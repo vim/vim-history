@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CHILL
 " Maintainer:	YoungSang Yoon <image@lgic.co.kr>
-" Last change:	2000 Nov 04
+" Last change:	2001 Jan 15
 "
 
 " first created by image@lgic.co.kr & modified by paris@lgic.co.kr 
@@ -11,8 +11,10 @@
 " & Communications LTd.)
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful CHILL keywords
 syn keyword	chStatement	goto GOTO return RETURN returns RETURNS

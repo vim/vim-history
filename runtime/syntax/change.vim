@@ -7,8 +7,10 @@
 " in the articles by Donald E. Knuth and Silvio Levy cited in "web.vim" and
 " "cweb.vim" respectively.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " We distinguish two groups of material, (a) stuff between @x..@y, and
 " (b) stuff between @y..@z. WEB/CWEB ignore everything else in a change file.

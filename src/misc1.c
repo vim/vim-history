@@ -1860,9 +1860,8 @@ del_lines(nlines, undo)
     /* adjust marks, mark the buffer as changed and prepare for displaying */
     deleted_lines_mark(curwin->w_cursor.lnum, n);
 
-    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
     curwin->w_cursor.col = 0;
+    check_cursor_lnum();
 }
 
     int
@@ -5609,7 +5608,7 @@ get_expr_indent()
 
     /* restore the cursor position so that 'indentexpr' doesn't need to */
     curwin->w_cursor = pos;
-    adjust_cursor();
+    check_cursor();
 
     /* If there is an error, just keep the current indent. */
     if (indent < 0)
@@ -5904,14 +5903,27 @@ vim_fexists(fname)
 # endif
 #endif
 
+static int	breakcheck_count = 0;
+
     void
 line_breakcheck()
 {
-    static int	count = 0;
-
-    if (++count == BREAKCHECK_SKIP)
+    if (++breakcheck_count >= BREAKCHECK_SKIP)
     {
-	count = 0;
+	breakcheck_count = 0;
+	ui_breakcheck();
+    }
+}
+
+/*
+ * Like line_breakcheck() but check 10 times less often.
+ */
+    void
+fast_breakcheck()
+{
+    if (++breakcheck_count >= BREAKCHECK_SKIP * 10)
+    {
+	breakcheck_count = 0;
 	ui_breakcheck();
     }
 }

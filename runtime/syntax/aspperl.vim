@@ -2,17 +2,21 @@
 " Language:	Active State's PerlScript (ASP)
 " Maintainer:	Aaron Hope <edh@brioforge.com>
 " URL:		http://nim.dhs.org/~edh/aspperl.vim
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'perlscript'
 endif
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 syn include @AspPerlScript <sfile>:p:h/perl.vim
+unlet b:current_syntax
 
 syn cluster htmlPreproc add=AspPerlScriptInsideHtmlTags
 

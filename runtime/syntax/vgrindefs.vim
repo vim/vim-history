@@ -1,12 +1,14 @@
 " Vim syntax file
 " Language:	Vgrindefs
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " The Vgrindefs file is used to specify a language for vgrind
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Comments
 syn match vgrindefsComment "^#.*"

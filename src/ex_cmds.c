@@ -1855,7 +1855,7 @@ ex_file(eap)
 	    return;
 	}
 	curbuf->b_flags |= BF_NOTEDITED;
-	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, FALSE);
+	buf = buflist_new(fname, xfname, curwin->w_cursor.lnum, FALSE, FALSE);
 	if (buf != NULL)
 	    curwin->w_alt_fnum = buf->b_fnum;
 	vim_free(fname);
@@ -2437,11 +2437,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		    if (tlnum <= 0)
 			tlnum = 1L;
 		}
-		(void)buflist_new(ffname, sfname, tlnum, FALSE);
+		(void)buflist_new(ffname, sfname, tlnum, FALSE, FALSE);
 		goto theend;
 	    }
 #endif
-	    buf = buflist_new(ffname, sfname, 0L, TRUE);
+	    buf = buflist_new(ffname, sfname, 0L, TRUE, flags & ECMD_SET_HELP);
 	}
 	if (buf == NULL)
 	    goto theend;
@@ -2501,8 +2501,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #endif
 		    buf_copy_options(buf, BCO_ENTER);
 
-		/* close the current buffer */
-		close_buffer(curwin, curbuf, !(flags & ECMD_HIDE), FALSE);
+		/* close the link to the current buffer */
+		close_buffer(curwin, curbuf,
+				      (flags & ECMD_HIDE) ? 0 : DOBUF_UNLOAD);
 
 #ifdef FEAT_AUTOCMD
 		/* Be careful again, like above. */
@@ -2559,6 +2560,29 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	curbuf->b_help = TRUE;
 	curbuf->b_p_ma = FALSE;
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
+#ifdef FEAT_AUTOCMD
+	buf = curbuf;
+#endif
+	set_bufsecret(TRUE);
+#ifdef FEAT_AUTOCMD
+	/* If autocommands change buffers under our fingers, forget about
+	 * editing the file. */
+	if (buf != curbuf)
+	    goto theend;
+#endif
+    }
+    else
+    {
+#ifdef FEAT_AUTOCMD
+	buf = curbuf;
+#endif
+	set_bufsecret(FALSE);
+#ifdef FEAT_AUTOCMD
+	/* If autocommands change buffers under our fingers, forget about
+	 * editing the file. */
+	if (buf != curbuf)
+	    goto theend;
+#endif
     }
 
 /*
@@ -2617,7 +2641,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     /*
      * Reset cursor position, could be used by autocommands.
      */
-    adjust_cursor();
+    check_cursor();
 
     /*
      * Check if we are editing the w_arg_idx file in the argument list.
@@ -2634,6 +2658,14 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	 * cursor.
 	 */
 	win_init(curwin);
+
+#ifdef FEAT_FOLDING
+	/* It's like all lines in the buffer changed.  Need to update
+	 * automatic folding. */
+	if (other_file)
+	    clearFolding(curwin);
+	foldUpdateAll(curwin);
+#endif
 
 #ifdef FEAT_SUN_WORKSHOP
 	if (usingSunWorkShop && curbuf->b_ffname)
@@ -2684,14 +2716,6 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	/* Even when cursor didn't move we need to recompute topline. */
 	changed_line_abv_curs();
 
-#ifdef FEAT_FOLDING
-	/* It's like all lines in the buffer changed.  Need to update
-	 * automatic folding. */
-	if (other_file)
-	    clearFolding(curwin);
-	foldUpdateAll(curwin);
-#endif
-
 #ifdef FEAT_TITLE
 	maketitle();
 #endif
@@ -2703,7 +2727,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	{
 	    curwin->w_cursor.lnum = newlnum;
 	    curwin->w_cursor.col = newcol;
-	    adjust_cursor();
+	    check_cursor();
 	}
 	else if (newlnum > 0)	/* line number from caller or old position */
 	{
@@ -3958,7 +3982,7 @@ ex_global(eap)
 	if (global_need_beginline)
 	    beginline(BL_WHITE | BL_FIX);
 	else
-	    adjust_cursor();	/* cursor may be beyond the end of the line */
+	    check_cursor();	/* cursor may be beyond the end of the line */
 
 	/* If it looks like no message was written, allow overwriting the
 	 * command with the report for number of changes. */

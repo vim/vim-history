@@ -19,8 +19,10 @@
 " null-modifier "void".
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " The null-modifier
 syn keyword radianceKeyword void

@@ -1,10 +1,10 @@
 " Vim support file to switch off loading indent files for file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 25
+" Last Change:	2001 Jan 15
 
-if exists("did_load_indent")
-  unlet did_load_indent
+if exists("did_indent_on")
+  unlet did_indent_on
 endif
 
 " Remove all autocommands in the filetypeindent group

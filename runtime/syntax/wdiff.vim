@@ -7,8 +7,10 @@
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn region wdiffOld start=+\[-+ end=+-]+
 syn region wdiffNew start="{+" end="+}"

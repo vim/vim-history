@@ -10,7 +10,10 @@
 "   http://www.open-oasis.org/docbook/
 "
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if exists('b:docbk_type')
     if 'xml' == b:docbk_type

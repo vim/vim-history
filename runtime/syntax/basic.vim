@@ -8,8 +8,11 @@
 " This syntax file not a complete implementation yet.  Send suggestions to the
 " maintainer.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " A bunch of useful BASIC keywords
 syn keyword basicStatement	BEEP beep Beep BLOAD bload Bload BSAVE bsave Bsave
 syn keyword basicStatement	CALL call Call ABSOLUTE absolute Absolute

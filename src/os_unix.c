@@ -654,9 +654,9 @@ sig_alarm SIGDEFARG(sigarg)
     void
 mch_startjmp()
 {
-# ifdef FEAT_EVAL
+#ifdef SIGHASARG
     lc_signal = 0;
-# endif
+#endif
     lc_active = TRUE;
 }
 
@@ -698,7 +698,7 @@ deathtrap SIGDEFARG(sigarg)
      */
     if (lc_active)
     {
-# if defined(FEAT_EVAL) && defined(SIGHASARG)
+# if defined(SIGHASARG)
 	lc_signal = sigarg;
 # endif
 	lc_active = FALSE;	/* don't jump again */
@@ -3412,7 +3412,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 pstrcmp(a, b)
     const void *a, *b;
 {
-    return (strcmp(*(char **)a, *(char **)b));
+    return (pathcmp(*(char **)a, *(char **)b));
 }
 
 /*

@@ -20,7 +20,7 @@ STARTTEST
 :set bin noeol
 :$w! XXMac
 :set nobin eol
-:bdel XXUnix XXDos XXMac
+:bwipe XXUnix XXDos XXMac
 :" create mixed format files
 :!cat XXUnix XXDos >XXUxDs
 :!cat XXUnix XXMac >XXUxMac
@@ -38,7 +38,7 @@ STARTTEST
 :w! XXtt
 :!cat XXtt >>test.out
 :!cat XX1 >>test.out
-:bdel XXUnix XXDos XXMac
+:bwipe XXUnix XXDos XXMac
 :set fileformat=dos
 :e! XXUnix
 :w! XXtt
@@ -50,7 +50,7 @@ STARTTEST
 :w! XXtt
 :!cat XXtt >>test.out
 :!cat XX2 >>test.out
-:bdel XXUnix XXDos XXMac
+:bwipe XXUnix XXDos XXMac
 :set fileformat=mac
 :e! XXUnix
 :w! XXtt
@@ -62,24 +62,24 @@ STARTTEST
 :w! XXtt
 :!cat XXtt >>test.out
 :!cat XX3 >>test.out
-:bdel XXUnix XXDos XXMac
+:bwipe XXUnix XXDos XXMac
 :"
 :" try reading and writing with 'fileformats' set to one format
 :set fileformats=unix
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :set fileformats=dos
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :set fileformats=mac
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :!cat XX4 >>test.out
 :"
 :" try reading and writing with 'fileformats' set to two formats
@@ -87,43 +87,43 @@ STARTTEST
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :e! XXUxMac
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxMac
+:bwipe XXUxMac
 :e! XXDosMac
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXDosMac
+:bwipe XXDosMac
 :!cat XX5 >>test.out
 :set fileformats=unix,mac
 :e! XXUxDs
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDs
+:bwipe XXUxDs
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :e! XXDosMac
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXDosMac
+:bwipe XXDosMac
 :!cat XX6 >>test.out
 :set fileformats=dos,mac
 :e! XXUxDs
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDs
+:bwipe XXUxDs
 :e! XXUxMac
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxMac
+:bwipe XXUxMac
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :!cat XX7 >>test.out
 :"
 :" try reading and writing with 'fileformats' set to three formats
@@ -131,13 +131,13 @@ STARTTEST
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :!cat XX8 >>test.out
 :set fileformats=mac,dos,unix
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :!cat XX9 >>test.out
 :" try with 'binary' set
 :set fileformats=mac,unix,dos
@@ -145,12 +145,12 @@ STARTTEST
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :set fileformats=mac
 :e! XXUxDsMc
 :w! XXtt
 :!cat XXtt >>test.out
-:bdel XXUxDsMc
+:bwipe XXUxDsMc
 :set fileformats=dos
 :e! XXUxDsMc
 :w! XXtt

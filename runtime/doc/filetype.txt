@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.s.  Last change: 2000 Nov 16
+*filetype.txt*   For Vim version 6.0t.  Last change: 2001 Jan 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -132,7 +132,7 @@ A. If your file type can be detected by the file name.
    have been installed.  Your autocommands will match first, and the
    ":setfiletype" command will make sure that no other autocommands will set
    'filetype' after this.
-
+							*new-filetype-scripts*
 B. If your filetype can only be detected by inspecting the contents of the
    file.
 

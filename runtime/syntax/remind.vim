@@ -8,8 +8,10 @@
 " remind is a sophisticated reminder service
 " you can download remind from ftp://ftp.doe.carleton.ca/pub/remind-3.0/
 
-" clear any unwanted syntax defs
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " shut case off
 syn case ignore

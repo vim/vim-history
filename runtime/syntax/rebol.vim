@@ -2,13 +2,15 @@
 " Language:	Rebol
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
 " Filenames:	*.r
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " URL:		N/A
 "
 " Change history
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Rebol is case insensitive
 syn case ignore

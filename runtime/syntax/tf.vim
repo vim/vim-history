@@ -3,13 +3,15 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	send syntax_vim.tgz
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 "
 " Options	lite_minlines = x     to sync at least x lines backwards
 
-" Remove any old syntax stuff hanging around
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
-syn clear
 syn case match
 
 if !exists("main_syntax")

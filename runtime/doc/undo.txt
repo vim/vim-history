@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 6.s.  Last change: 2000 Jul 07
+*undo.txt*      For Vim version 6.0t.  Last change: 2001 Jan 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -84,6 +84,10 @@ It is then possible to exit Vim with ":q" instead of ":q!".  {this is not in
 Vi} Note that this is relative to the last write of the file.  Typing "u"
 after ":w" actually changes the buffer, compared to what was written, so the
 buffer is considered changed then.
+
+When manual |folding| is being used, the folds are not saved and restored.
+Only changes completely within a fold will keep the fold as it was, because
+the first and last line of the fold don't change.
 
 The numbered registers can also be used for undoing deletes.  Each time you
 delete text, it is put into register "1.  The contents of register "1 are

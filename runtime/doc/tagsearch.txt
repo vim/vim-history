@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.s.  Last change: 2000 Dec 17
+*tagsearch.txt* For Vim version 6.0t.  Last change: 2001 Jan 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -44,9 +44,10 @@ below.
 
 g<LeftMouse>						*g<LeftMouse>*
 <C-LeftMouse>					*<C-LeftMouse>* *CTRL-]*
-CTRL-]			Same as ":tag {ident}", where {ident} is the keyword
-			under or after cursor.  {Vi: identifier after the
-			cursor}
+CTRL-]			Jump to the definition of the keyword under the
+			cursor.  Same as ":tag {ident}", where {ident} is the
+			keyword under or after cursor.  {Vi: identifier after
+			the cursor}
 
 							*v_CTRL-]*
 {Visual}CTRL-]		Same as ":tag {ident}", where {ident} is the text that

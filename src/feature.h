@@ -102,8 +102,8 @@
 
 /*
  * +listcmds		Vim commands for the buffer list and the argument
- *			listMultiple buffers.  Without this there is no
- *			":buffer" ":bnext", ":bdel", ":argdelete", etc.
+ *			list.  Without this there is no ":buffer" ":bnext",
+ *			":bdel", ":argdelete", etc.
  */
 #ifdef FEAT_NORMAL
 # define FEAT_LISTCMDS

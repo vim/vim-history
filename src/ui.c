@@ -1221,7 +1221,7 @@ vim_used_in_input_buf()
 }
 #endif
 
-#if defined(GUI) || defined(FEAT_SIGNS) || defined(FEAT_MOUSE_GPM) \
+#if defined(FEAT_GUI) || defined(FEAT_SIGNS) || defined(FEAT_MOUSE_GPM) \
 	|| defined(PROTO) || defined(FEAT_XCLIPBOARD) || defined(VMS) \
 	|| defined(FEAT_SNIFF)
 /* Add the given bytes to the input buffer */

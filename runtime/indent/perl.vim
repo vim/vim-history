@@ -2,7 +2,13 @@
 " Language:	Perl
 " Author:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/indent/perl.vim
-" Last Change:	2000-12-04
+" Last Change:	2001 Jan 15
+
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
 
 setlocal indentexpr=GetPerlIndent()
 setlocal indentkeys-=0# indentkeys+=0=,0)

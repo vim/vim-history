@@ -2,11 +2,15 @@
 " Language:     samba configuration files (smb.conf)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/samba.vim
-" Last change:  2000 Nov 13
+" Last change:  2001 Jan 15
 
 " Don't forget to run your config file through testparm(1)!
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 syn match sambaParameter /^[a-zA-Z \t]\+=/ contains=sambaKeyword

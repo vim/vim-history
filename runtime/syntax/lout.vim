@@ -5,8 +5,10 @@
 
 " Lout: Basser Lout document formatting system.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Lout is case sensitive
 syn case match

@@ -3,8 +3,10 @@
 " Maintainer:	Jan Hlavacek <lahvak@math.ohio-state.edu>
 " Last Change:	980216
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword slangStatement	break return continue EXECUTE_ERROR_BLOCK
 syn match slangStatement	"\<X_USER_BLOCK[0-4]\>"

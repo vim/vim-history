@@ -662,8 +662,6 @@ mch_FullName(fname, buf, len, force)
     {
 	retval = lock2name(l, buf, (long)len - 1);
 	UnLock(l);
-	if (mch_isdir(fname))
-	    add_pathsep(buf);
     }
     else if (force || !mch_isFullName(fname))	    /* not a full path yet */
     {
@@ -1444,7 +1442,7 @@ Return:
 sortcmp(a, b)
     char **a, **b;
 {
-    return stricmp(*a, *b);
+    return pathcmp(*a, *b);
 }
 
     int

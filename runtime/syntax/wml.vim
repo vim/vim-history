@@ -2,15 +2,21 @@
 " Language:    WML
 " Maintainer:  Gerfried Fuchs <alfie@innocent.com>
 " URL:         http://alfie.ist.org/vim/syntax/wml.vim
-" Last Change: 2000 Dec 17
+" Last Change: 2001 Jan 15
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
 "
 " Original Version: Craig Small <csmall@eye-net.com.au>
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " A lot of the web stuff looks like HTML so we load that first
-runtime syntax/syntax/html.vim
+runtime! syntax/syntax/html.vim
+unlet b:current_syntax
 
 if !exists("main_syntax")
   let main_syntax = 'wml'
@@ -84,6 +90,7 @@ syn region  htmlTagName start="\<\(define-tag\|define-region\)" end="\>" contain
 if main_syntax != 'perl'
   " Perl script
   syn include @wmlPerlScript $VIMRUNTIME/syntax/perl.vim
+  unlet b:current_syntax
   syn region perlScript start=+<perl>+ keepend end=+</perl>+ contains=@wmlPerlScript,wmlPerlTag
 " eperl between '<:' and ':>'  -- Alfie [1999-12-26]
   syn region perlScript start=+<:+ keepend end=+:>+ contains=@wmlPerlScript,wmlPerlTag

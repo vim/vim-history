@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.s.  Last change: 2000 Nov 23
+*various.txt*   For Vim version 6.0t.  Last change: 2001 Jan 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -348,6 +348,8 @@ N  *+X11*		Unix only: can restore window title |X11|
 :[count]verb[ose] {command}
 			Execute {command} with 'verbose' set to [count].  If
 			[count] is omitted one is used.
+			The additional use of ":silent" makes messages
+			generated but not displayed.
 			The combination of ":silent" and ":verbose" can be
 			used to generate messages and check them with
 			|v:statusmsg| and friends.  For example: >
@@ -471,7 +473,7 @@ Jump to specific subjects by using tags.  This can be done in two ways:
   "g<LeftMouse>" work just like "CTRL-]".
 - use the ":ta {subject}" command.  This works with all characters.
 
-Use "CTRL-T" to jump back.
+Use CTRL-T or CTRL-O to jump back.
 Use ":q" to close the help window.
 
 It is possible to add help files for plugins and other items.  You don't need

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		configure.in script: M4 with sh
 " Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !
@@ -9,8 +9,10 @@
 " script, so I wrote this quick and dirty patch.
 
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " define the config syntax
 syn match   configdelimiter "[()\[\];,]"

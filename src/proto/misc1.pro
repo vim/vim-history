@@ -71,6 +71,7 @@ void prepare_to_exit __ARGS((void));
 void preserve_exit __ARGS((void));
 int vim_fexists __ARGS((char_u *fname));
 void line_breakcheck __ARGS((void));
+void fast_breakcheck __ARGS((void));
 int expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 int match_suffix __ARGS((char_u *fname));
 int gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));

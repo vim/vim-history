@@ -18,6 +18,14 @@ new version to Bram@vim.org.
 
 Rules for making an indent file:
 
+You should use this check for "b:did_indent":
+
+	" Only load this indent file when no other was loaded.
+	if exists("b:did_indent")
+	  finish
+	endif
+	let b:did_indent = 1
+
 Always use ":setlocal" to set 'indentexpr'.  This avoids it being carried over
 to other buffers.
 

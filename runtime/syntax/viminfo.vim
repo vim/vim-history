@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Vim .viminfo file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 29
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " The lines that are NOT recognized
 syn match viminfoError "^[^\t].*"

@@ -6,8 +6,10 @@
 " URL:		http://bigfoot.com/~johnh51/vim/syntax/gnuplot.vim
 "
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " some shortened names to make demo files look clean... jeh.
 

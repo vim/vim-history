@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	purify log files
 " Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" clear any unwanted syntax defs
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Purify header
 syn match purifyLogHeader      "^\*\*\*\*.*$"

@@ -2,7 +2,10 @@
 " Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
 " Last Change:		11:15:35 16-Oct-2000.
 
-menutrans clear
+" Quit when menu translations have already been done.
+if exists("did_menu_trans")
+  finish
+endif
 let did_menu_trans = 1
 
 " Help menu

@@ -4,11 +4,13 @@
 " Maintainers:   Markus Mottl            <mottl@miss.wu-wien.ac.at>
 "                Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/sml.vim
-" Last Change:   2000 Nov 04
+" Last Change:   2001 Jan 15
 "                               cleaned up for distribution
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 
 " SML is case sensitive.

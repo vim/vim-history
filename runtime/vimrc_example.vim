@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jan 08
+" Last change:	2001 Jan 20
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -58,4 +58,4 @@ if has("autocmd")
     \   exe "normal g`\"" |
     \ endif
 
-  endif " has("autocmd")
+endif " has("autocmd")

@@ -3,13 +3,15 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 "
 " Options	lite_sql_query = 1 for SQL syntax highligthing inside strings
 "		lite_minlines = x     to sync at least x lines backwards
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'lite'
@@ -19,6 +21,7 @@ if main_syntax == 'lite'
   if exists("lite_sql_query")
     if lite_sql_query == 1
       syn include @liteSql <sfile>:p:h/sql.vim
+      unlet b:current_syntax
     endif
   endif
 endif
@@ -27,6 +30,7 @@ if (main_syntax == 'msql')
   if exists("msql_sql_query")
     if msql_sql_query == 1
       syn include @liteSql <sfile>:p:h/sql.vim
+      unlet b:current_syntax
     endif
   endif
 endif

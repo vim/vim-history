@@ -1,9 +1,12 @@
 " VIM syntax file
 " Language:	Nroff/Troff
 " Maintainer:	Matthias Burian <burian@grabner-instruments.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if exists("nroff_space_errors")
   syn match nroffError "\s\+$"

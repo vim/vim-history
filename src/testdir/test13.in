@@ -25,16 +25,16 @@ otestje2
 otestje3
 :w
 
-:au WinLeave testje bdel
+:au WinLeave Xtestje2 bwipe
 
 :w! test.out
-:au WinLeave testje bdel testje3
+:au WinLeave Xtestje1 bwipe Xtestje3
 :close
 :w >>test.out
 :e Xtestje1
-:bdel Xtestje2 Xtestje3 test.out
+:bwipe Xtestje2 Xtestje3 test.out
 :au!
-:au! BufUnload Xtestje1 bdel
+:au! BufUnload Xtestje1 bwipe
 :e Xtestje3
 :w >>test.out
 :e Xtestje2
@@ -44,9 +44,9 @@ otestje3
 :au!
 :only
 :e Xtestje1
-:bdel Xtestje2 Xtestje3 test.out test13.in
-:au BufDelete Xtestje1 buf Xtestje1
-:bd
+:bwipe Xtestje2 Xtestje3 test.out test13.in
+:au BufWipeout Xtestje1 buf Xtestje1
+:bwipe
 :w >>test.out
 :qa!
 ENDTEST

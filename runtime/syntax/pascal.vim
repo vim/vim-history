@@ -3,11 +3,13 @@
 " Current  Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
 " Previous Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
 " Version: 2.3
-" Last Change:	2000 Dec 10
+" Last Change:	2001 Jan 15
 " Contributions: Tim Chase <tchase@csc.com>, Stas Grabois <stsi@vtrails.com>
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 
 syn case ignore

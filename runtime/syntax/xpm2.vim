@@ -1,13 +1,15 @@
 " Vim syntax file
 " Language:	X Pixmap v2
 " Maintainer:	Steve Wall (steve_wall@redcom.com)
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Version:	5.5
 "
 " Made from xpm.vim by Ronald Schild <rs@scutum.de>
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn region  xpm2PixelString	start="^"  end="$"  contains=@xpm2Colors
 syn keyword xpm2Todo		TODO FIXME XXX  contained

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		SKILL
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
@@ -9,8 +9,10 @@
 "				database. This file also defines syntax highlighting for
 "				certain Design Framework II interface functions.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword skillConstants          t nil unbound
 

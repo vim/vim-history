@@ -1,14 +1,16 @@
 " Vim syntax file
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " URL:		http://www.linuxstart.com/~vimuser/vim/syntax/rexx.vim
 "
 " Special Thanks to Dan Sharp <dwsharp@hotmail.com> for comments and additions
 " (and providing the webspace)
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

@@ -103,13 +103,17 @@
 # define DFLT_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
 #endif
 
+#ifndef DFLT_VDIR
+# define DFLT_VDIR	"$VIM/vimfiles/view"	/* default for 'viewdir' */
+#endif
+
 #ifndef DFLT_DIR
 # define DFLT_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"vim##.err"
-#define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/vimfiles/after"
 
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME

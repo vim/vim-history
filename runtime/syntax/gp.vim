@@ -1,9 +1,13 @@
 " Vim syntax file
 " Language:	gp (version 2.0)
 " Maintainer:	Karim Belabas <Karim.Belabas@math.u-psud.fr>
-" Last change:	2000 Nov 04
+" Last change:	2001 Jan 15
 
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " some control statements
 syntax keyword gpStatement	break return next
 syntax keyword gpConditional	if

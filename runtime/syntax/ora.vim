@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -10,8 +10,10 @@
 "   sqlnet-ora and tnsnames.ora; since will not cause(?) problems
 "   is easier to follow separately each file's keywords)
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'ora'

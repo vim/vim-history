@@ -1,15 +1,17 @@
 " Vim syntax file
 " Language:	FORM
 " Maintainer:	Michael M. Tung <michael.tung@uni-mainz.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " First public release based on 'Symbolic Manipulation with FORM'
 " by J.A.M. Vermaseren, CAN, Netherlands, 1991.  
 " This syntax file is still in development. Please send suggestions
 " to the maintainer.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

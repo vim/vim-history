@@ -9,8 +9,10 @@
 " TODO lots more keywords
 " global?
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful keywords
 syn keyword tadsStatement	goto break return continue

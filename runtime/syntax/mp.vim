@@ -3,14 +3,17 @@
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
 " Last Change:	August 3, 1998
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 let plain_mf_macros = 0 " plain.mf has no special meaning for MetaPost
 let other_mf_macros = 0 " cmbase.mf, logo.mf, ... neither
 
 " Read the Metafont syntax to start with
-runtime syntax/mf.vim
+runtime! syntax/mf.vim
+unlet b:current_syntax
 
 " MetaPost has TeX inserts for typeset labels
 " verbatimtex, btex, and etex will be treated as keywords

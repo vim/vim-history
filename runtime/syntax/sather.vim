@@ -2,15 +2,17 @@
 " Language:	Sather/pSather
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/sather.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Sather is a OO-language developped at the International Computer Science
 " Institute (ICSI) in Berkeley, CA. pSather is a parallel extension to Sather.
 " Homepage: http://www.icsi.berkeley.edu/~sather
 " Sather files use .sa as suffix
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " keyword definitions
 syn keyword satherExternal       extern

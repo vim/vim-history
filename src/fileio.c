@@ -993,7 +993,8 @@ retry:
 		/*
 		 * Read bytes from the file.
 		 */
-		if ((size = read(fd, (char *)ptr, (size_t)size)) <= 0)
+		size = read(fd, (char *)ptr, (size_t)size);
+		if (size <= 0)
 		{
 		    if (size < 0)		    /* read error */
 			error = TRUE;
@@ -1002,7 +1003,6 @@ retry:
 			/* some trailing bytes unconverted */
 			conv_error = TRUE;
 #endif
-		    break;
 		}
 
 #ifdef FEAT_CRYPT
@@ -1015,7 +1015,7 @@ retry:
 		/*
 		 * Decrypt the read bytes.
 		 */
-		if (cryptkey != NULL)
+		if (cryptkey != NULL && size > 0)
 		    for (p = ptr; p < ptr + size; ++p)
 			ZDECODE(*p);
 #endif
@@ -1081,6 +1081,14 @@ retry:
 		    goto retry;
 		}
 	    }
+#endif
+	    /*
+	     * Break here for a read error or end-of-file.
+	     */
+	    if (size <= 0)
+		break;
+
+#ifdef FEAT_MBYTE
 
 	    /* Include not converted bytes. */
 	    ptr -= conv_restlen;
@@ -2099,14 +2107,18 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    && vim_strchr(p_cpo, CPO_FNAMEW) != NULL)
     {
 #ifdef FEAT_AUTOCMD
-	/* It's like the unnamed buffer is deleted. */
-	apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
+	/* It's like the unnamed buffer is deleted.... */
+	if (!curbuf->b_p_bst)
+	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 #endif
 	if (setfname(fname, sfname, FALSE) == OK)
 	    curbuf->b_flags |= BF_NOTEDITED;
 #ifdef FEAT_AUTOCMD
-	/* And a new named one is created */
-	apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, curbuf);
+	/* ....and a new named one is created */
+	apply_autocmds(EVENT_BUFSECRET, NULL, NULL, FALSE, curbuf);
+	if (!curbuf->b_p_bst)
+	    apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, curbuf);
 #endif
     }
 
@@ -5050,19 +5062,23 @@ static struct event_name
     EVENT_T	event;	/* event number */
 } event_names[] =
 {
+    {"BufSecret",	EVENT_BUFSECRET},
     {"BufCreate",	EVENT_BUFCREATE},
     {"BufDelete",	EVENT_BUFDELETE},
+    {"BufWipeout",	EVENT_BUFWIPEOUT},
     {"BufEnter",	EVENT_BUFENTER},
     {"BufFilePost",	EVENT_BUFFILEPOST},
     {"BufFilePre",	EVENT_BUFFILEPRE},
     {"BufHidden",	EVENT_BUFHIDDEN},
     {"BufLeave",	EVENT_BUFLEAVE},
     {"BufNewFile",	EVENT_BUFNEWFILE},
+    {"BufReadAfter",	EVENT_BUFREADAFTER},
     {"BufReadPost",	EVENT_BUFREADPOST},
     {"BufReadPre",	EVENT_BUFREADPRE},
     {"BufRead",		EVENT_BUFREADPOST},
     {"BufReadCmd",	EVENT_BUFREADCMD},
     {"BufUnload",	EVENT_BUFUNLOAD},
+    {"BufWinLeave",	EVENT_BUFWINLEAVE},
     {"BufWritePost",	EVENT_BUFWRITEPOST},
     {"BufWritePre",	EVENT_BUFWRITEPRE},
     {"BufWrite",	EVENT_BUFWRITEPRE},
@@ -5932,7 +5948,7 @@ ex_doautoall(eap)
 	}
     }
 
-    adjust_cursor();	    /* just in case lines got deleted */
+    check_cursor();	    /* just in case lines got deleted */
 }
 
 /*
@@ -6037,7 +6053,7 @@ aucmd_restbuf(aco)
 	    curwin->w_buffer = curbuf;
 	    ++curbuf->b_nwindows;
 	    curwin->w_cursor = aco->save_cursor;
-	    adjust_cursor();
+	    check_cursor();
 	    /* check topline < line_count, in case lines got deleted */
 	    if (aco->save_topline <= curbuf->b_ml.ml_line_count)
 		curwin->w_topline = aco->save_topline;

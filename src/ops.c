@@ -1700,7 +1700,7 @@ op_replace(oap, c)
     }
 
     curwin->w_cursor = oap->start;
-    adjust_cursor();
+    check_cursor();
     changed_lines(oap->start.lnum, oap->start.col, oap->end.lnum + 1, 0L);
 
     /* Set "'[" and "']" marks. */
@@ -1944,7 +1944,7 @@ op_insert(oap, count1)
 		block_insert(oap, ins_text, (oap->op_type == OP_INSERT), &bd);
 
 		curwin->w_cursor.col = oap->start.col;
-		adjust_cursor();
+		check_cursor();
 	    }
 	    vim_free(ins_text);
 	}
@@ -2068,7 +2068,7 @@ op_change(oap)
 		    }
 		}
 		curwin->w_cursor.col = oap->start.col;
-		adjust_cursor();
+		check_cursor();
 
 		changed_lines(oap->start.lnum + 1, 0, oap->end.lnum + 1, 0L);
 	    }
@@ -2175,9 +2175,6 @@ op_yank(oap, deleting, mess)
 	return OK;
 
 #ifdef FEAT_CLIPBOARD
-    /* If no register specified, and "unnamed" in 'clipboard', use * register */
-    if (!deleting && oap->regname == 0 && vim_strchr(p_cb, 'd') != NULL)
-	oap->regname = '*';
     if (!clipboard.available && oap->regname == '*')
 	oap->regname = 0;
 #endif
@@ -2373,9 +2370,39 @@ success:
 #ifdef FEAT_CLIPBOARD
     /*
      * If we were yanking to the clipboard register, send result to clipboard.
+     * If no register was specified, and "unnamed" in 'clipboard', make a copy
+     * to the * register.
      */
-    if (curr == &(y_regs[CLIPBOARD_REGISTER]) && clipboard.available)
+    if (clipboard.available
+	    && (curr == &(y_regs[CLIPBOARD_REGISTER])
+		|| (!deleting && oap->regname == 0
+					   && vim_strchr(p_cb, 'd') != NULL)))
     {
+	if (curr != &(y_regs[CLIPBOARD_REGISTER]))
+	{
+	    /* Copy the text from register 0 to the clipboard register. */
+	    curr = y_current;
+	    y_current = &(y_regs[CLIPBOARD_REGISTER]);
+	    free_yank_all();
+	    *y_current = *curr;
+	    y_current->y_array = (char_u **)lalloc_clear(
+			(long_u)(sizeof(char_u *) * y_current->y_size), TRUE);
+	    if (y_current->y_array == NULL)
+		y_current->y_size = 0;
+	    else
+	    {
+		for (j = 0; j < y_current->y_size; ++j)
+		    if ((y_current->y_array[j] = vim_strsave(curr->y_array[j]))
+								      == NULL)
+		    {
+			free_yank(j);
+			y_current->y_size = 0;
+			break;
+		    }
+	    }
+	    y_current = curr;
+	}
+
 	clip_own_selection();
 	clip_gen_set_selection();
     }
@@ -2446,19 +2473,18 @@ do_put(regname, dir, count, flags)
 	orig_indent = get_indent();
 
     curbuf->b_op_start = curwin->w_cursor;	/* default for '[ mark */
-
     if (dir == FORWARD)
     {
+	/* move to the start of the next (multi-byte) character */
 #ifdef FEAT_MBYTE
-	/* put it on the next of the multi-byte character. */
 	if (has_mbyte)
 	{
-	    ptr = ml_get_cursor();
-	    bytelen = mb_ptr2len_check(ptr) - 1;
+	    bytelen = mb_ptr2len_check(ml_get_cursor());
 	    curbuf->b_op_start.col += bytelen;
 	}
+	else
 #endif
-	curbuf->b_op_start.col++;
+	    curbuf->b_op_start.col++;
     }
 
     curbuf->b_op_end = curwin->w_cursor;	/* default for '] mark */
@@ -2568,20 +2594,25 @@ do_put(regname, dir, count, flags)
     }
     else if (y_type == MLINE)
     {
+	lnum = curwin->w_cursor.lnum;
 #ifdef FEAT_FOLDING
+	/* Correct line number for closed fold.  Don't move the cursor yet,
+	 * u_save() uses it. */
 	if (dir == BACKWARD)
-	    (void)hasFolding(curwin->w_cursor.lnum,
-						&curwin->w_cursor.lnum, NULL);
+	    (void)hasFolding(lnum, &lnum, NULL);
 	else
-	    (void)hasFolding(curwin->w_cursor.lnum,
-						NULL, &curwin->w_cursor.lnum);
+	    (void)hasFolding(lnum, NULL, &lnum);
 #endif
-	if (dir == BACKWARD)
-	    lnum = curwin->w_cursor.lnum;
-	else
-	    lnum = curwin->w_cursor.lnum + 1;
+	if (dir == FORWARD)
+	    ++lnum;
 	if (u_save(lnum - 1, lnum) == FAIL)
 	    goto end;
+#ifdef FEAT_FOLDING
+	if (dir == FORWARD)
+	    curwin->w_cursor.lnum = lnum - 1;
+	else
+	    curwin->w_cursor.lnum = lnum;
+#endif
     }
     else if (u_save_cursor() == FAIL)
 	goto end;
@@ -2598,9 +2629,9 @@ do_put(regname, dir, count, flags)
 	coladvance_force(getviscol() + 1);
 #endif
 
-/*
- * block mode
- */
+    /*
+     * Block mode
+     */
     if (y_type == MBLOCK)
     {
 	if (dir == FORWARD && gchar_cursor() != NUL)
@@ -2608,18 +2639,13 @@ do_put(regname, dir, count, flags)
 	    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
 
 #ifdef FEAT_MBYTE
-	    if (cc_dbcs)
-	    {
-		/* put it on the next of the multi-byte character. */
-		col += bytelen + 1;
-		curwin->w_cursor.col += bytelen + 1;
-	    }
+	    if (has_mbyte)
+		/* move to start of next multi-byte character */
+		curwin->w_cursor.col += bytelen;
 	    else
 #endif
-	    {
-		++col;
 		++curwin->w_cursor.col;
-	    }
+	    ++col;
 	}
 	else
 	    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
@@ -2726,8 +2752,11 @@ do_put(regname, dir, count, flags)
 	else
 	    curwin->w_cursor.lnum = lnum;
     }
-    else	/* not block mode */
+    else
     {
+	/*
+	 * Character or Line mode
+	 */
 	if (y_type == MCHAR)
 	{
 	    /* if type is MCHAR, FORWARD is the same as BACKWARD on the next
@@ -2738,11 +2767,11 @@ do_put(regname, dir, count, flags)
 		if (has_mbyte)
 		{
 		    /* put it on the next of the multi-byte character. */
-		    col += bytelen + 1;
+		    col += bytelen;
 		    if (yanklen)
 		    {
-			curwin->w_cursor.col += bytelen + 1;
-			curbuf->b_op_end.col += bytelen + 1;
+			curwin->w_cursor.col += bytelen;
+			curbuf->b_op_end.col += bytelen;
 		    }
 		}
 		else
@@ -2758,10 +2787,11 @@ do_put(regname, dir, count, flags)
 	    }
 	    new_cursor = curwin->w_cursor;
 	}
+	/*
+	 * Line mode: BACKWARD is the same as FORWARD on the previous line
+	 */
 	else if (dir == BACKWARD)
-	    /* if type is MLINE, BACKWARD is the same as FORWARD on the
-	     * previous line */
-	    --lnum;
+		--lnum;
 
 	/*
 	 * simple case: insert into current line
@@ -2880,12 +2910,20 @@ error:
 	    {
 		curbuf->b_op_start.col = 0;
 		if (dir == FORWARD)
+		{
+#ifdef FEAT_FOLDING
+		    /* a "p" inside a closed fold is like a "p" in the last
+		     * line of the fold */
+		    (void)hasFolding(curbuf->b_op_start.lnum, NULL,
+						    &curbuf->b_op_start.lnum);
+#endif
 		    curbuf->b_op_start.lnum++;
+		}
 	    }
 	    mark_adjust(curbuf->b_op_start.lnum + (y_type == MCHAR),
 					     (linenr_t)MAXLNUM, nr_lines, 0L);
 
-	    /* note changed text for displaying */
+	    /* note changed text for displaying and folding */
 	    if (y_type == MCHAR)
 		changed_lines(curwin->w_cursor.lnum, col,
 					 curwin->w_cursor.lnum + 1, nr_lines);

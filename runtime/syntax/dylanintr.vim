@@ -4,7 +4,10 @@
 " Last Change:	Fri Sep 29 13:53:27 PDT 2000
 "
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 syn case ignore
 
 syn region	dylanintrInfo		matchgroup=Statement start="^" end=":" oneline

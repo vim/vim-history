@@ -657,7 +657,7 @@ ex_perldo(eap)
     }
     FREETMPS;
     LEAVE;
-    adjust_cursor();
+    check_cursor();
     update_screen(NOT_VALID);
     if (!length)
 	return;
@@ -836,7 +836,7 @@ Windows(...)
 	for (i = 0; i < items; i++)
 	{
 	    w = SvIV(ST(i));
-	    vimwin = win_goto_nr(w);
+	    vimwin = win_find_nr(w);
 	    if (vimwin)
 		XPUSHs(newWINrv(newSV(0), vimwin));
 	}
@@ -902,7 +902,7 @@ Cursor(win, ...)
       col = SvIV(ST(2));
       win->w_cursor.lnum = lnum;
       win->w_cursor.col = col;
-      adjust_cursor();		    /* put cursor on an existing line */
+      check_cursor();		    /* put cursor on an existing line */
       update_screen(NOT_VALID);
     }
 

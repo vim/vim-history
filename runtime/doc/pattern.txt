@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.s.  Last change: 2000 Dec 20
+*pattern.txt*   For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -257,7 +257,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 		or  branch \| branch \| branch
 		etc.
 
-						*/branch*
+						*/branch* */\&*
 2. A branch is one or more concats, separated by "\&".  It matches the last
    concat, but only if all the preceding contats also match at the same
    position.  Example: "foobeep\&..." matches "foo" in "foobeep".
@@ -287,13 +287,14 @@ the "*" is under your right hand middle finger (search to the right and down).
 
 						*/atom*
 5. An atom can be one of a long list of items.  Each atom matches a certain
-   character.  It is often an ordinary character or a character class.  See
-   |/ordinary-atom|.  Braces can be used to make a pattern into an atom.  The
-   "\z(\)" construct is only for syntax highlighting, see |:syn-ext-match|.
+   character.  It is often an ordinary character or a character class.  Braces
+   can be used to make a pattern into an atom.  The "\z(\)" construct is only
+   for syntax highlighting.
 
-   atom    ::=	    ordinary-atom
-   		or  \( pattern \)
-		or  \z( pattern \)
+   atom    ::=	    ordinary-atom		|/ordinary-atom|
+   		or  \( pattern \)		|/\(|
+		or  \%( pattern \)		|/\%(|
+		or  \z( pattern \)		|/\z(|
 
 
 Overview of multi items.				*/multi*
@@ -341,6 +342,8 @@ More explanation and examples below, follow the links.
 |/\>|	\>	\>	end of a word |/zero-width|
 |/\zs|	\zs	\zs	anything, sets start of match
 |/\ze|	\ze	\ze	anything, sets end of match
+|/\%^|	\%^	\%^	beginning of file |/zero-width|
+|/\%$|	\%$	\%$	end of file |/zero-width|
 
 Character classes {not in Vi}:
 |/\i|	\i	\i	identifier character (see 'isident' option)
@@ -384,13 +387,14 @@ Character classes {not in Vi}:
 	   ...
 |/\9|	\9	\9	Like "\1", but uses ninth \(\)
 
-|/\z|	\z1	\z1	only for syntax highlighting, see |:syn-ext-match|
+|/\z1|	\z1	\z1	only for syntax highlighting, see |:syn-ext-match|
 	   ...
-|/\z|	\z9	\z9	only for syntax highlighting, see |:syn-ext-match|
+|/\z1|	\z9	\z9	only for syntax highlighting, see |:syn-ext-match|
 
 	x	x	a character with no special meaning matches itself
 
 |/[]|	[]	\[]	any character specified inside the []
+|/\%[]| \%[]	\%[]	a list of optionally matched atoms
 
 |/\c|	\c	\c	ignore case
 |/\C|	\C	\C	match case
@@ -614,6 +618,7 @@ $	At end of pattern or in front of "\|" or "\)", matches end-of-line
 	branch is used.
 	Example: "^\s*\zsif" matches an "if" at the start of a line, ignoring
 	white space.
+	{not in Vi} {not available when compiled without the +syntax feature}
 							*/\ze*
 \ze	Matches at any position, and sets the end of the match there: The
 	previous char is the last char of the whole match. |/zero-width|
@@ -621,6 +626,22 @@ $	At end of pattern or in front of "\|" or "\)", matches end-of-line
 	branch is used.
 	Example: "end\ze\(if\|for\)" matches the "end" in "endif" and
 	"endfor".
+	{not in Vi} {not available when compiled without the +syntax feature}
+
+							*/\%^*
+\%^	Matches start of the file.  When matching with a string, matches the
+	start of the string. {not in Vi}
+	For example, to find the first "VIM" in a file: >
+		/\%^\_.\{-}\zsVIM
+<
+							*/\%$*
+\%$	Matches end of the file.  When matching with a string, matches the
+	end of the string. {not in Vi}
+	Note that this does NOT find the last "VIM" in a file:
+		/VIM\_.\{-}\%$
+	It will find the next VIM, because the part after it will always
+	match.  This one will find the last "VIM" in the file: >
+		/VIM\ze\(\(VIM\)\@!\_.\)*\%$
 
 Character classes: {not in Vi}
 \i	identifier character (see 'isident' option)	*/\i*
@@ -667,20 +688,24 @@ Character classes: {not in Vi}
 \b	matches <BS>					*/\b*
 \n	matches a end-of-line				*/\n*
 
-~	matches the last given substitute string    */~* */\~*
+~	matches the last given substitute string	*/~* */\~*
 
-\(\)	A pattern enclosed by escaped parentheses      */\(\)*
-		(e.g., "\(^a\)") matches that pattern		*/\)*
+\(\)	A pattern enclosed by escaped parentheses	*/\(* */\(\)* */\)*
+	(e.g., "\(^a\)") matches ^a
 
 \1      Matches the same string that was matched by	*/\1*
-		the first sub-expression in \( and \). {not in Vi}
-		Example: "\([a-z]\).\1" matches "ata", "ehe", "tot",
-		etc.
+	the first sub-expression in \( and \). {not in Vi}
+	Example: "\([a-z]\).\1" matches "ata", "ehe", "tot", etc.
 \2      Like "\1", but uses second sub-expression,	*/\2*
    ...							*/\3*
 \9      Like "\1", but uses ninth sub-expression.	*/\9*
 	Note: The numbering of groups is done based on which "\(" comes first
-	(going left to right).
+	in the pattern (going left to right), NOT based on what is matched
+	first.
+
+\%(\)	A pattern enclosed by escaped parentheses.	*/\%(\)* */\%(*
+	Just like \(\), but without counting it as a sub-expresion
+	{not in Vi}
 
 x	A single character, with no special meaning, matches itself
 
@@ -759,6 +784,22 @@ x	A single character, with no special meaning, matches itself
 	  the text has to be compared with each character in the collection.
 	  Use one of the other atoms above when possible.  Example: "\d" is
 	  much faster than "[0-9]" and matches the same characters.
+
+						*/\%[]*
+\%[]	A list of optionally matched atoms.  This always matches.
+	It matches as much of the list of atoms it contains as possible.  Thus
+	it stops at the first atom that doesn't match.  For example: >
+		/r\%[ead]
+<	matches "r", "re", "rea" or "read".  The longest that matches is used.
+	To match the Ex command "function", where "fu" is required and
+	"nction" is optional, this would work: >
+		/\<fu\%[nction]\>
+<	The end-of-word atom "\>" is used to avoid matching "fu" in "full".
+	It gets more complicated when the atoms are not ordinary characters.
+	You don't often have to use it, but it is possible.  Example: >
+		/\<r\%[[eo]ad]\>
+<	Matches the words "r", "re", "ro", "rea", "roa", "read" and "road".
+	{not available when compiled without the +syntax feature}
 
 
 Ignoring case in a pattern					*/ignorecase*

@@ -3,8 +3,10 @@
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
 " Last Change:	Fri Apr  3 11:09:41 1998
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword slrnrcTodo		contained Todo
 

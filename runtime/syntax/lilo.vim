@@ -1,15 +1,17 @@
 " Vim syntax file
 " Language:	lilo
 " Maintainer:	David Necas (Yeti) <yeti@physics.muni.cz>
-" Last Change:	2000 Nov 12
+" Last Change:	2001 Jan 15
 " URL:		http://physics.muni.cz/~yeti/download/lilo.vim
 "
 " slightly overengineered now. 
 " deny-all based: virtually everything is error and only what is recognized
 " is higlighted otherwise
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 set iskeyword=a-z,A-Z,48-57,.,-,_

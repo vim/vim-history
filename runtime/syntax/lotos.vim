@@ -7,7 +7,10 @@
 " I'm not sure I understand all of the syntax highlight language,
 " but this file seems to do the job for standard LOTOS.
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

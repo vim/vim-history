@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		lace
 " Maintainer:	Jocelyn Fiat <utilities@eiffel.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Copyright Interactive Software Engineering, 1998
 " You are free to use this file as you please, but
@@ -9,8 +9,10 @@
 " it to the maintainer at <utilities@eiffel.com>
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " LACE is case insensitive, but the style guide lines are not.
 

@@ -2,15 +2,19 @@
 " Language:		M4
 " Maintainer:	Claudio Fleiner
 " URL:			http://www.fleiner.com/vim/syntax/m4.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " This file will highlight user function calls if they use only
 " capital letters and have at least one argument (i.e. the '('
 " must be there). Let me know if this is a problem.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " we define it here so that included files can test for it
 if !exists("main_syntax")
-  syn clear
   let main_syntax='m4'
 endif
 

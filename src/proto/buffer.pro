@@ -1,13 +1,14 @@
 /* buffer.c */
 int open_buffer __ARGS((int read_stdin, exarg_t *eap));
 int buf_valid __ARGS((buf_t *buf));
-void close_buffer __ARGS((win_t *win, buf_t *buf, int free_buf, int del_buf));
+void close_buffer __ARGS((win_t *win, buf_t *buf, int action));
 void buf_clear __ARGS((buf_t *buf));
 void buf_freeall __ARGS((buf_t *buf, int del_buf));
 char_u *do_bufdel __ARGS((int command, char_u *arg, int addr_count, int start_bnr, int end_bnr, int forceit));
 int do_buffer __ARGS((int action, int start, int dir, int count, int forceit));
+void set_curbuf __ARGS((buf_t *buf, int action));
 void enter_buffer __ARGS((buf_t *buf));
-buf_t *buflist_new __ARGS((char_u *ffname, char_u *sfname, linenr_t lnum, int use_curbuf));
+buf_t *buflist_new __ARGS((char_u *ffname, char_u *sfname, linenr_t lnum, int use_curbuf, int secret));
 void free_buf_options __ARGS((buf_t *buf, int free_p_ff));
 int buflist_getfile __ARGS((int n, linenr_t lnum, int options, int forceit));
 void buflist_getfpos __ARGS((void));
@@ -24,7 +25,7 @@ int buflist_name_nr __ARGS((int fnum, char_u **fname, linenr_t *lnum));
 int setfname __ARGS((char_u *ffname, char_u *sfname, int message));
 void setaltfname __ARGS((char_u *ffname, char_u *sfname, linenr_t lnum));
 char_u *getaltfname __ARGS((int errmsg));
-int buflist_add __ARGS((char_u *fname, int use_curbuf));
+int buflist_add __ARGS((char_u *fname, int use_curbuf, int secret));
 void buflist_slash_adjust __ARGS((void));
 void buflist_altfpos __ARGS((void));
 int otherfile __ARGS((char_u *ffname));
@@ -50,4 +51,5 @@ linenr_t buf_delsign __ARGS((buf_t *buf, int id));
 int buf_findsign __ARGS((buf_t *buf, int id));
 int buf_findsign_id __ARGS((buf_t *buf, linenr_t lnum));
 void buf_delete_all_signs __ARGS((void));
+void set_bufsecret __ARGS((int on));
 /* vim: set ft=c : */

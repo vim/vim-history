@@ -2,10 +2,12 @@
 " Language:	Icon
 " Maintainer:	Wendell Turner <wturner@halcyon.com>
 " URL:          ftp://ftp.halcyon.com/pub/users/wturner/icon.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Builtin Functions
 syn keyword  iconFunction   abs acos any args asin atan bal

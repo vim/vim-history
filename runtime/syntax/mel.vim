@@ -4,8 +4,10 @@
 " Last Change:	May 27 1999
 " Based on:	Bram Moolenaar <Bram@vim.org> C syntax file
 
-" Remove any old syntax stuff hanging around
-sy clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " when wanted, highlight trailing white space and spaces before tabs
 if exists("mel_space_errors")

@@ -3,18 +3,18 @@ Also test deleting the last buffer, should give a new, empty buffer.
 
 STARTTEST
 :so small.vim
-:au BufLeave Xxx bdel
+:au BufLeave Xxx bwipe
 /start of
 :.,/end of/w! Xxx               " write test file Xxx
 :sp Xxx                         " split to Xxx
-:bdel                           " delete buffer Xxx, now we're back here
+:bwipe                          " delete buffer Xxx, now we're back here
 G?this is a
 othis is some more text
 :                               " Append some text to this file
 :?start?,$w! test.out           " Write current file contents
-:bdel test.out                  " delete alternate buffer
-:au bufleave test5.in bdel
-:bdel!                          " delete current buffer, get an empty one
+:bwipe test.out                 " delete alternate buffer
+:au bufleave test5.in bwipe
+:bwipe!                         " delete current buffer, get an empty one
 ithis is another test line:w >>test.out
 :                               " append an extra line to the output file
 :qa!

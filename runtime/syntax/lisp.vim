@@ -6,8 +6,11 @@
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 if version >= 600
  setlocal iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
 else

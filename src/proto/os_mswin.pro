@@ -8,6 +8,7 @@ int mch_can_restore_icon __ARGS((void));
 int mch_FullName __ARGS((char_u *fname, char_u *buf, int len, int force));
 int mch_isFullName __ARGS((char_u *fname));
 void slash_adjust __ARGS((char_u *p));
+int vim_stat __ARGS((const char *name, struct stat *stp));
 void mch_suspend __ARGS((void));
 void mch_errmsg __ARGS((char *str));
 void mch_display_error __ARGS((void));

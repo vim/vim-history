@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	man
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Dec 08
+" Last Change:	2001 Jan 19
 
 " To make the ":Man" command available before editing a manual page, source
 " this script from your startup vimrc file.
@@ -32,7 +32,7 @@ if &filetype == "man"
 endif
 
 if !exists(":Man")
-  com -nargs=1 Man call <SID>GetPage(<q-args>)
+  com -nargs=1 Man call <SID>GetPage(<f-args>)
 endif
 
 " Define functions only once.
@@ -115,7 +115,7 @@ func <SID>GetPage(...)
       endwhile
     endif
   endif
-  exec "edit $HOME/".page
+  exec "edit $HOME/".page.".".sect."~"
 
   exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
@@ -125,6 +125,8 @@ func <SID>GetPage(...)
     exec "norm 2G/^[^\s]\<cr>kd1G"
   endif
   setl ft=man nomod
+  setl bufhidden=hide
+  setl bufsecret
 endfunc
 
 func <SID>PopPage()

@@ -3,7 +3,11 @@
 " Maintainer:	rms@poczta.onet.pl
 " Last change:  21 Jul 2000
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syntax case match
 syn keyword fglKeyword ABORT ABS ABSOLUTE ACCEPT ACCESS ACOS ADD AFTER ALL
 syn keyword fglKeyword ALLOCATE ALTER AND ANSI ANY APPEND ARG_VAL ARRAY ARR_COUNT

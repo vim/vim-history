@@ -3,11 +3,14 @@
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
 " Last Change:	10 Aug 1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C++ syntax to start with
 syn include @cppTopLevel <sfile>:p:h/cpp.vim
+unlet b:current_syntax
 
 syn region pcctsAction matchgroup=pcctsDelim start="<<" end=">>?\=" contains=@cppTopLevel,pcctsRuleRef
 

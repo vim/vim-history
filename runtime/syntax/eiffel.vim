@@ -3,11 +3,12 @@
 " Maintainer:	Reimer Behrends <behrends@cse.msu.edu>
 "		With much input from Jocelyn Fiat <fiat@eiffel.com>
 " See http://www.cse.msu.edu/~behrends/vim/ for the most current version.
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Option handling
 

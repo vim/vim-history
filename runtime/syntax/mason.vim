@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2000 Dec 17
+" Last change: 2001 Jan 15
 " URL:         http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
@@ -13,16 +13,21 @@
 "  - Fix <%text> blocks to show HTML tags but ignore Mason tags.
 "
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'mason'
 endif
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 syn cluster htmlPreproc add=@masonTop
 
 syn include @perlTop <sfile>:p:h/perl.vim
+unlet b:current_syntax
 
 " It's hard to reduce down to the correct sub-set of Perl to highlight in some
 " of these cases so I've taken the safe option of just using perlTop in all of

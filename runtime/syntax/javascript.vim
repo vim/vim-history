@@ -2,18 +2,18 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
-" Remove any old syntax stuff hanging around
-syn clear
 syn case ignore
 
 if !exists("main_syntax")
   let main_syntax = 'javascript'
 endif
-
-let b:current_syntax = "javascript"
 
 syn match   javaScriptLineComment      "\/\/.*$"
 syn match   javaScriptCommentSkip      "^[ \t]*\*\($\|[ \t]\+\)"

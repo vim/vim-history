@@ -3,7 +3,11 @@
 " Maintainer:   Allan Kelly <allan@fruitloaf.co.uk>
 " Version:      5.6(synched), Sat Jan 22 14:28:42 GMT 2000
 "               5.6.1(minor revisions) Mon Jan 24 08:43:34 GMT 2000
-syn clear
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match      apacheComment       "^\s*#.*$"
 syn keyword apachedeclaration ResourceConfig AccessConfig LoadModule

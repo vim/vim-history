@@ -69,13 +69,14 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0s
+MINOR = 0t
 
 # CHECKLIST for creating a new version:
 #
-# - Update Vim version number in: src/version.h, Contents, MAJOR/MINOR above,
-#   VIMRTDIR in src/Makefile, GvimExt/GvimExt.reg, README*.txt,
-#   runtime/doc/*.txt.
+# - Update Vim version number.  For a test version in: src/version.h, Contents,
+#   MAJOR/MINOR above, VIMRTDIR in src/Makefile, README*.txt,
+#   runtime/doc/*.txt.  For a minor/major version: GvimExt/GvimExt.reg,
+#   src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
 # - With these features: "make proto" (requires cproto; ignore warnings for

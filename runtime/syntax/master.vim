@@ -8,8 +8,10 @@
 " this is a very simple syntax file - I will be improving it
 " add entire DEFINE syntax
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case match
 

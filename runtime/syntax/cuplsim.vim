@@ -1,13 +1,16 @@
 " Vim syntax file
 " Language:	CUPL simulation
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syn stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the CUPL syntax to start with
-runtime syntax/cupl.vim
+runtime! syntax/cupl.vim
+unlet b:current_syntax
 
 " omit definition-specific stuff
 syn clear cuplStatement

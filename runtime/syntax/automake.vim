@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	automake Makefile.am
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last change:	2000 Dec 17
+" Last change:	2001 Jan 15
 
 
 " This script adds support for automake's Makefile.am format. It highlights
@@ -10,9 +10,14 @@
 " when they are used in an inappropriate place, such as in defining
 " EXTRA_SOURCES.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the Makefile syntax to start with
-runtime syntax/make.vim
+runtime! syntax/make.vim
+unlet b:current_syntax
 
 syn match automakePrimary "^[A-Za-z0-9_]\+\(_PROGRAMS\|LIBRARIES\|_LIST\|_SCRIPTS\|_DATA\|_HEADERS\|_MANS\|_TEXINFOS\|_JAVA\|_LTLIBRARIES\)\s*="me=e-1
 syn match automakePrimary "^TESTS\s*="me=e-1

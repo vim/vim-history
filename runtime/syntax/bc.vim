@@ -1,11 +1,14 @@
 " Vim syntax file
 " Language:	bc - An arbitrary precision calculator language
 " Maintainer:	Vladimir Scholtz <vlado@gjh.sk>
-" Last change:	2000 Nov 04
+" Last change:	2001 Jan 15
 " Available on:	www.gjh.sk/~vlado/bc.vim
 
-" Remove any old syntax
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Keywords

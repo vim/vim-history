@@ -6,6 +6,12 @@
 "               b:verilog_indent_modules -- indenting after the declaration
 "                                           of modules, functions, tasks, etc.
 
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
+
 setlocal indentkeys=:,o,O,e,=begin,=else,=end,=join,=endcase
 setlocal indentkeys+==endmodule,=endfunction,=endtask,=endspecify
 setlocal indentexpr=GetVerilogIndent()

@@ -21,10 +21,14 @@
 "   http://www.w3.org/TR/1998/REC-xml-19980210
 "   http://www.w3.org/XML/1998/06/xmlspec-report-19980910.htm
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 let s:xml_cpo_save = &cpo
 set cpo&vim
 
-syn clear
 syn case match
 
 " mark illegal characters
@@ -185,6 +189,7 @@ syn region  xmlDocType matchgroup=xmlDocTypeDecl start="<!DOCTYPE"he=s+2,rs=s+2 
 syn keyword xmlDocTypeKeyword contained DOCTYPE PUBLIC SYSTEM
 syn region  xmlInlineDTD contained start="\[" end="]" contains=@xmlDTD
 syn include @xmlDTD <sfile>:p:h/dtd.vim
+unlet b:current_syntax
 
 
 " synchronizing

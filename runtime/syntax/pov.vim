@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	POV-Ray(tm) 3.1 Screen Description Language
 " Maintainer:	David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " BETA VERSION
 " Rewritten from scratch; has nothing to do with T. Scott Urban's pov.vim file.
@@ -12,8 +12,10 @@
 "   highlight more syntax errors
 "   decide once for all what is descriptor and what is modifier or merge them together
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case match
 " `top level' stuff

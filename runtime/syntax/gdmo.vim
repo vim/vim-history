@@ -3,10 +3,12 @@
 "		(ISO-10165-4; Guidelines for the Definition of Managed Object)
 " Maintainer:	Gyuman Kim <violino@dooly.modacom.co.kr>
 " URL:		http://dooly.modacom.co.kr/~violino/gdmo.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " keyword definitions
 syn match   gdmoCategory      "MANAGED\s\+OBJECT\s\+CLASS"

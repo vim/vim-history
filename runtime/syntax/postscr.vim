@@ -14,8 +14,10 @@
 " postscr_andornot_binary	- highlight and, or, and not as binary operators (not logical)
 "
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " PostScript is case sensitive
 syn case match

@@ -8,17 +8,21 @@
 " the standard WEB distribution, available for anonymous ftp at
 " ftp://labrea.stanford.edu/pub/tex/web/.
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Although WEB is the ur-language for the "Literate Programming" paradigm,
 " we base this syntax file on the modern superset, CWEB.  Note: This shortcut
 " may introduce some illegal constructs, e.g., CWEB's "@c" does _not_ start a
 " code section in WEB.  Anyway, I'm not a WEB programmer.
-runtime syntax/cweb.vim
+runtime! syntax/cweb.vim
+unlet b:current_syntax
 
 " Replace C/C++ syntax by Pascal syntax.
 syntax include @webIncludedC <sfile>:p:h/pascal.vim
+unlet b:current_syntax
 
 " Double-@ means single-@, anywhere in the WEB source (as in CWEB).
 " Don't misinterpret "@'" as the start of a Pascal string.

@@ -4,8 +4,11 @@
 " Last change:	September 14, 2000
 " Based on lisp.vim by : Dr. Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 set iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
 
 " Lists

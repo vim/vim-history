@@ -1,12 +1,15 @@
 " Vim syntax file
 " Language:	Squid config file
 " Maintainer:	Klaus Muth <muth@hagos.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " URL:		http://unitopia.uni-stuttgart.de/~monty/vim/syntax/squid.vim
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " squid.conf syntax seems to be case insensitive
 syn case ignore
 

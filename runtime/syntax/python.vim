@@ -23,8 +23,10 @@
 "    let python_highlight_all = 1
 "
 
-" remove old syntax
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword pythonStatement	break continue del
 syn keyword pythonStatement	except exec finally

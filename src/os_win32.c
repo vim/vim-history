@@ -2789,7 +2789,7 @@ pstrcmp(
     const void *a,
     const void *b)
 {
-    return (_stricoll(* (char **)a, * (char **)b));
+    return (pathcmp(* (char **)a, * (char **)b));
 }
 
 

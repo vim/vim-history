@@ -801,7 +801,7 @@ bufselfcmd(ref, interp, objc, objv)
     curbuf = savebuf;
     curwin = savewin;
     if (flags & FL_ADJUST_CURSOR)
-	adjust_cursor();
+	check_cursor();
     if (flags & (FL_UPDATE_SCREEN | FL_UPDATE_CURBUF))
 	update_screen(NOT_VALID);
 

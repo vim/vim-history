@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.s.  Last change: 2000 Jul 07
+*usr_02.txt*	For Vim version 6.0t.  Last change: 2001 Jan 20
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -15,10 +15,16 @@ Table of contents: |usr_toc.txt|
 *02.1*	Opening a file
 
 It all starts by typing this command in your shell: >
+
 	vim foobar
+
 Where "foobar" is the name of the file you want to edit.
 
 TODO
+
+If you type "u" twice, and the result is that you get the same text back, you
+probably have Vim configured to work Vi compatible.  Look here to fix this:
+|not-compatible|.
 
 ==============================================================================
  vim:tw=78:

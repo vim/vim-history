@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

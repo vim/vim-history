@@ -3,8 +3,11 @@
 " Maintainer:	Rafal Sulejman <rms@poczta.onet.pl>
 " Last change:	21 Jun 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syntax case ignore
 " A bunch of useful SNOBOL keywords
 syn match snobol4Label	"^[^ \t]*"

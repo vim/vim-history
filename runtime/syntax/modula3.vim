@@ -1,13 +1,15 @@
 " Vim syntax file
 " Language:	Modula-3
 " Maintainer:	Timo Pedersen <dat97tpe@ludat.lth.se>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Basic things only...
 " Based on the modula 2 syntax file
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Modula-3 is case-sensitive
 " syn case ignore

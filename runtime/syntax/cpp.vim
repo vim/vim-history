@@ -1,13 +1,16 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ccshan@post.harvard.edu>
-" Last change:	2000 Dec 17
+" Last change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-runtime syntax/c.vim
+runtime! syntax/c.vim
+unlet b:current_syntax
 
 " C++ extentions
 

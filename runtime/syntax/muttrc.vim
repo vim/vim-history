@@ -9,8 +9,10 @@
 " To get a syntax file for your specific version, see
 "	http://www.student.dtu.dk/~c928400/vim
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Set the keyword characters
 set isk=@,48-57,_,-

@@ -247,11 +247,11 @@ static LOGFONT norm_logfont;
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c d)
 # define MyTranslateMessage(x) global_ime_TranslateMessage(x)
 #else
-# ifdef FEAT_MBYTE
-#  define MyTranslateMessage(x) LCTranslateMessage(x)
-# else
+// # ifdef FEAT_MBYTE
+// #  define MyTranslateMessage(x) LCTranslateMessage(x)
+// # else
 #  define MyTranslateMessage(x) TranslateMessage(x)
-# endif
+// # endif
 #endif
 
 /* Local variables: */
@@ -4015,6 +4015,7 @@ gui_mch_draw_part_cursor(
     DeleteBrush(hbr);
 }
 
+#if 0	    /* DISABLED - has been reported not to work */
 #ifdef FEAT_MBYTE
 /*
  * locale-aware TranslateMessage replacement
@@ -4072,6 +4073,7 @@ LCTranslateMessage(CONST MSG *lpMsg)
     }
     return TRUE;
 }
+#endif
 #endif
 
 /*

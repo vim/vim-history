@@ -3,9 +3,12 @@
 " Maintainer:	Paul Terray <mailto:terray@4dconcept.fr>
 " Last Change:	11 Oct 2000
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 set iskeyword=@,48-57,_,128-167,224-235,-
-" remove old syntax
-syn clear
 
 syn keyword omnimarkKeywords	ACTIVATE AGAIN
 syn keyword omnimarkKeywords	CATCH CLEAR CLOSE COPY COPY-CLEAR CROSS-TRANSLATE

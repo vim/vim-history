@@ -1,13 +1,15 @@
 " Vim syntax file
 " Language:	Model
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " very basic things only (based on the vgrindefs file).
 " If you use this language, please improve it, and send me the patches!
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of keywords
 syn keyword modelKeyword abs and array boolean by case cdnl char copied dispose

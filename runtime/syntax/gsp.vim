@@ -15,21 +15,25 @@
 "               'matchgroup=htmlError' part on the gspInLine line or change it
 "               to something else
 
-" Clear existing syntax
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'gsp'
 endif
 
 " Source HTML syntax
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 " Next syntax items are case-sensitive
 syn case match
 
 " Include Java syntax
 syn include @gspJava <sfile>:p:h/java.vim
+unlet b:current_syntax
 
 " Add <java> as an HTML tag name along with its args
 syn keyword htmlTagName contained java

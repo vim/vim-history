@@ -363,7 +363,15 @@ decl(lp)
 check_cursor_lnum()
 {
     if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+    {
+#ifdef FEAT_FOLDING
+	/* If there is a closed fold at the end of the file, put the cursor in
+	 * its first line.  Otherwise in the last line. */
+	if (!hasFolding(curbuf->b_ml.ml_line_count,
+						&curwin->w_cursor.lnum, NULL))
+#endif
+	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+    }
     if (curwin->w_cursor.lnum <= 0)
 	curwin->w_cursor.lnum = 1;
 }
@@ -408,7 +416,7 @@ check_cursor_col()
  * make sure curwin->w_cursor in on a valid character
  */
     void
-adjust_cursor()
+check_cursor()
 {
     check_cursor_lnum();
     check_cursor_col();
@@ -889,14 +897,14 @@ vim_strsave_escaped(string, esc_chars)
      * First count the number of backslashes required.
      * Then allocate the memory and insert them.
      */
-    length = 1;				/* count the trailing '/' and NUL */
+    length = 1;				/* count the trailing NUL */
     for (p = string; *p; p++)
     {
 #ifdef FEAT_MBYTE
 	if (has_mbyte && (l = mb_ptr2len_check(p)) > 1)
 	{
-	    length += l;
-	    p += l - 1;	/* skip multibyte */
+	    length += l;		/* count a multibyte char */
+	    p += l - 1;
 	    continue;
 	}
 #endif
@@ -915,7 +923,7 @@ vim_strsave_escaped(string, esc_chars)
 	    {
 		mch_memmove(p2, p, (size_t)l);
 		p2 += l;
-		p += l - 1;	/* skip multibyte char  */
+		p += l - 1;		/* skip multibyte char  */
 		continue;
 	    }
 #endif
@@ -1088,7 +1096,7 @@ copy_option_part(option, buf, maxlen, sep_chars)
     /* skip '.' at start of option part, for 'suffixes' */
     if (*p == '.')
 	buf[len++] = *p++;
-    while (*p && vim_strchr((char_u *)sep_chars, *p) == NULL)
+    while (*p != NUL && vim_strchr((char_u *)sep_chars, *p) == NULL)
     {
 	/*
 	 * Skip backslash before a separator character and space.
@@ -1101,6 +1109,8 @@ copy_option_part(option, buf, maxlen, sep_chars)
     }
     buf[len] = NUL;
 
+    if (*p != NUL)		/* skip separator */
+	++p;
     p = skip_to_option_part(p);	/* p points to next file name */
 
     *option = p;
@@ -4834,5 +4844,71 @@ sort_strings(files, count)
     int		count;
 {
     qsort((void *)files, (size_t)count, sizeof(char_u *), sort_compare);
+}
+#endif
+
+#if !defined(NO_EXPANDPATH) || defined(PROTO)
+/*
+ * Compare path "p[]" to "q[]".
+ * Return value like strcmp(p, q), but consider path separators.
+ */
+    int
+pathcmp(p, q)
+    const char *p, *q;
+{
+    int		i;
+    const char	*s;
+
+    for (i = 0; ; ++i)
+    {
+	/* End of "p": check if "q" also ends or just has a slash. */
+	if (p[i] == NUL)
+	{
+	    if (q[i] == NUL)  /* full match */
+		return 0;
+	    s = q;
+	    break;
+	}
+
+	/* End of "q": check if "p" just has a slash. */
+	if (q[i] == NUL)
+	{
+	    s = p;
+	    break;
+	}
+
+	if (
+#ifdef CASE_INSENSITIVE_FILENAME
+		TO_UPPER(p[i]) != TO_UPPER(q[i])
+#else
+		p[i] != q[i]
+#endif
+#ifdef BACKSLASH_IN_FILENAME
+		/* consider '/' and '\\' to be equal */
+		&& !((p[i] == '/' && q[i] == '\\')
+		    || (p[i] == '\\' && q[i] == '/'))
+#endif
+		)
+	{
+	    if (vim_ispathsep(p[i]))
+		return -1;
+	    if (vim_ispathsep(q[i]))
+		return 1;
+	    return ((char_u *)p)[i] - ((char_u *)q)[i];	    /* no match */
+	}
+    }
+
+    /* ignore a trailing slash, but not "//" or ":/" */
+    if (s[i + 1] == NUL && i > 0 && !vim_ispathsep(s[i - 1])
+#ifdef BACKSLASH_IN_FILENAME
+	    && (s[i] == '/' || s[i] == '\\')
+#else
+	    && s[i] == '/'
+#endif
+       )
+	return 0;   /* match with trailing slash */
+    if (s == q)
+	return -1;	    /* no match */
+    return 1;
 }
 #endif

@@ -2,20 +2,24 @@
 " Language:	HTML and M4
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/htmlm4.vim
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " we define it here so that included files can test for it
 if !exists("main_syntax")
-  syn clear
   let main_syntax='htmlm4'
 endif
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 syn case match
 
-runtime syntax/m4.vim
+runtime! syntax/m4.vim
+unlet b:current_syntax
 syn cluster htmlPreproc add=@m4Top
 syn cluster m4StringContents add=htmlTag,htmlEndTag
 

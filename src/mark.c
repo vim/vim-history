@@ -481,8 +481,8 @@ fname2fnum(fm)
 	mch_dirname(IObuff, IOSIZE);
 	p = shorten_fname(NameBuff, IObuff);
 
-	/* buflist_new will call fmarks_check_names() */
-	(void)buflist_new(NameBuff, p, (linenr_t)1, FALSE);
+	/* buflist_new() will call fmarks_check_names() */
+	(void)buflist_new(NameBuff, p, (linenr_t)1, FALSE, TRUE);
     }
 }
 
@@ -818,6 +818,7 @@ ex_jumps(eap)
  * If 'amount_after' is non-zero adjust marks after line2.
  * Example: Delete lines 34 and 35: mark_adjust(34, 35, MAXLNUM, -2);
  * Example: Insert two lines below 55: mark_adjust(56, MAXLNUM, 2, 0);
+ *				   or: mark_adjust(56, 55, MAXLNUM, 2);
  */
     void
 mark_adjust(line1, line2, amount, amount_after)

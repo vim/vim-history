@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.s.  Last change: 2001 Jan 14
+*version6.txt*  For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -16,6 +16,7 @@ See |version4.txt| for differences between Vim 3.0 and Vim 4.0.
 See |version5.txt| for differences between Vim 4.0 and Vim 5.0.
 
 INCOMPATIBLE CHANGES			|incompatible-6|
+
 Cursor position in Visual mode		|curpos-visual|
 substitute command			|substitute-CR|
 'include' option local			|include-local|
@@ -23,12 +24,14 @@ global option values used		|new-global-values|
 'fileencoding' obsolete			|fileencoding-obsolete|
 Digraphs changed			|digraphs-changed|
 Filetype detection changed		|filetypedetect-changed|
+Secret buffers introduced		|new-secret-buffers|
 CTRL-U in Command-line mode		|CTRL-U-changed|
 Ctags gone				|ctags-gone|
 Documentation				|documentation-6|
 Small incompatibilities			|incomp-small-6|
 
 NEW FEATURES
+
 Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
 Extended search patterns		|new-searchpat|
@@ -136,9 +139,41 @@ This caused confusion with the FileType event name.  The group is now called
 autocommands will not be removed by ":filetype off".
 The support for 'runtimepath' has made the "myfiletypefile" and "mysyntaxfile"
 mechanism obsolete.  They are still used for backwards compatibility.
+
 The connection between the FileType event and setting the 'syntax' option was
 previously in the "syntax" autocommand group.  That caused confusion with the
 Syntax event name.  The group is now called "syntaxset".
+
+The distributed syntax files no longer contain "syntax clear".  That makes it
+possible to include one in the other without tricks.
+
+
+Secret buffers introduced			*new-secret-buffers*
+-------------------------
+
+Introduction of secret buffers: Make a difference between buffers which don't
+appear in the buffer list and buffers which are really not in the buffer list.
+Commands like ":ls", ":bnext", ":blast" and the Buffers menu will skip secret
+buffers now. |secret-buffer|
+The 'bufsecret' option can be used to make a buffer secret or not.
+Several commands that previously added a buffer now add a secret buffer.  This
+means that a ":bnext" or ":ball" will not find these files until they have
+actually been edited.  For example, buffers used for the alternative file by
+":w file" and ":r file".
+Other commands previously completely removed a buffer and now only make the
+buffer secret.  Commands relying on a buffer not to be present might fail.
+For example A ":bdelete" command in an autocommand that relied on something
+following to fail (was used in the automatic tests).  Also, option values are
+not reset when ":bdel" is used.  |:bwipeout| can be used for the old meaning
+of ":bdel".
+The BufDelete autocommand event is now triggered when a buffer becomes
+secret.  The BufCreate event is only triggered when a non-secret buffer is
+created, or when a secret buffer is no longer secret.  The new BufSecret and
+BufWipeout events take over the meaning of really adding a buffer or really
+deleting it.
+When doing Insert mode completion only non-secret buffers are scanned.  Added
+the 'S' flag to 'complete' to do completion from secret buffers.
+Secret buffers are not stored in a viminfo file.
 
 
 CTRL-U in Command-line mode			*CTRL-U-changed*
@@ -358,6 +393,13 @@ Multi-line patterns: (Loic Grenie)
 
 \&		match only when branch before and after it match
 
+\%[]		optionally match a list of atoms; "end\%[if]" matches "end",
+		"endi" and "endif"
+\%(\)		like \(\), but without creating a back-reference; there can be
+		any number of these, overcomes the limit of nine \( \) pairs
+\%^		match start-of-file (Chase Tingley)
+\%$		match end-of-file (Chase Tingley)
+
 For syntax items:
 \z(...\)	external reference match set (in region start pattern)
 \z1 - \z9	external reference match use (in region skip or end pattern)
@@ -458,6 +500,13 @@ The first line of each help file is automagically added to the "LOCAL
 ADDITIONS" section in doc/help.txt.
 
 <unique> argument to ":map": only add a mapping when it wasn't defined before.
+
+When displaying an option value with 'verbose' set will give a message about
+where the option was last set.  Very useful to find out which script did set
+the value.
+
+The new |:scriptnames| command displays a list of all scripts that have been
+sourced.
 
 
 Filetype plugins				*new-filetype-plugins*
@@ -685,6 +734,14 @@ restored.  It's like ":mksession" for one window.
 The View also contains the local argument list and manually created, opened
 and closed folds.
 
+Added the ":loadview" command and the 'viewdir' option: Allows for saving and
+restoring views of a file with simple commands. ":mkview 1" saves view 1 for
+the current file, ":loadview 1" loads it again.  Also allows quickly switching
+between two views on one file.  And saving and restoring manual folds and the
+folding state.
+
+Added 'viewoptions' to specify how ":mkview" works.
+
 ":mksession" now also works fine with vertical splits.  It has been further
 improved and restores the view of each window.  It also works properly with
 preview and quickfix windows.
@@ -716,9 +773,14 @@ Options: ~
 'debug'		When set to "msg" it will print error messages that would
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
+'fold...'	Many new options for folding.
 'modifiable'	When off, it is impossible to make changes to a buffer.
 'previewwindow' Set in the preview window.  Used in a session file to mark a
 		window as the preview window.
+'secret'	Makes a buffer skipped for ":bnext" and ":ls".
+
+Use "vim{version}:" for modelines, only to be executed when the version is
+>= {version}.  Also "vim>{version}", "vim<{version}" and "vim={version}".
 
 
 Ex commands: ~
@@ -783,6 +845,7 @@ New functions: ~
 executable()	Checks if a program or batch script can be executed.
 filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
+foldcloseend()	Find the end of a closed fold.
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
 getchar()	Get one character from the user.  Can be used to define a
 		mapping that takes an argument.
@@ -802,6 +865,8 @@ mode()		Return a string that indicates the current mode.
 nextnonblank()	Skip blank lines forwards.
 prevnonblank()	Skip blank lines backwards.  Useful to for indent scripts.
 search()	Search for a pattern.
+searchpair()	Search for matching pair.  Can be used in indent files to find
+		the "if" matching an endif.
 setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
 setwinvar()	sets an option or variable local to a window (Ron Aaron)
 stridx()	Search for first occurrence of one string in another.
@@ -810,6 +875,29 @@ tolower()	Convert string to all-lower case.
 toupper()	Convert string to all-upper case.
 type()		Check the type of an expression.
 winwidth()	Width of a window. (Johannes Zellner)
+
+
+New autocommand events: ~
+BufReadAfter	Triggered after using the modelines.  Can be used to load a
+		view.
+BufWinLeave	Triggered when a buffer is no longer in a window.  Also
+		triggered when exiting Vim.  Can be used to save views.
+FileChangedRO	Triggered before making the first change to a read-only file.
+		Can be used to check-out the file. (Scott Graham)
+TermResponse	Triggered when the terminal replies to the version-request.
+		The v:termresponse internal variable holds the result.  Can be
+		used to react to the version of the terminal.  (Ronald Schild)
+FileReadCmd	Triggered before reading a file.
+BufReadCmd	Triggered before reading a file into a buffer.
+FileWriteCmd	Triggered before writing a file.
+BufWriteCmd	Triggered before writing a buffer into a file.
+FileAppendCmd	Triggered before appending to a file.
+FuncUndefined	Triggered when a user function is not defined. (Ron Aaron)
+
+The autocommands for the *Cmd events read or write the file instead of normal
+file read/write.  Use this in netrw.vim to be able to edit files on a remote
+system. (Charles Campbell)
+
 
 New Syntax files: ~
 Debian Control file and Debian Changelog syntax files. (Wichert Akkerman)
@@ -865,6 +953,10 @@ an expression.  The submatch() function can be used to access submatches.
 
 When dragging the status line or the vertical separator, mouse codes are
 skipped to avoid that the redrawing lags behind too much.
+
+When doing ":qall" and there is a change in a buffer that is being edited in
+another window, jump to that window, instead of editing that buffer in the
+current window.
 
 Added the "++cc=" and "++ff=" arguments to file read/write commands to force
 using the given 'charcode' or 'fileformat'.  And the "v:cmdarg" variable, to
@@ -948,17 +1040,8 @@ Win32: When $HOMEDRIVE and $HOMEPATH are defined, use them to define $HOME.
 Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
 
-Autocommands:
-Added the FileReadCmd, BufReadCmd, FileWriteCmd, BufWriteCmd, FileAppendCmd:
-use autocommands instead of normal file read/write.  Use this in netrw.vim to
-be able to edit files on a remote system. (Charles Campbell) FuncUndefined:
-When a user function is not defined. (Ron Aaron)
-
-Added TermResponse autocommand event and v:termresponse internal variable.
-Can be used to react to the version of the terminal.  (Ronald Schild)
-
-Added FileChangedRO event: Triggered before making the first change to a
-read-only file.  Can be used to check-out the file. (Scott Graham)
+Also trigger the BufUnload event when Vim is going to exit.  Perhaps some
+cleaning up is required.
 
 GUI:
 - X11: When a color can't be allocated, use the nearest match from the
@@ -1480,5 +1563,36 @@ When in a while loop the line number for error messages stayed fixed.  Now the
 line number is remembered in the while loop.
 
 "cd c:/" didn't work on MS-DOS.  mch_isdir() removed a trailing slash.
+
+MS-Windows: getftime() didn't work when a directory had a trailing slash or
+backslash.  Didn't show the time in the explorer because of this.
+
+When doing wildcard completion, a directory "a/" sorted after "a-b".  Now
+recognize path separators when sorting files.
+
+Non-Unix systems: When editing "c:/dir/../file" and "c:/file" they were
+created as different buffers, although it's the same file.  Expand to a full
+file name also when an absolute name contains "..".
+
+"g&" didn't repeat the last substitute properly.
+
+When 'clipboard' was set to "unnamed", a "Y" command would not write to "0.
+Now make a copy of register 0 to the clipboard register.
+
+When the search pattern matches in many ways, it could not always be
+interrupted with a CTRL-C.  And CTRL-C would have to be hit once for every
+line when 'hlsearch' is on.
+When 'incsearch' is on and interrupting the search for a match, don't abandon
+the command line.
+
+When turning a directory name into a full path, e.g., with fnamemodify(),
+sometimes a slash was added.  Make this consistent: Don't add a slash.
+
+When a file name contains a "!", using it in a shell command will cause
+trouble: ":!cat %".  Escape the "!" to avoid that.  Escape it another time
+when 'shell' contains "sh".
+
+Completing a file name that has a tail that starts with a "~" didn't work:
+":e view/~<Tab>".
 
  vim:tw=78:

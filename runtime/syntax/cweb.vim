@@ -13,18 +13,22 @@
 " TODO: names, and leaves C/C++ comments as such. (On the other hand,
 " TODO: switching to TeX mode in C/C++ comments might be colour overkill.)
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " For starters, read the TeX syntax; TeX syntax items are allowed at the top
 " level in the CWEB syntax, e.g., in the preamble.  In general, a CWEB source
 " code can be seen as a normal TeX document with some C/C++ material
 " interspersed in certain defined regions.
-runtime syntax/tex.vim
+runtime! syntax/tex.vim
+unlet b:current_syntax
 
 " Read the C/C++ syntax too; C/C++ syntax items are treated as such in the
 " C/C++ section of a CWEB chunk or in inner C/C++ context in "|...|" groups.
 syntax include @webIncludedC <sfile>:p:h/cpp.vim
+unlet b:current_syntax
 
 " Inner C/C++ context (ICC) should be quite simple as it's comprised of
 " material in "|...|"; however the naive definition for this region would

@@ -2,10 +2,12 @@
 " Language:	Modula 2
 " Maintainer:	pf@artcom0.north.de (Peter Funk)
 "   based on original work of Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Don't ignore case (Modula-2 is case significant). This is the default in vim
 

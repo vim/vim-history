@@ -503,10 +503,10 @@ EXTERN int	vr_virtoffset INIT(= 0);  /* Offset when columns can't align */
  * Used to protect areas where we could crash.
  */
 EXTERN JMP_BUF lc_jump_env;	/* argument to SETJMP() */
-# ifdef FEAT_EVAL
+#ifdef SIGHASARG
 EXTERN int lc_signal;		/* catched signal number, 0 when no was signal
 				   catched; used for mch_libcall() */
-# endif
+#endif
 EXTERN int lc_active INIT(= FALSE); /* TRUE when lc_jump_env is valid. */
 #endif
 
@@ -806,7 +806,7 @@ EXTERN int	cmdwin_type INIT(= 0);	/* type of cmdline window or 0 */
 EXTERN int	cmdwin_result INIT(= 0); /* result of cmdline window or 0 */
 #endif
 
-EXTERN char_u no_lines_msg[]	INIT(=N_("--No lines in buffer--"));
+EXTERN char_u no_lines_msg[]	INIT(= N_("--No lines in buffer--"));
 
 /* table to store parsed 'wildmode' */
 EXTERN char_u	wim_flags[4];

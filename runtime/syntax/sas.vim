@@ -3,7 +3,10 @@
 " Maintainer:	Phil Hanna <pehanna@yahoo.com>
 " Last Change:	18 May 1999 (modified 2000 Jul 10 by Bram)
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

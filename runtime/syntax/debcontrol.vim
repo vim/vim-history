@@ -2,10 +2,12 @@
 " Language:	Debian control files
 " Maintainer:	Wichert Akkerman <wakkerma@debian.org>
 " URL:		none
-" Last Change:	2000 Dec 25
+" Last Change:	2001 Jan 15
 
-" Remove old cruft
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Define some common expressions we can use later on
 syn match debcontrolArchitecture contained "\(all\|any\|alpha\|arm\|hppa\|i386\|m68k\|powerpc\|sh\|sparc\|hurd-i386\)"

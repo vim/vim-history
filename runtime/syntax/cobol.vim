@@ -3,13 +3,17 @@
 " Maintainers:  Davyd Ondrejko <vondraco@columbus.rr.com>
 "     (formerly Sitaram Chamarty <sitaram@diac.com> and
 "               James Mitchell <james_mitchell@acm.org>)
-" Last change:  2000 Nov 12
+" Last change:  2001 Jan 15
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " MOST important - else most of the keywords wont work!
 set isk=@,48-57,-
 
 " set up other basic parameters
-syn clear
 syn case ignore
 
 syn match cobolKeys "^\a\{1,6\}" contains=cobolReserved

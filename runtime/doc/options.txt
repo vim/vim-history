@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.s.  Last change: 2001 Jan 14
+*options.txt*   For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -102,6 +102,23 @@ The {option} arguments to ":set" may be repeated.  For example: >
 	:set ai nosi sw=3 ts=3
 If you make an error in one of the arguments, an error message will be given
 and the following arguments will be ignored.
+
+							*:set-verbose*
+When 'verbose' is non-zero, displaying an option value will also tell where it
+was last set.  Example: >
+	:verbose set shiftwidth cindent?
+	  shiftwidth=4
+	          Last set from modeline
+	  cindent
+		  Last set from /usr/local/share/vim/vim60/ftplugin/c.vim
+This is only done when specific option values are requested, not for ":set
+all" or ":set" without an argument.
+When the option was set by hand there is no "Last set" message.  There is only
+one value for all local options with the same name.  Thus the message applies
+to the option name, not necessarily its value.
+When the option was set while executing a function, user command or
+autocommand, the script in which it was defined is reported.
+{not available when compiled without the +eval feature}
 
 							*:set-termcap*
 For {option} the form "t_xx" may be used to set a termcap option.  This will
@@ -225,33 +242,42 @@ You will not get back the 'list' value as it was the last time you edited
 
 							*:setl* *:setlocal*
 :setl[ocal] ...		Like ":set" but set only the value local to the
-			current buffer.  When ":set" is used the global value
-			of a local option will be set too.
-			When displaying an option value it works just like
-			":set".
+			current buffer or window.
+			With the "all" argument: display all local option's
+			local values.
+			Without argument: display all local option's local
+			values which are different from the default.
+			When displaying a specific local option, show the
+			local value.  For a global option the global value is
+			shown.
 			{not in Vi}
 
 							*:setg* *:setglobal*
-:setg[lobal] ...	Like ":set" but show the global value for options
-			local to a buffer.  When used without an argument or
-			with  "all" only the options which are local to a
-			buffer will be shown.
-			When setting an optiont set the global value for a
-			local option without changing the local value.
+:setg[lobal] ...	Like ":set" but set only the global value for a local
+			option without changing the local value.
+			When displaying an option, the global value is shown.
+			With the "all" argument: display all local option's
+			global values.
+			Without argument: display all local option's global
+			values which are different from the default.
 			{not in Vi}
 
-Command		set global value    set local value ~
-:set		     yes		yes
-:setlocal	     no			yes
-:setglobal	     yes		perhaps
+For buffer-local and window-local options:
+	Command		 global value       local value ~
+      :set option=value	     set		set
+ :setlocal option=value	      -			set
+:setglobal option=value	     set		 -
+      :set option             -                display
+ :setlocal option             -                display
+:setglobal option           display              -
 
 
 Global options with a local value			*global-local*
 
 Options are global when you use mostly one value for all buffers.  For some
-global options it's useful to sometimes have a local option.  You can set the
-local value with ":setlocal".  That buffer will then use the local value,
-while all other buffers use the global value.
+global options it's useful to sometimes have a different local value.  You can
+set the local value with ":setlocal".  That buffer will then use the local
+value, while all other buffers use the global value.
 
 For example, you have two windows, both on C source code.  They use the global
 'makeprg' option.  If you do this in one of the two windows: >
@@ -413,6 +439,21 @@ that a normal word like "lex:" is caught.  There is one exception: "vi:" and
 "vim:" can also be at the start of the line (for compatibility with version
 3.0).  Using "ex:" at the start of the line will be ignored (this could be
 short for "example:").
+
+							*modeline-version*
+If the modeline is only to be used for some versions of Vim, the version
+number can be specified where "vim:" is used:
+	vim{vers}:	version {vers} or later
+	vim<{vers}:	version before {vers} 
+	vim={vers}:	version {vers}
+	vim>{vers}:	version after {vers}
+{vers} is 600 for Vim 6.0 (hundred times the major version plus minor).
+For example, to use a modeline only for Vim 6.0 and later: >
+	/* vim600: set foldmethod=marker: */
+To use a modeline for Vim before version 5.7: >
+	/* vim<570: set sw=4: */
+There can be no blanks between "vim" and the ":".
+
 
 The number of lines that are checked can be set with the 'modelines' option.
 If 'modeline' is off or 'modelines' is 0 no lines are checked.
@@ -850,10 +891,20 @@ A jump table for the options with a short description can be found at |X_op|.
 	  unload	unload the buffer, also when 'hidden' is set or using
 			|:hide|
 	  delete	delete the buffer, also when 'hidden' is set or using
-			|:hide|
+			|:hide| (this makes the buffer secret)
 
 	This option is used together with 'buftype' and 'swapfile' to specify
 	special kinds of buffers.   See |special-buffers|.
+
+						*'bufsecret'* *'bst'*
+'bufsecret' 'bst'	boolean (default: off)
+			local to buffer
+			{not in Vi}
+	When this option is set, the buffer is not used for ":bnext", "ls",
+	the Buffers menu, etc.  This option is set by Vim for buffers that are
+	only used to remember a file name or marks.  Vim resets it when
+	starting to edit a buffer.  But not when moving to a buffer with
+	":bnext", ":blast", etc.
 
 						*'buftype'* *'bt'*
 'buftype' 'bt'		string (default: "")
@@ -863,7 +914,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	The value of this option specifies the type of a buffer:
 	  <empty>	normal buffer
-	  nofile  	buffer which is not related to a file and will not be
+	  nofile	buffer which is not related to a file and will not be
 			written
 	  nowrite	buffer which will not be written
 	  quickfix	quickfix buffer, contains list of errors |:cwindow|
@@ -1252,8 +1303,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	and the places to scan.  It is a comma separated list of flags:
 	.	scan the current buffer ('wrapscan' is ignored)
 	w	scan buffers from other windows
-	b	scan other loaded buffers
-	u	scan the unloaded buffers
+	b	scan other loaded buffers, but not secret ones
+	u	scan the unloaded buffers, but not secret ones
+	S	scan the secret buffers only
 	k	scan the files given with the 'dictionary' option
 	k{dict}	scan the file {dict}.  Several "k" flags can be given,
 		patterns are valid too.  For example: >
@@ -2036,9 +2088,18 @@ A jump table for the options with a short description can be found at |X_op|.
 	The kind of folding used for the current window.  Possible values:
 	|fold-manual|	manual	    Folds are created manually.
 	|fold-indent|	indent	    Lines with equal indent form a fold.
-	|fold-expr|	expr  	    'foldexpr' gives the fold level of a line.
+	|fold-expr|	expr	    'foldexpr' gives the fold level of a line.
 	|fold-marker|	marker	    Markers are used to specify folds.
 	|fold-syntax|	syntax	    Syntax highlighting items specify folds.
+
+						*'foldnestmax'* *'fdn'*
+'foldnestmax' 'fdn'	number (default: 20)
+			local to window
+			{not in Vi}
+			{not available when compiled without the |+folding|
+			feature}
+	Sets the maximum nesting of folds for the "indent" and "syntax"
+	methods.  This avoids that too many folds will be created.
 
 						*'foldtext'* *'fdt'*
 'foldtext' 'fdt'	string (default: "foldtext()")
@@ -3661,34 +3722,58 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'runtimepath'* *'rtp'*
 'runtimepath' 'rtp'	string	(default:
-				 Unix: "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME")
-				 Amiga: "home:vimfiles,s:vimfiles,
-						    $VIM/vimfiles,$VIMRUNTIME"
-				 PC, OS/2: "$HOME/vimfiles,$VIM/vimfiles,
-								  $VIMRUNTIME"
-				 Macintosh: "$VIM/vimfiles,$VIMRUNTIME"
-				 RISC-OS: "Choices:vimfiles,$VIMRUNTIME"
-				 VMS: "sys$login:vimfiles,$VIM/vimfiles,
-								  $VIMRUNTIME"
+					Unix: "$HOME/.vim,
+						$VIM/vimfiles,
+						$VIMRUNTIME,
+						$VIM/vimfiles/after,
+						$HOME/.vim/after"
+					Amiga: "home:vimfiles,
+						$VIM/vimfiles,
+						$VIMRUNTIME,
+						$VIM/vimfiles/after,
+						home:vimfiles/after"
+					PC, OS/2: "$HOME/vimfiles,
+						$VIM/vimfiles,
+						$VIMRUNTIME,
+						$VIM/vimfiles/after,
+						$HOME/vimfiles/after"
+					Macintosh: "$VIM:vimfiles,
+						$VIMRUNTIME,
+						$VIM:vimfiles:after"
+					RISC-OS: "Choices:vimfiles,
+						$VIMRUNTIME,
+						Choices:vimfiles/after"
+					VMS: "sys$login:vimfiles,
+						$VIM/vimfiles,
+						$VIMRUNTIME,
+						$VIM/vimfiles/after,
+						sys$login:vimfiles/after"
 			global
 			{not in Vi}
 	This is a list of directories which will be searched for runtime
 	files:
-	  filetype.vim	filetypes |new-filetype|
+	  filetype.vim	filetypes by file name |new-filetype|
+	  scripts.vim	filetypes by file contents |new-filetype-scripts|
 	  menu.vim	GUI menus |menu.vim|
 	  doc/		documentation |write-local-help|
+	  lang/		menu translations |:menutrans|
 	  plugin/	plugin scripts |write-plugin|
 	  ftplugin/	filetype plugins |write-filetype-plugin|
 	  syntax/	syntax files |mysyntaxfile|
-	  syntax2/	syntax file additions |mysyntaxfile-add|
 
 	And any other file searched for with the |:runtime| command.
 
-	The defaults for most systems are setup to search three locations:
+	The defaults for most systems are setup to search five locations:
 	1. In your home directory, for your personal preferences.
 	2. In a system-wide Vim directory, for preferences from the system
 	   administrator.
-	3. In $VIMRUNTIME, for files distributed with the Vim version.
+	3. In $VIMRUNTIME, for files distributed with Vim.
+	4. In the "after" directory in the system-wide Vim directory.  This is
+	   for the system administrator to overrule or add to the distributed
+	   defaults (rarely needed)
+	5. In the "after" directory in your home directory.  This is for
+	   personal preferences to overrule or add to the distributed defaults
+	   or system-wide settings (rarely needed).
 
 	Note that, unlike 'path', no wildcards like "*" or "**" are allowed.
 	See |:runtime|.
@@ -3834,6 +3919,8 @@ A jump table for the options with a short description can be found at |X_op|.
 							help,options,winsize")
 			global
 			{not in Vi}
+			{not available when compiled without the +mksession
+			feature}
 	Changes the effect of the |:mksession| command.  It is a comma
 	separated list of words.  Each word enables saving and restoring
 	something:
@@ -3848,7 +3935,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	   options	options and mappings
 	   resize	size of the Vim window: 'lines' and 'columns'
 	   sesdir	the directory in which the session file is located
-	   		will become the current directory (useful with
+			will become the current directory (useful with
 			projects accessed over a network from different
 			systems)
 	   slash	backslashes in file names replaced with forward
@@ -5030,6 +5117,38 @@ A jump table for the options with a short description can be found at |X_op|.
 
 	This option can also be set with the "-V" argument.  See |-V|.
 	This option is also set by the |:verbose| command.
+
+						*'viewdir'* *'vdir'*
+'viewdir' 'vdir'	string	(default for Amiga, MS-DOS, OS/2 and Win32:
+							 "$VIM/vimfiles/view",
+				 for Unix: "~/.vim/view",
+				 for Macintosh: "$VIM:vimfiles:view"
+				 for VMS: "sys$login:vimfiles/view"
+				 for RiscOS: "Choices:vimfiles/view")
+			global
+			{not in Vi}
+			{not available when compiled without the +mksession
+			feature}
+	Name of the directory where to store files for |:mkview|.
+
+						*'viewoptions'* *'vop'*
+'viewoptions' 'vop'	string	(default: "folds,options,cursor")
+			global
+			{not in Vi}
+			{not available when compiled without the +mksession
+			feature}
+	Changes the effect of the |:mkview| command.  It is a comma separated
+	list of words.  Each word enables saving and restoring something:
+	   word		save and restore ~
+	   cursor	cursor position in file and in window
+	   folds	manually created folds
+	   options	options and mappings
+	   unix		with Unix end-of-line format (single <NL>), even when
+			on Windows or DOS
+
+	"slash" and "unix" are useful on Windows when sharing view files
+	with Unix.  The Unix version of Vim cannot source dos format scripts,
+	but the Windows version of Vim can source unix format scripts.
 
 						*'viminfo'* *'vi'*
 

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.s.  Last change: 2000 Dec 31
+*starting.txt*  For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1278,7 +1278,13 @@ This saves the current Session, and starts off the command to load another.
 :mkvie[w][!] [file]	Write a Vim script that restores the contents of the
 			current window.
 			When [!] is included an existing file is overwritten.
-			When [file] is omitted "View.vim" is used.
+			When [file] is omitted or is a number from 1 to 9, a
+			name is generated and 'viewdir' prepended.  An
+			existing file is always overwritten then.  Use
+			|:loadview| to load this view again.
+			When [file] is the name of a file ('viewdir' is not
+			used), a command to edit the file is added to the
+			generated file.
 
 The output of ":mkview" contains these items:
 1. The argument list used in the window.  When the global argument list is
@@ -1287,10 +1293,10 @@ The output of ":mkview" contains these items:
 2. The file being edited in the window.  If there is no file, the window is
    made empty.
 3. Restore mappings, abbreviations and options local to the window if
-   'sessionoptions' contains "options".  For the options it restores local to
+   'viewoptions' contains "options".  For the options it restores local to
    the current buffer, options local to the window, and global values for
    window-local options
-4. Restore folds when using manual folding and 'sessionoptions' contains
+4. Restore folds when using manual folding and 'viewoptions' contains
    "folds".  Restore manually opened and closed folds.
 5. The scroll position and the cursor position in the file.  Doesn't work very
    well when there are closed folds.
@@ -1307,8 +1313,28 @@ Note that Views and Sessions are not perfect:
   default value though.
 - Existing mappings will be overwritten without warning.  An existing mapping
   may cause an error for ambiguity.
+- When storing manual folds and when storing manually opened/closed folds,
+  changes in the file between saving and loading the view will mess it up.
 - The Vim script is not very efficient.  But still faster than typing the
   commands yourself!
+
+							*:lo* *:loadview*
+:lo[adview] [nr]	Load the view for the current file.  When [nr] is
+			omitted, the view stored with ":mkview" is loaded.
+			When [nr] is specified, the view stored with ":mkview
+			[nr]" is loaded.
+
+The combination of ":mkview" and ":loadview" can be used to store up to ten
+different views of a file.  These are remembered in the directory specified
+with the 'viewdir' option.  The views are stored using the file name.  If a
+file is renamed or accessed through a (symbolic) link the view will not be
+found.
+
+You might want to clean up your 'viewdir' directory now and then.
+
+To automatically save and restore views for *.c files: >
+	au BufUnload,BufHidden *.c mkview
+	au BufReadAfter *.c silent loadview
 
 ==============================================================================
 10. The viminfo file				*viminfo* *viminfo-file*

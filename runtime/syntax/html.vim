@@ -2,12 +2,15 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2000 Dec 20
+" Last Change:  2001 Jan 15
 
 " Please check :help html.vim for some comments and a description of the options
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " mark illegal characters
@@ -148,6 +151,7 @@ syn keyword htmlSpecialTagName  contained script style
 if main_syntax != 'java' || exists("java_javascript")
   " JAVA SCRIPT
   syn include @htmlJavaScript <sfile>:p:h/javascript.vim
+  unlet b:current_syntax
   syn region  javaScript start=+<script[^>]*>+ keepend end=+</script>+me=s-1 contains=@htmlJavaScript,htmlCssStyleComment,htmlScriptTag,@htmlPreproc
   syn region  htmlScriptTag     contained start=+<script+ end=+>+       contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent
   hi def link htmlScriptTag htmlTag
@@ -172,6 +176,7 @@ endif
 if main_syntax != 'java' || exists("java_vb")
   " VB SCRIPT
   syn include @htmlVbScript <sfile>:p:h/vb.vim
+  unlet b:current_syntax
   syn region  javaScript start=+<script [^>]*language *=[^>]*vbscript[^>]*>+ keepend end=+</script>+me=s-1 contains=@htmlVbScript,htmlCssStyleComment,htmlScriptTag,@htmlPreproc
 endif
 
@@ -181,6 +186,7 @@ if main_syntax != 'java' || exists("java_css")
   " embedded style sheets
   syn keyword htmlArg           contained media
   syn include @htmlCss <sfile>:p:h/css.vim
+  unlet b:current_syntax
   syn region cssStyle start=+<style+ keepend end=+</style>+ contains=@htmlCss,htmlTag,htmlEndTag,htmlCssStyleComment,@htmlPreproc
   syn match htmlCssStyleComment contained "\(<!--\|-->\)"
   syn region htmlCssDefinition matchgroup=htmlArg start='style="' keepend matchgroup=htmlString end='"' contains=css.*Attr,css.*Properties,cssComment,cssLength,cssColor,cssURL,cssImportant,cssError,cssString,@htmlPreproc

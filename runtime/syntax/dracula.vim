@@ -8,8 +8,10 @@
 "		the purposes of Design Rule Checking, Layout vs. Schematic
 "		verification, and Layout Parameter Extraction.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Ignore case
 syn case ignore

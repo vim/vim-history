@@ -3,7 +3,11 @@
 " Maintaner: FooLman of United Force <foolman@bigfoot.com>
 " Last change: 22 aug 2000 
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 syn match tasmLabel "^[\ \t]*[@a-z_$][a-z0-9_$@]*\ *:"
 syn keyword tasmDirective ALIAS ALIGN ARG ASSUME %BIN CATSRT CODESEG

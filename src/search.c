@@ -398,8 +398,11 @@ search_getline(lnum)
  * if (options & SEARCH_END) return position at end of match
  * if (options & SEARCH_START) accept match at pos itself
  * if (options & SEARCH_KEEP) keep previous search pattern
+ * if (options & SEARCH_FOLD) match only once in a closed fold
  *
- * Return OK for success, FAIL for failure.
+ * Return FAIL (zero) for failure, non-zero for success.
+ * When FEAT_EVAL is defined, returns the index of the first matching
+ * subpattern plus one; one if there was none.
  */
     int
 searchit(buf, pos, dir, str, count, options, pat_use)
@@ -424,6 +427,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
     int		extra_col;
     int		match_ok;
     long	nmatched;
+    int		submatch = 0;
 
     if (search_regcomp(str, RE_SEARCH, pat_use,
 		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
@@ -480,9 +484,25 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 			       (colnr_t)0, curbuf->b_ml.ml_line_count - lnum);
 		if (nmatched > 0)
 		{
+		    /* match may actually be in another line when using \zs */
+		    lnum += regmatch.startpos[0].lnum;
 		    ptr = ml_get_buf(buf, lnum, FALSE);
 		    startcol = regmatch.startpos[0].col;
 		    endpos = regmatch.endpos[0];
+
+# ifdef FEAT_EVAL
+		    /* find the first subpat that matched */
+		    for (submatch = 1; ; ++submatch)
+		    {
+			if (regmatch.startpos[submatch].lnum >= 0)
+			    break;
+			if (submatch == 9)
+			{
+			    submatch = 0;
+			    break;
+			}
+		    }
+# endif
 
 		    /*
 		     * Forward search in the first line: match should be after
@@ -625,7 +645,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 
 		    if (options & SEARCH_END && !(options & SEARCH_NOOF))
 		    {
-			pos->lnum = endpos.lnum + lnum;
+			pos->lnum = endpos.lnum + search_firstline;
 			pos->col = endpos.col - 1;
 		    }
 		    else
@@ -636,7 +656,8 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 		    found = 1;
 
 		    /* Set variables used for 'incsearch' highlighting. */
-		    search_match_lines = endpos.lnum;
+		    search_match_lines = endpos.lnum
+						  - (lnum - search_firstline);
 		    search_match_endcol = endpos.col;
 		    break;
 		}
@@ -699,7 +720,7 @@ searchit(buf, pos, dir, str, count, options, pat_use)
 	return FAIL;
     }
 
-    return OK;
+    return submatch + 1;
 }
 
 /*
@@ -782,7 +803,7 @@ do_search(oap, dirc, str, count, options)
     if (dirc == '/')
     {
 	if (hasFolding(pos.lnum, NULL, &pos.lnum))
-	    pos.col = MAXCOL;
+	    pos.col = MAXCOL - 2;	/* avoid overflow when adding 1 */
     }
     else
     {
@@ -1568,7 +1589,9 @@ findmatchlimit(oap, initc, flags, maxtravel)
     }
 
 #ifdef FEAT_RIGHTLEFT
-    if (curwin->w_p_rl)
+    /* This is just guessing: when 'rightleft' is set, search for a maching
+     * paren/brace in the other direction. */
+    if (curwin->w_p_rl && vim_strchr((char_u *)"()[]{}<>", initc) != NULL)
 	backwards = !backwards;
 #endif
 

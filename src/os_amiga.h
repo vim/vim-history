@@ -40,7 +40,7 @@
 
 #define DFLT_ERRORFILE		"AztecC.Err"
 #define DFLT_MAKEEF		"t:vim##.Err"
-#define DFLT_RUNTIMEPATH	"home:vimfiles,s:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH "home:vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,home:vimfiles/after"
 
 #define BASENAMELEN	26	/* Amiga */
 
@@ -159,18 +159,22 @@ typedef long off_t;
 #endif
 
 #ifndef DFLT_BDIR
-# define DFLT_BDIR	".,t:"	    /* default for 'backupdir' */
+# define DFLT_BDIR	".,t:"		/* default for 'backupdir' */
 #endif
 
 #ifndef DFLT_DIR
-# define DFLT_DIR	".,t:"	    /* default for 'directory' */
+# define DFLT_DIR	".,t:"		/* default for 'directory' */
+#endif
+
+#ifndef DFLT_VDIR
+# define DFLT_VDIR	"$VIM/vimfiles/view"	/* default for 'viewdir' */
 #endif
 
 #ifndef DFLT_MAXMEM
-# define DFLT_MAXMEM	256	/* use up to 256Kbyte for buffer */
+# define DFLT_MAXMEM	256		/* use up to 256Kbyte for buffer */
 #endif
 #ifndef DFLT_MAXMEMTOT
-# define DFLT_MAXMEMTOT	0	/* decide in set_init */
+# define DFLT_MAXMEMTOT	0		/* decide in set_init */
 #endif
 
 #if defined(SASC)

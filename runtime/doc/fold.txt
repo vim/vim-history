@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.s.  Last change: 2001 Jan 08
+*fold.txt*      For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -36,6 +36,9 @@ The level of a fold is only defined by its nesting.  To increase the fold
 level of a fold for a range of lines, define a fold inside it that has the
 same lines.
 
+The manual folds are lost when you abandon the file.  To save the folds use
+the |:mkview| command.  The view can be restored later with |:loadview|.
+
 
 "indent":					*fold-indent*
 The folds are automatically defined by the indent of the lines.
@@ -43,6 +46,8 @@ The folds are automatically defined by the indent of the lines.
 The foldlevel is computed from the indent of the line, divided by the
 'shiftwidth' (rounded down).  A sequence of lines with the same or higher fold
 level form a fold, with the lines with a higher level forming a nested fold.
+
+The nesting of folds is limited with 'foldnestmax'.
 
 Some lines are ignored and get the fold level of the line above or below it,
 whatever is the lowest.  These are empty or white lines and lines starting
@@ -104,7 +109,8 @@ method can be very slow!
 "syntax":					*fold-syntax*
 A fold is defined by syntax items that have the "fold" argument. |:syn-fold|
 
-The fold level is defined by nesting folds.
+The fold level is defined by nesting folds.  The nesting of folds is limited
+with 'foldnestmax'.
 
 
 "marker":					*fold-marker*
@@ -177,7 +183,7 @@ file.
 2. Fold commands				*fold-commands*
 
 All folding commands start with "z".  Hint: the "z" looks like a folded piece
-of paper, seen from the side.
+of paper, if you look at it from the side.
 
 							*zf*
 zf{motion}  or
@@ -320,22 +326,20 @@ fold column:
 
 OTHER OPTIONS
 
-'foldenable' 'fen':	Open all folds while set.
-'foldexpr'   'fde':	Expression used for "expr" folding.
-'foldignore' 'fdi':	Characters used for "indent" folding.
-'foldmarker' 'fmr':	Defined markers used for "marker" folding.
-'foldmethod' 'fdm':	Name of the current folding method.
+'foldenable'  'fen':	Open all folds while set.
+'foldexpr'    'fde':	Expression used for "expr" folding.
+'foldignore'  'fdi':	Characters used for "indent" folding.
+'foldmarker'  'fmr':	Defined markers used for "marker" folding.
+'foldmethod'  'fdm':	Name of the current folding method.
+'foldnestmax' 'fdn':	Maximum nesting for "indent" and "syntax" folding.
 
 ==============================================================================
 4. Behavior of folds					*fold-behavior*
 
-When moving the cursor downwards, it will move to the first line of a sequence
-of folded lines.  When the cursor is already on a folded line, it moves to the
-next unfolded line.
-
-When moving the cursor upwards, it will move to the last line of a sequence of
-folded lines.  When the cursor is already on a folded line, it moves to the
-previous unfolded line.
+When moving the cursor upwards or downwards and when scrolling, the cursor
+will move to the first line of a sequence of folded lines.  When the cursor is
+already on a folded line, it moves to the next unfolded line or the next
+closed fold.
 
 While the cursor is on folded lines, the cursor is always displayed in the
 first column.  The ruler does show the actual cursor position, but since the

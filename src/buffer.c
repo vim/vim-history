@@ -60,7 +60,6 @@ open_buffer(read_stdin, eap)
     int		retval = OK;
 #ifdef FEAT_AUTOCMD
     buf_t	*old_curbuf;
-    buf_t	*new_curbuf;
 #endif
 
     /*
@@ -78,7 +77,7 @@ open_buffer(read_stdin, eap)
 	 * There MUST be a memfile, otherwise we can't do anything
 	 * If we can't create one for the current buffer, take another buffer
 	 */
-	close_buffer(NULL, curbuf, FALSE, FALSE);
+	close_buffer(NULL, curbuf, 0);
 	for (curbuf = firstbuf; curbuf != NULL; curbuf = curbuf->b_next)
 	    if (curbuf->b_ml.ml_mfp != NULL)
 		break;
@@ -151,19 +150,24 @@ open_buffer(read_stdin, eap)
 #ifdef FEAT_AUTOCMD
 	/*
 	 * The autocommands may have changed the current buffer.  Apply the
-	 * modelines to the correct buffer, if it still exists.
+	 * modelines to the correct buffer, if it still exists and is loaded.
 	 */
-	if (buf_valid(old_curbuf))
+	if (buf_valid(old_curbuf) && old_curbuf->b_ml.ml_mfp != NULL)
 	{
-	    new_curbuf = curbuf;
-	    curbuf = old_curbuf;
-	    curwin->w_buffer = old_curbuf;
+	    aco_save_t	aco;
+
+	    /* Go to the buffer that was opened. */
+	    aucmd_prepbuf(&aco, old_curbuf);
 #endif
 	    do_modelines();
 	    curbuf->b_flags &= ~(BF_CHECK_RO | BF_NEVERLOADED);
+
 #ifdef FEAT_AUTOCMD
-	    curbuf = new_curbuf;
-	    curwin->w_buffer = new_curbuf;
+	    if (curbuf->b_ffname != NULL)
+		apply_autocmds(EVENT_BUFREADAFTER, NULL, NULL, FALSE, curbuf);
+
+	    /* restore curwin/curbuf and a few other things */
+	    aucmd_restbuf(&aco);
 	}
 #endif
     }
@@ -188,21 +192,29 @@ buf_valid(buf)
 
 /*
  * Close the link to a buffer.
- * If "free_buf" is TRUE free the buffer if it becomes unreferenced. The
- * caller should get a new buffer very soon!
- * If "del_buf" is TRUE, remove the buffer from the buffer list.
+ * "action" is used when there is no longer a window for the buffer.
+ * It can be:
+ * 0			buffer becomes hidden
+ * DOBUF_UNLOAD		buffer is unloaded
+ * DOBUF_DELETE		buffer is unloaded and becomes secret
+ * DOBUF_WIPE		buffer is unloaded and really deleted
+ * When doing all but the first one on the current buffer, the caller should
+ * get a new buffer very soon!
+ *
  * The 'bufhidden' option can force freeing and deleting.
  */
     void
-close_buffer(win, buf, free_buf, del_buf)
-    win_t	*win;	    /* if not NULL, set b_last_cursor */
+close_buffer(win, buf, action)
+    win_t	*win;		/* if not NULL, set b_last_cursor */
     buf_t	*buf;
-    int		free_buf;
-    int		del_buf;
+    int		action;
 {
 #ifdef FEAT_AUTOCMD
     int		is_curbuf;
 #endif
+    int		unload_buf = (action != 0);
+    int		del_buf = (action == DOBUF_DEL || action == DOBUF_WIPE);
+    int		wipe_buf = (action == DOBUF_WIPE);
 
 #ifdef FEAT_QUICKFIX
     /*
@@ -213,32 +225,53 @@ close_buffer(win, buf, free_buf, del_buf)
     if (buf->b_p_bh[0] == 'd')		/* 'bufhidden' == "delete" */
     {
 	del_buf = TRUE;
-	free_buf = TRUE;
+	unload_buf = TRUE;
     }
     else if (buf->b_p_bh[0] == 'u')	/* 'bufhidden' == "unload" */
-	free_buf = TRUE;
+	unload_buf = TRUE;
 #endif
 
+    /* decrease the link count from windows (unless not in any window) */
     if (buf->b_nwindows > 0)
 	--buf->b_nwindows;
-    if (buf->b_nwindows == 0 && win != NULL)
-	set_last_cursor(win);	/* may set b_last_cursor */
-    if (win == curwin)		/* remember last cursor pos and options */
-	buflist_setfpos(buf,
-		curwin->w_cursor.lnum == 1 ? 0 : curwin->w_cursor.lnum,
-		curwin->w_cursor.col, TRUE);
+
+    if (win != NULL)
+    {
+	/* Set b_last_cursor when closing the last window for a buffer.
+	 * Remember the last cursor position of a buffer for the current
+	 * window. */
+	if (buf->b_nwindows == 0)
+	    set_last_cursor(win);
+	if (win == curwin)
+	    buflist_setfpos(buf,
+		    curwin->w_cursor.lnum == 1 ? 0 : curwin->w_cursor.lnum,
+		    curwin->w_cursor.col, TRUE);
+    }
 
 #ifdef FEAT_AUTOCMD
-    /* When the buffer becomes hidden, but is not unloaded, trigger BufHidden */
-    if (buf->b_nwindows == 0 && !free_buf)
+    /* When the buffer is no longer in a window, trigger BufWinLeave */
+    if (buf->b_nwindows == 0)
     {
-	apply_autocmds(EVENT_BUFHIDDEN, buf->b_fname, buf->b_fname, FALSE, buf);
+	apply_autocmds(EVENT_BUFWINLEAVE, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
 	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	    return;
+
+	/* When the buffer becomes hidden, but is not unloaded, trigger
+	 * BufHidden */
+	if (!unload_buf)
+	{
+	    apply_autocmds(EVENT_BUFHIDDEN, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
+	    if (!buf_valid(buf))	/* autocmds may delete the buffer */
+		return;
+	}
     }
 #endif
 
-    if (buf->b_nwindows > 0 || !free_buf)
+    /* Return when a window is displaying the buffer or when it's not
+     * unloaded. */
+    if (buf->b_nwindows > 0 || !unload_buf)
     {
 	if (buf == curbuf)
 	    u_sync();	    /* sync undo before going to another buffer */
@@ -258,6 +291,9 @@ close_buffer(win, buf, free_buf, del_buf)
 #endif
     buf_freeall(buf, del_buf);
 #ifdef FEAT_AUTOCMD
+    if (wipe_buf && buf_valid(buf))
+	apply_autocmds(EVENT_BUFWIPEOUT, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
     /*
      * Autocommands may have deleted the buffer.
      * It's possible that autocommands change curbuf to the one being deleted.
@@ -273,11 +309,11 @@ close_buffer(win, buf, free_buf, del_buf)
     /*
      * Remove the buffer from the list.
      */
-    if (del_buf)
+    if (wipe_buf)
     {
 #ifdef FEAT_SUN_WORKSHOP
 	if (usingSunWorkShop)
-	    workshop_file_closed_lineno((char *) buf->b_ffname,
+	    workshop_file_closed_lineno((char *)buf->b_ffname,
 			buf->b_last_cursor.lnum);
 #endif
 	vim_free(buf->b_ffname);
@@ -293,7 +329,11 @@ close_buffer(win, buf, free_buf, del_buf)
 	free_buffer(buf);
     }
     else
+    {
 	buf_clear(buf);
+	if (del_buf)
+	    buf->b_p_bst = TRUE;
+    }
 }
 
 /*
@@ -332,7 +372,7 @@ buf_freeall(buf, del_buf)
     apply_autocmds(EVENT_BUFUNLOAD, buf->b_fname, buf->b_fname, FALSE, buf);
     if (!buf_valid(buf))	    /* autocommands may delete the buffer */
 	return;
-    if (del_buf)
+    if (del_buf && !buf->b_p_bst)
     {
 	apply_autocmds(EVENT_BUFDELETE, buf->b_fname, buf->b_fname, FALSE, buf);
 	if (!buf_valid(buf))	    /* autocommands may delete the buffer */
@@ -418,24 +458,25 @@ clear_wininfo(buf)
  *		    buffer "end_bnr", then any other arguments.
  * addr_count == 2: ":N,N bdel" - delete buffers in range
  *
- * command can be DOBUF_UNLOAD (":bunload") or DOBUF_DEL (":bdel")
+ * command can be DOBUF_UNLOAD (":bunload"), DOBUF_WIPE (":bwipeout") or
+ * DOBUF_DEL (":bdel")
  *
  * Returns error message or NULL
  */
     char_u *
 do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
-    int	    command;
-    char_u  *arg;	/* pointer to extra arguments */
-    int	    addr_count;
-    int	    start_bnr;	/* first buffer number in a range */
-    int	    end_bnr;	/* buffer number or last buffer number in a range */
-    int	    forceit;
+    int		command;
+    char_u	*arg;		/* pointer to extra arguments */
+    int		addr_count;
+    int		start_bnr;	/* first buffer number in a range */
+    int		end_bnr;	/* buffer nr or last buffer nr in a range */
+    int		forceit;
 {
-    int	    do_current = 0;	/* delete current buffer? */
-    int	    deleted = 0;	/* number of buffers deleted */
-    char_u  *errormsg = NULL;	/* return value */
-    int	    bnr;		/* buffer number */
-    char_u  *p;
+    int		do_current = 0;	/* delete current buffer? */
+    int		deleted = 0;	/* number of buffers deleted */
+    char_u	*errormsg = NULL; /* return value */
+    int		bnr;		/* buffer number */
+    char_u	*p;
 
     if (addr_count == 0)
     {
@@ -499,8 +540,10 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 	{
 	    if (command == DOBUF_UNLOAD)
 		sprintf((char *)IObuff, _("No buffers were unloaded"));
+	    else if (command == DOBUF_DEL)
+		sprintf((char *)IObuff, _("No buffers were deleted"));
 	    else
-		sprintf((char *)IObuff, _("No buffers were deleted")),
+		sprintf((char *)IObuff, _("No buffers were wiped out"));
 	    errormsg = IObuff;
 	}
 	else if (deleted >= p_report)
@@ -512,27 +555,34 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 		else
 		    smsg((char_u *)_("%d buffers unloaded"), deleted);
 	    }
-	    else
+	    else if (command == DOBUF_DEL)
 	    {
 		if (deleted == 1)
 		    smsg((char_u *)_("1 buffer deleted"));
 		else
 		    smsg((char_u *)_("%d buffers deleted"), deleted);
 	    }
+	    else
+	    {
+		if (deleted == 1)
+		    smsg((char_u *)_("1 buffer wiped out"));
+		else
+		    smsg((char_u *)_("%d buffers wiped out"), deleted);
+	    }
 	}
     }
 
     return errormsg;
 }
-#endif
 
 /*
- * Implementation of the command for the buffer list
+ * Implementation of the commands for the buffer list.
  *
  * action == DOBUF_GOTO	    go to specified buffer
  * action == DOBUF_SPLIT    split window and go to specified buffer
  * action == DOBUF_UNLOAD   unload specified buffer(s)
- * action == DOBUF_DEL	    delete specified buffer(s)
+ * action == DOBUF_DEL	    delete specified buffer(s) (make secret)
+ * action == DOBUF_WIPE	    delete specified buffer(s) really
  *
  * start == DOBUF_CURRENT   go to "count" buffer from current buffer
  * start == DOBUF_FIRST	    go to "count" buffer from first buffer
@@ -550,7 +600,9 @@ do_buffer(action, start, dir, count, forceit)
     int		forceit;	/* TRUE for :...! */
 {
     buf_t	*buf;
-    buf_t	*delbuf;
+    buf_t	*bp;
+    int		unload = (action == DOBUF_UNLOAD || action == DOBUF_DEL
+						     || action == DOBUF_WIPE);
 
     switch (start)
     {
@@ -583,8 +635,13 @@ do_buffer(action, start, dir, count, forceit)
     }
     else
     {
-	while (count-- > 0)
+	bp = NULL;
+	while (count > 0 || (!unload && buf->b_p_bst && bp != buf))
 	{
+	    /* remember the buffer where we start, we come back there when all
+	     * buffers are secret. */
+	    if (bp == NULL)
+		bp = buf;
 	    if (dir == FORWARD)
 	    {
 		buf = buf->b_next;
@@ -597,9 +654,12 @@ do_buffer(action, start, dir, count, forceit)
 		if (buf == NULL)
 		    buf = lastbuf;
 	    }
-	    /* in non-help buffer, skip help buffers, and vv */
-	    if (buf->b_help != (start == DOBUF_LAST ? lastbuf : curbuf)->b_help)
-		 count++;
+	    /* don't count secret buffers */
+	    if (unload || !buf->b_p_bst)
+	    {
+		 --count;
+		 bp = NULL;	/* use this buffer as new starting point */
+	    }
 	}
     }
 
@@ -607,8 +667,8 @@ do_buffer(action, start, dir, count, forceit)
     {
 	if (start == DOBUF_FIRST)
 	{
-					    /* don't warn when deleting */
-	    if (action != DOBUF_UNLOAD && action != DOBUF_DEL)
+	    /* don't warn when deleting */
+	    if (!unload)
 		EMSGN(_("Cannot go to buffer %ld"), count);
 	}
 	else if (dir == FORWARD)
@@ -626,7 +686,7 @@ do_buffer(action, start, dir, count, forceit)
     /*
      * delete buffer buf from memory and/or the list
      */
-    if (action == DOBUF_UNLOAD || action == DOBUF_DEL)
+    if (unload)
     {
 	int	forward;
 	int	retval;
@@ -665,7 +725,7 @@ do_buffer(action, start, dir, count, forceit)
 	     * if the buffer still exists.
 	     */
 	    if (buf != curbuf && buf_valid(buf))
-		close_buffer(NULL, buf, TRUE, TRUE);
+		close_buffer(NULL, buf, action);
 	    return retval;
 	}
 
@@ -679,15 +739,15 @@ do_buffer(action, start, dir, count, forceit)
 #endif
 
 	/*
-	 * If the buffer to be deleted is not current one, delete it here.
+	 * If the buffer to be deleted is not the current one, delete it here.
 	 */
 	if (buf != curbuf)
 	{
 #ifdef FEAT_WINDOWS
 	    close_windows(buf);
 #endif
-	    if (buf_valid(buf))
-		close_buffer(NULL, buf, TRUE, action == DOBUF_DEL);
+	    if (buf_valid(buf) && buf->b_nwindows == 0)
+		close_buffer(NULL, buf, action);
 	    return OK;
 	}
 
@@ -793,36 +853,58 @@ do_buffer(action, start, dir, count, forceit)
 	return FAIL;
     }
 
+    /* Go to the other buffer. */
+    set_curbuf(buf, action);
+
+    return OK;
+}
+
+#endif /* FEAT_LISTCMDS */
+
+/*
+ * Set current buffer to "buf".  Executes autocommands and closes current
+ * buffer.  "action" tells how to close the current buffer:
+ * DOBUF_GOTO	    free or hide it
+ * DOBUF_SPLIT	    nothing
+ * DOBUF_UNLOAD	    unload it
+ * DOBUF_DEL	    delete it
+ * DOBUF_WIPE	    wipe it out
+ */
+    void
+set_curbuf(buf, action)
+    buf_t	*buf;
+    int		action;
+{
+    buf_t	*prevbuf;
+    int		unload = (action == DOBUF_UNLOAD || action == DOBUF_DEL
+						     || action == DOBUF_WIPE);
+
     setpcmark();
     curwin->w_alt_fnum = curbuf->b_fnum; /* remember alternate file */
     buflist_altfpos();			 /* remember curpos */
 
     /* close_windows() or apply_autocmds() may change curbuf */
-    delbuf = curbuf;
+    prevbuf = curbuf;
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
-    if (buf_valid(delbuf))
+    if (buf_valid(prevbuf))
 #endif
     {
 #ifdef FEAT_WINDOWS
-	if (action == DOBUF_UNLOAD || action == DOBUF_DEL)
-	    close_windows(delbuf);
+	if (unload)
+	    close_windows(prevbuf);
 #endif
-	if (buf_valid(delbuf))
-	    close_buffer(delbuf == curwin->w_buffer ? curwin : NULL, delbuf,
-			(action == DOBUF_GOTO
-			     && !P_HID(delbuf)
-			     && !bufIsChanged(delbuf))
-			|| action == DOBUF_UNLOAD
-			|| action == DOBUF_DEL,
-		    action == DOBUF_DEL);
+	if (buf_valid(prevbuf))
+	    close_buffer(prevbuf == curwin->w_buffer ? curwin : NULL, prevbuf,
+		    unload ? action : (action == DOBUF_GOTO
+			&& !P_HID(prevbuf)
+			&& !bufIsChanged(prevbuf)) ? DOBUF_UNLOAD : 0);
     }
 #ifdef FEAT_AUTOCMD
     if (buf_valid(buf))	    /* an autocommand may have deleted buf! */
 #endif
 	enter_buffer(buf);
-    return OK;
 }
 
 /*
@@ -882,11 +964,12 @@ enter_buffer(buf)
 static int  top_file_num = 1;		/* highest file number */
 
     buf_t *
-buflist_new(ffname, sfname, lnum, use_curbuf)
+buflist_new(ffname, sfname, lnum, use_curbuf, secret)
     char_u	*ffname;	/* full path of fname or relative */
     char_u	*sfname;	/* short fname or NULL */
     linenr_t	lnum;		/* preferred cursor line */
     int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
+    int		secret;		/* when the buffer is new, create it secret */
 {
     buf_t	*buf;
 #ifdef UNIX
@@ -936,7 +1019,9 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 	buf = curbuf;
 #ifdef FEAT_AUTOCMD
 	/* It's like this buffer is deleted. */
-	apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
+	if (!curbuf->b_p_bst)
+	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 #endif
 #ifdef FEAT_QUICKFIX
 	/* Make sure 'bufhidden' and 'buftype' are empty */
@@ -1040,8 +1125,11 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     buf_clear(buf);
     clrallmarks(buf);			/* clear marks */
     fmarks_check_names(buf);		/* check file marks for this file */
+    buf->b_p_bst = secret;		/* init 'bufsecret' */
 #ifdef FEAT_AUTOCMD
-    apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, buf);
+    apply_autocmds(EVENT_BUFSECRET, NULL, NULL, FALSE, buf);
+    if (!secret)
+	apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, buf);
 #endif
 
     return buf;
@@ -1672,14 +1760,18 @@ buflist_list(eap)
 
     for (buf = firstbuf; buf != NULL && !got_int; buf = buf->b_next)
     {
+	/* skip secret buffers, unless ! was used */
+	if (buf->b_p_bst && !eap->forceit)
+	    continue;
 	msg_putchar('\n');
 	if (buf_spname(buf) != NULL)
 	    STRCPY(NameBuff, buf_spname(buf));
 	else
 	    home_replace(buf, buf->b_fname, NameBuff, MAXPATHL, TRUE);
 
-	sprintf((char *)IObuff, "%3d %c%c%c \"",
+	sprintf((char *)IObuff, "%3d%c%c%c%c \"",
 		buf->b_fnum,
+		buf->b_p_bst ? 's' : ' ',
 		buf == curbuf ? '%' :
 			(curwin->w_alt_fnum == buf->b_fnum ? '#' : ' '),
 		buf->b_ml.ml_mfp == NULL ? '-' :
@@ -1765,12 +1857,6 @@ setfname(ffname, sfname, message)
 	if (ffname == NULL)		    /* out of memory */
 	    return FAIL;
 
-#ifdef USE_FNAME_CASE
-# ifdef USE_LONG_FNAME
-	if (USE_LONG_FNAME)
-# endif
-	    fname_case(sfname);	    /* set correct case for short file name */
-#endif
 	/*
 	 * if the file name is already used in another buffer:
 	 * - if the buffer is loaded, fail
@@ -1792,7 +1878,7 @@ setfname(ffname, sfname, message)
 		vim_free(ffname);
 		return FAIL;
 	    }
-	    close_buffer(NULL, buf, TRUE, TRUE);    /* delete from the list */
+	    close_buffer(NULL, buf, DOBUF_WIPE); /* delete from the list */
 	}
 	sfname = vim_strsave(sfname);
 	if (ffname == NULL || sfname == NULL)
@@ -1801,6 +1887,12 @@ setfname(ffname, sfname, message)
 	    vim_free(ffname);
 	    return FAIL;
 	}
+#ifdef USE_FNAME_CASE
+# ifdef USE_LONG_FNAME
+	if (USE_LONG_FNAME)
+# endif
+	    fname_case(sfname);	    /* set correct case for short file name */
+#endif
 	vim_free(curbuf->b_ffname);
 	vim_free(curbuf->b_sfname);
 	curbuf->b_ffname = ffname;
@@ -1851,7 +1943,8 @@ setaltfname(ffname, sfname, lnum)
 {
     buf_t	*buf;
 
-    buf = buflist_new(ffname, sfname, lnum, FALSE);
+    /* Create a buffer.  'bufsecret' is set if it's a new buffer */
+    buf = buflist_new(ffname, sfname, lnum, FALSE, TRUE);
     if (buf != NULL)
 	curwin->w_alt_fnum = buf->b_fnum;
 }
@@ -1877,18 +1970,20 @@ getaltfname(errmsg)
 }
 
 /*
- * add a file name to the buflist and return its number
+ * Add a file name to the buflist and return its number.
+ * If it's a new buffer, 'bufsecret' will be set.
  *
  * used by qf_init(), main() and doarglist()
  */
     int
-buflist_add(fname, use_curbuf)
+buflist_add(fname, use_curbuf, secret)
     char_u	*fname;
     int		use_curbuf;	/* re-use curbuf if it's empty and unnamed */
+    int		secret;		/* value for 'bufsecret' of new buffer */
 {
     buf_t	*buf;
 
-    buf = buflist_new(fname, NULL, (linenr_t)0, use_curbuf);
+    buf = buflist_new(fname, NULL, (linenr_t)0, use_curbuf, secret);
     if (buf != NULL)
 	return buf->b_fnum;
     return 0;
@@ -2080,7 +2175,7 @@ fileinfo(fullname, shorthelp, dont_truncate)
 					    (long)curbuf->b_ml.ml_line_count);
     if (curbuf->b_ml.ml_flags & ML_EMPTY)
     {
-	STRCPY(buffer + STRLEN(buffer), no_lines_msg);
+	STRCPY(buffer + STRLEN(buffer), _(no_lines_msg));
     }
 #ifdef FEAT_CMDL_INFO
     else if (p_ru)
@@ -2432,11 +2527,13 @@ fix_fname(fname)
     /*
      * Force expanding the path always for Unix, because symbolic links may
      * mess up the full path name, even though it starts with a '/'.
+     * Also expand when there is ".." in the file name, try to remove it,
+     * because "c:/src/../README" is equal to "c:/README".
      */
 #ifdef UNIX
     return FullName_save(fname, TRUE);
 #else
-    if (!vim_isAbsName(fname))
+    if (!vim_isAbsName(fname) || strstr((char *)fname, "..") != NULL)
 	return FullName_save(fname, FALSE);
 
     fname = vim_strsave(fname);
@@ -2764,7 +2861,7 @@ do_buffer_all(eap)
     for (buf = firstbuf; buf != NULL && open_wins < count; buf = buf->b_next)
     {
 	/* Check if this buffer needs a window */
-	if (!all && buf->b_ml.ml_mfp == NULL)
+	if ((!all && buf->b_ml.ml_mfp == NULL) || buf->b_p_bst)
 	    continue;
 
 	/* Check if this buffer already has a window */
@@ -2792,8 +2889,7 @@ do_buffer_all(eap)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	    swap_exists_action = SEA_DIALOG;
 #endif
-	    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD,
-							 (int)buf->b_fnum, 0);
+	    set_curbuf(buf, DOBUF_GOTO);
 #ifdef FEAT_AUTOCMD
 	    if (!buf_valid(buf))	/* autocommands deleted the buffer!!! */
 	    {
@@ -2899,6 +2995,8 @@ do_modelines()
     --entered;
 }
 
+#include "version.h"		/* for version number */
+
 /*
  * chk_modeline() - check a single line for a mode string
  * Return FAIL if an error encountered.
@@ -2911,20 +3009,38 @@ chk_modeline(lnum)
     char_u	*e;
     char_u	*linecopy;		/* local copy of any modeline found */
     int		prev;
+    int		vers;
     int		end;
     int		retval = OK;
     char_u	*save_sourcing_name;
     linenr_t	save_sourcing_lnum;
+#ifdef FEAT_EVAL
+    scid_t	save_SID;
+#endif
 
     prev = -1;
     for (s = ml_get(lnum); *s != NUL; ++s)
     {
 	if (prev == -1 || vim_isspace(prev))
 	{
-	    if ((prev != -1 && STRNCMP(s, "ex:", (size_t)3) == 0) ||
-			       STRNCMP(s, "vi:", (size_t)3) == 0 ||
-			       STRNCMP(s, "vim:", (size_t)4) == 0)
+	    if ((prev != -1 && STRNCMP(s, "ex:", (size_t)3) == 0)
+		    || STRNCMP(s, "vi:", (size_t)3) == 0)
 		break;
+	    if (STRNCMP(s, "vim", 3) == 0)
+	    {
+		if (s[3] == '<' || s[3] == '=' || s[3] == '>')
+		    e = s + 4;
+		else
+		    e = s + 3;
+		vers = getdigits(&e);
+		if (*e == ':'
+			&& (s[3] == ':'
+			    || (VIM_VERSION_100 >= vers && isdigit(s[3]))
+			    || (VIM_VERSION_100 < vers && s[3] == '<')
+			    || (VIM_VERSION_100 > vers && s[3] == '>')
+			    || (VIM_VERSION_100 == vers && s[3] == '=')))
+		    break;
+	    }
 	}
 	prev = *s;
     }
@@ -2975,12 +3091,17 @@ chk_modeline(lnum)
 		s += 4;
 	    }
 
+#ifdef FEAT_EVAL
+	    save_SID = current_SID;
+	    current_SID = SID_MODELINE;
+#endif
 	    *e = NUL;			/* truncate the set command */
-	    if (do_set(s, OPT_MODELINE | OPT_LOCAL) == FAIL)
-	    {
-		retval = FAIL;		/* stop if error found */
+	    retval = do_set(s, OPT_MODELINE | OPT_LOCAL);
+#ifdef FEAT_EVAL
+	    current_SID = save_SID;
+#endif
+	    if (retval == FAIL)		/* stop if error found */
 		break;
-	    }
 	    s = e + 1;			/* advance to next part */
 	}
 
@@ -3038,7 +3159,7 @@ read_viminfo_bufferlist(line, fp, writing)
 	if (sfname == NULL)
 	    sfname = NameBuff;
 
-	buf = buflist_new(NameBuff, sfname, (linenr_t)0, FALSE);
+	buf = buflist_new(NameBuff, sfname, (linenr_t)0, FALSE, FALSE);
 	if (buf != NULL)	/* just in case... */
 	{
 	    buf->b_last_cursor.lnum = lnum;
@@ -3080,7 +3201,7 @@ write_viminfo_bufferlist(fp)
     for (buf = firstbuf; buf != NULL ; buf = buf->b_next)
     {
 	if (buf->b_fname == NULL
-		|| buf->b_help
+		|| buf->b_p_bst
 #ifdef FEAT_QUICKFIX
 		|| bt_quickfix(buf)
 #endif
@@ -3331,3 +3452,26 @@ buf_delete_all_signs()
 }
 
 #endif /* FEAT_SIGNS */
+
+/*
+ * Set 'bufsecret' for curbuf to "on" and trigger autocommands if it changed.
+ */
+    void
+set_bufsecret(on)
+    int		on;
+{
+    if (on && !curbuf->b_p_bst)
+    {
+	curbuf->b_p_bst = TRUE;	/* set 'bufsecret' */
+#ifdef FEAT_AUTOCMD
+	apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
+#endif
+    }
+    else if (!on && curbuf->b_p_bst)
+    {
+	curbuf->b_p_bst = FALSE;	/* reset 'bufsecret' */
+#ifdef FEAT_AUTOCMD
+	apply_autocmds(EVENT_BUFCREATE, NULL, NULL, FALSE, curbuf);
+#endif
+    }
+}

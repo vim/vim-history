@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Lynx 2.7.1 style file
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" clear any unwanted syntax defs
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " This setup is probably atypical for a syntax highlighting file, because
 " most of it is not really intended to be overrideable.  Instead, the

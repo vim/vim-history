@@ -1,11 +1,13 @@
 " Vim syntax file
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-" Last Change: November 8, 2000
-"     Version: 6.0-1
+" Last Change: January 11, 2001
+"     Version: 6.0-2
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 
@@ -37,11 +39,11 @@ syn keyword stpFunction   datename datepart db_id db_name degree difference
 syn keyword stpFunction   exp floor getdate hextoint host_id host_name index_col
 syn keyword stpFunction   inttohex isnull lct_admin log log10 lower ltrim max
 syn keyword stpFunction   min now object_id object_name patindex pi pos power
-syn keyword stpFunction   proc_role radians rand replicate reserved_pgs reverse
-syn keyword stpFunction   right rtrim rowcnt round show_role sign sin soundex
-syn keyword stpFunction   space sqrt str stuff substring sum suser_id suser_name
-syn keyword stpFunction   tan tsequal upper used_pgs user user_id user_name
-syn keyword stpFunction   valid_name valid_user
+syn keyword stpFunction   proc_role radians rand replace replicate reserved_pgs
+syn keyword stpFunction   reverse right rtrim rowcnt round show_role sign sin
+syn keyword stpFunction   soundex space sqrt str stuff substr substring sum
+syn keyword stpFunction   suser_id suser_name tan tsequal upper used_pgs user
+syn keyword stpFunction   user_id user_name valid_name valid_user
 
 syn keyword stpType       binary bit char datetime decimal double float image
 syn keyword stpType       int integer long money nchar numeric precision real
@@ -72,8 +74,12 @@ syn match   stpNumber		  "-\=\<\d*\.\=[0-9_]\>"
 syn region  stpComment    start="/\*"  end="\*/" contains=stpTodo
 syn match   stpComment    "--.*" contains=stpTodo
 
+" Parens:
 syn region  stpParen      transparent start='(' end=')' contains=ALLBUT,stpParenError
 syn match   stpParenError ")"
+
+" Syntax Synchronizing
+syn sync    minlines=10	maxlines=100
 
 " The default highlighting.
 hi def link stpComment Comment

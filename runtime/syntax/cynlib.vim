@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	    Cynlib(C++)
 " Maintainer:   Phil Derrick <phild@cynapps.com>  
-" Last change:  2000 Dec 17
+" Last change:  2001 Jan 15
 " URL http://www.derrickp.freeserve.co.uk/vim/syntax/cynlib.vim
 "
 " Language Information
@@ -14,11 +14,14 @@
 "               Further information can be found from www.cynapps.com
 
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C++ syntax to start with - this includes the C syntax
-runtime syntax/cpp.vim
+runtime! syntax/cpp.vim
+unlet b:current_syntax
 
 " Cynlib extensions
 

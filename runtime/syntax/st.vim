@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Smalltalk
 " Maintainer:	Arndt Hesse <hesse@self.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " some Smalltalk keywords and standard methods
 syn keyword	stKeyword	super self class true false new not

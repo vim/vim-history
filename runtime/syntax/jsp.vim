@@ -2,23 +2,27 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2000 Dec 21
+" Last change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'jsp'
 endif
 
 " Source HTML syntax
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 " Next syntax items are case-sensitive
 syn case match
 
 " Include Java syntax
 syn include @jspJava <sfile>:p:h/java.vim
+unlet b:current_syntax
 
 syn region jspScriptlet matchgroup=jspTag start=/<%/  keepend end=/%>/ contains=@jspJava
 syn region jspComment                     start=/<%--/        end=/--%>/

@@ -187,9 +187,13 @@ struct stat
 # define DFLT_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
+#ifndef DFLT_VDIR
+# define DFLT_VDIR	"$VIM:vimfiles:view"	/* default for 'viewdir' */
+#endif
+
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"vim##.err"
-#define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
 
 /*
  * Macintosh has plenty of memory, use large buffers

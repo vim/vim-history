@@ -2,10 +2,12 @@
 " Language:    JCL job control language - DOS/VSE
 " Maintainer:  Davyd Ondrejko <david.ondrejko@safelite.com>
 " URL:
-" Last change: 2000 Nov 12
+" Last change: 2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " tags
 syn keyword vsejclKeyword DLBL EXEC JOB ASSGN EOJ

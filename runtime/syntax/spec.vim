@@ -5,7 +5,10 @@
 " URL:		http://pegasus.rutgers.edu/~elflord/vim/syntax/spec.vim
 " Last Change:	Wed Sep 22 21:42:34 EDT 1999 (modified 2000 Jul 10 by Bram)
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 
 syn region specDeref	     start="\${" end="}" contains=specSpecialVariables,specSpecialChar

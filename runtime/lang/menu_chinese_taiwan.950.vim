@@ -1,8 +1,11 @@
 " Menu Translations:	Traditional Chinese (for Big5 UNIX/Windows)
 " Translated By: 	Hung-teh, Lin	<piaip@csie.ntu.edu.tw>
-" Last Change:		2000/11/11 16:00:00 [for VIM 6.0l]
+" Last Change:		2001 Jan 15
 
-menutrans clear
+" Quit when menu translations have already been done.
+if exists("did_menu_trans")
+  finish
+endif
 let did_menu_trans = 1
 
 " Help menu

@@ -2,14 +2,16 @@
 " Language:	Modsim III, by CACI Products Co. (www.caci.com)
 " Maintainer:	Philipp Jocham <flip@sbox.tu-graz.ac.at>
 " Extension:	*.mod
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " 1999 Apr 22 : Changed modsim3Literal from region to match
 
 " very basic things only (based on the modula2 and c files).
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " syn case match " case sensitiv match is default
 

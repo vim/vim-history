@@ -339,11 +339,6 @@ mch_FullName(
     fname_case(buf);
 #endif
 
-    /* Append backslash to directory names; after fname_case() because it
-     * removes the backslash again. */
-    if (nResult == OK && mch_isdir(buf))
-	add_pathsep(buf);
-
     return nResult;
 }
 
@@ -365,7 +360,7 @@ mch_isFullName(char_u *fname)
     if (mch_FullName(fname, szName, _MAX_PATH, FALSE) == FAIL)
 	return FALSE;
 
-    return strcoll(fname, szName) == 0;
+    return pathcmp(fname, szName) == 0;
 }
 
 /*
@@ -391,6 +386,24 @@ slash_adjust(p)
 }
 
 
+/*
+ * stat() can't handle a trailing '/' or '\', remove it first.
+ */
+    int
+vim_stat(const char *name, struct stat *stp)
+{
+    char	buf[_MAX_PATH + 1];
+    char	*p;
+
+    STRNCPY(buf, name, _MAX_PATH);
+    buf[_MAX_PATH] = NUL;
+    p = buf + strlen(buf);
+    if (p > buf)
+	--p;
+    if (p > buf && (*p == '\\' || *p == '/') && p[-1] != ':')
+	*p = NUL;
+    return stat(buf, stp);
+}
 
 #ifdef FEAT_GUI_MSWIN
     void

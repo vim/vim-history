@@ -998,7 +998,7 @@ openscript(name)
 	oldcurscript = curscript;
 	do
 	{
-	    adjust_cursor();	/* put cursor on an existing line */
+	    check_cursor();	/* put cursor on an existing line */
 	    normal_cmd(&oa, FALSE);
 	    vpeekc();		/* check for end of file */
 	}

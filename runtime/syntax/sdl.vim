@@ -4,7 +4,11 @@
 " Last Change:	Mon Mar 16 12:13:33 MET 1998
 " This syntax file is a adaption of the C syntax to SDL syntax
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syntax case ignore
 
 " A bunch of useful SDL keywords

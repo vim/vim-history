@@ -399,7 +399,7 @@ main
     stdout_isatty = (mch_check_win(argc, argv) != FAIL);
 
     /*
-     * allocate the first window and buffer. Can't do much without it
+     * Allocate the first window and buffer. Can't do much without it.
      */
     win_alloc_first();
 
@@ -1297,6 +1297,7 @@ main
 #endif
 	no_wait_return = TRUE;
 	i = msg_didany;
+	set_bufsecret(FALSE);
 	(void)open_buffer(TRUE, NULL);	/* create memfile and read file */
 	no_wait_return = FALSE;
 	msg_didany = i;
@@ -1407,7 +1408,7 @@ main
 		/* When getting the ATTENTION prompt here, use a dialog */
 		swap_exists_action = SEA_DIALOG;
 #endif
-
+		set_bufsecret(FALSE);
 		(void)open_buffer(FALSE, NULL); /* create memfile, read file */
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
@@ -1739,8 +1740,13 @@ process_env(env, is_viminit)
 
     void
 getout(r)
-    int		    r;
+    int		r;
 {
+#ifdef FEAT_AUTOCMD
+    buf_t	*buf;
+    win_t	*wp;
+#endif
+
     exiting = TRUE;
 
     /* Position the cursor on the last screen line, below all the text */
@@ -1750,6 +1756,29 @@ getout(r)
 	windgoto((int)Rows - 1, 0);
 
 #ifdef FEAT_AUTOCMD
+    /* Trigger BufWinLeave for all windows, but only once per buffer. */
+    for (wp = firstwin; wp != NULL; )
+    {
+	buf = wp->w_buffer;
+	if (buf->b_changedtick != -1)
+	{
+	    apply_autocmds(EVENT_BUFWINLEAVE, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
+	    buf->b_changedtick = -1;	/* note that we did it already */
+	    wp = firstwin;		/* restart, window may be closed */
+	}
+	else
+	    wp = wp->w_next;
+    }
+    /* Trigger BufUnload for buffers that are loaded */
+    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+	if (buf->b_ml.ml_mfp != NULL)
+	{
+	    apply_autocmds(EVENT_BUFUNLOAD, buf->b_fname, buf->b_fname,
+								  FALSE, buf);
+	    if (!buf_valid(buf))	/* autocmd may delete the buffer */
+		break;
+	}
     apply_autocmds(EVENT_VIMLEAVEPRE, NULL, NULL, FALSE, curbuf);
 #endif
 

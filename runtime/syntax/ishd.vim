@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	InstallShield Script
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword ishdStatement abort begin case default downto else end
 syn keyword ishdStatement endif endfor endwhile endswitch endprogram exit elseif

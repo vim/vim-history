@@ -3,8 +3,10 @@
 " Maintainer:	Peter Meszaros <pmeszaros@effice.hu>
 " Last Change:	October 9, 1999
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 set iskeyword=$,@,48-57,_
 

@@ -8,14 +8,22 @@
 " other languages.
 " Send comments, suggestions and requests to the maintainer.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 let s:wsh_cpo_save = &cpo
 set cpo&vim
 
-runtime syntax/xml.vim
+runtime! syntax/xml.vim
+unlet b:current_syntax
 
 syn case ignore
 syn include @wshVBScript <sfile>:p:h/vb.vim
+unlet b:current_syntax
 syn include @wshJavaScript <sfile>:p:h/javascript.vim
+unlet b:current_syntax
 syn region wshVBScript
     \ matchgroup=xmlTag    start="<script[^>]*VBScript\(>\|[^>]*[^/>]>\)"
     \ matchgroup=xmlEndTag end="</script>"

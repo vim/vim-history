@@ -11,7 +11,7 @@ int dec __ARGS((pos_t *lp));
 int decl __ARGS((pos_t *lp));
 void check_cursor_lnum __ARGS((void));
 void check_cursor_col __ARGS((void));
-void adjust_cursor __ARGS((void));
+void check_cursor __ARGS((void));
 void adjust_cursor_col __ARGS((void));
 int leftcol_changed __ARGS((void));
 void vim_mem_profile_dump __ARGS((void));
@@ -81,4 +81,5 @@ char_u *find_directory_in_path __ARGS((char_u *ptr, int len, int options));
 int vim_chdir __ARGS((char_u *new_dir));
 int get_user_name __ARGS((char_u *buf, int len));
 void sort_strings __ARGS((char_u **files, int count));
+int pathcmp __ARGS((const char *p, const char *q));
 /* vim: set ft=c : */

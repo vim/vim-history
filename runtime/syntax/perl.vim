@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2000-09-20
+" Last Change:	2001 Jan 15
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -24,14 +24,17 @@
 " unlet perl_no_sync_on_global_var
 " let perl_sync_dist = 100
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " POD starts with ^=<word> and ends with ^=cut
 
 if exists("perl_include_pod")
   " Include a while extra syntax file
   syn include @Pod <sfile>:p:h/pod.vim
+  unlet b:current_syntax
   syn region perlPOD start="^=[a-z]" end="^=cut" contains=@Pod,perlTodo keepend
 else
   " Use only the bare minimum of rules

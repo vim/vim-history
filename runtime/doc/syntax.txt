@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.s.  Last change: 2001 Jan 11
+*syntax.txt*    For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -144,26 +144,27 @@ If you are setting up a system with many users, and you don't want each user
 to add the same syntax file, you can use another directory from 'runtimepath'.
 
 
-ADDING TO AN EXISTING SYNTAX FILE		*mysyntaxfile-add* *syntax2*
+ADDING TO AN EXISTING SYNTAX FILE		*mysyntaxfile-add*
 
 If you are mostly satisfied with an existing syntax file, but would like to
 add a few items or change the highlighting, follow these steps:
 
 1. Create your user directory from 'runtimepath', see above.
 
-2. Create a directory in there called "syntax2".  For Unix: >
-	mkdir ~/.vim/syntax2
+2. Create a directory in there called "after/syntax".  For Unix: >
+	mkdir ~/.vim/after
+	mkdir ~/.vim/after/syntax
 
 3. Write a Vim script that contains the commands you want to use.  For
    example, to change the colors for the C syntax: >
 	highlight cComment ctermfg=Green guifg=Green
 
-4. Write that file in the "syntax2" directory.  Use the name of the syntax,
-   with ".vim" added.  For our C syntax: >
-	:w ~/.vim/syntax2/c.vim
+4. Write that file in the "after/syntax" directory.  Use the name of the
+   syntax, with ".vim" added.  For our C syntax: >
+	:w ~/.vim/after/syntax/c.vim
 
 That's it.  The next time you edit a C file the Comment color will be
-different.  You don't have to exit Vim.
+different.  You don't even have to restart Vim.
 
 
 REPLACING AN EXISTING SYNTAX FILE			*mysyntaxfile-replace*
@@ -310,12 +311,7 @@ When a file is loaded, its syntax file is found in this way:
     +-	When the 'syntax' option was set above, this triggers an autocommand
     |	from |synload-1| (and |synload-2|).  This find the main syntax file in
     |	'runtimepath', with this command:
-    |		runtime syntax/<name>.vim
-    |	Then the modification syntax files are loaded, mostly used to change
-    |	the highlighting:
-    |		runtime! syntax2/<name>.vim
-    |	Note that all files found will be sourced, while only one main syntax
-    |	file is loaded.
+    |		runtime! syntax/<name>.vim
     |
     +-	Any other user installed FileType or Syntax autocommands are
 	triggered.  This can be used to change the highlighting for a specific
@@ -1886,6 +1882,7 @@ This will make each {} block form one fold.
 
 The fold will start on the line where the item starts, and end where the item
 ends.  If the start and end are within the same line, there is no fold.
+The 'foldnestmax' option limits the nesting of syntax folds.
 {not available when Vim was compiled without |+folding| feature}
 
 
@@ -2125,12 +2122,12 @@ External matches					*:syn-ext-match*
 
 These extra regular expression items are available in region patterns:
 
-							*/\z(\)*
+							*/\z(* */\z(\)*
     \z(\)	Marks the sub-expression as "external", meaning that it is can
 		be accessed from another pattern match.  Currently only usable
 		in defining a syntax region start pattern.
 
-    \z1  ...  \z9				*/\z* */\z1* */\z2* *\z9*
+    \z1  ...  \z9					*/\z1* */\z2* *\z9*
 		Matches the same string that was matched by the corresponding
 		sub-expression in a previous start pattern match.
 

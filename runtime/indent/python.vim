@@ -3,6 +3,12 @@
 " Maintainer:	David Bustos <bustos@caltech.edu>
 " Last Change:	October 10, 2000
 
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
+
 " Some preliminary settings
 setlocal cinkeys+=<:>,=elif	" Reindent when : is inserted
 setlocal nolisp		" Make sure lisp indenting doesn't supersede us

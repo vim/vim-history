@@ -4,8 +4,11 @@
 " Written:	Wed Jan 28 14:37:23 GMT--8:00 1998
 " Last Changed:	Mon Jun 21 14:15:03 WST 1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 set iskeyword=@,48-57,_,128-167,224-235,-,:,=
 
 syn keyword mibImplicit ACCESS ANY AUGMENTS BEGIN BIT BITS BOOLEAN CHOICE

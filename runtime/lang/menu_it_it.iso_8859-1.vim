@@ -1,25 +1,28 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Jan 03
+" Last Change:	2001 Jan 16
 
-menutrans clear
+" Quit when menu translations have already been done.
+if exists("did_menu_trans")
+  finish
+endif
 let did_menu_trans = 1
 
 " Help menu
 menutrans &Help			&Aiuto
 menutrans &Overview<Tab><F1>	&Panoramica<Tab><F1>
-menutrans &How-to\ links	&How-to\ collegamenti
+menutrans &How-to\ links	Co&me\.\.\.
 "menutrans &GUI			&GUI
 menutrans &Credits		&Crediti
 menutrans Co&pying		C&opie
-menutrans &Find\.\.\.		&Ricerca\.\.\.
+menutrans &Find\.\.\.		Ce&rca\.\.\.
 menutrans &Version		&Versione
 menutrans &About		&Informazioni
 
 " File menu
 "menutrans &File				&File
 menutrans &Open\.\.\.<Tab>:e		&Apri\.\.\.<Tab>:e
-menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&pri\ in\ nuova\ Finestra\.\.\.<Tab>:sp
+menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&pri\ nuova\ Finestra\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nuovo<Tab>:enew
 menutrans &Close<Tab>:q			&Chiudi<Tab>:q
 menutrans &Save<Tab>:w			&Salva<Tab>:w
@@ -42,10 +45,10 @@ menutrans &Delete<Tab>x			Cance&lla<Tab>x
 menutrans &Select\ all<Tab>ggVG		&Seleziona\ tutto<Tab>ggVG
 menutrans &Find\.\.\.			C&erca\.\.\.
 menutrans &Find<Tab>/			C&erca<Tab>/
-menutrans Find\ and\ Rep&lace		Cerca\ e\ rim&piazza
-menutrans Find\ and\ Rep&lace\.\.\.	Cerca\ e\ rim&piazza\.\.\.
-menutrans Find\ and\ Rep&lace<Tab>:s	Cerca\ e\ rim&piazza<Tab>:s
-menutrans Find\ and\ Rep&lace<Tab>:%s	Cerca\ e\ rim&piazza<Tab>:%s
+menutrans Find\ and\ Rep&lace		Cerca\ e\ Rim&piazza
+menutrans Find\ and\ Rep&lace\.\.\.	Cerca\ e\ Rim&piazza\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:s	Cerca\ e\ Rim&piazza<Tab>:s
+menutrans Find\ and\ Rep&lace<Tab>:%s	Cerca\ e\ Rim&piazza<Tab>:%s
 menutrans Options\.\.\.			Opzioni\.\.\.
 
 " Programming menu
@@ -76,7 +79,7 @@ menutrans &Window			&Finestra
 menutrans &New<Tab>^Wn			&Nuova<Tab>^Wn
 menutrans S&plit<Tab>^Ws		&Dividi\ lo\ schermo<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividi\ verso\ #<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv	Di&vidi\ in\ verticale<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv	Di&vidi\ verticalmente<Tab>^Wv
 menutrans &Close<Tab>^Wc		&Chiudi<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	C&hiudi\ altro(i)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			S&uccessivo<Tab>^Ww
@@ -87,8 +90,8 @@ menutrans M&in\ Height<Tab>^W1_		A&ltezza\ minima<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Larghezza\ massima<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Larghezza\ minima<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Ruotare\ verso\ l'&alto<Tab>^WR
-menutrans Rotate\ &Down<Tab>^Wr		Rotation\ verso\ il &basso<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Scegli\ &font\.\.\.
+menutrans Rotate\ &Down<Tab>^Wr		Ruotare\ verso\ il &basso<Tab>^Wr
+menutrans Select\ &Font\.\.\.		Scegli\ &Font\.\.\.
 
 " The popup menu
 menutrans &Undo		        &Disfa
@@ -97,10 +100,10 @@ menutrans &Copy			C&opia
 menutrans &Paste		I&ncolla
 menutrans &Delete		C&ancella
 menutrans Select\ Blockwise 	Seleziona\ in\ blocco
-menutrans Select\ &Word		Seleziona\ &parola
-menutrans Select\ &Line		Seleziona\ &linea
-menutrans Select\ &Block	Seleziona\ &blocco
-menutrans Select\ &All		Seleziona\ &tutto
+menutrans Select\ &Word		Seleziona\ &Parola
+menutrans Select\ &Line		Seleziona\ &Linea
+menutrans Select\ &Block	Seleziona\ &Blocco
+menutrans Select\ &All		Seleziona\ &Tutto
  
 " The GUI toolbar (for Win32 or GTK)
 if has("win32") || has("gui_gtk")
@@ -108,40 +111,40 @@ if has("win32") || has("gui_gtk")
     delfun Do_toolbar_tmenu
   endif
   fun Do_toolbar_tmenu()
-    tmenu ToolBar.Open		Apri file
-    tmenu ToolBar.Save		Salva file
-    tmenu ToolBar.SaveAll	Salva tutti i files
+    tmenu ToolBar.Open		Apri
+    tmenu ToolBar.Save		Salva
+    tmenu ToolBar.SaveAll	SalvaTutto
     tmenu ToolBar.Print		Stampa
     tmenu ToolBar.Undo		Disfa
     tmenu ToolBar.Redo		Rifai
     tmenu ToolBar.Cut		Taglia
     tmenu ToolBar.Copy		Copia
     tmenu ToolBar.Paste		Incolla
-    tmenu ToolBar.Find		Cerca...
-    tmenu ToolBar.FindNext	Cerca successivo
+    tmenu ToolBar.Find		Cerca
+    tmenu ToolBar.FindNext	CercaSuccessivo
     tmenu ToolBar.FindPrev	Cerca precedente
-    tmenu ToolBar.Replace	Rimpiazza...
-    tmenu ToolBar.LoadSesn	Carica sessione
-    tmenu ToolBar.SaveSesn	Salva sessione
-    tmenu ToolBar.RunScript	Esegui script
-    tmenu ToolBar.Make		Esegui Make 
-    tmenu ToolBar.Shell		Esegui Shell
-    tmenu ToolBar.RunCtags	Genera file di Tags
-    tmenu ToolBar.TagJump	Vai a una Tag
-    tmenu ToolBar.Help		Aiuto!
-    tmenu ToolBar.FindHelp	Cerca nella documentazione...
+    tmenu ToolBar.Replace	Rimpiazza
+    tmenu ToolBar.LoadSesn	CaricaSessione
+    tmenu ToolBar.SaveSesn	SalvaSessione
+    tmenu ToolBar.RunScript	EseguiScript
+    tmenu ToolBar.Make		Make 
+    tmenu ToolBar.Shell		Shell
+    tmenu ToolBar.RunCtags	EseguiCtags
+    tmenu ToolBar.TagJump	VaiATag
+    tmenu ToolBar.Help		Aiuto
+    tmenu ToolBar.FindHelp	CercaInAiuto
   endfun
 endif
 
 " Syntax menu
 menutrans &Syntax		&Sintassi
-menutrans Set\ 'syntax'\ only	Attivare\ soltanto\ 'syntax'
+menutrans Set\ 'syntax'\ only	Attivare\ solo\ \ 'syntax'
 menutrans Set\ 'filetype'\ too	Attivare\ anche\ 'filetype'
 menutrans &Off			&Basta
 menutrans &Manual		&Manuale
 menutrans A&utomatic		A&utomatico
-menutrans &on\ (this\ file)	A&ttivare\ (per\ questo\ file)
-menutrans o&ff\ (this\ file)	&disattivare\ (per\ \questo\ file)
-menutrans Co&lor\ test		Test\ dei\ &Colori
-menutrans &Highlight\ test	Test\ dell'&evidenziamento
+menutrans o&n\ (this\ file)	A&ttivare\ (con\ questo\ file)
+menutrans o&ff\ (this\ file)	&Disattivare\ (con\ \questo\ file)
+menutrans Co&lor\ test		Test\ &Colori
+menutrans &Highlight\ test	Test\ &Evidenziamento
 menutrans &Convert\ to\ HTML	Converti\ ad\ &HTML

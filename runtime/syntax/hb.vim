@@ -2,13 +2,16 @@
 " Language:	Hyper Builder
 " Maintainer:	Alejandro Forero Cuervo
 " URL:		http://bachue.com/hb/vim/syntax/hb.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the HTML syntax to start with
 "syn include @HTMLStuff <sfile>:p:h/htmlhb.vim
+"unlet b:current_syntax
 
 "this would be nice but we are supposed not to do it
 "set mps=<:>

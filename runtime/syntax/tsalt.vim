@@ -1,11 +1,13 @@
 " Vim syntax file
 " Language:	Telix (Modem Comm Program) SALT Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Version Info: @(#)tsalt.vim	1.5	97/12/16 08:11:15
 
-" Remove any old syn stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " turn case matching off
 syn case ignore

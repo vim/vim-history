@@ -5,8 +5,10 @@
 
 " Open Psion Language... (EPOC16/EPOC32)
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " case is not significant
 syn case ignore

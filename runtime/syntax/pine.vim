@@ -3,8 +3,11 @@
 " Maintainer:	David Pascoe <David.Pascoe@jtec.com.au>
 " Last Change:	Wed Oct 13 11:02:15 WST 1999, update for pine 4.20
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 set iskeyword=@,48-57,_,128-167,224-235,-,
 
 syn keyword pineConfig addrbook-sort-rule

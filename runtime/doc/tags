@@ -72,8 +72,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'bs'	options.txt	/*'bs'*
 'bsdir'	options.txt	/*'bsdir'*
 'bsk'	options.txt	/*'bsk'*
+'bst'	options.txt	/*'bst'*
 'bt'	options.txt	/*'bt'*
 'bufhidden'	options.txt	/*'bufhidden'*
+'bufsecret'	options.txt	/*'bufsecret'*
 'buftype'	options.txt	/*'buftype'*
 'cb'	options.txt	/*'cb'*
 'cc'	options.txt	/*'cc'*
@@ -162,6 +164,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'fdi'	options.txt	/*'fdi'*
 'fdl'	options.txt	/*'fdl'*
 'fdm'	options.txt	/*'fdm'*
+'fdn'	options.txt	/*'fdn'*
 'fdt'	options.txt	/*'fdt'*
 'fe'	options.txt	/*'fe'*
 'fen'	options.txt	/*'fen'*
@@ -187,6 +190,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'foldlevel'	options.txt	/*'foldlevel'*
 'foldmarker'	options.txt	/*'foldmarker'*
 'foldmethod'	options.txt	/*'foldmethod'*
+'foldnestmax'	options.txt	/*'foldnestmax'*
 'foldtext'	options.txt	/*'foldtext'*
 'formatoptions'	options.txt	/*'formatoptions'*
 'formatprg'	options.txt	/*'formatprg'*
@@ -797,12 +801,16 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'ut'	options.txt	/*'ut'*
 'vb'	options.txt	/*'vb'*
 'vbs'	options.txt	/*'vbs'*
+'vdir'	options.txt	/*'vdir'*
 've'	options.txt	/*'ve'*
 'verbose'	options.txt	/*'verbose'*
 'vi'	options.txt	/*'vi'*
+'viewdir'	options.txt	/*'viewdir'*
+'viewoptions'	options.txt	/*'viewoptions'*
 'viminfo'	options.txt	/*'viminfo'*
 'virtualedit'	options.txt	/*'virtualedit'*
 'visualbell'	options.txt	/*'visualbell'*
+'vop'	options.txt	/*'vop'*
 'w1200'	vi_diff.txt	/*'w1200'*
 'w300'	vi_diff.txt	/*'w300'*
 'w9600'	vi_diff.txt	/*'w9600'*
@@ -1032,6 +1040,13 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /[]	pattern.txt	/*\/[]*
 /\	pattern.txt	/*\/\\*
 /\$	pattern.txt	/*\/\\$*
+/\%$	pattern.txt	/*\/\\%$*
+/\%(	pattern.txt	/*\/\\%(*
+/\%(\)	pattern.txt	/*\/\\%(\\)*
+/\%[]	pattern.txt	/*\/\\%[]*
+/\%^	pattern.txt	/*\/\\%^*
+/\&	pattern.txt	/*\/\\&*
+/\(	pattern.txt	/*\/\\(*
 /\(\)	pattern.txt	/*\/\\(\\)*
 /\)	pattern.txt	/*\/\\)*
 /\+	pattern.txt	/*\/\\+*
@@ -1092,7 +1107,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\u	pattern.txt	/*\/\\u*
 /\w	pattern.txt	/*\/\\w*
 /\x	pattern.txt	/*\/\\x*
-/\z	syntax.txt	/*\/\\z*
+/\z(	syntax.txt	/*\/\\z(*
 /\z(\)	syntax.txt	/*\/\\z(\\)*
 /\z1	syntax.txt	/*\/\\z1*
 /\z2	syntax.txt	/*\/\\z2*
@@ -1143,6 +1158,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 28.6	usr_28.txt	/*28.6*
 28.7	usr_28.txt	/*28.7*
 28.8	usr_28.txt	/*28.8*
+28.9	usr_28.txt	/*28.9*
 2html.vim	syntax.txt	/*2html.vim*
 40.1	usr_40.txt	/*40.1*
 40.2	usr_40.txt	/*40.2*
@@ -1286,6 +1302,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :buffers	windows.txt	/*:buffers*
 :bun	windows.txt	/*:bun*
 :bunload	windows.txt	/*:bunload*
+:bw	windows.txt	/*:bw*
+:bwipe	windows.txt	/*:bwipe*
+:bwipeout	windows.txt	/*:bwipeout*
 :c	change.txt	/*:c*
 :cN	quickfix.txt	/*:cN*
 :cNext	quickfix.txt	/*:cNext*
@@ -1539,6 +1558,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :let-register	eval.txt	/*:let-register*
 :let-star	eval.txt	/*:let-star*
 :list	various.txt	/*:list*
+:lo	starting.txt	/*:lo*
+:loadview	starting.txt	/*:loadview*
 :ls	windows.txt	/*:ls*
 :m	change.txt	/*:m*
 :ma	motion.txt	/*:ma*
@@ -1775,6 +1796,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :set-browse	options.txt	/*:set-browse*
 :set-default	options.txt	/*:set-default*
 :set-termcap	options.txt	/*:set-termcap*
+:set-verbose	options.txt	/*:set-verbose*
 :set^=	options.txt	/*:set^=*
 :set_env	options.txt	/*:set_env*
 :setf	options.txt	/*:setf*
@@ -2198,10 +2220,14 @@ BufHidden	autocmd.txt	/*BufHidden*
 BufLeave	autocmd.txt	/*BufLeave*
 BufNewFile	autocmd.txt	/*BufNewFile*
 BufRead	autocmd.txt	/*BufRead*
+BufReadAfter	autocmd.txt	/*BufReadAfter*
 BufReadCmd	autocmd.txt	/*BufReadCmd*
 BufReadPost	autocmd.txt	/*BufReadPost*
 BufReadPre	autocmd.txt	/*BufReadPre*
+BufSecret	autocmd.txt	/*BufSecret*
 BufUnload	autocmd.txt	/*BufUnload*
+BufWinLeave	autocmd.txt	/*BufWinLeave*
+BufWipeout	autocmd.txt	/*BufWipeout*
 BufWrite	autocmd.txt	/*BufWrite*
 BufWriteCmd	autocmd.txt	/*BufWriteCmd*
 BufWritePost	autocmd.txt	/*BufWritePost*
@@ -2373,6 +2399,7 @@ Insert	insert.txt	/*Insert*
 Insert-mode	insert.txt	/*Insert-mode*
 Internationalization	multibyte.txt	/*Internationalization*
 J	change.txt	/*J*
+James-Bond	windows.txt	/*James-Bond*
 Japanese	multibyte.txt	/*Japanese*
 K	various.txt	/*K*
 Korean	multibyte.txt	/*Korean*
@@ -3170,6 +3197,7 @@ fold-options	fold.txt	/*fold-options*
 fold-syntax	fold.txt	/*fold-syntax*
 fold.txt	fold.txt	/*fold.txt*
 foldclosed()	eval.txt	/*foldclosed()*
+foldclosedend()	eval.txt	/*foldclosedend()*
 folddashes-variable	eval.txt	/*folddashes-variable*
 foldend-variable	eval.txt	/*foldend-variable*
 folding	fold.txt	/*folding*
@@ -3725,6 +3753,7 @@ mode-ins-repl	insert.txt	/*mode-ins-repl*
 mode-replace	insert.txt	/*mode-replace*
 mode-switching	intro.txt	/*mode-switching*
 modeline	options.txt	/*modeline*
+modeline-version	options.txt	/*modeline-version*
 more-compatible	version5.txt	/*more-compatible*
 more-prompt	message.txt	/*more-prompt*
 motion.txt	motion.txt	/*motion.txt*
@@ -3801,6 +3830,7 @@ new-file-writing	version6.txt	/*new-file-writing*
 new-filetype	filetype.txt	/*new-filetype*
 new-filetype-5.4	version5.txt	/*new-filetype-5.4*
 new-filetype-plugins	version6.txt	/*new-filetype-plugins*
+new-filetype-scripts	filetype.txt	/*new-filetype-scripts*
 new-folding	version6.txt	/*new-folding*
 new-functions-5.2	version5.txt	/*new-functions-5.2*
 new-global-values	version6.txt	/*new-global-values*
@@ -3821,6 +3851,7 @@ new-script	version5.txt	/*new-script*
 new-script-5.4	version5.txt	/*new-script-5.4*
 new-search-path	version6.txt	/*new-search-path*
 new-searchpat	version6.txt	/*new-searchpat*
+new-secret-buffers	version6.txt	/*new-secret-buffers*
 new-session-files	version5.txt	/*new-session-files*
 new-user-defined	version5.txt	/*new-user-defined*
 new-utf-8	version6.txt	/*new-utf-8*
@@ -3831,6 +3862,7 @@ nextnonblank()	eval.txt	/*nextnonblank()*
 no-eval-feature	eval.txt	/*no-eval-feature*
 no_buffers_menu	gui.txt	/*no_buffers_menu*
 normal-index	index.txt	/*normal-index*
+not-compatible	usr_01.txt	/*not-compatible*
 not-edited	editing.txt	/*not-edited*
 notation	intro.txt	/*notation*
 notepad	gui_w32.txt	/*notepad*
@@ -4086,6 +4118,8 @@ search-commands	pattern.txt	/*search-commands*
 search-offset	pattern.txt	/*search-offset*
 search-pattern	pattern.txt	/*search-pattern*
 search-range	pattern.txt	/*search-range*
+searchpair()	eval.txt	/*searchpair()*
+secret-buffer	windows.txt	/*secret-buffer*
 section	motion.txt	/*section*
 sed-syntax	syntax.txt	/*sed-syntax*
 sed.vim	syntax.txt	/*sed.vim*
@@ -4182,7 +4216,6 @@ syntax-highlighting	syntax.txt	/*syntax-highlighting*
 syntax-loading	syntax.txt	/*syntax-loading*
 syntax-printing	usr_07.txt	/*syntax-printing*
 syntax.txt	syntax.txt	/*syntax.txt*
-syntax2	syntax.txt	/*syntax2*
 sys-file-list	help.txt	/*sys-file-list*
 system()	eval.txt	/*system()*
 system-vimrc	starting.txt	/*system-vimrc*

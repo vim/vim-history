@@ -7,11 +7,14 @@
 " Comment:          Replaced sourcing c.vim file by ada.vim and rename yacc*
 "		in ayacc*
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the Ada syntax to start with
-runtime syntax/ada.vim
+runtime! syntax/ada.vim
+unlet b:current_syntax
 
 " Clusters
 syn cluster	ayaccActionGroup	contains=ayaccDelim,cInParen,cTodo,cIncluded,ayaccDelim,ayaccCurlyError,ayaccUnionCurly,ayaccUnion,cUserLabel,cOctalZero,cCppOut2,cCppSkip,cErrInBracket,cErrInParen,cOctalError

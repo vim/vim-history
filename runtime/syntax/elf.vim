@@ -7,8 +7,10 @@
 "      This is the Applix Inc., Macro and Builder programming language.
 "      It has nothing in common with the binary format called ELF.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Case does not matter
 syn case ignore

@@ -504,9 +504,10 @@ EXTERN char_u	*p_slm;		/* 'selectmode' */
 EXTERN char_u	*p_ssop;	/* 'sessionoptions' */
 EXTERN unsigned	ssop_flags;
 # ifdef IN_OPTION_C
+/* Also used for 'viewoptions'! */
 static char *(p_ssop_values[]) = {"buffers", "winpos", "resize", "winsize",
     "options", "help", "blank", "globals", "slash", "unix", "sesdir",
-    "curdir", "folds", NULL};
+    "curdir", "folds", "cursor", NULL};
 # endif
 # define SSOP_BUFFERS	0x001
 # define SSOP_WINPOS	0x002
@@ -521,6 +522,7 @@ static char *(p_ssop_values[]) = {"buffers", "winpos", "resize", "winsize",
 # define SSOP_SESDIR	0x400
 # define SSOP_CURDIR	0x800
 # define SSOP_FOLDS	0x1000
+# define SSOP_CURSOR	0x2000
 #endif
 EXTERN char_u	*p_sh;		/* 'shell' */
 EXTERN char_u	*p_shcf;	/* 'shellcmdflag' */
@@ -611,6 +613,11 @@ EXTERN char_u	*p_fcs;		/* 'fillchar' */
 #endif
 #ifdef FEAT_VIMINFO
 EXTERN char_u	*p_viminfo;	/* 'viminfo' */
+#endif
+#ifdef FEAT_SESSION
+EXTERN char_u	*p_vdir;	/* 'viewdir' */
+EXTERN char_u	*p_vop;		/* 'viewoptions' */
+EXTERN unsigned	vop_flags;
 #endif
 EXTERN int	p_vb;		/* 'visualbell' */
 #ifdef FEAT_VIRTUALEDIT

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
@@ -15,8 +15,10 @@
 " hs_highlight_more_types - Treat names of other common types as keywords.
 " hs_highlight_debug - Highlight names of debugging functions.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " (Qualified) identifiers (no default highlighting)
 syn match ConId "\(\<[A-Z][a-zA-Z0-9_']*\.\)\=\<[A-Z][a-zA-Z0-9_']*\>"
