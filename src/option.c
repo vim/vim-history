@@ -4799,9 +4799,21 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'encoding' and 'fileencoding' */
     else if (varp == &p_enc || gvarp == &p_fenc || varp == &p_tenc)
     {
-	if (varp == &curbuf->b_p_fenc && !curbuf->b_p_ma)
-	    errmsg = e_modifiable;
-	else
+	if (gvarp == &p_fenc)
+	{
+	    if (!curbuf->b_p_ma)
+		errmsg = e_modifiable;
+	    else if (vim_strchr(*varp, ',') != NULL)
+		/* No comma allowed in 'fileencoding'; catches confusing it
+		 * with 'fileencodings'. */
+		errmsg = e_invarg;
+# ifdef FEAT_TITLE
+	    else
+		/* May show a "+" in the title now. */
+		need_maketitle = TRUE;
+# endif
+	}
+	if (errmsg == NULL)
 	{
 	    /* canonize the value, so that STRCMP() can be used on it */
 	    p = enc_canonize(*varp);
@@ -9305,11 +9317,16 @@ save_file_ff(buf)
  * Return TRUE if 'fileformat' and/or 'fileencoding' has a different value
  * from when editing started (save_file_ff() called).
  * Also when 'endofline' was changed and 'binary' is set.
+ * Don't consider a new, empty buffer to be changed.
  */
     int
 file_ff_differs(buf)
     buf_T	*buf;
 {
+    if ((buf->b_flags & BF_NEW)
+	    && buf->b_ml.ml_line_count == 1
+	    && *ml_get_buf(buf, (linenr_T)1, FALSE) == NUL)
+	return FALSE;
     if (buf->b_start_ffc != *buf->b_p_ff)
 	return TRUE;
     if (buf->b_p_bin && buf->b_start_eol != buf->b_p_eol)
