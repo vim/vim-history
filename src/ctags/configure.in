@@ -1,6 +1,6 @@
-dnl $Id: configure.in,v 6.8 1998/08/12 04:25:54 darren Exp $
+dnl $Id: configure.in,v 8.2 1999/03/28 00:30:51 darren Exp $
 
-dnl	Copyright (c) 1996-1998, Darren Hiebert
+dnl	Copyright (c) 1996-1999, Darren Hiebert
 dnl
 dnl	This source code is released for free distribution under the terms
 dnl	of the GNU General Public License.
@@ -13,6 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
+echo 'Exuberant Ctags, version 3.2.4'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros
@@ -130,16 +131,10 @@ dnl Checks for header file macros
 dnl -----------------------------
 
 CHECK_HEADER_DEFINE(L_tmpnam, stdio.h,, AC_DEFINE(L_tmpnam, 20))
-CHECK_HEADER_DEFINE(SEEK_SET, stdio.h,, AC_DEFINE(SEEK_SET, 0))
-CHECK_HEADER_DEFINE(SEEK_END, stdio.h,, AC_DEFINE(SEEK_END, 2))
 
 CHECK_HEADER_DEFINE(INT_MAX, limits.h,,
 	CHECK_HEADER_DEFINE(MAXINT, limits.h,
 		AC_DEFINE(INT_MAX, MAXINT), AC_DEFINE(INT_MAX, 32767)))
-
-dnl This check is for informational purposes only. It doesn't set anything.
-CHECK_HEADER_DEFINE(PATH_MAX, limits.h,,
-	CHECK_HEADER_DEFINE(MAXNAMLEN, dirent.h))
 
 
 dnl Checks for typedefs
@@ -147,6 +142,13 @@ dnl -------------------
 
 AC_TYPE_SIZE_T
 AC_TYPE_OFF_T
+
+AC_MSG_CHECKING("for fpos_t")
+AC_EGREP_HEADER(fpos_t, stdio.h, AC_MSG_RESULT(yes),
+[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(fpos_t, long)
+])
 
 AC_MSG_CHECKING("for clock_t")
 AC_EGREP_HEADER(clock_t, time.h, AC_MSG_RESULT(yes),
@@ -166,6 +168,15 @@ dnl Checks for library functions
 dnl ----------------------------
 
 AC_REPLACE_FUNCS(strstr)
+
+AC_CHECK_FUNCS(fgetpos, have_fgetpos=yes)
+
+dnl SEEK_SET should be in stdio.h, but may be in unistd.h on SunOS 4.1.x
+if test "$have_fgetpos" != yes; then
+	CHECK_HEADER_DEFINE(SEEK_SET, stdio.h,,
+		CHECK_HEADER_DEFINE(SEEK_SET, unistd.h,,
+			AC_DEFINE(SEEK_SET, 0)))
+fi
 
 AC_CHECK_FUNCS(strerror opendir)
 AC_CHECK_FUNCS(clock times, break)
@@ -203,7 +214,7 @@ dnl Checks for missing prototypes
 dnl -----------------------------
 AC_CHECKING("for missing prototypes")
 
-AC_DEFUN(CHECK_PROTO, [AC_EGREP_HEADER([[^A-Za-zo-9_]$1[ 	]*\(.*\)[ 	]*;], $2,, AC_DEFINE(patsubst([NEED_PROTO_NAME], [NAME], translit($1, [a-z], [A-Z]))) AC_MSG_RESULT(adding prototype for $1))])
+AC_DEFUN(CHECK_PROTO, [AC_EGREP_HEADER([[^A-Za-z0-9_]$1([ 	]+[A-Za-z0-9_]*)?\(], $2,, AC_DEFINE(patsubst([NEED_PROTO_NAME], [NAME], translit($1, [a-z], [A-Z]))) AC_MSG_RESULT(adding prototype for $1))])
 
 if test "$have_remove" = yes; then
 	CHECK_PROTO(remove, stdio.h)
@@ -214,6 +225,10 @@ CHECK_PROTO(malloc,	stdlib.h)
 CHECK_PROTO(getenv,	stdlib.h)
 CHECK_PROTO(strstr,	string.h)
 CHECK_PROTO(stat,	sys/stat.h)
+CHECK_PROTO(lstat,	sys/stat.h)
+if test "$have_fgetpos" = yes; then
+	CHECK_PROTO(fgetpos, stdio.h)
+fi
 if test "$have_truncate" = yes; then
 	CHECK_PROTO(truncate, unistd.h)
 fi

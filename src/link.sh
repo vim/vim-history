@@ -10,7 +10,7 @@
 # command if anything fails.
 #
 # Author: Bram Moolenaar
-#   Date: 1997 Apr 7
+#   Date: 1999 June 7
 
 echo "$LINK" >link.cmd
 exit_value=0
@@ -37,12 +37,12 @@ else
   if sh link.cmd; then
     touch link.sed
     for libname in SM ICE nsl dnet dnet_stub inet socket dir elf Xmu Xpm x pthread thread readline; do
-      if grep "l$libname" link.cmd >/dev/null; then
+      if grep "l$libname " link.cmd >/dev/null; then
         if test ! -f link1.sed; then
           echo "link.sh: OK, linking works, let's try removing a few libraries..."
         fi
         echo "link.sh: Trying to remove the $libname library..."
-        echo "s/-l$libname[ 	]*//g" >link1.sed
+        echo "s/-l$libname  *//g" >link1.sed
         sed -f link.sed <link.cmd >linkit2.sh
         sed -f link1.sed <linkit2.sh >linkit.sh
         cat linkit.sh
@@ -56,7 +56,7 @@ else
       fi
     done
     if test ! -f pathdef.c; then
-      make pathdef.o
+      $MAKE pathdef.o
     fi
     if test ! -f link1.sed; then
       echo "link.sh: Linked fine, no libraries can be removed"
@@ -83,7 +83,7 @@ if test -s link.sed; then
     mv -f link.sed link2.sed
     touch link.sed
     rm -f pathdef.c
-    make pathdef.o
+    $MAKE pathdef.o
   fi
 fi
 if test -f link.sed -a ! -s link.sed -a ! -f link3.sed; then

@@ -19,6 +19,13 @@ extern int	sscanf __ARGS((char *, char *, ...));
 extern FILE	*fopen __ARGS((char *, char *));
 extern int	fclose __ARGS((FILE *));
 extern int	fseek __ARGS((FILE *, long, int));
+#ifdef HAVE_FSEEKO
+extern int	fseeko __ARGS((FILE *, off_t, int));
+#endif
+extern long	ftell __ARGS((FILE *));
+#ifdef HAVE_FTELLO
+extern off_t	ftello __ARGS((FILE *));
+#endif
 extern void	rewind __ARGS((FILE *));
 extern int	fread __ARGS((char *, int, int, FILE *));
 extern int	fwrite __ARGS((char *, int, int, FILE *));

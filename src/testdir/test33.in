@@ -1,9 +1,11 @@
 Test for 'lisp'
+If the lisp feature is not enabled, this will fail!
 
 STARTTEST
 :set lisp
 /^(defun
-=G:/^(defun/,$wq! test.out
+=G:/^(defun/,$w! test.out
+:q!
 ENDTEST
 
 (defun html-file (base)

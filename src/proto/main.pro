@@ -1,5 +1,5 @@
 /* main.c */
-int process_env __ARGS((char_u *env));
+int process_env __ARGS((char_u *env, int is_viminit));
 void getout __ARGS((int r));
 int toF_TyA __ARGS((int c));
 int fkmap __ARGS((int c));

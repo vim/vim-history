@@ -23,8 +23,16 @@
 #undef STRLEN
 #undef FF
 #undef OP_DELETE
+#undef OP_JOIN
 #ifdef __BORLANDC__
 #define NOPROTO 1
+#endif
+/* remove MAX and MIN, included by glib.h, redefined by sys/param.h */
+#ifdef MAX
+# undef MAX
+#endif
+#ifdef MIN
+# undef MIN
 #endif
 #include <EXTERN.h>
 #include <perl.h>
@@ -228,14 +236,14 @@ do_perl(eap)
     char	*err;
     STRLEN	length;
     SV		*sv;
-    dSP;
 
     if (!perl_interp)
     {
 	perl_init();
-	SPAGAIN;
     }
 
+    {
+    dSP;
     ENTER;
     SAVETMPS;
 
@@ -243,7 +251,7 @@ do_perl(eap)
     perl_eval_sv(sv, G_DISCARD | G_NOARGS);
     SvREFCNT_dec(sv);
 
-    err = SvPV(GvSV(errgv), length);
+    err = SvPV(GvSV(PL_errgv), length);
 
     FREETMPS;
     LEAVE;
@@ -253,7 +261,7 @@ do_perl(eap)
 
     msg_split((char_u *)err, highlight_attr[HLF_E]);
     return FAIL;
-    
+    }
 }
 
     static int
@@ -262,9 +270,9 @@ replace_line(line, end)
 {
     char *str;
 
-    if (SvOK(GvSV(defgv)))
+    if (SvOK(GvSV(PL_defgv)))
     {
-	str = SvPV(GvSV(defgv), na);
+	str = SvPV(GvSV(PL_defgv), PL_na);
 	ml_replace(*line, (char_u *)str, 1);
 #ifdef SYNTAX_HL
 	syn_changed(*line); /* recompute syntax hl. for this line */
@@ -288,7 +296,6 @@ do_perldo(eap)
     SV		*sv;
     char	*str;
     linenr_t	i;
-    dSP;
 
     if (bufempty())
 	return FAIL;
@@ -296,8 +303,9 @@ do_perldo(eap)
     if (!perl_interp)
     {
 	perl_init();
-	SPAGAIN;
     }
+    {
+    dSP;
     length = strlen((char *)eap->arg);
     sv = newSV(length + sizeof("sub VIM::perldo {")-1 + 1);
     sv_setpvn(sv, "sub VIM::perldo {", sizeof("sub VIM::perldo {")-1);
@@ -305,7 +313,7 @@ do_perldo(eap)
     sv_catpvn(sv, "}", 1);
     perl_eval_sv(sv, G_DISCARD | G_NOARGS);
     SvREFCNT_dec(sv);
-    str = SvPV(GvSV(errgv), length);
+    str = SvPV(GvSV(PL_errgv), length);
     if (length)
 	goto err;
 
@@ -316,10 +324,10 @@ do_perldo(eap)
     SAVETMPS;
     for (i = eap->line1; i <= eap->line2; i++)
     {
-	sv_setpv(GvSV(defgv),(char *)ml_get(i));
+	sv_setpv(GvSV(PL_defgv),(char *)ml_get(i));
 	PUSHMARK(sp);
 	perl_call_pv("VIM::perldo", G_SCALAR | G_EVAL);
-	str = SvPV(GvSV(errgv), length);
+	str = SvPV(GvSV(PL_errgv), length);
 	if (length)
 	    break;
 	SPAGAIN;
@@ -343,10 +351,11 @@ do_perldo(eap)
 err:
     msg_split((char_u *)str, highlight_attr[HLF_E]);
     return FAIL;
+    }
 }
 
 /* Register any extra external extensions */
-extern void 
+extern void
 #ifdef __BORLANDC__
 __import
 #endif
@@ -398,7 +407,7 @@ SetOption(line)
 
     PPCODE:
     if (line != NULL)
-	do_set((char_u *)line);
+	do_set((char_u *)line, FALSE);
     update_screen(NOT_VALID);
 
 void
@@ -464,6 +473,7 @@ Buffers(...)
 	    {
 		char_u *pat;
 		int len;
+
 		pat = (char_u *)SvPV(sv, len);
 		++emsg_off;
 		b = buflist_findpat(pat, pat+len);
@@ -653,7 +663,7 @@ Set(vimbuf, ...)
 	lnum = SvIV(ST(1));
 	for(i=2; i<items; i++, lnum++)
 	{
-	    line = SvPV(ST(i),na);
+	    line = SvPV(ST(i),PL_na);
 	    if(lnum > 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
 	    {
 		savebuf = curbuf;
@@ -738,7 +748,7 @@ Append(vimbuf, ...)
 	lnum = SvIV(ST(1));
 	for(i=2; i<items; i++, lnum++)
 	{
-	    line = SvPV(ST(i),na);
+	    line = SvPV(ST(i),PL_na);
 	    if(lnum >= 0 && lnum <= vimbuf->b_ml.ml_line_count && line != NULL)
 	    {
 		savebuf = curbuf;

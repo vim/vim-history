@@ -47,14 +47,14 @@
 #ifdef HAVE_ST_BLKSIZE
 # define STATFS stat
 # define F_BSIZE st_blksize
-# define fstatfs(fd, buf, len, nul) fstat((fd), (buf))
+# define fstatfs(fd, buf, len, nul) mch_fstat((fd), (buf))
 #else
 # ifdef HAVE_SYS_STATFS_H
 #  include <sys/statfs.h>
 #  define STATFS statfs
 #  define F_BSIZE f_bsize
 #  ifdef __MINT__		/* do we still need this? */
-#   define fstatfs(fd, buf, len, nul) fstat((fd), (buf))
+#   define fstatfs(fd, buf, len, nul) mch_fstat((fd), (buf))
 #  endif
 # endif
 #endif
@@ -174,17 +174,18 @@ mf_open(fname, trunc_file)
      * with a sizeof(), because block 0 is defined in memline.c (Sorry).
      * The maximal block size is arbitrary.
      */
-    if (mfp->mf_fd >= 0 &&
-		    fstatfs(mfp->mf_fd, &stf, sizeof(struct statfs), 0) == 0 &&
-		    stf.F_BSIZE >= 1048 && stf.F_BSIZE <= 50000)
+    if (mfp->mf_fd >= 0
+	    && fstatfs(mfp->mf_fd, &stf, sizeof(struct statfs), 0) == 0
+	    && stf.F_BSIZE >= 1048
+	    && stf.F_BSIZE <= 50000)
 	mfp->mf_page_size = stf.F_BSIZE;
 #endif
 
-    if (mfp->mf_fd < 0 || trunc_file ||
-			 (size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
+    if (mfp->mf_fd < 0 || trunc_file
+		      || (size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	mfp->mf_blocknr_max = 0;	/* no file or empty file */
     else
-	mfp->mf_blocknr_max = size / mfp->mf_page_size;
+	mfp->mf_blocknr_max = (blocknr_t)(size / mfp->mf_page_size);
     mfp->mf_blocknr_min = -1;
     mfp->mf_neg_count = 0;
     mfp->mf_infile_count = mfp->mf_blocknr_max;
@@ -262,8 +263,9 @@ mf_close(mfp, del_file)
  * Close the swap file for a memfile.  Used when 'swapfile' is reset.
  */
     void
-mf_close_file(buf)
+mf_close_file(buf, getlines)
     BUF		*buf;
+    int		getlines;	/* get all lines into memory? */
 {
     MEMFILE	*mfp;
     linenr_t	lnum;
@@ -272,13 +274,15 @@ mf_close_file(buf)
     if (mfp == NULL || mfp->mf_fd < 0)		/* nothing to close */
 	return;
 
-    /* get all blocks in memory by accessing all lines (clumsy!) */
-    dont_release = TRUE;
-    for (lnum = 1; lnum <= buf->b_ml.ml_line_count; ++lnum)
-	(void)ml_get_buf(buf, lnum, FALSE);
-    dont_release = FALSE;
-
-    /* TODO: should check if all blocks are really in core */
+    if (getlines)
+    {
+	/* get all blocks in memory by accessing all lines (clumsy!) */
+	dont_release = TRUE;
+	for (lnum = 1; lnum <= buf->b_ml.ml_line_count; ++lnum)
+	    (void)ml_get_buf(buf, lnum, FALSE);
+	dont_release = FALSE;
+	/* TODO: should check if all blocks are really in core */
+    }
 
     if (close(mfp->mf_fd) < 0)			/* close the file */
 	EMSG("Close error on swap file");
@@ -516,7 +520,7 @@ mf_sync(mfp, flags)
 {
     int	    status;
     BHDR    *hp;
-#ifdef SYNC_DUP_CLOSE
+#if defined(SYNC_DUP_CLOSE) && !defined(MSDOS)
     int	    fd;
 #endif
 
@@ -835,22 +839,32 @@ mf_release_all()
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
     {
 	mfp = buf->b_ml.ml_mfp;
-	/* only if there is a memfile with a file */
-	if (mfp != NULL && mfp->mf_fd >= 0)
-	    for (hp = mfp->mf_used_last; hp != NULL; )
+	if (mfp != NULL)
+	{
+	    /* If no swap file yet, may open one */
+	    if (mfp->mf_fd < 0 && buf->b_may_swap)
+		ml_open_file(buf);
+
+	    /* only if there is a swapfile */
+	    if (mfp->mf_fd >= 0)
 	    {
-		if (!(hp->bh_flags & BH_LOCKED) && (!(hp->bh_flags & BH_DIRTY)
-						|| mf_write(mfp, hp) != FAIL))
+		for (hp = mfp->mf_used_last; hp != NULL; )
 		{
-		    mf_rem_used(mfp, hp);
-		    mf_rem_hash(mfp, hp);
-		    mf_free_bhdr(hp);
-		    hp = mfp->mf_used_last;	/* re-start, list was changed */
-		    retval = TRUE;
+		    if (!(hp->bh_flags & BH_LOCKED)
+			    && (!(hp->bh_flags & BH_DIRTY)
+				|| mf_write(mfp, hp) != FAIL))
+		    {
+			mf_rem_used(mfp, hp);
+			mf_rem_hash(mfp, hp);
+			mf_free_bhdr(hp);
+			hp = mfp->mf_used_last;	/* re-start, list was changed */
+			retval = TRUE;
+		    }
+		    else
+			hp = hp->bh_prev;
 		}
-		else
-		    hp = hp->bh_prev;
 	    }
+	}
     }
     return retval;
 }
@@ -934,7 +948,7 @@ mf_read(mfp, hp)
 	return FAIL;
 
     page_size = mfp->mf_page_size;
-    offset = page_size * hp->bh_bnum;
+    offset = (off_t)page_size * hp->bh_bnum;
     size = page_size * hp->bh_page_count;
     if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
     {
@@ -992,7 +1006,7 @@ mf_write(mfp, hp)
 	else
 	    hp2 = hp;
 
-	offset = page_size * nr;
+	offset = (off_t)page_size * nr;
 	if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 	{
 	    EMSG("Seek error in swap file write");
@@ -1189,7 +1203,7 @@ mf_do_open(mfp, fname, trunc_file)
      * fname cannot be NameBuff, because it must have been allocated.
      */
     mf_set_ffname(mfp);
-#if defined(MSDOS) || defined(WIN32) || defined(RISCOS)
+#if defined(MSDOS) || defined(MSWIN) || defined(RISCOS)
     /*
      * A ":!cd e:xxx" may change the directory without us knowning, use the
      * full pathname always.  Careful: This frees fname!
@@ -1200,12 +1214,17 @@ mf_do_open(mfp, fname, trunc_file)
     /*
      * try to open the file
      */
-    mfp->mf_fd = open((char *)mfp->mf_fname,
+    mfp->mf_fd = open(
+#ifdef VMS
+	    vms_fixfilename(mfp->mf_fname),
+#else
+	    (char *)mfp->mf_fname,
+#endif
 	    (trunc_file ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)) | O_EXTRA
 #if defined(UNIX) || defined(RISCOS)		 /* open in rw------- mode */
 		    , (mode_t)0600
 #endif
-#if defined(MSDOS) || defined(WIN32) || defined(__EMX__)
+#if defined(MSDOS) || defined(MSWIN) || defined(__EMX__)
 		    , S_IREAD | S_IWRITE	 /* open read/write */
 #endif
 #ifdef VMS		    /* open in rw------- mode */

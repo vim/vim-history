@@ -11,6 +11,7 @@
 #if defined(USE_CSCOPE) || defined(PROTO)
 
 #include <sys/types.h>		/* pid_t */
+#include <sys/stat.h>		/* dev_t, ino_t */
 
 #define CSCOPE_SUCCESS		0
 #define CSCOPE_FAILURE		-1
@@ -46,7 +47,7 @@
 
 typedef struct {
     char *  name;
-    int     (*func) (EXARG *eap);
+    int     (*func) __ARGS((EXARG *eap));
     char *  help;
     char *  usage;
 } cscmd_t;
@@ -56,6 +57,8 @@ typedef struct csi {
     char *	    ppath;	/* path to prepend (the -P option) */
     char *	    flags;	/* additional cscope flags/options (e.g, -p2) */
     pid_t	    pid;	/* PID of the connected cscope process. */
+    dev_t	    st_dev;	/* ID of dev containing cscope db */
+    ino_t	    st_ino;	/* inode number of cscope db */
 
     FILE *	    fr_fp;	/* from cscope: FILE. */
     int		    fr_fd;	/* from cscope: file descriptor. */

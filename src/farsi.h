@@ -7,22 +7,22 @@
  */
 
 /*
-** Farsi characters are catagorized into following types:
-**
-** TyA	(for capital letter representation)
-** TyB	(for types that look like _X  e.g. AYN)
-** TyC	(for types that look like X_  e.g. YE_)
-** TyD	(for types that look like _X_  e.g. _AYN_)
-** TyE	(for types that look like X  e.g. RE)
-*/
+ * Farsi characters are catagorized into following types:
+ *
+ * TyA	(for capital letter representation)
+ * TyB	(for types that look like _X  e.g. AYN)
+ * TyC	(for types that look like X_  e.g. YE_)
+ * TyD	(for types that look like _X_  e.g. _AYN_)
+ * TyE	(for types that look like X  e.g. RE)
+ */
 
 /*
-** Farsi character set definition
-*/
+ * Farsi character set definition
+ */
 
 /*
-** Begin of the none standard part
-*/
+ * Begin of the non-standard part
+ */
 
 #define TEE_		0x80
 #define ALEF_U_H_	0x81
@@ -64,12 +64,12 @@
 #define YE_		0xff
 
 /*
-** End of the none standard part
-*/
+ * End of the non-standard part
+ */
 
 /*
-** Standard part
-*/
+ * Standard part
+ */
 
 #define F_BLANK		0xa0	/* Farsi ' ' (SP) character */
 #define F_PSP		0xa1	/* PSP for capitalizing of a character */
@@ -168,9 +168,9 @@
 #define ALEF_D_H	0xfa
 
 /*
-** global definitions
-** ==================
-*/
+ * global definitions
+ * ==================
+ */
 
 #define SRC_EDT	0
 #define SRC_CMD 1
@@ -178,8 +178,8 @@
 #define AT_CURSOR 0
 
 /*
-** definitions for the window dependent functions (w_p_pers).
-*/
+ * definitions for the window dependent functions (w_p_pers).
+ */
 
 #define W_CONV 0x1
 #define W_R_L  0x2
@@ -233,6 +233,7 @@ EXTERN char_u farsi_text_3[]
 #endif
 		    ;
 
+#if 0 /* not used */
 EXTERN char_u farsi_text_4[]
 #ifdef DO_INIT
 		= { DAL, WAW, _SHIN, _YE, _MIM, _NOON, ' ', YE_, _NOON,
@@ -242,6 +243,7 @@ EXTERN char_u farsi_text_4[]
 		    RE, ALEF_, _KAF,' ', MIM, ALEF_, _GAF, _NOON, _HE, '\0'}
 #endif
 		    ;
+#endif
 
 EXTERN char_u farsi_text_5[]
 #ifdef DO_INIT

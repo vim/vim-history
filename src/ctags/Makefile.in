@@ -1,4 +1,4 @@
-# $Id: Makefile.in,v 6.1 1998/07/01 06:34:33 darren Exp $
+# $Id: Makefile.in,v 8.3 1999/06/23 00:47:15 darren Exp $
 #
 # Makefile for UNIX-like platforms.
 #
@@ -6,8 +6,8 @@
 # These are the names of the installed programs, in case you wish to change
 # them.
 #
-CTAGS	= ctags
-ETAGS	= etags
+CTAGS_PROG	= ctags
+ETAGS_PROG	= etags
 
 # This suffix will be added to all program names. This is especially for
 # installation on Win95/NT hosts using GNU-Win32
@@ -61,9 +61,13 @@ INSTALL		= cp
 INSTALL_PROG	= $(INSTALL)
 INSTALL_DATA	= $(INSTALL)
 
-SRCS	= entry.c get.c main.c options.c parse.c read.c sort.c
-OBJS	= entry.o get.o main.o options.o parse.o read.o sort.o
-HDRS	= ctags.h config.h
+SRCS =	eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
+	parse.c read.c sort.c vstring.c
+OBJS =	eiffel.o entry.o fortran.o get.o keyword.o main.o options.o \
+	parse.o read.o sort.o vstring.o
+HDRS =	ctags.h debug.h entry.h general.h get.h keyword.h main.h options.h \
+	parse.h read.h sort.h vstring.h
+
 MANPAGE	= ctags.1
 
 AUTO_GEN   = configure config.h.in
@@ -75,14 +79,14 @@ CONFIG_GEN = config.cache config.log config.status config.run \
 #
 manext	= 1
 man1dir	= $(mandir)/man1
-CMAN	= $(CTAGS).$(manext)
-EMAN	= $(ETAGS).$(manext)
+CMAN	= $(CTAGS_PROG).$(manext)
+EMAN	= $(ETAGS_PROG).$(manext)
 
 #
 # destinations for installed files
 #
-CTAGS_EXEC	= $(CTAGS)$(SUFFIX)
-ETAGS_EXEC	= $(ETAGS)$(SUFFIX)
+CTAGS_EXEC	= $(CTAGS_PROG)$(SUFFIX)
+ETAGS_EXEC	= $(ETAGS_PROG)$(SUFFIX)
 DEST_CTAGS	= $(bindir)/$(CTAGS_EXEC)
 DEST_ETAGS	= $(bindir)/$(ETAGS_EXEC)
 DEST_CMAN	= $(man1dir)/$(CMAN)
@@ -96,6 +100,9 @@ all: $(CTAGS_EXEC)
 $(CTAGS_EXEC): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBOBJS)
 
+dctags: debug.c $(SRCS) $(HDRS)
+	$(CC) -I. -I$(srcdir) $(DEFS) -DDEBUG -g $(LDFLAGS) -o $@ $(LIBOBJS) debug.c $(SRCS)
+
 $(OBJS): $(HDRS) config.h
 
 #
@@ -104,7 +111,7 @@ $(OBJS): $(HDRS) config.h
 install: @install_targets@
 
 install-strip: install
-     
+
 install-ctags: install-cbin install-cman
 install-etags: install-ebin install-eman
 
@@ -119,7 +126,7 @@ FORCE:
 install-bin: install-cbin install-ebin
 install-cbin: $(DEST_CTAGS)
 install-ebin: $(DEST_ETAGS)
-     
+
 $(DEST_CTAGS): $(CTAGS_EXEC) $(bindir) FORCE
 	$(INSTALL_PROG) $(CTAGS_EXEC) $@  &&  chmod 755 $@
 	$(STRIP) $(DEST_CTAGS)
@@ -135,7 +142,7 @@ install-cman: $(DEST_CMAN)
 install-eman: $(DEST_EMAN)
 
 $(DEST_CMAN): $(man1dir) $(MANPAGE) FORCE
-	- $(INSTALL_DATA) $(MANPAGE) $@  &&  chmod 644 $@
+	- $(INSTALL_DATA) $(srcdir)/$(MANPAGE) $@  &&  chmod 644 $@
 
 $(DEST_EMAN): $(DEST_CMAN)
 	- cd $(man1dir) && $(SLINK) $(CMAN) $(EMAN)

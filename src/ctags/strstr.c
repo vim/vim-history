@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: strstr.c,v 6.1 1998/07/01 06:34:33 darren Exp $
+*   $Id: strstr.c,v 8.1 1999/03/04 04:16:38 darren Exp $
 *
-*   Copyright (c) 1996-1998, Darren Hiebert
+*   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.

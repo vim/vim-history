@@ -1,53 +1,56 @@
 #*****************************************************************************
-#	$Id: Makefile.maint,v 6.11 1998/08/20 06:01:51 darren Exp $
+#	$Id: Makefile.maint,v 8.6 1999/06/23 00:44:31 darren Exp $
 #
 #   Development makefile for Exuberant Ctags, used to build releases.
 #
-#	Copyright (c) 1996-1998, Darren Hiebert
+#	Copyright (c) 1996-1999, Darren Hiebert
 #*****************************************************************************
 
-SOURCES		=	debug.c entry.c get.c main.c options.c parse.c read.c sort.c
-HEADERS		=	ctags.h
+SOURCES		=	eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
+				parse.c read.c sort.c vstring.c
+DSOURCES	=	$(SOURCES) debug.c
+HEADERS		=	ctags.h debug.h entry.h general.h get.h keyword.h main.h \
+				options.h parse.h read.h sort.h vstring.h
 
-VERSION_FILES=	ctags.h ctags.1 ctags.lsm NEWS
+VERSION_FILES=	ctags.h ctags.1 ctags.lsm configure.in NEWS
 
-DIST_FILES	=	COPYING FAQ INSTALL INSTALL.DOS QUOTES README \
-				Makefile.in configure.in acconfig.h mkinstalldirs \
-				Makefile.amiga Makefile.bcc Makefile.djg Makefile.maint \
-				Makefile.os2 Makefile.w32 os_vms.mms \
-				$(SOURCES) strstr.c 
+DIST_FILES	=	COPYING FAQ INSTALL INSTALL.DOS QUOTES README configure.in \
+				acconfig.h mkinstalldirs Makefile.in Makefile.amiga \
+				Makefile.bcc Makefile.djg Makefile.maint Makefile.os2 \
+				Makefile.qdos Makefile.w32 Makefile.ming descrip.mms \
+				$(DSOURCES) qdos.c strstr.c $(HEADERS) ctags.1 ctags.lsm NEWS
 
-DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README \
-				Makefile.amiga Makefile.bcc Makefile.djg \
-				Makefile.os2 Makefile.w32 \
-				$(SOURCES)
+DOS_FILES	=	COPYING FAQ INSTALL.DOS QUOTES README Makefile.bcc \
+				Makefile.djg Makefile.os2 Makefile.w32 Makefile.ming \
+				$(DSOURCES) $(HEADERS)
 
-RCS_FILES	=	$(DIST_FILES) $(VERSION_FILES) Makefile.maint \
-				ctags.spec COPYING.short
+CVS_FILES	=	$(DIST_FILES) ctags.spec
 
 WARNINGS	=	-Wall -W -Wtraditional -Wpointer-arith -Wcast-align \
 				-Wwrite-strings -Wmissing-prototypes -Wmissing-declarations \
 				-Wnested-externs -Wcast-qual -Wshadow \
-				-pedantic -Wstrict-prototypes # -Wconversion -Werror 
+				-pedantic -Wstrict-prototypes # -Wconversion -Werror
 
 ERRFILE	= errors
-REDIR 	= 2>&1 | tee $(ERRFILE)
+REDIR	= 2>&1 | tee $(ERRFILE)
 
 RPM_ROOT= $(HOME)/Develop
 CTAGS_DOSDIR = /mnt/dos/ctags
 WEB_ARCHIVE_DIR = $(HOME)/public_html/archives
 DEP_DIR	= .deps
 
-CC		= gcc
+CC		= egcs
 DEFS	= -I. -DHAVE_CONFIG_H
-CFLAGS	= $(DEFS) $(WARNINGS)
+CFLAGS	= $(DEFS)
 OPT		= -O3
 DCFLAGS	= $(CFLAGS) -DDEBUG -DINTERNAL_SORT
 DLFLAGS	= -lefence
 LD		= gcc
 
-AUTO_GEN   = configure config.h.in
-CONFIG_GEN = config.cache config.log config.status config.run config.h Makefile
+AUTO_GEN	= configure config.h.in
+CONFIG_GEN	= config.cache config.log config.status config.run config.h Makefile
+PROF_GEN	= gmon.out
+COV_GEN		= *.da *.gcov
 
 #
 # Targets
@@ -55,13 +58,13 @@ CONFIG_GEN = config.cache config.log config.status config.run config.h Makefile
 ifeq ($(findstring clean,$(MAKECMDGOALS)),)
 ifneq ($(MAKECMDGOALS),setup)
 ifeq ($(wildcard config.h),)
-ctags dctags ctags.prof:
+ctags dctags ctags.prof ctags.cov:
 	$(MAKE) config.h
 	$(MAKE) $(MAKECMDGOALS)
 else
 all: ctags dctags tags syntax.vim
 
-include $(SOURCES:%.c=$(DEP_DIR)/%.d)
+include $(DSOURCES:%.c=$(DEP_DIR)/%.d)
 
 #
 # Executable targets
@@ -70,12 +73,17 @@ ctags: $(SOURCES:.c=.o)
 	@ echo "-- Linking $@"
 	@ $(LD) $(LFLAGS) $^ -o $@
 
-dctags: $(SOURCES) $(HEADERS) Makefile
+dctags: $(SOURCES:.c=.od) debug.od
 	@ echo "-- Building $@"
-	@ $(CC) -g $(DCFLAGS) $(SOURCES) $(DLFLAGS) -o $@ $(REDIR)
+	@ $(LD) $(LFLAGS) $^ -o $@
 
-ctags.prof: $(SOURCES) $(HEADERS)
-	$(CC) -O3 -pg $(CFLAGS) $(SOURCES) -o $@
+ctags.prof: $(SOURCES) $(HEADERS) Makefile
+	$(CC) -pg $(CFLAGS) $(WARNINGS) $(SOURCES) -o $@
+
+ctags.cov: $(SOURCES) $(HEADERS) Makefile
+	$(CC) -fprofile-arcs -ftest-coverage $(CFLAGS) $(WARNINGS) $(SOURCES) -o $@
+
+gcov: $(SOURCES:.c=.c.gcov)
 
 endif
 endif
@@ -100,9 +108,18 @@ config.h: config.h.in configure
 	./configure --enable-maintainer-mode
 	@ touch $@
 
-clean:
-	rm -f *.[oi] $(DEP_DIR)/*.d ctags dctags ctags*.exe ctags.prof ctags.man \
-	      gmon.out tags TAGS syntax.vim
+depclean:
+	rm -f $(DEP_DIR)/*.d
+
+profclean:
+	rm -f $(PROF_GEN)
+
+gcovclean:
+	rm -f $(COV_GEN)
+
+clean: depclean profclean gcovclean
+	rm -f *.[oi] ctags dctags ctags*.exe ctags.man \
+	      ctags.prof ctags.cov *.bb *.bbg tags TAGS syntax.vim $(ERRFILE)
 
 distclean: clean
 	rm -f $(CONFIG_GEN)
@@ -113,33 +130,32 @@ maintainer-clean maintclean: distclean
 ctags.man: ctags.1
 	@ groff -Tascii -mandoc $< | sed 's/.//g' > $@
 
-tags: $(SOURCES) $(HEADERS)
+tags: $(DSOURCES) $(HEADERS)
+	@ echo "-- Building tag file"
 	@ ctags $^
 
 #
 # Create a Vim syntax file for all typedefs
 #
 syntax: syntax.vim
-syntax.vim: $(SOURCES) $(HEADERS)
+syntax.vim: $(DSOURCES) $(HEADERS)
+	@ echo "-- Generating syntax file"
 	@ ctags -i=ctS -o- $^ |\
 		awk 'BEGIN{printf("syntax keyword Typedef\t")}\
 				{printf("%s ", $$1)}END{print ""}' > $@
 
 #
-# RCS management
+# CVS management
 #
-co:
-	-@ (cd RCS; rlog -L -R * | sed -e 's/,v$$//')
+status:
+	@ cvs -n -q update
 
-checkin:
-	@ ci -u `rlog -L -R RCS/* | sed -e 's:RCS/::' -e 's/,v$$//'`
+cvs-tag-%:
+	@ echo "---------- Tagging release `echo $* | sed 's/\./_/g'`"
+	@ cvs tag -c -F Ctags-`echo $* | sed 's/\./_/g'`
 
-rcs-release:
-	-co -l $(RCS_FILES)
-	ci -u -f6.1 -n"V2_1" -m"Formal release of 2.1" $(RCS_FILES)
-
-rcs-files:
-	@ls -1 $(RCS_FILES)
+cvs-files:
+	@ls -1 $(CVS_FILES)
 
 #
 # Release management
@@ -150,6 +166,7 @@ ctags-%.tar.gz: $(DIST_FILES) $(VERSION_FILES)
 	mkdir ctags-$*
 	cp -p $(DIST_FILES) ctags-$*/
 	for file in $(VERSION_FILES) ;do \
+		rm -f ctags-$*/$${file} ;\
 		sed -e "s/@@VERSION@@/$*/" \
 		    -e "s/@@LSMDATE@@/`date +'%d%b%y' | tr 'a-z' 'A-Z'`/" \
 			$${file} > ctags-$*/$${file} ;\
@@ -190,11 +207,12 @@ dos1-%: $(DOS_FILES)
 	for file in $^ ;do \
 		unix2dos $${file} $(CTAGS_DOSDIR)/ctags$*/$${file} ;\
 	done
-	mv $(CTAGS_DOSDIR)/ctags$*/Makefile.amiga \
-	   $(CTAGS_DOSDIR)/ctags$*/Makefile.ami
+	cd $(CTAGS_DOSDIR); mv makefile makefile.bak; \
+		sed -e 's/^\(VERSION =\) [0-9]\+/\1 $*/' makefile.bak > makefile
 
 dos2-%: $(VERSION_FILES) ctags.man
 	for file in $^ ;do \
+		rm -f $(CTAGS_DOSDIR)/ctags`echo $*|sed 's/\.//g'`/$${file} ;\
 		sed -e "s/@@VERSION@@/$*/" \
 		    -e "s/@@LSMDATE@@/`date +'%d%b%y' | tr 'a-z' 'A-Z'`/" $${file} |\
 			unix2dos > $(CTAGS_DOSDIR)/ctags`echo $*|sed 's/\.//g'`/$${file} ;\
@@ -209,7 +227,8 @@ rpm-%: ctags-%.tar.gz ctags.spec
 	@ echo "---------- Building RPM"
 	cp -p ctags-$*.tar.gz $(RPM_ROOT)/SOURCES/
 	sed -e "s/@@VERSION@@/$*/" ctags.spec > $(RPM_ROOT)/SPECS/ctags-$*.spec
-	(cd $(RPM_ROOT)/SPECS; rpm -ba ctags-$*.spec)
+	(cd $(RPM_ROOT)/SPECS; rpm --sign -ba ctags-$*.spec)
+	rm -fr $(RPM_ROOT)/BUILD/ctags-$*
 
 ctags32-%: ctags-%.tar.gz
 	@ echo "---------- Building DPMS binary for MSDOS"
@@ -231,7 +250,7 @@ cleanrelease-%:
 	rm -f $(RPM_ROOT)/SRPMS/ctags-$*-1.src.rpm
 	rm -f $(RPM_ROOT)/SPECS/ctags-$*.spec
 
-release-%: ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-% ctags32-%
+release-%: cvs-tag-% ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-% ctags32-%
 	@ echo "---------- Copying files to web archive"
 	cp -p ctags-$*.tar.* $(WEB_ARCHIVE_DIR)
 	cp -p $(RPM_ROOT)/RPMS/i386/ctags-$*-1.i386.rpm $(WEB_ARCHIVE_DIR)
@@ -243,26 +262,36 @@ release-%: ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-% ctags32-%
 #
 # Dependency file generation
 #
-$(DEP_DIR)/%.d: %.c Makefile
+$(DEP_DIR)/%.d: %.c Makefile.maint
 	@ if [ ! -d $(DEP_DIR) ] ;then mkdir -p $(DEP_DIR) ;fi
-	@ $(CC) -M $(DCFLAGS) $< | sed 's/\($*\.o\)\([ :]\)/\1 $(@F)\2/g' > $@
+	@ $(CC) -M $(DCFLAGS) $< | sed 's/\($*\.o\)\([ :]\)/\1 $*.od $(@F)\2/g' > $@
 
 
-%.dd: %.c Makefile
-	-@ $(CC) -M $(DCFLAGS) $<
+%.inc: %.c Makefile
+	-@ $(CC) -MM $(DCFLAGS) $<
 
 #
 # Compilation rules
 #
 %.o : %.c $(DEP_DIR)/%.d
-	@ echo "-- Compiling $*.c"
-	@ $(CC) $(CFLAGS) $(OPT) -Wuninitialized -O -c $<  $(REDIR)
+	@ echo "-- Compiling $<"
+	@ $(CC) $(CFLAGS) -DEXTERNAL_SORT $(OPT) $(WARNINGS) -Wuninitialized -O -c $<  $(REDIR)
+
+%.od : %.c $(DEP_DIR)/%.d
+	@ echo "-- Compiling (debug) $<"
+	@ $(CC) -g $(DCFLAGS) $(WARNINGS) -o $*.od -c $<  $(REDIR)
 
 %.i : %.c $(DEP_DIR)/%.d FORCE
-	$(CC) $(DCFLAGS) -Wuninitialized -O -E $< | noblanks > $@ $(REDIR)
+	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< > $@ $(REDIR)
+
+%.ic : %.c $(DEP_DIR)/%.d FORCE
+	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< | noblanks > $@ $(REDIR)
 
 %.err: %.c
-	@ $(CC) $(DCFLAGS) -Wuninitialized -O -c $<
+	@ $(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -c $<
 	@ rm $*.o
+
+%.c.gcov: %.da
+	@ gcov $*.c
 
 # vi:ts=4 sw=4

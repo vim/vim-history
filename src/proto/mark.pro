@@ -7,7 +7,7 @@ FPOS *getmark __ARGS((int c, int changefile));
 void fmarks_check_names __ARGS((BUF *buf));
 int check_mark __ARGS((FPOS *pos));
 void clrallmarks __ARGS((BUF *buf));
-char_u *fm_getname __ARGS((struct filemark *fmark));
+char_u *fm_getname __ARGS((struct filemark *fmark, int lead_len));
 void do_marks __ARGS((char_u *arg));
 void do_jumps __ARGS((void));
 void mark_adjust __ARGS((linenr_t line1, linenr_t line2, long amount, long amount_after));

@@ -42,8 +42,13 @@
  * 02.04.97 Added -E option, to have EBCDIC translation instead of ASCII
  *          (antonio.colombo@jrc.org)
  * 22.05.97 added -g (group octets) option (jcook@namerica.kla.com).
+ * 23.09.98 nasty -p -r misfeature fixed: slightly wrong output, when -c was
+ *          missing or wrong.
+ * 26.09.98 Fixed: 'xxd -i infile outfile' did not truncate outfile.
+ * 27.10.98 Fixed: -g option parser required blank.
+ *          option -b added: 01000101 binary output in normal format.
  *
- * (c) 1990-1997 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
+ * (c) 1990-1998 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
  * Distribute freely and credit me,
  * make money and share with me,
@@ -67,13 +72,13 @@
 #include <stdlib.h>
 #include <string.h>	/* for strncmp() */
 #include <ctype.h>	/* for isalnum() */
-#if __MWERKS__ && !defined(__BEOS__)
+#if __MWERKS__ && !defined(BEBOX)
 # include <unix.h>	/* for fdopen() on MAC */
 #endif
 
-/*
- * This corrects the problem of missing prototypes for certain functions
- * in some GNU installations (e.g. SunOS 4.1.x).
+/*  This corrects the problem of missing prototypes for certain functions
+ *  in some GNU installations (e.g. SunOS 4.1.x).
+ *  Darren Hiebert <darren@hmi.com> (sparc-sun-sunos4.1.3_U1/2.7.2.2)
  */
 #if defined(__GNUC__) && defined(__STDC__)
 # ifndef __USE_FIXED_PROTOTYPES__
@@ -108,7 +113,7 @@ extern void perror __P((char *));
 extern long int strtol();
 extern long int ftell();
 
-char version[] = "xxd V1.8 22may97 by Juergen Weigert";
+char version[] = "xxd V1.10 27oct98 by Juergen Weigert";
 #ifdef WIN32
 char osver[] = " (Win32)";
 #else
@@ -166,7 +171,7 @@ static void xxdline __P((FILE *, char *, int));
 
 #define TRY_SEEK	/* attempt to use lseek, or skip forward by reading */
 #define COLS 256	/* change here, if you ever need more columns */
-#define LLEN (9 + 3*COLS + 2 + COLS)
+#define LLEN (9 + (5*COLS-1)/2 + 2 + COLS)
 
 char hexxa[] = "0123456789abcdef0123456789ABCDEF", *hexx = hexxa;
 
@@ -174,6 +179,7 @@ char hexxa[] = "0123456789abcdef0123456789ABCDEF", *hexx = hexxa;
 #define HEX_NORMAL 0
 #define HEX_POSTSCRIPT 1
 #define HEX_CINCLUDE 2
+#define HEX_BITS 3		/* not hex a dump, but bits: 01111001 */
 
 static void
 exit_with_usage(pname)
@@ -183,13 +189,14 @@ char *pname;
   fprintf(stderr, "    or\n       %s -r [-s [-]offset] [-c cols] [-ps] [infile [outfile]]\n", pname);
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "    -a          toggle autoskip: A single '*' replaces nul-lines. Default off.\n");
+  fprintf(stderr, "    -b          binary digit dump (incompatible with -p,-i,-r). Default hex.\n");
   fprintf(stderr, "    -c cols     format <cols> octets per line. Default 16 (-i: 12, -ps: 30).\n");
   fprintf(stderr, "    -E          show characters in EBCDIC. Default ASCII.\n");
   fprintf(stderr, "    -g          number of octets per group in normal output. Default 2.\n");
   fprintf(stderr, "    -h          print this summary.\n");
   fprintf(stderr, "    -i          output in C include file style.\n");
   fprintf(stderr, "    -l len      stop after <len> octets.\n");
-  fprintf(stderr, "    -ps         output in postscript continuous hexdump style.\n");
+  fprintf(stderr, "    -ps         output in postscript plain hexdump style.\n");
   fprintf(stderr, "    -r          reverse operation: convert (or patch) hexdump into binary.\n");
   fprintf(stderr, "    -r -s off   revert with <off> added to file positions found in hexdump.\n");
   fprintf(stderr, "    -s %sseek  start at <seek> bytes abs. %sinfile offset.\n",
@@ -284,10 +291,10 @@ long base_off;
 	  have_off++;
 	  want_off++;
 	  n1 = -1;
-	  if (++p >= cols)
+	  if ((++p >= cols) && !hextype)
 	    {
-	      if (!hextype)
-	        want_off = 0;
+	      /* skip rest of line as garbaga */
+	      want_off = 0;
 	      while ((c = getc(fpi)) != '\n' && c != EOF)
 	        ;
 	      ign_garb = 1;
@@ -295,6 +302,7 @@ long base_off;
 	}
       else if (n1 < 0 && n2 < 0 && n3 < 0)
         {
+	  /* already stumbled into garbage, skip line, wait and see */
 	  if (!hextype)
 	    want_off = 0;
 	  while ((c = getc(fpi)) != '\n' && c != EOF)
@@ -392,7 +400,7 @@ char *argv[];
   int c, e, p = 0, relseek = 1, negseek = 0, revert = 0;
   int cols = 0, nonzero = 0, autoskip = 0, hextype = HEX_NORMAL;
   int ebcdic = 0;
-  int octspergrp = 2;	/* number of octets grouped in output */
+  int octspergrp = -1;	/* number of octets grouped in output */
   int grplen;		/* total chars per octet group */
   long length = -1, n = 0, seekoff = 0;
   char l[LLEN+1];
@@ -413,6 +421,7 @@ char *argv[];
     {
       pp = argv[1] + (!STRNCMP(argv[1], "--", 2) && argv[1][2]);
            if (!STRNCMP(pp, "-a", 2)) autoskip = 1 - autoskip;
+      else if (!STRNCMP(pp, "-b", 2)) hextype = HEX_BITS;
       else if (!STRNCMP(pp, "-u", 2)) hexx = hexxa + 16;
       else if (!STRNCMP(pp, "-p", 2)) hextype = HEX_POSTSCRIPT;
       else if (!STRNCMP(pp, "-i", 2)) hextype = HEX_CINCLUDE;
@@ -438,11 +447,16 @@ char *argv[];
 	}
       else if (!STRNCMP(pp, "-g", 2))
         {
-	  if (!argv[2])
-	    exit_with_usage(pname);
-	  octspergrp = (int)strtol(argv[2], NULL, 0);
-	  argv++;
-	  argc--;
+	  if (pp[2] && STRNCMP("group", pp + 2, 5))
+	    octspergrp = (int)strtol(pp + 2, NULL, 0);
+	  else
+	    {
+	      if (!argv[2])
+		exit_with_usage(pname);
+	      octspergrp = (int)strtol(argv[2], NULL, 0);
+	      argv++;
+	      argc--;
+	    }
 	}
       else if (!STRNCMP(pp, "-s", 2))
 	{
@@ -506,8 +520,19 @@ char *argv[];
       {
       case HEX_POSTSCRIPT:	cols = 30; break;
       case HEX_CINCLUDE:	cols = 12; break;
+      case HEX_BITS:		cols = 6; break;
       case HEX_NORMAL:
       default:			cols = 16; break;
+      }
+
+  if (octspergrp < 0)
+    switch (hextype)
+      {
+      case HEX_BITS:		octspergrp = 1; break;
+      case HEX_NORMAL:		octspergrp = 2; break;
+      case HEX_POSTSCRIPT:
+      case HEX_CINCLUDE:
+      default:			octspergrp = 0; break;
       }
 
   if (cols < 1 || (!hextype && (cols > COLS)))
@@ -539,8 +564,9 @@ char *argv[];
   else
     {
       int fd;
+      int mode = revert ? O_WRONLY : (O_TRUNC|O_WRONLY);
 
-      if (((fd = OPEN(argv[2], O_WRONLY | BIN_CREAT(revert), 0666)) < 0) ||
+      if (((fd = OPEN(argv[2], mode | BIN_CREAT(revert), 0666)) < 0) ||
           (fpo = fdopen(fd, BIN_WRITE(revert))) == NULL)
 	{
 	  fprintf(stderr, "%s: ", pname);
@@ -640,9 +666,12 @@ char *argv[];
       return 0;
     }
 
-  /* hextype == HEX_NORMAL */
+  /* hextype: HEX_NORMAL or HEX_BITS */
 
-  grplen = octspergrp + octspergrp + 1;		/* chars per octet group */
+  if (hextype == HEX_NORMAL)
+    grplen = octspergrp + octspergrp + 1;	/* chars per octet group */
+  else	/* hextype == HEX_BITS */
+    grplen = 8 * octspergrp + 1;
 
   while ((length < 0 || n < length) && (e = getc(fp)) != EOF)
     {
@@ -651,8 +680,19 @@ char *argv[];
 	  sprintf(l, "%07lx: ", n + seekoff);
 	  for (c = 9; c < LLEN; l[c++] = ' ');
 	}
-      l[c = (9 + (grplen * p) / octspergrp)] = hexx[(e >> 4) & 0xf];
-      l[++c]                                 = hexx[ e       & 0xf];
+      if (hextype == HEX_NORMAL)
+	{
+	  l[c = (9 + (grplen * p) / octspergrp)] = hexx[(e >> 4) & 0xf];
+	  l[++c]                               = hexx[ e       & 0xf];
+	}
+      else /* hextype == HEX_BITS */
+        {
+	  int i;
+
+	  c = (9 + (grplen * p) / octspergrp) - 1;
+	  for (i = 7; i >= 0; i--)
+	    l[++c] = (e & (1 << i)) ? '1' : '0';
+	}
       if (ebcdic)
         e = (e < 64) ? '.' : etoa64[e-64];
       l[11 + (grplen * cols - 1)/octspergrp + p] = (e > 31 && e < 127) ? e : '.';

@@ -38,13 +38,47 @@ ui_write(s, len)
 #endif
 }
 
+#if defined(USE_GUI) || defined(PROTO)
+/*
+ * When executing an external program, there may be some typed characters that
+ * are not consumed by it.  Give them back to ui_inchar() and they are stored
+ * here for the next call.
+ */
+static char_u *ta_str = NULL;
+static int ta_off;	    /* offset for next char to use */
+static int ta_len;	    /* length of ta_str */
+
+    void
+ui_inchar_undo(s, len)
+    char_u	*s;
+    int		len;
+{
+    char_u  *new;
+    int	    newlen;
+
+    newlen = len;
+    if (ta_str != NULL)
+	newlen += ta_len - ta_off;
+    new = alloc(newlen);
+    if (new != NULL)
+    {
+	mch_memmove(new, ta_str + ta_off, (size_t)(ta_len - ta_off));
+	mch_memmove(new + ta_len - ta_off, s, (size_t)len);
+	vim_free(ta_str);
+	ta_str = new;
+	ta_len = newlen;
+	ta_off = 0;
+    }
+}
+#endif
+
 /*
  * ui_inchar(): low level input funcion.
- * Get a characters from the keyboard.
+ * Get characters from the keyboard.
  * Return the number of characters that are available.
- * If wtime == 0 do not wait for characters.
- * If wtime == -1 wait forever for characters.
- * If wtime > 0 wait wtime milliseconds for a character.
+ * If "wtime" == 0 do not wait for characters.
+ * If "wtime" == -1 wait forever for characters.
+ * If "wtime" > 0 wait "wtime" milliseconds for a character.
  */
     int
 ui_inchar(buf, maxlen, wtime)
@@ -52,6 +86,25 @@ ui_inchar(buf, maxlen, wtime)
     int	    maxlen;
     long    wtime;	    /* don't use "time", MIPS cannot handle it */
 {
+#ifdef USE_GUI
+    /*
+     * Use the typeahead if there is any.
+     */
+    if (ta_str != NULL)
+    {
+	if (maxlen >= ta_len - ta_off)
+	{
+	    mch_memmove(buf, ta_str + ta_off, (size_t)ta_len);
+	    vim_free(ta_str);
+	    ta_str = NULL;
+	    return ta_len;
+	}
+	mch_memmove(buf, ta_str + ta_off, (size_t)maxlen);
+	ta_off += maxlen;
+	return maxlen;
+    }
+#endif
+
 #ifdef NO_CONSOLE
     /* Don't wait for character input when the window hasn't been opened yet.
      * Must return something, otherwise we'll loop forever.  */
@@ -71,6 +124,8 @@ ui_inchar(buf, maxlen, wtime)
 #endif
 #ifndef NO_CONSOLE
     return mch_inchar(buf, maxlen, wtime);
+#else
+    return 0;
 #endif
 }
 
@@ -129,6 +184,7 @@ ui_suspend()
     mch_suspend();
 }
 
+#if !defined(UNIX) || !defined(SIGTSTP) || defined(PROTO)
 /*
  * When the OS can't really suspend, call this function to start a shell.
  */
@@ -139,36 +195,7 @@ suspend_shell()
     (void)mch_call_shell(NULL, SHELL_COOKED);
     need_check_timestamps = TRUE;
 }
-
-    int
-ui_can_restore_title()
-{
-#ifdef USE_GUI
-    /*
-     * If GUI is (going to be) used, we can always set the window title.
-     * Saves a bit of time, because the X11 display server does not need to be
-     * contacted.
-     */
-    if (gui.starting || gui.in_use)
-	return TRUE;
 #endif
-    return mch_can_restore_title();
-}
-
-    int
-ui_can_restore_icon()
-{
-#ifdef USE_GUI
-    /*
-     * If GUI is (going to be) used, we can always set the icon name.
-     * Saves a bit of time, because the X11 display server does not need to be
-     * contacted.
-     */
-    if (gui.starting || gui.in_use)
-	return TRUE;
-#endif
-    return mch_can_restore_icon();
-}
 
 /*
  * Try to get the current window size.	Put the result in Rows and Columns.
@@ -204,11 +231,11 @@ ui_set_winsize()
 #ifdef USE_GUI
     if (gui.in_use)
 	gui_set_winsize(
-#ifdef WIN32
+# ifdef WIN32
 		TRUE
-#else
+# else
 		FALSE
-#endif
+# endif
 		);
     else
 #endif
@@ -222,7 +249,7 @@ ui_breakcheck()
     if (gui.in_use)
 	gui_mch_update();
     else
-#endif /* USE_GUI */
+#endif
 	mch_breakcheck();
 }
 
@@ -234,13 +261,6 @@ ui_breakcheck()
  */
 
 #ifdef USE_CLIPBOARD
-
-static void clip_invert_area __ARGS((int, int, int, int));
-static void clip_yank_non_visual_selection __ARGS((int, int, int, int));
-static void clip_get_word_boundaries __ARGS((VimClipboard *, int, int));
-static int  clip_get_line_end __ARGS((int));
-static void clip_update_non_visual_selection __ARGS((VimClipboard *, int, int,
-						    int, int));
 
 #define char_class(c)	(c <= ' ' ? ' ' : vim_iswordc(c))
 
@@ -287,6 +307,10 @@ clip_update_selection()
 	{
 	    start = VIsual;
 	    end = curwin->w_cursor;
+#ifdef MULTI_BYTE
+	    if (is_dbcs && mb_isbyte1(ml_get(end.lnum),end.col))
+		end.col++;
+#endif
 	}
 	else
 	{
@@ -302,7 +326,7 @@ clip_update_selection()
 	    clipboard.vmode = VIsual_mode;
 	    clip_free_selection();
 	    clip_own_selection();
-	    clip_mch_set_selection();
+	    clip_gen_set_selection();
 	}
     }
 }
@@ -314,49 +338,96 @@ clip_own_selection()
      * Also want to check somehow that we are reading from the keyboard rather
      * than a mapping etc.
      */
-    if (!clipboard.owned)
-	clipboard.owned = (clip_mch_own_selection() == OK);
+    if (!clipboard.owned && clipboard.available)
+    {
+	clipboard.owned = (clip_gen_own_selection() == OK);
+#ifdef HAVE_X11
+	if (clipboard.owned
+		&& get_real_state() == VISUAL
+		&& clip_isautosel()
+		&& hl_attr(HLF_V) != hl_attr(HLF_VNC))
+	    redraw_curbuf_later(NOT_VALID);
+#endif
+    }
 }
 
     void
 clip_lose_selection()
 {
+#ifdef HAVE_X11
+    int	    was_owned = clipboard.owned;
+#endif
+
     clip_free_selection();
     clipboard.owned = FALSE;
     clip_clear_selection();
-    clip_mch_lose_selection();
+    clip_gen_lose_selection();
+#ifdef HAVE_X11
+    if (was_owned
+	    && get_real_state() == VISUAL
+	    && clip_isautosel()
+	    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
+    {
+	update_curbuf(NOT_VALID);
+	setcursor();
+	cursor_on();
+	out_flush();
+    }
+#endif
 }
 
     void
 clip_copy_selection()
 {
-    if (VIsual_active)
+    if (VIsual_active && clipboard.available)
     {
-	if (vim_strchr(p_guioptions, GO_ASEL) == NULL)
+	if (clip_isautosel())
 	    clip_update_selection();
 	clip_free_selection();
 	clip_own_selection();
 	if (clipboard.owned)
 	    clip_get_selection();
-	clip_mch_set_selection();
+	clip_gen_set_selection();
     }
 }
 
+/*
+ * Called when Visual mode is ended: update the selection.
+ */
     void
 clip_auto_select()
 {
-    if (vim_strchr(p_guioptions, GO_ASEL) != NULL)
+    if (clip_isautosel())
 	clip_copy_selection();
 }
 
-
+/*
+ * Return TRUE if automatic selection of Visual area is desired.
+ */
+    int
+clip_isautosel()
+{
+    return (
 #ifdef USE_GUI
+	    gui.in_use ? (vim_strchr(p_go, GO_ASEL) != NULL) :
+#endif
+	    (vim_strchr(p_cb, 't') != NULL));
+}
+
+
+#if defined(USE_GUI) || defined(PROTO)
 
 /*
  * Stuff for general mouse selection, without using Visual mode.
  */
 
 static int clip_compare_pos __ARGS((int row1, int col1, int row2, int col2));
+static void clip_invert_area __ARGS((int, int, int, int));
+static void clip_yank_non_visual_selection __ARGS((int, int, int, int));
+static void clip_get_word_boundaries __ARGS((VimClipboard *, int, int));
+static int  clip_get_line_end __ARGS((int));
+static void clip_update_non_visual_selection __ARGS((VimClipboard *, int, int,
+						    int, int));
 
 /*
  * Compare two screen positions ala strcmp()
@@ -406,10 +477,8 @@ clip_start_selection(button, x, y, repeated_click, modifiers)
     else
 	cb->mode = SELECT_MODE_CHAR;
 
-#ifdef USE_GUI
     /* clear the cursor until the selection is made */
     gui_undraw_cursor();
-#endif
 
     switch (cb->mode)
     {
@@ -466,10 +535,8 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	/* Check to make sure we have something selected */
 	if (cb->start.lnum == cb->end.lnum && cb->start.col == cb->end.col)
 	{
-#ifdef USE_GUI
 	    if (gui.in_use)
 		gui_update_cursor(FALSE, FALSE);
-#endif
 	    cb->state = SELECT_CLEARED;
 	    return;
 	}
@@ -482,11 +549,9 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	clip_own_selection();
 	clip_yank_non_visual_selection((int)cb->start.lnum, cb->start.col,
 					      (int)cb->end.lnum, cb->end.col);
-	clip_mch_set_selection();
-#ifdef USE_GUI
+	clip_gen_set_selection();
 	if (gui.in_use)
 	    gui_update_cursor(FALSE, FALSE);
-#endif
 
 	cb->state = SELECT_DONE;
 	return;
@@ -634,7 +699,6 @@ clip_redraw_selection(x, y, w, h)
     if (cb->state == SELECT_CLEARED)
 	return;
 
-#ifdef USE_GUI	    /* TODO: how do we invert for non-GUI versions? */
     row1 = check_row(Y_2_ROW(y));
     col1 = check_col(X_2_COL(x));
     row2 = check_row(Y_2_ROW(y + h - 1));
@@ -670,7 +734,6 @@ clip_redraw_selection(x, y, w, h)
 	if (end > start)
 	    gui_mch_invert_rectangle(row, start, 1, end - start);
     }
-#endif
 }
 
 /*
@@ -759,7 +822,6 @@ clip_invert_area(row1, col1, row2, col2)
     int	    row2;
     int	    col2;
 {
-#ifdef USE_GUI	    /* TODO: how do we invert for non-GUI versions? */
     /* Swap the from and to positions so the from is always before */
     if (clip_compare_pos(row1, col1, row2, col2) > 0)
     {
@@ -796,7 +858,6 @@ clip_invert_area(row1, col1, row2, col2)
     /* Handle the rectangle thats left */
     if (row2 >= row1)
 	gui_mch_invert_rectangle(row1, 0, row2 - row1 + 1, (int)Columns);
-#endif
 }
 
 /*
@@ -986,6 +1047,65 @@ clip_clear_selection()
 }
 #endif /* USE_GUI */
 
+    int
+clip_gen_own_selection()
+{
+#ifdef XTERM_CLIP
+# ifdef USE_GUI
+    if (gui.in_use)
+	return clip_mch_own_selection();
+    else
+# endif
+	return clip_xterm_own_selection();
+#else
+    return clip_mch_own_selection();
+#endif
+}
+
+    void
+clip_gen_lose_selection()
+{
+#ifdef XTERM_CLIP
+# ifdef USE_GUI
+    if (gui.in_use)
+	clip_mch_lose_selection();
+    else
+# endif
+	clip_xterm_lose_selection();
+#else
+    clip_mch_lose_selection();
+#endif
+}
+
+    void
+clip_gen_set_selection()
+{
+#ifdef XTERM_CLIP
+# ifdef USE_GUI
+    if (gui.in_use)
+	clip_mch_set_selection();
+    else
+# endif
+	clip_xterm_set_selection();
+#else
+    clip_mch_set_selection();
+#endif
+}
+
+    void
+clip_gen_request_selection()
+{
+#ifdef XTERM_CLIP
+# ifdef USE_GUI
+    if (gui.in_use)
+	clip_mch_request_selection();
+    else
+# endif
+	clip_xterm_request_selection();
+#else
+    clip_mch_request_selection();
+#endif
+}
 
 #endif /* USE_CLIPBOARD */
 
@@ -1028,11 +1148,13 @@ vim_is_input_buf_empty()
     return (inbufcount == 0);
 }
 
+#if defined(HAVE_OLE) || defined(PROTO)
     int
 vim_free_in_input_buf()
 {
     return (INBUFLEN - inbufcount);
 }
+#endif
 
 /* Add the given bytes to the input buffer */
     void
@@ -1043,16 +1165,35 @@ add_to_input_buf(s, len)
     if (inbufcount + len > INBUFLEN + MAX_KEY_CODE_LEN)
 	return;	    /* Shouldn't ever happen! */
 
+#ifdef HANGUL_INPUT
+    if ((State & (INSERT|CMDLINE)) && hangul_input_state_get())
+	if ((len = hangul_input_process(s, len)) == 0)
+	    return;
+#endif
+
     while (len--)
 	inbuf[inbufcount++] = *s++;
 }
 
+#if defined(HANGUL_INPUT) || defined(PROTO)
+    void
+push_raw_key (s, len)
+    char_u  *s;
+    int	    len;
+{
+    while (len--)
+	inbuf[inbufcount++] = *s++;
+}
+#endif
+
+#if defined(USE_GUI) || defined(PROTO)
 /* Remove everything from the input buffer.  Called when ^C is found */
     void
 trash_input_buf()
 {
     inbufcount = 0;
 }
+#endif
 
 /*
  * Read as much data from the input buffer as possible up to maxlen, and store
@@ -1104,18 +1245,28 @@ fill_input_buf(exit_on_error)
      * If we can't get any, and there isn't any in the buffer, we give up and
      * exit Vim.
      */
-# ifdef __BEOS__
+/* make sure we have all macros defined... */
+# if defined(__BEOS__)
+#  ifndef B_BEOS_VERSION_4_5
+#   define B_BEOS_VERSION 4_5 0x0450
+#  endif
+# endif
+/* Genki (R4.5) doesn't seem to like the following (exits immediately on
+ * startup)
+ * richard@whitequeen.com Jul 99
+ */
+# if defined(__BEOS__) && B_BEOS_VERSION < B_BEOS_VERSION_4_5
     /*
      * On the BeBox version (for now), all input is secretly performed within
      * beos_select() which is called from RealWaitForChar().
      */
-    while (!vim_is_input_buf_full() && RealWaitForChar(read_cmd_fd, 0))
+    while (!vim_is_input_buf_full() && RealWaitForChar(read_cmd_fd, 0, NULL))
 	    ;
     len = inbufcount;
     inbufcount = 0;
 # else
 
-#ifdef USE_SNIFF
+#  ifdef USE_SNIFF
     if (sniff_request_waiting)
     {
 	add_to_input_buf((char_u *)"\233sniff",6); /* results in K_SNIFF */
@@ -1123,7 +1274,7 @@ fill_input_buf(exit_on_error)
 	want_sniff_request = 0;
 	return;
     }
-#endif
+#  endif
 #  ifdef VMS
     while (!vim_is_input_buf_full() && RealWaitForChar(0, 0L))
     {
@@ -1202,8 +1353,38 @@ ui_cursor_shape()
     if (gui.in_use)
 	gui_upd_cursor_shape();
 #endif
-#if defined(MSDOS) || (defined(WIN32) && !defined(USE_GUI_WIN32))
+#ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
 #endif
+}
+#endif
+
+#if defined(XTERM_CLIP) || defined(USE_GUI) || defined(PROTO)
+/*
+ * Check bounds for column number
+ */
+    int
+check_col(col)
+    int	    col;
+{
+    if (col < 0)
+	return 0;
+    if (col >= (int)screen_Columns)
+	return (int)screen_Columns - 1;
+    return col;
+}
+
+/*
+ * Check bounds for row number
+ */
+    int
+check_row(row)
+    int	    row;
+{
+    if (row < 0)
+	return 0;
+    if (row >= (int)screen_Rows)
+	return (int)screen_Rows - 1;
+    return row;
 }
 #endif

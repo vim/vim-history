@@ -9,7 +9,6 @@
 #include "vim.h"
 
 #ifdef FILE_IN_PATH
-static char_u *find_file_in_path __ARGS((char_u *ptr, int len, int options, long count));
 static char_u *find_file_in_wildcard_path __ARGS((char_u *path_so_far, char_u *wildcards, int level, long *countptr));
 static int path_is_url __ARGS((char_u *p));
 #endif
@@ -78,26 +77,32 @@ do_window(nchar, Prenum)
     case 'n':	reset_VIsual();			/* stop Visual mode */
 		stuffcharReadbuff(':');
 		if (Prenum)
-		    stuffnumReadbuff(Prenum);	    /* window height */
-		stuffReadbuff((char_u *)"new\n");   /* it is ex_docmd.c */
+		    stuffnumReadbuff(Prenum);	/* window height */
+		stuffReadbuff((char_u *)"new\n");
 		break;
 
 /* quit current window */
     case Ctrl('Q'):
     case 'q':	reset_VIsual();			/* stop Visual mode */
-		stuffReadbuff((char_u *)":quit\n"); /* it is ex_docmd.c */
+		stuffReadbuff((char_u *)":quit\n");
 		break;
 
 /* close current window */
     case Ctrl('C'):
     case 'c':	reset_VIsual();			/* stop Visual mode */
-		stuffReadbuff((char_u *)":close\n");	/* it is ex_docmd.c */
+		stuffReadbuff((char_u *)":close\n");
+		break;
+
+/* close preview window */
+    case Ctrl('Z'):
+    case 'z':	reset_VIsual();			/* stop Visual mode */
+		stuffReadbuff((char_u *)":pclose\n");
 		break;
 
 /* close all but current window */
     case Ctrl('O'):
     case 'o':	reset_VIsual();			/* stop Visual mode */
-		stuffReadbuff((char_u *)":only\n"); /* it is ex_docmd.c */
+		stuffReadbuff((char_u *)":only\n");
 		break;
 
 /* cursor to next window */
@@ -235,6 +240,12 @@ do_window(nchar, Prenum)
 		break;
 
 /* jump to tag and split window if tag exists */
+    case '}':
+		if (Prenum)
+		    g_do_tagpreview = Prenum;
+		else
+		    g_do_tagpreview = p_pvh;
+		/*FALLTHROUGH*/
     case ']':
     case Ctrl(']'):
 		reset_VIsual();			/* stop Visual mode */
@@ -259,7 +270,7 @@ do_window(nchar, Prenum)
 #endif
 		    setpcmark();
 		    if (win_split(0, FALSE, FALSE) == OK)
-			(void)do_ecmd(0, ptr, NULL, NULL, (linenr_t)0,
+			(void)do_ecmd(0, ptr, NULL, NULL, ECMD_LASTL,
 								   ECMD_HIDE);
 		    vim_free(ptr);
 		}
@@ -287,22 +298,30 @@ do_window(nchar, Prenum)
 
 /* CTRL-W g  extended commands */
     case 'g':
-#ifdef USE_GUI_WIN32
+    case Ctrl('G'):
+#ifdef USE_ON_FLY_SCROLL
 		dont_scroll = TRUE;		/* disallow scrolling here */
 #endif
 		++no_mapping;
 		++allow_keys;   /* no mapping for xchar, but allow key codes */
-		xchar = vgetc();
+		xchar = safe_vgetc();
 #ifdef HAVE_LANGMAP
 		LANGMAP_ADJUST(xchar, TRUE);
 #endif
 		--no_mapping;
 		--allow_keys;
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
 		(void)add_to_showcmd(xchar);
 #endif
 		switch (xchar)
 		{
+		    case '}':
+			xchar = Ctrl(']');
+			if (Prenum)
+			    g_do_tagpreview = Prenum;
+			else
+			    g_do_tagpreview = p_pvh;
+			/*FALLTHROUGH*/
 		    case ']':
 		    case Ctrl(']'):
 			reset_VIsual();			/* stop Visual mode */
@@ -500,6 +519,8 @@ win_valid(win)
 {
     WIN	    *wp;
 
+    if (win == NULL)
+	return FALSE;
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (wp == win)
 	    return TRUE;
@@ -900,13 +921,16 @@ close_window(win, free_buf)
     }
     else			    /* freed space goes to previous window */
 	wp = win->w_prev;
-    win_new_height(wp, wp->w_height + win->w_height + win->w_status_height);
 
 /*
  * Close the link to the buffer.
  */
     close_buffer(win, win->w_buffer, free_buf, FALSE);
+    /* autocommands may have closed the window already */
+    if (!win_valid(win))
+	return;
 
+    win_new_height(wp, wp->w_height + win->w_height + win->w_status_height);
     win_free(win);
     if (win == curwin)
 	curwin = NULL;
@@ -963,7 +987,7 @@ close_others(message, forceit)
 	return;
     }
 
-    for (wp = firstwin; wp != NULL; wp = nextwp)
+    for (wp = firstwin; win_valid(wp); wp = nextwp)
     {
 	nextwp = wp->w_next;
 	if (wp == curwin)		/* don't close current window */
@@ -971,11 +995,21 @@ close_others(message, forceit)
 
 	/* Check if it's allowed to abandon this window */
 	if (!can_abandon(wp->w_buffer, forceit))
-	    continue;
+	{
+#if defined(GUI_DIALOG) || defined(CON_DIALOG)
+	    if (message && (p_confirm || confirm))
+		dialog_changed(wp->w_buffer, FALSE);
+	    if (buf_changed(wp->w_buffer))
+#endif
+		continue;
+	}
 
 	/* Close the link to the buffer. */
 	close_buffer(wp, wp->w_buffer,
 				 !p_hid && !buf_changed(wp->w_buffer), FALSE);
+	/* autocommands may have closed the window already */
+	if (!win_valid(wp))
+	    continue;
 
 	/* Remove the window.  All lines go to previous or next window. */
 	if (wp->w_prev != NULL)
@@ -1053,6 +1087,7 @@ win_goto(wp)
     win_enter(wp, TRUE);
 }
 
+#if defined(HAVE_PERL_INTERP) || defined(PROTO)
 /*
  * Go to window nr "winnr" (counting top to bottom).
  */
@@ -1067,6 +1102,7 @@ win_goto_nr(winnr)
 	    break;
     return wp;
 }
+#endif
 
 /*
  * Make window wp the current window.
@@ -1125,15 +1161,38 @@ win_enter(wp, undo_sync)
 	apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
 
+#ifdef WANT_TITLE
     maketitle();
+#endif
     curwin->w_redr_status = TRUE;
+    if (restart_edit)
+	redraw_later(VALID);	/* causes status line redraw */
 
-	    /* set window height to desired minimal value */
+    /* set window height to desired minimal value */
     if (curwin->w_height < p_wh)
 	win_setheight((int)p_wh);
 #ifdef USE_MOUSE
     setmouse();			/* in case jumped to/from help buffer */
 #endif
+}
+
+/*
+ * Jump to the first open window that contains buffer buf if one exists
+ * TODO: Alternatively jump to last open window? Dependent from 'splitbelow'?
+ * Returns pointer to window if it exists, otherwise NULL.
+ */
+    WIN *
+buf_jump_open_win(buf)
+    BUF	    *buf;
+{
+    WIN	    *wp;
+
+    for (wp = firstwin; wp; wp = wp->w_next)
+	if (wp->w_buffer == buf)
+	    break;
+    if (wp)
+	win_enter(wp, FALSE);
+    return wp;
 }
 
 /*
@@ -1166,6 +1225,9 @@ win_alloc(after)
 	newwin->w_topline = 1;
 	newwin->w_botline = 2;
 	newwin->w_cursor.lnum = 1;
+#ifdef SCROLLBIND
+	newwin->w_scbind_pos = 1;
+#endif
 
 	/* We won't calculate w_fraction until resizing the window */
 	newwin->w_fraction = 0;
@@ -1679,7 +1741,7 @@ command_height(old_p_ch)
     WIN	    *wp;
     int	    h;
 
-    if (!starting)
+    if (starting != NO_SCREEN)
     {
 	cmdline_row = Rows - p_ch;
 	if (p_ch > old_p_ch)		    /* p_ch got bigger */
@@ -1749,11 +1811,11 @@ last_status()
 	win_comp_pos();
 	lastwin->w_status_height = 1;
 	comp_col();
-	update_screen(CLEAR);
+	redraw_all_later(NOT_VALID);
     }
 }
 
-#ifdef FILE_IN_PATH
+#if defined(FILE_IN_PATH) || defined(PROTO)
 /*
  * file_name_at_cursor()
  *
@@ -1790,6 +1852,7 @@ get_file_name_in_path(line, col, options, count)
 {
     char_u  *ptr;
     char_u  *file_name;
+    char_u  *path;
     int	    len;
 
     /*
@@ -1832,15 +1895,15 @@ get_file_name_in_path(line, col, options, count)
 	 * Such a link looks like "type://machine/path". Only "/path" is used.
 	 * First search for the string "://", then for the extra '/'
 	 */
-	if ((file_name = vim_strchr(ptr, ':')) != NULL &&
-		((path_is_url(file_name) == URL_SLASH &&
-		  (file_name = vim_strchr(file_name + 3, '/')) != NULL) ||
-		 (path_is_url(file_name) == URL_BACKSLASH &&
-		  (file_name = vim_strchr(file_name + 3, '\\')) != NULL)) &&
-		file_name < ptr + len)
+	if ((file_name = vim_strchr(ptr, ':')) != NULL
+		&& ((path_is_url(file_name) == URL_SLASH
+			&& (path = vim_strchr(file_name + 3, '/')) != NULL)
+		    || (path_is_url(file_name) == URL_BACKSLASH
+			&& (path = vim_strchr(file_name + 3, '\\')) != NULL))
+		&& path < ptr + len)
 	{
-	    len -= file_name - ptr;
-	    ptr = file_name;
+	    len -= path - ptr;
+	    ptr = path;
 	    if (ptr[1] == '~')	    /* skip '/' for /~user/path */
 	    {
 		++ptr;
@@ -1865,7 +1928,7 @@ get_file_name_in_path(line, col, options, count)
  *
  * Returns an allocated string for the file name.  NULL for error.
  */
-    static char_u *
+    char_u *
 find_file_in_path(ptr, len, options, count)
     char_u	*ptr;		/* file name */
     int		len;		/* length of file name */
@@ -1939,7 +2002,7 @@ find_file_in_path(ptr, len, options, count)
 		}
 		if (!vim_ispathsep(file_name[len - 1]))
 		    file_name[len++] = PATHSEP;
-		file_name[len] = '\0';
+		file_name[len] = NUL;
 
 		/*
 		 * Handle "**" in the path: 'wildcard in path'.
@@ -2066,7 +2129,7 @@ find_file_in_wildcard_path(path_so_far, wildcards, level, countptr)
     if (!vim_ispathsep(file_name[len-1]))
     {
 	file_name[len++] = PATHSEP;
-	file_name[len] = '\0';
+	file_name[len] = NUL;
     }
     rest_of_wildcards = wildcards;
     if (rest_of_wildcards)
@@ -2077,11 +2140,12 @@ find_file_in_wildcard_path(path_so_far, wildcards, level, countptr)
 	    file_name[len++] = *rest_of_wildcards++;
 	/* file_name[len++] = *rest_of_wildcards++; */
 	rest_of_wildcards++;
-	file_name[len] = '\0';
+	file_name[len] = NUL;
     }
 
     ++expand_interactively;
-    expand_wildcards(1, &file_name, &nFiles, &ppFiles, EW_FILE|EW_DIR);
+    expand_wildcards(1, &file_name, &nFiles, &ppFiles,
+						  EW_FILE|EW_DIR|EW_ADDSLASH);
     --expand_interactively;
 
     if (!*rest_of_wildcards)
@@ -2091,8 +2155,7 @@ find_file_in_wildcard_path(path_so_far, wildcards, level, countptr)
 	    if (!mch_isdir(ppFiles[i]))
 		continue;   /* not a directory */
 	    STRCPY(file_name, ppFiles[i]);
-	    if (!vim_ispathsep(file_name[STRLEN(file_name)-1]))
-		STRCAT(file_name, PATHSEPSTR);
+	    add_pathsep(file_name);
 	    STRCAT(file_name, NameBuff);
 	    if (mch_getperm(file_name) >= 0 && --*countptr == 0)
 	    {

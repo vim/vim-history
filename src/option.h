@@ -23,19 +23,18 @@
 
 /* default values for p_efm 'errorformat' */
 #ifdef AMIGA
-			/* don't use [^0-9] here, Manx C can't handle it */
-# define EFM_DFLT	"%f>%l:%c:%t:%n:%m,%f:%l: %t%*[^0123456789]%n: %m,%f %l %t%*[^0123456789]%n: %m,%*[^\"]\"%f\"%*[^0123456789]%l: %m,%f:%l:%m"
+# define EFM_DFLT	"%f>%l:%c:%t:%n:%m,%f:%l: %t%*\\D%n: %m,%f %l %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f:%l:%m"
 #else
 # if defined MSDOS  ||	defined WIN32
-#  define EFM_DFLT	"%f(%l) : %t%*[^0-9]%n: %m,%*[^\"]\"%f\"%*[^0-9]%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"
+#  define EFM_DFLT	"%f(%l) : %t%*\\D%n: %m,%*[^\"]\"%f\"%*\\D%l: %m,%f(%l) : %m,%*[^ ] %f %l: %m,%f:%l:%m"
 # else
 #  if defined(__EMX__)	/* put most common here (i.e. gcc format) at front */
-#   define EFM_DFLT	"%f:%l:%m,%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f(%l:%c) : %m"
+#   define EFM_DFLT	"%f:%l:%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f(%l:%c) : %m"
 #  else
 #   if defined(__QNX__)
-#    define EFM_DFLT	"%f(%l):%*[^WE]%t%*[^0123456789]%n:%m"
+#    define EFM_DFLT	"%f(%l):%*[^WE]%t%*\\D%n:%m"
 #   else /* Unix, probably */
-#    define EFM_DFLT	"%*[^\"]\"%f\"%*[^0-9]%l: %m,\"%f\"%*[^0-9]%l: %m,%f:%l:%m,\"%f\"\\, line %l%*[^0-9]%c%*[^ ] %m"
+#define EFM_DFLT	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
 #   endif
 #  endif
 # endif
@@ -112,11 +111,15 @@
 #define CPO_FNAMER	'f'	/* set file name for ":r file" */
 #define CPO_FNAMEW	'F'	/* set file name for ":w file" */
 #define CPO_JOINSP	'j'	/* only use two spaces for join after '.' */
+#define CPO_ENDOFSENT	'J'	/* need two spaces to detect end of sentence */
 #define CPO_KEYCODE	'k'	/* don't recognize raw key code in mappings */
+#define CPO_KOFFSET	'K'	/* don't wait for key code in mappings */
 #define CPO_LITERAL	'l'	/* take char after backslash in [] literal */
 #define CPO_LISTWM	'L'	/* 'list' changes wrapmargin */
 #define CPO_SHOWMATCH	'm'
 #define CPO_LINEOFF	'o'
+#define CPO_OVERNEW	'O'	/* silently overwrite new file */
+#define CPO_LISP	'p'	/* 'lisp' indenting */
 #define CPO_REDO	'r'
 #define CPO_BUFOPT	's'
 #define CPO_BUFOPTGLOB	'S'
@@ -132,10 +135,10 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcdeEfFjklLmorsStuwWxy$!%*<"
+#define CPO_ALL		"aAbBcdeEfFjJkKlLmoOprsStuwWxy$!%*<"
 
 /* characters for p_ww option: */
-#define WW_ALL		"bshl<>[],"
+#define WW_ALL		"bshl<>[],~"
 
 /* characters for p_mouse option: */
 #define MOUSE_NORMAL	'n'		/* use mouse in Normal mode */
@@ -158,15 +161,16 @@
 #define SHM_WRI		'w'		/* "[w]" instead of "written" */
 #define SHM_A		"rmfixlnw"	/* represented by 'a' flag */
 #define SHM_WRITE	'W'		/* don't use "written" at all */
-#define SHM_TRUNC	't'		/* trunctate message */
+#define SHM_TRUNC	't'		/* trunctate file messages */
+#define SHM_TRUNCALL	'T'		/* trunctate all messages */
 #define SHM_OVER	'o'		/* overwrite file messages */
 #define SHM_OVERALL	'O'		/* overwrite more messages */
 #define SHM_SEARCH	's'		/* no search hit bottom messages */
 #define SHM_ATTENTION	'A'		/* no ATTENTION messages */
 #define SHM_INTRO	'I'		/* intro messages */
-#define SHM_ALL		"rmfixlnwaWtoOsAI" /* all possible flags for 'shm' */
+#define SHM_ALL		"rmfixlnwaWtToOsAI" /* all possible flags for 'shm' */
 
-/* characters for p_guioptions: */
+/* characters for p_go: */
 #define GO_ASEL		'a'		/* autoselect */
 #define GO_BOT		'b'		/* use bottom scrollbar */
 #define GO_FORG		'f'		/* start GUI in foreground */
@@ -174,11 +178,13 @@
 #define GO_ICON		'i'		/* use Vim icon */
 #define GO_LEFT		'l'		/* use left scrollbar */
 #define GO_MENUS	'm'		/* use menu bar */
+#define GO_NOSYSMENU	'M'		/* don't source system menu */
 #define GO_POINTER	'p'		/* pointer enter/leave callbacks */
 #define GO_RIGHT	'r'		/* use right scrollbar */
 #define GO_TEAROFF	't'		/* add tear-off menu items */
 #define GO_TOOLBAR	'T'		/* add toolbar */
-#define GO_ALL		"abfgilmprtT"	/* all possible flags for 'go' */
+#define GO_VERTICAL	'v'		/* vertical toolbar */
+#define GO_ALL		"abfgilmMprtTv"	/* all possible flags for 'go' */
 
 /* flags for 'comments' option */
 #define COM_NEST	'n'		/* comments strings nest */
@@ -186,11 +192,46 @@
 #define COM_START	's'		/* start of comment */
 #define COM_MIDDLE	'm'		/* middle of comment */
 #define COM_END		'e'		/* end of comment */
+#define COM_AUTO_END	'x'		/* last char of end closes comment */
 #define COM_FIRST	'f'		/* first line comment only */
 #define COM_LEFT	'l'		/* left adjusted */
 #define COM_RIGHT	'r'		/* right adjusted */
-#define COM_ALL		"nbsmeflr"	/* all flags for 'comments' option */
+#define COM_NOBACK	'O'		/* don't use for "O" command */
+#define COM_ALL		"nbsmexflrO"	/* all flags for 'comments' option */
 #define COM_MAX_LEN	50		/* maximum length of a part */
+
+/* flags for 'statusline' option */
+#define STL_FILEPATH	'f'		/* path of file in buffer */
+#define STL_FULLPATH	'F'		/* full path of file in buffer */
+#define STL_FILENAME	't'		/* last part (tail) of file path */
+#define STL_COLUMN	'c'		/* column og cursor*/
+#define STL_VIRTCOL	'v'		/* virtual column */
+#define STL_VIRTCOL_ALT	'V'		/* - with 'if different' display */
+#define STL_LINE	'l'		/* line number of cursor */
+#define STL_NUMLINES	'L'		/* number of lines in buffer */
+#define STL_BUFNO	'n'		/* current buffer number */
+#define STL_OFFSET	'o'		/* offset of character under cursor*/
+#define STL_OFFSET_X	'O'		/* - in hexadecimal */
+#define STL_BYTEVAL	'b'		/* byte value of character */
+#define STL_BYTEVAL_X	'B'		/* - in hexadecimal */
+#define STL_ROFLAG	'r'		/* readonly flag */
+#define STL_ROFLAG_ALT	'R'		/* - other display */
+#define STL_HELPFLAG	'h'		/* window is showing a help file */
+#define STL_HELPFLAG_ALT 'H'		/* - other display */
+#define STL_FILETYPE	'y'		/* 'filetype' */
+#define STL_FILETYPE_ALT 'Y'		/* - other display */
+#define STL_PREVIEWFLAG	'w'		/* window is showing the preview buf */
+#define STL_PREVIEWFLAG_ALT 'W'		/* - other display */
+#define STL_MODIFIED	'm'		/* modified flag */
+#define STL_MODIFIED_ALT 'M'		/* - other display */
+#define STL_PERCENTAGE	'p'		/* percentage through file */
+#define STL_ALTPERCENT	'P'		/* percentage as TOP BOT ALL or NN% */
+#define STL_ARGLISTSTAT	'a'		/* argument list status as (x of y) */
+#define STL_VIM_EXPR	'{'		/* start of expression to substitute */
+#define STL_MIDDLEMARK	'='		/* separation between left and right */
+#define STL_TRUNCMARK	'<'		/* truncation mark if line is too long*/
+#define STL_HIGHLIGHT	'*'		/* highlight from (User)1..9 or 0 */
+#define STL_ALL		((char_u *) "fFtcvVlLnoObBrRhHmYyWwMpPa{")
 
 /* flags used for parsed 'wildmode' */
 #define WIM_FULL	1
@@ -202,199 +243,258 @@
  */
 
 #ifdef RIGHTLEFT
-EXTERN long	p_aleph;	/* Hebrew 'Aleph' encoding */
+EXTERN long	p_aleph;	/* 'aleph' */
 #endif
-EXTERN int	p_aw;		/* auto-write */
-EXTERN long	p_bs;		/* backspace over newlines in insert mode */
-EXTERN char_u  *p_bg;		/* window background color: light or dark */
-EXTERN int	p_bk;		/* make backups when writing out files */
-EXTERN char_u  *p_bdir;		/* list of directory names for backup files */
-EXTERN char_u  *p_bex;		/* extension for backup file */
+EXTERN int	p_aw;		/* 'autowrite' */
+EXTERN long	p_bs;		/* 'backspace' */
+EXTERN char_u  *p_bg;		/* 'background' */
+EXTERN int	p_bk;		/* 'backup' */
+EXTERN char_u  *p_bdir;		/* 'backupdir' */
+EXTERN char_u  *p_bex;		/* 'backupext' */
 EXTERN char_u  *p_bsdir;	/* 'browsedir' */
 #ifdef MSDOS
-EXTERN int	p_biosk;	/* Use bioskey() instead of kbhit() */
+EXTERN int	p_biosk;	/* 'bioskey' */
+EXTERN int	p_consk;	/* 'conskey' */
 #endif
-EXTERN char_u  *p_breakat;	/* characters that can cause a line break */
-EXTERN long	p_ch;		/* command line height */
+#ifdef LINEBREAK
+EXTERN char_u  *p_breakat;	/* 'breakat' */
+#endif
+#ifdef USE_CLIPBOARD
+EXTERN char_u  *p_cb;		/* 'clipboard' */
+#endif
+EXTERN long	p_ch;		/* 'cmdheight' */
 #if defined(GUI_DIALOG) || defined(CON_DIALOG)
 EXTERN int	p_confirm;	/* 'confirm' */
 #endif
-EXTERN int	p_cp;		/* vi-compatible */
-EXTERN char_u  *p_cpo;		/* vi-compatible option flags */
+EXTERN int	p_cp;		/* 'compatible' */
+EXTERN char_u  *p_cpo;		/* 'cpoptions' */
 #ifdef USE_CSCOPE
-EXTERN char_u  *p_csprg;	/* name of cscope program */
-EXTERN int	p_cst;		/* always use :cstag instead of :tag command */
-EXTERN long	p_csto;		/* cscope/tags search order */
-EXTERN int	p_csverbose;	/* cscope verbose messages flag */
+EXTERN char_u  *p_csprg;	/* 'cscopeprg' */
+EXTERN int	p_cst;		/* 'cscopetag' */
+EXTERN long	p_csto;		/* 'cscopetagorder' */
+EXTERN int	p_csverbose;	/* 'cscopeverbose' */
 #endif
-EXTERN char_u  *p_def;		/* Pattern for recognising definitions */
-EXTERN char_u  *p_dict;		/* Dictionaries for ^P/^N */
+EXTERN char_u  *p_def;		/* 'define' */
+#ifdef INSERT_EXPAND
+EXTERN char_u  *p_dict;		/* 'dictionary' */
+#endif
 #ifdef DIGRAPHS
-EXTERN int	p_dg;		/* enable digraphs */
+EXTERN int	p_dg;		/* 'digraph' */
 #endif
-EXTERN char_u	*p_dir;		/* list of directories for swap file */
-EXTERN int	p_ed;		/* :s is ed compatible */
-EXTERN int	p_ea;		/* make windows equal height */
-EXTERN char_u	*p_ep;		/* program name for '=' command */
-EXTERN int	p_eb;		/* ring bell for errors */
+EXTERN char_u	*p_dir;		/* 'directory' */
+EXTERN char_u  *p_dy;		/* 'display' */
+EXTERN int	p_ed;		/* 'edcompatible' */
+EXTERN int	p_ea;		/* 'equalalways' */
+EXTERN char_u	*p_ep;		/* 'equalprg' */
+EXTERN int	p_eb;		/* 'errorbells' */
 #ifdef QUICKFIX
-EXTERN char_u  *p_ef;		/* name of errorfile */
-EXTERN char_u  *p_efm;		/* error format */
-EXTERN char_u  *p_gefm;		/* error format for grep -n */
+EXTERN char_u  *p_ef;		/* 'errorfile' */
+EXTERN char_u  *p_efm;		/* 'errorformat' */
+EXTERN char_u  *p_gefm;		/* 'grepformat' */
+EXTERN char_u  *p_gp;		/* 'grepprg' */
 #endif
 #ifdef AUTOCMD
-EXTERN char_u  *p_ei;		/* events ignored for autocommands */
+EXTERN char_u  *p_ei;		/* 'eventignore' */
 #endif
-EXTERN int	p_ek;		/* function keys with ESC in insert mode */
-EXTERN int	p_exrc;		/* read .exrc in current dir */
-EXTERN char_u  *p_ffs;		/* acceptable file formats */
-EXTERN char_u  *p_fp;		/* name of format program */
-EXTERN int	p_gd;		/* /g is default for :s */
+EXTERN int	p_ek;		/* 'esckeys' */
+EXTERN int	p_exrc;		/* 'exrc' */
+EXTERN char_u  *p_ffs;		/* 'fileformats' */
+EXTERN char_u  *p_fp;		/* 'formatprg' */
+EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef USE_GUI
-EXTERN char_u  *p_guifont;	/* GUI font list */
-EXTERN int	p_guipty;	/* use pseudo pty for external commands */
+EXTERN char_u  *p_guifont;	/* 'guifont' */
+# ifdef USE_FONTSET
+EXTERN char_u  *p_guifontset;	/* 'guifontset' */
+# endif
+EXTERN int	p_guipty;	/* 'guipty' */
+#endif
+#if defined(USE_GUI_GTK) || defined(USE_GUI_X11)
+EXTERN long	p_ghr;		/* 'guiheadroom' */
 #endif
 #ifdef CURSOR_SHAPE
-EXTERN char_u  *p_guicursor;	/* shape settings for cursor */
+EXTERN char_u  *p_guicursor;	/* 'guicursor' */
 #endif
-#if defined(USE_GUI) || defined(USE_CLIPBOARD)
-EXTERN char_u  *p_guioptions;	/* Which GUI components? */
+#if defined(USE_GUI)
+EXTERN char_u  *p_go;		/* 'guioptions' */
 #endif
-EXTERN char_u  *p_hf;		/* name of help file */
-EXTERN long	p_hh;		/* help window height */
-EXTERN int	p_hid;		/* buffers can be hidden */
-EXTERN char_u  *p_hl;		/* which highlight mode to use */
-EXTERN int	p_hls;		/* highlight matches with last search pattern */
-EXTERN long	p_hi;		/* command line history size */
+EXTERN char_u  *p_hf;		/* 'helpfile' */
+EXTERN long	p_hh;		/* 'helpheight' */
+EXTERN int	p_hid;		/* 'hidden' */
+EXTERN char_u  *p_hl;		/* 'highlight' */
+EXTERN int	p_hls;		/* 'hlsearch' */
+EXTERN long	p_hi;		/* 'history' */
 #ifdef RIGHTLEFT
-EXTERN int	p_hkmap;	/* Hebrew keyboard map */
-EXTERN int	p_hkmapp;	/* idem, phonetic */
+EXTERN int	p_hkmap;	/* 'hkmap' */
+EXTERN int	p_hkmapp;	/* 'hkmapp' */
 # ifdef FKMAP
-EXTERN int	p_fkmap;	/* Farsi keyboard map */
-EXTERN int	p_altkeymap;	/* alternative keyboard map Hebrew/Farsi */
+EXTERN int	p_fkmap;	/* 'fkmap' */
+EXTERN int	p_altkeymap;	/* 'altkeymap' */
 # endif
 #endif
-EXTERN int	p_icon;		/* put file name in icon if possible */
-EXTERN char_u  *p_iconstring;	/* icon string */
-EXTERN int	p_ic;		/* ignore case in searches */
-EXTERN int	p_is;		/* incremental search */
-EXTERN int	p_im;		/* start editing in input mode */
-EXTERN char_u  *p_inc;		/* Pattern for including other files */
-EXTERN char_u  *p_isf;		/* characters in a file name */
-EXTERN char_u  *p_isi;		/* characters in an identifier */
-EXTERN char_u  *p_isp;		/* characters that are printable */
-EXTERN int	p_js;		/* use two spaces after '.' with Join */
-EXTERN char_u  *p_kp;		/* keyword program */
+#ifdef WANT_TITLE
+EXTERN int	p_icon;		/* 'icon' */
+EXTERN char_u  *p_iconstring;	/* 'iconstring' */
+#endif
+EXTERN int	p_ic;		/* 'ignorecase' */
+EXTERN int	p_is;		/* 'incsearch' */
+EXTERN int	p_im;		/* 'insertmode' */
+EXTERN char_u  *p_inc;		/* 'include' */
+EXTERN char_u  *p_isf;		/* 'isfname' */
+EXTERN char_u  *p_isi;		/* 'isident' */
+EXTERN char_u  *p_isp;		/* 'isprint' */
+EXTERN int	p_js;		/* 'joinspaces' */
+EXTERN char_u  *p_kp;		/* 'keywordprg' */
 EXTERN char_u  *p_km;		/* 'keymodel' */
 #ifdef HAVE_LANGMAP
-EXTERN char_u  *p_langmap;	/* mapping for some language */
+EXTERN char_u  *p_langmap;	/* 'langmap'*/
 #endif
-EXTERN long	p_ls;		/* last window has status line */
-EXTERN char_u  *p_lcs;		/* characters for list mode */
+EXTERN long	p_ls;		/* 'laststatus' */
+EXTERN char_u  *p_lcs;		/* 'listchars' */
 
-EXTERN int	p_lz;		/* lazy redraw, only when key typed */
-EXTERN int	p_magic;	/* use some characters for reg exp */
+EXTERN int	p_lz;		/* 'lazyredraw' */
+EXTERN int	p_magic;	/* 'magic' */
 #ifdef QUICKFIX
-EXTERN char_u  *p_mef;		/* name of make errorfile */
-EXTERN char_u  *p_mp;		/* program for :make command */
-EXTERN char_u  *p_gp;		/* program for :grep command */
+EXTERN char_u  *p_mef;		/* 'makeef' */
+EXTERN char_u  *p_mp;		/* 'makeprg' */
 #endif
-EXTERN long	p_mat;		/* time to show the match of a paren */
+EXTERN long	p_mat;		/* 'matchtime' */
+#ifdef WANT_EVAL
 EXTERN long	p_mfd;		/* 'maxfuncdepth' */
+#endif
 EXTERN long	p_mmd;		/* 'maxmapdepth' */
-EXTERN long	p_mm;		/* maximal amount of memory for buffer */
-EXTERN long	p_mmt;		/* maximal amount of memory for Vim */
-EXTERN long	p_mls;		/* number of mode lines */
-EXTERN char_u  *p_mouse;	/* flags for use of mouse */
+EXTERN long	p_mm;		/* 'maxmem' */
+EXTERN long	p_mmt;		/* 'maxmemtot' */
+EXTERN long	p_mls;		/* 'modelines' */
+EXTERN char_u  *p_mouse;	/* 'mouse' */
 #ifdef USE_GUI
 EXTERN int	p_mousef;	/* 'mousefocus' */
-EXTERN int	p_mh;		/* hide pointer enable */
+EXTERN int	p_mh;		/* 'mousehide' */
 #endif
 EXTERN char_u  *p_mousem;	/* 'mousemodel' */
-EXTERN long	p_mouset;	/* mouse double click time */
-EXTERN int	p_more;		/* wait when screen full when listing */
-EXTERN char_u  *p_para;		/* paragraphs */
-EXTERN int	p_paste;	/* paste mode */
-EXTERN char_u  *p_pm;		/* patchmode file suffix */
-EXTERN char_u  *p_path;		/* path for "]f" and "^Wf" */
-EXTERN int	p_remap;	/* remap */
-EXTERN long	p_report;	/* minimum number of lines for report */
+EXTERN long	p_mouset;	/* 'mousetime' */
+EXTERN int	p_more;		/* 'more' */
+EXTERN char_u  *p_para;		/* 'paragraphs' */
+EXTERN int	p_paste;	/* 'paste' */
+EXTERN char_u  *p_pt;		/* 'pastetoggle' */
+EXTERN char_u  *p_pm;		/* 'patchmode' */
+EXTERN char_u  *p_path;		/* 'path' */
+EXTERN int	p_remap;	/* 'remap' */
+EXTERN long	p_report;	/* 'report' */
+EXTERN long	p_pvh;		/* 'previewheight' */
 #ifdef WIN32
-EXTERN int	p_rs;		/* restore startup screen upon exit */
+EXTERN int	p_rs;		/* 'restorescreen' */
 #endif
 #ifdef RIGHTLEFT
-EXTERN int	p_ari;		/* allow CTRL-_ command */
-EXTERN int	p_ri;		/* reverse direction of insert */
+EXTERN int	p_ari;		/* 'allowrevins' */
+EXTERN int	p_ri;		/* 'revins' */
 #endif
-EXTERN int	p_ru;		/* show column/line number */
-EXTERN long	p_sj;		/* scroll jump size */
-EXTERN long	p_so;		/* scroll offset */
-EXTERN char_u  *p_sections;	/* sections */
-EXTERN int	p_secure;	/* do .exrc and .vimrc in secure mode */
+#ifdef CMDLINE_INFO
+EXTERN int	p_ru;		/* 'ruler' */
+#endif
+#ifdef STATUSLINE
+EXTERN char_u	*p_ruf;		/* 'rulerformat' */
+#endif
+EXTERN long	p_sj;		/* 'scrolljump' */
+EXTERN long	p_so;		/* 'scrolloff' */
+#ifdef SCROLLBIND
+EXTERN char_u  *p_sbo;		/* 'scrollopt' */
+#endif
+EXTERN char_u  *p_sections;	/* 'sections' */
+EXTERN int	p_secure;	/* 'secure' */
 EXTERN char_u  *p_sel;		/* 'selection' */
 EXTERN char_u  *p_slm;		/* 'selectmode' */
-EXTERN char_u  *p_sessopt;	/* sessionoptions */
-EXTERN char_u  *p_sh;		/* name of shell to use */
-EXTERN char_u  *p_shcf;		/* flag to shell to execute one command */
-EXTERN char_u  *p_sp;		/* string for output of make */
-EXTERN char_u  *p_shq;		/* quote character(s) for shell */
-EXTERN char_u  *p_sxq;		/* quote around redirection for shell */
-EXTERN char_u  *p_srr;		/* string for output of filter */
-EXTERN long	p_st;		/* type of shell */
-EXTERN int	p_sr;		/* shift round off (for < and >) */
-EXTERN char_u  *p_shm;		/* When to use short message */
-EXTERN char_u  *p_sbr;		/* string for break of line */
-EXTERN int	p_sc;		/* show command in status line */
-EXTERN int	p_sft;		/* showfulltag */
-EXTERN int	p_sm;		/* showmatch */
-EXTERN int	p_smd;		/* show mode */
-EXTERN long	p_ss;		/* sideways scrolling offset */
-EXTERN int	p_scs;		/* 'smartcase' */
-EXTERN int	p_sta;		/* smart-tab for expand-tab */
-EXTERN int	p_sb;		/* split window backwards */
-EXTERN int	p_sol;		/* Move cursor to start-of-line? */
-EXTERN char_u  *p_su;		/* suffixes for wildcard expansion */
-EXTERN char_u  *p_sws;		/* swap file syncing */
-EXTERN int	p_tbs;		/* tag binary search */
-EXTERN long	p_tl;		/* used tag length */
-EXTERN int	p_tr;		/* tag file name is relative */
-EXTERN char_u  *p_tags;		/* tags search path */
-EXTERN int	p_terse;	/* terse messages */
-EXTERN int	p_ta;		/* auto textmode detection */
-EXTERN int	p_to;		/* tilde is an operator */
-EXTERN int	p_timeout;	/* mappings entered within one second */
-EXTERN long	p_tm;		/* timeoutlen (msec) */
-EXTERN int	p_title;	/* set window title if possible */
-EXTERN long	p_titlelen;	/* length of window title in % of Columns */
-EXTERN char_u  *p_titlestring;	/* window title string */
-EXTERN int	p_ttimeout;	/* key codes entered within one second */
-EXTERN long	p_ttm;		/* key code timeoutlen (msec) */
-EXTERN int	p_tbi;		/* 'ttybuiltin' use builtin termcap first */
-EXTERN int	p_tf;		/* terminal fast I/O */
-EXTERN long	p_ttyscroll;	/* maximum nr of screen lines for a scroll */
-EXTERN char_u  *p_ttym;		/* 'ttymouse', type of mouse */
-EXTERN long	p_ul;		/* number of Undo Levels */
-EXTERN long	p_uc;		/* update count for swap file */
-EXTERN long	p_ut;		/* update time for swap file */
-#ifdef VIMINFO
-EXTERN char_u  *p_viminfo;	/* Parameters for using ~/.viminfo file */
+#ifdef MKSESSION
+EXTERN char_u  *p_sessopt;	/* 'sessionoptions' */
 #endif
-EXTERN int	p_vb;		/* visual bell only (no beep) */
-EXTERN long	p_verbose;	/* verbosity, -V command line argument */
-EXTERN int	p_warn;		/* warn for changes at shell command */
-#if defined(USE_GUI_WIN32) || defined(USE_GUI_MOTIF) || defined(LINT)
+EXTERN char_u  *p_sh;		/* 'shell' */
+EXTERN char_u  *p_shcf;		/* 'shellcmdflag' */
+#ifdef QUICKFIX
+EXTERN char_u  *p_sp;		/* 'shellpipe' */
+#endif
+EXTERN char_u  *p_shq;		/* 'shellquote' */
+EXTERN char_u  *p_sxq;		/* 'shellxquote' */
+EXTERN char_u  *p_srr;		/* 'shellredir' */
+#ifdef AMIGA
+EXTERN long	p_st;		/* 'shelltype' */
+#endif
+#ifdef BACKSLASH_IN_FILENAME
+EXTERN int	p_ssl;		/* 'shellslash' */
+#endif
+#ifdef STATUSLINE
+EXTERN char_u  *p_stl;		/* 'statusline' */
+#endif
+EXTERN int	p_sr;		/* 'shiftround' */
+EXTERN char_u  *p_shm;		/* 'shortmess' */
+#ifdef LINEBREAK
+EXTERN char_u  *p_sbr;		/* 'showbreak' */
+#endif
+#ifdef CMDLINE_INFO
+EXTERN int	p_sc;		/* 'showcmd' */
+#endif
+EXTERN int	p_sft;		/* 'showfulltag' */
+EXTERN int	p_sm;		/* 'showmatch' */
+EXTERN int	p_smd;		/* 'showmode' */
+EXTERN long	p_ss;		/* 'sidescroll' */
+EXTERN int	p_scs;		/* 'smartcase' */
+EXTERN int	p_sta;		/* 'smarttab' */
+EXTERN int	p_sb;		/* 'splitbelow' */
+EXTERN int	p_sol;		/* 'startofline' */
+EXTERN char_u  *p_su;		/* 'suffixes' */
+EXTERN char_u  *p_sws;		/* 'swapsync' */
+EXTERN char_u  *p_swb;		/* 'switchbuf' */
+EXTERN int	p_tbs;		/* 'tagbsearch' */
+EXTERN long	p_tl;		/* 'taglength' */
+EXTERN int	p_tr;		/* 'tagrelative' */
+EXTERN char_u  *p_tags;		/* 'tags' */
+EXTERN int	p_tgst;		/* 'tagstack' */
+EXTERN int	p_terse;	/* 'terse' */
+EXTERN int	p_ta;		/* 'textauto' */
+EXTERN int	p_to;		/* 'tildeop' */
+EXTERN int	p_timeout;	/* 'timeout' */
+EXTERN long	p_tm;		/* 'timeoutlen' */
+#ifdef WANT_TITLE
+EXTERN int	p_title;	/* 'title' */
+EXTERN long	p_titlelen;	/* 'titlelen' */
+EXTERN char_u  *p_titleold;	/* 'titleold' */
+EXTERN char_u  *p_titlestring;	/* 'titlestring' */
+#endif
+EXTERN int	p_ttimeout;	/* 'ttimeout' */
+EXTERN long	p_ttm;		/* 'ttimeoutlen' */
+EXTERN int	p_tbi;		/* 'ttybuiltin' */
+EXTERN int	p_tf;		/* 'ttyfast' */
+#if defined(USE_GUI_GTK) && defined(USE_TOOLBAR)
+EXTERN char_u  *p_toolbar;	/* 'toolbar' */
+#endif
+EXTERN long	p_ttyscroll;	/* 'ttyscroll' */
+EXTERN char_u  *p_ttym;		/* 'ttymouse' */
+EXTERN long	p_ul;		/* 'undolevels' */
+EXTERN long	p_uc;		/* 'updatecount' */
+EXTERN long	p_ut;		/* 'updatetime' */
+#ifdef VIMINFO
+EXTERN char_u  *p_viminfo;	/* 'viminfo' */
+#endif
+EXTERN int	p_vb;		/* 'visualbell' */
+EXTERN long	p_verbose;	/* 'verbose' */
+EXTERN int	p_warn;		/* 'warn' */
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_MOTIF) || defined(LINT) || defined (USE_GUI_GTK)
+#define HAS_WAK
 EXTERN char_u	*p_wak;		/* 'winaltkeys' */
 #endif
 #ifdef WILDIGNORE
 EXTERN char_u  *p_wig;		/* 'wildignore' */
 #endif
-EXTERN int	p_wiv;		/* inversion of text is weird */
-EXTERN char_u  *p_ww;		/* which keys wrap to next/prev line */
-EXTERN long	p_wc;		/* character for wildcard exapansion */
+EXTERN int	p_wiv;		/* 'weirdinvert' */
+EXTERN char_u  *p_ww;		/* 'whichwrap' */
+EXTERN long	p_wc;		/* 'wildchar' */
+EXTERN long	p_wcm;		/* 'wildcharm' */
 EXTERN char_u  *p_wim;		/* 'wildmode' */
-EXTERN long	p_wh;		/* desired window height */
-EXTERN long	p_wmh;		/* minimal window height */
-EXTERN int	p_ws;		/* wrap scan */
-EXTERN int	p_wa;		/* write any */
-EXTERN int	p_wb;		/* write backup files */
-EXTERN long	p_wd;		/* write delay for screen output (for tests) */
+#ifdef WILDMENU
+EXTERN int	p_wmnu;		/* 'wildmenu' */
+#endif
+EXTERN long	p_wh;		/* 'winheight' */
+EXTERN long	p_wmh;		/* 'winminheight' */
+EXTERN int	p_ws;		/* 'wrapscan' */
+EXTERN int	p_write;	/* 'write' */
+EXTERN int	p_wa;		/* 'writeany' */
+EXTERN int	p_wb;		/* 'writebackup' */
+EXTERN long	p_wd;		/* 'writedelay' */

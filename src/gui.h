@@ -26,7 +26,12 @@
 # include <X11/StringDefs.h>
 #endif
 
-#ifdef USE_GUI_WIN32
+#ifdef USE_GUI_GTK
+# include <X11/Intrinsic.h>
+# include <gtk/gtk.h>
+#endif
+
+#ifdef USE_GUI_MSWIN
 # include <windows.h>
 #endif
 
@@ -68,8 +73,12 @@
  * there is no terminal version, and on Windows we can't figure out how to
  * fork one off with :gui.
  */
-#if defined(USE_GUI_WIN32) || defined(USE_GUI_MAC)
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_MAC)
 # define ALWAYS_USE_GUI
+#endif
+
+#if defined(USE_GUI_MSWIN) || defined(USE_GUI_MAC)
+# define USE_ON_FLY_SCROLL
 #endif
 
 /*
@@ -83,36 +92,22 @@
  * X_2_COL  - Convert X pixel coord into character column.
  * Y_2_ROW  - Convert Y pixel coord into character row.
  */
-#define TEXT_X(col)	((col) * gui.char_width  + gui.border_offset)
-#define TEXT_Y(row)	((row) * gui.char_height + gui.char_ascent \
-						 + gui.border_offset)
-#define FILL_X(col)	((col) * gui.char_width  + gui.border_offset)
-#define FILL_Y(row)	((row) * gui.char_height + gui.border_offset)
-#define X_2_COL(x)	(((x) - gui.border_offset) / gui.char_width)
-#define Y_2_ROW(y)	(((y) - gui.border_offset) / gui.char_height)
-
-/* Indices into GuiMenu->strings[] and GuiMenu->noremap[] for each mode */
-#define MENU_INDEX_INVALID	-1
-#define MENU_INDEX_NORMAL	0
-#define MENU_INDEX_VISUAL	1
-#define MENU_INDEX_OP_PENDING	2
-#define MENU_INDEX_INSERT	3
-#define MENU_INDEX_CMDLINE	4
-#define MENU_INDEX_TIP		5
-#define MENU_MODES		6
-
-/* Menu modes */
-#define MENU_NORMAL_MODE	(1 << MENU_INDEX_NORMAL)
-#define MENU_VISUAL_MODE	(1 << MENU_INDEX_VISUAL)
-#define MENU_OP_PENDING_MODE	(1 << MENU_INDEX_OP_PENDING)
-#define MENU_INSERT_MODE	(1 << MENU_INDEX_INSERT)
-#define MENU_CMDLINE_MODE	(1 << MENU_INDEX_CMDLINE)
-#define MENU_TIP_MODE		(1 << MENU_INDEX_TIP)
-#define MENU_ALL_MODES		((1 << MENU_INDEX_TIP) - 1)
-/*note MENU_INDEX_TIP is not a 'real' mode*/
-
-/* The character for each menu mode */
-#define MENU_MODE_CHARS		"nvoict"
+#ifdef USE_GUI_WIN32
+# define TEXT_X(col)	((col) * gui.char_width)
+# define TEXT_Y(row)	((row) * gui.char_height + gui.char_ascent)
+# define FILL_X(col)	((col) * gui.char_width)
+# define FILL_Y(row)	((row) * gui.char_height)
+# define X_2_COL(x)	((x) / gui.char_width)
+# define Y_2_ROW(y)	((y) / gui.char_height)
+#else
+# define TEXT_X(col)	((col) * gui.char_width  + gui.border_offset)
+# define TEXT_Y(row)	((row) * gui.char_height + gui.char_ascent \
+							+ gui.border_offset)
+# define FILL_X(col)	((col) * gui.char_width  + gui.border_offset)
+# define FILL_Y(row)	((row) * gui.char_height + gui.border_offset)
+# define X_2_COL(x)	(((x) - gui.border_offset) / gui.char_width)
+# define Y_2_ROW(y)	(((y) - gui.border_offset) / gui.char_height)
+#endif
 
 /* Indices for arrays of scrollbars */
 #define SBAR_NONE	    -1
@@ -148,99 +143,61 @@
 /* For our own tearoff menu item */
 #define TEAR_STRING		"-->Detach"
 #define TEAR_LEN		(9)	/* length of above string */
-#define MNU_HIDDEN_CHAR		']'	/* Start a menu name with this to not
-					 * include it on the main menu bar */
 
 /* for the toolbar */
-#define TOOLBAR_BUTTON_HEIGHT	15
-#define TOOLBAR_BUTTON_WIDTH	16
-
-typedef struct GuiMenu
-{
-    int		modes;		    /* Which modes is this menu visible for? */
-    char_u	*name;		    /* Name of menu */
-    char_u	*dname;		    /* Displayed Name (without '&') */
-    int		mnemonic;	    /* mnemonic key (after '&') */
-    char_u	*actext;	    /* accelerator text (after TAB) */
-    int		priority;	    /* Menu order priority */
-    void	(*cb)();	    /* Call-back routine */
-    char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
-    int		noremap[MENU_MODES]; /* A noremap flag for each mode */
-    struct GuiMenu *children;	    /* Children of sub-menu */
-    struct GuiMenu *next;	    /* Next item in menu */
-#ifdef USE_GUI_X11
-    Widget	id;		    /* Manage this to enable item */
-    Widget	submenu_id;	    /* If this is submenu, add children here */
+#ifdef USE_GUI_WIN16
+# define TOOLBAR_BUTTON_HEIGHT	15
+# define TOOLBAR_BUTTON_WIDTH	16
+#else
+# define TOOLBAR_BUTTON_HEIGHT	18
+# define TOOLBAR_BUTTON_WIDTH	18
 #endif
-#ifdef USE_GUI_WIN32
-    UINT	id;		    /* Id of menu item */
-    HMENU	submenu_id;	    /* If this is submenu, add children here */
-    HWND	tearoff_handle;	    /* hWnd of tearoff if created */
-    struct GuiMenu *parent;	    /* Parent of menu (needed for tearoffs) */
-#endif
-#if USE_GUI_BEOS
-    BMenuItem	*id;		    /* Id of menu item */
-    BMenu	*submenu_id;	    /* If this is submenu, add children here */
-#endif
-#ifdef macintosh
-    MenuHandle	id;
-    short	index;		    /* the item index within the father menu */
-    short	menu_id;	    /* the menu id to which this item belong */
-    short	submenu_id;	    /* the menu id of the children (could be
-				       get throught some tricks) */
-    MenuHandle	menu_handle;
-    MenuHandle	submenu_handle;
-#endif
-#if defined(USE_GUI_AMIGA)
-				    /* only one of these will ever be set, but
-				     * they are used to allow the menu routine
-				     * to easily get a hold of the parent menu
-				     * pointer which is needed by all items to
-				     * form the chain correctly */
-    int		    id;		    /* unused by the amiga, but used in the
-				     * code kept for compatibility */
-    struct Menu	    *menuPtr;
-    struct MenuItem *menuItemPtr;
-#endif
-#ifdef RISCOS
-    int		*id;		    /* Not used, but gui.c needs it */
-    int		greyed_out;	    /* Flag */
-    int		hidden;
-#endif
-} GuiMenu;
+#define TOOLBAR_BORDER_HEIGHT	12  /* room above+below buttons for MSWindows */
 
 typedef struct GuiScrollbar
 {
-    long	ident;		    /* Unique identifier for each scrollbar */
-    struct window *wp;		    /* Scrollbar's window, NULL for bottom */
-    int		value;		    /* Represents top line number visible */
-    int		pixval;		    /* pixel count of value */
-    int		size;		    /* Size of scrollbar thumb */
-    int		max;		    /* Number of lines in buffer */
+    long	ident;		/* Unique identifier for each scrollbar */
+    struct window *wp;		/* Scrollbar's window, NULL for bottom */
+    int		value;		/* Represents top line number visible */
+    int		pixval;		/* pixel count of value */
+    int		size;		/* Size of scrollbar thumb */
+    int		max;		/* Number of lines in buffer */
 
     /* Values measured in characters: */
-    int		top;		    /* Top of scroll bar (chars from row 0) */
-    int		height;		    /* Height of scroll bar (num rows) */
-    int		status_height;	    /* Height of status line */
+    int		top;		/* Top of scroll bar (chars from row 0) */
+    int		height;		/* Height of scroll bar (num rows) */
+    int		status_height;	/* Height of status line */
 #ifdef USE_GUI_X11
-    Widget	id;		    /* Id of real scroll bar */
+    Widget	id;		/* Id of real scroll bar */
 #endif
-#ifdef USE_GUI_WIN32
-    HWND	id;		    /* Id of real scroll bar */
+#ifdef USE_GUI_GTK
+    GtkWidget *id;		/* Id of real scroll bar */
+#endif
+#ifdef USE_GUI_MSWIN
+    HWND	id;		/* Id of real scroll bar */
+    int		scroll_shift;	/* The scrollbar stuff can handle only up to
+				   32767 lines.  When the file is longer,
+				   scroll_shift is set to the number of shifts
+				   to reduce the count.  */
 #endif
 #if USE_GUI_BEOS
-    VimScrollBar *id;		    /* Pointer to real scroll bar */
+    VimScrollBar *id;		/* Pointer to real scroll bar */
 #endif
 #ifdef macintosh
-    ControlHandle id;		    /* A handle to the scrollbar */
+    ControlHandle id;		/* A handle to the scrollbar */
 #endif
 #ifdef RISCOS
-    int		id;		    /* Window handle of scrollbar window */
+    int		id;		/* Window handle of scrollbar window */
 #endif
 } GuiScrollbar;
 
-typedef long	    GuiColor;	    /* handle for a GUI color */
-typedef long_u	    GuiFont;	    /* handle for a GUI font */
+typedef long	    GuiColor;	/* handle for a GUI color */
+
+#ifdef USE_GUI_GTK
+typedef GdkFont	    *GuiFont;
+#else
+typedef long_u	    GuiFont;	/* handle for a GUI font */
+#endif
 
 typedef struct Gui
 {
@@ -263,15 +220,18 @@ typedef struct Gui
     int		scroll_region_top;  /* Top (first) line of scroll region */
     int		scroll_region_bot;  /* Bottom (last) line of scroll region */
     int		highlight_mask;	    /* Highlight attribute mask */
-    GuiMenu	*root_menu;	    /* Root of menu hierarchy */
     int		scrollbar_width;    /* Width of vertical scrollbars */
     int		scrollbar_height;   /* Height of horizontal scrollbar */
     int		left_sbar_x;	    /* Calculated x coord for left scrollbar */
     int		right_sbar_x;	    /* Calculated x coord for right scrollbar */
+#ifdef WANT_MENU
+# ifndef USE_GUI_GTK
     int		menu_height;	    /* Height of the menu bar */
     int		menu_width;	    /* Width of the menu bar */
+# endif
     char	menu_is_active;	    /* TRUE if menu is present */
     char	menu_height_fixed;  /* TRUE if menu height fixed */
+#endif
     GuiScrollbar bottom_sbar;	    /* Bottom scrollbar */
     int		which_scrollbars[3];/* Which scrollbar boxes are active? */
     int		prev_wrap;	    /* For updating the horizontal scrollbar */
@@ -289,8 +249,8 @@ typedef struct Gui
     GuiColor	def_back_pixel;	    /* default Color of background */
     GuiColor	def_norm_pixel;	    /* default Color of normal text */
 #ifdef USE_GUI_X11
-    GuiColor	menu_fg_pixel;	    /* Color of menu foregound */
-    GuiColor	menu_bg_pixel;	    /* Color of menu backgound */
+    GuiColor	menu_fg_pixel;	    /* Color of menu and dialog foregound */
+    GuiColor	menu_bg_pixel;	    /* Color of menu and dialog backgound */
     GuiColor	scroll_fg_pixel;    /* Color of scrollbar foregrnd */
     GuiColor	scroll_bg_pixel;    /* Color of scrollbar backgrnd */
     Display	*dpy;		    /* X display */
@@ -309,7 +269,38 @@ typedef struct Gui
     char_u	*geom;		    /* Geometry, eg "80x24" */
     Bool	rev_video;	    /* Use reverse video? */
 #endif
-#ifdef USE_GUI_WIN32
+#ifdef USE_GUI_GTK
+    Display	*dpy;		    /* X display */
+    int		visibility;	    /* Is window partially/fully obscured? */
+    GdkCursor	*blank_pointer;	    /* Blank pointer */
+
+    /* X Resources */
+    char_u	*geom;		    /* Geometry, eg "80x24" */
+    Bool	rev_video;	    /* Use reverse video? */
+
+    GtkWidget	*mainwin;	    /* top level GTK window */
+    GtkWidget	*formwin;	    /* manages all the windows below */
+    GtkWidget	*drawarea;	    /* the "text" area */
+#ifdef WANT_MENU
+    GtkWidget	*menubar;	    /* menubar */
+#endif
+#ifdef USE_TOOLBAR
+    GtkWidget	*toolbar;	    /* toolbar */
+#endif
+    GdkColor	*fgcolor;	    /* GDK-styled foreground color */
+    GdkColor	*bgcolor;	    /* GDK-styled background color */
+
+    GdkFont	*current_font;
+
+# ifdef GTK_HAVE_FEATURES_1_1_0
+    GtkAccelGroup *accel_group;
+    GtkWidget	*fontdlg;	    /* font selection dialog window */
+    char_u	*fontname;	    /* font name from font selection dialog */
+# endif
+    GtkWidget	*filedlg;	    /* file selection dialog */
+    char_u	*browse_fname;	    /* file name from filedlg */
+#endif
+#ifdef USE_GUI_MSWIN
     GuiFont	currFont;	    /* Current font */
     GuiColor	currFgColor;	    /* Current foreground text color */
     GuiColor	currBgColor;	    /* Current background text color */
@@ -323,8 +314,8 @@ typedef struct Gui
 #endif
 #ifdef USE_GUI_MAC
     WindowPtr	VimWindow;
-    GuiColor	menu_fg_pixel;	    /* Color of menu foregound */
-    GuiColor	menu_bg_pixel;	    /* Color of menu backgound */
+    GuiColor	menu_fg_pixel;	    /* Color of menu and dialog foregound */
+    GuiColor	menu_bg_pixel;	    /* Color of menu and dialog backgound */
     GuiColor	scroll_fg_pixel;    /* Color of scrollbar foregrnd */
     GuiColor	scroll_bg_pixel;    /* Color of scrollbar backgrnd */
     WindowPtr	wid;		    /* Window id of text area */
@@ -353,7 +344,14 @@ typedef struct Gui
     int		fg_colour;	    /* in 0xBBGGRR format */
     int		bg_colour;
 #endif
+#ifdef USE_XIM
+    char	*input_method;
+    char	*preedit_type;
+    Boolean	open_im;
+#endif
+#ifdef USE_FONTSET
+    GuiFont	fontset;
+#endif
 } Gui;
 
 extern Gui gui;			    /* this is defined in gui.c */
-extern int force_menu_update;	    /* this is defined in gui.c */

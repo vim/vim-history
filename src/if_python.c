@@ -24,6 +24,7 @@
 #include <Python.h>
 #ifdef macintosh
 # include "macglue.h"
+# include <CodeFragments.h>
 #endif
 #undef main /* Defined in python.h - aargh */
 #undef HAVE_FCNTL_H /* Clash with os_win32.h */
@@ -145,6 +146,9 @@ DoPythonCommand(EXARG *eap, const char *cmd)
 #ifdef macintosh
     GrafPtr oldPort;
     GetPort (&oldPort);
+    /* Check if the Python library is available */
+    if ( (Ptr) PyMac_Initialize == (Ptr) kUnresolvedCFragSymbolAddress)
+	return FAIL;
 #endif
     if (Python_Init())
 	return FAIL;

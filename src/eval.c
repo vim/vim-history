@@ -12,14 +12,17 @@
 
 #include "vim.h"
 
-#ifdef HAVE_FCNTL_H
-# include <fcntl.h>	/* contains setenv() declaration for Amiga */
-#endif
 #ifdef AMIGA
 # include <time.h>	/* for strftime() */
 #endif
 
-#ifdef WANT_EVAL
+#if defined(WANT_EVAL) || defined(PROTO)
+
+#if SIZEOF_INT <= 3		/* use long if int is smaller than 32 bits */
+typedef long	var_number_type;
+#else
+typedef int	var_number_type;
+#endif
 
 /*
  * Structure to hold an internal variable.
@@ -30,13 +33,9 @@ typedef struct
     char	var_type;	/* VAR_NUMBER or VAR_STRING */
     union
     {
-#if SIZEOF_INT <= 3		/* use long if int is smaller than 32 bits */
-	long	var_number;	/* number value */
-#else
-	int	var_number;	/* number value */
-#endif
-	char_u	*var_string;	/* string value (Careful: can be NULL!) */
-    }		var_val;
+	var_number_type	var_number;   /* number value */
+	char_u		*var_string;  /* string value (Careful: can be NULL!) */
+    } var_val;
 } var;
 
 #define VAR_UNKNOWN 0
@@ -66,6 +65,7 @@ struct ufunc
     char_u		*name;		/* name of function */
     int			varargs;	/* variable nr of arguments */
     int			flags;
+    int			calls;		/* nr of active calls */
     struct growarray	args;		/* arguments */
     struct growarray	lines;		/* function lines */
 };
@@ -100,45 +100,95 @@ struct funccall
 /* pointer to funccal for currently active function */
 struct funccall *current_funccal = NULL;
 
-static char_u *cat_prefix_varname __ARGS((int prefix, char_u *name));
-static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd));
-static int eval1 __ARGS((char_u **arg, VAR retvar));
-static int eval2 __ARGS((char_u **arg, VAR retvar));
-static int eval3 __ARGS((char_u **arg, VAR retvar));
-static int eval4 __ARGS((char_u **arg, VAR retvar));
-static int eval5 __ARGS((char_u **arg, VAR retvar));
-static int eval6 __ARGS((char_u **arg, VAR retvar));
-static int get_option_var __ARGS((char_u **arg, VAR retvar));
-static int get_string_var __ARGS((char_u **arg, VAR retvar));
-static int get_lit_string_var __ARGS((char_u **arg, VAR retvar));
-static int get_env_var __ARGS((char_u **arg, VAR retvar));
-static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg, linenr_t firstline, linenr_t lastline, int *doesrange));
+/*
+ * Array to hold the value of v: variables.
+ */
+#include "version.h"
+
+/* values for flags: */
+#define VV_COMPAT   1	    /* compatible, also used without "v:" */
+#define VV_RO	    2	    /* read-only */
+
+struct vimvar
+{
+    char	*name;		/* name of variable, without v: */
+    int		len;		/* length of name */
+    char_u	*val;		/* current value (can also be a number!) */
+    char	type;		/* VAR_NUMBER or VAR_STRING */
+    char	flags;		/* VV_COMPAT and VV_RO */
+} vimvars[VV_LEN] =
+{   /* The order here must match the VV_ defines in vim.h! */
+    {"count", sizeof("count") - 1, NULL, VAR_NUMBER, VV_COMPAT+VV_RO},
+    {"count1", sizeof("count1") - 1, NULL, VAR_NUMBER, VV_RO},
+    {"errmsg", sizeof("errmsg") - 1, NULL, VAR_STRING, VV_COMPAT},
+    {"warningmsg", sizeof("warningmsg") - 1, NULL, VAR_STRING, 0},
+    {"statusmsg", sizeof("statusmsg") - 1, NULL, VAR_STRING, 0},
+    {"shell_error", sizeof("shell_error") - 1, NULL, VAR_NUMBER,
+							     VV_COMPAT+VV_RO},
+    {"this_session", sizeof("this_session") - 1, NULL, VAR_STRING, 0},
+    {"version", sizeof("version") - 1, (char_u *)(VIM_VERSION_MAJOR * 100
+			   + VIM_VERSION_MINOR), VAR_NUMBER, VV_COMPAT+VV_RO},
+};
+
+static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
+static int eval1 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int eval2 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int eval3 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int eval4 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int eval5 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int eval6 __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int get_option_var __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int get_string_var __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int get_lit_string_var __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int get_env_var __ARGS((char_u **arg, VAR retvar, int evaluate));
+static int find_internal_func __ARGS((char_u *name));
+static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg, linenr_t firstline, linenr_t lastline, int *doesrange, int evaluate));
+static void f_append __ARGS((VAR argvars, VAR retvar));
 static void f_argc __ARGS((VAR argvars, VAR retvar));
 static void f_argv __ARGS((VAR argvars, VAR retvar));
 static void f_browse __ARGS((VAR argvars, VAR retvar));
+static BUF *find_buffer __ARGS((VAR avar));
 static void f_bufexists __ARGS((VAR argvars, VAR retvar));
+static void f_bufloaded __ARGS((VAR argvars, VAR retvar));
 static BUF *get_buf_var __ARGS((VAR avar));
 static void f_bufname __ARGS((VAR argvars, VAR retvar));
 static void f_bufnr __ARGS((VAR argvars, VAR retvar));
+static void f_bufwinnr __ARGS((VAR argvars, VAR retvar));
+static void f_byte2line __ARGS((VAR argvars, VAR retvar));
 static void f_char2nr __ARGS((VAR argvars, VAR retvar));
 static void f_col __ARGS((VAR argvars, VAR retvar));
 static void f_confirm __ARGS((VAR argvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
+static void f_did_filetype __ARGS((VAR argvars, VAR retvar));
 static void f_escape __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
+static void f_getftime __ARGS((VAR argvars, VAR retvar));
 static void f_getline __ARGS((VAR argvars, VAR retvar));
+static void f_getwinposx __ARGS((VAR argvars, VAR retvar));
+static void f_getwinposy __ARGS((VAR argvars, VAR retvar));
+static void f_glob __ARGS((VAR argvars, VAR retvar));
 static void f_has __ARGS((VAR argvars, VAR retvar));
+static void f_histadd __ARGS((VAR argvars, VAR retvar));
+static void f_histdel __ARGS((VAR argvars, VAR retvar));
+static void f_histget __ARGS((VAR argvars, VAR retvar));
+static void f_histnr __ARGS((VAR argvars, VAR retvar));
 static void f_hlexists __ARGS((VAR argvars, VAR retvar));
 static void f_hlID __ARGS((VAR argvars, VAR retvar));
 static void f_hostname __ARGS((VAR argvars, VAR retvar));
 static void f_isdirectory __ARGS((VAR argvars, VAR retvar));
 static void f_input __ARGS((VAR argvars, VAR retvar));
 static void f_last_buffer_nr __ARGS((VAR argvars, VAR retvar));
+static void f_libcall __ARGS((VAR argvars, VAR retvar));
 static void f_line __ARGS((VAR argvars, VAR retvar));
+static void f_line2byte __ARGS((VAR argvars, VAR retvar));
+static void f_localtime __ARGS((VAR argvars, VAR retvar));
+static void f_maparg __ARGS((VAR argvars, VAR retvar));
+static void f_mapcheck __ARGS((VAR argvars, VAR retvar));
+static void get_maparg __ARGS((VAR argvars, VAR retvar, int exact));
 static void f_match __ARGS((VAR argvars, VAR retvar));
 static void f_matchend __ARGS((VAR argvars, VAR retvar));
 static void f_matchstr __ARGS((VAR argvars, VAR retvar));
@@ -148,21 +198,24 @@ static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
 static void f_strlen __ARGS((VAR argvars, VAR retvar));
 static void f_strpart __ARGS((VAR argvars, VAR retvar));
+static void f_strtrans __ARGS((VAR argvars, VAR retvar));
 static void f_synID __ARGS((VAR argvars, VAR retvar));
 static void f_synIDattr __ARGS((VAR argvars, VAR retvar));
 static void f_synIDtrans __ARGS((VAR argvars, VAR retvar));
+static void f_system __ARGS((VAR argvars, VAR retvar));
 static void f_substitute __ARGS((VAR argvars, VAR retvar));
 static void f_tempname __ARGS((VAR argvars, VAR retvar));
 static void f_virtcol __ARGS((VAR argvars, VAR retvar));
+static void f_visualmode __ARGS((VAR argvars, VAR retvar));
 static void f_winbufnr __ARGS((VAR argvars, VAR retvar));
 static void f_winheight __ARGS((VAR argvars, VAR retvar));
 static void f_winnr __ARGS((VAR argvars, VAR retvar));
 static WIN *find_win_by_nr __ARGS((VAR vp));
 static FPOS *var2fpos __ARGS((VAR varp));
 static int get_env_len __ARGS((char_u **arg));
-char_u *get_env_string __ARGS((char_u **arg));
 static int get_id_len __ARGS((char_u **arg));
 static int eval_isnamec __ARGS((int c));
+static int find_vim_var __ARGS((char_u *name, int len));
 static int get_var_var __ARGS((char_u *name, int len, VAR retvar));
 static VAR alloc_var __ARGS((void));
 static VAR alloc_string_var __ARGS((char_u *string));
@@ -180,6 +233,7 @@ static char_u *find_option_end __ARGS((char_u *p));
 static void list_func_head __ARGS((struct ufunc *fp));
 static struct ufunc *find_func __ARGS((char_u *name));
 static void call_func __ARGS((struct ufunc *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
+
 
 /*
  * Set an internal variable to a string value. Creates the variable if it does
@@ -211,25 +265,29 @@ set_internal_string_var(name, value)
  * Return TRUE or FALSE.
  */
     int
-eval_to_bool(arg, error, nextcmd)
+eval_to_bool(arg, error, nextcmd, skip)
     char_u	*arg;
     int		*error;
     char_u	**nextcmd;
+    int		skip;	    /* only parse, don't execute */
 {
     var		retvar;
-    int		retval;
+    int		retval = FALSE;
 
-    if (eval0(arg, &retvar, nextcmd) == FAIL)
+    if (skip)
+	++emsg_off;
+    if (eval0(arg, &retvar, nextcmd, !skip) == FAIL)
     {
 	*error = TRUE;
-	retval = FALSE;
     }
-    else
+    else if (!skip)
     {
 	*error = FALSE;
 	retval = (get_var_number(&retvar) != 0);
 	clear_var(&retvar);
     }
+    if (skip)
+	--emsg_off;
 
     return retval;
 }
@@ -246,7 +304,7 @@ eval_to_string(arg, nextcmd)
     var		retvar;
     char_u	*retval;
 
-    if (eval0(arg, &retvar, nextcmd) == FAIL)
+    if (eval0(arg, &retvar, nextcmd, TRUE) == FAIL)
 	retval = NULL;
     else
     {
@@ -274,9 +332,6 @@ do_let(eap)
     char_u	*p;
     int		c1, c2;
     int		i;
-#ifndef HAVE_SETENV
-    char_u	*envbuf;
-#endif
 
     expr = vim_strchr(arg, '=');
     if (expr == NULL)
@@ -325,10 +380,17 @@ do_let(eap)
 			name = vim_strchr(arg, ':');
 			if (name != NULL)
 			{
-			    c2 = *++name;
-			    *name = NUL;
+			    /* "a:" vars have no name stored, use whole arg */
+			    if (arg[0] == 'a' && arg[1] == ':')
+				c2 = NUL;
+			    else
+			    {
+				c2 = *++name;
+				*name = NUL;
+			    }
 			    list_one_var(varp, arg);
-			    *name = c2;
+			    if (c2 != NUL)
+				*name = c2;
 			}
 			else
 			    list_one_var(varp, (char_u *)"");
@@ -344,7 +406,7 @@ do_let(eap)
     {
 	if (eap->skip)
 	    ++emsg_off;
-	i = eval0(expr + 1, &retvar, &eap->nextcmd);
+	i = eval0(expr + 1, &retvar, &eap->nextcmd, !eap->skip);
 	if (eap->skip)
 	{
 	    if (i != FAIL)
@@ -365,7 +427,9 @@ do_let(eap)
 		++arg;
 		name = arg;
 		len = get_env_len(&arg);
-		if (name != NULL)
+		if (len == 0)
+		    EMSG2(e_invarg2, name - 1);
+		else
 		{
 		    if (*skipwhite(arg) != '=')
 			EMSG(e_letunexp);
@@ -374,23 +438,14 @@ do_let(eap)
 			cc = name[len];
 			name[len] = NUL;
 			p = get_var_string(&retvar);
-#ifdef HAVE_SETENV
-			mch_setenv((char *)name, (char *)p, 1);
-#else
-			/*
-			 * Putenv does not copy the string, it has to remain
-			 * valid.  The allocated memory will never be freed.
-			 */
-			envbuf = alloc((unsigned)(STRLEN(p) +
-							   STRLEN(name) + 2));
-			if (envbuf != NULL)
-			{
-			    sprintf((char *)envbuf, "%s=%s", name, p);
-			    putenv((char *)envbuf);
-			}
-#endif
-			if (STRICMP(name, "home") == 0)
+			vim_setenv(name, p);
+			if (STRICMP(name, "HOME") == 0)
 			    init_homedir();
+			else if (didset_vim && STRICMP(name, "VIM") == 0)
+			    didset_vim = FALSE;
+			else if (didset_vimruntime
+					  && STRICMP(name, "VIMRUNTIME") == 0)
+			    didset_vimruntime = FALSE;
 			name[len] = cc;
 		    }
 		}
@@ -462,6 +517,83 @@ do_let(eap)
     }
 }
 
+#ifdef CMDLINE_COMPL
+
+    void
+set_context_for_expression(arg, cmdidx)
+    char_u  *arg;
+    CMDIDX  cmdidx;
+{
+    int	    got_eq = FALSE;
+    int	    c;
+
+    expand_context = cmdidx == CMD_let ? EXPAND_USER_VARS
+				       : cmdidx == CMD_call ? EXPAND_FUNCTIONS
+				       : EXPAND_EXPRESSION;
+    while ((expand_pattern = vim_strpbrk(arg,
+				  (char_u *)"\"'+-*/%.=!?~|&([<>,#")) != NULL)
+    {
+	c = *expand_pattern;
+	if (c == '&')
+	{
+	    c = expand_pattern[1];
+	    if (c == '&')
+	    {
+		++expand_pattern;
+		expand_context = cmdidx!=CMD_let || got_eq ? EXPAND_EXPRESSION
+							   : EXPAND_NOTHING;
+	    }
+	    else if (c != ' ')
+		expand_context = EXPAND_SETTINGS;
+	}
+	else if (c == '$')
+	    /* TODO: environment variables? */
+	    expand_context = EXPAND_NOTHING;
+	else if (*expand_pattern == '=')
+	{
+	    got_eq = TRUE;
+	    expand_context = EXPAND_EXPRESSION;
+	}
+	else if (cmdidx != CMD_let || got_eq)
+	{
+	    if (c == '"')	    /* string */
+	    {
+		while ((c = *++expand_pattern) != NUL && c != '"')
+		    if (c == '\\' && expand_pattern[1] != NUL)
+			++expand_pattern;
+		expand_context = EXPAND_NOTHING;
+	    }
+	    else if (c == '\'')	    /* literal string */
+	    {
+		while ((c = *++expand_pattern) != NUL && c != '\'')
+		    /* skip */ ;
+		expand_context = EXPAND_NOTHING;
+	    }
+	    else if (c == '|')
+	    {
+		if (expand_pattern[1] == '|')
+		{
+		    ++expand_pattern;
+		    expand_context = EXPAND_EXPRESSION;
+		}
+		else
+		    expand_context = EXPAND_COMMANDS;
+	    }
+	    else
+		expand_context = EXPAND_EXPRESSION;
+	}
+	else
+	    expand_context = EXPAND_NOTHING;
+	arg = expand_pattern;
+	if (*arg != NUL)
+	    while ((c = *++arg) != NUL && (c == ' ' || c == '\t'))
+		/* skip */ ;
+    }
+    expand_pattern = arg;
+}
+
+#endif /* CMDLINE_COMPL */
+
 /*
  * ":1,25call func(arg1, arg2)"	function call.
  */
@@ -476,10 +608,12 @@ do_call(eap)
     int		len;
     linenr_t	lnum;
     int		doesrange;
+    int		failed = FALSE;
 
     name = arg;
     len = get_id_len(&arg);
     startarg = arg;
+    retvar.var_type = VAR_UNKNOWN;	/* clear_var() uses this */
 
     if (*startarg != '(')
     {
@@ -504,15 +638,26 @@ do_call(eap)
 	}
 	arg = startarg;
 	if (get_func_var(name, len, &retvar, &arg,
-				  eap->line1, eap->line2, &doesrange) == FAIL)
+		      eap->line1, eap->line2, &doesrange, !eap->skip) == FAIL)
+	{
+	    failed = TRUE;
 	    break;
+	}
 	clear_var(&retvar);
 	if (doesrange || eap->skip)
 	    break;
     }
     if (eap->skip)
 	--emsg_off;
-    eap->nextcmd = check_nextcmd(arg);
+
+    if (!failed)
+    {
+	/* Check for trailing illegal characters and a following command. */
+	if (!ends_excmd(*arg))
+	    emsg(e_trailing);
+	else
+	    eap->nextcmd = check_nextcmd(arg);
+    }
 }
 
 /*
@@ -548,18 +693,21 @@ do_unlet(arg, forceit)
     } while (*arg != NUL);
 }
 
+#ifdef CMDLINE_COMPL
+
 /*
  * Local string buffer for the next two functions to store a variable name
  * with its prefix. Allocated in cat_prefix_varname(), freed later in
  * get_user_var_name().
  */
 
+static char_u *cat_prefix_varname __ARGS((int prefix, char_u *name));
+
 static char_u	*varnamebuf = NULL;
 static int	varnamebuflen = 0;
 
 /*
  * Function to concatenate a prefix and a variable name.
- * TODO: Use string instead of char for 'prefix' when allowing 'b3:' like vars.
  */
     static char_u *
 cat_prefix_varname(prefix, name)
@@ -568,50 +716,75 @@ cat_prefix_varname(prefix, name)
 {
     int		len;
 
-    len = STRLEN( name ) + 3;
-    if ( len > varnamebuflen )
+    len = STRLEN(name) + 3;
+    if (len > varnamebuflen)
     {
 	vim_free(varnamebuf);
 	len += 10;			/* some additional space */
 	varnamebuf = alloc(len);
-	if (varnamebuf)
-	    varnamebuflen = len;
-	else
+	if (varnamebuf == NULL)
 	{
 	    varnamebuflen = 0;
 	    return NULL;
 	}
+	varnamebuflen = len;
     }
     *varnamebuf = prefix;
     varnamebuf[1] = ':';
-    STRCPY(varnamebuf+2, name);
+    STRCPY(varnamebuf + 2, name);
     return varnamebuf;
 }
 
 /*
  * Function given to ExpandGeneric() to obtain the list of user defined
- * (global/buffer/window) variable names.
+ * (global/buffer/window/built-in) variable names.
  */
     char_u *
 get_user_var_name(idx)
     int	    idx;
 {
-    if (idx < variables.ga_len)				/* Global variables */
-	return VAR_ENTRY(idx).var_name;
-						/* Current buffer variables */
-    else if ((idx -= variables.ga_len) < curbuf->b_vars.ga_len)
-	return cat_prefix_varname('b', BVAR_ENTRY(idx).var_name);
-						/* Current window variables */
-    else if ((idx -= curbuf->b_vars.ga_len) < curwin->w_vars.ga_len)
-	return cat_prefix_varname('w', WVAR_ENTRY(idx).var_name);
-    else
+    static int	gidx;
+    static int	bidx;
+    static int	widx;
+    static int	vidx;
+    char_u	*name;
+
+    if (idx == 0)
+	gidx = bidx = widx = vidx = 0;
+    if (gidx < variables.ga_len)			/* Global variables */
     {
-	vim_free(varnamebuf);
-	varnamebuf = NULL;
-	varnamebuflen = 0;
-	return NULL;
+	while ((name = VAR_ENTRY(gidx++).var_name) == NULL
+		&& gidx < variables.ga_len)
+	    /* skip */;
+	if (name != NULL)
+	    return name;
     }
+    if (bidx < curbuf->b_vars.ga_len)		/* Current buffer variables */
+    {
+	while ((name = BVAR_ENTRY(bidx++).var_name) == NULL
+		&& bidx < curbuf->b_vars.ga_len)
+	    /* skip */;
+	if (name != NULL)
+	    return cat_prefix_varname('b', name);
+    }
+    if (widx < curwin->w_vars.ga_len)		/* Current window variables */
+    {
+	while ((name = WVAR_ENTRY(widx++).var_name) == NULL
+		&& widx < curwin->w_vars.ga_len)
+	    /* skip */;
+	if (name != NULL)
+	    return cat_prefix_varname('w', name);
+    }
+    if (vidx < VV_LEN)				      /* Built-in variables */
+	return cat_prefix_varname('v', (char_u *)vimvars[vidx++].name);
+
+    vim_free(varnamebuf);
+    varnamebuf = NULL;
+    varnamebuflen = 0;
+    return NULL;
 }
+
+#endif /* CMDLINE_COMPL */
 
 /*
  * types for expressions.
@@ -630,21 +803,28 @@ enum exp_type
 };
 
 /*
+ * The "evaluate" argument: When FALSE, the argument is only parsed but not
+ * executed.  The function may return OK, but the retvar will be of type
+ * VAR_UNKNOWN.  The function still returns FAIL for a syntax error.
+ */
+
+/*
  * Handle zero level expression.
  * This calls eval1() and handles error message and nextcmd.
  * Return OK or FAIL.
  */
     static int
-eval0(arg, retvar, nextcmd)
+eval0(arg, retvar, nextcmd, evaluate)
     char_u	*arg;
     VAR		retvar;
     char_u	**nextcmd;
+    int		evaluate;
 {
     int		ret;
     char_u	*p;
 
     p = skipwhite(arg);
-    ret = eval1(&p, retvar);
+    ret = eval1(&p, retvar, evaluate);
     if (ret == FAIL || !ends_excmd(*p))
     {
 	if (ret != FAIL)
@@ -668,17 +848,19 @@ eval0(arg, retvar, nextcmd)
  * Return OK or FAIL.
  */
     static int
-eval1(arg, retvar)
+eval1(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var		var2;
-    long	n1, n2;
+    long	result = FALSE;
+    int		first = TRUE;
 
     /*
      * Get the first variable.
      */
-    if (eval2(arg, retvar) == FAIL)
+    if (eval2(arg, retvar, evaluate) == FAIL)
 	return FAIL;
 
     /*
@@ -686,23 +868,35 @@ eval1(arg, retvar)
      */
     while ((*arg)[0] == '|' && (*arg)[1] == '|')
     {
-	n1 = get_var_number(retvar);
-	clear_var(retvar);
+	if (evaluate && first)
+	{
+	    if (get_var_number(retvar) != 0)
+		result = TRUE;
+	    clear_var(retvar);
+	    first = FALSE;
+	}
 
 	/*
 	 * Get the second variable.
 	 */
 	*arg = skipwhite(*arg + 2);
-	if (eval2(arg, &var2) == FAIL)
+	if (eval2(arg, &var2, evaluate && !result) == FAIL)
 	    return FAIL;
 
 	/*
 	 * Compute the result.
 	 */
-	n2 = get_var_number(&var2);
-	clear_var(&var2);
-	retvar->var_type = VAR_NUMBER;
-	retvar->var_val.var_number = (n1 || n2);
+	if (evaluate && !result)
+	{
+	    if (get_var_number(&var2) != 0)
+		result = TRUE;
+	    clear_var(&var2);
+	}
+	if (evaluate)
+	{
+	    retvar->var_type = VAR_NUMBER;
+	    retvar->var_val.var_number = result;
+	}
     }
 
     return OK;
@@ -718,17 +912,19 @@ eval1(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-eval2(arg, retvar)
+eval2(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var		var2;
-    long	n1, n2;
+    long	result = TRUE;
+    int		first = TRUE;
 
     /*
      * Get the first variable.
      */
-    if (eval3(arg, retvar) == FAIL)
+    if (eval3(arg, retvar, evaluate) == FAIL)
 	return FAIL;
 
     /*
@@ -736,23 +932,35 @@ eval2(arg, retvar)
      */
     while ((*arg)[0] == '&' && (*arg)[1] == '&')
     {
-	n1 = get_var_number(retvar);
-	clear_var(retvar);
+	if (evaluate && first)
+	{
+	    if (get_var_number(retvar) == 0)
+		result = FALSE;
+	    clear_var(retvar);
+	    first = FALSE;
+	}
 
 	/*
 	 * Get the second variable.
 	 */
 	*arg = skipwhite(*arg + 2);
-	if (eval3(arg, &var2) == FAIL)
+	if (eval3(arg, &var2, evaluate && result) == FAIL)
 	    return FAIL;
 
 	/*
 	 * Compute the result.
 	 */
-	n2 = get_var_number(&var2);
-	clear_var(&var2);
-	retvar->var_type = VAR_NUMBER;
-	retvar->var_val.var_number = (n1 && n2);
+	if (evaluate && result)
+	{
+	    if (get_var_number(&var2) == 0)
+		result = FALSE;
+	    clear_var(&var2);
+	}
+	if (evaluate)
+	{
+	    retvar->var_type = VAR_NUMBER;
+	    retvar->var_val.var_number = result;
+	}
     }
 
     return OK;
@@ -775,9 +983,10 @@ eval2(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-eval3(arg, retvar)
+eval3(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var			var2;
     char_u		*p;
@@ -788,11 +997,13 @@ eval3(arg, retvar)
     char_u		*s1, *s2;
     char_u		buf1[NUMBUFLEN], buf2[NUMBUFLEN];
     vim_regexp		*prog;
+    int			ic;
+    char_u		*save_cpo;
 
     /*
      * Get the first variable.
      */
-    if (eval4(arg, retvar) == FAIL)
+    if (eval4(arg, retvar, evaluate) == FAIL)
 	return FAIL;
 
     p = *arg;
@@ -831,70 +1042,93 @@ eval3(arg, retvar)
      */
     if (type != TYPE_UNKNOWN)
     {
+	/* extra question mark appended: ignore case */
+	if (p[len] == '?')
+	{
+	    ic = TRUE;
+	    ++len;
+	}
+	/* extra '#' appended: match case */
+	else if (p[len] == '#')
+	{
+	    ic = FALSE;
+	    ++len;
+	}
+	/* nothing appened: use 'ignorecase' */
+	else
+	    ic = p_ic;
+
 	/*
 	 * Get the second variable.
 	 */
 	*arg = skipwhite(p + len);
-	if (eval4(arg, &var2) == FAIL)
+	if (eval4(arg, &var2, evaluate) == FAIL)
 	{
 	    clear_var(retvar);
 	    return FAIL;
 	}
 
-	/*
-	 * If one of the two variables is a number, compare as a number.
-	 * When using "=~" or "!~", always compare as string.
-	 */
-	if ((retvar->var_type == VAR_NUMBER || var2.var_type == VAR_NUMBER)
-		&& type != TYPE_MATCH && type != TYPE_NOMATCH)
+	if (evaluate)
 	{
-	    n1 = get_var_number(retvar);
-	    n2 = get_var_number(&var2);
-	    switch (type)
+	    /*
+	     * If one of the two variables is a number, compare as a number.
+	     * When using "=~" or "!~", always compare as string.
+	     */
+	    if ((retvar->var_type == VAR_NUMBER || var2.var_type == VAR_NUMBER)
+		    && type != TYPE_MATCH && type != TYPE_NOMATCH)
 	    {
-		case TYPE_EQUAL:    n1 = (n1 == n2); break;
-		case TYPE_NEQUAL:   n1 = (n1 != n2); break;
-		case TYPE_GREATER:  n1 = (n1 > n2); break;
-		case TYPE_GEQUAL:   n1 = (n1 >= n2); break;
-		case TYPE_SMALLER:  n1 = (n1 < n2); break;
-		case TYPE_SEQUAL:   n1 = (n1 <= n2); break;
-		case TYPE_UNKNOWN:
-		case TYPE_MATCH:
-		case TYPE_NOMATCH:  break;  /* avoid gcc warning */
+		n1 = get_var_number(retvar);
+		n2 = get_var_number(&var2);
+		switch (type)
+		{
+		    case TYPE_EQUAL:    n1 = (n1 == n2); break;
+		    case TYPE_NEQUAL:   n1 = (n1 != n2); break;
+		    case TYPE_GREATER:  n1 = (n1 > n2); break;
+		    case TYPE_GEQUAL:   n1 = (n1 >= n2); break;
+		    case TYPE_SMALLER:  n1 = (n1 < n2); break;
+		    case TYPE_SEQUAL:   n1 = (n1 <= n2); break;
+		    case TYPE_UNKNOWN:
+		    case TYPE_MATCH:
+		    case TYPE_NOMATCH:  break;  /* avoid gcc warning */
+		}
 	    }
-	}
-	else
-	{
-	    s1 = get_var_string_buf(retvar, buf1);
-	    s2 = get_var_string_buf(&var2, buf2);
-	    if (type != TYPE_MATCH && type != TYPE_NOMATCH)
-		i = STRCMP(s1, s2);
-	    switch (type)
+	    else
 	    {
-		case TYPE_EQUAL:    n1 = (i == 0); break;
-		case TYPE_NEQUAL:   n1 = (i != 0); break;
-		case TYPE_GREATER:  n1 = (i > 0); break;
-		case TYPE_GEQUAL:   n1 = (i >= 0); break;
-		case TYPE_SMALLER:  n1 = (i < 0); break;
-		case TYPE_SEQUAL:   n1 = (i <= 0); break;
-		case TYPE_MATCH:
-		case TYPE_NOMATCH:  reg_ic = p_ic;
-				    prog = vim_regcomp(s2, TRUE);
-				    if (prog != NULL)
-				    {
-					n1 = vim_regexec(prog, s1, TRUE);
-					vim_free(prog);
-					if (type == TYPE_NOMATCH)
-					    n1 = !n1;
-				    }
-				    break;
-		case TYPE_UNKNOWN:  break;  /* avoid gcc warning */
+		s1 = get_var_string_buf(retvar, buf1);
+		s2 = get_var_string_buf(&var2, buf2);
+		if (type != TYPE_MATCH && type != TYPE_NOMATCH)
+		    i = ic ? STRICMP(s1, s2) : STRCMP(s1, s2);
+		switch (type)
+		{
+		    case TYPE_EQUAL:    n1 = (i == 0); break;
+		    case TYPE_NEQUAL:   n1 = (i != 0); break;
+		    case TYPE_GREATER:  n1 = (i > 0); break;
+		    case TYPE_GEQUAL:   n1 = (i >= 0); break;
+		    case TYPE_SMALLER:  n1 = (i < 0); break;
+		    case TYPE_SEQUAL:   n1 = (i <= 0); break;
+		    case TYPE_MATCH:
+		    case TYPE_NOMATCH:  reg_ic = ic;
+					/* avoid 'l' flag in 'cpoptions' */
+					save_cpo = p_cpo;
+					p_cpo = (char_u *)"";
+					prog = vim_regcomp(s2, TRUE);
+					if (prog != NULL)
+					{
+					    n1 = vim_regexec(prog, s1, TRUE);
+					    vim_free(prog);
+					    if (type == TYPE_NOMATCH)
+						n1 = !n1;
+					}
+					p_cpo = save_cpo;
+					break;
+		    case TYPE_UNKNOWN:  break;  /* avoid gcc warning */
+		}
 	    }
+	    clear_var(retvar);
+	    clear_var(&var2);
+	    retvar->var_type = VAR_NUMBER;
+	    retvar->var_val.var_number = n1;
 	}
-	clear_var(retvar);
-	clear_var(&var2);
-	retvar->var_type = VAR_NUMBER;
-	retvar->var_val.var_number = n1;
     }
 
     return OK;
@@ -912,9 +1146,10 @@ eval3(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-eval4(arg, retvar)
+eval4(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var		var2;
     int		op;
@@ -926,7 +1161,7 @@ eval4(arg, retvar)
     /*
      * Get the first variable.
      */
-    if (eval5(arg, retvar) == FAIL)
+    if (eval5(arg, retvar, evaluate) == FAIL)
 	return FAIL;
 
     /*
@@ -942,42 +1177,46 @@ eval4(arg, retvar)
 	 * Get the second variable.
 	 */
 	*arg = skipwhite(*arg + 1);
-	if (eval5(arg, &var2) == FAIL)
+	if (eval5(arg, &var2, evaluate) == FAIL)
 	{
 	    clear_var(retvar);
 	    return FAIL;
 	}
 
-	/*
-	 * Compute the result.
-	 */
-	if (op == '.')
+	if (evaluate)
 	{
-	    s1 = get_var_string_buf(retvar, buf1);
-	    s2 = get_var_string_buf(&var2, buf2);
-	    p = alloc((unsigned)(STRLEN(s1) + STRLEN(s2) + 1));
-	    if (p != NULL)
+	    /*
+	     * Compute the result.
+	     */
+	    if (op == '.')
 	    {
-		STRCPY(p, s1);
-		STRCAT(p, s2);
+		s1 = get_var_string_buf(retvar, buf1);
+		s2 = get_var_string_buf(&var2, buf2);
+		op = STRLEN(s1);
+		p = alloc((unsigned)(op + STRLEN(s2) + 1));
+		if (p != NULL)
+		{
+		    STRCPY(p, s1);
+		    STRCPY(p + op, s2);
+		}
+		clear_var(retvar);
+		retvar->var_type = VAR_STRING;
+		retvar->var_val.var_string = p;
 	    }
-	    clear_var(retvar);
-	    retvar->var_type = VAR_STRING;
-	    retvar->var_val.var_string = p;
-	}
-	else
-	{
-	    n1 = get_var_number(retvar);
-	    n2 = get_var_number(&var2);
-	    clear_var(retvar);
-	    if (op == '+')
-		n1 = n1 + n2;
 	    else
-		n1 = n1 - n2;
-	    retvar->var_type = VAR_NUMBER;
-	    retvar->var_val.var_number = n1;
+	    {
+		n1 = get_var_number(retvar);
+		n2 = get_var_number(&var2);
+		clear_var(retvar);
+		if (op == '+')
+		    n1 = n1 + n2;
+		else
+		    n1 = n1 - n2;
+		retvar->var_type = VAR_NUMBER;
+		retvar->var_val.var_number = n1;
+	    }
+	    clear_var(&var2);
 	}
-	clear_var(&var2);
     }
     return OK;
 }
@@ -994,18 +1233,19 @@ eval4(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-eval5(arg, retvar)
+eval5(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var		var2;
     int		op;
-    long	n1, n2;
+    long	n1 = 0, n2;
 
     /*
      * Get the first variable.
      */
-    if (eval6(arg, retvar) == FAIL)
+    if (eval6(arg, retvar, evaluate) == FAIL)
 	return FAIL;
 
     /*
@@ -1017,39 +1257,46 @@ eval5(arg, retvar)
 	if (op != '*' && op != '/' && op != '%')
 	    break;
 
-	n1 = get_var_number(retvar);
-	clear_var(retvar);
+	if (evaluate)
+	{
+	    n1 = get_var_number(retvar);
+	    clear_var(retvar);
+	}
 
 	/*
 	 * Get the second variable.
 	 */
 	*arg = skipwhite(*arg + 1);
-	if (eval6(arg, &var2) == FAIL)
+	if (eval6(arg, &var2, evaluate) == FAIL)
 	    return FAIL;
-	n2 = get_var_number(&var2);
-	clear_var(&var2);
 
-	/*
-	 * Compute the result.
-	 */
-	if (op == '*')
-	    n1 = n1 * n2;
-	else if (op == '/')
+	if (evaluate)
 	{
-	    if (n2 == 0)	/* give an error message? */
-		n1 = 0x7fffffff;
+	    n2 = get_var_number(&var2);
+	    clear_var(&var2);
+
+	    /*
+	     * Compute the result.
+	     */
+	    if (op == '*')
+		n1 = n1 * n2;
+	    else if (op == '/')
+	    {
+		if (n2 == 0)	/* give an error message? */
+		    n1 = 0x7fffffff;
+		else
+		    n1 = n1 / n2;
+	    }
 	    else
-		n1 = n1 / n2;
+	    {
+		if (n2 == 0)	/* give an error message? */
+		    n1 = 0;
+		else
+		    n1 = n1 % n2;
+	    }
+	    retvar->var_type = VAR_NUMBER;
+	    retvar->var_val.var_number = n1;
 	}
-	else
-	{
-	    if (n2 == 0)	/* give an error message? */
-		n1 = 0;
-	    else
-		n1 = n1 % n2;
-	}
-	retvar->var_type = VAR_NUMBER;
-	retvar->var_val.var_number = n1;
     }
 
     return OK;
@@ -1062,6 +1309,7 @@ eval5(arg, retvar)
  *  *option-name	option value
  *  @r			register contents
  *  identifier		variable value
+ *  funcion()		function call
  *  $VAR		environment variable
  *  (expression)	nested expression
  *
@@ -1076,9 +1324,10 @@ eval5(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-eval6(arg, retvar)
+eval6(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     var		var2;
     long	n;
@@ -1087,6 +1336,12 @@ eval6(arg, retvar)
     int		val;
     char_u	*start_leader, *end_leader;
     int		ret = OK;
+
+    /*
+     * Initialise variable so that clear_var() can't mistake this for a string
+     * and free a string that isn't there.
+     */
+    retvar->var_type = VAR_UNKNOWN;
 
     /*
      * Skip '!' and '-' characters.  They are handled later.
@@ -1111,41 +1366,48 @@ eval6(arg, retvar)
     case '7':
     case '8':
     case '9':
-		retvar->var_type = VAR_NUMBER;
 		vim_str2nr(*arg, NULL, &len, TRUE, TRUE, &n, NULL);
-		retvar->var_val.var_number = n;
 		*arg += len;
+		if (evaluate)
+		{
+		    retvar->var_type = VAR_NUMBER;
+		    retvar->var_val.var_number = n;
+		}
 		break;
 
     /*
      * String constant: "string".
      */
-    case '\"':	ret = get_string_var(arg, retvar);
+    case '"':	ret = get_string_var(arg, retvar, evaluate);
 		break;
 
     /*
      * Literal string constant: 'string'.
      */
-    case '\'':	ret = get_lit_string_var(arg, retvar);
+    case '\'':	ret = get_lit_string_var(arg, retvar, evaluate);
 		break;
 
     /*
      * Option value: &name
      */
-    case '&':	ret = get_option_var(arg, retvar);
+    case '&':	ret = get_option_var(arg, retvar, evaluate);
 		break;
 
     /*
      * Environment variable: $VAR.
      */
-    case '$':	ret = get_env_var(arg, retvar);
+    case '$':	ret = get_env_var(arg, retvar, evaluate);
 		break;
 
     /*
      * Register contents: @r.
      */
-    case '@':	retvar->var_type = VAR_STRING;
-		retvar->var_val.var_string = get_reg_contents(*++*arg);
+    case '@':	++*arg;
+		if (evaluate)
+		{
+		    retvar->var_type = VAR_STRING;
+		    retvar->var_val.var_string = get_reg_contents(**arg);
+		}
 		if (**arg != NUL)
 		    ++*arg;
 		break;
@@ -1154,11 +1416,14 @@ eval6(arg, retvar)
      * nested expression: (expression).
      */
     case '(':	*arg = skipwhite(*arg + 1);
-		ret = eval1(arg, retvar);	/* recursive! */
-		if (**arg != ')')
-		    EMSG("Missing ')'");
-		else
+		ret = eval1(arg, retvar, evaluate);	/* recursive! */
+		if (**arg == ')')
 		    ++*arg;
+		else if (ret == OK)
+		{
+		    EMSG("Missing ')'");
+		    ret = FAIL;
+		}
 		break;
 
     /*
@@ -1170,8 +1435,9 @@ eval6(arg, retvar)
 		{
 		    if (**arg == '(')		/* recursive! */
 			ret = get_func_var(s, len, retvar, arg,
-			  curwin->w_cursor.lnum, curwin->w_cursor.lnum, &len);
-		    else
+				  curwin->w_cursor.lnum, curwin->w_cursor.lnum,
+				  &len, evaluate);
+		    else if (evaluate)
 			ret = get_var_var(s, len, retvar);
 		}
 		else
@@ -1189,13 +1455,11 @@ eval6(arg, retvar)
 	 * Get the variable from inside the [].
 	 */
 	*arg = skipwhite(*arg + 1);
-	if (eval1(arg, &var2) == FAIL)		/* recursive! */
+	if (eval1(arg, &var2, evaluate) == FAIL)	/* recursive! */
 	{
 	    clear_var(retvar);
 	    return FAIL;
 	}
-	n = get_var_number(&var2);
-	clear_var(&var2);
 
 	/* Check for the ']'. */
 	if (**arg != ']')
@@ -1205,26 +1469,31 @@ eval6(arg, retvar)
 	    return FAIL;
 	}
 
-	/*
-	 * The resulting variable is a string of a single character.
-	 * If the index is too big or negative, the result is empty.
-	 */
-	s = get_var_string(retvar);
-	if (n >= (long)STRLEN(s) || n < 0)
-	    s = NULL;
-	else
-	    s = vim_strnsave(s + n, 1);
-	clear_var(retvar);
-	retvar->var_type = VAR_STRING;
-	retvar->var_val.var_string = s;
+	if (evaluate)
+	{
+	    n = get_var_number(&var2);
+	    clear_var(&var2);
 
+	    /*
+	     * The resulting variable is a string of a single character.
+	     * If the index is too big or negative, the result is empty.
+	     */
+	    s = get_var_string(retvar);
+	    if (n >= (long)STRLEN(s) || n < 0)
+		s = NULL;
+	    else
+		s = vim_strnsave(s + n, 1);
+	    clear_var(retvar);
+	    retvar->var_type = VAR_STRING;
+	    retvar->var_val.var_string = s;
+	}
 	*arg = skipwhite(*arg + 1);	/* skip the ']' */
     }
 
     /*
      * Apply logical NOT and unary '-', from right to left.
      */
-    if (ret == OK && end_leader > start_leader)
+    if (ret == OK && evaluate && end_leader > start_leader)
     {
 	val = get_var_number(retvar);
 	while (end_leader > start_leader)
@@ -1250,9 +1519,10 @@ eval6(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-get_option_var(arg, retvar)
+get_option_var(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;		/* when NULL, only check if option exists */
+    int		evaluate;
 {
     char_u	*option_end;
     long	numval;
@@ -1272,12 +1542,18 @@ get_option_var(arg, retvar)
 	return FAIL;
     }
 
+    if (!evaluate)
+    {
+	*arg = option_end;
+	return OK;
+    }
+
     c = *option_end;
     *option_end = NUL;
     opt_type = get_option_value(*arg + 1, &numval,
 					  retvar == NULL ? NULL : &stringval);
 
-    if (opt_type < 0)		    /* invalid name */
+    if (opt_type == -2)			/* invalid name */
     {
 	if (retvar != NULL)
 	    EMSG2("Unknown option: %s", *arg + 1);
@@ -1285,7 +1561,12 @@ get_option_var(arg, retvar)
     }
     else if (retvar != NULL)
     {
-	if (opt_type == 1)		/* number option */
+	if (opt_type == -1)		/* hidden option */
+	{
+	    retvar->var_type = VAR_NUMBER;
+	    retvar->var_val.var_number = 0;
+	}
+	else if (opt_type == 1)		/* number option */
 	{
 	    retvar->var_type = VAR_NUMBER;
 	    retvar->var_val.var_number = numval;
@@ -1308,9 +1589,10 @@ get_option_var(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-get_string_var(arg, retvar)
+get_string_var(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     char_u	*p;
     char_u	*name;
@@ -1320,7 +1602,7 @@ get_string_var(arg, retvar)
     /*
      * Find the end of the string, skipping backslashed characters.
      */
-    for (p = *arg + 1; *p && *p != '\"'; ++p)
+    for (p = *arg + 1; *p && *p != '"'; ++p)
 	if (*p == '\\' && p[1] != NUL)
 	{
 	    ++p;
@@ -1329,10 +1611,17 @@ get_string_var(arg, retvar)
 	    if (*p == '<')
 		extra += 2;
 	}
-    if (*p != '\"')
+    if (*p != '"')
     {
 	EMSG2("Missing quote: %s", *arg);
 	return FAIL;
+    }
+
+    /* If only parsing, set *arg and return here */
+    if (!evaluate)
+    {
+	*arg = p + 1;
+	return OK;
     }
 
     /*
@@ -1344,7 +1633,7 @@ get_string_var(arg, retvar)
 	return FAIL;
 
     i = 0;
-    for (p = *arg + 1; *p && *p != '\"'; ++p)
+    for (p = *arg + 1; *p && *p != '"'; ++p)
     {
 	if (*p == '\\')
 	{
@@ -1427,9 +1716,10 @@ get_string_var(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-get_lit_string_var(arg, retvar)
+get_lit_string_var(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
     char_u	*p;
     char_u	*name;
@@ -1444,44 +1734,250 @@ get_lit_string_var(arg, retvar)
 	return FAIL;
     }
 
-    /*
-     * Copy the string into allocated memory.
-     */
-    name = vim_strnsave(*arg + 1, (int)(p - (*arg + 1)));
-    if (name == NULL)
-	return FAIL;
+    if (evaluate)
+    {
+	/*
+	 * Copy the string into allocated memory.
+	 */
+	name = vim_strnsave(*arg + 1, (int)(p - (*arg + 1)));
+	if (name == NULL)
+	    return FAIL;
+
+	retvar->var_type = VAR_STRING;
+	retvar->var_val.var_string = name;
+    }
 
     *arg = p + 1;
-
-    retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = name;
 
     return OK;
 }
 
 /*
  * Get the value of an environment variable.
- * Return OK or FAIL.
+ * "arg" is pointing to the '$'.  It is advanced to after the name.
+ * If the environment variable was not set, silently assume it is empty.
+ * Always return OK.
  */
     static int
-get_env_var(arg, retvar)
+get_env_var(arg, retvar, evaluate)
     char_u	**arg;
     VAR		retvar;
+    int		evaluate;
 {
-    char_u	*string;
+    char_u	*string = NULL;
+    int		len;
+    int		cc;
+    char_u	*name;
 
-    string = get_env_string(arg);
-
-    /*
-     * Allocate a variable.  If the environment variable was not set, silently
-     * assume it is empty.
-     */
-    if (string != NULL)
-	string = vim_strsave(string);
-    retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = string;
+    ++*arg;
+    name = *arg;
+    len = get_env_len(arg);
+    if (evaluate)
+    {
+	if (len != 0)
+	{
+	    cc = name[len];
+	    name[len] = NUL;
+	    /* first try mch_getenv(), fast for normal environment vars */
+	    string = mch_getenv(name);
+	    if (string != NULL && *string != NUL)
+		string = vim_strsave(string);
+	    else
+	    {
+		/* next try expanding things like $VIM and ${HOME} */
+		string = expand_env_save(name - 1);
+		if (string != NULL && *string == '$')
+		{
+		    vim_free(string);
+		    string = NULL;
+		}
+	    }
+	    name[len] = cc;
+	}
+	retvar->var_type = VAR_STRING;
+	retvar->var_val.var_string = string;
+    }
 
     return OK;
+}
+
+/*
+ * Array with names and number of arguments of all internal functions
+ * MUST BE KEPT SORTED IN strcmp() ORDER FOR BINARY SEARCH!
+ */
+static struct fst
+{
+    char	*f_name;	/* function name */
+    char	f_min_argc;	/* minimal number of arguments */
+    char	f_max_argc;	/* maximal number of arguments */
+    void	(*f_func) __ARGS((VAR args, VAR rvar)); /* impl. function */
+} functions[] =
+{
+    {"append",		2, 2, f_append},
+    {"argc",		0, 0, f_argc},
+    {"argv",		1, 1, f_argv},
+    {"browse",		4, 4, f_browse},
+    {"bufexists",	1, 1, f_bufexists},
+    {"buffer_exists",	1, 1, f_bufexists},	/* obsolete */
+    {"buffer_name",	1, 1, f_bufname},	/* obsolete */
+    {"buffer_number",	1, 1, f_bufnr},		/* obsolete */
+    {"bufloaded",	1, 1, f_bufloaded},
+    {"bufname",		1, 1, f_bufname},
+    {"bufnr",		1, 1, f_bufnr},
+    {"bufwinnr",	1, 1, f_bufwinnr},
+    {"byte2line",	1, 1, f_byte2line},
+    {"char2nr",		1, 1, f_char2nr},
+    {"col",		1, 1, f_col},
+    {"confirm",		2, 4, f_confirm},
+    {"delete",		1, 1, f_delete},
+    {"did_filetype",	0, 0, f_did_filetype},
+    {"escape",		2, 2, f_escape},
+    {"exists",		1, 1, f_exists},
+    {"expand",		1, 2, f_expand},
+    {"file_readable",	1, 1, f_filereadable},	/* obsolete */
+    {"filereadable",	1, 1, f_filereadable},
+    {"fnamemodify",	2, 2, f_fnamemodify},
+    {"getcwd",		0, 0, f_getcwd},
+    {"getftime",	1, 1, f_getftime},
+    {"getline",		1, 1, f_getline},
+    {"getwinposx",	0, 0, f_getwinposx},
+    {"getwinposy",	0, 0, f_getwinposy},
+    {"glob",		1, 1, f_glob},
+    {"has",		1, 1, f_has},
+    {"highlightID",	1, 1, f_hlID},		/* obsolete */
+    {"highlight_exists",1, 1, f_hlexists},	/* obsolete */
+    {"histadd",		2, 2, f_histadd},
+    {"histdel",		1, 2, f_histdel},
+    {"histget",		1, 2, f_histget},
+    {"histnr",		1, 1, f_histnr},
+    {"hlID",		1, 1, f_hlID},
+    {"hlexists",	1, 1, f_hlexists},
+    {"hostname",	0, 0, f_hostname},
+    {"input",		1, 1, f_input},
+    {"isdirectory",	1, 1, f_isdirectory},
+    {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
+    {"libcall",		3, 3, f_libcall},
+    {"line",		1, 1, f_line},
+    {"line2byte",	1, 1, f_line2byte},
+    {"localtime",	0, 0, f_localtime},
+    {"maparg",		1, 2, f_maparg},
+    {"mapcheck",	1, 2, f_mapcheck},
+    {"match",		2, 2, f_match},
+    {"matchend",	2, 2, f_matchend},
+    {"matchstr",	2, 2, f_matchstr},
+    {"nr2char",		1, 1, f_nr2char},
+    {"setline",		2, 2, f_setline},
+#ifdef HAVE_STRFTIME
+    {"strftime",	1, 2, f_strftime},
+#endif
+    {"strlen",		1, 1, f_strlen},
+    {"strpart",		3, 3, f_strpart},
+    {"strtrans",	1, 1, f_strtrans},
+    {"substitute",	4, 4, f_substitute},
+    {"synID",		3, 3, f_synID},
+    {"synIDattr",	2, 3, f_synIDattr},
+    {"synIDtrans",	1, 1, f_synIDtrans},
+    {"system",		1, 1, f_system},
+    {"tempname",	0, 0, f_tempname},
+    {"virtcol",		1, 1, f_virtcol},
+    {"visualmode",	0, 0, f_visualmode},
+    {"winbufnr",	1, 1, f_winbufnr},
+    {"winheight",	1, 1, f_winheight},
+    {"winnr",		0, 0, f_winnr},
+};
+
+#ifdef CMDLINE_COMPL
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of internal
+ * or user defined function names.
+ */
+    char_u *
+get_function_name(idx)
+    int	    idx;
+{
+    static int	intidx = -1;
+    char_u	*name;
+    int		len;
+
+    if (idx == 0)
+	intidx = -1;
+    if (intidx < 0)
+    {
+	name = get_user_func_name(idx);
+	if (name != NULL)
+	{
+	    len = STRLEN(name);
+	    if (len >= IOSIZE-1)
+		return name;	/* prevents overflow */
+
+	    STRCPY(IObuff, name);
+	    IObuff[len] = '(';
+	    IObuff[++len] = NUL;
+	    return IObuff;
+	}
+    }
+    if (++intidx < (int)(sizeof(functions) / sizeof(struct fst)))
+    {
+	STRCAT(STRCPY(IObuff, functions[intidx].f_name), "(");
+	return IObuff;
+    }
+
+    return NULL;
+}
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of internal or
+ * user defined variable or function names.
+ */
+    char_u *
+get_expr_name(idx)
+    int	    idx;
+{
+    static int	intidx = -1;
+    char_u	*name;
+
+    if (idx == 0)
+	intidx = -1;
+    if (intidx < 0)
+    {
+	name = get_function_name(idx);
+	if (name != NULL)
+	    return name;
+    }
+    return get_user_var_name(++intidx);
+}
+
+#endif /* CMDLINE_COMPL */
+
+/*
+ * Find internal function in table above.
+ * Return index, or -1 if not found
+ */
+    static int
+find_internal_func(name)
+    char_u	*name;		/* name of the function */
+{
+    int		first = 0;
+    int		last = (int)(sizeof(functions) / sizeof(struct fst)) - 1;
+    int		cmp;
+    int		x;
+
+    /*
+     * Find the function name in the table. Binary search.
+     */
+    while (first <= last)
+    {
+	x = first + ((unsigned)(last - first) >> 1);
+	cmp = STRCMP(name, functions[x].f_name);
+	if (cmp < 0)
+	    last = x - 1;
+	else if (cmp > 0)
+	    first = x + 1;
+	else
+	    return x;
+    }
+    return -1;
 }
 
 /*
@@ -1489,7 +1985,7 @@ get_env_var(arg, retvar)
  * Return OK or FAIL.
  */
     static int
-get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
+get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     char_u	*name;		/* name of the function */
     int		len;		/* length of "name" */
     VAR		retvar;
@@ -1497,6 +1993,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
     linenr_t	firstline;	/* first line of range */
     linenr_t	lastline;	/* last line of range */
     int		*doesrange;	/* return: function handled range */
+    int		evaluate;
 {
     char_u	*argp;
     int		ret = FAIL;
@@ -1510,7 +2007,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
 		 "Not enough arguments for function: %s",
 		};
 #define ERROR_INVARG	0
-#define ERROR_UNKOWN	1
+#define ERROR_UNKNOWN	1
 #define ERROR_TOOMANY	2
 #define ERROR_TOOFEW	3
 #define ERROR_NONE	4
@@ -1519,65 +2016,6 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
     int		i;
     struct ufunc *fp;
     int		cc;
-    static struct fst
-    {
-	char	*f_name;	/* function name */
-	char	f_min_argc;	/* minimal number of arguments */
-	char	f_max_argc;	/* miximal number of arguments */
-	void	(*f_func) __ARGS((VAR args, VAR rvar));    /* impl. function */
-    } functions[] =
-    {
-	{"argc",		0, 0, f_argc},
-	{"argv",		1, 1, f_argv},
-	{"browse",		4, 4, f_browse},
-	{"buffer_exists",	1, 1, f_bufexists},	/* obsolete */
-	{"bufexists",		1, 1, f_bufexists},
-	{"buffer_name",		1, 1, f_bufname},	/* obsolete */
-	{"buffer_number",	1, 1, f_bufnr},		/* obsolete */
-	{"bufname",		1, 1, f_bufname},
-	{"bufnr",		1, 1, f_bufnr},
-	{"char2nr",		1, 1, f_char2nr},
-	{"col",			1, 1, f_col},
-	{"confirm",		2, 4, f_confirm},
-	{"delete",		1, 1, f_delete},
-	{"escape",		2, 2, f_escape},
-	{"exists",		1, 1, f_exists},
-	{"expand",		1, 1, f_expand},
-	{"file_readable",	1, 1, f_filereadable},	/* obsolete */
-	{"filereadable",	1, 1, f_filereadable},
-	{"fnamemodify",		2, 2, f_fnamemodify},
-	{"getcwd",		0, 0, f_getcwd},
-	{"getline",		1, 1, f_getline},
-	{"has",			1, 1, f_has},
-	{"highlight_exists",	1, 1, f_hlexists},	/* obsolete */
-	{"highlightID",		1, 1, f_hlID},		/* obsolete */
-	{"hlexists",		1, 1, f_hlexists},
-	{"hlID",		1, 1, f_hlID},
-	{"hostname",		0, 0, f_hostname},
-	{"input",		1, 1, f_input },
-	{"isdirectory",		1, 1, f_isdirectory},
-	{"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
-	{"line",		1, 1, f_line},
-	{"match",		2, 2, f_match},
-	{"matchend",		2, 2, f_matchend},
-	{"matchstr",		2, 2, f_matchstr},
-	{"nr2char",		1, 1, f_nr2char},
-	{"setline",		2, 2, f_setline},
-#ifdef HAVE_STRFTIME
-	{"strftime",		1, 1, f_strftime},
-#endif
-	{"strlen",		1, 1, f_strlen},
-	{"strpart",		3, 3, f_strpart},
-	{"synID",		3, 3, f_synID},
-	{"synIDattr",		2, 3, f_synIDattr},
-	{"synIDtrans",		1, 1, f_synIDtrans},
-	{"substitute",		4, 4, f_substitute},
-	{"tempname",		0, 0, f_tempname},
-	{"virtcol",		1, 1, f_virtcol},
-	{"winbufnr",		1, 1, f_winbufnr},
-	{"winheight",		1, 1, f_winheight},
-	{"winnr",		0, 0, f_winnr},
-    };
 
     cc = name[len];
     name[len] = NUL;
@@ -1592,7 +2030,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
 	argp = skipwhite(argp + 1);	    /* skip the '(' or ',' */
 	if (*argp == ')' || *argp == ',' || *argp == NUL)
 	    break;
-	if (eval1(&argp, &argvars[argcount]) == FAIL)
+	if (eval1(&argp, &argvars[argcount], evaluate) == FAIL)
 	{
 	    error = ERROR_OTHER;
 	    break;
@@ -1605,11 +2043,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
 	error = ERROR_INVARG;
 
     /* execute the function if no errors detected and executing */
-    if (error == ERROR_NONE && !emsg_off)
+    if (evaluate && error == ERROR_NONE)
     {
 	retvar->var_type = VAR_NUMBER;	/* default is number retvar */
+	error = ERROR_UNKNOWN;
 
-	error = ERROR_UNKOWN;
 	if (!islower(name[0]))
 	{
 	    /*
@@ -1632,8 +2070,10 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
 		     */
 		    save_search_patterns();
 		    saveRedobuff();
+		    ++fp->calls;
 		    call_func(fp, argcount, argvars, retvar,
 							 firstline, lastline);
+		    --fp->calls;
 		    restoreRedobuff();
 		    restore_search_patterns();
 		    error = ERROR_NONE;
@@ -1645,27 +2085,26 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
 	    /*
 	     * Find the function name in the table, call its implementation.
 	     */
-	    for (i = 0; i < (int)(sizeof(functions) / sizeof(struct fst)); ++i)
-		if (STRCMP(name, functions[i].f_name) == 0)
+	    i = find_internal_func(name);
+	    if (i >= 0)
+	    {
+		if (argcount < functions[i].f_min_argc)
+		    error = ERROR_TOOFEW;
+		else if (argcount > functions[i].f_max_argc)
+		    error = ERROR_TOOMANY;
+		else
 		{
-		    if (argcount < functions[i].f_min_argc)
-			error = ERROR_TOOFEW;
-		    else if (argcount > functions[i].f_max_argc)
-			error = ERROR_TOOMANY;
-		    else
-		    {
-			argvars[argcount].var_type = VAR_UNKNOWN;
-			functions[i].f_func(argvars, retvar);
-			error = ERROR_NONE;
-		    }
-		    break;
+		    argvars[argcount].var_type = VAR_UNKNOWN;
+		    functions[i].f_func(argvars, retvar);
+		    error = ERROR_NONE;
 		}
+	    }
 	}
-
-	*arg = skipwhite(argp + 1);
-	if (error == ERROR_NONE)
-	    ret = OK;
     }
+    if (error == ERROR_NONE)
+	ret = OK;
+
+    *arg = skipwhite(argp + 1);
 
     while (--argcount >= 0)
 	clear_var(&argvars[argcount]);
@@ -1678,8 +2117,45 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange)
     return ret;
 }
 
+/*********************************************
+ * Implementation of the built-in functions
+ */
+
 /*
- * "argc()" function.
+ * "append(lnum, string)" function
+ */
+    static void
+f_append(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    long	lnum;
+
+    lnum = get_var_number(&argvars[0]);
+    if (lnum == 0)  /* no valid number, try using line() */
+    {
+	f_line(argvars, retvar);
+	lnum = retvar->var_val.var_number;
+	clear_var(retvar);
+    }
+    retvar->var_val.var_number = 1; /* Default: Failed */
+
+    if (lnum >= 0 && lnum <= curbuf->b_ml.ml_line_count
+	    && u_save(lnum, lnum + 1) == OK)
+    {
+	ml_append(lnum, get_var_string(&argvars[1]), (colnr_t)0, FALSE);
+	if (curwin->w_cursor.lnum > lnum)
+	{
+	    ++curwin->w_cursor.lnum;
+	    changed_line_abv_curs();
+	}
+	update_curbuf(NOT_VALID);
+	retvar->var_val.var_number = 0;
+    }
+}
+
+/*
+ * "argc()" function
  */
 /* ARGSUSED */
     static void
@@ -1691,7 +2167,7 @@ f_argc(argvars, retvar)
 }
 
 /*
- * "argv()" function.
+ * "argv(nr)" function
  */
     static void
 f_argv(argvars, retvar)
@@ -1708,24 +2184,126 @@ f_argv(argvars, retvar)
     retvar->var_type = VAR_STRING;
 }
 
+/*
+ * "browse(save, title, initdir, default)" function
+ */
+/* ARGSUSED */
+    static void
+f_browse(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef USE_BROWSE
+    int		save;
+    char_u	*title;
+    char_u	*initdir;
+    char_u	*defname;
+    char_u	buf[NUMBUFLEN];
+    char_u	buf2[NUMBUFLEN];
+
+    save = get_var_number(&argvars[0]);
+    title = get_var_string(&argvars[1]);
+    initdir = get_var_string_buf(&argvars[2], buf);
+    defname = get_var_string_buf(&argvars[3], buf2);
+
+    retvar->var_val.var_string =
+		 do_browse(save, title, defname, NULL, initdir, NULL, curbuf);
+#else
+    retvar->var_val.var_string = NULL;
+#endif
+    retvar->var_type = VAR_STRING;
+}
+
+/*
+ * Find a buffer by number or exact name.
+ */
+    static BUF *
+find_buffer(avar)
+    VAR		avar;
+{
+    BUF		*buf = NULL;
+    char_u	*name;
+
+    if (avar->var_type == VAR_NUMBER)
+	buf = buflist_findnr((int)avar->var_val.var_number);
+    else if (avar->var_val.var_string != NULL)
+    {
+	/* First make the name into a full path name */
+	name = FullName_save(avar->var_val.var_string,
+#ifdef UNIX
+		TRUE	    /* force expansion, get rid of symbolic links */
+#else
+		FALSE
+#endif
+		);
+	if (name != NULL)
+	{
+	    buf = buflist_findname(name);
+	    vim_free(name);
+	}
+    }
+    return buf;
+}
+
+/*
+ * "bufexists(expr)" function
+ */
+    static void
+f_bufexists(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = (find_buffer(&argvars[0]) != NULL);
+}
+
+/*
+ * "bufloaded(expr)" function
+ */
+    static void
+f_bufloaded(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    BUF		*buf;
+
+    buf = find_buffer(&argvars[0]);
+    retvar->var_val.var_number = (buf != NULL && buf->b_ml.ml_mfp != NULL);
+}
+
+/*
+ * Get buffer by number or pattern.
+ */
     static BUF *
 get_buf_var(avar)
     VAR		avar;
 {
     char_u	*name = avar->var_val.var_string;
+    int		save_magic;
+    char_u	*save_cpo;
+    BUF		*buf;
 
     if (avar->var_type == VAR_NUMBER)
 	return buflist_findnr((int)avar->var_val.var_number);
-    else if (name == NULL || *name == NUL)
+    if (name == NULL || *name == NUL)
 	return curbuf;
-    else if (name[0] == '$' && name[1] == NUL)
+    if (name[0] == '$' && name[1] == NUL)
 	return lastbuf;
-    else
-	return buflist_findnr(buflist_findpat(name, name + STRLEN(name)));
+
+    /* Ignore 'magic' and 'cpoptions' here to make scripts portable */
+    save_magic = p_magic;
+    p_magic = TRUE;
+    save_cpo = p_cpo;
+    p_cpo = (char_u *)"";
+
+    buf = buflist_findnr(buflist_findpat(name, name + STRLEN(name)));
+
+    p_magic = save_magic;
+    p_cpo = save_cpo;
+    return buf;
 }
 
 /*
- * "buffer_name()" function.
+ * "bufname(expr)" function
  */
     static void
 f_bufname(argvars, retvar)
@@ -1745,7 +2323,7 @@ f_bufname(argvars, retvar)
 }
 
 /*
- * "buffer_number()" function.
+ * "bufnr(expr)" function
  */
     static void
 f_bufnr(argvars, retvar)
@@ -1764,40 +2342,53 @@ f_bufnr(argvars, retvar)
 }
 
 /*
- * "buffer_exists()" function.
+ * "bufwinnr(nr)" function
  */
     static void
-f_bufexists(argvars, retvar)
+f_bufwinnr(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    int		n = FALSE;
-    char_u	*name;
+    WIN		*wp;
+    int		winnr = 0;
+    BUF		*buf;
 
-    if (argvars[0].var_type == VAR_NUMBER)
-	n = (buflist_findnr((int)argvars[0].var_val.var_number) != NULL);
-    else if (argvars[0].var_val.var_string != NULL)
+    ++emsg_off;
+    buf = get_buf_var(&argvars[0]);
+    for (wp = firstwin; wp; wp = wp->w_next)
     {
-	/* First make the name into a full path name */
-	name = FullName_save(argvars[0].var_val.var_string,
-#ifdef UNIX
-		TRUE	    /* force expansion, get rid of symbolic links */
-#else
-		FALSE
-#endif
-		);
-	if (name != NULL)
-	{
-	    n = (buflist_findname(name) != NULL);
-	    vim_free(name);
-	}
+	++winnr;
+	if (wp->w_buffer == buf)
+	    break;
     }
-
-    retvar->var_val.var_number = n;
+    retvar->var_val.var_number = (wp ? winnr : -1);
+    --emsg_off;
 }
 
 /*
- * "char2nr()" function
+ * "byte2line(byte)" function
+ */
+    static void
+f_byte2line(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifndef BYTE_OFFSET
+    retvar->var_val.var_number = -1;
+#else
+    long	boff = 0;
+
+    boff = get_var_number(&argvars[0]) - 1;
+    if (boff < 0)
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = ml_find_line_or_offset(curbuf,
+							  (linenr_t)0, &boff);
+#endif
+}
+
+/*
+ * "char2nr(string)" function
  */
     static void
 f_char2nr(argvars, retvar)
@@ -1870,33 +2461,41 @@ f_confirm(argvars, retvar)
 
 
 /*
- * "browse(save, title, initdir, default)" function
+ * "libcall(libname, funcname, argument)" function
  */
-/* ARGSUSED */
+/*ARGSUSED*/
     static void
-f_browse(argvars, retvar)
+f_libcall(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef USE_BROWSE
-    int		save;
-    char_u	*title;
-    char_u	*initdir;
-    char_u	*defname;
-    char_u	buf[NUMBUFLEN];
-    char_u	buf2[NUMBUFLEN];
-
-    save = get_var_number(&argvars[0]);
-    title = get_var_string(&argvars[1]);
-    initdir = get_var_string_buf(&argvars[2], buf);
-    defname = get_var_string_buf(&argvars[3], buf2);
-
-    retvar->var_val.var_string =
-		 do_browse(save, title, defname, NULL, initdir, NULL, curbuf);
-#else
-    retvar->var_val.var_string = NULL;
+    /* Add other platforms here as there are supported */
+#ifdef WIN32
+    char_u  *retval;
 #endif
+
     retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+
+#ifdef WIN32
+    /* The first two args must be strings, otherwise meaningless */
+    if (argvars[0].var_type == VAR_STRING && argvars[1].var_type == VAR_STRING)
+    {
+	if (argvars[2].var_type == VAR_NUMBER)
+	    retval = mch_libcall(argvars[0].var_val.var_string,
+				 argvars[1].var_val.var_string,
+				 NULL,
+				 argvars[2].var_val.var_number);
+	else
+	    retval = mch_libcall(argvars[0].var_val.var_string,
+				 argvars[1].var_val.var_string,
+				 argvars[2].var_val.var_string,
+				 0);
+
+	if (retval != NULL)
+	    retvar->var_val.var_string = retval;
+    }
+#endif
 }
 
 /*
@@ -1908,6 +2507,22 @@ f_delete(argvars, retvar)
     VAR		retvar;
 {
     retvar->var_val.var_number = mch_remove(get_var_string(&argvars[0]));
+}
+
+/*
+ * "did_filetype()" function
+ */
+/*ARGSUSED*/
+    static void
+f_did_filetype(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef AUTOCMD
+    retvar->var_val.var_number = did_filetype;
+#else
+    retvar->var_val.var_number = 0;
+#endif
 }
 
 /*
@@ -1941,9 +2556,29 @@ f_exists(argvars, retvar)
 
     p = get_var_string(&argvars[0]);
     if (*p == '$')			/* environment variable */
-	n = (get_env_string(&p) != NULL);
+    {
+	/* first try "normal" environment variables (fast) */
+	if (mch_getenv(p + 1) != NULL)
+	    n = TRUE;
+	else
+	{
+	    /* try expanding things like $VIM and ${HOME} */
+	    p = expand_env_save(p);
+	    if (p != NULL && *p != '$')
+		n = TRUE;
+	    vim_free(p);
+	}
+    }
     else if (*p == '&')			/* option */
-	n = (get_option_var(&p, NULL) == OK);
+	n = (get_option_var(&p, NULL, TRUE) == OK);
+    else if (*p == '*')			/* internal or user defined function */
+    {
+	++p;
+	if (islower(*p))
+	    n = (find_internal_func(p) >= 0);
+	else if (isupper(*p))
+	    n = (find_func(p) != NULL);
+    }
     else				/* internal variable */
     {
 	name = p;
@@ -1966,13 +2601,22 @@ f_expand(argvars, retvar)
     char_u	*s;
     int		len;
     char_u	*errormsg;
+    int		flags = WILD_LIST_NOTFOUND|WILD_USE_NL;
 
     retvar->var_type = VAR_STRING;
     s = get_var_string(&argvars[0]);
     if (*s == '%' || *s == '#' || *s == '<')
+    {
+	++emsg_off;
 	retvar->var_val.var_string = eval_vars(s, &len, NULL, &errormsg, s);
+	--emsg_off;
+    }
     else
-	retvar->var_val.var_string = ExpandOne(s, NULL, WILD_USE_NL, WILD_ALL);
+    {
+	if (argvars[1].var_type != VAR_UNKNOWN && get_var_number(&argvars[1]))
+	    flags |= WILD_KEEP_ALL;
+	retvar->var_val.var_string = ExpandOne(s, NULL, flags, WILD_ALL);
+    }
 }
 
 /*
@@ -1988,7 +2632,7 @@ f_filereadable(argvars, retvar)
     int		n;
 
     p = get_var_string(&argvars[0]);
-    if (*p && !mch_isdir(p) && (fd = fopen((char *)p, "r")) != NULL)
+    if (*p && !mch_isdir(p) && (fd = mch_fopen((char *)p, "r")) != NULL)
     {
 	n = TRUE;
 	fclose(fd);
@@ -2047,6 +2691,25 @@ f_getcwd(argvars, retvar)
 }
 
 /*
+ * "getftime({fname})" function
+ */
+    static void
+f_getftime(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*fname;
+    struct stat	st;
+
+    fname = get_var_string(&argvars[0]);
+
+    if (mch_stat((char *)fname, &st) >= 0)
+	retvar->var_val.var_number = (var_number_type)st.st_mtime;
+    else
+	retvar->var_val.var_number = -1;
+}
+
+/*
  * "getline(lnum)" function
  */
     static void
@@ -2072,6 +2735,61 @@ f_getline(argvars, retvar)
 
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = vim_strsave(p);
+}
+
+/*
+ * "getwinposx()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getwinposx(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = -1;
+#ifdef USE_GUI
+    if (gui.in_use)
+    {
+	int	    x, y;
+
+	if (gui_mch_get_winpos(&x, &y) == OK)
+	    retvar->var_val.var_number = x;
+    }
+#endif
+}
+
+/*
+ * "getwinposy()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getwinposy(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = -1;
+#ifdef USE_GUI
+    if (gui.in_use)
+    {
+	int	    x, y;
+
+	if (gui_mch_get_winpos(&x, &y) == OK)
+	    retvar->var_val.var_number = y;
+    }
+#endif
+}
+
+/*
+ * "glob()" function
+ */
+    static void
+f_glob(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = ExpandOne(get_var_string(&argvars[0]),
+						 NULL, WILD_USE_NL, WILD_ALL);
 }
 
 /*
@@ -2106,6 +2824,9 @@ f_has(argvars, retvar)
 #ifdef macintosh
 	"mac",
 #endif
+#ifdef OS2
+	"os2",
+#endif
 #ifdef RISCOS
 	"riscos",
 #endif
@@ -2114,6 +2835,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef VMS
 	"vms",
+#endif
+#ifdef WIN16
+	"win16",
 #endif
 #ifdef WIN32
 	"win32",
@@ -2130,8 +2854,23 @@ f_has(argvars, retvar)
 	"all_builtin_terms",
 # endif
 #endif
+#ifdef BYTE_OFFSET
+	"byte_offset",
+#endif
 #ifdef CINDENT
 	"cindent",
+#endif
+#ifdef USE_CLIPBOARD
+	"clipboard",
+#endif
+#ifdef CMDLINE_COMPL
+	"cmdline_compl",
+#endif
+#ifdef COMMENTS
+	"comments",
+#endif
+#ifdef CRYPTV
+	"cryptv",
 #endif
 #ifdef USE_CSCOPE
 	"cscope",
@@ -2164,8 +2903,8 @@ f_has(argvars, retvar)
 #ifdef FILE_IN_PATH
 	"file_in_path",
 #endif
-#ifdef WANT_FILETYPE
-	"filetype",
+#ifdef WANT_OSFILETYPE
+	"osfiletype",
 #endif
 #ifdef FIND_IN_PATH
 	"find_in_path",
@@ -2182,14 +2921,23 @@ f_has(argvars, retvar)
 #ifdef USE_GUI_BEOS
 	"gui_beos",
 #endif
+#ifdef USE_GUI_GTK
+	"gui_gtk",
+#endif
 #ifdef USE_GUI_MAC
 	"gui_mac",
 #endif
 #ifdef USE_GUI_MOTIF
 	"gui_motif",
 #endif
+#ifdef USE_GUI_WIN16
+	"gui_win16",
+#endif
 #ifdef USE_GUI_WIN32
 	"gui_win32",
+#endif
+#ifdef HANGUL_INPUT
+	"hangul_input",
 #endif
 #ifdef INSERT_EXPAND
 	"insert_expand",
@@ -2197,8 +2945,17 @@ f_has(argvars, retvar)
 #ifdef HAVE_LANGMAP
 	"langmap",
 #endif
+#ifdef LINEBREAK
+	"linebreak",
+#endif
 #ifdef LISPINDENT
 	"lispindent",
+#endif
+#ifdef WANT_MENU
+	"menu",
+#endif
+#ifdef MKSESSION
+	"mksession",
 #endif
 #ifdef WANT_MODIFY_FNAME
 	"modify_fname",
@@ -2209,6 +2966,9 @@ f_has(argvars, retvar)
 #ifdef UNIX
 # ifdef DEC_MOUSE
 	"mouse_dec",
+# endif
+# ifdef GPM_MOUSE
+	"mouse_gpm",
 # endif
 # ifdef NETTERM_MOUSE
 	"mouse_netterm",
@@ -2238,11 +2998,18 @@ f_has(argvars, retvar)
 #ifdef RIGHTLEFT
 	"rightleft",
 #endif
-#ifdef SHOWCMD
+#ifdef SCROLLBIND
+	"scrollbind",
+#endif
+#ifdef CMDLINE_INFO
 	"showcmd",
+	"cmdline_info",
 #endif
 #ifdef SMARTINDENT
 	"smartindent",
+#endif
+#ifdef STATUSLINE
+	"statusline",
 #endif
 #ifdef SYNTAX_HL
 	"syntax",
@@ -2271,17 +3038,38 @@ f_has(argvars, retvar)
 #ifdef HAVE_TGETENT
 	"tgetent",
 #endif
+#ifdef WANT_TITLE
+	"title",
+#endif
 #ifdef USER_COMMANDS
 	"user-commands",
 #endif
 #ifdef VIMINFO
 	"viminfo",
 #endif
+#ifdef VISUALEXTRA
+	"visualextra",
+#endif
 #ifdef WILDIGNORE
 	"wildignore",
 #endif
+#ifdef WILDMENU
+	"wildmenu",
+#endif
+#ifdef HAS_WAK
+	"winaltkeys",
+#endif
 #ifdef WRITEBACKUP
 	"writebackup",
+#endif
+#ifdef USE_XIM
+	"xim",
+#endif
+#ifdef USE_FONTSET
+	"xfontset",
+#endif
+#ifdef XTERM_CLIP
+	"xterm_clipboard",
 #endif
 #ifdef SAVE_XTERM_SCREEN
 	"xterm_save",
@@ -2302,36 +3090,116 @@ f_has(argvars, retvar)
 
     if (n == FALSE)
     {
+	if (0)
+	    ;
 #ifdef USE_GUI
-	if (STRICMP(name, "gui_running") == 0)
-	{
+	else if (STRICMP(name, "gui_running") == 0)
 	    n = (gui.in_use || gui.starting);
-	}
 # ifdef USE_GUI_WIN32
 	else if (STRICMP(name, "gui_win32s") == 0)
-	{
 	    n = gui_is_win32s();
-	}
 # endif
-#ifdef USE_BROWSE
+# ifdef USE_BROWSE
 	else if (STRICMP(name, "browse") == 0)
-	{
 	    n = gui.in_use;	/* gui_mch_browse() works when GUI is running */
-	}
-#endif
+# endif
 #endif
 #ifdef SYNTAX_HL
-# ifdef USE_GUI
-	else
-# endif
-	    if (STRICMP(name, "syntax_items") == 0)
-	{
+	else if (STRICMP(name, "syntax_items") == 0)
 	    n = syntax_present(curbuf);
-	}
 #endif
+	else if (STRICMP(name, "vim_starting") == 0)
+	    n = (starting != 0);
     }
 
     retvar->var_val.var_number = n;
+}
+
+/*
+ * "histadd()" function
+ */
+    static void
+f_histadd(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		histype;
+    char_u	*str;
+
+    histype = get_histtype(get_var_string(&argvars[0]));
+    if (histype >= 0)
+    {
+	str = get_var_string(&argvars[1]);
+	if (*str != NUL)
+	{
+	    add_to_history(histype, str, FALSE);
+	    retvar->var_val.var_number = TRUE;
+	    return;
+	}
+    }
+    retvar->var_val.var_number = FALSE;
+}
+
+/*
+ * "histdel()" function
+ */
+    static void
+f_histdel(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		n;
+
+    if (argvars[1].var_type == VAR_UNKNOWN)
+	/* only one argument: clear entire history */
+	n = clear_history(get_histtype(get_var_string(&argvars[0])));
+    else if (argvars[1].var_type == VAR_NUMBER)
+	/* index given: remove that entry */
+	n = del_history_idx(get_histtype(get_var_string(&argvars[0])),
+					    (int)get_var_number(&argvars[1]));
+    else
+	/* string given: remove all matching entries */
+	n = del_history_entry(get_histtype(get_var_string(&argvars[0])),
+					   get_var_string(&argvars[1]));
+    retvar->var_val.var_number = n;
+}
+
+/*
+ * "histget()" function
+ */
+    static void
+f_histget(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		type;
+    int		idx;
+
+    type = get_histtype(get_var_string(&argvars[0]));
+    retvar->var_type = VAR_STRING;
+    if (argvars[1].var_type == VAR_UNKNOWN)
+	idx = get_history_idx(type);
+    else
+	idx = (int)get_var_number(&argvars[1]);
+    retvar->var_val.var_string = vim_strsave(get_history_entry(type, idx));
+}
+
+/*
+ * "histnr()" function
+ */
+    static void
+f_histnr(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    int		i;
+
+    i = get_histtype(get_var_string(&argvars[0]));
+    if (i >= HIST_CMD && i <= HIST_INPUT)
+	i = get_history_idx(i);
+    else
+	i = -1;
+    retvar->var_val.var_number = i;
 }
 
 /*
@@ -2381,7 +3249,7 @@ f_input(argvars, retvar)
     VAR		retvar;
 {
     char_u	*prompt = get_var_string(&argvars[0]);
-    char_u	*p;
+    char_u	*p = NULL;
     int		c;
 
     retvar->var_type = VAR_STRING;
@@ -2413,17 +3281,17 @@ f_input(argvars, retvar)
 	    msg_clr_eos();
 	    msg_puts_attr(prompt, echo_attr);
 	    msg_didout = FALSE;
+	    msg_starthere();
 	    *p = c;
 	}
-	cmdline_prompt(p, echo_attr);
 	cmdline_row = msg_row;
     }
-    retvar->var_val.var_string = getexline('@', NULL, 0);
-    cmdline_prompt(NULL, 0);
+
+    retvar->var_val.var_string = getcmdline_prompt('@', p, echo_attr);
+
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
     msg_didout = FALSE;
-    dont_wait_return = TRUE;
 }
 
 /*
@@ -2477,6 +3345,108 @@ f_line(argvars, retvar)
 }
 
 /*
+ * "line2byte(lnum)" function
+ */
+    static void
+f_line2byte(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifndef BYTE_OFFSET
+    retvar->var_val.var_number = -1;
+#else
+    linenr_t	lnum = 0;
+
+    lnum = get_var_number(&argvars[0]);
+    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
+	retvar->var_val.var_number = -1;
+    else
+	retvar->var_val.var_number = ml_find_line_or_offset(curbuf, lnum, NULL);
+    if (retvar->var_val.var_number >= 0)
+	++retvar->var_val.var_number;
+#endif
+}
+
+/*
+ * "localtime()" function
+ */
+/*ARGSUSED*/
+    static void
+f_localtime(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = (var_number_type)time(NULL);
+}
+
+/*
+ * "maparg()" function
+ */
+    static void
+f_maparg(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    get_maparg(argvars, retvar, TRUE);
+}
+
+/*
+ * "mapcheck()" function
+ */
+    static void
+f_mapcheck(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    get_maparg(argvars, retvar, FALSE);
+}
+
+    static void
+get_maparg(argvars, retvar, exact)
+    VAR		argvars;
+    VAR		retvar;
+    int		exact;
+{
+    char_u		*keys;
+    char_u		*which;
+    char_u		buf[NUMBUFLEN];
+    char_u		*keys_buf = NULL;
+    char_u		*rhs;
+    int			mode;
+    struct growarray	ga;
+
+    /* return empty string for failure */
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+
+    keys = get_var_string(&argvars[0]);
+    if (*keys == NUL)
+	return;
+
+    if (argvars[1].var_type != VAR_UNKNOWN)
+	which = get_var_string_buf(&argvars[1], buf);
+    else
+	which = (char_u *)"";
+    mode = get_map_mode(&which, 0);
+
+    keys = replace_termcodes(keys, &keys_buf, TRUE, TRUE);
+    rhs = check_map(keys, mode, exact);
+    vim_free(keys_buf);
+    if (rhs != NULL)
+    {
+	ga_init(&ga);
+	ga.ga_itemsize = 1;
+	ga.ga_growsize = 40;
+
+	while (*rhs != NUL)
+	    ga_concat(&ga, str2special(&rhs, FALSE));
+
+	ga_append(&ga, NUL);
+	retvar->var_val.var_string = (char_u *)ga.ga_data;
+    }
+}
+
+/*
  * "match()" function
  */
     static void
@@ -2519,6 +3489,11 @@ f_some_match(argvars, retvar, type)
     char_u		*pat;
     vim_regexp		*prog;
     char_u		patbuf[NUMBUFLEN];
+    char_u		*save_cpo;
+
+    /* Make 'cpoptions' empty, so that the 'l' flag doesn't work here */
+    save_cpo = p_cpo;
+    p_cpo = (char_u *)"";
 
     str = get_var_string(&argvars[0]);
     pat = get_var_string_buf(&argvars[1], patbuf);
@@ -2546,6 +3521,8 @@ f_some_match(argvars, retvar, type)
 	}
 	vim_free(prog);
     }
+
+    p_cpo = save_cpo;
 }
 
 /*
@@ -2583,6 +3560,9 @@ f_setline(argvars, retvar)
 	if (u_savesub(lnum) == OK && ml_replace(lnum, line, TRUE) == OK)
 	{
 	    changed();
+	    changed_cline_bef_curs();
+	    approximate_botline();	/* w_botline might have changed */
+	    check_cursor_col();
 #ifdef SYNTAX_HL
 	    /* recompute syntax hl. for this line */
 	    syn_changed(lnum);
@@ -2595,7 +3575,7 @@ f_setline(argvars, retvar)
 
 #ifdef HAVE_STRFTIME
 /*
- * "strftime()" function
+ * "strftime({format}[, {time}])" function
  */
     static void
 f_strftime(argvars, retvar)
@@ -2608,7 +3588,10 @@ f_strftime(argvars, retvar)
     char_u	*p;
 
     p = get_var_string(&argvars[0]);
-    seconds = time(NULL);
+    if (argvars[1].var_type == VAR_UNKNOWN)
+	seconds = time(NULL);
+    else
+	seconds = (time_t)get_var_number(&argvars[1]);
     curtime = localtime(&seconds);
     (void)strftime((char *)result_buf, (size_t)80, (char *)p, curtime);
 
@@ -2663,6 +3646,18 @@ f_strpart(argvars, retvar)
 
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = vim_strnsave(p + n, len);
+}
+
+/*
+ * "strtrans()" function
+ */
+    static void
+f_strtrans(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = transstr(get_var_string(&argvars[0]));
 }
 
 /*
@@ -2801,6 +3796,51 @@ f_synIDtrans(argvars, retvar)
 }
 
 /*
+ * "system()" function
+ */
+    static void
+f_system(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*p;
+
+    p = get_cmd_output(get_var_string(&argvars[0]));
+#ifdef USE_CR
+    /* translate <CR> into <NL> */
+    if (p != NULL)
+    {
+	char_u	*s;
+
+	for (s = p; *s; ++s)
+	{
+	    if (*s == CR)
+		*s = NL;
+	}
+    }
+#else
+# ifdef USE_CRNL
+    /* translate <CR><NL> into <NL> */
+    if (p != NULL)
+    {
+	char_u	*s, *d;
+
+	d = p;
+	for (s = p; *s; ++s)
+	{
+	    if (s[0] == CR && s[1] == NL)
+		++s;
+	    *d++ = *s;
+	}
+	*d = NUL;
+    }
+# endif
+#endif
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = p;
+}
+
+/*
  * "substitute()" function
  */
     static void
@@ -2859,6 +3899,23 @@ f_virtcol(argvars, retvar)
     }
 
     retvar->var_val.var_number = vcol;
+}
+
+/*
+ * "visualmode()" function
+ */
+/*ARGSUSED*/
+    static void
+f_visualmode(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	str[2];
+
+    retvar->var_type = VAR_STRING;
+    str[0] = curbuf->b_visual_mode;
+    str[1] = NUL;
+    retvar->var_val.var_string = vim_strsave(str);
 }
 
 /*
@@ -2951,7 +4008,7 @@ var2fpos(varp)
 }
 
 /*
- * Get the lenght of an environment variable name.
+ * Get the length of an environment variable name.
  * Advance "arg" to the first character after the name.
  * Return 0 for error.
  */
@@ -2970,34 +4027,6 @@ get_env_len(arg)
     len = p - *arg;
     *arg = p;
     return len;
-}
-
-/*
- * Get the value of an environment variable.
- * "arg" points to the '$' before the env var name.
- * "arg" is advanced to the first character after the name.
- * Return NULL for failure.
- */
-    char_u *
-get_env_string(arg)
-    char_u	**arg;
-{
-    int	    len;
-    int	    cc;
-    char_u  *name;
-    char_u  *s;
-
-    ++*arg;
-    name = *arg;
-    len = get_env_len(arg);
-    if (len == 0)
-	return NULL;
-    cc = name[len];
-    name[len] = NUL;
-    s = mch_getenv(name);
-    name[len] = cc;
-
-    return s;
 }
 
 /*
@@ -3032,6 +4061,65 @@ eval_isnamec(c)
 }
 
 /*
+ * Find a v: variable.
+ * Return it's index, or -1 if not found.
+ */
+    static int
+find_vim_var(name, len)
+    char_u	*name;
+    int		len;		/* length of "name" */
+{
+    char_u	*vname;
+    int		vlen;
+    int		i;
+
+    /*
+     * Ignore "v:" for old built-in variables, require it for new ones.
+     */
+    if (name[0] == 'v' && name[1] == ':')
+    {
+	vname = name + 2;
+	vlen = len - 2;
+    }
+    else
+    {
+	vname = name;
+	vlen = len;
+    }
+    for (i = 0; i < VV_LEN; ++i)
+	if (vlen == vimvars[i].len && STRCMP(vname, vimvars[i].name) == 0
+			 && ((vimvars[i].flags & VV_COMPAT) || vname != name))
+	    return i;
+    return -1;
+}
+
+/*
+ * Set number v: variable to "val".
+ */
+    void
+set_vim_var_nr(idx, val)
+    int		idx;
+    long	val;
+{
+    vimvars[idx].val = (char_u *)val;
+}
+
+/*
+ * Set string v: variable to a copy of "val".
+ */
+    void
+set_vim_var_string(idx, val)
+    int		idx;
+    char_u	*val;
+{
+    vim_free(vimvars[idx].val);
+    if (val == NULL)
+	vimvars[idx].val = NULL;
+    else
+	vimvars[idx].val = vim_strsave(val);
+}
+
+/*
  * Get the value of internal variable "name".
  * Return OK or FAIL.
  */
@@ -3047,27 +4135,21 @@ get_var_var(name, len, retvar)
     char_u	*string = NULL;
     VAR		v;
     int		cc;
+    int		i;
 
+    /* truncate the name, so that we can use strcmp() */
     cc = name[len];
     name[len] = NUL;
 
     /*
-     * Check for built-in variables.
+     * Check for built-in v: variables.
      */
-    if (len == 7 && STRCMP(name, "version") == 0)
+    i = find_vim_var(name, len);
+    if (i >= 0)
     {
-	type = VAR_NUMBER;
-	number = get_version();
-    }
-    else if (len == 5 && STRCMP(name, "count") == 0)
-    {
-	type = VAR_NUMBER;
-	number = global_opnum;
-    }
-    else if (len == 11 && STRCMP(name, "shell_error") == 0)
-    {
-	type = VAR_NUMBER;
-	number = call_shell_retval;
+	type = vimvars[i].type;
+	number = (long)vimvars[i].val;
+	string = vimvars[i].val;
     }
 
     /*
@@ -3095,7 +4177,7 @@ get_var_var(name, len, retvar)
 	retvar->var_type = type;
 	if (type == VAR_NUMBER)
 	    retvar->var_val.var_number = number;
-	else
+	else if (type == VAR_STRING)
 	{
 	    if (string != NULL)
 		string = vim_strsave(string);
@@ -3186,7 +4268,7 @@ get_var_number(varp)
 
     if (varp->var_type == VAR_NUMBER)
 	return (long)(varp->var_val.var_number);
-    else if (varp->var_val.var_string == NULL)
+    else if (varp->var_type == VAR_UNKNOWN || varp->var_val.var_string == NULL)
 	return 0L;
     else
     {
@@ -3241,9 +4323,14 @@ find_var(name, writing)
     char_u		*varname;
     struct growarray	*gap;
 
-    /* When not writing, check for function arguments "a:" */
-    if (!writing && name[0] == 'a' && name[1] == ':')
+    /* Check for function arguments "a:" */
+    if (name[0] == 'a' && name[1] == ':')
     {
+	if (writing)
+	{
+	    EMSG2(e_readonlyvar, name);
+	    return NULL;
+	}
 	name += 2;
 	if (current_funccal == NULL)
 	    return NULL;
@@ -3352,7 +4439,8 @@ list_one_var(v, prefix)
     char_u  *prefix;
 {
     msg(prefix);
-    msg_puts(v->var_name);
+    if (v->var_name != NULL)	/* "a:" vars don't have a name stored */
+	msg_puts(v->var_name);
     msg_putchar(' ');
     msg_advance(22);
     if (v->var_type == VAR_NUMBER)
@@ -3377,6 +4465,27 @@ set_var(name, varp)
     char_u		*varname;
     struct growarray	*gap;
 
+    /*
+     * Handle setting internal v: variables.
+     */
+    i = find_vim_var(name, (int)STRLEN(name));
+    if (i >= 0)
+    {
+	if (vimvars[i].flags & VV_RO)
+	    EMSG2(e_readonlyvar, name);
+	else
+	{
+	    if (vimvars[i].type == VAR_STRING)
+	    {
+		vim_free(vimvars[i].val);
+		vimvars[i].val = vim_strsave(get_var_string(varp));
+	    }
+	    else
+		vimvars[i].val = (char_u *)varp->var_val.var_number;
+	}
+	return;
+    }
+
     v = find_var(name, TRUE);
     if (v != NULL)	    /* existing variable, only need to free string */
     {
@@ -3393,7 +4502,7 @@ set_var(name, varp)
 	for (i = gap->ga_len; --i >= 0; )
 	    if (VAR_GAP_ENTRY(i, gap).var_name == NULL)
 		break;
-	if (i < 0)	    /* need to allocated more room */
+	if (i < 0)	    /* need to allocate more room */
 	{
 	    if (ga_grow(gap, 1) == FAIL)
 		return;
@@ -3437,17 +4546,21 @@ do_echo(eap, echo)
 	++emsg_off;
     else if (echo)
 	msg_start();
-    while (*arg != NUL && *arg != '|' && *arg != '\n')
+    while (*arg != NUL && *arg != '|' && *arg != '\n' && !got_int)
     {
-	if (eval1(&arg, &retvar) == FAIL)
+	p = arg;
+	if (eval1(&arg, &retvar, !eap->skip) == FAIL)
+	{
+	    EMSG2(e_invexpr2, p);
 	    break;
+	}
 	if (!eap->skip)
 	{
 	    if (atstart)
 		atstart = FALSE;
 	    else if (echo)
 		msg_puts_attr((char_u *)" ", echo_attr);
-	    for (p = get_var_string(&retvar); *p != NUL; ++p)
+	    for (p = get_var_string(&retvar); *p != NUL && !got_int; ++p)
 		if (*p == '\n' || *p == '\r' || *p == TAB)
 		{
 		    if (*p != TAB && needclr)
@@ -3517,8 +4630,10 @@ do_execute(eap, getline, cookie)
 	++emsg_off;
     while (*arg != NUL && *arg != '|' && *arg != '\n')
     {
-	if (eval1(&arg, &retvar) == FAIL)
+	p = arg;
+	if (eval1(&arg, &retvar, !eap->skip) == FAIL)
 	{
+	    EMSG2(e_invexpr2, p);
 	    ret = FAIL;
 	    break;
 	}
@@ -3591,6 +4706,7 @@ do_function(eap, getline, cookie)
     int		mustend = FALSE;
     int		flags = 0;
     struct ufunc *fp;
+    int		indent;
 
     /*
      * ":function" without argument: list functions.
@@ -3720,7 +4836,7 @@ do_function(eap, getline, cookie)
 	    break;
     }
 
-    if (*p != NUL && *p != '\"' && *p != '\n')
+    if (*p != NUL && *p != '"' && *p != '\n')
     {
 	EMSG(e_trailing);
 	goto erret;
@@ -3734,14 +4850,15 @@ do_function(eap, getline, cookie)
 	msg_putchar('\n');	    /* don't overwrite the function name */
 	cmdline_row = msg_row;
     }
+    indent = 2;
     for (;;)
     {
 	msg_scroll = TRUE;
 	need_wait_return = FALSE;
 	if (getline == NULL)
-	    theline = getcmdline(':', 0L, 2);
+	    theline = getcmdline(':', 0L, indent);
 	else
-	    theline = getline(':', cookie, 2);
+	    theline = getline(':', cookie, indent);
 	lines_left = Rows - 1;
 	if (theline == NULL)
 	    goto erret;
@@ -3753,6 +4870,10 @@ do_function(eap, getline, cookie)
 	    vim_free(theline);
 	    break;
 	}
+	if (indent > 2 && STRNCMP(p, "end", 3) == 0)
+	    indent -= 2;
+	else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
+	    indent += 2;
 	if (ga_grow(&newlines, 1) == FAIL)
 	    goto erret;
 	((char_u **)(newlines.ga_data))[newlines.ga_len] = theline;
@@ -3773,6 +4894,11 @@ do_function(eap, getline, cookie)
 	if (!eap->forceit)
 	{
 	    EMSG2("Function %s already exists, use ! to replace", name);
+	    goto erret;
+	}
+	if (fp->calls)
+	{
+	    EMSG2("Cannot redefine function %s: It is in use", name);
 	    goto erret;
 	}
 	/* redefine existing function */
@@ -3799,6 +4925,7 @@ do_function(eap, getline, cookie)
     fp->lines = newlines;
     fp->varargs = varargs;
     fp->flags = flags;
+    fp->calls = 0;
     return;
 
 erret:
@@ -3834,8 +4961,8 @@ list_func_head(fp)
 }
 
 /*
- * Find a function by name, return its index in ufuncs.
- * Return -1 for unknown function.
+ * Find a function by name, return pointer to it in ufuncs.
+ * Return NULL for unknown function.
  */
     static struct ufunc *
 find_func(name)
@@ -3848,6 +4975,32 @@ find_func(name)
 	    break;
     return fp;
 }
+
+#ifdef CMDLINE_COMPL
+
+/*
+ * Function given to ExpandGeneric() to obtain the list of user defined
+ * function names.
+ */
+    char_u *
+get_user_func_name(idx)
+    int	    idx;
+{
+    static struct ufunc *fp = NULL;
+    char_u		*name;
+
+    if (idx == 0)
+	fp = firstfunc;
+    if (fp != NULL)
+    {
+	name = fp->name;
+	fp = fp->next;
+	return name;
+    }
+    return NULL;
+}
+
+#endif /* CMDLINE_COMPL */
 
 /*
  * Handle ":delfunction {name}".
@@ -3864,6 +5017,11 @@ do_delfunction(arg)
 	EMSG2("Undefined function: %s", arg);
 	return;
     }
+    if (fp->calls)
+    {
+	EMSG2("Cannot delete function %s: It is in use", arg);
+	return;
+    }
 
     /* clear this function */
     vim_free(fp->name);
@@ -3874,12 +5032,15 @@ do_delfunction(arg)
     if (firstfunc == fp)
 	firstfunc = fp->next;
     else
+    {
 	for (pfp = firstfunc; pfp != NULL; pfp = pfp->next)
 	    if (pfp->next == fp)
 	    {
 		pfp->next = fp->next;
 		break;
 	    }
+    }
+    vim_free(fp);
 }
 
 /*
@@ -3895,6 +5056,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     linenr_t	lastline;	/* last line of range */
 {
     char_u		*save_sourcing_name;
+    linenr_t		save_sourcing_lnum;
     int			save_redrawing = RedrawingDisabled;
     struct funccall	fc;
     struct funccall	*save_fcp = current_funccal;
@@ -3935,6 +5097,8 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     /* Don't redraw while executing the function. */
     RedrawingDisabled = TRUE;
     save_sourcing_name = sourcing_name;
+    save_sourcing_lnum = sourcing_lnum;
+    sourcing_lnum = 0;
     sourcing_name = alloc((unsigned)((save_sourcing_name == NULL ? 0
 		: STRLEN(save_sourcing_name)) + STRLEN(fp->name) + 10));
     if (sourcing_name != NULL)
@@ -3956,9 +5120,10 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     RedrawingDisabled = save_redrawing;
     vim_free(sourcing_name);
     sourcing_name = save_sourcing_name;
+    sourcing_lnum = save_sourcing_lnum;
 
     /* when the function was aborted because of an error, return -1 */
-    if (did_emsg && (fp->flags & FC_ABORT))
+    if ((did_emsg && (fp->flags & FC_ABORT)) || retvar->var_type == VAR_UNKNOWN)
     {
 	clear_var(retvar);
 	retvar->var_type = VAR_NUMBER;
@@ -4001,6 +5166,7 @@ do_return(eap)
 {
     char_u	*arg = eap->arg;
     var		retvar;
+    char_u	*p;
 
     if (current_funccal == NULL)
     {
@@ -4015,7 +5181,8 @@ do_return(eap)
 
     if (*arg != NUL && *arg != '|' && *arg != '\n')
     {
-	if (eval1(&arg, &retvar) != FAIL)
+	p = arg;
+	if (eval1(&arg, &retvar, !eap->skip) != FAIL)
 	{
 	    if (!eap->skip)
 	    {
@@ -4025,6 +5192,8 @@ do_return(eap)
 	    else
 		clear_var(&retvar);
 	}
+	else
+	    EMSG2(e_invexpr2, p);
     }
 
     /* when skipping, advance to the next command in this line.  When not
@@ -4098,9 +5267,146 @@ func_has_abort(cookie)
 {
     return ((struct funccall *)cookie)->func->flags & FC_ABORT;
 }
+
+#ifdef VIMINFO
+/*
+ * Restore global vars that start with a capital from the viminfo file
+ */
+    int
+read_viminfo_varlist(line, fp, writing)
+    char_u	*line;
+    FILE	*fp;
+    int		writing;
+{
+    char_u	*tab;
+    int		is_string = FALSE;
+    VAR		varp;
+
+    if (!writing && (find_viminfo_parameter('!') != NULL))
+    {
+	tab = vim_strchr(line + 1, '\t');
+	if (tab != NULL)
+	{
+	    *tab++ = '\0';
+	    if (*tab == 'S') /*string var*/
+		is_string = TRUE;
+
+	    tab = vim_strchr(tab, '\t');
+	    if (tab != NULL)
+	    {
+		/* set variable */
+		if (is_string)
+		{
+		    viminfo_readstring(tab + 1);
+		    set_internal_string_var(line + 1, tab + 1);
+		}
+		else
+		{
+		    varp = alloc_var();
+		    if (varp != NULL)
+		    {
+			varp->var_type = VAR_NUMBER;
+			varp->var_val.var_number = atol((char *)tab);
+			set_var(line + 1, varp);
+			free_var(varp);
+		    }
+		}
+	    }
+	}
+    }
+
+    return vim_fgets(line, LSIZE, fp);
+}
+
+typedef enum
+{
+    VAR_FLAVOUR_DEFAULT,
+    VAR_FLAVOUR_SESSION,
+    VAR_FLAVOUR_VIMINFO
+} VAR_FLAVOUR;
+
+static VAR_FLAVOUR var_flavour __ARGS((char_u *varname));
+
+    static VAR_FLAVOUR
+var_flavour(varname)
+    char_u *varname;
+{
+    char_u *p = varname;
+
+    if (isupper(*p))
+    {
+	while (*(++p))
+	    if (islower(*p))
+		return VAR_FLAVOUR_SESSION;
+	return VAR_FLAVOUR_VIMINFO;
+    }
+    else
+	return VAR_FLAVOUR_DEFAULT;
+}
+
+/*
+ * Write global vars that start with a capital to the viminfo file
+ */
+    void
+write_viminfo_varlist(fp)
+    FILE    *fp;
+{
+    struct growarray	*gap = &variables;		/* global variable */
+    VAR			this_var;
+    int			i;
+
+    if (find_viminfo_parameter('!') == NULL)
+	return;
+
+    fprintf(fp, "\n# global variables:\n");
+    for (i = gap->ga_len; --i >= 0; )
+    {
+	this_var = &VAR_GAP_ENTRY(i, gap);
+	if (this_var->var_name != NULL
+		&& var_flavour(this_var->var_name) == VAR_FLAVOUR_VIMINFO)
+	{
+	    fprintf(fp, "!%s\t%s\t", this_var->var_name,
+			  (this_var->var_type == VAR_STRING) ? "STR" : "NUM");
+	    viminfo_writestring(fp, get_var_string(this_var));
+	}
+    }
+}
+#endif
+
+#ifdef MKSESSION
+    int
+store_session_globals(fd)
+    FILE	*fd;
+{
+    struct growarray	*gap = &variables;		/* global variable */
+    VAR			this_var;
+    int			i;
+
+    for (i = gap->ga_len; --i >= 0; )
+    {
+	this_var = &VAR_GAP_ENTRY(i, gap);
+	if (this_var->var_name != NULL)
+	{
+	    if (var_flavour(this_var->var_name) == VAR_FLAVOUR_SESSION)
+	    {
+		if ((fprintf(fd, "let %s = %c%s%c",
+			    this_var->var_name,
+			    (this_var->var_type == VAR_STRING) ? '"' : ' ',
+			    get_var_string(this_var),
+			    (this_var->var_type == VAR_STRING) ? '"' : ' ') < 0)
+			    || put_eol(fd) == FAIL)
+		    return FAIL;
+	    }
+
+	}
+    }
+    return OK;
+}
+#endif
+
 #endif /* WANT_EVAL */
 
-#if defined(WANT_MODIFY_FNAME) || defined(WANT_EVAL)
+#if defined(WANT_MODIFY_FNAME) || defined(WANT_EVAL) || defined(PROTO)
 
 /*
  * Adjust a filename, according to a string of modifiers.
@@ -4121,6 +5427,7 @@ modify_fname(src, usedlen, fnamep, bufp, fnamelen)
     char_u	*tail;
     char_u	*s, *p;
     char_u	dirname[MAXPATHL];
+    int		c;
 
 repeat:
     /* ":p" - full path/file_name */
@@ -4136,47 +5443,46 @@ repeat:
     }
 
     /* ":." - path relative to the current directory */
-    if (src[*usedlen] == ':' && src[*usedlen + 1] == '.')
-    {
-	*usedlen += 2;
-	/* Need full path first (use force to remove a "~/") */
-	p = FullName_save(*fnamep, **fnamep == '~');
-	if (p != NULL)
-	{
-	    mch_dirname(dirname, MAXPATHL);
-	    s = shorten_fname(p, dirname);
-	    if (s != NULL)
-	    {
-		*fnamep = s;
-		vim_free(*bufp);	/* free any allocated file name */
-		*bufp = p;
-	    }
-	    else
-		vim_free(p);
-	}
-    }
-
     /* ":~" - path relative to the home directory */
-    if (src[*usedlen] == ':' && src[*usedlen + 1] == '~')
+    while (src[*usedlen] == ':' && ((c = src[*usedlen + 1]) == '.' || c == '~'))
     {
 	*usedlen += 2;
-	/* Need full path first */
-	p = FullName_save(*fnamep, FALSE);
+	/* Need full path first (use expand_env() to remove a "~/") */
+	if (c == '.' && **fnamep == '~')
+	    p = expand_env_save(*fnamep);
+	else
+	    p = FullName_save(*fnamep, FALSE);
 	if (p != NULL)
 	{
-	    home_replace(NULL, p, dirname, MAXPATHL, TRUE);
-	    /* Only replace it when it starts with '~' */
-	    if (*dirname == '~')
+	    if (c == '.')
 	    {
-		s = vim_strsave(dirname);
+		mch_dirname(dirname, MAXPATHL);
+		s = shorten_fname(p, dirname);
 		if (s != NULL)
 		{
 		    *fnamep = s;
-		    vim_free(*bufp);
-		    *bufp = s;
+		    vim_free(*bufp);	/* free any allocated file name */
+		    *bufp = p;
 		}
+		else
+		    vim_free(p);
 	    }
-	    vim_free(p);
+	    else
+	    {
+		home_replace(NULL, p, dirname, MAXPATHL, TRUE);
+		/* Only replace it when it starts with '~' */
+		if (*dirname == '~')
+		{
+		    s = vim_strsave(dirname);
+		    if (s != NULL)
+		    {
+			*fnamep = s;
+			vim_free(*bufp);
+			*bufp = s;
+		    }
+		}
+		vim_free(p);
+	    }
 	}
     }
 
@@ -4324,6 +5630,11 @@ do_string_sub(str, pat, sub, flags)
     char_u		*tail;
     struct growarray	ga;
     char_u		*ret;
+    char_u		*save_cpo;
+
+    /* Make 'cpoptions' empty, so that the 'l' flag doesn't work here */
+    save_cpo = p_cpo;
+    p_cpo = (char_u *)"";
 
     ga_init2(&ga, 1, 200);
 
@@ -4384,6 +5695,8 @@ do_string_sub(str, pat, sub, flags)
 
     ret = vim_strsave(ga.ga_data == NULL ? str : (char_u *)ga.ga_data);
     ga_clear(&ga);
+    p_cpo = save_cpo;
+
     return ret;
 }
 

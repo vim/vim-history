@@ -1,31 +1,36 @@
 /*****************************************************************************
-*   $Id: read.c,v 6.6 1998/08/01 05:16:20 darren Exp $
+*   $Id: read.c,v 8.1 1999/03/04 04:16:38 darren Exp $
 *
-*   Copyright (c) 1996-1998, Darren Hiebert
+*   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
 *
-*   This module contains low level source and tag file read functions (line
-*   splicing and newline conversion for source files are performed at this
-*   level).
+*   This module contains low level source and tag file read functions (newline
+*   conversion for source files are performed at this level).
 *****************************************************************************/
 
 /*============================================================================
 =   Include files
 ============================================================================*/
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
-#include <limits.h>		/* to define INT_MAX or MAXINT */
+#include "general.h"
+
+#include <string.h>
 
 #include "ctags.h"
+#define FILE_WRITE
+#include "read.h"
+
+#include "entry.h"
+#include "main.h"
+#include "options.h"
+#include "debug.h"
 
 /*============================================================================
 =   Data declarations
 ============================================================================*/
 
-typedef struct _langTab {
+typedef struct sLangTab {
     const char *extension;
     langType language;
 } langTab;
@@ -34,88 +39,75 @@ typedef struct _langTab {
 =   Data definitions
 ============================================================================*/
 
-sourceFile File = { NULL, NULL, 0L, -1L, '\0', FALSE, FALSE, LANG_IGNORE };
+inputFile File;			/* globally read through macros */
+
+static fpos_t StartOfLine;	/* holds deferred position of start of line */
 
 /*============================================================================
 =   Function prototypes
 ============================================================================*/
+static void setInputFileName __ARGS((const char *const fileName));
+static void setSourceFileParameters __ARGS((vString *const fileName));
 static void fileNewline __ARGS((void));
-static boolean resizeLineBuffer __ARGS((lineBuf *const pLine));
 
 /*============================================================================
 =   Function definitions
 ============================================================================*/
 
+extern void freeSourceFileResources()
+{
+    vStringDelete(File.name);
+    vStringDelete(File.path);
+    vStringDelete(File.source.name);
+}
+
 /*----------------------------------------------------------------------------
  *	Generic line reading with automatic buffer sizing
  *--------------------------------------------------------------------------*/
 
-extern void freeLineBuffer( pLine )
-    lineBuf *const pLine;
-{
-    if (pLine->buffer != NULL)
-	free(pLine->buffer);
-    pLine->buffer = NULL;
-    pLine->size = 0;
-}
-
-static boolean resizeLineBuffer( pLine )
-    lineBuf *const pLine;
-{
-    boolean ok = FALSE;
-
-    if (pLine->size <= INT_MAX / 2)
-    {
-	const int newSize = pLine->size * 2;
-	char *const newBuffer = (char *)realloc(pLine->buffer,(size_t)newSize);
-
-	if (newBuffer != NULL)
-	{
-	    pLine->size = newSize;
-	    pLine->buffer = newBuffer;
-	    ok = TRUE;
-	}
-    }
-    return ok;
-}
-
-/*  Read a newline terminated line from 'fp' and if it overflows the buffer
- *  specified by 'pLine', increase the buffer. The buffer never shrinks. The
- *  size of the buffer will always be the longest line encountered so far.
- */
-extern char *readLine( pLine, fp )
-    lineBuf *const pLine;
+extern char *readLine( vLine, fp )
+    vString *const vLine;
     FILE *const fp;
 {
     char *line = NULL;
 
-    if (fp != NULL)		/* to free memory allocated to buffer */
+    vStringClear(vLine);
+    if (fp == NULL)		/* to free memory allocated to buffer */
+	error(FATAL, "NULL file pointer");
+    else
     {
 	boolean reReadLine;
 
-	if (pLine->buffer == NULL)	/* if buffer not yet allocated... */
-	{
-	    pLine->size = 32;
-	    pLine->buffer = (char *)malloc((size_t)pLine->size);
-	}
 	/*  If reading the line places any character other than a null or a
 	 *  newline at the last character position in the buffer (one less
 	 *  than the buffer size), then we must resize the buffer and
 	 *  reattempt to read the line.
 	 */
-	if (pLine->buffer != NULL) do 
+	do
 	{
-	    const long startOfLine = ftell(fp);
-	    char *const pLastChar = pLine->buffer + pLine->size - 2;
+	    char *const pLastChar = vStringValue(vLine) + vStringSize(vLine) -2;
+	    fpos_t startOfLine;
 
+	    fgetpos(fp, &startOfLine);
 	    reReadLine = FALSE;
 	    *pLastChar = '\0';
-	    line = fgets(pLine->buffer, pLine->size, fp);
-	    if (*pLastChar != '\0'  &&  *pLastChar != '\n')	/* overflow */
+	    line = fgets(vStringValue(vLine), (int)vStringSize(vLine), fp);
+	    if (line == NULL)
 	    {
-		if ((reReadLine = resizeLineBuffer(pLine)))
-		    fseek(fp, startOfLine, SEEK_SET);
+		if (! feof(fp))
+		    error(FATAL | PERROR, "Failure on attempt to read file");
 	    }
+	    else if (*pLastChar != '\0'  &&  *pLastChar != '\n')
+	    {
+		/*  buffer overflow */
+		reReadLine = vStringAutoResize(vLine);
+		if (reReadLine)
+		    fsetpos(fp, &startOfLine);
+		else
+		    error(FATAL | PERROR, "input line too big; out of memory");
+	    }
+	    else
+		vStringSetLength(vLine);
 	} while (reReadLine);
     }
     return line;
@@ -125,14 +117,75 @@ extern char *readLine( pLine, fp )
  *	Source file access functions
  *--------------------------------------------------------------------------*/
 
+static void setInputFileName( fileName )
+    const char *const fileName;
+{
+    const char *const head = fileName;
+    const char *const tail = baseFilename(head);
+
+    if (File.name != NULL)
+	vStringDelete(File.name);
+    File.name = vStringNewInit(fileName);
+
+    if (File.path != NULL)
+	vStringDelete(File.path);
+
+    if (tail == head)
+	File.path = NULL;
+    else
+    {
+	const size_t length = tail - head - 1;
+	File.path = vStringNew();
+	vStringNCopyS(File.path, fileName, length);
+    }
+}
+
+static void setSourceFileParameters( fileName )
+    vString *const fileName;
+{
+    if (File.source.name != NULL)
+	vStringDelete(File.source.name);
+    File.source.name = fileName;
+
+    if (vStringLength(fileName) > TagFile.max.file)
+	TagFile.max.file = vStringLength(fileName);
+
+    File.source.isHeader = isFileHeader(vStringValue(fileName));
+    File.source.language = getFileLanguage(vStringValue(fileName));
+}
+
+extern void setSourceFileName( fileName )
+    vString *const fileName;
+{
+    vString *pathName;
+
+    if (isAbsolutePath(vStringValue(fileName)) || File.path == NULL)
+	pathName = fileName;
+    else
+	pathName = combinePathAndFile(vStringValue(File.path),
+				      vStringValue(fileName));
+
+    setSourceFileParameters(pathName);
+}
+
+extern void setSourceFileLine( lineNumber )
+    const unsigned long lineNumber;
+{
+    File.source.lineNumber = lineNumber;
+}
+
 /*  This function opens a source file, and resets the line counter.  If it
  *  fails, it will display an error message and leave the File.fp set to NULL.
  */
-extern boolean fileOpen( fileName, language, isHeader )
+extern boolean fileOpen( fileName, language )
     const char *const fileName;
     const langType language;
-    const boolean isHeader;
 {
+#ifdef __vms
+    const char *const openMode = "r";
+#else
+    const char *const openMode = "rb";
+#endif
     boolean opened = FALSE;
 
     /*	If another file was already open, then close it.
@@ -143,26 +196,31 @@ extern boolean fileOpen( fileName, language, isHeader )
 	File.fp = NULL;
     }
 
-    File.fp = fopen(fileName, "rb");  /* must be binary mode for fseek() */
+    File.fp = fopen(fileName, openMode);
     if (File.fp == NULL)
 	error(WARNING | PERROR, "cannot open \"%s\"", fileName);
     else
     {
 	opened = TRUE;
 
-	File.name	= fileName;
-	File.lineNumber = 0L;
-	File.seek	= 0L;
-	File.afterNL    = TRUE;
+	setInputFileName(fileName);
+	fgetpos(File.fp, &StartOfLine);
+	fgetpos(File.fp, &File.filePosition);
+	File.lineNumber   = 0L;
+	File.newLine      = TRUE;
+	File.language     = language;
 
-	if (strlen(fileName) > TagFile.max.file)
-	    TagFile.max.file = strlen(fileName);
+	setSourceFileParameters(vStringNewInit(fileName));
+	File.source.lineNumber = 0L;
 
-	/*	Determine whether this is a header File.
-	    */
-	File.isHeader = isHeader;
-	File.language = language;
-	DebugStatement( debugOpen(fileName, File.isHeader, File.language); )
+	if (Option.verbose)
+	{
+	    const char *name = getLanguageName(language);
+
+	    printf("OPENING %s as %c%s language %sfile\n", fileName,
+		   toupper((int)name[0]), name + 1,
+		   File.source.isHeader ? "include " : "");
+	}
     }
     return opened;
 }
@@ -175,7 +233,8 @@ extern void fileClose()
 	 *  and is incremented upon each newline.
 	 */
 	if (Option.printTotals)
-	    addTotals(0, File.lineNumber - 1L, getFileSize(File.name));
+	    addTotals(0, File.lineNumber - 1L,
+		      getFileSize(vStringValue(File.name)));
 
 	fclose(File.fp);
 	File.fp = NULL;
@@ -186,22 +245,24 @@ extern void fileClose()
  */
 static void fileNewline()
 {
-    File.afterNL = FALSE;
-    File.seek	 = ftell(File.fp);
-    ++File.lineNumber;
+    File.filePosition = StartOfLine;
+    File.newLine = FALSE;
+    File.lineNumber++;
+    File.source.lineNumber++;
     DebugStatement( if (Option.breakLine == File.lineNumber) lineBreak(); )
+    DebugStatement( debugPrintf(DEBUG_RAW, "%6d: ", File.lineNumber); )
 }
 
-/*  This function reads a single character from the stream. 
+/*  This function reads a single character from the stream, performing newline
+ *  canonicalization.
  */
 extern int fileGetc()
 {
-    boolean escaped = FALSE;
     int	c;
 
     /*	If there is an ungotten character, then return it.  Don't do any
      *	other processing on it, though, because we already did that the
-     *	first time it was read.
+     *	first time it was read through fileGetc().
      */
     if (File.ungetch != '\0')
     {
@@ -210,63 +271,33 @@ extern int fileGetc()
 	return c;	    /* return here to avoid re-calling debugPutc() */
     }
 
-nextChar:	/* not structured, but faster for this critical path */
+    c = getc(File.fp);
 
     /*	If previous character was a newline, then we're starting a line.
      */
-    if (File.afterNL)
+    if (File.newLine  &&  c != EOF)
 	fileNewline();
 
-    c = getc(File.fp);
-    switch (c)
+    if (c == NEWLINE)
     {
-    default:
-	if (escaped)
-	{
-	    ungetc(c, File.fp);		/* return character after BACKSLASH */
-	    c = BACKSLASH;
-	}
-	break;
-
-    case BACKSLASH:				/* test for line splicing */
-	if (escaped)
-	    ungetc(c, File.fp);			/* push back one just read */
-	else
-	{
-	    escaped = TRUE;		/* defer test until next character */
-	    goto nextChar;
-	}
-	break;
-
-    /*	The following cases turn line breaks into a canonical form. The three
-     *	commonly used forms if line breaks: LF (UNIX), CR (MacIntosh), and
-     *	CR-LF (MS-DOS) are converted into a generic newline.
-     */
-    case CRETURN:
-	{
-	    const int next = getc(File.fp);	/* is CR followed by LF? */
-
-	    /*	If this is a carriage-return/line-feed pair, treat it as one
-	     *	newline, throwing away the line-feed.
-	     */
-	    if (next != NEWLINE)
-		ungetc(next, File.fp);
-	}
-	c = NEWLINE;				/* convert CR into newline */
-    case NEWLINE:
-	File.afterNL = TRUE;
-	if (escaped)				/* check for line splicing */
-	{
-	    DebugStatement(
-		debugPutc(BACKSLASH, DEBUG_RAW);     /* print the characters */
-		debugPutc(c, DEBUG_RAW);	     /*  we're throwing away */
-	    )
-	    escaped = FALSE;		    /* BACKSLASH now fully processed */
-	    goto nextChar;		    /* through away "\NEWLINE" */
-	}
-	break;
+	File.newLine = TRUE;
+	fgetpos(File.fp, &StartOfLine);
     }
+    else if (c == CRETURN)
+    {
+	/*  Turn line breaks into a canonical form. The three commonly
+	 *  used forms if line breaks: LF (UNIX), CR (MacIntosh), and
+	 *  CR-LF (MS-DOS) are converted into a generic newline.
+	 */
+	const int next = getc(File.fp);		/* is CR followed by LF? */
 
+	if (next != NEWLINE)
+	    ungetc(next, File.fp);
+
+	c = NEWLINE;				/* convert CR into newline */
+	File.newLine = TRUE;
+	fgetpos(File.fp, &StartOfLine);
+    }
     DebugStatement( debugPutc(c, DEBUG_RAW); )
     return c;
 }
@@ -280,16 +311,22 @@ extern void fileUngetc( c )
 /*  Places into the line buffer the contents of the line referenced by
  *  "location".
  */
-extern char *getSourceLine( pLine, location )
-    lineBuf *const pLine;
-    const long location;
+extern char *readSourceLine( vLine, pLocation, pSeekValue )
+    vString *const vLine;
+    const fpos_t *const pLocation;
+    long *const pSeekValue;
 {
-    const long orignalPosition = ftell(File.fp);
+    fpos_t orignalPosition;
     char *line;
 
-    fseek(File.fp, location, SEEK_SET);
-    line = readLine(pLine, File.fp);	
-    fseek(File.fp, orignalPosition, SEEK_SET);
+    fgetpos(File.fp, &orignalPosition);
+    fsetpos(File.fp, pLocation);
+    if (pSeekValue != NULL)
+	*pSeekValue = ftell(File.fp);
+    line = readLine(vLine, File.fp);
+    if (line == NULL)
+	error(FATAL, "Unexpected end of file: %s", File.name);
+    fsetpos(File.fp, &orignalPosition);
 
     return line;
 }

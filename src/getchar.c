@@ -194,13 +194,25 @@ get_recorded()
 
     p = get_bufcont(&recordbuff, TRUE);
     free_buff(&recordbuff);
+
     /*
      * Remove the characters that were added the last time, these must be the
      * (possibly mapped) characters that stopped recording.
      */
     len = STRLEN(p);
     if ((int)len >= last_recorded_len)
-	p[len - last_recorded_len] = NUL;
+    {
+	len -= last_recorded_len;
+	p[len] = NUL;
+    }
+
+    /*
+     * When stopping recording from Insert mode with CTRL-O q, also remove the
+     * CTRL-O.
+     */
+    if (len > 0 && restart_edit && p[len - 1] == Ctrl('O'))
+	p[len - 1] = NUL;
+
     return (p);
 }
 
@@ -635,12 +647,6 @@ start_redo_ins()
 }
 
     void
-set_redo_ins()
-{
-    block_redo = TRUE;
-}
-
-    void
 stop_redo_ins()
 {
     block_redo = FALSE;
@@ -942,7 +948,9 @@ save_typebuf()
 openscript(name)
     char_u *name;
 {
-    int oldcurscript;
+    int		oldcurscript;
+    OPARG	oa;
+    int		save_State;
 
     if (curscript + 1 == NSCRIPT)
     {
@@ -950,11 +958,11 @@ openscript(name)
 	return FAIL;
     }
 
-    if (scriptin[curscript] != NULL)    /* already reading script */
+    if (scriptin[curscript] != NULL)	/* already reading script */
 	++curscript;
 				/* use NameBuff for expanded name */
     expand_env(name, NameBuff, MAXPATHL);
-    if ((scriptin[curscript] = fopen((char *)NameBuff, READBIN)) == NULL)
+    if ((scriptin[curscript] = mch_fopen((char *)NameBuff, READBIN)) == NULL)
     {
 	emsg2(e_notopen, name);
 	if (curscript)
@@ -970,19 +978,18 @@ openscript(name)
      */
     if (global_busy)
     {
-	OPARG	oa;
-
 	clear_oparg(&oa);
+	save_State = State;
 	State = NORMAL;
 	oldcurscript = curscript;
 	do
 	{
-	    adjust_cursor();    /* put cursor on an existing line */
+	    adjust_cursor();	/* put cursor on an existing line */
 	    normal_cmd(&oa, FALSE);
-	    vpeekc();	    /* check for end of file */
+	    vpeekc();		/* check for end of file */
 	}
 	while (scriptin[oldcurscript] != NULL);
-	State = CMDLINE;
+	State = save_State;
     }
 
     return OK;
@@ -1009,6 +1016,17 @@ closescript()
     if (curscript)
 	--curscript;
 }
+
+#if defined(INSERT_EXPAND) || defined(PROTO)
+/*
+ * Return TRUE when reading keys from a script file.
+ */
+    int
+using_script()
+{
+    return scriptin[curscript] != NULL;
+}
+#endif
 
 /*
  * updatescipt() is called when a character can be written into the script file
@@ -1072,7 +1090,7 @@ vgetc()
 	    }
 	    c = TO_SPECIAL(c2, c);
 
-#ifdef USE_GUI_WIN32
+#if defined(USE_GUI_WIN32) && defined(WANT_MENU)
 	    /* Handle K_TEAROFF here, the caller of vgetc() doesn't need to
 	     * know that a menu was torn off */
 	    if (c == K_TEAROFF)
@@ -1104,6 +1122,21 @@ vgetc()
 
 	return c;
     }
+}
+
+/*
+ * Like vgetc(), but never return a NUL when called recursively, get a key
+ * directly from the user (ignoring typeahead).
+ */
+    int
+safe_vgetc()
+{
+    int	c;
+
+    c = vgetc();
+    if (c == NUL)
+	c = get_keystroke();
+    return c;
 }
 
     int
@@ -1153,7 +1186,7 @@ vgetorpeek(advance)
     int	    advance;
 {
     int		    c, c1;
-    int		    keylen = 0;		    /* init for gcc */
+    int		    keylen;
     char_u	    *s;
     struct mapblock *mp;
     int		    timedout = FALSE;	    /* waited for more than 1 second
@@ -1163,12 +1196,14 @@ vgetorpeek(advance)
     int		    local_State;
     int		    mlen;
     int		    max_mlen;
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
     int		    i;
     int		    new_wcol, new_wrow;
 #endif
 #ifdef USE_GUI
+# ifdef WANT_MENU
     int		    idx;
+# endif
     int		    shape_changed = FALSE;  /* adjusted cursor shape */
 #endif
     int		    n;
@@ -1246,6 +1281,7 @@ vgetorpeek(advance)
 		    line_breakcheck();
 		else
 		    ui_breakcheck();		/* check for CTRL-C */
+		keylen = 0;
 		if (got_int)
 		{
 		    /* flush all input */
@@ -1308,8 +1344,8 @@ vgetorpeek(advance)
 			     * Only consider an entry if the first character
 			     * matches and it is for the current state.
 			     */
-			    if (mp->m_keys[0] == c1 &&
-						   (mp->m_mode & local_State))
+			    if (mp->m_keys[0] == c1
+						&& (mp->m_mode & local_State))
 			    {
 				/* find the match length of this mapping */
 				for (mlen = 1; mlen < typelen; ++mlen)
@@ -1362,9 +1398,46 @@ vgetorpeek(advance)
 			    }
 			}
 		    }
-		    if (mp == NULL)	    /* no matching mapping found */
+
+		    /* Check for match with 'pastetoggle' */
+		    if (*p_pt != NUL && mp == NULL && (State & (INSERT|NORMAL)))
+		    {
+			for (mlen = 0; mlen < typelen && p_pt[mlen]; ++mlen)
+			    if (p_pt[mlen] != typebuf[typeoff + mlen])
+				    break;
+			if (p_pt[mlen] == NUL)	/* match */
+			{
+			    /* write chars to script file(s) */
+			    if (mlen > typemaplen)
+				gotchars(typebuf + typeoff + typemaplen,
+							   mlen - typemaplen);
+
+			    del_typebuf(mlen, 0); /* remove the chars */
+			    set_option_value((char_u *)"paste",
+							(long)!p_paste, NULL);
+			    if (!(State & INSERT))
+			    {
+				msg_col = 0;
+				msg_row = Rows - 1;
+				msg_clr_eos();		/* clear ruler */
+			    }
+			    showmode();
+			    setcursor();
+			    continue;
+			}
+			/* Need more chars for partly match. */
+			if (mlen == typelen)
+			    keylen = M_NEEDMORET;
+			else if (max_mlen < mlen)
+			    /* no match, may have to check for termcode at
+			     * next character */
+			    max_mlen = mlen + 1;
+		    }
+
+		    if (mp == NULL && keylen != M_NEEDMORET)
 		    {
 			/*
+			 * When no matching mapping found:
 			 * Check if we have a terminal code, when:
 			 *  mapping is allowed,
 			 *  keys have not been mapped,
@@ -1372,12 +1445,12 @@ vgetorpeek(advance)
 			 *	p_ek is on,
 			 *  and when not timed out,
 			 */
-			if ((no_mapping == 0 || allow_keys != 0) &&
-				(typemaplen == 0 ||
-					 (p_remap && !noremapbuf[typeoff])) &&
-				!timedout)
+			if ((no_mapping == 0 || allow_keys != 0)
+				&& (typemaplen == 0
+				    || (p_remap && !noremapbuf[typeoff]))
+				&& !timedout)
 			{
-			    keylen = check_termcode(max_mlen + 1);
+			    keylen = check_termcode(max_mlen + 1, NULL, 0);
 
 			    /*
 			     * When getting a partial match, but the last
@@ -1394,8 +1467,8 @@ vgetorpeek(advance)
 			if (keylen == 0)	/* no matching terminal code */
 			{
 #ifdef AMIGA			/* check for window bounds report */
-			    if (typemaplen == 0 &&
-					    (typebuf[typeoff] & 0xff) == CSI)
+			    if (typemaplen == 0
+					  && (typebuf[typeoff] & 0xff) == CSI)
 			    {
 				for (s = typebuf + typeoff + 1;
 					s < typebuf + typeoff + typelen &&
@@ -1438,9 +1511,9 @@ vgetorpeek(advance)
 			}
 			if (keylen > 0)	    /* full matching terminal code */
 			{
-#ifdef USE_GUI
-			    if (typebuf[typeoff] == K_SPECIAL &&
-					      typebuf[typeoff + 1] == KS_MENU)
+#if defined(USE_GUI) && defined(WANT_MENU)
+			    if (typebuf[typeoff] == K_SPECIAL
+					   && typebuf[typeoff + 1] == KS_MENU)
 			    {
 				/*
 				 * Using a menu may cause a break in undo!
@@ -1449,8 +1522,7 @@ vgetorpeek(advance)
 				 */
 				may_sync_undo();
 				del_typebuf(3, 0);
-				idx = gui_get_menu_index(current_menu,
-								 local_State);
+				idx = get_menu_index(current_menu, local_State);
 				if (idx != MENU_INDEX_INVALID)
 				{
 				    /*
@@ -1478,6 +1550,7 @@ vgetorpeek(advance)
 			/* partial match: get some more characters */
 			keylen = K_NEEDMORET;
 		    }
+
 		    /* complete match */
 		    if (keylen >= 0 && keylen <= typelen)
 		    {
@@ -1545,7 +1618,7 @@ vgetorpeek(advance)
 		 * place does not matter.
 		 */
 		c = 0;
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
 		new_wcol = curwin->w_wcol;
 		new_wrow = curwin->w_wrow;
 #endif
@@ -1620,7 +1693,7 @@ vgetorpeek(advance)
 		    }
 		    setcursor();
 		    out_flush();
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
 		    new_wcol = curwin->w_wcol;
 		    new_wrow = curwin->w_wrow;
 #endif
@@ -1640,7 +1713,7 @@ vgetorpeek(advance)
 /*
  * get a character: 4. from the user
  */
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
 		/*
 		 * If we have a partial match (and are going to wait for more
 		 * input from the user), show the partially matched characters
@@ -1676,7 +1749,7 @@ vgetorpeek(advance)
 					    ? p_ttm
 					    : p_tm)));
 
-#ifdef SHOWCMD
+#ifdef CMDLINE_INFO
 		if (i)
 		    pop_showcmd();
 #endif
@@ -1758,9 +1831,9 @@ vgetorpeek(advance)
 
     int
 inchar(buf, maxlen, wait_time)
-    char_u  *buf;
-    int	    maxlen;
-    long    wait_time;		    /* milli seconds */
+    char_u	*buf;
+    int		maxlen;
+    long	wait_time;	    /* milli seconds */
 {
     int		len = 0;	    /* init for GCC */
     int		retesc = FALSE;	    /* return ESC with gotint */
@@ -1794,6 +1867,8 @@ inchar(buf, maxlen, wait_time)
     {
 	if (got_int || (c = getc(scriptin[curscript])) < 0) /* reached EOF */
 	{
+	    /* Careful: closescript() frees typebuf[] and buf[] may point
+	     * inside typebuf[].  Don't use buf[] after this! */
 	    closescript();
 	    /*
 	     * When reading script file is interrupted, return an ESC to get
@@ -1817,10 +1892,15 @@ inchar(buf, maxlen, wait_time)
 	/*
 	 * If we got an interrupt, skip all previously typed characters and
 	 * return TRUE if quit reading script file.
+	 * Don't use buf[] here, closescript() may have freed typebuf[] and
+	 * buf may be pointing inside typebuf[].
 	 */
 	if (got_int)
 	{
-	    while (ui_inchar(buf, maxlen, 0L))
+#define DUM_LEN MAXMAPLEN * 3 + 3
+	    char_u	dum[DUM_LEN + 1];
+
+	    while (ui_inchar(dum, DUM_LEN, 0L))
 		;
 	    return retesc;
 	}
@@ -1848,7 +1928,7 @@ inchar(buf, maxlen, wait_time)
     {
 #ifdef USE_GUI
 	/* Any character can come after a CSI, don't escape it. */
-	if (buf[0] == CSI && i >= 2)
+	if (gui.in_use && buf[0] == CSI && i >= 2)
 	{
 	    buf += 2;
 	    i   -= 2;
@@ -1901,15 +1981,16 @@ inchar(buf, maxlen, wait_time)
  * Return 0 for success
  *	  1 for invalid arguments
  *	  2 for no match
- *	  3 for ambiguety
+ *	  3 for ambiguity
  *	  4 for out of mem
  */
     int
-do_map(maptype, keys, mode, abbrev)
+do_map(maptype, keys, mode, abbrev, ambig)
     int	    maptype;
     char_u  *keys;
     int	    mode;
     int	    abbrev;		/* not a mapping but an abbreviation */
+    char_u  **ambig;		/* pointer to mapping that caused ambiguity */
 {
     struct mapblock	*mp, **mpp;
     char_u		*arg;
@@ -2103,6 +2184,8 @@ do_map(maptype, keys, mode, abbrev)
 				mpp = &(mp->m_next);
 				continue;
 			    }
+			    if (ambig != NULL)
+				*ambig = p;
 			    retval = 3;
 			    goto theend;
 			}
@@ -2180,7 +2263,7 @@ do_map(maptype, keys, mode, abbrev)
 	goto theend;
     }
 
-#ifdef USE_GUI_WIN32
+#ifdef USE_GUI_MSWIN
     /* If CTRL-C has been mapped, don't use it for Interrupting */
     if (*keys == Ctrl('C'))
 	mapped_ctrl_c = TRUE;
@@ -2398,9 +2481,171 @@ showmap(mp)
     if (*mp->m_str == NUL)
 	msg_puts_attr((char_u *)"<Nop>", hl_attr(HLF_8));
     else
-	msg_outtrans_special(mp->m_str, TRUE);
+	msg_outtrans_special(mp->m_str, FALSE);
     out_flush();			/* show one line at a time */
 }
+
+#ifdef CMDLINE_COMPL
+/*
+ * Used below when expanding mapping/abbreviation names.
+ */
+static int	expand_mapmodes = 0;
+static int	expand_isabbrev = 0;
+
+/*
+ * Work out what to complete when doing command line completion of mapping
+ * or abbreviation names.
+ */
+    char_u *
+set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
+    char_u	*cmd;
+    char_u	*arg;
+    int		forceit;	/* TRUE if '!' given */
+    int		isabbrev;	/* TRUE if abbreviation */
+    int		isunmap;	/* TRUE if unmap/unabbrev command */
+    CMDIDX	cmdidx;
+{
+    if (forceit && cmdidx != CMD_map && cmdidx != CMD_unmap)
+	expand_context = EXPAND_NOTHING;
+    else
+    {
+	if (isunmap)
+	    expand_mapmodes = get_map_mode(&cmd, forceit || isabbrev);
+	else
+	{
+	    expand_mapmodes = INSERT + CMDLINE;
+	    if (!isabbrev)
+		expand_mapmodes += VISUAL + NORMAL + OP_PENDING;
+	}
+	expand_isabbrev = isabbrev;
+	expand_context = EXPAND_MAPPINGS;
+	expand_pattern = arg;
+    }
+
+    return NULL;
+}
+
+#ifdef HAVE_QSORT
+/*
+ * Compare function for qsort() below.
+ */
+static int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
+compare_mkeys __ARGS((const void *s1, const void *s2));
+
+    static int
+#ifdef __BORLANDC__
+_RTLENTRYF
+#endif
+compare_mkeys(s1, s2)
+    const void	*s1;
+    const void	*s2;
+{
+    return STRCMP(*(char **)s1, *(char **)s2);
+}
+#endif
+
+/*
+ * Find all mapping/abbreviation names that match regexp 'prog'.
+ * For command line expansion of ":[un]map" and ":[un]abbrev" in all modes.
+ * Return OK if matches found, FAIL otherwise.
+ */
+    int
+ExpandMappings(prog, num_file, file)
+    vim_regexp	*prog;
+    int		*num_file;
+    char_u	***file;
+{
+    struct mapblock	*mp;
+    int			hash;
+    int			count = 0;
+    int			round;
+    char_u		*p;
+
+    validate_maphash();
+
+    *num_file = 0;		    /* return values in case of FAIL */
+    *file = NULL;
+
+    /*
+     * round == 1: Count the matches.
+     * round == 2: Build the array to keep the matches.
+     */
+    for (round = 1; round <= 2; ++round)
+    {
+	count = 0;
+	for (hash = 0; hash < 256; ++hash)
+	{
+	    if (expand_isabbrev)
+	    {
+		if (hash)	/* only one abbrev list */
+		    break; /* for (hash) */
+		mp = first_abbr;
+	    }
+	    else
+		mp = maphash[hash];
+	    for (; mp; mp = mp->m_next)
+	    {
+		if (mp->m_mode & expand_mapmodes)
+		{
+		    p = translate_mapping(mp->m_keys, TRUE);
+		    if (p != NULL && vim_regexec(prog, p, TRUE))
+		    {
+			if (round == 1)
+			    ++count;
+			else
+			{
+			    (*file)[count++] = p;
+			    p = NULL;
+			}
+		    }
+		    vim_free(p);
+		}
+	    } /* for (mp) */
+	} /* for (hash) */
+
+	if (count == 0)			/* no match found */
+	    break; /* for (round) */
+
+	if (round == 1)
+	{
+	    *file = (char_u **)alloc((unsigned)(count * sizeof(char_u *)));
+	    if (*file == NULL)
+	    {
+		vim_free(prog);
+		return FAIL;
+	    }
+	}
+    } /* for (round) */
+
+#ifdef HAVE_QSORT
+    /* Sort the matches */
+    qsort((void *)*file, (size_t)count, sizeof(char_u *), compare_mkeys);
+    /* Remove multiple entries */
+    {
+	char_u	**ptr1 = *file;
+	char_u	**ptr2 = ptr1 + 1;
+	char_u	**ptr3 = ptr1 + count;
+
+	while (ptr2 < ptr3)
+	{
+	    if (STRCMP(*ptr1, *ptr2))
+		*++ptr1 = *ptr2++;
+	    else
+	    {
+		vim_free(*ptr2++);
+		count--;
+	    }
+	}
+    }
+#endif /* HAVE_QSORT */
+
+    *num_file = count;
+    return (count == 0 ? FAIL : OK);
+}
+#endif /* CMDLINE_COMPL */
 
 /*
  * Check for an abbreviation.
@@ -2600,7 +2845,7 @@ makemap(fd)
 		do	/* may do this twice if c2 is set */
 		{
 		    /* When outputting <> form, need to make sure that 'cpo'
-		     * is empty. */
+		     * is almost empty. */
 		    if (!did_cpo)
 		    {
 			if (*mp->m_str == NUL)		/* will use <Nop> */
@@ -2612,13 +2857,10 @@ makemap(fd)
 					did_cpo = TRUE;
 			if (did_cpo)
 			{
-			    if (fprintf(fd,
-#ifdef USE_CRNL
-					"let cpo_save=&cpo\r\nset cpo=\r\n"
-#else
-					"let cpo_save=&cpo\nset cpo=\n"
-#endif
-				       ) < 0)
+			    if (fprintf(fd, "let cpo_save=&cpo") < 0
+				    || put_eol(fd) < 0
+				    || fprintf(fd, "set cpo=B") < 0
+				    || put_eol(fd) < 0)
 				return FAIL;
 			}
 		    }
@@ -2633,10 +2875,7 @@ makemap(fd)
 			    || putescstr(fd, mp->m_keys, FALSE) == FAIL
 			    || putc(' ', fd) < 0
 			    || putescstr(fd, mp->m_str, FALSE) == FAIL
-#ifdef USE_CRNL
-			    || putc('\r', fd) < 0
-#endif
-			    || putc('\n', fd) < 0)
+			    || put_eol(fd) < 0)
 			return FAIL;
 		    c1 = c2;
 		    c2 = NUL;
@@ -2646,13 +2885,10 @@ makemap(fd)
 	}
 
     if (did_cpo)
-	if (fprintf(fd,
-#ifdef USE_CRNL
-		    "let &cpo=cpo_save\r\nunlet cpo_save\r\n"
-#else
-		    "let &cpo=cpo_save\nunlet cpo_save\n"
-#endif
-		    ) < 0)
+	if (fprintf(fd, "let &cpo=cpo_save") < 0
+		|| put_eol(fd) < 0
+		|| fprintf(fd, "unlet cpo_save") < 0
+		|| put_eol(fd) < 0)
 	    return FAIL;
     return OK;
 }
@@ -2758,7 +2994,7 @@ check_map_keycodes()
 
     validate_maphash();
     save_name = sourcing_name;
-    sourcing_name = (char_u *)"mappings";/* don't give error messages */
+    sourcing_name = (char_u *)"mappings"; /* avoids giving error messages */
 
     /*
      * Do the loop twice: Once for mappings, once for abbreviations.
@@ -2803,4 +3039,161 @@ check_map_keycodes()
 	    }
 	}
     sourcing_name = save_name;
+}
+
+#ifdef WANT_EVAL
+/*
+ * Check the string "keys" against the lhs of all mappings
+ * Return pointer to rhs of mapping (mapblock->m_str)
+ * NULL otherwise
+ */
+    char_u *
+check_map(keys, mode, exact)
+    char_u	*keys;
+    int		 mode;
+    int		exact;		/* require exact match */
+{
+    int			hash;
+    int			len, minlen;
+    struct mapblock	*mp, **mpp;
+
+    validate_maphash();
+
+    len = STRLEN(keys);
+    /* loop over all hash lists */
+    for (hash = 0; hash < 256; ++hash)
+    {
+	mpp = &(maphash[hash]);
+	for (mp = *mpp; mp != NULL; mp = *mpp)
+	{
+	    /* skip entries with wrong mode, wrong length and not matching
+	     * ones */
+	    if (mp->m_keylen < len)
+		minlen = mp->m_keylen;
+	    else
+		minlen = len;
+	    if ((mp->m_mode & mode)
+		    && (!exact || mp->m_keylen == len)
+		    && STRNCMP(mp->m_keys, keys, minlen) == 0)
+		return mp->m_str;
+	    mpp = &(mp->m_next);
+	}
+    }
+
+    return NULL;
+}
+#endif
+
+/*
+ * Default mappings for some often used keys.
+ */
+static struct initmap
+{
+    char_u	*arg;
+    int		mode;
+} initmappings[] =
+{
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2)
+	/* Use the Windows (CUA) keybindings. */
+# ifdef USE_GUI
+	{(char_u *)"<C-PageUp> H", NORMAL+VISUAL},
+	{(char_u *)"<C-PageUp> <C-O>H",INSERT},
+	{(char_u *)"<C-PageDown> L$", NORMAL+VISUAL},
+	{(char_u *)"<C-PageDown> <C-O>L<C-O>$", INSERT},
+
+	/* paste, copy and cut */
+	{(char_u *)"<S-Insert> \"*P", NORMAL},
+	{(char_u *)"<S-Insert> \"-d\"*P", VISUAL},
+	{(char_u *)"<S-Insert> <C-R>*", INSERT+CMDLINE},
+	{(char_u *)"<C-Insert> \"*y", VISUAL},
+	{(char_u *)"<S-Del> \"*d", VISUAL},
+	{(char_u *)"<C-Del> \"*d", VISUAL},
+	{(char_u *)"<C-X> \"*d", VISUAL},
+	/* Missing: CTRL-C (can't be mapped) and CTRL-V (means something) */
+# else
+	{(char_u *)"\316\204 H", NORMAL+VISUAL},    /* CTRL-PageUp is "H" */
+	{(char_u *)"\316\204 \017H",INSERT},	    /* CTRL-PageUp is "^OH"*/
+	{(char_u *)"\316v L$", NORMAL+VISUAL},	    /* CTRL-PageDown is "L$" */
+	{(char_u *)"\316v \017L\017$", INSERT},	    /* CTRL-PageDown ="^OL^O$"*/
+	{(char_u *)"\316w <C-Home>", NORMAL+VISUAL},
+	{(char_u *)"\316w <C-Home>", INSERT+CMDLINE},
+	{(char_u *)"\316u <C-End>", NORMAL+VISUAL},
+	{(char_u *)"\316u <C-End>", INSERT+CMDLINE},
+
+	/* paste, copy and cut */
+#  ifdef USE_CLIPBOARD
+	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
+	{(char_u *)"\316\324 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
+	{(char_u *)"\316\324 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
+	{(char_u *)"\316\325 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
+	{(char_u *)"\316\327 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
+	{(char_u *)"\316\330 \"*d", VISUAL},	    /* CTRL-Del is "*d */
+	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
+#  else
+	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
+	{(char_u *)"\316\324 d\"0P", VISUAL},	    /* SHIFT-Insert is d"0P */
+	{(char_u *)"\316\324 \017P", INSERT},	    /* SHIFT-Insert is ^OP */
+	{(char_u *)"\316\325 y", VISUAL},	    /* CTRL-Insert is y */
+	{(char_u *)"\316\327 d", VISUAL},	    /* SHIFT-Del is d */
+	{(char_u *)"\316\330 d", VISUAL},	    /* CTRL-Del is d */
+#  endif
+# endif
+#endif
+
+#if defined(macintosh)
+	/* Use the Standard MacOS binding. */
+	/* paste, copy and cut */
+	{(char_u *)"<D-v> \"*P", NORMAL},
+	{(char_u *)"<D-v> \"-d\"*P", VISUAL},
+	{(char_u *)"<D-v> <C-R>*", INSERT+CMDLINE},
+	{(char_u *)"<D-c> \"*y", VISUAL},
+	{(char_u *)"<D-x> \"*d", VISUAL},
+	{(char_u *)"<Backspace> \"-d", VISUAL},
+#endif
+
+	/* Map extra keys to their normal equivalents. */
+	{(char_u *)"<xF1> <F1>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xF1> <F1>", INSERT+CMDLINE},
+	{(char_u *)"<xF2> <F2>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xF2> <F2>", INSERT+CMDLINE},
+	{(char_u *)"<xF3> <F3>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xF3> <F3>", INSERT+CMDLINE},
+	{(char_u *)"<xF4> <F4>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xF4> <F4>", INSERT+CMDLINE},
+	{(char_u *)"<S-xF1> <S-F1>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<S-xF1> <S-F1>", INSERT+CMDLINE},
+	{(char_u *)"<S-xF2> <S-F2>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<S-xF2> <S-F2>", INSERT+CMDLINE},
+	{(char_u *)"<S-xF3> <S-F3>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<S-xF3> <S-F3>", INSERT+CMDLINE},
+	{(char_u *)"<S-xF4> <S-F4>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<S-xF4> <S-F4>", INSERT+CMDLINE},
+	{(char_u *)"<xEND> <END>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xEND> <END>", INSERT+CMDLINE},
+	{(char_u *)"<xHOME> <HOME>", NORMAL+VISUAL+OP_PENDING},
+	{(char_u *)"<xHOME> <HOME>", INSERT+CMDLINE},
+};
+
+/*
+ * Set up default mappings.
+ * Need to put string in allocated memory, because do_map() will modify it.
+ */
+    void
+init_mappings()
+{
+    char_u	*cpo_save = p_cpo;
+    int		i;
+    char_u	*s;
+
+    p_cpo = (char_u *)"";	/* Allow <> notation */
+    for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
+    {
+	s = vim_strsave(initmappings[i].arg);
+	if (s != NULL)
+	{
+	    do_map(0, s, initmappings[i].mode, FALSE, NULL);
+	    vim_free(s);
+	}
+    }
+    p_cpo = cpo_save;
 }

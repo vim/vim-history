@@ -1,8 +1,8 @@
 #
 # config.mk.in -- autoconf template for Vim on Unix		vim:ts=8:sw=8:
 #
-# DO NOT EDIT config.mk!! Do not edit config.mk.in!! Edit Makefile and run
-# configure again. config.mk will be overwritten by configure.
+# DO NOT EDIT config.mk!!  It will be overwritten by configure.
+# Edit Makefile and run "make" or run ./configure with other arguments.
 #
 # Configure does not edit the makefile directly. This method is not the
 # standard use of GNU autoconf, but it has two advantages:
@@ -31,6 +31,7 @@ X_LIBS		= @X_LIB@
 
 PERL		= @vi_cv_path_perl@
 PERLLIB		= @vi_cv_perllib@
+PERL_LIBS	= @perllibs@
 SHRPENV		= @shrpenv@
 PERL_SRC	= @PERL_SRC@
 PERL_OBJ	= @PERL_OBJ@
@@ -50,6 +51,9 @@ TCL_OBJ		= @TCL_OBJ@
 TCL_PRO		= @TCL_PRO@
 TCL_CFLAGS	= @TCL_CFLAGS@
 TCL_LIBS	= @TCL_LIBS@
+
+HANGULIN_SRC	= @HANGULIN_SRC@
+HANGULIN_OBJ	= @HANGULIN_OBJ@
 
 AWK		= @AWK@
 

@@ -1,6 +1,6 @@
 dnl configure.in: autoconf script for Vim
 
-dnl Process this file with autoconf 2.12 to produce "configure".
+dnl Process this file with autoconf 2.12 or 2.13 to produce "configure".
 
 AC_INIT(vim.h)
 AC_CONFIG_HEADER(config.h)
@@ -25,8 +25,9 @@ if test -z "$CFLAGS"; then
 fi
 
 dnl You might want to remove this, if it causes too much trouble.
-dnl -Wmissing-prototypes removed, old versions of GCC don't have it
-test "$GCC" = yes && CFLAGS="$CFLAGS -Wall -Wshadow"
+dnl -Wmissing-prototypes removed, old versions of GCC don't have it.
+dnl -Wshadow causes too much of trouble for the GTK+ gui.
+test "$GCC" = yes && CFLAGS="$CFLAGS -Wall"
 
 dnl If configure things we are cross compiling, there is probably something
 dnl wrong with the CC or CFLAGS settings, give an understandable error message
@@ -34,15 +35,22 @@ if test "$cross_compiling" = yes; then
   AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
 fi
 
-dnl See if the compiler accepts "-Olimit 2000", needed for some systems
-dnl because Vim uses very big case statements.
+dnl See if the compiler accepts "-Olimit 2000" or "-FOlimit,2000, needed for
+dnl some systems, because Vim uses very big case statements.
+
 if test "$GCC" != yes; then
   AC_MSG_CHECKING(if compiler accepts -Olimit)
   save_cflags=$CFLAGS
   CFLAGS="$CFLAGS -Olimit 2000"
   AC_TRY_LINK(, ,
 	AC_MSG_RESULT(yes),
-	AC_MSG_RESULT(no); CFLAGS="$save_cflags")
+        [AC_MSG_RESULT(no); CFLAGS="$save_cflags"
+         AC_MSG_CHECKING(if compiler accepts -FOlimit)
+         CFLAGS="$CFLAGS -FOlimit,2000"
+         AC_TRY_LINK(, ,
+               AC_MSG_RESULT(yes),
+               [AC_MSG_RESULT(no); CFLAGS="$save_cflags"])
+        ])
 fi
 
 dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
@@ -53,12 +61,23 @@ if test -f ./toolcheck; then
   sh ./toolcheck 1>&AC_FD_MSG
 fi
 
+dnl Check for BeOS, which needs an extra source file
+AC_MSG_CHECKING(for BeOS)
+case `uname` in
+    BeOS)	OS_EXTRA_SRC=os_beos.c; OS_EXTRA_OBJ=os_beos.o
+		BEOS=yes; AC_MSG_RESULT(yes);;
+    *)		OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
+		BEOS=no; AC_MSG_RESULT(no);;
+esac
+AC_SUBST(OS_EXTRA_SRC)
+AC_SUBST(OS_EXTRA_OBJ)
+
 
 dnl Check user requested features.
 
 AC_MSG_CHECKING(--enable-max-features argument)
 AC_ARG_ENABLE(max-features,
-	[  --enable-max-features   Use maximum number of features (but not the ones below).], ,
+	[  --enable-max-features   Use maximum number of features (but not *interp).], ,
 	[enable_max_features="no"])
 AC_MSG_RESULT($enable_max_features)
 if test "$enable_max_features" = "yes"; then
@@ -100,9 +119,9 @@ if test "$enable_perlinterp" = "yes"; then
       fi
       perllibs=`cd $srcdir;$vi_cv_path_perl -MExtUtils::Embed \
 	      -e 'ldopts' | sed '/Warning/d' | sed '/Note (probably harmless)/d'`
-      if test "X$perllibs" != "X"; then
-	LIBS="$perllibs $LIBS"
-      fi
+      dnl Don't add perl lib to $LIBS: if it's not in LD_LIBRARY_PATH
+      dnl a test in configure may fail because of that.
+      AC_SUBST(perllibs)
       perlldflags=`cd $srcdir;$vi_cv_path_perl -MExtUtils::Embed \
 	      -e 'ccdlflags'`
       if test "X$perlldflags" != "X"; then
@@ -134,9 +153,9 @@ if test "$enable_pythoninterp" = "yes"; then
   if test "X$vi_cv_path_python" != "X"; then
 
     dnl -- get its version number
-    AC_CACHE_CHECK(Python version,vi_cv_var_python_version, 
+    AC_CACHE_CHECK(Python version,vi_cv_var_python_version,
     [[vi_cv_var_python_version=`
-	    ${vi_cv_path_python} -c 'import sys; print sys.version[:3]'` 
+	    ${vi_cv_path_python} -c 'import sys; print sys.version[:3]'`
     ]])
 
     dnl -- it must be at least version 1.4
@@ -162,14 +181,14 @@ if test "$enable_pythoninterp" = "yes"; then
 
       AC_CACHE_VAL(vi_cv_path_pythonpath,
       [ vi_cv_path_pythonpath=`
-	    unset PYTHONPATH; 
+	    unset PYTHONPATH;
 	    ${vi_cv_path_python} -c \
 		"import sys, string; print string.join(sys.path,':')"` ])
 
       dnl -- where the Python implementation library archives are
 
       AC_ARG_WITH(python-config-dir,
-	[  --with-python-config-dir=path Python's config directory ],
+	[  --with-python-config-dir=path  Python's config directory],
 	[ vi_cv_path_python_conf="${withval}" ] )
 
       AC_CACHE_CHECK(Python's configuration directory,vi_cv_path_python_conf,
@@ -209,6 +228,8 @@ eof
 		vi_cv_path_python_plibs="${PYTHON_CONFDIR}/libpython${vi_cv_var_python_version}.a"
 	    fi
 	    vi_cv_path_python_plibs="${vi_cv_path_python_plibs} ${python_MODLIBS} ${python_LIBS} ${python_SYSLIBS}"
+	    dnl remove -ltermcap, it can conflict with an earlier -lncurses
+	    vi_cv_path_python_plibs=`echo $vi_cv_path_python_plibs | sed s/-ltermcap//`
 	])
 
 	PYTHON_LIBS="${vi_cv_path_python_plibs}"
@@ -243,8 +264,12 @@ AC_MSG_RESULT($enable_tclinterp)
 
 if test "$enable_tclinterp" = "yes"; then
 	AC_SUBST(vi_cv_path_tcl)
-	AC_PATH_PROG(vi_cv_path_tcl, tclsh)
-	if test -n "X$vi_cv_path_tcl"; then
+	dnl on FreeBSD tclsh is a silly script. tclsh8.0 is what we need.
+	AC_PATH_PROG(vi_cv_path_tcl, tclsh8.0)
+	if test "X$vi_cv_path_tcl" = "X"; then
+	  AC_PATH_PROG(vi_cv_path_tcl, tclsh)
+	fi
+	if test "X$vi_cv_path_tcl" != "X"; then
 		AC_MSG_CHECKING(Tcl version)
 		if echo 'exit [[expr [info tclversion] < 8.0]]' | $vi_cv_path_tcl - ; then
 			tclver=`echo 'puts [[info tclversion]]' | $vi_cv_path_tcl -`
@@ -280,7 +305,7 @@ if test "$enable_tclinterp" = "yes"; then
 					AC_MSG_CHECKING(for Tcl library by myself)
 					tcllib=`echo $tclinc | sed s/include/lib/g`
 					for ext in .so .a ; do
-						for ver in "" $tclver ; do 
+						for ver in "" $tclver ; do
 							for try in $tcllib ; do
 								trylib=tcl$ver$ext
 								if test -f $try/lib$trylib ; then
@@ -326,6 +351,51 @@ AC_ARG_ENABLE(cscope,
 AC_MSG_RESULT($enable_cscope)
 if test "$enable_cscope" = "yes"; then
   AC_DEFINE(USE_CSCOPE)
+fi
+
+AC_MSG_CHECKING(--enable-multibyte argument)
+AC_ARG_ENABLE(multibyte,
+	[  --enable-multibyte      Include multibyte editing support.], ,
+	[enable_multibyte="no"])
+AC_MSG_RESULT($enable_multibyte)
+if test "$enable_multibyte" = "yes"; then
+  AC_DEFINE(MULTI_BYTE)
+fi
+
+AC_MSG_CHECKING(--enable-hangulinput argument)
+AC_ARG_ENABLE(hangulinput,
+	[  --enable-hangulinput    Include Hangul input support.], ,
+	[enable_hangulinput="no"])
+AC_MSG_RESULT($enable_hangulinput)
+if test "$enable_hangulinput" = "yes"; then
+  AC_DEFINE(HANGUL_INPUT)
+  HANGULIN_SRC=hangulin.c
+  AC_SUBST(HANGULIN_SRC)
+  HANGULIN_OBJ=hangulin.o
+  AC_SUBST(HANGULIN_OBJ)
+fi
+
+AC_MSG_CHECKING(--enable-xim argument)
+AC_ARG_ENABLE(xim,
+	[  --enable-xim            Include XIM input support.], ,
+	[enable_xim="no"])
+AC_MSG_RESULT($enable_xim)
+dnl defining USE_XIM is delayed, so that it can be disabled for older GTK
+
+AC_MSG_CHECKING(--enable-fontset argument)
+AC_ARG_ENABLE(fontset,
+	[  --enable-fontset        Include X fontset output support.], ,
+	[enable_fontset="no"])
+AC_MSG_RESULT($enable_fontset)
+dnl defining USE_FONTSET is delayed, so that it can be disabled for no GUI
+
+AC_MSG_CHECKING(--enable-broken-locale argument)
+AC_ARG_ENABLE(broken_locale,
+	[  --enable-broken-locale  POSIX.2 locale functions are broken.], ,
+	[enable_broken_locale="no"])
+AC_MSG_RESULT($enable_broken_locale)
+if test "$enable_broken_locale" = "yes"; then
+  AC_DEFINE(BROKEN_LOCALE)
 fi
 
 test -z "$with_x" && with_x=yes
@@ -378,7 +448,8 @@ else
     with_x=no
   else
     AC_DEFINE(HAVE_X11)
-    X_LIB=-lX11; AC_SUBST(X_LIB)
+    X_LIB="-lXt -lX11";
+    AC_SUBST(X_LIB)
 
     dnl Some systems need -lnsl -lsocket when testing for ICE.
     dnl The check above doesn't do this, try here (again) if X_PRE_LIBS is empty
@@ -410,28 +481,254 @@ else
 
 fi
 
-test "x$with_x" = xno && enable_gui=no
+test "x$with_x" = xno -a "x$BEOS" != "xyes" && enable_gui=no
 
 AC_MSG_CHECKING(--enable-gui argument)
 AC_ARG_ENABLE(gui,
- [  --disable-gui           No Athena or Motif X11 GUI], , )
-SKIP_MOTIF=YES; SKIP_ATHENA=YES; GUITYPE=NONE
+ [  --enable-gui[=opts]     X11 GUI [default=auto] [opts=auto/no/gtk/motif/athena/beos]], , enable_gui="auto")
+
+if test "x$BEOS" = "xyes"; then
+
+SKIP_GTK=YES
+SKIP_MOTIF=YES
+SKIP_ATHENA=YES
+SKIP_BEOS=
+GUITYPE=NONE
+
 case "$enable_gui" in
-  no|No|NO)		AC_MSG_RESULT(no GUI support) ;;
-  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support);
-				SKIP_MOTIF= ; SKIP_ATHENA= ;;
-  motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support); SKIP_MOTIF= ;;
-  athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support); SKIP_ATHENA= ;;
+  no|No|NO)		AC_MSG_RESULT(no GUI support)
+			SKIP_BEOS=YES ;;
+  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
+  auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
+  beos|BeOS|BEOS)	AC_MSG_RESULT(BeOS GUI support) ;;
   *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
 esac
+
+else
+
+SKIP_GTK=
+SKIP_MOTIF=
+SKIP_ATHENA=
+SKIP_BEOS=YES
+GUITYPE=NONE
+
+case "$enable_gui" in
+  no|No|NO)		AC_MSG_RESULT(no GUI support)
+			SKIP_GTK=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
+  yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
+  auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
+  gtk|Gtk|GTK)		AC_MSG_RESULT(GTK GUI support)
+			SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
+  motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support)
+			SKIP_GTK=YES; SKIP_ATHENA=YES ;;
+  athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support)
+			SKIP_GTK=YES; SKIP_MOTIF=YES ;;
+  *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+esac
+
+fi
+
+if test "x$SKIP_GTK" != "xYES" -a "$enable_gui" != "gtk"; then
+    AC_MSG_CHECKING(whether or not to look for GTK)
+    AC_ARG_ENABLE(gtk-check,
+	[  --enable-gtk-check      If auto-select GUI, check for GTK [default=yes]],
+	, enable_gtk_check="yes")
+    AC_MSG_RESULT($enable_gtk_check);
+    if test "x$enable_gtk_check" = "xno"; then
+	SKIP_GTK=YES
+    fi
+fi
+
+if test "x$SKIP_MOTIF" != "xYES" -a "$enable_gui" != "motif"; then
+    AC_MSG_CHECKING(whether or not to look for Motif)
+    AC_ARG_ENABLE(motif-check,
+	[  --enable-motif-check    If auto-select GUI, check for Motif [default=yes]],
+	, enable_motif_check="yes")
+    AC_MSG_RESULT($enable_motif_check);
+    if test "x$enable_motif_check" = "xno"; then
+	SKIP_MOTIF=YES
+    fi
+fi
+
+if test "x$SKIP_ATHENA" != "xYES" -a "$enable_gui" != "athena"; then
+    AC_MSG_CHECKING(whether or not to look for Athena)
+    AC_ARG_ENABLE(athena-check,
+	[  --enable-athena-check   If auto-select GUI, check for Athena [default=yes]],
+	, enable_athena_check="yes")
+    AC_MSG_RESULT($enable_athena_check);
+    if test "x$enable_athena_check" = "xno"; then
+	SKIP_ATHENA=YES
+    fi
+fi
+
+
+dnl
+dnl Get the cflags and libraries from the gtk-config script
+dnl
+
+dnl define an autoconf function to check for a specified version of GTK, and
+dnl try to compile/link a GTK program.  this gets used twice, once for GTK
+dnl 1.1.16, and once for 1.0.6, if 1.1.16 was not found.
+dnl
+dnl AM_PATH_GTK([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
+dnl Test for GTK, and define GTK_CFLAGS and GTK_LIBS
+dnl
+AC_DEFUN(AM_PATH_GTK,
+[
+  if test "X$GTK_CONFIG" != "X"; then
+
+    min_gtk_version=ifelse([$1], ,0.99.7,$1)
+    AC_MSG_CHECKING(for GTK - version >= $min_gtk_version)
+    no_gtk=""
+    if test "$GTK_CONFIG" = "no" ; then
+      no_gtk=yes
+    else
+      GTK_CFLAGS=`$GTK_CONFIG $gtk_config_args --cflags`
+      GTK_LIBS=`$GTK_CONFIG $gtk_config_args --libs`
+      gtk_config_major_version=`$GTK_CONFIG $gtk_config_args --version | \
+             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+      gtk_config_minor_version=`$GTK_CONFIG $gtk_config_args --version | \
+             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+      gtk_config_micro_version=`$GTK_CONFIG $gtk_config_args --version | \
+             sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
+      if test "x$enable_gtktest" = "xyes" ; then
+        ac_save_CFLAGS="$CFLAGS"
+        ac_save_LIBS="$LIBS"
+        CFLAGS="$CFLAGS $GTK_CFLAGS"
+        LIBS="$LIBS $GTK_LIBS"
+dnl
+dnl Now check if the installed GTK is sufficiently new. (Also sanity
+dnl checks the results of gtk-config to some extent
+dnl
+        rm -f conf.gtktest
+        AC_TRY_RUN([
+#include <gtk/gtk.h>
+#include <stdio.h>
+
+int
+main ()
+{
+  int major, minor, micro;
+  char *tmp_version;
+
+  system ("touch conf.gtktest");
+
+  /* HP/UX 9 (%@#!) writes to sscanf strings */
+  tmp_version = g_strdup("$min_gtk_version");
+  if (sscanf(tmp_version, "%d.%d.%d", &major, &minor, &micro) != 3) {
+     printf("%s, bad version string\n", "$min_gtk_version");
+     exit(1);
+   }
+
+  if ((gtk_major_version > major) ||
+      ((gtk_major_version == major) && (gtk_minor_version > minor)) ||
+      ((gtk_major_version == major) && (gtk_minor_version == minor) &&
+                                       (gtk_micro_version >= micro)))
+  {
+      return 0;
+  }
+  return 1;
+}
+],, no_gtk=yes,[echo $ac_n "cross compiling; assumed OK... $ac_c"])
+         CFLAGS="$ac_save_CFLAGS"
+         LIBS="$ac_save_LIBS"
+       fi
+    fi
+    if test "x$no_gtk" = x ; then
+       AC_MSG_RESULT(yes)
+       ifelse([$2], , :, [$2])
+    else
+       AC_MSG_RESULT(no)
+       if test "$GTK_CONFIG" = "no" ; then
+         :
+       else
+         if test -f conf.gtktest ; then
+          :
+         fi
+       fi
+
+      GTK_CFLAGS=""
+      GTK_LIBS=""
+      ifelse([$3], , :, [$3])
+    fi
+  else
+    GTK_CFLAGS=""
+    GTK_LIBS=""
+    ifelse([$3], , :, [$3])
+  fi
+  AC_SUBST(GTK_CFLAGS)
+  AC_SUBST(GTK_LIBS)
+  rm -f conf.gtktest
+])
+
+dnl ---------------------------------------------------------------------------
+dnl Check for GTK.  First checks for gtk-config, cause it needs that to get the
+dnl correct compiler flags.  Then checks for GTK 1.1.16.  If that fails, then
+dnl it checks for 1.0.6.  If both fail, then continue on for Motif as before...
+dnl ---------------------------------------------------------------------------
+if test -z "$SKIP_GTK"; then
+
+  AC_MSG_CHECKING(--with-gtk-prefix argument)
+  AC_ARG_WITH(gtk-prefix,[  --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)],
+	gtk_config_prefix="$withval"; AC_MSG_RESULT($gtk_config_prefix),
+	gtk_config_prefix=""; AC_MSG_RESULT(no))
+
+  AC_MSG_CHECKING(--with-gtk-exec-prefix argument)
+  AC_ARG_WITH(gtk-exec-prefix,[  --with-gtk-exec-prefix=PFX Exec prefix where GTK is installed (optional)],
+	gtk_config_exec_prefix="$withval"; AC_MSG_RESULT($gtk_config_prefix),
+	gtk_config_exec_prefix=""; AC_MSG_RESULT(no))
+
+  AC_MSG_CHECKING(--disable-gtktest argument)
+  AC_ARG_ENABLE(gtktest, [  --disable-gtktest       Do not try to compile and run a test GTK program],
+	, enable_gtktest=yes)
+    if test "x$enable_gtktest" = "xyes" ; then
+	AC_MSG_RESULT(gtk test enabled)
+    else
+	AC_MSG_RESULT(gtk test disabled)
+    fi
+
+  if test "x$gtk_config_prefix" != "x" ; then
+     gtk_config_args="$gtk_config_args --prefix=$gtk_config_prefix"
+     GTK_CONFIG=$gtk_config_prefix/bin/gtk-config
+  fi
+  if test "x$gtk_config_exec_prefix" != "x" ; then
+     gtk_config_args="$gtk_config_args --exec-prefix=$gtk_config_exec_prefix"
+     GTK_CONFIG=$gtk_config_exec_prefix/bin/gtk-config
+  fi
+  if test "X$GTK_CONFIG" = "X"; then
+    AC_PATH_PROG(GTK_CONFIG, gtk-config, no)
+  else
+     AC_MSG_RESULT(Using GTK configuration program $GTK_CONFIG)
+  fi
+
+  dnl  We require at least GTK 1.1.16.  1.0.6 doesn't work.  1.1.1 to 1.1.15
+  dnl were test versions.
+  if test "X$GTK_CONFIG" != "X"; then
+    AM_PATH_GTK(1.1.16,
+                [GUI_LIB_LOC="$LIBS $GTK_LIBS"
+                GUI_INC_LOC="$GTK_CFLAGS"], )
+    if test "x$GTK_CFLAGS" != "x"; then
+      SKIP_ATHENA=YES
+      SKIP_MOTIF=YES
+      GUITYPE=GTK
+    fi
+  fi
+  dnl Give a warning if GTK is older than 1.2.3
+  if test "x$GUITYPE" = "xGTK"; then
+    if test $gtk_config_major_version = 1 -a $gtk_config_minor_version -lt 2 -o $gtk_config_major_version = 1 -a $gtk_config_minor_version = 2 -a $gtk_config_micro_version -lt 3; then
+	AC_MSG_RESULT(this GTK version is old; version 1.2.3 or later is recommended)
+    fi
+  fi
+fi
 
 dnl Check for Motif include files location.
 dnl The LAST one found is used, this makes the highest version to be used,
 dnl e.g. when Motif1.2 and Motif2.0 are both present.
 
 if test -z "$SKIP_MOTIF"; then
-  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/X11*/include /usr/include/X11* /usr/dt/include $MOTIFHOME/include $GUI_INC_LOC"
+  gui_XXX="/usr/XXX/Motif* /usr/Motif*/XXX /usr/XXX /usr/shlib /usr/X11*/XXX /usr/XXX/X11* /usr/dt/XXX /local/Motif*/XXX /local/XXX/Motif* /usr/local/Motif*/XXX /usr/local/XXX/Motif* /usr/local/XXX /usr/local/X11*/XXX /usr/local/LessTif/Motif*/XXX $MOTIFHOME/XXX"
   AC_MSG_CHECKING(for location of Motif GUI includes)
+  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` `echo "$gui_XXX" | sed s/XXX/include/g` $GUI_INC_LOC"
   GUI_INC_LOC=
   for try in $gui_includes; do
     if test -f "$try/Xm/Xm.h"; then
@@ -447,13 +744,12 @@ if test -z "$SKIP_MOTIF"; then
   fi
 fi
 
-dnl Check for Motif library files location.
-dnl The LAST one found is used, this makes the highest version to be used,
-dnl e.g. when Motif1.2 and Motif2.0 are both present.
+dnl Check for Motif library files location.  In the same order as the include
+dnl files, to avoid a mixup if several versions are present
 
 if test -z "$SKIP_MOTIF"; then
   AC_MSG_CHECKING(for location of Motif GUI libs)
-  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/X11*/lib /usr/lib/X11* /usr/dt/lib $MOTIFHOME/lib $GUI_LIB_LOC"
+  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$gui_XXX" | sed s/XXX/lib/g` `echo "$GUI_INC_LOC" | sed s/include/lib/` $GUI_LIB_LOC"
   GUI_LIB_LOC=
   for try in $gui_libs; do
     for libtry in "$try"/libXm.a "$try"/libXm.so* "$try"/libXm.sl; do
@@ -483,6 +779,8 @@ if test -z "$SKIP_MOTIF"; then
   SKIP_ATHENA=YES
   GUITYPE=MOTIF
   MOTIF_LIBNAME=-lXm
+  AC_CHECK_LIB(Xp, XpEndJob, [MOTIF_LIBNAME="-lXm -lXp"],,
+		[-lXm -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS])
   AC_MSG_CHECKING(--with-motif-lib argument)
   AC_ARG_WITH(motif-lib,
   [  --with-motif-lib=string   Library for Motif ],
@@ -552,10 +850,32 @@ EOF
   AC_SUBST(NARROW_PROTO)
 fi
 
+if test "x$GUITYPE" = "xNONE" -a "$enable_xim" = "yes"; then
+  AC_MSG_RESULT(no GUI selected; xim has been disabled)
+  enable_xim="no"
+fi
+if test "x$GUITYPE" = "xNONE" -a "$enable_fontset" = "yes"; then
+  AC_MSG_RESULT(no GUI selected; fontset has been disabled)
+  enable_fontset="no"
+fi
+
+dnl There is no test for the BeOS GUI, if it's selected it's used
+if test -z "$SKIP_BEOS"; then
+  GUITYPE=BEOSGUI
+fi
+
 AC_SUBST(GUI_INC_LOC)
 AC_SUBST(GUI_LIB_LOC)
 AC_SUBST(GUITYPE)
 AC_SUBST(GUI_X_LIBS)
+
+dnl defining USE_XIM and USE_FONTSET is delayed, so that they can be disabled
+if test "$enable_xim" = "yes"; then
+  AC_DEFINE(USE_XIM)
+fi
+if test "$enable_fontset" = "yes"; then
+  AC_DEFINE(USE_FONTSET)
+fi
 
 dnl Checks for libraries.
 AC_MSG_CHECKING(for sequent/ptx)
@@ -606,6 +926,23 @@ AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h)
 
+dnl Check if strings.h and string.h can both be included when defined.
+AC_MSG_CHECKING([if strings.h can be included after string.h])
+AC_TRY_COMPILE([
+#if defined(_AIX) && !defined(_NO_PROTO)
+# define _NO_PROTO	/* like in os_unix.h, causes conflict for AIX (Winn) */
+#endif
+#ifdef HAVE_STRING_H
+# include <string.h>
+#endif
+#if defined(HAVE_STRINGS_H)
+# include <strings.h>
+#endif
+		], [int i; i = 0;],
+		AC_MSG_RESULT(yes),
+		AC_DEFINE(NO_STRINGS_WITH_STRING_H)
+		AC_MSG_RESULT(no))
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_PROG_GCC_TRADITIONAL
 AC_C_CONST
@@ -615,6 +952,7 @@ AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_UID_T
 AC_HEADER_TIME
+AC_CHECK_TYPE(ino_t, long)
 
 olibs="$LIBS"
 AC_MSG_CHECKING(--with-tlib argument)
@@ -628,11 +966,30 @@ else
 	dnl  curses, because curses is much slower.
 	dnl  Newer versions of ncurses are preferred over anything.
 	dnl  Older versions of ncurses have bugs, get a new one!
-	AC_CHECK_LIB(ncurses, tgetent,,
-	AC_CHECK_LIB(termlib, tgetent,,
-	AC_CHECK_LIB(termcap, tgetent,,
-	AC_CHECK_LIB(curses, tgetent,,
-	))))
+	dnl  Digital Unix (OSF1) should use curses (Ronald Schild).
+	case "`uname -s 2>/dev/null`" in
+	  OSF1) tlibs="ncurses curses termlib termcap";;
+	  *)    tlibs="ncurses termlib termcap curses";;
+	esac
+	for libname in $tlibs; do
+	  AC_CHECK_LIB($libname, tgetent,,)
+	  if test "x$olibs" != "x$LIBS"; then
+	    dnl It's possible that a library is found but it doesn't work
+	    dnl e.g., shared library that cannot be found
+	    dnl compile and run a test program to be sure
+	    AC_TRY_RUN([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+main() {char *s; s=(char *)tgoto("%p1%d", 0, 1); exit(0); }],
+			  res="OK", res="FAIL", res="FAIL")
+	    if test "$res" = "OK"; then
+	      break
+	    fi
+	    AC_MSG_RESULT($libname library is not usable)
+	    LIBS="$olibs"
+	  fi
+	done
 fi
 if test "x$olibs" != "x$LIBS"; then
   AC_MSG_CHECKING(whether we talk terminfo)
@@ -641,10 +998,12 @@ if test "x$olibs" != "x$LIBS"; then
 # include <termcap.h>
 #endif
 main()
-{char *s; s=tgoto("%p1%d", 0, 1); exit(!strcmp(s==0 ? "" : s, "1")); }],
+{char *s; s=(char *)tgoto("%p1%d", 0, 1); exit(!strcmp(s==0 ? "" : s, "1")); }],
 	  AC_MSG_RESULT([no -- we are in termcap land]),
 	  AC_MSG_RESULT([yes -- terminfo spoken here]); AC_DEFINE(TERMINFO),
 	  AC_MSG_ERROR(failed to compile test program.))
+else
+  AC_MSG_RESULT(none found)
 fi
 
 AC_MSG_CHECKING(whether termcap.h contains ospeed)
@@ -707,6 +1066,7 @@ AC_TRY_COMPILE([
 dnl AC_DECL_SYS_SIGLIST
 
 dnl Checks for library functions. ===================================
+
 AC_TYPE_SIGNAL
 
 dnl find out what to use at the end of a signal function
@@ -715,6 +1075,20 @@ if test $ac_cv_type_signal = void; then
 else
    AC_DEFINE(SIGRETURN, [return 0])
 fi
+
+dnl check if struct sigcontext is defined (used for SGI only)
+AC_MSG_CHECKING(for struct sigcontext)
+AC_TRY_COMPILE([
+#include <signal.h>
+test_sig()
+{
+    struct sigcontext *scont;
+    scont = (struct sigcontext *)0;
+    return 1;
+} ], ,
+	  AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_SIGCONTEXT),
+	  AC_MSG_RESULT(no))
 
 dnl tricky stuff: try to find out if getcwd() is implemented with
 dnl system("sh -c pwd")
@@ -733,10 +1107,11 @@ main()
 		AC_DEFINE(BAD_GETCWD),
 	AC_MSG_ERROR(failed to compile test program))
 
-AC_CHECK_FUNCS(bcmp fchdir fchown fsync getcwd getpwnam getpwuid gettimeofday \
-	getwd lstat memcmp memset opendir putenv qsort select setenv setpgid \
-	setsid sigset strcasecmp strerror strftime stricmp strncasecmp \
-	strnicmp strpbrk strtol tgetent utime utimes)
+dnl Check for functions in one big call, to reduce the size of configure
+AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpwnam getpwuid \
+	gettimeofday getwd lstat memcmp memset nanosleep opendir putenv qsort \
+	select setenv setpgid setsid sigset strcasecmp strerror strftime \
+	stricmp strncasecmp strnicmp strpbrk strtol tgetent usleep utime utimes)
 
 dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible
 AC_MSG_CHECKING(for st_blksize)
@@ -750,6 +1125,32 @@ AC_TRY_COMPILE(
 	n = (int)st.st_blksize;],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_ST_BLKSIZE),
 	AC_MSG_RESULT(no))
+
+AC_MSG_CHECKING(--enable-gpm argument)
+AC_ARG_ENABLE(gpm,
+        [  --disable-gpm           Don't use gpm (Linux mouse daemon).], ,
+	[enable_gpm="yes"])
+AC_MSG_RESULT($enable_gpm)
+
+if test "$enable_gpm" = "yes"; then
+dnl Checking if gpm support can be compiled
+    AC_CACHE_CHECK([for gpm], vi_cv_have_gpm,
+        [olibs="$LIBS" ; LIBS="-lgpm"]
+        AC_TRY_LINK(
+            [#include <gpm.h>
+            #include <linux/keyboard.h>],
+            [Gpm_GetLibVersion(NULL);],
+            dnl Configure defines HAVE_GPM, if it is defined feature.h defines
+            dnl GPM_MOUSE if mouse support is included
+            [vi_cv_have_gpm=yes],
+            [vi_cv_have_gpm=no])
+        [LIBS="$olibs"]
+    )
+    if test $vi_cv_have_gpm = yes; then
+          LIBS="$LIBS -lgpm"
+          AC_DEFINE(HAVE_GPM)
+    fi
+fi
 
 dnl rename needs to be checked separately to work on Nextstep with cc
 AC_MSG_CHECKING(for rename)
@@ -766,11 +1167,11 @@ AC_MSG_CHECKING(whether memmove/bcopy/memcpy handle overlaps)
 main() {
   char buf[10];
   strcpy(buf, "abcdefghi");
-  bcopy(buf, buf + 2, 3);
+  mch_memmove(buf, buf + 2, 3);
   if (strncmp(buf, "ababcf", 6))
     exit(1);
   strcpy(buf, "abcdefghi");
-  bcopy(buf + 2, buf, 3);
+  mch_memmove(buf + 2, buf, 3);
   if (strncmp(buf, "cdedef", 6))
     exit(1);
   exit(0); /* libc version works properly.  */
@@ -779,15 +1180,131 @@ main() {
 dnl Check for memmove() before bcopy(), makes memmove() be used when both are
 dnl present, fixes problem with incompatibility between Solaris 2.4 and 2.5.
 
-AC_TRY_RUN([#define bcopy(s,d,l) memmove(d,s,l) $bcopy_test_prog],
+AC_TRY_RUN([#define mch_memmove(s,d,l) memmove(d,s,l) $bcopy_test_prog],
  AC_DEFINE(USEMEMMOVE) AC_MSG_RESULT(memmove does),
-AC_TRY_RUN([$bcopy_test_prog],
+AC_TRY_RUN([#define mch_memmove(s,d,l) bcopy(d,s,l) $bcopy_test_prog],
  AC_DEFINE(USEBCOPY) AC_MSG_RESULT(bcopy does),
-AC_TRY_RUN([#define bcopy(s,d,l) memcpy(d,s,l) $bcopy_test_prog],
+AC_TRY_RUN([#define mch_memmove(s,d,l) memcpy(d,s,l) $bcopy_test_prog],
  AC_DEFINE(USEMEMCPY) AC_MSG_RESULT(memcpy does), AC_MSG_RESULT(no),
   AC_MSG_ERROR(failed to compile test program)),
   AC_MSG_ERROR(failed to compile test program)),
   AC_MSG_ERROR(failed to compile test program))
+
+dnl Check for multibyte locale functions
+dnl Find out if _Xsetlocale() is supported by libX11.
+dnl Check if X_LOCALE should be defined.
+dnl Define BROKEN_LOCALE if setting locale doesn't work properly or mblen()
+dnl or _Xmblen() cannot be used, there are many systems where it doesn't work.
+
+if test "$enable_multibyte" = "yes"; then
+  cflags_save=$CFLAGS
+  ldflags_save=$LDFLAGS
+  if test -n "$x_includes" ; then
+    CFLAGS="$CFLAGS -I$x_includes"
+    LDFLAGS="$LDFLAGS $X_LIBS -lX11"
+    AC_MSG_CHECKING(whether X_LOCALE needed)
+    AC_TRY_COMPILE([#include <X11/Xlocale.h>],,
+      AC_TRY_LINK_FUNC([_Xsetlocale], [AC_MSG_RESULT(yes)
+	AC_DEFINE(X_LOCALE)], AC_MSG_RESULT(no)),
+      AC_MSG_RESULT(no))
+  fi
+  locale_skip=0
+  AC_TRY_RUN([
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef X_LOCALE
+#include <X11/Xlocale.h>
+#elif defined(HAVE_LOCALE_H)
+#include <locale.h>
+#endif
+main(argc,argv)
+int argc;
+char**argv;
+{
+  if (argc<2) return 0;
+  exit(setlocale(LC_ALL,argv[1])?0:1);
+}
+], cp conftest localetest; locale_skip=0, locale_skip=1,
+  AC_MSG_ERROR(failed to compile test program))
+  if test "$locale_skip" = "0"
+  then
+    AC_MSG_CHECKING(what locale you can use for multibyte)
+    av_locale=""
+    for locale in ja ja_JP ja_JP.ujis ja_JP.eucJP ja_JP.EUC ja_JP.sjis ja.SJIS \
+		  japan japanese japanese.ujis ja_JP.PCK \
+		  ko ko_KR ko_KR.euc ko_KR.eucKR ko_KR.EUC korean \
+		  zh zh_CN zh_TW zh_CN.euc zh_TW.euc zh_CN.eucCN zh_TW.eucTW \
+		  zh.GBK zh_TW.BIG zh_TW.BIG5 zh_TW.EUC zh_CN.EUC
+    do
+      if ./localetest $locale
+      then
+        av_locale="$av_locale $locale"
+      fi
+    done
+    rm -f localetest
+    if test "$av_locale" = ""
+    then
+      AC_MSG_RESULT(none)
+      locale_broken=1
+    else
+      AC_MSG_RESULT($av_locale)
+      locale_broken=0
+      AC_TRY_RUN([
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef X_LOCALE
+#include <X11/Xlocale.h>
+#define MbLen _Xmblen
+#elif defined(HAVE_LOCALE_H)
+#include <locale.h>
+#define MbLen mblen
+#endif
+main(argc,argv)
+int argc; char **argv;
+{
+  char cs[4];
+  int i;
+  if (argc!=2) exit(0);
+  if (!setlocale(LC_ALL,argv[1])) exit(1);
+  if (MB_CUR_MAX<=1) exit(1);
+  for(i=0x80; i<=0xff; i++) {
+    cs[0]=i; cs[1]=0;
+    if (MbLen(cs,1)<=0) exit(0);
+  }
+  exit(1);
+}
+      ], cp conftest localetest, av_locale=""; locale_broken=1,
+	AC_MSG_ERROR(failed to compile test program))
+    fi
+    for locale in C $av_locale
+    do
+      if test "$locale" != "C"
+      then
+	AC_MSG_CHECKING(mblen works in $locale)
+        if ./localetest $locale
+	then
+	  AC_MSG_RESULT(yes)
+	else
+	  AC_MSG_RESULT(no)
+	  locale_broken=1
+        fi
+      fi
+    done
+    rm -f localetest
+    AC_MSG_CHECKING(whether locale is broken)
+    if test "$locale_broken" = 1
+    then
+      AC_DEFINE(BROKEN_LOCALE)
+      AC_MSG_RESULT(yes)
+    else
+      AC_MSG_RESULT(no)
+    fi
+  fi
+  CFLAGS=$cflags_save
+  LDFLAGS=$ldflags_save
+fi
 
 dnl Check how we can run ctags
 dnl -t for typedefs (many ctags have this)
@@ -814,17 +1331,6 @@ AC_MSG_RESULT($MANDEF)
 if test "$MANDEF" = "man -s"; then
 	AC_DEFINE(USEMAN_S)
 fi
-
-dnl Check for BeOS, which needs an extra source file
-AC_MSG_CHECKING(for BeOS)
-case `uname` in
-    BeOS)	OS_EXTRA_SRC=os_beos.c; OS_EXTRA_OBJ=os_beos.o
-		AC_MSG_RESULT(yes);;
-    *)		OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
-		AC_MSG_RESULT(no);;
-esac
-AC_SUBST(OS_EXTRA_SRC)
-AC_SUBST(OS_EXTRA_OBJ)
 
 dnl write output files
 AC_OUTPUT(config.mk)

@@ -1,7 +1,7 @@
 /*****************************************************************************
-*   $Id: debug.c,v 6.6 1998/08/06 04:57:55 darren Exp $
+*   $Id: debug.c,v 8.1 1999/03/04 04:16:38 darren Exp $
 *
-*   Copyright (c) 1996-1998, Darren Hiebert
+*   Copyright (c) 1996-1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -12,21 +12,18 @@
 /*============================================================================
 =   Include files
 ============================================================================*/
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include "general.h"
 
-#if defined(__STDC__) || defined(MSDOS) || defined(WIN32) || defined(OS2)
-# define ENABLE_STDARG
-#endif
-
+#include <ctype.h>
 #ifdef ENABLE_STDARG
 # include <stdarg.h>
 #else
 # include <varargs.h>
 #endif
 
-#include "ctags.h"
+#include "debug.h"
+#include "options.h"
+#include "read.h"
 
 /*============================================================================
 =   Function definitions
@@ -37,7 +34,7 @@
 extern void lineBreak() {}	/* provides a line-specified break point */
 
 #ifdef ENABLE_STDARG
-extern void debugPrintf( const enum _debugLevels level,
+extern void debugPrintf( const enum eDebugLevels level,
 			 const char *const format, ... )
 #else
 extern void debugPrintf( va_alist )
@@ -49,11 +46,11 @@ extern void debugPrintf( va_alist )
 #ifdef ENABLE_STDARG
     va_start(ap, format);
 #else
-    enum _debugLevels level;
+    enum eDebugLevels level;
     const char *format;
 
     va_start(ap);
-    level = va_arg(ap, enum _debugLevels);
+    level = va_arg(ap, enum eDebugLevels);
     format = va_arg(ap, char *);
 #endif
 
@@ -62,26 +59,6 @@ extern void debugPrintf( va_alist )
     fflush(stdout);
 
     va_end(ap);
-}
-
-extern void debugOpen( fileName, isHeader, language )
-    const char *const fileName;
-    const boolean isHeader;
-    const langType language;
-{
-    if (debug(DEBUG_STATUS))
-    {
-	if (language == LANG_IGNORE)
-	    printf("  ignoring %s (unknown extension)\n", fileName);
-	else
-	{
-	    const char *name = getLanguageName(language);
-
-	    printf("OPENING %s as a %c%s language %sfile\n",
-		fileName, toupper(name[0]), name + 1, isHeader ? "header ":"");
-	}
-	fflush(stdout);
-    }
 }
 
 extern void debugPutc( c, level )
@@ -94,33 +71,6 @@ extern void debugPutc( c, level )
     	else if (c == CHAR_SYMBOL)	printf("'c'");
 	else				putchar(c);
 
-	fflush(stdout);
-    }
-}
-
-extern void debugEntry( scope, type, tagName, pMember )
-    const tagScope scope;
-    const tagType type;
-    const char *const tagName;
-    const memberInfo *const pMember;
-{
-    if (debug(DEBUG_PARSE))
-    {
-	printf("<#%s%s:%s", (scope == SCOPE_STATIC ? "static:" : ""),
-	       tagTypeName(type), tagName);
-
-	if (pMember->type != MEMBER_NONE)
-	{
-	    printf("[%s:%s]", getTypeString(pMember->type), pMember->parent);
-
-	    if ((File.language == LANG_CPP  ||  File.language == LANG_JAVA) &&
-		pMember->visibility != VIS_UNDEFINED)
-	    {
-		printf("{visibility:%s}",
-		       getVisibilityString(pMember->visibility));
-	    }
-	}
-	printf("#>");
 	fflush(stdout);
     }
 }
@@ -153,6 +103,32 @@ extern void clearString( string, length )
 
     for (i = 0 ; i < length ; ++i)
 	string[i] = '\0';
+}
+
+extern void debugEntry( tag )
+    const tagEntryInfo *const tag;
+{
+    const char *const scope = tag->isFileScope ? "{fs}" : "";
+
+    if (debug(DEBUG_PARSE))
+    {
+	unsigned int i;
+
+	printf("<#%s%s:%s", scope, tag->kindName, tag->name);
+
+	/*  Add any other extension flags.
+	 */
+	for (i = 0  ;  i < tag->otherFields.count  ;  ++i)
+	{
+	    const char *const label = tag->otherFields.label[i];
+	    const char *const value = tag->otherFields.value[i];
+
+	    if (label != NULL)
+		printf("[%s:%s]", label, value == NULL ? "" : value);
+	}
+	printf("#>");
+	fflush(stdout);
+    }
 }
 
 #endif

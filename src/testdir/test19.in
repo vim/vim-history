@@ -5,7 +5,12 @@ STARTTEST
 /some
 r	:set noexpandtab
 /other
-r	:?start?,$w! test.out
+r	
+:" Test replacing with Tabs and then backspacing to undo it
+0wR			
+:" Test replacing with Tabs
+0wR			
+:?^start?,$w! test.out
 :qa!
 ENDTEST
 
@@ -13,4 +18,6 @@ start text
 		some test text
 test text
 		other test text
+    a cde
+    f ghi
 test text

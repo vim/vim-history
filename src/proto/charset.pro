@@ -1,12 +1,12 @@
 /* charset.c */
 int init_chartab __ARGS((void));
 void trans_characters __ARGS((char_u *buf, int bufsize));
+char_u *transstr __ARGS((char_u *s));
 char_u *transchar __ARGS((int c));
 void transchar_nonprint __ARGS((char_u *buf, int c));
 int charsize __ARGS((int c));
 int vim_strsize __ARGS((char_u *s));
 int chartabsize __ARGS((int c, colnr_t col));
-int win_chartabsize __ARGS((WIN *wp, int c, colnr_t col));
 int linetabsize __ARGS((char_u *s));
 int win_linetabsize __ARGS((WIN *wp, char_u *s));
 int vim_isIDc __ARGS((int c));

@@ -73,13 +73,6 @@
 # include <sys/stream.h>
 #endif
 
-#ifdef HAVE_SYS_PTEM_H
-# include <sys/ptem.h>
-# ifndef _IO_PTEM_H	    /* For UnixWare that should check for _IO_PT_PTEM_H */
-#  define _IO_PTEM_H
-# endif
-#endif
-
 #ifdef HAVE_SYS_UTSNAME_H
 # include <sys/utsname.h>
 #endif
@@ -87,7 +80,7 @@
 #ifdef HAVE_SYS_SYSTEMINFO_H
 /*
  * foolish Sinix <sys/systeminfo.h> uses SYS_NMLN but doesn't include
- * limits.h>, where it is defined. Perhaps other systems have the same
+ * <limits.h>, where it is defined. Perhaps other systems have the same
  * problem? Include it here. -- Slootman
  */
 # if defined(HAVE_LIMITS_H) && !defined(_LIMITS_H)
@@ -111,5 +104,12 @@
 #  ifdef HAVE_SGTTY_H
 #   include <sgtty.h>
 #  endif
+# endif
+#endif
+
+#ifdef HAVE_SYS_PTEM_H
+# include <sys/ptem.h>	/* must be after termios.h for Sinix */
+# ifndef _IO_PTEM_H	/* For UnixWare that should check for _IO_PT_PTEM_H */
+#  define _IO_PTEM_H
 # endif
 #endif

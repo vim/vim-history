@@ -926,7 +926,7 @@ winselfcmd(ref, interp, objc, objv)
 					break;
 			}
 			/* TODO: should check column */
-			win->w_cursor.lnum = row2vim(val1);
+			win->w_cursor.lnum = val1;
 			win->w_cursor.col = col2vim(val2);
 			flags |= FL_UPDATE_SCREEN;
 			break;

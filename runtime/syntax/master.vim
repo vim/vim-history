@@ -1,0 +1,38 @@
+" Vim syntax file
+" Language:	Focus Master File
+" Maintainer:	Rob Brady <robb@datatone.com>
+" URL: http://www.datatone.com/~robb/vim/syntax/master.vim
+" $Date: 1999/06/29 23:57:22 $
+" $Revision: 1.2 $
+
+" this is a very simple syntax file - I will be improving it
+" how do I highlight = , $
+" I should highlight things in different colors
+" this works for all the files in the 'samples' directory, but contact me
+"  if you have more convoluted files
+" add entire DEFINE syntax
+
+" Remove any old syntax stuff hanging around
+syn clear
+
+syn case match
+
+" A bunch of useful keywords
+syn keyword masterKeyword FILENAME SUFFIX SEGNAME SEGTYPE PARENT FIELDNAME
+syn keyword masterKeyword FIELD ALIAS USAGE INDEX MISSING ON
+syn keyword masterKeyword FORMAT CRFILE CRKEY
+syn keyword masterDefine  DEFINE DECODE EDIT
+syn region  masterString     start=+"+  end=+"+
+syn region  masterString     start=+'+  end=+'+
+syn match   masterComment "\$.*"
+
+if !exists("did_master_syntax_inits")
+    let did_master_syntax_inits = 1
+    hi link masterKeyword Keyword
+    hi link masterComment Comment
+    hi link masterString  String
+endif
+
+let b:current_syntax = "master"
+
+" vim: ts=8

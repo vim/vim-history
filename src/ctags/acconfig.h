@@ -1,4 +1,4 @@
-/* $Id: acconfig.h,v 6.2 1998/07/02 06:10:55 darren Exp $   */
+/* $Id: acconfig.h,v 8.1 1999/03/04 04:16:38 darren Exp $   */
 
 /*  Package name.
  */
@@ -8,9 +8,13 @@
  */
 #undef VERSION
 
-/*  Define each of these to the appropriate type if no typedef exists.
+/*  Define to the appropriate type if <time.h> does not define this.
  */
 #undef clock_t
+
+/*  Define to long if <stdio.h> does not define this.
+ */
+#undef fpos_t
 
 /*  Define to the appropriate size for tmpnam() if <stdio.h> does not define
  *  this.
@@ -21,11 +25,10 @@
  */
 #undef remove
 
-/*  Define these values used by fseek() appropriately if <stdio.h> does not
- *  define them.
+/*  Define this value used by fseek() appropriately if <stdio.h>
+ *  (or <unistd.h> on SunOS 4.1.x) does not define them.
  */
 #undef SEEK_SET
-#undef SEEK_END
 
 /*  Define as the maximum integer on your system if not defined <limits.h>.
  */
@@ -46,7 +49,9 @@
 /*  Define this label to use the system sort utility (which is probably more
  *  efficient) over the interal sorting algorithm.
  */
-#undef EXTERNAL_SORT
+#ifndef INTERNAL_SORT
+# undef EXTERNAL_SORT
+#endif
 
 /*  If you are using the system sort utility (i.e. external sort), define
  *  this label to be the name of your awk program, which is used to report
@@ -73,7 +78,9 @@
 #undef NEED_PROTO_MALLOC
 #undef NEED_PROTO_GETENV
 #undef NEED_PROTO_STRSTR
+#undef NEED_PROTO_FGETPOS
 #undef NEED_PROTO_STAT
+#undef NEED_PROTO_LSTAT
 #undef NEED_PROTO_TRUNCATE
 #undef NEED_PROTO_FTRUNCATE
 

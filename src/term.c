@@ -75,7 +75,10 @@ static struct builtin_term *find_builtin_term __ARGS((char_u *name));
 static void parse_builtin_tcap __ARGS((char_u *s));
 static void term_color __ARGS((char_u *s, int n));
 static void gather_termleader __ARGS((void));
+#if defined(USE_GUI) \
+    || (defined(USE_MOUSE) && (!defined(UNIX) || defined(XTERM_MOUSE)))
 static int get_bytes_from_buf __ARGS((char_u *, char_u *, int));
+#endif
 static int term_is_builtin __ARGS((char_u *));
 
 #ifdef HAVE_TGETENT
@@ -86,6 +89,9 @@ static char_u *tgetent_error __ARGS((char_u *, char_u *));
  * files have been disabled by the define at the start of this file.
  */
 char		*tgetstr __ARGS((char *, char **));
+
+/* When set: Get terminal version when switched to RAW mode */
+static int need_get_crv = TRUE;
 
 /*
  * Don't declare these variables if termcap.h contains them.
@@ -109,9 +115,9 @@ char *UP, *BC, PC;
 #  endif
 # endif
 
-# define TGETSTR(s, p)	(char_u *)tgetstr((s), (char **)(p))
+# define TGETSTR(s, p)	vim_tgetstr((s), (p))
 # define TGETENT(b, t)	tgetent((char *)(b), (char *)(t))
-
+static char_u *vim_tgetstr __ARGS((char *s, char_u **pp));
 #endif /* HAVE_TGETENT */
 
 struct builtin_term builtin_termcaps[] =
@@ -582,6 +588,9 @@ struct builtin_term builtin_termcaps[] =
     {K_END,		"\316O"},
     {K_PAGEDOWN,	"\316Q"},
     {K_PAGEUP,		"\316I"},
+    {K_KPLUS,		"\316N"},
+    {K_KMINUS,		"\316J"},
+    {K_KMULTIPLY,	"\3167"},
 # endif
 
 # if defined(WIN32) || defined(ALL_BUILTIN_TCAPS) || defined(__EMX__)
@@ -642,7 +651,11 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_VB,	"\033|B"},	/* visual bell */
     {(int)KS_TI,	"\033|S"},	/* put terminal in termcap mode */
     {(int)KS_TE,	"\033|E"},	/* out of termcap mode */
+#  ifdef TERMINFO
+    {(int)KS_CS,	"\033|%i%p1%d;%p2%dr"},/* scroll region */
+#  else
     {(int)KS_CS,	"\033|%i%d;%dr"},/* scroll region */
+#  endif
 
     {K_UP,		"\316H"},
     {K_DOWN,		"\316P"},
@@ -683,6 +696,9 @@ struct builtin_term builtin_termcaps[] =
     {K_END,		"\316O"},
     {K_PAGEDOWN,	"\316Q"},
     {K_PAGEUP,		"\316I"},
+    {K_KPLUS,		"\316N"},
+    {K_KMINUS,		"\316J"},
+    {K_KMULTIPLY,	"\3167"},
 # endif
 
 # if defined(ALL_BUILTIN_TCAPS) || defined(__MINT__)
@@ -795,14 +811,26 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_TI,	"\0337\033[?47h"},
     {(int)KS_TE,	"\033[2J\033[?47l\0338"},
 #  endif
+    {(int)KS_CIS,	"\033]1;"},
+    {(int)KS_CIE,	"\007"},
+    {(int)KS_TS,	"\033]2;"},
+    {(int)KS_FS,	"\007"},
+#  ifdef TERMINFO
+    {(int)KS_CWS,	"\033[8;%p1%d;%p2%dt"},	/* height, width in chars */
+    {(int)KS_CWP,	"\033[3;%p1%d;%p2%dt"}, /* X, Y in pixels */
+#  else
+    {(int)KS_CWS,	"\033[8;%d;%dt"},	/* height, width in chars */
+    {(int)KS_CWP,	"\033[3;%d;%dt"},	/* X, Y in pixels */
+#  endif
+    {(int)KS_CRV,	"\033[>c"},
     {K_UP,		"\033OA"},
     {K_DOWN,		"\033OB"},
-    {K_LEFT,		"\033OD"},
     {K_RIGHT,		"\033OC"},
-    {K_S_UP,		"\033Ox"},
-    {K_S_DOWN,		"\033Or"},
-    {K_S_LEFT,		"\033Ot"},
-    {K_S_RIGHT,		"\033Ov"},
+    {K_LEFT,		"\033OD"},
+    {K_S_UP,		"\033O2A"},
+    {K_S_DOWN,		"\033O2B"},
+    {K_S_RIGHT,		"\033O2C"},
+    {K_S_LEFT,		"\033O2D"},
     /* An extra set of function keys for vt100 mode */
     {K_XF1,		"\033OP"},
     {K_XF2,		"\033OQ"},
@@ -820,13 +848,33 @@ struct builtin_term builtin_termcaps[] =
     {K_F10,		"\033[21~"},
     {K_F11,		"\033[23~"},
     {K_F12,		"\033[24~"},
+    {K_S_XF1,		"\033O2P"},
+    {K_S_XF2,		"\033O2Q"},
+    {K_S_XF3,		"\033O2R"},
+    {K_S_XF4,		"\033O2S"},
+    {K_S_F1,		"\033[11;2~"},
+    {K_S_F2,		"\033[12;2~"},
+    {K_S_F3,		"\033[13;2~"},
+    {K_S_F4,		"\033[14;2~"},
+    {K_S_F5,		"\033[15;2~"},
+    {K_S_F6,		"\033[17;2~"},
+    {K_S_F7,		"\033[18;2~"},
+    {K_S_F8,		"\033[19;2~"},
+    {K_S_F9,		"\033[20;2~"},
+    {K_S_F10,		"\033[21;2~"},
+    {K_S_F11,		"\033[23;2~"},
+    {K_S_F12,		"\033[24;2~"},
     {K_HELP,		"\033[28~"},
     {K_UNDO,		"\033[26~"},
     {K_INS,		"\033[2~"},
     {K_HOME,		"\033[7~"},
+    {K_S_HOME,		"\033O2H"},
     {K_KHOME,		"\033[1~"},
+    {K_XHOME,		"\033OH"},	/* alternate Home */
     {K_END,		"\033[8~"},
+    {K_S_END,		"\033O2F"},
     {K_KEND,		"\033[4~"},
+    {K_XEND,		"\033OF"},	/* alternate End */
     {K_PAGEUP,		"\033[5~"},
     {K_PAGEDOWN,	"\033[6~"},
     {K_KPLUS,		"\033Ok"},	/* keypad plus */
@@ -865,25 +913,32 @@ struct builtin_term builtin_termcaps[] =
 #  else
     {(int)KS_CDL,	"\033[%dM"},
 #  endif
-/*
- * This "cs" is not working correctly. What is the right one?
- */
-#if 0
+#if 0	/* The scroll region is not working as Vim expects. */
 #  ifdef TERMINFO
     {(int)KS_CS,	"\033[%i%p1%d;%p2%dr"},
 #  else
-     {(int)KS_CS,	"\033[%i%d;%dr"},
+    {(int)KS_CS,	"\033[%i%d;%dr"},
 #  endif
 #endif
     {(int)KS_CL,	"\033[H\033[2J"},
-    {(int)KS_VE,	"\033[9/y\033[12/y\033[=6l"},
-    {(int)KS_VS,	"\033[10/y\033[=1h\033[=2l\033[=6h"},
+    {(int)KS_VE,	"\033[9/y\033[12/y"},
+    {(int)KS_VS,	"\033[10/y\033[=1h\033[=2l"},
+    {(int)KS_TI,	"\033[=6h"},
+    {(int)KS_TE,	"\033[=6l"},
     {(int)KS_SE,	"\033[m"},
     {(int)KS_SO,	"\033[1;7m"},
     {(int)KS_ME,	"\033[m"},
     {(int)KS_MR,	"\033[7m"},
     {(int)KS_MD,	"\033[1m"},
     {(int)KS_UE,	"\033[m"},
+    {(int)KS_CCO,	"8"},			/* allow 8 colors */
+#  ifdef TERMINFO
+    {(int)KS_CAB,	"\033[4%p1%dm"},	/* set background color */
+    {(int)KS_CAF,	"\033[3%p1%dm"},	/* set foreground color */
+#  else
+    {(int)KS_CAB,	"\033[4%dm"},		/* set background color */
+    {(int)KS_CAF,	"\033[3%dm"},		/* set foreground color */
+#  endif
     {(int)KS_US,	"\033[4m"},
     {(int)KS_MS,	"y"},	/* does this really work? */
     {(int)KS_LE,	"\010"},
@@ -897,6 +952,15 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_CRI,	"\033[%p1%dC"},
 #  else
     {(int)KS_CRI,	"\033[%dC"},
+#  endif
+    {(int)KS_CIS,	"\033P3.y"},
+    {(int)KS_CIE,	"\234"},
+    {(int)KS_TS,	"\033P1.y"},
+    {(int)KS_FS,	"\234"},
+#  ifdef TERMINFO
+    {(int)KS_CWS,	"\033[203;%p1%d;%p2%d/y"},
+#  else
+    {(int)KS_CWS,	"\033[203;%d;%d/y"},
 #  endif
     {K_UP,		"\033[A"},
     {K_DOWN,		"\033[B"},
@@ -1003,6 +1067,18 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_KE,	"[KE]"},
     {(int)KS_TI,	"[TI]"},
     {(int)KS_TE,	"[TE]"},
+    {(int)KS_CIS,	"[CIS]"},
+    {(int)KS_CIE,	"[CIE]"},
+    {(int)KS_TS,	"[TS]"},
+    {(int)KS_FS,	"[FS]"},
+#  ifdef TERMINFO
+    {(int)KS_CWS,	"[%p1%dCWS%p2%d]"},
+    {(int)KS_CWP,	"[%p1%dCWP%p2%d]"},
+#  else
+    {(int)KS_CWS,	"[%dCWS%d]"},
+    {(int)KS_CWP,	"[%dCWP%d]"},
+#  endif
+    {(int)KS_CRV,	"[CRV]"},
     {K_UP,		"[KU]"},
     {K_DOWN,		"[KD]"},
     {K_LEFT,		"[KL]"},
@@ -1012,9 +1088,13 @@ struct builtin_term builtin_termcaps[] =
     {K_S_LEFT,		"[S-KL]"},
     {K_S_RIGHT,		"[S-KR]"},
     {K_F1,		"[F1]"},
+    {K_XF1,		"[xF1]"},
     {K_F2,		"[F2]"},
+    {K_XF2,		"[xF2]"},
     {K_F3,		"[F3]"},
+    {K_XF3,		"[xF3]"},
     {K_F4,		"[F4]"},
+    {K_XF4,		"[xF4]"},
     {K_F5,		"[F5]"},
     {K_F6,		"[F6]"},
     {K_F7,		"[F7]"},
@@ -1024,9 +1104,13 @@ struct builtin_term builtin_termcaps[] =
     {K_F11,		"[F11]"},
     {K_F12,		"[F12]"},
     {K_S_F1,		"[S-F1]"},
+    {K_S_XF1,		"[S-xF1]"},
     {K_S_F2,		"[S-F2]"},
+    {K_S_XF2,		"[S-xF2]"},
     {K_S_F3,		"[S-F3]"},
+    {K_S_XF3,		"[S-xF3]"},
     {K_S_F4,		"[S-F4]"},
+    {K_S_XF4,		"[S-xF4]"},
     {K_S_F5,		"[S-F5]"},
     {K_S_F6,		"[S-F6]"},
     {K_S_F7,		"[S-F7]"},
@@ -1041,11 +1125,13 @@ struct builtin_term builtin_termcaps[] =
     {K_INS,		"[INS]"},
     {K_DEL,		"[DEL]"},
     {K_HOME,		"[HOME]"},
+    {K_KHOME,		"[KHOME]"},
+    {K_XHOME,		"[XHOME]"},
     {K_END,		"[END]"},
+    {K_KEND,		"[KEND]"},
+    {K_XEND,		"[XEND]"},
     {K_PAGEUP,		"[PAGEUP]"},
     {K_PAGEDOWN,	"[PAGEDOWN]"},
-    {K_KHOME,		"[KHOME]"},
-    {K_KEND,		"[KEND]"},
     {K_KPAGEUP,		"[KPAGEUP]"},
     {K_KPAGEDOWN,	"[KPAGEDOWN]"},
     {K_MOUSE,		"[MOUSE]"},
@@ -1088,7 +1174,7 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"amiga"
 #endif
 
-#ifdef WIN32
+#ifdef MSWIN
 # define DEFAULT_TERM	(char_u *)"win32"
 #endif
 
@@ -1269,7 +1355,10 @@ set_termname(term)
 				{KS_KE, "ke"}, {KS_TI, "ti"}, {KS_TE, "te"},
 				{KS_BC, "bc"}, {KS_CSB,"Sb"}, {KS_CSF,"Sf"},
 				{KS_CAB,"AB"}, {KS_CAF,"AF"}, {KS_LE, "le"},
-				{KS_ND, "nd"}, {KS_OP, "op"},
+				{KS_ND, "nd"}, {KS_OP, "op"}, {KS_CRV, "RV"},
+				{KS_CIS, "IS"}, {KS_CIE, "IE"},
+				{KS_TS, "ts"}, {KS_FS, "fs"},
+				{KS_CWP, "WP"}, {KS_CWS, "WS"},
 				{(enum SpecialKey)0, NULL}
 			    };
 
@@ -1404,7 +1493,8 @@ set_termname(term)
 			mch_errmsg("\r\n");
 		    }
 		}
-		if (!starting)	/* when user typed :set term=xxx, quit here */
+		/* when user typed :set term=xxx, quit here */
+		if (starting != NO_SCREEN)
 		{
 		    screen_start();	/* don't know where cursor is now */
 		    wait_return(TRUE);
@@ -1435,6 +1525,10 @@ set_termname(term)
 	    {
 		out_flush();
 		gui_init();
+		/* If starting the GUI failed, don't do any of the other
+		 * things for this terminal */
+		if (!gui.in_use)
+		    return FAIL;
 #ifdef HAVE_TGETENT
 		break;		/* don't try using external termcap */
 #endif
@@ -1492,8 +1586,10 @@ set_termname(term)
 
 #ifdef USE_MOUSE
 # ifdef UNIX
-    /* for Unix, set the 'ttymouse' option to the type of mouse to be used.
-     * The termcode for the mouse is added as a side effect in option.c */
+    /*
+     * For Unix, set the 'ttymouse' option to the type of mouse to be used.
+     * The termcode for the mouse is added as a side effect in option.c.
+     */
     {
 	char_u	*p;
 
@@ -1505,10 +1601,27 @@ set_termname(term)
 	p = (char_u *)"dec";
 #  endif
 #  ifdef XTERM_MOUSE
+#   ifdef USE_CLIPBOARD
+#    ifdef USE_GUI
+	if (!term_is_gui(term))
+#    endif
+	    clip_init(FALSE);
+#   endif
 	if (vim_is_xterm(term))
-	    p = (char_u *)"xterm";
+	{
+	    if (use_xterm_mouse())
+		p = NULL;	/* keep existing value, might be "xterm2" */
+	    else
+		p = (char_u *)"xterm";
+#    ifdef XTERM_CLIP
+	    setup_xterm_clip();
+#    endif
+	}
 #  endif
-	set_option_value((char_u *)"ttym", 0L, p);
+	if (p != NULL)
+	    set_option_value((char_u *)"ttym", 0L, p);
+	else
+	    check_mouse_termcode();	/* set mouse termcode anyway */
     }
 # else
     set_mouse_termcode(KS_MOUSE, (char_u *)"\233M");
@@ -1525,7 +1638,7 @@ set_termname(term)
     }
 #endif
 
-#if defined(AMIGA) || defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__BEOS__) || defined(RISCOS)
+#ifdef USE_TERM_CONSOLE
 	/* DEFAULT_TERM indicates that it is the machine console. */
     if (STRCMP(term, DEFAULT_TERM))
 	term_console = FALSE;
@@ -1545,9 +1658,9 @@ set_termname(term)
     if (vim_is_fastterm(term))
 	p_tf = TRUE;
 #endif
-#if defined(AMIGA) || defined(MSDOS) || defined(WIN32) || defined(OS2) || defined(__BEOS__) || defined(RISCOS)
+#ifdef USE_TERM_CONSOLE
 /*
- * 'ttyfast' is default on Amiga, MSDOS, Win32, BeBox, RISCOS and OS/2 consoles
+ * 'ttyfast' is default on consoles
  */
     if (term_console)
 	p_tf = TRUE;
@@ -1555,8 +1668,11 @@ set_termname(term)
 
     ttest(TRUE);	/* make sure we have a valid set of terminal codes */
 
-    full_screen = TRUE;	    /* we can use termcap codes from now on */
-    set_term_defaults();    /* use current values as defaults */
+    full_screen = TRUE;		/* we can use termcap codes from now on */
+    set_term_defaults();	/* use current values as defaults */
+#ifdef HAVE_TGETENT
+    need_get_crv = TRUE;	/* Get terminal version later */
+#endif
 
     /*
      * Initialize the terminal with the appropriate termcap codes.
@@ -1564,13 +1680,15 @@ set_termname(term)
      * Don't do this when starting, need to parse the .vimrc first, because it
      * may redefine t_TI etc.
      */
-    if (!starting)
+    if (starting != NO_SCREEN)
     {
 	starttermcap();		/* may change terminal mode */
 #ifdef USE_MOUSE
 	setmouse();		/* may start using the mouse */
 #endif
+#ifdef WANT_TITLE
 	maketitle();		/* may display window title */
+#endif
     }
 
 	/* display initial screen after ttest() checking. jw. */
@@ -1586,7 +1704,7 @@ set_termname(term)
 #endif
     }
     set_winsize(width, height, FALSE);	/* may change Rows */
-    if (!starting)
+    if (starting != NO_SCREEN)
     {
 	if (scroll_region)
 	    scroll_region_reset();	    /* In case Rows changed */
@@ -1616,7 +1734,14 @@ set_termname(term)
     return OK;
 }
 
-#ifdef USE_MOUSE
+#if defined(USE_MOUSE) || defined(PROTO)
+#define HMT_NORMAL	1
+#define HMT_NETTERM	2
+#define HMT_DEC		4
+static int has_mouse_termcode = 0;
+
+# if (!defined(UNIX) || defined(XTERM_MOUSE) \
+	    || defined(NETTERM_MOUSE) || defined(DEC_MOUSE)) || defined(PROTO)
     void
 set_mouse_termcode(n, s)
     int		n;	/* KS_MOUSE, KS_NETTERM_MOUSE or KS_DEC_MOUSE */
@@ -1627,9 +1752,22 @@ set_mouse_termcode(n, s)
     name[0] = n;
     name[1] = K_FILLER;
     add_termcode(name, s);
+#  ifdef NETTERM_MOUSE
+    if (n == KS_NETTERM_MOUSE)
+	has_mouse_termcode |= HMT_NETTERM;
+    else
+#  endif
+#  ifdef DEC_MOUSE
+	if (n == KS_DEC_MOUSE)
+	    has_mouse_termcode |= HMT_DEC;
+	else
+#  endif
+	    has_mouse_termcode |= HMT_NORMAL;
 }
+# endif
 
-# ifdef UNIX
+# if ((defined(UNIX) || defined(OS2)) && (defined(XTERM_MOUSE) \
+	    || defined(DEC_MOUSE) || defined(GPM_MOUSE))) || defined(PROTO)
     void
 del_mouse_termcode(n)
     int		n;	/* KS_MOUSE, KS_NETTERM_MOUSE or KS_DEC_MOUSE */
@@ -1639,9 +1777,20 @@ del_mouse_termcode(n)
     name[0] = n;
     name[1] = K_FILLER;
     del_termcode(name);
+#  ifdef NETTERM_MOUSE
+    if (n == KS_NETTERM_MOUSE)
+	has_mouse_termcode &= ~HMT_NETTERM;
+    else
+#  endif
+#  ifdef DEC_MOUSE
+	if (n == KS_DEC_MOUSE)
+	    has_mouse_termcode &= ~HMT_DEC;
+	else
+#  endif
+	    has_mouse_termcode &= ~HMT_NORMAL;
 }
 # endif
-#endif /* USE_MOUSE */
+#endif
 
 #ifdef HAVE_TGETENT
 /*
@@ -1665,6 +1814,23 @@ tgetent_error(tbuf, term)
 	return (char_u *)"Terminal entry not found in termcap";
 #endif
     return NULL;
+}
+
+/*
+ * Some versions of tgetstr() have been reported to return -1 instead of NULL.
+ * Fix that here.
+ */
+    static char_u *
+vim_tgetstr(s, pp)
+    char	*s;
+    char_u	**pp;
+{
+    char	*p;
+
+    p = tgetstr(s, (char **)pp);
+    if (p == (char *)-1)
+	p = NULL;
+    return (char_u *)p;
 }
 #endif /* HAVE_TGETENT */
 
@@ -1924,7 +2090,7 @@ termcapinit(name)
 		 && strcmp((char *)mch_getenv((char_u *)"TERM"), "ansi") == 0)
 	term = DEFAULT_TERM;
 #endif
-#ifndef WIN32
+#ifndef MSWIN
     if (term == NULL)
 	term = mch_getenv((char_u *)"TERM");
 #endif
@@ -2057,9 +2223,19 @@ out_str_nf(s)
 out_str(s)
     char_u	 *s;
 {
-    if (out_pos > OUT_SIZE - 20)  /* avoid terminal strings being split up */
-	out_flush();
     if (s != NULL && *s)
+    {
+#ifdef USE_GUI
+	/* Don't use tputs() when GUI is used, ncurses crashes. */
+	if (gui.in_use)
+	{
+	    out_str_nf(s);
+	    return;
+	}
+#endif
+	/* avoid terminal strings being split up */
+	if (out_pos > OUT_SIZE - 20)
+	    out_flush();
 #ifdef HAVE_TGETENT
 	tputs((char *)s, 1, TPUTSFUNCAST out_char_nf);
 #else
@@ -2067,9 +2243,10 @@ out_str(s)
 	    out_char_nf(*s++);
 #endif
 
-    /* For testing we write one string at a time. */
-    if (p_wd)
-	out_flush();
+	/* For testing we write one string at a time. */
+	if (p_wd)
+	    out_flush();
+    }
 }
 
 /*
@@ -2104,6 +2281,29 @@ term_delete_lines(line_count)
     OUT_STR(tgoto((char *)T_CDL, 0, line_count));
 }
 
+#if defined(HAVE_TGETENT) || defined(PROTO)
+    void
+term_set_winpos(x, y)
+    int	    x;
+    int	    y;
+{
+    /* Can't handle a negative value here */
+    if (x < 0)
+	x = 0;
+    if (y < 0)
+	y = 0;
+    OUT_STR(tgoto((char *)T_CWP, y, x));
+}
+
+    void
+term_set_winsize(width, height)
+    int	    width;
+    int	    height;
+{
+    OUT_STR(tgoto((char *)T_CWS, height, width));
+}
+#endif
+
     void
 term_fg_color(n)
     int	    n;
@@ -2132,14 +2332,10 @@ term_color(s, n)
     int	    n;
 {
     /* Special handling of 16 colors, because termcap can't handle it */
+    /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     if (n > 7 && atoi((char *)T_CCO) == 16
 	      && s[0] == ESC && s[1] == '[' && s[2] != NUL
-#ifdef TERMINFO
-	      && STRCMP(s + 3, "%p1%dm") == 0
-#else
-	      && STRCMP(s + 3, "%dm") == 0
-#endif
-		)
+	      && (STRCMP(s + 3, "%p1%dm") == 0 || STRCMP(s + 3, "%dm") == 0))
     {
 	if (s[2] == '3')	/* foreground */
 	{
@@ -2163,6 +2359,22 @@ term_color(s, n)
     }
     OUT_STR(tgoto((char *)s, 0, n));
 }
+
+#if (defined(WANT_TITLE) && (defined(UNIX) || defined(OS2))) || defined(PROTO)
+/*
+ * Generic function to set window title, using t_ts and t_fs.
+ */
+    void
+term_settitle(title)
+    char_u	*title;
+{
+    /* t_ts takes one argument: column in status line */
+    OUT_STR(tgoto((char *)T_TS, 0, 0));	/* set title start */
+    out_str_nf(title);
+    out_str(T_FS);			/* set title end */
+    out_flush();
+}
+#endif
 
 /*
  * Make sure we have a valid set or terminal options.
@@ -2264,6 +2476,7 @@ ttest(pairs)
     need_gather = TRUE;
 }
 
+#if defined(USE_GUI) || defined(PROTO)
 /*
  * Represent the given long_u as individual bytes, with the most significant
  * byte first, and store them in dst.
@@ -2313,7 +2526,10 @@ get_long_from_buf(buf, val)
     }
     return len;
 }
+#endif
 
+#if defined(USE_GUI) \
+    || (defined(USE_MOUSE) && (!defined(UNIX) || defined(XTERM_MOUSE)))
 /*
  * Read the next num_bytes bytes from buf, and store them in bytes.  Assume
  * that buf has been through inchar().	Returns the actual number of bytes used
@@ -2347,6 +2563,7 @@ get_bytes_from_buf(buf, bytes, num_bytes)
     }
     return len;
 }
+#endif
 
     void
 check_winsize()
@@ -2366,7 +2583,7 @@ check_winsize()
 }
 
 /*
- * set window size
+ * Set window size.
  * If 'mustset' is TRUE, we must set Rows and Columns, do not get real
  * window size (this is used for the :win command).
  * If 'mustset' is FALSE, we may try to get the real window size and if
@@ -2404,7 +2621,7 @@ set_winsize(width, height, mustset)
 #ifdef AMIGA
     out_flush();	    /* must do this before mch_get_winsize() for some
 			       obscure reason */
-#endif /* AMIGA */
+#endif
 
     if (mustset || (ui_get_winsize() == FAIL && height != 0))
     {
@@ -2416,9 +2633,13 @@ set_winsize(width, height, mustset)
     else
 	check_winsize();	/* always check, to get p_scroll right */
 
-    if (!starting)
+    if (starting != NO_SCREEN)
     {
+#ifdef WANT_TITLE
 	maketitle();
+#endif
+	changed_line_abv_curs();
+	invalidate_botline();
 
 	/*
 	 * We only redraw when it's needed:
@@ -2430,32 +2651,16 @@ set_winsize(width, height, mustset)
 	 * Always need to call update_screen() or screenalloc(), to make
 	 * sure Rows/Columns and the size of NextScreen is correct!
 	 */
-	if (State == ASKMORE || State == EXTERNCMD || State == CONFIRM)
+	if (State == ASKMORE || State == EXTERNCMD || State == CONFIRM
+							     || exmode_active)
 	{
 	    screenalloc(FALSE);
-	    if (State == ASKMORE)
-	    {
-		msg_moremsg(FALSE);	/* display --more-- message again */
-		msg_row = Rows - 1;
-	    }
-#ifdef CON_DIALOG
-	    else if (State == CONFIRM)
-	    {
-		display_confirm_msg();	/* display ":confirm" message again */
-		msg_row = Rows - 1;
-	    }
-#endif
-	    else
-		windgoto(msg_row, msg_col); /* put cursor back */
+	    repeat_message();
 	}
 	else if (State == CMDLINE)
 	{
 	    update_screen(NOT_VALID);
 	    redrawcmdline();
-	}
-	else if (exmode_active)
-	{
-	    screenalloc(FALSE);
 	}
 	else
 	{
@@ -2470,6 +2675,8 @@ set_winsize(width, height, mustset)
     --busy;
 }
 
+static int	cur_tmode = TMODE_COOK;
+
 /*
  * Set the terminal to TMODE_RAW (for Normal mode) or TMODE_COOK (for external
  * commands and Ex mode).
@@ -2478,8 +2685,6 @@ set_winsize(width, height, mustset)
 settmode(tmode)
     int	 tmode;
 {
-    static int	oldtmode = TMODE_COOK;
-
 #ifdef USE_GUI
     /* don't set the term where gvim was started to any mode */
     if (gui.in_use)
@@ -2500,10 +2705,11 @@ settmode(tmode)
 	 * normal again, because that causes problems (logout!) on some
 	 * machines.
 	 */
-	if (tmode != TMODE_COOK || oldtmode != TMODE_COOK)
+	if (tmode != TMODE_COOK || cur_tmode != TMODE_COOK)
 	{
 	    out_flush();
 	    mch_settmode(tmode);    /* machine specific function */
+	    cur_tmode = tmode;
 #ifdef USE_MOUSE
 	    if (tmode != TMODE_RAW)
 		mch_setmouse(FALSE);		/* switch mouse off */
@@ -2511,8 +2717,22 @@ settmode(tmode)
 		setmouse();			/* may switch mouse on */
 #endif
 	    out_flush();
-	    oldtmode = tmode;
 	}
+
+#ifdef HAVE_TGETENT
+	/* Request version string (for xterm) just after switching to raw mode
+	 * (otherwise the result will be echoed).  The result it caught in
+	 * check_termcode(). */
+	if (cur_tmode == TMODE_RAW && need_get_crv && *T_CRV)
+	{
+	    out_str(T_CRV);
+	    need_get_crv = FALSE;
+	    /* check for the characters now, otherwise they might be eaten by
+	     * get_keystroke() */
+	    (void)vpeekc();
+	}
+#endif
+
     }
 }
 
@@ -2569,19 +2789,27 @@ setmouse()
     if (gui.in_use)
 	return;
 # endif
-    if (*p_mouse == NUL)	    /* be quick when mouse is off */
+    /* be quick when mouse is off */
+    if (*p_mouse == NUL || has_mouse_termcode == 0)
 	return;
+
+    /* don't switch mouse on when not in raw mode (Ex mode) */
+    if (cur_tmode != TMODE_RAW)
+    {
+	mch_setmouse(FALSE);
+	return;
+    }
 
     if (VIsual_active)
 	checkfor = MOUSE_VISUAL;
-    else if (State == HITRETURN)
+    else if (State == HITRETURN || State == ASKMORE || State == SETWSIZE)
 	checkfor = MOUSE_RETURN;
     else if (State & INSERT)
 	checkfor = MOUSE_INSERT;
     else if (State & CMDLINE)
 	checkfor = MOUSE_COMMAND;
-    else if (State == CONFIRM)	    /* don't use mouse for ":confirm" */
-	checkfor = ' ';
+    else if (State == CONFIRM || State == EXTERNCMD)
+	checkfor = ' '; /* don't use mouse for ":confirm" or ":!cmd" */
     else
 	checkfor = MOUSE_NORMAL;    /* assume normal mode */
 
@@ -2822,6 +3050,7 @@ find_termcode(name)
     return NULL;
 }
 
+#if defined(CMDLINE_COMPL) || defined(PROTO)
     char_u *
 get_termcode(i)
     int	    i;
@@ -2830,6 +3059,7 @@ get_termcode(i)
 	return NULL;
     return &termcodes[i].name[0];
 }
+#endif
 
     void
 del_termcode(name)
@@ -2863,10 +3093,14 @@ del_termcode(name)
  * Return 0 for no match, -1 for partial match, > 0 for full match.
  * With a match, the match is removed, the replacement code is inserted in
  * typebuf[] and the number of characters in typebuf[] is returned.
+ * When "buf" is not NULL, it is used instead of typebuf[]. "buflen" is then
+ * the length of the string in buf[].
  */
     int
-check_termcode(max_offset)
-    int	    max_offset;
+check_termcode(max_offset, buf, buflen)
+    int		max_offset;
+    char_u	*buf;
+    int		buflen;
 {
     char_u	*tp;
     char_u	*p;
@@ -2903,6 +3137,9 @@ check_termcode(max_offset)
     long	timediff;		/* elapsed time in msec */
 # endif
 #endif
+    int		cpo_koffset;
+
+    cpo_koffset = (vim_strchr(p_cpo, CPO_KOFFSET) != NULL);
 
     /*
      * Speed up the checks for terminal codes by gathering all first bytes
@@ -2918,9 +3155,22 @@ check_termcode(max_offset)
      * can become very long.
      * This is used often, KEEP IT FAST!
      */
-    for (offset = 0; offset < typelen && offset < max_offset; ++offset)
+    for (offset = 0; offset < max_offset; ++offset)
     {
-	tp = typebuf + typeoff + offset;
+	if (buf == NULL)
+	{
+	    if (offset >= typelen)
+		break;
+	    tp = typebuf + typeoff + offset;
+	    len = typelen - offset;	/* length of the input */
+	}
+	else
+	{
+	    if (offset >= buflen)
+		break;
+	    tp = buf + offset;
+	    len = buflen - offset;
+	}
 
 	/*
 	 * Don't check characters after K_SPECIAL, those are already
@@ -2944,13 +3194,12 @@ check_termcode(max_offset)
 	    continue;
 
 	/*
-	 * Skip this position if p_ek is not set and
-	 * typebuf[typeoff + offset] is an ESC and we are in insert mode
+	 * Skip this position if p_ek is not set and tp[0] is an ESC and we
+	 * are in Insert mode.
 	 */
 	if (*tp == ESC && !p_ek && (State & INSERT))
 	    continue;
 
-	len = typelen - offset;	/* length of the input */
 	new_slen = 0;		/* Length of what will replace the termcode */
 	key_name[0] = NUL;	/* no key name found yet */
 
@@ -2977,9 +3226,10 @@ check_termcode(max_offset)
 		/*
 		 * Ignore the entry if we are not at the start of typebuf[]
 		 * and there are not enough characters to make a match.
+		 * But only when the 'K' flag is in 'cpoptions'.
 		 */
 		slen = termcodes[i].len;
-		if (offset && len < slen)
+		if (cpo_koffset && offset && len < slen)
 		    continue;
 		if (STRNCMP(termcodes[i].code, tp,
 				     (size_t)(slen > len ? len : slen)) == 0)
@@ -3006,24 +3256,6 @@ check_termcode(max_offset)
 			    }
 		    }
 
-		    /* replace K_XF1 by K_F1, K_XF1 by K_F2, etc. */
-		    if (termcodes[i].name[0] == KS_EXTRA)
-			switch (termcodes[i].name[1])
-			{
-			    case KE_XF1: termcodes[i].name[0] = 'k';
-					 termcodes[i].name[1] = '1';
-					 break;
-			    case KE_XF2: termcodes[i].name[0] = 'k';
-					 termcodes[i].name[1] = '2';
-					 break;
-			    case KE_XF3: termcodes[i].name[0] = 'k';
-					 termcodes[i].name[1] = '3';
-					 break;
-			    case KE_XF4: termcodes[i].name[0] = 'k';
-					 termcodes[i].name[1] = '4';
-					 break;
-			}
-
 		    key_name[0] = termcodes[i].name[0];
 		    key_name[1] = termcodes[i].name[1];
 
@@ -3033,7 +3265,37 @@ check_termcode(max_offset)
 	}
 
 	if (key_name[0] == NUL)
-	    continue;	    /* No match at this position, try next one */
+	{
+	    /* Check for xterm version string: "<Esc>[><x>;<vers>;<y>c".  Also
+	     * eat other possible responses to t_RV, rxvt returns
+	     * "<Esc>[?1;2c" */
+	    if (tp[0] == ESC && tp[1] == '[' && len >= 3 && *T_CRV != NUL)
+	    {
+		j = 0;
+		extra = 0;
+		for (i = 3; i < len && (isdigit(tp[i]) || tp[i] == ';'); ++i)
+		    if (tp[i] == ';' && ++j == 1)
+			extra = atoi((char *)tp + i + 1);
+		if (i == len)
+		    return -1;		/* not enough characters */
+
+		/* eat it when at least one digit and ending in 'c' */
+		if (i > 3 && tp[i] == 'c')
+		{
+		    /* If xterm version is >= 95, we can use mouse dragging */
+		    if (tp[2] == '>' && j == 2 && extra >= 95)
+			set_option_value((char_u *)"ttymouse", 0L,
+							  (char_u *)"xterm2");
+		    key_name[0] = (int)KS_EXTRA;
+		    key_name[1] = (int)KE_IGNORE;
+		    slen = i + 1;
+		}
+		else
+		    continue;
+	    }
+	    else
+		continue;    /* No match at this position, try next one */
+	}
 
 	/* We only get here when we have a complete termcode match */
 
@@ -3052,7 +3314,7 @@ check_termcode(max_offset)
 	{
 	    is_click = is_drag = FALSE;
 
-#if !defined(UNIX) || defined(XTERM_MOUSE)
+#if !defined(UNIX) || defined(XTERM_MOUSE) || defined(USE_GUI)
 	    if (key_name[0] == (int)KS_MOUSE)
 	    {
 		/*
@@ -3072,6 +3334,25 @@ check_termcode(max_offset)
 		mouse_col = bytes[1] - ' ' - 1;
 		mouse_row = bytes[2] - ' ' - 1;
 		slen += num_bytes;
+#ifdef UNIX
+		if (use_xterm_mouse() > 1)
+		{
+		    if (mouse_code & MOUSE_DRAG_XTERM)
+			mouse_code |= MOUSE_DRAG;
+		}
+#endif
+#ifdef XTERM_CLIP
+		else
+		{
+		    if (!(mouse_code & MOUSE_DRAG & ~MOUSE_CLICK_MASK))
+		    {
+			if ((mouse_code & MOUSE_RELEASE) == MOUSE_RELEASE)
+			    stop_xterm_trace();
+			else
+			    start_xterm_trace(mouse_code);
+		    }
+		}
+#endif
 	    }
 #endif /* !UNIX || XTERM_MOUSE */
 #ifdef NETTERM_MOUSE
@@ -3255,12 +3536,21 @@ check_termcode(max_offset)
 	    else
 	    {
 #if defined(UNIX) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-# ifdef USE_GUI
+# ifdef GPM_MOUSE
+		extern int gpm_flag; /* gpm library variable */
+#  ifdef USE_GUI
 		/*
-		 * Only for Unix, when GUI is not active, we handle
+		 * Only for Unix, when GUI or gpm is not active, we handle
 		 * multi-clicks here.
 		 */
+		if (gpm_flag == 0 && !gui.in_use)
+#  else
+		if (gpm_flag == 0)
+#  endif
+# else
+#  ifdef USE_GUI
 		if (!gui.in_use)
+#  endif
 # endif
 		{
 		    /*
@@ -3287,7 +3577,7 @@ check_termcode(max_offset)
 		    orig_mouse_row = mouse_row;
 		    orig_topline = curwin->w_topline;
 		}
-# ifdef USE_GUI
+# if defined(USE_GUI) || defined(GPM_MOUSE)
 		else
 		    orig_num_clicks = NUM_MOUSE_CLICKS(mouse_code);
 # endif
@@ -3338,7 +3628,7 @@ check_termcode(max_offset)
 	 * If using the GUI, then we get menu and scrollbar events.
 	 *
 	 * A menu event is encoded as K_SPECIAL, KS_MENU, K_FILLER followed by
-	 * four bytes which are to be taken as a pointer to the GuiMenu
+	 * four bytes which are to be taken as a pointer to the VimMenu
 	 * structure.
 	 *
 	 * A scrollbar event is K_SPECIAL, KS_SCROLLBAR, K_FILLER followed by
@@ -3354,15 +3644,15 @@ check_termcode(max_offset)
 	    num_bytes = get_long_from_buf(tp + slen, &val);
 	    if (num_bytes == -1)
 		return -1;
-	    current_menu = (GuiMenu *)val;
+	    current_menu = (VimMenu *)val;
 	    slen += num_bytes;
 	}
 	else if (key_name[0] == (int)KS_SCROLLBAR)
 	{
 	    /* Get the last scrollbar event in the queue of the same type */
 	    j = 0;
-	    for (i = 0; tp[j] == CSI && tp[j+1] == KS_SCROLLBAR
-						    && tp[j+2] != NUL; ++i)
+	    for (i = 0; tp[j] == CSI && tp[j + 1] == KS_SCROLLBAR
+						     && tp[j + 2] != NUL; ++i)
 	    {
 		j += 3;
 		num_bytes = get_bytes_from_buf(tp + j, bytes, 1);
@@ -3387,8 +3677,8 @@ check_termcode(max_offset)
 	{
 	    /* Get the last horiz. scrollbar event in the queue */
 	    j = 0;
-	    for (i = 0; tp[j] == CSI && tp[j+1] == KS_HORIZ_SCROLLBAR
-						       && tp[j+2] != NUL; ++i)
+	    for (i = 0; tp[j] == CSI && tp[j + 1] == KS_HORIZ_SCROLLBAR
+						     && tp[j + 2] != NUL; ++i)
 	    {
 		j += 3;
 		num_bytes = get_long_from_buf(tp + j, &val);
@@ -3413,18 +3703,33 @@ check_termcode(max_offset)
 	}
 	string[new_slen] = NUL;
 	extra = new_slen - slen;
-	if (extra < 0)
+	if (buf == NULL)
+	{
+	    if (extra < 0)
 		/* remove matched chars, taking care of noremap */
-	    del_typebuf(-extra, offset);
-	else if (extra > 0)
+		del_typebuf(-extra, offset);
+	    else if (extra > 0)
 		/* insert the extra space we need */
-	    ins_typebuf(string + slen, FALSE, offset, FALSE);
+		ins_typebuf(string + slen, FALSE, offset, FALSE);
 
-	/*
-	 * Careful: del_typebuf() and ins_typebuf() may have
-	 * reallocated typebuf[]
-	 */
-	mch_memmove(typebuf + typeoff + offset, string, (size_t)new_slen);
+	    /*
+	     * Careful: del_typebuf() and ins_typebuf() may have
+	     * reallocated typebuf[]
+	     */
+	    mch_memmove(typebuf + typeoff + offset, string, (size_t)new_slen);
+	}
+	else
+	{
+	    if (extra < 0)
+		/* remove matched characters */
+		mch_memmove(buf + offset, buf + offset - extra,
+					   (size_t)(buflen + offset + extra));
+	    else if (extra > 0)
+		/* insert the extra space we need */
+		mch_memmove(buf + offset + extra, buf + offset,
+						   (size_t)(buflen - offset));
+	    mch_memmove(buf + offset, string, (size_t)new_slen);
+	}
 	return (len + extra + offset);
     }
     return 0;			    /* no match found */
@@ -3523,23 +3828,16 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	 */
 	if (do_key_code)
 	{
-	    for (i = 0; i < tc_len; ++i)
+	    i = find_term_bykeys(src);
+	    if (i >= 0)
 	    {
-		slen = termcodes[i].len;
-		if (slen > 1
-			&& STRNCMP(termcodes[i].code, src, (size_t)slen) == 0)
-		{
-		    result[dlen++] = K_SPECIAL;
-		    result[dlen++] = termcodes[i].name[0];
-		    result[dlen++] = termcodes[i].name[1];
-		    src += slen;
-		    break;
-		}
-	    }
-
-	    /* If terminal code matched, continue after it. */
-	    if (i != tc_len)
+		result[dlen++] = K_SPECIAL;
+		result[dlen++] = termcodes[i].name[0];
+		result[dlen++] = termcodes[i].name[1];
+		src += termcodes[i].len;
+		/* If terminal code matched, continue after it. */
 		continue;
+	    }
 	}
 
 	/*
@@ -3584,6 +3882,26 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	from = *bufp;
     vim_free(result);
     return from;
+}
+
+/*
+ * Find a termcode with keys 'src' (must be NUL terminated).
+ * Return the index in termcodes[], or -1 if not found.
+ */
+    int
+find_term_bykeys(src)
+    char_u	*src;
+{
+    int		i;
+    int		slen;
+
+    for (i = 0; i < tc_len; ++i)
+    {
+	slen = termcodes[i].len;
+	if (slen > 1 && STRNCMP(termcodes[i].code, src, (size_t)slen) == 0)
+	    return i;
+    }
+    return -1;
 }
 
 /*
@@ -3745,6 +4063,103 @@ show_one_termcode(name, code, printit)
     }
     return len;
 }
+
+#if defined(CMDLINE_COMPL) || defined(PROTO)
+/*
+ * Translate an internal mapping/abbreviation representation into the
+ * corresponding external one recognized by :map/:abbrev commands;
+ * respects the current B/k/< settings of 'cpoption'.
+ *
+ * This function is called when expanding mappings/abbreviations on the
+ * command-line, and for building the "Ambiguous mapping..." error messæge.
+ *
+ * It uses a growarray to build the translation string since the
+ * latter can be wider than the original description. The caller has to
+ * free the string afterwards.
+ *
+ * Returns NULL when there is a problem.
+ */
+    char_u *
+translate_mapping(str, expmap)
+    char_u	*str;
+    int		expmap;  /* TRUE when expanding mappings on command-line */
+{
+    struct growarray	ga;
+    int			c;
+    int			modifiers;
+    int			cpo_bslash;
+    int			cpo_special;
+    int			cpo_keycode;
+
+    ga_init(&ga);
+    ga.ga_itemsize = 1;
+    ga.ga_growsize = 40;
+
+    cpo_bslash = (vim_strchr(p_cpo, CPO_BSLASH) != NULL);
+    cpo_special = (vim_strchr(p_cpo, CPO_SPECI) != NULL);
+    cpo_keycode = (vim_strchr(p_cpo, CPO_KEYCODE) == NULL);
+
+    for (; *str; ++str)
+    {
+	c = *str;
+	if (c == K_SPECIAL && str[1] != NUL && str[2] != NUL)
+	{
+	    modifiers = 0;
+	    if (str[1] == KS_MODIFIER)
+	    {
+		str++;
+		modifiers = *++str;
+		c = *++str;
+	    }
+	    if (cpo_special && cpo_keycode && c == K_SPECIAL && !modifiers)
+	    {
+		int	i;
+
+		/* try to find special key in termcodes */
+		for (i = 0; i < tc_len; ++i)
+		    if (termcodes[i].name[0] == str[1]
+					    && termcodes[i].name[1] == str[2])
+			break;
+		if (i < tc_len)
+		{
+		    ga_concat(&ga, termcodes[i].code);
+		    str += 2;
+		    continue; /* for (str) */
+		}
+	    }
+	    if (c == K_SPECIAL && str[1] != NUL && str[2] != NUL)
+	    {
+		if (expmap && cpo_special)
+		{
+		    ga_clear(&ga);
+		    return NULL;
+		}
+		c = TO_SPECIAL(str[1], str[2]);
+		if (c == K_ZERO)	/* display <Nul> as ^@ */
+		    c = NUL;
+		str += 2;
+	    }
+	    if (IS_SPECIAL(c) || modifiers)	/* special key */
+	    {
+		if (expmap && cpo_special)
+		{
+		    ga_clear(&ga);
+		    return NULL;
+		}
+		ga_concat(&ga, get_special_key_name(c, modifiers));
+		continue; /* for (str) */
+	    }
+	}
+	if (c == ' ' || c == '\t' || c == Ctrl('J') || c == Ctrl('V')
+	    || (c == '<' && !cpo_special) || (c == '\\' && !cpo_bslash))
+	    ga_append(&ga, cpo_bslash ? Ctrl('V') : '\\');
+	if (c)
+	    ga_append(&ga, c);
+    }
+    ga_append(&ga, NUL);
+    return (char_u *)(ga.ga_data);
+}
+#endif
 
 #if (defined(WIN32) && !defined(USE_GUI)) || defined(PROTO)
 static char ksme_str[20];
