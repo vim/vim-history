@@ -4141,11 +4141,13 @@ win_new_height(wp, height)
     wp->w_height = height;
     wp->w_skipcol = 0;
 
+    /* Don't change w_topline when height is zero.  Don't set w_topline when
+     * 'scrollbind' is set and this isn't the current window. */
+    if (height > 0
 #ifdef FEAT_SCROLLBIND
-    /* Don't set w_topline when 'scrollbind' is set and this isn't the current
-     * window. */
-    if (!wp->w_p_scb || wp == curwin)
+	    && (!wp->w_p_scb || wp == curwin)
 #endif
+       )
     {
 	lnum = wp->w_cursor.lnum;
 	if (lnum < 1)		/* can happen when starting up */
