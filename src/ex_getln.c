@@ -93,7 +93,7 @@ static int	nextwild __ARGS((expand_T *xp, int type, int options));
 static int	showmatches __ARGS((expand_T *xp, int wildmenu));
 static void	set_expand_context __ARGS((expand_T *xp));
 static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, int));
-static int	glob_in_path_prefix __ARGS((expand_T *xp));
+static int	expand_showtail __ARGS((expand_T *xp));
 #ifdef FEAT_CMDL_COMPL
 static int	ExpandRTDir __ARGS((char_u *pat, int *num_file, char_u ***file, char *dirname));
 # if defined(FEAT_USR_CMDS) && defined(FEAT_EVAL)
@@ -2713,7 +2713,7 @@ nextwild(xp, type, options)
     if (xp->xp_numfiles == -1)
     {
 	set_expand_context(xp);
-	cmd_showtail = !glob_in_path_prefix(xp);
+	cmd_showtail = expand_showtail(xp);
     }
 
     if (xp->xp_context == EXPAND_UNSUCCESSFUL)
@@ -3226,7 +3226,7 @@ showmatches(xp, wildmenu)
 	set_expand_context(xp);
 	i = expand_cmdline(xp, ccline.cmdbuff, ccline.cmdpos,
 						    &num_files, &files_found);
-	showtail = !glob_in_path_prefix(xp);
+	showtail = expand_showtail(xp);
 	if (i != EXPAND_OK)
 	    return i;
 
@@ -3399,34 +3399,36 @@ sm_gettail(s)
     return t;
 }
 
-
+/*
+ * Return TRUE if we only need to show the tail of completion matches.
+ * When not completing file names or there is a wildcard in the path FALSE is
+ * returned.
+ */
     static int
-glob_in_path_prefix(xp)
+expand_showtail(xp)
     expand_T	*xp;
 {
     char_u	*s;
     char_u	*end;
 
+    /* When not completing file names a "/" may mean something different. */
     if (xp->xp_context != EXPAND_FILES && xp->xp_context != EXPAND_DIRECTORIES)
 	return FALSE;
 
     end = gettail(xp->xp_pattern);
-    if (end == xp->xp_pattern)
+    if (end == xp->xp_pattern)		/* there is no path separator */
 	return FALSE;
 
     for (s = xp->xp_pattern; s < end; s++)
     {
-	if (*s == '\\')	/* skip backslash */
-	    if (*++s == 0)
-		break;
-
-	switch (*s)
-	{
-	    case '*': case '?': case '[':
-		return TRUE;
-	}
+	/* Skip escaped wildcards.  Only when the backslash is not a path
+	 * separator, on DOS the '*' "path\*\file" must not be skipped. */
+	if (rem_backslash(s))
+	    ++s;
+	else if (vim_strchr((char_u *)"*?[", *s) != NULL)
+	    return FALSE;
     }
-    return FALSE;
+    return TRUE;
 }
 
 /*
@@ -3434,7 +3436,7 @@ glob_in_path_prefix(xp)
  * When expanding file names: The string will be used with expand_wildcards().
  * Copy the file name into allocated memory and add a '*' at the end.
  * When expanding other names: The string will be used with regcomp().  Copy
- * the name into allocated memory and add ".*" at the end.
+ * the name into allocated memory and prepend "^".
  */
     char_u *
 addstar(fname, len, context)
@@ -3474,6 +3476,11 @@ addstar(fname, len, context)
 		/* Buffer names are like file names.  "." should be literal */
 		if (context == EXPAND_BUFFERS && fname[i] == '.')
 		    new_len++;		/* "." becomes "\." */
+
+		/* Custom expansion takes care of special things, match
+		 * backslashes literally (perhaps also for other types?) */
+		if (context == EXPAND_USER_DEFINED && fname[i] == '\\')
+		    new_len++;		/* '\' becomes "\\" */
 	    }
 	    retval = alloc(new_len);
 	    if (retval != NULL)
@@ -3482,7 +3489,10 @@ addstar(fname, len, context)
 		j = 1;
 		for (i = 0; i < len; i++, j++)
 		{
-		    if (fname[i] == '\\' && ++i == len)	/* skip backslash */
+		    /* Skip backslash.  But why?  At least keep it for custom
+		     * expansion. */
+		    if (context != EXPAND_USER_DEFINED
+					    && fname[i] == '\\' && ++i == len)
 			break;
 
 		    switch (fname[i])
@@ -3494,6 +3504,9 @@ addstar(fname, len, context)
 			case '?':   retval[j] = '.';
 				    continue;
 			case '.':   if (context == EXPAND_BUFFERS)
+					retval[j++] = '\\';
+				    break;
+			case '\\':  if (context == EXPAND_USER_DEFINED)
 					retval[j++] = '\\';
 				    break;
 		    }
