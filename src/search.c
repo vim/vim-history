@@ -1890,11 +1890,10 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	    {
 		int col;
 
-		c = 0;
 		for (col = pos.col - 1; col >= 0; --col)
 		    if (linep[col] != '\\')
 			break;
-		if ((c & 1) == 0)
+		if ((((int)pos.col - 1 - col) & 1) == 0)
 		{
 		    inquote = !inquote;
 		    start_in_quotes = FALSE;
