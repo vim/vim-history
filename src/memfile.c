@@ -517,6 +517,17 @@ mf_free(mfp, hp)
 	mf_ins_free(mfp, hp);	/* put *hp in the free list */
 }
 
+#if defined(__MORPHOS__)
+/* function is missing in MorphOS libnix version */
+extern unsigned long *__stdfiledes;
+
+    static unsigned long
+fdtofh(int filedescriptor)
+{
+    return __stdfiledes[filedescriptor];
+}
+#endif
+
 /*
  * Sync the memory file *mfp to disk.
  * Flags:
@@ -660,14 +671,13 @@ mf_sync(mfp, flags)
 		Flush(fp->ufbfh);
 	}
 # else
-#  if defined(_DCC) || defined(__GNUC__)
+#  if defined(_DCC) || defined(__GNUC__) || defined(__MORPHOS__)
 	{
-#   ifdef __GNUC__
+#   if defined(__GNUC__) && !defined(__MORPHOS__)
 	    /* Have function (in libnix at least),
 	     * but ain't got no prototype anywhere. */
-	    unsigned long fdtofh(int filedescriptor);
+	    extern unsigned long fdtofh(int filedescriptor);
 #   endif
-
 	    BPTR fh = (BPTR)fdtofh(mfp->mf_fd);
 
 	    if (fh != 0)

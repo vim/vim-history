@@ -26,3 +26,9 @@ The DICE makefile has been reported to work by one person only.
 
 You will have to set the "VIM" environment variable to the location of the
 documentation files.
+
+
+MorphOS
+
+Use the Make_morphos.mak Makefile:
+	make -f Make_morphos.mak

@@ -1,4 +1,4 @@
-*os_amiga.txt*  For Vim version 6.2.  Last change: 2001 Sep 03
+*os_amiga.txt*  For Vim version 6.2.  Last change: 2004 Apr 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6,6 +6,7 @@
 
 							*Amiga*
 This file contains the particularities for the Amiga version of Vim.
+There is also a section specifically for |MorphOS| below.
 
 Installation on the Amiga:
 - Assign "VIM:" to the directory where the Vim "doc" directory is.  Vim will
@@ -74,5 +75,65 @@ automatically in Vim). Examples: >
 Commands that accept a single file name allow for embedded spaces in the file
 name. However, when using commands that accept several file names, embedded
 spaces need to be escaped with a backslash.
+
+------------------------------------------------------------------------------
+Vim for MorphOS							*MorphOS*
+
+[this section mostly by Ali Akcaagac]
+
+For the latest info about the MorphOS version:
+	http://www.akcaagac.com/index_vim.html
+
+
+Problems ~
+
+There are a couple of problems which are not MorphOS related but more Vim and
+UN*X related. When starting up Vim in ram: it complains with a nag requester
+from MorphOS please simply ignore it. Another problem is when running Vim as
+is some plugins will cause a few problems which you can ignore as well.
+Hopefully someone will be fixing it over the time.
+
+To pass all these problems for now you can either run:
+
+	vim <file to be edited>
+
+or if you want to run Vim plain and enjoy the motion of Helpfiles etc. it then
+would be better to enter:
+
+	vim --noplugins <of course you can add a file>
+
+
+Installation ~
+
+1) Please copy the binary 'VIM' file to c:
+2) Get the Vim runtime package from:
+
+	ftp://ftp.vim.org/pub/vim/amiga/vim62rt.tgz
+
+   and unpack it in your 'Apps' directory of the MorphOS installation. For me
+   this would create following directory hierarchy:
+
+	MorphOS:Apps/Vim/Vim62/...
+
+3) Add the following lines to your s:shell-startup (Important!).
+
+	;Begin VIM
+	Set VIM=MorphOS:Apps/Vim/Vim62
+	Assign HOME: ""
+	;End VIM
+
+4) Copy the '.vimrc' file to s:
+
+5) There is also a file named 'color-sequence' included in this archive. This
+   will set the MorphOS Shell to show ANSI colors. Please copy the file to s:
+   and change the s:shell-startup to:
+
+	;Begin VIM
+	Set VIM=MorphOS:Apps/Vim/Vim62
+	Assign HOME: ""
+	Execute S:Color-Sequence
+	Cls
+	;End VIM
+
 
  vim:tw=78:ts=8:ft=help:norl:
