@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 02
+" Last Change:	2002 May 07
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -913,6 +913,10 @@ if (exists("did_load_filetypes") || exists("syntax_on"))
 	\ && !exists("did_install_syntax_menu")
   let did_install_syntax_menu = 1
 
+" Skip setting up the individual syntax selection menus when
+" skip_syntax_sel_menu is defined (it takes quite a bit of time).
+if !exists("skip_syntax_sel_menu")
+
 " Define the SetSyn function, used for the Syntax menu entries.
 " Set 'filetype' and also 'syntax' if it is manually selected.
 fun! SetSyn(name)
@@ -1285,6 +1289,8 @@ fun! s:Nosynonly()
     unlet s:syntax_menu_synonly
   endif
 endfun
+
+endif " !exists("skip_syntax_sel_menu")
 
 an 50.210 &Syntax.&Off			:syn off<CR>
 an 50.700 &Syntax.-SEP3-		<Nop>
