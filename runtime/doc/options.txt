@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.3.  Last change: 2004 Jun 01
+*options.txt*	For Vim version 6.3.  Last change: 2004 Oct 20
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -910,7 +910,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  impossible!).  Writing may fail because of this.
 	- A directory "." means to put the backup file in the same directory
 	  as the edited file.
-	- A directory starting with "./" (or ".\" for MS-DOS et.al.) means to
+	- A directory starting with "./" (or ".\" for MS-DOS et al.) means to
 	  put the backup file relative to where the edited file is.  The
 	  leading "." is replaced with the path name of the edited file.
 	  ("." inside a directory name has no special meaning).
@@ -1975,7 +1975,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  the edited file.  On Unix, a dot is prepended to the file name, so
 	  it doesn't show in a directory listing.  On MS-Windows the "hidden"
 	  attribute is set and a dot prepended if possible.
-	- A directory starting with "./" (or ".\" for MS-DOS et.al.) means to
+	- A directory starting with "./" (or ".\" for MS-DOS et al.) means to
 	  put the swap file relative to where the edited file is.  The leading
 	  "." is replaced with the path name of the edited file.
 	- For Unix and Win32, if a directory ends in two path separators, the

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.3.  Last change: 2004 Sep 16
+*change.txt*    For Vim version 6.3.  Last change: 2004 Oct 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1035,8 +1035,9 @@ a <NL>, it is regarded as a linewise register.  {not in Vi}
 
 7. Selection and drop registers "*, "+ and "~ 
 Use these register for storing and retrieving the selected text for the GUI.
-See |quotestar| and |quoteplus|.  When the clipboard is not available or not
-working, the unnamed register is used instead.  {not in Vi}
+See |quotestar| and |quoteplus|.  When the clipboard is not available (the
+|+xterm_clipboard| feature is required for X11) or not working, the unnamed
+register is used instead.  {not in Vi}
 
 Note that there is only a distinction between "* and "+ for X11 systems.  For
 an explanation of the difference, see |x11-selection|.  Under MS-Windows, use

@@ -1,7 +1,14 @@
 " Vim syntax file
 " Language:	Debian control files
-" Maintainer:	Wichert Akkerman <wakkerma@debian.org>
-" Last Change:	October 28, 2001
+" Maintainer:	Gerfried Fuchs <alfie@debian.org>
+" Last Change:  27 Oct 2004
+" URL:          http://alfie.ist.org/software/vim/syntax/debcontrol.vim
+"
+" Original Version: Wichert Akkerman <wakkerma@debian.org>
+
+" Comments are very welcome - but please make sure that you are commenting on
+" the latest version of this file.
+" SPAM is _NOT_ welcome - be ready to be reported!
 
 " Standard syntax initialization
 if version < 600
@@ -29,7 +36,7 @@ syn match	debcontrolEmail	"[_=[:alnum:]\.+-]\+@[[:alnum:]\./\-]\+"
 syn match	debcontrolEmail	"<.\{-}>"
 
 " List of all legal keys
-syn match debcontrolKey contained "^\(Source\|Package\|Section\|Priority\|Maintainer\|Uploaders\|Build-Depends\|Build-Conflicts\|Build-Depends-Indep\|Build-Conflicts-Indep\|Standards-Version\|Pre-Depends\|Depends\|Recommends\|Suggests\|Provides\|Replaces\|Conflicts\|Essential\|Architecture\|Description\|Bugs\|Origin\): *"
+syn match debcontrolKey contained "^\(Source\|Package\|Section\|Priority\|Maintainer\|Uploaders\|Build-Depends\|Build-Conflicts\|Build-Depends-Indep\|Build-Conflicts-Indep\|Standards-Version\|Pre-Depends\|Depends\|Recommends\|Suggests\|Provides\|Replaces\|Conflicts\|Essential\|Architecture\|Description\|Bugs\|Origin\|Enhances\): *"
 
 " Fields for which we do strict syntax checking
 syn region debcontrolStrictField start="^Architecture" end="$" contains=debcontrolKey,debcontrolArchitecture,debcontrolSpace oneline
@@ -38,7 +45,7 @@ syn region debcontrolStrictField start="^Priority" end="$" contains=debcontrolKe
 syn region debcontrolStrictField start="^Section" end="$" contains=debcontrolKey,debcontrolSection oneline
 
 " Catch-all for the other legal fields
-syn region debcontrolField start="^\(Maintainer\|Build-Depends\|Build-Conflicts\|Build-Depends-Indep\|Build-Conflicts-Indep\|Standards-Version\|Pre-Depends\|Depends\|Recommends\|Suggests\|Provides\|Replaces\|Conflicts\|Essential\|Bugs\|Origin\):" end="$" contains=debcontrolKey,debcontrolVariable,debcontrolEmail oneline
+syn region debcontrolField start="^\(Maintainer\|Build-Depends\|Build-Conflicts\|Build-Depends-Indep\|Build-Conflicts-Indep\|Standards-Version\|Pre-Depends\|Depends\|Recommends\|Suggests\|Provides\|Replaces\|Conflicts\|Essential\|Bugs\|Origin\|Enhances\):" end="$" contains=debcontrolKey,debcontrolVariable,debcontrolEmail oneline
 syn region debcontrolMultiField start="^\(Uploaders\|Description\):" skip="^ " end="^$"me=s-1 end="^[^ ]"me=s-1 contains=debcontrolKey,debcontrolEmail,debcontrolVariable
 
 " Associate our matches and regions with pretty colours
