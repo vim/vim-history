@@ -336,23 +336,10 @@ typedef DWORD (WINAPI *PSNSECINFO) (LPTSTR, enum SE_OBJECT_TYPE,
 typedef DWORD (WINAPI *PGNSECINFO) (LPSTR, enum SE_OBJECT_TYPE,
 	SECURITY_INFORMATION, PSID *, PSID *, PACL *, PACL *,
 	PSECURITY_DESCRIPTOR *);
-typedef BOOL (WINAPI *PGFILESEC) (LPCTSTR, SECURITY_INFORMATION,
-        PSECURITY_DESCRIPTOR, DWORD, LPDWORD);
-typedef BOOL (WINAPI *PGSECDESCDACL) (PSECURITY_DESCRIPTOR,
-        LPBOOL, PACL *, LPBOOL);
-typedef BOOL (WINAPI *POPENPROCTOK) (HANDLE, DWORD, PHANDLE);
-typedef BOOL (WINAPI *PGTOKINFO) (HANDLE, TOKEN_INFORMATION_CLASS,
-        LPVOID, DWORD, PDWORD);
-typedef DWORD (WINAPI *PGEFFRIGHTACL) (PACL, TRUSTEE *, ACCESS_MASK *);
 
 static HANDLE advapi_lib = NULL;	/* Handle for ADVAPI library */
 static PSNSECINFO pSetNamedSecurityInfo;
 static PGNSECINFO pGetNamedSecurityInfo;
-static PGFILESEC pGetFileSecurity;
-static PGSECDESCDACL pGetSecurityDescriptorDacl;
-static POPENPROCTOK pOpenProcessToken;
-static PGTOKINFO pGetTokenInformation;
-static PGEFFRIGHTACL pGetEffectiveRightsFromAcl;
 #endif
 
 /*
@@ -394,22 +381,8 @@ PlatformId(void)
 						      "SetNamedSecurityInfoA");
 		pGetNamedSecurityInfo = (PGNSECINFO)GetProcAddress(advapi_lib,
 						      "GetNamedSecurityInfoA");
-		pGetFileSecurity = (PGFILESEC)GetProcAddress(advapi_lib,
-						      "GetFileSecurityA");
-		pGetSecurityDescriptorDacl = (PGSECDESCDACL)GetProcAddress(advapi_lib,
-						      "GetSecurityDescriptorDacl");
-		pOpenProcessToken = (POPENPROCTOK)GetProcAddress(advapi_lib,
-						      "OpenProcessToken");
-		pGetTokenInformation = (PGTOKINFO)GetProcAddress(advapi_lib,
-						      "GetTokenInformation");
-		pGetEffectiveRightsFromAcl = (PGEFFRIGHTACL)GetProcAddress(advapi_lib,
-						      "GetEffectiveRightsFromAclA");
 		if (pSetNamedSecurityInfo == NULL
-			|| pGetNamedSecurityInfo == NULL
-			|| pGetFileSecurity == NULL
-			|| pGetSecurityDescriptorDacl == NULL
-			|| pOpenProcessToken == NULL
-			|| pGetTokenInformation == NULL)
+			|| pGetNamedSecurityInfo == NULL)
 		{
 		    /* If we can't get the function addresses, set advapi_lib
 		     * to NULL so that we don't use them. */
@@ -4035,200 +4008,14 @@ default_shell()
     return psz;
 }
 
-#ifdef HAVE_ACL
 /*
- * Code to support ACLs on Windows based on hints and tips from Corinna
- * Vinschen.
- */
-
-/*
- * do_acl_check() provides an initial check to see if the file system the file
- * lives on supports ACLs at all.  This is primarily for handlng network drives
- * - one of Win9x/ME, NT/2K/XP, or Samba.
- * If the network drive is invalid Check #1 fails.
- * Win9X/ME and some Samba do not support ACLs at all and fail Check #2.
- * Samba does not provide full ACL support - we detect them as case preserving
- * but no supporting unicode file names, Check #3.
- * NT/2K/XP support ACLs.
- * Remark: NT 4 SP 4 (and other versions) has a broken
- * GetEffectiveRightsFromAcl() (Vince Negri)
- */
-    static int
-do_acl_check(char *n)
-{
-    char_u	buf[MAXPATHL];
-    DWORD	max_comp_len;
-    DWORD	file_sys_flags;
-    int		i;
-    int		first;
-
-    /* Expand "n" to full path, use current dir if this fails. */
-    if (mch_isFullName(n))
-    {
-	STRNCPY(buf, n, MAXPATHL);
-	buf[MAXPATHL - 1] = NUL;
-    }
-    else if (mch_FullName((char_u *)n, buf, MAXPATHL, FALSE) == FAIL
-		&& mch_dirname(buf, MAXPATHL) == FAIL)
-	return FALSE;
-
-    /* Extract file root path */
-    if ((buf[0] == '/' || buf[0] == '\\') && (buf[1] == '/' || buf[1] == '\\'))
-    {
-	/* "//computer/share" kind of name, truncate after "share". */
-	first = TRUE;
-	for (i = 2; buf[i] != NUL; ++i)
-	{
-	    if (buf[i] == '/' || buf[i] == '\\')
-	    {
-		if (first)
-		    first = FALSE;
-		else
-		{
-		    ++i;	/* include the trailing (back)slash */
-		    break;
-		}
-	    }
-#ifdef FEAT_MBYTE
-	    if (has_mbyte)
-		i += (*mb_ptr2len_check)(buf + i) - 1;
-#endif
-	}
-    }
-    else
-    {
-	/* "c:/dir" kind of name, truncate after first slash. */
-	i = 3;
-    }
-    buf[i] = NUL;
-
-    /* Check #1 - can we get volume information in the first place? */
-    if (!GetVolumeInformation((char *)buf, NULL, 0, NULL, &max_comp_len,
-						    &file_sys_flags, NULL, 0))
-        return FALSE;
-
-    /* Check #2 - does the file system support ACLs at all? */
-    if (!(file_sys_flags & FS_PERSISTENT_ACLS))
-        return FALSE;
-
-    /* Check #3 - does it look like a Samba file system?  Current guess is that
-     * they are the only ones that are case sensitive/preserving but do not
-     * support Unicode file names. */
-    if ((file_sys_flags
-	 & (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE|FS_UNICODE_STORED_ON_DISK))
-				  == (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE))
-        return FALSE;
-
-    /* The file system supports ACLs - do the check */
-    return TRUE;
-}
-
-/* NB: Not SACL_SECURITY_INFORMATION since we don't have enough privilege */
-#define MCH_ACCESS_SEC  (OWNER_SECURITY_INFORMATION \
-			 |GROUP_SECURITY_INFORMATION \
-			 |DACL_SECURITY_INFORMATION)
-
-/*
- * acl_check() implements ACL support under Windows NT/2K/XP(?)
- * Does not support ACLs on NT 3.1/5 since the key function
- * GetEffectiveRightsFromAcl() does not exist and implementing its
- * functionality is a pain.
- * Returns TRUE if file "n" has access rights according to "p" FALSE otherwise.
- */
-    static int
-acl_check(char* n, int p)
-{
-    DWORD                       error;
-    BOOL			aclpresent;
-    BOOL			aclDefault;
-    HANDLE			hToken;
-    DWORD			bytes;
-    TRUSTEE			t;
-    ACCESS_MASK			am;
-    ACCESS_MASK			cm;
-    PACL			pacl;
-    static DWORD		sd_bytes = 0;
-    static SECURITY_DESCRIPTOR* psd = NULL;
-    static DWORD		tu_bytes = 0;
-    static TOKEN_USER*		ptu = NULL;
-
-    if (advapi_lib != NULL
-	    && pGetEffectiveRightsFromAcl != NULL)
-    {
-	/* Get file ACL info */
-	if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
-	{
-            error = GetLastError();
-            if (error == ERROR_NOT_SUPPORTED)
-                return TRUE; /* Should be filtered by do_acl_check() but ... */
-	    if (error != ERROR_INSUFFICIENT_BUFFER)
-		return FALSE;
-	    vim_free(psd);
-	    psd = (SECURITY_DESCRIPTOR *)alloc(bytes);
-	    if (psd == NULL)
-	    {
-		sd_bytes = 0;
-		return FALSE;
-	    }
-	    sd_bytes = bytes;
-	    if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
-		return FALSE;
-	}
-	if (!pGetSecurityDescriptorDacl(psd, &aclpresent, &pacl, &aclDefault))
-	    return FALSE;
-
-	/* Get user security info */
-	if (!pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-	    return FALSE;
-	if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
-	{
-	    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return FALSE;
-	    vim_free(ptu);
-	    ptu = (TOKEN_USER *)alloc(bytes);
-	    if (ptu == NULL)
-	    {
-		tu_bytes = 0;
-		return FALSE;
-	    }
-	    tu_bytes = bytes;
-	    if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
-		return FALSE;
-	}
-
-	/* Lets see what user can do based on ACL */
-	t.pMultipleTrustee = NULL;
-	t.MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
-	t.TrusteeForm = TRUSTEE_IS_SID;
-	t.TrusteeType = TRUSTEE_IS_USER;
-	t.ptstrName = ptu->User.Sid;
-	if (pGetEffectiveRightsFromAcl(pacl, &t, &am) != ERROR_SUCCESS)
-	    return FALSE;
-
-	cm = 0;
-	cm |= (p & W_OK) ? FILE_WRITE_DATA : 0;
-	cm |= (p & R_OK) ? FILE_READ_DATA : 0;
-
-	/* Check access mask against modes requested */
-	if ((am & cm) != cm)
-	    return FALSE;
-    }
-    return TRUE;
-}
-#endif /* HAVE_ACL */
-
-/*
- * mch_access() extends access() to support ACLs under Windows NT/2K/XP(?)
+ * mch_access() was used to support ACLs under Windows NT/2K/XP(?).
+ * Unfortunately the ACL system functions are buggy, we couldn't make it work,
+ * removed for now.
  * Returns 0 if file "n" has access rights according to "p", -1 otherwise.
  */
     int
 mch_access(char *n, int p)
 {
-#ifdef HAVE_ACL
-    /* Only do ACL check if not on Win 9x/ME - GetEffectiveRightsFromAcl()
-     * does not exist on NT before 4.0 */
-    if (!mch_windows95() && do_acl_check(n) && !acl_check(n, p))
-        return -1;
-#endif /* HAVE_ACL */
     return access(n, p);
 }
