@@ -11,6 +11,7 @@
  * uninstal.c:	Minimalistic uninstall program for Vim on MS-Windows
  *		Removes:
  *		- the "Edit with Vim" popup menu entry
+ *		- the Vim "Open With..." popup menu entry
  *		- any Vim Batch files in the path
  *		- icons for Vim on the Desktop
  *		- the Vim entry in the Start Menu
@@ -57,6 +58,31 @@ popup_gvim_path(char *buf)
     return (r == ERROR_SUCCESS);
 }
 
+/*
+ * Check if the "Open With..." menu entry exists and what gvim it refers to.
+ * Returns non-zero when it's found.
+ */
+    static int
+openwith_gvim_path(char *buf)
+{
+    HKEY	key_handle;
+    DWORD	value_type;
+    DWORD	bufsize = BUFSIZE;
+    int		r;
+
+    /* Open the key where the path to gvim.exe is stored. */
+    if (RegOpenKeyEx(HKEY_CLASSES_ROOT,
+		"Applications\\gvim.exe\\shell\\edit\\command", 0, KEY_READ,
+						&key_handle) != ERROR_SUCCESS)
+	return 0;
+
+    /* get the DisplayName out of it to show the user */
+    r = RegQueryValueEx(key_handle, "", 0, &value_type, (LPBYTE)buf, &bufsize);
+    RegCloseKey(key_handle);
+
+    return (r == ERROR_SUCCESS);
+}
+
     static void
 remove_popup(void)
 {
@@ -83,11 +109,38 @@ remove_popup(void)
 	++fail;
 
     if (fail == 6)
-	printf("No Vim registry entries could be removed\n");
+	printf("No Vim popup registry entries could be removed\n");
     else if (fail)
-	printf("Some Vim registry entries could not be removed\n");
+	printf("Some Vim popup registry entries could not be removed\n");
     else
-	printf("The Vim registry entries have been removed\n");
+	printf("The Vim popup registry entries have been removed\n");
+}
+
+    static void
+remove_openwith(void)
+{
+    int		fail = 0;
+    HKEY	kh;
+
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, "Applications\\gvim.exe\\shell\\edit\\command") != ERROR_SUCCESS)
+	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, "Applications\\gvim.exe\\shell\\edit") != ERROR_SUCCESS)
+	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, "Applications\\gvim.exe\\shell") != ERROR_SUCCESS)
+	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, "Applications\\gvim.exe") != ERROR_SUCCESS)
+	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, ".htm\\OpenWithList\\gvim.exe") != ERROR_SUCCESS)
+	++fail;
+    if (RegDeleteKey(HKEY_CLASSES_ROOT, "*\\OpenWithList\\gvim.exe") != ERROR_SUCCESS)
+	++fail;
+
+    if (fail == 6)
+	printf("No Vim open-with registry entries could be removed\n");
+    else if (fail)
+	printf("Some Vim open-with registry entries could not be removed\n");
+    else
+	printf("The Vim open-with registry entries have been removed\n");
 }
 #endif
 
@@ -302,7 +355,20 @@ main(int argc, char *argv[])
 	printf("   which uses \"%s\"\n", popup_path);
 	printf("\nRemove it (y/n)? ");
 	if (confirm())
+	{
 	    remove_popup();
+	    /* Assume the "Open With" entry can be removed as well, don't
+	     * bother the user with asking him again. */
+	    remove_openwith();
+	}
+    }
+    else if (openwith_gvim_path(popup_path))
+    {
+	printf(" - the Vim \"Open With...\" entry in the popup menu\n");
+	printf("   which uses \"%s\"\n", popup_path);
+	printf("\nRemove it (y/n)? ");
+	if (confirm())
+	    remove_openwith();
     }
 
     if (get_shell_folder_path(path, "desktop"))

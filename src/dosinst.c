@@ -32,7 +32,9 @@ char	*default_bat_dir = NULL;  /* when not NULL, use this as the default
 				     directory to write .bat files in */
 char	*default_vim_dir = NULL;  /* when not NULL, use this as the default
 				     install dir for NSIS */
+#if 0
 char	homedir[BUFSIZE];	/* home directory or "" */
+#endif
 
 /*
  * Structure used for each choice the user can make.
@@ -112,6 +114,9 @@ static int     vimfiles_dir_choice;
 
 /* non-zero when selected to install the popup menu entry. */
 static int	install_popup = 0;
+
+/* non-zero when selected to install the "Open with" entry. */
+static int	install_openwith = 0;
 
 /* non-zero when need to add an uninstall entry in the registry */
 static int	need_uninstall_entry = 0;
@@ -679,6 +684,7 @@ inspect_system(void)
     else
 	*oldvimrc = NUL;
 
+#if 0 /* currently not used */
     /*
      * Get default home directory.
      * Prefer $HOME if it's set.  For Win NT use $HOMEDRIVE and $HOMEPATH.
@@ -709,6 +715,7 @@ inspect_system(void)
 		*homedir = NUL;
 	}
     }
+#endif
 }
 
 /*
@@ -1311,6 +1318,7 @@ init_vimrc_choices(void)
 /*
  * Add some entries to the registry:
  * - to add "Edit with Vim" to the context * menu
+ * - to add Vim to the "Open with..." list
  * - to uninstall Vim
  */
 /*ARGSUSED*/
@@ -1365,6 +1373,22 @@ install_registry(void)
 	    fprintf(fd, "[HKEY_LOCAL_MACHINE\\Software\\Vim\\Gvim]\n");
 	    fprintf(fd, "\"path\"=\"%sgvim.exe\"\n", buf);
 	    fprintf(fd, "\n");
+	}
+
+	if (install_openwith)
+	{
+	    char	bufg[BUFSIZE];
+	    struct stat st;
+
+	    printf("Creating \"Open with ...\" list entry\n");
+
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe]\n\n");
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe\\shell]\n\n");
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe\\shell\\edit]\n\n");
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe\\shell\\edit\\command]\n");
+	    fprintf(fd, "@=\"%sgvim.exe \\\"%%1\\\"\"\n\n", buf);
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\.htm\\OpenWithList\\gvim.exe]\n\n");
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\OpenWithList\\gvim.exe]\n\n");
 	}
 
 	printf("Creating an uninstall entry\n");
@@ -1429,6 +1453,44 @@ init_popup_choice(void)
 	choices[choice_count].installfunc = NULL;
 	choices[choice_count].active = 1;
 	change_popup_choice(choice_count);  /* set the text */
+	++choice_count;
+    }
+    else
+	add_dummy_choice();
+}
+
+    static void
+change_openwith_choice(int idx)
+{
+    if (install_openwith == 0)
+    {
+	choices[idx].text = "Add Vim to the \"Open With...\" list in the popup menu for the right\n    mouse button so that you can edit any file with Vim";
+	install_openwith = 1;
+    }
+    else
+    {
+	choices[idx].text = "Do NOT add Vim to the \"Open With...\" list in the popup menu for the\n    right mouse button to edit any file with Vim";
+	install_openwith = 0;
+    }
+}
+
+/*
+ * Only add the choice for the open-with menu entry when gvim.exe was found
+ * and and regedit.exe exist.
+ */
+    static void
+init_openwith_choice(void)
+{
+    if (has_gvim
+#ifndef WIN3264
+	    && searchpath("regedit.exe") != NULL
+#endif
+       )
+    {
+	choices[choice_count].changefunc = change_openwith_choice;
+	choices[choice_count].installfunc = NULL;
+	choices[choice_count].active = 1;
+	change_openwith_choice(choice_count);  /* set the text */
 	++choice_count;
     }
     else
@@ -1577,6 +1639,12 @@ build_shortcut(
 }
 
 /*
+ * We used to use "homedir" as the working directory, but that is a bad choice
+ * on multi-user systems.  Not specifying a directory appears to work best.
+ */
+#define WORKDIR ""
+
+/*
  * Create shortcut(s) in the Start Menu\Programs\Vim folder.
  */
     static void
@@ -1587,28 +1655,28 @@ install_start_menu(int idx)
     if (has_vim)
     {
 	if (build_shortcut("Vim", "vim.exe", "",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
 	if (build_shortcut("Vim Read-only", "vim.exe", "-R",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
 	if (build_shortcut("Vim Diff", "vim.exe", "-d",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
     }
     if (has_gvim)
     {
 	if (build_shortcut("gVim", "gvim.exe", "",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
 	if (build_shortcut("gVim Easy", "gvim.exe", "-y",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
 	if (build_shortcut("gVim Read-only", "gvim.exe", "-R",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
 	if (build_shortcut("gVim Diff", "gvim.exe", "-d",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	    return;
     }
     if (build_shortcut("Uninstall",
@@ -1621,7 +1689,7 @@ install_start_menu(int idx)
 					   VIM_STARTMENU, installdir) == FAIL)
 	return;
     if (build_shortcut("Help", has_gvim ? "gvim.exe" : "vim.exe", "-c h",
-					      VIM_STARTMENU, homedir) == FAIL)
+					      VIM_STARTMENU, WORKDIR) == FAIL)
 	return;
     {
 	char	shell_folder_path[BUFSIZE];
@@ -1674,7 +1742,7 @@ install_shortcut_gvim(int idx)
     if (choices[idx].arg)
     {
 	(void)build_shortcut(icon_names[0], "gvim.exe",
-						      "", "desktop", homedir);
+						      "", "desktop", WORKDIR);
 	need_uninstall_entry = 1;
     }
 }
@@ -1685,7 +1753,7 @@ install_shortcut_evim(int idx)
     if (choices[idx].arg)
     {
 	(void)build_shortcut(icon_names[1], "gvim.exe",
-						    "-y", "desktop", homedir);
+						    "-y", "desktop", WORKDIR);
 	need_uninstall_entry = 1;
     }
 }
@@ -1696,7 +1764,7 @@ install_shortcut_gview(int idx)
     if (choices[idx].arg)
     {
 	(void)build_shortcut(icon_names[2], "gvim.exe",
-						    "-R", "desktop", homedir);
+						    "-R", "desktop", WORKDIR);
 	need_uninstall_entry = 1;
     }
 }
@@ -1974,6 +2042,9 @@ setup_choices(void)
     /* Whether to add Vim to the popup menu */
     init_popup_choice();
 
+    /* Whether to add Vim to the "Open With..." menu */
+    init_openwith_choice();
+
     /* Whether to add Vim to the Start Menu. */
     init_startmenu_choice();
 
@@ -1995,6 +2066,8 @@ print_cmd_line_help(void)
     printf("    Create a default _vimrc file if one does not already exist.\n");
     printf("-install-popup\n");
     printf("    Install the Edit-with-Vim context menu entry\n");
+    printf("-install-openwith\n");
+    printf("    Add Vim to the \"Open With...\" context menu list\n");
 #ifdef WIN3264
     printf("-add-start-menu");
     printf("    Add Vim to the start menu\n");
@@ -2053,6 +2126,10 @@ command_line_setup_choices(int argc, char **argv)
 	else if (strcmp(argv[i], "-install-popup") == 0)
 	{
 	    init_popup_choice();
+	}
+	else if (strcmp(argv[i], "-install-openwith") == 0)
+	{
+	    init_openwith_choice();
 	}
 	else if (strcmp(argv[i], "-add-start-menu") == 0)
 	{
@@ -2178,7 +2255,14 @@ show_help(void)
 "select each file type.\n"
 "An alternative is the option offered here: Install an \"Edit with Vim\"\n"
 "entry in the popup menu for the right mouse button.  This means you can\n"
-"edit any file with Vim\n"
+"edit any file with Vim.\n"
+,
+"\"Open With...\" context menu entry\n"
+"--------------------------------\n"
+"(this choice is only available when gvim.exe is present)\n"
+"This option adds Vim to the \"Open With...\" entry in the popup menu for\n"
+"the right mouse button.  This also makes it possible to edit HTML files\n"
+"directly from Internet Explorer.\n"
 ,
 "Add Vim to the Start menu\n"
 "-------------------------\n"
@@ -2237,7 +2321,10 @@ install(void)
 	    (choices[i].installfunc)(i);
 
     /* Add some entries to the registry, if needed. */
-    if (install_popup || (need_uninstall_entry && interactive) || !interactive)
+    if (install_popup
+	    || install_openwith
+	    || (need_uninstall_entry && interactive)
+	    || !interactive)
 	install_registry();
 
 #ifdef WIN3264
