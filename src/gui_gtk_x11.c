@@ -511,13 +511,15 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     int i;
     int modifiers;
     int key;
+    guint state;
 
     key_sym = event->keyval;
     len = event->length;
+    state = event->state;
     g_assert(len <= sizeof(string));
 
 #ifdef HANGUL_INPUT
-    if (event->keyval == GDK_space && (event->state & GDK_SHIFT_MASK))
+    if (event->keyval == GDK_space && (state & GDK_SHIFT_MASK))
     {
 	hangul_input_state_toggle();
 	return TRUE;
@@ -531,8 +533,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     if (key_sym == GDK_ISO_Left_Tab)
 	key_sym = GDK_Tab;
 
-    if ((key_sym == GDK_2 || key_sym == GDK_at)
-					 && (event->state & GDK_CONTROL_MASK))
+    if ((key_sym == GDK_2 || key_sym == GDK_at) && (state & GDK_CONTROL_MASK))
     {
 	string[0] = NUL;	/* CTRL-2 and CTRL-@ is NUL */
 	len = 1;
@@ -548,7 +549,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 #ifdef WANT_MENU
     /* If there is a menu and 'wak' is "yes", or 'wak' is "menu" and the key
      * is a menu shortcut, we ignore everything with the ALT modifier. */
-    if ((event->state & GDK_MOD1_MASK)
+    if ((state & GDK_MOD1_MASK)
 	    && gui.menu_is_active
 	    && (*p_wak == 'y'
 		|| (*p_wak == 'm'
@@ -558,11 +559,14 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 #endif
 
     /* Check for Alt/Meta key (Mod1Mask) */
-    if (len == 1 && (event->state & GDK_MOD1_MASK)
+    if (len == 1 && (state & GDK_MOD1_MASK)
 	&& !(key_sym == GDK_BackSpace || key_sym == GDK_Delete)) {
 	/* Don't do this for <S-M-Tab>, that should become K_S_TAB with ALT. */
-	if (!(key_sym == GDK_Tab && (event->state & GDK_SHIFT_MASK)))
+	if (!(key_sym == GDK_Tab && (state & GDK_SHIFT_MASK)))
+	{
 	    string[0] |= 0x80;
+	    state &= ~GDK_MOD1_MASK;	/* don't use it again */
+	}
     }
 
     /* Check for special keys, making sure BS and DEL are recognised. */
@@ -586,11 +590,11 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	key_sym == GDK_Return || key_sym == GDK_Linefeed ||
 	key_sym == GDK_Escape) {
 	modifiers = 0;
-	if (event->state & GDK_SHIFT_MASK)
+	if (state & GDK_SHIFT_MASK)
 	    modifiers |= MOD_MASK_SHIFT;
-	if (event->state & GDK_CONTROL_MASK)
+	if (state & GDK_CONTROL_MASK)
 	    modifiers |= MOD_MASK_CTRL;
-	if (event->state & GDK_MOD1_MASK)
+	if (state & GDK_MOD1_MASK)
 	    modifiers |= MOD_MASK_ALT;
 #if defined(USE_XIM) && defined(MULTI_BYTE)
 	/* It seems GDK returns GDK_VoidSymbol if the len is 3 and it
