@@ -405,9 +405,9 @@ qf_init(efile, errorformat, newlist)
      * Read the lines in the error file one by one.
      * Try to recognize one of the error formats in each line.
      */
-    while (fgets((char *)IObuff, CMDBUFFSIZE, fd) != NULL && !got_int)
+    while (fgets((char *)IObuff, CMDBUFFSIZE - 2, fd) != NULL && !got_int)
     {
-	IObuff[CMDBUFFSIZE] = NUL;  /* for very long lines */
+	IObuff[CMDBUFFSIZE - 2] = NUL;  /* for very long lines */
 	if ((efmp = vim_strrchr(IObuff, '\n')) != NULL)
 	    *efmp = NUL;
 #ifdef USE_CRNL
