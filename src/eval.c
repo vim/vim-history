@@ -2957,11 +2957,14 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     else
 	ret = FAIL;
 
-    if (ret == OK)
-	ret = call_func(name, len, retvar, argcount, argvars,
+    if (!aborting())
+    {
+	if (ret == OK)
+	    ret = call_func(name, len, retvar, argcount, argvars,
 				    firstline, lastline, doesrange, evaluate);
-    else if (!aborting())
-	EMSG2(_("E116: Invalid arguments for function %s"), name);
+	else
+	    EMSG2(_("E116: Invalid arguments for function %s"), name);
+    }
 
     while (--argcount >= 0)
 	clear_var(&argvars[argcount]);
