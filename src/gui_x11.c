@@ -3210,7 +3210,7 @@ gui_mch_drawsign(row, col, typenr)
     }
 }
 
-    XImage *
+    void *
 gui_mch_register_sign(signfile)
     char_u	    *signfile;
 {
@@ -3259,14 +3259,14 @@ gui_mch_register_sign(signfile)
 	}
     }
 
-    return sign;
+    return (void *)sign;
 }
 
     void
 gui_mch_destroy_sign(sign)
-    XImage *sign;
+    void *sign;
 {
-    XFree(sign->data);
+    XFree(((XImage *)sign)->data);
     vim_free(sign);
 }
 #endif

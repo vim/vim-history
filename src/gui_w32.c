@@ -3388,3 +3388,126 @@ dyn_imm_unload(void)
 # endif
 
 #endif
+
+#if defined(FEAT_SIGN_ICONS) || defined(PROTO)
+typedef struct _signicon_t
+{
+    HANDLE	hImage;
+    UINT	uType;
+} signicon_t;
+
+    void
+gui_mch_drawsign(row, col, typenr)
+    int		row;
+    int		col;
+    int		typenr;
+{
+    signicon_t *sign;
+    int x, y, w, h;
+
+    if (!gui.in_use || (sign = (signicon_t *)sign_get_image(typenr)) == NULL)
+	return;
+
+    x = TEXT_X(col);
+    y = TEXT_Y(row);
+    w = gui.char_width * 2;
+    h = gui.char_height;
+    switch (sign->uType)
+    {
+	case IMAGE_BITMAP:
+	    {
+		HDC hdcMem;
+		HBITMAP hbmpOld;
+
+		hdcMem = CreateCompatibleDC(s_hdc);
+		hbmpOld = (HBITMAP)SelectObject(hdcMem, sign->hImage);
+		BitBlt(s_hdc, x, y, w, h, hdcMem, 0, 0, SRCCOPY);
+		SelectObject(hdcMem, hbmpOld);
+		DeleteDC(hdcMem);
+	    }
+	    break;
+	case IMAGE_ICON:
+	case IMAGE_CURSOR:
+	    DrawIconEx(s_hdc, x, y, (HICON)sign->hImage, w, h, 0, NULL, DI_NORMAL);
+	    break;
+    }
+}
+
+    static void
+close_signicon_image(signicon_t *sign)
+{
+    if (sign)
+	switch (sign->uType)
+	{
+	    case IMAGE_BITMAP:
+		DeleteObject((HGDIOBJ)sign->hImage);
+		break;
+	    case IMAGE_CURSOR:
+		DestroyCursor((HCURSOR)sign->hImage);
+		break;
+	    case IMAGE_ICON:
+		DestroyIcon((HICON)sign->hImage);
+		break;
+	}
+}
+
+    void *
+gui_mch_register_sign(signfile)
+    char_u	*signfile;
+{
+    signicon_t	sign, *psign;
+    char_u	*ext;
+
+    if (is_winnt_3())
+    {
+	/* TODO: May be changed this message */
+	EMSG(_("E255: Couldn't read in sign data!"));
+	return NULL;
+    }
+
+    sign.hImage = NULL;
+    ext = signfile + STRLEN(signfile) - 4; /* get extention */
+    if (ext > signfile)
+    {
+	int do_load = 1;
+
+	if (!STRICMP(ext, ".bmp"))
+	    sign.uType =  IMAGE_BITMAP;
+	else if (!STRICMP(ext, ".ico"))
+	    sign.uType =  IMAGE_ICON;
+	else if (!STRICMP(ext, ".cur") || !STRICMP(ext, ".ani"))
+	    sign.uType =  IMAGE_CURSOR;
+	else
+	    do_load = 0;
+
+	if (do_load)
+	    sign.hImage = (HANDLE)LoadImage(NULL, signfile, sign.uType,
+		    gui.char_width * 2, gui.char_height,
+		    LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+    }
+
+    psign = NULL;
+    if (sign.hImage && (psign = (signicon_t *)alloc(sizeof(signicon_t))))
+	*psign = sign;
+
+    if (!psign)
+    {
+	if (sign.hImage)
+	    close_signicon_image(&sign);
+	EMSG(_("E255: Couldn't read in sign data!"));
+    }
+    return (void *)psign;
+
+}
+
+    void
+gui_mch_destroy_sign(sign)
+    void *sign;
+{
+    if (sign)
+    {
+	close_signicon_image((signicon_t *)sign);
+	vim_free(sign);
+    }
+}
+#endif

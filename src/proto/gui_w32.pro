@@ -74,4 +74,7 @@ void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));
 void gui_mch_menu_grey __ARGS((vimmenu_T *menu, int grey));
 int gui_mch_dialog __ARGS((int type, char_u *title, char_u *message, char_u *buttons, int dfltbutton, char_u *textfield));
 void gui_mch_set_foreground __ARGS((void));
+void gui_mch_drawsign __ARGS((int row, int col, int typenr));
+void *gui_mch_register_sign __ARGS((char_u *signfile));
+void gui_mch_destroy_sign __ARGS((void *sign));
 /* vim: set ft=c : */
