@@ -5015,7 +5015,9 @@ uc_check_code(code, len, buf, cmd, eap, split_buf, split_len)
 	l -= 2;
     }
 
-    if (STRNICMP(p, "args", l) == 0)
+    if (l < 1)
+	type = ct_NONE;
+    else if (STRNICMP(p, "args", l) == 0)
 	type = ct_ARGS;
     else if (STRNICMP(p, "bang", l) == 0)
 	type = ct_BANG;
