@@ -1,6 +1,6 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 May 26
+" Last Change:	2003 May 30
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1
@@ -6100,6 +6100,10 @@ Xcheck 286331153
 "	    message text (without displaying it) and continuing with the next
 "	    script line.
 "
+"	    When a command triggering autocommands is executed by :silent!
+"	    inside a :try/:endtry, the autocommand execution is not suppressed
+"	    on error.
+"
 "	    This test reuses the function MSG() from the previous test.
 "-------------------------------------------------------------------------------
 
@@ -6184,13 +6188,22 @@ if taken != expected
     Xout "'taken' is" taken "instead of" expected
 endif
 
+augroup TMP
+    autocmd BufWritePost * Xpath 33554432	" X: 33554432
+augroup END
+
+Xpath 67108864					" X: 67108864
+write /i/m/p/o/s/s/i/b/l/e
+Xpath 134217728					" X: 134217728
+
+autocmd! TMP
 unlet! caught errmsg3 taken expected
 delfunction S
 delfunction Foo
 delfunction Bar
 delfunction MSG
 
-Xcheck 2097103
+Xcheck 236978127
 
 
 "-------------------------------------------------------------------------------
