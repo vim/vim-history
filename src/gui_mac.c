@@ -1560,7 +1560,7 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
     else			/* Bottom scrollbar */
     {
 	sb_info = sb;
-	page = W_WIDTH(sb->wp) - 5;
+	page = W_WIDTH(curwin) - 5;
     }
 
     switch (partCode)
@@ -2816,6 +2816,19 @@ gui_mch_open()
 
     if (gui_win_x != -1 && gui_win_y != -1)
 	gui_mch_set_winpos(gui_win_x, gui_win_y);
+
+#ifdef USE_CARBONIZED
+    /*
+     * Make the GUI the foreground process (in case it was launched
+     * from the Terminal or via :gui).
+     */
+    {
+	ProcessSerialNumber psn;
+	if (GetCurrentProcess(&psn) == noErr)
+	    SetFrontProcess(&psn);
+    }
+#endif
+
     return OK;
 }
 
@@ -3400,7 +3413,13 @@ gui_mch_draw_part_cursor(w, h, color)
 {
     Rect rc;
 
-    rc.left = FILL_X(gui.col);
+#ifdef FEAT_RIGHTLEFT
+    /* vertical line should be on the right of current point */
+    if (!(State & CMDLINE) && curwin->w_p_rl)
+	rc.left = FILL_X(gui.col + 1) - w;
+    else
+#endif
+	rc.left = FILL_X(gui.col);
     rc.top = FILL_Y(gui.row) + gui.char_height - h;
     rc.right = rc.left + w;
     rc.bottom = rc.top + h;
@@ -4302,7 +4321,11 @@ gui_mch_create_scrollbar(sb, orient)
 			 0, /* current*/
 			 0, /* top */
 			 0, /* bottom */
+#ifdef USE_CARBONIZED
+			 kControlScrollBarLiveProc,
+#else
 			 scrollBarProc,
+#endif
 			 (long) sb->ident);
 #ifdef DEBUG_MAC_SB
     printf ("create_sb (%x) %x\n",sb->id, orient);
