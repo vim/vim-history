@@ -246,6 +246,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     long	linerest = 0;		/* remaining chars in line */
 #ifdef UNIX
     int		perm = 0;
+    int		swap_mode = -1;		/* protection bits for swap file */
 #else
     int		perm;
 #endif
@@ -452,13 +453,17 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #endif
 #ifdef UNIX
 	    /*
-	     * Set the protection bits of the swap file equal to the original
-	     * file. This makes it possible for others to read the name of the
-	     * original file from the swapfile.
+	     * Use the protection bits of the original file for the swap file.
+	     * This makes it possible for others to read the name of the
+	     * edited file from the swapfile, but only if they can read the
+	     * edited file.
+	     * Remove the "write" and "execute" bits for group and others
+	     * (they must not write the swapfile).
+	     * Add the "read" and "write" bits for the user, otherwise we may
+	     * not be able to write to the file ourselves.
+	     * Setting the bits is done below, after creating the swap file.
 	     */
-	    if (curbuf->b_ml.ml_mfp->mf_fname != NULL)
-		(void)mch_setperm(curbuf->b_ml.ml_mfp->mf_fname,
-					  (long)((st.st_mode & 0777) | 0600));
+	    swap_mode = (st.st_mode & 0644) | 0600;
 #endif
 #ifdef FEAT_CW_EDITOR
 	    /* Get the FSSpec on MacOS
@@ -617,7 +622,14 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #ifdef FEAT_QUICKFIX
     if (!bt_dontwrite(curbuf))
 #endif
+    {
 	check_need_swap(newfile);
+#ifdef UNIX
+	/* Set swap file protection bits after creating it. */
+	if (swap_mode > 0 && curbuf->b_ml.ml_mfp->mf_fname != NULL)
+	    (void)mch_setperm(curbuf->b_ml.ml_mfp->mf_fname, (long)swap_mode);
+#endif
+    }
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     /* If "Quit" selected at ATTENTION dialog, don't load the file */
