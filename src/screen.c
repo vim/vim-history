@@ -2910,8 +2910,11 @@ win_line(wp, lnum, startrow, endrow)
 # endif
 			{
 			    p_extra = sign_get_text(text_sign);
-			    c_extra = NUL;
-			    n_extra = STRLEN(p_extra);
+			    if (p_extra != NULL)
+			    {
+				c_extra = NUL;
+				n_extra = STRLEN(p_extra);
+			    }
 			    char_attr = sign_get_attr(text_sign, FALSE);
 			}
 		    }
