@@ -5854,6 +5854,11 @@ nv_replace(cap)
 	{
 	    int		old_State = State;
 
+	    if (cap->ncharC1 != 0)
+		AppendCharToRedobuff(cap->ncharC1);
+	    if (cap->ncharC2 != 0)
+		AppendCharToRedobuff(cap->ncharC2);
+
 	    /* This is slow, but it handles replacing a single-byte with a
 	     * multi-byte and the other way around.  Also handles adding
 	     * composing characters for utf-8. */
