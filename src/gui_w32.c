@@ -10,7 +10,7 @@
  *
  * GUI support for Microsoft Windows.  Win32 initially; maybe Win16 later
  *
- * George V. Reilly <gvr@halcyon.com> wrote the original Win32 GUI.
+ * George V. Reilly <george@reilly.org> wrote the original Win32 GUI.
  * Robert Webb reworked it to use the existing GUI stuff and added menu,
  * scrollbars, etc.
  *
@@ -813,10 +813,10 @@ _OnDeadChar(
     static void
 _OnChar(
     HWND hwnd,
-    UINT ch,
+    UINT ch,	    /* Careful: CSI arrives as 0xffffff9b */
     int cRepeat)
 {
-    char_u	string[1];
+    char_u	string[3];
 
     /* TRACE("OnChar(%d, %c)\n", ch, ch); */
 
@@ -826,7 +826,16 @@ _OnChar(
 	trash_input_buf();
 	got_int = TRUE;
     }
-    add_to_input_buf(string, 1);
+
+    if (string[0] == CSI)
+    {
+	/* Insert CSI as K_CSI. */
+	string[1] = KS_EXTRA;
+	string[2] = KE_CSI;
+	add_to_input_buf(string, 3);
+    }
+    else
+	add_to_input_buf(string, 1);
 }
 
     static void
@@ -871,14 +880,22 @@ _OnSysChar(
 	string[len++] = KS_MODIFIER;
 	string[len++] = modifiers;
     }
+
     if (IS_SPECIAL(ch))
     {
 	string[len++] = CSI;
 	string[len++] = K_SECOND(ch);
 	string[len++] = K_THIRD(ch);
     }
+    else if (ch == CSI)
+    {
+	string[len++] = CSI;
+	string[len++] = KS_EXTRA;
+	string[len++] = KE_CSI;
+    }
     else
 	string[len++] = ch;
+
     add_to_input_buf(string, len);
 }
 

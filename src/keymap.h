@@ -206,7 +206,9 @@ enum key_extra
     KE_MOUSEUP,		/* scroll wheel pseudo-button Up */
 
     KE_KINS,		/* keypad Insert key */
-    KE_KDEL		/* keypad Delete key */
+    KE_KDEL,		/* keypad Delete key */
+
+    KE_CSI		/* CSI typed directly */
 };
 
 /*
@@ -350,6 +352,8 @@ enum key_extra
 
 #define K_SELECT	TERMCAP2KEY(KS_SELECT, K_FILLER)
 #define K_TEAROFF	TERMCAP2KEY(KS_TEAROFF, K_FILLER)
+
+#define K_CSI		TERMCAP2KEY(KS_EXTRA, KE_CSI)
 
 /*
  * Symbols for pseudo keys which are translated from the real key symbols

@@ -1293,6 +1293,14 @@ gui_mac_do_key(EventRecord *theEvent)
 			add_to_input_buf(string2, 3);
 	}
 
+	if (num == 1 && string[0] == CSI)
+	{
+		/* Insert CSI as K_CSI.  Not tested! */
+		string[1] = KS_EXTRA;
+		string[2] = KE_CSI;
+		num = 3;
+	}
+
 	add_to_input_buf(string, num);
 }
 

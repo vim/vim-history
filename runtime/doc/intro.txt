@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.6.  Last change: 2000 Jan 10
+*intro.txt*     For Vim version 5.6.  Last change: 2000 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -370,6 +370,8 @@ notation	meaning		    equivalent	decimal value(s)	~
 <Bslash>	backslash		\	 92	*backslash* *<Bslash>*
 <Bar>		vertical bar		|	124	*<Bar>*
 <Del>		delete				127
+<CSI>		command sequence intro  ALT-Esc 155	*<CSI>*
+<xCSI>		CSI when typed in the GUI		*<xCSI>*
 
 <EOL>		end-of-line (can be <CR>, <LF> or <CR><LF>,
 		depends on system and 'fileformat')	*<EOL>*
