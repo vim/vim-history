@@ -4619,7 +4619,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
      * separator (slash and/or backslash), wildcards and characters that are
      * often illegal in a file name. */
     else if ((options[opt_idx].flags & P_NFNAME)
-				   && vim_strpbrk(*varp, "/\\*?[|<>") != NULL)
+			 && vim_strpbrk(*varp, (char_u *)"/\\*?[|<>") != NULL)
     {
 	errmsg = e_invarg;
     }
