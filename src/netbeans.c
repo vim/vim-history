@@ -442,13 +442,12 @@ getConnInfo(char *file, char **host, char **port, char **auth)
     struct stat	st;
 
     /*
-     * For Unix only accept the file when it's owned by the current user and
-     * not accessible by others.
+     * For Unix only accept the file when it's not accessible by others.
+     * The open will then fail if we don't own the file.
      */
-    if (mch_stat(file, &st) == 0
-	    && (st.st_uid != getuid() || (st.st_mode & 0077)))
+    if (mch_stat(file, &st) == 0 && (st.st_mode & 0077) != 0)
     {
-	EMSG2(_("E668: Ownership of NetBeans connection file invalid: \"%s\""),
+	EMSG2(_("E668: Wrong access mode for NetBeans connection info file: \"%s\""),
 									file);
 	return FAIL;
     }
