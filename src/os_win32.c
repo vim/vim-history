@@ -1386,8 +1386,11 @@ mch_inchar(
 	    }
 #endif
 
-	    if (c == Ctrl_C)
-		g_fCBrkPressed = TRUE;
+	    if (c == Ctrl_C && ctrl_c_interrupts)
+	    {
+		trash_input_buf();
+		got_int = TRUE;
+	    }
 
 #ifdef FEAT_MOUSE
 	    if (g_nMouseClick == -1)
