@@ -2753,8 +2753,9 @@ im_save_status(psave)
     /* Don't save when 'imdisable' is set or "xic" is NULL, IM is always
      * disabled then (but might start later).
      * Also don't save when inside a mapping, vgetc_im_active has not been set
-     * then. */
-    if (!p_imdisable && KeyTyped
+     * then.
+     * And don't save when the keys were stuffed (e.g., for a "." command). */
+    if (!p_imdisable && KeyTyped && !KeyStuffed
 # ifdef FEAT_XIM
 	    && xic != NULL
 # endif
