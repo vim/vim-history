@@ -270,9 +270,6 @@ static void dyn_imm_load(void);
 #ifndef ETO_IGNORELANGUAGE
 # define ETO_IGNORELANGUAGE  0x1000
 #endif
-#ifndef ETO_PDY
-# define ETO_PDY             0x2000
-#endif
 
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
@@ -1761,11 +1758,8 @@ gui_mch_draw_string(
 	vim_free(unicodebuf);
 	unicodebuf = (WCHAR *)alloc(len * sizeof(WCHAR));
 
-	if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-	{
-	    vim_free(unicodepdy);
-	    unicodepdy = (int *)alloc(len * sizeof(int) * 2);
-	}
+	vim_free(unicodepdy);
+	unicodepdy = (int *)alloc(len * sizeof(int));
 
 	unibuflen = len;
     }
@@ -1780,10 +1774,6 @@ gui_mch_draw_string(
 	int		cw;	/* width of current cell */
 
 	cells = 0;
-	/* Add ETO_PDY to make characters fit as we expect, even when the font
-	 * uses different widths (e.g., bold character is wider). */
-	if (unicodepdy != NULL)
-	    foptions |= ETO_PDY;
 	for (clen = 0; i < len; )
 	{
 	    unicodebuf[clen] = utf_ptr2char(text + i);
@@ -1792,8 +1782,10 @@ gui_mch_draw_string(
 		cw = 1;
 	    if (unicodepdy != NULL)
 	    {
-		unicodepdy[clen * 2] = cw * gui.char_width;
-		unicodepdy[clen * 2 + 1] = 0;
+		/* Use unicodepdy to make characters fit as we expect, even
+		 * when the font uses different widths (e.g., bold character
+		 * is wider).  */
+		unicodepdy[clen] = cw * gui.char_width;
 	    }
 	    cells += cw;
 	    i += utfc_ptr2len_check_len(text + i, len - i);
