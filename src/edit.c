@@ -2043,7 +2043,22 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 				wstart = ptr;
 
 				/* Find end of the word and add it. */
-				ptr = find_word_end(ptr);
+#ifdef FEAT_MBYTE
+				if (has_mbyte)
+				    /* Japanese words may have characters in
+				     * different classes, only separate words
+				     * with single-byte non-word characters. */
+				    while (*ptr != NUL)
+				    {
+					int l = (*mb_ptr2len_check)(ptr);
+
+					if (l < 2 && !vim_iswordc(*ptr))
+					    break;
+					ptr += l;
+				    }
+				else
+#endif
+				    ptr = find_word_end(ptr);
 				add_r = ins_compl_add_infercase(wstart,
 					(int)(ptr - wstart), files[i], dir, 0);
 			    }
