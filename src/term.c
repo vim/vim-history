@@ -1642,15 +1642,22 @@ set_termname(term)
 					   TGETSTR(string_names[i].name, &tp);
 		}
 
-		if ((T_MS == NULL || T_MS == empty_option) && tgetflag("ms"))
+		/* tgetflag() returns 1 if the flag is present, 0 if not and
+		 * possibly -1 if the flag doesn't exist. */
+		if ((T_MS == NULL || T_MS == empty_option)
+							&& tgetflag("ms") > 0)
 		    T_MS = (char_u *)"y";
-		if ((T_XS == NULL || T_XS == empty_option) && tgetflag("xs"))
+		if ((T_XS == NULL || T_XS == empty_option)
+							&& tgetflag("xs") > 0)
 		    T_XS = (char_u *)"y";
-		if ((T_DB == NULL || T_DB == empty_option) && tgetflag("db"))
+		if ((T_DB == NULL || T_DB == empty_option)
+							&& tgetflag("db") > 0)
 		    T_DB = (char_u *)"y";
-		if ((T_DA == NULL || T_DA == empty_option) && tgetflag("da"))
+		if ((T_DA == NULL || T_DA == empty_option)
+							&& tgetflag("da") > 0)
 		    T_DA = (char_u *)"y";
-		if ((T_UT == NULL || T_UT == empty_option) && tgetflag("ut"))
+		if ((T_UT == NULL || T_UT == empty_option)
+							&& tgetflag("ut") > 0)
 		    T_UT = (char_u *)"y";
 
 
@@ -2104,20 +2111,26 @@ tgetent_error(tbuf, term)
     int	    i;
 
     i = TGETENT(tbuf, term);
-    if (i < 1)
+    if (i < 0		    /* -1 is always an error */
+# ifdef TGETENT_ZERO_ERR
+	    || i == 0	    /* sometimes zero is also an error */
+# endif
+       )
     {
 	/* On FreeBSD tputs() gets a SEGV after a tgetent() which fails.  Call
 	 * tgetent() with the always existing "dumb" entry to avoid a crash or
 	 * hang. */
 	(void)TGETENT(tbuf, "dumb");
 
-	if (i == -1)
+	if (i < 0)
+# ifdef TGETENT_ZERO_ERR
 	    return (char_u *)_("Cannot open termcap file");
 	if (i == 0)
+# endif
 #ifdef TERMINFO
 	    return (char_u *)_("Terminal entry not found in terminfo");
 #else
-	return (char_u *)_("Terminal entry not found in termcap");
+	    return (char_u *)_("Terminal entry not found in termcap");
 #endif
     }
     return NULL;

@@ -1548,6 +1548,19 @@ else
   AC_MSG_RESULT(none found)
 fi
 
+if test "x$olibs" != "x$LIBS"; then
+  AC_MSG_CHECKING(what tgetent() returns for an unknown terminal)
+  AC_TRY_RUN([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+main()
+{char s[10000]; int res = tgetent(s, "thisterminaldoesnotexist"); exit(res != 0); }],
+	  AC_MSG_RESULT(zero); AC_DEFINE(TGETENT_ZERO_ERR, 0),
+	  AC_MSG_RESULT(non-zero),
+	  AC_MSG_ERROR(failed to compile test program.))
+fi
+
 AC_MSG_CHECKING(whether termcap.h contains ospeed)
 AC_TRY_LINK([
 #ifdef HAVE_TERMCAP_H
