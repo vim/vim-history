@@ -1339,6 +1339,7 @@ static struct key_name_entry
     {'\\',		(char_u *)"Bslash"},
     {K_DEL,		(char_u *)"Del"},
     {K_DEL,		(char_u *)"Delete"},	/* Alternative name */
+    {K_KDEL,		(char_u *)"kDel"},
     {K_UP,		(char_u *)"Up"},
     {K_DOWN,		(char_u *)"Down"},
     {K_LEFT,		(char_u *)"Left"},
@@ -1392,6 +1393,7 @@ static struct key_name_entry
     {K_UNDO,		(char_u *)"Undo"},
     {K_INS,		(char_u *)"Insert"},
     {K_INS,		(char_u *)"Ins"},	/* Alternative name */
+    {K_KINS,		(char_u *)"kInsert"},
     {K_HOME,		(char_u *)"Home"},
     {K_KHOME,		(char_u *)"kHome"},
     {K_XHOME,		(char_u *)"xHome"},
@@ -1747,7 +1749,7 @@ find_special_key(srcp, modp, keycode)
 		    /* don't want keycode, use single byte code */
 		    if (key == K_BS)
 			key = BS;
-		    else if (key == K_DEL)
+		    else if (key == K_DEL || key == K_KDEL)
 			key = DEL;
 		}
 

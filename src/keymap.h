@@ -203,7 +203,10 @@ enum key_extra
     KE_S_XF4,
 
     KE_MOUSEDOWN,	/* scroll wheel pseudo-button Down */
-    KE_MOUSEUP		/* scroll wheel pseudo-button Up */
+    KE_MOUSEUP,		/* scroll wheel pseudo-button Up */
+
+    KE_KINS,		/* keypad Insert key */
+    KE_KDEL		/* keypad Delete key */
 };
 
 /*
@@ -320,7 +323,9 @@ enum key_extra
 #define K_BS		TERMCAP2KEY('k', 'b')
 
 #define K_INS		TERMCAP2KEY('k', 'I')
+#define K_KINS		TERMCAP2KEY(KS_EXTRA, KE_KINS)
 #define K_DEL		TERMCAP2KEY('k', 'D')
+#define K_KDEL		TERMCAP2KEY(KS_EXTRA, KE_KDEL)
 #define K_HOME		TERMCAP2KEY('k', 'h')
 #define K_KHOME		TERMCAP2KEY('K', '1')	/* keypad home (upper left) */
 #define K_XHOME		TERMCAP2KEY(KS_EXTRA, KE_XHOME)

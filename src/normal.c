@@ -310,9 +310,9 @@ getcount:
     {
 	/* Pick up any leading digits and compute ca.count0 */
 	while (    (c >= '1' && c <= '9')
-		|| (ca.count0 != 0 && (c == K_DEL || c == '0')))
+		|| (ca.count0 != 0 && (c == K_DEL || c == K_KDEL || c == '0')))
 	{
-	    if (c == K_DEL)
+	    if (c == K_DEL || c == K_KDEL)
 	    {
 		ca.count0 /= 10;
 #ifdef CMDLINE_INFO
@@ -1023,6 +1023,7 @@ getcount:
     case 'I':
     case 'i':
     case K_INS:
+    case K_KINS:
 	command_busy = nv_edit(&ca);
 	break;
 
@@ -1081,12 +1082,13 @@ getcount:
 	}
 	/* FALLTHROUGH */
     case K_DEL:
+    case K_KDEL:
     case 'Y':
     case 'D':
     case 'C':
     case 'x':
     case 'X':
-	if (ca.cmdchar == K_DEL)
+	if (ca.cmdchar == K_DEL || ca.cmdchar == K_KDEL)
 	    ca.cmdchar = 'x';		/* DEL key behaves like 'x' */
 
 	/* with Visual these commands are operators */
@@ -3366,7 +3368,7 @@ nv_zet(cap)
 #ifdef CMDLINE_INFO
 	    (void)add_to_showcmd(nchar);
 #endif
-	    if (nchar == K_DEL)
+	    if (nchar == K_DEL || nchar == K_KDEL)
 		n /= 10;
 	    else if (vim_isdigit(nchar))
 		n = n * 10 + (nchar - '0');
@@ -5750,7 +5752,7 @@ nv_edit(cap)
     CMDARG *cap;
 {
     /* <Insert> is equal to "i" */
-    if (cap->cmdchar == K_INS)
+    if (cap->cmdchar == K_INS || cap->cmdchar == K_KINS)
 	cap->cmdchar = 'i';
 
     /* in Visual mode "A" and "I" are an operator */

@@ -2101,7 +2101,7 @@ get_number(colon)
 	    n = n * 10 + c - '0';
 	    msg_putchar(c);
 	}
-	else if (c == K_DEL || c == K_BS || c == Ctrl('H'))
+	else if (c == K_DEL || c == K_KDEL || c == K_BS || c == Ctrl('H'))
 	{
 	    n /= 10;
 	    MSG_PUTS("\b \b");

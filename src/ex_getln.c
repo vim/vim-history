@@ -629,11 +629,15 @@ getcmdline(firstc, count, indent)
 	case K_BS:
 	case Ctrl('H'):
 	case K_DEL:
+	case K_KDEL:
 	case Ctrl('W'):
 #ifdef FKMAP
 		if (cmd_fkmap && c == K_BS)
 		    c = K_DEL;
 #endif
+		if (c == K_KDEL)
+		    c = K_DEL;
+
 		/*
 		 * delete current character is the same as backspace on next
 		 * character, except at end of line
@@ -689,6 +693,7 @@ getcmdline(firstc, count, indent)
 		goto cmdline_changed;
 
 	case K_INS:
+	case K_KINS:
 #ifdef FKMAP
 		/* if Farsi mode set, we are in reverse insert mode -
 		   Do not change the mode */
@@ -1474,7 +1479,8 @@ getexmodeline(c, dummy, indent)
 		    if (c1 == '\r')
 			c1 = '\n';
 
-		    if (c1 == BS || c1 == K_BS || c1 == DEL || c1 == K_DEL)
+		    if (c1 == BS || c1 == K_BS
+				  || c1 == DEL || c1 == K_DEL || c1 == K_KDEL)
 		    {
 			if (line_ga.ga_len > 0)
 			{

@@ -662,6 +662,7 @@ edit(cmdchar, startln, count)
 	switch (c)
 	{
 	case K_INS:	    /* toggle insert/replace mode */
+	case K_KINS:
 #ifdef FKMAP
 	    if (p_fkmap && p_ri)
 	    {
@@ -809,6 +810,7 @@ doESCkey:
 
 	/* delete character under the cursor */
 	case K_DEL:
+	case K_KDEL:
 	    ins_del();
 	    need_redraw = TRUE;
 	    break;
