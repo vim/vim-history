@@ -852,6 +852,8 @@ gui_update_cursor(force, clear_selection)
 			syn_id2colors(iid, &fg, &bg);
 			if (bg != INVALCOLOR)
 			    cbg = bg;
+			if (fg != INVALCOLOR)
+			    cfg = fg;
 		    }
 		}
 	    }
