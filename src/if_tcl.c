@@ -1424,7 +1424,7 @@ tclsetdelcmd(interp, reflist, vimobj, delcmd)
 	reflist = reflist->next;
     }
     /* This should never happen.  Famous last word? */
-    EMSG(_("TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"));
+    EMSG(_("(te1) TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"));
     Tcl_SetResult(interp, _("cannot register callback command: buffer/window reference not found"), TCL_STATIC);
     return TCL_ERROR;
 }
@@ -1740,7 +1740,7 @@ tclexit(error)
 	robj = Tcl_GetObjResult(tclinfo.interp);
 	if( Tcl_GetIntFromObj(tclinfo.interp, robj, &retval) != TCL_OK )
 	{
-	    EMSG(_("TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"));
+	    EMSG(_("(te2) TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"));
 	    newerr = FAIL;
 	}
 	else

@@ -2174,7 +2174,9 @@ static char *(p_slm_values[]) = {"mouse", "key", "cmd", NULL};
 #ifdef FEAT_VISUAL
 static char *(p_km_values[]) = {"startsel", "stopsel", NULL};
 #endif
+#ifdef FEAT_BROWSE
 static char *(p_bsdir_values[]) = {"current", "last", "buffer", NULL};
+#endif
 #ifdef FEAT_SCROLLBIND
 static char *(p_scbopt_values[]) = {"ver", "hor", "jump", NULL};
 #endif
@@ -2381,6 +2383,7 @@ set_init_1()
 #endif
 
     curbuf->b_p_initialized = TRUE;
+    curbuf->b_p_ar = -1;	/* no local 'autoread' value */
     check_buf_options(curbuf);
     check_win_options(curwin);
     check_options();
@@ -3106,8 +3109,15 @@ do_set(arg, opt_flags)
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
 		    else if (nextchar == '<')
-			value = *(int *)get_varp_scope(&(options[opt_idx]),
+		    {
+			/* For 'autoread' -1 means to use global value. */
+			if ((int *)varp == &curbuf->b_p_ar
+						    && opt_flags == OPT_LOCAL)
+			    value = -1;
+			else
+			    value = *(int *)get_varp_scope(&(options[opt_idx]),
 								  OPT_GLOBAL);
+		    }
 		    else
 		    {
 			/*
@@ -4593,12 +4603,15 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 #endif
 
+#ifdef FEAT_BROWSE
     /* 'browsedir' */
     else if (varp == &p_bsdir)
     {
-	if (check_opt_strings(p_bsdir, p_bsdir_values, FALSE) != OK)
+	if (check_opt_strings(p_bsdir, p_bsdir_values, FALSE) != OK
+		&& !mch_isdir(p_bsdir))
 	    errmsg = e_invarg;
     }
+#endif
 
 #ifdef FEAT_VISUAL
     /* 'keymodel' */
@@ -5457,6 +5470,8 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 #ifdef FEAT_SUN_WORKSHOP
     else if ((int *)varp == &p_beval)
     {
+	extern BalloonEval	*balloonEval;
+
 	if (p_beval == TRUE)
 	    gui_mch_enable_beval_area(balloonEval);
 	else
@@ -5993,8 +6008,9 @@ findoption(arg)
  * Returns:
  * Number or Toggle option: 1, *numval gets value.
  *	     String option: 0, *stringval gets allocated string.
- *	     hidden option: -1.
- *	    unknown option: -2.
+ * Hidden Number or Toggle option: -1.
+ *	     hidden String option: -2.
+ *	           unknown option: -3.
  */
     int
 get_option_value(name, numval, stringval, opt_flags)
@@ -6008,14 +6024,14 @@ get_option_value(name, numval, stringval, opt_flags)
 
     opt_idx = findoption(name);
     if (opt_idx < 0)		    /* unknown option */
-	return -2;
+	return -3;
 
     varp = get_varp_scope(&(options[opt_idx]), opt_flags);
-    if (varp == NULL)		    /* hidden option */
-	return -1;
 
     if (options[opt_idx].flags & P_STRING)
     {
+	if (varp == NULL)		    /* hidden option */
+	    return -2;
 	if (stringval != NULL)
 	{
 #ifdef FEAT_CRYPT
@@ -6028,6 +6044,9 @@ get_option_value(name, numval, stringval, opt_flags)
 	}
 	return 0;
     }
+
+    if (varp == NULL)		    /* hidden option */
+	return -1;
     if (options[opt_idx].flags & P_NUM)
 	*numval = *(long *)varp;
     else
@@ -6059,7 +6078,7 @@ set_option_value(name, number, string, opt_flags)
 
     opt_idx = findoption(name);
     if (opt_idx == -1)
-	EMSG2(_("Unknown option: %s"), name);
+	EMSG2(_("(oe3) Unknown option: %s"), name);
     else if (options[opt_idx].flags & P_STRING)
 	set_string_option(opt_idx, string, opt_flags);
     else
@@ -6287,6 +6306,8 @@ showoneopt(p, opt_flags)
     if ((p->flags & P_BOOL) && ((int *)varp == &curbuf->b_changed
 					? !curbufIsChanged() : !*(int *)varp))
 	MSG_PUTS("no");
+    else if ((p->flags & P_BOOL) && *(int *)varp < 0)
+	MSG_PUTS("--");
     else
 	MSG_PUTS("  ");
     MSG_PUTS(p->fullname);
@@ -6527,11 +6548,13 @@ clear_termoptions()
 #ifdef FEAT_MOUSE
     mch_setmouse(FALSE);	    /* switch mouse off */
 #endif
-#ifdef FEAT_XCLIPBOARD
-    clear_xterm_clip();
-#endif
 #ifdef FEAT_TITLE
     mch_restore_title(3);	    /* restore window titles */
+#endif
+#ifdef FEAT_XCLIPBOARD
+    /* close the display opened for the clipboard.  After restoring the title,
+     * because that will need the display. */
+    clear_xterm_clip();
 #endif
 #ifdef WIN32
     /*
@@ -6837,7 +6860,7 @@ get_varp(p)
 #ifdef FEAT_KEYMAP
 	case PV_KMAP:	return (char_u *)&(curbuf->b_p_keymap);
 #endif
-	default:	EMSG(_("get_varp ERROR"));
+	default:	EMSG(_("(eq3) get_varp ERROR"));
     }
     /* always return a valid pointer to avoid a crash! */
     return (char_u *)&(curbuf->b_p_wm);
@@ -7711,7 +7734,7 @@ langmap_set()
 	    }
 	    if (to == NUL)
 	    {
-		EMSG2(_("'langmap': Matching character missing for %s"),
+		EMSG2(_("(le5) 'langmap': Matching character missing for %s"),
 							     transchar(from));
 		return;
 	    }
@@ -7745,7 +7768,7 @@ langmap_set()
 		    {
 			if (p[0] != ',')
 			{
-			    EMSG2(_("'langmap': Extra characters after semicolon: %s"), p);
+			    EMSG2(_("(le6) 'langmap': Extra characters after semicolon: %s"), p);
 			    return;
 			}
 			++p;

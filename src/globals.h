@@ -125,6 +125,10 @@ EXTERN int	msg_col;
 EXTERN int	msg_row;
 EXTERN int	msg_scrolled;	/* Number of screen lines that windows have
 				 * scrolled because of printing messages. */
+EXTERN int	msg_scrolled_ign INIT(= FALSE);
+				/* when TRUE don't set need_wait_return in
+				   msg_puts_attr() when msg_scrolled is
+				   non-zero */
 
 EXTERN char_u	*keep_msg INIT(= NULL);	    /* msg to be shown after redraw */
 EXTERN int	keep_msg_attr INIT(= 0);    /* highlight attr for keep_msg */
@@ -958,6 +962,9 @@ EXTERN char_u e_invexpr2[]	INIT(=N_("(ee3) Invalid expression: %s"));
 #endif
 EXTERN char_u e_invrange[]	INIT(=N_("(er4) Invalid range"));
 EXTERN char_u e_invcmd[]	INIT(=N_("Invalid command"));
+#ifdef UNIX
+EXTERN char_u e_isadir2[]	INIT(=N_("(we7) \"%s\" is a directory"));
+#endif
 #ifdef FEAT_EVAL
 EXTERN char_u e_letunexp[]	INIT(=N_("(el1) Unexpected characters before '='"));
 #endif
@@ -966,7 +973,7 @@ EXTERN char_u e_marknotset[]	INIT(=N_("(em5) Mark not set"));
 EXTERN char_u e_modifiable[]	INIT(=N_("(ec5) Cannot make changes, 'modifiable' is off"));
 EXTERN char_u e_nesting[]	INIT(=N_("(es4) Scripts nested too deep"));
 EXTERN char_u e_noalt[]		INIT(=N_("(en2) No alternate file"));
-EXTERN char_u e_noabbr[]	INIT(=N_("(ea2) No such abbreviation"));
+EXTERN char_u e_noabbr[]	INIT(=N_("(eb0) No such abbreviation"));
 EXTERN char_u e_nobang[]	INIT(=N_("No ! allowed"));
 #ifndef FEAT_GUI
 EXTERN char_u e_nogvim[]	INIT(=N_("(eg1) GUI cannot be used: Not enabled at compile time"));
@@ -1028,6 +1035,7 @@ EXTERN char_u e_sandbox[]	INIT(=N_("(es5) Not allowed in sandbox"));
 #endif
 EXTERN char_u e_scroll[]	INIT(=N_("(es2) Invalid scroll size"));
 EXTERN char_u e_shellempty[]	INIT(=N_("(es1) 'shell' option is empty"));
+EXTERN char_u e_swapclose[]	INIT(=N_("(el4) Close error on swap file"));
 EXTERN char_u e_tagstack[]	INIT(=N_("(et1) tag stack empty"));
 EXTERN char_u e_toocompl[]	INIT(=N_("(ec3) Command too complex"));
 EXTERN char_u e_longname[]	INIT(=N_("(en1) Name too long"));
@@ -1038,6 +1046,9 @@ EXTERN char_u e_umark[]		INIT(=N_("(em6) Unknown mark"));
 EXTERN char_u e_wildexpand[]	INIT(=N_("(ew3) Cannot expand wildcards"));
 EXTERN char_u e_write[]		INIT(=N_("(ew4) Error while writing"));
 EXTERN char_u e_zerocount[]	INIT(=N_("Zero count"));
+#ifdef FEAT_EVAL
+EXTERN char_u e_usingsid[]	INIT(=N_("(ev7) Using <SID> not in a script context"));
+#endif
 
 /*
  * Optional Farsi support.  Include it here, so EXTERN and INIT are defined.

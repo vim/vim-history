@@ -2,6 +2,7 @@
 void main_loop __ARGS((int cmdwin));
 void getout __ARGS((int exitval));
 int process_env __ARGS((char_u *env, int is_viminit));
+void time_msg __ARGS((char *msg));
 int toF_TyA __ARGS((int c));
 int fkmap __ARGS((int c));
 void conv_to_pvim __ARGS((void));

@@ -1,13 +1,19 @@
 " Vim syntax file
-" Language:	CA-OpenROAD
-" Maintainer:	Luis Moreno <lmoreno@retemail.es>
-" Last Change:	2001 Jan 15
+" Language:		CA-OpenROAD
+" Maintainer:	Luis Moreno <lmoreno@eresmas.net>
+" Last change:	2001 May 02 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+"
+if version < 600
+	syntax clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
+" Keywords
+"
 syntax keyword openroadKeyword	ABORT ALL ALTER AND ANY AS ASC AT AVG BEGIN
 syntax keyword openroadKeyword	BETWEEN BY BYREF CALL CALLFRAME CALLPROC CASE
 syntax keyword openroadKeyword	CLEAR CLOSE COMMIT CONNECT CONTINUE COPY COUNT
@@ -47,7 +53,7 @@ syntax keyword openroadTodo contained	TODO
 syntax cluster	openroadParenGroup	contains=openroadParenError,openroadTodo
 syntax region	openroadParen		transparent start='(' end=')' contains=ALLBUT,@openroadParenGroup
 syntax match	openroadParenError	")"
-hi def link	openroadParenError	cError
+highlight link	openroadParenError	cError
 
 " Numbers
 "
@@ -88,23 +94,37 @@ if exists("openroad_comment_strings")
 	syntax match openroadCommentSkip	contained "^\s*\*\($\|\s\+\)"
 	syntax region openroadCommentString	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end="$"
 	syntax region openroadComment		start="/\*" end="\*/" contains=openroadCommentString,openroadCharacter,openroadNumber
-	syntax match openroadComment		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
+	syntax match openroadComment 		"//.*" contains=openroadComment2String,openroadCharacter,openroadNumber
 else
-	syn region openroadComment		start="/\*" end="\*/"
-	syn match openroadComment		"//.*"
+	syn region openroadComment     		start="/\*" end="\*/"
+	syn match openroadComment      		"//.*"
 endif
 
-" The default highlighting.
-hi def link openroadKeyword	Statement
-hi def link openroadEvent	Statement
-hi def link openroadNumber	Number
-hi def link openroadString	String
-hi def link openroadComment	Comment
-hi def link openroadOperator	Operator
-hi def link openroadType	Type
-hi def link openroadClass	Type
-hi def link openroadConst	Constant
-hi def link openroadIdent	Identifier
-hi def link openroadTodo	Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+"
+if version >= 508 || !exists("did_openroad_syntax_inits")
+	if version < 508
+		let did_openroad_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
+
+	HiLink openroadKeyword	Statement
+	HiLink openroadEvent	Statement
+	HiLink openroadNumber	Number
+	HiLink openroadString	String
+	HiLink openroadComment	Comment
+	HiLink openroadOperator	Operator
+	HiLink openroadType		Type
+	HiLink openroadClass	Type
+	HiLink openroadConst	Constant
+	HiLink openroadIdent	Identifier
+	HiLink openroadTodo		Todo
+
+	delcommand HiLink
+endif
 
 let b:current_syntax = "openroad"

@@ -1,7 +1,8 @@
 " Vim syntax file
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
-" Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
-" Last Change:	2001 Jan 15
+" Maintainer:	Sandor Kopanyi <sandor.kopanyi@mailbox.hu>
+" Url:          <->
+" Last Change:	2001 Apr 30
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -10,8 +11,10 @@
 "   sqlnet-ora and tnsnames.ora; since will not cause(?) problems
 "   is easier to follow separately each file's keywords)
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove any old syntax stuff hanging around, if needed
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -434,22 +437,37 @@ syn cluster oraAll add=oraValue,oraModifier,oraString,oraSpecial,oraComment
 "==============================================================================
 " highlighting
 
-" The default highlighting.
-hi def link oraKeyword       Statement       "usual keywords
-hi def link oraKeywordGroup  Type            "keywords which group other keywords
-hi def link oraKeywordPref   oraKeywordGroup "keywords which act as prefixes
-hi def link oraKeywordObs    Todo            "obsolete keywords
-hi def link oraKeywordUnd    PreProc         "undocumented keywords
-hi def link oraKeywordUndObs oraKeywordObs   "undocumented obsolete keywords
-hi def link oraValue         Identifier      "values, like true or false
-hi def link oraModifier      oraValue        "modifies values
-hi def link oraString        String          "strings
- 
-hi def link oraSpecial       Special         "special characters
-hi def link oraError         Error           "errors
-hi def link oraParenError    oraError        "errors caused by mismatching parantheses
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ora_syn_inits")
 
-hi def link oraComment       Comment         "comments
+  if version < 508
+    let did_ora_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink oraKeyword       Statement             "usual keywords
+  HiLink oraKeywordGroup  Type                  "keywords which group other keywords
+  HiLink oraKeywordPref   oraKeywordGroup       "keywords which act as prefixes
+  HiLink oraKeywordObs    Todo                  "obsolete keywords
+  HiLink oraKeywordUnd    PreProc               "undocumented keywords
+  HiLink oraKeywordUndObs oraKeywordObs         "undocumented obsolete keywords
+  HiLink oraValue         Identifier            "values, like true or false
+  HiLink oraModifier      oraValue              "modifies values
+  HiLink oraString        String                "strings
+ 
+  HiLink oraSpecial       Special               "special characters
+  HiLink oraError         Error                 "errors
+  HiLink oraParenError    oraError              "errors caused by mismatching parantheses
+
+  HiLink oraComment       Comment               "comments
+
+  delcommand HiLink
+endif
+
+
 
 let b:current_syntax = "ora"
 

@@ -198,7 +198,7 @@ do_window(nchar, Prenum)
 		    if (wp->w_p_pvw)
 			break;
 		if (wp == NULL)
-		    EMSG(_("There is no preview window"));
+		    EMSG(_("(pe1) There is no preview window"));
 		else
 		    win_goto(wp);
 		break;
@@ -565,7 +565,7 @@ win_split(size, flags)
     flags |= cmdmod.split;
     if ((flags & WSP_TOP) && (flags & WSP_BOT))
     {
-	EMSG(_("Can't split topleft and botright at the same time"));
+	EMSG(_("(we1) Can't split topleft and botright at the same time"));
 	return FAIL;
     }
 
@@ -1296,7 +1296,7 @@ win_rotate(upwards, count)
 							   frp = frp->fr_next)
 	if (frp->fr_win == NULL)
 	{
-	    EMSG(_("Cannot rotate when another window is split"));
+	    EMSG(_("(we2) Cannot rotate when another window is split"));
 	    return;
 	}
 #endif
@@ -1761,7 +1761,7 @@ win_close(win, free_buf)
 
     if (lastwin == firstwin)
     {
-	EMSG(_("Cannot close last window"));
+	EMSG(_("(we3) Cannot close last window"));
 	return;
     }
 
@@ -2423,7 +2423,7 @@ close_others(message, forceit)
      * remove the status line.
      */
     if (lastwin != firstwin)
-	EMSG(_("Other window contains changes"));
+	EMSG(_("(we4) Other window contains changes"));
 }
 
 #endif /* FEAT_WINDOWS */
@@ -4224,7 +4224,7 @@ file_name_in_line(line, col, options, count)
     if (*ptr == NUL)		/* nothing found */
     {
 	if (options & FNAME_MESS)
-	    EMSG(_("No file name under cursor"));
+	    EMSG(_("(fe5) No file name under cursor"));
 	return NULL;
     }
 
@@ -4332,7 +4332,7 @@ find_file_name_in_path(ptr, len, options, count)
 	{
 	    c = ptr[len];
 	    ptr[len] = NUL;
-	    EMSG2(_("Can't find file \"%s\" in path"), ptr);
+	    EMSG2(_("(ce0) Can't find file \"%s\" in path"), ptr);
 	    ptr[len] = c;
 	}
 

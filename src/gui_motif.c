@@ -158,14 +158,6 @@ gui_x11_create_widgets()
 	Arg al[7]; /* Make sure there is enough room for arguments! */
 	int ac = 0;
 
-	if (gui.menu_fg_pixel != -1)
-	{
-	    XtSetArg(al[ac], XmNforeground, gui.menu_fg_pixel); ac++;
-	}
-	if (gui.menu_bg_pixel != -1)
-	{
-	    XtSetArg(al[ac], XmNbackground, gui.menu_bg_pixel); ac++;
-	}
 # if (XmVersion >= 1002)
 	XtSetArg(al[ac], XmNtearOffModel, tearoff_val); ac++;
 # endif
@@ -178,6 +170,13 @@ gui_x11_create_widgets()
 # endif
 	menuBar = XmCreateMenuBar(vimForm, "menuBar", al, ac);
 	XtManageChild(menuBar);
+
+	/* Remember the default colors, needed for ":hi clear". */
+	XtVaGetValues(menuBar,
+	    XmNbackground, &gui.menu_def_bg_pixel,
+	    XmNforeground, &gui.menu_def_fg_pixel,
+	    NULL);
+	gui_motif_menu_colors(menuBar);
     }
 #endif
 
@@ -187,7 +186,6 @@ gui_x11_create_widgets()
      */
     toolBarFrame = XtVaCreateWidget("toolBarFrame",
 	xmFrameWidgetClass, vimForm,
-	XmNchildType, XmFRAME_WORKAREA_CHILD,
 	XmNshadowType, XmSHADOW_OUT,
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
@@ -196,6 +194,7 @@ gui_x11_create_widgets()
 
     toolBar = XtVaCreateManagedWidget("toolBar",
 	xmRowColumnWidgetClass, toolBarFrame,
+	XmNchildType, XmFRAME_WORKAREA_CHILD,
 	XmNrowColumnType, XmWORK_AREA,
 	XmNorientation, XmHORIZONTAL,
 	XmNtraversalOn, False,
@@ -768,21 +767,21 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    Pixmap pixmap = 0;
-	    Pixmap insensitive = 0;
-
-	    if (strstr((const char *)p_toolbar, "icons") != NULL)
-		get_pixmap(menu->name, &pixmap, &insensitive);
-	    if (pixmap == 0)
+	    get_pixmap(menu->name, &menu->image, &menu->image_ins);
+	    /* Set the label here, so that we can switch between icons/text
+	     * by changing the XmNlabelType resource. */
+	    xms = XmStringCreate((char *)menu->dname, STRING_TAG);
+	    XtSetArg(args[n], XmNlabelString, xms); n++;
+	    if (menu->image == 0)
 	    {
-		xms = XmStringCreate((char *)menu->dname, STRING_TAG);
-		XtSetArg(args[n], XmNlabelString, xms); n++;
 		XtSetArg(args[n], XmNlabelType, XmSTRING); n++;
+		XtSetArg(args[n], XmNlabelPixmap, 0); n++;
+		XtSetArg(args[n], XmNlabelInsensitivePixmap, 0); n++;
 	    }
 	    else
 	    {
-		XtSetArg(args[n], XmNlabelPixmap, pixmap); n++;
-		XtSetArg(args[n], XmNlabelInsensitivePixmap, insensitive); n++;
+		XtSetArg(args[n], XmNlabelPixmap, menu->image); n++;
+		XtSetArg(args[n], XmNlabelInsensitivePixmap, menu->image_ins); n++;
 		XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
 #ifndef FEAT_SUN_WORKSHOP
 		XtSetArg(args[n], XmNshadowThickness, 0); n++;
@@ -969,16 +968,35 @@ gui_mch_new_menu_font()
 }
 
     static void
-gui_mch_submenu_change(mp, colors)
-    vimmenu_T	*mp;
+gui_mch_submenu_change(menu, colors)
+    vimmenu_T	*menu;
     int		colors;		/* TRUE for colors, FALSE for font */
 {
-    while (mp != NULL)
+    vimmenu_T	*mp;
+
+    for (mp = menu; mp != NULL; mp = mp->next)
     {
 	if (mp->id != (Widget)0)
 	{
 	    if (colors)
+	    {
 		gui_motif_menu_colors(mp->id);
+#ifdef FEAT_TOOLBAR
+		/* For a toolbar item: Free the pixmap and allocate a new one,
+		 * so that the background color is right. */
+		if (mp->image != (Pixmap)0)
+		{
+		    XFreePixmap(gui.dpy, mp->image);
+		    XFreePixmap(gui.dpy, mp->image_ins);
+		    get_pixmap(mp->name, &mp->image, &mp->image_ins);
+		    if (mp->image != (Pixmap)0)
+			XtVaSetValues(mp->id,
+				XmNlabelPixmap, mp->image,
+				XmNlabelInsensitivePixmap, mp->image_ins,
+				NULL);
+		}
+#endif
+	    }
 	    else
 		gui_motif_menu_fontlist(mp->id);
 	}
@@ -999,7 +1017,6 @@ gui_mch_submenu_change(mp, colors)
 	    /* Set the colors for the children */
 	    gui_mch_submenu_change(mp->children, colors);
 	}
-	mp = mp->next;
     }
 }
 
@@ -1010,50 +1027,40 @@ gui_mch_submenu_change(mp, colors)
 gui_mch_destroy_menu(menu)
     vimmenu_T	*menu;
 {
-    Widget	parent;
-    int		num_children;
-
-
-    if (menu->submenu_id != (Widget)0)
-    {
-	XtDestroyWidget(menu->submenu_id);
-	menu->submenu_id = (Widget)0;
-    }
+    /* Please be sure to destroy the parent widget first (i.e. menu->id).
+     *
+     * This code should be basically identical to that in the file gui_athena.c
+     * because they are both Xt based.
+     */
     if (menu->id != (Widget)0)
     {
-	/*
-	 * This is a hack to stop LessTif from crashing when a menu's last
-	 * child is destroyed. We check to see if this is the last child and if
-	 * so, don't delete it. The parent will be deleted soon anyway, and it
-	 * will delete it's children like all good widgets do.
-	 */
-	parent = XtParent(menu->id);
-	if (parent != menuBar
-#ifdef FEAT_TOOLBAR
-		&& parent != toolBar
-#endif
-	   )
-	{
-	    XtVaGetValues(parent, XtNnumChildren, &num_children, NULL);
-	    if (num_children > 1)
-		XtDestroyWidget(menu->id);
-	}
-	else
-	    XtDestroyWidget(menu->id);
-	menu->id = (Widget)0;
+	Widget	    parent;
+	Cardinal    num_children;
 
+	parent = XtParent(menu->id);
+#if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
+	if ((parent == toolBar) && (menu->tip != NULL))
+	{
+	    /* We try to destroy this before the actual menu, because there are
+	     * callbacks, etc. that will be unregistered during the tooltip
+	     * destruction.
+	     *
+	     * If you call "gui_mch_destroy_beval_area()" after destroying
+	     * menu->id, then the tooltip's window will have already been
+	     * deallocated by Xt, and unknown behaviour will ensue (probably
+	     * a core dump).
+	     */
+	    gui_mch_destroy_beval_area(menu->tip);
+	    menu->tip = NULL;
+	}
+#endif
+	XtDestroyWidget(menu->id);
+	menu->id = (Widget)0;
 	if (parent == menuBar)
 	    gui_mch_compute_menu_height((Widget)0);
 #ifdef FEAT_TOOLBAR
 	else if (parent == toolBar)
 	{
-# ifdef FEAT_BEVAL
-	    if (menu->tip != NULL)
-	    {
-		gui_mch_destroy_beval_area(menu->tip);
-		menu->tip = NULL;
-	    }
-# endif
 	    /* When removing last toolbar item, don't display the toolbar. */
 	    XtVaGetValues(toolBar, XmNnumChildren, &num_children, NULL);
 	    if (num_children == 0)
@@ -1062,6 +1069,11 @@ gui_mch_destroy_menu(menu)
 		gui.toolbar_height = gui_mch_compute_toolbar_height();
 	}
 #endif
+    }
+    if (menu->submenu_id != (Widget)0)
+    {
+	XtDestroyWidget(menu->submenu_id);
+	menu->submenu_id = (Widget)0;
     }
 }
 
@@ -1077,6 +1089,23 @@ gui_mch_show_popupmenu(menu)
 }
 
 #endif /* FEAT_MENU */
+
+/*
+ * Set the menu and scrollbar colors to their default values.
+ */
+    void
+gui_mch_def_colors()
+{
+    if (gui.in_use)
+    {
+	/* Use the values saved when starting up.  These should come from the
+	 * window manager or a resources file. */
+	gui.menu_fg_pixel = gui.menu_def_fg_pixel;
+	gui.menu_bg_pixel = gui.menu_def_bg_pixel;
+	gui.scroll_fg_pixel = gui.scroll_def_fg_pixel;
+	gui.scroll_bg_pixel = gui.scroll_def_bg_pixel;
+    }
+}
 
 
 /*
@@ -1226,6 +1255,14 @@ gui_mch_create_scrollbar(sb, orient)
 
     sb->id = XtCreateWidget("scrollBar",
 	    xmScrollBarWidgetClass, textAreaForm, args, n);
+
+    /* Remember the default colors, needed for ":hi clear". */
+    if (gui.scroll_def_bg_pixel == (guicolor_T)0
+	    && gui.scroll_def_fg_pixel == (guicolor_T)0)
+	XtVaGetValues(sb->id,
+		XmNbackground, &gui.scroll_def_bg_pixel,
+		XmNforeground, &gui.scroll_def_fg_pixel,
+		NULL);
 
     if (sb->id != (Widget)0)
     {
@@ -1823,6 +1860,73 @@ gui_mch_show_toolbar(int showit)
     XtVaGetValues(toolBar, XmNnumChildren, &numChildren, NULL);
     if (showit && numChildren > 0)
     {
+	/* Assume that we want to show the toolbar if p_toolbar contains
+	 * valid option settings, therefore p_toolbar must not be NULL.
+	 */
+	WidgetList  children;
+
+	XtVaGetValues(toolBar, XmNchildren, &children, NULL);
+	{
+	    void    (*action)(BalloonEval *);
+	    int	    text = 0;
+
+	    if (strstr((const char *)p_toolbar, "tooltips"))
+		action = &gui_mch_enable_beval_area;
+	    else
+		action = &gui_mch_disable_beval_area;
+	    if (strstr((const char *)p_toolbar, "text"))
+		text = 1;
+	    else if (strstr((const char *)p_toolbar, "icons"))
+		text = -1;
+	    if (text != 0)
+	    {
+		vimmenu_T   *toolbar;
+		vimmenu_T   *cur;
+
+		for (toolbar = root_menu; toolbar; toolbar = toolbar->next)
+		    if (menu_is_toolbar(toolbar->dname))
+			break;
+		/* Assumption: toolbar is NULL if there is no toolbar,
+		 *             otherwise it contains the toolbar menu structure.
+		 *
+		 * Assumption: "numChildren" == the number of items in the list
+		 *             of items beginning with toolbar->children.
+		 */
+		if (toolbar)
+		{
+		    for (cur = toolbar->children; cur; cur = cur->next)
+		    {
+			Arg	    args[1];
+			int	    n = 0;
+
+			/* Enable/Disable tooltip (OK to enable while
+			 * currently enabled)
+			 */
+			if (cur->tip != NULL)
+			    (*action)(cur->tip);
+			if (!menu_is_separator(cur->name))
+			{
+			    if (text == 1)
+			    {
+				XtSetArg(args[n], XmNlabelType, XmSTRING);
+				n++;
+			    }
+			    else
+			    {
+				XtSetArg(args[n], XmNlabelType, XmPIXMAP);
+				n++;
+			    }
+			    if (cur->id != NULL)
+			    {
+				XtUnmanageChild(cur->id);
+				XtSetValues(cur->id,args,n);
+				XtManageChild(cur->id);
+			    }
+			}
+		    }
+		}
+	    }
+	}
 	gui.toolbar_height = gui_mch_compute_toolbar_height();
 	XtManageChild(XtParent(toolBar));
 	XtVaSetValues(textAreaFrame,
@@ -1854,6 +1958,7 @@ gui_mch_show_toolbar(int showit)
 
 	XtUnmanageChild(XtParent(toolBar));
     }
+    gui_set_shellsize(FALSE);
 }
 
 /*

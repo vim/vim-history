@@ -57,7 +57,7 @@ void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, long val, long size, l
 void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));
-guicolor_T ImeGetCursorColor __ARGS((guicolor_T color));
+int input_method_active __ARGS((void));
 void ImeSetCompositionWindow __ARGS((void));
 void ImeSetOriginMode __ARGS((void));
 void ImeSetEnglishMode __ARGS((void));

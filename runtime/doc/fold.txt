@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 18
+*fold.txt*      For Vim version 6.0ae.  Last change: 2001 mei 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -229,6 +229,10 @@ This does not work properly when:
 - The line already contains a marker with a level number.  Vim then doesn't
   know what to do.
 - Folds nearby use a level number in their marker which gets in the way.
+- The line is inside a comment, 'commentstring' isn't empty and nested
+  comments don't work.  For example with C: adding /* {{{ */ inside a comment
+  will truncate the existing comment.  Either put the marker before or after
+  the comment, or add the marker manually.
 Generally it's not a good idea to let Vim create markers when you already have
 markers with a level number.
 
@@ -251,7 +255,7 @@ All folding commands start with "z".  Hint: the "z" looks like a folded piece
 of paper, if you look at it from the side.
 
 CREATING AND DELETING FOLDS ~
-							*zf*
+							*zf* *ef9*
 zf{motion}  or
 {Visual}zf	Operator to create a fold.
 		This only works when 'foldmethod' is "manual" or "marker".
@@ -265,7 +269,7 @@ zF		Create a fold for N lines.  Works like "zf".
 :{range}fo[ld]						*:fold* *:fo*
 		Create a fold for the lines in {range}.  Works like "zf".
 
-							*zd*
+							*zd* *ef0*
 zd		Delete one fold at the cursor.  When the cursor is on folded
 		line, that fold is deleted.  Nested folds are moved one level
 		up.  In Visual mode all folds (partially) in the selected area
@@ -281,7 +285,7 @@ zD		Delete folds recursively at the cursor.  In Visual mode all
 		This only works when 'foldmethod' is "manual" or "marker".
 		Also see |fold-delete-marker|.
 
-							*zE*
+							*zE* *ez6*
 zE		Eliminate all folds in the window.
 		This only works when 'foldmethod' is "manual" or "marker".
 		Also see |fold-delete-marker|.

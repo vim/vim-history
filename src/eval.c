@@ -190,6 +190,7 @@ static int find_internal_func __ARGS((char_u *name));
 static int get_func_var __ARGS((char_u *name, int len, VAR retvar, char_u **arg, linenr_T firstline, linenr_T lastline, int *doesrange, int evaluate));
 static void f_append __ARGS((VAR argvars, VAR retvar));
 static void f_argc __ARGS((VAR argvars, VAR retvar));
+static void f_argidx __ARGS((VAR argvars, VAR retvar));
 static void f_argv __ARGS((VAR argvars, VAR retvar));
 static void f_browse __ARGS((VAR argvars, VAR retvar));
 static buf_T *find_buffer __ARGS((VAR avar));
@@ -213,7 +214,6 @@ static void f_eventhandler __ARGS((VAR argvars, VAR retvar));
 static void f_executable __ARGS((VAR argvars, VAR retvar));
 static void f_exists __ARGS((VAR argvars, VAR retvar));
 static void f_expand __ARGS((VAR argvars, VAR retvar));
-static void f_expandpath __ARGS((VAR argvars, VAR retvar));
 static void f_filereadable __ARGS((VAR argvars, VAR retvar));
 static void f_filewritable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
@@ -676,7 +676,7 @@ ex_let(eap)
 		    {
 			varp = find_var(arg, FALSE);
 			if (varp == NULL)
-			    EMSG2(_("Unknown variable: \"%s\""), arg);
+			    EMSG2(_("(ve1) Unknown variable: \"%s\""), arg);
 			else
 			{
 			    name = vim_strchr(arg, ':');
@@ -955,7 +955,7 @@ ex_call(eap)
 
     if (*startarg != '(')
     {
-	EMSG2(_("Missing braces: %s"), name);
+	EMSG2(_("(ve2) Missing braces: %s"), name);
 	goto end;
     }
 
@@ -1023,7 +1023,7 @@ ex_unlet(eap)
 	if (do_unlet(arg) == FAIL && !eap->forceit)
 	{
 	    *name_end = cc;
-	    EMSG2(_("No such variable: \"%s\""), arg);
+	    EMSG2(_("(ve3) No such variable: \"%s\""), arg);
 	    break;
 	}
 
@@ -1049,6 +1049,22 @@ do_unlet(name)
     }
     return FAIL;
 }
+
+#if (defined(FEAT_MENU) && defined(FEAT_MULTI_LANG)) || defined(PROTO)
+/*
+ * Delete all "menutrans_" variables.
+ */
+    void
+del_menutrans_vars()
+{
+    int		i;
+
+    for (i = 0; i < variables.ga_len; ++i)
+	if (VAR_ENTRY(i).var_name != NULL
+		&& STRNCMP(VAR_ENTRY(i).var_name, "menutrans_", 10) == 0)
+	    var_free_one(&VAR_ENTRY(i));
+}
+#endif
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 
@@ -1248,7 +1264,7 @@ eval1(arg, retvar, evaluate)
 	 */
 	if ((*arg)[0] != ':')
 	{
-	    EMSG(_("Missing ':' after '?'"));
+	    EMSG(_("(ev1) Missing ':' after '?'"));
 	    return FAIL;
 	}
 
@@ -1862,7 +1878,7 @@ eval7(arg, retvar, evaluate)
 		    ++*arg;
 		else if (ret == OK)
 		{
-		    EMSG(_("Missing ')'"));
+		    EMSG(_("(ev2) Missing ')'"));
 		    ret = FAIL;
 		}
 		break;
@@ -1912,7 +1928,7 @@ eval7(arg, retvar, evaluate)
 	/* Check for the ']'. */
 	if (**arg != ']')
 	{
-	    EMSG(_("Missing ']'"));
+	    EMSG(_("(ev3) Missing ']'"));
 	    clear_var(retvar);
 	    return FAIL;
 	}
@@ -1987,7 +2003,7 @@ get_option_var(arg, retvar, evaluate)
     if (option_end == NULL)
     {
 	if (retvar != NULL)
-	    EMSG2(_("Option name missing: %s"), *arg);
+	    EMSG2(_("(ve4) Option name missing: %s"), *arg);
 	return FAIL;
     }
 
@@ -2002,15 +2018,20 @@ get_option_var(arg, retvar, evaluate)
     opt_type = get_option_value(*arg, &numval,
 			       retvar == NULL ? NULL : &stringval, 0);
 
-    if (opt_type == -2)			/* invalid name */
+    if (opt_type == -3)			/* invalid name */
     {
 	if (retvar != NULL)
-	    EMSG2(_("Unknown option: %s"), *arg + 1);
+	    EMSG2(_("(ve5) Unknown option: %s"), *arg);
 	ret = FAIL;
     }
     else if (retvar != NULL)
     {
-	if (opt_type == -1)		/* hidden option */
+	if (opt_type == -2)		/* hidden string option */
+	{
+	    retvar->var_type = VAR_STRING;
+	    retvar->var_val.var_string = NULL;
+	}
+	else if (opt_type == -1)	/* hidden number option */
 	{
 	    retvar->var_type = VAR_NUMBER;
 	    retvar->var_val.var_number = 0;
@@ -2062,7 +2083,7 @@ get_string_var(arg, retvar, evaluate)
 	}
     if (*p != '"')
     {
-	EMSG2(_("Missing quote: %s"), *arg);
+	EMSG2(_("(ve6) Missing quote: %s"), *arg);
 	return FAIL;
     }
 
@@ -2179,7 +2200,7 @@ get_lit_string_var(arg, retvar, evaluate)
     p = vim_strchr(*arg + 1, '\'');
     if (p == NULL)
     {
-	EMSG2(_("Missing quote: %s"), *arg);
+	EMSG2(_("(ve7) Missing quote: %s"), *arg);
 	return FAIL;
     }
 
@@ -2264,6 +2285,7 @@ static struct fst
 {
     {"append",		2, 2, f_append},
     {"argc",		0, 0, f_argc},
+    {"argidx",		0, 0, f_argidx},
     {"argv",		1, 1, f_argv},
     {"browse",		4, 4, f_browse},
     {"bufexists",	1, 1, f_bufexists},
@@ -2287,7 +2309,6 @@ static struct fst
     {"executable",	1, 1, f_executable},
     {"exists",		1, 1, f_exists},
     {"expand",		1, 2, f_expand},
-    {"expandpath",	2, 2, f_expandpath},
     {"file_readable",	1, 1, f_filereadable},	/* obsolete */
     {"filereadable",	1, 1, f_filereadable},
     {"filewritable",	1, 1, f_filewritable},
@@ -2483,11 +2504,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     var		argvars[MAX_FUNC_ARGS];	/* vars for arguments */
     int		argcount = 0;		/* number of arguments found */
     static char *errors[] =
-		{N_("Invalid arguments for function %s"),
-		 N_("Unknown function: %s"),
-		 N_("Too many arguments for function: %s"),
-		 N_("Not enough arguments for function: %s"),
-		 N_("Using <SID> not in a script context: %s"),
+		{N_("(fe1) Invalid arguments for function %s"),
+		 N_("(fe2) Unknown function: %s"),
+		 N_("(fe3) Too many arguments for function: %s"),
+		 N_("(fe4) Not enough arguments for function: %s"),
+		 N_("(fe6) Using <SID> not in a script context: %s"),
 		};
 #define ERROR_INVARG	0
 #define ERROR_UNKNOWN	1
@@ -2697,6 +2718,18 @@ f_argc(argvars, retvar)
     VAR		retvar;
 {
     retvar->var_val.var_number = ARGCOUNT;
+}
+
+/*
+ * "argidx()" function
+ */
+/* ARGSUSED */
+    static void
+f_argidx(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = curwin->w_arg_idx;
 }
 
 /*
@@ -3283,45 +3316,6 @@ f_expand(argvars, retvar)
 }
 
 /*
- * "expandpath()" function
- */
-    static void
-f_expandpath(argvars, retvar)
-    VAR		argvars;
-    VAR		retvar;
-{
-    char_u	*expr;
-    char_u	*pathlist;
-    char_u	buf[NUMBUFLEN];
-    garray_T	ga;
-    char_u	*p;
-    expand_T	xpc;
-
-    expr = get_var_string(&argvars[0]);
-    pathlist = get_var_string_buf(&argvars[1], buf);
-    ga_init2(&ga, 1, 100);
-
-    while (*pathlist != NUL)
-    {
-	copy_option_part(&pathlist, NameBuff, MAXPATHL, ",");
-	if (STRLEN(expr) + STRLEN(NameBuff) < MAXPATHL - 2)
-	{
-	    add_pathsep(NameBuff);
-	    STRCAT(NameBuff, expr);
-	    xpc.xp_context = EXPAND_FILES;
-	    p = ExpandOne(&xpc, NameBuff, NULL,
-			     WILD_SILENT|WILD_USE_NL|WILD_KEEP_ALL, WILD_ALL);
-	    if (p != NULL && ga_grow(&ga, STRLEN(p)) == OK)
-		STRCAT(ga.ga_data, p);
-	    vim_free(p);
-	}
-    }
-
-    retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = ga.ga_data;
-}
-
-/*
  * "filereadable()" function
  */
     static void
@@ -3809,60 +3803,11 @@ f_globpath(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    expand_T	xpc;
-    char_u	*buf;
     char_u	buf1[NUMBUFLEN];
-    char_u	*path, *file;
-    garray_T	ga;
-    int		len;
-    char_u	*p;
 
-    buf = alloc(MAXPATHL);
-    if (buf == NULL)
-	return;
-
-    xpc.xp_context = EXPAND_FILES;
-    path = get_var_string(&argvars[0]);
-    file = get_var_string_buf(&argvars[1], buf1);
-    ga_init2(&ga, 1, 100);
-
-    /* Loop over all entries in {path}. */
-    while (*path != NUL)
-    {
-	/* Copy one item of the path to buf[] and concatenate the file name. */
-	copy_option_part(&path, buf, MAXPATHL, ",");
-	if (STRLEN(buf) + STRLEN(file) + 2 < MAXPATHL)
-	{
-	    add_pathsep(buf);
-	    STRCAT(buf, file);
-	    p = ExpandOne(&xpc, buf, NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
-	    if (p != NULL)
-	    {
-		len = STRLEN(p);
-		if (ga.ga_data == NULL)
-		{
-		    ga.ga_data = p;
-		    ga.ga_room = 0;
-		    ga.ga_len = len;
-		}
-		else
-		{
-		    /* Concatenate new results to previous ones. */
-		    if (ga_grow(&ga, len + 2) == OK)
-		    {
-			STRCAT(ga.ga_data, "\n");
-			STRCAT(ga.ga_data, p);
-			ga.ga_len += len;
-			ga.ga_room -= len;
-		    }
-		    vim_free(p);
-		}
-	    }
-	}
-    }
-    vim_free(buf);
     retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = ga.ga_data;
+    retvar->var_val.var_string = globpath(get_var_string(&argvars[0]),
+				       get_var_string_buf(&argvars[1], buf1));
 }
 
 /*
@@ -6281,7 +6226,7 @@ get_var_var(name, len, retvar)
     if (type == VAR_UNKNOWN)
     {
 	if (retvar != NULL)
-	    EMSG2(_("Undefined variable: %s"), name);
+	    EMSG2(_("(ve8) Undefined variable: %s"), name);
 	ret = FAIL;
     }
     else if (retvar != NULL)
@@ -6979,6 +6924,7 @@ ex_function(eap)
     int		indent;
     int		nesting;
     int		in_append = FALSE;
+    static char_u e_funcexts[] = N_("(fe8) Function %s already exists, use ! to replace");
 
     /*
      * ":function" without argument: list functions.
@@ -7020,7 +6966,7 @@ ex_function(eap)
 		MSG("   endfunction");
 	    }
 	    else
-		EMSG2(_("Undefined function: %s"), eap->arg);
+		EMSG2(_("(ve9) Undefined function: %s"), eap->arg);
 	}
 	goto erret_name;
     }
@@ -7033,7 +6979,7 @@ ex_function(eap)
     {
 	if (!eap->skip)
 	{
-	    EMSG2(_("Missing '(': %s"), eap->arg);
+	    EMSG2(_("(ve0) Missing '(': %s"), eap->arg);
 	    goto erret_name;
 	}
 	p = vim_strchr(p, '(');
@@ -7063,7 +7009,7 @@ ex_function(eap)
 	    {
 		if (eap->skip)
 		    break;
-		EMSG2(_("Illegal argument: %s"), arg);
+		EMSG2(_("(iv1) Illegal argument: %s"), arg);
 		goto erret;
 	    }
 	    if (ga_grow(&newargs, 1) == FAIL)
@@ -7127,7 +7073,7 @@ ex_function(eap)
 	 * need to skip the body to be able to find what follows. */
 	if (find_func(name) != NULL && !eap->forceit)
 	{
-	    EMSG2(_("Function %s already exists, use ! to replace"), name);
+	    EMSG2(_(e_funcexts), name);
 	    goto erret;
 	}
 
@@ -7149,7 +7095,7 @@ ex_function(eap)
 	    lines_left = Rows - 1;
 	if (theline == NULL)
 	{
-	    EMSG(_("Missing :endfunction"));
+	    EMSG(_("(ev4) Missing :endfunction"));
 	    goto erret;
 	}
 
@@ -7223,12 +7169,12 @@ ex_function(eap)
     {
 	if (!eap->forceit)
 	{
-	    EMSG2(_("Function %s already exists, use ! to replace"), name);
+	    EMSG2(_(e_funcexts), name);
 	    goto erret;
 	}
 	if (fp->calls)
 	{
-	    EMSG2(_("Cannot redefine function %s: It is in use"), name);
+	    EMSG2(_("(fe7) Cannot redefine function %s: It is in use"), name);
 	    goto erret;
 	}
 	/* redefine existing function */
@@ -7285,13 +7231,13 @@ trans_function_name(pp)
 	start += lead;
     else if (!ASCII_ISUPPER(*start))
     {
-	EMSG2(_("Function name must start with a capital: %s"), start);
+	EMSG2(_("(ev5) Function name must start with a capital: %s"), start);
 	return NULL;
     }
     end = find_name_end(start, &expr_start, &expr_end);
     if (end == start)
     {
-	EMSG(_("Function name required"));
+	EMSG(_("(ev6) Function name required"));
 	return NULL;
     }
     if (expr_start != NULL)
@@ -7318,7 +7264,7 @@ trans_function_name(pp)
 	{
 	    if (current_SID <= 0)
 	    {
-		EMSG(_("Using <SID> not in a script context"));
+		EMSG(_(e_usingsid));
 		return NULL;
 	    }
 	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
@@ -7499,12 +7445,12 @@ ex_delfunction(eap)
 
     if (fp == NULL)
     {
-	EMSG2(_("Undefined function: %s"), eap->arg);
+	EMSG2(_("(fd1) Undefined function: %s"), eap->arg);
 	return;
     }
     if (fp->calls)
     {
-	EMSG2(_("Cannot delete function %s: It is in use"), eap->arg);
+	EMSG2(_("(fd2) Cannot delete function %s: It is in use"), eap->arg);
 	return;
     }
 
@@ -7551,7 +7497,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     /* If depth of calling is getting too high, don't execute the function */
     if (depth >= p_mfd)
     {
-	EMSG(_("Function call depth is higher than 'maxfuncdepth'"));
+	EMSG(_("(ev8) Function call depth is higher than 'maxfuncdepth'"));
 	retvar->var_type = VAR_NUMBER;
 	retvar->var_val.var_number = -1;
 	return;
@@ -7681,7 +7627,7 @@ ex_return(eap)
 
     if (current_funccal == NULL)
     {
-	EMSG(_(":return not inside a function"));
+	EMSG(_("(ev9) :return not inside a function"));
 	return;
     }
 

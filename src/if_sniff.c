@@ -422,7 +422,7 @@ ProcessSniffRequests()
 #endif
 	if (len < 0)
 	{
-	    vi_error_msg(_("Sniff: Error during read. Disconnected"));
+	    vi_error_msg(_("(se1) Sniff: Error during read. Disconnected"));
 	    sniff_disconnect(1);
 	    break;
 	}
@@ -494,7 +494,7 @@ ex_sniff(eap)
     if (sniff_cmds[i].longname)
 	SendRequest(&sniff_cmds[i], symbol);
     else
-	EMSG2(_("Unknown SNiFF+ request: %s"), cmd);
+	EMSG2(_("(se0) Unknown SNiFF+ request: %s"), cmd);
     vim_free(cmd);
 }
 
@@ -505,7 +505,7 @@ sniff_connect()
     if (sniff_connected)
 	return;
     if (ConnectToSniffEmacs())
-	vi_error_msg(_("Error connecting to SNiFF+"));
+	vi_error_msg(_("(se2) Error connecting to SNiFF+"));
     else
     {
 	int i;
@@ -784,7 +784,7 @@ HandleSniffRequest(buffer)
 	case '\0':
 	    break;
 	default :
-	    sprintf(VICommand, _("Unrecognized sniff request [%s]"), buffer );
+	    sprintf(VICommand, _("(se3) Unrecognized sniff request [%s]"), buffer );
 	    vi_error_msg(VICommand);
 	    break;
     }
@@ -870,7 +870,7 @@ SendRequest(command, symbol)
     }
     if (!sniff_connected && !(cmd_type & SILENT))
     {
-	vi_error_msg(_("SNiFF+ not connected"));
+	vi_error_msg(_("(se4) SNiFF+ not connected"));
 	return;
     }
 
@@ -879,7 +879,7 @@ SendRequest(command, symbol)
 	if (!IS_SNIFF_BUF)
 	{
 	    if (!(cmd_type & SILENT))
-		vi_error_msg(_("Not a SNiFF+ buffer"));
+		vi_error_msg(_("(se5) Not a SNiFF+ buffer"));
 	    return;
 	}
 	buffer_name = vi_buffer_name();

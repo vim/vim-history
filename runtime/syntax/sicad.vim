@@ -1,20 +1,26 @@
 " Vim syntax file
 " Language:	SiCAD (procedure language)
 " Maintainer:	Zsolt Branyiczky <zbranyiczky@lmark.mgx.hu>
-" Last Change:	2001 Apr 20
-" URL:		http://lmark.mgx.hu/download/vim/syntax/sicad.vim
+" Last Change:	2001 May 04
+" URL:		http://lmark.mgx.hu:81/download/vim/sicad.vim
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
-" spaces are used in (auto)indents since sicad hates tabulator characters
-setlocal expandtab
-
 " used syntax highlighting in a sql command
 syn include @SQL <sfile>:p:h/sql.vim
-unlet b:current_syntax
+
+" spaces are used in (auto)indents since sicad hates tabulator characters
+if version >= 600
+  setlocal expandtab
+else
+  set expandtab
+endif
 
 " ignore case 
 syn case ignore
@@ -81,10 +87,12 @@ syn match sicadOperator	"\.gt\."
 syn match sicadOperator	"\.le\."
 syn match sicadOperator	"\.lt\."
 syn match sicadOperator	"\.or\."
+syn match sicadOperator	"\.eqv\."
+syn match sicadOperator	"\.neqv\."
 
 " variable name
 syn match sicadIdentifier	"%g\=[irpt][0-9]\{1,2}\>"
-syn match sicadIdentifier	"%g\=l[0-9]\>"   " separated logical varible
+syn match sicadIdentifier	"%g\=l[0-9]\>"
 syn match sicadIdentifier	"%g\=[irptl]("me=e-1
 syn match sicadIdentifier	"%error\>"
 syn match sicadIdentifier	"%nsel\>"
@@ -157,207 +165,244 @@ syn match sicadParenError ')'
 "syn match sicadApostropheError +'[^']*$+me=s+1 contained
 
 " SICAD keywords
-syn keyword sicadStatement	abst add adrin aib aibzsn
-syn keyword sicadStatement	aidump aifgeo aisbrk alknam alknr
-syn keyword sicadStatement	alksav alksel alktrc alopen ansbo
-syn keyword sicadStatement	aractiv ararea arareao arbuffer archeck
-syn keyword sicadStatement	arcomv arcont arconv arcopy arcopyo
-syn keyword sicadStatement	arcorr arcreate arerror areval arflfm
-syn keyword sicadStatement	arflop arfrast argbkey argenf argraph
-syn keyword sicadStatement	argrapho arinters arkompfl arlisly arnext
-syn keyword sicadStatement	aroverl arovers arpars arrefp arselect
-syn keyword sicadStatement	arset arstruct arunify arupdate arvector
-syn keyword sicadStatement	arveinfl arvflfl arvoroni ausku basis
-syn keyword sicadStatement	basisaus basisdar basisnr bebos befl
-syn keyword sicadStatement	befla befli befls beo beorta
-syn keyword sicadStatement	beortn bep bepan bepap bepola
-syn keyword sicadStatement	bepoln bepsn bepsp ber berili
-syn keyword sicadStatement	berk bewz bkl bli bma
-syn keyword sicadStatement	bmakt bmakts bmbm bmerk bmerw
-syn keyword sicadStatement	bmerws bminit bmk bmorth bmos
-syn keyword sicadStatement	bmoss bmpar bmsl bmsum bmsums
-syn keyword sicadStatement	bmver bmvero bmw bo bta
-syn keyword sicadStatement	buffer bvl bw bza bzap
-syn keyword sicadStatement	bzd bzgera bzorth cat catel
-syn keyword sicadStatement	cdbdiff ce close comp conclose
-syn keyword sicadStatement	coninfo conopen conread contour conwrite
-syn keyword sicadStatement	cop copel cr cs cstat
-syn keyword sicadStatement	cursor d da dal dasp
-syn keyword sicadStatement	dasps dataout dcol dd defsr
-syn keyword sicadStatement	del delel deskrdef df dfn
-syn keyword sicadStatement	dfns dfpos dfr dgd dgm
-syn keyword sicadStatement	dgp dgr dh diaus dir
-syn keyword sicadStatement	disbsd dkl dktx dkur dlgfix
-syn keyword sicadStatement	dlgfre dma dprio dr druse
-syn keyword sicadStatement	dsel dskinfo dsr dv dve
-syn keyword sicadStatement	eba ebd ebs edbsdbin edbssnin
-syn keyword sicadStatement	edbsvtin edt egaus egdef egdefs
-syn keyword sicadStatement	eglist egloe egloenp egloes egxx
-syn keyword sicadStatement	eib ekur ekuradd elpos epg
-syn keyword sicadStatement	esau esauadd esek eta etap
-syn keyword sicadStatement	etav feparam ficonv filse fl
-syn keyword sicadStatement	fli flin flini flinit flkor
-syn keyword sicadStatement	fln flnli flop flout flowert
-syn keyword sicadStatement	flparam flraster flsy flsyd flsym
-syn keyword sicadStatement	flsyms flsymt fmtatt fmtdia fpg
-syn keyword sicadStatement	gbadddb gbaim gbanrs gbatw gbau
-syn keyword sicadStatement	gbaudit gbclosp gbcreem gbcreld gbcresdb
-syn keyword sicadStatement	gbcretd gbde gbdeldb gbdelem gbdelld
-syn keyword sicadStatement	gbdeltd gbdisdb gbdisem gbdisld gbdistd
-syn keyword sicadStatement	gbebn gbemau gbepsv gbgetdet gbgetes
-syn keyword sicadStatement	gbgetmas gbgqel gbgqelr gbgqsa gbgrant
-syn keyword sicadStatement	gbler gblerb gblerf gbles gblocdic
-syn keyword sicadStatement	gbmgmg gbmntdb gbmoddb gbnam gbneu
-syn keyword sicadStatement	gbopenp gbpoly gbpos gbpruef gbps
-syn keyword sicadStatement	gbqgel gbqgsa gbreldic gbresem gbrevoke
-syn keyword sicadStatement	gbsav gbsbef gbsddk gbsicu gbsrt
-syn keyword sicadStatement	gbss gbstat gbsysp gbszau gbubp
-syn keyword sicadStatement	gbueb gbunmdb gbuseem gbw gbweg
-syn keyword sicadStatement	gbwieh gbzt gelp gera hgw
-syn keyword sicadStatement	hpg hr0 hra hrar inchk
-syn keyword sicadStatement	inf infd inst kbml kbmls
-syn keyword sicadStatement	kbmm kbmms kbmt kbmtdps kbmts
-syn keyword sicadStatement	khboe khbol khdob khe khetap
-syn keyword sicadStatement	khfrw khktk khlang khld khmfrp
-syn keyword sicadStatement	khmks khpd khpfeil khpl khprofil
-syn keyword sicadStatement	khrand khsa khsabs khsd khsdl
-syn keyword sicadStatement	khse khskbz khsna khsnum khsob
-syn keyword sicadStatement	khspos khtrn khver khzpe khzpl
-syn keyword sicadStatement	kib kldat klleg klsch klsym
-syn keyword sicadStatement	klvert kmpg kmtlage kmtp kmtps
-syn keyword sicadStatement	kodef kodefp kok kokp kolae
-syn keyword sicadStatement	kom kontly kopar koparp kopg
-syn keyword sicadStatement	kosy kp kr krsek krtclose
-syn keyword sicadStatement	krtopen ktk lad lae laesel
-syn keyword sicadStatement	language lasso lbdes lcs ldesk
-syn keyword sicadStatement	ldesks le leak leattdes leba
-syn keyword sicadStatement	lebas lebaznp lebd lebm lebv
-syn keyword sicadStatement	lebvaus lebvlist lede ledel ledepo
-syn keyword sicadStatement	ledepol ledepos leder ledm lee
-syn keyword sicadStatement	leeins lees lege lekr lekrend
-syn keyword sicadStatement	lekwa lekwas lel lelh lell
-syn keyword sicadStatement	lelp lem lena lend lenm
-syn keyword sicadStatement	lep lepe lepee lepko lepl
-syn keyword sicadStatement	lepmko lepmkop lepos leposm leqs
-syn keyword sicadStatement	leqsl leqssp leqsv leqsvov les
-syn keyword sicadStatement	lesch lesr less lestd let
-syn keyword sicadStatement	letaum letl lev levtm levtp
-syn keyword sicadStatement	levtr lew lewm lexx lfs
-syn keyword sicadStatement	li lldes lmode loedk loepkt
-syn keyword sicadStatement	lop lose lp lppg lppruef
-syn keyword sicadStatement	lr ls lsop lsta lstat
-syn keyword sicadStatement	ly lyaus lz lza lzae
-syn keyword sicadStatement	lzbz lze lznr lzo lzpos
-syn keyword sicadStatement	ma ma0 ma1 mad map
-syn keyword sicadStatement	mapoly mcarp mccfr mccgr mcclr
-syn keyword sicadStatement	mccrf mcdf mcdma mcdr mcdrp
-syn keyword sicadStatement	mcdve mcebd mcgse mcinfo mcldrp
-syn keyword sicadStatement	md me mefd mefds minmax
-syn keyword sicadStatement	mipg ml mmdbf mmdellb mmdir
-syn keyword sicadStatement	mmfsb mminfolb mmlapp mmlbf mmlistlb
-syn keyword sicadStatement	mmmsg mmreadlb mmsetlb mnp mpo
-syn keyword sicadStatement	mr mra ms msav msgout
-syn keyword sicadStatement	msgsnd msp mspf mtd nasel
-syn keyword sicadStatement	ncomp new nlist nlistlt nlistly
-syn keyword sicadStatement	nlistnp nlistpo np npa npdes
-syn keyword sicadStatement	npe npem npinfa npruef npsat
-syn keyword sicadStatement	npss npssa ntz oa oan
-syn keyword sicadStatement	odel odf odfx oj oja
-syn keyword sicadStatement	ojaddsk ojaef ojaefs ojaen ojak
-syn keyword sicadStatement	ojaks ojakt ojakz ojalm ojatkis
-syn keyword sicadStatement	ojatt ojbsel ojckon ojde ojdtl
-syn keyword sicadStatement	ojeb ojebd ojel ojesb ojesbd
-syn keyword sicadStatement	ojex ojezge ojko ojlb ojloe
-syn keyword sicadStatement	ojlsb ojmos ojnam ojpda ojpoly
-syn keyword sicadStatement	ojprae ojs ojsak ojsort ojstrukt
-syn keyword sicadStatement	ojsub ojtdef ojx old op
-syn keyword sicadStatement	opa opa1 open opnbsd orth
-syn keyword sicadStatement	osanz ot otp otrefp param
-syn keyword sicadStatement	paranf pas passw pda pg
-syn keyword sicadStatement	pg0 pgauf pgaufsel pgb pgko
-syn keyword sicadStatement	pgm pgr pgvs pily pkpg
-syn keyword sicadStatement	plot plotf plotfr pmap pmdata
-syn keyword sicadStatement	pmdi pmdp pmeb pmep pminfo
-syn keyword sicadStatement	pmlb pmli pmlp pmmod pnrver
-syn keyword sicadStatement	poa pos posa posaus post
-syn keyword sicadStatement	printfr protect prs prsym qualif
-syn keyword sicadStatement	rahmen raster rasterd rbbackup rbchange
-syn keyword sicadStatement	rbcmd rbcopy rbcut rbdbcl rbdbload
-syn keyword sicadStatement	rbdbop rbdbwin rbdefs rbedit rbfdel
-syn keyword sicadStatement	rbfill rbfload rbfnew rbfree rbg
-syn keyword sicadStatement	rbinfo rbpaste rbrstore rbsnap rbsta
-syn keyword sicadStatement	rbvtor rcol re reb refunc
-syn keyword sicadStatement	ren renel rk rkpos rohr
-syn keyword sicadStatement	rohrpos rpr rr rr0 rra
-syn keyword sicadStatement	rrar rs samtosdb sav savx
-syn keyword sicadStatement	scol scopy scopye sdbtosam sddk
-syn keyword sicadStatement	sdwr se selaus selpos seman
-syn keyword sicadStatement	semi sesch setscl sge sid
-syn keyword sicadStatement	sie sig sigp skk skks
-syn keyword sicadStatement	sn sn21 snpa snpar snparp
-syn keyword sicadStatement	snpd snpi snpkor snpl snpm
-syn keyword sicadStatement	sob sob0 sobloe sobs sof
-syn keyword sicadStatement	sop split spr sqdadd sqdlad
-syn keyword sicadStatement	sqdold sqdsav sr sres
-syn keyword sicadStatement	srt sset stat stdtxt string
-syn keyword sicadStatement	strukt strupru suinfl suinflk suinfls
-syn keyword sicadStatement	supo supo1 sva svr sy
-syn keyword sicadStatement	sya syly sysout syu syux
-syn keyword sicadStatement	taa tabeg tabl tabm tam
-syn keyword sicadStatement	tanr tapg tapos tarkd tas
-syn keyword sicadStatement	tase tb tbadd tbd tbext
-syn keyword sicadStatement	tbget tbint tbout tbput tbsat
-syn keyword sicadStatement	tbsel tbstr tcaux tccable tcchkrep
-syn keyword sicadStatement	tccond tcdbg tcinit tcmodel tcnwe
-syn keyword sicadStatement	tcpairs tcpath tcscheme tcse tcselc
-syn keyword sicadStatement	tcstar tcstrman tcsubnet tcsymbol tctable
-syn keyword sicadStatement	tcthrcab tctrans tctst tdb tdbdel
-syn keyword sicadStatement	tdbget tdblist tdbput tgmod titel
-syn keyword sicadStatement	tmoff tmon tp tpa tps
-syn keyword sicadStatement	tpta tra trans transkdo transopt
-syn keyword sicadStatement	transpro trm trpg trrkd trs
-syn keyword sicadStatement	ts tsa tx txa txchk
-syn keyword sicadStatement	txcng txju txl txp txpv
-syn keyword sicadStatement	txtcmp txv txz uiinfo uistatus
-syn keyword sicadStatement	umdk umdk1 umdka umge umr
-syn keyword sicadStatement	verbo verflli verif verly versinfo
-syn keyword sicadStatement	vfg wabsym wzmerk zdrhf zdrhfn
-syn keyword sicadStatement	zdrhfw zdrhfwn zefp zfl zflaus
-syn keyword sicadStatement	zka zlel zlels zortf zortfn
-syn keyword sicadStatement	zortfw zortfwn zortp zortpn zparb
-syn keyword sicadStatement	zparbn zparf zparfn zparfw zparfwn
-syn keyword sicadStatement	zparp zparpn zwinkp zwinkpn
-" other commands excluded by ausku
-syn keyword sicadStatement	oldd ps psw psopen pdadd
-syn keyword sicadStatement      psclose psprw psparam psstat psres
-syn keyword sicadStatement      savd
+syn keyword sicadStatement  abst add addsim adrin aib
+syn keyword sicadStatement  aibzsn aidump aifgeo aisbrk alknam
+syn keyword sicadStatement  alknr alksav alksel alktrc alopen
+syn keyword sicadStatement  ansbo aractiv ararea arareao ararsfs
+syn keyword sicadStatement  arbuffer archeck arcomv arcont arconv
+syn keyword sicadStatement  arcopy arcopyo arcorr arcreate arerror
+syn keyword sicadStatement  areval arflfm arflop arfrast argbkey
+syn keyword sicadStatement  argenf argraph argrapho arinters arkompfl
+syn keyword sicadStatement  arlasso arlcopy arlgraph arline arlining
+syn keyword sicadStatement  arlisly armakea armemo arnext aroverl
+syn keyword sicadStatement  arovers arparkmd arpars arrefp arselect
+syn keyword sicadStatement  arset arstruct arunify arupdate arvector
+syn keyword sicadStatement  arveinfl arvflfl arvoroni ausku basis
+syn keyword sicadStatement  basisaus basisdar basisnr bebos befl
+syn keyword sicadStatement  befla befli befls beo beorta
+syn keyword sicadStatement  beortn bep bepan bepap bepola
+syn keyword sicadStatement  bepoln bepsn bepsp ber berili
+syn keyword sicadStatement  berk bewz bkl bli bma
+syn keyword sicadStatement  bmakt bmakts bmbm bmerk bmerw
+syn keyword sicadStatement  bmerws bminit bmk bmorth bmos
+syn keyword sicadStatement  bmoss bmpar bmsl bmsum bmsums
+syn keyword sicadStatement  bmver bmvero bmw bo bta
+syn keyword sicadStatement  buffer bvl bw bza bzap
+syn keyword sicadStatement  bzd bzgera bzorth cat catel
+syn keyword sicadStatement  cdbdiff ce cgmparam close closesim
+syn keyword sicadStatement  comgener comp comp conclose conclose coninfo
+syn keyword sicadStatement  conopen conread contour conwrite cop
+syn keyword sicadStatement  copar coparp coparp2 copel cr
+syn keyword sicadStatement  cs cstat cursor d da
+syn keyword sicadStatement  dal dasp dasps dataout dcol
+syn keyword sicadStatement  dd defsr del delel deskrdef
+syn keyword sicadStatement  df dfn dfns dfpos dfr
+syn keyword sicadStatement  dgd dgm dgp dgr dh
+syn keyword sicadStatement  diag diaus dir disbsd dkl
+syn keyword sicadStatement  dktx dkur dlgfix dlgfre dma
+syn keyword sicadStatement  dprio dr druse dsel dskinfo
+syn keyword sicadStatement  dsr dv dve eba ebd
+syn keyword sicadStatement  ebdmod ebs edbsdbin edbssnin edbsvtin
+syn keyword sicadStatement  edt egaus egdef egdefs eglist
+syn keyword sicadStatement  egloe egloenp egloes egxx eib
+syn keyword sicadStatement  ekur ekuradd elel elpos epg
+syn keyword sicadStatement  esau esauadd esek eta etap
+syn keyword sicadStatement  etav feparam ficonv filse fl
+syn keyword sicadStatement  fli flin flini flinit flins
+syn keyword sicadStatement  flkor fln flnli flop flout
+syn keyword sicadStatement  flowert flparam flraster flsy flsyd
+syn keyword sicadStatement  flsym flsyms flsymt fmtatt fmtdia
+syn keyword sicadStatement  fmtlib fpg gbadddb gbaim gbanrs
+syn keyword sicadStatement  gbatw gbau gbaudit gbclosp gbcredic
+syn keyword sicadStatement  gbcreem gbcreld gbcresdb gbcretd gbde
+syn keyword sicadStatement  gbdeldb gbdeldic gbdelem gbdelld gbdelref
+syn keyword sicadStatement  gbdeltd gbdisdb gbdisem gbdisld gbdistd
+syn keyword sicadStatement  gbebn gbemau gbepsv gbgetdet gbgetes
+syn keyword sicadStatement  gbgetmas gbgqel gbgqelr gbgqsa gbgrant
+syn keyword sicadStatement  gbimpdic gbler gblerb gblerf gbles
+syn keyword sicadStatement  gblocdic gbmgmg gbmntdb gbmoddb gbnam
+syn keyword sicadStatement  gbneu gbopenp gbpoly gbpos gbpruef
+syn keyword sicadStatement  gbpruefg gbps gbqgel gbqgsa gbrefdic
+syn keyword sicadStatement  gbreftab gbreldic gbresem gbrevoke gbsav
+syn keyword sicadStatement  gbsbef gbsddk gbsicu gbsrt gbss
+syn keyword sicadStatement  gbstat gbsysp gbszau gbubp gbueb
+syn keyword sicadStatement  gbunmdb gbuseem gbw gbweg gbwieh
+syn keyword sicadStatement  gbzt gelp gera getvar hgw
+syn keyword sicadStatement  hpg hr0 hra hrar icclchan
+syn keyword sicadStatement  iccrecon icdescon icfree icgetcon icgtresp
+syn keyword sicadStatement  icopchan icputcon icreacon icreqd icreqnw
+syn keyword sicadStatement  icreqw icrespd icresrve icwricon imsget
+syn keyword sicadStatement  imsgqel imsmget imsplot imsprint inchk
+syn keyword sicadStatement  inf infd inst kbml kbmls
+syn keyword sicadStatement  kbmm kbmms kbmt kbmtdps kbmts
+syn keyword sicadStatement  khboe khbol khdob khe khetap
+syn keyword sicadStatement  khfrw khktk khlang khld khmfrp
+syn keyword sicadStatement  khmks khms khpd khpfeil khpl
+syn keyword sicadStatement  khprofil khrand khsa khsabs khsaph
+syn keyword sicadStatement  khsd khsdl khse khskbz khsna
+syn keyword sicadStatement  khsnum khsob khspos khsvph khtrn
+syn keyword sicadStatement  khver khzpe khzpl kib kldat
+syn keyword sicadStatement  klleg klsch klsym klvert kmpg
+syn keyword sicadStatement  kmtlage kmtp kmtps kodef kodefp
+syn keyword sicadStatement  kodefs kok kokp kolae kom
+syn keyword sicadStatement  kontly kopar koparp kopg kosy
+syn keyword sicadStatement  kp kr krsek krtclose krtopen
+syn keyword sicadStatement  ktk lad lae laesel language
+syn keyword sicadStatement  lasso lbdes lcs ldesk ldesks
+syn keyword sicadStatement  le leak leattdes leba lebas
+syn keyword sicadStatement  lebaznp lebd lebm lebv lebvaus
+syn keyword sicadStatement  lebvlist lede ledel ledepo ledepol
+syn keyword sicadStatement  ledepos leder ledist ledm lee
+syn keyword sicadStatement  leeins lees lege lekr lekrend
+syn keyword sicadStatement  lekwa lekwas lel lelh lell
+syn keyword sicadStatement  lelp lem lena lend lenm
+syn keyword sicadStatement  lep lepe lepee lepko lepl
+syn keyword sicadStatement  lepmko lepmkop lepos leposm leqs
+syn keyword sicadStatement  leqsl leqssp leqsv leqsvov les
+syn keyword sicadStatement  lesch lesr less lestd let
+syn keyword sicadStatement  letaum letl lev levm levtm
+syn keyword sicadStatement  levtp levtr lew lewm lexx
+syn keyword sicadStatement  lfs li lining lldes lmode
+syn keyword sicadStatement  loedk loepkt lop lose loses
+syn keyword sicadStatement  lp lppg lppruef lr ls
+syn keyword sicadStatement  lsop lsta lstat ly lyaus
+syn keyword sicadStatement  lz lza lzae lzbz lze
+syn keyword sicadStatement  lznr lzo lzpos ma ma0
+syn keyword sicadStatement  ma1 mad map mapoly mcarp
+syn keyword sicadStatement  mccfr mccgr mcclr mccrf mcdf
+syn keyword sicadStatement  mcdma mcdr mcdrp mcdve mcebd
+syn keyword sicadStatement  mcgse mcinfo mcldrp md me
+syn keyword sicadStatement  mefd mefds minmax mipg ml
+syn keyword sicadStatement  mmcmdme mmdbf mmdellb mmdir mmdome
+syn keyword sicadStatement  mmfsb mminfolb mmlapp mmlbf mmlistlb
+syn keyword sicadStatement  mmloadcm mmmsg mmreadlb mmsetlb mmshowcm
+syn keyword sicadStatement  mmstatme mnp mpo mr mra
+syn keyword sicadStatement  ms msav msgout msgsnd msp
+syn keyword sicadStatement  mspf mtd nasel ncomp new
+syn keyword sicadStatement  nlist nlistlt nlistly nlistnp nlistpo
+syn keyword sicadStatement  np npa npdes npe npem
+syn keyword sicadStatement  npinfa npruef npsat npss npssa
+syn keyword sicadStatement  ntz oa oan odel odf
+syn keyword sicadStatement  odfx oj oja ojaddsk ojaed
+syn keyword sicadStatement  ojaeds ojaef ojaefs ojaen ojak
+syn keyword sicadStatement  ojaks ojakt ojakz ojalm ojatkis
+syn keyword sicadStatement  ojatt ojatw ojbsel ojcasel ojckon
+syn keyword sicadStatement  ojde ojdtl ojeb ojebd ojel
+syn keyword sicadStatement  ojelpas ojesb ojesbd ojex ojezge
+syn keyword sicadStatement  ojko ojlb ojloe ojlsb ojmerk
+syn keyword sicadStatement  ojmos ojnam ojpda ojpoly ojprae
+syn keyword sicadStatement  ojs ojsak ojsort ojstrukt ojsub
+syn keyword sicadStatement  ojtdef ojvek ojx old oldd
+syn keyword sicadStatement  op opa opa1 open opensim
+syn keyword sicadStatement  opnbsd orth osanz ot otp
+syn keyword sicadStatement  otrefp param paranf pas passw
+syn keyword sicadStatement  pcatchf pda pdadd pg pg0
+syn keyword sicadStatement  pgauf pgaufsel pgb pgko pgm
+syn keyword sicadStatement  pgr pgvs pily pkpg plot
+syn keyword sicadStatement  plotf plotfr pmap pmdata pmdi
+syn keyword sicadStatement  pmdp pmeb pmep pminfo pmlb
+syn keyword sicadStatement  pmli pmlp pmmod pnrver poa
+syn keyword sicadStatement  pos posa posaus post printfr
+syn keyword sicadStatement  protect prs prssy prsym ps
+syn keyword sicadStatement  psadd psclose psopen psparam psprw
+syn keyword sicadStatement  psres psstat psw pswr qualif
+syn keyword sicadStatement  rahmen raster rasterd rbbackup rbchang2
+syn keyword sicadStatement  rbchange rbcmd rbcoldst rbcolor rbcopy
+syn keyword sicadStatement  rbcut rbcut2 rbdbcl rbdbload rbdbop
+syn keyword sicadStatement  rbdbwin rbdefs rbedit rbfdel rbfill
+syn keyword sicadStatement  rbfill2 rbfload rbfload2 rbfnew rbfnew2
+syn keyword sicadStatement  rbfpar rbfree rbg rbgetcol rbgetdst
+syn keyword sicadStatement  rbinfo rbpaste rbpixel rbrstore rbsnap
+syn keyword sicadStatement  rbsta rbtile rbtrpix rbvtor rcol
+syn keyword sicadStatement  rd rdchange re reb rebmod
+syn keyword sicadStatement  refunc ren renel rk rkpos
+syn keyword sicadStatement  rohr rohrpos rpr rr rr0
+syn keyword sicadStatement  rra rrar rs samtosdb sav
+syn keyword sicadStatement  savd savesim savx scol scopy
+syn keyword sicadStatement  scopye sdbtosam sddk sdwr se
+syn keyword sicadStatement  selaus selpos seman semi sesch
+syn keyword sicadStatement  setscl setvar sfclntpf sfconn sffetchf
+syn keyword sicadStatement  sffpropi sfftypi sfqugeoc sfquwhcl sfself
+syn keyword sicadStatement  sfstat sftest sge sid sie
+syn keyword sicadStatement  sig sigp skk skks sn
+syn keyword sicadStatement  sn21 snpa snpar snparp snparps
+syn keyword sicadStatement  snpars snpas snpd snpi snpkor
+syn keyword sicadStatement  snpl snpm sob sob0 sobloe
+syn keyword sicadStatement  sobs sof sop split spr
+syn keyword sicadStatement  sqdadd sqdlad sqdold sqdsav sql
+syn keyword sicadStatement  sr sres srt sset stat
+syn keyword sicadStatement  stdtxt string strukt strupru suinfl
+syn keyword sicadStatement  suinflk suinfls supo supo1 sva
+syn keyword sicadStatement  svr sy sya syly sysout
+syn keyword sicadStatement  syu syux taa tabeg tabl
+syn keyword sicadStatement  tabm tam tanr tapg tapos
+syn keyword sicadStatement  tarkd tas tase tb tbadd
+syn keyword sicadStatement  tbd tbext tbget tbint tbout
+syn keyword sicadStatement  tbput tbsat tbsel tbstr tcaux
+syn keyword sicadStatement  tccable tcchkrep tccomm tccond tcdbg
+syn keyword sicadStatement  tcgbnr tcgrpos tcinit tclconv tcmodel
+syn keyword sicadStatement  tcnwe tcpairs tcpath tcrect tcrmdli
+syn keyword sicadStatement  tcscheme tcschmap tcse tcselc tcstar
+syn keyword sicadStatement  tcstrman tcsubnet tcsymbol tctable tcthrcab
+syn keyword sicadStatement  tctrans tctst tdb tdbdel tdbget
+syn keyword sicadStatement  tdblist tdbput tgmod titel tmoff
+syn keyword sicadStatement  tmon tp tpa tps tpta
+syn keyword sicadStatement  tra trans transkdo transopt transpro
+syn keyword sicadStatement  triangle trm trpg trrkd trs
+syn keyword sicadStatement  ts tsa tx txa txchk
+syn keyword sicadStatement  txcng txju txl txp txpv
+syn keyword sicadStatement  txtcmp txv txz uckon uiinfo
+syn keyword sicadStatement  uistatus umdk umdk1 umdka umge
+syn keyword sicadStatement  umges umr verbo verflli verif
+syn keyword sicadStatement  verly versinfo vfg vpactive vpcenter
+syn keyword sicadStatement  vpcreate vpdelete vpinfo vpmodify vpscroll
+syn keyword sicadStatement  vpsta wabsym wzmerk zdrhf zdrhfn
+syn keyword sicadStatement  zdrhfw zdrhfwn zefp zfl zflaus
+syn keyword sicadStatement  zka zlel zlels zortf zortfn
+syn keyword sicadStatement  zortfw zortfwn zortp zortpn zparb
+syn keyword sicadStatement  zparbn zparf zparfn zparfw zparfwn
+syn keyword sicadStatement  zparp zparpn zwinkp zwinkpn
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sicad_syntax_inits")
 
-" The default highlighting.
-hi def link sicadLabel		PreProc
-hi def link sicadLabel1		sicadLabel
-hi def link sicadLabel2		sicadLabel
-hi def link sicadConditional	Conditional
-hi def link sicadBoolean	Boolean
-hi def link sicadNumber		Number
-hi def link sicadFloat		Float
-hi def link sicadOperator	Operator
-hi def link sicadStatement	Statement
-hi def link sicadParameter	sicadStatement
-hi def link sicadGoto		sicadStatement
-hi def link sicadLineCont	sicadStatement
-hi def link sicadString		String
-hi def link sicadComment	Comment
-hi def link sicadSpecial	Special
-hi def link sicadIdentifier	Type
-"  hi def link sicadIdentifier	Identifier
-hi def link sicadError		Error
-hi def link sicadParenError	sicadError
-hi def link sicadApostropheError sicadError
-hi def link sicadStringError	sicadError
-hi def link sicadCommentError	sicadError
-hi def link sqlStatement	Special  " modified highlight group in sql.vim
+  if version < 508
+    let did_sicad_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink sicadLabel PreProc
+  HiLink sicadLabel1 sicadLabel
+  HiLink sicadLabel2 sicadLabel
+  HiLink sicadConditional Conditional
+  HiLink sicadBoolean Boolean
+  HiLink sicadNumber Number
+  HiLink sicadFloat Float
+  HiLink sicadOperator Operator
+  HiLink sicadStatement Statement
+  HiLink sicadParameter sicadStatement
+  HiLink sicadGoto sicadStatement
+  HiLink sicadLineCont sicadStatement
+  HiLink sicadString String
+  HiLink sicadComment Comment
+  HiLink sicadSpecial Special
+  HiLink sicadIdentifier Type
+"  HiLink sicadIdentifier Identifier
+  HiLink sicadError Error
+  HiLink sicadParenError sicadError
+  HiLink sicadApostropheError sicadError
+  HiLink sicadStringError sicadError
+  HiLink sicadCommentError sicadError
+  HiLink sqlStatement Special  " modified highlight group in sql.vim
+
+  delcommand HiLink
+
+endif
 
 let b:current_syntax = "sicad"
 
-" vim: ts=8
+" vim: ts=8 sw=2

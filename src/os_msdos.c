@@ -1852,7 +1852,7 @@ mch_screenmode(char_u *arg)
     }
     if (mode == -1)
     {
-	EMSG(_("Unsupported screen mode"));
+	EMSG(_("(et9) Unsupported screen mode"));
 	return FAIL;
     }
     textmode(mode);		    /* use Borland function */

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 apr 26
+" Last Change:	2001 May 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -32,8 +32,8 @@ menutrans Save\ &As\.\.\.<Tab>:sav	Salva\ &con\ nome\.\.\.<Tab>:sav
 menutrans &Print			S&tampa
 menutrans Sa&ve-Exit<Tab>:wqa		Sa&lva\ ed\ esci<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Esci<Tab>:qa
-menutrans Show\ &Diff\ with\.\.\.	Vedi\ &Differenza\ con\.\.\.
-menutrans Show\ &Patched\ by\.\.\.	Vedi\ Patc&hes\ da\.\.\.
+menutrans Show\ &Diff\ with\.\.\.	Indica\ &Differenza\ con\.\.\.
+menutrans Show\ &Patched\ by\.\.\.	Indica\ Patc&hes\ da\.\.\.
 
 " Edit menu
 " menutrans &Edit			&Edit
@@ -42,7 +42,7 @@ menutrans &Redo<Tab>^R			Ri&fai<Tab>^R
 menutrans Rep&eat<Tab>\.		&Ripeti \ultimo \comando<Tab>\.
 menutrans Cu&t<Tab>"+x			T&aglia<Tab>"+x
 menutrans &Copy<Tab>"+y			&Copia<Tab>"+y
-menutrans &Paste<Tab>"+p		&Incolla<Tab>"+p
+menutrans &Paste<Tab>"+P		&Incolla<Tab>"+P
 menutrans Put\ &Before<Tab>[p		&Metti\ davanti<Tab>[p
 menutrans Put\ &After<Tab>]p		M&etti\ dietro<Tab>]p
 menutrans &Delete<Tab>x			Cance&lla<Tab>x
@@ -56,21 +56,48 @@ menutrans Find\ and\ Rep&lace<Tab>:%s	Cerca\ e\ Rim&piazza<Tab>:%s
 menutrans Settings\ &Window		&Finestra\ Impostazioni
 menutrans Se&ttings			Im&postazioni
 
-" Build boolean options
-menutrans Toggle\ Line\ Numbering<Tab>:set\ number!	Numerazione\ \ Sì/No<Tab>:set\ number!
-menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		Linee\ lunghe\ Sì/No<Tab>:set\ wrap!
-menutrans Toggle\ hlsearch<Tab>:set\ hlsearch!		Evidenzia\ ricerche\ Sì/No<Tab>:set\ hlsearch!
-menutrans Toggle\ expandtab<Tab>:set\ expandtab!	TAB\ a\ spazi\ Sì/No<Tab>:set\ expandtab!
+" Edit/Global Settings
+menutrans Global\ Settings	Impostazioni\ Globali
+menutrans Toggle\ Pattern\ Highlight<Tab>:set\ hls!	Evidenzia\ ricerche\ Sì/No<Tab>:set\ hls!
+menutrans Toggle\ ignore-case<Tab>:set\ ic!	Ignora\ maius\.-minusc\.\ Sì/No<Tab>:set\ ic!
+menutrans Toggle\ showmatch<Tab>:set\ sm!	Indica\ corrispondente\ Sì/No<Tab>:set\ sm!
+menutrans Context\ lines	Linee\ di\ contesto
+menutrans Virtual\ Edit		Edit\ Virtuale
+menutrans Never		Mai
+menutrans Block\ Selection		Selezione\ Blocco
+menutrans Insert\ mode	Modalità\ Inserimento
+menutrans Block\ and\ Insert	Selezione\ Blocco+Inserimento
+menutrans Always		Sempre
+menutrans Toggle\ Insert\ mode<Tab>:set\ im!	Modalità\ Inserimento\ Sì/No<Tab>:set\ im!
+menutrans Search\ Path\.\.\.	Cammino\ di\ ricerca\.\.\.
+menutrans Tag\ Files\.\.\.		File Tag\.\.\.
 
+" Edit/File Settings
+
+menutrans File\ Settings	Impostazioni\ File
+
+" Boolean options
+menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!	Numerazione\ \ Sì/No<Tab>:set\ nu!
+menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		Linee\ lunghe\ Sì/No<Tab>:set\ wrap!
+menutrans Toggle\ List\ Mode<Tab>:set\ list!		Modalità\ Lista\ Sì/No<Tab>:set\ list!
+menutrans Toggle\ Wrap\ at\ word<Tab>:set\ lbr!		A\ capo\ alla\ parola\ Sì/No<Tab>:set\ lbr!
+menutrans Toggle\ expand-tab<Tab>:set\ et!	Espandi\ Tabulazione\ Sì/No<Tab>:set\ et!
+menutrans Toggle\ auto-indent<Tab>:set\ ai!	Indentazione\ automatica\ Sì/No<Tab>:set ai!
+menutrans Toggle\ C-indenting<Tab>:set\ cin!	Indentazione\ stile\ C\ Sì/No<Tab>:set cin!
+menutrans Toggle\ Search\ Patn\ Highl<Tab>:set\ hls!	Evidenzia\ ricerche\ Sì/No<Tab>:set\ hls!
+menutrans Toggle\ expand-tab<Tab>:set\ et!	Tab\ a\ spazi\ Sì/No<Tab>:set\ et!
+menutrans Toggle\ auto-indent<Tab>:set\ ai!	Rientro\ automatico\ Sì/No<Tab>:set\ ai!
 " Build GUI options
-menutrans Toggle\ Toolbar		Barra\ Strumenti\ Sì/No
-menutrans Toggle\ Bottom\ Scrollbar	Scorrimento\ in\ basso\ Sì/No
-menutrans Toggle\ Left\ Scrollbar	Scorrimento\ a\ sinistra\ Sì/No
-menutrans Toggle\ Right\ Scrolbar	Scorrimento\ a\ destra\ Sì/No
+menutrans Toggle\ Toolbar	Barra\ Strumenti\ Sì/No
+menutrans Toggle\ Bottom\ Scrollbar	Barra\ Scorrimento\ in\ fondo\ Sì/No
+menutrans Toggle\ Left\ Scrollbar	Barra\ Scorrimento\ a\ sinistra\ Sì/No
+menutrans Toggle\ Right\ Scrollbar	Barra\ Scorrimento\ a\ destra\ Sì/No
 
 " Build variable options
 menutrans Shiftwidth			Spazi\ Rientranza
+menutrans Soft\ Tabstop			Tabulazione\ Software
 menutrans Text\ Width\.\.\.		Lunghezza\ Riga\.\.\.
+menutrans File\ Format\.\.\.	Formato\ File\.\.\.
 
 " Programming menu
 menutrans &Tools			&Strumenti
@@ -159,6 +186,32 @@ menutrans Select\ &Line		Seleziona\ &Linea
 menutrans Select\ &Block	Seleziona\ &Blocco
 menutrans Select\ &All		Seleziona\ &Tutto
  
+" The GUI toolbar (for MS-Windows and GTK)
+menutrans ToolBar		Barra\ Strumenti
+if has("toolbar")
+menutrans Open		Apri
+menutrans Save		Salva
+menutrans SaveAll	SalvaTutto
+menutrans Print		Stampa
+menutrans Undo		Disfa
+menutrans Redo		Rifai
+menutrans Cut		Taglia
+menutrans Copy		Copia
+menutrans Paste		Incolla
+menutrans Find		Cerca
+menutrans FindNext	CercaSuccessivo
+menutrans FindPrev	CercaPrecedente
+menutrans Replace	Rimpiazza
+menutrans LoadSesn	CaricaSessione
+menutrans SaveSesn	SalvaSessione
+menutrans RunScript	EseguiScript
+menutrans Make		Make 
+"menutrans Shell		Shell
+menutrans RunCtags	EseguiCtags
+menutrans TagJump	VaiATag
+menutrans Help		Aiuto
+menutrans FindHelp	CercaInAiuto
+endif
 " The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")

@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ad.  Last change: 2001 Apr 15
+*gui.txt*       For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -21,7 +21,7 @@ Other GUI documentation:
 {Vi does not have any of these commands}
 
 ==============================================================================
-1. Starting the GUI					*gui-start*
+1. Starting the GUI					*gui-start* *eg4* *eg6*
 
 First you must make sure you actually have a version of Vim with the GUI code
 included.  You can check this with the ":version" command, it should include
@@ -112,7 +112,7 @@ that you can't see part of it.  On X windows this requires a bit of guesswork.
 You can change the height that is used for the window title and a task bar
 with the 'guiheadroom' option.
 
-							*:winp* *:winpos*
+						*:winp* *:winpos* *ew8*
 :winp[os]
 		Display current position of the top left corner of the GUI vim
 		window in pixels.  Does not work in all versions.
@@ -459,6 +459,7 @@ create floating menus that do not appear on the main menu bar.
 				*:vme* *:vmenu* *:vnoreme* *:vnoremenu*
 				*:ime* *:imenu* *:inoreme* *:inoremenu*
 				*:cme* *:cmenu* *:cnoreme* *:cnoremenu*
+				*eu4* *eu5* *eu6* *eu8* *eu9* *eu0* *en9* *en0*
 To create a new menu item, use the ":menu" commands.  They are exactly like
 the ":map" set of commands but the first argument is a menu item name, given
 as a path of menus and submenus with a '.' between them. eg: >
@@ -568,7 +569,7 @@ menus can be different.  This is different from menu-bar menus, which have
 the same order for all modes.
 NOTE: sub-menu priorities currently don't work for all versions of the GUI.
 
-							*menu-separator*
+							*menu-separator* *eu7*
 Menu items can be separated by a special item that inserts some space between
 items.  Depending on the system this is displayed as a line or a dotted line.
 These items must start with a '-' and end in a '-'.  The part in between is
@@ -675,7 +676,7 @@ be used to complete the name of the menu item.
 
 5.4 Executing Menus					*execute-menus*
 
-							*:em*  *:emenu*
+						*:em*  *:emenu* *me2* *me3*
 :[range]em[eenu] {menu}		Execute {menu} from the command line.
 				The default is to execute the Normal mode
 				menu.  If a range is specified, it executes

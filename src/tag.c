@@ -386,7 +386,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    cur_match = MAXCOL - 1;
 		else if (cur_match < 0)
 		{
-		    EMSG(_("Cannot go before first matching tag"));
+		    EMSG(_("(te3) Cannot go before first matching tag"));
 		    skip_msg = TRUE;
 		    cur_match = 0;
 		}
@@ -506,7 +506,7 @@ do_tag(tag, type, count, forceit, verbose)
 	if (num_matches <= 0)
 	{
 	    if (verbose)
-		EMSG2(_("tag not found: %s"), name);
+		EMSG2(_("(te0) tag not found: %s"), name);
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	    g_do_tagpreview = 0;
 #endif
@@ -738,9 +738,9 @@ do_tag(tag, type, count, forceit, verbose)
 						      && nofile_fname == NULL)
 		{
 		    if (num_matches == 1)
-			EMSG(_("There is only one matching tag"));
+			EMSG(_("(te4) There is only one matching tag"));
 		    else
-			EMSG(_("Cannot go beyond last matching tag"));
+			EMSG(_("(te5) Cannot go beyond last matching tag"));
 		    skip_msg = TRUE;
 		}
 		cur_match = num_matches - 1;
@@ -820,7 +820,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    }
 		    continue;
 		}
-		EMSG2(_("File \"%s\" does not exist"), nofile_fname);
+		EMSG2(_("(je1) File \"%s\" does not exist"), nofile_fname);
 	    }
 	    else
 	    {
@@ -1340,7 +1340,7 @@ line_read_in:
 				if (fp != NULL)
 				{
 				    if (STRLEN(fullpath_ebuf) > LSIZE)
-					  EMSG2(_("Tag file path truncated for %s\n"), ebuf);
+					  EMSG2(_("(je2) Tag file path truncated for %s\n"), ebuf);
 				    STRNCPY(tag_fname, fullpath_ebuf, LSIZE);
 				    tag_fname[LSIZE] = NUL;
 				    ++incstack_idx;
@@ -1831,7 +1831,7 @@ line_read_in:
 
 	if (line_error)
 	{
-	    EMSG2(_("Format error in tags file \"%s\""), tag_fname);
+	    EMSG2(_("(je3) Format error in tags file \"%s\""), tag_fname);
 #ifdef FEAT_CSCOPE
 	    if (!use_cscope)
 #endif
@@ -1895,7 +1895,7 @@ line_read_in:
     if (!stop_searching)
     {
 	if (!did_open && verbose)	/* never opened any tags file */
-	    EMSG(_("No tags file"));
+	    EMSG(_("(te6) No tags file"));
 	retval = OK;		/* It's OK even when no tag found */
     }
 
@@ -2562,7 +2562,7 @@ jumpto_tag(lbuf, forceit)
 		}
 		if (found == 0)
 		{
-		    EMSG(_("Can't find tag pattern"));
+		    EMSG(_("(te7) Can't find tag pattern"));
 		    curwin->w_cursor.lnum = save_lnum;
 		}
 		else
@@ -2573,7 +2573,7 @@ jumpto_tag(lbuf, forceit)
 		     */
 		    if (found == 2 || !save_p_ic)
 		    {
-			MSG(_("Couldn't find tag, just guessing!"));
+			MSG(_("(te8) Couldn't find tag, just guessing!"));
 			if (!msg_scrolled && msg_silent == 0)
 			{
 			    out_flush();

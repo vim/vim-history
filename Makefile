@@ -70,7 +70,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ad
+MINOR = 0ae
 
 # CHECKLIST for creating a new version:
 #
@@ -85,6 +85,7 @@ MINOR = 0ad
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
 # - Enable the efence library in "src/Makefile" and run "make test".
+# - Do "make menu" to update the runtime/menu.vim file.
 # - Add remarks for changes to runtime/doc/version6.txt.
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
@@ -563,6 +564,8 @@ RT_ALL =	\
 		runtime/macros/hanoi/hanoi.vim \
 		runtime/macros/hanoi/poster \
 		runtime/macros/justify.vim \
+		runtime/macros/less.sh \
+		runtime/macros/less.vim \
 		runtime/macros/life/click.me \
 		runtime/macros/life/life.vim \
 		runtime/macros/maze/README.txt \
@@ -580,6 +583,7 @@ RT_ALL =	\
 		runtime/macros/urm/urm.vim \
 		runtime/menu.vim \
 		runtime/delmenu.vim \
+		runtime/makemenu.vim \
 		runtime/mswin.vim \
 		runtime/evim.vim \
 		runtime/optwin.vim \
@@ -588,6 +592,8 @@ RT_ALL =	\
 		runtime/scripts.vim \
 		runtime/ftplugin.vim \
 		runtime/ftplugof.vim \
+		runtime/colors/README.txt \
+		runtime/colors/*.vim \
 		runtime/indent.vim \
 		runtime/indoff.vim \
 		runtime/indent/*.vim \

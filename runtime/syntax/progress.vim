@@ -4,50 +4,47 @@
 "						*.i (collides with assembler)
 "						*.w (collides with cweb)
 " Maintainer:			Philip Uren			<philu@computer.org>
-" Contributors:			Chris Ruprecht		<chrup@mac.com>
+" Contributors:         Chris Ruprecht		<chrup@mac.com>
 "						Philip Uren			<philu@computer.org>
 "						Mikhail Kuperblum	<mikhail@whasup.com>
 " URL: 					http://www.zeta.org.au/~philu/vim/progress.vim
-" Last Change:			Fri Mar 30 09:04:39 EST 2001
+" Last Change:			Thu May  3 08:49:47 EST 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+	syntax clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
-setlocal isk=@,48-57,_,-,!,#,$,%
-" Remove any old syntax stuff hanging around
+if version >= 600
+  setlocal iskeyword=@,48-57,_,-,!,#,$,%
+else
+  set iskeyword=@,48-57,_,-,!,#,$,%
+endif
 
 syn case ignore
 
 " Progress Blocks of code and mismatched "end." errors.
-syn match   ProgressEndError		"end\."
-syn region ProgressDoBlock transparent matchgroup=ProgressDo start="do" matchgroup=ProgressDo end="end\." contains=ALLBUT,ProgressProcedure,ProgressFunction
-syn region ProgressForBlock transparent matchgroup=ProgressFor start="^[ 	]*for\>" matchgroup=ProgressFor end="end\." contains=ALLBUT,ProgressProcedure,ProgressFunction
-syn region ProgressRepeatBlock transparent matchgroup=ProgressRepeat start="^[ 	]*repeat\>" matchgroup=ProgressRepeat end="end\." contains=ALLBUT,ProgressProcedure,ProgressFunction
+syn match   ProgressEndError		"\<end\>"
+syn region ProgressDoBlock transparent matchgroup=ProgressDo start="\<do\>" matchgroup=ProgressDo end="\<end\>" contains=ALLBUT,ProgressProcedure,ProgressFunction
+syn region ProgressForBlock transparent matchgroup=ProgressFor start="\<for\>" matchgroup=ProgressFor end="\<end\>" contains=ALLBUT,ProgressProcedure,ProgressFunction
+syn region ProgressRepeatBlock transparent matchgroup=ProgressRepeat start="\<repeat\>" matchgroup=ProgressRepeat end="\<end\>" contains=ALLBUT,ProgressProcedure,ProgressFunction
+syn region ProgressCaseBlock transparent matchgroup=ProgressCase start="\<case\>" matchgroup=ProgressCase end="\<end\scase\>" contains=ALLBUT,ProgressProcedure,ProgressFunction
 
 " These are Progress reserved words,
 " and they could go in ProgressReserved,
 " but I found it more helpful to highlight them in a different color.
-syn keyword ProgressConditional	if else then when otherwise case
+syn keyword ProgressConditional	if else then when otherwise
 syn keyword ProgressFor				each where
 
 " Make those TODO and debugging notes stand out!
 syn keyword	ProgressTodo			contained	TODO BUG FIX
 syn keyword ProgressDebug			contained	DEBUG
 syn keyword ProgressDebug						debugger
-syn match	ProgressNeedsWork		contained	"NEED[S]*[ 	][ 	]*WORK"
 
-" If you like to highlight the whole line of
-" the start and end of procedures
-" to make the whole block of code stand out:
-syn match ProgressProcedure		"^[ 	]*procedure.*"
-syn match ProgressProcedure		"^[ 	]*end[ 	][ 	]*procedure.*"
-
-syn match ProgressFunction		"^[ 	]*function.*"
-syn match ProgressFunction		"^[ 	]*end[ 	][ 	]*function.*"
-" ... otherwise use this:
-" syn keyword ProgressFunction	procedure function
+syn keyword ProgressFunction	procedure function
 
 syn keyword ProgressReserved	accum[ulate] active-window add alias all alter ambig[uous] analyz[e] and any apply as asc[ending] assign at attr[-space]
 syn keyword ProgressReserved	authorization auto-ret[urn] avail[able] back[ground] before-h[ide] begins bell between blank break btos by call can-do can-find
@@ -76,7 +73,6 @@ syn keyword ProgressReserved	to today top-only trans trans[action] trigger trigg
 syn keyword ProgressReserved	use-index use-revvideo use-underline user user[id] using v6frame value values view view-as vms wait-for web-con[text]
 syn keyword ProgressReserved	window window-maxim[ized] window-minim[ized] window-normal with work-tab[le] workfile write xcode xref yes _cbit
 syn keyword ProgressReserved	_control _list _memory _msg _pcontrol _serial[-num] _trace 
-syn keyword ProgressTodo        contained	TODO
 
 " Strings. Handles embedded quotes.
 " Note that, for some reason, Progress doesn't use the backslash, "\"
@@ -84,23 +80,23 @@ syn keyword ProgressTodo        contained	TODO
 syn region ProgressString	matchgroup=ProgressQuote	start=+"+ end=+"+	skip=+\~"+
 syn region ProgressString	matchgroup=ProgressQuote	start=+'+ end=+'+	skip=+\~'+
 
-syn match  ProgressIdentifier		"\<[a-zA-Z_][a-zA-Z0-9_]*\>()"
+syn match  ProgressIdentifier			"\<[a-zA-Z_][a-zA-Z0-9_]*\>()"
 
-" syn match  ProgressDelimiter		"()"
+" syn match  ProgressDelimiter			"()"
 
 " syn match  ProgressMatrixDelimiter	"[][]"
 
 " If you prefer you can highlight the range
-"syn match  ProgressMatrixDelimiter	"[\d\+\.\.\d\+]"
+"syn match  ProgressMatrixDelimiter		"[\d\+\.\.\d\+]"
 
-syn match  ProgressNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
-syn match  ProgressByte		"\$[0-9a-fA-F]\+"
+syn match  ProgressNumber				"\<\d\+\(u\=l\=\|lu\|f\)\>"
+syn match  ProgressByte					"\$[0-9a-fA-F]\+"
 
-" If you don't like tabs
+" If you don't like tabs:
 "syn match ProgressShowTab "\t"
 "syn match ProgressShowTabc "\t"
 
-syn region ProgressComment		start="/\*"  end="\*/" contains=ProgressComment,ProgressTodo,ProgressDebug,ProgressNeedsWork
+syn region ProgressComment		start="/\*"  end="\*/" contains=ProgressComment,ProgressTodo,ProgressDebug
 syn match ProgressInclude		"^[ 	]*[{].*\.i[}]"
 
 syn match ProgressSubstitute	"^[ 	]*[{].*[^i][}]"
@@ -112,7 +108,7 @@ syn keyword ProgressOperator	<= <> >= abs[olute] accelerator across add-first ad
 syn keyword ProgressOperator	attach[ment] auto-end-key auto-endkey auto-go auto-ind[ent] auto-resize auto-z[ap] available-formats ave[rage] avg backward[s] base-key batch[-mode] bgc[olor] binary
 syn keyword ProgressOperator	bind-where block-iteration-display border-bottom border-bottom-ch[ars] border-bottom-pi[xels] border-left border-left-char[s] border-left-pixe[ls] border-right border-right-cha[rs]
 syn keyword ProgressOperator	border-right-pix[els] border-t[op] border-t[op-chars] border-top-pixel[s] both bottom box box-select[able] browse browse-header buffer buffer-chars buffer-lines
-syn keyword ProgressOperator	button button[s] byte cache cache-size can-query can-set cancel-break cancel-button caps careful-paint c[ase-sensitive] cdecl char[acter] character_length charset
+syn keyword ProgressOperator	button button[s] byte cache cache-size can-query can-set cancel-break cancel-button caps careful-paint case-sensitive cdecl char[acter] character_length charset
 syn keyword ProgressOperator	checked choose clear-select[ion] close code codepage codepage-convert col-of colon-align[ed] color-table column-bgc[olor] column-dcolor column-fgc[olor] column-font
 syn keyword ProgressOperator	column-label-bgc[olor] column-label-dcolor column-label-fgc[olor] column-label-font column-of column-pfc[olor] column-sc[rolling] combo-box command compile complete
 syn keyword ProgressOperator	connect constrained contents context context-pop[up] control-containe[r] c[ontrol-form] convert-to-offse[t] convert count cpcase cpcoll cpint[ernal] cplog
@@ -144,8 +140,8 @@ syn keyword ProgressOperator	no-debug no-drag no-echo no-index-hint no-join-by-s
 syn keyword ProgressOperator	none num-but[tons] num-col[umns] num-copies num-formats num-items num-iterations num-lines num-locked-colum[ns] num-messages num-results num-selected num-selected-rows
 syn keyword ProgressOperator	num-selected-widgets num-tabs num-to-retain numeric numeric-f[ormat] octet_length ok ok-cancel on-frame[-border] ordered-join ordinal orientation os-getenv outer
 syn keyword ProgressOperator	outer-join override owner page-size page-wid[th] paged parent partial-key pascal pathname pfc[olor] pinnable pixels-per-colum[n] pixels-per-row popup-m[enu] popup-o[nly]
-syn keyword ProgressOperator	position precision presel[ect] prev prev-col[umn] prev-sibling prev-tab-i[tem] primary printer-control-handle printer-setup private-d[ata] proce[dure] Progress-s[ource]
-syn keyword ProgressOperator	put-double put-float put-long put-short put-string put-unsigned-short query-off-end question radio-buttons radio-set random raw raw-transfer read-file read-only
+syn keyword ProgressOperator	position precision presel[ect] prev prev-col[umn] prev-sibling prev-tab-i[tem] primary printer-control-handle printer-setup private-d[ata] profiler Progress-s[ource]
+syn keyword ProgressOperator	publish put-double put-float put-long put-short put-string put-unsigned-short query-off-end question radio-buttons radio-set random raw raw-transfer read-file read-only
 syn keyword ProgressOperator	real recursive refresh refreshable replace replace-selection-text replication-create replication-delete replication-write request resiza[ble] resize retry-cancel
 syn keyword ProgressOperator	return-ins[erted] return-to-start-di[r] reverse-from right right-align[ed] right-trim round row row-ma[rkers] row-of rowid rule rule-row rule-y save-as save-file
 syn keyword ProgressOperator	screen-val[ue] scroll-bars scroll-delta scroll-horiz-value scroll-offset scroll-to-current-row scroll-to-i[tem] scroll-to-selected-row scroll-vert-value scrollable
@@ -153,62 +149,67 @@ syn keyword ProgressOperator	scrollbar-horizo[ntal] scrollbar-vertic[al] scrolle
 syn keyword ProgressOperator	select-next-row select-prev-row select-repositioned-row select-row selectable selected selected-items selection-end selection-list selection-start selection-text
 syn keyword ProgressOperator	send sensitive separate-connection separators set-blue[-value] set-break set-cell-focus set-contents set-dynamic set-green[-value] set-leakpoint set-pointer-valu[e]
 syn keyword ProgressOperator	s[et-property] set-red[-value] set-repositioned-row set-selection set-size set-wait[-state] side-lab side-lab[e] side-lab[el] side-label-handl[e] side-lab[els] silent
-syn keyword ProgressOperator	simple single size size-c[hars] size-p[ixels] slider smallint sort source sql sqrt start status-area status-area-font status-bar stdcall stenciled stop stoppe[d]
-syn keyword ProgressOperator	stored-proc[edure] string sub-ave[rage] sub-count sub-max[imum] sub-me[nu] sub-menu-help sub-min[imum] sub-total subst[itute] substr[ing] subtype sum suppress-warning[s]
-syn keyword ProgressOperator	system-alert-box[es] system-help tab-position tabbable target temp-dir[ectory] temp-table terminate text-selected three-d through thru tic-marks time-source title-bgc[olor]
-syn keyword ProgressOperator	title-dc[olor] title-fgc[olor] title-fo[nt] to-rowid toggle-box tool-bar top topic total trailing trunc[ate] type unbuff[ered] unique-id unload upper use use-dic[t-exps]
+syn keyword ProgressOperator	simple single size size-c[hars] size-p[ixels] slider smallint sort source source-procedure sql sqrt start status-area status-area-font status-bar stdcall stenciled stop stoppe[d]
+syn keyword ProgressOperator	stored-proc[edure] string sub-ave[rage] sub-count sub-max[imum] sub-me[nu] sub-menu-help sub-min[imum] sub-total subscribe subst[itute] substr[ing] subtype sum super suppress-warning[s]
+syn keyword ProgressOperator	system-alert-box[es] system-help tab-position tabbable target target-procedure temp-dir[ectory] temp-table terminate text-selected three-d through thru tic-marks time-source title-bgc[olor]
+syn keyword ProgressOperator	title-dc[olor] title-fgc[olor] title-fo[nt] to-rowid toggle-box tool-bar top topic total trailing trunc[ate] type unbuff[ered] unique-id unload unsubscribe upper use use-dic[t-exps]
 syn keyword ProgressOperator	use-filename use-text v6display valid-event valid-handle validate validate-condition validate-message var[iable] vert[ical] virtual-height virtual-height-c[hars]
 syn keyword ProgressOperator	virtual-height-pixel[s] virtual-width virtual-width-ch[ars] virtual-width-pi[xels] visible wait warning weekday widget widget-e[nter] widget-h[andle] widget-l[eave]
 syn keyword ProgressOperator	widget-pool width width[-chars] width-p[ixels] window-name window-sta[te] window-sys[tem] word-wrap x-of y-of year yes-no yes-no-cancel _dcm
-syn keyword ProgressOperator	source-procedure subscribe super target-procedure unsubscribe
-" Progress Version 9.0 added these
-syn keyword ProgressOperator	profiler publish source-procedure subscribe super target-procedure unsubscribe profiler
 
 syn keyword ProgressType	    char[acter] int[eger] format
 syn keyword ProgressType	    var[iable] log[ical] da[te]
 
-syn sync lines=2500
+syn sync lines=800
 
-" The default highlighting.
-hi def link ProgressAcces			Statement
-hi def link ProgressByte			Number
-hi def link ProgressComment			Comment
-" hi link ProgressComment			StatusLine
-hi def link ProgressConditional		Conditional
-hi def link ProgressDebug			Debug
-hi def link ProgressDo				Repeat
-hi def link ProgressEndError		Error
-hi def link ProgressFor				Repeat
-hi def link ProgressFunction		Function
-" hi link ProgressFunction			Procedure
-hi def link ProgressInclude			Include
-hi def link ProgressLabel			Label
-hi def link ProgressMatrixDelimiter	Identifier
-hi def link ProgressModifier		Type
-hi def link ProgressNeedsWork		Todo
-hi def link ProgressNumber			Number
-hi def link ProgressOperator		Operator
-" hi link ProgressOperator			Function
-hi def link ProgressPreProc			PreProc
-hi def link ProgressProcedure		Procedure
-hi def link ProgressQuote			Delimiter
-hi def link ProgressRepeat			Repeat
-hi def link ProgressReserved		Statement
-" hi link ProgressReserved			Identifier
-" hi link ProgressStatement			Statement
-hi def link ProgressString			String
-hi def link ProgressStructure		Structure
-hi def link ProgressSubstitute		PreProc
-hi def link ProgressTodo			Todo
-hi def link ProgressType			Statement
-hi def link ProgressUnclassified	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_progress_syntax_inits")
+  if version < 508
+	let did_progress_syntax_inits = 1
+	command -nargs=+ HiLink hi link <args>
+  else
+	command -nargs=+ HiLink hi def link <args>
+  endif
 
-"optional highlighting
-"hi link ProgressDelimiter			Identifier
-"hi link ProgressShowTab			Error
-"hi link ProgressShowTabc			Error
-"hi link ProgressIdentifier			Identifier
+  " The default methods for highlighting. Can be overridden later.
+  HiLink ProgressByte			    Number
+  HiLink ProgressCase				Repeat
+  HiLink ProgressComment			StatusLine
+  HiLink ProgressConditional		Conditional
+  HiLink ProgressDebug				Debug
+  HiLink ProgressDo					Repeat
+  HiLink ProgressEndError			Error
+  HiLink ProgressFor				Repeat
+  HiLink ProgressFunction			Procedure
+  HiLink ProgressInclude			Include
+  HiLink ProgressLabel		    	Label
+  HiLink ProgressMatrixDelimiter	Identifier
+  HiLink ProgressModifier	    	Type
+  HiLink ProgressNumber				Number
+  HiLink ProgressOperator    		Function
+  HiLink ProgressPreProc			PreProc
+  HiLink ProgressProcedure			Procedure
+  HiLink ProgressQuote				Delimiter
+  HiLink ProgressRepeat				Repeat
+  HiLink ProgressReserved			Identifier
+  HiLink ProgressString				String
+  HiLink ProgressStructure	    	Structure
+  HiLink ProgressSubstitute			PreProc
+  HiLink ProgressTodo		    	Todo
+  HiLink ProgressType		    	Statement
+  HiLink ProgressUnclassified		Statement
+
+  " Optional highlighting
+  " HiLink ProgressDelimiter		Identifier
+  " HiLink ProgressShowTab			Error
+  " HiLink ProgressShowTabc	    	Error
+  " HiLink ProgressIdentifier		Identifier
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "progress"
 
-" vim: ts=4 sw=2 
+" vim: ts=4 sw=2

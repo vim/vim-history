@@ -368,7 +368,7 @@ Python_Init(void)
 #ifdef DYNAMIC_PYTHON
 	if (!python_enabled())
 	{
-	    EMSG(_("Sorry, this command is disabled, the Python library could not be loaded."));
+	    EMSG(_("(ep8) Sorry, this command is disabled, the Python library could not be loaded."));
 	    goto fail;
 	}
 #endif
@@ -678,12 +678,8 @@ buffer_ensure(int n)
     if (new_size != buffer_size)
     {
 	new_buffer = alloc((unsigned)new_size);
-
 	if (new_buffer == NULL)
-	{
-	    EMSG(_("Out of memory!"));
 	    return;
-	}
 
 	if (buffer)
 	{
@@ -766,7 +762,7 @@ PythonIO_Init(void)
 
     if (PyErr_Occurred())
     {
-	EMSG(_("Python: Error initialising I/O objects"));
+	EMSG(_("(ep7) Python: Error initialising I/O objects"));
 	return -1;
     }
 

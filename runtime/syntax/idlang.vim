@@ -1,12 +1,22 @@
 " Interactive Data Language syntax file (IDL, too :-)
-" Maintainer:	Hermann.Rochholz@faidor.com
-" Last Change:	2001 Jan 15
+" located at http://www.creaso.com 
+" Maintainer:	Hermann.Rochholz@gmx.de
+" Last Change:	1999 Jun 14
+" Cleaned a little bit up  April 2001
+" Update to vim V6.xx 2001 May 
 " Preliminary, because I do not use higher language elements of IDL until now.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove any old syntax stuff hanging around
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+
+" change 6.xx -----------------------------------------------------------------
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
+" change 6.xx -----------------------------------------------------------------
 
 syntax case ignore
 
@@ -338,7 +348,6 @@ syn keyword idlangRoutine	ULONG ULONG64
 syn keyword idlangRoutine	WRITE_PNG
 syn keyword idlangRoutine	BYTEORDER L64SWAP
 
-
 " overwrite LongName
 syn match  idlangContinueLine	"nomessage"
 syn match  idlangContinueLine	"insertcol"
@@ -346,51 +355,70 @@ syn match  idlangContinueLine	"insertcol"
 syn match idlangReadWrite	"\ *pro\ "
 syn match idlangReadWrite	"\ *function\ "
 
-" The default highlighting.
-hi def link idlangConditional	Conditional
-hi def link idlangConditionll	Conditional
-hi def link idlangRepeat	Repeat
-hi def link idlangColor	idlangType
-hi def link idlangCommand	idlangType
-hi def link idlangRoutine	idlangType
-hi def link idlangDiagram	idlangType
-hi def link idlangIO	idlangType
-hi def link idlangStatement	Statement
-hi def link idlangType	Type
-hi def link idlangContinueLine	Todo
-hi def link idlangRealNumber	Float
-hi def link idlangNumber	Number
-hi def link idlangCommentError	Error
-hi def link idlangString	String
-hi def link idlangOperator	Operator
-hi def link idlangLogicalConstant	Constant
-hi def link idlangComment	Comment
-hi def link idlangTodo	Todo
-hi def link idlangUnitHeader	idlangPreCondit
-hi def link idlangFormat	idlangImplicit
-hi def link idlangReadWrite	Statement
-hi def link idlangImplicit	Identifier
-hi def link idlangUnixCmd	Statement
-hi def link idlangPreProc	PreProc
-"hi def link idlangExtended	idlangImplicit
-hi def link idlangPreCondit	PreCondit
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+" change 6.xx -----------------------------------------------------------------
+if version >= 508 || !exists("did_idlang_syn_inits")
+  if version < 508
+    let did_idlang_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+" change 6.xx -----------------------------------------------------------------
 
-" optional hiing
-"hi def link idlangContinueError	Error
-"hi def link idlangSpecial	Special
-"hi def link idlangPointRealNumber	idlangNumber
-"hi def link idlangPointDoubleNumber idlangNumber
-"hi def link idlangLongName	Error
-hi def link idlangDblCommaError	Error
-hi def link idlangStop	Error
-"hi def link idlangDelimiter	Identifier
-hi def link idlangStructure	idlangType
-hi def link idlangStrucvar	idlangPreProc
-hi def link idlangSystem	Identifier
-hi def link idlangKeyword	Special
+" OLD  if !exists("did_idlang_syntax_inits")
+" OLD    let did_idlang_syntax_inits = 1
 
-"hi def link idlangIdentifier	Identifier
+  HiLink idlangConditional	Conditional
+  HiLink idlangConditionll	Conditional
+  HiLink idlangRepeat	Repeat
+  HiLink idlangColor	idlangType
+  HiLink idlangCommand	idlangType
+  HiLink idlangRoutine	idlangType
+  HiLink idlangDiagram	idlangType
+  HiLink idlangIO	idlangType
+  HiLink idlangStatement	Statement
+  HiLink idlangType	Type
+  HiLink idlangContinueLine	Todo
+  HiLink idlangRealNumber	Float
+  HiLink idlangNumber	Number
+  HiLink idlangCommentError	Error
+  HiLink idlangString	String
+  HiLink idlangOperator	Operator
+  HiLink idlangLogicalConstant	Constant
+  HiLink idlangComment	Comment
+  HiLink idlangTodo	Todo
+  HiLink idlangUnitHeader	idlangPreCondit
+  HiLink idlangFormat	idlangImplicit
+  HiLink idlangReadWrite	Statement
+  HiLink idlangImplicit	Identifier
+  HiLink idlangUnixCmd	Statement
+  HiLink idlangPreProc	PreProc
+"  HiLink idlangExtended	idlangImplicit
+  HiLink idlangPreCondit	PreCondit
 
-let current_syntax = "idlang"
+  " optional hiing
+  "HiLink idlangContinueError		Error
+  "HiLink idlangSpecial		Special
+  "HiLink idlangPointRealNumber	idlangNumber
+  "HiLink idlangPointDoubleNumber	idlangNumber
+"  HiLink idlangLongName	Error
+  HiLink idlangDblCommaError	Error
+  HiLink idlangStop	Error
+  "HiLink idlangDelimiter		Identifier
+  HiLink idlangStructure	idlangType
+  HiLink idlangStrucvar	idlangPreProc
+  HiLink idlangSystem	Identifier
+  HiLink idlangKeyword	Special
+
+  "HiLink idlangIdentifier	Identifier
+
+  delcommand HiLink
+endif
+
+let b:current_syntax = "idlang"
 
 " vim: ts=18
+

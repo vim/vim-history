@@ -368,7 +368,7 @@ ex_breakdel(eap)
     }
 
     if (todel < 0)
-	EMSG2(_("Breakpoint not found: %s"), eap->arg);
+	EMSG2(_("(be3) Breakpoint not found: %s"), eap->arg);
     else
     {
 	vim_free(BREAKP(todel).dbg_name);
@@ -740,7 +740,7 @@ check_changed_any(hidden)
 	    msg_col = 0;
 	    msg_didout = FALSE;
 	}
-	if (EMSG2(_("No write since last change for buffer \"%s\""),
+	if (EMSG2(_("(we8) No write since last change for buffer \"%s\""),
 		    buf_spname(buf) != NULL ? (char_u *)buf_spname(buf) :
 		    buf->b_fname))
 	{
@@ -1185,11 +1185,11 @@ do_argfile(eap, argn)
     if (argn < 0 || argn >= ARGCOUNT)
     {
 	if (ARGCOUNT <= 1)
-	    EMSG(_("There is only one file to edit"));
+	    EMSG(_("(ea3) There is only one file to edit"));
 	else if (argn < 0)
-	    EMSG(_("Cannot go before first file"));
+	    EMSG(_("(ea4) Cannot go before first file"));
 	else
-	    EMSG(_("Cannot go beyond last file"));
+	    EMSG(_("(ea5) Cannot go beyond last file"));
     }
     else
     {
@@ -1727,6 +1727,10 @@ do_source(fname, check_other, is_vimrc)
 	if (sourcing_name != NULL)
 	    smsg((char_u *)_("continuing in %s"), sourcing_name);
     }
+#ifdef STARTUPTIME
+    sprintf(IObuff, "sourcing %s", fname);
+    TIME_MSG(IObuff);
+#endif
 
 #ifdef FEAT_EVAL
     /*
@@ -2019,7 +2023,7 @@ get_one_sourceline(sp)
 		else	    /* lines like ":map xx yy^M" will have failed */
 		{
 		    if (!sp->error)
-			EMSG(_("Warning: Wrong line separator, ^M may be missing"));
+			EMSG(_("(ws1) Warning: Wrong line separator, ^M may be missing"));
 		    sp->error = TRUE;
 		    sp->fileformat = EOL_UNIX;
 		}
@@ -2068,7 +2072,7 @@ ex_scriptencoding(eap)
 
     if (eap->getline != getsourceline)
     {
-	EMSG(_(":scriptencoding used outside of a sourced file"));
+	EMSG(_("(ee5) :scriptencoding used outside of a sourced file"));
 	return;
     }
 
@@ -2101,7 +2105,7 @@ ex_finish(eap)
     if (eap->getline == getsourceline)
 	((struct source_cookie *)eap->cookie)->finished = TRUE;
     else
-	EMSG(_(":finish used outside of a sourced file"));
+	EMSG(_("(ef5) :finish used outside of a sourced file"));
 }
 
 /*

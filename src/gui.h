@@ -315,6 +315,12 @@ typedef struct Gui
     guicolor_T	scroll_fg_pixel;    /* Same in Pixel format */
     char	*scroll_bg_color;   /* Color of scrollbar background */
     guicolor_T	scroll_bg_pixel;    /* Same in Pixel format */
+# ifdef FEAT_GUI_MOTIF
+    guicolor_T	menu_def_fg_pixel;  /* Default menu foreground */
+    guicolor_T	menu_def_bg_pixel;  /* Default menu background */
+    guicolor_T	scroll_def_fg_pixel;  /* Default scrollbar foreground */
+    guicolor_T	scroll_def_bg_pixel;  /* Default scrollbar background */
+# endif
     Display	*dpy;		    /* X display */
     Window	wid;		    /* Window id of text area */
     int		visibility;	    /* Is shell partially/fully obscured? */

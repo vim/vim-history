@@ -526,9 +526,32 @@ check_stack_growth(p)
 static char *stack_limit = NULL;
 
 /*
+ * Find out until how var the stack can grow without getting into trouble.
+ * Called when starting up and when switching to the signal stack in
+ * deathtrap().
+ */
+    static void
+get_stack_limit()
+{
+    struct rlimit	rlp;
+    int			i;
+
+    /* Set the stack limit to 15/16 of the allowable size. */
+    if (getrlimit(RLIMIT_STACK, &rlp) == 0
+#  ifdef RLIM_INFINITY
+	    && rlp.rlim_cur != RLIM_INFINITY
+#  endif
+       )
+    {
+	if (stack_grows_downwards)
+	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));
+	else
+	    stack_limit = (char *)((long)&i + ((long)rlp.rlim_cur / 16L * 15L));
+    }
+}
+
+/*
  * Return FAIL when running out of stack space.
- * This assumes a stack that grows downwards.  If it grows in the other
- * direction the check won't work but doesn't cause problems.
  * "p" must point to any variable local to the caller that's on the stack.
  */
     int
@@ -715,6 +738,12 @@ deathtrap SIGDEFARG(sigarg)
 
     /* Remember how often we have been called. */
     ++entered;
+
+#ifdef HAVE_GETRLIMIT
+    /* Since we are now using the signal stack, need to reset the stack
+     * limit.  Otherwise using a regexp will fail. */
+    get_stack_limit();
+#endif
 
 #ifdef SIGHASARG
     /* try to find the name of this signal */
@@ -1144,13 +1173,14 @@ get_x11_windis()
 	if (x11_display_from == XD_HERE && x11_display != NULL)
 	{
 	    XCloseDisplay(x11_display);
-	    x11_display = NULL;
+	    x11_display_from = XD_NONE;
 	}
 	if (gui_get_x11_windis(&x11_window, &x11_display) == OK)
 	{
 	    x11_display_from = XD_GUI;
 	    return OK;
 	}
+	x11_display = NULL;
 	return FAIL;
     }
     else if (x11_display_from == XD_GUI)
@@ -1178,6 +1208,10 @@ get_x11_windis()
 #ifdef FEAT_XCLIPBOARD
     if (xterm_dpy != NULL && x11_window != 0)
     {
+	/* Checked it already. */
+	if (x11_display_from == XD_XTERM)
+	    return OK;
+
 	/*
 	 * If the X11 display was opened here before, for the window where Vim
 	 * was started, close that one now to avoid a memory leak.
@@ -1521,7 +1555,11 @@ mch_settitle(title, icon)
 
     if ((type || *T_TS != NUL) && title != NULL)
     {
-	if (oldtitle == NULL)		/* first call, save title */
+	if (oldtitle == NULL
+#ifdef FEAT_GUI
+		&& !gui.in_use
+#endif
+		)		/* first call but not in GUI, save title */
 	    (void)get_x11_title(FALSE);
 
 	if (*T_TS != NUL)		/* it's OK if t_fs is empty */
@@ -1540,7 +1578,11 @@ mch_settitle(title, icon)
 
     if ((type || *T_CIS != NUL) && icon != NULL)
     {
-	if (oldicon == NULL)		/* first call, save icon */
+	if (oldicon == NULL
+#ifdef FEAT_GUI
+		&& !gui.in_use
+#endif
+		)		/* first call, save icon */
 	    get_x11_icon(FALSE);
 
 	if (*T_CIS != NUL)
@@ -1981,13 +2023,13 @@ mch_get_acl(fname)
     vim_acl_solaris_T   *aclent;
 
     aclent = malloc(sizeof(vim_acl_solaris_T));
-    if ((aclent->acl_cnt = acl(fname, GETACLCNT, 0, NULL)) < 0)
+    if ((aclent->acl_cnt = acl((char *)fname, GETACLCNT, 0, NULL)) < 0)
     {
 	free(aclent);
 	return NULL;
     }
     aclent->acl_entry = malloc(aclent->acl_cnt * sizeof(aclent_t));
-    if (acl(fname, GETACL, aclent->acl_cnt, aclent->acl_entry) < 0)
+    if (acl((char *)fname, GETACL, aclent->acl_cnt, aclent->acl_entry) < 0)
     {
 	free(aclent->acl_entry);
 	free(aclent);
@@ -2040,7 +2082,7 @@ mch_set_acl(fname, aclent)
     acl_set_file((char *)fname, ACL_TYPE_ACCESS, (acl_t)aclent);
 #else
 #ifdef HAVE_SOLARIS_ACL
-    acl(fname, SETACL, ((vim_acl_solaris_T *)aclent)->acl_cnt,
+    acl((char *)fname, SETACL, ((vim_acl_solaris_T *)aclent)->acl_cnt,
 	    ((vim_acl_solaris_T *)aclent)->acl_entry);
 #else
 #ifdef HAVE_AIX_ACL
@@ -2162,27 +2204,14 @@ mch_init()
 #ifdef HAVE_CHECK_STACK_GROWTH
     int			i;
 #endif
-#ifdef HAVE_GETRLIMIT
-    struct rlimit	rlp;
-#endif
 
 #ifdef HAVE_CHECK_STACK_GROWTH
     check_stack_growth((char *)&i);
 
 # ifdef HAVE_GETRLIMIT
-    /* Set the stack limit to 15/16 of the allowable size. */
-    if (getrlimit(RLIMIT_STACK, &rlp) == 0
-#  ifdef RLIM_INFINITY
-	    && rlp.rlim_cur != RLIM_INFINITY
-#  endif
-       )
-    {
-	if (stack_grows_downwards)
-	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));
-	else
-	    stack_limit = (char *)((long)&i + ((long)rlp.rlim_cur / 16L * 15L));
-    }
+    get_stack_limit();
 # endif
+
 #endif
 
     /*
@@ -2606,7 +2635,7 @@ check_mouse_termcode()
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG(_("(et8) Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -4732,7 +4761,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 	    for (i = 0; signal_info[i].sig != -1; i++)
 		if (lc_signal == signal_info[i].sig)
 		    break;
-	    EMSG2("got SIG%s in libcall()", signal_info[i].name);
+	    EMSG2("(ge6) got SIG%s in libcall()", signal_info[i].name);
 	}
 #  endif
 # endif
@@ -4747,7 +4776,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 
     if (!success)
     {
-	EMSG(_("Library call failed"));
+	EMSG(_("(eq5) Library call failed"));
 	return FAIL;
     }
 

@@ -278,7 +278,7 @@ edit(cmdchar, startln, count)
     if (!did_ai)
 	ai_col = 0;
 
-    if (cmdchar != NUL && !restart_edit)
+    if (cmdchar != NUL && restart_edit == 0)
     {
 	ResetRedobuff();
 	AppendNumberToRedobuff(count);
@@ -365,7 +365,7 @@ edit(cmdchar, startln, count)
      * Don't do this for "CTRL-O ." (repeat an insert): we get here with
      * restart_edit non-zero, and something in the stuff buffer.
      */
-    if (restart_edit && stuff_empty())
+    if (restart_edit != 0 && stuff_empty())
     {
 #ifdef FEAT_MOUSE
 	/*
@@ -415,6 +415,12 @@ edit(cmdchar, startln, count)
 #ifdef FEAT_CINDENT
     can_cindent = TRUE;
 #endif
+#ifdef FEAT_FOLDING
+    /* The cursor line is not in a closed fold, unless 'insertmode' is set or
+     * restarting. */
+    if (!p_im && did_restart_edit == 0)
+	foldOpenCursor();
+#endif
 
     /*
      * If 'showmode' is set, show the current (insert/replace/..) mode.
@@ -425,7 +431,7 @@ edit(cmdchar, startln, count)
     if (p_smd)
 	i = showmode();
 
-    if (!p_im && !did_restart_edit)
+    if (!p_im && did_restart_edit == 0)
 	change_warning(i + 1);
 
 #ifdef CURSOR_SHAPE
@@ -474,9 +480,8 @@ edit(cmdchar, startln, count)
 	msg_scroll = FALSE;
 
 #ifdef FEAT_FOLDING
-	/* The cursor line must never be in a closed fold, unless 'insertmode'
-	 * is set. */
-	if (!p_im)
+	/* Open fold at the cursor line, according to 'foldopen'. */
+	if (fdo_flags & FDO_INSERT)
 	    foldOpenCursor();
 	/* Close folds where the cursor isn't, according to 'foldclose' */
 	if (!char_avail())
@@ -1144,12 +1149,6 @@ normalchar:
 	    ins_try_si(c);
 #endif
 
-#ifdef FEAT_FOLDING
-	    /* When inserting a character the cursor line must never be in a
-	     * closed fold. */
-	    foldOpenCursor();
-#endif
-
 	    if (c == ' ')
 	    {
 		inserted_space = TRUE;
@@ -1170,6 +1169,11 @@ normalchar:
 		revins_chars++;
 #endif
 	    }
+#ifdef FEAT_FOLDING
+	    /* When inserting a character the cursor line must never be in a
+	     * closed fold. */
+	    foldOpenCursor();
+#endif
 	    break;
 	}   /* end of switch (c) */
 
@@ -4145,6 +4149,12 @@ stop_arrow()
 	ResetRedobuff();
 	AppendToRedobuff((char_u *)"1i");   /* pretend we start an insertion */
     }
+
+#ifdef FEAT_FOLDING
+    /* Always open fold at the cursor line when inserting something. */
+    foldOpenCursor();
+#endif
+
     return (arrow_used ? FAIL : OK);
 }
 
@@ -5434,7 +5444,7 @@ ins_esc(count, cmdchar)
 
     /* When an autoindent was removed, curswant stays after the
      * indent */
-    if (!restart_edit && (colnr_T)temp == curwin->w_cursor.col)
+    if (restart_edit == NUL && (colnr_T)temp == curwin->w_cursor.col)
 	curwin->w_set_curswant = TRUE;
 
     /* Remember the last Insert position in the '^ mark. */
@@ -5444,7 +5454,7 @@ ins_esc(count, cmdchar)
      * The cursor should end up on the last inserted character.
      */
     if (       curwin->w_cursor.col != 0
-	    && (!restart_edit
+	    && (restart_edit == NUL
 		|| (gchar_cursor() == NUL
 #ifdef FEAT_VISUAL
 		    && !VIsual_active
@@ -5483,7 +5493,7 @@ ins_esc(count, cmdchar)
      * When recording or for CTRL-O, need to display the new mode.
      * Otherwise remove the mode message.
      */
-    if (Recording || restart_edit)
+    if (Recording || restart_edit != NUL)
 	showmode();
     else if (p_smd)
 	MSG("");
@@ -6129,6 +6139,10 @@ ins_left()
 {
     pos_T	tpos;
 
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     tpos = curwin->w_cursor;
     if (oneleft() == OK)
@@ -6162,6 +6176,10 @@ ins_home()
 {
     pos_T	tpos;
 
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     tpos = curwin->w_cursor;
     if ((mod_mask & MOD_MASK_CTRL))
@@ -6179,6 +6197,10 @@ ins_end()
 {
     pos_T	tpos;
 
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     tpos = curwin->w_cursor;
     if ((mod_mask & MOD_MASK_CTRL))
@@ -6192,6 +6214,10 @@ ins_end()
     static void
 ins_s_left()
 {
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     if (curwin->w_cursor.lnum > 1 || curwin->w_cursor.col > 0)
     {
@@ -6206,6 +6232,10 @@ ins_s_left()
     static void
 ins_right()
 {
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     if (gchar_cursor() != NUL
 #ifdef FEAT_VIRTUALEDIT
@@ -6252,6 +6282,10 @@ ins_right()
     static void
 ins_s_right()
 {
+#ifdef FEAT_FOLDING
+    if ((fdo_flags & FDO_HOR) && KeyTyped)
+	foldOpenCursor();
+#endif
     undisplay_dollar();
     if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
 	    || gchar_cursor() != NUL)

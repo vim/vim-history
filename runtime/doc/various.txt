@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
+*various.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -78,7 +78,7 @@ g8			Print the hex values of the bytes used in the
 							*:#*
 :[range]# [count]	synonym for :number.
 
-							*:z*
+							*:z* *ez2*
 :{range}z[+-^.=]{count}	Display several lines of text surrounding the line
 			specified with {range}, or around the current line
 			if there is no {range}.  If there is a {count}, that's
@@ -115,7 +115,8 @@ g8			Print the hex values of the bytes used in the
 			will be aborted as if <Esc> was typed.  The display
 			isn't updated while doing this.  This implies that an
 			insert command must be completed (to start Insert
-			mode, see |:startinsert|).
+			mode, see |:startinsert|).  A ":" command must be
+			completed as well.
 			This command cannot be followed by another command,
 			since any '|' is considered part of the command.
 			This command can be used recursively, but the depth is
@@ -140,10 +141,11 @@ g8			Print the hex values of the bytes used in the
 			Not available when |+ex_extra| feature was disabled at
 			compile time.
 
-							*:sh* *:shell*
+							*:sh* *:shell* *eq6*
 :sh[ell]		This command starts a shell.  When the shell exits
 			(after the "exit" command) you return to Vim.  The
 			name for the shell command comes from 'shell' option.
+							*et0*
 			Note: This doesn't work when Vim on the Amiga was
 			started in QuickFix mode from a compiler, because the
 			compiler will have set stdin to a non-interactive
@@ -212,7 +214,7 @@ N  *+dialog_gui*	Support for |:confirm| with GUI dialog.
 N  *+dialog_con*	Support for |:confirm| with console dialog.
 N  *+dialog_con_gui*	Support for |:confirm| with GUI and console dialog.
 N  *+diff*		|vimdiff| and 'diff'
-N  *+digraphs*		|digraphs|
+N  *+digraphs*		|digraphs| *ed9*
 B  *+emacs_tags*	|emacs-tags| files
 N  *+eval*		expression evaluation |eval.txt|
 N  *+ex_extra*		Vim's extra Ex commands: |:center|, |:left|,
@@ -422,7 +424,7 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			the very top.
 			{not in Vi}
 
-								*{subject}*
+							*{subject}* *he4*
 :h[elp] {subject}	Like ":help", additionally jump to the tag {subject}.
 			{subject} can include wildcards like "*", "?" and
 			"[a-z]":
@@ -514,7 +516,7 @@ command:
 			ToolBar.HelpFind menu entry instead of using a builtin
 			dialog.  {only when compiled with |+GUI_GTK|}
 
-							*:helpt* *:helptags*
+			*:helpt* *:helptags* *et5* *he5* *he6* *he7* *he8*
 :helpt[ags] {dir}	Generate the help tags file for directory {dir}.  All
 			"*.txt" files in the directory are scanned for a help
 			tag definition in between stars.  The generated tags

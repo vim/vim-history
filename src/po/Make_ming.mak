@@ -16,9 +16,15 @@ POFILES = af.po cs.po de.po es.po fr.po it.po ja.po ko.po pl.po tr.po zh_TW.po
 
 PACKAGE = vim
 
-MSGFMT = msgfmt
-XGETTEXT = xgettext
-MSGMERGE = msgmerge
+# Uncomment one of the lines below or modify it to put the path to your
+# gettex binaries; I use the first
+#GETTEXT_PATH = C:/gettext.win32/bin/
+#GETTEXT_PATH = C:/gettext-0.10.35-w32/win32/Release/
+#GETTEXT_PATH = C:/cygwin/bin/
+
+MSGFMT = $(GETTEXT_PATH)msgfmt
+XGETTEXT = $(GETTEXT_PATH)xgettext
+MSGMERGE = $(GETTEXT_PATH)msgmerge
 
 MV = move
 CP = copy
@@ -36,18 +42,18 @@ all: $(MOFILES)
 
 first_time:
 	$(XGETTEXT) --default-domain=$(LANGUAGE) \
-		--add-comments --keyword=_ --keyword=N_ ..\\*.c ..\\globals.h 
+		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) $(wildcard ../globals.h)
 
 $(LANGUAGES):
 	$(XGETTEXT) --default-domain=$(PACKAGE) \
-		--add-comments --keyword=_ --keyword=N_ ..\\*.c ..\\globals.h 
+		--add-comments --keyword=_ --keyword=N_ $(wildcard ../*.c) $(wildcard ../globals.h)
 	$(MV) $(PACKAGE).po $(PACKAGE).pot
 	$(CP) $@.po $@.po.orig
 	$(MV) $@.po $@.po.old
 	$(MSGMERGE) $@.po.old $(PACKAGE).pot -o $@.po
 	$(RM) $@.po.old
 
-install:
+install: 
 	$(MKD) $(VIMRUNTIME)\lang\$(LANGUAGE)
 	$(MKD) $(VIMRUNTIME)\lang\$(LANGUAGE)\LC_MESSAGES 
 	$(CP) $(LANGUAGE).mo $(VIMRUNTIME)\lang\$(LANGUAGE)\LC_MESSAGES\$(PACKAGE).mo

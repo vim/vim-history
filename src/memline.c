@@ -188,7 +188,7 @@ static linenr_T	lowest_marked = 0;
 #define ML_SIMPLE(x)	(x & 0x10)  /* DEL, INS or FIND */
 
 static void set_b0_fname __ARGS((ZERO_BL *, buf_T *buf));
-static void swapfile_info __ARGS((char_u *));
+static time_t swapfile_info __ARGS((char_u *));
 static int recov_file_names __ARGS((char_u **, char_u *, int prepend_dot));
 static int ml_append_int __ARGS((buf_T *, linenr_T, char_u *, colnr_T, int, int));
 static int ml_delete_int __ARGS((buf_T *, linenr_T, int));
@@ -272,7 +272,7 @@ ml_open()
 	goto error;
     if (hp->bh_bnum != 0)
     {
-	EMSG(_("didn't get block nr 0?"));
+	EMSG(_("(eg7) Didn't get block nr 0?"));
 	goto error;
     }
     b0p = (ZERO_BL *)(hp->bh_data);
@@ -312,7 +312,7 @@ ml_open()
 	goto error;
     if (hp->bh_bnum != 1)
     {
-	EMSG(_("didn't get block nr 1?"));
+	EMSG(_("(eg7) Didn't get block nr 1?"));
 	goto error;
     }
     pp = (PTR_BL *)(hp->bh_data);
@@ -330,7 +330,7 @@ ml_open()
 	goto error;
     if (hp->bh_bnum != 2)
     {
-	EMSG(_("didn't get block nr 2?"));
+	EMSG(_("(eg7) Didn't get block nr 2?"));
 	goto error;
     }
 
@@ -440,12 +440,12 @@ ml_setname()
 	if (mfp->mf_fd < 0)
 	{
 	    /* could not (re)open the swap file, what can we do???? */
-	    EMSG(_("Oops, lost the swap file!!!"));
+	    EMSG(_("(eo6) Oops, lost the swap file!!!"));
 	    return;
 	}
     }
     if (!success)
-	EMSG(_("Could not rename swap file"));
+	EMSG(_("(eo7) Could not rename swap file"));
 }
 
 /*
@@ -512,7 +512,7 @@ ml_open_file(buf)
     {
 	need_wait_return = TRUE;	/* call wait_return later */
 	++no_wait_return;
-	(void)EMSG2(_("Unable to open swap file for \"%s\", recovery impossible"),
+	(void)EMSG2(_("(ue4) Unable to open swap file for \"%s\", recovery impossible"),
 		    buf_spname(buf) != NULL
 			? (char_u *)buf_spname(buf)
 			: buf->b_fname);
@@ -611,7 +611,7 @@ ml_timestamp(buf)
 	return;
     b0p = (ZERO_BL *)(hp->bh_data);
     if (b0p->b0_id[0] != BLOCK0_ID0 || b0p->b0_id[1] != BLOCK0_ID1)
-	EMSG(_("ml_timestamp: Didn't get block 0??"));
+	EMSG(_("(ei8) ml_timestamp: Didn't get block 0??"));
     else
 	set_b0_fname(b0p, buf);
     mf_put(mfp, hp, TRUE, FALSE);
@@ -749,7 +749,7 @@ ml_recover()
 	len = recover_names(&fname, FALSE, 0);
 	if (len == 0)		    /* no swap files found */
 	{
-	    EMSG2(_("No swap file found for %s"), fname);
+	    EMSG2(_("(ue5) No swap file found for %s"), fname);
 	    goto theend;
 	}
 	if (len == 1)		    /* one swap file found, use it */
@@ -803,7 +803,7 @@ ml_recover()
     {
 	if (p != NULL)
 	{
-	    EMSG2(_("Cannot open %s"), p);
+	    EMSG2(_("(ue6) Cannot open %s"), p);
 	    vim_free(p);
 	}
 	goto theend;
@@ -845,7 +845,7 @@ ml_recover()
     }
     if (b0p->b0_id[0] != BLOCK0_ID0 || b0p->b0_id[1] != BLOCK0_ID1)
     {
-	EMSG2(_("%s does not look like a Vim swap file"), mfp->mf_fname);
+	EMSG2(_("(ue7) %s does not look like a Vim swap file"), mfp->mf_fname);
 	goto theend;
     }
     if (b0_magic_wrong(b0p))
@@ -924,7 +924,7 @@ ml_recover()
 		    && org_stat.st_mtime > swp_stat.st_mtime)
 		|| org_stat.st_mtime != mtime))
     {
-	EMSG(_("Warning: Original file may have been changed"));
+	EMSG(_("(eo8) Warning: Original file may have been changed"));
     }
     out_flush();
     mf_put(mfp, hp, FALSE, FALSE);	/* release block 0 */
@@ -965,7 +965,7 @@ ml_recover()
 	{
 	    if (bnum == 1)
 	    {
-		EMSG2(_("Unable to read block 1 from %s"), mfp->mf_fname);
+		EMSG2(_("(ue8) Unable to read block 1 from %s"), mfp->mf_fname);
 		goto theend;
 	    }
 	    ++error;
@@ -1050,7 +1050,7 @@ ml_recover()
 		{
 		    if (bnum == 1)
 		    {
-			EMSG2(_("Block 1 ID wrong (%s not a .swp file?)"),
+			EMSG2(_("(ue9) Block 1 ID wrong (%s not a .swp file?)"),
 							       mfp->mf_fname);
 			goto theend;
 		    }
@@ -1133,9 +1133,9 @@ ml_recover()
 
     recoverymode = FALSE;
     if (got_int)
-	EMSG(_("Recovery Interrupted"));
+	EMSG(_("(eo9) Recovery Interrupted"));
     else if (error)
-	EMSG(_("Errors detected while recovering; look for lines starting with ???"));
+	EMSG(_("(eo0) Errors detected while recovering; look for lines starting with ???"));
     else
     {
 	MSG(_("Recovery completed. You should check if everything is OK."));
@@ -1395,7 +1395,7 @@ recover_names(fname, list, nr)
 		    MSG_PUTS(".    ");
 		    msg_puts(gettail(files[i]));
 		    msg_putchar('\n');
-		    swapfile_info(files[i]);
+		    (void)swapfile_info(files[i]);
 		}
 	    }
 	    else
@@ -1450,15 +1450,16 @@ static int process_still_running;
 
 /*
  * Give information about an existing swap file
+ * Returns timestamp (0 when unknown).
  */
-    static void
+    static time_t
 swapfile_info(fname)
     char_u	*fname;
 {
     struct stat	    st;
     int		    fd;
     struct block0   b0;
-    time_t	    x;
+    time_t	    x = (time_t)0;
 
     /* print the swap file date */
     if (mch_stat((char *)fname, &st) != -1)
@@ -1561,6 +1562,8 @@ swapfile_info(fname)
     else
 	MSG_PUTS(_("         [cannot be opened]"));
     msg_putchar('\n');
+
+    return x;
 }
 
     static int
@@ -1744,7 +1747,7 @@ ml_preserve(buf, message)
     if (mfp == NULL || mfp->mf_fname == NULL)
     {
 	if (message)
-	    EMSG(_("Cannot preserve, there is no swap file"));
+	    EMSG(_("(ep9) Cannot preserve, there is no swap file"));
 	return;
     }
 
@@ -1793,10 +1796,17 @@ theend:
 	if (status == OK)
 	    MSG(_("File preserved"));
 	else
-	    EMSG(_("Preserve failed"));
+	    EMSG(_("(ep0) Preserve failed"));
     }
 }
 
+/*
+ * NOTE: The pointer returned by the ml_get_*() functions only remains valid
+ * until the next call!
+ *  line1 = ml_get(1);
+ *  line2 = ml_get(2);	// line1 is now invalid!
+ * Make a copy of the line if necessary.
+ */
 /*
  * get a pointer to a (read-only copy of a) line
  *
@@ -1883,7 +1893,7 @@ errorret:
 	 */
 	if ((hp = ml_find_line(buf, lnum, ML_FIND)) == NULL)
 	{
-	    EMSGN(_("ml_get: cannot find line %ld"), lnum);
+	    EMSGN(_("(me5) ml_get: cannot find line %ld"), lnum);
 	    goto errorret;
 	}
 
@@ -2271,7 +2281,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 	    pp = (PTR_BL *)(hp->bh_data);   /* must be pointer block */
 	    if (pp->pb_id != PTR_ID)
 	    {
-		EMSG(_("pointer block id wrong 3"));
+		EMSG(_("(ei9) pointer block id wrong 3"));
 		mf_put(mfp, hp, FALSE, FALSE);
 		return FAIL;
 	    }
@@ -2413,7 +2423,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 	 */
 	if (stack_idx < 0)
 	{
-	    EMSG(_("Updated too many blocks?"));
+	    EMSG(_("(ei0) Updated too many blocks?"));
 	    buf->b_ml.ml_stack_top = 0;	/* invalidate stack */
 	}
     }
@@ -2570,7 +2580,7 @@ ml_delete_int(buf, lnum, message)
 	    pp = (PTR_BL *)(hp->bh_data);   /* must be pointer block */
 	    if (pp->pb_id != PTR_ID)
 	    {
-		EMSG(_("pointer block id wrong 4"));
+		EMSG(_("(ei9) pointer block id wrong 4"));
 		mf_put(mfp, hp, FALSE, FALSE);
 		return FAIL;
 	    }
@@ -2797,7 +2807,7 @@ ml_flush_line(buf)
 
 	hp = ml_find_line(buf, lnum, ML_FIND);
 	if (hp == NULL)
-	    EMSGN(_("Cannot find line %ld"), lnum);
+	    EMSGN(_("(me6) Cannot find line %ld"), lnum);
 	else
 	{
 	    dp = (DATA_BL *)(hp->bh_data);
@@ -3040,7 +3050,7 @@ ml_find_line(buf, lnum, action)
 	pp = (PTR_BL *)(dp);		/* must be pointer block */
 	if (pp->pb_id != PTR_ID)
 	{
-	    EMSG(_("pointer block id wrong"));
+	    EMSG(_("(ei9) pointer block id wrong"));
 	    goto error_block;
 	}
 
@@ -3085,11 +3095,11 @@ ml_find_line(buf, lnum, action)
 	if (idx >= (int)pp->pb_count)	    /* past the end: something wrong! */
 	{
 	    if (lnum > buf->b_ml.ml_line_count)
-		EMSGN(_("line number out of range: %ld past the end"),
+		EMSGN(_("(me7) line number out of range: %ld past the end"),
 					      lnum - buf->b_ml.ml_line_count);
 
 	    else
-		EMSGN(_("line count wrong in block %ld"), bnum);
+		EMSGN(_("(me8) line count wrong in block %ld"), bnum);
 	    goto error_block;
 	}
 	if (action == ML_DELETE)
@@ -3184,7 +3194,7 @@ ml_lineadd(buf, count)
 	if (pp->pb_id != PTR_ID)
 	{
 	    mf_put(mfp, hp, FALSE, FALSE);
-	    EMSG(_("pointer block id wrong 2"));
+	    EMSG(_("(ei9) pointer block id wrong 2"));
 	    break;
 	}
 	pp->pb_pointer[ip->ip_index].pe_line_count += count;
@@ -3317,7 +3327,7 @@ findswapname(buf, dirp, old_fname)
 {
     char_u	*fname;
     int		n;
-    time_t	x;
+    time_t	x, sx;
     char_u	*dir_name;
 #ifdef AMIGA
     BPTR	fh;
@@ -3607,7 +3617,7 @@ findswapname(buf, dirp, old_fname)
 		    MSG_PUTS(_("\nFound a swap file by the name \""));
 		    msg_home_replace(fname);
 		    MSG_PUTS(_("\"\n"));
-		    swapfile_info(fname);
+		    sx = swapfile_info(fname);
 		    MSG_PUTS(_("While opening file \""));
 		    msg_outtrans(buf->b_fname);
 		    MSG_PUTS(_("\"\n"));
@@ -3616,6 +3626,8 @@ findswapname(buf, dirp, old_fname)
 			MSG_PUTS(_("             dated: "));
 			x = st.st_mtime;    /* Manx C can't do &st.st_mtime */
 			MSG_PUTS(ctime(&x));
+			if (sx != 0 && x > sx)
+			    MSG_PUTS(_("      NEWER than swap file!\n"));
 		    }
 		    /* Some of these messages are long to allow translation to
 		     * other languages. */
@@ -3703,7 +3715,7 @@ findswapname(buf, dirp, old_fname)
 	{
 	    if (fname[n - 2] == 'a')    /* ".saa": tried enough, give up */
 	    {
-		EMSG(_("Too many swap files found"));
+		EMSG(_("(et7) Too many swap files found"));
 		vim_free(fname);
 		fname = NULL;
 		break;

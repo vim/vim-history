@@ -15,6 +15,7 @@ diffwin.vim	show the differences of two windows
 hdiffwin.vim	like diffwin but uses horizontally split windows
 dvorak		for when you use a Dvorak keyboard
 justify.vim	user function for justifying text
+less.sh + less.vim	make Vim work like less (or more)
 shellmenu.vim	menus for editing shell scripts in the GUI version
 swapmous.vim	swap left and right mouse buttons
 

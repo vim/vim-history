@@ -281,7 +281,9 @@ EXTERN int	p_bdlay;	/* 'balloondelay' */
 #ifdef FEAT_SUN_WORKSHOP
 EXTERN int	p_beval;	/* 'ballooneval' */
 #endif
+#ifdef FEAT_BROWSE
 EXTERN char_u	*p_bsdir;	/* 'browsedir' */
+#endif
 #ifdef MSDOS
 EXTERN int	p_biosk;	/* 'bioskey' */
 EXTERN int	p_consk;	/* 'conskey' */
@@ -372,7 +374,7 @@ EXTERN char_u	*p_fdo;		/* 'foldopen' */
 EXTERN unsigned	fdo_flags;
 # ifdef IN_OPTION_C
 static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
-					   "quickfix", "search", "tag", NULL};
+				 "quickfix", "search", "tag", "insert", NULL};
 # endif
 # define FDO_ALL		0x001
 # define FDO_BLOCK		0x002
@@ -382,6 +384,7 @@ static char *(p_fdo_values[]) = {"all", "block", "hor", "mark", "percent",
 # define FDO_QUICKFIX		0x020
 # define FDO_SEARCH		0x040
 # define FDO_TAG		0x080
+# define FDO_INSERT		0x100
 #endif
 EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */

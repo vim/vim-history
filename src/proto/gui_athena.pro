@@ -14,6 +14,7 @@ int gui_mch_compute_toolbar_height __ARGS((void));
 void gui_mch_get_toolbar_colors __ARGS((Pixel *bgp, Pixel *fgp));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 void gui_mch_new_menu_colors __ARGS((void));
+void gui_mch_def_colors __ARGS((void));
 void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));
 void gui_mch_show_popupmenu __ARGS((vimmenu_T *menu));
 void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, long val, long size, long max));

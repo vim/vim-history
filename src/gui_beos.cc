@@ -2398,7 +2398,7 @@ gui_mch_get_font(
 
 error:
     if (giveErrorIfMissing)
-	EMSG2("Unknown font: %s", name);
+	EMSG2("(fe0) Unknown font: %s", name);
 
     return (GuiFont)font;
 }

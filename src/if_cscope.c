@@ -177,7 +177,7 @@ do_cstag(eap)
 
     if (!ret)
     {
-	(void)EMSG(_("cstag: tag not found"));
+	(void)EMSG(_("(et6) cstag: tag not found"));
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	g_do_tagpreview = 0;
 #endif
@@ -372,22 +372,17 @@ cs_add_common(arg1, arg2, flags)
 
     /* buf is for general purpose msgs.  let's hope MAXPATHL*2 is big enough */
     if ((buf = (char *)alloc(MAXPATHL * 2)) == NULL)
-    {
-	(void)EMSG(_("cs_add_common: alloc fail #1"));
 	goto add_err;
-    }
 
     /* get the filename (arg1), expand it, and try to stat it */
     if ((fname = (char *)alloc(MAXPATHL+1)) == NULL)
-    {
-	(void)EMSG(_("cs_add_common: alloc fail #2"));
 	goto add_err;
-    }
 
     expand_env((char_u *)arg1, (char_u *)fname, MAXPATHL);
     ret = stat(fname, &statbuf);
     if (ret < 0)
     {
+staterr:
 	if (p_csverbose)
 	{
 	    (void)sprintf(buf, _("stat(%s) error: %d"), fname, errno);
@@ -402,22 +397,12 @@ cs_add_common(arg1, arg2, flags)
 	struct stat statbuf2;
 
 	if ((ppath = (char *)alloc(MAXPATHL+1)) == NULL)
-	{
-	    (void)EMSG(_("cs_add_common: alloc fail #3"));
 	    goto add_err;
-	}
 
 	expand_env((char_u *)arg2, (char_u *)ppath, MAXPATHL);
 	ret = stat(ppath, &statbuf2);
 	if (ret < 0)
-	{
-	    if (p_csverbose)
-	    {
-		(void)sprintf(buf, _("stat(%s) error: %d"), fname, errno);
-		(void)EMSG(buf);
-	    }
-	    goto add_err;
-	}
+	    goto staterr;
     }
 
     /* if filename is a directory, append the cscope database name to it */
@@ -426,10 +411,7 @@ cs_add_common(arg1, arg2, flags)
 	char *fname2;
 	fname2 = (char *)alloc(strlen(CSCOPE_DBFILE) + strlen(fname) + 2);
 	if (fname2 == NULL)
-	{
-	    (void)EMSG(_("cs_add_common: alloc fail #4"));
 	    goto add_err;
-	}
 
 	while (fname[strlen(fname)-1] == '/')
 	{
@@ -851,7 +833,7 @@ cs_find_common(opt, pat, forceit, verbose)
 
     if (totmatches == 0)
     {
-	char *nf = _("no matches found in cscope connections");
+	char *nf = _("(eo1) no matches found in cscope connections");
 	char *buf;
 
 	if (!verbose)
@@ -862,7 +844,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	    (void)EMSG(nf);
 	else
 	{
-	    sprintf(buf, _("no matches found for cscope query %s of %s"),
+	    sprintf(buf, _("(eo2) no matches found for cscope query %s of %s"),
 		opt, pat);
 	    (void)EMSG(buf);
 	    vim_free(buf);
@@ -1099,10 +1081,10 @@ cs_kill(eap)
 	if (p_csverbose)
 	{
 	    if (printbuf == NULL)
-		(void)EMSG(_("cscope connection not found"));
+		(void)EMSG(_("(eo3) cscope connection not found"));
 	    else
 	    {
-		sprintf(printbuf, _("cscope connection %s not found"), stok);
+		sprintf(printbuf, _("(eo4) cscope connection %s not found"), stok);
 		(void)EMSG(printbuf);
 	    }
 	}
@@ -1338,7 +1320,7 @@ cs_parse_results(tagstr, totmatches, nummatches_a, matches_p, cntxts_p, matched)
 	    {
 		if (feof(csinfo[i].fr_fp))
 		    errno = EIO;
-		(void)sprintf(buf, _("error reading cscope connection %d"), i);
+		(void)sprintf(buf, _("(eo5) error reading cscope connection %d"), i);
 		(void)EMSG(buf);
 		goto parse_out;
 	    }

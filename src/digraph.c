@@ -2358,7 +2358,7 @@ ex_loadkeymap(eap)
 
     if (eap->getline != getsourceline)
     {
-	EMSG(_("Using :loadkeymap not in a sourced file"));
+	EMSG(_("(ek1) Using :loadkeymap not in a sourced file"));
 	return;
     }
 

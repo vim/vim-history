@@ -67,6 +67,10 @@ static int msg_hist_off = FALSE;	/* don't add messages to history */
  * msg_scrolled	    How many lines the screen has been scrolled (because of
  *		    messages).  Used in update_screen() to scroll the screen
  *		    back.  Incremented each time the screen scrolls a line.
+ * msg_scrolled_ign  TRUE when msg_scrolled is non-zero and msg_puts_attr()
+ *		    writes something without scrolling should not make
+ *		    need_wait_return to be set.  This is a hack to make ":ts"
+ *		    work without an extra prompt.
  * lines_left	    Number of lines available for messages before the
  *		    more-prompt is to be given.
  * need_wait_return TRUE when the hit-return prompt is needed.
@@ -90,13 +94,22 @@ msg(s)
 #ifdef FEAT_EVAL
     set_vim_var_string(VV_STATUSMSG, s, -1);
 #endif
-    return msg_attr(s, 0);
+    return msg_attr_keep(s, 0, FALSE);
 }
 
     int
 msg_attr(s, attr)
     char_u	*s;
     int		attr;
+{
+    return msg_attr_keep(s, attr, FALSE);
+}
+
+    int
+msg_attr_keep(s, attr, keep)
+    char_u	*s;
+    int		attr;
+    int		keep;	    /* TRUE: set keep_msg if it doesn't scroll */
 {
     static int	entered = 0;
     int		retval;
@@ -129,6 +142,13 @@ msg_attr(s, attr)
     msg_outtrans_attr(s, attr);
     msg_clr_eos();
     retval = msg_end();
+
+    if (keep && retval && vim_strsize(s) < (int)(Rows - cmdline_row - 1)
+							   * Columns + sc_col)
+    {
+	set_keep_msg(s);
+	keep_msg_attr = 0;
+    }
 
     vim_free(buf);
     --entered;
@@ -1170,7 +1190,7 @@ str2special(sp, from)
     int		from;	/* TRUE for lhs of mapping */
 {
     int			c;
-    static char_u	buf[5];
+    static char_u	buf[7];
     char_u		*str = *sp;
     int			modifiers = 0;
     int			special = FALSE;
@@ -1486,7 +1506,7 @@ msg_puts_attr(s, attr)
      * need_wait_return after some prompt, and then outputting something
      * without scrolling
      */
-    if (msg_scrolled)
+    if (msg_scrolled && !msg_scrolled_ign)
 	need_wait_return = TRUE;
 
     /*
@@ -1802,9 +1822,20 @@ mch_errmsg(str)
 {
     int		len;
 
-#ifdef UNIX
-    /* On Unix use stderr if it's a tty. */
-    if (isatty(2))
+#if defined(UNIX) || defined(FEAT_GUI)
+    /* On Unix use stderr if it's a tty.
+     * When not going to start the GUI also use stderr. */
+    if (
+# ifdef UNIX
+	    isatty(2)
+#  ifdef FEAT_GUI
+	    ||
+#  endif
+# endif
+# ifdef FEAT_GUI
+	    !(gui.in_use || gui.starting)
+# endif
+	    )
     {
 	fprintf(stderr, "%s", str);
 	return;
@@ -2438,11 +2469,16 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	    title = (char_u *)_("Open File dialog");
     }
 
-    /* When no directory specified, use buffer dir, last dir or current dir */
+    /* When no directory specified, use default dir, buffer dir, last dir
+     * or current dir */
     if (initdir == NULL || *initdir == NUL)
     {
+	/* When 'browsedir' is a directory, use it */
+	if (mch_isdir(p_bsdir))
+	    initdir = p_bsdir;
 	/* When saving or 'browsedir' is "buffer", use buffer fname */
-	if ((saving || *p_bsdir == 'b') && buf != NULL && buf->b_ffname != NULL)
+	else if ((saving || *p_bsdir == 'b') && 
+		 buf != NULL && buf->b_ffname != NULL)
 	{
 	    dflt = gettail(curbuf->b_ffname);
 	    tofree = vim_strsave(curbuf->b_ffname);
@@ -2477,7 +2513,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 # endif
     {
 	/* TODO: non-GUI file selector here */
-	EMSG(_("Sorry, no file browser in console mode"));
+	EMSG(_("(ez5) Sorry, no file browser in console mode"));
 	fname = NULL;
     }
 

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 14
+" Last Change:	2001 May 03
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -24,26 +24,35 @@ set cpo&vim
 " First remove all old syntax autocommands.
 au! Syntax
 
-" :set syntax=OFF  and any syntax name that doesn't exist
-au Syntax *		syn clear
+au Syntax *		call s:SynSet()
 
-" :set syntax=ON
-au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl ErrorMsg | echo "filetype unknown" | echohl None | endif
+fun! s:SynSet()
+  " clear syntax for :set syntax=OFF  and any syntax name that doesn't exist
+  syn clear
+  if exists("b:current_syntax")
+    unlet b:current_syntax
+  endif
 
-" Load the syntax file(s) when the Syntax option is set.
-if has("mac")
-  au Syntax * if expand("<amatch>") != "" |
-	\ syntax clear |
-	\ if exists("b:current_syntax") | unlet b:current_syntax | endif |
-	\ runtime! syntax:<amatch>.vim |
-	\ endif
-else
-  au Syntax * if expand("<amatch>") != "" |
-	\ syntax clear |
-	\ if exists("b:current_syntax") | unlet b:current_syntax | endif |
-	\ runtime! syntax/<amatch>.vim |
-	\ endif
-endif
+  let s = expand("<amatch>")
+  if s == "ON"
+    " :set syntax=ON
+    if &filetype == ""
+      echohl ErrorMsg
+      echo "filetype unknown"
+      echohl None
+    endif
+    let s = &filetype
+  endif
+
+  if s != ""
+    " Load the syntax file(s)
+    if has("mac")
+      exe "runtime! syntax:" . s . ".vim"
+    else
+      exe "runtime! syntax/" . s . ".vim"
+    endif
+  endif
+endfun
 
 
 " Source the user-specified syntax highlighting file

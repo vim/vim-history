@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0ad.  Last change: 2001 Mar 23
+*quickref.txt*  For Vim version 6.0ae.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

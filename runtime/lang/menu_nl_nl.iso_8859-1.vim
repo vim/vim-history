@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 apr 26
+" Last Change:	2001 mei 04
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -29,8 +29,8 @@ menutrans &New<Tab>:enew		&Nieuw<Tab>:enew
 menutrans &Close<Tab>:q			&Sluiten<Tab>:q
 menutrans &Save<Tab>:w			&Bewaren<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Bewaren\ als\.\.\.<Tab>:sav
-menutrans Show\ &Diff\ with\.\.\.	Toon\ diff\ met\.\.\.
-menutrans Show\ &Patched\ by\.\.\.	Toon\ gewijzigd\ door\.\.\.
+menutrans Split\ &Diff\ with\.\.\.	Toon\ diff\ met\.\.\.
+menutrans Split\ Patched\ &By\.\.\.	Toon\ gewijzigd\ door\.\.\.
 menutrans &Print			Af&drukken
 menutrans Sa&ve-Exit<Tab>:wqa		Bewaren\ en\ Afluiten<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Afsluiten<Tab>:qa
@@ -52,7 +52,11 @@ menutrans Find\ and\ Rep&lace\.\.\.	Zoeken\ en\ &Vervangen\.\.\.
 menutrans Find\ and\ Rep&lace<Tab>:%s	Zoeken\ en\ &Vervangen<Tab>:%s
 menutrans Find\ and\ Rep&lace		Zoeken\ en\ &Vervangen
 menutrans Find\ and\ Rep&lace<Tab>:s	Zoeken\ en\ &Vervangen<Tab>:s
-menutrans Options\.\.\.			Opties\.\.\.
+menutrans Settings\ &Window		Opties\ Venster
+menutrans &Global\ Settings		Globale\ Opties
+menutrans F&ile\ Settings		Bestand\ Opties
+menutrans C&olor\ Scheme		Kleuren\ Schema
+menutrans &Keymap			Toetsenbord\ Indeling
 
 " Programming menu
 menutrans &Tools			&Gereedschap
@@ -77,7 +81,6 @@ menutrans Delete		Wissen
 menutrans A&lternate		Vorige
 menutrans &Next			Vooruit
 menutrans &Previous		Achteruit
-menutrans [No\ File]		[Geen\ Bestand]
 
 " Window menu
 menutrans &Window			&Venster
@@ -159,5 +162,10 @@ menutrans Co&lor\ test		Test\ de\ &Kleuren
 menutrans &Highlight\ test	Test\ de\ Markeringen
 menutrans &Convert\ to\ HTML	Converteren\ naar\ &HTML
 
-" Find Help dialog text
-let find_help_dialog = "Typ een commando of woord om help voor te vinden:\n\nVoeg i_ in voor Input mode commandos (bijv. i_CTRL-X)\nVoeg c_ in voor een commando-regel edit commando (bijv. c_<Del>)\nVoeg ' in \voor een optie naam (bijv. 'shiftwidth')"
+" dialog texts
+let menutrans_no_file = "[Geen Bestand]"
+let menutrans_help_dialog = "Typ een commando of woord om help voor te vinden:\n\nVoeg i_ in voor Input mode commandos (bijv. i_CTRL-X)\nVoeg c_ in voor een commando-regel edit commando (bijv. c_<Del>)\nVoeg ' in \voor een optie naam (bijv. 'shiftwidth')"
+let g:menutrans_path_dialog = "Typ het zoekpad voor bestanden.\nGebruik commas tussen de padnamen."
+let g:menutrans_tags_dialog = "Typ namen van tag bestanden.\nGebruik commas tussen de namen."
+let g:menutrans_textwidth_dialog = "Typ de nieuwe tekst breedte (0 om formatteren uit the schakelen): "
+let g:menutrans_fileformat_dialog = "Selecteer formaat voor het schrijven van het bestand"

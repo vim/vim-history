@@ -2,14 +2,16 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 2001 Jan 15
+" Last Change: 2001 Apr 26
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
 " Otherwise you get more highlighting.
 
 " Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+if version < 600
+   syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -73,30 +75,43 @@ endif
 syn sync ccomment maxlines=50
 
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_prolog_syn_inits")
+  if version < 508
+    let did_prolog_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-" The default highlighting.
-hi def link prologComment            Comment
-hi def link prologCComment           Comment
-hi def link prologCharCode           Special
+  " The default highlighting.
+  HiLink prologComment            Comment
+  HiLink prologCComment           Comment
+  HiLink prologCharCode           Special
+  
+  if exists ("prolog_highlighting_clean")
+  
+    HiLink prologKeyword          Statement
+    HiLink prologClauseHead       Statement
+  
+  else
+  
+    HiLink prologKeyword          Keyword
+    HiLink prologClauseHead       Constant
+    HiLink prologQuestion         PreProc
+    HiLink prologSpecialCharacter Special
+    HiLink prologNumber           Number
+    HiLink prologAsIs             Normal
+    HiLink prologCommentError     Error
+    HiLink prologAtom             String
+    HiLink prologString           String
+    HiLink prologOperator         Operator
+  
+  endif
 
-if exists ("prolog_highlighting_clean")
-
-  hi def link prologKeyword          Statement
-  hi def link prologClauseHead       Statement
-
-else
-
-  hi def link prologKeyword          Keyword
-  hi def link prologClauseHead       Constant
-  hi def link prologQuestion         PreProc
-  hi def link prologSpecialCharacter Special
-  hi def link prologNumber           Number
-  hi def link prologAsIs             Normal
-  hi def link prologCommentError     Error
-  hi def link prologAtom             String
-  hi def link prologString           String
-  hi def link prologOperator         Operator
-
+  delcommand HiLink
 endif
 
 let b:current_syntax = "prolog"

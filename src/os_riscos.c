@@ -725,7 +725,7 @@ mch_setmouse(on)
 mch_screenmode(arg)
     char_u   *arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG(_("(et8) Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -1210,7 +1210,7 @@ mch_set_filetype(file, type)
 {
     if (xswi(OS_FSControl, 31, type) & v_flag)
     {
-	EMSG(_("Invalid 'filetype' option - using Text"));
+	EMSG(_("(eq4) Invalid 'osfiletype' option - using Text"));
 	r2 = 0xfff;
     }
 

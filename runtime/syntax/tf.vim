@@ -1,14 +1,19 @@
 " Vim syntax file
 " Language:	tf
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
-" URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
+" URL:		http://www.isp.de/data/tf.vim
 " Email:	send syntax_vim.tgz
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Mai 01
 "
 " Options	lite_minlines = x     to sync at least x lines backwards
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove any old syntax stuff hanging around
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -155,32 +160,45 @@ else
   syn sync minlines=100
 endif
 
-" The default highlighting.
-hi def link tfComment		Comment
-hi def link tfString		String
-hi def link tfNumber		Number
-hi def link tfFloat		Float
-hi def link tfIdentifier	Identifier
-hi def link tfVar		Identifier
-hi def link tfWorld		Identifier
-hi def link tfReadonly		Identifier
-hi def link tfHook		Identifier
-hi def link tfFunctions		Function
-hi def link tfRepeat		Repeat
-hi def link tfConditional	Conditional
-hi def link tfLabel		Label
-hi def link tfStatement		Statement
-hi def link tfType		Type
-hi def link tfInclude		Include
-hi def link tfDefine		Define
-hi def link tfSpecialChar	SpecialChar
-hi def link tfSpecialCharEsc	SpecialChar
-hi def link tfParentError	Error
-hi def link tfTodo		Todo
-hi def link tfEndCommand	Delimiter
-hi def link tfJoinLines		Delimiter
-hi def link tfOperator		Operator
-hi def link tfRelation		Operator
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tf_syn_inits")
+  if version < 508
+    let did_tf_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  
+  HiLink tfComment		Comment
+  HiLink tfString		String
+  HiLink tfNumber		Number
+  HiLink tfFloat		Float
+  HiLink tfIdentifier		Identifier
+  HiLink tfVar			Identifier
+  HiLink tfWorld		Identifier
+  HiLink tfReadonly		Identifier
+  HiLink tfHook		Identifier
+  HiLink tfFunctions		Function
+  HiLink tfRepeat		Repeat
+  HiLink tfConditional		Conditional
+  HiLink tfLabel		Label
+  HiLink tfStatement		Statement
+  HiLink tfType		Type
+  HiLink tfInclude		Include
+  HiLink tfDefine		Define
+  HiLink tfSpecialChar		SpecialChar
+  HiLink tfSpecialCharEsc	SpecialChar
+  HiLink tfParentError		Error
+  HiLink tfTodo		Todo
+  HiLink tfEndCommand		Delimiter
+  HiLink tfJoinLines		Delimiter
+  HiLink tfOperator		Operator
+  HiLink tfRelation		Operator
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "tf"
 

@@ -22,6 +22,7 @@ syn keyword informType Object Property String Routine
 syn keyword informInclude Import Include Link Replace System_file
 
 syn keyword informPreCondit End Endif Ifdef Ifndef Iftrue Iffalse Ifv3 Ifv5
+syn keyword informPreCondit Ifnot
 
 syn keyword informPreProc Abbreviate Default Fake_action Lowstring
 syn keyword informPreProc Message Release Serial Statusline Stub Switches
@@ -126,6 +127,9 @@ syntax case match
 
 syn keyword informSysFunc child children elder indirect parent random
 syn keyword informSysFunc sibling younger youngest metaclass
+if exists("inform_highlight_glulx")
+  syn keyword informSysFunc glk
+endif
 
 syn keyword informSysConst adjectives_table actions_table classes_table
 syn keyword informSysConst identifiers_table preactions_table version_number
@@ -184,33 +188,50 @@ syn keyword informTodo contained TODO
 
 syn match informAsmContainer "@\s*\k*" contains=informAsm
 
-syn keyword informAsm contained je jl jg dec_chk inc_chk jin test or and
-syn keyword informAsm contained test_attr set_attr clear_attr store
-syn keyword informAsm contained insert_obj loadw loadb get_prop
-syn keyword informAsm contained get_prop_addr get_next_prop add sub mul div
-syn keyword informAsm contained mod call storew storeb put_prop sread
-syn keyword informAsm contained print_char print_num random push pull
-syn keyword informAsm contained split_window set_window output_stream
-syn keyword informAsm contained input_stream sound_effect jz get_sibling
-syn keyword informAsm contained get_child get_parent get_prop_len inc dec
-syn keyword informAsm contained print_addr remove_obj print_obj ret jump
-syn keyword informAsm contained print_paddr load not rtrue rfalse print
-syn keyword informAsm contained print_ret nop save restore restart
-syn keyword informAsm contained ret_popped pop quit new_line show_status
-syn keyword informAsm contained verify call_2s call_vs aread call_vs2
-syn keyword informAsm contained erase_window erase_line set_cursor get_cursor
-syn keyword informAsm contained set_text_style buffer_mode read_char
-syn keyword informAsm contained scan_table call_1s call_2n set_colour throw
-syn keyword informAsm contained call_vn call_vn2 tokenise encode_text
-syn keyword informAsm contained copy_table print_table check_arg_count
-syn keyword informAsm contained call_1n catch piracy log_shift art_shift
-syn keyword informAsm contained set_font save_undo restore_undo draw_picture
-syn keyword informAsm contained picture_data erase_picture set_margins
-syn keyword informAsm contained move_window window_size window_style
-syn keyword informAsm contained get_wind_prop scroll_window pop_stack
-syn keyword informAsm contained read_mouse mouse_window push_stack
-syn keyword informAsm contained put_wind_prop print_form make_menu
-syn keyword informAsm contained picture_table
+if exists("inform_highlight_glulx")
+  syn keyword informAsm contained nop add sub mul div mod neg bitand bitor
+  syn keyword informAsm contained bitxor bitnot shiftl sshiftr ushiftr jump jz
+  syn keyword informAsm contained jnz jeq jne jlt jge jgt jle jltu jgeu jgtu
+  syn keyword informAsm contained jleu call return catch throw tailcall copy
+  syn keyword informAsm contained copys copyb sexs sexb aload aloads aloadb
+  syn keyword informAsm contained aloadbit astore astores astoreb astorebit
+  syn keyword informAsm contained stkcount stkpeek stkswap stkroll stkcopy
+  syn keyword informAsm contained streamchar streamnum streamstr gestalt
+  syn keyword informAsm contained debugtrap getmemsize setmemsize jumpabs
+  syn keyword informAsm contained random setrandom quit verify restart save
+  syn keyword informAsm contained restore saveundo restoreundo protect glk
+  syn keyword informAsm contained getstringtbl setstringtbl getiosys setiosys
+  syn keyword informAsm contained linearsearch binarysearch linkedsearch
+  syn keyword informAsm contained callf callfi callfii callfiii 
+else
+  syn keyword informAsm contained je jl jg dec_chk inc_chk jin test or and
+  syn keyword informAsm contained test_attr set_attr clear_attr store
+  syn keyword informAsm contained insert_obj loadw loadb get_prop
+  syn keyword informAsm contained get_prop_addr get_next_prop add sub mul div
+  syn keyword informAsm contained mod call storew storeb put_prop sread
+  syn keyword informAsm contained print_char print_num random push pull
+  syn keyword informAsm contained split_window set_window output_stream
+  syn keyword informAsm contained input_stream sound_effect jz get_sibling
+  syn keyword informAsm contained get_child get_parent get_prop_len inc dec
+  syn keyword informAsm contained print_addr remove_obj print_obj ret jump
+  syn keyword informAsm contained print_paddr load not rtrue rfalse print
+  syn keyword informAsm contained print_ret nop save restore restart
+  syn keyword informAsm contained ret_popped pop quit new_line show_status
+  syn keyword informAsm contained verify call_2s call_vs aread call_vs2
+  syn keyword informAsm contained erase_window erase_line set_cursor get_cursor
+  syn keyword informAsm contained set_text_style buffer_mode read_char
+  syn keyword informAsm contained scan_table call_1s call_2n set_colour throw
+  syn keyword informAsm contained call_vn call_vn2 tokenise encode_text
+  syn keyword informAsm contained copy_table print_table check_arg_count
+  syn keyword informAsm contained call_1n catch piracy log_shift art_shift
+  syn keyword informAsm contained set_font save_undo restore_undo draw_picture
+  syn keyword informAsm contained picture_data erase_picture set_margins
+  syn keyword informAsm contained move_window window_size window_style
+  syn keyword informAsm contained get_wind_prop scroll_window pop_stack
+  syn keyword informAsm contained read_mouse mouse_window push_stack
+  syn keyword informAsm contained put_wind_prop print_form make_menu
+  syn keyword informAsm contained picture_table
+endif
 
 " Handling for different versions of VIM.
 

@@ -335,7 +335,7 @@ void ex_rubydo(exarg_T *eap)
 	    line = rb_lastline_get();
 	    if (!NIL_P(line)) {
 		if (TYPE(line) != T_STRING) {
-		    EMSG("$_ must be an instance of String");
+		    EMSG("(er0) $_ must be an instance of String");
 		    return;
 		}
 		ml_replace(i, (char_u *) STR2CSTR(line), 1);
@@ -394,7 +394,7 @@ static int ensure_ruby_initialized(void)
 	}
 	else
 	{
-	    EMSG(_("Sorry, this command is disabled, the Ruby library could not be loaded."));
+	    EMSG(_("(el3) Sorry, this command is disabled, the Ruby library could not be loaded."));
 	    return 0;
 	}
 #endif
@@ -423,26 +423,26 @@ static void error_print(int state)
 
     switch (state) {
     case TAG_RETURN:
-	EMSG("unexpected return");
+	EMSG("(re1) unexpected return");
 	break;
     case TAG_NEXT:
-	EMSG("unexpected next");
+	EMSG("(re2) unexpected next");
 	break;
     case TAG_BREAK:
-	EMSG("unexpected break");
+	EMSG("(re3) unexpected break");
 	break;
     case TAG_REDO:
-	EMSG("unexpected redo");
+	EMSG("(re4) unexpected redo");
 	break;
     case TAG_RETRY:
-	EMSG("retry outside of rescue clause");
+	EMSG("(re5) retry outside of rescue clause");
 	break;
     case TAG_RAISE:
     case TAG_FATAL:
 	eclass = CLASS_OF(ruby_errinfo);
 	einfo = rb_obj_as_string(ruby_errinfo);
 	if (eclass == rb_eRuntimeError && RSTRING(einfo)->len == 0) {
-	    EMSG("unhandled exception");
+	    EMSG("(re6) unhandled exception");
 	}
 	else {
 	    VALUE epath;
@@ -457,7 +457,7 @@ static void error_print(int state)
 	}
 	break;
     default:
-	snprintf(buff, BUFSIZ, "unknown longjmp status %d", state);
+	snprintf(buff, BUFSIZ, "(re7) unknown longjmp status %d", state);
 	EMSG(buff);
 	break;
     }

@@ -1,10 +1,13 @@
 " Vim syn file
 " Language:	Altera AHDL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 25
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -62,16 +65,30 @@ syn match   ahdlSpecialChar "[\[\]().,;]"
 
 syn sync minlines=1
 
-" The default highlighting.
-hi def link ahdlNumber		ahdlString
-hi def link ahdlMegafunction	ahdlIdentifier
-hi def link ahdlSpecialChar	SpecialChar
-hi def link ahdlKeyword		Statement
-hi def link ahdlString		String
-hi def link ahdlComment		Comment
-hi def link ahdlIdentifier	Identifier
-hi def link ahdlOperator	Operator
-hi def link ahdlTodo		Todo
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ahdl_syn_inits")
+  if version < 508
+    let did_ahdl_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default highlighting.
+  HiLink ahdlNumber		ahdlString
+  HiLink ahdlMegafunction	ahdlIdentifier
+  HiLink ahdlSpecialChar	SpecialChar
+  HiLink ahdlKeyword		Statement
+  HiLink ahdlString		String
+  HiLink ahdlComment		Comment
+  HiLink ahdlIdentifier		Identifier
+  HiLink ahdlOperator		Operator
+  HiLink ahdlTodo		Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "ahdl"
 " vim:ts=8

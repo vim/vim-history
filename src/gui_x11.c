@@ -1156,7 +1156,7 @@ gui_mch_init_check()
     if (app_context == NULL || gui.dpy == NULL)
     {
 	gui.dying = TRUE;
-	EMSG(_("cannot open display"));
+	EMSG(_("(eg6) cannot open display"));
 	return FAIL;
     }
     return OK;
@@ -1306,7 +1306,7 @@ gui_mch_init()
     }
 
     if (gui.color_approx)
-	EMSG(_("Vim ec1: Cannot allocate colormap entry, some colors may be incorrect"));
+	EMSG(_("Vim: (ec1) Cannot allocate colormap entry, some colors may be incorrect"));
 
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
@@ -1641,7 +1641,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (font == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("Unknown font: %s"), name);
+	    EMSG2(_("(fe0) Unknown font: %s"), name);
 	return NOFONT;
     }
 
@@ -1665,7 +1665,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
 
     if (font->max_bounds.width != font->min_bounds.width)
     {
-	EMSG2(_("Font \"%s\" is not fixed-width"), name);
+	EMSG2(_("(ne1) Font \"%s\" is not fixed-width"), name);
 	XFreeFont(gui.dpy, font);
 	return NOFONT;
     }
@@ -1794,7 +1794,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
 
 	if (giveErrorIfMissing)
 	{
-	    EMSG2(_("Error: During loading fontset %s"), name);
+	    EMSG2(_("(ef7) During loading fontset %s"), name);
 	    EMSG(_("Font(s) for the following character sets are missing:"));
 	    for (i = 0; i < num_missing; i++)
 		EMSG2("%s", missing[i]);
@@ -1805,7 +1805,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
     if (fontset == NULL)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("Unknown fontset: %s"), name);
+	    EMSG2(_("(fe9) Unknown fontset: %s"), name);
 	return NOFONTSET;
     }
 
@@ -1831,30 +1831,11 @@ check_fontset_sanity(fs)
 
     base_name = XBaseFontNameListOfFontSet(fs);
     fn = XFontsOfFontSet(fs, &xfs, &font_name);
-#if 0
-    if (fn < 2)
-    {
-	char *locale = XLocaleOfFontSet(fs);
-
-	if (!locale || locale[0] == 'C')
-	{
-	    EMSG(_("locale is not set correctly"));
-	    MSG(_("Set LANG environment variable to your locale"));
-	    MSG(_("For korean:"));
-	    MSG(_("   csh: setenv LANG ko"));
-	    MSG(_("   sh : export LANG=ko"));
-	}
-	EMSG2(_("fontset name: %s"), base_name);
-	EMSG(_("Your language Font missing"));
-	EMSG2(_("loaded fontname: %s"), font_name[0]);
-	return FAIL;
-    }
-#endif
     for (i = 0; i < fn; i++)
     {
 	if (xfs[i]->max_bounds.width != xfs[i]->min_bounds.width)
 	{
-	    EMSG2(_("Fontset name: %s"), base_name);
+	    EMSG2(_("(ef8) Fontset name: %s"), base_name);
 	    EMSG2(_("Font '%s' is not fixed-width"), font_name[i]);
 	    return FAIL;
 	}
@@ -1874,7 +1855,7 @@ check_fontset_sanity(fs)
 	if (	   xfs[i]->max_bounds.width != 2 * min_width
 		&& xfs[i]->max_bounds.width != min_width)
 	{
-	    EMSG2(_("Fontset name: %s\n"), base_name);
+	    EMSG2(_("(oe2) Fontset name: %s\n"), base_name);
 	    EMSG2(_("Font0: %s\n"), font_name[min_font_idx]);
 	    EMSG2(_("Font1: %s\n"), font_name[i]);
 	    EMSGN(_("Font%d width is not twice that of font0\n"), i);
@@ -3011,9 +2992,7 @@ gui_mch_register_sign(signfile)
     if ((signfile[0] != 0) && (signfile[0] != '-'))
     {
 	sign = (XImage *)alloc(sizeof(XImage));
-	if (sign == NULL)
-	    EMSG(_("Cannot allocate memory for debugger sign"));
-	else
+	if (sign != NULL)
 	{
 	    attrs.valuemask = XpmColorSymbols;
 	    attrs.numsymbols = 2;
@@ -3037,7 +3016,7 @@ gui_mch_register_sign(signfile)
 	    {
 		vim_free(sign);
 		sign = NULL;
-		EMSG(_("Error -- couldn't read in sign data!"));
+		EMSG(_("(es0) Couldn't read in sign data!"));
 	    }
 	    vim_free((char *) attrs.colorsymbols);
 	}
@@ -3249,6 +3228,10 @@ filePredicate(cp)
 
 static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
 
+/*
+ * Allocated a pixmap for "name".  Return in "sen" and "insen".  "insen" can
+ * be NULL.
+ */
     void
 get_pixmap(name, sen, insen)
     char_u	*name;
@@ -3343,7 +3326,7 @@ createXpmImages(path, xpm, sen, insen)
     char_u	*path;
     char	**xpm;
     Pixmap	*sen;
-    Pixmap	*insen;
+    Pixmap	*insen;	    /* can be NULL */
 {
     Window	rootWindow;
     XpmAttributes attrs;
@@ -3352,8 +3335,6 @@ createXpmImages(path, xpm, sen, insen)
     GC		mask_gc;
     GC		back_gc;
     XGCValues	gcvalues;
-    int		startX;
-    int		x, y;
     Pixmap	mask;
     Pixmap	map;
     Pixel	bg_pixel;
@@ -3399,21 +3380,29 @@ createXpmImages(path, xpm, sen, insen)
 	XCopyArea(gui.dpy, map, *sen, mask_gc, 0, 0,
 					     attrs.width, attrs.height, 0, 0);
 
-	/* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
-	 * pixmap with half the pixels set to the background color. */
-	*insen = XCreatePixmap(gui.dpy, rootWindow,
-		 attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
-	XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
-					     attrs.width, attrs.height, 0, 0);
-	for (y = 0; y < attrs.height; y++)
+#ifdef FEAT_GUI_MOTIF	/* not used for Athena */
+	if (insen != NULL)
 	{
-	    if (y % 2 == 0)
-		startX = 0;
-	    else
-		startX = 1;
-	    for (x = startX; x < attrs.width; x += 2)
-		XDrawPoint(gui.dpy, *insen, back_gc, x, y);
+	    int		x, y;
+	    int		startX;
+
+	    /* Create the "insensitive" pixmap.  It's a copy of the "sensitive"
+	     * pixmap with half the pixels set to the background color. */
+	    *insen = XCreatePixmap(gui.dpy, rootWindow,
+		    attrs.width, attrs.height, DefaultDepth(gui.dpy, screenNum));
+	    XCopyArea(gui.dpy, *sen, *insen, back_gc, 0, 0,
+		    attrs.width, attrs.height, 0, 0);
+	    for (y = 0; y < attrs.height; y++)
+	    {
+		if (y % 2 == 0)
+		    startX = 0;
+		else
+		    startX = 1;
+		for (x = startX; x < attrs.width; x += 2)
+		    XDrawPoint(gui.dpy, *insen, back_gc, x, y);
+	    }
 	}
+#endif
 	XFreeGC(gui.dpy, back_gc);
 	XFreeGC(gui.dpy, mask_gc);
 	XFreePixmap(gui.dpy, map);
@@ -3428,7 +3417,7 @@ createXpmImages(path, xpm, sen, insen)
 }
 #endif
 
-#ifdef FEAT_BEVAL
+#if (defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)) || defined(PROTO)
 /*
  * Set the balloon-eval used for the tooltip of a toolbar menu item.
  */

@@ -1,19 +1,29 @@
 " Vim syntax file
 " Language:     IA-64 (Itanium) assembly language
 " Maintainer:   Parth Malwankar <parth.malwankar@usa.net>
-" URL:          http://www.geocities.com/pmalwankar (click on 'my vim page')
+" URL:          http://www.geocities.com/pmalwankar (Home Page with link to my Vim page)
 "               http://www.geocities.com/pmalwankar/vim.htm (for VIM)
-" File Version: 0.3
-" Last Change:  2001 April 6
+" File Version: 0.5
+" Last Change:  2001 May 3
 
-" Remove any old syntax stuff hanging around
-syn clear
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
+
 
 "ignore case for assembly
 syn case ignore
 
 "  Identifier Keyword characters (defines \k)
-setl iskeyword=@,48-57,#,$,.,:,?,@-@,_,~
+if version >= 600
+	setlocal iskeyword=@,48-57,#,$,.,:,?,@-@,_,~
+else
+	set iskeyword=@,48-57,#,$,.,:,?,@-@,_,~
+endif
 
 syn sync minlines=5
 
@@ -28,11 +38,11 @@ syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=:\>"he=e-1
 syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=::\>"he=e-2
 syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=#\>"he=e-1
 syn region ia64string           start=+L\="+ skip=+\\\\\|\\"+ end=+"+
-syn match ia64Octal             "0[0-7]*\>"
-syn match ia64Binary            "0[bB][01]*\>"
-syn match ia64Hex               "0[xX][0-9a-fA-F]*\>"
-syn match ia64Decimal           "[1-9][0-9]*\>"
-syn match ia64Float             "[0-9]*\.[0-9]*\([eE][+-]\=[0-9]*\)\=\>"
+syn match ia64Octal             "0[0-7_]*\>"
+syn match ia64Binary            "0[bB][01_]*\>"
+syn match ia64Hex               "0[xX][0-9a-fA-F_]*\>"
+syn match ia64Decimal           "[1-9_][0-9_]*\>"
+syn match ia64Float             "[0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*\)\=\>"
 
 "simple instructions
 syn keyword ia64opcode add adds addl addp4 alloc and andcm cover epc
@@ -102,7 +112,7 @@ syn match ia64opcode "dep\(\.z\)\=\>"
 "extr
 syn match ia64opcode "extr\(\.u\)\=\>"
 "fadd
-syn match ia64opcode "fadd\(\.[sd]\(\.s[0-3]\)\=\)\=\>"
+syn match ia64opcode "fadd\(\.[sd]\)\=\(\.s[0-3]\)\=\>"
 "famax/famin
 syn match ia64opcode "fa\(max\|min\)\(\.s[0-3]\)\=\>"
 "fchkf/fmax/fmin
@@ -112,19 +122,19 @@ syn match ia64opcode "fclass\(\.n\=m\)\(\.unc\)\=\>"
 "fclrf/fpamax
 syn match ia64opcode "f\(clrf\|pamax\|pamin\)\(\.s[0-3]\)\=\>"
 "fcmp
-syn match ia64opcode "fcmp\.\(n\=[lg][te]\|n\=eq\|\(un\)\=ord\)\(\.unc\(\.s[0-3]\)\=\)\=\>"
+syn match ia64opcode "fcmp\.\(n\=[lg][te]\|n\=eq\|\(un\)\=ord\)\(\.unc\)\=\(\.s[0-3]\)\=\>"
 "fcvt/fcvt.xf/fcvt.xuf.pc.sf
-syn match ia64opcode "fcvt\.\(\(fxu\=\(\.trunc\)\=\(\.s[0-3]\)\=\)\|\(xf\|xuf\(\.[sd]\(\.s[0-3]\)\=\)\=\)\)\>"
+syn match ia64opcode "fcvt\.\(\(fxu\=\(\.trunc\)\=\(\.s[0-3]\)\=\)\|\(xf\|xuf\(\.[sd]\)\=\(\.s[0-3]\)\=\)\)\>"
 "fetchadd
 syn match ia64opcode "fetchadd[48]\.\(acq\|rel\)\(\.nt1\|\.nta\)\=\>"
-"fma/fmpy
-syn match ia64opcode "fm\([as]\|py\)\(\.[sd]\(\.s[0-3]\)\=\)\=\>"
+"fma/fmpy/fms
+syn match ia64opcode "fm\([as]\|py\)\(\.[sd]\)\=\(\.s[0-3]\)\=\>"
 "fmerge/fpmerge
 syn match ia64opcode "fp\=merge\.\(ns\|se\=\)\>"
 "fmix
 syn match ia64opcode "fmix\.\(lr\|[lr]\)\>"
-"fnma
-syn match ia64opcode "fn\(ma\|mpy\|orm\)\(\.[sd]\(\.s[0-3]\)\=\)\=\>"
+"fnma/fnorm/fnmpy
+syn match ia64opcode "fn\(ma\|mpy\|orm\)\(\.[sd]\)\=\(\.s[0-3]\)\=\>"
 "fpcmp
 syn match ia64opcode "fpcmp\.\(n\=[lg][te]\|n\=eq\|\(un\)\=ord\)\(\.s[0-3]\)\=\>"
 "fpcvt
@@ -136,7 +146,7 @@ syn match ia64opcode "fr\(cpa\|sqrta\)\(\.s[0-3]\)\=\>"
 "fsetc/famin/fchkf
 syn match ia64opcode "f\(setc\|amin\|chkf\)\(\.s[0-3]\)\=\>"
 "fsub
-syn match ia64opcode "fsub\(\.[sd]\(\.s[0-3]\)\=\)\=\>"
+syn match ia64opcode "fsub\(\.[sd]\)\=\(\.s[0-3]\)\=\>"
 "fswap
 syn match ia64opcode "fswap\(\.n[lr]\=\)\=\>"
 "fsxt
@@ -148,22 +158,22 @@ syn match ia64opcode "invala\(\.[ae]\)\=\>"
 "itc/itr
 syn match ia64opcode "it[cr]\.[id]\>"
 "ld
-syn match ia64opcode "ld[1248]\>\|ld[1248]\.\(sa\=\|a\|c\.\(nc\|clr\(\.acq\)\=\)\|acq\|bias\)\(\.nt[1a]\)\=\>"
+syn match ia64opcode "ld[1248]\>\|ld[1248]\(\.\(sa\=\|a\|c\.\(nc\|clr\(\.acq\)\=\)\|acq\|bias\)\)\=\(\.nt[1a]\)\=\>"
 syn match ia64opcode "ld8\.fill\(\.nt[1a]\)\=\>"
 "ldf
-syn match ia64opcode "ldf[sde8]\(\.\(sa\=\|a\|c\.\(nc\|clr\)\)\(\.nt[1a]\)\=\)\=\>"
+syn match ia64opcode "ldf[sde8]\(\(\.\(sa\=\|a\|c\.\(nc\|clr\)\)\)\=\(\.nt[1a]\)\=\)\=\>"
 syn match ia64opcode "ldf\.fill\(\.nt[1a]\)\=\>"
 "ldfp
-syn match ia64opcode "ldfp[sd8]\(\.\(sa\=\|a\|c\.\(nc\|clr\)\)\(\.nt[1a]\)\=\)\=\>"
+syn match ia64opcode "ldfp[sd8]\(\(\.\(sa\=\|a\|c\.\(nc\|clr\)\)\)\=\(\.nt[1a]\)\=\)\=\>"
 "lfetch
-syn match ia64opcode "lfetch\(\(\.fault\)\(excl\)\=\(\.nt[12a]\)\=\)\=\>"
+syn match ia64opcode "lfetch\(\.fault\(\.excl\)\=\|\.excl\)\=\(\.nt[12a]\)\=\>"
 "mf
 syn match ia64opcode "mf\(\.a\)\=\>"
 "mix
 syn match ia64opcode "mix[124]\.[lr]\>"
 "mov
 syn match ia64opcode "mov\(\.[im]\)\=\>"
-syn match ia64opcode "mov\(\.ret\)\=\(\(\.sptk\|\.dptk\)\(\.imp\)\=\)\=\>"
+syn match ia64opcode "mov\(\.ret\)\=\(\(\.sptk\|\.dptk\)\=\(\.imp\)\=\)\=\>"
 "nop
 syn match ia64opcode "nop\(\.[ibmfx]\)\=\>"
 "pack
@@ -198,7 +208,7 @@ syn match ia64opcode "shr\(\.u\)\=\>"
 "srlz
 syn match ia64opcode "srlz\(\.[id]\)\>"
 "st
-syn match ia64opcode "st[1248]\(\(\.rel\)\(\.nta\)\=\)\=\>"
+syn match ia64opcode "st[1248]\(\.rel\)\=\(\.nta\)\=\>"
 syn match ia64opcode "st8\.spill\(\.nta\)\=\>"
 "stf
 syn match ia64opcode "stf[1248]\(\.nta\)\=\>"
@@ -255,35 +265,46 @@ syn match ia64data "data[1248]\>"
 syn match ia64data "real\([48]\|1[06]\)\>"
 syn match ia64data "stringz\=\>"
 
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ia64_syn_inits")
+	if version < 508
+		let did_ia64_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-" The default highlighting.
+	"put masm groups with our groups
+	HiLink masmOperator    ia64operator
+	HiLink masmDirective   ia64Directive
+	HiLink masmOpcode      ia64Opcode
+	HiLink masmIdentifier  ia64Identifier
+	HiLink masmFloat       ia64Float
 
-"put masm groups with our groups
-hi def link masmOperator    ia64operator
-hi def link masmDirective   ia64Directive
-hi def link masmOpcode      ia64Opcode
-hi def link masmIdentifier  ia64Identifier
-hi def link masmFloat       ia64Float
+	"ia64 specific stuff
+	HiLink ia64Label       Define
+	HiLink ia64Comment     Comment
+	HiLink ia64Directive   Type
+	HiLink ia64opcode      Statement
+	HiLink ia64registers   Operator
+	HiLink ia64string      String
+	HiLink ia64Hex         Number
+	HiLink ia64Binary      Number
+	HiLink ia64Octal       Number
+	HiLink ia64Float       Float
+	HiLink ia64Decimal     Number
+	HiLink ia64Identifier  Identifier
+	HiLink ia64data        Type
+	HiLink ia64delimiter   Delimiter
+	HiLink ia64operator    Operator
+	HiLink ia64Todo        Todo
 
-"ia64 specific stuff
-hi def link ia64Label       Define
-hi def link ia64Comment     Comment
-hi def link ia64Directive   Type
-hi def link ia64opcode      Statement
-hi def link ia64registers   Operator
-hi def link ia64string      String
-hi def link ia64Hex         Number
-hi def link ia64Binary      Number
-hi def link ia64Octal       Number
-hi def link ia64Float       Float
-hi def link ia64Decimal     Number
-hi def link ia64Identifier  Identifier
-hi def link ia64data        Type
-hi def link ia64delimiter   Delimiter
-hi def link ia64operator    Operator
-hi def link ia64Todo        Todo
+	delcommand HiLink
+endif
 
 let b:current_syntax = "ia64"
 
-" vim: ts=8
+" vim: ts=8 sw=2
 

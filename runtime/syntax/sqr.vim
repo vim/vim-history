@@ -1,22 +1,29 @@
 " Vim syntax file
 "    Language: Structured Query Report Writer (SQR)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-" Last Change: November 8, 2000
-"     Version: 6.0-1
+"         URL: http://lanzarotta.tripod.com/vim/syntax/sqr.vim.zip
+" Last Change: April 30, 2001
 
-setlocal isk=@,48-57,_,-
-
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x, clear all syntax items.
+" For version 6.x, quit when a syntax file was already loaded.
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
+endif
+
+if version >= 600
+  setlocal iskeyword=@,48-57,_,-
+else
+  set iskeyword=@,48-57,_,-
 endif
 
 syn case ignore
 
 " The STP reserved words, defined as keywords.
 syn region	sqrIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
-syn match	sqrIncluded	contained "<[^>]*>"
-syn match	sqrInclude	"^\s*#\s*include\>\s*["<]" contains=sqrIncluded
+syn match	  sqrIncluded	contained "<[^>]*>"
+syn match	  sqrInclude	"^\s*#\s*include\>\s*["<]" contains=sqrIncluded
 
 syn keyword	sqrDefine	#define #else #end-if #if #ifdef #ifndef
 
@@ -58,26 +65,39 @@ syn region	sqrString	start=+"+  skip=+\\\\|\\"+  end=+"+
 syn region	sqrString	start=+'+  skip=+\\\\|\\"+  end=+'+
 
 " Numbers:
-syn match	sqrNumber	"-\=\<\d*\.\=[0-9_]\>"
+syn match	  sqrNumber	"-\=\<\d*\.\=[0-9_]\>"
 
 " Comments:
 syn region	sqrComment	start="/\*"  end="\*/" contains=sqrTodo
-syn match	sqrComment	"!.*" contains=sqrTodo
+syn match	  sqrComment	"!.*" contains=sqrTodo
 syn sync ccomment sqrComment
 
-" The default highlighting.
-hi def link sqrComment Comment
-hi def link sqrNumber Number
-hi def link sqrOperator Operator
-hi def link sqrStatement Statement
-hi def link sqrString String
-hi def link sqrType Type
-hi def link sqrDefine Macro
-hi def link sqrInclude Include
-hi def link sqrTodo Todo
-hi def link sqrFunction Function
-hi def link sqrParameter Function
+" Define the default highlighting.
+" For version 5.7 and earlier, only when not done already.
+" For version 5.8 and later, only when an item doesn;t have hightlighting yet.
+if version >= 508 || !exists("did_sqr_syn_inits")
+  if version < 508
+    let did_sqr_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  
+  HiLink sqrComment Comment
+  HiLink sqrNumber Number
+  HiLink sqrOperator Operator
+  HiLink sqrStatement Statement
+  HiLink sqrString String
+  HiLink sqrType Type
+  HiLink sqrDefine Macro
+  HiLink sqrInclude Include
+  HiLink sqrTodo Todo
+  HiLink sqrFunction Function
+  HiLink sqrParameter Function
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "sqr"
 
-" vim: ts=8
+" vim: ts=8 sw=2

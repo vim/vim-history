@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	March 2, 2001
-" Version: 20
+" Last Change:	May 1, 2001
+" Version: 22
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
@@ -21,12 +21,24 @@ if exists("b:current_syntax")
   finish
 endif
 
-" figure out whether I'm bash or kornshell by default
-if !exists("b:is_kornshell") && !exists("b:is_bash") && !exists("b:is_sh")
+" b:is_sh is set when "#! /bin/sh" is found;
+" However, it often is just a masquerade by bash or kornshell.
+" So, when the user to set "is_bash" or "is_kornshell",
+" a b:is_sh is converted into b:is_bash/b:is_kornshell,
+" respectively.
+if !exists("b:is_kornshell") && !exists("b:is_bash")
   if exists("is_kornshell")
     let b:is_kornshell= 1
+    if exists("b:is_sh")
+      unlet b:is_sh
+    endif
   elseif exists("is_bash")
     let b:is_bash= 1
+    if exists("b:is_sh")
+      unlet b:is_sh
+    endif
+  else
+    let b:is_sh= 1
   endif
 endif
 

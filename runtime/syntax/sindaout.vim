@@ -1,17 +1,21 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint output file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 Feb 04
+" Last Change:  2001-05-02 16:08:42 Mountain Daylight Time
 " Filenames:    *.out
 " URL:          http://www.naglenet.org/vim/syntax/sindaout.vim
-" MAIN URL:     http://www.naglenet.org/vim
+" MAIN URL:     http://www.naglenet.org/vim/
 
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
+
 
 
 " Ignore case
@@ -20,8 +24,13 @@ syn case match
 
 
 " Load SINDA syntax file
-runtime! syntax/sinda.vim
+if version < 600
+  source <sfile>:p:h/sinda.vim
+else
+  runtime! syntax/sinda.vim
+endif
 unlet b:current_syntax
+
 
 
 "
@@ -56,22 +65,36 @@ syn match sindaoutLabel        "Begin Solution: Routine"
 syn match sindaoutError        "<<< Error >>>"
 
 
-" The default highlighting.
-hi sindaHeaderDelim  ctermfg=Black ctermbg=Green             guifg=Black guibg=Green
+" Define the default highlighting
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sindaout_syntax_inits")
+  if version < 508
+    let did_sindaout_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link sindaoutPos                 Statement
-hi def link sindaoutNeg                 PreProc
-hi def link sindaoutTitle               Type
-hi def link sindaoutFile                sindaIncludeFile
-hi def link sindaoutInteger             sindaInteger
+  hi sindaHeaderDelim  ctermfg=Black ctermbg=Green             guifg=Black guibg=Green
 
-hi def link sindaoutSectionDelim	      Delimiter
-hi def link sindaoutSectionTitle        Exception
-hi def link sindaoutHeaderDelim         SpecialComment
-hi def link sindaoutLabel               Identifier
+  HiLink sindaoutPos                 Statement
+  HiLink sindaoutNeg                 PreProc
+  HiLink sindaoutTitle               Type
+  HiLink sindaoutFile                sindaIncludeFile
+  HiLink sindaoutInteger             sindaInteger
 
-hi def link sindaoutError               Error
+  HiLink sindaoutSectionDelim	      Delimiter
+  HiLink sindaoutSectionTitle        Exception
+  HiLink sindaoutHeaderDelim         SpecialComment
+  HiLink sindaoutLabel               Identifier
+
+  HiLink sindaoutError               Error
+
+  delcommand HiLink
+endif
 
 
 let b:current_syntax = "sindaout"
 
+" vim: ts=8 sw=2

@@ -21,13 +21,8 @@ AC_CHECK_PROG(STRIP, strip, strip, :)
 dnl Set default value for CFLAGS if none is defined or it's empty
 if test -z "$CFLAGS"; then
   CFLAGS="-O"
-  test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce"
+  test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce -Wall"
 fi
-
-dnl You might want to remove this, if it causes too much trouble.
-dnl -Wmissing-prototypes removed, old versions of GCC don't have it.
-dnl -Wshadow causes too much of trouble for the GTK+ gui.
-test "$GCC" = yes && CFLAGS="$CFLAGS -Wall"
 
 dnl If configure thinks we are cross compiling, there is probably something
 dnl wrong with the CC or CFLAGS settings, give an understandable error message

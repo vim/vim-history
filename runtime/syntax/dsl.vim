@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	DSSSL
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Die, 17 Apr 2001 08:25:44 +0200
+" Last Change:	Die, 01 Mai 2001 11:41:51 +0200
 " Filenames:	*.dsl
 " URL:		http://www.zellner.org/vim/syntax/dsl.vim
 " $Id$
@@ -26,9 +26,11 @@ syn region  dslCond matchgroup=dslCondDelim start="\[\_[^[]\+\[" end="]]" contai
 
 syn region dslRegion matchgroup=Delimiter start=+(+ end=+)+ contains=dslRegion,dslString,dslComment
 syn match dslString +"\_[^"]*"+ contained
-syn match dslComment +;.*$+
+syn match dslComment +;.*$+ contains=dslTodo
+syn keyword dslTodo contained TODO FIXME XXX display
 
 " The default highlighting.
+hi def link dslTodo		Todo
 hi def link dslString		String
 hi def link dslComment		Comment
 " compare the following with xmlCdataStart / xmlCdataEnd

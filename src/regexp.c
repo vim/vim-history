@@ -2669,7 +2669,7 @@ vim_regexec_both(line, col)
 #ifdef SIGHASARG
 	if (lc_signal != SIGINT)
 #endif
-	    EMSG(_("Crash intercepted; regexp too complex?"));
+	    EMSG(_("(ey8) Crash intercepted; regexp too complex?"));
 	retval = 0L;
 	goto theend;
     }
@@ -2803,7 +2803,7 @@ vim_regexec_both(line, col)
     }
 
     if (out_of_stack)
-	EMSG(_("pattern caused out-of-stack error"));
+	EMSG(_("(ey9) pattern caused out-of-stack error"));
 
 theend:
     /* Didn't find a match. */

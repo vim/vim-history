@@ -66,7 +66,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 
     if (msg != NULL && msgCB != NULL)
     {
-	EMSG(_("Cannot create BalloonEval with both message and callback"));
+	EMSG(_("(ei6) Cannot create BalloonEval with both message and callback"));
 	return NULL;
     }
 
@@ -75,7 +75,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
     {
 	beval->target = target;
 	beval->balloonShell = NULL;
-	beval->timerID = NULL;
+	beval->timerID = (XtIntervalId)NULL;
 	beval->appContext = XtWidgetToApplicationContext(target);
 	beval->showState = ShS_NEUTRAL;
 	beval->x = 0;
@@ -122,7 +122,6 @@ gui_mch_destroy_beval_area(beval)
     vim_free(beval);
 }
 
-#if defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
     void
 gui_mch_enable_beval_area(beval)
     BalloonEval	*beval;
@@ -139,6 +138,7 @@ gui_mch_disable_beval_area(beval)
 	removeEventHandler(beval);
 }
 
+#if defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
     Boolean
 gui_mch_get_beval_info(beval, filename, line, text, index)
     BalloonEval	*beval;
@@ -401,7 +401,7 @@ timerRoutine(dx, id)
 {
     BalloonEval *beval = (BalloonEval *)dx;
 
-    beval->timerID = NULL;
+    beval->timerID = (XtIntervalId)NULL;
 
     /*
      * If the timer event happens then the mouse has stopped long enough for
@@ -509,10 +509,10 @@ cancelBalloon(beval)
 	    || beval->showState == ShS_UPDATE_PENDING)
 	undrawBalloon(beval);
 
-    if (beval->timerID != NULL)
+    if (beval->timerID != (XtIntervalId)NULL)
     {
 	XtRemoveTimeOut(beval->timerID);
-	beval->timerID = NULL;
+	beval->timerID = (XtIntervalId)NULL;
     }
     beval->showState = ShS_NEUTRAL;
 }

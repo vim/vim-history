@@ -10,6 +10,7 @@ void set_context_for_expression __ARGS((expand_T *xp, char_u *arg, cmdidx_T cmdi
 void ex_call __ARGS((exarg_T *eap));
 void ex_unlet __ARGS((exarg_T *eap));
 int do_unlet __ARGS((char_u *name));
+void del_menutrans_vars __ARGS((void));
 char_u *get_user_var_name __ARGS((expand_T *xp, int idx));
 char_u *get_function_name __ARGS((expand_T *xp, int idx));
 char_u *get_expr_name __ARGS((expand_T *xp, int idx));

@@ -559,7 +559,7 @@ mch_char_avail()
 mch_screenmode(
     char_u *arg)
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG(_("(et8) Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -646,7 +646,7 @@ mch_libcall(
 
     if (!fRunTimeLinkSuccess)
     {
-	EMSG2(_("Library call failed for \"%s\"()"), funcname);
+	EMSG2(_("(eq5) Library call failed for \"%s\"()"), funcname);
 	return FAIL;
     }
 

@@ -157,10 +157,12 @@ filemess(buf, name, s, attr)
 	check_for_delay(FALSE);
     msg_start();
     msg_scroll = msg_scroll_save;
+    msg_scrolled_ign = TRUE;
     /* may truncate the message to avoid a hit-return prompt */
     msg_outtrans_attr(msg_may_trunc(FALSE, IObuff), attr);
     msg_clr_eos();
     out_flush();
+    msg_scrolled_ign = FALSE;
 }
 
 /*
@@ -609,9 +611,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    --no_wait_return;
 	    msg_scroll = msg_save;
 	    if (fd < 0)
-		EMSG(_("*ReadPre autocommands made the file unreadable"));
+		EMSG(_("(ea9) *ReadPre autocommands made the file unreadable"));
 	    else
-		EMSG(_("*ReadPre autocommands must not change current buffer"));
+		EMSG(_("(ea0) *ReadPre autocommands must not change current buffer"));
 	    return FAIL;
 	}
     }
@@ -844,7 +846,7 @@ retry:
 		    if (fd < 0)
 		    {
 			/* Re-opening the original file failed! */
-			EMSG(_("Conversion made file unreadable!"));
+			EMSG(_("(eu3) Conversion made file unreadable!"));
 			error = TRUE;
 			goto failed;
 		    }
@@ -1782,6 +1784,7 @@ failed:
 
 	    vim_free(keep_msg);
 	    keep_msg = NULL;
+	    msg_scrolled_ign = TRUE;
 #ifdef ALWAYS_USE_GUI
 	    /* Don't show the message when reading stdin, it would end up in a
 	     * message box (which might be shown when exiting!) */
@@ -1790,16 +1793,19 @@ failed:
 	    else
 #endif
 		p = msg_trunc_attr(IObuff, FALSE, 0);
-	    if (read_stdin || read_buffer || restart_edit != 0)
+	    if (read_stdin || read_buffer || restart_edit != 0
+		    || (msg_scrolled && !need_wait_return))
 	    {
-		/* When reading from stdin, the screen will be cleared next;
-		 * keep the message to repeat it later.
-		 * When restart_edit is set, keep the message to show it after
-		 * redrawing (otherwise there will be a delay before
-		 * redrawing). */
+		/* Need to repeat the message after redrawing when:
+		 * - When reading from stdin (the screen will be cleared next).
+		 * - When restart_edit is set (otherwise there will be a delay
+		 *   before redrawing).
+		 * - When the screen was scrolled but there is no wait-return
+		 *   prompt. */
 		set_keep_msg(p);
 		keep_msg_attr = 0;
 	    }
+	    msg_scrolled_ign = FALSE;
 	}
 
 	/* with errors writing the file requires ":w!" */
@@ -2336,7 +2342,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		}
 		return OK;
 	    }
-	    EMSG(_("Autocommands deleted or unloaded buffer to be written"));
+	    EMSG(_("(ew0) Autocommands deleted or unloaded buffer to be written"));
 	    return FAIL;
 	}
 
@@ -2359,7 +2365,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		{
 		    --no_wait_return;
 		    msg_scroll = msg_save;
-		    EMSG(_("Autocommand changed number of lines in unexpected way"));
+		    EMSG(_("(el2) Autocommand changed number of lines in unexpected way"));
 		    return FAIL;
 		}
 	    }
@@ -3511,7 +3517,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	     * the current backup file becomes the original file
 	     */
 	    if (org == NULL)
-		EMSG(_("patchmode: can't save original file"));
+		EMSG(_("(ep7) Patchmode: can't save original file"));
 	    else if (mch_stat(org, &st) < 0)
 	    {
 		vim_rename(backup, (char_u *)org);
@@ -3533,7 +3539,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    if (org == NULL
 		    || (empty_fd = mch_open(org, O_CREAT | O_EXTRA | O_EXCL,
 								   0666)) < 0)
-	      EMSG(_("patchmode: can't touch empty original file"));
+	      EMSG(_("(ee9) patchmode: can't touch empty original file"));
 	    else
 	      close(empty_fd);
 	}
@@ -3548,7 +3554,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * Remove the backup unless 'backup' option is set
      */
     if (!p_bk && backup != NULL && mch_remove(backup) != 0)
-	EMSG(_("Can't delete backup file"));
+	EMSG(_("(ee0) Can't delete backup file"));
 
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)
@@ -4699,17 +4705,17 @@ vim_rename(from, to)
     while ((n = read(fd_in, buffer, (size_t)BUFSIZE)) > 0)
 	if (write(fd_out, buffer, (size_t)n) != n)
 	{
-	    errmsg = _("Error writing to \"%s\"");
+	    errmsg = _("(re8) Error writing to \"%s\"");
 	    break;
 	}
 
     vim_free(buffer);
     close(fd_in);
     if (close(fd_out) < 0)
-	errmsg = _("Error closing \"%s\"");
+	errmsg = _("(re9) Error closing \"%s\"");
     if (n < 0)
     {
-	errmsg = _("Error reading \"%s\"");
+	errmsg = _("(re0) Error reading \"%s\"");
 	to = from;
     }
     if (errmsg != NULL)
@@ -5647,7 +5653,7 @@ find_end_event(arg)
     {
 	if (arg[1] && !vim_iswhite(arg[1]))
 	{
-	    EMSG2(_("Illegal character after *: %s"), arg);
+	    EMSG2(_("(ae2) Illegal character after *: %s"), arg);
 	    return NULL;
 	}
 	pat = arg + 1;
@@ -5658,7 +5664,7 @@ find_end_event(arg)
 	{
 	    if ((int)event_name2nr(pat, &p) >= (int)NUM_EVENTS)
 	    {
-		EMSG2(_("No such event: %s"), pat);
+		EMSG2(_("(ae3) No such event: %s"), pat);
 		return NULL;
 	    }
 	}
@@ -6071,7 +6077,7 @@ do_doautocmd(arg, do_msg)
 
     if (*arg == '*')
     {
-	EMSG(_("Can't execute autocommands for ALL events"));
+	EMSG(_("(ex1) Can't execute autocommands for ALL events"));
 	return FAIL;
     }
 
@@ -6366,7 +6372,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      */
     if (nesting == 10)
     {
-	EMSG(_("autocommand nesting too deep"));
+	EMSG(_("(en6) autocommand nesting too deep"));
 	return retval;
     }
 
@@ -7221,9 +7227,9 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     if (nested != 0)
     {
 	if (nested < 0)
-	    EMSG(_("Missing {."));
+	    EMSG(_("(em9) Missing {."));
 	else
-	    EMSG(_("Missing }."));
+	    EMSG(_("(em0) Missing }."));
 	vim_free(reg_pat);
 	reg_pat = NULL;
     }

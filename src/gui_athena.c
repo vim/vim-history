@@ -436,35 +436,29 @@ athena_calculate_ins_pos(widget)
 
     WidgetList	children;
     Cardinal	num_children = 0;
-    String      name;
     int		retval;
+    Arg		args[2];
+    int		n = 0;
+    int		i;
 
-    name = XtName(widget);
-    {
-	Arg	args[2];
-	int	n = 0;
+    XtSetArg(args[n], XtNchildren, &children); n++;
+    XtSetArg(args[n], XtNnumChildren, &num_children); n++;
+    XtGetValues(XtParent(widget), args, n);
 
-	XtSetArg(args[n], XtNchildren, &children); n++;
-	XtSetArg(args[n], XtNnumChildren, &num_children); n++;
-	XtGetValues(XtParent(widget), args, n);
-    }
     retval = num_children;
+    for (i = 0; i < num_children; ++i)
     {
-	int i;
+	Widget	current = children[i];
+	vimmenu_T	*menu = NULL;
 
-	for (i = 0; i < num_children; ++i)
-	{
-	    Widget	current = children[i];
-	    vimmenu_T	*menu = NULL;
-
-	    for (menu = (a_cur_menu->parent == NULL) ? root_menu : a_cur_menu->parent->children;
-		 menu != NULL;
-		 menu = menu->next)
-		if (current == menu->id)
-		    if (a_cur_menu->priority < menu->priority)
-			if (i < retval)
-			    retval = i;
-	}
+	for (menu = (a_cur_menu->parent == NULL)
+			       ? root_menu : a_cur_menu->parent->children;
+			       menu != NULL;
+			       menu = menu->next)
+	    if (current == menu->id
+		    && a_cur_menu->priority < menu->priority
+		    && i < retval)
+		retval = i;
     }
     return retval;
 }
@@ -616,7 +610,7 @@ gui_mch_new_menu_font()
 	 * the heights.
 	 */
 	vimmenu_T *mp;
-	int max_height = INT_MAX;
+	int max_height = 9999;
 
 	for (mp = root_menu; mp != NULL; mp = mp->next)
 	{
@@ -631,7 +625,7 @@ gui_mch_new_menu_font()
 		    max_height = height;
 	    }
 	}
-	if (max_height != INT_MAX)
+	if (max_height != 9999)
 	{
 	    /* Don't update the menu height when it was set at a fixed value */
 	    if (!gui.menu_height_fixed)
@@ -648,8 +642,6 @@ gui_mch_new_menu_font()
     }
     /* Now, to simulate the window being resized.  Only, this
      * will resize the window to it's current state.
-     *
-     * Hopefully, the menu bar will be resized correctly.
      *
      * There has to be a better way, but I do not see one at this time.
      * (David Harrison)
@@ -673,16 +665,31 @@ gui_mch_new_menu_font()
 
 
     static void
-gui_mch_submenu_change(mp, colors)
-    vimmenu_T	*mp;
+gui_mch_submenu_change(menu, colors)
+    vimmenu_T	*menu;
     int		colors;		/* TRUE for colors, FALSE for font */
 {
-    while (mp != NULL)
+    vimmenu_T	*mp;
+
+    for (mp = menu; mp != NULL; mp = mp->next)
     {
 	if (mp->id != (Widget)0)
 	{
 	    if (colors)
+	    {
 		gui_athena_menu_colors(mp->id);
+#ifdef FEAT_TOOLBAR
+		/* For a toolbar item: Free the pixmap and allocate a new one,
+		 * so that the background color is right. */
+		if (mp->image != (Pixmap)0)
+		{
+		    XFreePixmap(gui.dpy, mp->image);
+		    get_pixmap(mp->name, &mp->image, NULL);
+		    if (mp->image != (Pixmap)0)
+			XtVaSetValues(mp->id, XtNbitmap, mp->image, NULL);
+		}
+#endif
+	    }
 	    else
 		gui_athena_menu_font(mp->id);
 	}
@@ -700,7 +707,6 @@ gui_mch_submenu_change(mp, colors)
 	    /* Set the colors for the children */
 	    gui_mch_submenu_change(mp->children, colors);
 	}
-	mp = mp->next;
     }
 }
 
@@ -749,28 +755,27 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    Pixmap pixmap = 0;
-	    Pixmap insensitive = 0;
-
-	    if (strstr((const char *)p_toolbar, "icons") != NULL)
-		get_pixmap(menu->name, &pixmap, &insensitive);
-	    if (pixmap == 0)
-	    {
-		XtSetArg(args[n], XtNlabel, menu->dname); n++;
-	    }
-	    else
-	    {
-		XtSetArg(args[n], XtNbitmap, pixmap); n++;
-		XtSetArg(args[n], XtNinternalHeight, 1); n++;
-		XtSetArg(args[n], XtNinternalWidth, 1); n++;
-		XtSetArg(args[n], XtNborderWidth, 1); n++;
-	    }
+	    get_pixmap(menu->name, &menu->image, NULL);
+	    XtSetArg(args[n], XtNlabel, menu->dname); n++;
+	    XtSetArg(args[n], XtNinternalHeight, 1); n++;
+	    XtSetArg(args[n], XtNinternalWidth, 1); n++;
+	    XtSetArg(args[n], XtNborderWidth, 1); n++;
+	    if (menu->image != 0)
+		XtSetArg(args[n], XtNbitmap, menu->image); n++;
 	}
 	XtSetArg(args[n], XtNhighlightThickness, 0); n++;
 	type = commandWidgetClass;
 	/* TODO: figure out the position in the toolbar?
 	 *       This currently works fine for the default toolbar, but
 	 *       what if we add/remove items during later runtime?
+	 */
+
+	/* NOTE: "idx" isn't used here.  The position is calculated by
+	 *       athena_calculate_ins_pos().  The position it calculates
+	 *       should be equal to "idx".
+	 */
+	/* TODO: Could we just store "idx" and use that as the child
+	 * placement?
 	 */
 
 	if (menu->id == NULL)
@@ -839,6 +844,81 @@ gui_mch_show_toolbar(int showit)
     XtVaGetValues(toolBar, XtNnumChildren, &numChildren, NULL);
     if (showit && numChildren > 0)
     {
+	/* Assume that we want to show the toolbar if p_toolbar contains valid
+	 * option settings, therefore p_toolbar must not be NULL.
+	 */
+	WidgetList  children;
+
+	XtVaGetValues(toolBar, XtNchildren, &children, NULL);
+	{
+	    void    (*action)(BalloonEval *);
+	    int	    text = 0;
+
+	    if (strstr((const char *)p_toolbar, "tooltips"))
+		action = &gui_mch_enable_beval_area;
+	    else
+		action = &gui_mch_disable_beval_area;
+	    if (strstr((const char *)p_toolbar, "text"))
+		text = 1;
+	    else if (strstr((const char *)p_toolbar, "icons"))
+		text = -1;
+	    if (text != 0)
+	    {
+		vimmenu_T   *toolbar;
+		vimmenu_T   *cur;
+
+		for (toolbar = root_menu; toolbar; toolbar = toolbar->next)
+		    if (menu_is_toolbar(toolbar->dname))
+			break;
+		/* Assumption: toolbar is NULL if there is no toolbar,
+		 *             otherwise it contains the toolbar menu structure.
+		 *
+		 * Assumption: "numChildren" == the number of items in the list
+		 *             of items beginning with toolbar->children.
+		 */
+		if (toolbar)
+		{
+		    for (cur = toolbar->children; cur; cur = cur->next)
+		    {
+			Arg	    args[2];
+			int	    n = 0;
+
+			/* Enable/Disable tooltip (OK to enable while currently
+			 * enabled)
+			 */
+			if (cur->tip != NULL)
+			    (*action)(cur->tip);
+			if (text == 1)
+			{
+			    XtSetArg(args[n], XtNbitmap, None);
+			    n++;
+			    XtSetArg(args[n], XtNlabel,
+				    menu_is_separator(cur->name) ? "" :
+					(char *)cur->dname);
+			    n++;
+			}
+			else
+			{
+			    XtSetArg(args[n], XtNbitmap, cur->image);
+			    n++;
+			    XtSetArg(args[n], XtNlabel, (cur->image == None) ?
+				    menu_is_separator(cur->name) ?
+					"" :
+					(char *)cur->dname
+				    :
+				    (char *)None);
+			    n++;
+			}
+			if (cur->id != NULL)
+			{
+			    XtUnmanageChild(cur->id);
+			    XtSetValues(cur->id, args, n);
+			    XtManageChild(cur->id);
+			}
+		    }
+		}
+	    }
+	}
 	gui.toolbar_height = gui_mch_compute_toolbar_height();
 	XtManageChild(toolBar);
 	if (XtIsManaged(menuBar))
@@ -874,6 +954,7 @@ gui_mch_show_toolbar(int showit)
 
 	XtUnmanageChild(toolBar);
     }
+    gui_set_shellsize(FALSE);
 }
 
 
@@ -942,22 +1023,8 @@ gui_mch_new_menu_colors()
     gui_athena_menu_colors(toolBar);
 #endif
 
-    gui_mch_submenu_change(root_menu,TRUE);
+    gui_mch_submenu_change(root_menu, TRUE);
 }
-
-
-/*
- * We can't always delete widgets, it would cause a crash.
- * Keep a list of dead widgets, so that we can avoid re-managing them.  This
- * means that they are still there but never shown.
- */
-struct deadwid
-{
-    struct deadwid	*next;
-    Widget		id;
-};
-
-static struct deadwid *first_deadwid = NULL;
 
 /*
  * Destroy the machine specific menu widget.
@@ -966,54 +1033,65 @@ static struct deadwid *first_deadwid = NULL;
 gui_mch_destroy_menu(menu)
     vimmenu_T *menu;
 {
+    /* Please be sure to destroy the parent widget first (i.e. menu->id).
+     *
+     * This code should be basically identical to that in the file gui_motif.c
+     * because they are both Xt based.
+     */
+    if (menu->id != (Widget)0)
+    {
+	Widget	    parent;
+	Cardinal    num_children;
+	Dimension   height, space, border;
+
+	parent = XtParent(menu->id);
+	XtVaGetValues(menuBar,
+		XtNvSpace,	&space,
+		XtNborderWidth, &border,
+		NULL);
+	XtVaGetValues(menu->id,
+		XtNheight,	&height,
+		NULL);
+#if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
+	if ((parent == toolBar) && (menu->tip != NULL))
+	{
+	    /* We try to destroy this before the actual menu, because there are
+	     * callbacks, etc. that will be unregistered during the tooltip
+	     * destruction.
+	     *
+	     * If you call "gui_mch_destroy_beval_area()" after destroying
+	     * menu->id, then the tooltip's window will have already been
+	     * deallocated by Xt, and unknown behaviour will ensue (probably
+	     * a core dump).
+	     */
+	    gui_mch_destroy_beval_area(menu->tip);
+	    menu->tip = NULL;
+	}
+#endif
+	XtDestroyWidget(menu->id);
+	menu->id = (Widget)0;
+
+	if (parent == menuBar)
+	{
+	    if (!gui.menu_height_fixed)
+		gui.menu_height = height + 2 * (space + border);
+	}
+#ifdef FEAT_TOOLBAR
+	else if (parent == toolBar)
+	{
+	    /* When removing last toolbar item, don't display the toolbar. */
+	    XtVaGetValues(toolBar, XtNnumChildren, &num_children, NULL);
+	    if (num_children == 0)
+		gui_mch_show_toolbar(FALSE);
+	    else
+		gui.toolbar_height = gui_mch_compute_toolbar_height();
+	}
+#endif
+    }
     if (menu->submenu_id != (Widget)0)
     {
 	XtDestroyWidget(menu->submenu_id);
 	menu->submenu_id = (Widget)0;
-    }
-    if (menu->id != (Widget)0)
-    {
-#if 0
-	Widget	parent;
-
-	/*
-	 * This is a hack to stop the Athena simpleMenuWidget from getting a
-	 * BadValue error when a menu's last child is destroyed. We check to
-	 * see if this is the last child and if so, don't delete it. The parent
-	 * will be deleted soon anyway, and it will delete it's children like
-	 * all good widgets do.
-	 */
-	parent = XtParent(menu->id);
-	if (parent != menuBar)
-	{
-	    int num_children;
-
-	    XtVaGetValues(parent, XtNnumChildren, &num_children, NULL);
-	    if (num_children > 1)
-		XtDestroyWidget(menu->id);
-	}
-	else
-	    XtDestroyWidget(menu->id);
-#else
-	/*
-	 * The code above causes a crash.  Apparently because the highlighting
-	 * is still there, and removing it later causes the crash.
-	 * This fix just unmanages the menu item, without destroying it.  The
-	 * problem now is that the highlighting will be wrong, and we need to
-	 * remember the ID to avoid that the item will be re-managed later...
-	 */
-	struct deadwid    *p;
-
-	p = (struct deadwid *)alloc((unsigned)sizeof(struct deadwid));
-	if (p != NULL)
-	{
-	    p->id = menu->id;
-	    p->next = first_deadwid;
-	    first_deadwid = p;
-	}
-	XtUnmanageChild(menu->id);
-#endif
-	menu->id = (Widget)0;
     }
 }
 
@@ -1029,7 +1107,6 @@ gui_athena_reorder_menus()
     int		num_children;
     int		to, from;
     vimmenu_T	*menu;
-    struct deadwid *p;
 
     XtVaGetValues(menuBar,
 	    XtNchildren,    &children,
@@ -1059,19 +1136,7 @@ gui_athena_reorder_menus()
 	if (menu == NULL)	/* cannot happen */
 	    break;
     }
-#if 1
-    /* Only manage children that have not been destroyed */
-    for (to = 0; to < num_children; ++to)
-    {
-	for (p = first_deadwid; p != NULL; p = p->next)
-	    if (p->id == children[to])
-		break;
-	if (p == NULL)
-	    XtManageChild(children[to]);
-    }
-#else
     XtManageChildren(children, num_children);
-#endif
 }
 
 /* ARGSUSED */
@@ -1198,6 +1263,22 @@ gui_mch_show_popupmenu(menu)
 }
 
 #endif /* FEAT_MENU */
+
+/*
+ * Set the menu and scrollbar colors to their default values.
+ */
+    void
+gui_mch_def_colors()
+{
+    /*
+     * Get the colors ourselves.  Using the automatic conversion doesn't
+     * handle looking for approximate colors.
+     */
+    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.menu_fg_color);
+    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.menu_bg_color);
+    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.scroll_fg_color);
+    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.scroll_bg_color);
+}
 
 
 /*

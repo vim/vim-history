@@ -601,7 +601,7 @@ hangul_automata2(buf, c)
 	    return AUTOMATA_CORRECT_NEW;
 
 	default:
-	    EMSG(_("automata ERROR: internal"));
+	    EMSG(_("(ei7) Hangul automata ERROR"));
 	    break;
     }
     return AUTOMATA_ERROR; /* RrEeAaLlLlYy EeRrRrOoRr */

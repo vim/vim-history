@@ -928,7 +928,7 @@ mch_settmode(tmode)
 mch_screenmode(arg)
     char_u	*arg;
 {
-    EMSG(_("Screen mode setting not supported"));
+    EMSG(_("(et8) Screen mode setting not supported"));
     return FAIL;
 }
 
@@ -1132,7 +1132,7 @@ mch_call_shell(cmd, options)
     if (close_win)
     {
 	/* if Vim opened a window: Executing a shell may cause crashes */
-	EMSG(_("Cannot execute shell with -f option"));
+	EMSG(_("(et0) Cannot execute shell with -f option"));
 	return -1;
     }
 
@@ -1384,10 +1384,7 @@ mch_expandpath(gap, pat, flags)
     /* Get our AnchorBase */
     Anchor = (struct AnchorPath *)alloc_clear((unsigned)ANCHOR_SIZE);
     if (Anchor == NULL)
-    {
-	EMSG(_("Out of memory"));
 	return 0;
-    }
 
     Anchor->ap_Strlen = ANCHOR_BUF_SIZE;  /* ap_Length not supported anymore */
 #ifdef APF_DODOT

@@ -36,6 +36,10 @@ static void main_start_gui __ARGS((void));
 static void check_swap_exists_action __ARGS((void));
 #endif
 
+#ifdef STARTUPTIME
+static FILE *time_fd = NULL;
+#endif
+
 /*
  * Different types of error messages.
  */
@@ -129,6 +133,10 @@ main
 #ifdef MEM_PROFILE
     atexit(vim_mem_profile_dump);
 #endif
+#ifdef STARTUPTIME
+    time_fd = fopen(STARTUPTIME, "a");
+    time_msg("--- VIM STARTING ---");
+#endif
 
 #ifdef __EMX__
     _wildcard(&argc, &argv);
@@ -145,6 +153,7 @@ main
 #ifdef FEAT_GUI_MAC
     /* Macintosh needs this before any memory is allocated. */
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
+    TIME_MSG("GUI prepared");
 #endif
 
     /* Init the table of Normal mode commands. */
@@ -161,6 +170,8 @@ main
     if ((IObuff = alloc(IOSIZE)) == NULL
 	    || (NameBuff = alloc(MAXPATHL)) == NULL)
 	mch_windexit(0);
+
+    TIME_MSG("Allocated generic buffers");
 
 #if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
     /*
@@ -186,6 +197,7 @@ main
 	textdomain(VIMPACKAGE);
     }
 # endif
+    TIME_MSG("locale set");
 #endif
 
 #ifdef FEAT_XCLIPBOARD
@@ -215,10 +227,12 @@ main
 
 #if defined(FEAT_GUI) && !defined(FEAT_GUI_MAC)
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
+    TIME_MSG("GUI prepared");
 #endif
 
 #ifdef FEAT_CLIPBOARD
     clip_init(FALSE);		/* Initialise clipboard stuff */
+    TIME_MSG("clipboard setup");
 #endif
 
     /*
@@ -228,6 +242,7 @@ main
      * argument.
      */
     stdout_isatty = (mch_check_win(argc, argv) != FAIL);
+    TIME_MSG("window checked");
 
     /*
      * Allocate the first window and buffer. Can't do much without it.
@@ -245,6 +260,7 @@ main
      */
     init_homedir();		/* find real value of $HOME */
     set_init_1();
+    TIME_MSG("inits 1");
 
 #ifdef FEAT_EVAL
     set_lang_var();		/* set v:lang and v:ctype */
@@ -761,6 +777,7 @@ scripterror:
 	    argv_idx = 1;
 	}
     }
+    TIME_MSG("parsing arguments");
 
     /*
      * On some systems, when we compile with the GUI, we always use it.  On Mac
@@ -804,6 +821,7 @@ scripterror:
 	(void)vim_chdirfile(fname);
     }
 #endif
+    TIME_MSG("expanding arguments");
 
 #ifdef FEAT_DIFF
     if (diff_mode)
@@ -844,6 +862,7 @@ scripterror:
      * Note that we may use mch_windexit() before mch_shellinit()!
      */
     mch_shellinit();
+    TIME_MSG("shell init");
 
     /*
      * Print a warning if stdout is not a terminal.
@@ -868,6 +887,7 @@ scripterror:
 	    mch_errmsg(_("Vim: Warning: Input is not from a terminal\n"));
 	out_flush();
 	ui_delay(2000L, TRUE);
+	TIME_MSG("Warning delay");
     }
 
     if (want_full_screen)
@@ -875,6 +895,7 @@ scripterror:
 	termcapinit(term);	/* set terminal name and get terminal
 				   capabilities (will set full_screen) */
 	screen_start();		/* don't know where cursor is now */
+	TIME_MSG("Termcap init");
     }
 
     /*
@@ -898,6 +919,7 @@ scripterror:
     msg_row = cmdline_row;
     screenalloc(FALSE);		/* allocate screen buffers */
     set_init_2();
+    TIME_MSG("inits 2");
 
     /*
      * Don't call msg_start() if the GUI is expected to start, it switches the
@@ -918,6 +940,7 @@ scripterror:
     init_mappings();		/* set up initial mappings */
 
     init_highlight(TRUE);	/* set the default highlight groups */
+    TIME_MSG("init highlight");
 #ifdef CURSOR_SHAPE
     parse_shape_opt(SHAPE_CURSOR); /* set cursor shapes from 'guicursor' */
 #endif
@@ -930,7 +953,10 @@ scripterror:
      * any things he doesn't like.
      */
     if (evim_mode)
+    {
 	(void)do_source((char_u *)EVIM_FILE, FALSE, FALSE);
+	TIME_MSG("source evim file");
+    }
 
     /*
      * If -u option given, use only the initializations from that file and
@@ -950,7 +976,7 @@ scripterror:
 	else
 	{
 	    if (do_source(use_vimrc, FALSE, FALSE) != OK)
-		EMSG2(_("Cannot read from \"%s\""), use_vimrc);
+		EMSG2(_("(ce3) Cannot read from \"%s\""), use_vimrc);
 	}
     }
     else if (!silent_mode)
@@ -1080,6 +1106,7 @@ scripterror:
 	proc->pr_WindowPtr = save_winptr;
 #endif
     }
+    TIME_MSG("sourcing vimrc file(s)");
 
 #ifdef FEAT_EVAL
     /*
@@ -1087,7 +1114,10 @@ scripterror:
      * Only when compiled with +eval, since most plugins need it.
      */
     if (p_lpl)
+    {
 	cmd_runtime((char_u *)"plugin/*.vim", TRUE);
+	TIME_MSG("loading plugins");
+    }
 #endif
 
     /*
@@ -1106,6 +1136,7 @@ scripterror:
      * 'title' and 'icon', Unix: 'shellpipe' and 'shellredir'.
      */
     set_init_3();
+    TIME_MSG("inits 3");
 
     /*
      * "-n" argument: Disable swap file by setting 'updatecount' to 0.
@@ -1130,7 +1161,10 @@ scripterror:
 
 #ifdef FEAT_GUI
     if (gui.starting)
+    {
 	gui_start();		/* will set full_screen to TRUE */
+	TIME_MSG("starting GUI");
+    }
 #endif
 
 #ifdef SPAWNO		/* special MSDOS swapping library */
@@ -1142,7 +1176,10 @@ scripterror:
      * Read in registers, history etc, but not marks, from the viminfo file
      */
     if (*p_viminfo != NUL)
+    {
 	read_viminfo(NULL, TRUE, FALSE, FALSE);
+	TIME_MSG("reading viminfo");
+    }
 #endif
 
 #ifdef FEAT_QUICKFIX
@@ -1159,6 +1196,7 @@ scripterror:
 	    out_char('\n');
 	    mch_windexit(3);
 	}
+	TIME_MSG("reading errorfile");
     }
 #endif
 
@@ -1179,10 +1217,13 @@ scripterror:
      * when getting a resize callback.
      */
     if (gui.in_use)
+    {
 # ifdef FEAT_SUN_WORKSHOP
 	if (!usingSunWorkShop)
 # endif
 	    gui_wait_for_chars(50L);
+	TIME_MSG("GUI delay");
+    }
 #endif
 
 #ifdef FEAT_XCLIPBOARD
@@ -1190,7 +1231,10 @@ scripterror:
 # ifdef FEAT_GUI
     if (!gui.in_use)
 # endif
+    {
 	setup_term_clip();
+	TIME_MSG("setup clipboard");
+    }
 #endif
 
     /*
@@ -1212,6 +1256,7 @@ scripterror:
 	(void)open_buffer(TRUE, NULL);	/* create memfile and read file */
 	no_wait_return = FALSE;
 	msg_didany = i;
+	TIME_MSG("reading stdin");
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	check_swap_exists_action();
 #endif
@@ -1236,7 +1281,10 @@ scripterror:
      */
     settmode(TMODE_RAW);
     if (need_wait_return || msg_didany)
+    {
 	wait_return(TRUE);
+	TIME_MSG("waiting for return");
+    }
 
     starttermcap();	    /* start termcap if not done by wait_return() */
 #ifdef FEAT_MOUSE
@@ -1257,11 +1305,17 @@ scripterror:
 					)
 	must_redraw = CLEAR;
     else
+    {
 	screenclear();			/* clear screen */
+	TIME_MSG("clearing screen");
+    }
 
 #ifdef FEAT_CRYPT
     if (ask_for_key)
+    {
 	(void)get_crypt_key(TRUE, TRUE);
+	TIME_MSG("getting crypt key");
+    }
 #endif
 
     no_wait_return = TRUE;
@@ -1281,7 +1335,10 @@ scripterror:
 	if (vert_windows == MAYBE)
 	    vert_windows = FALSE;
 	if (firstwin->w_next == NULL)
+	{
 	    window_count = make_windows(window_count, vert_windows);
+	    TIME_MSG("making windows");
+	}
 	else
 	    window_count = win_count();
     }
@@ -1351,6 +1408,7 @@ scripterror:
 	curbuf = curwin->w_buffer;
 #endif
     }
+    TIME_MSG("opening buffers");
 
     /* Ex starts at last line of the file */
     if (exmode_active)
@@ -1358,6 +1416,7 @@ scripterror:
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
+    TIME_MSG("BufEnter autocommands");
 #endif
     setpcmark();
 
@@ -1366,7 +1425,10 @@ scripterror:
      * When started with "-q errorfile" jump to first error now.
      */
     if (edit_type == EDIT_QF)
+    {
 	qf_jump(0, 0, FALSE);
+	TIME_MSG("jump to first error");
+    }
 #endif
 
 #ifdef FEAT_WINDOWS
@@ -1415,6 +1477,7 @@ scripterror:
 # ifdef FEAT_AUTOCMD
     --autocmd_no_leave;
 # endif
+    TIME_MSG("editing files in windows");
     if (window_count > 1)
 	win_equal(curwin, 'b');		/* adjust heights */
 #endif /* FEAT_WINDOWS */
@@ -1443,8 +1506,10 @@ scripterror:
     {
 	STRCPY(IObuff, "ta ");
 
-	STRCAT(IObuff, tagname);
+	STRNCAT(IObuff, tagname, IOSIZE - 4);
+	IObuff[IOSIZE - 1] = NUL;
 	do_cmdline_cmd(IObuff);
+	TIME_MSG("jumping to tag");
     }
 
     if (n_commands > 0)
@@ -1466,6 +1531,7 @@ scripterror:
 	if (edit_type == EDIT_QF)
 	    qf_jump(0, 0, FALSE);
 #endif
+	TIME_MSG("executing command arguments");
     }
 
     RedrawingDisabled = 0;
@@ -1479,6 +1545,7 @@ scripterror:
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_VIMENTER, NULL, NULL, FALSE, curbuf);
+    TIME_MSG("VimEnter autocommands");
 #endif
 
 #if defined(FEAT_DIFF) && defined(FEAT_SCROLLBIND)
@@ -1488,6 +1555,7 @@ scripterror:
     {
 	update_topline();
 	check_scrollbind((linenr_T)0, 0L);
+	TIME_MSG("diff scrollbinding");
     }
 #endif
 
@@ -1499,6 +1567,8 @@ scripterror:
      * call normal_cmd(), which will then start Insert mode. */
     if (restart_edit)
 	stuffReadbuff((char_u *)"\034\016");
+
+    TIME_MSG("before starting main loop");
 
     /*
      * Call the main command loop.  This never returns.
@@ -1990,6 +2060,49 @@ check_swap_exists_action()
     if (swap_exists_action == SEA_QUIT)
 	getout(1);
     handle_swap_exists(NULL);
+}
+#endif
+
+#if defined(STARTUPTIME) || defined(PROTO)
+static void time_diff __ARGS((struct timeval *then, struct timeval *now));
+
+    static void
+time_diff(then, now)
+    struct timeval	*then;
+    struct timeval	*now;
+{
+    long	usec;
+    long	msec;
+
+    usec = now->tv_usec - then->tv_usec;
+    msec = (now->tv_sec - then->tv_sec) * 1000L + usec / 1000L,
+    usec = usec % 1000L;
+    fprintf(time_fd, "%03ld.%03ld", msec, usec > 0 ? usec : usec + 1000L);
+}
+
+    void
+time_msg(msg)
+    char	*msg;
+{
+    static struct timeval	start;
+    static struct timeval	prev;
+    struct timeval		now;
+
+    if (time_fd != NULL)
+    {
+	if (strstr(msg, "STARTING") != NULL)
+	{
+	    gettimeofday(&start, NULL);
+	    prev = start;
+	    fprintf(time_fd, "\n\nelapsed  diff (msec)  after:\n");
+	}
+	gettimeofday(&now, NULL);
+	time_diff(&start, &now);
+	fprintf(time_fd, "  ");
+	time_diff(&prev, &now);
+	prev = now;
+	fprintf(time_fd, ": %s\n", msg);
+    }
 }
 #endif
 

@@ -125,7 +125,7 @@ static foldinfo_T win_foldinfo;	/* info for 'foldcolumn' */
 static schar_T	*current_ScreenLine;
 
 static void win_update __ARGS((win_T *wp));
-static void win_draw_end __ARGS((win_T *wp, int c, int row));
+static void win_draw_end __ARGS((win_T *wp, int c1, int c2, int row, int endrow, enum hlf_value hl));
 #ifdef FEAT_FOLDING
 static void fold_line __ARGS((win_T *wp, long fold_count, foldinfo_T *foldinfo, linenr_T lnum, int row));
 static void fill_foldcolumn __ARGS((char_u *p, win_T *wp, int closed, linenr_T lnum));
@@ -425,6 +425,7 @@ update_screen(type)
 		    && curwin->w_lines[0].wl_valid
 #ifdef FEAT_DIFF
 		    && curwin->w_topfill == curwin->w_old_topfill
+		    && curwin->w_botfill == curwin->w_old_botfill
 #endif
 		    && curwin->w_topline == curwin->w_lines[0].wl_lnum)
 #ifdef FEAT_VISUAL
@@ -732,8 +733,10 @@ win_update(wp)
 				   updating.  0 when no mid area updating. */
     int		bot_start = 999;/* first row of the bot area that needs
 				   updating.  999 when no bot area updating */
+#ifdef FEAT_VISUAL
     int		scrolled_down = FALSE;	/* TRUE when scrolled down when
 					   w_topline got smaller a bit */
+#endif
 #ifdef FEAT_SEARCH_EXTRA
     int		top_to_mod = FALSE;    /* redraw above mod_top */
 #endif
@@ -794,7 +797,10 @@ win_update(wp)
 #ifdef FEAT_SEARCH_EXTRA
     /* Setup for ":match" highlighting.  Disable any previous match */
     match_hl.rm = wp->w_match;
-    match_hl.attr = syn_id2attr(wp->w_match_id);
+    if (wp->w_match_id == 0)
+	match_hl.attr = 0;
+    else
+	match_hl.attr = syn_id2attr(wp->w_match_id);
     match_hl.buf = buf;
     match_hl.lnum = 0;
     search_hl.buf = buf;
@@ -939,7 +945,11 @@ win_update(wp)
      * 3: wp->w_topline is wp->w_lines[0].wl_lnum: find first entry in
      *    w_lines[] that needs updating.
      */
-    if ((type == VALID || type == INVERTED || type == INVERTED_ALL))
+    if ((type == VALID || type == INVERTED || type == INVERTED_ALL)
+#ifdef FEAT_DIFF
+	    && !wp->w_botfill && !wp->w_old_botfill
+#endif
+	    )
     {
 	if (buf->b_mod_set && wp->w_topline == mod_top)
 	{
@@ -1004,7 +1014,9 @@ win_update(wp)
 			    /* Need to update rows that are new, stop at the
 			     * first one that scrolled down. */
 			    top_end = i;
+#ifdef FEAT_VISUAL
 			    scrolled_down = TRUE;
+#endif
 
 			    /* Move the entries that were scrolled, disable
 			     * the entries for the lines to be redrawn. */
@@ -1280,11 +1292,11 @@ win_update(wp)
 		if (wp->w_lines[idx].wl_valid)
 		    mid_start += wp->w_lines[idx].wl_size;
 		++idx;
-#ifdef FEAT_FOLDING
+# ifdef FEAT_FOLDING
 		if (idx < wp->w_lines_valid && wp->w_lines[idx].wl_valid)
 		    lnum = wp->w_lines[idx].wl_lnum;
 		else
-#endif
+# endif
 		    ++lnum;
 	    }
 	    srow = mid_start;
@@ -1701,7 +1713,7 @@ win_update(wp)
 	}
 	else
 	{
-	    win_draw_end(wp, '@', srow);
+	    win_draw_end(wp, '@', ' ', srow, wp->w_height, HLF_AT);
 	    wp->w_botline = lnum;
 	}
     }
@@ -1710,20 +1722,40 @@ win_update(wp)
 #ifdef FEAT_VERTSPLIT
 	draw_vsep_win(wp, row);
 #endif
-	/* make sure the rest of the screen is blank */
-	/* put '~'s on rows that aren't part of the file. */
-	win_draw_end(wp, '~', row);
-
 	if (eof)		/* we hit the end of the file */
+	{
 	    wp->w_botline = buf->b_ml.ml_line_count + 1;
+#ifdef FEAT_DIFF
+	    j = diff_check_fill(wp, wp->w_botline);
+	    if (j > 0 && !wp->w_botfill)
+	    {
+		/*
+		 * Display filler lines at the end of the file
+		 */
+		if (char2cells(fill_diff) > 1)
+		    i = '-';
+		else
+		    i = fill_diff;
+		if (row + j > wp->w_height)
+		    j = wp->w_height - row;
+		win_draw_end(wp, i, i, row, row + (int)j, HLF_DED);
+		row += j;
+	    }
+#endif
+	}
 	else if (dollar_vcol == 0)
 	    wp->w_botline = lnum;
+
+	/* make sure the rest of the screen is blank */
+	/* put '~'s on rows that aren't part of the file. */
+	win_draw_end(wp, '~', ' ', row, wp->w_height, HLF_AT);
     }
 
     /* Reset the type of redrawing required, the window has been updated. */
     wp->w_redr_type = 0;
 #ifdef FEAT_DIFF
     wp->w_old_topfill = wp->w_topfill;
+    wp->w_old_botfill = wp->w_botfill;
 #endif
 
     if (dollar_vcol == 0)
@@ -1767,13 +1799,17 @@ win_update(wp)
 }
 
 /*
- * Clear the rest of the window and mark the unused lines with "c".
+ * Clear the rest of the window and mark the unused lines with "c1".  use "c2"
+ * as the filler character.
  */
     static void
-win_draw_end(wp, c, row)
+win_draw_end(wp, c1, c2, row, endrow, hl)
     win_T	*wp;
-    int		c;
+    int		c1;
+    int		c2;
     int		row;
+    int		endrow;
+    enum hlf_value hl;
 {
 #if defined(FEAT_FOLDING) || defined(FEAT_CMDWIN)
     int		n = 0;
@@ -1794,17 +1830,17 @@ win_draw_end(wp, c, row)
 	    /* draw the fold column at the right */
 	    if (n > wp->w_width)
 		n = wp->w_width;
-	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		    W_ENDCOL(wp) - n, (int)W_ENDCOL(wp),
 		    ' ', ' ', hl_attr(HLF_FC));
 	}
 # endif
-	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		W_WINCOL(wp), W_ENDCOL(wp) - 1 - FDC_OFF,
-		' ', ' ', hl_attr(HLF_AT));
-	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+		c2, c2, hl_attr(hl));
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		W_ENDCOL(wp) - 1 - FDC_OFF, W_ENDCOL(wp) - FDC_OFF,
-		c, ' ', hl_attr(HLF_AT));
+		c1, c2, hl_attr(hl));
     }
     else
 #endif
@@ -1816,7 +1852,7 @@ win_draw_end(wp, c, row)
 	    n = 1;
 	    if (n > wp->w_width)
 		n = wp->w_width;
-	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		    W_WINCOL(wp), (int)W_WINCOL(wp) + n,
 		    cmdwin_type, ' ', hl_attr(HLF_AT));
 	}
@@ -1829,15 +1865,15 @@ win_draw_end(wp, c, row)
 	    /* draw the fold column at the left */
 	    if (nn > W_WIDTH(wp))
 		nn = W_WIDTH(wp);
-	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		    W_WINCOL(wp) + n, (int)W_WINCOL(wp) + nn,
 		    ' ', ' ', hl_attr(HLF_FC));
 	    n = nn;
 	}
 #endif
-	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + endrow,
 		W_WINCOL(wp) + FDC_OFF, (int)W_ENDCOL(wp),
-		c, ' ', hl_attr(HLF_AT));
+		c1, c2, hl_attr(hl));
     }
     set_empty_rows(wp, row);
 }
@@ -3580,7 +3616,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		    )
 	    {
-		win_draw_end(wp, '@', row);
+		win_draw_end(wp, '@', ' ', row, wp->w_height, HLF_AT);
 #ifdef FEAT_VERTSPLIT
 		draw_vsep_win(wp, row);
 #endif
@@ -3652,6 +3688,10 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 #ifdef FEAT_DIFF
 	    --filler_todo;
+	    /* When the filler lines are actually below the last line of the
+	     * file, don't draw the line itself, break here. */
+	    if (filler_todo == 0 && wp->w_botfill)
+		break;
 #endif
 	}
 
@@ -3768,7 +3808,7 @@ screen_line(row, coloff, endcol, clear_width
 	col = endcol + 1;
 	off_to = LineOffset[row] + col + coloff;
 	off_from += col;
-	endcol = coloff + (clear_width > 0 ? clear_width : -clear_width);
+	endcol = (clear_width > 0 ? clear_width : -clear_width);
     }
 #endif /* FEAT_RIGHTLEFT */
 

@@ -53,9 +53,12 @@ static int	diff_busy = FALSE;	/* ex_diffgetput() is busy */
 #define DIFF_IWHITE	4	/* ignore change in white space */
 static int	diff_flags = DIFF_FILLER;
 
+#define LBUFLEN 50		/* length of line in diff file */
+
 static int diff_buf_idx __ARGS((buf_T *buf));
 static void diff_check_unchanged __ARGS((diff_T *dp));
 static void diff_redraw __ARGS((int dofold));
+static void diff_file __ARGS((char_u *tmp_orig, char_u *tmp_new, char_u *tmp_diff));
 static void diff_clear __ARGS((void));
 static int diff_equal_entry __ARGS((diff_T *dp, int idx1, int idx2));
 static int diff_cmp __ARGS((char_u *s1, char_u *s2));
@@ -119,7 +122,7 @@ diff_buf_add(buf)
 	    return;
 	}
 
-    EMSG2(_("Can not diff more than %ld buffers"), DB_COUNT);
+    EMSG2(_("(de3) Can not diff more than %ld buffers"), DB_COUNT);
 }
 
 /*
@@ -531,11 +534,19 @@ ex_diffupdate(eap)
     char_u	*tmp_orig;
     char_u	*tmp_new;
     char_u	*tmp_diff;
-    char_u	*cmd;
+    FILE	*fd;
+    int		ok = FALSE;
 
     /* Delete all diffblocks. */
     diff_clear();
     diff_invalid = FALSE;
+
+    /* Use the first buffer as the original text. */
+    for (idx_orig = 0; idx_orig < DB_COUNT; ++idx_orig)
+	if (diffbuf[idx_orig] != NULL)
+	    break;
+    if (idx_orig == DB_COUNT)
+	return;
 
     /* We need three temp file names. */
     tmp_orig = vim_tempname('o');
@@ -544,12 +555,47 @@ ex_diffupdate(eap)
     if (tmp_orig == NULL || tmp_new == NULL || tmp_diff == NULL)
 	goto theend;
 
-    /* Use the first buffer as the original text. */
-    for (idx_orig = 0; idx_orig < DB_COUNT; ++idx_orig)
-	if (diffbuf[idx_orig] != NULL)
-	    break;
-    if (idx_orig == DB_COUNT)
-	goto theend;		/* no diff buffers */
+    /*
+     * Do a quick test if "diff" really works.  Otherwise it looks like there
+     * are no differences.  Can't use the return value, it's non-zero when
+     * there are differences.
+     */
+    fd = fopen((char *)tmp_orig, "w");
+    if (fd != NULL)
+    {
+	fwrite("line1\n", 6, 1, fd);
+	fclose(fd);
+	fd = fopen((char *)tmp_new, "w");
+	if (fd != NULL)
+	{
+	    fwrite("line2\n", 6, 1, fd);
+	    fclose(fd);
+	    diff_file(tmp_orig, tmp_new, tmp_diff);
+	    fd = fopen((char *)tmp_diff, "r");
+	    if (fd != NULL)
+	    {
+		char_u	linebuf[LBUFLEN];
+
+		for (;;)
+		{
+		    /* There must be a line that contains "1c1". */
+		    if (tag_fgets(linebuf, LBUFLEN, fd))
+			break;
+		    if (STRNCMP(linebuf, "1c1", 3) == 0)
+			ok = TRUE;
+		}
+		fclose(fd);
+	    }
+	    mch_remove(tmp_diff);
+	    mch_remove(tmp_new);
+	}
+	mch_remove(tmp_orig);
+    }
+    if (!ok)
+    {
+	EMSG(_("(de7) Cannot create diffs"));
+	goto theend;
+    }
 
     /* Write the first buffer to a tempfile. */
     buf = diffbuf[idx_orig];
@@ -566,28 +612,7 @@ ex_diffupdate(eap)
 	if (buf_write(buf, tmp_new, NULL, (linenr_T)1, buf->b_ml.ml_line_count,
 				     NULL, FALSE, FALSE, FALSE, TRUE) == FAIL)
 	    continue;
-#ifdef FEAT_EVAL
-	if (*p_dex != NUL)
-	    /* Use 'diffexpr' to generate the diff file. */
-	    eval_diff(tmp_orig, tmp_new, tmp_diff);
-	else
-#endif
-	{
-	    cmd = alloc((unsigned)(STRLEN(tmp_orig) + STRLEN(tmp_new)
-				    + STRLEN(tmp_diff) + STRLEN(p_srr) + 14));
-	    if (cmd != NULL)
-	    {
-		/* Build the diff command and execute it.  Ignore errors, diff
-		 * returns non-zero when differences have been found. */
-		sprintf((char *)cmd, "diff %s%s%s %s",
-			(diff_flags & DIFF_IWHITE) ? "-b " : "",
-			(diff_flags & DIFF_ICASE) ? "-i " : "",
-			tmp_orig, tmp_new);
-		append_redir(cmd, tmp_diff);
-		(void)call_shell(cmd, SHELL_FILTER|SHELL_SILENT|SHELL_DOOUT);
-		vim_free(cmd);
-	    }
-	}
+	diff_file(tmp_orig, tmp_new, tmp_diff);
 
 	/* Read the diff output and add each entry to the diff list. */
 	diff_read(idx_orig, idx_new, tmp_diff);
@@ -602,6 +627,41 @@ theend:
     vim_free(tmp_orig);
     vim_free(tmp_new);
     vim_free(tmp_diff);
+}
+
+/*
+ * Make a diff between files "tmp_orig" and "tmp_new", results in "tmp_diff".
+ */
+    static void
+diff_file(tmp_orig, tmp_new, tmp_diff)
+    char_u	*tmp_orig;
+    char_u	*tmp_new;
+    char_u	*tmp_diff;
+{
+    char_u	*cmd;
+
+#ifdef FEAT_EVAL
+    if (*p_dex != NUL)
+	/* Use 'diffexpr' to generate the diff file. */
+	eval_diff(tmp_orig, tmp_new, tmp_diff);
+    else
+#endif
+    {
+	cmd = alloc((unsigned)(STRLEN(tmp_orig) + STRLEN(tmp_new)
+				+ STRLEN(tmp_diff) + STRLEN(p_srr) + 14));
+	if (cmd != NULL)
+	{
+	    /* Build the diff command and execute it.  Ignore errors, diff
+	     * returns non-zero when differences have been found. */
+	    sprintf((char *)cmd, "diff %s%s%s %s",
+		    (diff_flags & DIFF_IWHITE) ? "-b " : "",
+		    (diff_flags & DIFF_ICASE) ? "-i " : "",
+		    tmp_orig, tmp_new);
+	    append_redir(cmd, tmp_diff);
+	    (void)call_shell(cmd, SHELL_FILTER|SHELL_SILENT|SHELL_DOOUT);
+	    vim_free(cmd);
+	}
+    }
 }
 
 /*
@@ -620,6 +680,20 @@ ex_diffpatch(eap)
     char_u	*newname = NULL;	/* name of patched file buffer */
 #ifdef UNIX
     char_u	dirbuf[MAXPATHL];
+#endif
+#ifdef FEAT_BROWSE
+    char_u	*browseFile = NULL;
+#endif
+
+#ifdef FEAT_BROWSE
+    if (cmdmod.browse)
+    {
+	browseFile = do_browse(TRUE, (char_u *)_("Patch file"),
+		NULL, NULL, eap->arg, BROWSE_FILTER_ALL_FILES, curbuf);
+	if (browseFile == NULL)
+	    return;		/* operation cancelled */
+	eap->arg = browseFile;
+    }
 #endif
 
     /* We need two temp file names. */
@@ -732,6 +806,9 @@ theend:
     vim_free(tmp_new);
     vim_free(newname);
     vim_free(buf);
+#ifdef FEAT_BROWSE
+    vim_free(browseFile);
+#endif
 }
 
 /*
@@ -805,7 +882,6 @@ diff_read(idx_orig, idx_new, fname)
     diff_T	*dp = first_diff;
     diff_T	*dn, *dpl;
     long	f1, l1, f2, l2;
-#define LBUFLEN 50
     char_u	linebuf[LBUFLEN];   /* only need to hold the diff line */
     int		difftype;
     char_u	*p;
@@ -817,7 +893,10 @@ diff_read(idx_orig, idx_new, fname)
 
     fd = fopen((char *)fname, "r");
     if (fd == NULL)
+    {
+	EMSG(_("(ed3) Cannot read diff output"));
 	return;
+    }
 
     for (;;)
     {
@@ -1041,7 +1120,7 @@ diff_check(wp, lnum)
 	return 0;
 
     /* safety check: "lnum" must be a buffer line */
-    if (lnum < 1 || lnum > buf->b_ml.ml_line_count)
+    if (lnum < 1 || lnum > buf->b_ml.ml_line_count + 1)
 	return 0;
 
     idx = diff_buf_idx(buf);
@@ -1291,10 +1370,11 @@ diff_set_topline(fromwin, towin)
     }
 
     /* safety check (if diff info gets outdated strange things may happen) */
+    towin->w_botfill = FALSE;
     if (towin->w_topline > towin->w_buffer->b_ml.ml_line_count)
     {
 	towin->w_topline = towin->w_buffer->b_ml.ml_line_count;
-	towin->w_topfill = 0;
+	towin->w_botfill = TRUE;
     }
     if (towin->w_topline < 1)
     {
@@ -1509,7 +1589,7 @@ ex_diffgetput(eap)
     idx_cur = diff_buf_idx(curbuf);
     if (idx_cur == DB_COUNT)
     {
-	EMSG(_("Current buffer is not in diff mode"));
+	EMSG(_("(ed4) Current buffer is not in diff mode"));
 	return;
     }
 
@@ -1521,7 +1601,7 @@ ex_diffgetput(eap)
 		break;
 	if (idx_other == DB_COUNT)
 	{
-	    EMSG(_("No other buffer in diff mode"));
+	    EMSG(_("(ed5) No other buffer in diff mode"));
 	    return;
 	}
 
@@ -1529,7 +1609,7 @@ ex_diffgetput(eap)
 	for (i = idx_other + 1; i < DB_COUNT; ++i)
 	    if (diffbuf[i] != curbuf && diffbuf[i] != NULL)
 	    {
-		EMSG(_("More than two buffers in diff mode, don't know which one to use"));
+		EMSG(_("(ed6) More than two buffers in diff mode, don't know which one to use"));
 		return;
 	    }
     }
@@ -1552,13 +1632,13 @@ ex_diffgetput(eap)
 	buf = buflist_findnr(i);
 	if (buf == NULL)
 	{
-	    EMSG2(_("Can't find buffer \"%s\""), eap->arg);
+	    EMSG2(_("(de4) Can't find buffer \"%s\""), eap->arg);
 	    return;
 	}
 	idx_other = diff_buf_idx(buf);
 	if (idx_other == DB_COUNT)
 	{
-	    EMSG2(_("Buffer \"%s\" is not in diff mode"), eap->arg);
+	    EMSG2(_("(de5) Buffer \"%s\" is not in diff mode"), eap->arg);
 	    return;
 	}
     }

@@ -176,7 +176,7 @@ gui_init_check()
     if (result != MAYBE)
     {
 	if (result == FAIL)
-	    EMSG(_("Cannot start the GUI"));
+	    EMSG(_("(eg4) Cannot start the GUI"));
 	return result;
     }
 
@@ -294,7 +294,7 @@ gui_init()
 	    if (STRCMP(use_gvimrc, "NONE") != 0
 		    && STRCMP(use_gvimrc, "NORC") != 0
 		    && do_source(use_gvimrc, FALSE, FALSE) != OK)
-		EMSG2(_("Cannot read from \"%s\""), use_gvimrc);
+		EMSG2(_("(ge5) Cannot read from \"%s\""), use_gvimrc);
 	}
 	else
 	{
@@ -419,7 +419,7 @@ gui_init()
 	goto error2;
 #ifdef FEAT_MBYTE
     if (gui_get_wide_font() == FAIL)
-	EMSG(_("'guifontwide' invalid"));
+	EMSG(_("(eg5) 'guifontwide' invalid"));
 #endif
 
     gui.num_cols = Columns;
@@ -798,16 +798,26 @@ gui_update_cursor(force, clear_selection)
 			     shape_table[idx].blinkoff);
 	if (id > 0)
 	{
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-	    guicolor_T ImeGetCursorColor(guicolor_T color);
-#endif
-
 	    cattr = syn_id2colors(id, &cfg, &cbg);
+#if (defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)) || defined(FEAT_XIM)
+	    {
+		static int id;
+		guicolor_T fg, bg;
+
+		if (input_method_active())
+		{
+		    id = syn_name2id((char_u *)"CursorIM");
+		    if (id > 0)
+		    {
+			syn_id2colors(id, &fg, &bg);
+			if (bg > 0)
+			    cbg = bg;
+		    }
+		}
+	    }
+#endif
 	    --cbg;
 	    --cfg;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-	    cbg = ImeGetCursorColor(cbg);
-#endif
 	}
 
 	/*
@@ -3075,8 +3085,11 @@ gui_drag_scrollbar(sb, value, still_dragging)
 			))))
     {
 	do_check_scrollbind(TRUE);
-	if (sb->wp == NULL)
-	    setcursor();
+	/* need to update the window right here */
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	    if (wp->w_redr_type > 0)
+		updateWindow(wp);
+	setcursor();
     }
 # endif
     out_flush();

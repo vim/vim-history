@@ -1429,32 +1429,11 @@ do_pending_operator(cap, old_col, gui_yank)
 
 		oap->block_mode = TRUE;
 
-		getvcol(curwin, &(oap->start),
+		getvvcol(curwin, &(oap->start),
 				      &oap->start_vcol, NULL, &oap->end_vcol);
 		if (!redo_VIsual_busy)
 		{
-		    getvcol(curwin, &(oap->end), &start, NULL, &end);
-# ifdef FEAT_VIRTUALEDIT
-		    if (virtual_active())
-		    {
-			/* Add "coladd" to the virtual columns.  But watch out
-			 * for a double-wide character! */
-			if (lt(oap->start, curwin->w_cursor))
-			{
-			    oap->start_vcol += curbuf->b_visual_start.coladd;
-			    start += curbuf->b_visual_end.coladd;
-			}
-			else
-			{
-			    oap->start_vcol += curbuf->b_visual_end.coladd;
-			    start += curbuf->b_visual_start.coladd;
-			}
-			if (oap->end_vcol < oap->start_vcol)
-			    oap->end_vcol = oap->start_vcol;
-			if (end < start)
-			    end = start;
-		    }
-# endif
+		    getvvcol(curwin, &(oap->end), &start, NULL, &end);
 
 		    if (start < oap->start_vcol)
 			oap->start_vcol = start;
@@ -1476,7 +1455,7 @@ do_pending_operator(cap, old_col, gui_yank)
 			    curwin->w_cursor.lnum <= oap->end.lnum;
 						      ++curwin->w_cursor.lnum)
 		    {
-			getvcol(curwin, &curwin->w_cursor, NULL, NULL, &end);
+			getvvcol(curwin, &curwin->w_cursor, NULL, NULL, &end);
 			if (end > oap->end_vcol)
 			    oap->end_vcol = end;
 		    }
@@ -2995,9 +2974,9 @@ find_ident_under_cursor(string, find_type)
 	 * didn't find an identifier or string
 	 */
 	if (find_type & FIND_STRING)
-	    EMSG(_("No string under cursor"));
+	    EMSG(_("(eq1) No string under cursor"));
 	else
-	    EMSG(_("No identifier under cursor"));
+	    EMSG(_("(eq2) No identifier under cursor"));
 	return 0;
     }
     ptr += col;
@@ -4139,7 +4118,7 @@ dozet:
 		}
 		else
 		{
-		    EMSG(_("Cannot create fold with current 'foldmethod'"));
+		    EMSG(_("(ef9) Cannot create fold with current 'foldmethod'"));
 		    clearopbeep(cap->oap);
 		}
 		break;
@@ -4157,7 +4136,7 @@ dozet:
 				  curwin->w_cursor.lnum, nchar == 'D', FALSE);
 		}
 		else
-		    EMSG(_("Cannot delete fold with current 'foldmethod'"));
+		    EMSG(_("(ef0) Cannot delete fold with current 'foldmethod'"));
 		break;
 
 		/* "zE": erease all folds */
@@ -4170,7 +4149,7 @@ dozet:
 		    deleteFold((linenr_T)1, curbuf->b_ml.ml_line_count,
 								 TRUE, FALSE);
 		else
-		    EMSG(_("Cannot erase folds with current 'foldmethod'"));
+		    EMSG(_("(ez6) Cannot erase folds with current 'foldmethod'"));
 		break;
 
 		/* "zn": fold none: reset 'foldenable' */
@@ -5752,12 +5731,11 @@ nv_replace(cap)
 #endif
 
 #ifdef FEAT_VIRTUALEDIT
-   /* If virtual editing is ON, we have to make sure the cursor position
-    * is identical with the text position */
-    if (ve_flags == VE_ALL && curwin->w_cursor.coladd)
+    /* Break tabs, etc. */
+    if (virtual_active())
     {
 	u_save_cursor();
-	coladvance_force(getviscol() + 1);
+	coladvance_force(getviscol());
     }
 #endif
 
@@ -5950,10 +5928,8 @@ nv_Replace(cap)
 	if (u_save_cursor() == OK)
 	{
 #ifdef FEAT_VIRTUALEDIT
-	    /* If virtual editing is ON, we have to make sure the cursor
-	     * position is identical with the text position. */
-	    if (ve_flags == VE_ALL && curwin->w_cursor.coladd)
-		coladvance_force(getviscol() + 1);
+	    if (virtual_active())
+		coladvance(getviscol());
 #endif
 	    /* This is a new edit command, not a restart.  We don't edit
 	     * recursively. */

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
-" URL:		http://www.tritarget.com/vim/syntax
-" Last Change:	2001 Jan 15
+" URL:		http://tritarget.com/pub/vim/syntax/aspvbs.vim
+" Last Change:	2001 May 04
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -13,7 +13,11 @@ if !exists("main_syntax")
   let main_syntax = 'aspvbs'
 endif
 
-runtime! syntax/html.vim
+if (version < 600)
+  source <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+endif
 unlet b:current_syntax
 
 syn cluster htmlPreProc add=AspVBScriptInsideHtmlTags
@@ -125,19 +129,32 @@ syn sync match AspVBSSyncGroup grouphere AspVBScriptInsideHtmlTags "<%"
 " This is a kludge so the HTML will sync properly
 syn sync match htmlHighlight groupthere htmlTag "%>"
 
-" The default highlighting.
-"hi def link AspVBScript	Special
-hi def link AspVBSLineNumber	Comment
-hi def link AspVBSNumber	Number
-hi def link AspVBSError		Error
-hi def link AspVBSStatement	Statement
-hi def link AspVBSString	String
-hi def link AspVBSComment	Comment
-hi def link AspVBSTodo		Todo
-hi def link AspVBSFunction	Identifier
-hi def link AspVBSMethods	PreProc
-hi def link AspVBSEvents	Special
-hi def link AspVBSTypeSpecifier	Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_aspvbs_syn_inits")
+  if version < 508
+    let did_aspvbs_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  "HiLink AspVBScript	Special
+  HiLink AspVBSLineNumber	Comment
+  HiLink AspVBSNumber	Number
+  HiLink AspVBSError		Error
+  HiLink AspVBSStatement	Statement
+  HiLink AspVBSString	String
+  HiLink AspVBSComment	Comment
+  HiLink AspVBSTodo		Todo
+  HiLink AspVBSFunction	Identifier
+  HiLink AspVBSMethods	PreProc
+  HiLink AspVBSEvents	Special
+  HiLink AspVBSTypeSpecifier	Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "aspvbs"
 

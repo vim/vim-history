@@ -1445,7 +1445,7 @@ get_logfont(
 			}
 		    if (cp->name == NULL)
 		    {
-			sprintf((char *)IObuff, _("Illegal charset name \"%s\" in font name \"%s\""), p, name);
+			sprintf((char *)IObuff, _("(en7) Illegal charset name \"%s\" in font name \"%s\""), p, name);
 			EMSG(IObuff);
 			break;
 		    }
@@ -1453,7 +1453,7 @@ get_logfont(
 		}
 	    default:
 		sprintf((char *)IObuff,
-			_("Illegal char '%c' in font name \"%s\""),
+			_("(en8) Illegal char '%c' in font name \"%s\""),
 			p[-1], name);
 		EMSG(IObuff);
 		break;
@@ -1482,7 +1482,7 @@ gui_mch_get_font(
     get_logfont(&lf, name);
     font = get_font_handle(&lf);
     if (font == NOFONT && giveErrorIfMissing)
-	EMSG2(_("Unknown font: %s"), name);
+	EMSG2(_("(fe0) Unknown font: %s"), name);
     return font;
 }
     void
@@ -2580,7 +2580,8 @@ _OnActivateApp(
     BOOL fActivate,
     DWORD dwThreadId)
 {
-    gui_focus_change((int)fActivate);
+    /* we call gui_focus_change() in _OnSetFocus() */
+    /* gui_focus_change((int)fActivate); */
     return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
 }
 

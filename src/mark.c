@@ -710,7 +710,7 @@ show_one_mark(c, arg, p, name, current)
 	    if (arg == NULL)
 		MSG(_("No marks set"));
 	    else
-		EMSG2(_("No marks matching \"%s\""), arg);
+		EMSG2(_("(me1) No marks matching \"%s\""), arg);
 	}
     }
     /* don't output anything if 'q' typed at --more-- prompt */
