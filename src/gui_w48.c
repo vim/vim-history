@@ -113,7 +113,6 @@ typedef int DWORD;
 # define LPCSTR		int
 # undef MSG
 # define MSG		int
-typedef void *HIMC;
 #endif
 
 #ifndef GET_X_LPARAM
