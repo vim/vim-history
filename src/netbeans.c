@@ -2568,24 +2568,20 @@ netbeans_deleted_all_lines(buf_T *bufp)
 
 /*
  * See if the lines are guarded. The top and bot parameters are from
- * u_savecommon() and are translated to 'to' and 'from' values before
- * testing.
- *
- * Note: top and bot are 0 based but p->lnum is 1 based. So to and from
- * must be corrected for this.
+ * u_savecommon(), these are the line above the change and the line below the
+ * change.
  */
     int
 netbeans_is_guarded(linenr_T top, linenr_T bot)
 {
-    signlist_T *p;
-    int lnum;
+    signlist_T	*p;
+    int		lnum;
 
     for (p = curbuf->b_signlist; p != NULL; p = p->next)
-    {
-	for (lnum = top + 1; lnum < bot; lnum++)
+	if (p->id >= GUARDEDOFFSET)
+	    for (lnum = top + 1; lnum < bot; lnum++)
 		if (lnum == p->lnum)
-			return TRUE;
-    }
+		    return TRUE;
 
     return FALSE;
 }
