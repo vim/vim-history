@@ -7862,7 +7862,7 @@ ex_function(eap)
 	/* Check if the function already exists, don't let the user type the
 	 * whole function before telling him it doesn't work!  For a script we
 	 * need to skip the body to be able to find what follows. */
-	if (find_func(name) != NULL && !eap->forceit)
+	if (!eap->skip && !eap->forceit && find_func(name) != NULL)
 	{
 	    EMSG2(_(e_funcexts), name);
 	    goto erret;
@@ -8246,6 +8246,7 @@ ex_delfunction(eap)
 	return;
     if (!ends_excmd(*skipwhite(p)))
     {
+	vim_free(name);
 	EMSG(_(e_trailing));
 	return;
     }
