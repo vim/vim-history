@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0.  Last change: 2001 Sep 16
+*eval.txt*      For Vim version 6.0.  Last change: 2002 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -743,10 +743,11 @@ byte2line( {byte})		Number	line number at byte count {byte}
 char2nr( {expr})		Number	ASCII value of first char in {expr}
 cindent( {lnum})		Number  C indent for line {lnum}
 col( {expr})			Number	column nr of cursor or mark
-confirm( {msg}, {choices} [, {default} [, {type}]])
+confirm( {msg} [, {choices} [, {default} [, {type}]]])
 				Number	number of choice picked by user
 cscope_connection( [{num} , {dbpath} [, {prepend}]])
 				Number	checks existence of cscope connection
+cursor( {lnum}, {col})		Number  position cursor at {lnum}, {col}
 delete( {fname})		Number	delete file {fname}
 did_filetype()			Number	TRUE if FileType autocommand event used
 escape( {string}, {chars})	String	escape {chars} in {string} with '\'
@@ -995,16 +996,24 @@ col({expr})	The result is a Number, which is the column of the file
 			col("'t")		column of mark t
 			col("'" . markname)	column of mark markname
 <		The first column is 1.  0 is returned for an error.
-
-							*confirm()*
-confirm({msg}, {choices} [, {default} [, {type}]])
+		For the cursor position, when 'virtualedit' is active, the
+		column is one higher if the cursor is after the end of the
+		line.  This can be used to obtain the column in Insert mode: >
+			:imap <F2> <C-O>:let save_ve = &ve<CR>
+				\<C-O>:set ve=all<CR>
+				\<C-O>:echo col(".") . "\n" <Bar>
+				\let &ve = save_ve<CR>
+<
+						*confirm()*
+confirm({msg} [, {choices} [, {default} [, {type}]]])
 		Confirm() offers the user a dialog, from which a choice can be
 		made.  It returns the number of the choice.  For the first
 		choice this is 1.
 		Note: confirm() is only supported when compiled with dialog
 		support, see |+dialog_con| and |+dialog_gui|.
 		{msg} is displayed in a |dialog| with {choices} as the
-		alternatives.
+		alternatives.  When {choices} is missing or empty, "&OK" is
+		used (and translated).
 		{msg} is a String, use '\n' to include a newline.  Only on
 		some systems the string is wrapped when it doesn't fit.
 		{choices} is a String, with the individual choices separated
@@ -1085,6 +1094,17 @@ cscope_connection([{num} , {dbpath} [, {prepend}]])
 		cscope_connection(4, "out", "local")			0
 		cscope_connection(4, "cscope.out", "/usr/local")	1
 <
+cursor({lnum}, {col})					*cursor()*
+		Positions the cursor at the column {col} in the line {lnum}.
+		Does not change the jumplist.
+		If {lnum} is greater than the number of lines in the buffer,
+		the cursor will be positioned at the last line in the buffer.
+		If {lnum} is zero, the cursor will stay in the current line.
+		If {col} is greater than the number of characters in the line,
+		the cursor will be positioned at the last character in the
+		line.
+		If {col} is zero, the cursor will stay in the current column.
+
 							*delete()*
 delete({fname})	Deletes the file by the name {fname}.  The result is a Number,
 		which is 0 if the file was deleted successfully, and non-zero
