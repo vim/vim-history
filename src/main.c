@@ -334,7 +334,11 @@ main
      */
     for (i = 0; i < argc; i++)
     {
-	if (STRCMP(argv[i], "-display") == 0)
+	if (STRCMP(argv[i], "-display") == 0
+#ifdef USE_GUI_GTK
+		|| STRCMP(argv[i], "--display") == 0
+#endif
+		)
 	{
 	    xterm_display = argv[i + 1];
 	    break;

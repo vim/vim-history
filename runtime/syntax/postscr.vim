@@ -1,17 +1,17 @@
 " Vim syntax file
-" Language:     PostScript - all Levels, selectable
+" Language:	PostScript - all Levels, selectable
 " Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
-" Filenames:    *.ps,*.eps
-" Last Change:  13th May 1999
-" URL:          N/A
+" Filenames:	*.ps,*.eps
+" Last Change:  10th January 2000
+" URL:          http://www.netcomuk.co.uk/~mrw/vim
 "
 " Options Flags:
-" postscr_level                 - language level to use for highligting (1, 2, or 3)
-" postscr_display               - include display PS operators
-" postscr_ghostscript           - include GS extensions
-" postscr_fonts                 - highlight standard font names (a lot for PS 3)
-" postscr_encoding              - highlight encoding names (there are a lot)
-" postscr_andornot_binary       - highlight and, or, and not as binary operators (not logical)
+" postscr_level			- language level to use for highligting (1, 2, or 3)
+" postscr_display		- include display PS operators
+" postscr_ghostscript		- include GS extensions
+" postscr_fonts			- highlight standard font names (a lot for PS 3)
+" postscr_encoding		- highlight encoding names (there are a lot)
+" postscr_andornot_binary	- highlight and, or, and not as binary operators (not logical)
 "
 
 " Remove any old syntax stuff hanging around
@@ -71,6 +71,7 @@ syn region postscrASCIIString   start=+(+ end=+)+ skip=+([^)]*)+ contains=postsc
 " Hex strings
 syn match postscrHexCharError   contained "[^<>[:xdigit:][:space:]]"
 syn region postscrHexString     start=+<\($\|[^<]\)+ end=+>+ contains=postscrHexCharError
+syn match postscrHexString      "<>"
 " ASCII85 strings
 syn match postscrASCII85CharError contained "[^<>\~!-uz[:space:]]"
 syn region postscrASCII85String start=+<\~+ end=+\~>+ contains=postscrASCII85CharError

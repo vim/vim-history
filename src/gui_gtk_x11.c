@@ -525,8 +525,23 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     for (i = 0; i < len; ++i)
 	string[i] = event->string[i];
 
-    if (key_sym == GDK_space)
-	string[0] = ' ';	/* Otherwise Ctrl-Space doesn't work */
+    /* Shift-Tab results in Left_Tab, but we want <S-Tab> */
+    if (key_sym == GDK_ISO_Left_Tab)
+	key_sym = GDK_Tab;
+
+    if ((key_sym == GDK_2 || key_sym == GDK_at)
+					 && (event->state & GDK_CONTROL_MASK))
+    {
+	string[0] = NUL;	/* CTRL-2 and CTRL-@ is NUL */
+	len = 1;
+    }
+    else if (len == 0 && (key_sym == GDK_space || key_sym == GDK_Tab))
+    {
+	/* When there are modifiers, these keys get zero length; we need the
+	 * original key here to be able to add a modifier below. */
+	string[0] = (key_sym & 0xff);
+	len = 1;
+    }
 
 #ifdef WANT_MENU
     /* If there is a menu and 'wak' is "yes", or 'wak' is "menu" and the key
@@ -575,7 +590,6 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	    modifiers |= MOD_MASK_CTRL;
 	if (event->state & GDK_MOD1_MASK)
 	    modifiers |= MOD_MASK_ALT;
-
 #if defined(USE_XIM) && defined(MULTI_BYTE)
 	/* It seems GDK returns GDK_VoidSymbol if the len is 3 and it
 	 * contains multi-byte characters. Is next is right?
@@ -2684,6 +2698,26 @@ input_timer_cb(gpointer data)
     return FALSE;		/* don't happen again */
 }
 
+#ifdef USE_SNIFF
+/*
+ * Callback function, used when data is available on the SNiFF connection.
+ */
+/* ARGSUSED */
+    static void
+sniff_request_cb(
+    gpointer	data,
+    gint	source_fd,
+    GdkInputCondition condition)
+{
+    static char_u bytes[3] = {CSI, (int)KS_EXTRA, (int)KE_SNIFF};
+
+    add_to_input_buf(bytes, 3);
+
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+#endif
+
 /*
  * GUI input routine called by gui_wait_for_chars().  Waits for a character
  * from the keyboard.
@@ -2698,8 +2732,27 @@ gui_mch_wait_for_chars(long wtime)
 {
     int focus;
     guint timer;
-
     static int timed_out;
+#ifdef USE_SNIFF
+    static int	sniff_on = 0;
+    static gint	sniff_input_id = 0;
+#endif
+
+#ifdef USE_SNIFF
+    if (sniff_on && !want_sniff_request)
+    {
+	if (sniff_input_id)
+	    gdk_input_remove(sniff_input_id);
+	sniff_on = 0;
+    }
+    else if (!sniff_on && want_sniff_request)
+    {
+	/* Add fd_from_sniff to watch for available data in main loop. */
+	sniff_input_id = gdk_input_add(fd_from_sniff,
+			       GDK_INPUT_READ, sniff_request_cb, (gpointer)0);
+	sniff_on = 1;
+    }
+#endif
 
     timed_out = FALSE;
 

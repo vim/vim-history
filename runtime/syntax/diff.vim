@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 10
+" Last Change:	1999 Dec 10
 
 " Remove any old syntax stuff hanging around
 syn clear

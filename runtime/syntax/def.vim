@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Microsoft Module-Definition (.def) File
 " Maintainer:	Rob Brady <robb@datatone.com>
-" Last change:	$Date$
+" Last Change:	$Date$
 " URL: http://www.datatone.com/~robb/vim/syntax/def.vim
 " $Revision$
 

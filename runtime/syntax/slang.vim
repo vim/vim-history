@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	S-Lang
 " Maintainer:	Jan Hlavacek <lahvak@math.ohio-state.edu>
-" Last change:	980216
+" Last Change:	980216
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -2,7 +2,7 @@
 " Language:	TCL/TK
 " Maintainer:	Allan Kelly <Allan.Kelly@ed.ac.uk>
 " Original:	Robin Becker <robin@jessikat.demon.co.uk>
-" Version:      5.1(synched), 1998 June 29
+" Version:	5.1(synched), 1998 June 29
 "
 " Keywords TODO: format clock click anchor
 

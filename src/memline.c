@@ -1196,7 +1196,7 @@ recover_names(fname, list, nr)
 	{
 	    if (fname == NULL || *fname == NULL)
 	    {
-#ifdef RISCOS
+#if defined(VMS) || defined(RISCOS)
 		names[0] = vim_strsave((char_u *)"*_sw#");
 #else
 		names[0] = vim_strsave((char_u *)"*.sw?");
@@ -1294,7 +1294,7 @@ recover_names(fname, list, nr)
 	    char_u	    *swapname;
 
 #if defined(VMS) || defined(RISCOS)
-	    swapname = modname(*fname, (char_u *)"_swp", TRUE);
+	    swapname = modname(*fname, (char_u *)"_swp", FALSE);
 #else
 	    swapname = modname(*fname, (char_u *)".swp", TRUE);
 #endif
@@ -3752,9 +3752,8 @@ fnamecmp_ino(fname_c, fname_s, ino_block0)
     int		retval_c;	    /* flag: buf_c valid */
     int		retval_s;	    /* flag: buf_s valid */
 
-
     if (mch_stat((char *)fname_c, &st) == 0)
-	ino_c = st.st_ino;
+	ino_c = (ino_t)st.st_ino;
 
     /*
      * First we try to get the inode from the file name, because the inode in
@@ -3762,9 +3761,9 @@ fnamecmp_ino(fname_c, fname_s, ino_block0)
      * valid on this machine), use the inode from block 0.
      */
     if (mch_stat((char *)fname_s, &st) == 0)
-	ino_s = st.st_ino;
+	ino_s = (ino_t)st.st_ino;
     else
-	ino_s = ino_block0;
+	ino_s = (ino_t)ino_block0;
 
     if (ino_c && ino_s)
 	return (ino_c != ino_s);

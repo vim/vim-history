@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:     HTML
-" Maintainer:   Claudio Fleiner <claudio@fleiner.com>
-" URL:          http://www.fleiner.com/vim/syntax/html.vim
-" Last change:  1999 Jul 20
+" Language:	HTML
+" Maintainer:	Claudio Fleiner <claudio@fleiner.com>
+" URL:		http://www.fleiner.com/vim/syntax/html.vim
+" Last Change:	1999 Sept 28
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -18,14 +18,13 @@ if !exists("main_syntax")
 endif
 
 " tags
-syn match   htmlSpecial  contained "\\\d\d\d\|\\."
-syn region  htmlString   contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=htmlSpecial,javaScriptExpression,@htmlPreproc
-syn region  htmlString   contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=htmlSpecial,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+"+ end=+"+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
+syn region  htmlString   contained start=+'+ end=+'+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc
 syn match   htmlValue    contained "=[\t ]*[^'" \t>][^ \t>]*"hs=s+1   contains=javaScriptExpression,@htmlPreproc
 syn region  htmlEndTag             start=+</+      end=+>+ contains=htmlTagN,htmlTagError
-syn region  htmlTag                start=+<[^/]+   end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc
-syn match   htmlTagN     contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName
-syn match   htmlTagN     contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName
+syn region  htmlTag                start=+<[^/]+   end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc,@htmlArgCluster
+syn match   htmlTagN     contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster
+syn match   htmlTagN     contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster
 syn match   htmlTagError contained "[^>]<"ms=s+1
 
 
@@ -103,7 +102,7 @@ syn match htmlPreProcAttrName contained "\(expr\|errmsg\|sizefmt\|timefmt\|var\|
 
 if !exists("html_no_rendering")
   " rendering
-  syn cluster htmlTop contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,@htmlPreproc
+  syn cluster htmlTop contains=@Spell,htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,htmlLink,javaScript,@htmlPreproc
 
   syn region htmlBold start="<b\>" end="</b>"me=e-4 contains=@htmlTop,htmlBoldUnderline,htmlBoldItalic
   syn region htmlBold start="<strong\>" end="</strong>"me=e-9 contains=@htmlTop,htmlBoldUnderline,htmlBoldItalic
@@ -133,7 +132,7 @@ if !exists("html_no_rendering")
   syn region htmlItalicUnderlineBold contained start="<b\>" end="</b>"me=e-4 contains=@htmlTop
   syn region htmlItalicUnderlineBold contained start="<strong\>" end="</strong>"me=e-9 contains=@htmlTop
 
-  syn region htmlLink start="<a\>[^>]*href\>" end="</a>"me=e-4 contains=htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
+  syn region htmlLink start="<a\>[^>]*href\>" end="</a>"me=e-4 contains=@Spell,htmlTag,htmlEndTag,htmlSpecialChar,htmlPreProc,htmlComment,javaScript,@htmlPreproc
   syn region htmlH1 start="<h1\>" end="</h1>"me=e-5 contains=@htmlTop
   syn region htmlH2 start="<h2\>" end="</h2>"me=e-5 contains=@htmlTop
   syn region htmlH3 start="<h3\>" end="</h3>"me=e-5 contains=@htmlTop

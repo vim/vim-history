@@ -3,7 +3,7 @@
 " Language:	SPEC: Build/install scripts for Linux RPM packages
 " Maintainer:	Donovan Rebbechi elflord@pegasus.rutgers.edu
 " URL:		http://pegasus.rutgers.edu/~elflord/vim/syntax/spec.vim
-" Last change:	Wed Sep 22 21:42:34 EDT 1999
+" Last Change:	Wed Sep 22 21:42:34 EDT 1999
 
 syn clear
 

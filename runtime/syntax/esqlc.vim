@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ESQL-C
 " Maintainer:	Jonathan A. George <jageorge@tel.gte.com>
-" Last change:	1998 Aug 12
+" Last Change:	1998 Aug 12
 
 " Remove any old syntax stuff hanging around
 syntax clear

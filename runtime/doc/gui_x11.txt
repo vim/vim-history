@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.6a.  Last change: 2000 Jan 01
+*gui_x11.txt*   For Vim version 5.6.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -188,7 +188,7 @@ Using a pipe should work on any Unix system, but there are disadvantages:
 - The ":sh" command won't show a prompt, although it will sort of work.
 - When using ":make" it's not possible to interrupt with a CTRL-C.
 
-Typehead while the external command is running is often lost.  This happens
+Typeahead while the external command is running is often lost.  This happens
 both with a pipe and a pseudo-tty.  This is a known problem, but it seems it
 can't be fixed (or at least, it's very difficult).
 
@@ -323,8 +323,8 @@ has not been tested with Vim and is also unsupported.
 For Motif, you need at least Motif version 1.2 and/or X11R5.  Motif 2.0 and
 X11R6 are OK.  Motif 1.1 and X11R4 might work, no guarantee (there may be a
 few problems, but you might make it compile and run with a bit of work, please
-send me the patches if you do).  The newest releases of Lesstif have been
-reported to mostly work (e.g., tear-off menus don't work).
+send me the patches if you do).  The newest releases of LessTif have been
+reported to work fine too.
 
 							*gui-x11-athena*
 The Athena version uses the Xaw widget set by default.  If you have the 3D

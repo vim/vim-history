@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	AmigaDos
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change: May 18, 1998
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	May 18, 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

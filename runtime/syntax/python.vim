@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Python
 " Maintainer:	Neil Schemenauer <nascheme@enme.ucalgary.ca>
-" Last change:	Sun 03 Oct 1999
+" Last Change:	Sun 03 Oct 1999
 
 " remove old syntax
 syn clear

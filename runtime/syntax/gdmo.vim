@@ -3,7 +3,7 @@
 "		(ISO-10165-4; Guidelines for the Definition of Managed Object)
 " Maintainer:	Gyuman Kim <violino@dooly.modacom.co.kr>
 " URL:		http://dooly.modacom.co.kr/~violino/gdmo.vim
-" Last change:	1999 Jul 02
+" Last Change:	1999 Jul 02
 
 " Remove any old syntax stuff hanging around
 syn clear

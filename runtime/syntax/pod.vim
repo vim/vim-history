@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl POD format
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last change:	1999 Jul 03
+" Last Change:	1999 Jul 03
 
 " To add embedded POD documentation highlighting to your syntax file, add
 " the commands:

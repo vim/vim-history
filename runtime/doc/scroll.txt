@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.6a.  Last change: 1999 Dec 08
+*scroll.txt*    For Vim version 5.6.  Last change: 1999 Dec 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

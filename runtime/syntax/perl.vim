@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:        Perl
-" Maintainer:      Nick Hibma <n_hibma@webweaving.org>
-" Last change:     1999 Dec 15
-" Location:        http://www.etla.net/~n_hibma/vim/syntax/perl.vim
+" Language:	Perl
+" Maintainer:	Nick Hibma <n_hibma@webweaving.org>
+" Last Change:	1999 Dec 27
+" Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
 " any comments.
@@ -11,16 +11,17 @@
 "       http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
 "
 " Original version: Sonia Heimann <niania@netsurf.org>
+" Thanks to many people for their contribution. They made it work, not me.
 
 " The following parameters are available for tuning the
 " perl syntax highlighting, with defaults given:
 "
-" let perl_include_pod = 0
-" let perl_want_scope_in_variables = 0
-" let perl_extended_vars = 0
-" let perl_string_as_statement = 0
-" let perl_no_sync_on_sub = 0
-" let perl_no_sync_on_global_var = 0
+" unlet perl_include_pod
+" unlet perl_want_scope_in_variables
+" unlet perl_extended_vars
+" unlet perl_string_as_statement
+" unlet perl_no_sync_on_sub
+" unlet perl_no_sync_on_global_var
 " let perl_sync_dist = 100
 
 " Remove any old syntax stuff hanging around
@@ -40,7 +41,6 @@ endif
 
 " All keywords
 "
-syn keyword perlLabel            case default
 syn keyword perlConditional      if elsif unless switch eq ne gt lt ge le cmp not and or xor
 syn keyword perlConditional      else nextgroup=perlElseIfError skipwhite skipnl skipempty
 syn keyword perlRepeat           while for foreach do until
@@ -67,7 +67,7 @@ syn keyword perlStatementSocket  accept bind connect getpeername getsockname get
 syn keyword perlStatementIPC     msgctl msgget msgrcv msgsnd semctl semget semop shmctl shmget shmread shmwrite
 syn keyword perlStatementNetwork endprotoent endservent gethostbyaddr gethostbyname gethostent getnetbyaddr getnetbyname getnetent getprotobyname getprotobynumber getprotoent getservbyname getservbyport getservent sethostent setnetent setprotoent setservent
 syn keyword perlStatementPword   getgrent getgrgid getgrnam getlogia
-syn keyword perlStatementTime    gmtime localtime time timesr
+syn keyword perlStatementTime    gmtime localtime time times
 
 syn keyword perlStatementMisc    print warn formline reset scalar new delete STDIN STDOUT STDERR
 
@@ -195,17 +195,29 @@ syn region perlTranslation matchgroup=perlMatchStartEnd start=+\[+ end=+\][xosmi
 " a string
 syn match perlString "\<\I\i*\s*=>"me=e-2
 
-" Strings and q, qq and qw expressions
+" Strings and q, qq, qw and qr expressions
 syn region perlStringUnexpanded matchgroup=perlStringStartEnd start="'" end="'" contains=@perlInterpSQ
 syn region perlString matchgroup=perlStringStartEnd start=+"+  end=+"+ contains=@perlInterpDQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+q[qx]#+ end=+#+ contains=@perlInterpDQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+q[qx]|+ end=+|+ contains=@perlInterpDQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+q[qx](+ end=+)+ contains=@perlInterpDQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+q[qx]/+ end=+/+ contains=@perlInterpDQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+qw\=#+  end=+#+ contains=@perlInterpSQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+qw\=|+  end=+|+ contains=@perlInterpSQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+qw\=(+  end=+)+ contains=@perlInterpSQ
-syn region perlQQ matchgroup=perlStringStartEnd start=+qw\=/+  end=+/+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q#+ end=+#+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q|+ end=+|+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q(+ end=+)+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q{+ end=+}+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q/+ end=+/+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q[qx]#+ end=+#+ contains=@perlInterpDQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q[qx]|+ end=+|+ contains=@perlInterpDQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q[qx](+ end=+)+ contains=@perlInterpDQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q[qx]{+ end=+}+ contains=@perlInterpDQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<q[qx]/+ end=+/+ contains=@perlInterpDQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qw#+  end=+#+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qw|+  end=+|+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qw(+  end=+)+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qw{+  end=+}+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qw/+  end=+/+ contains=@perlInterpSQ
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qr#+  end=+#+ contains=@perlInterpMatch
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qr|+  end=+|+ contains=@perlInterpMatch
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qr(+  end=+)+ contains=@perlInterpMatch
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qr{+  end=+}+ contains=@perlInterpMatch
+syn region perlQQ matchgroup=perlStringStartEnd start=+\<qr/+  end=+/+ contains=@perlInterpMatch
 
 " Constructs such as print <<EOF [...] EOF
 "

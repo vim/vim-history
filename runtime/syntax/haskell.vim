@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last change:	1999 May 8
+" Last Change:	1999 May 8
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	4Dos batch file
 " Maintainer:	John Leo Spetz <jls11@po.cwru.edu>
-" Last change:	1999 Jul 02
+" Last Change:	1999 Jul 02
 
 "//Issues to resolve:
 "//- Boolean operators surrounded by period are recognized but the

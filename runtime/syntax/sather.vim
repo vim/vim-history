@@ -2,7 +2,7 @@
 " Language:	Sather/pSather
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/sather.vim
-" Last change:	1998 Jan 12
+" Last Change:	1998 Jan 12
 
 " Sather is a OO-language developped at the International Computer Science
 " Institute (ICSI) in Berkeley, CA. pSather is a parallel extension to Sather.

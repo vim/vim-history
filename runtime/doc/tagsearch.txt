@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 5.6a.  Last change: 1999 Aug 09
+*tagsearch.txt* For Vim version 5.6.  Last change: 1999 Aug 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

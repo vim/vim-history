@@ -4,7 +4,7 @@
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
 "		If you want to enhance and maintain, You can remove my name
 "		and insert yours.
-" Last change:	1999 Sep 18
+" Last Change:	1999 Sep 18
 
 " Remove any old syntax stuff hanging around
 syn clear

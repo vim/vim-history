@@ -22,7 +22,7 @@
 =   General defines
 ============================================================================*/
 #ifndef PROGRAM_VERSION
-# define PROGRAM_VERSION	"3.3.3"
+# define PROGRAM_VERSION	"3.4"
 #endif
 #define PROGRAM_NAME	"Exuberant Ctags"
 #define PROGRAM_URL	"http://darren.hiebert.com/ctags/"

@@ -104,11 +104,14 @@
 # define HAVE_TIME_H
 # define HAVE_STDLIB_H
 # define HAVE_SYS_TYPES_H
+# define HAVE_SYS_STAT_H
+# define HAVE_UNISTD_H
 # define HAVE_CLOCK
 # define HAVE_CHSIZE
 # define HAVE_FGETPOS
 # define HAVE_OPENDIR
 # define HAVE_STRERROR
+# define HAVE_TRUNCATE
 #endif
 
 #ifdef AMIGA

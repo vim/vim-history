@@ -2,7 +2,7 @@
 " Language:	abc music notation language
 " Maintainer:	James Allwright <J.R.Allwright@westminster.ac.uk>
 " URL:		http://perun.hscs.wmin.ac.uk/vim/syntax/abc.vim
-" Last change:	26th May 1999
+" Last Change:	26th May 1999
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -35,11 +35,11 @@ if !exists("did_abc_syntax_inits")
   " The default methods for highlighting.  Can be overridden later
   hi link abcComment		Comment
   hi link abcHeadField		Type
-  hi link abcBodyField      Special
+  hi link abcBodyField		Special
   hi link abcBar			Statement
-  hi link abcTuple          Statement
-  hi link abcBroken         Statement
-  hi link abcTie            Statement
+  hi link abcTuple			Statement
+  hi link abcBroken			Statement
+  hi link abcTie			Statement
   hi link abcGuitarChord	Identifier
   hi link abcNote			Constant
 endif

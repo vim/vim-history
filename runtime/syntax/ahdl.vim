@@ -1,7 +1,7 @@
 " Vim syn file
 " Language:	Altera AHDL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last change:	1999 Sep 28
+" Last Change:	1999 Sep 28
 
 " Remove any old syn stuff hanging around
 syn clear

@@ -3327,7 +3327,7 @@ cat > conftest.$ac_ext <<EOF
 #include "confdefs.h"
 
 int main() {
-fprintf("(" __DATE__ " " __TIME__ ")");
+printf("(" __DATE__ " " __TIME__ ")");
 ; return 0; }
 EOF
 if { (eval echo configure:3334: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	PL/SQL -- Oracle Procedural SQL
 " Maintainer:	C. Laurence Gonsalves <clgonsal@kami.com>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 " URL:		http://www.cryogen.com/clgonsal/vim/syntax/plsql.vim
 
 " Remove any old syntax stuff hanging around

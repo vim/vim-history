@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language: Smalltalk
-" Maintainer: Arndt Hesse <hesse@self.de>
-" Last change: 1997 Dec 24
+" Language:	Smalltalk
+" Maintainer:	Arndt Hesse <hesse@self.de>
+" Last Change:	1997 Dec 24
 
 " remove any old syntax stuff hanging around
 syn clear

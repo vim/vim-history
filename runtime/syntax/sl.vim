@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Renderman shader language
 " Maintainer:	Dan Piponi <dan@tanelorn.demon.co.uk>
-" Last change:	1999 Jun 16
+" Last Change:	1999 Jun 16
 
 " Reset
 syn clear

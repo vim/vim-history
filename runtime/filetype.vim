@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Dec 16
+" Last change:	2000 Jan 02
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
@@ -29,6 +29,9 @@ au BufNewFile,BufRead *.adb,*.ads		set ft=ada
 " AHDL
 au BufNewFile,BufRead *.tdf			set ft=ahdl
 
+" Apache Style
+au BufNewFile,BufRead proftpd.conf*,httpd.conf*,srm.conf*,access.conf* set ft=apachestyle
+
 " Applix ELF
 au BufNewFile,BufRead *.am			set ft=elf
 
@@ -42,7 +45,8 @@ au BufNewFile,BufRead *.asn,*.asn1		set ft=asn
 au BufNewFile,BufRead *.asp,*.asa		set ft=aspvbs
 
 " Assembly (all kinds)
-au BufNewFile,BufRead *.asm,*.s,*.i,*.mac	call FTCheck_asm()
+" *.lst is not pure assembly, it has two extra columns (address, byte codes)
+au BufNewFile,BufRead *.asm,*.s,*.i,*.mac,*.lst	call FTCheck_asm()
 
 " This function checks for the kind of assembly that is wanted by the user, or
 " can be detected from the first five lines of the file.
@@ -127,6 +131,9 @@ au BufNewFile,BufRead *.prg			set ft=clipper
 " Cobol
 au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	set ft=cobol
 
+" Cold Fusion
+au BufNewFile,BufRead *.cfm,*.cfi		set ft=cf
+
 " Configure scripts
 au BufNewFile,BufRead configure.in		set ft=config
 
@@ -154,6 +161,9 @@ au BufNewFile,BufRead *.dtd			set ft=dtd
 
 " Eiffel
 au BufNewFile,BufRead *.e,*.E			set ft=eiffel
+
+" ERicsson LANGuage
+au BufNewFile,BufRead *.erl			set ft=erlang
 
 " Elm Filter Rules file
 au BufNewFile,BufReadPost filter-rules		set ft=elmfilt
@@ -188,6 +198,9 @@ au BufNewFile,BufRead .gdbinit			set ft=gdb
 " GDMO
 au BufNewFile,BufRead *.mo,*.gdmo		set ft=gdmo
 
+" Gedcom
+au BufNewFile,BufRead *.ged			set ft=gedcom
+
 " GP scripts (2.0 and onward)
 au BufNewFile,BufRead *.gp			set ft=gp
 
@@ -203,6 +216,9 @@ au BufNewFile,BufRead *.html,*.htm,*.shtml	set ft=html
 
 " HTML with M4
 au BufNewFile,BufRead *.html.m4			set ft=htmlm4
+
+" Icon
+au BufNewFile,BufRead *.icn			set ft=icon
 
 " IDL (Interface Description Language)
 au BufNewFile,BufRead *.idl			set ft=idl
@@ -350,7 +366,7 @@ au BufNewFile,BufRead *.pm	if getline(1) =~ "XPM2"|set ft=xpm2|elseif getline(1)
 au BufNewFile,BufRead *.pod			set ft=pod
 
 " Php3
-au BufNewFile,BufRead *.php3			set ft=php3
+au BufNewFile,BufRead *.php,*.php3		set ft=php3
 
 " Phtml
 au BufNewFile,BufRead *.phtml			set ft=phtml
@@ -496,6 +512,9 @@ au BufNewFile,BufRead *.slt			set ft=tsalt
 
 " TeX
 au BufNewFile,BufRead *.tex,*.sty,*.dtx,*.ltx	set ft=tex
+
+" Texinfo
+au BufNewFile,BufRead *.texinfo,*.texi,*.txi	set ft=texinfo
 
 " TF mud client
 au BufNewFile,BufRead *.tf			set ft=tf

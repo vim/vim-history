@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Remind
 " Maintainer:	Davide Alberani <alberanid@bigfoot.com>
-" Last change:	03 Dec 1999
+" Last Change:	03 Dec 1999
 " Version:	0.1
 " URL:		http://members.xoom.com/alberanid/vim/syntax/remind.vim
 "

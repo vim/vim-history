@@ -1,4 +1,15 @@
-Current Version: 3.3.3
+Current Version: 3.4
+
+ctags-3.4 (Thu Jan 13 2000)
+* Fixed sorting problems when LC_ALL environment variable was set to foreign
+  locale (not fixed by previous release).
+* Fixed nested scoping reported in extension flags and class-qualified tags.
+* Eliminated generation of class-qualified tag entries when --c-types=+C
+  option is in effect but scope is empty (e.g. "::main").
+* Added support for default access of class members in Java.
+* Added new extension flag "implementation", which indicates if a routine or
+  class is virtual or abstract.
+* Minor changes for OS/2 compilation.
 
 ctags-3.3.3 (Thu Dec 16 1999)
 * Changed how input is read for -L and --filter options to permit file names

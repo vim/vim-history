@@ -2,12 +2,13 @@
 " Language:	tf
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
-" Email:        send syntax_vim.tgz
-" Last change:	1999 Jun 14
+" Email:	send syntax_vim.tgz
+" Last Change:	1999 Dec 27
 "
-" Options       tf_minlines = x     to sync at least x lines backwards
+" Options	lite_minlines = x     to sync at least x lines backwards
 
 " Remove any old syntax stuff hanging around
+
 syn clear
 syn case match
 
@@ -63,9 +64,9 @@ syn match tfReadonly  "\<P\(\d\+\|R\|L\)\>" contained
 syn match tfReadonly  "\<R\>" contained
 
 " Identifier
-syn match tfIdentifier "%\+[a-zA-Z_#*-0-9][a-zA-Z0-9_]*" contains=tfVar,tfReadonly
+syn match tfIdentifier "%\+[a-zA-Z_#*-0-9]\w*" contains=tfVar,tfReadonly
 syn match tfIdentifier "%\+[{]"he=e-1,me=e-1
-syn match tfIdentifier "\$\+{[a-zA-Z_#*-0-9][a-zA-Z0-9_]*}" contains=tfWorld
+syn match tfIdentifier "\$\+{[a-zA-Z_#*-0-9]\w*}" contains=tfWorld
 
 " Function names
 syn keyword tfFunctions  ascii char columns echo filename ftime fwrite getopts
@@ -148,36 +149,38 @@ syn match tfEscape "(/escape .*)"
 " sync
 if exists("tf_minlines")
   exec "syn sync minlines=" . tf_minlines
+else
+  syn sync minlines=100
 endif
 
 if !exists("did_tf_syntax_inits")
   let did_tf_syntax_inits = 1
   " The default methods for highlighting.  Can be overridden later
-  hi link tfComment                   Comment
-  hi link tfString                    String
-  hi link tfNumber                    Number
-  hi link tfFloat                     Float
-  hi tfIdentifier guifg=DarkGray ctermfg=Brown
-  hi link tfFunctions                 Function
-  hi link tfRepeat                    Repeat
-  hi link tfConditional               Conditional
-  hi link tfLabel                     Label
-  hi link tfStatement                 Statement
-  hi link tfType                      Type
-  hi link tfInclude                   Include
-  hi link tfDefine                    Define
-  hi link tfSpecialChar               SpecialChar
-  hi link tfSpecialCharEsc            SpecialChar
-  hi link tfParentError	              Error
-  hi link tfTodo                      Todo
-  hi link tfEndCommand		      Delimiter
-  hi link tfJoinLines		      Delimiter
-  hi tfRelation guifg=SeaGreen ctermfg=DarkGreen
-  hi tfOperator guifg=SeaGreen ctermfg=DarkGreen
-  hi tfVar guifg=Red ctermfg=DarkRed
-  hi tfWorld guifg=Red ctermfg=DarkRed
-  hi tfReadonly guifg=Red ctermfg=DarkRed
-  hi tfHook guifg=Red ctermfg=DarkRed
+  hi link tfComment		Comment
+  hi link tfString		String
+  hi link tfNumber		Number
+  hi link tfFloat		Float
+  hi link tfIdentifier		Identifier
+  hi link tfVar			Identifier
+  hi link tfWorld		Identifier
+  hi link tfReadonly		Identifier
+  hi link tfHook		Identifier
+  hi link tfFunctions		Function
+  hi link tfRepeat		Repeat
+  hi link tfConditional		Conditional
+  hi link tfLabel		Label
+  hi link tfStatement		Statement
+  hi link tfType		Type
+  hi link tfInclude		Include
+  hi link tfDefine		Define
+  hi link tfSpecialChar		SpecialChar
+  hi link tfSpecialCharEsc	SpecialChar
+  hi link tfParentError		Error
+  hi link tfTodo		Todo
+  hi link tfEndCommand		Delimiter
+  hi link tfJoinLines		Delimiter
+  hi link tfOperator		Operator
+  hi link tfRelation		Operator
 endif
 
 let b:current_syntax = "tf"

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	InstallShield Script
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Remove any old syntax stuff
 syn clear

@@ -61,7 +61,7 @@ DESCRIPTION
 
 
 
-Darren Hiebert            Version 3.3.3                         1
+Darren Hiebert             Version 3.4                          1
 
 
 
@@ -127,7 +127,7 @@ SOURCE FILES
 
 
 
-Darren Hiebert            Version 3.3.3                         2
+Darren Hiebert             Version 3.4                          2
 
 
 
@@ -193,7 +193,7 @@ OPTIONS
 
 
 
-Darren Hiebert            Version 3.3.3                         3
+Darren Hiebert             Version 3.4                          3
 
 
 
@@ -259,7 +259,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         4
+Darren Hiebert             Version 3.4                          4
 
 
 
@@ -325,7 +325,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         5
+Darren Hiebert             Version 3.4                          5
 
 
 
@@ -391,7 +391,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         6
+Darren Hiebert             Version 3.4                          6
 
 
 
@@ -457,7 +457,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         7
+Darren Hiebert             Version 3.4                          7
 
 
 
@@ -523,7 +523,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         8
+Darren Hiebert             Version 3.4                          8
 
 
 
@@ -589,7 +589,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                         9
+Darren Hiebert             Version 3.4                          9
 
 
 
@@ -655,7 +655,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        10
+Darren Hiebert             Version 3.4                         10
 
 
 
@@ -721,7 +721,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        11
+Darren Hiebert             Version 3.4                         11
 
 
 
@@ -787,7 +787,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        12
+Darren Hiebert             Version 3.4                         12
 
 
 
@@ -853,7 +853,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        13
+Darren Hiebert             Version 3.4                         13
 
 
 
@@ -919,7 +919,7 @@ OPERATIONAL DETAILS
 
 
 
-Darren Hiebert            Version 3.3.3                        14
+Darren Hiebert             Version 3.4                         14
 
 
 
@@ -985,7 +985,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        15
+Darren Hiebert             Version 3.4                         15
 
 
 
@@ -1051,7 +1051,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert            Version 3.3.3                        16
+Darren Hiebert             Version 3.4                         16
 
 
 
@@ -1105,19 +1105,19 @@ EXTENSION FLAGS
                    without a ':' defaults to the kind key).
 
 
+       implementation
+                   When present, this indicates a limited  imple-
+                   mentation (abstract vs. concrete) of a routine
+                   or class, where value is specific to the  lan-
+                   guage  ("virtual"  or  "pure virtual" for C++;
+                   "abstract" for Java).
+
+
        interface   Indicates that this tag is  a  member  of  the
-                   interface whose name is given by value.
-
-
-       namespace   Indicates  that  this  tag  is a member of the
-                   namespace whose name is given by value.
-
-
-       struct      Indicates that this tag is  a  member  of  the
 
 
 
-Darren Hiebert            Version 3.3.3                        17
+Darren Hiebert             Version 3.4                         17
 
 
 
@@ -1126,6 +1126,14 @@ Darren Hiebert            Version 3.3.3                        17
 CTAGS(1)                                                 CTAGS(1)
 
 
+                   interface whose name is given by value.
+
+
+       namespace   Indicates  that  this  tag  is a member of the
+                   namespace whose name is given by value.
+
+
+       struct      Indicates that this tag is  a  member  of  the
                    structure whose name is given by value.
 
 
@@ -1172,18 +1180,10 @@ HOW TO USE WITH GNU EMACS
        Emacs will, by default, expect a  tag  file  by  the  name
        "TAGS"  in  the  current  directory.  Once the tag file is
        built, the following commands exercise  the  tag  indexing
-       feature:
-
-       Meta-x visit-tags-table
-                   Visit a TAGS file.
-
-       Meta-.      Find  a definition for a tag.  The default tag
-                   is the identifier under the cursor.  There  is
-                   name completion in the minibuffer; typing "foo
 
 
 
-Darren Hiebert            Version 3.3.3                        18
+Darren Hiebert             Version 3.4                         18
 
 
 
@@ -1192,6 +1192,14 @@ Darren Hiebert            Version 3.3.3                        18
 CTAGS(1)                                                 CTAGS(1)
 
 
+       feature:
+
+       Meta-x visit-tags-table
+                   Visit a TAGS file.
+
+       Meta-.      Find  a definition for a tag.  The default tag
+                   is the identifier under the cursor.  There  is
+                   name completion in the minibuffer; typing "foo
                    TAB" completes the  identifier  starting  with
                    `foo'  (`foobar',  for  example)  or lists the
                    alternatives.
@@ -1210,6 +1218,23 @@ BUGS (CAVEATS)
        Ctags has as many options as ls(1).
 
 
+       Because  ctags  is  neither a preprocessor nor a compiler,
+       use of preprocessor macros  can  fool  ctags  into  either
+       missing  tags or improperly generating inappropriate tags.
+       Although ctags has been designed to handle certain  common
+       cases,  this is the single biggest cause of reported prob-
+       lems. In particular, the use  of  preprocessor  constructs
+       which  alter  the  textual syntax of C can fool ctags. You
+       can work around many such problems by using the -I option.
+
+
+       When  parsing  a  C++  member  function  definition  (e.g.
+       "className::function"), ctags cannot determine whether the
+       scope  specifier  is a class name or a namespace specifier
+       and always lists it as a class name in the  scope  portion
+       of the extension flags.
+
+
        White  space  is treated as a separator for file names and
        options read from  list  files,  specified  using  the  -L
        option,  and  in filter mode (specified using the --filter
@@ -1218,19 +1243,21 @@ BUGS (CAVEATS)
        space (spaces, etc.) through these options.
 
 
-       Because ctags is neither a preprocessor  nor  a  compiler,
-       use  of  preprocessor  macros  can  fool ctags into either
-       missing tags or improperly generating inappropriate  tags.
-       Although  ctags has been designed to handle certain common
-       cases, this is the single biggest cause of reported  prob-
-       lems.  In  particular,  the use of preprocessor constructs
-       which alter the textual syntax of C can  fool  ctags.  You
-       can work around many such problems by using the -I option.
-
-
        Legacy C source code which uses C++ reserved  keywords  as
        variable  or  parameter  names  (e.g.  "class", etc.) in a
        header file may fail to have correct  tags  generated  for
+
+
+
+Darren Hiebert             Version 3.4                         19
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
        the  objects  using them. In order to properly handle such
        code, use the --lang option.
 
@@ -1246,18 +1273,6 @@ BUGS (CAVEATS)
               int variable;
 
               /* ... */
-
-
-
-Darren Hiebert            Version 3.3.3                        19
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
               void foo(variable)
               int variable;
               {
@@ -1297,6 +1312,18 @@ FILES
                  files.
 
 
+
+
+
+Darren Hiebert             Version 3.4                         20
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
        tags      The default tag file created by ctags.
 
        TAGS      The default tag file created by etags.
@@ -1312,16 +1339,6 @@ SEE ALSO
        Also  ex(1),  vi(1), elvis, or, better yet, vim, the offi-
        cial editor of ctags. For more information on vim, see the
        VIM Pages web site at:
-
-
-
-Darren Hiebert            Version 3.3.3                        20
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
 
 
            http://www.vim.org/
@@ -1361,6 +1378,18 @@ CREDITS
        ers, and to helping the orphans of Uganda.
 
 
+
+
+
+Darren Hiebert             Version 3.4                         21
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
        The section entitled "HOW  TO  USE  WITH  GNU  EMACS"  was
        shamelessly stolen from the man page for GNU etags.
 
@@ -1381,6 +1410,43 @@ CREDITS
 
 
 
-Darren Hiebert            Version 3.3.3                        21
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Darren Hiebert             Version 3.4                         22
 
 

@@ -1,6 +1,6 @@
-" Language   : tags
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change: January 28, 1999
+" Language:    tags
+" Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change: January 28, 1999
 
 " Remove any old syntax stuff hanging around
 syn clear

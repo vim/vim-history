@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language   : bin using xxd
-" Version    : 5.4-3
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change: March 19, 1999
+" Language:		bin using xxd
+" Version:		5.4-3
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
+" Last Change:	March 19, 1999
 "  Notes: use :help xxd   to see how to invoke it
 
 " Removes any old syntax stuff hanging around

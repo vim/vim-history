@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	November 12, 1999
-" Version: 1.09
+" Last Change:		November 12, 1999
+" Version:		1.10
 "
 " Using the following VIM variables:
 " is_kornshell               if defined, enhance with kornshell syntax
@@ -97,9 +97,17 @@ syn match   shOperator	"!\=="	skipwhite nextgroup=shPattern
 syn match   shPattern	"\<\S*\>"	contained contains=shSinglequote,shDoublequote
 syn match   shWrapLineOperator "\\$"
 syn region  shCommandSub   start="`" skip="\\`" end="`" contains=ALLBUT,@shCommandSubList1
+
+" $(..) is not supported by sh (Bourne shell).  However, apparently
+" some systems (HP?) have as their /bin/sh a (link to) Korn shell
+" (ie. Posix compliant shell).  /bin/ksh should work for those
+" systems too, however, so the following syntax will flag $(..) as
+" an Error under /bin/sh.  By consensus of vimdev'ers!
 if exists("is_kornshell") || exists("is_bash")
  syn region shCommandSub matchgroup=shDeref start="$(" end=")" contains=ALLBUT,@shCommandSubList2
  syn match shSkipInitWS contained	"^\s\+"
+else
+ syn region shCommandSub matchgroup=Error start="$(" end=")" contains=ALLBUT,@shCommandSubList2
 endif
 
 if exists("is_bash")
@@ -171,15 +179,15 @@ syn region shHereDoc matchgroup=shRedir start="<<-\=\s*\**EOF\**" matchgroup=shR
 
 " Identifiers
 "============
-syn match  shIdentifier "\<[a-zA-Z_][a-zA-Z0-9_]*\>="me=e-1	nextgroup=shSetIdentifier
+syn match  shIdentifier "\<[a-zA-Z_][a-zA-Z0-9_]*="me=e-1	nextgroup=shSetIdentifier
 syn match  shIdWhiteSpace  contained	"\s"
 syn match  shSetIdentifier contained	"=" nextgroup=shDeref,shString,shPattern
 if exists("is_bash")
  syn region shIdentifier matchgroup=shStatement start="\<\(declare\|typeset\|local\|export\|set\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="#\|="me=e-1 contains=@shIdList
 elseif exists("is_kornshell")
- syn region shIdentifier matchgroup=shStatement start="\<\(typeset\|set\|export\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="#\|="me=e-1 contains=@shIdList
+ syn region shIdentifier matchgroup=shStatement start="\<\(typeset\|set\|export\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="[#=)]"me=e-1 contains=@shIdList
 else
- syn region shIdentifier matchgroup=shStatement start="\<\(set\|export\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="#\|="me=e-1 contains=@shIdList
+ syn region shIdentifier matchgroup=shStatement start="\<\(set\|export\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="[#=)]"me=e-1 contains=@shIdList
 endif
 
 " The [^/] in the start pattern is a kludge to avoid bad

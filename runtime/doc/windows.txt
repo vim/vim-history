@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 5.6a.  Last change: 1999 Oct 03
+*windows.txt*   For Vim version 5.6.  Last change: 1999 Dec 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -629,7 +629,7 @@ Be careful: there may be more hidden, modified buffers!
 		a number).  Insert a backslash before a space in a buffer
 		name.
 
-:[N]b[uffer][!] [N]					*:b* *:buffer*
+:[N]b[uffer][!] [N]					*:b* *:bu* *:buffer*
 		Edit buffer [N] from the buffer list.  If [N] is not given,
 		the current buffer remains being edited.  See |:buffer-!| for
 		[!].

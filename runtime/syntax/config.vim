@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     configure.in script: M4 with sh
-" Maintainer:   Christian Hammesr <ch@lathspell.westend.com>
-" Last change:  1999 Apr 21
+" Language:		configure.in script: M4 with sh
+" Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
+" Last Change:	1999 Apr 21
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !

@@ -13,7 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
-echo 'Exuberant Ctags, version 3.3.3'
+echo 'Exuberant Ctags, version 3.4'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros
@@ -202,20 +202,21 @@ if test "$have_truncate" != yes  ; then
 	fi
 fi
 
-AC_CHECK_FUNCS(putenv, have_putenv=yes)
+AC_CHECK_FUNCS(setenv, have_setenv=yes)
 dnl === Cannot nest AC_CHECK_FUNCS() calls
-if test "$have_putenv" != yes ; then
-	AC_CHECK_FUNCS(setenv)
-else
-	AC_EGREP_HEADER(putenv, stdlib.h, have_putenv_prototype=yes)
-	if test "$have_putenv_prototype" = yes ; then
-		AC_MSG_CHECKING("putenv prototype")
-		AC_EGREP_HEADER([[^A-Za-zo-9_]putenv[ 	]*\(.*const.*\)[ 	]*;],
-			stdlib.h, AC_MSG_RESULT(correct),
-			[
-				AC_MSG_RESULT(no const)
-				AC_DEFINE(NON_CONST_PUTENV_PROTOTYPE)
-			])
+if test "$have_setenv" != yes ; then
+	AC_CHECK_FUNCS(putenv, have_putenv=yes)
+	if test "$have_putenv" = yes ; then
+		AC_EGREP_HEADER(putenv, stdlib.h, have_putenv_prototype=yes)
+		if test "$have_putenv_prototype" = yes ; then
+			AC_MSG_CHECKING("putenv prototype")
+			AC_EGREP_HEADER([[^A-Za-zo-9_]putenv[ 	]*\(.*const.*\)[ 	]*;],
+				stdlib.h, AC_MSG_RESULT(correct),
+				[
+					AC_MSG_RESULT(no const)
+					AC_DEFINE(NON_CONST_PUTENV_PROTOTYPE)
+				])
+		fi
 	fi
 fi
 

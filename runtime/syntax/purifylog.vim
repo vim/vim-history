@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     purify log files
-" Maintainer:   Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last change:  1999 Jun 14
+" Language:	purify log files
+" Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
+" Last Change:	1999 Jun 14
 
 " clear any unwanted syntax defs
 syn clear
@@ -52,53 +52,53 @@ syn match purifyLogZPR "^ZPR:.*$"
 syn match purifyLogZPW "^ZPW:.*$"
 
 if !exists("did_purifyLog_syntax_inits")
-        let did_purifyLog_syntax_inits = 1
+	let did_purifyLog_syntax_inits = 1
 
-        " The default methods for highlighting.  Can be overridden later
+	" The default methods for highlighting.  Can be overridden later
 
-        hi link purifyLogFIU purifyLogInformational
-        hi link purifyLogMAF purifyLogInformational
-        hi link purifyLogMIU purifyLogInformational
-        hi link purifyLogSIG purifyLogInformational
-        hi link purifyLogWPF purifyLogInformational
-        hi link purifyLogWPM purifyLogInformational
-        hi link purifyLogWPN purifyLogInformational
-        hi link purifyLogWPR purifyLogInformational
-        hi link purifyLogWPW purifyLogInformational
-        hi link purifyLogWPX purifyLogInformational
+	hi link purifyLogFIU purifyLogInformational
+	hi link purifyLogMAF purifyLogInformational
+	hi link purifyLogMIU purifyLogInformational
+	hi link purifyLogSIG purifyLogInformational
+	hi link purifyLogWPF purifyLogInformational
+	hi link purifyLogWPM purifyLogInformational
+	hi link purifyLogWPN purifyLogInformational
+	hi link purifyLogWPR purifyLogInformational
+	hi link purifyLogWPW purifyLogInformational
+	hi link purifyLogWPX purifyLogInformational
 
-        hi link purifyLogABR purifyLogWarning
-        hi link purifyLogBSR purifyLogWarning
-        hi link purifyLogBSW purifyLogWarning
-        hi link purifyLogFMR purifyLogWarning
-        hi link purifyLogMLK purifyLogWarning
-        hi link purifyLogMSE purifyLogWarning
-        hi link purifyLogPAR purifyLogWarning
-        hi link purifyLogPLK purifyLogWarning
-        hi link purifyLogSBR purifyLogWarning
-        hi link purifyLogSOF purifyLogWarning
-        hi link purifyLogUMC purifyLogWarning
-        hi link purifyLogUMR purifyLogWarning
+	hi link purifyLogABR purifyLogWarning
+	hi link purifyLogBSR purifyLogWarning
+	hi link purifyLogBSW purifyLogWarning
+	hi link purifyLogFMR purifyLogWarning
+	hi link purifyLogMLK purifyLogWarning
+	hi link purifyLogMSE purifyLogWarning
+	hi link purifyLogPAR purifyLogWarning
+	hi link purifyLogPLK purifyLogWarning
+	hi link purifyLogSBR purifyLogWarning
+	hi link purifyLogSOF purifyLogWarning
+	hi link purifyLogUMC purifyLogWarning
+	hi link purifyLogUMR purifyLogWarning
 
-        hi link purifyLogABW purifyLogCorrupting
-        hi link purifyLogBRK purifyLogCorrupting
-        hi link purifyLogFMW purifyLogCorrupting
-        hi link purifyLogFNH purifyLogCorrupting
-        hi link purifyLogFUM purifyLogCorrupting
-        hi link purifyLogMRE purifyLogCorrupting
-        hi link purifyLogSBW purifyLogCorrupting
+	hi link purifyLogABW purifyLogCorrupting
+	hi link purifyLogBRK purifyLogCorrupting
+	hi link purifyLogFMW purifyLogCorrupting
+	hi link purifyLogFNH purifyLogCorrupting
+	hi link purifyLogFUM purifyLogCorrupting
+	hi link purifyLogMRE purifyLogCorrupting
+	hi link purifyLogSBW purifyLogCorrupting
 
-        hi link purifyLogCOR purifyLogFatal
-        hi link purifyLogNPR purifyLogFatal
-        hi link purifyLogNPW purifyLogFatal
-        hi link purifyLogZPR purifyLogFatal
-        hi link purifyLogZPW purifyLogFatal
+	hi link purifyLogCOR purifyLogFatal
+	hi link purifyLogNPR purifyLogFatal
+	hi link purifyLogNPW purifyLogFatal
+	hi link purifyLogZPR purifyLogFatal
+	hi link purifyLogZPW purifyLogFatal
 
-        hi link purifyLogHeader        Comment
-        hi link purifyLogInformational PreProc
-        hi link purifyLogWarning       Type
-        hi link purifyLogCorrupting    Error
-        hi link purifyLogFatal         Error
+	hi link purifyLogHeader        Comment
+	hi link purifyLogInformational PreProc
+	hi link purifyLogWarning       Type
+	hi link purifyLogCorrupting    Error
+	hi link purifyLogFatal	       Error
 endif
 
 let b:current_syntax = "purifylog"

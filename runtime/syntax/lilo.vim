@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	lilo
 " Maintainer:	Klaus Muth <mh@hagos.de>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 " URL:		http://unitopia.mud.de/~monty/vim/syntax/lilo.vim
 "
 " Sorry, not much different colors in it. Any line without color must be

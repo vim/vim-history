@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ATLAS
 " Maintainer:	Inaki Saez <jisaez@sfe.indra.es>
-" Last change:	1998-03-31
+" Last Change:	1998-03-31
 
 syn clear
 

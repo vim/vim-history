@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Pike
 " Maintainer:	Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
-" Last change:	1998 Feb 16
+" Last Change:	1998 Feb 16
 
 " Remove any old syntax stuff hanging around
 syn clear

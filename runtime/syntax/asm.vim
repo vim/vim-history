@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last change:	1999 Jun 14
+" Last Change:	1999 Jun 14
 
 " Remove any old syntax stuff hanging around
 syn clear

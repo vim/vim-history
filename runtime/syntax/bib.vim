@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : BibTeX (bibtex)
-" Maintainer : Bernd Feige <Bernd.Feige@gmx.net>
-" Last change: Aug 27, 1999
+" Language:	BibTeX (bibtex)
+" Maintainer:	Bernd Feige <Bernd.Feige@gmx.net>
+" Last Change:	Aug 27, 1999
 
 " Thanks go to David Squire <squire@cui.unige.ch> for the change to
 " discriminate between inside and outside of bib entries :-)

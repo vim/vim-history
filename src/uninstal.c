@@ -38,7 +38,7 @@ main(int argc, char *argv[])
     int	    fail = 0;
     HKEY    kh;
 
-    printf("This program will remove the \"Edit with Vim\" entry from the popup menu\n");
+    printf("This program will remove the \"Edit with Vim\" entry from the popup menu.\n");
     printf("It will NOT delete the Vim executable or runtime files.\n");
     printf("Continue (y/n)? ");
     if (confirm())

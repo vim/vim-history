@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Hitachi H-8300h specific syntax for GNU Assembler
 " Maintainer:	Kevin Dahlhausen <ap096@po.cwru.edu>
-" Last change:	1997 April 20
+" Last Change:	1997 April 20
 
 " Remove any old syntax stuff hanging around
 syn clear

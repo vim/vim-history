@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language: SAS
-" Maintainer: Phil Hanna <pehanna@yahoo.com>
-" Last change: 18 May 1999
+" Language:	SAS
+" Maintainer:	Phil Hanna <pehanna@yahoo.com>
+" Last Change:	18 May 1999
 
 syn clear
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Lex
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last change:	May 13, 1999
+" Last Change:	May 13, 1999
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     Man page
-" Maintainer:   Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last change:  1999 Jun 14
+" Language:	Man page
+" Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
+" Last Change:	1999 Jun 14
 " Version Info:
 
 " clear any unwanted syntax defs

@@ -1,9 +1,9 @@
 " Vim syntax file
-" Language:     Speedup, plant simulator from AspenTech
-" Maintainer:   Stefan.Schwarzer <Stefan.Schwarzer@tu-clausthal.de>
-" URL:          http://home.tu-clausthal.de/~svss/vim/spup.vim
-" Last change:  1999 Jul 7
-" Filename:     spup.vim
+" Language:		Speedup, plant simulator from AspenTech
+" Maintainer:	Stefan.Schwarzer <Stefan.Schwarzer@tu-clausthal.de>
+" URL:			http://home.tu-clausthal.de/~svss/vim/spup.vim
+" Last Change:	1999 Jul 7
+" Filename:		spup.vim
 
 " Bugs
 " - in the appropriate sections keywords are always highlighted

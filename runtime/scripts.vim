@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Oct 02
+" Last change:	2000 Jan 06
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -136,6 +136,10 @@ elseif getline(1) =~ '<?\s*xml.*?>'
 " XXD output
 elseif getline(1) =~ '^\x\{7}: \x\{4} \x\{4} '
   set ft=xxd
+
+" RCS/CVS log output
+elseif getline(1) =~ '^RCS file:' || getline(2) =~ '^RCS file:'
+  set ft=rcslog
 
 endif
 

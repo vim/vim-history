@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Slrn setup file
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
-" Last change:	Fri Apr  3 11:09:41 1998
+" Last Change:	Fri Apr  3 11:09:41 1998
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last change:	1999 Apr 20
+" Last Change:	1999 Apr 20
 
 
 " Remove any old syntax stuff hanging around

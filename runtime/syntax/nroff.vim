@@ -1,7 +1,7 @@
 " VIM syntax file
-" Language: Nroff/Troff
-" Maintainer: Matthias Burian <burian@grabner-instruments.com>
-" Last change: Aug. 09, 1999
+" Language:	Nroff/Troff
+" Maintainer:	Matthias Burian <burian@grabner-instruments.com>
+" Last Change:	Aug. 09, 1999
 
 syn clear
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	gp (version 2.0)
 " Maintainer:	Karim Belabas <karim@mpim-bonn.mpg.de>
-" Last change:	1998 February 23
+" Last Change:	1998 February 23
 
 syntax clear
 " some control statements

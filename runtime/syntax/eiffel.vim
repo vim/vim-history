@@ -1,9 +1,9 @@
 " Eiffel syntax file
 " Language:	Eiffel
 " Maintainer:	Reimer Behrends <behrends@cse.msu.edu>
-"               With much input from Jocelyn Fiat <fiat@eiffel.com>
+"		With much input from Jocelyn Fiat <fiat@eiffel.com>
 " See http://www.cse.msu.edu/~behrends/vim/ for the most current version.
-" Last change:	1999 Sep 19
+" Last Change:	1999 Sep 19
 
 " Remove any old syntax stuff hanging around
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Simula
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1999 Mar 10
+" Last Change:	1999 Mar 10
 
 " Clear old syntax defs
 syn clear

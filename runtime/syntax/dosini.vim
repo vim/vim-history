@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Configuration File (ini file) for MSDOS/MS Windows
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last change:	1999 Jul 23
+" Last Change:	1999 Jul 23
 " Version Info: @(#)dosini.vim	1.6	97/12/15 08:54:12
 
 " clear any unwanted syntax defs

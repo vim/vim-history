@@ -1,4 +1,4 @@
-*os_vms.txt*   For Vim version 5.6a.  Last change: 1999 Dec 06
+*os_vms.txt*    For Vim version 5.6.  Last change: 2000 Jan 12
 
 
 		  VIM REFERENCE MANUAL
@@ -7,157 +7,185 @@
 							*VMS* *vms*
 This file contains the particularities for the VMS version of Vim.
 
-1. VMS version of Vim 5.4	|VMS-5.4|
-2. VMS version of Vim 5.3	|VMS-5.3|
-3. Extra remarks		|VMS-SK|
+1. Getting started	|vms-started|
+2. Download files	|vms-download|
+3. Compiling		|vms-compiling|
+4. Problems		|vms-problems|
+5. Deploy		|vms-deploy|
+6. Practical usage	|vms-usage|
+7. GUI mode questions	|vms-gui|
+8. Useful notes		|vms-notes|
+9. Authors 		|vms-authors|
 
 ==============================================================================
-1. VMS version of Vim 5.4					*VMS-5.4*
+1. Getting started					*vms-started*
 
-by Charles E. Campbell, Jr.
+VIM (Vi IMproved) is a vi-compatible text editor that runs on nearly every
+operating system known to humanity.  Now use Vim on Open VMS too, in character
+or X/Motif environment.  It is fully featured and absolutely compatible with
+VIM on other operating systems.
+==============================================================================
+2. Download files					*vms-download*
 
-You will need both the Unix and Extras distributions to build vim.exe for VMS.
-Please read |VMS-5.3|; much of its directions on how to build vms.exe still
-apply.
+You can download the VIM source code by ftp from the official VIM site:
+	ftp://ftp.vim.org/pub/vim/
+Or use one of the mirrors:
+	ftp://ftp.vim.org/pub/vim/MIRRORS
 
-Vim v5.4 now uses a special directory structure to hold the document
-and runtime files:
+You will need both the Unix and Extra archives to build vim.exe for VMS.
+For using VIM's full power you will need the runtime files as well.
+
+You can download precompiled executables from:
+	http://www.polarfox.com/vim/
+
+==============================================================================
+3. Compiling						*vms-compiling*
+
+Unpack the Unix and Extra archives together into one directory.  In the <.SRC>
+subdirectory you should find the make file OS_VMS.MMS.  By editing this file
+you may choose between building the character, GUI and debug version.
+
+You will need either the DECSET mms utility or the freely available clone of
+it called mmk (VMS has no make utility in the standard distribution).  I found
+a binary of 'mmk' which worked well.
+
+If you have MSS on your system, the command
+>	MMS /DESCRIP=OS_VMS.MMS
+will start building your own customized version of VIM.
+
+==============================================================================
+4. Problems						*vms-problems*
+
+The code has been tested under Open VMS 6.2-7.1 and with the DECC compiler.
+It should work without bigger problems.  If it happened that your system does
+not have some include libraries you can tune up in OS_VMS_CONF.H file.
+Note: Under VAX it should work with DECC compiler without problem, but the
+code is not compilable with the old VAXC compiler.
+==============================================================================
+5. Deploy						*vms-deploy*
+
+Vim uses a special directory structure to hold the document and runtime files:
 
    vim (or wherever)
     |- tmp
-    |- vim54
+    |- vim56
     |----- doc
     |----- syntax
 
-Use
-	assign/nolog dev:[leading-path-here.vim54] vimruntime
-	assign/nolog dev:[leading-path-here.vim54.tmp] tmp
+Use:
+>	assign/nolog dev:[leading-path-here.vim54] vimruntime
+>	assign/nolog dev:[leading-path-here.vim54.tmp] tmp
 
 to get vim.exe to find its document, filetype, and syntax files, and to
-specify a directory where temporary files will be located.  Copy the
-"runtime" subdirectory of the vim distribution to vimruntime:.
+specify a directory where temporary files will be located.  Copy the "runtime"
+subdirectory of the vim distribution to vimruntime.
 
-This version has been modified so that it will internally convert any
-unix-style paths and even mixed unix/VMS paths into VMS style paths.  Some
-typical conversions resemble:
+==============================================================================
+6. Practical usage					*vms-usage*
 
-	/abc/def/ghi          -> abc:[def]ghi.
-	/abc/def/ghi.j        -> abc:[def]ghi.j
+Copy all VIM runtime directory structure to the deployment position.
+Add the following things to your LOGIN.COM (in SYS$LOGIN directory).
+Set up logical $VIM as:
+
+>	$ define vim device:<path>
+
+Set up some symbols:
+
+>	$ ! vi starts vim in chr. mode.
+>	$ vi*m  :== mcr device:<path>VIM.EXE
+
+>	$ gvi starts vim in GUI mode.
+>	$ gv*im :== spawn/nowait mcr device:<path>VIM.EXE -g
+
+>	$ ! normal vt300-80 is not defined. let us use ansi instead.
+>	$ define term "ansi"
+
+Create .vimrc and .gvimrc files in your home directory (SYS$LOGIN).
+The easiest way is just rename example files.  You may leave the menu file
+(MENU.VIM) in the original $VIM directory.
+
+It should work without any problem. Example LOGIN.COM:
+
+>	$ vi*m  :== mcr RF10:[UTIL.VIM]VIM.EXE
+>	$ gv*im :== spawn/nowait mcr RF10:[UTIL.VIM]VIM.EXE -g
+>	$ define vim RF10:[UTIL.VIM]
+>	$ define term "ansi"
+>	$ set disp/create/node=192.168.5.159/trans=tcpip
+
+==============================================================================
+7. GUI mode questions					*vms-gui*
+
+VMS is not a native X window environment so you can not start VIM in GUI mode
+"just like that".
+1) If you are working on the VMS X console:
+   Start VIM with the command:
+>	$ mc device:<path>VIM.EXE -g
+   or type :gui as a command to the VIM command prompt.
+
+2) If you are working on other X window environment
+   Set up display to your host with:
+>	$ set disp/create/node=<your IP address>/trans=tcpip
+   and start VIM as in point 1.
+
+3) If you are working on MS Windows or other non X window environment
+   You need to set up one X server and run VIM as in point 2.
+   For MS Windows there are available free X servers as MIX , Omni X etc.
+
+==============================================================================
+8. Useful notes						*vms-notes*
+
+8.1 backspace/delete.
+
+There are backspace/delete key inconsistencies with VMS.
+:fixdel doesn't do the trick, but the solution is:
+
+>	" for terminal mode
+>	inoremap ^? ^H
+
+>	" for gui mode
+>	inoremap <Del> ^H
+
+(Bruce Hunsaker <BNHunsaker@chq.byu.edu> VIM 5.3)
+
+8.2 Filters.
+
+VIM supports filters; ie. if you have a sort program that can handle
+input/output redirection like Unix (<infile >outfile), you could use
+
+>	map \s 0!'aqsort<CR>
+
+(Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov> VIM 5.4)
+
+8.3 VMS file version numbers.
+
+If you want VIM to save into a new file with the next higher file version
+number, try these settings.
+>	set nobackup
+>	set nowritebackup
+
+(Claude Marinier <ClaudeMarinier@xwavesolutions.com> VIM 5.5 )
+
+8.4 Directory conversion.
+
+VIM will internally convert any unix-style paths and even mixed unix/VMS
+paths into VMS style paths. Some typical conversions resemble:
+
+	/abc/def/ghi	      -> abc:[def]ghi.
+	/abc/def/ghi.j	      -> abc:[def]ghi.j
 	/abc/def/ghi/jkl/mno  -> abc:[def.ghi.jkl]mno.
 	abc:[def.ghi]jkl/mno  -> abc:[def.ghi.jkl]mno.
+	  ./				-> current directoty
+	  ../				-> relative parent directory
+	  <.def.ghi>		-> relative child directory
 
-In particular, $VIM_DOC is no longer used.
-
-Notes:
-
-  a) I used a home-grown make program to build vim.exe from a modified
-     <Makefile.manx>; hence I have not tested mms/mmk.
-
-  b) This version supports filters; ie. if you have a sort program
-     that can handle input/output redirection like Unix (<infile >outfile),
-     you could use
-
-	map \s 0!'aqsort<CR>
-
-     and expect it to work.
-
-  c) For some reason binary tag searching would not work properly,
-     hence the VMS version uses linear tag searching by default.
-
-
-Use whichever or both of the following in your <login.com> to make vim
-invokable with filenames:
-
-   $ vim :== device:[path]vim.exe """-T""" """ansi"""
-   $ vi  :== device:[path]vim.exe """-T""" """ansi"""
+(David Elins <delins@foliage.com>, Jerom Lauret
+<JLAURET@mail.chem.sunysb.edu> VIM 5.6 )
 
 ==============================================================================
-2. VMS version of Vim 5.3					*VMS-5.3*
+9. Authors 						*vms-authors*
 
-by Bruce Hunsaker
-
-Here is some information about building VIM 5.3 for VMS.
-My experience is on DEC Alpha's running VMS 7.1.
-
-1) You will need VMS version of unzip to unpack the
-   distribution.  Trying to copy an already unpacked source tree
-   to VMS did not work well for me (via FTP).  Binaries for these
-   2 utilities are readily available on the WWW.
-
-2) You will need either the DECSET mms utility or the freely available
-   clone of it called mmk.  (VMS has no make utility in the standard
-   distribution.)  I found a binary of 'mmk' which worked well.
-
-3) I suggest unpacking the distribution to the location that will be
-   used at run-time.  This will avoid problems trying to decide
-   what to move to the final 'install' directory, since there is no
-   'install' target in the makefile.
-
-3) Once unpacked, change to the vim/src directory and do:
-		mmk/descrip=os_vms_x.mms
-   This builds a version of VIM with Terminal and X-windows support.
-
-   To build just a character mode VIM do:
-		mmk/descrip=os_vms.mms
-   (or use 'mms' instead of 'mmk' if you have it)
-
-4) Copy the executable (vim.exe) to a common location. (I set up
-   a [usr.bin] directory for this.
-
-5) To run, I added the following lines in my LOGIN.COM:
-
-		$ vi*m :== $lib_disk:[usr.bin]vim.exe
-		$ define tmp tmp_disk:[tmp]
-		$ define vim "/lib_disk/usr/lib/vim-5_1/"
-		$ define vim_hlp lib_disk:[usr.lib.vim-5_1.doc]
-
-	Your names for devices and directories will need to be changed
-	to match your system.
-
-	After the setup is complete I run VIM with either 'vi' or 'vi -g'.
-	Note: 'vi -g' will not start in the background.  In order to do
-	      that I have to resort to: 'pipe vi -g &' WARNING, this
-		  breaks ':sh', but you can do ':!create/term/detach' to
-		  spawn a sub-shell.
-
-6) Create .vimrc and .gvimrc files in your home directory.  I suggest
-   copying the supplied example files in the distribution, and using
-   them as a starting point.
-
-7) There are backspace/delete key inconsistencies with VMS.
-	:fixdel dosen't do the trick. I had to add:
-
-		" for terminal mode
-		inoremap ^? ^H
-
-		" for gui mode
-		inoremap <Del> ^H
-For compiling Vim on alpha running VMS, just invoke
-	mms /descrip=os_vms.mms
-
-I've worked (and compiled) only the console version, not the GUI. It's OK.
-The arrow keys didn't work, I've mapped them:
-	:map <^V + Left-arrow> <Left>
-and so on.
-
-==============================================================================
-3. Extra remarks						*VMS-SK*
-
-If you are using a terminal emulator (as most people are) setting the
-'fastterm' option can make screen updating smoother.
-
-Some remarks and changes from Sandor Kopanyi:
-
-In fileio.c there was a VMS specific section regarding creation of temporary
-files ("mktemp not working..." etc., "use tempnam() instead...").  Well,
-tempnam didn't work (for me, at least), mktemp seems to work, so I removed
-that section.  It is still possible to use the "original" version, defining
-VMS_TEMPNAM; then tempnam() will be used (if only VMS is defined, then
-mktemp() will be compiled).
-
-And a problem (nothing is perfect :-): I run ViM in an X-emulator; when I
-paste a lot of long rows (more than ~7 rows), Vim becomes "confused", and only
-some parts of the rows appears, but even that ones "mixed". There is no
-problem with short rows (less then ~25 chars).
-
- vim:ts=8:sw=8:tw=78:
+In alphabetical order:
+	Zoltan Arpadffy <arpadffy@altavista.net>
+	Charles E. Campbell, Jr. <cec@gryphon.gsfc.nasa.gov>
+	Bruce Hunsaker <BNHunsaker@chq.byu.edu>
+	Sandor Kopanyi <sandor.kopanyi@altavista.net>

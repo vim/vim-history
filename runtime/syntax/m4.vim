@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:     M4
-" Maintainer:   Claudio Fleiner
-" URL:		http://www.fleiner.com/vim/syntax/m4.vim
-" Last change:  1999 Apr 22
+" Language:		M4
+" Maintainer:	Claudio Fleiner
+" URL:			http://www.fleiner.com/vim/syntax/m4.vim
+" Last Change:	1999 Sep 1
 
 " This file will highlight user function calls if they use only
 " capital letters and have at least one argument (i.e. the '('
@@ -17,7 +17,7 @@ endif
 " define the m4 syntax
 syn match  m4Variable contained "\$\d\+"
 syn match  m4Special  contained "$[@*#]"
-syn match  m4Comment  "dnl\>.*"
+syn match  m4Comment  "dnl\>.*" contains=SpellErrors
 syn match  m4Constants "\(\<m4_\)\=__file__"
 syn match  m4Constants "\(\<m4_\)\=__line__"
 syn keyword m4Constants divnum sysval m4_divnum m4_sysval
@@ -28,8 +28,8 @@ syn region m4Command  matchgroup=m4Statement start="\<\(m4_\)\=\(syscmd\|esyscmd
 syn region m4Command  matchgroup=m4builtin start="\<\(m4_\)\=\(len\|index\|regexp\|substr\|translit\|patsubst\|format\|incr\|decr\|eval\|maketemp\)("he=e-1 end=")" contains=@m4Top
 syn keyword m4Statement divert undivert
 syn region m4Command  matchgroup=m4Type      start="\<\(m4_\)\=\(undefine\|popdef\)("he=e-1 end=")" contains=@m4Top
-syn region m4Function matchgroup=m4Type      start="\<[_A-Z]*("he=e-1 end=")" contains=@m4Top
-syn region m4String   start="`" end="'" contained contains=@m4Top,@m4StringContents
+syn region m4Function matchgroup=m4Type      start="\<[_A-Z][_A-Z0-9]*("he=e-1 end=")" contains=@m4Top
+syn region m4String   start="`" end="'" contained contains=@m4Top,@m4StringContents,SpellErrors
 syn cluster m4Top     contains=m4Comment,m4Constants,m4Special,m4Variable,m4String,m4Paren,m4Command,m4Statement,m4Function
 
 if !exists("did_m4_syntax_inits")

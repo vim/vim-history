@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Mutt setup files
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
-" Last change:	Tue Jul 28 17:41:25 1998
+" Last Change:	Tue Jul 28 17:41:25 1998
 
 " This file covers mutt version 0.74 and up (non developer)
 " It has been updated for version 0.93i

@@ -73,9 +73,26 @@ Using OpenWithVim with explorer:
   change application to $PATH_OF_OPENWITHVIM\OpenWithVim -rr "%1"
   => double clicking a file with that extension will be open with Vim
 
+  or
+
+  replace the entry gvim.exe with OpenWithVim -rr in the script
+  $VIMRUNTIME/vim.reg and execute it.  This will add entries in the registry
+  for vim adding 'Edit with Vim' in the popup menu for the right mouse
+  button.  For more information, see
+  :h win32-popup-menu
+  and the note at
+  :h install-registry
+
 * Requires
  
   GVim 5.3 with OLE support
+
+  Visual Basic runtime files.  These files can be downloaded e.g. from
+  www.download.com.  Just search for 'Visual Basic 6.0 Runtime Module' or go
+  directly to
+  http://download.cnet.com/downloads/0-10082-100-897832.html?tag=st.dl.10001_103_1.lst.titledetail
+  or try a web search.
+
 
 * Author
 
@@ -87,6 +104,8 @@ Using OpenWithVim with explorer:
 
 * Changes:
 
+5.I.2000:
+  Added Python version of OpenWithVim.
 13.XII.99:
   Additionally, the keys <c-\><c-n> are sent by OpenWithVim to ensure, that
   the specified file is loaded and avoid scrambling an already open file in

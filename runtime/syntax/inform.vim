@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language: Inform
-" Maintainer: Stephen Thomas (stephent@isltd.insignia.com)
-" Last change: 1999 Oct 16th
+" Language:	Inform
+" Maintainer:	Stephen Thomas (stephent@isltd.insignia.com)
+" Last Change:	1999 Oct 16th
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,4 +1,4 @@
-README_extra.txt for version 5.6a of Vim: Vi IMproved.
+README_extra.txt for version 5.6 of Vim: Vi IMproved.
 
 This is the extra archive of Vim.  It is to be used in combination with the
 source archive (vim-5.5-src.tar.gz).  The extra archive is useless without it.

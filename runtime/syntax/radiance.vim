@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:		Radiance Scene Description
+" Language:	Radiance Scene Description
 " Maintainer:	Georg Mischler <schorsch@schorsch.com>
-" Last change:	01. Nov. 1998
+" Last Change:	01. Nov. 1998
 
 " Radiance is a lighting simulation software package written
 " by Gregory Ward-Larson ("the computer artist formerly known

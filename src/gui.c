@@ -2951,6 +2951,12 @@ gui_mouse_moved(y)
 	add_to_input_buf(st, 6);
 	st[3] = (char_u)MOUSE_RELEASE;
 	add_to_input_buf(st, 6);
+
+#ifdef USE_GUI_GTK
+	/* Need to wake up the main loop */
+	if (gtk_main_level() > 0)
+	    gtk_main_quit();
+#endif
     }
 }
 

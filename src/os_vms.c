@@ -95,8 +95,10 @@ static void	set_x11_icon __ARGS((char_u *));
 static int	get_x11_title __ARGS((int));
 static int	get_x11_icon __ARGS((int));
 static char_u	*oldtitle = NULL;
+static int      did_set_title = FALSE;
 static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
 static char_u	*oldicon = NULL;
+static int      did_set_icon = FALSE;
 #endif
 
 static void	may_core_dump __ARGS((void));
@@ -107,21 +109,23 @@ static void	fill_inbuf __ARGS((int));
 
 static RETSIGTYPE	sig_winch __ARGS(SIGPROTOARG);
 static RETSIGTYPE	deathtrap __ARGS(SIGPROTOARG);
+static void set_signals __ARGS((void));
+static void catch_signals __ARGS((RETSIGTYPE (*func_deadly)(), RETSIGTYPE (*func_other)()));
 
-static void	catch_signals __ARGS((RETSIGTYPE (*func)()));
 static int	have_wildcard __ARGS((int, char_u **));
 static int	have_dollars __ARGS((int, char_u **));
 
 static int	do_resize = FALSE;
 static char_u	*extra_shell_arg = NULL;
 static int	show_shell_mess = TRUE;
-static int	core_dump = FALSE;	/* core dump in mch_windexit() */
+static int      deadly_signal = 0;	/* The signal we caught */
 static TT_MODE	orgmode;
 
 static void	ass_tty(void);
 static TT_MODE	get_tty(void);
 static void	set_tty(int r, int c);
 static void	reset_tty(TT_MODE *mode);
+static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
 
 #ifdef SYS_SIGLIST_DECLARED
 /*
@@ -135,74 +139,80 @@ static void	reset_tty(TT_MODE *mode);
  */
 #endif
 
-static struct
+static struct signalinfo
 {
-    int		sig;		/* Signal number, eg. SIGSEGV etc */
-    char	*name;		/* Signal name (not char_u!). */
-    int		dump;		/* Should this signal cause a core dump? */
+    int     sig;	/* Signal number, eg. SIGSEGV etc */
+    char    *name;	/* Signal name (not char_u!). */
+    char    deadly;	/* Catch as a deadly signal? */
 } signal_info[] =
 {
 #ifdef SIGHUP
-	{SIGHUP,	"HUP",		FALSE},
-#endif
-#ifdef SIGINT
-	{SIGINT,	"INT",		FALSE},
+    {SIGHUP,	    "HUP",	TRUE},
 #endif
 #ifdef SIGQUIT
-	{SIGQUIT,	"QUIT",		TRUE},
+    {SIGQUIT,	    "QUIT",	TRUE},
 #endif
 #ifdef SIGILL
-	{SIGILL,	"ILL",		TRUE},
+    {SIGILL,	    "ILL",	TRUE},
 #endif
 #ifdef SIGTRAP
-	{SIGTRAP,	"TRAP",		TRUE},
+    {SIGTRAP,	    "TRAP",	TRUE},
 #endif
 #ifdef SIGABRT
-	{SIGABRT,	"ABRT",		TRUE},
+    {SIGABRT,	    "ABRT",	TRUE},
 #endif
 #ifdef SIGEMT
-	{SIGEMT,	"EMT",		TRUE},
+    {SIGEMT,	    "EMT",	TRUE},
 #endif
 #ifdef SIGFPE
-	{SIGFPE,	"FPE",		TRUE},
+    {SIGFPE,	    "FPE",	TRUE},
 #endif
 #ifdef SIGBUS
-	{SIGBUS,	"BUS",		TRUE},
+    {SIGBUS,	    "BUS",	TRUE},
 #endif
 #ifdef SIGSEGV
-	{SIGSEGV,	"SEGV",		TRUE},
+    {SIGSEGV,	    "SEGV",	TRUE},
 #endif
 #ifdef SIGSYS
-	{SIGSYS,	"SYS",		TRUE},
-#endif
-#ifdef SIGPIPE
-	{SIGPIPE,	"PIPE",		FALSE},
+    {SIGSYS,	    "SYS",	TRUE},
 #endif
 #ifdef SIGALRM
-	{SIGALRM,	"ALRM",		FALSE},
+    {SIGALRM,	    "ALRM",	FALSE}, /* Perl's alarm() can trigger it */
 #endif
 #ifdef SIGTERM
-	{SIGTERM,	"TERM",		FALSE},
+    {SIGTERM,	    "TERM",	TRUE},
 #endif
 #ifdef SIGVTALRM
-	{SIGVTALRM,	"VTALRM",	FALSE},
+    {SIGVTALRM,     "VTALRM",	TRUE},
 #endif
 #ifdef SIGPROF
-	{SIGPROF,	"PROF",		FALSE},
+    {SIGPROF,	    "PROF",	TRUE},
 #endif
 #ifdef SIGXCPU
-	{SIGXCPU,	"XCPU",		TRUE},
+    {SIGXCPU,	    "XCPU",	TRUE},
 #endif
 #ifdef SIGXFSZ
-	{SIGXFSZ,	"XFSZ",		TRUE},
+    {SIGXFSZ,	    "XFSZ",	TRUE},
 #endif
 #ifdef SIGUSR1
-	{SIGUSR1,	"USR1",		FALSE},
+    {SIGUSR1,	    "USR1",	TRUE},
 #endif
 #ifdef SIGUSR2
-	{SIGUSR2,	"USR2",		FALSE},
+    {SIGUSR2,	    "USR2",	TRUE},
 #endif
-	{-1,		"Unknown!",	-1}
+#ifdef SIGINT
+    {SIGINT,	    "INT",	FALSE},
+#endif
+#ifdef SIGWINCH
+    {SIGWINCH,	    "WINCH",	FALSE},
+#endif
+#ifdef SIGTSTP
+    {SIGTSTP,	    "TSTP",	FALSE},
+#endif
+#ifdef SIGPIPE
+    {SIGPIPE,	    "PIPE",	FALSE},
+#endif
+    {-1,	    "Unknown!", FALSE}
 };
 
 static short	iochan;			/* TTY I/O channel */
@@ -319,28 +329,70 @@ mch_resize(void)
 }
 
 /*
+ * We need correct potatotypes for a signal function, otherwise mean compilers
+ * will barf when the second argument to signal() is ``wrong''.
+ * Let me try it with a few tricky defines from my own osdef.h  (jw).
+ */
+#if defined(SIGWINCH)
+/* ARGSUSED */
+    static RETSIGTYPE
+sig_winch SIGDEFARG(sigarg)
+{
+    /* this is not required on all systems, but it doesn't hurt anybody */
+    signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
+    do_resize = TRUE;
+    SIGRETURN;
+}
+#endif
+
+#if defined(SIGINT)
+/* ARGSUSED */
+    static RETSIGTYPE
+catch_sigint SIGDEFARG(sigarg)
+{
+    /* this is not required on all systems, but it doesn't hurt anybody */
+    signal(SIGINT, (RETSIGTYPE (*)())catch_sigint);
+    got_int = TRUE;
+    SIGRETURN;
+}
+#endif
+
+#ifdef SET_SIG_ALARM
+/*
+ * signal function for alarm().
+ */
+/* ARGSUSED */
+    static RETSIGTYPE
+sig_alarm SIGDEFARG(sigarg)
+{
+    /* doesn't do anything, just to break a system call */
+    SIGRETURN;
+}
+#endif
+
+
+/*
  * This function handles deadly signals.
  * It tries to preserve any swap file and exit properly.
  * (partly from Elvis).
  */
-    static RETSIGTYPE
+
+   static RETSIGTYPE
 deathtrap SIGDEFARG(sigarg)
 {
-    static int		entered = 0;
+    static int      entered = 0;
 #ifdef SIGHASARG
-    int			i;
+    int     i;
 
-    for (i = 0; signal_info[i].dump != -1; i++)
-    {
+    /* try to find the name of this signal */
+    for (i = 0; signal_info[i].sig != -1; i++)
 	if (sigarg == signal_info[i].sig)
-	{
-	    if (signal_info[i].dump)
-		core_dump = TRUE;
 	    break;
-	}
-    }
+    deadly_signal = sigarg;
 #endif
 
+    full_screen = FALSE;	/* don't write message to the GUI, it might be
+				 * part of the problem... */
     /*
      * If something goes wrong after entering here, we may get here again.
      * When this happens, give a message and try to exit nicely (resetting the
@@ -348,31 +400,33 @@ deathtrap SIGDEFARG(sigarg)
      * When this happens twice, just exit, don't even try to give a message,
      * stack may be corrupt or something weird.
      */
-    if (entered == 2)
+    if (entered >= 2)
     {
+	reset_signals();	/* don't catch any signals anymore */
 	may_core_dump();
 	exit(7);
     }
-    if (entered)
+    if (entered++)
     {
 	OUT_STR("Vim: Double signal, exiting\n");
-	vms_flushbuf();
+	out_flush();
+	reset_signals();	/* don't catch any signals anymore */
 	getout(1);
     }
-    ++entered;
 
     sprintf((char *)IObuff, "Vim: Caught %s %s\n",
 #ifdef SIGHASARG
-			    "deadly signal", signal_info[i].name
+		    "deadly signal", signal_info[i].name
 #else
-			    "some", "deadly signal"
+		    "some", "deadly signal"
 #endif
-			    );
+	   );
 
-    /*preserve_exit();			** preserve files and exit */
+    preserve_exit();		/* preserve files and exit */
 
     SIGRETURN;
 }
+
 
 /*
  * If the machine has job control, use it to suspend the program,
@@ -456,34 +510,89 @@ mch_windinit(void)
 
     vms_flushbuf();
     (void)mch_get_winsize();
-
-    /*
-     * arrange for signals to be handled
-     */
-#if defined(SIGWINCH)
-    signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
-#endif
-#ifdef SIGTSTP
-    signal(SIGTSTP, SIG_DFL);
-#endif
-    catch_signals(deathtrap);
+    set_signals();
 }
 
     static void
-catch_signals(func)
-    RETSIGTYPE (*func)();
+set_signals()
 {
-	int		i;
+#if defined(SIGWINCH)
+    /*
+     * WINDOW CHANGE signal is handled with sig_winch().
+     */
+    signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
+#endif
 
-	for (i = 0; signal_info[i].dump != -1; i++)
-		signal(signal_info[i].sig, func);
+    /*
+     * We want the STOP signal to work, to make mch_suspend() work.
+     * For "rvim" the STOP signal is ignored.
+     */
+#ifdef SIGTSTP
+    signal(SIGTSTP, restricted ? SIG_IGN : SIG_DFL);
+#endif
+#ifdef _REENTRANT
+    signal(SIGCONT, sigcont_handler);
+#endif
+
+    /*
+     * We want to ignore breaking of PIPEs.
+     */
+#ifdef SIGPIPE
+    signal(SIGPIPE, SIG_IGN);
+#endif
+
+    /*
+     * We want to catch CTRL-C (only works while in Cooked mode).
+     */
+#ifdef SIGINT
+    signal(SIGINT, (RETSIGTYPE (*)())catch_sigint);
+#endif
+
+    /*
+     * Ignore alarm signals (Perl's alarm() generates it).
+     */
+#ifdef SIGALRM
+    signal(SIGALRM, SIG_IGN);
+#endif
+
+    /*
+     * Arrange for other signals to gracefully shutdown Vim.
+     */
+    catch_signals(deathtrap, SIG_ERR);
+
+#if defined(USE_GUI) && defined(SIGHUP)
+    /*
+     * When the GUI is running, ignore the hangup signal.
+     */
+    if (gui.in_use)
+	signal(SIGHUP, SIG_IGN);
+#endif
 }
 
     void
-reset_signals(void)
+reset_signals()
 {
-	catch_signals(SIG_DFL);
+    catch_signals(SIG_DFL, SIG_DFL);
+#ifdef _REENTRANT
+    /* SIGCONT isn't in the list, because its default action is ignore */
+    signal(SIGCONT, SIG_DFL);
+#endif
 }
+
+    static void
+catch_signals(func_deadly, func_other)
+    RETSIGTYPE (*func_deadly)();
+    RETSIGTYPE (*func_other)();
+{
+    int     i;
+
+    for (i = 0; signal_info[i].sig != -1; i++)
+	if (signal_info[i].deadly)
+	    signal(signal_info[i].sig, func_deadly);
+	else if (func_other != SIG_ERR)
+	    signal(signal_info[i].sig, func_other);
+}
+
 
 /*
  * Check_win checks whether we have an interactive window.
@@ -819,7 +928,7 @@ mch_settitle(char_u *title, char_u *icon)
      */
     if (vim_is_xterm(term_str(KS_NAME)))
 	type = 2;
-    if (vim_is_iris_ansi(term_str(KS_NAME)))
+    if (vim_is_iris(term_str(KS_NAME)))
 	type = 3;
     if (type)
     {
@@ -845,6 +954,7 @@ mch_settitle(char_u *title, char_u *icon)
 		    vms_flushbuf();
 		    break;
 	    }
+	    did_set_title = TRUE;
 	}
 	if (icon != NULL)
 	{
@@ -868,6 +978,7 @@ mch_settitle(char_u *title, char_u *icon)
 		    vms_flushbuf();
 		    break;
 	    }
+	    did_set_icon = TRUE;
 	}
     }
 }
@@ -882,43 +993,55 @@ mch_settitle(char_u *title, char_u *icon)
     void
 mch_restore_title(int which)
 {
-    mch_settitle((which & 1) ? oldtitle : NULL, (which & 2) ? oldicon : NULL);
+    /* only restore the title or icon when it has been set */
+    mch_settitle(((which & 1) && did_set_title) ?
+			(oldtitle ? oldtitle : p_titleold) : NULL,
+				((which & 2) && did_set_icon) ? oldicon : NULL);
 }
 
 #endif /* WANT_TITLE */
 
     int
-vim_is_xterm(char_u *name)
+vim_is_xterm(name)
+    char_u *name;
 {
     if (name == NULL)
 	return FALSE;
-    return (vim_strnicmp((char *)name, "xterm", (size_t)5) == 0
-	    || STRCMP(name, "builtin_xterm") == 0);
+    return (STRNICMP(name, "xterm", 5) == 0
+		|| STRNICMP(name, "kterm", 5)==0
+		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
     int
-vim_is_iris_ansi(char_u *name)
+vim_is_iris(name)
+    char_u  *name;
 {
     if (name == NULL)
 	return FALSE;
-    return (vim_strnicmp((char *)name, "iris-ansi", (size_t)9) == 0
+    return (STRNICMP(name, "iris-ansi", 9) == 0
 	    || STRCMP(name, "builtin_iris-ansi") == 0);
 }
+
 
 /*
  * Return TRUE if "name" is a terminal for which 'ttyfast' should be set.
  * This should include all windowed terminal emulators.
  */
-    int
-is_fastterm(char_u *name)
+
+vim_is_fastterm(name)
+    char_u  *name;
 {
     if (name == NULL)
 	return FALSE;
-    if (vim_is_xterm(name) || vim_is_iris_ansi(name))
+    if (vim_is_xterm(name) || vim_is_iris(name))
 	return TRUE;
-    return (vim_strnicmp((char *)name, "hpterm", (size_t)6) == 0
-	    || vim_strnicmp((char *)name, "sun-cmd", (size_t)7) == 0);
+    return (   STRNICMP(name, "hpterm", 6) == 0
+	    || STRNICMP(name, "sun-cmd", 7) == 0
+	    || STRNICMP(name, "screen", 6) == 0
+	    || STRNICMP(name, "rxvt", 4) == 0
+	    || STRNICMP(name, "dtterm", 6) == 0 );
 }
+
 
 /*
  * Insert user name in s[len].
@@ -1079,7 +1202,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int
 mch_isFullName(char_u *fname)
 {
-    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'['))
+    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'[') || strchr((char *)fname,'>') )
 	return 1;
     else
 	return 0;
@@ -1128,8 +1251,10 @@ mch_isdir(char_u *name)
 {
 	struct stat statb;
 
-	if (mch_stat((char *)name, &statb))
-		return FALSE;
+    if (*name == NUL)	    /* Some stat()s don't flag "" as an error. */
+	return FALSE;
+    if (stat((char *)name, &statb))
+	return FALSE;
 #ifdef _POSIX_SOURCE
 	return (S_ISDIR(statb.st_mode) ? TRUE : FALSE);
 #else
@@ -1140,26 +1265,36 @@ mch_isdir(char_u *name)
     void
 mch_windexit(int r)
 {
-#ifdef WANT_TITLE
-    mch_settitle(oldtitle, oldicon);	/* restore xterm title */
-#endif
     settmode(TMODE_COOK);
     exiting = TRUE;
-    stoptermcap();
+
+#ifdef USE_GUI
+    if (!gui.in_use)
+#endif
+    {
+#ifdef WANT_TITLE
+	mch_restore_title(3);   /* restore xterm title and icon name */
+#endif
+	stoptermcap();
+    }
     vms_flushbuf();
     ml_close_all(TRUE);			/* remove all memfiles */
     may_core_dump();
+#ifdef USE_GUI
+    if (gui.in_use)
+	gui_exit(r);
+#endif
     exit(r);
 }
 
     static void
 may_core_dump(void)
 {
-#ifdef SIGQUIT
-	signal(SIGQUIT, SIG_DFL);
-	if (core_dump)
-		kill(getpid(), SIGQUIT);		/* force a core dump */
-#endif
+    if (deadly_signal != 0)
+    {
+	signal(deadly_signal, SIG_DFL);
+	kill(getpid(), deadly_signal);  /* Die using the signal we caught */
+    }
 }
 
     void
@@ -1605,6 +1740,9 @@ vms_wproc( char *name, int type )
 	   if (cp)
 		*cp = '\0';
 	}
+	cp = strchr(xname,']');
+	if (cp)
+	    return 1; /* do not add directories at all*/
     }
     /* translate name */
     strcpy(xname,decc$translate_vms(xname));
@@ -1615,7 +1753,7 @@ vms_wproc( char *name, int type )
 	    return 1;
     }
     if (--vms_match_free == 0) {
-	/* add more space to store matches */
+	/* add more spacE to store matches */
 	vms_match_alloced += EXPL_ALLOC_INC;
 	vms_fmatch = (char_u **)realloc(vms_fmatch,
 		sizeof(char **) * vms_match_alloced);
@@ -1773,26 +1911,15 @@ getlinecol(void)
 {
     char_u	tbuf[TBUFSZ];
 
-    if (term_str(KS_NAME) /*&& TGETENT(tbuf, term_str(KS_NAME)) > 0*/)
+    if (term_str(KS_NAME) )
     {
 	if (Columns == 0)
 	    Columns = 80; /*tgetnum("co");*/
 	if (Rows == 0)
-	    Rows = 24; /*tgetnum("li");*/
+	    Rows = 24;    /*tgetnum("li");*/
     }
 }
 
-/*
- *	from the VMS port of stevie
- */
-
-    void
-sig(int x)
-{
-    signal(SIGINT, sig);
-    signal(SIGQUIT, sig);
-    got_int = TRUE;
-}
 
     char_u *
 mch_getenv(char_u *lognam)
@@ -1985,17 +2112,115 @@ mch_expandpath(struct growarray *gap, char_u *path, int flags)
     return cnt;
 }
 
+static char *Fspec_Rms;	/* rms file spec, passed implicitly between routines */
+
+#define EQN(S1,S2,LN) (strncmp(S1,S2,LN) == 0)
+#define SKIP_FOLLOWING_SLASHES(Str) while (Str[1] == '/') ++Str
+
+/* attempt to translate a mixed unix-vms file specification to pure vms */
+
+static void
+vms_unix_mixed_filespec(char *in, char *out)
+{
+    char *lastcolon;
+    char *end_of_dir;
+    char ch;
+    int len;
+
+    /* copy vms filename portion up to last colon
+     * (node and/or disk)
+     */
+    lastcolon = strrchr(in, ':');   /* find last colon */
+    if (lastcolon != NULL) {
+	len = lastcolon - in + 1;
+	strncpy(out, in, len);
+	out += len;
+	in += len;
+    }
+
+    end_of_dir = NULL;	/* default: no directory */
+
+    /* start of directory portion */
+    ch = *in;
+    if ((ch == '[') || (ch == '/')) {	/* start of directory(s) ? */
+	ch = '[';
+	SKIP_FOLLOWING_SLASHES(in);
+    } else if (EQN(in, "../", 3)) { /* Unix parent directory? */
+	*out++ = '[';
+	*out++ = '-';
+	end_of_dir = out;
+	ch = '.';
+	in += 2;
+	SKIP_FOLLOWING_SLASHES(in);
+    } else {		    /* not a special character */
+	while (EQN(in, "./", 2)) {	/* Ignore Unix "current dir" */
+	    in += 2;
+	    SKIP_FOLLOWING_SLASHES(in);
+    }
+    if (strchr(in, '/') == NULL) {  /* any more Unix directories ? */
+	strcpy(out, in);	/* No - get rest of the spec */
+	return;
+    } else {
+	*out++ = '[';	    /* Yes, denote a Vms subdirectory */
+	ch = '.';
+	--in;
+	}
+    }
+
+    /* if we get here, there is a directory part of the filename */
+
+    /* initialize output file spec */
+    *out++ = ch;
+    ++in;
+
+    while (*in != '\0') {
+	ch = *in;
+	if ((ch == ']') || (ch == '/')) {	/* end of (sub)directory ? */
+	    end_of_dir = out;
+	    ch = '.';
+	    SKIP_FOLLOWING_SLASHES(in);
+	    }
+	else if (EQN(in, "../", 3)) {	/* Unix parent directory? */
+	    *out++ = '-';
+	    end_of_dir = out;
+	    ch = '.';
+	    in += 2;
+	    SKIP_FOLLOWING_SLASHES(in);
+	    }
+	else {
+	    while (EQN(in, "./", 2)) {  /* Ignore Unix "current dir" */
+	    end_of_dir = out;
+	    in += 2;
+	    SKIP_FOLLOWING_SLASHES(in);
+	    ch = *in;
+	    }
+	}
+
+    /* Place next character into output file spec */
+	*out++ = ch;
+	++in;
+    }
+
+    *out = '\0';    /* Terminate output file spec */
+
+    if (end_of_dir != NULL) /* Terminate directory portion */
+	*end_of_dir = ']';
+}
+
+/* for decc$to_vms in vms_fixfilename */
+static
+vms_fspec_proc(char *fil, int val)
+{
+    strcpy(Fspec_Rms,fil);
+    return(1);
+}
+
 /*
  * change '/' to '.' (or ']' for the last one)
  */
     void *
 vms_fixfilename(void *instring)
 {
-    char		*b;
-    char		*colon = NULL;
-    char		*s;
-    char		*fname;
-    char		*lastdot;
     static char		*buf = NULL;
     static size_t	buflen = 0;
     size_t		len;
@@ -2011,73 +2236,16 @@ vms_fixfilename(void *instring)
 	    buf = (char *)calloc(buflen, sizeof(char));
     }
 
-    /* determine fname: ...[last ]/ ]xxx.sfx;version
-     *				    |fname	    |
+    /* if this already is a vms file specification, copy it
+     * else if VMS understands how to translate the file spec, let it do so
+     * else translate mixed unix-vms file specs to pure vms
      */
-    for (fname = ((char *)instring) + len - 2;
-       fname > ((char *)instring) && *fname != ']' && *fname != '/'; --fname)
-	;
-    ++fname;
 
-    /* copy device name into buffer */
-    s = instring;
-    if (*s == '/')
-	++s;
-    for (b = buf; *s && s < fname; ++s)
-    {
-	if (*s == '/' || *s == ':')
-	    break;
-	*b++ = *s;
-    }
-    *b = '\0';
-
-    if (s + 1 == fname)
-    {
-	*b++ = ':';
-	++s;
-    }
-
-    else if (*s == '/')
-    {
-	*b++ = ':';
-	*b++ = '[';
-	++s;
-    }
-
-    else if (*s == ':')
-    {
-	*b++ = ':';
-	*b++ = '[';
-	if (*++s == '[')
-	    ++s;
-    }
-
-    /* copy rest of instring (prior to fname) into buffer */
-    for (lastdot = NULL; *s && s < fname; ++s)
-    {
-	if (*s == '/' || *s == '.' || *s == ']')
-	{
-	    lastdot = b;
-	    *b++ = '.';
-	}
-	else
-	    *b++ = *s;
-    }
-
-    /* convert lastdot to ']' */
-    if (lastdot)
-	*lastdot = ']';
-    *b = '\0';
-
-    /* copy fname onto end of buffer */
-    strcpy(b,fname);
-    if (!strchr(fname, '.') && !strchr(fname, ';'))
-    {
-	/* append a '.' to files missing suffix */
-	b += strlen(b);
-	*b++ = '.';
-	*b = '\0';
-    }
+    Fspec_Rms = buf;	/* for decc$to_vms */
+    if (strchr(instring,'/') == NULL)
+	strcpy(buf, instring);  /* already a vms file spec */
+    else if (decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0)
+	vms_unix_mixed_filespec(instring, buf);
 
     return buf;
 }

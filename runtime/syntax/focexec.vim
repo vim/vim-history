@@ -2,7 +2,7 @@
 " Language:	Focus Executable
 " Maintainer:	Rob Brady <robb@datatone.com>
 " Last Change:	$Date$
-" URL: http://www.datatone.com/~robb/vim/syntax/focexec.vim
+" URL:		http://www.datatone.com/~robb/vim/syntax/focexec.vim
 " $Revision$
 
 " this is a very simple syntax file - I will be improving it

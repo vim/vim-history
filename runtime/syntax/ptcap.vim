@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	printcap/termcap database
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1999 Sep 14
+" Last Change:	1999 Sep 14
 
 " Clear old syntax defs
 syn clear

@@ -1,4 +1,6 @@
-#!/usr/bin/nawk  -f
+#!/usr/bin/nawk -f
+#
+# Change "nawk" to "awk" or "gawk" if you get errors.
 #
 # Make Vim Errors
 # Processes errors from cc for use by Vim's quick fix tools

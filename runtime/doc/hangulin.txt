@@ -1,11 +1,11 @@
-*hangulin.txt*  For Vim version 5.6a.  Last change: 1999 Jun 11
+*hangulin.txt*  For Vim version 5.6.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Chi-Deok Hwang and Sung-Hyun Nam
 
 Introduction					*hangul*
 ------------
-It is to input hangul, the korean language, with VIM GUI version.
+It is to input hangul, the Korean language, with VIM GUI version.
 If you have a XIM program, you can use another |+xim| feature.
 Basically, it is for whom has no XIM program.
 
@@ -27,8 +27,8 @@ or 3 bulsik. You can find keywords like next in there.
 
 Environment variables
 ---------------------
-You should set LANG variable to korean locale such as ko or ko_KR.euc.
-If you set LC_ALL variable, it should be set to korean locale also.
+You should set LANG variable to Korean locale such as ko or ko_KR.euc.
+If you set LC_ALL variable, it should be set to Korean locale also.
 
 VIM resource
 ------------
@@ -70,7 +70,7 @@ attention! the , (comma) or ; (semicolon)
 
 And there should be no ':set guifont'. If it exists, then Gvim ignores
 ':set guifontset'. It means VIM runs without fontset supporting.
-So, you can see only english. Hangul does not be correctly displayed.
+So, you can see only English. Hangul does not be correctly displayed.
 
 After 'fontset' feature is enabled, VIM does not allow using 'font'.
 For example, if you use

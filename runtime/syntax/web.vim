@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : WEB
-" Maintainer : Andreas Scherer <andreas.scherer@pobox.com>
-" Last change: August 23, 1999
+" Language:	WEB
+" Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
+" Last Change:	August 23, 1999
 
 " Details of the WEB language can be found in the article by Donald E. Knuth,
 " "The WEB System of Structured Documentation", included as "webman.tex" in

@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 5.6a.  Last change: 1999 Sep 14
+*gui.txt*       For Vim version 5.6.  Last change: 2000 Jan 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,9 +183,9 @@ scrolled as far as possible left and right.
 
 							*athena-intellimouse*
 If you have an Intellimouse and are running Linux  and have the proper
-patches in your X server to use the wheel, then to can use the wheel to scroll
-the text up and down in gvim.  At the moment, it only works with the athena
-version.
+patches in your X server to use the wheel, then you can use the wheel to
+scroll the text up and down in gvim.  At the moment, it only works with the
+athena version.
 
 In order to use this you must have a patched X server.  The following page has
 a bit of information about using the Intellimouse on Linux as well as links to
@@ -510,6 +510,7 @@ The default menus have these priorities:
 	Help		9999
 
 When no or zero priority is given, 500 is used.
+The priority for the PopUp menu is not used.
 
 You can use a priority higher than 9999, to make it go after the Help menu,
 but that is non-standard and is discouraged.  The highest possible priority is
@@ -528,8 +529,12 @@ priority will be put before it:
 When a number is missing, the default value 500 will be used:
 >	:menu .900 myMenu.test :echo "text"<CR>
 The menu priority is only used when creating a new menu.  When it already
-existed, the priority will not change.  Thus, the priority only needs to be
-given the first time a menu is used.
+existed, e.g., in another mode, the priority will not change.  Thus, the
+priority only needs to be given the first time a menu is used.
+An exception is the PopUp menu.  There is a separate menu for each mode
+(Normal, Op-pending, Visual, Insert, Cmdline).  The order in each of these
+menus can be different.  This is different from menu-bar menus, which have
+the same order for all modes.
 NOTE: sub-menu priorities currently don't work for all versions of the GUI.
 
 							*gui-toolbar*
@@ -597,7 +602,7 @@ In the Win32 GUI, starting a menu name with ']' excludes that menu from the
 main menu bar.  You must then use the |:tearoff| command to display it.
 
 							*popup-menu*
-Also in the Win32, Motif and Athena GUI, you can define the special menu
+In the Win32, GTK, Motif and Athena GUI, you can define the special menu
 "PopUp".  This is the menu that is displayed when the right mouse button is
 pressed, if 'mousemodel' is set to popup or popup_setpos.
 

@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language   : WEB Changes
-" Maintainer : Andreas Scherer <andreas.scherer@pobox.com>
-" Last change: August 23, 1999
+" Language:	WEB Changes
+" Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
+" Last Change:	August 23, 1999
 
 " Details of the change mechanism of the WEB and CWEB languages can be found
 " in the articles by Donald E. Knuth and Silvio Levy cited in "web.vim" and

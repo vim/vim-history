@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	none; used to test colors
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Nov 1
+" Last Change:	1998 Nov 1
 
 " edit this file, then do ":source %", and check if the colors match
 

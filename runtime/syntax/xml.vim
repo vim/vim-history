@@ -5,7 +5,7 @@
 "		Paul Siegmann <pauls@euronet.nl>
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
-" Last change:	Dec 09 1999
+" Last Change:	Dec 09 1999
 " $Id$
 
 " CREDITS:

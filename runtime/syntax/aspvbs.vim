@@ -2,7 +2,7 @@
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
 " URL:		http://www.tritarget.com/vim/syntax
-" Last change:	1999 Sep 18
+" Last Change:	1999 Sep 18
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -83,16 +83,16 @@ syn keyword AspVBSMethods contained WriteLine
 
 " AspVBScript Number Contstants
 " Integer number, or floating point number without a dot.
-syn match  AspVBSNumber	contained 	"\<\d\+\>"
+syn match  AspVBSNumber	contained	"\<\d\+\>"
 " Floating point number, with dot
-syn match  AspVBSNumber	contained 	"\<\d\+\.\d*\>"
+syn match  AspVBSNumber	contained	"\<\d\+\.\d*\>"
 " Floating point number, starting with a dot
-syn match  AspVBSNumber	contained 	"\.\d\+\>"
+syn match  AspVBSNumber	contained	"\.\d\+\>"
 
 " String and Character Contstants
 " removed (skip=+\\\\\|\\"+) because VB doesn't have backslash escaping in
 " strings (or does it?)
-syn region  AspVBSString	contained 	  start=+"+  end=+"+ keepend
+syn region  AspVBSString	contained	  start=+"+  end=+"+ keepend
 
 " AspVBScript Comments
 syn region  AspVBSComment	contained start="^REM\s\|\sREM\s" end="$" contains=AspVBSTodo keepend

@@ -2,7 +2,7 @@
 " Language:	Java
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last change:	1999 Sept 7
+" Last Change:	1999 Dec 27
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -25,7 +25,6 @@ endif
 
 " keyword definitions
 syn keyword javaExternal        import native package
-syn keyword javaBranch          break continue
 syn keyword javaError           goto const
 syn keyword javaConditional     if else switch
 syn keyword javaRepeat          while for do
@@ -44,6 +43,8 @@ syn keyword javaClassDecl       extends implements interface
 syn match   javaTypedef         "\.\s*\<class\>"ms=s+1
 syn match   javaClassDecl       "^class\>"
 syn match   javaClassDecl       "[^.]\s*\<class\>"ms=s+1
+syn keyword javaBranch          break continue nextgroup=javaUserLabelRef skipwhite
+syn match   javaUserLabelRef    "\k\+" contained
 syn keyword javaScopeDecl       public protected private abstract
 
 if exists("java_highlight_java_lang_ids")
@@ -148,7 +149,7 @@ syn match   javaComment          "/\*\*/"
 syn match   javaSpecialError     contained "\\."
 syn match   javaSpecialCharError contained "[^']"
 syn match   javaSpecialChar      contained "\\\([4-9]\d\|[0-3]\d\d\|[\"\\'ntbrf]\|u\x\{4\}\)"
-syn region  javaString           start=+"+ end=+"+  contains=javaSpecialChar,javaSpecialError,@Spell
+syn match   javaString           +"[^"]*"+  contains=javaSpecialChar,javaSpecialError,@Spell
 syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
 syn match   javaCharacter        "'[^']*'" contains=javaSpecialChar,javaSpecialCharError
 syn match   javaCharacter        "'\\''" contains=javaSpecialChar
@@ -198,6 +199,7 @@ if exists("java_highlight_debug")
 
   " to make this work you must define the highlighting for these groups
   syn region javaDebug start="System\.\(out\|err\)\.print\(ln\)*\s*" end=";" contains=javaDebug.*
+  syn match javaDebug "[A-Za-z][a-zA-Z0-9_]*\.printStackTrace\s*(\s*)" contains=javaDebug.*
   syn region javaDebug  start="trace[SL]\=[ \t]*(" end=";" contains=javaDebug.*
 
   syn cluster javaTop add=javaDebug
@@ -240,6 +242,7 @@ if !exists("did_java_syntax_inits")
   hi link javaFuncDef                       Function
   hi link javaBraces                        Function
   hi link javaBranch                        Conditional
+  hi link javaUserLabelRef                  javaUserLabel
   hi link javaLabel                         Label
   hi link javaUserLabel                     Label
   hi link javaConditional                   Conditional

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CUPL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last change:	1999 Sep 22
+" Last Change:	1999 Sep 22
 
 " Remove any old syn stuff hanging around
 syn clear

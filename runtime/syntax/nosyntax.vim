@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1998 Dec 6
+" Last Change:	1998 Dec 6
 
 " This file is used for ":syntax off".
 " It removes the autocommands and stops highlighting for all buffers.

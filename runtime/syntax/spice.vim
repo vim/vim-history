@@ -1,7 +1,7 @@
 " Vim syntax file
-" Language:     Spice circuit simulator input netlist
-" Maintainer:   Noam Halevy <Noam.Halevy.motorola.com>
-" Last change:  12/08/99
+" Language:	Spice circuit simulator input netlist
+" Maintainer:	Noam Halevy <Noam.Halevy.motorola.com>
+" Last Change:	12/08/99
 "
 " This is based on sh.vim by Lennart Schultz
 " but greatly simplified
