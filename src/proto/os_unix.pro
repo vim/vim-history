@@ -62,3 +62,4 @@ int clip_xterm_own_selection __ARGS((void));
 void clip_xterm_lose_selection __ARGS((void));
 void clip_xterm_request_selection __ARGS((void));
 void clip_xterm_set_selection __ARGS((void));
+/* vim: set ft=c : */

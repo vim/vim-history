@@ -1205,6 +1205,7 @@ mb_dec(lp)
     return -1;			/* at start of file */
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Check if buf[x] is the lead byte of a multi-byte.  Can be used anywhere in
  * a string.
@@ -1223,7 +1224,6 @@ mb_isbyte1(buf, x)
 	    && mb_head_off(buf, buf + x) == 0);
 }
 
-#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Return TRUE if the character at "row"/"col" on the screen if it is the left
  * side of a double-width character.

@@ -47,6 +47,7 @@ typedef struct
     regprog_t		*regprog;
     char_u		*startp[NSUBEXP];
     char_u		*endp[NSUBEXP];
+    int			rm_ic;
 } regmatch_t;
 
 /*
@@ -62,6 +63,7 @@ typedef struct
     regprog_t		*regprog;
     pos_t		startpos[NSUBEXP];
     pos_t		endpos[NSUBEXP];
+    int			rmm_ic;
 } regmmatch_t;
 
 /*

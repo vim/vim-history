@@ -162,7 +162,7 @@ u_savecommon(top, bot, newbot)
      */
     if (!curbuf->b_p_ma)
     {
-	EMSG(_("Cannot make changes, 'modifiable' is off"));
+	EMSG(_(e_modifiable));
 	return FAIL;
     }
 
@@ -384,6 +384,12 @@ u_redo(count)
 u_doit(count)
     int count;
 {
+    /* Don't allow changes when 'modifiable' is off. */
+    if (!curbuf->b_p_ma)
+    {
+	EMSG(_(e_modifiable));
+	return;
+    }
 #ifdef HAVE_SANDBOX
     /* In the sandbox it's not allowed to change the text. */
     if (sandbox != 0)

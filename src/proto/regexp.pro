@@ -11,3 +11,4 @@ char_u *regtilde __ARGS((char_u *source, int magic));
 int vim_regsub __ARGS((regmatch_t *rmp, char_u *source, char_u *dest, int copy, int magic, int backslash));
 int vim_regsub_multi __ARGS((regmmatch_t *rmp, char_u *(*getline)(linenr_t), linenr_t maxline, char_u *source, char_u *dest, int copy, int magic, int backslash));
 char_u *reg_submatch __ARGS((int no));
+/* vim: set ft=c : */

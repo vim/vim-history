@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0r.  Last change: 2001 Jan 01
+*todo.txt*      For Vim version 6.s.  Last change: 2001 Jan 14
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,9 +29,48 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Syntax syncing: sometimes a wrong state used from lines below a change which
-is not redisplayed?  Happens when using "J" moves a "{" into the display, but
-only after making some changes that highlighted the "{" as an error.
+Windows: Can getftime("dirname") return a valid number?
+
+Windows: Two buffers on the same file: (Waggoner)
+	:let c=getcwd()
+	:let n=fnamemodify(c,":p:t")
+	:exec("new " . c . "/../" . n . "/junk")
+	:exec("new ../" . n . "/junk")
+
+Windows: ":e c:/" changes the buffer name to "\".  Why? (Waggoner)
+
+Windows: fnamemodify("C:\vim\vim57",":p") doesn't add a slash,
+fnamemodify("vim57",":p") in "c:\vim" does.  Make this consistent: add a slash
+for the first one too.
+
+"Secret" or "Ignored" buffer?
+    Make a sub-list of the buffer list, which is displayed for
+    ":ls".  Other buffers still exist but are secret.  Some buffers (e.g.,
+    help files, explorer buffer) are also secret).  ":bnext" et al. skip
+    secret buffers.  Need to check in some places that a secret buffer isn't
+    used (can it have a loaded buffer?).
+    Add 'bufsecret' buffer-local option.
+    ":r file" would add "file" as a secret buffer.
+    ":bwipeout buffer" really deletes a buffer.
+    Add BufWipeOut event.
+    Add BufNewSecret event.
+
+one-line window with wrapping line: "l" moves cursor to status line every
+other time.
+
+":setglobal" doesn't show global options, but global values of local options.
+Is that right?  ":setlocal" does show global options.  This feels like it's
+the wrong way around.
+
+With a vertical split 'rl' doesn't work properly.  Left window messes up right
+window, no separator.
+
+In 'rl' window, starting with a comment, syntax highlighting starts wrong.
+
+Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
+see the differece between a backtick and a quote. (Vince Negri)
+
+Add expression expansion where backtick expansion is done: `=expr`. (Negri)
 
 
 Main items for 6.0:
@@ -63,14 +102,10 @@ J.  User Friendlier
 
 
 A. Folding:
--   Change foldcolumn:
-    - Use a "+" for a closed fold, "-" for an open fold.  Click on the "+" to
-      open a fold and click on a "-" to close a fold.
-      When an open fold contains another fold at the same line, show "+-".
-    - color closed folds differently.
-    - Fold column shouldn't stop at end-of-file.
+-   'foldcolumn' not updated when doing "J" just above an open fold.
 -   ":bdel" and ":buf main.c" don't create or delete folds
     (foldmethod=syntax).  (Stocker) ":edit" does.
+    ":sbuffer file" has the same problem (Raul)
 -   Fold problem: (Raul)
     1) create a new buffer with just 4 lines and set scrolloff=1
     2) fold lines 3 and 4
@@ -78,6 +113,8 @@ A. Folding:
     4) press zb
     now the line 1 is out of sight
 -   Fold lines 3-4 then 1-3: foldcolumn shows that it's wrong.
+-   foldmethod=marker "dd" on two folds, then "u" removes folds above it.
+    Making one change (e.g., "x") will re-create them.
 -   change foldlevel() function: return fold level of a line also when the
     fold is closed.  Don't return negative number for first line.
     Add a separate function foldstart() to find the start of a fold.
@@ -90,7 +127,6 @@ A. Folding:
 -   When a search starts in a closed fold, don't match again inside the fold.
 -   When appending to the last line of a fold and typing <CR> the new line
     should be included in the fold.
--   'foldcolumn' not updated when doing "J" just above an open fold.
 -   Fold problem: When switching 'foldmarker' and then editing the same file
     again while setting the foldmarker in a modeline, an old fold with the
     other marker isn't removed. (Sylvain Viart)
@@ -170,7 +206,6 @@ A. Folding:
 -   "zF" command: define a fold for a number of lines. Works like "3zfzf".
 -   'foldmethod' "textobject": fold on sections and paragraph text objects.
 -   Add commands to jump to start/end of fold.  Use "[|" and "]|"?
--   Separate highlighting for 'foldcolumn'.
 -   Ex range which stands for folded lines and non-folded lines.
 	:=d cmd	    displayed (not folded) lines
 	:=f cmd	    folded lines
@@ -272,7 +307,7 @@ D. Vertical window split:
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
 -   Bugs: (Mark Waggoner)
-    See patches in ~/Mail/oldmail/waggoner/in.00132 .
+    See patches in ~/Mail/oldmail/waggoner/in.00132.
     "P" leaves a space at the end of the line.
 
     4. Start a rectangular visual select with Ctrl-V, move down a few
@@ -325,8 +360,42 @@ F. Sun Visual Workshop patch from Gordon Prieur:
 
 
 G. Edit command line with Vi commands:
--   figure out what to do
--   See readline(3) for ideas.
+    For the command-line window:
+	- add a few command-line editing commands in edit().  Vim command
+	  completion?  Would also be useful for Vim script editing.
+	  Eventually the Elvis way would be a small step.
+    The Elvis way: the cmdline is a one-line view on a buffer with the command
+        line history.
+	See remarks from Steve (~/Mail/oldmail/kirkendall/in.00012).
+	> solve conflicts between Insert mode and Command-line mode commands.
+	  make it work like Korn shell and tcsh.
+	> where to show insert/normal mode message?  Change highlighting of
+	  character in first column?
+	> use CTRL-O to execute one normal mode command
+	> How to switch to normal mode for more commands?  <Esc> should cancel
+	  the command.  CTRL-T?
+	> Set "curwin" and "curbuf" to the command line window and buffer.
+	> curwin->w_topline is always equal to curwin->w_cursor.lnum.
+	> Use edit() for normal cmdline editing?  Would have to integrate
+	  getcmdline() into edit().
+	> never set 'number', no folding, etc.  no status line
+	> When executing the line, do like "U" and append the executed line at
+	  the bottom.
+	> Differences between Insert mode and Command-line-insert Mode:
+	    - <CR> doesn't start a new line
+	    - completion with 'wildchar'
+	    - use cmdline abbreviations
+	> Differences between Normal mode and Command-line-normal Mode:
+	    - <CR> executes the line
+	    - no CTRL-W commands
+	    - no ":" commands?
+	    - Visual mode only within one line.
+	    - "j" and "k" move in the history.
+	> sync undo after entering a command line?
+	> allow "/" and "= to recursively call getcmdline(), overwrite the
+	  cmdline.
+	> use NV_NOCL flag for commands that are not allowed in Command-line
+	  Mode.
 
 
 H. More automatic testing:
@@ -358,6 +427,8 @@ J. User Friendlier
     Add Vim to the Start/Programs menu if the user wants this.
     Detect the OLE version and register it.
     Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
+    Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
+    can really be dropped-in.
 -   Make Windows uninstall program better:
     Delete the vim.bat and gvim.bat files.
     Delete a whole tree of Vim files.
@@ -432,8 +503,6 @@ Various recent:
 -   "/$" in 'list' mode should put the highlighting on the "$" character, also
     for empty lines.
 8   Use $install_prefix? (Cabric)
--   Write little program to join lines ending in "\" for VAXC compiler.
-    (Arpadffy)
 -   Where 'suffixesadd' is used, also try removing a trailing "." or "," from
     the file name.
 -   Add regexp items to match start-of-file and end-of-file.
@@ -478,6 +547,7 @@ Various recent:
     -> ":silent map": add flag to mapping, increment "silence" when exeucuting
        it, append a command to decrement "silence"; reset silence when
        aborting a mapping).
+       Or use ":map <silent>"?
     -> ":silent unmap" shouldn't complain about a non-existing mapping.
     Still do the messages for ":redir"?
     -> ":silent redir": Remember the last message, print it if waiting for a
@@ -744,9 +814,6 @@ Motif GUI:
 9   Motif 1.2: Adding many menu items, making two rows, still doesn't work
     properly on HPUX.
 8   Implement ":tearoff".
-9   When using the right mouse button, for some people gvim freezes for a
-    couple of seconds.  This doesn't happen when there is no Popup menu.
-    (Halevy)
 8   Popup menu ordering is wrong.
 8   Dialog: Pointer should be moved to the default button.  Accelerators don't
     work yet.
@@ -824,6 +891,8 @@ GUI:
 
 
 MSDOS/DJGPP:
+8   DJGPP: "cd c:" doesn't work.  Works OK in 16-bit version.  mch_getperm()
+    returns -1 for "c:".
 9   DOS: Make CTRL-Fx and ALT-Fx work.
     CTRL-F1 = CE-5E, CTRL-F2 = CE-5F, .., CTRL-F10 = CE-67
     ALT-F1 = CE-68, ALT-F2 = CE-69, .., ALT-F10 = CE-71
@@ -941,13 +1010,12 @@ Macintosh:
 
 
 VMS:
-9   Make a runtime archive for VMS.
 8   VMS: Inserts <NL> every 8291 bytes when writing. (Howie)  4.5 didn't have
     this problem.  It's caused by the write() function, need to write() every
     line separately.  It seems read() also returns a single line.  Switch I/O
     to binary mode somehow?
-7   Lots of code in common with os_unix.c, but many fixes are missing.  For
-    example, usage of t_ts and t_fs.
+7   Lots of code in common with os_unix.c, but many fixes are missing.  Move
+    shared code to a common file?  Use one file with #ifdefs?
 
 
 "Small" problems:
@@ -1862,7 +1930,10 @@ Autocommands:
     autocommands don't work for MS-DOS.  Needs to be able to remove the ^Ms at
     the end of each line.  Alternative: don't use a filter command, write the
     file, gunzip, set nobin, delete the lines, read the file.
--   Add events to autocommands:?
+8   Add buffer-local autocommands?  Reduces overhead for autocommands that
+    trigger often (inserting a character, switching mode).
+	:au Event <buffer> do-something
+-   Add events to autocommands:
     Error	    - When an error happens
     NormalEnter	    - Entering Normal mode
     InsertEnter	    - Entering Insert mode
@@ -1877,8 +1948,11 @@ Autocommands:
     BufReadAction   - replaces reading a file
     BufWriteAction  - replaces writing a file
     ShutDown	    - when the system is about to shut down
-    InsertKeyPre    - key hit in Insert mode, before inserting the char.
-    InsertKeyPost   - key hit in Insert mode, after inserting the char.
+    InsertCharPre   - user typed character Insert mode, before inserting the
+		      char.  Set v:char to the character, can be changed. (not
+		      when 'paste' is set).
+    InsertCharPost  - user typed a character in Insert mode, after inserting
+		      the char.
     BufModified	    - When a buffer becomes modified, or unmodified (for
 		      putting a [+] in the window title or checking out the
 		      file from CVS).
@@ -1977,16 +2051,6 @@ Command line history:
 Command-line editing:
 7   Add commands (keys) to delete from the cursor to the end of the command
     line.
--   Korn-shell or tcsh like command line editing (like editing a single line
-    with vi). Use :cmap! for mappings. Can be implemented like a buffer
-    containing command lines.  Use CTRL-O instead of <Esc>, to remain
-    vi-compatible?  See remarks from Steve (oldmail/kirkendall/in.012).
--   Add 'cedit' option like Nvi: editing commandline in a window?
-    NO!  It's too confusing (e.g. when using ^W^W to go to another window, when
-    doing ":" and starting another commandline edit windows, etc.).
-    YES!  Some people like it anyway (forbid ^W^W).
-    Use Elvis's method too (commandline is like a one-line window into a buffer
-    that contains the commandline history).
 -   Add flags to 'whichwrap' for command line editing (cursor right at end of
     lines wraps to start of line).
 
@@ -2233,6 +2297,8 @@ Mappings and Abbreviations:
 8   Add ":cab!", abbreviations that only apply to Command-line mode and not to
     entering search strings.
 8   Allow mapping of CTRL-@ (anywhere in the LHS).
+8   Give a warning when using CTRL-C in the lhs of a mapping.  It will never
+    (?) work.
 8   Add a way to save a current mapping and restore it later.  Use a function
     that returns the mapping command to restore it: mapcmd()?  mapcheck() is
     not fool proof.  How to handle ambigious mappings?
@@ -3005,7 +3071,8 @@ Various improvements:
     '}' as the start of a section (e.g. one shiftwidth to the right).
 -   Add 'indent' option: Always use this amount of indent when starting a new
     line and when formatting text.
--   Use pipes for filtering on Unix.
+-   Use pipes for filtering on Unix.  Requires using fork() to be able to read
+    and write at the same time, or some select() mechanism.
 7   Allow using Vim in a pipe: "ls | vim -u xxx.vim - | yyy".  Only needs
     implementing ":w" to stdout in the buffer that was read from stdin.
 8   Allow opening an unnamed buffer with ":e !cmd" and ":sp !cmd".  Vile can

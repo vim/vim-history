@@ -34,7 +34,7 @@
 # include "os_os2_cfg.h"
 #endif
 
-#if defined macintosh
+#ifdef macintosh
 # define FEAT_GUI_MAC	    /* mandatory */
 #endif
 #if defined(FEAT_GUI_MOTIF) \
@@ -86,7 +86,8 @@
 # endif
 #endif
 #ifdef macintosh
-# if defined(__POWERPC__) || defined (__fourbyteints__)
+# if defined(__POWERPC__) || defined (__fourbyteints__) \
+  || defined(__MRC__) || defined (__SC__) /* MPW Compilers */
 #  define SIZEOF_INT 4
 # else
 #  define SIZEOF_INT 2
@@ -144,6 +145,10 @@
 # include "os_vms.h"
 #endif
 
+#if defined(macintosh) && (defined(__MRC__) || defined(__SC__))
+   /* Apple's Compilers support prototypes */
+# define __ARGS(x) x
+#endif
 #ifndef __ARGS
 # if defined(__STDC__) || defined(__GNUC__) || defined(WIN32)
 #  define __ARGS(x) x
@@ -188,6 +193,9 @@
 #endif
 
 #ifdef macintosh
+# if defined(__MRC__) || defined (__SC__) /* MPW Compilers */
+#  define HAVE_SETENV
+# endif
 # include "os_mac.h"
 #endif
 
@@ -404,8 +412,9 @@ typedef unsigned short u8char_t;
 /*
  * values for xp_context when doing command line completion
  */
-#define CONTEXT_UNKNOWN		(-2)
-#define EXPAND_UNSUCCESSFUL	(-1)
+#define CONTEXT_UNKNOWN		(-3)
+#define EXPAND_UNSUCCESSFUL	(-2)
+#define EXPAND_OK		(-1)
 #define EXPAND_NOTHING		0
 #define EXPAND_COMMANDS		1
 #define EXPAND_FILES		2
@@ -531,7 +540,7 @@ typedef unsigned short u8char_t;
 #define FIND_IDENT	1	/* find identifier (word) */
 #define FIND_STRING	2	/* find any string (WORD) */
 
-/* Values for get_file_name_in_path() */
+/* Values for file_name_in_line() */
 #define FNAME_MESS	1	/* give error message */
 #define FNAME_EXP	2	/* expand to path */
 #define FNAME_HYP	4	/* check for hypertext link */
@@ -787,6 +796,8 @@ enum auto_event
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
     EVENT_BUFWRITECMD,		/* write buffer using command */
+    EVENT_CMDWINENTER,		/* after entering the cmdline window */
+    EVENT_CMDWINLEAVE,		/* before leaving the cmdline window */
     EVENT_FILEAPPENDPOST,	/* after appending to a file */
     EVENT_FILEAPPENDPRE,	/* before appending to a file */
     EVENT_FILEAPPENDCMD,	/* appende to a file using command */
@@ -850,13 +861,14 @@ enum hlf_value
     , HLF_VNC	    /* Visual mode, autoselecting and not clipboard owner */
     , HLF_W	    /* warning messages */
     , HLF_WM	    /* Wildmenu highlight */
-    , HLF_F	    /* Folded line */
+    , HLF_FL	    /* Folded line */
+    , HLF_FC	    /* Fold column */
     , HLF_COUNT	    /* MUST be the last one */
 };
 
 /* the HL_FLAGS must be in the same order as the HLF_ enums! */
 #define HL_FLAGS {'8', '@', 'd', 'e', 'h', 'i', 'l', 'm', 'M', \
-		  'n', 'r', 's', 'S', 'c', 't', 'v', 'V', 'w', 'W', 'f'}
+		  'n', 'r', 's', 'S', 'c', 't', 'v', 'V', 'w', 'W', 'f', 'F'}
 
 /*
  * Boolean constants
@@ -1126,14 +1138,16 @@ int vim_memcmp __ARGS((void *, void *, size_t));
     (code) = ((code) & 0x3f) | ((((num) - 1) & 3) << 6)
 
 /*
- * jump_to_mouse() returns one of these values, possibly with
- * CURSOR_MOVED added
+ * jump_to_mouse() returns one of first four these values, possibly with
+ * some of the other three added.
  */
-# define IN_UNKNOWN	1
-# define IN_BUFFER	2
-# define IN_STATUS_LINE	3	    /* on status or command line */
-# define IN_SEP_LINE	4	    /* on vertical separator line */
-# define CURSOR_MOVED	0x100
+# define IN_UNKNOWN		0
+# define IN_BUFFER		1
+# define IN_STATUS_LINE		2	/* on status or command line */
+# define IN_SEP_LINE		4	/* on vertical separator line */
+# define CURSOR_MOVED		0x100
+# define MOUSE_FOLD_CLOSE	0x200	/* clicked on '-' in fold column */
+# define MOUSE_FOLD_OPEN	0x400	/* clicked on '+' in fold column */
 
 /* flags for jump_to_mouse() */
 # define MOUSE_FOCUS		0x01	/* need to stay in this window */
@@ -1155,25 +1169,26 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 /* Defines for Vim variables.  These must match vimvars[] in eval.c! */
 #define VV_COUNT	0
 #define VV_COUNT1	1
-#define VV_ERRMSG	2
-#define VV_WARNINGMSG	3
-#define VV_STATUSMSG	4
-#define VV_SHELL_ERROR	5
-#define VV_THIS_SESSION	6
-#define VV_VERSION	7
-#define VV_LNUM		8
-#define VV_TERMRESPONSE	9
-#define VV_FNAME	10
-#define VV_LANG		11
-#define VV_CC_FROM	12
-#define VV_CC_TO	13
-#define VV_CC_IN	14
-#define VV_CC_OUT	15
-#define VV_CMDARG	16
-#define VV_FOLDSTART	17
-#define VV_FOLDEND	18
-#define VV_FOLDDASHES	19
-#define VV_LEN		20	/* number of v: vars */
+#define VV_PREVCOUNT	2
+#define VV_ERRMSG	3
+#define VV_WARNINGMSG	4
+#define VV_STATUSMSG	5
+#define VV_SHELL_ERROR	6
+#define VV_THIS_SESSION	7
+#define VV_VERSION	8
+#define VV_LNUM		9
+#define VV_TERMRESPONSE	10
+#define VV_FNAME	11
+#define VV_LANG		12
+#define VV_CC_FROM	13
+#define VV_CC_TO	14
+#define VV_CC_IN	15
+#define VV_CC_OUT	16
+#define VV_CMDARG	17
+#define VV_FOLDSTART	18
+#define VV_FOLDEND	19
+#define VV_FOLDDASHES	20
+#define VV_LEN		21	/* number of v: vars */
 
 #ifdef FEAT_CLIPBOARD
 

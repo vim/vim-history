@@ -551,29 +551,38 @@ block_insert(oap, s, b_insert, bdp)
 
 	/* copy up to shifted part */
 	mch_memmove(newp, oldp, (size_t)(offset));
+	oldp += offset;
 
 	/* insert pre-padding */
 	copy_spaces(newp + offset, (size_t)spaces);
 
 	/* copy the new text */
 	mch_memmove(newp + offset + spaces, s, (size_t)s_len);
+	offset += s_len;
 
-	oldp += offset;
 	if (spaces && !bdp->is_short)
 	{
 	    /* insert post-padding */
-	    copy_spaces(newp + offset + spaces + s_len,
-						     (size_t)(p_ts - spaces));
+	    copy_spaces(newp + offset + spaces, (size_t)(p_ts - spaces));
 	    /* We're splitting a TAB, don't copy it. */
 	    oldp++;
 	    /* We allowed for that TAB, remember this now */
 	    count++;
 	}
 
-	mch_memmove(newp + offset + s_len + (spaces ? count : 0),
-					    oldp, (size_t)(STRLEN(oldp) + 1));
+	if (spaces > 0)
+	    offset += count;
+	mch_memmove(newp + offset, oldp, (size_t)(STRLEN(oldp) + 1));
 
 	ml_replace(lnum, newp, FALSE);
+
+	if (lnum == oap->end.lnum)
+	{
+	    /* Set "']" mark to the end of the block instead of the end of
+	     * the insert in the first line.  */
+	    curbuf->b_op_end.lnum = oap->end.lnum;
+	    curbuf->b_op_end.col = offset;
+	}
     } /* for all lnum */
 
     changed_lines(oap->start.lnum + 1, 0, oap->end.lnum + 1, 0L);
@@ -3278,13 +3287,9 @@ do_join(insert_space)
     /*
      * go to first character of the joined line
      */
-    if (currsize == 0)
-	curwin->w_cursor.col = 0;
-    else
-    {
-	curwin->w_cursor.col = currsize - 1;
-	(void)oneright();
-    }
+    curwin->w_cursor.col = currsize;
+    check_cursor_col();
+    curwin->w_set_curswant = TRUE;
 
     return OK;
 }

@@ -40,9 +40,10 @@
 
 #define POUND           0xA3
 
-#define Ctrl_chr(x)	((x) & 0x1f)
+#define Ctrl_chr(x)	((x) ^ 0x40)	/* '?' -> DEL, '@' -> ^@, etc. */
 #define Meta(x)		((x) | 0x80)
 
+#define CTRL_F_STR	"\006"
 #define CTRL_H_STR	"\010"
 #define CTRL_V_STR	"\026"
 #define CTRL_W_STR	"\027"
@@ -99,7 +100,7 @@
 
 #define EBCDIC_CHAR_ADD_(x) ((x) < 0?'a':(x)>25?'z':"abcdefghijklmnopqrstuvwxyz"[x])
 #define EBCDIC_CHAR_ADD(c,s) (isupper(c) ? toupper(EBCDIC_CHAR_ADD_(CharOrdUp(c)+(s))) : EBCDIC_CHAR_ADD_(CharOrdLow(c)+(s)))
-     
+
 #define R13_(c) ("abcdefghijklmnopqrstuvwxyz"[((c) + 13) % 26])
 #define ROT13(c, a)  (isupper(c) ? toupper(R13_(CharOrdUp(c))) : R13_(CharOrdLow(c)))
 
@@ -123,6 +124,7 @@
 
 #define POUND           '£'
 
+#define CTRL_F_STR	"\056"
 #define CTRL_H_STR	"\026"
 #define CTRL_V_STR	"\062"
 #define CTRL_W_STR	"\046"

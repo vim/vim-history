@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0r.  Last change: 2000 Dec 19
+*quickfix.txt*  For Vim version 6.s.  Last change: 2001 Jan 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -249,8 +249,11 @@ be escaped), meta symbols have to be written with leading '%':
 When using character classes in expressions (see |/\i| for an overview),
 terms containing the "\+" quantifier can be written in the scanf() "%*"
 notation. Example: "%\\d%\\+" ("\d\+", "any number") is equivalent to "%*\\d".
-Important note: The \(...\) grouping of expressions can not be used in format
+Important note: The \(...\) grouping of sub-matches can not be used in format
 specifications because it is reserved for internal conversions.
+
+note: By default the difference between upper and lower case is ignored.  If
+you want to match case, add "\C" to the pattern |/\C|.
 
 Some examples for C compilers that produce single-line error outputs:
 %f>%l:%c:%t:%n:%m"			for the AztecC.Err file

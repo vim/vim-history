@@ -1,4 +1,4 @@
-/* vim:set ts=8 sts=4 sw=4 fdm=marker fdl=1:
+/* vim:set ts=8 sts=4 sw=4 fdm=marker fdl=1 fdc=3:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *
@@ -215,7 +215,12 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
     if (firstp != NULL)
 	*firstp = first;
     if (levelp != NULL)
-	*levelp = level + 1;
+    {
+	if (lnum_rel == 0)
+	    *levelp = -(level + 1);	/* open fold starts here too */
+	else
+	    *levelp = level + 1;
+    }
     return TRUE;
 }
 

@@ -24,3 +24,4 @@ char_u *mch_getenv __ARGS((char_u *var));
 char *default_shell __ARGS((void));
 void clip_mch_request_selection __ARGS((void));
 void clip_mch_set_selection __ARGS((void));
+/* vim: set ft=c : */

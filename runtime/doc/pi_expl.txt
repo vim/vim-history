@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0r.  Last change: 2000 Dec 29
+*pi_expl.txt*    For Vim version 6.s.  Last change: 2000 Dec 29
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -27,23 +27,49 @@ To launch the explorer in the directory of the file currently edited: >
 If the file has changes the window is split.  To always split the window: >
 	:Sexplore
 
-							*g:explVertical*
-By default, when the explorer splits the window, it will do so horizontally.
-To split the window vertically set the following: >
-  let g:explVertical=1
-Setting it to zero will cause the window to split horizontally.
-
 From inside the explorer, pressing <enter> on a filename will close the
-explorer and open the file chosen. To open the file in a new window, press o.
-The new window will be split horizontally or vertically based on the value of
-the variable g:explVertical.
+explorer and open the file chosen. To open the file in a new window, press
+'o'.  You can control where the split window will go relative to the explorer
+window using the variables g:explVertical, g:explSplitBelow and
+g:explSplitRight.
+
+							*g:explVertical*
+							*g:explSplitBelow*
+							*g:explSplitRight*
+To control whether the split is made horizontally or vertically, use: >
+  let g:explVertical=1	" Split vertically
+  let g:explVertical=0	" Split horizontally (default)
+
+To control where the window goes relative to the explorer window when
+splitting horizontally, use the variable: >
+  let g:explSplitBelow=1    " Put new window below explorer window
+  let g:explSplitBelow=0    " Put new window above explorer window
+The default for this is the setting of splitbelow at the time the plugin is
+loaded.
+
+To control where the windows goes relative to the explorer window when
+splitting vertically, use the variable: >
+  let g:explSplitRight=1    " Put new window to the right of the explorer
+  let g:explSplitRight=0    " Put new window to the left of the explorer
+The default for this is the setting of splitright at the time the plugin is
+loaded.
+
+Note that the window split is done a little bit differently than window splits
+are usually done.  Ordinarily, when splitting a window, the space occupied by
+the current window will be split to give space for the new window.  The
+explorer attempts to instead split from a window adjacent to the explorer
+window so that the explorer window will not change sizes.  If there is not an
+adjacent window in the direction you are splitting, the explorer window is
+split.
 
 							*g:explWinSize*
 After opening a file with the 'o' command, you might want to resize the
 explorer window. This can be done by setting the variable >
   let g:explWinSize=N
 N is the number of rows (when the window is split horizontally) or the number
-of columns (when the window is split vertically).
+of columns (when the window is split vertically).  If g:explWinSize is set to
+an empty string (""), resizing will not be done.  g:explWinSize defaults to
+15.
 
 							*g:explDetailedList*
 The file size (in bytes) and modification time can be displayed inside the

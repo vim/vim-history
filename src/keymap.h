@@ -219,6 +219,7 @@ enum key_extra
     , KE_CSI		/* CSI typed directly */
     , KE_SNR		/* <SNR> */
     , KE_PLUG		/* <Plug> */
+    , KE_CMDWIN		/* open command-line window from Command-line Mode */
 };
 
 /*
@@ -416,6 +417,7 @@ enum key_extra
 #define K_CSI		TERMCAP2KEY(KS_EXTRA, KE_CSI)
 #define K_SNR		TERMCAP2KEY(KS_EXTRA, KE_SNR)
 #define K_PLUG		TERMCAP2KEY(KS_EXTRA, KE_PLUG)
+#define K_CMDWIN	TERMCAP2KEY(KS_EXTRA, KE_CMDWIN)
 
 /* Bits for modifier mask */
 /* 0x01 cannot be used, because the modifier must be 0x02 or higher */

@@ -41,3 +41,4 @@ void fix_help_buffer __ARGS((void));
 void ex_helptags __ARGS((exarg_t *eap));
 void ex_sign __ARGS((exarg_t *eap));
 void ex_unsign __ARGS((exarg_t *eap));
+/* vim: set ft=c : */

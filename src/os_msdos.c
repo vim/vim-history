@@ -30,6 +30,7 @@
 # include <dpmi.h>
 # include <signal.h>
 # include <sys/movedata.h>
+# include <crt0.h>
 #else
 # include <alloc.h>
 #endif
@@ -1637,6 +1638,35 @@ mch_isFullName(char_u *fname)
 	|| (fname[0] == fname[1] && (fname[0] == '/' || fname[0] == '\\'));
 }
 
+#ifdef DJGPP
+    static int
+vim_chmod(char_u *name)
+{
+    char_u	*p;
+    int		f;
+    int		c = 0;
+
+    /* DJGPP can't handle a file name with a trailing slash, remove it.
+     * But don't remove it for "/" or "c:/". */
+    p = name + strlen((char *)name);
+    if (p > name)
+	--p;
+    if (p > name && (*p == '\\' || *p == '/') && p[-1] != ':')
+    {
+	c = *p;				/* remove trailing (back)slash */
+	*p = NUL;
+    }
+    else
+	p = NULL;
+    f = _chmod((char *)name, 0, 0);
+    if (p != NULL)
+	*p = c;				/* put back (back)slash */
+    return f;
+}
+#else
+# define vim_chmod(name) _chmod((char *)name, 0, 0)
+#endif
+
 /*
  * get file permissions for 'name'
  * -1 : error
@@ -1645,7 +1675,7 @@ mch_isFullName(char_u *fname)
     long
 mch_getperm(char_u *name)
 {
-    return (long)_chmod((char *)name, 0, 0);	 /* get file mode */
+    return (long)vim_chmod(name);	/* get file mode */
 }
 
 /*
@@ -1682,19 +1712,9 @@ mch_hide(char_u *name)
     int
 mch_isdir(char_u *name)
 {
-    int	    f;
-    char_u  *p;
+    int		f;
 
-    p = name + strlen((char *)name);
-    if (p > name)
-	--p;
-    if (*p == '\\' || *p == '/')   /* remove trailing (back)slash for now */
-	*p = NUL;
-    else
-	p = NULL;
-    f = _chmod((char *)name, 0, 0);
-    if (p != NULL)
-	*p = psepc;		    /* put back (back)slash */
+    f = vim_chmod(name);
     if (f == -1)
 	return FALSE;		    /* file does not exist at all */
     if ((f & FA_DIREC) == 0)

@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0r.  Last change: 2000 Oct 17
+*usr_toc.txt*	For Vim version 6.s.  Last change: 2000 Oct 17
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

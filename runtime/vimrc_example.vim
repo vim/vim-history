@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Dec 12
+" Last change:	2001 Jan 08
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -31,7 +31,7 @@ set incsearch		" do incremental searching
 map Q gq
 
 " Make p in Visual mode replace the selected text with the "" register.
-vnoremap p <Esc>:let current_reg = @"<CR>gvdi<C-R>=current_reg<CR><Esc>
+vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
 " Switch syntax highlighting on, when the terminal has colors
 " Also switch on highlighting the last used search pattern.

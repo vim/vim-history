@@ -66,3 +66,4 @@ void gui_mch_find_dialog __ARGS((exarg_t *eap));
 void gui_mch_replace_dialog __ARGS((exarg_t *eap));
 void gui_mch_mousehide __ARGS((int hide));
 void mch_set_mouse_shape __ARGS((int shape));
+/* vim: set ft=c : */

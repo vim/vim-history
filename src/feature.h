@@ -119,6 +119,11 @@
 # define FEAT_WINDOWS
 #endif
 
+/* the cmdline-window requires FEAT_VERTSPLIT */
+#ifdef FEAT_VERTSPLIT
+# define FEAT_CMDWIN
+#endif
+
 /*
  * +folding		Fold lines.
  */
@@ -505,9 +510,9 @@
 /*
  * +multi_byte		Generic multi-byte character handling.  Doesn't work
  *			with 16 bit ints.
- * 
+ *
  * Disabled for EBCDIC:
- * Multibyte support doesn't work on OS390 Unix currently. 
+ * Multibyte support doesn't work on OS390 Unix currently.
  */
 #if defined(FEAT_BIG) && !defined(FEAT_MBYTE) && !defined(WIN16) \
 	&& SIZEOF_INT >= 4 && !defined(EBCDIC)
@@ -828,7 +833,8 @@
  *			handling.
  * +mouse		Any mouse support (any of the above enabled).
  */
-#if !defined(AMIGA) || defined(FEAT_GUI_AMIGA)	/* Amiga console has no mouse */
+/* OS/2 and Amiga console have no mouse support */
+#if (!defined(AMIGA) && !defined(OS2)) || defined(FEAT_GUI_AMIGA)
 # ifdef FEAT_NORMAL
 #  define FEAT_MOUSE_XTERM
 # endif
@@ -851,9 +857,6 @@
 #   define FEAT_VISUAL
 #  endif
 # endif
-# ifndef FEAT_MOUSE
-#  define FEAT_MOUSE
-# endif
 #endif
 
 #if defined(FEAT_NORMAL) && defined(FEAT_VISUAL) && defined(UNIX) \
@@ -867,11 +870,10 @@
 # define FEAT_MOUSE_GPM
 #endif
 /* Define FEAT_MOUSE when any of the above is defined */
-/* It's also defined in gui.h, the GUI always has a mouse. */
 #if !defined(FEAT_MOUSE) && (defined(FEAT_MOUSE_XTERM) \
 	|| defined(FEAT_MOUSE_NET) || defined(FEAT_MOUSE_DEC) \
-	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM)) \
-	|| defined(FEAT_MOUSE_JSB)
+	|| defined(DOS_MOUSE) || defined(FEAT_MOUSE_GPM) \
+	|| defined(FEAT_MOUSE_JSB) || defined(FEAT_GUI))
 # define FEAT_MOUSE		/* include mouse support */
 #endif
 

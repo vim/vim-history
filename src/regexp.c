@@ -733,7 +733,8 @@ skip_regexp(p, dirc, magic)
  * code and thus invalidate pointers into it.  (Note that it has to be in
  * one piece because vim_free() must be able to free it all.)
  *
- * Does not use reg_ic, see vim_regexec() for that.
+ * Whether upper/lower case is to be ignored is decided when executing the
+ * program, it does not matter here.
  *
  * Beware that the optimization-preparation code in here knows about some
  * of the structure of the compiled regexp.
@@ -2190,9 +2191,9 @@ int		regnarrate = 0;
 #endif
 
 /*
- * Internal copy of reg_ic.  It is set at each call to vim_regexec().
- * Normally it gets the value of reg_ic, but when the pattern contains '\c' or
- * '\C' the value is overruled.
+ * Internal copy of 'ignorecase'.  It is set at each call to vim_regexec().
+ * Normally it gets the value of "rm_ic" or "rmm_ic", but when the pattern
+ * contains '\c' or '\C' the value is overruled.
  */
 static int	ireg_ic;
 
@@ -2261,7 +2262,6 @@ static pos_t	reg_endzpos[NSUBEXP];	/* idem, end pos */
 /*
  * Match a regexp against a string.
  * "rmp->regprog" is a compiled regexp as returned by vim_regcomp().
- * Uses current value of reg_ic.
  * Uses curbuf for line count and 'iskeyword'.
  *
  * Return TRUE if there is a match, FALSE if not.
@@ -2275,13 +2275,13 @@ vim_regexec(rmp, line, col)
     reg_match = rmp;
     reg_mmatch = NULL;
     reg_maxline = 0;
+    ireg_ic = rmp->rm_ic;
     return (vim_regexec_both(line, col) != 0);
 }
 
 /*
  * Match a regexp against multiple lines.
  * "rmp->regprog" is a compiled regexp as returned by vim_regcomp().
- * Uses current value of reg_ic.
  * Uses curbuf for line count and 'iskeyword'.
  *
  * "getline" must point to a function that returns a pointer to the line.  The
@@ -2302,6 +2302,7 @@ vim_regexec_multi(rmp, getline, col, maxline)
     reg_mmatch = rmp;
     reg_getline = getline;
     reg_maxline = maxline;
+    ireg_ic = rmp->rmm_ic;
     return vim_regexec_both(NULL, col);
 }
 
@@ -2376,13 +2377,11 @@ vim_regexec_both(line, col)
     if (prog_magic_wrong())
 	goto theend;
 
-    /* If pattern contains "\c" or "\C": overrule value of reg_ic */
+    /* If pattern contains "\c" or "\C": overrule value of ireg_ic */
     if (prog->regflags & RF_ICASE)
 	ireg_ic = TRUE;
     else if (prog->regflags & RF_NOICASE)
 	ireg_ic = FALSE;
-    else
-	ireg_ic = reg_ic;
 
     /* If there is a "must appear" string, look for it. */
     if (prog->regmust != NULL)

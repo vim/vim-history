@@ -480,8 +480,9 @@ do_window(nchar, Prenum)
 /*
  * split the current window, implements CTRL-W s and :split
  *
- * "new_size" is the height or width for the new window, 0 to make half of
- * current height.
+ * "size" is the height or width for the new window, 0 to use half of current
+ * height or width.
+ *
  * "flags":
  * WSP_ROOM: require enough room for new window
  * WSP_VERT: vertical split.
@@ -491,12 +492,13 @@ do_window(nchar, Prenum)
  * return FAIL for failure, OK otherwise
  */
     int
-win_split(new_size, flags)
-    int		new_size;
+win_split(size, flags)
+    int		size;
     int		flags;
 {
     win_t	*wp;
     win_t	*oldwin;
+    int		new_size = size;
     int		i;
     int		need_status = 0;
     int		do_equal = FALSE;
@@ -879,7 +881,30 @@ win_split(new_size, flags)
 		(flags & WSP_VERT) ? 'h' :
 #endif
 		'v');
+
+    /* Don't change the window height/width to 'winheight' / 'winwidth' if a
+     * size was given. */
+#ifdef FEAT_VERTSPLIT
+    if (flags & WSP_VERT)
+    {
+	i = p_wiw;
+	if (size != 0)
+	    p_wiw = size;
+    }
+    else
+#endif
+    {
+	i = p_wh;
+	if (size != 0)
+	    p_wh = size;
+    }
     win_enter(wp, FALSE);
+#ifdef FEAT_VERTSPLIT
+    if (flags & WSP_VERT)
+	p_wiw = i;
+    else
+#endif
+	p_wh = i;
 
     redraw_later(NOT_VALID);
 
@@ -1417,8 +1442,8 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		next_curwin_size = -1;
 		for (fr = topfr->fr_child; fr != NULL; fr = fr->fr_next)
 		{
-		    /* the quickfix and preview window keep their height if
-		     * it's full width.
+		    /* The quickfix and preview window keep their height if
+		     * possible.
 		     * Watch out for this window being the next_curwin. */
 		    if (fr->fr_win != NULL
 			    && (bt_quickfix(fr->fr_win->w_buffer)
@@ -1638,8 +1663,13 @@ win_close(win, free_buf)
 #endif
 #ifdef FEAT_QUICKFIX
 	/* For a preview or quickfix window, remember its old size and restore
-	 * it later (it's a simplistic solution...). */
+	 * it later (it's a simplistic solution...).  Don't do this if the
+	 * window will occupy the full height of the screen. */
 	if (frp2->fr_win != NULL
+		&& (frp2->fr_next != NULL
+		    || frp2->fr_prev != NULL
+		    || frp2->fr_parent == NULL
+		    || frp2->fr_parent->fr_parent == NULL)
 		&& (frp2->fr_win->w_p_pvw
 		    || bt_quickfix(frp2->fr_win->w_buffer)))
 	    old_height = frp2->fr_win->w_height;
@@ -1857,8 +1887,8 @@ frame_add_statusline(frp)
     else /* frp->fr_layout == FR_COL */
     {
 	/* Only need to handle the last frame in the column. */
-	while (frp->fr_next != NULL)
-	    frp = frp->fr_next;
+	for (frp = frp->fr_child; frp->fr_next != NULL; frp = frp->fr_next)
+	    ;
 	frame_add_statusline(frp);
     }
 }
@@ -2815,6 +2845,52 @@ shell_new_columns()
 	win_equal(curwin, 'h');
 }
 #endif
+
+#if defined(FEAT_CMDWIN) || defined(PROTO)
+/*
+ * Save the size of all windows in "gap".
+ */
+    void
+win_size_save(gap)
+    garray_t	*gap;
+
+{
+    win_t	*wp;
+
+    ga_init2(gap, sizeof(int), 1);
+    if (ga_grow(gap, win_count() * 2) == OK)
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	{
+	    ((int *)gap->ga_data)[gap->ga_len++] =
+					       wp->w_width + wp->w_vsep_width;
+	    ((int *)gap->ga_data)[gap->ga_len++] = wp->w_height;
+	}
+}
+
+/*
+ * Restore window sizes, but only if the number of windows is still the same.
+ * Does not free the growarray.
+ */
+    void
+win_size_restore(gap)
+    garray_t	*gap;
+{
+    win_t	*wp;
+    int		i;
+
+    if (win_count() * 2 == gap->ga_len)
+    {
+	i = 0;
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+	{
+	    frame_setwidth(wp->w_frame, ((int *)gap->ga_data)[i++]);
+	    win_setheight_win(((int *)gap->ga_data)[i++], wp);
+	}
+	/* recompute the window positions */
+	(void)win_comp_pos();
+    }
+}
+#endif /* FEAT_CMDWIN */
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
@@ -3819,15 +3895,9 @@ last_status_rec(fr, statusline)
 
 #if defined(FEAT_SEARCHPATH) || defined(PROTO)
 /*
- * file_name_at_cursor()
+ * Return the file name under or after the cursor.
  *
- * Return the name of the file under (or to the right of) the cursor.
- *
- * get_file_name_in_path()
- *
- * Return the name of the file at (or to the right of) ptr[col].
- *
- * The p_path variable is searched if the file name does not start with '/'.
+ * The p_path variable is searched if the file name is not absolute.
  * The string returned has been alloc'ed and should be freed by the caller.
  * NULL is returned if the file name or file is not found.
  *
@@ -3835,30 +3905,30 @@ last_status_rec(fr, statusline)
  * FNAME_MESS	    give error messages
  * FNAME_EXP	    expand to path
  * FNAME_HYP	    check for hypertext link
+ * FNAME_INCL	    apply "includeexpr"
  */
     char_u *
 file_name_at_cursor(options, count)
     int	    options;
     long    count;
 {
-    return get_file_name_in_path(ml_get_curline(),
+    return file_name_in_line(ml_get_curline(),
 					curwin->w_cursor.col, options, count);
 }
 
+/*
+ * Return the name of the file under or after ptr[col].
+ * Otherwise like file_name_at_cursor().
+ */
     char_u *
-get_file_name_in_path(line, col, options, count)
+file_name_in_line(line, col, options, count)
     char_u	*line;
     int		col;
     int		options;
     long	count;
 {
     char_u	*ptr;
-    char_u	*file_name;
     int		len;
-    int		first;
-#if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
-    char_u	*tofree = NULL;
-#endif
 
     /*
      * search forward for what could be the start of a file name
@@ -3904,7 +3974,25 @@ get_file_name_in_path(line, col, options, count)
 						       && ptr[len - 2] != '.')
 	--len;
 
-#if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
+    return find_file_name_in_path(ptr, len, options, count);
+}
+
+/*
+ * Return the name of the file ptr[len].
+ * Otherwise like file_name_at_cursor().
+ */
+    char_u *
+find_file_name_in_path(ptr, len, options, count)
+    char_u	*ptr;
+    int		len;
+    int		options;
+    long	count;
+{
+    char_u	*file_name;
+    int		first;
+# if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
+    char_u	*tofree = NULL;
+
     if ((options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
     {
 	set_vim_var_string(VV_FNAME, ptr, len);
@@ -3918,13 +4006,12 @@ get_file_name_in_path(line, col, options, count)
 	    len = STRLEN(ptr);
 	}
     }
-#endif
+# endif
 
-    if (!(options & FNAME_EXP))
-	file_name = vim_strnsave(ptr, len);
-    else
+    if (options & FNAME_EXP)
     {
-	/* Repeat finding the file "count" times. */
+	/* Repeat finding the file "count" times.  This matters when it
+	 * appears several times in the path. */
 	for (first = TRUE; ; first = FALSE)
 	{
 	    file_name = find_file_in_path(ptr, len, options, first);
@@ -3933,10 +4020,12 @@ get_file_name_in_path(line, col, options, count)
 	    vim_free(file_name);
 	}
     }
+    else
+	file_name = vim_strnsave(ptr, len);
 
-#if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
+# if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
     vim_free(tofree);
-#endif
+# endif
 
     return file_name;
 

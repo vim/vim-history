@@ -777,7 +777,7 @@ fkmap(c)
 	}
 
 	arrow_used = TRUE;
-	stop_arrow();
+	(void)stop_arrow();
 
 	if (!curwin->w_p_rl && revins)
 	    inc_cursor();
@@ -790,7 +790,7 @@ fkmap(c)
 	if (revins)
 	{
 	    arrow_used = TRUE;
-	    stop_arrow();
+	    (void)stop_arrow();
 
 	    revins = 0;
 	    if (curwin->w_p_rl)

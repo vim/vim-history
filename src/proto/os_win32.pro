@@ -41,3 +41,4 @@ int mch_rename __ARGS((const char *pszOldFile, const char *pszNewFile));
 char *default_shell __ARGS((void));
 void clip_mch_request_selection __ARGS((void));
 void clip_mch_set_selection __ARGS((void));
+/* vim: set ft=c : */

@@ -55,3 +55,4 @@ int mch_input_isatty __ARGS((void));
 int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
 void *vms_fixfilename __ARGS((void *instring));
 void *vms_remove_version __ARGS((void *fname));
+/* vim: set ft=c : */

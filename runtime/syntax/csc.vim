@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Essbase script
 " Maintainer:	Raul Segura Acevedo <raul@turing.iquimica.unam.mx>
-" Last change:	2000 Nov 12
+" Last change:	2001 Jan 02
 
 " Remove any old syntax stuff hanging around
 sy	clear
@@ -142,8 +142,8 @@ sy	match	cscBPMacro	contained	"!"
 sy	match	cscBPW	"!\s*\a*"	contains=cscBPmacro
 
 sy	match	cscEqError	'\("[^"]*"\|[^][	 !%()*+,--/:;<=>{}~]\+\|->\)*\s*=\([^=]\@=\|$\)'
-sy	region	cscFormula	transparent matchgroup=VarName start='\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\s*=\([^=]\@=\|\n\)' skip='"[^"]*"' end=';' contains=ALLBUT,cscFormula,cscFormulaIn,cscBPMacro,cscCondition
-sy	region	cscFormulaIn matchgroup=VarName transparent start='\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\(->\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\)*\s*=\([^=]\@=\|$\)' skip='"[^"]*"' end=';' contains=ALLBUT,cscFormula,cscFormulaIn,cscBPMacro,cscCondition contained
+sy	region	cscFormula	transparent matchgroup=cscVarName start='\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\s*=\([^=]\@=\|\n\)' skip='"[^"]*"' end=';' contains=ALLBUT,cscFormula,cscFormulaIn,cscBPMacro,cscCondition
+sy	region	cscFormulaIn matchgroup=cscVarName transparent start='\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\(->\("[^"]*"\|[^][ 	!%()*+,--/:;<=>{}~]\+\)\)*\s*=\([^=]\@=\|$\)' skip='"[^"]*"' end=';' contains=ALLBUT,cscFormula,cscFormulaIn,cscBPMacro,cscCondition contained
 sy	match	cscEq "=="
 
 if !exists("csc_minlines")

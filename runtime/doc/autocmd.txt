@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0r.  Last change: 2000 Dec 14
+*autocmd.txt*   For Vim version 6.s.  Last change: 2001 Jan 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -351,6 +351,22 @@ WinLeave			Before leaving a window.  If the window to be
 				executes the BufLeave autocommands before the
 				WinLeave autocommands (but not for ":new").
 				Not used for ":qa" or ":q" when exiting Vim.
+							*CmdwinEnter*
+CmdwinEnter			After entering the command-line window.
+				Useful for setting options specifically for
+				this special type of window.  This is
+				triggered _instead_ of BufEnter and WinEnter.
+				<afile> is set to a single character,
+				indicating the type of command-line.
+				|cmdwin-char|
+							*CmdwinLeave*
+CmdwinLeave			Before leaving the command-line window.
+				Useful to clean up any global setting done
+				with CmdwinEnter.  This is triggered _instead_
+				of BufLeave and WinLeave.
+				<afile> is set to a single character,
+				indicating the type of command-line.
+				|cmdwin-char|
 							*GUIEnter*
 GUIEnter			After starting the GUI successfully, and after
 				opening the window.  It is triggered before

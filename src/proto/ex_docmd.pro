@@ -4,6 +4,7 @@ int do_cmdline __ARGS((char_u *cmdline, char_u *(*getline)(int, void *, int), vo
 int cmd_exists __ARGS((char_u *name));
 void handle_swap_exists __ARGS((buf_t *old_curbuf));
 char_u *set_one_cmd_context __ARGS((expand_t *xp, char_u *buff));
+char_u *skip_range __ARGS((char_u *cmd, int *ctx));
 int expand_filename __ARGS((exarg_t *eap, char_u **cmdlinep, char_u **errormsgp));
 void separate_nextcmd __ARGS((exarg_t *eap));
 int autowrite __ARGS((buf_t *buf, int forceit));
@@ -33,8 +34,8 @@ char_u *get_user_cmd_complete __ARGS((expand_t *xp, int idx));
 void not_exiting __ARGS((void));
 void do_argfile __ARGS((exarg_t *eap, int argn));
 void handle_drop __ARGS((int filec, char_u **filev, int split));
-void alist_unlink __ARGS((alist_t *al));
 void alist_init __ARGS((alist_t *al));
+void alist_unlink __ARGS((alist_t *al));
 void alist_new __ARGS((void));
 void alist_expand __ARGS((void));
 void alist_set __ARGS((alist_t *al, int count, char_u **files, int use_curbuf));
@@ -49,3 +50,4 @@ void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
 void set_lang_var __ARGS((void));
 linenr_t dbg_find_breakpoint __ARGS((int file, char_u *fname, linenr_t after));
 void dbg_breakpoint __ARGS((char_u *name, linenr_t lnum));
+/* vim: set ft=c : */

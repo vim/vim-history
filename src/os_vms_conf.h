@@ -31,7 +31,6 @@
 #define HAVE_DATE_TIME 1
 
 /*#define UNIX 1		* define always by current configure script */
-/*#define SVR4 1		* an elf-based system is SVR4. What is linux? */
 
 /* Defined to the size of an int */
 #define SIZEOF_INT 4

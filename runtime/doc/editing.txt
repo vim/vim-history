@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0r.  Last change: 2000 Dec 01
+*editing.txt*   For Vim version 6.s.  Last change: 2001 Jan 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -313,6 +313,14 @@ unmodified.
 			{not available when the |+file_in_path| feature was
 			disabled at compile time}
 
+							*v_gf*
+{Visual}[count]gf	Same as "gf", but the highlighted text is used as the
+			name of the file to edit.  'isfname' is ignored.
+			Leading blanks are skipped, otherwise all blanks and
+			special characters are included in the file name.
+			(For {Visual} see |Visual-mode|.)
+			{not in VI}
+
 These commands are used to start editing a single file.  This means that the
 file is read into the buffer and the current file name is set.  The file that
 is opened depends on the current directory, see |:cd|.
@@ -611,12 +619,28 @@ list of the current window.
 			Define {arglist} as the new argument list and edit
 			the first one.  This fails when changes have been made
 			and Vim does not want to |abandon| the current buffer.
-			Also see |++opt| and |+cmd|. {Vi: no ++opt}
+			Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
 
 :ar[gs]! [++opt] [+cmd] {arglist}			*:args_f!*
 			Define {arglist} as the new argument list and edit
 			the first one.  Discard any changes to the current
-			buffer.  Also see |++opt| and |+cmd|. {Vi: no ++opt}
+			buffer.
+			Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
+
+:[count]arge[dit][!] [++opt] [+cmd] {name}		*:arge* *:argedit*
+			Add {name} to the argument list and edit it.
+			When {name} already exists in the argument list, this
+			entry is edited.
+			This is like using |:argadd| and then |:edit|.
+			Note that only one file name is allowed, and spaces
+			inside the file name are allowed, like with |:edit|.
+			[count] is used like with |:argadd|.
+			[!] is required if the current file cannot be
+			|abandon|ed.
+			Also see |++opt| and |+cmd|.
+			{not in Vi}
 
 :[count]arga[dd] {name} ..				*:arga* *:argadd*
 			Add the {name}s to the argument list.
@@ -630,7 +654,9 @@ list of the current window.
 				:0argadd x	x a b c
 				:1argadd x	a x b c
 				:99argadd x	a b c x
-			This command keeps the currently edited file.
+			There is no check for duplicates, it is possible to
+			add a file to the argument list twice.
+			The currently edited file is not changed.
 			{not in Vi} {not available when compiled without the
 			|+listcmds| feature}
 			Note: you can also use this method: >

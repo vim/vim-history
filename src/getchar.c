@@ -3021,8 +3021,8 @@ set_context_in_map_cmd(xp, cmd, arg, forceit, isabbrev, isunmap, cmdidx)
  * Return OK if matches found, FAIL otherwise.
  */
     int
-ExpandMappings(prog, num_file, file)
-    regprog_t	*prog;
+ExpandMappings(regmatch, num_file, file)
+    regmatch_t	*regmatch;
     int		*num_file;
     char_u	***file;
 {
@@ -3031,13 +3031,11 @@ ExpandMappings(prog, num_file, file)
     int		count;
     int		round;
     char_u	*p;
-    regmatch_t	regmatch;
 
     validate_maphash();
 
     *num_file = 0;		    /* return values in case of FAIL */
     *file = NULL;
-    regmatch.regprog = prog;
 
     /*
      * round == 1: Count the matches.
@@ -3049,7 +3047,7 @@ ExpandMappings(prog, num_file, file)
 #ifdef FEAT_LOCALMAP
 	if (!expand_buffer)
 	{
-	    if (vim_regexec(&regmatch, (char_u *)"<buffer>", (colnr_t)0))
+	    if (vim_regexec(regmatch, (char_u *)"<buffer>", (colnr_t)0))
 	    {
 		if (round == 1)
 		    ++count;
@@ -3058,7 +3056,7 @@ ExpandMappings(prog, num_file, file)
 	    }
 	}
 #endif
-	if (vim_regexec(&regmatch, (char_u *)"<unique>", (colnr_t)0))
+	if (vim_regexec(regmatch, (char_u *)"<unique>", (colnr_t)0))
 	{
 	    if (round == 1)
 		++count;
@@ -3084,7 +3082,7 @@ ExpandMappings(prog, num_file, file)
 		if (mp->m_mode & expand_mapmodes)
 		{
 		    p = translate_mapping(mp->m_keys, TRUE);
-		    if (p != NULL && vim_regexec(&regmatch, p, (colnr_t)0))
+		    if (p != NULL && vim_regexec(regmatch, p, (colnr_t)0))
 		    {
 			if (round == 1)
 			    ++count;
@@ -3736,24 +3734,34 @@ static struct initmap
 
 /*
  * Set up default mappings.
- * Need to put string in allocated memory, because do_map() will modify it.
  */
     void
 init_mappings()
 {
-    char_u	*cpo_save = p_cpo;
     int		i;
+
+    for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
+	add_map(initmappings[i].arg, initmappings[i].mode);
+}
+
+/*
+ * Add a mapping "map" for mode "mode".
+ * Need to put string in allocated memory, because do_map() will modify it.
+ */
+    void
+add_map(map, mode)
+    char_u	*map;
+    int		mode;
+{
     char_u	*s;
+    char_u	*cpo_save = p_cpo;
 
     p_cpo = (char_u *)"";	/* Allow <> notation */
-    for (i = 0; i < sizeof(initmappings) / sizeof(struct initmap); ++i)
+    s = vim_strsave(map);
+    if (s != NULL)
     {
-	s = vim_strsave(initmappings[i].arg);
-	if (s != NULL)
-	{
-	    do_map(0, s, initmappings[i].mode, FALSE, NULL);
-	    vim_free(s);
-	}
+	do_map(0, s, mode, FALSE, NULL);
+	vim_free(s);
     }
     p_cpo = cpo_save;
 }

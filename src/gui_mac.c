@@ -16,7 +16,9 @@
 #define USE_HELPMENU
 #define USE_AEVENT
 /*#define USE_OFFSETED_WINDOW*/
+#if !(defined(__MRC__) || defined(__SC__)) /* not in Apple MPW */
 #define USE_VIM_CREATOR_ID
+#endif
 
 #include <Devices.h> /* included first to avoid CR problems */
 #include "vim.h"
@@ -195,6 +197,9 @@ OSErr   InstallAEHandlers (void);
 static int gui_argc = 0;
 static char **gui_argv = NULL;
 
+#if defined(__MRC__) || defined(__SC__) /* not in Apple MPW */
+QDGlobals qd;
+#endif
     short
 gui_mac_get_menu_item_index (pMenu, pElderMenu)
     vimmenu_t *pMenu;
@@ -453,8 +458,8 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
     long	value;
     int		page;
     int		dragging = FALSE;
-    win_t	*wp;
-    int		sb_num;
+/*    win_t	*wp;
+    int		sb_num; */
 
     sb = gui_find_scrollbar((long) GetControlReference (theControl));
 
@@ -537,7 +542,9 @@ gui_mch_prepare(argc, argv)
     char_u	temp[256];
     FSSpec	applDir;
 #endif
+#ifdef USE_CTRLCLICKMENU
     long	gestalt_rc;
+#endif
 
     MaxApplZone();
     InitGraf(&qd.thePort);
@@ -639,9 +646,6 @@ gui_mch_prepare(argc, argv)
     int
 gui_mch_init()
 {
-    guicolor_t tmp_pixel;
-
-
     /* Display any pending error messages */
     mch_display_error();
 
@@ -699,11 +703,12 @@ gui_mch_open()
 }
 
     void
-gui_mch_exit()
+gui_mch_exit(int rc)
 {
     /* TODO: find out all what is missing here? */
-    DisposeRgn (cursorRgn);
+    DisposeRgn(cursorRgn);
     /* Exit to shell? */
+    exit(rc);
 }
 
 /*
@@ -1116,7 +1121,6 @@ gui_mch_get_color(name)
 	    int		len;
 	    int		pos;
 	    char	*color;
-	    int		dummy;
 
 	    fgets(line, LINE_LEN, fd);
 	    len = strlen(line);
@@ -1439,7 +1443,6 @@ gui_mac_doMouseDown (theEvent)
     Rect		movingLimits;
     short		thePortion;
     ControlHandle	theControl;
-    long		menu;
 
     Rect		sizeRect;
     long		newSize;
@@ -1577,8 +1580,6 @@ gui_mac_handle_event (event)
     Boolean	a_bool;
     int_u	vimModifier;
     OSErr	error;
-
-    char	touche;
 
 #ifdef USE_CTRLCLICKMENU
     /*
@@ -1729,7 +1730,9 @@ gui_mch_update()
  * spent inside WaitNextEvent while profiling.
  */
 
-#pragma profile reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma profile reset
+#endif
     pascal
     Boolean
 WaitNextEventWrp (EventMask eventMask, EventRecord *theEvent, UInt32 sleep, RgnHandle mouseRgn)
@@ -1748,19 +1751,17 @@ WaitNextEventWrp (EventMask eventMask, EventRecord *theEvent, UInt32 sleep, RgnH
  * Returns OK if a character was found to be available within the given time,
  * or FAIL otherwise.
  */
-#pragma profile reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma profile reset
+#endif
     int
 gui_mch_wait_for_chars(wtime)
     int	    wtime;
 {
-    RgnHandle	watchingRgn;
-
     EventMask	mask  = (everyEvent);
     EventRecord event;
     long	entryTick;
     long	currentTick;
-
-    short	oldDragRectEnbl;
 
     entryTick = TickCount();
 
@@ -1802,7 +1803,9 @@ gui_mch_wait_for_chars(wtime)
     return FAIL;
 }
 
-#pragma profile reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma profile reset
+#endif
 
 /*
  * Output routines.
@@ -2018,13 +2021,9 @@ clip_mch_own_selection()
 clip_mch_set_selection()
 {
     Handle	textOfClip;
-    long	scrapOffset;
     long	scrapSize;
     int		type;
-    char	*searchCR;
-    char	*tempclip;
 
-    long_u	cch;
     char_u	*str = NULL;
 
     if (!clipboard.owned)
@@ -2261,8 +2260,8 @@ gui_mch_destroy_menu(menu)
     vimmenu_t	*menu;
 {
     short	index = gui_mac_get_menu_item_index (menu, root_menu);
-    vimmenu_t	*brother;
 /*
+    vimmenu_t	*brother;
     index = menu->index;
 */
     if (index > 0)
@@ -2659,7 +2658,6 @@ gui_mch_dialog(
     short	button;
     short	itemType;
     short	useIcon;
-    short	appendWhere;
 
     theDialog = GetNewDialog (129, nil, (WindowRef) -1);
     /*	SetTitle (title); */
@@ -2778,7 +2776,9 @@ OSErr HandleUnusedParms (AppleEvent *theAEvent)
  *
  */
 
-#pragma options align=mac68k
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=mac68k
+#endif
 typedef struct SelectionRange SelectionRange;
 struct SelectionRange /* for handling kCoreClassEvent:kOpenDocuments:keyAEPosition typeChar */
 {
@@ -2789,7 +2789,9 @@ struct SelectionRange /* for handling kCoreClassEvent:kOpenDocuments:keyAEPositi
     long unused2; // 0 (not used)
     long theDate; // modification date/time
 };
-#pragma options align=reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=reset
+#endif
 /* The IDE uses the optional keyAEPosition parameter to tell the ed-
    itor the selection range. If lineNum is zero or greater, scroll the text
    to the specified line. If lineNum is less than zero, use the values in
@@ -3024,21 +3026,24 @@ pascal OSErr Handle_aevt_pdoc_AE (AppleEvent *theAEvent, AppleEvent *theReply, l
  *
  */
 
-#pragma options align=mac68k
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=mac68k
+#endif
 typedef struct WindowSearch WindowSearch;
 struct WindowSearch /* for handling class 'KAHL', event 'SRCH', keyDirectObject typeChar*/
 {
     FSSpec theFile; // identifies the file
     long *theDate; // where to put the modification date/time
 };
-#pragma options align=reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=reset
+#endif
 
 pascal OSErr Handle_KAHL_SRCH_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon)
 {
     OSErr	error = noErr;
     buf_t	*buf;
     int		foundFile = false;
-    FSSpec	find_FSSpec;
     DescType	typeCode;
     WindowSearch SearchData;
     Size	actualSize;
@@ -3113,7 +3118,9 @@ pascal OSErr Handle_KAHL_SRCH_AE (AppleEvent *theAEvent, AppleEvent *theReply, l
  *
  */
 
-#pragma options align=mac68k
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=mac68k
+#endif
 typedef struct ModificationInfo ModificationInfo;
 struct ModificationInfo /* for replying to class 'KAHL', event 'MOD ', keyDirectObject typeAEList*/
 {
@@ -3121,7 +3128,9 @@ struct ModificationInfo /* for replying to class 'KAHL', event 'MOD ', keyDirect
     long theDate; // the date/time the file was last modified
     short saved; // set this to zero when replying, unused
 };
-#pragma options align=reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=reset
+#endif
 
 pascal OSErr Handle_KAHL_MOD_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon)
 {
@@ -3243,7 +3252,9 @@ pascal OSErr Handle_KAHL_MOD_AE (AppleEvent *theAEvent, AppleEvent *theReply, lo
  *
  */
 
-#pragma options align=mac68k
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=mac68k
+#endif
 typedef struct CW_GetText CW_GetText;
 struct CW_GetText /* for handling class 'KAHL', event 'GTTX', keyDirectObject typeChar*/
 {
@@ -3252,7 +3263,9 @@ struct CW_GetText /* for handling class 'KAHL', event 'GTTX', keyDirectObject ty
     long *unused;   /* 0 (not used) */
     long *theDate;  /* where to put the modification date/time */
 };
-#pragma options align=reset
+#if defined(__MWERKS__)  /* only in Codewarrior */
+# pragma options align=reset
+#endif
 
 pascal OSErr Handle_KAHL_GTTX_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon)
 {
@@ -3435,6 +3448,7 @@ OSErr   InstallAEHandlers (void)
 
     error = AEInstallEventHandler(kAECoreSuite, kAESetData,
 		    NewAEEventHandlerProc(Handle_unknown_AE), nil, false);
+*/
 
     /*
      * Bind codewarrior support handlers

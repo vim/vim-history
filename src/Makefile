@@ -303,8 +303,9 @@ CClink = $(CC)
 # You can give a lot of options to configure.
 # Change this to your desire and do 'make config' afterwards
 
-# just an example:
+# examples:
 #CONF_ARGS = --exec-prefix=/usr
+#CONF_ARGS = --with-vim-name=vim6
 
 # GUI - For creating Vim with GUI (gvim) (B)
 # Uncomment this line when you don't want to get the GUI version, although you
@@ -775,7 +776,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60r
+VIMRTDIR = /vim60s
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1374,34 +1375,42 @@ proto: $(PRO_AUTO) $(PRO_MANUAL)
 #$(PRO_AUTO): $$(*F).c
 #	cproto $(PFLAGS) -DFEAT_GUI $(*F).c > $@
 
-# Always define FEAT_GUI.  This will generate a few warnings if it's also
+# Always define FEAT_GUI.  This may generate a few warnings if it's also
 # defined in auto/config.h, you can ignore that.
 .c.pro:
 	cproto $(PFLAGS) -DFEAT_GUI $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_amiga.pro: os_amiga.c
-	cproto $(PFLAGS) -DAMIGA -UHAVE_CONFIG_H -DBPTR=char* os_amiga.c > proto/os_amiga.pro
+	cproto $(PFLAGS) -DAMIGA -UHAVE_CONFIG_H -DBPTR=char* $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_msdos.pro: os_msdos.c
-	cproto $(PFLAGS) -DMSDOS -UHAVE_CONFIG_H os_msdos.c > proto/os_msdos.pro
+	cproto $(PFLAGS) -DMSDOS -UHAVE_CONFIG_H $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_win16.pro: os_win16.c
-	cproto $(PFLAGS) -DWIN16 -UHAVE_CONFIG_H os_win16.c > proto/os_win16.pro
+	cproto $(PFLAGS) -DWIN16 -UHAVE_CONFIG_H $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_win32.pro: os_win32.c
-	cproto $(PFLAGS) -DWIN32 -UHAVE_CONFIG_H os_win32.c > proto/os_win32.pro
+	cproto $(PFLAGS) -DWIN32 -UHAVE_CONFIG_H $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_mswin.pro: os_mswin.c
-	cproto $(PFLAGS) -DWIN16 -DWIN32 -UHAVE_CONFIG_H os_mswin.c > proto/os_mswin.pro
+	cproto $(PFLAGS) -DWIN16 -DWIN32 -UHAVE_CONFIG_H $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_beos.pro: os_beos.c
-	cproto $(PFLAGS) -D__BEOS__ -UHAVE_CONFIG_H os_beos.c > proto/os_beos.pro
+	cproto $(PFLAGS) -D__BEOS__ -UHAVE_CONFIG_H $< > proto/$@
+	echo "/* vim: set ft=c : */" >> proto/$@
 
 os_vms.pro: os_vms.c
 # must use os_vms_conf.h for auto/config.h
 	mv auto/config.h auto/config.h.save
 	cp os_vms_conf.h auto/config.h
-	cproto $(PFLAGS) -DVMS -UFEAT_GUI_ATHENA -UFEAT_GUI_MOTIF -UFEAT_GUI_GTK os_vms.c > proto/os_vms.pro
+	cproto $(PFLAGS) -DVMS -UFEAT_GUI_ATHENA -UFEAT_GUI_MOTIF -UFEAT_GUI_GTK $< > $@
+	echo "/* vim: set ft=c : */" >> proto/$@
 	rm auto/config.h
 	mv auto/config.h.save auto/config.h
 
@@ -1531,9 +1540,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 	cd $(PLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(PLUGSUBLOC)
 	cd $(PLUGSUBLOC); chmod $(HELPMOD) *.vim README.txt
 # install the ftplugin files
-	cd $(FTPLUGSOURCE); $(INSTALL_DATA_R) * $(FTPLUGSUBLOC)
-	cd $(FTPLUGSUBLOC); chmod $(DIRMOD) *
-	cd $(FTPLUGSUBLOC); chmod $(HELPMOD) */*.vim
+	cd $(FTPLUGSOURCE); $(INSTALL_DATA) *.vim README.txt $(FTPLUGSUBLOC)
+	cd $(FTPLUGSUBLOC); chmod $(HELPMOD) *.vim README.txt
 
 installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
 	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(MACROSUBLOC)

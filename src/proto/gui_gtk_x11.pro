@@ -56,3 +56,4 @@ int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));
 void gui_mch_mousehide __ARGS((int hide));
 void mch_set_mouse_shape __ARGS((int shape));
+/* vim: set ft=c : */

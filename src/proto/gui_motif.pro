@@ -10,6 +10,7 @@ void gui_mch_add_menu __ARGS((vimmenu_t *menu, int idx));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 int gui_mch_text_area_extra_height __ARGS((void));
 void gui_mch_add_menu_item __ARGS((vimmenu_t *menu, int idx));
+void gui_motif_update_mousemodel __ARGS((vimmenu_t *menu));
 void gui_mch_new_menu_colors __ARGS((void));
 void gui_mch_destroy_menu __ARGS((vimmenu_t *menu));
 void gui_mch_show_popupmenu __ARGS((vimmenu_t *menu));
@@ -28,3 +29,4 @@ void gui_mch_set_footer __ARGS((char_u *msg));
 void gui_mch_show_toolbar __ARGS((int showit));
 void gui_mch_reset_focus __ARGS((void));
 int gui_mch_compute_toolbar_height __ARGS((void));
+/* vim: set ft=c : */

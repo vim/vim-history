@@ -1,145 +1,147 @@
 # Czech translation of vim
-#
-# FIRST AUTHOR Jiøí Pavlovský <pavlovsk@ff.cuni.cz>, 2000.
+# Jiøí Pavlovský <pavlovsk@ff.cuni.cz>, 2000.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: vim-6.0g\n"
-"POT-Creation-Date: 2000-08-22 20:00+0200\n"
-"PO-Revision-Date: 2000-08-22 20:27+0200\n"
+"Project-Id-Version: vim-6.0r\n"
+"POT-Creation-Date: 2001-01-05 20:37+0100\n"
+"PO-Revision-Date: 2001-01-06 00:09+0100\n"
 "Last-Translator: Jiøí Pavlovský  <pavlovsk@ff.cuni.cz>\n"
 "Language-Team: Czech <cs@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-2\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: buffer.c:86
+#: buffer.c:91
 msgid "Cannot allocate buffer, exiting..."
 msgstr "Nelze alokovat buffer, konèím..."
 
-#: buffer.c:89
+#: buffer.c:94
 msgid "Cannot allocate buffer, using other one..."
 msgstr "Nelze alokovat buffer, pou¾iji jiný..."
 
-#: buffer.c:459
+#: buffer.c:501
+msgid "No buffers were unloaded"
+msgstr "®ádný buffer nebyl deaktivován"
+
+#: buffer.c:503
+msgid "No buffers were deleted"
+msgstr "®ádný buffer nebyl smazán"
+
+#: buffer.c:511
+msgid "1 buffer unloaded"
+msgstr "poèet deaktivovaných bufferù: 1"
+
+#: buffer.c:513
 #, c-format
-msgid "No buffers were %s"
-msgstr "®ádný buffer nebyl %s"
+msgid "%d buffers unloaded"
+msgstr "poèet deaktivovaných bufferù: %d"
 
-#: buffer.c:460 buffer.c:467
-msgid "unloaded"
-msgstr "deaktivován"
+#: buffer.c:518
+msgid "1 buffer deleted"
+msgstr "poèet smazaných bufferù: 1"
 
-#: buffer.c:460 buffer.c:467
-msgid "deleted"
-msgstr "smazán"
-
-#: buffer.c:465
+#: buffer.c:520
 #, c-format
-msgid "%d buffer %s"
-msgstr "%d buffer %s"
+msgid "%d buffers deleted"
+msgstr "poèet smazaných bufferù: %d"
 
-#: buffer.c:465
-#, c-format
-msgid "%d buffers %s"
-msgstr "%d bufferù %s"
-
-#: buffer.c:521
+#: buffer.c:575
 msgid "No modified buffer found"
 msgstr "Nebyl nalezen ¾ádný zmìnìný buffer"
 
-#: buffer.c:558
+#: buffer.c:612
 #, c-format
 msgid "Cannot go to buffer %ld"
 msgstr "Nelze pøeskoèit na buffer %ld"
 
-#: buffer.c:561
+#: buffer.c:615
 msgid "Cannot go beyond last buffer"
 msgstr "Za poslední buffer nelze pøeskoèit"
 
-#: buffer.c:563
+#: buffer.c:617
 msgid "Cannot go before first buffer"
 msgstr "Pøed první buffer nelze pøeskoèit"
 
-#: buffer.c:578
+#: buffer.c:636
 #, c-format
 msgid "No write since last change for buffer %ld (use ! to override)"
 msgstr "Zmìny v bufferu %ld nebyly ulo¾eny (! pro vynucení)"
 
-#: buffer.c:591
+#: buffer.c:649
 msgid "Cannot unload last buffer"
 msgstr "Poslední buffer nelze deaktivovat"
 
-#: buffer.c:945
+#: buffer.c:1009
 msgid "Warning: List of file names overflow"
 msgstr "Varování: pøeteèení seznamu s názvy souborù"
 
-#: buffer.c:1091
+#: buffer.c:1146
 #, c-format
 msgid "buffer %ld not found"
 msgstr "buffer %ld nenalezen"
 
-#: buffer.c:1279
+#: buffer.c:1333
 #, c-format
 msgid "More than one match for %s"
 msgstr "Vzoru %s vyhovuje více bufferù"
 
-#: buffer.c:1281
+#: buffer.c:1335
 #, c-format
 msgid "No matching buffer for %s"
 msgstr "Vzoru %s nevyhovuje ¾ádný buffer"
 
-#: buffer.c:1586 ex_docmd.c:6548
+#: buffer.c:1695 ex_docmd.c:7438
 #, c-format
 msgid "line %ld"
 msgstr "øádek %ld"
 
-#: buffer.c:1675
+#: buffer.c:1784
 msgid "Buffer with this name already exists"
 msgstr "Buffer tohoto jména ji¾ existuje"
 
-#: buffer.c:1925
+#: buffer.c:2055
 msgid " [Modified]"
 msgstr " [zmìnìný]"
 
-#: buffer.c:1926
+#: buffer.c:2060
 msgid "[Not edited]"
 msgstr "[needitovaný]"
 
-#: buffer.c:1927
+#: buffer.c:2065
 msgid "[New file]"
 msgstr "[nový soubor]"
 
-#: buffer.c:1928
+#: buffer.c:2066
 msgid "[Read errors]"
 msgstr "[chyby pøi ètení]"
 
-#: buffer.c:1930 fileio.c:1149
+#: buffer.c:2068 fileio.c:1629
 msgid "[readonly]"
 msgstr "[pouze pro ètení]"
 
-#: buffer.c:1946
+#: buffer.c:2084
 msgid "1 line --%d%%--"
 msgstr "øádkù: --%d%%--"
 
-#: buffer.c:1946
+#: buffer.c:2084
 msgid "%ld lines --%d%%--"
 msgstr "øádkù: %ld --%d%%--"
 
-#: buffer.c:1954
+#: buffer.c:2092
 msgid "line %ld of %ld --%d%%-- col "
 msgstr "øádek %ld/%ld --%d%%-- sloupec"
 
-#: buffer.c:2099
+#: buffer.c:2244
 msgid "[No file]"
 msgstr "[¾ádný soubor]"
 
 #. must be a help buffer
-#: buffer.c:2124
+#: buffer.c:2283
 msgid "help"
 msgstr "nápovìda"
 
-#: buffer.c:2869
+#: buffer.c:3071
 msgid ""
 "\n"
 "# Buffer list:\n"
@@ -147,15 +149,15 @@ msgstr ""
 "\n"
 "# seznam bufferù:\n"
 
-#: buffer.c:2897
+#: buffer.c:3104
 msgid "[Error List]"
 msgstr "[seznam chyb]"
 
-#: buffer.c:2918 memline.c:1504
+#: buffer.c:3117 memline.c:1494
 msgid "[No File]"
 msgstr "[¾ádný soubor]"
 
-#: digraph.c:711
+#: digraph.c:2160
 msgid "Escape not allowed in digraph"
 msgstr "spøe¾ka nesmí obsahovat Escape"
 
@@ -206,33 +208,33 @@ msgstr " Doplòování podle tezauru (^T/^N/^P)"
 msgid "Hit end of paragraph"
 msgstr "Konec odstavce"
 
-#: edit.c:831
+#: edit.c:847
 msgid "'thesaurus' option is empty"
 msgstr "volba 'thesaurus' je prázdná"
 
-#: edit.c:998
+#: edit.c:1014
 msgid "'dictionary' option is empty"
 msgstr "volba 'dictionary' je prázdná"
 
-#: edit.c:1903
+#: edit.c:1929
 #, c-format
 msgid "Scanning dictionary: %s"
 msgstr "prohledávám slovník %s"
 
-#: edit.c:2035
+#: edit.c:2063
 msgid " (insert) Scroll (^E/^Y)"
 msgstr " (insert) Rolování (^E/^Y)"
 
-#: edit.c:2037
+#: edit.c:2065
 msgid " (replace) Scroll (^E/^Y)"
 msgstr " (replace) Rolování (^E/^Y)"
 
-#: edit.c:2336
+#: edit.c:2392
 #, c-format
 msgid "Scanning: %s"
 msgstr "prohledávám %s"
 
-#: edit.c:2366
+#: edit.c:2425
 msgid "Scanning tags."
 msgstr "prohledávám tagy"
 
@@ -240,183 +242,190 @@ msgstr "prohledávám tagy"
 #. * be called before ptr = ml_get, or when this address is no
 #. * longer needed.  -- Acevedo.
 #.
-#: edit.c:3010
+#: edit.c:3070
 msgid "-- Searching..."
 msgstr "-- hledám..."
 
-#: edit.c:3059
+#: edit.c:3126
 msgid "Back at original"
 msgstr "Výchozí podoba"
 
-#: edit.c:3064
+#: edit.c:3131
 msgid "Word from other line"
 msgstr "Slovo z jiného øádku"
 
-#: edit.c:3069
+#: edit.c:3136
 msgid "The only match"
 msgstr "jediná shoda"
 
-#: edit.c:3077
+#: edit.c:3192
 #, c-format
-msgid "All %d matches have now been found"
-msgstr "V¹echny shody (%d) byly nyní nalezeny"
+msgid "match %d of %d"
+msgstr "shoda %d/%d"
 
-#: edit.c:3079
+#: edit.c:3195
 #, c-format
-msgid "There are %d matching file names"
-msgstr "Poèet vyhovujících názvù souborù: %d"
+msgid "match %d"
+msgstr "shoda %d"
 
-#: edit.c:3081
-#, c-format
-msgid "There are %d matching tags"
-msgstr "Poèet vyhovujících tagù: %d"
-
-#: edit.c:3083
-#, c-format
-msgid "There are %d matches"
-msgstr "Poèet shod: %d"
-
-#: eval.c:527
+#: eval.c:582
 #, c-format
 msgid "Unknown variable: \"%s\""
 msgstr "neznámá promìnná: \"%s\""
 
-#: eval.c:774
+#: eval.c:837
 #, c-format
 msgid "Missing braces: %s"
 msgstr "Chybí závorky: %s"
 
-#: eval.c:837
+#: eval.c:900
 #, c-format
 msgid "No such variable: \"%s\""
 msgstr "Promìnná \"%s\" neexistuje"
 
-#: eval.c:1059
+#: eval.c:1124
 msgid "Missing ':' after '?'"
 msgstr "po '?' chybí ':'"
 
-#: eval.c:1662
+#: eval.c:1727
 msgid "Missing ')'"
 msgstr "chybí ')'"
 
-#: eval.c:1705
+#: eval.c:1770
 msgid "Missing ']'"
 msgstr "chybí ']'"
 
-#: eval.c:1779
+#: eval.c:1844
 #, c-format
 msgid "Option name missing: %s"
 msgstr "Chybí jméno volby: %s"
 
-#: eval.c:1797 option.c:5389
+#: eval.c:1862 option.c:5542
 #, c-format
 msgid "Unknown option: %s"
 msgstr "Neznámá volba: %s"
 
-#: eval.c:1854 eval.c:1971
+#: eval.c:1919 eval.c:2036
 #, c-format
 msgid "Missing quote: %s"
 msgstr "Chybí uvozovky: %s"
 
-#: eval.c:2252
+#: eval.c:2327
 #, c-format
 msgid "Invalid arguments for function %s"
 msgstr "Chybné argumenty pro funkci %s"
 
-#: eval.c:2253
+#: eval.c:2328
 #, c-format
 msgid "Unknown function: %s"
 msgstr "Neznámá funkce: %s"
 
-#: eval.c:2254
+#: eval.c:2329
 #, c-format
 msgid "Too many arguments for function: %s"
 msgstr "Pøíli¹ mnoho argumentù pro funkci %s"
 
-#: eval.c:2255
+#: eval.c:2330
 #, c-format
 msgid "Not enough arguments for function: %s"
 msgstr "Pøíli¹ málo argumentù pro funkci %s"
 
-#: eval.c:4832
+#: eval.c:2331
+#, c-format
+msgid "Using <SID> not in a script context: %s"
+msgstr "Pou¾ití <SID> mimo kontext skriptu: %s"
+
+#: eval.c:4716
+msgid "(Invalid)"
+msgstr "(Chybný)"
+
+#: eval.c:5566
 #, c-format
 msgid "Undefined variable: %s"
 msgstr "Nedefinovaná promìnná: %s"
 
-#: eval.c:5475
-#, c-format
-msgid "Function name must start with a capital: %s"
-msgstr "Název funkce musí zaèínat velkým písmenem: %s"
-
-#: eval.c:5498 eval.c:5791
+#: eval.c:6273 eval.c:6701
 #, c-format
 msgid "Undefined function: %s"
 msgstr "Nedefinovaná funkce: %s"
 
-#: eval.c:5511
-msgid "Function name required"
-msgstr "Je vy¾adováno jméno funkce"
-
-#: eval.c:5518
+#: eval.c:6286
 #, c-format
 msgid "Missing '(': %s"
 msgstr "Chybí '(': %s"
 
-#: eval.c:5544 syntax.c:2820 syntax.c:6180
+#: eval.c:6316 syntax.c:2913 syntax.c:6293
 #, c-format
 msgid "Illegal argument: %s"
 msgstr "nepøípustný argument: %s"
 
-#: eval.c:5617
+#: eval.c:6391
 msgid "Missing :endfunction"
 msgstr "Chybí :endfunction"
 
-#: eval.c:5670
+#: eval.c:6444
 #, c-format
 msgid "Function %s already exists, use ! to replace"
 msgstr "Funkce %s ji¾ existuje. Pou¾ijte ! pro její nahrazení."
 
-#: eval.c:5675
+#: eval.c:6449
 #, c-format
 msgid "Cannot redefine function %s: It is in use"
 msgstr "Nelze pøedefinovat funkci %s: je pou¾ívána"
 
-#: eval.c:5719
+#: eval.c:6503
+#, c-format
+msgid "Function name must start with a capital: %s"
+msgstr "Název funkce musí zaèínat velkým písmenem: %s"
+
+#: eval.c:6510
+msgid "Function name required"
+msgstr "Je vy¾adováno jméno funkce"
+
+#: eval.c:6526 term.c:4454
+msgid "Using <SID> not in a script context"
+msgstr "Pou¾ití <SID> mimo kontext skriptu"
+
+#: eval.c:6590
 msgid "function "
 msgstr "funkce "
 
-#: eval.c:5796
+#: eval.c:6706
 #, c-format
 msgid "Cannot delete function %s: It is in use"
 msgstr "Nelze smazat funkci %s: je ji¾ pou¾ívána"
 
-#: eval.c:5842
+#: eval.c:6753
 msgid "Function call depth is higher than 'maxfuncdepth'"
 msgstr "Zanoøení funkce je hlub¹í ne¾ 'maxfuncdepth'"
 
 #. always scroll up, don't overwrite
-#: eval.c:5890
+#: eval.c:6804
 #, c-format
 msgid "calling %s"
 msgstr "volám %s"
 
 #. always scroll up, don't overwrite
-#: eval.c:5912 ex_docmd.c:4064
+#: eval.c:6829 ex_docmd.c:4450
 #, c-format
 msgid "continuing in %s"
 msgstr "pokraèuji v %s"
 
-#: eval.c:5966
+#: eval.c:6883
 msgid ":return not inside a function"
 msgstr ":return mimo funkci"
 
-#. always scroll up, don't overwrite
-#: eval.c:6035
+#: eval.c:6961
 #, c-format
-msgid "%s returning"
-msgstr "návrat z %s"
+msgid "%s returning #%ld"
+msgstr "dokonèeno provádìní %s. Návratová hodnota %ld"
 
-#: eval.c:6164
+#: eval.c:6964
+#, c-format
+msgid "%s returning \"%s\""
+msgstr "dokonèeno provádìní %s. Návratová hodnota \"%s\""
+
+#: eval.c:7105
 msgid ""
 "\n"
 "# global variables:\n"
@@ -442,62 +451,66 @@ msgstr "poèet pøesunutých øádkù: 1"
 msgid "%ld lines moved"
 msgstr "poèet pøesunutých øádkù: %ld"
 
-#: ex_cmds.c:891
+#: ex_cmds.c:889
 #, c-format
 msgid "%ld lines filtered"
 msgstr "poèet filtrovaných øádkù: %ld"
 
-#: ex_cmds.c:917
+#: ex_cmds.c:916
 msgid "*Filter* Autocommands must not change current buffer"
 msgstr "Automatické pøíkazy *Filter* nesmí mìnit aktuální buffer"
 
-#: ex_cmds.c:1001
+#: ex_cmds.c:1000
 msgid "[No write since last change]\n"
 msgstr "[Neulo¾ené zmìny]\n"
 
-#: ex_cmds.c:1209
+#: ex_cmds.c:1211
 #, c-format
 msgid "viminfo: %s in line: "
 msgstr "viminfo: %s na øádku: "
 
-#: ex_cmds.c:1214
+#: ex_cmds.c:1216
 msgid "viminfo: Too many errors, skipping rest of file"
 msgstr "viminfo: pøíli¹ mnoho chyb, pøeskakuji zbytek souboru"
 
-#: ex_cmds.c:1241
+#: ex_cmds.c:1243
 #, c-format
 msgid "Reading viminfo file \"%s\"%s%s"
 msgstr "Ètu viminfo soubor \"%s\"%s%s"
 
-#: ex_cmds.c:1242
+#: ex_cmds.c:1244
 msgid " info"
 msgstr " informace"
 
-#: ex_cmds.c:1243
+#: ex_cmds.c:1245
 msgid " marks"
 msgstr " znaèky"
 
-#: ex_cmds.c:1330
+#: ex_cmds.c:1332
 #, c-format
 msgid "Viminfo file is not writable: %s"
 msgstr "do viminfo souboru %s nelze zapisovat"
 
-#: ex_cmds.c:1455
+#: ex_cmds.c:1438
+msgid "Security error: new viminfo file is a symbolic link"
+msgstr "Bezpeènostní chyba: nový viminfo soubor je symbolickým odkazem"
+
+#: ex_cmds.c:1467
 #, c-format
 msgid "Can't write viminfo file %s!"
 msgstr "Nelze ulo¾it viminfo soubor %s!"
 
-#: ex_cmds.c:1463
+#: ex_cmds.c:1475
 #, c-format
 msgid "Writing viminfo file \"%s\""
 msgstr "Ukládám viminfo souboru \"%s\""
 
 #. Write the info:
-#: ex_cmds.c:1556
+#: ex_cmds.c:1568
 msgid "# This viminfo file was generated by vim\n"
 msgstr "# Tento viminfo soubor byl vytvoøen editorem vim.\n"
 
-#: ex_cmds.c:1557
+#: ex_cmds.c:1569
 msgid ""
 "# You may edit it if you're careful!\n"
 "\n"
@@ -505,37 +518,42 @@ msgstr ""
 "# Pokud budete opatrný, mù¾ete jej upravovat.\n"
 "\n"
 
-#: ex_cmds.c:1642
+#: ex_cmds.c:1652
 msgid "Illegal starting char"
 msgstr "Nepøípustný poèáteèní znak"
 
-#: ex_cmds.c:1915 ex_cmds.c:2106 ex_docmd.c:3265
+#: ex_cmds.c:1932 ex_cmds.c:2123 ex_docmd.c:3479
 msgid "Save As"
 msgstr "Ulo¾it jako"
 
-#: ex_cmds.c:1972
+#: ex_cmds.c:1989
 msgid "Write partial file?"
 msgstr "Ulo¾it neúplný soubor?"
 
-#: ex_cmds.c:1979
+#: ex_cmds.c:1996
 msgid "Use ! to write partial buffer"
 msgstr "Pou¾ijte 1 pro ulo¾ení neúplného bufferu"
 
-#: ex_cmds.c:2031 ex_docmd.c:7122
+#: ex_cmds.c:2048 ex_docmd.c:8030
 #, c-format
 msgid "\"%s\" is a directory"
 msgstr "\"%s\" je adresáøem"
 
-#: ex_cmds.c:2040
+#: ex_cmds.c:2057
 #, c-format
 msgid "Overwrite existing file \"%.*s\"?"
 msgstr "Pøepsat soubor \"%.*s\"?"
 
-#: ex_cmds.c:2149
+#: ex_cmds.c:2128
+#, c-format
+msgid "No file name for buffer %ld"
+msgstr "®ádný název souboru pro buffer %ld"
+
+#: ex_cmds.c:2166
 msgid "File not written: Writing is disabled by 'write' option"
 msgstr "Soubor nebyl ulo¾en: ukládání je zakázáno volbou 'write'"
 
-#: ex_cmds.c:2169
+#: ex_cmds.c:2186
 #, c-format
 msgid ""
 "'readonly' option is set for \"%.*s\".\n"
@@ -544,63 +562,63 @@ msgstr ""
 "Pro \"%.*s\" je nastavena volba 'readonly'.\n"
 "Pøejete si ji potlaèit?"
 
-#: ex_cmds.c:2329
+#: ex_cmds.c:2346
 msgid "Edit File"
 msgstr "Editovat soubor"
 
-#: ex_cmds.c:2773
+#: ex_cmds.c:2789
 #, c-format
 msgid "Autocommands unexpectedly deleted new buffer %s"
 msgstr "Automatické pøíkazy neoèekávanì smazaly nový buffer %s"
 
-#: ex_cmds.c:2892
+#: ex_cmds.c:2908
 msgid "non-numeric argument to :z"
 msgstr "neèíselný argument pro :z"
 
-#: ex_cmds.c:2981
+#: ex_cmds.c:2997
 msgid "Shell commands not allowed in rvim"
 msgstr "rvim nepovoluje pou¾ití pøíkazù shellu"
 
-#: ex_cmds.c:3098
+#: ex_cmds.c:3125
 msgid "Regular expressions can't be delimited by letters"
 msgstr "Regulární výrazy nesmí být oddìleny písmeny"
 
-#: ex_cmds.c:3419
+#: ex_cmds.c:3451
 #, c-format
 msgid "replace with %s (y/n/a/q/^E/^Y)?"
 msgstr "nahradit %s (y/n/a/q/^E/^Y)"
 
-#: ex_cmds.c:3758
+#: ex_cmds.c:3793
 msgid "(Interrupted) "
 msgstr "(pøeru¹eno) "
 
-#: ex_cmds.c:3762
+#: ex_cmds.c:3797
 msgid "1 substitution"
 msgstr "poèet nahrazení na øádek: 1"
 
-#: ex_cmds.c:3764
+#: ex_cmds.c:3799
 #, c-format
 msgid "%ld substitutions"
 msgstr "poèet nahrazení na øádek: %ld"
 
-#: ex_cmds.c:3767
+#: ex_cmds.c:3802
 msgid " on 1 line"
 msgstr "/1"
 
-#: ex_cmds.c:3769
+#: ex_cmds.c:3804
 #, c-format
 msgid " on %ld lines"
 msgstr "/%ld"
 
-#: ex_cmds.c:3820
+#: ex_cmds.c:3855
 msgid "Cannot do :global recursive"
 msgstr "global nelze volat rekurzivnì"
 
-#: ex_cmds.c:3855
+#: ex_cmds.c:3890
 msgid "Regular expression missing from global"
 msgstr "U pøíkazu 'global' chybí regulární výraz"
 
-#: ex_cmds.c:3974
+#: ex_cmds.c:4009
 msgid ""
 "\n"
 "# Last Substitute String:\n"
@@ -610,69 +628,65 @@ msgstr ""
 "# Last Substitute String:\n"
 "$"
 
-#: ex_cmds.c:4073
+#: ex_cmds.c:4108
 #, c-format
 msgid "Sorry, no help for %s"
-msgstr "Lituji, pro %s není øádná nápovìda"
+msgstr "Lituji, pro %s není ¾ádná nápovìda"
 
-#: ex_cmds.c:4107
+#: ex_cmds.c:4142
 #, c-format
 msgid "Sorry, help file \"%s\" not found"
 msgstr "Lituji, soubor \"%s\" s nápovìdou nebyl nalezen"
 
-#: ex_cmds.c:4543
+#: ex_cmds.c:4579
 #, c-format
 msgid "Not a directory: %s"
 msgstr "%s není adresáøem"
 
-#: ex_cmds.c:4571
+#: ex_cmds.c:4607
 #, c-format
 msgid "Cannot open %s for writing"
 msgstr "Nelze otevøít %s pro zápis"
 
-#: ex_cmds.c:4585
+#: ex_cmds.c:4621
 #, c-format
 msgid "Unable to open %s for reading"
 msgstr "Nelze otevøít %s pro zápis"
 
-#: ex_cmds.c:4664
+#: ex_cmds.c:4700
 #, c-format
 msgid "Duplicate tag \"%s\" in file %s"
 msgstr "Duplicitní tag \"%s\" v souboru %s"
 
-#: ex_cmds.c:4757
-msgid "Missing sign id"
+#: ex_cmds.c:4792 ex_cmds.c:4896
+msgid "Missing sign ID"
 msgstr "Chybí identifikátor pro sign"
 
-#: ex_cmds.c:4790
+#: ex_cmds.c:4825
 msgid "Missing filename"
 msgstr "Chybí název souboru"
 
-#: ex_cmds.c:4822
+#: ex_cmds.c:4857
 #, c-format
-msgid "Invalid line number: %d"
-msgstr "chybné èíslo øádku: %d"
+msgid "Invalid line number: %ld"
+msgstr "chybné èíslo øádku: %ld"
 
-#: ex_cmds.c:4825
+#: ex_cmds.c:4860
 #, c-format
 msgid "Invalid buffer name: %s"
 msgstr "chybné jméno bufferu: %s"
 
-#: ex_cmds.c:4861
-msgid "Missing sign ID"
-msgstr "Chybí identifikátor pro sign"
-
-#: ex_cmds.c:4882
+#: ex_cmds.c:4917
 #, c-format
 msgid "Cannot find buffer: %s"
 msgstr "Nelze nalézt buffer %s"
 
-#: ex_cmds.c:4893
+#: ex_cmds.c:4928
 #, c-format
-msgid "    line %d, id %d, type %d"
-msgstr "    øádek %d, id %d, typ %d"
+msgid "    line %ld, id %d, type %d"
+msgstr "    øádek %ld, id %d, typ %d"
 
-#: ex_cmds.c:4907
+#: ex_cmds.c:4942
 msgid ""
 "\n"
 "--- Signs ---"
@@ -680,572 +694,655 @@ msgstr ""
 "\n"
 "--- Znaky ---"
 
-#: ex_cmds.c:4913
+#: ex_cmds.c:4948
 #, c-format
 msgid "Signs for %s:"
 msgstr "Znaky pro %s:"
 
-#: ex_docmd.c:435
+#: ex_docmd.c:494
 msgid "Entering Ex mode.  Type \"visual\" to go to Normal mode."
 msgstr "Spou¹tím Ex re¾im. Napi¹te \"visual\" pro návrat do Normálního re¾imu."
 
 #. must be at EOF
-#: ex_docmd.c:471
+#: ex_docmd.c:530
 msgid "At end-of-file"
 msgstr "Konec souboru"
 
-#: ex_docmd.c:692
+#: ex_docmd.c:751
 #, c-format
 msgid "line ~%ld: %s"
 msgstr "øádek ~%ld: %s"
 
-#: ex_docmd.c:697
+#: ex_docmd.c:756 ex_docmd.c:10146
 #, c-format
 msgid "line %ld: %s"
 msgstr "øádek %ld: %s"
 
-#: ex_docmd.c:831
+#: ex_docmd.c:890
 msgid "Missing :endwhile"
 msgstr "Chybí :endwhile"
 
-#: ex_docmd.c:833
+#: ex_docmd.c:892
 msgid "Missing :endif"
 msgstr "chybné :endif"
 
-#: ex_docmd.c:1189
+#: ex_docmd.c:1058
+#, c-format
+msgid "Breakpoint in \"%s%s\" line %ld"
+msgstr "Bod pøeru¹ení v \"%s%s\" na øádku %ld"
+
+#: ex_docmd.c:1210
 msgid "Ambiguous use of user-defined command"
 msgstr "Nejednoznaèné pou¾ití u¾ivatelsky definovaného pøíkazu"
 
-#: ex_docmd.c:1231
+#: ex_docmd.c:1224
 msgid "Not an editor command"
 msgstr "není pøíkazem editoru"
 
-#: ex_docmd.c:1285
+#: ex_docmd.c:1286
 msgid "Don't panic!"
 msgstr "Nepanikaøte!"
 
-#: ex_docmd.c:1304
+#: ex_docmd.c:1305
 msgid "Backwards range given"
 msgstr "Zadán zpìtný rozsah"
 
-#: ex_docmd.c:1308
+#: ex_docmd.c:1309
 msgid "Backwards range given, OK to swap"
 msgstr "Zadán zpìtný rozsah. Prohodit hranice"
 
-#: ex_docmd.c:1391
+#: ex_docmd.c:1393
 msgid "Use w or w>>"
 msgstr "Pou¾ijte w èi w>>"
 
-#: ex_docmd.c:2765
+#: ex_docmd.c:2977
 msgid "Sorry, this command is not implemented"
 msgstr "Lituji, ale tento pøíkaz není implementován"
 
-#: ex_docmd.c:2907
+#: ex_docmd.c:3119
 msgid "Only one file name allowed"
 msgstr "Pøípustný je pouze jeden název souboru"
 
-#: ex_docmd.c:3190
+#: ex_docmd.c:3404
 #, c-format
 msgid "Save changes to \"%.*s\"?"
 msgstr "Ulo¾it zmìny do \"%.*s\"?"
 
-#: ex_docmd.c:3348
+#: ex_docmd.c:3562
 #, c-format
 msgid "No write since last change for buffer \"%s\""
 msgstr "Buffer %s obsahuje neulo¾ené zmìny"
 
-#: ex_docmd.c:3396
+#: ex_docmd.c:3611
 msgid "Warning: Entered other buffer unexpectedly (check autocommands)"
 msgstr ""
 "Varování: Neèekaný vstup do jiného bufferu (zkontrolujte automatické pøíkazy)"
 
-#: ex_docmd.c:3633
+#: ex_docmd.c:3855
 msgid "makeef option not set"
 msgstr "volba makeef není nastavena"
 
-#: ex_docmd.c:3897
+#: ex_docmd.c:4239
 #, c-format
 msgid "%d more files to edit.  Quit anyway?"
 msgstr "Je¹tì zbývají soubory k editaci (%d). Chcete pøesto ukonèit editor?"
 
-#: ex_docmd.c:3904
+#: ex_docmd.c:4246
 #, c-format
 msgid "%ld more files to edit"
 msgstr "Je¹tì zbývají soubory k editaci (%ld)."
 
-#: ex_docmd.c:3990
+#: ex_docmd.c:4344
 #, c-format
 msgid "could not source \"%s\""
 msgstr "nelze interpretovat \"%s\""
 
-#: ex_docmd.c:4000
+#: ex_docmd.c:4354
 #, c-format
 msgid "sourcing \"%s\""
 msgstr "interpretuji \"%s\""
 
-#: ex_docmd.c:4062
+#: ex_docmd.c:4448
 #, c-format
 msgid "finished sourcing %s"
 msgstr "dokonèena interpretace %s"
 
-#: ex_docmd.c:4278
+#: ex_docmd.c:4719
 msgid "Warning: Wrong line separator, ^M may be missing"
 msgstr "Varování: chybný oddìlovaè øádkù. Mo¾ná chybí ^M."
 
-#: ex_docmd.c:4323
-msgid ":finish used outsided of a sourced file"
+#: ex_docmd.c:4764
+msgid ":finish used outside of a sourced file"
 msgstr ":finish pou¾ito mimo interpretovaný soubor"
 
-#: ex_docmd.c:4410
+#: ex_docmd.c:4865
 msgid "Command already exists: use ! to redefine"
 msgstr "Pøíkaz ji¾ existuje: pou¾ijte ! pro pøedefinování"
 
-#: ex_docmd.c:4508
+#: ex_docmd.c:4968
 msgid ""
 "\n"
-"   Name        Args Range Complete  Definition"
+"    Name        Args Range Complete  Definition"
 msgstr ""
 "\n"
-"   Jméno       Arg  Rozsah Úplnost  Definice"
+"    Jméno       Args Rozsah Úplnost  Definice"
 
-#: ex_docmd.c:4588
+#: ex_docmd.c:5057
 msgid "No user-defined commands found"
 msgstr "Nebyly nalezeny ¾ádné u¾ivatelsky definované pøíkazy"
 
-#: ex_docmd.c:4618
+#: ex_docmd.c:5088
 msgid "No attribute specified"
 msgstr "Nebyly zadány ¾ádné atributy"
 
-#: ex_docmd.c:4668
+#: ex_docmd.c:5140
 msgid "Invalid number of arguments"
 msgstr "Chybný poèet argumentù"
 
-#: ex_docmd.c:4683
+#: ex_docmd.c:5155
 msgid "Count cannot be specified twice"
 msgstr "opakování nemù¾e být zadáno dvakrát"
 
-#: ex_docmd.c:4693
+#: ex_docmd.c:5165
 msgid "Invalid default value for count"
 msgstr "Chybná implicitní hodnota pro poèet"
 
-#: ex_docmd.c:4721
+#: ex_docmd.c:5193
 msgid "argument required for complete"
 msgstr "chybná implicitní hodnota pro opakování"
 
-#: ex_docmd.c:4740
+#: ex_docmd.c:5212
 #, c-format
 msgid "Invalid complete value: %s"
 msgstr "Chybná hodnota doplnìní: %s"
 
-#: ex_docmd.c:4748
+#: ex_docmd.c:5220
 #, c-format
 msgid "Invalid attribute: %s"
 msgstr "Chybný atribut: %s"
 
-#: ex_docmd.c:4788
+#: ex_docmd.c:5261
 msgid "Invalid command name"
 msgstr "Chybné jméno pøíkazu"
 
-#: ex_docmd.c:4805
+#: ex_docmd.c:5276
 msgid "User defined commands must start with an uppercase letter"
 msgstr "U¾ivatelsky definované pøíkazy musí zaèínat velikým písmenem."
 
-#: ex_docmd.c:4853
+#: ex_docmd.c:5347
 #, c-format
 msgid "No such user-defined command: %s"
 msgstr "U¾ivatelsky definovaný pøíkaz %s neexistuje"
 
-#: ex_docmd.c:5642
+#: ex_docmd.c:6159
 msgid "There is only one file to edit"
 msgstr "Pro editaci byl zadán pouze jeden soubor"
 
-#: ex_docmd.c:5644
+#: ex_docmd.c:6161
 msgid "Cannot go before first file"
 msgstr "Pøed první soubor nelze pøeskoèit"
 
-#: ex_docmd.c:5646
+#: ex_docmd.c:6163
 msgid "Cannot go beyond last file"
 msgstr "Za poslední soubor nelze pøeskoèit"
 
-#: ex_docmd.c:6019
+#: ex_docmd.c:6905
 msgid "Edit File in new window"
 msgstr "Editovat soubor v novém oknì"
 
-#: ex_docmd.c:6302
+#: ex_docmd.c:7192
 msgid "No swap file"
 msgstr "¾ádný odkládací soubor"
 
-#: ex_docmd.c:6406
+#: ex_docmd.c:7296
 msgid "Append File"
 msgstr "Ulo¾it soubor"
 
-#: ex_docmd.c:6465
+#: ex_docmd.c:7355
 msgid "No previous directory"
 msgstr "®ádný pøedchozí adresáø"
 
-#: ex_docmd.c:6600
+#: ex_docmd.c:7490
 msgid "Ambiguous mapping"
 msgstr "Nejednoznaèné mapování"
 
-#: ex_docmd.c:6603
+#: ex_docmd.c:7493
 #, c-format
 msgid "Ambiguous mapping, conflicts with \"%s\""
 msgstr "Nejednoznaèné mapování - je v konfliktu s \"%s\""
 
-#: ex_docmd.c:6641
+#: ex_docmd.c:7531
 #, c-format
 msgid "Window position: X %d, Y %d"
 msgstr "Umístìní okna: X %d, Y %d"
 
-#: ex_docmd.c:6646
+#: ex_docmd.c:7536
 msgid "Obtaining window position not implemented for this platform"
 msgstr "Na této platformì nelze umístìní okna zjistit"
 
-#: ex_docmd.c:6906
+#: ex_docmd.c:7796
 msgid "Save Redirection"
 msgstr "Ulo¾it pøesmìrování"
 
-#: ex_docmd.c:7013
+#: ex_docmd.c:7910
+msgid "Save View"
+msgstr "Ulo¾it pohled"
+
+#: ex_docmd.c:7911
 msgid "Save Session"
 msgstr "Ulo¾it sezení"
 
-#: ex_docmd.c:7015
+#: ex_docmd.c:7913
 msgid "Save Setup"
 msgstr "Ulo¾it nastavení"
 
-#: ex_docmd.c:7128
+#: ex_docmd.c:8036
 #, c-format
 msgid "\"%s\" exists (use ! to override)"
 msgstr "\"%s\" existuje (pou¾ijte ! pro vynucení)"
 
-#: ex_docmd.c:7133
+#: ex_docmd.c:8041
 #, c-format
 msgid "Cannot open \"%s\" for writing"
 msgstr "Nelze otevøít \"%s\" pro zápis"
 
 #. set mark
-#: ex_docmd.c:7157
+#: ex_docmd.c:8065
 msgid "Argument must be a letter or forward/backward quote"
 msgstr "Argumentem mù¾e být pouze písmeno nebo pravý èi levý apostrof"
 
-#: ex_docmd.c:7179
+#: ex_docmd.c:8088
 msgid "Recursive use of :normal too deep"
 msgstr "vnoøení :normal je pøíli¹ hluboké"
 
-#: ex_docmd.c:7186
+#: ex_docmd.c:8095
 msgid "Cannot use :normal from event handler"
 msgstr ":normal nelze pou¾ívat z obsluhy událostí"
 
-#: ex_docmd.c:7448
+#: ex_docmd.c:8364
 msgid ":if nesting too deep"
 msgstr "vnoøení :if je pøíli¹ hluboké"
 
-#: ex_docmd.c:7483
+#: ex_docmd.c:8399
 msgid ":endif without :if"
 msgstr ":endif bez odpovídajícího :if"
 
-#: ex_docmd.c:7503
+#: ex_docmd.c:8419
 msgid ":else without :if"
 msgstr ":else bez odpovídajícího :if"
 
-#: ex_docmd.c:7505
+#: ex_docmd.c:8421
 msgid ":elseif without :if"
 msgstr ":elseif bez odpovídajícího :if"
 
-#: ex_docmd.c:7557
+#: ex_docmd.c:8473
 msgid ":while nesting too deep"
 msgstr "vnoøení :while je pøíli¹ hluboké"
 
-#: ex_docmd.c:7603
+#: ex_docmd.c:8519
 msgid ":continue without :while"
 msgstr ":continue bez odpovídajícího :while"
 
-#: ex_docmd.c:7630
+#: ex_docmd.c:8546
 msgid ":break without :while"
 msgstr ":break bez odpovídajícího :while"
 
-#: ex_docmd.c:7653 ex_docmd.c:7658
+#: ex_docmd.c:8569 ex_docmd.c:8574
 msgid ":endwhile without :while"
 msgstr ":endwhile bez odpovídajícího :while"
 
-#: ex_docmd.c:7679
+#: ex_docmd.c:8595
 msgid ":endfunction not inside a function"
 msgstr ":endfunction mimo funkci"
 
-#: ex_docmd.c:7842
+#: ex_docmd.c:8771
 msgid "No alternate file name to substitute for '#'"
 msgstr "®ádný alternativní název souboru, kterým by bylo mo¾né nahradit '#'"
 
-#: ex_docmd.c:7873
+#: ex_docmd.c:8802
 msgid "no autocommand file name to substitute for \"<afile>\""
 msgstr "®ádný název souboru, kterým by bylo mo¾né nahradit \"<afile>\""
 
-#: ex_docmd.c:7881
+#: ex_docmd.c:8810
 msgid "no autocommand buffer number to substitute for \"<abuf>\""
 msgstr "®ádné èíslo bufferu, kterým by bylo mo¾né nahradit \"<abuf>\""
 
-#: ex_docmd.c:7892
+#: ex_docmd.c:8821
 msgid "no autocommand match name to substitute for \"<amatch>\""
 msgstr ""
 "®ádná shoda automatických pøíkazù, kterou by bylo mo¾né nahradit \"<amatch>\""
 
-#: ex_docmd.c:7902
+#: ex_docmd.c:8831
 msgid "no :source file name to substitute for \"<sfile>\""
 msgstr "®ádný interpretovaný soubor, kterým by bylo mo¾né nahradit \"<sfile>\""
 
-#: ex_docmd.c:7936
-#, fuzzy, c-format
+#: ex_docmd.c:8865
+#, c-format
 msgid "Empty file name for '%' or '#', only works with \":p:h\""
 msgstr "Prázdný název souboru pro '%' èi '#' funguje pouze s \":p:h\""
 
-#: ex_docmd.c:7938
+#: ex_docmd.c:8867
 msgid "Evaluates to an empty string"
 msgstr "Výsledkem vyhodnocení je prázdný øetìzec"
 
-#: ex_docmd.c:8367
+#: ex_docmd.c:9657
 msgid "Cannot open viminfo file for reading"
 msgstr "Nelze otevøít pro ètení viminfo soubor"
 
-#: ex_docmd.c:8405
+#: ex_docmd.c:9703
 #, c-format
 msgid "Searching for \"%s\" in \"%s\""
 msgstr "Hledám \"%s\" v \"%s\""
 
-#: ex_docmd.c:8448
+#: ex_docmd.c:9735
+#, c-format
+msgid "not found in 'runtimepath': \"%s\""
+msgstr "soubor \"%s\" nebyl nalezen v 'runtimepath'"
+
+#: ex_docmd.c:9754
 msgid "Run Macro"
 msgstr "Spustit makro"
 
-#: ex_docmd.c:8584
+#: ex_docmd.c:9942
 msgid "No digraphs in this version"
 msgstr "V této verzi nejsou spøe¾ky podporovány"
 
-#: ex_docmd.c:8693
+#: ex_docmd.c:10073
 #, c-format
 msgid "Current language: %s"
 msgstr "Aktuální jazyk: %s"
 
-#: ex_docmd.c:8699
+#: ex_docmd.c:10079
 #, c-format
 msgid "Cannot set language to \"%s\""
 msgstr "Nelze nastavit jazyk na \"%s\""
 
-#: ex_getln.c:2508
+#: ex_docmd.c:10142
+msgid "Entering Debug mode.  Type \"cont\" to leave."
+msgstr "Spou¹tím ladící re¾im. Pro ukonèení napi¹te \"cont\"."
+
+#: ex_docmd.c:10148
+#, c-format
+msgid "cmd: %s"
+msgstr "pøíkaz: %s"
+
+#: ex_docmd.c:10379
+#, c-format
+msgid "Breakpoint not found: %s"
+msgstr "Bod pøeru¹ení nenalezen: %s"
+
+#: ex_docmd.c:10405
+msgid "No breakpoints defined"
+msgstr "Nebyly definovánu ¾ádné body pøeru¹ení"
+
+#: ex_docmd.c:10410
+#, c-format
+msgid "%3d  %s %s  line %ld"
+msgstr "%3d  %s %s  øádek %ld"
+
+#: ex_getln.c:2496
 msgid "tagname"
 msgstr "jméno tagu"
 
-#: ex_getln.c:2511
+#: ex_getln.c:2499
 msgid " kind file\n"
 msgstr " typ soubor\n"
 
-#: ex_getln.c:3517
+#: ex_getln.c:3513
 msgid "'history' option is zero"
 msgstr "'volba 'history' je nastavena na nulu"
 
-#: ex_getln.c:3756
+#: ex_getln.c:3752
 #, c-format
 msgid ""
 "\n"
 "# %s History (newest to oldest):\n"
 msgstr ""
 "\n"
-"# Historie %s (od nejnovìj¹í po nejstar¹í polo¾ku):\n"
+"# Historie %s (poèínaje nejnovìj¹í polo¾kou):\n"
 
-#: ex_getln.c:3757
+#: ex_getln.c:3753
 msgid "Command Line"
 msgstr "pøíkazové øádky"
 
-#: ex_getln.c:3758
+#: ex_getln.c:3754
 msgid "Search String"
 msgstr "vyhledávaných øetìzcù"
 
-#: ex_getln.c:3759
+#: ex_getln.c:3755
 msgid "Expression"
 msgstr "výrazù"
 
-#: ex_getln.c:3760
+#: ex_getln.c:3756
 msgid "Input Line"
 msgstr "vstupní øádky"
 
-#: ex_getln.c:3790
+#: ex_getln.c:3786
 msgid "cmd_pchar beyond the command length"
 msgstr "cmd_pchar pøekraèuje délku pøíkazu"
 
-#: fileio.c:265
+#: fileio.c:378
 msgid "Illegal file name"
 msgstr "nepøípustný název souboru"
 
-#: fileio.c:289 fileio.c:402 fileio.c:1629 fileio.c:1648
+#: fileio.c:402 fileio.c:515 fileio.c:2332 fileio.c:2376
 msgid "is a directory"
 msgstr "je adresáøem"
 
-#: fileio.c:291 fileio.c:1631
+#: fileio.c:404
 msgid "is not a file"
 msgstr "není souborem"
 
-#. may create swap file now
-#: fileio.c:415 fileio.c:2502
+#: fileio.c:535 fileio.c:3367
 msgid "[New File]"
 msgstr "[nový soubor]"
 
-#: fileio.c:432
+#: fileio.c:552
 msgid "[Permission Denied]"
 msgstr "[pøístup odmítnut]"
 
-#: fileio.c:507
+#: fileio.c:642
 msgid "*ReadPre autocommands made the file unreadable"
 msgstr "*ReadPre automatické pøíkazy uèinily soubor neèitelným"
 
-#: fileio.c:509
+#: fileio.c:644
 msgid "*ReadPre autocommands must not change current buffer"
 msgstr "*ReadPre automatické pøíkazy nesmí mìnit aktuální buffer"
 
-#: fileio.c:555
-msgid "Can't find temp file for reading"
-msgstr "Nelze nalézt doèasný soubor pro ètení"
+#: fileio.c:660
+#, c-format
+msgid "Security error: filter output is a symbolic link: %s"
+msgstr "Bezpeènostní chyba: výstupem filtru je symbolický odkaz: %s"
 
-#: fileio.c:564 fileio.c:2414
-msgid "Conversion failed"
-msgstr "Pøevod selhal"
-
-#: fileio.c:572
-msgid "can't read output of 'charconvert'"
-msgstr "nelze èíst výstup 'charconvert'"
-
-#: fileio.c:605
+#: fileio.c:679
 msgid "Vim: Reading from stdin...\n"
 msgstr "Vim: ètu ze standardního vstupu...\n"
 
-#: fileio.c:610
+#: fileio.c:685
 msgid "Reading from stdin..."
 msgstr "ètu ze standardního vstupu..."
 
-#: fileio.c:1127
+#. Re-opening the original file failed!
+#: fileio.c:885
+msgid "Conversion made file unreadable!"
+msgstr "Po konverzi je soubor neèitelný!"
+
+#: fileio.c:1607
 msgid "[fifo/socket]"
 msgstr "[pojmenovaná roura/soket]"
 
-#: fileio.c:1134
+#: fileio.c:1614
 msgid "[fifo]"
 msgstr "[pojmenovaná roura]"
 
-#: fileio.c:1141
+#: fileio.c:1621
 msgid "[socket]"
 msgstr "[soket]"
 
-#: fileio.c:1149
+#: fileio.c:1629
 msgid "[RO]"
 msgstr "[RO]"
 
-#: fileio.c:1159
+#: fileio.c:1639
 msgid "[CR missing]"
 msgstr "[chybí CR]"
 
-#: fileio.c:1164
+#: fileio.c:1644
 msgid "[NL found]"
 msgstr "[nalezeno NL]"
 
-#: fileio.c:1169
+#: fileio.c:1649
 msgid "[long lines split]"
 msgstr "[dlouhé øádky zalomeny]"
 
-#: fileio.c:1175 fileio.c:2516
+#: fileio.c:1655 fileio.c:3351
+msgid "[NOT converted]"
+msgstr "[nezkonvertován]"
+
+#: fileio.c:1660 fileio.c:3356
+msgid "[converted]"
+msgstr "[zkonvertován]"
+
+#: fileio.c:1667 fileio.c:3381
 msgid "[crypted]"
 msgstr "[za¹ifrován]"
 
-#: fileio.c:1181
+#: fileio.c:1674
+msgid "[CONVERSION ERROR]"
+msgstr "[CHYBA PØEVODU]"
+
+#: fileio.c:1681
 msgid "[READ ERRORS]"
 msgstr "[CHYBY ÈTENÍ]"
 
-#: fileio.c:1547
+#: fileio.c:1856
+msgid "Can't find temp file for conversion"
+msgstr "Nelze nalézt doèasný soubor pro konverzi"
+
+#: fileio.c:1863
+msgid "Conversion with 'charconvert' failed"
+msgstr "Konverze s 'charconvert' se nezdaøila"
+
+#: fileio.c:1866
+msgid "can't read output of 'charconvert'"
+msgstr "nelze èíst výstup 'charconvert'"
+
+#: fileio.c:1874
+msgid "Security error: 'charconvert' output is a symbolic link"
+msgstr "Bezpeènostní chyba: výstupem 'charconvert' je symbolický odkaz"
+
+#: fileio.c:2248
 msgid "Autocommands deleted or unloaded buffer to be written"
 msgstr ""
 "Automatické pøíkazy smazaly èi deaktivovaly buffer, který mìl být ulo¾en"
 
-#: fileio.c:1570
+#: fileio.c:2271
 msgid "Autocommand changed number of lines in unexpected way"
 msgstr "Automatický pøíkaz neèekaným zpùsobem zmìnil poèet øádkù"
 
-#: fileio.c:1660
+#: fileio.c:2337 fileio.c:2360
+msgid "is not a file or writable device"
+msgstr "není souborem ani zaøízením na nì¾ lze zapisovat"
+
+#: fileio.c:2388
 msgid "is read-only (use ! to override)"
 msgstr "je pouze pro ètení (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:1917
+#: fileio.c:2683
 msgid "Can't write to backup file (use ! to override)"
 msgstr "Nelze zapisovat do zálo¾ního souboru (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:1922
+#: fileio.c:2689
 msgid "Close error for backup file (use ! to override)"
 msgstr "Chyba pøi uzavírání zálo¾ního souboru (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:1924
+#: fileio.c:2691
 msgid "Can't read file for backup (use ! to override)"
 msgstr "Nelze naèíst soubor pro zálohu (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:1936
+#: fileio.c:2707
 msgid "Cannot create backup file (use ! to override)"
 msgstr "Nelze vytvoøit zálo¾ní soubor (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:2025
+#: fileio.c:2796
 msgid "Can't make backup file (use ! to override)"
 msgstr "Nelze vytvoøit zálo¾ní soubor (pou¾ijte ! pro vynucení)"
 
 # resource fork ?!
-#: fileio.c:2072
+#: fileio.c:2851
 msgid "The resource fork will be lost (use ! to override)"
 msgstr "'Resource fork' bude ztracen (pou¾ijte ! pro vynucení)"
 
-#: fileio.c:2131
+#: fileio.c:2939
 msgid "Can't find temp file for writing"
 msgstr "Nelze nalézt doèasný soubor pro ukládání"
 
-#: fileio.c:2161
+#: fileio.c:2957
+msgid "Cannot convert (use ! to write without conversion)"
+msgstr "Nelze konvertovat (pou¾ijte ! pro vynucení konverze)"
+
+#: fileio.c:2987
 msgid "Can't open file for writing"
 msgstr "Soubor nelze otevøít pro ukládání"
 
-#: fileio.c:2372
+#: fileio.c:3072
+#, c-format
+msgid "Security error: filter input is a symbolic link: %s"
+msgstr "Bezpeènostní chyba: vstupem filtru je symbolický odkaz: %s"
+
+#: fileio.c:3222
 msgid "Close failed"
 msgstr "Volání close selhalo"
 
-#: fileio.c:2430
+#: fileio.c:3277
+msgid "write error, conversion failed"
+msgstr "chyba pøi zápisu, konverze se nezdaøila"
+
+#: fileio.c:3280
 msgid "write error (file system full?)"
 msgstr "chyba pøi ukládání (je volné místo na disku?)"
 
-#: fileio.c:2496
+#: fileio.c:3346
 msgid " CONVERSION ERROR"
 msgstr " CHYBA PØEVODU"
 
-#: fileio.c:2502
+#: fileio.c:3362
+msgid "[Device]"
+msgstr "[zaøízení]"
+
+#: fileio.c:3367
 msgid "[New]"
 msgstr "[nový]"
 
-#: fileio.c:2524
-msgid " [w]"
-msgstr " [u]"
-
-#: fileio.c:2524
-msgid " written"
-msgstr " ulo¾en"
-
-#: fileio.c:2526
+#: fileio.c:3389
 msgid " [a]"
 msgstr " [p]"
 
-#: fileio.c:2526
+#: fileio.c:3389
 msgid " appended"
 msgstr " pøipojen"
 
-#: fileio.c:2576
+#: fileio.c:3391
+msgid " [w]"
+msgstr " [u]"
+
+#: fileio.c:3391
+msgid " written"
+msgstr " ulo¾en"
+
+#: fileio.c:3441
 msgid "patchmode: can't save original file"
 msgstr "patchmode: nelze ulo¾it pùvodní soubor"
 
-#: fileio.c:2597
+#: fileio.c:3462
 msgid "patchmode: can't touch empty original file"
 msgstr "patchmode: nelze zapisovat do prázdného pùvodního souboru"
 
-#: fileio.c:2612
+#: fileio.c:3477
 msgid "Can't delete backup file"
 msgstr "Nelze smazat zálo¾ní soubor"
 
-#: fileio.c:2653
+#: fileio.c:3528
 msgid ""
 "\n"
 "WARNING: Original file may be lost or damaged\n"
@@ -1253,96 +1350,94 @@ msgstr ""
 "\n"
 "VAROVÁNÍ: Obsah pùvodního souboru mù¾e být ztracen èi po¹kozen\n"
 
-#: fileio.c:2655
+#: fileio.c:3530
 msgid "don't quit the editor until the file is successfully written!"
 msgstr "neukonèujte editor døíve, ne¾ bude soubor úspì¹nì ulo¾en!"
 
-#: fileio.c:2719
+#: fileio.c:3598
 msgid "[dos]"
 msgstr "[dos]"
 
-#: fileio.c:2719
+#: fileio.c:3598
 msgid "[dos format]"
 msgstr "[dos formát]"
 
-#: fileio.c:2726
+#: fileio.c:3605
 msgid "[mac]"
 msgstr "[mac]"
 
-#: fileio.c:2726
+#: fileio.c:3605
 msgid "[mac format]"
 msgstr "[mac formát]"
 
-#: fileio.c:2733
+#: fileio.c:3612
 msgid "[unix]"
 msgstr "[unix]"
 
-#: fileio.c:2733
+#: fileio.c:3612
 msgid "[unix format]"
 msgstr "[unix formát]"
 
-#: fileio.c:2777
+#: fileio.c:3656
 msgid "[noeol]"
 msgstr "[¾ádný eol]"
 
-#: fileio.c:2777
+#: fileio.c:3656
 msgid "[Incomplete last line]"
 msgstr "[neúplný poslední øádek]"
 
 #. don't overwrite messages here
 #. don't use emsg() here, don't want to flush the buffers
-#: fileio.c:2793
+#: fileio.c:3672
 msgid "WARNING: The file has been changed since reading it!!!"
 msgstr "VAROVÁNÍ: od jeho naètení byl obsah souboru zmìnìn!!!!"
 
-#: fileio.c:2795
+#: fileio.c:3674
 msgid "Do you really want to write to it"
 msgstr "Chcete jej opravdu ulo¾it"
 
-#: fileio.c:3454
-msgid "writing to"
-msgstr "ukládám"
-
-#: fileio.c:3461
-msgid "closing"
-msgstr "zavírám"
-
-#: fileio.c:3464
-msgid "reading"
-msgstr "ètu"
-
-#: fileio.c:3469
+#: fileio.c:4615
 #, c-format
-msgid "Error %s '%s'"
-msgstr "Chyba %s '%s'"
+msgid "Error writing to \"%s\""
+msgstr "Chyba pøi zápisu do \"%s\""
 
-#: fileio.c:3585
+#: fileio.c:4622
+#, c-format
+msgid "Error closing \"%s\""
+msgstr "Chyb pøi uzavírání \"%s\""
+
+#: fileio.c:4625
+#, c-format
+msgid "Error reading \"%s\""
+msgstr "Chyba pøi ètení \"%s\""
+
+#: fileio.c:4745
 #, c-format
 msgid "Warning: File \"%s\" no longer available"
 msgstr "Varování: soubor \"%s\" ji¾ není dostupný"
 
-#: fileio.c:3587
+#: fileio.c:4747
 #, c-format
 msgid "Warning: File \"%s\" has changed since editing started"
 msgstr "Varování: soubor \"%s\" byl po poèátku editace zmìnìn"
 
-#: fileio.c:3594
+#: fileio.c:4754
 #, c-format
 msgid "Warning: File \"%s\" has been created after editing started"
 msgstr "Varování: po poèátku editace vytvoøen soubor \"%s\""
 
-#: fileio.c:4250
+#: fileio.c:5422
 #, c-format
 msgid "Illegal character after *: %s"
 msgstr "nepøípustný znak po *: %s"
 
-#: fileio.c:4261
+#: fileio.c:5433
 #, c-format
 msgid "No such event: %s"
 msgstr "událost %s neexistuje"
 
 #. Highlight title
-#: fileio.c:4410
+#: fileio.c:5582
 msgid ""
 "\n"
 "--- Auto-Commands ---"
@@ -1350,47 +1445,47 @@ msgstr ""
 "\n"
 "--- Automatické pøíkazy ---"
 
-#: fileio.c:4671
+#: fileio.c:5846
 msgid "Can't execute autocommands for ALL events"
 msgstr "Automatické pøíkazy nelze spustit pro V©ECHNY události"
 
-#: fileio.c:4694
+#: fileio.c:5869
 msgid "No matching autocommands"
 msgstr "®ádné vyhovující automatické pøíkazy"
 
-#: fileio.c:4928
+#: fileio.c:6127
 msgid "autocommand nesting too deep"
 msgstr "vnoøení automatického pøíkazu pøíli¹ hluboká"
 
-#: fileio.c:5189
+#: fileio.c:6396
 #, c-format
 msgid "%s Auto commands for \"%s\""
 msgstr "%s automatické pøíkazy pro \"%s\""
 
-#: fileio.c:5192
+#: fileio.c:6404
 #, c-format
 msgid "Executing %s"
 msgstr "spou¹tím %s"
 
 #. always scroll up, don't overwrite
-#: fileio.c:5257
+#: fileio.c:6472
 #, c-format
 msgid "autocommand %s"
 msgstr "Automatický pøíkaz %s"
 
-#: fileio.c:5675
+#: fileio.c:6944
 msgid "Missing {."
 msgstr "Chybí {."
 
-#: fileio.c:5677
+#: fileio.c:6946
 msgid "Missing }."
 msgstr "Chybí }."
 
-#: fold.c:391
+#: fold.c:393
 msgid "No fold found"
 msgstr "®ádný záhyb nebyl nalezen"
 
-#: fold.c:441
+#: fold.c:443
 msgid "Fold must be at least two lines"
 msgstr "Záhyb musí zahrnovat alespoò dva øádky"
 
@@ -1398,23 +1493,43 @@ msgstr "Záhyb musí zahrnovat alespoò dva øádky"
 msgid "No fold at this line"
 msgstr "®ádný záhyb na tomto øádku"
 
-#: getchar.c:237
+#: getchar.c:241
 msgid "Add to read buffer"
 msgstr "Pøidat do bufferu pro ètení"
 
-#: getchar.c:1704
+#: getchar.c:1737
 msgid "recursive mapping"
 msgstr "rekurzivní mapování"
 
-#: getchar.c:2409
+#: getchar.c:2392
+#, c-format
+msgid "global abbreviation already exists for %s"
+msgstr "pro %s ji¾ globální zkratka ji¾ existuje"
+
+#: getchar.c:2395
+#, c-format
+msgid "global mapping already exists for %s"
+msgstr "pro %s ji¾ globální mapování ji¾ existuje"
+
+#: getchar.c:2531
+#, c-format
+msgid "abbreviation already exists for %s"
+msgstr "pro %s ji¾ zkratka ji¾ existuje"
+
+#: getchar.c:2534
+#, c-format
+msgid "mapping already exists for %s"
+msgstr "pro %s ji¾ mapování ji¾ existuje"
+
+#: getchar.c:2597
 msgid "No abbreviation found"
 msgstr "®ádná zkratka nebyl nalezena"
 
-#: getchar.c:2411
+#: getchar.c:2599
 msgid "No mapping found"
 msgstr "®ádné mapování nebylo nalezeno"
 
-#: getchar.c:3061
+#: getchar.c:3363
 msgid "makemap: Illegal mode"
 msgstr "makemap: nepøípustný mód"
 
@@ -1435,12 +1550,12 @@ msgstr "vim_SelFile: nelze se vrátit do aktuálního adresáøe"
 msgid "Pathname:"
 msgstr "Název cesty:"
 
-#: gui_at_fs.c:2560 gui_gtk.c:2276
+#: gui_at_fs.c:2560 gui_gtk.c:2274
 msgid "OK"
 msgstr "OK"
 
 #. 'Cancel' button
-#: gui_at_fs.c:2560 gui_gtk.c:1728 gui_gtk.c:2270
+#: gui_at_fs.c:2560 gui_gtk.c:1726 gui_gtk.c:2268
 msgid "Cancel"
 msgstr "Zru¹it"
 
@@ -1448,7 +1563,7 @@ msgstr "Zru¹it"
 msgid "vim_SelFile: can't get current directory"
 msgstr "vim_SelFile: nelze zjistit aktuální adresáø"
 
-#: gui_athena.c:948 gui_motif.c:1342
+#: gui_athena.c:948 gui_motif.c:1354
 msgid "Vim dialog"
 msgstr "Vim dialog"
 
@@ -1460,192 +1575,192 @@ msgstr "Pøípravek posunovací li¹ty: nelze zjistit geometrii obrázku"
 msgid "Cannot create BalloonEval with both message and callback"
 msgstr "BalloonEval nelze vytvoøit se zprávou a zároveò zpìtným voláním"
 
-#: gui.c:170
+#: gui.c:171
 msgid "Cannot start the GUI"
 msgstr "Nelze spustit GUI"
 
-#: gui.c:284 main.c:1045
+#: gui.c:285 main.c:1051
 #, c-format
 msgid "Cannot read from \"%s\""
 msgstr "Nelze èíst z \"%s\""
 
-#: gui.c:401
+#: gui.c:402
 msgid "'guifontwide' invalid"
 msgstr "volba 'guifontwide' je chybnì nastavena"
 
-#: gui_gtk.c:1185
+#: gui_gtk.c:1183
 msgid "Vim dialog..."
 msgstr "Vim dialog.."
 
-#: gui_gtk.c:1565
+#: gui_gtk.c:1563
 msgid "VIM - Search and Replace..."
 msgstr "VIM - Nalézt a nahradit..."
 
-#: gui_gtk.c:1570
+#: gui_gtk.c:1568
 msgid "VIM - Search..."
 msgstr "VIM - Nalézt..."
 
-#: gui_gtk.c:1593
+#: gui_gtk.c:1591
 msgid "Find what:"
 msgstr "Vyhledat:"
 
-#: gui_gtk.c:1611
+#: gui_gtk.c:1609
 msgid "Replace with:"
 msgstr "Nový text:"
 
 #. exact match only button
-#: gui_gtk.c:1643
+#: gui_gtk.c:1641
 msgid "Match exact word only"
 msgstr "hledat pouze celá slova"
 
-#: gui_gtk.c:1654
+#: gui_gtk.c:1652
 msgid "Direction"
 msgstr "Smìr"
 
 #. 'Up' and 'Down' buttons
-#: gui_gtk.c:1666
+#: gui_gtk.c:1664
 msgid "Up"
 msgstr "Nahoru"
 
-#: gui_gtk.c:1670
+#: gui_gtk.c:1668
 msgid "Down"
 msgstr "Dolù"
 
 #. 'Find Next' button
-#: gui_gtk.c:1692
+#: gui_gtk.c:1690
 msgid "Find Next"
 msgstr "Najít dal¹í"
 
 #. 'Replace' button
-#: gui_gtk.c:1709
+#: gui_gtk.c:1707
 msgid "Replace"
 msgstr "Nahradit"
 
 #. 'Replace All' button
-#: gui_gtk.c:1718
+#: gui_gtk.c:1716
 msgid "Replace All"
 msgstr "Nahradit v¹e"
 
-#: gui_gtk.c:2231
+#: gui_gtk.c:2229
 msgid "VIM - Help on..."
 msgstr "VIM - Nápovìda k..."
 
-#: gui_gtk.c:2253
+#: gui_gtk.c:2251
 msgid "Topic:"
 msgstr "Téma:"
 
-#: gui_gtk_x11.c:956 gui_x11.c:1057
+#: gui_gtk_x11.c:985 gui_x11.c:1061
 msgid "cannot open display"
 msgstr "nelze otevøít display"
 
-#: gui_gtk_x11.c:2211 gui_x11.c:1716
+#: gui_gtk_x11.c:2240 gui_x11.c:1721
 #, c-format
 msgid "Unknown fontset: %s"
 msgstr "Neznámá sada písem: %s"
 
-#: gui_gtk_x11.c:2237
+#: gui_gtk_x11.c:2266
 msgid "Font Selection"
 msgstr "Výbìr písma"
 
-#: gui_gtk_x11.c:2479 gui_x11.c:1552
+#: gui_gtk_x11.c:2508 gui_x11.c:1557
 #, c-format
 msgid "Unknown font: %s"
 msgstr "Neznámé písmo: %s"
 
-#: gui_gtk_x11.c:2490 gui_x11.c:1576
+#: gui_gtk_x11.c:2519 gui_x11.c:1581
 #, c-format
 msgid "Font \"%s\" is not fixed-width"
 msgstr "Písmo \"%s\" nemá pevnou ¹íøku"
 
-#: gui_gtk_x11.c:2619
+#: gui_gtk_x11.c:2648
 #, c-format
 msgid "Color name not recognized: %s"
 msgstr "Neznámé jméno barvy: %s"
 
-#: gui_x11.c:1218
+#: gui_x11.c:1222
 msgid "Vim: Cannot allocate colormap entry, some colors may be incorrect"
 msgstr ""
 "Vim: nelze alokovat polo¾ku barevné mapy. Nìkteré barvy mohou být nesprávné"
 
-#: gui_x11.c:1705
+#: gui_x11.c:1710
 #, c-format
 msgid "Error: During loading fontset %s"
 msgstr "Chyba pøi nahrávání sady písem %s"
 
-#: gui_x11.c:1706
+#: gui_x11.c:1711
 msgid "Font(s) for the following character sets are missing:"
 msgstr "Chybí písma pro následující znakové sady:"
 
-#: gui_x11.c:1749
+#: gui_x11.c:1754
 msgid "locale is not set correctly"
 msgstr "národní prostøedí je nastaveno chybnì"
 
-#: gui_x11.c:1750
+#: gui_x11.c:1755
 msgid "Set LANG environment variable to your locale"
 msgstr "Nastavte promìnnou prostøedí LANG na Va¹e locale"
 
-#: gui_x11.c:1751
+#: gui_x11.c:1756
 msgid "For korean:"
 msgstr "Pro korej¹tinu"
 
-#: gui_x11.c:1752
+#: gui_x11.c:1757
 msgid "   csh: setenv LANG ko"
 msgstr "   csh: setenv LANG ko"
 
-#: gui_x11.c:1753
+#: gui_x11.c:1758
 msgid "   sh : export LANG=ko"
 msgstr "   sh : export LANG=ko"
 
-#: gui_x11.c:1755
+#: gui_x11.c:1760
 #, c-format
 msgid "fontset name: %s"
 msgstr "název sady písem: %s"
 
-#: gui_x11.c:1756
+#: gui_x11.c:1761
 msgid "Your language Font missing"
 msgstr "Chybí písmo pro Vá¹ jazyk"
 
-#: gui_x11.c:1757
+#: gui_x11.c:1762
 #, c-format
 msgid "loaded fontname: %s"
 msgstr "pou¾ité písmo: %s"
 
-#: gui_x11.c:1765
+#: gui_x11.c:1770
 #, c-format
 msgid "Fontset name: %s"
 msgstr "název sady písem: %s"
 
-#: gui_x11.c:1766
+#: gui_x11.c:1771
 #, c-format
 msgid "Font '%s' is not fixed-width"
 msgstr "Písmo '%s' nemá pevnou ¹íøku"
 
-#: gui_x11.c:1785
+#: gui_x11.c:1790
 #, c-format
 msgid "Fontset name: %s\n"
 msgstr "Název sady písem: %s\n"
 
-#: gui_x11.c:1786
+#: gui_x11.c:1791
 #, c-format
 msgid "Font0: %s\n"
 msgstr "Písmo0: %s\n"
 
-#: gui_x11.c:1787
+#: gui_x11.c:1792
 #, c-format
 msgid "Font1: %s\n"
 msgstr "Písmo1: %s\n"
 
-#: gui_x11.c:1788
+#: gui_x11.c:1793
 #, c-format
 msgid "Font%d width is not twice that of font0\n"
 msgstr "Písmo%d není dvakrát ¹ir¹í ne¾ písmo0\n"
 
-#: gui_x11.c:1789
+#: gui_x11.c:1794
 #, c-format
 msgid "Font0 width: %ld\n"
 msgstr "©íøka písma0: %ld\n"
 
-#: gui_x11.c:1790
+#: gui_x11.c:1795
 #, c-format
 msgid ""
 "Font1 width: %ld\n"
@@ -1654,16 +1769,16 @@ msgstr ""
 "©íøka písma1: %ld\n"
 "\n"
 
-#: gui_x11.c:1893
+#: gui_x11.c:1898
 #, c-format
 msgid "Cannot allocate color %s"
 msgstr "Nelze alokovat barvu %s"
 
-#: gui_x11.c:2940
+#: gui_x11.c:2948
 msgid "Cannot allocate memory for debugger sign"
 msgstr "Nelze alokovat pamì» pro symbol ladícího programu"
 
-#: gui_x11.c:2965
+#: gui_x11.c:2973
 msgid "Error -- couldn't read in sign data!"
 msgstr "Chyba -- nelze pøeèíst sign data!"
 
@@ -1829,126 +1944,126 @@ msgstr "   #   øádek"
 msgid "filename / context / line\n"
 msgstr "název souboru/ kontext/ øádek\n"
 
-#: if_cscope.c:1679
+#: if_cscope.c:1685
 msgid "All cscope databases reset"
 msgstr "V¹echny cscope databáze resetovány"
 
-#: if_cscope.c:1746
+#: if_cscope.c:1752
 msgid "no cscope connections\n"
 msgstr "¾ádné cscope spojení\n"
 
-#: if_cscope.c:1750
+#: if_cscope.c:1756
 msgid " # pid    database name                       prepend path\n"
 msgstr " # pid    název databáze                      pøedpona cesty\n"
 
-#: if_cscope.c:1761
+#: if_cscope.c:1767
 #, c-format
 msgid "%2d %-5ld  %-34s  <none>\n"
 msgstr "%2d %-5ld  %-34s  <¾ádný>\n"
 
-#: if_python.c:298
+#: if_python.c:559
 msgid "can't delete OutputObject attributes"
 msgstr "nelze smazat atributy OutputObject"
 
-#: if_python.c:305
+#: if_python.c:566
 msgid "softspace must be an integer"
 msgstr "softspace musí být kladné celé èíslo"
 
-#: if_python.c:313
+#: if_python.c:574
 msgid "invalid attribute"
 msgstr "chybný atribut"
 
-#: if_python.c:352 if_python.c:366
+#: if_python.c:613 if_python.c:627
 msgid "writelines() requires list of strings"
 msgstr "writelines() vy¾aduje seznam øetìzcù"
 
-#: globals.h:885 if_python.c:411
+#: globals.h:927 if_python.c:672
 msgid "Out of memory!"
 msgstr "Nedostatek pamìti!"
 
-#: if_python.c:496
+#: if_python.c:757
 msgid "Python: Error initialising I/O objects"
 msgstr "Python: chyba pøi inicializaci I/O objektù"
 
-#: if_python.c:681 if_tcl.c:1266
+#: if_python.c:942 if_tcl.c:1264
 msgid "invalid expression"
 msgstr "Chybný výraz"
 
-#: if_python.c:695 if_tcl.c:1271
+#: if_python.c:956 if_tcl.c:1269
 msgid "expressions disabled at compile time"
 msgstr "podpora výrazù byla vypnuta pøi pøekladu programu"
 
-#: if_python.c:708
+#: if_python.c:969
 msgid "attempt to refer to deleted buffer"
 msgstr "pokus o odkaz na smazaný buffer"
 
-#: if_python.c:723 if_python.c:764 if_python.c:828 if_tcl.c:1078
+#: if_python.c:984 if_python.c:1025 if_python.c:1089 if_tcl.c:1078
 msgid "line number out of range"
 msgstr "èíslo øádku mimo rozsah"
 
-#: if_python.c:961
+#: if_python.c:1222
 #, c-format
 msgid "<buffer object (deleted) at %8lX>"
 msgstr "(buffer objekt (smazán) na %8lX)"
 
-#: if_python.c:1052 if_tcl.c:700
+#: if_python.c:1313 if_tcl.c:700
 msgid "invalid mark name"
 msgstr "chybné jméno znaèky"
 
-#: if_python.c:1327
+#: if_python.c:1588
 msgid "no such buffer"
 msgstr "¾ádný takový buffer"
 
-#: if_python.c:1415
+#: if_python.c:1676
 msgid "attempt to refer to deleted window"
 msgstr "pokus o odkaz na smazané okno"
 
-#: if_python.c:1456
+#: if_python.c:1721
 msgid "readonly attribute"
 msgstr "atribut pouze_pro_ètení"
 
-#: if_python.c:1469
+#: if_python.c:1734
 msgid "cursor position outside buffer"
 msgstr "umístìní kurzoru mimo buffer"
 
-#: if_python.c:1522
+#: if_python.c:1811
 #, c-format
 msgid "<window object (deleted) at %.8lX>"
 msgstr "(objekt okna (smazán) na %8lX)"
 
-#: if_python.c:1534
+#: if_python.c:1823
 #, c-format
 msgid "<window object (unknown) at %.8lX>"
 msgstr "(objekt okna (neznámý) na %8lX)"
 
-#: if_python.c:1536
+#: if_python.c:1825
 #, c-format
 msgid "<window %d>"
 msgstr "(okno %d)"
 
-#: if_python.c:1614
+#: if_python.c:1901
 msgid "no such window"
 msgstr "¾ádné takové okno"
 
-#: if_python.c:1842 if_python.c:1873 if_python.c:1923 if_python.c:1983
-#: if_python.c:2100 if_python.c:2152 if_tcl.c:548 if_tcl.c:593 if_tcl.c:667
-#: if_tcl.c:737 if_tcl.c:1847
+#: if_python.c:2131 if_python.c:2162 if_python.c:2212 if_python.c:2272
+#: if_python.c:2389 if_python.c:2441 if_tcl.c:548 if_tcl.c:593 if_tcl.c:667
+#: if_tcl.c:737 if_tcl.c:1845
 msgid "cannot save undo information"
 msgstr "nelze ulo¾it zpìtné informace"
 
-#: if_python.c:1844 if_python.c:1930 if_python.c:1994
+#: if_python.c:2133 if_python.c:2219 if_python.c:2283
 msgid "cannot delete line"
 msgstr "nelze smazat øádek"
 
-#: if_python.c:1875 if_python.c:2010 if_tcl.c:554 if_tcl.c:1869
+#: if_python.c:2164 if_python.c:2299 if_tcl.c:554 if_tcl.c:1867
 msgid "cannot replace line"
 msgstr "nelze nahradit øádek"
 
-#: if_python.c:2026 if_python.c:2102 if_python.c:2160
+#: if_python.c:2315 if_python.c:2391 if_python.c:2449
 msgid "cannot insert line"
 msgstr "nelze vlo¾it øádek"
 
-#: if_python.c:2264
+#: if_python.c:2553
 msgid "string cannot contain newlines"
 msgstr "øetìzec nesmí obsahovat znaky nového øádku"
 
@@ -1982,56 +2097,56 @@ msgstr "øádek %d sloupec %d"
 msgid "cannot insert/append line"
 msgstr "nelze vlo¾it/pøipojit øádek"
 
-#: if_tcl.c:1132
+#: if_tcl.c:1130
 msgid "unknown flag: "
 msgstr "neznámý pøíznak: "
 
-#: if_tcl.c:1202
+#: if_tcl.c:1200
 msgid "unknown vimOption"
 msgstr "neznámá vimOption"
 
-#: if_tcl.c:1287
+#: if_tcl.c:1285
 msgid "keyboard interrupt"
 msgstr "pøeru¹ení z klávesnice"
 
-#: if_tcl.c:1292
+#: if_tcl.c:1290
 msgid "vim error"
 msgstr "chyba vim"
 
-#: if_tcl.c:1335
+#: if_tcl.c:1333
 msgid "cannot create buffer/window command: object is being deleted"
 msgstr "nelze vytvoøit pøíkaz bufferu/okna: objekt smazán"
 
-#: if_tcl.c:1409
+#: if_tcl.c:1407
 msgid ""
 "cannot register callback command: buffer/window is already being deleted"
 msgstr ""
 "nelze zaregistrovat pøíkaz zpìtného volání: buffer/okno ji¾ bylo smazáno"
 
 #. This should never happen.  Famous last word?
-#: if_tcl.c:1426
+#: if_tcl.c:1424
 msgid ""
 "TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org"
 msgstr ""
 "TCL FATAL ERROR: reflist po¹kozen!? Oznamte, prosím, tuto chybu na "
 "vim-dev@vim.org"
 
-#: if_tcl.c:1427
+#: if_tcl.c:1425
 msgid "cannot register callback command: buffer/window reference not found"
 msgstr ""
 "nelze zaregistrovat pøíkaz zpìtného volání: odkaz na buffer/okno nenalezen"
 
-#: if_tcl.c:1742
+#: if_tcl.c:1740
 msgid "TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org"
 msgstr ""
 "TCL CHYBA: návratový kód není celé èíslo!? Oznamte, prosím, tuto chybu na "
 "vim-dev@vim.org"
 
-#: if_tcl.c:1855
+#: if_tcl.c:1853
 msgid "cannot get line"
 msgstr "nelze pøeèíst øádek"
 
-#: main.c:50 option.c:2689 option.c:2791
+#: main.c:50 option.c:2782 option.c:2906
 msgid "Unknown option"
 msgstr "Neznámá volba"
 
@@ -2061,7 +2176,7 @@ msgstr ""
 
 #: main.c:93
 msgid "[file ..]       edit specified file(s)"
-msgstr "[SOUBOR ..           editovat SOUBOR(y)"
+msgstr "[SOUBOR] ..          editovat SOUBOR(y)"
 
 #: main.c:94
 msgid "-               read text from stdin"
@@ -2078,14 +2193,16 @@ msgstr "-q [chybový soubor]  editovat soubor na místì výskytu první chyby"
 #: main.c:106
 msgid ""
 "\n"
+"\n"
 "usage:"
 msgstr ""
+"\n"
 "\n"
 "pou¾ití:"
 
 #: main.c:109
-msgid " vim [options] "
-msgstr " vim [pøepínaèe]"
+msgid " vim [arguments] "
+msgstr "vim [pøepínaèe] "
 
 #: main.c:113
 msgid ""
@@ -2099,15 +2216,15 @@ msgstr ""
 msgid ""
 "\n"
 "\n"
-"Options:\n"
+"Arguments:\n"
 msgstr ""
 "\n"
 "\n"
-"Pøepínaèe:\n"
+"Argumenty:\n"
 
 #: main.c:117
-msgid "--\t\t\tEnd of options"
-msgstr "--\t\t\tKonec pøepínaèù"
+msgid "--\t\t\tOnly file names after this"
+msgstr "--\t\t\tMohou následovat pouze názvy souborù"
 
 #: main.c:119
 msgid "-register\t\tRegister this gvim for OLE"
@@ -2170,245 +2287,263 @@ msgid "-V[N]\t\tVerbose level"
 msgstr "-V[N]\t\tÚroveò výpisu hlá¹ek"
 
 #: main.c:139
-msgid "-n\t\t\tNo swap file, use memory only"
-msgstr "-n\t\t\tNebude vytváøet odkládací soubor, pou¾ívat pouze pamì»"
+msgid "-D\t\t\tDebugging mode"
+msgstr "-D\t\t\tLadící mód"
 
 #: main.c:140
+msgid "-n\t\t\tNo swap file, use memory only"
+msgstr "-n\t\t\tNebude vytváøet odkládací soubor, bude pou¾ívat pouze pamì»"
+
+#: main.c:141
 msgid "-r\t\t\tList swap files and exit"
 msgstr "-r\t\t\tVypí¹e seznam odkládacích souborù a skonèí"
 
-#: main.c:141
-msgid "-r (with file name)\tRecover crashed session"
-msgstr "-r (s názvem souboru)\tObnoví pøeru¹ené sezení"
-
 #: main.c:142
+msgid "-r (with file name)\tRecover crashed session"
+msgstr "-r název souboru\tObnoví pøeru¹ené sezení"
+
+#: main.c:143
 msgid "-L\t\t\tSame as -r"
 msgstr "-L\t\t\tStejné jako -r"
 
-#: main.c:144
+#: main.c:145
 msgid "-f\t\t\tDon't use newcli to open window"
 msgstr "-f\t\t\tNebude pou¾ívat newcli pro otevøení okna"
 
-#: main.c:145
+#: main.c:146
 msgid "-d <device>\t\tUse <device> for I/O"
 msgstr "-d <zaøízení>\t\tPou¾ít <zaøízení> pro I/O"
 
-#: main.c:148
+#: main.c:149
 msgid "-H\t\t\tstart in Hebrew mode"
 msgstr "-H\t\t\tnastartuje v hebrejském módu"
 
-#: main.c:151
+#: main.c:152
 msgid "-F\t\t\tstart in Farsi mode"
 msgstr "-F\t\t\tnastartuje ve Farsi módu"
 
-#: main.c:153
+#: main.c:154
 msgid "-T <terminal>\tSet terminal type to <terminal>"
 msgstr "-T <terminál>\tNastaví typ terminálu na <terminál>"
 
-#: main.c:154
-msgid "-o[N]\t\tOpen N windows (default: one for each file)"
-msgstr "-o[N]\t\tOtevøe N oken (implicitnì jedno pro ka¾dý soubor)"
-
 #: main.c:155
-msgid "+\t\t\tStart at end of file"
-msgstr "+\t\t\tNastaví kurzor na konec souboru"
-
-#: main.c:156
-msgid "+<lnum>\t\tStart at line <lnum>"
-msgstr "+<øádek>\t\tNastaví kurzor na <øádek>"
-
-#: main.c:157
-msgid "-c <command>\t\tExecute <command> first"
-msgstr "-c <pøíkaz>\t\tNejprve vykoná <pøíkaz>"
-
-#: main.c:158
-msgid "-s <scriptin>\tRead commands from script file <scriptin>"
-msgstr "-s <skript>\tBude èíst pøíkazy ze <skriptu>"
-
-#: main.c:159
-msgid "-w <scriptout>\tAppend commands to script file <scriptout>"
-msgstr "-w <skript>\tBude pøipojovat pøíkazy do <skriptu>"
-
-#: main.c:160
-msgid "-W <scriptout>\tWrite commands to script file <scriptout>"
-msgstr "-W <skript>\tUlo¾ pøíkazy do <skriptu>"
-
-#: main.c:161
 msgid "-u <vimrc>\t\tUse <vimrc> instead of any .vimrc"
 msgstr "-u <vimrc>\t\tPou¾ije <vimrc> místo jakéhokoliv .vimrc"
 
-#: main.c:163
+#: main.c:157
 msgid "-U <gvimrc>\t\tUse <gvimrc> instead of any .gvimrc"
 msgstr "-U <gvimrc>\t\tPou¾ije <gvimrc> místo jakéhokoliv .gvimrc"
 
+#: main.c:159
+msgid "--noplugin\t\tDon't load plugin scripts"
+msgstr "--noplugin\t\tNenahraje 'plugin' skripty"
+
+#: main.c:160
+msgid "-o[N]\t\tOpen N windows (default: one for each file)"
+msgstr "-o[N]\t\tOtevøe N oken (implicitnì jedno pro ka¾dý soubor)"
+
+#: main.c:161
+msgid "+\t\t\tStart at end of file"
+msgstr "+\t\t\tNastaví kurzor na konec souboru"
+
+#: main.c:162
+msgid "+<lnum>\t\tStart at line <lnum>"
+msgstr "+<øádek>\t\tNastaví kurzor na <øádek>"
+
+#: main.c:163
+msgid "-c <command>\t\tExecute <command> after loading the first file"
+msgstr "-c <pøíkaz>\t\tPo nahrání prvního souboru vykoná <pøíkaz>"
+
+#: main.c:164
+msgid ""
+"-S <session>\tExecute commands in file <session> after loading the first file"
+msgstr ""
+"-S <sezení>\t\tPo nahrání prvního souboru vykoná pøíkazy v souboru <sezení>"
+
+#: main.c:165
+msgid "-s <scriptin>\tRead Normal mode commands from file <scriptin>"
+msgstr "-s <skript>\t\tNaète pøíkazy normálního módu ze <skriptu>"
+
 #: main.c:166
+msgid "-w <scriptout>\tAppend all typed commands to file <scriptout>"
+msgstr "-w <skript>\t\tPøipojí v¹echny napsané pøíkazy do souboru <skript>"
+
+#: main.c:167
+msgid "-W <scriptout>\tWrite all typed commands to file <scriptout>"
+msgstr "-W <skript>\t\tUlo¾í v¹echny napsané pøíkazy do souboru <skript>"
+
+#: main.c:169
 msgid "-x\t\t\tEdit encrypted files"
 msgstr "-x\t\t\tEditace za¹ifrovaných souborù"
 
-#: main.c:169
+#: main.c:172
+msgid "-X\t\t\tDo not connect to X server"
+msgstr "-X\t\t\tNepøipojí se k X serveru"
+
+#: main.c:175
 msgid "-i <viminfo>\t\tUse <viminfo> instead of .viminfo"
 msgstr "-i <viminfo>\t\tPou¾ije <viminfo> místo jakéhokoliv .viminfo"
 
-#: main.c:171
+#: main.c:177
 msgid "-h\t\t\tprint Help (this message) and exit"
 msgstr "-h\t\t\tVypí¹e tuto nápovìdu a skonèí"
 
-#: main.c:172
+#: main.c:178
 msgid "--version\t\tprint version information and exit"
 msgstr "--version\t\tvypí¹e informace o verzi a skonèí"
 
-#: main.c:176
+#: main.c:182
 msgid ""
 "\n"
-"Options recognised by gvim (Motif version):\n"
+"Arguments recognised by gvim (Motif version):\n"
 msgstr ""
 "\n"
 "Pøepínaèe pro gvim (Motif verzi):\n"
 
-#: main.c:179
+#: main.c:185
 msgid ""
 "\n"
-"Options recognised by gvim (Athena version):\n"
+"Arguments recognised by gvim (Athena version):\n"
 msgstr ""
 "\n"
 "Pøepínaèe pro gvim (Athena verzi):\n"
 
-#: main.c:182
+#: main.c:188
 msgid "-display <display>\tRun vim on <display>"
 msgstr "-display <display>\tSpustí vim na <display>"
 
-#: main.c:183
+#: main.c:189
 msgid "-iconic\t\tStart vim iconified"
 msgstr "-iconic\t\tSpustí vim minimalizované"
 
-#: main.c:185
+#: main.c:191
 msgid "-name <name>\t\tUse resource as if vim was <name>"
 msgstr "-name <název>\t\tPou¾ije resource jako by vim mìl <název>"
 
-#: main.c:186
+#: main.c:192
 msgid "\t\t\t  (Unimplemented)\n"
 msgstr "\t\t\t  (není implementováno)\n"
 
-#: main.c:188
+#: main.c:194
 msgid "-background <color>\tUse <color> for the background (also: -bg)"
 msgstr "-background <barva>\tNastaví <barvu> pozadí (také -bg)"
 
-#: main.c:189
+#: main.c:195
 msgid "-foreground <color>\tUse <color> for normal text (also: -fg)"
 msgstr "-foreground <barva>\tNastaví <barvu> popøedí (také -fg)"
 
-#: main.c:190 main.c:208
+#: main.c:196 main.c:214
 msgid "-font <font>\t\tUse <font> for normal text (also: -fn)"
 msgstr "-font <písmo>\t\tNastaví <písmo> normálního textu (také -fn)"
 
-#: main.c:191
+#: main.c:197
 msgid "-boldfont <font>\tUse <font> for bold text"
 msgstr "-boldfont <písmo>\tNastaví <písmo> pro zvýraznìný text"
 
-#: main.c:192
+#: main.c:198
 msgid "-italicfont <font>\tUse <font> for italic text"
 msgstr "-italicfont <písmo>\tNastaví <písmo> pro kurzívu"
 
-#: main.c:193 main.c:209
+#: main.c:199 main.c:215
 msgid "-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"
 msgstr "-geometry <geometrie>\tNastaví <geometrii> (také -geom)"
 
-#: main.c:194
+#: main.c:200
 msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr "-borderwidth <¹íøka>\tNastaví <¹íøku> okrajù (také -bw)"
 
-#: main.c:195
+#: main.c:201
 msgid "-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"
 msgstr "-scrollbarwidth <¹íøku>\tNastaví <¹íøku> posunovací li¹ty (také -sw)"
 
-#: main.c:196
+#: main.c:202
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"
 msgstr "-menuheight <vý¹ka>\tNastaví <vý¹ku> nabídky (také -mh)"
 
-#: main.c:197 main.c:210
+#: main.c:203 main.c:216
 msgid "-reverse\t\tUse reverse video (also: -rv)"
 msgstr "-reverse\t\tPou¾ije reverzní barvy (také -rv)"
 
-#: main.c:198
+#: main.c:204
 msgid "+reverse\t\tDon't use reverse video (also: +rv)"
 msgstr "+reverse\t\tNepou¾ije reverzní barvy (také +rv)"
 
-#: main.c:199
+#: main.c:205
 msgid "-xrm <resource>\tSet the specified resource"
 msgstr "-xrm <resource>\tNastaví zadaný <resource>"
 
-#: main.c:202
+#: main.c:208
 msgid ""
 "\n"
-"Options recognised by gvim (RISC OS version):\n"
+"Arguments recognised by gvim (RISC OS version):\n"
 msgstr ""
 "\n"
 "Pøepínaèe pro gvim (RISC OS verzi):\n"
 
-#: main.c:203
+#: main.c:209
 msgid "--columns <number>\tInitial width of window in columns"
 msgstr "--columns <poèet>\t<poèet> sloupcù na okno"
 
-#: main.c:204
+#: main.c:210
 msgid "--rows <number>\tInitial height of window in rows"
 msgstr "--rows <poèet>\t<poèet> øádkù na okno"
 
-#: main.c:207
+#: main.c:213
 msgid ""
 "\n"
-"Options recognised by gvim (GTK+ version):\n"
+"Arguments recognised by gvim (GTK+ version):\n"
 msgstr ""
 "\n"
 "Pøepínaèe pro gvim (GTK+ verzi):\n"
 
-#: main.c:211
+#: main.c:217
 msgid "-display <display>\tRun vim on <display> (also: --display)"
 msgstr "-display <display>\tspustí vim na <display> (také --display)"
 
-#: main.c:775 main.c:825
+#: main.c:219
+msgid "--help\t\tShow Gnome arguments"
+msgstr "--help\t\tVypí¹e Gnome pøepínaèe"
+
+#: main.c:784 main.c:834
 msgid "Attempt to open script file again: \""
 msgstr "Pokus o opìtovné otevøení skriptu: \""
 
-#: main.c:784
-msgid "Cannot open \""
-msgstr "Nelze otevøít \""
+#: main.c:793
+msgid "Cannot open for reading: \""
+msgstr "Nelze otevøít %s pro zápis"
 
-#: main.c:786
-msgid "\" for reading\n"
-msgstr "\" pro ètení\n"
+#: main.c:844
+msgid "Cannot open for script output: \""
+msgstr "Nelze otevøít pro výstup skriptu: \""
 
-#: main.c:835
-msgid "cannot open \""
-msgstr "nelze otevøít \""
+#: main.c:846
+msgid "\"\n"
+msgstr "\"\n"
 
-#: main.c:837
-msgid "\" for output\n"
-msgstr "\" pro výstup\n"
-
-#: main.c:917
+#: main.c:921
 #, c-format
 msgid "%d files to edit\n"
 msgstr "poèet souborù pro editaci: %d\n"
 
-#: main.c:975
+#: main.c:979
 msgid "Vim: Warning: Output is not to a terminal\n"
 msgstr "Vim: Varování: výstup nesmìøuje na terminál\n"
 
-#: main.c:977
+#: main.c:981
 msgid "Vim: Warning: Input is not from a terminal\n"
 msgstr "Vim: Varování: vstup nepochází z terminálu\n"
 
-#: mark.c:650
+#: mark.c:703
 msgid "No marks set"
 msgstr "Nejsou nastaveny ¾ádné znaèky"
 
-#: mark.c:652
+#: mark.c:705
 #, c-format
 msgid "No marks matching \"%s\""
 msgstr "\"%s\" nevyhovují ¾ádné znaèky"
 
 #. Highlight title
-#: mark.c:663
+#: mark.c:716
 msgid ""
 "\n"
 "mark line  col file/text"
@@ -2417,7 +2552,7 @@ msgstr ""
 "znaèka øádek  sloupec soubor/text"
 
 #. Highlight title
-#: mark.c:700
+#: mark.c:753
 msgid ""
 "\n"
 " jump line  col file/text"
@@ -2425,11 +2560,7 @@ msgstr ""
 "\n"
 " skok øádek sloupec soubor/text"
 
-#: mark.c:926
-msgid "Illegal file mark name"
-msgstr "Chybný název souborové znaèky"
-
-#: mark.c:958
+#: mark.c:1079
 msgid ""
 "\n"
 "# File marks:\n"
@@ -2437,15 +2568,24 @@ msgstr ""
 "\n"
 "# Souborové znaèky:\n"
 
-#: mark.c:1063
+#. Write the jumplist with -'
+#: mark.c:1116
+msgid ""
+"\n"
+"# Jumplist (newest first):\n"
+msgstr ""
+"\n"
+"# Seznam skokù (poèínaje nejnovìj¹í polo¾kou):\n"
+
+#: mark.c:1210
 msgid ""
 "\n"
 "# History of marks within files (newest to oldest):\n"
 msgstr ""
 "\n"
-"# Historie znaèek v souborech (od nejnovìj¹í po nejstar¹í polo¾ku:\n"
+"# Historie znaèek v souborech (poèínaje nejnovìj¹í polo¾kou):\n"
 
-#: mark.c:1139
+#: mark.c:1293
 msgid "Missing '>'"
 msgstr "Chybí '>'"
 
@@ -2458,72 +2598,72 @@ msgstr "Chyba pøi uzavírání odkládacího souboru"
 msgid "block was not locked"
 msgstr "blok nebyl zamknut"
 
-#: memfile.c:956
+#: memfile.c:957
 msgid "Seek error in swap file read"
 msgstr "chyba posunu ukazovátka pøi ètení odkládacího souboru"
 
-#: memfile.c:961
+#: memfile.c:962
 msgid "Read error in swap file"
 msgstr "chyba pøi ètení odkládacího souboru"
 
-#: memfile.c:1013
+#: memfile.c:1014
 msgid "Seek error in swap file write"
 msgstr "chyba posunu ukazovátka pøi ukládání do odkládacího souboru"
 
-#: memfile.c:1031
+#: memfile.c:1032
 msgid "Write error in swap file"
 msgstr "chyba pøi ukládání do odkládacího souboru"
 
-#: memline.c:278
+#: memline.c:274
 msgid "didn't get block nr 0?"
 msgstr "nelze získat blok 0?"
 
-#: memline.c:318
+#: memline.c:314
 msgid "didn't get block nr 1?"
 msgstr "nelze získat blok 1?"
 
-#: memline.c:336
+#: memline.c:332
 msgid "didn't get block nr 2?"
 msgstr "nelze získat blok 2?"
 
 #. could not (re)open the swap file, what can we do????
-#: memline.c:446
+#: memline.c:442
 msgid "Oops, lost the swap file!!!"
 msgstr "Jéje, odkládací soubor byl ztracen!!!"
 
-#: memline.c:451
+#: memline.c:447
 msgid "Could not rename swap file"
 msgstr "Nelze pøejmenovat odkládací soubor"
 
-#: memline.c:522
+#: memline.c:514
 #, c-format
 msgid "Unable to open swap file for \"%s\", recovery impossible"
 msgstr "Nelze otevøít odkládací soubor pro \"%s\""
 
-#: memline.c:614
+#: memline.c:606
 msgid "ml_timestamp: Didn't get block 0??"
 msgstr "ml_timestamp: nelze získat blok 0??"
 
-#: memline.c:752
+#: memline.c:744
 #, c-format
 msgid "No swap file found for %s"
 msgstr "Odkládací soubor pro %s nebyl nalezen"
 
-#: memline.c:762
+#: memline.c:754
 msgid "Enter number of swap file to use (0 to quit): "
 msgstr ""
 "Zadejte èíslo odkládacího souboru, který se má pou¾ít (0 pro ukonèení): "
 
-#: memline.c:806
+#: memline.c:798
 #, c-format
 msgid "Cannot open %s"
 msgstr "Nelze otevøít %s"
 
-#: memline.c:828
+#: memline.c:820
 msgid "Unable to read block 0 from "
 msgstr "Nelze èíst blok 0 z "
 
-#: memline.c:831
+#: memline.c:823
 msgid ""
 "\n"
 "Maybe no changes were made or Vim did not update the swap file."
@@ -2531,32 +2671,28 @@ msgstr ""
 "\n"
 "Mo¾ná nedo¹lo k ¾ádným zmìnám, nebo Vim neaktualizoval odkládací soubor."
 
-#: memline.c:840 memline.c:855
-msgid "The file "
-msgstr "Soubor "
-
-#: memline.c:842 memline.c:859
+#: memline.c:833 memline.c:849
 msgid " cannot be used with this version of Vim.\n"
 msgstr " nelze pou¾ít s touto verzí Vim.\n"
 
-#: memline.c:843
+#: memline.c:834
 msgid "Use Vim version 3.0.\n"
 msgstr "Pou¾ijte Vim verze 3.0.\n"
 
-#: memline.c:849
+#: memline.c:840
 #, c-format
 msgid "%s does not look like a Vim swap file"
 msgstr "%s se nezdá být odkládacím souborem Vim"
 
-#: memline.c:863
+#: memline.c:853
 msgid " cannot be used on this computer.\n"
 msgstr " nelze pou¾ít na tomto poèítaèi.\n"
 
-#: memline.c:865
+#: memline.c:855
 msgid "The file was created on "
 msgstr "Soubor byl vytvoøen "
 
-#: memline.c:869
+#: memline.c:859
 msgid ""
 ",\n"
 "or the file has been damaged."
@@ -2564,75 +2700,75 @@ msgstr ""
 ",\n"
 "nebo byl soubor po¹kozen."
 
-#: memline.c:898
+#: memline.c:888
 #, c-format
 msgid "Using swap file \"%s\""
 msgstr "Pou¾ívám odkládací soubor \"%s\""
 
-#: memline.c:910
+#: memline.c:900
 #, c-format
 msgid "Original file \"%s\""
 msgstr "Pùvodní soubor \"%s\""
 
-#: memline.c:929
+#: memline.c:919
 msgid "Warning: Original file may have been changed"
 msgstr "Varování: Pùvodní soubor mohl být zmìnìn"
 
-#: memline.c:970
+#: memline.c:960
 #, c-format
 msgid "Unable to read block 1 from %s"
 msgstr "Nelze èíst blok 1 z %s"
 
-#: memline.c:974
+#: memline.c:964
 msgid "???MANY LINES MISSING"
 msgstr "???CHYBÍ MNOHO ØÁDKÙ"
 
-#: memline.c:990
+#: memline.c:980
 msgid "???LINE COUNT WRONG"
 msgstr "???CHYBNÝ POÈET ØÁDKÙ"
 
-#: memline.c:997
+#: memline.c:987
 msgid "???EMPTY BLOCK"
 msgstr "???PRÁZDNÝ BLOK"
 
-#: memline.c:1023
+#: memline.c:1013
 msgid "???LINES MISSING"
 msgstr "???CHYBÌJÍCÍ ØÁDKY"
 
-#: memline.c:1055
+#: memline.c:1045
 #, c-format
 msgid "Block 1 ID wrong (%s not a .swp file?)"
 msgstr "ID bloku 1 je chybné (je %s odkládacím souborem?)"
 
-#: memline.c:1060
+#: memline.c:1050
 msgid "???BLOCK MISSING"
 msgstr "???CHYBÍ BLOK"
 
-#: memline.c:1076
+#: memline.c:1066
 msgid "??? from here until ???END lines may be messed up"
 msgstr "od ??? po ???END mohou být øádky pomíchané"
 
-#: memline.c:1092
+#: memline.c:1082
 msgid "??? from here until ???END lines may have been inserted/deleted"
 msgstr "od ??? po ???END mohou být vlo¾ené/smazané øádky"
 
-#: memline.c:1112
+#: memline.c:1102
 msgid "???END"
 msgstr "???KONEC"
 
-#: memline.c:1138
+#: memline.c:1128
 msgid "Recovery Interrupted"
 msgstr "Obnova pøeru¹ena"
 
-#: memline.c:1140
+#: memline.c:1130
 msgid "Errors detected while recovering; look for lines starting with ???"
 msgstr "V prùbìhu obnovy do¹lo k chybám; zkontrolujte øádky zaèínající na ???"
 
-#: memline.c:1143
+#: memline.c:1133
 msgid "Recovery completed. You should check if everything is OK."
 msgstr "Obnova dokonèena. Zkontrolujte, zda je v¹e v poøádku."
 
-#: memline.c:1144
+#: memline.c:1134
 msgid ""
 "\n"
 "(You might want to write out this file under another name\n"
@@ -2640,58 +2776,58 @@ msgstr ""
 "\n"
 "(Zva¾te ulo¾ení tohoto souboru pod jiným názvem\n"
 
-#: memline.c:1145
+#: memline.c:1135
 msgid "and run diff with the original file to check for changes)\n"
 msgstr "a pomocí programu diff zjistìte zmìny oproti pùvodnímu souboru.)\n"
 
-#: memline.c:1146
+#: memline.c:1136
 msgid ""
 "Delete the .swp file afterwards.\n"
 "\n"
 msgstr "Poté sma¾te odkládací soubor.\n"
 
 #. use msg() to start the scrolling properly
-#: memline.c:1199
+#: memline.c:1189
 msgid "Swap files found:"
 msgstr "Nalezené odkládací soubory:"
 
-#: memline.c:1377
+#: memline.c:1367
 msgid "   In current directory:\n"
 msgstr "   V aktuálním adresáøi:\n"
 
-#: memline.c:1379
+#: memline.c:1369
 msgid "   Using specified name:\n"
 msgstr "   Se zadaným názvem:\n"
 
-#: memline.c:1383
+#: memline.c:1373
 msgid "   In directory "
 msgstr "   V adresáøi "
 
-#: memline.c:1401
+#: memline.c:1391
 msgid "      -- none --\n"
 msgstr "      -- ¾ádné --\n"
 
-#: memline.c:1465 memline.c:3626
+#: memline.c:1455 memline.c:3611
 msgid "             dated: "
 msgstr "             datum vytvoøení: "
 
-#: memline.c:1476
+#: memline.c:1466
 msgid "          owned by: "
 msgstr "          vlastník: "
 
-#: memline.c:1494
+#: memline.c:1484
 msgid "         [from Vim version 3.0]"
 msgstr "         [od Vim verze 3.0]"
 
-#: memline.c:1498
+#: memline.c:1488
 msgid "         [does not look like a Vim swap file]"
 msgstr "         [nevypadá jako odkládací soubor Vim]"
 
-#: memline.c:1502
+#: memline.c:1492
 msgid "         file name: "
 msgstr "         název souboru: "
 
-#: memline.c:1514
+#: memline.c:1504
 msgid ""
 "\n"
 "          modified: "
@@ -2699,15 +2835,15 @@ msgstr ""
 "\n"
 "          datum zmìny: "
 
-#: memline.c:1515
+#: memline.c:1505
 msgid "YES"
 msgstr "ANO"
 
-#: memline.c:1515
+#: memline.c:1505
 msgid "no"
 msgstr "ne"
 
-#: memline.c:1519
+#: memline.c:1509
 msgid ""
 "\n"
 "         host name: "
@@ -2715,7 +2851,7 @@ msgstr ""
 "\n"
 "         název poèítaèe: "
 
-#: memline.c:1525
+#: memline.c:1515
 msgid ""
 "\n"
 "         user name: "
@@ -2723,7 +2859,7 @@ msgstr ""
 "\n"
 "         u¾ivatelské jméno: "
 
-#: memline.c:1531
+#: memline.c:1521
 msgid ""
 "\n"
 "        process ID: "
@@ -2731,11 +2867,11 @@ msgstr ""
 "\n"
 "        ID procesu : "
 
-#: memline.c:1537
+#: memline.c:1527
 msgid " (still running)"
 msgstr " (stále aktivní)"
 
-#: memline.c:1549
+#: memline.c:1539
 msgid ""
 "\n"
 "         [not usable with this version of Vim]"
@@ -2743,7 +2879,7 @@ msgstr ""
 "\n"
 "         [nepou¾itelné s touto verzí Vim]"
 
-#: memline.c:1552
+#: memline.c:1542
 msgid ""
 "\n"
 "         [not usable on this computer]"
@@ -2751,92 +2887,92 @@ msgstr ""
 "\n"
 "         [nepou¾itelné na tomto poèítaèi]"
 
-#: memline.c:1557
+#: memline.c:1547
 msgid "         [cannot be read]"
 msgstr "         [nelze pøeèíst]"
 
-#: memline.c:1561
+#: memline.c:1551
 msgid "         [cannot be opened]"
 msgstr "         [nelze otevøít]"
 
-#: memline.c:1746
+#: memline.c:1736
 msgid "Cannot preserve, there is no swap file"
 msgstr "Nelze zachovat - odkládací soubor neexistuje."
 
-#: memline.c:1793
+#: memline.c:1783
 msgid "File preserved"
 msgstr "Soubor zachován"
 
-#: memline.c:1795
+#: memline.c:1785
 msgid "Preserve failed"
 msgstr "Uchování se nezdaøilo"
 
-#: memline.c:1859
+#: memline.c:1849
 #, c-format
 msgid "ml_get: invalid lnum: %ld"
 msgstr "ml_get: chybné èíslo øádku: %ld"
 
-#: memline.c:1885
+#: memline.c:1875
 #, c-format
 msgid "ml_get: cannot find line %ld"
 msgstr "ml_get: nelze nalézt øádek %ld"
 
-#: memline.c:2273
+#: memline.c:2263
 msgid "pointer block id wrong 3"
 msgstr "chybné id ukazatele na blok 3"
 
-#: memline.c:2353
+#: memline.c:2343
 msgid "stack_idx should be 0"
 msgstr "stack_idx by mìlo mít hodnotu 3"
 
-#: memline.c:2415
+#: memline.c:2405
 msgid "Updated too many blocks?"
 msgstr "Aktualizováno pøíli¹ mnoho blokù?"
 
-#: memline.c:2572
+#: memline.c:2562
 msgid "pointer block id wrong 4"
 msgstr "chybné id ukazatele na blok 4"
 
-#: memline.c:2599
+#: memline.c:2589
 msgid "deleted block 1?"
 msgstr "smazán blok 1?"
 
-#: memline.c:2799
+#: memline.c:2789
 #, c-format
 msgid "Cannot find line %ld"
 msgstr "Nelze nalézt øádek %ld"
 
-#: memline.c:3042
+#: memline.c:3032
 msgid "pointer block id wrong"
 msgstr "chybné id ukazatele na blok"
 
-#: memline.c:3058
+#: memline.c:3048
 msgid "pe_line_count is zero"
 msgstr "pe_line_count má nulovou hodnotu"
 
-#: memline.c:3087
+#: memline.c:3077
 #, c-format
 msgid "line number out of range: %ld past the end"
 msgstr "poèet øádkù mimo rozsah: %ld > celkový poèet øádkù"
 
-#: memline.c:3091
+#: memline.c:3081
 #, c-format
 msgid "line count wrong in block %ld"
 msgstr "chybný poèet øádkù v bloku %ld"
 
-#: memline.c:3140
+#: memline.c:3130
 msgid "Stack size increases"
 msgstr "Nárùst velikosti zásobníku"
 
-#: memline.c:3186
+#: memline.c:3176
 msgid "pointer block id wrong 2"
 msgstr "chybné id ukazatele na blok 2"
 
-#: memline.c:3616
+#: memline.c:3601
 msgid "ATTENTION"
 msgstr "POZOR"
 
-#: memline.c:3617
+#: memline.c:3602
 msgid ""
 "\n"
 "Found a swap file by the name \""
@@ -2844,31 +2980,29 @@ msgstr ""
 "\n"
 "Nalezen odkládací soubor se jménem \""
 
-#: memline.c:3621
+#: memline.c:3606
 msgid "While opening file \""
 msgstr "Pøi otevírání souboru\""
 
-#: memline.c:3630
+#. Some of these messages are long to allow translation to
+#. * other languages.
+#: memline.c:3617
 msgid ""
 "\n"
 "(1) Another program may be editing the same file.\n"
+"    If this is the case, be careful not to end up with two\n"
+"    different instances of the same file when making changes.\n"
 msgstr ""
 "\n"
 "(1) Soubor mù¾e být editován jiným programem.\n"
+"    Je-li tomu tak, pak si dejte pozor, aby jste po ulo¾ení zmìn\n"
+"    nemìli dvì rùzné verze tého¾ souboru.\n"
 
-#: memline.c:3631
-msgid "    If this is the case, be careful not to end up with two\n"
-msgstr "    Je-li tomu tak, pak si dejte pozor, aby jste po ulo¾ení zmìn\n"
-
-#: memline.c:3632
-msgid "    different instances of the same file when making changes.\n"
-msgstr "    nemìli dvì rùzné verze tého¾ souboru.\n"
-
-#: memline.c:3633
+#: memline.c:3618
 msgid "    Quit, or continue with caution.\n"
 msgstr "    Ukonèete program, nebo opatrnì pokraèujte v editaci.\n"
 
-#: memline.c:3634
+#: memline.c:3619
 msgid ""
 "\n"
 "(2) An edit session for this file crashed.\n"
@@ -2876,11 +3010,11 @@ msgstr ""
 "\n"
 "(2) Editace tohoto souboru byla pøeru¹ena neèekaným ukonèením programu.\n"
 
-#: memline.c:3635
+#: memline.c:3620
 msgid "    If this is the case, use \":recover\" or \"vim -r "
 msgstr "    Je-li tomu tak, pak pou¾ijte \":recover\" èi \"vim -r "
 
-#: memline.c:3637
+#: memline.c:3622
 msgid ""
 "\"\n"
 "    to recover the changes (see \":help recovery)\".\n"
@@ -2888,11 +3022,11 @@ msgstr ""
 "\"\n"
 "    pro obnovení zmìn (viz \":help recovery)\".\n"
 
-#: memline.c:3638
+#: memline.c:3623
 msgid "    If you did this already, delete the swap file \""
 msgstr "    Pokud jste tak ji¾ uèinil, tak sma¾te odkládací soubor \""
 
-#: memline.c:3640
+#: memline.c:3625
 msgid ""
 "\"\n"
 "    to avoid this message.\n"
@@ -2901,23 +3035,23 @@ msgstr ""
 "\"\n"
 "    a tato zpráva se ji¾ nebude objevovat.\n"
 
-#: memline.c:3654 memline.c:3658
+#: memline.c:3639 memline.c:3643
 msgid "Swap file \""
 msgstr "Odkládací soubor \""
 
-#: memline.c:3655 memline.c:3661
+#: memline.c:3640 memline.c:3646
 msgid "\" already exists!"
 msgstr "\" ji¾ existuje!"
 
-#: memline.c:3664
+#: memline.c:3649
 msgid "VIM - ATTENTION"
 msgstr "VIM - POZOR"
 
-#: memline.c:3666
+#: memline.c:3651
 msgid "Swap file already exists!"
 msgstr "Odkládací soubor ji¾ existuje!"
 
-#: memline.c:3670
+#: memline.c:3655
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -2929,7 +3063,7 @@ msgstr ""
 "&Obnovit soubor\n"
 "&Konec"
 
-#: memline.c:3672
+#: memline.c:3657
 msgid ""
 "&Open Read-Only\n"
 "&Edit anyway\n"
@@ -2943,45 +3077,45 @@ msgstr ""
 "&Konec\n"
 "&Smazat"
 
-#: memline.c:3710
+#: memline.c:3700
 msgid "Too many swap files found"
 msgstr "Pøíli¹ mnoho odkládacích souborù"
 
-#: globals.h:917 menu.c:212
+#: globals.h:957 menu.c:220
 msgid "Trailing characters"
 msgstr "Nadbyteèné znaky na konci"
 
-#: menu.c:397
+#: menu.c:405
 msgid "Menu path must not lead to a sub-menu"
 msgstr "Cesta nabídkou nesmí vést do podnabídky"
 
-#: menu.c:407 menu.c:648 menu.c:709 menu.c:884 menu.c:1859 menu.c:1991
+#: menu.c:415 menu.c:656 menu.c:717 menu.c:892 menu.c:1876 menu.c:2003
 msgid "Part of menu-item path is not sub-menu"
 msgstr "Èásti cesty k pøedmìtu nabídky není podnabídkou"
 
-#: menu.c:436
+#: menu.c:444
 msgid "Must not add menu items directly to menu bar"
 msgstr "Polo¾ky nabídky nelze pøidávat pøímo na li¹tu"
 
-#: menu.c:442
+#: menu.c:450
 msgid "Separator cannot be part of a menu path"
 msgstr "Oddìlovaè nesmí být èástí cesty nabídkou"
 
-#: menu.c:673 menu.c:769 menu.c:900
+#: menu.c:681 menu.c:777 menu.c:908
 msgid "No menu of that name"
 msgstr "Nabídka tohoto jména neexistuje"
 
-#: menu.c:731 menu.c:890
+#: menu.c:739 menu.c:898
 msgid "Menu only exists in another mode"
 msgstr "Nabídka existuje pouze v jiném módu"
 
-#: menu.c:746
+#: menu.c:754
 msgid "Sorry, deleting a menu is not possible in the Athena version"
 msgstr "Lituji, ale v Athena verzi nelze nabídku mazat"
 
 #. Now we have found the matching menu, and we list the mappings
 #. Highlight title
-#: menu.c:911
+#: menu.c:919
 msgid ""
 "\n"
 "--- Menus ---"
@@ -2989,71 +3123,80 @@ msgstr ""
 "\n"
 "--- Nabídky ---"
 
-#: menu.c:1789
+#: menu.c:1806
 msgid "Tear off this menu"
 msgstr "Odtrhnout tuto nabídku"
 
-#: menu.c:1854
+#: menu.c:1871
 msgid "Menu path must lead to a menu item"
 msgstr "Cesta nabídkou musí vést k polo¾ce nabídky"
 
-#: menu.c:1874 menu.c:2007
-msgid "Menu not found - check menu names"
-msgstr "Nabídka nenalezena - zkontrolujte názvy nabídek"
+#: menu.c:1891
+#, c-format
+msgid "Menu not found: %s"
+msgstr "Vzor nenalezen: %s"
 
-#: menu.c:1948
+#: menu.c:1960
 #, c-format
 msgid "Menu not defined for %s mode"
 msgstr "V %s módu není nabídka definována"
 
 #. not allowed to tear off one item
-#: menu.c:1985
+#: menu.c:1997
 msgid "Menu path must lead to a sub-menu"
 msgstr "Cesta nabídkou musí vést do podnabídky"
 
-#: message.c:402
+#: menu.c:2019
+msgid "Menu not found - check menu names"
+msgstr "Nabídka nenalezena - zkontrolujte názvy nabídek"
+
+#: message.c:416
 #, c-format
 msgid "Error detected while processing %s:"
 msgstr "Chyba pøi zpracování %s:"
 
-#: message.c:418
+#: message.c:432
 #, c-format
 msgid "line %4ld:"
 msgstr "øádek %4ld:"
 
-#: message.c:452
+#: message.c:470
 msgid "[string too long]"
 msgstr "[pøíli¹ dlouhý øetìzec]"
 
-#: message.c:771
+#: message.c:602
+msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
+msgstr "Správce zpráv: Bram Moolenaar <Bram@vim.org>"
+
+#: message.c:802
 msgid "Interrupt: "
 msgstr "Pøeru¹ení: "
 
-#: message.c:774
-msgid "Press RETURN to continue"
-msgstr "pokraèování stiskem RETURN"
+#: message.c:805
+msgid "Hit ENTER to continue"
+msgstr "pokraèování stiskem ENTER"
 
-#: message.c:776
-msgid "Press RETURN or enter command to continue"
-msgstr "Pro pokraèování stisknìte RETURN nebo zadejte pøíkaz"
+#: message.c:807
+msgid "Hit ENTER or type command to continue"
+msgstr "Pro pokraèování stisknìte ENTER nebo zadejte pøíkaz"
 
-#: message.c:1624
+#: message.c:1678
 msgid "-- More --"
 msgstr "-- Pokraèování --"
 
-#: message.c:1627
+#: message.c:1681
 msgid " (RET/BS: line, SPACE/b: page, d/u: half page, q: quit)"
 msgstr " (RET/BS: øádek, MEZERNÍK/b: stránka, d/u: 0.5 stránky, q: konec)"
 
-#: message.c:1628
+#: message.c:1682
 msgid " (RET: line, SPACE: page, d: half page, q: quit)"
 msgstr " (RET: øádek, MEZERNÍK: stránka, d: 0.5 stránky, q: konec)"
 
-#: message.c:2134 message.c:2149
+#: message.c:2190 message.c:2205
 msgid "Question"
 msgstr "Otázka"
 
-#: message.c:2136
+#: message.c:2192
 msgid ""
 "&Yes\n"
 "&No"
@@ -3061,7 +3204,7 @@ msgstr ""
 "&Ano\n"
 "&Ne"
 
-#: message.c:2151
+#: message.c:2207
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3071,7 +3214,7 @@ msgstr ""
 "&Ne\n"
 "&Zru¹it"
 
-#: message.c:2169
+#: message.c:2225
 msgid ""
 "&Yes\n"
 "&No\n"
@@ -3085,103 +3228,115 @@ msgstr ""
 "Zahodit &v¹e\n"
 "&Zru¹it"
 
-#: message.c:2208
+#: message.c:2264
 msgid "Save File dialog"
 msgstr "Dialog pro ukládání souborù"
 
-#: message.c:2210
+#: message.c:2266
 msgid "Open File dialog"
 msgstr "Dialog pro otevírání souborù"
 
 #. TODO: non-GUI file selector here
-#: message.c:2243
+#: message.c:2299
 msgid "Sorry, no file browser in console mode"
 msgstr "Lituji, ale konzolová verze nepodporuje prohlí¾eè souborù"
 
-#: misc1.c:2233
+#: misc1.c:2318
 msgid "Warning: Changing a readonly file"
 msgstr "Varování: mìním soubor pouze_pro_ètení"
 
-#: misc1.c:2447
+#: misc1.c:2533
+msgid "1 more line"
+msgstr "poèet nových øádkù: 1"
+
+#: misc1.c:2535
+msgid "1 line less"
+msgstr "poèet smazaných øádkù: 1"
+
+#: misc1.c:2540
 #, c-format
-msgid "%ld %s line %s"
-msgstr "O %ld %s øádkù %s"
+msgid "%ld more lines"
+msgstr "poèet nových øádkù: %ld"
 
-#: misc1.c:2447
+#: misc1.c:2542
 #, c-format
-msgid "%ld %s lines %s"
-msgstr "O %ld %s øádkù %s"
+msgid "%ld fewer lines"
+msgstr "poèet smazaných øádkù: %ld"
 
-#: misc1.c:2448
-msgid "more"
-msgstr "více"
-
-#: misc1.c:2448
-msgid "fewer"
-msgstr "ménì"
-
-#: misc1.c:2449
-msgid "(Interrupted)"
+#: misc1.c:2545
+msgid " (Interrupted)"
 msgstr "(Pøeru¹eno)"
 
-#: misc1.c:5684
+#: misc1.c:5860
 msgid "Vim: preserving files...\n"
 msgstr "Vim: zachovávám soubory...\n"
 
 #. close all memfiles, without deleting
-#: misc1.c:5694
+#: misc1.c:5870
 msgid "Vim: Finished.\n"
 msgstr "Vim: ukonèen\n"
 
-#: misc2.c:563 misc2.c:579
+#: misc1.c:6353
+msgid "Security error: shell command output is a symbolic link"
+msgstr "Bezpeènostní chyba: výstupem pøíkazu shellu je symbolický odkaz"
+
+#: misc2.c:576 misc2.c:592
 msgid "ERROR: "
 msgstr "CHYBA: "
 
-#: misc2.c:584
+#: misc2.c:596
 #, c-format
-msgid "[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu"
+msgid ""
+"\n"
+"[bytes] total alloc-freed %lu-%lu, in use %lu, peak use %lu\n"
 msgstr ""
-"[bajtù] celkem uvolnìno-alokováno %lu-%lu, vyu¾ito %lu, maximální vyu¾ití %lu"
+"\n"
+"[bajtù] celkem uvolnìno-alokováno %lu-%lu, vyu¾ito %lu, maximální vyu¾ití "
+"%lu\n"
 
-#: misc2.c:587
+#: misc2.c:598
 #, c-format
-msgid "[calls] total re/malloc()'s %lu, total free()'s %lu"
-msgstr "[volání] celkem re/malloc(): %lu, celkem free() %lu"
+msgid ""
+"[calls] total re/malloc()'s %lu, total free()'s %lu\n"
+"\n"
+msgstr ""
+"[volání] celkem re/malloc(): %lu, celkem free() %lu\n"
+"\n"
 
-#: misc2.c:645
+#: misc2.c:656
 msgid "Line is becoming too long"
 msgstr "Øádek se stává pøíli¹ dlouhým"
 
-#: misc2.c:690
+#: misc2.c:701
 #, c-format
 msgid "Internal error: lalloc(%ld, )"
 msgstr "Vnitøní chyba: lalloc(%ld, )"
 
-#: misc2.c:2546 option.c:3906
+#: misc2.c:2580 option.c:4037
 msgid "Missing colon"
 msgstr "Chybí dvojteèka"
 
-#: misc2.c:2572
+#: misc2.c:2606
 msgid "Illegal mode"
 msgstr "nepøípustný mód"
 
-#: misc2.c:2608
+#: misc2.c:2642
 msgid "Illegal mouseshape"
 msgstr "Chybný tvar my¹i"
 
-#: misc2.c:2644
+#: misc2.c:2678
 msgid "digit expected"
 msgstr "oèekávána èíslice"
 
-#: misc2.c:2649
+#: misc2.c:2683
 msgid "Illegal percentage"
 msgstr "nepøípustné procento"
 
-#: misc2.c:2953
+#: misc2.c:2987
 msgid "Enter encryption key: "
 msgstr "Zadejte ¹ifrovací klíè: "
 
-#: misc2.c:3446
+#: misc2.c:3480
 #, c-format
 msgid ""
 "Invalid path: '**[number]' must be at the end of the path or be followed by "
@@ -3190,22 +3345,22 @@ msgstr ""
 "Chybná cesta: '**[èíslo] musí být buï na konci cesty, nebo musí být\n"
 "následováno'%s. Viz :help path."
 
-#: misc2.c:4613
+#: misc2.c:4706
 #, c-format
 msgid "Can't find directory \"%s\" in cdpath"
 msgstr "Adresáø \"%s\" nelze v cdpath nalézt"
 
-#: misc2.c:4615
+#: misc2.c:4708
 #, c-format
 msgid "Can't find file \"%s\" in path"
 msgstr "Soubor \"%s\" nelze v cdpath nalézt"
 
-#: misc2.c:4620
+#: misc2.c:4713
 #, c-format
 msgid "No more directory \"%s\" found in cdpath"
 msgstr "®ádný dal¹í adresáø \"%s\" nebyl v cdpath nalezen"
 
-#: misc2.c:4623
+#: misc2.c:4716
 #, c-format
 msgid "No more file \"%s\" found in path"
 msgstr "®ádný dal¹í soubor \"%s\" nebyl v cestì nalezen"
@@ -3214,136 +3369,138 @@ msgstr "®ádný dal¹í soubor \"%s\" nebyl v cestì nalezen"
 msgid "Not a valid codepage"
 msgstr "Chybná kódová stránka"
 
-#: multibyte.c:1350
+#: multibyte.c:1437
 msgid "Cannot set IC values"
 msgstr "Nelze nastavit IC hodnoty"
 
-#: multibyte.c:1608
+#: multibyte.c:1695
 msgid "XIM requires VIM compiled with +xfontset feature."
 msgstr "XIM vy¾aduje, aby VIM byl pøelo¾en s volbou +fontset"
 
-#: multibyte.c:1654
+#: multibyte.c:1741
 msgid "Failed to open input method"
 msgstr "Nepodaøilo se otevøít vstupní metodu"
 
-#: multibyte.c:1665
+#: multibyte.c:1752
 msgid "Warning: Could not set destroy callback to IM"
 msgstr "Varování: likvidaèní zpìtné volání nelze nastavit na IM"
 
-#: multibyte.c:1671
+#: multibyte.c:1758
 msgid "input method doesn't support any style"
 msgstr "vstupní metoda nepodporuje ¾ádný styl"
 
-#: multibyte.c:1725
+#: multibyte.c:1812
 msgid "input method doesn't support my preedit type"
 msgstr "vstupní metoda nepodporuje mùj 'preedit' typ"
 
-#: multibyte.c:1765
+#: multibyte.c:1852
 msgid "Failed to create input context"
 msgstr "Nepodaøilo se vytvoøit vstupní kontext"
 
-#: multibyte.c:1799
+#: multibyte.c:1886
 msgid "Your GTK+ is older than 1.2.3. Status area disabled"
 msgstr "Máte GTK+ verze star¹í ne¾ 1.2.3. Stavová plocha vypnuta."
 
-#: multibyte.c:1975
+#: multibyte.c:2062
 msgid "Input Method Server is not running"
 msgstr "Server vstupních metod nebì¾í"
 
-#: multibyte.c:2007 multibyte.c:2029
+#: multibyte.c:2094 multibyte.c:2116
 msgid "over-the-spot style requires fontset"
 msgstr "Nadbodový styl vy¾aduje fontset"
 
-#: multibyte.c:2052
+#: multibyte.c:2139
 msgid "Can't create input context."
 msgstr "Nelze vytvoøit vstupní kontext."
 
-#: normal.c:2522
+#: normal.c:2637
 msgid "Warning: terminal cannot highlight"
 msgstr "Varování: terminál nepodporuje zvýrazòování"
 
-#: normal.c:2655
+#: normal.c:2770
 msgid "No string under cursor"
 msgstr "pod kurzorem není ¾ádný øetìzec"
 
-#: normal.c:2657
+#: normal.c:2772
 msgid "No identifier under cursor"
 msgstr "pod kurzorem není ¾ádný identifikátor"
 
-#: normal.c:3629
+#: normal.c:3784
 msgid "Cannot create fold with current 'foldmethod'"
 msgstr "pomocí aktuální 'foldmethod' nelze vytvoøit záhyb"
 
-#: normal.c:3641 normal.c:3648
+#: normal.c:3796 normal.c:3803
 msgid "Cannot delete fold with current 'foldmethod'"
 msgstr "pomocí aktuální 'foldmethod' nelze vytvoøit záhyb"
 
-#: ops.c:261
-msgid "1 line "
-msgstr "poèet øádkù: 1"
-
-#: ops.c:263
+#: ops.c:260
 #, c-format
-msgid "%ld lines "
-msgstr "poèet øádkù: %ld"
+msgid "1 line %sed 1 time"
+msgstr "poèet øádkù posunutých jednou pomocí %s : 1"
 
-#: ops.c:266
-msgid "ed 1 time"
-msgstr "poèet editací: 1"
-
-#: ops.c:268
+#: ops.c:262
 #, c-format
-msgid "ed %d times"
-msgstr "poèet editací: %d"
+msgid "1 line %sed %d times"
+msgstr "poèet øádkù posunutých %2$dkrát pomocí %1$s : 1"
 
-#: ops.c:605
+#: ops.c:267
+#, c-format
+msgid "%ld lines %sed 1 time"
+msgstr "poèet øádkù posunutých jednou pomocí %2$s : %1$ld"
+
+#: ops.c:270
+#, c-format
+msgid "%ld lines %sed %d times"
+msgstr "poèet øádkù posunutých %3$dkrát pomocí %2$s : %1$ld"
+
+#: ops.c:608
 #, c-format
 msgid "%ld lines to indent... "
 msgstr "poèet øádkù k odsazení: %ld"
 
-#: ops.c:637
+#: ops.c:652
 msgid "1 line indented "
 msgstr "poèet øádkù k odsazení: 1"
 
-#: ops.c:639
+#: ops.c:654
 #, c-format
 msgid "%ld lines indented "
 msgstr "poèet odsazených øádkù: %ld"
 
-#: ops.c:1392
+#: ops.c:1413
 msgid "cannot yank; delete anyway"
 msgstr "nelze kopírovat; pøesto smazáno"
 
-#: ops.c:1713
+#: ops.c:1770
 msgid "1 line ~ed"
 msgstr "poèet øádek se zmìnìnou velikostí písmen: 1"
 
-#: ops.c:1715
+#: ops.c:1772
 #, c-format
 msgid "%ld lines ~ed"
 msgstr "poèet øádek se zmìnìnou velikostí písmen: %ld"
 
-#: ops.c:2046
+#: ops.c:2108
 #, c-format
 msgid "freeing %ld lines"
 msgstr "poèet uvolòovaných øádkù: %ld"
 
-#: ops.c:2284
+#: ops.c:2352
 msgid "1 line yanked"
 msgstr "poèet zkopírovaných øádkù: 1"
 
-#: ops.c:2286
+#: ops.c:2354
 #, c-format
 msgid "%ld lines yanked"
 msgstr "poèet zkopírovaných øádkù: %ld"
 
-#: ops.c:2475
+#: ops.c:2547
 #, c-format
 msgid "Nothing in register %s"
 msgstr "Registr %s je prázdný"
 
 #. Highlight title
-#: ops.c:2913
+#: ops.c:3018
 msgid ""
 "\n"
 "--- Registers ---"
@@ -3351,11 +3508,11 @@ msgstr ""
 "\n"
 "--- Registry ---"
 
-#: ops.c:3952
+#: ops.c:4088
 msgid "Illegal register name"
 msgstr "nepøípustný název registru"
 
-#: ops.c:4028
+#: ops.c:4168
 msgid ""
 "\n"
 "# Registers:\n"
@@ -3363,145 +3520,153 @@ msgstr ""
 "\n"
 "# Registry:\n"
 
-#: ops.c:4054
+#: ops.c:4194
 #, c-format
 msgid "Unknown register type %d"
 msgstr "%d není známým typem registru"
 
-#: ops.c:4350
+#: ops.c:4490
 #, c-format
 msgid "Invalid register name: '%s'"
 msgstr "'%s' není pøípustné jméno registru"
 
-#: option.c:1650
+#: option.c:1733
 msgid "Thanks for flying Vim"
 msgstr "Dìkuji za pou¾ití Vim"
 
-#: option.c:2707
+#: option.c:2812
 msgid "Not allowed in a modeline"
 msgstr "Není v modeline povoleno"
 
-#: option.c:2714
+#: option.c:2819
 #, c-format
 msgid "Warning: %s option changed from modeline"
 msgstr "Varování: volba %s zmìnìna z modeline"
 
-#: option.c:2918
+#: option.c:3033
 msgid "Number required after ="
 msgstr "Po = je vy¾adováno èíslo"
 
-#: option.c:3164 option.c:3669
+#: option.c:3298 option.c:3797
 msgid "Not found in termcap"
 msgstr "Nenalezen v termcapu"
 
-#: option.c:3230
+#: option.c:3364
 #, c-format
 msgid "Illegal character <%s>"
 msgstr "Nepøípustný znak <%s>"
 
-#: option.c:3661
+#: option.c:3789
 msgid "Cannot set 'term' to empty string"
 msgstr "volba 'term' nemù¾e být prázdná"
 
-#: option.c:3664
+#: option.c:3792
 msgid "Cannot change term in GUI"
 msgstr "V GUI nelze mìnit term"
 
-#: option.c:3666
+#: option.c:3794
 msgid "Use \":gui\" to start the GUI"
 msgstr "Pou¾ijte \"gui\" pro spu¹tìní GUI"
 
-#: option.c:3690
+#: option.c:3815
 msgid "'backupext' and 'patchmode' are equal"
 msgstr "volby 'backupext' a 'patchmode' mají stejnou hodnotu"
 
-#: option.c:3908
+#: option.c:4039
 msgid "Zero length string"
 msgstr "øetìzec o nulové délce"
 
-#: option.c:3968
+#: option.c:4099
 #, c-format
 msgid "Missing number after <%s>"
 msgstr "Po <%s> chybí èíslo"
 
-#: option.c:3982
+#: option.c:4113
 msgid "Missing comma"
 msgstr "Chybí èárka"
 
-#: option.c:3989
+#: option.c:4120
 msgid "Must specify a ' value"
 msgstr "Je nutné zadat hodnotu '"
 
-#: option.c:4028
+#: option.c:4160
 msgid "contains unprintable character"
 msgstr "obsahuje netisknutelné znaky"
 
-#: option.c:4041
+#: option.c:4173
 msgid "Invalid font(s)"
 msgstr "Chybná písma"
 
-#: option.c:4047
+#: option.c:4179
 msgid "can't select fontset"
 msgstr "nelze vybrat sadu fontù"
 
-#: option.c:4049
+#: option.c:4181
 msgid "Invalid fontset"
 msgstr "chybná sada písem"
 
-#: option.c:4056
+#: option.c:4188
 msgid "can't select wide font"
 msgstr "nelze vybrat ¹iroký font"
 
-#: option.c:4058
+#: option.c:4190
 msgid "Invalid wide font"
 msgstr "Chybné ¹iroké písmo"
 
-#: option.c:4309
+#: option.c:4446
 #, c-format
 msgid "Illegal character after <%c>"
 msgstr "Nepøípustný znak po <%c>"
 
-#: option.c:4380
+#: option.c:4517
 msgid "comma required"
 msgstr "je nutná èárka"
 
-#: option.c:4435
+#: option.c:4552
 msgid "No mouse support"
 msgstr "Bez podpory my¹i"
 
-#: option.c:4659
+#: option.c:4776
 msgid "Unclosed expression sequence"
 msgstr "neuzavøená sekvence výrazù"
 
-#: option.c:4663
+#: option.c:4780
 msgid "too many items"
 msgstr "pøíli¹ mnoho polo¾ek"
 
-#: option.c:4665
+#: option.c:4782
 msgid "unbalanced groups"
 msgstr "nevyvá¾ené skupiny"
 
-#: option.c:4970 option.c:5000
+#: option.c:4819
+msgid "Not allowed here"
+msgstr "Toto zde není povoleno"
+
+#: option.c:4922
+msgid "A preview window already exists"
+msgstr "Okno náhledu ji¾ existuje"
+
+#: option.c:5123 option.c:5153
 msgid "'winheight' cannot be smaller than 'winminheight'"
 msgstr ""
 "hodnota volby 'winheight' nesmí být men¹í ne¾ hodnota volby 'winminheight'"
 
-#: option.c:5016 option.c:5035
+#: option.c:5169 option.c:5188
 msgid "'winwidth' cannot be smaller than 'winminwidth'"
 msgstr ""
 "hodnota volby 'winwidth' nesmí být men¹í ne¾ hodnota volby 'winminwidth'"
 
-#: option.c:5082
+#: option.c:5235
 #, c-format
 msgid "Need at least %d lines"
 msgstr "minimální potøebný poèet øádkù: %d"
 
-#: option.c:5091
+#: option.c:5244
 #, c-format
 msgid "Need at least %d columns"
 msgstr "minimální potøebný poèet sloupcù: %d"
 
-#: option.c:5498
+#: option.c:5651
 msgid ""
 "\n"
 "--- Terminal codes ---"
@@ -3509,7 +3674,7 @@ msgstr ""
 "\n"
 "--- Kódy terminálu ---"
 
-#: option.c:5500
+#: option.c:5653
 msgid ""
 "\n"
 "--- Global option values ---"
@@ -3517,7 +3682,7 @@ msgstr ""
 "\n"
 "--- Nastavení globálních voleb ---"
 
-#: option.c:5502
+#: option.c:5655
 msgid ""
 "\n"
 "--- Options ---"
@@ -3525,38 +3690,38 @@ msgstr ""
 "\n"
 "--- Volby ---"
 
-#: option.c:5934
+#: option.c:6172
 msgid "get_varp ERROR"
 msgstr "get_varp CHYBA"
 
-#: option.c:6708
+#: option.c:6962
 #, c-format
 msgid "'langmap': Matching character missing for %s"
 msgstr "'langmap': pro %s chybí vyhovující znak"
 
-#: option.c:6735
+#: option.c:6989
 #, c-format
 msgid "'langmap': Extra characters after semicolon: %s"
 msgstr "'langmap': nadbyteèné znaky po støedníku: %s"
 
-#: os_unix.c:596
+#: os_unix.c:735
 msgid "Vim: Double signal, exiting\n"
 msgstr "VIm: dvojitý signál, konèím\n"
 
-#: os_unix.c:602
+#: os_unix.c:741
 #, c-format
 msgid "Vim: Caught %s %s\n"
 msgstr "Vim: Zachycen %s %s\n"
 
-#: os_unix.c:604 os_unix.c:606
+#: os_unix.c:743 os_unix.c:745
 msgid "deadly signal"
 msgstr "smrtelný signál"
 
-#: os_unix.c:606
+#: os_unix.c:745
 msgid "some"
 msgstr "nìjaký"
 
-#: os_unix.c:814
+#: os_unix.c:974
 msgid ""
 "\n"
 "Vim: Got X error\n"
@@ -3564,11 +3729,11 @@ msgstr ""
 "\n"
 "Vim: chyba X11\n"
 
-#: os_unix.c:2080
+#: os_unix.c:2361
 msgid "Screen mode setting not supported"
 msgstr "Nastavování re¾imu obrazovky není podporováno"
 
-#: os_unix.c:2245 os_unix.c:2809
+#: os_unix.c:2526 os_unix.c:3090
 msgid ""
 "\n"
 "Cannot execute shell "
@@ -3576,7 +3741,7 @@ msgstr ""
 "\n"
 "nelze spustit shell "
 
-#: os_unix.c:2271
+#: os_unix.c:2552
 msgid ""
 "\n"
 "Cannot execute shell sh\n"
@@ -3584,11 +3749,15 @@ msgstr ""
 "\n"
 "Nelze spustit sh shell\n"
 
-#: os_unix.c:2278 os_unix.c:2817
-msgid " returned\n"
-msgstr " vráceno\n"
+#: os_unix.c:2557 os_unix.c:3096
+msgid ""
+"\n"
+"shell returned "
+msgstr ""
+"\n"
+" návratová hodnota shellu "
 
-#: os_unix.c:2410
+#: os_unix.c:2691
 msgid ""
 "\n"
 "Cannot create pipes\n"
@@ -3596,7 +3765,7 @@ msgstr ""
 "\n"
 "Nelze vytvoøit roury\n"
 
-#: os_unix.c:2425
+#: os_unix.c:2706
 msgid ""
 "\n"
 "Cannot fork\n"
@@ -3604,7 +3773,7 @@ msgstr ""
 "\n"
 "Volání fork selhalo\n"
 
-#: os_unix.c:2822
+#: os_unix.c:3103
 msgid ""
 "\n"
 "Command terminated\n"
@@ -3612,298 +3781,330 @@ msgstr ""
 "\n"
 "Pøíkaz ukonèen\n"
 
-#: os_unix.c:4134
+#: os_unix.c:4454
 msgid "Library call failed"
 msgstr "Volání knihovní funkce selhalo"
 
-#: quickfix.c:249
+#: quickfix.c:260
 msgid "Too many %%%c in format string"
 msgstr "Pøíli¹ mnoho %%%c ve formátovacím øetìzci"
 
-#: quickfix.c:262
+#: quickfix.c:273
 msgid "Unexpected %%%c in format string"
 msgstr "Neoèekávaný výskyt %%%c ve formátovacím øetìzci"
 
-#: quickfix.c:291
+#: quickfix.c:317
 msgid "Missing ] in format string"
 msgstr "Ve formátovacím øetìzci chybí ]"
 
-#: quickfix.c:305
+#: quickfix.c:331
 msgid "Unsupported %%%c in format string"
 msgstr "Nepodporovaná formátová specifikace ve formátovacím øetìzci"
 
-#: quickfix.c:323
+#: quickfix.c:349
 msgid "Invalid %%%c in format string prefix"
 msgstr "Nepøípustné %%%c v prefixu formátovacího øetìzce"
 
-#: quickfix.c:331
+#: quickfix.c:357
 msgid "Invalid %%%c in format string"
 msgstr "Nepøípustné %%%c ve formátovacím øetìzci"
 
-#: quickfix.c:357
+#: quickfix.c:383
 msgid "'errorformat' contains no pattern"
 msgstr "'errorformat' neobsahuje ¾ádný vzorek"
 
-#: quickfix.c:372
+#: quickfix.c:398
 msgid "Change dir debugging enabled."
 msgstr "Ladìní zmìn adresáøù zapnuto"
 
-#: quickfix.c:426
+#: quickfix.c:452
 #, c-format
 msgid "Not a proper file name: '%s'"
 msgstr "'%s' není platným názvem souboru"
 
-#: quickfix.c:434
+#: quickfix.c:460
 #, c-format
 msgid "File name '%s' is valid"
 msgstr "'%s' je platným název souboru"
 
-#: quickfix.c:471
+#: quickfix.c:497
 msgid "Missing or empty directory name"
 msgstr "Chybìjící nebo prázdný název adresáøe"
 
-#: quickfix.c:477
+#: quickfix.c:503
 #, c-format
 msgid "Enter: %s"
 msgstr "Vstup do adresáøe %s"
 
-#: quickfix.c:484
+#: quickfix.c:510
 #, c-format
 msgid "Leave: %s"
 msgstr "Výstup z adresáøe %s"
 
-#: quickfix.c:882
+#: quickfix.c:907
 msgid "No more items"
 msgstr "®ádné dal¹í polo¾ky"
 
-#: quickfix.c:1075
+#: quickfix.c:1100
 #, c-format
-msgid "(%d of %d)%s%s: %s"
-msgstr "(%d/%d)%s%s: %s"
+msgid "(%d of %d)%s%s: "
+msgstr "(%d/%d)%s%s: "
 
-#: quickfix.c:1077
+#: quickfix.c:1102
 msgid " (line deleted)"
 msgstr " (øádek smazán)"
 
-#: quickfix.c:1269
+#: quickfix.c:1306
 msgid "At bottom of quickfix stack"
 msgstr "Konec quickfix seznamu"
 
-#: quickfix.c:1278
+#: quickfix.c:1315
 msgid "At top of quickfix stack"
 msgstr "Zaèátek quickfix seznamu"
 
-#: quickfix.c:1290
+#: quickfix.c:1327
 #, c-format
 msgid "error list %d of %d; %d errors"
 msgstr "seznam chyb %d z %d; poèet chyb: %d"
 
-#: regexp.c:1128
+#: quickfix.c:1665
+msgid "Cannot write, 'buftype' option is set"
+msgstr "Nelze ulo¾it, je nastavena volba 'buftype'"
+
+#: regexp.c:913
+msgid "Too many \\z("
+msgstr "pøíli¹ mnoho \\z("
+
+#: regexp.c:923
+msgid "Too many \\("
+msgstr "pøíli¹ mnoho \\<"
+
+#: regexp.c:974
+msgid "Unmatched \\z("
+msgstr "Chybí uzavírající znak pro \\z("
+
+#: regexp.c:977
+msgid "Unmatched \\("
+msgstr "Chybí uzavírající znak pro \\("
+
+#: regexp.c:982
+msgid "Unmatched \\)"
+msgstr "Chybí otevírající znak pro \\)"
+
+#: regexp.c:1131
 msgid "*, \\+ or \\{ operand could be empty"
 msgstr "*, \\+ èi \\{ operand by mohl být prázdný"
 
-#: regexp.c:1179
+#: regexp.c:1182
 msgid "invalid character after \\@"
 msgstr "nepøípustný znak po \\@"
 
-#: regexp.c:1207
+#: regexp.c:1210
 msgid "Too many complex \\{...}s"
 msgstr "Pøíli¹ mnoho slo¾ených \\{...}"
 
-#: regexp.c:1219
+#: regexp.c:1222
 msgid "Nested *, \\=, \\+, \\! or \\{"
 msgstr "vnoøené *, \\=. \\+, \\! èi \\{"
 
-#: regexp.c:1316
+#: regexp.c:1319
 msgid "invalid use of \\_"
 msgstr "nepøípustné pou¾ití \\_"
 
-#: regexp.c:1341
+#: regexp.c:1344
 msgid "\\= follows nothing"
 msgstr "pøed \\= nic není"
 
-#: regexp.c:1345
+#: regexp.c:1348
 msgid "\\+ follows nothing"
 msgstr "pøed \\+ nic není"
 
-#: regexp.c:1349
+#: regexp.c:1352
 msgid "\\@ follows nothing"
 msgstr "pøed \\@ nic není"
 
-#: regexp.c:1353
+#: regexp.c:1356
 msgid "\\{ follows nothing"
 msgstr "pøed \\{ nic není"
 
-#: regexp.c:1358
+#: regexp.c:1361
 msgid "* follows nothing"
 msgstr "pøed * nic není"
 
-#: regexp.c:1359
+#: regexp.c:1362
 msgid "\\* follows nothing"
 msgstr "pøed \\* nic není"
 
-#: regexp.c:1409
+#: regexp.c:1412
 msgid "Illegal back reference"
 msgstr "nepøípustný zpìtný odkaz"
 
-#: regexp.c:1420
+#: regexp.c:1423
 msgid "\\z( not allowed here"
 msgstr "\\z( zde není povoleno"
 
-#: regexp.c:1437
+#: regexp.c:1440
 msgid "\\z1 et al. not allowed here"
 msgstr "\\z1 et al. nesmí být na tomto místì"
 
-#: regexp.c:1448
+#: regexp.c:1451
 msgid "unattached \\z"
 msgstr "nepøipojené \\z"
 
-#: regexp.c:1665
+#: regexp.c:1677
 msgid "Unexpected magic character; check META."
 msgstr "Neèekaný magický znak: zkontrolujte META"
 
-#: regexp.c:2097
+#: regexp.c:2109
 #, c-format
 msgid "Syntax error in \\%c...%c"
 msgstr "Chyba syntaxe v \\%c...%c"
 
-#: regexp.c:2612
+#: regexp.c:2343
+msgid "Crash intercepted; regexp too complex?"
+msgstr "Zachyceno pøeteèení zásobníku: pøíli¹ slo¾itý regulární výraz?"
+
+#: regexp.c:2460
+msgid "pattern caused out-of-stack error"
+msgstr "vzorek zpùsobil pøeteèení zásobníku"
+
+#: regexp.c:2684
 msgid "External submatches:\n"
 msgstr "Vnìj¹í podøazené shody:\n"
 
-#: screen.c:3683 screen.c:4261
+#: screen.c:3817 screen.c:4403
 msgid "[help]"
 msgstr "[nápovìda]"
 
-#: screen.c:3688 screen.c:4290
+#: screen.c:3823 screen.c:4433
 msgid "[Preview]"
 msgstr "[náhled]"
 
-#: screen.c:8167
+#: screen.c:8745
 msgid " REVERSE"
 msgstr " REVERSE"
 
-#: screen.c:8169
+#: screen.c:8747
 msgid " INSERT"
 msgstr " INSERT"
 
-#: screen.c:8172
+#: screen.c:8750
 msgid " REPLACE"
 msgstr " REPLACE"
 
-#: screen.c:8174
+#: screen.c:8752
 msgid " VREPLACE"
 msgstr " VREPLACE"
 
-#: screen.c:8176
+#: screen.c:8754
 msgid " (insert)"
 msgstr " (insert)"
 
-#: screen.c:8178
+#: screen.c:8756
 msgid " (replace)"
 msgstr " (replace)"
 
-#: screen.c:8180
+#: screen.c:8758
 msgid " (vreplace)"
 msgstr " (vreplace)"
 
-#: screen.c:8183
+#: screen.c:8761
 msgid " Hebrew"
 msgstr " hebrejský"
 
-#: screen.c:8190
+#: screen.c:8768
 msgid " (paste)"
 msgstr " (paste)"
 
-#: screen.c:8196
+#: screen.c:8774
 msgid " SELECT"
 msgstr " SHODY"
 
-#: screen.c:8198
+#: screen.c:8776
 msgid " VISUAL"
 msgstr " VIZUÁLNÍ"
 
-#: screen.c:8200
+#: screen.c:8778
 msgid " BLOCK"
 msgstr " BLOK"
 
-#: screen.c:8202
+#: screen.c:8780
 msgid " LINE"
 msgstr " ØÁDEK"
 
-#: screen.c:8211 screen.c:8265
+#: screen.c:8789 screen.c:8843
 msgid "recording"
 msgstr "nahrávám"
 
-#: screen.c:8522
+#: screen.c:9120
 msgid "All"
 msgstr "V¹e"
 
-#: screen.c:8522
+#: screen.c:9120
 msgid "Bot"
 msgstr "Konec"
 
-#: screen.c:8524
+#: screen.c:9122
 msgid "Top"
 msgstr "Zaèátek"
 
-#: screen.c:9394
+#: screen.c:9618
 msgid "VIM - Vi IMproved"
 msgstr "VIM - Vi IMproved"
 
-#: screen.c:9396
+#: screen.c:9620
 msgid "version "
 msgstr "verze "
 
-#: screen.c:9397
+#: screen.c:9621
 msgid "by Bram Moolenaar et al."
 msgstr "Autor: Bram Moolenaar a dal¹í"
 
-#: screen.c:9399
+#: screen.c:9623
 msgid "Vim is freely distributable"
 msgstr "Vim je volnì ¹iøitelný program"
 
-#: screen.c:9400
+#: screen.c:9624
 msgid "type  :help uganda<Enter>     if you like Vim "
 msgstr "zadejte :help uganda<Enter>  pokud se Vám Vim líbí"
 
-#: screen.c:9402
+#: screen.c:9626
 msgid "type  :q<Enter>               to exit         "
 msgstr "zadejte :q<Enter>             pro ukonèení programu"
 
-#: screen.c:9403
+#: screen.c:9627
 msgid "type  :help<Enter>  or  <F1>  for on-line help"
 msgstr "zadejte :help<Enter>  èi <F1> pro nápovìdu"
 
-#: screen.c:9404
+#: screen.c:9628
 msgid "type  :help version6<Enter>   for version info"
 msgstr "zadejte :help version6<Enter>  pro informace verzi"
 
-#: screen.c:9407
+#: screen.c:9631
 msgid "Running in Vi compatible mode"
 msgstr "Bì¾ím v re¾imu kompatibility s Vi"
 
-#: screen.c:9408
+#: screen.c:9632
 msgid "type  :set nocp<Enter>        for Vim defaults"
 msgstr "zadejte :set nocp<Enter>     pro implicitní nastavení Vim"
 
-#: screen.c:9409
+#: screen.c:9633
 msgid "type  :help cp-default<Enter> for info on this"
 msgstr "podrobnìj¹í informace získáte pomocí :help cp-default<Enter>"
 
-#: screen.c:9458
-msgid "WARNING: Windows 95 detected"
-msgstr "VAROVÁNÍ: detekovány Windows 95"
+#: screen.c:9689
+msgid "WARNING: Windows 95/98/ME detected"
+msgstr "VAROVÁNÍ: detekovány Windows 95/98/ME"
 
-#: screen.c:9460
+#: screen.c:9691
 msgid "type  :help windows95<Enter>  for info on this"
 msgstr "zadejte :help windows95<Enter> pro podrobnìj¹í informace"
 
-#: screen.c:9465
+#: screen.c:9696
 msgid "     WARNING: Intel CPU detected.    "
 msgstr "    VAROVÁNÍ: detekován procesor Intel"
 
-#: screen.c:9467
+#: screen.c:9698
 msgid " PPC has a much better architecture. "
 msgstr " PPC má mnohem lep¹í architekturu"
 
@@ -3934,87 +4135,87 @@ msgstr "hledaný dosáhlo konce bez nalezení %s"
 msgid "Expected '?' or '/'  after ';'"
 msgstr "Po ';' oèekávám '?' nebo '/'"
 
-#: search.c:3350
+#: search.c:3364
 msgid " (includes previously listed match)"
 msgstr " (vèetnì ji¾ vypsaných shod)"
 
 #. cursor at status line
-#: search.c:3370
+#: search.c:3384
 msgid "--- Included files "
 msgstr "--- Vlo¾ené soubory"
 
-#: search.c:3372
+#: search.c:3386
 msgid "not found "
 msgstr " nenalezeny"
 
-#: search.c:3373
+#: search.c:3387
 msgid "in path ---\n"
 msgstr "v cestì ---\n"
 
-#: search.c:3412
+#: search.c:3426
 msgid "  (Already listed)"
 msgstr "  (Ji¾ vypsáno)"
 
-#: search.c:3414
+#: search.c:3428
 msgid "  NOT FOUND"
 msgstr " NENALEZENY"
 
-#: search.c:3466
+#: search.c:3480
 #, c-format
 msgid "Scanning included file: %s"
 msgstr "Prohledávám vlo¾ené soubory: %s"
 
-#: search.c:3695
+#: search.c:3709
 msgid "Match is on current line"
 msgstr "Shoda je na aktuálním øádku"
 
-#: search.c:3829
+#: search.c:3843
 msgid "All included files were found"
 msgstr "V¹echny vlo¾ené soubory byly nalezeny"
 
-#: search.c:3831
+#: search.c:3845
 msgid "No included files"
 msgstr "®ádné vlo¾ené soubory"
 
-#: search.c:3847
+#: search.c:3861
 msgid "Couldn't find definition"
 msgstr "Nelze nalézt definici"
 
-#: search.c:3849
+#: search.c:3863
 msgid "Couldn't find pattern"
 msgstr "Nelze nalézt vzorek"
 
-#: syntax.c:2992 syntax.c:3180
+#: syntax.c:3085 syntax.c:3273
 #, c-format
 msgid "No such syntax cluster: %s"
 msgstr "Syntaktická sestava %s neexistuje"
 
-#: syntax.c:3013 syntax.c:3188
+#: syntax.c:3106 syntax.c:3281
 #, c-format
 msgid "No such highlight group name: %s"
 msgstr "Skupina zvýraznìní %s neexistuje"
 
-#: syntax.c:3124
+#: syntax.c:3217
 msgid "No Syntax items defined for this buffer"
 msgstr "Pro tento buffer nejsou definovány ¾ádné pøedmìty syntaxe"
 
-#: syntax.c:3132
+#: syntax.c:3225
 msgid "syncing on C-style comments"
 msgstr "synchronizuji komentáøe v C stylu"
 
-#: syntax.c:3140
+#: syntax.c:3233
 msgid "no syncing"
 msgstr "¾ádná synchronizace"
 
-#: syntax.c:3143
+#: syntax.c:3236
 msgid "syncing starts "
 msgstr "synchronizace zaèíná "
 
-#: syntax.c:3145 syntax.c:3214
+#: syntax.c:3238 syntax.c:3307
 msgid " lines before top line"
 msgstr " øádkù pøed zaèátkem"
 
-#: syntax.c:3149
+#: syntax.c:3242
 msgid ""
 "\n"
 "--- Syntax sync items ---"
@@ -4022,7 +4223,7 @@ msgstr ""
 "\n"
 "--- Polo¾ky synchronizace syntaxe ---"
 
-#: syntax.c:3152
+#: syntax.c:3245
 msgid ""
 "\n"
 "syncing on items"
@@ -4030,7 +4231,7 @@ msgstr ""
 "\n"
 "synchronizuji pøedmìty"
 
-#: syntax.c:3157
+#: syntax.c:3250
 msgid ""
 "\n"
 "--- Syntax items ---"
@@ -4038,156 +4239,156 @@ msgstr ""
 "\n"
 "--- Pøedmìty syntaxe ---"
 
-#: syntax.c:3204
+#: syntax.c:3297
 msgid "minimal "
 msgstr "minimální "
 
-#: syntax.c:3211
+#: syntax.c:3304
 msgid "maximal "
 msgstr "maximální "
 
-#: syntax.c:3801
+#: syntax.c:3890
 msgid "group[t]here not accepted here"
 msgstr "group[t]here nesmí být na tomto místì"
 
-#: syntax.c:3825
+#: syntax.c:3914
 #, c-format
 msgid "Didn't find region item for %s"
 msgstr "Pro %s chybí polo¾ka regionu"
 
-#: syntax.c:3853
+#: syntax.c:3942
 msgid "contains argument not accepted here"
 msgstr "obsahuje argumenty, které zde nejsou povoleny"
 
-#: syntax.c:3930
+#: syntax.c:4019
 msgid "Filename required"
 msgstr "Vy¾adován název souboru"
 
-#: syntax.c:4238
+#: syntax.c:4327
 #, c-format
 msgid "Missing '=': %s"
 msgstr "Chybí '=': %s"
 
-#: syntax.c:4391
+#: syntax.c:4480
 #, c-format
 msgid "Not enough arguments: syntax region %s"
 msgstr "Pøíli¹ málo argumentù: oblast syntaxe %s"
 
-#: syntax.c:4722
+#: syntax.c:4811
 msgid "No cluster specified"
 msgstr "Nebyla zadána ¾ádná sestava"
 
-#: syntax.c:4759
+#: syntax.c:4848
 #, c-format
 msgid "Pattern delimiter not found: %s"
 msgstr "Oddìlovaè vzorku %s nenalezen"
 
-#: syntax.c:4834
+#: syntax.c:4923
 #, c-format
 msgid "Garbage after pattern: %s"
 msgstr "Chyba za vzorkem %s"
 
-#: syntax.c:4916
+#: syntax.c:5005
 msgid "syntax sync: line continuations pattern specified twice"
 msgstr "synchronizace syntaxe: vzorek pokraèování øádkù zadán dvakrát"
 
-#: syntax.c:4973
+#: syntax.c:5062
 #, c-format
 msgid "Illegal arguments: %s"
 msgstr "chybné argumenty: %s"
 
-#: syntax.c:5023
+#: syntax.c:5112
 #, c-format
 msgid "Missing equal sign: %s"
 msgstr "Chybí rovnítko: %s"
 
-#: syntax.c:5029
+#: syntax.c:5118
 #, c-format
 msgid "Empty argument: %s"
 msgstr "Prázdný argument: %s"
 
-#: syntax.c:5054
+#: syntax.c:5143
 #, c-format
 msgid "%s not allowed here"
 msgstr "%s zde není povoleno"
 
-#: syntax.c:5061
+#: syntax.c:5150
 #, c-format
 msgid "%s must be first in contains list"
 msgstr "%s musí být první v 'contains' seznamu"
 
-#: syntax.c:5125
+#: syntax.c:5214
 #, c-format
 msgid "Unknown group name: %s"
 msgstr "Neznámá název skupiny: %s"
 
-#: syntax.c:5306
+#: syntax.c:5399
 #, c-format
 msgid "Invalid :syntax subcommand: %s"
 msgstr "chybný podøazený pøíkaz :syntax : %s "
 
-#: syntax.c:5594
+#: syntax.c:5706
 #, c-format
 msgid "highlight group not found: %s"
 msgstr "skupina zvýraznìní %s nebyla nalezena"
 
-#: syntax.c:5618
+#: syntax.c:5730
 #, c-format
 msgid "Not enough arguments: \":highlight link %s\""
 msgstr "Pøíli¹ málo argumentù: \":highlight link %s\""
 
-#: syntax.c:5624
+#: syntax.c:5737
 #, c-format
 msgid "Too many arguments: \":highlight link %s\""
 msgstr "Pøíli¹ mnoho argumentù: \":highlight link %s\""
 
-#: syntax.c:5649
+#: syntax.c:5757
 msgid "group has settings, highlight link ignored"
 msgstr "skupina je nastavena, odkaz na zvýrazòovací skupinu ignorován"
 
-#: syntax.c:5671
+#: syntax.c:5779
 msgid "Cannot clear all highlight groups"
 msgstr "V¹echny zvýrazòovací skupiny nelze smazat"
 
-#: syntax.c:5702
+#: syntax.c:5815
 #, c-format
 msgid "unexpected equal sign: %s"
 msgstr "neèekané rovnítko : %s"
 
-#: syntax.c:5738
+#: syntax.c:5851
 #, c-format
 msgid "missing equal sign: %s"
 msgstr "chybné rovnítko: %s"
 
-#: syntax.c:5760
+#: syntax.c:5873
 #, c-format
 msgid "missing argument: %s"
 msgstr "chybí argument: %s"
 
-#: syntax.c:5797
+#: syntax.c:5910
 #, c-format
 msgid "Illegal value: %s"
 msgstr "nepøípustná hodnota: %s"
 
-#: syntax.c:5874
+#: syntax.c:5987
 msgid "FG color unknown"
 msgstr "barva popøedí není známá"
 
-#: syntax.c:5885
+#: syntax.c:5998
 msgid "BG color unknown"
 msgstr "barva pozadí není známá"
 
-#: syntax.c:5935
+#: syntax.c:6048
 #, c-format
 msgid "Color name or number not recognized: %s"
 msgstr "název èi èíslo barvy %s nebylo rozpoznáno"
 
-#: syntax.c:6113
+#: syntax.c:6226
 #, c-format
 msgid "terminal code too long: %s"
 msgstr "terminálový kód %s je pøíli¹ dlouhý"
 
-#: syntax.c:6609
+#: syntax.c:6739
 msgid "Too many different highlighting attributes in use"
 msgstr "Je pou¾íváno pøíli¹ velké mno¾ství odli¹ných zvýrazòovacích atributù"
 
@@ -4199,59 +4400,59 @@ msgstr "konec seznamu tagù"
 msgid "at top of tag stack"
 msgstr "zaèátek seznamu tagù"
 
-#: tag.c:323
+#: tag.c:380
 msgid "Cannot go before first matching tag"
 msgstr "Pøed první vyhovující tag nelze pøeskoèit"
 
-#: tag.c:429
+#: tag.c:500
 #, c-format
 msgid "tag not found: %s"
 msgstr "tag %s nenalezen"
 
-#: tag.c:459
+#: tag.c:532
 msgid "  # pri kind tag"
 msgstr "  # pri typ tag"
 
-#: tag.c:462
+#: tag.c:535
 msgid "file\n"
 msgstr "soubor\n"
 
 #.
 #. * Ask to select a tag from the list.
 #.
-#: tag.c:614
+#: tag.c:692
 msgid "Enter nr of choice (<CR> to abort): "
 msgstr "Zadejte èíslo (<CR> pro ukonèení): "
 
-#: tag.c:650
+#: tag.c:728
 msgid "There is only one matching tag"
 msgstr "Vyhovuje pouze jeden tag"
 
-#: tag.c:652
+#: tag.c:730
 msgid "Cannot go beyond last matching tag"
 msgstr "Za poslední vyhovující tag nelze pøeskoèit"
 
-#: tag.c:668 tag.c:728
+#: tag.c:750 tag.c:810
 #, c-format
 msgid "File \"%s\" does not exist"
 msgstr "Soubor \"%s\" neexistuje"
 
 #. Give an indication of the number of matching tags
-#: tag.c:680
+#: tag.c:762
 #, c-format
 msgid "tag %d of %d%s"
 msgstr "tag %d z celkového poètu %d%s"
 
-#: tag.c:683
+#: tag.c:765
 msgid " or more"
 msgstr " nebo více"
 
-#: tag.c:685
+#: tag.c:767
 msgid "  Using tag with different case!"
 msgstr "  Pou¾ívám tag s písmeny jiné velikosti!"
 
 #. Highlight title
-#: tag.c:797
+#: tag.c:879
 msgid ""
 "\n"
 "  # TO tag         FROM line  in file/text"
@@ -4259,98 +4460,94 @@ msgstr ""
 "\n"
 "  # CÍL tag        START øádek  v souboru/textu"
 
-#: tag.c:1035
+#: tag.c:1117
 msgid "Linear tag search"
 msgstr "Lineární hledání tagu"
 
-#: tag.c:1037
+#: tag.c:1119
 msgid "Binary tag search"
 msgstr "Binární hledání tagu"
 
-#: tag.c:1063
+#: tag.c:1145
 #, c-format
 msgid "Searching tags file %s"
 msgstr "Prohledávám soubor tagù %s"
 
-#: tag.c:1251
+#: tag.c:1329
 #, c-format
-#~ msgid "Tag file path trucated for %s\n"
-#~ msgstr ""
+msgid "Tag file path truncated for %s\n"
+msgstr "Soubor tagù %s byl oøezán\n"
 
-#: tag.c:1736
+#: tag.c:1820
 #, c-format
 msgid "Format error in tags file \"%s\""
 msgstr "Chyba formátu v souboru tagù \"%s\""
 
-#: tag.c:1740
+#: tag.c:1824
 #, c-format
 msgid "Before byte %ld"
 msgstr "Pøed bajtem %ld"
 
-#: tag.c:1761
+#: tag.c:1845
 #, c-format
 msgid "Tags file not sorted: %s"
 msgstr "Obsah soubor tagù %s není seøazen"
 
 #. never opened any tags file
-#: tag.c:1800
+#: tag.c:1884
 msgid "No tags file"
 msgstr "®ádný soubor tagù"
 
-#: tag.c:2467
+#: tag.c:2551
 msgid "Can't find tag pattern"
 msgstr "Nelze najít vzorek tagù"
 
-#: tag.c:2478
+#: tag.c:2562
 msgid "Couldn't find tag, just guessing!"
 msgstr "Tag nelze nalézt, pouze hádám!"
 
-#: tag.c:2510
+#: tag.c:2594
 msgid "WARNING: tag command changed a buffer!!!"
 msgstr "VAROVÁNÍ: pøíkaz tag zmìnil obsah bufferu!!!"
 
-#: term.c:1640
+#: term.c:1669
 msgid "' not known. Available builtin terminals are:"
 msgstr "' není znám. Dostupné vestavìné terminály:"
 
-#: term.c:1664
+#: term.c:1693
 msgid "defaulting to '"
 msgstr "implicitní terminál '"
 
-#: term.c:1996
+#: term.c:2016
 msgid "Cannot open termcap file"
 msgstr "Nelze otevøít termcap"
 
-#: term.c:1999
+#: term.c:2019
 msgid "Terminal entry not found in terminfo"
 msgstr "Terminfo neobsahuje polo¾ku pro tento terminál"
 
-#: term.c:2001
+#: term.c:2021
 msgid "Terminal entry not found in termcap"
 msgstr "Termcap neobsahuje polo¾ku pro tento terminál"
 
-#: term.c:2160
+#: term.c:2180
 #, c-format
 msgid "No \"%s\" entry in termcap"
 msgstr "Termcap neobsahuje polo¾ku pro \"%s\""
 
-#: term.c:2634
+#: term.c:2654
 #, c-format
 msgid "terminal capability %s required"
 msgstr "Terminál musí mít schopnost %s"
 
 #. Highlight title
-#: term.c:4573
+#: term.c:4676
 msgid ""
 "\n"
 "--- Terminal keys ---"
 msgstr ""
 "\n"
 "--- Klávesy terminálu ---"
-
-#: term.c:4738
-msgid "xterm sent more codes than Vim asked for"
-msgstr "xterm poslal více kódù, ne¾ po nìm Vim ¾ádal"
 
 #: ui.c:199
 msgid "new shell started\n"
@@ -4360,32 +4557,36 @@ msgstr "spu¹tìn nový shell\n"
 msgid "Vim: Error reading input, exiting...\n"
 msgstr "Vim: chyba pøi ètení vstupu, konèím...\n"
 
-#: undo.c:262
+#: undo.c:165
+msgid "Cannot make changes, 'modifiable' is off"
+msgstr "Nelze mìnit, je nastavena volba 'modifiable'"
+
+#: undo.c:332
 msgid "No undo possible; continue anyway"
 msgstr "odstranìní zmìn není mo¾né; chcete pøesto pokraèovat"
 
-#: undo.c:401
+#: undo.c:480
 msgid "u_undo: line numbers wrong"
 msgstr "u_undo: èísla øádkù jsou chybná"
 
-#: undo.c:558
+#: undo.c:637
 msgid "1 change"
 msgstr "poèet zmìn: 1"
 
-#: undo.c:560
+#: undo.c:639
 #, c-format
 msgid "%ld changes"
 msgstr "poèet zmìn: %ld"
 
-#: undo.c:603
+#: undo.c:679
 msgid "undo list corrupt"
 msgstr "záznam o zmìnách po¹kozen"
 
-#: undo.c:618
+#: undo.c:709
 msgid "undo line missing"
 msgstr "chybí undo øádek"
 
-#: version.c:565
+#: version.c:575
 msgid ""
 "\n"
 "MS-Windows 16/32 bit GUI version"
@@ -4393,7 +4594,7 @@ msgstr ""
 "\n"
 "16/32 bitová GUI verze pro MS Windows"
 
-#: version.c:567
+#: version.c:577
 msgid ""
 "\n"
 "MS-Windows 32 bit GUI version"
@@ -4401,15 +4602,15 @@ msgstr ""
 "\n"
 "32 bitová GUI verze pro MS Windows"
 
-#: version.c:570
+#: version.c:580
 msgid " in Win32s mode"
 msgstr " ve Win32s re¾imu"
 
-#: version.c:572
+#: version.c:582
 msgid " with OLE support"
 msgstr " s OLE podporou"
 
-#: version.c:575
+#: version.c:585
 msgid ""
 "\n"
 "MS-Windows 32 bit console version"
@@ -4417,7 +4618,7 @@ msgstr ""
 "\n"
 "32 bitová verze pro MS Windows konzolu"
 
-#: version.c:579
+#: version.c:589
 msgid ""
 "\n"
 "MS-Windows 16 bit version"
@@ -4425,7 +4626,7 @@ msgstr ""
 "\n"
 "16 bitová verze pro MS Windows"
 
-#: version.c:583
+#: version.c:593
 msgid ""
 "\n"
 "32 bit MS-DOS version"
@@ -4433,7 +4634,7 @@ msgstr ""
 "\n"
 "32 bitová verze pro MS Windows"
 
-#: version.c:585
+#: version.c:595
 msgid ""
 "\n"
 "16 bit MS-DOS version"
@@ -4441,7 +4642,7 @@ msgstr ""
 "\n"
 "16 bitová MS-DOS verze"
 
-#: version.c:589
+#: version.c:599
 msgid ""
 "\n"
 "MacOS version"
@@ -4449,7 +4650,7 @@ msgstr ""
 "\n"
 "MacOS verze"
 
-#: version.c:592
+#: version.c:602
 msgid ""
 "\n"
 "RISC OS version"
@@ -4457,7 +4658,7 @@ msgstr ""
 "\n"
 "RISC OS verze"
 
-#: version.c:602
+#: version.c:612
 msgid ""
 "\n"
 "Included patches: "
@@ -4465,7 +4666,7 @@ msgstr ""
 "\n"
 "Pou¾ité záplaty: "
 
-#: version.c:629
+#: version.c:639
 msgid ""
 "\n"
 "Compiled "
@@ -4473,179 +4674,175 @@ msgstr ""
 "\n"
 "pøelo¾il "
 
-#: version.c:632
+#: version.c:642
 msgid "by "
 msgstr " "
 
-#: version.c:644
+#: version.c:654
 msgid ""
 "\n"
-"Huge"
+"Huge version "
 msgstr ""
 "\n"
-"Obrovská"
+"maximální verze"
 
-#: version.c:647
+#: version.c:657
 msgid ""
 "\n"
-"Big"
+"Big version "
 msgstr ""
 "\n"
-"Velká"
-
-#: version.c:650
-msgid ""
-"\n"
-"Normal"
-msgstr ""
-"\n"
-"Normální"
-
-#: version.c:653
-msgid ""
-"\n"
-"Small"
-msgstr ""
-"\n"
-"Malá"
-
-#: version.c:655
-msgid ""
-"\n"
-"Tiny"
-msgstr ""
-"\n"
-"Drobná"
+"velká verze "
 
 #: version.c:660
-msgid " version "
-msgstr " verze "
+msgid ""
+"\n"
+"Normal version "
+msgstr ""
+"\n"
+"normální verze"
 
-#: version.c:662
-msgid "without"
-msgstr "bez"
+#: version.c:663
+msgid ""
+"\n"
+"Small version "
+msgstr ""
+"\n"
+"malá verze "
 
-#: version.c:666
-msgid "with GTK-GNOME"
-msgstr "s GTK-GNOME"
+#: version.c:665
+msgid ""
+"\n"
+"Tiny version "
+msgstr ""
+"\n"
+"minimální verze"
 
-#: version.c:668
-msgid "with GTK"
-msgstr "s GTK"
-
-#: version.c:672
-msgid "with X11-Motif"
-msgstr "s X11-Motif"
+#: version.c:671
+msgid "without GUI."
+msgstr "bez grafického rozhraní"
 
 #: version.c:675
-msgid "with X11-Athena"
-msgstr "S X11-Athena"
+msgid "with GTK-GNOME GUI."
+msgstr "s rozhraním GTK-GNOME"
 
-#: version.c:678
-msgid "with BeOS"
-msgstr "s BeOS"
+#: version.c:677
+msgid "with GTK GUI."
+msgstr "s rozhraním GTK"
 
 #: version.c:681
-msgid "with"
-msgstr "s"
+msgid "with X11-Motif GUI."
+msgstr "s rozhraním X11-Motif"
 
-#: version.c:688
-msgid " GUI.  Features included (+) or not (-):\n"
-msgstr " GUI.  Vlastnosti zahrnuté (+) a nezahrnuté (-):\n"
+#: version.c:684
+msgid "with X11-Athena GUI."
+msgstr "S rozhraním X11-Athena"
 
-#: version.c:700
+#: version.c:687
+msgid "with BeOS GUI."
+msgstr "s rozhraním BeOS"
+
+#: version.c:690
+msgid "with GUI."
+msgstr "s grafickým rozhraním"
+
+#: version.c:697
+msgid "  Features included (+) or not (-):\n"
+msgstr " Vlastnosti zahrnuté (+) a nezahrnuté (-):\n"
+
+#: version.c:709
 msgid "   system vimrc file: \""
 msgstr "   systémový vimrc soubor: \""
 
-#: version.c:705
+#: version.c:714
 msgid "     user vimrc file: \""
 msgstr "     u¾ivatelský vimrc soubor: \""
 
-#: version.c:710
+#: version.c:719
 msgid " 2nd user vimrc file: \""
 msgstr " druhý u¾ivatelský vimrc soubor: \""
 
-#: version.c:715
-msgid "  3d user vimrc file: \""
-msgstr "  tøetí u¾ivatelský vimrc soubor: \""
+#: version.c:724
+msgid " 3rd user vimrc file: \""
+msgstr " tøetí u¾ivatelský vimrc soubor: \""
 
-#: version.c:720
+#: version.c:729
 msgid "      user exrc file: \""
 msgstr "      u¾ivatelský exrc soubor: \""
 
-#: version.c:725
+#: version.c:734
 msgid "  2nd user exrc file: \""
 msgstr "  druhý u¾ivatelský exrc soubor: \""
 
-#: version.c:731
+#: version.c:740
 msgid "  system gvimrc file: \""
 msgstr "  systémový gvimrc soubor: \""
 
-#: version.c:735
+#: version.c:744
 msgid "    user gvimrc file: \""
 msgstr "    u¾ivatelský gvimrc soubor: \""
 
-#: version.c:739
+#: version.c:748
 msgid "2nd user gvimrc file: \""
 msgstr "druhý u¾ivatelský gvimrc soubor: \""
 
-#: version.c:744
-msgid " 3d user gvimrc file: \""
+#: version.c:753
+msgid "3rd user gvimrc file: \""
 msgstr "tøetí u¾ivatelský gvimrc soubor: \""
 
-#: version.c:751
+#: version.c:760
 msgid "    system menu file: \""
 msgstr "    systémový soubor s menu: \""
 
-#: version.c:759
+#: version.c:768
 msgid "  fall-back for $VIM: \""
 msgstr "  implicitní hodnota $VIM:\""
 
-#: version.c:765
+#: version.c:774
 msgid " f-b for $VIMRUNTIME: \""
 msgstr "  implicitní hodnota $VIMRUNTIME: \""
 
-#: version.c:769
+#: version.c:778
 msgid "Compilation: "
 msgstr "Pøeklad: "
 
-#: version.c:775
+#: version.c:784
 msgid "Compiler: "
 msgstr "Pøekladaè: "
 
-#: version.c:780
+#: version.c:789
 msgid "Linking: "
 msgstr "Linkuji: "
 
-#: version.c:785
-#~ msgid "  DEBUG BUILD"
-#~ msgstr ""
+#: version.c:794
+msgid "  DEBUG BUILD"
+msgstr "  PODPORA LADÌNÍ"
 
-#: window.c:510
+#: window.c:514
 msgid "Can't split topleft and botright at the same time"
 msgstr "Okno nelze rozdìlit zároveò topleft a botright"
 
-#: window.c:1126
+#: window.c:1136
 msgid "Cannot rotate when another window is split"
 msgstr "Nelze rotovat, pokud je jiné okno rozdìleno"
 
-#: window.c:1515
+#: window.c:1574
 msgid "Cannot close last window"
 msgstr "Poslední okno nelze uzavøít"
 
-#: window.c:2035
+#: window.c:2128
 msgid "Already only one window"
 msgstr "Ji¾ existuje pouze jedno okno"
 
-#: window.c:2065
+#: window.c:2158
 msgid "Other window contains changes"
 msgstr "Jiné okno obsahuje zmìny"
 
-#: window.c:3708
+#: window.c:3872
 msgid "No file name under cursor"
 msgstr "Pod kurzorem se nenachází název souboru"
 
-#: globals.h:761
+#: globals.h:803
 msgid "--No lines in buffer--"
 msgstr "--Buffer neobsahuje ¾ádný øádek--"
 
@@ -4653,280 +4850,276 @@ msgstr "--Buffer neobsahuje ¾ádný øádek--"
 #. * The error messages that can be shared are included here.
 #. * Excluded are errors that are only used once and debugging messages.
 #.
-#: globals.h:823
+#: globals.h:865
 msgid "Command aborted"
 msgstr "Pøíkaz pøeru¹en"
 
-#: globals.h:824
+#: globals.h:866
 msgid "Argument required"
 msgstr "Je vy¾adován argument"
 
-#: globals.h:825
+#: globals.h:867
 msgid "\\ should be followed by /, ? or &"
 msgstr "po \\ by mìl následovat /. ? nebo &"
 
-#: globals.h:826
+#: globals.h:868
 msgid "Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr ""
 "Pøíkaz není z exrc/vimrc v aktuálním adresáøi èi pøi hledání tagu povolen."
 
-#: globals.h:827
+#: globals.h:869
 msgid "File exists (use ! to override)"
 msgstr "Soubor existuje (pou¾ijte ! pro vynucení)"
 
-#: globals.h:828
+#: globals.h:870
 msgid "Command failed"
 msgstr "Pøíkaz selhal"
 
-#: globals.h:829
+#: globals.h:871
 msgid "Internal error"
 msgstr "Vnitøní chyba"
 
-#: globals.h:830
+#: globals.h:872
 msgid "Interrupted"
 msgstr "Pøeru¹eno"
 
-#: globals.h:831
+#: globals.h:873
 msgid "Invalid address"
 msgstr "Chybný adresa"
 
-#: globals.h:832
+#: globals.h:874
 msgid "Invalid argument"
 msgstr "Chybný argument"
 
-#: globals.h:833
+#: globals.h:875
 #, c-format
 msgid "Invalid argument: %s"
 msgstr "Chybný argument: %s"
 
-#: globals.h:835
+#: globals.h:877
 #, c-format
 msgid "Invalid expression: %s"
 msgstr "Chybný výraz: %s"
 
-#: globals.h:837
+#: globals.h:879
 msgid "Invalid range"
 msgstr "Chybný rozsah"
 
-#: globals.h:838
+#: globals.h:880
 msgid "Invalid command"
 msgstr "Chybný pøíkaz"
 
-#: globals.h:840
+#: globals.h:882
 msgid "Unexpected characters before '='"
 msgstr "Neoèekávané znaky pøed '='"
 
-#: globals.h:842
+#: globals.h:884
 msgid "Mark has invalid line number"
 msgstr "Znaèka má chybné èíslo øádku"
 
-#: globals.h:843
+#: globals.h:885
 msgid "Mark not set"
 msgstr "Znaèka není nastavena"
 
-#: globals.h:845
+#: globals.h:887
 msgid "GUI is not running"
 msgstr "GUI není spu¹tìno"
 
-#: globals.h:847
+#: globals.h:889
 msgid "Scripts nested too deep"
 msgstr "Skript vnoøen pøíli¹ hluboko"
 
-#: globals.h:848
+#: globals.h:890
 msgid "No alternate file"
 msgstr "®ádný alternativní soubor"
 
-#: globals.h:849
+#: globals.h:891
 msgid "No such abbreviation"
 msgstr "Taková zkratka neexistuje"
 
-#: globals.h:850
+#: globals.h:892
 msgid "No ! allowed"
 msgstr "! není povoleno"
 
-#: globals.h:852
+#: globals.h:894
 msgid "GUI cannot be used: Not enabled at compile time"
 msgstr "Nelze pou¾ít GUI: nebylo zapnuto pøi pøekladu programu"
 
-#: globals.h:855
+#: globals.h:897
 msgid "Hebrew cannot be used: Not enabled at compile time\n"
 msgstr "nelze pou¾ít hebrejský re¾im:  nebyl zapnut pøi pøekladu programu\n"
 
-#: globals.h:858
+#: globals.h:900
 msgid "Farsi cannot be used: Not enabled at compile time\n"
 msgstr "Nelze pou¾ít farsi re¾im:  nebyl zapnut pøi pøekladu programu\n"
 
-#: globals.h:860
+#: globals.h:902
 msgid "No inserted text yet"
 msgstr "Zatím není ¾ádný vlo¾ený text"
 
-#: globals.h:861
+#: globals.h:903
 msgid "No previous command line"
 msgstr "®ádná pøedchozí pøíkazová øádka"
 
-#: globals.h:862
+#: globals.h:904
 msgid "No such mapping"
 msgstr "®ádné takové mapování"
 
-#: globals.h:863
+#: globals.h:905
 msgid "No match"
 msgstr "®ádná shoda"
 
-#: globals.h:864
+#: globals.h:906
 #, c-format
 msgid "No match: %s"
 msgstr "®ádná shoda: %s"
 
-#: globals.h:865
+#: globals.h:907
 msgid "No file name"
 msgstr "®ádný název souboru"
 
-#: globals.h:866
-#~ msgid "No previous substitute regular expression"
-#~ msgstr ""
+#: globals.h:908
+msgid "No previous substitute regular expression"
+msgstr ""
 
-#: globals.h:867
+#: globals.h:909
 msgid "No previous command"
 msgstr "®ádný pøedchozí pøíkaz"
 
-#: globals.h:868
+#: globals.h:910
 msgid "No previous regular expression"
 msgstr "¾ádný pøedchozí regulární výraz"
 
-#: globals.h:869
+#: globals.h:911
 msgid "No range allowed"
 msgstr "Rozsah není povolen"
 
-#: globals.h:871
+#: globals.h:913
 msgid "Not enough room"
 msgstr "Nedostatek místa"
 
-#: globals.h:873
+#: globals.h:915
 #, c-format
 msgid "Can't create file %s"
 msgstr "Nelze vytvoøit soubor %s"
 
-#: globals.h:874
+#: globals.h:916
 msgid "Can't get temp file name"
 msgstr "Nelze získat název doèasného souboru"
 
-#: globals.h:875
+#: globals.h:917
 #, c-format
 msgid "Can't open file %s"
 msgstr "Nelze otevøít soubor %s"
 
-#: globals.h:876
+#: globals.h:918
 #, c-format
 msgid "Can't read file %s"
 msgstr "Nelze èíst soubor %s"
 
-#: globals.h:877
+#: globals.h:919
 msgid "No write since last change (use ! to override)"
 msgstr "Neulo¾ené zmìny (pou¾ijte ! pro vynucení)"
 
-#: globals.h:878
+#: globals.h:920
 msgid "Null argument"
 msgstr "Nulový argument"
 
-#: globals.h:880
+#: globals.h:922
 msgid "Number expected"
 msgstr "Oèekáváno èíslo"
 
-#: globals.h:883
+#: globals.h:925
 #, c-format
 msgid "Can't open errorfile %s"
 msgstr "Nelze otevøít chybový soubor %s"
 
-#: globals.h:887
+#: globals.h:929
 msgid "Pattern not found"
 msgstr "Vzor nenalezen"
 
-#: globals.h:889
+#: globals.h:931
 #, c-format
 msgid "Pattern not found: %s"
 msgstr "Vzor nenalezen: %s"
 
-#: globals.h:890
+#: globals.h:932
 msgid "Argument must be positive"
 msgstr "Argument musí být kladný"
 
-#: globals.h:892
+#: globals.h:934
 msgid "No Errors"
 msgstr "®ádné chyby"
 
-#: globals.h:894
-#~ msgid "Damaged match string"
-#~ msgstr ""
+#: globals.h:936
+msgid "Damaged match string"
+msgstr "Po¹kozený øetìzec pro vyhledávání"
 
-#: globals.h:895
+#: globals.h:937
 msgid "Corrupted regexp program"
 msgstr "po¹kozený regexp program"
 
-#: globals.h:896
+#: globals.h:938
 msgid "'readonly' option is set (use ! to override)"
 msgstr "'nastavena volba 'readonly' (pou¾ijte ! pro vynucení)"
 
-#: globals.h:898
+#: globals.h:940
 #, c-format
 msgid "Cannot set read-only variable \"%s\""
 msgstr "Nelze nastavit pouze_pro_ètení promìnnou \"%s\""
 
-#: globals.h:901
+#: globals.h:943
 msgid "Error while reading errorfile"
 msgstr "Chyba pøi ètení chybového souboru"
 
-#: globals.h:903
-#~ msgid "Invalid scroll size"
-#~ msgstr ""
+#: globals.h:946
+msgid "Not allowed in sandbox"
+msgstr "Není v bezpeènostní schránce povoleno"
 
-#: globals.h:904
+#: globals.h:948
+msgid "Invalid scroll size"
+msgstr "Chybná hodnota promìnné 'scroll'"
+
+#: globals.h:949
 msgid "tag stack empty"
 msgstr "seznam tagù je prázdný"
 
-#: globals.h:905
+#: globals.h:950
 msgid "Command too complex"
 msgstr "Pøíkaz je pøíli¹ slo¾itý"
 
-#: globals.h:906
+#: globals.h:951
 msgid "Name too long"
 msgstr "Název je pøíli¹ dlouhý"
 
-#: globals.h:907
-msgid "Too many \\("
-msgstr "pøíli¹ mnoho \\<"
-
-#: globals.h:908
-msgid "Too many \\)"
-msgstr "pøíli¹ mnoho \\)"
-
-#: globals.h:909
+#: globals.h:952
 msgid "Too many ["
 msgstr "pøíli¹ mnoho ["
 
-#: globals.h:911
-msgid "Too many \\z("
-msgstr "pøíli¹ mnoho \\z("
-
-#: globals.h:914
+#: globals.h:954
 msgid "Command too long"
 msgstr "pøíkaz je pøíli¹ dlouhý"
 
-#: globals.h:916
+#: globals.h:956
 msgid "Too many file names"
 msgstr "Pøíli¹ mnoho názvù souborù"
 
-#: globals.h:918
+#: globals.h:958
 msgid "Unknown mark"
 msgstr "Neznámá znaèka"
 
-#: globals.h:919
+#: globals.h:959
 msgid "Unknown"
 msgstr "Neznámý"
 
-#: globals.h:920
+#: globals.h:960
+msgid "Cannot expand wildcards"
+msgstr "Nelze expandovat ¾olíkové znaky"
+
+#: globals.h:961
 msgid "Error while writing"
 msgstr "Chyba pøi ukládání"
 
-#: globals.h:921
+#: globals.h:962
 msgid "Zero count"
 msgstr "Nulový poèet"

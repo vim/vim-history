@@ -1,18 +1,22 @@
 " Vim syntax file
 " Language:    Lisp
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: Sept 28, 2000
-" Version:     1.06
+" Last Change: December 6, 2000
+" Version:     1.07
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
 
 " remove any old syntax stuff hanging around
 syn clear
-set iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+if version >= 600
+ setlocal iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+else
+ set iskeyword=42,43,45,47-58,60-62,64-90,97-122,_
+endif
 
 " Clusters
-syn cluster	lispAtomCluster	contains=lispAtomBarSymbol,lispAtomList,lispAtomNmbr0,lispComment,lispString
-syn cluster	lispListCluster	contains=lispAtom,lispAtomBarSymbol,lispAtomMark,lispBQList,lispBarSymbol,lispComment,lispConcat,lispDecl,lispFunc,lispKey,lispList,lispNumber,lispSpecial,lispString,lispSymbol,lispVar
+syn cluster	lispAtomCluster	contains=lispAtomBarSymbol,lispAtomList,lispAtomNmbr0,lispComment,lispString,lispDecl,lispFunc,lispLeadWhite
+syn cluster	lispListCluster	contains=lispAtom,lispAtomBarSymbol,lispAtomMark,lispBQList,lispBarSymbol,lispComment,lispConcat,lispDecl,lispFunc,lispKey,lispList,lispNumber,lispSpecial,lispString,lispSymbol,lispVar,lispLeadWhite
 
 " Lists
 syn match	lispSymbol	contained	![^()'`,"; \t]\+!
@@ -28,6 +32,7 @@ syn match	lispAtomBarSymbol	!'|..\{-}|!	contains=lispAtomMark
 syn region	lispAtom	start=+'"+	skip=+\\"+ end=+"+
 syn region	lispAtomList	contained	matchgroup=Special start="("	skip="|.\{-}|" matchgroup=Special end=")"	contains=@lispAtomCluster
 syn match	lispAtomNmbr	contained	"\<\d\+"
+syn match	lispLeadWhite	contained	"^\s\+"
 
 " Standard Lisp Functions and Macros
 syn keyword lispFunc	*	find-method	pprint-indent
@@ -430,25 +435,53 @@ syn case match
 " synchronization
 syn sync lines=100
 
-" The default highlighting.
-hi def link lispAtomNmbr	lispNumber
-hi def link lispAtomMark	lispMark
+if version >= 600
+  " The default highlighting.
+  hi def link lispAtomNmbr	lispNumber
+  hi def link lispAtomMark	lispMark
+  
+  hi def link lispAtom	Identifier
+  hi def link lispAtomBarSymbol	Special
+  hi def link lispBarSymbol	Special
+  hi def link lispComment	Comment
+  hi def link lispConcat	Statement
+  hi def link lispDecl	Statement
+  hi def link lispFunc	Statement
+  hi def link lispKey	Type
+  hi def link lispMark	Delimiter
+  hi def link lispNumber	Number
+  hi def link lispParenError	Error
+  hi def link lispSpecial	Type
+  hi def link lispString	String
+  hi def link lispTodo	Todo
+  hi def link lispVar	Statement
 
-hi def link lispAtom	Identifier
-hi def link lispAtomBarSymbol	Special
-hi def link lispBarSymbol	Special
-hi def link lispComment	Comment
-hi def link lispConcat	Statement
-hi def link lispDecl	Statement
-hi def link lispFunc	Statement
-hi def link lispKey	Type
-hi def link lispMark	Delimiter
-hi def link lispNumber	Number
-hi def link lispParenError	Error
-hi def link lispSpecial	Type
-hi def link lispString	String
-hi def link lispTodo	Todo
-hi def link lispVar	Statement
+else
+
+  if !exists("did_lisp_syntax_inits")
+    let did_lisp_syntax_inits= 1
+    " The default highlighting.
+    hi link lispAtomNmbr	lispNumber
+    hi link lispAtomMark	lispMark
+    
+    hi link lispAtom	Identifier
+    hi link lispAtomBarSymbol	Special
+    hi link lispBarSymbol	Special
+    hi link lispComment	Comment
+    hi link lispConcat	Statement
+    hi link lispDecl	Statement
+    hi link lispFunc	Statement
+    hi link lispKey	Type
+    hi link lispMark	Delimiter
+    hi link lispNumber	Number
+    hi link lispParenError	Error
+    hi link lispSpecial	Type
+    hi link lispString	String
+    hi link lispTodo	Todo
+    hi link lispVar	Statement
+  endif
+  let b:current_syntax = "lisp"
+endif
 
 let b:current_syntax = "lisp"
 

@@ -10,3 +10,4 @@ int bt_nofile __ARGS((buf_t *buf));
 int bt_dontwrite __ARGS((buf_t *buf));
 int bt_dontwrite_msg __ARGS((buf_t *buf));
 int buf_hide __ARGS((buf_t *buf));
+/* vim: set ft=c : */

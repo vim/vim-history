@@ -10,7 +10,7 @@ void ins_compl_check_keys __ARGS((void));
 int get_literal __ARGS((void));
 void insertchar __ARGS((int c, int force_formatting, int second_indent, int ctrlv));
 int comp_textwidth __ARGS((int ff));
-void stop_arrow __ARGS((void));
+int stop_arrow __ARGS((void));
 void set_last_insert __ARGS((int c));
 void beginline __ARGS((int flags));
 int oneright __ARGS((void));
@@ -29,3 +29,4 @@ char_u *keymap_init __ARGS((void));
 int hkmap __ARGS((int c));
 void ins_scroll __ARGS((void));
 void ins_horscroll __ARGS((void));
+/* vim: set ft=c : */

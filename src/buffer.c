@@ -55,7 +55,7 @@ static void	clear_wininfo __ARGS((buf_t *buf));
     int
 open_buffer(read_stdin, eap)
     int		read_stdin;	    /* read file from stdin */
-    exarg_t	*eap;		    /* for forced 'ff' and 'fcc' */
+    exarg_t	*eap;		    /* for forced 'ff' and 'fcc' or NULL */
 {
     int		retval = OK;
 #ifdef FEAT_AUTOCMD
@@ -1113,6 +1113,11 @@ free_buf_options(buf, free_p_ff)
 #ifdef FEAT_INS_EXPAND
     free_string_option(buf->b_p_cpt);
 #endif
+#ifdef FEAT_QUICKFIX
+    free_string_option(buf->b_p_gp);
+    free_string_option(buf->b_p_mp);
+#endif
+    free_string_option(buf->b_p_ep);
 }
 
 /*
@@ -1150,6 +1155,11 @@ buflist_getfile(n, lnum, options, forceit)
     /* if alternate file is the current buffer, nothing to do */
     if (buf == curbuf)
 	return OK;
+
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+	return FAIL;
+#endif
 
     /* altfpos may be changed by getfile(), get it now */
     if (lnum == 0)
@@ -1434,20 +1444,11 @@ buflist_match(prog, buf)
     buf_t	*buf;
 {
     char_u	*match;
-    int		save_reg_ic = reg_ic;
-
-#ifdef CASE_INSENSITIVE_FILENAME
-    reg_ic = TRUE;		/* Always ignore case */
-#else
-    reg_ic = FALSE;		/* Never ignore case */
-#endif
 
     /* First try the short file name, then the long file name. */
     match = fname_match(prog, buf->b_sfname);
     if (match == NULL)
 	match = fname_match(prog, buf->b_ffname);
-
-    reg_ic = save_reg_ic;
 
     return match;
 }
@@ -1468,6 +1469,12 @@ fname_match(prog, name)
     if (name != NULL)
     {
 	regmatch.regprog = prog;
+#ifdef CASE_INSENSITIVE_FILENAME
+	regmatch.rm_ic = TRUE;		/* Always ignore case */
+#else
+	regmatch.rm_ic = FALSE;		/* Never ignore case */
+#endif
+
 	if (vim_regexec(&regmatch, name, (colnr_t)0))
 	    match = name;
 	else
@@ -2250,17 +2257,18 @@ maketitle()
 		buf[IOSIZE - 100] = NUL; /* in case it was too long */
 	    }
 
-	    if (!curbuf->b_p_ma)
-		STRCAT(buf, " -");
-	    else if (curbuf->b_p_ro)
+	    switch (bufIsChanged(curbuf)
+		    + (curbuf->b_p_ro * 2)
+		    + (!curbuf->b_p_ma * 4))
 	    {
-		if (bufIsChanged(curbuf))
-		    STRCAT(buf, " =+");
-		else
-		    STRCAT(buf, " =");
+		case 1: STRCAT(buf, " +"); break;
+		case 2: STRCAT(buf, " ="); break;
+		case 3: STRCAT(buf, " =+"); break;
+		case 4:
+		case 6: STRCAT(buf, " -"); break;
+		case 5:
+		case 7: STRCAT(buf, " -+"); break;
 	    }
-	    else if (bufIsChanged(curbuf))
-		STRCAT(buf, " +");
 
 	    if (curbuf->b_fname != NULL)
 	    {

@@ -11,9 +11,12 @@ void redrawcmdline __ARGS((void));
 void compute_cmdrow __ARGS((void));
 void gotocmdline __ARGS((int clr));
 char_u *ExpandOne __ARGS((expand_t *xp, char_u *str, char_u *orig, int options, int mode));
+void ExpandEscape __ARGS((expand_t *xp, char_u *str, int cmd_numfiles, char_u **cmd_files, int options));
 void tilde_replace __ARGS((char_u *orig_pat, int num_files, char_u **files));
 char_u *addstar __ARGS((char_u *fname, int len, int context));
-int ExpandGeneric __ARGS((expand_t *xp, regprog_t *prog, int *num_file, char_u ***file, char_u *((*func)(expand_t *, int))));
+void set_cmd_context __ARGS((expand_t *xp, char_u *str, int len, int col));
+int expand_cmdline __ARGS((expand_t *xp, char_u *str, int col, int *matchcount, char_u ***matches));
+int ExpandGeneric __ARGS((expand_t *xp, regmatch_t *regmatch, int *num_file, char_u ***file, char_u *((*func)(expand_t *, int))));
 int get_histtype __ARGS((char_u *name));
 void add_to_history __ARGS((int histype, char_u *new_entry, int in_map));
 int get_history_idx __ARGS((int histype));
@@ -30,3 +33,4 @@ void finish_viminfo_history __ARGS((void));
 void write_viminfo_history __ARGS((FILE *fp));
 void cmd_pchar __ARGS((int c, int offset));
 int cmd_gchar __ARGS((int offset));
+/* vim: set ft=c : */

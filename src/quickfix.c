@@ -14,11 +14,6 @@
 
 #if defined(FEAT_QUICKFIX) || defined(PROTO)
 
-/*
- * define DEBUG_CD to print out control msgs for change directory parsing
- */
-/* #define DEBUG_CD */
-
 struct dir_stack_t
 {
     struct dir_stack_t	*next;
@@ -390,13 +385,13 @@ qf_init(efile, errorformat)
      */
     got_int = FALSE;
 
+    /* Always ignore case when looking for a matching error. */
+    regmatch.rm_ic = TRUE;
+
     /*
      * Read the lines in the error file one by one.
      * Try to recognize one of the error formats in each line.
      */
-#ifdef DEBUG_CD
-    emsg(_("Change dir debugging enabled."));
-#endif
     while (fgets((char *)IObuff, CMDBUFFSIZE, fd) != NULL && !got_int)
     {
 	IObuff[CMDBUFFSIZE] = NUL;  /* for very long lines */
@@ -446,21 +441,7 @@ restofline:
 		    namebuf[len] = NUL;
 		    if (vim_strchr((char_u *)"OPQ", idx) != NULL
 			    && mch_getperm(namebuf) == -1)
-		    {
-#ifdef DEBUG_CD
-			char mess[200];
-			sprintf(mess,_("Not a proper file name: '%s'"), namebuf);
-			emsg(mess);
-#endif
 			continue;
-		    }
-#ifdef DEBUG_CD
-		    {
-			char mess[200];
-			sprintf(mess,_("File name '%s' is valid"),namebuf);
-			emsg(mess);
-		    }
-#endif
 		}
 		if ((i = (int)fmt_ptr->addr[1]) > 0)		/* %n */
 		    enr = (int)atol((char *)regmatch.startp[i]);
@@ -499,17 +480,9 @@ restofline:
 		    }
 		    if ((directory = qf_push_dir(namebuf, &dir_stack)) == NULL)
 			goto error1;
-#ifdef DEBUG_CD
-		    emsg2(_("Enter: %s"), directory);
-#endif
 		}
 		else if (idx == 'X')			/* leave directory */
-		{
 		    directory = qf_pop_dir(/* namebuf, */&dir_stack);
-#ifdef DEBUG_CD
-		    emsg2(_("Leave: %s"), directory);
-#endif
-		}
 	    }
 	    namebuf[0] = NUL;		/* no match found, remove file name */
 	    lnum = 0;			/* don't jump to this line */

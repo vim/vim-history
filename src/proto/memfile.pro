@@ -13,3 +13,4 @@ blocknr_t mf_trans_del __ARGS((memfile_t *mfp, blocknr_t old_nr));
 void mf_set_ffname __ARGS((memfile_t *mfp));
 void mf_fullname __ARGS((memfile_t *mfp));
 int mf_need_trans __ARGS((memfile_t *mfp));
+/* vim: set ft=c : */

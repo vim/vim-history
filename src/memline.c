@@ -554,11 +554,15 @@ ml_close(buf, del_file)
     buf->b_ml.ml_chunksize = NULL;
 #endif
     buf->b_ml.ml_mfp = NULL;
+
+    /* Reset the "recovered" flag, give the ATTENTION prompt the next time
+     * this buffer is loaded. */
+    buf->b_flags &= ~BF_RECOVERED;
 }
 
 /*
  * Close all existing memlines and memfiles.
- * Used when exiting.
+ * Only used when exiting.
  * When 'del_file' is TRUE, delete the memfiles.
  */
     void
@@ -569,6 +573,9 @@ ml_close_all(del_file)
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	ml_close(buf, del_file);
+#ifdef TEMPDIRNAMES
+    vim_deltempdir();	    /* delete created temp directory */
+#endif
 }
 
 /*

@@ -7,6 +7,7 @@ char_u *menu_name_skip __ARGS((char_u *name));
 int get_menu_index __ARGS((vimmenu_t *menu, int state));
 int menu_is_menubar __ARGS((char_u *name));
 int menu_is_popup __ARGS((char_u *name));
+int menu_is_child_of_popup __ARGS((vimmenu_t *menu));
 int menu_is_toolbar __ARGS((char_u *name));
 int menu_is_separator __ARGS((char_u *name));
 void gui_create_initial_menus __ARGS((vimmenu_t *menu));
@@ -17,3 +18,4 @@ void gui_mch_toggle_tearoffs __ARGS((int enable));
 void ex_emenu __ARGS((exarg_t *eap));
 vimmenu_t *gui_find_menu __ARGS((char_u *path_name));
 void ex_menutrans __ARGS((exarg_t *eap));
+/* vim: set ft=c : */

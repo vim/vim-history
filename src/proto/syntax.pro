@@ -2,6 +2,7 @@
 void syntax_start __ARGS((win_t *wp, linenr_t lnum));
 void syn_stack_free_all __ARGS((buf_t *buf));
 void syn_stack_apply_changes __ARGS((buf_t *buf));
+void syntax_end_parsing __ARGS((linenr_t lnum));
 int syntax_check_changed __ARGS((linenr_t lnum));
 int get_syntax_attr __ARGS((colnr_t col));
 void syntax_clear __ARGS((buf_t *buf));
@@ -35,3 +36,4 @@ int highlight_changed __ARGS((void));
 void set_context_in_highlight_cmd __ARGS((expand_t *xp, char_u *arg));
 char_u *get_highlight_name __ARGS((expand_t *xp, int idx));
 void free_highlight_fonts __ARGS((void));
+/* vim: set ft=c : */

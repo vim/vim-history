@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Dec 23
+" Last Change:	2001 Jan 14
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -206,12 +206,16 @@ endfunc
 
 func! <SID>BMRemove()
   if s:bmenu_wait == 0
-    let munge = <SID>BMMunge(expand("<afile>"), expand("<abuf>"))
+    let name = expand("<afile>")
+    if isdirectory(name)
+      return
+    endif
+    let munge = <SID>BMMunge(name, expand("<abuf>"))
 
     if s:bmenu_short == 0
-      exe 'aun &Buffers.' . munge
+      exe 'silent! aun &Buffers.' . munge
     else
-      exe 'aun &Buffers.' . <SID>BMHash2(munge) . munge
+      exe 'silent! aun &Buffers.' . <SID>BMHash2(munge) . munge
     endif
     let s:bmenu_count = s:bmenu_count - 1
   endif
@@ -250,7 +254,7 @@ func! <SID>BMShow(...)
   " figure out how many buffers there are
   let buf = 1
   while buf <= bufnr('$')
-    if bufexists(buf)
+    if bufexists(buf) && !isdirectory(bufname(buf))
       let s:bmenu_count = s:bmenu_count + 1
     endif
     let buf = buf + 1
@@ -309,8 +313,11 @@ func! <SID>BMHash2(name)
   endif
 endfunc
 
-" take a buffer number, return a name to insert into a menu:
+" insert a buffer name into the buffer menu:
 func! <SID>BMFilename(name, num)
+  if isdirectory(a:name)
+    return
+  endif
   let munge = <SID>BMMunge(a:name, a:num)
   let hash = <SID>BMHash(munge)
   if s:bmenu_short == 0
@@ -329,16 +336,15 @@ func! <SID>BMMunge(fname, bnum)
   let name = a:fname
   if name == ''
     let name = "[No File]"
+  else
+    let name = fnamemodify(name, ':p:~')
   endif
-  let name = fnamemodify(name, ':~')
-  if !isdirectory(a:fname)
-    " detach file name and separate it out:
-    let name2 = fnamemodify(name, ':t')
-    if a:bnum >= 0
-      let name2 = name2 . ' (' . a:bnum . ')'
-    endif
-    let name = name2 . "\t" . fnamemodify(name,':h')
+  " detach file name and separate it out:
+  let name2 = fnamemodify(name, ':t')
+  if a:bnum >= 0
+    let name2 = name2 . ' (' . a:bnum . ')'
   endif
+  let name = name2 . "\t" . fnamemodify(name,':h')
   let name = escape(name, "\\. \t|")
   let name = substitute(name, "\n", "^@", "g")
   return name
@@ -346,12 +352,12 @@ endfunc
 
 " When just starting Vim, load the buffer menu later
 if has("vim_starting")
-    augroup LoadBufferMenu
-        au! VimEnter * if !exists("no_buffers_menu") | call <SID>BMShow() | endif
-	au  VimEnter * au! LoadBufferMenu
-    augroup END
+  augroup LoadBufferMenu
+    au! VimEnter * if !exists("no_buffers_menu") | call <SID>BMShow() | endif
+    au  VimEnter * au! LoadBufferMenu
+  augroup END
 else
-    call <SID>BMShow()
+  call <SID>BMShow()
 endif
 
 endif " !exists("no_buffers_menu")

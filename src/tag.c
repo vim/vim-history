@@ -980,7 +980,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 
     int		cmplen;
     int		match;		/* matches */
-    int		match_no_ic = 0;/* matches with reg_ic == FALSE */
+    int		match_no_ic = 0;/* matches with rm_ic == FALSE */
     int		match_re;	/* match with regexp */
     int		matchoff = 0;
 
@@ -1104,12 +1104,13 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
  * Only ignore case when TAG_NOIC not used or 'ignorecase' set.
  */
 #ifdef FEAT_TAG_BINS
-    reg_ic = ((p_ic || !noic) && (findall || patheadlen == 0 || !p_tbs));
+    regmatch.rm_ic = ((p_ic || !noic)
+				   && (findall || patheadlen == 0 || !p_tbs));
     for (;;)
     {
-      linear = (reg_ic || patheadlen == 0 || !p_tbs);
+      linear = (regmatch.rm_ic || patheadlen == 0 || !p_tbs);
 #else
-      reg_ic = (p_ic || !noic);
+      regmatch.rm_ic = (p_ic || !noic);
 #endif
 
 #if 0	    /* debug message about binary or linear search */
@@ -1611,7 +1612,7 @@ line_read_in:
 		match = FALSE;
 	    else
 	    {
-		if (reg_ic)
+		if (regmatch.rm_ic)
 		{
 		    match = (STRNICMP(tagp.tagname, pat, cmplen) == 0);
 		    if (match)
@@ -1633,12 +1634,12 @@ line_read_in:
 		*tagp.tagname_end = NUL;
 		match = vim_regexec(&regmatch, tagp.tagname, (colnr_t)0);
 		matchoff = (int)(regmatch.startp[0] - tagp.tagname);
-		if (match && reg_ic)
+		if (match && regmatch.rm_ic)
 		{
-		    reg_ic = FALSE;
+		    regmatch.rm_ic = FALSE;
 		    match_no_ic = vim_regexec(&regmatch, tagp.tagname,
 								  (colnr_t)0);
-		    reg_ic = TRUE;
+		    regmatch.rm_ic = TRUE;
 		}
 		*tagp.tagname_end = cc;
 		match_re = TRUE;
@@ -1683,7 +1684,7 @@ line_read_in:
 		    else
 			mtt = MT_GL_OTH;
 		}
-		if (reg_ic && !match_no_ic)
+		if (regmatch.rm_ic && !match_no_ic)
 		    mtt += MT_IC_OFF;
 		if (match_re)
 		    mtt += MT_RE_OFF;
@@ -1874,7 +1875,7 @@ line_read_in:
       if (use_cscope)
 	  break;
 # endif
-      reg_ic = TRUE;	/* try another time while ignoring case */
+      regmatch.rm_ic = TRUE;	/* try another time while ignoring case */
     }
 #endif
 
@@ -1954,7 +1955,7 @@ get_tagfname(first, buf)
 	did_filefind_init = FALSE;
     }
 
-    /* tried allready (or bogus call) */
+    /* tried already (or bogus call) */
     if (np == NULL)
 	return FAIL;
 
@@ -2033,6 +2034,7 @@ get_tagfname(first, buf)
 	STRCPY(buf, fname);
 	vim_free(fname);
     }
+
     return OK;
 }
 

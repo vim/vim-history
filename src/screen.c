@@ -95,13 +95,11 @@ static int	screen_cur_row, screen_cur_col;	/* last known cursor position */
  * search_hl_buf	the buffer to search for a match
  * search_hl_lnum	the line to search for a match
  * search_hl_attr	contains the attributes to be used
- * search_hl_ic		the value for "reg_ic" for this search
  */
 regmmatch_t	search_hl_rm;
 buf_t		*search_hl_buf;
 linenr_t	search_hl_lnum;
 int		search_hl_attr;
-int		search_hl_ic;
 #endif
 
 /*
@@ -154,7 +152,7 @@ static void win_update __ARGS((win_t *wp));
 static void win_draw_end __ARGS((win_t *wp, int c, int row));
 #ifdef FEAT_FOLDING
 static void fold_line __ARGS((win_t *wp, long fold_count, int level, linenr_t lnum, int row));
-static int foldcolumn_char __ARGS((void));
+static void fill_foldcolumn __ARGS((char_u *p, win_t *wp, int closed));
 #endif
 static int win_line __ARGS((win_t *, linenr_t, int, int));
 static int char_needs_redraw __ARGS((int off_from, int off_to, int len));
@@ -1343,10 +1341,22 @@ win_update(wp)
 #endif
 		}
 
-		/* When able to count old number of rows, count new window
-		 * rows, and may insert/delete lines */
-		if (i < wp->w_lines_valid)
+		if (i == wp->w_lines_valid)
 		{
+		    /* When buffer lines have been inserted/deleted, and
+		     * insering/deleting window lines is not possible, need to
+		     * check for redraw until the end of the window.  This is
+		     * also required when the topline changed. */
+		    if (buf->b_mod_xlines != 0
+			    || (wp->w_topline == mod_top
+				&& wp->w_lines_valid > 0
+				&& wp->w_lines[0].wl_lnum != mod_top))
+			bot_start = 0;
+		}
+		else
+		{
+		    /* Able to count old number of rows: Count new window
+		     * rows, and may insert/delete lines */
 		    j = idx;
 		    for (l = lnum; l < mod_bot; ++l)
 		    {
@@ -1442,11 +1452,6 @@ win_update(wp)
 			}
 		    }
 		}
-		/* When buffer lines have been inserted/deleted, and
-		 * insering/deleting window lines is not possible, need to
-		 * check for redraw until the end of the window. */
-		else if (buf->b_mod_xlines != 0)
-		    bot_start = 0;
 
 		/* When inserting or deleting lines and 'number' is set:
 		 * Redraw all lines below the change to update the line
@@ -1462,7 +1467,7 @@ win_update(wp)
 	     * 'wrap' is on).
 	     */
 	    fold_count = foldedCount(wp, lnum, &win_fold_level);
-	    if (fold_count)
+	    if (fold_count != 0)
 	    {
 		fold_line(wp, fold_count, win_fold_level, lnum, row);
 		++row;
@@ -1578,6 +1583,14 @@ win_update(wp)
     if (idx > wp->w_lines_valid)
 	wp->w_lines_valid = idx;
 
+#ifdef FEAT_SYN_HL
+    /*
+     * Let the syntax stuff know we stop parsing here.
+     */
+    if (syntax_present(buf))
+	syntax_end_parsing(lnum);
+#endif
+
     /*
      * If we didn't hit the end of the file, and we didn't finish the last
      * line we were working on, then the line didn't fit.
@@ -1666,21 +1679,70 @@ win_draw_end(wp, c, row)
     int		c;
     int		row;
 {
+#if defined(FEAT_FOLDING) || defined(FEAT_WINDOWS)
+	int	n = 0;
+# define FDC_OFF n
+#else
+# define FDC_OFF 0
+#endif
+
 #ifdef FEAT_RIGHTLEFT
     if (wp->w_p_rl)
     {
+	/* No check for cmdline window: should never be right-left. */
+# ifdef FEAT_FOLDING
+	n = wp->w_p_fdc;
+
+	if (n > 0)
+	{
+	    /* draw the fold column at the right */
+	    if (n > wp->w_width)
+		n = wp->w_width;
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+		    W_ENDCOL(wp) - n, (int)W_ENDCOL(wp),
+		    ' ', ' ', hl_attr(HLF_FC));
+	}
+# endif
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
-		W_WINCOL(wp), W_ENDCOL(wp) - 1,
+		W_WINCOL(wp), W_ENDCOL(wp) - 1 - FDC_OFF,
 		' ', ' ', hl_attr(HLF_AT));
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
-		W_ENDCOL(wp) - 1, W_ENDCOL(wp),
+		W_ENDCOL(wp) - 1 - FDC_OFF, W_ENDCOL(wp) - FDC_OFF,
 		c, ' ', hl_attr(HLF_AT));
     }
     else
 #endif
+    {
+#ifdef FEAT_CMDWIN
+	if (cmdwin_type != 0 && wp == curwin)
+	{
+	    /* draw the cmdline character in the leftmost column */
+	    n = 1;
+	    if (n > wp->w_width)
+		n = wp->w_width;
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+		    W_WINCOL(wp), (int)W_WINCOL(wp) + n,
+		    cmdwin_type, ' ', hl_attr(HLF_AT));
+	}
+#endif
+#ifdef FEAT_FOLDING
+	if (wp->w_p_fdc > 0)
+	{
+	    int	    nn = n + wp->w_p_fdc;
+
+	    /* draw the fold column at the left */
+	    if (nn > wp->w_width)
+		nn = wp->w_width;
+	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
+		    W_WINCOL(wp) + n, (int)W_WINCOL(wp) + nn,
+		    ' ', ' ', hl_attr(HLF_FC));
+	    n = nn;
+	}
+#endif
 	screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
-		W_WINCOL(wp), (int)W_ENDCOL(wp),
+		W_WINCOL(wp) + FDC_OFF, (int)W_ENDCOL(wp),
 		c, ' ', hl_attr(HLF_AT));
+    }
     wp->w_empty_rows = wp->w_height - row;
 }
 
@@ -1705,6 +1767,7 @@ fold_line(wp, fold_count, level, lnum, row)
     int		len;
     char_u	*p;
     char_u	*text = NULL;
+    int		fdc = wp->w_p_fdc;
 
     /* Compose the folded-line string with 'foldtext', if set. */
     if (*wp->w_p_fdt != NUL)
@@ -1714,6 +1777,8 @@ fold_line(wp, fold_count, level, lnum, row)
 	set_vim_var_nr(VV_FOLDEND, lnume);
 
 	/* Set "v:folddashes" to a string of "level" dashes. */
+	if (level < 0)
+	    level = -level;
 	if (level > 50)
 	    level = 50;
 	vim_memset(dashes, '-', (size_t)level);
@@ -1756,19 +1821,59 @@ fold_line(wp, fold_count, level, lnum, row)
 	text = buf;
     }
     len = STRLEN(text);
-    if (wp->w_p_fdc)
-	len += 2;
+    len += fdc;
+    p = current_ScreenLine;
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0 && wp == curwin)
+    {
+	++len;
+	*p++ = cmdwin_type;
+    }
+#endif
     if (len > W_WIDTH(wp))
 	len = W_WIDTH(wp);
-    if (wp->w_p_fdc)
+    if (fdc > 0)
     {
-	STRNCPY(current_ScreenLine + 2, text, len - 2);
-	current_ScreenLine[0] = foldcolumn_char();
-	current_ScreenLine[1] = ' ';
+	if (len < fdc)
+	{
+	    fdc = len;
+#ifdef FEAT_CMDWIN
+	    if (cmdwin_type != 0 && wp == curwin && fdc > 0)
+		--fdc;
+#endif
+	}
+	fill_foldcolumn(p, wp, TRUE);
+	{
+#ifdef FEAT_RIGHTLEFT
+	    if (wp->w_p_rl)		/* reverse fold column */
+	    {
+		char_u *p1 = current_ScreenLine;
+		char_u *p2 = current_ScreenLine + W_WIDTH(wp) - 1;
+		int	    t;
+
+		/* cmdline window is never right-left, ignore cmdwin_type */
+		while (p1 < current_ScreenLine + fdc)
+		{
+		    t = *p1;
+		    *p1 = *p2;
+		    *p2 = t;
+		    ++p1;
+		    --p2;
+		}
+		STRNCPY(current_ScreenLine, text, len - fdc);
+	    }
+	    else
+#endif
+		STRNCPY(p + fdc, text, len - fdc);
+	}
     }
     else
 	STRNCPY(current_ScreenLine, text, len);
-    while (len < W_WIDTH(wp))
+    while (len < W_WIDTH(wp)
+#ifdef FEAT_RIGHTLEFT
+	    - (wp->w_p_rl ? fdc : 0)
+#endif
+	  )
 	current_ScreenLine[len++] = fill_fold;
     if (text != buf)
 	vim_free(text);
@@ -1776,7 +1881,7 @@ fold_line(wp, fold_count, level, lnum, row)
     /*
      * If all folded lines are in the Visual area, highlight the line.
      */
-    attr = HLF_F;
+    attr = HLF_FL;
 #ifdef FEAT_VISUAL
     if (VIsual_active && wp->w_buffer == curwin->w_buffer)
     {
@@ -1807,24 +1912,40 @@ fold_line(wp, fold_count, level, lnum, row)
     if (attr == HLF_V && VIsual_mode == Ctrl_V)
     {
 	from = 0;
-	if (wp->w_old_cursor_fcol < (colnr_t)W_WIDTH(wp))
+	if (wp->w_old_cursor_fcol + fdc < (colnr_t)W_WIDTH(wp))
 	{
-	    vim_memset(current_ScreenAttrs,
-			       hl_attr(HLF_F), (size_t)wp->w_old_cursor_fcol);
-	    if (wp->w_old_cursor_lcol < (colnr_t)W_WIDTH(wp))
+#ifdef FEAT_RIGHTLEFT
+# define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + (wp->w_p_rl ? (W_WIDTH(wp) - (p) - (l)) : (p)), v, l)
+#else
+# define RL_MEMSET(p, v, l) vim_memset(current_ScreenAttrs + p, v, l)
+#endif
+	    RL_MEMSET(fdc, hl_attr(HLF_FL), (size_t)wp->w_old_cursor_fcol);
+	    if (wp->w_old_cursor_lcol + fdc < (colnr_t)W_WIDTH(wp))
 		from = wp->w_old_cursor_lcol;
 	    else
-		from = W_WIDTH(wp);
-	    vim_memset(current_ScreenAttrs + wp->w_old_cursor_fcol,
+		from = W_WIDTH(wp) - fdc;
+	    RL_MEMSET(wp->w_old_cursor_fcol + fdc,
 		      hl_attr(HLF_V), (size_t)(from - wp->w_old_cursor_fcol));
 	}
-	if (from < W_WIDTH(wp))
-	    vim_memset(current_ScreenAttrs + from,
-				hl_attr(HLF_F), (size_t)(W_WIDTH(wp) - from));
+	if (from < W_WIDTH(wp) - fdc)
+	    RL_MEMSET(from + fdc,
+			 hl_attr(HLF_FL), (size_t)(W_WIDTH(wp) - from - fdc));
     }
     else
 #endif
 	vim_memset(current_ScreenAttrs, hl_attr(attr), (size_t)(W_WIDTH(wp)));
+
+    if (fdc > 0)
+    {
+#ifdef FEAT_RIGHTLEFT
+	if (wp->w_p_rl)
+	    vim_memset(current_ScreenAttrs + W_WIDTH(wp) - fdc,
+						hl_attr(HLF_FC), (size_t)fdc);
+	else
+#endif
+	    vim_memset(current_ScreenAttrs, hl_attr(HLF_FC), (size_t)fdc);
+    }
+
     SCREEN_LINE(row + W_WINROW(wp), W_WINCOL(wp), (int)W_WIDTH(wp),
 						     (int)W_WIDTH(wp), FALSE);
 
@@ -1844,18 +1965,48 @@ fold_line(wp, fold_count, level, lnum, row)
 }
 
 /*
- * Get the character to put in the 'foldcolumn' for the current line.
+ * Fill the foldcolumn at "p" for window "wp".
  */
-    static int
-foldcolumn_char()
+    static void
+fill_foldcolumn(p, wp, closed)
+    char_u	*p;
+    win_t	*wp;
+    int		closed;
 {
-    if (win_fold_level == 0)		/* no fold here */
-	return ' ';
-    if (win_fold_level < 0)		/* start of open fold */
-	return '-';
-    if (win_fold_level <= 9)
-	return '0' + win_fold_level;	/* continued fold */
-    return '>';				/* continued deep fold */
+    int		i = 0;
+    int		level;
+    int		first_level;
+
+    copy_spaces(p, (size_t)wp->w_p_fdc);
+    if (win_fold_level < 0)	/* start of open fold */
+	level = -win_fold_level;
+    else
+	level = win_fold_level;
+    if (level > 0)
+    {
+	/* If the column is too narrow, we start at the lowest level that
+	 * fits and use numbers to indicated the depth. */
+	first_level = level - wp->w_p_fdc - closed + 2;
+	if (first_level < 1)
+	    first_level = 1;
+	for (i = 0; i + 1 < wp->w_p_fdc; ++i)
+	{
+	    if (first_level == 1)
+		p[i] = '|';
+	    else if (first_level + i <= 9)
+		p[i] = '0' + first_level + i;
+	    else
+		p[i] = '>';
+	    if (first_level + i == level)
+	    {
+		if (win_fold_level < 0 && i >= closed)
+		    p[i - closed] = '-';	/* start of open fold */
+		break;
+	    }
+	}
+    }
+    if (closed)
+	p[i] = '+';
 }
 #endif /* FEAT_FOLDING */
 
@@ -1884,7 +2035,7 @@ win_line(wp, lnum, startrow, endrow)
     int		row;			/* row in the window, excl w_winrow */
     int		screen_row;		/* row on the screen, incl w_winrow */
 
-    char_u	extra[18];		/* "%ld" must fit in here */
+    char_u	extra[18];		/* "%ld" and 'fdc' must fit in here */
     int		n_extra = 0;		/* number of extra chars */
     char_u	*p_extra = NULL;	/* string of extra chars */
     int		c_extra = NUL;		/* extra chars, all the same */
@@ -1946,10 +2097,15 @@ win_line(wp, lnum, startrow, endrow)
 
     /* draw_state: items that are drawn in sequence: */
 #define WL_START	0		/* nothing done yet */
-#ifdef FEAT_FOLDING
-# define WL_FOLD	WL_START + 1	/* 'foldcolumn' */
+#ifdef FEAT_WINDOWS
+# define WL_CMDLINE	WL_START + 1	/* cmdline window column */
 #else
-# define WL_FOLD	WL_START
+# define WL_CMDLINE	WL_START
+#endif
+#ifdef FEAT_FOLDING
+# define WL_FOLD	WL_CMDLINE + 1	/* 'foldcolumn' */
+#else
+# define WL_FOLD	WL_CMDLINE
 #endif
 #ifdef FEAT_SIGNS
 # define WL_SIGN	WL_FOLD + 1	/* column for signs */
@@ -2238,22 +2394,34 @@ win_line(wp, lnum, startrow, endrow)
 	/* Skip this quickly when working on the text. */
 	if (draw_state != WL_LINE)
 	{
+#ifdef FEAT_CMDWIN
+	    if (draw_state == WL_CMDLINE - 1 && n_extra == 0)
+	    {
+		draw_state = WL_CMDLINE;
+		if (cmdwin_type != 0 && wp == curwin)
+		{
+		    /* Draw the cmdline character. */
+		    *extra = cmdwin_type;
+		    n_extra = 1;
+		    p_extra = extra;
+		    c_extra = NUL;
+		    char_attr = hl_attr(HLF_AT);
+		}
+	    }
+#endif
+
 #ifdef FEAT_FOLDING
 	    if (draw_state == WL_FOLD - 1 && n_extra == 0)
 	    {
 		draw_state = WL_FOLD;
-		if (wp->w_p_fdc)
+		if (wp->w_p_fdc > 0)
 		{
 		    /* Draw the 'foldcolumn'. */
-		    if (row == startrow)
-			extra[0] = foldcolumn_char();
-		    else
-			extra[0] = ' ';
-		    extra[1] = ' ';
-		    n_extra = 2;
+		    fill_foldcolumn(extra, wp, FALSE);
+		    n_extra = wp->w_p_fdc;
 		    p_extra = extra;
 		    c_extra = NUL;
-		    char_attr = hl_attr(HLF_F);
+		    char_attr = hl_attr(HLF_FC);
 		}
 	    }
 #endif
@@ -4327,12 +4495,11 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
 		wp->w_p_list = TRUE;
 	    }
+	    /* Don't display %V if it's the same as %c. */
 	    if (opt == STL_VIRTCOL_ALT
-		    && virtcol == (colnr_t)(!(State & INSERT) && empty_line
-			    ? 0 : (int)wp->w_cursor.col))
-	    {
+		    && (virtcol == (colnr_t)(!(State & INSERT) && empty_line
+			    ? 0 : (int)wp->w_cursor.col)))
 		break;
-	    }
 	    num = (long)virtcol + 1;
 	    break;
 
@@ -4437,8 +4604,17 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	case STL_MODIFIED:
 	case STL_MODIFIED_ALT:
 	    itemisflag = TRUE;
-	    if (bufIsChanged(wp->w_buffer))
-		str = (char_u *)((opt == STL_MODIFIED_ALT) ? ",+" : "[+]");
+	    switch ((opt == STL_MODIFIED_ALT)
+		    + bufIsChanged(wp->w_buffer) * 2
+		    + (!wp->w_buffer->b_p_ma) * 4)
+	    {
+		case 2: str = (char_u *)"[+]"; break;
+		case 3: str = (char_u *)",+"; break;
+		case 4: str = (char_u *)"[-]"; break;
+		case 5: str = (char_u *)",-"; break;
+		case 6: str = (char_u *)"[+-]"; break;
+		case 7: str = (char_u *)",+-"; break;
+	    }
 	    break;
 	}
 
@@ -4806,9 +4982,8 @@ start_search_hl()
 {
     if (p_hls && !no_hlsearch)
     {
-	search_hl_rm.regprog = last_pat_prog();
+	last_pat_prog(&search_hl_rm);
 	search_hl_attr = hl_attr(HLF_L);
-	search_hl_ic = reg_ic;
     }
 }
 
@@ -4872,7 +5047,6 @@ next_search_hl(lnum, mincol)
     /* use the right buffer for multi-line regexp and 'iskeyword' */
     curbuf_save = curbuf;
     curbuf = search_hl_buf;
-    reg_ic = search_hl_ic;
 
     /*
      * Repeat searching for a match until one is found that includes "mincol"
@@ -7551,8 +7725,11 @@ win_col_off(wp)
     win_t	*wp;
 {
     return ((wp->w_p_nu ? 8 : 0)
+#ifdef FEAT_CMDWIN
+	    + (cmdwin_type == 0 && wp == curwin ? 0 : 1)
+#endif
 #ifdef FEAT_FOLDING
-	    + (wp->w_p_fdc ? 2 : 0)
+	    + wp->w_p_fdc
 #endif
 #ifdef FEAT_SIGNS
 	    + (wp->w_buffer->b_signlist != NULL ? 2 : 0)
@@ -8724,6 +8901,8 @@ showmode()
 #ifdef FEAT_INS_EXPAND
 	    if (edit_submode != NULL)		/* CTRL-X in Insert mode */
 	    {
+		if (edit_submode_pre != NULL)
+		    msg_puts_attr(edit_submode_pre, attr);
 		msg_puts_attr(edit_submode, attr);
 		if (edit_submode_extra != NULL)
 		{
@@ -9133,14 +9312,17 @@ get_rel_pos(wp, str)
  * Change current window if neccesary.	Returns an integer with the
  * CURSOR_MOVED bit set if the cursor has moved or unset otherwise.
  *
+ * The MOUSE_FOLD_CLOSE bit is set when clicked on the '-' in a fold column.
+ * The MOUSE_FOLD_OPEN bit is set when clicked on the '+' in a fold column.
+ *
  * If flags has MOUSE_FOCUS, then the current window will not be changed, and
  * if the mouse is outside the window then the text will scroll, or if the
  * mouse was previously on a status line, then the status line may be dragged.
  *
  * If flags has MOUSE_MAY_VIS, then VIsual mode will be started before the
- * cursor is moved unless the cursor was on a status line.  Ignoring the
- * CURSOR_MOVED bit, this function returns one of IN_UNKNOWN, IN_BUFFER,
- * IN_STATUS_LINE or IN_SEP_LINE depending on where the cursor was clicked.
+ * cursor is moved unless the cursor was on a status line.
+ * This function returns one of IN_UNKNOWN, IN_BUFFER, IN_STATUS_LINE or
+ * IN_SEP_LINE depending on where the cursor was clicked.
  *
  * If flags has MOUSE_MAY_STOP_VIS, then Visual mode will be stopped, unless
  * the mouse is on the status line of the same window.
@@ -9169,6 +9351,9 @@ jump_to_mouse(flags, inclusive)
     int		first;
     int		row = mouse_row;
     int		col = mouse_col;
+#ifdef FEAT_FOLDING
+    int		mouse_char;
+#endif
 
     mouse_past_bottom = FALSE;
     mouse_past_eol = FALSE;
@@ -9199,8 +9384,17 @@ retnomove:
     prev_row = mouse_row;
     prev_col = mouse_col;
 
-    if ((flags & MOUSE_SETPOS))
+    if (flags & MOUSE_SETPOS)
 	goto retnomove;				/* ugly goto... */
+
+#ifdef FEAT_FOLDING
+    /* Remember the character under the mouse, it might be a '-' or '+' in the
+     * fold column. */
+    if (row >= 0 && row < Rows && col >= 0 && col <= Columns)
+	mouse_char = ScreenLines[LineOffset[row] + col];
+    else
+	mouse_char = ' ';
+#endif
 
     old_curwin = curwin;
     old_cursor = curwin->w_cursor;
@@ -9238,6 +9432,17 @@ retnomove:
 		    || (!on_status_line
 # ifdef FEAT_VERTSPLIT
 			&& !on_sep_line
+# endif
+# ifdef FEAT_FOLDING
+			&& (
+#  ifdef FEAT_RIGHTLEFT
+			    wp->w_p_rl ? col < W_WIDTH(wp) - wp->w_p_fdc :
+#  endif
+			    col >= wp->w_p_fdc
+#  ifdef FEAT_CMDWIN
+				  + (cmdwin_type == 0 && wp == curwin ? 0 : 1)
+#  endif
+			    )
 # endif
 			&& (flags & MOUSE_MAY_STOP_VIS))))
 	{
@@ -9366,6 +9571,20 @@ retnomove:
 	}
     }
 
+#ifdef FEAT_FOLDING
+    /* Check for position outside of the fold column. */
+    if (
+# ifdef FEAT_RIGHTLEFT
+	    curwin->w_p_rl ? col < W_WIDTH(curwin) - curwin->w_p_fdc :
+# endif
+	    col >= curwin->w_p_fdc
+#  ifdef FEAT_CMDWIN
+				+ (cmdwin_type == 0 ? 0 : 1)
+#  endif
+       )
+	mouse_char = ' ';
+#endif
+
     /* compute the position in the buffer line from the posn on the screen */
     if (mouse_comp_pos(&row, &col, &curwin->w_cursor.lnum))
 	mouse_past_bottom = TRUE;
@@ -9397,10 +9616,19 @@ retnomove:
     else if (inclusive != NULL)
 	*inclusive = FALSE;
 
-    if (curwin == old_curwin && curwin->w_cursor.lnum == old_cursor.lnum
-	    && curwin->w_cursor.col == old_cursor.col)
-	return IN_BUFFER;		/* Cursor has not moved */
-    return IN_BUFFER | CURSOR_MOVED;	/* Cursor has moved */
+    count = IN_BUFFER;
+    if (curwin != old_curwin || curwin->w_cursor.lnum != old_cursor.lnum
+	    || curwin->w_cursor.col != old_cursor.col)
+	count |= CURSOR_MOVED;		/* Cursor has moved */
+
+#ifdef FEAT_FOLDING
+    if (mouse_char == '+')
+	count |= MOUSE_FOLD_OPEN;
+    else if (mouse_char != ' ')
+	count |= MOUSE_FOLD_CLOSE;
+#endif
+
+    return count;
 }
 
 /*

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0r.  Last change: 2001 Jan 01
+*options.txt*   For Vim version 6.s.  Last change: 2001 Jan 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -236,10 +236,8 @@ You will not get back the 'list' value as it was the last time you edited
 			local to a buffer.  When used without an argument or
 			with  "all" only the options which are local to a
 			buffer will be shown.
-			Currently does not make a difference from ":set" when
-			setting an option.  In the future it may set the
-			global value for a local option without changing the
-			local value.
+			When setting an optiont set the global value for a
+			local option without changing the local value.
 			{not in Vi}
 
 Command		set global value    set local value ~
@@ -247,6 +245,28 @@ Command		set global value    set local value ~
 :setlocal	     no			yes
 :setglobal	     yes		perhaps
 
+
+Global options with a local value			*global-local*
+
+Options are global when you use mostly one value for all buffers.  For some
+global options it's useful to sometimes have a local option.  You can set the
+local value with ":setlocal".  That buffer will then use the local value,
+while all other buffers use the global value.
+
+For example, you have two windows, both on C source code.  They use the global
+'makeprg' option.  If you do this in one of the two windows: >
+	:set makeprg=gmake
+then the other window will switch to the same value.  There is no need to set
+the 'makeprg' option in the other C source window too.
+However, if you start editing a Perl file in a new window, you want to use
+another 'makeprog' for it, without changing the value used for the C source
+files.  You use this command: >
+	:setlocal makeprg=perlmake
+You can switch back to using the global value by making the local value empty: >
+	:setlocal makeprg=
+
+
+Setting the filetype
 
 :setf[iletype] {filetype}			*:setf* *:setfiletype*
 			Set the 'filetype' option to {filetype}, but only if
@@ -712,14 +732,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	".bak" that you want to keep.
 
 						*'backupskip'* *'bsk'*
-'backupskip' 'bsk'	string  (default: "^/tmp/")
+'backupskip' 'bsk'	string  (default: "/tmp/*")
 			global
 			{not in Vi}
-	Pattern that specifies which files will not have a backup file.  When
-	the pattern matches with the name of the file which is written, no
-	backup file is created.  The full path name of the file is used.
-	Note that search pattern syntax is used here, not file patterns.  Thus
-	".*\.c" should be used instead of *.c".  See |pattern|.
+			{not available when compiled without the |+wildignore|
+			feature}
+	A list of file patterns.  When one of the patterns matches with the
+	name of the file which is written, no backup file is created.  Both
+	the specified file name and the full path name of the file are used.
+	The pattern is used like with |:autocmd|, see |autocmd-patterns|.
 	Watch out for special characters, see |option-backslash|.
 
 						*'balloondelay'* *'bdlay'*
@@ -886,6 +907,23 @@ A jump table for the options with a short description can be found at |X_op|.
 	override it: >
 	  :let &cdpath = ',' . substitute(substitute($CDPATH, '[, ]', '\\\0', 'g'), ':', ',', 'g')
 <
+						*'cedit'*
+'cedit'			string	(Vi default: "", Vim default: CTRL-F)
+			global
+			{not in Vi}
+			{not available when compiled without the |+vertsplit|
+			feature}
+	The key used in Command-line Mode to open the command-line window.
+	The default is CTRL-F when 'compatible' is off.
+	Only non-printable keys are allowed.
+	The key can be specified as a single character, but it is difficult to
+	type.  The preferred way is to use the <> notation.  Examples: >
+		:set cedit=<C-Y>
+		:set cedit=<Esc>
+<	|Nvi| also has this option, but it only uses the first character.
+	NOTE: This option is set to the Vi default value when 'compatible' is
+	set and to the Vim default value when 'compatible' is reset.
+
 					*'charcode'* *'cc'*
 'charcode' 'cc'		string (default: "latin-1")
 			global
@@ -1087,6 +1125,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	Number of screen lines to use for the command-line.  Helps avoiding
 	|hit-enter| prompts.
 
+						*'cmdwinheight'* *'cwh'*
+'cmdwinheight' 'cwh'	number	(default 7)
+			global
+			{not in Vi}
+			{not available when compiled without the |+vertsplit|
+			feature}
+	Number of screen lines to use for the command-line window. |cmdwin|
+
 						*'columns'* *'co'*
 'columns' 'co'		number	(default 80 or terminal width)
 			global
@@ -1150,6 +1196,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	'backspace'	  ""		normal backspace
 	'backup'	  off		no backup file
 	'cindent'	  off		no C code indentation
+	'cedit'		+ ""		no key to open the |cmdwin|
 	'cpoptions'	+ (all flags)	Vi-compatible flags
 	'cscopetag'	  off		don't use cscope for ":tag"
 	'cscopetagorder'  0		see |cscopetagorder|
@@ -1625,7 +1672,7 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'equalprg'* *'ep'*
 'equalprg' 'ep'		string	(default "")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	External program to use for "=" command.  When this option is empty
 	the internal formatting functions are used ('lisp', 'cindent' or
@@ -1912,14 +1959,15 @@ A jump table for the options with a short description can be found at |X_op|.
 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 	toggle this option |i_CTRL-_|.  See |farsi.txt|.
 
-/			*'foldcolumn'* *'fdc'* *'nofoldcolumn'* *'nofdc'*
-'foldcolumn' 'fdc'	boolean (default off)
+						*'foldcolumn'* *'fdc'*
+'foldcolumn' 'fdc'	number (default 0)
 			local to window
 			{not in Vi}
 			{not available when compiled without the |+folding|
 			feature}
-	When on, a small column is shown at the left of the window which
-	indicates folds and fold levels.
+	When non-zero, a column with the specified width is shown at the side
+	of the window which indicates open and closed folds.  The maximum
+	value is 12.
 	See |folding|.
 
 			*'foldenable'* *'fen'* *'nofoldenable'* *'nofen'*
@@ -2055,7 +2103,7 @@ A jump table for the options with a short description can be found at |X_op|.
 						*'grepprg'* *'gp'*
 'grepprg' 'gp'		string	(default "grep -n ", Win32: "findstr /n",
 						      VMS: "SEEARCH/NUMBERS ")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	Program to use for the ":grep" command. This option may contain '%'
 	and '#' characters, which are expanded like when used in a command-
@@ -2989,7 +3037,7 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'makeef'* *'mef'*
 'makeef' 'mef'		string	(Amiga default: "t:vim##.Err",
-					  Unix: "/tmp/vim##.err",
+				 Unix and OS/2: "",
 					others: "vim##.err")
 			global
 			{not in Vi}
@@ -2997,6 +3045,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	Name of the errorfile for the |:make| command (see |:make_makeprg|)
 	and the |:grep| command.
+	When it is empty, an internally generated temp file will be used.
 	When "##" is included, it is replaced by a number to make the name
 	unique.  This makes sure that the ":make" command doesn't overwrite an
 	existing file.
@@ -3006,7 +3055,7 @@ A jump table for the options with a short description can be found at |X_op|.
 
 						*'makeprg'* *'mp'*
 'makeprg' 'mp'		string	(default "make", VMS: "MMS")
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 	Program to use for the ":make" command.  See |:make_makeprg|.  This
 	option may contain '%' and '#' characters, which are expanded like
@@ -3418,6 +3467,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	been successfully written, that's why it must be possible to write a
 	backup file).  If there was no file to be backed up, an empty file is
 	created.
+	When the 'backupskip' pattern matches, a patchmode file is not made.
 
 						*'path'* *'pa'*
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
@@ -3610,7 +3660,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	ruler.  The default ruler width is 17 characters.
 
 						*'runtimepath'* *'rtp'*
-'runtimepath' 'rtp'	string	(default: "$VIMRUNTIME",
+'runtimepath' 'rtp'	string	(default:
 				 Unix: "$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME")
 				 Amiga: "home:vimfiles,s:vimfiles,
 						    $VIM/vimfiles,$VIMRUNTIME"
@@ -3628,7 +3678,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	  menu.vim	GUI menus |menu.vim|
 	  doc/		documentation |write-local-help|
 	  plugin/	plugin scripts |write-plugin|
-	  ftplugin/	iletype plugins |write-filetype-plugin|
+	  ftplugin/	filetype plugins |write-filetype-plugin|
 	  syntax/	syntax files |mysyntaxfile|
 	  syntax2/	syntax file additions |mysyntaxfile-add|
 
@@ -4215,7 +4265,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the +windows
 			feature}
 	When on, splitting a window will put the new window below the current
-	one.
+	one. |:split|
 
 			*'splitright'* *'spr'* *'nosplitright'* *'nospr'*
 'splitright' 'spr'	boolean	(default off)
@@ -4224,7 +4274,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the +vertsplit
 			feature}
 	When on, splitting a window will put the new window right of the
-	current one.
+	current one. |:vsplit|
 
 			   *'startofline'* *'sol'* *'nostartofline'* *'nosol'*
 'startofline' 'sol'	boolean	(default on)
@@ -4279,8 +4329,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	f S   Path to the file in the buffer, relative to current directory.
 	F S   Full path to the file in the buffer.
 	t S   File name (tail) of file in the buffer.
-	m F   Modified flag, text is " [+].
-	M F   Modified flag, text is ",+".
+	m F   Modified flag, text is " [+]" or " [-]" if 'modifiable' is off.
+	M F   Modified flag, text is ",+" or ",-".
 	r F   Readonly flag, text is " [RO]".
 	R F   Readonly flag, text is ",RO".
 	h F   Help buffer flag, text is " [help]".

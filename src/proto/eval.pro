@@ -14,6 +14,7 @@ char_u *get_user_var_name __ARGS((expand_t *xp, int idx));
 char_u *get_function_name __ARGS((expand_t *xp, int idx));
 char_u *get_expr_name __ARGS((expand_t *xp, int idx));
 void set_vim_var_nr __ARGS((int idx, long val));
+void set_vcount __ARGS((long count, long count1));
 void set_vim_var_string __ARGS((int idx, char_u *val, int len));
 char_u *set_cmdarg __ARGS((exarg_t *eap, char_u *oldarg));
 char_u *get_var_value __ARGS((char_u *name));
@@ -38,3 +39,4 @@ int store_session_globals __ARGS((FILE *fd));
 int eval_charconvert __ARGS((char_u *cc_from, char_u *cc_to, char_u *fname_from, char_u *fname_to));
 int modify_fname __ARGS((char_u *src, int *usedlen, char_u **fnamep, char_u **bufp, int *fnamelen));
 char_u *do_string_sub __ARGS((char_u *str, char_u *pat, char_u *sub, char_u *flags));
+/* vim: set ft=c : */

@@ -43,3 +43,4 @@ int mch_chdir __ARGS((char_u *dir));
 void mch_read_filetype __ARGS((char_u *file));
 void mch_set_filetype __ARGS((char_u *file, char_u *type));
 int mch_check_filetype __ARGS((char_u *fname, char_u *type));
+/* vim: set ft=c : */

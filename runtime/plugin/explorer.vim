@@ -2,8 +2,8 @@
 " File : explorer.vim
 " Author : M A Aziz Ahmed (aziz@123india.com)
 " Additions by Mark Waggoner (waggoner@aracnet.com)
-" Last update : Thu Dec 29 2000
-" Version : 2.2
+" Last update : Wed Jan 11 2001
+" Version : 2.3
 "-----------------------------------------------------------------------------
 " This file implements a file explorer. Latest version available at:
 " http://www.freespeech.org/aziz/vim/
@@ -24,6 +24,13 @@
 " See :help file-explorer for more details
 "
 "-----------------------------------------------------------------------------
+" Updates in version 2.3 by Mark Waggoner
+" - Change backslashes to slashes where needed when running on windows
+" - Fix incorrect display when insert mode abbreviations exist
+" - Add explSplitBelow and explSplitRight options and change method of
+"   opening new windows so that it takes space away from ajoining
+"   window if possible
+" - Make work better if open two windows on same explorer buffer
 " Updates in version 2.2 by Mark Waggoner
 " - Allow files matching 'suffixes' option to be grouped separately
 "   from other files.  Highlight them.
@@ -54,16 +61,29 @@ endif
 let loaded_explorer=1
 
 
-"Default settings
+"---
+" Default settings for global configuration variables
 
 " Split vertically instead of horizontally?
 if !exists("g:explVertical")
   let g:explVertical=0
 endif
 
-" How big to make the window?
+" How big to make the window? Set to "" to avoid resizing
 if !exists("g:explWinSize")
   let g:explWinSize=15
+endif
+
+" When opening a new file/directory, split below current window (or
+" above)?  1 = below, 0 = to above
+if !exists("g:explSplitBelow")
+  let g:explSplitBelow = &splitbelow
+endif
+
+" Split to right of current window (or to left)?
+" 1 = to right, 0 = to left
+if !exists("g:explSplitRight")
+  let g:explSplitRight = &splitright
 endif
 
 " Show detailed help?
@@ -106,10 +126,9 @@ if !exists("g:explUseSeparators")
   let g:explUseSeparators=0
 endif
 
-"----------------------------------------------------------
-" script variables - these are the same across all 
+"---
+" script variables - these are the same across all
 " explorer windows
-"----------------------------------------------------------
 
 " characters that must be escaped for a regular expression
 let s:escregexp = '/*^$.~\'
@@ -131,9 +150,8 @@ endif
 " A line to use for separating sections
 let s:separator='"---------------------------------------------------'
 
-"----------------------------------------------------------
+"---
 " Create commands
-"----------------------------------------------------------
 
 if !exists(':Explore')
   command Explore :call s:StartExplorer(0)
@@ -142,7 +160,7 @@ if !exists(':Sexplore')
   command Sexplore :call s:StartExplorer(1)
 endif
 
-"----------------------------------------------------------
+"---
 " Start the explorer using the preferences from the global variables
 "
 function! s:StartExplorer(split)
@@ -155,7 +173,7 @@ function! s:StartExplorer(split)
   execute startcmd
 endfunction
 
-"----------------------------------------------------------
+"---
 " This is the main entry for 'editing' a directory
 "
 function! s:EditDir()
@@ -164,19 +182,18 @@ function! s:EditDir()
     return
   endif
 
-  " If directory is already loaded, don't open it again!
-  if line('$') > 1
-    return
-  endif
-
   " Turn off the swapfile, set the buffer type so that it won't get
-  " written, and delete it when it gets hidden.
+  " written, and so that it will get deleted when it gets hidden.
   setlocal modifiable
   setlocal noswapfile
   setlocal buftype=nowrite
   setlocal bufhidden=delete
   " Don't wrap around long lines
   setlocal nowrap
+
+  " No need for any insertmode abbreviations, since we don't allow
+  " insertions anyway!
+  iabc <buffer>
 
   " Long or short listing?  Use the global variable the first time
   " explorer is called, after that use the script variable as set by
@@ -218,21 +235,27 @@ function! s:EditDir()
   endif
   call s:SetSuffixesLast()
 
+  " If directory is already loaded, don't open it again!
+  if line('$') > 1
+    return
+  endif
+
   " Get the complete path to the directory to look at with a slash at
   " the end
-  let b:completePath = substitute(expand("%:p"), '\\', '/', 'g')
+  let b:completePath = s:Path(expand("%:p"))
 
   " Save the directory we are currently in and chdir to the directory
   " we are editing so that we can get a real path to the directory,
   " eliminating things like ".."
-  let origdir = getcwd()
+  let origdir= s:Path(getcwd())
   exe "chdir" escape(b:completePath,s:escfilename)
-  let b:completePath = getcwd()
+  let b:completePath = s:Path(getcwd())
+  exe "chdir" escape(origdir,s:escfilename)
+
+  " Add a slash at the end
   if b:completePath !~ '/$'
     let b:completePath = b:completePath . '/'
   endif
-  let b:completePath = substitute(b:completePath, '/[^/]*/\.\./', '/', 'g')
-  exe "chdir" escape(origdir,s:escfilename)
 
   " escape special characters for exec commands
   let b:completePathEsc=escape(b:completePath,s:escfilename)
@@ -294,8 +317,11 @@ function! s:EditDir()
   setlocal nomodifiable
 endfunction
 
-" Open a file or directory in a new window.  If a file, resize the
-" explorer down to the size set in g:explWinSize
+"---
+" Open a file or directory in a new window.
+" Use g:explSplitBelow and g:explSplitRight to decide where to put the
+" split window, and resize the original explorer window if it is
+" larger than g:explWinSize
 "
 function! s:OpenEntry()
   " Are we on a line with a file name?
@@ -309,21 +335,95 @@ function! s:OpenEntry()
   let s:longhelp = w:longhelp
   let s:longlist = w:longlist
 
-  " Get file name and remove ending slash on directory names
-  let fn=substitute(s:GetFullFileNameEsc(),'/$','','')
+  " Get the window number of the explorer window
+  let n = winnr()
 
-  " Open new window
+  " Save the user's settings for splitbelow and splitright
+  let savesplitbelow=&splitbelow
+  let savesplitright=&splitright
+
+  " Figure out how to do the split based on the user's preferences.
+  " We want to split to the (left,right,top,bottom) of the explorer
+  " window, but we want to extract the screen real-estate from the
+  " window next to the explorer if possible.
+  "
+  " 'there' will be set to a command to move from the split window
+  " back to the explorer window
+  "
+  " 'back' will be set to a command to move from the explorer window
+  " back to the newly split window
+  "
+  " 'right' and 'below' will be set to the settings needed for
+  " splitbelow and splitright IF the explorer is the only window.
+  "
+  if g:explVertical
+    if g:explSplitRight
+      let there="normal! \<c-w>h"
+      let back ="normal! \<c-w>l"
+      let right=1
+      let below=0
+    else
+      let there="normal! \<c-w>l"
+      let back ="normal! \<c-w>h"
+      let right=0
+      let below=0
+    endif
+  else
+    if g:explSplitBelow
+      let there="normal! \<c-w>k"
+      let back ="normal! \<c-w>j"
+      let right=0
+      let below=1
+    else
+      let there="normal! \<c-w>j"
+      let back ="normal! \<c-w>k"
+      let right=0
+      let below=0
+    endif
+  endif
+
+  " Get the file name 
+  let fn=s:GetFullFileNameEsc()
+
+  " Attempt to go to adjacent window
+  exec(back)
+  " If no adjacent window, set splitright and splitbelow appropriately
+  if n == winnr()
+    let &splitright=right
+    let &splitbelow=below
+  else
+    " found adjacent window - invert split direction
+    let &splitright=!right
+    let &splitbelow=!below
+  endif
+
+  " Is it a directory?  If so, get a real path to it instead of
+  " relative path
+  if isdirectory(fn)
+    let origdir= s:Path(getcwd())
+    exe "chdir" fn
+    let fn = s:Path(getcwd())
+    exe "chdir" escape(origdir,s:escfilename)
+  endif
+
+  " Open the new window
   exec("silent " . s:splitMode." sp " . fn)
 
-  " Keep the file explorer at the top and resize it if opening a
-  " file - otherwise don't bother.
-  if !isdirectory(expand("%:p"))
-      exec("normal! \<c-w>x")
-      exec("silent ".s:splitMode." resize ".g:explWinSize)
-      exec("normal! \<c-w>p")
+  " resize the explorer window if it is larger than the requested size
+  exec(there)
+  if g:explWinSize =~ '[0-9]\+' && winheight("") > g:explWinSize
+    exec("silent ".s:splitMode." resize ".g:explWinSize)
   endif
+  exec(back)
+
+  " Restore splitmode settings
+  let &splitbelow=savesplitbelow
+  let &splitright=savesplitright
+
 endfunction
 
+
+"---
 " Open file or directory in the same window as the explorer is
 " currently in
 "
@@ -333,19 +433,26 @@ function! s:EditEntry()
   if l =~ '^"' 
     return
   endif
- 
+
   " Copy window settings to script settings
   let s:sortby=w:sortdirlabel . w:sorttype
   let s:longhelp = w:longhelp
   let s:longlist = w:longlist
 
-  " Get file name and remove ending slash on directory names
-  let fn=substitute(s:GetFullFileNameEsc(),'/$','','')
+  " Get the file name 
+  let fn=s:GetFullFileNameEsc()
+  if isdirectory(fn)
+    let origdir= s:Path(getcwd())
+    exe "chdir" fn
+    let fn = s:Path(getcwd())
+    exe "chdir" escape(origdir,s:escfilename)
+  endif
 
   " Edit the file/dir
-  exec("silent e " . fn)
+  exec("e " . fn)
 endfunction
 
+"---
 " Create a regular expression out of the suffixes option for sorting
 " and set a string to indicate whether we are sorting with the
 " suffixes at the end (or the beginning)
@@ -362,6 +469,7 @@ function! s:SetSuffixesLast()
   endif
 endfunction
 
+"---
 " Show the header and contents of the directory
 "
 function! s:ShowDirectory()
@@ -381,25 +489,26 @@ function! s:ShowDirectory()
   let save_f=@f
 
   " Get a list of all the files
-  let @f=glob(b:completePath."*")
+  let @f=s:Path(glob(b:completePath."*"))
   if @f != "" && @f !~ '\n$'
     let @f=@f."\n"
   endif
 
   " Removing dot files if they are a part of @f. In Unix for example, dot files
   " are not included, but in Windows they are!
-  let @f=substitute(@f, "[^\n]*[\\\\/]\\.[^\\\\/\n]*\n", '', 'g')
+  " NOT any more as of vim60r
+  " let @f=substitute(@f, "[^\n]*[\\\\/]\\.[^\\\\/\n]*\n", '', 'g')
 
   " Add the dot files now, making sure "." is not included!
-  let @f=@f.substitute(glob(b:completePath.".*"), "[^\n]*/./\\=\n", '' , '')
+  let @f=@f.substitute(s:Path(glob(b:completePath.".*")), "[^\n]*/./\\=\n", '' , '')
   if @f != "" && @f !~ '\n$'
     let @f=@f."\n"
   endif
 
   " Add ".." if it isn't in the list
-  if @f !~ (escape(b:completePath,s:escregexp) . '\.\.')
-    let @f=@f . "\n" . b:completePath . ".."
-  endif
+" if @f !~ (escape(b:completePath,s:escregexp) . '\.\.')
+"   let @f=@f . "\n" . b:completePath . ".."
+" endif
 
   " Are there any files left after filtering?
   if @f!=""
@@ -431,6 +540,7 @@ function! s:ShowDirectory()
 
 endfunction
 
+"---
 " Mark which items are directories - called once for each file name
 " must be used only when size/date is not displayed
 "
@@ -460,6 +570,18 @@ function! s:MarkDirs()
   let &report=oldRep
 endfunction
 
+"---
+" Make sure a path has proper form
+"
+function! s:Path(p)
+  if has("dos16") || has("dos32") || has("win16") || has("win32") || has("os2")
+    return substitute(a:p,'\\','/','g')
+  else
+    return a:p
+  endif
+endfunction
+
+"---
 " Extract the file name from a line in several different forms
 "
 function! s:GetFullFileNameEsc()
@@ -471,10 +593,7 @@ function! s:GetFileNameEsc()
 endfunction
 
 function! s:EscapeFilename(name)
-    let n=escape(a:name,s:escfilename)
-    " Remove path
-    let n=substitute(n, '/[^/]*/\.\./', '/', 'g')
-    return n
+    return escape(a:name,s:escfilename)
 endfunction
 
 
@@ -487,13 +606,14 @@ function! s:GetFileName()
 endfunction
 
 function! s:ExtractFullFileName(line)
-  return b:completePath.s:ExtractFileName(a:line)
+  return b:completePath . s:ExtractFileName(a:line)
 endfunction
 
 function! s:ExtractFileName(line)
   return substitute(strpart(a:line,0,b:maxFileLen),'\s\+$','','')
 endfunction
 
+"---
 " Get the size of the file
 function! s:ExtractFileSize(line)
   if (w:longlist==0)
@@ -503,6 +623,7 @@ function! s:ExtractFileSize(line)
   endif
 endfunction
 
+"---
 " Get the date of the file - dates must be displayed!
 function! s:ExtractFileDate(line)
   if w:longlist==0
@@ -513,6 +634,7 @@ function! s:ExtractFileDate(line)
 endfunction
 
 
+"---
 " Add the header with help information
 "
 function! s:AddHeader()
@@ -529,7 +651,6 @@ function! s:AddHeader()
     else
       let @f="\" Press ? for keyboard shortcuts\n"
     endif
-"   let @f=@f."\"---------------------------------------------------\n"
     let @f=@f."\" Sorted by ".w:sortdirlabel.w:sorttype.b:suffixeslast.b:filtering."\n"
     let @f=@f."\"= ".b:completePath."\n"
     put! f
@@ -537,6 +658,7 @@ function! s:AddHeader()
 endfunction
 
 
+"---
 " Show the size and date for each file
 "
 function! s:AddFileInfo()
@@ -547,7 +669,7 @@ function! s:AddFileInfo()
 
   " Remove all info
   0
-  /^"=/+1,$g/^/let fn=s:GetFileName() | exec "normal! 0C" .fn."\<esc>"
+  /^"=/+1,$g/^/call setline(line("."),s:GetFileName())
 
   " Add info if requested
   if w:longlist==1
@@ -579,6 +701,7 @@ function! s:AddFileInfo()
 endfunction
 
 
+"----
 " Get the modification time for a file
 "
 function! s:FileModDate(name)
@@ -590,6 +713,7 @@ function! s:FileModDate(name)
   endif
 endfunction
 
+"---
 " Delete a file or files
 "
 function! s:DeleteFile() range
@@ -640,6 +764,7 @@ function! s:DeleteFile() range
   setlocal nomodifiable
 endfunction
 
+"---
 " Rename a file
 "
 function! s:RenameFile()
@@ -668,6 +793,7 @@ function! s:RenameFile()
   setlocal nomodifiable
 endfunction
 
+"---
 " Toggle between short and long help
 "
 function! s:ToggleHelp()
@@ -685,6 +811,7 @@ function! s:ToggleHelp()
   setlocal nomodifiable
 endfunction
 
+"---
 " Update the header
 "
 function! s:UpdateHeader()
@@ -694,7 +821,7 @@ function! s:UpdateHeader()
   normal! mt
   " Remove old header
   0
-  1, /^"=/ d
+  1,/^"=/ d
   " Add new header
   call s:AddHeader()
   " Go back where we came from if possible
@@ -707,6 +834,7 @@ function! s:UpdateHeader()
   setlocal nomodified
 endfunction
 
+"---
 " Toggle long vs. short listing
 "
 function! s:ToggleLongList()
@@ -722,7 +850,8 @@ function! s:ToggleLongList()
   setlocal nomodifiable
 endfunction
 
-" Show all files
+"---
+" Show all files - remove filtering
 "
 function! s:ShowAllFiles()
   setlocal modifiable
@@ -732,6 +861,7 @@ function! s:ShowAllFiles()
   setlocal nomodifiable
 endfunction
 
+"---
 " Figure out what section we are in
 "
 function! s:GetSection()
@@ -745,6 +875,7 @@ function! s:GetSection()
   return section
 endfunction
 
+"---
 " Remove section separators
 "
 function! s:RemoveSeparators()
@@ -755,6 +886,7 @@ function! s:RemoveSeparators()
   silent! exec '/^"=/+1,$g/^' . s:separator . "/d"
 endfunction
 
+"---
 " Add section separators
 "   between directories and files if they are separated
 "   between files and 'suffixes' files if they are separated
@@ -777,6 +909,7 @@ function! s:AddSeparators()
                \let lastsec=sec
 endfunction
 
+"---
 " General string comparison function
 "
 function! s:StrCmp(line1, line2, direction)
@@ -789,6 +922,7 @@ function! s:StrCmp(line1, line2, direction)
   endif
 endfunction
 
+"---
 " Function for use with Sort(), to compare the file names
 " Default sort is to put in alphabetical order, but with all directory
 " names before all file names
@@ -811,6 +945,7 @@ function! s:FileNameCmp(line1, line2, direction)
 
 endfunction
 
+"---
 " Function for use with Sort(), to compare the file modification dates
 " Default sort is to put NEWEST files first.  Reverse will put oldest
 " files first
@@ -839,6 +974,7 @@ function! s:FileDateCmp(line1, line2, direction)
   endif
 endfunction
 
+"---
 " Function for use with Sort(), to compare the file sizes
 " Default sort is to put largest files first.  Reverse will put
 " smallest files first
@@ -866,8 +1002,9 @@ function! s:FileSizeCmp(line1, line2, direction)
   endif
 endfunction
 
+"---
 " Sort lines.  SortR() is called recursively.
-
+"
 function! s:SortR(start, end, cmp, direction)
 
   " Bottom of the recursion if start reaches end
@@ -910,6 +1047,7 @@ function! s:SortR(start, end, cmp, direction)
   call s:SortR(partition + 1, a:end, a:cmp,a:direction)
 endfunction
 
+"---
 " To Sort a range of lines, pass the range to Sort() along with the name of a
 " function that will compare two lines.
 "
@@ -917,6 +1055,7 @@ function! s:Sort(cmp,direction) range
   call s:SortR(a:firstline, a:lastline, a:cmp, a:direction)
 endfunction
 
+"---
 " Reverse the current sort order
 "
 function! s:SortReverse()
@@ -931,6 +1070,7 @@ function! s:SortReverse()
   call s:SortListing("")
 endfunction
 
+"---
 " Toggle through the different sort orders
 "
 function! s:SortSelect()
@@ -948,6 +1088,7 @@ function! s:SortSelect()
   call s:SortListing("")
 endfunction
 
+"---
 " Sort the file listing
 "
 function! s:SortListing(msg)
@@ -1001,6 +1142,7 @@ function! s:SortListing(msg)
 endfunction
 
 
+"---
 " Set up the autocommand to allow directories to be edited
 "
 augroup fileExplorer

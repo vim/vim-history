@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0r.  Last change: 2001 Jan 01
+*version6.txt*  For Vim version 6.s.  Last change: 2001 Jan 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -37,6 +37,7 @@ UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
 Filetype plugins			|new-filetype-plugins|
+Window for command-line editing		|new-cmdwin|
 Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
@@ -190,7 +191,7 @@ Removed '_' from the 'breakat' default: It's commonly used in keywords.
 
 The default for 'mousehide' is on, because this works well form most people.
 
-The Amiga binary is now always compiled with 'big" features.  The "big" binary
+The Amiga binary is now always compiled with "big" features.  The "big" binary
 archive no longer exists.
 
 The items "[RO]", "[+]", "[help]", "[Preview]" and "[filetype]" in
@@ -210,6 +211,8 @@ and there is nothing to undo).
 The "Save As" menu entry now edits the saved file.  Most people expect it to
 work like this.
 
+A buffer for a directory is no longer added to the Buffers menu.
+
 Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
 Thus it's now the hit-enter prompt instead of the hit-return prompt.
 
@@ -224,6 +227,10 @@ After using ":colder" the newer error lists are overwritten.  This makes it
 possible to use ":grep" to browse in a tree-like way.  Must use ":cnewer 99"
 to get the old behavior.
 
+The patterns in 'errorformat' would sometimes ignore case (MS-Windows) and
+sometimes not (Unix).  Now case is always ignored.  Add "\C" to the pattern to
+match case.
+
 When setting 'syntax' to a name for which there is no syntax file, the syntax
 highlighting is cleared.  Previously the existing highlighting was kept.
 
@@ -235,6 +242,10 @@ executable needs to be smaller.
 a session will result in the current directory being restored, instead of
 going to the directory where the session file is located.
 
+A session deleted all buffers, deleting all marks.  Now keep the buffer list,
+it shouldn't hurt for some existing buffers to remain present.
+When the argument list is empty ":argdel *" caused an error message.
+
 ==============================================================================
 NEW FEATURES
 
@@ -244,6 +255,8 @@ Folding							*new-folding*
 Vim can now display a buffer with text folded.  This allows overviewing the
 structure of a file quickly.  It is also possible to move folded text, for
 example to move a function to another position.
+
+There is a whole bunch of new commands and options related to folding.
 See |folding|.
 
 
@@ -409,7 +422,8 @@ Multi-language support					*new-multi-lang*
 - Added ":menutrans" to be able to translate menu paths.
 - Added German and Polish menu translations (Marcin Dalecki), Italian menu
   translations (Antonio Colombo).
-- removed "broken locale" (Marcin Dalecki0.
+- Added Hungarian menus. (Zoltan Arpadffy)
+- removed "broken locale" (Marcin Dalecki).
 - don't user color names in icons, use RGB values.  The names could be
   translated.
 - Win32: Added global IME support (Muraoka)
@@ -460,8 +474,8 @@ included in the Vim distribution, etc.
 To be able to make this work, several features were added:
 - Added the "s:" variables, local to a script.  Avoids name conflicts with
   global variables.  They can be used in the script and in functions,
-  autocommands and user commands defined in the script. |s:var|
-  automatically deletes them when the script ends.
+  autocommands and user commands defined in the script.  They are kept between
+  invocations of the same script.  |s:var|
 - Added the global value for local options.  This value is used when opening
   a new buffer or editing another file.  The option value specified in a
   modeline or filetype setting is not carried over to another buffer.
@@ -469,6 +483,9 @@ To be able to make this work, several features were added:
   ":setlocal" sets the local option value only.
   ":setglobal" displays the global value for a local option.  Setting only
   the global value isn't implemented yet.
+- Added the buffer-local value for some global options: 'equalprg', 'makeprg'
+  and 'grepprg'.  This allows setting a local value for these global options,
+  without making it incompatible.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
 - In a mapping "<Leader>" can be used to get the value of the "mapleader"
   variable.  This simplifies mappings that use "mapleader".  "<Leader>"
@@ -482,6 +499,24 @@ To be able to make this work, several features were added:
 
 The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
+
+
+Window for command-line editing				*new-cmdwin*
+-------------------------------
+
+The Command-line window can be used to edit a command-line with Normal and
+Insert mode commands.  When it is opened it contains the history.  This allows
+copying parts of previous command lines. |cmdwin|
+
+The command-line window can be opened from the command-line with the key
+specified by the 'cedit' option (like Nvi).  It can also be opened directly
+from Normal mode with "q:", "q/" and "q?".
+
+The 'cmdwinheight' is used to specify the initional height of the window.
+
+In Insert mode CTRL-X CTRL-V can be used to complete an Ex command line, like
+it's done on the command-line.  This is also useful for writing Vim scripts!
+
 
 
 Debugging mode						*new-debug-mode*
@@ -521,10 +556,10 @@ This was originally made to work with Sun Visual Workshop. (Gordon Prieur)
 Buffer types						*new-buftype*
 ------------
 
-The 'buftype' and 'bufhidden' option have been added.  They can be set to have
-different kinds of buffers.  For example:
+The 'buftype' and 'bufhidden' options have been added.  They can be set to
+have different kinds of buffers.  For example:
 - 'buftype' = "quickfix": buffer with error list
-- 'buftype' = "nofile" and 'bufhidden' = 'delete": scratch buffer that will be
+- 'buftype' = "nofile" and 'bufhidden' = "delete": scratch buffer that will be
   deleted as soon as there is no window displaying it.
 
 'bufhidden' can be used to overrule the 'hidden' option for one buffer.
@@ -547,6 +582,12 @@ Added Python support for compiling with Mingw. (Ron Aaron)
 
 Win32: Dynamically load Perl and Python.  Allows compiling Vim with these
 interfaces and will try to find the DLLs at runtime. (Muraoka Taro)
+
+Compiling the Win32 GUI with Cygwin.  Also compile vimrun, dosinst and
+uninstall.  (gerfried)
+
+Mac: Make Vim compile with the free MPW compiler supplied by Apple.  And
+updates for CodeWarrior. (Axel Kielhorn)
 
 
 Quickfix extended					*quickfix-6*
@@ -605,8 +646,8 @@ a Unix filesystem.
 Added the 'autowriteall' option.  Works like 'autowrite' but for more
 commands.
 
-Added the 'backupskip' option: A pattern to skip making a backup file when it
-matches.  The default is "^/tmp", this makes "crontab -e" work.
+Added the 'backupskip' option: A list of file patterns to skip making a backup
+file when it matches.  The default is "/tmp/*", this makes "crontab -e" work.
 
 Added support for Access Control Lists (ACL) for FreeBSD and Win32.  The ACL
 is copied from the original file to the new file (or the backup if it's
@@ -630,6 +671,9 @@ be removed with |:argdelete|.
 
 "##" can be used like "#", it is replaced by all the names in the argument
 list concatenated.  Useful for ":grep foo ##".
+
+The |:argedit| adds a file to the argument list and edits it.  Like ":argadd"
+and then ":edit".
 
 
 Restore a View						*new-View*
@@ -740,6 +784,9 @@ executable()	Checks if a program or batch script can be executed.
 filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
 foldlevel()	Find out the foldlevel. (Johannes Zellner)
+getchar()	Get one character from the user.  Can be used to define a
+		mapping that takes an argument.
+getcharmod()	Get last used key modifier.
 getbufvar()	gets the value of an option or local variable in a buffer (Ron
 		Aaron)
 getfsize()	Return the size of a file.
@@ -788,7 +835,7 @@ way to start Vim with a session file.
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
-'n' flag for 'cpoptions': When omitted text of wrapped lines in not put
+'n' flag for 'cpoptions': When omitted text of wrapped lines is not put
 between line numbers from 'number' option.
 
 When there is a format error in a tags file, the byte position is reported so
@@ -797,6 +844,9 @@ that the error can be located.
 Allow a tags file to have CR, CR-LF or LF line separator.  Useful on the
 Macintosh.
 
+"gf" works in Visual mode: Use the selected text as the file name. (Chase
+Tingley)
+
 The DOS/Windows install program has been enhanced.  The Vim executable is
 never moved or $PATH changed.  A small batch file is created in a directory in
 $PATH.  Less choices to be made.
@@ -804,6 +854,8 @@ $PATH.  Less choices to be made.
 The window title now has "VIM" on the end.  The file name comes first, useful
 in the taskbar.  A "+" is added when the file is modified.  "=" is added for
 a read-only file.  "-" is added for a file with 'modifiable' off.
+
+When 'modifiable' is off, the %m and %M items in 'statusline' show a '-'.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -855,6 +907,10 @@ Security:
   existing to avoid a symlink attack. (Colin Phipps)
 - Evaluating options which are an expression is done in a |sandbox|.  If the
   option was set by a modeline, it cannot cause damage.
+- Use a secure way to generate temp file names: Create a private directory for
+  temp files.  Used for Unix, MS-DOS and OS/2.
+- 'makeef' can be empty, which means that an internally generated file name is
+  used.  The old default was "/tmp/file", which is a security risk.
 
 Reduced the amount of stack space used by regmatch() to allow it to handle
 complicated patterns on a longer text.
@@ -898,8 +954,8 @@ use autocommands instead of normal file read/write.  Use this in netrw.vim to
 be able to edit files on a remote system. (Charles Campbell) FuncUndefined:
 When a user function is not defined. (Ron Aaron)
 
-Added TermReponse autocommand event and v:termreponse internal variable.  Can
-be used to react to the version of the terminal.  (Ronald Schild)
+Added TermResponse autocommand event and v:termresponse internal variable.
+Can be used to react to the version of the terminal.  (Ronald Schild)
 
 Added FileChangedRO event: Triggered before making the first change to a
 read-only file.  Can be used to check-out the file. (Scott Graham)
@@ -956,7 +1012,7 @@ In a ":highlight" listing, show "xxx" with the highlight color.
 
 Expression evaluation:
 "? :" can be used like in C.
-col("$") returns the length of the cursor line. (Stephen P. Wall)
+col("$") returns the length of the cursor line plus one. (Stephen P. Wall)
 
 Optional extra argument for match(), matchend() and matchstr(): Offset to
 start looking for a match.
@@ -1000,6 +1056,8 @@ Internal changes:
   Unicode characters.
 - Global variables expand_context and expand_pattern were not supposed to be
   global.  Pass them to ExpandOne() and all functions called by it.
+- No longer use the global reg_ic flag.  It caused trouble and in a few places
+  it was not set.
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -1051,6 +1109,8 @@ in his vimrc file.  Also, the "if did_xxx_syntax_inits" is not needed anymore.
 This greatly simplifies using non-default colors for a specific language.
 
 Also set "v:errmsg" when using ":silent! cmd".
+
+Added the v:prevcount variable: v:count for the previous command.
 
 When editing the last file in the argument list in any way, allow exiting.
 Previously this was only possible when getting to that file with ":next" or
@@ -1371,5 +1431,54 @@ differently.
 does it for the current file (looks like a bug).  Now remember the buffer used
 for the entry in the argument list and use it's name (adjusted when doing
 ":cd"), unless it's deleted.
+
+When inserting a special key as its name ("<F8>" as four characters) after
+moving around in Insert mode, undo didn't work properly.
+
+Motif GUI: When using the right mouse button, for some people gvim freezed for
+a couple of seconds (Motif 1.2?).  This doesn't happen when there is no Popup
+menu.  Solved by only creating a popup menu when 'mousemodel' is "popup" or
+"popup_setpos". (David Harrison)
+
+Motif: When adding many menu items, the "Help" menu disappeared but the
+menubar didn't wrap.  Now manually set the menubar height.
+
+When using <BS> in Insert mode to remove a line break, or using "J" to join
+lines, the cursor could end up halfway a multi-byte character. (Muraoka Taro)
+
+Removed defining SVR4 in configure.  It causes problems for some X header
+files and doesn't appear to be used anywhere.
+
+When 'wildignore' is used, 'ignorecase' for a tag match was not working.
+
+Disabled the mouse code for OS/2.  It was not really used.
+
+":mksession" always used the full path name for a buffer, also when the short
+name could be used.
+":mkvimrc" and ":mksession" didn't save 'wildchar' and 'pastetoggle' in such a
+way that they would be restored.  Now use the key name if possible, this is
+portable.
+
+After recovering a file and abandoning it, an ":edit" command didn't give the
+ATTENTION prompt again.  Would be useful to be able to delete the file in an
+easy way.  Reset the BF_RECOVERED flag when unloading the buffer.
+
+histdel() could match or ignore case, depending on what happened before it.
+Now always match case.
+
+When a window size was specified when splitting a window, it would still get
+the size from 'winheight' or 'winwidth' if it's larger.
+
+When using "append" or "insert" inside a function definition, a line starting
+with "function" or "endfunction" caused confusion.  Now recognize the commands
+and skip lines until a ".".
+
+At the end of any function or sourced file need_wait_return could be reset,
+causing messages to disappear when redrawing.
+
+When in a while loop the line number for error messages stayed fixed.  Now the
+line number is remembered in the while loop.
+
+"cd c:/" didn't work on MS-DOS.  mch_isdir() removed a trailing slash.
 
  vim:tw=78:

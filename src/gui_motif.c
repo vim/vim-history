@@ -447,12 +447,20 @@ gui_mch_add_menu(menu, idx)
 	Arg arg[2];
 	int n = 0;
 
-#ifndef FEAT_CDE_COLORS
-	XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
-	XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
-#endif
-	menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu", arg, n);
-	menu->id = (Widget)0;
+	/* Only create the popup menu when it's actually used, otherwise there
+	 * is a delay when using the right mouse button. */
+# if (XmVersion <= 1002)
+	if (mouse_model_popup())
+# endif
+	{
+# ifndef FEAT_CDE_COLORS
+	    XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
+	    XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
+# endif
+	    menu->submenu_id = XmCreatePopupMenu(textArea, "contextMenu",
+								      arg, n);
+	    menu->id = (Widget)0;
+	}
 	return;
     }
 #endif
@@ -619,7 +627,7 @@ gui_mch_text_area_extra_height()
 
 /*
  * Compute the height of the menu bar.
- * We need to check all the items for their position an height, for the case
+ * We need to check all the items for their position and height, for the case
  * there are several rows, and/or some characters extend higher or lower.
  */
     static void
@@ -689,6 +697,10 @@ gui_mch_compute_menu_height(id)
      * Add 4 for the underlining of shortcut keys.
      */
     gui.menu_height = maxy + height - 2 * shadow + 2 * margin + 4;
+
+    /* Somehow the menu bar doesn't resize automatically.  Set it here,
+     * even though this is a catch 22. */
+    XtVaSetValues(menuBar, XmNheight, gui.menu_height, NULL);
 }
 
     void
@@ -703,11 +715,17 @@ gui_mch_add_menu_item(menu, idx)
     menu->mnemonic = 0;
 # endif
 
+# if (XmVersion <= 1002)
+    /* Don't add Popup menu items when the popup menu isn't used. */
+    if (menu_is_child_of_popup(menu) && !mouse_model_popup())
+	return;
+# endif
+
 # ifdef FEAT_TOOLBAR
     if (menu_is_toolbar(parent->name))
     {
 	WidgetClass	type;
-        XmString	xms;	    /* fallback label if pixmap not found */
+	XmString	xms;	    /* fallback label if pixmap not found */
 	int		n;
 	Arg		args[15];
 
@@ -837,6 +855,56 @@ gui_mch_add_menu_item(menu, idx)
     }
 }
 
+#if (XmVersion <= 1002)
+/*
+ * This function will destroy/create the popup menus dynamically,
+ * according to the value of 'mousemodel'.
+ * This will fix the "right mouse button freeze" that occurs when
+ * there exists a popup menu but it isn't managed.
+ */
+    void
+gui_motif_update_mousemodel(menu)
+    vimmenu_t	*menu;
+{
+    int		idx = 0;
+
+    /* When GUI hasn't started the menus have not been created. */
+    if (!gui.in_use)
+      return;
+
+    while (menu)
+    {
+      if (menu->children != NULL)
+      {
+	  if (menu_is_popup(menu->name))
+	  {
+	      if (mouse_model_popup())
+	      {
+		  /* Popup menu will be used.  Create the popup menus. */
+		  gui_mch_add_menu(menu, idx);
+		  gui_motif_update_mousemodel(menu->children);
+	      }
+	      else
+	      {
+		  /* Popup menu will not be used.  Destroy the popup menus. */
+		  gui_motif_update_mousemodel(menu->children);
+		  gui_mch_destroy_menu(menu);
+	      }
+	  }
+      }
+      else if (menu_is_child_of_popup(menu))
+      {
+	  if (mouse_model_popup())
+	      gui_mch_add_menu_item(menu, idx);
+	  else
+	      gui_mch_destroy_menu(menu);
+      }
+      menu = menu->next;
+      ++idx;
+    }
+}
+#endif
+
     void
 gui_mch_new_menu_colors()
 {
@@ -847,7 +915,7 @@ gui_mch_new_menu_colors()
 #endif
     XtVaSetValues(menuBar,
 	XmNforeground, gui.menu_fg_pixel,
-#if (XmVersion <1002)
+#if (XmVersion < 1002)
 	XmNbackground, gui.menu_bg_pixel,
 #endif
 	NULL);

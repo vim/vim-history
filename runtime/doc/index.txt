@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0r.  Last change: 2000 Dec 23
+*index.txt*     For Vim version 6.s.  Last change: 2001 Jan 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -374,6 +374,9 @@ tag		char	      note action in Normal mode	~
 |q|		q{0-9a-zA-Z"}	   record typed characters into named register
 				   {0-9a-zA-Z"} (upper case to append)
 |q|		q		   (while recording) stops recording
+|q:|		q:		   edit : command-line in command-line window
+|q/|		q/		   edit / command-line in command-line window
+|q?|		q?		   edit ? command-line in command-line window
 |r|		r{char}		2  replace N chars with {char}
 |s|		["x]s		2  (substitute) delete N characters [into
 				   buffer x] and start insert
@@ -867,6 +870,7 @@ file names, tags, commands etc. as appropriate.
 				insert the contents of a register or object
 				under the cursor literally
 		CTRL-S		(used for terminal control flow)
+		CTRL-T		not used
 |c_CTRL-U|	CTRL-U		remove all characters
 |c_CTRL-V|	CTRL-V		insert next non-digit literally, insert three
 				digit decimal number as a single byte.

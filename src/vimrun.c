@@ -16,7 +16,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
+#ifndef __CYGWIN__
+# include <conio.h>
+#endif
 
 #ifdef __BORLANDC__
 extern char *
@@ -27,11 +29,16 @@ _oscmd;
 # define _kbhit kbhit
 # define _getch getch
 #else
-#ifdef __MINGW32__
-# include <windows.h>
-#else
+# ifdef __MINGW32__
+#  include <windows.h>
+# else
+#  ifdef __CYGWIN__
+#   include <windows.h>
+#   define _getch getchar
+#  else
 extern char *_acmdln;
-#endif
+#  endif
+# endif
 #endif
 
     int
@@ -44,10 +51,12 @@ main(void)
 
 #ifdef __BORLANDC__
     p = _oscmd;
-#elif defined(__MINGW32__)
-    p = (const char *) GetCommandLine();
 #else
+# if defined(__MINGW32__) || defined(__CYGWIN__)
+    p = (const char *) GetCommandLine();
+# else
     p = _acmdln;
+# endif
 #endif
     /*
      * Skip the executable name, which might be in "".
@@ -90,8 +99,10 @@ main(void)
     {
 	puts("Hit any key to close this window...");
 
+#ifndef __CYGWIN__
 	while (_kbhit())
 	    (void)_getch();
+#endif
 	(void)_getch();
     }
 

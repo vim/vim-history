@@ -1221,6 +1221,9 @@ vim_used_in_input_buf()
 }
 #endif
 
+#if defined(GUI) || defined(FEAT_SIGNS) || defined(FEAT_MOUSE_GPM) \
+	|| defined(PROTO) || defined(FEAT_XCLIPBOARD) || defined(VMS) \
+	|| defined(FEAT_SNIFF)
 /* Add the given bytes to the input buffer */
     void
 add_to_input_buf(s, len)
@@ -1239,6 +1242,7 @@ add_to_input_buf(s, len)
     while (len--)
 	inbuf[inbufcount++] = *s++;
 }
+#endif
 
 #if defined(FEAT_HANGULIN) || defined(PROTO)
     void

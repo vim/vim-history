@@ -3513,7 +3513,7 @@ unix_expandpath(gap, path, wildoff, flags)
     }
 
     /* compile the regexp into a program */
-    reg_ic = FALSE;			    /* Don't ever ignore case */
+    regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
     regmatch.regprog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 

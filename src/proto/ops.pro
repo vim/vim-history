@@ -40,3 +40,4 @@ int clip_convert_selection __ARGS((char_u **str, long_u *len));
 char_u *get_reg_contents __ARGS((int regname));
 void write_reg_contents __ARGS((int name, char_u *str, int must_append));
 void clear_oparg __ARGS((oparg_t *oap));
+/* vim: set ft=c : */

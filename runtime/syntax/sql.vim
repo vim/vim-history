@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SQL, PL/SQL (Oracle 8i)
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 06
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -41,7 +41,7 @@ syn keyword sqlType	mlslabel number raw rowid varchar varchar2 varray
 
 " Strings and characters:
 syn region sqlString		start=+"+  skip=+\\\\\|\\"+  end=+"+
-syn region sqlString		start=+'+  skip=+\\\\\|\\"+  end=+'+
+syn region sqlString		start=+'+  skip=+\\\\\|\\'+  end=+'+
 
 " Numbers:
 syn match sqlNumber		"-\=\<\d*\.\=[0-9_]\>"

@@ -1401,7 +1401,8 @@ write_viminfo(file, forceit)
 		    wp = tempname + STRLEN(tempname) - 5;
 		    if (wp < gettail(tempname))	    /* empty file name? */
 			wp = gettail(tempname);
-		    for (*wp = 'z'; mch_stat((char *)tempname, &st_new) == 0; --*wp)
+		    for (*wp = 'z'; mch_stat((char *)tempname, &st_new) == 0;
+									--*wp)
 		    {
 			/*
 			 * They all exist?  Must be something wrong! Don't
@@ -1430,17 +1431,7 @@ write_viminfo(file, forceit)
 		{
 		    vim_free(tempname);
 		    if ((tempname = vim_tempname('o')) != NULL)
-		    {
 			fp_out = mch_fopen((char *)tempname, WRITEBIN);
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-			if (symlink_check(tempname))
-			{
-			    EMSG(_("Security error: new viminfo file is a symbolic link"));
-			    fclose(fp_out);
-			    fp_out = NULL;
-			}
-#endif
-		    }
 		}
 #ifdef UNIX
 		/*
@@ -2224,6 +2215,11 @@ getfile(fnum, ffname, sfname, setpm, lnum, forceit)
     int		retval;
     char_u	*free_me = NULL;
 
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+	return 1;
+#endif
+
     if (fnum == 0)
     {
 	fname_expand(&ffname, &sfname);	/* make ffname full path, set sfname */
@@ -2298,7 +2294,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     int		fnum;
     char_u	*ffname;
     char_u	*sfname;
-    exarg_t	*eap;
+    exarg_t	*eap;			/* can be NULL! */
     linenr_t	newlnum;
     int		flags;
 {
@@ -3089,7 +3085,6 @@ do_sub(eap)
     int		temp;
     int		which_pat;
     char_u	*cmd;
-    int		save_reg_ic;
     int		save_State;
     linenr_t	first_line = 0;	/* first changed line */
     linenr_t	last_line= 0;	/* below last changed line AFTER the
@@ -3270,8 +3265,7 @@ do_sub(eap)
     if (eap->skip)	    /* not executing commands, only parsing */
 	return;
 
-    if ((regmatch.regprog = search_regcomp(pat, RE_SUBST, which_pat,
-							 SEARCH_HIS)) == NULL)
+    if (search_regcomp(pat, RE_SUBST, which_pat, SEARCH_HIS, &regmatch) == FAIL)
     {
 	if (do_error)
 	    EMSG(_(e_invcmd));
@@ -3280,9 +3274,9 @@ do_sub(eap)
 
     /* the 'i' or 'I' flag overrules 'ignorecase' and 'smartcase' */
     if (do_ic == 'i')
-	reg_ic = TRUE;
+	regmatch.rmm_ic = TRUE;
     else if (do_ic == 'I')
-	reg_ic = FALSE;
+	regmatch.rmm_ic = FALSE;
 
     sub_firstline = NULL;
 
@@ -3412,9 +3406,6 @@ do_sub(eap)
 		 */
 		if (do_ask)
 		{
-		    /* update_screen() may change reg_ic: save it */
-		    save_reg_ic = reg_ic;
-
 		    /* change State to CONFIRM, so that the mouse works
 		     * properly */
 		    save_State = State;
@@ -3490,7 +3481,6 @@ do_sub(eap)
 			else if (i == Ctrl_Y)
 			    scrolldown_clamp();
 		    }
-		    reg_ic = save_reg_ic;
 		    State = save_State;
 #ifdef FEAT_MOUSE
 		    setmouse();
@@ -3906,8 +3896,7 @@ ex_global(eap)
 	lrFswap(pat,0);
 #endif
 
-    if ((regmatch.regprog = search_regcomp(pat, RE_BOTH, which_pat,
-							 SEARCH_HIS)) == NULL)
+    if (search_regcomp(pat, RE_BOTH, which_pat, SEARCH_HIS, &regmatch) == FAIL)
     {
 	EMSG(_(e_invcmd));
 	return;

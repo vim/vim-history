@@ -586,7 +586,8 @@ EXTERN int	arrow_used;		/* Normally FALSE, set to TRUE after
 					 * to call u_sync() */
 #ifdef FEAT_INS_EXPAND
 EXTERN char_u	*edit_submode INIT(= NULL); /* msg for CTRL-X submode */
-EXTERN char_u	*edit_submode_extra INIT(= NULL);/* extra info for msg */
+EXTERN char_u	*edit_submode_pre INIT(= NULL); /* prepended to edit_submode */
+EXTERN char_u	*edit_submode_extra INIT(= NULL);/* appended to edit_submode */
 EXTERN enum hlf_value	edit_submode_highl; /* highl. method for extra info */
 EXTERN int	ctrl_x_mode INIT(= 0);	/* Which Ctrl-X mode are we in? */
 #endif
@@ -666,7 +667,6 @@ EXTERN int	term_console INIT(= FALSE); /* set to TRUE when console used */
 EXTERN int	termcap_active INIT(= FALSE);	/* set by starttermcap() */
 EXTERN int	bangredo INIT(= FALSE);	    /* set to TRUE whith ! command */
 EXTERN int	searchcmdlen;		    /* length of previous search cmd */
-EXTERN int	reg_ic INIT(= 0);	    /* p_ic passed to vim_regexec() */
 EXTERN int	reg_syn INIT(= 0);	    /* vim_regexec() used for syntax */
 #ifdef FEAT_SYN_HL
 EXTERN int	reg_do_extmatch INIT(= 0);  /* Used when compiling regexp:
@@ -800,6 +800,12 @@ EXTERN int	km_stopsel INIT(= FALSE);
 EXTERN int	km_startsel INIT(= FALSE);
 #endif
 
+#ifdef FEAT_CMDWIN
+EXTERN int	cedit_key INIT(= -1);	/* key value of 'cedit' option */
+EXTERN int	cmdwin_type INIT(= 0);	/* type of cmdline window or 0 */
+EXTERN int	cmdwin_result INIT(= 0); /* result of cmdline window or 0 */
+#endif
+
 EXTERN char_u no_lines_msg[]	INIT(=N_("--No lines in buffer--"));
 
 /* table to store parsed 'wildmode' */
@@ -834,14 +840,14 @@ EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 EXTERN char	psepc INIT(= '\\');	/* normal path separator character */
 EXTERN char	psepcN INIT(= '/');	/* abnormal path separator character */
 EXTERN char	pseps[2]		/* normal path separator string */
-#ifdef DO_INIT
+# ifdef DO_INIT
 			= {'\\', 0}
-#endif
+# endif
 			;
 EXTERN char	psepsN[2]		/* abnormal path separator string */
-#ifdef DO_INIT
+# ifdef DO_INIT
 			= {'/', 0}
-#endif
+# endif
 			;
 #endif
 
@@ -865,6 +871,9 @@ EXTERN int	suppress_alternate_input INIT(= FALSE);
 EXTERN char_u e_abort[]		INIT(=N_("Command aborted"));
 EXTERN char_u e_argreq[]	INIT(=N_("Argument required"));
 EXTERN char_u e_backslash[]	INIT(=N_("\\ should be followed by /, ? or &"));
+#ifdef FEAT_CMDWIN
+EXTERN char_u e_cmdwin[]	INIT(=N_("Invalid in command-line window; <CR> executes, CTRL-C quits"));
+#endif
 EXTERN char_u e_curdir[]	INIT(=N_("Command not allowed from exrc/vimrc in current dir or tag search"));
 EXTERN char_u e_exists[]	INIT(=N_("File exists (use ! to override)"));
 EXTERN char_u e_failed[]	INIT(=N_("Command failed"));
@@ -883,6 +892,7 @@ EXTERN char_u e_letunexp[]	INIT(=N_("Unexpected characters before '='"));
 #endif
 EXTERN char_u e_markinval[]	INIT(=N_("Mark has invalid line number"));
 EXTERN char_u e_marknotset[]	INIT(=N_("Mark not set"));
+EXTERN char_u e_modifiable[]	INIT(=N_("Cannot make changes, 'modifiable' is off"));
 #ifdef FEAT_GUI_GTK
 EXTERN char_u e_needgui[]	INIT(=N_("GUI is not running"));
 #endif

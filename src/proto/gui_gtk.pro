@@ -18,3 +18,4 @@ void gui_gtk_synch_fonts __ARGS((void));
 GtkWidget *gui_gtk_button_new_with_label __ARGS((char *labelname, GtkSignalFunc cbfunc, gpointer cbdata, GtkWidget *parent, int connect_object, gboolean expand, gboolean fill));
 void ex_helpfind __ARGS((exarg_t *eap));
 void gui_gtk_position_in_parent __ARGS((GtkWidget *parent, GtkWidget *child, gui_win_pos_t where));
+/* vim: set ft=c : */

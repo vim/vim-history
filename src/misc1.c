@@ -158,12 +158,15 @@ set_indent(size, flags)
     }
     mch_memmove(s, p, (size_t)line_len);
 
-    /* Replace the line. */
-    if (flags & SIN_UNDO)
-	u_savesub(curwin->w_cursor.lnum);
-    ml_replace(curwin->w_cursor.lnum, line, FALSE);
-    if (flags & SIN_CHANGED)
-	changed_bytes(curwin->w_cursor.lnum, 0);
+    /* Replace the line (unless undo fails). */
+    if (!(flags & SIN_UNDO) || u_savesub(curwin->w_cursor.lnum) == OK)
+    {
+	ml_replace(curwin->w_cursor.lnum, line, FALSE);
+	if (flags & SIN_CHANGED)
+	    changed_bytes(curwin->w_cursor.lnum, 0);
+    }
+    else
+	vim_free(line);
 
     curwin->w_cursor.col = ind_len;
     return TRUE;
@@ -3126,9 +3129,9 @@ get_env_name(xp, idx)
     expand_t	*xp;
     int		idx;
 {
-# ifdef AMIGA
+# if defined(AMIGA) || defined(__MRC__) || defined(__SC__)
     /*
-     * No environ[] on the Amiga.
+     * No environ[] on the Amiga and on the Mac (using MPW).
      */
     return NULL;
 # else
@@ -3545,7 +3548,7 @@ concat_fnames(fname1, fname2, sep)
 add_pathsep(p)
     char_u	*p;
 {
-    if (*p && !vim_ispathsep(*(p + STRLEN(p) - 1)))
+    if (*p != NUL && !vim_ispathsep(*(p + STRLEN(p) - 1)))
 	STRCAT(p, PATHSEPSTR);
 }
 
@@ -5929,14 +5932,6 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
     int		i, j;
     char_u	*p;
     int		non_suf_match;	/* number without matching suffix */
-#ifdef FEAT_WILDIGN
-    char_u	buf[100];
-    char_u	*ffname;
-    char_u	*tail;
-    char_u	*regpat;
-    char	allow_dirs;
-    int		match;
-#endif
 
     retval = gen_expand_wildcards(num_pat, pat, num_file, file, flags);
 
@@ -5950,38 +5945,25 @@ expand_wildcards(num_pat, pat, num_file, file, flags)
      */
     if (*p_wig)
     {
+	char_u	*ffname;
+
 	/* check all files in (*file)[] */
 	for (i = 0; i < *num_file; ++i)
 	{
 	    ffname = FullName_save((*file)[i], FALSE);
 	    if (ffname == NULL)		/* out of memory */
 		break;
-	    tail = gettail((*file)[i]);
 #ifdef VMS
 	    vms_remove_version(ffname);
 #endif
-
-	    /* try all patterns in 'wildignore' */
-	    p = p_wig;
-	    while (*p)
+	    if (match_file_list(p_wig, (*file)[i], ffname))
 	    {
-		copy_option_part(&p, buf, 100, ",");
-		regpat = file_pat_to_reg_pat(buf, NULL, &allow_dirs, FALSE);
-		if (regpat == NULL)
-		    break;
-		match = match_file_pat(regpat, ffname, (*file)[i], tail,
-							      (int)allow_dirs);
-		vim_free(regpat);
-		if (match)
-		{
-		    /* remove this matching file from the list */
-		    vim_free((*file)[i]);
-		    for (j = i; j + 1 < *num_file; ++j)
-			(*file)[j] = (*file)[j + 1];
-		    --*num_file;
-		    --i;
-		    break;
-		}
+		/* remove this matching file from the list */
+		vim_free((*file)[i]);
+		for (j = i; j + 1 < *num_file; ++j)
+		    (*file)[j] = (*file)[j + 1];
+		--*num_file;
+		--i;
 	    }
 	    vim_free(ffname);
 	}
@@ -6346,15 +6328,6 @@ get_cmd_output(cmd, flags)
 	EMSG2(_(e_notopen), tempname);
 	goto done;
     }
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-    if (symlink_check(tempname))
-    {
-	EMSG(_("Security error: shell command output is a symbolic link"));
-	fclose(fd);
-	goto done;
-    }
-#endif
 
     fseek(fd, 0L, SEEK_END);
     len = ftell(fd);		    /* get size of temp file */

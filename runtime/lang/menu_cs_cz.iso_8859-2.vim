@@ -3,15 +3,18 @@
 " Last Change:		2000 Jul 26
 
 menutrans clear
+let did_menu_trans = 1
 
 " Help menu
 menutrans &Help &Nápovìda
 menutrans &Overview<Tab><F1>	&Pøehled<Tab><F1>
 menutrans &How-to\ links	&Tipy
+menutrans &GUI        &Grafické\ rozhraní
 menutrans &Credits		Po&dìkování
-menutrans &Co&pying		&Licenèní politika
+menutrans Co&pying		&Licenèní\ politika
+menutrans &Find\.\.\.	&Najít\.\.\.
 menutrans &Version		&Verze
-menutrans &About		o\ &O aplikaci
+menutrans &About		  &O\ aplikaci
 
 " File menu
 menutrans &File				&Soubor
@@ -28,8 +31,8 @@ menutrans E&xit<Tab>:qa			&Konec<Tab>:qa
 " Edit menu
 menutrans &Edit				&Úpravy
 menutrans &Undo<Tab>u			&Zpìt<Tab>u
-menutrans &Redo<Tab>^R			Z&ru¹it vrácení<Tab>^R
-menutrans Repea&t<Tab>\.		&Opakovat<Tab>\.
+menutrans &Redo<Tab>^R			Z&ru¹it\ vrácení<Tab>^R
+menutrans Rep&eat<Tab>\.		&Opakovat<Tab>\.
 menutrans Cu&t<Tab>"*x			&Vyøíznout<Tab>"*x
 menutrans &Copy<Tab>"*y			&Kopírovat<Tab>"*y
 menutrans &Paste<Tab>"*p		V&lo¾it<Tab>"*p
@@ -37,7 +40,7 @@ menutrans Put\ &Before<Tab>[p		Vlo¾it\ &pøed<Tab>[p
 menutrans Put\ &After<Tab>]p		Vlo¾i&t\ za<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Vy&brat\ v¹e<Tab>ggVG
 menutrans &Find\.\.\.			&Hledat\.\.\.
-menutrans Find\ and\ R&eplace\.\.\.	&Nahradit\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.	&Nahradit\.\.\.
 menutrans Options\.\.\.			Volby\.\.\.
 
 " Programming menu
@@ -53,8 +56,8 @@ menutrans &Previous\ Error<Tab>:cp	&Pøedchozí\ chyba<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Sta&r¹í\ seznam<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	N&ovìj¹í\ seznam<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	Chybové\ o&kno<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!mc\ vim:xxd Pøevést\ do\ ¹estnáctkového\ formátu<Tab>:!mc\ vim:xxd
-menutrans Convert\ back<Tab>:%!mc\ vim:xxd\ -r Pøevést\ zpìt<Tab>:%mc\ vim:xxd\ -r
+menutrans Convert\ to\ HEX<Tab>:%!xxd Pøevést\ do\ ¹estnáctkového\ formátu<Tab>:%!xxd
+menutrans Convert\ back<Tab>:%!xxd\ -r Pøevést\ zpìt<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers	&Buffery
@@ -68,7 +71,7 @@ menutrans &Window			&Okna
 menutrans &New<Tab>^Wn			&Nové<Tab>^Wn
 menutrans S&plit<Tab>^Ws		&Rozdìlit<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	Ro&zdìlit\ na\ #<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv	Rozdìlit\ &vertikálnì<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv	Rozdìlit\ &vertikálnì<Tab>^Wv
 menutrans &Close<Tab>^Wc		Zavøí&t<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Zavøít\ &jiná<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			&Dal¹í<Tab>^Ww
@@ -139,7 +142,7 @@ menutrans Set\ 'filetype'\ too	Nastavit\ také\ 'filetype'
 menutrans &Off			&Vypnout
 menutrans &Manual		&Ruènì
 menutrans A&utomatic		A&utomaticky
-menutrans &on\ (this\ file)	&zapnout\ (pro\ tento\ soubor)
+menutrans o&n\ (this\ file)	&zapnout\ (pro\ tento\ soubor)
 menutrans o&ff\ (this\ file)	vyp&nout\ (pro\ tento\ soubor)
 menutrans Co&lor\ test		Test\ &barev
 menutrans &Highlight\ test	&Test\ zvýrazòování

@@ -423,9 +423,9 @@ adjust_cursor()
 adjust_cursor_col()
 {
     if (curwin->w_cursor.col > 0
-#ifdef FEAT_VISUAL
+# ifdef FEAT_VISUAL
 	    && (!VIsual_active || *p_sel == 'o')
-#endif
+# endif
 	    && gchar_cursor() == NUL)
 	--curwin->w_cursor.col;
 }
@@ -1069,7 +1069,8 @@ vim_strncpy(to, from, len)
 }
 
 /*
- * Isolate one part of a string option where parts are separated with commas.
+ * Isolate one part of a string option where parts are separated with
+ * "sep_chars".
  * The part is copied into buf[maxlen].
  * "*option" is advanced to the next part.
  * The length is returned.
@@ -2149,14 +2150,7 @@ extract_modifiers(key, modp)
 #endif
 	    )
     {
-	if (key == '?')
-	    key = DEL;
-	else
-#ifdef EBCDIC
-	    key = Ctrl_chr(key);
-#else
-	    key &= 0x1f;
-#endif
+	key = Ctrl_chr(key);
 	modifiers &= ~MOD_MASK_CTRL;
     }
     if ((modifiers & MOD_MASK_ALT) && key < 0x80)
@@ -2464,8 +2458,9 @@ get_real_state()
     return State;
 }
 
-#if defined(FEAT_SESSION) || defined(MSWIN) || defined(FEAT_GUI_GTK) \
-    || defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
+#if defined(FEAT_SESSION) || defined(MSWIN) \
+	|| (defined(FEAT_GUI_GTK) && defined(FEAT_WINDOWS)) \
+	|| defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
 /*
  * Change to a file's directory.
  */
@@ -4606,7 +4601,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	    || file_to_find[0] == ':'
 #endif
        )
-	    {
+    {
 	/*
 	 * Absolute path, no need to use "path_option".
 	 * If this is not a first call, return NULL.  We already returned a

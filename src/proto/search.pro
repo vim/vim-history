@@ -1,12 +1,12 @@
 /* search.c */
-regprog_t *search_regcomp __ARGS((char_u *pat, int pat_save, int pat_use, int options));
+int search_regcomp __ARGS((char_u *pat, int pat_save, int pat_use, int options, regmmatch_t *regmatch));
 char_u *get_search_pat __ARGS((void));
 void save_search_patterns __ARGS((void));
 void restore_search_patterns __ARGS((void));
-void set_reg_ic __ARGS((char_u *pat));
+int ignorecase __ARGS((char_u *pat));
 char_u *last_search_pat __ARGS((void));
 void set_last_search_pat __ARGS((char_u *s, int idx, int magic, int setlast));
-regprog_t *last_pat_prog __ARGS((void));
+void last_pat_prog __ARGS((regmmatch_t *regmatch));
 char_u *search_getline __ARGS((linenr_t lnum));
 int searchit __ARGS((buf_t *buf, pos_t *pos, int dir, char_u *str, long count, int options, int pat_use));
 int do_search __ARGS((oparg_t *oap, int dirc, char_u *str, long count, int options));
@@ -30,3 +30,4 @@ int linewhite __ARGS((linenr_t lnum));
 void find_pattern_in_path __ARGS((char_u *ptr, int dir, int len, int whole, int skip_comments, int type, long count, int action, linenr_t start_lnum, linenr_t end_lnum));
 int read_viminfo_search_pattern __ARGS((char_u *line, FILE *fp, int force));
 void write_viminfo_search_pattern __ARGS((FILE *fp));
+/* vim: set ft=c : */

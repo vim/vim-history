@@ -1763,7 +1763,7 @@ mch_breakcheck(void)
      */
     if (RealWaitForChar(0, 0L))		/* if characters available */
     {
-	add_to_input_buf((char_u *)ibuf,1);
+	add_to_input_buf((char_u *)ibuf, 1);
 	fill_input_buf(FALSE);
     }
 }

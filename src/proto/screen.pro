@@ -76,3 +76,4 @@ int jump_to_mouse __ARGS((int flags, int *inclusive));
 win_t *mouse_find_win __ARGS((int *rowp, int *colp));
 int get_fpos_of_mouse __ARGS((pos_t *mpos));
 void ex_intro __ARGS((exarg_t *eap));
+/* vim: set ft=c : */

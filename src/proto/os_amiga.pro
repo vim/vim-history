@@ -41,3 +41,4 @@ int mch_expandpath __ARGS((garray_t *gap, char_u *pat, int flags));
 int mch_has_wildcard __ARGS((char_u *p));
 char_u *mch_getenv __ARGS((char_u *var));
 int mch_setenv __ARGS((char *var, char *value, int x));
+/* vim: set ft=c : */

@@ -64,3 +64,4 @@ void clip_mch_request_selection __ARGS((void));
 void clip_mch_set_selection __ARGS((void));
 int gui_mch_get_lightness __ARGS((guicolor_t pixel));
 char_u *gui_mch_get_rgb __ARGS((guicolor_t pixel));
+/* vim: set ft=c : */

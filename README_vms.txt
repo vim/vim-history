@@ -1,4 +1,4 @@
-README_vms.txt for version 6.0r of Vim: Vi IMproved.
+README_vms.txt for version 6.s of Vim: Vi IMproved.
 
 This file explains the installation of Vim on VMS systems.
 See "README.txt" in the runtime archive for information about Vim.
@@ -27,7 +27,8 @@ To use the binary version, you need one of these archives:
 and of course
   vim-6.0-rt.tar.gz		runtime files
 
-The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files, but there are also prepared "deploy ready" archives:
+The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files,
+but there are also prepared "deploy ready" archives:
 
 vim-60-alpha.zip		GUI and console executables with runtime and 
 				help files for Alpha systems

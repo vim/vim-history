@@ -232,7 +232,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     linenr_t	from;
     linenr_t	lines_to_skip;
     linenr_t	lines_to_read;
-    exarg_t	*eap;
+    exarg_t	*eap;			/* can be NULL! */
     int		flags;
 {
     int		fd;
@@ -647,21 +647,6 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     }
 #endif /* FEAT_AUTOCMD */
 
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-    /* Security check: When filtering, we don't want to read through a
-     * symlink.  This could be a symlink attack to try to replace the filtered
-     * text with something else.
-     */
-    if (filtering && symlink_check(fname))
-    {
-	--no_wait_return;
-	msg_scroll = msg_save;
-	close(fd);
-	EMSG2(_("Security error: filter output is a symbolic link: %s"), fname);
-	return FAIL;
-    }
-#endif
-
     /* Autocommands may add lines to the file, need to check if it is empty */
     wasempty = (curbuf->b_ml.ml_flags & ML_EMPTY);
 
@@ -1044,8 +1029,7 @@ retry:
 	     * converting with 'charconvert' or when a BOM has already been
 	     * found.
 	     */
-	    if (size >= 2
-		    && (filesize == 0
+	    if ((filesize == 0
 # ifdef FEAT_CRYPT
 			|| (filesize == CRYPT_MAGIC_LEN && cryptkey != NULL)
 # endif
@@ -1058,7 +1042,8 @@ retry:
 		char_u	*ccname;
 		int	blen;
 
-		if (curbuf->b_p_bin)	/* no BOM detection in binary mode */
+		/* no BOM detection in a short file or in binary mode */
+		if (size < 2 || curbuf->b_p_bin)
 		    ccname = NULL;
 		else
 		    ccname = check_for_bom(ptr, size, &blen,
@@ -1864,18 +1849,6 @@ readfile_charconvert(fname, fcc, fdp)
 	if (errmsg == NULL && (*fdp = mch_open((char *)tmpname,
 						  O_RDONLY | O_EXTRA, 0)) < 0)
 	    errmsg = (char_u *)_("can't read output of 'charconvert'");
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-	/* Security check: We don't want to read from a symlink.  This could
-	 * be a symlink attack to try to replace the converted text with
-	 * something else. */
-	if (errmsg == NULL && symlink_check(tmpname))
-	{
-	    errmsg = (char_u *)_("Security error: 'charconvert' output is a symbolic link");
-	    close(*fdp);
-	    *fdp = -1;
-	}
-#endif
     }
 
     if (errmsg != NULL)
@@ -2414,17 +2387,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * If 'backupskip' is not empty, don't make a backup for some files.
      */
     dobackup = (p_wb || p_bk || *p_pm != NUL);
-    if (dobackup && *p_bsk != NUL)
-    {
-	regmatch_t	regmatch;
-
-	regmatch.regprog = vim_regcomp(p_bsk, TRUE);
-	if (regmatch.regprog != NULL
-		&& ffname != NULL
-		&& vim_regexec(&regmatch, ffname, (colnr_t)0))
-	    dobackup = FALSE;
-	vim_free(regmatch.regprog);
-    }
+#ifdef FEAT_WILDIGN
+    if (dobackup && *p_bsk != NUL && match_file_list(p_bsk, sfname, ffname))
+	dobackup = FALSE;
+#endif
 
     /*
      * If we are not appending or filtering, the file exists, and the
@@ -3059,18 +3025,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (buf->b_ffname != NULL)
 	    (void)mch_copy_file_attribute(buf->b_ffname, wfname);
 	/* Should copy ressource fork */
-    }
-#endif
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-    /* Security check: When filtering, we don't want to write through a
-     * symlink.  This could be a symlink attack to try to replace the filtered
-     * text with something else.
-     */
-    if (filtering && symlink_check(wfname))
-    {
-	EMSG2(_("Security error: filter input is a symbolic link: %s"), wfname);
-	goto fail;
     }
 #endif
 
@@ -4814,6 +4768,39 @@ write_lnum_adjust(offset)
 	write_no_eol_lnum += offset;
 }
 
+#if defined(TEMPDIRNAMES) || defined(PROTO)
+static char_u	*vim_tempdir = NULL;	/* Name of Vim's own temp dir. */
+static long	temp_count = 0;		/* Temp filename counter. */
+
+/*
+ * Delete the temp directory and all files it contains.
+ */
+    void
+vim_deltempdir()
+{
+    char_u	**files;
+    int		file_count;
+    int		i;
+
+    if (vim_tempdir != NULL)
+    {
+	sprintf((char *)NameBuff, "%s*", vim_tempdir);
+	if (gen_expand_wildcards(1, &NameBuff, &file_count, &files,
+					      EW_DIR|EW_FILE|EW_SILENT) == OK)
+	{
+	    for (i = 0; i < file_count; ++i)
+		mch_remove(files[i]);
+	    FreeWild(file_count, files);
+	}
+	gettail(NameBuff)[-1] = NUL;
+	(void)mch_rmdir(NameBuff);
+
+	vim_free(vim_tempdir);
+	vim_tempdir = NULL;
+    }
+}
+#endif
+
 /*
  * vim_tempname(): Return a unique name that can be used for a temp file.
  *
@@ -4822,82 +4809,118 @@ write_lnum_adjust(offset)
  * The returned pointer is to allocated memory.
  * The returned pointer is NULL if no valid name was found.
  */
+/*ARGSUSED*/
     char_u  *
 vim_tempname(extra_char)
     int	    extra_char;	    /* character to use in the name instead of '?' */
 {
-#ifdef WIN32
-    char	szTempFile[_MAX_PATH+1];
-    char	buf4[4];
-#endif
 #ifdef USE_TMPNAM
     char_u	itmp[L_tmpnam];	/* use tmpnam() */
 #else
     char_u	itmp[TEMPNAMELEN];
 #endif
-#if defined(TEMPDIRNAMES) || !defined(USE_TMPNAM)
-    char_u	*p;
-#endif
 
 #ifdef TEMPDIRNAMES
     static char	*(tempdirs[]) = {TEMPDIRNAMES};
-    static int	first_dir = 0;
-    int		first_try = TRUE;
     int		i;
+    long	nr;
+    long	off;
+#ifndef EEXIST
+    struct stat	st;
+#endif
 
     /*
-     * Try a few places to put the temp file.
-     * To avoid waisting time with non-existing environment variables and
-     * directories, they are skipped next time.
+     * This will create a directory for private use by this instance of Vim.
+     * This is done once, and the same directory is used for all temp files.
+     * This method avoids security problems because of symlink attacks et al.
+     * It's also a bit faster, because we only need to check for an existing
+     * file when creating the directory and not for each temp file.
      */
-    for (i = first_dir; i < sizeof(tempdirs) / sizeof(char *); ++i)
+    if (vim_tempdir == NULL)
     {
-	/* expand $TMP, leave room for '/', "v?XXXXXX" and NUL */
-	expand_env((char_u *)tempdirs[i], itmp, TEMPNAMELEN - 10);
-	if (mch_isdir(itmp))		/* directory exists */
+	/*
+	 * Try the entries in TEMPDIRNAMES to create the temp directory.
+	 */
+	for (i = 0; i < sizeof(tempdirs) / sizeof(char *); ++i)
 	{
-	    if (first_try)
-		first_dir = i;		/* start here next time */
-	    first_try = FALSE;
-# ifdef __EMX__
-	    /*
-	     * if $TMP contains a forward slash (perhaps because we're using
-	     * bash or tcsh, right Stefan?), don't add a backslash to the
-	     * directory before tacking on the file name; use a forward slash!
-	     * I first tried adding 2 backslashes, but somehow that didn't
-	     * work (something in the EMX system() ate them, I think).
-	     */
-	    if (vim_strchr(itmp, '/'))
-		STRCAT(itmp, "/");
-	    else
-# endif
-		add_pathsep(itmp);
-	    STRCAT(itmp, TEMPNAME);
-	    if ((p = vim_strchr(itmp, '?')) != NULL)
-		*p = extra_char;
-#ifdef HAVE_MKSTEMP
+	    /* expand $TMP, leave room for "/v1100000/999999999" */
+	    expand_env((char_u *)tempdirs[i], itmp, TEMPNAMELEN - 20);
+	    if (mch_isdir(itmp))		/* directory exists */
 	    {
-		int fd;
+# ifdef __EMX__
+		/* If $TMP contains a forward slash (perhaps using bash or
+		 * tcsh), don't add a backslash, use a forward slash!
+		 * Adding 2 backslashes didn't work. */
+		if (vim_strchr(itmp, '/') != NULL)
+		    STRCAT(itmp, "/");
+		else
+# endif
+		    add_pathsep(itmp);
 
-		/* We cheat: create the tempfile and then delete it. */
-		fd = mkstemp((char *)itmp);
-		if (fd == -1)
-		    continue;
-		close(fd);
-		mch_remove(itmp);
+		/* Get an arbitrary number of up to 6 digits.  When it's
+		 * unlikely that it already exists it will be faster,
+		 * otherwise it doesn't matter.  The use of mkdir() avoids any
+		 * security problems because of the predictable number. */
+		nr = (mch_get_pid() + (long)time(NULL)) % 1000000L;
+
+		/* Try up to 10000 different values until we find a name that
+		 * doesn't exist. */
+		for (off = 0; off < 10000L; ++off)
+		{
+		    sprintf((char *)itmp + STRLEN(itmp), "v%ld", nr + off);
+# ifndef EEXIST
+		    /* If mkdir() does not set errno to EEXIST, check for
+		     * existing file here.  There is a race condition then,
+		     * although it's fail-safe. */
+		    if (mch_stat((char *)itmp, &st) >= 0)
+			continue;
+# endif
+		    if (mch_mkdir(itmp, 0700) == 0)
+		    {
+			/* Directory was created, use this name. */
+# ifdef __EMX__
+			if (vim_strchr(itmp, '/') != NULL)
+			    STRCAT(itmp, "/");
+			else
+# endif
+			    add_pathsep(itmp);
+			/* Use the full path; When using the current directory
+			 * a ":cd" would confuse us. */
+			vim_tempdir = FullName_save(itmp, FALSE);
+			break;
+		    }
+# ifdef EEXIST
+		    /* If the mkdir() didn't fail because the file/dir exists,
+		     * we probably can't create any dir here, try another
+		     * place. */
+		    if (errno != EEXIST)
+# endif
+			break;
+		}
+		if (vim_tempdir != NULL)
+		    break;
 	    }
-#else
-	    if (mktemp((char *)itmp) == NULL)
-		continue;
-#endif
-	    return vim_strsave(itmp);
 	}
     }
+
+    if (vim_tempdir != NULL)
+    {
+	/* There is no need to check if the file exists, because we own the
+	 * directory and nobody else creates a file in it. */
+	sprintf((char *)itmp, "%s%ld", vim_tempdir, temp_count++);
+	return vim_strsave(itmp);
+    }
+
     return NULL;
 
-#else /* !TEMPDIRNAMES */
+#else /* TEMPDIRNAMES */
 
 # ifdef WIN32
+    char	szTempFile[_MAX_PATH+1];
+    char	buf4[4];
+    char_u	*retval;
+    char_u	*p;
+
     STRCPY(itmp, "");
     if (GetTempPath(_MAX_PATH, szTempFile) == 0)
 	szTempFile[0] = NUL;	/* GetTempPath() failed, use current dir */
@@ -4907,12 +4930,26 @@ vim_tempname(extra_char)
 	return NULL;
     /* GetTempFileName() will create the file, we don't want that */
     (void)DeleteFile(itmp);
-# else
+
+    /* Backslashes in a temp file name cause problems when filtering with
+     * "sh".  NOTE: This ignores 'shellslash' because forward slashes
+     * always work here. */
+    retval = vim_strsave(itmp);
+    if (*p_shcf == '-')
+	for (p = retval; *p; ++p)
+	    if (*p == '\\')
+		*p = '/';
+    return retval;
+
+# else /* WIN32 */
+
 #  ifdef USE_TMPNAM
     /* tmpnam() will make its own name */
     if (*tmpnam((char *)itmp) == NUL)
 	return NULL;
 #  else
+    char_u	*p;
+
 #   ifdef VMS_TEMPNAM
     /* mktemp() is not working on VMS.  It seems to be
      * a do-nothing function. Therefore we use tempnam().
@@ -4937,26 +4974,10 @@ vim_tempname(extra_char)
 	return NULL;
 #   endif
 #  endif
-# endif
+# endif /* WIN32 */
 
-# ifdef WIN32
-    {
-	char_u	*retval;
-
-	/* Backslashes in a temp file name cause problems when filtering with
-	 * "sh".  NOTE: This ignores 'shellslash' because forward slashes
-	 * always work here. */
-	retval = vim_strsave(itmp);
-	if (*p_shcf == '-')
-	    for (p = retval; *p; ++p)
-		if (*p == '\\')
-		    *p = '/';
-	return retval;
-    }
-# else
     return vim_strsave(itmp);
-# endif
-#endif /* !TEMPDIRNAMES */
+#endif /* TEMPDIRNAMES */
 }
 
 /*
@@ -5046,6 +5067,8 @@ static struct event_name
     {"BufWritePre",	EVENT_BUFWRITEPRE},
     {"BufWrite",	EVENT_BUFWRITEPRE},
     {"BufWriteCmd",	EVENT_BUFWRITECMD},
+    {"CmdwinEnter",	EVENT_CMDWINENTER},
+    {"CmdwinLeave",	EVENT_CMDWINLEAVE},
     {"CharCode",	EVENT_CHARCODE},
     {"FileEncoding",	EVENT_CHARCODE},
     {"CursorHold",	EVENT_CURSORHOLD},
@@ -6622,7 +6645,7 @@ au_exists(name, name_end, pattern)
 }
 #endif	/* FEAT_AUTOCMD */
 
-#if defined(FEAT_AUTOCMD) || defined(FEAT_WILDIGN)
+#if defined(FEAT_AUTOCMD) || defined(FEAT_WILDIGN) || defined(PROTO)
 /*
  * Try matching a filename with a pattern.
  * Used for autocommands and 'wildignore'.
@@ -6632,7 +6655,7 @@ au_exists(name, name_end, pattern)
 match_file_pat(pattern, fname, sfname, tail, allow_dirs)
     char_u	*pattern;		/* pattern to match with */
     char_u	*fname;			/* full path of file name */
-    char_u	*sfname;		/* short file name */
+    char_u	*sfname;		/* short file name or NULL */
     char_u	*tail;			/* tail of path */
     int		allow_dirs;		/* allow matching with dir */
 {
@@ -6646,9 +6669,9 @@ match_file_pat(pattern, fname, sfname, tail, allow_dirs)
 #endif
 
 #ifdef CASE_INSENSITIVE_FILENAME
-    reg_ic = TRUE;			/* Always ignore case */
+    regmatch.rm_ic = TRUE;		/* Always ignore case */
 #else
-    reg_ic = FALSE;			/* Don't ever ignore case */
+    regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
 #endif
 #ifdef FEAT_OSFILETYPE
     if (*pattern == '<')
@@ -6710,6 +6733,44 @@ match_file_pat(pattern, fname, sfname, tail, allow_dirs)
 
     vim_free(regmatch.regprog);
     return result;
+}
+#endif
+
+#if defined(FEAT_WILDIGN) || defined(PROTO)
+/*
+ * Return TRUE if a file matches with a pattern in "list".
+ * "list" is a comma-separated list of patterns, like 'wildignore'.
+ * "sfname" is the short file name or NULL, "ffname" the long file name.
+ */
+    int
+match_file_list(list, sfname, ffname)
+    char_u	*list;
+    char_u	*sfname;
+    char_u	*ffname;
+{
+    char_u	buf[100];
+    char_u	*tail;
+    char_u	*regpat;
+    char	allow_dirs;
+    int		match;
+    char_u	*p;
+
+    tail = gettail(sfname);
+
+    /* try all patterns in 'wildignore' */
+    p = list;
+    while (*p)
+    {
+	copy_option_part(&p, buf, 100, ",");
+	regpat = file_pat_to_reg_pat(buf, NULL, &allow_dirs, FALSE);
+	if (regpat == NULL)
+	    break;
+	match = match_file_pat(regpat, ffname, sfname, tail, (int)allow_dirs);
+	vim_free(regpat);
+	if (match)
+	    return TRUE;
+    }
+    return FALSE;
 }
 #endif
 
@@ -6949,20 +7010,6 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
     }
     return reg_pat;
 }
-
-#if defined(HAVE_LSTAT) && defined(HAVE_ISSYMLINK)
-/*
- * Return TRUE if file "name" is in fact a symbolic link.
- */
-    int
-symlink_check(fname)
-    char_u	*fname;
-{
-    struct stat sb;
-
-    return (mch_lstat((char *)fname, &sb) == 0 && ISSYMLINK(sb.st_mode));
-}
-#endif
 
 #if defined(USE_ICONV) || defined(PROTO)
 static char_u *alt_charset __ARGS((char_u *name));
