@@ -1,4 +1,4 @@
-*gui_w16.txt*   For Vim version 6.0d.  Last change: 2000 Jul 25
+*gui_w16.txt*   For Vim version 6.0e.  Last change: 2000 Jul 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

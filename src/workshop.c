@@ -7,6 +7,9 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "auto/config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -16,7 +19,9 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <libgen.h>
+#ifdef HAVE_LIBGEN_H
+# include <libgen.h>
+#endif
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,18 +38,24 @@
 #include "gui_beval.h"
 #include "workshop.h"
 
+#define wsdebug(x) /* nothing */
+
 void		 workshop_hotkeys(Boolean);
 
 static Boolean	 isShowing(int);
 static win_t	*get_window(buf_t *);
+#if 0
 static int	 get_buffer_number(buf_t *);
+#endif
 static void	 updatePriority(Boolean);
 static char	*addUniqueMnemonic(char *, char *);
 static char	*fixup(char *);
 static char	*get_selection(buf_t *);
 static char	*append_selection(int, char *, int *, int *);
 static void	 load_buffer_by_name(char *, int);
+#if 0
 static void	 load_buffer_by_number(int, int);
+#endif
 static void	 load_window(char *, int lnum);
 static void	 warp_to_pc(int);
 static void	 bevalCB(BalloonEval *, int);
@@ -106,7 +117,6 @@ workshop_init()
     int		 is_dirty = FALSE;
     int		 width, height;
     XtInputMask	 mask;
-    char	*cp;
 
     /*
      * Set size from workshop_get_width_height().
@@ -220,8 +230,7 @@ workshop_load_file(
 	/*
 	 * Set up the Balloon Expression Evaluation area.
 	 */
-	balloonEval =
-	    gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
+	balloonEval = gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
     }
 
     load_window(filename, line);
@@ -378,6 +387,7 @@ workshop_add_mark_type(
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
     {
 	char *cp;
+
 	cp = strrchr(sign, '/');
 	if (cp == NULL)
 	{
@@ -436,7 +446,6 @@ workshop_set_mark(
 	int		 idx)		/* which mark to use */
 {
     char	cbuf[BUFSIZ];	/* command buffer */
-    exarg_t	ea;		/* EX command struct */
 
     /* Set mark in a given file */
 #ifdef WSDEBUG_TRACE
@@ -458,7 +467,6 @@ workshop_change_mark_type(
 	int		 idx)		/* which mark to use */
 {
     char	cbuf[BUFSIZ];	/* command buffer */
-    exarg_t	ea;		/* EX command struct */
 
     /* Change mark type */
 #ifdef WSDEBUG_TRACE
@@ -484,7 +492,6 @@ workshop_goto_mark(
 	char		*message)
 {
     char		 cbuf[BUFSIZ];	/* command buffer */
-    exarg_t		 ea;		/* EX command struct */
 
     /* Goto mark */
 #ifdef WSDEBUG_TRACE
@@ -511,7 +518,6 @@ workshop_delete_mark(
 	int		 markId)
 {
     char		 cbuf[BUFSIZ];	/* command buffer */
-    exarg_t		 ea;		/* EX command struct */
 
     /* Delete mark */
 #ifdef WSDEBUG_TRACE
@@ -574,7 +580,7 @@ workshop_get_mark_lineno(
  * Toolbar code
  */
 
-
+#if 0 /* not used */
 /*
  * From selection.c
  * Update a position across buffer modifications specified by
@@ -590,6 +596,7 @@ maintainPosition(int *position, int modPos, int nInserted, int nDeleted)
     else
 	*position = modPos;
 }
+#endif
 
     void
 workshop_adjust_marks(Widget *window, int pos,
@@ -686,12 +693,12 @@ workshop_footer_message(
 workshop_menu_begin(
 	char		*label)
 {
-    vimmenu_t	*menu;		/* pointer to last menu */
-    int		menuPriority;	/* priority of new menu */
-    char	mnembuf[64];	/* store menubar mnemonics here */
-    char	*name;		/* label with a mnemonic */
-    char	*p;		/* used to find mnemonics */
-    int		idx;		/* index into mnembuf */
+    vimmenu_t	*menu;			/* pointer to last menu */
+    int		menuPriority = 0;	/* priority of new menu */
+    char	mnembuf[64];		/* store menubar mnemonics here */
+    char	*name;			/* label with a mnemonic */
+    char	*p;			/* used to find mnemonics */
+    int		idx;			/* index into mnembuf */
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
@@ -712,14 +719,12 @@ workshop_menu_begin(
     {
 	if (menubar_menu(menu->name))
 	{
-	    p = strchr((char *) menu->name, '&');
+	    p = strchr((char *)menu->name, '&');
 	    if (p != NULL)
-	    {
 		mnembuf[idx++] = *++p;
-	    }
 	}
-	if (menu->next != NULL &&
-		strcmp((char *) menu->next->dname, "Help") == 0)
+	if (menu->next != NULL
+		&& strcmp((char *) menu->next->dname, "Help") == 0)
 	{
 	    menuPriority = menu->priority + 10;
 	    break;
@@ -795,7 +800,6 @@ workshop_menu_item(
 	char		*filepos,
 	char		*sensitive)
 {
-    exarg_t		 ea;
     char		 cbuf[BUFSIZ];
     char		 namebuf[BUFSIZ];
     char		 accText[BUFSIZ];
@@ -888,9 +892,6 @@ workshop_menu_end()
     void
 workshop_toolbar_begin()
 {
-    exarg_t		 ea;
-    char		 cbuf[BUFSIZ];
-
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
     {
@@ -944,7 +945,6 @@ workshop_toolbar_button(
 	char	*file,
 	char	*left)
 {
-    exarg_t	ea;
     char	cbuf[BUFSIZ];
     char	namebuf[BUFSIZ];
     static int	tbid = 1;
@@ -1017,7 +1017,6 @@ workshop_frame_sensitivities(
 {
     VerbSense	*vp;		/* iterate through vs */
     char	*menu_name;	/* used in menu lookup */
-    exarg_t	 ea;		/* vim argument struct */
     char	*sense;		/* to move ?: out of loop */
     int		 cnt;		/* count of verbs to skip */
     char	 cbuf[4096];
@@ -1427,6 +1426,7 @@ load_buffer_by_name(
     coloncmd(cbuf, False);
 }
 
+#if 0 /* not used */
     static void
 load_buffer_by_number(
 	int	 b_fnum,		/* buffer number */
@@ -1443,7 +1443,7 @@ load_buffer_by_number(
     sprintf(cbuf, "e %s #%d", lnumbuf, b_fnum);
     coloncmd(cbuf, False);
 }
-
+#endif
 
 
     static void
@@ -1453,7 +1453,6 @@ load_window(
 {
     buf_t	*buf;		/* buffer filename is stored in */
     win_t	*win;		/* window filenme is displayed in */
-    int		b_fnum;		/* buffer number */
 
     /*
      * Make sure filename is displayed and is the current window.
@@ -1463,8 +1462,8 @@ load_window(
     if (buf == NULL || (win = get_window(buf)) == NULL)
     {
 	/* No buffer or buffer is not in current window */
-	wsdebug("load_window: load_buffer_by_name(\"%s\", %d)\n",
-		filename, lnum);
+	/* wsdebug("load_window: load_buffer_by_name(\"%s\", %d)\n",
+		filename, lnum); */
 	load_buffer_by_name(filename, lnum);
     }
     else
@@ -1473,14 +1472,14 @@ load_window(
 	if (win != curwin)
 	{
 	    win_enter(win, False);
-	    wsdebug("load_window: window endter %s\n",
-		    win->w_buffer->b_sfname);
+	    /* wsdebug("load_window: window endter %s\n",
+		    win->w_buffer->b_sfname); */
 	}
 	if (lnum > 0 && win->w_cursor.lnum != lnum)
 	{
 	    warp_to_pc(lnum);
-	    wsdebug("load_window: warp to %s[%d]\n",
-		    win->w_buffer->b_sfname, lnum);
+	    /* wsdebug("load_window: warp to %s[%d]\n",
+		    win->w_buffer->b_sfname, lnum); */
 	}
     }
     out_flush();
@@ -1534,7 +1533,7 @@ get_window(
 }
 
 
-
+#if 0 /* not used */
     static int
 get_buffer_number(
 	buf_t		*buf)		/* buffer to get position of */
@@ -1552,6 +1551,7 @@ get_buffer_number(
 
     return 1;
 }
+#endif
 
     static void
 updatePriority(
@@ -1579,7 +1579,6 @@ addUniqueMnemonic(
 {
     static char	 name[BUFSIZ];	/* buffer for the updated name */
     char	*p;		/* pointer into label */
-    char	*cp;		/* pointer into current mnemonics */
     char	*found;		/* pointer to possible mnemonic */
 
     found = NULL;
@@ -1921,7 +1920,6 @@ lookupVerb(
 	char		*verb,
 	int		 skip)		/* number of matches to skip */
 {
-    int		 count = 0;	/* count number of matches */
     int		 i;		/* loop iterator */
 
     for (i = 0; i < menuMapSize; i++)

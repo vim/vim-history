@@ -75,12 +75,24 @@ static struct builtin_term *find_builtin_term __ARGS((char_u *name));
 static void parse_builtin_tcap __ARGS((char_u *s));
 static void term_color __ARGS((char_u *s, int n));
 static void gather_termleader __ARGS((void));
+#ifdef FEAT_TERMRESPONSE
+static void req_codes_from_term __ARGS((void));
+static void req_more_codes_from_term __ARGS((void));
+static void got_code_from_term __ARGS((char_u *code, int len));
+#endif
 #if defined(FEAT_GUI) \
     || (defined(FEAT_MOUSE) && (!defined(UNIX) || defined(FEAT_MOUSE_XTERM)))
 static int get_bytes_from_buf __ARGS((char_u *, char_u *, int));
 #endif
+#ifdef FEAT_TERMRESPONSE
+static void may_req_termresponse __ARGS((void));
+#endif
+static void del_termcode_idx __ARGS((int idx));
 static int term_is_builtin __ARGS((char_u *name));
 static int term_7to8bit __ARGS((char_u *p));
+#ifdef FEAT_TERMRESPONSE
+static void switch_to_8bit __ARGS((void));
+#endif
 
 #ifdef HAVE_TGETENT
 static char_u *tgetent_error __ARGS((char_u *, char_u *));
@@ -91,7 +103,7 @@ static char_u *tgetent_error __ARGS((char_u *, char_u *));
  */
 char		*tgetstr __ARGS((char *, char **));
 
-# ifdef FEAT_MOUSE
+# ifdef FEAT_TERMRESPONSE
 /* When set: Get terminal version when switched to RAW mode */
 static int need_get_crv = TRUE;
 # endif
@@ -122,6 +134,8 @@ char *UP, *BC, PC;
 # define TGETENT(b, t)	tgetent((char *)(b), (char *)(t))
 static char_u *vim_tgetstr __ARGS((char *s, char_u **pp));
 #endif /* HAVE_TGETENT */
+
+static int  detected_8bit = FALSE;	/* detected 8-bit terminal */
 
 struct builtin_term builtin_termcaps[] =
 {
@@ -1321,6 +1335,9 @@ char_u *(term_strings[(int)KS_LAST + 1]);
 
 static int	need_gather = FALSE;		/* need to fill termleader[] */
 static char_u	termleader[256 + 1];		/* for check_termcode() */
+#ifdef FEAT_TERMRESPONSE
+static int	check_for_codes = FALSE;	/* check for key code reponse */
+#endif
 
     static struct builtin_term *
 find_builtin_term(term)
@@ -1409,6 +1426,22 @@ parse_builtin_tcap(term)
     }
 }
 
+#ifdef HAVE_TGETENT
+static char	    *(key_names[]) =
+{
+    "ku", "kd", "kr", "kl",
+# ifdef ARCHIE
+    "su", "sd",		/* Termcap code made up! */
+# endif
+    "#2", "#4", "%i", "*7",
+    "k1", "k2", "k3", "k4", "k5", "k6",
+    "k7", "k8", "k9", "k;", "F1", "F2",
+    "%1", "&8", "kb", "kI", "kD", "kh",
+    "@7", "kP", "kN", "K1", "K3", "K4", "K5",
+    NULL
+};
+#endif
+
 /*
  * Set terminal options for terminal "term".
  * Return OK if terminal 'term' was found in a termcap, FAIL otherwise.
@@ -1429,6 +1462,8 @@ set_termname(term)
     int		width = 0, height = 0;
     char_u	*error_msg = NULL;
     char_u	*bs_p, *del_p;
+
+    detected_8bit = FALSE;		/* reset 8-bit detection */
 
     if (term_is_builtin(term))
     {
@@ -1461,19 +1496,6 @@ set_termname(term)
 	    int		    i;
 	    char_u	    tbuf[TBUFSZ];
 	    char_u	    *tp;
-	    static char	    *(key_names[]) =
-			    {
-			    "ku", "kd", "kr",	/* "kl" is a special case */
-# ifdef ARCHIE
-			    "su", "sd",		/* Termcap code made up! */
-# endif
-			    "#4", "%i",
-			    "k1", "k2", "k3", "k4", "k5", "k6",
-			    "k7", "k8", "k9", "k;", "F1", "F2",
-			    "%1", "&8", "kb", "kI", "kD", "kh",
-			    "@7", "kP", "kN", "K1", "K3", "K4", "K5",
-			    NULL
-			    };
 	    static struct {
 			    enum SpecialKey dest; /* index in term_strings[] */
 			    char *name;		  /* termcap name for string */
@@ -1529,21 +1551,22 @@ set_termname(term)
 		    T_DA = (char_u *)"y";
 
 
-	    /* get key codes */
-
+		/*
+		 * get key codes
+		 */
 		for (i = 0; key_names[i] != NULL; ++i)
 		{
 		    if (find_termcode((char_u *)key_names[i]) == NULL)
-			add_termcode((char_u *)key_names[i],
-					   TGETSTR(key_names[i], &tp), FALSE);
-		}
-
-		    /* if cursor-left == backspace, ignore it (televideo 925) */
-		if (find_termcode((char_u *)"kl") == NULL)
-		{
-		    p = TGETSTR("kl", &tp);
-		    if (p != NULL && *p != Ctrl_H)
-			add_termcode((char_u *)"kl", p, FALSE);
+		    {
+			p = TGETSTR(key_names[i], &tp);
+			/* if cursor-left == backspace, ignore it (televideo
+			 * 925) */
+			if (p != NULL
+				&& (*p != Ctrl_H
+				    || key_names[i][0] != 'k'
+				    || key_names[i][1] != 'l'))
+			    add_termcode((char_u *)key_names[i], p, FALSE);
+		    }
 		}
 
 		if (height == 0)
@@ -1810,7 +1833,7 @@ set_termname(term)
 
     full_screen = TRUE;		/* we can use termcap codes from now on */
     set_term_defaults();	/* use current values as defaults */
-#if defined(FEAT_MOUSE) && defined(HAVE_TGETENT)
+#ifdef FEAT_TERMRESPONSE
     need_get_crv = TRUE;	/* Get terminal version later */
 #endif
 
@@ -1870,6 +1893,10 @@ set_termname(term)
 	}
 #endif
     }
+
+#ifdef FEAT_TERMRESPONSE
+    may_req_termresponse();
+#endif
 
     return OK;
 }
@@ -2150,7 +2177,7 @@ term_is_builtin(name)
 term_is_8bit(name)
     char_u  *name;
 {
-    return (strstr((char *)name, "8bit") != NULL);
+    return (detected_8bit || strstr((char *)name, "8bit") != NULL);
 }
 
 /*
@@ -2394,7 +2421,7 @@ out_char_nf(c)
  * use this whenever you don't want to run the string through tputs.
  * tputs above is harmless, but tputs from the termcap library
  * is likely to strip off leading digits, that it mistakes for padding
- * information. (jw)
+ * information, and "%i", "%d", etc.
  * This should only be used for writing terminal codes, not for outputting
  * normal text (use functions like msg_puts() and screen_putchar() for that).
  */
@@ -2973,21 +3000,9 @@ settmode(tmode)
 #endif
 	    out_flush();
 	}
-
-#if defined(FEAT_MOUSE) && defined(HAVE_TGETENT)
-	/* Request version string (for xterm) just after switching to raw mode
-	 * (otherwise the result will be echoed).  The result is caught in
-	 * check_termcode(). */
-	if (cur_tmode == TMODE_RAW && need_get_crv && *T_CRV)
-	{
-	    out_str(T_CRV);
-	    need_get_crv = FALSE;
-	    /* check for the characters now, otherwise they might be eaten by
-	     * get_keystroke() */
-	    (void)vpeekc();
-	}
+#ifdef FEAT_TERMRESPONSE
+	may_req_termresponse();
 #endif
-
     }
 }
 
@@ -3002,6 +3017,9 @@ starttermcap()
 	out_flush();
 	termcap_active = TRUE;
 	screen_start();			/* don't know where cursor is now */
+#ifdef FEAT_TERMRESPONSE
+	may_req_termresponse();
+#endif
     }
 }
 
@@ -3021,6 +3039,29 @@ stoptermcap()
 	out_flush();
     }
 }
+
+#ifdef FEAT_TERMRESPONSE
+/*
+ * Request version string (for xterm) when needed.
+ * Only do this after switching to raw mode, otherwise the result will be
+ * echoed.
+ * Only do this after termcap mode has been started, otherwise the codes for
+ * the cursor keys may be wrong.
+ * The result is caught in check_termcode().
+ */
+    static void
+may_req_termresponse()
+{
+    if (need_get_crv && cur_tmode == TMODE_RAW && termcap_active && *T_CRV)
+    {
+	out_str(T_CRV);
+	need_get_crv = FALSE;
+	/* check for the characters now, otherwise they might be eaten by
+	 * get_keystroke() */
+	(void)vpeekc();
+    }
+}
+#endif
 
 /*
  * Return TRUE when saving and restoring the screen.
@@ -3346,17 +3387,53 @@ del_termcode(name)
     for (i = 0; i < tc_len; ++i)
 	if (termcodes[i].name[0] == name[0] && termcodes[i].name[1] == name[1])
 	{
-	    vim_free(termcodes[i].code);
-	    --tc_len;
-	    while (i < tc_len)
-	    {
-		termcodes[i] = termcodes[i + 1];
-		++i;
-	    }
+	    del_termcode_idx(i);
 	    return;
 	}
     /* not found. Give error message? */
 }
+
+    static void
+del_termcode_idx(idx)
+    int		idx;
+{
+    int		i;
+
+    vim_free(termcodes[idx].code);
+    --tc_len;
+    for (i = idx; i < tc_len; ++i)
+	termcodes[i] = termcodes[i + 1];
+}
+
+#ifdef FEAT_TERMRESPONSE
+/*
+ * Called when detected that the terminal sends 8-bit codes.
+ * Convert all 7-bit codes to their 8-bit equivalent.
+ */
+    static void
+switch_to_8bit()
+{
+    int		i;
+    int		c;
+
+    /* Only need to do something when not already using 8-bit codes. */
+    if (!term_is_8bit(T_NAME))
+    {
+	for (i = 0; i < tc_len; ++i)
+	{
+	    c = term_7to8bit(termcodes[i].code);
+	    if (c != 0)
+	    {
+		mch_memmove(termcodes[i].code + 1, termcodes[i].code + 2,
+					       STRLEN(termcodes[i].code + 1));
+		termcodes[i].code[0] = c;
+	    }
+	}
+	need_gather = TRUE;		/* need to fill termleader[] */
+    }
+    detected_8bit = TRUE;
+}
+#endif
 
 #ifdef CHECK_DOUBLE_CLICK
 static linenr_t orig_topline = 0;
@@ -3557,9 +3634,9 @@ check_termcode(max_offset, buf, buflen)
 	    }
 	}
 
+#ifdef FEAT_TERMRESPONSE
 	if (key_name[0] == NUL)
 	{
-#ifdef FEAT_MOUSE
 	    /* Check for xterm version string: "<Esc>[><x>;<vers>;<y>c".  Also
 	     * eat other possible responses to t_RV, rxvt returns
 	     * "<Esc>[?1;2c".  Also accept CSI instead of <Esc>[. */
@@ -3579,10 +3656,25 @@ check_termcode(max_offset, buf, buflen)
 		/* eat it when at least one digit and ending in 'c' */
 		if (i > 2 + (tp[0] != CSI) && tp[i] == 'c')
 		{
-		    /* If xterm version is >= 95, we can use mouse dragging */
-		    if (tp[1 + (tp[0] != CSI)] == '>' && j == 2 && extra >= 95)
-			set_option_value((char_u *)"ttym", 0L,
+		    /* If this code starts with CSI, you can bet that the
+		     * terminal uses 8-bit codes. */
+		    if (tp[0] == CSI)
+			switch_to_8bit();
+
+		    if (tp[1 + (tp[0] != CSI)] == '>' && j == 2)
+		    {
+			/* if xterm version >= 95 use mouse dragging */
+			if (extra >= 95)
+			    set_option_value((char_u *)"ttym", 0L,
 						   (char_u *)"xterm2", FALSE);
+			/* if xterm version >= 140 try to get termcap codes */
+			if (extra >= 140)
+			{
+			    check_for_codes = TRUE;
+			    need_gather = TRUE;
+			    req_codes_from_term();
+			}
+		    }
 # ifdef FEAT_EVAL
 		    set_vim_var_string(VV_TERMRESPONSE, tp, i + 1);
 # endif
@@ -3594,13 +3686,35 @@ check_termcode(max_offset, buf, buflen)
 		    key_name[1] = (int)KE_IGNORE;
 		    slen = i + 1;
 		}
-		else
-		    continue;
 	    }
-	    else
-#endif
-		continue;    /* No match at this position, try next one */
+
+	    /* Check for '<Esc>P1+r<hex bytes><Esc>\'.  A "0" instead of the
+	     * "1" means an invalid request. */
+	    else if (check_for_codes
+		    && ((tp[0] == ESC && tp[1] == 'P' && len >= 2)
+			|| tp[0] == DCS))
+	    {
+		j = 1 + (tp[0] != DCS);
+		for (i = j; i < len; ++i)
+		    if ((tp[i] == ESC && tp[i + 1] == '\\' && i + 1 < len)
+			    || tp[i] == STERM)
+		    {
+			if (i - j >= 3 && tp[j + 1] == '+' && tp[j + 2] == 'r')
+			    got_code_from_term(tp + j, i);
+			key_name[0] = (int)KS_EXTRA;
+			key_name[1] = (int)KE_IGNORE;
+			slen = i + 1 + (tp[i] == ESC);
+			break;
+		    }
+
+		if (i == len)
+		    return -1;		/* not enough characters */
+	    }
 	}
+#endif
+
+	if (key_name[0] == NUL)
+	    continue;	    /* No match at this position, try next one */
 
 	/* We only get here when we have a complete termcode match */
 
@@ -4407,6 +4521,11 @@ gather_termleader()
     if (gui.in_use)
 	termleader[len++] = CSI;    /* the GUI codes are not in termcodes[] */
 #endif
+#ifdef FEAT_TERMRESPONSE
+    if (check_for_codes)
+	termleader[len++] = DCS;    /* the termcode response starts with DCS
+				       in 8-bit mode */
+#endif
     termleader[len] = NUL;
 
     for (i = 0; i < tc_len; ++i)
@@ -4552,6 +4671,83 @@ show_one_termcode(name, code, printit)
     }
     return len;
 }
+
+#ifdef FEAT_TERMRESPONSE
+/*
+ * For Xterm >= 140 compiled with OPT_TCAP_QUERY: Obtain the actually used
+ * termcap codes from the terminal itself.
+ * We get them one by one to avoid a very long response.
+ */
+static int xt_index_in;
+static int xt_index_out;
+
+    static void
+req_codes_from_term()
+{
+    xt_index_out = 0;
+    xt_index_in = 0;
+    req_more_codes_from_term();
+}
+
+    static void
+req_more_codes_from_term()
+{
+    char	buf[10];
+
+    /* Send up to 10 more requests out than we received.  Avoid sending too
+     * many, there can be a buffer overflow somewhere. */
+    while (xt_index_out < xt_index_in + 10 && key_names[xt_index_out] != NULL)
+    {
+	/* Can't send "k;" for F10, use "kf10" instead. */
+	sprintf(buf, "\033P+q%s\033\\",
+		key_names[xt_index_out][1] == ';'
+					  ? "kf10" : key_names[xt_index_out]);
+	out_str_nf((char_u *)buf);
+	++xt_index_out;
+    }
+}
+
+/*
+ * Decode key code response from xterm: '<Esc>P1+r<hex bytes><Esc>\'.  A "0"
+ * instead of the "1" indicates a code that isn't supported.
+ * "code" points to the "0" or "1".
+ */
+    static void
+got_code_from_term(code, len)
+    char_u	*code;
+    int		len;
+{
+#define XT_LEN 100
+    char_u	buf[XT_LEN];
+    int		i;
+    int		j = 0;
+
+    if (key_names[xt_index_in] == NULL)
+    {
+	EMSG(_("xterm sent more codes than Vim asked for"));
+	return;
+    }
+
+    /* A '1' means the code is supported, a '0' means it isn't.  When half the
+     * length is > XT_LEN we can't use it. */
+    if (code[0] == '1' && len / 2 < XT_LEN)
+    {
+	for (i = 3; isxdigit(code[i]) && isxdigit(code[i + 1]); i += 2)
+	    buf[j++] = (hex2nr(code[i]) << 4) + hex2nr(code[i + 1]);
+	buf[j] = NUL;
+
+	/* First delete any existing entry with the same code. */
+	i = find_term_bykeys(buf);
+	if (i >= 0)
+	    del_termcode_idx(i);
+
+	add_termcode((char_u *)key_names[xt_index_in], buf, FALSE);
+    }
+
+    ++xt_index_in;
+    req_more_codes_from_term();
+}
+#endif
 
 #if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 /*

@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0d.  Last change: 2000 Jul 15
+*usr_43.txt*	For Vim version 6.0e.  Last change: 2000 Aug 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -14,7 +14,7 @@
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*43.1*  Settings for a filetype
+*43.1*  Settings for a filetype				*settings*
 
 When you are editing a certain kind of file you tend to use the same option
 values and mappings, but different from when editing other files.  And you

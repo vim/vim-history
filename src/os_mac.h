@@ -128,8 +128,8 @@
 # define EXRC_FILE	"_exrc"
 #endif
 
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIMRUNTIME:doc:help.txt"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE	"$VIMRUNTIME:doc:help.txt"
 #endif
 
 #ifndef FILETYPE_FILE
@@ -155,16 +155,17 @@
 # endif
 #endif /* FEAT_VIMINFO */
 
-#ifndef DEF_BDIR
-# define DEF_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
+#ifndef DFLT_BDIR
+# define DFLT_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
 #endif
 
-#ifndef DEF_DIR
-# define DEF_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
+#ifndef DFLT_DIR
+# define DFLT_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
-#define ERRORFILE   "errors.err"
-#define MAKEEF	    "vim##.err"
+#define DFLT_ERRORFILE		"errors.err"
+#define DFLT_MAKEEF		"vim##.err"
+#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
 
 /*
  * Macintosh has plenty of memory, use large buffers
@@ -175,12 +176,12 @@
 
 #define BASENAMELEN	(32-5-1)	/* length of base of filename */
 
-#ifndef MAXMEM
-# define MAXMEM		512	/* use up to  512 Kbyte for buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	512	/* use up to  512 Kbyte for buffer */
 #endif
 
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	2048	/* use up to 2048 Kbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	2048	/* use up to 2048 Kbyte for Vim */
 #endif
 
 #define WILDCHAR_LIST "*?[{`$"

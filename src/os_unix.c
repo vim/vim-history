@@ -3196,7 +3196,17 @@ unix_expandpath(gap, path, wildoff, flags)
 	}
 	else if (vim_strchr((char_u *)"*?[{~$", *path_end) != NULL)
 	    e = p;
-	*p++ = *path_end++;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    len = mb_ptr2len_check(path_end);
+	    STRNCPY(p, path_end, len);
+	    p += len;
+	    path_end += len;
+	}
+	else
+#endif
+	    *p++ = *path_end++;
     }
     e = p;
     *e = NUL;
@@ -4017,7 +4027,6 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
     void	*hinstLib;
 # else
     shl_t	hinstLib;
-    shl_t	safe_handle;	/* shl_findsym() modifies so_handle */
 # endif
     STRPROCSTR	ProcAdd;
     INTPROCSTR	ProcAddI;
@@ -4033,8 +4042,7 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 #  endif
 	    );
 # else
-    safe_handle = so_handle = shl_load((const char*)libname,
-		BIND_IMMEDIATE|BIND_VERBOSE, 0L);
+    hinstLib = shl_load((const char*)libname, BIND_IMMEDIATE|BIND_VERBOSE, 0L);
 # endif
 
     /* If the handle is valid, try to get the function address. */
@@ -4054,11 +4062,9 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 # if defined(HAVE_DLOPEN)
 		ProcAdd = (STRPROCSTR)dlsym(hinstLib, (const char *)funcname);
 # else
-		if (shl_findsym(&hinstLib, (const char *) funcname,
-			    TYPE_PROCEDURE, (void *)&ProcAdd) < 0)
-		{
+		if (shl_findsym(&hinstLib, (const char *)funcname,
+					TYPE_PROCEDURE, (void *)&ProcAdd) < 0)
 		    ProcAdd = NULL;
-		}
 # endif
 		if ((success = (ProcAdd != NULL)))
 		{
@@ -4073,11 +4079,9 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 # if defined(HAVE_DLOPEN)
 		ProcAddI = (INTPROCSTR)dlsym(hinstLib, (const char *)funcname);
 # else
-		if (shl_findsym(&hinstLib, (const char *) funcname,
-			    TYPE_PROCEDURE, (void *)&ProcAddI) < 0)
-		{
+		if (shl_findsym(&hinstLib, (const char *)funcname,
+				       TYPE_PROCEDURE, (void *)&ProcAddI) < 0)
 		    ProcAddI = NULL;
-		}
 # endif
 		if ((success = (ProcAddI != NULL)))
 		{

@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 6.0d.  Last change: 2000 Jul 07
+*quotes.txt*    For Vim version 6.0e.  Last change: 2000 Jul 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -18,6 +18,10 @@ Although all of the programs were used during the preparation of the new and
 revised material, most of the editing was done with VIM versions 4.5 and 5.0
 under GNU-Linux (Redhat 4.2).  (Arnold Robbins, Israel, author of "Learning
 the Vi editor")
+
+It's well worth noting that the _entirety_ of SourceForge was written using
+vim and its nifty PHP syntax highlighting. I think the entire SF.net tech
+staff uses vim and we're all excited to have you aboard! (Tim Perdue)
 
 I rarely think about VIM, in the same way that I guess a fish rarely thinks
 about water.  It's the environment in which everything else happens.  I'm a

@@ -247,10 +247,18 @@ redraw_all_later(type)
 redraw_curbuf_later(type)
     int		type;
 {
+    redraw_buf_later(type, curbuf);
+}
+
+    void
+redraw_buf_later(type, buf)
+    int		type;
+    buf_t	*buf;
+{
     win_t	*wp;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
-	if (wp->w_redr_type < type && wp->w_buffer == curbuf)
+	if (wp->w_redr_type < type && wp->w_buffer == buf)
 	    wp->w_redr_type = type;
     if (must_redraw < type)	/* must_redraw is the maximum of all windows */
 	must_redraw = type;
@@ -519,9 +527,9 @@ lnum2row(wp, lnum)
     int		i, j;
 
     for (i = wp->w_topline, j = 0;
-	    i < wp->w_botline && j < wp->w_lsize_valid; i++)
+			      i < wp->w_botline && j < wp->w_lines_valid; i++)
     {
-	row += wp->w_lsize[j++];
+	row += wp->w_lines[j++].wl_size;
 	if (i == lnum)
 	    break;
     }
@@ -546,8 +554,6 @@ update_debug_sign(buf, lnum)
 		row = lnum2row(wp, lnum);
 		if (row > 0)
 		{
-		    wsdebug(_("update_debug_sign[1]: file \"%s\", row %d, cols [0 - %d]\n"),
-			    wp->w_buffer->b_sfname, row, screen_Columns - 1);
 		    screen_start();	/* not sure of screen cursor */
 		    win_line(wp, lnum, row, row + 1);
 		}
@@ -556,7 +562,6 @@ update_debug_sign(buf, lnum)
     }
     else
     {					/* delete all marks */
-	wsdebug(_("update_debug_signs[2]: Delete all marks!\n"));
 	for (wp = firstwin; wp; wp = wp->w_next)
 	    win_update(wp);
     }
@@ -671,6 +676,10 @@ win_update(wp)
 #endif
     linenr_t	mod_top = 0;
     linenr_t	mod_bot = 0;
+#ifdef FEAT_SEARCH_EXTRA
+    linenr_t	first_search_lnum = 0;	/* first lnum to search for multi-line
+					   search pattern */
+#endif
 
     type = wp->w_redr_type;
 
@@ -1152,6 +1161,7 @@ win_update(wp)
 #ifdef FEAT_SEARCH_EXTRA
     search_hl_buf = buf;
     search_hl_lnum = 0;		/* disable any previous match */
+    first_search_lnum = 0;
 #endif
 
     /*
@@ -1370,6 +1380,51 @@ win_update(wp)
 	    else
 #endif
 	    {
+
+#ifdef FEAT_SEARCH_EXTRA
+		/*
+		 * When using a multi-line pattern, start searching at the top
+		 * of the window or just after a closed fold.
+		 */
+		if (search_hl_rm.regprog != NULL
+			&& search_hl_lnum == 0
+			&& re_multiline(search_hl_rm.regprog))
+		{
+		    int		n;
+
+		    if (first_search_lnum == 0)
+		    {
+#ifdef FEAT_FOLDING
+			for (first_search_lnum = lnum;
+				first_search_lnum > wp->w_topline;
+							  --first_search_lnum)
+			    if (hasFoldingWin(wp, first_search_lnum - 1,
+						      NULL, NULL, TRUE, NULL))
+				break;
+#else
+			first_search_lnum = wp->w_topline;
+#endif
+		    }
+		    n = 0;
+		    while (first_search_lnum < lnum)
+		    {
+			next_search_hl(first_search_lnum, (colnr_t)n);
+			if (search_hl_lnum != 0)
+			{
+			    first_search_lnum = search_hl_lnum
+						+ search_hl_rm.endpos[0].lnum;
+			    n = search_hl_rm.endpos[0].col;
+			}
+			else
+			{
+			    ++first_search_lnum;
+			    n = 0;
+			}
+
+		    }
+		}
+#endif
+
 		row = win_line(wp, lnum, srow, wp->w_height);
 #ifdef FEAT_FOLDING
 		wp->w_lines[idx].wl_folded = FALSE;
@@ -3679,7 +3734,7 @@ win_redr_custom(wp, Ruler)
     int		attr;
     int		curattr;
     int		row;
-    int		col;
+    int		col = 0;
     int		maxlen;
     int		n;
     int		len;
@@ -3690,7 +3745,6 @@ win_redr_custom(wp, Ruler)
     struct	stl_hlrec hl[STL_MAX_ITEM];
 
     /* setup environment for the task at hand */
-    col = W_WINCOL(wp);
     row = W_WINROW(wp) + wp->w_height;
     fillchar = fillchar_status(&attr, wp == curwin);
     maxlen = W_WIDTH(wp);
@@ -3711,6 +3765,8 @@ win_redr_custom(wp, Ruler)
 	}
 #ifdef FEAT_VERTSPLIT
 	col = ru_col - (Columns - W_WIDTH(wp));
+	if (col < 0)
+	    col = 0;
 #else
 	col = ru_col;
 #endif
@@ -3718,19 +3774,24 @@ win_redr_custom(wp, Ruler)
 	if (!wp->w_status_height)
 	{
 	    row = Rows - 1;
-	    maxlen -= 1; /* writing in last column may cause scrolling */
+	    --maxlen;	/* writing in last column may cause scrolling */
 	    fillchar = ' ';
 	    attr = 0;
 	}
     }
     if (maxlen >= sizeof(buf))
 	maxlen = sizeof(buf) - 1;
+    if (maxlen <= 0)
+	return;
+#ifdef FEAT_VERTSPLIT
+    col += W_WINCOL(wp);
+#endif
 
     len = build_stl_str_hl(wp, buf, p, fillchar, maxlen, hl);
 
     for (p = buf + len; p < buf + maxlen; p++)
 	*p = fillchar;
-    *p = 0;
+    buf[maxlen] = 0;
 
     curattr = attr;
     p = buf;
@@ -4080,7 +4141,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
 		wp->w_p_list = TRUE;
 	    }
-	    if (virtcol == (colnr_t)(!(State & INSERT) && empty_line
+	    if (opt == STL_VIRTCOL_ALT
+		    && virtcol == (colnr_t)(!(State & INSERT) && empty_line
 			    ? 0 : (int)wp->w_cursor.col))
 	    {
 		break;

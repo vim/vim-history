@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0d.  Last change: 2000 Jul 07
+*editing.txt*   For Vim version 6.0e.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -174,6 +174,8 @@ If you want to always use ":confirm", set the 'confirm' option.
 			{command}.  At present this works for ":e", ":w",
 			":r", ":sp", ":mkexrc", ":mkvimrc" and ":mksession".
 			{only in Win32, Motif and Athena GUI}
+			When ":browse" is not supported it's ignored,
+			{command} is executed without a dialog.
 
 The syntax is best shown via some examples: >
 	:browse e $vim/foo

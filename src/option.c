@@ -311,7 +311,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"backupdir",   "bdir", P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_bdir, PV_NONE,
-			    {(char_u *)DEF_BDIR, (char_u *)0L}},
+			    {(char_u *)DFLT_BDIR, (char_u *)0L}},
     {"backupext",   "bex",  P_STRING|P_VI_DEF,
 			    (char_u *)&p_bex, PV_NONE,
 			    {
@@ -529,7 +529,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"directory",   "dir",  P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_dir, PV_NONE,
-			    {(char_u *)DEF_DIR, (char_u *)0L}},
+			    {(char_u *)DFLT_DIR, (char_u *)0L}},
     {"display",	    "dy",   P_STRING|P_VI_DEF|P_COMMA|P_RALL|P_NODUP,
 			    (char_u *)&p_dy, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
@@ -560,7 +560,7 @@ static struct vimoption options[] =
     {"errorfile",   "ef",   P_STRING|P_EXPAND|P_VI_DEF,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_ef, PV_NONE,
-			    {(char_u *)ERRORFILE, (char_u *)0L}
+			    {(char_u *)DFLT_ERRORFILE, (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -569,7 +569,7 @@ static struct vimoption options[] =
     {"errorformat", "efm",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_efm, PV_NONE,
-			    {(char_u *)EFM_DFLT, (char_u *)0L},
+			    {(char_u *)DFLT_EFM, (char_u *)0L},
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -620,10 +620,10 @@ static struct vimoption options[] =
 			    },
     {"fileformat",  "ff",   P_STRING|P_ALLOCED|P_VI_DEF|P_RSTAT|P_NO_MKRC,
 			    (char_u *)&p_ff, PV_FF,
-			    {(char_u *)FF_DFLT, (char_u *)0L}},
+			    {(char_u *)DFLT_FF, (char_u *)0L}},
     {"fileformats", "ffs",  P_STRING|P_VIM|P_COMMA|P_NODUP,
 			    (char_u *)&p_ffs, PV_NONE,
-			    {(char_u *)FFS_VI, (char_u *)FFS_DFLT}},
+			    {(char_u *)DFLT_FFS_VI, (char_u *)DFLT_FFS_VIM}},
     {"filetype",    "ft",   P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_AUTOCMD
 			    (char_u *)&p_ft, PV_FT,
@@ -656,7 +656,7 @@ static struct vimoption options[] =
     {"foldcolumn",  "fdc",  P_BOOL|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_FDC,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"foldenable", "fdd",   P_BOOL|P_VI_DEF|P_RWIN,
+    {"foldenable",  "fen",  P_BOOL|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_FEN,
 			    {(char_u *)TRUE, (char_u *)0L}},
     {"foldexpr",    "fde",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
@@ -682,7 +682,7 @@ static struct vimoption options[] =
 #endif
     {"formatoptions","fo",  P_STRING|P_ALLOCED|P_VIM|P_FLAGLIST,
 			    (char_u *)&p_fo, PV_FO,
-			    {(char_u *)FO_DFLT_VI, (char_u *)FO_DFLT}},
+			    {(char_u *)DFLT_FO_VI, (char_u *)DFLT_FO_VIM}},
     {"formatprg",   "fp",   P_STRING|P_EXPAND|P_VI_DEF|P_MODEWARN,
 			    (char_u *)&p_fp, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
@@ -695,7 +695,7 @@ static struct vimoption options[] =
     {"grepformat",  "gfm",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_gefm, PV_NONE,
-			    {(char_u *)GEFM_DFLT, (char_u *)0L},
+			    {(char_u *)DFLT_GREPFORMAT, (char_u *)0L},
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -795,7 +795,7 @@ static struct vimoption options[] =
 			    {(char_u *)0L, (char_u *)0L}},
     {"helpfile",    "hf",   P_STRING|P_EXPAND|P_VI_DEF,
 			    (char_u *)&p_hf, PV_NONE,
-			    {(char_u *)VIM_HLP, (char_u *)0L}},
+			    {(char_u *)DFLT_HELPFILE, (char_u *)0L}},
     {"helpheight",  "hh",   P_NUM|P_VI_DEF,
 #ifdef FEAT_WINDOWS
 			    (char_u *)&p_hh, PV_NONE,
@@ -1041,13 +1041,16 @@ static struct vimoption options[] =
     {"listchars",   "lcs",  P_STRING|P_VI_DEF|P_RALL|P_COMMA|P_NODUP,
 			    (char_u *)&p_lcs, PV_NONE,
 			    {(char_u *)"eol:$", (char_u *)0L}},
+    {"loadplugins", "lpl",  P_BOOL|P_VI_DEF,
+			    (char_u *)&p_lpl, PV_NONE,
+			    {(char_u *)TRUE, (char_u *)0L}},
     {"magic",	    NULL,   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_magic, PV_NONE,
 			    {(char_u *)TRUE, (char_u *)0L}},
     {"makeef",	    "mef",   P_STRING|P_EXPAND|P_VI_DEF,
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_mef, PV_NONE,
-			    {(char_u *)MAKEEF, (char_u *)0L}
+			    {(char_u *)DFLT_MAKEEF, (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -1080,10 +1083,10 @@ static struct vimoption options[] =
 			    {(char_u *)1000L, (char_u *)0L}},
     {"maxmem",	    "mm",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_mm, PV_NONE,
-			    {(char_u *)MAXMEM, (char_u *)0L}},
+			    {(char_u *)DFLT_MAXMEM, (char_u *)0L}},
     {"maxmemtot",   "mmt",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_mmt, PV_NONE,
-			    {(char_u *)MAXMEMTOT, (char_u *)0L}},
+			    {(char_u *)DFLT_MAXMEMTOT, (char_u *)0L}},
     {"menuitems",   "mis",  P_NUM|P_VI_DEF,
 #ifdef FEAT_MENU
 			    (char_u *)&p_mis, PV_NONE,
@@ -1172,7 +1175,7 @@ static struct vimoption options[] =
     {"osfiletype",  "oft",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_OSFILETYPE
 			    (char_u *)&p_oft, PV_OFT,
-			    {(char_u *)OFT_DFLT, (char_u *)0L}
+			    {(char_u *)DFLT_OFT, (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -1258,7 +1261,7 @@ static struct vimoption options[] =
 			    {(char_u *)"", (char_u *)0L}},
     {"runtimepath", "rtp",  P_STRING|P_VI_DEF|P_EXPAND|P_COMMA|P_NODUP,
 			    (char_u *)&p_rtp, PV_NONE,
-			    {(char_u *)"$VIMRUNTIME", (char_u *)0L}},
+			    {(char_u *)DFLT_RUNTIMEPATH, (char_u *)0L}},
     {"scroll",	    "scr",  P_NUM|P_NO_MKRC|P_VI_DEF,
 			    (char_u *)VAR_WIN, PV_SCROLL,
 			    {(char_u *)12L, (char_u *)0L}},
@@ -1563,7 +1566,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"textauto",    "ta",   P_BOOL|P_VIM,
 			    (char_u *)&p_ta, PV_NONE,
-			    {(char_u *)TA_DFLT, (char_u *)TRUE}},
+			    {(char_u *)DFLT_TEXTAUTO, (char_u *)TRUE}},
     {"textmode",    "tx",   P_BOOL|P_VI_DEF|P_NO_MKRC,
 			    (char_u *)&p_tx, PV_TX,
 			    {
@@ -4713,7 +4716,7 @@ set_bool_option(opt_idx, varp, value, local)
     else if ((int *)varp == &p_ta)
     {
 	set_string_option_direct((char_u *)"ffs", -1,
-			  p_ta ? (char_u *)FFS_DFLT : (char_u *)"", OPT_FREE);
+		      p_ta ? (char_u *)DFLT_FFS_VIM : (char_u *)"", OPT_FREE);
     }
 
     /*

@@ -105,7 +105,7 @@ substr($0,length($0),1) == "~" { print "<B><FONT COLOR=\"PURPLE\">" substr($0,1,
 # pipe end
 #
 /[^ 	]\|$/ && asciiart == "no" {gsub(/\|$/,"YXXY");}
-/[^ 	]\|[ ,.);	]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
+/[^ 	]\|[s ,.);	]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
 /[^ 	]\|]/ && asciiart == "no" {gsub(/\|/,"YXXY");}
 #
 # various

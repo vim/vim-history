@@ -257,6 +257,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'list'	options.txt	/*'list'*
 'listchars'	options.txt	/*'listchars'*
 'lmap'	options.txt	/*'lmap'*
+'loadplugins'	options.txt	/*'loadplugins'*
+'lpl'	options.txt	/*'lpl'*
 'ls'	options.txt	/*'ls'*
 'lsp'	options.txt	/*'lsp'*
 'lz'	options.txt	/*'lz'*
@@ -376,6 +378,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'nolinebreak'	options.txt	/*'nolinebreak'*
 'nolisp'	options.txt	/*'nolisp'*
 'nolist'	options.txt	/*'nolist'*
+'noloadplugins'	options.txt	/*'noloadplugins'*
+'nolpl'	options.txt	/*'nolpl'*
 'nolz'	options.txt	/*'nolz'*
 'nomagic'	options.txt	/*'nomagic'*
 'nomh'	options.txt	/*'nomh'*
@@ -880,6 +884,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 +tag_old_static	various.txt	/*+tag_old_static*
 +tcl	various.txt	/*+tcl*
 +terminfo	various.txt	/*+terminfo*
++termresponse	various.txt	/*+termresponse*
 +textobjects	various.txt	/*+textobjects*
 +tgetent	various.txt	/*+tgetent*
 +title	various.txt	/*+title*
@@ -908,6 +913,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 --	starting.txt	/*--*
 ---	starting.txt	/*---*
 --help	starting.txt	/*--help*
+--noplugins	starting.txt	/*--noplugins*
 --version	starting.txt	/*--version*
 -C	starting.txt	/*-C*
 -E	starting.txt	/*-E*
@@ -1075,6 +1081,10 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 02.1	usr_02.txt	/*02.1*
 03.1	usr_03.txt	/*03.1*
 04.1	usr_04.txt	/*04.1*
+06.1	usr_06.txt	/*06.1*
+06.2	usr_06.txt	/*06.2*
+06.3	usr_06.txt	/*06.3*
+06.4	usr_06.txt	/*06.4*
 07.1	usr_07.txt	/*07.1*
 07.2	usr_07.txt	/*07.2*
 07.3	usr_07.txt	/*07.3*
@@ -1145,6 +1155,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :a	insert.txt	/*:a*
 :ab	map.txt	/*:ab*
 :abbreviate	map.txt	/*:abbreviate*
+:abbreviate-<buffer>	map.txt	/*:abbreviate-<buffer>*
+:abbreviate-local	map.txt	/*:abbreviate-local*
 :abc	map.txt	/*:abc*
 :abclear	map.txt	/*:abclear*
 :al	windows.txt	/*:al*
@@ -2476,6 +2488,7 @@ abandon	editing.txt	/*abandon*
 abbreviations	map.txt	/*abbreviations*
 active-buffer	windows.txt	/*active-buffer*
 add-option-flags	options.txt	/*add-option-flags*
+add-plugin	usr_06.txt	/*add-plugin*
 added-5.1	version5.txt	/*added-5.1*
 added-5.2	version5.txt	/*added-5.2*
 added-5.3	version5.txt	/*added-5.3*
@@ -3395,6 +3408,7 @@ linewise-visual	visual.txt	/*linewise-visual*
 lite.vim	syntax.txt	/*lite.vim*
 literal-string	eval.txt	/*literal-string*
 lnum-variable	eval.txt	/*lnum-variable*
+load-plugins	starting.txt	/*load-plugins*
 load-vim-script	repeat.txt	/*load-vim-script*
 local-variable	eval.txt	/*local-variable*
 locale	change.txt	/*locale*
@@ -3533,6 +3547,7 @@ new-operator-mod	version6.txt	/*new-operator-mod*
 new-options-5.2	version5.txt	/*new-options-5.2*
 new-options-5.4	version5.txt	/*new-options-5.4*
 new-perl-python	version5.txt	/*new-perl-python*
+new-plugins	version6.txt	/*new-plugins*
 new-runtime-dir	version5.txt	/*new-runtime-dir*
 new-script	version5.txt	/*new-script*
 new-script-5.4	version5.txt	/*new-script-5.4*
@@ -3596,6 +3611,7 @@ page-up	intro.txt	/*page-up*
 page_down	intro.txt	/*page_down*
 page_up	intro.txt	/*page_up*
 paragraph	motion.txt	/*paragraph*
+pascal.vim	syntax.txt	/*pascal.vim*
 pattern	pattern.txt	/*pattern*
 pattern-searches	pattern.txt	/*pattern-searches*
 pattern.txt	pattern.txt	/*pattern.txt*
@@ -3764,6 +3780,7 @@ session-file	options.txt	/*session-file*
 set-option	options.txt	/*set-option*
 setbufvar()	eval.txt	/*setbufvar()*
 setline()	eval.txt	/*setline()*
+settings	usr_43.txt	/*settings*
 setwinvar()	eval.txt	/*setwinvar()*
 sh.vim	syntax.txt	/*sh.vim*
 shell-window	tips.txt	/*shell-window*
@@ -4114,6 +4131,7 @@ usr_01.txt	usr_01.txt	/*usr_01.txt*
 usr_02.txt	usr_02.txt	/*usr_02.txt*
 usr_03.txt	usr_03.txt	/*usr_03.txt*
 usr_04.txt	usr_04.txt	/*usr_04.txt*
+usr_06.txt	usr_06.txt	/*usr_06.txt*
 usr_07.txt	usr_07.txt	/*usr_07.txt*
 usr_28.txt	usr_28.txt	/*usr_28.txt*
 usr_43.txt	usr_43.txt	/*usr_43.txt*
@@ -4365,6 +4383,7 @@ xim	multibyte.txt	/*xim*
 xim-input-style	multibyte.txt	/*xim-input-style*
 xiterm	syntax.txt	/*xiterm*
 xpm.vim	syntax.txt	/*xpm.vim*
+xterm-8-bit	term.txt	/*xterm-8-bit*
 xterm-8bit	term.txt	/*xterm-8bit*
 xterm-blink	syntax.txt	/*xterm-blink*
 xterm-clipboard	term.txt	/*xterm-clipboard*

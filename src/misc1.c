@@ -5642,10 +5642,6 @@ line_breakcheck()
     }
 }
 
-#ifndef NO_EXPANDPATH
-static int	gen_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
-#endif
-
 /*
  * Expand wildcards.  Calls gen_expand_wildcards() and removes files matching
  * 'wildignore'.
@@ -5773,7 +5769,7 @@ match_suffix(fname)
     return (setsuflen != 0);
 }
 
-#ifndef NO_EXPANDPATH
+#if !defined(NO_EXPANDPATH) || defined(PROTO)
 
 # ifdef VIM_BACKTICK
 static int expand_backtick __ARGS((garray_t *gap, char_u *pat, int flags));
@@ -5790,7 +5786,7 @@ static int expand_backtick __ARGS((garray_t *gap, char_u *pat, int flags));
  * Return OK when some files found.  "num_file" is set to the number of
  * matches, "file" to the array of matches.  Call FreeWild() later.
  */
-    static int
+    int
 gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     int		num_pat;	/* number of input patterns */
     char_u	**pat;		/* array of input patterns */
@@ -5885,12 +5881,12 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 		add_pat = mch_expandpath(&ga, p, flags);
 	}
 
-	if ((add_pat <= 0 && (flags & EW_NOTFOUND))
-		|| (add_pat == -1 && mch_getperm(p) >= 0))
+	if (add_pat == -1 || (add_pat == 0 && (flags & EW_NOTFOUND)))
 	{
 	    char_u	*t = backslash_halve_save(p);
 
-	    addfile(&ga, t, flags);
+	    if ((flags & EW_NOTFOUND) || mch_getperm(t) >= 0)
+		addfile(&ga, t, flags);
 	    vim_free(t);
 	}
 
@@ -5911,6 +5907,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 /*
  * Expand an item in `backticks` by executing it as a command.
  * Currently only works when pat[] starts and ends with a `.
+ * Returns number of file names found.
  */
     static int
 expand_backtick(gap, pat, flags)

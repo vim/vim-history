@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0d.  Last change: 2000 Jul 19
+*eval.txt*      For Vim version 6.0e.  Last change: 2000 Aug 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -527,6 +527,7 @@ v:termresponse	The escape sequence returned by the terminal for the |t_RV|
 		is the terminal type: 0 for vt100 and 1 for vt220.  Pv is the
 		patch level (since this was introduced in patch 95, it's
 		always 95 or bigger).  Pc is always zero.
+		{only when compiled with |+termresponse| feature}
 
 			*v:charconvert_from* *charconvert_from-variable*
 v:charconvert_from
@@ -918,6 +919,7 @@ expand({expr} [, {flag}])
 			<cfile>		file name under the cursor
 			<afile>		autocmd file name
 			<abuf>		autocmd buffer number
+			<amatch>	autocmd matched name
 			<sfile>		sourced script file name
 			<cword>		word under the cursor
 			<cWORD>		WORD under the cursor
@@ -1728,6 +1730,7 @@ tag_any_white		Compiled with support for any white characters in tags
 			files |tag-any-white|.
 tcl			Compiled with Tcl interface.
 terminfo		Compiled with terminfo instead of termcap.
+termresponse		Compiled with support for |t_RV| and |v:termresponse|.
 textobjects		Compiled with support for |text-objects|.
 tgetent			Compiled with tgetent support, able to use a termcap
 			or terminfo file.

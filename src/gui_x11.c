@@ -1010,12 +1010,12 @@ gui_mch_prepare(argc, argv)
 	else
 #ifdef FEAT_SUN_WORKSHOP
 	    if (strcmp("-ws", argv[arg]) == 0)
-	    {
-		usingSunWorkShop++;
-		gui.dofork = FALSE;	/* don't fork() when starting GUI */
-		mch_memmove(&argv[arg], &argv[arg + 1], (--*argc - arg)
-						    * sizeof(char *));
-	    }
+	{
+	    usingSunWorkShop++;
+	    gui.dofork = FALSE;	/* don't fork() when starting GUI */
+	    mch_memmove(&argv[arg], &argv[arg + 1],
+					    (--*argc - arg) * sizeof(char *));
+	}
 	else
 #endif
 	    arg++;
@@ -1677,9 +1677,6 @@ gui_mch_free_fontset(fontset)
     if (fontset != NOFONTSET)
 	XFreeFontSet(gui.dpy, (XFontSet)fontset);
 }
-#endif
-
-#ifdef FEAT_XFONTSET
 
 /*
  * Load the fontset "name".
@@ -2892,12 +2889,14 @@ gui_x11_get_last_mouse_event()
 }
 #endif
 
-#ifdef FEAT_SIGNS
+#if defined(FEAT_SIGNS) || defined(PROTO)
+
+# define SIGN_WIDTH (gui.char_width * 2)
+
     void
 gui_mch_clearsign(row)
     int		row;
 {
-
     if (gui.in_use)
 	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - gui.char_height,
 		SIGN_WIDTH, gui.char_height, FALSE);
@@ -2953,8 +2952,9 @@ gui_mch_register_sign(signfile)
 
 	    if (status == 0)
 	    {
+		/* Sign width is fixed at two columns now.
 		if (sign->width > gui.sign_width)
-		    gui.sign_width = sign->width + 8;
+		    gui.sign_width = sign->width + 8; */
 	    }
 	    else
 	    {

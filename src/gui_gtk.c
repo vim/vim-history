@@ -35,6 +35,19 @@
 #include "vim.h"
 
 #ifdef FEAT_GUI_GNOME
+/* Gnome redefines _() and N_().  Grrr... */
+# ifdef _
+#  undef _
+# endif
+# ifdef N_
+#  undef N_
+# endif
+# ifdef textdomain
+#  undef textdomain
+# endif
+# ifdef bindtextdomain
+#  undef bindtextdomain
+# endif
 # include <gnome.h>
 #endif
 

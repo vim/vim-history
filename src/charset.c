@@ -12,7 +12,9 @@
 static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
 #endif
 
+#if defined(FEAT_MBYTE)
 static int nr2hex __ARGS((int c));
+#endif
 
 /*
  * chartab[] is used
@@ -128,13 +130,13 @@ buf_init_chartab(buf, global)
     for (i = global ? 0 : 3; i <= 3; ++i)
     {
 	if (i == 0)
-	    p = p_isi;		    /* first round: 'isident' */
+	    p = p_isi;		/* first round: 'isident' */
 	else if (i == 1)
-	    p = p_isp;		    /* second round: 'isprint' */
+	    p = p_isp;		/* second round: 'isprint' */
 	else if (i == 2)
-	    p = p_isf;		    /* third round: 'isfname' */
+	    p = p_isf;		/* third round: 'isfname' */
 	else	/* i == 3 */
-	    p = buf->b_p_isk;    /* fourth round: 'iskeyword' */
+	    p = buf->b_p_isk;	/* fourth round: 'iskeyword' */
 
 	while (*p)
 	{
@@ -158,8 +160,8 @@ buf_init_chartab(buf, global)
 		else
 		    c2 = *p++;
 	    }
-	    if (c <= 0 || (c2 < c && c2 != -1) || c2 >= 256 ||
-						    !(*p == NUL || *p == ','))
+	    if (c <= 0 || (c2 < c && c2 != -1) || c2 >= 256
+						 || !(*p == NUL || *p == ','))
 		return FAIL;
 
 	    if (c2 == -1)	/* not a range */
@@ -431,6 +433,7 @@ transchar_nonprint(buf, c)
     }
 }
 
+#if defined(FEAT_MBYTE) || defined(PROTO)
     void
 transchar_hex(buf, c)
     char_u	*buf;
@@ -442,6 +445,7 @@ transchar_hex(buf, c)
     buf[3] = '>';
     buf[4] = NUL;
 }
+#endif
 
 /*
  * Return number of display cells occupied by byte "b".
@@ -1226,6 +1230,7 @@ hex2nr(c)
     return c - '0';
 }
 
+#if defined(FEAT_MBYTE)
 /*
  * Convert the lower 4 bits of byte "c" to its hex character.
  */
@@ -1237,3 +1242,4 @@ nr2hex(c)
 	return (c & 0xf) + '0';
     return (c & 0xf) - 10 + 'A';
 }
+#endif

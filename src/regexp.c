@@ -418,7 +418,7 @@ static int my_isesc(c) int c; { return c == ESC; }
  * If not: NULL is returned; If so, a function of the sort is* is returned and
  * the name is skipped.
  */
-#if defined(macintosh) || defined(__BEOS__)
+#if defined(macintosh) || defined(__BEOS__) || defined(__NeXT__)
 /* the compiler doesn't understand the other one */
     static int (*
 skip_class_name(char_u **pp))__ARGS((int))
@@ -594,6 +594,7 @@ init_class_tab()
 /* flags for regflags */
 #define RF_ICASE    1	/* ignore case */
 #define RF_NOICASE  2	/* don't ignore case */
+#define RF_HASNL    4	/* can match a NL */
 
 /*
  * Global work variables for vim_regcomp().
@@ -673,6 +674,18 @@ re_ismultibytecode(c)
 	return 0;
     lead = ((unsigned)c >> 8) & 0xff;
     return MB_BYTE2LEN(lead) > 1 ? lead : 0;
+}
+#endif
+
+#if defined(FEAT_SEARCH_EXTRA) || defined(PROTO)
+/*
+ * Return TRUE if compiled regular expression "prog" can match a line break.
+ */
+    int
+re_multiline(prog)
+    regprog_t *prog;
+{
+    return (prog->regflags & RF_HASNL);
 }
 #endif
 
@@ -800,6 +813,8 @@ vim_regcomp(expr, magic)
     r->regmust = NULL;
     r->regmlen = 0;
     r->regflags = regflags;
+    if (flags & HASNL)
+	r->regflags |= RF_HASNL;
 #ifdef FEAT_SYN_HL
     /* Remember whether this pattern has any \z specials in it. */
     r->reghasz = re_has_z;
@@ -1579,7 +1594,7 @@ collection:
 			else
 			{
 			    /* Characters assumed to be 8 bits! */
-			    for (cu = 0; cu <= 255; cu++)
+			    for (cu = 1; cu <= 255; cu++)
 				if ((*func)(cu))
 				    regc(cu);
 			    norange = TRUE;
@@ -4762,8 +4777,13 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 
 		    /* If "backslash" is TRUE the backslash will be removed
 		     * later.  Used to insert a literal CR. */
-		    default:	if (!backslash)
-				    c = *src++;
+		    default:	if (backslash)
+				{
+				    if (copy)
+					*dst = '\\';
+				    ++dst;
+				}
+				c = *src++;
 		}
 	    }
 	    if (copy)

@@ -1173,6 +1173,15 @@ vgetc()
 		    c2 = vgetorpeek(TRUE);
 		    c = vgetorpeek(TRUE);
 		}
+#ifdef FEAT_GUI
+		else if (gui.in_use && buf[i] == CSI)
+		{
+		    /* Must be a CSI - KS_EXTRA - KE_CSI sequence, which
+		     * represents a CSI (0x9B). */
+		    c2 = vgetorpeek(TRUE);
+		    c = vgetorpeek(TRUE);
+		}
+#endif
 	    }
 	    --no_mapping;
 	    c = mb_ptr2char(buf);

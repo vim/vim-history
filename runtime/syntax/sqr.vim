@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Structured Query Report Writer (SQR)
 " Maintainer:	Jeff Lanzarotta
-" URL:		http://web.qx.net/lanzarotta/vim/syntax/sqr.vim
-" Last Change:	1999 December 15
+" URL:		http://members.tripod.com/lanzarotta/vim/syntax/sqr.vim
+" Last Change:	2000 July 13
 
 set isk=@,48-57,_,-
 

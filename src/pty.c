@@ -8,6 +8,7 @@
 
 /*
  * The stuff in this file mostly comes from the "screen" program.
+ * Included with permission from Juergen Weigert.
  * Copied from "pty.c" and "putenv.c".
  *
  * It has been modified to work better with Vim.
@@ -39,9 +40,6 @@
 /* RCS_ID("$Id$ FAU") */
 
 #include "vim.h"
-
-#define debug(x)
-#define debug1(x, y)
 
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
@@ -116,21 +114,6 @@
 /* SVR4 pseudo ttys don't seem to work with SCO-5 */
 #ifdef M_UNIX
 # undef HAVE_SVR4_PTYS
-#endif
-
-#if !(defined(sequent) || defined(_SEQUENT_) || defined(SVR4))
-# ifdef hpux
-static char PtyProto[] = "/dev/ptym/ptyXY";
-static char TtyProto[] = "/dev/pty/ttyXY";
-# else
-#  ifdef __BEOS__
-static char PtyProto[] = "/dev/pt/XY";
-static char TtyProto[] = "/dev/tt/XY";
-#  else
-static char PtyProto[] = "/dev/ptyXY";
-static char TtyProto[] = "/dev/ttyXY";
-#  endif
-# endif
 #endif
 
 static void initmaster __ARGS((int));
@@ -357,6 +340,20 @@ OpenPTY(ttyn)
 #endif
 
 #ifndef PTY_DONE
+
+# ifdef hpux
+static char PtyProto[] = "/dev/ptym/ptyXY";
+static char TtyProto[] = "/dev/pty/ttyXY";
+# else
+#  ifdef __BEOS__
+static char PtyProto[] = "/dev/pt/XY";
+static char TtyProto[] = "/dev/tt/XY";
+#  else
+static char PtyProto[] = "/dev/ptyXY";
+static char TtyProto[] = "/dev/ttyXY";
+#  endif
+# endif
+
     int
 OpenPTY(ttyn)
     char **ttyn;
@@ -367,7 +364,6 @@ OpenPTY(ttyn)
     static char PtyName[32];
     static char TtyName[32];
 
-    debug(_("OpenPTY: Using BSD style ptys.\n"));
     strcpy(PtyName, PtyProto);
     strcpy(TtyName, TtyProto);
     for (p = PtyName; *p != 'X'; p++)
@@ -378,7 +374,6 @@ OpenPTY(ttyn)
     {
 	for (d = PTYRANGE1; (p[1] = *d) != '\0'; d++)
 	{
-	    debug1(_("OpenPTY tries '%s'\n"), PtyName);
 #ifdef macintosh
 	    if ((f = open(PtyName, O_RDWR | O_NOCTTY | O_EXTRA)) == -1)
 #else

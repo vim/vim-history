@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Jul 15
+" Last Change:	2000 Aug 06
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -81,7 +81,7 @@ au Syntax OFF		syn clear
 au Syntax ON		if &filetype != "" | exe "set syntax=" . &filetype | else | echohl ErrorMsg | echo "filetype unknown" | echohl None | endif
 
 " Load the syntax file when the Syntax option is set.
-au Syntax * runtime syntax/<amatch>.vim
+au Syntax * if expand("<amatch>") != "" | runtime syntax/<amatch>.vim | endif
 
 
 " Source the user-specified syntax highlighting file

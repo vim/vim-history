@@ -579,12 +579,14 @@ SynMenu AB.Abaqus:abaqus
 SynMenu AB.ABC:abc
 SynMenu AB.ABEL:abel
 SynMenu AB.Ada:ada
+SynMenu AB.Aflex:aflex
 SynMenu AB.AHDL:ahdl
 SynMenu AB.Amiga\ DOS:amiga
-SynMenu AB.Arc\ Macro\ Language:aml
+SynMenu AB.Antlr:antlr
 SynMenu AB.Apache\ config:apache
 SynMenu AB.Apache-style\ config:apachestyle
 SynMenu AB.Applix\ ELF:elf
+SynMenu AB.Arc\ Macro\ Language:aml
 SynMenu AB.ASP\ with\ VBSages:aspvbs
 SynMenu AB.ASP\ with\ Perl:aspperl
 SynMenu AB.Assembly\ (GNU):asm
@@ -593,11 +595,15 @@ SynMenu AB.Assembly\ (Microsoft):masm
 SynMenu AB.Assembly\ (Netwide):nasm
 SynMenu AB.ASN\.1:asn
 SynMenu AB.Atlas:atlas
+SynMenu AB.Automake:automake
 SynMenu AB.Avenue:ave
 SynMenu AB.Awk:awk
+SynMenu AB.Ayacc:ayacc
+SynMenu AB.B:b
 SynMenu AB.BASIC:basic
 SynMenu AB.BC\ calculator:bc
 SynMenu AB.BibFile:bib
+SynMenu AB.Blank:blank
 
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
@@ -651,6 +657,8 @@ SynMenu IJKL.Icon:icon
 SynMenu IJKL.IDL:idl
 SynMenu IJKL.Interactive\ Data\ Lang:idlang
 SynMenu IJKL.Inform:inform
+SynMenu IJKL.Informix\ 4GL:fgl
+SynMenu IJKL.Inno\ Setup:iss
 SynMenu IJKL.InstallShield\ Rules:ishd
 SynMenu IJKL.Java:java
 SynMenu IJKL.JavaCC:javacc
@@ -677,6 +685,7 @@ SynMenu MNO.Makefile:make
 SynMenu MNO.MakeIndex:ist
 SynMenu MNO.Man\ page:man
 SynMenu MNO.Maple:maple
+SynMenu MNO.Mason:mason
 SynMenu MNO.Matlab:matlab
 SynMenu MNO.Maya\ Ext\.\ Lang\.:mel
 SynMenu MNO.Metafont:mf
@@ -721,6 +730,7 @@ SynMenu PQR.Python:python
 SynMenu PQR.Radiance:radiance
 SynMenu PQR.RCS\ log\ output:rcslog
 SynMenu PQR.Rebol:rebol
+SynMenu PQR.Registry\ of\ MS-Windows:registry
 SynMenu PQR.Remind:remind
 SynMenu PQR.Renderman\ Shader\ Lang:sl
 SynMenu PQR.Rexx:rexx
@@ -745,10 +755,12 @@ SynMenu S.SLRN\ rc:slrnrc
 SynMenu S.SLRN\ score:slrnsc
 SynMenu S.SmallTalk:st
 SynMenu S.SMIL:smil
+SynMenu S.SMITH:smith
 SynMenu S.SNMP\ MIB:mib
 SynMenu S.SNNS\ network:snnsnet
 SynMenu S.SNNS\ pattern:snnspat
 SynMenu S.SNNS\ result:snnsres
+SynMenu S.Snobol4:snobol4
 SynMenu S.SPEC\ (Linux\ RPM):spec
 SynMenu S.Spice:spice
 SynMenu S.Speedup:spup

@@ -267,18 +267,22 @@ eof
 	dnl On FreeBSD "-pthread" is required to use threads.
 	dnl _THREAD_SAFE must be used for compiling then
 	dnl Does not work in combination with Perl!
-	AC_MSG_CHECKING([if -pthread works])
-	cflags_save=$CFLAGS
-	libs_save=$LIBS
-	CFLAGS="$CFLAGS -D_THREAD_SAFE"
-	LIBS="$LIBS -pthread"
-	AC_TRY_LINK(,[ ],
+	AC_MSG_CHECKING([if -pthread should be used])
+	if test "`(uname) 2>/dev/null`" = FreeBSD; then
+	  cflags_save=$CFLAGS
+	  libs_save=$LIBS
+	  CFLAGS="$CFLAGS -D_THREAD_SAFE"
+	  LIBS="$LIBS -pthread"
+	  AC_TRY_LINK(,[ ],
 	     AC_MSG_RESULT(yes);
 			PYTHON_CFLAGS="$PYTHON_CFLAGS -D_THREAD_SAFE";
 			PYTHON_LIBS="$PYTHON_LIBS -pthread",
 	     AC_MSG_RESULT(no))
-	LIBS=$libs_save
-	CFLAGS=$cflags_save
+	  LIBS=$libs_save
+	  CFLAGS=$cflags_save
+	else
+	  AC_MSG_RESULT(no)
+	fi
 
 	AC_DEFINE(FEAT_PYTHON)
 
@@ -412,9 +416,9 @@ AC_ARG_ENABLE(workshop,
 AC_MSG_RESULT($enable_workshop)
 if test "$enable_workshop" = "yes"; then
   AC_DEFINE(FEAT_SUN_WORKSHOP)
-  WORKSHOP_SRC=gui_beval.c workshop.c integration.c
+  WORKSHOP_SRC="gui_beval.c workshop.c integration.c"
   AC_SUBST(WORKSHOP_SRC)
-  WORKSHOP_OBJ=objects/gui_beval.o objects/workshop.o objects/integration.o
+  WORKSHOP_OBJ="objects/gui_beval.o objects/workshop.o objects/integration.o"
   AC_SUBST(WORKSHOP_OBJ)
 fi
 
@@ -1120,7 +1124,7 @@ AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	sys/resource.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
-	Xm/Xm.h)
+	Xm/Xm.h libgen.h util/debug.h util/msg18n.h frame.h)
 
 dnl Check if strings.h and string.h can both be included when defined.
 AC_MSG_CHECKING([if strings.h can be included after string.h])

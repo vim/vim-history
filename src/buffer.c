@@ -539,8 +539,7 @@ do_buffer(action, start, dir, count, forceit)
 		    buf = lastbuf;
 	    }
 	    /* in non-help buffer, skip help buffers, and vv */
-	    if ((buf->b_help) !=
-			     (start == DOBUF_LAST ? lastbuf : curbuf)->b_help)
+	    if (buf->b_help != (start == DOBUF_LAST ? lastbuf : curbuf)->b_help)
 		 count++;
 	}
     }
@@ -2843,7 +2842,7 @@ write_viminfo_bufferlist(fp)
 buf_spname(buf)
     buf_t	*buf;
 {
-#ifdef FEAT_QUICKFIX
+#if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
     if (qf_isqbuf(buf))
 	return _("[Error List]");
 #endif
@@ -2853,7 +2852,7 @@ buf_spname(buf)
 }
 
 
-#ifdef FEAT_SIGNS
+#if defined(FEAT_SIGNS) || defined(PROTO)
 
 /*
  * Insert the sign into the signlist.
@@ -2878,6 +2877,11 @@ insert_image(buf, prev, next, id, lineno, type)
 
 	if (prev == NULL)
 	{
+	    /* When adding first sign need to redraw the windows to create the
+	     * column for signs. */
+	    if (buf->b_signlist == NULL)
+		redraw_buf_later(NOT_VALID, buf);
+
 	    /* first sign in signlist */
 	    newsign->next = next;
 	    buf->b_signlist = newsign;
@@ -2889,7 +2893,6 @@ insert_image(buf, prev, next, id, lineno, type)
 	}
     }
 }
-
 
 /*
  * Add the sign into the signlist. Find the right spot to do it though.
@@ -2924,7 +2927,6 @@ buf_addsign(buf, id, lineno, type)
     return lineno;
 }
 
-
     int
 buf_change_sign_type(buf, markId, newType)
     buf_t	*buf;		/* buffer to store sign in */
@@ -2944,7 +2946,6 @@ buf_change_sign_type(buf, markId, newType)
 
     return 0;
 }
-
 
     int_u
 buf_getsigntype(buf, lnum)
@@ -2980,12 +2981,18 @@ buf_delsign(buf, id)
 	{
 	    *lastp = next;
 	    lnum = sign->lineno;
-	    free(sign);
+	    vim_free(sign);
 	    break;
 	}
 	else
 	    lastp = &sign->next;
     }
+
+    /* When deleted the last sign need to redraw the windows to remove the
+     * sign column. */
+    if (buf->b_signlist == NULL)
+	redraw_buf_later(NOT_VALID, buf);
+
     return lnum;
 }
 
@@ -3036,9 +3043,14 @@ buf_delete_all_signs()
 	for (sign = buf->b_signlist; sign != NULL; sign = next)
 	{
 	    next = sign->next;
-	    free(sign);
+	    vim_free(sign);
 	}
     }
+
+    /* When deleted the last sign need to redraw the windows to remove the
+     * sign column. */
+    if (buf->b_signlist == NULL)
+	redraw_buf_later(NOT_VALID, buf);
 }
 
 #endif /* FEAT_SIGNS */

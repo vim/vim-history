@@ -1234,6 +1234,7 @@ vim_strnicmp(s1, s2, len)
 }
 #endif
 
+#if defined(FEAT_MBYTE) || defined(PROTO)
 /*
  * Check if string "s2" appears somewhere in "s1" while ignoring case.
  * Return NULL if not, a pointer to the first occurrence if it does.
@@ -1252,6 +1253,7 @@ vim_stristr(s1, s2)
 	    return p;
     return NULL;
 }
+#endif
 
 /*
  * Version of strchr() and strrchr() that handle unsigned char strings
@@ -1725,6 +1727,9 @@ static struct key_name_entry
     {'<',		(char_u *)"lt"},
 
     {K_MOUSE,		(char_u *)"Mouse"},
+    {K_NETTERM_MOUSE,	(char_u *)"NetMouse"},
+    {K_DEC_MOUSE,	(char_u *)"DecMouse"},
+    {K_JSBTERM_MOUSE,	(char_u *)"JsbMouse"},
     {K_LEFTMOUSE,	(char_u *)"LeftMouse"},
     {K_LEFTMOUSE_NM,	(char_u *)"LeftMouseNM"},
     {K_LEFTDRAG,	(char_u *)"LeftDrag"},
@@ -3101,8 +3106,11 @@ static int ff_check_visited __ARGS((ff_visited_t **, char_u *, char_u *));
 #else
 static int ff_check_visited __ARGS((ff_visited_t **, char_u *));
 #endif
-static void ff_free_visited_list __ARGS((ff_visited_t *));
-static ff_visited_list_hdr_t* ff_get_visited_list __ARGS((char_u*));
+static void ff_free_visited_list __ARGS((ff_visited_t *vl));
+static ff_visited_list_hdr_t* ff_get_visited_list __ARGS((char_u *));
+#ifdef FEAT_PATH_EXTRA
+static int ff_wc_equal __ARGS((char_u *s1, char_u *s2));
+#endif
 
 static void ff_push __ARGS((ff_stack_t *));
 static ff_stack_t * ff_pop __ARGS((void));
@@ -3853,7 +3861,8 @@ vim_findfile_free_visited()
 }
 
     static void
-ff_free_visited_list(ff_visited_t *vl)
+ff_free_visited_list(vl)
+    ff_visited_t *vl;
 {
     ff_visited_t *vp;
 
@@ -3931,6 +3940,7 @@ ff_get_visited_list(filename)
     return retptr;
 }
 
+#ifdef FEAT_PATH_EXTRA
 /*
  * check if two wildcard pathes are equal. Returns TRUE or FALSE.
  * They are equal if:
@@ -3941,9 +3951,11 @@ ff_get_visited_list(filename)
  *    '**\20' is equal to '**\24'
  */
     static int
-ff_wc_equal(char_u *s1, char_u * s2)
+ff_wc_equal(s1, s2)
+    char_u	*s1;
+    char_u	*s2;
 {
-    int     i;
+    int		i;
 
     if (s1 == s2)
         return TRUE;
@@ -3969,6 +3981,7 @@ ff_wc_equal(char_u *s1, char_u * s2)
     }
     return TRUE;
 }
+#endif
 
 /*
  * maintains the list of already visited files and dirs

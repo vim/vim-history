@@ -1318,7 +1318,7 @@ SFstatAndCheck(dir, entry)
 	if ((!mch_stat(entry->real, &statBuf))
 #ifdef S_IFLNK
 		|| (!mch_lstat(entry->real, &statBuf))
-#endif /* ndef S_IFLNK */
+#endif
 	   )
 	{
 	    if (SFfunc)

@@ -15,7 +15,7 @@
 #include <X11/Intrinsic.h>
 #include <Xm/Xm.h>
 
-#include "EditPlugin/integration.h"
+#include "integration.h" /* was "EditPlugin/integration.h" */
 
 #ifdef WSDEBUG
 #  ifndef DEBUG

@@ -59,6 +59,7 @@ syn sync lines=250
 
 if !exists("pascal_traditional")
   syn keyword pascalOperator		xor shl shr
+  syn keyword pascalOperator		assign close eof
   syn keyword pascalStructure		object
   syn keyword pascalStatement		asm unit interface implementation uses
   syn keyword pascalStatement		inherited forward

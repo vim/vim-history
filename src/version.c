@@ -413,6 +413,11 @@ static char *(features[]) =
 	"-tgetent",
 # endif
 #endif
+#ifdef FEAT_TERMRESPONSE
+	"+termresponse",
+#else
+	"-termresponse",
+#endif
 #ifdef FEAT_TEXTOBJ
 	"+textobjects",
 #else

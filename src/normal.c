@@ -2680,6 +2680,7 @@ prep_redo_cmd(cap)
 
 /*
  * Prepare for redo of any command.
+ * Note that only the last argument can be a multi-byte char.
  */
     static void
 prep_redo(regname, num, cmd1, cmd2, cmd3, cmd4, cmd5)
@@ -2709,7 +2710,18 @@ prep_redo(regname, num, cmd1, cmd2, cmd3, cmd4, cmd5)
     if (cmd4 != NUL)
 	AppendCharToRedobuff(cmd4);
     if (cmd5 != NUL)
+    {
+#ifdef FEAT_MBYTE
+	{
+	    char_u	buf[MB_MAXBYTES + 1];
+
+	    buf[mb_char2bytes(cmd5, buf)] = NUL;
+	    AppendToRedobuff(buf);
+	}
+#else
 	AppendCharToRedobuff(cmd5);
+#endif
+    }
 }
 
 /*
@@ -3375,12 +3387,24 @@ scroll_redraw(up, count)
 	/* If moved back to where we were, at least move the cursor, otherwise
 	 * we get stuck at one position.  Don't move the cursor up if the
 	 * first line of the buffer is already on the screen */
-	if (curwin->w_topline == prev_topline)
+	while (curwin->w_topline == prev_topline)
 	{
 	    if (up)
-		cursor_down(1L, FALSE);
-	    else if (prev_topline != 1L)
-		cursor_up(1L, FALSE);
+	    {
+		if (curwin->w_cursor.lnum > prev_lnum
+			|| cursor_down(1L, FALSE) == FAIL)
+		    break;
+	    }
+	    else
+	    {
+		if (curwin->w_cursor.lnum < prev_lnum
+			|| prev_topline == 1L
+			|| cursor_up(1L, FALSE) == FAIL)
+		    break;
+	    }
+	    /* Now recompute the topline, otherwise the cursor will be moved
+	     * back again. */
+	    update_topline();
 	}
     }
     if (curwin->w_cursor.lnum != prev_lnum)
@@ -3639,6 +3663,12 @@ dozet:
 		/* "zi": invert folding: toggle 'foldenable' */
     case 'i':	curwin->w_p_fen = !curwin->w_p_fen;
 		break;
+
+		/* "za": open fold at cursor or Visual area */
+    case 'a':	if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
+		    openFold(curwin->w_cursor.lnum);
+		else
+		    closeFold(curwin->w_cursor.lnum);
 
 		/* "zo": open fold at cursor or Visual area */
     case 'o':	if (VIsual_active)
@@ -5478,6 +5508,12 @@ nv_pcmark(cap)
 {
     pos_t	*pos;
 
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+    /* In a quickfix window a <Tab> jumps to the error under the cursor. */
+    if (qf_isqbuf(curbuf))
+	stuffReadbuff((char_u *)":.cc\n");
+    else
+#endif
     if (!checkclearopq(cap->oap))
     {
 	pos = movemark((int)cap->count1);

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0d.  Last change: 2000 Jul 30
+*todo.txt*      For Vim version 6.0e.  Last change: 2000 Aug 06
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,25 +29,7 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-r^Vu6590 cannot be repeated, only "90" is remembered.
-
-Multi-byte with composing character not displayed correctly by "ga".  But
-":message" does show it correctly.
-
-Preview window can have help flag set.
-
-":s/x/\&/" should insert a '&' but it doesn't. (Nam)
-
-xterm 140: Try out obtaining key codes. <Esc>P+q<name><Esc>\
-
-When 'hlsearch' highlighting, need to start updating a few lines back when
-scrolling.  Remember line where highlighting starts?
-
-Quickfix window:
-Trigger BufReadPost autocommand when quickfix buffer has been filled.
-Use <Tab> to jump to error, like ":.cc"?
-
-'mousefocus' doesn't work with vertical split. (Gomes)
+Win32: mouseshape doesn't return to normal after a ":set" command. (Timothy)
 
 Win32 GUI: (on no file), :vs<CR>:q<CR> leaves a trail of pixels down the
 middle. (Paul Moore)
@@ -56,14 +38,6 @@ Win32 GUI: :split<CR> :vs<CR> ^W <right> :new<CR> :q<CR> :q<CR> leaves the top
 window with no scrollbar. (Paul Moore)
 
 Win32 GUI: mouse wheel always scrolls rightmost window.
-
-Motif GUI: crash with "vim -r -u vimrc_example.vim -U gvimrc_example.vim" in
-command_height() when setting 'ch' to 2. (Keseg)
-
-GTK with Gnome: set guioptions-=T gives empty toolbar. (Ron Aaron)
-
-GTK gives error message:
-Gdk-WARNING **: locale not supported by C library
 
 GTK GUI: comma in 'guifont' not recognized and it's used for the Normal
 highlighing? (Ron Aaron)
@@ -75,8 +49,6 @@ when 'sbr' has a value different from '', and when syntax is off, and when you
 have a line longer than the window's width, ('wrap' being on), the whole
 continuation line is highlighted in the 'nontext' style. (Rafael
 Garcia-Suarez)
-
-"vlllU" doesn't always redraw.  Also Vgq.
 
 VMS: Include ~/vim/patches/kluka_vms.patch?
 
@@ -130,7 +102,11 @@ A. Folding:
     open/close of the fold depend on whether it's inside an open/closed fold.
     Otherwise closed folds appear when inserting lines in a fold that was
     opened with "zO".
+-   In Insert mode, not only show the line the cursor is in but the whole
+    fold.
 -   Add ":foldclose": close folds in a range of lines.
+-   When using syntax folding, a "transparent fold" region is always nested.
+    How to avoid the nesting?
 -   Make "zc", "zC", "zo" and "zO" work in Visual mode to work on all selected
     lines.
 -   Execute 'foldexpr' in a sandbox.  Don't allow it to change text, external
@@ -194,19 +170,13 @@ B. UTF-8 support:
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
     wide characters).  Use 'displaycode' option?
 -   GUI: Cursor is sometimes not removed.
--   Handle illegal UTF-8 sequences:
-	- trailing 0x80-0xbf bytes
-	- single 0x80-0xbf bytes
-	- missing 0x80-0xbf bytes (truncated sequence)
-    Show them as <8a> highlighted.  Also allow this for other non-printable
-    characters.  Need to take care of 4 cell wide chars.
+-   show other non-printable as <xx>.
 -   Check mbyte with 'fontset'.
 -   When inserting a UTF-8 byte sequence in the input stream, does a K_SPECIAL
     byte (0x80) get inserted as one byte or as K_SPECIAL - KS_SPECIAL -
     KE_FILLER?  See cmdline_paste_str().  Check all occurences of
     stuffcharReadbuff().
 -   Use function pointers for some mb_ functions to speed it up?
--   GTK GUI: crashes as soon as setting 'guifont' to utf-8 font.
 -   Check callers of get_literal() to handle char > 255 as multi-byte.
 -   prep_redo() should handle mbyte (at least for last arg
 -   set_last_insert() should handle mbyte.
@@ -216,7 +186,8 @@ B. UTF-8 support:
     Later: Also support CTRL-K <space> {mnemonic} <space>.
 -   out_char() doesn't handle mbyte, check callers.
 -   cls() should work for UTF-8 chars.  Use class table function from Markus
-    Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.
+    Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
+    modification from Markus.
 -   Handle mbyte in win_line().  When double-cell char doesn't fit at end of
     line, move it to next line, fill gap with '>' with HLF_AT attributes.
 -   Automatic detection of 'filecharcode' when reading a file.
@@ -313,6 +284,7 @@ F. Sun Visual Workshop patch from Gordon Prieur:
 -   docs for 'F' flag in 'guioptions'.
 -   add stdarg.h include file in os_unix.h?
 -   Cleanup debug stuff (workshop.h).
+-   Add code to handle folding.
 
 
 G. Edit command line with Vi commands:
@@ -338,24 +310,17 @@ I. Multi-language support:
 
 
 J. User Friendlier
-9   Make this work: ":runtime plugin/*.vim".  Do this when starting up, after
-    sourcing .vimrc files?
-    Add explanation in user manual that you can load plug-ins this way.
-    Example: editing gzip files.
-    Disable with "--no-plugin" or ":set noplugin".
-9   Make default for 'runtimepath' use "~/.vim/runtime,$VIMRUNTIME"?
-9   Add ":scripttrace": show which script files would be loaded for the
-    current buffer?
-8   Allow the user to specify where <F1> takes him: use the file name of
-    'helpfile'.  But how to keep the path?  Automatically add $VIMRUNTIME/doc
-    when ":set hf=filename" doesn't include a "/"?
-    NO: use a path for the runtime files:
-	:set runtimepath=~/vim/runtime,~/projectX/vim56,/usr/local/vim/vim56,$VIMRUNTIME
-    This should make it possible for a sysadm to add local documentation.
-    Also support a "post_<filetype>.vim" file, to do adjustments after loading
-    a standard syntax file?
--   update $VIMRUNTIME/optwin for new options.
-8   Add "display" argument to many items in syntax files, to speed up parsing.
+9   Default for 'runtimepath' on non-Unix systems: Which directory to use for
+    user plugins?  After selecting this, adjust text in usr_06.txt.
+8   Write about how to write a plugin in usr_40.txt.  Require that there is
+    a "loaded_<name>_plugin" to avoid loading it (twice).
+8   Add explanation how to add local documentation files (by sysadm).  Check:
+    Are they picked up from 'runtimepath'/doc ?
+9   Add buffer-local menu.  Should offer a choice between removing the menu or
+    disabling it.  Be careful that tear-offs don't disappear (keep one empty
+    item?).
+9   Also support a "post_<filetype>.vim" file, to do adjustments after loading
+    a standard settings or syntax file?
 -   Use "session default" for options: use this value when opening a new
     window or editing a new buffer.
     original default: set at compile time or depending on terminal
@@ -378,6 +343,8 @@ Messages:
 
 
 Various recent:
+8   Add "display" argument to many items in syntax files, to speed up parsing.
+-   update $VIMRUNTIME/optwin for new options.
 -   When using the file browser in GTK the absolute file name is used.  Should
     try to simplify it. (Lohner)
 -   When checking if a file exists on Unix, uses lstat(), otherwise a symlink
@@ -433,9 +400,13 @@ Various recent:
 -   update_topline() is slow.  Add flag to indicate cursor and topline are OK.
 -   "o" command at end of file doesn't scroll text up, it happens when first
     char is typed.
+-   "ls -1 * | xargs vim" works a bit but not well.  Should use stderr for all
+    term I/O.
 -   Check libcall() and libcallnr() for Win32.  No crash when function returns
     1 or -1?
 8   'buftype': also use it for tag preview window.  Remove w_preview flag.
+    Add "autohide" buftype: becomes hidden when closed.  Like a scratch buffer
+    but the contents is kept hidden.  Or call it "memory"?
 9   ":cwindow!" always open quickfix window, ":cwindow" only open it if there
     are recognized errors.  ":cclose" to close quickfix window?
 8   For ":silent !cmd":
@@ -487,6 +458,9 @@ Various recent:
 -   When displaying a space with only foreground highlighting, it's the same
     as a space without attributes.  Avoid displaying spaces for the "~" lines
     when starting up in a color terminal.
+-   When using the arglist, use a flag for each file in it that indicates if
+    it has been edited.  When using ":q" check if all flags are set.  Helps
+    when using buffer commands to go to the files.
 
 
 Considered for release 6.0:
@@ -568,11 +542,15 @@ Considered for release 6.0:
 8   Add docs on how to edit a remote file through ftp or http (with a script).
     Mention *Cmd autocommand events and $VIMRUNTIME/netrw.vim.
 8   Define auto-indenting with syntax items?
+    Also: define auto-indenting with fold regions?  indent = foldlevel *
+    shiftwidth.
 -   For files found with 'include': handle "*" in included name, for Java.
     (Jason)
 -   Include patch to multibyte.txt from patch
     ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz .  It has already
     changed quite a bit, merge changes.
+
+- Include patches from 5.x after ~/vim/patches/vim-5.7x-*.tar.gz
 
 ---------------------- bugs ---------------------------
 
@@ -649,6 +627,9 @@ Vi incompatibility:
     it. (Lohner)  Try out with "vt100" entry (cm replaced with cX).
 
 GTK+ GUI known bugs:
+-   GTK with Gnome gives error message:
+	Gdk-WARNING **: locale not supported by C library
+    Looks like this can't be avoided.
 9   When logging out from KDE, vim is not told to save its files.  Catching
     the WM_SAVE_YOURSELF event doesn't work.
 8   For some fonts characters are drawn in the line above.  Include fix
@@ -1206,11 +1187,17 @@ Problems that will (probably) not be solved:
     libraries, get a patch from Sun.
 -   Solaris 2.6 with GTK and Perl: gvim crashes when started.  Problem with X
     input method called from GDK code.  Without Perl it doesn't crash.
+-   "Hebrew-enabled" MS-Windows 98 shows Hebrew words backwards.  This is a
+    MS-Windows problem, it automatically reverses words that Vim already
+    reversed, thus messing up the display.  A workaround is to install Hebrew
+    fonts that are not marked as being Hebrew. (Nadav Har'El)
 
 ---------------------  extensions and improvements ----------------------
 						    *extensions-improvements*
 
 Documentation:
+9   Errors in doc to HTML conversion:
+    autocmd.txt "like \| in a |pattern|"
 9   Add 'fold' section to quick reference.
 9   Add new options to quick reference.
 9   Extend the User Manual.  Use portions of the Reference Manual.
@@ -2036,6 +2023,11 @@ Insert mode:
 	char *name;
 9   When using 'cino' "f1s" the indent after a function is set to the indent
     of the "}", should be zero.
+9   Formatting comments should use 'comments' setting.  E.g. when lining out
+    comments like this:
+	/*
+	** formatted with comments=sr:/*,mb:**,ex:*/
+	*/
 9   One indent to much when doing "o" below this "while": (Rouben Rostamian)
 	{
 	    do

@@ -935,6 +935,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     int		sort_error = FALSE;		/* tags file not sorted */
     int		linear;				/* do a linear search */
 #endif
+    int		line_error = FALSE;		/* syntax error */
     int		has_re = (flags & TAG_REGEXP);	/* regexp used */
     int		help_only = (flags & TAG_HELP);
     int		name_only = (flags & TAG_NAMES);
@@ -1352,8 +1353,7 @@ line_read_in:
 		if (tagp.tagname_end == NULL)	    /* corrupted tag line */
 #endif
 		{
-		    EMSG2(_(e_tagformat), tag_fname);
-		    stop_searching = TRUE;
+		    line_error = TRUE;
 		    break;
 		}
 
@@ -1511,8 +1511,7 @@ line_read_in:
 					       &tagp);
 	    if (i == FAIL)
 	    {
-		EMSG2(_(e_tagformat), tag_fname);
-		stop_searching = TRUE;
+		line_error = TRUE;
 		break;
 	    }
 
@@ -1729,6 +1728,17 @@ line_read_in:
 		break;
 #endif
 	} /* forever */
+
+	if (line_error)
+	{
+	    EMSG2(_("Format error in tags file \"%s\""), tag_fname);
+#ifdef FEAT_CSCOPE
+	    if (!use_cscope)
+#endif
+		EMSGN(_("Before byte %ld"), (long)ftell(fp));
+	    stop_searching = TRUE;
+	    line_error = FALSE;
+	}
 
 #ifdef FEAT_CSCOPE
 	if (!use_cscope)
@@ -2317,7 +2327,7 @@ jumpto_tag(lbuf, forceit)
 #ifdef FEAT_WINDOWS
     if (g_do_tagpreview)
     {
-	/* don't spllit again below */
+	/* don't split again below */
 	postponed_split = 0;
 	/* Save current window */
 	curwin_save = curwin;
@@ -2344,8 +2354,14 @@ jumpto_tag(lbuf, forceit)
 	win_split(postponed_split > 0 ? postponed_split : 0, 0);
 #endif
 
-    /* A :ta from a help file will keep the b_help flag set. */
-    keep_help_flag = curbuf->b_help;
+    /* A :ta from a help file will keep the b_help flag set.  For ":ptag" we
+     * need to use the flag from the window where we came from. */
+#ifdef FEAT_WINDOWS
+    if (g_do_tagpreview)
+	keep_help_flag = curwin_save->w_buffer->b_help;
+    else
+#endif
+	keep_help_flag = curbuf->b_help;
     getfile_result = getfile(0, fname, NULL, TRUE, (linenr_t)0, forceit);
     keep_help_flag = FALSE;
 

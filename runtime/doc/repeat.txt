@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0d.  Last change: 2000 Jul 16
+*repeat.txt*    For Vim version 6.0e.  Last change: 2000 Jul 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -130,6 +130,13 @@ q			Stops recording.  (Implementation note: The 'q' that
 			by 'runtimepath'.  There is no error for non-existing
 			files.  Example: >
 				:runtime syntax/c.vim
+<			When {file} contains wildcards all matching files are
+			sourced.  Example: >
+				:runtime plugin/*.vim
+<			This is what Vim uses to load the plugin files when
+			starting up.
+			Only one file name can be given, spaces are considered
+			to be part of the name, except at the start and end.
 
 							*:fini* *:finish*
 :fini[sh]		Stop sourcing a script.  Can only be used in a Vim

@@ -66,8 +66,8 @@
 # endif
 #endif
 
-#ifndef VIM_HLP
-# define VIM_HLP	"$VIMRUNTIME\\doc\\help.txt"
+#ifndef DFLT_HELPFILE
+# define DFLT_HELPFILE	"$VIMRUNTIME\\doc\\help.txt"
 #endif
 
 #ifndef FILETYPE_FILE
@@ -87,16 +87,17 @@
 # define SYNTAX_FNAME	"$VIMRUNTIME\\syntax\\%s.vim"
 #endif
 
-#ifndef DEF_BDIR
-# define DEF_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
+#ifndef DFLT_BDIR
+# define DFLT_BDIR	".,c:\\tmp,c:\\temp"	/* default for 'backupdir' */
 #endif
 
-#ifndef DEF_DIR
-# define DEF_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
+#ifndef DFLT_DIR
+# define DFLT_DIR	".,c:\\tmp,c:\\temp"	/* default for 'directory' */
 #endif
 
-#define ERRORFILE	"errors.err"
-#define MAKEEF		"vim##.err"
+#define DFLT_ERRORFILE		"errors.err"
+#define DFLT_MAKEEF		"vim##.err"
+#define DFLT_RUNTIMEPATH	"$VIMRUNTIME"
 
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME

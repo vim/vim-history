@@ -1194,10 +1194,13 @@ retry:
 #endif
 		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (read_stdin)
+	    if (read_stdin || restart_edit != 0)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
+		 * When restart_edit is set, keep the message to show it after
+		 * redrawing (otherwise there will be a delay before
+		 * redrawing).
 		 * Copy the message (truncated) to msg_buf, because IObuff
 		 * could be overwritten any time. */
 		STRNCPY(msg_buf, keep_msg, MSG_BUF_LEN);
@@ -4815,7 +4818,9 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 	if (fname != NULL && *fname != NUL)
 	    autocmd_fname = fname;
 	else if (buf != NULL)
-	    autocmd_fname = buf->b_fname;
+	{
+		autocmd_fname = buf->b_fname;
+	}
 	else
 	    autocmd_fname = NULL;
     }
@@ -4841,9 +4846,19 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf)
 	    fname = NULL;
 	else
 	{
-	    if (buf->b_sfname != NULL)
-		sfname = vim_strsave(buf->b_sfname);
-	    fname = buf->b_ffname;
+#ifdef FEAT_SYN_HL
+	    if (event == EVENT_SYNTAX)
+		fname = buf->b_p_syn;
+	    else
+#endif
+		if (event == EVENT_FILETYPE)
+		    fname = buf->b_p_ft;
+		else
+		{
+		    if (buf->b_sfname != NULL)
+			sfname = vim_strsave(buf->b_sfname);
+		    fname = buf->b_ffname;
+		}
 	}
 	if (fname == NULL)
 	    fname = (char_u *)"";
@@ -5142,12 +5157,19 @@ set_context_in_autocmd(arg, doautocmd)
 
     /* check for a group name, skip it if present */
     include_groups = FALSE;
+    p = arg;
     group = au_get_grouparg(&arg);
     if (group == AUGROUP_ERROR)
 	return NULL;
+    /* If there only is a group name that's what we expand. */
+    if (*arg == NUL && group != AUGROUP_ALL && !vim_iswhite(arg[-1]))
+    {
+	arg = p;
+	group = AUGROUP_ALL;
+    }
 
     /* skip over event name */
-    for (p = arg; *p && !vim_iswhite(*p); ++p)
+    for (p = arg; *p != NUL && !vim_iswhite(*p); ++p)
 	if (*p == ',')
 	    arg = p + 1;
     if (*p == NUL)

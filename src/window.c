@@ -1392,7 +1392,8 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    }
 	    else if (n == m)		/* doesn't contain curwin */
 		next_curwin_size = 0;
-	    else if ((room + (totwincount - 2)) / (totwincount - 1) > p_wh)
+	    else if (totwincount > 1
+		     && (room + (totwincount - 2)) / (totwincount - 1) > p_wh)
 	    {
 		next_curwin_size = (room + p_wh + totwincount * p_wmh +
 					     (totwincount - 1)) / totwincount;
@@ -1400,14 +1401,22 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    }
 	    else
 		next_curwin_size = p_wh;
+
 #ifdef FEAT_QUICKFIX
 	    for (fr = topfr->fr_child; fr != NULL; fr = fr->fr_next)
 	    {
-		/* don't count lines of quickfix window if it's full width. */
+		/* don't count lines of quickfix window if it's full width.
+		 * Watch out for next_curwin being the quickfix window. */
 		if (fr->fr_win != NULL && qf_isqbuf(fr->fr_win->w_buffer))
 		{
 		    room -= fr->fr_win->w_height - p_wmh;
-		    --totwincount;
+		    if (fr->fr_win == next_curwin)
+		    {
+			room += next_curwin_size - p_wmh;
+			next_curwin_size = 0;
+		    }
+		    else
+			--totwincount;
 		}
 	    }
 #endif
@@ -1437,21 +1446,23 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		m = frame_minheight(fr, next_curwin);
 		if (n != m)	    /* don't count next_curwin */
 		    --wincount;
-		new_size = (wincount * room + ((unsigned)totwincount >> 1))
+		if (totwincount == 0)
+		    new_size = room;
+		else
+		    new_size = (wincount * room + ((unsigned)totwincount >> 1))
 								/ totwincount;
 		if (n != m)	    /* add next_curwin size */
 		{
 		    next_curwin_size -= p_wh - (m - n);
 		    new_size += next_curwin_size;
+		    room -= new_size - next_curwin_size;
 		}
+		else
+		    room -= new_size;
 	    }
 	    win_equal_rec(next_curwin, fr, dir, col, row, width, new_size + n);
 	    row += new_size + n;
 	    height -= new_size + n;
-	    if (n != m)	    /* contains curwin */
-		room -= new_size - next_curwin_size;
-	    else
-		room -= new_size;
 	    totwincount -= wincount;
 	}
     }
@@ -2919,8 +2930,10 @@ frame_setheight(curfrp, height)
 		    height = room + room_cmdline;
 		break;
 	    }
+#ifdef FEAT_VERTSPLIT
 	    frame_setheight(curfrp->fr_parent, height
 		+ frame_minheight(curfrp->fr_parent, NOWIN) - (int)p_wmh - 1);
+#endif
 	}
 
 

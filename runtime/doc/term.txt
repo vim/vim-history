@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0d.  Last change: 2000 Jul 17
+*term.txt*      For Vim version 6.0e.  Last change: 2000 Aug 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -181,8 +181,8 @@ proper key code, add these lines to your ~/.Xdefaults file:
 		<Key>Home: string("0x1b") string("[7~") \n\
 		<Key>End: string("0x1b") string("[8~")
 
-							*xterm-8bit*
-Xterm can be run in a mode where it uses 8bit escape sequences.  The CSI ode
+						*xterm-8bit* *xterm-8-bit*
+Xterm can be run in a mode where it uses 8-bit escape sequences.  The CSI ode
 is used instead of <Esc>[.  The advantage is that an <Esc> can quickly be
 recognized in Insert mode, because it can't be confused with the start of a
 special key.
@@ -191,6 +191,9 @@ For the builtin termcap entries, Vim checks if the 'term' option contains
 mouse and a few other things.  You would normally set $TERM in your shell to
 "xterm-8bit" and Vim picks this up and adjusts to the 8-bit setting
 automatically.
+When Vim receives a response to the t_RV (request version) sequence and it
+starts with CSI, it assumes that the terminal is in 8-bit mode and will
+convert all key sequences to their 8-bit variants.
 
 ==============================================================================
 2. Terminal options					*terminal-options*

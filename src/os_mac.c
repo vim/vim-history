@@ -84,7 +84,18 @@ mac_expandpath(
 	/*	    if (vim_strchr((char_u *)"*?[{~$", *path) != NULL)*/
 	else if (vim_strchr((char_u *)WILDCHAR_LIST, *path) != NULL)
 	    e = p;
-	*p++ = *path++;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    int len = mb_ptr2len_check(path);
+
+	    STRNCPY(p, path, len);
+	    p += len;
+	    path += len;
+	}
+	else
+#endif
+	    *p++ = *path++;
     }
     e = p;
 

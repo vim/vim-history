@@ -14,6 +14,8 @@
         (but can only use glue if we don't have to distribute source)
 */
 
+#include "vim.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -30,7 +32,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/param.h>
-#include <libgen.h>
+#ifdef HAVE_LIBGEN_H
+# include <libgen.h>
+#endif
 #include <unistd.h>
 #include <string.h>
 
@@ -41,14 +45,24 @@
 
 #include <X11/xpm.h>
 
-#include <util/debug.h>
-#include <util/msgi18n.h>
+#ifdef HAVE_UTIL_DEBUG_H
+# include <util/debug.h>
+#endif
+#ifdef HAVE_UTIL_MSGI18N_H
+# include <util/msgi18n.h>
+#endif
 
 #include "integration.h"	/* <EditPlugin/integration.h> */
-#include <frame.h>
+#ifdef HAVE_FRAME_H
+# include <frame.h>
+#endif
 
 #ifndef MAX
 # define MAX(a, b)    (a) > (b) ? (a) : (b)
+#endif
+
+#ifndef NOCATGETS
+# define NOCATGETS(x) x
 #endif
 
 /* Somehow, this is not defined even though I'm including string.h */
@@ -58,7 +72,7 @@ extern char *strdup(const char *s1);
 // Functions private to this file
 static void workshop_connection_closed(void);
 static void messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2);
-static void workshop_disconnect();
+static void workshop_disconnect(void);
 static void workshop_sensitivity(int num, char *table);
 static void adjust_sign_name(char *filename);
 static void process_menuItem(char *);
@@ -101,9 +115,8 @@ workshop_connection_closed(void)
 	sd = -1;
 }
 
-
-char *
-getCommand()
+	static char *
+getCommand(void)
 {
 	int	 len;		// length of this command
 	char	 lenbuf[7];	// get the length string here
@@ -560,7 +573,8 @@ unrecognised_message(
 void adjust_sign_name(char *filename)
 {
 	char *s;
-	static fontSize = -1;
+	static int fontSize = -1;
+
 	if (fontSize == -1) {
 		fontSize = workshop_get_font_height();
 	}
@@ -612,7 +626,6 @@ void	workshop_connect(XtAppContext context)
 	struct sockaddr_un	server;
 #endif
 	char			buf[32];
-	char *			do_debug;
 	char *			address;
 #ifdef DEBUG
 	char			*file;
@@ -785,7 +798,7 @@ isWindowMapped(Display *display, Window win)
         }
 }
 
-Boolean
+static Boolean
 isMapped(Widget widget)
 {
         if (widget == NULL) {
@@ -799,7 +812,7 @@ isMapped(Widget widget)
         return(isWindowMapped(XtDisplay(widget), XtWindow(widget)));
 }
 
-Boolean
+static Boolean
 widgetIsIconified(
         Widget           w)
 {
@@ -1115,9 +1128,13 @@ void workshop_file_modified(char *filename)
 void workshop_frame_moved(int new_x, int new_y, int new_w, int new_h)
 {
 	char buffer[200];
-	sprintf(buffer, NOCATGETS("frameAt %d %d %d %d\n"), new_x, new_y,
-		new_w, new_h);
-	write(sd, buffer, strlen(buffer));
+
+	if (sd >= 0)
+	{
+		sprintf(buffer, NOCATGETS("frameAt %d %d %d %d\n"),
+				new_x, new_y, new_w, new_h);
+		write(sd, buffer, strlen(buffer));
+	}
 }
 
 // A button in the toolbar has been pushed.

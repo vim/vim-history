@@ -77,6 +77,7 @@ DOCS = \
 	usr_02.txt \
 	usr_03.txt \
 	usr_04.txt \
+	usr_06.txt \
 	usr_07.txt \
 	usr_28.txt \
 	usr_43.txt \
@@ -159,6 +160,7 @@ HTMLS = \
 	usr_02.html \
 	usr_03.html \
 	usr_04.html \
+	usr_06.html \
 	usr_07.html \
 	usr_28.html \
 	usr_43.html \

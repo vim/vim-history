@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NASM - The Netwide Assembler (v0.98)
-" Maintainer:	Manuel M.H. Stol	<mmh.stol@a1.nl>
-" Last Change:	2000-02-15
+" Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
+" Last Change:	2000 Jul 06
 " Vim URL:	http://www.vim.org/lang.html
 " NASM Home:	http://www.cryogen.com/Nasm/
 " Orig. Maint.:	C. Laurence Gonsalves	<clgonsal@kami.com>

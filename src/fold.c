@@ -1531,9 +1531,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot)
 		     * end earlier. */
 		    fp->fd_top = firstlnum;
 		    fp->fd_len = bot - firstlnum + 1;
-		    if (State & INSERT)
-			fp->fd_flags = FD_OPEN;
-		    else if (i > 0)
+		    if (i > 0)
 			fp->fd_flags = (fp - 1)->fd_flags;
 		    else
 			fp->fd_flags = FD_LEVEL;

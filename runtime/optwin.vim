@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1999 Sep 18
+" Last Change:	2000 Jul 05
 
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
@@ -815,6 +815,8 @@ if has("viminfo")
   call OW_OptionL("vi", &vi)
 endif
 
+let &cpo = ""
+
 " go to first line
 1
 
@@ -910,4 +912,5 @@ let &title = old_title
 let &icon = old_icon
 let &ru = old_ru
 let &sc = old_sc
+let &cpo = optwin_cpo_save
 unlet optwin_cpo_save OW_idx OW_lnum old_title old_icon old_ru old_sc

@@ -32,8 +32,10 @@
 #define ESC_STR		(char_u *)"\033"
 #define DEL		0x7f
 #define DEL_STR		(char_u *)"\177"
-#define CSI		0x9b
+#define CSI		0x9b	/* Control Sequence Introducer */
 #define CSI_STR		"\233"
+#define DCS		0x90	/* Device Control String */
+#define STERM		0x9c	/* String Terminator */
 
 #define Ctrl_chr(x)	((x) & 0x1f)
 #define Meta(x)		((x) | 0x80)
@@ -108,8 +110,10 @@
 #define DEL		0x07
 #define DEL_STR		(char_u *)"\007"
 /* TODO: EBCDIC Code page dependent (here 1047) */
-#define CSI		0x9b
+#define CSI		0x9b	/* Control Sequence Introducer */
 #define CSI_STR		"\233"
+#define DCS		0x90	/* Device Control String */
+#define STERM		0x9c	/* String Terminator */
 
 #define CTRL_H_STR	"\026"
 #define CTRL_V_STR	"\062"

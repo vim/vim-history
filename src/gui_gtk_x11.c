@@ -25,8 +25,21 @@
 
 #include "vim.h"
 #ifdef FEAT_GUI_GNOME
-#include <gnome.h>
-#include "version.h"
+/* Gnome redefines _() and N_().  Grrr... */
+# ifdef _
+#  undef _
+# endif
+# ifdef N_
+#  undef N_
+# endif
+# ifdef textdomain
+#  undef textdomain
+# endif
+# ifdef bindtextdomain
+#  undef bindtextdomain
+# endif
+# include <gnome.h>
+# include "version.h"
 #endif
 
 #if !defined(FEAT_GUI_GTK) && defined(PROTO)
@@ -1549,9 +1562,9 @@ delete_event_cb(GtkWidget *wgt, gpointer cbdata)
 #define VIM_ATOM_NAME "_VIM_TEXT"
 static const GtkTargetEntry primary_targets[] = {
     {VIM_ATOM_NAME, 0, SELECTION_CLIPBOARD},
-    {"STRING", 0, SELECTION_STRING},
+    {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT},
     {"TEXT", 0, SELECTION_TEXT},
-    {"COMPOUND_TEXT", 0, SELECTION_COMPOUND_TEXT}
+    {"STRING", 0, SELECTION_STRING}
 };
 
 /*
@@ -2515,7 +2528,7 @@ gui_mch_free_font(GuiFont font)
 	gdk_font_unref((GdkFont *)font);
 }
 
-#ifdef FEAT_XFONTSET
+#if defined(FEAT_XFONTSET) || defined(PROTO)
 /*
  * If a fontset is not going to be used, free its structure.
  */
@@ -3272,6 +3285,26 @@ clip_mch_request_selection()
     while (received_selection == RS_NONE)
 	gtk_main();		/* wait for selection_received_event */
 
+    if (received_selection == RS_FAIL)
+    {
+	/* Now try to get it out of the usual string selection. */
+	received_selection = RS_NONE;
+	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+				    gdk_atom_intern("COMPOUND_TEXT", FALSE),
+				    (guint32)GDK_CURRENT_TIME);
+	while (received_selection == RS_NONE)
+	    gtk_main();		/* wait for selection_received_event */
+    }
+    if (received_selection == RS_FAIL)
+    {
+	/* Now try to get it out of the usual string selection. */
+	received_selection = RS_NONE;
+	(void)gtk_selection_convert(gui.drawarea, GDK_SELECTION_PRIMARY,
+				    gdk_atom_intern("TEXT", FALSE),
+				    (guint32)GDK_CURRENT_TIME);
+	while (received_selection == RS_NONE)
+	    gtk_main();		/* wait for selection_received_event */
+    }
     if (received_selection == RS_FAIL)
     {
 	/* Now try to get it out of the usual string selection. */

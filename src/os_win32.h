@@ -74,12 +74,12 @@
 
 #define TEMPNAMELEN	_MAX_PATH	/* length of temp file name path */
 
-#ifndef MAXMEM
-# define MAXMEM		(2*1024)    /* use up to 2 Mbyte for a buffer */
+#ifndef DFLT_MAXMEM
+# define DFLT_MAXMEM	(2*1024)    /* use up to 2 Mbyte for a buffer */
 #endif
 
-#ifndef MAXMEMTOT
-# define MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
+#ifndef DFLT_MAXMEMTOT
+# define DFLT_MAXMEMTOT	(5*1024)    /* use up to 5 Mbyte for Vim */
 #endif
 
 /*
