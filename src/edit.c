@@ -5307,7 +5307,8 @@ in_cinkeys(keytyped, when, line_is_empty)
 		else
 #endif
 		    /* TODO: multi-byte */
-		    if (keytyped == (int)p[-1])
+		    if (keytyped == (int)p[-1] || (icase && keytyped < 256
+			       && TO_LOWER(keytyped) == TO_LOWER((int)p[-1])))
 		{
 		    line = ml_get_cursor();
 		    if ((curwin->w_cursor.col == (colnr_T)(p - look)
