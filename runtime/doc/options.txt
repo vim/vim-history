@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 18
+*options.txt*	For Vim version 6.2.  Last change: 2004 Apr 29
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -3052,7 +3052,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 				     M:ModeMsg,n:LineNr,r:Question,
 				     s:StatusLine,S:StatusLineNC,c:VertSplit
 				     t:Title,v:Visual,w:WarningMsg,W:WildMenu,
-				     f:Folded,F:FoldColumn")
+				     f:Folded,F:FoldColumn,A:DiffAdd,
+				     C:DiffChange,D:DiffDelete,T:DiffText,
+				     >:SignColumn")
 			global
 			{not in Vi}
 	This option can be used to set highlighting mode for various
@@ -3084,6 +3086,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|hl-WildMenu|	 W  wildcard matches displayed for 'wildmenu'
 	|hl-Folded|	 f  line used for closed folds
 	|hl-FoldColumn|	 F  'foldcolumn'
+	|hl-SignColumn|	 >  column used for |signs|
 
 	The display modes are:
 		r	reverse		(termcap entry "mr" and "me")
