@@ -182,6 +182,8 @@ static int	show_shell_mess = TRUE;
 #endif
 static int	deadly_signal = 0;	    /* The signal we caught */
 
+static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
+
 #ifdef SYS_SIGLIST_DECLARED
 /*
  * I have seen
@@ -419,19 +421,28 @@ mch_delay(msec, ignoreinput)
     long	msec;
     int		ignoreinput;
 {
+    int		old_tmode;
+
     if (ignoreinput)
     {
+	/* Go to cooked mode without echo, to allow SIGINT interrupting us
+	 * here */
+	old_tmode = curr_tmode;
+	settmode(TMODE_SLEEP);
+
 	/*
 	 * Everybody sleeps in a different way...
 	 * Prefer nanosleep(), some versions of usleep() can only sleep up to
 	 * one second.
 	 */
 #ifdef HAVE_NANOSLEEP
-	struct timespec ts;
+	{
+	    struct timespec ts;
 
-	ts.tv_sec = msec / 1000;
-	ts.tv_nsec = (msec % 1000) * 1000000;
-	(void)nanosleep(&ts, NULL);
+	    ts.tv_sec = msec / 1000;
+	    ts.tv_nsec = (msec % 1000) * 1000000;
+	    (void)nanosleep(&ts, NULL);
+	}
 #else
 # ifdef HAVE_USLEEP
 	while (msec >= 1000)
@@ -447,19 +458,23 @@ mch_delay(msec, ignoreinput)
 #   ifdef __EMX__
 	_sleep2(msec);
 #   else
-	struct timeval tv;
+	{
+	    struct timeval tv;
 
-	tv.tv_sec = msec / 1000;
-	tv.tv_usec = (msec % 1000) * 1000;
-	/*
-	 * NOTE: Solaris 2.6 has a bug that makes select() hang here.  Get a
-	 * patch from Sun to fix this.  Reported by Gunnar Pedersen.
-	 */
-	select(0, NULL, NULL, NULL, &tv);
+	    tv.tv_sec = msec / 1000;
+	    tv.tv_usec = (msec % 1000) * 1000;
+	    /*
+	     * NOTE: Solaris 2.6 has a bug that makes select() hang here.  Get
+	     * a patch from Sun to fix this.  Reported by Gunnar Pedersen.
+	     */
+	    select(0, NULL, NULL, NULL, &tv);
+	}
 #   endif /* __EMX__ */
 #  endif /* HAVE_SELECT */
 # endif /* HAVE_NANOSLEEP */
 #endif /* HAVE_USLEEP */
+
+	settmode(old_tmode);
     }
     else
 	WaitForChar(msec);
@@ -1699,8 +1714,6 @@ may_core_dump()
     }
 }
 
-static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
-
     void
 mch_settmode(tmode)
     int		tmode;
@@ -1720,18 +1733,19 @@ mch_settmode(tmode)
 	   struct termio tnew;
 # endif
 
+    if (first)
+    {
+	first = FALSE;
+# if defined(HAVE_TERMIOS_H)
+	tcgetattr(read_cmd_fd, &told);
+# else
+	ioctl(read_cmd_fd, TCGETA, &told);
+# endif
+    }
+
+    tnew = told;
     if (tmode == TMODE_RAW)
     {
-	if (first)
-	{
-	    first = FALSE;
-# if defined(HAVE_TERMIOS_H)
-	    tcgetattr(read_cmd_fd, &told);
-# else
-	    ioctl(read_cmd_fd, TCGETA, &told);
-# endif
-	}
-	tnew = told;
 	/*
 	 * ~ICRNL enables typing ^V^M
 	 */
@@ -1747,21 +1761,18 @@ mch_settmode(tmode)
 # endif
 	tnew.c_cc[VMIN] = 1;		/* return after 1 char */
 	tnew.c_cc[VTIME] = 0;		/* don't wait */
-# if defined(HAVE_TERMIOS_H)
-	tcsetattr(read_cmd_fd, TCSANOW, &tnew);
-# else
-	ioctl(read_cmd_fd, TCSETA, &tnew);
-# endif
     }
-    else
-    {
+    else if (tmode == TMODE_SLEEP)
+	tnew.c_lflag &= ~(ECHO);
+
 # if defined(HAVE_TERMIOS_H)
-	tcsetattr(read_cmd_fd, TCSANOW, &told);
+    tcsetattr(read_cmd_fd, TCSANOW, &tnew);
 # else
-	ioctl(read_cmd_fd, TCSETA, &told);
+    ioctl(read_cmd_fd, TCSETA, &tnew);
 # endif
-    }
+
 #else
+
     /*
      * for "old" tty systems
      */
@@ -1771,20 +1782,21 @@ mch_settmode(tmode)
     static struct sgttyb ttybold;
 	   struct sgttyb ttybnew;
 
+    if (first)
+    {
+	first = FALSE;
+	ioctl(read_cmd_fd, TIOCGETP, &ttybold);
+    }
+
+    ttybnew = ttybold;
     if (tmode == TMODE_RAW)
     {
-	if (first)
-	{
-	    first = FALSE;
-	    ioctl(read_cmd_fd, TIOCGETP, &ttybold);
-	}
-	ttybnew = ttybold;
 	ttybnew.sg_flags &= ~(CRMOD | ECHO);
 	ttybnew.sg_flags |= RAW;
-	ioctl(read_cmd_fd, TIOCSETN, &ttybnew);
     }
-    else
-	ioctl(read_cmd_fd, TIOCSETN, &ttybold);
+    else if (tmode == TMODE_SLEEP)
+	ttybnew.sg_flags &= ~(ECHO);
+    ioctl(read_cmd_fd, TIOCSETN, &ttybnew);
 #endif
     curr_tmode = tmode;
 }

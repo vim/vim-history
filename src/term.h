@@ -147,5 +147,6 @@ extern char_u *(term_strings[]);    /* current terminal strings */
 #define T_CRV	(term_str(KS_CRV))	/* request version string */
 #define T_OP	(term_str(KS_OP))	/* original color pair */
 
-#define TMODE_COOK  0	    /* terminal mode for external cmds and Ex mode */
-#define TMODE_RAW   1	    /* terminal mode for Normal and Insert mode */
+#define TMODE_COOK  0	/* terminal mode for external cmds and Ex mode */
+#define TMODE_SLEEP 1	/* terminal mode for sleeping (cooked but no echo) */
+#define TMODE_RAW   2	/* terminal mode for Normal and Insert mode */
