@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Dec 13
+" Last Change:	2002 Jun 22
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -147,7 +147,7 @@ endwhile
 
 " Open the window
 new option-window
-set ts=15 tw=0
+setlocal ts=15 tw=0
 
 " Insert help and a "set" command for each option.
 call append(0, '" Each "set" line shows the current value of an option (on the left).')
@@ -832,7 +832,7 @@ call <SID>OptionG("bex", &bex)
 call append("$", "autowrite\tautomatically write a file when leaving a modified buffer")
 call <SID>BinOptionG("aw", &aw)
 call append("$", "autowriteall\tas 'autowrite', but works with more commands")
-call <SID>BinOptionG("aw", &aw)
+call <SID>BinOptionG("awa", &awa)
 call append("$", "writeany\talways write without asking for confirmation")
 call <SID>BinOptionG("wa", &wa)
 call append("$", "autoread\tautomatically read a file when it was modified outside of Vim")
@@ -1117,7 +1117,6 @@ endif
 noremap <silent> <buffer> <CR> <C-\><C-N>:call <SID>CR()<CR>
 inoremap <silent> <buffer> <CR> <Esc>:call <SID>CR()<CR>
 noremap <silent> <buffer> <Space> :call <SID>Space()<CR>
-inoremap <silent> <buffer> <Space> <Esc>:call <SID>Space()<CR>
 
 " Make the buffer be deleted when the window is closed.
 set buftype=nofile bufhidden=delete noswapfile
