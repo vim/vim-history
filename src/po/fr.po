@@ -760,7 +760,7 @@ msgstr "E140: Utilisez ! pour écrire un tampon partiel"
 #: ex_cmds.c:2244
 #, c-format
 msgid "Overwrite existing file \"%.*s\"?"
-msgstr "Écraser le fichier \"%.s\" existant ?"
+msgstr "Écraser le fichier \"%.*s\" existant ?"
 
 #: ex_cmds.c:2315
 #, c-format
@@ -777,7 +777,7 @@ msgid ""
 "'readonly' option is set for \"%.*s\".\n"
 "Do you wish to write anyway?"
 msgstr ""
-"L'option 'readonly' est active pour \".%s\".\n"
+"L'option 'readonly' est active pour \"%.*s\".\n"
 "Voulez-vous écrire quand même ?"
 
 #: ex_cmds.c:2538
@@ -5882,7 +5882,7 @@ msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr "E12: Cmde interdite à partir d'un exrc/vimrc dans rép. cour. ou tag search"
 
 #: globals.h:1043
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Le fichier existe déjà (utilisez ! pour passer outre)"
 
 #: globals.h:1044

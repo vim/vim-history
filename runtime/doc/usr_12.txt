@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.1.  Last change: 2001 Oct 23
+*usr_12.txt*	For Vim version 6.2a.  Last change: 2002 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -121,9 +121,9 @@ pattern contains:
 	    any number of times					      *
 
 In the "to" part we have "\2" and "\1".  These are called backreferences.
-They refer to the text matched by the \( \) parts in the pattern.  "\2" refers
-to the text matched by the second "\( \)", which is the "First" name.  "\1"
-refers to the first \( \), which is the "Last" name.
+They refer to the text matched by the "\( \)" parts in the pattern.  "\2"
+refers to the text matched by the second "\( \)", which is the "First" name.
+"\1" refers to the first "\( \)", which is the "Last" name.
    You can use up to nine backreferences in the "to" part of a substitute
 command.  "\0" stands for the whole matched pattern.  There are a few more
 special items in a substitute command, see |sub-replace-special|.
@@ -229,7 +229,7 @@ want to count words in.  Then type g CTRL-G.  The result:
 For other ways to count words, lines and other items, see |count-items|.
 
 ==============================================================================
-*12.6*	Find a man page
+*12.6*	Find a man page					*find-manpage*
 
 While editing a shell script or C program, you are using a command or function
 that you want to find the man page for (this is on Unix).  Let's first use a

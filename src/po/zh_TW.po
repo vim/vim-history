@@ -5659,7 +5659,7 @@ msgid "E12: Command not allowed from exrc/vimrc in current dir or tag search"
 msgstr "E12: exrc/vimrc 裡的指令無法執行"
 
 #: globals.h:1026
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: 檔案已經存在 (可用 ! 強制取代)"
 
 #: globals.h:1027

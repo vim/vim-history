@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www.isp.de/data/php.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2002 Mar 11
+" Last Change:	2002 May 16
 "
 " Options	php_sql_query = 1  for SQL syntax highlighting inside strings
 "		php_htmlInStrings = 1  for HTML syntax highlighting inside strings
@@ -32,6 +32,10 @@ if !exists("main_syntax")
 endif
 
 if version < 600
+  unlet! php_folding
+  if exists("php_sync_method") && !php_sync_method
+    let php_sync_method=-1
+  endif
   so <sfile>:p:h/html.vim
 else
   runtime syntax/html.vim
@@ -47,14 +51,17 @@ if !exists("php_sync_method")
   endif
 endif
 
-if exists("php_parentError")
+if exists("php_parentError") && !exists("php_parent_error_open") && !exists("php_parent_error_close")
   let php_parent_error_close=1
-  unlet php_parent_error_open
 endif
 
-syn cluster htmlPreproc add=phpRegion
+syn cluster htmlPreproc add=phpRegion,phpRegionAsp,phpRegionSc
 
-syn include @sqlTop <sfile>:p:h/sql.vim
+if version < 600
+  syn include @sqlTop <sfile>:p:h/sql.vim
+else
+  syn include @sqlTop syntax/sql.vim
+endif
 syn sync clear
 unlet b:current_syntax
 syn cluster sqlTop remove=sqlString,sqlComment
@@ -72,7 +79,7 @@ syn case match
 syn keyword	phpEnvVar	GATEWAY_INTERFACE SERVER_NAME SERVER_SOFTWARE SERVER_PROTOCOL REQUEST_METHOD QUERY_STRING DOCUMENT_ROOT HTTP_ACCEPT HTTP_ACCEPT_CHARSET HTTP_ENCODING HTTP_ACCEPT_LANGUAGE HTTP_CONNECTION HTTP_HOST HTTP_REFERER HTTP_USER_AGENT REMOTE_ADDR REMOTE_PORT SCRIPT_FILENAME SERVER_ADMIN SERVER_PORT SERVER_SIGNATURE PATH_TRANSLATED SCRIPT_NAME REQUEST_URI	contained
 
 " Internal Variables
-syn keyword	phpIntVar GLOBALS HTTP_GET_VARS HTTP_POST_VARS HTTP_COOKIE_VARS	HTTP_POST_FILES HTTP_ENV_VARS HTTP_SERVER_VARS PHP_ERRMSG PHP_SELF HTTP_RAW_POST_DATA HTTP_STATE_VARS _GET _POST _COOKIE _SERVER _ENV	contained
+syn keyword	phpIntVar GLOBALS HTTP_GET_VARS HTTP_POST_VARS HTTP_COOKIE_VARS	HTTP_POST_FILES HTTP_ENV_VARS HTTP_SERVER_VARS PHP_ERRMSG PHP_SELF HTTP_RAW_POST_DATA HTTP_STATE_VARS _GET _POST _COOKIE _SERVER _ENV 	contained
 
 syn case ignore
 
@@ -268,17 +275,24 @@ syn match	phpComment	"#.\{-}\(?>\|$\)\@="	contained contains=phpTodo
 syn match	phpComment	"//.\{-}\(?>\|$\)\@="	contained contains=phpTodo
 
 " String
-syn region	phpStringDouble	matchgroup=None start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar contained keepend extend
-syn region	phpStringSingle	matchgroup=None start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings,phpSpecialChar contained keepend extend
+if exists("php_parent_error_open")
+  syn region	phpStringDouble	matchgroup=None start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar contained keepend
+  syn region	phpStringSingle	matchgroup=None start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings,phpSpecialChar contained keepend
+else
+  syn region	phpStringDouble	matchgroup=None start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar contained keepend extend
+  syn region	phpStringSingle	matchgroup=None start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings,phpSpecialChar contained keepend extend
+endif
 
 " HereDoc
-syn case match
-syn region	phpHeredoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\I\i*\)$" end="^\z1;\=$"	contained contains=phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
+if version >= 600
+  syn case match
+  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@="	contained contains=phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
 " including HTML,JavaScript,SQL even if not enabled via options
-syn region	phpHeredoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1;\=$"	contained contains=@htmlTop,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
-syn region	phpHeredoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1;\=$"	contained contains=@sqlTop,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
-syn region	phpHeredoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1;\=$"	contained contains=@htmlJavascript,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
-syn case ignore
+  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpIdentifier,phpSpecialChar,phpMemberMethodsVar keepend extend
+  syn case ignore
+endif
 
 " Parent
 if exists("php_parent_error_close") || exists("php_parent_error_open")
@@ -293,29 +307,27 @@ syn cluster	phpClInside	contains=phpComment,phpFunctions,phpIdentifier,phpCondit
 syn cluster	phpClFunction	contains=@phpClInside,phpDefine,phpParentError,phpStorageClass
 syn cluster	phpClTop	contains=@phpClFunction,phpFoldFunction,phpFoldClass
 
+" Php Region
 if exists("php_parent_error_open")
-  " Php Region
   if exists("php_noShortTags")
     syn region	 phpRegion	matchgroup=Delimiter start="<?php" end="?>"	contains=@phpClTop
   else
     syn region	 phpRegion	matchgroup=Delimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop
   endif
-  syn region	 phpRegion	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop
+  syn region	 phpRegionSc	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop
   if exists("php_asp_tags")
-    syn region	 phpRegion	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop
+    syn region	 phpRegionAsp	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop
   endif
 else
-  " Php Region
   if exists("php_noShortTags")
     syn region	 phpRegion	matchgroup=Delimiter start="<?php" end="?>"	contains=@phpClTop keepend
   else
     syn region	 phpRegion	matchgroup=Delimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop keepend
   endif
-  syn region	 phpRegion	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop keepend
+  syn region	 phpRegionSc	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop keepend
   if exists("php_asp_tags")
-    syn region	 phpRegion	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop keepend
+    syn region	 phpRegionAsp	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop keepend
   endif
-
 endif
 
 " Fold
@@ -332,16 +344,17 @@ endif
 " Sync
 if php_sync_method==-1
   if exists("php_noShortTags")
-    syn sync match phpRegionSync grouphere phpRegion "<?php"
+    syn sync match phpRegionSync grouphere phpRegion "^\s*<?php\s*$"
   else
-    syn sync match phpRegionSync grouphere phpRegion "<?\(php\)\="
+    syn sync match phpRegionSync grouphere phpRegion "^\s*<?\(php\)\=\s*$"
   endif
-  syn sync match phpRegionSync grouphere phpRegion +<script language="php">+
+  syn sync match phpRegionSync grouphere phpRegionSc +^\s*<script language="php">\s*$+
   if exists("php_asp_tags")
-    syn sync match phpRegionSync grouphere phpRegion "<%\(=\)\="
+    syn sync match phpRegionSync grouphere phpRegionAsp "^\s*<%\(=\)\=\s*$"
   endif
-  syn sync match phpRegionSync groupthere NONE "?>"
-  syn sync minlines=50
+  syn sync match phpRegionSync grouphere NONE "^\s*?>\s*$"
+  syn sync match phpRegionSync grouphere NONE "^\s*%>\s*$"
+  "syn sync match phpRegionSync grouphere NONE "/\i*>\s*$"
 elseif php_sync_method>0
   exec "syn sync minlines=" . php_sync_method
 else
@@ -365,7 +378,6 @@ if version >= 508 || !exists("did_php_syn_inits")
   HiLink	 phpStructure	Structure
   HiLink	 phpStringSingle	String
   HiLink	 phpStringDouble	String
-  HiLink	 phpHereDoc	String
   HiLink	 phpNumber	Number
   HiLink	 phpFloat	Float
   HiLink	 phpFunctions	Function

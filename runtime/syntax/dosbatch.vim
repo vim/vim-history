@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	MSDOS batch file (with NT command extensions)
-" Maintainer:	Mike Williams <mrw@netcomuk.co.uk>
+" Maintainer:	Mike Williams <mrw@eandem.co.uk>
 " Filenames:    *.bat
-" Last Change:	13th July 2001
-" Web Page:     N/A
+" Last Change:	27th June 2002
+" URL:          http://www.eandem.co.uk/mrw/vim
 "
 " Options Flags:
 " dosbatch_cmdextversion	- 1 = Windows NT, 2 = Windows 2000 [default]

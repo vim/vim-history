@@ -1,7 +1,7 @@
 " IDL (Interactive Data Language) indent file.
 " Language: IDL (ft=idlang)
-" Last change:	2002 Mar 19
-" Maintainer: Aleksandar Jelenak <ajelenak@yahoo.com>
+" Last change:	2002 Sep 23
+" Maintainer: Aleksandar Jelenak <ajelenak AT yahoo.com>
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -33,12 +33,12 @@ function GetIdlangIndent(lnum)
    let curind = indent(pnum)
 
    " Indenting of continued lines.
-   if getline(pnum) =~ '\$$'
-      if getline(pnum2) !~ '\$$'
+   if getline(pnum) =~ '\$\s*\(;.*\)\=$'
+      if getline(pnum2) !~ '\$\s*\(;.*\)\=$'
 	 let curind = curind+&sw
       endif
    else
-      if getline(pnum2) =~ '\$$'
+      if getline(pnum2) =~ '\$\s*\(;.*\)\=$'
 	 let curind = curind-&sw
       endif
    endif

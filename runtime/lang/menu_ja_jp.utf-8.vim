@@ -2,7 +2,7 @@
 "
 " Menu Translations:	Japanese (UTF-8)
 " Translated By:	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		25-Feb-2002.
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -46,13 +46,16 @@ menutrans &Redo<Tab>^R			もう一度やる(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		繰り返す(&E)<Tab>\.
 menutrans Cu&t<Tab>"+x			切り取り(&T)<Tab>"+x
 menutrans &Copy<Tab>"+y			コピー(&C)<Tab>"+y
-menutrans &Paste<Tab>"+P		貼り付け(&P)<Tab>"+P
+menutrans &Paste<Tab>"+gP		貼り付け(&P)<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		前に貼る(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
 menutrans &Select\ all<Tab>ggVG		全て選択(&S)<Tab>ggvG
 menutrans &Find\.\.\.			検索(&F)\.\.\.
+menutrans &Find<Tab>/			検索(&F)<Tab>/
 menutrans Find\ and\ Rep&lace\.\.\.	置換(&L)\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:%s	置換(&L)<Tab>:%s
+menutrans Find\ and\ Rep&lace<Tab>:s	置換(&L)<Tab>:s
 "menutrans Options\.\.\.			オプション(&O)\.\.\.
 menutrans Settings\ &Window		設定ウィンドウ(&W)
 
@@ -162,7 +165,7 @@ menutrans Create\ &Fold<Tab>zf		折畳み作成(&F)<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		折畳み削除(&D)<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	全折畳み削除(&A)<Tab>zD
 " moving around in folds
-menutrans Fold\ column\ &width		折畳みカラム幅(&W)
+menutrans Fold\ col&umn\ width		折畳みカラム幅(&W)
 
 menutrans &Update		更新(&U)
 menutrans &Get\ Block		ブロック抽出(&G)
@@ -255,6 +258,7 @@ endif
 
 " Syntax menu
 menutrans &Syntax		シンタックス(&S)
+menutrans &Show\ filetypes\ in\ menu	対応形式をメニューに表示(&S)
 menutrans Set\ '&syntax'\ only	'syntax'だけ設定(&S)
 menutrans Set\ '&filetype'\ too	'filetype'も設定(&F)
 menutrans &Off			無効化(&O)
@@ -265,3 +269,42 @@ menutrans on/off\ for\ &This\ file
 menutrans Co&lor\ test		カラーテスト(&L)
 menutrans &Highlight\ test	ハイライトテスト(&H)
 menutrans &Convert\ to\ HTML	HTMLへコンバート(&C)
+
+" Japanese specific menu
+" 成否はiconv次第、必ずしも指定したエンコードになるわけではないことに注意
+if has('iconv')
+  " iconvのバージョン判定
+  let support_jisx0213 = (iconv("\x87\x64\x87\x6a", 'cp932', 'euc-jisx0213') ==# "\xad\xc5\xad\xcb") ? 1 : 0
+  "
+  " 読み込み
+  an 10.395 ファイル(&F).-SEPICONV- <Nop>
+  an 10.396.100.100 ファイル(&F).エンコード指定(&E)\.\.\..開く(&O)\.\.\..SJIS(&S)<Tab>fenc=cp932 :browse confirm e ++enc=cp932<CR>
+  if !support_jisx0213
+    an 10.396.100.110 ファイル(&F).エンコード指定(&E)\.\.\..開く(&O)\.\.\..EUC(&E)<Tab>fenc=euc-jp :browse confirm e ++enc=euc-jp<CR>
+    an 10.396.100.120 ファイル(&F).エンコード指定(&E)\.\.\..開く(&O)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp :browse confirm e ++enc=iso-2022-jp<CR>
+  else
+    an 10.396.100.110 ファイル(&F).エンコード指定(&E)\.\.\..開く(&O)\.\.\..EUC(&E)<Tab>fenc=euc-jisx0213 :browse confirm e ++enc=euc-jisx0213<CR>
+    an 10.396.100.120 ファイル(&F).エンコード指定(&E)\.\.\..開く(&O)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp-3 :browse confirm e ++enc=iso-2022-jp-3<CR>
+  endif
+
+  " 再読込
+  an 10.396.110.100 ファイル(&F).エンコード指定(&E)\.\.\..再読込(&R)\.\.\..SJIS(&S)<Tab>fenc=cp932 :e ++enc=cp932<CR>
+  if !support_jisx0213
+    an 10.396.110.110 ファイル(&F).エンコード指定(&E)\.\.\..再読込(&R)\.\.\..EUC(&E)<Tab>fenc=euc-jp :e ++enc=euc-jp<CR>
+    an 10.396.110.120 ファイル(&F).エンコード指定(&E)\.\.\..再読込(&R)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp :e ++enc=iso-2022-jp<CR>
+  else
+    an 10.396.110.110 ファイル(&F).エンコード指定(&E)\.\.\..再読込(&R)\.\.\..EUC(&E)<Tab>fenc=euc-jisx0213 :e ++enc=euc-jisx0213<CR>
+    an 10.396.110.120 ファイル(&F).エンコード指定(&E)\.\.\..再読込(&R)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp-3 :e ++enc=iso-2022-jp-3<CR>
+  endif
+
+  " 保存
+  an 10.396.115 ファイル(&F).エンコード指定(&E)\.\.\..-SEP1- <Nop>
+  an 10.396.120.100 ファイル(&F).エンコード指定(&E)\.\.\..保存(&S)\.\.\..SJIS(&S)<Tab>fenc=cp932 :set fenc=cp932 \| w<CR>
+  if !support_jisx0213
+    an 10.396.120.110 ファイル(&F).エンコード指定(&E)\.\.\..保存(&S)\.\.\..EUC(&E)<Tab>fenc=euc-jp :set fenc=euc-jp \| w<CR>
+    an 10.396.120.120 ファイル(&F).エンコード指定(&E)\.\.\..保存(&S)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp :set fenc=iso-2022-jp \| w<CR>
+  else
+    an 10.396.120.110 ファイル(&F).エンコード指定(&E)\.\.\..保存(&S)\.\.\..EUC(&E)<Tab>fenc=euc-jisx0213 :set fenc=euc-jisx0213 \| w<CR>
+    an 10.396.120.120 ファイル(&F).エンコード指定(&E)\.\.\..保存(&S)\.\.\..JIS(&J)<Tab>fenc=iso-2022-jp-3 :set fenc=iso-2022-jp-3 \| w<CR>
+  endif
+endif

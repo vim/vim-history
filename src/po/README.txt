@@ -17,7 +17,8 @@ a multi-byte character includes the 0x5c byte, this is not recognized as a
 backslash.  Since this format is incompatible with Solaris, Vim uses the old
 format.  This is done by setting the OLD_PO_FILE_OUTPUT and OLD_PO_FILE_INPUT
 environment variables.  When you use the Makefile in this directory that will
-be done for you.  This does NOT work with gettext 0.10.36.  Don't use it.
+be done for you.  This does NOT work with gettext 0.10.36.  Don't use it, get
+0.10.37.
 
 
 ON MS-WINDOWS

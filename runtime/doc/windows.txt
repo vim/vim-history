@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.1.  Last change: 2003 Feb 04
+*windows.txt*   For Vim version 6.2a.  Last change: 2003 Apr 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -54,7 +54,7 @@ hidden:   The buffer is not displayed.  If there is a file for this buffer, it
 							*inactive-buffer*
 inactive: The buffer is not displayed and does not contain anything.  Options
 	  for the buffer are remembered if the file was once loaded.  It can
-	  contains marks from the |viminfo| file.  But the buffer doesn't
+	  contain marks from the |viminfo| file.  But the buffer doesn't
 	  contain text.
 
 In a table:
@@ -224,7 +224,7 @@ window will appear.
 		Vim window.  When the split is vertical the window appears at
 		the far right and occupies the full height of the Vim window.
 
-These command modifers can be combined to make a vertically split window
+These command modifiers can be combined to make a vertically split window
 occupy the full height.  Example: >
 	:vertical topleft edit tags
 Opens a vertically split, full-height window on the "tags" file at the far
@@ -711,7 +711,8 @@ function.
 There can be only one preview window.  It is created with one of the commands
 below.  The 'previewheight' option can be set to specify the height of the
 preview window when it's opened.  The 'previewwindow' option is set in the
-preview window to be able to recognize it.
+preview window to be able to recognize it.  The 'winfixheight' option is set
+to have it keep the same height when opening/closing other windows.
 
 						*:pta* *:ptag*
 :pta[g][!] [tagname]
@@ -893,7 +894,7 @@ list of buffers. |unlisted-buffer|
 		line when the buffer is first entered. Note that other
 		commands after the + will be ignored.
 
-:[N]bd[elete][!]				*:bd* *:bdel* *:bdelete*
+:[N]bd[elete][!]			*:bd* *:bdel* *:bdelete* *E516*
 :bd[elete][!] [N]
 		Unload buffer [N] (default: current buffer) and delete it from
 		the buffer list.  If the buffer was changed, this fails,
@@ -903,7 +904,7 @@ list of buffers. |unlisted-buffer|
 		will be displayed instead.  This is the most recent entry in
 		the jump list that points into a loaded buffer.
 		Actually, the buffer isn't completely deleted, it is removed
-		from the buffer list |unlisted-buffer|.  Option values,
+		from the buffer list |unlisted-buffer| and option values,
 		variables and mappings/abbreviations for the buffer are
 		cleared.
 
@@ -922,15 +923,15 @@ list of buffers. |unlisted-buffer|
 :N,Mbdelete[!]	Do ":bdelete[!]" for all buffers in the range N to M
 		(inclusive).
 
-:[N]bw[ipeout][!]				*:bw* *:bwipe* *:bwipeout*
+:[N]bw[ipeout][!]			*:bw* *:bwipe* *:bwipeout* *E517*
 :bw[ipeout][!] {bufname}
 :N,Mbw[ipeout][!]
 :bw[ipeout][!] N1 N2 ...
-		Like ":bdelete", but really delete the buffer.  All marks in
+		Like |:bdelete|, but really delete the buffer.  All marks in
 		this buffer become invalid, option settings are lost, etc.
 		Don't use this unless you know what you are doing.
 
-:[N]bun[load][!]					*:bun* *:bunload*
+:[N]bun[load][!]				*:bun* *:bunload* *E515*
 :bun[load][!] [N]
 		Unload buffer [N] (default: current buffer).  The memory
 		allocated for this buffer will be freed.  The buffer remains
@@ -1015,7 +1016,7 @@ list of buffers. |unlisted-buffer|
 		See |:buffer-!| for [!].
 
 							*:bf* *:bfirst*
-:bf[irst	Same as ":brewind".
+:bf[irst]	Same as ":brewind".
 
 							*:sbr* *:sbrewind*
 :sbr[ewind]	Split window and go to first buffer in buffer list.  If the

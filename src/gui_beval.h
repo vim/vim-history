@@ -58,8 +58,8 @@ typedef struct
 #endif
 } BalloonEval;
 
-#define EVAL_OFFSET_X 10 /* displacement of beval topleft corner from pointer */
-#define EVAL_OFFSET_Y 5
+#define EVAL_OFFSET_X 15 /* displacement of beval topleft corner from pointer */
+#define EVAL_OFFSET_Y 10
 
 #include "gui_beval.pro"
 

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	pilrc - a resource compiler for Palm OS development
-" Maintainer:	Brian Schau <brian@schau.dk>
-" Last change:	2001 Jul 12
-" Available on:	http://www.brisse.dk/vim/
+" Maintainer:	Brian Schau <brian@schau.com>
+" Last change:	2003 Apr 19
+" Available on:	http://www.schau.com/pilrcvim/pilrc.vim
 
 " Remove any old syntax
 if version < 600
@@ -13,52 +13,61 @@ endif
 
 syn case ignore
 
+" Notes: TRANSPARENT, FONT and FONT ID are defined in the specials
+"        section below.   Beware of the order of the specials!
+"        Look in the syntax.txt and usr_27.txt files in vim\vim{version}\doc
+"        directory for regexps etc. 
+
 " Keywords - basic
 syn keyword pilrcKeyword ALERT APPLICATION APPLICATIONICONNAME AREA
 syn keyword pilrcKeyword BITMAP BITMAPCOLOR BITMAPCOLOR16 BITMAPCOLOR16K
-syn keyword pilrcKeyword BITMAPFAMILY BITMAPFAMILYSPECIAL BITMAPGREY
-syn keyword pilrcKeyword BITMAPGREY16 BITMAPSCREENFAMILY BUTTON BUTTONS BYTELIST
+syn keyword pilrcKeyword BITMAPFAMILY BITMAPFAMILYEX BITMAPFAMILYSPECIAL
+syn keyword pilrcKeyword BITMAPGREY BITMAPGREY16 BITMAPSCREENFAMILY
+syn keyword pilrcKeyword BOOTSCREENFAMILY BUTTON BUTTONS BYTELIST
 syn keyword pilrcKeyword CATEGORIES CHECKBOX COUNTRYLOCALISATION
 syn keyword pilrcKeyword DATA
-syn keyword pilrcKeyword FEATURE FIELD FONT FONTINDEX FORM FORMBITMAP
-syn keyword pilrcKeyword GADGET GRAFFITIINPUTAREA GRAFFITISTATEINDICATOR
+syn keyword pilrcKeyword FEATURE FIELD FONTINDEX FORM FORMBITMAP
+syn keyword pilrcKeyword GADGET GENERATEHEADER 
+syn keyword pilrcKeyword GRAFFITIINPUTAREA GRAFFITISTATEINDICATOR
 syn keyword pilrcKeyword HEX
-syn keyword pilrcKeyword ICON ICONFAMILY ID INTEGER
+syn keyword pilrcKeyword ICON ICONFAMILY ICONFAMILYEX INTEGER
 syn keyword pilrcKeyword KEYBOARD
 syn keyword pilrcKeyword LABEL LAUNCHERCATEGORY LIST LONGWORDLIST
 syn keyword pilrcKeyword MENU MENUITEM MESSAGE  MIDI
 syn keyword pilrcKeyword PALETTETABLE POPUPLIST POPUPTRIGGER
 syn keyword pilrcKeyword PULLDOWN PUSHBUTTON
-syn keyword pilrcKeyword REPEATBUTTON
+syn keyword pilrcKeyword REPEATBUTTON RESETAUTOID
 syn keyword pilrcKeyword SCROLLBAR SELECTORTRIGGER SLIDER SMALLICON
-syn keyword pilrcKeyword SMALLICONFAMILY STRING STRINGTABLE
+syn keyword pilrcKeyword SMALLICONFAMILY SMALLICONFAMILYEX STRING STRINGTABLE
 syn keyword pilrcKeyword TABLE TITLE TRANSLATION TRAP
 syn keyword pilrcKeyword VERSION
 syn keyword pilrcKeyword WORDLIST
 
 " Types
 syn keyword pilrcType AT AUTOSHIFT
-syn keyword pilrcType BACKGROUNDID BITMAPID BOLDFRAME
-syn keyword pilrcType CHECKED COLORTABLE COLUMNS COLUMNWIDTH COMPRESS
+syn keyword pilrcType BACKGROUNDID BITMAPID BOLDFRAME BPP
+syn keyword pilrcType CHECKED COLORTABLE COLUMNS COLUMNWIDTHS COMPRESS
+syn keyword pilrcType COMPRESSBEST COMPRESSPACKBITS COMPRESSRLE COMPRESSSCANLINE
 syn keyword pilrcType CONFIRMATION COUNTRY CREATOR CURRENCYDECIMALPLACES
 syn keyword pilrcType CURRENCYNAME CURRENCYSYMBOL CURRENCYUNIQUESYMBOL
 syn keyword pilrcType DATEFORMAT DAYLIGHTSAVINGS DEFAULTBTNID DEFAULTBUTTON
-syn keyword pilrcType DISABLED DYNAMICSIZE
-syn keyword pilrcType EDITABLE ENTRY ERROR
-syn keyword pilrcType FEEDBACK FILE FONT FONTID FORCECOMPRESS FRAME
+syn keyword pilrcType DENSITY DISABLED DYNAMICSIZE
+syn keyword pilrcType EDITABLE ENTRY ERROR EXTENDED
+syn keyword pilrcType FEEDBACK FILE FONTID FORCECOMPRESS FRAME
 syn keyword pilrcType GRAFFITI GRAPHICAL GROUP
 syn keyword pilrcType HASSCROLLBAR HELPID
-syn keyword pilrcType INDEX INFORMATION
+syn keyword pilrcType ID INDEX INFORMATION
 syn keyword pilrcType KEYDOWNCHR KEYDOWNKEYCODE KEYDOWNMODIFIERS
-syn keyword pilrcType LANGUAGE LEFTANCHOR LONGDATEFORMAT
-syn keyword pilrcType MAX MAXCHARS MEASUREMENTSYSTEM MENUID MIN
+syn keyword pilrcType LANGUAGE LEFTALIGN LEFTANCHOR LONGDATEFORMAT
+syn keyword pilrcType MAX MAXCHARS MEASUREMENTSYSTEM MENUID MIN LOCALE
 syn keyword pilrcType MINUTESWESTOFGMT MODAL MULTIPLELINES
 syn keyword pilrcType NAME NOCOLORTABLE NOCOMPRESS NOFRAME NONEDITABLE
-syn keyword pilrcType NONUSABLE NOSAVEBEHIND NUMBER NUMBERFORMAT NUMERIC
+syn keyword pilrcType NONEXTENDED NONUSABLE NOSAVEBEHIND NUMBER NUMBERFORMAT
+syn keyword pilrcType NUMERIC
 syn keyword pilrcType PAGESIZE
-syn keyword pilrcType RIGHTALIGN RIGHTANCHOR ROWS
-syn keyword pilrcType SAVEBEHIND SEPARATOR SCREEN SELECTEDBITMAPID SINGLELINE
-syn keyword pilrcType THUMBID TIMEFORMAT TRANSPARENT TRANSPARENTINDEX
+syn keyword pilrcType RECTFRAME RIGHTALIGN RIGHTANCHOR ROWS
+syn keyword pilrcType SAVEBEHIND SEARCH SCREEN SELECTEDBITMAPID SINGLELINE
+syn keyword pilrcType THUMBID TRANSPARENTINDEX TIMEFORMAT
 syn keyword pilrcType UNDERLINED USABLE
 syn keyword pilrcType VALUE VERTICAL VISIBLEITEMS
 syn keyword pilrcType WARNING WEEKSTARTDAY
@@ -78,6 +87,7 @@ syn keyword pilrcLanguage English French German Italian Japanese Spanish
 syn match pilrcString "\"[^"]*\""
 
 " Number
+syn match pilrcNumber "\<0x\x\+\>"
 syn match pilrcNumber "\<\d\+\>"
 
 " Comment
@@ -87,9 +97,15 @@ syn region pilrcComment start="//" end="$"
 " Constants
 syn keyword pilrcConstant AUTO AUTOID BOTTOM CENTER PREVBOTTOM PREVHEIGHT
 syn keyword pilrcConstant PREVLEFT PREVRIGHT PREVTOP PREVWIDTH RIGHT
+syn keyword pilrcConstant SEPARATOR
 
 " Identifier
-syn match pilrcIdentifier "\<[A-Za-z_][A-Za-z0-9_]*\>"
+syn match pilrcIdentifier "\<\h\w*\>"
+
+" Specials
+syn match pilrcType "\<FONT\>"
+syn match pilrcKeyword "\<FONT\>\s*\<ID\>"
+syn match pilrcType "\<TRANSPARENT\>"
 
 " Function
 syn keyword pilrcFunction BEGIN END
@@ -100,6 +116,8 @@ syn match pilrcInclude "\#define"
 syn keyword pilrcInclude equ
 syn keyword pilrcInclude package
 syn region pilrcInclude start="public class" end="}"
+
+syn sync ccomment pilrcComment
 
 if version >= 508 || !exists("did_pilrc_syntax_inits")
 	if version < 508
@@ -122,6 +140,7 @@ if version >= 508 || !exists("did_pilrc_syntax_inits")
 	HiLink pilrcConstant		Constant
 	HiLink pilrcFunction		Function
 	HiLink pilrcInclude		SpecialChar
+	HiLink pilrcIdentifier		Number
 
 	delcommand HiLink
 endif

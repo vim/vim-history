@@ -1,14 +1,13 @@
 " Vim syntax file
 " Language:	awk, nawk, gawk, mawk
 " Maintainer:	Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Sep 02
+" Last Change:	2002 Jun 23
 
 " AWK  ref.  is: Alfred V. Aho, Brian W. Kernighan, Peter J. Weinberger
 " The AWK Programming Language, Addison-Wesley, 1988
 
 " GAWK ref. is: Arnold D. Robbins
-" Effective AWK Programming, A User's Guide for GNU Awk
-" Edition 1.0.3, Free Software Foundation, 1997
+" Effective AWK Programming, Third Edition, O'Reilly, 2001
 
 " MAWK is a "new awk" meaning it implements AWK ref.
 " mawk conforms to the Posix 1003.2 (draft 11.3)
@@ -31,15 +30,17 @@ endif
 syn keyword awkStatement	break continue delete exit
 syn keyword awkStatement	function getline next
 syn keyword awkStatement	print printf return
-" GAWK ref. p. 268
+" GAWK ref. p. 117
 syn keyword awkStatement	nextfile
-" AWK  ref. p. 42, GAWK ref. p. 272
-syn keyword awkFunction	atan2 close cos exp int log rand sin sqrt srand
+" AWK  ref. p. 42, GAWK ref. p. 142-166
+syn keyword awkFunction	atan2 close cos exp fflush int log rand sin sqrt srand
 syn keyword awkFunction	gsub index length match split sprintf sub
 syn keyword awkFunction	substr system
-" GAWK ref. p. 273-274
-syn keyword awkFunction	fflush gensub tolower toupper
-syn keyword awkFunction	systime strftime
+" GAWK ref. p. 142-166
+syn keyword awkFunction	asort gensub mktime strftime strtonum systime
+syn keyword awkFunction	tolower toupper
+syn keyword awkFunction	and or xor compl lshift rshift
+syn keyword awkFunction	dcgettext bindtextdomain
 
 syn keyword awkConditional	if else
 syn keyword awkRepeat	while for
@@ -50,9 +51,10 @@ syn keyword awkPatterns	BEGIN END
 " AWK  ref. p. 36
 syn keyword awkVariables	ARGC ARGV FILENAME FNR FS NF NR
 syn keyword awkVariables	OFMT OFS ORS RLENGTH RS RSTART SUBSEP
-" GAWK ref. p. 260
-syn keyword awkVariables	ARGIND CONVFMT ENVIRON ERRNO
-syn keyword awkVariables	FIELDWIDTHS IGNORECASE RT RLENGTH
+" GAWK ref. p. 120-126
+syn keyword awkVariables	ARGIND BINMODE CONVFMT ENVIRON ERRNO
+syn keyword awkVariables	FIELDWIDTHS IGNORECASE LINT PROCINFO
+syn keyword awkVariables	RT RLENGTH TEXTDOMAIN
 
 syn keyword awkRepeat	do
 

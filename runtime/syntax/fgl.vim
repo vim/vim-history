@@ -1,7 +1,11 @@
 " Vim syntax file
 " Language:	Informix 4GL
-" Maintainer:	rms@poczta.onet.pl
-" Last change:  21 Jul 2000
+" Maintainer:	Rafal M. Sulejman <rms@poczta.onet.pl>
+" Update:	26 Sep 2002
+" Changes:
+" - Dynamic 4GL/FourJs/4GL 7.30 pseudo comment directives (Julian Bridle)
+" - Conditionally allow case insensitive keywords (Julian Bridle)
+" 
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -11,7 +15,11 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-syntax case match
+if exists("fgl_ignore_case")
+  syntax case ignore
+else
+  syntax case match
+endif
 syn keyword fglKeyword ABORT ABS ABSOLUTE ACCEPT ACCESS ACOS ADD AFTER ALL
 syn keyword fglKeyword ALLOCATE ALTER AND ANSI ANY APPEND ARG_VAL ARRAY ARR_COUNT
 syn keyword fglKeyword ARR_CURR AS ASC ASCENDING ASCII ASIN AT ATAN ATAN2 ATTACH
@@ -104,6 +112,10 @@ syn region fglComment    start="{"  end="}"
 syn match fglComment	"--.*"
 syn match fglComment	"#.*"
 
+" Not a comment even though it looks like one (Dynamic 4GL/FourJs directive)
+syn match fglSpecial	"--#"
+syn match fglSpecial	"--@"
+
 syn sync ccomment fglComment
 
 " Define the default highlighting.
@@ -118,8 +130,8 @@ if version >= 508 || !exists("did_fgl_syntax_inits")
   endif
 
   HiLink fglComment	Comment
-  HiLink fglKeyword	fglSpecial
-  "HiLink fglKeyword	fglStatement
+  "HiLink fglKeyword	fglSpecial
+  HiLink fglKeyword	fglStatement
   HiLink fglNumber	Number
   HiLink fglOperator	fglStatement
   HiLink fglSpecial	Special

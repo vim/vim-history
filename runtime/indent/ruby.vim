@@ -1,8 +1,11 @@
 " Vim indent file
 " Language:	Ruby
-" Maintainer:	Matt Armstrong <matt@lickey.com>
-" Last Change:	2001 Jul 28
-" URL: http://www.lickey.com/env/vim/indent/ruby.vim
+" Maintainer:	Gavin Sinclair <gsinclair@soyabean.com.au>
+" Last Change:	2002/08/14
+" URL: www.soyabean.com.au/gavin/vim/index.html
+" Changes: (since vim 6.1)
+"  - indentation after a line ending in comma, etc, (even in a comment) was
+"    broken, now fixed (2002/08/14)
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -30,8 +33,8 @@ function GetRubyIndent()
     return 0
   endif
 
-  " If the line trailed with a *, +, comma, . or (, trust the user
-  if getline(lnum) =~ '\(\*\|\.\|+\|,\|(\)\(\s*#.*\)\=$'
+  " If the line trailed with [*+,.(] - but not in a comment - trust the user
+  if getline(lnum) =~ '\(\[^#\].*\)?\(\*\|\.\|+\|,\|(\)\(\s*#.*\)\=$'
     return -1
   endif
 
@@ -39,7 +42,10 @@ function GetRubyIndent()
   " module, class, dev, if, for, while, until, else, elsif, case, when, {
   let ind = indent(lnum)
   let flag = 0
-  if getline(lnum) =~ '^\s*\(module\>\|class\>\|def\>\|if\>\|for\>\|while\>\|until\>\|else\>\|elsif\>\|case\>\|when\>\|unless\|begin\|ensure\>\|rescue\>\)' || getline(lnum) =~ '{\s*$' || getline(lnum) =~ '\({\|\<do\>\).*|.*|\s*$' || getline(lnum) =~ '\<do\>\(\s*#.*\)\=$'
+  if getline(lnum) =~ '^\s*\(module\>\|class\>\|def\>\|if\>\|for\>\|while\>\|until\>\|else\>\|elsif\>\|case\>\|when\>\|unless\|begin\|ensure\>\|rescue\>\)'
+        \ || getline(lnum) =~ '{\s*$'
+        \ || getline(lnum) =~ '\({\|\<do\>\).*|.*|\s*$'
+        \ || getline(lnum) =~ '\<do\>\(\s*#.*\)\=$'
     let ind = ind + &sw
     let flag = 1
   endif

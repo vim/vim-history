@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.1.  Last change: 2002 Mar 09
+*usr_08.txt*	For Vim version 6.2a.  Last change: 2002 Jul 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -44,7 +44,7 @@ top one:
 	+----------------------------------+
 
 What you see here is two windows on the same file.  The line with "====" is
-that status line.  It displays information about the window above it.  (in
+that status line.  It displays information about the window above it.  (In
 practice the status line will be in reverse video.)
    The two windows allow you to view two parts of the same file.  For example,
 you could make the top window show the variable declarations of a program, and
@@ -108,9 +108,9 @@ you like.
 ==============================================================================
 *08.3*	Window size
 
-The :split command can take a number argument.  If specified, this will be the
-height of the new window.  For example, the following opens a new window three
-lines high and starts editing the file alpha.c: >
+The ":split" command can take a number argument.  If specified, this will be
+the height of the new window.  For example, the following opens a new window
+three lines high and starts editing the file alpha.c: >
 
 	:3split alpha.c
 
@@ -182,7 +182,7 @@ The result looks something like this:
 Actually, the | lines in the middle will be in reverse video.  This is called
 the vertical separator.  It separates the two windows left and right of it.
 
-There is also the "vnew" command, to open a vertically split window on a new,
+There is also the ":vnew" command, to open a vertically split window on a new,
 empty file.  Another way to do this: >
 
 	:vertical new
@@ -295,7 +295,7 @@ changes, use this command: >
 This stands for ":write all".  But actually, it only writes files with
 changes.  Vim knows it doesn't make sense to write files that were not
 changed.
-   And then there is the combination of ":qall" and "wall": the "write and
+   And then there is the combination of ":qall" and ":wall": the "write and
 quit all" command: >
 
 	:wqall
@@ -330,7 +330,7 @@ This results in:
 	+-------------------------------+
 
 The "-O" argument is used to get vertically split windows.
-   When vim is already running, the ":all" command opens a window for each
+   When Vim is already running, the ":all" command opens a window for each
 file in the argument list.  ":vertical all" does it with vertical splits.
 
 ==============================================================================

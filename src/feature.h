@@ -556,12 +556,13 @@
 
 /*
  * +multi_byte		Generic multi-byte character handling.  Doesn't work
- *			with 16 bit ints.
+ *			with 16 bit ints.  Required for GTK+ 2.
  *
  * Disabled for EBCDIC:
  * Multibyte support doesn't work on OS390 Unix currently.
  */
-#if defined(FEAT_BIG) && !defined(FEAT_MBYTE) && !defined(WIN16) \
+#if (defined(FEAT_BIG) || defined(HAVE_GTK2)) \
+	&& !defined(FEAT_MBYTE) && !defined(WIN16) \
 	&& SIZEOF_INT >= 4 && !defined(EBCDIC)
 # define FEAT_MBYTE
 #endif
@@ -626,7 +627,7 @@
  * +xfontset		X fontset support.  For outputting wide characters.
  */
 #ifndef FEAT_XFONTSET
-# if defined(FEAT_MBYTE) && defined(HAVE_X11)
+# if defined(FEAT_MBYTE) && defined(HAVE_X11) && !defined(HAVE_GTK2)
 #  define FEAT_XFONTSET
 # else
 /* #  define FEAT_XFONTSET */
@@ -984,6 +985,13 @@
 # endif
 #endif
 
+/*
+ * +dnd	        Drag'n'drop support.  Always used for the GTK+ GUI.
+ */
+#if defined(FEAT_CLIPBOARD) && defined(FEAT_GUI_GTK)
+# define FEAT_DND
+#endif
+
 #if defined(FEAT_GUI_MSWIN) && defined(FEAT_SMALL)
 # define MSWIN_FIND_REPLACE	/* include code for find/replace dialog */
 # define MSWIN_FR_BUFSIZE 256
@@ -1067,6 +1075,14 @@
  */
 #if !defined(FEAT_GUI_MOTIF) && defined(FEAT_SUN_WORKSHOP)
 # undef FEAT_SUN_WORKSHOP
+#endif
+
+/*
+ * The Netbeans features currently only work with Motif and GTK.
+ */
+#if !defined(FEAT_GUI_MOTIF) && !defined(FEAT_GUI_GTK) \
+	&& defined(FEAT_NETBEANS_INTG)
+# undef FEAT_NETBEANS_INTG
 #endif
 
 /*

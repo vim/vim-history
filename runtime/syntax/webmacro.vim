@@ -2,7 +2,7 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2001 May 10
+" Last Change:  2003 Jan 04
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
@@ -14,8 +14,8 @@ if !exists("main_syntax")
   if version < 600
     syntax clear
   elseif exists("b:current_syntax")
-  finish
-endif
+    finish
+  endif
   let main_syntax = 'webmacro'
 endif
 

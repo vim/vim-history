@@ -1,8 +1,11 @@
 " Vim syntax file
-" Language   : Lout
-" Maintainer : Christian V. J. Brüssow <cvjb@epost.de>
-" Last change: Son 06 Mai 2001 20:33:13 CEST
-
+" Language:    Lout
+" Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
+" Last Change: Son 22 Sep 2002 00:13:37 CEST
+" Filenames:   *.lout,*.lt
+" URL:         http://www.cvjb.de/comp/vim/lout.vim
+" $Id$
+"
 " Lout: Basser Lout document formatting system.
 
 " For version 5.x: Clear all syntax items

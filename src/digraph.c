@@ -2341,7 +2341,7 @@ keymap_init()
 	    if (cmd_runtime(buf, FALSE) == FAIL)
 	    {
 		vim_free(buf);
-		return (char_u *)N_("Keymap file not found");
+		return (char_u *)N_("E544: Keymap file not found");
 	    }
 	}
 	vim_free(buf);

@@ -1,7 +1,7 @@
 " Plugin to update the %changelog section of RPM spec files
 " Filename: spec.vim
 " Maintainer: Gustavo Niemeyer <niemeyer@conectiva.com>
-" Last Change: Fri, 12 Oct 2001 01:37:08 -0300
+" Last Change: Wed, 10 Apr 2002 16:28:52 -0300
 
 if exists("b:did_ftplugin")
 	finish
@@ -59,6 +59,9 @@ if !exists("*s:SpecChangelog")
 		endwhile
 		if (nameline != -1 && verline != -1 && relline != -1)
 			let include_release_info = exists("g:spec_chglog_release_info")
+			let name = s:ParseRpmVars(name, nameline)
+			let ver = s:ParseRpmVars(ver, verline)
+			let rel = s:ParseRpmVars(rel, relline)
 		else
 			let include_release_info = 0
 		endif
@@ -123,6 +126,34 @@ if !exists("*s:SpecChangelog")
 		endif
 	endfunction
 endif
+
+function s:ParseRpmVars(str, strline)
+	let end = -1
+	let ret = ""
+	while (1)
+		let start = match(a:str, "\%{", end+1)
+		if (start == -1)
+			let ret = ret . strpart(a:str, end+1)
+			break
+		endif
+		let ret = ret . strpart(a:str, end+1, start-(end+1))
+		let end = match(a:str, "}", start)
+		if (end == -1)
+			let ret = ret . strpart(a:str, start)
+			break
+		endif
+		let varname = strpart(a:str, start+2, end-(start+2))
+		execute a:strline
+		let definestr = "^[ \t]*%define[ \t]\\+" . varname . "[ \t]\\+\\(.*\\)$"
+		let linenum = search(definestr, "bW")
+		if (linenum != -1)
+			let ret = ret .  substitute(getline(linenum), definestr, "\\1", "")
+		else
+			let ret = ret . strpart(str, start, end+1-start)
+		endif
+	endwhile
+	return ret
+endfunction
 
 " The following lines, along with the macros/matchit.vim plugin,
 " make it easy to navigate the different sections of a spec file

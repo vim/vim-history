@@ -1,4 +1,4 @@
-*usr_24.txt*	For Vim version 6.1.  Last change: 2001 Sep 27
+*usr_24.txt*	For Vim version 6.2a.  Last change: 2002 Jul 30
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -30,7 +30,7 @@ Table of contents: |usr_toc.txt|
 
 The <BS> key was already mentioned.  It deletes the character just before the
 cursor.  The <Del> key does the same for the character under (after) the
-cursor).
+cursor.
    When you typed a whole word wrong, use CTRL-W:
 
 	The horse had fallen to the sky ~
@@ -229,14 +229,14 @@ and go one directory level deeper, use CTRL-X CTRL-F again:
 
 	the file is found in /usr/X11R6/ ~
 
-The results depend on what is found in your file syste, of course.  The
+The results depend on what is found in your file system, of course.  The
 matches are sorted alphabetically.
 
 ==============================================================================
 *24.4*	Repeating an insert
 
 If you press CTRL-A, the editor inserts the text you typed the last time you
-were in insert mode.
+were in Insert mode.
    Assume, for example, that you have a file that begins with the following:
 
 	"file.h" ~
@@ -344,7 +344,7 @@ use the following command: >
 
 	:iabbrev ad advertisement
 
-Now, when you type "ad", the whole word 'advertisement" will be inserted into
+Now, when you type "ad", the whole word "advertisement" will be inserted into
 the text.  This is triggered by typing a character that can't be part of a
 word, for example a space:
 
@@ -437,8 +437,8 @@ abbreviation for "fresh", but that's very unlikely).
 	:abclear
 
 ":unabbreviate" and ":abclear" also come in the variants for Insert mode
-("iunabbeviate and ":iabclear") and Command-line mode (":cunabbreviate" and
-"cabclear").
+(":iunabbeviate and ":iabclear") and Command-line mode (":cunabbreviate" and
+":cabclear").
 
 
 REMAPPING ABBREVIATIONS

@@ -1,6 +1,6 @@
 " Matlab indent file
 " Language:	Matlab
-" Maintainer:	Christophe Poucet<cpoucet@esat.kuleuven.ac.be>
+" Maintainer:	Christophe Poucet <christophe.poucet@pandora.be>
 " Last Change:	6 January, 2001
 
 " Only load this indent file when no other was loaded.

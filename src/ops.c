@@ -35,9 +35,16 @@
 #   define PLUS_REGISTER	STAR_REGISTER	    /* there is only one */
 #  endif
 #endif
+#ifdef FEAT_DND
+# define TILDE_REGISTER		(PLUS_REGISTER + 1)
+#endif
 
 #ifdef FEAT_CLIPBOARD
-# define NUM_REGISTERS		(PLUS_REGISTER + 1)
+# ifdef FEAT_DND
+#  define NUM_REGISTERS		(TILDE_REGISTER + 1)
+# else
+#  define NUM_REGISTERS		(PLUS_REGISTER + 1)
+# endif
 #else
 # define NUM_REGISTERS		37
 #endif
@@ -799,6 +806,9 @@ valid_yank_reg(regname, writing)
 	    || regname == '*'
 	    || regname == '+'
 #endif
+#ifdef FEAT_DND
+	    || (!writing && regname == '~')
+#endif
 							)
 	return TRUE;
     return FALSE;
@@ -843,6 +853,10 @@ get_yank_register(regname, writing)
     /* When clipboard is not available, use register 0 instead of '+' */
     else if (clip_plus.available && regname == '+')
 	i = PLUS_REGISTER;
+#endif
+#ifdef FEAT_DND
+    else if (!writing && regname == '~')
+	i = TILDE_REGISTER;
 #endif
     else		/* not 0-9, a-z, A-Z or '-': use register 0 */
 	i = 0;
@@ -4856,7 +4870,7 @@ read_viminfo_register(virp, force)
     }
     if (!ASCII_ISALNUM(*str) && *str != '-')
     {
-	if (viminfo_error(_("Illegal register name"), virp->vir_line))
+	if (viminfo_error("E577: ", _("Illegal register name"), virp->vir_line))
 	    return TRUE;	/* too many errors, pretend end-of-file */
 	do_it = FALSE;
     }
@@ -4956,6 +4970,11 @@ write_viminfo_registers(fp)
 	if (i == STAR_REGISTER || i == PLUS_REGISTER)
 	    continue;
 #endif
+#ifdef FEAT_DND
+	/* Neither do we want the '~' register */
+	if (i == TILDE_REGISTER)
+	    continue;
+#endif
 	switch (y_regs[i].y_type)
 	{
 	    case MLINE:
@@ -4970,7 +4989,7 @@ write_viminfo_registers(fp)
 		break;
 #endif
 	    default:
-		sprintf((char *)IObuff, _("Unknown register type %d"),
+		sprintf((char *)IObuff, _("E574: Unknown register type %d"),
 		    y_regs[i].y_type);
 		emsg(IObuff);
 		type = (char_u *)"LINE";
@@ -5039,7 +5058,7 @@ x11_export_final_selection()
 
 # ifdef FEAT_GUI
     if (gui.in_use)
-	dpy = gui.dpy;
+	dpy = X_DISPLAY;
     else
 # endif
 # ifdef FEAT_XCLIPBOARD
@@ -5259,6 +5278,27 @@ may_set_selection()
 # endif
 
 #endif /* FEAT_CLIPBOARD || PROTO */
+
+
+#if defined(FEAT_DND) || defined(PROTO)
+/*
+ * Replace the contents of the '~' register with str.
+ */
+    void
+dnd_yank_drag_data(str, len)
+    char_u	*str;
+    long	len;
+{
+    struct yankreg *curr;
+
+    curr = y_current;
+    y_current = &y_regs[TILDE_REGISTER];
+    free_yank_all();
+    str_to_reg(y_current, MCHAR, str, len);
+    y_current = curr;
+}
+#endif /* FEAT_DND */
+
 
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*

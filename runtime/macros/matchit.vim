@@ -1,7 +1,8 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: February 28, 2002
+"  Last Change: June 12, 2002
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.4, for Vim 6.1
+"  Version:     1.7, for Vim 6.1
+"  URL:		http://www.vim.org/script.php?script_id=39
 
 " Documentation:
 "  The documentation is in a separate file, matchit.txt .
@@ -23,11 +24,16 @@
 "  variables.  See the MatchDebug() function, below, for details.
 
 " TODO:  I should think about multi-line patterns for b:match_words.
+"   This would require an option:  how many lines to scan (default 1).
+"   This would be useful for Python, maybe also for *ML.
 " TODO:  Maybe I should add a menu so that people will actually use some of
-" the features that I have implemented.
+"   the features that I have implemented.
 " TODO:  Eliminate the MultiMatch function.  Add yet another argument to
-" Match_wrapper() instead.
+"   Match_wrapper() instead.
 " TODO:  Allow :let b:match_words = '\(\(foo\)\(bar\)\):\3\2:end\1'
+" TODO:  Make backrefs safer by using '\V' (very no-magic).
+" TODO:  Add a level of indirection, so that custom % scripts can use my
+"   work but extend it.
 
 " allow user to prevent loading
 " and prevent duplicate loading
@@ -58,6 +64,9 @@ vmap ]% <Esc>]%m'gv``
 onoremap <silent> [% v:<C-U>call <SID>MultiMatch("bW", "o") <CR>
 onoremap <silent> ]% v:<C-U>call <SID>MultiMatch("W",  "o") <CR>
 
+" text object:
+vmap a% <Esc>[%v%
+
 " Auto-complete mappings:  (not yet "ready for prime time")
 " TODO Read :help write-plugin for the "right" way to let the user
 " specify a key binding.
@@ -73,10 +82,6 @@ onoremap <silent> ]% v:<C-U>call <SID>MultiMatch("W",  "o") <CR>
 "   execute "inoremap " . g:match_gthhoh . ' <C-O>:call <SID>Gthhoh()<CR>'
 " endif " gthhoh = "Get the heck out of here!"
 
-" Highlight group for error messages.  The user may choose to set this
-" to be invisible.
-hi link MatchError WarningMsg
-
 let s:notslash = '\\\@<!\%(\\\\\)*'
 
 function! s:Match_wrapper(word, forward, mode) range
@@ -87,14 +92,14 @@ function! s:Match_wrapper(word, forward, mode) range
   endif
   let restore_options = " ve=" . &ve . restore_options
   set ve=
-  " In s:CleanUp(), we may need to check whether the cursor moved forward.
-  let startline = line(".")
-  let startcol = col(".")
   " If this function was called from Visual mode, make sure that the cursor
   " is at the correct end of the Visual range:
   if a:mode == "v"
     execute "normal! gv\<Esc>"
   endif
+  " In s:CleanUp(), we may need to check whether the cursor moved forward.
+  let startline = line(".")
+  let startcol = col(".")
   " Use default behavior if called with a count or if no patterns are defined.
   if v:count
     exe "normal! " . v:count . "%"
@@ -156,7 +161,7 @@ function! s:Match_wrapper(word, forward, mode) range
   if a:word != ''
     " word given
     if a:word !~ s:all
-      echohl MatchError|echo 'Missing rule for word:"'.a:word.'"'|echohl NONE
+      echohl WarningMsg|echo 'Missing rule for word:"'.a:word.'"'|echohl NONE
       return s:CleanUp(restore_options, a:mode, startline, startcol)
     endif
     let matchline = a:word
@@ -164,10 +169,6 @@ function! s:Match_wrapper(word, forward, mode) range
     let prefix = '^\%('
     let suffix = '\)$'
   " Now the case when "word" is not given
-  elseif matchend(matchline, '.*' . s:all) < startcol
-    " there is no special word in this line || it ends before the cursor
-    echohl MatchError | echo "No matching rule applies here" | echohl NONE
-    return s:CleanUp(restore_options, a:mode, startline, startcol)
   else	" Find the match that ends on or after the cursor and set curcol.
     let regexp = s:Wholematch(matchline, s:all, startcol-1)
     let curcol = match(matchline, regexp)
@@ -407,11 +408,7 @@ endfun
 " let j      = matchend(getline("."), regexp)
 " let match  = matchstr(getline("."), regexp)
 fun! s:Wholematch(string, pat, start)
-  if a:pat =~ '^\\%\=(.*\\)$'
-    let group = a:pat
-  else
-    let group = '\(' . a:pat . '\)'
-  endif
+  let group = '\%(' . a:pat . '\)'
   let prefix = (a:start ? '\(^.\{,' . a:start . '}\)\zs' : '^')
   let len = strlen(a:string)
   let suffix = (a:start+1 < len ? '\(.\{,'.(len-a:start-1).'}$\)\@=' : '$')
@@ -849,7 +846,7 @@ aug Matchit
   \ '\<!loopondimensions\>\|\<!looponselected\>:\<!endloop\>'
   \ | endif
   " HTML:  thanks to Johannes Zellner.
-    au FileType html,jsp if !exists("b:match_words") |
+    au FileType html,jsp,php if !exists("b:match_words") |
       \	let b:match_ignorecase = 1 |
       \	let b:match_skip = 's:Comment' |
       \ let b:match_words = '<:>,' .
@@ -883,7 +880,8 @@ aug Matchit
   " - match <!, > inlined dtd's. This is not perfect, as it
   "   gets confused for example by
   "       <!ENTITY gt ">">
-  au! FileType xml,sgml,entity if !exists("b:match_words") |
+  au! FileType xml,sgml,entity,xslt,svg,xhtml,xsl,xsd
+    \ if !exists("b:match_words") |
     \ let b:match_ignorecase=0 | let b:match_words =
     \ '<:>,' .
     \ '<\@<=!\[CDATA\[:]]>,'.
@@ -897,4 +895,4 @@ aug END
 
 let &cpo = s:save_cpo
 
-" vim:sts=2:sw=2:
+" vim:sts=2:sw=2:ff=unix:

@@ -120,27 +120,6 @@
 #endif
 
 /*
- * When generating prototypes for Win32 on Unix, these lines make the syntax
- * errors disappear.  They do not need to be correct.
- */
-#ifdef PROTO
-# define HANDLE int
-# define SMALL_RECT int
-# define COORD int
-# define SHORT int
-# define WORD int
-# define DWORD int
-# define BOOL int
-# define LPSTR int
-# define KEY_EVENT_RECORD int
-# define MOUSE_EVENT_RECORD int
-# define WINAPI
-# define CONSOLE_CURSOR_INFO int
-# define LPCSTR char_u *
-#endif
-
-
-/*
  * Some simple debugging macros that look and behave a lot like their
  * namesakes in MFC.
  */

@@ -42,7 +42,7 @@ menutrans &Redo<Tab>^R			&Ponów<Tab>^R
 menutrans Rep&eat<Tab>\.		P&owtórz<Tab>\.
 menutrans Cu&t<Tab>"+x			W&ytnij<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopiuj<Tab>"+y
-menutrans &Paste<Tab>"+P			&Wklej<Tab>"+p
+menutrans &Paste<Tab>"+gP		&Wklej<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Wstaw\ p&rzed<Tab>[p
 menutrans Put\ &After<Tab>]p		Wstaw\ p&o<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Z&aznacz\ ca³oœæ<Tab>ggVG

@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.1.  Last change: 2003 Mar 12
+*sign.txt*      For Vim version 6.2a.  Last change: 2003 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -59,7 +59,7 @@ And here is the command to delete it again: >
 	:sign unplace 2
 
 
-DEFINING A SIGN.				*:sign-define* *E255* *E160*
+DEFINING A SIGN.			*:sign-define* *E255* *E160* *E612*
 
 :sign define {name} {argument}...
 		Define a new sign or set attributes for an existing sign.
@@ -70,10 +70,15 @@ DEFINING A SIGN.				*:sign-define* *E255* *E160*
 		Accepted arguments:
 
 	icon={pixmap}
-		Define the file name where the pixmap can be found.  The
-		pixmap should fit in the place of two characters.  This is not
-		checked.  If the pixmap is too big it will cause redraw
-		problems.
+		Define the file name where the bitmap can be found.  Should be
+		a full path.  The bitmap should fit in the place of two
+		characters.  This is not checked.  If the bitmap is too big it
+		will cause redraw problems.  Only GTK 2 can scale the bitmap
+		to fit the space available.
+			toolkit		supports ~
+			GTK 1		pixmap (.xpm)
+			GTK 2		many
+			Motif		pixmap (.xpm)
 
 	linehl={group}
 		Highlighting group used for the whole line the sign is placed

@@ -1,4 +1,4 @@
-*usr_90.txt*	For Vim version 6.1.  Last change: 2001 Oct 23
+*usr_90.txt*	For Vim version 6.2a.  Last change: 2002 Jul 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -66,18 +66,18 @@ Or use the home site ftp.vim.org, if you think it's fast enough.  Go to the
 embedded in the file name.  You will want to get the most recent version.
    You can get the files for Unix in two ways: One big archive that contains
 everything, or four smaller ones that each fit on a floppy disk.  For version
-6.0 the single big one is called:
+6.1 the single big one is called:
 
-	vim-6.0.tar.bz2 ~
+	vim-6.1.tar.bz2 ~
 
 You need the bzip2 program to uncompress it.  If you don't have it, get the
-four smaller files, which can be uncompressed with gzip.  For Vim 6.0 they are
+four smaller files, which can be uncompressed with gzip.  For Vim 6.1 they are
 called:
 
-	vim-6.0-src1.tar.gz ~
-	vim-6.0-src2.tar.gz ~
-	vim-6.0-rt1.tar.gz ~
-	vim-6.0-rt2.tar.gz ~
+	vim-6.1-src1.tar.gz ~
+	vim-6.1-src2.tar.gz ~
+	vim-6.1-rt1.tar.gz ~
+	vim-6.1-rt2.tar.gz ~
 
 
 COMPILING
@@ -90,19 +90,19 @@ First create a top directory to work in, for example: >
 Then unpack the archives there.  If you have the one big archive, you unpack
 it like this: >
 
-	bzip2 -d -c path/vim-6.0.tar.bz2 | tar xf -
+	bzip2 -d -c path/vim-6.1.tar.bz2 | tar xf -
 
 Change "path" to where you have downloaded the file.
 
-	gzip -d path/vim-6.0-src1.tar.gz | tar xf -
-	gzip -d path/vim-6.0-src2.tar.gz | tar xf -
-	gzip -d path/vim-6.0-rt1.tar.gz | tar xf -
-	gzip -d path/vim-6.0-rt2.tar.gz | tar xf -
+	gzip -d path/vim-6.1-src1.tar.gz | tar xf -
+	gzip -d path/vim-6.1-src2.tar.gz | tar xf -
+	gzip -d path/vim-6.1-rt1.tar.gz | tar xf -
+	gzip -d path/vim-6.1-rt2.tar.gz | tar xf -
 
 If you are satisfied with getting the default features, and your environment
 is setup properly, you should be able to compile Vim with just this: >
 
-	cd vim60/src
+	cd vim61/src
 	make
 
 The make program will run configure and compile everything.  Further on we
@@ -231,9 +231,9 @@ provide the fastest download:
 Or use the home site ftp.vim.org, if you think it's fast enough.  Go to the
 "pc" directory and you'll find a list of files there.  The version number is
 embedded in the file name.  You will want to get the most recent version.
-We will use "60" here, which is version 6.0.
+We will use "61" here, which is version 6.1.
 
-	gvim60.exe		The self-installing archive.
+	gvim61.exe		The self-installing archive.
 
 This is all you need for the second method.  Just launch the executable, and
 follow the prompts.
@@ -241,34 +241,34 @@ follow the prompts.
 For the first method you must chose one of the binary archives.  These are
 available:
 
-	gvim60.zip		The normal MS-Windows GUI version.
-	gvim60ole.zip		The MS-Windows GUI version with OLE support.
+	gvim61.zip		The normal MS-Windows GUI version.
+	gvim61ole.zip		The MS-Windows GUI version with OLE support.
 				Uses more memory, supports interfacing with
 				other OLE applications.
-	vim60w32.zip		32 bit MS-Windows console version.  For use in
+	vim61w32.zip		32 bit MS-Windows console version.  For use in
 				a Win NT/2000/XP console.  Does not work well
 				on Win 95/98.
-	vim60d32.zip		32 bit MS-DOS version.  For use in the
+	vim61d32.zip		32 bit MS-DOS version.  For use in the
 				Win 95/98 console window.
-	vim60d16.zip		16 bit MS-DOS version.  Only for old systems.
+	vim61d16.zip		16 bit MS-DOS version.  Only for old systems.
 				Does not support long filenames.
 
 You only need one of them.  Although you could install both a GUI and a
 console version.  You always need to get the archive with runtime files.
 
-	vim60rt.zip		The runtime files.
+	vim61rt.zip		The runtime files.
 
 Use your un-zip program to unpack the files.  For example, using the "unzip"
 program: >
 
 	cd c:\
-	unzip path\gvim60.zip
-	unzip path\vim60rt.zip
+	unzip path\gvim61.zip
+	unzip path\vim61rt.zip
 
-This will unpack the files in the directory "c:\vim\vim60".  If you already
+This will unpack the files in the directory "c:\vim\vim61".  If you already
 have a "vim" directory somewhere, you will want to move to the directory just
 above it.
-   Now change to the "vim\vim60" directory and run the install program: >
+   Now change to the "vim\vim61" directory and run the install program: >
 
 	install
 
@@ -433,7 +433,7 @@ However, if you have deleted the original files or you used an archive that
 someone supplied, you can't do this.  Do delete the files manually, here is an
 example for when "/usr/local" was used as the root: >
 
-	rm -rf /usr/local/share/vim/vim60
+	rm -rf /usr/local/share/vim/vim61
 	rm /usr/local/bin/eview
 	rm /usr/local/bin/evim
 	rm /usr/local/bin/ex
@@ -472,7 +472,7 @@ MS-WINDOWS
 
 If you installed Vim with the self-installing archive you can run
 the "uninstall-gui" program located in the same directory as the other Vim
-programs, e.g. "c:\vim\vim60".  You can also launch it from the Start menu if
+programs, e.g. "c:\vim\vim61".  You can also launch it from the Start menu if
 installed the Vim entries there.  This will remove most of the files, menu
 entries and desktop shortcuts.  Some files may remain however, as they need a
 Windows restart before being deleted.
@@ -482,10 +482,10 @@ be careful.
 
 Else, if you installed Vim with the zip archives, the preferred way is to use
 the "uninstal" program (note the missing l at the end).  You can find it in
-the same directory as the "install" program, e.g., "c:\vim\vim60".  This
+the same directory as the "install" program, e.g., "c:\vim\vim61".  This
 should also work from the usual "install/remove software" page.
    However, this only removes the registry entries for Vim.  You have to
-delete the files yourself.  Simply select the directory "vim\vim60" and delete
+delete the files yourself.  Simply select the directory "vim\vim61" and delete
 it recursively.  There should be no files there that you changed, but you
 might want to check that first.
    The "vim" directory probably contains your vimrc file and other runtime

@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	Postfix main.cf configuration
 " Maintainer:	KELEMEN Peter <fuji@elte.hu>
-" Last Change:	2002 Jan 30
-" Version:	0.09
+" Last Change:	2002 May 07
+" Version:	0.10
 " URL:		http://people.inf.elte.hu/~fuji/vim/syntax/pfmain.vim
-" Comment:	Based on Postfix 1.1.2 defaults. (+TLS)
+" Comment:	Based on Postfix 1.1.7 defaults. (+TLS)
 
 if version < 600
 	syntax clear
@@ -191,7 +191,6 @@ syntax keyword pfmainConf service_throttle_time
 syntax keyword pfmainConf setgid_group
 syntax keyword pfmainConf smtp_always_send_ehlo
 syntax keyword pfmainConf smtp_bind_address
-syntax keyword pfmainConf smtp_break_lines
 syntax keyword pfmainConf smtp_connect_timeout
 syntax keyword pfmainConf smtp_data_done_timeout
 syntax keyword pfmainConf smtp_data_init_timeout
@@ -199,6 +198,7 @@ syntax keyword pfmainConf smtp_data_xfer_timeout
 syntax keyword pfmainConf smtp_destination_concurrency_limit
 syntax keyword pfmainConf smtp_destination_recipient_limit
 syntax keyword pfmainConf smtp_helo_timeout
+syntax keyword pfmainConf smtp_line_length_limit
 syntax keyword pfmainConf smtp_mail_timeout
 syntax keyword pfmainConf smtp_never_send_ehlo
 syntax keyword pfmainConf smtp_pix_workaround_delay_time
@@ -427,7 +427,6 @@ syntax match pfmainRef "$\<service_throttle_time\>"
 syntax match pfmainRef "$\<setgid_group\>"
 syntax match pfmainRef "$\<smtp_always_send_ehlo\>"
 syntax match pfmainRef "$\<smtp_bind_address\>"
-syntax match pfmainRef "$\<smtp_break_lines\>"
 syntax match pfmainRef "$\<smtp_connect_timeout\>"
 syntax match pfmainRef "$\<smtp_data_done_timeout\>"
 syntax match pfmainRef "$\<smtp_data_init_timeout\>"
@@ -435,6 +434,7 @@ syntax match pfmainRef "$\<smtp_data_xfer_timeout\>"
 syntax match pfmainRef "$\<smtp_destination_concurrency_limit\>"
 syntax match pfmainRef "$\<smtp_destination_recipient_limit\>"
 syntax match pfmainRef "$\<smtp_helo_timeout\>"
+syntax match pfmainRef "$\<smtp_line_length_limit\>"
 syntax match pfmainRef "$\<smtp_mail_timeout\>"
 syntax match pfmainRef "$\<smtp_never_send_ehlo\>"
 syntax match pfmainRef "$\<smtp_pix_workaround_delay_time\>"

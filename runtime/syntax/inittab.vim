@@ -1,10 +1,9 @@
 " Vim syntax file
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: SysV-compatible init process control file `inittab'
-" Maintainer: David Ne\v{c}as (Yeti), <yeti@physics.muni.cz>
-" Last Change: 2001-07-13
-" URI: http://physics.muni.cz/~yeti/download/inittab.vim
-
+" Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
+" Last Change: 2002-09-13
+" URL: http://physics.muni.cz/~yeti/download/syntax/inittab.vim
 
 " Setup
 if version >= 600
@@ -33,7 +32,7 @@ syn match inittabShCommand "/\S\+" contained
 syn cluster inittabSh add=inittabShOption,inittabShString,inittabShCommand
 
 " Keywords
-syn keyword inittabActionName respawn wait once boot bottwait off ondemand sysinit powerwait powerfail powerokwait powerfailnow ctrlaltdel kbrequest initdefault contained
+syn keyword inittabActionName respawn wait once boot bootwait off ondemand sysinit powerwait powerfail powerokwait powerfailnow ctrlaltdel kbrequest initdefault contained
 
 " Line parser
 syn match inittabId "^[[:alnum:]~]\{1,4}" nextgroup=inittabColonRunLevels,inittabError
@@ -54,21 +53,21 @@ if version >= 508 || !exists("did_inittab_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink inittabComment        Comment
-  HiLink inittabFixme          Todo
-  HiLink inittabActionName     Type
-  HiLink inittabError          Error
-  HiLink inittabId             Identifier
-  HiLink inittabRunLevels      Special
+  HiLink inittabComment Comment
+  HiLink inittabFixme Todo
+  HiLink inittabActionName Type
+  HiLink inittabError Error
+  HiLink inittabId Identifier
+  HiLink inittabRunLevels Special
 
-  HiLink inittabColonProcess   inittabColon
-  HiLink inittabColonAction    inittabColon
+  HiLink inittabColonProcess inittabColon
+  HiLink inittabColonAction inittabColon
   HiLink inittabColonRunLevels inittabColon
-  HiLink inittabColon          PreProc
+  HiLink inittabColon PreProc
 
-  HiLink inittabShString       String
-  HiLink inittabShOption       Special
-  HiLink inittabShCommand      Statement
+  HiLink inittabShString String
+  HiLink inittabShOption Special
+  HiLink inittabShCommand Statement
 
   delcommand HiLink
 endif

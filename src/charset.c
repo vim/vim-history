@@ -415,7 +415,7 @@ str_foldcase(str, len)
     ga_init2(&ga, 1, 10);
     if (ga_grow(&ga, len + 1) == FAIL)
 	return NULL;
-    mch_memmove(ga.ga_data, str, len);
+    mch_memmove(ga.ga_data, str, (size_t)len);
     GA_CHAR(len) = NUL;
     ga.ga_len = len;
     ga.ga_room -= len;
@@ -1334,31 +1334,43 @@ getvvcol(wp, pos, start, cursor, end)
     colnr_T	*end;
 {
     colnr_T	col;
+    colnr_T	coladd;
+    colnr_T	endadd;
+# ifdef FEAT_MBYTE
     char_u	*ptr;
+# endif
 
     if (virtual_active())
     {
 	/* For virtual mode, only want one value */
 	getvcol(wp, pos, &col, NULL, NULL);
 
-	if (pos->coladd > 0)
+	coladd = pos->coladd;
+	endadd = 0;
+# ifdef FEAT_MBYTE
+	/* Cannot put the cursor on part of a wide character. */
+	ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
+	if (pos->col < STRLEN(ptr))
 	{
-	    /* Adjust for multiwide char */
-	    ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
-	    if (pos->col <= STRLEN(ptr))
+	    int c = (*mb_ptr2char)(ptr);
+
+	    if (c != TAB && vim_isprintc(c))
 	    {
-		ptr += pos->col;
-		if (*ptr != TAB && *ptr != NUL && ptr2cells(ptr) > 1)
-		    pos->coladd = 0;
+		endadd = char2cells(c) - 1;
+		if (coladd >= endadd)
+		    coladd -= endadd;
+		else
+		    coladd = 0;
 	    }
-	    col += pos->coladd;
 	}
+# endif
+	col += coladd;
 	if (start != NULL)
 	    *start = col;
 	if (cursor != NULL)
 	    *cursor = col;
 	if (end != NULL)
-	    *end = col;
+	    *end = col + endadd;
     }
     else
 	getvcol(wp, pos, start, cursor, end);

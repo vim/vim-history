@@ -1,8 +1,8 @@
 " Vim filetype plugin file
 " Language:	Java
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Change:	Sun, 07 Oct 2001 21:41:05 Eastern Daylight Time
-" Current version is at http://mywebpage.netscape.com/sharppeople/vim/ftplugin
+" Last Change:	2002 Oct 24
+" URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")

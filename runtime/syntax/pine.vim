@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Pine (email program) run commands
 " Maintainer:	David Pascoe <pascoedj@spamcop.net>
-" Last Change:	Sun Feb 24 18:08:58 CET 2002, updated for pine 4.44
+" Last Change:	Thu Feb 27 10:18:48 WST 2003, update for pine 4.53
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -26,8 +26,12 @@ syn keyword pineConfig bugs-address
 syn keyword pineConfig bugs-fullname
 syn keyword pineConfig character-set
 syn keyword pineConfig color-style
+syn keyword pineConfig compose-mime
 syn keyword pineConfig composer-wrap-column
+syn keyword pineConfig current-indexline-style
+syn keyword pineConfig cursor-style
 syn keyword pineConfig customized-hdrs
+syn keyword pineConfig debug-memory
 syn keyword pineConfig default-composer-hdrs
 syn keyword pineConfig default-fcc
 syn keyword pineConfig default-saved-msg-folder
@@ -37,13 +41,16 @@ syn keyword pineConfig display-filters
 syn keyword pineConfig download-command
 syn keyword pineConfig download-command-prefix
 syn keyword pineConfig editor
+syn keyword pineConfig elm-style-save
 syn keyword pineConfig empty-header-message
 syn keyword pineConfig fcc-name-rule
+syn keyword pineConfig feature-level
 syn keyword pineConfig feature-list
 syn keyword pineConfig file-directory
 syn keyword pineConfig folder-collections
 syn keyword pineConfig folder-extension
 syn keyword pineConfig folder-sort-rule
+syn keyword pineConfig font-char-set
 syn keyword pineConfig font-name
 syn keyword pineConfig font-size
 syn keyword pineConfig font-style
@@ -51,6 +58,7 @@ syn keyword pineConfig forced-abook-entry
 syn keyword pineConfig form-letter-folder
 syn keyword pineConfig global-address-book
 syn keyword pineConfig goto-default-rule
+syn keyword pineConfig header-in-reply
 syn keyword pineConfig image-viewer
 syn keyword pineConfig inbox-path
 syn keyword pineConfig incoming-archive-folders
@@ -95,16 +103,21 @@ syn keyword pineConfig newsrc-path
 syn keyword pineConfig nntp-server
 syn keyword pineConfig normal-background-color
 syn keyword pineConfig normal-foreground-color
+syn keyword pineConfig old-style-reply
 syn keyword pineConfig operating-dir
+syn keyword pineConfig patterns
 syn keyword pineConfig patterns-filters
+syn keyword pineConfig patterns-filters2
 syn keyword pineConfig patterns-indexcolors
 syn keyword pineConfig patterns-other
 syn keyword pineConfig patterns-roles
 syn keyword pineConfig patterns-scores
+syn keyword pineConfig patterns-scores2
 syn keyword pineConfig personal-name
 syn keyword pineConfig personal-print-category
 syn keyword pineConfig personal-print-command
 syn keyword pineConfig postponed-folder
+syn keyword pineConfig print-font-char-set
 syn keyword pineConfig print-font-name
 syn keyword pineConfig print-font-size
 syn keyword pineConfig print-font-style
@@ -130,12 +143,14 @@ syn keyword pineConfig reverse-foreground-color
 syn keyword pineConfig rsh-command
 syn keyword pineConfig rsh-open-timeout
 syn keyword pineConfig rsh-path
+syn keyword pineConfig save-by-sender
 syn keyword pineConfig saved-msg-name-rule
 syn keyword pineConfig scroll-margin
 syn keyword pineConfig selectable-item-background-color
 syn keyword pineConfig selectable-item-foreground-color
 syn keyword pineConfig sending-filters
 syn keyword pineConfig sendmail-path
+syn keyword pineConfig show-all-characters
 syn keyword pineConfig signature-file
 syn keyword pineConfig smtp-server
 syn keyword pineConfig sort-key
@@ -153,13 +168,20 @@ syn keyword pineConfig tcp-open-timeout
 syn keyword pineConfig tcp-query-timeout
 syn keyword pineConfig tcp-read-warning-timeout
 syn keyword pineConfig tcp-write-warning-timeout
+syn keyword pineConfig threading-display-style
+syn keyword pineConfig threading-expanded-character
+syn keyword pineConfig threading-index-style
+syn keyword pineConfig threading-indicator-character
+syn keyword pineConfig threading-lastreply-character
 syn keyword pineConfig title-background-color
 syn keyword pineConfig title-foreground-color
+syn keyword pineConfig titlebar-color-style
 syn keyword pineConfig upload-command
 syn keyword pineConfig upload-command-prefix
 syn keyword pineConfig url-viewers
 syn keyword pineConfig use-only-domain-name
 syn keyword pineConfig user-domain
+syn keyword pineConfig user-id
 syn keyword pineConfig user-id
 syn keyword pineConfig user-input-timeout
 syn keyword pineConfig viewer-hdr-colors
@@ -175,6 +197,7 @@ syn keyword pineOption auto-move-read-msgs
 syn keyword pineOption auto-open-next-unread
 syn keyword pineOption auto-unzoom-after-apply
 syn keyword pineOption auto-zoom-after-select
+syn keyword pineOption cache-remote-pinerc
 syn keyword pineOption check-newmail-when-quitting
 syn keyword pineOption combined-addrbook-display
 syn keyword pineOption combined-folder-display
@@ -187,7 +210,9 @@ syn keyword pineOption compose-sets-newsgroup-without-confirm
 syn keyword pineOption confirm-role-even-for-default
 syn keyword pineOption continue-tab-without-confirm
 syn keyword pineOption delete-skips-deleted
+syn keyword pineOption disable-2022-jp-conversions
 syn keyword pineOption disable-busy-alarm
+syn keyword pineOption disable-charset-conversions
 syn keyword pineOption disable-config-cmd
 syn keyword pineOption disable-keyboard-lock-cmd
 syn keyword pineOption disable-keymenu
@@ -198,6 +223,7 @@ syn keyword pineOption disable-pipes-in-templates
 syn keyword pineOption disable-roles-setup-cmd
 syn keyword pineOption disable-roles-sig-edit
 syn keyword pineOption disable-roles-template-edit
+syn keyword pineOption disable-sender
 syn keyword pineOption disable-shared-namespaces
 syn keyword pineOption disable-signature-edit-cmd
 syn keyword pineOption disable-take-last-comma-first
@@ -219,6 +245,7 @@ syn keyword pineOption enable-exit-via-lessthan-command
 syn keyword pineOption enable-fast-recent-test
 syn keyword pineOption enable-flag-cmd
 syn keyword pineOption enable-flag-screen-implicitly
+syn keyword pineOption enable-full-header-and-text
 syn keyword pineOption enable-full-header-cmd
 syn keyword pineOption enable-goto-in-file-browser
 syn keyword pineOption enable-incoming-folders
@@ -259,12 +286,15 @@ syn keyword pineOption include-attachments-in-reply
 syn keyword pineOption include-header-in-reply
 syn keyword pineOption include-text-in-reply
 syn keyword pineOption ldap-result-to-addrbook-add
+syn keyword pineOption mark-fcc-seen
 syn keyword pineOption mark-for-cc
 syn keyword pineOption news-approximates-new-status
 syn keyword pineOption news-deletes-across-groups
 syn keyword pineOption news-offers-catchup-on-close
 syn keyword pineOption news-post-without-validation
 syn keyword pineOption news-read-in-newsrc-order
+syn keyword pineOption next-thread-without-confirm
+syn keyword pineOption old-growth
 syn keyword pineOption pass-control-characters-as-is
 syn keyword pineOption prefer-plain-text
 syn keyword pineOption preserve-start-stop-characters
@@ -272,7 +302,7 @@ syn keyword pineOption print-formfeed-between-messages
 syn keyword pineOption print-includes-from-line
 syn keyword pineOption print-index-enabled
 syn keyword pineOption print-offers-custom-cmd-prompt
-syn keyword pineOption quell-berkeley-format-timezone
+syn keyword pineOption quell-attachment-extra-prompt
 syn keyword pineOption quell-berkeley-format-timezone
 syn keyword pineOption quell-content-id
 syn keyword pineOption quell-dead-letter-on-cancel
@@ -281,10 +311,12 @@ syn keyword pineOption quell-extra-post-prompt
 syn keyword pineOption quell-folder-internal-msg
 syn keyword pineOption quell-imap-envelope-update
 syn keyword pineOption quell-lock-failure-warnings
+syn keyword pineOption quell-maildomain-warning
 syn keyword pineOption quell-news-envelope-update
 syn keyword pineOption quell-partial-fetching
 syn keyword pineOption quell-ssl-largeblocks
 syn keyword pineOption quell-status-message-beeping
+syn keyword pineOption quell-timezone-comment-when-sending
 syn keyword pineOption quell-user-lookup-in-passwd-file
 syn keyword pineOption quit-without-confirm
 syn keyword pineOption reply-always-uses-reply-to
@@ -292,17 +324,24 @@ syn keyword pineOption save-aggregates-copy-sequence
 syn keyword pineOption save-will-advance
 syn keyword pineOption save-will-not-delete
 syn keyword pineOption save-will-quote-leading-froms
+syn keyword pineOption scramble-message-id
 syn keyword pineOption select-without-confirm
-syn keyword pineOption separate-folder-and-directory-display
+syn keyword pineOption selectable-item-nobold
+syn keyword pineOption separate-folder-and-directory-entries
 syn keyword pineOption show-cursor
 syn keyword pineOption show-plain-text-internally
 syn keyword pineOption show-selected-in-boldface
 syn keyword pineOption signature-at-bottom
 syn keyword pineOption single-column-folder-list
+syn keyword pineOption slash-collapses-entire-thread
+syn keyword pineOption spell-check-before-sending
+syn keyword pineOption store-window-position-in-config
 syn keyword pineOption strip-from-sigdashes-on-reply
 syn keyword pineOption tab-visits-next-new-message-only
 syn keyword pineOption termdef-takes-precedence
+syn keyword pineOption thread-index-shows-important-color
 syn keyword pineOption try-alternative-authentication-driver-first
+syn keyword pineOption unselect-will-not-advance
 syn keyword pineOption use-current-dir
 syn keyword pineOption use-function-keys
 syn keyword pineOption use-sender-not-x-sender

@@ -98,6 +98,7 @@ SRC = \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -138,6 +139,7 @@ OBJ = \
 	ex_cmds.o \
 	ex_cmds2.o \
 	ex_docmd.o \
+	ex_eval.o \
 	ex_getln.o \
 	fileio.o \
 	fold.o \
@@ -178,6 +180,7 @@ PRO = \
 	proto/ex_cmds.pro \
 	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
+	proto/ex_eval.pro \
 	proto/ex_getln.pro \
 	proto/fileio.pro \
 	proto/fold.pro \
@@ -281,6 +284,8 @@ ex_cmds2.o:		ex_cmds2.c
 proto/ex_cmds2.pro:	ex_cmds2.c
 ex_docmd.o:		ex_docmd.c ex_cmds.h
 proto/ex_docmd.pro:	ex_docmd.c ex_cmds.h
+ex_eval.o:		ex_eval.c ex_cmds.h
+proto/ex_eval.pro:	ex_eval.c ex_cmds.h
 ex_getln.o:		ex_getln.c
 proto/ex_getln.pro:	ex_getln.c
 fileio.o:		fileio.c

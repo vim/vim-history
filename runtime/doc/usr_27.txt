@@ -1,4 +1,4 @@
-*usr_27.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_27.txt*	For Vim version 6.2a.  Last change: 2002 Dec 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -34,7 +34,7 @@ only one of them.
 	:set ignorecase
 
 Search for "include" again, and now it will match "Include", "INCLUDE" and
-"InClUDe".  (set the 'hlsearch' option to quickly see where a pattern
+"InClUDe".  (Set the 'hlsearch' option to quickly see where a pattern
 matches.)
    You can switch this off again with: >
 
@@ -78,8 +78,8 @@ matter if 'ignorecase' or 'smartcase' was changed.
 	Note:
 	The use of "\" items in search patterns depends on the 'magic' option.
 	In this chapters we will assume 'magic' is on, because that is the
-	standard and recommended setting.  If you would change it, many search
-	patterns would suddenly become invalid.
+	standard and recommended setting.  If you would change 'magic', many
+	search patterns would suddenly become invalid.
 
 	Note:
 	If your search takes much longer than you expected, you can interrupt
@@ -161,7 +161,7 @@ cursor onto the last character of the match.  The command: >
 
 	/const/e
 
-puts the cursor on the t of "const".
+puts the cursor on the "t" of "const".
    From that position, adding a number moves forward that many characters.
 This command moves to the character just after the match: >
 
@@ -201,7 +201,7 @@ To repeat with the same offset: >
 
 	/
 
-"n" does the same thing.  To remove a previously used offset: >
+"n" does the same thing.  To repeat while removing a previously used offset: >
 
 	//
 
@@ -379,7 +379,7 @@ There are a few more special cases for [] ranges, see |/[]| for the whole
 story.
 
 
-COMPLIMENTED RANGE
+COMPLEMENTED RANGE
 
 To avoid matching a specific character, use "^" at the start of the range.
 The [] item then matches everything but the characters included.  Example: >
@@ -545,7 +545,7 @@ too.  This can be found with: >
 	/\<\h\w*\>
 
 "\<" and "\>" are used to find only whole words.  "\h" stands for "[A-Za-z_]"
-and "\w" for [0-9A-Za-z_]".
+and "\w" for "[0-9A-Za-z_]".
 
 	Note:
 	"\<" and "\>" depend on the 'iskeyword' option.  If it includes "-",

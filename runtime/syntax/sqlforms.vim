@@ -1,7 +1,7 @@
 " Vim syntax file
 "    Language: SQL*Forms (Oracle 7), based on sql.vim (vim5.0)
 "  Maintainer: Austin Ziegler (austin@halostatue.ca)
-" Last Change: 20010723, updated for latest Vim (5.8+).
+" Last Change: 2002 Jun 25
 " Prev Change: 19980710
 "         URL: http://www.halostatue.ca/vim/syntax/proc.vim
 "
@@ -17,7 +17,12 @@ endif
 
 syntax case ignore
 
-set iskeyword=a-z,A-Z,48-57,_,.,-,>
+if version >= 600
+  setlocal iskeyword=a-z,A-Z,48-57,_,.,-,>
+else
+  set iskeyword=a-z,A-Z,48-57,_,.,-,>
+endif
+
 
     " The SQL reserved words, defined as keywords.
 syntax match sqlTriggers /on-.*$/

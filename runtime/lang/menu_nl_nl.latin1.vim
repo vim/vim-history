@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2002 Mar 09
+" Last Change:	2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -47,7 +47,7 @@ menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
 menutrans Rep&eat<Tab>\.		&Herhalen<Tab>\.
 menutrans Cu&t<Tab>"+x			&Knippen<Tab>"+x
 menutrans &Copy<Tab>"+y			K&opiëeren<Tab>"+y
-menutrans &Paste<Tab>"+P		Plakken<Tab>"+P
+menutrans &Paste<Tab>"+gP		Plakken<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Ervoor\ invoegen<Tab>[p
 menutrans Put\ &After<Tab>]p		Erachter\ invoegen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markeren<Tab>ggVG
@@ -226,6 +226,7 @@ menutrans on/off\ for\ &This\ file	Aan/Uit\ voor\ dit\ Bestand
 menutrans Co&lor\ test		Test\ de\ &Kleuren
 menutrans &Highlight\ test	Test\ de\ Markeringen
 menutrans &Convert\ to\ HTML	Converteren\ naar\ &HTML
+menutrans &Show\ individual\ choices	Toon\ elke\ keuze
 
 " dialog texts
 let menutrans_no_file = "[Geen Bestand]"

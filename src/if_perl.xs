@@ -175,9 +175,9 @@ EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 # define boot_DynaLoader dll_boot_DynaLoader
 
 #ifndef DYNAMIC_PERL /* just generating prototypes */
-# define HANDLE int
-# define XSINIT_t int
-# define XSUBADDR_t int
+typedef int HANDLE;
+typedef int XSINIT_t;
+typedef int XSUBADDR_t;
 #endif
 
 /*
@@ -371,8 +371,7 @@ perl_runtime_link_init(char *libname, int verbose)
 	    FreeLibrary(hPerlLib);
 	    hPerlLib = NULL;
 	    if (verbose)
-		EMSG2(_("E448: Could not load library function %s"),
-						 perl_funcname_table[i].name);
+		EMSG2(_(e_loadfunc), perl_funcname_table[i].name);
 	    return FAIL;
 	}
     }

@@ -2,7 +2,8 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 2001 May 10
+" Last Change: 2002 September 30
+" URL:         http://jeanluc-picard.de/vim/syntax/prolog.vim
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
@@ -28,7 +29,7 @@ syn keyword  prologKeyword      module meta_predicate multifile dynamic
 syn match    prologCharCode     +0'\\\=.+
 syn region   prologString       start=+"+ skip=+\\"+ end=+"+
 syn region   prologAtom         start=+'+ skip=+\\'+ end=+'+
-syn region   prologClauseHead   start=+^[a-z][^(]*(+ end=+:-\|\.\|-->+
+syn region   prologClauseHead   start=+^[a-z][^(]*(+ skip=+\.[^ 	]+ end=+:-\|\.$\|\.[ 	]\|-->+
 
 if !exists("prolog_highlighting_clean")
 

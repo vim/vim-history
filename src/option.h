@@ -679,6 +679,25 @@ EXTERN int	p_tbi;		/* 'ttybuiltin' */
 EXTERN int	p_tf;		/* 'ttyfast' */
 #if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32)
 EXTERN char_u	*p_toolbar;	/* 'toolbar' */
+EXTERN unsigned toolbar_flags;
+# ifdef IN_OPTION_C
+static char *(p_toolbar_values[]) = {"text", "icons", "tooltips", "horiz", NULL};
+# endif
+# define TOOLBAR_TEXT	    0x01
+# define TOOLBAR_ICONS	    0x02
+# define TOOLBAR_TOOLTIPS   0x04
+# define TOOLBAR_HORIZ	    0x08
+#endif
+#if defined(FEAT_TOOLBAR) && defined(FEAT_GUI_GTK) && defined(HAVE_GTK2)
+EXTERN char_u	*p_tbis;	/* 'toolbariconsize' */
+EXTERN unsigned tbis_flags;
+# ifdef IN_OPTION_C
+static char *(p_tbis_values[]) = {"tiny", "small", "medium", "large", NULL};
+# endif
+# define TBIS_TINY	0x01
+# define TBIS_SMALL	0x02
+# define TBIS_MEDIUM	0x04
+# define TBIS_LARGE	0x08
 #endif
 EXTERN long	p_ttyscroll;	/* 'ttyscroll' */
 #if defined(FEAT_MOUSE) && (defined(UNIX) || defined(VMS))

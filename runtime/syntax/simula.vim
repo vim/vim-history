@@ -1,7 +1,8 @@
 " Vim syntax file
 " Language:	Simula
-" Maintainer:	Haakon Riiser <haakon@riiser.net>
-" Last Change:	2001 Apr 25
+" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
+" URL:		http://folk.uio.no/hakonrk/vim/syntax/simula.vim
+" Last Change:	2001 May 15
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

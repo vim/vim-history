@@ -35,6 +35,7 @@ SRC = \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -74,6 +75,7 @@ OBJ =	o/buffer.o \
 	o/ex_cmds.o \
 	o/ex_cmds2.o \
 	o/ex_docmd.o \
+	o/ex_eval.o \
 	o/ex_getln.o \
 	o/fileio.o \
 	o/fold.o \
@@ -140,6 +142,8 @@ o/ex_cmds.o:	ex_cmds.c  $(SYMS)
 o/ex_cmds2.o:	ex_cmds2.c  $(SYMS)
 
 o/ex_docmd.o:	ex_docmd.c  $(SYMS) ex_cmds.h
+
+o/ex_eval.o:	ex_eval.c  $(SYMS) ex_cmds.h
 
 o/ex_getln.o:	ex_getln.c  $(SYMS)
 

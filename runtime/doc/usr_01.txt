@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.1.  Last change: 2002 Jan 15
+*usr_01.txt*	For Vim version 6.2a.  Last change: 2003 Jan 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -116,7 +116,15 @@ available, use the two-letter language code.  For French: >
 
 	vimtutor fr
 
-On non-Unix systems, you have to do a little work:
+For OpenVMS, if Vim has been properly installed, you can start vimtutor from a
+VMS prompt with: >
+
+	@VIM:vimtutor
+
+Optionally add the two-letter language code as above.
+
+
+On other systems, you have to do a little work:
 
 1. Copy the tutor file.  You can do this with Vim (it knows where to find it):
 >
@@ -141,7 +149,7 @@ filename.  For French:
 ==============================================================================
 *01.4*	Copyright					*manual-copyright*
 
-The Vim user manual and reference manual are Copyright (c) 1988-2002 by Bram
+The Vim user manual and reference manual are Copyright (c) 1988-2003 by Bram
 Moolenaar. This material may be distributed only subject to the terms and
 conditions set forth in the Open Publication License, v1.0 or later.  The
 latest version is presently available at:

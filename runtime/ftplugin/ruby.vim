@@ -1,8 +1,8 @@
 " Vim filetype plugin
 " Language:     Ruby
-" Maintainer:   Matt Armstrong <matt@lickey.com>
-" Last Change:  2001/03/24
-" URL: http://www.lickey.com/env/vim/ftplugin/ruby/ruby.vim
+" Maintainer:   Gavin Sinclair <gsinclair@soyabean.com.au>
+" Last Change:  2002/08/12
+" URL: www.soyabean.com.au/gavin/vim/index.html
 
 " Only do this when not done yet for this buffer
 if (exists("b:did_ftplugin"))
@@ -10,12 +10,5 @@ if (exists("b:did_ftplugin"))
 endif
 let b:did_ftplugin = 1
 
-" Set 'formatoptions' to break comment lines but not other lines, and insert
-" the comment leader when hitting <CR> or using "o".
-setlocal fo-=t fo+=croql
-
-" Format comments to be up to 78 characters long
-setlocal tw=78
-
-" Set shift width to 2, the Ruby standard
-setlocal sw=2
+" There are no known setting particularly appropriate for Ruby.  Please
+" contact the maintainer if you think of some.

@@ -3,7 +3,6 @@
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
 " LastChange:	02 May 2001
 " Original:	Yacc, maintained by Dr. Charles E. Campbell, Jr.
-"			<Charles.Campbell@gsfc.nasa.gov>
 " Comment:	     Replaced sourcing c.vim file by ada.vim and rename yacc*
 "		in ayacc*
 

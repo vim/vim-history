@@ -32,7 +32,6 @@ syn match hogEnvvar contained	"[\!]\=\${\I\i*}"
 
 
 " String handling lifted from vim.vim written by Dr. Charles E. Campbell, Jr.
-" <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Try to catch strings, if nothing else matches (therefore it must precede the others!)
 " vmEscapeBrace handles ["]  []"] (ie. stays as string)
 syn region       hogEscapeBrace   oneline contained transparent     start="[^\\]\(\\\\\)*\[\^\=\]\=" skip="\\\\\|\\\]" end="\]"me=e-1

@@ -169,13 +169,13 @@ do_debug(cmd)
 			debug_break_level = -1;
 			break;
 		    case CMD_NEXT:
-			debug_break_level = debug_level;
+			debug_break_level = ex_nesting_level;
 			break;
 		    case CMD_STEP:
 			debug_break_level = 9999;
 			break;
 		    case CMD_FINISH:
-			debug_break_level = debug_level - 1;
+			debug_break_level = ex_nesting_level - 1;
 			break;
 		    case CMD_QUIT:
 			got_int = TRUE;
@@ -188,7 +188,8 @@ do_debug(cmd)
 	    /* don't debug this command */
 	    n = debug_break_level;
 	    debug_break_level = -1;
-	    (void)do_cmdline(cmdline, getexline, NULL, DOCMD_VERBOSE);
+	    (void)do_cmdline(cmdline, getexline, NULL,
+			     DOCMD_VERBOSE|DOCMD_EXCRESET);
 	    debug_break_level = n;
 
 	    vim_free(cmdline);
@@ -233,9 +234,20 @@ static char_u	*debug_breakpoint_name = NULL;
 static linenr_T	debug_breakpoint_lnum;
 
 /*
- * Go to debug mode when a breakpoint was encountered or "debug_level" is
+ * When debugging or a breakpoint is set on a skipped command, no debug prompt
+ * is shown by do_one_cmd().  This situation is indicated by debug_skipped, and
+ * debug_skipped_name is then set to the source name in the breakpoint case.  If
+ * a skipped command decides itself that a debug prompt should be displayed, it
+ * can do so by calling dbg_check_skipped().
+ */
+static int	debug_skipped;
+static char_u	*debug_skipped_name;
+
+/*
+ * Go to debug mode when a breakpoint was encountered or "ex_nesting_level" is
  * at or below the break level.  But only when the line is actually
- * executed.
+ * executed.  Return TRUE and set breakpoint_name for skipped commands that
+ * decide to execute something themselves.
  * Called from do_one_cmd() before executing a command.
  */
     void
@@ -244,6 +256,7 @@ dbg_check_breakpoint(eap)
 {
     char_u	*p;
 
+    debug_skipped = FALSE;
     if (debug_breakpoint_name != NULL)
     {
 	if (!eap->skip)
@@ -262,10 +275,51 @@ dbg_check_breakpoint(eap)
 	    do_debug(eap->cmd);
 	}
 	else
+	{
+	    debug_skipped = TRUE;
+	    debug_skipped_name = debug_breakpoint_name;
 	    debug_breakpoint_name = NULL;
+	}
     }
-    else if (!eap->skip && debug_level <= debug_break_level)
-	do_debug(eap->cmd);
+    else if (ex_nesting_level <= debug_break_level)
+    {
+	if (!eap->skip)
+	    do_debug(eap->cmd);
+	else
+	{
+	    debug_skipped = TRUE;
+	    debug_skipped_name = NULL;
+	}
+    }
+}
+
+/*
+ * Go to debug mode if skipped by dbg_check_breakpoint() because eap->skip was
+ * set.  Return TRUE when the debug mode is entered this time.
+ */
+    int
+dbg_check_skipped(eap)
+    exarg_T	*eap;
+{
+    int		prev_got_int;
+
+    if (debug_skipped)
+    {
+	/*
+	 * Save the value of got_int and reset it.  We don't want a previous
+	 * interruption cause flushing the input buffer.
+	 */
+	prev_got_int = got_int;
+	got_int = FALSE;
+	debug_breakpoint_name = debug_skipped_name;
+	/* eap->skip is TRUE */
+	eap->skip = FALSE;
+	(void)dbg_check_breakpoint(eap);
+	eap->skip = TRUE;
+	got_int |= prev_got_int;
+	return TRUE;
+    }
+    return FALSE;
 }
 
 /*
@@ -518,6 +572,7 @@ dbg_find_breakpoint(file, fname, after)
     linenr_T	lnum = 0;
     regmatch_T	regmatch;
     char_u	*name = fname;
+    int		prev_got_int;
 
     /* Replace K_SNR in function name with "<SNR>". */
     if (!file && fname[0] == K_SPECIAL)
@@ -543,8 +598,16 @@ dbg_find_breakpoint(file, fname, after)
 	{
 	    regmatch.regprog = bp->dbg_prog;
 	    regmatch.rm_ic = FALSE;
+	    /*
+	     * Save the value of got_int and reset it.  We don't want a previous
+	     * interruption cancel matching, only hitting CTRL-C while matching
+	     * should abort it.
+	     */
+	    prev_got_int = got_int;
+	    got_int = FALSE;
 	    if (vim_regexec(&regmatch, name, (colnr_T)0))
 		lnum = bp->dbg_lnum;
+	    got_int |= prev_got_int;
 	}
     }
     if (name != fname)
@@ -1901,11 +1964,24 @@ struct source_cookie
     linenr_T	breakpoint;	/* next line with breakpoint or zero */
     char_u	*fname;		/* name of sourced file */
     int		dbg_tick;	/* debug_tick when breakpoint was set */
+    int		level;		/* top nesting level of sourced file */
 #endif
 #ifdef FEAT_MBYTE
     vimconv_T	conv;		/* type of conversion */
 #endif
 };
+
+#ifdef FEAT_EVAL
+/*
+ * Return the nesting level for a source cookie.
+ */
+    int
+source_level(cookie)
+    void *cookie;
+{
+    return ((struct source_cookie *)cookie)->level;
+}
+#endif
 
 static char_u *get_one_sourceline __ARGS((struct source_cookie *sp));
 
@@ -2059,6 +2135,8 @@ do_source(fname, check_other, is_vimrc)
     cookie.breakpoint = dbg_find_breakpoint(TRUE, fname_exp, (linenr_T)0);
     cookie.fname = fname_exp;
     cookie.dbg_tick = debug_tick;
+
+    cookie.level = ex_nesting_level;
 #endif
 #ifdef FEAT_MBYTE
     cookie.conv.vc_type = CONV_NONE;		/* no conversion */
@@ -2163,8 +2241,8 @@ do_source(fname, check_other, is_vimrc)
      * After a "finish" in debug mode, need to break at first command of next
      * sourced file.
      */
-    if (save_debug_break_level > debug_level
-	    && debug_break_level == debug_level)
+    if (save_debug_break_level > ex_nesting_level
+	    && debug_break_level == ex_nesting_level)
 	++debug_break_level;
 #endif
 
@@ -2367,14 +2445,12 @@ get_one_sourceline(sp)
 #ifdef USE_CR
 	if (sp->fileformat == EOL_MAC)
 	{
-	    if (fgets_cr((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
-		    || got_int)
+	    if (fgets_cr((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL)
 		break;
 	}
 	else
 #endif
-	    if (fgets((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL
-		    || got_int)
+	    if (fgets((char *)buf + ga.ga_len, ga.ga_room, sp->fp) == NULL)
 		break;
 	len = (int)STRLEN(buf);
 #ifdef USE_CRNL
@@ -2529,10 +2605,42 @@ ex_finish(eap)
     exarg_T	*eap;
 {
     if (eap->getline == getsourceline)
-	((struct source_cookie *)eap->cookie)->finished = TRUE;
+	do_finish(eap, FALSE);
     else
 	EMSG(_("E168: :finish used outside of a sourced file"));
 }
+
+/*
+ * Mark a sourced file as finished.  Possibly makes the ":finish" pending.
+ * Also called for a pending finish at the ":endtry" or after returning from
+ * an extra do_cmdline().  "reanimate" is used in the latter case.
+ */
+    void
+do_finish(eap, reanimate)
+    exarg_T	*eap;
+    int		reanimate;
+{
+    int		idx;
+
+    if (reanimate)
+	((struct source_cookie *)eap->cookie)->finished = FALSE;
+
+    /*
+     * Cleanup (and inactivate) conditionals, but stop when a try conditional
+     * not in its finally clause (which then is to be executed next) is found.
+     * In this case, make the ":finish" pending for execution at the ":endtry".
+     * Otherwise, finish normally.
+     */
+    idx = cleanup_conditionals(eap->cstack, 0, TRUE);
+    if (idx >= 0)
+    {
+	eap->cstack->cs_pending[idx] = CSTP_FINISH;
+	report_make_pending(CSTP_FINISH, NULL);
+    }
+    else
+	((struct source_cookie *)eap->cookie)->finished = TRUE;
+}
+
 
 /*
  * Return TRUE when a sourced file had the ":finish" command: Don't give error

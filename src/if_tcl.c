@@ -151,7 +151,7 @@ static struct ref refsdeleted;	/* dummy object for deleted ref list */
 # endif
 
 # ifndef  DYNAMIC_TCL /* Just generating prototypes */
-#  define HANDLE int
+typedef int HANDLE;
 # endif
 
 /*
@@ -192,7 +192,7 @@ tcl_runtime_link_init(char *libname, int verbose)
     if (!(hTclLib = LoadLibraryEx(libname, NULL, 0)))
     {
 	if (verbose)
-	    EMSG2(_("E370: Could not load library %s"), libname);
+	    EMSG2(_(e_loadlib), libname);
 	return FAIL;
     }
     for (i = 0; tcl_funcname_table[i].ptr; ++i)
@@ -203,8 +203,7 @@ tcl_runtime_link_init(char *libname, int verbose)
 	    FreeLibrary(hTclLib);
 	    hTclLib = NULL;
 	    if (verbose)
-		EMSG2(_("E448: Could not load library function %s"),
-						  tcl_funcname_table[i].name);
+		EMSG2(_(e_loadfunc), tcl_funcname_table[i].name);
 	    return FAIL;
 	}
     }
@@ -1722,7 +1721,7 @@ tclinit(eap)
 #ifdef DYNAMIC_TCL
     if (!tcl_enabled(TRUE))
     {
-	EMSG(_("Sorry, this command is disabled: the Tcl library could not be loaded."));
+	EMSG(_("E571: Sorry, this command is disabled: the Tcl library could not be loaded."));
 	return FAIL;
     }
 #endif
@@ -1889,7 +1888,7 @@ tclexit(error)
 	}
 	else
 	{
-	    sprintf(buf, "exit code %d", retval);
+	    sprintf(buf, "E572: exit code %d", retval);
 	    tclerrmsg(buf);
 	    if (retval == 0 )
 	    {

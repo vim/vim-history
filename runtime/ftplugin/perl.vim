@@ -1,15 +1,13 @@
 " Vim filetype plugin file
 " Language:	Perl
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Change:	Sun, 07 Oct 2001 21:39:27 Eastern Daylight Time
-" Current version is at http://mywebpage.netscape.com/sharppeople/vim/ftplugin
+" Last Change: 2003 Mar 04
+" URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
 
-" Set 'formatoptions' to break comment lines but not other lines,
-" and insert the comment leader when hitting <CR> or using "o".
-setlocal fo-=t fo+=croql
+setlocal fo+=crq
 
 setlocal com=:#
 
@@ -27,7 +25,7 @@ endif
 
 " Provided by Ned Konz <ned@bike-nomad.com>
 "---------------------------------------------
-setlocal include=\\<\\(use\|require\\)\\s*
+setlocal include=\\<\\(use\|require\\)\\>
 setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.pm','')
 setlocal iskeyword=48-57,_,A-Z,a-z,:
 setlocal define=[^A-Za-z_]

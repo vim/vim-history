@@ -2,16 +2,16 @@
 =      歡     迎     閱     讀   《 V I M  教  程 》   ──     版本 1.5      =
 ===============================================================================
      vim 是一個具有很多命令的功能非常強大的編輯器。限于篇幅，在本教程當中
-     就詳細介紹了。本教程的設計目標是講述一些必要的基本命令，而掌握好這些
-     命令，您就能夠很容易將vim當作一個通用的萬能編輯器來使用了。
+     不就詳細介紹了。本教程的設計目標是講述一些必要的基本命令，而掌握好這
+     些命令，您就能夠很容易將vim當作一個通用的萬能編輯器來使用了。
 
      完成本教程的內容大約需要25-30分鐘，取決于您訓練的時間。
 
      每一節的命令操作將會更改本文。推薦您復制本文的一個副本，然後在副本上
-     進行訓練(如果您是通過"vimtutor"來起動教程的，那麼本文就已經是副本了)。
+     進行訓練(如果您是通過"vimtutor"來啟動教程的，那麼本文就已經是副本了)。
 
      切記一點︰本教程的設計思路是在使用中進行學習的。也就是說，您需要通過
-     執行命令來學習他們本身的正確用法。如果您只是閱讀而不操作，那麼您可能
+     執行命令來學習它們本身的正確用法。如果您只是閱讀而不操作，那麼您可能
      會很快遺忘這些命令的！
 
      好了，現在請確定您的Shift-Lock(大小寫鎖定鍵)還沒有按下，然後按鍵盤上
@@ -319,7 +319,7 @@
 
   3. 接著輸入 r ，這樣就能將錯誤替換掉了。
 
-  4. 重復步驟2和步驟3，知道第一行是已經修改完畢。
+  4. 重復步驟2和步驟3，直到第一行已經修改完畢。
 
 --->  Whan this lime was tuoed in, someone presswd some wrojg keys!
 --->  When this line was typed in, someone pressed some wrong keys!
@@ -344,7 +344,7 @@
 
   4. 最後按 <ESC> 鍵，然後光標定位到下一個錯誤第一個準備更改的字母處。
 
-  5. 重復步驟3和步驟4，知道第一個句子完全雷同第二個句子。
+  5. 重復步驟3和步驟4，直到第一個句子完全雷同第二個句子。
 
 ---> This lubw has a few wptfd that mrrf changing usf the change command.
 ---> This line has a few words that need changing using the change command.
@@ -836,6 +836,12 @@ Open up a line above this by typing Shift-O while the cursor is on this line.
 
   變更記錄︰
   =========
+      2002年08月30日 梁昌泰 <beos@turbolinux.com.cn>
+      感謝 RMS@SMTH 的指正，將多處錯誤修正。
+
+      2002年04月22日 梁昌泰 <linuxrat@gnuchina.org>
+      感謝 xuandong@sh163.net 的指正，將兩處錯別字修正。
+
       2002年03月18日 梁昌泰 <linuxrat@gnuchina.org>
       根據Bram Molenaar先生在2002年03月16日的來信要求，將vimtutor1.4中譯
       版升級到vimtutor1.5。

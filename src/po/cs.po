@@ -5674,7 +5674,7 @@ msgstr ""
 "povolen."
 
 #: globals.h:1026
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Soubor existuje (pou¾ijte ! pro vynucení)"
 
 #: globals.h:1027

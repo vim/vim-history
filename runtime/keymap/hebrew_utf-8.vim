@@ -53,7 +53,7 @@ U	<Char-0x5bb>	" qubuts
 D	<Char-0x5bc>	" dagesh
 ]T	<Char-0x5bd>	" meteg
 ]Q	<Char-0x5be>	" maqaf
-]R      <ּChar-0x5bf>	" rafe
+]R      <Char-0x5bf>	" rafe
 ]p      <Char-0x5c0>    " paseq
 SR	<Char-0x5c1>	" shin-dot
 SL	<Char-0x5c2>	" sin-dot

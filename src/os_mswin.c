@@ -90,6 +90,53 @@
 # endif
 #endif
 
+/*
+ * When generating prototypes for Win32 on Unix, these lines make the syntax
+ * errors disappear.  They do not need to be correct.
+ */
+#ifdef PROTO
+#define WINAPI
+#define WINBASEAPI
+typedef int BOOL;
+typedef int CALLBACK;
+typedef int COLORREF;
+typedef int CONSOLE_CURSOR_INFO;
+typedef int COORD;
+typedef int DWORD;
+typedef int ENUMLOGFONT;
+typedef int HANDLE;
+typedef int HDC;
+typedef int HFONT;
+typedef int HICON;
+typedef int HWND;
+typedef int INPUT_RECORD;
+typedef int KEY_EVENT_RECORD;
+typedef int LOGFONT;
+typedef int LPARAM;
+typedef int LPBOOL;
+typedef int LPCSTR;
+typedef int LPCWSTR;
+typedef int LPSTR;
+typedef int LPTSTR;
+typedef int LPWSTR;
+typedef int LRESULT;
+typedef int MOUSE_EVENT_RECORD;
+typedef int NEWTEXTMETRIC;
+typedef int PACL;
+typedef int PRINTDLG;
+typedef int PSECURITY_DESCRIPTOR;
+typedef int PSID;
+typedef int SECURITY_INFORMATION;
+typedef int SHORT;
+typedef int SMALL_RECT;
+typedef int TEXTMETRIC;
+typedef int UINT;
+typedef int WCHAR;
+typedef int WORD;
+typedef int WPARAM;
+typedef void VOID;
+#endif
+
 /* Record all output and all keyboard & mouse input */
 /* #define MCH_WRITE_DUMP */
 
@@ -100,55 +147,9 @@ FILE* fdDump = NULL;
 #ifdef WIN3264
 extern DWORD g_PlatformId;
 #endif
+
 #ifndef FEAT_GUI_MSWIN
 extern char g_szOrigTitle[];
-#endif
-
-/*
- * When generating prototypes for Win32 on Unix, these lines make the syntax
- * errors disappear.  They do not need to be correct.
- */
-#ifdef PROTO
-# define HANDLE int
-# define SMALL_RECT int
-# define COORD int
-# define SHORT int
-# define WORD int
-typedef int DWORD;
-# define BOOL int
-# define WCHAR int
-typedef int UINT;
-typedef int CALLBACK;
-typedef int LRESULT;
-typedef int LPSTR;
-# define LPTSTR int
-typedef int LPWSTR;
-typedef int LPCWSTR;
-typedef int WPARAM;
-typedef int LPARAM;
-typedef int LPBOOL;
-# define KEY_EVENT_RECORD int
-# define MOUSE_EVENT_RECORD int
-# define WINAPI
-# define CONSOLE_CURSOR_INFO int
-typedef int LPCSTR;
-# define WINBASEAPI
-# define INPUT_RECORD int
-# define SECURITY_INFORMATION int
-# define PSECURITY_DESCRIPTOR int
-# define VOID void
-typedef int HWND;
-# define PSID int
-# define PACL int
-# define HICON int
-# define HFONT int
-# define PRINTDLG int
-# define TEXTMETRIC int
-# define COLORREF int
-typedef int HDC;
-typedef int LOGFONT;
-# define ENUMLOGFONT int
-# define NEWTEXTMETRIC int
 #endif
 
 #ifdef FEAT_GUI
@@ -638,7 +639,7 @@ mch_char_avail()
 mch_screenmode(
     char_u *arg)
 {
-    EMSG(_("E359: Screen mode setting not supported"));
+    EMSG(_(e_screenmode));
     return FAIL;
 }
 
@@ -767,7 +768,7 @@ mch_libcall(
 
     if (!fRunTimeLinkSuccess)
     {
-	EMSG2(_("E364: Library call failed for \"%s()\""), funcname);
+	EMSG2(_(e_libcall), funcname);
 	return FAIL;
     }
 
@@ -1853,7 +1854,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     memset(&fLogFont, 0, sizeof(fLogFont));
     if (!get_logfont(&fLogFont, p_pfn, prt_dlg.hDC))
     {
-	EMSG2(_("E448: Unknown font: %s"), p_pfn);
+	EMSG2(_("E613: Unknown printer font: %s"), p_pfn);
 	mch_print_cleanup();
 	return FALSE;
     }
@@ -2541,7 +2542,7 @@ serverSendToVim(name, cmd, result, ptarget, asExpr, silent)
     if (target == 0)
     {
 	if (!silent)
-	    EMSG2(_("E247: no registered server named \"%s\""), name);
+	    EMSG2(_(e_noserver), name);
 	return -1;
     }
 

@@ -5636,7 +5636,7 @@ msgstr ""
 "zaznaczenia"
 
 #: globals.h:1010
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Plik istnieje (wymu¶ poprzez !)"
 
 #: globals.h:1011

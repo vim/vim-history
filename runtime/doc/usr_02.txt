@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_02.txt*	For Vim version 6.2a.  Last change: 2003 Mar 03
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -130,9 +130,9 @@ at you, you already are in Normal mode.
 ==============================================================================
 *02.3*	Moving around
 
-After you return to command mode, you can move around by using these keys:
+After you return to Normal mode, you can move around by using these keys:
 
-	h   left
+	h   left						*hjkl*
 	j   down
 	k   up
 	l   right
@@ -165,6 +165,16 @@ The best way to learn these commands is by using them.  Use the "i" command to
 insert some more lines of text.  Then use the hjkl keys to move around and
 insert a word somewhere.  Don't forget to press <Esc> to go back to Normal
 mode.  The |vimtutor| is also a nice way to learn by doing.
+
+For Japanse users, Hiroshi Iwatani suggested using this:
+
+			Komsomolsk
+			    ^
+			    |
+           Huan Ho      <--- --->  Los Angeles
+        (Yellow river)      |
+	                    v
+			  Java (the island, not the programming language)
 
 ==============================================================================
 *02.4*	Deleting characters
@@ -379,8 +389,8 @@ quit-and-throw-things-away command.  It is: >
 Don't forget to press <Enter> to finish the command.
 
 For those of you interested in the details, the three parts of this command
-are the colon (:), which enters command mode; the q command, which tells the
-editor to quit; and the override command modifier (!).
+are the colon (:), which enters Command-line mode; the q command, which tells
+the editor to quit; and the override command modifier (!).
    The override command modifier is needed because Vim is reluctant to throw
 away changes.  If you were to just type ":q", Vim would display an error
 message and refuse to exit:

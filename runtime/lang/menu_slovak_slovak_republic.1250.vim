@@ -1,6 +1,6 @@
 " Menu Translations:	Slovak
 " Translated By:	Martin Lacko <lacko@host.sk>
-" Last Change:		2002 Mar 12
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -11,11 +11,11 @@ let did_menu_trans = 1
 scriptencoding cp1250
 
 " Help menu
-menutrans &Help &Pomocník
+menutrans &Help			&Pomocník
 menutrans &Overview<Tab><F1>	&Preh¾ad<Tab><F1>
 menutrans &User\ Manual		Po&uívate¾skı\ manuál
 menutrans &How-to\ links	&Tipy
-menutrans &Find\.\.\.		&H¾ada\.\.\.
+menutrans &Find\.\.\.		&Nájs\.\.\.
 menutrans &Credits		Poï&akovanie
 menutrans O&rphans		Si&roty
 menutrans Co&pying		&Licencia
@@ -24,12 +24,12 @@ menutrans &About		&O\ programe
 
 " File menu
 menutrans &File				&Súbor
-menutrans &Open\.\.\.<Tab>:e		&Otvoi\.\.\.<Tab>:e
-menutrans Sp&lit-Open\.\.\.<Tab>:sp	Ot&voi\ v\ novom\ okne\.\.\.<Tab>:sp
+menutrans &Open\.\.\.<Tab>:e		&Otvori\.\.\.<Tab>:e
+menutrans Sp&lit-Open\.\.\.<Tab>:sp	Ot&vori\ v\ novom\ okne\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Novı<Tab>:enew
-menutrans &Close<Tab>:close		&Zavori<Tab>:close
+menutrans &Close<Tab>:close		&Zatvori<Tab>:close
 menutrans &Save<Tab>:w			&Uloi<Tab>:w
-menutrans Save\ &As\.\.\.<Tab>:w	Uli &ako\.\.\.<Tab>:w
+menutrans Save\ &As\.\.\.<Tab>:sav	Uloi\ &ako\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	Otvor&i\ porovnanie\ v\ novom\ okne\ s\.\.\.
 menutrans Split\ Patched\ &By\.\.\.	Otvo&ri\ aktualizované\ s\.\.\.
 menutrans &Print			&Tlaè
@@ -43,13 +43,13 @@ menutrans &Redo<Tab>^R			Z&ruši\ spä<Tab>^R
 menutrans Rep&eat<Tab>\.		&Opakova<Tab>\.
 menutrans Cu&t<Tab>"+x			&Vystrihnú<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopírova<Tab>"+y
-menutrans &Paste<Tab>"+P		V&loi<Tab>"+P
+menutrans &Paste<Tab>"+gP		V&loi<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Vloi\ &pred<Tab>[p
 menutrans Put\ &After<Tab>]p		Vloi\ za<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Vy&bra\ všetko<Tab>ggVG
 menutrans &Delete<Tab>x			Vy&maza<Tab>x
-menutrans &Find\.\.\.			&H¾ada\.\.\.
-menutrans Find\ and\ Rep&lace\.\.\.	&Nahradi\.\.\.
+menutrans &Find\.\.\.			&Nájs\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.	N&ahradi\.\.\.
 menutrans Settings\ &Window		Mo&nosti
 menutrans &Global\ Settings		&Globálne monosti
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Prepnú\ paletu\ zvırazòovania<Tab>:set\ hls!
@@ -62,35 +62,37 @@ menutrans Block\ Selection		Blokovı\ vıber
 menutrans Insert\ mode			Reim\ vkladania
 menutrans Block\ and\ Insert		Blok\ a\ vkladanie
 menutrans Always			Vdy
-menutrans Toggle\ Insert\ &Mode<Tab>:set	Prepnú\ rei&m\ vkladania<Tab>:set
+menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Prepnú\ rei&m\ vkladania<Tab>:set\ im!
 menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	Prepnú\ vi\ kompatibilitu<Tab>:set\ cp!
 menutrans Search\ &Path\.\.\.		Cesta\ &h¾adania\.\.\.
 menutrans Ta&g\ Files\.\.\.		Ta&gové súbory\.\.\.
 menutrans Toggle\ &Toolbar		Prepnú\ &panel
-menutrans Toggle\ &Bottom\ Scrollbar	Prepnú\ spodnı\ scrollbar
-menutrans Toggle\ &Left\ Scrollbar	Prepnú\ ¾avı\ scrollbar
-menutrans Toggle\ &Right\ Scrollbar	Prepnú\ pravı\ scrollbar
+menutrans Toggle\ &Bottom\ Scrollbar	Prepnú\ spodnı\ posuvník
+menutrans Toggle\ &Left\ Scrollbar	Prepnú\ ¾avı\ posuvník
+menutrans Toggle\ &Right\ Scrollbar	Prepnú\ pravı\ posuvník
 menutrans F&ile\ Settings		Nastavenia\ súboru
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Prepnú\ èíslova&nie\ riadkov<Tab>:set\ nu!
-menutrans Toggle\ &List\ Mode<Tab>:set\ list!	Prepnú\ reim\ &zoznamu<Tab>:set\ list!
-menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!	Prepnú\ z&alamovanie\ riadkov<Tab>:set\ wrap!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Prepnú\ reim\ &zoznamu<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Prepnú\ z&alamovanie\ riadkov<Tab>:set\ wrap!
 menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Prepnú\ za&lamovanie\ slov<Tab>:set\ lbr!
-menutrans Toggle\ &expand-tab<Tab>:set\ et!	Prepnú\ rozšír&ené\ tabulátory<Tab>:set\ et!
-menutrans Toggle\ &auto-indent<Tab>:set\ ai!	Prepnú\ automatické\ &odsadzovanie<Tab>:set\ ai!
-menutrans Toggle\ &C-indenting<Tab>:set\ cin!	Prepnú\ &C-odsadzovanie<Tab>:set\ cin!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!		Prepnú\ rozšír&ené\ tabulátory<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Prepnú\ automatické\ &odsadzovanie<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Prepnú\ &C-odsadzovanie<Tab>:set\ cin!
 menutrans &Shiftwidth			&Šírka\ šiftu
 menutrans Soft\ &Tabstop		&Softvérovı\ tabulátor
 menutrans Te&xt\ Width\.\.\.		Šírka\ te&xtu\.\.\.
 menutrans &File\ Format\.\.\.		&Formát\ súboru\.\.\.
+menutrans C&olor\ Scheme		Far&ebná\ schéma
 
 " Programming menu
 menutrans &Tools			&Nástroje
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Skoèi\ na\ znaèku<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Sk&oèi\ spä<Tab>^T
-menutrans Build\ &Tags\ File		&Vytvori\ súbor\ tagov
+menutrans Build\ &Tags\ File		&Vytvori\ súbor\ znaèiek
 menutrans &Folding			&Vnáranie
 menutrans &Enable/Disable\ folds<Tab>zi	Zapnú/Vypnú\ vnárani&e<Tab>zi
 menutrans &View\ Cursor\ Line<Tab>zv	Zobrazi\ kurzoro&vı\ riadok<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	Zobrazi\ iba\ kurzorovı\ riadok<Tab>zMzx
 menutrans C&lose\ more\ folds<Tab>zm	Zatvori\ viac \vnorení<Tab>zm
 menutrans &Close\ all\ folds<Tab>zM	Zatvor&i\ všetky\ vnorenia<Tab>zM
 menutrans O&pen\ more\ folds<Tab>zr	O&tvori\ viac\ vnorení<Tab>zr
@@ -129,13 +131,13 @@ menutrans Convert\ to\ HEX<Tab>:%!xxd	Prvies\ do\ šes&tnástkového\ formátu<Tab>
 menutrans Convert\ back<Tab>:%!xxd\ -r	Pr&evies\ spä<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
-menutrans &Buffers	&Buffere
+menutrans &Buffers		&Vyrovnávacia\ pamä
 menutrans &Refresh\ menu	Obnovi
-menutrans &Delete	Vymaza
-menutrans &Alternate	Zmeni
-menutrans &Next		Ï&alší
-menutrans &Previous	&Predchádzajúci
-menutrans [No File]	[iadny\ súbor]
+menutrans &Delete		Vymaza
+menutrans &Alternate		Zmeni
+menutrans &Next			Ï&alšia
+menutrans &Previous		&Predchádzajúca
+menutrans [No File]		[iadny\ súbor]
 
 " Window menu
 menutrans &Window			&Okná
@@ -185,13 +187,13 @@ if has("toolbar")
     tmenu ToolBar.SaveAll	Uloi všetky
     tmenu ToolBar.Print		Tlaè
     tmenu ToolBar.Undo		Spä
-    tmenu ToolBar.Redo		Zruši vrátenie
+    tmenu ToolBar.Redo		Opakova
     tmenu ToolBar.Cut		Vystrihnú
     tmenu ToolBar.Copy		Kopírova
     tmenu ToolBar.Paste		Vloi
-    tmenu ToolBar.Find		H¾ada...
-    tmenu ToolBar.FindNext	H¾ada ïalšie
-    tmenu ToolBar.FindPrev	H¾ada predchádzajúce
+    tmenu ToolBar.Find		Nájs...
+    tmenu ToolBar.FindNext	Nájs ïalšie
+    tmenu ToolBar.FindPrev	Nájs predchádzajúce
     tmenu ToolBar.Replace	Nahradi...
     if 0	" disabled; These are in the Windows menu
       tmenu ToolBar.New		Nové okno
@@ -199,15 +201,15 @@ if has("toolbar")
       tmenu ToolBar.WinMax	Maximalizova okno
       tmenu ToolBar.WinMin	Minimalizova okno
       tmenu ToolBar.WinVSplit	Rozdeli okno vertikálne
-      tmenu ToolBar.WinMaxWidth		Maximalizova šírku okna
-      tmenu ToolBar.WinMinWidth		Minimalizova šírku okna
+      tmenu ToolBar.WinMaxWidth	Maximalizova šírku okna
+      tmenu ToolBar.WinMinWidth	Minimalizova šírku okna
       tmenu ToolBar.WinClose	Zatvori okno
     endif
     tmenu ToolBar.LoadSesn	Naèíta sedenie
     tmenu ToolBar.SaveSesn	Uloi sedenie
-    tmenu ToolBar.RunScript	Spustit skript
+    tmenu ToolBar.RunScript	Spusti skript
     tmenu ToolBar.Make		Spusti make
-    tmenu ToolBar.Shell		Spusti shell
+    tmenu ToolBar.Shell		Spusti šel
     tmenu ToolBar.RunCtags	Spusti ctags
     tmenu ToolBar.TagJump	Skoèi na tag pod kurzorom
     tmenu ToolBar.Help		Pomocník
@@ -216,14 +218,15 @@ if has("toolbar")
 endif
 
 " Syntax menu
-menutrans &Syntax &Syntax
+menutrans &Syntax		&Syntax
 menutrans Set\ '&syntax'\ only	Nastavi\ iba\ 'syntax'
 menutrans Set\ '&filetype'\ too	Nastavi\ aj\ 'filetype'
 menutrans &Off			&Vypnú
 menutrans &Manual		&Ruène
 menutrans A&utomatic		A&utomaticky
-menutrans o&n\ (this\ file)	&zapnú\ (pre\ tento\ súbor)
-menutrans o&ff\ (this\ file)	vyp&nú\ (pre\ tento\ súbor )
+" menutrans o&n\ (this\ file)	&Zapnú\ (pre\ tento\ súbor)
+" menutrans o&ff\ (this\ file)	Vyp&nú\ (pre\ tento\ súbor )
+menutrans on/off\ for\ &This\ file	Zapnú/vypnú\ pre\ &tento\ súbor
 menutrans Co&lor\ test		Test\ &farieb
 menutrans &Highlight\ test	&Test\ zvırazòovania
 menutrans &Convert\ to\ HTML	&Previes\ do\ HTML

@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_07.txt*	For Vim version 6.2a.  Last change: 2002 Jul 19
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -127,7 +127,7 @@ And to move back to the first one again: >
 
 	:first
 
-There is no ":wlast" or "wfirst" command though!
+There is no ":wlast" or ":wfirst" command though!
 
 You can use a count for ":next" and ":previous".  To skip two files forward: >
 
@@ -310,8 +310,8 @@ the file, Vim will keep a copy of the unchanged file under the name
    If you make further changes to the file, Vim will notice that
 "data.txt.orig" already exists and leave it alone.  Further backup files will
 then be called "data.txt~" (or whatever you specified with 'backupext').
-   If you leave patchmode empty (that is the default), the original file will
-not be kept.
+   If you leave 'patchmode' empty (that is the default), the original file
+will not be kept.
 
 ==============================================================================
 *07.5*	Copy text between files

@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 14
+" Last Change:	2003 Mar 20
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -21,15 +21,19 @@ setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",:\"
 " Format comments to be up to 78 characters long
 setlocal tw=78
 
+" Comments start with a double quote
+setlocal commentstring=\"%s
+
 set cpo-=C
 
 " Let the matchit plugin know what items can be matched.
 if exists("loaded_matchit")
   let b:match_ignorecase = 0
   let b:match_words =
-	\ '\<fun\%[ction]\>:\<retu\%[rn]\>:\<endf\%[unction]\>,' .
-	\ '\<while\>:\<break\>:\<con\%[tinue]\>:\<endw\%[hile]\>,' .
+	\ '\<fu\%[nction]\>:\<retu\%[rn]\>:\<endf\%[unction]\>,' .
+	\ '\<wh\%[ile]\>:\<brea\%[k]\>:\<con\%[tinue]\>:\<endw\%[hile]\>,' .
 	\ '\<if\>:\<el\%[seif]\>:\<en\%[dif]\>,' .
+	\ '\<try\>:\<cat\%[ch]\>:\<fina\%[lly]\>:\<endt\%[ry]\>,' .
 	\ '\<aug\%[roup]\s\+\%(END\>\)\@!\S:\<aug\%[roup]\s\+END\>,' .
 	\ '(:)'
   " Ignore ":syntax region" commands, the 'end' argument clobbers if-endif

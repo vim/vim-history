@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.1.  Last change: 2003 Apr 13
+*starting.txt*  For Vim version 6.2a.  Last change: 2003 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -40,9 +40,9 @@ filename	One or more file names.  The first one will be the current
 		file and read into the buffer.  The cursor will be positioned
 		on the first line of the buffer.
 		To avoid a file name starting with a '-' being interpreted as
-		an option, precede the arglist with "--", e.g.:
-			Vim -- -filename
-		All arguments after the "--" will be interpreted as file names,
+		an option, precede the arglist with "--", e.g.: >
+			vim -- -filename
+<		All arguments after the "--" will be interpreted as file names,
 		no other options or "+command" argument can follow.
 
 							*--*
@@ -50,7 +50,8 @@ filename	One or more file names.  The first one will be the current
 		mode is to be used.
 
 		Starting in Normal mode: >
-	vim -   or  ex -v -
+			vim -
+			ex -v -
 <		Start editing a new buffer, which is filled with text
 		that is read from stdin.  The commands that would normally be
 		read from stdin will now be read from stderr.  Example: >
@@ -61,7 +62,10 @@ filename	One or more file names.  The first one will be the current
 			ls | view -
 <
 		Starting in Ex mode: >
-	ex -   or   vim -e -   or   exim -   or   vim -E
+			ex -
+			vim -e -
+			exim -
+			vim -E
 <		Start editing in silent mode.  See |-s-ex|.
 
 							*-t* *-tag*
@@ -88,6 +92,7 @@ The startup mode can be changed by using another name instead of "vim", which
 is equal to giving options:
 ex	vim -e	    Start in Ex mode (see |Ex-mode|).		    *ex*
 exim	vim -E	    Start in improved Ex mode (see |Ex-mode|).	    *exim*
+			(normally not installed)
 view	vim -R	    Start in read-only mode (see |-R|).		    *view*
 gvim	vim -g	    Start the GUI (see |gui|).			    *gvim*
 gex	vim -eg	    Start the GUI in Ex mode.			    *gex*
@@ -164,6 +169,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		double quotes (this depends on the shell that is used).
 		Example: >
 			vim  "+set si"  main.c
+			vim  "+find stdio.h"
 			vim  -c "set ff=dos"  -c wq  mine.mak
 <
 		Note: You can use up to 10 "+" or "-c" arguments in a Vim
@@ -464,10 +470,18 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Any non-file arguments must come before this.
 		See |--remote|. {not in Vi}
 
+--remote-silent [+{cmd}] {file} ...
+		Like --remote, but don't complain if there is no server.
+		See |--remote-silent|. {not in Vi}
+
 --remote-wait [+{cmd}] {file} ...
 		Like --remote, but wait for the server to finish editing the
 		file(s).
 		See |--remote-wait|. {not in Vi}
+
+--remote-wait-silent [+{cmd}] {file} ...
+		Like --remote-wait, but don't complain if there is no server.
+		See |--remote-wait-silent|. {not in Vi}
 
 --servername {name}
 		Specify the name of the Vim server to send to or to become.
@@ -483,7 +497,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		See |--remote-expr|. {not in Vi}
 
 --serverlist	Output a list of Vim server names and exit.  See
-		|--serverlist|. {not in Vi}
+		See |--serverlist|. {not in Vi}
 
 --socketid {id}						*--socketid*
 		GTK+ GUI Vim only.  Make gvim try to use GtkPlug mechanism, so
@@ -493,10 +507,23 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 --echo-wid						*--echo-wid*
 		GTK+ GUI Vim only.  Make gvim echo the Window ID on stdout,
 		which can be used to run gvim in a kpart widget.  The format
-		of the output is:
+		of the output is: >
 			WID: 12345\n
+<		{not in Vi}
+
+--role {role}						*--role*
+		GTK+ 2 GUI only.  Set the role of the main window to {role}.
+		The window role can be used by a window manager to uniquely
+		identify a window, in order to restore window placement and
+		such.  The --role argument is passed automatically when
+		restoring the session on login.  See |gui-gnome-session|
 		{not in Vi}
 
+-nb							*-nb*
+-nb:{hostname}:{addr}:{password}
+		Attempt connecting to Netbeans and become an editor server for
+		it.  The second form specifies the hostname, address and
+		password for connecting to Netbeans. |netbeans-run|
 
 Example for using a script file to change a name in several files:
 	Create a file "subs.vi" containing substitute commands and a :wq
@@ -617,7 +644,10 @@ Additionally:
 - ":behave mswin" is used |:behave|
 - syntax highlighting is enabled
 - filetype detection is enabled, filetype plugins and indenting is enabled
-- in a text file 'textwdith' is set to 78
+- in a text file 'textwidth' is set to 78
+
+One hint: If you want to go to Normal mode to be able to type a sequence of
+commands, use CTRL-L. |i_CTRL-L|
 
 ==============================================================================
 4. Initialization				*initialization* *startup*
@@ -866,8 +896,7 @@ If Vim takes a long time to start up, there may be a few causes:
 - If you have "viminfo" enabled, the loading of the viminfo file may take a
   while.  You can find out if this is the problem by disabling viminfo for a
   moment (use the Vim argument "-i NONE", |-i|).  Try reducing the number of
-  lines stored in a register with ":set viminfo='20\"50".
-							|viminfo-file|.
+  lines stored in a register with ":set viminfo='20\"50".  |viminfo-file|.
 
 							*:intro*
 When Vim starts without a file name, an introductory message is displayed (for
@@ -950,7 +979,7 @@ For Unix, when there is a compiled-in default for $VIMRUNTIME (check the
 output of ":version"), steps 2, 3 and 4 are skipped, and the compiled-in
 default is used after step 5.  This means that the compiled-in default
 overrules the value of $VIM.  This is useful if $VIM is "/etc" and the runtime
-files are in "/user/share/vim/vim54".
+files are in "/usr/share/vim/vim54".
 
 Once Vim has done this once, it will set the $VIMRUNTIME environment variable.
 To change it later, use a ":let" command like this: >
@@ -1185,7 +1214,7 @@ To automatically save and restore views for *.c files: >
 
 ==============================================================================
 9. The viminfo file				*viminfo* *viminfo-file* *E136*
-
+						*E575* *E576* *E577*
 If you exit Vim and later start it again, you would normally lose a lot of
 information.  The viminfo file can be used to remember that information, which
 enables you to continue where you left off.
@@ -1336,7 +1365,7 @@ most of the information will be restored).
 			already set (registers, marks, etc.) will be
 			overwritten.  {not in Vi}
 
-					   *:wv* *:wviminfo* *E137* *E138*
+					*:wv* *:wviminfo* *E137* *E138* *E574*
 :wv[iminfo][!] [file]	Write to viminfo file [file] (default: see above).
 			The information in the file is first read in to make
 			a merge between old and new info.  When [!] is used,

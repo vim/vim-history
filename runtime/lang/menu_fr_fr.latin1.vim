@@ -1,7 +1,7 @@
 " Menu Translations:	Francais
 " Maintainer:		Adrien Beau <version.francaise@free.fr>
 " First Version:	Francois Thunus <thunus@systran.fr>
-" Last Change:		2002 Mar 16
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -60,7 +60,7 @@ menutrans Rep&eat<Tab>\.			R&épéter<Tab>\.
 " -SEP1-
 menutrans Cu&t<Tab>"+x				Co&uper<Tab>"+x
 menutrans &Copy<Tab>"+y				Cop&ier<Tab>"+y
-menutrans &Paste<Tab>"+P			C&oller<Tab>"+P
+menutrans &Paste<Tab>"+gP			C&oller<Tab>"+gP
 menutrans Put\ &Before<Tab>[p			Placer\ a&vant<Tab>[p
 menutrans Put\ &After<Tab>]p			Placer\ apr&ès<Tab>]p
 menutrans &Delete<Tab>x				Effa&cer<Tab>x

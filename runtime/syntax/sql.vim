@@ -52,10 +52,13 @@ syn region sqlString		start=+'+  skip=+\\\\\|\\'+  end=+'+
 syn match sqlNumber		"-\=\<\d*\.\=[0-9_]\>"
 
 " Comments:
-syn region sqlComment    start="/\*"  end="\*/"
-syn match sqlComment	"--.*"
+syn region sqlComment    start="/\*"  end="\*/" contains=sqlTodo
+syn match sqlComment	"--.*$" contains=sqlTodo
 
 syn sync ccomment sqlComment
+
+" Todo.
+syn keyword sqlTodo TODO FIXME XXX DEBUG NOTE
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -76,6 +79,7 @@ if version >= 508 || !exists("did_sql_syn_inits")
   HiLink sqlStatement	Statement
   HiLink sqlString	String
   HiLink sqlType	Type
+  HiLink sqlTodo	Todo
 
   delcommand HiLink
 endif

@@ -336,11 +336,19 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	{
 	    if (apply_autocmds_exarg(EVENT_BUFREADCMD, NULL, sfname,
 							  FALSE, curbuf, eap))
+#ifdef FEAT_EVAL
+		return aborting() ? FAIL : OK;
+#else
 		return OK;
+#endif
 	}
 	else if (apply_autocmds_exarg(EVENT_FILEREADCMD, sfname, sfname,
 							    FALSE, NULL, eap))
+#ifdef FEAT_EVAL
+	    return aborting() ? FAIL : OK;
+#else
 	    return OK;
+#endif
 
 	curbuf->b_op_start = pos;
     }
@@ -546,6 +554,10 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 		    /* remember the current fileformat */
 		    save_file_ff(curbuf);
 
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+		    if (aborting())   /* autocmds may abort script processing */
+			return FAIL;
+#endif
 		    return OK;	    /* a new file is not an error */
 		}
 		else
@@ -636,6 +648,15 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	if (msg_scrolled == n)
 	    msg_scroll = m;
 
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	{
+	    --no_wait_return;
+	    msg_scroll = msg_save;
+	    curbuf->b_p_ro = TRUE;	/* must use "w!" now */
+	    return FAIL;
+	}
+#endif
 	/*
 	 * Don't allow the autocommands to change the current buffer.
 	 * Try to re-open the file.
@@ -2059,6 +2080,10 @@ failed:
 							    FALSE, NULL, eap);
 	if (msg_scrolled == n)
 	    msg_scroll = m;
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return FAIL;
+#endif
     }
 #endif
 
@@ -2338,6 +2363,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     linenr_T	    lnum;
     long	    nchars;
     char_u	    *errmsg = NULL;
+    char_u	    *errnum = NULL;
     char_u	    *buffer;
     char_u	    smallbuf[SMBUFSIZE];
     char_u	    *backup_ext;
@@ -2423,6 +2449,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (curbuf->b_p_bl)
 	    apply_autocmds(EVENT_BUFDELETE, NULL, NULL, FALSE, curbuf);
 	apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    return FAIL;
+#endif
 #endif
 	if (setfname(fname, sfname, FALSE) == OK)
 	    curbuf->b_flags |= BF_NOTEDITED;
@@ -2532,16 +2562,21 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	aucmd_restbuf(&aco);
 
 	/*
-	 * In two situations we return here and don't write the file:
+	 * In three situations we return here and don't write the file:
 	 * 1. the autocommands deleted or unloaded the buffer.
-	 * 2. If one of the "Cmd" autocommands was executed.
+	 * 2. The autocommands abort script processing.
+	 * 3. If one of the "Cmd" autocommands was executed.
 	 */
 	if (!buf_valid(buf))
 	    buf = NULL;
-	if (buf == NULL || buf->b_ml.ml_mfp == NULL || did_cmd)
+	if (buf == NULL || buf->b_ml.ml_mfp == NULL || did_cmd || aborting())
 	{
 	    --no_wait_return;
 	    msg_scroll = msg_save;
+	    if (aborting())
+		/* An aborting error, interrupt or exception in the
+		 * autocommands. */
+		return FAIL;
 	    if (did_cmd)
 	    {
 		if (buf == NULL)
@@ -2560,7 +2595,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    return FAIL;
 		return OK;
 	    }
-	    EMSG(_("E203: Autocommands deleted or unloaded buffer to be written"));
+#ifdef FEAT_EVAL
+	    if (!aborting())
+#endif
+		EMSG(_("E203: Autocommands deleted or unloaded buffer to be written"));
 	    return FAIL;
 	}
 
@@ -2644,11 +2682,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	{
 	    if (S_ISDIR(st_old.st_mode))
 	    {
+		errnum = (char_u *)"E502: ";
 		errmsg = (char_u *)_("is a directory");
 		goto fail;
 	    }
 	    if (mch_nodetype(fname) != NODE_WRITABLE)
 	    {
+		errnum = (char_u *)"E503: ";
 		errmsg = (char_u *)_("is not a file or writable device");
 		goto fail;
 	    }
@@ -2666,6 +2706,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     c = mch_nodetype(fname);
     if (c == NODE_OTHER)
     {
+	errnum = (char_u *)"E503: ";
 	errmsg = (char_u *)_("is not a file or writable device");
 	goto fail;
     }
@@ -2682,6 +2723,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    newfile = TRUE;
 	else if (mch_isdir(fname))
 	{
+	    errnum = (char_u *)"E502: ";
 	    errmsg = (char_u *)_("is a directory");
 	    goto fail;
 	}
@@ -2710,9 +2752,15 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (!forceit && file_readonly)
 	{
 	    if (vim_strchr(p_cpo, CPO_FWRITE) != NULL)
+	    {
+		errnum = (char_u *)"E504: ";
 		errmsg = (char_u *)_(err_readonly);
+	    }
 	    else
+	    {
+		errnum = (char_u *)"E505: ";
 		errmsg = (char_u *)_("is read-only (add ! to override)");
+	    }
 	    goto fail;
 	}
 
@@ -3014,7 +3062,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			{
 			    if (buf_write_bytes(&write_info) == FAIL)
 			    {
-				errmsg = (char_u *)_("Can't write to backup file (add ! to override)");
+				errmsg = (char_u *)_("E506: Can't write to backup file (add ! to override)");
 				break;
 			    }
 			    ui_breakcheck();
@@ -3026,9 +3074,9 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			}
 
 			if (close(bfd) < 0 && errmsg == NULL)
-			    errmsg = (char_u *)_("Close error for backup file (add ! to override)");
+			    errmsg = (char_u *)_("E507: Close error for backup file (add ! to override)");
 			if (write_info.bw_len < 0)
-			    errmsg = (char_u *)_("Can't read file for backup (add ! to override)");
+			    errmsg = (char_u *)_("E508: Can't read file for backup (add ! to override)");
 #ifdef UNIX
 			set_file_time(backup, st_old.st_atime, st_old.st_mtime);
 #endif
@@ -3044,7 +3092,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    vim_free(copybuf);
 
 	    if (backup == NULL && errmsg == NULL)
-		errmsg = (char_u *)_("Cannot create backup file (add ! to override)");
+		errmsg = (char_u *)_("E509: Cannot create backup file (add ! to override)");
 	    /* ignore errors when forceit is TRUE */
 	    if ((some_error || errmsg != NULL) && !forceit)
 	    {
@@ -3069,6 +3117,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	     */
 	    if (file_readonly && vim_strchr(p_cpo, CPO_FWRITE) != NULL)
 	    {
+		errnum = (char_u *)"E504: ";
 		errmsg = (char_u *)_(err_readonly);
 		goto fail;
 	    }
@@ -3146,7 +3195,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    }
 	    if (backup == NULL && !forceit)
 	    {
-		errmsg = (char_u *)_("Can't make backup file (add ! to override)");
+		errmsg = (char_u *)_("E510: Can't make backup file (add ! to override)");
 		goto fail;
 	    }
 	}
@@ -3616,7 +3665,7 @@ restore_backup:
 
     if (close(fd) != 0)
     {
-	errmsg = (char_u *)_("Close failed");
+	errmsg = (char_u *)_("E512: Close failed");
 	end = 0;
     }
 
@@ -3687,13 +3736,13 @@ restore_backup:
 	{
 #ifdef FEAT_MBYTE
 	    if (write_info.bw_conv_error)
-		errmsg = (char_u *)_("write error, conversion failed");
+		errmsg = (char_u *)_("E513: write error, conversion failed");
 	    else
 #endif
 		if (got_int)
 		    errmsg = (char_u *)_(e_interr);
 		else
-		    errmsg = (char_u *)_("write error (file system full?)");
+		    errmsg = (char_u *)_("E514: write error (file system full?)");
 	}
 
 	/*
@@ -3931,6 +3980,8 @@ nofail:
 
     if (errmsg != NULL)
     {
+	int numlen = errnum != NULL ? STRLEN(errnum) : 0;
+
 	attr = hl_attr(HLF_E);	/* set highlight for error messages */
 	msg_add_fname(buf,
 #ifndef UNIX
@@ -3939,8 +3990,15 @@ nofail:
 		fname
 #endif
 		     );		/* put file name in IObuff with quotes */
-	if (STRLEN(IObuff) + STRLEN(errmsg) >= IOSIZE)
-	    IObuff[IOSIZE - STRLEN(errmsg) - 1] = NUL;
+	if (STRLEN(IObuff) + STRLEN(errmsg) + numlen >= IOSIZE)
+	    IObuff[IOSIZE - STRLEN(errmsg) - numlen - 1] = NUL;
+	/* If the error message has the form "is ...", put the error number in
+	 * front of the file name. */
+	if (errnum != NULL)
+	{
+	    mch_memmove(IObuff + numlen, IObuff, STRLEN(IObuff) + 1);
+	    mch_memmove(IObuff, errnum, (size_t)numlen);
+	}
 	STRCAT(IObuff, errmsg);
 	emsg(IObuff);
 
@@ -3964,7 +4022,11 @@ nofail:
     msg_scroll = msg_save;
 
 #ifdef FEAT_AUTOCMD
+#ifdef FEAT_EVAL
+    if (!should_abort(retval))
+#else
     if (!got_int)
+#endif
     {
 	aco_save_T	aco;
 
@@ -3991,6 +4053,11 @@ nofail:
 
 	/* restore curwin/curbuf and a few other things */
 	aucmd_restbuf(&aco);
+
+#ifdef FEAT_EVAL
+	if (aborting())	    /* autocmds may abort script processing */
+	    retval = FALSE;
+#endif
     }
 #endif
 
@@ -4190,7 +4257,7 @@ buf_write_bytes(ip)
 		    l = CONV_RESTLEN - ip->bw_restlen;
 		    if (l > len)
 			l = len;
-		    mch_memmove(ip->bw_rest + ip->bw_restlen, buf, l);
+		    mch_memmove(ip->bw_rest + ip->bw_restlen, buf, (size_t)l);
 		    n = utf_ptr2len_check_len(ip->bw_rest, ip->bw_restlen + l);
 		    if (n > ip->bw_restlen + len)
 		    {
@@ -4215,7 +4282,7 @@ buf_write_bytes(ip)
 		    {
 			ip->bw_restlen -= n;
 			mch_memmove(ip->bw_rest, ip->bw_rest + n,
-							     ip->bw_restlen);
+						      (size_t)ip->bw_restlen);
 			n = 0;
 		    }
 		}
@@ -4230,7 +4297,8 @@ buf_write_bytes(ip)
 			if (len - wlen > CONV_RESTLEN)
 			    return FAIL;
 			ip->bw_restlen = len - wlen;
-			mch_memmove(ip->bw_rest, buf + wlen, ip->bw_restlen);
+			mch_memmove(ip->bw_rest, buf + wlen,
+						      (size_t)ip->bw_restlen);
 			break;
 		    }
 		    if (n > 1)
@@ -5545,7 +5613,10 @@ buf_check_timestamp(buf, focus)
 			    (linenr_T)0,
 			    (linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
 		{
-		    EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
+#if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+		    if (!aborting())
+#endif
+			EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
 		    if (savebuf != NULL)
 		    {
 			/* Put the text back from the save buffer.  First
@@ -6868,7 +6939,11 @@ do_doautocmd(arg, do_msg)
     if (nothing_done && do_msg)
 	MSG(_("No matching autocommands"));
 
+#ifdef FEAT_EVAL
+    return aborting() ? FAIL : OK;
+#else
     return OK;
+#endif
 }
 
 /*
@@ -7073,6 +7148,33 @@ apply_autocmds_exarg(event, fname, fname_io, force, buf, eap)
 						       AUGROUP_ALL, buf, eap);
 }
 
+/*
+ * Like apply_autocmds(), but handles the caller's retval.  If the script
+ * processing is being aborted or if retval is FAIL when inside a try
+ * conditional, no autocommands are executed.  If otherwise the autocommands
+ * cause the script to be aborted, retval is set to FAIL.
+ */
+    int
+apply_autocmds_retval(event, fname, fname_io, force, buf, retval)
+    EVENT_T	event;
+    char_u	*fname;	    /* NULL or empty means use actual file name */
+    char_u	*fname_io;  /* fname to use for <afile> on cmdline */
+    int		force;	    /* when TRUE, ignore autocmd_busy */
+    buf_T	*buf;	    /* buffer for <abuf> */
+    int		*retval;    /* pointer to caller's retval */
+{
+    int		did_cmd;
+
+    if (should_abort(*retval))
+	return FALSE;
+
+    did_cmd = apply_autocmds_group(event, fname, fname_io, force,
+						      AUGROUP_ALL, buf, NULL);
+    if (did_cmd && aborting())
+	*retval = FAIL;
+    return did_cmd;
+}
+
 #if defined(FEAT_AUTOCMD) || defined(PROTO)
     int
 has_cursorhold()
@@ -7127,6 +7229,15 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      */
     if (autocmd_busy && !(force || autocmd_nested))
 	return retval;
+
+#ifdef FEAT_EVAL
+    /*
+     * Quickly return when immdediately aborting on error, or when an interrupt
+     * occurred or an exception was thrown but not caught.
+     */
+    if (aborting())
+	return retval;
+#endif
 
     /*
      * FileChangedShell never nests, because it can create an endless loop.
@@ -7870,7 +7981,7 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
 		reg_pat = (char_u *)alloc(check_length + 1);
 		if (reg_pat != NULL)
 		{
-		    mch_memmove(reg_pat, pat, check_length);
+		    mch_memmove(reg_pat, pat, (size_t)check_length);
 		    reg_pat[check_length] = NUL;
 		}
 		return reg_pat;
@@ -7922,7 +8033,7 @@ file_pat_to_reg_pat(pat, pat_end, allow_dirs, no_bslash)
 #ifdef FEAT_OSFILETYPE
     /* Copy the type check in to the start. */
     if (check_length)
-	mch_memmove(reg_pat, pat - check_length, check_length);
+	mch_memmove(reg_pat, pat - check_length, (size_t)check_length);
     i = check_length;
 #else
     i = 0;

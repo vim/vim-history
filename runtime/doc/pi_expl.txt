@@ -1,4 +1,4 @@
-*pi_expl.txt*   For Vim version 6.1.  Last change: 2001 Sep 17
+*pi_expl.txt*   For Vim version 6.2a.  Last change: 2002 Nov 08
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -42,6 +42,8 @@ directory name.  The following command keys are available:
       the only window, it will first split a new window to use for the file to
       be opened.
   'p' will open (or use) the preview window showing the file
+  'x' will execute the file with the system tools.  Only when supported
+      (currently MS-Windows and KDE).
 
 When splitting off a new window, you can control where the split window will
 go relative to the explorer window using the variables g:explVertical,
@@ -86,7 +88,7 @@ The default for this set to g:explSplitBelow at the time the plugin is loaded.
 
 The start splits allow for the explorer window to be placed in a file browser
 type arrangement, where the directories are shown on the left and the contents
-opened on the right.  The start split settings are only used when issueing
+opened on the right.  The start split settings are only used when issuing
 the Sexplore command.
 
 Note that the window split is done a little bit differently than window splits
@@ -193,6 +195,21 @@ have the directories, files, and suffixes separated, and you would like a
 separator line between the groups, you can set the option >
   let g:explUseSeparators=1    " Use separator lines
   let g:explUseSeparators=0    " Don't use separator lines
+<
+							 *g:explFileHandler*
+If you set the "g:explFileHandler" variable to the name of a function, typing
+'x' will call this function.  The file or directory under the cursor will be
+passed as an argument to the function.  Suppose you have KDE, you could use
+this: >
+
+  function MyFileHandler(fn)
+    exec "silent! !kfmclient exec " . escape(a:fn,' \%#')
+  endfunction
+  let g:explFileHandler = 'MyFileHandler'
+
+For Win32 the variable is set by default to invoke the execute action. If you
+type 'x' on a HTML file, Microsoft Internet Explorer will start (or whatever
+application you have associated with HTML files).
 
 ==============================================================================
  vim:tw=78:noet:ts=8:ft=help:norl:

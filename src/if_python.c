@@ -255,7 +255,7 @@ python_runtime_link_init(char *libname, int verbose)
     if (!hinstPython)
     {
 	if (verbose)
-	    EMSG2(_("E370: Could not load library %s"), libname);
+	    EMSG2(_(e_loadlib), libname);
 	return FAIL;
     }
 
@@ -267,8 +267,7 @@ python_runtime_link_init(char *libname, int verbose)
 	    FreeLibrary(hinstPython);
 	    hinstPython = 0;
 	    if (verbose)
-		EMSG2(_("E448: Could not load library function %s"),
-					       python_funcname_table[i].name);
+		EMSG2(_(e_loadfunc), python_funcname_table[i].name);
 	    return FAIL;
 	}
     }

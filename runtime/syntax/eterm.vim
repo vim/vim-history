@@ -1,7 +1,8 @@
-"  vim: set sw=4 sts=4:
-"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Tue, 24 Jul 2001 18:54:53 CEST
-"  Language	: Eterm configuration file
+" Vim syntax file
+" Language:	    Eterm configuration file
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
 
 if version < 600
     syntax clear
@@ -25,7 +26,7 @@ syn match   etermNumber		contained display "\<\(\d\+\|0x\x\{1,2}\)\>"
 syn region  etermString		contained display oneline start=+"+ skip=+\\"+ end=+"+
 
 " booleans
-syn match   etermBoolean	contained display "\<\(on\|off\|false\|true\|yes\|no\)\>"
+syn keyword etermBoolean	contained on off true false yes no
 
 " colors (not pretty, but can't figure out better way...)
 syn match   etermColor		contained display "\s\+#\x\{6}\>"
@@ -167,7 +168,7 @@ if version >= 508 || !exists("did_eterm_syn_inits")
     HiLink etermBoolean		Boolean
     HiLink etermColor		Number
     HiLink etermPreProc		PreProc
-    HiLink etermFunctions	Function
+    HiLink etermFunctions    	Function
     HiLink etermKeyMod		Special
     HiLink etermContext		Keyword
     HiLink etermOption		Keyword
@@ -194,3 +195,5 @@ if version >= 508 || !exists("did_eterm_syn_inits")
 endif
 
 let b:current_syntax = "eterm"
+
+"  vim: set sw=4 sts=4:

@@ -4,9 +4,9 @@
 " Maintainers:  Markus Mottl            <markus@oefai.at>
 "               Fabrizio Zeno Cornelli  <zeno@filibusta.crema.unimi.it>
 " URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/sml.vim
-" Last Change:  2001 Nov 20 - Fixed small highlighting bug with modules (MM)
+" Last Change:  2002 Jun 02 - Fixed small typo  (MM)
+"               2001 Nov 20 - Fixed small highlighting bug with modules (MM)
 "               2001 Aug 29 - Fixed small highlighting bug  (MM)
-"               2001 Aug 28 - Upgraded URL & mail address  (MM)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -118,7 +118,7 @@ syn match    smlMTDef "=\s*\w\(\w\|'\)*\>"hs=s+1,me=s
 syn keyword  smlKeyword  and andalso case
 syn keyword  smlKeyword  datatype else eqtype
 syn keyword  smlKeyword  exception fn fun handle
-syn keyword  smlKeyword  in infix infixl infixl
+syn keyword  smlKeyword  in infix infixl infixr
 syn keyword  smlKeyword  match nonfix of orelse
 syn keyword  smlKeyword  raise handle type
 syn keyword  smlKeyword  val where while with withtype

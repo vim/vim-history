@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.1.  Last change: 2002 Feb 12
+*term.txt*      For Vim version 6.2a.  Last change: 2003 Apr 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -31,7 +31,7 @@ A few other terminal types are always available, see below |builtin-terms|.
 You can give the terminal name with the '-T' Vim argument.  If it is not given
 Vim will try to get the name from the TERM environment variable.
 
-							*termcap* *terminfo*
+				*termcap* *terminfo* *E557* *E558* *E559*
 On Unix the terminfo database or termcap file is used.  This is referred to as
 "termcap" in all the documentation.  At compile time, when running configure,
 the choice whether to use terminfo or termcap is done automatically.  When
@@ -243,7 +243,7 @@ OUTPUT CODES
 	t_le	move cursor one char left			*t_le* *'t_le'*
 	t_mb	blinking mode					*t_mb* *'t_mb'*
 	t_md	bold mode					*t_md* *'t_md'*
-	t_me	Normal mode (undoes t_mr, t_mb and t_md)	*t_me* *'t_me'*
+	t_me	Normal mode (undoes t_mr, t_mb, t_md and color)	*t_me* *'t_me'*
 	t_mr	reverse (invert) mode				*t_mr* *'t_mr'*
 								*t_ms* *'t_ms'*
 	t_ms	if non-empty, cursor can be moved in standout/inverse mode
@@ -336,6 +336,7 @@ Note: Use the <> form if possible
 	t_kI	<Insert>	insert key			*t_kI* *'t_kI'*
 	t_kD	<Del>		delete key			*t_kD* *'t_kD'*
 	t_kb	<BS>		backspace key			*t_kb* *'t_kb'*
+	t_kB	<S-Tab>		back-tab (shift-tab)		*t_kB* *'t_kB'*
 	t_kh	<Home>		home key			*t_kh* *'t_kh'*
 	t_#2	<S-Home>	shifted home key     *<S-Home>* *t_#2* *'t_#2'*
 		<xHome>		alternate home key		*<xHome>*
@@ -355,15 +356,15 @@ Note: Use the <> form if possible
 	t_KA	<kEnter>	keypad enter key     *<kEnter>*	*t_KA* *'t_KA'*
 	t_KB	<kPoint>	keypad decimal point *<kPoint>*	*t_KB* *'t_KB'*
 	t_KC	<k0>		keypad 0		 *<k0>*	*t_KC* *'t_KC'*
-	t_KD	<k1>		keypad 0		 *<k1>*	*t_KD* *'t_KD'*
-	t_KE	<k2>		keypad 0		 *<k2>*	*t_KE* *'t_KE'*
-	t_KF	<k3>		keypad 0		 *<k3>*	*t_KF* *'t_KF'*
-	t_KG	<k4>		keypad 0		 *<k4>*	*t_KG* *'t_KG'*
-	t_KH	<k5>		keypad 0		 *<k5>*	*t_KH* *'t_KH'*
-	t_KI	<k6>		keypad 0		 *<k6>*	*t_KI* *'t_KI'*
-	t_KJ	<k7>		keypad 0		 *<k7>*	*t_KJ* *'t_KJ'*
-	t_KK	<k8>		keypad 0		 *<k8>*	*t_KK* *'t_KK'*
-	t_KL	<k9>		keypad 0		 *<k9>*	*t_KL* *'t_KL'*
+	t_KD	<k1>		keypad 1		 *<k1>*	*t_KD* *'t_KD'*
+	t_KE	<k2>		keypad 2		 *<k2>*	*t_KE* *'t_KE'*
+	t_KF	<k3>		keypad 3		 *<k3>*	*t_KF* *'t_KF'*
+	t_KG	<k4>		keypad 4		 *<k4>*	*t_KG* *'t_KG'*
+	t_KH	<k5>		keypad 5		 *<k5>*	*t_KH* *'t_KH'*
+	t_KI	<k6>		keypad 6		 *<k6>*	*t_KI* *'t_KI'*
+	t_KJ	<k7>		keypad 7		 *<k7>*	*t_KJ* *'t_KJ'*
+	t_KK	<k8>		keypad 8		 *<k8>*	*t_KK* *'t_KK'*
+	t_KL	<k9>		keypad 9		 *<k9>*	*t_KL* *'t_KL'*
 		<Mouse>		leader of mouse code		*<Mouse>*
 
 Note about t_so and t_mr: When the termcap entry "so" is not present the
@@ -388,7 +389,8 @@ Vim has started, the escape sequences may not be recognized any more.
 							*termcap-colors*
 Note about colors: The 't_Co' option tells Vim the number of colors available.
 When it is non-zero, the 't_AB' and 't_AF' options are used to set the color.
-If one of these is not available, 't_Sb' and 't_Sf' are used.
+If one of these is not available, 't_Sb' and 't_Sf' are used.  't_me' is used
+to reset to the default colors.
 
 							*termcap-title*
 The 't_ts' and 't_fs' options are used to set the window title if the terminal
@@ -573,7 +575,7 @@ Will make the mouse work in help files only (so you can use "g<LeftMouse>" to
 jump to tags).
 
 Whether the selection that is started with the mouse is in Visual mode or
-Select mode depends on whethere "mouse" in included in the 'selectmode'
+Select mode depends on whether "mouse" is included in the 'selectmode'
 option.
 
 In an xterm, with the currently active mode included in the 'mouse' option,
@@ -716,7 +718,8 @@ available).  For selecting text, extra clicks extend the selection:
 	quadruple	rectangular block	*<4-LeftMouse>*
 Exception: In a Help window a double click jumps to help for the word that is
 clicked on.
-A double click on a word selects that word.  A double click on a character
+A double click on a word selects that word.  'iskeyword' is used to specify
+which characters are included in a word.  A double click on a character
 that has a match selects until that match (like using "v%").  If the match is
 a #if/#else/#endif block, the selection becomes linewise.
 For MS-DOS and xterm the time for double clicking can be set with the
@@ -748,6 +751,7 @@ the current window, without moving the cursor.  If by selecting a window it
 will change position or size, the dragging of the status line will look
 confusing, but it will work (just try it).
 
+					*<MiddleRelease>* *<MiddleDrag>*
 Mouse clicks can be mapped.  The codes for mouse clicks are:
      code	    mouse button	      normal action	~
  <LeftMouse>	 left pressed		    set cursor position

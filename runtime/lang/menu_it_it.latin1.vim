@@ -1,7 +1,7 @@
 " Menu Translations:	Italian / Italiano
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
 "			Vlad Sandrini <sator72@libero.it>
-" Last Change:	2002 Mar 09
+" Last Change:	2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -54,7 +54,7 @@ menut &Redo<Tab>^R			&Ripristina<Tab>^R
 menut Rep&eat<Tab>\.		Ri&peti<Tab>\.
 menut Cu&t<Tab>"+x			&Taglia<Tab>"+x
 menut &Copy<Tab>"+y			&Copia<Tab>"+y
-menut &Paste<Tab>"+P		&Incolla<Tab>"+P
+menut &Paste<Tab>"+gP		&Incolla<Tab>"+gP
 menut Put\ &Before<Tab>[p		&Metti\ davanti<Tab>[p
 menut Put\ &After<Tab>]p		M&etti\ dietro<Tab>]p
 menut &Delete<Tab>x			Cance&lla<Tab>x
@@ -223,6 +223,7 @@ menut &Previous		&Precedente
 menut [No\ File]		[Nessun\ File]
 " Syntax / Sintassi
 menut &Syntax		&Sintassi
+menut &Show\ individual\ choices	Mo&stra\ opzioni\ individuali
 menut Set\ '&syntax'\ only	Attiva\ solo\ \ '&syntax'
 menut Set\ '&filetype'\ too	Attiva\ anche\ '&filetype'
 menut &Off			&Disattiva

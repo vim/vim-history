@@ -122,6 +122,7 @@ SRC = \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -153,7 +154,7 @@ SRC = \
 	gui_amiga.c \
 	gui.c
 
-OBJ = buffer.o charset.o diff.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o ex_getln.o \
+OBJ = buffer.o charset.o diff.o digraph.o edit.o eval.o ex_cmds.o ex_cmds2.o ex_docmd.o ex_eval.o ex_getln.o \
 	fileio.o fold.o getchar.o main.o mark.o memfile.o memline.o menu.o message.o misc1.o misc2.o move.o \
 	normal.o ops.o option.o os_amiga.o quickfix.o regexp.o screen.o search.o syntax.o \
 	tag.o term.o ui.o undo.o window.o gui_amiga.o gui.o  $(TERMLIB)
@@ -168,6 +169,7 @@ PRO = \
 	ex_cmds.pro \
 	ex_cmds2.pro \
 	ex_docmd.pro \
+	ex_eval.pro \
 	ex_getln.pro \
 	fileio.pro \
 	fold.pro \
@@ -288,6 +290,8 @@ ex_cmds2.o:	ex_cmds2.c $(DEP)
 ex_cmds2.pro:	ex_cmds2.c $(DEP)
 ex_docmd.o:	ex_docmd.c ex_cmds.h  $(DEP)
 ex_docmd.pro:	ex_docmd.c ex_cmds.h $(DEP)
+ex_eval.o:	ex_eval.c ex_cmds.h  $(DEP)
+ex_eval.pro:	ex_eval.c ex_cmds.h $(DEP)
 ex_getln.o:	ex_getln.c  $(DEP)
 ex_getln.pro:	ex_getln.c  $(DEP)
 fileio.o:	fileio.c  $(DEP)

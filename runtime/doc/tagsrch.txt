@@ -1,4 +1,4 @@
-*tagsrch.txt*   For Vim version 6.1.  Last change: 2003 Mar 03
+*tagsrch.txt*   For Vim version 6.2a.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -94,7 +94,7 @@ g<RightMouse>						*g<RightMouse>*
 CTRL-T			Jump to [count] older entry in the tag stack
 			(default 1).  {not in Vi}
 
-							*:po* *:pop*
+						*:po* *:pop* *E555* *E556*
 :[count]po[p][!]	Jump to [count] older entry in tag stack (default 1).
 			See |tag-!| for [!].  {not in Vi}
 

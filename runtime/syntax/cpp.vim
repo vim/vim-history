@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ccshan@post.harvard.edu>
-" Last change:	2001 May 14
+" Last Change:	2002 Jul 15
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -25,12 +25,13 @@ syn keyword cppAccess		public protected private
 syn keyword cppType		inline virtual explicit export bool wchar_t
 syn keyword cppExceptions	throw try catch
 syn keyword cppOperator		operator typeid
+syn keyword cppOperator		and bitor or xor compl bitand and_eq or_eq xor_eq not not_eq
 syn match cppCast		"\<\(const\|static\|dynamic\|reinterpret\)_cast\s*<"me=e-1
 syn match cppCast		"\<\(const\|static\|dynamic\|reinterpret\)_cast\s*$"
 syn keyword cppStorageClass	mutable
 syn keyword cppStructure	class typename template namespace
-syn keyword cppNumber	NPOS
-syn keyword cppBoolean	true false
+syn keyword cppNumber		NPOS
+syn keyword cppBoolean		true false
 
 " The minimum and maximum operators in GNU C++
 syn match cppMinMax "[<>]?"
@@ -45,8 +46,8 @@ if version >= 508 || !exists("did_cpp_syntax_inits")
   endif
   HiLink cppAccess		cppStatement
   HiLink cppCast		cppStatement
-  HiLink cppExceptions		cppStatement
-  HiLink cppOperator		cppStatement
+  HiLink cppExceptions		Exception
+  HiLink cppOperator		Operator
   HiLink cppStatement		Statement
   HiLink cppType		Type
   HiLink cppStorageClass	StorageClass

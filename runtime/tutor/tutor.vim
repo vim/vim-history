@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2003 Feb 24
+" Last Change:	2003 Mar 21
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -23,9 +23,12 @@ else
   if s:lang != ""
     " Remove "@euro" (ignoring case), it may be at the end
     let s:lang = substitute(s:lang, '\c@euro', '', '')
-    " On MS-Windows it may be German_Germany.1252.  How about other languages?
+    " On MS-Windows it may be German_Germany.1252 or Polish_Poland.1250.  How
+    " about other languages?
     if s:lang =~ "German"
       let s:ext = ".de"
+    elseif s:lang =~ "Polish"
+      let s:ext = ".pl"
     else
       let s:ext = "." . strpart(s:lang, 0, 2)
     endif
@@ -36,9 +39,9 @@ endif
 " The "sjis" one is actually "cp932", it doesn't matter for this text.
 if s:ext =~? '\.ja'
   if &enc =~ "euc"
-    let s:ext = s:ext . ".euc"
+    let s:ext = ".ja.euc"
   else
-    let s:ext = s:ext . ".sjis"
+    let s:ext = ".ja.sjis"
   endif
 endif
 
@@ -47,20 +50,20 @@ endif
 " Mendel L Chan <beos@turbolinux.com.cn> for Chinese vim tutorial
 if s:ext =~? '\.zh'
   if &enc =~ 'big5\|cp950'
-    let s:ext = s:ext . ".big5"
+    let s:ext = ".zh.big5"
   else
-    let s:ext = s:ext . ".euc"
+    let s:ext = ".zh.euc"
   endif
 endif
 
-" The Polish tutor is available in two encodings, guess which one to use
+" The Polish tutor is available in two encodings, guess which one to use.
 if s:ext =~? '\.pl' && &enc =~ 1250
-  let s:ext = s:ext . ".cp1250"
+  let s:ext = ".pl.cp1250"
 endif
 
 " The Greek tutor is available in two encodings, guess which one to use
 if s:ext =~? '\.gr' && &enc =~ 737
-  let s:ext = s:ext . ".cp737"
+  let s:ext = ".gr.cp737"
 endif
 
 " Somehow ".ge" (Germany) is sometimes used for ".de" (Deutsch).

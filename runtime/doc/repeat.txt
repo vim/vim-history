@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.1.  Last change: 2003 Mar 12
+*repeat.txt*    For Vim version 6.2a.  Last change: 2003 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -25,9 +25,9 @@ Chapter 26 of the user manual introduces repeating |usr_26.txt|.
 Simple changes can be repeated with the "." command.  Without a count, the
 count of the last change is used.  If you enter a count, it will replace the
 last one.  If the last change included a specification of a numbered register,
-the register number will be incremented.  See |undo-redo| for an example how
-to use this.  Note that when repeating a command that used a Visual selection,
-the same SIZE of area is used, see |visual-repeat|.
+the register number will be incremented.  See |redo-register| for an example
+how to use this.  Note that when repeating a command that used a Visual
+selection, the same SIZE of area is used, see |visual-repeat|.
 
 							*@:*
 @:			Repeat last command-line [count] times.
@@ -55,10 +55,12 @@ The global commands work by first scanning through the [range] lines and
 marking each line where a match occurs (for a multi-line pattern, only the
 start of the match matters).
 In a second scan the [cmd] is executed for each marked line with its line
-number prepended.  If a line is deleted its mark disappears.
+number prepended.  For ":v" and ":g!" the command is executed for each not
+marked line.  If a line is deleted its mark disappears.
 The default for [range] is the whole buffer (1,$).  Use "CTRL-C" to interrupt
 the command.  If an error message is given for a line, the command for that
-line is aborted and the global command continues with the next matching line.
+line is aborted and the global command continues with the next marked or
+unmarked line.
 
 To repeat a non-Ex command, you can use the ":normal" command: >
 	:g/pat/normal {commands}
@@ -213,8 +215,12 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 						*:fini* *:finish* *E168*
 :fini[sh]		Stop sourcing a script.  Can only be used in a Vim
 			script file.  This is a quick way to skip the rest of
-			the file.
-			{not in Vi}
+			the file.  If it is used after a |:try| but before the
+			matching |:finally| (if present), the commands
+			following the ":finally" up to the matching |:endtry|
+			are executed first.  This process applies to all
+			nested ":try"s in the script.  The outermost ":endtry"
+			then stops sourcing the script.  {not in Vi}
 
 All commands and command sequences can be repeated by putting them in a named
 register and then executing it.  There are two ways to get the commands in the
@@ -322,6 +328,16 @@ To avoid this, add the 'C' flag to the 'cpoptions' option: >
    .
    :set cpo-=C
 
+Note that when the commands are inside a function, you need to add the 'C'
+flag when defining the function, it is not relevant when executing it. >
+   :set cpo+=C
+   :function Foo()
+   :1append
+   \asdf
+   .
+   :endfunction
+   :set cpo-=C
+
 Rationale:
 	Most programs work with a trailing backslash to indicate line
 	continuation.  Using this in Vim would cause incompatibility with Vi.
@@ -360,7 +376,7 @@ To enter debugging mode use one of these methods:
 								*:debug*
 2. Run a command with ":debug" prepended.  Debugging will only be done while
    this command executes.  Useful for debugging a specific script or user
-   function.  And for scripts and fuctions used by autocommands.  Example: >
+   function.  And for scripts and functions used by autocommands.  Example: >
 	:debug edit test.txt.gz
 
 3. Set a breakpoint in a sourced file or user function.  You could do this in

@@ -50,22 +50,22 @@ FILE* fdDump = NULL;
  * errors disappear.  They do not need to be correct.
  */
 #ifdef PROTO
-# define HANDLE int
-# define SMALL_RECT int
-# define COORD int
-# define SHORT int
-# define WORD int
-# define DWORD int
-# define BOOL int
-# define LPSTR int
-# define LPTSTR int
-# define KEY_EVENT_RECORD int
-# define MOUSE_EVENT_RECORD int
+typedef int HANDLE;
+typedef int SMALL_RECT;
+typedef int COORD;
+typedef int SHORT;
+typedef int WORD;
+typedef int DWORD;
+typedef int BOOL;
+typedef int LPSTR;
+typedef int LPTSTR;
+typedef int KEY_EVENT_RECORD;
+typedef int MOUSE_EVENT_RECORD;
 # define WINAPI
-# define CONSOLE_CURSOR_INFO int
-# define LPCSTR char_u *
+typedef int CONSOLE_CURSOR_INFO;
+typedef char * LPCSTR;
 # define WINBASEAPI
-# define INPUT_RECORD int
+typedef int INPUT_RECORD;
 # define _cdecl
 #endif
 

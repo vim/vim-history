@@ -271,7 +271,7 @@ endif
 
 GUISRC =  vimres.c gui.c gui_w32.c
 SRC    =  os_w32exe.c buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c \
-	  ex_cmds2.c ex_docmd.c ex_getln.c fileio.c fold.c getchar.c main.c \
+	  ex_cmds2.c ex_docmd.c ex_eval.c ex_getln.c fileio.c fold.c getchar.c main.c \
 	  mark.c memfile.c memline.c menu.c message.c misc1.c misc2.c move.c \
 	  mbyte.c normal.c ops.c option.c os_win32.c os_mswin.c \
 	  quickfix.c regexp.c screen.c search.c syntax.c tag.c term.c ui.c \

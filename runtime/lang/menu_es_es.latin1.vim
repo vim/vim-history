@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2002 Mar 09
+" Last Change:		2003 Mar 30
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -48,7 +48,7 @@ menutrans &Redo<Tab>^R			&Rehacer<Tab>^R
 menutrans Rep&eat<Tab>\.		Repe&tir<Tab>\.
 menutrans Cu&t<Tab>"+x			Cor&tar<Tab>"+x
 menutrans &Copy<Tab>"+y			&Copiar<Tab>"+y
-menutrans &Paste<Tab>"+P		&Pegar<Tab>"+P
+menutrans &Paste<Tab>"+gP		&Pegar<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Poner\ &antes<Tab>[p
 menutrans Put\ &After<Tab>]p		Poner\ &después<Tab>]p
 if has("win32") || has("win16")
@@ -66,8 +66,8 @@ menutrans Settings\ &Window		&Ventana\ de\ opciones
 " Edit/Global Settings
 menutrans &Global\ Settings		Opciones\ &globales
 
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Activar/Desactivar\ &realzado\ de\ patrones<Tab>:set\ hls!
-menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Activar/Desactivar\ &ignorar\ la\ caja<Tab>:set\ ic!
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Activar/Desactivar\ &realzado\ de\ sintaxis<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Activar/Desactivar\ &ignorar\ mayúsculas\y\ minúsculas<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Activar/Desactivar\ &mostrar\ coincidencias<Tab>:set\ sm!
 
 menutrans &Context\ lines		Líneas\ de\ &contexto
@@ -75,8 +75,8 @@ menutrans &Context\ lines		Líneas\ de\ &contexto
 menutrans &Virtual\ Edit		Edición\ &virtual
 menutrans Never				Nunca
 menutrans Block\ Selection		Selección\ de\ bloque
-menutrans Insert\ mode			Modo\ insertar
-menutrans Block\ and\ Insert		Bloque\ e\ insertar
+menutrans Insert\ mode			Modo\ de\ inserción
+menutrans Block\ and\ Insert		Bloque\ e\ inserción
 menutrans Always			Siempre
 
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Activar/Desactivar\ modo\ de\ in&serción<Tab>:set\ im!
@@ -110,16 +110,17 @@ menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ &C<
 " other options
 menutrans &Shiftwidth			Anchura\ del\ &sangrado
 
-menutrans Soft\ &Tabstop		&Tabulado\ suave
+menutrans Soft\ &Tabstop		&Tabulado\ «blando»
 
 menutrans Te&xt\ Width\.\.\.		Anchura\ del\ te&xto\.\.\.
-let g:menutrans_textwidth_dialog = "Introduzca la nueva anchura del texto (0 para desactivar el formateo): "
+let g:menutrans_textwidth_dialog = "Introduzca el nuevo ancho del texto (0 para desactivar el quiebre de línea): "
 
 menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
 let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
 
 menutrans C&olor\ Scheme		Esquema\ de\ c&olores
 menutrans blue		azul
+menutrans darkblue	azul\ oscuro
 menutrans default	normal
 menutrans evening	vespertino
 menutrans morning	matutino
@@ -271,9 +272,9 @@ menutrans &Off				&Desactivar
 menutrans &Manual			&Manual
 menutrans A&utomatic			A&utomática
 menutrans on/off\ for\ &This\ file	Activar/Desactivar\ en\ es&te\ fichero
-menutrans Co&lor\ test			&Prueba\ del\ color
-menutrans &Highlight\ test		Prueba\ del\ &realzado
+menutrans Co&lor\ test			&Prueba\ de\ colores
+menutrans &Highlight\ test		Prueba\ de\ &realzado
 menutrans &Convert\ to\ HTML		&Convertir\ en\ HTML
 
 " Find Help dialog text
-let g:menutrans_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción (e.g.: `shiftwidth`)"
+let g:menutrans_help_dialog = "Introduzca un nombre de comando o palabra para obtener ayuda;\n\nAnteponga i_ para comandos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para comandos de la línea de comandos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción (e.g.: `shiftwidth`)"

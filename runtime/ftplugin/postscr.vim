@@ -1,7 +1,7 @@
 " Vim filetype plugin file
-" Language:	    PostScript
-" Maintainer:	  Mike Williams <mrw@netcomuk.co.uk>
-" Last Change:  15th August 2001
+" Language:     PostScript
+" Maintainer:   Mike Williams <mrw@eandem.co.uk>
+" Last Change:  27th June 2002
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")

@@ -2956,7 +2956,7 @@ check_keyword_id(line, startcol, endcolp, flagsp, next_listp, cur_si)
 	    ktab = syn_buf->b_keywtab[syn_khash(keyword)];
 	else /* round == 2, ignore case */
 	{
-	    p = str_foldcase(keyword, STRLEN(keyword));
+	    p = str_foldcase(keyword, (int)STRLEN(keyword));
 	    if (p != NULL)
 	    {
 		STRNCPY(keyword, p, MAXKEYWLEN);
@@ -3924,7 +3924,7 @@ add_keyword(name, id, flags, cont_in_list, next_list)
 
     if (curbuf->b_syn_ic)
     {
-	name_ic = str_foldcase(name, STRLEN(name));
+	name_ic = str_foldcase(name, (int)STRLEN(name));
 	if (name_ic == NULL)
 	    name_ic = name;
     }
@@ -8382,9 +8382,11 @@ free_highlight_fonts()
 # ifdef FEAT_XFONTSET
     gui_mch_free_fontset(gui.fontset);
 # endif
+# ifndef HAVE_GTK2
     gui_mch_free_font(gui.bold_font);
     gui_mch_free_font(gui.ital_font);
     gui_mch_free_font(gui.boldital_font);
+# endif
 }
 #endif
 

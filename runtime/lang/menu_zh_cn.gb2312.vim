@@ -42,7 +42,7 @@ menutrans &Redo<Tab>^R			重做(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		重复上次动作(&E)<Tab>\.
 menutrans Cu&t<Tab>"+x			剪切(&T)<Tab>"+x
 menutrans &Copy<Tab>"+y			复制(&C)<Tab>"+y
-menutrans &Paste<Tab>"+P		粘帖(&P)<Tab>"+P
+menutrans &Paste<Tab>"+gP		粘帖(&P)<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		贴到光标前(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		贴到光标后(&A)<Tab>]p
 menutrans &Delete<Tab>x			删除(&D)<Tab>x

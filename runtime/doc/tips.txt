@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.1.  Last change: 2001 Dec 11
+*tips.txt*      For Vim version 6.2a.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -105,8 +105,8 @@ Put this in your .vimrc: >
 	endfun
 
 To use it, place the cursor on a word, type "_u" and vim will load the file
-that contains the word.  Search for the next occurence of the word in the same
-file with "n".  Go to the next file with "_n".
+that contains the word.  Search for the next occurrence of the word in the
+same file with "n".  Go to the next file with "_n".
 
 This has been tested with id-utils-3.2 (which is the name of the id-tools
 archive file on your closest gnu-ftp-mirror).
@@ -213,7 +213,9 @@ number of substitutions is the number of items.  Examples: >
 	:%s/\<the\>/&/g		"the" as a word
 
 You might want to reset 'hlsearch' or do ":nohlsearch".
-An alternative is using |v_g_CTRL-G| in Visual mode.
+
+This does not work if the 'modifiable' option is off.  An alternative is using
+|v_g_CTRL-G| in Visual mode.
 
 ==============================================================================
 Restoring the cursor position				*restore-position*

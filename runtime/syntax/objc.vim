@@ -1,7 +1,8 @@
 " Vim syntax file
 " Language:	Objective C
-" Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	2001 May 09
+" Maintainer:	Anthony Hodsdon <ahodsdon@fastmail.fm>
+" First Author:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
+" Last Change:	2003 Jan 30
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -11,11 +12,13 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-" Read the C syntax to start with
-if version < 600
-  source <sfile>:p:h/c.vim
-else
-  runtime! syntax/c.vim
+if &filetype != 'objcpp'
+  " Read the C syntax to start with
+  if version < 600
+    source <sfile>:p:h/c.vim
+  else
+    runtime! syntax/c.vim
+  endif
 endif
 
 " Objective C extentions follow below
@@ -47,8 +50,8 @@ syn match  objcDirective	"@encode\|@protocol\|@selector"
 " However, if you prefer full method declaration matching
 " append .* at the end of the next two patterns!
 "
-syn match objcInstMethod  "^[\t\s]*-[\s]*"
-syn match objcFactMethod  "^[\t\s]*+[\s]*"
+syn match objcInstMethod  "^\s*-\s*"
+syn match objcFactMethod  "^\s*+\s*"
 
 
 " Define the default highlighting.

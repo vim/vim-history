@@ -1282,7 +1282,7 @@ copy_viminfo_marks(virp, fp_out, count, eof)
 	{
 	    if (line[0] != '\n' && line[0] != '\r' && line[0] != '#')
 	    {
-		if (viminfo_error(_("Missing '>'"), line))
+		if (viminfo_error("E576: ", _("Missing '>'"), line))
 		    break;	/* too many errors, return now */
 	    }
 	    eof = vim_fgets(line, LSIZE, virp->vir_fd);
@@ -1352,7 +1352,7 @@ copy_viminfo_marks(virp, fp_out, count, eof)
 	    {
 		if (line[1] != NUL)
 		{
-		    sscanf((char *)line + 2, "%ld %d", &pos.lnum, &pos.col);
+		    sscanf((char *)line + 2, "%ld %u", &pos.lnum, &pos.col);
 		    switch (line[1])
 		    {
 			case '"': curbuf->b_last_cursor = pos; break;

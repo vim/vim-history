@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2003 Mar 09
+*eval.txt*      For Vim version 6.2a.  Last change: 2003 Apr 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -37,29 +37,29 @@ These are converted automatically, depending on how they are used.
 
 Conversion from a Number to a String is by making the ASCII representation of
 the Number.  Examples: >
-Number 123	-->	String "123"
-Number 0	-->	String "0"
-Number -1	-->	String "-1"
+	Number 123	-->	String "123"
+	Number 0	-->	String "0"
+	Number -1	-->	String "-1"
 
 Conversion from a String to a Number is done by converting the first digits
 to a number.  Hexadecimal "0xf9" and Octal "017" numbers are recognized.  If
 the String doesn't start with digits, the result is zero.  Examples: >
-String "456"	-->	Number 456
-String "6bar"	-->	Number 6
-String "foo"	-->	Number 0
-String "0xf1"	-->	Number 241
-String "0100"	-->	Number 64
+	String "456"	-->	Number 456
+	String "6bar"	-->	Number 6
+	String "foo"	-->	Number 0
+	String "0xf1"	-->	Number 241
+	String "0100"	-->	Number 64
 
 To force conversion from String to Number, add zero to it: >
-:echo "0100" + 0
+	:echo "0100" + 0
 
 For boolean operators Numbers are used.  Zero is FALSE, non-zero is TRUE.
 
 Note that in the command >
-:if "foo"
+	:if "foo"
 "foo" is converted to 0, which means FALSE.  To test for a non-empty string,
 use strlen(): >
-:if strlen("foo")
+	:if strlen("foo")
 
 If you need to know the type of a variable or expression, use the |type()|
 function.
@@ -230,7 +230,8 @@ Examples:
 "abc" == "Abc"	  evaluates to 1 if 'ignorecase' is set, 0 otherwise
 
 When comparing a String with a Number, the String is converted to a Number,
-and the comparison is done on Numbers.
+and the comparison is done on Numbers.  This means that "0 == 'x'" is TRUE,
+because 'x' converted to a Number is zero.
 
 When comparing two Strings, this is done with strcmp() or stricmp().  This
 results in the mathematical difference (comparing byte values), not
@@ -326,10 +327,13 @@ A string constant accepts these special characters:
 \...	three-digit octal number (e.g., "\316")
 \..	two-digit octal number (must be followed by non-digit)
 \.	one-digit octal number (must be followed by non-digit)
-\x..	two-character hex number (e.g., "\x1f")
-\x.	one-character hex number (must be followed by non-hex)
+\x..	byte specified with two hex numbers (e.g., "\x1f")
+\x.	byte specified with one hex number (must be followed by non-hex char)
 \X..	same as \x..
 \X.	same as \x.
+\u....  character specified with up to 4 hex numbers, stored according to the
+	current value of 'encoding' (e.g., "\u02a4")
+\U....	same as \u....
 \b	backspace <BS>
 \e	escape <Esc>
 \f	formfeed <FF>
@@ -417,7 +421,7 @@ See below |functions|.
 
 ==============================================================================
 3. Internal variable				*internal-variables* *E121*
-
+									*E461*
 An internal variable name can be made up of letters, digits and '_'.  But it
 cannot start with a digit.  It's also possible to use curly braces, see
 |curly-braces-names|.
@@ -605,6 +609,17 @@ v:errmsg	Last given error message.  It's allowed to set this variable.
 	:  ... handle error
 <		"errmsg" also works, for backwards compatibility.
 
+					*v:exception* *exception-variable*
+v:exception	The value of the exception most recently caught and not
+		finished.  See also |v:throwpoint|.
+		Example: >
+	:try
+	:  throw "oops"
+	:catch /.*/
+	:  echo "caught" v:exception
+	:endtry
+<		Output: "caught oops"
+
 					*v:fname_in* *fname_in-variable*
 v:fname_in	The name of the input file.  Only valid while evaluating:
 			option		used for ~
@@ -680,9 +695,9 @@ v:prevcount	The count given for the last but one Normal mode command.
 <		Read-only.
 
 					*v:progname* *progname-variable*
-v:progname	Contains the name (with path removed) with which vim was
+v:progname	Contains the name (with path removed) with which Vim was
 		invoked.  Allows you to do special initialisations for "view",
-		"evim" etc., or any other name you might symlink to vim.
+		"evim" etc., or any other name you might symlink to Vim.
 		Read-only.
 
 					*v:servername* *servername-variable*
@@ -724,6 +739,18 @@ v:this_session	Full filename of the last loaded or saved session file.  See
 		|:mksession|.  It is allowed to set this variable.  When no
 		session file has been saved, this variable is empty.
 		"this_session" also works, for backwards compatibility.
+
+					*v:throwpoint* *throwpoint-variable*
+v:throwpoint	The point where the exception most recently caught and not
+		finished was thrown.  Not set when commands are typed.  See
+		also |v:exception|.
+		Example: >
+	:try
+	:  throw "oops"
+	:catch /.*/
+	:  echo "Exception from" v:throwpoint
+	:endtry
+<		Output: "Exception from test.vim, line 2"
 
 					*v:version* *version-variable*
 v:version	Version number of Vim: Major version number times 100 plus
@@ -788,13 +815,13 @@ getchar( [expr])		Number  get one character from the user
 getcharmod( )			Number  modifiers for the last typed character
 getbufvar( {expr}, {varname})		variable {varname} in buffer {expr}
 getcwd()			String	the current working directory
-getftime( {fname})		Number	last modification time of file
 getfsize( {fname})		Number	size in bytes of file
+getftime( {fname})		Number	last modification time of file
 getline( {lnum})		String	line {lnum} from current buffer
-getwinposx()			Number	X coord in pixels of GUI vim window
-getwinposy()			Number	Y coord in pixels of GUI vim window
-getwinvar( {nr}, {varname}		variable {varname} in window {nr}
-glob( {expr}])			String	expand file wildcards in {expr}
+getwinposx()			Number	X coord in pixels of GUI Vim window
+getwinposy()			Number	Y coord in pixels of GUI Vim window
+getwinvar( {nr}, {varname})		variable {varname} in window {nr}
+glob( {expr})			String	expand file wildcards in {expr}
 globpath( {path}, {expr})	String	do glob({expr}) for all dirs in {path}
 has( {feature})			Number	TRUE if feature {feature} supported
 hasmapto( {what} [, {mode}])	Number	TRUE if mapping to {what} exists
@@ -804,7 +831,7 @@ histget( {history} [, {index}])	String	get the item {index} from a history
 histnr( {history})		Number	highest index of a history
 hlexists( {name})		Number	TRUE if highlight group {name} exists
 hlID( {name})			Number	syntax ID of highlight group {name}
-hostname()			String	name of the machine vim is running on
+hostname()			String	name of the machine Vim is running on
 iconv( {expr}, {from}, {to})	String  convert encoding of {expr}
 indent( {lnum})			Number  indent of line {lnum}
 input( {prompt} [, {text}])	String	get input from the user
@@ -844,7 +871,7 @@ resolve( {filename})		String  get filename a shortcut points to
 search( {pattern} [, {flags}])	Number  search for {pattern}
 searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
 				Number  search for other end of start/end pair
-server2client( {serverid}, {string})
+server2client( {clientid}, {string})
 				Number	send reply string
 serverlist()			String	get a list of available servers
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
@@ -898,7 +925,7 @@ argv({nr})	The result is the {nr}th file in the argument list of the
 		Example: >
 	:let i = 0
 	:while i < argc()
-	:  let f = substitute(argv(i), '\([. ]\)', '\\&', 'g')
+	:  let f = escape(argv(i), '. ')
 	:  exe 'amenu Arg.' . f . ' :e ' . f . '<CR>'
 	:  let i = i + 1
 	:endwhile
@@ -1191,7 +1218,8 @@ exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 					or user defined function (see
 					|user-functions|).
 			varname		internal variable (see
-					|internal-variables|).
+					|internal-variables|).  Does not work
+					for |curly-braces-names|.
 			:cmdname	Ex command, both built-in and user
 					commands |:command|
 					returns:
@@ -1209,6 +1237,7 @@ exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 			exists("&shortname")
 			exists("$HOSTNAME")
 			exists("*strftime")
+			exists("*s:MyFunc")
 			exists("bufcount")
 			exists(":Make")
 			exists("#CursorHold");
@@ -1242,7 +1271,7 @@ expand({expr} [, {flag}])				*expand()*
 			#n		alternate file name n
 			<cfile>		file name under the cursor
 			<afile>		autocmd file name
-			<abuf>		autocmd buffer number
+			<abuf>		autocmd buffer number (as a String!)
 			<amatch>	autocmd matched name
 			<sfile>		sourced script file name
 			<cword>		word under the cursor
@@ -1281,11 +1310,14 @@ expand({expr} [, {flag}])				*expand()*
 		When {expr} does not start with '%', '#' or '<', it is
 		expanded like a file name is expanded on the command line.
 		'suffixes' and 'wildignore' are used, unless the optional
-		{flag} argument is given and it is non-zero.
+		{flag} argument is given and it is non-zero.  Names for
+		non-existing files are included.
 
 		Expand() can also be used to expand variables and environment
 		variables that are only known in a shell.  But this can be
 		slow, because a shell must be started.  See |expr-env-expand|.
+		The expanded variable is still handled like a list of file
+		names.
 
 		See |glob()| for finding existing files.  See |system()| for
 		getting the raw output of an external command.
@@ -1360,7 +1392,8 @@ foreground()	Move the Vim window to the foreground.  Useful when sent from
 getchar([expr])						*getchar()*
 		Get a single character from the user.  If it is an 8-bit
 		character, the result is a number.  Otherwise a String is
-		returned with the encoded character.
+		returned with the encoded character.  For a special key it's a
+		sequence of bytes starting with 0x80 (decimal: 128).
 		If [expr] is omitted, wait until a character is available.
 		If [expr] is 0, only get a character when one is available.
 		If [expr] is 1, only check if a character is available, it is
@@ -1369,7 +1402,13 @@ getchar([expr])						*getchar()*
 				non-zero value is returned.
 		If a character available, it is returned as a Number.  Use
 		nr2char() to convert it to a String.
-		The returned value is negative for special keys.
+		To turn a multi-byte character string also to a Number use
+		this: >
+			let c = getchar()
+			if c == 0
+			   let c = char2nr(c)
+			endif
+<		The returned value is negative for special keys.
 		The returned value is zero if no character is available.
 		There is no prompt, you will somehow have to make clear to the
 		user that a character has to be typed.
@@ -1402,14 +1441,19 @@ getcharmod()						*getcharmod()*
 			32	mouse triple click
 			64	mouse quadruple click
 			128	Macintosh only: command
+		Only the modifiers that have not been included in the
+		character itself are obtained.  Thus Shift-a results in "A"
+		with no modifier.
 
 getbufvar({expr}, {varname})				*getbufvar()*
 		The result is the value of option or local buffer variable
-		{varname} in buffer {expr}.
+		{varname} in buffer {expr}.  Note that the name without "b:"
+		must be used.
 		This also works for a global or local window option, but it
 		doesn't work for a global or local window variable.
 		For the use of {expr}, see |bufname()| above.
-		Note that the name without "b:" must be used.
+		When the buffer or variable doesn't exist an empty string is
+		returned, there is no error message.
 		Examples: >
 			:let bufmodified = getbufvar(1, "&mod")
 			:echo "todo myvar = " . getbufvar("todo", "myvar")
@@ -1418,18 +1462,18 @@ getbufvar({expr}, {varname})				*getbufvar()*
 getcwd()	The result is a String, which is the name of the current
 		working directory.
 
+getfsize({fname})					*getfsize()*
+		The result is a Number, which is the size in bytes of the
+		given file {fname}.
+		If {fname} is a directory, 0 is returned.
+		If the file {fname} can't be found, -1 is returned.
+
 getftime({fname})					*getftime()*
 		The result is a Number, which is the last modification time of
 		the given file {fname}.  The value is measured as seconds
 		since 1st Jan 1970, and may be passed to strftime().  See also
 		|localtime()| and |strftime()|.
 		If the file {fname} can't be found -1 is returned.
-
-getfsize({fname})					*getfsize()*
-		The result is a Number, which is the size in bytes of the
-		given file {fname}.
-		If {fname} is a directory, 0 is returned.
-		If the file {fname} can't be found, -1 is returned.
 
 							*getline()*
 getline({lnum}) The result is a String, which is line {lnum} from the current
@@ -1444,12 +1488,12 @@ getline({lnum}) The result is a String, which is line {lnum} from the current
 
 							*getwinposx()*
 getwinposx()	The result is a Number, which is the X coordinate in pixels of
-		the left hand side of the GUI vim window.  The result will be
+		the left hand side of the GUI Vim window.  The result will be
 		-1 if the information is not available.
 
 							*getwinposy()*
 getwinposy()	The result is a Number, which is the Y coordinate in pixels of
-		the top of the GUI vim window.  The result will be -1 if the
+		the top of the GUI Vim window.  The result will be -1 if the
 		information is not available.
 
 getwinvar({nr}, {varname})				*getwinvar()*
@@ -1498,8 +1542,9 @@ has({feature})	The result is a Number, which is 1 if the feature {feature} is
 
 hasmapto({what} [, {mode}])				*hasmapto()*
 		The result is a Number, which is 1 if there is a mapping that
-		contains {what} in the rhs (what it is mapped to) and this
-		mapping exists in one of the modes indicated by {mode}.
+		contains {what} in somewhere in the rhs (what it is mapped to)
+		and this mapping exists in one of the modes indicated by
+		{mode}.
 		Both the global mappings and the mappings local to the current
 		buffer are checked for a match.
 		If no matching mapping is found 0 is returned.
@@ -1535,7 +1580,8 @@ histadd({history}, {item})				*histadd()*
 		Example: >
 			:call histadd("input", strftime("%Y %b %d"))
 			:let date=input("Enter date: ")
-<
+<		This function is not available in the |sandbox|.
+
 histdel({history} [, {item}])				*histdel()*
 		Clear {history}, ie. delete all its entries.  See |hist-names|
 		for the possible values of {history}.
@@ -1543,7 +1589,7 @@ histdel({history} [, {item}])				*histdel()*
 		If the parameter {item} is given as String, this is seen
 		as regular expression.  All entries matching that expression
 		will be removed from the history (if there are any).
-		Upper/lowercase must match, unless "\c" is used |/\c|"
+		Upper/lowercase must match, unless "\c" is used |/\c|.
 		If {item} is a Number, it will be interpreted as index, see
 		|:history-indexing|.  The respective entry will be removed
 		if it exists.
@@ -1730,8 +1776,9 @@ libcall({libname}, {funcname}, {argument})
 		to Vim.
 		If the function returns a number, use libcallnr()!
 		If {argument} is a number, it is passed to the function as an
-		int; if {param} is a string, it is passed as a null-terminated
-		string.
+		int; if {argument} is a string, it is passed as a
+		null-terminated string.
+		This function will fail in |restricted-mode|.
 
 		libcall() allows you to write your own 'plug-in' extensions to
 		Vim without having to recompile the program.  It is NOT a
@@ -1824,6 +1871,7 @@ maparg({name}[, {mode}])				*maparg()*
 			"o"	Operator-pending
 			"i"	Insert
 			"c"	Cmd-line
+			"l"	langmap |language-mapping|
 			""	Normal, Visual and Operator-pending
 		When {mode} is omitted, the modes from "" are used.
 		The {name} can have special key names, like in the ":map"
@@ -1945,6 +1993,7 @@ prevnonblank({lnum})					*prevnonblank()*
 			let ind = indent(prevnonblank(v:lnum - 1))
 <		When {lnum} is invalid or there is no non-blank line at or
 		above it, zero is returned.
+		Also see |nextnonblank()|.
 
 							*remote_expr()* *E449*
 remote_expr({server}, {string} [, {idvar}])
@@ -1954,6 +2003,7 @@ remote_expr({server}, {string} [, {idvar}])
 		variable and a {serverid} for later use with
 		remote_read() is stored there.
 		See also |clientserver| |RemoteReply|.
+		This function is not available in the |sandbox|.
 		{only available when compiled with the |+clientserver| feature}
 		Note: Any errors will cause a local error message to be issued
 		and the result will be the empty string.
@@ -1969,6 +2019,7 @@ remote_foreground({server})				*remote_foreground()*
 <		Except that on Win32 systems the client does the work, to work
 		around the problem that the OS doesn't always allow the server
 		to bring itself to the foreground.
+		This function is not available in the |sandbox|.
 		{only in the Win32, Athena, Motif and GTK GUI versions and the
 		Win32 console version}
 
@@ -1979,7 +2030,9 @@ remote_peek({serverid} [, {retvar}])		*remote_peek()*
 		{retvar} if specified.  {retvar} must be a string with the
 		name of a variable.
 		Returns zero if none are available.
+		Returns -1 if something is wrong.
 		See also |clientserver|.
+		This function is not available in the |sandbox|.
 		{only available when compiled with the |+clientserver| feature}
 		Examples: >
 			:let repl = ""
@@ -1989,8 +2042,9 @@ remote_read({serverid})				*remote_read()*
 		Return the oldest available reply from {serverid} and consume
 		it.  It blocks until a reply is available.
 		See also |clientserver|.
+		This function is not available in the |sandbox|.
 		{only available when compiled with the |+clientserver| feature}
-		Examples: >
+		Example: >
 			:echo remote_read(id)
 <
 							*remote_send()* *E241*
@@ -2001,6 +2055,7 @@ remote_send({server}, {string} [, {idvar}])
 		variable and a {serverid} for later use with
 		remote_read() is stored there.
 		See also |clientserver| |RemoteReply|.
+		This function is not available in the |sandbox|.
 		{only available when compiled with the |+clientserver| feature}
 		Note: Any errors will be reported in the server and may mess
 		up the display.
@@ -2019,6 +2074,7 @@ rename({from}, {to})					*rename()*
 		should also work to move files across file systems.  The
 		result is a Number, which is 0 if the file was renamed
 		successfully, and non-zero when the renaming failed.
+		This function is not available in the |sandbox|.
 
 resolve({filename})					*resolve()*
 		On MS-Windows, when {filename} is a shortcut (a .lnk file),
@@ -2073,7 +2129,7 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 		{middle} is not empty, it is found when searching from either
 		direction, but only when not in a nested start-end pair.  A
 		typical use is: >
-			searchpair("if", "else", "endif")
+			searchpair('\<if\>', '\<else\>', '\<endif\>')
 <		By leaving {middle} empty the "else" is skipped.
 
 		{flags} are used like with |search()|.  Additionally:
@@ -2162,7 +2218,8 @@ setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Examples: >
 			:call setbufvar(1, "&mod", 1)
 			:call setbufvar("todo", "myvar", "foobar")
-<
+<		This function is not available in the |sandbox|.
+
 setline({lnum}, {line})					*setline()*
 		Set line {lnum} of the current buffer to {line}.  If this
 		succeeds, 0 is returned.  If this fails (most likely because
@@ -2180,7 +2237,8 @@ setwinvar({nr}, {varname}, {val})			*setwinvar()*
 		Examples: >
 			:call setwinvar(1, "&list", 0)
 			:call setwinvar(2, "myvar", "foobar")
-<
+<		This function is not available in the |sandbox|.
+
 strftime({format} [, {time}])				*strftime()*
 		The result is a String, which is a formatted date and time, as
 		specified by the {format} string.  The given {time} is used,
@@ -2247,7 +2305,7 @@ strtrans({expr})					*strtrans()*
 
 submatch({nr})						*submatch()*
 		Only for an expression in a |:substitute| command.  Returns
-		the {nr}'th submatch of the matched text  When {nr} is 0
+		the {nr}'th submatch of the matched text.  When {nr} is 0
 		the whole matched text is returned.
 		Example: >
 			:s/\d\+/\=submatch(0) + 1/
@@ -2289,7 +2347,7 @@ synID({line}, {col}, {trans})				*synID()*
 		Warning: This function can be very slow.  Best speed is
 		obtained by going through the file in forward direction.
 
-		Example (echos the name of the syntax item under the cursor): >
+		Example (echoes the name of the syntax item under the cursor): >
 			:echo synIDattr(synID(line("."), col("."), 1), "name")
 <
 synIDattr({synID}, {what} [, {mode}])			*synIDattr()*
@@ -2303,21 +2361,21 @@ synIDattr({synID}, {what} [, {mode}])			*synIDattr()*
 		Use synIDtrans() to follow linked highlight groups.
 		{what}		result
 		"name"		the name of the syntax item
-		"fg"		foreground color (GUI: color name, cterm:
-				color number as a string, term: empty string)
+		"fg"		foreground color (GUI: color name used to set
+				the color, cterm: color number as a string,
+				term: empty string)
 		"bg"		background color (like "fg")
-		"fg#"		like "fg", but name in "#RRGGBB" form
-		"bg#"		like "bg", but name in "#RRGGBB" form
+		"fg#"		like "fg", but for the GUI and the GUI is
+				running the name in "#RRGGBB" form
+		"bg#"		like "fg#" for "bg"
 		"bold"		"1" if bold
 		"italic"	"1" if italic
 		"reverse"	"1" if reverse
 		"inverse"	"1" if inverse (= reverse)
 		"underline"	"1" if underlined
 
-		When the GUI is not running or the cterm mode is asked for,
-		"fg#" is equal to "fg" and "bg#" is equal to "bg".
-
-		Example (echos the color of the syntax item under the cursor): >
+		Example (echoes the color of the syntax item under the
+		cursor): >
 	:echo synIDattr(synIDtrans(synID(line("."), col("."), 1)), "fg")
 <
 synIDtrans({synID})					*synIDtrans()*
@@ -2356,6 +2414,8 @@ tempname()					*tempname()* *temp-file-name*
 		accessible by the current user) to avoid security problems
 		(e.g., a symlink attack or other people reading your file).
 		When Vim exits the directory and all files in it are deleted.
+		For MS-Windows forward slashes are used when the 'shellslash'
+		option is set or when 'shellcmdflag' starts with '-'.
 
 tolower({expr})						*tolower()*
 		The result is a copy of the String given, with all uppercase
@@ -2379,7 +2439,7 @@ virtcol({expr})						*virtcol()*
 		would be of unlimited width.  When there is a <Tab> at the
 		position, the returned Number will be the column at the end of
 		the <Tab>.  For example, for a <Tab> in column 1, with 'ts'
-		set to 8, it returns 8;
+		set to 8, it returns 8.
 		When Virtual editing is active in the current mode, a position
 		beyond the end of the line can be returned. |'virtualedit'|
 		The accepted positions are:
@@ -2492,6 +2552,7 @@ dialog_con		Compiled with console dialog support.
 dialog_gui		Compiled with GUI dialog support.
 diff			Compiled with |vimdiff| and 'diff' support.
 digraphs		Compiled with support for digraphs.
+dnd			Compiled with support for the "~ register |quote_~|.
 dos32			32 bits DOS (DJGPP) version of Vim.
 dos16			16 bits DOS version of Vim.
 ebcdic			Compiled on a machine with ebcdic character set.
@@ -2514,7 +2575,8 @@ gettext			Compiled with message translation |multi-lang|
 gui			Compiled with GUI enabled.
 gui_athena		Compiled with Athena GUI.
 gui_beos		Compiled with BeOs GUI.
-gui_gtk			Compiled with GTK+ GUI.
+gui_gtk			Compiled with GTK+ GUI (any version).
+gui_gtk2		Compiled with GTK+ 2 GUI (gui_gtk is also defined).
 gui_mac			Compiled with Macintosh GUI.
 gui_motif		Compiled with Motif GUI.
 gui_photon		Compiled with Photon GUI.
@@ -2522,7 +2584,7 @@ gui_win32		Compiled with MS Windows Win32 GUI.
 gui_win32s		idem, and Win32s system being used (Windows 3.1)
 gui_running		Vim is running in the GUI, or it will start soon.
 hangul_input		Compiled with Hangul input support. |hangul|
-iconv			Can use iconv() for coversion.
+iconv			Can use iconv() for conversion.
 insert_expand		Compiled with support for CTRL-X expansion commands in
 			Insert mode.
 jumplist		Compiled with |jumplist| support.
@@ -2550,6 +2612,7 @@ mouse_xterm		Compiled with support for xterm mouse.
 multi_byte		Compiled with support for editing Korean et al.
 multi_byte_ime		Compiled with support for IME input method.
 multi_lang		Compiled with support for multiple languages.
+netbeans_intg		Compiled with support for |netbeans|.
 ole			Compiled with OLE automation support for Win32.
 os2			OS/2 version of Vim.
 osfiletype		Compiled with support for osfiletypes |+osfiletype|
@@ -2558,7 +2621,7 @@ perl			Compiled with Perl interface.
 postscript		Compiled with PostScript file printing.
 printer			Compiled with |:hardcopy| support.
 python			Compiled with Python interface.
-qnx			QNX version of vim.
+qnx			QNX version of Vim.
 quickfix		Compiled with |quickfix| support.
 rightleft		Compiled with 'rightleft' support.
 ruby			Compiled with Ruby interface |ruby|.
@@ -2640,7 +2703,8 @@ Don't forget that "^" will only match at the first character of the String and
 5. Defining functions					*user-functions*
 
 New functions can be defined.  These can be called just like builtin
-functions.
+functions.  The function executes a sequence of Ex commands.  Normal mode
+commands can be executed with the |:normal| command.
 
 The function name must start with an uppercase letter, to avoid confusion with
 builtin functions.  To prevent from using the same name in different scripts
@@ -2676,7 +2740,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 			is set to the number of extra arguments (which can be
 			0).
 			When not using "...", the number of arguments in a
-			function call must be equal the number of named
+			function call must be equal to the number of named
 			arguments.  When using "...", the number of arguments
 			may be larger.
 			It is also possible to define a function without any
@@ -2688,6 +2752,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 			When a function by this name already exists and [!] is
 			not used an error message is given.  When [!] is used,
 			an existing function is silently replaced.
+						*a:firstline* *a:lastline*
 			When the [range] argument is added, the function is
 			expected to take care of a range itself.  The range is
 			passed as "a:firstline" and "a:lastline".  If [range]
@@ -2714,6 +2779,14 @@ instead of "s:" when the mapping is expanded outside of the script.
 			the number 0 is returned.
 			Note that there is no check for unreachable lines,
 			thus there is no warning if commands follow ":return".
+			
+			If the ":return" is used after a |:try| but before the
+			matching |:finally| (if present), the commands
+			following the ":finally" up to the matching |:endtry|
+			are executed first.  This process applies to all
+			nested ":try"s inside the function.  The function
+			returns at the outermost ":endtry".
+
 
 Inside a function variables can be used.  These are local variables, which
 will disappear when the function returns.  Global variables need to be
@@ -2838,7 +2911,7 @@ You can use multiple brace pairs: >
 	echo my_{adverb}_{adjective}_message
 ..or even nest them: >
 	echo my_{ad{end_of_word}}_message
-where "end_of_word" is either "verb" or "jective"
+where "end_of_word" is either "verb" or "jective".
 
 However, the expression inside the braces must evaluate to a valid single
 variable name. e.g. this is invalid: >
@@ -2851,8 +2924,8 @@ You can call and define functions by an evaluated name in a similar way.
 Example: >
 	:let func_end='whizz'
 	:call my_func_{func_end}(parameter)
-<
-This would call the function "my_func_whizz(parameter)"
+
+This would call the function "my_func_whizz(parameter)".
 
 ==============================================================================
 7. Commands						*expression-commands*
@@ -2860,7 +2933,7 @@ This would call the function "my_func_whizz(parameter)"
 :let {var-name} = {expr1}				*:let* *E18*
 			Set internal variable {var-name} to the result of the
 			expression {expr1}.  The variable will get the type
-			from the {expr}.  if {var-name} didn't exist yet, it
+			from the {expr}.  If {var-name} didn't exist yet, it
 			is created.
 
 :let ${env-name} = {expr1}			*:let-environment* *:let-$*
@@ -2910,7 +2983,7 @@ This would call the function "my_func_whizz(parameter)"
 			With [!] no error message is given for non-existing
 			variables.
 
-:if {expr1}					*:if* *:endif* *:en* *E171*
+:if {expr1}			*:if* *:endif* *:en* *E171* *E579* *E580*
 :en[dif]		Execute the commands until the next matching ":else"
 			or ":endif" if {expr1} evaluates to non-zero.
 
@@ -2938,16 +3011,17 @@ This would call the function "my_func_whizz(parameter)"
 			NOTE: The ":append" and ":insert" commands don't work
 			properly in between ":if" and ":endif".
 
-							*:else* *:el*
+						*:else* *:el* *E581* *E583*
 :el[se]			Execute the commands until the next matching ":else"
 			or ":endif" if they previously were not being
 			executed.
 
-							*:elseif* *:elsei*
+					*:elseif* *:elsei* *E582* *E584*
 :elsei[f] {expr1}	Short for ":else" ":if", with the addition that there
 			is no extra ":endif".
 
-:wh[ile] {expr1}		*:while* *:endwhile* *:wh* *:endw* *E170*
+:wh[ile] {expr1}			*:while* *:endwhile* *:wh* *:endw*
+							*E170* *E585* *E588*
 :endw[hile]		Repeat the commands between ":while" and ":endwhile",
 			as long as {expr1} evaluates to non-zero.
 			When an error is detected from a command inside the
@@ -2956,13 +3030,109 @@ This would call the function "my_func_whizz(parameter)"
 			NOTE: The ":append" and ":insert" commands don't work
 			properly inside a ":while" loop.
 
-							*:continue* *:con*
+						*:continue* *:con* *E586*
 :con[tinue]		When used inside a ":while", jumps back to the
-			":while".
+			":while".  If it is used after a |:try| inside the
+			":while" but before the matching |:finally| (if
+			present), the commands following the ":finally" up to
+			the matching |:endtry| are executed first.  This
+			process applies to all nested ":try"s inside the
+			":while".  The outermost ":endtry" then jumps back to
+			the ":while".
 
-							*:break* *:brea*
+						*:break* *:brea* *E587*
 :brea[k]		When used inside a ":while", skips to the command
-			after the matching ":endwhile".
+			after the matching ":endwhile".  If it is used after
+			a |:try| inside the ":while" but before the matching
+			|:finally| (if present), the commands following the
+			":finally" up to the matching |:endtry| are executed
+			first.  This process applies to all nested ":try"s
+			inside the ":while".  The outermost ":endtry" then
+			jumps to the command after the ":endwhile".
+
+:try				*:try* *:endt* *:endtry* *E600* *E601* *E602*
+:endt[ry]		Change the error handling for the commands between
+			":try" and ":endtry" including everything being
+			executed across ":source" commands, function calls,
+			or autocommand invocations.
+
+			When an error or interrupt is detected and there is
+			a ":finally" command following, execution continues
+			after the ":finally".  Otherwise, or when the
+			":endtry" is reached thereafter, the next
+			(dynamically) surrounding ":try" is checked for
+			a corresponding ":finally" etc.  Then the script
+			processing is terminated.  (Whether a function
+			definition has an "abort" argument does not matter.)
+			Example: >
+		:try | edit too much | finally | echo "cleanup" | endtry
+		:echo "impossible"	" not reached, script terminated above
+<
+			Moreover, an error or interrupt (dynamically) inside
+			":try" and ":endtry" is converted to an exception.  It
+			can be caught as if it were thrown by a |:throw|
+			command (see |:catch|).  In this case, the script
+			processing is not terminated.
+
+			The value "Vim:Interrupt" is used for an interrupt
+			exception.  An error in a Vim command is converted
+			to a value of the form "Vim({command}):{errmsg}",
+			other errors are converted to a value of the form
+			"Vim:{errmsg}".  {command} is the full command name,
+			and {errmsg} is the message that is displayed if the
+			error exception is not caught, always beginning with
+			the error number.
+			Examples: >
+		:try | sleep 100 | catch /^Vim:Interrupt$/ | endtry
+		:try | edit | catch /^Vim(edit):E\d\+/ | echo "error" | endtry
+<
+					*:cat* *:catch* *E603* *E604* *E605*
+:cat[ch] /{pattern}/	The following commands until the next ":catch",
+			":finally", or ":endtry" that belongs to the same
+			":try" as the ":catch" are executed when an exception
+			matching {pattern} is being thrown and has not yet
+			been caught by a previous ":catch".  Otherwise, these
+			commands are skipped.
+			Examples: >
+		:catch /^Vim:Interrupt$/	" catch interrupts (CTRL-C)
+		:catch /^Vim\%((\a\+)\)\=:E/	" catch all Vim errors
+		:catch /^Vim\%((\a\+)\)\=:/	" catch errors and interrupts
+		:catch /^Vim(write):/		" catch all errors in :write
+		:catch /^Vim\%((\a\+)\)\=:E123/	" catch error E123
+		:catch /my-exception/		" catch user exception
+		:catch /.*/			" catch everything
+<
+			NOTE: It is not reliable to ":catch" the TEXT of
+			an error message because it may vary in different
+			locales.
+
+					*:fina* *:finally* *E606* *E607*
+:fina[lly]		The following commands until the matching |:endtry|
+			are executed whenever the part between the matching
+			|:try| and the ":finally" is left:  either by falling
+			through to the ":finally" or by a |:continue|,
+			|:break|, |:finish|, or |:return|, or by an error or
+			interrupt or exception (see |:throw|).
+
+							*:th* *:throw* *E608*
+:th[row] {expr1}	The {expr1} is evaluated and thrown as an exception.
+			If the ":throw" is used after a |:try| but before the
+			first corresponding |:catch|, commands are skipped
+			until the first ":catch" matching {expr1} is reached.
+			If there is no such ":catch" or if the ":throw" is
+			used after a ":catch" but before the |:finally|, the
+			commands following the ":finally" (if present) up to
+			the matching |:endtry| are executed.  If the ":throw"
+			is after the ":finally", commands up to the ":endtry"
+			are skipped.  At the ":endtry", this process applies
+			again for the next dynamically surrounding ":try"
+			(which may be found in a calling function or sourcing
+			script), until a matching ":catch" has been found.
+			If the exception is not caught, the command processing
+			is terminated.
+			Example: >
+		:try | throw "oops" | catch /^oo/ | echo "caught" | endtry
+<
 
 							*:ec* *:echo*
 :ec[ho] {expr1} ..	Echoes each {expr1}, with a space in between and a
@@ -3035,17 +3205,19 @@ This would call the function "my_func_whizz(parameter)"
 							*:exe* *:execute*
 :exe[cute] {expr1} ..	Executes the string that results from the evaluation
 			of {expr1} as an Ex command.  Multiple arguments are
-			concatenated, with a space in between.
+			concatenated, with a space in between.  {expr1} is
+			used as the processed command, command line editing
+			keys are not recognized.
 			Cannot be followed by a comment.
 			Examples: >
 		:execute "buffer " nextbuf
 		:execute "normal " count . "w"
 <
-			Execute can be used to append a next command to
-			commands that don't accept a '|'.  Example: >
+			":execute" can be used to append a command to commands
+			that don't accept a '|'.  Example: >
 		:execute '!ls' | echo "theend"
 
-<			Execute is also a nice way to avoid having to type
+<			":execute" is also a nice way to avoid having to type
 			control characters in a Vim script for a ":normal"
 			command: >
 		:execute "normal ixxx\<Esc>"
@@ -3106,7 +3278,7 @@ result: "3332"
 
 Sorting lines (by Robert Webb) ~
 
-Here is a vim script to sort lines.  Highlight the lines in vim and type
+Here is a Vim script to sort lines.  Highlight the lines in Vim and type
 ":Sort".  This doesn't call any external programs so it'll work on any
 platform.  The function Sort() actually takes the name of a comparison
 function as its argument, like qsort() does in C.  So you could supply it
@@ -3174,7 +3346,7 @@ with different comparison functions in order to sort according to date etc.
 <
 							*sscanf*
 There is no sscanf() function in Vim.  If you need to extract parts from a
-line, you can use matchstr() and substitute() to do it  This example shows
+line, you can use matchstr() and substitute() to do it.  This example shows
 how to get the file name, line number and column number out of a line like
 "foobar.txt, 123, 45". >
    :" Set up the match bit
@@ -3214,7 +3386,7 @@ missing: >
 
 The 'foldexpr', 'includeexpr', 'indentexpr', 'statusline' and 'foldtext'
 options are evaluated in a sandbox.  This means that you are protected from
-these expression having nasty side effects.  This gives some safety for when
+these expressions having nasty side effects.  This gives some safety for when
 these options are set from a modeline.  It is also used when the command from
 a tags file is executed.
 This is not guaranteed 100% secure, but it should block most attacks.

@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 6.1.  Last change: 2001 Sep 25
+*quotes.txt*    For Vim version 6.2a.  Last change: 2003 Feb 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,6 +14,12 @@ strength]  (Dictionary)
 VIM is so much better than vi that a great many of my old vi :map's became
 immediately obsolete! (Tony Nugent, Australia)
 
+Coming with a very GUI mindset from Windows, I always thought of people using
+Vi as some kind of outter space alien in human clothes.  Once I tried I really
+got addicted by its power and now I found my self typing Vim keypresses in the
+oddest places! That's why I would like to see Vim embedded in every
+application which deals with text editing. (José Fonseca)
+
 Although all of the programs were used during the preparation of the new and
 revised material, most of the editing was done with VIM versions 4.5 and 5.0
 under GNU-Linux (Redhat 4.2).  (Arnold Robbins, Israel, author of "Learning
@@ -24,8 +30,11 @@ is the best, most useful and highest quality to work with, second only to the
 linux kernel itself. (Peter Jay Salzman)
 
 It's well worth noting that the _entirety_ of SourceForge was written using
-vim and its nifty PHP syntax highlighting. I think the entire SF.net tech
-staff uses vim and we're all excited to have you aboard! (Tim Perdue)
+Vim and its nifty PHP syntax highlighting. I think the entire SF.net tech
+staff uses Vim and we're all excited to have you aboard! (Tim Perdue)
+
+Vim is one of a select bunch of tools for which I have no substitute.  It is
+a brilliant piece of work! (Biju Chacko)
 
 I rarely think about VIM, in the same way that I guess a fish rarely thinks
 about water.  It's the environment in which everything else happens.  I'm a

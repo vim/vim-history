@@ -2,7 +2,7 @@
 " Language:	HTML
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/html.vim
-" Last Change:  2001 Sep 16
+" Last Change:  2002 Aug 5
 
 " Please check :help html.vim for some comments and a description of the options
 
@@ -12,8 +12,8 @@ if !exists("main_syntax")
   if version < 600
     syntax clear
   elseif exists("b:current_syntax")
-  finish
-endif
+    finish
+  endif
   let main_syntax = 'html'
 endif
 
@@ -200,7 +200,7 @@ if main_syntax != 'java' || exists("java_css")
   unlet b:current_syntax
   syn region cssStyle start=+<style+ keepend end=+</style>+ contains=@htmlCss,htmlTag,htmlEndTag,htmlCssStyleComment,@htmlPreproc
   syn match htmlCssStyleComment contained "\(<!--\|-->\)"
-  syn region htmlCssDefinition matchgroup=htmlArg start='style="' keepend matchgroup=htmlString end='"' contains=css.*Attr,css.*Properties,cssComment,cssLength,cssColor,cssURL,cssImportant,cssError,cssString,@htmlPreproc
+  syn region htmlCssDefinition matchgroup=htmlArg start='style="' keepend matchgroup=htmlString end='"' contains=css.*Attr,css.*Prop,cssComment,cssLength,cssColor,cssURL,cssImportant,cssError,cssString,@htmlPreproc
   HtmlHiLink htmlStyleArg htmlString
 endif
 
@@ -227,7 +227,7 @@ if version >= 508 || !exists("did_html_syn_inits")
   HtmlHiLink htmlValue                     String
   HtmlHiLink htmlSpecialChar             Special
 
-if !exists("html_no_rendering")
+  if !exists("html_no_rendering")
     HtmlHiLink htmlH1                      Title
     HtmlHiLink htmlH2                      htmlH1
     HtmlHiLink htmlH3                      htmlH2
@@ -244,17 +244,17 @@ if !exists("html_no_rendering")
     HtmlHiLink htmlItalicBold              htmlBoldItalic
     HtmlHiLink htmlItalicBoldUnderline     htmlBoldUnderlineItalic
     HtmlHiLink htmlItalicUnderlineBold     htmlBoldUnderlineItalic
-    HtmlHiLink htmlLink			   Underlined
-  if !exists("html_my_rendering")
-    hi def htmlBold                term=bold cterm=bold gui=bold
-    hi def htmlBoldUnderline       term=bold,underline cterm=bold,underline gui=bold,underline
-    hi def htmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
-    hi def htmlBoldUnderlineItalic term=bold,italic,underline cterm=bold,italic,underline gui=bold,italic,underline
-    hi def htmlUnderline           term=underline cterm=underline gui=underline
-    hi def htmlUnderlineItalic     term=italic,underline cterm=italic,underline gui=italic,underline
-    hi def htmlItalic              term=italic cterm=italic gui=italic
+    HtmlHiLink htmlLink                    Underlined
+    if !exists("html_my_rendering")
+      hi def htmlBold                term=bold cterm=bold gui=bold
+      hi def htmlBoldUnderline       term=bold,underline cterm=bold,underline gui=bold,underline
+      hi def htmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
+      hi def htmlBoldUnderlineItalic term=bold,italic,underline cterm=bold,italic,underline gui=bold,italic,underline
+      hi def htmlUnderline           term=underline cterm=underline gui=underline
+      hi def htmlUnderlineItalic     term=italic,underline cterm=italic,underline gui=italic,underline
+      hi def htmlItalic              term=italic cterm=italic gui=italic
+    endif
   endif
-endif
 
   HtmlHiLink htmlPreStmt            PreProc
   HtmlHiLink htmlPreError           Error

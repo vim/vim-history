@@ -1,4 +1,4 @@
-*if_cscop.txt*  For Vim version 6.1.  Last change: 2001 Sep 05
+*if_cscop.txt*  For Vim version 6.2a.  Last change: 2003 Jan 16
 
 
 		  VIM REFERENCE MANUAL    by Andy Kahn
@@ -90,13 +90,14 @@ suggested use.)
 ==============================================================================
 2. Cscope related commands				*cscope-commands*
 
-		*:cscope* *:cs* *:scs* *:scscope* *E259* *E262*
+		*:cscope* *:cs* *:scs* *:scscope* *E259* *E262* *E561* *E560*
 All cscope commands are accessed through suboptions to the main cscope
 command ":cscope".  The shortest abbreviation is ":cs".  The ":scscope"
 command does the same and also splits the window (short: "scs").
 
 The available subcommands are:
 
+					*E563* *E564* *E566* *E568* *E569*
     add   : Add a new cscope database/connection.
 
 	USAGE	:cs add {file|dir} [pre-path] [flags]
@@ -110,6 +111,7 @@ The available subcommands are:
 	    :cscope add /projects/vim/cscope.out /usr/local/vim
 	    :cscope add cscope.out /usr/local/vim -C
 <
+						*E565* *E567*
     find  : Query cscope.  All cscope query options are available
 	    except option #5 ("Change this grep pattern").
 
@@ -122,7 +124,7 @@ The available subcommands are:
 		1 or g: Find this definition
 		2 or d: Find functions called by this function
 		3 or c: Find functions calling this function
-		4 or t: Find assignments to
+		4 or t: Find this text string
 		6 or e: Find this egrep pattern
 		7 or f: Find this file
 		8 or i: Find files #including this file
@@ -204,7 +206,7 @@ The available subcommands are:
 
 	    USAGE   :cs show
 
-							*:cstag* *E257*
+							*:cstag* *E257* *E562*
 If you use cscope as well as ctags, |:cstag| allows you to search one or
 the other before making a jump.  For example, you can choose to first
 search your cscope database(s) for a match, and if one is not found, then
@@ -378,7 +380,7 @@ license or OS distribution), then you can download it for free from:
 This is released by SCO under the BSD license.
 
 If you want a newer version of cscope, you will probably have to buy it.
-According to the nvi documentation:
+According to the (old) nvi documentation:
 
 	You can buy version 13.3 source with an unrestricted license
 	for $400 from AT&T Software Solutions by calling +1-800-462-8146.

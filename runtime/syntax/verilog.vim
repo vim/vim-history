@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mun_johl@sierralogic.com>
-" Last Update:  Fri Feb 15 10:22:27 PST 2002
+" Last Update:  Mon Jun 17 13:00:58 PDT 2002
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -13,9 +13,9 @@ endif
 
 " Set the local value of the 'iskeyword' option
 if version >= 600
-   setlocal iskeyword=@,48-57,_,192-255,+,-,?
+   setlocal iskeyword=@,48-57,_,192-255
 else
-   set iskeyword=@,48-57,_,192-255,+,-,?
+   set iskeyword=@,48-57,_,192-255
 endif
 
 " A bunch of useful Verilog keywords
@@ -31,7 +31,14 @@ syn keyword verilogStatement   wand wor triand trior
 syn keyword verilogStatement   defparam
 syn keyword verilogStatement   integer real
 syn keyword verilogStatement   time
-
+syn keyword verilogStatement   and bufif0 bufif1 cmos edge event endprimitive
+syn keyword verilogStatement   endspecify endtable highz0 highz1 large
+syn keyword verilogStatement   macromodule medium nand nmos nor not notif0
+syn keyword verilogStatement   notif1 pmos primitive rcmos rnmos rpmos
+syn keyword verilogStatement   rtran rtranif0 rtranif1 scalared small specify
+syn keyword verilogStatement   specparam strong0 strong1 supply0 supply1
+syn keyword verilogStatement   table tran tranif0 tranif1 weak0 weak1
+syn keyword verilogStatement   xnor xor
 syn keyword verilogLabel       begin end fork join
 syn keyword verilogConditional if else case casex casez default endcase
 syn keyword verilogRepeat      forever repeat while for
@@ -41,7 +48,7 @@ syn keyword verilogTodo contained TODO
 syn match   verilogOperator "[&|~><!)(*#%@+/=?:;}{,.\^\-\[\]]"
 
 syn region  verilogComment start="/\*" end="\*/" contains=verilogTodo
-syn match   verilogComment "//.*" oneline contains=verilogTodo
+syn match   verilogComment "//.*" contains=verilogTodo
 
 syn match   verilogGlobal "`[a-zA-Z0-9_]\+\>"
 syn match   verilogGlobal "$[a-zA-Z0-9_]\+\>"
@@ -54,7 +61,9 @@ syn match   verilogNumber "\(\<\d\+\|\)'[dD]\s*[0-9_xXzZ?]\+\>"
 syn match   verilogNumber "\(\<\d\+\|\)'[hH]\s*[0-9a-fA-F_xXzZ?]\+\>"
 syn match   verilogNumber "\<[+-]\=[0-9_]\+\(\.[0-9_]*\|\)\(e[0-9_]*\|\)\>"
 
-syn region  verilogString start=+"+  end=+"+
+syn region  verilogString start=+"+ skip=+\\"+ end=+"+ contains=verilogEscape
+syn match   verilogEscape +\\[nt"\\]+ contained
+syn match   verilogEscape "\\\o\o\=\o\=" contained
 
 " Directives
 syn match   verilogDirective   "//\s*synopsys\>.*$"
@@ -94,6 +103,7 @@ if version >= 508 || !exists("did_verilog_syn_inits")
    HiLink verilogStatement       Statement
    HiLink verilogGlobal          Define
    HiLink verilogDirective       SpecialComment
+   HiLink verilogEscape		 Special
 
    delcommand HiLink
 endif

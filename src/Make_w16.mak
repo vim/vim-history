@@ -82,6 +82,7 @@ ObjFiles = \
    $(INTDIR)\ex_cmds.obj\
    $(INTDIR)\ex_cmds2.obj\
    $(INTDIR)\ex_docmd.obj\
+   $(INTDIR)\ex_eval.obj\
    $(INTDIR)\ex_getln.obj\
    $(INTDIR)\fileio.obj\
    $(INTDIR)\fold.obj\

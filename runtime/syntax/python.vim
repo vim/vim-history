@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	Python
 " Maintainer:	Neil Schemenauer <nas@python.ca>
-" Updated:	2002-01-22
+" Updated:	2002-10-18
 "
-" There are four options to control Python syntax highlighting.
+" Options to control Python syntax highlighting:
 "
 " For highlighted numbers:
 "
@@ -17,8 +17,12 @@
 "
 "    let python_highlight_exceptions = 1
 "
+" Highlight erroneous whitespace:
+"
+"    let python_highlight_space_errors = 1
+"
 " If you want all possible Python highlighting (the same as setting the
-" preceding three options):
+" preceding options):
 "
 "    let python_highlight_all = 1
 "
@@ -45,7 +49,7 @@ syn keyword pythonConditional	if elif else
 syn keyword pythonOperator	and in is not or
 syn keyword pythonPreCondit	import from
 syn match   pythonComment	"#.*$" contains=pythonTodo
-syn keyword pythonTodo		contained TODO FIXME XXX
+syn keyword pythonTodo		TODO FIXME XXX contained
 
 " strings
 syn region pythonString		matchgroup=Normal start=+[uU]\='+ end=+'+ skip=+\\\\\|\\'+ contains=pythonEscape
@@ -57,8 +61,8 @@ syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]"+ end=+"+ skip=+\
 syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]"""+ end=+"""+
 syn region pythonRawString	matchgroup=Normal start=+[uU]\=[rR]'''+ end=+'''+
 syn match  pythonEscape		+\\[abfnrtv'"\\]+ contained
-syn match  pythonEscape		"\\\o\o\=\o\=" contained
-syn match  pythonEscape		"\\x\x\+" contained
+syn match  pythonEscape		"\\\o\{1,3}" contained
+syn match  pythonEscape		"\\x\x\{2}" contained
 syn match  pythonEscape		"\(\\u\x\{4}\|\\U\x\{8}\)" contained
 syn match  pythonEscape		"\\$"
 
@@ -66,6 +70,7 @@ if exists("python_highlight_all")
   let python_highlight_numbers = 1
   let python_highlight_builtins = 1
   let python_highlight_exceptions = 1
+  let python_highlight_space_errors = 1
 endif
 
 if exists("python_highlight_numbers")
@@ -96,7 +101,7 @@ if exists("python_highlight_exceptions")
   syn keyword pythonException	ArithmeticError AssertionError AttributeError
   syn keyword pythonException	DeprecationWarning EOFError EnvironmentError
   syn keyword pythonException	Exception FloatingPointError IOError
-  syn keyword pythonException	ImportError IndentiationError IndexError
+  syn keyword pythonException	ImportError IndentationError IndexError
   syn keyword pythonException	KeyError KeyboardInterrupt LookupError
   syn keyword pythonException	MemoryError NameError NotImplementedError
   syn keyword pythonException	OSError OverflowError OverflowWarning
@@ -108,6 +113,13 @@ if exists("python_highlight_exceptions")
   syn keyword pythonException	ZeroDivisionError
 endif
 
+if exists("python_highlight_space_errors")
+  " trailing whitespace
+  syn match   pythonSpaceError   display excludenl "\S\s\+$"ms=s+1
+  " mixed tabs and spaces
+  syn match   pythonSpaceError   display " \+\t"
+  syn match   pythonSpaceError   display "\t\+ "
+endif
 
 " This is fast but code inside triple quoted strings screws it up. It
 " is impossible to fix because the only way to know if you are inside a
@@ -146,6 +158,9 @@ if version >= 508 || !exists("did_python_syn_inits")
   endif
   if exists("python_highlight_exceptions")
     HiLink pythonException	Exception
+  endif
+  if exists("python_highlight_space_errors")
+    HiLink pythonSpaceError	Error
   endif
 
   delcommand HiLink

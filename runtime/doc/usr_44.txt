@@ -1,4 +1,4 @@
-*usr_44.txt*	For Vim version 6.1.  Last change: 2001 Dec 22
+*usr_44.txt*	For Vim version 6.2a.  Last change: 2002 Oct 10
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -67,8 +67,8 @@ the @ in the name.
 
 MATCHING CASE
 
-   Some languages are not case sensitive, such as Pascal.  Others, such as C,
-are case sensitive.  You need to tell which type you have with the following
+Some languages are not case sensitive, such as Pascal.  Others, such as C, are
+case sensitive.  You need to tell which type you have with the following
 commands: >
 	:syntax case match
 	:syntax case ignore
@@ -76,11 +76,11 @@ commands: >
 The "match" argument means that Vim will match the case of syntax elements.
 Therefore, "int" differs from "Int" and "INT".  If the "ignore" argument is
 used, the following are equivalent: "Procedure", "PROCEDURE" and "procedure".
-   The :syntax case commands can appear anywhere in a syntax file and affect
-the syntax definitions that follow.  In most cases, you have only one :syntax
-case command in your syntax file; if you work with an unusual language that
+   The ":syntax case" commands can appear anywhere in a syntax file and affect
+the syntax definitions that follow.  In most cases, you have only one ":syntax
+case" command in your syntax file; if you work with an unusual language that
 contains both case-sensitive and non-case-sensitive elements, however, you can
-scatter the :syntax case command throughout the file.
+scatter the ":syntax case" command throughout the file.
 
 ==============================================================================
 *44.2*	Keywords
@@ -332,13 +332,13 @@ the group xInside, for example, use the following command: >
 Suppose, that you want to highlight the parentheses differently.  You can do
 this with a lot of convoluted region statements, or you can use the
 "matchgroup" argument.  This tells Vim to highlight the start and end of a
-region with a different highlight group (in this case, the Xparen group): >
+region with a different highlight group (in this case, the xParen group): >
 
 	:syntax region xInside matchgroup=xParen start=/(/ end=/)/
 
 The "matchgroup" argument applies to the start or end match that comes after
 it.  In the previous example both start and end are highlighted with xParen.
-To highlight the end with xParenEnd: > >
+To highlight the end with xParenEnd: >
 
 	:syntax region xInside matchgroup=xParen start=/(/
 		\ matchgroup=xParenEnd end=/)/
@@ -468,14 +468,14 @@ the following command: >
 
 	:syntax cluster xState contains=xNumber,xIdent
 
-Clusters are used inside other :syntax items just like any syntax group.
+Clusters are used inside other syntax items just like any syntax group.
 Their names start with @.  Thus, you can define the three groups like this: >
 
 	:syntax match xFor /^for.*/ contains=@xState
 	:syntax match xIf /^if.*/ contains=@xState
 	:syntax match xWhile /^while.*/ contains=@xState
 
-You can add new group names to this cluster with the add argument: >
+You can add new group names to this cluster with the "add" argument: >
 
 	:syntax cluster xState add=xString
 
@@ -518,9 +518,10 @@ When "=head" is found in a Perl file, the perlPOD region starts.  In this
 region the @Pod cluster is contained.  All the items defined as top-level
 items in the pod.vim syntax files will match here.  When "=cut" is found, the
 region ends and we go back to the items defined in the Perl file.
-   The ":syntax include" file is clever enough to ignore a ":syntax clear"
-command in the included file.  And an argument like "contains=ALL" will only
-contain items defined in the included file, not in the file that includes it.
+   The ":syntax include" command is clever enough to ignore a ":syntax clear"
+command in the included file.  And an argument such as "contains=ALL" will
+only contain items defined in the included file, not in the file that includes
+it.
    The "<sfile>:p:h/" part uses the name of the current file (<sfile>),
 expands it to a full path (:p) and then takes the head (:h).  This results in
 the directory name of the file.  This causes the pod.vim file in the same
@@ -617,7 +618,7 @@ added.  Thus for the x language, the full path of the file would be:
 
 You must also make the file type be recognized.  See |43.2|.
 
-If your file works well, you migth want to make it available to other Vim
+If your file works well, you might want to make it available to other Vim
 users.  First read the next section to make sure your file works well for
 others.  Then e-mail it to the Vim maintainer: <maintainer@vim.org>.  Also
 explain how the filetype can be detected.  With a bit of luck your file will

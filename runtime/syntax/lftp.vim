@@ -1,8 +1,8 @@
 " Vim syntax file
-" Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-" URL		: http://www.pcppopper.org/
-" Revised on	: Mon, 27 Aug 2001 21:49:33 +0200
-" Language	: lftp Configuration file
+" Language:	    lftp Configuration file
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
 
 if version < 600
     syntax clear
@@ -22,7 +22,7 @@ SetIsk 48-57,97-122,-
 delcommand SetIsk
 
 " comments
-syn region  lftpComment		matchgroup=lftpComment start="#" end="$" contains=lftpTodo
+syn region  lftpComment		display oneline matchgroup=lftpComment start="#" end="$" contains=lftpTodo
 
 " todo
 syn keyword lftpTodo		contained TODO FIXME

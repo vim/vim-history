@@ -2,13 +2,12 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: XF86Config (XFree86 configuration file)
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2002 Mar 24
-" URI: http://physics.muni.cz/~yeti/download/syntax/xf86conf.vim
+" Last Change: 2002-03-24
+" URL: http://physics.muni.cz/~yeti/download/syntax/xf86conf.vim
 " Required Vim Version: 6.0
 "
 " Options: let xf86conf_xfree86_version = 3 or 4
 "              to force XFree86 3.x or 4.x XF86Config syntax
-
 
 " Setup
 if version >= 600
@@ -18,7 +17,7 @@ if version >= 600
   endif
 else
   " Croak when an old Vim is sourcing us.
-  echo "Sorry, but this syntax file relies on Vim 6 features.  Either upgrade Vim or use a version of " . expand("<sfile>:t:r") . " syntax file appropriate for Vim " . version/100 . "." . version %100 . "."
+  echo "Sorry, but this syntax file relies on Vim 6 features.  Either upgrade Vim or usea version of " . expand("<sfile>:t:r") . " syntax file appropriate for Vim " . version/100 . "." . version %100 . "."
   finish
 endif
 
@@ -166,33 +165,33 @@ syn sync match xf86confSyncSectionScreen groupthere xf86confSectionScreen "^\s*S
 syn sync match xf86confSyncEndSection groupthere NONE "^\s*End_*Section\s*$"
 
 " Define the default highlighting
-hi def link xf86confComment			Comment
-hi def link xf86confTodo			Todo
-hi def link xf86confSectionDelim		Statement
-hi def link xf86confOptionName			Identifier
+hi def link xf86confComment Comment
+hi def link xf86confTodo Todo
+hi def link xf86confSectionDelim Statement
+hi def link xf86confOptionName Identifier
 
-hi def link xf86confSectionError		xf86confError
-hi def link xf86confSubSectionError		xf86confError
-hi def link xf86confModeSubSectionError		xf86confError
-hi def link xf86confOctalNumberError		xf86confError
-hi def link xf86confError			Error
+hi def link xf86confSectionError xf86confError
+hi def link xf86confSubSectionError xf86confError
+hi def link xf86confModeSubSectionError xf86confError
+hi def link xf86confOctalNumberError xf86confError
+hi def link xf86confError Error
 
-hi def link xf86confOption			xf86confKeyword
-hi def link xf86confModeLine			xf86confKeyword
-hi def link xf86confKeyword			Type
+hi def link xf86confOption xf86confKeyword
+hi def link xf86confModeLine xf86confKeyword
+hi def link xf86confKeyword Type
 
-hi def link xf86confDecimalNumber		xf86confNumber
-hi def link xf86confOctalNumber			xf86confNumber
-hi def link xf86confHexadecimalNumber		xf86confNumber
-hi def link xf86confFrequency			xf86confNumber
-hi def link xf86confModeLineValue		Constant
-hi def link xf86confNumber			Constant
+hi def link xf86confDecimalNumber xf86confNumber
+hi def link xf86confOctalNumber xf86confNumber
+hi def link xf86confHexadecimalNumber xf86confNumber
+hi def link xf86confFrequency xf86confNumber
+hi def link xf86confModeLineValue Constant
+hi def link xf86confNumber Constant
 
-hi def link xf86confSync			xf86confConstant
-hi def link xf86confConstant			Special
-hi def link xf86confSpecialChar			Special
-hi def link xf86confString			String
+hi def link xf86confSync xf86confConstant
+hi def link xf86confConstant Special
+hi def link xf86confSpecialChar Special
+hi def link xf86confString String
 
-hi def link xf86confValue			Constant
+hi def link xf86confValue Constant
 
 let b:current_syntax = "xf86conf"

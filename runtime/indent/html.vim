@@ -1,7 +1,8 @@
 " Description:	html indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
+" Updated By:	Bram Moolenaar
 " URL:		http://www.zellner.org/vim/indent/html.vim
-" Last Change:	Thu, 10 Jan 2002 22:00:55 +0100
+" Last Change:	2003 Mar 14
 " Globals:	g:html_indent_tags         -- indenting tags
 "		g:html_indent_strict       -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
@@ -76,7 +77,7 @@ call <SID>HtmlIndentPush('noscript')
 call <SID>HtmlIndentPush('object')
 call <SID>HtmlIndentPush('ol')
 call <SID>HtmlIndentPush('optgroup')
-call <SID>HtmlIndentPush('pre')
+" call <SID>HtmlIndentPush('pre')
 call <SID>HtmlIndentPush('q')
 call <SID>HtmlIndentPush('s')
 call <SID>HtmlIndentPush('samp')
@@ -120,17 +121,17 @@ delfun <SID>HtmlIndentPush
 set cpo-=C
 
 " [-- count indent-increasing tags of line a:lnum --]
-fun! <SID>HtmlIndentOpen(lnum)
+fun! <SID>HtmlIndentOpen(lnum, pattern)
     let s = substitute('x'.getline(a:lnum),
-    \ '.\{-}\(\(<\)\('.g:html_indent_tags.'\)\>\)', "\1", 'g')
+    \ '.\{-}\(\(<\)\('.a:pattern.'\)\>\)', "\1", 'g')
     let s = substitute(s, "[^\1].*$", '', '')
     return strlen(s)
 endfun
 
 " [-- count indent-decreasing tags of line a:lnum --]
-fun! <SID>HtmlIndentClose(lnum)
+fun! <SID>HtmlIndentClose(lnum, pattern)
     let s = substitute('x'.getline(a:lnum),
-    \ '.\{-}\(\(<\)/\('.g:html_indent_tags.'\)\>>\)', "\1", 'g')
+    \ '.\{-}\(\(<\)/\('.a:pattern.'\)\>>\)', "\1", 'g')
     let s = substitute(s, "[^\1].*$", '', '')
     return strlen(s)
 endfun
@@ -148,9 +149,9 @@ endfun
 " [-- return the sum of indents respecting the syntax of a:lnum --]
 fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
-	    let open = <SID>HtmlIndentOpen(a:lnum)
-	    let close = <SID>HtmlIndentClose(a:lnum)
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
+	    let open = <SID>HtmlIndentOpen(a:lnum, g:html_indent_tags)
+	    let close = <SID>HtmlIndentClose(a:lnum, g:html_indent_tags)
 	    if 0 != open || 0 != close
 		return open - close
 	    endif
@@ -158,7 +159,7 @@ fun! <SID>HtmlIndentSum(lnum, style)
     endif
     if '' != &syntax &&
 	\ synIDattr(synID(a:lnum, 1, 1), 'name') =~ '\(css\|java\).*' &&
-	\ synIDattr(synID(a:lnum, strlen(getline(a:lnum)) - 1, 1), 'name')
+	\ synIDattr(synID(a:lnum, strlen(getline(a:lnum)), 1), 'name')
 	\ =~ '\(css\|java\).*'
 	if a:style == match(getline(a:lnum), '^\s*}')
 	    return <SID>HtmlIndentOpenAlt(a:lnum) - <SID>HtmlIndentCloseAlt(a:lnum)
@@ -176,13 +177,33 @@ fun! HtmlIndentGet(lnum)
 	return 0
     endif
 
-    let restore_ic=&ic
-    let &ic=1 " ignore case
+    let restore_ic = &ic
+    setlocal ic		" ignore case
+
+    " [-- special handling for <pre>: no indenting --]
+    if getline(a:lnum) =~ '\c</pre>'
+	  \ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nWb')
+	  \ || 0 < searchpair('\c<pre>', '', '\c</pre>', 'nW')
+	" we're in a line with </pre> or inside <pre> ... </pre>
+	return -1
+    endif
+
+    if getline(lnum) =~ '\c</pre>'
+	" line before the current line a:lnum contains
+	" a closing </pre>. --> search for line before
+	" starting <pre> to restore the indent.
+	let preline = prevnonblank(search('\c<pre>', 'bW') - 1)
+	if preline > 0
+	    return indent(preline)
+	endif
+    endif
 
     let ind = <SID>HtmlIndentSum(lnum, -1)
     let ind = ind + <SID>HtmlIndentSum(a:lnum, 0)
 
-    let &ic=restore_ic
+    if restore_ic == 0
+      setlocal noic
+    endif
 
     return indent(lnum) + (&sw * ind)
 endfun

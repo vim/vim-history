@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Dec 29
+" Last Change:	2003 Apr 20
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -155,11 +155,11 @@ cnoremenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
 nnoremenu 20.360 &Edit.&Paste<Tab>"+gP		"+gP
 cnoremenu	 &Edit.&Paste<Tab>"+gP		<C-R>+
 if has("virtualedit")
-  vnoremenu <script>	 &Edit.&Paste<Tab>"+P	"-c<Esc><SID>Paste
-  inoremenu <script>	 &Edit.&Paste<Tab>"+P	<Esc><SID>Pastegi
+  vnoremenu <script>	 &Edit.&Paste<Tab>"+gP	"-c<Esc><SID>Paste
+  inoremenu <script>	 &Edit.&Paste<Tab>"+gP	<Esc><SID>Pastegi
 else
-  vnoremenu <script>	 &Edit.&Paste<Tab>"+P	"-c<Esc>gix<Esc><SID>Paste"_x
-  inoremenu <script>	 &Edit.&Paste<Tab>"+P	x<Esc><SID>Paste"_s
+  vnoremenu <script>	 &Edit.&Paste<Tab>"+gP	"-c<Esc>gix<Esc><SID>Paste"_x
+  inoremenu <script>	 &Edit.&Paste<Tab>"+gP	x<Esc><SID>Paste"_s
 endif
 nnoremenu 20.370 &Edit.Put\ &Before<Tab>[p	[p
 inoremenu	 &Edit.Put\ &Before<Tab>[p	<C-O>[p
@@ -695,6 +695,7 @@ func! s:BMMunge(fname, bnum)
   endif
   let name = name2 . "\t" . <SID>BMTruncName(fnamemodify(name,':h'))
   let name = escape(name, "\\. \t|")
+  let name = substitute(name, "&", "&&", "g")
   let name = substitute(name, "\n", "^@", "g")
   return name
 endfunc
@@ -833,7 +834,6 @@ endif
 
   an 1.245 ToolBar.-sep6-		<Nop>
   an 1.250 ToolBar.Make			:make<CR>
-  an 1.260 ToolBar.Shell			:sh<CR>
   an 1.270 ToolBar.RunCtags		:!ctags -R .<CR>
   an 1.280 ToolBar.TagJump		g<C-]>
 
@@ -875,7 +875,6 @@ else
   tmenu ToolBar.SaveSesn	Save current session
   tmenu ToolBar.RunScript	Run a Vim Script
   tmenu ToolBar.Make		Make current project
-  tmenu ToolBar.Shell		Open a command shell
   tmenu ToolBar.RunCtags	Build tags in current directory tree
   tmenu ToolBar.TagJump		Jump to tag under cursor
   tmenu ToolBar.Help		Vim Help

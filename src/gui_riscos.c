@@ -949,7 +949,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
 	    zap_redraw = TRUE;
 	else
 	{
-	    EMSG2(_("E235: Can't load Zap font '%s'"), font_name);
+	    EMSG2(_("E610: Can't load Zap font '%s'"), font_name);
 	    font_name = "System";   /* Error - use system font */
 	    zap_redraw = FALSE;
 	}
@@ -1045,7 +1045,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (!handle)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("E235: Can't use font %s"), name);
+	    EMSG2(_("E611: Can't use font %s"), name);
 	return NOFONT;
     }
 

@@ -27,6 +27,7 @@ SrcFiles        =  ¶
 				  :src:ex_cmds.c ¶
 				  :src:ex_cmds2.c ¶
 				  :src:ex_docmd.c ¶
+				  :src:ex_eval.c ¶
 				  :src:ex_getln.c ¶
 				  :src:fileio.c ¶
 				  :src:fold.c ¶
@@ -76,6 +77,7 @@ ObjFiles-PPC    =  ¶
 				  "{ObjDir}ex_cmds.c.x" ¶
 				  "{ObjDir}ex_cmds2.c.x" ¶
 				  "{ObjDir}ex_docmd.c.x" ¶
+				  "{ObjDir}ex_eval.c.x" ¶
 				  "{ObjDir}ex_getln.c.x" ¶
 				  "{ObjDir}fileio.c.x" ¶
 				  "{ObjDir}fold.c.x" ¶
@@ -156,6 +158,7 @@ VIm  ÄÄ  {ObjFiles-PPC} {LibFiles-PPC} {¥MondoBuild¥}
 "{ObjDir}ex_cmds.c.x"  Ä  :src:ex_cmds.c
 "{ObjDir}ex_cmds2.c.x"  Ä  :src:ex_cmds2.c
 "{ObjDir}ex_docmd.c.x"  Ä  :src:ex_docmd.c
+"{ObjDir}ex_eval.c.x"  Ä  :src:ex_eval.c
 "{ObjDir}ex_getln.c.x"  Ä  :src:ex_getln.c
 "{ObjDir}fileio.c.x"  Ä  :src:fileio.c
 "{ObjDir}fold.c.x"  Ä  :src:fold.c
@@ -243,6 +246,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -322,6 +326,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -401,6 +406,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -480,6 +486,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -559,6 +566,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -639,6 +647,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -718,6 +727,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -797,6 +807,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -876,6 +887,87 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
+	:src:proto:ex_getln.pro ¶
+	:src:proto:fileio.pro ¶
+	:src:proto:fold.pro ¶
+	:src:proto:getchar.pro ¶
+	:src:proto:hangulin.pro ¶
+	:src:proto:main.pro ¶
+	:src:proto:mark.pro ¶
+	:src:proto:memfile.pro ¶
+	:src:proto:memline.pro ¶
+	:src:proto:menu.pro ¶
+	:src:proto:message.pro ¶
+	:src:proto:misc1.pro ¶
+	:src:proto:misc2.pro ¶
+	:src:proto:move.pro ¶
+	:src:proto:multibyte.pro ¶
+	:src:proto:normal.pro ¶
+	:src:proto:ops.pro ¶
+	:src:proto:option.pro ¶
+	:src:proto:quickfix.pro ¶
+	:src:proto:regexp.pro ¶
+	:src:proto:screen.pro ¶
+	:src:proto:search.pro ¶
+	:src:proto:syntax.pro ¶
+	:src:proto:tag.pro ¶
+	:src:proto:term.pro ¶
+	:src:proto:termlib.pro ¶
+	:src:proto:ui.pro ¶
+	:src:proto:undo.pro ¶
+	:src:proto:version.pro ¶
+	:src:proto:window.pro ¶
+	:src:proto:if_python.pro ¶
+	:src:proto:if_tcl.pro ¶
+	:src:proto:if_ruby.pro ¶
+	:src:proto:gui.pro ¶
+	:src:proto:pty.pro ¶
+	:src:proto:gui_gtk.pro ¶
+	:src:proto:gui_gtk_x11.pro ¶
+	:src:proto:gui_motif.pro ¶
+	:src:proto:gui_athena.pro ¶
+	:src:proto:gui_mac.pro ¶
+	:src:proto:gui_x11.pro ¶
+	:src:proto:workshop.pro ¶
+	:src:proto:if_perl.pro ¶
+	:src:proto:if_perlsfio.pro
+
+:obj:ex_eval.c.x	Ä  ¶
+	:src:ex_eval.c ¶
+	:src:vim.h ¶
+	:src:ex_cmds.h ¶
+	:src:auto:config.h ¶
+	:src:feature.h ¶
+	:src:os_unix.h ¶
+	:src:os_mac.h ¶
+	:src:workshop.h ¶
+	:src:ascii.h ¶
+	:src:keymap.h ¶
+	:src:term.h ¶
+	:src:macros.h ¶
+	:src:structs.h ¶
+	:src:globals.h ¶
+	:src:option.h ¶
+	:src:proto.h ¶
+	:src:integration.h ¶
+	:src:wsdebug.h ¶
+	:src:regexp.h ¶
+	:src:gui.h ¶
+	:src:farsi.h ¶
+	:src:proto:os_unix.pro ¶
+	:src:proto:os_mac.pro ¶
+	:src:proto:buffer.pro ¶
+	:src:proto:charset.pro ¶
+	:src:proto:if_cscope.pro ¶
+	:src:proto:diff.pro ¶
+	:src:proto:digraph.pro ¶
+	:src:proto:edit.pro ¶
+	:src:proto:eval.pro ¶
+	:src:proto:ex_cmds.pro ¶
+	:src:proto:ex_cmds2.pro ¶
+	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -955,6 +1047,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1034,6 +1127,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1113,6 +1207,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1192,6 +1287,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1271,6 +1367,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1350,6 +1447,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1455,6 +1553,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1535,6 +1634,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1614,6 +1714,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1693,6 +1794,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1772,6 +1874,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1851,6 +1954,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -1930,6 +2034,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2010,6 +2115,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2089,6 +2195,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2168,6 +2275,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2247,6 +2355,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2326,6 +2435,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2405,6 +2515,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2484,6 +2595,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2563,6 +2675,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2642,6 +2755,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2721,6 +2835,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2800,6 +2915,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2879,6 +2995,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -2958,6 +3075,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3037,6 +3155,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3116,6 +3235,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3195,6 +3315,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3275,6 +3396,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3353,6 +3475,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3432,6 +3555,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3512,6 +3636,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3591,6 +3716,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶
@@ -3670,6 +3796,7 @@ Dependencies  Ä  $OutOfDate
 	:src:proto:ex_cmds.pro ¶
 	:src:proto:ex_cmds2.pro ¶
 	:src:proto:ex_docmd.pro ¶
+	:src:proto:ex_eval.pro ¶
 	:src:proto:ex_getln.pro ¶
 	:src:proto:fileio.pro ¶
 	:src:proto:fold.pro ¶

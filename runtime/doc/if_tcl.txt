@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 6.1.  Last change: 2001 Oct 25
+*if_tcl.txt*    For Vim version 6.2a.  Last change: 2001 Oct 25
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -23,7 +23,7 @@ WARNING: There are probably still some bugs.  Please send bug reports,
 comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 
 ==============================================================================
-1. Commands						*tcl-ex-commands*
+1. Commands				*tcl-ex-commands* *E571* *E572*
 
 							*:tcl* *:tc*
 :tc[l] {cmd}		Execute Tcl command {cmd}.

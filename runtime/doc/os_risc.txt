@@ -1,4 +1,4 @@
-*os_risc.txt*   For Vim version 6.1.  Last change: 2001 Sep 27
+*os_risc.txt*   For Vim version 6.2a.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Thomas Leonard
@@ -105,7 +105,7 @@ Limitations:
 You can resize the window by dragging the lower-right corner, even though
 there is no icon shown there.
 
-You can use the --rows and --columns arguments to specifiy the initial size of
+You can use the --rows and --columns arguments to specify the initial size of
 the Vim window, like this: >
 
   *Vi -g --rows 20 --columns 80

@@ -1,17 +1,17 @@
 " Vim syntax file
 " Language:	Perl
-" Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2002 Mar 12
-" Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
+" Maintainer:	Nick Hibma <n_hibma@van-laarhoven.org>
+" Last Change:	2003 Mar 23
+" Location:	http://www.van-laarhoven.org/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
 " any comments.
 " See also the file perl.vim.regression.pl to check whether your
 " modifications work in the most odd cases
-" http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
+" http://www.van-laarhoven.org/vim/syntax/perl.vim.regression.pl
 "
 " Original version: Sonia Heimann <niania@netsurf.org>
-" Thanks to many people for their contribution. They made it work, not me.
+" Thanks to many people for their contribution.
 
 " The following parameters are available for tuning the
 " perl syntax highlighting, with defaults given:
@@ -113,10 +113,11 @@ syn keyword perlStatementProc		alarm exec fork getpgrp getppid getpriority kill 
 syn keyword perlStatementSocket		accept bind connect getpeername getsockname getsockopt listen recv send setsockopt shutdown socket socketpair
 syn keyword perlStatementIPC		msgctl msgget msgrcv msgsnd semctl semget semop shmctl shmget shmread shmwrite
 syn keyword perlStatementNetwork	endhostent endnetent endprotoent endservent gethostbyaddr gethostbyname gethostent getnetbyaddr getnetbyname getnetent getprotobyname getprotobynumber getprotoent getservbyname getservbyport getservent sethostent setnetent setprotoent setservent
-syn keyword perlStatementPword		getpwuid getpwnam getpwent setpwent endpwent getgrent getgrgid getlogin getgrnam setgrent
+syn keyword perlStatementPword		getpwuid getpwnam getpwent setpwent endpwent getgrent getgrgid getlogin getgrnam setgrent endgrent
 syn keyword perlStatementTime		gmtime localtime time times
 
-syn keyword perlStatementMisc		warn formline reset scalar new delete prototype lock
+syn keyword perlStatementMisc		warn formline reset scalar delete prototype lock
+syn keyword perlStatementNew		new
 
 syn keyword perlTodo			TODO TBD FIXME XXX contained
 
@@ -153,10 +154,10 @@ syn match  perlPackageRef	 "\(\h\w*\)\=\(::\|'\)\I"me=e-1 contained
 " with transparency. Or maybe we should handle the bare word in that case. or make it into
 
 if exists("perl_want_scope_in_variables")
-  syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
+  syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember,perlMethod
   syn match  perlFunctionName	"\\\=&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" contains=perlPackageRef nextgroup=perlVarMember,perlVarSimpleMember
 else
-  syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
+  syn match  perlVarPlain	"\\\=\([@%$]\|\$#\)\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember,perlMethod
   syn match  perlFunctionName	"\\\=&\$*\(\I\i*\)\=\(\(::\|'\)\I\i*\)*\>" nextgroup=perlVarMember,perlVarSimpleMember
 endif
 
@@ -169,6 +170,7 @@ if exists("perl_extended_vars")
   syn match  perlVarSimpleMember	"\(->\)\={\I\i*}" nextgroup=perlVarMember,perlVarSimpleMember contains=perlVarSimpleMemberName contained
   syn match  perlVarSimpleMemberName	"\I\i*" contained
   syn region perlVarMember	matchgroup=perlVarPlain start="\(->\)\=\[" skip="\\]" end="]" contained contains=@perlExpr nextgroup=perlVarMember,perlVarSimpleMember
+  syn match  perlMethod		"\(->\)\I\i*" contained
 endif
 
 " File Descriptors
@@ -313,14 +315,14 @@ if version >= 600
   " 'if $a' in 'print <<EOF if $a').
   if exists("perl_fold")
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\z(\I\i*\)+    end=+^\z1$+ contains=@perlInterpDQ fold
-    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(.\+\)"+ end=+^\z1$+ contains=@perlInterpDQ fold
-    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(.\+\)'+ end=+^\z1$+ contains=@perlInterpSQ fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(.\{-}\)"+ end=+^\z1$+ contains=@perlInterpDQ fold
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(.\{-}\)'+ end=+^\z1$+ contains=@perlInterpSQ fold
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*""+         end=+^$+    contains=@perlInterpDQ,perlNotEmptyLine fold
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*''+         end=+^$+    contains=@perlInterpSQ,perlNotEmptyLine fold
   else
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\z(\I\i*\)+    end=+^\z1$+ contains=@perlInterpDQ
-    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(.\+\)"+ end=+^\z1$+ contains=@perlInterpDQ
-    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(.\+\)'+ end=+^\z1$+ contains=@perlInterpSQ
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*"\z(.\{-}\)"+ end=+^\z1$+ contains=@perlInterpDQ
+    syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*'\z(.\{-}\)'+ end=+^\z1$+ contains=@perlInterpSQ
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*""+         end=+^$+    contains=@perlInterpDQ,perlNotEmptyLine
     syn region perlHereDoc	matchgroup=perlStringStartEnd start=+<<\s*''+         end=+^$+    contains=@perlInterpSQ,perlNotEmptyLine
   endif
@@ -388,11 +390,15 @@ if exists("perl_fold")
   syn region perlBEGINENDFold start="^\z(\s*\)\<\(BEGIN\|END\)\>.*[^};]$" end="^\z1}\s*$" transparent fold keepend
 
   if exists("perl_fold_blocks")
-    syn region perlIfFold start="^\z(\s*\)\(elsif\|if\|while\|until\|for\(each\)\=\s\+\(my\s\+\|our\s+\)\=\S\+\)\s*(.*)\s*{" start="^\z(\s*\)\(else\|do\|continue\)\s*{" end="^\z1}\s*;\=$" transparent fold keepend
+    syn region perlIfFold start="^\z(\s*\)\(if\|while\|until\)\s*(.*)\s*{\s*$" start="^\z(\s*\)foreach\s*\(\(my\|our\)\=\s*\S\+\s*\)\=(.*)\s*{\s*$" end="^\z1}\s*;\=$" transparent fold keepend
+    syn region perlIfFold start="^\z(\s*\)do\s*{\s*$" end="^\z1}\s*while" end="^\z1}\s*;\=$" transparent fold keepend
   endif
 
-  syn sync fromstart
   setlocal foldmethod=syntax
+  syn sync fromstart
+else
+  " fromstart above seems to set minlines even if perl_fold is not set.
+  syn sync minlines=0
 endif
 
 
@@ -491,7 +497,9 @@ if version >= 508 || !exists("did_perl_syn_inits")
   HiLink perlStatementPword	perlStatement
   HiLink perlStatementTime	perlStatement
   HiLink perlStatementMisc	perlStatement
+  HiLink perlStatementNew	perlStatement
   HiLink perlFunctionName	perlIdentifier
+  HiLink perlMethod		perlIdentifier
   HiLink perlFunctionPRef	perlType
   HiLink perlPOD		perlComment
   HiLink perlShellCommand	perlString

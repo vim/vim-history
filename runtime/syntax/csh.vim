@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	C-shell (csh)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Version:	1.04
-" Last Change:	Dec 10, 2001
-" Latest:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
+" Version:	7
+" Last Change:	Nov 18, 2002
+" URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,6 +15,7 @@ endif
 
 " clusters:
 syn cluster cshQuoteList	contains=cshDblQuote,cshSnglQuote,cshBckQuote
+syn cluster cshVarList	contains=cshExtVar,cshSelector,cshQtyWord,cshArgv,cshSubst
 
 " Variables which affect the csh itself
 syn match cshSetVariables	contained "argv\|histchars\|ignoreeof\|noglob\|prompt\|status"
@@ -62,14 +63,14 @@ syn keyword cshShellVariables	HOME	LOGNAME	PATH	TERM	USER
 syn match cshExtVar	"\$[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="		contains=cshModifier
 syn match cshSelector	"\$[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_]\+\]\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="	contains=cshModifier
 syn match cshQtyWord	"\$#[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="		contains=cshModifier
-syn match cshArgv	"\$\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
-syn match cshArgv	"\$\*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
+syn match cshArgv		"\$\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
+syn match cshArgv		"\$\*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\="			contains=cshModifier
 
 " Modifiable Variables with {}
 syn match cshExtVar	"\${[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"		contains=cshModifier
 syn match cshSelector	"\${[a-zA-Z_][a-zA-Z0-9_]*\[[a-zA-Z_]\+\]\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"	contains=cshModifier
-syn match cshQtyWord	"\${#[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"	contains=cshModifier
-syn match cshArgv	"\${\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"			contains=cshModifier
+syn match cshQtyWord	"\${#[a-zA-Z_][a-zA-Z0-9_]*\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"		contains=cshModifier
+syn match cshArgv		"\${\d\+\(:h\|:t\|:r\|:q\|:x\|:gh\|:gt\|:gr\)\=}"			contains=cshModifier
 
 " UnModifiable Substitutions
 syn match cshSubstError	"\$?[a-zA-Z_][a-zA-Z0-9_]*:\(h\|t\|r\|q\|x\|gh\|gt\|gr\)"
@@ -83,15 +84,13 @@ syn match cshSubst	"\$?[0$<]"
 syn match cshRedir	">>&!\|>&!\|>>&\|>>!\|>&\|>!\|>>\|<<\|>\|<"
 
 " Handle set expressions
-syn keyword cshSetStmt	contained set unset
-syn region  cshSetExpr	transparent start="set\|unset" end="$\|;" contains=cshSetVariables,cshSetStmt,@cshQuoteList,cshComment
+syn region  cshSetExpr	matchgroup=cshSetStmt start="\<set\>\|\<unset\>" end="$\|;" contains=cshComment,cshSetStmt,cshSetVariables,@cshQuoteList
 
 " Operators and Expression-Using constructs
-syn keyword cshExprUsing	contained if while exit then
-syn match   cshOperator	contained "\(&&\|!\~\|!=\|<<\|<=\|==\|=\~\|>=\|>>\|\*\|\^\|\~\|||\|!\|\|%\|&\|+\|-\|/\|<\|>\||\)"
+"syn match   cshOperator	contained "&&\|!\~\|!=\|<<\|<=\|==\|=\~\|>=\|>>\|\*\|\^\|\~\|||\|!\|\|%\|&\|+\|-\|/\|<\|>\||"
+syn match   cshOperator	contained "&&\|!\~\|!=\|<<\|<=\|==\|=\~\|>=\|>>\|\*\|\^\|\~\|||\|!\|%\|&\|+\|-\|/\|<\|>\||"
 syn match   cshOperator	contained "[(){}]"
-syn region  cshTest	transparent start="if\|while\|exit" skip="\\$" end="$\|;\|then" contains=cshOperator,cshExprUsing,@cshQuoteList,cshComment
-
+syn region  cshTest	matchgroup=cshStatement start="\<if\>\|\<while\>" skip="\\$" matchgroup=cshStatement end="\<then\>\|$" contains=cshComment,cshOperator,@cshQuoteList,@cshVarLIst
 
 " Highlight special characters (those which have a backslash) differently
 syn match cshSpecial	contained "\\\d\d\d\|\\[abcfnrtv\\]"
@@ -122,7 +121,6 @@ if version >= 508 || !exists("did_csh_syntax_inits")
   HiLink cshArgv		cshVariables
   HiLink cshBckQuote	cshCommand
   HiLink cshDblQuote	cshString
-  HiLink cshExprUsing	cshStatement
   HiLink cshExtVar	cshVariables
   HiLink cshHereDoc	cshString
   HiLink cshNoEndlineBQ	cshNoEndline

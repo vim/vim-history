@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.1.  Last change: 2002 Feb 02
+*insert.txt*    For Vim version 6.2a.  Last change: 2003 Mar 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -18,7 +18,7 @@ user manual |usr_24.txt|.
 3. 'textwidth' and 'wrapmargin' options			|ins-textwidth|
 4. 'expandtab', 'smarttab' and 'softtabstop'  options	|ins-expandtab|
 5. Replace mode						|Replace-mode|
-6. Virtual replace mode					|Virtual-replace-mode|
+6. Virtual Replace mode					|Virtual-Replace-mode|
 7. Insert mode completion				|ins-completion|
 8. Insert mode commands					|inserting|
 9. Ex insert commands					|inserting-ex|
@@ -479,13 +479,13 @@ character will be put back for only one space that you backspace over (the
 last one).  {Vi does not have the 'expandtab' option}
 
 ==============================================================================
-6. Virtual replace mode		*vreplace-mode* *Virtual-replace-mode*
+6. Virtual Replace mode		*vreplace-mode* *Virtual-Replace-mode*
 
-Enter Virtual replace mode with the "gR" command in normal mode.
+Enter Virtual Replace mode with the "gR" command in normal mode.
 {not available when compiled without the +vreplace feature}
-{Vi does not have Virtual replace mode}
+{Vi does not have Virtual Replace mode}
 
-Virtual replace mode is similar to Replace mode, but instead of replacing
+Virtual Replace mode is similar to Replace mode, but instead of replacing
 actual characters in the file, you are replacing screen real estate, so that
 characters further on in the file never appear to move.
 
@@ -507,7 +507,7 @@ As with Replace mode, using <BS> etc will bring back the characters that were
 replaced.  This still works in conjunction with 'smartindent', CTRL-T and
 CTRL-D, 'expandtab', 'smarttab', 'softtabstop', etc.
 
-In 'list' mode, Virtual replace mode acts as if it was not in 'list' mode,
+In 'list' mode, Virtual Replace mode acts as if it was not in 'list' mode,
 unless "L" is in 'cpoptions'.
 
 Note that the only times characters beyond the cursor should appear to move
@@ -557,7 +557,7 @@ ends CTRL-X mode (any key that is not a valid CTRL-X mode command) is mapped.
 Also, when doing completion with 'complete' mappings apply as usual.
 
 The following mappings are suggested to make typing the completion commands
-a bit easier (although they will hide other commands):
+a bit easier (although they will hide other commands): >
     :inoremap ^] ^X^]
     :inoremap ^F ^X^F
     :inoremap ^D ^X^D
@@ -837,16 +837,16 @@ CTRL-X CTRL-V		Guess what kind of item is in front of the cursor and
 Completing keywords from different sources		*compl-generic*
 
 							*i_CTRL-N*
-CTRL-N			Search backwards in the places given with the
-			'complete' option for words that start with the
-			keyword in front of the cursor.  The found keyword is
-			inserted in front of the cursor.
+CTRL-N			Find next match for words that start with the
+			keyword in front of the cursor, looking in places
+			specified with the 'complete' option.  The found
+			keyword is inserted in front of the cursor.
 
 							*i_CTRL-P*
-CTRL-P			Search forwards in the places given with the
-			'complete' option for words that start with the
-			keyword in front of the cursor.  The found keyword is
-			inserted in front of the cursor.
+CTRL-P			Find previous match for words that start with the
+			keyword in front of the cursor, looking in places
+			specified with the 'complete' option.  The found
+			keyword is inserted in front of the cursor.
 
 	CTRL-N		Search forward for next matching keyword.  This
 			keyword replaces the previous matching keyword.
@@ -873,6 +873,8 @@ A			Append text at the end of the line [count] times.
 
 <insert>	or				*i* *insert* *<Insert>*
 i			Insert text before the cursor [count] times.
+			When using CTRL-O in Insert mode |i_CTRL-O| the count
+			is not supported.
 
 							*I*
 I			Insert text before the first non-blank in the line
@@ -994,6 +996,7 @@ If 'fileformat' is "mac", a <NL> in the file is internally represented by a
 If the 'fileformats' option is not empty Vim tries to recognize the type of
 <EOL> (see |file-formats|).  However, the 'fileformat' option will not be
 changed, the detected format is only used while reading the file.
+A similar thing happens with 'fileencodings'.
 
 On non-MS-DOS, Win32, and OS/2 systems the message "[dos format]" is shown if
 a file is read in DOS format, to remind you that something unusual is done.

@@ -1,5 +1,5 @@
-### USEDLL: no for statically linked version of run-time, yes for DLL runtime (requires
-###         cc3250.dll be available in %PATH%)
+### USEDLL: no for statically linked version of run-time, yes for DLL runtime
+### (requires cc3250.dll be available in %PATH%)
 !if ("$(USEDLL)"=="")
 USEDLL = no
 !endif

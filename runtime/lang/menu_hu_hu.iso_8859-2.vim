@@ -1,7 +1,7 @@
 " Menu Translations:	Hungarian (Magyar)
 " Original Translation:	Zoltán Árpádffy
 " Maintained By:	Kontra Gergely <kgergely@mcl.hu>
-" Last Change:		2002 Mar 09
+" Last Change:		2003 Mar 30
 " I'm working on defining (unaccented) hotkeys for everything.
 " I want to remove y and z hotkeys, because on the hungarian keymap they're at
 " a differrent place.
@@ -62,7 +62,7 @@ menutrans &Redo<Tab>^R			Mé&gis<Tab>^R
 menutrans Rep&eat<Tab>\.		&Ismét<Tab>\.
 menutrans Cu&t<Tab>"+x			&Kivágás<Tab>"+x
 menutrans &Copy<Tab>"+y			&Másolás<Tab>"+y
-menutrans &Paste<Tab>"+P		&Beillesztés<Tab>"+P
+menutrans &Paste<Tab>"+gP		&Beillesztés<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Berakás\ e&lé<Tab>[p
 menutrans Put\ &After<Tab>]p		Berakás\ &mögé<Tab>]p
 menutrans &Delete<Tab>x			&Törlés<Tab>x

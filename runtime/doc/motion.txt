@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.1.  Last change: 2002 Feb 27
+*motion.txt*    For Vim version 6.2a.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -189,7 +189,7 @@ g_			To the last non-blank character of the line and
 			[count - 1] lines downward (inclusive). {not in Vi}
 
 							*g0* *g<Home>*
-g0 or g<Home>		When lines wrap ('wrap on): To the first character of
+g0 or g<Home>		When lines wrap ('wrap' on): To the first character of
 			the screen line.  |exclusive| motion.  Differs from
 			"0" when a line is wider than the screen.
 			When lines don't wrap ('wrap' off): To the leftmost
@@ -301,10 +301,14 @@ CTRL-M		or					*CTRL-M* *<CR>*
 _  <underscore>		[count] - 1 lines downward, on the first non-blank
 			character (linewise).
 
-<C-End>		or					*G* *<C-End>*
+							*G*
 G			Goto line [count], default last line, on the first
 			non-blank character (linewise).  If 'startofline' not
 			set, keep the same column.
+
+							*<C-End>*
+<C-End>			Goto line [count], default last line, on the last
+			character (inclusive). {not in Vi}
 
 <C-Home>	or					*gg* *<C-Home>*
 gg			Goto line [count], default first line, on the first
@@ -324,8 +328,9 @@ gg			Goto line [count], default first line, on the first
 :[range]go[to] [count]					*:go* *:goto* *go*
 [count]go		Go to {count} byte in the buffer.  Default [count] is
 			one, start of the file.  When giving [range], the
-			last number in it used.  End-of-line characters are
-			counted depending on the current 'fileformat' setting.
+			last number in it used as the byte count.  End-of-line
+			characters are counted depending on the current
+			'fileformat' setting.
 			{not in Vi}
 			{not available when compiled without the
 			|+byte_offset| feature}
@@ -836,26 +841,26 @@ move up and down the list.  There is a separate jump list for each window.
 The maximum number of entries is fixed at 100.
 {not available without the +jumplist feature}
 
-For example, after three jump commands you have this jump list: >
+For example, after three jump commands you have this jump list:
 
-  jump line  file/line
-    3	  1  some text
-    2	 70  another line
-    1  1154  end.
- >
+  jump line  col file/line ~
+    3	  1    0 some text ~
+    2	 70    0 another line ~
+    1  1154   23 end. ~
+ > ~
 
 The "file/line" column shows the file name, or the text at the jump if it is
 in the current file (an indent is removed and a long line is truncated to fit
 in the window).
 
 You are currently in line 1167.  If you then use the CTRL-O command, the
-cursor is put in line 1154.  This results in: >
+cursor is put in line 1154.  This results in:
 
-  jump line  file/line
-    2	  1  some text
-    1	 70  another line
- >  0  1154  end.
-    1  1167  foo bar
+  jump line  col file/line ~
+    2	  1    0 some text ~
+    1	 70    0 another line ~
+ >  0  1154   23 end. ~
+    1  1167    0 foo bar ~
 
 The pointer will be set at the last used jump position.  The next CTRL-O
 command will use the entry above it, the next CTRL-I command will use the
@@ -875,14 +880,14 @@ The result is that when repeating CTRL-O you will get back to old positions
 only once.
 
 After the CTRL-O command that got you into line 1154 you could give another
-jump command (e.g., "G").  The jump list would then become: >
+jump command (e.g., "G").  The jump list would then become:
 
-  jump line  file/line
-    4	  1  some text
-    3	 70  another line
-    2  1167  foo bar
-    1  1154  end.
- >
+  jump line  col file/line ~
+    4	  1    0 some text ~
+    3	 70    0 another line ~
+    2  1167    0 foo bar ~
+    1  1154   23 end. ~
+ > ~
 
 The line numbers will be adjusted for deleted and inserted lines.  This fails
 if you stop editing a file without writing, like with ":n!".
@@ -904,7 +909,12 @@ stored in the viminfo file and restored when starting Vim.
 					'matchpairs' option)
 			/* */		start or end of C-style comment
 			#if, #ifdef, #else, #elif, #endif
-					C preprocessor conditionals
+					C preprocessor conditionals (when the
+					cursor is on the # or no ([{
+					following)
+			For other items the matchit plugin can be used, see
+			|matchit-install|.
+
 			Parens and braces preceded with a backslash are
 			ignored.  When the '%' character is not present in
 			'cpoptions', parens and braces inside double quotes

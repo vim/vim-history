@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.1.  Last change: 2001 Nov 02
+*usr_31.txt*	For Vim version 6.2a.  Last change: 2002 Jul 31
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -241,7 +241,7 @@ THE GVIM STARTUP FILE
 When gvim starts, it reads the gvimrc file.  That's similar to the vimrc file
 used when starting Vim.  The gvimrc file can be used for settings and commands
 that are only to be used when the GUI is going to be started.  For example,
-you can set the 'lines' variable to set a different window size: >
+you can set the 'lines' option to set a different window size: >
 
 	:set lines=55
 

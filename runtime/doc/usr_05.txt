@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.1.  Last change: 2001 Nov 02
+*usr_05.txt*	For Vim version 6.2a.  Last change: 2003 Mar 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -22,7 +22,7 @@ Vims capabilities.  Or define your own macros.
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*05.1*	The vimrc file
+*05.1*	The vimrc file					*vimrc-intro*
 
 You probably got tired of typing commands that you use very often.  To start
 with all your favorite option settings and mappings, you write them in what is
@@ -316,6 +316,7 @@ Then copy the file to your plugin directory:
 	PC and OS/2	$HOME/vimfiles/plugin or $VIM/vimfiles/plugin
 	Amiga		s:vimfiles/plugin
 	Macintosh	$VIM:vimfiles:plugin
+	Mac OS X	~/.vim/plugin/
 	RISC-OS		Choices:vimfiles.plugin
 
 Example for Unix (assuming you didn't have a plugin directory yet): >
@@ -351,7 +352,7 @@ filetype one.  The scripts in $VIMRUNTIME/macros are global ones, the filetype
 plugins are in $VIMRUNTIME/ftplugin.
 
 
-USING A FILETYPE PLUGIN
+USING A FILETYPE PLUGIN					*ftplugin-name*
 
 You can add a filetype plugin by dropping it in the right directory.  The
 name of this directory is in the same directory mentioned above for global
@@ -407,7 +408,7 @@ Further reading:
 			plugin doesn't work.
 
 ==============================================================================
-*05.5*	Adding a help file			*add-local-help*
+*05.5*	Adding a help file		*add-local-help* *matchit-install*
 
 If you are lucky, the plugin you installed also comes with a help file.  We
 will explain how to install the help file, so that you can easily find help
@@ -445,11 +446,11 @@ Now you can use the >
 command to find help for "g%" in the help file you just added.  You can see an
 entry for the local help file when you do: >
 
-	:help
+	:help local-additions
 
-Go down to the "LOCAL ADDITIONS" section.  The title lines from the local help
-files are automagically added to this section.  There you can see which local
-help files have been added and jump to them through the tag.
+The title lines from the local help files are automagically added to this
+section.  There you can see which local help files have been added and jump to
+them through the tag.
 
 For writing a local help file, see |write-local-help|.
 
@@ -478,7 +479,7 @@ The option has now been switched off.
 
 Just above this line is a short description of the 'wrap' option.  Move the
 cursor one line up to place it in this line.  Now hit <Enter> and you jump to
-the full help on the 'wrap' option.  Use CTRL-O to jump back.
+the full help on the 'wrap' option.
 
 For options that take a number or string argument you can edit the value.
 Then press <Enter> to apply the new value.  For example, move the cursor a few
@@ -573,7 +574,7 @@ KEYWORDS
 The 'iskeyword' option specifies which characters can appear in a word: >
 
 	:set iskeyword
-<	  iskeyword=@,48-57,_,192-255 >
+<	  iskeyword=@,48-57,_,192-255
 
 The "@" stands for all alphabetic letters.  "48-57" stands for ASCII
 characters 48 to 57, which are the numbers 0 to 9.  "192-255" are the

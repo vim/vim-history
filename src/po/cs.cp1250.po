@@ -2672,7 +2672,7 @@ msgstr "\"\n"
 
 #: main.c:867
 msgid "Cannot open for reading: \""
-msgstr "Nelze otevøít %s pro zápis"
+msgstr "Nelze otevøít pro zápis: \""
 
 #: main.c:911
 msgid "Cannot open for script output: \""
@@ -4619,7 +4619,7 @@ msgstr "E374: Ve formátovacím øetìzci chybí ]"
 
 #: quickfix.c:362
 msgid "E375: Unsupported %%%c in format string"
-msgstr "E375: Nepodporovaná formátová specifikace ve formátovacím øetìzci"
+msgstr "E375: %%%c Nepodporovaná formátová specifikace ve formátovacím øetìzci"
 
 #: quickfix.c:380
 msgid "E376: Invalid %%%c in format string prefix"
@@ -5674,7 +5674,7 @@ msgstr ""
 "povolen."
 
 #: globals.h:1026
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Soubor existuje (použijte ! pro vynucení)"
 
 #: globals.h:1027

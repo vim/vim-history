@@ -275,7 +275,7 @@ syn region  sgmlProcessing matchgroup=sgmlProcessingDelim start="<?" end="?>" co
 
 
 " DTD -- we use dtd.vim here
-syn region  sgmlDocType matchgroup=sgmlDocTypeDecl start="<!DOCTYPE"he=s+2,rs=s+2 end=">" contains=sgmlDocTypeKeyword,sgmlInlineDTD,sgmlString
+syn region  sgmlDocType matchgroup=sgmlDocTypeDecl start="\c<!DOCTYPE"he=s+2,rs=s+2 end=">" contains=sgmlDocTypeKeyword,sgmlInlineDTD,sgmlString
 syn keyword sgmlDocTypeKeyword contained DOCTYPE PUBLIC SYSTEM
 syn region  sgmlInlineDTD contained start="\[" end="]" contains=@sgmlDTD
 syn include @sgmlDTD <sfile>:p:h/dtd.vim

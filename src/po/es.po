@@ -5751,7 +5751,7 @@ msgstr ""
 "«tags»"
 
 #: globals.h:1030
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: El fichero ya existe (use ! para invalidar)"
 
 #: globals.h:1031

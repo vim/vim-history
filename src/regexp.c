@@ -2527,7 +2527,7 @@ read_limits(minval, maxval)
 	regparse++;	/* Allow either \{...} or \{...\} */
     if (*regparse != '}' || (*maxval == 0 && *minval == 0))
     {
-	sprintf((char *)IObuff, _("Syntax error in %s{...}"),
+	sprintf((char *)IObuff, _("E554: Syntax error in %s{...}"),
 					  reg_magic == MAGIC_ALL ? "" : "\\");
 	EMSG_RET_FAIL(IObuff);
     }

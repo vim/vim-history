@@ -1,4 +1,4 @@
-*mlang.txt*     For Vim version 6.1.  Last change: 2001 Sep 04
+*mlang.txt*     For Vim version 6.2a.  Last change: 2002 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -44,7 +44,7 @@ use of "-" and "_".
 			With the "time" argument the language used for
 			strftime() is printed.  Technical: LC_TIME.
 			Without argument all parts of the locale are printed
-			(this is system dependend).
+			(this is system dependent).
 			The current language can also be obtained with the
 			|v:lang|, |v:ctype| and |v:lc_time| variables.
 

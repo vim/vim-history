@@ -1,8 +1,8 @@
-"  vim: set sw=4 sts=4:
-"  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  URL		: http://www.pcppopper.org/
-"  Revised on	: Wed, 01 Aug 2001 02:02:07 CEST
-"  Language	: Screen Virtual Terminal Emulator/Manager Configuration File
+" Vim syntax file
+" Language:	    Screen Virtual Terminal Emulator/Manager Configuration File
+" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
+" URL:		    http://www.pcppopper.org/
+" Latest Revision:  2002-10-24
 
 if version < 600
     syntax clear
@@ -46,6 +46,9 @@ syn keyword screenCommands	quit readbuf readreg redisplay register remove remove
 syn keyword screenCommands	select sessionname setenv shelltitle silencewait verbose
 syn keyword screenCommands	sleep sorendition split startup_message stuff su suspend time
 syn keyword screenCommands	title umask version wall width writebuf xoff xon defmode hardstatus
+syn keyword screenCommands	altscreen break breaktype copy_reg defbreaktype defencoding deflog encoding
+syn keyword screenCommands	eval ignorecase ins_reg maxwin partial pow_detach setsid source unsetenv
+syn keyword screenCommands	windowlist windows
 syn match   screenCommands	"\<\(def\)\=\(autonuke\|bce\|c1\|charset\|escape\|flow\|kanji\|login\|monitor\|hstatus\|obuflimit\)\>"
 syn match   screenCommands	"\<\(def\)\=\(scrollback\|shell\|silence\|slowpaste\|utf8\|wrap\|writelock\|zombie\|gr\)\>"
 syn match   screenCommands	"\<hard\(copy\(_append\|dir\)\=\|status\)\>"
@@ -85,3 +88,5 @@ if version >= 508 || !exists("did_screen_syn_inits")
 endif
 
 let b:current_syntax = "screen"
+
+"  vim: set sw=4 sts=4:

@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.1.  Last change: 2002 Feb 04
+*autocmd.txt*   For Vim version 6.2a.  Last change: 2003 Mar 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,20 +68,20 @@ Note that special characters (e.g., "%", "<cword>") in the ":autocmd"
 arguments are not expanded when the autocommand is defined.  These will be
 expanded when the Event is recognized, and the {cmd} is executed.  The only
 exception is that "<sfile>" is expanded when the autocmd is defined.  Example:
- >
+>
 	:au BufNewFile,BufRead *.html so <sfile>:h/html.vim
 
 Here Vim expands <sfile> to the name of the file containing this line.
 
 When your .vimrc file is sourced twice, the autocommands will appear twice.
 To avoid this, put this command in your .vimrc file, before defining
-autocommands:
- >
+autocommands: >
+
 	:autocmd!	" Remove ALL autocommands for the current group.
 
 If you don't want to remove all autocommands, you can instead use a variable
-to ensure that Vim includes the autocommands only once:
- >
+to ensure that Vim includes the autocommands only once: >
+
 	:if !exists("autocommands_loaded")
 	:  let autocommands_loaded = 1
 	:  au ...
@@ -168,10 +168,12 @@ BufReadPre			When starting to edit a new buffer, before
 						*BufRead* *BufReadPost*
 BufRead or BufReadPost		When starting to edit a new buffer, after
 				reading the file into the buffer, before
-				executing the modelines.  This does NOT work
-				for ":r file".  Not used when the file doesn't
-				exist.  Also used after successfully recovering
-				a file.
+				executing the modelines.  See |BufWinEnter|
+				for when you need to do something after
+				processing the modelines.
+				This does NOT work for ":r file".  Not used
+				when the file doesn't exist.  Also used after
+				successfully recovering a file.
 							*BufReadCmd*
 BufReadCmd			Before starting to edit a new buffer.  Should
 				read the file into the buffer. |Cmd-event|
@@ -283,7 +285,10 @@ FileChangedShell		When Vim notices that the modification time of
 				buffer, jump to another buffer or delete a
 				buffer.  *E246*
 				NOTE: This event never nests, to avoid an
-				endless loop.
+				endless loop.  This means that while executing
+				commands for the FileChangedShell event no
+				other FileChangedShell event will be
+				triggered.
 							*FileChangedRO*
 FileChangedRO			Before making the first change to a read-only
 				file.  Can be used to check-out the file from
@@ -313,6 +318,7 @@ CursorHold			When the user doesn't press a key for the time
 				fire every 'updatetime' ms if you leave Vim to
 				make some coffee. :)  See |CursorHold-example|
 				for previewing tags.
+				This event is only triggered in Normal mode.
 				Note: Interactive commands cannot be used for
 				this event.  There is no hit-enter prompt,
 				the screen is updated directly (when needed).
@@ -471,7 +477,7 @@ RemoteReply			When a reply from a Vim that functions as
 				<amatch> is equal to the {serverid} from which
 				the reply was sent, and <afile> is the actual
 				reply string.
-				Note that even if an auto command is defined,
+				Note that even if an autocommand is defined,
 				the reply should be read with |remote_read()|
 				to consume it.
 							*TermChanged*
@@ -769,7 +775,8 @@ execute only once.
 
 There is currently no way to disable the autocommands.  If you want to write a
 file without executing the autocommands for that type of file, write it under
-another name and rename it with a shell command.
+another name and rename it with a shell command.  In some situations you can
+use the 'eventignore' option.
 
 Note: When reading a file (with ":read file" or with a filter command) and the
 last line in the file does not have an <EOL>, Vim remembers this.  At the next

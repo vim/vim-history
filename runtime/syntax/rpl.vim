@@ -1,11 +1,9 @@
 " Vim syntax file
 " Language:            RPL/2
-" Version:             0.13.1 against RPL/2 version 4.00pre4e
-" Last Change:         2002 Mar 03
+" Version:             0.15.7 against RPL/2 version 4.00pre6b
+" Last Change:         2003 Jan 29
 " Maintainer:          Joël BERTRAND <rpl2@free.fr>
-" For the latest version of this file, see <http://rpl2.free.fr>
-" Credits:
-" Nothing
+" URL:			http://www.makalis.fr/~bertrand/rpl2/download/vim/syntax/rpl.vim
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,137 +13,345 @@ elseif exists("b:current_syntax")
   finish
 endif
 
+" Keyword characters (not used)
+" set iskeyword=33-127
+
 " Case sensitive
 syntax case match
 
-syntax keyword rplConstant         e i
+" Constants
+syntax match rplConstant           "\(^\|\s\+\)\(e\|i\)\ze\($\|\s\+\)"
 
 " Any binary number
-syntax match rplBinaryError        "#\s*\S\+b"
-syntax match rplBinary             "\<#\>\s*[01]\+b\>"
-syntax match rplBinary             "\<#[01]\+b\>"
-syntax match rplOctalError         "#\s*\S\+o"
-syntax match rplOctal              "\<#\>\s*\o\+o\>"
-syntax match rplOctal              "\<#\o\+o\>"
-syntax match rplDecimalError       "#\s*\S\+d"
-syntax match rplDecimal            "\<#\>\s*\d\+d\>"
-syntax match rplDecimal            "\<#\d\+d\>"
-syntax match rplHexadecimalError   "#\s*\S\+h"
-syntax match rplHexadecimal        "\<#\>\s*\x\+h\>"
-syntax match rplHexadecimal        "\<#\x\+h\>"
+syntax match rplBinaryError        "\(^\|\s\+\)#\s*\S\+b\ze"
+syntax match rplBinary             "\(^\|\s\+\)#\s*[01]\+b\ze\($\|\s\+\)"
+syntax match rplOctalError         "\(^\|\s\+\)#\s*\S\+o\ze"
+syntax match rplOctal              "\(^\|\s\+\)#\s*\o\+o\ze\($\|\s\+\)"
+syntax match rplDecimalError       "\(^\|\s\+\)#\s*\S\+d\ze"
+syntax match rplDecimal            "\(^\|\s\+\)#\s*\d\+d\ze\($\|\s\+\)"
+syntax match rplHexadecimalError   "\(^\|\s\+\)#\s*\S\+h\ze"
+syntax match rplHexadecimal        "\(^\|\s\+\)#\s*\x\+h\ze\($\|\s\+\)"
 
 " Case unsensitive
 syntax case ignore
 
-syntax keyword rplControl          abort kill cont halt clmf sst
+syntax match rplControl            "\(^\|\s\+\)abort\ze\($\|\s\+\)"
+syntax match rplControl            "\(^\|\s\+\)kill\ze\($\|\s\+\)"
+syntax match rplControl            "\(^\|\s\+\)cont\ze\($\|\s\+\)"
+syntax match rplControl            "\(^\|\s\+\)halt\ze\($\|\s\+\)"
+syntax match rplControl            "\(^\|\s\+\)cmlf\ze\($\|\s\+\)"
+syntax match rplControl            "\(^\|\s\+\)sst\ze\($\|\s\+\)"
 
-syntax keyword rplConstant         pi
+syntax match rplConstant           "\(^\|\s\+\)pi\ze\($\|\s\+\)"
 
-syntax keyword rplStatement        return last syseval wait type wait
-syntax keyword rplStatement        kind
-syntax keyword rplStatement        eval use remove
-syntax keyword rplStatement        dup dup2 dupn drop drop2 dropn depth
-syntax keyword rplStatement        rolld roll pick rot swap over clear
-syntax keyword rplStatement        warranty copyright
-syntax keyword rplStatement        convert date time mem
-syntax match   rplStatement        "\<->num\>"
+syntax match rplStatement          "\(^\|\s\+\)return\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)last\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)syzeval\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)wait\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)type\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)kind\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)eval\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)use\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)remove\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)dup\([2n]\|\)\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)drop\([2n]\|\)\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)depth\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)roll\(d\|\)\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)pick\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)rot\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)swap\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)over\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)clear\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)warranty\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)copyright\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)convert\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)date\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)time\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)mem\ze\($\|\s\+\)"
+syntax match rplStatement          "\(^\|\s\+\)clmf\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)->num\ze\($\|\s\+\)"
 
-syntax keyword rplStorage          get geti put puti sto rcl purge
-syntax keyword rplStorage          sinv sneg sconj
-syntax keyword rplStorage          steq rceq vars
-syntax match   rplStorage          "\<sto+\>" "\<sto-\>" "\<sto*\>" "\<sto/\>"
-syntax match   rplStorage          "\<->\>"
+syntax match rplStorage            "\(^\|\s\+\)get\(i\|\)\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)put\(i\|\)\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)rcl\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)purge\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)sinv\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)sneg\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)sconj\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)steq\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)rceq\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)vars\ze\($\|\s\+\)"
+syntax match rplStorage            "\(^\|\s\+\)sto\([+-/\*]\|\)\ze\($\|\s\+\)"
 
-syntax keyword rplConditional      if iferr then elseif else end
-syntax keyword rplConditional      select case default
+syntax match rplAlgConditional     "\(^\|\s\+\)ift\(e\|\)\ze\($\|\s\+\)"
 
-syntax keyword rplAlgConditional   ift ifte
+syntax match rplOperator           "\(^\|\s\+\)and\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)\(x\|\)or\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)not\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)same\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)==\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)<=\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)=<\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)=>\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)>=\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)<>\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)>\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)<\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)[+-]\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)[/\*]\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)\^\ze\($\|\s\+\)"
+syntax match rplOperator           "\(^\|\s\+\)\*\*\ze\($\|\s\+\)"
 
-syntax keyword rplRepeat           do until
-syntax keyword rplRepeat           while repeat
-syntax keyword rplRepeat           for start next step cycle
+syntax match rplBoolean            "\(^\|\s\+\)true\ze\($\|\s\+\)"
+syntax match rplBoolean            "\(^\|\s\+\)false\ze\($\|\s\+\)"
 
-syntax keyword rplOperator         and or not xor same
-syntax match   rplOperator         "\<==\>" "\<<=\>" "\>=<\>" "\<<\>"
-syntax match   rplOperator         "\>>\>" "\>>=\>" "\>=>\>" "\><>\>"
+syntax match rplReadWrite          "\(^\|\s\+\)store\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)recall\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\(\|wf\|un\)lock\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)open\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)close\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)delete\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)create\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)format\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)rewind\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)backspace\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\(\|re\)write\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)read\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)inquire\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)sync\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)append\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)suppress\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)seek\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)pr\(1\|int\|st\|stc\|lcd\|var\|usr\|md\)\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)cr\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)erase\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)disp\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)input\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)prompt\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)key\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)cllcd\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\(\|re\)draw\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)drax\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)indep\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)depnd\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)res\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)axes\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)label\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)pmin\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)pmax\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)centr\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)persist\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)title\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\(auto\|log\|\)scale\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)function\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)polar\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)scatter\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)wireframe\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\*w\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)\*h\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)->lcd\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)lcd->\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)edit\ze\($\|\s\+\)"
+syntax match rplReadWrite          "\(^\|\s\+\)visit\ze\($\|\s\+\)"
 
-syntax keyword rplBoolean          true false
+syntax match rplIntrinsic          "\(^\|\s\+\)abs\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)arg\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)conj\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)re\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)im\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)mant\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)xpon\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)ceil\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)fact\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)fp\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)floor\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)inv\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)ip\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)max\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)min\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)mod\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)neg\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)relax\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)sign\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)sq\(\|rt\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)xroot\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)cos\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)sin\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)tan\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)tg\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)a\(\|rc\)cos\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)a\(\|rc\)sin\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)atan\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)arctg\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|a\)cosh\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|a\)sinh\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|a\)tanh\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|arg\)th\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)arg[cst]h\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|a\)log\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)ln\(\|1\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)exp\(\|m\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)trn\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)con\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)idn\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)rdm\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)rsd\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)cnrm\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)cross\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)d[eo]t\ze\($\|\s\+\)"
 
-syntax keyword rplReadWrite        store recall lock wflock unlock
-syntax keyword rplReadWrite        open close delete create format
-syntax keyword rplReadWrite        rewind backspace
-syntax keyword rplReadWrite        write read inquire sync append
-syntax keyword rplReadWrite        rewrite suppress seek
-syntax keyword rplReadWrite        pr1 print cr prst prstc erase prlcd
-syntax keyword rplReadWrite        prvar prusr prmd
-syntax keyword rplReadWrite        disp input prompt key
-syntax keyword rplReadWrite        cllcd draw redraw drax indep depnd res axes
-syntax keyword rplReadWrite        label
-syntax keyword rplReadWrite        pmin pmax centr persist title
-syntax keyword rplReadWrite        logscale autoscale scale
-syntax keyword rplReadWrite        function polar parametric scatter
-syntax keyword rplReadWrite        wireframe
-syntax match   rplReadWrite        "\<->lcd\>" "\<lcd->\>" "\<*w\>" "\<*h\>"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|g\)egvl\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|g\)\(\|l\|r\)egv\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)rnrm\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(std\|fix\|sci\|eng\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(rad\|deg\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|n\)rand\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)rdz\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|i\)fft\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(dec\|bin\|oct\|hex\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)rclf\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)stof\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)[cs]f\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)chr\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)num\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)pos\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)sub\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)size\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(st\|rc\)ws\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(r\|s\)\(r\|l\)\(\|b\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)as\(r\|l\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(int\|der\)\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)stos\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|r\)cls\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)drws\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)scls\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)nscls\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)tot\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)mean\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|p\)sdev\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|p\)var\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)maxs\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)mins\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|p\)cov\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)cols\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)corr\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)utp[cfnt]\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)comb\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)perm\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)\(\|p\)lu\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)[lu]chol\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)schur\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)%\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)%ch\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)%t\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)hms->\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)->hms\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)hms+\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)hms-\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)d->r\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)r->d\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)b->r\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)r->b\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)c->r\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)r->c\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)str->\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)->str\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)array->\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)->array\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)list->\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)->list\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)s+\ze\($\|\s\+\)"
+syntax match rplIntrinsic          "\(^\|\s\+\)s-\ze\($\|\s\+\)"
 
-syntax keyword rplIntrinsic        abs arg conj re im mant xpon
-syntax keyword rplIntrinsic        ceil fact fp floor inv ip max min mod
-syntax keyword rplIntrinsic        neg relax
-syntax keyword rplIntrinsic        sign sq sqrt xroot
-syntax keyword rplIntrinsic        cos sin tan tg
-syntax keyword rplIntrinsic        acos arccos asin arcsin atan arctg
-syntax keyword rplIntrinsic        cosh sinh tanh th
-syntax keyword rplIntrinsic        acosh argch asinh argsh atanh argth
-syntax keyword rplIntrinsic        log alog ln exp expm ln1
-syntax keyword rplIntrinsic        trn con idn rdm rsd
-syntax keyword rplIntrinsic        cnrm cross det dot egv egvl gegv glegv
-syntax keyword rplIntrinsic        gregv gegvl legv regv rnrm
-syntax keyword rplIntrinsic        std fix sci eng rad deg
-syntax keyword rplIntrinsic        nrand rand rdz
-syntax keyword rplIntrinsic        fft ifft
-syntax keyword rplIntrinsic        dec bin oct hex rclf stof sf cf
-syntax keyword rplIntrinsic        chr num pos sub size
-syntax keyword rplIntrinsic        stws rcws rl rr rlb rrb
-syntax keyword rplIntrinsic        sl sr slb srb asr
-syntax keyword rplIntrinsic        int der
-syntax keyword rplIntrinsic        stos rcls cls drws scls ns
-syntax keyword rplIntrinsic        tot mean sdev var maxs mins
-syntax keyword rplIntrinsic        psdev pvar pcov
-syntax keyword rplIntrinsic        cols corr cov
-syntax keyword rplIntrinsic        utpc utpf utpn utpt comb perm
-syntax keyword rplIntrinsic        lu lchol plu uchol schur
-syntax match   rplIntrinsic        "\<r->c\>" "\<c->r\>" "\<!\>"
-syntax match   rplIntrinsic        "\<%\>" "\<%ch\>" "\<%t\>"
-syntax match   rplIntrinsic        "\<hms->\>" "\<->hms\>" "\<hms+\>" "\<hms-\>"
-syntax match   rplIntrinsic        "\<d->r\>" "\<r->d\>"
-syntax match   rplIntrinsic        "\<b->r\>" "\<r->b\>"
-syntax match   rplIntrinsic        "\<str->\>" "\<->str\>"
-syntax match   rplIntrinsic        "\<array->\>" "\<->array\>"
-syntax match   rplIntrinsic        "\<list->\>" "\<->list\>"
-syntax match   rplIntrinsic        "\<s+\>" "\<s-\>"
+syntax match rplObsolete           "\(^\|\s\+\)arry->\ze\($\|\s\+\)"hs=e-5
+syntax match rplObsolete           "\(^\|\s\+\)->arry\ze\($\|\s\+\)"hs=e-5
 
-syntax match   rplObsolete         "\<arry->\>" "\<->arry\>"
+" Conditional structures
+syntax match rplConditionalError   "\(^\|\s\+\)case\ze\($\|\s\+\)"hs=e-3
+syntax match rplConditionalError   "\(^\|\s\+\)then\ze\($\|\s\+\)"hs=e-3
+syntax match rplConditionalError   "\(^\|\s\+\)else\ze\($\|\s\+\)"hs=e-3
+syntax match rplConditionalError   "\(^\|\s\+\)elseif\ze\($\|\s\+\)"hs=e-5
+syntax match rplConditionalError   "\(^\|\s\+\)end\ze\($\|\s\+\)"hs=e-2
+syntax match rplConditionalError   "\(^\|\s\+\)cycle\ze\($\|\s\+\)"hs=e-4
+syntax match rplConditionalError   "\(^\|\s\+\)\(step\|next\)\ze\($\|\s\+\)"hs=e-3
+syntax match rplConditionalError   "\(^\|\s\+\)until\ze\($\|\s\+\)"hs=e-4
+syntax match rplConditionalError   "\(^\|\s\+\)repeat\ze\($\|\s\+\)"hs=e-5
+syntax match rplConditionalError   "\(^\|\s\+\)default\ze\($\|\s\+\)"hs=e-6
+
+" FOR/(CYCLE)/NEXT
+" FOR/(CYCLE)/STEP
+" START/(CYCLE)/NEXT
+" START/(CYCLE)/STEP
+syntax match rplCycle              "\(^\|\s\+\)cycle\ze\($\|\s\+\)" contained containedin=rplForNext
+syntax region rplForNext matchgroup=rplRepeat start="\(^\|\s\+\)\(for\|start\)\ze\($\|\s\+\)" end="\(^\|\s\+\)\(next\|step\)\ze\($\|\s\+\)" contains=ALL keepend extend
+
+" ELSEIF/END
+syntax region rplElseifEnd matchgroup=rplConditional start="\(^\|\s\+\)elseif\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contained contains=ALLBUT,rplElseEnd keepend
+
+" ELSE/END
+syntax region rplElseEnd matchgroup=rplConditional start="\(^\|\s\+\)else\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contained contains=ALLBUT,rplElseEnd,rplThenEnd,rplElseifEnd keepend
+
+" THEN/END
+syntax region rplThenEnd matchgroup=rplConditional start="\(^\|\s\+\)then\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contained containedin=rplIfEnd contains=ALLBUT,rplThenEnd keepend
+
+" IF/END
+syntax region rplIfEnd matchgroup=rplConditional start="\(^\|\s\+\)if\(err\|\)\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contains=ALLBUT,rplElseEnd,rplElseifEnd keepend extend
+" if end is accepted !
+
+" CASE/THEN
+syntax region rplCaseThen matchgroup=rplConditional start="\(^\|\s\+\)case\ze\($\|\s\+\)" end="\(^\|\s\+\)then\ze\($\|\s\+\)" contains=ALLBUT,rplCaseThen,rplCaseEnd,rplThenEnd keepend extend contained containedin=rplCaseEnd
+
+" CASE/END
+syntax region rplCaseEnd matchgroup=rplConditional start="\(^\|\s\+\)case\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contains=ALLBUT,rplCaseEnd,rplThenEnd,rplElseEnd keepend extend contained containedin=rplSelectEnd
+
+" DEFAULT/END
+syntax region rplDefaultEnd matchgroup=rplConditional start="\(^\|\s\+\)default\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contains=ALLBUT,rplDefaultEnd keepend contained containedin=rplSelectEnd
+
+" SELECT/END
+syntax region rplSelectEnd matchgroup=rplConditional start="\(^\|\s\+\)select\ze\($\|\s\+\)" end="\(^\|\s\+\)end\ze\($\|\s\+\)" contains=ALLBUT,rplThenEnd keepend extend
+" select end is accepted !
+
+" DO/UNTIL/END
+syntax region rplUntilEnd matchgroup=rplConditional start="\(^\|\s\+\)until\ze\($\|\s\+\)" end="\(^\|\s\+\)\zsend\ze\($\|\s\+\)" contains=ALLBUT,rplUntilEnd,rplCycle contained containedin=rplDoUntil extend keepend
+syntax region rplDoUntil matchgroup=rplConditional start="\(^\|\s\+\)do\ze\($\|\s\+\)" end="\(^\|\s\+\)until\ze\($\|\s\+\)" contains=ALLBUT,rplCycle keepend extend
+
+" WHILE/REPEAT/END
+syntax region rplRepeatEnd matchgroup=rplConditional start="\(^\|\s\+\)repeat\ze\($\|\s\+\)" end="\(^\|\s\+\)\zsend\ze\($\|\s\+\)" contains=ALLBUT,rplRepeatEnd,rplCycle contained containedin=rplWhileRepeat extend keepend
+syntax region rplWhileRepeat matchgroup=rplConditional start="\(^\|\s\+\)while\ze\($\|\s\+\)" end="\(^\|\s\+\)repeat\ze\($\|\s\+\)" contains=ALLBUT,rplCycle keepend extend
 
 " Comments
+syntax match rplCommentError "\*/"
 syntax region rplCommentString contained start=+"+ end=+"+ end=+\*/+me=s-1
-syntax region rplCommentLine start="//" skip="\\$" end="$" keepend contains=rplCommentString
-syntax region rplComment start="/\*" end="\*/" contains=rplCommentString
-syntax match rplCommentError   "\*/"
+syntax region rplCommentLine start="\(^\|\s\+\)//\ze" skip="\\$" end="$" contains=NONE keepend extend
+syntax region rplComment start="\(^\|\s\+\)/\*\ze" end="\*/" contains=rplCommentString keepend extend
 
 " Catch errors caused by too many right parentheses
-syntax region rplParen transparent start="(" end=")" contains=ALLBUT,rplParenError,rplComplex,rplIncluded
+syntax region rplParen transparent start="(" end=")" contains=ALLBUT,rplParenError,rplComplex,rplIncluded keepend extend
 syntax match rplParenError ")"
 
+" Subroutines
 " Catch errors caused by too many right '>>'
-syntax region rplSub matchgroup=rplSubDelimitor start="\<<<\>" end="\<>>\>" contains=ALLBUT,rplSubError,rplIncluded
-syntax match rplSubError "\<>>\>"
+syntax match rplSubError "\(^\|\s\+\)>>\ze\($\|\s\+\)"hs=e-1
+syntax region rplSub matchgroup=rplSubDelimitor start="\(^\|\s\+\)<<\ze\($\|\s\+\)" end="\(^\|\s\+\)>>\ze\($\|\s\+\)" contains=ALLBUT,rplSubError,rplIncluded,rplCycle,rplDefaultEnd,rplStorageSub keepend extend
+
+" Expressions
+syntax region rplExpr start="\(^\|\s\+\)'" end="'\ze\($\|\s\+\)" oneline contains=rplParen,rplParenError
+
+" Local variables
+syntax match rplStorageError "\(^\|\s\+\)->\ze\($\|\s\+\)"hs=e-1
+syntax region rplStorageSub matchgroup=rplStorage start="\(^\|\s\+\)<<\ze\($\|\s\+\)" end="\(^\|\s\+\)>>\ze\($\|\s\+\)" contains=ALLBUT,rplSubError,rplIncluded,rplCycle,rplDefaultEnd,rplStorageExpr contained containedin=rplLocalStorage keepend extend
+syntax region rplStorageExpr matchgroup=rplStorage start="\(^\|\s\+\)'" end="'\ze\($\|\s\+\)" oneline contains=rplParen,rplParenError extend contained containedin=rplLocalStorage
+syntax region rplLocalStorage matchgroup=rplStorage start="\(^\|\s\+\)->\ze\($\|\s\+\)" end="\(^\|\s\+\)\(<<\ze\($\|\s\+\)\|'\)" contains=rplStorageSub,rplStorageExpr,rplComment,rplCommentLine keepend extend
 
 " Catch errors caused by too many right brackets
-syntax region rplArray start="\[" end="\]" contains=ALLBUT,rplArrayError
 syntax match rplArrayError "\]"
+syntax match rplArray "\]" contained containedin=rplArray
+syntax region rplArray matchgroup=rplArray start="\[" end="\]" contains=ALLBUT,rplArrayError keepend extend
 
 " Catch errors caused by too many right '}'
-syntax region rplList start="{" end="}" contains=ALLBUT,rplListError,rplIncluded
 syntax match rplListError "}"
+syntax match rplList "}" contained containedin=rplList
+syntax region rplList matchgroup=rplList start="{" end="}" contains=ALLBUT,rplListError,rplIncluded keepend extend
 
 " cpp is used by RPL/2
 syntax match rplPreProc   "^\s*#\s*\(define\|undef\)\>"
@@ -155,18 +361,24 @@ syntax match rplInclude   "^\s*#\s*include\>\s*["<]" contains=rplIncluded,rplStr
 syntax match rplExecPath  "^#!.*"
 
 " Any integer
-syntax match rplInteger    "\<[-+]\=\d\+\>"
+syntax match rplInteger    "\(^\|\s\+\)[-+]\=\d\+\ze\($\|\s\+\)"
 
 " Floating point number
-syntax match rplFloat      "\<[-+]\=\(\d*\)\=[.,]\=\d*\([eE][-+]\=\d\+\)\=\>" contains=ALLBUT,rplPoint,rplSign
-syntax match rplPoint      "\<[.,]\>"
+" [S][ip].[fp]
+syntax match rplFloat       "\(^\|\s\+\)[-+]\=\(\d*\)\=[\.,]\(\d*\)\=\ze\($\|\s\+\)" contains=ALLBUT,rplPoint,rplSign
+" [S][ip][.fp]E[S]exp
+syntax match rplFloat       "\(^\|\s\+\)[-+]\=\(\d*\)\=\([\.,]\d*\)\=[eE]\([-+]\)\=\d*\ze\($\|\s\+\)" contains=ALLBUT,rplPoint,rplSign
+syntax match rplPoint      "\<[\.,]\>"
 syntax match rplSign       "\<[+-]\>"
 
 " Complex number
-syntax match rplComplex    "\<([-+]\=\(\d*\)\=[.,]\=\d*\([eE][-+]\=\d\+\)\=\s*[,.]\s*[-+]\=\(\d*\)\=[.,]\=\d*\([eE][-+]\=\d\+\)\=)\>"
+" (x,y)
+syntax match rplComplex    "\(^\|\s\+\)([-+]\=\(\d*\)\=\.\=\d*\([eE][-+]\=\d\+\)\=\s*,\s*[-+]\=\(\d*\)\=\.\=\d*\([eE][-+]\=\d\+\)\=)\ze\($\|\s\+\)"
+" (x.y)
+syntax match rplComplex    "\(^\|\s\+\)([-+]\=\(\d*\)\=,\=\d*\([eE][-+]\=\d\+\)\=\s*\.\s*[-+]\=\(\d*\)\=,\=\d*\([eE][-+]\=\d\+\)\=)\ze\($\|\s\+\)"
 
-syntax region rplString start=+"+ end=+"+ oneline contains=NONE
-syntax region rplExpr   start=+'+ end=+'+ oneline contains=rplParen, rplParenError
+" Strings
+syntax region rplString start=+\(^\|\s\+\)"+ end=+"\ze\($\|\s\+\)+ oneline contains=NONE
 
 syntax match rplTab "\t"  transparent
 
@@ -187,9 +399,14 @@ if version >= 508 || !exists("did_rpl_syntax_inits")
   HiLink rplStatement           Statement
   HiLink rplAlgConditional      Conditional
   HiLink rplConditional         Repeat
+  HiLink rplConditionalError    Error
   HiLink rplRepeat              Repeat
+  HiLink rplCycle               Repeat
+  HiLink rplUntil               Repeat
   HiLink rplIntrinsic           Special
   HiLink rplStorage             StorageClass
+  HiLink rplStorageExpr         StorageClass
+  HiLink rplStorageError	Error
   HiLink rplReadWrite           rplIntrinsic
 
   HiLink rplOperator            Operator

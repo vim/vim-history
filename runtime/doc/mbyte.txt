@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.1.  Last change: 2003 Feb 06
+*mbyte.txt*     For Vim version 6.2a.  Last change: 2003 Apr 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -107,6 +107,14 @@ For the GUI you must select fonts that work with the current 'encoding'.  This
 is the difficult part.  It depends on the system you are using, the locale and
 a few other things.  See the chapters on fonts: |mbyte-fonts-X11| for
 X-Windows and |mbyte-fonts-MSwin| for MS-Windows.
+
+For GTK+ 2, you can skip most of this section.  The option 'guifontset' does
+no longer exist.  You only need to set 'guifont' and everything should "just
+work".  If your system comes with Xft2 and fontconfig and the current font
+does not contain a certain glyph, a different font will be used automatically
+if available.  The 'guifontwide' option is still supported but usually you do
+not need to set it.  It is only necessary if the automatic font selection does
+not suit your needs.
 
 For X11 you can set the 'guifontset' option to a list of fonts that together
 cover the characters that are used.  Example for Korean: >
@@ -331,10 +339,10 @@ first):
 On MS-Windows systems you often want to use "ucs-2le", because it uses little
 endian UCS-2.
 
-There are a few encodings which are similar, but exactly the same.  Vim treats
-them as if they were different encodings, so that conversion will be done when
-needed.  You might want to use the similar name to avoid conversion or when
-conversion is not possible:
+There are a few encodings which are similar, but not exactly the same.  Vim
+treats them as if they were different encodings, so that conversion will be
+done when needed.  You might want to use the similar name to avoid conversion
+or when conversion is not possible:
 
 	cp932, shift-jis, sjis
 	cp936, euc-cn
@@ -435,6 +443,20 @@ Useful utilities for converting the charset:
 	series, Shift_JIS, Big5 and HZ. Lv can be found at:
 	http://www.ff.iij4u.or.jp/~nrt/freeware/lv4493.tar.gz
 
+
+							*mbyte-conversion*
+When reading and writing files in an encoding different from 'encoding',
+conversion needs to be done.  These conversions are supported:
+- All conversions between Latin-1 (ISO-8859-1), UTF-8, UCS-2 and UCS-4 are
+  handled internally.
+- For MS-Windows, when 'encoding' is a Unicode encoding, conversion from and
+  to any codepage should work.
+- Conversion specified with 'charconvert'
+- Conversion with the iconv library, if it is available.
+	Old versions of GNU iconv() may cause the conversion to fail (they
+	request a very large buffer, more than Vim is willing to provide).
+	Try getting another iconv() implementation.
+
 ==============================================================================
 4. Using a terminal					*mbyte-terminal*
 
@@ -495,6 +517,11 @@ For Vim you may need to set 'encoding' to "utf-8".
 
 Unfortunately, using fonts in X11 is complicated.  The name of a single-byte
 font is a long string.  For multi-byte fonts we need several of these...
+
+Note: Most of this is no longer relevant for GTK+ 2.  Selecting a font via
+its XLFD is not supported anymore; see 'guifont' for an example of how to
+set the font.  Do yourself a favour and ignore the |XLFD| and |xfontset|
+sections below.
 
 First of all, Vim only accepts fixed-width fonts for displaying text.  You
 cannot use proportionally spaced fonts.  This excludes many of the available
@@ -847,7 +874,7 @@ FULLY CONTROLED XIM
 You can fully control XIM, like with IME of MS-Windows (see |multibyte-ime|).
 This is currently only available for the GTK GUI.
 
-Before using fully controled XIM, one setting is required.  Set the
+Before using fully controlled XIM, one setting is required.  Set the
 'imactivatekey' option to the key that is used for the activation of the input
 method.  For example, when you are using kinput2 + canna as IM Server, the
 activation key is probably Shift+Space: >
@@ -872,10 +899,48 @@ This |+multi_byte_ime| feature help this.  It reduce times of switch status of
 IME manually.  In normal mode, there are almost no need working IME, even
 editing multibyte text.  So exiting insert mode with ESC, Vim memorize last
 status of IME and force turn off IME.  When re-enter insert mode, Vim revert
-IME status to that momorized automatically.
+IME status to that memorized automatically.
 
 This works on not only insert-normal mode, but also search-command input and
 replace mode.
+The options 'iminsert', 'imsearch' and 'imcmdline' can be used to chose
+the different input medhods or disable them temporarily.
+
+WHAT IS IME
+    IME is a part of East asian version Windows.  That helps you to input
+    multibyte character.  English and other language version Windows does not
+    have any IME.  (Also there are no need usually.) But there is one that
+    called Microsoft Global IME.  Global IME is a part of Internet Explorer
+    4.0 or above.  You can get more information about Global IME, at below
+    URL.
+
+WHAT IS GLOBAL IME					*global-ime*
+    Global IME makes capability to input Chinese, Japanese, and Korean text
+    into Vim buffer on any language version of Windows 98, Windows 95, and
+    Windows NT 4.0.
+    On Windows 2000 and XP it should work as well (without downloading).  On
+    Windows 2000 Professional, Global IME is built in, and the Input Locales
+    can be added through Control Panel/Reginal Options/Input Locales.
+    Please see below URL for detail of Global IME.  You can also find various
+    language version of Global IME at same place.
+
+    - Global IME detailed information.
+	http://www.microsoft.com/windows/ie/features/ime.asp
+
+    - Active Input Method Manager (Global IME)
+	http://msdn.microsoft.com/workshop/misc/AIMM/aimm.asp
+
+    Support Global IME is a experimental feature.
+
+NOTE: For IME to work you must make sure the input locales of your languague
+are added to your system.  The exact location of this depends on the version
+of Windows you use.  For example, on my W2P box:
+1. Control Panel
+2. Reginal Options
+3. Input Locales Tab
+4. Add Installed input locales -> Chinese(PRC)
+   The default is still English (United Stated)
+
 
 Cursor color when IME or XIM is on				*CursorIM*
     There is a little cute feature for IME.  Cursor can indicate status of IME
@@ -888,38 +953,12 @@ Cursor color when IME or XIM is on				*CursorIM*
     CursorIM.  For example, add these lines to your _gvimrc: >
 
 	if has('multi_byte_ime')
-	    highlight Cursor guibg=Green guifg=NONE
-	    highlight CursorIM guibg=Purple guifg=NONE
+	    highlight Cursor guifg=NONE guibg=Green
+	    highlight CursorIM guifg=NONE guibg=Purple
 	endif
 <
     Cursor color with off IME is green.  And purple cursor indicates that
     status is on.
-
-WHAT IS IME
-    IME is a part of East asian version Windows.  That helps you to input
-    multibyte character.  English and other language version Windows does not
-    have any IME.  (Also there are no need usually.) But there is one that
-    called Microsoft Global IME.  Global IME is a part of Internet Exproler
-    4.0 or above.  You can get more information about Global IME, at below
-    URL.
-
-WHAT IS GLOBAL IME					*global-ime*
-    Global IME makes capability to input Chinese, Japanese, and Korean text
-    into Vim buffer on any language version of Windows 98, Windows 95, and
-    Windows NT 4.0.  Please see below URL for detail of Global IME.  You can
-    also find various language version of Global IME at same place.
-
-    - Global IME detailed information.
-	http://www.microsoft.com/windows/ie/features/ime.asp
-
-    - Active Input Method Manager (Global IME)
-	http://msdn.microsoft.com/workshop/misc/AIMM/aimm.asp
-
-    Support Global IME is a experimental feature.
-
-NOTE: For IME to work you must make sure in the "Language settings for the
-system" the default locale is set to your language.  The exact location of
-this depends on the version of Windows you use.
 
 ==============================================================================
 9. Input with a keymap					*mbyte-keymap*
@@ -985,7 +1024,8 @@ keyboards and encodings.
 The actual mappings are in the lines below "loadkeymap".  In the example "a"
 is mapped to "A" and "b" to "B".  Thus the first item is mapped to the second
 item.  This is done for each line, until the end of the file.
-These items are exactly the same as what can be used in a |:lnoremap| command.
+These items are exactly the same as what can be used in a |:lnoremap| command,
+using "<buffer>" to make the mappings local to the buffer..
 You can check the result with this command: >
 	:lmap
 The two items must be separated by white space.  You cannot include white
@@ -1158,6 +1198,7 @@ Combining forms:
 כֿ    0xfb4d  XRk  kaf+rafe
 פֿ    0xfb4e  XRp  pe+rafe
 ﭏ    0xfb4f  Xal  alef-lamed
+
 ==============================================================================
 10. Using UTF-8				*mbyte-utf8* *UTF-8* *utf-8* *utf8*
 								*Unicode*
@@ -1178,7 +1219,8 @@ Vim has comprehensive UTF-8 support.  It appears to work in:
 
 Double-width characters are supported.  This works best with 'guifontwide' or
 'guifontset'.  When using only 'guifont' the wide characters are drawn in the
-normal width and a space to fill the gap.
+normal width and a space to fill the gap.  Note that the 'guifontset' option
+is no longer relevant in the GTK+ 2 GUI.
 
 Up to two combining characters can be used.  The combining character is drawn
 on top of the preceding character.  When editing text a composing character is
@@ -1209,6 +1251,9 @@ Useful commands:
   message is truncated, use ":messages").
 - "g8" shows the bytes used in a UTF-8 character, also the composing
   characters, as hex numbers.
+- ":set encoding=utf-8 fileencodings=" forces using UTF-8 for all files.  The
+  default is to use the current locale for 'encoding' and set 'fileencodings'
+  to automatically the encoding of a file.
 
 
 STARTING VIM
@@ -1225,6 +1270,8 @@ doesn't always work.  See the system specific remarks below, and 'langmenu'.
 
 
 USING UTF-8 IN X-Windows				*utf-8-in-xwindows*
+
+Note: This section does not apply to the GTK+ 2 GUI.
 
 You need to specify a font to be used.  For double-wide characters another
 font is required, which is exactly twice as wide.  There are three ways to do

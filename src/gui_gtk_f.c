@@ -14,8 +14,13 @@
  *	embedded systems related, which seems to cause some serious trouble for
  *	your's in-house developers, maybe we need to talk badly with each other
  *	:-) <dalecki@cs.net.pl> (My native language is polish and I speak
- *	native grade german too. I'm living in Göttingen.de.)
+ *	native grade german too. I'm living in GÃ¶ttingen.de.)
  *	--mdcki"
+ *
+ * Support for GTK+ 2 was added by:
+ *
+ * (C) 2002,2003  Jason Hildebrand  <jason@peaceworks.ca>
+ *		  Daniel Elstner  <daniel.elstner@gmx.net>
  *
  * This is a special purspose container widget, which manages arbitrary childs
  * at arbitrary positions width arbitrary sizes.  This finally puts an end on
@@ -37,50 +42,57 @@ struct _GtkFormChild
     GdkWindow *window;
     gint x;		/* relative subwidget x position */
     gint y;		/* relative subwidget y position */
-    gint mapped : 1;
+    gint mapped;
 };
 
 
-static void gtk_form_class_init(GtkFormClass * class);
-static void gtk_form_init(GtkForm * form);
+static void gtk_form_class_init(GtkFormClass *klass);
+static void gtk_form_init(GtkForm *form);
 
-static void gtk_form_realize(GtkWidget * widget);
-static void gtk_form_unrealize(GtkWidget * widget);
-static void gtk_form_map(GtkWidget * widget);
-static void gtk_form_size_request(GtkWidget * widget,
-				  GtkRequisition * requisition);
-static void gtk_form_size_allocate(GtkWidget * widget,
-				   GtkAllocation * allocation);
-static void gtk_form_draw(GtkWidget * widget,
-			  GdkRectangle * area);
-static gint gtk_form_expose(GtkWidget * widget,
-			    GdkEventExpose * event);
+static void gtk_form_realize(GtkWidget *widget);
+static void gtk_form_unrealize(GtkWidget *widget);
+static void gtk_form_map(GtkWidget *widget);
+static void gtk_form_size_request(GtkWidget *widget,
+				  GtkRequisition *requisition);
+static void gtk_form_size_allocate(GtkWidget *widget,
+				   GtkAllocation *allocation);
+#ifndef HAVE_GTK2  /* this isn't needed in gtk2 */
+static void gtk_form_draw(GtkWidget *widget,
+			  GdkRectangle *area);
+#endif
+static gint gtk_form_expose(GtkWidget *widget,
+			    GdkEventExpose *event);
 
-static void gtk_form_remove(GtkContainer * container,
-			    GtkWidget * widget);
-static void gtk_form_forall(GtkContainer * container,
+static void gtk_form_remove(GtkContainer *container,
+			    GtkWidget *widget);
+static void gtk_form_forall(GtkContainer *container,
 			    gboolean include_internals,
 			    GtkCallback callback,
 			    gpointer callback_data);
 
-static void gtk_form_realize_child(GtkForm * form,
-				   GtkFormChild * child);
-static void gtk_form_position_child(GtkForm * form,
-				    GtkFormChild * child,
+static void gtk_form_attach_child_window(GtkForm *form,
+					 GtkFormChild *child);
+static void gtk_form_realize_child(GtkForm *form,
+				   GtkFormChild *child);
+static void gtk_form_position_child(GtkForm *form,
+				    GtkFormChild *child,
 				    gboolean force_allocate);
-static void gtk_form_position_children(GtkForm * form);
+static void gtk_form_position_children(GtkForm *form);
 
-static GdkFilterReturn gtk_form_filter(GdkXEvent * gdk_xevent,
-				       GdkEvent * event,
+static GdkFilterReturn gtk_form_filter(GdkXEvent *gdk_xevent,
+				       GdkEvent *event,
 				       gpointer data);
-static GdkFilterReturn gtk_form_main_filter(GdkXEvent * gdk_xevent,
-					    GdkEvent * event,
+static GdkFilterReturn gtk_form_main_filter(GdkXEvent *gdk_xevent,
+					    GdkEvent *event,
 					    gpointer data);
 
-static void gtk_form_set_static_gravity(GdkWindow * win,
-					gboolean op);
+static void gtk_form_set_static_gravity(GdkWindow *window,
+					gboolean use_static);
 
 static void gtk_form_send_configure(GtkForm *form);
+
+static void gtk_form_child_map(GtkWidget *widget, gpointer user_data);
+static void gtk_form_child_unmap(GtkWidget *widget, gpointer user_data);
 
 static GtkWidgetClass *parent_class = NULL;
 
@@ -98,13 +110,13 @@ gtk_form_new(void)
 }
 
     void
-gtk_form_put(GtkForm * form,
-	     GtkWidget * child_widget,
-	     gint x, gint y)
+gtk_form_put(GtkForm	*form,
+	     GtkWidget	*child_widget,
+	     gint	x,
+	     gint	y)
 {
     GtkFormChild *child;
 
-    g_return_if_fail(form != NULL);
     g_return_if_fail(GTK_IS_FORM(form));
 
     child = g_new(GtkFormChild, 1);
@@ -119,9 +131,15 @@ gtk_form_put(GtkForm * form,
 
     form->children = g_list_append(form->children, child);
 
-    gtk_widget_set_parent(child_widget, GTK_WIDGET(form));
+    /* child->window must be created and attached to the widget _before_
+     * it has been realized, or else things will break with GTK2.  Note
+     * that gtk_widget_set_parent() realizes the widget if it's visible
+     * and its parent is mapped.
+     */
     if (GTK_WIDGET_REALIZED(form))
-	gtk_widget_set_parent_window (child->widget, form->bin_window);
+	gtk_form_attach_child_window(form, child);
+
+    gtk_widget_set_parent(child_widget, GTK_WIDGET(form));
     gtk_widget_size_request(child->widget, NULL);
 
     if (GTK_WIDGET_REALIZED(form) && !GTK_WIDGET_REALIZED(child_widget))
@@ -131,14 +149,14 @@ gtk_form_put(GtkForm * form,
 }
 
     void
-gtk_form_move(GtkForm * form,
-	      GtkWidget * child_widget,
-	      gint x, gint y)
+gtk_form_move(GtkForm	*form,
+	      GtkWidget	*child_widget,
+	      gint	x,
+	      gint	y)
 {
     GList *tmp_list;
     GtkFormChild *child;
 
-    g_return_if_fail(form != NULL);
     g_return_if_fail(GTK_IS_FORM(form));
 
     for (tmp_list = form->children; tmp_list; tmp_list = tmp_list->next)
@@ -156,9 +174,8 @@ gtk_form_move(GtkForm * form,
 }
 
     void
-gtk_form_set_size(GtkForm * form, guint width, guint height)
+gtk_form_set_size(GtkForm *form, guint width, guint height)
 {
-    g_return_if_fail(form != NULL);
     g_return_if_fail(GTK_IS_FORM(form));
 
     /* prevent unneccessary calls */
@@ -168,22 +185,24 @@ gtk_form_set_size(GtkForm * form, guint width, guint height)
     form->height = height;
 
     /* signal the change */
+#ifdef HAVE_GTK2
+    gtk_widget_queue_resize(gtk_widget_get_parent(GTK_WIDGET(form)));
+#else
     gtk_container_queue_resize(GTK_CONTAINER(GTK_WIDGET(form)->parent));
+#endif
 }
 
     void
-gtk_form_freeze(GtkForm * form)
+gtk_form_freeze(GtkForm *form)
 {
-    g_return_if_fail(form != NULL);
     g_return_if_fail(GTK_IS_FORM(form));
 
     ++form->freeze_count;
 }
 
     void
-gtk_form_thaw(GtkForm * form)
+gtk_form_thaw(GtkForm *form)
 {
-    g_return_if_fail(form != NULL);
     g_return_if_fail(GTK_IS_FORM(form));
 
     if (form->freeze_count)
@@ -191,17 +210,21 @@ gtk_form_thaw(GtkForm * form)
 	if (!(--form->freeze_count))
 	{
 	    gtk_form_position_children(form);
+#ifdef HAVE_GTK2
+	    gtk_widget_queue_draw(GTK_WIDGET(form));
+#else
 	    gtk_widget_draw(GTK_WIDGET(form), NULL);
+#endif
 	}
     }
 }
 
 /* Basic Object handling procedures
  */
-    guint
+    GtkType
 gtk_form_get_type(void)
 {
-    static guint form_type = 0;
+    static GtkType form_type = 0;
 
     if (!form_type)
     {
@@ -220,13 +243,13 @@ gtk_form_get_type(void)
 }
 
     static void
-gtk_form_class_init(GtkFormClass * class)
+gtk_form_class_init(GtkFormClass *klass)
 {
     GtkWidgetClass *widget_class;
     GtkContainerClass *container_class;
 
-    widget_class = (GtkWidgetClass *) class;
-    container_class = (GtkContainerClass *) class;
+    widget_class = (GtkWidgetClass *) klass;
+    container_class = (GtkContainerClass *) klass;
 
     parent_class = gtk_type_class(gtk_container_get_type());
 
@@ -235,7 +258,9 @@ gtk_form_class_init(GtkFormClass * class)
     widget_class->map = gtk_form_map;
     widget_class->size_request = gtk_form_size_request;
     widget_class->size_allocate = gtk_form_size_allocate;
+#ifndef HAVE_GTK2 /* not needed for GTK2 */
     widget_class->draw = gtk_form_draw;
+#endif
     widget_class->expose_event = gtk_form_expose;
 
     container_class->remove = gtk_form_remove;
@@ -243,7 +268,7 @@ gtk_form_class_init(GtkFormClass * class)
 }
 
     static void
-gtk_form_init(GtkForm * form)
+gtk_form_init(GtkForm *form)
 {
     form->children = NULL;
 
@@ -258,18 +283,18 @@ gtk_form_init(GtkForm * form)
     form->freeze_count = 0;
 }
 
-/* Widget methods
+/*
+ * Widget methods
  */
 
     static void
-gtk_form_realize(GtkWidget * widget)
+gtk_form_realize(GtkWidget *widget)
 {
     GList *tmp_list;
     GtkForm *form;
     GdkWindowAttr attributes;
     gint attributes_mask;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     form = GTK_FORM(widget);
@@ -312,19 +337,28 @@ gtk_form_realize(GtkWidget * widget)
     {
 	GtkFormChild *child = tmp_list->data;
 
-	gtk_widget_set_parent_window (child->widget, form->bin_window);
+	gtk_form_attach_child_window(form, child);
+
 	if (GTK_WIDGET_VISIBLE(child->widget))
 	    gtk_form_realize_child(form, child);
     }
 }
 
+
+/* After reading the documentation at 
+ * http://developer.gnome.org/doc/API/2.0/gtk/gtk-changes-2-0.html 
+ * I think it should be possible to remove this function when compiling
+ * against gtk-2.0.  It doesn't seem to cause problems, though.
+ *
+ * Well, I reckon at least the gdk_window_show(form->bin_window)
+ * is necessary.  GtkForm is anything but a usual container widget.
+ */
     static void
-gtk_form_map(GtkWidget * widget)
+gtk_form_map(GtkWidget *widget)
 {
     GList *tmp_list;
     GtkForm *form;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     form = GTK_FORM(widget);
@@ -338,23 +372,18 @@ gtk_form_map(GtkWidget * widget)
     {
 	GtkFormChild *child = tmp_list->data;
 
-	if (GTK_WIDGET_VISIBLE(child->widget) &&
-	    !GTK_WIDGET_MAPPED(child->widget))
+	if (GTK_WIDGET_VISIBLE(child->widget)
+		&& !GTK_WIDGET_MAPPED(child->widget))
 	    gtk_widget_map(child->widget);
-
-	if (child->window)
-	    gdk_window_show(child->window);
     }
-
 }
 
     static void
-gtk_form_unrealize(GtkWidget * widget)
+gtk_form_unrealize(GtkWidget *widget)
 {
     GList *tmp_list;
     GtkForm *form;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     form = GTK_FORM(widget);
@@ -369,11 +398,21 @@ gtk_form_unrealize(GtkWidget * widget)
     {
 	GtkFormChild *child = tmp_list->data;
 
-	if (child->window)
+	if (child->window != NULL)
 	{
+	    gtk_signal_disconnect_by_func(GTK_OBJECT(child->widget),
+					  GTK_SIGNAL_FUNC(gtk_form_child_map),
+					  child);
+	    gtk_signal_disconnect_by_func(GTK_OBJECT(child->widget),
+					  GTK_SIGNAL_FUNC(gtk_form_child_unmap),
+					  child);
+
 	    gdk_window_set_user_data(child->window, NULL);
 	    gdk_window_destroy(child->window);
+
+	    child->window = NULL;
 	}
+
 	tmp_list = tmp_list->next;
     }
 
@@ -381,16 +420,15 @@ gtk_form_unrealize(GtkWidget * widget)
 	 (* GTK_WIDGET_CLASS (parent_class)->unrealize) (widget);
 }
 
-/*ARGSUSED*/
+#ifndef HAVE_GTK2
     static void
-gtk_form_draw(GtkWidget * widget, GdkRectangle * area)
+gtk_form_draw(GtkWidget *widget, GdkRectangle *area)
 {
     GtkForm		*form;
     GList		*children;
     GtkFormChild	*child;
     GdkRectangle	child_area;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     if (GTK_WIDGET_DRAWABLE(widget))
@@ -411,15 +449,14 @@ gtk_form_draw(GtkWidget * widget, GdkRectangle * area)
 	}
     }
 }
+#endif /* !HAVE_GTK2 */
 
     static void
-gtk_form_size_request(GtkWidget * widget,
-		      GtkRequisition * requisition)
+gtk_form_size_request(GtkWidget *widget, GtkRequisition *requisition)
 {
     GList *tmp_list;
     GtkForm *form;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     form = GTK_FORM(widget);
@@ -438,14 +475,12 @@ gtk_form_size_request(GtkWidget * widget,
 }
 
     static void
-gtk_form_size_allocate(GtkWidget * widget,
-		       GtkAllocation * allocation)
+gtk_form_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     GList *tmp_list;
     GtkForm *form;
     gboolean need_reposition;
 
-    g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
     if (widget->allocation.x == allocation->x
@@ -486,12 +521,11 @@ gtk_form_size_allocate(GtkWidget * widget,
 }
 
     static gint
-gtk_form_expose(GtkWidget * widget, GdkEventExpose * event)
+gtk_form_expose(GtkWidget *widget, GdkEventExpose *event)
 {
-    GList *tmp_list;
+    GList   *tmp_list;
     GtkForm *form;
 
-    g_return_val_if_fail(widget != NULL, FALSE);
     g_return_val_if_fail(GTK_IS_FORM(widget), FALSE);
 
     form = GTK_FORM(widget);
@@ -499,15 +533,35 @@ gtk_form_expose(GtkWidget * widget, GdkEventExpose * event)
     if (event->window == form->bin_window)
 	return FALSE;
 
-    tmp_list = form->children;
-    while (tmp_list)
+    for (tmp_list = form->children; tmp_list; tmp_list = tmp_list->next)
     {
+#ifdef HAVE_GTK2
+	GtkFormChild	*formchild = tmp_list->data;
+	GtkWidget	*child	   = formchild->widget;
+	/*
+	 * The following chunk of code is taken from gtkcontainer.c.  The
+	 * gtk1.x code synthesized expose events directly on the child widgets, 
+	 * which can't be done in gtk2
+	 */
+	if (GTK_WIDGET_DRAWABLE(child) && GTK_WIDGET_NO_WINDOW(child)
+		&& child->window == event->window)
+	{
+	    GdkEventExpose child_event;
+	    child_event = *event;
+ 
+	    child_event.region = gtk_widget_region_intersect(child, event->region);
+	    if (!gdk_region_empty(child_event.region))
+	    {
+		gdk_region_get_clipbox(child_event.region, &child_event.area);
+		gtk_widget_send_expose(child, (GdkEvent *)&child_event);
+	    }
+	}
+#else /* !HAVE_GTK2 */
 	GtkFormChild *child = tmp_list->data;
 
 	if (event->window == child->window)
 	    return gtk_widget_event(child->widget, (GdkEvent *) event);
-
-	tmp_list = tmp_list->next;
+#endif /* !HAVE_GTK2 */
     }
 
     return FALSE;
@@ -516,13 +570,12 @@ gtk_form_expose(GtkWidget * widget, GdkEventExpose * event)
 /* Container method
  */
     static void
-gtk_form_remove(GtkContainer * container, GtkWidget * widget)
+gtk_form_remove(GtkContainer *container, GtkWidget *widget)
 {
     GList *tmp_list;
     GtkForm *form;
     GtkFormChild *child = NULL;	    /* init for gcc */
 
-    g_return_if_fail(container != NULL);
     g_return_if_fail(GTK_IS_FORM(container));
 
     form = GTK_FORM(container);
@@ -540,6 +593,11 @@ gtk_form_remove(GtkContainer * container, GtkWidget * widget)
     {
 	if (child->window)
 	{
+	    gtk_signal_disconnect_by_func(GTK_OBJECT(child->widget),
+					  GTK_SIGNAL_FUNC(&gtk_form_child_map), child);
+	    gtk_signal_disconnect_by_func(GTK_OBJECT(child->widget),
+					  GTK_SIGNAL_FUNC(&gtk_form_child_unmap), child);
+
 	    /* FIXME: This will cause problems for reparenting NO_WINDOW
 	     * widgets out of a GtkForm
 	     */
@@ -554,18 +612,17 @@ gtk_form_remove(GtkContainer * container, GtkWidget * widget)
     }
 }
 
-/*ARGSUSED*/
+/*ARGSUSED1*/
     static void
-gtk_form_forall(GtkContainer * container,
-		gboolean include_internals,
-		GtkCallback callback,
-		gpointer callback_data)
+gtk_form_forall(GtkContainer	*container,
+		gboolean	include_internals,
+		GtkCallback	callback,
+		gpointer	callback_data)
 {
     GtkForm *form;
     GtkFormChild *child;
     GList *tmp_list;
 
-    g_return_if_fail(container != NULL);
     g_return_if_fail(GTK_IS_FORM(container));
     g_return_if_fail(callback != NULL);
 
@@ -585,24 +642,22 @@ gtk_form_forall(GtkContainer * container,
  */
 
     static void
-gtk_form_realize_child(GtkForm * form,
-		       GtkFormChild * child)
+gtk_form_attach_child_window(GtkForm *form, GtkFormChild *child)
 {
-    GtkWidget *widget;
-    gint attributes_mask;
-
-    widget = GTK_WIDGET(form);
+    if (child->window != NULL)
+	return; /* been there, done that */
 
     if (GTK_WIDGET_NO_WINDOW(child->widget))
     {
-	GdkWindowAttr attributes;
+	GtkWidget	*widget;
+	GdkWindowAttr	attributes;
+	gint		attributes_mask;
 
-	gint x = child->x;
-	gint y = child->y;
+	widget = GTK_WIDGET(form);
 
 	attributes.window_type = GDK_WINDOW_CHILD;
-	attributes.x = x;
-	attributes.y = y;
+	attributes.x = child->x;
+	attributes.y = child->y;
 	attributes.width = child->widget->requisition.width;
 	attributes.height = child->widget->requisition.height;
 	attributes.wclass = GDK_INPUT_OUTPUT;
@@ -615,22 +670,39 @@ gtk_form_realize_child(GtkForm * form,
 				       &attributes, attributes_mask);
 	gdk_window_set_user_data(child->window, widget);
 
-	if (child->window)
-	    gtk_style_set_background(widget->style,
-				     child->window,
-				     GTK_STATE_NORMAL);
+	gtk_style_set_background(widget->style,
+				 child->window,
+				 GTK_STATE_NORMAL);
+
+	gtk_widget_set_parent_window(child->widget, child->window);
+	gtk_form_set_static_gravity(child->window, TRUE);
+	/*
+	 * Install signal handlers to map/unmap child->window
+	 * alongside with the actual widget.
+	 */
+	gtk_signal_connect(GTK_OBJECT(child->widget), "map",
+			   GTK_SIGNAL_FUNC(&gtk_form_child_map), child);
+	gtk_signal_connect(GTK_OBJECT(child->widget), "unmap",
+			   GTK_SIGNAL_FUNC(&gtk_form_child_unmap), child);
     }
-    gtk_widget_set_parent_window(child->widget,
-		       child->window ? child->window : form->bin_window);
-
-    gtk_widget_realize(child->widget);
-
-    gtk_form_set_static_gravity(child->window ? child->window : child->widget->window, TRUE);
+    else if (!GTK_WIDGET_REALIZED(child->widget))
+    {
+	gtk_widget_set_parent_window(child->widget, form->bin_window);
+    }
 }
 
     static void
-gtk_form_position_child(GtkForm * form,
-			GtkFormChild * child,
+gtk_form_realize_child(GtkForm *form, GtkFormChild *child)
+{
+    gtk_form_attach_child_window(form, child);
+    gtk_widget_realize(child->widget);
+
+    if (child->window == NULL) /* might be already set, see above */
+	gtk_form_set_static_gravity(child->widget->window, TRUE);
+}
+
+    static void
+gtk_form_position_child(GtkForm *form, GtkFormChild *child,
 			gboolean force_allocate)
 {
     gint x;
@@ -638,17 +710,14 @@ gtk_form_position_child(GtkForm * form,
 
     x = child->x;
     y = child->y;
+
     if ((x >= G_MINSHORT) && (x <= G_MAXSHORT) &&
-	    (y >= G_MINSHORT) && (y <= G_MAXSHORT))
+	(y >= G_MINSHORT) && (y <= G_MAXSHORT))
     {
 	if (!child->mapped)
 	{
-	    child->mapped = TRUE;
-
 	    if (GTK_WIDGET_MAPPED(form) && GTK_WIDGET_VISIBLE(child->widget))
 	    {
-		if (child->window)
-		    gdk_window_show(child->window);
 		if (!GTK_WIDGET_MAPPED(child->widget))
 		    gtk_widget_map(child->widget);
 
@@ -691,16 +760,15 @@ gtk_form_position_child(GtkForm * form,
 	if (child->mapped)
 	{
 	    child->mapped = FALSE;
-	    if (child->window)
-		gdk_window_hide(child->window);
-	    else if (GTK_WIDGET_MAPPED (child->widget))
+
+	    if (GTK_WIDGET_MAPPED(child->widget))
 		gtk_widget_unmap(child->widget);
 	}
     }
 }
 
     static void
-gtk_form_position_children(GtkForm * form)
+gtk_form_position_children(GtkForm *form)
 {
     GList *tmp_list;
 
@@ -719,11 +787,9 @@ gtk_form_position_children(GtkForm * form)
  * them or discards them, depending on whether we are obscured
  * or not.
  */
-/*ARGSUSED*/
+/*ARGSUSED1*/
     static GdkFilterReturn
-gtk_form_filter(GdkXEvent * gdk_xevent,
-		GdkEvent * event,
-		gpointer data)
+gtk_form_filter(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 {
     XEvent *xevent;
     GtkForm *form;
@@ -756,11 +822,9 @@ gtk_form_filter(GdkXEvent * gdk_xevent,
  * there is no corresponding event in GTK, so we have
  * to get the events from a filter
  */
-/*ARGSUSED*/
+/*ARGSUSED1*/
     static GdkFilterReturn
-gtk_form_main_filter(GdkXEvent * gdk_xevent,
-		     GdkEvent * event,
-		     gpointer data)
+gtk_form_main_filter(GdkXEvent *gdk_xevent, GdkEvent *event, gpointer data)
 {
     XEvent *xevent;
     GtkForm *form;
@@ -795,26 +859,34 @@ gtk_form_main_filter(GdkXEvent * gdk_xevent,
  * we don't have to use Xlib here.
  */
     static void
-gtk_form_set_static_gravity(GdkWindow * win, gboolean on)
+gtk_form_set_static_gravity(GdkWindow *window, gboolean use_static)
 {
+#ifdef HAVE_GTK2
+    gboolean static_gravity_supported;
+
+    static_gravity_supported = gdk_window_set_static_gravities(window,
+							       use_static);
+    g_return_if_fail(static_gravity_supported);
+#else
     XSetWindowAttributes xattributes;
 
-    xattributes.win_gravity = on ? StaticGravity : NorthWestGravity;
-    xattributes.bit_gravity = on ? StaticGravity : NorthWestGravity;
+    xattributes.win_gravity = (use_static) ? StaticGravity : NorthWestGravity;
+    xattributes.bit_gravity = (use_static) ? StaticGravity : NorthWestGravity;
 
-    XChangeWindowAttributes(GDK_WINDOW_XDISPLAY(win),
-			    GDK_WINDOW_XWINDOW(win),
+    XChangeWindowAttributes(GDK_WINDOW_XDISPLAY(window),
+			    GDK_WINDOW_XWINDOW(window),
 			    CWBitGravity | CWWinGravity,
 			    &xattributes);
+#endif
 }
 
     void
-gtk_form_move_resize(GtkForm * form, GtkWidget * widget,
-		     gint x, gint y,
-		     gint w, gint h)
+gtk_form_move_resize(GtkForm *form, GtkWidget *widget,
+		     gint x, gint y, gint w, gint h)
 {
-    widget->requisition.width = w;
+    widget->requisition.width  = w;
     widget->requisition.height = h;
+
     gtk_form_move(form, widget, x, y);
 }
 
@@ -824,7 +896,7 @@ gtk_form_send_configure(GtkForm *form)
     GtkWidget *widget;
     GdkEventConfigure event;
 
-    widget = GTK_WIDGET (form);
+    widget = GTK_WIDGET(form);
 
     event.type = GDK_CONFIGURE;
     event.window = widget->window;
@@ -833,5 +905,34 @@ gtk_form_send_configure(GtkForm *form)
     event.width = widget->allocation.width;
     event.height = widget->allocation.height;
 
-    gtk_widget_event (widget, (GdkEvent*) &event);
+#ifdef HAVE_GTK2
+    gtk_main_do_event((GdkEvent*)&event);
+#else
+    gtk_widget_event(widget, (GdkEvent*)&event);
+#endif
 }
+
+/*ARGSUSED0*/
+    static void
+gtk_form_child_map(GtkWidget *widget, gpointer user_data)
+{
+    GtkFormChild *child;
+
+    child = (GtkFormChild *)user_data;
+
+    child->mapped = TRUE;
+    gdk_window_show(child->window);
+}
+
+/*ARGSUSED0*/
+    static void
+gtk_form_child_unmap(GtkWidget *widget, gpointer user_data)
+{
+    GtkFormChild *child;
+
+    child = (GtkFormChild *)user_data;
+
+    child->mapped = FALSE;
+    gdk_window_hide(child->window);
+}
+

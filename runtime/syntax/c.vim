@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 18
+" Last Change:	2003 Jan 23
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -33,7 +33,7 @@ if exists("c_no_cformat")
   " cCppString: same as cString, but ends at end of line
   syn region	cCppString	start=+L\="+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end='$' contains=cSpecial
 else
-  syn match	cFormat		display "%\(\d\+\$\)\=[-+' #0*]*\(\d*\|\*\|\*\d\+\$\)\(\.\(\d*\|\*\|\*\d\+\$\)\)\=\([hlL]\|ll\)\=\([diuoxXfeEgGcCsSpn]\|\[\^\=.[^]]*\]\)" contained
+  syn match	cFormat		display "%\(\d\+\$\)\=[-+' #0*]*\(\d*\|\*\|\*\d\+\$\)\(\.\(\d*\|\*\|\*\d\+\$\)\)\=\([hlL]\|ll\)\=\([diuoxXDOUfeEgGcCsSpn]\|\[\^\=.[^]]*\]\)" contained
   syn match	cFormat		display "%%" contained
   syn region	cString		start=+L\="+ skip=+\\\\\|\\"+ end=+"+ contains=cSpecial,cFormat
   " cCppString: same as cString, but ends at end of line
@@ -64,23 +64,24 @@ if exists("c_space_errors")
 endif
 
 "catch errors caused by wrong parenthesis and brackets
+" also accept <% for {, %> for }, <: for [ and :> for ] (C99)
 syn cluster	cParenGroup	contains=cParenError,cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cCommentStartError,cUserCont,cUserLabel,cBitField,cCommentSkip,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom
 if exists("c_no_bracket_error")
   syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cCppParen,cCppString
   " cCppParen: same as cParen but ends at end-of-line; used in cDefine
   syn region	cCppParen	transparent start='(' skip='\\$' excludenl end=')' end='$' contained contains=ALLBUT,@cParenGroup,cParen,cString
   syn match	cParenError	display ")"
-  syn match	cErrInParen	display contained "[{}]"
+  syn match	cErrInParen	display contained "[{}]\|<%\|%>"
 else
   syn region	cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cCppParen,cErrInBracket,cCppBracket,cCppString
   " cCppParen: same as cParen but ends at end-of-line; used in cDefine
   syn region	cCppParen	transparent start='(' skip='\\$' excludenl end=')' end='$' contained contains=ALLBUT,@cParenGroup,cErrInBracket,cParen,cBracket,cString
   syn match	cParenError	display "[\])]"
-  syn match	cErrInParen	display contained "[\]{}]"
-  syn region	cBracket	transparent start='\[' end=']' contains=ALLBUT,@cParenGroup,cErrInParen,cCppParen,cCppBracket,cCppString
+  syn match	cErrInParen	display contained "[\]{}]\|<%\|%>"
+  syn region	cBracket	transparent start='\[\|<:' end=']\|:>' contains=ALLBUT,@cParenGroup,cErrInParen,cCppParen,cCppBracket,cCppString
   " cCppBracket: same as cParen but ends at end-of-line; used in cDefine
-  syn region	cCppBracket	transparent start='\[' skip='\\$' excludenl end=']' end='$' contained contains=ALLBUT,@cParenGroup,cErrInParen,cParen,cBracket,cString
-  syn match	cErrInBracket	display contained "[);{}]"
+  syn region	cCppBracket	transparent start='\[\|<:' skip='\\$' excludenl end=']\|:>' end='$' contained contains=ALLBUT,@cParenGroup,cErrInParen,cParen,cBracket,cString
+  syn match	cErrInBracket	display contained "[);{}]\|<%\|%>"
 endif
 
 "integer number, or floating point number without a dot and with "f".
@@ -101,6 +102,13 @@ syn match	cFloat		display contained "\d\+\.\d*\(e[-+]\=\d\+\)\=[fl]\="
 syn match	cFloat		display contained "\.\d\+\(e[-+]\=\d\+\)\=[fl]\=\>"
 "floating point number, without dot, with exponent
 syn match	cFloat		display contained "\d\+e[-+]\=\d\+[fl]\=\>"
+if !exists("c_no_c99")
+  "hexadecimal floating point number, optional leading digits, with dot, with exponent
+  syn match	cFloat		display contained "0x\x*\.\x\+p[-+]\=\d\+[fl]\=\>"
+  "hexadecimal floating point number, with leading digits, optional dot, with exponent
+  syn match	cFloat		display contained "0x\x\+\.\=p[-+]\=\d\+[fl]\=\>"
+endif
+
 " flag an octal number with wrong digits
 syn match	cOctalError	display contained "0\o*[89]\d*"
 syn case match
@@ -115,10 +123,10 @@ if exists("c_comment_strings")
   syntax region cCommentString	contained start=+L\=\\\@<!"+ skip=+\\\\\|\\"+ end=+"+ end=+\*/+me=s-1 contains=cSpecial,cCommentSkip
   syntax region cComment2String	contained start=+L\=\\\@<!"+ skip=+\\\\\|\\"+ end=+"+ end="$" contains=cSpecial
   syntax region  cCommentL	start="//" skip="\\$" end="$" keepend contains=@cCommentGroup,cComment2String,cCharacter,cNumbersCom,cSpaceError
-  syntax region cComment	matchgroup=cCommentStart start="/\*" matchgroup=NONE end="\*/" contains=@cCommentGroup,cCommentStartError,cCommentString,cCharacter,cNumbersCom,cSpaceError
+  syntax region cComment	matchgroup=cCommentStart start="/\*" end="\*/" contains=@cCommentGroup,cCommentStartError,cCommentString,cCharacter,cNumbersCom,cSpaceError
 else
   syn region	cCommentL	start="//" skip="\\$" end="$" keepend contains=@cCommentGroup,cSpaceError
-  syn region	cComment	matchgroup=cCommentStart start="/\*" matchgroup=NONE end="\*/" contains=@cCommentGroup,cCommentStartError,cSpaceError
+  syn region	cComment	matchgroup=cCommentStart start="/\*" end="\*/" contains=@cCommentGroup,cCommentStartError,cSpaceError
 endif
 " keep a // comment separately, it terminates a preproc. conditional
 syntax match	cCommentError	display "\*/"
@@ -132,7 +140,7 @@ endif
 syn keyword	cType		int long short char void
 syn keyword	cType		signed unsigned float double
 if !exists("c_no_ansi") || exists("c_ansi_typedefs")
-  syn keyword   cType		size_t wchar_t ptrdiff_t sig_atomic_t fpos_t
+  syn keyword   cType		size_t ssize_t wchar_t ptrdiff_t sig_atomic_t fpos_t
   syn keyword   cType		clock_t time_t va_list jmp_buf FILE DIR div_t ldiv_t
   syn keyword   cType		mbstate_t wctrans_t wint_t wctype_t
 endif
@@ -156,6 +164,9 @@ syn keyword	cStorageClass	static register auto volatile extern const
 if exists("c_gnu")
   syn keyword	cStorageClass	inline __attribute__
 endif
+if !exists("c_no_c99")
+  syn keyword	cStorageClass	inline restrict
+endif
 
 if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   if exists("c_gnu")
@@ -169,6 +180,22 @@ if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   syn keyword cConstant CHAR_MAX INT_MAX LONG_MAX SHRT_MAX
   syn keyword cConstant SCHAR_MIN SINT_MIN SLONG_MIN SSHRT_MIN
   syn keyword cConstant SCHAR_MAX SINT_MAX SLONG_MAX SSHRT_MAX
+  if !exists("c_no_c99")
+    syn keyword cConstant LLONG_MAX ULLONG_MAX
+    syn keyword cConstant INT8_MIN INT16_MIN INT32_MIN INT64_MIN
+    syn keyword cConstant INT8_MAX INT16_MAX INT32_MAX INT64_MAX
+    syn keyword cConstant UINT8_MAX UINT16_MAX UINT32_MAX UINT64_MAX
+    syn keyword cConstant INT_LEAST8_MIN INT_LEAST16_MIN INT_LEAST32_MIN INT_LEAST64_MIN
+    syn keyword cConstant INT_LEAST8_MAX INT_LEAST16_MAX INT_LEAST32_MAX INT_LEAST64_MAX
+    syn keyword cConstant UINT_LEAST8_MAX UINT_LEAST16_MAX UINT_LEAST32_MAX UINT_LEAST64_MAX
+    syn keyword cConstant INT_FAST8_MIN INT_FAST16_MIN INT_FAST32_MIN INT_FAST64_MIN
+    syn keyword cConstant INT_FAST8_MAX INT_FAST16_MAX INT_FAST32_MAX INT_FAST64_MAX
+    syn keyword cConstant UINT_FAST8_MAX UINT_FAST16_MAX UINT_FAST32_MAX UINT_FAST64_MAX
+    syn keyword cConstant INTPTR_MIN INTPTR_MAX UINTPTR_MAX
+    syn keyword cConstant INTMAX_MIN INTMAX_MAX UINTMAX_MAX
+    syn keyword cConstant PTRDIFF_MIN PTRDIFF_MAX SIG_ATOMIC_MIN SIG_ATOMIC_MAX
+    syn keyword cConstant SIZE_MAX WCHAR_MIN WCHAR_MAX WINT_MIN WINT_MAX
+  endif
   syn keyword cConstant FLT_RADIX FLT_ROUNDS
   syn keyword cConstant FLT_DIG FLT_MANT_DIG FLT_EPSILON
   syn keyword cConstant DBL_DIG DBL_MANT_DIG DBL_EPSILON
@@ -189,7 +216,7 @@ if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   syn keyword cConstant SIGILL SIGINT SIGKILL SIGPIPE SIGQUIT SIGSEGV
   syn keyword cConstant SIGSTOP SIGTERM SIGTRAP SIGTSTP SIGTTIN SIGTTOU
   syn keyword cConstant SIGUSR1 SIGUSR2
-  syn keyword cConstant _IOFBF _IOLBF _IONBF BUFSIZ EOF
+  syn keyword cConstant _IOFBF _IOLBF _IONBF BUFSIZ EOF WEOF
   syn keyword cConstant FOPEN_MAX FILENAME_MAX L_tmpnam
   syn keyword cConstant SEEK_CUR SEEK_END SEEK_SET
   syn keyword cConstant TMP_MAX stderr stdin stdout
@@ -210,20 +237,21 @@ if !exists("c_no_c99") " ISO C99
   syn keyword cConstant true false
 endif
 
-syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError
-syn match	cPreCondit	display "^\s*#\s*\(else\|endif\)\>"
+" Accept %: for # (C99)
+syn region	cPreCondit	start="^\s*\(%:\|#\)\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" end="$" end="//"me=s-1 contains=cComment,cCppString,cCharacter,cCppParen,cParenError,cNumbers,cCommentError,cSpaceError
+syn match	cPreCondit	display "^\s*\(%:\|#\)\s*\(else\|endif\)\>"
 if !exists("c_no_if0")
-  syn region	cCppOut		start="^\s*#\s*if\s\+0\+\>" end=".\|$" contains=cCppOut2
-  syn region	cCppOut2	contained start="0" end="^\s*#\s*\(endif\>\|else\>\|elif\>\)" contains=cSpaceError,cCppSkip
-  syn region	cCppSkip	contained start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*#\s*endif\>" contains=cSpaceError,cCppSkip
+  syn region	cCppOut		start="^\s*\(%:\|#\)\s*if\s\+0\+\>" end=".\@=\|$" contains=cCppOut2
+  syn region	cCppOut2	contained start="0" end="^\s*\(%:\|#\)\s*\(endif\>\|else\>\|elif\>\)" contains=cSpaceError,cCppSkip
+  syn region	cCppSkip	contained start="^\s*\(%:\|#\)\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*\(%:\|#\)\s*endif\>" contains=cSpaceError,cCppSkip
 endif
 syn region	cIncluded	display contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match	cIncluded	display contained "<[^>]*>"
-syn match	cInclude	display "^\s*#\s*include\>\s*["<]" contains=cIncluded
+syn match	cInclude	display "^\s*\(%:\|#\)\s*include\>\s*["<]" contains=cIncluded
 "syn match cLineSkip	"\\$"
 syn cluster	cPreProcGroup	contains=cPreCondit,cIncluded,cInclude,cDefine,cErrInParen,cErrInBracket,cUserLabel,cSpecial,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cString,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cCommentStartError,cParen,cBracket,cMulti
-syn region	cDefine		start="^\s*#\s*\(define\|undef\)\>" skip="\\$" end="$" end="//"me=s-1 contains=ALLBUT,@cPreProcGroup
-syn region	cPreProc	start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" keepend contains=ALLBUT,@cPreProcGroup
+syn region	cDefine		start="^\s*\(%:\|#\)\s*\(define\|undef\)\>" skip="\\$" end="$" end="//"me=s-1 contains=ALLBUT,@cPreProcGroup
+syn region	cPreProc	start="^\s*\(%:\|#\)\s*\(pragma\>\|line\>\|warning\>\|warn\>\|error\>\)" skip="\\$" end="$" keepend contains=ALLBUT,@cPreProcGroup
 
 " Highlight User Labels
 syn cluster	cMultiGroup	contains=cIncluded,cSpecial,cCommentSkip,cCommentString,cComment2String,@cCommentGroup,cCommentStartError,cUserCont,cUserLabel,cBitField,cOctalZero,cCppOut,cCppOut2,cCppSkip,cFormat,cNumber,cFloat,cOctal,cOctalError,cNumbersCom,cCppParen,cCppBracket,cCppString

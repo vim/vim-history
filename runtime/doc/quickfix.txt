@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.1.  Last change: 2002 Jul 15
+*quickfix.txt*  For Vim version 6.2a.  Last change: 2003 Apr 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,7 +51,7 @@ The following quickfix commands can be used:
 			The 'switchbuf' settings are respected when jumping
 			to a buffer.
 
-							*:cn* *:cnext*
+							*:cn* *:cnext* *E553*
 :[count]cn[ext][!]	Display the [count] next error in the list that
 			includes a file name.  If there are no file names at
 			all, go to the [count] next error.  See |:cc| for
@@ -229,8 +229,9 @@ option.  This works almost like typing
 
 {makeprg} is the string given with the 'makeprg' option.  Any command can be
 used, not just "make".  Characters '%' and '#' are expanded as usual on a
-command-line.  You can use "#<" to insert the current file name without
-extension, for example: >
+command-line.  You can use "%<" to insert the current file name without
+extension, or "#<" to insert the alternate file name without extension, for
+example: >
    :set makeprg=make\ #<.o
 
 [arguments] is anything that is typed after ":make".
@@ -358,23 +359,23 @@ need to write down a "todo" list.
 6. Selecting a compiler					*compiler-select*
 
 							*:comp* *:compiler*
-:compiler {name}		Set options to work with compiler {name}.
+:comp[iler] {name}		Set options to work with compiler {name}.
 				{not available when compiled without the
 				|+eval| feature}
 
 
 What this command actually does is:
-- delete the "current_compiler" variable
+- delete the "current_compiler" variable		*current_compiler*
 - execute ":runtime! compiler/{name}.vim"
 
 For writing a compiler plugin, see |write-compiler-plugin|.
 
 
-MANX AZTEC C						*quickfix-manx*
+MANX AZTEC C				*quickfix-manx* *compiler-manx*
 
 To use Vim with Manx's Aztec C compiler on the Amiga you should do the
 following:
-- Set the CCEDIT environment variable with the command
+- Set the CCEDIT environment variable with the command: >
 	mset "CCEDIT=vim -q"
 - Compile with the -qf option.  If the compiler finds any errors, Vim is
   started and the cursor is positioned on the first error.  The error message
@@ -393,6 +394,25 @@ up to 25 remaining errors will be found.
 If Vim was started from the compiler, the :sh and some :!  commands will not
 work, because Vim is then running in the same process as the compiler and
 stdin (standard input) will not be interactive.
+
+
+PYUNIT COMPILER						*compiler-pyunit*
+
+This is not actually a compiler, but a unit testing framework for the
+Python language. It is included into standard Python distribution
+starting from version 2.0. For older versions, you can get it from
+http://pyunit.sourceforge.net.
+
+When you run your tests with the help of the framework, possible errors
+are parsed by Vim and presented for you in quick-fix mode.
+
+Unfortunately, there is no standard way to run the tests.
+The alltests.py script seems to be used quite often, that's all.
+Useful values for the 'makeprg' options therefore are:
+ setlocal makeprg=./alltests.py " Run a testsuite
+ setlocal makeprg=python %      " Run a single testcase
+
+Also see http://vim.sourceforge.net/tip_view.php?tip_id=280.
 
 
 TEX COMPILER						*compiler-tex*
@@ -414,7 +434,7 @@ process the right file when editing \input-ed or \include-ed file; portable
 solution for substituting % for no arguments is welcome). This is not in the
 semantics of make, but you may specify filename without extension ".tex" and
 mean this as "make filename.dvi or filename.pdf or
-filename.some_result_extension according to compiler"
+filename.some_result_extension according to compiler".
 
 =============================================================================
 7. The error format					*error-file-format*
@@ -730,9 +750,9 @@ processing.
 Maintaining the correct directory is more complicated if you don't use
 GNU-make. AIX-make for example doesn't print any information about its working
 directory. Then you need to enhance the makefile. In the makefile of lesstiff
-their is a command which echos "Making {target} in {dir}". The special problem
-here is that it doesn't print informations on leaving the directory and that
-it doesn't print the absolute path.
+there is a command which echoes "Making {target} in {dir}". The special
+problem here is that it doesn't print informations on leaving the directory
+and that it doesn't print the absolute path.
 
 To solve the problem with relative paths and missing "leave directory"
 messages Vim uses following algorithm:
@@ -826,6 +846,8 @@ Jikes(TM) produces a single-line error message when invoked with the option
 This 'errorformat' has been reported to work well for javac, which outputs a
 line with "^" to indicate the column of the error: >
   :set efm=%A%f:%l:\ %m,%-Z%p^,%-C%.%#
+or: >
+  :set efm=%A%f:%l:\ %m,%+Z%p^,%+C%.%#,%-G%.%#
 <
 						*errorformat-ant*
 For ant (http://jakarta.apache.org/) the above errorformat has to be modified

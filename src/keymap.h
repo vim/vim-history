@@ -238,6 +238,8 @@ enum key_extra
     , KE_X2MOUSE
     , KE_X2DRAG
     , KE_X2RELEASE
+
+    , KE_DROP           /* DnD data is available */
 };
 
 /*
@@ -454,6 +456,8 @@ enum key_extra
 #define K_SNR		TERMCAP2KEY(KS_EXTRA, KE_SNR)
 #define K_PLUG		TERMCAP2KEY(KS_EXTRA, KE_PLUG)
 #define K_CMDWIN	TERMCAP2KEY(KS_EXTRA, KE_CMDWIN)
+
+#define K_DROP		TERMCAP2KEY(KS_EXTRA, KE_DROP)
 
 /* Bits for modifier mask */
 /* 0x01 cannot be used, because the modifier must be 0x02 or higher */

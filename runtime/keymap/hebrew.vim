@@ -1,5 +1,5 @@
 let encoding = &enc
-if encoding = ''
+if encoding == ''
 	let encoding = 'cp1255'
 endif
 

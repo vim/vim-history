@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.1.  Last change: 2001 Sep 03
+*usr_43.txt*	For Vim version 6.2a.  Last change: 2002 Jul 14
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -158,7 +158,7 @@ filetype.vim file.  Therefore, the order of checks is:
 
 	1. filetype.vim files before $VIMRUNTIME in 'runtimepath'
 	2. first part of $VIMRUNTIME/filetype.vim
-	3. all script.vim files in 'runtimepath'
+	3. all scripts.vim files in 'runtimepath'
 	4. remainder of $VIMRUNTIME/filetype.vim
 	5. filetype.vim files after $VIMRUNTIME in 'runtimepath'
 

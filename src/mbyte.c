@@ -66,7 +66,9 @@
  *     might be required.
  * (3) For the GUI the correct font must be selected, no conversion done.
  *     Otherwise, conversion is to be done when 'encoding' differs from
- *     'termencoding'.
+ *     'termencoding'.  (Different in the GTK+ 2 port -- 'termencoding'
+ *     is always used for both input and output and must always be set to
+ *     "utf-8".  gui_mch_init() does this automatically.)
  * (4) The encoding of the file is specified with 'fileencoding'.  Conversion
  *     is to be done when it's different from 'encoding'.
  *
@@ -96,6 +98,11 @@
 #endif
 #ifdef X_LOCALE
 #include <X11/Xlocale.h>
+#endif
+
+#if defined(FEAT_XIM) && defined(HAVE_GTK2)
+# include <gdk/gdkkeysyms.h>
+# include <gdk/gdkx.h>
 #endif
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
@@ -393,7 +400,7 @@ mb_init()
 	else if (GetLastError() == ERROR_INVALID_PARAMETER)
 	{
 codepage_invalid:
-	    return (char_u *)N_("Not a valid codepage");
+	    return (char_u *)N_("E543: Not a valid codepage");
 	}
     }
 #endif
@@ -571,7 +578,7 @@ codepage_invalid:
     if (enc_utf8 && !option_was_set((char_u *)"fencs"))
 	set_string_option_direct((char_u *)"fencs", -1,
 				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
-#ifdef HAVE_BIND_TEXTDOMAIN_CODESET
+#if defined(HAVE_BIND_TEXTDOMAIN_CODESET) && defined(FEAT_GETTEXT)
     /* GNU gettext 0.10.37 supports this feature: set the codeset used for
      * translated messages independently from the current locale. */
     (void)bind_textdomain_codeset(VIMPACKAGE,
@@ -2244,10 +2251,23 @@ mb_adjustpos(lp)
 {
     char_u	*p;
 
-    if (lp->col > 0)
+    if (lp->col > 0
+#ifdef FEAT_VIRTUALEDIT
+	    || lp->coladd > 1
+#endif
+	    )
     {
 	p = ml_get(lp->lnum);
 	lp->col -= (*mb_head_off)(p, p + lp->col);
+#ifdef FEAT_VIRTUALEDIT
+	/* Reset "coladd" when the cursor would be on the right half of a
+	 * double-wide character. */
+	if (lp->coladd == 1
+		&& p[lp->col] != TAB
+		&& vim_isprintc((*mb_ptr2char)(p + lp->col))
+		&& ptr2cells(p + lp->col) > 1)
+	    lp->coladd = 0;
+#endif
     }
 }
 
@@ -2778,7 +2798,7 @@ iconv_enabled(verbose)
 	/* Only give the message when 'verbose' is set, otherwise it might be
 	 * done whenever a conversion is attempted. */
 	if (verbose && p_verbose > 0)
-	    EMSG2(_("E370: Could not load library %s"),
+	    EMSG2(_(e_loadlib),
 		    hIconvDLL == 0 ? DYNAMIC_ICONV_DLL : DYNAMIC_MSVCRT_DLL);
 	iconv_end();
 	return FALSE;
@@ -2794,8 +2814,7 @@ iconv_enabled(verbose)
     {
 	iconv_end();
 	if (verbose && p_verbose > 0)
-	    EMSG2(_("E448: Could not load library function %s"),
-							      "for libiconv");
+	    EMSG2(_(e_loadfunc), "for libiconv");
 	return FALSE;
     }
     return TRUE;
@@ -2824,6 +2843,562 @@ iconv_end()
 
 #if defined(FEAT_XIM) || defined(PROTO)
 
+# if defined(HAVE_GTK2) && !defined(PROTO)
+
+static int im_is_active        = FALSE;	/* IM is enabled for current mode    */
+static int im_preedit_cursor   = 0;	/* cursor offset in characters       */
+static int im_preedit_trailing = 0;	/* number of characters after cursor */
+
+static unsigned long im_commit_handler_id  = 0;
+static unsigned int  im_activatekey_keyval = GDK_VoidSymbol;
+static unsigned int  im_activatekey_state  = 0;
+
+    void
+im_set_active(int active)
+{
+    int was_active;
+
+    was_active = !!im_is_active;
+    im_is_active = (active && !p_imdisable);
+
+    if (im_is_active != was_active)
+	xim_reset();
+}
+
+    void
+xim_set_focus(int focus)
+{
+    if (xic != NULL)
+    {
+	if (focus)
+	    gtk_im_context_focus_in(xic);
+	else
+	    gtk_im_context_focus_out(xic);
+    }
+}
+
+    void
+im_set_position(int row, int col)
+{
+    if (xic != NULL)
+    {
+	GdkRectangle area;
+
+	area.x = FILL_X(col);
+	area.y = FILL_Y(row);
+	area.width  = gui.char_width * (mb_lefthalve(row, col) ? 2 : 1);
+	area.height = gui.char_height;
+
+	gtk_im_context_set_cursor_location(xic, &area);
+    }
+}
+
+#  if 0 || defined(PROTO) /* apparently only used in gui_x11.c */
+    void
+xim_set_preedit(void)
+{
+    im_set_position(gui.row, gui.col);
+}
+#  endif
+
+    static void
+im_add_to_input(char_u *str, int len)
+{
+    /* Convert from 'termencoding' (always "utf-8") to 'encoding' */
+    if (input_conv.vc_type != CONV_NONE)
+    {
+	str = string_convert(&input_conv, str, &len);
+	g_return_if_fail(str != NULL);
+    }
+
+    add_to_input_buf_csi(str, len);
+
+    if (input_conv.vc_type != CONV_NONE)
+	vim_free(str);
+
+    if (p_mh) /* blank out the pointer if necessary */
+	gui_mch_mousehide(TRUE);
+}
+
+    static void
+im_delete_preedit(void)
+{
+    char_u bskey[]  = {CSI, 'k', 'b'};
+    char_u delkey[] = {CSI, 'k', 'D'};
+
+    for (; im_preedit_cursor > 0; --im_preedit_cursor)
+	add_to_input_buf(bskey, (int)sizeof(bskey));
+
+    for (; im_preedit_trailing > 0; --im_preedit_trailing)
+	add_to_input_buf(delkey, (int)sizeof(delkey));
+}
+
+    static void
+im_correct_cursor(int num_move_back)
+{
+    char_u backkey[] = {CSI, 'k', 'l'};
+
+#  ifdef FEAT_RIGHTLEFT
+    if ((State & CMDLINE) == 0 && curwin != NULL && curwin->w_p_rl)
+	backkey[2] = 'r';
+#  endif
+    for (; num_move_back > 0; --num_move_back)
+	add_to_input_buf(backkey, (int)sizeof(backkey));
+}
+
+/*
+ * Callback invoked when the user finished preediting.
+ * Put the final string into the input buffer.
+ */
+/*ARGSUSED0*/
+    static void
+im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
+{
+    /* The imhangul module doesn't reset the preedit string before
+     * committing.  Call im_delete_preedit() to work around that. */
+    im_delete_preedit();
+
+    /* Indicate that preediting has finished */
+    preedit_start_col = MAXCOL;
+
+    im_add_to_input((char_u *)str, (int)strlen(str));
+
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
+/*
+ * Callback invoked after changes to the preedit string.  If the preedit
+ * string was empty before, remember the preedit start column so we know
+ * where to apply feedback attributes.  Delete the previous preedit string
+ * if there was one, save the new preedit cursor offset, and put the new
+ * string into the input buffer.
+ *
+ * TODO: The pragmatic "put into input buffer" approach used here has
+ *       several fundamental problems:
+ *
+ * - The characters in the preedit string are subject to remapping.
+ *   That's broken, only the finally committed string should be remapped.
+ *
+ * - There is a race condition involved:  The retrieved value for the
+ *   current cursor position will be wrong if any unprocessed characters
+ *   are still queued in the input buffer.
+ *
+ * - Due to the lack of synchronization between the file buffer in memory
+ *   and any typed characters, it's practically impossible to implement the
+ *   "retrieve_surrounding" and "delete_surrounding" signals reliably.  IM
+ *   modules for languages such as Thai are likely to rely on this feature
+ *   for proper operation.
+ *
+ * Conclusions:  I think support for preediting needs to be moved to the
+ * core parts of Vim.  Ideally, until it has been committed, the preediting
+ * string should only be displayed and not affect the buffer content at all.
+ * The question how to deal with the synchronization issue still remains.
+ * Circumventing the input buffer is probably not desirable.  Anyway, I think
+ * implementing "retrieve_surrounding" is the only hard problem.
+ *
+ * One way to solve all of this in a clean manner would be to queue all key
+ * press/release events "as is" in the input buffer, and apply the IM filtering
+ * at the receiving end of the queue.  This, however, would have a rather large
+ * impact on the code base.  If there is an easy way to force processing of all
+ * remaining input from within the "retrieve_surrounding" signal handler, this
+ * might not be necessary.  Gotta ask on vim-dev for opinions.
+ */
+/*ARGSUSED1*/
+    static void
+im_preedit_changed_cb(GtkIMContext *context, gpointer data)
+{
+    char    *preedit_string = NULL;
+    int	    cursor_index    = 0;
+    int	    num_move_back   = 0;
+    char_u  *str;
+    char_u  *p;
+    int	    i;
+
+    gtk_im_context_get_preedit_string(context,
+				      &preedit_string, NULL,
+				      &cursor_index);
+
+    g_return_if_fail(preedit_string != NULL); /* just in case */
+
+    if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
+    {
+	/* Urgh, this breaks if the input buffer isn't empty now */
+	if (State & CMDLINE)
+	    preedit_start_col = cmdline_getvcol_cursor();
+	else if (curwin != NULL)
+	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+    }
+
+    im_delete_preedit();
+
+    str = (char_u *)preedit_string;
+    /*
+     * According to the documentation of gtk_im_context_get_preedit_string(),
+     * the cursor_pos output argument returns the offset in bytes.  This is
+     * unfortunately not true -- real life shows the offset is in characters,
+     * and the GTK+ source code agrees with me.  Will file a bug later.
+     */
+    for (p = str, i = 0; *p != NUL; p += utf_byte2len(*p), ++i)
+    {
+	int is_composing;
+
+	is_composing = ((*p & 0x80) != 0 && utf_iscomposing(utf_ptr2char(p)));
+	/*
+	 * These offsets are used as counters when generating <BS> and <Del>
+	 * to delete the preedit string.  So don't count composing characters
+	 * unless 'delcombine' is enabled.
+	 */
+	if (!is_composing || p_deco)
+	{
+	    if (i < cursor_index)
+		++im_preedit_cursor;
+	    else
+		++im_preedit_trailing;
+	}
+	if (!is_composing && i >= cursor_index)
+	{
+	    /* This is essentially the same as im_preedit_trailing, except
+	     * composing characters are not counted even if p_deco is set. */
+	    ++num_move_back;
+	}
+    }
+
+    if (p > str)
+    {
+	im_add_to_input(str, (int)(p - str));
+	im_correct_cursor(num_move_back);
+    }
+
+    g_free(preedit_string);
+
+    if (gtk_main_level() > 0)
+	gtk_main_quit();
+}
+
+/*
+ * Translate the Pango attributes at iter to Vim highlighting attributes.
+ * Ignore attributes not supported by Vim highlighting.  This shouldn't have
+ * too much impact -- right now we handle even more attributes than necessary
+ * for the IM modules I tested with.
+ */
+    static int
+translate_pango_attributes(PangoAttrIterator *iter)
+{
+    PangoAttribute  *attr;
+    int		    char_attr = HL_NORMAL;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_UNDERLINE);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value
+						 != (int)PANGO_UNDERLINE_NONE)
+	char_attr |= HL_UNDERLINE;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_WEIGHT);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value >= (int)PANGO_WEIGHT_BOLD)
+	char_attr |= HL_BOLD;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_STYLE);
+    if (attr != NULL && ((PangoAttrInt *)attr)->value
+						   != (int)PANGO_STYLE_NORMAL)
+	char_attr |= HL_ITALIC;
+
+    attr = pango_attr_iterator_get(iter, PANGO_ATTR_BACKGROUND);
+    if (attr != NULL)
+    {
+	const PangoColor *color = &((PangoAttrColor *)attr)->color;
+
+	/* Assume inverse if black background is requested */
+	if ((color->red | color->green | color->blue) == 0)
+	    char_attr |= HL_INVERSE;
+    }
+
+    return char_attr;
+}
+
+/*
+ * Retrieve the highlighting attributes at column col in the preedit string.
+ * Return -1 if not in preediting mode or if col is out of range.
+ */
+    int
+im_get_feedback_attr(int col)
+{
+    char	    *preedit_string = NULL;
+    PangoAttrList   *attr_list	    = NULL;
+    int		    char_attr	    = -1;
+
+    if (xic == NULL)
+	return char_attr;
+
+    gtk_im_context_get_preedit_string(xic, &preedit_string, &attr_list, NULL);
+
+    if (preedit_string != NULL && attr_list != NULL)
+    {
+	int index;
+
+	/* Get the byte index as used by PangoAttrIterator */
+	for (index = 0; col > 0 && preedit_string[index] != '\0'; --col)
+	    index += utfc_ptr2len_check((char_u *)preedit_string + index);
+
+	if (preedit_string[index] != '\0')
+	{
+	    PangoAttrIterator	*iter;
+	    int			start, end;
+
+	    char_attr = HL_NORMAL;
+	    iter = pango_attr_list_get_iterator(attr_list);
+
+	    /* Extract all relevant attributes from the list. */
+	    do
+	    {
+		pango_attr_iterator_range(iter, &start, &end);
+
+		if (index >= start && index < end)
+		    char_attr |= translate_pango_attributes(iter);
+	    }
+	    while (pango_attr_iterator_next(iter));
+
+	    pango_attr_iterator_destroy(iter);
+	}
+    }
+
+    if (attr_list != NULL)
+	pango_attr_list_unref(attr_list);
+    g_free(preedit_string);
+
+    return char_attr;
+}
+
+    void
+xim_init(void)
+{
+    g_return_if_fail(gui.drawarea != NULL);
+    g_return_if_fail(gui.drawarea->window != NULL);
+
+    xic = gtk_im_multicontext_new();
+
+    im_commit_handler_id = g_signal_connect(G_OBJECT(xic), "commit",
+					    G_CALLBACK(&im_commit_cb), NULL);
+    g_signal_connect(G_OBJECT(xic), "preedit_changed",
+		     G_CALLBACK(&im_preedit_changed_cb), NULL);
+
+    gtk_im_context_set_client_window(xic, gui.drawarea->window);
+}
+
+    void
+im_shutdown(void)
+{
+    if (xic != NULL)
+    {
+	gtk_im_context_focus_out(xic);
+	g_object_unref(xic);
+	xic = NULL;
+    }
+    im_is_active = FALSE;
+    im_commit_handler_id = 0;
+    preedit_start_col = MAXCOL;
+}
+
+/*
+ * Convert the string argument to keyval and state for GdkEventKey.
+ * If str is valid return TRUE, otherwise FALSE.
+ *
+ * See 'imactivatekey' for documentation of the format.
+ */
+    static int
+im_string_to_keyval(const char *str, unsigned int *keyval, unsigned int *state)
+{
+    const char	    *mods_end;
+    unsigned	    tmp_keyval;
+    unsigned	    tmp_state = 0;
+
+    mods_end = strrchr(str, '-');
+    mods_end = (mods_end != NULL) ? mods_end + 1 : str;
+
+    /* Parse modifier keys */
+    while (str < mods_end)
+	switch (*str++)
+	{
+	    case '-':							break;
+	    case 'S': case 's': tmp_state |= (unsigned)GDK_SHIFT_MASK;	break;
+	    case 'L': case 'l': tmp_state |= (unsigned)GDK_LOCK_MASK;	break;
+	    case 'C': case 'c': tmp_state |= (unsigned)GDK_CONTROL_MASK;break;
+	    case '1':		tmp_state |= (unsigned)GDK_MOD1_MASK;	break;
+	    case '2':		tmp_state |= (unsigned)GDK_MOD2_MASK;	break;
+	    case '3':		tmp_state |= (unsigned)GDK_MOD3_MASK;	break;
+	    case '4':		tmp_state |= (unsigned)GDK_MOD4_MASK;	break;
+	    case '5':		tmp_state |= (unsigned)GDK_MOD5_MASK;	break;
+	    default:
+		return FALSE;
+	}
+
+    tmp_keyval = gdk_keyval_from_name(str);
+
+    if (tmp_keyval == 0 || tmp_keyval == GDK_VoidSymbol)
+	return FALSE;
+
+    if (keyval != NULL)
+	*keyval = tmp_keyval;
+    if (state != NULL)
+	*state = tmp_state;
+
+    return TRUE;
+}
+
+/*
+ * Return TRUE if p_imak is valid, otherwise FALSE.  As a special case, an
+ * empty string is also regarded as valid.
+ *
+ * Note: The numerical key value of p_imak is cached if it was valid; thus
+ * boldly assuming im_xim_isvalid_imactivate() will always be called whenever
+ * 'imak' changes.  This is currently the case but not obvious -- should
+ * probably rename the function for clarity.
+ */
+    int
+im_xim_isvalid_imactivate(void)
+{
+    if (p_imak[0] == NUL)
+    {
+	im_activatekey_keyval = GDK_VoidSymbol;
+	im_activatekey_state  = 0;
+	return TRUE;
+    }
+
+    return im_string_to_keyval((const char *)p_imak,
+			       &im_activatekey_keyval,
+			       &im_activatekey_state);
+}
+
+    static void
+im_synthesize_keypress(unsigned int keyval, unsigned int state)
+{
+    GdkEventKey *event;
+
+#  ifdef HAVE_GTK_MULTIHEAD
+    event = (GdkEventKey *)gdk_event_new(GDK_KEY_PRESS);
+    g_object_ref(gui.drawarea->window); /* unreffed by gdk_event_free() */
+#  else
+    event = (GdkEventKey *)g_malloc0((gulong)sizeof(GdkEvent));
+    event->type = GDK_KEY_PRESS;
+#  endif
+    event->window = gui.drawarea->window;
+    event->send_event = TRUE;
+    event->time = GDK_CURRENT_TIME;
+    event->state  = state;
+    event->keyval = keyval;
+    event->hardware_keycode = /* needed for XIM */
+	XKeysymToKeycode(GDK_WINDOW_XDISPLAY(event->window), (KeySym)keyval);
+
+    gtk_im_context_filter_keypress(xic, event);
+
+    /* For consistency, also send the corresponding release event. */
+    event->type = GDK_KEY_RELEASE;
+    gtk_im_context_filter_keypress(xic, event);
+
+#  ifdef HAVE_GTK_MULTIHEAD
+    gdk_event_free((GdkEvent *)event);
+#  else
+    g_free(event);
+#  endif
+}
+
+    void
+xim_reset(void)
+{
+    if (xic != NULL)
+    {
+	/*
+	 * The third-party imhangul module (and maybe others too) ignores
+	 * gtk_im_context_reset() or at least doesn't reset the active state.
+	 * Thus sending imactivatekey would turn it off if it was on before,
+	 * which is clearly not what we want.  Fortunately we can work around
+	 * that for imhangul by sending GDK_Escape, but I don't know if it
+	 * works with all IM modules that support an activation key :/
+	 *
+	 * An alternative approach would be to destroy the IM context and
+	 * recreate it.  But that means loading/unloading the IM module on
+	 * every mode switch, which causes a quite noticable delay even on
+	 * my rather fast box...
+	 */
+	im_synthesize_keypress(GDK_Escape, 0U);
+
+	gtk_im_context_reset(xic);
+	/*
+	 * HACK for Ami: This sequence of function calls makes Ami handle
+	 * the IM reset gratiously, without breaking loads of other stuff.
+	 * It seems to force English mode as well, which is exactly what we
+	 * want because it makes the Ami status display work reliably.
+	 */
+	gtk_im_context_set_use_preedit(xic, FALSE);
+	gtk_im_context_set_use_preedit(xic, TRUE);
+	xim_set_focus(gui.in_focus);
+
+	if (im_activatekey_keyval != GDK_VoidSymbol && im_is_active)
+	{
+	    g_signal_handler_block(xic, im_commit_handler_id);
+	    im_synthesize_keypress(im_activatekey_keyval, im_activatekey_state);
+	    g_signal_handler_unblock(xic, im_commit_handler_id);
+	}
+    }
+
+    preedit_start_col = MAXCOL;
+}
+
+    int
+xim_queue_key_press_event(GdkEventKey *event)
+{
+    if (xic != NULL && !p_imdisable && (State & (INSERT | CMDLINE)) != 0)
+    {
+	/*
+	 * Filter 'imactivatekey' and map it to CTRL-^.  This way, Vim is
+	 * always aware of the current status of IM, and can even emulate
+	 * the activation key for modules that don't support one.
+	 */
+	if (event->keyval == im_activatekey_keyval
+	    && (event->state & im_activatekey_state) == im_activatekey_state)
+	{
+	    unsigned int state_mask;
+
+	    /* Require the state of the 3 most used modifiers to match exactly.
+	     * Otherwise e.g. <S-C-space> would be unusable for other purposes
+	     * if the IM activate key is <S-space>. */
+	    state_mask  = im_activatekey_state;
+	    state_mask |= ((int)GDK_SHIFT_MASK | (int)GDK_CONTROL_MASK
+							| (int)GDK_MOD1_MASK);
+
+	    if ((event->state & state_mask) != im_activatekey_state)
+		return FALSE;
+
+	    /* Don't send it a second time on GDK_KEY_RELEASE. */
+	    if (event->type == GDK_KEY_PRESS)
+	    {
+		char_u ctrl_hat[] = {Ctrl_HAT};
+
+		add_to_input_buf(ctrl_hat, (int)sizeof(ctrl_hat));
+
+		if (gtk_main_level() > 0)
+		    gtk_main_quit();
+	    }
+	    return TRUE;
+	}
+
+	/* Don't filter events through the IM context if IM isn't active
+	 * right now.  Unlike with GTK+ 1.2 we cannot rely on the IM module
+	 * not doing anything before the activation key was sent. */
+	if (im_is_active)
+	    return gtk_im_context_filter_keypress(xic, event);
+    }
+
+    return FALSE;
+}
+
+    int
+im_get_status(void)
+{
+    return im_is_active;
+}
+
+# else /* !HAVE_GTK2 */
+
 static int	xim_is_active = FALSE;  /* XIM should be active in the current
 					   mode */
 static int	xim_has_focus = FALSE;	/* XIM is really being used for Vim */
@@ -2841,6 +3416,7 @@ static int	status_area_enabled = TRUE;
 #  define GSList int
 #  define gboolean int
    typedef int GdkEvent;
+   typedef int GdkEventKey;
 #  define GdkIC int
 # endif
 #endif
@@ -3084,7 +3660,10 @@ im_set_active(active)
     if (xim_input_style & XIMPreeditCallbacks)
     {
 	preedit_buf_len = 0;
-	getvcol(curwin, &(curwin->w_cursor), &preedit_start_col, NULL, NULL);
+	if (State & CMDLINE)
+	    preedit_start_col = cmdline_getvcol_cursor();
+	else
+	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
     }
 #else
 # if 0
@@ -3747,7 +4326,11 @@ xim_real_init(x11_window, x11_display)
 static char e_overthespot[] = N_("E290: over-the-spot style requires fontset");
 # endif
 
-void
+# ifdef PROTO
+typedef int GdkIC;
+# endif
+
+    void
 xim_decide_input_style()
 {
     /* GDK_IM_STATUS_CALLBACKS was disabled, enabled it to allow Japanese
@@ -3830,7 +4413,10 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     if ((text == NULL && draw_data->chg_length == preedit_buf_len)
 	    || preedit_buf_len == 0)
     {
-	getvcol(curwin, &(curwin->w_cursor), &preedit_start_col, NULL, NULL);
+	if (State & CMDLINE)
+	    preedit_start_col = cmdline_getvcol_cursor();
+	else
+	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
 	vim_free(draw_feedback);
 	draw_feedback = NULL;
     }
@@ -3931,6 +4517,26 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 	gtk_main_quit();
 }
 
+/*
+ * Retrieve the highlighting attributes at column col in the preedit string.
+ * Return -1 if not in preediting mode or if col is out of range.
+ */
+    int
+im_get_feedback_attr(int col)
+{
+    if (draw_feedback != NULL && col < preedit_buf_len)
+    {
+	if (draw_feedback[col] & XIMReverse)
+	    return HL_INVERSE;
+	else if (draw_feedback[col] & XIMUnderline)
+	    return HL_UNDERLINE;
+	else
+	    return hl_attr(HLF_V);
+    }
+
+    return -1;
+}
+
 /*ARGSUSED*/
     static void
 preedit_caret_cbproc(XIC xic, XPointer client_data, XPointer call_data)
@@ -3970,7 +4576,7 @@ xim_reset(void)
 }
 
     int
-xim_queue_key_press_event(GdkEvent *ev)
+xim_queue_key_press_event(GdkEventKey *event)
 {
     if (preedit_buf_len <= 0)
 	return FALSE;
@@ -3978,7 +4584,7 @@ xim_queue_key_press_event(GdkEvent *ev)
 	processing_queued_event = FALSE;
 
     key_press_event_queue = g_slist_append(key_press_event_queue,
-					   gdk_event_copy(ev));
+					   gdk_event_copy((GdkEvent *)event));
     return TRUE;
 }
 
@@ -4121,6 +4727,21 @@ xim_init(void)
 	}
     }
 }
+
+    void
+im_shutdown(void)
+{
+    if (xic != NULL)
+    {
+	gdk_im_end();
+	gdk_ic_destroy(xic);
+	xic = NULL;
+    }
+    xim_is_active = FALSE;
+    xim_preediting = FALSE;
+    preedit_start_col = MAXCOL;
+}
+
 #endif /* FEAT_GUI_GTK */
 
     int
@@ -4152,6 +4773,7 @@ im_get_status()
     return xim_has_focus;
 }
 
+# endif /* !HAVE_GTK2 */
 #endif /* FEAT_XIM */
 
 #if defined(FEAT_MBYTE) || defined(PROTO)

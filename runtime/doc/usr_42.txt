@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.1.  Last change: 2002 Jan 23
+*usr_42.txt*	For Vim version 6.2a.  Last change: 2002 Oct 08
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -40,7 +40,7 @@ The ":update" command writes the file when it was modified.
 "Settings" under the "Edit" menu, with an item "Shiftwidth".  You could use
 even deeper levels.  Don't use this too much, you need to move the mouse quite
 a bit to use such an item.
-   The ":menu" command is very similar to the :map command: the left side
+   The ":menu" command is very similar to the ":map" command: the left side
 specifies how the item is triggered and the right hand side defines the
 characters that are executed.  {keys} are characters, they are used just like
 you would have typed them.  Thus in Insert mode, when {keys} is plain text,
@@ -50,7 +50,7 @@ that text is inserted.
 ACCELERATORS
 
 The ampersand character (&) is used to indicate an accelerator.  For instance,
-you can use Alt-F to select "File" and S to select "Save".  (the 'winaltkeys'
+you can use Alt-F to select "File" and S to select "Save".  (The 'winaltkeys'
 option may disable this though!).  Therefore, the {menu-item} looks like
 "&File.&Save".  The accelerator characters will be underlined in the menu.
    You must take care that each key is used only once in each menu.  Otherwise
@@ -111,7 +111,7 @@ SPECIAL CHARACTERS
 
 The {menu-item} in this example is "&File.&Save<Tab>:w". This brings up an
 important point: {menu-item} must be one word.  If you want to put a dot,
-space or tabs in the name, you either use the <> notation (<space> and <tab>,
+space or tabs in the name, you either use the <> notation (<Space> and <Tab>,
 for instance) or use the backslash (\) escape. >
 
 	:menu 10.305 &File.&Do\ It\.\.\. :exit<CR>
@@ -153,7 +153,7 @@ like the variations on the ":map" command:
 	:amenu		All modes
 
 To avoid that the commands of a menu item are being mapped, use the command
-":noremenu", ":nnoremenu", "anoremenu", etc.
+":noremenu", ":nnoremenu", ":anoremenu", etc.
 
 
 USING :AMENU

@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     PostScript - all Levels, selectable
-" Maintainer:   Mike Williams <mrw@netcomuk.co.uk>
+" Maintainer:   Mike Williams <mrw@eandem.co.uk>
 " Filenames:    *.ps,*.eps
-" Last Change:  6th June 2000
-" URL:          http://www.netcomuk.co.uk/~mrw/vim
+" Last Change:  27th June 2002
+" URL:          http://www.eandem.co.uk/mrw/vim
 "
 " Options Flags:
 " postscr_level                 - language level to use for highligting (1, 2, or 3)

@@ -26,6 +26,7 @@
 # endif
 # ifndef FEAT_GUI_GTK
 #  define GdkEvent int
+#  define GdkEventKey int
 # endif
 # ifndef FEAT_X11
 #  define XImage int
@@ -76,6 +77,7 @@
 # include "ex_cmds.pro"
 # include "ex_cmds2.pro"
 # include "ex_docmd.pro"
+# include "ex_eval.pro"
 # include "ex_getln.pro"
 # include "fileio.pro"
 # include "fold.pro"

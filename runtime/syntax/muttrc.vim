@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Mutt setup files
 " Maintainer:	Preben "Peppe" Guldberg <c928400@student.dtu.dk>
-" Last Change:	22nd Sep 2001
+" Last Change:	18 Jun 2002
 
 " This file covers mutt version 1.2.5i
 
@@ -217,7 +217,7 @@ syn keyword muttrcColorField	contained indicator markers message normal quoted s
 syn keyword muttrcColorField	contained status tilde tree underline
 syn match   muttrcColorField	contained "\<quoted\d\=\>"
 syn keyword muttrcColorFG	contained black blue cyan default green magenta red white yellow
-syn keyword muttrcColorFG	contained brightblue brightcyan brightdefault brightgreen
+syn keyword muttrcColorFG	contained brightblack brightblue brightcyan brightdefault brightgreen
 syn keyword muttrcColorFG	contained brightmagenta brightred brightwhite brightyellow
 syn match   muttrcColorFG	contained "\<\(bright\)\=color\d\{1,2}\>"
 syn keyword muttrcColorBG	contained black blue cyan default green magenta red white yellow

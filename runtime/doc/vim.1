@@ -88,7 +88,7 @@ See ":help tag-commands".
 Start in quickFix mode.
 The file [errorfile] is read and the first error is displayed.
 If [errorfile] is omitted, the filename is obtained from the 'errorfile'
-option (defaults to "AztecC.Err" for the Amiga, "errors.vim" on other
+option (defaults to "AztecC.Err" for the Amiga, "errors.err" on other
 systems).
 Further errors can be jumped to with the ":cn" command.
 See ":help quickfix".
@@ -191,6 +191,11 @@ is executed by a program that will wait for the edit
 session to finish (e.g. mail).
 On the Amiga the ":sh" and ":!" commands will not work.
 .TP
+--nofork
+Foreground.  For the GUI version,
+.B Vim
+will not fork and detach from the shell it was started in.
+.TP
 -F
 If
 .B Vim
@@ -259,7 +264,11 @@ Can also be done with ":set uc=0".
 Can be undone with ":set uc=200".
 .TP
 -o[N]
-Open N windows.
+Open N windows stacked.
+When N is omitted, open one window for each file.
+.TP
+-O[N]
+Open N windows side by side.
 When N is omitted, open one window for each file.
 .TP
 -R
@@ -341,6 +350,10 @@ Like -w, but an existing file is overwritten.
 -x
 Use encryption when writing files.   Will prompt for a crypt key.
 .TP
+-X
+Don't connect to the X server.  Shortens startup time in a terminal, but the
+window title and clipboard will not be used.
+.TP
 -Z
 Restricted mode.  Works like the executable starts with "r".
 .TP
@@ -357,17 +370,30 @@ Print version information and exit.
 .TP
 --remote
 Connect to a Vim server and make it edit the files given in the rest of the
-arguments.
+arguments.  If no server is found a warning is given and the files are edited
+in the current Vim.
+.TP
+--remote-expr {expr}
+Connect to a Vim server, evaluate {expr} in it and print the result on stdout.
+.TP
+--remote-send {keys}
+Connect to a Vim server and send {keys} to it.
+.TP
+--remote-silent
+As --remote, but without the warning when no server is found.
+.TP
+--remote-wait
+As --remote, but Vim does not exit until the files have been edited.
+.TP
+--remote-wait-silent
+As --remote-wait, but without the warning when no server is found.
 .TP
 --serverlist
 List the names of all Vim servers that can be found.
 .TP
 --servername {name}
 Use {name} as the server name.  Used for the current Vim, unless used with a
---serversend or --remote, then it's the name of the server to connect to.
-.TP
---serversend {keys}
-Connect to a Vim server and send {keys} to it.
+--remote argument, then it's the name of the server to connect to.
 .TP
 --socketid {id}
 GTK GUI only: Use the GtkPlug mechanism to run gvim in another window.

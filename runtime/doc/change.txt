@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.1.  Last change: 2002 Sep 16
+*change.txt*    For Vim version 6.2a.  Last change: 2003 Apr 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -19,7 +19,7 @@ commands with the "." command.
 For inserting text see |insert.txt|.
 
 ==============================================================================
-1. Deleting text					*deleting*
+1. Deleting text					*deleting* *E470*
 
 ["x]<Del>	or					*<Del>* *x* *dl*
 ["x]x			Delete [count] characters under and after the cursor
@@ -46,7 +46,8 @@ For inserting text see |insert.txt|.
 							*D*
 ["x]D			Delete the characters under the cursor until the end
 			of the line and [count]-1 more lines [into register
-			x]; synonym for d$ (not linewise).
+			x]; synonym for "d$".
+			(not linewise)
 
 {Visual}["x]x	or					*v_x* *v_d* *v_<Del>*
 {Visual}["x]d   or
@@ -129,7 +130,7 @@ commands, except "gJ", delete any leading white space on the next line.  If
 the 'joinspaces' option is on, these commands insert two spaces after a '.',
 '!' or '?' (but if 'cpoptions' includes the 'j' flag, they insert two spaces
 only after a '.').
-The '' and '' flags in 'formatoptions' change the behavior for inserting
+The 'B' and 'M' flags in 'formatoptions' change the behavior for inserting
 spaces before and after a multi-byte character |fo-table|.
 
 
@@ -143,11 +144,11 @@ R			Enter Replace mode: Each character you type replaces
 			times.  See |Replace-mode| for more details.
 
 							*gR*
-gR			Enter Virtual replace mode: Each character you type
+gR			Enter Virtual Replace mode: Each character you type
 			replaces existing characters in screen space.  So a
 			<Tab> may replace several characters at once.
 			Repeat the entered text [count]-1 times.  See
-			|Virtual-replace-mode| for more details.
+			|Virtual-Replace-mode| for more details.
 			{not available when compiled without the +vreplace
 			feature}
 
@@ -261,7 +262,7 @@ r{char}			Replace the character under the cursor with {char}.
 							*gr*
 gr{char}		Replace the virtual characters under the cursor with
 			{char}.  This replaces in screen space, not file
-			space.  See |gR| and |Virtual-replace-mode| for more
+			space.  See |gR| and |Virtual-Replace-mode| for more
 			details.  As with |r| a count may be given.
 			{char} can be entered like with |r|.
 			{not available when compiled without the +vreplace
@@ -449,8 +450,8 @@ For example: >
 4. Complex changes					*complex-change*
 
 							*!* *filter*
-!{motion}{filter}	Filter {motion} text through the external program
-			{filter}.
+!{motion}{filter}	Filter {motion} text lines through the external
+			program {filter}.
 
 							*!!*
 !!{filter}		Filter [count] lines through the external program
@@ -499,6 +500,7 @@ not recognize a comment (starting with '"') after the ":!" command.
 :[range]s[ubstitute]/{pattern}/{string}/[&][c][e][g][p][r][i][I] [count]
 			For each line in [range] replace a match of {pattern}
 			with {string}.
+			For the {pattern} see |pattern|.
 			{string} can be a literal string, or something
 			special; see |sub-replace-special|.
 			When [range] and [count] are omitted, replace in the
@@ -650,7 +652,7 @@ and use a <CR> without a backslash where you want to break the line.
 matched with the first pair of () with "submatch(1)".  Likewise for further
 sub-matches in ().
    Be careful: The separation character must not appear in the expression!
-Consider using a character like "@" or "|".  There is no problem if the result
+Consider using a character like "@" or ":".  There is no problem if the result
 of the expression contains the separation character.
 Example: >
 	:s@\n@\="\r" . expand("$HOME") . "\r"@
@@ -659,32 +661,37 @@ This replaces an end-of-line with a new line containing the value of $HOME.
 Some characters in {string} have a special meaning:
 
 magic	nomagic	  action    ~
-  &	  \&	  replaced with the whole matched pattern
+  &	  \&	  replaced with the whole matched pattern	     *s/\&*
  \&	   &	  replaced with &
-      \0	  replaced with the whole matched pattern  *\0*
-      \1	  replaced with the matched pattern in the first pair of ()
-      \2	  replaced with the matched pattern in the second pair of ()
-      ..	  ..
-      \9	  replaced with the matched pattern in the ninth pair of ()
-  ~	  \~	  replaced with the {string} of the previous substitute
- \~	   ~	  replaced with ~ 
-      \u	  next character made uppercase
-      \U	  following characters made uppercase, until \E
-      \l	  next character made lowercase
-      \L	  following characters made lowercase, until \E
-      \e	  end of \u, \U, \l and \L (NOTE: not <Esc>!)
-      \E	  end of \u, \U, \l and \L
-      <CR>	  split line in two at this point (Type the <CR> as CTRL-V
-		  <Enter>)
-      \r	  idem
-      \<CR>	  insert a carriage-return (CTRL-M) (Type the <CR> as CTRL-V
-		  <Enter>)
-      \n	  insert a <NL> (<NUL> in the file) (does NOT break the line)
-      \b	  insert a <BS>
-      \t	  insert a <Tab>
-      \\	  insert a single backslash
-      \x	  where x is any character not mentioned above: Reserved for
-		  future expansion
+      \0	  replaced with the whole matched pattern	   *\0* *s/\0*
+      \1	  replaced with the matched pattern in the first
+		  pair of ()					     *s/\1*
+      \2	  replaced with the matched pattern in the first
+		  pair of ()					     *s/\2*
+      ..	  ..						     *s/\3*
+      \9	  replaced with the matched pattern in the ninth
+		  pair of ()					     *s/\9*
+  ~	  \~	  replaced with the {string} of the previous
+		  substitute					     *s~*
+ \~	   ~	  replaced with ~				     *s/\~*
+      \u	  next character made uppercase			     *s/\u*
+      \U	  following characters made uppercase, until \E      *s/\U*
+      \l	  next character made lowercase			     *s/\l*
+      \L	  following characters made lowercase, until \E      *s/\L*
+      \e	  end of \u, \U, \l and \L (NOTE: not <Esc>!)	     *s/\e*
+      \E	  end of \u, \U, \l and \L			     *s/\E*
+      <CR>	  split line in two at this point
+		  (Type the <CR> as CTRL-V <Enter>)		     *s<CR>*
+      \r	  idem						     *s/\r*
+      \<CR>	  insert a carriage-return (CTRL-M)
+		  (Type the <CR> as CTRL-V <Enter>)		     *s/\<CR>*
+      \n	  insert a <NL> (<NUL> in the file)
+		  (does NOT break the line)			     *s/\n*
+      \b	  insert a <BS>					     *s/\b*
+      \t	  insert a <Tab>				     *s/\t*
+      \\	  insert a single backslash			     *s/\\*
+      \x	  where x is any character not mentioned above:
+		  Reserved for future expansion
 
 Examples: >
   :s/a\|b/xxx\0xxx/g		 modifies "a b"	     to "xxxaxxx xxxbxxx"
@@ -729,7 +736,8 @@ either the first or second pattern in parentheses did not match, so either
 			Replace all sequences of white-space containing a
 			<Tab> with new strings of white-space using the new
 			tabstop value given.  If you do not specify a new
-			tabstop size, Vim uses the current value of 'tabstop'.
+			tabstop size or it is zero, Vim uses the current value
+			of 'tabstop'.
 			The current value of 'tabstop' is always used to
 			compute the width of existing tabs.
 			With !, Vim also replaces strings of only normal
@@ -824,7 +832,12 @@ inside of strings can change!  Also see 'softtabstop' option. >
 			specified.  Using the mouse only works when 'mouse'
 			contains 'n' or 'a'.
 			{not in Vi}
-
+			If you have a scrollwheel and often accidentally paste
+			text, you can use these mappings to disable the
+			pasting with the middle mouse button: >
+				:map <MiddleMouse> <Nop>
+				:imap <MiddleMouse> <Nop>
+<
 							*gp*
 ["x]gp			Just like "p", but leave the cursor just after the new
 			text.  {not in Vi}
@@ -916,7 +929,7 @@ There are nine types of registers:			*registers* *E354*
 4. 26 named registers "a to "z or "A to "Z
 5. four read-only registers ":, "., "% and "#
 6. the expression register "=
-7. The selection registers "* and "+
+7. The selection and drop registers "*, "+ and "~ 
 8. The black hole register "_
 9. Last search pattern register "/
 
@@ -992,7 +1005,7 @@ expression (like with the "/" command).  If the "= register is used for the
 "p" command, the string is split up at <NL> characters.  If the string ends in
 a <NL>, it is regarded as a linewise register.  {not in Vi}
 
-7. Selection registers "* and "+
+7. Selection and drop registers "*, "+ and "~ 
 Use these register for storing and retrieving the selected text for the GUI.
 See |quotestar| and |quoteplus|.  When the clipboard is not available or not
 working, the unnamed register is used instead.  {not in Vi}
@@ -1000,6 +1013,18 @@ working, the unnamed register is used instead.  {not in Vi}
 Note that there is only a distinction between "* and "+ for X11 systems.  For
 an explanation of the difference, see |x11-selection|.  Under MS-Windows, use
 of "* and "+ is actually synonymous and refers to the |gui-clipboard|.
+
+						*quote_~* *quote~* *<Drop>*
+The read-only "~ register stores the dropped text from the last drag'n'drop
+operation.  When something has been dropped onto Vim, the "~ register is
+filled in and the <Drop> pseudo key is sent for notification.  You can remap
+this key if you want; the default action (for all modes) is to insert the
+contents of the "~ register at the cursor position.  {not in Vi}
+{only available when compiled with the |+dnd| feature, curently only with the
+GTK GUI}
+
+Note: The "~ register is only used when dropping plain text onto Vim.
+Drag'n'drop of URI lists is handled internally.
 
 8. Black hole register "_				*quote_*
 When writing to this register, nothing happens.  This can be used to delete

@@ -5714,7 +5714,7 @@ msgstr ""
 "E12: Bevel uit exrc/vimrc nie toegelaat in huidige gids- of etiketsoektog nie"
 
 #: globals.h:1026
-msgid "E13: File exists (use ! to override)"
+msgid "E13: File exists (add ! to override)"
 msgstr "E13: Lêer bestaan (gebruik ! om te dwing)"
 
 #: globals.h:1027

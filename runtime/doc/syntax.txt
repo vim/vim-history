@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.1.  Last change: 2002 Mar 24
+*syntax.txt*    For Vim version 6.2a.  Last change: 2003 Apr 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -194,7 +194,10 @@ Vim will only load the first syntax file found.
 
 
 NAMING CONVENTIONS
-							*group-name*
+						*group-name* *{group-name}*
+The name for a highlight or syntax group must consist of ASCII letters, digits
+and the underscore.  As a regexp: "[a-zA-Z0-9_]*"
+
 To be able to allow each user to pick his favorite set of colors, there must
 be preferred names for highlight groups that are common for many languages.
 These are the suggested group names:
@@ -363,14 +366,26 @@ Source the script to convert the current file: >
 
 	:runtime! syntax/2html.vim
 <
-	Warning: This is slow!
+Warning: This is slow!
+							*:TOhtml*
+Or use the ":TOhtml" user command.  It is defined in a standard plugin.
+":TOhtml" also works with a range and in a Visual area: >
+
+	:10,40TOhtml
 
 After you save the resulting file, you can view it with any HTML viewer, such
 as Netscape.  The colors should be exactly the same as you see them in Vim.
 
+To restrict the conversion to a range of lines set "html_start_line" and
+"html_end_line" to the first and last line to be converted.  Example, using
+the last set Visual area: >
+
+	:let html_start_line = line("'<")
+	:let html_end_line = line("'>")
+
 The lines are numbered according to 'number' option and the Number
 highlighting.  You can force lines to be numbered in the HTML output by
-setting "html_number_lines" to nonzero value: >
+setting "html_number_lines" to non-zero value: >
    :let html_number_lines = 1
 Force to omit the line numbers by using a zero value: >
    :let html_number_lines = 0
@@ -381,6 +396,18 @@ By default, HTML optimized for old browsers is generated.  If you prefer using
 cascading style sheets (CSS1) for the attributes (resulting in considerably
 shorter and valid HTML 4 file), use: >
    :let html_use_css = 1
+
+The current value of 'encoding' is used to specify the charset of the HTML
+file.  This only works for those values of 'encoding' that have an equivalent
+HTML charset name.  To overrule this set g:html_use_encoding to the name of
+the charset to be used: >
+   :let html_use_encoding = "foobar"
+To omit the line that specifies the charset, set g:html_use_encoding to an
+empty string: >
+   :let html_use_encoding = ""
+To go back to the automatic mechanism, delete the g:html_use_encoding
+variable: >
+   :unlet html_use_encoding
 
 Remarks:
 - This only works in a version with GUI support.  If the GUI is not actually
@@ -452,7 +479,7 @@ ada_begin_preproc        Show all begin-like keywords using the coloring
                            of C preprocessor commands.
 
 Even on a slow (90Mhz) PC this mode works quickly, but if you find
-the performance unnacceptable, turn on ada_withuse_ordinary.
+the performance unacceptable, turn on ada_withuse_ordinary.
 
 
 ANT						*ant.vim* *ant-syntax*
@@ -472,6 +499,15 @@ will install syntax perl highlighting for the following ant code >
 
 See |mysyntaxfile-add| for installing script languages permanently.
 
+
+APACHE						*apache.vim* *apache-syntax*
+
+The apache syntax file provides syntax highlighting depending on Apache HTTP
+server version, by default for 1.3.x.  Set "apache_version" to Apache version
+(as a string) to get highlighting for another version.  Example: >
+
+	:let apache_version = "2.0"
+<
 
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
 ASSEMBLY	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
@@ -523,7 +559,7 @@ To disable a feature: >
 
 Variable		Highlight ~
 nasm_loose_syntax	unofficial parser allowed syntax not as Error
-			  (parser dependend; not recommended)
+			  (parser dependent; not recommended)
 nasm_ctx_outside_macro	contexts outside macro not as Error
 nasm_no_warn		potentially risky syntax not as ToDo
 
@@ -571,7 +607,7 @@ c_no_utf		don't highlight \u and \U in strings
 c_syntax_for_h		use C syntax for *.h files, instead of C++
 c_no_if0		don't highlight "#if 0" blocks as comments
 c_no_cformat		don't highlight %-formats in strings
-c_no_c99		con't highlight C99 standard items
+c_no_c99		don't highlight C99 standard items
 
 If you notice highlighting errors while scrolling backwards, which are fixed
 when redrawing with CTRL-L, try setting the "c_minlines" internal variable
@@ -797,6 +833,9 @@ syntax highlighting will not be correct if the form is incorrectly set.
 When you create a new fortran file, the syntax script assumes fixed source
 form. If you always use free source form, then >
     :let fortran_free_source=1
+in your .vimrc prior to the :syntax on command. If you always use fixed source
+form, then >
+    :let fortran_fixed_source=1
 in your .vimrc prior to the :syntax on command.
 
 If the form of the source code depends upon the file extension, then it is
@@ -807,21 +846,26 @@ rest in fixed source form, add the following code to your ftplugin file >
     let s:extfname = expand("%:e")
     if s:extfname ==? "f90"
 	let fortran_free_source=1
+	unlet! fortran_fixed_source
     else
+	let fortran_fixed_source=1
 	unlet! fortran_free_source
     endif
+Note that this will work only if the "filetype plugin indent on" command
+precedes the "syntax on" command in your .vimrc file.
 
 When you edit an existing fortran file, the syntax script will assume free
-source form if the fortran_free_source variable has been set. If it has not
-been set, the syntax script attempts to determine which source form has been
-used by examining the first five columns of the first 25 lines of your file.
-If no signs of free source form are detected, then the file is assumed to be
-in fixed source form. The algorithm should work in the vast majority of cases.
-In some cases, such as a file that begins with 25 or more full-line comments,
-the script may incorrectly decide that the fortran code is in fixed form. If
-that happens, just add a non-comment statement beginning anywhere in the first
-five columns of the first twenty five lines, save (:w) and then reload (:e!)
-the file.
+source form if the fortran_free_source variable has been set, and assumes
+fixed source form if the fortran_fixed_source variable has been set. If
+neither of these variables have been set, the syntax script attempts to
+determine which source form has been used by examining the first five columns
+of the first 25 lines of your file. If no signs of free source form are
+detected, then the file is assumed to be in fixed source form. The algorithm
+should work in the vast majority of cases. In some cases, such as a file that
+begins with 25 or more full-line comments, the script may incorrectly decide
+that the fortran code is in fixed form. If that happens, just add a
+non-comment statement beginning anywhere in the first five columns of the
+first twenty five lines, save (:w) and then reload (:e!) the file.
 
 Tabs in fortran files ~
 Tabs are not recognized by the Fortran standards. Tabs are not a good idea in
@@ -839,8 +883,8 @@ fortran_fold with a command such as >
     :let fortran_fold=1
 to instruct the syntax script to define fold regions for program units, that
 is main programs starting with a program statement, subroutines, function
-subprograms, block data subprograms, and modules. If you also set the variable
-fortran_fold_conditionals with a command such as >
+subprograms, block data subprograms, interface blocks, and modules. If you
+also set the variable fortran_fold_conditionals with a command such as >
     :let fortran_fold_conditionals=1
 then fold regions will also be defined for do loops, if blocks, and select
 case constructs. If you also set the variable
@@ -898,6 +942,8 @@ ftplugin file should contain the code >
     else
 	unlet! fortran_dialect
     endif
+Note that this will work only if the "filetype plugin indent on" command
+precedes the "syntax on" command in your .vimrc file.
 
 Finer control is necessary if the file extension does not uniquely identify
 the dialect. You can override the default dialect, on a file-by-file basis, by
@@ -921,7 +967,7 @@ For further information related to fortran, see |fortran-indent| and
 FVWM CONFIGURATION FILES			*fvwm.vim* *fvwm-syntax*
 
 In order for Vim to recognize Fvwm configuration files that do not match
-the patterns *fvwmrc* or *fvwm2rc*, you must put additional patterns
+the patterns *fvwmrc* or *fvwm2rc* , you must put additional patterns
 appropriate to your system in your myfiletypes.vim file.  For these
 patterns, you must set the variable "b:fvwm_version" to the major version
 number of Fvwm, and the 'filetype' option to fvwm.
@@ -1075,14 +1121,20 @@ most programs make extensive use of it.  If do not wish Library symbols
 to be highlighted add this to your vim startup: >
 	:let inform_highlight_simple=1
 
-By default it is assumed that Inform programs are Z-machine targetted,
+By default it is assumed that Inform programs are Z-machine targeted,
 and highlights Z-machine assembly language symbols appropriately.  If
-you intend your program to be targetted to a Glulx/Glk environment you
+you intend your program to be targeted to a Glulx/Glk environment you
 need to add this to your startup sequence: >
 	:let inform_highlight_glulx=1
 
 This will highlight Glulx opcodes instead, and also adds glk() to the
 set of highlighted system functions.
+
+The Inform compiler will flag certain obsolete keywords as errors when
+it encounters them.  These keywords are normally highlighted as errors
+by Vim.  To prevent such error highlighting, you must add this to your
+startup sequence: >
+	:let inform_suppress_obsolete=1
 
 
 JAVA						*java.vim* *java-syntax*
@@ -1113,7 +1165,7 @@ functions:
 If you write function declarations that are always indented by either
 a tab, 8 spaces or 2 spaces you may want to set >
 	:let java_highlight_functions="indent"
-However, if you follow the java guidlines about how functions and classes are
+However, if you follow the Java guidelines about how functions and classes are
 supposed to be named (with respect to upper and lowercase), use >
 	:let java_highlight_functions="style"
 If both options do not work for you, but you would still want function
@@ -1199,7 +1251,7 @@ LITE						*lite.vim* *lite-syntax*
 
 There are two options for the lite syntax highlighting.
 
-If you like SQL syntax highligthing inside Strings, use this: >
+If you like SQL syntax highlighting inside Strings, use this: >
 
 	:let lite_sql_query = 1
 
@@ -1207,6 +1259,57 @@ For syncing, minlines defaults to 100.  If you prefer another value, you can
 set "lite_minlines" to the value you desire.  Example: >
 
 	:let lite_minlines = 200
+
+
+LPC						*lpc.vim* *lpc-syntax*
+
+LPC stands for a simple, memory-efficient language: Lars Pensj| C. The 
+file name of LPC is usually *.c.  Recognizing these files as LPC would bother
+users writing only C programs.  If you want to use LPC syntax in Vim, you
+should set a variable in your .vimrc file: >
+
+	:let lpc_syntax_for_c = 1
+
+If it doesn't work properly for some particular C or LPC files, use a
+modeline.  For a LPC file:
+
+	// vim:set ft=lpc:
+
+For a C file that is recognized as LPC:
+
+	// vim:set ft=c:
+
+If you don't want to set the variable, use the modeline in EVERY LPC file.
+
+There are several implementations for LPC, we intend to support most widely
+used ones. Here the default LPC syntax is for MudOS series, for MudOS v22 
+and before, you should turn off the sensible modifiers, and this will also
+asserts the new efuns after v22 to be invalid, don't set this variable when
+you are using the latest version of MudOS: >
+
+	:let lpc_pre_v22 = 1
+
+For LpMud 3.2 series of LPC: >
+
+	:let lpc_compat_32 = 1
+
+For LPC4 series of LPC: >
+
+	:let lpc_use_lpc4_syntax = 1
+
+For uLPC series of LPC:
+uLPC has been developed to Pike, so you should use Pike syntax 
+instead, and the name of your source file shoud be *.pike
+
+
+LUA						*lua.vim* *lua-syntax*
+
+This syntax file may be used for Lua 4.0 and Lua 5.0 (default). If you are
+programming in Lua 4.0, use this: >
+
+	:let lua_version = 4
+
+If lua_version variable doesn't exist, it is set to 5.
 
 
 MAPLE						*maple.vim* *maple-syntax*
@@ -1274,7 +1377,7 @@ MSQL						*msql.vim* *msql-syntax*
 
 There are two options for the msql syntax highlighting.
 
-If you like SQL syntax highligthing inside Strings, use this: >
+If you like SQL syntax highlighting inside Strings, use this: >
 
 	:let msql_sql_query = 1
 
@@ -1298,9 +1401,25 @@ If you don't want to highlight these errors, leave it unset.
 
 NROFF						*nroff.vim* *nroff-syntax*
 
-To mark trailing spaces as an error, use this:
+To mark trailing spaces as an error, use this: >
 
->  let nroff_space_errors = 1
+  let nroff_space_errors = 1
+
+
+OCAML   					*ocaml.vim* *ocaml-syntax*
+
+The OCaml syntax file handles files having the following prefixes: .ml,
+.mli, .mll and .mly.  By setting the following variable >
+
+	:let ocaml_revised = 1
+
+you can switch from standard OCaml-syntax to revised syntax as supported
+by the camlp4 preprocessor.  Setting the variable >
+
+	:let ocaml_noend_error = 1
+
+prevents highlighting of "end" as error, which is useful when sources
+contain very long structures that Vim does not synchronize anymore.
 
 
 PAPP						*papp.vim* *papp-syntax*
@@ -1381,7 +1500,7 @@ There are a number of possible options to the perl syntax highlighting.
 
 If you use POD files or POD segments, you might: >
 
-	:let perl_include_POD = 1
+	:let perl_include_pod = 1
 
 To handle package references in variable and function names differently from
 the rest of the name (like 'PkgName::' in '$PkgName::VarName'): >
@@ -1434,7 +1553,7 @@ it has been renamed to "php"]
 
 There are the following options for the php syntax highlighting.
 
-If you like SQL syntax hightlighting inside Strings: >
+If you like SQL syntax highlighting inside Strings: >
 
   let php_sql_query = 1
 
@@ -1506,7 +1625,7 @@ PHTML						*phtml.vim* *phtml-syntax*
 
 There are two options for the phtml syntax highlighting.
 
-If you like SQL syntax highligthing inside Strings, use this: >
+If you like SQL syntax highlighting inside Strings, use this: >
 
 	:let phtml_sql_query = 1
 
@@ -1625,6 +1744,40 @@ For highlighted standard exceptions: >
 If you want all possible Python highlighting (the same as setting the
 preceding three options): >
 	:let python_highlight_all = 1
+
+
+QUAKE						*quake.vim* *quake-syntax*
+
+The Quake syntax defininition should work for most any FPS (First Person
+Shooter) based on one of the Quake engines. However, the command names vary
+a bit between the three games (Quake, Quake 2, and Quake 3 Arena) so the
+syntax definition checks for the existence of three global variables to allow
+users to specify what commands are legal in their files. The three variables
+can be set for the following effects:
+
+set to highlight commands only available in Quake: >
+	:let quake_is_quake1 = 1
+
+set to highlight commands only available in Quake 2: >
+	:let quake_is_quake2 = 1
+
+set to highlight commands only available in Quake 3 Arena: >
+	:let quake_is_quake3 = 1
+
+Any combination of these three variables is legal, but might highlight more
+commands than are actually available to you by the game.
+
+
+READLINE				*readline.vim* *readline-syntax*
+
+The readline library is primarily used by the BASH shell, which adds quite a
+few commands and options to the ones already available. To highlight these
+items as well you can add the following to your |vimrc| or just type it in the
+command line before loading a file with the readline syntax: >
+	let readline_has_bash = 1
+
+This will add highlighting for the commands that BASH (version 2.05a and
+later, and part earlier) adds.
 
 
 REXX						*rexx.vim* *rexx-syntax*
@@ -1753,7 +1906,7 @@ vimrc file: >
 
 SH						*sh.vim* *sh-syntax*
 
-This covers the "normal" Unix (Borne) sh, bash and the korn shell.
+This covers the "normal" Unix (Bourne) sh, bash and the Korn shell.
 
 Vim attempts to determine which shell type is in use by specifying that
 various filenames are of specific types:
@@ -1873,6 +2026,23 @@ For syncing, minlines defaults to 100.  If you prefer another value, you can
 set "tf_minlines" to the value you desire.  Example: >
 
 	:let tf_minlines = your choice
+
+
+VIM						*vim.vim* *vim-syntax*
+
+There is one option available for <vim.vim>, accessed via the g:vimembedscript
+global variable.  The option allows for somewhat faster loading of syntax
+highlighting for vim scripts at the expense of supporting syntax highlighting
+for external scripting languages (currently perl, python, ruby, and tcl).
+
+	g:vimembedscript == 1 (default)  <vim.vim> will allow highlighting
+	g:vimembedscript doesn't exist   of suported embedded scripting
+					 languages: perl, python, ruby and
+					 tcl.
+
+	g:vimembedscript == 0            Syntax highlighting for embedded
+					 scripting languages will not be
+					 loaded.
 
 
 XF86CONFIG                              *xf86conf.vim* *xf86conf-syntax*
@@ -2056,7 +2226,7 @@ DEFINING MATCHES					*:syn-match*
 DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 							*E398* *E399*
 :sy[ntax] region {group-name} [{options}]
-		[matchgroup={group_name}]
+		[matchgroup={group-name}]
 		[keepend]
 		[extend]
 		[excludenl]
@@ -2255,7 +2425,7 @@ display							*:syn-display*
 If the "display" argument is given, this item will be skipped when the
 detected highlighting will not be displayed.  This will speed up highlighting,
 by skipping this item when only finding the syntax state for the text that is
-to be dislayed.
+to be displayed.
 
 Generally, you can use "display" for match and region items that meet these
 conditions:
@@ -2332,11 +2502,12 @@ The "oneline" argument indicates that the region does not cross a line
 boundary.  It must match completely in the current line.  However, when the
 region has a contained item that does cross a line boundary, it continues on
 the next line anyway.  A contained item can be used to recognize a line
-continuation pattern.
+continuation pattern.  But the "end" pattern must still match in the first
+line, otherwise the region doesn't even start.
 
 When the start pattern includes a "\n" to match an end-of-line, the end
-pattern must found in the same line as where the start pattern ends.  The end
-pattern may also include an end-of-line.  Thus the "oneline" argument
+pattern must be found in the same line as where the start pattern ends.  The
+end pattern may also include an end-of-line.  Thus the "oneline" argument
 means that the end of the start pattern and the start of the end pattern must
 be within one line.  This can't be changed by a skip pattern that matches a
 line break.
@@ -3107,8 +3278,8 @@ ctermbg={color-nr}				*highlight-ctermbg*
 	highlighting settings portable (complicated, isn't it?).  The
 	following names are recognized, with the color number used:
 
-	    NR-16   NR-8    COLOR NAME ~
 							*cterm-colors*
+	    NR-16   NR-8    COLOR NAME ~
 	    0	    0	    Black
 	    1	    4	    DarkBlue
 	    2       2	    DarkGreen
@@ -3283,7 +3454,9 @@ Normal		normal text
 							*hl-Question*
 Question	|hit-enter| prompt and yes/no questions
 							*hl-Search*
-Search		last search pattern highlighting (see 'hlsearch')
+Search		Last search pattern highlighting (see 'hlsearch').
+		Also used for highlighting the current line in the quickfix
+		window and similar items that need to stand out.
 							*hl-SpecialKey*
 SpecialKey	Meta and special keys listed with ":map", also for text used
 		to show unprintable characters in the text, 'listchars'.
@@ -3499,24 +3672,23 @@ And put these lines in your .vimrc: >
 ==============================================================================
 16. Color xterms				*xterm-color* *color-xterm*
 
-Most color xterms have only eight colors.  They should work with these
-lines in your .vimrc: >
-   :if has("terminfo")
-   :  set t_Co=8
-   :  set t_Sf=<Esc>[3%p1%dm
-   :  set t_Sb=<Esc>[4%p1%dm
-   :else
-   :  set t_Co=8
-   :  set t_Sf=<Esc>[3%dm
-   :  set t_Sb=<Esc>[4%dm
+Most color xterms have only eight colors.  If you don't get colors with the
+default setup, it should work with these lines in your .vimrc: >
+   :if &term =~ "xterm"
+   :  if has("terminfo")
+   :    set t_Co=8
+   :    set t_Sf=<Esc>[3%p1%dm
+   :    set t_Sb=<Esc>[4%p1%dm
+   :  else
+   :    set t_Co=8
+   :    set t_Sf=<Esc>[3%dm
+   :    set t_Sb=<Esc>[4%dm
+   :  endif
    :endif
 <	[<Esc> is a real escape, type CTRL-V <Esc>]
 
-You might want to put these lines in an ":if" that checks the name of your
-terminal, for example: >
-   :if &term =~ "xterm"
-<  put above lines here >
-   :endif
+You might want to change the first "if" to match the name of your terminal,
+e.g. "dtterm" instead of "xterm".
 
 Note: Do these settings BEFORE doing ":syntax on".  Otherwise the colors may
 be wrong.
@@ -3549,7 +3721,7 @@ supports. >
 If you only get 8 colors, check the xterm compilation settings.
 (Also see |UTF8-xterm| for using this xterm with UTF-8 character encoding).
 
-This xterm should work with these lines in your .vimrc: >
+This xterm should work with these lines in your .vimrc (for 16 colors): >
    :if has("terminfo")
    :  set t_Co=16
    :  set t_AB=<Esc>[%?%p1%{8}%<%t%p1%{40}%+%e%p1%{92}%+%;%dm
@@ -3565,8 +3737,13 @@ Without |+terminfo|, Vim will recognize these settings, and automatically
 translate cterm colors of 8 and above to "<Esc>[9%dm" and "<Esc>[10%dm".
 Colors above 16 are also translated automatically.
 
-Or just set the TERM environment variable to "xterm-16color" and try if that
-works.
+For 256 colors this has been reported to work: >
+
+   :set t_AB=<Esc>[48;5;%dm
+   :set t_AF=<Esc>[38;5;%dm
+
+Or just set the TERM environment variable to "xterm-color" or "xterm-16color"
+and try if that works.
 
 You probably want to use these X resources (in your ~/.Xdefaults file):
 	XTerm*color0:			#000000

@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.1.  Last change: 2001 Oct 23
+*usr_30.txt*	For Vim version 6.2a.  Last change: 2002 Aug 10
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -53,7 +53,7 @@ like this:
 	Hit ENTER or type command to continue ~
 
 From this you can see that you have errors in the file "main.c".  When you
-press Enter, Vim displays the file "main.c", with the cursor positioned on
+press <Enter>, Vim displays the file "main.c", with the cursor positioned on
 line 6, the first line with an error.  You did not need to specify the file or
 the line number, Vim knew where to go by looking in the error messages.
 
@@ -141,7 +141,7 @@ This is not too useful, so you will refine the command a little and use the :r
 
 Now the command executed is as follows: >
 
-	make file.o
+	make main.o
 
 More about these modifiers here: |filename-modifiers|.
 
@@ -156,7 +156,7 @@ compiled again.  You can go back to the previous error list with: >
 
 	:colder
 
-Then use ":clist" and "cc {nr}" to jump to the place with the warning.
+Then use ":clist" and ":cc {nr}" to jump to the place with the warning.
    To go forward to the next error list: >
 
 	:cnewer
@@ -188,7 +188,7 @@ OUTPUT REDIRECTION
 The ":make" command redirects the output of the executed program to an error
 file.  How this works depends on various things, such as the 'shell'.  If your
 ":make" command doesn't capture the output, check the 'makeef' and
-'shellredir' options.  The 'shellquote' and 'shellxquote' options might also
+'shellpipe' options.  The 'shellquote' and 'shellxquote' options might also
 matter.
 
 In case you can't get ":make" to redirect the file for you, an alternative is
@@ -241,7 +241,7 @@ form is: >
 
 This indents the current line.  Like with all operators, there are three ways
 to use it.  In Visual mode "=" indents the selected lines.  A useful text
-object is "a{"  This selects the current {} block.  Thus, to re-indent the
+object is "a{".  This selects the current {} block.  Thus, to re-indent the
 code code block the cursor is in: >
 
 	=a{
@@ -438,9 +438,10 @@ SPACES AND TABS
 If you are using a combination of tabs and spaces, you just edit normally.
 The Vim defaults do a fine job of handling things.
    You can make life a little easier by setting the 'softtabstop' option.
-This option tells Vim to make the Tab key look and feel as if tabs were set at
-the value of 'softtabstop', but actually use a combination of tabs and spaces.
-   After you execute the following command, every time you press the Tab key
+This option tells Vim to make the <Tab> key look and feel as if tabs were set
+at the value of 'softtabstop', but actually use a combination of tabs and
+spaces.
+   After you execute the following command, every time you press the <Tab> key
 the cursor moves to the next 4-column boundary: >
 
 	:set softtabstop=4

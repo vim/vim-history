@@ -3634,7 +3634,7 @@ win_line(wp, lnum, startrow, endrow)
 #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
 	if (xic != NULL
 		&& lnum == curwin->w_cursor.lnum
-		&& State == INSERT
+		&& (State & INSERT)
 		&& im_get_status()
 		&& !p_imdisable
 		&& preedit_start_col != MAXCOL
@@ -3645,32 +3645,21 @@ win_line(wp, lnum, startrow, endrow)
 	    getvcol(curwin, &(curwin->w_cursor), &tcol, NULL, NULL);
 	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
 	    {
-		if (feedback_old_attr == -1)
+		if (feedback_old_attr < 0)
 		{
 		    feedback_col = 0;
 		    feedback_old_attr = char_attr;
 		}
-		if (draw_feedback != NULL)
-		{
-		    if (draw_feedback[feedback_col] & XIMReverse)
-			char_attr = HL_INVERSE;
-		    else if (draw_feedback[feedback_col] & XIMUnderline)
-			char_attr = HL_UNDERLINE;
-		    else
-			char_attr = hl_attr(HLF_V);
-		}
-		else
+		char_attr = im_get_feedback_attr(feedback_col);
+		if (char_attr < 0)
 		    char_attr = feedback_old_attr;
 		feedback_col++;
 	    }
-	    else
+	    else if (feedback_old_attr >= 0)
 	    {
-		if (feedback_old_attr >= 0)
-		{
-		    char_attr = feedback_old_attr;
-		    feedback_old_attr = -1;
-		    feedback_col = 0;
-		}
+		char_attr = feedback_old_attr;
+		feedback_old_attr = -1;
+		feedback_col = 0;
 	    }
 	}
 #endif
@@ -4157,9 +4146,9 @@ screen_line(row, coloff, endcol, clear_width
 	{
 	    while (col <= endcol && ScreenLines[off_to] == ' '
 		    && ScreenAttrs[off_to] == 0
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
 				  && (!enc_utf8 || ScreenLinesUC[off_to] == 0)
-#endif
+# endif
 						  )
 	    {
 		++off_to;
@@ -7745,7 +7734,11 @@ showmode()
 #if defined(FEAT_XIM)
 	    if (xic != NULL && im_get_status() && !p_imdisable
 					&& curbuf->b_p_iminsert == B_IMODE_IM)
+# ifdef HAVE_GTK2 /* most of the time, it's not XIM being used */
+		MSG_PUTS_ATTR(" IM", attr);
+# else
 		MSG_PUTS_ATTR(" XIM", attr);
+# endif
 #endif
 #if defined(FEAT_HANGULIN) && defined(FEAT_GUI)
 	    if (gui.in_use)

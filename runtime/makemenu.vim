@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Jan 29
+" Last Change:	2003 Apr 05
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -299,6 +299,7 @@ SynMenu R-Sg.Rebol:rebol
 SynMenu R-Sg.Remind:remind
 SynMenu R-Sg.Renderman.Renderman\ Shader\ Lang:sl
 SynMenu R-Sg.Renderman.Renderman\ Interface\ Bytestream:rib
+SynMenu R-Sg.Resolv\.conf:resolv
 SynMenu R-Sg.Rexx:rexx
 SynMenu R-Sg.Robots\.txt:robots
 SynMenu R-Sg.RockLinux\ package\ desc\.:desc
@@ -347,6 +348,7 @@ SynMenu Sh-S.Snort\ Configuration:hog
 SynMenu Sh-S.SPEC\ (Linux\ RPM):spec
 SynMenu Sh-S.Specman:specman
 SynMenu Sh-S.Spice:spice
+SynMenu Sh-S.Spyce:spyce
 SynMenu Sh-S.Speedup:spup
 SynMenu Sh-S.Splint:splint
 SynMenu Sh-S.Squid\ config:squid
@@ -402,6 +404,7 @@ SynMenu WXYZ.Website\ MetaLanguage:wml
 SynMenu WXYZ.wDiff:wdiff
 SynMenu WXYZ.Wget\ config:wget
 SynMenu WXYZ.Whitespace\ (add):whitespace
+SynMenu WXYZ.WildPackets\ EtherPeek\ Decoder:dcd
 SynMenu WXYZ.WinBatch/Webbatch:winbatch
 SynMenu WXYZ.Windows\ Scripting\ Host:wsh
 SynMenu WXYZ.WvDial:wvdial

@@ -166,6 +166,9 @@ static void ins_up __ARGS((int startcol));
 static void ins_pageup __ARGS((void));
 static void ins_down __ARGS((int startcol));
 static void ins_pagedown __ARGS((void));
+#ifdef FEAT_DND
+static void ins_drop __ARGS((void));
+#endif
 static int  ins_tab __ARGS((void));
 static int  ins_eol __ARGS((int c));
 #ifdef FEAT_DIGRAPHS
@@ -1079,6 +1082,12 @@ doESCkey:
 	case K_KPAGEDOWN:
 	    ins_pagedown();
 	    break;
+
+#ifdef FEAT_DND
+	case K_DROP:
+	    ins_drop();
+	    break;
+#endif
 
 	/* When <S-Tab> isn't mapped, use it like a normal TAB */
 	case K_S_TAB:
@@ -4727,9 +4736,15 @@ oneright()
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active())
     {
-	/* Adjust for multi-wide char (not include TAB) */
+	/* Adjust for multi-wide char (excluding TAB) */
 	ptr = ml_get_cursor();
-	coladvance(getviscol() + ((*ptr != TAB && *ptr != NUL)
+	coladvance(getviscol() + ((*ptr != TAB && vim_isprintc(
+#ifdef FEAT_MBYTE
+			    (*mb_ptr2char)(ptr)
+#else
+			    *ptr
+#endif
+			    ))
 		    ? ptr2cells(ptr) : 1));
 	curwin->w_set_curswant = TRUE;
 	return OK;
@@ -4788,16 +4803,23 @@ oneleft()
 	}
 # else
 	coladvance(v - 1);
+# endif
 
+	if (curwin->w_cursor.coladd == 1)
 	{
 	    char_u *ptr;
 
 	    /* Adjust for multi-wide char (not a TAB) */
 	    ptr = ml_get_cursor();
-	    if (*ptr != TAB && *ptr != NUL && (width = ptr2cells(ptr)) > 1)
-		coladvance(v - width);
+	    if (*ptr != TAB && vim_isprintc(
+#  ifdef FEAT_MBYTE
+			    (*mb_ptr2char)(ptr)
+#  else
+			    *ptr
+#  endif
+			    ) && ptr2cells(ptr) > 1)
+		curwin->w_cursor.coladd = 0;
 	}
-# endif
 
 	curwin->w_set_curswant = TRUE;
 	return OK;
@@ -6934,6 +6956,14 @@ ins_pagedown()
     else
 	vim_beep();
 }
+
+#ifdef FEAT_DND
+    static void
+ins_drop()
+{
+    do_put('~', BACKWARD, 1L, PUT_CURSEND);
+}
+#endif
 
 /*
  * Handle TAB in Insert or Replace mode.

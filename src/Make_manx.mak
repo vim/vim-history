@@ -43,6 +43,7 @@ SRC =	buffer.c \
 	ex_cmds.c \
 	ex_cmds2.c \
 	ex_docmd.c \
+	ex_eval.c \
 	ex_getln.c \
 	fileio.c \
 	fold.c \
@@ -84,6 +85,7 @@ OBJ =	obj/buffer.o \
 	obj/ex_cmds.o \
 	obj/ex_cmds2.o \
 	obj/ex_docmd.o \
+	obj/ex_eval.o \
 	obj/ex_getln.o \
 	obj/fileio.o \
 	obj/fold.o \
@@ -123,6 +125,7 @@ PRO =	proto/buffer.pro \
 	proto/ex_cmds.pro \
 	proto/ex_cmds2.pro \
 	proto/ex_docmd.pro \
+	proto/ex_eval.pro \
 	proto/ex_getln.pro \
 	proto/fileio.pro \
 	proto/fold.pro \
@@ -224,6 +227,9 @@ obj/ex_cmds2.o:	ex_cmds2.c
 # Don't use $(SYMS) here, because ex_docmd.c defines DO_DECLARE_EXCMD
 obj/ex_docmd.o:	ex_docmd.c ex_cmds.h
 	$(CCNOSYM) $@ ex_docmd.c
+
+obj/ex_eval.o:	ex_eval.c ex_cmds.h
+	$(CCSYM) $@ ex_eval.c
 
 obj/ex_getln.o:	ex_getln.c
 	$(CCSYM) $@ ex_getln.c

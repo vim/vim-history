@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.1.  Last change: 2002 Mar 04
+*usr_20.txt*	For Vim version 6.2a.  Last change: 2002 Oct 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -7,7 +7,7 @@
 
 Vim has a few generic features that makes it easier to enter commands.  Colon
 commands can be abbreviated, edited and repeated.  Completion is available for
-nearly everyting.
+nearly everything.
 
 |20.1|	Command line editing
 |20.2|	Command line abbreviations
@@ -34,9 +34,9 @@ typed earlier, first move the cursor with the cursor keys.
 
 	:s/col/pig/
 
-Before you hit Enter, you notice that "col" should be "cow".  To correct this,
-you type <Left> five times.  The cursor is now just after "col".  Type "<BS>
-and "w" to correct: >
+Before you hit <Enter>, you notice that "col" should be "cow".  To correct
+this, you type <Left> five times.  The cursor is now just after "col".  Type
+<BS> and "w" to correct: >
 
 	:s/cow/pig/
 
@@ -123,7 +123,7 @@ command.  Instead ":set" can be abbreviated to ":se".
    When the shorter form of a command could be used for two commands, it
 stands for only one of them.  There is no logic behind which one, you have to
 learn them.  In the help files the shortest form that works is mentioned.  For
-example:
+example: >
 
 	:s[ubstitute]
 
@@ -262,7 +262,7 @@ now check the list for the item you wanted.  If it isn't there, you can use
 <BS> to correct the word.  If there are many matches, type a few more
 characters before pressing <Tab> to complete the rest.
    If you have watched carefully, you will have noticed that "incsearch"
-doesnt' start with "is".  In this case "is" stands for the short name of
+doesn't start with "is".  In this case "is" stands for the short name of
 "incsearch". (Many options have a short and a long name.)  Vim is clever
 enough to know that you might have wanted to expand the short name of the
 option into the long name.
@@ -374,7 +374,7 @@ command can be used to find something.
 to find the previous command that contains "config".  It's a bit strange,
 because you are using a command line to search in the command line window.
 While typing that search command you can't open another command line window,
-there can only be one.
+there can be only one.
 
 ==============================================================================
 
