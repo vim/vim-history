@@ -3475,7 +3475,6 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    s = out;
 	else
 	{
-	    s = item[0].start;
 	    for ( ; l < itemcnt; l++)
 		if (item[l].type == Trunc)
 		{
@@ -3483,6 +3482,12 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 		    s = item[l].start;
 		    break;
 		}
+	    if (l == itemcnt)
+	    {
+		/* No %< item, truncate first item. */
+		s = item[0].start;
+		l = 0;
+	    }
 	}
 
 	if (width - vim_strsize(s) > maxwidth)
@@ -3541,12 +3546,13 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 		*s = NUL;
 	    }
 
+	    --n;	/* count the '<' */
 	    for (; l < itemcnt; l++)
 	    {
-		if (item[l].start - n >= out)
+		if (item[l].start - n >= s)
 		    item[l].start -= n;
 		else
-		    item[l].start = out;
+		    item[l].start = s;
 	    }
 	}
 	width = maxwidth;
