@@ -189,7 +189,6 @@ mb_isbyte2(buf, x)
 
 static int	xim_has_focus = 0;
 #ifdef USE_GUI_X11
-static XIM	xim;
 static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
 #endif
@@ -539,7 +538,7 @@ xim_instantiate_cb(display, client_data, call_data)
 
     xim_real_init(x11_window, x11_display);
     gui_set_winsize(FALSE);
-    if (xim != NULL)
+    if (xic != NULL)
 	XUnregisterIMInstantiateCallback(x11_display, NULL, NULL, NULL,
 					 xim_instantiate_cb, NULL);
 }
@@ -556,7 +555,6 @@ xim_destroy_cb(im, client_data, call_data)
 
     gui_get_x11_windis(&x11_window, &x11_display);
 
-    xim = NULL;
     xic = NULL;
     status_area_enabled = FALSE;
 
@@ -575,7 +573,6 @@ xim_init()
 
     gui_get_x11_windis(&x11_window, &x11_display);
 
-    xim = NULL;
     xic = NULL;
 
     if (xim_real_init(x11_window, x11_display))
@@ -601,6 +598,7 @@ xim_real_init(x11_window, x11_display)
 		*end,
 		tmp[1024],
 		buf[32];
+    XIM		xim = NULL;
     XIMStyles	*xim_styles;
     XIMStyle	this_input_style = 0;
     Boolean	found;
@@ -620,37 +618,38 @@ xim_real_init(x11_window, x11_display)
     EMSG("XIM requires VIM compiled with +fontset feature.");
     return FALSE;
 #endif
-    if (xim == NULL)
+
+    if (xic != NULL)
+	return FALSE;
+
+    if (!gui.input_method || !*gui.input_method)
     {
-	if (!gui.input_method || !*gui.input_method)
+	if ((p = XSetLocaleModifiers("")) != NULL && *p)
+	    xim = XOpenIM(x11_display, NULL, NULL, NULL);
+    }
+    else
+    {
+	strcpy(tmp, gui.input_method);
+	for (ns = s = tmp; ns && *s;)
 	{
-	    if ((p = XSetLocaleModifiers("")) != NULL && *p)
-		xim = XOpenIM(x11_display, NULL, NULL, NULL);
-	}
-	else
-	{
-	    strcpy(tmp, gui.input_method);
-	    for (ns = s = tmp; ns && *s;)
-	    {
-		while (*s && isspace((unsigned char)*s))
-		    s++;
-		if (!*s)
-		    break;
-		if ((ns = end = strchr(s, ',')) == 0)
-		    end = s + strlen(s);
-		while (isspace((unsigned char)*end))
-		    end--;
-		*end = '\0';
+	    while (*s && isspace((unsigned char)*s))
+		s++;
+	    if (!*s)
+		break;
+	    if ((ns = end = strchr(s, ',')) == 0)
+		end = s + strlen(s);
+	    while (isspace((unsigned char)*end))
+		end--;
+	    *end = '\0';
 
-		strcpy(buf, "@im=");
-		strcat(buf, s);
-		if ((p = XSetLocaleModifiers(buf)) != NULL
-		    && *p
-		    && (xim = XOpenIM(x11_display, NULL, NULL, NULL)) != NULL)
-		    break;
+	    strcpy(buf, "@im=");
+	    strcat(buf, s);
+	    if ((p = XSetLocaleModifiers(buf)) != NULL
+		&& *p
+		&& (xim = XOpenIM(x11_display, NULL, NULL, NULL)) != NULL)
+		break;
 
-		s = ns + 1;
-	    }
+	    s = ns + 1;
 	}
     }
 
@@ -711,6 +710,13 @@ xim_real_init(x11_window, x11_display)
 	{
 	    if (this_input_style == xim_styles->supported_styles[i])
 	    {
+		found = True;
+		break;
+	    }
+	    if ((xim_styles->supported_styles[i] & this_input_style)
+			== (this_input_style & ~XIMStatusArea))
+	    {
+		this_input_style &= ~XIMStatusArea;
 		found = True;
 		break;
 	    }
