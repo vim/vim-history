@@ -1536,6 +1536,12 @@ ins_char(c)
     int		n;
 
     n = (*mb_char2bytes)(c, buf);
+
+    /* When "c" is 0x100, 0x200, etc. we don't want to insert a NUL byte.
+     * Happens for CTRL-Vu9900. */
+    if (buf[0] == 0)
+	buf[0] = '\n';
+
     ins_char_bytes(buf, n);
 }
 
