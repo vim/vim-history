@@ -1483,6 +1483,11 @@ diff_set_topline(fromwin, towin)
 	towin->w_topline = 1;
 	towin->w_topfill = 0;
     }
+
+    /* When w_topline changes need to recompute w_botline and cursor position */
+    invalidate_botline_win(towin);
+    changed_line_abv_curs_win(towin);
+
     check_topfill(towin, FALSE);
 #ifdef FEAT_FOLDING
     (void)hasFoldingWin(towin, towin->w_topline, &towin->w_topline,
