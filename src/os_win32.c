@@ -3796,7 +3796,14 @@ mch_libcall(
 
 	// save the string before we free the library
 	if (retval != NULL)
-	    retval = vim_strsave(retval);
+	{
+	    /* Check if the return value is a valid string pointer.  Otherwise
+	     * we may crash when the function returns a number! */
+	    if (retval == (char_u *)1 || IsBadStringPtr(retval, INT_MAX))
+		retval = NULL;
+	    else
+		retval = vim_strsave(retval);
+	}
 
 	// Free the DLL module.
 	fFreeResult = FreeLibrary(hinstLib);
