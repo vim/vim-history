@@ -866,7 +866,7 @@ vim_regcomp(expr, magic)
 		if (OP(scan) == EXACTLY && STRLEN(OPERAND(scan)) >= (size_t)len)
 		{
 		    longest = OPERAND(scan);
-		    len = STRLEN(OPERAND(scan));
+		    len = (int)STRLEN(OPERAND(scan));
 		}
 	    r->regmust = longest;
 	    r->regmlen = len;
@@ -2776,7 +2776,7 @@ vim_regexec_both(line, col)
 		    retval = 0;
 		    break;
 		}
-		col = s - regline;
+		col = (int)(s - regline);
 	    }
 
 	    retval = regtry(prog, col);
@@ -2890,7 +2890,7 @@ regtry(prog, col)
 	    if (reg_endpos[0].lnum < 0)
 	    {
 		reg_endpos[0].lnum = reglnum;
-		reg_endpos[0].col = reginput - regline;
+		reg_endpos[0].col = (int)(reginput - regline);
 	    }
 #ifdef FEAT_VIRTUALEDIT
 	    {
@@ -3357,7 +3357,7 @@ regmatch(scan)
 		    ++reginput;		/* matched a single char */
 		else
 		{
-		    len = STRLEN(opnd);
+		    len = (int)STRLEN(opnd);
 		    /* Need to match first byte again for multi-byte. */
 		    if (cstrncmp(opnd, reginput, len) != 0)
 			return FALSE;
@@ -3551,7 +3551,7 @@ regmatch(scan)
 		    {
 			/* Compare current input with back-ref in the same
 			 * line. */
-			len = reg_endp[no] - reg_startp[no];
+			len = (int)(reg_endp[no] - reg_startp[no]);
 			if (cstrncmp(reg_startp[no], reginput, len) != 0)
 			    return FALSE;
 		    }
@@ -3586,7 +3586,7 @@ regmatch(scan)
 				 * the other, need to make copy.  Slow! */
 				if (regline != reg_tofree)
 				{
-				    len = STRLEN(regline);
+				    len = (int)STRLEN(regline);
 				    if (reg_tofree == NULL
 						 || len >= (int)reg_tofreelen)
 				    {
@@ -3608,7 +3608,7 @@ regmatch(scan)
 				if (clnum == reg_endpos[no].lnum)
 				    len = reg_endpos[no].col - ccol;
 				else
-				    len = STRLEN(p + ccol);
+				    len = (int)STRLEN(p + ccol);
 
 				if (cstrncmp(p + ccol, reginput, len) != 0)
 				    return FALSE;	/* doesn't match */
@@ -3975,7 +3975,8 @@ regmatch(scan)
 					    --save_start.rs_u.pos.lnum) == NULL)
 				    break;
 				reg_restore(&save_start);
-				save_start.rs_u.pos.col = STRLEN(regline);
+				save_start.rs_u.pos.col =
+						     (colnr_T)STRLEN(regline);
 			    }
 			    else
 				--save_start.rs_u.pos.col;
@@ -4315,21 +4316,26 @@ do_class:
 #ifdef FEAT_MBYTE
       case MULTIBYTECODE:
 	{
-	    int		i, len;
+	    int		i, len, cf = 0;
 
 	    /* Safety check (just in case 'encoding' was changed since
 	     * compiling the program). */
 	    if ((len = (*mb_ptr2len_check)(opnd)) > 1)
+	    {
+		if (ireg_ic && enc_utf8)
+		    cf = utf_fold(utf_ptr2char(opnd));
 		while (count < maxcount)
 		{
 		    for (i = 0; i < len; ++i)
 			if (opnd[i] != scan[i])
 			    break;
-		    if (i < len)
+		    if (i < len && (!ireg_ic || !enc_utf8
+					|| utf_fold(utf_ptr2char(scan)) != cf))
 			break;
 		    scan += len;
 		    ++count;
 		}
+	    }
 	}
 	break;
 #endif
@@ -4503,7 +4509,7 @@ reg_save(save)
 {
     if (REG_MULTI)
     {
-	save->rs_u.pos.col = reginput - regline;
+	save->rs_u.pos.col = (colnr_T)(reginput - regline);
 	save->rs_u.pos.lnum = reglnum;
     }
     else
@@ -4561,7 +4567,7 @@ save_se(savep, posp, pp)
     {
 	savep->se_u.pos = *posp;
 	posp->lnum = reglnum;
-	posp->col = reginput - regline;
+	posp->col = (colnr_T)(reginput - regline);
     }
     else
     {
@@ -5061,7 +5067,7 @@ cstrncmp(s1, s2, n)
     {
 	int	i, l;
 
-	for (i = 0; i < n; i += l)
+	for (i = 0; i < n && s1[i] != NUL; i += l)
 	{
 	    l = (*mb_ptr2len_check)(s1 + i);
 	    if (l == 1)
@@ -5072,10 +5078,16 @@ cstrncmp(s1, s2, n)
 	    }
 	    else
 	    {
-		/* For multi-byte don't ignore case. */
+		/* For multi-byte only ignore case for Unicode. */
 		if (l > n - i)
 		    l = n - i;
-		if (STRNCMP(s1 + i, s2 + i, l) != 0)
+		if (enc_utf8)
+		{
+		    if (utf_fold(utf_ptr2char(s1 + i))
+					    != utf_fold(utf_ptr2char(s2 + i)))
+			return 1;
+		}
+		else if (STRNCMP(s1 + i, s2 + i, l) != 0)
 		    return 1;
 	    }
 	}
@@ -5097,29 +5109,47 @@ cstrchr(s, c)
 
     if (!ireg_ic
 #ifdef FEAT_MBYTE
-	    || mb_char2len(c) > 1
+	    || (!enc_utf8 && mb_char2len(c) > 1)
 #endif
 	    )
 	return vim_strchr(s, c);
 
     /* tolower() and toupper() can be slow, comparing twice should be a lot
-     * faster (esp. when using MS Visual C++!) */
-    if (isupper(c))
+     * faster (esp. when using MS Visual C++!).
+     * For UTF-8 need to use folded case. */
+#ifdef FEAT_MBYTE
+    if (enc_utf8 && c > 0x80)
+	cc = utf_fold(c);
+    else
+#endif
+	 if (isupper(c))
 	cc = TO_LOWER(c);
     else if (islower(c))
 	cc = TO_UPPER(c);
     else
 	return vim_strchr(s, c);
 
-    for (p = s; *p; ++p)
-    {
-	if (*p == c || *p == cc)
-	    return p;
 #ifdef FEAT_MBYTE
-	if (has_mbyte)
-	    p += (*mb_ptr2len_check)(p) - 1;
-#endif
+    if (has_mbyte)
+    {
+	for (p = s; *p != NUL; p += (*mb_ptr2len_check)(p))
+	{
+	    if (enc_utf8 && c > 0x80)
+	    {
+		if (utf_fold(utf_ptr2char(p)) == cc)
+		    return p;
+	    }
+	    else if (*p == c || *p == cc)
+		return p;
+	}
     }
+    else
+#endif
+	/* Faster version for when there are no multi-byte characters. */
+	for (p = s; *p != NUL; ++p)
+	    if (*p == c || *p == cc)
+		return p;
+
     return NULL;
 }
 
@@ -5217,7 +5247,7 @@ regtilde(source, magic)
 	    if (reg_prev_sub != NULL)
 	    {
 		/* length = len(newsub) - 1 + len(prev_sub) + 1 */
-		prevlen = STRLEN(reg_prev_sub);
+		prevlen = (int)STRLEN(reg_prev_sub);
 		tmpsub = alloc((unsigned)(STRLEN(newsub) + prevlen));
 		if (tmpsub != NULL)
 		{
@@ -5442,6 +5472,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte && (len = (*mb_ptr2len_check)(src - 1)) > 1)
 	    {
+		/* TODO: should use "func" here. */
 		if (copy)
 		    mch_memmove(dst, src - 1, len);
 		dst += len - 1;
@@ -5477,7 +5508,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 			len = reg_mmatch->endpos[no].col
 					       - reg_mmatch->startpos[no].col;
 		    else
-			len = STRLEN(s);
+			len = (int)STRLEN(s);
 		}
 	    }
 	    else
@@ -5486,7 +5517,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 		if (reg_match->endp[no] == NULL)
 		    s = NULL;
 		else
-		    len = reg_match->endp[no] - s;
+		    len = (int)(reg_match->endp[no] - s);
 	    }
 	    if (s != NULL)
 	    {
@@ -5505,7 +5536,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 			    if (reg_mmatch->endpos[no].lnum == clnum)
 				len = reg_mmatch->endpos[no].col;
 			    else
-				len = STRLEN(s);
+				len = (int)STRLEN(s);
 			}
 			else
 			    break;
@@ -5607,7 +5638,7 @@ reg_submatch(no)
 	    {
 		/* Multiple lines: take start line from start col, middle
 		 * lines completely and end line up to end col. */
-		len = STRLEN(s);
+		len = (int)STRLEN(s);
 		if (round == 2)
 		{
 		    STRCPY(retval, s);
@@ -5620,7 +5651,7 @@ reg_submatch(no)
 		    s = reg_getline(lnum++);
 		    if (round == 2)
 			STRCPY(retval + len, s);
-		    len += STRLEN(s);
+		    len += (int)STRLEN(s);
 		    if (round == 2)
 			retval[len] = '\r';
 		    ++len;

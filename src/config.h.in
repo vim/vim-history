@@ -152,6 +152,7 @@
 #undef HAVE_OPENDIR
 #undef HAVE_PUTENV
 #undef HAVE_QSORT
+#undef HAVE_READLINK
 #undef HAVE_RENAME
 #undef HAVE_SELECT
 #undef HAVE_SETENV

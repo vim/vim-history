@@ -7,7 +7,7 @@
  * See README.txt for an overview of the Vim source code.
  */
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(MSDOS) || defined(WIN32) || defined(_WIN64)
 # include <io.h>		/* for close() and dup() */
 #endif
 
@@ -1589,7 +1589,7 @@ scripterror:
     }
 #endif
 
-#if defined(WIN32) && !defined(FEAT_GUI_W32)
+#if defined(WIN3264) && !defined(FEAT_GUI_W32)
     mch_set_winsize_now();	    /* Allow winsize changes from now on */
 #endif
 

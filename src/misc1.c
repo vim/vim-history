@@ -138,7 +138,7 @@ set_indent(size, flags)
 	p = ml_get_curline();
     else
 	p = skipwhite(p);
-    line_len = STRLEN(p) + 1;
+    line_len = (int)STRLEN(p) + 1;
     line = alloc(ind_len + line_len);
     if (line == NULL)
 	return FALSE;
@@ -199,7 +199,7 @@ get_number_indent(lnum)
     if (*p == NUL)
 	return -1;
     pos.lnum = lnum;
-    pos.col = p - line;
+    pos.col = (colnr_T)(p - line);
     getvcol(curwin, &pos, &col, NULL, NULL);
     return (int)col;
 }
@@ -221,7 +221,7 @@ cin_is_cinword(line)
     int		retval = FALSE;
     int		len;
 
-    cinw_len = STRLEN(curbuf->b_p_cinw) + 1;
+    cinw_len = (int)STRLEN(curbuf->b_p_cinw) + 1;
     cinw_buf = alloc((unsigned)cinw_len);
     if (cinw_buf != NULL)
     {
@@ -345,7 +345,7 @@ open_line(dir, del_spaces, old_indent)
 	}
 #endif
 #ifdef FEAT_COMMENTS
-	extra_len = STRLEN(p_extra);
+	extra_len = (int)STRLEN(p_extra);
 #endif
 	saved_char = *p_extra;
 	*p_extra = NUL;
@@ -399,7 +399,10 @@ open_line(dir, del_spaces, old_indent)
 	    old_cursor = curwin->w_cursor;
 	    ptr = saved_line;
 #ifdef FEAT_COMMENTS
-	    lead_len = get_leader_len(ptr, NULL, FALSE);
+	    if (fo_do_comments)
+		lead_len = get_leader_len(ptr, NULL, FALSE);
+	    else
+		lead_len = 0;
 #endif
 	    if (dir == FORWARD)
 	    {
@@ -418,7 +421,10 @@ open_line(dir, del_spaces, old_indent)
 		    newindent = get_indent();
 		}
 #ifdef FEAT_COMMENTS
-		lead_len = get_leader_len(ptr, NULL, FALSE);
+		if (fo_do_comments)
+		    lead_len = get_leader_len(ptr, NULL, FALSE);
+		else
+		    lead_len = 0;
 		if (lead_len > 0)
 		{
 		    /*
@@ -443,7 +449,7 @@ open_line(dir, del_spaces, old_indent)
 				 * with the line containing the start of
 				 * the comment
 				 */
-				curwin->w_cursor.col = p - ptr;
+				curwin->w_cursor.col = (colnr_T)(p - ptr);
 				if ((pos = findmatch(NULL, NUL)) != NULL)
 				{
 				    curwin->w_cursor.lnum = pos->lnum;
@@ -482,7 +488,7 @@ open_line(dir, del_spaces, old_indent)
 		     */
 		    if (*p == ')')
 		    {
-			curwin->w_cursor.col = p - ptr;
+			curwin->w_cursor.col = (colnr_T)(p - ptr);
 			if ((pos = findmatch(NULL, '(')) != NULL)
 			{
 			    curwin->w_cursor.lnum = pos->lnum;
@@ -558,7 +564,10 @@ open_line(dir, del_spaces, old_indent)
      * This may then be inserted in front of the new line.
      */
     end_comment_pending = NUL;
-    lead_len = get_leader_len(saved_line, &lead_flags, dir == BACKWARD);
+    if (fo_do_comments)
+	lead_len = get_leader_len(saved_line, &lead_flags, dir == BACKWARD);
+    else
+	lead_len = 0;
     if (lead_len > 0)
     {
 	char_u	*lead_repl = NULL;	    /* replaces comment leader */
@@ -647,7 +656,7 @@ open_line(dir, del_spaces, old_indent)
 		    if (current_flag == COM_START)
 		    {
 			lead_repl = lead_middle;
-			lead_repl_len = STRLEN(lead_middle);
+			lead_repl_len = (int)STRLEN(lead_middle);
 		    }
 
 		    /*
@@ -688,7 +697,7 @@ open_line(dir, del_spaces, old_indent)
 		for (lead_repl = p; lead_repl > curbuf->b_p_com
 					 && lead_repl[-1] != ':'; --lead_repl)
 		    ;
-		lead_repl_len = p - lead_repl;
+		lead_repl_len = (int)(p - lead_repl);
 
 		/* We can probably always add an extra space when doing "O" on
 		 * the comment-end */
@@ -882,7 +891,7 @@ open_line(dir, del_spaces, old_indent)
 							   ))
 	    {
 		old_cursor = curwin->w_cursor;
-		curwin->w_cursor.col = comment_end - saved_line;
+		curwin->w_cursor.col = (colnr_T)(comment_end - saved_line);
 		if ((pos = findmatch(NULL, NUL)) != NULL)
 		{
 		    curwin->w_cursor.lnum = pos->lnum;
@@ -1060,7 +1069,7 @@ open_line(dir, del_spaces, old_indent)
     {
 	fixthisline(get_lisp_indent);
 	p = ml_get_curline();
-	ai_col = skipwhite(p) - p;
+	ai_col = (colnr_T)(skipwhite(p) - p);
     }
 #endif
 #ifdef FEAT_CINDENT
@@ -1082,7 +1091,7 @@ open_line(dir, del_spaces, old_indent)
     {
 	do_c_expr_indent();
 	p = ml_get_curline();
-	ai_col = skipwhite(p) - p;
+	ai_col = (colnr_T)(skipwhite(p) - p);
     }
 #endif
 #if defined(FEAT_LISP) || defined(FEAT_CINDENT)
@@ -1144,9 +1153,6 @@ get_leader_len(line, flags, backward)
     char_u	part_buf[COM_MAX_LEN];	/* buffer for one option part */
     char_u	*string;		/* pointer to comment string */
     char_u	*list;
-
-    if (!fo_do_comments)	    /* don't format comments at all */
-	return 0;
 
     i = 0;
     while (vim_iswhite(line[i]))    /* leading white space is ignored */
@@ -1535,14 +1541,14 @@ ins_char_bytes(buf, newlen)
 
 #ifdef FEAT_VIRTUALEDIT
     /* Break tabs if needed. */
-    if (virtual_active() && 
-	    (chartabsize(ml_get_cursor(), curwin->w_cursor.col) > 1))
+    if (virtual_active()
+	    && (chartabsize(ml_get_cursor(), curwin->w_cursor.col) > 1))
 	coladvance_force(getviscol());
 #endif
 
     col = curwin->w_cursor.col;
     oldp = ml_get(lnum);
-    linelen = STRLEN(oldp) + 1;
+    linelen = (int)STRLEN(oldp) + 1;
 
     if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG) && oldp[col] != NUL)
     {
@@ -1736,7 +1742,7 @@ ins_str(s)
     char_u	*s;
 {
     char_u	*oldp, *newp;
-    int		newlen = STRLEN(s);
+    int		newlen = (int)STRLEN(s);
     int		oldlen;
     colnr_T	col;
     linenr_T	lnum = curwin->w_cursor.lnum;
@@ -1748,7 +1754,7 @@ ins_str(s)
 
     col = curwin->w_cursor.col;
     oldp = ml_get(lnum);
-    oldlen = STRLEN(oldp);
+    oldlen = (int)STRLEN(oldp);
 
     newp = alloc_check((unsigned)(oldlen + newlen + 1));
     if (newp == NULL)
@@ -1785,21 +1791,21 @@ del_char(fixpos)
 	if (p == NULL || p[0] == NUL)
 	    return FALSE;
 
-	return del_chars((long)(*mb_ptr2len_check)(p), fixpos);
+	return del_bytes((long)(*mb_ptr2len_check)(p), fixpos);
     }
 #endif
-    return del_chars(1L, fixpos);
+    return del_bytes(1L, fixpos);
 }
 
 /*
- * Delete 'count' characters under the cursor.
+ * Delete 'count' bytes under the cursor.
  * If 'fixpos' is TRUE, don't leave the cursor on the NUL after the line.
  * Caller must have prepared for undo.
  *
  * return FAIL for failure, OK otherwise
  */
     int
-del_chars(count, fixpos)
+del_bytes(count, fixpos)
     long	count;
     int		fixpos;
 {
@@ -1815,7 +1821,7 @@ del_chars(count, fixpos)
 #endif
 
     oldp = ml_get(lnum);
-    oldlen = STRLEN(oldp);
+    oldlen = (int)STRLEN(oldp);
 
     /*
      * Can't do anything when the cursor is on the NUL after the line.
@@ -1836,18 +1842,20 @@ del_chars(count, fixpos)
 	/* don't try anything if trying to del more than one 'char' */
 	if ((count <= (p0len + p1len + p2len)) && p1 != 0)
 	{
+	    /* We are here because there are combining characters; either
+	     * p1, p2 or both.  We need to remove just that character, and
+	     * leave the cursor where it was. */
+
+	    /* since p1 is always valid, adjust for it */
+	    col += p0len;
+	    count = p1len;
 	    if (p2 != 0)
 	    {
-		col += p0len + p1len;
-		count -= p2len;
+		/* p2 is valid, so remove it instead of p1 */
+		col += p1len;
+		count = p2len;
 	    }
-	    else /* only p1 */
-	    {
-		col += p0len;
-		count -= p1len;
-	    }
-	    if (col > 0)
-		fixpos = 0;
+	    fixpos = 0;
 	}
     }
 #endif
@@ -1863,11 +1871,7 @@ del_chars(count, fixpos)
 	 * fixpos is TRUE, we don't want to end up positioned at the NUL,
 	 * unless we are in virtual mode.
 	 */
-#ifdef FEAT_VIRTUALEDIT
 	if (col > 0 && fixpos && !virtual_active())
-#else
-	if (col > 0 && fixpos)
-#endif
 	{
 	    --curwin->w_cursor.col;
 #ifdef FEAT_MBYTE
@@ -2746,7 +2750,7 @@ init_homedir()
     if (var != NULL && *var == NUL)	/* empty is same as not set */
 	var = NULL;
 
-#ifdef WIN32
+#ifdef WIN3264
     /*
      * Typically, $HOME is not defined on Windows, unless the user has
      * specifically defined it for Vim's sake.  However, on Windows NT
@@ -2977,7 +2981,7 @@ expand_env(src, dst, dstlen)
 		    && (STRLEN(var) + STRLEN(tail) + 1 < (unsigned)dstlen))
 	    {
 		STRCPY(dst, var);
-		dstlen -= STRLEN(var);
+		dstlen -= (int)STRLEN(var);
 		dst += STRLEN(var);
 		/* if var[] ends in a path separator and tail[] starts
 		 * with it, skip a character */
@@ -3168,7 +3172,7 @@ vim_getenv(name, mustfree)
 	    didset_vimruntime = TRUE;
 #ifdef FEAT_GETTEXT
 	    {
-		char_u	*buf = alloc(STRLEN(p) + 6);
+		char_u	*buf = alloc((unsigned int)STRLEN(p) + 6);
 
 		if (buf != NULL)
 		{
@@ -3222,7 +3226,7 @@ remove_tail(p, pend, name)
     char_u	*pend;
     char_u	*name;
 {
-    int		len = STRLEN(name) + 1;
+    int		len = (int)STRLEN(name) + 1;
     char_u	*newend = pend - len;
 
     if (newend >= p
@@ -3433,7 +3437,7 @@ home_replace_save(buf, src)
 
     len = 3;			/* space for "~/" and trailing NUL */
     if (src != NULL)		/* just in case */
-	len += STRLEN(src);
+	len += (unsigned)STRLEN(src);
     dst = alloc(len);
     if (dst != NULL)
 	home_replace(buf, src, dst, len, TRUE);
@@ -4103,7 +4107,7 @@ get_indent_nolabel(lnum)		/* XXX */
     if (p == NULL)
 	return 0;
 
-    fp.col = p - l;
+    fp.col = (colnr_T)(p - l);
     fp.lnum = lnum;
     getvcol(curwin, &fp, &col, NULL, NULL);
     return (int)col;
@@ -4301,7 +4305,7 @@ cin_ends_in(s, find)
 {
     char_u	*p = s;
     char_u	*r;
-    int		len = STRLEN(find);
+    int		len = (int)STRLEN(find);
 
     while (*p != NUL)
     {
@@ -4425,7 +4429,7 @@ find_last_paren(l)
 
     for (i = 0; l[i]; i++)
     {
-	i = skip_string(l + i) - l;	    /* ignore parens in quotes */
+	i = (int)(skip_string(l + i) - l);    /* ignore parens in quotes */
 	if (l[i] == ')')
 	{
 	    curwin->w_cursor.col = i;
@@ -4699,9 +4703,6 @@ get_c_indent()
 	int	start_off = 0;
 	int	done = FALSE;
 
-	/* To be sure later on, we set NUL. */
-	lead_middle[0] = NUL;
-
 	/* find how indented the line beginning the comment is */
 	getvcol(curwin, trypos, &col, NULL, NULL);
 	amount = col;
@@ -4730,7 +4731,7 @@ get_c_indent()
 	    (void)copy_option_part(&p, lead_end, COM_MAX_LEN, ",");
 	    if (what == COM_START)
 	    {
-		lead_start_len = STRLEN(lead_end);
+		lead_start_len = (int)STRLEN(lead_end);
 		start_off = off;
 		start_align = align;
 	    }
@@ -4748,7 +4749,7 @@ get_c_indent()
 		    if (start_off != 0)
 			amount += start_off;
 		    else if (start_align == COM_RIGHT)
-			amount += lead_start_len - STRLEN(lead_middle);
+			amount += lead_start_len - (int)STRLEN(lead_middle);
 		    done = TRUE;
 		    break;
 		}
@@ -4763,7 +4764,7 @@ get_c_indent()
 		    if (off != 0)
 			amount += off;
 		    else if (align == COM_RIGHT)
-			amount += lead_start_len - STRLEN(lead_middle);
+			amount += lead_start_len - (int)STRLEN(lead_middle);
 		    done = TRUE;
 		    break;
 		}
@@ -4772,24 +4773,10 @@ get_c_indent()
 
 	/* If our line starts with an asterisk, line up with the
 	 * asterisk in the comment opener; otherwise, line up
-	 * with the first character of the comment text. Unless
-	 * we have a middle string defined. Then use that offset.
+	 * with the first character of the comment text.
 	 */
 	if (done)
 	    ;
-	else if (lead_middle[0] != NUL)
-	{
-	    /* If we indent a non-empty line, which does not start
-	     * with our middle string, we have to indent a little
-	     * bit more. */
-	    if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) != 0
-		    && theline[0] != NUL)
-		amount += ind_in_comment;
-	    /* Else we may be in INSERT-state. Then increase indent
-	     * by the start offset. */
-	    else
-		amount += start_off;
-	}
 	else if (theline[0] == '*')
 	    amount += 1;
 	else
@@ -4814,32 +4801,12 @@ get_c_indent()
 		start = ml_get(trypos->lnum);
 		look = start + trypos->col + 2;	    /* skip / and * */
 		if (*look != NUL)		    /* if something after it */
-		    trypos->col = skipwhite(look) - start;
+		    trypos->col = (colnr_T)(skipwhite(look) - start);
 		getvcol(curwin, trypos, &col, NULL, NULL);
 		amount = col;
 		if (*look == NUL)
 		    amount += ind_in_comment;
 	    }
-	}
-
-	/*
-	 * If we have a middle string, the current line is empty and
-	 * we are in INSERT-state, we want to insert the middle string.
-	 */
-	if (lead_middle[0] != NUL && theline[0] == NUL && (State & INSERT))
-	{
-	    n = 0;
-	    while (lead_middle[n] != NUL && n < (int)STRLEN(lead_middle))
-	    {
-		ins_char(lead_middle[n]);
-		n++;
-	    }
-	    /* Without this, we would exceed the memory of the linepointer
-	     * and would find ourselves in the data-nirwana. */
-	    ins_char(' ');
-
-	    /* Update Cursor-position, since inserted some text. */
-	    cur_curpos.col += STRLEN(lead_middle) + 1;
 	}
     }
 
@@ -5945,7 +5912,7 @@ lisp_match(p)
 
     for (i = 0; i < sizeof(tab) / sizeof(char *); ++i)
     {
-	len = STRLEN(tab[i]);
+	len = (int)STRLEN(tab[i]);
 	if (STRNCMP(tab[i], p, len) == 0 && p[len] == ' ')
 	    return TRUE;
     }
@@ -6145,7 +6112,7 @@ prepare_to_exit()
 	 * screen (if there are two screens).
 	 */
 	settmode(TMODE_COOK);
-#ifdef WIN32
+#ifdef WIN3264
 	if (can_end_termcap_mode(FALSE) == TRUE)
 #endif
 	    stoptermcap();
@@ -6334,7 +6301,7 @@ match_suffix(fname)
 #define MAXSUFLEN 30	    /* maximum length of a file suffix */
     char_u	suf_buf[MAXSUFLEN];
 
-    fnamelen = STRLEN(fname);
+    fnamelen = (int)STRLEN(fname);
     setsuflen = 0;
     for (setsuf = p_su; *setsuf; )
     {
@@ -6355,12 +6322,12 @@ static int vim_backtick __ARGS((char_u *p));
 static int expand_backtick __ARGS((garray_T *gap, char_u *pat, int flags));
 # endif
 
-# if defined(MSDOS) || defined(FEAT_GUI_W16) || defined(WIN32)
+# if defined(MSDOS) || defined(FEAT_GUI_W16) || defined(WIN3264)
 /*
  * File name expansion code for MS-DOS, Win16 and Win32.  It's here because
  * it's shared between these systems.
  */
-#ifdef WIN32
+#ifdef WIN3264
 # include <windows.h>
 #endif
 
@@ -6381,7 +6348,7 @@ pstrcmp(const void *a, const void *b)
     return (pathcmp(*(char **)a, *(char **)b));
 }
 
-# ifndef WIN32
+# ifndef WIN3264
     static void
 namelowcpy(
     char_u *d,
@@ -6417,7 +6384,7 @@ dos_expandpath(
     char_u		*p, *s, *e;
     int			start_len = gap->ga_len;
     int			ok;
-#ifdef WIN32
+#ifdef WIN3264
     WIN32_FIND_DATA	fb;
     HANDLE		hFind;
 #else
@@ -6431,7 +6398,7 @@ dos_expandpath(
     char		saved[4];
 
     /* make room for file name */
-    buf = alloc(STRLEN(path) + BASENAMELEN + 5);
+    buf = alloc((unsigned int)STRLEN(path) + BASENAMELEN + 5);
     if (buf == NULL)
 	return 0;
 
@@ -6453,7 +6420,7 @@ dos_expandpath(
 	    else
 		s = p + 1;
 	}
-	else if (*path == '*' || *path == '?')
+	else if (*path == '*' || *path == '?' || *path == '[')
 	    e = p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -6493,7 +6460,7 @@ dos_expandpath(
     /* Scan all files in the directory with "dir/ *.*" */
     mch_memmove(saved, s, 4);
     STRCPY(s, "*.*");
-#ifdef WIN32
+#ifdef WIN3264
     hFind = FindFirstFile(buf, &fb);
     ok = (hFind != INVALID_HANDLE_VALUE);
 #else
@@ -6505,7 +6472,7 @@ dos_expandpath(
 
     while (ok)
     {
-#ifdef WIN32
+#ifdef WIN3264
 	p = (char_u *)fb.cFileName;
 #else
 	p = (char_u *)fb.ff_name;
@@ -6514,12 +6481,12 @@ dos_expandpath(
 	if ((p[0] != '.' || starts_with_dot)
 		&& vim_regexec(&regmatch, p, (colnr_T)0))
 	{
-#ifdef WIN32
+#ifdef WIN3264
 	    STRCPY(s, p);
 #else
 	    namelowcpy(s, p);
 #endif
-	    len = STRLEN(buf);
+	    len = (int)STRLEN(buf);
 	    STRCPY(buf + len, path);
 	    if (mch_has_wildcard(path))
 	    {
@@ -6537,17 +6504,18 @@ dos_expandpath(
 		    addfile(gap, buf, flags);
 	    }
 	}
-#ifdef WIN32
+#ifdef WIN3264
 	ok = FindNextFile(hFind, &fb);
 #else
 	ok = (findnext(&fb) == 0);
 #endif
     }
 
-#ifdef WIN32
+#ifdef WIN3264
     FindClose(hFind);
 #endif
     vim_free(buf);
+    vim_free(regmatch.regprog);
 
     matches = gap->ga_len - start_len;
     if (matches)
@@ -6888,7 +6856,7 @@ get_cmd_output(cmd, flags)
 
     buffer = alloc(len + 1);
     if (buffer != NULL)
-	i = fread((char *)buffer, (size_t)1, (size_t)len, fd);
+	i = (int)fread((char *)buffer, (size_t)1, (size_t)len, fd);
     fclose(fd);
     mch_remove(tempname);
     if (buffer == NULL)

@@ -4,6 +4,7 @@ int getviscol __ARGS((void));
 int getviscol2 __ARGS((colnr_T col, colnr_T coladd));
 int coladvance_force __ARGS((colnr_T wcol));
 int coladvance __ARGS((colnr_T wcol));
+int getvpos __ARGS((pos_T *pos, colnr_T wcol));
 int inc_cursor __ARGS((void));
 int inc __ARGS((pos_T *lp));
 int incl __ARGS((pos_T *lp));

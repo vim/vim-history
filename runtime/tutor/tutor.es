@@ -593,7 +593,7 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 	  :!dir - muestra el contenido de un directorio.
 	  :!delete NOMBRE_DE_FICHERO  -  borra el fichero NOMBRE_DE FICHERO.
 
-  2.  :#,# NOMBRE_DE _FICHERO  guarda desde las líneas # hasta la # en el
+  2.  :#,#w NOMBRE_DE _FICHERO  guarda desde las líneas # hasta la # en el
      fichero NOMBRE_DE_FICHERO.
 
   3.  :r NOMBRE_DE _FICHERO  recupera el fichero del disco NOMBRE_DE FICHERO

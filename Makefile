@@ -70,13 +70,13 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ai
+MINOR = 0aj
 
 # CHECKLIST for creating a new version:
 #
 # - Update Vim version number.  For a test version in: src/version.h, Contents,
-#   MAJOR/MINOR above, VIMRTDIR in src/Makefile, README*.txt,
-#   runtime/doc/*.txt.  For a minor/major version: GvimExt/GvimExt.reg,
+#   MAJOR/MINOR above, VIMRTDIR in src/Makefile, README*.txt, runtime/doc/*.txt
+#   and nsis/gvim.nsi.  For a minor/major version: GvimExt/GvimExt.reg,
 #   src/vim16.def.
 # - Correct included_patches[] in src/version.c.
 # - Compile Vim with GTK, Perl, Python, TCL, Ruby, Cscope and "huge" features.
@@ -483,7 +483,6 @@ SRC_VMS =	\
 		src/os_vms.opt \
 		src/os_vms_conf.h \
 		src/os_vms_mms.c \
-		src/os_vms_osdef.h \
 		src/proto/os_vms.pro \
 		src/testdir/Make_vms.mms \
 		src/testdir/vms.vim \
@@ -599,6 +598,8 @@ RT_ALL =	\
 		runtime/indoff.vim \
 		runtime/indent/*.vim \
 		runtime/indent/README.txt \
+		runtime/compiler/*.vim \
+		runtime/compiler/README.txt \
 		runtime/ftplugin/*.vim \
 		runtime/ftplugin/README.txt \
 		runtime/syntax/*.vim \

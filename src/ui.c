@@ -282,7 +282,7 @@ ui_set_shellsize()
 #ifdef FEAT_GUI
     if (gui.in_use)
 	gui_set_shellsize(
-# ifdef WIN32
+# ifdef WIN3264
 		TRUE
 # else
 		FALSE
@@ -2664,7 +2664,7 @@ get_fpos_of_mouse(mpos)
 
 #endif /* FEAT_MOUSE */
 
-#if defined(FEAT_GUI) || defined(WIN32) || defined(PROTO)
+#if defined(FEAT_GUI) || defined(WIN3264) || defined(PROTO)
 /*
  * Called when focus changed.  Used for the GUI or for systems where this can
  * be done in the console (Win32).

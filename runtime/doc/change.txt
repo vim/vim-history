@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ai.  Last change: 2001 Jun 03
+*change.txt*    For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -484,9 +484,8 @@ not recognize a comment (starting with '"') after the ":!" command.
 :[range]s[ubstitute]/{pattern}/{string}/[&][c][e][g][p][r][i][I] [count]
 			For each line in [range] replace a match of {pattern}
 			with {string}.
-			If {string} starts with "\=" it is evaluated as an
-			expression.  The |submatch()| function can be used to
-			access sub-matches of the {pattern}.
+			{string} can be a literal string, or something
+			special; see |sub-replace-special|.
 			When [range] and [count] are omitted, replace in the
 			current line only.
 			When [count] is given, replace in [count] lines,
@@ -1001,7 +1000,8 @@ The next three commands always work on whole lines.
 			compile time.
 
 							*:le* *:left*
-:[range]le[ft] [indent]	Left-align lines in [range].  Sets the indent in the
+:[range]le[ft] [indent]
+			Left-align lines in [range].  Sets the indent in the
 			lines to [indent] (default 0).  {not in Vi}
 			Not available when |+ex_extra| feature was disabled at
 			compile time.
@@ -1171,11 +1171,11 @@ readability.
 
 letter	 meaning when present in 'formatoptions'    ~
 
-t	Auto-wrap text using textwidth
+t	Auto-wrap text using textwidth (does not apply to comments)
 c	Auto-wrap comments using textwidth, inserting the current comment
 	leader automatically.
 r	Automatically insert the current comment leader after hitting
-	<Enter> in insert mode.
+	<Enter> in Insert mode.
 o	Automatically insert the current comment leader after hitting 'o' or
 	'O' in Normal mode.
 q	Allow formatting of comments with "gq".

@@ -1,11 +1,11 @@
 /* XPM */
 static char * tb_save_all_xpm[] = {
 "18 18 5 1",
-" 	c None",
-".	c #000000",
+" 	c None    s background",
+".	c #000000 s foreground",
 "+	c #BBBBBB",
 "@	c #FFFFFF",
-"#	c #888888",
+"#	c #888888 s bottomShadow",
 "..............    ",
 ".+.@@@@@@@@.@.    ",
 ".+.@@@@@@@@...#   ",

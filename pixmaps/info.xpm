@@ -1,10 +1,10 @@
 /* XPM */
 static char * info_xpm[] = {
 "34 34 4 1",
-" 	c None",
-".	c #888888",
+" 	c None    s background",
+".	c #888888 s bottomShadow",
 "+	c #FFFFFF",
-"@	c #000000",
+"@	c #000000 s foreground",
 "                                  ",
 "            ........              ",
 "         ...++++++++...           ",

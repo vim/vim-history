@@ -179,7 +179,7 @@ get_buffcont(buffer, dozero)
 
 /* compute the total length of the string */
     for (bp = buffer->bh_first.b_next; bp != NULL; bp = bp->b_next)
-	count += STRLEN(bp->b_str);
+	count += (long_u)STRLEN(bp->b_str);
 
     if ((count || dozero) && (p = lalloc(count + 1, TRUE)) != NULL)
     {
@@ -251,7 +251,7 @@ add_buff(buf, s, slen)
     long_u	    len;
 
     if (slen < 0)
-	slen = STRLEN(s);
+	slen = (long)STRLEN(s);
     if (slen == 0)				/* don't add empty strings */
 	return;
 
@@ -272,7 +272,7 @@ add_buff(buf, s, slen)
 
     if (buf->bh_space >= (int)slen)
     {
-	len = STRLEN(buf->bh_curr->b_str);
+	len = (long_u)STRLEN(buf->bh_curr->b_str);
 	STRNCPY(buf->bh_curr->b_str + len, s, slen);
 	buf->bh_curr->b_str[len + slen] = NUL;
 	buf->bh_space -= slen;
@@ -908,7 +908,7 @@ ins_typebuf(str, noremap, offset, nottyped)
 
     init_typebuf();
 
-    addlen = STRLEN(str);
+    addlen = (int)STRLEN(str);
     /*
      * Easy case: there is room in front of typebuf.tb_buf[typebuf.tb_off]
      */
@@ -1616,7 +1616,7 @@ vgetorpeek(advance)
      * case we must return NUL, to indicate no character is available.
      * 2. A GUI callback function writes to the screen, causing a
      * wait_return().
-     * Using ":normal" can also do this, but is saves the typeahead buffer,
+     * Using ":normal" can also do this, but it saves the typeahead buffer,
      * thus it should be OK.  But don't get a key from the user then.
      */
     if (vgetc_busy
@@ -2212,6 +2212,10 @@ vgetorpeek(advance)
 #ifdef FEAT_EX_EXTRA
 		if (ex_normal_busy > 0)
 		{
+# ifdef FEAT_CMDWIN
+		    static int tc = 0;
+# endif
+
 		    /* No typeahead left and inside ":normal".  Must return
 		     * something to avoid getting stuck.  When an incomplete
 		     * mapping is present, behave like it timed out. */
@@ -2221,11 +2225,24 @@ vgetorpeek(advance)
 			continue;
 		    }
 		    /* When 'insertmode' is set, ESC just beeps in Insert
-		     * mode.  Use CTRL-L to make edit() return. */
+		     * mode.  Use CTRL-L to make edit() return.
+		     * For the command line only CTRL-C always breaks it.
+		     * For the cmdline window: Alternate between ESC and
+		     * CTRL-C: ESC for most situations and CTRL-C to close the
+		     * cmdline window. */
 		    if (p_im && (State & INSERT))
 			c = Ctrl_L;
+		    else if ((State & CMDLINE)
+# ifdef FEAT_CMDWIN
+			    || (cmdwin_type > 0 && tc == ESC)
+# endif
+			    )
+			c = Ctrl_C;
 		    else
 			c = ESC;
+# ifdef FEAT_CMDWIN
+		    tc = c;
+# endif
 		    break;
 		}
 #endif
@@ -2738,7 +2755,7 @@ do_map(maptype, arg, mode, abbrev)
      */
     if (haskey)
     {
-	len = STRLEN(keys);
+	len = (int)STRLEN(keys);
 	if (len > MAXMAPLEN)		/* maximum length of MAXMAPLEN chars */
 	{
 	    retval = 1;
@@ -2936,7 +2953,7 @@ do_map(maptype, arg, mode, abbrev)
 		{
 		    if (round)	    /* second round: Try unmap "rhs" string */
 		    {
-			n = STRLEN(mp->m_str);
+			n = (int)STRLEN(mp->m_str);
 			p = mp->m_str;
 		    }
 		    else
@@ -3073,7 +3090,7 @@ do_map(maptype, arg, mode, abbrev)
 	retval = 4;	/* no mem */
 	goto theend;
     }
-    mp->m_keylen = STRLEN(mp->m_keys);
+    mp->m_keylen = (int)STRLEN(mp->m_keys);
     mp->m_noremap = noremap;
     mp->m_mode = mode;
 
@@ -3651,7 +3668,7 @@ check_abbr(c, ptr, col, mincol)
 		break;
 	    }
 	}
-	len = p - ptr;
+	len = (int)(p - ptr);
     }
     else
 #endif
@@ -3733,7 +3750,7 @@ check_abbr(c, ptr, col, mincol)
 					    /* insert the to string */
 	    (void)ins_typebuf(mp->m_str, mp->m_noremap, 0, TRUE);
 					    /* no abbrev. for these chars */
-	    typebuf.tb_no_abbr_cnt += STRLEN(mp->m_str) + j + 1;
+	    typebuf.tb_no_abbr_cnt += (int)STRLEN(mp->m_str) + j + 1;
 
 	    tb[0] = Ctrl_H;
 	    tb[1] = NUL;
@@ -4133,7 +4150,7 @@ check_map(keys, mode, exact)
 
     validate_maphash();
 
-    len = STRLEN(keys);
+    len = (int)STRLEN(keys);
 #ifdef FEAT_LOCALMAP
     for (local = 1; local >= 0; --local)
 #endif

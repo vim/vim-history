@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
+*quickfix.txt*  For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -637,5 +637,20 @@ Sometimes, when the mark has been deleted for some reason, the message "line
 changed" is shown to warn you that the error location may not be correct.  If
 you quit Vim and start again the marks are lost and the error locations may
 not be correct anymore.
+
+
+SELECTING A COMPILER
+
+							*:comp* *:compiler*
+:compiler {name}		Set options to work with comipler {name}.
+				{not available when compiled without the
+				|+eval| feature}
+
+
+What this command actually does is:
+- delete the "did_load_compiler" variable
+- execute ":runtime! compiler/{name}.vim"
+
+For writing a compiler plugin, see |write-compiler-plugin|.
 
  vim:tw=78:

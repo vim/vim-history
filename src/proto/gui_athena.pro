@@ -11,7 +11,7 @@ void gui_mch_new_menu_font __ARGS((void));
 void gui_mch_add_menu_item __ARGS((vimmenu_T *menu, int idx));
 void gui_mch_show_toolbar __ARGS((int showit));
 int gui_mch_compute_toolbar_height __ARGS((void));
-void gui_mch_get_toolbar_colors __ARGS((Pixel *bgp, Pixel *fgp));
+void gui_mch_get_toolbar_colors __ARGS((Pixel *bgp, Pixel *fgp, Pixel *bsp, Pixel *tsp, Pixel *hsp));
 void gui_mch_toggle_tearoffs __ARGS((int enable));
 void gui_mch_new_menu_colors __ARGS((void));
 void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));

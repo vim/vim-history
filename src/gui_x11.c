@@ -466,6 +466,16 @@ static XtResource vim_resources[] =
 	XtRString,
 	"fixed"
     },
+#elif defined(FEAT_GUI_ATHENA)
+    {
+	XtNballoonEvalFontList,
+	XtCFont,
+	XtRFontStruct,
+	sizeof(XFontStruct *),
+	XtOffsetOf(gui_T, balloonEval_fontList),
+	XtRString,
+	"fixed"
+    },
 #endif
 #endif /* FEAT_BEVAL */
 };
@@ -1175,14 +1185,6 @@ gui_mch_init()
 #if 0
     /* Uncomment this to enable synchronous mode for debugging */
     XSynchronize(gui.dpy, True);
-#endif
-
-#if 0 /* not needed? */
-    /*
-     * So converters work.
-     */
-    XtInitializeWidgetClass(applicationShellWidgetClass);
-    XtInitializeWidgetClass(topLevelShellWidgetClass);
 #endif
 
     vimShell = XtVaAppCreateShell(VIM_NAME, VIM_CLASS,
@@ -1945,8 +1947,29 @@ gui_mch_get_color(reqname)
     /* Do this twice if the name isn't recognized. */
     while (name != NULL)
     {
-	if (XParseColor(gui.dpy, colormap, (char *)name, &color) != 0
-		&& (XAllocColor(gui.dpy, colormap, &color) != 0
+	i = XParseColor(gui.dpy, colormap, (char *)name, &color);
+
+#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+	if (i == 0)
+	{
+	    char *old;
+
+	    /* The X11 system is trying to resolve named colors only by names
+	     * corresponding to the current locale language.  But Vim scripts
+	     * usually contain the English color names.  Therefore we have to
+	     * try a second time here with the native "C" locale set. */
+	    old = setlocale(LC_MESSAGES, NULL);
+	    if (old != NULL && STRCMP(old, "C") != 0)
+	    {
+		old = (char *)vim_strsave((char_u *)old);
+		setlocale(LC_MESSAGES, "C");
+		i = XParseColor(gui.dpy, colormap, (char *)name, &color);
+		setlocale(LC_MESSAGES, old);
+		vim_free(old);
+	    }
+	}
+#endif
+	if (i != 0 && (XAllocColor(gui.dpy, colormap, &color) != 0
 		    || find_closest_color(colormap, &color) == OK))
 	    return (guicolor_T)color.pixel;
 
@@ -3017,15 +3040,18 @@ gui_mch_register_sign(signfile)
 	sign = (XImage *)alloc(sizeof(XImage));
 	if (sign != NULL)
 	{
+	    XpmColorSymbol color[5] =
+	    {
+		{"background", NULL, 0},
+		{"foreground", NULL, 0},
+		{"bottomShadow", NULL, 0},
+		{"topShadow", NULL, 0},
+		{"highlight", NULL, 0}
+	    };
 	    attrs.valuemask = XpmColorSymbols;
 	    attrs.numsymbols = 2;
-	    attrs.colorsymbols = (XpmColorSymbol *)
-			     alloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
-	    attrs.colorsymbols[0].name = "BgColor";
-	    attrs.colorsymbols[0].value = NULL;
+	    attrs.colorsymbols = color;
 	    attrs.colorsymbols[0].pixel = gui.back_pixel;
-	    attrs.colorsymbols[1].name = "FgColor";
-	    attrs.colorsymbols[1].value = NULL;
 	    attrs.colorsymbols[1].pixel = gui.norm_pixel;
 	    status = XpmReadFileToImage(gui.dpy, (char *)signfile,
 							 &sign, NULL, &attrs);
@@ -3183,108 +3209,79 @@ mch_set_mouse_shape(shape)
 /*
  * Those are the pixmaps used for the default buttons.
  */
-struct NameToPixmap
+static char **(built_in_pixmaps[]) =
 {
-    char *name;
-    char **xpm;
-};
-
-static const struct NameToPixmap built_in_pixmaps[] =
-{
-    {"New", tb_new_xpm},
-    {"Open", tb_open_xpm},
-    {"Save", tb_save_xpm},
-    {"Undo", tb_undo_xpm},
-    {"Redo", tb_redo_xpm},
-    {"Cut", tb_cut_xpm},
-    {"Copy", tb_copy_xpm},
-    {"Paste", tb_paste_xpm},
-    {"Print", tb_print_xpm},
-    {"Help", tb_help_xpm},
-    {"Find", tb_find_xpm},
-    {"SaveAll",	tb_save_all_xpm},
-    {"SaveSesn", tb_save_session_xpm},
-    {"NewSesn", tb_new_session_xpm},
-    {"LoadSesn", tb_load_session_xpm},
-    {"RunScript", tb_macro_xpm},
-    {"Replace",	tb_replace_xpm},
-    {"WinClose", tb_close_xpm},
-    {"WinMax",	tb_maximize_xpm},
-    {"WinMin", tb_minimize_xpm},
-    {"WinSplit", tb_split_xpm},
-    {"Shell", tb_shell_xpm},
-    {"FindPrev", tb_find_prev_xpm},
-    {"FindNext", tb_find_next_xpm},
-    {"FindHelp", tb_find_help_xpm},
-    {"Make", tb_make_xpm},
-    {"TagJump", tb_jump_xpm},
-    {"RunCtags", tb_ctags_xpm},
-    {"Exit", tb_exit_xpm},
-    {"WinVSplit", tb_vsplit_xpm},
-    {"WinMaxWidth", tb_maxwidth_xpm},
-    {"WinMinWidth", tb_minwidth_xpm},
-    { NULL, NULL} /* end tag */
+    tb_new_xpm,
+    tb_open_xpm,
+    tb_save_xpm,
+    tb_undo_xpm,
+    tb_redo_xpm,
+    tb_cut_xpm,
+    tb_copy_xpm,
+    tb_paste_xpm,
+    tb_print_xpm,
+    tb_help_xpm,
+    tb_find_xpm,
+    tb_save_all_xpm,
+    tb_save_session_xpm,
+    tb_new_session_xpm,
+    tb_load_session_xpm,
+    tb_macro_xpm,
+    tb_replace_xpm,
+    tb_close_xpm,
+    tb_maximize_xpm,
+    tb_minimize_xpm,
+    tb_split_xpm,
+    tb_shell_xpm,
+    tb_find_prev_xpm,
+    tb_find_next_xpm,
+    tb_find_help_xpm,
+    tb_make_xpm,
+    tb_jump_xpm,
+    tb_ctags_xpm,
+    tb_vsplit_xpm,
+    tb_maxwidth_xpm,
+    tb_minwidth_xpm,
+    tb_exit_xpm
 };
 
 static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
 
 /*
- * Allocated a pixmap for "name".  Return in "sen" and "insen".  "insen" can
- * be NULL.
+ * Allocated a pixmap for toolbar menu "menu".
+ * Return in "sen" and "insen".  "insen" can be NULL.
  */
     void
-get_pixmap(name, file, sen, insen)
-    char_u	*name;
-    char_u	*file;
+get_toolbar_pixmap(menu, sen, insen)
+    vimmenu_T	*menu;
     Pixmap	*sen;
     Pixmap	*insen;
 {
-    int		builtin_num;		/* index into builtin table */
-    int		num_pixmaps;		/* entries in builtin pixmap table */
     char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
     char	**xpm = NULL;		/* xpm array */
-    int		i;
 
     buf[0] = NUL;			/* start with NULL path */
 
-    if (file != NULL)
+    if (menu->iconfile != NULL)
     {
 	/* Use the file argument: first as an absolute path (with extension),
 	 * then as a file name (without extension). */
-	createXpmImages(file, NULL, sen, insen);
+	createXpmImages(menu->iconfile, NULL, sen, insen);
 	if (*sen == (Pixmap)0
-		&& gui_find_bitmap(name, buf, "xpm") == OK
+		&& gui_find_bitmap(menu->name, buf, "xpm") == OK
 		&& buf[0] != NUL)
 	    createXpmImages(buf, NULL, sen, insen);
 	if (*sen != (Pixmap)0)
 	    return;
     }
 
-    num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
-    if (STRNCMP(name, "BuiltIn", (size_t)7) == 0)
+    if (menu->icon_builtin || gui_find_bitmap(menu->name, buf, "xpm") == FAIL)
     {
-	if (isdigit((int)name[7]) && isdigit((int)name[8]))
-	{
-	    builtin_num = atoi((char *)name + 7);
-	    if (builtin_num >= 0 && builtin_num < num_pixmaps)
-		xpm = built_in_pixmaps[builtin_num].xpm;
-	    else
-		xpm = tb_blank_xpm;
-	}
-    }
-    else
-    {
-	if (gui_find_bitmap(name, buf, "xpm") == FAIL)
-	{
-	    for (i = 0; i < num_pixmaps; i++)
-	    {
-		if (STRCMP(name, built_in_pixmaps[i].name) == 0)
-		{
-		    xpm = built_in_pixmaps[i].xpm;
-		    break;
-		}
-	    }
-	}
+	if (menu->iconidx >= 0 && menu->iconidx
+		   < (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])))
+	    xpm = built_in_pixmaps[menu->iconidx];
+	else
+	    xpm = tb_blank_xpm;
     }
 
     if (xpm != NULL || buf[0] != NUL)
@@ -3308,6 +3305,14 @@ createXpmImages(path, xpm, sen, insen)
 {
     Window	rootWindow;
     XpmAttributes attrs;
+    XpmColorSymbol color[5] =
+    {
+	{"background", NULL, 0},
+	{"foreground", NULL, 0},
+	{"bottomShadow", NULL, 0},
+	{"topShadow", NULL, 0},
+	{"highlight", NULL, 0}
+    };
     int		screenNum;
     int		status;
     GC		mask_gc;
@@ -3318,30 +3323,26 @@ createXpmImages(path, xpm, sen, insen)
     Pixel	bg_pixel;
     Pixel	fg_pixel;
 
-    gui_mch_get_toolbar_colors(&bg_pixel, &fg_pixel);
+    gui_mch_get_toolbar_colors(&bg_pixel, &fg_pixel,
+	    &color[2].pixel, 
+	    &color[3].pixel,
+	    &color[4].pixel);
 
     /* Setup the color subsititution table */
+    color[0].pixel = bg_pixel;
+    color[1].pixel = fg_pixel;
     attrs.valuemask = XpmColorSymbols;
-    attrs.numsymbols = 2;
-    attrs.colorsymbols = (XpmColorSymbol *)
-			  XtMalloc(sizeof(XpmColorSymbol) * attrs.numsymbols);
-    attrs.colorsymbols[0].name = "BgColor";
-    attrs.colorsymbols[0].value = NULL;
-    attrs.colorsymbols[0].pixel = bg_pixel;
-    attrs.colorsymbols[1].name = "FgColor";
-    attrs.colorsymbols[1].value = NULL;
-    attrs.colorsymbols[1].pixel = fg_pixel;
+    attrs.colorsymbols = color;
+    attrs.numsymbols = 5;
 
     screenNum = DefaultScreen(gui.dpy);
     rootWindow = RootWindow(gui.dpy, screenNum);
 
     /* Create the "sensitive" pixmap */
     if (xpm != NULL)
-	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm,
-							 &map, &mask, &attrs);
+	status = XpmCreatePixmapFromData(gui.dpy, rootWindow, xpm, &map, &mask, &attrs);
     else
-	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path,
-							 &map, &mask, &attrs);
+	status = XpmReadFileToPixmap(gui.dpy, rootWindow, (char *)path, &map, &mask, &attrs);
     if (status == XpmSuccess && map != 0)
     {
 	/* Need to create new Pixmaps with the mask applied. */
@@ -3384,13 +3385,10 @@ createXpmImages(path, xpm, sen, insen)
 	XFreeGC(gui.dpy, back_gc);
 	XFreeGC(gui.dpy, mask_gc);
 	XFreePixmap(gui.dpy, map);
-	/* XFreePixmap(gui.dpy, mask); causes a crash, probably XFreeGC
-	 * already freed it. */
     }
     else
 	*insen = *sen = 0;
 
-    XtFree((char *)attrs.colorsymbols);
     XpmFreeAttributes(&attrs);
 }
 #endif

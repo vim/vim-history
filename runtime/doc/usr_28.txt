@@ -1,11 +1,13 @@
-*usr_28.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_28.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
 				   Folding
 
 
-Introduction.
+Structured text can be separated in sections.  And sections in sub-sections.
+Folding allows you to display a section as one line, providing an overview.
+This chapter explains the different ways this can be done.
 
 |28.1|	What is folding?
 |28.2|  Manual folding
@@ -16,9 +18,9 @@ Introduction.
 |28.7|  Folding by syntax
 |28.8|  Folding by expression
 |28.9|  Folding unchanged lines
-|28.10|  Which fold method to use?
+|28.10| Which fold method to use?
 
-     Next chapter: |usr_29.txt|  Editing programs
+     Next chapter: |usr_29.txt|  Moving through programs
  Previous chapter: |usr_27.txt|  Search commands and patterns
 Table of contents: |usr_toc.txt|
 
@@ -53,43 +55,57 @@ that indicates that there is a section.
 *28.2*  Manual folding
 
 Try it out: Position the cursor in a paragraph and type: >
+
 	zfap
+
 You will see that the paragraph is replaced by a highlighted line.  You have
-created a fold.  Note that |zf| is an operator and |ap| a text object
-selection.  You can use the |zf| operator with any movement command to create
-a fold for the text that it moved over.  |zf| also works in Visual mode.
+created a fold.  |zf| is an operator and |ap| a text object selection.  You
+can use the |zf| operator with any movement command to create a fold for the
+text that it moved over.  |zf| also works in Visual mode.
 
 To view the text again, open the fold by typing: >
+
 	zo
+
 And you can close the fold again with: >
+
 	zc
 
 All the folding commands start with 'z'.  With some fantasy, this looks like a
-folded piece of paper, seen from the side.  The following letter has a
+folded piece of paper, seen from the side.  The letter after the "z" has a
 mnemonic meaning to make it easier to remember the commands:
+
 	zf	F-old creation
 	zo	O-pen a fold
 	zc	C-lose a fold
 
 Folds can be nested: A region of text that contains folds can be folded
-again.  For example, you can fold each paragraph in this chapter, and then
-fold the whole chapter.  Try it out.  You will notice that opening the fold
-for the whole chapter will restore the nested folds as they were, some may be
-open and some may be closed.
+again.  For example, you can fold each paragraph in this sectin, and then
+fold all the sections in this chapter.  Try it out.  You will notice that
+opening the fold for the whole chapter will restore the nested folds as they
+were, some may be open and some may be closed.
 
 Suppose you have created several folds, and now want to view all the text.
 You could go to each fold and type "zo".  To do this faster, use this command: >
+
 	zr
+
 This will R-educe the folding.  The opposite is: >
+
 	zm
+
 This folds M-ore.  You can repeat "zr" and "zm" to open and close nested folds
 of several levels.
 
 If you have nested several levels deep, you can open all of them with: >
+
 	zR
+
 This R-educes folds until there are none left.  And you can close all folds
 with: >
+
 	zM
+
 This folds M-ore and M-ore.
 
 You can quickly disable the folding with the |zn| command.  Then |zN| brings
@@ -109,7 +125,7 @@ When some folds are closed, movement commands like "j" and "k" move over a
 fold like it was a single, empty line.  This allows you to quickly move around
 over folded text.
 
-You can yank delete and put folds as if it was a single line.  This is very
+You can yank, delete and put folds as if it was a single line.  This is very
 useful if you want to reorder functions in a program.  First make sure that
 each fold contains a whole function (or a bit less) by selecting the right
 'foldmethod'.  Then delete the function with "dd", move the cursor and put it
@@ -123,7 +139,9 @@ use Visual selection:
 
 It is sometimes difficult to see or remember where a fold is located, thus
 where a |zo| command would actually work.  To see the defined folds: >
+
 	:set foldcolumn
+
 This will show a small column on the left of the window to indicate folds.
 A "-" is shown at the start of each fold.  A number indicates the fold level.
 
@@ -140,13 +158,18 @@ or right.  For example, the "0" command opens the fold under the cursor
 (if 'foldopen' contains "hor", which is the default).  The 'foldopen' option
 can be changed to open folds for specific commands.  If you want the line
 under the cursor always to be open, do this: >
+
 	:set foldopen=all
-Warning: you won't be able to move onto a closed fold then.  You might want to
+
+Warning: You won't be able to move onto a closed fold then.  You might want to
 use this only temporarily and then set it back to the default: >
+
 	:set foldopen&
 
 You can make folds close automatically when you move out of it: >
+
 	:set foldclose=all
+
 This will re-apply 'foldlevel' to all folds that don't contain the cursor.
 You have to try it out if you like how this feels.  Use |zm| to fold more and
 |zr| to fold less (reduce folds).
@@ -191,7 +214,9 @@ indent.  Lines with a larger indent will become nested folds.  This works well
 with many programming languages.
 
 Try this by setting the 'foldmethod' option: >
+
 	:set foldmethod=indent
+
 Then you can use the |zm| and |zr| commands to fold more and reduce folding.
 It's easy to see on this example text:
 
@@ -209,7 +234,9 @@ depth of the fold.  This is called a fold level.
 
 When you use the |zr| and |zm| commands you actually increase or decrease the
 'foldlevel' option.  You could also set it directly: >
+
 	:set foldlevel=3
+
 This means that all folds with three times a 'shiftwidth' indent or more will
 be closed.  The lower the foldlevel, the more folds will be closed.  When
 'foldlevel' is zero, all folds are closed.  |zM| does set 'foldlevel' to zero.
@@ -242,6 +269,7 @@ This gives precise control over which lines are included in a fold.  The
 disadvantage is that the text needs to be modified.
 
 Try it: >
+
 	:set foldmethod=marker
 
 Example text, as it could appear in a C program:
@@ -255,7 +283,7 @@ Example text, as it could appear in a C program:
 	}
 	/* }}} */
 
-Note that the folded line will display the text before the marker.  This is
+Notice that the folded line will display the text before the marker.  This is
 very useful to tell what the fold contains.
 
 It's quite annoying when the markers don't pair up correctly after moving some
@@ -282,7 +310,16 @@ More about folding with markers in the reference manual: |fold-marker|
 ==============================================================================
 *28.7*  Folding by syntax
 
-Syntax items that have the "fold" argument define a fold region.
+For each language Vim uses a different syntax file.  This defines the colors
+for various items in the file.  If you are reading this in Vim, in a terminal
+that supports colors, the colors you see are made with the "help" syntax file.
+   In the syntax files it is possible to add syntax items that have the "fold"
+argument.  These define a fold region.  This requires writing a syntax file
+and adding these items in it.  That's not so easy to do.  But once it's done,
+all folding happens automatically.
+   Here we'll assume you are using an existing syntax file.  Then there is
+nothing more to explain.  You can open and close folds as explained above.
+The folds will be created and deleted automatically when you edit the file.
 
 More about folding by syntax in the reference manual: |fold-syntax|
 
@@ -294,6 +331,7 @@ line a user function is called to compute the fold level of a line.  You can
 use this for text where something in the text indicates which lines belong
 together.  An example is an e-mail message where the quoted text is indicated
 by a ">" before the line.  To fold these quotes use this: >
+
 	:set foldmethod=expr
 	:set foldexpr=strlen(substitute(substitute(getline(v:lnum),'\\s','',\"g\"),'[^>].*','',''))
 
@@ -313,10 +351,14 @@ Explanation for the 'foldexpr' used in the example (inside out):
 
 Note that a backslash must be inserted before every space, double quote and
 backslash for the ":set" command.  If this confuses you, do >
+
 	:set foldexpr
+
 to check the actual resulting value.  To correct a complicated expression, use
 the command-line completion: >
+
 	:set foldexpr=<Tab>
+
 Where <Tab> is a real Tab.  Vim will fill in the previous value, which you can
 then edit.
 
@@ -339,22 +381,38 @@ For more details see |fold-diff|.
 ==============================================================================
 *28.10*  Which fold method to use?
 
-'foldmethod'	'foldlevel'	change text
-"manual"	  nesting	    no
-"indent"	  indent	    no
-"expr"		  value		    no
-"marker"	  nesting	    yes
-"syntax"	  nesting	    no
-"diff"		  0 or 1	    no
+All these possibilities makes you wonder which method you should chose.
+Unfortunately, there is not golden rule.  Here are some hints.
 
-TODO
+If there is a syntax file with folding for the language you are editing, that
+is probably the best choice.  If there isn't one, you might try to write it.
+This requires a good knowledge of search patterns.  It's not easy, but when
+it's working you will not have to define folds manually.
 
-If you use the "expr" method to define folds, but they are not exactly how you
-want them, you could switch to the "manual" method.  This will not remove the
-defined folds.  Then you can delete or add folds manually.
+Typing commands to manually fold regions can be used for unstructured text.
+Then use the |:mkview| command to save and restore your folds.
+
+The marker method requires you to change the file.  If you are sharing the
+files with other people or you have to meet company standards, you might not
+be allowed to add them.
+   The main advantage of markers is that you can put them exactly where you
+want them.  That avoids that a few lines are missed when you cut and paste
+folds.  And you can add a comment about what is contained in the fold.
+
+Folding by indent is something that works in many files, but not always very
+well.  Use it when you can't use one of the other methods.  However, it is
+very useful for outlining.  Then you specifically use one 'shiftwidth' for
+each nesting level.
+
+Folding with expressions can make folds in almost any structured text.  It is
+quite simple to specify, especially if the start and end of a fold can easily
+be recognized.
+   If you use the "expr" method to define folds, but they are not exactly how
+you want them, you could switch to the "manual" method.  This will not remove
+the defined folds.  Then you can delete or add folds manually.
 
 ==============================================================================
 
-Next chapter: |usr_29.txt|  Editing programs
+Next chapter: |usr_29.txt|  Moving through programs
 
 Copyright: see |manual-copyright|  vim:tw=78:

@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 May 20
+" Last Change:		2001 Jun 7
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -61,7 +61,7 @@ menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Activar/Desactivar\ &mostrar\ coinci
 
 menutrans &Context\ lines		Líneas\ de\ &contexto
 
-menutrans &Virtual\ Edit			Edición\ &virtual
+menutrans &Virtual\ Edit		Edición\ &virtual
 menutrans Never				Nunca
 menutrans Block\ Selection		Selección\ de\ bloque
 menutrans Insert\ mode			Modo\ insertar
@@ -84,10 +84,10 @@ menutrans Toggle\ &Right\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ 
 menutrans F&ile\ Settings		Opciones\ del\ &fichero
 
 " Boolean options
-menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!		Activar/Desactivar\ &numeración\ de\ líneas<Tab>:set\ nu!
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	Activar/Desactivar\ &numeración\ de\ líneas<Tab>:set\ nu!
 menutrans Toggle\ &List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «&list»<Tab>:set\ list!
 menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!		Activar/Desactivar\ &doblado\ de\ líneas<Tab>:set\ wrap!	
-menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!		Activar/Desactivar\ doblado\ en\ &palabra<Tab>:set\ lbr!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	Activar/Desactivar\ doblado\ en\ &palabra<Tab>:set\ lbr!
 menutrans Toggle\ &expand-tab<Tab>:set\ et!		Activar/Desactivar\ &expansión\ de\ tabs<Tab>:set\ et!	
 menutrans Toggle\ &auto-indent<Tab>:set\ ai!		Activar/Desactivar\ &auto-sangrado<Tab>:set\ ai!
 menutrans Toggle\ &C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ &C<Tab>:set\ cin!
@@ -102,7 +102,8 @@ menutrans Te&xt\ Width\.\.\. 		Anchura\ del\ te&xto\.\.\.
 menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
 let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
 
-menutrans C&olor\ Scheme			Esquema\ de\ c&olores
+menutrans C&olor\ Scheme		Esquema\ de\ c&olores
+menutrans Select\ Fo&nt\.\.\.		Seleccionar\ fue&nte\.\.\.
 
 menutrans &Keymap	Asociación\ de\ teclas
 menutrans None		Ninguna
@@ -174,8 +175,7 @@ menutrans &Equal\ Size<Tab>^W=		Mismo\ &tamaño<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Altura\ mí&nima<Tab>^W1_
 menutrans Max\ &Width<Tab>^W\|		Anchura\ má&xima<Tab>^W\|
-menutrans Min\ Widt&h<Tab>^W1\|	Anc&hura\ mínima<Tab>^W1\|
-menutrans Select\ Fo&nt\.\.\.		Seleccionar\ &fuente\.\.\.
+menutrans Min\ Widt&h<Tab>^W1\|		Anc&hura\ mínima<Tab>^W1\|
 
 " The popup menu
 menutrans &Undo		        &Deshacer
@@ -221,16 +221,16 @@ if has("win32") || has("gui_gtk")
 endif
 
 " Syntax menu
-menutrans &Syntax		&Sintaxis
-menutrans Set\ '&syntax'\ only	Activar\ sólo\ «sintaxis»
-menutrans Set\ '&filetype'\ too	Activar\ también\ «tipo\ de\ fichero»
-menutrans &Off			&Desactivar
-menutrans &Manual		&Manual
-menutrans A&utomatic		A&utomática
+menutrans &Syntax			&Sintaxis
+menutrans Set\ '&syntax'\ only		Activar\ sólo\ «sintaxis»
+menutrans Set\ '&filetype'\ too		Activar\ también\ «tipo\ de\ fichero»
+menutrans &Off				&Desactivar
+menutrans &Manual			&Manual
+menutrans A&utomatic			A&utomática
 menutrans on/off\ for\ &This\ file	Activar/Desactivar\ en\ es&te\ fichero
-menutrans Co&lor\ test		&Prueba\ del\ color
-menutrans &Highlight\ test	Prueba\ del\ &realzado
-menutrans &Convert\ to\ HTML	&Convertir\ en\ HTML
+menutrans Co&lor\ test			&Prueba\ del\ color
+menutrans &Highlight\ test		Prueba\ del\ &realzado
+menutrans &Convert\ to\ HTML		&Convertir\ en\ HTML
 
 " Find Help dialog text
-let find_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción 8(e.g.: `shiftwidth`)"
+let g:menutrans_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción 8(e.g.: `shiftwidth`)"

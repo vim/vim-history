@@ -600,7 +600,7 @@ list_version()
      * internal variables in eval.c!
      */
     MSG(longVersion);
-#ifdef WIN32
+#ifdef WIN3264
 # ifdef FEAT_GUI_W32
 #  if (_MSC_VER <= 1010)    /* Only MS VC 4.1 and earlier can do Win32s */
     MSG_PUTS(_("\nMS-Windows 16/32 bit GUI version"));
@@ -838,7 +838,7 @@ list_version()
 version_msg(s)
     char	*s;
 {
-    int		len = strlen(s);
+    int		len = (int)STRLEN(s);
 
     if (len < (int)Columns && msg_col + len >= (int)Columns)
 	msg_putchar('\n');
@@ -884,7 +884,7 @@ intro_message(colon)
     blanklines = (int)Rows - ((sizeof(lines) / sizeof(char *)) - 1);
     if (!p_cp)
 	blanklines += 4;  /* add 4 for not showing "Vi compatible" message */
-#if defined(WIN32) && !defined(FEAT_GUI_W32)
+#if defined(WIN3264) && !defined(FEAT_GUI_W32)
     if (mch_windows95())
 	blanklines -= 3;  /* subtract 3 for showing "Windows 95" message */
 #endif
@@ -911,7 +911,7 @@ intro_message(colon)
 		do_intro_line(row, (char_u *)_(lines[i]), i == 2, 0);
 	    ++row;
 	}
-#if defined(WIN32) && !defined(FEAT_GUI_W32)
+#if defined(WIN3264) && !defined(FEAT_GUI_W32)
 	if (mch_windows95())
 	{
 	    do_intro_line(row + 1,
@@ -952,7 +952,7 @@ do_intro_line(row, msg, add_version, attr)
 	    else
 		sprintf((char *)vers + 3, ".%d", highest_patch());
 	}
-	col += STRLEN(vers);
+	col += (int)STRLEN(vers);
     }
     col = (Columns - col) / 2;
     if (col < 0)

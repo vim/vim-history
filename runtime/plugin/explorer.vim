@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@123india.com)
-" Last Change: 2001 May 16
+" Last Change: 2001 Jun 09
 " Version: 2.3
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -70,6 +70,9 @@ if exists("loaded_explorer")
 endif
 let loaded_explorer=1
 
+" Line continuation used here
+let s:cpo_save = &cpo
+set cpo&vim
 
 "---
 " Default settings for global configuration variables
@@ -453,7 +456,7 @@ function! s:OpenEntry()
   endif
 
   " Get the file name 
-  let fn=s:GetFullFileNameEsc()
+  let fn=s:GetFullFileName()
 
   " Attempt to go to adjacent window
   exec(back)
@@ -477,13 +480,13 @@ function! s:OpenEntry()
   " relative path
   if isdirectory(fn)
     let origdir= s:Path(getcwd())
-    exe "chdir" fn
+    exe "chdir" escape(fn,s:escfilename)
     let fn = s:Path(getcwd())
     exe "chdir" escape(origdir,s:escfilename)
   endif
 
   " Open the new window
-  exec("silent " . splitMode." sp " . fn)
+  exec("silent " . splitMode." sp " . escape(fn,s:escfilename))
 
   " resize the explorer window if it is larger than the requested size
   exec(there)
@@ -526,10 +529,10 @@ function! s:EditEntry(movefirst,editcmd)
   let s:longlist = w:longlist
 
   " Get the file name 
-  let fn=s:GetFullFileNameEsc()
+  let fn=s:GetFullFileName()
   if isdirectory(fn)
     let origdir= s:Path(getcwd())
-    exe "chdir" fn
+    exe "chdir" escape(fn,s:escfilename)
     let fn = s:Path(getcwd())
     exe "chdir" escape(origdir,s:escfilename)
   endif
@@ -537,7 +540,7 @@ function! s:EditEntry(movefirst,editcmd)
   " Move to desired window if needed
   exec(a:movefirst)
   " Edit the file/dir
-  exec(a:editcmd . " " . fn)
+  exec(a:editcmd . " " . escape(fn,s:escfilename))
 endfunction
 
 
@@ -698,7 +701,12 @@ function! s:GetFileName()
 endfunction
 
 function! s:ExtractFullFileName(line)
-  return b:completePath . s:ExtractFileName(a:line)
+      let fn=s:ExtractFileName(a:line)
+      if fn == '/'
+              return b:completePath
+      else
+              return b:completePath . s:ExtractFileName(a:line)
+      endif
 endfunction
 
 function! s:ExtractFileName(line)
@@ -1250,3 +1258,6 @@ augroup fileExplorer
   au BufEnter * call s:EditDir()
 augroup end
 
+" restore 'cpo'
+let &cpo = s:cpo_save
+unlet s:cpo_save

@@ -62,7 +62,7 @@
 
 #ifdef FEAT_PRINTER
 # include <dlgs.h>
-# ifdef WIN32
+# ifdef WIN3264
 #  include <winspool.h>
 # endif
 # include <commdlg.h>
@@ -103,7 +103,7 @@
 FILE* fdDump = NULL;
 #endif
 
-#ifdef WIN32
+#ifdef WIN3264
 extern DWORD g_PlatformId;
 #endif
 #ifndef FEAT_GUI_MSWIN
@@ -229,14 +229,14 @@ mch_early_init(void)
 {
     int		i;
 
-#ifdef WIN32
+#ifdef WIN3264
     PlatformId();
 #endif
 
     /* Init the tables for toupper() and tolower() */
     for (i = 0; i < 256; ++i)
 	toupper_tab[i] = tolower_tab[i] = i;
-#ifdef WIN32
+#ifdef WIN3264
     CharUpperBuff(toupper_tab, 256);
     CharLowerBuff(tolower_tab, 256);
 #else
@@ -487,7 +487,7 @@ display_errors()
 		/* Truncate a very long message, it will go off-screen. */
 		if (STRLEN(p) > 2000)
 		    STRCPY(p + 2000 - 14, "...(truncated)");
-#ifdef WIN32
+#ifdef WIN3264
 		MessageBox(0, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
 #else
 		MessageBox(0, p, "Vim", MB_TASKMODAL);
@@ -510,9 +510,9 @@ mch_has_wildcard(char_u *p)
     {
 	if (vim_strchr((char_u *)
 #  ifdef VIM_BACKTICK
-				    "?*$`"
+				    "?*$[`"
 #  else
-				    "?*$"
+				    "?*$["
 #  endif
                                                 , *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
@@ -596,7 +596,7 @@ mch_screenmode(
  * and returns an allocated string.
  * Return OK if it worked, FAIL if not.
  */
-#ifdef WIN32
+#ifdef WIN3264
 typedef LPTSTR (*MYSTRPROCSTR)(LPTSTR);
 typedef LPTSTR (*MYINTPROCSTR)(int);
 typedef int (*MYSTRPROCINT)(LPTSTR);
@@ -763,7 +763,8 @@ clip_mch_request_selection(VimClipboard *cbd)
 		const char	*pszNL;
 		int		len;
 
-		temp_clipboard = (char_u *)lalloc(STRLEN(psz) + 1, TRUE);
+		temp_clipboard = (char_u *)lalloc((long_u)STRLEN(psz) + 1,
+									TRUE);
 		if (temp_clipboard != NULL)
 		{
 		    /* Translate <CR><NL> into <NL>. */
@@ -778,7 +779,7 @@ clip_mch_request_selection(VimClipboard *cbd)
 				break;
 			    ++pszNL;
 			}
-			len = (pszNL != NULL) ?  pszNL - psz : STRLEN(psz);
+			len = (int)((pszNL != NULL) ? pszNL - psz : STRLEN(psz));
 			STRNCPY(pszTemp, psz, len);
 			pszTemp += len;
 			if (pszNL != NULL)
@@ -1157,7 +1158,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	    )
     {
 	s_pd.Flags |= PD_RETURNDEFAULT;
-#ifdef WIN32
+#ifdef WIN3264
 	/*
 	 * MSDN suggests setting the first parameter to WINSPOOL for
 	 * NT, but NULL appears to work just as well.
@@ -1190,7 +1191,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     stored_nFlags = s_pd.Flags;
     stored_nCopies = s_pd.nCopies;
 
-#ifdef WIN32
+#ifdef WIN3264
     /*
      * On some windows systems the nCopies parameter is not
      * passed back correctly. It must be retrieved from the
@@ -1403,15 +1404,17 @@ mch_resolve_shortcut(char_u *fname)
     hr = ppf->lpVtbl->Load(ppf, wsz, STGM_READ);
     if (hr != S_OK)
 	goto shortcut_error;
-    hr = psl->lpVtbl->Resolve(psl, NULL, SLR_UPDATE);
+#if 0  // This makes Vim wait a long time if the target doesn't exist.
+    hr = psl->lpVtbl->Resolve(psl, NULL, SLR_NO_UI);
     if (hr != S_OK)
 	goto shortcut_error;
+#endif
 
     // Get the path to the link target.
+    ZeroMemory(buf, MAX_PATH);
     hr = psl->lpVtbl->GetPath(psl, buf, MAX_PATH, &ffd, 0);
-    if (hr != S_OK)
-	goto shortcut_error;
-    rfname = vim_strsave( buf );
+    if (hr == S_OK && buf[0] != NUL)
+	rfname = vim_strsave(buf);
 
 shortcut_error:
     // Release all interface pointers (both belong to the same object)

@@ -32,7 +32,7 @@
  * file is opened.
  */
 
-#if defined MSDOS || defined WIN32
+#if defined MSDOS || defined(WIN32) || defined(_WIN64)
 # include <io.h>	/* for lseek(), must be before vim.h */
 #endif
 
@@ -958,7 +958,7 @@ mf_read(mfp, hp)
 	EMSG(_("E294: Seek error in swap file read"));
 	return FAIL;
     }
-    if ((unsigned)read(mfp->mf_fd, (char *)hp->bh_data, (size_t)size) != size)
+    if ((unsigned)vim_read(mfp->mf_fd, hp->bh_data, size) != size)
     {
 	EMSG(_("E295: Read error in swap file"));
 	return FAIL;
@@ -1020,8 +1020,8 @@ mf_write(mfp, hp)
 	else
 	    page_count = hp2->bh_page_count;
 	size = page_size * page_count;
-	if ((unsigned)write(mfp->mf_fd,
-	     (char *)(hp2 == NULL ? hp : hp2)->bh_data, (size_t)size) != size)
+	if ((unsigned)vim_write(mfp->mf_fd,
+	     (hp2 == NULL ? hp : hp2)->bh_data, size) != size)
 	{
 	    /*
 	     * Avoid repeating the error message, this mostly happens when the

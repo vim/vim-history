@@ -740,7 +740,7 @@ gui_update_cursor(force, clear_selection)
 {
     int		cur_width = 0;
     int		cur_height = 0;
-    long_u	old_hl_mask;
+    int		old_hl_mask;
     int		idx;
     int		id;
     guicolor_T	cfg, cbg, cc;	/* cursor fore-/background color */
@@ -799,7 +799,7 @@ gui_update_cursor(force, clear_selection)
 	if (id > 0)
 	{
 	    cattr = syn_id2colors(id, &cfg, &cbg);
-#ifdef USE_IM_CONTROL
+#if defined(USE_IM_CONTROL) || defined(FEAT_HANGULIN)
 	    {
 		static int id;
 		guicolor_T fg, bg;
@@ -908,7 +908,7 @@ gui_update_cursor(force, clear_selection)
 	{
 	    /*
 	     * First draw the partial cursor, then overwrite with the text
-	     * character, using a transparant background.
+	     * character, using a transparent background.
 	     */
 	    if (shape_table[idx].shape == SHAPE_VER)
 	    {
@@ -1109,7 +1109,7 @@ again:
 
     gui.num_cols = (pixel_width - gui_get_base_width()) / gui.char_width;
     gui.num_rows = (pixel_height - gui_get_base_height()
-#ifndef FEAT_GUI_PHOTON
+#if !defined(FEAT_GUI_PHOTON) && !defined(FEAT_GUI_MSWIN)
 				    + (gui.char_height / 2)
 #endif
 					) / gui.char_height;
@@ -1447,7 +1447,7 @@ gui_write(s, len)
 		    p = s + 1;	/* Skip the ESC */
 		    break;
 	    }
-	    len -= ++p - s;
+	    len -= (int)(++p - s);
 	    s = p;
 	}
 	else if (
@@ -1508,7 +1508,7 @@ gui_write(s, len)
 		len--;
 		p++;
 	    }
-	    gui_outstr(s, p - s);
+	    gui_outstr(s, (int)(p - s));
 	    s = p;
 	}
     }
@@ -1571,7 +1571,7 @@ gui_outstr(s, len)
 	return;
 
     if (len < 0)
-	len = STRLEN(s);
+	len = (int)STRLEN(s);
 
     while (len > 0)
     {
@@ -1689,7 +1689,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #endif
 
     if (len < 0)
-	len = STRLEN(s);
+	len = (int)STRLEN(s);
     if (len == 0)
 	return;
 
@@ -2856,7 +2856,7 @@ gui_init_which_components(oldval)
 	    need_set_size = TRUE;
 	}
 #endif
-#if defined(FEAT_MENU) && !defined(WIN16) && !(defined(WIN32) && !defined(FEAT_TEAROFF))
+#if defined(FEAT_MENU) && !defined(WIN16) && !(defined(WIN3264) && !defined(FEAT_TEAROFF))
 	if (using_tearoff != prev_tearoff)
 	{
 	    gui_mch_toggle_tearoffs(using_tearoff);

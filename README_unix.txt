@@ -1,4 +1,4 @@
-README_unix.txt for version 6.0ai of Vim: Vi IMproved.
+README_unix.txt for version 6.0aj of Vim: Vi IMproved.
 
 This file explains the installation of Vim on Unix systems.
 See "README.txt" for general information about Vim.

@@ -249,7 +249,7 @@ trunc_string(s, buf, room)
     else if (enc_utf8)
     {
 	/* For UTF-8 we can go backwards easily. */
-	i = STRLEN(s);
+	i = (int)STRLEN(s);
 	for (;;)
 	{
 	    half = i - (*mb_head_off)(s, s + i - 1) - 1;
@@ -263,7 +263,7 @@ trunc_string(s, buf, room)
     else
 #endif
     {
-	for (i = STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room; --i)
+	for (i = (int)STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room; --i)
 	    len += n;
     }
 
@@ -623,7 +623,7 @@ add_msg_hist(s, len, attr)
     if (p != NULL)
     {
 	if (len < 0)
-	    len = STRLEN(s);
+	    len = (int)STRLEN(s);
 	/* remove leading and trailing newlines */
 	while (len > 0 && *s == '\n')
 	{
@@ -1517,12 +1517,12 @@ msg_puts_attr(s, attr)
      * If there is no valid screen, use fprintf so we can see error messages.
      * If termcap is not active, we may be writing in an alternate console
      * window, cursor positioning may not work correctly (window size may be
-     * different, e.g. for WIN32 console) or we just don't know where the
+     * different, e.g. for Win32 console) or we just don't know where the
      * cursor is.
      */
     if (msg_use_printf())
     {
-#ifdef WIN32
+#ifdef WIN3264
 	if (!silent_mode)
 	    mch_settmode(TMODE_COOK);	/* handle '\r' and '\n' correctly */
 #endif
@@ -1552,7 +1552,7 @@ msg_puts_attr(s, attr)
 	}
 	msg_didout = TRUE;	    /* assume that line is not empty */
 
-#ifdef WIN32
+#ifdef WIN3264
 	if (!silent_mode)
 	    mch_settmode(TMODE_RAW);
 #endif
@@ -1793,14 +1793,14 @@ msg_puts_attr(s, attr)
  * This is used when there is no valid screen, so we can see error messages.
  * If termcap is not active, we may be writing in an alternate console
  * window, cursor positioning may not work correctly (window size may be
- * different, e.g. for WIN32 console) or we just don't know where the
+ * different, e.g. for Win32 console) or we just don't know where the
  * cursor is.
  */
     static int
 msg_use_printf()
 {
     return (!msg_check_screen()
-#ifdef WIN32
+#ifdef WIN3264
 	    || !termcap_active
 #endif
 	    || (swapping_screen() && !termcap_active)
@@ -1849,7 +1849,7 @@ mch_errmsg(str)
     /* avoid a delay for a message that isn't there */
     emsg_on_display = FALSE;
 
-    len = STRLEN(str) + 1;
+    len = (int)STRLEN(str) + 1;
     if (error_ga.ga_growsize == 0)
     {
 	error_ga.ga_growsize = 80;
@@ -2185,7 +2185,7 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
     char_u	*message;
     char_u	*buttons;
     int		dfltbutton;
-    char_u	*textfield;
+    char_u	*textfield;	/* IObuff for inputdialog(), NULL otherwise */
 {
     int		oldState;
     int		retval = 0;

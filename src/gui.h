@@ -18,18 +18,16 @@
 #ifdef FEAT_GUI_MOTIF
 # define FEAT_GUI_X11
 # include <Xm/Xm.h>
-# ifdef FEAT_BEVAL
-#  include "gui_beval.h"
-# endif
 #endif
 
 #ifdef FEAT_GUI_ATHENA
 # define FEAT_GUI_X11
 # include <X11/Intrinsic.h>
 # include <X11/StringDefs.h>
-# ifdef FEAT_BEVAL
-#  include "gui_beval.h"
-# endif
+#endif
+
+#ifdef FEAT_BEVAL
+# include "gui_beval.h"
 #endif
 
 #ifdef FEAT_GUI_GTK
@@ -104,7 +102,7 @@
  * X_2_COL  - Convert X pixel coord into character column.
  * Y_2_ROW  - Convert Y pixel coord into character row.
  */
-#if defined(FEAT_GUI_W32) || defined(FEAT_GUI_MOTIF)
+#ifdef FEAT_GUI_W32
 # define TEXT_X(col)	((col) * gui.char_width)
 # define TEXT_Y(row)	((row) * gui.char_height + gui.char_ascent)
 # define FILL_X(col)	((col) * gui.char_width)
@@ -383,6 +381,7 @@ typedef struct Gui
 # ifdef FEAT_BEVAL
     Pixel	balloonEval_fg_pixel;/* foreground color of balloon eval win */
     Pixel	balloonEval_bg_pixel;/* background color of balloon eval win */
+    XFontStruct *balloonEval_fontList;/* balloon evaluation font */
 # endif
 #endif  /* FEAT_GUI_ATHENA */
 
@@ -483,6 +482,8 @@ extern gui_T gui;			/* this is defined in gui.c */
 #  define XtNballoonEvalBackground  "balloonEvalBackground"
 # ifdef FEAT_GUI_MOTIF
 #  define XmNballoonEvalFontList    "balloonEvalFontList"
+# elif defined(FEAT_GUI_ATHENA)
+#  define XtNballoonEvalFontList    "balloonEvalFontList"
 # endif
 #endif
 

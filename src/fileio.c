@@ -11,7 +11,7 @@
  * fileio.c: read from and write to a file
  */
 
-#if defined(MSDOS) || defined(WIN32) || defined(WIN16)
+#if defined(MSDOS) || defined(WIN16) || defined(WIN32) || defined(_WIN64)
 # include <io.h>	/* for lseek(), must be before vim.h */
 #endif
 
@@ -21,7 +21,7 @@
 
 #include "vim.h"
 
-#ifdef WIN32
+#ifdef WIN3264
 # include <windows.h>	/* For DeleteFile(), GetTempPath(), etc. */
 #endif
 
@@ -406,8 +406,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	 */
 	if (mch_stat((char *)fname, &st) >= 0)
 	{
-	    curbuf->b_mtime = st.st_mtime;
-	    curbuf->b_mtime_read = st.st_mtime;
+	    curbuf->b_mtime = curbuf->b_mtime_read = (long)st.st_mtime;
 #if defined(RISCOS) && defined(FEAT_OSFILETYPE)
 	    /* Read the filetype into the buffer local filetype option. */
 	    mch_read_filetype(fname);
@@ -427,6 +426,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	     * TODO: Update it properly when the buffer name changes
 	     */
 	    (void)GetFSSpecFromPath(curbuf->b_ffname, &curbuf->b_FSSpec);
+#endif
+#ifdef VMS
+	    curbuf->b_fab_rfm = st.st_fab_rfm;
 #endif
 	}
 	else
@@ -646,7 +648,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    if (gui.in_use)
 	    {
 		p = (char_u *)_("Reading from stdin...");
-		gui_write(p, STRLEN(p));
+		gui_write(p, (int)STRLEN(p));
 	    }
 #endif
 	}
@@ -1011,7 +1013,7 @@ retry:
 			for (;;)
 			{
 			    p = ml_get(read_buf_lnum) + read_buf_col;
-			    n = STRLEN(p);
+			    n = (int)STRLEN(p);
 			    if ((int)tlen + n + 1 > size)
 			    {
 				/* Filled up to "size", append partial line. */
@@ -1041,7 +1043,7 @@ retry:
 		    /*
 		     * Read bytes from the file.
 		     */
-		    size = read(fd, (char *)ptr, (size_t)size);
+		    size = vim_read(fd, ptr, size);
 		}
 
 		if (size <= 0)
@@ -1174,13 +1176,13 @@ retry:
 		    /* Some remaining characters, keep them for the next
 		     * round. */
 		    mch_memmove(conv_rest, (char_u *)fromp, from_size);
-		    conv_restlen = from_size;
+		    conv_restlen = (int)from_size;
 		}
 
 		/* move the linerest to before the converted characters */
 		line_start = ptr - linerest;
 		mch_memmove(line_start, buffer, (size_t)linerest);
-		size = (char_u *)top - ptr;
+		size = (long)((char_u *)top - ptr);
 	    }
 # endif
 
@@ -1251,7 +1253,7 @@ retry:
 		 * conv_rest[]. */
 		if (tail != NULL)
 		{
-		    conv_restlen = (ptr + size) - tail;
+		    conv_restlen = (int)((ptr + size) - tail);
 		    mch_memmove(conv_rest, (char_u *)tail, conv_restlen);
 		    size -= conv_restlen;
 		}
@@ -1372,7 +1374,7 @@ retry:
 		/* move the linerest to before the converted characters */
 		line_start = dest - linerest;
 		mch_memmove(line_start, buffer, (size_t)linerest);
-		size = (ptr + real_size) - dest;
+		size = (long)((ptr + real_size) - dest);
 		ptr = dest;
 	    }
 	    else if (enc_utf8 && !conv_error && !curbuf->b_p_bin)
@@ -1504,7 +1506,7 @@ rewind_retry:
 		    if (skip_count == 0)
 		    {
 			*ptr = NUL;	    /* end of line */
-			len = ptr - line_start + 1;
+			len = (colnr_T) (ptr - line_start + 1);
 			if (ml_append(lnum, line_start, len, newfile) == FAIL)
 			{
 			    error = TRUE;
@@ -1538,7 +1540,7 @@ rewind_retry:
 		    if (skip_count == 0)
 		    {
 			*ptr = NUL;		/* end of line */
-			len = ptr - line_start + 1;
+			len = (colnr_T)(ptr - line_start + 1);
 			if (fileformat == EOL_DOS)
 			{
 			    if (ptr[-1] == CR)	/* remove CR */
@@ -1588,7 +1590,7 @@ rewind_retry:
 		}
 	    }
 	}
-	linerest = ptr - line_start;
+	linerest = (long)(ptr - line_start);
 	ui_breakcheck();
     }
 
@@ -2800,8 +2802,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef HAS_BW_FLAGS
 			write_info.bw_flags = FIO_NOCONVERT;
 #endif
-			while ((write_info.bw_len = read(fd, (char *)copybuf,
-							(size_t)BUFSIZE)) > 0)
+			while ((write_info.bw_len = vim_read(fd, copybuf,
+							BUFSIZE)) > 0)
 			{
 			    if (buf_write_bytes(&write_info) == FAIL)
 			    {
@@ -3095,13 +3097,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      * (this may happen when the user reached his quotum for number of files).
      * Appending will fail if the file does not exist and forceit is FALSE.
      */
-    while ((fd = open((char *)wfname, O_WRONLY | O_EXTRA | (append
+    while ((fd = mch_open((char *)wfname, O_WRONLY | O_EXTRA | (append
 			? (forceit ? (O_APPEND | O_CREAT) : O_APPEND)
 			: (O_CREAT | O_TRUNC))
-#ifndef macintosh
-			, 0666
-#endif
-				)) < 0)
+			, 0666)) < 0)
     {
 	/*
 	 * A forced write will try to create a new file if the old one is
@@ -3319,22 +3318,31 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    s = buffer;
 	    len = 0;
 	}
-#ifdef VMS_OLD_STUFF
+#ifdef VMS
 	/*
-	 * On VMS there is an unexplained problem: newlines get added when
-	 * writing blocks at a time.  Fix it by writing a line at a time.
-	 * This is much slower!
+	 * On VMS there is a problem: newlines get added when writing blocks
+	 * at a time. Fix it by writing a line at a time.
+         * This is much slower!
+         * Explanation: Vim can not handle, so far, variable record format.
+	 * With $analize/rms filename you can get the rms file structure, and
+	 * if the Record format filed is variable, CR will be added after
+	 * every written buffer.  In other cases it works without this fix.
+	 * From other side read is about 5 times slower for "variable record
+	 * format" files.
 	 */
-	write_info.bw_len = len;
-	if (buf_write_bytes(&write_info) == FAIL)
+	if (buf->b_fab_rfm == FAB$C_VAR)
 	{
-	    end = 0;		/* write error: break loop */
-	    break;
+	    write_info.bw_len = len;
+	    if (buf_write_bytes(&write_info) == FAIL)
+	    {
+		end = 0;		/* write error: break loop */
+		break;
+	    }
+	    write_info.bw_len = bufsize;
+	    nchars += len;
+	    s = buffer;
+	    len = 0;
 	}
-	write_info.bw_len = bufsize;
-	nchars += len;
-	s = buffer;
-	len = 0;
 #endif
     }
     if (len > 0 && end > 0)
@@ -3431,8 +3439,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 #ifdef HAS_BW_FLAGS
 			write_info.bw_flags = FIO_NOCONVERT;
 #endif
-			while ((write_info.bw_len = read(fd, (char *)smallbuf,
-						      (size_t)SMBUFSIZE)) > 0)
+			while ((write_info.bw_len = vim_read(fd, smallbuf,
+						      SMBUFSIZE)) > 0)
 			    if (buf_write_bytes(&write_info) == FAIL)
 				break;
 
@@ -3859,7 +3867,7 @@ buf_write_bytes(ip)
 	    for (wlen = 0; wlen < len; ++wlen)
 		p += utf_char2bytes(buf[wlen], p);
 	    buf = ip->bw_conv_buf;
-	    len = p - ip->bw_conv_buf;
+	    len = (int)(p - ip->bw_conv_buf);
 	}
 	else if (flags & (FIO_UCS4 | FIO_UTF16 | FIO_UCS2 | FIO_LATIN1))
 	{
@@ -3935,11 +3943,11 @@ buf_write_bytes(ip)
 		ip->bw_conv_error |= ucs2bytes(c, &p, flags);
 	    }
 	    if (flags & FIO_LATIN1)
-		len = p - buf;
+		len = (int)(p - buf);
 	    else
 	    {
 		buf = ip->bw_conv_buf;
-		len = p - ip->bw_conv_buf;
+		len = (int)(p - ip->bw_conv_buf);
 	    }
 	}
 
@@ -4003,10 +4011,10 @@ buf_write_bytes(ip)
 	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
 	    if (fromlen > 0)
 		mch_memmove(ip->bw_rest, (void *)from, fromlen);
-	    ip->bw_restlen = fromlen;
+	    ip->bw_restlen = (int)fromlen;
 
 	    buf = ip->bw_conv_buf;
-	    len = (char_u *)to - ip->bw_conv_buf;
+	    len = (int)((char_u *)to - ip->bw_conv_buf);
 	}
 # endif
     }
@@ -4028,7 +4036,7 @@ buf_write_bytes(ip)
     /* Repeat the write(), it may be interrupted by a signal. */
     while (len)
     {
-	wlen = write(ip->bw_fd, (char *)buf, (size_t)len);
+	wlen = vim_write(ip->bw_fd, buf, len);
 	if (wlen <= 0)		    /* error! */
 	    return FAIL;
 	len -= wlen;
@@ -4283,7 +4291,7 @@ shorten_fname(full_path, dir_name)
 
     if (full_path == NULL)
 	return NULL;
-    len = STRLEN(dir_name);
+    len = (int)STRLEN(dir_name);
     if (fnamencmp(dir_name, full_path, len) == 0)
     {
 	p = full_path + len;
@@ -4404,7 +4412,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
     char_u	*ptr;
     int		fnamelen, extlen;
 
-    extlen = STRLEN(ext);
+    extlen = (int)STRLEN(ext);
 
     /*
      * If there is no file name we must get the name of the current directory
@@ -4416,7 +4424,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	if (retval == NULL)
 	    return NULL;
 	if (mch_dirname(retval, MAXPATHL) == FAIL ||
-					     (fnamelen = STRLEN(retval)) == 0)
+				     (fnamelen = (int)STRLEN(retval)) == 0)
 	{
 	    vim_free(retval);
 	    return NULL;
@@ -4432,7 +4440,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
     }
     else
     {
-	fnamelen = STRLEN(fname);
+	fnamelen = (int)STRLEN(fname);
 	retval = alloc((unsigned)(fnamelen + extlen + 3));
 	if (retval == NULL)
 	    return NULL;
@@ -4538,7 +4546,7 @@ buf_modname(shortname, fname, ext, prepend_dot)
 	else if ((int)STRLEN(e) + extlen > 4)
 	    s = e + 4 - extlen;
     }
-#if defined(OS2) || defined(USE_LONG_FNAME) || defined(WIN32)
+#if defined(OS2) || defined(USE_LONG_FNAME) || defined(WIN3264)
     /*
      * If there is no file name, and the extension starts with '.', put a
      * '_' before the dot, because just ".ext" may be invalid if it's on a
@@ -4637,9 +4645,11 @@ vim_fgets(buf, size, fp)
     return (eof == NULL);
 }
 
+#if defined(USE_CR) || defined(PROTO)
 /*
  * Like vim_fgets(), but accept any line terminator: CR, CR-LF or LF.
  * Returns TRUE for end-of-file.
+ * Only used for the Mac, because it's much slower than vim_fgets().
  */
     int
 tag_fgets(buf, size, fp)
@@ -4677,6 +4687,7 @@ tag_fgets(buf, size, fp)
     buf[i] = NUL;
     return eof;
 }
+#endif
 
 /*
  * rename() only works if both files are on the same file system, this
@@ -4751,8 +4762,8 @@ vim_rename(from, to)
 	return -1;
     }
 
-    while ((n = read(fd_in, buffer, (size_t)BUFSIZE)) > 0)
-	if (write(fd_out, buffer, (size_t)n) != n)
+    while ((n = vim_read(fd_in, buffer, BUFSIZE)) > 0)
+	if (vim_write(fd_out, buffer, n) != n)
 	{
 	    errmsg = _("E208: Error writing to \"%s\"");
 	    break;
@@ -4871,7 +4882,7 @@ buf_check_timestamp(buf, focus)
     if (       !(buf->b_flags & BF_NOTEDITED)
 	    && buf->b_mtime != 0
 	    && ((stat_res = mch_stat((char *)buf->b_ffname, &st)) < 0
-		|| time_differs(st.st_mtime, buf->b_mtime)))
+		|| time_differs((long)st.st_mtime, buf->b_mtime)))
     {
 	retval = 1;
 
@@ -4879,7 +4890,7 @@ buf_check_timestamp(buf, focus)
 	if (stat_res < 0)
 	    buf->b_mtime = 0;
 	else
-	    buf->b_mtime = st.st_mtime;
+	    buf->b_mtime = (long)st.st_mtime;
 
 	/* Don't do anything for a directory.  Might contain the file
 	 * explorer. */
@@ -5068,7 +5079,9 @@ vim_deltempdir()
 	    FreeWild(file_count, files);
 	}
 	gettail(NameBuff)[-1] = NUL;
+# ifndef VAX	/* temporary fix: VAX doesn't have rmdir() */
 	(void)mch_rmdir(NameBuff);
+# endif
 
 	vim_free(vim_tempdir);
 	vim_tempdir = NULL;
@@ -5190,7 +5203,7 @@ vim_tempname(extra_char)
 
 #else /* TEMPDIRNAMES */
 
-# ifdef WIN32
+# ifdef WIN3264
     char	szTempFile[_MAX_PATH + 1];
     char	buf4[4];
     char_u	*retval;
@@ -5216,7 +5229,7 @@ vim_tempname(extra_char)
 		*p = '/';
     return retval;
 
-# else /* WIN32 */
+# else /* WIN3264 */
 
 #  ifdef USE_TMPNAM
     /* tmpnam() will make its own name */
@@ -5249,7 +5262,7 @@ vim_tempname(extra_char)
 	return NULL;
 #   endif
 #  endif
-# endif /* WIN32 */
+# endif /* WIN3264 */
 
     return vim_strsave(itmp);
 #endif /* TEMPDIRNAMES */
@@ -5681,7 +5694,7 @@ event_name2nr(start, end)
 	;
     for (i = 0; event_names[i].name != NULL; ++i)
     {
-	len = strlen(event_names[i].name);
+	len = (int)STRLEN(event_names[i].name);
 	if (len == p - start && STRNICMP(event_names[i].name, start, len) == 0)
 	    break;
     }
@@ -6073,7 +6086,7 @@ do_autocmd_event(event, pat, nested, cmd, forceit, group)
 		if (ap == NULL)
 		    return FAIL;
 		ap->pat = vim_strnsave(pat, (int)(endpat - pat));
-		ap->patlen = endpat - pat;
+		ap->patlen = (int)(endpat - pat);
 		if (ap->pat == NULL)
 		{
 		    vim_free(ap);

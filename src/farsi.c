@@ -1799,7 +1799,7 @@ conv_to_pvim()
     {
 	ptr = ml_get((linenr_T)lnum);
 
-	llen = STRLEN(ptr);
+	llen = (int)STRLEN(ptr);
 
 	for ( i = 0; i < llen-1; i++)
 	{
@@ -1854,7 +1854,7 @@ conv_to_pstd()
     {
 	ptr = ml_get((linenr_T)lnum);
 
-	llen = STRLEN(ptr);
+	llen = (int)STRLEN(ptr);
 
 	for ( i = 0; i < llen; i++)
 	{
@@ -1917,7 +1917,7 @@ lrFswap(cmdbuf, len)
     if (cmdbuf == NULL)
 	return cmdbuf;
 
-    if (len == 0 && (len = STRLEN(cmdbuf)) == 0)
+    if (len == 0 && (len = (int)STRLEN(cmdbuf)) == 0)
 	return cmdbuf;
 
     for (i = 0; i < len; i++)
@@ -1958,9 +1958,9 @@ lrF_sub(ibuf)
 
     /* Now find the boundry of the substitute section */
     if ((ep = (char_u *)strrchr((char *)++p, '/')) != NULL)
-	cnt = ep - p;
+	cnt = (int)(ep - p);
     else
-	cnt = STRLEN(p);
+	cnt = (int)STRLEN(p);
 
     /* Reverse the characters in the substitute section and take care of '\' */
     for (i = 0; i < cnt-1; i++)

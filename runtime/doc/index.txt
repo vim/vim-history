@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0ai.  Last change: 2001 Jun 03
+*index.txt*     For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1048,6 +1048,7 @@ The commands are sorted on the non-optional part of their name.
 |:colorscheme|	:colo[rscheme]	load a specifi color scheme
 |:command|	:com[mand]	create user-defined command
 |:comclear|	:comc[lear]	clear all user-defined commands
+|:compiler|	:comp[iler]	do settings for a specific compiler
 |:continue|	:con[tinue]	go back to :while
 |:confirm|	:conf[irm]	prompt user when confirmation required
 |:cprevious|	:cp[revious]	go to previous error

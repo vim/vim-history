@@ -6835,14 +6835,14 @@ echo "${ECHO_T}automatic terminal library selection" >&6
   esac
   for libname in $tlibs; do
 
-ac_ac_Lib=`echo "ac_cv_lib_$libname_tgetent" | $ac_tr_sh`
-echo "$as_me:6839: checking for tgetent in -l$libname" >&5
-echo $ECHO_N "checking for tgetent in -l$libname... $ECHO_C" >&6
+ac_ac_Lib=`echo "ac_cv_lib_${libname}_tgetent" | $ac_tr_sh`
+echo "$as_me:6839: checking for tgetent in -l${libname}" >&5
+echo $ECHO_N "checking for tgetent in -l${libname}... $ECHO_C" >&6
 if eval "test \"\${$ac_ac_Lib+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
   ac_check_lib_save_LIBS=$LIBS
-LIBS="-l$libname  $LIBS"
+LIBS="-l${libname}  $LIBS"
 cat >conftest.$ac_ext <<_ACEOF
 #line 6847 "configure"
 #include "confdefs.h"
@@ -6887,10 +6887,10 @@ echo "$as_me:6886: result: `eval echo '${'$ac_ac_Lib'}'`" >&5
 echo "${ECHO_T}`eval echo '${'$ac_ac_Lib'}'`" >&6
 if test `eval echo '${'$ac_ac_Lib'}'` = yes; then
   cat >>confdefs.h <<EOF
-#define `echo "HAVE_LIB$libname" | $ac_tr_cpp` 1
+#define `echo "HAVE_LIB${libname}" | $ac_tr_cpp` 1
 EOF
 
-  LIBS="-l$libname $LIBS"
+  LIBS="-l${libname} $LIBS"
 
 fi
 
@@ -7586,9 +7586,9 @@ fi
 
 for ac_func in bcmp fchdir fchown fseeko fsync ftello getcwd getpseudotty \
 	getpwnam getpwuid getrlimit gettimeofday getwd lstat memcmp \
-	memset nanosleep opendir putenv qsort select setenv setpgid setsid \
-	sigaltstack sigstack sigset sigsetjmp sigaction sigvec \
-	strcasecmp strerror strftime stricmp strncasecmp strnicmp \
+	memset nanosleep opendir putenv qsort readlink select setenv \
+	setpgid setsid sigaltstack sigstack sigset sigsetjmp sigaction \
+	sigvec strcasecmp strerror strftime stricmp strncasecmp strnicmp \
 	strpbrk strtol tgetent usleep utime utimes
 do
 ac_ac_var=`echo "ac_cv_func_$ac_func" | $ac_tr_sh`

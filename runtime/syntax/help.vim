@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2001 May 28
+" Last Change:	2001 Jun 09
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -16,11 +16,11 @@ syn match helpSectionDelim	"^=\{3,}.*==$"
 syn match helpSectionDelim	"^-\{3,}.*--$"
 syn region helpExample		matchgroup=helpIgnore start=" >$" start="^>$" end="^[^ \t]"me=e-1 end="^<"
 if has("ebcdic")
-  syn match helpHyperTextJump	"|[^"*|]\+|"
+  syn match helpHyperTextJump	"\\\@<!|[^"*|]\+|"
   syn match helpHyperTextEntry	"\*[^"*|]\+\*\s"he=e-1
   syn match helpHyperTextEntry	"\*[^"*|]\+\*$"
 else
-  syn match helpHyperTextJump	"|[#-)!+-~]\+|"
+  syn match helpHyperTextJump	"\\\@<!|[#-)!+-~]\+|"
   syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*\s"he=e-1
   syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*$"
 endif

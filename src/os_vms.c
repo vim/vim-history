@@ -277,164 +277,6 @@ mch_set_shellsize(void)
     screen_start();
 }
 
-/*
- * vms_wproc() is called for each matching filename by decc$to_vms().
- * We want to save each match for later retrieval.
- *
- * Returns:  1 - continue finding matches
- *	     0 - stop trying to find any further mathces
- *
- */
-static int
-vms_wproc( char *name, int type )
-{
-    char xname[MAXPATHL];
-    int i;
-
-    if (vms_match_num == 0) {
-	/* first time through, setup some things */
-	if (NULL == vms_fmatch) {
-	    vms_fmatch = (char_u **)alloc(EXPL_ALLOC_INC * sizeof(char *));
-	    if (!vms_fmatch)
-		return 0;
-	    vms_match_alloced = EXPL_ALLOC_INC;
-	    vms_match_free = EXPL_ALLOC_INC;
-	}
-	else {
-	    /* re-use existing space */
-	    vms_match_free = vms_match_alloced;
-	}
-    }
-    /* remove version from filename (if it exists) */
-    strcpy(xname,name);
-    {
-	char *cp = strchr(xname,';');
-
-	if (cp)
-	    *cp = '\0';
-	/* also may have the form: filename.ext.ver */
-	cp = strchr(xname,'.');
-	if (cp) {
-	   ++cp;
-	   cp = strchr(cp,'.');
-	   if (cp)
-		*cp = '\0';
-	}
-	cp = strchr(xname,']');
-	if (cp)
-	    return 1; /* do not add directories at all*/
-    }
-    /* translate name */
-    strcpy(xname,decc$translate_vms(xname));
-
-    /* if name already exists, don't add it */
-    for (i = 0; i<vms_match_num; i++) {
-	if (0 == STRCMP((char_u *)xname,vms_fmatch[i]))
-	    return 1;
-    }
-    if (--vms_match_free == 0) {
-	/* add more spacE to store matches */
-	vms_match_alloced += EXPL_ALLOC_INC;
-	vms_fmatch = (char_u **)realloc(vms_fmatch,
-		sizeof(char **) * vms_match_alloced);
-	if (!vms_fmatch)
-	    return 0;
-	vms_match_free = EXPL_ALLOC_INC;
-    }
-#ifdef APPEND_DIR_SLASH
-    if (type == DECC$K_DIRECTORY) {
-	STRCAT(xname,"/");
-	vms_fmatch[vms_match_num] = vim_strsave((char_u *)xname);
-    }
-    else {
-	vms_fmatch[vms_match_num] =
-	    vim_strsave((char_u *)xname);
-    }
-#else
-    vms_fmatch[vms_match_num] =
-	vim_strsave((char_u *)xname);
-#endif
-    ++vms_match_num;
-    return 1;
-}
-
-/*
- *	mch_expand_wildcards	this code does wild-card pattern
- *				matching NOT using the shell
- *
- *	return OK for success, FAIL for error (you may loose some
- *	memory) and put an error message in *file.
- *
- *	num_pat	   number of input patterns
- *	pat	   array of pointers to input patterns
- *	num_file   pointer to number of matched file names
- *	file	   pointer to array of pointers to matched file names
- *
- */
-    int
-mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, int flags)
-{
-    int		i, j = 0, cnt = 0;
-    char	*cp;
-    char_u	buf[MAXPATHL];
-    int		dir;
-    int files_alloced, files_free;
-
-    *num_file = 0;			/* default: no files found	*/
-    files_alloced = EXPL_ALLOC_INC;
-    files_free = EXPL_ALLOC_INC;
-    *file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
-    if (*file == NULL)
-    {
-	*num_file = 0;
-	return FAIL;
-    }
-    for (i = 0; i < num_pat; i++)
-    {
-	/* expand environment var or home dir */
-	if (vim_strchr(pat[i],'$') || vim_strchr(pat[i],'~'))
-	    expand_env(pat[i],buf,MAXPATHL);
-	else
-	    STRCPY(buf,pat[i]);
-
-	vms_match_num = 0; /* reset collection counter */
-	cnt = decc$to_vms((char *)buf, vms_wproc, 1, 0);
-	if (cnt > 0)
-	    cnt = vms_match_num;
-
-	if (cnt < 1)
-	    continue;
-
-	for (i = 0; i < cnt; i++)
-	{
-	    /* files should exist if expanding interactively */
-	    if (!(flags & EW_NOTFOUND) && mch_getperm(vms_fmatch[i]) < 0)
-		continue;
-	    /* do not include directories */
-	    dir = (mch_isdir(vms_fmatch[i]));
-	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
-		continue;
-	    /* allocate memory for pointers */
-	    if (--files_free < 1)
-	    {
-		files_alloced += EXPL_ALLOC_INC;
-		*file = (char_u **)realloc(*file,
-		    sizeof(char_u **) * files_alloced);
-		if (*file == NULL)
-		{
-		    *file = (char_u **)"";
-		    *num_file = 0;
-		    return(FAIL);
-		}
-		files_free = EXPL_ALLOC_INC;
-	    }
-
-	    (*file)[*num_file++] = vms_fmatch[i];
-	}
-    }
-    return OK;
-}
-
     char_u *
 mch_getenv(char_u *lognam)
 {
@@ -517,14 +359,154 @@ vms_sys(char *cmd, char *out, char *inp)
     return(TRUE);
 }
 
+/*
+ * vms_wproc() is called for each matching filename by decc$to_vms().
+ * We want to save each match for later retrieval.
+ *
+ * Returns:  1 - continue finding matches
+ *	     0 - stop trying to find any further mathces
+ *
+ */
+static int
+vms_wproc( char *name )
+{
+    char xname[MAXPATHL];
+    int i;
+
+    if (vms_match_num == 0) {
+	/* first time through, setup some things */
+	if (NULL == vms_fmatch) {
+	    vms_fmatch = (char_u **)alloc(EXPL_ALLOC_INC * sizeof(char *));
+	    if (!vms_fmatch)
+		return 0;
+	    vms_match_alloced = EXPL_ALLOC_INC;
+	    vms_match_free = EXPL_ALLOC_INC;
+	}
+	else {
+	    /* re-use existing space */
+	    vms_match_free = vms_match_alloced;
+	}
+    }
+    
+    strcpy(xname,vms_fixfilename(name));
+    vms_remove_version(xname); 
+
+    /* if name already exists, don't add it */
+    for (i = 0; i<vms_match_num; i++) {
+	if (0 == STRCMP((char_u *)xname,vms_fmatch[i]))
+	    return 1;
+    }
+    if (--vms_match_free == 0) {
+	/* add more space to store matches */
+	vms_match_alloced += EXPL_ALLOC_INC;
+	vms_fmatch = (char_u **)realloc(vms_fmatch,
+		sizeof(char **) * vms_match_alloced);
+	if (!vms_fmatch)
+	    return 0;
+	vms_match_free = EXPL_ALLOC_INC;
+    }
+#ifdef APPEND_DIR_SLASH
+    if (type == DECC$K_DIRECTORY) {
+	STRCAT(xname,"/");
+	vms_fmatch[vms_match_num] = vim_strsave((char_u *)xname);
+    }
+    else {
+	vms_fmatch[vms_match_num] =
+	    vim_strsave((char_u *)xname);
+    }
+#else
+    vms_fmatch[vms_match_num] =
+	vim_strsave((char_u *)xname);
+#endif
+    ++vms_match_num;
+    return 1;
+}
+
+/*
+ *	mch_expand_wildcards	this code does wild-card pattern
+ *				matching NOT using the shell
+ *
+ *	return OK for success, FAIL for error (you may loose some
+ *	memory) and put an error message in *file.
+ *
+ *	num_pat	   number of input patterns
+ *	pat	   array of pointers to input patterns
+ *	num_file   pointer to number of matched file names
+ *	file	   pointer to array of pointers to matched file names
+ *
+ */
+    int
+mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, int flags)
+{
+    int		i, j = 0, cnt = 0;
+    char	*cp;
+    char_u	buf[MAXPATHL];
+    int		dir;
+    int files_alloced, files_free;
+
+    *num_file = 0;			/* default: no files found	*/
+    files_alloced = EXPL_ALLOC_INC;
+    files_free = EXPL_ALLOC_INC;
+    *file = (char_u **) alloc(sizeof(char_u **) * files_alloced);
+    if (*file == NULL)
+    {
+	*num_file = 0;
+	return FAIL;
+    }
+    for (i = 0; i < num_pat; i++)
+    {
+	/* expand environment var or home dir */
+	if (vim_strchr(pat[i],'$') || vim_strchr(pat[i],'~'))
+	    expand_env(pat[i],buf,MAXPATHL);
+	else
+	    STRCPY(buf,pat[i]);
+
+	vms_match_num = 0; /* reset collection counter */
+	cnt = decc$from_vms( vms_fixfilename(buf), vms_wproc, 1);
+	if (cnt > 0)
+	    cnt = vms_match_num;
+
+	if (cnt < 1)
+	    continue;
+
+	for (i = 0; i < cnt; i++)
+	{
+	    /* files should exist if expanding interactively */
+	    if (!(flags & EW_NOTFOUND) && mch_getperm(vms_fmatch[i]) < 0)
+		continue;
+	    /* do not include directories */
+	    dir = (mch_isdir(vms_fmatch[i]));
+	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
+		continue;
+	    /* allocate memory for pointers */
+	    if (--files_free < 1)
+	    {
+		files_alloced += EXPL_ALLOC_INC;
+		*file = (char_u **)realloc(*file,
+		    sizeof(char_u **) * files_alloced);
+		if (*file == NULL)
+		{
+		    *file = (char_u **)"";
+		    *num_file = 0;
+		    return(FAIL);
+		}
+		files_free = EXPL_ALLOC_INC;
+	    }
+
+	    (*file)[*num_file++] = vms_fmatch[i];
+	}
+    }
+    return OK;
+}
+
     int
 mch_expandpath(garray_T *gap, char_u *path, int flags)
 {
     int		i,cnt = 0;
     char	*cp;
-
     vms_match_num = 0;
-    cnt = decc$to_vms((char *)path, vms_wproc, 1, 0);
+    
+    cnt = decc$from_vms(vms_fixfilename(path), vms_wproc, 1 );
     if (cnt > 0)
 	cnt = vms_match_num;
     for (i = 0; i < cnt; i++)
@@ -534,7 +516,6 @@ mch_expandpath(garray_T *gap, char_u *path, int flags)
     }
     return cnt;
 }
-
 
 /* 
  * attempt to translate a mixed unix-vms file specification to pure vms 
@@ -626,6 +607,7 @@ vms_unix_mixed_filespec(char *in, char *out)
     if (end_of_dir != NULL) /* Terminate directory portion */
 	*end_of_dir = ']';
 }
+
 
 /* 
  * for decc$to_vms in vms_fixfilename 

@@ -17,6 +17,7 @@
 # case.  To build using Microsoft Visual C++, use Make_mvc.mak.
 #
 # This should work with the free Borland command line compiler, version 5.5.
+# You need at least sp1 (service pack 1).  With sp2 it compiles faster.
 # Use a command like this:
 # <path>\bin\make /f Make_bc5.mak BOR=<path>
 #

@@ -41,7 +41,7 @@
  *  mf_get().
  */
 
-#if defined(MSDOS) || defined(WIN32)
+#if defined(MSDOS) || defined(WIN32) || defined(_WIN64)
 # include <io.h>
 #endif
 
@@ -206,7 +206,7 @@ static int fnamecmp_ino __ARGS((char_u *, char_u *, long));
 #endif
 static void long_to_char __ARGS((long, char_u *));
 static long char_to_long __ARGS((char_u *));
-#if defined(UNIX) || defined(WIN32)
+#if defined(UNIX) || defined(WIN3264)
 static char_u *make_percent_swname __ARGS((char_u *dir, char_u *name));
 #endif
 #ifdef FEAT_BYTEOFF
@@ -669,8 +669,7 @@ set_b0_fname(b0p, buf)
 #ifdef CHECK_INODE
 	    long_to_char((long)st.st_ino, b0p->b0_ino);
 #endif
-	    buf->b_mtime = st.st_mtime;
-	    buf->b_mtime_read = st.st_mtime;
+	    buf->b_mtime = buf->b_mtime_read = (long)st.st_mtime;
 	}
 	else
 	{
@@ -729,7 +728,7 @@ ml_recover()
     fname = curbuf->b_fname;
     if (fname == NULL)		    /* When there is no file name */
 	fname = (char_u *)"";
-    len = STRLEN(fname);
+    len = (int)STRLEN(fname);
     if (len >= 4 &&
 #if defined(VMS) || defined(RISCOS)
 	    STRNICMP(fname + len - 4, "_sw" , 3)
@@ -1275,7 +1274,7 @@ recover_names(fname, list, nr)
 	    }
 	    else
 	    {
-#if defined(UNIX) || defined(WIN32)
+#if defined(UNIX) || defined(WIN3264)
 		p = dir_name + STRLEN(dir_name);
 		if (vim_ispathsep(p[-1]) && p[-1] == p[-2])
 		{
@@ -1413,7 +1412,7 @@ recover_names(fname, list, nr)
     return file_count;
 }
 
-#if defined(UNIX) || defined(WIN32)  /* Need _very_ long file names */
+#if defined(UNIX) || defined(WIN3264)  /* Need _very_ long file names */
 /*
  * Append the full path to name with path separators made into percent
  * signs, to dir. An unnamed buffer is handled as "" (<currentdir>/"")
@@ -1582,13 +1581,13 @@ recov_file_names(names, path, prepend_dot)
     num_names = 1;
 #else /* !SHORT_FNAME */
     /*
-     * (WIN32) never short names, but do prepend a dot.
-     * (Not MS-DOS or WIN32) maybe short name, maybe not: Try both.
+     * (Win32 and Win64) never short names, but do prepend a dot.
+     * (Not MS-DOS or Win32 or Win64) maybe short name, maybe not: Try both.
      * Only use the short name if it is different.
      */
     char_u	*p;
     int		i;
-# ifndef WIN32
+# ifndef WIN3264
     int	    shortname = curbuf->b_shortname;
 
     curbuf->b_shortname = FALSE;
@@ -1625,7 +1624,7 @@ recov_file_names(names, path, prepend_dot)
     if (num_names >= 1)	    /* check if we have the same name twice */
     {
 	p = names[num_names - 1];
-	i = STRLEN(names[num_names - 1]) - STRLEN(names[num_names]);
+	i = (int)STRLEN(names[num_names - 1]) - (int)STRLEN(names[num_names]);
 	if (i > 0)
 	    p += i;	    /* file name has been expanded to full path */
 
@@ -1637,7 +1636,7 @@ recov_file_names(names, path, prepend_dot)
     else
 	++num_names;
 
-# ifndef WIN32
+# ifndef WIN3264
     /*
      * Also try with 'shortname' set, in case the file is on a DOS filesystem.
      */
@@ -1668,7 +1667,7 @@ recov_file_names(names, path, prepend_dot)
 # endif
 
 end:
-# ifndef WIN32
+# ifndef WIN3264
     curbuf->b_shortname = shortname;
 # endif
 
@@ -1977,7 +1976,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 	lowest_marked = lnum + 1;
 
     if (len == 0)
-	len = STRLEN(line) + 1;		/* space needed for the text */
+	len = (colnr_T)STRLEN(line) + 1;	/* space needed for the text */
     space_needed = len + INDEX_SIZE;	/* space needed for text + index */
 
     mfp = buf->b_ml.ml_mfp;
@@ -2818,7 +2817,7 @@ ml_flush_line(buf)
 		old_len = dp->db_txt_end - start;
 	    else		/* text of previous line follows */
 		old_len = (dp->db_index[idx - 1] & DB_INDEX_MASK) - start;
-	    new_len = STRLEN(new_line) + 1;
+	    new_len = (colnr_T)STRLEN(new_line) + 1;
 	    extra = new_len - old_len;	    /* negative if lines gets smaller */
 
 	    /*
@@ -2914,7 +2913,7 @@ ml_new_ptr(mfp)
     pp = (PTR_BL *)(hp->bh_data);
     pp->pb_id = PTR_ID;
     pp->pb_count = 0;
-    pp->pb_count_max = (mfp->mf_page_size - sizeof(PTR_BL)) / sizeof(PTR_EN) + 1;
+    pp->pb_count_max = (short_u)((mfp->mf_page_size - sizeof(PTR_BL)) / sizeof(PTR_EN) + 1);
 
     return hp;
 }
@@ -3213,7 +3212,7 @@ makeswapname(buf, dir_name)
 {
     char_u	*r, *s;
 
-#if defined(UNIX) || defined(WIN32)  /* Need _very_ long file names */
+#if defined(UNIX) || defined(WIN3264)  /* Need _very_ long file names */
     s = dir_name + STRLEN(dir_name);
     if (vim_ispathsep(s[-1]) && s[-1] == s[-2])
     {			       /* Ends with '//', Use Full path */
@@ -3372,7 +3371,7 @@ findswapname(buf, dirp, old_fname)
     {
 	if (fname == NULL)	/* must be out of memory */
 	    break;
-	if ((n = STRLEN(fname)) == 0)	/* safety check */
+	if ((n = (int)STRLEN(fname)) == 0)	/* safety check */
 	{
 	    vim_free(fname);
 	    fname = NULL;
@@ -3856,13 +3855,13 @@ long_to_char(n, s)
     long    n;
     char_u  *s;
 {
-    s[0] = (n & 0xff);
+    s[0] = (char_u)(n & 0xff);
     n = (unsigned)n >> 8;
-    s[1] = (n & 0xff);
+    s[1] = (char_u)(n & 0xff);
     n = (unsigned)n >> 8;
-    s[2] = (n & 0xff);
+    s[2] = (char_u)(n & 0xff);
     n = (unsigned)n >> 8;
-    s[3] = (n & 0xff);
+    s[3] = (char_u)(n & 0xff);
 }
 
     static long
@@ -3873,11 +3872,11 @@ char_to_long(s)
 
     retval = s[3];
     retval <<= 8;
-    retval += s[2];
+    retval |= s[2];
     retval <<= 8;
-    retval += s[1];
+    retval |= s[1];
     retval <<= 8;
-    retval += s[0];
+    retval |= s[0];
 
     return retval;
 }
@@ -3962,7 +3961,7 @@ ml_updatechunk(buf, line, len, updtype)
 	buf->b_ml.ml_usedchunks = 1;
 	buf->b_ml.ml_chunksize[0].mlcs_numlines = 1;
 	buf->b_ml.ml_chunksize[0].mlcs_totalsize =
-				  STRLEN(buf->b_ml.ml_line_ptr) + 1;
+				  (long)STRLEN(buf->b_ml.ml_line_ptr) + 1;
 	return;
     }
 

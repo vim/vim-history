@@ -40,6 +40,9 @@
 #endif
 #include <windows.h>
 
+#if defined(__MINGW32__) && defined(GETTEXT_DYNAMIC)
+# include "dyn-ming.h"
+#endif
 
 #undef chdir
 #ifdef __GNUC__
@@ -1701,6 +1704,13 @@ static HICON g_hOrigIcon = NULL;
 static HICON g_hVimIcon = NULL;
 static BOOL g_fCanChangeIcon = FALSE;
 
+/* ICON* are not defined in VC++ 4.0 */
+#ifndef ICON_SMALL
+#define ICON_SMALL 0
+#endif
+#ifndef ICON_BIG
+#define ICON_BIG 1
+#endif
 /*
  * GetConsoleIcon()
  * Description:
@@ -2001,7 +2011,7 @@ fname_case(
     char szTrueName[_MAX_PATH + 2];
     char szOrigElem[_MAX_PATH + 2];
     char *psz, *pszPrev;
-    const int len = (name != NULL)  ?  STRLEN(name)  :	0;
+    const int len = (name != NULL) ? (int)STRLEN(name) : 0;
 
     if (len == 0)
 	return;
@@ -2772,11 +2782,11 @@ mch_call_shell(
 	/* we use "command" or "cmd" to start the shell; slow but easy */
 	char_u *newcmd;
 
-	newcmd = lalloc(
+	newcmd = lalloc((long_u) (
 #ifdef FEAT_GUI_W32
 		STRLEN(vimrun_path) +
 #endif
-		STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10, TRUE);
+		STRLEN(p_sh) + STRLEN(p_shcf) + STRLEN(cmd) + 10), TRUE);
 	if (newcmd != NULL)
 	{
 	    char_u *cmdbase = (*cmd == '"' ? cmd + 1 : cmd);
@@ -2988,7 +2998,7 @@ termcap_mode_end(void)
 	 * Clear anything that happens to be on the current line.
 	 */
 	coord.X = 0;
-	coord.Y = p_rs ? cb->Info.dwCursorPosition.Y : (Rows - 1);
+	coord.Y = (SHORT) (p_rs ? cb->Info.dwCursorPosition.Y : (Rows - 1));
 	FillConsoleOutputCharacter(g_hConOut, ' ',
 		cb->Info.dwSize.X, coord, &dwDummy);
 	/*
@@ -3728,7 +3738,7 @@ mch_avail_mem(
 
     ms.dwLength = sizeof(MEMORYSTATUS);
     GlobalMemoryStatus(&ms);
-    return(ms.dwAvailPhys + ms.dwAvailPageFile);
+    return (long_u) (ms.dwAvailPhys + ms.dwAvailPageFile);
 }
 
 

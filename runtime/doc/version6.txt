@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ai.  Last change: 2001 Jun 03
+*version6.txt*  For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -276,6 +276,7 @@ A buffer for a directory is no longer added to the Buffers menu.
 
 Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
 Thus it's now the hit-enter prompt instead of the hit-return prompt.
+Can map <Enter> just like <CR> or <Return>.
 
 When setting 'syntax' to a name for which there is no syntax file, the syntax
 highlighting is cleared.  Previously the existing highlighting was kept.
@@ -442,6 +443,7 @@ Added diff mode |diff-mode|
   another file.
 - Added the ":diffpatch" command to start diff mode with the current file and
   a patch file.
+- Added the ":diffthis" command to start diff mode for the current file.
 - The 'diff' option switches diff mode on in a window.
 - The ":diffupdate" refreshes the diffs.
 - The 'diffopt' option changes how diffs are displayed.
@@ -593,6 +595,8 @@ Many new items for Multi-byte support:
   each multibyte character, not only at a space.
 - Patterns should now work properly with all kinds of multi-byte characters.
 - Made ":syntax keyword" work with multi-byte characters.
+- Added support for Unicode upper/lower case flipping and comparing. (based on
+  patch by Raphael Finkel)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -622,6 +626,7 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
 - Use a different mouse cursor for when ":lmap" mappings are active.  Can
   specify two highlight groups for an item in 'guicursor'.  By default
   "lCursor" and "Cursor" are equal, the user must set a color he likes.
+  Use the cursor color for hangul input as well. (Sung-Hyun Nam)
 - Show "(lang)" for 'showmode' when language mapping is enabled.
 - UTF-8: Made "r" work with a ":lmap" that includes a composing character.
   Also works for "f", which now works to find a character that includes a
@@ -666,6 +671,8 @@ Multi-language support					*new-multi-lang*
   messages to 'encoding'.  This requires GNU gettext 0.10.36.
 - Added gettext support for Win32.  This means messages will be translated
   when the locale is set and libintl.dll can be found.  (Muraoka Taro)
+  Also made it work with MingW compiler.  (Eduardo Fernandez)
+
 
 
 Plugin support					*new-plugins*
@@ -868,6 +875,9 @@ uninstall.  (gerfried)
 
 Mac: Make Vim compile with the free MPW compiler supplied by Apple.  And
 updates for CodeWarrior. (Axel Kielhorn)
+
+Added typecasts and ifdefs as a start to make Vim work on Win64 (George
+Reilly)
 
 
 Quickfix extended					*quickfix-6*
@@ -1121,6 +1131,9 @@ Ex commands: ~
 
 :hardcopy	Print to paper.
 
+:compiler	Load a Vim script to do settings for a specific compiler.
+
+
 New marks: ~
 
 '( and ')	Begin or end of current sentence.  Useful in Ex commands.
@@ -1159,6 +1172,7 @@ inputdialog()	Like input() but use a GUI dialog when possible.  Currently
 		Use inputdialog() for the Edit/Settings/Text Width menu.  Also
 		for the Help/Find.. and Toolbar FindHelp items.
 		(Win32 support by Thore B. Karlsen)
+		(Win16 support by Vince Negri)
 inputsecret()	Ask the user to type a string without showing the typed keys.
 		(Charles Campbell)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
@@ -1166,6 +1180,8 @@ libcallnr()	for Win32 and Unix
 mode()		Return a string that indicates the current mode.
 nextnonblank()	Skip blank lines forwards.
 prevnonblank()	Skip blank lines backwards.  Useful to for indent scripts.
+resolve()	MS-Windows: resolve a shortcut to the file it points to.
+		Unix: resolve a symbolic link.
 search()	Search for a pattern.
 searchpair()	Search for matching pair.  Can be used in indent files to find
 		the "if" matching an endif.
@@ -1265,8 +1281,7 @@ between line numbers from 'number' option.
 When there is a format error in a tags file, the byte position is reported so
 that the error can be located.
 
-Allow a tags file to have CR, CR-LF or LF line separator.  Useful on the
-Macintosh.
+On the Macintosh, allow a tags file to have CR, CR-LF or LF line separator.
 
 "gf" works in Visual mode: Use the selected text as the file name. (Chase
 Tingley)
@@ -1744,6 +1759,12 @@ Added IDs to many error messages.  Makes it easier to find the relevant
 explanation in the docs.
 
 Unix: Catch SIGPWR to preserve files when the power is about to go down.
+
+Motif: (Martin Dalecki)
+- Made the dialog layout better.
+- Added find and find/replace dialogs.
+- For the menus, change "iso-8859" to "iso_8859", Linux appears to need this.
+- Added icon to dialogs, like for GTK.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -2354,8 +2375,12 @@ middle, didn't always compute the space correctly.
 
 Could not imap <C-@>.  Now it works like <Nul>.
 
-VMS: Fixed a few things for VAXC.  os_vms_fix.com had some strange CTRL-M
-characters. (Zoltan Arpadffy and John W. Hamill)
+VMS:
+- Fixed a few things for VAXC.  os_vms_fix.com had some strange CTRL-M
+  characters. (Zoltan Arpadffy and John W. Hamill)
+- Added VMS-specific defaults for the 'isfname' and 'isprint' options.
+  (Zoltan Arpadffy)
+- Removed os_vms_osdef.h, it's no longer used.
 
 The gzip plugin used a ":normal" command, this doesn't work when dropping a
 compressed file on Vim.
@@ -2378,9 +2403,6 @@ would reset the counter used for the "more" prompt.
 
 In the Win32 find/replace dialog, a '/' character caused problems.  Escape it
 with a backslash.
-
-VMS: added VMS-specific defaults for the 'isfname' and 'isprint' options.
-(Zoltan Arpadffy)
 
 Starting a shell with ":sh" was different from starting a shell for CTRL-Z
 when suspending doesn't work.  They now work the same way.
@@ -2621,5 +2643,22 @@ browser made Vim exit.  Removed the use of XtAppError().
 
 When using autoconf 2.50, UNIX was not defined.  Moved the comment for "#undef
 UNIX" to a separate line.
+
+Win32: Disabled _OnWindowPosChanging() to make maximize work better.
+
+Win32: Compiling with VC 4.0 didn't work. (Walter Briscoe)
+
+Athena:
+- Finally fixed the problems with deleting a menu. (David Harrison)
+- Athena: When closing the confirm() dialog, worked like OK was pressed,
+  instead of Cancel.
+
+The file explorer didn't work in compatible mode, because of line
+continuation.
+
+Didn't give an error message for ":digraph a".
+
+When using Ex mode in the GUI and typing a special key, <BS> didn't delete it
+correctly.  Now display '?' for a special key.
 
  vim:tw=78:

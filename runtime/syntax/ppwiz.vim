@@ -2,7 +2,7 @@
 " Language:     PPWizard (preprocessor by Dennis Bareis)
 " Maintainer:   Stefan Schwarzer <s.schwarzer@ndh.net>
 " URL:          http://www.ndh.net/home/sschwarzer/download/ppwiz.vim
-" Last Change:  2001 Apr 29
+" Last Change:  2001 Jun 05
 " Filename:     ppwiz.vim
 
 " Remove old syntax stuff
@@ -51,9 +51,9 @@ syn region  ppwizArg      start="{" end="}" contains=ppwizEqual,ppwizString
 syn match   ppwizEqual    "=" contained
 syn match   ppwizOperator "<>\|=\|<\|>" contained
 " standard variables (builtin)
-syn region  ppwizStdVar   start="<\?[^\?]" end=">" contains=@ppwizArgVal
+syn region  ppwizStdVar   start="<?[^?]" end=">" contains=@ppwizArgVal
 " Rexx variables
-syn region  ppwizRexxVar  start="<\?\?" end=">" contains=@ppwizArgVal
+syn region  ppwizRexxVar  start="<??" end=">" contains=@ppwizArgVal
 " Constants
 syn region  ppwizString   start=+"+ end=+"+ contained contains=ppwizMacro,ppwizArg,ppwizHTML,ppwizCont,ppwizStdVar,ppwizRexxVar
 syn region  ppwizString   start=+'+ end=+'+ contained contains=ppwizMacro,ppwizArg,ppwizHTML,ppwizCont,ppwizStdVar,ppwizRexxVar

@@ -194,7 +194,7 @@ charset_pairs[] =
     {"OEM",		OEM_CHARSET},
     {"SHIFTJIS",	SHIFTJIS_CHARSET},
     {"SYMBOL",		SYMBOL_CHARSET},
-#ifdef WIN32
+#ifdef WIN3264
     {"ARABIC",		ARABIC_CHARSET},
     {"BALTIC",		BALTIC_CHARSET},
     {"EASTEUROPE",	EASTEUROPE_CHARSET},
@@ -400,14 +400,14 @@ _OnBlinkTimer(
     {
 	gui_undraw_cursor();
 	blink_state = BLINK_OFF;
-	blink_timer = SetTimer(NULL, 0, (UINT)blink_offtime,
+	blink_timer = (UINT) SetTimer(NULL, 0, (UINT)blink_offtime,
 						    (TIMERPROC)_OnBlinkTimer);
     }
     else
     {
 	gui_update_cursor(TRUE, FALSE);
 	blink_state = BLINK_ON;
-	blink_timer = SetTimer(NULL, 0, (UINT)blink_ontime,
+	blink_timer = (UINT) SetTimer(NULL, 0, (UINT)blink_ontime,
 							 (TIMERPROC)_OnBlinkTimer);
     }
 }
@@ -451,7 +451,7 @@ gui_mch_start_blink(void)
     /* Only switch blinking on if none of the times is zero */
     if (blink_waittime && blink_ontime && blink_offtime && gui.in_focus)
     {
-	blink_timer = SetTimer(NULL, 0, (UINT)blink_waittime,
+	blink_timer = (UINT)SetTimer(NULL, 0, (UINT)blink_waittime,
 						    (TIMERPROC)_OnBlinkTimer);
 	blink_state = BLINK_ON;
 	gui_update_cursor(TRUE, FALSE);
@@ -940,7 +940,7 @@ _OnFindRepl(void)
 	    fr_setreplcmd(cmd);
     }
     if (*cmd)
-	add_to_input_buf(cmd, STRLEN(cmd));
+	add_to_input_buf(cmd, (int)STRLEN(cmd));
 }
 #endif
 
@@ -1567,7 +1567,7 @@ gui_mch_get_color(char_u *name)
 
     static SysColorTable sys_table[] =
     {
-#ifdef WIN32
+#ifdef WIN3264
 	{"SYS_3DDKSHADOW", COLOR_3DDKSHADOW},
 	{"SYS_3DHILIGHT", COLOR_3DHILIGHT},
 #ifndef __MINGW32__
@@ -1657,7 +1657,7 @@ gui_mch_get_color(char_u *name)
 	    char    *color;
 
 	    fgets(line, LINE_LEN, fd);
-	    len = strlen(line);
+	    len = (int)STRLEN(line);
 
 	    if (len <= 1 || line[len-1] != '\n')
 		continue;
@@ -1807,7 +1807,7 @@ process_message(void)
     if (msg.message == WM_OLE)
     {
 	char_u *str = (char_u *)msg.lParam;
-	add_to_input_buf(str, strlen(str));
+	add_to_input_buf(str, (int)STRLEN(str));
 	vim_free(str);
 	return;
     }
@@ -2030,7 +2030,7 @@ gui_mch_wait_for_chars(int wtime)
 	/* Don't do anything while processing a (scroll) message. */
 	if (s_busy_processing)
 	    return FAIL;
-	s_wait_timer = SetTimer(NULL, 0, (UINT)wtime, (TIMERPROC)_OnTimer);
+	s_wait_timer = (UINT)SetTimer(NULL, 0, (UINT)wtime, (TIMERPROC)_OnTimer);
     }
 
     focus = gui.in_focus;
@@ -2046,7 +2046,8 @@ gui_mch_wait_for_chars(int wtime)
 	    focus = gui.in_focus;
 	}
 
-	if (s_need_activate) {
+	if (s_need_activate)
+	{
 	    (void) SetActiveWindow(s_hwnd);
 	    s_need_activate = FALSE;
 	}
@@ -2312,49 +2313,11 @@ gui_mch_show_toolbar(int showit)
     else
 	ShowWindow(s_toolbarhwnd, SW_HIDE);
 }
-/*
- * Find a bitmap by name.
- * If the name is one of the built-in bitmaps, return the index to that bitmap.
- * Otherwise, look for $VIM/bitmaps/<name>.bmp, load it, add it to the toolbar
- * bitmap list and return the resulting index on failure return -1, which will
- * result in a blank (but still functional) button
- */
-static const char_u *BuiltInBitmaps[] =
-{
-    "New",		//0
-    "Open",		//1
-    "Save",		//2
-    "Undo",		//3
-    "Redo",		//4
-    "Cut",		//5
-    "Copy",		//6
-    "Paste",		//7
-    "Print",		//8
-    "Help",		//9
-    "Find",		//10
-    "SaveAll",		//11
-    "SaveSesn",		//12
-    "NewSesn",		//13
-    "LoadSesn",		//14
-    "RunScript",	//15
-    "Replace",		//16
-    "WinClose",		//17
-    "WinMax",		//18
-    "WinMin",		//19
-    "WinSplit",		//20
-    "Shell",		//21
-    "FindPrev",		//22
-    "FindNext",		//23
-    "FindHelp",		//24
-    "Make",		//25
-    "TagJump",		//26
-    "RunCtags",		//27
-    "WinVSplit",	//28
-    "WinMaxWidth",	//29
-    "WinMinWidth",	//30
-    NULL
-};
-#endif /* FEAT_TOOLBAR */
+
+/* Then number of bitmaps is fixed.  Exit is missing! */
+#define TOOLBAR_BITMAP_COUNT 31
+
+#endif
 
     void
 gui_simulate_alt_key(exarg_T *eap)
@@ -2941,7 +2904,7 @@ static LPCSTR mshape_idcs[] =
     MAKEINTRESOURCE(IDC_SIZEWE),	/* leftright */
     MAKEINTRESOURCE(IDC_SIZEWE),	/* lrsizing */
     MAKEINTRESOURCE(IDC_WAIT),		/* busy */
-#ifdef WIN32
+#ifdef WIN3264
     MAKEINTRESOURCE(IDC_NO),		/* no */
 #else
     MAKEINTRESOURCE(IDC_ICON),		/* no */
@@ -2969,10 +2932,14 @@ mch_set_mouse_shape(int shape)
 	    idc = MAKEINTRESOURCE(IDC_ARROW);
 	else
 	    idc = mshape_idcs[shape];
-#ifdef WIN32
-	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
+#ifdef _WIN64
+	SetClassLongPtr(s_textArea, GCLP_HCURSOR, (LONG_PTR)LoadCursor(NULL, idc));
 #else
+# ifdef WIN32
+	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
+# else
 	SetClassWord(s_textArea, GCW_HCURSOR, LoadCursor(NULL, idc));
+# endif
 #endif
 	if (!p_mh)
 	{

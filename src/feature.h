@@ -146,7 +146,7 @@
 #endif
 
 /*
- * +printer		":harcopy" command
+ * +printer		":hardcopy" command
  */
 #if defined(FEAT_NORMAL)
 # define FEAT_PRINTER
@@ -631,7 +631,7 @@
 #if defined(HAVE_DLOPEN) && defined(HAVE_DLSYM)
 # define USE_DLOPEN
 #endif
-#if defined(FEAT_EVAL) && (defined(WIN32) || ((defined(UNIX) || defined(VMS)) \
+#if defined(FEAT_EVAL) && (defined(WIN3264) || ((defined(UNIX) || defined(VMS)) \
 	&& (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))))
 # define FEAT_LIBCALL
 #endif
@@ -706,7 +706,7 @@
 #endif
 #if defined(FEAT_GUI_DIALOG) && \
 	(defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
-	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32))
+	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN))
 # define FEAT_GUI_TEXTDIALOG
 #endif
 
@@ -906,7 +906,7 @@
 # ifdef FEAT_BIG
 #  define FEAT_MOUSE_DEC
 # endif
-# if defined(FEAT_NORMAL) && (defined(MSDOS) || defined(WIN32))
+# if defined(FEAT_NORMAL) && (defined(MSDOS) || defined(WIN3264))
 #  define DOS_MOUSE
 # endif
 # if defined(FEAT_NORMAL) && defined(__QNX__)
@@ -958,7 +958,7 @@
  */
 #ifdef FEAT_NORMAL
 /* MS-DOS console and Win32 console can change cursor shape */
-# if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
+# if defined(MSDOS) || (defined(WIN3264) && !defined(FEAT_GUI_W32))
 #  define MCH_CURSOR_SHAPE
 # endif
 # if defined(FEAT_GUI_W32) || defined(FEAT_GUI_W16) || defined(FEAT_GUI_MOTIF) \

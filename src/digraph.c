@@ -105,7 +105,7 @@ digr_T	digraphdefault[] =
 	{NUL, NUL, NUL}
 	};
 
-#else	/* !MSDOS && !WIN32 */
+#else	/* !MSDOS && !OS2 */
 # ifdef __MINT__
 
 	/*
@@ -1989,7 +1989,7 @@ digr_T	digraphdefault[] =
 #   endif /* EBCDIC */
 #  endif    /* !HPUX_DIGRAPHS */
 # endif	/* !__MINT__ */
-#endif	/* !MSDOS && !WIN32 */
+#endif	/* !MSDOS && !OS2 */
 
 /*
  * handle digraphs after typing a character
@@ -2140,7 +2140,7 @@ getdigraph(char1, char2, meta)
 }
 
 /*
- * put the digraphs in the argument string in the digraph table
+ * Add the digraphs in the argument to the digraph table.
  * format: {c1}{c2} char {c1}{c2} char ...
  */
     void
@@ -2151,11 +2151,18 @@ putdigraph(str)
     int		i;
     digr_T	*dp;
 
-    while (*str)
+    while (*str != NUL)
     {
 	str = skipwhite(str);
-	if ((char1 = *str++) == 0 || (char2 = *str++) == 0)
+	if (*str == NUL)
 	    return;
+	char1 = *str++;
+	char2 = *str++;
+	if (char2 == 0)
+	{
+	    EMSG(_(e_invarg));
+	    return;
+	}
 	if (char1 == ESC || char2 == ESC)
 	{
 	    EMSG(_("E104: Escape not allowed in digraph"));
@@ -2236,24 +2243,23 @@ printdigraph(dp)
     char_u	buf[30];
     char_u	*p;
 
-#ifdef FEAT_MBYTE
     int		list_width;
 
-    if (has_mbyte)
+    if ((dy_flags & DY_UHEX)
+#ifdef FEAT_MBYTE
+	    || has_mbyte
+	    )
+#endif
 	list_width = 13;
     else
 	list_width = 11;
-# define LIST_WIDTH list_width
-#else
-# define LIST_WIDTH 11
-#endif
 
     if (dp->result != 0)
     {
-	if (msg_col > Columns - LIST_WIDTH)
+	if (msg_col > Columns - list_width)
 	    msg_putchar('\n');
 	if (msg_col)
-	    while (msg_col % LIST_WIDTH != 0)
+	    while (msg_col % list_width != 0)
 		msg_putchar(' ');
 
 	p = buf;

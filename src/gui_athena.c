@@ -702,7 +702,7 @@ gui_mch_submenu_change(menu, colors)
 		if (mp->image != (Pixmap)0)
 		{
 		    XFreePixmap(gui.dpy, mp->image);
-		    get_pixmap(mp->name, mp->iconfile, &mp->image, NULL);
+		    get_toolbar_pixmap(mp, &mp->image, NULL);
 		    if (mp->image != (Pixmap)0)
 			XtVaSetValues(mp->id, XtNbitmap, mp->image, NULL);
 		}
@@ -773,7 +773,7 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    get_pixmap(menu->name, menu->iconfile, &menu->image, NULL);
+	    get_toolbar_pixmap(menu, &menu->image, NULL);
 	    XtSetArg(args[n], XtNlabel, menu->dname); n++;
 	    XtSetArg(args[n], XtNinternalHeight, 1); n++;
 	    XtSetArg(args[n], XtNinternalWidth, 1); n++;
@@ -1012,11 +1012,17 @@ gui_mch_compute_toolbar_height()
 }
 
     void
-gui_mch_get_toolbar_colors(bgp, fgp)
+gui_mch_get_toolbar_colors(bgp, fgp, bsp, tsp, hsp)
     Pixel	*bgp;
     Pixel	*fgp;
+    Pixel       *bsp;
+    Pixel	*tsp;
+    Pixel	*hsp;
 {
     XtVaGetValues(toolBar, XtNbackground, bgp, XtNborderColor, fgp, NULL);
+    *bsp = *bgp;
+    *tsp = *fgp;
+    *hsp = *tsp;
 }
 #endif
 
@@ -1086,8 +1092,38 @@ gui_mch_destroy_menu(menu)
 	    menu->tip = NULL;
 	}
 #endif
-	XtDestroyWidget(menu->id);
-	menu->id = (Widget)0;
+	/*
+	 * This is a hack to stop the Athena simpleMenuWidget from getting a
+	 * BadValue error when a menu's last child is destroyed. We check to
+	 * see if this is the last child and if so, don't delete it. The parent
+	 * will be deleted soon anyway, and it will delete it's children like
+	 * all good widgets do.
+	 */
+	/* NOTE: The cause of the BadValue X Protocol Error is because when the
+	 * last child is destroyed, it is first unmanaged, thus causing a
+	 * geometry resize request from the parent Shell widget.
+	 * Since the Shell widget has no more children, it is resized to have
+	 * width/height of 0.  XConfigureWindow() is then called with the
+	 * width/height of 0, which generates the BadValue.
+	 *
+	 * This happens in phase two of the widget destruction process.
+	 */
+	{
+	    Widget parent;
+
+	    parent = XtParent(menu->id);
+	    if ((parent != menuBar) && (parent != toolBar))
+	    {
+		Cardinal num_children;
+
+		XtVaGetValues(parent, XtNnumChildren, &num_children, NULL);
+		if (num_children > 1)
+		    XtDestroyWidget(menu->id);
+	    }
+	    else
+		XtDestroyWidget(menu->id);
+	    menu->id = (Widget)0;
+	}
 
 	if (parent == menuBar)
 	{
@@ -1545,7 +1581,7 @@ keyhit_callback(w, client_data, event, cont)
 	if (*buf == CR)
 	    dialogStatus = 1;
 	else if (*buf == ESC)
-	    dialogStatus = 2;
+	    dialogStatus = 0;
     }
 }
 
@@ -1572,7 +1608,7 @@ dialog_wm_handler(w, client_data, event, dum)
 {
     if (event->type == ClientMessage
 	    && ((XClientMessageEvent *)event)->data.l[0] == dialogatom)
-	dialogStatus = 2;
+	dialogStatus = 0;
 }
 
 /* ARGSUSED */

@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ai.  Last change: 2001 Jun 03
+*map.txt*       For Vim version 6.0aj.  Last change: 2001 Jun 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -884,6 +884,7 @@ There are some special cases as well:
 	-bang	    The command can take a ! modifier (like :q or :w)
 	-bar	    The command can be followed by a "|" and another command.
 		    A "|" inside the command argument is not allowed then.
+		    Also checks for a " to start a comment.
 	-register   The first argument to the command can be an optional
 		    register name (like :del, :put, :yank).
 	-buffer	    The command will only be available in the current buffer.

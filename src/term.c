@@ -640,7 +640,7 @@ struct builtin_term builtin_termcaps[] =
     {K_K9,		"\316\376"},
 # endif
 
-# if defined(WIN32) || defined(ALL_BUILTIN_TCAPS) || defined(__EMX__)
+# if defined(WIN3264) || defined(ALL_BUILTIN_TCAPS) || defined(__EMX__)
 /*
  * These codes are valid for the Win32 Console .  The entries that start with
  * ESC | are translated into console calls in os_win32.c.  The function keys
@@ -1921,7 +1921,7 @@ set_termname(term)
 	/* termcap failed to report size */
 	/* set defaults, in case ui_get_shellsize() also fails */
 	width = 80;
-#if defined MSDOS  ||  defined WIN32
+#if defined MSDOS  ||  defined WIN3264
 	height = 25;	    /* console is often 25 lines */
 #else
 	height = 24;	    /* most terminals are 24 lines */
@@ -3460,7 +3460,7 @@ add_termcode(name, string, use_8bit)
     termcodes[i].name[0] = name[0];
     termcodes[i].name[1] = name[1];
     termcodes[i].code = s;
-    termcodes[i].len = STRLEN(s);
+    termcodes[i].len = (int)STRLEN(s);
     ++tc_len;
 }
 
@@ -3977,7 +3977,7 @@ check_termcode(max_offset, buf, buflen)
 		mouse_col = mc - 1;
 		mouse_row = mr - 1;
 		mouse_code = MOUSE_LEFT;
-		slen += (p - (tp + slen));
+		slen += (int)(p - (tp + slen));
 	    }
 # endif	/* FEAT_MOUSE_NET */
 # ifdef FEAT_MOUSE_JSB
@@ -4239,7 +4239,7 @@ check_termcode(max_offset, buf, buflen)
 		mouse_col = Pc - 1;
 		mouse_row = Pr - 1;
 
-		slen += (p - (tp + slen));
+		slen += (int)(p - (tp + slen));
 	    }
 # endif /* FEAT_MOUSE_DEC */
 # ifdef FEAT_MOUSE_PTERM
@@ -4623,7 +4623,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 		    result[dlen++] = (int)KS_EXTRA;
 		    result[dlen++] = (int)KE_SNR;
 		    sprintf((char *)result + dlen, "%ld", (long)current_SID);
-		    dlen += STRLEN(result + dlen);
+		    dlen += (int)STRLEN(result + dlen);
 		    result[dlen++] = '_';
 		    continue;
 		}
@@ -4921,7 +4921,7 @@ show_one_termcode(name, code, printit)
 	STRCPY(IObuff + 5, p);
     else
 	IObuff[5] = NUL;
-    len = STRLEN(IObuff);
+    len = (int)STRLEN(IObuff);
     do
 	IObuff[len++] = ' ';
     while (len < 17);
@@ -5193,7 +5193,7 @@ translate_mapping(str, expmap)
 }
 #endif
 
-#if (defined(WIN32) && !defined(FEAT_GUI)) || defined(PROTO)
+#if (defined(WIN3264) && !defined(FEAT_GUI)) || defined(PROTO)
 static char ksme_str[20];
 static char ksmr_str[20];
 static char ksmd_str[20];

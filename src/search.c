@@ -292,7 +292,14 @@ ignorecase(pat)
 	    int		l;
 
 	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
+	    {
+		if (enc_utf8 && utf_isupper(utf_ptr2char(p)))
+		{
+		    ic = FALSE;
+		    break;
+		}
 		p += l;
+	    }
 	    else
 #endif
 		if (*p == '\\' && p[1] != NUL)	/* skip "\S" et al. */
@@ -934,7 +941,7 @@ do_search(oap, dirc, str, count, options)
 		while (isdigit(*p))	    /* skip number */
 		    ++p;
 	    }
-	    searchcmdlen = p - str;	    /* compute length of search command
+	    searchcmdlen = (int)(p - str); /* compute length of search command
 							    for get_address() */
 	    str = p;			    /* put str after search command */
 	}
@@ -1174,7 +1181,7 @@ search_for_exact_line(buf, pos, dir, pat)
 	    start = pos->lnum;
 	ptr = ml_get_buf(buf, pos->lnum, FALSE);
 	p = skipwhite(ptr);
-	pos->col = p - ptr;
+	pos->col = (colnr_T) (p - ptr);
 
 	/* when adding lines the matching line may be empty but it is not
 	 * ignored because we are interested in the next line -- Acevedo */
@@ -1274,7 +1281,7 @@ searchc(cap, type)
 
     p = ml_get_curline();
     col = curwin->w_cursor.col;
-    len = STRLEN(p);
+    len = (int)STRLEN(p);
 
     while (count--)
     {
@@ -1594,7 +1601,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		ptr = skipwhite(linep);
 		if (*ptr != '#')
 		    continue;
-		pos.col = ptr - linep;
+		pos.col = (colnr_T) (ptr - linep);
 		ptr = skipwhite(ptr + 1);
 		if (hash_dir > 0)
 		{
@@ -1663,7 +1670,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		    break;
 
 		linep = ml_get(pos.lnum);
-		pos.col = STRLEN(linep);    /* put pos.col on trailing NUL */
+		pos.col = (colnr_T)STRLEN(linep); /* pos.col on trailing NUL */
 		do_quotes = -1;
 		line_breakcheck();
 
@@ -2184,7 +2191,7 @@ findpar(oap, dir, count, what, both)
     curwin->w_cursor.lnum = curr;
     if (curr == curbuf->b_ml.ml_line_count && what != '}')
     {
-	if ((curwin->w_cursor.col = STRLEN(ml_get(curr))) != 0)
+	if ((curwin->w_cursor.col = (colnr_T)STRLEN(ml_get(curr))) != 0)
 	{
 	    --curwin->w_cursor.col;
 	    oap->inclusive = TRUE;
@@ -3634,11 +3641,9 @@ search_line:
 		    if (!define_matched && skip_comments)
 		    {
 #ifdef FEAT_COMMENTS
-			fo_do_comments = TRUE;
 			if ((*line != '#' ||
 				STRNCMP(skipwhite(line + 1), "define", 6) != 0)
-				&& get_leader_len(line, NULL, FALSE)
-				)
+				&& get_leader_len(line, NULL, FALSE))
 			    matched = FALSE;
 
 			/*
@@ -3670,9 +3675,6 @@ search_line:
 				    ++p;
 				}
 			    }
-#ifdef FEAT_COMMENTS
-			fo_do_comments = FALSE;
-#endif
 		    }
 		}
 	    }
@@ -3698,7 +3700,7 @@ search_line:
 		    p = find_word_start(p);
 		}
 		p = find_word_end(p);
-		i = p - aux;
+		i = (int)(p - aux);
 
 		if ((continue_status & CONT_ADDING) && i == completion_length)
 		{
@@ -3737,7 +3739,7 @@ search_line:
 			if (p - aux >= IOSIZE - i)
 			    p = aux + IOSIZE - i - 1;
 			STRNCPY(IObuff + i, aux, p - aux);
-			i += p - aux;
+			i += (int)(p - aux);
 			reuse |= CONT_S_IPOS;
 		    }
 		    IObuff[i] = NUL;
@@ -3847,7 +3849,7 @@ search_line:
 		}
 		if (action != ACTION_SHOW)
 		{
-		    curwin->w_cursor.col = startp - line;
+		    curwin->w_cursor.col = (colnr_T) (startp - line);
 		    curwin->w_set_curswant = TRUE;
 		}
 

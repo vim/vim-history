@@ -607,7 +607,7 @@ NOTE:  The file you retrieve is placed starting where the cursor is located.
 
   2.  :w FILENAME  writes the current Vim file to disk with name FILENAME.
 
-  3.  :#,# FILENAME  saves the lines # through # in file FILENAME.
+  3.  :#,#w FILENAME  saves the lines # through # in file FILENAME.
 
   4.  :r FILENAME  retrieves disk file FILENAME and inserts it into the
       current file following the cursor position.

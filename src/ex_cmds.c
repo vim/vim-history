@@ -101,7 +101,7 @@ do_ascii(eap)
     /* Repeat for combining characters. */
     while (has_mbyte && (c >= 0x100 || (enc_utf8 && c >= 0x80)))
     {
-	len = STRLEN(IObuff);
+	len = (int)STRLEN(IObuff);
 	/* This assumes every multi-byte char is printable... */
 	if (len > 0)
 	    IObuff[len++] = ' ';
@@ -351,7 +351,7 @@ ex_retab(eap)
 
 			/* len is actual number of white characters used */
 			len = num_spaces + num_tabs;
-			old_len = STRLEN(ptr);
+			old_len = (long)STRLEN(ptr);
 			new_line = lalloc(old_len - col + start_col + len + 1,
 									TRUE);
 			if (new_line == NULL)
@@ -623,9 +623,9 @@ do_bang(addr_count, eap, forceit, do_in, do_out)
     trailarg = arg;
     do
     {
-	len = STRLEN(trailarg) + 1;
+	len = (int)STRLEN(trailarg) + 1;
 	if (newcmd != NULL)
-	    len += STRLEN(newcmd);
+	    len += (int)STRLEN(newcmd);
 	if (ins_prevcmd)
 	{
 	    if (prevcmd == NULL)
@@ -634,7 +634,7 @@ do_bang(addr_count, eap, forceit, do_in, do_out)
 		vim_free(newcmd);
 		return;
 	    }
-	    len += STRLEN(prevcmd);
+	    len += (int)STRLEN(prevcmd);
 	}
 	if ((t = alloc(len)) == NULL)
 	{
@@ -752,7 +752,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     if (*cmd == NUL)	    /* no filter command */
 	return;
 
-#ifdef WIN32
+#ifdef WIN3264
     /*
      * Check if external commands are allowed now.
      */
@@ -1039,7 +1039,7 @@ do_shell(cmd, flags)
 	 */
 #ifndef FEAT_GUI_MSWIN
 	if (cmd == NULL
-# ifdef WIN32
+# ifdef WIN3264
 		|| (winstart && !need_wait_return)
 # endif
 	   )
@@ -1109,11 +1109,11 @@ make_filter_cmd(cmd, itmp, otmp)
     char_u	*buf;
     long_u	len;
 
-    len = STRLEN(cmd) + 3;				/* "()" + NUL */
+    len = (long_u)STRLEN(cmd) + 3;			/* "()" + NUL */
     if (itmp != NULL)
-	len += STRLEN(itmp) + 9;			/* " { < " + " } " */
+	len += (long_u)STRLEN(itmp) + 9;		/* " { < " + " } " */
     if (otmp != NULL)
-	len += STRLEN(otmp) + STRLEN(p_srr) + 2;	/* "  " */
+	len += (long_u)STRLEN(otmp) + (long_u)STRLEN(p_srr) + 2; /* "  " */
     buf = lalloc(len, TRUE);
     if (buf == NULL)
 	return NULL;
@@ -2912,6 +2912,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 		/* 'sol' is off: Use last known column. */
 		curwin->w_cursor.col = solcol;
 		check_cursor_col();
+		curwin->w_set_curswant = TRUE;
 	    }
 	    else
 		beginline(BL_SOL | BL_FIX);
@@ -3725,7 +3726,7 @@ do_sub(eap)
 		    nmatch_tl += nmatch - 1;
 		}
 		i = regmatch.startpos[0].col - copycol;
-		needed_len = i + (STRLEN(p1) - regmatch.endpos[0].col)
+		needed_len = i + ((unsigned)STRLEN(p1) - regmatch.endpos[0].col)
 								 + sublen + 1;
 		if (new_start == NULL)
 		{
@@ -3747,7 +3748,7 @@ do_sub(eap)
 		     * substitution into.  If not, make it larger (with a bit
 		     * extra to avoid too many calls to alloc()/free()).
 		     */
-		    len = STRLEN(new_start);
+		    len = (unsigned)STRLEN(new_start);
 		    needed_len += len;
 		    if (needed_len > new_start_len)
 		    {
@@ -3859,7 +3860,7 @@ skip:
 			 * changed the number of characters.
 			 */
 			STRCAT(new_start, sub_firstline + copycol);
-			matchcol = STRLEN(sub_firstline) - matchcol;
+			matchcol = (colnr_T)STRLEN(sub_firstline) - matchcol;
 
 			if (u_savesub(lnum) != OK)
 			    break;
@@ -3901,7 +3902,7 @@ skip:
 			vim_free(sub_firstline);    /* free the temp buffer */
 			sub_firstline = new_start;
 			new_start = NULL;
-			matchcol = STRLEN(sub_firstline) - matchcol;
+			matchcol = (colnr_T)STRLEN(sub_firstline) - matchcol;
 			copycol = 0;
 		    }
 		    if (nmatch == -1 && !lastone)
@@ -4526,14 +4527,19 @@ find_help_tags(arg, num_matches, matches)
     if (i < 0)	/* no match in table */
     {
 	/* Replace "\S" with "/\\S", etc.  Otherwise every tag is matched.
-	 * Also replace "\%^" and "\%(", they match every tag too. */
+	 * Also replace "\%^" and "\%(", they match every tag too.
+	 * And also "\_$" and "\_^". */
 
 	if (arg[0] == '\\'
 		&& ((arg[1] != NUL && arg[2] == NUL)
-		    || (arg[1] == '%' && arg[2] != NUL && arg[3] == NUL)))
+		    || ((arg[1] == '%' || arg[1] == '_')
+					  && arg[2] != NUL && arg[3] == NUL)))
 	{
 	    STRCPY(d, "/\\\\");
 	    STRCPY(d + 3, arg + 1);
+	    /* Check for "/\\_$", should be "/\\_\$" */
+	    if (d[3] == '_' && d[4] == '$')
+		STRCPY(d + 4, "\\$");
 	}
 	else
 	{
@@ -4659,7 +4665,7 @@ fix_help_buffer()
 	for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
 	{
 	    line = ml_get_buf(curbuf, lnum, FALSE);
-	    len = STRLEN(line);
+	    len = (int)STRLEN(line);
 	    if (in_example && len > 0 && !vim_iswhite(line[0]))
 	    {
 		/* End of example: non-white or '<' in first column. */
@@ -5052,7 +5058,7 @@ ex_sign(eap)
 			first_sign = sp;
 		    else
 			sp_prev->sn_next = sp;
-		    sp->sn_name = vim_strnsave(arg, p - arg);
+		    sp->sn_name = vim_strnsave(arg, (int)(p - arg));
 
 		    /* If the name is a number use that for the typenr,
 		     * otherwise use a negative number. */
@@ -5097,7 +5103,7 @@ ex_sign(eap)
 		    {
 			arg += 5;
 			vim_free(sp->sn_icon);
-			sp->sn_icon = vim_strnsave(arg, p - arg);
+			sp->sn_icon = vim_strnsave(arg, (int)(p - arg));
 #ifdef FEAT_SIGN_ICONS
 			if (gui.in_use)
 			{
@@ -5118,17 +5124,17 @@ ex_sign(eap)
 			    return;
 			}
 			vim_free(sp->sn_text);
-			sp->sn_text = vim_strnsave(arg, p - arg);
+			sp->sn_text = vim_strnsave(arg, (int)(p - arg));
 		    }
 		    else if (STRNCMP(arg, "linehl=", 7) == 0)
 		    {
 			arg += 7;
-			sp->sn_line_hl = syn_check_group(arg, p - arg);
+			sp->sn_line_hl = syn_check_group(arg, (int)(p - arg));
 		    }
 		    else if (STRNCMP(arg, "texthl=", 7) == 0)
 		    {
 			arg += 7;
-			sp->sn_text_hl = syn_check_group(arg, p - arg);
+			sp->sn_text_hl = syn_check_group(arg, (int)(p - arg));
 		    }
 		    else
 		    {

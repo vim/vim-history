@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_04.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -9,7 +9,7 @@ This chapter shows you several ways of making corrections and moving text
 around.  It learns you the three basic ways to change text: operator-motion,
 Visual mode and text objects.
 
-|04.1|	Making small changes
+|04.1|	Operators and motions
 |04.2|	Changing text
 |04.3|	Repeating a change
 |04.4|	Visual mode

@@ -44,7 +44,7 @@
 #  include "os_win16.pro"
 #  include "os_mswin.pro"
 # endif
-# ifdef WIN32
+# ifdef WIN3264
 #  include "os_win32.pro"
 #  include "os_mswin.pro"
 # endif

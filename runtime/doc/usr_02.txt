@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_02.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -363,7 +363,7 @@ To exit, use the "ZZ" command.  This command writes the file and exits.
 	Unlike many other editors, Vim does not automatically make a backup
 	file.  If you type "ZZ", your changes are committed and there's no
 	turning back.  You can configure the Vim editor to produce backup
-	files, see |08.x|.
+	files, see |05.2|.
 
 
 DISCARDING CHANGES
@@ -421,7 +421,7 @@ back to the preceding position.
    At the top of the help screen, there is the notation *help.txt*.  This name
 between "*" characters is used by the help system to define a tag (hyperlink
 destination).
-   See |22.x| for details about using tags.
+   See |29.1| for details about using tags.
 
 To get help on a given subject, use the following command: >
 

@@ -307,7 +307,7 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {
-#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(FEAT_GUI_W32)
+#if (defined(MSDOS) || defined(WIN3264) || defined(OS2)) && !defined(FEAT_GUI_W32)
 			    (char_u *)128L,
 #else
 			    (char_u *)224L,
@@ -345,7 +345,7 @@ static struct vimoption
     {"background",  "bg",   P_STRING|P_VI_DEF|P_RCLR,
 			    (char_u *)&p_bg, PV_NONE,
 			    {
-#if (defined(MSDOS) || defined(OS2) || defined(WIN32)) && !defined(FEAT_GUI)
+#if (defined(MSDOS) || defined(OS2) || defined(WIN3264)) && !defined(FEAT_GUI)
 			    (char_u *)"dark",
 #else
 			    (char_u *)"light",
@@ -854,7 +854,7 @@ static struct vimoption
 			    {(char_u *)20L, (char_u *)0L}},
     {"foldopen",    "fdo",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_fdo, PV_NONE,
-		    {(char_u *)"block,hor,mark,percent,quickfix,search,tag",
+		 {(char_u *)"block,hor,mark,percent,quickfix,search,tag,undo",
 							       (char_u *)0L}},
     {"foldtext",    "fdt",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
 # ifdef FEAT_EVAL
@@ -891,7 +891,7 @@ static struct vimoption
 #ifdef FEAT_QUICKFIX
 			    (char_u *)&p_gp, OPT_BOTH(PV_GP),
 			    {
-# ifdef WIN32
+# ifdef WIN3264
 			    /* may be changed to "grep -n" in os_win32.c */
 			    (char_u *)"findstr /n",
 # else
@@ -1249,7 +1249,7 @@ static struct vimoption
     {"lines",	    NULL,   P_NUM|P_NODEFAULT|P_NO_MKRC|P_VI_DEF|P_RCLR,
 			    (char_u *)&Rows, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN3264) || defined(OS2)
 			    (char_u *)25L,
 #else
 			    (char_u *)24L,
@@ -1358,7 +1358,7 @@ static struct vimoption
     {"mouse",	    NULL,   P_STRING|P_VI_DEF|P_FLAGLIST,
 			    (char_u *)&p_mouse, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(WIN32)
+#if defined(MSDOS) || defined(WIN3264)
 				(char_u *)"a",
 #else
 				(char_u *)"",
@@ -1535,7 +1535,7 @@ static struct vimoption
 			    (char_u *)&p_report, PV_NONE,
 			    {(char_u *)2L, (char_u *)0L}},
     {"restorescreen", "rs", P_BOOL|P_VI_DEF,
-#ifdef WIN32
+#ifdef WIN3264
 			    (char_u *)&p_rs, PV_NONE,
 #else
 			    (char_u *)NULL, PV_NONE,
@@ -1637,7 +1637,7 @@ static struct vimoption
 #  if defined(WIN16)
 			    (char_u *)"command.com",
 #  else
-#   if defined(WIN32)
+#   if defined(WIN3264)
 			    (char_u *)"",	/* set in set_init_1() */
 #   else
 #    if defined(OS2)
@@ -1979,7 +1979,7 @@ static struct vimoption
     {"undolevels",  "ul",   P_NUM|P_VI_DEF,
 			    (char_u *)&p_ul, PV_NONE,
 			    {
-#if defined(UNIX) || defined(WIN32) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(WIN3264) || defined(OS2) || defined(VMS)
 			    (char_u *)1000L,
 #else
 			    (char_u *)100L,
@@ -2331,7 +2331,7 @@ set_init_1()
 	    || (p = mch_getenv((char_u *)"EMXSHELL")) != NULL
 # endif
 	    || (p = mch_getenv((char_u *)"COMSPEC")) != NULL
-# ifdef WIN32
+# ifdef WIN3264
 	    || (p = default_shell()) != NULL
 # endif
 #endif
@@ -2643,7 +2643,7 @@ set_init_2()
 					      = (char_u *)((long_u)Rows >> 1);
     comp_col();
 
-#if !((defined(MSDOS) || defined(OS2) || defined(WIN32)) && !defined(FEAT_GUI))
+#if !((defined(MSDOS) || defined(OS2) || defined(WIN3264)) && !defined(FEAT_GUI))
     {
 	int	idx4;
 
@@ -2666,7 +2666,7 @@ set_init_2()
     void
 set_init_3()
 {
-#if defined(UNIX) || defined(OS2) || defined(WIN32)
+#if defined(UNIX) || defined(OS2) || defined(WIN3264)
 /*
  * Set 'shellpipe' and 'shellredir', depending on the 'shell' option.
  * This is done after other initializations, where 'shell' might have been
@@ -2693,7 +2693,7 @@ set_init_3()
      * - Remove any argument.  E.g., "csh -f" -> "csh".
      */
     p = gettail(p_sh);
-    p = vim_strnsave(p, skiptowhite(p) - p);
+    p = vim_strnsave(p, (int)(skiptowhite(p) - p));
     if (p != NULL)
     {
 	/*
@@ -2702,13 +2702,13 @@ set_init_3()
 	 */
 	if (	   fnamecmp(p, "csh") == 0
 		|| fnamecmp(p, "tcsh") == 0
-# if defined(OS2) || defined(WIN32)	/* also check with .exe extension */
+# if defined(OS2) || defined(WIN3264)	/* also check with .exe extension */
 		|| fnamecmp(p, "csh.exe") == 0
 		|| fnamecmp(p, "tcsh.exe") == 0
 # endif
 	   )
 	{
-#if defined(FEAT_QUICKFIX) && !defined(WIN32)
+#if defined(FEAT_QUICKFIX) && !defined(WIN3264)
 	    if (do_sp)
 	    {
 		p_sp = (char_u *)"|& tee";
@@ -2727,7 +2727,7 @@ set_init_3()
 		    || fnamecmp(p, "ksh") == 0
 		    || fnamecmp(p, "zsh") == 0
 		    || fnamecmp(p, "bash") == 0
-#  ifdef WIN32
+#  ifdef WIN3264
 		    || fnamecmp(p, "cmd") == 0
 		    || fnamecmp(p, "sh.exe") == 0
 		    || fnamecmp(p, "ksh.exe") == 0
@@ -2738,7 +2738,7 @@ set_init_3()
 		    )
 # endif
 	    {
-#if defined(FEAT_QUICKFIX) && !defined(WIN32)
+#if defined(FEAT_QUICKFIX) && !defined(WIN3264)
 		if (do_sp)
 		{
 		    p_sp = (char_u *)"2>&1| tee";
@@ -2755,7 +2755,7 @@ set_init_3()
     }
 #endif
 
-#if defined(MSDOS) || defined(WIN32) || defined(OS2)
+#if defined(MSDOS) || defined(WIN3264) || defined(OS2)
     /*
      * Set 'shellcmdflag and 'shellquote' depending on the 'shell' option.
      * This is done after other initializations, where 'shell' might have been
@@ -2776,7 +2776,7 @@ set_init_3()
 	}
 
 # ifndef DJGPP
-#  ifdef WIN32
+#  ifdef WIN3264
 	/* Somehow Win32 requires the quotes around the redirection too */
 	idx3 = findoption((char_u *)"sxq");
 	if (!(options[idx3].flags & P_WAS_SET))
@@ -3395,9 +3395,9 @@ do_set(arg, opt_flags)
 			     * we need to remove the backslashes.
 			     */
 			    /* get a bit too much */
-			    newlen = STRLEN(arg) + 1;
+			    newlen = (unsigned)STRLEN(arg) + 1;
 			    if (adding || prepending || removing)
-				newlen += STRLEN(origval) + 1;
+				newlen += (unsigned)STRLEN(origval) + 1;
 			    newval = alloc(newlen);
 			    if (newval == NULL)  /* out of mem, don't change */
 				break;
@@ -3433,9 +3433,9 @@ do_set(arg, opt_flags)
 			    if (s != NULL)
 			    {
 				vim_free(newval);
-				newlen = STRLEN(s) + 1;
+				newlen = (unsigned)STRLEN(s) + 1;
 				if (adding || prepending || removing)
-				    newlen += STRLEN(origval) + 1;
+				    newlen += (unsigned)STRLEN(origval) + 1;
 				newval = alloc(newlen);
 				if (newval == NULL)
 				    break;
@@ -3447,7 +3447,7 @@ do_set(arg, opt_flags)
 			    i = 0;	/* init for GCC */
 			    if (removing || (flags & P_NODUP))
 			    {
-				i = STRLEN(newval);
+				i = (int)STRLEN(newval);
 				bs = 0;
 				for (s = origval; *s; ++s)
 				{
@@ -3484,14 +3484,14 @@ do_set(arg, opt_flags)
 				comma = ((flags & P_COMMA) && *origval);
 				if (adding)
 				{
-				    i = STRLEN(origval);
+				    i = (int)STRLEN(origval);
 				    mch_memmove(newval + i + comma, newval,
 							  STRLEN(newval) + 1);
 				    mch_memmove(newval, origval, (size_t)i);
 				}
 				else
 				{
-				    i = STRLEN(newval);
+				    i = (int)STRLEN(newval);
 				    mch_memmove(newval + i + comma, origval,
 							  STRLEN(origval) + 1);
 				}
@@ -4549,7 +4549,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	{
 	    out_str(T_ME);
 	    redraw_later(CLEAR);
-#if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
+#if defined(MSDOS) || (defined(WIN3264) && !defined(FEAT_GUI_W32))
 	    /* Since t_me has been set, this probably means that the user
 	     * wants to use this as default colors.  Need to reset default
 	     * background/foreground colors. */
@@ -5195,7 +5195,7 @@ set_chars_option(varp)
 	{
 	    for (i = 0; i < entries; ++i)
 	    {
-		len = STRLEN(tab[i].name);
+		len = (int)STRLEN(tab[i].name);
 		if (STRNCMP(p, tab[i].name, len) == 0
 			&& p[len] == ':'
 			&& p[len + 1] != NUL)
@@ -5342,10 +5342,10 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	compatible_set();
     }
 
-    /* when 'readonly' is reset, also reset readonlymode */
+    /* when 'readonly' is reset globally, also reset readonlymode */
     else if ((int *)varp == &curbuf->b_p_ro)
     {
-	if (!curbuf->b_p_ro)
+	if (!curbuf->b_p_ro && (opt_flags & OPT_LOCAL) == 0)
 	    readonlymode = FALSE;
 #ifdef FEAT_TITLE
 	maketitle();
@@ -6334,7 +6334,7 @@ showoptions(all, opt_flags)
 		else
 		{
 		    option_value2string(p, opt_flags);
-		    len = STRLEN(p->fullname) + vim_strsize(NameBuff) + 1;
+		    len = (int)STRLEN(p->fullname) + vim_strsize(NameBuff) + 1;
 		}
 		if ((len <= INC - GAP && run == 1) ||
 						(len > INC - GAP && run == 2))
@@ -6664,7 +6664,7 @@ clear_termoptions()
      * because that will need the display. */
     clear_xterm_clip();
 #endif
-#ifdef WIN32
+#ifdef WIN3264
     /*
      * Check if this is allowed now.
      */
@@ -8190,7 +8190,7 @@ opt_strings_flags(val, values, flagp, list)
 	    if (values[i] == NULL)	/* val not found in values[] */
 		return FAIL;
 
-	    len = STRLEN(values[i]);
+	    len = (int)STRLEN(values[i]);
 	    if (STRNCMP(values[i], val, len) == 0
 		    && ((list && val[len] == ',') || val[len] == NUL))
 	    {

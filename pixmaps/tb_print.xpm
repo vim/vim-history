@@ -1,11 +1,11 @@
 /* XPM */
 static char * tb_print_xpm[] = {
 "18 18 6 1",
-" 	c None",
-".	c #000000",
+" 	c None    s background",
+".	c #000000 s foreground",
 "X	c #FFFFFF",
-"o	c #AAAAAA",
-"O	c #888888",
+"o	c #BBBBBB",
+"O	c #888888 s bottomShadow",
 "+	c #FF1144",
 "   .......        ",
 "   .XXXXX..       ",

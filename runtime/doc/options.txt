@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ai.  Last change: 2001 Jun 03
+*options.txt*   For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1017,6 +1017,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:set cedit=<C-Y>
 		:set cedit=<Esc>
 <	|Nvi| also has this option, but it only uses the first character.
+	See |cmdwin|.
 
 					*'encoding'* *'enc'*
 'encoding' 'enc'	string (default: "latin1" or value from $LANG)
@@ -2292,7 +2293,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 						*'foldopen'* *'fdo'*
 'foldopen' 'fdo'	string (default: "block,hor,mark,percent,quickfix,
-								  search,tag")
+							     search,tag,undo")
 			global
 			{not in Vi}
 			{not available when compiled without the |+folding|
@@ -2303,12 +2304,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 		all		any
 		block		"(", "{", "[[", "[{", etc.
 		hor		horizontal movements: "l", "w", "fx", etc.
-		insert		any in Insert mode
+		insert		any command in Insert mode
+		jump		far jumps: "G", "gg", etc.
 		mark		jumping to a mark: "'m", CTRL-O, etc.
 		percent		"%"
 		quickfix	":cn", ":crew", ":make", etc.
 		search		search for a pattern: "/", "n", "*", "gd", etc.
 		tag		jumping to a tag: ":ta", CTRL-T, etc.
+		undo		undo or redo: "u" and CTRL-R
 	When the command is part of a mapping this option is not used.  Add
 	the |zv| command to the mapping to get the same effect.
 	When a movement command is used for an operator (e.g., "dl" or "y%")
@@ -4335,8 +4338,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 					"cmd.exe", OS/2: "cmd")
 			global
 	Name of the shell to use for ! and :! commands.  When changing the
-	value also check the 'shelltype', 'shellpipe', 'shellslash' and
-	'shellredir' options.
+	value also check these options: 'shelltype', 'shellpipe', 'shellslash'
+	'shellredir', 'shellquote', 'shellxquote' and 'shellcmdflag'.
 	It is allowed to give an argument to the command, e.g.  "csh -f".
 	See |option-backslash| about including spaces and backslashes.
 	Environment variables are expanded |:set_env|.

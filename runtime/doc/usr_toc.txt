@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0ai.  Last change: 2001 Jun 03
+*usr_toc.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -36,8 +36,8 @@ Editing Effectively
 |usr_26.txt|  Repeating
 |usr_27.txt|  Search commands and patterns
 |usr_28.txt|  Folding
-|usr_29.txt|  Editing programs
-|usr_30.txt|  Compiling programs
+|usr_29.txt|  Moving through programs
+|usr_30.txt|  Editing programs
 |usr_31.txt|  Exploiting the GUI
 
 Tuning Vim
@@ -86,7 +86,7 @@ Read this from start to end to learn the essential commands.
 		|03.10|	Using marks
 
 |usr_04.txt|  Making small changes
-		|04.1|	Making small changes
+		|04.1|	Operators and motions
 		|04.2|	Changing text
 		|04.3|	Repeating a change
 		|04.4|	Visual mode
@@ -193,39 +193,38 @@ Subjects that can be read independently.
 		|23.5|	Compressed files
 
 |usr_24.txt|  Inserting quickly
-		(chap 20)
-		insert mode completion (chap 12)
-		abbreviations (chap 8) (chap 24)
-		abbr to correct typos,
-		digraphs (chap 2)
-		CTRL-V nr
-		CTRL-R register
-		":r file"
-		CTRL-O
-		CTRL-A and CTRL-@
-		CTRL-E and CTRL-Y
+		|24.1|	Making corrections
+		|24.2|	Completion
+		|24.3|	Repeating an insert
+		|24.4|	Copying from another line
+		|24.5|	Inserting a register
+		|24.6|	Abbreviations
+		|24.7|	Entering special characters
+		|24.8|	Digraphs
+		|24.9|	Normal mode commands
 
 |usr_25.txt|  Editing formatted text
-		'wrap', 'textwidth' (chap 11)
-		"gq" (chap 11)
-		reference to 'formatoptions'
-		:center (chap 11)
-		'autoindent'
-		dealing with long lines (chap 20)
-		'linebreak' |edit-no-break|
-		modelines
-		tables
-		'virtualedit'
-		tabs, 'sts', :retab (chap 23)
+		|25.1|	Breaking lines
+		|25.2|	Aligning text
+		|25.3|	Indents and tabs
+		|25.4|	Dealing with long lines
+		|25.5|	Editing tables
 
 |usr_26.txt|  Repeating
-		"gv"
-		":bufdo"
-		":windo"
+		|26.1|	Repeating with Visual mode
+		|26.2|	Add and subtract
+		|26.3|	Making a change in many files
 
-|usr_27.txt|  Search comands and patterns (chap 19)
-		most often used items
-		offsets
+|usr_27.txt|  Search commands and patterns
+		|27.1|	Ignoring case
+		|27.2|	Wrapping around the file end
+		|27.3|	Offsets
+		|27.4|	Matching multiple times
+		|27.5|	Alternatives
+		|27.6|	Character ranges
+		|27.7|	Character classes
+		|27.8|	Matching a line break
+		|27.9|	Examples
 
 |usr_28.txt|  Folding
 		|28.1|	What is folding?
@@ -239,33 +238,38 @@ Subjects that can be read independently.
 		|28.9|  Folding unchanged lines
 		|28.10| Which fold method to use?
 
-|usr_29.txt|  Editing programs
+|usr_29.txt|  Moving through programs
 		tags (chap 7) link to 'tagbsearch' and 'taglength'
-		example: edit tags file, map <Enter> to show match in other
-		window)
-		(chap 7)
-		">>", "<<", ">%"
-		'ts', 'sts', 'sw'
-		'cindent', 'smartindent', link to 'cinoptions'
-		"="
-		indent files
-		formatting comments, link to 'comments'
-		"[I", ]D
-		:checkpath (chap 23) link to 'include' and 'define'
-		"gd", "gD"
-		"%" on #if-#endif
-		[{, [#, [m and [(  (chap 23)
-		"K"
+			example: edit tags file, map <Enter> to show match in
+			other window)
+			:ts
+			ctags -R .
+			'tags'
 		tag preview, preview window
-		:grep (chap 7)
-		cscope
-		sniff
+			mention cscope
+			mention sniff
+		Moving through programs
+			"%" on #if-#endif
+			[{, [#, [m and [(  (chap 23)
+		finding indentifiers
+			"[I", ]D
+			:checkpath (chap 23) link to 'include' and 'define'
+			"gd", "gD"
 
-|usr_30.txt|  Compiling programs
-		:make (chap 7)
-		:cn
-		:colder (chap 23)
-		link to 'makeprg' and 'errorformat'
+|usr_30.txt|  Editing programs
+		Compiling
+			:make (chap 7)
+			:cn
+			:colder (chap 23)
+			a few hints how to set 'errorformat' (escape comma).
+			link to 'makeprg' and 'errorformat'
+		indenting
+			">>", "<<", ">%"
+			'ts', 'sts', 'sw'
+			'cindent', 'smartindent', link to 'cinoptions'
+			"="
+			indent files
+		formatting comments, link to 'comments'
 
 |usr_31.txt|  Exploiting the GUI
 		:browse (chap 26)

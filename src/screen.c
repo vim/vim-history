@@ -10,7 +10,7 @@
 /*
  * screen.c: code for displaying on the screen
  *
- * Output to the screen (console, terminal emulator or GUI window) is minized
+ * Output to the screen (console, terminal emulator or GUI window) is minimized
  * by remembering what is already on the screen, and only updating the parts
  * that changed.
  *
@@ -1888,7 +1888,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     int		level;
     int		col;
     int		txtcol;
-    int		off = current_ScreenLine - ScreenLines;
+    int		off = (int)(current_ScreenLine - ScreenLines);
 
     /* Build the fold line:
      * 1. Add the cmdwin_type for the command-line window
@@ -2099,7 +2099,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
     else
 #endif
     {
-	len = STRLEN(text);
+	len = (int)STRLEN(text);
 	if (len > W_WIDTH(wp) - col)
 	    len = W_WIDTH(wp) - col;
 	if (len > 0)
@@ -2577,10 +2577,10 @@ win_line(wp, lnum, startrow, endrow)
     /* find start of trailing whitespace */
     if (wp->w_p_list && lcs_trail)
     {
-	trailcol = STRLEN(ptr);
+	trailcol = (colnr_T)STRLEN(ptr);
 	while (trailcol > (colnr_T)0 && vim_iswhite(ptr[trailcol - 1]))
 	    --trailcol;
-	trailcol += ptr - line;
+	trailcol += (colnr_T) (ptr - line);
 	extra_check = TRUE;
     }
 
@@ -2651,7 +2651,7 @@ win_line(wp, lnum, startrow, endrow)
 	shl->attr_cur = 0;
 	if (shl->rm.regprog != NULL)
 	{
-	    v = ptr - line;
+	    v = (long)(ptr - line);
 	    next_search_hl(wp, shl, lnum, (colnr_T)v);
 
 	    /* Need to get the line again, a multi-line regexp may have made it
@@ -2694,7 +2694,7 @@ win_line(wp, lnum, startrow, endrow)
     }
 #endif
 
-    off = current_ScreenLine - ScreenLines;
+    off = (unsigned) (current_ScreenLine - ScreenLines);
     col = 0;
 #ifdef FEAT_RIGHTLEFT
     if (wp->w_p_rl)
@@ -2862,7 +2862,7 @@ win_line(wp, lnum, startrow, endrow)
 		    /* Draw 'showbreak' at the start of each broken line. */
 		    p_extra = p_sbr;
 		    c_extra = NUL;
-		    n_extra = STRLEN(p_sbr);
+		    n_extra = (int)STRLEN(p_sbr);
 		    char_attr = hl_attr(HLF_AT);
 		    need_showbreak = FALSE;
 		}
@@ -2952,7 +2952,7 @@ win_line(wp, lnum, startrow, endrow)
 			{
 			    shl->attr_cur = 0;
 
-			    v = ptr - line;
+			    v = (long)(ptr - line);
 			    next_search_hl(wp, shl, lnum, (colnr_T)v);
 
 			    /* Need to get the line again, a multi-line regexp
@@ -3135,7 +3135,7 @@ win_line(wp, lnum, startrow, endrow)
 			c = *p_extra++;
 			mb_c = c;
 			mb_utf8 = FALSE;
-			n_extra = STRLEN(p_extra);
+			n_extra = (int)STRLEN(p_extra);
 			c_extra = NUL;
 			if (area_attr == 0 && search_attr == 0)
 			{
@@ -3162,7 +3162,7 @@ win_line(wp, lnum, startrow, endrow)
 			    mb_l = 1;
 			    transchar_nonprint(extra, c);
 			    p_extra = extra;
-			    n_extra = STRLEN(extra) - 1;
+			    n_extra = (int)STRLEN(extra) - 1;
 			    c_extra = NUL;
 			    c = *p_extra++;
 			    if (area_attr == 0 && search_attr == 0)
@@ -3226,7 +3226,7 @@ win_line(wp, lnum, startrow, endrow)
 #ifdef FEAT_SYN_HL
 		if (has_syntax)
 		{
-		    v = ptr - line;
+		    v = (long)(ptr - line);
 		    syntax_attr = get_syntax_attr((colnr_T)v - 1);
 
 		    /* Need to get the line again, a multi-line regexp may
@@ -3698,7 +3698,7 @@ win_line(wp, lnum, startrow, endrow)
 	    }
 
 	    col = 0;
-	    off = current_ScreenLine - ScreenLines;
+	    off = (unsigned) (current_ScreenLine - ScreenLines);
 #ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 	    {
@@ -3820,7 +3820,7 @@ screen_line(row, coloff, endcol, clear_width
     clip_may_clear_selection(row, row);
 # endif
 
-    off_from = current_ScreenLine - ScreenLines;
+    off_from = (unsigned) (current_ScreenLine - ScreenLines);
     off_to = LineOffset[row] + coloff;
 
 #ifdef FEAT_RIGHTLEFT
@@ -4383,7 +4383,7 @@ win_redr_status_matches(xp, num_matches, matches, match)
 	if (emenu && menu_is_separator(s))
 	{
 	    STRCPY(buf + len, transchar('|'));
-	    l = STRLEN(buf + len);
+	    l = (int)STRLEN(buf + len);
 	    len += l;
 	    clen += l;
 	}
@@ -4411,7 +4411,7 @@ win_redr_status_matches(xp, num_matches, matches, match)
 #endif
 	    {
 		STRCPY(buf + len, transchar(*s));
-		len += STRLEN(buf + len);
+		len += (int)STRLEN(buf + len);
 	    }
 	}
 	if (i == match)
@@ -4533,7 +4533,7 @@ win_redr_status(wp)
 	    trans_characters(NameBuff, MAXPATHL);
 	}
 	p = NameBuff;
-	len = STRLEN(p);
+	len = (int)STRLEN(p);
 
 	if (wp->w_buffer->b_help
 #ifdef FEAT_QUICKFIX
@@ -4545,13 +4545,13 @@ win_redr_status(wp)
 	if (wp->w_buffer->b_help)
 	{
 	    STRCPY(p + len, _("[help]"));
-	    len += STRLEN(p + len);
+	    len += (int)STRLEN(p + len);
 	}
 #ifdef FEAT_QUICKFIX
 	if (wp->w_p_pvw)
 	{
 	    STRCPY(p + len, _("[Preview]"));
-	    len += STRLEN(p + len);
+	    len += (int)STRLEN(p + len);
 	}
 #endif
 	if (bufIsChanged(wp->w_buffer))
@@ -4810,7 +4810,7 @@ win_redr_custom(wp, Ruler)
 	screen_puts(p, row, col, curattr);
 
 	hl[n].start[0] = c;
-	col += hl[n].start - p;
+	col += (int)(hl[n].start - p);
 	p = hl[n].start;
 
 	if (hl[n].userhl == 0)
@@ -5191,7 +5191,7 @@ screen_start_highlight(attr)
 
     screen_attr = attr;
     if (full_screen
-#ifdef WIN32
+#ifdef WIN3264
 		    && termcap_active
 #endif
 				       )
@@ -5258,7 +5258,7 @@ screen_stop_highlight()
     int	    do_ME = FALSE;	    /* output T_ME code */
 
     if (screen_attr != 0
-#ifdef WIN32
+#ifdef WIN3264
 			&& termcap_active
 #endif
 					   )
@@ -6022,6 +6022,7 @@ screenclear2()
     if (starting == NO_SCREEN || ScreenLines == NULL)
 	return;
 
+    screen_attr = -1;		/* force setting the Normal colors */
     screen_stop_highlight();	/* don't want highlighting here */
 
 #ifdef FEAT_CLIPBOARD
@@ -6239,7 +6240,7 @@ windgoto(row, col)
 		else
 		    bs = T_BC;		    /* "backspace character (old) */
 		if (*bs)
-		    cost = (screen_cur_col - col) * STRLEN(bs);
+		    cost = (screen_cur_col - col) * (int)STRLEN(bs);
 		else
 		    cost = 999;
 		if (col + 1 < cost)	    /* using CR is less characters */
@@ -7585,9 +7586,9 @@ win_redr_ruler(wp, always)
 	 * On the last line, don't print in the last column (scrolls the
 	 * screen up on some terminals).
 	 */
-	i = STRLEN(buffer);
+	i = (int)STRLEN(buffer);
 	get_rel_pos(wp, buffer + i + 1);
-	o = STRLEN(buffer + i + 1);
+	o = (int)STRLEN(buffer + i + 1);
 #ifdef FEAT_WINDOWS
 	if (wp->w_status_height == 0)	/* can't use last char of screen */
 #endif

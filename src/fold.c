@@ -607,7 +607,7 @@ foldCreate(start, end)
 	}
     }
 
-    i = fp - (fold_T *)gap->ga_data;
+    i = (int)(fp - (fold_T *)gap->ga_data);
     if (ga_grow(gap, 1) == OK)
     {
 	fp = (fold_T *)gap->ga_data + i;
@@ -1020,7 +1020,7 @@ foldAdjustVisual()
     if (hasFolding(end->lnum, NULL, &end->lnum))
     {
 	ptr = ml_get(end->lnum);
-	end->col = STRLEN(ptr);
+	end->col = (colnr_T)STRLEN(ptr);
 	if (end->col > 0 && *p_sel == 'o')
 	    --end->col;
 #ifdef FEAT_MBYTE
@@ -1451,7 +1451,7 @@ foldMarkAdjustRecurse(gap, line1, line2, amount, amount_after)
     /*
      * Adjust all folds below "line1" that are affected.
      */
-    for (i = fp - (fold_T *)gap->ga_data; i < gap->ga_len; ++i, ++fp)
+    for (i = (int)(fp - (fold_T *)gap->ga_data); i < gap->ga_len; ++i, ++fp)
     {
 	/*
 	 * Check for these situations:
@@ -1706,7 +1706,7 @@ foldAddMarker(lnum, marker, markerlen)
 
     /* Allocate a new line: old-line + 'cms'-start + marker + 'cms'-end */
     line = ml_get(lnum);
-    line_len = STRLEN(line);
+    line_len = (int)STRLEN(line);
     newline = alloc((unsigned)(line_len + markerlen + STRLEN(cms) - 1));
     if (newline == NULL)
 	return;
@@ -1780,7 +1780,7 @@ foldDelMarker(lnum, marker, markerlen)
 			&& STRNCMP(p + len, cms2 + 2, STRLEN(cms2 + 2)) == 0)
 		{
 		    p -= cms2 - cms;
-		    len += STRLEN(cms) - 2;
+		    len += (int)STRLEN(cms) - 2;
 		}
 	    }
 	    if (u_save(lnum - 1, lnum + 1) == OK)
@@ -1816,7 +1816,7 @@ foldtext_cleanup(str)
     /* locate "%s" in 'commentstring', use the part before and after it. */
     cmtp = (char_u *)strstr((char *)curbuf->b_p_cms, "%s");
     if (cmtp != NULL)
-	cmtp_len = STRLEN(cmtp + 2);
+	cmtp_len = (int)STRLEN(cmtp + 2);
     parseMarker(curwin);
 
     for (s = str; *s != NUL; )
@@ -1839,7 +1839,7 @@ foldtext_cleanup(str)
 	    if (!did1
 		  && STRNCMP(s, curbuf->b_p_cms, cmtp - curbuf->b_p_cms) == 0)
 	    {
-		len = cmtp - curbuf->b_p_cms;
+		len = (int)(cmtp - curbuf->b_p_cms);
 		did1 = TRUE;
 	    }
 	    else if (!did2 && STRNCMP(s, cmtp + 2, cmtp_len) == 0)
@@ -2279,7 +2279,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 			     * this point to split them too. */
 			    foldRemove(&fp->fd_nested, flp->lnum - fp->fd_top,
 						      flp->lnum - fp->fd_top);
-			    i = fp - (fold_T *)gap->ga_data;
+			    i = (int)(fp - (fold_T *)gap->ga_data);
 			    foldSplit(gap, i, flp->lnum, flp->lnum - 1);
 			    fp = (fold_T *)gap->ga_data + i + 1;
 			    /* If using the "marker" or "syntax" method, we
@@ -2315,7 +2315,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		{
 		    /* Insert new fold.  Careful: ga_data may be NULL and it
 		     * may change! */
-		    i = fp - (fold_T *)gap->ga_data;
+		    i = (int)(fp - (fold_T *)gap->ga_data);
 		    if (foldInsert(gap, i) != OK)
 			return bot;
 		    fp = (fold_T *)gap->ga_data + i;
@@ -2377,7 +2377,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 	     * this fold. */
 	    flp->lnum = flp->lnum_save - fp->fd_top;
 	    flp->off += fp->fd_top;
-	    i = fp - (fold_T *)gap->ga_data;
+	    i = (int)(fp - (fold_T *)gap->ga_data);
 	    bot = foldUpdateIEMSRecurse(&fp->fd_nested, level + 1,
 				       startlnum2 - fp->fd_top, flp, getlevel,
 					      bot - fp->fd_top, fp->fd_flags);
@@ -2461,7 +2461,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		{
 		    /* indent or expr method: split fold to create a new one
 		     * below bot */
-		    i = fp - (fold_T *)gap->ga_data;
+		    i = (int)(fp - (fold_T *)gap->ga_data);
 		    foldSplit(gap, i, flp->lnum, bot);
 		    fp = (fold_T *)gap->ga_data + i;
 		}
@@ -2569,7 +2569,7 @@ foldSplit(gap, i, top, bot)
     gap1 = &fp->fd_nested;
     gap2 = &fp[1].fd_nested;
     (void)(foldFind(gap1, bot + 1 - fp->fd_top, &fp2));
-    len = (fold_T *)gap1->ga_data + gap1->ga_len - fp2;
+    len = (int)((fold_T *)gap1->ga_data + gap1->ga_len - fp2);
     if (len > 0 && ga_grow(gap2, len) == OK)
     {
 	for (idx = 0; idx < len; ++idx)
@@ -2867,8 +2867,8 @@ parseMarker(wp)
     win_T	*wp;
 {
     foldendmarker = vim_strchr(wp->w_p_fmr, ',');
-    foldstartmarkerlen = foldendmarker++ - wp->w_p_fmr;
-    foldendmarkerlen = STRLEN(foldendmarker);
+    foldstartmarkerlen = (int)(foldendmarker++ - wp->w_p_fmr);
+    foldendmarkerlen = (int)STRLEN(foldendmarker);
 }
 
 /* foldlevelMarker() {{{2 */

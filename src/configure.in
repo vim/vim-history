@@ -1384,7 +1384,7 @@ else
 	*)	tlibs="ncurses termlib termcap curses";;
   esac
   for libname in $tlibs; do
-    AC_CHECK_LIB($libname, tgetent,,)
+    AC_CHECK_LIB(${libname}, tgetent,,)
     if test "x$olibs" != "x$LIBS"; then
       dnl It's possible that a library is found but it doesn't work
       dnl e.g., shared library that cannot be found
@@ -1614,9 +1614,9 @@ main()
 dnl Check for functions in one big call, to reduce the size of configure
 AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpseudotty \
 	getpwnam getpwuid getrlimit gettimeofday getwd lstat memcmp \
-	memset nanosleep opendir putenv qsort select setenv setpgid setsid \
-	sigaltstack sigstack sigset sigsetjmp sigaction sigvec \
-	strcasecmp strerror strftime stricmp strncasecmp strnicmp \
+	memset nanosleep opendir putenv qsort readlink select setenv \
+	setpgid setsid sigaltstack sigstack sigset sigsetjmp sigaction \
+	sigvec strcasecmp strerror strftime stricmp strncasecmp strnicmp \
 	strpbrk strtol tgetent usleep utime utimes)
 
 dnl fstatfs() can take 2 to 4 arguments, try to use st_blksize if possible

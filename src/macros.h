@@ -54,6 +54,7 @@
  * On some systems toupper()/tolower() only work on lower/uppercase characters
  * Careful: Only call TO_UPPER() and TO_LOWER() with a character in the range
  * 0 - 255.  toupper()/tolower() on some systems can't handle others.
+ * Note: for UTF-8 use utf_toupper() and utf_tolower().
  */
 #ifdef MSWIN
 #  define TO_UPPER(c)	toupper_tab[(c) & 255]
@@ -66,6 +67,22 @@
 #  define TO_UPPER	toupper
 #  define TO_LOWER	tolower
 # endif
+#endif
+
+/*
+ * MB_ISLOWER() and MB_ISUPPER() are to be used on multi-byte characters.  But
+ * don't use them for negative values or values above 0x100 for DBCS.
+ */
+#ifdef FEAT_MBYTE
+# define MB_ISLOWER(c)	(enc_utf8 && (c) > 0x80 ? utf_islower(c) : islower(c))
+# define MB_ISUPPER(c)	(enc_utf8 && (c) > 0x80 ? utf_isupper(c) : isupper(c))
+# define MB_TOLOWER(c)	(enc_utf8 && (c) > 0x80 ? utf_tolower(c) : TO_LOWER(c))
+# define MB_TOUPPER(c)	(enc_utf8 && (c) > 0x80 ? utf_toupper(c) : TO_UPPER(c))
+#else
+# define MB_ISLOWER(c)	islower(c)
+# define MB_ISUPPER(c)	isupper(c)
+# define MB_TOLOWER(c)	TO_LOWER(c)
+# define MB_TOUPPER(c)	TO_UPPER(c)
 #endif
 
 /* Like isalpha() but reject non-ASCII characters.  Can't be used with a
@@ -112,30 +129,36 @@
  * On the Mac open() has only two arguments.
  */
 #ifdef VMS
-# define mch_access(n, p) access(vms_fixfilename(n), (p))
-# define mch_fopen(n, p)  fopen(vms_fixfilename(n), (p))
-# define mch_fstat(n, p)  fstat(vms_fixfilename(n), (p))
-# define mch_lstat(n, p)  lstat(vms_fixfilename(n), (p))
-# define mch_stat(n, p)   stat(vms_fixfilename(n), (p))
+# define mch_access(n, p)	access(vms_fixfilename(n), (p))
+				/* see mch_open() comment */
+# define mch_fopen(n, p)	fopen(vms_fixfilename(n), (p))
+# define mch_fstat(n, p)	fstat(vms_fixfilename(n), (p))
+	/* VMS does not have lstat() */
+# define mch_stat(n, p)		stat(vms_fixfilename(n), (p))
 #else
-# define mch_access(n, p) access((n), (p))
-# define mch_fopen(n, p)  fopen((n), (p))
-# define mch_fstat(n, p)  fstat((n), (p))
-# define mch_lstat(n, p)  lstat((n), (p))
+# define mch_access(n, p)	access((n), (p))
+# define mch_fopen(n, p)	fopen((n), (p))
+# define mch_fstat(n, p)	fstat((n), (p))
+# define mch_lstat(n, p)	lstat((n), (p))
 # ifdef MSWIN	/* has it's own mch_stat() function */
-#  define mch_stat(n, p)   vim_stat((n), (p))
+#  define mch_stat(n, p)	vim_stat((n), (p))
 # else
-#  define mch_stat(n, p)   stat((n), (p))
+#  define mch_stat(n, p)	stat((n), (p))
 # endif
 #endif
 
 #ifdef macintosh
-# define mch_open(n, m, p) open((n), (m))
+# define mch_open(n, m, p)	open((n), (m))
 #else
 # ifdef VMS
-#  define mch_open(n, m, p) open(vms_fixfilename(n), (m), (p))
+/*
+ * It is possible to force some record format with:
+ * #  define mch_open(n, m, p) open(vms_fixfilename(n), (m), (p)), "rat=cr", "rfm=stmlf", "mrs=0")
+ * but it is not recomended, because it can destroy indexes etc.
+ */
+#  define mch_open(n, m, p)	open(vms_fixfilename(n), (m), (p))
 # else
-#  define mch_open(n, m, p) open((n), (m), (p))
+#  define mch_open(n, m, p)	open((n), (m), (p))
 # endif
 #endif
 

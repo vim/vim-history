@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ai.  Last change: 2001 Jun 03
+*todo.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 10
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,16 +29,21 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: Disable _OnWindowPosChanging() to make maximize work better?
-(Einspanjer)
+Win32: When the gvim window is maximized and selecting another font, the
+window no longer fills the screen.
 
-Line with ====| in usr_20.txt is recognized as a link when converting to HTML.
+Win32: Editing a file by its short name should expand into the long name.
+Worked OK in 6.0ae.  (Webb)
+
+Win32: Try out new Make_ivc.mak.  Include it when it works.
+
+Multibyte: Use new upper/lower case code for STRICMP() and STRNICMP().
+
+Add X-Windows patch to communicate between two Vims?  (Flemming Madsen)
 
 Toolbar icons from Steve Wall?
 
 Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
-
-GUI: Make inputdialog() work for Win16, Photon, Amiga, Mac, RiscOS.
 
 Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
 marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
@@ -73,14 +78,18 @@ E. Virtual edit:
 -   When doing Visual selection and including space after the end-of-line it
     is not included in the operation.  Should this be changed to include the
     space after the end-of-line?
--   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
-    to a valid character.
+-   'fdc' set to 2, 'sidescroll' to 1, 'nowrap': using ' ' to go past the end
+    of the line, the "0" to go to the start: text disappears under the
+    foldcolumn. (Pritesh Mistry)
+-   Visual selection of virtual space does not work when 'list' is on.
 -   Add more documentation.
 -   Use vpos_T instead of fpos_T for positions that can have a coladd?
 -   coladvance2() can be a bit slow.  Check with profiling.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line?
 -   Allow specifying it separately for Tabs and beyond end-of-line?
+-   When the cursor reaches the right border of the window, make the text
+    scroll left?
 
 
 J. User Friendlier
@@ -168,6 +177,7 @@ Various recent:
     block, but padding is wrong (always two spaces).  Fix the padding.
 9   With blockwise Visual mode, "A" works different than "I" when there are
     short lines.  Make them work the same way.
+8   GUI: Make inputdialog() work for Photon, Amiga, Mac, RiscOS.
 
 
 Considered for release 6.0:
@@ -223,6 +233,10 @@ Vi incompatibility:
     link on the same file under the name of the first one.  Adjust the file
     name in the buffer to the last one used?  Use several file names in one
     buffer???
+    Also: When first editing file "test", which is symlink to "test2", and
+    then editing "test2", you end up editing buffer "test" again.  Change the
+    name of the buffer to the actual file, instead of using the name of the
+    symlink?
 7   The ":map" command output overwrites the command.  Perhaps it should keep
     the ":map" when it's used without arguments?
 7   When interrupting reading a file, Vi considers the buffer modified.  Add a
@@ -374,31 +388,12 @@ Win32 GUI known bugs:
 
 
 Athena GUI:
-9   Use one of the Syntax menu items.  Then ":aunmenu Syntax", Vim crashes.
-    Also crashes when using Buffers.Refresh.
 9   When using ":unmenu" in menu item, the reversing of menu items is wrong.
     Happens with Syntax/manual.	Problem with not removing the reversed text
     when destroying the menu item?  For Rochholz Vim crashes.
-9   Because destroying a menu can cause a crash, it is not destroyed but
-    unmanaged.  The destoyed Widgets are remembered, this list is never
-    cleaned up.
-    David Harrison Notes: Athena now destroys its menus and this widget list
-    doesn't exist anymore.  It does still cause a crash ONLY when you delete
-    a menu under the following conditions:
-    1) Select a menu that has a submenu attached to it and select an item
-       from the submenu.  Selection in this case means making a menu item
-       highlighted by moving the mouse over it.
-       For example: "Window.Move To.Top" or "Help.GUI".
-    2) Delete any menu item that is a parent of the item you selected.
-       For example: "Window.Move To" or "Window".  If you selected "Help.GUI",
-       then deleting "Help" will cause a crash.
-    Basically, as long as you haven't looked at a menu, you can delete it.
-9   When closing the confirm() dialog, Vim exits.
 9   When using "menu a.b.c.d lll", the "b" submenu does not disappear.
 9   When dragging the scrollbar thumb very fast, focus is only obtained in
     the scrollbar itself.
-9   The pullright pixmap isn't changed when the menubar's foreground or
-    background color is changed.
 9   The pullright pixmap seems to be a pixel too high.
 8   When "j" or "k" repeated quickly, display is messed up (Lauther).
 8   Has extra stripes here and there. (Zeitlin).
@@ -406,18 +401,12 @@ Athena GUI:
     the command line pseudo-scrollbar (only when status line moved quickly).
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
+9   The pullright pixmap isn't changed when the menubar's foreground or
+    background color is changed.
 7   The file selector's scrollbar colors are not set after doing a
     ":hi Scrollbar guifg=color". (David Harrison)
 7   The file selector's colors are not changed by the colorscheme command.
     Related to the above problem.
-7   Check menu.vim for the "no_buffers_menu" variable.  If Athena can delete
-    menus (which it can in most cases now), then set the variable to a 0.
-    This should be done just before the 6.0 release.
-7   Two callbacks can be generated when selecting a menu item.  For example,
-    when selecting "Syntax.AB.Assembly.680x0", you get a callback for the
-    "680x0" menu item and the "Syntax.AB" item.  The translations for the
-    menus are modified on-the-fly and is possibly the problem.  Is this really
-    what we want?  Look at Motif's more robust solution.
 
 
 Motif GUI:
@@ -629,6 +618,8 @@ Macintosh:
 
 
 VMS:
+8   VAX doesn't have rmdir(), required in vim_deltempdir().
+8   vimdiff doesn't work, because the diff output looks different.
 8   VMS: Inserts <NL> every 8291 bytes when writing. (Howie)  4.5 didn't have
     this problem.  It's caused by the write() function, need to write() every
     line separately.  It seems read() also returns a single line.  Switch I/O
@@ -658,10 +649,6 @@ VMS:
 9   Get out-of-memory for ":g/^/,$s//@/" on 1000 lines, this is not handled
     correctly.  Get many error messages while redrawing the screen, which
     cause another redraw, etc.
-9   When first editing file "test", which is symlink to "test2", and then
-    editing "test2", you end up editing buffer "test" again.  Change the name
-    of the buffer to the actual file, instead of using the name of the
-    symlink?
 8   [<C-I> doesn't work when '*' is in 'iskeyword'.  find_pattern_in_path()
     must escape special characters in the pattern.
 8   Vim can overwrite a read-only file with ":w!".  ":w" can't overwrite an
@@ -936,6 +923,12 @@ Multi-byte characters:
 8   Should add test for using various commands with multi-byte characters.
 -   Include flipcase patch: ~/vim/patches/wall.flipcase2 ?  Make it work for
     multi-byte characters.
+8   'infercase' doesn't work with multi-byte characters.
+8   toupper() function doesn't handle byte count changes.
+8   Searching with UTF-8 doesn't always take care of composing characters.
+    E.g. when using "x*" where "x" has a composing character.
+8   ":s/x/\u\1/" doesn't work, making uppercase isn't done for multi-byte
+    characters.
 8   UTF-8: When there is a precomposed character in the font, use it instead
     of a character and a composing character.  See xterm for an example.
 -   GTK and Win32: Allow selecting fonts for 'guifontset' with the
@@ -1000,6 +993,7 @@ Syntax highlighting:
     "%" match.  :syntax nomatch cMatchError (,{,[,),},] [contained]
 8   Highlight the text between two matching parens (e.g., with a grey
     background) when on one of the parens or in between them.
+    Or highlight the matching paren when the cursor is on one.
 8   Add a command to jump to the next character highlighted with "Error".
 8   When using a cterm, and no ctermfg or ctermbg are defined, use start/stop
     sequences.	Add remark in docs that :if 'term' == "term-name" should be
@@ -1180,6 +1174,7 @@ Built-in script language:
 	getkey()		Like input() but get only one char.
 	raisewin()		raise gvim window (see HierAssist patch for
 				Tcl implementation ~/vim/HierAssist/ )
+7   Make bufname("'0") return the buffer name from mark '0.
 8   argc() returns 0 when using "vim -t tag".  How to detect that no file was
     specified in any way?  To be able to jump to the last edited file.
 8   Pass the executable name to the Vim scripts in some way.  As v:argv0?
@@ -2226,6 +2221,7 @@ Swap (.swp) files:
     dir as the actual file. Adjust FullName().	Avoids editing the same file
     twice (e.g. when using quickfix).  Also try to make the name of the backup
     file the same as the actual file?
+    Use the code for resolve()?
 7   When using 64 bit inode numbers, also store the top 32 bits.  Add another
     field for this, using part of bo_fname[], to keep it compatible.
 7   When editing a file on removable media, should put swap file somewhere

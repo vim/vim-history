@@ -23,6 +23,9 @@
 # include <Xm/RepType.h>
 #endif
 #include <Xm/Frame.h>
+#include <Xm/LabelG.h>
+#include <Xm/ToggleBG.h>
+#include <Xm/SeparatoG.h>
 
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -30,6 +33,17 @@
 #include <X11/Intrinsic.h>
 
 #include "vim.h"
+
+#ifdef FEAT_GUI_DIALOG
+
+# include <X11/xpm.h>
+
+# include "../pixmaps/alert.xpm"
+# include "../pixmaps/error.xpm"
+# include "../pixmaps/generic.xpm"
+# include "../pixmaps/info.xpm"
+# include "../pixmaps/quest.xpm"
+#endif
 
 #define MOTIF_POPUP
 
@@ -126,17 +140,6 @@ gui_x11_create_widgets()
      */
 #if (XmVersion >= 1002)
     XmRepTypeInstallTearOffModelConverter();
-#endif
-
-#if 0 /* not needed? */
-    XtInitializeWidgetClass(xmFormWidgetClass);
-    XtInitializeWidgetClass(xmRowColumnWidgetClass);
-    XtInitializeWidgetClass(xmDrawingAreaWidgetClass);
-    XtInitializeWidgetClass(xmCascadeButtonWidgetClass);
-    XtInitializeWidgetClass(xmMenuShellWidgetClass);
-    XtInitializeWidgetClass(xmPushButtonWidgetClass);
-    XtInitializeWidgetClass(xmScrollBarWidgetClass);
-    XtInitializeWidgetClass(xmTextFieldWidgetClass);
 #endif
 
     /* Make sure the "Quit" menu entry of the window manager is ignored */
@@ -755,9 +758,9 @@ gui_mch_add_menu_item(menu, idx)
 	     * A separator has the format "-sep%d[:%d]-". The optional :%d is
 	     * a width specifier. If no width is specified then we choose one.
 	     */
-	    cp = (char *) vim_strchr(menu->name, ':');
+	    cp = (char *)vim_strchr(menu->name, ':');
 	    if (cp != NULL)
-		wid = (Dimension) atoi(++cp);
+		wid = (Dimension)atoi(++cp);
 	    else
 		wid = 5;
 
@@ -767,8 +770,7 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    get_pixmap(menu->name, menu->iconfile,
-					      &menu->image, &menu->image_ins);
+	    get_toolbar_pixmap(menu, &menu->image, &menu->image_ins);
 	    /* Set the label here, so that we can switch between icons/text
 	     * by changing the XmNlabelType resource. */
 	    xms = XmStringCreate((char *)menu->dname, STRING_TAG);
@@ -991,8 +993,7 @@ gui_mch_submenu_change(menu, colors)
 		{
 		    XFreePixmap(gui.dpy, mp->image);
 		    XFreePixmap(gui.dpy, mp->image_ins);
-		    get_pixmap(mp->name, mp->iconfile,
-						  &mp->image, &mp->image_ins);
+		    get_toolbar_pixmap(mp, &mp->image, &mp->image_ins);
 		    if (mp->image != (Pixmap)0)
 			XtVaSetValues(mp->id,
 				XmNlabelPixmap, mp->image,
@@ -1574,13 +1575,88 @@ gui_motif_set_fontlist(wg)
     }
 }
 
+static Widget create_pixmap_label(Widget parent, String name, char **data, ArgList args, Cardinal arg);
+
+    static Widget
+create_pixmap_label(parent, name, data, args, arg)
+    Widget	parent;
+    String	name;
+    char	**data;
+    ArgList	args;
+    Cardinal	arg;
+{
+    Widget	label;
+    Display	*dsp;
+    Screen	*scr;
+    int		depth;
+    Pixmap	pixmap = 0;
+    XpmAttributes XpmAttr;
+    Boolean	rs;
+    Pixel	bg;
+    Pixel	fg;
+    Pixel	bsc;
+    Pixel	tsc;
+    Pixel	hsc;
+    XpmColorSymbol color[5] =
+    {
+	{"background", NULL, 0},
+	{"foreground", NULL, 0},
+	{"bottomShadow", NULL, 0},
+	{"topShadow", NULL, 0},
+	{"highlight", NULL, 0}
+    };
+
+    label = XmCreateLabelGadget(parent, name, args, arg);
+
+    /*
+     * We need to be carefull here, since in case of gadgets, there is
+     * no way to get the background color directly from the widget itself.
+     * In such cases we get it from The Core part of his parent instead.
+     */
+    dsp = XtDisplayOfObject(label);
+    scr = XtScreenOfObject(label);
+    XtVaGetValues(XtIsSubclass(label, coreWidgetClass)
+	    ?  label : XtParent(label),
+		  XmNdepth, &depth,
+		  XmNbackground, &bg,
+		  XmNforeground, &fg,
+		  XmNbottomShadowColor, &bsc,
+		  XmNtopShadowColor, &tsc,
+		  XmNhighlight, &hsc,
+		  NULL);
+
+    color[0].pixel = bg;
+    color[1].pixel = fg;
+    color[2].pixel = bsc;
+    color[3].pixel = tsc;
+    color[4].pixel = hsc;
+
+    XpmAttr.valuemask = XpmColorSymbols | XpmCloseness | XpmDepth;
+    XpmAttr.colorsymbols = color;
+    XpmAttr.numsymbols = 5;
+    XpmAttr.closeness = 65535;
+    XpmAttr.depth = depth;
+    XpmCreatePixmapFromData(dsp, RootWindowOfScreen(scr),
+		    data, &pixmap, NULL, &XpmAttr);
+
+    XtVaGetValues(label, XmNrecomputeSize, &rs, NULL);
+    XtVaSetValues(label, XmNrecomputeSize, True, NULL);
+    XtVaSetValues(label,
+	    XmNlabelType, XmPIXMAP,
+	    XmNlabelPixmap, pixmap,
+	    NULL);
+    XtVaSetValues(label, XmNrecomputeSize, rs, NULL);
+
+    return label;
+}
+
 /* ARGSUSED */
     int
-gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
+gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
     int		type;
     char_u	*title;
     char_u	*message;
-    char_u	*buttons;
+    char_u	*button_names;
     int		dfltbutton;
     char_u	*textfield;		/* buffer of size IOSIZE */
 {
@@ -1589,11 +1665,16 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     XtAppContext	app;
     XmString		label;
     int			butcount;
-    static Widget	dialogbb = NULL;
-    static Widget	dialogmessage = NULL;
+    Widget		dialogform = NULL;
+    Widget		form = NULL;
     Widget		dialogtextfield = NULL;
-    Widget		*dialogButton;
-    int			vertical;
+    Widget		*buttons;
+    Widget		sep_form = NULL;
+    Boolean		vertical;
+    Widget		separator = NULL;
+    char		**icon_data = NULL;
+    int			n;
+    Arg			args[6];
 
     if (title == NULL)
 	title = (char_u *)_("Vim dialog");
@@ -1601,28 +1682,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     /* if our pointer is currently hidden, then we should show it. */
     gui_mch_mousehide(FALSE);
 
-    /* First time called: create the dialog and the message */
-    if (dialogbb == NULL)
-    {
-	dialogbb = XmCreateFormDialog(vimShell,
-		(char *)"dialog", NULL, 0);
-
-	dialogmessage = XtVaCreateManagedWidget("dialogMessage",
-		xmLabelWidgetClass, dialogbb,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		NULL);
-    }
-
-    /* Set the message string */
-    label = XmStringLtoRCreate((char *)message, STRING_TAG);
-    if (label == NULL)
-	return -1;
-    XtVaSetValues(dialogmessage,
-	    XmNlabelString, label,
-	    NULL);
-    XmStringFree(label);
+    dialogform = XmCreateFormDialog(vimShell, (char *)"dialog", NULL, 0);
 
     /* Check 'v' flag in 'guioptions': vertical button placement. */
     vertical = (vim_strchr(p_go, GO_VERTICAL) != NULL);
@@ -1631,41 +1691,25 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     label = XmStringCreateSimple((char *)title);
     if (label == NULL)
 	return -1;
-    XtVaSetValues(dialogbb,
+    XtVaSetValues(dialogform,
 	    XmNdialogTitle, label,
-	    XmNhorizontalSpacing, 20,
-	    XmNverticalSpacing, vertical ? 0 : 20,
+	    XmNhorizontalSpacing, 4,
+	    XmNverticalSpacing, vertical ? 0 : 4,
 	    NULL);
     XmStringFree(label);
 
-    if (textfield != NULL)
-    {
-	dialogtextfield = XtVaCreateWidget("textfield",
-		xmTextFieldWidgetClass, dialogbb,
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_WIDGET,
-		XmNtopWidget, dialogmessage,
-		NULL);
-	gui_motif_set_fontlist(dialogtextfield);
-	XmTextFieldSetString(dialogtextfield, (char *)textfield);
-	XtManageChild(dialogtextfield);
-	XtAddEventHandler(dialogtextfield, KeyPressMask, False,
-			    (XtEventHandler)keyhit_callback, (XtPointer)NULL);
-    }
-
     /* make a copy, so that we can insert NULs */
-    buts = vim_strsave(buttons);
+    buts = vim_strsave(button_names);
     if (buts == NULL)
 	return -1;
 
-    /* Count the number of buttons and allocate dialogButton[]. */
+    /* Count the number of buttons and allocate buttons[]. */
     butcount = 1;
     for (p = buts; *p; ++p)
 	if (*p == DLG_BUTTON_SEP)
 	    ++butcount;
-    dialogButton = (Widget *)alloc((unsigned)(butcount * sizeof(Widget)));
-    if (dialogButton == NULL)
+    buttons = (Widget *)alloc((unsigned)(butcount * sizeof(Widget)));
+    if (buttons == NULL)
     {
 	vim_free(buts);
 	return -1;
@@ -1674,6 +1718,7 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
     /*
      * Create the buttons.
      */
+    sep_form = (Widget) 0;
     p = buts;
     for (butcount = 0; *p; ++butcount)
     {
@@ -1687,61 +1732,233 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
 		break;
 	    }
 	}
-	label = XmStringCreate((char *)p, STRING_TAG);
+	label = XmStringCreate(_((char *)p), STRING_TAG);
 	if (label == NULL)
 	    break;
 
-	dialogButton[butcount] = XtVaCreateManagedWidget("button",
-		xmPushButtonWidgetClass, dialogbb,
+	buttons[butcount] = XtVaCreateManagedWidget("button",
+		xmPushButtonWidgetClass, dialogform,
 		XmNlabelString, label,
-		XmNtopAttachment, XmATTACH_WIDGET,
-		XmNtopWidget, dialogtextfield != NULL
-					    ? dialogtextfield : dialogmessage,
+		XmNbottomAttachment, XmATTACH_FORM,
+		XmNbottomOffset, 4,
 		NULL);
 	XmStringFree(label);
+
+	/* Layout properly. */
+
 	if (butcount > 0)
 	{
 	    if (vertical)
-		XtVaSetValues(dialogButton[butcount],
-			XmNtopWidget, dialogButton[butcount - 1],
+		XtVaSetValues(buttons[butcount],
+			XmNtopWidget, buttons[butcount - 1],
 			NULL);
 	    else
-		XtVaSetValues(dialogButton[butcount],
-			XmNleftAttachment, XmATTACH_WIDGET,
-			XmNleftWidget, dialogButton[butcount - 1],
-			NULL);
+	    {
+		if (*next == NUL)
+		{
+		    XtVaSetValues(buttons[butcount],
+			    XmNrightAttachment, XmATTACH_FORM,
+			    XmNrightOffset, 4,
+			    NULL);
+
+		    /* fill in a form as invisible separator */
+		    sep_form = XtVaCreateWidget("separatorForm",
+			    xmFormWidgetClass,	dialogform,
+			    XmNleftAttachment, XmATTACH_WIDGET,
+			    XmNleftWidget, buttons[butcount - 1],
+			    XmNrightAttachment, XmATTACH_WIDGET,
+			    XmNrightWidget, buttons[butcount],
+			    XmNbottomAttachment, XmATTACH_FORM,
+			    XmNbottomOffset, 4,
+			    NULL);
+		    XtManageChild(sep_form);
+		}
+		else
+		{
+		    XtVaSetValues(buttons[butcount],
+			    XmNleftAttachment, XmATTACH_WIDGET,
+			    XmNleftWidget, buttons[butcount - 1],
+			    NULL);
+		}
+	    }
 	}
 	else if (!vertical)
-	    XtVaSetValues(dialogButton[0],
-		    XmNleftAttachment, XmATTACH_FORM,
-		    XmNleftOffset, 20,
-		    NULL);
+	{
+	    if (*next == NUL)
+	    {
+		XtVaSetValues(buttons[0],
+			XmNrightAttachment, XmATTACH_FORM,
+			XmNrightOffset, 4,
+			NULL);
 
-	XtAddCallback(dialogButton[butcount], XmNactivateCallback,
+		/* fill in a form as invisible separator */
+		sep_form = XtVaCreateWidget("separatorForm",
+			xmFormWidgetClass, dialogform,
+			XmNleftAttachment, XmATTACH_FORM,
+			XmNleftOffset, 4,
+			XmNrightAttachment, XmATTACH_WIDGET,
+			XmNrightWidget, buttons[0],
+			XmNbottomAttachment, XmATTACH_FORM,
+			XmNbottomOffset, 4,
+			NULL);
+		XtManageChild(sep_form);
+	    }
+	    else
+		XtVaSetValues(buttons[0],
+			XmNleftAttachment, XmATTACH_FORM,
+			XmNleftOffset, 4,
+			NULL);
+	}
+
+	XtAddCallback(buttons[butcount], XmNactivateCallback,
 			  (XtCallbackProc)butproc, (XtPointer)(long)butcount);
 	p = next;
     }
     vim_free(buts);
 
+    separator = (Widget) 0;
+    if (butcount > 0)
+    {
+	/* Create the separator for beauty. */
+	n = 0;
+	XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
+	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNbottomWidget, buttons[0]); n++;
+	XtSetArg(args[n], XmNbottomOffset, 4); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	separator = XmCreateSeparatorGadget(dialogform, "separator", args, n);
+	XtManageChild(separator);
+    }
+
+    if (textfield != NULL)
+    {
+	dialogtextfield = XtVaCreateWidget("textField",
+		xmTextFieldWidgetClass, dialogform,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		NULL);
+	if (butcount > 0)
+	    XtVaSetValues(dialogtextfield,
+		    XmNbottomAttachment, XmATTACH_WIDGET,
+		    XmNbottomWidget, separator,
+		    NULL);
+	else
+	    XtVaSetValues(dialogtextfield,
+		    XmNbottomAttachment, XmATTACH_FORM,
+		    NULL);
+
+	gui_motif_set_fontlist(dialogtextfield);
+	XmTextFieldSetString(dialogtextfield, (char *)textfield);
+	XtManageChild(dialogtextfield);
+	XtAddEventHandler(dialogtextfield, KeyPressMask, False,
+			    (XtEventHandler)keyhit_callback, (XtPointer)NULL);
+    }
+
+    /* Form holding both message and pixmap labels */
+    form = XtVaCreateWidget("separatorForm",
+	    xmFormWidgetClass, dialogform,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    NULL);
+    XtManageChild(form);
+    {
+	Widget	    dialogpixmap = NULL;
+
+	/* Add pixmap */
+	switch (type)
+	{
+	    case VIM_GENERIC:
+		icon_data = generic_xpm;
+		break;
+	    case VIM_ERROR:
+		icon_data = error_xpm;
+		break;
+	    case VIM_WARNING:
+		icon_data = alert_xpm;
+		break;
+	    case VIM_INFO:
+		icon_data = info_xpm;
+		break;
+	    case VIM_QUESTION:
+		icon_data = quest_xpm;
+		break;
+	    default:
+		icon_data = generic_xpm;
+	}
+
+	n = 0;
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNtopOffset, 8); n++;
+	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNbottomOffset, 8); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNleftOffset, 8); n++;
+
+	dialogpixmap = create_pixmap_label(form, "dialogPixmap",
+		icon_data, args, n);
+	XtManageChild(dialogpixmap);
+
+	/* Create the dialog message. */
+	label = XmStringLtoRCreate((char *)message, STRING_TAG);
+	if (label == NULL)
+	    return -1;
+	(void)XtVaCreateManagedWidget("dialogMessage",
+		xmLabelWidgetClass, form,
+		XmNlabelString, label,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNtopOffset, 8,
+		XmNleftAttachment, XmATTACH_WIDGET,
+		XmNleftWidget, dialogpixmap,
+		XmNleftOffset, 8,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNrightOffset, 8,
+		XmNbottomAttachment, XmATTACH_FORM,
+		XmNbottomOffset, 8,
+		NULL);
+	XmStringFree(label);
+    }
+
+    if (textfield != NULL)
+    {
+	XtVaSetValues(form,
+		XmNbottomAttachment, XmATTACH_WIDGET,
+		XmNbottomWidget, dialogtextfield,
+		NULL);
+    }
+    else
+    {
+	if (butcount > 0)
+	    XtVaSetValues(form,
+		    XmNbottomAttachment, XmATTACH_WIDGET,
+		    XmNbottomWidget, separator,
+		    NULL);
+	else
+	    XtVaSetValues(form,
+		    XmNbottomAttachment, XmATTACH_FORM,
+		    NULL);
+    }
+
     if (dfltbutton < 1)
 	dfltbutton = 1;
     if (dfltbutton > butcount)
 	dfltbutton = butcount;
-    XtVaSetValues(dialogbb,
-	    XmNdefaultButton, dialogButton[dfltbutton - 1], NULL);
+    XtVaSetValues(dialogform,
+	    XmNdefaultButton, buttons[dfltbutton - 1], NULL);
     if (textfield != NULL)
-	XtVaSetValues(dialogbb, XmNinitialFocus, dialogtextfield, NULL);
-    XtManageChild(dialogbb);
+	XtVaSetValues(dialogform, XmNinitialFocus, dialogtextfield, NULL);
+    XtManageChild(dialogform);
 
     /* Need to make the dialog appear before we can move the pointer to it.
      * The short delay is somehow needed (wait for window manager?). */
-    XtRealizeWidget(dialogbb);
+    XtRealizeWidget(dialogform);
     XSync(gui.dpy, False);
     ui_delay(10L, FALSE);
 
     /* Position the mouse pointer in the dialog, required for when focus
      * follows mouse. */
-    XWarpPointer(gui.dpy, (Window)0, XtWindow(dialogbb), 0, 0, 0, 0, 20, 40);
+    XWarpPointer(gui.dpy, (Window)0, XtWindow(dialogform), 0, 0, 0, 0, 20, 40);
 
     if (textfield != NULL && *textfield != NUL)
     {
@@ -1753,27 +1970,18 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
 					   (XmTextPosition)STRLEN(textfield));
     }
 
-    app = XtWidgetToApplicationContext(dialogbb);
+    app = XtWidgetToApplicationContext(dialogform);
 
     /* Loop until a button is pressed or the dialog is killed somehow. */
     dialogStatus = -1;
-    while (1)
+    for (;;)
     {
 	XtAppProcessEvent(app, (XtInputMask)XtIMAll);
-	if (dialogStatus >= 0 || !XtIsManaged(dialogbb))
+	if (dialogStatus >= 0 || !XtIsManaged(dialogform))
 	    break;
     }
 
-    XtUnmanageChild(dialogbb);
-
-    while (butcount)
-    {
-	--butcount;
-	XtUnmanageChild(dialogButton[butcount]);
-	XtDestroyWidget(dialogButton[butcount]);
-    }
-
-    vim_free(dialogButton);
+    vim_free(buttons);
 
     if (textfield != NULL)
     {
@@ -1785,9 +1993,9 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton, textfield)
 	    STRNCPY(textfield, p, IOSIZE);
 	    textfield[IOSIZE - 1] = NUL;
 	}
-	XtUnmanageChild(dialogtextfield);
-	XtDestroyWidget(dialogtextfield);
     }
+
+    XtDestroyWidget(dialogform);
 
     return dialogStatus;
 }
@@ -2071,11 +2279,20 @@ toolbarbutton_leave_cb(w, client_data, event, cont)
 # endif
 
     void
-gui_mch_get_toolbar_colors(bgp, fgp)
+gui_mch_get_toolbar_colors(bgp, fgp, bsp, tsp, hsp)
     Pixel	*bgp;
     Pixel	*fgp;
+    Pixel       *bsp;
+    Pixel	*tsp;
+    Pixel	*hsp;
 {
-    XtVaGetValues(toolBar, XmNbackground, bgp, XmNforeground, fgp, NULL);
+    XtVaGetValues(toolBar,
+	    XmNbackground, bgp,
+	    XmNforeground, fgp,
+	    XmNbottomShadowColor, bsp,
+	    XmNtopShadowColor, tsp,
+	    XmNhighlightColor, hsp,
+	    NULL);
 }
 #endif
 
@@ -2142,4 +2359,581 @@ gui_motif_menu_fontlist(id)
 	}
     }
 }
+
 #endif
+
+/*
+ * Flags used to distinguish the different contexts in which the
+ * find/replace callback may be called.
+ */
+#define FR_DIALOGTERM	1
+#define FR_FINDNEXT	2
+#define FR_R_FINDNEXT	3
+#define FR_REPLACE	4
+#define FR_REPLACEALL	5
+
+/*
+ * We don't create it twice for the sake of speed.
+ */
+
+typedef struct _SharedFindReplace
+{
+    Widget dialog;	/* the main dialog widget */
+    Widget exact;	/* 'Exact match' check button */
+    Widget up;		/* search direction 'Up' radio button */
+    Widget down;	/* search direction 'Down' radio button */
+    Widget what;	/* 'Find what' entry text widget */
+    Widget with;	/* 'Replace with' entry text widget */
+    Widget find;	/* 'Find Next' action button */
+    Widget replace;	/* 'Replace With' action button */
+    Widget all;		/* 'Replace All' action button */
+
+    Widget cancel;
+} SharedFindReplace;
+
+static SharedFindReplace find_widgets = { NULL };
+static SharedFindReplace repl_widgets = { NULL };
+
+static void find_replace_destroy_callback(Widget w, XtPointer client_data, XtPointer call_data);
+static void find_replace_dismiss_callback(Widget w, XtPointer client_data, XtPointer call_data);
+static void entry_activate_callback(Widget w, XtPointer client_data, XtPointer call_data);
+static void find_replace_callback(Widget w, XtPointer client_data, XtPointer call_data);
+static void find_replace_keypress(Widget w, SharedFindReplace * frdp, XKeyEvent * event);
+static void find_replace_dialog_create(char_u *entry_text, int do_replace);
+
+/*ARGSUSED*/
+    static void
+find_replace_destroy_callback(w, client_data, call_data)
+    Widget	w;
+    XtPointer	client_data;
+    XtPointer	call_data;
+{
+    SharedFindReplace *cd = (SharedFindReplace *)client_data;
+
+    if (cd != NULL)
+	cd->dialog = (Widget)0;
+}
+
+/*ARGSUSED*/
+    static void
+find_replace_dismiss_callback(w, client_data, call_data)
+    Widget	w;
+    XtPointer	client_data;
+    XtPointer	call_data;
+{
+    SharedFindReplace *cd = (SharedFindReplace *)client_data;
+
+    if (cd != NULL)
+	XtUnmanageChild(cd->dialog);
+}
+
+/*ARGSUSED*/
+    static void
+entry_activate_callback(w, client_data, call_data)
+    Widget	w;
+    XtPointer	client_data;
+    XtPointer	call_data;
+{
+    XmProcessTraversal((Widget)client_data, XmTRAVERSE_CURRENT);
+}
+
+/*ARGSUSED*/
+    static void
+find_replace_callback(w, client_data, call_data)
+    Widget	w;
+    XtPointer	client_data;
+    XtPointer call_data;
+{
+    unsigned long flags = (unsigned long)client_data;
+
+    char	*find_text, *repl_text, *cmd;
+    Boolean	direction_down = TRUE;
+    Boolean	exact_match = FALSE;
+    int		len;
+
+    if (flags == FR_DIALOGTERM && State == CONFIRM)
+    {
+	add_to_input_buf((char_u *)"q", 1);
+	return;
+    }
+
+    /* Get the search/replace strings from the dialog */
+    if (flags == FR_FINDNEXT)
+    {
+	find_text = XmTextFieldGetString(find_widgets.what);
+	repl_text = NULL;
+	XtVaGetValues(find_widgets.down, XmNset, &direction_down, NULL);
+	XtVaGetValues(find_widgets.exact, XmNset, &exact_match, NULL);
+    }
+    else if (flags == FR_R_FINDNEXT || flags == FR_REPLACE
+						    || flags == FR_REPLACEALL)
+    {
+	find_text = XmTextFieldGetString(repl_widgets.what);
+	repl_text = XmTextFieldGetString(repl_widgets.with);
+	XtVaGetValues(repl_widgets.down, XmNset, &direction_down, NULL);
+	XtVaGetValues(repl_widgets.exact, XmNset, &exact_match, NULL);
+    }
+    else
+    {
+	find_text = NULL;
+	repl_text = NULL;
+    }
+
+    /* Calculate exact length of cmd buffer.  See below to count characters */
+    len = 2;
+    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
+    {
+	len += (strlen(find_text) + 1);
+	if (State != CONFIRM && exact_match)
+	    len += 4;   /* \< and \>*/
+    }
+    else if (flags == FR_REPLACE || flags == FR_REPLACEALL)
+    {
+	if (State == CONFIRM)
+	    len++;
+	else
+	    len += (strlen(find_text) + strlen(repl_text) + 11);
+    }
+
+    cmd = malloc(sizeof(char) * len);
+
+    /* start stuffing in the command text */
+    if (State & INSERT)
+	cmd[0] = Ctrl_O;
+    else if ((State | NORMAL) == 0 && State != CONFIRM)
+	cmd[0] = ESC;
+    else
+	cmd[0] = NUL;
+    cmd[1] = NUL;
+
+    /* Synthesize the input corresponding to the particular actions. */
+    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
+    {
+	if (State == CONFIRM)
+	{
+	    STRCAT(cmd, "n");
+	}
+	else
+	{
+	    if (direction_down)
+		STRCAT(cmd, "/");
+	    else
+		STRCAT(cmd, "?");
+
+	    if (exact_match)
+		STRCAT(cmd, "\\<");
+	    STRCAT(cmd, find_text);
+	    if (exact_match)
+		STRCAT(cmd, "\\>");
+
+	    STRCAT(cmd, "\r");
+	}
+    }
+    else if (flags == FR_REPLACE)
+    {
+	if (State == CONFIRM)
+	{
+	    STRCAT(cmd, "y");
+	}
+	else
+	{
+	    STRCAT(cmd, ":%sno/");
+	    STRCAT(cmd, find_text);
+	    STRCAT(cmd, "/");
+	    STRCAT(cmd, repl_text);
+	    STRCAT(cmd, "/gc\r");
+	}
+	/*
+	 * Give main window the focus back: this is to allow
+	 * handling of the confirmation y/n/a/q stuff.
+	 */
+	/*(void)SetFocus(s_hwnd); */
+    }
+    else if (flags == FR_REPLACEALL)
+    {
+	if (State == CONFIRM)
+	{
+	    STRCAT(cmd, "a");
+	}
+	else
+	{
+	    STRCAT(cmd, ":%sno/");
+	    STRCAT(cmd, find_text);
+	    STRCAT(cmd, "/");
+	    STRCAT(cmd, repl_text);
+	    STRCAT(cmd, "/g\r");
+	}
+    }
+    if (*cmd)
+	add_to_input_buf((char_u *)cmd, STRLEN(cmd));
+
+    free(cmd);
+
+    if (find_text)
+	XtFree(find_text);
+    if (repl_text)
+	XtFree(repl_text);
+}
+
+    static void
+find_replace_keypress(w, frdp, event)
+    Widget		w;
+    SharedFindReplace	*frdp;
+    XKeyEvent		*event;
+{
+    KeySym keysym;
+
+    if (frdp == NULL)
+	return;
+
+    keysym = XLookupKeysym(event, 0);
+
+    /* the scape key pops the whole dialog down */
+    if (keysym == XK_Escape)
+    {
+	find_replace_callback(w, (XtPointer)FR_DIALOGTERM, NULL);
+	XtUnmanageChild(frdp->dialog);
+    }
+}
+
+    static void
+find_replace_dialog_create(entry_text, do_replace)
+    char_u	*entry_text;
+    int		do_replace;
+{
+    SharedFindReplace	*frdp;
+    Widget		separator;
+    Widget		input_form;
+    Widget		button_form;
+    Widget		frame;
+    XmString		str;
+    int			n;
+    Arg			args[6];
+    int			exact_word = FALSE;
+
+    frdp = do_replace ? &repl_widgets: &find_widgets;
+
+    /* If the argument is emtpy, get the last used search pattern.  If it is
+     * surrounded by "\<..\>" remove that and set the "exact_word" toggle
+     * button.
+     */
+
+    if (*entry_text == NUL)
+	entry_text = last_search_pat();
+    if (entry_text != NULL)
+    {
+	entry_text = vim_strsave(entry_text);
+	if (entry_text != NULL)
+	{
+	    int len = STRLEN(entry_text);
+
+	    if (len >= 4
+		    && STRNCMP(entry_text, "\\<", 2) == 0
+		    && STRNCMP(entry_text + len - 2, "\\>", 2) == 0)
+	    {
+		exact_word = TRUE;
+		mch_memmove(entry_text, entry_text + 2, (size_t)(len - 4));
+		entry_text[len - 4] = NUL;
+	    }
+	}
+    }
+
+    /* If the dialog already exists, just raise it. */
+    if (frdp->dialog)
+    {
+	/* If the window is already up, just pop it to the top */
+	if (XtIsManaged(frdp->dialog))
+	{
+	    XMapRaised(XtDisplay(frdp->dialog),
+					    XtWindow(XtParent(frdp->dialog)));
+	}
+	else
+	    XtManageChild(frdp->dialog);
+	XtPopup(XtParent(frdp->dialog), XtGrabNone);
+	XmProcessTraversal(frdp->what, XmTRAVERSE_CURRENT);
+
+	if (entry_text != NULL)
+	    XmTextFieldSetString(frdp->what, (char *)entry_text);
+	vim_free(entry_text);
+
+	XtVaSetValues(frdp->exact, XmNset, exact_word, NULL);
+	return;
+    }
+
+    /* Create a fresh new dialog window */
+    if (do_replace)
+	 str = XmStringCreateSimple(_("VIM - Search and Replace..."));
+    else
+	 str = XmStringCreateSimple(_("VIM - Search..."));
+
+    n = 0;
+    XtSetArg(args[n], XmNautoUnmanage, False); n++;
+    XtSetArg(args[n], XmNnoResize, True); n++;
+    XtSetArg(args[n], XmNdialogTitle, str); n++;
+
+    frdp->dialog = XmCreateFormDialog(vimShell, "findReplaceDialog", args, n);
+    XmStringFree(str);
+    XtAddCallback(frdp->dialog, XmNdestroyCallback,
+	    find_replace_destroy_callback, frdp);
+    XtAddCallback(frdp->dialog, XmNdestroyCallback,
+	    find_replace_callback, (XtPointer) FR_DIALOGTERM);
+
+    button_form = XtVaCreateWidget("buttonForm",
+	    xmFormWidgetClass,	frdp->dialog,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    XmNrightOffset, 4,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNtopOffset, 4,
+	    XmNbottomAttachment, XmATTACH_FORM,
+	    XmNbottomOffset, 4,
+	    NULL);
+
+    str = XmStringCreateSimple(_("Find Next"));
+    frdp->find = XtVaCreateManagedWidget("findButton",
+	    xmPushButtonWidgetClass, button_form,
+	    XmNlabelString, str,
+	    XmNsensitive, True,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    NULL);
+    XmStringFree(str);
+
+    XtAddCallback(frdp->find, XmNactivateCallback,
+	    find_replace_callback,
+	    (XtPointer) (do_replace ? FR_R_FINDNEXT : FR_FINDNEXT));
+
+    if (do_replace)
+    {
+	str = XmStringCreateSimple(_("Replace"));
+	frdp->replace = XtVaCreateManagedWidget("replaceButton",
+		xmPushButtonWidgetClass, button_form,
+		XmNlabelString, str,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, frdp->find,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		NULL);
+	XmStringFree(str);
+
+	XtAddCallback(frdp->replace, XmNactivateCallback,
+	    find_replace_callback, (XtPointer) FR_REPLACE);
+
+	str = XmStringCreateSimple(_("Replace All"));
+	frdp->all = XtVaCreateManagedWidget("replaceAllButton",
+		xmPushButtonWidgetClass, button_form,
+		XmNlabelString, str,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, frdp->replace,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment,	XmATTACH_FORM,
+		NULL);
+	XmStringFree(str);
+
+	XtAddCallback(frdp->replace, XmNactivateCallback,
+	    find_replace_callback, (XtPointer) FR_REPLACEALL);
+    }
+
+    str = XmStringCreateSimple(_("Cancel"));
+    frdp->cancel = XtVaCreateManagedWidget("closeButton",
+	    xmPushButtonWidgetClass, button_form,
+	    XmNlabelString, str,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNrightAttachment, XmATTACH_FORM,
+	    XmNbottomAttachment, XmATTACH_FORM,
+	    NULL);
+    XmStringFree(str);
+    XtAddCallback(frdp->cancel, XmNactivateCallback,
+	    find_replace_dismiss_callback, frdp);
+    XtAddCallback(frdp->cancel, XmNactivateCallback,
+	    find_replace_callback, (XtPointer) FR_DIALOGTERM);
+
+    XtManageChild(button_form);
+
+    n = 0;
+    XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
+    XtSetArg(args[n], XmNrightAttachment, XmATTACH_WIDGET); n++;
+    XtSetArg(args[n], XmNrightWidget, button_form); n++;
+    XtSetArg(args[n], XmNrightOffset, 4); n++;
+    XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+    XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+    separator = XmCreateSeparatorGadget(frdp->dialog, "separator", args, n);
+    XtManageChild(separator);
+
+    input_form = XtVaCreateWidget("inputForm",
+	    xmFormWidgetClass,	frdp->dialog,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNleftOffset, 4,
+	    XmNrightAttachment, XmATTACH_WIDGET,
+	    XmNrightWidget, separator,
+	    XmNrightOffset, 4,
+	    XmNtopAttachment, XmATTACH_FORM,
+	    XmNtopOffset, 4,
+	    NULL);
+
+    {
+	Widget label_what;
+
+	str = XmStringCreateSimple(_("Find what:"));
+	label_what = XtVaCreateManagedWidget("whatLabel",
+		xmLabelGadgetClass, input_form,
+		XmNlabelString, str,
+		XmNleftAttachment,	XmATTACH_FORM,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNtopOffset, 4,
+		NULL);
+	XmStringFree(str);
+
+	frdp->what = XtVaCreateManagedWidget("whatText",
+		xmTextFieldWidgetClass, input_form,
+		XmNtopAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		XmNleftAttachment, XmATTACH_WIDGET,
+		XmNleftWidget, label_what,
+		NULL);
+
+	if (do_replace)
+	{
+	    frdp->with = XtVaCreateManagedWidget("withText",
+		    xmTextFieldWidgetClass,	input_form,
+		    XmNtopAttachment, XmATTACH_WIDGET,
+		    XmNtopWidget, frdp->what,
+		    XmNtopOffset, 4,
+		    XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+		    XmNleftWidget, frdp->what,
+		    XmNrightAttachment, XmATTACH_FORM,
+		    XmNbottomAttachment, XmATTACH_FORM,
+		    NULL);
+
+	    XtAddCallback(frdp->with, XmNactivateCallback,
+		    find_replace_callback, (XtPointer) FR_R_FINDNEXT);
+
+	    str = XmStringCreateSimple(_("Replace with:"));
+	    (void)XtVaCreateManagedWidget("withLabel",
+		    xmLabelGadgetClass, input_form,
+		    XmNlabelString, str,
+		    XmNleftAttachment, XmATTACH_FORM,
+		    XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
+		    XmNrightWidget, label_what,
+		    XmNtopAttachment, XmATTACH_WIDGET,
+		    XmNtopWidget, frdp->what,
+		    XmNtopOffset, 4,
+		    XmNbottomAttachment, XmATTACH_FORM,
+		    NULL);
+	    XmStringFree(str);
+
+	    /*
+	     * Make the entry activation only change the input focus onto the
+	     * with item.
+	     */
+	    XtAddCallback(frdp->what, XmNactivateCallback,
+		    entry_activate_callback, frdp->with);
+	    XtAddEventHandler(frdp->with, KeyPressMask, False,
+			    (XtEventHandler)find_replace_keypress,
+			    (XtPointer) frdp);
+
+	}
+	else
+	{
+	    /*
+	     * Make the entry activation do the search.
+	     */
+	    XtAddCallback(frdp->what, XmNactivateCallback,
+		    find_replace_callback, (XtPointer) FR_FINDNEXT);
+	}
+	XtAddEventHandler(frdp->what, KeyPressMask, False,
+			    (XtEventHandler)find_replace_keypress,
+			    (XtPointer)frdp);
+    }
+
+    XtManageChild(input_form);
+
+    {
+	Widget radio_box;
+
+	frame = XtVaCreateWidget("directionFrame",
+		xmFrameWidgetClass, frdp->dialog,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, input_form,
+		XmNtopOffset, 4,
+		XmNbottomAttachment, XmATTACH_FORM,
+		XmNbottomOffset, 4,
+		XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
+		XmNrightWidget, input_form,
+		NULL);
+
+	str = XmStringCreateSimple(_("Direction"));
+	(void)XtVaCreateManagedWidget("directionFrameLabel",
+		xmLabelWidgetClass, frame,
+		XmNlabelString, str,
+		XmNchildHorizontalAlignment, XmALIGNMENT_BEGINNING,
+		XmNchildType, XmFRAME_TITLE_CHILD,
+		NULL);
+	XmStringFree(str);
+
+	radio_box = XmCreateRadioBox(frame, "radioBox",
+		(ArgList)NULL, 0);
+
+	str = XmStringCreateSimple( _("Up"));
+	frdp->up = XtVaCreateManagedWidget("upRadioButton",
+		xmToggleButtonGadgetClass, radio_box,
+		XmNlabelString, str,
+		XmNset, False,
+		NULL);
+	XmStringFree(str);
+
+	str = XmStringCreateSimple(_("Down"));
+	frdp->down = XtVaCreateManagedWidget("downRadioButton",
+		xmToggleButtonGadgetClass, radio_box,
+		XmNlabelString, str,
+		XmNset, True,
+		NULL);
+	XmStringFree(str);
+
+	XtManageChild(radio_box);
+	XtManageChild(frame);
+    }
+
+    str = XmStringCreateSimple(_("Match exact word only"));
+    frdp->exact = XtVaCreateManagedWidget("exactToggle",
+	    xmToggleButtonGadgetClass, frdp->dialog,
+	    XmNlabelString, str,
+	    XmNorientation, XmVERTICAL,
+	    XmNentryAlignment, XmALIGNMENT_BEGINNING,
+	    XmNleftAttachment, XmATTACH_FORM,
+	    XmNleftOffset, 4,
+	    XmNrightAttachment, XmATTACH_WIDGET,
+	    XmNrightWidget, frame,
+	    XmNrightOffset, 4,
+	    XmNbottomAttachment, XmATTACH_FORM,
+	    XmNbottomOffset, 4,
+	    XmNset, exact_word,
+	    NULL);
+    XmStringFree(str);
+
+    if (entry_text != NULL)
+	XmTextFieldSetString(frdp->what, (char *)entry_text);
+    vim_free(entry_text);
+
+    XtManageChild(frdp->dialog);
+    XmProcessTraversal(frdp->what, XmTRAVERSE_CURRENT);
+}
+
+   void
+gui_mch_find_dialog(exarg_T *eap)
+{
+    if (!gui.in_use)
+	return;
+
+    find_replace_dialog_create(eap->arg, FALSE);
+}
+
+
+    void
+gui_mch_replace_dialog(exarg_T *eap)
+{
+    if (!gui.in_use)
+	return;
+
+    find_replace_dialog_create(eap->arg, TRUE);
+}
