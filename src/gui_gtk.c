@@ -2659,6 +2659,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
     gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
 				      GTK_WIDGET(frdp->dialog), VW_POS_MOUSE);
     gui_gtk_synch_fonts();
+    gtk_widget_show_all(frdp->dialog);
 #endif
 
 #ifdef HAVE_GTK2
