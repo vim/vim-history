@@ -1,4 +1,4 @@
-#
+#!/bin/sh
 # enable DEC locator input model on remote terminal
 echo  "\033[1;2'z\033[1;3'{\c"
 vim "$@"

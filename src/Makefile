@@ -796,7 +796,7 @@ INSTALL_DATA_R	= cp -r
 ### Program to run on installed binary
 #STRIP = strip
 
-### Permissions for vim binary
+### Permissions for binaries
 BINMOD = 755
 
 ### Permissions for man page
@@ -805,14 +805,17 @@ MANMOD = 644
 ### Permissions for help files
 HELPMOD = 644
 
-### Permissions for Perl scripts
+### Permissions for Perl and shell scripts
 PERLMOD = 755
 
 ### Permission for script files (menu.vim, bugreport.vim, ..)
 SCRIPTMOD = 644
 
-### Permissions for bin/man/help directories that are created
+### Permissions for all directories that are created
 DIRMOD = 755
+
+### Permissions for all other files that are created
+FILEMOD = 644
 
 # Where to copy the man and help files from
 HELPSOURCE = ../runtime/doc
@@ -1380,11 +1383,13 @@ installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUB
 
 installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
 	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(MACROSUBLOC)
+	chmod $(DIRMOD) `find $(MACROSUBLOC) -type d -print`
+	chmod $(FILEMOD) `find $(MACROSUBLOC) -type f -print`
 
 # install the tutor files
 installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
 	$(INSTALL_DATA) vimtutor $(BINDIR)
-	chmod $(BINMOD) $(BINDIR)/vimtutor
+	chmod $(PERLMOD) $(BINDIR)/vimtutor
 	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
 	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
@@ -1405,6 +1410,8 @@ installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 	chmod $(MANMOD) $(MANSUBDIR)/xxd.1
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(TOOLSSUBLOC)
+	-chmod $(FILEMOD) $(TOOLSSUBLOC)/*
+	-chmod $(PERLMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
 
 $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo Runtime files not found.
