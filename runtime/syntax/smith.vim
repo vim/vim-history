@@ -22,15 +22,12 @@ syn region smithString		start=+"+  skip=+\\\\\|\\"+  end=+"+
 
 syn case match
 
-if !exists("did_smith_syntax_inits")
-  let did_smith_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link smithRegister	Identifier
-  hi link smithKeyword	Keyword
-	hi link smithComment Comment
-	hi link smithString String
-  hi link smithNumber	Number
-endif
+" The default highlighting.
+hi def link smithRegister	Identifier
+hi def link smithKeyword	Keyword
+hi def link smithComment Comment
+hi def link smithString String
+hi def link smithNumber	Number
 
 let b:current_syntax = "smith"
 

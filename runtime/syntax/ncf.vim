@@ -9,9 +9,9 @@ syn clear
 
 syn case ignore
 
-syn keyword ncfCommands 	mount load unload
+syn keyword ncfCommands		mount load unload
 syn keyword ncfBoolean		on off
-syn keyword ncfCommands 	set nextgroup=ncfSetCommands
+syn keyword ncfCommands		set nextgroup=ncfSetCommands
 syn keyword ncfTimeTypes	Reference Primary Secondary Single
 syn match ncfLoad	"\(unl\|l\)oad .*"lc=4 contains=ALLBUT,Error
 syn match ncfMount	"mount .*"lc=5 contains=ALLBUT,Error
@@ -213,35 +213,31 @@ if exists("ncf_highlight_unknowns")
     syn match Error "[^ \t]*" contains=ALL
 endif
 
-if !exists("did_ncf_syntax_inits")
-	let did_ncf_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link ncfCommands	Statement
-	hi link ncfSetCommands	ncfCommands
-	hi link ncfLogins	ncfCommands
-	hi link ncfString	String
-	hi link ncfContString	ncfString
-	hi link ncfComment	Comment
-	hi link ncfImplicit	Type
-	hi link ncfBoolean	Boolean
-	hi link ncfScript	Identifier
-	hi link ncfNumber	Number
-	hi link ncfIPAddr	ncfNumber
-	hi link ncfHexNumber	ncfNumber
-	hi link ncfTime		ncfNumber
-	hi link ncfDSTTime	ncfNumber
-	hi link ncfPath		Constant
-	hi link ncfServerName	Special
-	hi link ncfIPXNet	ncfServerName
-	hi link ncfTimeTypes	Constant
-	hi link ncfSetCommandsNum	ncfSetCommands
-	hi link ncfSetCommandsBool	ncfSetCommands
-	hi link ncfSetCommandsStr	ncfSetCommands
-	hi link ncfSetCommandsTime	ncfSetCommands
-	hi link ncfSetCommandsTimeDate	ncfSetCommands
-	hi link ncfSetCommandsBindCon	ncfSetCommands
-
-endif
+" The default highlighting.
+hi def link ncfCommands		Statement
+hi def link ncfSetCommands	ncfCommands
+hi def link ncfLogins		ncfCommands
+hi def link ncfString		String
+hi def link ncfContString	ncfString
+hi def link ncfComment		Comment
+hi def link ncfImplicit		Type
+hi def link ncfBoolean		Boolean
+hi def link ncfScript		Identifier
+hi def link ncfNumber		Number
+hi def link ncfIPAddr		ncfNumber
+hi def link ncfHexNumber	ncfNumber
+hi def link ncfTime		ncfNumber
+hi def link ncfDSTTime		ncfNumber
+hi def link ncfPath		Constant
+hi def link ncfServerName	Special
+hi def link ncfIPXNet		ncfServerName
+hi def link ncfTimeTypes	Constant
+hi def link ncfSetCommandsNum	ncfSetCommands
+hi def link ncfSetCommandsBool	ncfSetCommands
+hi def link ncfSetCommandsStr	ncfSetCommands
+hi def link ncfSetCommandsTime	ncfSetCommands
+hi def link ncfSetCommandsTimeDate ncfSetCommands
+hi def link ncfSetCommandsBindCon ncfSetCommands
 
 let b:current_syntax = "ncf"
 

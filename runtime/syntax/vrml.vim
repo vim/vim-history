@@ -3,7 +3,7 @@
 " Modified from: VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
 " Maintainer:	 Gregory Seidman <gseidman@acm.org>
 " URL:		 http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
-" Last Change:	 1999 Feb 22
+" Last Change:	 2000 Nov 04
 
 " syn clear
 " keyword definitions
@@ -181,27 +181,24 @@ syn sync minlines=1
 syn match   VRMLBraces         "[{}]"
 syn match   VRMLBrackets       "[\[\]]"
 
-if !exists("did_VRML_syntax_inits")
-  let did_VRML_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link VRMLCharacter  VRMLString
-  hi link VRMLSpecialCharacter VRMLSpecial
-  hi link VRMLNumber     VRMLString
-  hi link VRMLValues     VRMLString
-  hi link VRMLString     String
-  hi link VRMLSpecial    Special
-  hi link VRMLComment    Comment
-  hi link VRMLNodes      Statement
-  hi link VRMLFields     Type
-  hi link VRMLEvents     Type
-  hi      VRMLfTypes     ctermfg=6 guifg=Brown
-  hi link VRMLInstances  PreCondit
-  hi link VRMLRoutes     PreCondit
-  hi link VRMLProtos     PreProc
-  hi link VRMLRouteNode  Identifier
-  hi link VRMLInstName   Identifier
-  hi link VRMLTypes      Identifier
-endif
+" The default highlighting.
+hi def link VRMLCharacter	VRMLString
+hi def link VRMLSpecialCharacter VRMLSpecial
+hi def link VRMLNumber		VRMLString
+hi def link VRMLValues		VRMLString
+hi def link VRMLString		String
+hi def link VRMLSpecial		Special
+hi def link VRMLComment		Comment
+hi def link VRMLNodes		Statement
+hi def link VRMLFields		Type
+hi def link VRMLEvents		Type
+hi def VRMLfTypes		ctermfg=6 guifg=Brown
+hi def link VRMLInstances	PreCondit
+hi def link VRMLRoutes		PreCondit
+hi def link VRMLProtos		PreProc
+hi def link VRMLRouteNode	Identifier
+hi def link VRMLInstName	Identifier
+hi def link VRMLTypes		Identifier
 
 let b:current_syntax = "vrml"
 

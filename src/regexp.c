@@ -4722,7 +4722,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
     int		no = -1;
     fptr	func = (fptr)NULL;
     linenr_t	clnum = 0;	/* init for GCC */
-    int		len;
+    int		len = 0;	/* init for GCC */
 #ifdef FEAT_EVAL
     static char_u *eval_result = NULL;
 #endif

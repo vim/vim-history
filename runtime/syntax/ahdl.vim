@@ -1,7 +1,7 @@
 " Vim syn file
 " Language:	Altera AHDL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	1999 Sep 28
+" Last Change:	2000 Nov 04
 
 " Remove any old syn stuff hanging around
 syn clear
@@ -60,19 +60,16 @@ syn match   ahdlSpecialChar "[\[\]().,;]"
 
 syn sync minlines=1
 
-if !exists("did_ahdl_syn_inits")
-  let did_ahdl_syn_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link ahdlNumber	   ahdlString
-  hi link ahdlMegafunction ahdlIdentifier
-  hi link ahdlSpecialChar  SpecialChar
-  hi link ahdlKeyword	   Statement
-  hi link ahdlString	   String
-  hi link ahdlComment	   Comment
-  hi link ahdlIdentifier   Identifier
-  hi link ahdlOperator	   Operator
-  hi link ahdlTodo	   Todo
-endif
+" The default highlighting.
+hi def link ahdlNumber		ahdlString
+hi def link ahdlMegafunction	ahdlIdentifier
+hi def link ahdlSpecialChar	SpecialChar
+hi def link ahdlKeyword		Statement
+hi def link ahdlString		String
+hi def link ahdlComment		Comment
+hi def link ahdlIdentifier	Identifier
+hi def link ahdlOperator	Operator
+hi def link ahdlTodo		Todo
 
 let b:current_syntax = "ahdl"
 " vim:ts=8

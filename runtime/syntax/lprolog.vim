@@ -3,7 +3,7 @@
 " Filenames:   *.mod *.sig
 " Maintainer:  Markus Mottl <mottl@miss.wu-wien.ac.at>,
 " URL:         http://miss.wu-wien.ac.at/~mottl/vim/syntax/lprolog.vim
-" Last Change: 2000 June 5 - initial release
+" Last Change: 2000 Nov 04
 
 " Remove any old syntax stuff hanging around.
 syn clear
@@ -87,35 +87,31 @@ syn match   lprologCommentErr  "\*/"
 syn sync minlines=50
 syn sync maxlines=500
 
-if !exists("did_lprolog_syntax_inits")
 
-  let did_lprolog_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
+" The default highlighting.
+hi def link lprologComment     Comment
+hi def link lprologTodo        Todo
 
-  hi link lprologComment     Comment
-  hi link lprologTodo        Todo
+hi def link lprologKeyword     Keyword
+hi def link lprologSpecial     Special
+hi def link lprologOperator    Operator
+hi def link lprologIdentifier  Normal
 
-  hi link lprologKeyword     Keyword
-  hi link lprologSpecial     Special
-  hi link lprologOperator    Operator
-  hi link lprologIdentifier  Normal
+hi def link lprologInteger     Number
+hi def link lprologReal        Number
+hi def link lprologString      String
 
-  hi link lprologInteger     Number
-  hi link lprologReal        Number
-  hi link lprologString      String
+hi def link lprologCommentErr  Error
+hi def link lprologBrackErr    Error
+hi def link lprologParenErr    Error
 
-  hi link lprologCommentErr  Error
-  hi link lprologBrackErr    Error
-  hi link lprologParenErr    Error
+hi def link lprologModuleName  Special
+hi def link lprologTypeName    Identifier
 
-  hi link lprologModuleName  Special
-  hi link lprologTypeName    Identifier
-
-  hi link lprologVariable    Keyword
-  hi link lprologAtom        Normal
-  hi link lprologClause      Type
-endif
+hi def link lprologVariable    Keyword
+hi def link lprologAtom        Normal
+hi def link lprologClause      Type
 
 let b:current_syntax = "lprolog"
 

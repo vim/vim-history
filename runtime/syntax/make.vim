@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2000 Sept 7
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -12,7 +12,7 @@ syn match makePreCondit	"^\s*\(ifeq\>\|else\>\|endif\>\|define\>\|endef\>\|ifneq
 syn match makeInclude	"^\s*include"
 syn match makeStatement	"^\s*vpath"
 syn match makeOverride	"^\s*override"
-hi link makeOverride makeStatement
+hi def link makeOverride makeStatement
 
 " Microsoft Makefile specials
 syn case ignore
@@ -92,30 +92,28 @@ syn match   makeComment	"#$"
 " not make it a standard character, but instead it will
 " still act as the beginning of a variable
 " The escaped char is not highlightet currently
-syn match makeEscapedChar 	"\\[^$]"
+syn match makeEscapedChar	"\\[^$]"
 
 
 syn region  makeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIdent
 syn region  makeSString start=+'+  skip=+\\'+  end=+'+  contains=makeIdent
 syn region  makeBString start=+`+  skip=+\\`+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine
 
-if !exists("did_makefile_syntax_inits")
-  let did_makefile_syntax_inits = 1
-  hi link makeNextLine	makeSpecial
-  hi link makeSpecTarget	Statement
-  hi link makeImplicit	Function
-  hi link makeTarget	Function
-  hi link makeInclude	Include
-  hi link makePreCondit	PreCondit
-  hi link makeStatement	Statement
-  hi link makeIdent	Identifier
-  hi link makeSpecial	Special
-  hi link makeComment	Comment
-  hi link makeDString	String
-  hi link makeSString	String
-  hi link makeBString	Function
-  hi link makeError     Error
-endif
+" The default highlighting.
+hi def link makeNextLine	makeSpecial
+hi def link makeSpecTarget	Statement
+hi def link makeImplicit	Function
+hi def link makeTarget		Function
+hi def link makeInclude		Include
+hi def link makePreCondit	PreCondit
+hi def link makeStatement	Statement
+hi def link makeIdent		Identifier
+hi def link makeSpecial		Special
+hi def link makeComment		Comment
+hi def link makeDString		String
+hi def link makeSString		String
+hi def link makeBString		Function
+hi def link makeError		Error
 
 let b:current_syntax = "make"
 

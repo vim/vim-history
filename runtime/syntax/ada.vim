@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Ada (95)
 " Maintainer:	David A. Wheeler <wheeler@ida.org>
-" Last Change:	1998 Dec 7
+" Last Change:	2000 Nov 04
 
 " Former Maintainer:	Simon Bradley <simon.bradley@pitechnology.com>
 "			(was <sib93@aber.ac.uk>)
@@ -55,25 +55,22 @@ syn region  adaLabel		start="<<"  end=">>"
 " Comments.
 syn region  adaComment	oneline contains=adaTodo start="--"  end="$"
 
-if !exists("did_ada_syntax_inits")
-  let did_ada_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link adaCharacter	Character
-  hi link adaComment	Comment
-  hi link adaConditional	Conditional
-  hi link adaKeyword	Keyword
-  hi link adaLabel	Label
-  hi link adaNumber	Number
-  hi link adaOperator	Operator
-  hi link adaPreCondit	PreCondit
-  hi link adaRepeat	Repeat
-  hi link adaSpecial	Special
-  hi link adaStatement	Statement
-  hi link adaString	String
-  hi link adaStructure	Structure
-  hi link adaTodo	Todo
-  hi link adaType	Type
-endif
+" The default highlighting.
+hi def link adaCharacter	Character
+hi def link adaComment		Comment
+hi def link adaConditional	Conditional
+hi def link adaKeyword		Keyword
+hi def link adaLabel		Label
+hi def link adaNumber		Number
+hi def link adaOperator		Operator
+hi def link adaPreCondit	PreCondit
+hi def link adaRepeat		Repeat
+hi def link adaSpecial		Special
+hi def link adaStatement	Statement
+hi def link adaString		String
+hi def link adaStructure	Structure
+hi def link adaTodo		Todo
+hi def link adaType		Type
 
 let b:current_syntax = "ada"
 

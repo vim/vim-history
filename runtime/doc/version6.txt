@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
+*version6.txt*  For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -173,6 +173,9 @@ it appeared above the current window.
 'helpfile' is no longer used to find the help tags file.  This allows a user
 to add its own help files (e.g., for plugins).
 
+When doing ":help tag", don't open help.txt first, jump directly to the help
+tag.  It's faster and avoids an extra message.
+
 
 Small incompatibilities				*incomp-small-6*
 -----------------------
@@ -203,6 +206,9 @@ work like this.
 
 Renamed <Return> to <Enter>, since that's what it's called on most keyboards.
 Thus it's now the hit-enter prompt instead of the hit-return prompt.
+
+The help items for syntax files are now tagged with "-syntax" instead of
+".vim", because the indent and filetype plugins use "-indent" and "-plugin".
 
 ==============================================================================
 NEW FEATURES
@@ -335,20 +341,24 @@ characters are supported, they overprint the preceding character.
 Double-width characters are also supported.  See |UTF-8|.
 
 UCS-2 and UCS-4 encodings are supported too, they are converted to UTF-8
-internally.
+internally.  Other encodings are converted with iconv() or an external
+converter specified with 'charconvert'.
 
-Multi-byte:
+Many new items for Multi-byte support:
 - Added 'charcode' option: specifies character coding used inside Vim.
 - Added 'filecharcode' and 'filecharcodes': specify character coding in a
-  file.
-- Added 'charconvert' option: expression used to convert between character
-  encodings.
+  file, similar to 'fileformat' and 'fileformats'.
+  When 'charcode' is "utf-8" and 'filecharcodes' is "utf-8,latin-1" this will
+  automatically switch to latin-1 if a file does not contain valid UTF-8.
 - Added 'guifontwide' for double-width font.
 - Added Korean support for character class detection.  Also fix cls() in
   search.c. (Chong-Dae Park)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
+Most Normal mode commands that accept a character argument, like "r", "t" and
+"f" now accept a digraph.  The 'D' flag in 'cpoptions' disables this to remain
+Vi compatible.
 
 
 Multi-language support					*new-multi-lang*
@@ -379,6 +389,11 @@ loaded.  For Unix, the directory "~/.vim/plugin" is used by default.  The
 
 The |:runtime| command has been added to load one or more files in
 'runtimepath'.
+
+Standard plugins:
+netrw.vim - Edit files over a network
+gzip.vim - Edit compressed files
+explorer.vim - Browse directories
 
 Added support for local help files. |add-local-help|.
 When searching for help tags, all "doc/tags" files in 'runtimepath' are used.
@@ -472,6 +487,9 @@ Port to 16-bit MS Windows (Windows 3.1x) (Vince Negri)
 
 Allow cross-compiling the Win32 version with Make_ming.mak. (Ron Aaron)
 Added Python support for compiling with Mingw. (Ron Aaron)
+
+Win32: Dynamically load Perl and Python.  Allows compiling Vim with these
+interfaces and will try to find the DLLs at runtime. (Muraoka Taro)
 
 
 Quickfix extended					*quickfix-6*
@@ -612,6 +630,9 @@ displays the found text in the preview window.
 MS-DOS and MS-Windows also read the system-wide vimrc file $VIM/vimrc.  Mostly
 for NT systems with multiple users.
 
+A double-click of the mouse on a character that has a "%" match selects from
+that character to the match.  Similar to "v%".
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
@@ -656,6 +677,12 @@ Performance:
 - Improved speed of screen output for 32 bit DOS version. (Vince Negri)
 - When dragging with the mouse, there is a lookahead to skip mouse codes when
   there is another one next.  Makes dragging with the mouse a lot faster.
+- Also a memory usage improvement: When calling u_save with a single line,
+  don't save it if the line was recently saved for the same undo already.
+- When using a script that appends one character at a time, the amount of
+  allocated memory was growing steadily.  Also when 'undolevels' is -1.
+  Caused by the line saved for "U" never to be freed.  Now free an undo block
+  when it becomes empty.
 
 Robustness:
 - Unix: Check for running out of stack space when executing a regexp.  Avoids
@@ -783,6 +810,11 @@ Options:
 - If possible, use getrlimit() to set 'maxmemtot' and 'maxmem'. (Pina)
 - Added "alpha" to 'nrformats': increment or decrement an alphabetic character
   with CTRL-A and CTRL-X.
+- ":set opt&vi" sets an option to its Vi default, ":set opt&vim" to its Vim
+  default.  Useful to set 'cpo' to its Vim default without knowing what flags
+  that includes.
+- 'scrolloff' now also applies to a long, wrapped line that doesn't fit in the
+  window.
 
 Internal changes:
 - Split line pointers in text part and attributes part.  Allows for future
@@ -827,6 +859,15 @@ mention its buffer number in the error message.
 ":function Name" lists the function with line numbers.  Makes it easier to
 find out where an error happened.
 
+In non-blockwise Visual mode, "r" replaces all selected characters with the
+typed one, like in blockwise Visual mode.
+
+"default" argument for ":highlight".  When included, the command is ignored if
+highlighting for the group was already defined.
+All syntax files now use ":hi default ..." to allow the user to specify colors
+in his vimrc file.  Also, the "if did_xxx_syntax_inits" is not needed anymore.
+This greatly simplifies using non-default colors for a specific language.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -846,6 +887,12 @@ recent version of screen.
 
 Added configure options to install Vim, Ex and View under another name (e.g.,
 vim6, ex6 and view6).
+
+Made enabling the SNiFF+ interface possible with a Configure argument.
+
+Configure now always checks /usr/local/lib for libraries and
+/usr/local/include for include files.  Helps finding the stuff for iconv() and
+gettext().
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -964,5 +1011,19 @@ give it to printf() for the "Scanning" message.
 ":set runtimepath-=$VIMRUNTIME" didn't work, because expansion of wildcards
 was done after trying to remove the string.  Now for ":set opt+=val" and ":set
 opt-=val" the expansion of wildcards is done before adding or removing "val".
+
+Using CTRL-V with the "r" command with a blockwise Visual selection inserted a
+CTRL-V instead of getting a special character.
+
+Unix: Changed the order of libraries: Put -lXdmcp after -lX11 and -lSM -lICE
+after -lXdmcp.  Should fix link problem on HP-UX 10.20.
+
+Don't remove the last "-lm" from the link line.  Vim may link but fail later
+when the GUI starts.
+
+When the shell returns with an error when trying to expand wildcards, do
+include the pattern when the "EW_NOTFOUND" flag was set.
+When expanding wildcards with the shell fails, give a clear error message
+instead of just "1 returned".
 
  vim:tw=78:

@@ -2,7 +2,7 @@
 " Language:	Modula 2
 " Maintainer:	pf@artcom0.north.de (Peter Funk)
 "   based on original work of Bram Moolenaar <Bram@vim.org>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -48,23 +48,20 @@ syn region modula2String start=+"+ end=+"+
 syn region modula2String start="'" end="'"
 syn region modula2Set start="{" end="}"
 
-if !exists("did_modula2_syntax_inits")
-  let did_modula2_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link modula2Ident		Identifier
-  hi link modula2StdConst	Boolean
-  hi link modula2Type		Identifier
-  hi link modula2StdFunc	Identifier
-  hi link modula2Header		Type
-  hi link modula2Keyword	Statement
-  hi link modula2AttKeyword     PreProc
-  hi link modula2Comment	Comment
+" The default highlighting.
+hi def link modula2Ident	Identifier
+hi def link modula2StdConst	Boolean
+hi def link modula2Type		Identifier
+hi def link modula2StdFunc	Identifier
+hi def link modula2Header	Type
+hi def link modula2Keyword	Statement
+hi def link modula2AttKeyword   PreProc
+hi def link modula2Comment	Comment
   " The following is just a matter of taste (you want to try this instead):
   " hi modula2Comment term=bold ctermfg=DarkBlue guifg=Blue gui=bold
-  hi link modula2Todo		Todo
-  hi link modula2String		String
-  hi link modula2Set		String
-endif
+hi def link modula2Todo		Todo
+hi def link modula2String	String
+hi def link modula2Set		String
 
 let b:current_syntax = "modula2"
 

@@ -2,7 +2,7 @@
 " Language:	JavaCC, a Java Compiler Compiler written by JavaSoft
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javacc.vim
-" Last Change:	1998 Jul 22
+" Last Change:	2000 Nov 04
 
 " Uses java.vim, and adds a few special things for JavaCC Parser files.
 " Those files usually have the extension  *.jj
@@ -41,11 +41,12 @@ syn match javaccToken "<[^> \t]*>"
 syn keyword javaccActionToken TOKEN SKIP MORE SPECIAL_TOKEN
 syn keyword javaccError DEBUG IGNORE_IN_BNF
 
-hi link javaccSpecToken Statement
-hi link javaccActionToken Type
-hi link javaccPackages javaScopeDecl
-hi link javaccToken String
-hi link javaccError Error
+" The default highlighting.
+hi def link javaccSpecToken Statement
+hi def link javaccActionToken Type
+hi def link javaccPackages javaScopeDecl
+hi def link javaccToken String
+hi def link javaccError Error
 
 let b:current_syntax = "javacc"
 

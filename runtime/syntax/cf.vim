@@ -2,7 +2,7 @@
 " Language:	CF (Cold Fusion)
 " Maintainer:	Jeff Lanzarotta
 " URL:		http://members.tripod.com/lanzarotta/vim/syntax/cf.vim
-" Last Change:	2000 July 13
+" Last Change:	2000 Nov 04
 " Note:		Since Cold Fusion has its' own version of html comments, make sure
 "		that you put 'let html_wrong_comments=1' in your _vimrc file.
 
@@ -118,13 +118,10 @@ syn cluster htmlArgCluster add=cfArg,cfFunctionName
 
 syn region cfFunctionRegion start='#' end='#' contains=cfFunctionName
 
-if !exists("did_cf_syntax_inits")
-  let did_cf_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link cfTagName Statement 
-  hi link cfArg Type
-  hi link cfFunctionName Function
-endif
+" The default highlighting.
+hi def link cfTagName Statement 
+hi def link cfArg Type
+hi def link cfFunctionName Function
 
 let b:current_syntax = "cf"
 

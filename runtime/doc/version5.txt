@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
+*version5.txt*  For Vim version 6.0l.  Last change: 2000 Nov 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -54,7 +54,7 @@ Fixed					|fixed-5.1|
 
 VERSION 5.2			|version-5.2|
 Long lines editable			|long-lines|
-File browser added			|file-browser|
+File browser added			|file-browser-5.2|
 Dialogs added				|dialogs-added|
 Popup menu added			|popup-menu-added|
 Select mode added			|new-Select-mode|
@@ -2008,7 +2008,7 @@ the text around the cursor can be seen.  This makes it possible to edit these
 long lines when wrapping is on.
 
 
-File browser added					*file-browser*
+File browser added					*file-browser-5.2*
 ------------------
 
 The Win32, Athena and Motif GUI bring up a file requester if the user asks to

@@ -96,17 +96,15 @@ syn keyword sasFunction ZIPSTATE
 
 " End of SAS Functions
 
-if !exists("did_sas_syntax_inits")
-  let did_sas_syntax_inits = 1
-  hi link sasComment            Comment
-  hi link sasConditional        Statement
-  hi link sasStep               Statement
-  hi link sasFunction           Function
-  hi link sasMacro              PreProc
-  hi link sasNumber             Number
-  hi link sasStatement          Statement
-  hi link sasString             String
-endif
+" The default highlighting.
+hi def link sasComment            Comment
+hi def link sasConditional        Statement
+hi def link sasStep               Statement
+hi def link sasFunction           Function
+hi def link sasMacro              PreProc
+hi def link sasNumber             Number
+hi def link sasStatement          Statement
+hi def link sasString             String
 
 let b:current_syntax = "sas"
 

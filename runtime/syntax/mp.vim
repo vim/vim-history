@@ -98,15 +98,12 @@ if other_mp_macros
   syn keyword mpMacro drawunboxed fixpos fixsize pic
 endif
 
-if !exists("did_mp_syntax_inits")
- let did_mp_syntax_inits = 1
- " The default methods for highlighting. Can be overridden later
- hi link mpTeXinsert	String
- hi link mpTeXbegin	Statement
- hi link mpTeXend	Statement
- hi link mpInternal	mfInternal
- hi link mpMacro	Macro
-endif
+" The default highlighting.
+hi def link mpTeXinsert	String
+hi def link mpTeXbegin	Statement
+hi def link mpTeXend	Statement
+hi def link mpInternal	mfInternal
+hi def link mpMacro	Macro
 
 let b:current_syntax = "mp"
 

@@ -49,39 +49,35 @@ syn keyword slangOperator	sizeof
 
 syn region slangPreCondit start="^\s*#\s*\(ifdef\>\|ifndef\>\|iftrue\>\|ifnfalse\>\|iffalse\>\|ifntrue\>\|if\$\|ifn\$\|\|elif\>\|else\>\|endif\>\)" skip="\\$" end="$" contains=cComment,slangString,slangCharacter,slangNumber
 
-" Default links
-if !exists("did_slang_syntax_inits")
-  let did_slang_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slangDefinition	Type
-  hi link slangBlock		slangDefinition
-  hi link slangLabel		Label
-  hi link slangConditional	Conditional
-  hi link slangRepeat		Repeat
-  hi link slangCharacter	Character
-  hi link slangFloat		Float
-  hi link slangImaginary	Float
-  hi link slangDecimal		slangNumber
-  hi link slangOctal		slangNumber
-  hi link slangHex		slangNumber
-  hi link slangNumber		Number
-  hi link slangParenError	Error
-  hi link slangOctalError	Error
-  hi link slangOperator		Operator
-  hi link slangStructure	Structure
-  hi link slangInclude		Include
-  hi link slangPreCondit	PreCondit
-  hi link slangError		Error
-  hi link slangStatement	Statement
-  hi link slangType		Type
-  hi link slangString		String
-  hi link slangConstant		Constant
-  hi link slangRangeArray	slangConstant
-  hi link slangComment		Comment
-  hi link slangSpecial		SpecialChar
-  hi link slangTodo		Todo
-  hi link slangDelim		Delimiter
-endif
+" The default highlighting.
+hi def link slangDefinition	Type
+hi def link slangBlock		slangDefinition
+hi def link slangLabel		Label
+hi def link slangConditional	Conditional
+hi def link slangRepeat		Repeat
+hi def link slangCharacter	Character
+hi def link slangFloat		Float
+hi def link slangImaginary	Float
+hi def link slangDecimal	slangNumber
+hi def link slangOctal		slangNumber
+hi def link slangHex		slangNumber
+hi def link slangNumber		Number
+hi def link slangParenError	Error
+hi def link slangOctalError	Error
+hi def link slangOperator	Operator
+hi def link slangStructure	Structure
+hi def link slangInclude	Include
+hi def link slangPreCondit	PreCondit
+hi def link slangError		Error
+hi def link slangStatement	Statement
+hi def link slangType		Type
+hi def link slangString		String
+hi def link slangConstant	Constant
+hi def link slangRangeArray	slangConstant
+hi def link slangComment	Comment
+hi def link slangSpecial	SpecialChar
+hi def link slangTodo		Todo
+hi def link slangDelim		Delimiter
 
 let b:current_syntax = "slang"
 

@@ -71,36 +71,34 @@ if !exists("mel_minlines")
 endif
 exec "sy sync ccomment melComment minlines=" . mel_minlines
 
-if !exists("did_mel_syntax_inits")
-  let did_mel_syntax_inits=1
-  hi link melBoolean	Boolean
-  hi link melFunction	Function
-  hi link melIdentifier	Identifier
-  hi link melStatement	Statement
-  hi link melConditional Conditional
-  hi link melRepeat	Repeat
-  hi link melLabel	Label
-  hi link melOperator	Operator
-  hi link melKeyword	Keyword
-  hi link melException	Exception
-  hi link melInclude	Include
-  hi link melType	Type
-  hi link melStorageClass StorageClass
-  hi link melDebug	Debug
-  hi link melTodo	Todo
-  hi link melCharSpecial SpecialChar
-  hi link melString	String
-  hi link melInteger	Number
-  hi link melFloat	Float
-  hi link melMatrixVector Float
-  hi link melComment	Comment
-  hi link melError	Error
-  hi link melSpaceError	melError
-  hi link melCharError	melError
-  hi link melParenError	melError
-  hi link melInParen	melError
-  hi link melCommentError melError
-  hi melCommaSemi	NONE
-endif
+" The default highlighting.
+hi def link melBoolean		Boolean
+hi def link melFunction		Function
+hi def link melIdentifier	Identifier
+hi def link melStatement	Statement
+hi def link melConditional	Conditional
+hi def link melRepeat		Repeat
+hi def link melLabel		Label
+hi def link melOperator		Operator
+hi def link melKeyword		Keyword
+hi def link melException	Exception
+hi def link melInclude		Include
+hi def link melType		Type
+hi def link melStorageClass	StorageClass
+hi def link melDebug		Debug
+hi def link melTodo		Todo
+hi def link melCharSpecial	SpecialChar
+hi def link melString		String
+hi def link melInteger		Number
+hi def link melFloat		Float
+hi def link melMatrixVector	Float
+hi def link melComment		Comment
+hi def link melError		Error
+hi def link melSpaceError	melError
+hi def link melCharError	melError
+hi def link melParenError	melError
+hi def link melInParen		melError
+hi def link melCommentError	melError
+hi def melCommaSemi		NONE
 
 let b:current_syntax = "mel"

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		lace
 " Maintainer:	Jocelyn Fiat <utilities@eiffel.com>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Copyright Interactive Software Engineering, 1998
 " You are free to use this file as you please, but
@@ -79,41 +79,38 @@ syn region laceParen		transparent start="(" end=")" contains=ALLBUT,laceParenErr
 " Should suffice for even very long strings and expressions
 syn sync lines=40
 
-if !exists("did_lace_syntax_inits")
-  let did_lace_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link laceTopStruct			PreProc
+" The default highlighting.
+hi def link laceTopStruct		PreProc
 
-  hi link laceOptionClause		Statement
-  hi link laceOptionMark		Constant
-  hi link laceClusterProp		Label
-  hi link laceAdaptClassName	Label
-  hi link laceExternal			Statement
-  hi link laceCluster			ModeMsg
+hi def link laceOptionClause	Statement
+hi def link laceOptionMark		Constant
+hi def link laceClusterProp		Label
+hi def link laceAdaptClassName	Label
+hi def link laceExternal		Statement
+hi def link laceCluster			ModeMsg
 
-  hi link laceEscape			Special
+hi def link laceEscape			Special
 
-  hi link laceBool				Boolean
-  hi link laceString			String
-  hi link laceCharacter			Character
-  hi link laceClassName			Type
-  hi link laceNumber			Number
+hi def link laceBool			Boolean
+hi def link laceString			String
+hi def link laceCharacter		Character
+hi def link laceClassName		Type
+hi def link laceNumber			Number
 
-  hi link laceOperator			Special
-  hi link laceArray				Special
-  hi link laceExport			Special
-  hi link laceCreation			Special
-  hi link laceBrackets			Special
-  hi link laceConstraint		Special
+hi def link laceOperator		Special
+hi def link laceArray			Special
+hi def link laceExport			Special
+hi def link laceCreation		Special
+hi def link laceBrackets		Special
+hi def link laceConstraint		Special
 
-  hi link laceComment			Comment
+hi def link laceComment			Comment
 
-  hi link laceError				Error
-  hi link laceStringError		Error
-  hi link laceParenError		Error
-  hi link laceBracketError		Error
-  hi link laceTodo				Todo
-endif
+hi def link laceError			Error
+hi def link laceStringError		Error
+hi def link laceParenError		Error
+hi def link laceBracketError	Error
+hi def link laceTodo			Todo
 
 let b:current_syntax = "lace"
 

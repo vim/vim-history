@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Modula-3
 " Maintainer:	Timo Pedersen <dat97tpe@ludat.lth.se>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Basic things only...
 " Based on the modula 2 syntax file
@@ -40,14 +40,11 @@ syn region modula3Comment start="(\*" end="\*)"
 syn region modula3String start=+"+ end=+"+
 syn region modula3String start=+'+ end=+'+
 
-if !exists("did_modula3_syntax_inits")
-  let did_modula3_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link modula3Keyword	Statement
-  hi link modula3Block		PreProc
-  hi link modula3Comment	Comment
-  hi link modula3String		String
-endif
+" The default highlighting.
+hi def link modula3Keyword	Statement
+hi def link modula3Block	PreProc
+hi def link modula3Comment	Comment
+hi def link modula3String	String
 
 let b:current_syntax = "modula3"
 

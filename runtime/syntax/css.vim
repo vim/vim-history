@@ -2,7 +2,7 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	2000 Oct 20
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -87,31 +87,30 @@ if main_syntax == "css"
   syn sync minlines=10
 endif
 
-if !exists("did_css_syntax_inits")
-  hi link cssComment Comment
-  hi link cssTagName Statement
-  hi link cssFontProperties StorageClass
-  hi link cssColorProperties StorageClass
-  hi link cssTextProperties StorageClass
-  hi link cssBoxProperties StorageClass
-  hi link cssClassificationProperties StorageClass
-  hi link cssFontAttr Type
-  hi link cssColorAttr Type
-  hi link cssTextAttr Type
-  hi link cssBoxAttr Type
-  hi link cssClassificationAttr Type
-  hi link cssPseudoClassId PreProc
-  hi link cssLength Number
-  hi link cssColor Constant
-  hi link cssURL String
-  hi link cssIdentifier Function
-  hi link cssInclude Include
-  hi link cssImportant Special
-  hi link cssBraces Function
-  hi link cssError Error
-  hi link cssInclude Include
-  hi link cssString String
-endif
+" The default highlighting.
+hi def link cssComment Comment
+hi def link cssTagName Statement
+hi def link cssFontProperties StorageClass
+hi def link cssColorProperties StorageClass
+hi def link cssTextProperties StorageClass
+hi def link cssBoxProperties StorageClass
+hi def link cssClassificationProperties StorageClass
+hi def link cssFontAttr Type
+hi def link cssColorAttr Type
+hi def link cssTextAttr Type
+hi def link cssBoxAttr Type
+hi def link cssClassificationAttr Type
+hi def link cssPseudoClassId PreProc
+hi def link cssLength Number
+hi def link cssColor Constant
+hi def link cssURL String
+hi def link cssIdentifier Function
+hi def link cssInclude Include
+hi def link cssImportant Special
+hi def link cssBraces Function
+hi def link cssError Error
+hi def link cssInclude Include
+hi def link cssString String
 
 let b:current_syntax = "css"
 

@@ -2,7 +2,7 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2000-08-28
+" Last change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -26,18 +26,16 @@ syn keyword jspDirName contained include page taglib
 syn keyword jspDirArg contained file uri prefix language extends import session buffer autoFlush
 syn keyword jspDirArg contained isThreadSafe info errorPage contentType isErrorPage
 
-if !exists("did_jsp_syntax_inits")
-  let did_jsp_syntax_inits = 1
+" The default highlighting.
   " java.vim has redefined htmlComment highlighting
-  hi link htmlComment     Comment
-  hi link htmlCommentPart Comment
+hi def link htmlComment     Comment
+hi def link htmlCommentPart Comment
   " Be consistent with html highlight settings
-  hi link jspComment      htmlComment
-  hi link jspTag          htmlTag
-  hi link jspDirective    jspTag
-  hi link jspDirName      htmlTagName
-  hi link jspDirArg       htmlArg
-endif
+hi def link jspComment      htmlComment
+hi def link jspTag          htmlTag
+hi def link jspDirective    jspTag
+hi def link jspDirName      htmlTagName
+hi def link jspDirArg       htmlArg
 
 let b:current_syntax = "jsp"
 

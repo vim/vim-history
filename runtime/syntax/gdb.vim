@@ -2,7 +2,7 @@
 " Language:	GDB command files
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/gdb.vim
-" Last Change:	1999 Oct 21 
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -78,20 +78,17 @@ if !exists("gdb_minlines")
 endif
 exec "syn sync ccomment gdbComment minlines=" . gdb_minlines
 
-if !exists("did_gdb_syntax_inits")
-  let did_gdb_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link gdbFuncDef                       Function
-  hi link gdbComment                       Comment
-  hi link gdbStatement                     Statement
-  hi link gdbString                        String
-  hi link gdbCharacter                     Character
-  hi link gdbVariable                      Identifier
-  hi link gdbSet                           Constant
-  hi link gdbInfo                          Type
-  hi link gdbDocument                      Special
-  hi link gdbNumber                        Number
-endif
+" The default highlighting.
+hi def link gdbFuncDef        Function
+hi def link gdbComment        Comment
+hi def link gdbStatement      Statement
+hi def link gdbString         String
+hi def link gdbCharacter      Character
+hi def link gdbVariable       Identifier
+hi def link gdbSet            Constant
+hi def link gdbInfo           Type
+hi def link gdbDocument       Special
+hi def link gdbNumber         Number
 
 let b:current_syntax = "gdb"
 

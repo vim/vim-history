@@ -178,37 +178,34 @@ syn region  tclComment		start=/;\s*\#/hs=s+1 end="$" contains=tclTodo
 
 "syn sync ccomment tclComment
 
-if !exists("did_tcl_syntax_inits")
-  let did_tcl_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link tcltkSwitch		Special
-  hi link tclLabel		Label
-  hi link tclConditional	Conditional
-  hi link tclRepeat		Repeat
-  hi link tclNumber		Number
-  hi link tclError		Error
-  hi link tclStatement		Statement
-  " hi link tclStatementColor	Statement
-  hi link tclString		String
-  hi link tclComment		Comment
-  hi link tclSpecial		Special
-  hi link tclTodo		Todo
+" The default highlighting.
+hi def link tcltkSwitch		Special
+hi def link tclLabel		Label
+hi def link tclConditional	Conditional
+hi def link tclRepeat		Repeat
+hi def link tclNumber		Number
+hi def link tclError		Error
+hi def link tclStatement	Statement
+" hi def link tclStatementColor	Statement
+hi def link tclString		String
+hi def link tclComment		Comment
+hi def link tclSpecial		Special
+hi def link tclTodo		Todo
   " Below here are the commands and their options.
-  hi link tcltkCommandColor	Statement
-  hi link tcltkWidgetColor      Structure
-  hi link tclLineContinue       WarningMsg
-  hi link tcltkStringSwitch	Special
-  hi link tcltkArraySwitch	Special
-  hi link tcltkLsortSwitch	Special
-  hi link tcltkPackSwitch	Special
-  hi link tcltkPackConfSwitch	Special
-  hi link tcltkMaths		Special
-  hi link tcltkNamespaceSwitch	Special
-  hi link tcltkWidgetSwitch	Special
-  hi link tcltkPackConfColor	Identifier
-  "hi link tcltkLsort		Statement
-  hi link tclVarRef             Identifier
-endif
+hi def link tcltkCommandColor	Statement
+hi def link tcltkWidgetColor    Structure
+hi def link tclLineContinue     WarningMsg
+hi def link tcltkStringSwitch	Special
+hi def link tcltkArraySwitch	Special
+hi def link tcltkLsortSwitch	Special
+hi def link tcltkPackSwitch	Special
+hi def link tcltkPackConfSwitch	Special
+hi def link tcltkMaths		Special
+hi def link tcltkNamespaceSwitch Special
+hi def link tcltkWidgetSwitch	Special
+hi def link tcltkPackConfColor	Identifier
+"hi def link tcltkLsort		Statement
+hi def link tclVarRef           Identifier
 
 let b:current_syntax = "tcl"
 

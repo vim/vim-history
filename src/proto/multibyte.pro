@@ -14,6 +14,7 @@ int utf_ptr2char __ARGS((char_u *p));
 int utfc_ptr2char __ARGS((char_u *p, int *p1, int *p2));
 int utfc_char2bytes __ARGS((int off, char_u *buf));
 int utf_ptr2len_check __ARGS((char_u *p));
+int utf_ptr2len_check_len __ARGS((char_u *p, int size));
 int utfc_ptr2len_check __ARGS((char_u *p));
 int utf_char2len __ARGS((int c));
 int utf_char2bytes __ARGS((int c, char_u *buf));

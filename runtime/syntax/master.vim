@@ -22,12 +22,10 @@ syn region  masterString	start=+"+  end=+"+
 syn region  masterString	start=+'+  end=+'+
 syn match   masterComment	"\$.*"
 
-if !exists("did_master_syntax_inits")
-  let did_master_syntax_inits = 1
-  hi link masterKeyword Keyword
-  hi link masterComment Comment
-  hi link masterString  String
-endif
+" The default highlighting.
+hi def link masterKeyword Keyword
+hi def link masterComment Comment
+hi def link masterString  String
 
 let b:current_syntax = "master"
 

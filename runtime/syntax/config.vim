@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		configure.in script: M4 with sh
 " Maintainer:	Christian Hammesr <ch@lathspell.westend.com>
-" Last Change:	2000 Apr 15
+" Last Change:	2000 Nov 04
 
 " Well, I actually even do not know much about m4. This explains why there
 " is probably very much missing here, yet !
@@ -24,18 +24,15 @@ syn region  configstring    start=+"+ skip=+\\"+ end=+"+
 syn region  configstring    start=+`+ skip=+\\'+ end=+'+
 syn region  configstring    start=+`+ skip=+\\'+ end=+`+
 
-if !exists("did_config_syntax_inits")
-  let did_config_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link configdelimiter Delimiter
-  hi link configoperator  Operator
-  hi link configcomment   Comment
-  hi link configfunction  Function
-  hi link confignumber    Number
-  hi link configkeyword   Keyword
-  hi link configspecial   Special
-  hi link configstring    String
-endif
+" The default highlighting.
+hi def link configdelimiter Delimiter
+hi def link configoperator  Operator
+hi def link configcomment   Comment
+hi def link configfunction  Function
+hi def link confignumber    Number
+hi def link configkeyword   Keyword
+hi def link configspecial   Special
+hi def link configstring    String
 
 let b:current_syntax = "config"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Simula
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	1999 Mar 10
+" Last Change:	2000 Nov 04
 
 " Clear old syntax defs
 syn clear
@@ -52,34 +52,32 @@ syn match	simulaReal		"-\=\<\d\+\(\.\d\+\)\=\(&&\=[+-]\=\d\+\)\=\>"
 " Real starting with a `.', optional exponent
 syn match	simulaReal		"-\=\.\d\+\(&&\=[+-]\=\d\+\)\=\>"
 
-if !exists("did_simula_syntax_inits")
-    let did_simula_syntax_inits = 1
-    hi link simulaAssigned		Identifier
-    hi link simulaBoolean		Boolean
-    hi link simulaCharacter		Character
-    hi link simulaCharError		Error
-    hi link simulaComment		Comment
-    hi link simulaCompound		Statement
-    hi link simulaConditional		Conditional
-    hi link simulaConstant		Constant
-    hi link simulaFunction		Function
-    hi link simulaNumber		Number
-    hi link simulaOperator		Operator
-    hi link simulaReal			Float
-    hi link simulaReferenceType		Type
-    hi link simulaRepeat		Repeat
-    hi link simulaReserved		Error
-    hi link simulaSemicolon		Statement
-    hi link simulaSpecial		Special
-    hi link simulaSpecialChar		SpecialChar
-    hi link simulaSpecialCharErr	Error
-    hi link simulaStatement		Statement
-    hi link simulaStorageClass		StorageClass
-    hi link simulaString		String
-    hi link simulaStructure		Structure
-    hi link simulaTodo			Todo
-    hi link simulaType			Type
-endif
+" The default highlighting.
+hi def link simulaAssigned		Identifier
+hi def link simulaBoolean		Boolean
+hi def link simulaCharacter		Character
+hi def link simulaCharError		Error
+hi def link simulaComment		Comment
+hi def link simulaCompound		Statement
+hi def link simulaConditional		Conditional
+hi def link simulaConstant		Constant
+hi def link simulaFunction		Function
+hi def link simulaNumber		Number
+hi def link simulaOperator		Operator
+hi def link simulaReal			Float
+hi def link simulaReferenceType		Type
+hi def link simulaRepeat		Repeat
+hi def link simulaReserved		Error
+hi def link simulaSemicolon		Statement
+hi def link simulaSpecial		Special
+hi def link simulaSpecialChar		SpecialChar
+hi def link simulaSpecialCharErr	Error
+hi def link simulaStatement		Statement
+hi def link simulaStorageClass		StorageClass
+hi def link simulaString		String
+hi def link simulaStructure		Structure
+hi def link simulaTodo			Todo
+hi def link simulaType			Type
 
 let b:current_syntax = "simula"
 " vim: sts=4 sw=4 ts=8

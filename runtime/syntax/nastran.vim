@@ -151,31 +151,28 @@ syn region nastranBulkData start=+ *[Bb][Uu][Ll][Kk] *$+ end=+^ [Ee][Nn][Dd] *[D
 syn keyword nastranUtilCard ECHOON ECHOOFF INCLUDE PARAM
 
 
-if !exists("did_nastran_syntax_inits")
-  let did_nastran_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link nastranDmapexecmod          Statement
-  hi link nastranDmapType             Type
-  hi link nastranDmapPreCondit        Error
-  hi link nastranDmapUtilmod          PreProc
-  hi link nastranDmapMatmod           nastranDmapUtilmod
-  hi link nastranDmapString           String
-  hi link nastranDmapNumber           Constant
-  hi link nastranDmapFloat            nastranDmapNumber
-  hi link nastranDmapInitTab          nastranDmapNumber
-  hi link nastranDmapTab              nastranDmapNumber
-  hi link nastranDmapLogical          nastranDmapExecmod
-  hi link nastranDmapImplicit         Identifier
-  hi link nastranDmapComment          Comment
-  hi link nastranDmapRepeat           nastranDmapexecmod
-  hi link nastranNastranCard          nastranDmapPreCondit
-  hi link nastranECSCard              nastranDmapUtilmod
-  hi link nastranFMSCard              nastranNastranCard
-  hi link nastranCC                   nastranDmapexecmod
-  hi link nastranDelimiter            Special
-  hi link nastranBulkData             nastranDmapType
-  hi link nastranUtilCard             nastranDmapexecmod
-endif
+" The default highlighting.
+hi def link nastranDmapexecmod          Statement
+hi def link nastranDmapType             Type
+hi def link nastranDmapPreCondit        Error
+hi def link nastranDmapUtilmod          PreProc
+hi def link nastranDmapMatmod           nastranDmapUtilmod
+hi def link nastranDmapString           String
+hi def link nastranDmapNumber           Constant
+hi def link nastranDmapFloat            nastranDmapNumber
+hi def link nastranDmapInitTab          nastranDmapNumber
+hi def link nastranDmapTab              nastranDmapNumber
+hi def link nastranDmapLogical          nastranDmapExecmod
+hi def link nastranDmapImplicit         Identifier
+hi def link nastranDmapComment          Comment
+hi def link nastranDmapRepeat           nastranDmapexecmod
+hi def link nastranNastranCard          nastranDmapPreCondit
+hi def link nastranECSCard              nastranDmapUtilmod
+hi def link nastranFMSCard              nastranNastranCard
+hi def link nastranCC                   nastranDmapexecmod
+hi def link nastranDelimiter            Special
+hi def link nastranBulkData             nastranDmapType
+hi def link nastranUtilCard             nastranDmapexecmod
 
 let b:current_syntax = "nastran"
 

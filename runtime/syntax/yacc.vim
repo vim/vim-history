@@ -38,30 +38,27 @@ syn match	yaccSep	"^[ \t]*%}"
 syn match	yaccCurlyError	"[{}]"
 syn region	yaccAction	matchgroup=yaccCurly start="{" end="}" contains=ALLBUT,@yaccActionGroup
 
-if !exists("did_yacc_syntax_inits")
-  " The default methods for highlighting.  Can be overridden later
-  let did_yacc_syntax_inits = 1
+" The default highlighting.
 
   " Internal yacc highlighting links
-  hi link yaccBrkt	yaccStmt
-  hi link yaccKey	yaccStmt
-  hi link yaccOper	yaccStmt
-  hi link yaccUnionStart	yaccKey
+hi def link yaccBrkt	yaccStmt
+hi def link yaccKey	yaccStmt
+hi def link yaccOper	yaccStmt
+hi def link yaccUnionStart	yaccKey
 
   " External yacc highlighting links
-  hi link yaccCurly	Delimiter
-  hi link yaccCurlyError	Error
-  hi link yaccDefinition	Function
-  hi link yaccDelim	Function
-  hi link yaccKeyActn	Special
-  hi link yaccSectionSep	Todo
-  hi link yaccSep	Delimiter
-  hi link yaccStmt	Statement
-  hi link yaccType	Type
+hi def link yaccCurly	Delimiter
+hi def link yaccCurlyError	Error
+hi def link yaccDefinition	Function
+hi def link yaccDelim	Function
+hi def link yaccKeyActn	Special
+hi def link yaccSectionSep	Todo
+hi def link yaccSep	Delimiter
+hi def link yaccStmt	Statement
+hi def link yaccType	Type
 
   " since Bram doesn't like my Delimiter :|
-  hi link Delimiter	Type
-endif
+hi def link Delimiter	Type
 
 let b:current_syntax = "yacc"
 

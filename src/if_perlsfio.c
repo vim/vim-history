@@ -33,6 +33,9 @@
 #ifdef _
 # undef _
 #endif
+#ifdef DEBUG
+# undef DEBUG
+#endif
 
 #include <EXTERN.h>
 #include <perl.h>

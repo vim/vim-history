@@ -94,24 +94,21 @@ syn match fglNumber		"-\=\<[0-9]*\.\=[0-9_]\>"
 
 " Comments:
 syn region fglComment    start="{"  end="}"
-syn match fglComment 	"--.*"
-syn match fglComment 	"#.*"
+syn match fglComment	"--.*"
+syn match fglComment	"#.*"
 
 syn sync ccomment fglComment
 
-if !exists("did_fgl_syntax_inits")
-  let did_fgl_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link fglComment	Comment
-  hi link fglKeyword	fglSpecial
-  "hi link fglKeyword	fglStatement
-  hi link fglNumber	Number
-  hi link fglOperator	fglStatement
-  hi link fglSpecial	Special
-  hi link fglStatement	Statement
-  hi link fglString	String
-  hi link fglType	Type
-endif
+" The default highlighting.
+hi def link fglComment	Comment
+hi def link fglKeyword	fglSpecial
+"hi def link fglKeyword	fglStatement
+hi def link fglNumber	Number
+hi def link fglOperator	fglStatement
+hi def link fglSpecial	Special
+hi def link fglStatement Statement
+hi def link fglString	String
+hi def link fglType	Type
 
 let b:current_syntax = "fgl"
 

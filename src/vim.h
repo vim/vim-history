@@ -670,15 +670,8 @@ typedef unsigned short u8char_t;
 
 /*
  * Flags for chartab[].
- * The "_CHAR" ones are for a character (possibly multi-byte).  They don't
- * work for the first byte of a multi-byte.
- * To get the nr of cells use CT_CELL_MASK:
- * - For non-multi-byte index with the character.
- * - For DBCS index with the first byte.
- * - For UTF-8 index with the character (byte up to 0x80 is the same, byte of
- *   0x80 and above depends on further bytes).
  */
-#define CT_CELL_MASK	0x03	/* low two bits for display cells (1 or 2) */
+#define CT_CELL_MASK	0x03	/* mask: nr of display cells (1 or 2) */
 #define CT_PRINT_CHAR	0x04	/* flag: set for printable chars */
 #define CT_ID_CHAR	0x08	/* flag: set for ID chars */
 #define CT_FNAME_CHAR	0x10	/* flag: set for file name chars */

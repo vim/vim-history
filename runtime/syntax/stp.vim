@@ -2,7 +2,7 @@
 " Language:	Stored Procedures
 " Maintainer:	Jeff Lanzarotta
 " URL:		http://members.tripod.com/lanzarotta/vim/syntax/stp.vim
-" Last Change:	2000 Jul 13
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -50,20 +50,17 @@ syn match stpNumber	"-\=\<\d*\.\=[0-9_]\>"
 syn region stpComment	start="/\*"  end="\*/" contains=stpTodo
 syn match stpComment	"--.*" contains=stpTodo
 
-if !exists("did_stp_syntax_inits")
-  let did_stp_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link stpComment	Comment
-  hi link stpKeyword	Keyword
-  hi link stpNumber	Number
-  hi link stpOperator	Operator
-  hi link stpSpecial	Special
-  hi link stpStatement	Statement
-  hi link stpString	String
-  hi link stpType	Type
-  hi link stpTodo	Todo
-  hi link stpFunction	Function
-endif
+" The default highlighting.
+hi def link stpComment		Comment
+hi def link stpKeyword		Keyword
+hi def link stpNumber		Number
+hi def link stpOperator		Operator
+hi def link stpSpecial		Special
+hi def link stpStatement	Statement
+hi def link stpString		String
+hi def link stpType		Type
+hi def link stpTodo		Todo
+hi def link stpFunction		Function
 
 let b:current_syntax = "stp"
 

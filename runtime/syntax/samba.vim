@@ -2,7 +2,7 @@
 " Language:     samba configuration files (smb.conf)
 " Maintainer:   Rafael Garcia-Suarez <garcia_suarez@hotmail.com>
 " URL:          http://altern.org/rgs/vim/syntax/samba.vim
-" Last change:  2000-04-26
+" Last change:  2000 Nov 04
 
 " Don't forget to run your config file through testparm(1)!
 
@@ -68,16 +68,14 @@ syn keyword sambaKeyword contained hook hires pid uid close rootpreexec
 syn keyword sambaKeyword contained utmp wtmp hostname consolidate
 syn keyword sambaKeyword contained inherit source environment
 
-if !exists("did_samba_syntax_inits")
-  let did_samba_syntax_inits=1
-  hi link sambaParameter Normal
-  hi link sambaKeyword Type
-  hi link sambaSection Statement
-  hi link sambaMacro PreProc
-  hi link sambaComment Comment
-  hi link sambaContinue Operator
-  hi link sambaBoolean Constant
-endif
+" The default highlighting.
+hi def link sambaParameter Normal
+hi def link sambaKeyword Type
+hi def link sambaSection Statement
+hi def link sambaMacro PreProc
+hi def link sambaComment Comment
+hi def link sambaContinue Operator
+hi def link sambaBoolean Constant
 
 let b:current_syntax = "samba"
 

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Rich Text Format
-" 		"*.rtf" files 
+"		"*.rtf" files 
 " 
 " The Rich Text Format (RTF) Specification is a method of encoding formatted
 " text and graphics for easy transfer between applications.
@@ -46,25 +46,22 @@ syn match rtfBlue		"\\blue[0-9][0-9]*"
 " Some stuff for help files
 syn match rtfFootNote "[#$K+]{\\footnote.*}" contains=rtfControlWord,rtfNewControlWord
 
-if !exists("did_rtf_syntax_inits")
-	let did_rtf_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link rtfControlWord		Statement
-	hi link rtfNewControlWord	Special
-	hi link rtfControlSymbol	Constant
-	hi link rtfCharacter		Character
-	hi link rtfUnicodeCharacter	SpecialChar
-	hi link rtfFootNote		Comment
+" The default highlighting.
+hi def link rtfControlWord	Statement
+hi def link rtfNewControlWord	Special
+hi def link rtfControlSymbol	Constant
+hi def link rtfCharacter	Character
+hi def link rtfUnicodeCharacter	SpecialChar
+hi def link rtfFootNote		Comment
 
-	" Define colors for the syntax file
-      	hi rtfRed          term=underline cterm=underline ctermfg=DarkRed gui=underline guifg=DarkRed
-      	hi rtfGreen        term=underline cterm=underline ctermfg=DarkGreen gui=underline guifg=DarkGreen
-      	hi rtfBlue         term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=DarkBlue
+" Define colors for the syntax file
+hi def rtfRed          term=underline cterm=underline ctermfg=DarkRed gui=underline guifg=DarkRed
+hi def rtfGreen        term=underline cterm=underline ctermfg=DarkGreen gui=underline guifg=DarkGreen
+hi def rtfBlue         term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=DarkBlue
 
-	hi link rtfRed		rtfRed
-	hi link rtfGreen	rtfGreen
-	hi link rtfBlue		rtfBlue
-endif
+hi def link rtfRed		rtfRed
+hi def link rtfGreen		rtfGreen
+hi def link rtfBlue		rtfBlue
 
 let b:current_syntax = "rtf"
 

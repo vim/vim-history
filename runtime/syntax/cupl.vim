@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CUPL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	1999 Sep 22
+" Last Change:	2000 Nov 04
 
 " Remove any old syn stuff hanging around
 syn clear
@@ -86,28 +86,26 @@ syn region cuplComment start=+/\*+ end=+\*/+ contains=cuplNumber,cuplTodo
 
 syn sync minlines=1
 
-if !exists("did_cupl_syn_inits")
-  let did_cupl_syn_inits = 1
-  " The default methods for hiing.  Can be overridden later
-  hi link cuplHeader	cuplStatement
-  hi link cuplLogicalOperator	 cuplOperator
-  hi link cuplRangeOperator	 cuplOperator
-  hi link cuplArithmeticOperator cuplOperator
-  hi link cuplAssignmentOperator cuplOperator
-  hi link cuplEqualityOperator	 cuplOperator
-  hi link cuplTruthTableOperator cuplOperator
-  hi link cuplOperator	cuplStatement
-  hi link cuplFunction	cuplStatement
-  hi link cuplStatement Statement
-  hi link cuplNumberRange cuplNumber
-  hi link cuplNumber	  cuplString
-  hi link cuplString	String
-  hi link cuplComment	Comment
-  hi link cuplExtension   cuplSpecial
-  hi link cuplSpecialChar cuplSpecial
-  hi link cuplSpecial	Special
-  hi link cuplDirective PreProc
-  hi link cuplTodo	Todo
-endif
+" The default highlighting.
+hi def link cuplHeader	cuplStatement
+hi def link cuplLogicalOperator	 cuplOperator
+hi def link cuplRangeOperator	 cuplOperator
+hi def link cuplArithmeticOperator cuplOperator
+hi def link cuplAssignmentOperator cuplOperator
+hi def link cuplEqualityOperator	 cuplOperator
+hi def link cuplTruthTableOperator cuplOperator
+hi def link cuplOperator	cuplStatement
+hi def link cuplFunction	cuplStatement
+hi def link cuplStatement Statement
+hi def link cuplNumberRange cuplNumber
+hi def link cuplNumber	  cuplString
+hi def link cuplString	String
+hi def link cuplComment	Comment
+hi def link cuplExtension   cuplSpecial
+hi def link cuplSpecialChar cuplSpecial
+hi def link cuplSpecial	Special
+hi def link cuplDirective PreProc
+hi def link cuplTodo	Todo
+
 let b:current_syntax = "cupl"
 " vim:ts=8

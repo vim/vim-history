@@ -148,46 +148,44 @@ if main_syntax == "sgml"
   syn sync minlines=10
 endif
 
-if !exists("did_sgml_syntax_inits")
-    let did_sgml_syntax_inits = 1
-    hi link sgmlTag                       Function
-    hi link sgmlEndTag                    Identifier
-    hi link sgmlArg                       Type
-    hi link sgmlTagName                   sgmlStatement
-    hi link sgmlSpecialTagName            Exception
-    hi link sgmlValue                     Value
-    hi link sgmlSpecialChar               Special
-    hi link sgmlDocEnt                    Type
-    hi link sgmlDocType                   PreProc
-    hi link sgmlTitle                     Title
-    hi link sgmlPreStmt                   PreProc
-    hi link sgmlPreErr                    Error
-    hi link sgmlPreProc                   PreProc
-    hi link sgmlPreAttr                   String
-    hi link sgmlPreProcAttrName           PreProc
-    hi link sgmlPreProcAttrErr            Error
-    hi link sgmlSpecial                   Special
-    hi link sgmlSpecialChar               Special
-    hi link sgmlString                    String
-    hi link sgmlStatement                 Statement
-    hi link sgmlComment                   Comment
-    hi link sgmlValue                     String
-    hi link sgmlTagErr                    sgmlErr
-    hi link sgmlErr                       Error
+" The default highlighting.
+hi def link sgmlTag                       Function
+hi def link sgmlEndTag                    Identifier
+hi def link sgmlArg                       Type
+hi def link sgmlTagName                   sgmlStatement
+hi def link sgmlSpecialTagName            Exception
+hi def link sgmlValue                     Value
+hi def link sgmlSpecialChar               Special
+hi def link sgmlDocEnt                    Type
+hi def link sgmlDocType                   PreProc
+hi def link sgmlTitle                     Title
+hi def link sgmlPreStmt                   PreProc
+hi def link sgmlPreErr                    Error
+hi def link sgmlPreProc                   PreProc
+hi def link sgmlPreAttr                   String
+hi def link sgmlPreProcAttrName           PreProc
+hi def link sgmlPreProcAttrErr            Error
+hi def link sgmlSpecial                   Special
+hi def link sgmlSpecialChar               Special
+hi def link sgmlString                    String
+hi def link sgmlStatement                 Statement
+hi def link sgmlComment                   Comment
+hi def link sgmlValue                     String
+hi def link sgmlTagErr                    sgmlErr
+hi def link sgmlErr                       Error
 
-    if !exists("sgml_no_rendering")
-        if !exists("sgml_my_rendering")
-            if &background == "dark"
-                 hi sgmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
-             else
-                 hi sgmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
-             endif
-             hi sgmlBold                term=bold cterm=bold gui=bold
-             hi sgmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
-             hi sgmlUnderline           term=underline cterm=underline gui=underline
-             hi sgmlItalic              term=italic cterm=italic gui=italic
-        endif
+if !exists("sgml_no_rendering")
+  if !exists("sgml_my_rendering")
+    if &background == "dark"
+      hi def sgmlLink              term=underline cterm=underline ctermfg=cyan gui=underline guifg=#80a0ff
+    else
+      hi def sgmlLink              term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=Blue
     endif
+    hi def sgmlBold                term=bold cterm=bold gui=bold
+    hi def sgmlBoldItalic          term=bold,italic cterm=bold,italic gui=bold,italic
+    hi def sgmlUnderline           term=underline cterm=underline gui=underline
+    hi def sgmlItalic              term=italic cterm=italic gui=italic
+  endif
 endif
 
 let b:current_syntax = "sgml"

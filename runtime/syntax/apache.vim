@@ -40,17 +40,15 @@ syn keyword apacheallowDenyVal all none contained
 syn match apacheOrder "^order.*$" contains=apacheOrderValue
 syn keyword apacheOrderValue deny allow contained
 
-if !exists("did_apache_syntax_inits")
-    let did_apache_syntax_inits = 1
+" The default highlighting.
+hi def link apachedeclaration       Function
+hi def link apacheOptions           Number
+hi def link apacheComment           Comment
+hi def link apachesection           Label
+hi def link apacheallowDeny         Include
+hi def link apacheallowDenyVal      Identifier
+hi def link apacheOrder             Special
+hi def link apacheOrderValue        String
+hi def link apachestring            Number
 
-    hi link apachedeclaration       Function
-    hi link apacheOptions           Number
-    hi link apacheComment           Comment
-    hi link apachesection           Label
-    hi link apacheallowDeny         Include
-    hi link apacheallowDenyVal      Identifier
-    hi link apacheOrder             Special
-    hi link apacheOrderValue        String
-    hi link apachestring            Number
-endif
 let b:current_syntax = "apache"

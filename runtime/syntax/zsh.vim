@@ -2,7 +2,7 @@
 " Language:	Z shell (zsh)
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
 " Heavily based on sh.vim by Lennart Schultz
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -71,32 +71,29 @@ syn match zshTestOpr	"-\<[oeaznlg][tfqet]\=\>\|!\==\|-\<[b-gkLprsStuwjxOG]\>"
 "syn region zshTest           start="\[" skip="\\$" end="\]" contains=zshString,zshTestOpr,zshDerefIdentifier,zshDerefOpr
 syn region  zshString	start=+"+  skip=+\\"+  end=+"+  contains=zshSpecial,zshOperator,zshDerefIdentifier,zshDerefOpr,zshSpecialShellVar,zshSinglequote,zshCommandSub
 
-if !exists("did_zsh_syntax_inits")
-  let did_zsh_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link zshSinglequote		zshString
-  hi link zshConditional		zshStatement
-  hi link zshRepeat		zshStatement
-  hi link zshFunctionName	zshFunction
-  hi link zshCommandSub		zshOperator
-  hi link zshRedir		zshOperator
-  hi link zshSetVariables	zshShellVariables
-  hi link zshSpecialShellVar	zshShellVariables
-  hi link zshTestOpr		zshOperator
-  hi link zshDerefOpr		zshSpecial
-  hi link zshDerefIdentifier	zshShellVariables
-  hi link zshOperator		Operator
-  hi link zshStatement		Statement
-  hi link zshNumber		Number
-  hi link zshString		String
-  hi link zshComment		Comment
-  hi link zshSpecial		Special
-  hi link zshTodo		Todo
-  hi link zshShellVariables	Special
-"  hi zshOperator		term=underline ctermfg=6 guifg=Purple gui=bold
-"  hi zshShellVariables	term=underline ctermfg=2 guifg=SeaGreen gui=bold
-"  hi zshFunction		term=bold ctermbg=1 guifg=Red
-endif
+" The default highlighting.
+hi def link zshSinglequote	zshString
+hi def link zshConditional	zshStatement
+hi def link zshRepeat		zshStatement
+hi def link zshFunctionName	zshFunction
+hi def link zshCommandSub	zshOperator
+hi def link zshRedir		zshOperator
+hi def link zshSetVariables	zshShellVariables
+hi def link zshSpecialShellVar	zshShellVariables
+hi def link zshTestOpr		zshOperator
+hi def link zshDerefOpr		zshSpecial
+hi def link zshDerefIdentifier	zshShellVariables
+hi def link zshOperator		Operator
+hi def link zshStatement	Statement
+hi def link zshNumber		Number
+hi def link zshString		String
+hi def link zshComment		Comment
+hi def link zshSpecial		Special
+hi def link zshTodo		Todo
+hi def link zshShellVariables	Special
+"  hi def zshOperator		term=underline ctermfg=6 guifg=Purple gui=bold
+"  hi def zshShellVariables	term=underline ctermfg=2 guifg=SeaGreen gui=bold
+"  hi def zshFunction		term=bold ctermbg=1 guifg=Red
 
 let b:current_syntax = "zsh"
 

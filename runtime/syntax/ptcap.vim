@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	printcap/termcap database
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2000 Apr 06
+" Last Change:	2000 Nov 04
 
 " Clear old syntax defs
 syn clear
@@ -67,26 +67,24 @@ syn region ptcapField	    start=":" skip="[^\\]\(\\\\\)*\\$" end="[^\\]\(\\\\\)*
 syn region ptcapString	    matchgroup=ptcapOperator start="=" skip="[^\\]\(\\\\\)*\\:" matchgroup=ptcapDelimiter end=":"me=e-1 matchgroup=NONE end="[^\\]\(\\\\\)*[^\\]$" end="^$" contains=ptcapEscapedChar,ptcapLineCont keepend contained
 syn region ptcapComment	    start="^\s*#" end="$" contains=ptcapLeadBlank
 
-if !exists("did_ptcap_syntax_inits")
-    let did_ptcap_syntax_inits = 1
-    hi link ptcapComment	Comment
-    hi link ptcapDelimiter	Delimiter
-    " The highlighting of "ptcapEntry" should always be overridden by
-    " its contents, so I use Todo highlighting to indicate that there
-    " is work to be done with the syntax file if you can see it :-)
-    hi link ptcapEntry		Todo
-    hi link ptcapError		Error
-    hi link ptcapEscapedChar	SpecialChar
-    hi link ptcapField		Type
-    hi link ptcapLeadBlank	NONE
-    hi link ptcapLineCont	Special
-    hi link ptcapNames		Label
-    hi link ptcapNumber		NONE
-    hi link ptcapNumberError	Error
-    hi link ptcapOperator	Operator
-    hi link ptcapSpecialCap	Type
-    hi link ptcapString		NONE
-endif
+" The default highlighting.
+hi def link ptcapComment	Comment
+hi def link ptcapDelimiter	Delimiter
+" The highlighting of "ptcapEntry" should always be overridden by
+" its contents, so I use Todo highlighting to indicate that there
+" is work to be done with the syntax file if you can see it :-)
+hi def link ptcapEntry		Todo
+hi def link ptcapError		Error
+hi def link ptcapEscapedChar	SpecialChar
+hi def link ptcapField		Type
+hi def link ptcapLeadBlank	NONE
+hi def link ptcapLineCont	Special
+hi def link ptcapNames		Label
+hi def link ptcapNumber		NONE
+hi def link ptcapNumberError	Error
+hi def link ptcapOperator	Operator
+hi def link ptcapSpecialCap	Type
+hi def link ptcapString		NONE
 
 let b:current_syntax = "ptcap"
 

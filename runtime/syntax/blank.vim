@@ -18,15 +18,10 @@ syn match blankNumber "\[[0-9]\+\]"
 
 syn case match
 
-if !exists("did_blank_syntax_inits")
-  let did_blank_syntax_inits = 1
-
-  " The default methods for highlighting
-  hi link blankInstruction      Statement
-  hi link blankNumber           Number
-  hi link blankString           String
-
-endif
+" The default highlighting.
+hi def link blankInstruction      Statement
+hi def link blankNumber           Number
+hi def link blankString           String
 
 let b:current_syntax = "blank"
 " vim: ts=8

@@ -3,7 +3,7 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	send syntax_vim.tgz
-" Last Change:	1999 Dec 27
+" Last Change:	2000 Nov 04
 "
 " Options	lite_minlines = x     to sync at least x lines backwards
 
@@ -153,35 +153,32 @@ else
   syn sync minlines=100
 endif
 
-if !exists("did_tf_syntax_inits")
-  let did_tf_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link tfComment		Comment
-  hi link tfString		String
-  hi link tfNumber		Number
-  hi link tfFloat		Float
-  hi link tfIdentifier		Identifier
-  hi link tfVar			Identifier
-  hi link tfWorld		Identifier
-  hi link tfReadonly		Identifier
-  hi link tfHook		Identifier
-  hi link tfFunctions		Function
-  hi link tfRepeat		Repeat
-  hi link tfConditional		Conditional
-  hi link tfLabel		Label
-  hi link tfStatement		Statement
-  hi link tfType		Type
-  hi link tfInclude		Include
-  hi link tfDefine		Define
-  hi link tfSpecialChar		SpecialChar
-  hi link tfSpecialCharEsc	SpecialChar
-  hi link tfParentError		Error
-  hi link tfTodo		Todo
-  hi link tfEndCommand		Delimiter
-  hi link tfJoinLines		Delimiter
-  hi link tfOperator		Operator
-  hi link tfRelation		Operator
-endif
+" The default highlighting.
+hi def link tfComment		Comment
+hi def link tfString		String
+hi def link tfNumber		Number
+hi def link tfFloat		Float
+hi def link tfIdentifier	Identifier
+hi def link tfVar		Identifier
+hi def link tfWorld		Identifier
+hi def link tfReadonly		Identifier
+hi def link tfHook		Identifier
+hi def link tfFunctions		Function
+hi def link tfRepeat		Repeat
+hi def link tfConditional	Conditional
+hi def link tfLabel		Label
+hi def link tfStatement		Statement
+hi def link tfType		Type
+hi def link tfInclude		Include
+hi def link tfDefine		Define
+hi def link tfSpecialChar	SpecialChar
+hi def link tfSpecialCharEsc	SpecialChar
+hi def link tfParentError	Error
+hi def link tfTodo		Todo
+hi def link tfEndCommand	Delimiter
+hi def link tfJoinLines		Delimiter
+hi def link tfOperator		Operator
+hi def link tfRelation		Operator
 
 let b:current_syntax = "tf"
 

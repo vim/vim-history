@@ -53,22 +53,20 @@ syn sync match lexSyncPat	grouphere  lexPatBlock	"^%[a-zA-Z]"
 syn sync match lexSyncPat	groupthere lexPatBlock	"^<$"
 syn sync match lexSyncPat	groupthere lexPatBlock	"^%%$"
 
-if !exists("did_lex_syntax_inits")
-  let did_lex_synax_inits = 1
-  hi link	lexSlashQuote	lexPat
-  hi link	lexBrace		lexPat
-  hi link lexAbbrvComment	lexPatComment
+" The default highlighting.
+hi def link lexSlashQuote	lexPat
+hi def link lexBrace	lexPat
+hi def link lexAbbrvComment	lexPatComment
 
-  hi link	lexAbbrv		SpecialChar
-  hi link	lexAbbrvRegExp	Macro
-  hi link	lexCFunctions	Function
-  hi link	lexMorePat	SpecialChar
-  hi link	lexPat		Function
-  hi link	lexPatComment	Comment
-  hi link	lexPatString	Function
-  hi link	lexPatTag		Special
-  hi link	lexSep		Delimiter
-endif
+hi def link lexAbbrv	SpecialChar
+hi def link lexAbbrvRegExp	Macro
+hi def link lexCFunctions	Function
+hi def link lexMorePat	SpecialChar
+hi def link lexPat		Function
+hi def link lexPatComment	Comment
+hi def link lexPatString	Function
+hi def link lexPatTag	Special
+hi def link lexSep		Delimiter
 
 let b:current_syntax = "lex"
 

@@ -2,7 +2,7 @@
 " Language:	SMIL (Synchronized Multimedia Integration Language)
 " Maintainer:	Herve Foucher <Herve.Foucher@helio.org>
 " URL:		http://www.helio.org/vim/syntax/smil.vim
-" Last Change:	1999 Sep 02
+" Last Change:	2000 Nov 04
 
 " To learn more about SMIL, please refer to http://www.w3.org/AudioVideo/
 " and to http://www.helio.org/products/smil/tutorial/
@@ -104,29 +104,26 @@ else
 endif
 syn region smilComment                start=+<!DOCTYPE+ keepend end=+>+
 
-if !exists("did_smil_syntax_inits")
-  let did_smil_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link smilTag			Function
-  hi link smilEndTag			Identifier
-  hi link smilArg			Type
-  hi link smilTagName			smilStatement
-  hi link smilSpecialTagName		Exception
-  hi link smilValue			Value
-  hi link smilSpecialChar		Special
+" The default highlighting.
+hi def link smilTag			Function
+hi def link smilEndTag			Identifier
+hi def link smilArg			Type
+hi def link smilTagName			smilStatement
+hi def link smilSpecialTagName		Exception
+hi def link smilValue			Value
+hi def link smilSpecialChar		Special
 
-  hi link smilSpecial			Special
-  hi link smilSpecialChar		Special
-  hi link smilString			String
-  hi link smilStatement			Statement
-  hi link smilComment			Comment
-  hi link smilCommentPart		Comment
-  hi link smilPreProc			PreProc
-  hi link smilValue			String
-  hi link smilCommentError		smilError
-  hi link smilTagError			smilError
-  hi link smilError			Error
-endif
+hi def link smilSpecial			Special
+hi def link smilSpecialChar		Special
+hi def link smilString			String
+hi def link smilStatement		Statement
+hi def link smilComment			Comment
+hi def link smilCommentPart		Comment
+hi def link smilPreProc			PreProc
+hi def link smilValue			String
+hi def link smilCommentError		smilError
+hi def link smilTagError		smilError
+hi def link smilError			Error
 
 let b:current_syntax = "smil"
 

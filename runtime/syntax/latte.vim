@@ -59,21 +59,18 @@ syn keyword latteSyntax upcase useless warn while zero?  contained
 syn sync match matchPlace grouphere NONE "^[^ \t]"
 " ... i.e. synchronize on a line that starts at the left margin
 
-if !exists("did_latte_syntax_inits")
-  let did_latte_syntax_inits= 1
 
-  hi link latteSyntax		Statement
-  hi link latteVar		Function
+" The default highlighting.
+hi def link latteSyntax		Statement
+hi def link latteVar		Function
 
-  hi link latteString		String
-  hi link latteQuote		String
+hi def link latteString		String
+hi def link latteQuote		String
 
-  hi link latteDelimiter	Delimiter
-  hi link latteOperator		Operator
+hi def link latteDelimiter	Delimiter
+hi def link latteOperator	Operator
 
-  hi link latteComment		Comment
-  hi link latteError		Error
-
-endif
+hi def link latteComment	Comment
+hi def link latteError		Error
 
 let b:current_syntax = "latte"

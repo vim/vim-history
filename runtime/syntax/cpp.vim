@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C++
 " Maintainer:	Ken Shan <ccshan@post.harvard.edu>
-" Last change:	2000 Aug 26
+" Last change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -34,19 +34,17 @@ endif
 
 syn match cppMinMax "[<>]?"
 
-if !exists("did_cpp_syntax_inits")
-  let did_cpp_syntax_inits = 1
-  hi link cppAccess	cppStatement
-  hi link cppCast	cppStatement
-  hi link cppExceptions	cppStatement
-  hi link cppOperator	cppStatement
-  hi link cppStatement	Statement
-  hi link cppType	Type
-  hi link cppStorageClass	StorageClass
-  hi link cppStructure	Structure
-  hi link cppNumber	Number
-  hi link cppBoolean	Boolean
-endif
+" The default highlighting.
+hi def link cppAccess	cppStatement
+hi def link cppCast	cppStatement
+hi def link cppExceptions	cppStatement
+hi def link cppOperator	cppStatement
+hi def link cppStatement	Statement
+hi def link cppType	Type
+hi def link cppStorageClass	StorageClass
+hi def link cppStructure	Structure
+hi def link cppNumber	Number
+hi def link cppBoolean	Boolean
 
 let b:current_syntax = "cpp"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	1997/12/15
+" Last Change:	2000 Nov 04
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
 syn clear
@@ -135,40 +135,36 @@ syn region  ctermString			start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=ctermSp
 syn match   ctermCharacter		"'[^\\]'"
 syn match   ctermSpecialCharacter	"'\\.'"
 
-if !exists("did_cterm_syntax_inits")
-	let did_cterm_syntax_inits = 1
+" The default highlighting.
+hi def link ctermStatement		Statement
+hi def link ctermFunction		Statement
+hi def link ctermStrFunction		Statement
+hi def link ctermIntFunction		Statement
+hi def link ctermLabel			Statement
+hi def link ctermConditional		Statement
+hi def link ctermRepeat			Statement
+hi def link ctermLibFunc		UserDefFunc
+hi def link ctermType			Type
+hi def link ctermFuncArg		PreCondit
 
-	hi link ctermStatement		Statement
-	hi link ctermFunction		Statement
-	hi link ctermStrFunction	Statement
-	hi link ctermIntFunction	Statement
-	hi link ctermLabel		Statement
-	hi link ctermConditional	Statement
-	hi link ctermRepeat		Statement
-	hi link ctermLibFunc		UserDefFunc
-	hi link ctermType		Type
-	hi link ctermFuncArg		PreCondit
+hi def link ctermPreVarRO		PreCondit
+hi def link ctermPreVarRW		PreConditBold
+hi def link ctermVar			Type
 
-	hi link ctermPreVarRO		PreCondit
-	hi link ctermPreVarRW		PreConditBold
-	hi link ctermVar		Type
+hi def link ctermComment		Comment
 
-	hi link ctermComment		Comment
+hi def link ctermCharacter		SpecialChar
+hi def link ctermSpecial		Special
+hi def link ctermSpecialCharacter	SpecialChar
+hi def link ctermSymbols		Special
+hi def link ctermString			String
+hi def link ctermTodo			Todo
+hi def link ctermOperator		Statement
+hi def link ctermNumber			Number
 
-	hi link ctermCharacter		SpecialChar
-	hi link ctermSpecial		Special
-	hi link ctermSpecialCharacter	SpecialChar
-	hi link ctermSymbols		Special
-	hi link ctermString		String
-	hi link ctermTodo		Todo
-	hi link ctermOperator		Statement
-	hi link ctermNumber		Number
-
-	" redefine the colors
-	"hi PreConditBold	term=bold ctermfg=1 cterm=bold guifg=Purple gui=bold
-	"hi Special	term=bold ctermfg=6 guifg=SlateBlue gui=underline
-
-endif
+" redefine the colors
+"hi def PreConditBold	term=bold ctermfg=1 cterm=bold guifg=Purple gui=bold
+"hi def Special	term=bold ctermfg=6 guifg=SlateBlue gui=underline
 
 let b:current_syntax = "cterm"
 

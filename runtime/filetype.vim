@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 21
+" Last change:	2000 Nov 05
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -11,7 +11,7 @@ let did_load_filetypes = 1
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
 let s:cpo_save = &cpo
-set cpo-=C
+set cpo&vim
 
 augroup filetypedetect
 
@@ -858,3 +858,4 @@ endif
 
 " Restore 'cpoptions'
 let &cpo = s:cpo_save
+unlet s:cpo_save

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	gnuplot
 " Maintainer:	John Hoelzel <johnh51@earthlink.net>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -77,17 +77,15 @@ syn region gnuplotString	start=+'+ skip=+\\'+ end=+'+
 " comments
 syn region gnuplotComment	start="^\s*#\s*" skip="\\$" end="$"
 
-if !exists("did_gnuplot_syntax_inits")
-  let did_gnuplot_syntax_inits = 1
-  hi link gnuplotString		String
-  hi link gnuplotStatement	Statement
-  hi link gnuplotConditional	Conditional
-  hi link gnuplotNumber		Number
-  hi link gnuplotFloat		Float
-  hi link gnuplotOctalError	Error
-  hi link gnuplotType		Type
-  hi link gnuplotComment	Comment
-endif
+" The default highlighting.
+hi def link gnuplotString	String
+hi def link gnuplotStatement	Statement
+hi def link gnuplotConditional	Conditional
+hi def link gnuplotNumber	Number
+hi def link gnuplotFloat	Float
+hi def link gnuplotOctalError	Error
+hi def link gnuplotType		Type
+hi def link gnuplotComment	Comment
 
 let b:current_syntax = "gnuplot"
 

@@ -2,7 +2,7 @@
 " Language:	Apache-style config files (Apache, ProFTPd, etc)
 " Maintainer:	Christian Hammers <ch@westend.com>
 " URL:		none
-" Last Change:	1999 Oct 28
+" Last Change:	2000 Nov 04
 
 " Apache-style config files look this way:
 "
@@ -31,15 +31,12 @@ syn match  apachestyleTagN	contained +<[/\s]*[-a-zA-Z0-9]\++ms=s+1
 syn match  apachestyleTagError	contained "[^>]<"ms=s+1
 
 
-if !exists("did_apachestyle_syntax_inits")
-  let did_apachestyle_syntax_inits = 1
-
-  hi link apachestyleComment			Comment
-  hi link apachestyleOption			String
-  hi link apachestyleTag			Special
-  hi link apachestyleTagN			Identifier
-  hi link apachestyleTagError			Error
-endif
+" The default highlighting.
+hi def link apachestyleComment		Comment
+hi def link apachestyleOption		String
+hi def link apachestyleTag		Special
+hi def link apachestyleTagN		Identifier
+hi def link apachestyleTagError		Error
 
 let b:current_syntax = "apachestyle"
 " vim: ts=8

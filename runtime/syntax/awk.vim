@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	awk, nawk, gawk, mawk
 " Maintainer:	Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2000 Oct 28
+" Last Change:	2000 Nov 04
 
 " AWK  ref.  is: Alfred V. Aho, Brian W. Kernighan, Peter J. Weinberger
 " The AWK Programming Language, Addison-Wesley, 1988
@@ -52,17 +52,17 @@ syn keyword awkVariables	FIELDWIDTHS IGNORECASE RT RLENGTH
 syn keyword awkRepeat	do
 
 " Octal format character.
-syn match   awkSpecialCharacter contained "\\[0-7]\{1,3\}"
+syn match   awkSpecialCharacter display contained "\\[0-7]\{1,3\}"
 syn keyword awkStatement	func nextfile
 " Hex   format character.
-syn match   awkSpecialCharacter contained "\\x[0-9A-Fa-f]\+"
+syn match   awkSpecialCharacter display contained "\\x[0-9A-Fa-f]\+"
 
 syn match   awkFieldVars	"\$\d\+"
 
 "catch errors caused by wrong parenthesis
 syn region	awkParen	transparent start="(" end=")" contains=ALLBUT,awkParenError,awkSpecialCharacter,awkArrayElement,awkArrayArray,awkTodo,awkRegExp,awkBrktRegExp,awkBrackets,awkCharClass
-syn match	awkParenError	")"
-syn match	awkInParen	contained "[{}]"
+syn match	awkParenError	display ")"
+syn match	awkInParen	display contained "[{}]"
 
 " 64 lines for complex &&'s, and ||'s in a big "if"
 syn sync ccomment awkParen maxlines=64
@@ -88,18 +88,18 @@ syn match   awkSpecialPrintf	contained "%[-+ #]*\d*\.\=\d*[cdefgiosuxEGX%]"
 
 " Numbers, allowing signs (both -, and +)
 " Integer number.
-syn match  awkNumber		"[+-]\=\<\d\+\>"
+syn match  awkNumber		display "[+-]\=\<\d\+\>"
 " Floating point number.
-syn match  awkFloat		"[+-]\=\<\d\+\.\d+\>"
+syn match  awkFloat		display "[+-]\=\<\d\+\.\d+\>"
 " Floating point number, starting with a dot.
-syn match  awkFloat		"[+-]\=\<.\d+\>"
+syn match  awkFloat		display "[+-]\=\<.\d+\>"
 syn case ignore
 "floating point number, with dot, optional exponent
-syn match  awkFloat	"\<\d\+\.\d*\(e[-+]\=\d\+\)\=\>"
+syn match  awkFloat	display "\<\d\+\.\d*\(e[-+]\=\d\+\)\=\>"
 "floating point number, starting with a dot, optional exponent
-syn match  awkFloat	"\.\d\+\(e[-+]\=\d\+\)\=\>"
+syn match  awkFloat	display "\.\d\+\(e[-+]\=\d\+\)\=\>"
 "floating point number, without dot, with exponent
-syn match  awkFloat	"\<\d\+e[-+]\=\d\+\>"
+syn match  awkFloat	display "\<\d\+e[-+]\=\d\+\>"
 syn case match
 
 "syn match  awkIdentifier	"\<[a-zA-Z_][a-zA-Z0-9_]*\>"
@@ -138,61 +138,58 @@ syn match  awkLineSkip	"\\$"
 " Highlight array element's (recursive arrays allowed).
 " Keeps nested array names' separate from normal array elements.
 " Keeps numbers separate from normal array elements (variables).
-syn match  awkArrayArray	contained "[^][, \t]*\["me=e-1
-syn match  awkArrayElement	contained "[^][, \t]*"
+syn match  awkArrayArray        contained "[^][, \t]\+\["me=e-1
+syn match  awkArrayElement      contained "[^][, \t]\+"
 syn region awkArray		transparent start="\[" end="\]" contains=awkArray,awkArrayElement,awkArrayArray,awkNumber,awkFloat
 
 " 10 should be enough.
 " (for the few instances where it would be more than "oneline")
 syn sync ccomment awkArray maxlines=10
 
-if !exists("did_awk_syntax_inits")
-  let did_awk_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link awkConditional	Conditional
-  hi link awkFunction	Function
-  hi link awkRepeat	Repeat
-  hi link awkStatement	Statement
+" The default highlighting.
+hi def link awkConditional	Conditional
+hi def link awkFunction		Function
+hi def link awkRepeat		Repeat
+hi def link awkStatement	Statement
 
-  hi link awkString	String
-  hi link awkSpecialPrintf Special
-  hi link awkSpecialCharacter Special
+hi def link awkString		String
+hi def link awkSpecialPrintf	Special
+hi def link awkSpecialCharacter Special
 
-  hi link awkSearch	String
-  hi link awkBrackets	awkRegExp
-  hi link awkBrktRegExp	awkNestRegExp
-  hi link awkCharClass	awkNestRegExp
-  hi link awkNestRegExp	Keyword
-  hi link awkRegExp	Special
+hi def link awkSearch		String
+hi def link awkBrackets		awkRegExp
+hi def link awkBrktRegExp	awkNestRegExp
+hi def link awkCharClass	awkNestRegExp
+hi def link awkNestRegExp	Keyword
+hi def link awkRegExp		Special
 
-  hi link awkNumber	Number
-  hi link awkFloat	Float
+hi def link awkNumber		Number
+hi def link awkFloat		Float
 
-  hi link awkFileIO	Special
-  "hi link awkOperator	Special
-  "hi link awkExpression	Special
-  hi link awkBoolLogic	Special
+hi def link awkFileIO		Special
+"hi def link awkOperator	Special
+"hi def link awkExpression	Special
+hi def link awkBoolLogic	Special
 
-  hi link awkPatterns	Special
-  hi link awkVariables	Special
-  hi link awkFieldVars	Special
+hi def link awkPatterns		Special
+hi def link awkVariables	Special
+hi def link awkFieldVars	Special
 
-  hi link awkLineSkip	Special
-  hi link awkSemicolon	Special
-  hi link awkComma	Special
-  "hi link awkIdentifier	Identifier
+hi def link awkLineSkip		Special
+hi def link awkSemicolon	Special
+hi def link awkComma		Special
+"hi def link awkIdentifier	Identifier
 
-  hi link awkComment	Comment
-  hi link awkTodo	Todo
+hi def link awkComment		Comment
+hi def link awkTodo		Todo
 
-  " Change this if you want nested array names to be highlighted.
-  hi link awkArrayArray	awkArray
-  hi link awkArrayElement Special
+" Change this if you want nested array names to be highlighted.
+hi def link awkArrayArray	awkArray
+hi def link awkArrayElement	Special
 
-  hi link awkParenError	awkError
-  hi link awkInParen	awkError
-  hi link awkError	Error
-endif
+hi def link awkParenError	awkError
+hi def link awkInParen		awkError
+hi def link awkError		Error
 
 let b:current_syntax = "awk"
 

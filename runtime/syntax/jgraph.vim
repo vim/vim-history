@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	jgraph (graph plotting utility)
 " Maintainer:	Jonas Munsin jmunsin@iki.fi
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 " this syntax file is not yet complete
 
 
@@ -29,10 +29,10 @@ syn match  jgraphNumber          "\<-\=\d\+\.\d*\>"
 syn match  jgraphNumber          "\-\=\.\d\+\>"
 
 
-hi link jgraphComment	Comment
-hi link jgraphCmd	Identifier
-hi link jgraphType	Type
-hi link jgraphNumber	Number
-
+" The default highlighting.
+hi def link jgraphComment	Comment
+hi def link jgraphCmd		Identifier
+hi def link jgraphType		Type
+hi def link jgraphNumber	Number
 
 let b:current_syntax = "jgraph"

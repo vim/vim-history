@@ -65,16 +65,13 @@ syn region  OPLString	        start=+"+   end=+"+
 syn region  OPLComment	        start="REM[\t ]" end="$"
 syn match   OPLMathsOperator    "-\|=\|[:<>+\*^/\\]"
 
-if !exists("did_OPL_syntax_inits")
-  let did_OPL_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link OPLStatement		Statement
-  hi link OPLNumber		Number
-  hi link OPLString		String
-  hi link OPLComment		Comment
-  hi link OPLMathsOperator      Conditional
-"  hi link OPLError		Error
-endif
+" The default highlighting.
+hi def link OPLStatement	Statement
+hi def link OPLNumber		Number
+hi def link OPLString		String
+hi def link OPLComment		Comment
+hi def link OPLMathsOperator    Conditional
+"hi def link OPLError		Error
 
 let b:current_syntax = "opl"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2000-09-07
+" Last Change:	2000 Nov 04
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -279,95 +279,91 @@ syn match  perlFormatField	"@$" contained
 syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD
 
 
+" The default highlighting.
+hi def link perlSharpBang		PreProc
+hi def link perlControl			PreProc
+hi def link perlInclude			Include
+hi def link perlSpecial			Special
+hi def link perlString			String
+hi def link perlCharacter		Character
+hi def link perlNumber			Number
+hi def link perlType			Type
+hi def link perlIdentifier		Identifier
+hi def link perlLabel			Label
+hi def link perlStatement		Statement
+hi def link perlConditional		Conditional
+hi def link perlRepeat			Repeat
+hi def link perlOperator		Operator
+hi def link perlFunction		Function
+hi def link perlFunctionPrototype	perlFunction
+hi def link perlComment			Comment
+hi def link perlTodo			Todo
+hi def link perlList			perlStatement
+hi def link perlMisc			perlStatement
+hi def link perlVarPlain		perlIdentifier
+hi def link perlFiledescRead		perlIdentifier
+hi def link perlFiledescStatement	perlIdentifier
+hi def link perlVarSimpleMember		perlIdentifier
+hi def link perlVarSimpleMemberName	perlString
+hi def link perlVarNotInMatches		perlIdentifier
+hi def link perlVarSlash		perlIdentifier
+hi def link perlQQ			perlString
+hi def link perlUntilEOF		perlString
+hi def link perlStringUnexpanded	perlString
+hi def link perlSubstitution		perlString
+hi def link perlTranslation		perlString
+hi def link perlMatch			perlString
+hi def link perlMatchStartEnd		perlStatement
+if exists("perl_string_as_statement")
+  hi def link perlStringStartEnd	perlStatement
+else
+  hi def link perlStringStartEnd	perlString
+endif
+hi def link perlFormatName		perlIdentifier
+hi def link perlFormatField		perlString
+hi def link perlPackageDecl		perlType
+hi def link perlStorageClass		perlType
+hi def link perlPackageRef		perlType
+hi def link perlStatementPackage	perlStatement
+hi def link perlStatementSub		perlStatement
+hi def link perlStatementStorage	perlStatement
+hi def link perlStatementControl	perlStatement
+hi def link perlStatementScalar		perlStatement
+hi def link perlStatementRegexp		perlStatement
+hi def link perlStatementNumeric	perlStatement
+hi def link perlStatementList		perlStatement
+hi def link perlStatementHash		perlStatement
+hi def link perlStatementIOfunc		perlStatement
+hi def link perlStatementFiledesc	perlStatement
+hi def link perlStatementVector		perlStatement
+hi def link perlStatementFiles		perlStatement
+hi def link perlStatementFlow		perlStatement
+hi def link perlStatementScope		perlStatement
+hi def link perlStatementInclude	perlStatement
+hi def link perlStatementProc		perlStatement
+hi def link perlStatementSocket		perlStatement
+hi def link perlStatementIPC		perlStatement
+hi def link perlStatementNetwork	perlStatement
+hi def link perlStatementPword		perlStatement
+hi def link perlStatementTime		perlStatement
+hi def link perlStatementMisc		perlStatement
+hi def link perlFunctionName		perlIdentifier
+hi def link perlFunctionPRef		perlType
+hi def link perlPOD			perlComment
+hi def link perlShellCommand		perlString
+hi def link perlSpecialAscii		perlSpecial
+hi def link perlSpecialDollar		perlSpecial
+hi def link perlSpecialString		perlSpecial
+hi def link perlSpecialStringU		perlSpecial
+hi def link perlSpecialMatch		perlSpecial
+hi def link perlSpecialBEOM		perlSpecial
+hi def link perlDATA			perlComment
 
-if !exists("did_perl_syntax_inits")
-  let did_perl_syntax_inits = 1
-
-  hi link perlSharpBang		PreProc
-  hi link perlControl		PreProc
-  hi link perlInclude		Include
-  hi link perlSpecial		Special
-  hi link perlString		String
-  hi link perlCharacter		Character
-  hi link perlNumber		Number
-  hi link perlType		Type
-  hi link perlIdentifier	Identifier
-  hi link perlLabel		Label
-  hi link perlStatement		Statement
-  hi link perlConditional	Conditional
-  hi link perlRepeat		Repeat
-  hi link perlOperator		Operator
-  hi link perlFunction		Function
-  hi link perlFunctionPrototype	perlFunction
-  hi link perlComment		Comment
-  hi link perlTodo		Todo
-  hi link perlList		perlStatement
-  hi link perlMisc		perlStatement
-  hi link perlVarPlain		perlIdentifier
-  hi link perlFiledescRead	perlIdentifier
-  hi link perlFiledescStatement	perlIdentifier
-  hi link perlVarSimpleMember	perlIdentifier
-  hi link perlVarSimpleMemberName	perlString
-  hi link perlVarNotInMatches	perlIdentifier
-  hi link perlVarSlash		perlIdentifier
-  hi link perlQQ		perlString
-  hi link perlUntilEOF		perlString
-  hi link perlStringUnexpanded	perlString
-  hi link perlSubstitution	perlString
-  hi link perlTranslation	perlString
-  hi link perlMatch		perlString
-  hi link perlMatchStartEnd	perlStatement
-  if exists("perl_string_as_statement")
-    hi link perlStringStartEnd	perlStatement
-  else
-    hi link perlStringStartEnd	perlString
-  endif
-  hi link perlFormatName	perlIdentifier
-  hi link perlFormatField	perlString
-  hi link perlPackageDecl	perlType
-  hi link perlStorageClass	perlType
-  hi link perlPackageRef	perlType
-  hi link perlStatementPackage	perlStatement
-  hi link perlStatementSub	perlStatement
-  hi link perlStatementStorage	perlStatement
-  hi link perlStatementControl	perlStatement
-  hi link perlStatementScalar	perlStatement
-  hi link perlStatementRegexp	perlStatement
-  hi link perlStatementNumeric	perlStatement
-  hi link perlStatementList	perlStatement
-  hi link perlStatementHash	perlStatement
-  hi link perlStatementIOfunc	perlStatement
-  hi link perlStatementFiledesc	perlStatement
-  hi link perlStatementVector	perlStatement
-  hi link perlStatementFiles	perlStatement
-  hi link perlStatementFlow	perlStatement
-  hi link perlStatementScope	perlStatement
-  hi link perlStatementInclude	perlStatement
-  hi link perlStatementProc	perlStatement
-  hi link perlStatementSocket	perlStatement
-  hi link perlStatementIPC	perlStatement
-  hi link perlStatementNetwork	perlStatement
-  hi link perlStatementPword	perlStatement
-  hi link perlStatementTime	perlStatement
-  hi link perlStatementMisc	perlStatement
-  hi link perlFunctionName	perlIdentifier
-  hi link perlFunctionPRef	perlType
-  hi link perlPOD		perlComment
-  hi link perlShellCommand	perlString
-  hi link perlSpecialAscii	perlSpecial
-  hi link perlSpecialDollar	perlSpecial
-  hi link perlSpecialString	perlSpecial
-  hi link perlSpecialStringU	perlSpecial
-  hi link perlSpecialMatch	perlSpecial
-  hi link perlSpecialBEOM	perlSpecial
-  hi link perlDATA		perlComment
-
-  hi link perlBrackets		Error
+hi def link perlBrackets		Error
 
   " Possible errors
-  hi link perlNotEmptyLine	Error
-  hi link perlElseIfError	Error
-endif
+hi def link perlNotEmptyLine		Error
+hi def link perlElseIfError		Error
 
 " Syncing to speed up processing
 "

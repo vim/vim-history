@@ -78,32 +78,29 @@ syn match loutBoldItalic '@BI\s\+\k\+'
 syn region loutBoldItalic matchgroup=loutBIBraces start='@BI\s*{' matchgroup=loutBIBraces end='}' contains=ALLBUT,loutBraceError
 syn region loutHeadings matchgroup=loutHeads start='@\(\(Title\)\|\(Caption\)\)\s*{' matchgroup=loutHeads end='}' contains=ALLBUT,loutBraceError
 
-if !exists("did_lout_syntax")
-	let did_lout_syntax = 1
-	" The default methods for highlighting. Can be overrriden later.
-	hi link loutTodo Todo
-	hi link loutDefine Define
-	hi link loutEOmlDef Define
-	hi link loutFunction Function
-	hi link loutBraceError Error
-	hi link loutNULL Special
-	hi link loutComment Comment
-	hi link loutSpecial Special
-	hi link loutSymbols Character
-	hi link loutInclude Include
-	hi link loutKeyword Keyword
-	hi link loutTag Tag
-	hi link loutMath Number
-	hi link loutMBraces loutMath
+" The default highlighting.
+hi def link loutTodo Todo
+hi def link loutDefine Define
+hi def link loutEOmlDef Define
+hi def link loutFunction Function
+hi def link loutBraceError Error
+hi def link loutNULL Special
+hi def link loutComment Comment
+hi def link loutSpecial Special
+hi def link loutSymbols Character
+hi def link loutInclude Include
+hi def link loutKeyword Keyword
+hi def link loutTag Tag
+hi def link loutMath Number
+hi def link loutMBraces loutMath
 
-	hi loutItalic term=italic cterm=italic gui=italic
-	hi link loutIBraces loutItalic
-	hi loutBold term=bold cterm=bold gui=bold
-	hi link loutBBraces loutBold
-	hi loutBoldItalic term=bold,italic cterm=bold,italic gui=bold,italic
-	hi link loutBIBraces loutBoldItalic
-	hi loutHeadings term=bold cterm=bold guifg=indianred
-	hi link loutHeads loutHeadings
-endif
+hi def loutItalic term=italic cterm=italic gui=italic
+hi def link loutIBraces loutItalic
+hi def loutBold term=bold cterm=bold gui=bold
+hi def link loutBBraces loutBold
+hi def loutBoldItalic term=bold,italic cterm=bold,italic gui=bold,italic
+hi def link loutBIBraces loutBoldItalic
+hi def loutHeadings term=bold cterm=bold guifg=indianred
+hi def link loutHeads loutHeadings
 
 let b:current_syntax = "lout"

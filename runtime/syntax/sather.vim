@@ -2,7 +2,7 @@
 " Language:	Sather/pSather
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/sather.vim
-" Last Change:	1998 Jan 12
+" Last Change:	2000 Nov 04
 
 " Sather is a OO-language developped at the International Computer Science
 " Institute (ICSI) in Berkeley, CA. pSather is a parallel extension to Sather.
@@ -56,36 +56,33 @@ syn match   satherComment         "--.*" contains=satherComment2String,satherCha
 syn sync ccomment satherComment
 
 
-if !exists("did_sather_syntax_inits")
-  let did_sather_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link satherBranch		satherStatement
-  hi link satherLabel		satherStatement
-  hi link satherConditional	satherStatement
-  hi link satherSynchronize	satherStatement
-  hi link satherRepeat		satherStatement
-  hi link satherExceptions	satherStatement
-  hi link satherStorageClass	satherDeclarative
-  hi link satherMethodDecl	satherDeclarative
-  hi link satherClassDecl	satherDeclarative
-  hi link satherScopeDecl	satherDeclarative
-  hi link satherBoolValue	satherValue
-  hi link satherSpecial		satherValue
-  hi link satherString		satherValue
-  hi link satherCharacter	satherValue
-  hi link satherSpecialCharacter	satherValue
-  hi link satherNumber		satherValue
-  hi link satherStatement	Statement
-  hi link satherOperator	Statement
-  hi link satherComment		Comment
-  hi link satherType		Type
-  hi link satherValue		String
-  hi link satherString		String
-  hi link satherSpecial		String
-  hi link satherCharacter	String
-  hi link satherDeclarative	Type
-  hi link satherExternal	PreCondit
-endif
+" The default highlighting.
+hi def link satherBranch	satherStatement
+hi def link satherLabel		satherStatement
+hi def link satherConditional	satherStatement
+hi def link satherSynchronize	satherStatement
+hi def link satherRepeat	satherStatement
+hi def link satherExceptions	satherStatement
+hi def link satherStorageClass	satherDeclarative
+hi def link satherMethodDecl	satherDeclarative
+hi def link satherClassDecl	satherDeclarative
+hi def link satherScopeDecl	satherDeclarative
+hi def link satherBoolValue	satherValue
+hi def link satherSpecial	satherValue
+hi def link satherString	satherValue
+hi def link satherCharacter	satherValue
+hi def link satherSpecialCharacter satherValue
+hi def link satherNumber	satherValue
+hi def link satherStatement	Statement
+hi def link satherOperator	Statement
+hi def link satherComment	Comment
+hi def link satherType		Type
+hi def link satherValue		String
+hi def link satherString	String
+hi def link satherSpecial	String
+hi def link satherCharacter	String
+hi def link satherDeclarative	Type
+hi def link satherExternal	PreCondit
 
 let b:current_syntax = "sather"
 

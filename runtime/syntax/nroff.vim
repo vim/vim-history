@@ -1,7 +1,7 @@
 " VIM syntax file
 " Language:	Nroff/Troff
 " Maintainer:	Matthias Burian <burian@grabner-instruments.com>
-" Last Change:	2000 Sep 30
+" Last Change:	2000 Nov 04
 
 syn clear
 
@@ -24,19 +24,16 @@ syn region nroffSize start="\\s[0-9]*" end="\\s[0-9]*"
 syn region nroffSpecial start="^\.[TP]S$" end="^\.[TP]E$"
 syn region nroffSpecial start="^\.EQ" end="^\.EN"
 
-if !exists("did_nroff_syntax_inits")
-  let did_nroff_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link nroffCommand			Statement
-  hi link nroffComment			Comment
-  hi link nroffComArg			Comment
-  hi link nroffFont			PreProc
-  hi link nroffSize			PreProc
-  hi link nroffDefine			String
-  hi link nroffString			String
-  hi link nroffSpecial			Question
-  hi link nroffError			Error
-endif
+" The default highlighting.
+hi def link nroffCommand		Statement
+hi def link nroffComment		Comment
+hi def link nroffComArg			Comment
+hi def link nroffFont			PreProc
+hi def link nroffSize			PreProc
+hi def link nroffDefine			String
+hi def link nroffString			String
+hi def link nroffSpecial		Question
+hi def link nroffError			Error
 
 let b:current_syntax = "nroff"
 

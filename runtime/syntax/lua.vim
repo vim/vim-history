@@ -95,27 +95,24 @@ syn keyword luaStdLibFunc    strfind gsub
 "syncing method
 syn sync minlines=100
 
-if !exists("did_lua_syntax_inits")
-  let did_lua_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link luaStatement		Statement
-  hi link luaRepeat		Repeat
-  hi link luaString		String
-  hi link luaNumber		Number
-  hi link luaFloat		Float
-  hi link luaOperator		Operator
-  hi link luaConstant		Constant
-  hi link luaCond	        Conditional
-  hi link luaFunction		Function
-  hi link luaComment		Comment
-  hi link luaTodo		Todo
-  hi link luaTable		Structure
-  hi link luaError		Error
-  hi link luaSpecial		SpecialChar
-  hi link luaPreProc		PreProc
-  hi link luaInternalFunc	Identifier
-  hi link luaStdLibFunc		Identifier
-endif
+" The default highlighting.
+hi def link luaStatement	Statement
+hi def link luaRepeat		Repeat
+hi def link luaString		String
+hi def link luaNumber		Number
+hi def link luaFloat		Float
+hi def link luaOperator		Operator
+hi def link luaConstant		Constant
+hi def link luaCond	        Conditional
+hi def link luaFunction		Function
+hi def link luaComment		Comment
+hi def link luaTodo		Todo
+hi def link luaTable		Structure
+hi def link luaError		Error
+hi def link luaSpecial		SpecialChar
+hi def link luaPreProc		PreProc
+hi def link luaInternalFunc	Identifier
+hi def link luaStdLibFunc	Identifier
 
 let b:current_syntax = "lua"
 

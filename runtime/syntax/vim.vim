@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0j script
+" Language:	Vim 6.0k script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	October 23, 2000
-" Version:	6.0j-01
+" Last Change:	October 30, 2000
+" Version:	6.0k-01	NOT RELEASED
 
 " Remove old syntax
 syn clear
@@ -13,71 +13,71 @@ syn keyword vimTodo contained	COMBAK	NOT	RELEASED	TODO
 syn cluster vimCommentGroup	contains=vimTodo
 
 " regular vim commands
-syn keyword vimCommand contained	N[ext]	cu[nmap]	k	ptf[irst]	star[tinsert]
-syn keyword vimCommand contained	P[rint]	cunme	lan[guage]	ptj[ump]	stj[ump]
-syn keyword vimCommand contained	X	cunmenu	la[st]	ptl[ast]	st[op]
-syn keyword vimCommand contained	ab[breviate]	cw[indow]	lc[d]	ptn[ext]	sts[elect]
-syn keyword vimCommand contained	abc[lear]	delc[ommand]	lch[dir]	ptp[revious]	sun[hide]
-syn keyword vimCommand contained	al[l]	d[elete]	le[ft]	ptr[ewind]	sus[pend]
-syn keyword vimCommand contained	am	delf[unction]	l[ist]	pts[elect]	sv[iew]
-syn keyword vimCommand contained	amenu	dig[raphs]	ls	pu[t]	syncbind
-syn keyword vimCommand contained	an	di[splay]	mak[e]	pw[d]	t
-syn keyword vimCommand contained	anoremenu	dj[ump]	ma[rk]	pyf[ile]	tN[ext]
-syn keyword vimCommand contained	a[ppend]	dl[ist]	marks	py[thon]	ta[g]
-syn keyword vimCommand contained	ar[gs]	dr[op]	me	qa[ll]	tags
-syn keyword vimCommand contained	argu[ment]	ds[earch]	menu	q[uit]	tc[l]
-syn keyword vimCommand contained	as[cii]	dsp[lit]	menu-disable	quita[ll]	tcld[o]
-syn keyword vimCommand contained	aun	echon	menu-enable	r[ead]	tclf[ile]
-syn keyword vimCommand contained	aunmenu	e[dit]	menu-<script>	rec[over]	te[aroff]
-syn keyword vimCommand contained	bN[ext]	el[se]	menut[rans]	redi[r]	tf[irst]
-syn keyword vimCommand contained	bad[d]	elsei[f]	mk[exrc]	red[o]	tj[ump]
-syn keyword vimCommand contained	ba[ll]	em[eenu]	mks[ession]	reg[isters]	tl[ast]
-syn keyword vimCommand contained	bd[elete]	emenu	mkv[imrc]	res[ize]	tm[enu]
-syn keyword vimCommand contained	bf[irst	endf[unction]	mod[e]	ret[ab]	tn[ext]
-syn keyword vimCommand contained	bl[ast]	en[dif]	m[ove]	retu[rn]	to[pleft]
-syn keyword vimCommand contained	bm[odified]	endw[hile]	new	rew[ind]	tp[revious]
-syn keyword vimCommand contained	bn[ext]	ene[w]	n[ext]	ri[ght]	tr[ewind]
-syn keyword vimCommand contained	bo[tright]	ex	nmapc[lear]	rub[y]	ts[elect]
-syn keyword vimCommand contained	bp[revious]	exi[t]	nme	rubyd[o]	tu[nmenu]
-syn keyword vimCommand contained	brea[k]	f[ile]	nmenu	rubyf[ile]	una[bbreviate]
-syn keyword vimCommand contained	br[ewind]	files	nnoreme	ru[ntime]	u[ndo]
-syn keyword vimCommand contained	bro[wse]	filetype	nnoremenu	rv[iminfo]	unh[ide]
-syn keyword vimCommand contained	b[uffer]	fin[d]	noh[lsearch]	sN[ext]	unm[ap]
-syn keyword vimCommand contained	buffers	fini[sh]	norea[bbrev]	sal[l]	unme
-syn keyword vimCommand contained	bun[load]	fir[st]	noreme	sa[rgument]	unmenu
-syn keyword vimCommand contained	cN[ext]	fix[del]	noremenu	sbN[ext]	uns[ign]
-syn keyword vimCommand contained	ca[bbrev]	fo[ld]	norm[al]	sba[ll]	ve[rsion]
-syn keyword vimCommand contained	cabc[lear]	foldo[pen]	nu[mber]	sbf[irst]	vert[ical]
-syn keyword vimCommand contained	cal[l]	fu[nction]	nun[map]	sbl[ast]	v[global]
-syn keyword vimCommand contained	cc	g[lobal]	nunme	sbm[odified]	vie[w]
-syn keyword vimCommand contained	cd	go[to]	nunmenu	sbn[ext]	vi[sual]
-syn keyword vimCommand contained	ce[nter]	gr[ep]	omapc[lear]	sbp[revious]	vmapc[lear]
-syn keyword vimCommand contained	cf[ile]	h[elp]	ome	sbr[ewind]	vme
-syn keyword vimCommand contained	cfir[st]	helpf[ind]	omenu	sb[uffer]	vmenu
-syn keyword vimCommand contained	c[hange]	helpt[ags]	on[ly]	scrip[tnames]	vne[w]
-syn keyword vimCommand contained	chd[ir]	hid[e]	onoreme	se[t]	vnoreme
-syn keyword vimCommand contained	che[ckpath]	his[tory]	onoremenu	setf[iletype]	vnoremenu
-syn keyword vimCommand contained	cla[st]	ia[bbrev]	o[pen]	setg[lobal]	vs[plit]
-syn keyword vimCommand contained	cl[ist]	iabc[lear]	opt[ions]	setl[ocal]	vu[nmap]
-syn keyword vimCommand contained	clo[se]	if	ou[nmap]	sf[ind]	vunme
-syn keyword vimCommand contained	cmapc[lear]	ij[ump]	ounme	sfir[st	vunmenu
-syn keyword vimCommand contained	cme	il[ist]	ounmenu	sh[ell]	wN[ext]
-syn keyword vimCommand contained	cmenu	imapc[lear]	pc[lose]	sig[n]	wa[ll]
-syn keyword vimCommand contained	cnew[er]	ime	ped[it]	signs	wh[ile]
-syn keyword vimCommand contained	cn[ext]	imenu	pe[rl]	sil[ent]	win
-syn keyword vimCommand contained	cnf[ile]	inorea[bbrev]	perld[o]	si[malt]	winp[os]
-syn keyword vimCommand contained	cnorea[bbrev]	inoreme	po[p]	sla[st]	win[size]
-syn keyword vimCommand contained	cnoreme	inoremenu	pop[up]	sl[eep]	wn[ext]
-syn keyword vimCommand contained	cnoremenu	i[nsert]	pp[op]	sm[agic]	wp[revous]
-syn keyword vimCommand contained	col[der]	is[earch]	pre[serve]	sn[ext]	wq
-syn keyword vimCommand contained	comc[lear]	isp[lit]	prev[ious]	sni[ff]	wqa[ll]
-syn keyword vimCommand contained	conf[irm]	iuna[bbrev]	p[rint]	sno[magic]	w[rite]
-syn keyword vimCommand contained	con[tinue]	iu[nmap]	promptf[ind]	so[urce]	ws[verb]
-syn keyword vimCommand contained	co[py]	iunme	promptr[epl]	sp[lit]	wv[iminfo]
-syn keyword vimCommand contained	cp[revious]	iunmenu	ps[earch]	spr[evious]	xa[ll]
-syn keyword vimCommand contained	cq[uit]	j[oin]	ptN[ext]	sr[ewind]	x[it]
-syn keyword vimCommand contained	cr[ewind]	ju[mps]	pta[g]	sta[g]	y[ank]
-syn keyword vimCommand contained	cuna[bbrev]
+syn keyword vimCommand contained	N[ext]	cr[ewind]	ju[mps]	ptf[irst]	star[tinsert]
+syn keyword vimCommand contained	Nr	cuna[bbrev]	k	ptj[ump]	stj[ump]
+syn keyword vimCommand contained	Nw	cu[nmap]	lan[guage]	ptl[ast]	st[op]
+syn keyword vimCommand contained	P[rint]	cunme	la[st]	ptn[ext]	sts[elect]
+syn keyword vimCommand contained	X	cunmenu	lc[d]	ptp[revious]	sun[hide]
+syn keyword vimCommand contained	ab[breviate]	cw[indow]	lch[dir]	ptr[ewind]	sus[pend]
+syn keyword vimCommand contained	abc[lear]	delc[ommand]	le[ft]	pts[elect]	sv[iew]
+syn keyword vimCommand contained	al[l]	d[elete]	l[ist]	pu[t]	syncbind
+syn keyword vimCommand contained	am	delf[unction]	ls	pw[d]	t
+syn keyword vimCommand contained	amenu	dig[raphs]	mak[e]	pyf[ile]	tN[ext]
+syn keyword vimCommand contained	an	di[splay]	ma[rk]	py[thon]	ta[g]
+syn keyword vimCommand contained	anoremenu	dj[ump]	marks	qa[ll]	tags
+syn keyword vimCommand contained	a[ppend]	dl[ist]	me	q[uit]	tc[l]
+syn keyword vimCommand contained	ar[gs]	dr[op]	menu	quita[ll]	tcld[o]
+syn keyword vimCommand contained	argu[ment]	ds[earch]	menu-disable	r[ead]	tclf[ile]
+syn keyword vimCommand contained	as[cii]	dsp[lit]	menu-enable	rec[over]	te[aroff]
+syn keyword vimCommand contained	aun	echon	menu-<script>	redi[r]	tf[irst]
+syn keyword vimCommand contained	aunmenu	e[dit]	menut[rans]	red[o]	tj[ump]
+syn keyword vimCommand contained	bN[ext]	el[se]	mk[exrc]	reg[isters]	tl[ast]
+syn keyword vimCommand contained	bad[d]	elsei[f]	mks[ession]	res[ize]	tm[enu]
+syn keyword vimCommand contained	ba[ll]	em[eenu]	mkv[imrc]	ret[ab]	tn[ext]
+syn keyword vimCommand contained	bd[elete]	emenu	mod[e]	retu[rn]	to[pleft]
+syn keyword vimCommand contained	bf[irst	endf[unction]	m[ove]	rew[ind]	tp[revious]
+syn keyword vimCommand contained	bl[ast]	en[dif]	new	ri[ght]	tr[ewind]
+syn keyword vimCommand contained	bm[odified]	endw[hile]	n[ext]	rub[y]	ts[elect]
+syn keyword vimCommand contained	bn[ext]	ene[w]	nmapc[lear]	rubyd[o]	tu[nmenu]
+syn keyword vimCommand contained	bo[tright]	ex	nme	rubyf[ile]	una[bbreviate]
+syn keyword vimCommand contained	bp[revious]	exi[t]	nmenu	ru[ntime]	u[ndo]
+syn keyword vimCommand contained	brea[k]	f[ile]	nnoreme	rv[iminfo]	unh[ide]
+syn keyword vimCommand contained	br[ewind]	files	nnoremenu	sN[ext]	unm[ap]
+syn keyword vimCommand contained	bro[wse]	filetype	noh[lsearch]	sal[l]	unme
+syn keyword vimCommand contained	b[uffer]	fin[d]	norea[bbrev]	sa[rgument]	unmenu
+syn keyword vimCommand contained	buffers	fini[sh]	noreme	sbN[ext]	uns[ign]
+syn keyword vimCommand contained	bun[load]	fir[st]	noremenu	sba[ll]	ve[rsion]
+syn keyword vimCommand contained	cN[ext]	fix[del]	norm[al]	sbf[irst]	vert[ical]
+syn keyword vimCommand contained	ca[bbrev]	fo[ld]	nu[mber]	sbl[ast]	v[global]
+syn keyword vimCommand contained	cabc[lear]	foldo[pen]	nun[map]	sbm[odified]	vie[w]
+syn keyword vimCommand contained	cal[l]	fu[nction]	nunme	sbn[ext]	vi[sual]
+syn keyword vimCommand contained	cc	g[lobal]	nunmenu	sbp[revious]	vmapc[lear]
+syn keyword vimCommand contained	cd	go[to]	omapc[lear]	sbr[ewind]	vme
+syn keyword vimCommand contained	ce[nter]	gr[ep]	ome	sb[uffer]	vmenu
+syn keyword vimCommand contained	cf[ile]	h[elp]	omenu	scrip[tnames]	vne[w]
+syn keyword vimCommand contained	cfir[st]	helpf[ind]	on[ly]	se[t]	vnoreme
+syn keyword vimCommand contained	c[hange]	helpt[ags]	onoreme	setf[iletype]	vnoremenu
+syn keyword vimCommand contained	chd[ir]	hid[e]	onoremenu	setg[lobal]	vs[plit]
+syn keyword vimCommand contained	che[ckpath]	his[tory]	o[pen]	setl[ocal]	vu[nmap]
+syn keyword vimCommand contained	cla[st]	ia[bbrev]	opt[ions]	sf[ind]	vunme
+syn keyword vimCommand contained	cl[ist]	iabc[lear]	ou[nmap]	sfir[st	vunmenu
+syn keyword vimCommand contained	clo[se]	if	ounme	sh[ell]	wN[ext]
+syn keyword vimCommand contained	cmapc[lear]	ij[ump]	ounmenu	sig[n]	wa[ll]
+syn keyword vimCommand contained	cme	il[ist]	pc[lose]	signs	wh[ile]
+syn keyword vimCommand contained	cmenu	imapc[lear]	ped[it]	sil[ent]	win
+syn keyword vimCommand contained	cnew[er]	ime	pe[rl]	si[malt]	winp[os]
+syn keyword vimCommand contained	cn[ext]	imenu	perld[o]	sla[st]	win[size]
+syn keyword vimCommand contained	cnf[ile]	inorea[bbrev]	po[p]	sl[eep]	wn[ext]
+syn keyword vimCommand contained	cnorea[bbrev]	inoreme	pop[up]	sm[agic]	wp[revous]
+syn keyword vimCommand contained	cnoreme	inoremenu	pp[op]	sn[ext]	wq
+syn keyword vimCommand contained	cnoremenu	i[nsert]	pre[serve]	sni[ff]	wqa[ll]
+syn keyword vimCommand contained	col[der]	is[earch]	prev[ious]	sno[magic]	w[rite]
+syn keyword vimCommand contained	comc[lear]	isp[lit]	p[rint]	so[urce]	ws[verb]
+syn keyword vimCommand contained	conf[irm]	iuna[bbrev]	promptf[ind]	sp[lit]	wv[iminfo]
+syn keyword vimCommand contained	con[tinue]	iu[nmap]	promptr[epl]	spr[evious]	xa[ll]
+syn keyword vimCommand contained	co[py]	iunme	ps[earch]	sr[ewind]	x[it]
+syn keyword vimCommand contained	cp[revious]	iunmenu	ptN[ext]	sta[g]	y[ank]
+syn keyword vimCommand contained	cq[uit]	j[oin]	pta[g]
 syn match   vimCommand contained	"\<z[-+^.=]"
 
 " vimOptions are caught only when contained in a vimSet
@@ -307,7 +307,7 @@ syn keyword vimFuncName contained	escape
 syn match vimCmdSep	"[:|]\+"	skipwhite nextgroup=vimAddress,vimAutoCmd,vimMark,vimFilter,vimUserCmd,vimSet,vimLet,vimCommand,vimSyntax,vimExtCmd
 syn match vimIsCommand	"\<\a\+\>"	contains=vimCommand
 syn match vimVar		"\<[bwglsav]:\K\k*\>"
-syn match vimFunc     	"\I\i*\s*("	contains=vimFuncName,vimCommand
+syn match vimFunc		"\I\i*\s*("	contains=vimFuncName,vimCommand
 
 " Behave!
 " =======
@@ -355,9 +355,9 @@ syn match vimSpecFileMod	"\(:[phtre]\)\+"		contained
 " User-Specified Commands
 syn cluster vimUserCmdList	contains=vimAddress,vimSyntax,vimHighlight,vimAutoCmd,vimCmplxRepeat,vimComment,vimCtrlChar,vimEscapeBrace,vimFilter,vimFunc,vimFunction,vimIsCommand,vimMark,vimNotation,vimNumber,vimOper,vimRegion,vimRegister,vimLet,vimSet,vimSetEqual,vimSetString,vimSpecFile,vimString,vimSubst,vimSubstRep,vimSubstRange,vimSynLine
 syn match   vimUserCmd	"\<com\(m\(a\(nd\=\)\=\)\=\)\=!\=\>.*$"		contains=vimUserAttrb,@vimUserCmdList
-syn match   vimUserAttrb 	contained	"-n\(a\(r\(gs\=\)\=\)\=\)\==[01*?+]"	contains=vimUserAttrbKey,vimOper
-syn match   vimUserAttrb 	contained	"-com\(p\(l\(e\(te\=\)\=\)\=\)\=\)\==\(augroup\|buffer\|command\|dir\|event\|file\|help\|highlight\|menu\|option\|tag\|var\)"	contains=vimUserAttrbKey,vimUserAttrbCmplt,vimOper
-syn match   vimUserAttrb 	contained	"-ra\(n\(ge\=\)\=\)\=\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
+syn match   vimUserAttrb	contained	"-n\(a\(r\(gs\=\)\=\)\=\)\==[01*?+]"	contains=vimUserAttrbKey,vimOper
+syn match   vimUserAttrb	contained	"-com\(p\(l\(e\(te\=\)\=\)\=\)\=\)\==\(augroup\|buffer\|command\|dir\|event\|file\|help\|highlight\|menu\|option\|tag\|var\)"	contains=vimUserAttrbKey,vimUserAttrbCmplt,vimOper
+syn match   vimUserAttrb	contained	"-ra\(n\(ge\=\)\=\)\=\(=%\|=\d\+\)\="	contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-cou\(nt\=\)\==\d\+"		contains=vimNumber,vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-b\(a\(ng\=\)\=\)\="		contains=vimOper,vimUserAttrbKey
 syn match   vimUserAttrb	contained	"-re\(g\(i\(s\(t\(er\=\)\=\)\=\)\=\)\=\)\="	contains=vimOper,vimUserAttrbKey
@@ -628,127 +628,124 @@ syn sync match vimAugroupSyncA	groupthere NONE	"\<aug\(r\(o\(up\=\)\=\)\=\)\=\>\
 
 " Highlighting Settings
 " ====================
-if !exists("did_vim_syntax_inits")
-  let did_vim_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
-  hi link vimAuHighlight	vimHighlight
-  hi link vimSubst1	vimSubst
+" The default highlighting.
+hi def link vimAuHighlight	vimHighlight
+hi def link vimSubst1	vimSubst
 
-  hi link vimAddress	vimMark
-  hi link vimAugroupKey	vimCommand
-"  hi link vimAugroupError	vimError
-  hi link vimAutoCmd	vimCommand
-  hi link vimAutoCmdOpt	vimOption
-  hi link vimAutoSet	vimCommand
-  hi link vimBehaveError	vimError
-  hi link vimCollClassErr	vimError
-  hi link vimCommentString	vimString
-  hi link vimCondHL	vimCommand
-  hi link vimEchoHL	vimCommand
-  hi link vimEchoHLNone	vimGroup
-  hi link vimElseif	vimCondHL
-  hi link vimErrSetting	vimError
-  hi link vimFgBgAttrib	vimHiAttrib
-  hi link vimFTCmd	vimCommand
-  hi link vimFTOption	vimSynType
-  hi link vimFTError	vimError
-  hi link vimFunctionError	vimError
-  hi link vimGroupAdd	vimSynOption
-  hi link vimGroupRem	vimSynOption
-  hi link vimHLGroup	vimGroup
-  hi link vimHiAttribList	vimError
-  hi link vimHiCTerm	vimHiTerm
-  hi link vimHiCtermError	vimError
-  hi link vimHiCtermFgBg	vimHiTerm
-  hi link vimHiGroup	vimGroupName
-  hi link vimHiGui	vimHiTerm
-  hi link vimHiGuiFgBg	vimHiTerm
-  hi link vimHiGuiFont	vimHiTerm
-  hi link vimHiGuiRgb	vimNumber
-  hi link vimHiKeyError	vimError
-  hi link vimHiStartStop	vimHiTerm
-  hi link vimHighlight	vimCommand
-  hi link vimKeyCode	vimSpecFile
-  hi link vimKeyCodeError	vimError
-  hi link vimLet		vimCommand
-  hi link vimLineComment	vimComment
-  hi link vimMap		vimCommand
-  hi link vimMapBang	vimCommand
-  hi link vimNotFunc	vimCommand
-  hi link vimNotPatSep	vimString
-  hi link vimPatSepErr	vimError
-  hi link vimPlainMark	vimMark
-  hi link vimPlainRegister	vimRegister
-  hi link vimSetString	vimString
-  hi link vimSpecFileMod	vimSpecFile
-  hi link vimStringCont	vimString
-  hi link vimSubst	vimCommand
-  hi link vimSubstFlagErr	vimError
-  hi link vimSynCaseError	vimError
-  hi link vimSynContains	vimSynOption
-  hi link vimSynKeyOpt	vimSynOption
-  hi link vimSynMtchGrp	vimSynOption
-  hi link vimSynMtchOpt	vimSynOption
-  hi link vimSynNextgroup	vimSynOption
-  hi link vimSynNotPatRange	vimSynRegPat
-  hi link vimSynPatRange	vimString
-  hi link vimSynRegOpt	vimSynOption
-  hi link vimSynRegPat	vimString
-  hi link vimSyntax	vimCommand
-  hi link vimSynType	vimSpecial
-  hi link vimSyncGroup	vimGroupName
-  hi link vimSyncGroupName	vimGroupName
-  hi link vimUserAttrb	vimSpecial
-  hi link vimUserAttrbCmplt	vimSpecial
-  hi link vimUserAttrbKey	vimOption
-  hi link vimUserCmd	vimCommand
+hi def link vimAddress	vimMark
+hi def link vimAugroupKey	vimCommand
+"  hi def link vimAugroupError	vimError
+hi def link vimAutoCmd	vimCommand
+hi def link vimAutoCmdOpt	vimOption
+hi def link vimAutoSet	vimCommand
+hi def link vimBehaveError	vimError
+hi def link vimCollClassErr	vimError
+hi def link vimCommentString	vimString
+hi def link vimCondHL	vimCommand
+hi def link vimEchoHL	vimCommand
+hi def link vimEchoHLNone	vimGroup
+hi def link vimElseif	vimCondHL
+hi def link vimErrSetting	vimError
+hi def link vimFgBgAttrib	vimHiAttrib
+hi def link vimFTCmd	vimCommand
+hi def link vimFTOption	vimSynType
+hi def link vimFTError	vimError
+hi def link vimFunctionError	vimError
+hi def link vimGroupAdd	vimSynOption
+hi def link vimGroupRem	vimSynOption
+hi def link vimHLGroup	vimGroup
+hi def link vimHiAttribList	vimError
+hi def link vimHiCTerm	vimHiTerm
+hi def link vimHiCtermError	vimError
+hi def link vimHiCtermFgBg	vimHiTerm
+hi def link vimHiGroup	vimGroupName
+hi def link vimHiGui	vimHiTerm
+hi def link vimHiGuiFgBg	vimHiTerm
+hi def link vimHiGuiFont	vimHiTerm
+hi def link vimHiGuiRgb	vimNumber
+hi def link vimHiKeyError	vimError
+hi def link vimHiStartStop	vimHiTerm
+hi def link vimHighlight	vimCommand
+hi def link vimKeyCode	vimSpecFile
+hi def link vimKeyCodeError	vimError
+hi def link vimLet	vimCommand
+hi def link vimLineComment	vimComment
+hi def link vimMap	vimCommand
+hi def link vimMapBang	vimCommand
+hi def link vimNotFunc	vimCommand
+hi def link vimNotPatSep	vimString
+hi def link vimPatSepErr	vimError
+hi def link vimPlainMark	vimMark
+hi def link vimPlainRegister	vimRegister
+hi def link vimSetString	vimString
+hi def link vimSpecFileMod	vimSpecFile
+hi def link vimStringCont	vimString
+hi def link vimSubst	vimCommand
+hi def link vimSubstFlagErr	vimError
+hi def link vimSynCaseError	vimError
+hi def link vimSynContains	vimSynOption
+hi def link vimSynKeyOpt	vimSynOption
+hi def link vimSynMtchGrp	vimSynOption
+hi def link vimSynMtchOpt	vimSynOption
+hi def link vimSynNextgroup	vimSynOption
+hi def link vimSynNotPatRange	vimSynRegPat
+hi def link vimSynPatRange	vimString
+hi def link vimSynRegOpt	vimSynOption
+hi def link vimSynRegPat	vimString
+hi def link vimSyntax	vimCommand
+hi def link vimSynType	vimSpecial
+hi def link vimSyncGroup	vimGroupName
+hi def link vimSyncGroupName	vimGroupName
+hi def link vimUserAttrb	vimSpecial
+hi def link vimUserAttrbCmplt	vimSpecial
+hi def link vimUserAttrbKey	vimOption
+hi def link vimUserCmd	vimCommand
 
-  hi link vimAutoEvent	Type
-  hi link vimBracket	Delimiter
-  hi link vimCmplxRepeat	SpecialChar
-  hi link vimCommand	Statement
-  hi link vimComment	Comment
-  hi link vimCommentTitle	PreProc
-  hi link vimContinue	Special
-  hi link vimCtrlChar	SpecialChar
-  hi link vimEnvvar	PreProc
-  hi link vimError	Error
-  hi link vimFuncName	Function
-  hi link vimFuncVar	Identifier
-  hi link vimGroup	Type
-  hi link vimGroupSpecial	Special
-  hi link vimHLMod	PreProc
-  hi link vimHiAttrib	PreProc
-  hi link vimHiTerm	Type
-  hi link vimKeyword	Statement
-  hi link vimMark		Number
-  hi link vimNotation	Special
-  hi link vimNumber	Number
-  hi link vimOper		Operator
-  hi link vimOption	PreProc
-  hi link vimPatSep	SpecialChar
-  hi link vimPattern	Type
-  hi link vimRegister	SpecialChar
-  hi link vimSetSep	Statement
-  hi link vimSpecFile	Identifier
-  hi link vimSpecial	Type
-  hi link vimStatement	Statement
-  hi link vimString	String
-  hi link vimSubstDelim	Delimiter
-  hi link vimSubstFlags	Special
-  hi link vimSubstSubstr	SpecialChar
-  hi link vimSynCase	Type
-  hi link vimSynCaseError	Error
-  hi link vimSynError	Error
-  hi link vimSynOption	Special
-  hi link vimSynReg	Type
-  hi link vimSyncC	Type
-  hi link vimSyncError	Error
-  hi link vimSyncKey	Type
-  hi link vimSyncNone	Type
-  hi link vimTodo	Todo
-endif
+hi def link vimAutoEvent	Type
+hi def link vimBracket	Delimiter
+hi def link vimCmplxRepeat	SpecialChar
+hi def link vimCommand	Statement
+hi def link vimComment	Comment
+hi def link vimCommentTitle	PreProc
+hi def link vimContinue	Special
+hi def link vimCtrlChar	SpecialChar
+hi def link vimEnvvar	PreProc
+hi def link vimError	Error
+hi def link vimFuncName	Function
+hi def link vimFuncVar	Identifier
+hi def link vimGroup	Type
+hi def link vimGroupSpecial	Special
+hi def link vimHLMod	PreProc
+hi def link vimHiAttrib	PreProc
+hi def link vimHiTerm	Type
+hi def link vimKeyword	Statement
+hi def link vimMark	Number
+hi def link vimNotation	Special
+hi def link vimNumber	Number
+hi def link vimOper	Operator
+hi def link vimOption	PreProc
+hi def link vimPatSep	SpecialChar
+hi def link vimPattern	Type
+hi def link vimRegister	SpecialChar
+hi def link vimSetSep	Statement
+hi def link vimSpecFile	Identifier
+hi def link vimSpecial	Type
+hi def link vimStatement	Statement
+hi def link vimString	String
+hi def link vimSubstDelim	Delimiter
+hi def link vimSubstFlags	Special
+hi def link vimSubstSubstr	SpecialChar
+hi def link vimSynCase	Type
+hi def link vimSynCaseError	Error
+hi def link vimSynError	Error
+hi def link vimSynOption	Special
+hi def link vimSynReg	Type
+hi def link vimSyncC	Type
+hi def link vimSyncError	Error
+hi def link vimSyncKey	Type
+hi def link vimSyncNone	Type
+hi def link vimTodo	Todo
 
 let b:current_syntax = "vim"
 

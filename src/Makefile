@@ -369,6 +369,9 @@ CClink = $(CC)
 # WORKShOP - Sun Visual Workshop interface
 #CONF_OPT_WORKSHOP = --enable-workshop
 
+# SNIFF - Include support for SNiFF+.
+#CONF_OPT_SNIFF = --enable-sniff
+
 # MULTIBYTE - To edit multi-byte characters.  Well, actually only two-byte
 # characters at the moment.
 # Uncomment this when you want to edit a multibyte language.
@@ -447,13 +450,6 @@ CClink = $(CC)
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
 
-# Used for debugging memory allocation
-#CFLAGS = -g -O2 -DMEM_PROFILE -Wall -Wshadow -Wmissing-prototypes
-
-# Used to check /usr/local/ for header files and/or libraries
-#CPPFLAGS = -I/usr/local/include
-#LDFLAGS = -L/usr/local/lib
-
 # EFENCE - Electric-Fence malloc debugging: catches memory accesses beyond
 # allocated memory (and makes every malloc()/free() very slow).
 # Electric Fence is free (search ftp sites).
@@ -474,11 +470,6 @@ LINT_OPTIONS = -beprxzF
 #CFLAGS = -g -pg -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #LDFLAGS = -pg
 #LIBS = -ltermcap_p
-
-# SNIFF - Include support for SNiFF+.
-#SNIFF_SRC  = if_sniff.c
-#SNIFF_OBJ  = objects/if_sniff.o
-#SNIFF_DEFS = -DUSE_SNIFF
 
 #####################################################
 ###  Specific systems, check if yours is listed!  ###
@@ -784,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60k
+VIMRTDIR = /vim60l
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1116,7 +1107,7 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .cc .c .o .pro
 
-PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS) $(EXTRA_IPATHS)
+PRE_DEFS = -Iproto $(DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS) $(EXTRA_IPATHS)
 POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(RUBY_CFLAGS) $(EXTRA_DEFS)
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
@@ -1321,6 +1312,7 @@ config auto/config.mk: auto/configure
 		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
+		$(CONF_OPT_SNIFF) \
 		$(CONF_OPT_FEAT) $(CONF_TERM_LIB) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure.
@@ -1673,10 +1665,10 @@ uninstall_runtime:
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
 	-rm -rf $(LANGSUBLOC)
-	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(VIMRTLOC)
+	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
 	-rm -rf $(FTPLUGSUBLOC)/*/*.vim $(FTPLUGSUBLOC)/README.txt
 	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
-	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC) $(PLUGSUBLOC)
+	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC) $(PLUGSUBLOC) $(VIMRTLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)

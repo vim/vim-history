@@ -2,7 +2,7 @@
 " Language:	Structured Query Report Writer (SQR)
 " Maintainer:	Jeff Lanzarotta
 " URL:		http://members.tripod.com/lanzarotta/vim/syntax/sqr.vim
-" Last Change:	2000 July 13
+" Last Change:	2000 Nov 04
 
 set isk=@,48-57,_,-
 
@@ -63,21 +63,18 @@ syn region	sqrComment	start="/\*"  end="\*/" contains=sqrTodo
 syn match	sqrComment	"!.*" contains=sqrTodo
 syn sync ccomment sqrComment
 
-if !exists("did_sqr_syntax_inits")
-  let did_sqr_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link sqrComment		Comment
-  hi link sqrNumber		Number
-  hi link sqrOperator		Operator
-  hi link sqrStatement		Statement
-  hi link sqrString		String
-  hi link sqrType		Type
-  hi link sqrDefine		Macro
-  hi link sqrInclude		Include
-  hi link sqrTodo		Todo
-  hi link sqrFunction		Function
-  hi link sqrParameter		Function
-endif
+" The default highlighting.
+hi def link sqrComment		Comment
+hi def link sqrNumber		Number
+hi def link sqrOperator		Operator
+hi def link sqrStatement	Statement
+hi def link sqrString		String
+hi def link sqrType		Type
+hi def link sqrDefine		Macro
+hi def link sqrInclude		Include
+hi def link sqrTodo		Todo
+hi def link sqrFunction		Function
+hi def link sqrParameter	Function
 
 let b:current_syntax = "sqr"
 

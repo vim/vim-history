@@ -2,7 +2,7 @@
 " Language:	Pascal
 " Previous Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
 " Current  Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
-" Last Change:	2000 Mar 11
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -69,35 +69,32 @@ if !exists("pascal_traditional")
   syn keyword pascalAcces		private public
 endif
 
-if !exists("did_pascal_syntax_inits")
-  let did_pascal_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link pascalAcces			Statement
-  hi link pascalByte			Number
-  hi link pascalComment			Comment
-  hi link pascalConditional		Conditional
-  hi link pascalFunction		Function
-  hi link pascalLabel			Label
-  hi link pascalMatrixDelimiter		Identifier
-  hi link pascalModifier		Type
-  hi link pascalNumber			Number
-  hi link pascalOperator		Operator
-  hi link pascalRepeat			Repeat
-  hi link pascalStatement		Statement
-  hi link pascalString			String
-  hi link pascalStructure		Structure
-  hi link pascalTodo			Todo
-  hi link pascalType			Type
-  hi link pascalUnclassified		Statement
+" The default highlighting.
+hi def link pascalAcces			Statement
+hi def link pascalByte			Number
+hi def link pascalComment		Comment
+hi def link pascalConditional		Conditional
+hi def link pascalFunction		Function
+hi def link pascalLabel			Label
+hi def link pascalMatrixDelimiter	Identifier
+hi def link pascalModifier		Type
+hi def link pascalNumber		Number
+hi def link pascalOperator		Operator
+hi def link pascalRepeat		Repeat
+hi def link pascalStatement		Statement
+hi def link pascalString		String
+hi def link pascalStructure		Structure
+hi def link pascalTodo			Todo
+hi def link pascalType			Type
+hi def link pascalUnclassified		Statement
 
 "optional highlighting
-  "hi link pascalDelimiter		Identifier
+"hi link pascalDelimiter		Identifier
 
-  "hi link pascalShowTab			Error
-  "hi link pascalShowTabc		Error
+"hi link pascalShowTab			Error
+"hi link pascalShowTabc			Error
 
-  "hi link pascalIdentifier		Identifier
-endif
+"hi link pascalIdentifier		Identifier
 
 let b:current_syntax = "pascal"
 

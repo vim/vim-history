@@ -107,29 +107,26 @@ syn sync match pythonSync grouphere NONE "):$"
 syn sync maxlines=100
 "syn sync minlines=2000
 
-if !exists("did_python_syntax_inits")
-  let did_python_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link pythonStatement	Statement
-  hi link pythonFunction	Function
-  hi link pythonConditional	Conditional
-  hi link pythonRepeat		Repeat
-  hi link pythonString		String
-  hi link pythonRawString	String
-  hi link pythonEscape		Special
-  hi link pythonOperator	Operator
-  hi link pythonPreCondit	PreCondit
-  hi link pythonComment		Comment
-  hi link pythonTodo		Todo
-  if exists("python_highlight_numbers")
-    hi link pythonNumber	Number
-  endif
-  if exists("python_highlight_builtins")
-    hi link pythonBuiltin	Function
-  endif
-  if exists("python_highlight_exceptions")
-    hi link pythonException	Exception
-  endif
+" The default highlighting.
+hi def link pythonStatement	Statement
+hi def link pythonFunction	Function
+hi def link pythonConditional	Conditional
+hi def link pythonRepeat	Repeat
+hi def link pythonString	String
+hi def link pythonRawString	String
+hi def link pythonEscape	Special
+hi def link pythonOperator	Operator
+hi def link pythonPreCondit	PreCondit
+hi def link pythonComment	Comment
+hi def link pythonTodo		Todo
+if exists("python_highlight_numbers")
+  hi def link pythonNumber	Number
+endif
+if exists("python_highlight_builtins")
+  hi def link pythonBuiltin	Function
+endif
+if exists("python_highlight_exceptions")
+  hi def link pythonException	Exception
 endif
 
 let b:current_syntax = "python"

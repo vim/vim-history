@@ -2,7 +2,7 @@
 " Language:	ASN.1
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/asn.vim
-" Last Change:	1998 Mar 7
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -41,27 +41,24 @@ syn match asnBraces     "[{}]"
 
 syn sync ccomment asnComment
 
-if !exists("did_asn_syntax_inits")
-  let did_asn_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link asnDefinition		Function
-  hi link asnBraces		Function
-  hi link asnStructure		Statement
-  hi link asnBoolValue		Boolean
-  hi link asnSpecial		Special
-  hi link asnString		String
-  hi link asnCharacter		Character
-  hi link asnSpecialCharacter	asnSpecial
-  hi link asnNumber		asnValue
-  hi link asnComment		Comment
-  hi link asnLineComment	asnComment
-  hi link asnType		Type
-  hi link asnTypeInfo		PreProc
-  hi link asnValue		Number
-  hi link asnExternal		Include
-  hi link asnTagModifier	Function
-  hi link asnFieldOption	Type
-endif
+" The default highlighting.
+hi def link asnDefinition	Function
+hi def link asnBraces		Function
+hi def link asnStructure	Statement
+hi def link asnBoolValue	Boolean
+hi def link asnSpecial		Special
+hi def link asnString		String
+hi def link asnCharacter	Character
+hi def link asnSpecialCharacter	asnSpecial
+hi def link asnNumber		asnValue
+hi def link asnComment		Comment
+hi def link asnLineComment	asnComment
+hi def link asnType		Type
+hi def link asnTypeInfo		PreProc
+hi def link asnValue		Number
+hi def link asnExternal		Include
+hi def link asnTagModifier	Function
+hi def link asnFieldOption	Type
 
 let b:current_syntax = "asn"
 

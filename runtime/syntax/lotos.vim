@@ -49,17 +49,14 @@ syn keyword lotosType   using
 
 syn sync lines=250
 
-if !exists("did_lotos_syntax_inits")
-  let did_lotos_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link lotosStatement		Statement
-  hi link lotosProcess			Label
-  hi link lotosOperator			Operator
-  hi link lotosSort			Function
-  hi link lotosType			Type
-  hi link lotosComment			Comment
-  hi link lotosDelimiter                String
-endif
+" The default highlighting.
+hi def link lotosStatement	Statement
+hi def link lotosProcess	Label
+hi def link lotosOperator	Operator
+hi def link lotosSort		Function
+hi def link lotosType		Type
+hi def link lotosComment	Comment
+hi def link lotosDelimiter      String
 
 let b:current_syntax = "lotos"
 

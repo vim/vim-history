@@ -84,21 +84,19 @@ syn match tasmHex "\<[0-9][0-9A-F]*H\>"
 syn match tasmOct "\<[0-7]\+O\>"
 syn match tasmBin "\<[01]\+B\>"
 
-if !exists("did_tasm_syntax_inits")
-  let did_tasm_syntax_inits = 1
-  hi link tasmString String
-  hi link tasmDec Number
-  hi link tasmHex Number
-  hi link tasmOct Number
-  hi link tasmBin Number
-  hi link tasmInstruction Keyword
-  hi link tasmCoprocInstr Keyword
-  hi link tasmMMXInst	Keyword
-  hi link tasmDirective PreProc
-  hi link tasmRegister Identifier
-  hi link tasmProctype PreProc
-  hi link tasmComment Comment
-  hi link tasmLabel Label
-endif
+" The default highlighting.
+hi def link tasmString String
+hi def link tasmDec Number
+hi def link tasmHex Number
+hi def link tasmOct Number
+hi def link tasmBin Number
+hi def link tasmInstruction Keyword
+hi def link tasmCoprocInstr Keyword
+hi def link tasmMMXInst	Keyword
+hi def link tasmDirective PreProc
+hi def link tasmRegister Identifier
+hi def link tasmProctype PreProc
+hi def link tasmComment Comment
+hi def link tasmLabel Label
 
 let b:curret_syntax = "tasm"

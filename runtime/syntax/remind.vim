@@ -30,23 +30,21 @@ syn match remindVar		"\$[_a-zA-Z][_a-zA-Z0-9]*"
 syn match remindSubst		"%[^ ]"
 syn match remindAdvanceNumber	"\(\*\|+\|-\|++\|--\)[0-9]\+"
 
-if !exists("did_remind_syntax_inits")
-  let did_remind_syntax_inits = 1
-  hi link remindCommands	Function
-  hi link remindExpiry		Repeat
-  hi link remindTag		Label
-  hi link remindTimed		Statement
-  hi link remindMove		Statement
-  hi link remindSpecial		Include
-  hi link remindRun		Function
-  hi link remindConditional	Conditional
-  hi link remindComment		Comment
-  hi link remindString		String
-  hi link remindDebug		Debug
-  hi link remindVar		Identifier
-  hi link remindSubst		Constant
-  hi link remindAdvanceNumber	Number
-endif
+" The default highlighting.
+hi def link remindCommands	Function
+hi def link remindExpiry	Repeat
+hi def link remindTag		Label
+hi def link remindTimed		Statement
+hi def link remindMove		Statement
+hi def link remindSpecial	Include
+hi def link remindRun		Function
+hi def link remindConditional	Conditional
+hi def link remindComment	Comment
+hi def link remindString	String
+hi def link remindDebug		Debug
+hi def link remindVar		Identifier
+hi def link remindSubst		Constant
+hi def link remindAdvanceNumber	Number
 
 let b:current_syntax = "remind"
 

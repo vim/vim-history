@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Haskell
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last Change:	1999 May 8
+" Last Change:	2000 Nov 04
 " Thanks to Ryan Crumley for suggestions and John Meacham for
 " pointing out bugs.
 "
@@ -92,42 +92,40 @@ if !exists("hs_minlines")
 endif
 exec "syn sync lines=" . hs_minlines
 
-if !exists("did_hs_syntax_inits")
-  let did_hs_syntax_inits = 1
-  hi link hsModule                        hsStructure
-  hi link hsImport                        Include
-  hi link hsImportMod                     hsImport
-  hi link hsInfix                         PreProc
-  hi link hsStructure                     Structure
-  hi link hsStatement                     Statement
-  hi link hsConditional                   Conditional
-  hi link hsSpecialChar                   SpecialChar
-  hi link hsTypedef                       Typedef
-  hi link hsVarSym                        hsOperator
-  hi link hsConSym                        hsOperator
-  hi link hsOperator                      Operator
-  if exists("hs_highlight_delimiters")
-    " Some people find this highlighting distracting.
-    hi link hsDelimiter                   Delimiter
-  endif
-  hi link hsSpecialCharError              Error
-  hi link hsString                        String
-  hi link hsCharacter                     Character
-  hi link hsNumber                        Number
-  hi link hsFloat                         Float
-  hi link hsConditional                   Conditional
-  hi link hsLiterateComment               hsComment
-  hi link hsBlockComment                  hsComment
-  hi link hsLineComment                   hsComment
-  hi link hsComment                       Comment
-  hi link hsPragma                        SpecialComment
-  hi link hsBoolean                       Boolean
-  hi link hsType                          Type
-  hi link hsMaybe                         hsEnumConst
-  hi link hsOrdering                      hsEnumConst
-  hi link hsEnumConst                     Constant
-  hi link hsDebug                         Debug
+" The default highlighting.
+hi def link hsModule           hsStructure
+hi def link hsImport           Include
+hi def link hsImportMod        hsImport
+hi def link hsInfix            PreProc
+hi def link hsStructure        Structure
+hi def link hsStatement        Statement
+hi def link hsConditional      Conditional
+hi def link hsSpecialChar      SpecialChar
+hi def link hsTypedef          Typedef
+hi def link hsVarSym           hsOperator
+hi def link hsConSym           hsOperator
+hi def link hsOperator         Operator
+if exists("hs_highlight_delimiters")
+  " Some people find this highlighting distracting.
+  hi def link hsDelimiter      Delimiter
 endif
+hi def link hsSpecialCharError Error
+hi def link hsString           String
+hi def link hsCharacter        Character
+hi def link hsNumber           Number
+hi def link hsFloat            Float
+hi def link hsConditional      Conditional
+hi def link hsLiterateComment  hsComment
+hi def link hsBlockComment     hsComment
+hi def link hsLineComment      hsComment
+hi def link hsComment          Comment
+hi def link hsPragma           SpecialComment
+hi def link hsBoolean          Boolean
+hi def link hsType             Type
+hi def link hsMaybe            hsEnumConst
+hi def link hsOrdering         hsEnumConst
+hi def link hsEnumConst        Constant
+hi def link hsDebug            Debug
 
 let b:current_syntax = "haskell"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	POV-Ray(tm) 3.1 Screen Description Language
 " Maintainer:	David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change:	2000/07/15
+" Last Change:	2000 Nov 04
 
 " BETA VERSION
 " Rewritten from scratch; has nothing to do with T. Scott Urban's pov.vim file.
@@ -102,52 +102,49 @@ syn match  povNumber		"\W[+-]\=\(\d\+\)\=\.\=\d\+\([eE][+-]\=\d\+\)\="lc=1
 " does anyone start lines with a number?
 "syn match  povNumber		"^[+-]\=\(\d\+\)\=\.\=\d\+\([eE][+-]\=\d\+\)\="
 
-if !exists("did_pov_syntax_inits")
-  let did_pov_syntax_inits = 1
-  " the default methods for highlighting.  can be overridden later
+" The default highlighting.
   " comments
-  hi link povComment		Comment
+hi def link povComment		Comment
   " todo
-  hi link povTodo		Todo
+hi def link povTodo		Todo
   " constants
-  hi link povNumber		Number
-  hi link povString		String
-  hi link povFileOpen		Constant
-  hi link povConsts		Constant
-  hi link povDotItem		Constant
+hi def link povNumber		Number
+hi def link povString		String
+hi def link povFileOpen		Constant
+hi def link povConsts		Constant
+hi def link povDotItem		Constant
   " specials
-  hi link povHFType		povSpecial
-  hi link povDensityType	povSpecial
-  hi link povFontType		povSpecial
-  hi link povOpenType		povSpecial
-  hi link povSpecialChar	povSpecial
-  hi link povSpecial		Special
+hi def link povHFType		povSpecial
+hi def link povDensityType	povSpecial
+hi def link povFontType		povSpecial
+hi def link povOpenType		povSpecial
+hi def link povSpecialChar	povSpecial
+hi def link povSpecial		Special
   " preproc or like
-  hi link povConditionalDir	PreProc
-  hi link povLabelDir		PreProc
-  hi link povDeclareDir		Define
-  hi link povIncludeDir		Include
-  hi link povFileDir		PreProc
-  hi link povMessageDir		Debug
+hi def link povConditionalDir	PreProc
+hi def link povLabelDir		PreProc
+hi def link povDeclareDir	Define
+hi def link povIncludeDir	Include
+hi def link povFileDir		PreProc
+hi def link povMessageDir	Debug
   " objects and descriptors
-  hi link povAppearance		povDescriptors
-  hi link povObjects		povDescriptors
-  hi link povGlobalSettings	povDescriptors
-  hi link povDescriptors	Type
+hi def link povAppearance	povDescriptors
+hi def link povObjects		povDescriptors
+hi def link povGlobalSettings	povDescriptors
+hi def link povDescriptors	Type
   " functions
-  hi link povJuliaFunctions	PovFunctions
-  hi link povModifiers		povFunctions
-  hi link povFunctions		Function
+hi def link povJuliaFunctions	PovFunctions
+hi def link povModifiers	povFunctions
+hi def link povFunctions	Function
   " operators
-  hi link povCommands		Operator
-  hi link povTransform		Operator
-  hi link povCSG		Operator
+hi def link povCommands		Operator
+hi def link povTransform	Operator
+hi def link povCSG		Operator
   " errors
-  hi link povParenError		povError
-  hi link povBraceError		povError
-  hi link povCommentError	povError
-  hi link povError		Error
-endif
+hi def link povParenError	povError
+hi def link povBraceError	povError
+hi def link povCommentError	povError
+hi def link povError		Error
 
 let b:current_syntax = "pov"
 

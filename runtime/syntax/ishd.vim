@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	InstallShield Script
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff
 syn clear
@@ -381,27 +381,23 @@ syn match	ishdInclude	+^\s*#\s*include\>\s*"+ contains=ishdIncluded
 syn cluster	ishdPreProcGroup	contains=ishdPreCondit,ishdIncluded,ishdInclude,ishdDefine,ishdHashIf0,ishdHashIf0End,ishdHashIf0Skip,ishdNumber
 syn region	ishdDefine		start="^\s*#\s*\(define\|undef\)\>" end="$" contains=ALLBUT,@ishdPreProcGroup
 
-" Highlight links
-if !exists("did_is_syntax_inits")
-  let did_is_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link ishdNumber	    Number
-  hi link ishdError	    Error
-  hi link ishdStatement	    Statement
-  hi link ishdString	    String
-  hi link ishdComment	    Comment
-  hi link ishdTodo	    Todo
-  hi link ishdFunction	    Identifier
-  hi link ishdConstant	    PreProc
-  hi link ishdType	    Type
-  hi link ishdInclude	    Include
-  hi link ishdDefine	    Macro
-  hi link ishdIncluded	    String
-  hi link ishdPreCondit	    PreCondit
-  hi link ishdHashIf0Skip   ishdHashIf0
-  hi link ishdHashIf0End    ishdHashIf0
-  hi link ishdHashIf0	    Comment
-endif
+" The default highlighting.
+hi def link ishdNumber		Number
+hi def link ishdError		Error
+hi def link ishdStatement	Statement
+hi def link ishdString		String
+hi def link ishdComment		Comment
+hi def link ishdTodo		Todo
+hi def link ishdFunction	Identifier
+hi def link ishdConstant	PreProc
+hi def link ishdType		Type
+hi def link ishdInclude		Include
+hi def link ishdDefine		Macro
+hi def link ishdIncluded	String
+hi def link ishdPreCondit	PreCondit
+hi def link ishdHashIf0Skip	ishdHashIf0
+hi def link ishdHashIf0End	ishdHashIf0
+hi def link ishdHashIf0		Comment
 
 let b:current_syntax = "ishd"
 

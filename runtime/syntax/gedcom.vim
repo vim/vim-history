@@ -34,16 +34,14 @@ syntax match gedcom_surname "/\(\i\|\s\)*/" contained
 syntax match gedcom_date "\d\{1,2}\s\+\(jan\|feb\|mar\|apr\|may\|jun\|jul\|aug\|sep\|oct\|nov\|dec\)\s\+\d\+"
 syntax match gedcom_date ".*" contained
 
-if !exists("did_gedcom_syntax_inits")
-  let did_gedcom_syntax_inits = 1
-  highlight link gedcom_record Statement
-  highlight link gedcom_id Comment
-  highlight link gedcom_ii PreProc
-  highlight link gedcom_in Type
-  highlight link gedcom_name PreProc
-  highlight link gedcom_cname Type
-  highlight link gedcom_surname Identifier
-  highlight link gedcom_date Constant
-endif
+" The default highlighting.
+hi def link gedcom_record Statement
+hi def link gedcom_id Comment
+hi def link gedcom_ii PreProc
+hi def link gedcom_in Type
+hi def link gedcom_name PreProc
+hi def link gedcom_cname Type
+hi def link gedcom_surname Identifier
+hi def link gedcom_date Constant
 
 let b:current_syntax = "gedcom"

@@ -2,7 +2,7 @@
 " Language:	Icon
 " Maintainer:	Wendell Turner <wturner@halcyon.com>
 " URL:          ftp://ftp.halcyon.com/pub/users/wturner/icon.vim
-" Last Change:	2000 Jan 9
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -150,45 +150,40 @@ if !exists("icon_minlines")
 endif
 exec "syn sync ccomment iconComment minlines=" . icon_minlines
 
-if !exists("did_icon_syntax_inits")
-  let did_icon_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later
+" The default highlighting.
+" hi def link iconSpecialCharacter	iconSpecial
+hi def link iconOctalError	iconError
+hi def link iconParenError	iconError
+hi def link iconInParen		iconError
+hi def link iconCommentError	iconError
+hi def link iconSpaceError	iconError
+hi def link iconCommentError	iconError
+hi def link iconIncluded	iconString
+hi def link iconCommentString	iconString
+hi def link iconComment2String	iconString
+hi def link iconCommentSkip	iconComment
 
-  " hi link iconSpecialCharacter	iconSpecial
+hi def link iconUserLabel	Label
+hi def link iconCharacter	Character
+hi def link iconNumber		Number
+hi def link iconRadix		Number
+hi def link iconFloat		Float
+hi def link iconInclude		Include
+hi def link iconPreProc		PreProc
+hi def link iconDefine		Macro
+hi def link iconError		Error
+hi def link iconStatement	Statement
+hi def link iconPreCondit	PreCondit
+hi def link iconString		String
+hi def link iconComment		Comment
+hi def link iconSpecial		SpecialChar
+hi def link iconTodo		Todo
+hi def link iconStorageClass	StorageClass
+hi def link iconFunction	Statement
+hi def link iconReserved	Label
+hi def link iconKeyword		Operator
 
-  hi link iconOctalError	iconError
-  hi link iconParenError	iconError
-  hi link iconInParen		iconError
-  hi link iconCommentError	iconError
-  hi link iconSpaceError	iconError
-  hi link iconCommentError	iconError
-  hi link iconIncluded		iconString
-  hi link iconCommentString	iconString
-  hi link iconComment2String	iconString
-  hi link iconCommentSkip	iconComment
-
-  hi link iconUserLabel		Label
-  hi link iconCharacter		Character
-  hi link iconNumber		Number
-  hi link iconRadix		Number
-  hi link iconFloat		Float
-  hi link iconInclude		Include
-  hi link iconPreProc		PreProc
-  hi link iconDefine		Macro
-  hi link iconError		Error
-  hi link iconStatement		Statement
-  hi link iconPreCondit		PreCondit
-  hi link iconString		String
-  hi link iconComment		Comment
-  hi link iconSpecial		SpecialChar
-  hi link iconTodo		Todo
-  hi link iconStorageClass	StorageClass
-  hi link iconFunction		Statement
-  hi link iconReserved		Label
-  hi link iconKeyword		Operator
-
-  "hi link iconIdentifier	Identifier
-endif
+"hi def link iconIdentifier	Identifier
 
 let b:current_syntax = "icon"

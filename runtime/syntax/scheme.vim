@@ -147,23 +147,20 @@ syn match	schemeComment	";.*$"
 syn sync match matchPlace grouphere NONE "^[^ \t]"
 " ... i.e. synchronize on a line that starts at the left margin
 
-if !exists("did_scheme_syntax_inits")
-  let did_scheme_syntax_inits= 1
 
-  hi link schemeSyntax		Statement
-  hi link schemeFunc		Function
+" The default highlighting.
+hi def link schemeSyntax	Statement
+hi def link schemeFunc		Function
 
-  hi link schemeString		String
-  hi link schemeChar		Character
-  hi link schemeNumber		Number
-  hi link schemeBoolean		Boolean
+hi def link schemeString	String
+hi def link schemeChar		Character
+hi def link schemeNumber	Number
+hi def link schemeBoolean	Boolean
 
-  hi link schemeDelimiter	Delimiter
-  hi link schemeConstant	Constant
+hi def link schemeDelimiter	Delimiter
+hi def link schemeConstant	Constant
 
-  hi link schemeComment		Comment
-  hi link schemeError		Error
-
-  endif
+hi def link schemeComment	Comment
+hi def link schemeError		Error
 
 let b:current_syntax = "scheme"

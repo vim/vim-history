@@ -133,25 +133,22 @@ syn match   basicFilenumber  "#\d\+"
 " syn match   basicMathsOperator "[<>+\*^/\\=-]"
 syn match   basicMathsOperator   "-\|=\|[:<>+\*^/\\]\|AND\|OR"
 
-if !exists("did_basic_syntax_inits")
-  let did_basic_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link basicLabel		Label
-  hi link basicConditional	Conditional
-  hi link basicRepeat		Repeat
-  hi link basicLineNumber	Comment
-  hi link basicNumber		Number
-  hi link basicError		Error
-  hi link basicStatement	Statement
-  hi link basicString		String
-  hi link basicComment		Comment
-  hi link basicSpecial		Special
-  hi link basicTodo		Todo
-  hi link basicFunction		Identifier
-  hi link basicTypeSpecifier Type
-  hi link basicFilenumber basicTypeSpecifier
-  hi basicMathsOperator term=bold cterm=bold gui=bold
-endif
+" The default highlighting.
+hi def link basicLabel		Label
+hi def link basicConditional	Conditional
+hi def link basicRepeat		Repeat
+hi def link basicLineNumber	Comment
+hi def link basicNumber		Number
+hi def link basicError		Error
+hi def link basicStatement	Statement
+hi def link basicString		String
+hi def link basicComment	Comment
+hi def link basicSpecial	Special
+hi def link basicTodo		Todo
+hi def link basicFunction	Identifier
+hi def link basicTypeSpecifier Type
+hi def link basicFilenumber	basicTypeSpecifier
+hi def basicMathsOperator term=bold cterm=bold gui=bold
 
 let b:current_syntax = "basic"
 

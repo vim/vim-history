@@ -5,7 +5,7 @@
 # libraries when they exist, but this doesn't mean they are needed for Vim.
 #
 #      Author: Bram Moolenaar
-# Last change: 2000 Aug 06
+# Last change: 2000 Nov 04
 #
 # Warning: This fails miserably if the linker doesn't return an error code!
 #
@@ -26,18 +26,21 @@ if test -f auto/link.sed; then
 else
 
 # If linking works with the full link command, try removing some libraries,
-# that are know not to be needed on at least one system.
+# that are known not to be needed on at least one system.
 # Remove auto/pathdef.c if there is a new link command and compile it again.
+# There is a loop to remove libraries that appear several times.
 #
-# Note: Can't remove Xext; It links fine but will give an error when running
-# gvim with Motif.
-# X11, m, perl and crypt are removed when they appear several times.
+# Notes:
+# - Can't remove Xext; It links fine but will give an error when running gvim
+#   with Motif.
+# - Don't remove the last -lm: On HP-UX Vim links OK but crashes when the GTK
+#   GUI is started, because the "floor" symbol could not be resolved.
 #
   cat link.cmd
   if sh link.cmd; then
     touch auto/link.sed
     cp link.cmd linkit.sh
-    for libname in SM ICE nsl dnet dnet_stub inet socket dir elf Xt Xmu Xpm X11 x pthread thread readline m perl crypt; do
+    for libname in SM ICE nsl dnet dnet_stub inet socket dir elf iconv Xt Xmu Xpm X11 Xdmcp x pthread thread readline m perl crypt; do
       cont=yes
       while test -n "$cont"; do
         if grep "l$libname " linkit.sh >/dev/null; then
@@ -46,19 +49,25 @@ else
             echo "link.sh: See auto/link.log for details."
             rm -f auto/link.log
           fi
-          echo "link.sh: Trying to remove the $libname library..."
           echo "s/-l$libname  *//" >link1.sed
           sed -f auto/link.sed <link.cmd >linkit2.sh
           sed -f link1.sed <linkit2.sh >linkit.sh
-          cat linkit.sh >>auto/link.log
-          # Redirect this link output, it may contain error messages which
-          # should be ignored.
-          if sh linkit.sh >>auto/link.log 2>&1; then
-            echo "link.sh: We don't need the $libname library!"
-            cat link1.sed >>auto/link.sed
-            rm -f auto/pathdef.c
+          # keep the last -lm
+          if test $libname != "m" || grep "lm " linkit.sh >/dev/null; then
+            echo "link.sh: Trying to remove the $libname library..."
+            cat linkit.sh >>auto/link.log
+            # Redirect this link output, it may contain error messages which
+            # should be ignored.
+            if sh linkit.sh >>auto/link.log 2>&1; then
+              echo "link.sh: We don't need the $libname library!"
+              cat link1.sed >>auto/link.sed
+              rm -f auto/pathdef.c
+            else
+              echo "link.sh: We DO need the $libname library."
+              cont=
+              cp link.cmd linkit.sh
+            fi
           else
-            echo "link.sh: We DO need the $libname library."
             cont=
             cp link.cmd linkit.sh
           fi

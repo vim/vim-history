@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0k.  Last change: 2000 Oct 21
+*usr_40.txt*	For Vim version 6.0l.  Last change: 2000 Nov 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -109,12 +109,13 @@ LINE CONTINUATION, AVOIDING SIDE EFFECTS
 
 In line 17 above, the line-continuation mechanism is used |line-continuation|.
 Users with 'compatible' set will run into trouble here, they will get an error
-message.  To avoid this, we will make the 'cpoptions' variable empty.  But the
-user doesn't want this option to change, thus we need to restore it.  That can
-be done like this: >
+message.  We can't just reset 'compatible', because that has a lot of side
+effects.  To avoid this, we will set the 'cpoptions' option to its Vim default
+value and restore it later.  That will allow the use of line-continuation and
+make the script work for most people.  It is done like this: >
 
  10	let s:save_cpo = &cpo
- 11	set cpo=
+ 11	set cpo&vim
 
  41	let &cpo = s:save_cpo
 
@@ -122,8 +123,8 @@ We first store the old value of 'cpoptions' in the s:save_cpo variable.  At
 the end of the plugin this value is restored.
 
 Note that a script-local variable is used |s:var|.  A global variable could
-already be in use for something else.  Always use script-local variables to
-avoid problems.
+already be in use for something else.  Always use script-local variables for
+things that are only used in the script.
 
 
 NOT LOADING
@@ -307,7 +308,7 @@ Here is the resulting complete example: >
   8	let loaded_typecorr = 1
   9
  10	let s:save_cpo = &cpo
- 11	set cpo=
+ 11	set cpo&vim
  12
  13	iabbrev teh the
  14	iabbrev otehr other

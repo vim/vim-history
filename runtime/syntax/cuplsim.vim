@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	CUPL simulation
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	1999 Sep 21
+" Last Change:	2000 Nov 04
 
 " Remove any old syn stuff hanging around
 syn clear
@@ -43,17 +43,14 @@ syn match cuplsimOutput +"\x\+"+
 syn sync minlines=1
 
 " append to the highlighting links in cupl.vim
-if !exists("did_cuplsim_syn_inits")
-  let did_cuplsim_syn_inits = 1
-  " The default methods for hiing.  Can be overridden later
-  hi link cuplsimOrder	  cuplStatement
-  hi link cuplsimBase	  cuplStatement
-  hi link cuplsimBaseType cuplStatement
-  hi link cuplsimVectors  cuplStatement
-  hi link cuplsimStimulus    cuplNumber
-  hi link cuplsimOutput      cuplNumber
-  hi link cuplsimOrderFormat cuplNumber
-endif
+" The default highlighting.
+hi def link cuplsimOrder	  cuplStatement
+hi def link cuplsimBase	  cuplStatement
+hi def link cuplsimBaseType cuplStatement
+hi def link cuplsimVectors  cuplStatement
+hi def link cuplsimStimulus    cuplNumber
+hi def link cuplsimOutput      cuplNumber
+hi def link cuplsimOrderFormat cuplNumber
 
 let b:current_syntax = "cuplsim"
 " vim:ts=8

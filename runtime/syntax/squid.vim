@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Squid config file
 " Maintainer:	Klaus Muth <muth@hagos.de>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 " URL:		http://unitopia.uni-stuttgart.de/~monty/vim/syntax/squid.vim
 
 
@@ -83,19 +83,16 @@ syn match	squidIP		"\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}\>"
 " Make it fast like hell :)
 syn sync minlines=3
 
-if !exists("did_squid_syntax_inits")
-  let did_squid_syntax_inits = 1
-" The default methods for highlighting.  Can be overridden later
-  hi link squidTodo	Todo
-  hi link squidComment	Comment
-  hi link squidTag	Special
-  hi link squidConf	Keyword
-  hi link squidOpt	Constant
-  hi link squidAction	String
-  hi link squidNumber	Number
-  hi link squidIP	Number
-  hi link squidAcl	Keyword
-endif
+" The default highlighting.
+hi def link squidTodo		Todo
+hi def link squidComment	Comment
+hi def link squidTag		Special
+hi def link squidConf		Keyword
+hi def link squidOpt		Constant
+hi def link squidAction		String
+hi def link squidNumber		Number
+hi def link squidIP		Number
+hi def link squidAcl		Keyword
 
 let b:current_syntax = "squid"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Virata Configuration Script
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2000-10-11
+" Last Change:	2000 Nov 04
 " Vim URL:	http://www.vim.org/lang.html
 " Virata URL:	http://www.virata.com/
 
@@ -112,48 +112,44 @@ syn sync minlines=50		"for multiple if region nesting
 
 
 
-if !exists("did_virata_syntax_inits")
-  let did_virata_syntax_inits = 1
 
   " Sub Links:
-  hi link virataDefSubst	virataPreProc
-  hi link virataInImport	virataOperator
-  hi link virataInExport	virataOperator
-  hi link virataInExec		virataOperator
-  hi link virataInProcess	virataOperator
-  hi link virataInAlter		virataOperator
-  hi link virataInModule	virataOperator
+hi def link virataDefSubst	virataPreProc
+hi def link virataInImport	virataOperator
+hi def link virataInExport	virataOperator
+hi def link virataInExec	virataOperator
+hi def link virataInProcess	virataOperator
+hi def link virataInAlter	virataOperator
+hi def link virataInModule	virataOperator
 
   " Comment Group:
-  hi link virataComment		Comment
-  hi link virataSpclComment	SpecialComment
-  hi link virataInCommentTodo	Todo
+hi def link virataComment	Comment
+hi def link virataSpclComment	SpecialComment
+hi def link virataInCommentTodo	Todo
 
   " Constant Group:
-  hi link virataString		String
-  hi link virataStringError	Error
-  hi link virataCharacter	Character
-  hi link virataSpclChar	Special
-  hi link virataDecNumber	Number
-  hi link virataHexNumber	Number
-  hi link virataSizeNumber	Number
-  hi link virataNumberError	Error
+hi def link virataString	String
+hi def link virataStringError	Error
+hi def link virataCharacter	Character
+hi def link virataSpclChar	Special
+hi def link virataDecNumber	Number
+hi def link virataHexNumber	Number
+hi def link virataSizeNumber	Number
+hi def link virataNumberError	Error
 
   " PreProc Group:
-  hi link virataPreProc		PreProc
-  hi link virataDefine		Define
-  hi link virataInclude		Include
-  hi link virataPreCondit	PreCondit
-  hi link virataPreProcError	Error
-  hi link virataPreProcWarn	Todo
+hi def link virataPreProc	PreProc
+hi def link virataDefine	Define
+hi def link virataInclude	Include
+hi def link virataPreCondit	PreCondit
+hi def link virataPreProcError	Error
+hi def link virataPreProcWarn	Todo
 
   " Directive Group:
-  hi link virataStatement	Statement
-  hi link virataCfgStatement	Statement
-  hi link virataOperator	Operator
-  hi link virataDirective	Keyword
-
-endif
+hi def link virataStatement	Statement
+hi def link virataCfgStatement	Statement
+hi def link virataOperator	Operator
+hi def link virataDirective	Keyword
 
 let b:current_syntax = "virata"
 

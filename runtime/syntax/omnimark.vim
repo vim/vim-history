@@ -85,17 +85,14 @@ syn match  omnimarkEscape contained +%[0-9][0-9]#+
 "syn sync maxlines=100
 syn sync minlines=2000
 
-if !exists("did_omnimark_syntax_inits")
-  let did_omnimark_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link omnimarkCommands		Statement
-  hi link omnimarkKeywords		Identifier
-  hi link omnimarkString		String
-  hi link omnimarkPatterns		Macro
-"  hi link omnimarkNumber			Number
-  hi link omnimarkComment		Comment
-  hi link omnimarkEscape		Special
-endif
+" The default highlighting.
+hi def link omnimarkCommands		Statement
+hi def link omnimarkKeywords		Identifier
+hi def link omnimarkString		String
+hi def link omnimarkPatterns		Macro
+"hi def link omnimarkNumber		Number
+hi def link omnimarkComment		Comment
+hi def link omnimarkEscape		Special
 
 let b:current_syntax = "omnimark"
 

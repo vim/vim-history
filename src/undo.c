@@ -46,6 +46,7 @@
 
 #include "vim.h"
 
+static u_entry_t *u_get_headentry __ARGS((void));
 static void u_getbot __ARGS((void));
 static int u_savecommon __ARGS((linenr_t, linenr_t, linenr_t));
 static void u_doit __ARGS((int count));
@@ -55,7 +56,7 @@ static void u_freelist __ARGS((struct u_header *));
 static void u_freeentry __ARGS((u_entry_t *, long));
 
 static char_u *u_blockalloc __ARGS((long_u));
-static void u_free_line __ARGS((char_u *));
+static void u_free_line __ARGS((char_u *, int keep));
 static char_u *u_alloc_line __ARGS((unsigned));
 static char_u *u_save_line __ARGS((linenr_t));
 
@@ -149,11 +150,11 @@ u_savecommon(top, bot, newbot)
     linenr_t top, bot;
     linenr_t newbot;
 {
-    linenr_t	    lnum;
-    long	    i;
-    struct u_header *uhp;
-    u_entry_t  *uep;
-    long	    size;
+    linenr_t		lnum;
+    long		i;
+    struct u_header	*uhp;
+    u_entry_t		*uep;
+    long		size;
 
 #ifdef HAVE_SANDBOX
     /*
@@ -166,6 +167,8 @@ u_savecommon(top, bot, newbot)
 	return FAIL;
     }
 #endif
+
+    size = bot - top - 1;
 
     /*
      * if curbuf->b_u_synced == TRUE make a new header
@@ -213,10 +216,45 @@ u_savecommon(top, bot, newbot)
 	    curbuf->b_u_oldhead = uhp;
 	++curbuf->b_u_numhead;
     }
-    else    /* find line number for ue_bot for previous u_save() */
-	u_getbot();
+    else
+    {
+	/*
+	 * When saving a single line, and it has been saved just before, it
+	 * doesn't make sense saving it again.  Saves a lot of memory when
+	 * making lots of changes inside the same line.
+	 * This is only possible if the previous change didn't increase or
+	 * decrease the number of lines.
+	 * Check the ten last changes.  More doesn't make sense and takes too
+	 * long.
+	 */
+	if (size == 1)
+	{
+	    uep = u_get_headentry();
+	    for (i = 0; i < 10; ++i)
+	    {
+		if (uep == NULL)
+		    break;
 
-    size = bot - top - 1;
+		/* If lines have been inserted/deleted we give up. */
+		if (uep->ue_lcount == 0
+			? (uep->ue_top + uep->ue_size + 1
+			    != (uep->ue_bot == 0
+				? curbuf->b_ml.ml_line_count + 1
+				: uep->ue_bot))
+			: uep->ue_lcount != curbuf->b_ml.ml_line_count)
+		    break;
+
+		/* If it's the same line we can skip saving it again. */
+		if (uep->ue_size == 1 && uep->ue_top == top)
+		    return OK;
+		uep = uep->ue_next;
+	    }
+	}
+
+	/* find line number for ue_bot for previous u_save() */
+	u_getbot();
+    }
+
 #if !defined(UNIX) && !defined(DJGPP) && !defined(WIN32) && !defined(__EMX__)
 	/*
 	 * With Amiga and MSDOS 16 bit we can't handle big undo's, because
@@ -480,9 +518,9 @@ u_undoredo()
 		    ml_replace((linenr_t)1, uep->ue_array[i], TRUE);
 		else
 		    ml_append(lnum, uep->ue_array[i], (colnr_t)0, FALSE);
-		u_free_line(uep->ue_array[i]);
+		u_free_line(uep->ue_array[i], FALSE);
 	    }
-	    u_free_line((char_u *)uep->ue_array);
+	    u_free_line((char_u *)uep->ue_array, FALSE);
 	}
 
 	/* adjust marks */
@@ -610,6 +648,21 @@ u_unchanged(buf)
 }
 
 /*
+ * Get pointer to last added entry.
+ * If it's not valid, give an error message and return NULL.
+ */
+    static u_entry_t *
+u_get_headentry()
+{
+    if (curbuf->b_u_newhead == NULL || curbuf->b_u_newhead->uh_entry == NULL)
+    {
+	EMSG(_("undo list corrupt"));
+	return NULL;
+    }
+    return curbuf->b_u_newhead->uh_entry;
+}
+
+/*
  * u_getbot(): compute the line number of the previous u_save
  *		It is called only when b_u_synced is FALSE.
  */
@@ -618,12 +671,9 @@ u_getbot()
 {
     u_entry_t	*uep;
 
-    if (curbuf->b_u_newhead == NULL ||
-				(uep = curbuf->b_u_newhead->uh_entry) == NULL)
-    {
-	EMSG(_("undo list corrupt"));
+    uep = u_get_headentry();
+    if (uep == NULL)
 	return;
-    }
 
     if (uep->ue_lcount != 0)
     {
@@ -676,7 +726,7 @@ u_freelist(uhp)
     else
 	uhp->uh_prev->uh_next = uhp->uh_next;
 
-    u_free_line((char_u *)uhp);
+    u_free_line((char_u *)uhp, FALSE);
     --curbuf->b_u_numhead;
 }
 
@@ -689,8 +739,8 @@ u_freeentry(uep, n)
     long	    n;
 {
     while (n)
-	u_free_line(uep->ue_array[--n]);
-    u_free_line((char_u *)uep);
+	u_free_line(uep->ue_array[--n], FALSE);
+    u_free_line((char_u *)uep, FALSE);
 }
 
 /*
@@ -737,7 +787,7 @@ u_clearline()
 {
     if (curbuf->b_u_line_ptr != NULL)
     {
-	u_free_line(curbuf->b_u_line_ptr);
+	u_free_line(curbuf->b_u_line_ptr, FALSE);
 	curbuf->b_u_line_ptr = NULL;
 	curbuf->b_u_line_lnum = 0;
     }
@@ -775,7 +825,7 @@ u_undoline()
     }
     ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
     changed_bytes(curbuf->b_u_line_lnum, 0);
-    u_free_line(curbuf->b_u_line_ptr);
+    u_free_line(curbuf->b_u_line_ptr, FALSE);
     curbuf->b_u_line_ptr = oldp;
 
     t = curbuf->b_u_line_colnr;
@@ -827,9 +877,9 @@ u_undoline()
  * changed (e.g. with :%s/^M$//).
  */
 
-    /*
-     * this blocksize is used when allocating new lines
-     */
+ /*
+  * this blocksize is used when allocating new lines
+  */
 #define MEMBLOCKSIZE 2044
 
 /*
@@ -873,6 +923,7 @@ u_blockalloc(size)
 			mp = next)
 	    ;
 	p->mb_next = next;		/* link in block list */
+	p->mb_size = size;
 	mp->mb_next = p;
 	p->mb_info.m_next = NULL;	/* clear free list */
 	p->mb_info.m_size = 0;
@@ -903,17 +954,19 @@ u_blockfree(buf)
 }
 
 /*
- * Free a chunk of memory.
+ * Free a chunk of memory for the current buffer.
  * Insert the chunk into the correct free list, keeping it sorted on address.
  */
     static void
-u_free_line(ptr)
-    char_u *ptr;
+u_free_line(ptr, keep)
+    char_u	*ptr;
+    int		keep;	/* don't free the block when it's empty */
 {
     minfo_t	*next;
     minfo_t	*prev, *curr;
     minfo_t	*mp;
     mblock_t	*nextb;
+    mblock_t	*prevb;
 
     if (ptr == NULL || ptr == IObuff)
 	return;	/* illegal address can happen in out-of-memory situations */
@@ -1005,6 +1058,24 @@ u_free_line(ptr)
 	curbuf->b_m_search = curr;  /* put curbuf->b_m_search before freed
 				       chunk */
     }
+
+    /*
+     * If the block only containes free memory now, release it.
+     */
+    if (!keep && curbuf->b_mb_current->mb_size
+			      == curbuf->b_mb_current->mb_info.m_next->m_size)
+    {
+	/* Find the block before the current one to be able to unlink it from
+	 * the list of blocks. */
+	prevb = &curbuf->b_block_head;
+	for (nextb = prevb->mb_next; nextb != curbuf->b_mb_current;
+						       nextb = nextb->mb_next)
+	    prevb = nextb;
+	prevb->mb_next = nextb->mb_next;
+	vim_free(nextb);
+	curbuf->b_mb_current = NULL;
+	curbuf->b_m_search = NULL;
+    }
 }
 
 /*
@@ -1026,7 +1097,7 @@ u_alloc_line(size)
      */
     size += M_OFFSET + 1;
     if (size < sizeof(minfo_t) + 1)
-      size = sizeof(minfo_t) + 1;
+	size = sizeof(minfo_t) + 1;
 
     /*
      * round size up for alignment
@@ -1075,7 +1146,7 @@ u_alloc_line(size)
 		if (mp == NULL)
 		    return (NULL);
 		mp->m_size = n;
-		u_free_line((char_u *)mp + M_OFFSET);
+		u_free_line((char_u *)mp + M_OFFSET, TRUE);
 		mp = curbuf->b_m_search;
 		mbp = curbuf->b_mb_current;
 	    }

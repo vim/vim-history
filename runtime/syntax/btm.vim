@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	4Dos batch file
 " Maintainer:	John Leo Spetz <jls11@po.cwru.edu>
-" Last Change:	1999 Jul 02
+" Last Change:	2000 Nov 04
 
 "//Issues to resolve:
 "//- Boolean operators surrounded by period are recognized but the
@@ -178,37 +178,34 @@ syn keyword btmCommand	type unalias undelete unformat
 syn keyword btmCommand	unlock unset ver verify vol
 syn keyword btmCommand	vscrput y
 
-if !exists("did_btm_syntax_inits")
-  let did_btm_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link btmLabel		Special
-  hi link btmLabelMark		Special
-  hi link btmCmdDivider		Special
-  hi link btmConditional	btmStatement
-  hi link btmDotBoolOp          btmStatement
-  hi link btmRepeat		btmStatement
-  hi link btmEchoCommand	btmStatement
-  hi link btmEchoParam          btmStatement
-  hi link btmStatement		Statement
-  hi link btmTodo		Todo
-  hi link btmString		String
-  hi link btmNumber             Number
-  hi link btmComment		Comment
-  hi link btmArgument		Identifier
-  hi link btmVariable		Identifier
-  hi link btmEcho		String
-  hi link btmBIFMatch           btmStatement
-  hi link btmBuiltInFunc        btmStatement
-  hi link btmBuiltInVar         btmStatement
-  hi link btmSpecialVar         btmStatement
-  hi link btmCommand		btmStatement
+" The default highlighting.
+hi def link btmLabel		Special
+hi def link btmLabelMark	Special
+hi def link btmCmdDivider	Special
+hi def link btmConditional	btmStatement
+hi def link btmDotBoolOp        btmStatement
+hi def link btmRepeat		btmStatement
+hi def link btmEchoCommand	btmStatement
+hi def link btmEchoParam        btmStatement
+hi def link btmStatement	Statement
+hi def link btmTodo		Todo
+hi def link btmString		String
+hi def link btmNumber           Number
+hi def link btmComment		Comment
+hi def link btmArgument		Identifier
+hi def link btmVariable		Identifier
+hi def link btmEcho		String
+hi def link btmBIFMatch         btmStatement
+hi def link btmBuiltInFunc      btmStatement
+hi def link btmBuiltInVar       btmStatement
+hi def link btmSpecialVar       btmStatement
+hi def link btmCommand		btmStatement
 
 "optional highlighting
-  "hi link btmShowTab		Error
-  "hi link btmShowTabc		Error
+"hi def link btmShowTab		Error
+"hi def link btmShowTabc	Error
 
-  "hi link btmIdentifier		Identifier
-endif
+"hi def link btmIdentifier	Identifier
 
 let b:current_syntax = "btm"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SiCAD (procedure language)
 " Maintainer:	Zsolt Branyiczky <zbranyiczky@lmark.mgx.hu>
-" Last Change:	1999 Dec 20
+" Last Change:	2000 Nov 04
 " URL:		http://lmark.mgx.hu/download/vim/syntax/sicad.vim
 
 " spaces are used in (auto)indents since sicad hates tabulator characters
@@ -329,34 +329,31 @@ syn keyword sicadStatement	oldd ps psw psopen pdadd
 syn keyword sicadStatement      psclose psprw psparam psstat psres
 syn keyword sicadStatement      savd
 
-if !exists("did_sicad_syntax_inits")
 
-  let did_sicad_syntax_inits = 1
-  hi link sicadLabel		PreProc
-  hi link sicadLabel1		sicadLabel
-  hi link sicadLabel2		sicadLabel
-  hi link sicadConditional	Conditional
-  hi link sicadBoolean		Boolean
-  hi link sicadNumber		Number
-  hi link sicadFloat		Float
-  hi link sicadOperator		Operator
-  hi link sicadStatement	Statement
-  hi link sicadParameter	sicadStatement
-  hi link sicadGoto		sicadStatement
-  hi link sicadLineCont		sicadStatement
-  hi link sicadString		String
-  hi link sicadComment		Comment
-  hi link sicadSpecial		Special
-  hi link sicadIdentifier	Type
-"  hi link sicadIdentifier	Identifier
-  hi link sicadError		Error
-  hi link sicadParenError	sicadError
-  hi link sicadApostropheError	sicadError
-  hi link sicadStringError	sicadError
-  hi link sicadCommentError	sicadError
-  hi link sqlStatement	        Special  " modified highlight group in sql.vim
-
-endif
+" The default highlighting.
+hi def link sicadLabel		PreProc
+hi def link sicadLabel1		sicadLabel
+hi def link sicadLabel2		sicadLabel
+hi def link sicadConditional	Conditional
+hi def link sicadBoolean	Boolean
+hi def link sicadNumber		Number
+hi def link sicadFloat		Float
+hi def link sicadOperator	Operator
+hi def link sicadStatement	Statement
+hi def link sicadParameter	sicadStatement
+hi def link sicadGoto		sicadStatement
+hi def link sicadLineCont	sicadStatement
+hi def link sicadString		String
+hi def link sicadComment	Comment
+hi def link sicadSpecial	Special
+hi def link sicadIdentifier	Type
+"  hi def link sicadIdentifier	Identifier
+hi def link sicadError		Error
+hi def link sicadParenError	sicadError
+hi def link sicadApostropheError sicadError
+hi def link sicadStringError	sicadError
+hi def link sicadCommentError	sicadError
+hi def link sqlStatement	Special  " modified highlight group in sql.vim
 
 let b:current_syntax = "sicad"
 

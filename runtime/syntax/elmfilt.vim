@@ -18,17 +18,16 @@ syn keyword	elmfiltRule	if then
 syn region	elmfiltString	start='"' skip='"\(\\\\\)*\\"' end='"'	contains=elmfiltArg
 syn match	elmfiltComment	"^#.*$"
 
-if !exists("did_elmfilt_syntax_inits")
-  let did_elmfilt_syntax_inits= 1
-  hi link elmfiltAction	Statement
-  hi link elmfiltArg	Special
-  hi link elmfiltComment	Comment
-  hi link elmfiltCond	Type
-  hi link elmfiltMatch	Special
-  hi link elmfiltNumber	Number
-  hi link elmfiltOper	Operator
-  hi link elmfiltRule	Statement
-  hi link elmfiltString	String
-  endif
+" The default highlighting.
+hi def link elmfiltAction	Statement
+hi def link elmfiltArg	Special
+hi def link elmfiltComment	Comment
+hi def link elmfiltCond	Type
+hi def link elmfiltMatch	Special
+hi def link elmfiltNumber	Number
+hi def link elmfiltOper	Operator
+hi def link elmfiltRule	Statement
+hi def link elmfiltString	String
+
 let b:current_syntax = "elmfilt"
 " vim: ts=9

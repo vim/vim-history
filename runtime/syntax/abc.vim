@@ -30,19 +30,16 @@ syn region abcHeader start="^X:" end="^K:.*$" contained contains=abcHeadField,ab
 syn region abcTune start="^X:" end="^ *$" contains=abcHeader,abcComment,abcBar,abcNote,abcBodyField,abcGuitarChord,abcTuple,abcBroken,abcTie
 syn match abcComment "%.*$"
 
-if !exists("did_abc_syntax_inits")
-  let did_abc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link abcComment		Comment
-  hi link abcHeadField		Type
-  hi link abcBodyField		Special
-  hi link abcBar			Statement
-  hi link abcTuple			Statement
-  hi link abcBroken			Statement
-  hi link abcTie			Statement
-  hi link abcGuitarChord	Identifier
-  hi link abcNote			Constant
-endif
+" The default highlighting.
+hi def link abcComment		Comment
+hi def link abcHeadField	Type
+hi def link abcBodyField	Special
+hi def link abcBar			Statement
+hi def link abcTuple		Statement
+hi def link abcBroken		Statement
+hi def link abcTie			Statement
+hi def link abcGuitarChord	Identifier
+hi def link abcNote			Constant
 
 let b:current_syntax = "abc"
 

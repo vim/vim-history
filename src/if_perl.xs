@@ -37,6 +37,12 @@
 #ifdef _
 # undef _
 #endif
+#ifdef DEBUG
+# undef DEBUG
+#endif
+#ifdef _DEBUG
+# undef _DEBUG
+#endif
 
 #include <EXTERN.h>
 #include <perl.h>
@@ -55,8 +61,259 @@
 
 // static void *perl_interp = NULL;
 static PerlInterpreter *perl_interp = NULL;
+#ifdef ACTIVE_PERL
+static void xs_init __ARGS((pTHXo));
+#else
 static void xs_init __ARGS((void));
+#endif
 static void VIM_init __ARGS((void));
+
+#ifdef __MINGW32__
+# include "dyn-ming.h"
+#endif
+
+/*
+ * For dynamic linked perl. (Windows)
+ */
+#if defined(ACTIVE_PERL) || defined(PROTO)
+/*
+ * Wrapper defines
+ */
+# define perl_alloc dll_perl_alloc
+# define perl_construct dll_perl_construct
+# define perl_parse dll_perl_parse
+# define perl_run dll_perl_run
+# define perl_destruct dll_perl_destruct
+# define perl_free dll_perl_free
+# define Perl_get_context dll_Perl_get_context
+# define Perl_croak dll_Perl_croak
+# define Perl_croak_nocontext dll_Perl_croak_nocontext
+# define Perl_dowantarray dll_Perl_dowantarray
+# define Perl_free_tmps dll_Perl_free_tmps
+# define Perl_gv_stashpv dll_Perl_gv_stashpv
+# define Perl_markstack_grow dll_Perl_markstack_grow
+# define Perl_mg_find dll_Perl_mg_find
+# define Perl_newXS dll_Perl_newXS
+# define Perl_newSV dll_Perl_newSV
+# define Perl_newSViv dll_Perl_newSViv
+# define Perl_newSVpv dll_Perl_newSVpv
+# define Perl_call_argv dll_Perl_call_argv
+# define Perl_call_pv dll_Perl_call_pv
+# define Perl_eval_sv dll_Perl_eval_sv
+# define Perl_get_sv dll_Perl_get_sv
+# define Perl_pop_scope dll_Perl_pop_scope
+# define Perl_push_scope dll_Perl_push_scope
+# define Perl_save_int dll_Perl_save_int
+# define Perl_stack_grow dll_Perl_stack_grow
+# define Perl_set_context dll_Perl_set_context
+# define Perl_sv_2bool dll_Perl_sv_2bool
+# define Perl_sv_2iv dll_Perl_sv_2iv
+# define Perl_sv_2mortal dll_Perl_sv_2mortal
+# define Perl_sv_2pv dll_Perl_sv_2pv
+# define Perl_sv_bless dll_Perl_sv_bless
+# define Perl_sv_catpvn dll_Perl_sv_catpvn
+# define Perl_sv_free dll_Perl_sv_free
+# define Perl_sv_isa dll_Perl_sv_isa
+# define Perl_sv_magic dll_Perl_sv_magic
+# define Perl_sv_setiv dll_Perl_sv_setiv
+# define Perl_sv_setpv dll_Perl_sv_setpv
+# define Perl_sv_setpvn dll_Perl_sv_setpvn
+# define Perl_sv_setsv dll_Perl_sv_setsv
+# define Perl_sv_upgrade dll_Perl_sv_upgrade
+# define Perl_Tstack_sp_ptr dll_Perl_Tstack_sp_ptr
+# define Perl_Top_ptr dll_Perl_Top_ptr
+# define Perl_Tstack_base_ptr dll_Perl_Tstack_base_ptr
+# define Perl_Tstack_max_ptr dll_Perl_Tstack_max_ptr
+# define Perl_Ttmps_ix_ptr dll_Perl_Ttmps_ix_ptr
+# define Perl_Ttmps_floor_ptr dll_Perl_Ttmps_floor_ptr
+# define Perl_Tmarkstack_ptr_ptr dll_Perl_Tmarkstack_ptr_ptr
+# define Perl_Tmarkstack_max_ptr dll_Perl_Tmarkstack_max_ptr
+# define Perl_TSv_ptr dll_Perl_TSv_ptr
+# define Perl_TXpv_ptr dll_Perl_TXpv_ptr
+# define Perl_Tna_ptr dll_Perl_Tna_ptr
+# define Perl_Idefgv_ptr dll_Perl_Idefgv_ptr
+# define Perl_Ierrgv_ptr dll_Perl_Ierrgv_ptr
+# define Perl_Isv_yes_ptr dll_Perl_Isv_yes_ptr
+# define boot_DynaLoader dll_boot_DynaLoader
+
+#ifndef ACTIVE_PERL /* just generating prototypes */
+# define HANDLE int
+# define XSINIT_t int
+# define pTHX_ int
+# define XSUBADDR_t int
+#endif
+
+/*
+ * Declare HANDLE for perl.dll and function pointers.
+ */
+static HANDLE hPerlLib = NULL;
+
+static PerlInterpreter* (*perl_alloc)();
+static void (*perl_construct)(PerlInterpreter*);
+static void (*perl_destruct)(PerlInterpreter*);
+static void (*perl_free)(PerlInterpreter*);
+static int (*perl_run)(PerlInterpreter*);
+static int (*perl_parse)(PerlInterpreter*, XSINIT_t, int, char**, char**);
+static void* (*Perl_get_context)(void);
+static void (*Perl_croak)(pTHX_ const char*, ...) __attribute__((noreturn));
+static void (*Perl_croak_nocontext)(const char*, ...) __attribute__((noreturn));
+static I32 (*Perl_dowantarray)(pTHX);
+static void (*Perl_free_tmps)(pTHX);
+static HV* (*Perl_gv_stashpv)(pTHX_ const char*, I32);
+static void (*Perl_markstack_grow)(pTHX);
+static MAGIC* (*Perl_mg_find)(pTHX_ SV*, int);
+static CV* (*Perl_newXS)(pTHX_ char*, XSUBADDR_t, char*);
+static SV* (*Perl_newSV)(pTHX_ STRLEN);
+static SV* (*Perl_newSViv)(pTHX_ IV);
+static SV* (*Perl_newSVpv)(pTHX_ const char*, STRLEN);
+static I32 (*Perl_call_argv)(pTHX_ const char*, I32, char**);
+static I32 (*Perl_call_pv)(pTHX_ const char*, I32);
+static I32 (*Perl_eval_sv)(pTHX_ SV*, I32);
+static SV* (*Perl_get_sv)(pTHX_ const char*, I32);
+static void (*Perl_pop_scope)(pTHX);
+static void (*Perl_push_scope)(pTHX);
+static void (*Perl_save_int)(pTHX_ int*);
+static SV** (*Perl_stack_grow)(pTHX_ SV**, SV**p, int);
+static SV** (*Perl_set_context)(void*);
+static bool (*Perl_sv_2bool)(pTHX_ SV*);
+static IV (*Perl_sv_2iv)(pTHX_ SV*);
+static SV* (*Perl_sv_2mortal)(pTHX_ SV*);
+static char* (*Perl_sv_2pv)(pTHX_ SV*, STRLEN*);
+static SV* (*Perl_sv_bless)(pTHX_ SV*, HV*);
+static void (*Perl_sv_catpvn)(pTHX_ SV*, const char*, STRLEN);
+static void (*Perl_sv_free)(pTHX_ SV*);
+static int (*Perl_sv_isa)(pTHX_ SV*, const char*);
+static void (*Perl_sv_magic)(pTHX_ SV*, SV*, int, const char*, I32);
+static void (*Perl_sv_setiv)(pTHX_ SV*, IV);
+static void (*Perl_sv_setpv)(pTHX_ SV*, const char*);
+static void (*Perl_sv_setpvn)(pTHX_ SV*, const char*, STRLEN);
+static void (*Perl_sv_setsv)(pTHX_ SV*, SV*);
+static bool (*Perl_sv_upgrade)(pTHX_ SV*, U32);
+static SV*** (*Perl_Tstack_sp_ptr)(register PerlInterpreter*);
+static OP** (*Perl_Top_ptr)(register PerlInterpreter*);
+static SV*** (*Perl_Tstack_base_ptr)(register PerlInterpreter*);
+static SV*** (*Perl_Tstack_max_ptr)(register PerlInterpreter*);
+static I32* (*Perl_Ttmps_ix_ptr)(register PerlInterpreter*);
+static I32* (*Perl_Ttmps_floor_ptr)(register PerlInterpreter*);
+static I32** (*Perl_Tmarkstack_ptr_ptr)(register PerlInterpreter*);
+static I32** (*Perl_Tmarkstack_max_ptr)(register PerlInterpreter*);
+static SV** (*Perl_TSv_ptr)(register PerlInterpreter*);
+static XPV** (*Perl_TXpv_ptr)(register PerlInterpreter*);
+static STRLEN* (*Perl_Tna_ptr)(register PerlInterpreter*);
+static GV** (*Perl_Idefgv_ptr)(register PerlInterpreter*);
+static GV** (*Perl_Ierrgv_ptr)(register PerlInterpreter*);
+static SV* (*Perl_Isv_yes_ptr)(register PerlInterpreter*);
+static void (*boot_DynaLoader)_((PerlInterpreter*, CV*));
+
+/*
+ * Table of name to function pointer of perl.
+ */
+#define PERL_PROC FARPROC
+static struct {
+    char* name;
+    PERL_PROC* ptr;
+} perl_funcname_table[] = {
+    {"perl_alloc", (PERL_PROC*)&perl_alloc},
+    {"perl_construct", (PERL_PROC*)&perl_construct},
+    {"perl_destruct", (PERL_PROC*)&perl_destruct},
+    {"perl_free", (PERL_PROC*)&perl_free},
+    {"perl_run", (PERL_PROC*)&perl_run},
+    {"perl_parse", (PERL_PROC*)&perl_parse},
+    {"Perl_get_context", (PERL_PROC*)&Perl_get_context},
+    {"Perl_croak", (PERL_PROC*)&Perl_croak},
+    {"Perl_croak_nocontext", (PERL_PROC*)&Perl_croak_nocontext},
+    {"Perl_dowantarray", (PERL_PROC*)&Perl_dowantarray},
+    {"Perl_free_tmps", (PERL_PROC*)&Perl_free_tmps},
+    {"Perl_gv_stashpv", (PERL_PROC*)&Perl_gv_stashpv},
+    {"Perl_markstack_grow", (PERL_PROC*)&Perl_markstack_grow},
+    {"Perl_mg_find", (PERL_PROC*)&Perl_mg_find},
+    {"Perl_newXS", (PERL_PROC*)&Perl_newXS},
+    {"Perl_newSV", (PERL_PROC*)&Perl_newSV},
+    {"Perl_newSViv", (PERL_PROC*)&Perl_newSViv},
+    {"Perl_newSVpv", (PERL_PROC*)&Perl_newSVpv},
+    {"Perl_call_argv", (PERL_PROC*)&Perl_call_argv},
+    {"Perl_call_pv", (PERL_PROC*)&Perl_call_pv},
+    {"Perl_eval_sv", (PERL_PROC*)&Perl_eval_sv},
+    {"Perl_get_sv", (PERL_PROC*)&Perl_get_sv},
+    {"Perl_pop_scope", (PERL_PROC*)&Perl_pop_scope},
+    {"Perl_push_scope", (PERL_PROC*)&Perl_push_scope},
+    {"Perl_save_int", (PERL_PROC*)&Perl_save_int},
+    {"Perl_stack_grow", (PERL_PROC*)&Perl_stack_grow},
+    {"Perl_set_context", (PERL_PROC*)&Perl_set_context},
+    {"Perl_sv_2bool", (PERL_PROC*)&Perl_sv_2bool},
+    {"Perl_sv_2iv", (PERL_PROC*)&Perl_sv_2iv},
+    {"Perl_sv_2mortal", (PERL_PROC*)&Perl_sv_2mortal},
+    {"Perl_sv_2pv", (PERL_PROC*)&Perl_sv_2pv},
+    {"Perl_sv_bless", (PERL_PROC*)&Perl_sv_bless},
+    {"Perl_sv_catpvn", (PERL_PROC*)&Perl_sv_catpvn},
+    {"Perl_sv_free", (PERL_PROC*)&Perl_sv_free},
+    {"Perl_sv_isa", (PERL_PROC*)&Perl_sv_isa},
+    {"Perl_sv_magic", (PERL_PROC*)&Perl_sv_magic},
+    {"Perl_sv_setiv", (PERL_PROC*)&Perl_sv_setiv},
+    {"Perl_sv_setpv", (PERL_PROC*)&Perl_sv_setpv},
+    {"Perl_sv_setpvn", (PERL_PROC*)&Perl_sv_setpvn},
+    {"Perl_sv_setsv", (PERL_PROC*)&Perl_sv_setsv},
+    {"Perl_sv_upgrade", (PERL_PROC*)&Perl_sv_upgrade},
+    {"Perl_Tstack_sp_ptr", (PERL_PROC*)&Perl_Tstack_sp_ptr},
+    {"Perl_Top_ptr", (PERL_PROC*)&Perl_Top_ptr},
+    {"Perl_Tstack_base_ptr", (PERL_PROC*)&Perl_Tstack_base_ptr},
+    {"Perl_Tstack_max_ptr", (PERL_PROC*)&Perl_Tstack_max_ptr},
+    {"Perl_Ttmps_ix_ptr", (PERL_PROC*)&Perl_Ttmps_ix_ptr},
+    {"Perl_Ttmps_floor_ptr", (PERL_PROC*)&Perl_Ttmps_floor_ptr},
+    {"Perl_Tmarkstack_ptr_ptr", (PERL_PROC*)&Perl_Tmarkstack_ptr_ptr},
+    {"Perl_Tmarkstack_max_ptr", (PERL_PROC*)&Perl_Tmarkstack_max_ptr},
+    {"Perl_TSv_ptr", (PERL_PROC*)&Perl_TSv_ptr},
+    {"Perl_TXpv_ptr", (PERL_PROC*)&Perl_TXpv_ptr},
+    {"Perl_Tna_ptr", (PERL_PROC*)&Perl_Tna_ptr},
+    {"Perl_Idefgv_ptr", (PERL_PROC*)&Perl_Idefgv_ptr},
+    {"Perl_Ierrgv_ptr", (PERL_PROC*)&Perl_Ierrgv_ptr},
+    {"Perl_Isv_yes_ptr", (PERL_PROC*)&Perl_Isv_yes_ptr},
+    {"boot_DynaLoader", (PERL_PROC*)&boot_DynaLoader},
+    {"", NULL},
+};
+
+/*
+ * Make all runtime-links of perl.
+ *
+ * 1. Get module handle using LoadLibraryEx.
+ * 2. Get pointer to perl function by GetProcAddress.
+ * 3. Repeat 2, until get all functions will be used.
+ *
+ * Parameter 'libname' provides name of DLL.
+ * Succeeded in load, return 1. Failed, return zero.
+ */
+    static int
+perl_runtime_link_init(char *libname)
+{
+    int i;
+
+    if (hPerlLib)
+	return 1;
+    if (!(hPerlLib = LoadLibraryEx(libname, NULL, 0)))
+	return 0;
+    for (i = 0; perl_funcname_table[i].ptr; ++i)
+    {
+	if (!(*perl_funcname_table[i].ptr = GetProcAddress(hPerlLib,
+			perl_funcname_table[i].name)))
+	{
+	    FreeLibrary(hPerlLib);
+	    hPerlLib = NULL;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+/*
+ * If runtime-link-perl(DLL) was loaded successfully, return 1.
+ * There were no DLL loaded, return 0.
+ */
+    int
+perl_enabled()
+{
+    return perl_runtime_link_init(ACTIVE_PERL_W32);
+}
+#endif /* ACTIVE_PERL */
 
 /*
  * perl_init(): initialize perl interpreter
@@ -93,7 +350,18 @@ perl_end()
 	perl_run(perl_interp);
 	perl_destruct(perl_interp);
 	perl_free(perl_interp);
+#ifdef ACTIVE_PERL	/* is this right? */
+	PERL_SET_CONTEXT(0);
+#endif
+	perl_interp = NULL;
     }
+#ifdef ACTIVE_PERL
+    if (hPerlLib)
+    {
+	FreeLibrary(hPerlLib);
+	hPerlLib = NULL;
+    }
+#endif
 }
 
 /*
@@ -235,6 +503,10 @@ VIM_init()
     SvREADONLY_on(sv);
 }
 
+#ifdef ACTIVE_PERL
+static char *e_noperl = N_("Sorry, this command is disabled: the Perl library could not be loaded.");
+#endif
+
 /*
  * ":perl"
  */
@@ -248,6 +520,13 @@ ex_perl(eap)
 
     if (!perl_interp)
     {
+#ifdef ACTIVE_PERL
+	if (!perl_enabled())
+	{
+	    EMSG(_(e_noperl));
+	    return;
+	}
+#endif
 	perl_init();
     }
 
@@ -312,6 +591,13 @@ ex_perldo(eap)
 
     if (!perl_interp)
     {
+#ifdef ACTIVE_PERL
+	if (!perl_enabled())
+	{
+	    EMSG(_(e_noperl));
+	    return;
+	}
+#endif
 	perl_init();
     }
     {
@@ -365,15 +651,24 @@ err:
 }
 
 /* Register any extra external extensions */
+#ifndef ACTIVE_PERL
 extern void
 #ifdef __BORLANDC__
 __import
 #endif
 boot_DynaLoader _((CV* cv));
 extern void boot_VIM _((CV* cv));
+#else
+/* extern void boot_DynaLoader _((PerlInterpreter*), (CV* cv)); */
+extern void boot_VIM _((PerlInterpreter*, CV* cv));
+#endif
 
     static void
+#ifndef ACTIVE_PERL
 xs_init()
+#else
+xs_init(pTHXo)
+#endif
 {
 #if 0
     dXSUB_SYS;	    /* causes an error with Perl 5.003_97 */

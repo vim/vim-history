@@ -126,22 +126,19 @@ syn keyword radianceTodo contained	TODO XXX
 syn match radianceComment	"#.*$" contains=radianceTodo
 
 
-if !exists("did_radiance_syntax_inits")
-  let did_radiance_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link radianceKeyword	Keyword
-  hi link radianceExtraType	Type
-  hi link radianceSurfType	Type
-  hi link radianceLightType	Type
-  hi link radianceMatType	Type
-  hi link radiancePatType	Type
-  hi link radianceTexType	Type
-  hi link radianceMixType	Type
-  hi link radianceComment	Comment
-  hi link radianceCommand	Function
-  hi link radianceID		String
-  hi link radianceTodo		Todo
-endif
+" The default highlighting.
+hi def link radianceKeyword	Keyword
+hi def link radianceExtraType	Type
+hi def link radianceSurfType	Type
+hi def link radianceLightType	Type
+hi def link radianceMatType	Type
+hi def link radiancePatType	Type
+hi def link radianceTexType	Type
+hi def link radianceMixType	Type
+hi def link radianceComment	Comment
+hi def link radianceCommand	Function
+hi def link radianceID		String
+hi def link radianceTodo	Todo
 
 let b:current_syntax = "radiance"
 

@@ -808,7 +808,8 @@ mf_release(mfp, page_count)
     mf_rem_hash(mfp, hp);
 
     /*
-     * If a bhdr_t is returned, make sure that the page_count of bh_data is right
+     * If a bhdr_t is returned, make sure that the page_count of bh_data is
+     * right
      */
     if (hp->bh_page_count != page_count)
     {

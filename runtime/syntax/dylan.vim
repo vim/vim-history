@@ -71,38 +71,35 @@ syn match	dylanHeader	"^[Cc]opyright:.*$"
 syn match	dylanHeader	"^[Ss]ynopsis:.*$"
 
 " Part 2:  Syntax highlighting rules
-if !exists("did_dylan_syntax_inits")
-  let did_dylan_syntax_inits = 1
 
-  " The default methods for highlighting.  Can be overridden later.
-  hi link dylanComment		Comment
-  hi link dylanConstant		Constant
-  hi link dylanString		String
-  hi link dylanCharacter	Character
-  hi link dylanNumber		Number
-  hi link dylanBoolean		Boolean
-  hi link dylanClass		Structure
-  hi link dylanVariable		Identifier
-  hi link dylanConditional	Conditional
-  hi link dylanRepeat		Repeat
-  hi link dylanLabel		Label
-  hi link dylanOperator		Operator
-  hi link dylanUnnamedDefs	Keyword
-  hi link dylanNamedDefs	Keyword
-  hi link dylanParamDefs	Keyword
-  hi link dylanBlock		Structure
-  hi link dylanSimpleDefs	Keyword
-  hi link dylanStatement	Statement
-  hi link dylanOther		Keyword
-  hi link dylanException	Exception
-  hi link dylanClassMods	StorageClass
-  hi link dylanMethMods		StorageClass
-  hi link dylanMiscMods		StorageClass
-  hi link dylanImport		Include
-  hi link dylanPreProc		PreProc
-  hi link dylanPrecondit	PreCondit
-  hi link dylanHeader		Macro
-endif
+" The default highlighting.
+hi def link dylanComment	Comment
+hi def link dylanConstant	Constant
+hi def link dylanString		String
+hi def link dylanCharacter	Character
+hi def link dylanNumber		Number
+hi def link dylanBoolean	Boolean
+hi def link dylanClass		Structure
+hi def link dylanVariable	Identifier
+hi def link dylanConditional	Conditional
+hi def link dylanRepeat		Repeat
+hi def link dylanLabel		Label
+hi def link dylanOperator	Operator
+hi def link dylanUnnamedDefs	Keyword
+hi def link dylanNamedDefs	Keyword
+hi def link dylanParamDefs	Keyword
+hi def link dylanBlock		Structure
+hi def link dylanSimpleDefs	Keyword
+hi def link dylanStatement	Statement
+hi def link dylanOther		Keyword
+hi def link dylanException	Exception
+hi def link dylanClassMods	StorageClass
+hi def link dylanMethMods	StorageClass
+hi def link dylanMiscMods	StorageClass
+hi def link dylanImport		Include
+hi def link dylanPreProc	PreProc
+hi def link dylanPrecondit	PreCondit
+hi def link dylanHeader		Macro
 
 let b:current_syntax = "dylan"
 

@@ -28,6 +28,10 @@
 # undef _POSIX_THREADS
 #endif
 
+#if defined(_WIN32) && defined (HAVE_FCNTL_H)
+# undef HAVE_FCNTL_H
+#endif
+
 #include <Python.h>
 #ifdef macintosh
 # include "macglue.h"
@@ -36,10 +40,219 @@
 #undef main /* Defined in python.h - aargh */
 #undef HAVE_FCNTL_H /* Clash with os_win32.h */
 
+#ifdef __MINGW32__
+# include "dyn-ming.h"
+#endif
+
 /* Parser flags */
 #define single_input	256
 #define file_input	257
 #define eval_input	258
+
+#if defined(DYNAMIC_PYTHON) || defined(PROTO)
+/*
+ * Wrapper defines
+ */
+#define PyArg_Parse dll_PyArg_Parse
+#define PyArg_ParseTuple dll_PyArg_ParseTuple
+#define PyDict_SetItemString dll_PyDict_SetItemString
+#define PyErr_BadArgument dll_PyErr_BadArgument
+#define PyErr_Clear dll_PyErr_Clear
+#define PyErr_NoMemory dll_PyErr_NoMemory
+#define PyErr_Occurred dll_PyErr_Occurred
+#define PyErr_SetNone dll_PyErr_SetNone
+#define PyErr_SetString dll_PyErr_SetString
+#define PyEval_RestoreThread dll_PyEval_RestoreThread
+#define PyEval_SaveThread dll_PyEval_SaveThread
+#define PyExc_AttributeError dll_PyExc_AttributeError
+#define PyExc_IndexError dll_PyExc_IndexError
+#define PyExc_KeyboardInterrupt dll_PyExc_KeyboardInterrupt
+#define PyExc_TypeError dll_PyExc_TypeError
+#define PyExc_ValueError dll_PyExc_ValueError
+#define PyInt_AsLong dll_PyInt_AsLong
+#define PyInt_FromLong dll_PyInt_FromLong
+#define PyInt_Type (*dll_PyInt_Type)
+#define PyList_GetItem dll_PyList_GetItem
+#define PyList_New dll_PyList_New
+#define PyList_SetItem dll_PyList_SetItem
+#define PyList_Size dll_PyList_Size
+#define PyList_Type (*dll_PyList_Type)
+#define PyModule_GetDict dll_PyModule_GetDict
+#define PyRun_SimpleString dll_PyRun_SimpleString
+#define PyString_AsString dll_PyString_AsString
+#define PyString_FromString dll_PyString_FromString
+#define PyString_FromStringAndSize dll_PyString_FromStringAndSize
+#define PyString_Size dll_PyString_Size
+#define PyString_Type (*dll_PyString_Type)
+#define PySys_SetObject dll_PySys_SetObject
+#define PyType_Type (*dll_PyType_Type)
+#define Py_BuildValue dll_Py_BuildValue
+#define Py_FindMethod dll_Py_FindMethod
+#define Py_InitModule4 dll_Py_InitModule4
+#define Py_Initialize dll_Py_Initialize
+#define _PyObject_New dll__PyObject_New
+#define _Py_NoneStruct (*dll__Py_NoneStruct)
+#define PyObject_Init dll__PyObject_Init
+
+/*
+ * Pointers for dynamic link
+ */
+static int(*dll_PyArg_Parse)(PyObject *, char *, ...);
+static int(*dll_PyArg_ParseTuple)(PyObject *, char *, ...);
+static int(*dll_PyDict_SetItemString)(PyObject *dp, char *key, PyObject *item);
+static int(*dll_PyErr_BadArgument)(void);
+static void(*dll_PyErr_Clear)(void);
+static PyObject*(*dll_PyErr_NoMemory)(void);
+static PyObject*(*dll_PyErr_Occurred)(void);
+static void(*dll_PyErr_SetNone)(PyObject *);
+static void(*dll_PyErr_SetString)(PyObject *, const char *);
+static void(*dll_PyEval_RestoreThread)(PyThreadState *);
+static PyThreadState*(*dll_PyEval_SaveThread)(void);
+static PyObject* dll_PyExc_AttributeError;
+static PyObject* dll_PyExc_IndexError;
+static PyObject* dll_PyExc_KeyboardInterrupt;
+static PyObject* dll_PyExc_TypeError;
+static PyObject* dll_PyExc_ValueError;
+static long(*dll_PyInt_AsLong)(PyObject *);
+static PyObject*(*dll_PyInt_FromLong)(long);
+static PyTypeObject* dll_PyInt_Type;
+static PyObject*(*dll_PyList_GetItem)(PyObject *, int);
+static PyObject*(*dll_PyList_New)(int size);
+static int(*dll_PyList_SetItem)(PyObject *, int, PyObject *);
+static int(*dll_PyList_Size)(PyObject *);
+static PyTypeObject* dll_PyList_Type;
+static PyObject*(*dll_PyModule_GetDict)(PyObject *);
+static int(*dll_PyRun_SimpleString)(char *);
+static char*(*dll_PyString_AsString)(PyObject *);
+static PyObject*(*dll_PyString_FromString)(const char *);
+static PyObject*(*dll_PyString_FromStringAndSize)(const char *, int);
+static int(*dll_PyString_Size)(PyObject *);
+static PyTypeObject* dll_PyString_Type;
+static int(*dll_PySys_SetObject)(char *, PyObject *);
+static PyTypeObject* dll_PyType_Type;
+static PyObject*(*dll_Py_BuildValue)(char *, ...);
+static PyObject*(*dll_Py_FindMethod)(PyMethodDef[], PyObject *, char *);
+static PyObject*(*dll_Py_InitModule4)(char *, PyMethodDef *, char *, PyObject *, int);
+static void(*dll_Py_Initialize)(void);
+static PyObject*(*dll__PyObject_New)(PyTypeObject *, PyObject *);
+#ifdef __MINGW32__
+static PyObject*(*dll__PyObject_Init)(PyTypeObject *, PyObject *);
+#endif
+static PyObject* dll__Py_NoneStruct;
+
+#ifndef DYNAMIC_PYTHON
+# define HINSTANCE int		/* for generating prototypes */
+#endif
+
+static HINSTANCE hinstPython = 0; /* Instance of python.dll */
+
+/*
+ * Table of name to function pointer of python.
+ */
+#define PYTHON_PROC FARPROC
+static struct {
+    char* name;
+    PYTHON_PROC* ptr;
+} python_funcname_table[] = {
+    {"PyArg_Parse", (PYTHON_PROC*)&dll_PyArg_Parse},
+    {"PyArg_ParseTuple", (PYTHON_PROC*)&dll_PyArg_ParseTuple},
+    {"PyDict_SetItemString", (PYTHON_PROC*)&dll_PyDict_SetItemString},
+    {"PyErr_BadArgument", (PYTHON_PROC*)&dll_PyErr_BadArgument},
+    {"PyErr_Clear", (PYTHON_PROC*)&dll_PyErr_Clear},
+    {"PyErr_NoMemory", (PYTHON_PROC*)&dll_PyErr_NoMemory},
+    {"PyErr_Occurred", (PYTHON_PROC*)&dll_PyErr_Occurred},
+    {"PyErr_SetNone", (PYTHON_PROC*)&dll_PyErr_SetNone},
+    {"PyErr_SetString", (PYTHON_PROC*)&dll_PyErr_SetString},
+    {"PyEval_RestoreThread", (PYTHON_PROC*)&dll_PyEval_RestoreThread},
+    {"PyEval_SaveThread", (PYTHON_PROC*)&dll_PyEval_SaveThread},
+    {"PyExc_AttributeError", (PYTHON_PROC*)&dll_PyExc_AttributeError},
+    {"PyExc_IndexError", (PYTHON_PROC*)&dll_PyExc_IndexError},
+    {"PyExc_KeyboardInterrupt", (PYTHON_PROC*)&dll_PyExc_KeyboardInterrupt},
+    {"PyExc_TypeError", (PYTHON_PROC*)&dll_PyExc_TypeError},
+    {"PyExc_ValueError", (PYTHON_PROC*)&dll_PyExc_ValueError},
+    {"PyInt_AsLong", (PYTHON_PROC*)&dll_PyInt_AsLong},
+    {"PyInt_FromLong", (PYTHON_PROC*)&dll_PyInt_FromLong},
+    {"PyInt_Type", (PYTHON_PROC*)&dll_PyInt_Type},
+    {"PyList_GetItem", (PYTHON_PROC*)&dll_PyList_GetItem},
+    {"PyList_New", (PYTHON_PROC*)&dll_PyList_New},
+    {"PyList_SetItem", (PYTHON_PROC*)&dll_PyList_SetItem},
+    {"PyList_Size", (PYTHON_PROC*)&dll_PyList_Size},
+    {"PyList_Type", (PYTHON_PROC*)&dll_PyList_Type},
+    {"PyModule_GetDict", (PYTHON_PROC*)&dll_PyModule_GetDict},
+    {"PyRun_SimpleString", (PYTHON_PROC*)&dll_PyRun_SimpleString},
+    {"PyString_AsString", (PYTHON_PROC*)&dll_PyString_AsString},
+    {"PyString_FromString", (PYTHON_PROC*)&dll_PyString_FromString},
+    {"PyString_FromStringAndSize", (PYTHON_PROC*)&dll_PyString_FromStringAndSize},
+    {"PyString_Size", (PYTHON_PROC*)&dll_PyString_Size},
+    {"PyString_Type", (PYTHON_PROC*)&dll_PyString_Type},
+    {"PySys_SetObject", (PYTHON_PROC*)&dll_PySys_SetObject},
+    {"PyType_Type", (PYTHON_PROC*)&dll_PyType_Type},
+    {"Py_BuildValue", (PYTHON_PROC*)&dll_Py_BuildValue},
+    {"Py_FindMethod", (PYTHON_PROC*)&dll_Py_FindMethod},
+    {"Py_InitModule4", (PYTHON_PROC*)&dll_Py_InitModule4},
+    {"Py_Initialize", (PYTHON_PROC*)&dll_Py_Initialize},
+    {"_PyObject_New", (PYTHON_PROC*)&dll__PyObject_New},
+#ifdef __MINGW32__
+    /* check this out-- I needed it for MingW32 to compile w/ ActiveState 2.0 */
+    {"PyObject_Init", (PYTHON_PROC*)&dll__PyObject_Init},
+#endif
+    {"_Py_NoneStruct", (PYTHON_PROC*)&dll__Py_NoneStruct},
+    {"", NULL},
+};
+
+/*
+ * Free python.dll
+ */
+    static void
+end_dynamic_python()
+{
+    if (hinstPython)
+    {
+	FreeLibrary(hinstPython);
+	hinstPython = 0;
+    }
+}
+
+/*
+ * Load library and get all pointers.  If failed, function returns 0.
+ * Succeeded 1.
+ *
+ * Parameter 'libname' provides name of DLL.
+ */
+    static int
+python_runtime_link_init(char* libname)
+{
+    int i;
+
+    if (hinstPython)
+	return 1;
+    hinstPython = LoadLibrary(libname);
+    if (!hinstPython)
+	return 0;
+
+    for (i = 0; python_funcname_table[i].ptr; ++i)
+    {
+	if (!(*python_funcname_table[i].ptr = GetProcAddress(hinstPython,
+			python_funcname_table[i].name)))
+	{
+	    FreeLibrary(hinstPython);
+	    hinstPython = 0;
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+/*
+ * If python is enabled (there is installed python on Windows system) return
+ * 1, else 0.
+ */
+    int
+python_enabled()
+{
+    return python_runtime_link_init(DYNAMIC_PYTHON_W32);
+}
+#endif /* DYNAMIC_PYTHON */
 
 /******************************************************
  * Internal function prototypes.
@@ -107,11 +320,27 @@ static void Python_Lock_Vim() {
 static void Python_Release_Vim() {
 }
 
+    void
+python_end()
+{
+#ifdef DYNAMIC_PYTHON
+    end_dynamic_python();
+#endif
+}
+
     static int
 Python_Init(void)
 {
     if (!initialised)
     {
+#ifdef DYNAMIC_PYTHON
+	if (!python_enabled())
+	{
+	    emsg("Sorry, this command is disable, because of missing python.");
+	    goto fail;
+	}
+#endif
+
 #ifndef macintosh
 	Py_Initialize();
 #else

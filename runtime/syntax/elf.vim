@@ -54,22 +54,19 @@ syn match elfParens "[\[\]()]"
 " Punctuation
 syn match elfPunct "[,;]"
 
-if !exists("did_elf_syntax_inits")
-  let did_elf_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later.
-  hi link elfComment Comment
-  hi link elfPPCom Include
-  hi link elfKeyword Keyword
-  hi link elfSpecial Special
-  hi link elfEnvironment Special
-  hi link elfBraceError Error
-  hi link elfConditional Conditional
-  hi link elfMacro Function
-  hi link elfNumber Number
-  hi link elfString String
-  hi link elfParens Delimiter
-  hi link elfPunct Delimiter
-endif
+" The default highlighting.
+hi def link elfComment Comment
+hi def link elfPPCom Include
+hi def link elfKeyword Keyword
+hi def link elfSpecial Special
+hi def link elfEnvironment Special
+hi def link elfBraceError Error
+hi def link elfConditional Conditional
+hi def link elfMacro Function
+hi def link elfNumber Number
+hi def link elfString String
+hi def link elfParens Delimiter
+hi def link elfPunct Delimiter
 
 let b:current_syntax = "elf"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl POD format
 " Maintainer:	Scott Bigham <dsb@cs.duke.edu>
-" Last Change:	1999 Jul 03
+" Last Change:	2000 Nov 04
 
 " To add embedded POD documentation highlighting to your syntax file, add
 " the commands:
@@ -48,17 +48,14 @@ syn match podSpecial	"[$@%]\I\i*\(::\I\i*\)*\>"
 " Special formatting sequences
 syn region podFormat	start="[IBSCLFXEZ]<" end=">" oneline contains=podFormat
 
-if !exists("did_pod_syntax_inits")
-  let did_pod_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later.
-  hi link podCommand		Statement
-  hi link podCmdText		String
-  hi link podOverIndent		Number
-  hi link podForKeywd		Identifier
-  hi link podFormat		Identifier
-  hi link podVerbatimLine	PreProc
-  hi link podSpecial		Identifier
-endif
+" The default highlighting.
+hi def link podCommand		Statement
+hi def link podCmdText		String
+hi def link podOverIndent	Number
+hi def link podForKeywd		Identifier
+hi def link podFormat		Identifier
+hi def link podVerbatimLine	PreProc
+hi def link podSpecial		Identifier
 
 let b:current_syntax = "pod"
 

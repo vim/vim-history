@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0k.  Last change: 2000 Aug 16
+*insert.txt*    For Vim version 6.0l.  Last change: 2000 Nov 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -167,7 +167,7 @@ CTRL-D		Delete one shiftwidth of indent at the start of the current
 						*i_CTRL-V*
 CTRL-V		Insert next non-digit literally.  For special keys, the
 		terminal code is inserted.  It's also possible to enter the
-		decimal, octal or hexadecimal value of a charcter
+		decimal, octal or hexadecimal value of a character
 		|i_CTRL-V_digit|.
 		The characters typed right after CTRL-V are not considered for
 		mapping.  {Vi: no decimal byte entry}
@@ -243,9 +243,9 @@ entered directly.  This way you can enter any character, except a line break
 first char	mode	     max nr of chars   max value ~
 (none)		decimal		   3		255
 o or O		octal		   3		255
-x or X		hexadecimal	   2		255
-u		hexadecimal	   4		65535
-U		hexadecimal	   8		2147483647
+x or X		hexadecimal	   2		ff	 (255)
+u		hexadecimal	   4		ffff	 (65535)
+U		hexadecimal	   8		ffffffff (2147483647)
 
 Normally you would type the maximum number of characters.  Thus to enter a
 space (value 32) you would type <C-V>032.  You can omit the leading zero, in
@@ -920,5 +920,30 @@ An example on how to use ":r !": >
 This command reads "binfile", uuencodes it and reads it into the current
 buffer.  Useful when you are editing e-mail and want to include a binary
 file.
+
+							*read-messages*
+When reading a file Vim will display a message with information about the read
+file.  In the table is an explanation for some of the items.  The others are
+self explanatory.  Using the long or the short version depends on the
+'shortmess' option.
+
+	long		short		meaning ~
+	[readonly]	{RO}		the file is write protected
+	[fifo/socket]			using a stream
+	[fifo]				using a fifo stream
+	[socket]			using a socket stream
+	[CR missing]			reading with "dos" 'fileformat' and a
+					NL without a preceding CR was found.
+	[NL found]			reading with "mac" 'fileformat' and a
+					NL was found (could be "unix" format)
+	[long lines split]		at least one line was split in two
+	[NOT converted]			conversion from 'filecharcode' to
+					'charcode' was desired but not
+					possible
+	[converted]			conversion from 'filecharcode' to
+					'charcode' done
+	[crypted]			file was decrypted
+	[READ ERRORS]			not all of the file could be read
+
 
  vim:tw=78:

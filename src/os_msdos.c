@@ -2009,9 +2009,9 @@ mch_call_shell(
 
     if (x && !(options & SHELL_SILENT))
     {
-	msg_putchar('\n');
+	MSG_PUTS(_("\nshell returned "));
 	msg_outnum((long)x);
-	MSG_PUTS(_(" returned\n"));
+	msg_putchar('\n');
     }
 
     return x;

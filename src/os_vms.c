@@ -1729,9 +1729,9 @@ mch_call_shell(char_u *cmd, int options)
 	OUT_STR(_("\nCannot execute shell sh\n"));
     else if (x && !(options & SHELL_SILENT))
     {
-	msg_putchar('\n');
+	OUT_STR(_("\nshell returned "));
 	msg_outnum((long)x);
-	OUT_STR(_(" returned\n"));
+	msg_putchar('\n');
     }
     settmode(TMODE_RAW);			/* set to raw mode */
 #ifdef FEAT_TITLE

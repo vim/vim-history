@@ -101,40 +101,38 @@ syn match   dclParam	"'\I[a-zA-Z0-9_$]*'\="
 syn region  dclFuncList	matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" contains=ALLBUT,dclCmdDirPath,dclCmdProc,dclCmdProc,dclDirPath,dclFilename,dclFilename,dclMdfySet,dclMdfySetString,delCmdProc,dclExe,dclTodo
 syn match   dclError	")"
 
-if !exists("did_dcl_syntax_inits")
- let did_dcl_syntax_inits = 1
- hi link dclLogOper	dclError
- hi link dclLogical	dclOper
- hi link dclLogSep	dclSep
+" The default highlighting.
+hi def link dclLogOper	dclError
+hi def link dclLogical	dclOper
+hi def link dclLogSep	dclSep
 
- hi link dclAssign	Operator
- hi link dclCmdProc	Special
- hi link dclCmdProcStart	Operator
- hi link dclComment	Comment
- hi link dclContinue	Statement
- hi link dclDevice	Identifier
- hi link dclDirPath	Identifier
- hi link dclDirPath	Identifier
- hi link dclDirSep	Delimiter
- hi link dclError	Error
- hi link dclExe		Statement
- hi link dclFilename	NONE
- hi link dclGotoLabel	Label
- hi link dclInstr	Statement
- hi link dclLexical	Function
- hi link dclMdfy	Type
- hi link dclMdfyBrkt	Delimiter
- hi link dclMdfySep	Delimiter
- hi link dclMdfySet	Type
- hi link dclMdfySetString	String
- hi link dclNumber	Number
- hi link dclOper	Operator
- hi link dclParam	Special
- hi link dclSep		Delimiter
- hi link dclStart	Delimiter
- hi link dclString	String
- hi link dclTodo	Todo
-endif
+hi def link dclAssign	Operator
+hi def link dclCmdProc	Special
+hi def link dclCmdProcStart	Operator
+hi def link dclComment	Comment
+hi def link dclContinue	Statement
+hi def link dclDevice	Identifier
+hi def link dclDirPath	Identifier
+hi def link dclDirPath	Identifier
+hi def link dclDirSep	Delimiter
+hi def link dclError	Error
+hi def link dclExe	Statement
+hi def link dclFilename	NONE
+hi def link dclGotoLabel	Label
+hi def link dclInstr	Statement
+hi def link dclLexical	Function
+hi def link dclMdfy	Type
+hi def link dclMdfyBrkt	Delimiter
+hi def link dclMdfySep	Delimiter
+hi def link dclMdfySet	Type
+hi def link dclMdfySetString	String
+hi def link dclNumber	Number
+hi def link dclOper	Operator
+hi def link dclParam	Special
+hi def link dclSep	Delimiter
+hi def link dclStart	Delimiter
+hi def link dclString	String
+hi def link dclTodo	Todo
 
 let b:current_syntax = "dcl"
 

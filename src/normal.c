@@ -853,6 +853,27 @@ getcount:
 #ifdef FEAT_CMDL_INFO
 	    need_flushbuf |= add_to_showcmd(*cp);
 #endif
+
+#ifdef FEAT_DIGRAPHS
+	    /* Typing CTRL-K gets a digraph. */
+	    if (*cp == Ctrl_K
+		    && ((nv_cmds[idx].cmd_flags & NV_LANG)
+			|| cp == &ca.extra_char)
+		    && vim_strchr(p_cpo, CPO_DIGRAPH) == NULL)
+	    {
+		c = get_digraph(FALSE);
+		if (c > 0)
+		{
+		    *cp = c;
+# ifdef FEAT_CMDL_INFO
+		    /* Guessing how to update showcmd here... */
+		    del_from_showcmd(3);
+		    need_flushbuf |= add_to_showcmd(*cp);
+# endif
+		}
+	    }
+#endif
+
 #ifdef FEAT_LANGMAP
 	    /* adjust chars > 127, except after "tTfFr" commands */
 	    LANGMAP_ADJUST(*cp, !((nv_cmds[idx].cmd_flags & NV_LANG)
@@ -2211,7 +2232,7 @@ do_mouse(oap, c, dir, count, fix_indent)
     }
 
     /*
-     * Jump!
+     * JUMP!
      */
     jump_flags = jump_to_mouse(jump_flags,
 				      oap == NULL ? NULL : &(oap->inclusive));
@@ -2457,9 +2478,30 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    clipboard.vmode = NUL;
 #endif
 	}
+	/*
+	 * A double click selects a word or a block.
+	 */
 	if (mod_mask & MOD_MASK_2CLICK)
 	{
-	    if (lt(curwin->w_cursor, orig_cursor))
+	    pos_t	*pos;
+
+	    /* If the character under the cursor (skipping white space) is not
+	     * a word character, try finding a match and select a (), {}, [],
+	     * #if/#endif, etc. block. */
+	    end_visual = curwin->w_cursor;
+	    while (vim_iswhite(gchar_pos(&end_visual)))
+		inc(&end_visual);
+	    oap->motion_type = MCHAR;
+	    if (VIsual_mode == 'v'
+		    && !vim_isIDc(gchar_pos(&end_visual))
+		    && equal(curwin->w_cursor, VIsual)
+		    && (pos = findmatch(oap, NUL)) != NULL)
+	    {
+		curwin->w_cursor = *pos;
+		if (oap->motion_type == MLINE)
+		    VIsual_mode = 'V';
+	    }
+	    else if (lt(curwin->w_cursor, orig_cursor))
 	    {
 		find_start_of_word(&curwin->w_cursor);
 		find_end_of_word(&VIsual);
@@ -5075,6 +5117,18 @@ nv_replace(cap)
     int		had_ctrl_v;
     long	n;
 
+    if (checkclearop(cap->oap))
+	return;
+
+    /* get another character */
+    if (cap->nchar == Ctrl_V)
+    {
+	had_ctrl_v = Ctrl_V;
+	cap->nchar = get_literal();
+    }
+    else
+	had_ctrl_v = NUL;
+
 #ifdef FEAT_VISUAL
     /* Visual mode "r" */
     if (VIsual_active)
@@ -5083,9 +5137,6 @@ nv_replace(cap)
 	return;
     }
 #endif
-
-    if (checkclearop(cap->oap))
-	return;
 
 #ifdef FEAT_VIRTUALEDIT
    /* If virtual editing is ON, we have to make sure the cursor position
@@ -5125,15 +5176,6 @@ nv_replace(cap)
 	stuffcharReadbuff(ESC);
 	return;
     }
-
-    /* get another character */
-    if (cap->nchar == Ctrl_V)
-    {
-	had_ctrl_v = Ctrl_V;
-	cap->nchar = get_literal();
-    }
-    else
-	had_ctrl_v = NUL;
 
     /* save line for undo */
     if (u_save_cursor() == FAIL)

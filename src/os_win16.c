@@ -833,7 +833,7 @@ mch_call_shell(
 
     if (x && !(options & SHELL_SILENT))
     {
-	smsg(_("%d returned"), x);
+	smsg(_("shell returned %d"), x);
 	msg_putchar('\n');
     }
 #ifdef FEAT_TITLE

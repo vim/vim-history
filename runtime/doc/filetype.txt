@@ -1,4 +1,4 @@
-*filetype.txt*   For Vim version 6.0k.  Last change: 2000 Oct 21
+*filetype.txt*   For Vim version 6.0l.  Last change: 2000 Oct 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -232,7 +232,7 @@ plugins.  It starts with: >
 There you can see where Vim looks for your plugin scripts.
 
 ==============================================================================
-3. Filetype plugin					*filetype-plugins*
+2. Filetype plugin					*filetype-plugins*
 
 When loading filetype plugins has been enabled |:filetype-plugin-on|, options
 will be set and mappings defined.  These are all local to the buffer, they

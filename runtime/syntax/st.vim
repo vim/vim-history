@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Smalltalk
 " Maintainer:	Arndt Hesse <hesse@self.de>
-" Last Change:	1997 Dec 24
+" Last Change:	2000 Nov 04
 
 " remove any old syntax stuff hanging around
 syn clear
@@ -61,26 +61,24 @@ syn match  stBlockError	"\]"
 syn region stSet	transparent start='{' end='}' contains=ALLBUT,stSetError
 syn match  stSetError	"}"
 
-hi link stParenError stError
-hi link stSetError stError
-hi link stBlockError stError
-
 " synchronization for syntax analysis
 syn sync minlines=50
 
-if !exists("did_st_syntax_inits")
-  let did_st_syntax_inits = 1
-  hi link stKeyword		Statement
-  hi link stMethod		Statement
-  hi link stComment		Comment
-  hi link stCharacter		Constant
-  hi link stString		Constant
-  hi link stSymbol		Special
-  hi link stNumber		Type
-  hi link stFloat		Type
-  hi link stError		Error
-  hi link stLocalVariables	Identifier
-  hi link stBlockVariable	Identifier
-endif
+" The default highlighting.
+hi def link stParenError	stError
+hi def link stSetError		stError
+hi def link stBlockError	stError
+
+hi def link stKeyword		Statement
+hi def link stMethod		Statement
+hi def link stComment		Comment
+hi def link stCharacter		Constant
+hi def link stString		Constant
+hi def link stSymbol		Special
+hi def link stNumber		Type
+hi def link stFloat		Type
+hi def link stError		Error
+hi def link stLocalVariables	Identifier
+hi def link stBlockVariable	Identifier
 
 let b:current_syntax = "st"

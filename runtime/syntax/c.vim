@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -33,9 +33,9 @@ else
   syn region	cString		start=+L\="+ skip=+\\\\\|\\"+ end=+"+ contains=cSpecial,cFormat
   " cCppString: same as cString, but ends at end of line
   syn region	cCppString	start=+L\="+ skip=+\\\\\|\\"\|\\$+ excludenl end=+"+ end='$' contains=cSpecial,cFormat
-  hi link cFormat cSpecial
+  hi def link cFormat cSpecial
 endif
-hi link cCppString cString
+hi def link cCppString cString
 
 syn match	cCharacter	"L\='[^\\]'"
 syn match	cCharacter	"L'[^']*'" contains=cSpecial
@@ -118,8 +118,8 @@ else
   syn region	cComment	matchgroup=cCommentStart start="/\*" matchgroup=NONE end="\*/" contains=@cCommentGroup,cCommentStartError,cSpaceError
 endif
 " keep a // comment separately, it terminates a preproc. conditional
-hi link cCommentL cComment
-hi link cCommentStart cComment
+hi def link cCommentL cComment
+hi def link cCommentStart cComment
 syntax match	cCommentError	display "\*/"
 syntax match	cCommentStartError display "/\*"me=e-1 contained
 
@@ -220,50 +220,47 @@ if !exists("c_minlines")
 endif
 exec "syn sync ccomment cComment minlines=" . c_minlines
 
-if !exists("did_c_syntax_inits")
-  let did_c_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link cLabel	Label
-  hi link cUserLabel	Label
-  hi link cConditional	Conditional
-  hi link cRepeat	Repeat
-  hi link cCharacter	Character
-  hi link cSpecialCharacter cSpecial
-  hi link cNumber	Number
-  hi link cOctal	Number
-  hi link cOctalZero	PreProc		" link this to Error if you want
-  hi link cFloat	Float
-  hi link cOctalError	cError
-  hi link cParenError	cError
-  hi link cErrInParen	cError
-  hi link cErrInBracket	cError
-  hi link cCommentError	cError
-  hi link cCommentStartError	cError
-  hi link cSpaceError	cError
-  hi link cSpecialError	cError
-  hi link cOperator	Operator
-  hi link cStructure	Structure
-  hi link cStorageClass	StorageClass
-  hi link cInclude	Include
-  hi link cPreProc	PreProc
-  hi link cDefine	Macro
-  hi link cIncluded	cString
-  hi link cError	Error
-  hi link cStatement	Statement
-  hi link cPreCondit	PreCondit
-  hi link cType		Type
-  hi link cConstant	Constant
-  hi link cCommentString cString
-  hi link cComment2String cString
-  hi link cCommentSkip	cComment
-  hi link cString	String
-  hi link cComment	Comment
-  hi link cSpecial	SpecialChar
-  hi link cTodo		Todo
-  hi link cCppSkip	cCppOut
-  hi link cCppOut2	cCppOut
-  hi link cCppOut	Comment
-endif
+" The default highlighting.
+hi def link cLabel		Label
+hi def link cUserLabel		Label
+hi def link cConditional	Conditional
+hi def link cRepeat		Repeat
+hi def link cCharacter		Character
+hi def link cSpecialCharacter	cSpecial
+hi def link cNumber		Number
+hi def link cOctal		Number
+hi def link cOctalZero		PreProc	 " link this to Error if you want
+hi def link cFloat		Float
+hi def link cOctalError		cError
+hi def link cParenError		cError
+hi def link cErrInParen		cError
+hi def link cErrInBracket	cError
+hi def link cCommentError	cError
+hi def link cCommentStartError	cError
+hi def link cSpaceError		cError
+hi def link cSpecialError	cError
+hi def link cOperator		Operator
+hi def link cStructure		Structure
+hi def link cStorageClass	StorageClass
+hi def link cInclude		Include
+hi def link cPreProc		PreProc
+hi def link cDefine		Macro
+hi def link cIncluded		cString
+hi def link cError		Error
+hi def link cStatement		Statement
+hi def link cPreCondit		PreCondit
+hi def link cType		Type
+hi def link cConstant		Constant
+hi def link cCommentString	cString
+hi def link cComment2String	cString
+hi def link cCommentSkip	cComment
+hi def link cString		String
+hi def link cComment		Comment
+hi def link cSpecial		SpecialChar
+hi def link cTodo		Todo
+hi def link cCppSkip		cCppOut
+hi def link cCppOut2		cCppOut
+hi def link cCppOut		Comment
 
 let b:current_syntax = "c"
 

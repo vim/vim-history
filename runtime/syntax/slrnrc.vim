@@ -151,37 +151,34 @@ syn match   slrnrcUnsetkey	'^\s*unsetkey\s\+\("\)\=\(article\|group\|readline\)\
 "syn keyword slrnrcObsolete	ccfollowup_string decode_directory editor_command followup
 "syn keyword slrnrcObsolete	organization quote_string realname replyto signature username
 
-if !exists("did_slrnrc_syntax_inits")
-  let did_slrnrc_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link slrnrcTodo		Todo
-  hi link slrnrcSpaceError	Error
-  hi link slrnrcNumber		Number
-  hi link slrnrcSpecKey		SpecialChar
-  hi link slrnrcKey		String
-  hi link slrnrcSpecChar	SpecialChar
-  hi link slrnrcString		String
-  hi link slangPreCondit	Special
-  hi link slrnrcComment		Comment
-  hi link slrnrcVarInt		Identifier
-  hi link slrnrcVarStr		Identifier
-  hi link slrnrcCmd		slrnrcSet
-  hi link slrnrcSet		Operator
-  hi link slrnrcColor		Keyword
-  hi link slrnrcColorObj	Identifier
-  hi link slrnrcColorVal	String
-  hi link slrnrcMono		Keyword
-  hi link slrnrcMonoObj		Identifier
-  hi link slrnrcMonoVal		String
-  hi link slrnrcFunArt		Macro
-  hi link slrnrcFunGroup	Macro
-  hi link slrnrcFunRead		Macro
-  hi link slrnrcSetkeyObj	Identifier
-  hi link slrnrcSetkey		Keyword
-  hi link slrnrcUnsetkey	slrnrcSetkey
+" The default highlighting.
+hi def link slrnrcTodo		Todo
+hi def link slrnrcSpaceError	Error
+hi def link slrnrcNumber	Number
+hi def link slrnrcSpecKey	SpecialChar
+hi def link slrnrcKey		String
+hi def link slrnrcSpecChar	SpecialChar
+hi def link slrnrcString	String
+hi def link slangPreCondit	Special
+hi def link slrnrcComment	Comment
+hi def link slrnrcVarInt	Identifier
+hi def link slrnrcVarStr	Identifier
+hi def link slrnrcCmd		slrnrcSet
+hi def link slrnrcSet		Operator
+hi def link slrnrcColor		Keyword
+hi def link slrnrcColorObj	Identifier
+hi def link slrnrcColorVal	String
+hi def link slrnrcMono		Keyword
+hi def link slrnrcMonoObj	Identifier
+hi def link slrnrcMonoVal	String
+hi def link slrnrcFunArt	Macro
+hi def link slrnrcFunGroup	Macro
+hi def link slrnrcFunRead	Macro
+hi def link slrnrcSetkeyObj	Identifier
+hi def link slrnrcSetkey	Keyword
+hi def link slrnrcUnsetkey	slrnrcSetkey
 
-  "hi link slrnrcObsolete	Special
-endif
+"hi def link slrnrcObsolete	Special
 
 let b:current_syntax = "slrnrc"
 

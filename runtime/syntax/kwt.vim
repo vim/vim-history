@@ -34,14 +34,12 @@ syn match kwtEndRule	"\(\]\|>\);"
 "syn region cText	transparent start='{' end='}' contains=ALLBUT,cParenError,cIncluded,cSpecial,cTodo,cUserCont,cUserLabel,cBitField
 
 
-if !exists("did_kwt_syntax_inits")
-  let did_kwt_syntax_inits = 1
-  hi link kwtStatement	Statement
-  hi link kwtSep	Delimiter
-  hi link kwtViews	Label
-  hi link kwtPhylum	Type
-  "hi link cText	Comment
-endif
+" The default highlighting.
+hi def link kwtStatement	Statement
+hi def link kwtSep		Delimiter
+hi def link kwtViews		Label
+hi def link kwtPhylum		Type
+"hi def link cText		Comment
 
 syn sync lines=300
 

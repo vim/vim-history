@@ -144,16 +144,17 @@
 #undef HAVE_OPENDIR
 #undef HAVE_PUTENV
 #undef HAVE_QSORT
+#undef HAVE_RENAME
 #undef HAVE_SELECT
 #undef HAVE_SETENV
 #undef HAVE_SETPGID
 #undef HAVE_SETSID
-#undef HAVE_SIGALTSTACK
-#undef HAVE_SIGSTACK
-#undef HAVE_SIGSET
 #undef HAVE_SIGACTION
-#undef HAVE_SIGVEC
+#undef HAVE_SIGALTSTACK
+#undef HAVE_SIGSET
 #undef HAVE_SIGSETJMP
+#undef HAVE_SIGSTACK
+#undef HAVE_SIGVEC
 #undef HAVE_STRCASECMP
 #undef HAVE_STRERROR
 #undef HAVE_STRFTIME
@@ -162,9 +163,8 @@
 #undef HAVE_STRNICMP
 #undef HAVE_STRPBRK
 #undef HAVE_STRTOL
-#undef HAVE_TGETENT
 #undef HAVE_ST_BLKSIZE
-#undef HAVE_RENAME
+#undef HAVE_TGETENT
 #undef HAVE_USLEEP
 #undef HAVE_UTIME
 
@@ -173,44 +173,45 @@
 
 /* Define if you have the header file: */
 #undef HAVE_DIRENT_H
-#undef HAVE_SYS_NDIR_H
-#undef HAVE_SYS_DIR_H
+#undef HAVE_ERRNO_H
+#undef HAVE_FCNTL_H
+#undef HAVE_FRAME_H
+#undef HAVE_ICONV_H
+#undef HAVE_LIBC_H
+#undef HAVE_LIBGEN_H
+#undef HAVE_LIBINTL_H
+#undef HAVE_LOCALE_H
 #undef HAVE_NDIR_H
+#undef HAVE_POLL_H
+#undef HAVE_PWD_H
+#undef HAVE_SETJMP_H
+#undef HAVE_SGTTY_H
+#undef HAVE_STRINGS_H
+#undef HAVE_STROPTS_H
+#undef HAVE_SYS_ACL_H
+#undef HAVE_SYS_DIR_H
+#undef HAVE_SYS_IOCTL_H
+#undef HAVE_SYS_NDIR_H
+#undef HAVE_SYS_PARAM_H
+#undef HAVE_SYS_POLL_H
+#undef HAVE_SYS_PTEM_H
+#undef HAVE_SYS_RESOURCE_H
 #undef HAVE_SYS_SELECT_H
+#undef HAVE_SYS_STATFS_H
+#undef HAVE_SYS_STREAM_H
+#undef HAVE_SYS_SYSTEMINFO_H
+#undef HAVE_SYS_TIME_H
 #undef HAVE_SYS_UTSNAME_H
 #undef HAVE_TERMCAP_H
-#undef HAVE_FCNTL_H
-#undef HAVE_SGTTY_H
-#undef HAVE_SYS_IOCTL_H
-#undef HAVE_SYS_TIME_H
+#undef HAVE_TERMIOS_H
 #undef HAVE_TERMIO_H
 #undef HAVE_UNISTD_H
-#undef HAVE_STROPTS_H
-#undef HAVE_ERRNO_H
-#undef HAVE_STRINGS_H
-#undef HAVE_XM_XM_H
-#undef HAVE_LIBGEN_H
 #undef HAVE_UTIL_DEBUG_H
 #undef HAVE_UTIL_MSGI18N_H
-#undef HAVE_FRAME_H
-#undef HAVE_SYS_ACL_H
-#undef HAVE_X11_XPM_H
-#undef HAVE_SYS_RESOURCE_H
-#undef HAVE_SYS_SYSTEMINFO_H
-#undef HAVE_LOCALE_H
-#undef HAVE_SYS_STREAM_H
-#undef HAVE_SYS_PTEM_H
-#undef HAVE_TERMIOS_H
-#undef HAVE_LIBC_H
-#undef HAVE_SYS_STATFS_H
-#undef HAVE_POLL_H
-#undef HAVE_SYS_POLL_H
-#undef HAVE_PWD_H
 #undef HAVE_UTIME_H
-#undef HAVE_SYS_PARAM_H
-#undef HAVE_LIBINTL_H
-#undef HAVE_SETJMP_H
 #undef HAVE_X11_SUNKEYSYM_H
+#undef HAVE_X11_XPM_H
+#undef HAVE_XM_XM_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
@@ -255,6 +256,9 @@
 
 /* Define if you want to include the Tcl interpreter. */
 #undef FEAT_TCL
+
+/* Define if you want to include the Sniff interface. */
+#undef FEAT_SNIFF
 
 /* Define if you want to add support for ACL */
 #undef HAVE_ACL

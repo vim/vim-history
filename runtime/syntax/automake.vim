@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	automake Makefile.am
 " Maintainer:	John Williams <jrw@pobox.com>
-" Last change:	2000 Jul 06
+" Last change:	2000 Nov 04
 
 
 " This script adds support for automake's Makefile.am format. It highlights
@@ -40,24 +40,22 @@ syn region  automakeMakeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIde
 syn region  automakeMakeSString start=+'+  skip=+\\'+  end=+'+  contains=makeIdent,automakeSubstitution
 syn region  automakeMakeBString start=+`+  skip=+\\`+  end=+`+  contains=makeIdent,makeSString,makeDString,makeNextLine,automakeSubstitution
 
-if ! exists("did_automake_syntax_inits")
-    let did_automake_syntax_inits = 1
-    hi link automakePrimary     Statement
-    hi link automakeSecondary   Type
-    hi link automakeExtra       Special
-    hi link automakeOptions     Special
-    hi link automakeClean       Special
-    hi link automakeSubdirs     Statement
-    hi link automakeConditional PreProc
-    hi link automakeSubst       PreProc
-    hi link automakeComment1    makeComment
-    hi link automakeComment2    makeComment
-    hi link automakeMakeError   makeError
-    hi link automakeBadSubst    makeError
-    hi link automakeMakeDString makeDString
-    hi link automakeMakeSString makeSString
-    hi link automakeMakeBString makeBString
-endif
+" The default highlighting.
+hi def link automakePrimary     Statement
+hi def link automakeSecondary   Type
+hi def link automakeExtra       Special
+hi def link automakeOptions     Special
+hi def link automakeClean       Special
+hi def link automakeSubdirs     Statement
+hi def link automakeConditional PreProc
+hi def link automakeSubst       PreProc
+hi def link automakeComment1    makeComment
+hi def link automakeComment2    makeComment
+hi def link automakeMakeError   makeError
+hi def link automakeBadSubst    makeError
+hi def link automakeMakeDString makeDString
+hi def link automakeMakeSString makeSString
+hi def link automakeMakeBString makeBString
 
 let b:current_syntax = "automake"
 

@@ -213,6 +213,7 @@ typedef struct m_block mblock_t;
 struct m_block
 {
     mblock_t	*mb_next;	/* pointer to next allocated block */
+    size_t	mb_size;	/* total size of all chunks in this block */
     minfo_t	mb_info;	/* head of free chuck list for this block */
 };
 
@@ -429,6 +430,13 @@ struct condstack
 #endif
 
 #ifdef FEAT_SYN_HL
+/* struct passed to in_id_list() */
+struct sp_syn
+{
+    int		inc_tag;	/* ":syn include" unique tag */
+    short	id;		/* highlight group ID of item */
+};
+
 /*
  * Each keyword has one keyentry, which is linked in a hash list.
  */
@@ -437,8 +445,7 @@ typedef struct keyentry keyentry_t;
 struct keyentry
 {
     keyentry_t	*next;		/* next keyword in the hash list */
-    int		syn_inc_tag;	/* ":syn include" tag for this match */
-    short	syn_id;		/* syntax ID for this match (if non-zero) */
+    struct sp_syn k_syn;	/* struct passed to in_id_list() */
     short	*next_list;	/* ID list for next match (if non-zero) */
     short	flags;		/* see syntax.c */
     char_u	keyword[1];	/* actually longer */

@@ -4,7 +4,7 @@
 " Maintainers:   Markus Mottl     <mottl@miss.wu-wien.ac.at>
 "                Karl-Heinz Sylla <Karl-Heinz.Sylla@gmd.de>
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
-" Last Change:   2000 May  05 - small fix for optional arguments
+" Last Change:   2000 Nov 04
 
 " Remove any old syntax stuff hanging around.
 syn clear
@@ -196,63 +196,59 @@ syn sync match ocamlStructSync  groupthere ocamlStruct  "\<end\>"
 syn sync match ocamlSigSync     grouphere  ocamlSig     "\<sig\>"
 syn sync match ocamlSigSync     groupthere ocamlSig     "\<end\>"
 
-if !exists("did_ocaml_syntax_inits")
-  " The default methods for highlighting.  Can be overridden later
-  let did_ocaml_syntax_inits = 1
+" The default highlighting.
+hi def link ocamlBraceErr     Error
+hi def link ocamlBrackErr     Error
+hi def link ocamlParenErr     Error
+hi def link ocamlArrErr       Error
 
-  hi link ocamlBraceErr     Error
-  hi link ocamlBrackErr     Error
-  hi link ocamlParenErr     Error
-  hi link ocamlArrErr       Error
+hi def link ocamlCommentErr   Error
 
-  hi link ocamlCommentErr   Error
+hi def link ocamlCountErr     Error
+hi def link ocamlDoErr        Error
+hi def link ocamlDoneErr      Error
+hi def link ocamlEndErr       Error
+hi def link ocamlThenErr      Error
 
-  hi link ocamlCountErr     Error
-  hi link ocamlDoErr        Error
-  hi link ocamlDoneErr      Error
-  hi link ocamlEndErr       Error
-  hi link ocamlThenErr      Error
+hi def link ocamlCharErr      Error
 
-  hi link ocamlCharErr      Error
+hi def link ocamlComment      Comment
 
-  hi link ocamlComment      Comment
+hi def link ocamlModPath      Include
+hi def link ocamlModule       Include
+hi def link ocamlModParam1    Include
+hi def link ocamlModType      Include
+hi def link ocamlMPRestr3     Include
+hi def link ocamlFullMod      Include
+hi def link ocamlModTypeRestr Include
+hi def link ocamlWith         Include
+hi def link ocamlMTDef        Include
 
-  hi link ocamlModPath      Include
-  hi link ocamlModule       Include
-  hi link ocamlModParam1    Include
-  hi link ocamlModType      Include
-  hi link ocamlMPRestr3     Include
-  hi link ocamlFullMod      Include
-  hi link ocamlModTypeRestr Include
-  hi link ocamlWith         Include
-  hi link ocamlMTDef        Include
+hi def link ocamlConstructor  Constant
 
-  hi link ocamlConstructor  Constant
+hi def link ocamlModPreRHS    Keyword
+hi def link ocamlMPRestr2     Keyword
+hi def link ocamlKeyword      Keyword
+hi def link ocamlFunDef       Keyword
+hi def link ocamlRefAssign    Keyword
+hi def link ocamlKeyChar      Keyword
+hi def link ocamlAnyVar       Keyword
+hi def link ocamlTopStop      Keyword
+hi def link ocamlOperator     Keyword
 
-  hi link ocamlModPreRHS    Keyword
-  hi link ocamlMPRestr2     Keyword
-  hi link ocamlKeyword      Keyword
-  hi link ocamlFunDef       Keyword
-  hi link ocamlRefAssign    Keyword
-  hi link ocamlKeyChar      Keyword
-  hi link ocamlAnyVar       Keyword
-  hi link ocamlTopStop      Keyword
-  hi link ocamlOperator     Keyword
+hi def link ocamlBoolean      Boolean
+hi def link ocamlCharacter    Character
+hi def link ocamlNumber       Number
+hi def link ocamlFloat        Float
+hi def link ocamlString       String
 
-  hi link ocamlBoolean      Boolean
-  hi link ocamlCharacter    Character
-  hi link ocamlNumber       Number
-  hi link ocamlFloat        Float
-  hi link ocamlString       String
+hi def link ocamlLabel        Identifier
 
-  hi link ocamlLabel        Identifier
+hi def link ocamlType         Type
 
-  hi link ocamlType         Type
+hi def link ocamlTodo         Todo
 
-  hi link ocamlTodo         Todo
-
-  hi link ocamlEncl         Keyword
-endif
+hi def link ocamlEncl         Keyword
 
 let b:current_syntax = "ocaml"
 

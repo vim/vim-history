@@ -1808,7 +1808,11 @@ frame_new_width(topfrp, width, leftfirst)
     {
 	/* Simple case: just one window. */
 	wp = topfrp->fr_win;
-	if (wp->w_wincol + width == Columns)
+	/* Find out if there are any windows right of this one. */
+	for (frp = topfrp; frp->fr_parent != NULL; frp = frp->fr_parent)
+	    if (frp->fr_parent->fr_layout == FR_ROW && frp->fr_next != NULL)
+		break;
+	if (frp == NULL)
 	    wp->w_vsep_width = 0;
 	win_new_width(wp, width - wp->w_vsep_width);
     }
@@ -3451,7 +3455,7 @@ win_new_height(wp, height)
 #ifdef FEAT_FOLDING
 	    hasFoldingWin(wp, lnum, &lnum, NULL, TRUE, NULL);
 #endif
-	    sline -= (line_size = plines_win(wp, --lnum));
+	    sline -= (line_size = plines_win(wp, --lnum, TRUE));
 	}
 	if (sline < 0)
 	{

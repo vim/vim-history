@@ -34,20 +34,16 @@ syn match   IstSpecial     "\\\\\|{\|}\|#\|\\n"  contained
 syn match   IstTodo        "DEBUG\|TODO"         contained
 
 
-if !exists("did_ist_syntax_inits")
- let did_ist_syntax_inits = 1
-
- hi link IstInpSpec	Type
- hi link IstOutSpec	Identifier
- hi link IstString	String
- hi link IstNumber	Number
- hi link IstComment	Comment
- hi link IstTodo	Todo
- hi link IstSpecial	Special
- hi link IstDoubleQuote	Label
- hi link IstCharacter	Label
-
-endif
+" The default highlighting.
+hi def link IstInpSpec	Type
+hi def link IstOutSpec	Identifier
+hi def link IstString	String
+hi def link IstNumber	Number
+hi def link IstComment	Comment
+hi def link IstTodo	Todo
+hi def link IstSpecial	Special
+hi def link IstDoubleQuote	Label
+hi def link IstCharacter	Label
 
 let b:current_syntax = "ist"
 

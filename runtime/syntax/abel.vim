@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	ABEL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last Change:	1999 Sep 22
+" Last Change:	2000 Nov 04
 
 " Remove any old syn stuff hanging around
 syn clear
@@ -110,38 +110,35 @@ syn region abelComment start=+"+ end=+"\|$+ contains=abelNumber,abelTodo
 
 syn sync minlines=1
 
-if !exists("did_abel_syn_inits")
-  let did_abel_syn_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link abelHeader	  abelStatement
-  hi link abelSection	  abelStatement
-  hi link abelDeclaration abelStatement
-  hi link abelLogicalOperator	 abelOperator
-  hi link abelRangeOperator	 abelOperator
-  hi link abelAlternateOperator  abelOperator
-  hi link abelArithmeticOperator abelOperator
-  hi link abelRelationalOperator abelOperator
-  hi link abelAssignmentOperator abelOperator
-  hi link abelTruthTableOperator abelOperator
-  hi link abelSpecifier   abelStatement
-  hi link abelOperator	  abelStatement
-  hi link abelStatement   Statement
-  hi link abelIdentifier  Identifier
-  hi link abelTypeId	  abelType
-  hi link abelTypeIdChar  abelType
-  hi link abelType	  Type
-  hi link abelNumber	  abelString
-  hi link abelString	  String
-  hi link abelConstant	  Constant
-  hi link abelComment	  Comment
-  hi link abelExtension   abelSpecial
-  hi link abelSpecialChar abelSpecial
-  hi link abelTypeIdEnd   abelSpecial
-  hi link abelSpecial	  Special
-  hi link abelDirective   PreProc
-  hi link abelTodo	  Todo
-  hi link abelError       Error
-endif
+" The default highlighting.
+hi def link abelHeader			abelStatement
+hi def link abelSection			abelStatement
+hi def link abelDeclaration		abelStatement
+hi def link abelLogicalOperator		abelOperator
+hi def link abelRangeOperator		abelOperator
+hi def link abelAlternateOperator	abelOperator
+hi def link abelArithmeticOperator	abelOperator
+hi def link abelRelationalOperator	abelOperator
+hi def link abelAssignmentOperator	abelOperator
+hi def link abelTruthTableOperator	abelOperator
+hi def link abelSpecifier		abelStatement
+hi def link abelOperator		abelStatement
+hi def link abelStatement		Statement
+hi def link abelIdentifier		Identifier
+hi def link abelTypeId			abelType
+hi def link abelTypeIdChar		abelType
+hi def link abelType			Type
+hi def link abelNumber			abelString
+hi def link abelString			String
+hi def link abelConstant		Constant
+hi def link abelComment			Comment
+hi def link abelExtension		abelSpecial
+hi def link abelSpecialChar		abelSpecial
+hi def link abelTypeIdEnd		abelSpecial
+hi def link abelSpecial			Special
+hi def link abelDirective		PreProc
+hi def link abelTodo			Todo
+hi def link abelError			Error
 
 let b:current_syntax = "abel"
 " vim:ts=8

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0k.  Last change: 2000 Oct 29
+*starting.txt*  For Vim version 6.0l.  Last change: 2000 Oct 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -244,7 +244,8 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-C*
 -C		Compatible mode.  Sets the 'compatible' option.  You can use
-		this to get 'compatible', even though there is a .vimrc file.
+		this to get 'compatible', even though a .vimrc file exists.
+		But the command ":set nocompatible" overrules it anyway.
 		Also see |compatible-default|.  {not in Vi}
 
 							*-N*
@@ -347,8 +348,11 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-X*
 -X		Do not try connecting to the X server to get the current
-		window title.  Only makes a difference on Unix or VMS, when
-		compiled with the |+X11| feature.  Otherwise it's ignored.
+		window title.  This avoids a long startup time when running
+		Vim in a terminal emulator and the connection to the X server
+		is slow.
+		Only makes a difference on Unix or VMS, when compiled with the
+		|+X11| feature.  Otherwise it's ignored.
 
 							*-s*
 -s {scriptin}	The script file "scriptin" is read.  The characters in the
@@ -575,12 +579,9 @@ accordingly.  Vim proceeds in this order:
 	- The 'loadplugins' option was reset in a vimrc file.
 	- The |--noplugins| command line argument is used.
 	- The "-u NONE" command line argument is used |-u|.
-	- When Vim was started with the |-u| argument to specify a vimrc
-	  script to use.
 	- When Vim was compiled without the |+eval| feature.
 	Note that using "-c set noloadplugins" doesn't work, because the
-	commands from the command line are executed after loading the plugins
-	(so that they are active when loading the first file).
+	commands from the command line have not been executed yet.
 
 5. Set 'shellpipe' and 'shellredir'
 	The 'shellpipe' and 'shellredir' options are set according to the

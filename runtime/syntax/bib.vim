@@ -43,16 +43,13 @@ syn sync match All grouphere bibEntry /^\s*@/
 syn sync maxlines=200
 syn sync minlines=50
 
-if !exists("did_bib_syntax_inits")
-  let did_bib_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link bibType		Identifier
-  hi link bibEntryKw		Statement
-  hi link bibNSEntryKw		PreProc
-  hi link bibKey		Special
-  hi link bibVariable		Constant
-  hi link bibUnescapedSpecial	Error
-  hi link bibComment		Comment
-endif
+" The default highlighting.
+hi def link bibType		Identifier
+hi def link bibEntryKw		Statement
+hi def link bibNSEntryKw	PreProc
+hi def link bibKey		Special
+hi def link bibVariable		Constant
+hi def link bibUnescapedSpecial	Error
+hi def link bibComment		Comment
 
 let b:current_syntax = "bib"

@@ -145,24 +145,21 @@ syn match vhdlTime "\<\d\+\.\d\+\s\+\(\([fpnum]s\)\|\(sec\)\|\(min\)\|\(hr\)\)\>
 syn match vhdlComment "--.*$"
 " syn match vhdlGlobal "[\'$#~!%@?\^\[\]{}\\]"
 
-if !exists("did_vhdl_syntax_inits")
-  let did_vhdl_syntax_inits = 1
-  " The default methods for highlighting. Can be overridden later
-  hi link cDefine       PreProc
-  hi link vhdlSpecial   Special
-  hi link vhdlStatement Statement
-  hi link vhdlCharacter String
-  hi link vhdlString    String
-  hi link vhdlVector    String
-  hi link vhdlBoolean   String
-  hi link vhdlComment   Comment
-  hi link vhdlNumber    String
-  hi link vhdlTime      String
-  hi link vhdlType      Type
-  hi link vhdlOperator  Type
-  hi link vhdlGlobal    Error
-  hi link vhdlAttribute Type
-endif
+" The default highlighting.
+hi def link cDefine       PreProc
+hi def link vhdlSpecial   Special
+hi def link vhdlStatement Statement
+hi def link vhdlCharacter String
+hi def link vhdlString    String
+hi def link vhdlVector    String
+hi def link vhdlBoolean   String
+hi def link vhdlComment   Comment
+hi def link vhdlNumber    String
+hi def link vhdlTime      String
+hi def link vhdlType      Type
+hi def link vhdlOperator  Type
+hi def link vhdlGlobal    Error
+hi def link vhdlAttribute Type
 
 let b:current_syntax = "vhdl"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Telix (Modem Comm Program) SALT Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	1997/12/16
+" Last Change:	2000 Nov 04
 " Version Info: @(#)tsalt.vim	1.5	97/12/16 08:11:15
 
 " Remove any old syn stuff hanging around
@@ -129,8 +129,8 @@ syn region tsaltParen		transparent start='(' end=')' contains=ALLBUT,tsaltParenE
 syn match tsaltParenError		")"
 syn match tsaltInParen		contained "[{}]"
 
-hi link tsaltParenError		tsaltError
-hi link tsaltInParen		tsaltError
+hi def link tsaltParenError		tsaltError
+hi def link tsaltInParen		tsaltError
 
 "integer number, or floating point number without a dot and with "f".
 syn match  tsaltNumber		"\<\d\+\(u\=l\=\|lu\|f\)\>"
@@ -162,38 +162,34 @@ syn region tsaltMulti	transparent start='?' end=':' contains=ALLBUT,tsaltInclude
 syn sync ccomment tsaltComment
 
 
-if !exists("did_tsalt_syntax_inits")
-	let did_tsalt_syntax_inits = 1
-	" The default methods for highlighting.  Can be overridden later
-	hi link tsaltFunction		Statement
-	hi link tsaltSysVar		Type
-	"hi link tsaltLibFunc		UserDefFunc
-	"hi link tsaltConstants		Type
-	"hi link tsaltFuncArg		Type
-	"hi link tsaltOperator		Operator
-	"hi link tsaltLabel		Label
-	"hi link tsaltUserLabel		Label
-	hi link tsaltConditional	Conditional
-	hi link tsaltRepeat		Repeat
-	hi link tsaltCharacter		SpecialChar
-	hi link tsaltSpecialCharacter	SpecialChar
-	hi link tsaltNumber		Number
-	hi link tsaltFloat		Float
-	hi link tsaltCommentError	tsaltError
-	hi link tsaltInclude		Include
-	hi link tsaltPreProc		PreProc
-	hi link tsaltDefine		Macro
-	hi link tsaltIncluded		tsaltString
-	hi link tsaltError		Error
-	hi link tsaltStatement		Statement
-	hi link tsaltPreCondit		PreCondit
-	hi link tsaltType		Type
-	hi link tsaltString		String
-	hi link tsaltComment		Comment
-	hi link tsaltSpecial		Special
-	hi link tsaltTodo		Todo
-
-endif
+" The default highlighting.
+hi def link tsaltFunction		Statement
+hi def link tsaltSysVar			Type
+"hi def link tsaltLibFunc		UserDefFunc
+"hi def link tsaltConstants		Type
+"hi def link tsaltFuncArg		Type
+"hi def link tsaltOperator		Operator
+"hi def link tsaltLabel			Label
+"hi def link tsaltUserLabel		Label
+hi def link tsaltConditional		Conditional
+hi def link tsaltRepeat			Repeat
+hi def link tsaltCharacter		SpecialChar
+hi def link tsaltSpecialCharacter	SpecialChar
+hi def link tsaltNumber			Number
+hi def link tsaltFloat			Float
+hi def link tsaltCommentError		tsaltError
+hi def link tsaltInclude		Include
+hi def link tsaltPreProc		PreProc
+hi def link tsaltDefine			Macro
+hi def link tsaltIncluded		tsaltString
+hi def link tsaltError			Error
+hi def link tsaltStatement		Statement
+hi def link tsaltPreCondit		PreCondit
+hi def link tsaltType			Type
+hi def link tsaltString			String
+hi def link tsaltComment		Comment
+hi def link tsaltSpecial		Special
+hi def link tsaltTodo			Todo
 
 let b:current_syntax = "tsalt"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Feb 08
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -35,24 +35,22 @@ syn match diffNewFile	"^--- .*"
 
 syn match diffComment	"^#.*"
 
-if !exists("did_diff_syntax_inits")
-  let did_diff_syntax_inits = 1
-  hi link diffOldFile	diffFile
-  hi link diffNewFile	diffFile
-  hi link diffFile	Type
-  hi link diffOnly	Constant
-  hi link diffIdentical	Constant
-  hi link diffDiffer	Constant
-  hi link diffBDiffer	Constant
-  hi link diffIsA	Constant
-  hi link diffNoEOL	Constant
-  hi link diffRemoved	Special
-  hi link diffChanged	PreProc
-  hi link diffAdded	Identifier
-  hi link diffLine	Statement
-  hi link diffSubname	PreProc
-  hi link diffComment	Comment
-endif
+" The default highlighting.
+hi def link diffOldFile		diffFile
+hi def link diffNewFile		diffFile
+hi def link diffFile		Type
+hi def link diffOnly		Constant
+hi def link diffIdentical	Constant
+hi def link diffDiffer		Constant
+hi def link diffBDiffer		Constant
+hi def link diffIsA		Constant
+hi def link diffNoEOL		Constant
+hi def link diffRemoved		Special
+hi def link diffChanged		PreProc
+hi def link diffAdded		Identifier
+hi def link diffLine		Statement
+hi def link diffSubname		PreProc
+hi def link diffComment		Comment
 
 let b:current_syntax = "diff"
 

@@ -63,22 +63,20 @@ syn match   focexecNumber	"\<\d\+\.\d*\>"
 
 syn match   focexecComment	"-\*.*"
 
-if !exists("did_focexec_syntax_inits")
-  let did_focexec_syntax_inits = 1
-  hi link focexecString1	String
-  hi link focexecString2	String
-  hi link focexecNumber		Number
-  hi link focexecComment	Comment
-  hi link focexecTable		Keyword
-  hi link focexecModify		Keyword
-  hi link focexecNormal		Keyword
-  hi link focexecSet		Keyword
-  hi link focexecDash		Keyword
-  hi link focexecFileDef	Keyword
-  hi link focexecJoin		Keyword
-  hi link focexecAmperVar	Identifier
-  hi link focexecFuse		Function
-endif
+" The default highlighting.
+hi def link focexecString1	String
+hi def link focexecString2	String
+hi def link focexecNumber	Number
+hi def link focexecComment	Comment
+hi def link focexecTable	Keyword
+hi def link focexecModify	Keyword
+hi def link focexecNormal	Keyword
+hi def link focexecSet		Keyword
+hi def link focexecDash		Keyword
+hi def link focexecFileDef	Keyword
+hi def link focexecJoin		Keyword
+hi def link focexecAmperVar	Identifier
+hi def link focexecFuse		Function
 
 let b:current_syntax = "focexec"
 

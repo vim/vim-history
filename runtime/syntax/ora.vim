@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
-" Last Change:	2000 Jun 14
+" Last Change:	2000 Nov 04
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -432,25 +432,22 @@ syn cluster oraAll add=oraValue,oraModifier,oraString,oraSpecial,oraComment
 "==============================================================================
 " highlighting
 
-if !exists("did_ora_syntax_inits")
-  let did_ora_syntax_inits = 1
-
-  hi link oraKeyword       Statement             "usual keywords
-  hi link oraKeywordGroup  Type                  "keywords which group other keywords
-  hi link oraKeywordPref   oraKeywordGroup       "keywords which act as prefixes
-  hi link oraKeywordObs    Todo                  "obsolete keywords
-  hi link oraKeywordUnd    PreProc               "undocumented keywords
-  hi link oraKeywordUndObs oraKeywordObs         "undocumented obsolete keywords
-  hi link oraValue         Identifier            "values, like true or false
-  hi link oraModifier      oraValue              "modifies values
-  hi link oraString        String                "strings
+" The default highlighting.
+hi def link oraKeyword       Statement       "usual keywords
+hi def link oraKeywordGroup  Type            "keywords which group other keywords
+hi def link oraKeywordPref   oraKeywordGroup "keywords which act as prefixes
+hi def link oraKeywordObs    Todo            "obsolete keywords
+hi def link oraKeywordUnd    PreProc         "undocumented keywords
+hi def link oraKeywordUndObs oraKeywordObs   "undocumented obsolete keywords
+hi def link oraValue         Identifier      "values, like true or false
+hi def link oraModifier      oraValue        "modifies values
+hi def link oraString        String          "strings
  
-  hi link oraSpecial       Special               "special characters
-  hi link oraError         Error                 "errors
-  hi link oraParenError    oraError              "errors caused by mismatching parantheses
+hi def link oraSpecial       Special         "special characters
+hi def link oraError         Error           "errors
+hi def link oraParenError    oraError        "errors caused by mismatching parantheses
 
-  hi link oraComment       Comment               "comments
-endif
+hi def link oraComment       Comment         "comments
 
 let b:current_syntax = "ora"
 

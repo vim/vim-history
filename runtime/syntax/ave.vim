@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	avenue
 " Maintainer:	Jan-Oliver Wagner <Jan-Oliver.Wagner@usf.Uni-Osnabrueck.DE>
-" Last Change:	1998 September 11
+" Last Change:	2000 Nov 04
 
 " Avenue is the ArcView built-in language. ArcView is
 " a desktop GIS by ESRI. Though it is a built-in language
@@ -53,26 +53,23 @@ syn match aveComment	"'.*"
 syn match aveTypos	"=="
 syn match aveTypos	"!="
 
-if !exists("did_ave_syntax_inits")
-  let did_ave_syntax_inits = 1
+" The default highlighting.
+hi def link aveStatement	Statement
 
-  hi link aveStatement		Statement
+hi def link aveString		String
+hi def link aveNumber		Number
 
-  hi link aveString		String
-  hi link aveNumber		Number
+hi def link aveFixVariables	Special
+hi def link aveVariables	Identifier
+hi def link globalVariables	Special
+hi def link aveConst		Special
 
-  hi link aveFixVariables	Special
-  hi link aveVariables		Identifier
-  hi link globalVariables	Special
-  hi link aveConst		Special
+hi def link aveClassMethods	Function
 
-  hi link aveClassMethods	Function
+hi def link aveOperators	Operator
+hi def link aveComment		Comment
 
-  hi link aveOperators		Operator
-  hi link aveComment		Comment
-
-  hi link aveTypos		Error
-endif
+hi def link aveTypos		Error
 
 let b:current_syntax = "ave"
 

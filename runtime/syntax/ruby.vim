@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     Ruby
 " Maintainer:   Mirko Nasato
-" Last Change:  2000 Feb 19
+" Last Change:  2000 Nov 04
 " Location:     http://altern.org/mn/ruby/ruby.vim
 
 " See http://altern.org/mn/ruby/vim.html for documentation.
@@ -178,28 +178,26 @@ syn match   rubySharpBang  "#!.*"
 syn region  rubyDocumentation  start="^=begin" end="^=end.*$" contains=rubyTodo
 
 " Do it
-if !exists("did_ruby_syntax_inits")
-  let did_ruby_syntax_inits = 1
 
-  hi link rubyDefine          Define
-  hi link rubyFunction        Function
-  hi link rubyControl         Statement
-  hi link rubyInclude         Include
-  hi link rubyNumber          Number
-  hi link rubyBoolean         Boolean
-  hi link rubyException       Exception
-  hi link rubyClassOrModule   Type
-  hi link rubyIdentifier      Special
-  hi link rubySharpBang       PreProc
+" The default highlighting.
+hi def link rubyDefine          Define
+hi def link rubyFunction        Function
+hi def link rubyControl         Statement
+hi def link rubyInclude         Include
+hi def link rubyNumber          Number
+hi def link rubyBoolean         Boolean
+hi def link rubyException       Exception
+hi def link rubyClassOrModule   Type
+hi def link rubyIdentifier      Special
+hi def link rubySharpBang       PreProc
   
-  hi link rubyString          String
-  hi link rubyStringDelimit   Delimiter
-  hi link rubyExprSubst       Special
+hi def link rubyString          String
+hi def link rubyStringDelimit   Delimiter
+hi def link rubyExprSubst       Special
   
-  hi link rubyComment         Comment
-  hi link rubyDocumentation   Comment
-  hi link rubyTodo            Todo
-endif
+hi def link rubyComment         Comment
+hi def link rubyDocumentation   Comment
+hi def link rubyTodo            Todo
 
 let b:current_syntax = "ruby"
 

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
+*editing.txt*   For Vim version 6.0l.  Last change: 2000 Nov 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -308,6 +308,9 @@ unmodified.
 These commands are used to start editing a single file.  This means that the
 file is read into the buffer and the current file name is set.  The file that
 is opened depends on the current directory, see |:cd|.
+
+See |read-messages| for an explanation of the message that is given after the
+file has been read.
 
 							*:filename*
 Note for systems other than Unix and MS-DOS: When using a command that
@@ -936,7 +939,7 @@ The names can be in upper or lower case.
 6. Editing binary files					*edit-binary*
 
 Although Vim was made to edit text files, it is possible to edit binary
-files.  The "-b" Vim argument (b for binary) makes Vim do file I/O in binary
+files.  The |-b| Vim argument (b for binary) makes Vim do file I/O in binary
 mode, and sets some options for editing binary files ('binary' on, 'textwidth'
 to 0, 'modeline' off, 'expandtab' off).  Setting the 'binary' option has the
 same effect.  Don't forget to do this before reading the file.

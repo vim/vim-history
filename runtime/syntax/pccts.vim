@@ -62,25 +62,22 @@ syn sync match pcctsSyncAction "<<\([^>]\|>[^>]\)*>>"
 syn sync match pcctsSyncRule grouphere pcctsRule "\<[a-z][A-Za-z0-9_]*\>\s*\[[^]]*\]\s*:"
 syn sync match pcctsSyncRule grouphere pcctsRule "\<[a-z][A-Za-z0-9_]*\>\(\s*\[[^]]*\]\)\=\s*>\s*\[[^]]*\]\s*:"
 
-if !exists("did_pccts_syntax_inits")
-  let did_pccts_syntax_inits = 1
-  " The default methods for highlighting. Can be overriden later.
-  hi link pcctsDelim		Special
-  hi link pcctsTokenName	Identifier
-  hi link pcctsRuleName		Statement
-  hi link pcctsLabelHack	Label
-  hi link pcctsDirective	PreProc
-  hi link pcctsString		String
-  hi link pcctsComment		Comment
-  hi link pcctsClass		Statement
-  hi link pcctsClassName	Identifier
-  hi link pcctsException	Statement
-  hi link pcctsExceptionHandler	Keyword
-  hi link pcctsExceptionRuleRef	pcctsDelim
-  hi link pcctsExceptionID	Identifier
-  hi link pcctsRuleRef		Identifier
-  hi link pcctsSpecialChar	SpecialChar
-endif
+" The default highlighting.
+hi def link pcctsDelim			Special
+hi def link pcctsTokenName		Identifier
+hi def link pcctsRuleName		Statement
+hi def link pcctsLabelHack		Label
+hi def link pcctsDirective		PreProc
+hi def link pcctsString			String
+hi def link pcctsComment		Comment
+hi def link pcctsClass			Statement
+hi def link pcctsClassName		Identifier
+hi def link pcctsException		Statement
+hi def link pcctsExceptionHandler	Keyword
+hi def link pcctsExceptionRuleRef	pcctsDelim
+hi def link pcctsExceptionID		Identifier
+hi def link pcctsRuleRef		Identifier
+hi def link pcctsSpecialChar		SpecialChar
 
 let b:current_syntax = "pccts"
 

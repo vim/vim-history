@@ -1,4 +1,4 @@
-*if_sniff.txt*	For Vim version 6.0k.  Last change: 2000 Jul 07
+*if_sniff.txt*	For Vim version 6.0l.  Last change: 2000 Oct 30
 
 
 		  VIM REFERENCE MANUAL
@@ -88,7 +88,8 @@ connects to SNiFF+.
 
 To compile Vim with SNiFF+ support, you need two source files of the extra
 archive: if_sniff.c and if_sniff.h.
-On Unix: Edit the Makefile and uncomment the SNIFF macro definitions
+On Unix: Edit the Makefile and uncomment the line "--enable-sniff".  Or run
+configure manually with this argument.
 On NT: Specify SNIFF=yes with your make command.
 
  vim:tw=78:

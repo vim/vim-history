@@ -3,7 +3,7 @@
 "		(ISO-10165-4; Guidelines for the Definition of Managed Object)
 " Maintainer:	Gyuman Kim <violino@dooly.modacom.co.kr>
 " URL:		http://dooly.modacom.co.kr/~violino/gdmo.vim
-" Last Change:	1999 Jul 02
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -58,23 +58,20 @@ syn match gdmoBraces     "[{}]"
 
 syn sync ccomment gdmoComment
 
-if !exists("did_gdmo_syntax_inits")
-  let did_gdmo_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link gdmoCategory         Structure
-  hi link gdmoRelationship     Macro
-  hi link gdmoDefinition       Statement
-  hi link gdmoReference        Type
-  hi link gdmoExtension        Operator
-  hi link gdmoBraces           Function
-  hi link gdmoSpecial          Special
-  hi link gdmoString           String
-  hi link gdmoCharacter        Character
-  hi link gdmoSpecialCharacter gdmoSpecial
-  hi link gdmoComment          Comment
-  hi link gdmoLineComment      gdmoComment
-  hi link gdmoType             Type
-endif
+" The default highlighting.
+hi def link gdmoCategory         Structure
+hi def link gdmoRelationship     Macro
+hi def link gdmoDefinition       Statement
+hi def link gdmoReference        Type
+hi def link gdmoExtension        Operator
+hi def link gdmoBraces           Function
+hi def link gdmoSpecial          Special
+hi def link gdmoString           String
+hi def link gdmoCharacter        Character
+hi def link gdmoSpecialCharacter gdmoSpecial
+hi def link gdmoComment          Comment
+hi def link gdmoLineComment      gdmoComment
+hi def link gdmoType             Type
 
 let b:current_syntax = "gdmo"
 

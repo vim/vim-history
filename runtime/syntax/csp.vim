@@ -110,25 +110,21 @@ syn match cspRttComment		"^--\$\$AM_INPUT"lc=2		contained
 
 syn sync lines=250
 
-if !exists("did_csp_syntax_inits")
-  let did_csp_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  " (The command groups are defined in $VIMRUNTIME/syntax/synload.vim)
-  hi link cspComment		Comment
-  hi link cspNumber		Number
-  hi link cspConditional	Conditional
-  hi link cspOperator		Delimiter
-  hi link cspKeyword		Keyword
-  hi link cspReserved		SpecialChar
-  hi link cspInclude		Include
-  hi link cspAssert		PreCondit
-  hi link cspType		Type
-  hi link cspProcess		Function
-  hi link cspTodo		Todo
-  hi link cspRttComment		Define
-  hi link cspReservedIdentifier	Error
-  " (Currently unused vim method: Debug)
-endif
+" The default highlighting.
+hi def link cspComment		Comment
+hi def link cspNumber		Number
+hi def link cspConditional	Conditional
+hi def link cspOperator		Delimiter
+hi def link cspKeyword		Keyword
+hi def link cspReserved		SpecialChar
+hi def link cspInclude		Include
+hi def link cspAssert		PreCondit
+hi def link cspType		Type
+hi def link cspProcess		Function
+hi def link cspTodo		Todo
+hi def link cspRttComment	Define
+hi def link cspReservedIdentifier Error
+" (Currently unused vim method: Debug)
 
 let b:current_syntax = "csp"
 

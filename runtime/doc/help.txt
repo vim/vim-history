@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0k.  Last change: 2000 Oct 29
+*help.txt*	For Vim version 6.0l.  Last change: 2000 Oct 31
 
 			VIM - main help file
 									 k
@@ -160,8 +160,10 @@ Remarks about specific systems ~
 |os_vms.txt|	VMS
 |os_win32.txt|	MS-Windows 95/98/NT
 
-Standard plugins ~
-|pi_netrw.txt|	Reading and Writing files over a network
+Standard plugins	*standard-plugin-list* ~
+|pi_netrw.txt|	Reading and writing files over a network
+|pi_gzip.txt|	Reading and writing compressed files
+|pi_expl.txt|	File explorer
 
 LOCAL ADDITIONS:
 

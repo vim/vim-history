@@ -33,23 +33,20 @@ syn region  snobol4String		  start=+[^a-zA-Z0-9]'+  skip=+\\\\\|\\"+  end=+'+
 syn match   snobol4MathsOperator   "-\|=\|[:<>+\*^/\\]\||\|"
 syn match  snobol4Comment     "^\*.*$"
 
-if !exists("did_snobol4_syntax_inits")
-  let did_snobol4_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link snobol4Label		Label
-  hi link snobol4Conditional	Conditional
-  hi link snobol4Repeat		Repeat
-  hi link snobol4Number		Number
-  hi link snobol4Error		Error
-  hi link snobol4Statement	Statement
-  hi link snobol4String		String
-  hi link snobol4Comment	Comment
-  hi link snobol4Special	Special
-  hi link snobol4Todo		Todo
-  hi link snobol4Function	Identifier
-  hi link snobol4Keyword	Keyword
-  hi link snobol4MathsOperator	Operator
-endif
+" The default highlighting.
+hi def link snobol4Label	Label
+hi def link snobol4Conditional	Conditional
+hi def link snobol4Repeat	Repeat
+hi def link snobol4Number	Number
+hi def link snobol4Error	Error
+hi def link snobol4Statement	Statement
+hi def link snobol4String	String
+hi def link snobol4Comment	Comment
+hi def link snobol4Special	Special
+hi def link snobol4Todo		Todo
+hi def link snobol4Function	Identifier
+hi def link snobol4Keyword	Keyword
+hi def link snobol4MathsOperator Operator
 
 let b:current_syntax = "snobol4"
 " vim: ts=8

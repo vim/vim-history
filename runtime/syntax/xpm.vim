@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	X Pixmap
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last Change:	1999 Jul 05
+" Last Change:	2000 Nov 04
 " Version:	5.4n.1
 
 " Remove any old syntax stuff hanging around
@@ -36,7 +36,7 @@ while i <= line("$")		" scanning all lines
 
 	 " highlight the Values string as normal string (no pixel string)
 	 exe 'syn match xpmValues /'.s.'/'
-	 hi link xpmValues String
+	 hi def link xpmValues String
 
 	 let n = 1		" n = color index
 
@@ -114,14 +114,12 @@ unlet color chars colors cpp n i s
 
 endif		" has("gui_running")
 
-if !exists("did_xpm_syntax_inits")
-   let did_xpm_syntax_inits = 1
-   hi link xpmType		Type
-   hi link xpmStorageClass	StorageClass
-   hi link xpmTodo		Todo
-   hi link xpmComment		Comment
-   hi link xpmPixelString	String
-endif
+" The default highlighting.
+hi def link xpmType		Type
+hi def link xpmStorageClass	StorageClass
+hi def link xpmTodo		Todo
+hi def link xpmComment		Comment
+hi def link xpmPixelString	String
 
 let b:current_syntax = "xpm"
 

@@ -488,69 +488,67 @@ if exists("mv_totorder")
 
 " ==  PACKAGES  =======================================================
 
-if !exists("did_maplev_syntax_inits")
-  let did_maplev_syntax_inits = 1
 
+" The default highlighting.
   " Maple->Maple Links
-  hi link mvBraceError	mvError
-  hi link mvCurlyError	mvError
-  hi link mvDebug		mvTodo
-  hi link mvParenError	mvError
-  hi link mvPkg_DEtools	mvPkgFunc
-  hi link mvPkg_Galois	mvPkgFunc
-  hi link mvPkg_GaussInt	mvPkgFunc
-  hi link mvPkg_LREtools	mvPkgFunc
-  hi link mvPkg_combinat	mvPkgFunc
-  hi link mvPkg_combstruct	mvPkgFunc
-  hi link mvPkg_difforms	mvPkgFunc
-  hi link mvPkg_finance	mvPkgFunc
-  hi link mvPkg_genfunc	mvPkgFunc
-  hi link mvPkg_geometry	mvPkgFunc
-  hi link mvPkg_grobner	mvPkgFunc
-  hi link mvPkg_group	mvPkgFunc
-  hi link mvPkg_inttrans	mvPkgFunc
-  hi link mvPkg_liesymm	mvPkgFunc
-  hi link mvPkg_linalg	mvPkgFunc
-  hi link mvPkg_logic	mvPkgFunc
-  hi link mvPkg_networks	mvPkgFunc
-  hi link mvPkg_numapprox	mvPkgFunc
-  hi link mvPkg_numtheory	mvPkgFunc
-  hi link mvPkg_orthopoly	mvPkgFunc
-  hi link mvPkg_padic	mvPkgFunc
-  hi link mvPkg_plots	mvPkgFunc
-  hi link mvPkg_plottools	mvPkgFunc
-  hi link mvPkg_powseries	mvPkgFunc
-  hi link mvPkg_process	mvPkgFunc
-  hi link mvPkg_simplex	mvPkgFunc
-  hi link mvPkg_stats	mvPkgFunc
-  hi link mvPkg_student	mvPkgFunc
-  hi link mvPkg_sumtools	mvPkgFunc
-  hi link mvPkg_tensor	mvPkgFunc
-  hi link mvPkg_totorder	mvPkgFunc
-  hi link mvRange		mvOper
-  hi link mvSemiError	mvError
+hi def link mvBraceError	mvError
+hi def link mvCurlyError	mvError
+hi def link mvDebug		mvTodo
+hi def link mvParenError	mvError
+hi def link mvPkg_DEtools	mvPkgFunc
+hi def link mvPkg_Galois	mvPkgFunc
+hi def link mvPkg_GaussInt	mvPkgFunc
+hi def link mvPkg_LREtools	mvPkgFunc
+hi def link mvPkg_combinat	mvPkgFunc
+hi def link mvPkg_combstruct	mvPkgFunc
+hi def link mvPkg_difforms	mvPkgFunc
+hi def link mvPkg_finance	mvPkgFunc
+hi def link mvPkg_genfunc	mvPkgFunc
+hi def link mvPkg_geometry	mvPkgFunc
+hi def link mvPkg_grobner	mvPkgFunc
+hi def link mvPkg_group	mvPkgFunc
+hi def link mvPkg_inttrans	mvPkgFunc
+hi def link mvPkg_liesymm	mvPkgFunc
+hi def link mvPkg_linalg	mvPkgFunc
+hi def link mvPkg_logic	mvPkgFunc
+hi def link mvPkg_networks	mvPkgFunc
+hi def link mvPkg_numapprox	mvPkgFunc
+hi def link mvPkg_numtheory	mvPkgFunc
+hi def link mvPkg_orthopoly	mvPkgFunc
+hi def link mvPkg_padic	mvPkgFunc
+hi def link mvPkg_plots	mvPkgFunc
+hi def link mvPkg_plottools	mvPkgFunc
+hi def link mvPkg_powseries	mvPkgFunc
+hi def link mvPkg_process	mvPkgFunc
+hi def link mvPkg_simplex	mvPkgFunc
+hi def link mvPkg_stats	mvPkgFunc
+hi def link mvPkg_student	mvPkgFunc
+hi def link mvPkg_sumtools	mvPkgFunc
+hi def link mvPkg_tensor	mvPkgFunc
+hi def link mvPkg_totorder	mvPkgFunc
+hi def link mvRange		mvOper
+hi def link mvSemiError	mvError
 
   " Maple->Standard Links
-  hi link mvAssign		Delimiter
-  hi link mvBool		Boolean
-  hi link mvComma		Delimiter
-  hi link mvComment		Comment
-  hi link mvCond		Conditional
-  hi link mvConstant	Number
-  hi link mvDelayEval	Label
-  hi link mvError		Error
-  hi link mvLibrary		Statement
-  hi link mvNumber		Number
-  hi link mvOper		Operator
-  hi link mvPackage		Type
-  hi link mvPkgFunc		Function
-  hi link mvPktOption	Special
-  hi link mvRepeat		Repeat
-  hi link mvSpecial		Special
-  hi link mvStatement	Statement
-  hi link mvString		String
-  hi link mvTodo		Todo
-endif
+hi def link mvAssign	Delimiter
+hi def link mvBool		Boolean
+hi def link mvComma		Delimiter
+hi def link mvComment	Comment
+hi def link mvCond		Conditional
+hi def link mvConstant	Number
+hi def link mvDelayEval	Label
+hi def link mvError		Error
+hi def link mvLibrary	Statement
+hi def link mvNumber	Number
+hi def link mvOper		Operator
+hi def link mvPackage	Type
+hi def link mvPkgFunc	Function
+hi def link mvPktOption	Special
+hi def link mvRepeat	Repeat
+hi def link mvSpecial	Special
+hi def link mvStatement	Statement
+hi def link mvString	String
+hi def link mvTodo		Todo
 
 let b:current_syntax = "maple"
 

@@ -13,20 +13,19 @@ syn match	dylanintrClass		"<.*>"
 syn region	dylanintrType		start=+"+ skip=+\\\\\|\\"+ end=+"+
 
 syn region	dylanintrIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
-syn match 	dylanintrIncluded	contained "<[^>]*>"
-syn match 	dylanintrInclude	"^\s*#\s*include\>\s*["<]" contains=intrIncluded
+syn match	dylanintrIncluded	contained "<[^>]*>"
+syn match	dylanintrInclude	"^\s*#\s*include\>\s*["<]" contains=intrIncluded
 
 "syn keyword intrMods pointer struct
-if !exists("did_dylan_intr_syntax_inits")
-  let did_dylan_intr_syntax_inits = 1
-  hi link dylanintrInfo		Special
-  hi link dylanintrInterface	Operator
-  hi link dylanintrMods		Type
-  hi link dylanintrClass	StorageClass
-  hi link dylanintrType		Type
-  hi link dylanintrIncluded	String
-  hi link dylanintrInclude	Include
-endif
+
+" The default highlighting.
+hi def link dylanintrInfo	Special
+hi def link dylanintrInterface	Operator
+hi def link dylanintrMods	Type
+hi def link dylanintrClass	StorageClass
+hi def link dylanintrType	Type
+hi def link dylanintrIncluded	String
+hi def link dylanintrInclude	Include
 
 let b:current_syntax = "dylan-intr"
 

@@ -296,12 +296,10 @@ syn keyword pineOption vertical-folder-list
 
 syn match  pineComment  "^#.*$"
 
-if !exists("did_pine_syntax_inits")
-  let did_pine_syntax_inits = 1
-  hi link pineConfig	  Type
-  hi link pineComment     Comment
-  hi link pineOption      Macro
-endif
+" The default highlighting.
+hi def link pineConfig	Type
+hi def link pineComment	Comment
+hi def link pineOption	Macro
 
 let b:current_syntax = "pine"
 

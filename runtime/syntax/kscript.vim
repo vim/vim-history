@@ -9,7 +9,7 @@ syn clear
 
 syn keyword	kscriptPreCondit	import from
 
-syn keyword 	kscriptHardCoded	print println connect length arg mid upper lower isEmpty toInt toFloat findApplication
+syn keyword	kscriptHardCoded	print println connect length arg mid upper lower isEmpty toInt toFloat findApplication
 syn keyword	kscriptConditional	if else switch
 syn keyword	kscriptRepeat		while for do foreach
 syn keyword	kscriptExceptions	emit catch raise try signal
@@ -26,32 +26,26 @@ syn region	kscriptComment		start="/\*" end="\*/" contains=kscriptTodo
 syn match	kscriptComment		"//.*" contains=kscriptTodo
 syn match	kscriptComment		"#.*$" contains=kscriptTodo
 
-syn region  	kscriptString		start=+'+  end=+'+ skip=+\\\\\|\\'+
-syn region  	kscriptString		start=+"+  end=+"+ skip=+\\\\\|\\"+
-syn region  	kscriptString		start=+"""+  end=+"""+
-syn region  	kscriptString		start=+'''+  end=+'''+
+syn region	kscriptString		start=+'+  end=+'+ skip=+\\\\\|\\'+
+syn region	kscriptString		start=+"+  end=+"+ skip=+\\\\\|\\"+
+syn region	kscriptString		start=+"""+  end=+"""+
+syn region	kscriptString		start=+'''+  end=+'''+
 
-if !exists("did_kscript_syntax_inits")
-  let did_kscript_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-
-  hi link kscriptConditional		Conditional
-  hi link kscriptRepeat			Repeat
-  hi link kscriptExceptions		Statement
-  hi link kscriptFunction		Function	
-  hi link kscriptConst			Constant
-  hi link kscriptStatement		Statement
-  hi link kscriptLabel			Label
-  hi link kscriptStorageClass		StorageClass
-  hi link kscriptType			Type
-  hi link kscriptTodo			Todo
-  hi link kscriptComment		Comment
-  hi link kscriptString			String
-  hi link kscriptPreCondit		PreCondit
-  hi link kscriptHardCoded		Statement
-
-
-endif
+" The default highlighting.
+hi def link kscriptConditional		Conditional
+hi def link kscriptRepeat		Repeat
+hi def link kscriptExceptions		Statement
+hi def link kscriptFunction		Function	
+hi def link kscriptConst		Constant
+hi def link kscriptStatement		Statement
+hi def link kscriptLabel		Label
+hi def link kscriptStorageClass		StorageClass
+hi def link kscriptType			Type
+hi def link kscriptTodo			Todo
+hi def link kscriptComment		Comment
+hi def link kscriptString		String
+hi def link kscriptPreCondit		PreCondit
+hi def link kscriptHardCoded		Statement
 
 let b:current_syntax = "kscript"
 

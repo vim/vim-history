@@ -93,69 +93,64 @@ syn sync match shForSync      groupthere shFor      "\<in\>"
 syn sync match shCaseEsacSync grouphere  shCaseEsac "\<case\>"
 syn sync match shCaseEsacSync groupthere shCaseEsac "\<esac\>"
 
-if !exists("did_spec_syntax_inits")
-        let did_spec_syntax_inits = 1
-        " The default methods for highlighting. Can be overridden later.
-
-          "main types color definitions
-          hi link specSection                   Structure
-          hi link specSectionMacro              Macro
-          hi link specWWWlink                   PreProc
-          hi link specOpts                      Operator
+" The default highlighting.
+hi def link specSection                   Structure
+hi def link specSectionMacro              Macro
+hi def link specWWWlink                   PreProc
+hi def link specOpts                      Operator
 
           "yes, it's ugly, but white is sooo cool
-          if &background == "dark"
-            hi      specGlobalMacro            ctermfg=white
-          else
-            hi link specGlobalMacro            Identifier
-          endif
+if &background == "dark"
+  hi def specGlobalMacro            ctermfg=white
+else
+  hi def link specGlobalMacro            Identifier
+endif
 
           "sh colors
-          hi link shComment                     Comment
-          hi link shIf                          Statement
-          hi link shOperator                    Special
-          hi link shQuote1                      String
-          hi link shQuote2                      String
-          hi link shQuoteDelim                  Statement
+hi def link shComment                     Comment
+hi def link shIf                          Statement
+hi def link shOperator                    Special
+hi def link shQuote1                      String
+hi def link shQuote2                      String
+hi def link shQuoteDelim                  Statement
 
           "spec colors
-          hi link specBlock                     Function
-          hi link specColon                     Special
-          hi link specCommand                   Statement
-          hi link specCommandOpts               specOpts
-          hi link specCommandSpecial            Special
-          hi link specComment                   Comment
-          hi link specConfigure                 specCommand
-          hi link specDate                      String
-          hi link specDescriptionOpts           specOpts
-          hi link specEmail                     specWWWlink
-          hi link specError                     Error
-          hi link specFilesDirective            specSectionMacro
-          hi link specFilesOpts                 specOpts
-          hi link specLicense                   String
-          hi link specMacroNameLocal            specGlobalMacro
-          hi link specMacroNameOther            specGlobalMacro
-          hi link specManpageFile               NONE
-          hi link specMonth                     specDate
-          hi link specNoNumberHilite            NONE
-          hi link specNumber                    Number
-          hi link specPackageOpts               specOpts
-          hi link specPercent                   Special
-          hi link specSpecialChar               Special
-          hi link specSpecialVariables          specGlobalMacro
-          hi link specSpecialVariablesNames     specGlobalMacro
-          hi link specTarCommand                specCommand
-          hi link specURL                       specWWWlink
-          hi link specURLMacro                  specWWWlink
-          hi link specVariables                 Identifier
-          hi link specWeekday                   specDate
-          hi link specListedFilesBin            Statement
-          hi link specListedFilesDoc            Statement
-          hi link specListedFilesEtc            Statement
-          hi link specListedFilesLib            Statement
-          hi link specListedFilesPrefix         Statement
-          hi link specListedFilesShare          Statement
-  endif
+hi def link specBlock                     Function
+hi def link specColon                     Special
+hi def link specCommand                   Statement
+hi def link specCommandOpts               specOpts
+hi def link specCommandSpecial            Special
+hi def link specComment                   Comment
+hi def link specConfigure                 specCommand
+hi def link specDate                      String
+hi def link specDescriptionOpts           specOpts
+hi def link specEmail                     specWWWlink
+hi def link specError                     Error
+hi def link specFilesDirective            specSectionMacro
+hi def link specFilesOpts                 specOpts
+hi def link specLicense                   String
+hi def link specMacroNameLocal            specGlobalMacro
+hi def link specMacroNameOther            specGlobalMacro
+hi def link specManpageFile               NONE
+hi def link specMonth                     specDate
+hi def link specNoNumberHilite            NONE
+hi def link specNumber                    Number
+hi def link specPackageOpts               specOpts
+hi def link specPercent                   Special
+hi def link specSpecialChar               Special
+hi def link specSpecialVariables          specGlobalMacro
+hi def link specSpecialVariablesNames     specGlobalMacro
+hi def link specTarCommand                specCommand
+hi def link specURL                       specWWWlink
+hi def link specURLMacro                  specWWWlink
+hi def link specVariables                 Identifier
+hi def link specWeekday                   specDate
+hi def link specListedFilesBin            Statement
+hi def link specListedFilesDoc            Statement
+hi def link specListedFilesEtc            Statement
+hi def link specListedFilesLib            Statement
+hi def link specListedFilesPrefix         Statement
+hi def link specListedFilesShare          Statement
 
 let b:current_syntax = "spec"
 

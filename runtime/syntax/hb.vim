@@ -2,7 +2,7 @@
 " Language:	Hyper Builder
 " Maintainer:	Alejandro Forero Cuervo
 " URL:		http://bachue.com/hb/vim/syntax/hb.vim
-" Last Change:	2000 Apr 2
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -54,22 +54,20 @@ syn region HBText matchgroup=HBDirectiveKeyword start=/^:\(set\|out\)\s*\S\+.*$/
 
 syn match HBComment "^#.*$"
 
-if !exists("did_hb_syntax_inits")
-  let did_hb_syntax_inits = 1
 
-  hi link HBhtmlString                    String
-  hi link HBhtmlTagN                      Function
-  hi link htmlSpecialChar                 String
+" The default highlighting.
+hi def link HBhtmlString                String
+hi def link HBhtmlTagN                  Function
+hi def link htmlSpecialChar             String
 
-  hi link HBInvalidLine Error
-  hi link HBFoobar Comment
-  hi HBFileName guibg=lightgray guifg=black
-  hi link HBDirectiveError Error
-  hi link HBDirectiveBlockEnd HBDirectiveKeyword
-  hi HBDirectiveKeyword guibg=lightgray guifg=darkgreen
-  hi link HBComment Comment
-  hi link HBhtmlTagSk Statement
-endif
+hi def link HBInvalidLine		Error
+hi def link HBFoobar Comment
+hi def HBFileName			guibg=lightgray guifg=black
+hi def link HBDirectiveError		Error
+hi def link HBDirectiveBlockEnd		HBDirectiveKeyword
+hi def HBDirectiveKeyword		guibg=lightgray guifg=darkgreen
+hi def link HBComment			Comment
+hi def link HBhtmlTagSk			Statement
 
 syn sync match Normal grouphere NONE "^:\s*$"
 syn sync match Normal grouphere NONE "^:\s*lib\s\+[^ \t]\+$"

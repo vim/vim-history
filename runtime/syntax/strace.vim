@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	strace output
 " Maintainer:	David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change:	2000 Sep 01
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -23,22 +23,19 @@ syn match   straceParenthesis   "[][(){}]"
 syn match   straceOperator      "[-+=*/!%&|:,]"
 syn region  straceComment       start="/\*" end="\*/" oneline
 
-if !exists("did_strace_syntax_inits")
-  let did_strace_syntax_inits = 1
-  " the default methods for highlighting.  can be overridden later
-  hi link straceComment         Comment
-  hi link straceVerbosed	Comment
-  hi link straceNumber		Number
-  hi link straceNumberRHS       Type
-  hi link straceOtherRHS       	Type
-  hi link straceString		String
-  hi link straceConstant	Function
-  hi link straceEquals  	Type
-  hi link straceSysCall  	Statement
-  hi link straceParenthesis     Statement
-  hi link straceOperator        Normal
-  hi link straceSpecialChar	Special
-endif
+" the default methods for highlighting.  can be overridden later
+hi def link straceComment       Comment
+hi def link straceVerbosed	Comment
+hi def link straceNumber	Number
+hi def link straceNumberRHS     Type
+hi def link straceOtherRHS      Type
+hi def link straceString	String
+hi def link straceConstant	Function
+hi def link straceEquals	Type
+hi def link straceSysCall	Statement
+hi def link straceParenthesis   Statement
+hi def link straceOperator      Normal
+hi def link straceSpecialChar	Special
 
 let b:current_syntax = "strace"
 

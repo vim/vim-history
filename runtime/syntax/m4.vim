@@ -2,7 +2,7 @@
 " Language:		M4
 " Maintainer:	Claudio Fleiner
 " URL:			http://www.fleiner.com/vim/syntax/m4.vim
-" Last Change:	1999 Sep 1
+" Last Change:	2000 Nov 04
 
 " This file will highlight user function calls if they use only
 " capital letters and have at least one argument (i.e. the '('
@@ -32,23 +32,20 @@ syn region m4Function matchgroup=m4Type      start="\<[_A-Z][_A-Z0-9]*("he=e-1 e
 syn region m4String   start="`" end="'" contained contains=@m4Top,@m4StringContents,SpellErrors
 syn cluster m4Top     contains=m4Comment,m4Constants,m4Special,m4Variable,m4String,m4Paren,m4Command,m4Statement,m4Function
 
-if !exists("did_m4_syntax_inits")
-  let did_m4_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link m4Delimiter Delimiter
-  hi link m4Comment   Comment
-  hi link m4Function  Function
-  hi link m4Keyword   Keyword
-  hi link m4Special   Special
-  hi link m4String    String
-  hi link m4Statement Statement
-  hi link m4Preproc   PreProc
-  hi link m4Type      Type
-  hi link m4Special   Special
-  hi link m4Variable  Special
-  hi link m4Constants Constant
-  hi link m4Builtin   Statement
-endif
+" The default highlighting.
+hi def link m4Delimiter Delimiter
+hi def link m4Comment   Comment
+hi def link m4Function  Function
+hi def link m4Keyword   Keyword
+hi def link m4Special   Special
+hi def link m4String    String
+hi def link m4Statement Statement
+hi def link m4Preproc   PreProc
+hi def link m4Type      Type
+hi def link m4Special   Special
+hi def link m4Variable  Special
+hi def link m4Constants Constant
+hi def link m4Builtin   Statement
 
 let b:current_syntax = "m4"
 

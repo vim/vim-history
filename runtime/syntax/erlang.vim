@@ -72,19 +72,17 @@ if ! exists("erlang_keywords")
 endif
 
 
-if ! exists("did_erlang_syntax_inits")
-	let did_erlang_syntax_inits = 1
-	hi link erlangComment Comment
-	hi link erlangKeyword Keyword
-	hi link erlangString1 String
-	hi link erlangString2 String
-	hi link erlangFunction Function
-	hi link erlangSpecialCharacter Special
-	hi link erlangNumber Number
-	hi link erlangOperator Operator
-	hi link erlangSpecialCharacterCommand Keyword
-	hi link erlangModules Keyword
-endif
+" The default highlighting.
+hi def link erlangComment Comment
+hi def link erlangKeyword Keyword
+hi def link erlangString1 String
+hi def link erlangString2 String
+hi def link erlangFunction Function
+hi def link erlangSpecialCharacter Special
+hi def link erlangNumber Number
+hi def link erlangOperator Operator
+hi def link erlangSpecialCharacterCommand Keyword
+hi def link erlangModules Keyword
 
 
 let b:current_syntax = "erlang"

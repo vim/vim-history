@@ -1,4 +1,4 @@
-*pi_netrw.txt*   For Vim version 6.0k.  Last change: 2000 Oct 29
+*pi_netrw.txt*   For Vim version 6.0l.  Last change: 2000 Oct 29
 
 
 		  VIM REFERENCE MANUAL    by Charles E. Campbell, Jr.
@@ -11,9 +11,12 @@ Network-Oriented File Transfers with Vim		*netrw* *network*
 3. Ex Commands						|netrw-ex|
 4. Variables						|netrw-var|
 
-{Vi does not have any of these commands}
+The functionality mentioned here is a |standard-plugin|.
+This plugin is only available if 'compatible' is not set.
+You can avoid loading this plugin by setting the "loaded_netrw" variable: >
+	:let loaded_netrw = 1
 
-Netrw is only available if 'compatible' is not set.
+{Vi does not have any of this}
 
 ==============================================================================
 1. Network-Oriented File Transfer			*netrw-xfer*
@@ -26,18 +29,18 @@ http is supported read-only.
     Reading				Writing			Uses ~
     --------------------------	---------------------------	----------
     * rcp://machine/path	* rcp://machine/path		rcp
-    :Nr rcp://machine/path	:Nw rcp://machine/path		rcp
+    :Nread rcp://machine/path	:Nwrite rcp://machine/path		rcp
 
     * scp://machine/path	* scp://machine/path		scp
-    :Nr scp://machine/path	:Nw scp://machine/path		scp
+    :Nread scp://machine/path	:Nwrite scp://machine/path		scp
 
     * ftp://machine/path	* ftp://machine/path		ftp
-    :Nr ftp://machine/path	:Nw ftp://machine/path		ftp+(**)
-    :Nr machine path		:Nw machine path		ftp+.netrc
-    :Nr machine uid pass path	:Nw machine uid pass path	ftp
+    :Nread ftp://machine/path	:Nwrite ftp://machine/path		ftp+(**)
+    :Nread machine path		:Nwrite machine path		ftp+.netrc
+    :Nread machine uid pass path	:Nwrite machine uid pass path	ftp
 
     * http://machine/path					wget
-    :Nr http://machine/path					wget
+    :Nread http://machine/path					wget
 
 	(*) transparent file transfer: i.e. vim rcp://machine/path
 	                                    :r  ftp://machine/path
@@ -47,9 +50,9 @@ http is supported read-only.
 	     work with your ftp client.  Otherwise the script will
 	     prompt for user-id and pasword.
 
-Both the :Nr and the :Nw command can accept multiple filenames: >
+Both the :Nread and the :Nwrite command can accept multiple filenames: >
 
-	:Nr rcp://machine/path1 rcp://machine/path2
+	:Nread rcp://machine/path1 rcp://machine/path2
 
 
 NETRC							*netrw-netrc*
@@ -109,11 +112,11 @@ additional commands available.
 :[range]Nw {netfile} [{netfile}]...
 				Write the specified lines to the {netfile}.
 
-:Nr				Read the specified lines into the current
+:Nread				Read the specified lines into the current
 				buffer from the file specified in
 				b:netrw_lastfile.
 
-:Nr {netfile} {netfile}...	Read the {netfile} after the current line.
+:Nread {netfile} {netfile}...	Read the {netfile} after the current line.
 
 							*netrw-uidpass*
 :call NetUserPass()		If b:netrw_uid and b:netrw_passwd don't exist,
@@ -134,17 +137,18 @@ additional commands available.
 ==============================================================================
 4. Variables						*netrw-var*
 
-The script <netrw.vim> uses several variables.
+The script <netrw.vim> uses several variables:
 
-	b:netrw_uid		Holds current user-id for ftp.
-	b:netrw_passwd		Holds current password for ftp.
+	netrw_uid			Holds current user-id for ftp.
+	netrw_passwd		Holds current password for ftp.
 	b:netrw_lastfile	Holds latest method/machine/path.
 
 The script will also make use of the following variables internally,
 albeit temporarily.
 
-	b:netrw_method		Index indicating rcp/ftp+.netrc/ftp
-	b:netrw_machine		Holds machine name parsed from input
+	s:netrw_method		Index indicating rcp/ftp+.netrc/ftp
+	s:netrw_machine		Holds machine name parsed from input
+	s:netrw_fname       Holds filename being accessed
 
 ==============================================================================
  vim:tw=78:

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Visual Basic
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2000 Feb 08
+" Last Change:	2000 Nov 04
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
@@ -156,21 +156,18 @@ syn region  vbComment   start="'"   end="$" contains=vbTodo
 syn region  vbLineNumber	start="^\d" end="\s"
 syn match   vbTypeSpecifier  "[a-zA-Z0-9][\$%&!#]"ms=s+1
 
-if !exists("did_vb_syntax_inits")
-  let did_vb_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link vbLineNumber	        Comment
-  hi link vbNumber		Number
-  hi link vbError		Error
-  hi link vbStatement	        Statement
-  hi link vbString		String
-  hi link vbComment		Comment
-  hi link vbTodo		Todo
-  hi link vbFunction		Identifier
-  hi link vbMethods             PreProc
-  hi link vbEvents              Special
-  hi link vbTypeSpecifier       Type
-endif
+" The default highlighting.
+hi def link vbLineNumber	Comment
+hi def link vbNumber		Number
+hi def link vbError		Error
+hi def link vbStatement	        Statement
+hi def link vbString		String
+hi def link vbComment		Comment
+hi def link vbTodo		Todo
+hi def link vbFunction		Identifier
+hi def link vbMethods           PreProc
+hi def link vbEvents            Special
+hi def link vbTypeSpecifier     Type
 
 let b:current_syntax = "vb"
 

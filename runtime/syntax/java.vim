@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2000 Oct 20
+" Last Change:  2000 Nov 04
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -15,7 +15,7 @@ syn match javaError "<<<\|\.\.\|=>\|<>\|||=\|&&=\|[^-]->\|\*\/"
 
 " use separate name so that it can be deleted in javacc.vim
 syn match javaError2 "#\|=<"
-hi link javaError2 javaError
+hi def link javaError2 javaError
 
 " we define it here so that included files can test for it
 if !exists("main_syntax")
@@ -85,8 +85,8 @@ if exists("java_highlight_java_lang_ids") || exists("java_highlight_java_lang") 
   syn keyword javaLangClass  VirtualMachineError
   syn keyword javaLangObject clone equals finalize getClass hashCode
   syn keyword javaLangObject notify notifyAll toString wait
-  hi link javaLangClass                   javaConstant
-  hi link javaLangObject                  javaConstant
+  hi def link javaLangClass                   javaConstant
+  hi def link javaLangObject                  javaConstant
   syn cluster javaTop add=javaLangObject,javaLangClass
   syn cluster javaClasses add=javaLangClass
 endif
@@ -129,9 +129,9 @@ syn region  javaComment          start="/\*"  end="\*/" contains=javaCommentStri
 syn match   javaCommentStar      contained "^\s*\*[^/]"me=e-1
 syn match   javaCommentStar      contained "^\s*\*$"
 syn match   javaLineComment      "//.*" contains=javaComment2String,javaCommentCharacter,javaNumber,javaTodo,@Spell
-hi link javaCommentString javaString
-hi link javaComment2String javaString
-hi link javaCommentCharacter javaCharacter
+hi def link javaCommentString javaString
+hi def link javaComment2String javaString
+hi def link javaCommentCharacter javaCharacter
 
 syn cluster javaTop add=javaComment,javaLineComment
 
@@ -212,20 +212,20 @@ if exists("java_highlight_debug")
 
   syn cluster javaTop add=javaDebug
 
-  hi link javaDebug                 Debug
-  hi link javaDebugString           DebugString
-  hi link javaDebugStringError      javaError
-  hi link javaDebugType             DebugType
-  hi link javaDebugBoolean          DebugBoolean
-  hi link javaDebugNumber           Debug
-  hi link javaDebugSpecial          DebugSpecial
-  hi link javaDebugSpecialCharacter DebugSpecial
-  hi link javaDebugCharacter        DebugString
+  hi def link javaDebug                 Debug
+  hi def link javaDebugString           DebugString
+  hi def link javaDebugStringError      javaError
+  hi def link javaDebugType             DebugType
+  hi def link javaDebugBoolean          DebugBoolean
+  hi def link javaDebugNumber           Debug
+  hi def link javaDebugSpecial          DebugSpecial
+  hi def link javaDebugSpecialCharacter DebugSpecial
+  hi def link javaDebugCharacter        DebugString
 
-  hi link DebugString               String
-  hi link DebugSpecial              Special
-  hi link DebugBoolean              Boolean
-  hi link DebugType                 Type
+  hi def link DebugString               String
+  hi def link DebugSpecial              Special
+  hi def link DebugBoolean              Boolean
+  hi def link DebugType                 Type
 endif
 
 if exists("java_mark_braces_in_parens_as_errors")
@@ -244,54 +244,50 @@ if !exists("java_minlines")
 endif
 exec "syn sync ccomment javaComment minlines=" . java_minlines
 
-if !exists("did_java_syntax_inits")
-  let did_java_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link javaFuncDef                       Function
-  hi link javaBraces                        Function
-  hi link javaBranch                        Conditional
-  hi link javaUserLabelRef                  javaUserLabel
-  hi link javaLabel                         Label
-  hi link javaUserLabel                     Label
-  hi link javaConditional                   Conditional
-  hi link javaRepeat                        Repeat
-  hi link javaExceptions                    Exception
-  hi link javaStorageClass                  StorageClass
-  hi link javaMethodDecl                    javaStorageClass
-  hi link javaClassDecl                     javaStorageClass
-  hi link javaScopeDecl                     javaStorageClass
-  hi link javaBoolean                       Boolean
-  hi link javaSpecial                       Special
-  hi link javaSpecialError                  Error
-  hi link javaSpecialCharError              Error
-  hi link javaString                        String
-  hi link javaCharacter                     Character
-  hi link javaSpecialChar                   SpecialChar
-  hi link javaNumber                        Number
-  hi link javaError                         Error
-  hi link javaStringError                   Error
-  hi link javaStatement                     Statement
-  hi link javaOperator                      Operator
-  hi link javaComment                       Comment
-  hi link javaDocComment                    Comment
-  hi link javaLineComment                   Comment
-  hi link javaConstant                      javaBoolean
-  hi link javaTypedef                       Typedef
-  hi link javaTodo                          Todo
+" The default highlighting.
+hi def link javaFuncDef            Function
+hi def link javaBraces             Function
+hi def link javaBranch             Conditional
+hi def link javaUserLabelRef       javaUserLabel
+hi def link javaLabel              Label
+hi def link javaUserLabel          Label
+hi def link javaConditional        Conditional
+hi def link javaRepeat             Repeat
+hi def link javaExceptions         Exception
+hi def link javaStorageClass       StorageClass
+hi def link javaMethodDecl         javaStorageClass
+hi def link javaClassDecl          javaStorageClass
+hi def link javaScopeDecl          javaStorageClass
+hi def link javaBoolean            Boolean
+hi def link javaSpecial            Special
+hi def link javaSpecialError       Error
+hi def link javaSpecialCharError   Error
+hi def link javaString             String
+hi def link javaCharacter          Character
+hi def link javaSpecialChar        SpecialChar
+hi def link javaNumber             Number
+hi def link javaError              Error
+hi def link javaStringError        Error
+hi def link javaStatement          Statement
+hi def link javaOperator           Operator
+hi def link javaComment            Comment
+hi def link javaDocComment         Comment
+hi def link javaLineComment        Comment
+hi def link javaConstant           javaBoolean
+hi def link javaTypedef            Typedef
+hi def link javaTodo               Todo
 
-  hi link javaCommentTitle                  SpecialComment
-  hi link javaDocTags                       Special
-  hi link javaDocParam                      Function
-  hi link javaCommentStar                   javaComment
+hi def link javaCommentTitle       SpecialComment
+hi def link javaDocTags            Special
+hi def link javaDocParam           Function
+hi def link javaCommentStar        javaComment
 
-  hi link javaType                          Type
-  hi link javaExternal                      Include
+hi def link javaType               Type
+hi def link javaExternal           Include
 
-  hi link htmlComment                       Special
-  hi link htmlCommentPart                   Special
-  hi link javaSpaceError                    Error
-
-endif
+hi def link htmlComment            Special
+hi def link htmlCommentPart        Special
+hi def link javaSpaceError         Error
 
 let b:current_syntax = "java"
 

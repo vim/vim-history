@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		SKILL
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Nov 04
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
@@ -519,28 +519,26 @@ syn match skillCommentError         "\*/"
 
 syn sync ccomment skillComment minlines=10
 
-if !exists("did_skill_syntax_inits")
-    let did_skill_syntax_inits = 1
 
-    hi link skillcdfFunctions       Function
-    hi link skillgeFunctions        Function
-    hi link skillhiFunctions        Function
-    hi link skillleFunctions        Function
-    hi link skilldbefFunctions      Function
-    hi link skillddFunctions        Function
-    hi link skillpcFunctions        Function
-    hi link skilltechFunctions      Function
-    hi link skillConstants          Constant
-    hi link skillFunction           Function
-    hi link skillKeywords           Statement
-    hi link skillConditional        Conditional
-    hi link skillRepeat             Repeat
-    hi link skillString             String
-    hi link skillTodo               Todo
-    hi link skillNote               Todo
-    hi link skillComment            Comment
-    hi link skillCommentError       Error
-endif
+" The default highlighting.
+hi def link skillcdfFunctions       Function
+hi def link skillgeFunctions        Function
+hi def link skillhiFunctions        Function
+hi def link skillleFunctions        Function
+hi def link skilldbefFunctions      Function
+hi def link skillddFunctions        Function
+hi def link skillpcFunctions        Function
+hi def link skilltechFunctions      Function
+hi def link skillConstants          Constant
+hi def link skillFunction           Function
+hi def link skillKeywords           Statement
+hi def link skillConditional        Conditional
+hi def link skillRepeat             Repeat
+hi def link skillString             String
+hi def link skillTodo               Todo
+hi def link skillNote               Todo
+hi def link skillComment            Comment
+hi def link skillCommentError       Error
 
 let b:current_syntax = "skill"
 

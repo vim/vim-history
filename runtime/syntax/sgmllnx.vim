@@ -4,7 +4,7 @@
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
 "		If you want to enhance and maintain, You can remove my name
 "		and insert yours.
-" Last Change:	1999 Sep 18
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -32,22 +32,19 @@ syn match   sgmllnxTagName contained "sect\d\+"
 syn region sgmllnxComment start=+<!--+ end=+-->+
 syn region sgmllnxDocType start=+<!doctype+ end=+>+
 
-if !exists("did_sgmllnx_syntax_inits")
-  let did_sgmllnx_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link sgmllnxTag2	Function
-  hi link sgmllnxTagN2	Function
-  hi link sgmllnxTag	Special
-  hi link sgmllnxEndTag	Special
-  hi link sgmllnxParen	Special
-  hi link sgmllnxEntity	Type
-  hi link sgmllnxDocEnt    Type
-  hi link sgmllnxTagName	Statement
-  hi link sgmllnxComment	Comment
-  hi link sgmllnxSpecial	Special
-  hi link sgmllnxDocType   PreProc
-  hi link sgmllnxTagError	Error
-endif
+" The default highlighting.
+hi def link sgmllnxTag2		Function
+hi def link sgmllnxTagN2	Function
+hi def link sgmllnxTag		Special
+hi def link sgmllnxEndTag	Special
+hi def link sgmllnxParen	Special
+hi def link sgmllnxEntity	Type
+hi def link sgmllnxDocEnt	Type
+hi def link sgmllnxTagName	Statement
+hi def link sgmllnxComment	Comment
+hi def link sgmllnxSpecial	Special
+hi def link sgmllnxDocType	PreProc
+hi def link sgmllnxTagError	Error
 
 let b:current_syntax = "sgmllnx"
 

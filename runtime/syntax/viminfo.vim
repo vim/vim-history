@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim .viminfo file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	1999 Aug 19
+" Last Change:	2000 Nov 04
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -21,13 +21,10 @@ syn match viminfoStatement "^\~[mM][sS][lL][eE]\d\+\~\=[/&]"
 " Comments
 syn match viminfoComment "^#.*"
 
-if !exists("did_viminfo_syntax_inits")
-  let did_viminfo_syntax_inits = 1
-  " The default methods for highlighting.  Can be overridden later
-  hi link viminfoComment		Comment
-  hi link viminfoError		Error
-  hi link viminfoStatement	Statement
-endif
+" The default highlighting.
+hi def link viminfoComment	Comment
+hi def link viminfoError	Error
+hi def link viminfoStatement	Statement
 
 let b:current_syntax = "viminfo"
 

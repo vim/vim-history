@@ -2,7 +2,7 @@
 " Language:	COBOL
 " Maintainers:	Sitaram Chamarty <sitaram@dimensional.com> and
 "		James Mitchell <james_mitchell@acm.org>
-" Last Change:	1999 December 21
+" Last Change:	2000 Nov 04
 
 " MOST important - else most of the keywords wont work!
 set isk=@,48-57,-
@@ -114,29 +114,26 @@ else
     syn match   cobolBadLine      "^.\{6}.\{67,\}"
 endif
 
-if !exists("did_cobol_syntax_inits")
-  let did_cobol_syntax_inits = 1
-"    hi link cobolJunk     Error
-    hi link cobolBAD      Error
-    hi link cobolBadID    Error
-    hi link cobolBadLine  Error
-    hi link cobolCALLs    Function
-    hi link cobolComment  Comment
-    hi link cobolAreaA    LineNr
-    hi link cobolCompiler PreProc
-    hi link cobolCondFlow Special
-    hi link cobolCopy     PreProc
-    hi link cobolDecl     Type
-    hi link cobolEXECs    Special
-    hi link cobolExtras   Special
-    hi link cobolGoTo     Special
-    hi link cobolConstant Constant
-    hi link cobolNumber   Constant
-    hi link cobolParas    Function
-    hi link cobolReserved Statement
-    hi link cobolString   Constant
-    hi link cobolTodo     Todo
-    hi link cobolWatch    Special
-endif
+" hi def link cobolJunk   Error
+hi def link cobolBAD      Error
+hi def link cobolBadID    Error
+hi def link cobolBadLine  Error
+hi def link cobolCALLs    Function
+hi def link cobolComment  Comment
+hi def link cobolAreaA    LineNr
+hi def link cobolCompiler PreProc
+hi def link cobolCondFlow Special
+hi def link cobolCopy     PreProc
+hi def link cobolDecl     Type
+hi def link cobolEXECs    Special
+hi def link cobolExtras   Special
+hi def link cobolGoTo     Special
+hi def link cobolConstant Constant
+hi def link cobolNumber   Constant
+hi def link cobolParas    Function
+hi def link cobolReserved Statement
+hi def link cobolString   Constant
+hi def link cobolTodo     Todo
+hi def link cobolWatch    Special
 
 let b:current_syntax = "cobol"

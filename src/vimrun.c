@@ -67,7 +67,7 @@ main(void)
     puts(p);
     retval = system(p);
     if (retval != 0)
-	printf("%d returned\n", retval);
+	printf("shell returned %d\n", retval);
 
     puts("Hit any key to close this window...");
 

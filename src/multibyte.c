@@ -630,8 +630,8 @@ utf_ptr2char(p)
 }
 
 /*
- * Convert a UTF-8 byte string to a wide chararacter.  Also get the composing
- * characters.
+ * Convert a UTF-8 byte string to a wide chararacter.  Also get up to two
+ * composing characters.
  */
     int
 utfc_ptr2char(p, p1, p2)
@@ -689,7 +689,9 @@ utfc_char2bytes(off, buf)
 
 /*
  * Get the length of a UTF-8 byte sequence.  Ignores any following composing
- * characters.  Returns 0 for "".  Returns 1 for for illegal byte sequence.
+ * characters.
+ * Returns 0 for "".
+ * Returns 1 for an illegal byte sequence.
  */
     int
 utf_ptr2len_check(p)
@@ -702,6 +704,30 @@ utf_ptr2len_check(p)
 	return 0;
     len = utf8len_tab[*p];
     for (i = 1; i < len; ++i)
+	if ((p[i] & 0xc0) != 0x80)
+	    return 1;
+    return len;
+}
+
+/*
+ * Get the length of UTF-8 byte sequence "p[size]".  Ignores any following
+ * composing characters.
+ * Returns 1 for "".
+ * Returns 1 for an illegal byte sequence.
+ * Returns number > "size" for an incomplete byte sequence.
+ */
+    int
+utf_ptr2len_check_len(p, size)
+    char_u	*p;
+    int		size;
+{
+    int		len;
+    int		i;
+
+    if (*p == NUL)
+	return 1;
+    len = utf8len_tab[*p];
+    for (i = 1; i < len && i < size; ++i)
 	if ((p[i] & 0xc0) != 0x80)
 	    return 1;
     return len;
@@ -729,19 +755,18 @@ utfc_ptr2len_check(p)
     if (len == 1 && p[0] >= 0x80)
 	return 1;
 
-    /* Check for first composing char. */
-    if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
-	return len;
+    /*
+     * Check for composing characters.  We can handle only the first two, but
+     * skip all of them (otherwise the cursor would get stuck).
+     */
+    for (;;)
+    {
+	if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
+	    return len;
 
-    /* Skip over first composing char */
-    len += utf_ptr2len_check(p + len);
-
-    /* Check for second composing char. */
-    if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
-	return len;
-
-    /* Skip over second composing char */
-    return len + utf_ptr2len_check(p + len);
+	/* Skip over composing char */
+	len += utf_ptr2len_check(p + len);
+    }
 }
 
 /*
