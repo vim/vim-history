@@ -3874,8 +3874,10 @@ getnextcomp(fname)
 
 #if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) \
 	|| defined(FEAT_SESSION) || defined(MSWIN) \
-	|| (defined(FEAT_GUI_GTK) && defined(FEAT_WINDOWS)) \
-	|| defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
+	|| (defined(FEAT_GUI_GTK) \
+			    && (defined(FEAT_WINDOWS) || defined(FEAT_DND))) \
+	|| defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) \
+	|| defined(PROTO)
 /*
  * Get a pointer to one character past the head of a path name.
  * Unix: after "/"; DOS: after "c:\"; Amiga: after "disk:/"; Mac: no head.
