@@ -2468,6 +2468,7 @@ get_string_var(arg, retvar, evaluate)
      * Find the end of the string, skipping backslashed characters.
      */
     for (p = *arg + 1; *p && *p != '"'; ++p)
+    {
 	if (*p == '\\' && p[1] != NUL)
 	{
 	    ++p;
@@ -2476,6 +2477,12 @@ get_string_var(arg, retvar, evaluate)
 	    if (*p == '<')
 		extra += 2;
 	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p) - 1;
+#endif
+    }
+
     if (*p != '"')
     {
 	EMSG2(_("E114: Missing quote: %s"), *arg);
@@ -2581,6 +2588,17 @@ get_string_var(arg, retvar, evaluate)
 	}
 	else
 	    name[i++] = *p;
+
+#ifdef FEAT_MBYTE
+	/* For a multi-byte character copy the bytes after the first one. */
+	if (has_mbyte)
+	{
+	    int	l = (*mb_ptr2len_check)(p);
+
+	    while (--l > 0)
+		name[i++] = *++p;
+	}
+#endif
     }
     name[i] = NUL;
     *arg = p + 1;
