@@ -4415,109 +4415,160 @@ mch_fopen(char *name, char *mode)
 #endif
 
 /*
- * SUB STREAM:
+ * SUB STREAM (aka info stream) handling:
  *
  * NTFS can have sub streams for each file.  Normal contents of file is
- * stored in main stream, and external contents (author information and
+ * stored in the main stream, and extra contents (author information and
  * title and so on) can be stored in sub stream.  After Windows 2000, user
  * can access and store those informations in sub streams via explorer's
  * property menuitem in right click menu.  Those informations in sub streams
- * were lost when copy only main streams.  So we have to copy sub streams.
+ * were lost when copying only the main stream.  So we have to copy sub
+ * streams.
  *
- * http://msdn.microsoft.com/library/en-us/dnw2k/html/ntfs5.asp
+ * Incomplete explanation:
+ *	http://msdn.microsoft.com/library/en-us/dnw2k/html/ntfs5.asp
+ * More useful info and an example:
+ *	http://www.sysinternals.com/ntw2k/source/misc.shtml#streams
  */
 
-    static char *
-get_infostream_name(char *name, char *substream)
+/*
+ * Copy info stream data "substream".  Read from the file with BackupRead(sh)
+ * and write to stream "substream" of file "to".
+ * Errors are ignored.
+ */
+    static void
+copy_substream(HANDLE sh, void *context, WCHAR *to, WCHAR *substream, long len)
 {
-    int len;
-    char *newname;
+    HANDLE  hTo;
+    WCHAR   *to_name;
 
-    len = strlen(name) + strlen(substream) + 2;
-    newname = malloc(len);
-    strcpy(newname, name);
-    strcat(newname, ":");
-    strcat(newname, substream);
-    return newname;
-}
+    to_name = malloc((wcslen(to) + wcslen(substream) + 1) * sizeof(WCHAR));
+    wcscpy(to_name, to);
+    wcscat(to_name, substream);
 
-    static int
-copy_substream(char *from, char *to, char *substream)
-{
-    int	    retval = 0;
-    HANDLE  hFrom, hTo;
-    char    *from_info, *to_info;
-
-    from_info	= get_infostream_name(from, substream);
-    to_info	= get_infostream_name(to, substream);
-    hFrom = CreateFile(from_info, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-	    FILE_ATTRIBUTE_NORMAL, NULL);
-    hTo = CreateFile(to_info, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-	    FILE_ATTRIBUTE_NORMAL, NULL);
-
-    if (hFrom != INVALID_HANDLE_VALUE && hTo != INVALID_HANDLE_VALUE)
-    {
-	/* Just copy information */
-	DWORD dwCopy, dwSize, dwRead = 0, dwWrite = 0;
-	char buf[4096];
-
-	retval = 1;
-	dwCopy = GetFileSize(hFrom, NULL);
-	while (dwCopy > 0)
-	{
-	    dwSize = dwCopy > sizeof(buf) ? sizeof(buf) : dwCopy;
-	    if (!ReadFile(hFrom, buf, dwSize, &dwRead, NULL)
-		    || dwRead != dwSize
-		    || !WriteFile(hTo, buf, dwSize, &dwWrite, NULL)
-		    || dwWrite != dwSize)
-	    {
-		retval = 0;
-		break;
-	    }
-	    dwCopy -= dwSize;
-	}
-    }
-    else if (hFrom == INVALID_HANDLE_VALUE && hTo != INVALID_HANDLE_VALUE)
-    {
-	/* No source information, delete destination */
-	CloseHandle(hTo);
-	hTo = INVALID_HANDLE_VALUE;
-	retval = DeleteFile(to_info);
-	retval = 1;
-    }
-    else if (hFrom == INVALID_HANDLE_VALUE && hTo == INVALID_HANDLE_VALUE)
-    {
-	retval = 1;
-    }
-
-    if (hFrom != INVALID_HANDLE_VALUE)
-	CloseHandle(hFrom);
+    hTo = CreateFileW(to_name, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
+						 FILE_ATTRIBUTE_NORMAL, NULL);
     if (hTo != INVALID_HANDLE_VALUE)
-	CloseHandle(hTo);
-    free(from_info);
-    free(to_info);
+    {
+	long	done;
+	DWORD	todo;
+	DWORD	readcnt, written;
+	char	buf[4096];
 
-    return 1;
+	/* Copy block of bytes at a time.  Abort when something goes wrong. */
+	for (done = 0; done < len; done += written)
+	{
+	    todo = len - done > sizeof(buf) ? sizeof(buf) : len - done;
+	    if (!BackupRead(sh, (LPBYTE)buf, todo, &readcnt,
+						       FALSE, FALSE, context)
+		    || readcnt != todo
+		    || !WriteFile(hTo, buf, todo, &written, NULL)
+		    || written != todo)
+		break;
+	}
+	CloseHandle(hTo);
+    }
+
+    free(to_name);
 }
 
-    static int
+/*
+ * Copy info streams from file "from" to file "to".
+ */
+    static void
 copy_infostreams(char_u *from, char_u *to)
 {
-    if (!copy_substream(from, to, "\05SummaryInformation"))
-	goto FAILTOCOPY;
-    if (!copy_substream(from, to, "\05DocumentSummaryInformation"))
-	goto FAILTOCOPY;
-    if (!copy_substream(from, to, "\05SebiesnrMkudrfcoIaamtykdDa"))
-	goto FAILTOCOPY;
-    return 1;
-FAILTOCOPY:
-    return 0;
+    WCHAR		*fromw;
+    WCHAR		*tow;
+    HANDLE		sh;
+    WIN32_STREAM_ID	sid;
+    int			headersize;
+    WCHAR		streamname[_MAX_PATH];
+    DWORD		readcount;
+    void		*context = NULL;
+    DWORD		lo, hi;
+    int			len;
+
+    /* Convert the file names to wide characters. */
+    fromw = enc_to_ucs2(from, NULL);
+    tow = enc_to_ucs2(to, NULL);
+    if (fromw != NULL && tow != NULL)
+    {
+	/* Open the file for reading. */
+	sh = CreateFileW(fromw, GENERIC_READ, FILE_SHARE_READ, NULL,
+			     OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	if (sh != INVALID_HANDLE_VALUE)
+	{
+	    /* Use BackupRead() to find the info streams.  Repeat until we
+	     * have done them all.*/
+	    for (;;)
+	    {
+		/* Get the header to find the length of the stream name.  If
+		 * the "readcount" is zero we have done all info streams. */
+		ZeroMemory(&sid, sizeof(WIN32_STREAM_ID));
+		headersize = (char *)&sid.cStreamName - (char *)&sid.dwStreamId;
+		if (!BackupRead(sh, (LPBYTE)&sid, headersize,
+					   &readcount, FALSE, FALSE, &context)
+			|| readcount == 0)
+		    break;
+
+		/* We only deal with streams that have a name.  The normal
+		 * file data appears to be without a name, even though docs
+		 * suggest it is called "::$DATA". */
+		if (sid.dwStreamNameSize > 0)
+		{
+		    /* Read the stream name. */
+		    if (!BackupRead(sh, (LPBYTE)streamname,
+							 sid.dwStreamNameSize,
+					  &readcount, FALSE, FALSE, &context))
+			break;
+
+		    /* Copy an info stream with a name ":anything:$DATA".
+		     * Skip "::$DATA", it has no stream name (examples suggest
+		     * it might be used for the normal file contents).
+		     * Note that BackupRead() counts bytes, but the name is in
+		     * wide characters. */
+		    len = readcount / sizeof(WCHAR);
+		    streamname[len] = 0;
+		    if (len > 7 && wcsicmp(streamname + len - 6,
+							      L":$DATA") == 0)
+		    {
+			streamname[len - 6] = 0;
+			copy_substream(sh, &context, tow, streamname,
+						      (long)sid.Size.LowPart);
+		    }
+		}
+
+		/* Advance to the next stream.  We might try seeking too far,
+		 * but BackupSeek() doesn't skip over stream borders, thus
+		 * that's OK. */
+		(void)BackupSeek(sh, sid.Size.LowPart, sid.Size.HighPart,
+							  &lo, &hi, &context);
+	    }
+
+	    /* Clear the context. */
+	    (void)BackupRead(sh, NULL, 0, &readcount, TRUE, FALSE, &context);
+
+	    CloseHandle(sh);
+	}
+    }
+    vim_free(fromw);
+    vim_free(tow);
 }
 
+/*
+ * Copy file attributes from file "from" to file "to".
+ * For Windows NT and later we copy info streams.
+ * Always returns zero, errors are ignored.
+ */
     int
 mch_copy_file_attribute(char_u *from, char_u *to)
 {
-    return copy_infostreams(from, to);
+    /* File streams only work on Windows NT and later. */
+    PlatformId();
+    if (g_PlatformId == VER_PLATFORM_WIN32_NT)
+	copy_infostreams(from, to);
+    return 0;
 }
 
 #if defined(MYRESETSTKOFLW) || defined(PROTO)
