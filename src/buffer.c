@@ -3485,7 +3485,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
 		    {
-			l -= ptr2cells(s);
+			l -= ptr2cells(t);
 			t += (*mb_ptr2len_check)(t);
 		    }
 		    else
