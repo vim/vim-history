@@ -1804,6 +1804,13 @@ AC_TRY_LINK([
 
 dnl Link with -lposix1e for ACL stuff; if not found, try -lacl for SGI
 dnl when -lacl works, also try to use -lattr (required for Debian).
+AC_MSG_CHECKING(--disable-acl argument)
+AC_ARG_ENABLE(acl,
+	[  --disable-acl           Don't check for ACL support.],
+	AC_MSG_RESULT(yes),
+	[enable_acl="yes"; AC_MSG_RESULT(no)])
+if test "$enable_acl" = "yes"; then
+
 AC_CHECK_LIB(posix1e, acl_get_file, [LIBS="$LIBS -lposix1e"],
 	AC_CHECK_LIB(acl, acl_get_file, [LIBS="$LIBS -lacl"
 		  AC_CHECK_LIB(attr, fgetxattr, LIBS="$LIBS -lattr",,)],,),)
@@ -1848,6 +1855,7 @@ struct acl *aclent;], [aclsize = sizeof(struct acl);
 	],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_AIX_ACL),
 	AC_MSG_RESULT(no))
+fi
 
 AC_MSG_CHECKING(--disable-gpm argument)
 AC_ARG_ENABLE(gpm,
