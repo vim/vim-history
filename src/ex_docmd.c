@@ -3622,6 +3622,10 @@ separate_nextcmd(eap)
 		break;
 	    }
 	}
+#ifdef MULTI_BYTE
+	else if (is_dbcs && p[1] && IsLeadByte(*p))
+	    ++p;	/* skip second byte of double-byte char */
+#endif
     }
     if (!(eap->argt & NOTRLCOM))	/* remove trailing spaces */
 	del_trailing_spaces(eap->arg);
