@@ -1483,6 +1483,7 @@ struct window
     pos_T	w_ru_cursor;	    /* cursor position shown in ruler */
     colnr_T	w_ru_virtcol;	    /* virtcol shown in ruler */
     linenr_T	w_ru_topline;	    /* topline shown in ruler */
+    linenr_T	w_ru_line_count;    /* line count used for ruler */
 # ifdef FEAT_DIFF
     int		w_ru_topfill;	    /* topfill shown in ruler */
 # endif

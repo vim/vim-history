@@ -8307,6 +8307,7 @@ win_redr_ruler(wp, always)
 	    || wp->w_cursor.coladd != wp->w_ru_cursor.coladd
 #endif
 	    || wp->w_topline != wp->w_ru_topline
+	    || wp->w_buffer->b_ml.ml_line_count != wp->w_ru_line_count
 #ifdef FEAT_DIFF
 	    || wp->w_topfill != wp->w_ru_topfill
 #endif
@@ -8423,6 +8424,7 @@ win_redr_ruler(wp, always)
 	wp->w_ru_virtcol = wp->w_virtcol;
 	wp->w_ru_empty = empty_line;
 	wp->w_ru_topline = wp->w_topline;
+	wp->w_ru_line_count = wp->w_buffer->b_ml.ml_line_count;
 #ifdef FEAT_DIFF
 	wp->w_ru_topfill = wp->w_topfill;
 #endif
