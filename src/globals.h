@@ -542,6 +542,11 @@ EXTERN int	orig_line_count INIT(= 0);  /* Line count when "gR" started */
 EXTERN int	vr_lines_changed INIT(= 0); /* #Lines changed by "gR" so far */
 #endif
 
+#if defined(FEAT_X11) && defined(FEAT_XCLIPBOARD)
+/* argument to SETJMP() for handling X IO errors */
+EXTERN JMP_BUF x_jump_env;
+#endif
+
 #if defined(HAVE_SETJMP_H)
 /*
  * Stuff for setjmp() and longjmp().

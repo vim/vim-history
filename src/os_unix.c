@@ -751,7 +751,7 @@ sig_alarm SIGDEFARG(sigarg)
  * A simplistic version of setjmp() that only allows one level of using.
  * Don't call twice before calling mch_endjmp()!.
  * Usage:
- *	mch_startjmp()
+ *	mch_startjmp();
  *	if (SETJMP(lc_jump_env) != 0)
  *	{
  *	    mch_didjmp();
@@ -1189,6 +1189,45 @@ x_error_check(dpy, error_event)
     got_x_error = TRUE;
     return 0;
 }
+
+#if defined(FEAT_X11) && defined(FEAT_XCLIPBOARD)
+# if defined(HAVE_SETJMP_H)
+/*
+ * An X IO Error handler, used to catch error while opening the display.
+ */
+static int x_IOerror_check __ARGS((Display *dpy));
+
+/* ARGSUSED */
+    static int
+x_IOerror_check(dpy)
+    Display *dpy;
+{
+    /* This function should not return, it causes exit().  Longjump instead. */
+    LONGJMP(lc_jump_env, 1);
+    /*NOTREACHED*/
+}
+# endif
+
+/*
+ * An X IO Error handler, used to catch terminal errors.
+ */
+static int x_IOerror_handler __ARGS((Display *dpy));
+
+/* ARGSUSED */
+    static int
+x_IOerror_handler(dpy)
+    Display *dpy;
+{
+    xterm_dpy = NULL;
+    x11_window = 0;
+    x11_display = NULL;
+    xterm_Shell = (Widget)0;
+
+    /* This function should not return, it causes exit().  Longjump instead. */
+    LONGJMP(x_jump_env, 1);
+    /*NOTREACHED*/
+}
+#endif
 
 /*
  * Return TRUE when connection to the X server is desired.
@@ -5203,7 +5242,10 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 	 */
 	mch_startjmp();
 	if (SETJMP(lc_jump_env) != 0)
+	{
 	    success = FALSE;
+	    mch_didjmp();
+	}
 	else
 # endif
 	{
@@ -5310,6 +5352,9 @@ setup_term_clip()
     if (app_context != NULL && xterm_Shell == (Widget)0)
     {
 	int (*oldhandler)();
+#if defined(HAVE_SETJMP_H)
+	int (*oldIOhandler)();
+#endif
 # if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
 	struct timeval  start_tv;
 
@@ -5320,9 +5365,29 @@ setup_term_clip()
 	/* Ignore X errors while opening the display */
 	oldhandler = XSetErrorHandler(x_error_check);
 
-	xterm_dpy = XtOpenDisplay(app_context, xterm_display,
-		"vim_xterm", "Vim_xterm", NULL, 0, &z, &strp);
+#if defined(HAVE_SETJMP_H)
+	/* Ignore X IO errors while opening the display */
+	oldIOhandler = XSetIOErrorHandler(x_IOerror_check);
+	mch_startjmp();
+	if (SETJMP(lc_jump_env) != 0)
+	{
+	    mch_didjmp();
+	    xterm_dpy = NULL;
+	}
+	else
+#endif
+	{
+	    xterm_dpy = XtOpenDisplay(app_context, xterm_display,
+		    "vim_xterm", "Vim_xterm", NULL, 0, &z, &strp);
+#if defined(HAVE_SETJMP_H)
+	    mch_endjmp();
+#endif
+	}
 
+#if defined(HAVE_SETJMP_H)
+	/* Now handle X IO errors normally. */
+	(void)XSetIOErrorHandler(oldIOhandler);
+#endif
 	/* Now handle X errors normally. */
 	(void)XSetErrorHandler(oldhandler);
 
@@ -5332,6 +5397,9 @@ setup_term_clip()
 		MSG(_("Opening the X display failed"));
 	    return;
 	}
+
+	/* Catch terminating error of the X server connection. */
+	(void)XSetIOErrorHandler(x_IOerror_handler);
 
 # if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
 	if (p_verbose > 0)

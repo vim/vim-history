@@ -1940,6 +1940,38 @@ main_loop(cmdwin)
 {
     oparg_T	oa;	/* operator arguments */
 
+#if defined(FEAT_X11) && defined(FEAT_XCLIPBOARD)
+    /* Setup to catch a terminating error from the X server.  Just ignore
+     * it, restore the state and continue.  This might not always work
+     * properly, but at least we don't exit unexpectedly when the X server
+     * exists while Vim is running in a console. */
+    if (!cmdwin && SETJMP(x_jump_env))
+    {
+	State = NORMAL;
+# ifdef FEAT_VISUAL
+	VIsual_active = FALSE;
+# endif
+	got_int = TRUE;
+	need_wait_return = FALSE;
+	global_busy = FALSE;
+	exmode_active = 0;
+	skip_redraw = FALSE;
+	RedrawingDisabled = 0;
+	no_wait_return = 0;
+# ifdef FEAT_EVAL
+	emsg_skip = 0;
+# endif
+	emsg_off = 0;
+# ifdef FEAT_MOUSE
+	setmouse();
+# endif
+	settmode(TMODE_RAW);
+	starttermcap();
+	scroll_start();
+	redraw_later_clear();
+    }
+#endif
+
     clear_oparg(&oa);
     while (!cmdwin
 #ifdef FEAT_CMDWIN
