@@ -4685,9 +4685,8 @@ buf_write_bytes(ip)
 		if (needed == 0)
 		{
 		    /* When conversion fails there may be a trailing byte. */
-		    ip->bw_restlen = 1;
 		    needed = MultiByteToWideChar(enc_codepage,
-				  MB_ERR_INVALID_CHARS, (LPCSTR)from, fromlen,
+			      MB_ERR_INVALID_CHARS, (LPCSTR)from, fromlen - 1,
 								     NULL, 0);
 		    if (needed == 0)
 		    {
@@ -4696,7 +4695,8 @@ buf_write_bytes(ip)
 			return FAIL;
 		    }
 		    /* Save the trailing byte for the next call. */
-		    *ip->bw_rest = from[fromlen - 1];
+		    ip->bw_rest[0] = from[fromlen - 1];
+		    ip->bw_restlen = 1;
 		}
 		needed = MultiByteToWideChar(enc_codepage, MB_ERR_INVALID_CHARS,
 				       (LPCSTR)from, fromlen - ip->bw_restlen,
