@@ -705,11 +705,14 @@ msg_end_prompt()
  */
     void
 wait_return(redraw)
-    int	    redraw;
+    int		redraw;
 {
-    int		    c;
-    int		    oldState;
-    int		    tmpState;
+    int		c;
+    int		oldState;
+    int		tmpState;
+#ifndef ORG_HITRETURN
+    int		had_got_int;
+#endif
 
     if (redraw == TRUE)
 	must_redraw = CLEAR;
@@ -769,6 +772,9 @@ wait_return(redraw)
 #else
 	do
 	{
+	    /* Remember "got_int", if it is set vgetc() probably returns a
+	     * CTRL-C, but we need to loop then. */
+	    had_got_int = got_int;
 	    c = safe_vgetc();
 	    if (!global_busy)
 		got_int = FALSE;
@@ -782,7 +788,8 @@ wait_return(redraw)
 		c = K_IGNORE;
 	    }
 #endif
-	} while (c == Ctrl_C || c == K_IGNORE
+	} while ((had_got_int && c == Ctrl_C)
+				|| c == K_IGNORE
 #ifdef FEAT_GUI
 				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
 #endif
@@ -807,7 +814,7 @@ wait_return(redraw)
 	    (void)jump_to_mouse(MOUSE_SETPOS, NULL, 0);
 	else
 #endif
-	    if (vim_strchr((char_u *)"\r\n ", c) == NULL)
+	    if (vim_strchr((char_u *)"\r\n ", c) == NULL && c != Ctrl_C)
 	{
 	    stuffcharReadbuff(c);
 	    do_redraw = TRUE;	    /* need a redraw even though there is
