@@ -583,12 +583,18 @@ update_debug_sign(buf, lnum)
 		row = 0;
 		for (j = 0; j < wp->w_lines_valid; ++j)
 		{
-		    /* Ignore folding, a closed fold with a sign doesn't need
-		     * updating. */
 		    if (lnum == wp->w_lines[j].wl_lnum)
 		    {
-			screen_start();	/* not sure of screen cursor */
-			win_line(wp, lnum, row, row + wp->w_lines[j].wl_size);
+# ifdef FEAT_FOLDING
+			/* Ignore folding, a closed fold with a sign doesn't
+			 * need updating. */
+			if (!wp->w_lines[j].wl_folded)
+# endif
+			{
+			    screen_start();	/* not sure of screen cursor */
+			    win_line(wp, lnum, row,
+						row + wp->w_lines[j].wl_size);
+			}
 			break;
 		    }
 		    row += wp->w_lines[j].wl_size;
