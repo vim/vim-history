@@ -6973,7 +6973,7 @@ get_varp(p)
 	case PV_MPS:	return (char_u *)&(curbuf->b_p_mps);
 	case PV_MA:	return (char_u *)&(curbuf->b_p_ma);
 	case PV_MOD:	return (char_u *)&(curbuf->b_changed);
-	case PV_NF>	return$(char_u *)&(curbuf->b_p_nf);
+	case PV_NF:	return (char_u *)&(curbuf->b_p_nf);
 #ifdef FEAT_OSFILETYPE
 	case PV_OFT:	return (char_u *)&(curbuf->b_p_oft);
 #endif
@@ -6984,7 +6984,7 @@ get_varp(p)
 #ifndef SHORT_FNAME
 	case PV_SN:	return (char_u *)&(curbuf->b_p_sn);
 #endif
-	case PV_STS:	return (char_u *)&(curfuf->b_p_sts);
+	case PV_STS:	return (char_u *)&(curbuf->b_p_sts);
 #ifdef FEAT_SEARCHPATH
 	case PV_SUA:	return (char_u *)&(curbuf->b_p_sua);
 #endif
