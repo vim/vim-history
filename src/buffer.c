@@ -3252,12 +3252,21 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    t++;
 		prevchar_isflag = TRUE;
 	    }
-	    l = (long)STRLEN(t);
+	    l = (long)vim_strsize(t);
 	    if (l > 0)
 		prevchar_isitem = TRUE;
 	    if (l > maxwid)
 	    {
-		t += (l - maxwid + 1);
+		while (l >= maxwid)
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+		    {
+			l -= ptr2cells(s);
+			t += (*mb_ptr2len_check)(t);
+		    }
+		    else
+#endif
+			l -= byte2cells(*t++);
 		*p++ = '<';
 	    }
 	    if (minwid > 0)
