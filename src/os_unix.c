@@ -1991,11 +1991,15 @@ mch_FullName(fname, buf, len, force)
 		}
 	    }
 #endif
+
+	    /* Only change directory when we are sure we can return to where
+	     * we are now.  After doing "su" chdir(".") might not work. */
 	    if (
 #ifdef HAVE_FCHDIR
 		fd < 0 &&
 #endif
-			    mch_dirname(olddir, MAXPATHL) == FAIL)
+			(mch_dirname(olddir, MAXPATHL) == FAIL
+						   || mch_chdir(olddir) != 0))
 	    {
 		p = NULL;	/* can't get current dir: don't chdir */
 		retval = FAIL;
@@ -2046,12 +2050,14 @@ mch_FullName(fname, buf, len, force)
 #ifdef HAVE_FCHDIR
 	    if (fd >= 0)
 	    {
-		fchdir(fd);
+		l = fchdir(fd);
 		close(fd);
 	    }
 	    else
 #endif
-		mch_chdir((char *)olddir);
+		l = mch_chdir((char *)olddir);
+	    if (l != 0)
+		EMSG(_(e_prev_dir));
 	}
 
 	l = STRLEN(buf);

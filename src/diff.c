@@ -780,8 +780,9 @@ ex_diffpatch(eap)
     /* Temporaraly chdir to /tmp, to avoid patching files in the current
      * directory when the patch file contains more than one patch.  When we
      * have our own temp dir use that instead, it will be cleaned up when we
-     * exit (any .rej files created). */
-    if (mch_dirname(dirbuf, MAXPATHL) != OK)
+     * exit (any .rej files created).  Don't change directory if we can't
+     * return to the current. */
+    if (mch_dirname(dirbuf, MAXPATHL) != OK || mch_chdir(dirbuf) != 0)
 	dirbuf[0] = NUL;
     else
     {
@@ -819,7 +820,8 @@ ex_diffpatch(eap)
 #ifdef UNIX
     if (dirbuf[0] != NUL)
     {
-	mch_chdir((char *)dirbuf);
+	if (mch_chdir((char *)dirbuf) != 0)
+	    EMSG(_(e_prev_dir));
 	shorten_fnames(TRUE);
     }
 #endif

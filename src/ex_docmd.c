@@ -6689,7 +6689,8 @@ ex_mkrc(eap)
 		/*
 		 * Change to session file's dir.
 		 */
-		if (mch_dirname(dirnow, MAXPATHL) == FAIL)
+		if (mch_dirname(dirnow, MAXPATHL) == FAIL
+						    || mch_chdir(dirnow) != 0)
 		    *dirnow = NUL;
 		if (*dirnow != NUL && (ssop_flags & SSOP_SESDIR))
 		{
@@ -6709,7 +6710,8 @@ ex_mkrc(eap)
 		if (*dirnow != NUL && ((ssop_flags & SSOP_SESDIR)
 			|| ((ssop_flags & SSOP_CURDIR) && globaldir != NULL)))
 		{
-		    (void)mch_chdir((char *)dirnow);
+		    if (mch_chdir((char *)dirnow) != 0)
+			EMSG(_(e_prev_dir));
 		    shorten_fnames(TRUE);
 		}
 	    }
