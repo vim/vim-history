@@ -2437,6 +2437,7 @@ gui_wait_for_chars(wtime)
  * Generic mouse support function.  Add a mouse event to the input buffer with
  * the given properties.
  *  button	    --- may be any of MOUSE_LEFT, MOUSE_MIDDLE, MOUSE_RIGHT,
+ *			MOUSE_X1, MOUSE_X2
  *			MOUSE_DRAG, or MOUSE_RELEASE.
  *			MOUSE_4 and MOUSE_5 are used for a scroll wheel.
  *  x, y	    --- Coordinates of mouse in pixels.
@@ -2459,6 +2460,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     static int	    prev_button = -1;
     static int	    num_clicks = 1;
     char_u	    string[6];
+    char_u	    button_char;
     int		    row, col;
 #ifdef FEAT_CLIPBOARD
     int		    checkfor;
@@ -2468,31 +2470,45 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     /*
      * Scrolling may happen at any time, also while a selection is present.
      */
-    if (button == MOUSE_4 || button == MOUSE_5)
+    switch (button)
     {
-	/* Don't put events in the input queue now. */
-	if (hold_gui_events)
-	    return;
+	case MOUSE_X1:
+	    button_char = KE_X1MOUSE;
+	    goto button_set;
+	case MOUSE_X2:
+	    button_char = KE_X2MOUSE;
+	    goto button_set;
+	case MOUSE_4:
+	    button_char = KE_MOUSEDOWN;
+	    goto button_set;
+	case MOUSE_5:
+	    button_char = KE_MOUSEUP;
+button_set:
+	    {
+		/* Don't put events in the input queue now. */
+		if (hold_gui_events)
+		    return;
 
-	string[3] = CSI;
-	string[4] = KS_EXTRA;
-	string[5] = (int)(button == MOUSE_4 ? KE_MOUSEDOWN : KE_MOUSEUP);
-	if (modifiers == 0)
-	    add_to_input_buf(string + 3, 3);
-	else
-	{
-	    string[0] = CSI;
-	    string[1] = KS_MODIFIER;
-	    string[2] = 0;
-	    if (modifiers & MOUSE_SHIFT)
-		string[2] |= MOD_MASK_SHIFT;
-	    if (modifiers & MOUSE_CTRL)
-		string[2] |= MOD_MASK_CTRL;
-	    if (modifiers & MOUSE_ALT)
-		string[2] |= MOD_MASK_ALT;
-	    add_to_input_buf(string, 6);
-	}
-	return;
+		string[3] = CSI;
+		string[4] = KS_EXTRA;
+		string[5] = button_char;
+		if (modifiers == 0)
+		    add_to_input_buf(string + 3, 3);
+		else
+		{
+		    string[0] = CSI;
+		    string[1] = KS_MODIFIER;
+		    string[2] = 0;
+		    if (modifiers & MOUSE_SHIFT)
+			string[2] |= MOD_MASK_SHIFT;
+		    if (modifiers & MOUSE_CTRL)
+			string[2] |= MOD_MASK_CTRL;
+		    if (modifiers & MOUSE_ALT)
+			string[2] |= MOD_MASK_ALT;
+		    add_to_input_buf(string, 6);
+		}
+		return;
+	    }
     }
 
 #ifdef FEAT_CLIPBOARD

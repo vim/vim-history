@@ -64,6 +64,14 @@
 
 #define DLG_NONBUTTON_CONTROL	5000	/* First ID of non-button controls */
 
+#ifndef WM_XBUTTONDOWN // For Win2K / winME ONLY
+# define WM_XBUTTONDOWN		0x020B
+# define WM_XBUTTONUP		0x020C
+# define WM_XBUTTONDBLCLK	0x020D
+# define MK_XBUTTON1		0x0020
+# define MK_XBUTTON2		0x0040
+#endif
+
 #ifdef PROTO
 /*
  * Define a few things for generating prototypes.  This is just to avoid
@@ -610,6 +618,13 @@ _OnMouseButtonDown(
     else if (s_uMsg == WM_RBUTTONDOWN || s_uMsg == WM_RBUTTONDBLCLK)
 	button = MOUSE_RIGHT;
 #ifndef WIN16 //<VN>
+    else if (s_uMsg == WM_XBUTTONDOWN || s_uMsg == WM_XBUTTONDBLCLK)
+    {
+#ifndef GET_XBUTTON_WPARAM
+# define GET_XBUTTON_WPARAM(wParam)	(HIWORD(wParam))
+#endif
+	button = ((GET_XBUTTON_WPARAM(s_wParam) == 1) ? MOUSE_X1 : MOUSE_X2);
+    }
     else if (s_uMsg == WM_CAPTURECHANGED)
     {
 	/* on W95/NT4, somehow you get in here with an odd Msg
@@ -700,7 +715,8 @@ _OnMouseMoveOrRelease(
 	 * It's only a MOUSE_DRAG if one or more mouse buttons are being held
 	 * down.
 	 */
-	if (!(keyFlags & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)))
+	if (!(keyFlags & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON
+						| MK_XBUTTON1 | MK_XBUTTON2)))
 	{
 	    gui_mouse_moved(x, y);
 	    return;
@@ -851,6 +867,8 @@ HandleMouseHide(UINT uMsg, LPARAM lParam)
     case WM_MBUTTONUP:
     case WM_RBUTTONDOWN:
     case WM_RBUTTONUP:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONUP:
     case WM_NCMOUSEMOVE:
     case WM_NCLBUTTONDOWN:
     case WM_NCLBUTTONUP:
@@ -898,6 +916,9 @@ _TextAreaWndProc(
 	HANDLE_MSG(hwnd, WM_RBUTTONDBLCLK,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_RBUTTONDOWN,_OnMouseButtonDown);
 	HANDLE_MSG(hwnd, WM_RBUTTONUP,	_OnMouseMoveOrRelease);
+	HANDLE_MSG(hwnd, WM_XBUTTONDBLCLK,_OnMouseButtonDown);
+	HANDLE_MSG(hwnd, WM_XBUTTONDOWN,_OnMouseButtonDown);
+	HANDLE_MSG(hwnd, WM_XBUTTONUP,	_OnMouseMoveOrRelease);
 
     default:
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);

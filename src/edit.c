@@ -966,6 +966,12 @@ doESCkey:
 	case K_RIGHTMOUSE:
 	case K_RIGHTDRAG:
 	case K_RIGHTRELEASE:
+	case K_X1MOUSE:
+	case K_X1DRAG:
+	case K_X1RELEASE:
+	case K_X2MOUSE:
+	case K_X2DRAG:
+	case K_X2RELEASE:
 	    ins_mouse(c);
 	    break;
 

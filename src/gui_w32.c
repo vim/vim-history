@@ -24,6 +24,22 @@
  */
 
 /*
+ * These are new in Windows ME/XP, only defined in recent compilers.
+ */
+#ifndef HANDLE_WM_XBUTTONUP
+# define HANDLE_WM_XBUTTONUP(hwnd, wParam, lParam, fn) \
+   ((fn)((hwnd), (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
+#endif
+#ifndef HANDLE_WM_XBUTTONDOWN
+# define HANDLE_WM_XBUTTONDOWN(hwnd, wParam, lParam, fn) \
+   ((fn)((hwnd), FALSE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
+#endif
+#ifndef HANDLE_WM_XBUTTONDBLCLK
+# define HANDLE_WM_XBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
+   ((fn)((hwnd), TRUE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
+#endif
+
+/*
  * Include the common stuff for MS-Windows GUI.
  */
 #include "gui_w48.c"

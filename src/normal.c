@@ -358,6 +358,12 @@ static const struct nv_cmd
     {K_RIGHTMOUSE, nv_mouse,	0,			0},
     {K_RIGHTDRAG, nv_mouse,	0,			0},
     {K_RIGHTRELEASE, nv_mouse,	0,			0},
+    {K_X1MOUSE, nv_mouse,	0,			0},
+    {K_X1DRAG, nv_mouse,	0,			0},
+    {K_X1RELEASE, nv_mouse,	0,			0},
+    {K_X2MOUSE, nv_mouse,	0,			0},
+    {K_X2DRAG, nv_mouse,	0,			0},
+    {K_X2RELEASE, nv_mouse,	0,			0},
 #endif
     {K_IGNORE,	nv_ignore,	0,			0},
     {K_INS,	nv_edit,	0,			0},
@@ -3304,6 +3310,7 @@ add_to_showcmd(c)
 	K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
 	K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
 	K_MOUSEDOWN, K_MOUSEUP,
+	K_X1MOUSE, K_X1DRAG, K_X1RELEASE, K_X2MOUSE, K_X2DRAG, K_X2RELEASE,
 	0
     };
 #endif
@@ -7081,6 +7088,12 @@ nv_g_cmd(cap)
     case K_RIGHTMOUSE:
     case K_RIGHTDRAG:
     case K_RIGHTRELEASE:
+    case K_X1MOUSE:
+    case K_X1DRAG:
+    case K_X1RELEASE:
+    case K_X2MOUSE:
+    case K_X2DRAG:
+    case K_X2RELEASE:
 	mod_mask = MOD_MASK_CTRL;
 	(void)do_mouse(oap, cap->nchar, BACKWARD, cap->count1, 0);
 	break;

@@ -1094,6 +1094,13 @@ getcmdline(firstc, count, indent)
 	/* Mouse scroll wheel: ignored here */
 	case K_MOUSEDOWN:
 	case K_MOUSEUP:
+	/* Alternate buttons ignored here */
+	case K_X1MOUSE:
+	case K_X1DRAG:
+	case K_X1RELEASE:
+	case K_X2MOUSE:
+	case K_X2DRAG:
+	case K_X2RELEASE:
 		goto cmdline_not_changed;
 
 #endif	/* FEAT_MOUSE */
