@@ -1665,7 +1665,7 @@ op_delete(oap)
 
 	    /* Break a tab only when it's included in the area. */
 	    if (gchar_pos(&oap->end) == '\t'
-					  && oap->end.coladd < oap->inclusive)
+				     && (int)oap->end.coladd < oap->inclusive)
 	    {
 		/* save last line for undo */
 		if (u_save((linenr_T)(oap->end.lnum - 1),
