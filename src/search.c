@@ -2989,11 +2989,15 @@ extend:
     if (include)
 	ncount = count * 2;
     else
+    {
 	ncount = count;
-    if (!include && start_blank)
-	--ncount;
+	if (start_blank)
+	    --ncount;
+    }
     if (ncount)
 	findsent_forward(ncount, TRUE);
+    else
+	decl(&curwin->w_cursor);
 
     if (include)
     {
@@ -3003,7 +3007,10 @@ extend:
 	 * If there are no trailing blanks, try to include leading blanks.
 	 */
 	if (start_blank)
+	{
 	    find_first_blank(&curwin->w_cursor);
+	    decl(&curwin->w_cursor);
+	}
 	else if (c = gchar_cursor(), !vim_iswhite(c))
 	    find_first_blank(&start_pos);
     }
