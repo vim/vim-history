@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.1a.  Last change: 2001 Sep 03
+*usr_08.txt*	For Vim version 6.1b.  Last change: 2002 Mar 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -457,17 +457,19 @@ window to another.  Take the "main.c" and "main.c~" example above.  Move the
 cursor to the left window, on the line that was deleted in the other window.
 Now type this command: >
 
-	:diffput
+	dp
 
 The change will be removed by putting the text of the current window in the
-other window.
+other window.  "dp" stands for "diff put".
    You can also do it the other way around.  Move the cursor to the right
 window, to the line where "changed" was inserted.  Now type this command: >
 
-	:diffget
+	do
 
 The change will now be removed by getting the text from the other window.
 Since there are no changes left now, Vim puts all text in a closed fold.
+"do" stands for "diff obtain".  "dg" would have been better, but that already
+has a different meaning ("dgg" deletes from the cursor until the first line).
 
 For details about diff mode, see |vimdiff|.
 

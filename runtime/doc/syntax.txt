@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.1a.  Last change: 2002 Feb 24
+*syntax.txt*    For Vim version 6.1b.  Last change: 2002 Feb 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1161,6 +1161,12 @@ CSS. The options to use are >
 	:let java_javascript=1
 	:let java_css=1
 	:let java_vb=1
+
+In order to highlight nested parens with different colors define colors
+for javaParen, javaParen1 and javaParen2, for example with >
+	:hi link javaParen Comment
+or >
+	:hi javaParen ctermfg=blue guifg=#0000ff
 
 If you notice highlighting errors while scrolling backwards, which are fixed
 when redrawing with CTRL-L, try setting the "java_minlines" internal variable

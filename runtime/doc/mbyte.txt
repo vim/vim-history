@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.1a.  Last change: 2002 Feb 24
+*mbyte.txt*     For Vim version 6.1b.  Last change: 2002 Feb 28
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -294,8 +294,6 @@ u   utf-16	ucs-2 extended with double-words for more characters
 u   utf-16le	like utf-16, little endian
 u   ucs-4	32 bit UCS-4 encoded Unicode (ISO/IEC 10646-1)
 u   ucs-4le	like ucs-4, little endian
-    cp{number}	MS-Windows: any installed codepage which is single-byte or
-		double-byte
 
 The {name} can be any encoding name that your system supports.  It is passed
 to iconv() to convert between the encoding of the file and the current locale.

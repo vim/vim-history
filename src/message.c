@@ -1539,7 +1539,7 @@ msg_puts_attr(s, attr)
 		/* NL --> CR translation (for Mac) */
 		if (*s == '\n')
 		    *p++ = '\r';
-#ifdef USE_CR
+#if defined(USE_CR) && !defined(MACOS_X_UNIX)
 		else
 #endif
 		    *p++ = *s;

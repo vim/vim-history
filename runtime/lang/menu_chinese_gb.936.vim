@@ -53,33 +53,33 @@ menutrans Settings\ &Window		设定窗口(&W)
 menutrans &Global\ Settings		全局设定(&G)
 
 " Build boolean options
-menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	开/关增量查找模式<Tab>:set\ hls!	
-menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		开/关忽略大小写模式<Tab>:set\ ic! 
+menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	开/关增量查找模式<Tab>:set\ hls!
+menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		开/关忽略大小写模式<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!              开/关匹配显示<Tab>:set sm!
-menutrans &Context\ lines			上下文行数(&C) 
+menutrans &Context\ lines			上下文行数(&C)
 
 menutrans &Virtual\ Edit			可视化编辑模式(&V)
 menutrans Never					从不
 menutrans Block\ Selection			块选择
 menutrans Insert\ mode				插入模式
-menutrans Block\ and\ Insert   			块选择与插入模式
-menutrans Always	       			所有模式	
+menutrans Block\ and\ Insert			块选择与插入模式
+menutrans Always				所有模式
 
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	开/关插入模式<Tab>:set\ im!
 
-menutrans Search\ &Path\.\.\.          		查找路径\.\.\.(&P)
+menutrans Search\ &Path\.\.\.			查找路径\.\.\.(&P)
 
-menutrans Ta&g\ Files\.\.\.            		标签文件\.\.\.(&g)
+menutrans Ta&g\ Files\.\.\.			标签文件\.\.\.(&g)
 
 " GUI options
-menutrans Toggle\ &Toolbar             		开/关工具条(&T) 
-menutrans Toggle\ &Bottom\ Scrollbar    	开/关底部滚动条(&B)
-menutrans Toggle\ &Left\ Scrollbar     		开/关左端滚动条(&L)
-menutrans Toggle\ &Right\ Scrollbar     	开/关右端滚动条(&R)
+menutrans Toggle\ &Toolbar			开/关工具条(&T)
+menutrans Toggle\ &Bottom\ Scrollbar		开/关底部滚动条(&B)
+menutrans Toggle\ &Left\ Scrollbar		开/关左端滚动条(&L)
+menutrans Toggle\ &Right\ Scrollbar		开/关右端滚动条(&R)
 
 
 " Edit/File Settings
-menutrans F&ile\ Settings              		文件设定(&i) 
+menutrans F&ile\ Settings			文件设定(&i)
 
 " Boolean options
 menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!	开/关显示行号<Tab>:set\ nu!
@@ -205,7 +205,7 @@ if has("toolbar")
     tmenu ToolBar.FindNext	查找下一个
     tmenu ToolBar.FindPrev	查找上一个
     tmenu ToolBar.Replace	替换...
-    tmenu ToolBar.LoadSesn	加载会话 
+    tmenu ToolBar.LoadSesn	加载会话
     tmenu ToolBar.SaveSesn	保存当前的会话
     tmenu ToolBar.RunScript	运行Vim脚本
     tmenu ToolBar.Make		执行 Make
@@ -224,7 +224,7 @@ menutrans Set\ '&filetype'\ too	也设定\ 'filetype'(&f)
 menutrans &Off			关闭(&O)
 menutrans &Manual		手动设定(&M)
 menutrans A&utomatic		自动设定(&U)
-menutrans on/off\ for\ &This\ file	只对这个文件打开/关闭(&T)	
+menutrans on/off\ for\ &This\ file	只对这个文件打开/关闭(&T)
 menutrans Co&lor\ test		色彩显示测试(&L)
 menutrans &Highlight\ test	语法效果测试(&H)
 menutrans &Convert\ to\ HTML	转换成\ HTML\ 格式(&C)

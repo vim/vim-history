@@ -17,5 +17,5 @@ setlocal formatoptions-=t formatoptions+=rol
 
 " Define patterns for the browse file filter
 if has("gui_win32") && !exists("b:browsefilter")
-  let b:browsefilter = "DOS Batch Files (*.bat)\t*.bat\nAll Files (*.*)\t*.*\n"
+  let b:browsefilter = "DOS Batch Files (*.bat, *.cmd)\t*.bat;*.cmd\nAll Files (*.*)\t*.*\n"
 endif

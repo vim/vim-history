@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NSIS script, for version of NSIS 1.91 and later
 " Maintainer:	Alex Jakushev <Alex.Jakushev@kemek.lt>
-" Last Change:	2002 Jan 29
+" Last Change:	2002 Mar 03
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -25,7 +25,7 @@ syn match nsisGlobalLabel	"\.\S\{-1,}:"
 
 "PREPROCESSOR
 syn match nsisPreprocSubst	"${.\{-}}"
-syn match nsisDefine		"!define\>" 
+syn match nsisDefine		"!define\>"
 syn match nsisDefine		"!undef\>"
 syn match nsisMacro		"!macro\>"
 syn match nsisMacro		"!macroend\>"
@@ -67,23 +67,23 @@ syn region nsisString	start=/`/ skip=/"\|'/ end=/`/ contains=nsisPreprocSubst,ns
 "CONSTANTS
 syn keyword nsisBoolean		true false on off
 
-syn keyword nsisAttribOptions	hide show nevershow auto force ifnewer normal silent silentlog 
+syn keyword nsisAttribOptions	hide show nevershow auto force ifnewer normal silent silentlog
 syn keyword nsisAttribOptions	smooth colored SET CUR END
 
-syn keyword nsisRegistry	HKCR HKLM HKCU HKU HKCC HKDD HKPD 
-syn keyword nsisRegistry	HKEY_CLASSES_ROOT HKEY_LOCAL_MACHINE HKEY_CURRENT_USER HKEY_USERS 
-syn keyword nsisRegistry	HKEY_CURRENT_CONFIG HKEY_DYN_DATA HKEY_PERFORMANCE_DATA 
+syn keyword nsisRegistry	HKCR HKLM HKCU HKU HKCC HKDD HKPD
+syn keyword nsisRegistry	HKEY_CLASSES_ROOT HKEY_LOCAL_MACHINE HKEY_CURRENT_USER HKEY_USERS
+syn keyword nsisRegistry	HKEY_CURRENT_CONFIG HKEY_DYN_DATA HKEY_PERFORMANCE_DATA
 
-syn keyword nsisFileAttrib	NORMAL ARCHIVE HIDDEN OFFLINE READONLY SYSTEM TEMPORARY 
-syn keyword nsisFileAttrib	FILE_ATTRIBUTE_NORMAL FILE_ATTRIBUTE_ARCHIVE FILE_ATTRIBUTE_HIDDEN 
-syn keyword nsisFileAttrib	FILE_ATTRIBUTE_OFFLINE FILE_ATTRIBUTE_READONLY FILE_ATTRIBUTE_SYSTEM 
-syn keyword nsisFileAttrib	FILE_ATTRIBUTE_TEMPORARY 
+syn keyword nsisFileAttrib	NORMAL ARCHIVE HIDDEN OFFLINE READONLY SYSTEM TEMPORARY
+syn keyword nsisFileAttrib	FILE_ATTRIBUTE_NORMAL FILE_ATTRIBUTE_ARCHIVE FILE_ATTRIBUTE_HIDDEN
+syn keyword nsisFileAttrib	FILE_ATTRIBUTE_OFFLINE FILE_ATTRIBUTE_READONLY FILE_ATTRIBUTE_SYSTEM
+syn keyword nsisFileAttrib	FILE_ATTRIBUTE_TEMPORARY
 
-syn keyword nsisMessageBox	MB_OK MB_OKCANCEL MB_ABORTRETRYIGNORE MB_RETRYCANCEL MB_YESNO MB_YESNOCANCEL 
-syn keyword nsisMessageBox	MB_ICONEXCLAMATION MB_ICONINFORMATION MB_ICONQUESTION MB_ICONSTOP 
-syn keyword nsisMessageBox	MB_TOPMOST MB_SETFOREGROUND MB_RIGHT 
-syn keyword nsisMessageBox	MB_DEFBUTTON1 MB_DEFBUTTON2 MB_DEFBUTTON3 MB_DEFBUTTON4 
-syn keyword nsisMessageBox	IDABORT IDCANCEL IDIGNORE IDNO IDOK IDRETRY IDYES 
+syn keyword nsisMessageBox	MB_OK MB_OKCANCEL MB_ABORTRETRYIGNORE MB_RETRYCANCEL MB_YESNO MB_YESNOCANCEL
+syn keyword nsisMessageBox	MB_ICONEXCLAMATION MB_ICONINFORMATION MB_ICONQUESTION MB_ICONSTOP
+syn keyword nsisMessageBox	MB_TOPMOST MB_SETFOREGROUND MB_RIGHT
+syn keyword nsisMessageBox	MB_DEFBUTTON1 MB_DEFBUTTON2 MB_DEFBUTTON3 MB_DEFBUTTON4
+syn keyword nsisMessageBox	IDABORT IDCANCEL IDIGNORE IDNO IDOK IDRETRY IDYES
 
 syn match nsisNumber		"\<[^0]\d*\>"
 syn match nsisNumber		"\<0x\x\+\>"
@@ -102,7 +102,7 @@ syn keyword nsisAttribute	InstallDir InstallDirRegKey
 syn keyword nsisAttribute	LicenseText LicenseData
 
 "INSTALLER ATTRIBUTES - Component page configuration
-syn keyword nsisAttribute	ComponentText InstType EnabledBitmap DisabledBitmap SpaceTexts 
+syn keyword nsisAttribute	ComponentText InstType EnabledBitmap DisabledBitmap SpaceTexts
 
 "INSTALLER ATTRIBUTES - Directory page configuration
 syn keyword nsisAttribute	DirShow DirText AllowRootDirInstall
@@ -120,7 +120,7 @@ syn keyword nsisCompiler	SetOverwrite SetCompress SetDatablockOptimize SetDateSa
 
 
 "FUNCTIONS - general purpose
-syn keyword nsisInstruction	SetOutPath File Exec ExecWait ExecShell 
+syn keyword nsisInstruction	SetOutPath File Exec ExecWait ExecShell
 syn keyword nsisInstruction	Rename Delete RMDir
 
 "FUNCTIONS - registry & ini
@@ -184,7 +184,7 @@ syn match nsisCallback		"un\.onNextPage"
 
 
 "STATEMENTS - sections
-syn keyword nsisStatement	Section SectionIn SectionEnd SectionDivider 
+syn keyword nsisStatement	Section SectionIn SectionEnd SectionDivider
 syn keyword nsisStatement	AddSize
 
 "STATEMENTS - functions

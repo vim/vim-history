@@ -758,17 +758,17 @@ char* ConvertToAnsi (OLECHAR* sUnicode)
 {
 	static char BufAscii[MAX_OLE_STR];
 	return ConvertToAnsiBuf (sUnicode, BufAscii);
-} 
+}
 
 char* ConvertToAnsiBuf (OLECHAR* sUnicode, char* BufAscii)
 {
 	WideCharToMultiByte (CP_ACP, 0, sUnicode, -1, BufAscii, MAX_OLE_STR, NULL, NULL);
 	return BufAscii;
-} 
+}
 
 OLECHAR* ConvertToUnicode (char* sAscii)
 {
-	static OLECHAR BufUnicode[MAX_OLE_STR]; 
+	static OLECHAR BufUnicode[MAX_OLE_STR];
 	return ConvertToUnicodeBuf (sAscii, BufUnicode);
 }
 

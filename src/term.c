@@ -1394,7 +1394,7 @@ struct builtin_term builtin_termcaps[] =
 #endif
 
 #if defined(MACOS)
-# define DEFAULT_TERM	(char_u *)"mac-ansi"
+# define DEFAULT_TERM	(char_u *)"dumb"
 #endif
 
 /*
@@ -1456,6 +1456,10 @@ parse_builtin_tcap(term)
 
     p = find_builtin_term(term);
     term_8bit = term_is_8bit(term);
+
+    /* Do not parse if builtin term not found */
+    if (p->bt_string == NULL)
+	return;
 
     for (++p; p->bt_entry != (int)KS_NAME && p->bt_entry != BT_EXTRA_KEYS; ++p)
     {
@@ -2514,7 +2518,7 @@ out_trash()
 out_char(c)
     unsigned	c;
 {
-#if defined(UNIX) || defined(VMS) || defined(AMIGA)
+#if defined(UNIX) || defined(VMS) || defined(AMIGA) || defined(MACOS_X_UNIX)
     if (c == '\n')	/* turn LF into CR-LF (CRMOD doesn't seem to do this) */
 	out_char('\r');
 #endif
@@ -2535,7 +2539,7 @@ static void out_char_nf __ARGS((unsigned));
 out_char_nf(c)
     unsigned	c;
 {
-#if defined(UNIX) || defined(VMS) || defined(AMIGA)
+#if defined(UNIX) || defined(VMS) || defined(AMIGA) || defined(MACOS_X_UNIX)
     if (c == '\n')	/* turn LF into CR-LF (CRMOD doesn't seem to do this) */
 	out_char_nf('\r');
 #endif

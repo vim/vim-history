@@ -10,9 +10,9 @@
 # language (xx) and add it to the next three lines.
 #
 
-LANGUAGES = af cs de es fr it ja ko pl tr zh_TW
-MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo ko.mo pl.mo tr.mo zh_TW.mo
-POFILES = af.po cs.po de.po es.po fr.po it.po ja.po ko.po pl.po tr.po zh_TW.po
+LANGUAGES = af cs de es fr it ja ko pl sk uk zh_TW zh_CN zh_CN.UTF-8
+MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
+		ko.mo pl.mo sk.mo uk.mo zh_TW.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 

@@ -58,7 +58,7 @@ ui_write(s, len)
 #endif
 }
 
-#if (defined(FEAT_GUI) && defined(UNIX)) || defined(PROTO)
+#if (defined(FEAT_GUI) && defined(UNIX)) || defined(MACOS_X_UNIX) || defined(PROTO)
 /*
  * When executing an external program, there may be some typed characters that
  * are not consumed by it.  Give them back to ui_inchar() and they are stored
@@ -1609,7 +1609,7 @@ read_from_input_buf(buf, maxlen)
 fill_input_buf(exit_on_error)
     int	exit_on_error;
 {
-#if defined(UNIX) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(OS2) || defined(VMS) || defined(MACOS_X_UNIX)
     int		len;
     int		try;
     static int	did_read_something = FALSE;
@@ -1625,7 +1625,7 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #endif
-#if defined(UNIX) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(OS2) || defined(VMS) || defined(MACOS_X_UNIX)
     if (vim_is_input_buf_full())
 	return;
     /*

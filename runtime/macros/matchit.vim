@@ -1,7 +1,7 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: February 18, 2002
+"  Last Change: February 28, 2002
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.3
+"  Version:     1.4, for Vim 6.1
 
 " Documentation:
 "  The documentation is in a separate file, matchit.txt .
@@ -13,8 +13,8 @@
 "  Support for back references and other improvements by Benji Fisher
 "  Support for many languages by Johannes Zellner
 "  Suggestions for improvement, bug reports, and support for additional
-"  languages by Jordi-Albert Batalla, Neil Bird, Mark Collett, Stephen Wall,
-"  and Johannes Zellner.
+"  languages by Jordi-Albert Batalla, Neil Bird, Servatius Brandt, Mark
+"  Collett, Stephen Wall, and Johannes Zellner.
 
 " Debugging:
 "  If you'd like to try the built-in debugging commands...
@@ -25,6 +25,9 @@
 " TODO:  I should think about multi-line patterns for b:match_words.
 " TODO:  Maybe I should add a menu so that people will actually use some of
 " the features that I have implemented.
+" TODO:  Eliminate the MultiMatch function.  Add yet another argument to
+" Match_wrapper() instead.
+" TODO:  Allow :let b:match_words = '\(\(foo\)\(bar\)\):\3\2:end\1'
 
 " allow user to prevent loading
 " and prevent duplicate loading
@@ -48,8 +51,10 @@ onoremap <silent> g% v:<C-U>call <SID>Match_wrapper('',0,'o') <CR>
 " Analogues of [{ and ]} using matching patterns:
 nnoremap <silent> [% :<C-U>call <SID>MultiMatch("bW", "n") <CR>
 nnoremap <silent> ]% :<C-U>call <SID>MultiMatch("W",  "n") <CR>
-vnoremap [% <Esc>[%m'gv``
-vnoremap ]% <Esc>]%m'gv``
+vmap [% <Esc>[%m'gv``
+vmap ]% <Esc>]%m'gv``
+" vnoremap <silent> [% :<C-U>call <SID>MultiMatch("bW", "v") <CR>m'gv``
+" vnoremap <silent> ]% :<C-U>call <SID>MultiMatch("W",  "v") <CR>m'gv``
 onoremap <silent> [% v:<C-U>call <SID>MultiMatch("bW", "o") <CR>
 onoremap <silent> ]% v:<C-U>call <SID>MultiMatch("W",  "o") <CR>
 
@@ -103,6 +108,7 @@ function! s:Match_wrapper(word, forward, mode) range
   "   s:do_BR	flag for whether there are backrefs
   "   s:pat	parsed version of b:match_words
   "   s:all	regexp based on s:pat and the default groups
+  "
   " Allow b:match_words = "GetVimMatchWords()" .
   if b:match_words =~ ":"
     let match_words = b:match_words
@@ -182,7 +188,7 @@ function! s:Match_wrapper(word, forward, mode) range
 
   " Third step:  Find the group and single word that match, and the original
   " (backref) versions of these.  Then, resolve the backrefs.
-  " Set the following local variables:
+  " Set the following local variable:
   " group = colon-separated list of patterns, one of which matches
   "       = ini:mid:fin or ini:fin
   "
@@ -191,7 +197,8 @@ function! s:Match_wrapper(word, forward, mode) range
     \ s:notslash.'\zs[,:]*,[,:]*', ',', 'g')
   let patBR = substitute(patBR, s:notslash.'\zs:\{2,}', ':', 'g')
   " Now, set group and groupBR to the matching group: 'if:endif' or
-  " 'while:endwhile' or whatever.
+  " 'while:endwhile' or whatever.  A bit of a kluge:  s:Choose() returns
+  " group . "," . groupBR, and we pick it apart.
   let group = s:Choose(s:pat, matchline, ",", ":", prefix, suffix, patBR)
   let i = matchend(group, s:notslash . ",")
   let groupBR = strpart(group, i)
@@ -199,6 +206,11 @@ function! s:Match_wrapper(word, forward, mode) range
   " Now, matchline =~ prefix . substitute(group,':','\|','g') . suffix
   if s:do_BR " Do the hard part:  resolve those backrefs!
     let group = s:InsertRefs(groupBR, prefix, group, suffix, matchline)
+  endif
+  if exists("b:match_debug")
+    let b:match_wholeBR = groupBR
+    let i = matchend(groupBR, s:notslash . ":")
+    let b:match_iniBR = strpart(groupBR, 0, i-1)
   endif
 
   " Fourth step:  Set the arguments for searchpair().
@@ -718,7 +730,7 @@ endfun
 "     return ""
 "   end
 "   let startpos = s:MultiMatch("bW")
-" 
+"
 "   if startpos == ""
 "     return ""
 "   endif
@@ -745,7 +757,7 @@ endfun
 "     let group = s:InsertRefs(groupBR, prefix, group, suffix, matchline)
 "   endif
 " " let g:group = group
-" 
+"
 "   " - TODO:  Construct the closing from group.
 "   let fake = "end" . expand("<cword>")
 "   execute startpos

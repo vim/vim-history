@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Pascal
-" Current  Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
+" Version: 2.7
+" Last Change:	2002/03/08 14:11:57
+" Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
 " Previous Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
-" Version: 2.4
-" Last Change:	2001 May 10
-" Contributors: Tim Chase <tchase@csc.com>, Stas Grabois <stsi@vtrails.com>
+
+" Contributors: Tim Chase <tchase@csc.com>, Stas Grabois <stsi@vtrails.com>,
+"	Mazen NEIFER <mazen.neifer.2001@supaero.fr>,
+"	Klaus Hast <Klaus.Hast@arcor.net>
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -28,7 +31,7 @@ syn keyword pascalStatement	procedure function
 syn keyword pascalStatement	program begin end const var type
 syn keyword pascalStruct	record
 syn keyword pascalType		array boolean char integer file pointer real set
-syn keyword pascalType		string text
+syn keyword pascalType		string text variant
 
 
 syn keyword pascalTodo contained	TODO
@@ -148,7 +151,8 @@ if !exists("pascal_traditional")
   endif
 
   if exists("pascal_fpc")
-    syn keyword pascalStatement	fail otherwise
+    syn region pascalComment        start="//" end="$"
+    syn keyword pascalStatement	fail otherwise operator
     syn keyword pascalDirective	popstack
     syn keyword pascalPredefined self
     syn keyword pascalType	ShortString AnsiString WideString
@@ -181,7 +185,7 @@ if !exists("pascal_traditional")
     syn keyword pascalModifier	dispid index stored default nodefault readonly
     syn keyword pascalModifier	writeonly implements overload requires resident
     syn keyword pascalAcces	protected published automated
-    syn keyword pascalDirective	register pascal cdecl stdcall safecall
+    syn keyword pascalDirective	register pascal cvar cdecl stdcall safecall
     syn keyword pascalOperator	as is
   endif
 

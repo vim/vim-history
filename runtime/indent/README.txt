@@ -2,7 +2,7 @@ This directory contains files to automatically compute the indent for a
 type of file.
 
 If you want to add your own indent file for your personal use, read the docs
-at ":help indent-expression".  Looking at the existing files should give you 
+at ":help indent-expression".  Looking at the existing files should give you
 inspiration.
 
 If you make a new indent file which would be useful for others, please send it

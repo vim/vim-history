@@ -2,7 +2,7 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: Apache configuration (httpd.conf, srm.conf, access.conf, .htaccess)
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Sep 02
+" Last Change: 2002 Mar 03
 " URI: http://physics.muni.cz/~yeti/download/apache.vim
 
 
@@ -97,6 +97,15 @@ syn keyword apacheDeclaration AddCharset AddEncoding AddHandler AddLanguage AddT
 syn keyword apacheDeclaration MimeMagicFile
 syn keyword apacheDeclaration MMapFile
 syn keyword apacheDeclaration CacheNegotiatedDocs LanguagePriority
+syn keyword apacheDeclaration PerlModule PerlRequire PerlTaintCheck PerlWarn
+syn keyword apacheDeclaration PerlSetVar PerlSetEnv PerlPassEnv PerlSetupEnv
+syn keyword apacheDeclaration PerlInitHandler PerlPostReadRequestHandler PerlHeaderParserHandler
+syn keyword apacheDeclaration PerlTransHandler PerlAccessHandler PerlAuthenHandler PerlAuthzHandler
+syn keyword apacheDeclaration PerlTypeHandler PerlFixupHandler PerlHandler PerlLogHandler
+syn keyword apacheDeclaration PerlCleanupHandler PerlChildInitHandler PerlChildExitHandler
+syn keyword apacheDeclaration PerlRestartHandler PerlDispatchHandler
+syn keyword apacheDeclaration PerlFreshRestart PerlSendHeader
+syn keyword apacheDeclaration php_value php_flag php_admin_value php_admin_flag
 syn keyword apacheDeclaration ProxyRequests ProxyRemote ProxyPass ProxyPassReverse ProxyBlock AllowCONNECT ProxyReceiveBufferSize NoProxy ProxyDomain ProxyVia CacheRoot CacheSize CacheMaxExpire CacheDefaultExpire CacheLastModifiedFactor CacheGcInterval CacheDirLevels CacheDirLength CacheForceCompletion NoCache
 syn keyword apacheOption block
 syn keyword apacheDeclaration RewriteEngine RewriteOptions RewriteLog RewriteLogLevel RewriteLock RewriteMap RewriteBase RewriteCond RewriteRule
@@ -127,26 +136,26 @@ if version >= 508 || !exists("did_apache_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink apacheAllowOverride       apacheDeclaration
-  HiLink apacheAllowOverrideValue  apacheOption
-  HiLink apacheAuthType		   apacheDeclaration
-  HiLink apacheAuthTypeValue	   apacheOption
-  HiLink apacheOptionOption	   apacheOption
-  HiLink apacheDeclaration	   Function
-  HiLink apacheAnything		   apacheOption
-  HiLink apacheOption		   Number
-  HiLink apacheComment		   Comment
-  HiLink apacheFixme		   Todo
-  HiLink apacheLimitSectionKeyword apacheLimitSection
-  HiLink apacheLimitSection	   apacheSection
-  HiLink apacheSection		   Label
-  HiLink apacheMethodOption	   Type
-  HiLink apacheAllowDeny	   Include
-  HiLink apacheAllowDenyValue	   Identifier
-  HiLink apacheOrder		   Special
-  HiLink apacheOrderValue	   String
-  HiLink apacheString		   Number
-  HiLink apacheError		   Error
+  HiLink apacheAllowOverride		apacheDeclaration
+  HiLink apacheAllowOverrideValue	apacheOption
+  HiLink apacheAuthType			apacheDeclaration
+  HiLink apacheAuthTypeValue		apacheOption
+  HiLink apacheOptionOption		apacheOption
+  HiLink apacheDeclaration		Function
+  HiLink apacheAnything			apacheOption
+  HiLink apacheOption			Number
+  HiLink apacheComment			Comment
+  HiLink apacheFixme			Todo
+  HiLink apacheLimitSectionKeyword	apacheLimitSection
+  HiLink apacheLimitSection		apacheSection
+  HiLink apacheSection			Label
+  HiLink apacheMethodOption		Type
+  HiLink apacheAllowDeny		Include
+  HiLink apacheAllowDenyValue		Identifier
+  HiLink apacheOrder			Special
+  HiLink apacheOrderValue		String
+  HiLink apacheString			Number
+  HiLink apacheError			Error
 
   delcommand HiLink
 endif

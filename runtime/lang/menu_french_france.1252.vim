@@ -1,4 +1,3 @@
-" Menu Translations:	French for Windows
+" Menu Translations:	French for Windows CodePage 1252 encoding
 
-scriptencoding cp1252
 source <sfile>:p:h/menu_fr_fr.latin1.vim

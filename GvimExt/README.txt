@@ -88,7 +88,7 @@ To compile the DLL from the command line:
 	vcvars32
 	nmake -f Makefile
 
-If you did something interesting to this dll, please let me know 
+If you did something interesting to this dll, please let me know
 @ tianmiao@acm.org.
 
 Happy vimming!!!

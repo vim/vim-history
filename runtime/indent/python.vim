@@ -1,7 +1,7 @@
 " Python indent file
 " Language:	Python
 " Maintainer:	David Bustos <bustos@caltech.edu>
-" Last Change:	November 11, 2001
+" Last Change:	March 8, 2002
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -11,6 +11,7 @@ let b:did_indent = 1
 
 " Some preliminary settings
 setlocal nolisp		" Make sure lisp indenting doesn't supersede us
+setlocal autoindent	" indentexpr isn't much help otherwise
 
 setlocal indentexpr=GetPythonIndent(v:lnum)
 setlocal indentkeys+=<:>,=elif
@@ -26,14 +27,11 @@ function GetPythonIndent(lnum)
     return -1
   endif
 
-  " Search backwards for the frist non-empty, non-comment line.
+  " Search backwards for the first non-empty line.
   let plnum = prevnonblank(v:lnum - 1)
-  while getline(plnum) =~ '^\s*#'
-    let plnum = prevnonblank(plnum - 1)
-  endwhile
 
   if plnum == 0
-    " This is the first non-empty line.  Use zero indent.
+    " This is the first non-empty line, use zero indent.
     return 0
   endif
 
@@ -55,14 +53,14 @@ function GetPythonIndent(lnum)
   " If the current line begins with a header keyword, dedent
   elseif getline(a:lnum) =~ '^\s*\(elif\|else\|except\|finaly\)\>'
 
-    " Unless the user has already dedented
-    if indent(a:lnum) <= indent(plnum) - &sw
-      return -1
-    endif
-
-    " Or if the previous line was a one-liner
+    " Unless the previous line was a one-liner
     if getline(plnum) =~ '^\s*\(for\|if\|try\)\>'
       return indent(plnum)
+    endif
+
+    " Or the user has already dedented
+    if indent(a:lnum) <= indent(plnum) - &sw
+      return -1
     endif
 
     return indent(plnum) - &sw

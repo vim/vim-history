@@ -5,5 +5,5 @@
 if test $# = 0; then
   vim -c 'so $VIMRUNTIME/macros/less.vim' -
 else
-  vim -c 'so $VIMRUNTIME/macros/less.vim' $*
+  vim -c 'so $VIMRUNTIME/macros/less.vim' "$@"
 fi

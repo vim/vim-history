@@ -39,7 +39,7 @@ VisVim.rc
     Developer Studio.
 
 res\VisVim.rc2
-    This file contains resources that are not edited by Microsoft 
+    This file contains resources that are not edited by Microsoft
     Developer Studio.  You should place all resources not
     editable by the resource editor in this file.
 
@@ -76,7 +76,7 @@ OleAut.cpp
 
 Reg.cpp
     These files contain functions to access the registry.
-    
+
 
 /////////////////////////////////////////////////////////////////////////////
 Other standard files:

@@ -63,6 +63,7 @@
 #endif
 #if defined(MACOS_X_UNIX)
 #  define MACOS_X
+#  define UNIX
 #endif
 #if defined(MACOS_X) || defined(MACOS_CLASSIC)
 #  define MACOS
@@ -181,7 +182,7 @@
 # define __ARGS(x)  x
 #endif
 
-#if defined(UNIX) || defined(__EMX__) || defined(VMS)
+#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) && !defined(MACOS_X)
 # include "os_unix.h"	    /* bring lots of system header files */
 #endif
 
@@ -202,7 +203,7 @@
 # define __PARMS(x) __ARGS(x)
 #endif
 
-#ifdef UNIX
+#if defined(UNIX) && !defined(MACOS_X) /* MACOS_X doesn't yet support osdef.h */
 # include "auto/osdef.h"	/* bring missing declarations in */
 #endif
 

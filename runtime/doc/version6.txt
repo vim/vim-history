@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.1a.  Last change: 2002 Feb 24
+*version6.txt*  For Vim version 6.1b.  Last change: 2002 Mar 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3482,9 +3482,9 @@ Files:	    src/move.c
 ==============================================================================
 VERSION 6.1						*version-6.1*
 
-Improvements made between version 6.0 and 6.1.
+This section is about improvements made between version 6.0 and 6.1.
 
-This was a bug-fix release, no new features.
+This is a bug-fix release, there are not really any new features.
 
 
 Changed							*changed-6.1*
@@ -3509,16 +3509,18 @@ nsis	    NSIS (Alex Jakushev)
 ppd	    Postscript Printer Description (Bjoern Jacke)
 rpl	    RPL/2 (Joel Bertrand)
 scilab	    Scilab (Benoit Hamelin)
-splint	    Splint (Ralf Wildenheus)
+splint	    Splint (Ralf Wildenhues)
 sqlj	    SQLJ (Andreas Fischbach)
 wvdial	    WvDial (Prahlad Vaidyanathan)
 xf86conf    XFree86 config (Nikolai Weibull)
 xmodmap	    Xmodmap (Nikolai Weibull)
 xslt	    Xslt (Johannes Zellner)
 
-Indent file for Scheme. (Dorai Sitaram)
+Added indent file for Scheme. (Dorai Sitaram)
+Added indent script for Prolog. (Kontra Gergely)
 
 Added Ukrainian menu translations. (Bohdan Vlasyuk)
+Added ASCII version of the Czech menus. (Jiri Brezina)
 
 Added Simplified Chinese translation of the tutor. (Mendel L Chan)
 
@@ -3535,6 +3537,8 @@ Improved NSIS script to support NSIS 180.  Added icons for the
 enabled/disabled status. (Mirek Pruchnik)
 
 cp1250 version of the Slovak message translations.
+
+Compiler plugins for IRIX compilers. (David Harrison)
 
 
 Fixed							*fixed-6.1*
@@ -3579,6 +3583,44 @@ would be "Source Vim script". (Yegappan Lakshmanan)
 
 Win32: Don't use the printer font as default for the font dialog.
 
+"make doslang" didn't work when configure didn't run (yet).  Set $MAKEMO to
+"yes". (Mirek Pruchnik)
+
+The ToolBar TagJump item used "g]", which prompts for a selection even when
+there is only one matching tag.  Use "g<C-]>" instead.
+
+The ming makefile for message translations didn't have the right list of
+files.
+
+The MS-Windows 3.1 version complains about LIBINTL.DLL not found.  Compile
+this version without message translations.
+
+The Borland 5 makefile contained a check for Ruby which is no longer needed.
+The URLs for the TCL library was outdated. (Dan Sharp)
+
+The eviso.ps file was missing from the DOS runtime archive, it's needed for
+printing PostScript in the 32bit DOS version.
+
+In menu files ":scriptencoding" was used in a wrong way after patch 6.1a.032
+Now use ":scriptencoding" in the file where the translations are given.  Do
+the same for all menus in latin1 encoding.
+
+Included a lot of fixes for the Macintosh, mostly to make it work with Carbon.
+(Dany StAmant, Axel Kielhorn, Benji Fisher)
+
+Improved the vimtutor shell script to use $TMPDIR when it exists, and delete
+the copied file when exiting in an abnormal way. (Max Ischenko)
+
+When "iconv.dll" can't be found, try using "libiconv.dll".
+
+When encryption is used, filtering with a shell command wasn't possible.
+
+DJGPP: ":cd c:" always failed, can't get permissions for "c:".
+Win32: ":cd c:/" failed if the previous current directory on c: had become
+invalid.
+
+DJGPP: Shift-Del and Del both produce \316\123.  Default mapping for Del is
+wrong.  Disabled it.
 
 Patch 6.0.001
 Problem:    Loading the sh.vim syntax file causes error messages . (Corinna
@@ -5392,5 +5434,264 @@ Problem:    A tab causes UTF-8 text to be displayed in the wrong position.
 Solution:   Correct utf_char2cells() again.
 Files:	    src/mbyte.c
 
+Patch 6.1a.001 (extra)
+Problem:    32bit DOS: copying text to the clipboard may cause a crash.
+	    (Jonathan D Johnston)
+Solution:   Don't copy one byte too much in SetClipboardData().
+Files:	    src/os_msdos.c
+
+Patch 6.1a.002
+Problem:    GTK: On some configurations, when closing a dialog from the window
+	    manager, Vim hangs.
+Solution:   Catch the "destroy" signal. (Aric Blumer)
+Files:	    src/gui_gtk.c
+
+Patch 6.1a.003
+Problem:    Multi-byte: With UTF-8 double-wide char and 'virtualedit' set:
+	    yanking in Visual mode doesn't include the last byte. (Eric Long)
+Solution:   Don't add a space for a double-wide character.
+Files:	    src/ops.c
+
+Patch 6.1a.004 (extra)
+Problem:    MINGW: undefined type. (Ron Aaron)
+Solution:   Make GetCompositionString_inUCS2() static.
+Files:	    src/gui_w32.c, src/gui_w48.c, src/proto/gui_w32.pro
+
+Patch 6.1a.005 (extra)
+Problem:    Win32: ":hardcopy" doesn't work after ":hardcopy!". (Jonathan
+	    Johnston)
+Solution:   Don't keep the driver context when using ":hardcopy!". (Vince
+	    Negri)
+Files:	    src/os_mswin.c
+
+Patch 6.1a.006
+Problem:    multi-byte: after setting 'encoding' the window title might be
+	    wrong.
+Solution:   Force resetting the title. (Yasuhiro Matsumoto)
+Files:	    src/option.c
+
+Patch 6.1a.007
+Problem:    Filetype detection for "*.inc" doesn't work.
+Solution:   Use a ":let" command. (David Schweikert)
+Files:	    runtime/filetype.vim
+
+Patch 6.1a.008 (extra)
+Problem:    Win32: ACL detection for network shares doesn't work.
+Solution:   Include the trailing (back)slash in the root path. (Mike Williams)
+Files:	    src/os_win32.c
+
+Patch 6.1a.009
+Problem:    When using "\@<=" or "\@<!" in a pattern, a "\1" may refer to a ()
+	    part that follows, but it generates an error message.
+Solution:   Allow a forward reference when there is a following "\@<=" or
+	    "\@<!".
+Files:	    runtime/doc/pattern.txt, src/regexp.c
+
+Patch 6.1a.010
+Problem:    When using ":help" and opening a new window, the alternate file
+	    isn't set.
+Solution:   Set the alternate file to the previously edited file.
+Files:	    src/ex_cmds.c
+
+Patch 6.1a.011
+Problem:    GTK: ":set co=77", change width with the mouse, ":set co=77"
+	    doesn't resize the window. (Darren Hiebert)
+Solution:   Set the form size after handling a resize event.
+Files:	    src/gui_gtk_x11.c
+
+Patch 6.1a.012
+Problem:    GTK: The file browser always returns a full path. (Lohner)
+Solution:   Shorten the file name if possible.
+Files:	    src/gui_gtk.c
+
+Patch 6.1a.013
+Problem:    When using "=~word" in 'cinkeys' or 'indentkeys', the case of the
+	    last character of the word isn't ignored. (Raul Segura Acevedo)
+Solution:   Ignore case when checking the last typed character.
+Files:	    src/edit.c
+
+Patch 6.1a.014
+Problem:    After patch 6.1a.006 can't compile without the title feature.
+Solution:   Add an #ifdef.
+Files:	    src/option.c
+
+Patch 6.1a.015
+Problem:    MS-Windows: When expanding a file name that contains a '[' or '{'
+	    an extra backslash is inserted. (Raul Segura Acevedo)
+Solution:   Avoid adding the backslash.
+Files:	    src/ex_getln.c
+
+Patch 6.1a.016
+Problem:    Completion after ":language" doesn't include "time". (Raul Segura
+	    Acevedo)
+Solution:   Add the alternative to the completions.
+Files:	    src/ex_cmds2.c
+
+Patch 6.1a.017
+Problem:    Clicking the mouse in the top row of a window where the first line
+	    doesn't fit moves the cursor to the wrong column.
+Solution:   Add the skipcol also for the top row of a window.
+Files:	    src/ui.c
+
+Patch 6.1a.018
+Problem:    When 'scrolloff' is one and the window height is one, "gj" can put
+	    the cursor above the window. (Raul Segura Acevedo)
+Solution:   Don't let skipcol become bigger than the cursor column.
+Files:	    src/move.c
+
+Patch 6.1a.019
+Problem:    When using a composing character on top of an ASCII character, the
+	    "l" command clears the composing character.  Only when 'ruler' and
+	    'showcmd' are off. (Raphael Finkel)
+Solution:   Don't move the cursor by displaying characters when there are
+	    composing characters.
+Files:	    src/screen.c
+
+Patch 6.1a.020
+Problem:    GTK: after patch 6.1a.011 resizing with the mouse doesn't always
+	    work well for small sizes. (Adrien Beau)
+Solution:   Use another way to avoid the problem with ":set co=77".
+Files:	    src/gui_gtk_x11.c
+
+Patch 6.1a.021
+Problem:    Several Syntax menu entries are wrong or confusing.
+Solution:   Rephrase and correct the menu entries. (Adrien Beau)
+Files:	    runtime/makemenu.vim, runtime/menu.vim
+
+Patch 6.1a.022
+Problem:    A tags file might be used twice on case insensitive systems.
+	    (Rick Swanton)
+Solution:   Don't use the same file name twice in the default for the 'tags'
+	    option.  Ignore case when comparing names of already visited
+	    files.
+Files:	    src/misc2.c, src/option.c
+
+Patch 6.1a.023
+Problem:    When starting the GUI get "C" characters echoed in the terminal.
+Solution:   Don't try sending a clear-screen command while the GUI is starting
+	    up.
+Files:	    src/screen.c
+
+Patch 6.1a.024
+Problem:    In other editors CTRL-F is often used for a find dialog.
+Solution:   In evim use CTRL-F for the find dialog.
+Files:	    runtime/evim.vim
+
+Patch 6.1a.025
+Problem:    The choices for the fileformat dialog can't be translated.
+Solution:   Add g:menutrans_fileformat_choices. (Adrien Beau)
+Files:	    runtime/menu.vim
+
+Patch 6.1a.026
+Problem:    Indenting Java files is wrong with "throws", "extends" and
+	    "implements" clauses.
+Solution:   Update the Java indent script.
+Files:	    runtime/indent/java.vim
+
+Patch 6.1a.027
+Problem:    A few Syntax menu entries missing or incorrect.
+Solution:   Add and correct the menu entries. (Adrien Beau)
+	    Shorten a few menus to avoid they become too long.
+Files:	    runtime/makemenu.vim, runtime/menu.vim
+
+Patch 6.1a.028
+Problem:    XIM: problems with feedback and some input methods.
+Solution:   Use iconv for calculating the cells.  Remove the queue for
+	    key_press_event only when text was changed. (Yasuhiro Matsumoto)
+Files:	    src/globals.h, src/mbyte.c, src/screen.c
+
+Patch 6.1a.029
+Problem:    After patch 6.1a.028 can't compile GTK version with XIM but
+	    without multi-byte chars.
+Solution:   Add an #ifdef. (Aschwin Marsman)
+Files:	    src/mbyte.c
+
+Patch 6.1a.030
+Problem:    With double-byte encodings toupper() and tolower() may have wrong
+	    results.
+Solution:   Skip double-byte characters. (Eric Long)
+Files:	    src/eval.c
+
+Patch 6.1a.031
+Problem:    Accessing the 'balloondelay' variable may cause a crash.
+Solution:   Make the variable for 'balloondelay' a long. (Olaf Seibert)
+Files:	    src/option.h
+
+Patch 6.1a.032 (extra)
+Problem:    Some menu files used a wrong encoding name for "scriptencoding".
+Solution:   Move the translations to a separate file, which is sourced after
+	    setting "scriptencoding".
+	    Also add Czech menu translations in ASCII and update the other
+	    encodings.
+Files:	    runtime/lang/menu_cs_cz.iso_8859-1.vim,
+	    runtime/lang/menu_cs_cz.iso_8859-2.vim,
+	    runtime/lang/menu_czech_czech_republic.1250.vim,
+	    runtime/lang/menu_czech_czech_republic.1252.vim,
+	    runtime/lang/menu_czech_czech_republic.ascii.vim,
+	    runtime/lang/menu_de_de.iso_8859-1.vim,
+	    runtime/lang/menu_de_de.latin1.vim,
+	    runtime/lang/menu_fr_fr.iso_8859-1.vim,
+	    runtime/lang/menu_fr_fr.latin1.vim,
+	    runtime/lang/menu_french_france.1252.vim,
+	    runtime/lang/menu_german_germany.1252.vim,
+	    runtime/lang/menu_ja_jp.euc-jp.vim,
+	    runtime/lang/menu_ja_jp.utf-8.vim,
+	    runtime/lang/menu_japanese_japan.932.vim
+
+Patch 6.1a.033
+Problem:    XIM: doesn't reset input context.
+Solution:   call xim_reset() with im_set_active(FALSE). (Takuhiro Nishioka)
+Files:	    src/mbyte.c
+
+Patch 6.1a.034 (extra)
+Problem:    Win32: The ACL checks for a readonly file still don't work well.
+Solution:   Remove the ACL checks, go back to how it worked in Vim 6.0.
+Files:	    src/os_win32.c
+
+Patch 6.1a.035
+Problem:    multi-byte: When using ":sh" in the GUI, typed and displayed
+	    multi-byte characters are not handled correctly.
+Solution:   Deal with multi-byte characters to and from the shell. (Yasuhiro
+	    Matsumoto)  Also handle UTF-8 composing characters.
+Files:	    src/os_unix.c
+
+Patch 6.1a.036
+Problem:    GTK: the save-yourself event was not handled.
+Solution:   Catch the save-yourself event and preserve swap files. (Neil Bird)
+Files:	    src/gui_gtk_x11.c
+
+Patch 6.1a.037
+Problem:    The MS-Windows key mapping doesn't include CTRL-S for saving.
+	    (Vlad Sandrini)
+Solution:   Map CTRL-S to ":update".
+Files:	    runtime/mswin.vim
+
+Patch 6.1a.038
+Problem:    Solaris: Including both sys/sysctl.h and sys/sysinfo.h doesn't
+	    work. (Antonio Colombo)
+Solution:   Don't include sys/sysinfo.h when not calling sysinfo().
+Files:	    src/os_unix.c
+
+Patch 6.1a.039
+Problem:    Not all visual basic files are recognized.
+Solution:   Add checks to catch *.ctl files. (Raul Segura Acevedo)
+Files:	    runtime/filetype.vim
+
+Patch 6.1a.040
+Problem:    A *.pl file is recognized as Perl, but it could be a prolog file.
+Solution:   Check the first non-empty line. (Kontra Gergely)
+Files:	    runtime/filetype.vim
+
+Patch 6.1a.041
+Problem:    When pressing the left mouse button in the command line and them
+	    moving the mouse upwards, nearly all the text is selected.
+Solution:   Don't try extending a modeless selection when there isn't one.
+Files:	    src/ui.c
+
+Patch 6.1a.042
+Problem:    When merging files, ":diffput" and ":diffget" are used a lot, but
+	    they require a lot of typing.
+Solution:   Add "dp" for ":diffput" and "do" for ":diffget".
+Files:	    runtime/doc/diff.txt, src/diff.c, src/normal.c, src/proto/diff.pro
 
  vim:tw=78:ts=8:ft=help:norl:

@@ -1,7 +1,7 @@
 "Dorai Sitaram
 "Mar 4, 2000
 "
-"See http://www.ccs.neu.edu/~dorai/scmindent/scmindent.html 
+"See http://www.ccs.neu.edu/~dorai/scmindent/scmindent.html
 "for details
 
 if exists("b:did_indent")
@@ -99,7 +99,7 @@ endfunc
 
 func! GetSchemeIndent()
   normal mx
-  let last_line = v:lnum 
+  let last_line = v:lnum
   let first_line = search("^(", 'bW') || 1
 
   normal `x
@@ -108,7 +108,7 @@ func! GetSchemeIndent()
   let paren_stack = ''
   let verbp = 'nil'
 
-  if first_line == last_line 
+  if first_line == last_line
     return -1
   endif
 
@@ -129,17 +129,17 @@ func! GetSchemeIndent()
       let curr_left_i = Car(paren_stack) + Cadr(paren_stack)
     endif
 
-    if curr_line == last_line 
+    if curr_line == last_line
       return curr_left_i
     endif
- 
+
     let s = String_trim_blanks(str)
     let n = strlen(s)
- 
+
     let i = 0
     let j = curr_left_i
     let escp = 0
- 
+
     while i < n
       let c = String_ref(s, i)
       if verbp == 'comment'
@@ -172,4 +172,4 @@ func! GetSchemeIndent()
       let verbp = 'nil'
     endif
   endwhile
-endfunc 
+endfunc

@@ -44,6 +44,18 @@ The menu translation file should set the "did_menu_trans" variable so that Vim
 will not load another file.
 
 
+AUTOMATIC CONVERSION
+
+When Vim was compiled with multi-byte support, conversion between latin1 and
+UTF-8 will always be possible.  Other conversions depend on the iconv
+library, which is not always available.
+For UTF-8 menu files which only use latin1 characters, you can rely on Vim
+doing the conversion.  Let the UTF-8 menu file source the latin1 menu file,
+and put "scriptencoding latin1" in that one.
+Other conversions may not always be available (e.g., between iso-8859-# and
+MS-Windows codepages), thus the converted menu file must be available.
+
+
 Translated messages
 -------------------
 

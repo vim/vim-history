@@ -1,6 +1,12 @@
 " Vim plugin with helper function(s) for --remote-wait
 " Maintainer: Flemming Madsen <fma@cci.dk>
-" Last Change: 2001 Sep 05
+" Last Change: 2002 Feb 26
+
+" Has this already been loaded?
+if exists("loaded_rrhelper")
+  finish
+endif
+let loaded_rrhelper = 1
 
 " Setup answers for a --remote-wait client who will assume
 " a SetupRemoteReplies() function in the command server

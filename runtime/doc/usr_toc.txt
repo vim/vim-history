@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.1a.  Last change: 2001 Oct 23
+*usr_toc.txt*	For Vim version 6.1b.  Last change: 2002 Mar 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -50,7 +50,7 @@ Making Vim Run
 The user manual is available as a single, ready to print HTML and PDF file
 here:
 	http://vimdoc.sf.net
-	
+
 ==============================================================================
 Getting Started ~
 

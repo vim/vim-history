@@ -351,7 +351,7 @@
 /*
  * +cscope		Unix only: Cscope support.
  */
-#if defined(UNIX) && defined(FEAT_BIG) && !defined(FEAT_CSCOPE)
+#if defined(UNIX) && defined(FEAT_BIG) && !defined(FEAT_CSCOPE) && !defined(MACOS_X)
 # define FEAT_CSCOPE
 #endif
 
@@ -722,7 +722,7 @@
 #if defined(FEAT_GUI_DIALOG) && \
 	(defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
 	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN) \
-	 || defined(FEAT_GUI_PHOTON))
+	 || defined(FEAT_GUI_PHOTON) || defined(FEAT_GUI_MAC))
 # define FEAT_GUI_TEXTDIALOG
 #endif
 

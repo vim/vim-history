@@ -992,7 +992,7 @@ do_buffer(action, start, dir, count, forceit)
 		    break;
 		if (--jumpidx < 0)
 		    jumpidx = curwin->w_jumplistlen - 1;
-		if (jumpidx == forward)       /* List exhausted for sure */
+		if (jumpidx == forward)		/* List exhausted for sure */
 		    break;
 	    }
 	}
@@ -3799,8 +3799,8 @@ ex_buffer_all(eap)
 	{
 	    win_close(wp, FALSE);
 #ifdef FEAT_AUTOCMD
-	    wpnext = firstwin;	    /* just in case an autocommand does
-				       something strange with windows */
+	    wpnext = firstwin;	/* just in case an autocommand does something
+				   strange with windows */
 	    open_wins = 0;
 #endif
 	}

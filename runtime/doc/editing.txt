@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.1a.  Last change: 2002 Feb 16
+*editing.txt*   For Vim version 6.1b.  Last change: 2002 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1093,6 +1093,16 @@ message "[mac format]" is shown.
 
 See also |file-formats| and the 'fileformat' and 'fileformats' options.
 
+						*ACL*
+ACL stands for Access Control List.  It is an advanced way to control access
+rights for a file.  It is used on new MS-Windows and Unix systems, but only
+when the filesystem supports it.
+   Vim attempts to preserve the ACL info when writing a file.  The backup file
+will get the ACL info of the original file.
+   The ACL info is also used to check if a file is read-only (when opening the
+file).  Not for MS-Windows though, because the ACL library functions are
+buggy.
+
 						*write-device*
 When the file name is actually a device name, Vim will not make a backup (that
 would be impossible).  You need to use "!", since the device already exists.
@@ -1246,6 +1256,8 @@ cannot be read without the right key.
 
 Note: The swapfile and text in memory is not encrypted.  A system
 administrator will be able to see your text while you are editing it.
+When filtering text with ":!filter" or using ":w !command" the text is not
+encrypted, this may reveal it to others.
 
 WARNING: If you make a typo when entering the key and then write the file and
 exit, the text will be lost!

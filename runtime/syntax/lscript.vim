@@ -1,12 +1,12 @@
 " Vim syntax file
 " Language:	LotusScript
 " Maintainer:	Taryn East (taryneast@hotmail.com)
-" Last Change:	2001 Nov 05
+" Last Change:	2002 Mar 03
 
 " This is a rough  amalgamation of the visual basic syntax file, and the UltraEdit
 " and Textpad syntax highlighters.
 " It's not too brilliant given that a) I've never written a syntax.vim file before
-" and b) I'm not so crash hot at LotusScript either. If you see any problems 
+" and b) I'm not so crash hot at LotusScript either. If you see any problems
 " feel free to email me with them.
 
 " For version 5.x: Clear all syntax items
@@ -20,15 +20,15 @@ endif
 " LotusScript is case insensitive
 syn case ignore
 
-" These are Notes thingies that had an equivalent in the vb highlighter 
+" These are Notes thingies that had an equivalent in the vb highlighter
 " or I was already familiar with them
 syn keyword lscriptStatement ActivateApp As And Base Beep Call Case ChDir ChDrive Class
-syn keyword lscriptStatement Const Dim Declare DefCur DefDbl DefInt DefLng DefSng DefStr 
+syn keyword lscriptStatement Const Dim Declare DefCur DefDbl DefInt DefLng DefSng DefStr
 syn keyword lscriptStatement DefVar Do Else %Else ElseIf %ElseIf End %End Erase Event Exit
 syn keyword lscriptStatement Explicit FileCopy FALSE For ForAll Function Get GoTo GoSub
-syn keyword lscriptStatement If %If In Is Kill Let List Lock Loop MkDir 
+syn keyword lscriptStatement If %If In Is Kill Let List Lock Loop MkDir
 syn keyword lscriptStatement Name Next New NoCase NoPitch Not Nothing NULL
-syn keyword lscriptStatement On Option Or PI Pitch Preserve Private Public 
+syn keyword lscriptStatement On Option Or PI Pitch Preserve Private Public
 syn keyword lscriptStatement Property Public Put
 syn keyword lscriptStatement Randomize ReDim Reset Resume Return RmDir
 syn keyword lscriptStatement Select SendKeys SetFileAttr Set Static Sub Then To TRUE
@@ -36,16 +36,16 @@ syn keyword lscriptStatement Type Unlock Until While WEnd With Write XOr
 
 syn keyword lscriptDatatype Array Currency Double Integer Long Single String String$ Variant
 
-syn keyword lscriptNotesType Field Button Navigator  
-syn keyword lscriptNotesType NotesACL NotesACLEntry NotesAgent NotesDatabase NotesDateRange 
-syn keyword lscriptNotesType NotesDateTime NotesDbDirectory NotesDocument 
-syn keyword lscriptNotesType NotesDocumentCollection NotesEmbeddedObject NotesForm 
-syn keyword lscriptNotesType NotesInternational NotesItem NotesLog NotesName NotesNewsLetter 
+syn keyword lscriptNotesType Field Button Navigator
+syn keyword lscriptNotesType NotesACL NotesACLEntry NotesAgent NotesDatabase NotesDateRange
+syn keyword lscriptNotesType NotesDateTime NotesDbDirectory NotesDocument
+syn keyword lscriptNotesType NotesDocumentCollection NotesEmbeddedObject NotesForm
+syn keyword lscriptNotesType NotesInternational NotesItem NotesLog NotesName NotesNewsLetter
 syn keyword lscriptNotesType NotesMIMEEntry NotesOutline NotesOutlineEntry NotesRegistration
 syn keyword lscriptNotesType NotesReplication NotesRichTextItem NotesRichTextParagraphStyle
 syn keyword lscriptNotesType NotesRichTextStyle NotesRichTextTab
 syn keyword lscriptNotesType NotesSession NotesTimer NotesView NotesViewColumn NotesViewEntry
-syn keyword lscriptNotesType NotesViewEntryCollection NotesViewNavigator NotesUIDatabase 
+syn keyword lscriptNotesType NotesViewEntryCollection NotesViewNavigator NotesUIDatabase
 syn keyword lscriptNotesType NotesUIDocument NotesUIView NotesUIWorkspace
 
 syn keyword lscriptNotesConst ACLLEVEL_AUTHOR ACLLEVEL_DEPOSITOR ACLLEVEL_DESIGNER
@@ -111,45 +111,45 @@ syn keyword lscriptNotesConst VIEWMAPDATA VIEWMAPLAYOUT VW_SPACING_DOUBLE
 syn keyword lscriptNotesConst VW_SPACING_ONE_POINT_25 VW_SPACING_ONE_POINT_50
 syn keyword lscriptNotesConst VW_SPACING_ONE_POINT_75 VW_SPACING_SINGLE
 
-syn keyword lscriptFunction Abs Asc Atn Atn2 ACos ASin 
-syn keyword lscriptFunction CCur CDat CDbl Chr Chr$ CInt CLng Command Command$ 
+syn keyword lscriptFunction Abs Asc Atn Atn2 ACos ASin
+syn keyword lscriptFunction CCur CDat CDbl Chr Chr$ CInt CLng Command Command$
 syn keyword lscriptFunction Cos CSng CStr
-syn keyword lscriptFunction CurDir CurDir$ CVar Date Date$ DateNumber DateSerial DateValue 
+syn keyword lscriptFunction CurDir CurDir$ CVar Date Date$ DateNumber DateSerial DateValue
 syn keyword lscriptFunction Day Dir Dir$ Environ$ Environ EOF Error Error$ Evaluate Exp
 syn keyword lscriptFunction FileAttr FileDateTime FileLen Fix Format Format$ FreeFile
-syn keyword lscriptFunction GetFileAttr GetThreadInfo Hex Hex$ Hour 
+syn keyword lscriptFunction GetFileAttr GetThreadInfo Hex Hex$ Hour
 syn keyword lscriptFunction IMESetMode IMEStatus Input Input$ InputB InputB$
 syn keyword lscriptFunction InputBP InputBP$ InputBox InputBox$ InStr InStrB InStrBP InstrC
 syn keyword lscriptFunction IsA IsArray IsDate IsElement IsList IsNumeric
-syn keyword lscriptFunction IsObject IsResponse IsScalar IsUnknown LCase LCase$ 
-syn keyword lscriptFunction Left Left$ LeftB LeftB$ LeftC 
+syn keyword lscriptFunction IsObject IsResponse IsScalar IsUnknown LCase LCase$
+syn keyword lscriptFunction Left Left$ LeftB LeftB$ LeftC
 syn keyword lscriptFunction LeftBP LeftBP$ Len LenB LenBP LenC Loc LOF Log
-syn keyword lscriptFunction LSet LTrim LTrim$ MessageBox Mid Mid$ MidB MidB$ MidC 
+syn keyword lscriptFunction LSet LTrim LTrim$ MessageBox Mid Mid$ MidB MidB$ MidC
 syn keyword lscriptFunction Minute Month Now Oct Oct$ Responses Right Right$
 syn keyword lscriptFunction RightB RightB$ RightBP RightBP$ RightC Round Rnd RSet RTrim RTrim$
-syn keyword lscriptFunction Second Seek Sgn Shell Sin Sleep Space Space$ Spc Sqr Str Str$  
-syn keyword lscriptFunction StrConv StrLeft StrleftBack StrRight StrRightBack 
-syn keyword lscriptFunction StrCompare Tab Tan Time Time$ TimeNumber Timer 
-syn keyword lscriptFunction TimeValue Trim Trim$ Today TypeName UCase UCase$ 
-syn keyword lscriptFunction UniversalID Val Weekday Year 
+syn keyword lscriptFunction Second Seek Sgn Shell Sin Sleep Space Space$ Spc Sqr Str Str$
+syn keyword lscriptFunction StrConv StrLeft StrleftBack StrRight StrRightBack
+syn keyword lscriptFunction StrCompare Tab Tan Time Time$ TimeNumber Timer
+syn keyword lscriptFunction TimeValue Trim Trim$ Today TypeName UCase UCase$
+syn keyword lscriptFunction UniversalID Val Weekday Year
 
 syn keyword lscriptMethods AppendToTextList ArrayAppend ArrayReplace ArrayGetIndex
-syn keyword lscriptMethods Append Bind Close 
-"syn keyword lscriptMethods Contains 
+syn keyword lscriptMethods Append Bind Close
+"syn keyword lscriptMethods Contains
 syn keyword lscriptMethods CopyToDatabase CopyAllItems Count CurrentDatabase Delete Execute
 syn keyword lscriptMethods GetAllDocumentsByKey GetDatabase GetDocumentByKey
-syn keyword lscriptMethods GetDocumentByUNID GetFirstDocument GetFirstItem 
-syn keyword lscriptMethods GetItems GetItemValue GetNthDocument GetView 
-syn keyword lscriptMethods IsEmpty IsNull %Include Items 
+syn keyword lscriptMethods GetDocumentByUNID GetFirstDocument GetFirstItem
+syn keyword lscriptMethods GetItems GetItemValue GetNthDocument GetView
+syn keyword lscriptMethods IsEmpty IsNull %Include Items
 syn keyword lscriptMethods Line LBound LoadMsgText Open Print
-syn keyword lscriptMethods RaiseEvent ReplaceItemValue Remove RemoveItem Responses 
+syn keyword lscriptMethods RaiseEvent ReplaceItemValue Remove RemoveItem Responses
 syn keyword lscriptMethods Save Stop UBound UnprocessedDocuments Write
 
 syn keyword lscriptEvents Compare OnError
 
 "*************************************************************************************
 "These are Notes thingies that I'm not sure how to classify as they had no vb equivalent
-" At a wild guess I'd put them as Functions... 
+" At a wild guess I'd put them as Functions...
 " if anyone sees something really out of place... tell me!
 
 syn keyword lscriptFunction Access Alias Any Bin Bin$ Binary ByVal

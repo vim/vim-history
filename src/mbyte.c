@@ -2601,6 +2601,7 @@ HINSTANCE hMsvcrtDLL = 0;
 
 #  ifndef DYNAMIC_ICONV_DLL
 #   define DYNAMIC_ICONV_DLL "iconv.dll"
+#   define DYNAMIC_ICONV_DLL_ALT "libiconv.dll"
 #  endif
 #  ifndef DYNAMIC_MSVCRT_DLL
 #   define DYNAMIC_MSVCRT_DLL "msvcrt.dll"
@@ -2616,7 +2617,10 @@ iconv_enabled(verbose)
     if (hIconvDLL != 0 && hMsvcrtDLL != 0)
 	return TRUE;
     hIconvDLL = LoadLibrary(DYNAMIC_ICONV_DLL);
-    hMsvcrtDLL = LoadLibrary(DYNAMIC_MSVCRT_DLL);
+    if (hIconvDLL == 0)		/* sometimes it's called libiconv.dll */
+	hIconvDLL = LoadLibrary(DYNAMIC_ICONV_DLL_ALT);
+    if (hIconvDLL != 0)
+	hMsvcrtDLL = LoadLibrary(DYNAMIC_MSVCRT_DLL);
     if (hIconvDLL == 0 || hMsvcrtDLL == 0)
     {
 	/* Only give the message when 'verbose' is set, otherwise it might be

@@ -1,6 +1,6 @@
 " Menu Translations:	Slovak
 " Translated By:	Martin Lacko <lacko@host.sk>
-" Last Change:		2002 Feb 09
+" Last Change:		2002 Mar 09
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -61,12 +61,12 @@ menutrans &Previous\ Error<Tab>:cp	&Predchádzajúca\ chyba<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Sta&r¹í\ zoznam<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Nov¹í\ &zoznam<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	Chybové\ o&kno<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!xxd 	Prvies»\ do\ ¹es&tnástkového\ formátu<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r 	Pr&evies»\ spä»<Tab>:%!xxd\ -r
+menutrans Convert\ to\ HEX<Tab>:%!xxd	Prvies»\ do\ ¹es&tnástkového\ formátu<Tab>:%!xxd
+menutrans Convert\ back<Tab>:%!xxd\ -r	Pr&evies»\ spä»<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers	&Buffery
-menutrans Refresh 	Obnovi»
+menutrans Refresh	Obnovi»
 menutrans Delete	Vymaza»
 menutrans Alternate	Zmeni»
 menutrans [No\ File]	[®iadny\ súbor]
@@ -84,15 +84,15 @@ menutrans P&revious<Tab>^WW		&Predchádzajúce<Tab>^WW
 menutrans &Equal\ Size<Tab>^W=		Rovnaká\ vý¹&ka<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		&Maximálna\ vý¹ka<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Minimálna\ vý&¹ka<Tab>^W1_
-menutrans Max\ Width<Tab>^W\| 		Maximálna\ ¹írka<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|  	Minimálna ¹irka<Tab>^W1\|
+menutrans Max\ Width<Tab>^W\|		Maximálna\ ¹írka<Tab>^W\|
+menutrans Min\ Width<Tab>^W1\|		Minimálna ¹irka<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Rotova&»\ nahor<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotova»\ na&dol<Tab>^Wr
 menutrans Select\ Fo&nt\.\.\.		Vy&bra»\ písmo\.\.\.
 
 " The popup menu
 menutrans &Undo			&Spä»
-menutrans Cu&t      		&Vystrihnú»
+menutrans Cu&t			&Vystrihnú»
 menutrans &Copy			&Kopírova»
 menutrans &Paste		V&lo¾i»
 menutrans &Delete		V&ymaza»

@@ -2,7 +2,7 @@
 " This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: lilo configuration (lilo.conf)
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001-07-10
+" Last Change: 2002 Mar 10
 " URI: http://physics.muni.cz/~yeti/download/lilo.vim
 
 
@@ -30,22 +30,26 @@ syn match liloError "\S\+"
 syn match liloComment "#.*$"
 syn match liloEnviron "\$\w\+" contained
 syn match liloEnviron "\${[^}]\+}" contained
-syn match liloDecNumber "-\=\d\+" contained
+syn match liloDecNumber "\d\+" contained
 syn match liloHexNumber "0[xX]\x\+" contained
+syn match liloDecNumberP "\d\+p\=" contained
 syn match liloSpecial contained "\\\(\"\|\\\|$\)"
 syn region liloString start=+"+ skip=+\\\\\|\\"+ end=+"+ contained contains=liloSpecial,liloEnviron
 syn match liloLabel "\S\+" contained contains=liloSpecial,liloEnviron
 syn region liloPath start=+[$/]+ skip=+\\\\\|\\ \|\\$"+ end=+ \|$+ contained contains=liloSpecial,liloEnviron
+syn match liloDecNumberList "\(\d\|,\)\+" contained contains=liloDecNumber
+syn match liloDecNumberPList "\(\d\|[,p]\)\+" contained contains=liloDecNumberP,liloDecNumber
 syn region liloAnything start=+[^[:space:]#]+ skip=+\\\\\|\\ \|\\$+ end=+ \|$+ contained contains=liloSpecial,liloEnviron,liloString
 
 " Path
-syn keyword liloOption backup boot force-backup install keytable map message nextgroup=liloEqPath,liloEqPathComment,liloError skipwhite skipempty
+syn keyword liloOption backup bitmap boot disktab force-backup install keytable map message nextgroup=liloEqPath,liloEqPathComment,liloError skipwhite skipempty
 syn keyword liloKernelOpt initrd root nextgroup=liloEqPath,liloEqPathComment,liloError skipwhite skipempty
 syn keyword liloImageOpt path loader table nextgroup=liloEqPath,liloEqPathComment,liloError skipwhite skipempty
 syn keyword liloDiskOpt partition nextgroup=liloEqPath,liloEqPathComment,liloError skipwhite skipempty
 
 " Other
-syn keyword liloOption default serial nextgroup=liloEqAnything,liloEqAnythingComment,liloError skipwhite skipempty
+syn keyword liloOption menu-scheme raid-extra-boot serial nextgroup=liloEqAnything,liloEqAnythingComment,liloError skipwhite skipempty
+syn keyword liloOption default nextgroup=liloEqLabel,liloEqLabelComment,liloError skipwhite skipempty
 syn keyword liloKernelOpt ramdisk nextgroup=liloEqAnything,liloEqAnythingComment,liloError skipwhite skipempty
 syn keyword liloImageOpt alias label nextgroup=liloEqLabel,liloEqLabelComment,liloError skipwhite skipempty
 syn keyword liloImageOpt password range nextgroup=liloEqAnything,liloEqAnythingComment,liloError skipwhite skipempty
@@ -59,6 +63,7 @@ syn keyword liloOption delay timeout verbose nextgroup=liloEqDecNumber,liloEqDec
 syn keyword liloDiskOpt sectors heads cylinders start nextgroup=liloEqDecNumber,liloEqDecNumberComment,liloError skipwhite skipempty
 
 " String
+syn keyword liloOption menu-title nextgroup=liloEqString,liloEqStringComment,liloError skipwhite skipempty
 syn keyword liloKernelOpt append nextgroup=liloEqString,liloEqStringComment,liloError skipwhite skipempty
 syn keyword liloImageOpt fallback literal nextgroup=liloEqString,liloEqStringComment,liloError skipwhite skipempty
 
@@ -66,10 +71,16 @@ syn keyword liloImageOpt fallback literal nextgroup=liloEqString,liloEqStringCom
 syn keyword liloImageOpt map-drive to nextgroup=liloEqHexNumber,liloEqHexNumberComment,liloError skipwhite skipempty
 syn keyword liloDiskOpt bios normal hidden nextgroup=liloEqNumber,liloEqNumberComment,liloError skipwhite skipempty
 
+" Number list
+syn keyword liloOption bmp-colors bmp-timer nextgroup=liloEqNumberList,liloEqNumberListComment,liloError skipwhite skipempty
+
+" Number list, some of the numbers followed by p
+syn keyword liloOption bmp-table nextgroup=liloEqDecNumberPList,liloEqDecNumberPListComment,liloError skipwhite skipempty
+
 " Flag
-syn keyword liloOption compact fix-table ignore-table lba32 linear nowarn prompt
+syn keyword liloOption compact fix-table geometric ignore-table lba32 linear mandatory nowarn prompt
 syn keyword liloKernelOpt read-only read-write
-syn keyword liloImageOpt lock optional restricted single-key unsafe
+syn keyword liloImageOpt bypass lock mandatory optional restricted single-key unsafe
 syn keyword liloDiskOpt change activate deactivate inaccessible reset
 
 " Image
@@ -88,6 +99,8 @@ syn match liloEqDecNumberComment "#.*$" contained nextgroup=liloEqDecNumber,lilo
 syn match liloEqHexNumberComment "#.*$" contained nextgroup=liloEqHexNumber,liloEqHexNumberComment,liloError skipwhite skipempty
 syn match liloEqStringComment "#.*$" contained nextgroup=liloEqString,liloEqStringComment,liloError skipwhite skipempty
 syn match liloEqLabelComment "#.*$" contained nextgroup=liloEqLabel,liloEqLabelComment,liloError skipwhite skipempty
+syn match liloEqNumberListComment "#.*$" contained nextgroup=liloEqNumberList,liloEqNumberListComment,liloError skipwhite skipempty
+syn match liloEqDecNumberPListComment "#.*$" contained nextgroup=liloEqDecNumberPList,liloEqDecNumberPListComment,liloError skipwhite skipempty
 syn match liloEqAnythingComment "#.*$" contained nextgroup=liloEqAnything,liloEqAnythingComment,liloError skipwhite skipempty
 
 " Equal sign followed by ...
@@ -98,6 +111,8 @@ syn match liloEqDecNumber "=" contained nextgroup=liloDecNumber,liloDecNumberCom
 syn match liloEqHexNumber "=" contained nextgroup=liloHexNumber,liloHexNumberComment,liloError skipwhite skipempty
 syn match liloEqString "=" contained nextgroup=liloString,liloStringComment,liloError skipwhite skipempty
 syn match liloEqLabel "=" contained nextgroup=liloLabel,liloLabelComment,liloError skipwhite skipempty
+syn match liloEqNumberList "=" contained nextgroup=liloDecNumberList,liloDecNumberListComment,liloError skipwhite skipempty
+syn match liloEqDecNumberPList "=" contained nextgroup=liloDecNumberPList,liloDecNumberPListComment,liloError skipwhite skipempty
 syn match liloEqAnything "=" contained nextgroup=liloAnything,liloAnythingComment,liloError skipwhite skipempty
 
 " Comment followed by ...
@@ -108,6 +123,8 @@ syn match liloDecNumberComment "#.*$" contained nextgroup=liloDecNumber,liloDecN
 syn match liloHexNumberComment "#.*$" contained nextgroup=liloHexNumber,liloHexNumberComment,liloError skipwhite skipempty
 syn match liloStringComment "#.*$" contained nextgroup=liloString,liloStringComment,liloError skipwhite skipempty
 syn match liloLabelComment "#.*$" contained nextgroup=liloLabel,liloLabelComment,liloError skipwhite skipempty
+syn match liloDecNumberListComment "#.*$" contained nextgroup=liloDecNumberList,liloDecNumberListComment,liloError skipwhite skipempty
+syn match liloDecNumberPListComment "#.*$" contained nextgroup=liloDecNumberPList,liloDecNumberPListComment,liloError skipwhite skipempty
 syn match liloAnythingComment "#.*$" contained nextgroup=liloAnything,liloAnythingComment,liloError skipwhite skipempty
 
 " Define the default highlighting
@@ -119,55 +136,58 @@ if version >= 508 || !exists("did_lilo_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink liloEqPath             liloEquals
-  HiLink liloEqWord             liloEquals
-  HiLink liloEqVga              liloEquals
-  HiLink liloEqDecNumber        liloEquals
-  HiLink liloEqHexNumber        liloEquals
-  HiLink liloEqNumber           liloEquals
-  HiLink liloEqString           liloEquals
-  HiLink liloEqLabel            liloEquals
-  HiLink liloEqAnything         liloEquals
-  HiLink liloEquals             Special
+  HiLink liloEqPath		liloEquals
+  HiLink liloEqWord		liloEquals
+  HiLink liloEqVga		liloEquals
+  HiLink liloEqDecNumber	liloEquals
+  HiLink liloEqHexNumber	liloEquals
+  HiLink liloEqNumber		liloEquals
+  HiLink liloEqString		liloEquals
+  HiLink liloEqLabel		liloEquals
+  HiLink liloEqAnything		liloEquals
+  HiLink liloEquals		Special
 
-  HiLink liloError              Error
+  HiLink liloError		Error
 
-  HiLink liloEqPathComment      liloComment
-  HiLink liloEqVgaComment       liloComment
+  HiLink liloEqPathComment	liloComment
+  HiLink liloEqVgaComment	liloComment
   HiLink liloEqDecNumberComment liloComment
   HiLink liloEqHexNumberComment liloComment
-  HiLink liloEqStringComment    liloComment
-  HiLink liloEqLabelComment     liloComment
-  HiLink liloEqAnythingComment  liloComment
-  HiLink liloPathComment        liloComment
-  HiLink liloVgaComment         liloComment
-  HiLink liloDecNumberComment   liloComment
-  HiLink liloHexNumberComment   liloComment
-  HiLink liloNumberComment      liloComment
-  HiLink liloStringComment      liloComment
-  HiLink liloLabelComment       liloComment
-  HiLink liloAnythingComment    liloComment
-  HiLink liloComment            Comment
+  HiLink liloEqStringComment	liloComment
+  HiLink liloEqLabelComment	liloComment
+  HiLink liloEqAnythingComment	liloComment
+  HiLink liloPathComment	liloComment
+  HiLink liloVgaComment		liloComment
+  HiLink liloDecNumberComment	liloComment
+  HiLink liloHexNumberComment	liloComment
+  HiLink liloNumberComment	liloComment
+  HiLink liloStringComment	liloComment
+  HiLink liloLabelComment	liloComment
+  HiLink liloAnythingComment	liloComment
+  HiLink liloComment		Comment
 
-  HiLink liloDiskOpt            liloOption
-  HiLink liloKernelOpt          liloOption
-  HiLink liloImageOpt           liloOption
-  HiLink liloOption             Keyword
+  HiLink liloDiskOpt		liloOption
+  HiLink liloKernelOpt		liloOption
+  HiLink liloImageOpt		liloOption
+  HiLink liloOption		Keyword
 
-  HiLink liloDecNumber          liloNumber
-  HiLink liloHexNumber          liloNumber
-  HiLink liloNumber             Number
-  HiLink liloString             String
-  HiLink liloPath               Constant
+  HiLink liloDecNumber		liloNumber
+  HiLink liloHexNumber		liloNumber
+  HiLink liloDecNumberP		liloNumber
+  HiLink liloNumber		Number
+  HiLink liloString		String
+  HiLink liloPath		Constant
 
-  HiLink liloSpecial            Special
-  HiLink liloLabel              Title
-  HiLink liloAnything           Normal
-  HiLink liloEnviron            Identifier
-  HiLink liloVgaKeyword         Identifier
-  HiLink liloImage              Type
-  HiLink liloChRules            Preproc
-  HiLink liloDisk               Preproc
+  HiLink liloSpecial		Special
+  HiLink liloLabel		Title
+  HiLink liloDecNumberList	Special
+  HiLink liloDecNumberPList	Special
+  HiLink liloAnything		Normal
+  HiLink liloEnviron		Identifier
+  HiLink liloVgaKeyword		Identifier
+  HiLink liloImage		Type
+  HiLink liloChRules		Preproc
+  HiLink liloDisk		Preproc
 
   delcommand HiLink
 endif

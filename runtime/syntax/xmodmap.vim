@@ -9,7 +9,7 @@ elseif exists("b:current_syntax")
     finish
 endif
 
-" comments 
+" comments
 syn region  xmodmapComment	display oneline matchgroup=xmodmapComment start=/^!/ end=/$/ contains=xmodmapTodo
 
 " todo

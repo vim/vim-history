@@ -2576,6 +2576,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 @:	repeat.txt	/*@:*
 @@	repeat.txt	/*@@*
 A	insert.txt	/*A*
+ACL	editing.txt	/*ACL*
 ATTENTION	usr_11.txt	/*ATTENTION*
 Abbreviations	map.txt	/*Abbreviations*
 Aleph	options.txt	/*Aleph*
@@ -3907,6 +3908,7 @@ disable-menus	gui.txt	/*disable-menus*
 distribution	intro.txt	/*distribution*
 diw	motion.txt	/*diw*
 dl	change.txt	/*dl*
+do	diff.txt	/*do*
 doc-file-list	help.txt	/*doc-file-list*
 documentation-6	version6.txt	/*documentation-6*
 dos	os_dos.txt	/*dos*
@@ -3925,6 +3927,7 @@ dosbatch-syntax	syntax.txt	/*dosbatch-syntax*
 dosbatch.vim	syntax.txt	/*dosbatch.vim*
 double-click	term.txt	/*double-click*
 download	intro.txt	/*download*
+dp	diff.txt	/*dp*
 drag-n-drop-win32	gui_w32.txt	/*drag-n-drop-win32*
 drag-status-line	term.txt	/*drag-status-line*
 dtd-syntax	syntax.txt	/*dtd-syntax*
@@ -4077,6 +4080,7 @@ filename-modifiers	cmdline.txt	/*filename-modifiers*
 filereadable()	eval.txt	/*filereadable()*
 filetype	filetype.txt	/*filetype*
 filetype-detect	filetype.txt	/*filetype-detect*
+filetype-overrule	filetype.txt	/*filetype-overrule*
 filetype-plugin	usr_43.txt	/*filetype-plugin*
 filetype-plugins	filetype.txt	/*filetype-plugins*
 filetype.txt	filetype.txt	/*filetype.txt*

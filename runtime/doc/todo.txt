@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.1a.  Last change: 2002 Feb 24
+*todo.txt*      For Vim version 6.1b.  Last change: 2002 Mar 10
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -28,10 +28,6 @@ See |develop.txt| for development plans.
 
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
-
-MS-DOS 32 bit: Crash in SetClipboardData() when yanking a few lines. (Jonathan
-D Johnston)
-
 
 Vi incompatibility:
 8   With undo/redo only marks in the changed lines should be changed.  Other
@@ -99,30 +95,20 @@ Vi incompatibility:
 
 
 GTK+ GUI known bugs:
-9   ":set co=77", change width with the mouse, ":set co=77" doesn't resize the
-    window. (Darren Hiebert)
--   When using the file browser in GTK the absolute file name is used.  Should
-    try to simplify it. (Lohner)
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
-    Without Gnome it does work.
+    Without Gnome it is OK.
     Not all Gnome arguments get to gnome_init().
-9   When logging out from KDE, vim is not told to save its files.  Catching
-    the WM_SAVE_YOURSELF event doesn't work.  See patch from Neil Bird that
-    uses gdk_add_client_message_filter().
+9   When logging out from KDE, Vim is not told to save its files.  Catching
+    the WM_SAVE_YOURSELF event doesn't work.  Neil Bird has a patch for this
+    that uses gdk_add_client_message_filter(), but it also doesn't work.
 9   When selecting a font from the font selector with an embedded space it
     cannot be found. (Tsirkin)
 8   When a font is not fixed width, the message "not fixed-width" disappears
     immediately. (Tsirkin)
-    Add some code to handle proportional fonts?  Need to draw each character
-    separately (like xterm).  Also for when a double-width font is not exactly
-    double-width. (Maeda)
-9   Can't paste a Visual selection from GTK-gvim to vim in xterm when it is
-    longer than 4000 characters.  Works OK from gvim to gvim and vim to vim.
-    Pasting through xterm (using the shift key) also works.
-9   With the guifont "-*-clean-medium-r-*-*-8-*-*-*-*-80-*" bold characters
-    are drawn wrong.  Try on C source code.  The bold font is wider than the
-    medium font.  Check bold font cellsize and use bold font trick if it's
-    wrong?
+9   Can't paste a Visual selection from GTK-gvim to vim in xterm or Motif gvim
+    when it is longer than 4000 characters.  Works OK from gvim to gvim and
+    vim to vim.  Pasting through xterm (using the shift key) also works.
+    It starts working after GTK gvim loses the selection and gains it again.
 8   Font "7x14" has a bold version "7x14bold".  Try to find the bold font by
     appending "bold" when there are not 14 dashes.
 8   When using "gvim -geom 40x30" or setting 'columns' in .gvimrc or with a
@@ -151,6 +137,9 @@ Win32 GUI known bugs:
     comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
     NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
     doesn't work properly.
+8   When using system() that changes the current file, a focus event causes
+    the "file changed outside of Vim" dialog, while this doesn't happen for
+    Unix.  Ignore focus events while system() is busy?
 8   When Vim is minimized and when maximizing it a file-changed dialog pops
     up, Vim isn't maximized.  It should be done before the dialog, so that it
     appears in the right position. (Webb)
@@ -259,7 +248,7 @@ Motif GUI:
 7   Use accelerators for the Motif file selection dialog.  Patch from Martin
     Dalecki 2002 Jan 11.
 7   Use XmStringCreateLocalized() instead of XmStringCreateSimple()?
-    Only for Motif >2.0?
+    David Harrison says it's OK (it exists in Motif 1.2).
 8   The texts in the find/replace dialog don't use the right font.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
@@ -294,6 +283,7 @@ GUI:
     doesn't work.
 8   Menu priority for sub-menus for: Amiga, Mac, VMS, BeOS.
 8   Add menu separators for Amiga, Mac, RISCOS.
+8   Add a few more command names.  Patch from Jiri Brezina (28 feb 2002).
 8   Add way to specify the file filter for the browse dialog.  At least for
     browse().
 8   Add dialog for search/replace to other GUIs?  Tk has something for this,
@@ -337,8 +327,8 @@ MSDOS/DJGPP:
 9   Pressing CTRL-C often crashes the console Vim runs in. (Ken Liao)
     When 'bioskey' isn't set it doesn't happen.  Could be a problem with the
     BIOS emulation of the console.  Version 5.6 already had this problem.
-8   DJGPP: "cd c:" doesn't work.  Works OK in 16-bit version.  mch_getperm()
-    returns -1 for "c:".
+8   DJGPP: "cd c:" can take us to a directory that no longer exists.
+    change_drive() doesn't check this.  How to check for this error?
 9   The 16 bit version runs out of memory very quickly.  Should find unused
     code and reduce static data.
 9   Crash when running on Windows 98 in a console window and pressing CTRL-C.
@@ -356,6 +346,9 @@ MSDOS/DJGPP:
     key code.  Use a translation table?
 9   Can't read an opened swap file when the "share" command has not been used.
     At least ignore the swap files that Vim has opened itself.
+8   Use DJGPP 2.03.
+8   The Dos32 version (DJGPP) can't use long file names on Windows NT.
+    Check if new package can be used (v2misc/ntlfn08[bs].zip).
 8   setlocale() is bogus.
 8   Vim busy waits for new characters or mouse clicks.	Should put in some
     sort of sleep, to avoid eating 50% of the CPU time.  Test on an unpatched
@@ -474,6 +467,8 @@ Macintosh:
 
 
 "Small" problems:
+8   When the clipboard isn't supported: ":yank*" gives a confusing error
+    message.  Specifically mention that the register name is invalid.
 8   "gf" always excludes trailing punctuation characters. file_name_in_line()
     is currently fixed to use ".,:;!".  Add an option to make this
     configurable?
@@ -701,7 +696,6 @@ Problems that will (probably) not be solved:
     character gets the highlighting.
 -   Moving the cursor removes color in color-xterm.  This is a color-xterm
     problem!  color-xterm ver. 6.1 beta 3 and later work properly.
--   The Dos32 version (DJGPP) can't use long file names on Windows NT.
 -   In zsh, "gvim&" changes the terminal settings.  This is a zsh problem.
     (Jennings)
 -   Problem with HPterm under X: old contents of window is lost (Cosentino).
@@ -811,6 +805,7 @@ Help:
 
 
 User Friendlier:
+8   Windows install with NSIS: use bzip2 compression for a smaller file.
 8   Windows install with install.exe: Use .exe instead of .bat files for
     links, so that command line arguments are passed on unmodified? (Walter
     Briscoe)
@@ -850,6 +845,9 @@ Diff mode:
 Folding:
     (commands still available: zg zG zI zJ zK zp zP zq zQ zV zw zW zy zY;
     secondary: zB zS zT zZ)
+8   When a closed fold is displayed open because of 'foldminlines', the
+    behavior of commands is still like the fold is closed.  How to make the
+    user aware of this?
 8   "H" and "L" count buffer lines instead of window lines. (Servatius Brandt)
 8   Add a way to add fold-plugins.  Johannes Zellner has one for VB.
 7   When using 2html.vim, also reproduce folds as you can see them.  When
@@ -885,6 +883,9 @@ Multi-byte characters:
 8   toupper() function doesn't handle byte count changes.
 8   Searching with UTF-8 doesn't always take care of composing characters.
     E.g. when using "x*" where "x" has a composing character.
+    And there should be a way to ignore composing characters (e.g., for
+    Hebrew).  And a way to consider combined characters equal to the
+    decomposed form.
 8   Some UTF-8 have an ambiguous width (single or double).  Should inspect the
     font to find out what will be displayed. (Long)
 8   Should have a way to match a base character with arbitrary composing
@@ -1477,6 +1478,9 @@ Security:
 Win32 GUI:
 8   Make debug mode work while starting up (vim -D).  Open console window for
     the message and input?
+7   The Python interface only works with one version of Python, selected at
+    compile time.  Can this be made to work with version 2.1 and 2.2
+    dynamically?
 8   Add font argument to set the lfCharSet. (Bobcik)
 8   Somehow automatically detect the system language and set $LANG, so that
     gettext and menus work.
@@ -1537,11 +1541,17 @@ GUI:
 7   X11: Support cursorColor resource and "-cr" argument.
 8   X11 (and others): CTRL-; is not different from ';'.  Set the modifier mask
     to include CTRL for keys where CTRL produces the same ASCII code.
-8   Visual highlighting should keep the same font (bold, italic, etc.).
-8   Add flag to 'guioptions' to not put anything in the clipboard at all?
+7   Add some code to handle proportional fonts?  Need to draw each character
+    separately (like xterm).  Also for when a double-width font is not exactly
+    double-width. (Maeda)
 8   Should take font from xterm where gvim was started (if no other default).
 8   Selecting font names in X11 is difficult, make a script or something to
-    select one.
+    select one.  Martin Dalecki has a font selector for Motif, but it needs a
+    bit more work.
+7   Motif: use the menu font consistently.  Patch from Martin Dalecki 2002 Jan
+    11.
+8   Visual highlighting should keep the same font (bold, italic, etc.).
+8   Add flag to 'guioptions' to not put anything in the clipboard at all?
 8   Should support a way to use keys that we don't recognize yet.  Add a
     command that adds entries to special_keys somehow.	How do we make this
     portable (X11, Win32, ..)?
@@ -1585,9 +1595,6 @@ GUI:
     get it back if we want it?
 -   Motif: add 3D shading for the menu entries?  Patch from Martin Dalecki.
 -   Motif: remove support for Motif 1.1 and older?  Patch from Martin Dalecki.
-7   Motif: add a font selector.  Patch from Martin Dalecki.
-7   Motif: use the menu font consistently.  Patch from Martin Dalecki 2002 Jan
-    11.
 -   Paste in Insert mode should not do autowrap etc.  Or maybe this should be
     changeable with an option?
 -   Put a nice picture in the icon (but how do we do that?).
@@ -1705,8 +1712,6 @@ Insert mode completion/expansion:
 -   Make it possible to search include files in several places.  Use the
     'path' option?  Can this be done with the dictionary completion (use
     wildcards in the file name)?
--   For files found with 'include': handle "*" in included name, for Java.
-    (Jason)
 -   Make CTRL-X CTRL-K do a binary search in the dictionary (if it's sorted).
 -   Speed up CTRL-X CTRL-K dictionary searching (don't use a regexp?).
 -   Set a mark at the position where the match was found (file mark, could
@@ -1849,6 +1854,10 @@ Insert mode:
 	case 'c':   if (cond)
 			{
     Should align with "if" in case statement.
+9   Continuation line not recognized:
+	char *a[] = {"aaa", "bbb",
+		"ccc", NULL};
+		// too much indent here
 7   Allow aligning a closing ")" with the line above, instead of the matching
     "(": (Riehm) if (asdfasdf &&
 			asdf
@@ -1864,6 +1873,8 @@ Insert mode:
 		    some_cmd;
 	}
 8   "int asdf,<CR>asdf;" should indent the second line more. (Zellner)
+8   Java: Inside an anonymous class, after an "else" or "try" the indent is
+    too small. (Vincent Bergbauer)
 8   In C++ it's possible to have {} inside (): (Kirshna)
 		func(
 			new String[] {
@@ -1871,7 +1882,6 @@ Insert mode:
 			    "asdf"
 			}
 		    );
-8   Java indenting wrong when using an anonymous class. (Howard Gleason)
 7   Separate "(0" option into inside/outside a function (Zellner):
 	func(
 	   int x)	// indent like "(4"
@@ -1897,8 +1907,6 @@ Insert mode:
 9   Wrong indent for cino=(4, removing the (void) fixes it: (Zellner)
 	(void) MyFancyFunction(
 			       argument);
-8   Add 'cinoptions' flag "T" for dangling throws clause in Java.  Patch from
-    William Webber.
 -   Make smartindenting configurable. Add 'sioptions', e.g. '#' setting the
     indent to 0 should be switched on/off.
 7   Support ANSI style function header, with each argument on its own line.
@@ -1944,6 +1952,10 @@ Java:
     Odendahl?
 8   Recognize "import java.util.Vector" and use $CLASSPATH to find files for
     "[i" commands and friends.
+-   For files found with 'include': handle "*" in included name, for Java.
+    (Jason)
+-   How to make a "package java.util" cause all classes in the package to be
+    searched?  Also for "import java.util.*". (Mark Brophy)
 
 
 'comments':
@@ -2138,8 +2150,6 @@ Incsearch:
     (or not at all, when there was no match).  See oldmail/webb/in.872.
 -   With incsearch, use CTRL-N/CTRL-P to go to next/previous match, some other
     key to copy matched word to search pattern (Alexander Schmid).
--   How to make a "package java.util" cause all classes in the package to be
-    searched?  Also for "import java.util.*". (Mark Brophy)
 
 
 Searching:

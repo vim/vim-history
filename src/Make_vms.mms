@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Oct 12
+# Last change:  2002 Mar 09
 #
 # This has script been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX
 # with MMS and MMK
@@ -25,12 +25,12 @@
 # Build model selection
 # TINY   - Almost no features enabled, not even multiple windows
 # SMALL  - Few features enabled, as basic as possible
-# NORMAL - A default selection of features enabled 
+# NORMAL - A default selection of features enabled
 # BIG    - Many features enabled, as rich as possible. (default)
 # HUGE   - All possible featues enabled.
 # Please select one of these alternatives above.
 MODEL = BIG
- 
+
 # GUI or terminal mode executable.
 # Comment out if you want just the character terminal mode only.
 GUI = YES
@@ -231,7 +231,7 @@ all : [.auto]config.h mmk_compat $(TARGET)
 
 mmk_compat :
         -@ open/write pd pathdef.c
-        -@ write pd "/* Empty file to satisfy MMK depend.  */"        
+        -@ write pd "/* Empty file to satisfy MMK depend.  */"
         -@ write pd "/* It will be owerwritten later on... */"
         -@ close pd
 clean :

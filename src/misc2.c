@@ -2263,6 +2263,10 @@ extract_modifiers(key, modp)
 {
     int	modifiers = *modp;
 
+#ifdef MACOS
+    /* Command-key really special, No fancynest */
+    if (!(modifiers & MOD_MASK_CMD))
+#endif
     if ((modifiers & MOD_MASK_SHIFT) && ASCII_ISALPHA(key))
     {
 	key = TO_UPPER(key);
@@ -2286,6 +2290,10 @@ extract_modifiers(key, modp)
 	if (key == 0)
 	    key = K_ZERO;
     }
+#ifdef MACOS
+    /* Command-key really special, No fancynest */
+    if (!(modifiers & MOD_MASK_CMD))
+#endif
     if ((modifiers & MOD_MASK_ALT) && key < 0x80)
     {
 	key |= 0x80;
@@ -4881,8 +4889,16 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir, rel_fn
 		buf = curbuf->b_p_sua;
 		for (;;)
 		{
-		    if (mch_getperm(NameBuff) >= 0
-					&& (!need_dir || mch_isdir(NameBuff)))
+		    if (
+#ifdef DJGPP
+			    /* "C:" by itself will fail for mch_getperm(),
+			     * assume it's always valid. */
+			    (need_dir && NameBuff[0] != NUL
+				  && NameBuff[1] == ':'
+				  && NameBuff[2] == NUL) ||
+#endif
+			    (mch_getperm(NameBuff) >= 0
+				       && (!need_dir || mch_isdir(NameBuff))))
 		    {
 			file_name = vim_strsave(NameBuff);
 			goto theend;

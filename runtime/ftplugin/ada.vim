@@ -1,7 +1,7 @@
 " Vim Ada plugin file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2001 November 6
+" Last Change:	2002 Mar 09
 " Version:	$Id$
 " Look for the latest version at http://vim.sourceforge.net/
 "
@@ -29,7 +29,7 @@ set cpo-=C
 
 
 " Ada comments
-setlocal comments+=O:-- 
+setlocal comments+=O:--
 
 
 " Make local tag mappings for this buffer (if not already set)

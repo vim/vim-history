@@ -1,4 +1,4 @@
-" codepage 1255 on Windows is equal to ISO 8859-8 but it 
+" codepage 1255 on Windows is equal to ISO 8859-8 but it
 " adds in the vowel points, known as 'niqud', which are present in
 " CP1255: Note: there are several 'standards' for placement of the vowel
 " points, and I ignored all of them.  Since we can input English by simply

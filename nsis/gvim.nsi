@@ -12,7 +12,7 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 1a
+!define VER_MINOR 1b
 !define VER_MAJOR 6
 
 Name "Vim ${VER_MAJOR}.${VER_MINOR}"
@@ -123,7 +123,7 @@ Function un.onUnInstSuccess
   "Vim ${VER_MAJOR}.${VER_MINOR} has been (partly) removed from your system"
 FunctionEnd
 
-Function un.GetParent 
+Function un.GetParent
   Exch $0 ; old $0 is on top of stack
   Push $1
   Push $2
@@ -340,9 +340,9 @@ StrCpy $1 $0
 IfFileExists $1\vimfiles AskRemove 0
     ReadEnvStr $1 "HOME"
     StrCmp $1 "" NoRemove 0
-  
+
     IfFileExists $1\vimfiles 0 NoRemove
-  
+
   AskRemove:
     MessageBox MB_YESNO|MB_ICONQUESTION \
       "Remove all files in your $1\vimfiles directory? \

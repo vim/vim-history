@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.1a.  Last change: 2001 Sep 18
+*fold.txt*      For Vim version 6.1b.  Last change: 2002 Mar 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -294,6 +294,10 @@ zE		Eliminate all folds in the window.
 
 
 OPENING AND CLOSING FOLDS ~
+
+A fold smaller than 'foldminlines' will always be displayed like it was open.
+Therefore the commands below may work differently on small folds.
+
 							*zo*
 zo		Open one fold under the cursor.  When a count is given, that
 		many folds deep will be opened.  In Visual mode one level of

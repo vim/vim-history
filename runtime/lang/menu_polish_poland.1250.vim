@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	06 Sep 2001 	
+" Last Change:	06 Sep 2001
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")

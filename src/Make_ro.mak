@@ -21,7 +21,7 @@ OBJS =  o.buffer o.charset o.digraph o.edit o.eval o.ex_cmds o.ex_cmds2 o.diff \
 	o.os_riscos o.swis o.gui o.gui_riscos
 
 all: $(OBJS)
-	$(GCC) -o Vim $(OBJS) 
+	$(GCC) -o Vim $(OBJS)
 
 install: Vim
 	squeeze -v Vim @.!Vim.Vim

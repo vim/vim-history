@@ -166,7 +166,7 @@ syn match   xmlEndTag
 "   <empty.tag/>
 "   some data
 " </tag>
-" 
+"
 syn region   xmlRegion
     \ start=+<\z([^ /!?<>"']\+\)+
     \ skip=+<!--\_.\{-}-->+

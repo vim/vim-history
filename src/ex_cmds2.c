@@ -3441,9 +3441,9 @@ prt_def_font(new_name, height, font)
     static void
 prt_real_bits(real, precision, pinteger, pfraction)
     double      real;
-    int         precision;
-    int         *pinteger;
-    int         *pfraction;
+    int		precision;
+    int		*pinteger;
+    int		*pfraction;
 {
     int     i;
     int     integer;
@@ -3452,9 +3452,9 @@ prt_real_bits(real, precision, pinteger, pfraction)
     integer = (int)real;
     fraction = (float)(real - integer);
     if (real < (double)integer)
-        fraction = -fraction;
+	fraction = -fraction;
     for (i = 0; i < precision; i++)
-        fraction *= 10.0;
+	fraction *= 10.0;
 
     *pinteger = integer;
     *pfraction = (int)(fraction + 0.5);
@@ -3480,15 +3480,15 @@ prt_write_real(val, prec)
     /* Only emit fraction if necessary */
     if (fraction != 0)
     {
-        /* Remove any trailing zeros */
-        while ((fraction % 10) == 0)
-        {
-            prec--;
-            fraction /= 10;
-        }
-        /* Emit fraction left padded with zeros */
-        sprintf((char *)prt_line_buffer, ".%0*d", prec, fraction);
-        prt_write_file(prt_line_buffer);
+	/* Remove any trailing zeros */
+	while ((fraction % 10) == 0)
+	{
+	    prec--;
+	    fraction /= 10;
+	}
+	/* Emit fraction left padded with zeros */
+	sprintf((char *)prt_line_buffer, ".%0*d", prec, fraction);
+	prt_write_file(prt_line_buffer);
     }
     sprintf((char *)prt_line_buffer, " ");
     prt_write_file(prt_line_buffer);

@@ -98,7 +98,7 @@ gui_start()
 	display_errors();
 #endif
 
-#if defined(UNIX) && !defined(__BEOS__) && !defined(__QNXNTO__)
+#if defined(UNIX) && !defined(__BEOS__) && !defined(__QNXNTO__) && !defined(MACOS_X)
     /*
      * Quit the current process and continue in the child.
      * Makes "gvim file" disconnect from the shell it was started in.

@@ -2,8 +2,7 @@
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
 " Last Change:	2001 May 2
-" URL:		http://sites.netscape.net/sharpPeople/vim/syntax/rexx.vim
-"            or http://www.crosswinds.net/~vimuser/vim/syntax/rexx.vim
+" URL:		http://mywebpage.netscape.com/sharpPeople/vim/syntax/rexx.vim
 "
 " Special Thanks to Dan Sharp <dwsharp@hotmail.com> for comments and additions
 " (and providing the webspace)

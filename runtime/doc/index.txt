@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.1a.  Last change: 2002 Jan 30
+*index.txt*     For Vim version 6.1b.  Last change: 2002 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -359,6 +359,8 @@ tag		char	      note action in Normal mode	~
 				   insert
 |d|		["x]d{motion}	2  delete Nmove text [into buffer x]
 |dd|		["x]dd		2  delete N lines [into buffer x]
+|do|		do		2  same as ":diffget"
+|dp|		dp		2  same as ":diffput"
 |e|		e		1  cursor forward to the end of word N
 |f|		f{char}		1  cursor to Nth occurrence of {char} to the
 				   right

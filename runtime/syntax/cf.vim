@@ -1,11 +1,11 @@
 " Vim syntax file
 "    Language: Cold Fusion
 "  Maintainer: Jeff Lanzarotta (jefflanzarotta@yahoo.com)
-"         URL: http://lanzarotta.tripod.com/vim/syntax/cf.vim.zip
+"	  URL: http://lanzarotta.tripod.com/vim/syntax/cf.vim.zip
 " Last Change: October 15, 2001
-"       Usage: Since Cold Fusion has its own version of html comments,
-"              make sure that you put
-"              'let html_wrong_comments=1' in your _vimrc file.
+"	Usage: Since Cold Fusion has its own version of html comments,
+"	       make sure that you put
+"	       'let html_wrong_comments=1' in your _vimrc file.
 
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.

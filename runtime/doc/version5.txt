@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 6.1a.  Last change: 2001 Sep 27
+*version5.txt*  For Vim version 6.1b.  Last change: 2001 Sep 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
