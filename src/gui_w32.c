@@ -210,6 +210,10 @@ static void initialise_toolbar(void);
 static int get_toolbar_bitmap(vimmenu_T *menu);
 #endif
 
+#ifdef FEAT_MBYTE_IME
+static LRESULT _OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param);
+static char_u *GetResultStr(HWND hwnd, int GCS);
+#endif
 #if defined(FEAT_MBYTE_IME) && defined(DYNAMIC_IME)
 # ifdef NOIME
 typedef struct tagCOMPOSITIONFORM {
@@ -221,7 +225,8 @@ typedef HANDLE HIMC;
 # endif
 
 HINSTANCE hLibImm = NULL;
-LONG (WINAPI *pImmGetCompositionString)(HIMC, DWORD, LPVOID, DWORD);
+LONG (WINAPI *pImmGetCompositionStringA)(HIMC, DWORD, LPVOID, DWORD);
+LONG (WINAPI *pImmGetCompositionStringW)(HIMC, DWORD, LPVOID, DWORD);
 HIMC (WINAPI *pImmGetContext)(HWND);
 BOOL (WINAPI *pImmReleaseContext)(HWND, HIMC);
 BOOL (WINAPI *pImmGetOpenStatus)(HIMC);
@@ -232,7 +237,8 @@ BOOL (WINAPI *pImmSetCompositionWindow)(HIMC, LPCOMPOSITIONFORM);
 BOOL (WINAPI *pImmGetConversionStatus)(HIMC, LPDWORD, LPDWORD);
 static void dyn_imm_load(void);
 #else
-# define pImmGetCompositionString ImmGetCompositionStringA
+# define pImmGetCompositionStringA ImmGetCompositionStringA
+# define pImmGetCompositionStringW ImmGetCompositionStringW
 # define pImmGetContext		  ImmGetContext
 # define pImmReleaseContext	  ImmReleaseContext
 # define pImmGetOpenStatus	  ImmGetOpenStatus
@@ -792,6 +798,11 @@ _WndProc(
     case WM_IME_NOTIFY:
 	if (!_OnImeNotify(hwnd, (DWORD)wParam, (DWORD)lParam))
 	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	break;
+    case WM_IME_COMPOSITION:
+    	if (!_OnImeComposition(hwnd, wParam, lParam))
+	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	break;
 #endif
 
     default:
@@ -1294,7 +1305,6 @@ HanExtTextOut(HDC hdc, int X, int Y, UINT fuOption, const RECT *lprc,
 #include <ime.h>
 #include <imm.h>
 
-static char lpCompStr[100];		// Pointer to composition str.
 static BOOL bInComposition=FALSE;
 
 /*
@@ -1333,123 +1343,135 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 		State &= ~LANGMAP;
 		if (State & INSERT)
 		{
-		    int old_row, old_col;
-
-		    /* Save cursor position */
-		    old_row = gui.row;
-		    old_col = gui.col;
+		    long old_imi = curbuf->b_p_iminsert;
 
 		    curbuf->b_p_iminsert = B_IMODE_IM;
 
-		    // This must be called here before status_redraw_curbuf(),
-		    // otherwise the mode message may appear in the wrong
-		    // position.
-		    showmode();
-
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
-		    /* Show/unshow value of 'keymap' in status lines. */
-		    status_redraw_curbuf();
-#endif
-		    update_screen(0);
+		    /* Unshown 'keymap' in status lines */
+		    if (old_imi == B_IMODE_LMAP)
+		    {
+			/* Save cursor position */
+			int old_row = gui.row;
+			int old_col = gui.col;
 
-		    /* Restore cursor position */
-		    gui.row = old_row;
-		    gui.col = old_col;
+			// This must be called here before
+			// status_redraw_curbuf(), otherwise the mode
+			// message may appear in the wrong position.
+			showmode();
+			status_redraw_curbuf();
+			update_screen(0);
+			/* Restore cursor position */
+			gui.row = old_row;
+			gui.col = old_col;
+		    }
+#endif
 		}
 	    }
 	    gui_update_cursor(TRUE, FALSE);
-	    lResult = 1;
+	    lResult = 0;
 	    break;
     }
     pImmReleaseContext(hWnd, hImc);
     return lResult;
 }
 
-/* get composition string from WIN_IME */
-    static void
-GetCompositionStr(HWND hwnd, LPARAM CompFlag)
+    static LRESULT
+_OnImeComposition(HWND hwnd, WPARAM dbcs, LPARAM param)
 {
-    DWORD	dwBufLen;		// Stogare for len. of composition str
-    HIMC	hIMC;			// Input context handle.
+    char_u	*ret;
 
-    // If fail to get input context handle then do nothing.
-    // Applications should call ImmGetContext API to get
-    // input context handle.
+    if ((param & GCS_RESULTSTR) == 0) /* Composition unfinished. */
+	return 0;
 
-    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
-	return;
-
-    // Determines how much memory space to store the composition string.
-    // Applications should call ImmGetCompositionString with
-    // GCS_COMPSTR flag on, buffer length zero, to get the bullfer
-    // length.
-
-    if ((dwBufLen = pImmGetCompositionString(hIMC, GCS_COMPSTR,
-		    (void FAR*)NULL, 0l)) < 0)
-	goto exit2;
-
-    if (dwBufLen > 99)
-	goto exit2;
-
-    // Reads in the composition string.
-    if ( dwBufLen != 0 )
+    if (ret = GetResultStr(hwnd, GCS_RESULTSTR))
     {
-	pImmGetCompositionString(hIMC, GCS_COMPSTR, lpCompStr, dwBufLen);
-	lpCompStr[dwBufLen] = 0;
+	add_to_input_buf_csi(ret, strlen(ret));
+	vim_free(ret);
+	return 1;
     }
     else
-    {
-	strcpy(lpCompStr, "  ");
-	dwBufLen = 2;
-    }
-
-    // Display new composition chars.
-    DisplayCompStringOpaque(lpCompStr, dwBufLen);
-
-
-exit2:
-    pImmReleaseContext(hwnd, hIMC);
+	return 0;
 }
 
-
-// void GetResultStr()
-//
-// This handles WM_IME_COMPOSITION with GCS_RESULTSTR flag on.
-//
-// get complete composition string
-
-    static void
-GetResultStr(HWND hwnd)
+/*
+ * get the currnet composition string, in UCS-2; len is the number of
+ * Unicode characters
+ */
+    unsigned short *
+GetCompositionString_inUCS2(HIMC hIMC, DWORD GCS, int *len)
 {
-    DWORD	dwBufLen;		// Storage for length of result str.
-    HIMC	hIMC;			// Input context handle.
+    LONG ret;
+    unsigned short *wbuf = NULL;
 
-    // If fail to get input context handle then do nothing.
-    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
-	return;
+    if (!pImmGetContext)
+	return NULL; /* no imm32.dll */
 
-    // Determines how much memory space to store the result string.
-    // Applications should call ImmGetCompositionString with
-    // GCS_RESULTSTR flag on, buffer length zero, to get the bullfer
-    // length.
-    if ((dwBufLen = pImmGetCompositionString(hIMC, GCS_RESULTSTR,
-		    (void FAR *)NULL, (DWORD) 0)) <= 0)
-	goto exit2;
+    /* Try Unicode; this'll always work on NT regardless of codepage. */
+    ret = pImmGetCompositionStringW(hIMC, GCS, NULL, 0);
+    if (ret == 0)
+	return NULL; /* empty */
 
-    if (dwBufLen > 99)
-	goto exit2;
+    if (ret > 0)
+    {
+	wbuf = (unsigned short *) alloc(ret * sizeof(unsigned short));
+	if(!wbuf) return NULL;
+	pImmGetCompositionStringW(hIMC, GCS, wbuf, ret);
+	*len = ret / sizeof(unsigned short); /* char -> wchar */
+	return wbuf;
+    }
+    /* ret < 0; we got an error, so try the ANSI version.  This'll work
+     * on 9x/ME, but only if the codepage happens to be set to whatever
+     * we're inputting. */
+    ret = pImmGetCompositionStringA(hIMC, GCS, NULL, 0);
+    if (ret <= 0)
+	return NULL; /* empty or error */
+    else
+    {
+	char_u *buf;
 
-    // Reads in the result string.
-    pImmGetCompositionString(hIMC, GCS_RESULTSTR, lpCompStr, dwBufLen);
+	buf = alloc(ret);
+	if (buf == NULL)
+	    return NULL;
+	pImmGetCompositionStringA(hIMC, GCS, buf, ret);
 
-    // Displays the result string.
-    DisplayCompStringOpaque(lpCompStr, dwBufLen);
-
-exit2:
-    pImmReleaseContext(hwnd, hIMC);
+	/* convert from codepage to UCS-2 */
+	wbuf = (unsigned short *)string_convert(&ime_conv_cp, buf, &ret);
+	vim_free(buf);
+	*len = ret / sizeof(unsigned short); /* char_u -> wchar */
+    }
+    return wbuf;
 }
 
-    static char *
+/*
+ * void GetResultStr()
+ *
+ * This handles WM_IME_COMPOSITION with GCS_RESULTSTR flag on.
+ * get complete composition string
+ */
+    static char_u *
+GetResultStr(HWND hwnd, int GCS)
+{
+    DWORD	dwBufLen;	/* Stogare for len. of composition str. */
+    HIMC	hIMC;		/* Input context handle. */
+    unsigned short *buf = NULL;
+    char *convbuf = NULL;
+
+    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
+	return NULL;
+
+    /* Reads in the composition string. */
+    buf = GetCompositionString_inUCS2(hIMC, GCS, &dwBufLen);
+    if (buf == NULL)
+	return NULL;
+
+    convbuf = string_convert(&ime_conv, (unsigned char *) buf, &dwBufLen);
+    pImmReleaseContext(hwnd, hIMC);
+    vim_free(buf);
+    return convbuf;
+}
+
+    static char_u *
 ImeGetTempComposition(void)
 {
     if (bInComposition == TRUE)
@@ -1461,8 +1483,10 @@ ImeGetTempComposition(void)
 	{
 	    pImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
 	    pImmReleaseContext(s_hwnd, hImc);
-	    if ((dwConvMode & IME_CMODE_NATIVE))
-		return lpCompStr;
+	    if (dwConvMode & IME_CMODE_NATIVE)
+	    {
+		return GetResultStr(s_hwnd, GCS_COMPSTR);
+	    }
 	}
     }
     return NULL;
@@ -1670,7 +1694,7 @@ gui_mch_draw_string(
     HBRUSH		hbr;
     RECT		rc;
 #ifdef FEAT_MBYTE_IME
-    char		*szComp;
+    char_u		*szComp;
 #endif
 
     if (!(flags & DRAW_TRANSP))
@@ -1766,8 +1790,11 @@ gui_mch_draw_string(
 	/* draw an incomplete composition character (korean) */
 	if (len == 1 && blink_state == BLINK_ON
 		&& (szComp = ImeGetTempComposition()) != NULL) // hangul
+	{
 	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
 			       foptions, pcliprect, szComp, 2, padding, TRUE);
+	    vim_free(szComp);
+	}
 	else
 	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
 		      foptions, pcliprect, (char *)text, len, padding, FALSE);
@@ -1957,11 +1984,11 @@ gui_make_popup(char_u *path_name)
 	POINT	p;
 
 	/* Find the position of the current cursor */
-	GetDCOrgEx(s_hdc,&p);
+	GetDCOrgEx(s_hdc, &p);
 	if (curwin != NULL)
 	{
-	    p.x+= TEXT_X(W_WINCOL(curwin) + curwin->w_wcol +1);
-	    p.y+= TEXT_Y(W_WINROW(curwin) + curwin->w_wrow +1);
+	    p.x += TEXT_X(W_WINCOL(curwin) + curwin->w_wcol + 1);
+	    p.y += TEXT_Y(W_WINROW(curwin) + curwin->w_wrow + 1);
 	}
 	msg_scroll = FALSE;
 	gui_mch_show_popupmenu_at(menu, (int)p.x, (int)p.y);
@@ -3336,8 +3363,11 @@ dyn_imm_load(void)
     hLibImm = LoadLibrary("imm32.dll");
     if (hLibImm == NULL)
 	return;
-    if ((*((FARPROC*)&pImmGetCompositionString)
+    if ((*((FARPROC*)&pImmGetCompositionStringA)
 	    = GetProcAddress(hLibImm, "ImmGetCompositionStringA")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmGetCompositionStringW)
+	    = GetProcAddress(hLibImm, "ImmGetCompositionStringW")))
 	nImmFunc++;
     if ((*((FARPROC*)&pImmGetContext)
 	    = GetProcAddress(hLibImm, "ImmGetContext")))
@@ -3364,7 +3394,7 @@ dyn_imm_load(void)
 	    = GetProcAddress(hLibImm, "ImmGetConversionStatus")))
 	nImmFunc++;
 
-    if (nImmFunc != 9)
+    if (nImmFunc != 10)
     {
 	FreeLibrary(hLibImm);
 	hLibImm = NULL;

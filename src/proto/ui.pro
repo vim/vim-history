@@ -34,6 +34,7 @@ int vim_is_input_buf_empty __ARGS((void));
 int vim_free_in_input_buf __ARGS((void));
 int vim_used_in_input_buf __ARGS((void));
 void add_to_input_buf __ARGS((char_u *s, int len));
+void add_to_input_buf_csi __ARGS((char_u *str, int len));
 void push_raw_key __ARGS((char_u *s, int len));
 void trash_input_buf __ARGS((void));
 int read_from_input_buf __ARGS((char_u *buf, long maxlen));

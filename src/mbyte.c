@@ -572,6 +572,15 @@ codepage_invalid:
     if (enc_utf8 && !option_was_set((char_u *)"fencs"))
 	set_string_option_direct((char_u *)"fencs", -1,
 				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
+#ifdef FEAT_MBYTE_IME
+# ifdef USE_ICONV
+    ime_conv.vc_fd = (iconv_t)-1;
+    ime_conv_cp.vc_fd = (iconv_t)-1;
+# endif
+    convert_setup(&ime_conv, "ucs-2", p_enc);
+    ime_conv_cp.vc_type = CONV_CODEPAGE;
+    ime_conv_cp.vc_factor = 2; /* we don't really know anything about the codepage */
+#endif
 
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
     /* GNU gettext 0.10.37 supports this feature: set the codeset used for
@@ -3595,28 +3604,6 @@ xim_back_delete(int n)
 	add_to_input_buf(str, 3);
 }
 
-/*
- * Add "str[len]" to the input buffer while escaping CSI bytes.
- */
-    static void
-add_to_input_buf_csi(char_u *str, int len)
-{
-    int		i;
-    char_u	buf[2];
-
-    for (i = 0; i < len; ++i)
-    {
-	add_to_input_buf(str + i, 1);
-	if (str[i] == CSI)
-	{
-	    /* Turn CSI into K_CSI. */
-	    buf[0] = KS_EXTRA;
-	    buf[1] = (int)KE_CSI;
-	    add_to_input_buf(buf, 2);
-	}
-    }
-}
-
 static GSList *key_press_event_queue = NULL;
 static int preedit_buf_len = 0;
 static gboolean processing_queued_event = FALSE;
@@ -3953,6 +3940,24 @@ convert_setup(vcp, from, to)
 	/* Internal utf-8 -> latin1 conversion. */
 	vcp->vc_type = CONV_TO_LATIN1;
     }
+#ifdef WIN32
+    /* Win32-specific UTF-16 -> DBCS conversion, for the IME,
+     * so we don't need iconv ... */
+    else if ((from_prop & ENC_UNICODE)
+			   && (from_prop & ENC_2BYTE) && (to_prop & ENC_DBCS))
+    {
+	vcp->vc_type = CONV_DBCS;
+	vcp->vc_factor = 2;	/* up to twice as long */
+	vcp->vc_dbcs = atoi(to + 2);
+    }
+    else if ((from_prop & ENC_UNICODE)
+			&& (from_prop & ENC_2BYTE) && (to_prop & ENC_UNICODE))
+    {
+	vcp->vc_type = CONV_DBCS;
+	vcp->vc_factor = 2;	/* up to twice as long */
+	vcp->vc_dbcs = CP_UTF8;
+    }
+#endif
 # ifdef USE_ICONV
     else
     {
@@ -4079,6 +4084,40 @@ string_convert(vcp, ptr, lenp)
 	    retval = iconv_string(vcp->vc_fd, ptr, len);
 	    if (retval != NULL && lenp != NULL)
 		*lenp = (int)STRLEN(retval);
+	    break;
+# endif
+# ifdef WIN32
+	case CONV_DBCS:		/* UTF-16 -> dbcs or UTF8 */
+	{
+	    int retlen;
+
+            if (!lenp)
+                len /= sizeof(unsigned short);
+            retlen = WideCharToMultiByte(vcp->vc_dbcs, 0,
+				(const unsigned short *)ptr, len, 0, 0, 0, 0);
+	    retval = alloc(retlen + 1);
+	    if (retval == NULL)
+		break;
+	    WideCharToMultiByte(vcp->vc_dbcs, 0,
+		     (const unsigned short *) ptr, len, retval, retlen, 0, 0);
+	    retval[retlen] = NUL;
+	    if (lenp != NULL)
+	        *lenp = retlen;
+	    break;
+	}
+	case CONV_CODEPAGE:	/* current codepage -> ucs-2 */
+	{
+	    int retlen;
+
+	    retlen = MultiByteToWideChar(GetACP(), 0, ptr, len, 0, 0);
+	    retval = alloc(sizeof(unsigned short) * retlen);
+	    if (retval == NULL)
+		break;
+	    MultiByteToWideChar(GetACP(), 0, ptr, len,
+					   (unsigned short *) retval, retlen);
+	    if (lenp != NULL)
+	        *lenp = retlen * sizeof(unsigned short); /* number of shorts -> buffer size */
+	}
 # endif
     }
 
