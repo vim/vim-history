@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@polarfox.com>
-# Last change:  2002 Aug 27
+# Last change:  2003 Mar 07
 #
 # This has script been tested on VMS 6.2 to 7.3 on DEC Alpha and VAX
 # with MMS and MMK
@@ -24,6 +24,10 @@
 # Platform selection
 # Define this if you will use the VAX platform to build.
 # VAX = YES
+
+# VMS version
+# Uncomment if you use VMS version 6.2 or older
+# OLD_VMS = YES
 
 # Compiler selection.
 # Comment out if you use the VAXC compiler
@@ -104,6 +108,10 @@ PREFIX  = /prefix=all
 
 LD_DEF  = link
 C_INC   = [.proto]
+
+.IFDEF OLD_VMS
+VMS_DEF = ,"OLD_VMS"
+.ENDIF
 
 .IFDEF DEBUG
 DEBUG_DEF = ,"DEBUG"
@@ -247,7 +255,8 @@ VIMHOST = "''F$TRNLNM("SYS$NODE")'''F$TRNLNM("UCX$INET_HOST")'.''F$TRNLNM("UCX$I
 
 .SUFFIXES : .obj .c
 
-ALL_CFLAGS = /def=($(MODEL_DEF)$(DEFS)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF)$(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) -
+ALL_CFLAGS = /def=($(MODEL_DEF)$(DEFS)$(VMS_DEF)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF) -
+ $(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) -
  $(CFLAGS)$(GUI_FLAG) -
  /include=($(C_INC)$(GUI_INC_DIR)$(GUI_INC)$(PERL_INC)$(PYTHON_INC)$(TCL_INC))
 
@@ -255,7 +264,8 @@ ALL_CFLAGS = /def=($(MODEL_DEF)$(DEFS)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF)$(TCL_
 # It is specially formated for correct display of unix like includes 
 # as $(GUI_INC) - replaced with $(GUI_INC_VER) 
 # Otherwise should not be any other difference.
-ALL_CFLAGS_VER = /def=($(MODEL_DEF)$(DEFS)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF)$(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) -
+ALL_CFLAGS_VER = /def=($(MODEL_DEF)$(DEFS)$(VMS_DEF)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF) -
+ $(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) -
  $(CFLAGS)$(GUI_FLAG) -
  /include=($(C_INC)$(GUI_INC_DIR)$(GUI_INC_VER)$(PERL_INC)$(PYTHON_INC)$(TCL_INC))
 
