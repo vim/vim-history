@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.6.  Last change: 2000 Jan 09
+*cmdline.txt*   For Vim version 5.6.  Last change: 2000 Apr 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -119,8 +119,14 @@ CTRL-R {0-9a-z"%#:-=.}					*c_CTRL-R* *c_<C-R>*
 		Insert the contents of a numbered or named register.  Between
 		typing CTRL-R and the second character '"' will be displayed
 		to indicate that you are expected to enter the name of a
-		register.  The text is inserted as if you typed it, but
-		mappings and abbreviations are not used.  Special registers:
+		register.
+		The text is inserted as if you typed it, but mappings and
+		abbreviations are not used.  Characters that end the command
+		line are inserted literally (<Esc>, <CR>, <NL>, <C-C>).  A
+		<BS> or CTRL-W could still end the command line though, and
+		remaining characters will then be interpreted in another mode,
+		which might not be what you intended.
+		Special registers:
 			'"'	the unnamed register, containing the text of
 				the last delete or yank
 			'%'	the current file name
@@ -146,6 +152,14 @@ CTRL-R CTRL-A
 		{not in Vi}
 		CTRL-F and CTRL-P: {only when +file_in_path feature is
 		included}
+
+					*c_CTRL-R_CTRL-R* *c_<C-R>_<C-R>*
+CTRL-R CTRL-R {0-9a-z"%#:-=. CTRL-F CTRL-P CTRL-W CTRL-A}
+		Insert register or object under the cursor.  Works like
+		|c_CTRL-R| but inserts the text literally.  For example, if
+		register a contains "xy^Hz" (where ^H is a backspace),
+		"CTRL-R a" will insert "xz" while "CTRL-R CTRL-R a" will
+		insert "xy^Hz".
 
 CTRL-J						*c_CTRL-J* *c_<NL>* *c_<CR>*
 <CR> or <NL>	start entered command

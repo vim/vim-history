@@ -726,7 +726,9 @@ getcmdline(firstc, count, indent)
 #endif
 		putcmdline('"');
 		++no_mapping;
-		c = safe_vgetc();
+		i = c = safe_vgetc(); /* CTRL-R <char> */
+		if (c == Ctrl('R'))
+		    c = safe_vgetc(); /* CTRL-R CTRL-R <char> */
 		--no_mapping;
 #ifdef WANT_EVAL
 		/*
@@ -754,7 +756,7 @@ getcmdline(firstc, count, indent)
 		}
 #endif
 		if (c != ESC)	    /* use ESC to cancel inserting register */
-		    cmdline_paste(c);
+		    cmdline_paste(c, i == Ctrl('R'));
 		redrawcmd();
 		goto cmdline_changed;
 
@@ -826,10 +828,10 @@ getcmdline(firstc, count, indent)
 			goto cmdline_not_changed;   /* Ignore mouse */
 # ifdef USE_GUI
 		if (gui.in_use)
-		    cmdline_paste('*');
+		    cmdline_paste('*', TRUE);
 		else
 # endif
-		    cmdline_paste(0);
+		    cmdline_paste(0, TRUE);
 		redrawcmd();
 		goto cmdline_changed;
 

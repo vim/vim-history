@@ -86,6 +86,7 @@ static int	stuff_yank __ARGS((int, char_u *));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
 static void	stuffescaped __ARGS((char_u *arg));
 static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated, int errmsg));
+static void	cmdline_paste_str __ARGS((char_u *s, int literally));
 static void	free_yank __ARGS((long));
 static void	free_yank_all __ARGS((void));
 static void	block_prep __ARGS((OPARG *oap, struct block_def *, linenr_t, int));
@@ -1171,8 +1172,9 @@ get_spec_reg(regname, argp, allocated, errmsg)
  * return FAIL for failure, OK otherwise
  */
     int
-cmdline_paste(regname)
+cmdline_paste(regname, literally)
     int regname;
+    int literally;	/* Insert text literally instead of "as typed" */
 {
     long	i;
     char_u	*arg;
@@ -1198,10 +1200,10 @@ cmdline_paste(regname)
     {
 	if (arg == NULL)
 	    return FAIL;
-	i = put_on_cmdline(arg, -1, TRUE);
+	cmdline_paste_str(arg, literally);
 	if (allocated)
 	    vim_free(arg);
-	return (int)i;
+	return (int)OK;
     }
 
     get_yank_register(regname, FALSE);
@@ -1210,13 +1212,41 @@ cmdline_paste(regname)
 
     for (i = 0; i < y_current->y_size; ++i)
     {
-	put_on_cmdline(y_current->y_array[i], -1, FALSE);
+	cmdline_paste_str(y_current->y_array[i], literally);
 
 	/* insert ^M between lines and after last line if type is MLINE */
 	if (y_current->y_type == MLINE || i < y_current->y_size - 1)
-	    put_on_cmdline((char_u *)"\r", 1, FALSE);
+	    cmdline_paste_str((char_u *)"\r", literally);
     }
     return OK;
+}
+
+/*
+ * Put a string on the command line.
+ * When "literally" is TRUE, insert literally.
+ * When "literally" is FALSE, insert as typed, but don't leave the command
+ * line.
+ */
+    static void
+cmdline_paste_str(s, literally)
+    char_u	*s;
+    int		literally;
+{
+    if (literally)
+	put_on_cmdline(s, -1, TRUE);
+    else
+	while (*s)
+	{
+	    if (*s == Ctrl('V') && s[1])
+		stuffcharReadbuff(*s++);
+	    else if (*s == ESC || *s == Ctrl('C') || *s == CR || *s == NL
+#ifdef UNIX
+		    || *s == intr_char
+#endif
+		    || (*s == Ctrl('\\') && s[1] == Ctrl('N')))
+		stuffcharReadbuff(Ctrl('V'));
+	    stuffcharReadbuff(*s++);
+	}
 }
 
 /*

@@ -13,7 +13,7 @@ int yank_register_mline __ARGS((int regname));
 int do_record __ARGS((int c));
 int do_execreg __ARGS((int regname, int colon, int addcr));
 int insert_reg __ARGS((int regname, int literally));
-int cmdline_paste __ARGS((int regname));
+int cmdline_paste __ARGS((int regname, int literally));
 int op_delete __ARGS((OPARG *oap));
 int op_replace __ARGS((OPARG *oap, int c));
 void op_tilde __ARGS((OPARG *oap));
