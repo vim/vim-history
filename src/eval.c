@@ -1334,7 +1334,9 @@ ex_call(eap)
 	if (doesrange || eap->skip)
 	    break;
 	/* Stop when immediately aborting on error, or when an interrupt
-	 * occurred or an exception was thrown but not caught. */
+	 * occurred or an exception was thrown but not caught.  get_func_var()
+	 * returned OK, so that the check for trailing characters below is
+	 * executed. */
 	if (aborting())
 	    break;
     }
@@ -1345,7 +1347,10 @@ ex_call(eap)
     {
 	/* Check for trailing illegal characters and a following command. */
 	if (!ends_excmd(*arg))
+	{
+	    emsg_severe = TRUE;
 	    EMSG(_(e_trailing));
+	}
 	else
 	    eap->nextcmd = check_nextcmd(arg);
     }
@@ -3009,14 +3014,11 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     else
 	ret = FAIL;
 
-    if (!aborting())
-    {
-	if (ret == OK)
-	    ret = call_func(name, len, retvar, argcount, argvars,
+    if (ret == OK)
+	ret = call_func(name, len, retvar, argcount, argvars,
 				    firstline, lastline, doesrange, evaluate);
-	else
-	    EMSG2(_("E116: Invalid arguments for function %s"), name);
-    }
+    else if (!aborting())
+	EMSG2(_("E116: Invalid arguments for function %s"), name);
 
     while (--argcount >= 0)
 	clear_var(&argvars[argcount]);
@@ -3183,6 +3185,17 @@ call_func(name, len, retvar, argcount, argvars, firstline, lastline,
 		}
 	    }
 	}
+	/*
+	 * The function call (or "FuncUndefined" autocommand sequence) might
+	 * have been aborted by an error, an interrupt, or an explicitly thrown
+	 * exception that has not been caught so far.  This situation can be
+	 * tested for by calling aborting().  For an error in an internal
+	 * function or for the "E132" error in call_user_func(), however, the
+	 * throw point at which the "force_abort" flag (temporarily reset by
+	 * emsg()) is normally updated has not been reached yet. We need to
+	 * update that flag first to make aborting() reliable.
+	 */
+	update_force_abort();
     }
     if (error == ERROR_NONE)
 	ret = OK;

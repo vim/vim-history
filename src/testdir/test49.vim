@@ -7567,7 +7567,188 @@ Xcheck 224907669
 
 
 "-------------------------------------------------------------------------------
-" Test 74:  Errors, interupts, :throw during expression evaluation	    {{{1
+" Test 74:  Errors in builtin functions.				    {{{1
+"
+"	    On an error in a builtin function called inside a :try/:endtry
+"	    region, the evaluation of the expression calling that function and
+"	    the command containing that expression are abandoned.  The error can
+"	    be caught as an exception.
+"
+"	    A simple :call of the builtin function is a trivial case.  If the
+"	    builtin function is called in the argument list of another function,
+"	    no further arguments are evaluated, and the other function is not
+"	    executed.  If the builtin function is called from the argument of
+"	    a :return command, the :return command is not executed.  If the
+"	    builtin function is called from the argument of a :throw command,
+"	    the :throw command is not executed.  The evaluation of the
+"	    expression calling the builtin function is abandoned.
+"-------------------------------------------------------------------------------
+
+XpathINIT
+
+function! F1(arg1)
+    Xpath 1					" X: 0
+endfunction
+
+function! F2(arg1, arg2)
+    Xpath 2					" X: 0
+endfunction
+
+function! G()
+    Xpath 4					" X: 0
+endfunction
+
+function! H()
+    Xpath 8					" X: 0
+endfunction
+
+function! R()
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 16				" X: 16
+	    return append(1, "s")
+	catch /E21/
+	    let caught = 1
+	catch /.*/
+	    Xpath 32				" X: 0
+	finally
+	    Xpath 64				" X: 64
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 128			" X: 128
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+    Xpath 256					" X: 256
+endfunction
+
+try
+    set noma	" let append() fail with "E21"
+
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 512				" X: 512
+	    call append(1, "s")
+	catch /E21/
+	    let caught = 1
+	catch /.*/
+	    Xpath 1024				" X: 0
+	finally
+	    Xpath 2048				" X: 2048
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 4096			" X: 4096
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 8192				" X: 8192
+	    call F1('x' . append(1, "s"))
+	catch /E21/
+	    let caught = 1
+	catch /.*/
+	    Xpath 16384				" X: 0
+	finally
+	    Xpath 32768				" X: 32768
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 65536			" X: 65536
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 131072			" X: 131072
+	    call F2('x' . append(1, "s"), G())
+	catch /E21/
+	    let caught = 1
+	catch /.*/
+	    Xpath 262144			" X: 0
+	finally
+	    Xpath 524288			" X: 524288
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 1048576			" X: 1048576
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+
+    call R()
+
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 2097152			" X: 2097152
+	    throw "T" . append(1, "s")
+	catch /E21/
+	    let caught = 1
+	catch /^T.*/
+	    Xpath 4194304			" X: 0
+	catch /.*/
+	    Xpath 8388608			" X: 0
+	finally
+	    Xpath 16777216			" X: 16777216
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 33554432			" X: 33554432
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    Xpath 67108864			" X: 67108864
+	    let x = "a"
+	    let x = x . "b" . append(1, "s") . H()
+	catch /E21/
+	    let caught = 1
+	catch /.*/
+	    Xpath 134217728			" X: 0
+	finally
+	    Xpath 268435456			" X: 268435456
+	    if caught || $VIMNOERRTHROW && v:errmsg =~ 'E21'
+		Xpath 536870912			" X: 536870912
+	    endif
+	    if x == "a"
+		Xpath 1073741824		" X: 1073741824
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
+catch /.*/
+    " The Xpath command does not accept 2^31 (negative); add explicitly:
+    let Xpath = Xpath + 2147483648		" X: 0
+    Xout v:exception "in" v:throwpoint
+finally
+    set ma&
+endtry
+
+unlet! caught x
+delfunction F1
+delfunction F2
+delfunction G
+delfunction H
+delfunction R
+
+Xcheck 2000403408
+
+
+"-------------------------------------------------------------------------------
+" Test 75:  Errors, interupts, :throw during expression evaluation	    {{{1
 "
 "	    When a function call made during expression evaluation is aborted
 "	    due to an error inside a :try/:endtry region or due to an interrupt
@@ -7853,7 +8034,7 @@ Xcheck 1610087935
 
 
 "-------------------------------------------------------------------------------
-" Test 75:  Errors, interupts, :throw in name{brace-expression}		    {{{1
+" Test 76:  Errors, interupts, :throw in name{brace-expression}		    {{{1
 "
 "	    When a function call made during evaluation of an expression in
 "	    braces as part of a function name after ":function" is aborted due
@@ -7983,7 +8164,7 @@ Xcheck 1388671
 
 
 "-------------------------------------------------------------------------------
-" Test 76:  Messages on parsing errors in expression evaluation		    {{{1
+" Test 77:  Messages on parsing errors in expression evaluation		    {{{1
 "
 "	    When an expression evaluation detects a parsing error, an error
 "	    message is given and converted to an exception, and the expression
@@ -8172,7 +8353,7 @@ Xcheck 134217728
 
 
 "-------------------------------------------------------------------------------
-" Test 77:  Throwing one of several errors for the same command		    {{{1
+" Test 78:  Throwing one of several errors for the same command		    {{{1
 "
 "	    When several errors appear in a row (for instance during expression
 "	    evaluation), the first as the most specific one is used when
@@ -8367,7 +8548,7 @@ Xcheck 70288929
 
 
 "-------------------------------------------------------------------------------
-" Test 78:  Syntax error in expression for illegal :elseif		    {{{1
+" Test 79:  Syntax error in expression for illegal :elseif		    {{{1
 "
 "	    If there is a syntax error in the expression after an illegal
 "	    :elseif, an error message is given (or an error exception thrown)
@@ -8552,7 +8733,7 @@ Xcheck 17895765
 
 
 "-------------------------------------------------------------------------------
-" Test 79:  Discarding exceptions after an error or interrupt		    {{{1
+" Test 80:  Discarding exceptions after an error or interrupt		    {{{1
 "
 "	    When an exception is thrown from inside a :try conditional without
 "	    :catch and :finally clauses and an error or interrupt occurs before
@@ -8598,7 +8779,7 @@ Xcheck 387
 
 
 "-------------------------------------------------------------------------------
-" Test 80:  Ignoring :catch clauses after an error or interrupt		    {{{1
+" Test 81:  Ignoring :catch clauses after an error or interrupt		    {{{1
 "
 "	    When an exception is thrown and an error or interrupt occurs before
 "	    the matching :catch clause is reached, the exception is discarded
@@ -8706,7 +8887,7 @@ Xcheck 8454401
 
 
 "-------------------------------------------------------------------------------
-" Test 81:  Executing :finally clauses after an error or interrupt	    {{{1
+" Test 82:  Executing :finally clauses after an error or interrupt	    {{{1
 "
 "	    When an exception is thrown and an error or interrupt occurs before
 "	    the :finally of the innermost :try is reached, the exception is
@@ -8756,7 +8937,7 @@ Xcheck 2835
 
 
 "-------------------------------------------------------------------------------
-" Test 82:  Exceptions in autocommand sequences.			    {{{1
+" Test 83:  Exceptions in autocommand sequences.			    {{{1
 "
 "	    When an exception occurs in a sequence of autocommands for
 "	    a specific event, the rest of the sequence is not executed.  The
@@ -8931,7 +9112,7 @@ Xcheck 934782101
 
 
 "-------------------------------------------------------------------------------
-" Test 83:  Error exceptions in autocommands for I/O command events	    {{{1
+" Test 84:  Error exceptions in autocommands for I/O command events	    {{{1
 "
 "	    When an I/O command is inside :try/:endtry, autocommands to be
 "	    executed after it should be skipped on an error (exception) in the
@@ -9178,7 +9359,7 @@ Xcheck 198689
 
 
 "-------------------------------------------------------------------------------
-" Test 84:  $VIMNOERRTHROW and $VIMNOINTTHROW support			    {{{1
+" Test 85:  $VIMNOERRTHROW and $VIMNOINTTHROW support			    {{{1
 "
 "	    It is possible to configure Vim for throwing exceptions on error
 "	    or interrupt, controlled by variables $VIMNOERRTHROW and

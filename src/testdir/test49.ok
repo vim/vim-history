@@ -73,18 +73,19 @@ Results of test49.vim:
 *** Test  71: OK (1789569365)
 *** Test  72: OK (9032615)
 *** Test  73: OK (224907669)
-*** Test  74: OK (1610087935)
-*** Test  75: OK (1388671)
-*** Test  76: OK (134217728)
-*** Test  77: OK (70288929)
-*** Test  78: OK (17895765)
-*** Test  79: OK (387)
-*** Test  80: OK (8454401)
-*** Test  81: OK (2835)
-*** Test  82: OK (934782101)
-*** Test  83: OK (198689)
---- Test  84: All tests were run with throwing exceptions on error.
+*** Test  74: OK (2000403408)
+*** Test  75: OK (1610087935)
+*** Test  76: OK (1388671)
+*** Test  77: OK (134217728)
+*** Test  78: OK (70288929)
+*** Test  79: OK (17895765)
+*** Test  80: OK (387)
+*** Test  81: OK (8454401)
+*** Test  82: OK (2835)
+*** Test  83: OK (934782101)
+*** Test  84: OK (198689)
+--- Test  85: All tests were run with throwing exceptions on error.
 	      The $VIMNOERRTHROW control is not configured.
---- Test  84: All tests were run with throwing exceptions on interrupt.
+--- Test  85: All tests were run with throwing exceptions on interrupt.
 	      The $VIMNOINTTHROW control is not configured.
-*** Test  84: OK (50443995)
+*** Test  85: OK (50443995)
