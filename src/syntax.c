@@ -1704,7 +1704,8 @@ check_state_ends(line)
 		 * Don't do this when "keepend" is used.
 		 */
 		if (SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_type == SPTYPE_START
-			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND)))
+			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND))
+			     && keepend_level < 0)
 		{
 		    update_si_end(cur_si, line, (int)current_col);
 		    if (current_next_flags & HL_HAS_EOL)
