@@ -2149,6 +2149,7 @@ showmatch()
     pos_T	    mpos;
     colnr_T	    vcol;
     long	    save_so;
+    long	    save_siso;
 #ifdef CURSOR_SHAPE
     int		    save_state;
 #endif
@@ -2166,6 +2167,7 @@ showmatch()
 	    mpos = *lpos;    /* save the pos, update_screen() may change it */
 	    save_cursor = curwin->w_cursor;
 	    save_so = p_so;
+	    save_siso = p_siso;
 	    /* Handle "$" in 'cpo': If the ')' is typed on top of the "$",
 	     * stop displaying the "$". */
 	    if (dollar_vcol > 0 && dollar_vcol == curwin->w_virtcol)
@@ -2181,6 +2183,7 @@ showmatch()
 #endif
 	    curwin->w_cursor = mpos;	/* move to matching char */
 	    p_so = 0;			/* don't use 'scrolloff' here */
+	    p_siso = 0;			/* don't use 'sidescrolloff' here */
 	    showruler(FALSE);
 	    setcursor();
 	    cursor_on();		/* make sure that the cursor is shown */
@@ -2192,7 +2195,7 @@ showmatch()
 		gui_mch_flush();
 	    }
 #endif
-	    /* Restore collar_vcol(), because setcursor() may call curs_rows()
+	    /* Restore dollar_vcol(), because setcursor() may call curs_rows()
 	     * which resets it if the matching position is in a previous line
 	     * and has a higher column number. */
 	    dollar_vcol = save_dollar_vcol;
@@ -2207,6 +2210,7 @@ showmatch()
 		ui_delay(p_mat * 100L, FALSE);
 	    curwin->w_cursor = save_cursor;	/* restore cursor position */
 	    p_so = save_so;
+	    p_siso = save_siso;
 #ifdef CURSOR_SHAPE
 	    State = save_state;
 	    ui_cursor_shape();		/* may show different cursor shape */
