@@ -206,7 +206,15 @@ xim_set_focus(int focus)
 
     if (focus)
     {
-	if (!xim_has_focus)
+	/* In Normal mode, only connect to IM if user uses over-the-spot. */
+	if (!xim_has_focus
+		&& (!(State & NORMAL)
+#ifdef USE_GUI_GTK
+		    || (xim_input_style & GDK_IM_PREEDIT_POSITION)
+#else
+		    || (input_style & XIMPreeditPosition)
+#endif
+		   ))
 	{
 	    xim_has_focus = 1;
 #ifdef USE_GUI_GTK
@@ -236,7 +244,7 @@ xim_set_preedit()
     if (!xic)
 	return;
 
-    xim_set_focus(!(State & NORMAL));
+    xim_set_focus(TRUE);
 
 #ifdef USE_GUI_GTK
     if (gdk_im_ready())
