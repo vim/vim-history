@@ -1459,7 +1459,10 @@ ex_listdo(eap)
 		/* go to argument "i" */
 		if (i == ARGCOUNT)
 		    break;
-		do_argfile(eap, i);
+		/* Don't call do_argfile() when already there, it will try
+		 * reloading the file. */
+		if (curwin->w_arg_idx != i)
+		    do_argfile(eap, i);
 		if (curwin->w_arg_idx != i)
 		    break;
 		++i;
