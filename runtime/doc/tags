@@ -872,6 +872,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 )	motion.txt	/*)*
 +	motion.txt	/*+*
 ++builtin_terms	various.txt	/*++builtin_terms*
+++enc	editing.txt	/*++enc*
+++ff	editing.txt	/*++ff*
 ++opt	editing.txt	/*++opt*
 +ARP	various.txt	/*+ARP*
 +GUI_Athena	various.txt	/*+GUI_Athena*
@@ -1516,12 +1518,15 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :helpt	various.txt	/*:helpt*
 :helptags	various.txt	/*:helptags*
 :hi	syntax.txt	/*:hi*
+:hi-default	syntax.txt	/*:hi-default*
+:hi-link	syntax.txt	/*:hi-link*
 :hi-normal	syntax.txt	/*:hi-normal*
 :hi-normal-cterm	syntax.txt	/*:hi-normal-cterm*
 :hide	windows.txt	/*:hide*
 :highlight	syntax.txt	/*:highlight*
 :highlight-default	syntax.txt	/*:highlight-default*
 :highlight-link	syntax.txt	/*:highlight-link*
+:highlight-normal	syntax.txt	/*:highlight-normal*
 :history	cmdline.txt	/*:history*
 :history-indexing	cmdline.txt	/*:history-indexing*
 :i	insert.txt	/*:i*
@@ -1593,6 +1598,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :ln	map.txt	/*:ln*
 :lnoremap	map.txt	/*:lnoremap*
 :lo	starting.txt	/*:lo*
+:loadk	multilang.txt	/*:loadk*
+:loadkeymap	multilang.txt	/*:loadkeymap*
 :loadview	starting.txt	/*:loadview*
 :ls	windows.txt	/*:ls*
 :lu	map.txt	/*:lu*
@@ -1947,6 +1954,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-transparent	syntax.txt	/*:syn-transparent*
 :syncbind	scroll.txt	/*:syncbind*
 :syntax	syntax.txt	/*:syntax*
+:syntax-on	syntax.txt	/*:syntax-on*
 :t	change.txt	/*:t*
 :tN	tagsearch.txt	/*:tN*
 :tNext	tagsearch.txt	/*:tNext*
@@ -2674,6 +2682,7 @@ _vimrc	starting.txt	/*_vimrc*
 `	motion.txt	/*`*
 `(	motion.txt	/*`(*
 `)	motion.txt	/*`)*
+`-expansion	editing.txt	/*`-expansion*
 `.	motion.txt	/*`.*
 `0	motion.txt	/*`0*
 `<	motion.txt	/*`<*
@@ -2989,6 +2998,8 @@ ctags	tagsearch.txt	/*ctags*
 ctags-gone	version6.txt	/*ctags-gone*
 cterm-colors	syntax.txt	/*cterm-colors*
 ctrl	intro.txt	/*ctrl*
+curly-braces-function-names	eval.txt	/*curly-braces-function-names*
+curly-braces-names	eval.txt	/*curly-braces-names*
 curpos-visual	version6.txt	/*curpos-visual*
 current-directory	editing.txt	/*current-directory*
 current-file	editing.txt	/*current-file*
@@ -3003,6 +3014,8 @@ cursor_left	intro.txt	/*cursor_left*
 cursor_right	intro.txt	/*cursor_right*
 cursor_up	intro.txt	/*cursor_up*
 cw	change.txt	/*cw*
+cweb-syntax	syntax.txt	/*cweb-syntax*
+cweb.vim	syntax.txt	/*cweb.vim*
 cynlib-syntax	syntax.txt	/*cynlib-syntax*
 cynlib.vim	syntax.txt	/*cynlib.vim*
 d	change.txt	/*d*
@@ -3482,7 +3495,6 @@ hl-Cursor	syntax.txt	/*hl-Cursor*
 hl-CursorIM	syntax.txt	/*hl-CursorIM*
 hl-Directory	syntax.txt	/*hl-Directory*
 hl-ErrorMsg	syntax.txt	/*hl-ErrorMsg*
-hl-FillColumn	syntax.txt	/*hl-FillColumn*
 hl-FoldColumn	syntax.txt	/*hl-FoldColumn*
 hl-Folded	syntax.txt	/*hl-Folded*
 hl-IncSearch	syntax.txt	/*hl-IncSearch*
@@ -3500,6 +3512,7 @@ hl-StatusLine	syntax.txt	/*hl-StatusLine*
 hl-StatusLineNC	syntax.txt	/*hl-StatusLineNC*
 hl-Title	syntax.txt	/*hl-Title*
 hl-User1..9	syntax.txt	/*hl-User1..9*
+hl-VertSplit	syntax.txt	/*hl-VertSplit*
 hl-Visual	syntax.txt	/*hl-Visual*
 hl-VisualNOS	syntax.txt	/*hl-VisualNOS*
 hl-WarningMsg	syntax.txt	/*hl-WarningMsg*
@@ -3817,6 +3830,7 @@ mode-ins-repl	insert.txt	/*mode-ins-repl*
 mode-replace	insert.txt	/*mode-replace*
 mode-switching	intro.txt	/*mode-switching*
 modeline	options.txt	/*modeline*
+modeline-local	options.txt	/*modeline-local*
 modeline-version	options.txt	/*modeline-version*
 more-compatible	version5.txt	/*more-compatible*
 more-prompt	message.txt	/*more-prompt*
@@ -4035,9 +4049,12 @@ prevcount-variable	eval.txt	/*prevcount-variable*
 preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
 printcap-syntax	syntax.txt	/*printcap-syntax*
+progress-syntax	syntax.txt	/*progress-syntax*
+progress.vim	syntax.txt	/*progress.vim*
 ptcap-syntax	syntax.txt	/*ptcap-syntax*
 ptcap.vim	syntax.txt	/*ptcap.vim*
 put	change.txt	/*put*
+put-Visual-mode	change.txt	/*put-Visual-mode*
 python	if_python.txt	/*python*
 python-buffer	if_python.txt	/*python-buffer*
 python-buffers	if_python.txt	/*python-buffers*
@@ -4245,6 +4262,7 @@ status-line	windows.txt	/*status-line*
 statusmsg-variable	eval.txt	/*statusmsg-variable*
 strftime()	eval.txt	/*strftime()*
 stridx()	eval.txt	/*stridx()*
+string-match	eval.txt	/*string-match*
 strlen()	eval.txt	/*strlen()*
 strpart()	eval.txt	/*strpart()*
 strridx()	eval.txt	/*strridx()*
@@ -4613,6 +4631,7 @@ v_D	change.txt	/*v_D*
 v_J	change.txt	/*v_J*
 v_K	various.txt	/*v_K*
 v_O	visual.txt	/*v_O*
+v_P	change.txt	/*v_P*
 v_R	change.txt	/*v_R*
 v_S	change.txt	/*v_S*
 v_U	change.txt	/*v_U*
@@ -4672,6 +4691,7 @@ v_iw	motion.txt	/*v_iw*
 v_i{	motion.txt	/*v_i{*
 v_i}	motion.txt	/*v_i}*
 v_o	visual.txt	/*v_o*
+v_p	change.txt	/*v_p*
 v_r	change.txt	/*v_r*
 v_s	change.txt	/*v_s*
 v_u	change.txt	/*v_u*

@@ -2034,7 +2034,7 @@ mch_call_shell(
     settmode(TMODE_RAW);	/* set to raw mode */
     set_interrupts(TRUE);	/* catch interrupts */
 
-    if (x && !(options & SHELL_SILENT))
+    if (x && !(options & SHELL_SILENT) && !emsg_silent)
     {
 	MSG_PUTS(_("\nshell returned "));
 	msg_outnum((long)x);

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 02
+" Last Change:	2001 Feb 27
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -607,9 +607,9 @@ call append("$", "maxmapdepth\tmaximum depth of mapping")
 call append("$", "set mmd=" . &mmd)
 call append("$", "remap\trecognize mappings in mapped keys")
 call <SID>BinOptionL("remap", &remap)
-call append("$", "timeout\ttime-out halfway a mapping")
+call append("$", "timeout\tallow timing out halfway into a mapping")
 call <SID>BinOptionL("to", &to)
-call append("$", "ttimeout\ttime-out halfway a key code")
+call append("$", "ttimeout\tallow timing out halfway into a key code")
 call <SID>BinOptionL("ttimeout", &ttimeout)
 call append("$", "timeoutlen\ttime in msec for 'timeout'")
 call append("$", "set tm=" . &tm)

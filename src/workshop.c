@@ -118,25 +118,6 @@ workshop_init()
     XtInputMask	 mask;
 
     /*
-     * Set size from workshop_get_width_height().
-     */
-    width = height = 0;
-    if (workshop_get_width_height(&width, &height))
-    {
-	XtVaSetValues(vimShell,
-		XmNwidth, width,
-		XmNheight, height,
-		NULL);
-    }
-
-    /*
-     * Now read in the initial messages from eserve.
-     */
-    while ((mask = XtAppPending(app_context))
-	    && (mask & XtIMAlternateInput) && !workshopInitDone)
-	XtAppProcessEvent(app_context, XtIMAlternateInput);
-
-    /*
      * Turn on MenuBar, ToolBar, and Footer.
      */
     if (get_option_value((char_u *) "go", NULL, &guiOptions) == 0)
@@ -160,6 +141,25 @@ workshop_init()
 	if (is_dirty)
 	    set_option_value((char_u *) "go", 0, buf, 0);
     }
+
+    /*
+     * Set size from workshop_get_width_height().
+     */
+    width = height = 0;
+    if (workshop_get_width_height(&width, &height))
+    {
+	XtVaSetValues(vimShell,
+		XmNwidth, width,
+		XmNheight, height,
+		NULL);
+    }
+
+    /*
+     * Now read in the initial messages from eserve.
+     */
+    while ((mask = XtAppPending(app_context))
+	    && (mask & XtIMAlternateInput) && !workshopInitDone)
+	XtAppProcessEvent(app_context, XtIMAlternateInput);
 }
 
     void
@@ -227,8 +227,11 @@ workshop_load_file(
     {
 	/*
 	 * Set up the Balloon Expression Evaluation area.
+	 * It's enabled by default.  Disable it when 'ballooneval' is off.
 	 */
 	balloonEval = gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
+	if (!p_beval)
+	    gui_mch_disable_beval_area(balloonEval)
     }
 
     load_window(filename, line);
@@ -602,11 +605,37 @@ workshop_moved_marks(char *filename)
 #endif
 }
 
+static XmFontList gui_motif_create_fontlist __ARGS((XFontStruct *font));
+
+/*
+ * Encapsulate the way an XmFontList is created.
+ */
+    static XmFontList
+gui_motif_create_fontlist(font)
+    XFontStruct    *font;
+{
+    XmFontList font_list;
+
+# if (XmVERSION >= 1)
+#   if (XmREVISION == 1)
+    /* Motif 1.1 method */
+    font_list = XmFontListCreate(font, STRING_TAG);
+#   else
+    /* Motif 1.2 method */
+    XmFontListEntry font_list_entry;
+
+    font_list_entry = XmFontListEntryCreate(STRING_TAG, XmFONT_IS_FONT,
+							     (XtPointer)font);
+    font_list = XmFontListAppendEntry(NULL, font_list_entry);
+    XmFontListEntryFree(&font_list_entry);
+#   endif
+# endif
+    return font_list;
+}
+
     int
 workshop_get_font_height()
 {
-    int		 fontSize = 0;	/* tell WorkShop to use default */
-    XmFontListEntry	 fle;		/* required intermediate structure */
     XmFontList	 fontList;	/* fontList made from gui.norm_font */
     XmString	 str;
     Dimension	 w;
@@ -620,9 +649,7 @@ workshop_get_font_height()
 #endif
 
     /* Pick the proper signs for this font size */
-    fle = XmFontListEntryCreate(XmFONTLIST_DEFAULT_TAG,
-	    XmFONT_IS_FONT, (XtPointer) gui.norm_font);
-    fontList = XmFontListAppendEntry(NULL, fle);
+    fontList = gui_motif_create_fontlist((XFontStruct *)gui.norm_font);
     h = 0;
     if (fontList != NULL)
     {
@@ -630,19 +657,9 @@ workshop_get_font_height()
 	XmStringExtent(fontList, str, &w, &h);
 	XmStringFree(str);
 	XmFontListFree(fontList);
-#if 0
-	/* documentation says XmFontListEntryFree() doesn't free the
-	 * XFontStruct, but gvim crashes if the following call is made.
-	 */
-	XmFontListEntryFree(fle);
-#endif
-    }
-    if (h)
-    {
-	fontSize = h;
     }
 
-    return fontSize;
+    return (int)h;
 }
 
     void
@@ -652,9 +669,7 @@ workshop_footer_message(
 {
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
-    {
 	wstrace("workshop_footer_message(%s, %d)\n", message, severity);
-    }
 #endif
 
     gui_mch_set_footer((char_u *) message);
@@ -1975,7 +1990,7 @@ setDollarVim(
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
 	{
-	    strcpy(cp, "/WS6U1");
+	    strcpy(cp, "/WS6U2");
 	}
 	putenv(strdup(buf));
 
@@ -2001,7 +2016,7 @@ setDollarVim(
 	cp = strrchr(buf, '/');
 	if (cp != NULL)
 	{
-	    strcpy(cp, "../../../../WS6U1");
+	    strcpy(cp, "../../../../WS6U2");
 	}
 	putenv(strdup(buf));
 

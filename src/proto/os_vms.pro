@@ -59,3 +59,4 @@ void *vms_remove_version __ARGS((void *fname));
 /* vim: set ft=c : */
 /* vim: set ft=c : */
 /* vim: set ft=c : */
+/* vim: set ft=c : */

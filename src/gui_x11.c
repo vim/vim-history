@@ -82,7 +82,7 @@ static int fontset_ascent __ARGS((XFontSet fs));
 static guicolor_t	prev_fg_color = (guicolor_t)-1;
 static guicolor_t	prev_bg_color = (guicolor_t)-1;
 
-#ifdef FEAT_GUI_MOTIF
+#if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
 static XButtonPressedEvent last_mouse_event;
 #endif
 
@@ -582,9 +582,6 @@ gui_x11_focus_change_cb(w, data, event, dum)
     Boolean	*dum;
 {
     gui_focus_change(event->type == FocusIn);
-#ifdef FEAT_XIM
-    xim_set_focus(event->type == FocusIn);
-#endif
 }
 
 /* ARGSUSED */
@@ -631,7 +628,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     Boolean		string_alloced = False;
     Status		status;
 #else
-    char_u		string[3], string2[3];
+    char_u		string[4], string2[3];
 #endif
     KeySym		key_sym, key_sym2;
     int			len, len2;
@@ -754,9 +751,12 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     }
 #endif
 
-    /* Check for Alt/Meta key (Mod1Mask) */
-    if (len == 1 && (ev_press->state & Mod1Mask)
-			&& !(key_sym == XK_BackSpace || key_sym == XK_Delete))
+    /* Check for Alt/Meta key (Mod1Mask), but not for a BS, DEL or character
+     * that already has the 8th bit set. */
+    if (len == 1
+	    && (ev_press->state & Mod1Mask)
+	    && !(key_sym == XK_BackSpace || key_sym == XK_Delete)
+	    && (string[0] & 0x80) == 0)
     {
 #if defined(FEAT_MENU) && defined(FEAT_GUI_MOTIF)
 	/* Ignore ALT keys when they are used for the menu only */
@@ -780,7 +780,24 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	if (	   len2 == 1
 		&& string[0] == string2[0]
 		&& !(key_sym == XK_Tab && (ev_press->state & ShiftMask)))
+	{
 	    string[0] |= 0x80;
+#ifdef FEAT_MBYTE
+	    if (enc_utf8) /* convert to utf-8 */
+	    {
+		string[1] = string[0] & 0xbf;
+		string[0] = (string[0] >> 6) + 0xc0;
+		if (string[1] == CSI)
+		{
+		    string[2] = KS_EXTRA;
+		    string[3] = KE_CSI;
+		    len = 4;
+		}
+		else
+		    len = 2;
+	    }
+#endif
+	}
 	else
 	    ev_press->state |= Mod1Mask;
     }
@@ -959,7 +976,7 @@ gui_x11_mouse_cb(w, dud, event, dum)
 	    return;	/* Unknown mouse event type */
 
 	x_modifiers = event->xbutton.state;
-#ifdef FEAT_GUI_MOTIF
+#if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
 	last_mouse_event = event->xbutton;
 #endif
     }
@@ -2055,12 +2072,13 @@ gui_x11_create_blank_mouse()
 
     void
 gui_mch_draw_string(row, col, s, len, flags)
-    int	    row;
-    int	    col;
-    char_u  *s;
-    int	    len;
-    int	    flags;
+    int		row;
+    int		col;
+    char_u	*s;
+    int		len;
+    int		flags;
 {
+    int			cells = len;
 #ifdef FEAT_MBYTE
     static XChar2b	*buf = NULL;
     static int		buflen = 0;
@@ -2070,9 +2088,9 @@ gui_mch_draw_string(row, col, s, len, flags)
 
     if (enc_utf8)
     {
-	/* Convert UTF-8 byte sequence to 16 bit characters for the X functions.
-	 * Need a buffer for the 16 bit characters.  Keep it between calls,
-	 * because allocating it each time is slow. */
+	/* Convert UTF-8 byte sequence to 16 bit characters for the X
+	 * functions.  Need a buffer for the 16 bit characters.  Keep it
+	 * between calls, because allocating it each time is slow. */
 	if (buflen < len)
 	{
 	    XtFree((char *)buf);
@@ -2080,6 +2098,7 @@ gui_mch_draw_string(row, col, s, len, flags)
 	    buflen = len;
 	}
 	p = s;
+	cells = 0;
 	while (p < s + len)
 	{
 	    c = utf_ptr2char(p);
@@ -2088,9 +2107,20 @@ gui_mch_draw_string(row, col, s, len, flags)
 	    buf[wlen].byte1 = (unsigned)c >> 8;
 	    buf[wlen].byte2 = c;
 	    ++wlen;
+	    cells += utf_char2cells(c);
 	    p += utf_ptr2len_check(p);
 	}
     }
+    else if (has_mbyte)
+    {
+	cells = 0;
+	for (p = s; p < s + len; )
+	{
+	    cells += ptr2cells(p);
+	    p += (*mb_ptr2len_check)(p);
+	}
+    }
+
 #endif
 
 #ifdef FEAT_XFONTSET
@@ -2104,7 +2134,7 @@ gui_mch_draw_string(row, col, s, len, flags)
 	clip.x = 0;
 	clip.y = 0;
 	clip.height = gui.char_height;
-	clip.width = gui.char_width * len + 1;
+	clip.width = gui.char_width * cells + 1;
 	XSetClipRectangles(gui.dpy, gui.text_gc, FILL_X(col), FILL_Y(row),
 		&clip, 1, Unsorted);
     }
@@ -2129,7 +2159,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     {
 	XSetForeground(gui.dpy, gui.text_gc, prev_bg_color);
 	XFillRectangle(gui.dpy, gui.wid, gui.text_gc, FILL_X(col),
-		FILL_Y(row), gui.char_width * len, gui.char_height);
+		FILL_Y(row), gui.char_width * cells, gui.char_height);
 	XSetForeground(gui.dpy, gui.text_gc, prev_fg_color);
 #ifdef FEAT_MBYTE
 	if (enc_utf8)
@@ -2169,7 +2199,7 @@ gui_mch_draw_string(row, col, s, len, flags)
     /* Underline: draw a line at the bottom of the character cell. */
     if (flags & DRAW_UNDERL)
 	XDrawLine(gui.dpy, gui.wid, gui.text_gc, FILL_X(col),
-	     FILL_Y(row + 1) - 1, FILL_X(col + len) - 1, FILL_Y(row + 1) - 1);
+	     FILL_Y(row + 1) - 1, FILL_X(col + cells) - 1, FILL_Y(row + 1) - 1);
 
 #ifdef FEAT_XFONTSET
     if (current_fontset != NULL)
@@ -2927,7 +2957,7 @@ gui_mch_setmouse(x, y)
 						      );
 }
 
-#if defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if (defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)) || defined(PROTO)
     XButtonPressedEvent *
 gui_x11_get_last_mouse_event()
 {

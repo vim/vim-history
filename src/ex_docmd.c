@@ -5296,6 +5296,20 @@ ex_splitview(eap)
     need_mouse_correct = TRUE;
 #endif
 
+#ifdef FEAT_QUICKFIX
+    /* A ":split" in the quickfix window works like ":new".  Don't want two
+     * quickfix windows. */
+    if (bt_quickfix(curbuf))
+    {
+	if (eap->cmdidx == CMD_split)
+	    eap->cmdidx = CMD_new;
+# ifdef FEAT_VERTSPLIT
+	if (eap->cmdidx == CMD_vsplit)
+	    eap->cmdidx = CMD_vnew;
+# endif
+    }
+#endif
+
 #ifdef FEAT_SEARCHPATH
     if (eap->cmdidx == CMD_sfind)
     {
@@ -5448,6 +5462,7 @@ do_exedit(eap, old_curwin)
 #endif
 		) && *eap->arg == NUL)
     {
+	/* ":new" without argument: edit an new empty buffer */
 	setpcmark();
 	(void)do_ecmd(0, NULL, NULL, eap, ECMD_ONE,
 			       ECMD_HIDE + (eap->forceit ? ECMD_FORCEIT : 0));
@@ -6332,10 +6347,10 @@ ex_mkrc(eap)
     }
 #endif
 
-#if defined(FEAT_SESSION) && defined(mch_mkdir)
+#if defined(FEAT_SESSION) && defined(vim_mkdir)
     /* When using 'viewdir' may have to create the directory. */
     if (using_vdir && !mch_isdir(p_vdir))
-	mch_mkdir(p_vdir, 0755); /* ignore errors, open_exfile() will fail */
+	vim_mkdir(p_vdir, 0755); /* ignore errors, open_exfile() will fail */
 #endif
 
     fd = open_exfile(fname, eap->forceit, WRITEBIN);
@@ -8575,7 +8590,7 @@ ex_digraphs(eap)
     exarg_t	*eap;
 {
 #ifdef FEAT_DIGRAPHS
-    if (*eap->arg)
+    if (*eap->arg != NUL)
 	putdigraph(eap->arg);
     else
 	listdigraphs();
@@ -8655,7 +8670,7 @@ ex_foldopen(eap)
     exarg_t	*eap;
 {
     opFoldRange(eap->line1, eap->line2, eap->cmdidx == CMD_foldopen,
-								eap->forceit);
+							 eap->forceit, FALSE);
 }
 
     static void

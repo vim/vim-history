@@ -467,6 +467,9 @@ add_menu_path(menu_path, modes, pri_tab,
 #ifdef FEAT_GUI_MOTIF
 	    menu->sensitive = TRUE;	    /* the default */
 #endif
+#ifdef FEAT_BEVAL
+	    menu->tip = NULL;
+#endif
 
 	    /*
 	     * Add after menu that has lower priority.
@@ -682,6 +685,11 @@ menu_nable_recurse(menu, name, modes, enable)
 	EMSG(_("No menu of that name"));
 	return FAIL;
     }
+
+#ifdef FEAT_GUI
+    /* Want to update menus now even if mode not changed */
+    force_menu_update = TRUE;
+#endif
 
     return OK;
 }

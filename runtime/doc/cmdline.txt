@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0w.  Last change: 2001 Feb 20
+*cmdline.txt*   For Vim version 6.0x.  Last change: 2001 Mar 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -613,7 +613,8 @@ it, no matter how many backslashes.
 Note: these are typed literally, they are not special keys!
 	<cword>    is replaced with the word under the cursor (like |star|)
 	<cWORD>    is replaced with the WORD under the cursor (see |WORD|)
-	<cfile>    is replaced with the path name under the cursor
+	<cfile>    is replaced with the path name under the cursor (like what
+		   |gf| uses)
 	<afile>    when executing autocommands, is replaced with the file name
 		   for a file read or write
 	<abuf>     when executing autocommands, is replaced with the currently

@@ -4494,6 +4494,7 @@ find_help_tags(arg, num_matches, matches)
 	    /*
 	     * Replace "^x" by "CTRL-X". Don't do this for "^_" to make
 	     * ":help i_^_CTRL-D" work.
+	     * Insert '-' before and after "CTRL-X" when applicable.
 	     */
 	    if (*s < ' ' || (*s == '^' && s[1] && (isalpha(s[1])
 			   || vim_strchr((char_u *)"?@[\\]^", s[1]) != NULL)))

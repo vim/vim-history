@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Feb 20
+" Last Change:	2001 Mar 09
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -659,6 +659,7 @@ SynMenu CD.Cyn++:cynpp
 SynMenu CD.Cynlib:cynlib
 SynMenu CD.Cascading\ Style\ Sheets:css
 SynMenu CD.Century\ Term:cterm
+SynMenu CD.CFG:cfg
 SynMenu CD.CHILL:ch
 SynMenu CD.Change:change
 SynMenu CD.ChangeLog:changelog
@@ -710,6 +711,7 @@ SynMenu EFG.GNUplot:gnuplot
 
 SynMenu HIJK.Haskell:haskell
 SynMenu HIJK.Haskell-literal:lhaskell
+SynMenu HIJK.Hercules:hercules
 SynMenu HIJK.HTML:html
 SynMenu HIJK.HTML\ with\ M4:htmlm4
 SynMenu HIJK.Hyper\ Builder:hb

@@ -31,11 +31,15 @@
 #  else
 #   if defined(__QNX__)
 #    define DFLT_EFM	"%f(%l):%*[^WE]%t%*\\D%n:%m"
-#   else /* Unix, probably */
-#    ifdef EBCDIC
+#   else
+#    ifdef VMS
+#     define DFLT_EFM	"%A%p^,%C%%CC-%t-%m,%Cat line number %l in file %f"
+#    else /* Unix, probably */
+#     ifdef EBCDIC
 #define DFLT_EFM	"%*[^ ] %*[^ ] %f:%l%*[ ]%m,%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
-#    else
+#     else
 #define DFLT_EFM	"%*[^\"]\"%f\"%*\\D%l: %m,\"%f\"%*\\D%l: %m,%-G%f:%l: (Each undeclared identifier is reported only once,%-G%f:%l: for each function it appears in.),%f:%l:%m,\"%f\"\\, line %l%*\\D%c%*[^ ] %m,%D%*\\a[%*\\d]: Entering directory `%f',%X%*\\a[%*\\d]: Leaving directory `%f',%DMaking %*\\a in %f"
+#     endif
 #    endif
 #   endif
 #  endif
@@ -94,11 +98,12 @@
 #define FO_INS_VI	'v'
 #define FO_INS_LONG	'l'
 #define FO_INS_BLANK	'b'
+#define FO_MULTIBYTE	'm'
 #define FO_ONE_LETTER	'1'
 
 #define DFLT_FO_VI	"vt"
 #define DFLT_FO_VIM	"tcq"
-#define FO_ALL		"tcroq2vlb1n,"	/* for do_set() */
+#define FO_ALL		"tcroq2vlb1mn,"	/* for do_set() */
 
 /* characters for the p_cpo option: */
 #define CPO_ALTREAD	'a'	/* ":read" sets alternate file name */
@@ -272,6 +277,8 @@ EXTERN char_u	*p_bsk;		/* 'backupskip' */
 #endif
 #ifdef FEAT_BEVAL
 EXTERN int	p_bdlay;	/* 'balloondelay' */
+#endif
+#ifdef FEAT_SUN_WORKSHOP
 EXTERN int	p_beval;	/* 'ballooneval' */
 #endif
 EXTERN char_u	*p_bsdir;	/* 'browsedir' */

@@ -1410,11 +1410,11 @@ line_read_in:
 			lseek(fileno(fp), (off_t)0L, SEEK_SET);
 
 			/* Calculate the first read offset in the file.  Start
-			 * the search in the middle of the file.
-			 */
+			 * the search in the middle of the file. */
 			search_info.low_offset = 0;
 			search_info.low_char = 0;
 			search_info.high_offset = filesize;
+			search_info.curr_offset = 0;
 			search_info.high_char = 0xff;
 		    }
 		    continue;

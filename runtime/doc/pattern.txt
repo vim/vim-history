@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0w.  Last change: 2001 Feb 11
+*pattern.txt*   For Vim version 6.0x.  Last change: 2001 Mar 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -833,12 +833,12 @@ Note that 'ignorecase', "\c" and "\C" are not used for the character classes.
 
 Examples:
       pattern	'ignorecase'  'smartcase'	matches ~
-	foo	  off	       on or off	foo
-	foo	  on	       on or off	foo Foo FOO
-	Foo	  on	       off		foo Foo FOO
-	Foo	  on	       on		    Foo		
-	\cfoo	  on or off    on or off	foo Foo FOO
-	foo\C	  on or off    on or off	foo
+	foo	  off		-		foo
+	foo	  on		-		foo Foo FOO
+	Foo	  on		off		foo Foo FOO
+	Foo	  on		on		    Foo		
+	\cfoo	  -		-		foo Foo FOO
+	foo\C	  -		-		foo
 
 
 Technical detail:				*NL-used-for-Nul*

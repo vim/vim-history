@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0w.  Last change: 2001 Feb 21
+*change.txt*    For Vim version 6.0x.  Last change: 2001 Mar 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -837,6 +837,15 @@ first word).  You can use the "']" or "`]" command after the put command to
 move the cursor to the end of the inserted text, or use "'[" or "`[" to move
 the cursor to the start.
 
+						*put-Visual-mode* *v_p* *v_P*
+When using a put command like |p| or |P| in Visual mode, Vim will try to
+replace the selected text with the contents of the register.  Whether this
+works well depends on the type of selection and the type of the text in the
+register.  With blockwise selection it also depends on the size of the block
+and whether the corners are on an existing character. (implementation detail:
+it actually works by first putting the register after the selection and then
+deleting the selection).
+
 							*blockwise-register*
 If you use a blockwise Visual mode command to get the text into the register,
 the block of text will be inserted before ("P") or after ("p") the cursor
@@ -1198,6 +1207,8 @@ b	Like 'v', but only auto-wrap if you enter a blank at or before
 l	Long lines are not broken in insert mode: When a line was longer than
 	'textwidth' when the insert command started, Vim does not
 	automatically format it.
+m	Also break at a multi-byte character above 255.  This is useful for
+	Asian text where every character is a word on its own.
 1	Don't break a line after a one-letter word.  It's broken before it
 	instead (if possible).
 

@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0w.  Last change: 2001 Feb 20
+*multilang.txt* For Vim version 6.0x.  Last change: 2001 Mar 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -137,29 +137,35 @@ available keymap files, use this: >
 In Insert and Command-line mode you can use CTRL-^ to toggle between using the
 keyboard map or not. |i_CTRL-^| |c_CTRL-^|
 
-							*keymap-file-format*
+				*keymap-file-format* *:loadk* *:loadkeymap*
 The keymap file looks something like this: >
 
 	" Maintainer:	name <email@address>
 	" Last Changed:	2001 Jan 1
+
 	let b:keymap_name = "short"
+
 	loadkeymap
 	a	A
 	b	B	comment
 
-The lines starting with a " are comments and will be ignored.  The lines with
-the mappings may have a comment after the useful text.
+The lines starting with a " are comments and will be ignored.  Blank lines are
+also ignored.  The lines with the mappings may have a comment after the useful
+text.
 
 The "b:keymap_name" can be set to a short name, which will be shown in the
 status line.  The idea is that this takes less room than the value of
 'keymap', which might be long to distinguish between different languages,
 keyboards and encodings.
 
-The actual mappings are "a" and "b" here.  This is the first column of text.
-The second columns is what this will be mapped to.  These columns are exactly
-the same as what can be used in a |:lnoremap| command.  You can check the
-result with this command: >
+The actual mappings are in the lines below "loadkeymap".  In the example "a"
+is mapped to "A" and "b" to "B".  Thus the first item is mapped to the second
+item.  This is done for each line, until the end of the file.
+These items are exactly the same as what can be used in a |:lnoremap| command.
+You can check the result with this command: >
 	:lmap
+The two items must be separated by white space.  You cannot include white
+space inside an item, use the special names "<Tab>" and "<Space>" instead.
 
 It's possible to have more than one character in the first column.  This works
 like a dead key.  Example: >
@@ -182,6 +188,14 @@ The characters are assumed to be encoded for the current value of 'encoding'.
 It's possible to use ":scriptencoding" when all characters are given
 literally.  That doesn't work when using the <char-> construct, because the
 conversion is done on the keymap file, not on the resulting character.
+
+The lines after "loadkeymap" are interpreted with 'cpoptions' set to "C".
+This means that continuation lines are not used and a backslash has a special
+meaning in the mappings.  Examples: >
+
+	" a comment line
+	\"	x	maps " to x
+	\\	y	maps \ to y
 
 If you write a keymap file that will be useful for others, consider submitting
 it to the Vim author for inclusion in the distribution: <Bram@vim.org>

@@ -1845,9 +1845,9 @@ if test "$enable_workshop" = "yes"; then
 #define FEAT_SUN_WORKSHOP 1
 EOF
 
-  WORKSHOP_SRC="gui_beval.c workshop.c integration.c"
+  WORKSHOP_SRC="workshop.c integration.c"
   
-  WORKSHOP_OBJ="objects/gui_beval.o objects/workshop.o objects/integration.o"
+  WORKSHOP_OBJ="objects/workshop.o objects/integration.o"
   
 fi
 

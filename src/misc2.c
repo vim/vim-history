@@ -2018,9 +2018,9 @@ trans_special(srcp, dst, keycode)
     char_u	*dst;
     int		keycode; /* prefer key code, e.g. K_DEL instead of DEL */
 {
-    int	    modifiers;
-    int	    key;
-    int	    dlen = 0;
+    int		modifiers;
+    int		key;
+    int		dlen = 0;
 
     key = find_special_key(srcp, &modifiers, keycode);
     if (key == 0)
@@ -2040,6 +2040,10 @@ trans_special(srcp, dst, keycode)
 	dst[dlen++] = KEY2TERMCAP0(key);
 	dst[dlen++] = KEY2TERMCAP1(key);
     }
+#ifdef FEAT_MBYTE
+    else if (has_mbyte)
+	dlen += (*mb_char2bytes)(key, dst + dlen);
+#endif
     else
 	dst[dlen++] = key;
 
@@ -2191,6 +2195,9 @@ extract_modifiers(key, modp)
     {
 	key = Ctrl_chr(key);
 	modifiers &= ~MOD_MASK_CTRL;
+	/* <C-@> is <Nul> */
+	if (key == 0)
+	    key = K_ZERO;
     }
     if ((modifiers & MOD_MASK_ALT) && key < 0x80)
     {

@@ -590,10 +590,6 @@ focus_in_event(GtkWidget *widget, GdkEventFocus *focus, gpointer data)
     /* make sure keybord input goes there */
     gtk_widget_grab_focus(gui.drawarea);
 
-#ifdef FEAT_XIM
-    xim_set_focus(TRUE);
-#endif
-
     return TRUE;
 }
 
@@ -605,10 +601,6 @@ focus_out_event(GtkWidget * widget, GdkEventFocus *focus, gpointer data)
 
     if (blink_state != BLINK_NONE)
 	gui_mch_stop_blink();
-
-#ifdef FEAT_XIM
-    xim_set_focus(FALSE);
-#endif
 
     return TRUE;
 }
@@ -713,16 +705,32 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	return TRUE;
 #endif
 
-    /* Check for Alt/Meta key (Mod1Mask) */
-    if (len == 1 && (state & GDK_MOD1_MASK)
-	    && !(key_sym == GDK_BackSpace || key_sym == GDK_Delete))
+    /* Check for Alt/Meta key (Mod1Mask), but not for a BS, DEL or character
+     * that already has the 8th bit set.
+     * Don't do this for <S-M-Tab>, that should become K_S_TAB with ALT. */
+    if (len == 1
+	    && (state & GDK_MOD1_MASK)
+	    && !(key_sym == GDK_BackSpace || key_sym == GDK_Delete)
+	    && (string[0] & 0x80) == 0
+	    && !(key_sym == GDK_Tab && (state & GDK_SHIFT_MASK)))
     {
-	/* Don't do this for <S-M-Tab>, that should become K_S_TAB with ALT. */
-	if (!(key_sym == GDK_Tab && (state & GDK_SHIFT_MASK)))
+	string[0] |= 0x80;
+	state &= ~GDK_MOD1_MASK;	/* don't use it again */
+#ifdef FEAT_MBYTE
+	if (enc_utf8) /* convert to utf-8 */
 	{
-	    string[0] |= 0x80;
-	    state &= ~GDK_MOD1_MASK;	/* don't use it again */
+	    string[1] = string[0] & 0xbf;
+	    string[0] = ((unsigned)string[0] >> 6) + 0xc0;
+	    if (string[1] == CSI)
+	    {
+		string[2] = KS_EXTRA;
+		string[3] = KE_CSI;
+		len = 4;
+	    }
+	    else
+		len = 2;
 	}
+#endif
     }
 
     /* Check for special keys, making sure BS and DEL are recognized. */
@@ -1331,26 +1339,24 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	    || ((char *)data->data)[data->length] != '\0')
     {
 	gtk_drag_finish(context, FALSE, FALSE, time);
-
 	return;
     }
 
-    /* Count how many items there may be and normalize delimiters.
-     */
+    /* Count how many items there may be and normalize delimiters. */
     n = 1;
     copy = strdup((char *)data->data);
     for (i = 0; i < data->length; ++i)
     {
 	if (copy[i] == '\n')
 	    ++n;
-	else if(copy[i] == '\r')
+	else if (copy[i] == '\r')
 	{
 	    copy[i] = '\n';
 	    ++n;
 	}
     }
 
-    fnames = (char_u **) alloc((n + 1) * sizeof(char_u *));
+    fnames = (char_u **)alloc((n + 1) * sizeof(char_u *));
 
     start = copy;
     stop = copy;
@@ -1358,13 +1364,13 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     for (i = 0; i < n; ++i)
     {
 	stop = strchr(start, '\n');
-	if (stop)
+	if (stop != NULL)
 	    *stop = '\0';
 
-	if (!strlen(start))
+	if (strlen(start) == 0)
 	    continue;
 
-	if (strncmp(start, "file:", 5))
+	if (strncmp(start, "file:", 5) != 0)
 	{
 	    int j;
 
@@ -1376,14 +1382,17 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	    return;
 	}
 
-	if (!strncmp(start, "file://localhost", 16))
+	if (strncmp(start, "file://localhost", 16) == 0)
 	{
 	    fnames[nfiles] = (char_u *)strdup(start + 16);
 	    ++nfiles;
 	}
 	else
 	{
-	    fnames[nfiles] = (char_u *)strdup(start + 5);
+	    start += 5;
+	    while (start[0] == '/' && start[1] == '/')
+		++start;
+	    fnames[nfiles] = (char_u *)strdup(start);
 	    ++nfiles;
 	}
 	start = stop + 2;
@@ -1391,15 +1400,13 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
     free(copy);
 
     /* accept */
-    gtk_drag_finish (context, TRUE, FALSE, time);
+    gtk_drag_finish(context, TRUE, FALSE, time);
 
-    /*
-     * Handle dropping a directory on Vim.
-     */
     if (nfiles == 1)
     {
 	if (mch_isdir(fnames[0]))
 	{
+	    /* Handle dropping a directory on Vim. */
 	    if (mch_chdir((char *)fnames[0]) == 0)
 	    {
 		free(fnames[0]);
@@ -1415,7 +1422,7 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	{
 	    if (mch_isdir(fnames[i]))
 	    {
-		free(fnames[i]);
+		vim_free(fnames[i]);
 		fnames[i] = NULL;
 	    }
 	}
@@ -1426,6 +1433,24 @@ drag_data_received(GtkWidget *widget, GdkDragContext *context,
 	/* Shift held down, change to first file's directory */
 	if (fnames[0] != NULL && vim_chdirfile(fnames[0]) == 0)
 	    redo_dirs = TRUE;
+    }
+    else
+    {
+	char_u	dirname[MAXPATHL];
+	char_u	*s;
+
+	/* Shorten dropped file names. */
+	if (mch_dirname(dirname, MAXPATHL) == OK)
+	    for (i = 0; i < nfiles; ++i)
+		if (fnames[i] != NULL)
+		{
+		    s = shorten_fname(fnames[i], dirname);
+		    if (s != NULL && (s = vim_strsave(s)) != NULL)
+		    {
+			vim_free(fnames[i]);
+			fnames[i] = s;
+		    }
+		}
     }
 
     /* Handle the drop, :edit or :split to get to the file */

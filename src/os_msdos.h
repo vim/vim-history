@@ -95,9 +95,9 @@ int mch_rename(const char *OldFile, const char *NewFile);
 #endif
 
 #ifdef DJGPP
-# define mch_mkdir(x, y) mkdir((char *)(x), y)
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
 #else
-# define mch_mkdir(x, y) mkdir((char *)(x))
+# define vim_mkdir(x, y) mkdir((char *)(x))
 #endif
 #define mch_rmdir(x) rmdir((char *)(x))
 

@@ -533,9 +533,10 @@
 
 /*
  * Add "debug" for 'encoding': make uppercase ASCII characters be handled like
- * double-byte characters.
+ * double-byte characters.  Simplistic way to test the double-byte code in a
+ * latin1 environment.
  */
-#define MB_DEBUG
+/* #define MB_DEBUG */
 
 /*
  * +multi_byte_ime	Win32 IME input method.  Requires +multi_byte.
@@ -593,10 +594,9 @@
 
 /*
  * +xfontset		X fontset support.  For outputting wide characters.
- *			Required for XIM.
  */
 #ifndef FEAT_XFONTSET
-# ifdef FEAT_XIM
+# if defined(FEAT_MBYTE) && defined(HAVE_X11)
 #  define FEAT_XFONTSET
 # else
 /* #  define FEAT_XFONTSET */
@@ -964,7 +964,19 @@
 # define FEAT_SIGNS
 #endif
 
-#if defined(FEAT_SUN_WORKSHOP) && defined(FEAT_GUI_MOTIF)
+/*
+ * The following only works fo Motif, currently.
+ */
+#if defined(FEAT_GUI_MOTIF)
+/*
+ * +balloon_eval	Allow balloon expression evaluation. Used with a
+ *			debugger.
+ */
+#if defined(FEAT_TOOLBAR) || defined(FEAT_SUN_WORKSHOP)
+# define FEAT_BEVAL
+#endif
+
+#if defined(FEAT_SUN_WORKSHOP)
 /*
  * The following features are (currently) only used by Sun Visual WorkShop 6.
  * These features could be used with other integrations with debuggers so I've
@@ -987,15 +999,11 @@
 # define FEAT_FOOTER
 
 /*
- * +balloon_eval	Allow balloon expression evaluation. Used with a
- *			debugger.
- */
-# define FEAT_BEVAL
-
-/*
  * +cde_colors		Use CDE colors rather than overriding with explicit
  *			color settings.
  */
 # define FEAT_CDE_COLORS
+#endif
+
 #endif
 

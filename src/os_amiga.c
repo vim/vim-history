@@ -795,6 +795,20 @@ mch_isdir(name)
     return retval;
 }
 
+/*
+ * Create directory "name".
+ */
+    void
+mch_mkdir(name)
+    char_u	*name;
+{
+    BPTR	lock;
+
+    lock = CreateDir(name);
+    if (lock != NULL)
+	UnLock(lock);
+}
+
 #if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return 1 if "name" can be executed, 0 if not.
@@ -1273,7 +1287,7 @@ mch_call_shell(cmd, options)
 	    x = wait();
 	if (x)
 	{
-	    if (!(options & SHELL_SILENT))
+	    if (!(options & SHELL_SILENT) && !emsg_silent)
 	    {
 		msg_putchar('\n');
 		msg_outnum((long)x);

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Yacc
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	February 1, 2001
+" Last Change:	March 1, 2001
 " Option:
 "   yacc_uses_cpp : if this variable exists, then C++ is loaded rather than C
 
@@ -20,8 +20,7 @@ if version >= 600
 elseif exists("yacc_uses_cpp")
   so <sfile>:p:h/cpp.vim
 else
-   so <sfile>:p:h/c.vim
-  endif
+  so <sfile>:p:h/c.vim
 endif
 
 " Clusters

@@ -315,8 +315,6 @@ ui_breakcheck()
 
 #if defined(FEAT_CLIPBOARD) || defined(PROTO)
 
-#define char_class(c)	(c <= ' ' ? ' ' : vim_iswordc(c))
-
 /*
  * Selection stuff using Visual mode, for cutting and pasting text to other
  * windows.
@@ -934,18 +932,23 @@ clip_invert_area(row1, col1, row2, col2)
  */
     static void
 clip_yank_non_visual_selection(row1, col1, row2, col2)
-    int	    row1;
-    int	    col1;
-    int	    row2;
-    int	    col2;
+    int		row1;
+    int		col1;
+    int		row2;
+    int		col2;
 {
-    char_u  *buffer;
-    char_u  *bufp;
-    int	    row;
-    int	    start_col;
-    int	    end_col;
-    int	    line_end_col;
-    int	    add_newline_flag = FALSE;
+    char_u	*buffer;
+    char_u	*bufp;
+    int		row;
+    int		start_col;
+    int		end_col;
+    int		line_end_col;
+    int		add_newline_flag = FALSE;
+    int		len;
+#ifdef FEAT_MBYTE
+    char_u	*p;
+    int		i;
+#endif
 
     /*
      * Make sure row1 <= row2, and if row1 == row2 that col1 <= col2.
@@ -959,9 +962,24 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
     {
 	row = col1; col1 = col2; col2 = row;
     }
+#ifdef FEAT_MBYTE
+    /* correct starting point for being on right halve of double-wide char */
+    p = ScreenLines + LineOffset[row1];
+    if (enc_dbcs != 0)
+	col1 -= (*mb_head_off)(p, p + col1);
+    else if (enc_utf8 && p[col1] == 0)
+	--col1;
+#endif
 
     /* Create a temporary buffer for storing the text */
-    buffer = lalloc((row2 - row1 + 1) * Columns + 1, TRUE);
+    len = (row2 - row1 + 1) * Columns + 1, TRUE;
+#ifdef FEAT_MBYTE
+    if (enc_dbcs != 0)
+	len *= 2;	/* max. 2 bytes per display cell */
+    else if (enc_utf8)
+	len *= 9;	/* max. 3 bytes per display cell + 2 composing chars */
+#endif
+    buffer = lalloc((long_u)len, TRUE);
     if (buffer == NULL)	    /* out of memory */
 	return;
 
@@ -999,9 +1017,57 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
 
 	if (row < screen_Rows && end_col <= screen_Columns)
 	{
-	    STRNCPY(bufp, ScreenLines + LineOffset[row] + start_col,
+#ifdef FEAT_MBYTE
+	    if (enc_dbcs != 0)
+	    {
+		p = ScreenLines + LineOffset[row];
+		for (i = start_col; i < end_col; ++i)
+		    if (enc_dbcs == DBCS_JPNU && p[i] == 0x8e)
+		    {
+			/* single-width double-byte char */
+			*bufp++ = 0x8e;
+			*bufp++ = ScreenLines2[LineOffset[row] + i];
+		    }
+		    else
+		    {
+			*bufp++ = p[i];
+			if (MB_BYTE2LEN(p[i]) == 2)
+			    *bufp++ = p[++i];
+		    }
+	    }
+	    else if (enc_utf8)
+	    {
+		int	off;
+
+		off = LineOffset[row];
+		for (i = start_col; i < end_col; ++i)
+		{
+		    /* The base character is either in ScreenLinesUC[] or
+		     * ScreenLines[]. */
+		    if (ScreenLinesUC[off + i] == 0)
+			*bufp++ = ScreenLines[off + i];
+		    else
+			bufp += utf_char2bytes(ScreenLinesUC[off + i], bufp);
+		    if (ScreenLinesC1[off + i] != 0)
+		    {
+			/* Add one or two composing characters. */
+			bufp += utf_char2bytes(ScreenLinesC1[off + i], bufp);
+			if (ScreenLinesC2[off + i] != 0)
+			    bufp += utf_char2bytes(ScreenLinesC2[off + i],
+									bufp);
+		    }
+		    /* Skip right halve of double-wide character. */
+		    if (ScreenLines[off + i + 1] == 0)
+			++i;
+		}
+	    }
+	    else
+#endif
+	    {
+		STRNCPY(bufp, ScreenLines + LineOffset[row] + start_col,
 							 end_col - start_col);
-	    bufp += end_col - start_col;
+		bufp += end_col - start_col;
+	    }
 	}
     }
 
@@ -1015,40 +1081,51 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
 
 /*
  * Find the starting and ending positions of the word at the given row and
- * column.
+ * column.  Only white-separated words are recognized here.
  */
+#define CHAR_CLASS(c)	(c <= ' ' ? ' ' : vim_iswordc(c))
+
     static void
 clip_get_word_boundaries(cb, row, col)
-    VimClipboard    *cb;
-    int		    row;
-    int		    col;
+    VimClipboard	*cb;
+    int			row;
+    int			col;
 {
-    char    start_class;
-    int	    temp_col;
+    int		start_class;
+    int		temp_col;
+    char_u	*p;
 
     if (row >= screen_Rows || col >= screen_Columns)
 	return;
 
-    start_class = char_class(ScreenLines[LineOffset[row] + col]);
+    p = ScreenLines + LineOffset[row];
+#ifdef FEAT_MBYTE
+    /* With UTF-8 there are zero bytes in the right halve of a double-wide
+     * character. */
+    if (enc_utf8 && p[col] == 0)
+	--col;
+#endif
+    start_class = CHAR_CLASS(p[col]);
 
     temp_col = col;
     for ( ; temp_col > 0; temp_col--)
-	if (char_class(ScreenLines[LineOffset[row] + temp_col - 1])
-							       != start_class)
+	if (CHAR_CLASS(p[temp_col - 1]) != start_class
+#ifdef FEAT_MBYTE
+		&& !(enc_utf8 && p[temp_col - 1] == 0)
+#endif
+		)
 	    break;
-
     cb->word_start_col = temp_col;
 
     temp_col = col;
     for ( ; temp_col < screen_Columns; temp_col++)
-	if (char_class(ScreenLines[LineOffset[row] + temp_col]) != start_class)
+	if (CHAR_CLASS(p[temp_col]) != start_class
+#ifdef FEAT_MBYTE
+		&& !(enc_utf8 && p[temp_col] == 0)
+#endif
+		)
 	    break;
     cb->word_end_col = temp_col;
-
-#ifdef DEBUG_SELECTION
-    printf("Current word: col %u to %u\n", cb->word_start_col,
-	    cb->word_end_col);
-#endif
 }
 
 /*
@@ -1901,6 +1978,16 @@ retnomove:
 	    on_sep_line = col - wp->w_width + 1;
 	else
 	    on_sep_line = 0;
+
+	/* The rightmost character of the status line might be a vertical
+	 * separator character if the is no connecting window to the right. */
+	if (on_status_line && on_sep_line)
+	{
+	    if (stl_connected(wp))
+		on_sep_line = 0;
+	    else
+		on_status_line = 0;
+	}
 #endif
 
 #ifdef FEAT_VISUAL
@@ -2041,7 +2128,9 @@ retnomove:
 		    break;
 		first = FALSE;
 #ifdef FEAT_FOLDING
-		hasFolding(curwin->w_topline, NULL, &curwin->w_topline);
+		if (hasFolding(curwin->w_topline, NULL, &curwin->w_topline)
+			&& curwin->w_topline == curbuf->b_ml.ml_line_count)
+		    break;
 #endif
 	    }
 	    redraw_later(VALID);
@@ -2163,15 +2252,15 @@ mouse_comp_pos(rowp, colp, lnump)
 		col += curwin->w_skipcol;
 		break;
 	    }
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(lnum, NULL, &lnum);
+#endif
 	    if (lnum == curbuf->b_ml.ml_line_count)
 	    {
 		retval = TRUE;
 		break;		/* past end of file */
 	    }
 	    row -= count;
-#ifdef FEAT_FOLDING
-	    (void)hasFolding(lnum, NULL, &lnum);
-#endif
 	    ++lnum;
 	}
     }

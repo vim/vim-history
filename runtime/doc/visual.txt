@@ -1,4 +1,4 @@
-*visual.txt*    For Vim version 6.0w.  Last change: 2000 Jul 07
+*visual.txt*    For Vim version 6.0x.  Last change: 2001 Mar 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -218,6 +218,7 @@ Additionally the following commands can be used:
 	D	delete (3)					|v_D|
 	X	delete (2)					|v_X|
 	Y	yank (2)					|v_Y|
+	p	put						|v_p|
 	J	join (1)					|v_J|
 	U	make uppercase					|v_U|
 	u	make lowercase					|v_u|

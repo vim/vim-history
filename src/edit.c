@@ -327,6 +327,10 @@ edit(cmdchar, startln, count)
 /* GIME_TEST */
     ImeSetOriginMode();
 #endif
+#ifdef FEAT_XIM
+    /* Enable XIM to allow typing language characters directly. */
+    xim_set_focus(TRUE);
+#endif
 #if defined(FEAT_MBYTE) && defined(macintosh)
     KeyScript(previous_script);
 #endif
@@ -1905,8 +1909,7 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 		    while (vim_regexec(&regmatch, buf, (colnr_t)(ptr - buf)))
 		    {
 			ptr = regmatch.startp[0];
-			while (vim_iswordc(*ptr))
-			    ++ptr;
+			ptr = find_word_end(ptr);
 			add_r = ins_compl_add_infercase(regmatch.startp[0],
 					      (int)(ptr - regmatch.startp[0]),
 							    files[i], dir, 0);
@@ -1919,16 +1922,15 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 			     */
 			    for (;;)
 			    {
-				/* Find start of the next word. */
-				while (*ptr && !vim_iswordc(*ptr))
-				    ++ptr;
+				/* Find start of the next word.  Skip white
+				 * space and punctuation. */
+				ptr = find_word_start(ptr);
 				if (*ptr == NUL)
 				    break;
 				wstart = ptr;
 
 				/* Find end of the word and add it. */
-				while (vim_iswordc(*ptr))
-				    ++ptr;
+				ptr = find_word_end(ptr);
 				add_r = ins_compl_add_infercase(wstart,
 					(int)(ptr - wstart), files[i], dir, 0);
 			    }
@@ -1957,6 +1959,53 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
     p_scs = save_p_scs;
     vim_free(regmatch.regprog);
     vim_free(buf);
+}
+
+/*
+ * Find the start of the next word.
+ * Returns a pointer to the first char of the word.  Also stops at a NUL.
+ */
+    char_u *
+find_word_start(ptr)
+    char_u	*ptr;
+{
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	while (*ptr != NUL && *ptr != '\n' && mb_get_class(ptr) <= 1)
+	    ptr += (*mb_ptr2len_check)(ptr);
+    else
+#endif
+	while (*ptr != NUL && *ptr != '\n' && !vim_iswordc(*ptr))
+	    ++ptr;
+    return ptr;
+}
+
+/*
+ * Find the end of the word.  Assumes it starts inside a word.
+ * Returns a pointer to just after the word.
+ */
+    char_u *
+find_word_end(ptr)
+    char_u	*ptr;
+{
+#ifdef FEAT_MBYTE
+    int		start_class;
+
+    if (has_mbyte)
+    {
+	start_class = mb_get_class(ptr);
+	while (*ptr != NUL)
+	{
+	    ptr += (*mb_ptr2len_check)(ptr);
+	    if (mb_get_class(ptr) != start_class)
+		break;
+	}
+    }
+    else
+#endif
+	while (vim_iswordc(*ptr))
+	    ++ptr;
+    return ptr;
 }
 
 /*
@@ -2514,16 +2563,18 @@ ins_compl_get_exp(ini, dir)
 		    if (continue_status & CONT_ADDING)
 		    {
 			tmp_ptr += completion_length;
-			if (vim_iswordc(*tmp_ptr))
+			/* Skip if already inside a word. */
+			if (vim_iswordp(tmp_ptr))
 			    continue;
-			while (*tmp_ptr && !vim_iswordc(*tmp_ptr++))
-			    ;
+			/* Find start of next word. */
+			tmp_ptr = find_word_start(tmp_ptr);
 		    }
-		    while (vim_iswordc(*tmp_ptr))
-			tmp_ptr++;
+		    /* Find end of this word. */
+		    tmp_ptr = find_word_end(tmp_ptr);
 		    len = tmp_ptr - ptr;
+
 		    if ((continue_status & CONT_ADDING)
-			&& len == completion_length)
+						  && len == completion_length)
 		    {
 			if (pos->lnum < ins_buf->b_ml.ml_line_count)
 			{
@@ -2535,10 +2586,10 @@ ins_compl_get_exp(ini, dir)
 			    STRNCPY(IObuff, ptr, len);
 			    ptr = ml_get_buf(ins_buf, pos->lnum + 1, FALSE);
 			    tmp_ptr = ptr = skipwhite(ptr);
-			    while (*tmp_ptr && !vim_iswordc(*tmp_ptr++))
-				;
-			    while (vim_iswordc(*tmp_ptr))
-				tmp_ptr++;
+			    /* Find start of next word. */
+			    tmp_ptr = find_word_start(tmp_ptr);
+			    /* Find end of next word. */
+			    tmp_ptr = find_word_end(tmp_ptr);
 			    if (tmp_ptr > ptr)
 			    {
 				if (*ptr != ')' && IObuff[len-1] != TAB)
@@ -2897,13 +2948,27 @@ ins_complete(c)
 		complete_pat = alloc(quote_meta(NULL, tmp_ptr, temp) + 3);
 		if (complete_pat == NULL)
 		    return FAIL;
-		if (!vim_iswordc(*tmp_ptr) ||
-			(tmp_ptr > line && vim_iswordc(*(tmp_ptr-1))))
+		if (!vim_iswordp(tmp_ptr)
+			|| (tmp_ptr > line
+			    && (
+#ifdef FEAT_MBYTE
+				vim_iswordp(mb_prevptr(line, tmp_ptr))
+#else
+				vim_iswordc(*(tmp_ptr - 1))
+#endif
+				)))
 		    prefix = (char_u *)"";
 		STRCPY((char *)complete_pat, prefix);
 		(void)quote_meta(complete_pat + STRLEN(prefix), tmp_ptr, temp);
 	    }
-	    else if (--temp < 0 || !vim_iswordc(line[temp]))
+	    else if (
+#ifdef FEAT_MBYTE
+		    --temp < 0 || !vim_iswordp(mb_prevptr(line,
+							     line + temp + 1))
+#else
+		    --temp < 0 || !vim_iswordc(line[temp])
+#endif
+		    )
 	    {
 		/* Match any word of at least two chars */
 		complete_pat = vim_strsave((char_u *)"\\<\\k\\k");
@@ -2914,8 +2979,31 @@ ins_complete(c)
 	    }
 	    else
 	    {
-		while (--temp >= 0 && vim_iswordc(line[temp]))
-		    ;
+#ifdef FEAT_MBYTE
+		/* Search the point of change class of multibyte character
+		 * or not a word single byte character backward.  */
+		if (has_mbyte)
+		{
+		    int base_class = 0;
+		    int head_off = (*mb_head_off)(line, line + temp);
+
+		    if (head_off > 0 && temp >= head_off)
+		    {
+			temp -= head_off;
+			base_class = mb_get_class(&line[temp]);
+		    }
+		    while (--temp >= 0)
+		    {
+			head_off = (*mb_head_off)(line, line + temp);
+			if (base_class != mb_get_class(&line[temp - head_off]))
+			    break;
+			temp -= head_off;
+		    }
+		}
+		else
+#endif
+		    while (--temp >= 0 && vim_iswordc(line[temp]))
+			;
 		tmp_ptr += ++temp;
 		if ((temp = (int)complete_col - temp) == 1)
 		{
@@ -3214,14 +3302,31 @@ quote_meta(dest, src, len)
 	    case '^':		/* currently it's not needed. */
 	    case '$':
 		m++;
-		if (dest)
+		if (dest != NULL)
 		    *dest++ = '\\';
 		break;
 	}
-	if (dest)
+	if (dest != NULL)
 	    *dest++ = *src;
+#ifdef FEAT_MBYTE
+	/* Copy remaining bytes of a multibyte character. */
+	if (has_mbyte)
+	{
+	    int i, mb_len;
+
+	    mb_len = (*mb_ptr2len_check)(src) - 1;
+	    if (mb_len > 0 && len >= mb_len)
+		for (i = 0; i < mb_len; ++i)
+		{
+		    --len;
+		    ++src;
+		    if (dest != NULL)
+			*dest++ = *src;
+		}
+	}
+#endif
     }
-    if (dest)
+    if (dest != NULL)
 	*dest = NUL;
 
     return m;
@@ -3433,6 +3538,9 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #endif
     int		first_line = TRUE;
     int		fo_ins_blank;
+#ifdef FEAT_MBYTE
+    int		fo_multibyte;
+#endif
     int		save_char = NUL;
     int		cc;
 
@@ -3441,6 +3549,9 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
     textwidth = comp_textwidth(force_formatting);
     fo_ins_blank = has_format_option(FO_INS_BLANK);
+#ifdef FEAT_MBYTE
+    fo_multibyte = has_format_option(FO_MULTIBYTE);
+#endif
 
     /*
      * Try to break the line in two or more pieces when:
@@ -3494,6 +3605,10 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    colnr_t	len;
 	    colnr_t	virtcol;
 	    char_u	*saved_text = NULL;
+	    colnr_t	col;
+#ifdef FEAT_MBYTE
+	    char_u	*line = NULL;
+#endif
 
 	    virtcol = get_nolist_virtcol();
 	    if (virtcol < (colnr_t)textwidth)
@@ -3518,12 +3633,23 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    }
 	    if ((startcol = curwin->w_cursor.col) == 0)
 		break;
-					/* find column of textwidth border */
+
+	    /* find column of textwidth border */
 	    coladvance((colnr_t)textwidth);
 	    wantcol = curwin->w_cursor.col;
 
 	    curwin->w_cursor.col = startcol - 1;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		/* Correct cursor for multi-byte character. */
+		line = ml_get_curline();
+		curwin->w_cursor.col -=
+			    (*mb_head_off)(line, line + curwin->w_cursor.col);
+	    }
+#endif
 	    foundcol = 0;
+
 	    /*
 	     * Find position to break at.
 	     * Stop at start of line.
@@ -3535,13 +3661,27 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 			|| curwin->w_cursor.col >= Insstart.col))
 	    {
 		cc = gchar_cursor();
+#ifdef FEAT_MBYTE
+		if (cc >= 0x100 && fo_multibyte)
+		{
+		    /* Break at a multi-byte character. */
+		    end_foundcol = curwin->w_cursor.col;
+		    foundcol = curwin->w_cursor.col;
+		    dec_cursor();
+		    if (curwin->w_cursor.col < (colnr_t)wantcol)
+			break;
+		    continue;
+		}
+#endif
 		if (vim_iswhite(cc))
 		{
 		    /* remember position of blank just before text */
 		    end_foundcol = curwin->w_cursor.col;
+
+		    /* find start of sequence of blanks */
 		    while (curwin->w_cursor.col > 0 && vim_iswhite(cc))
 		    {
-			--curwin->w_cursor.col;
+			dec_cursor();
 			cc = gchar_cursor();
 		    }
 		    if (curwin->w_cursor.col == 0 && vim_iswhite(cc))
@@ -3557,18 +3697,25 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 			if (curwin->w_cursor.col == 0)
 			    break;	/* one-letter word at begin */
 
-			--curwin->w_cursor.col;
+			col = curwin->w_cursor.col;
+			dec_cursor();
 			cc = gchar_cursor();
 
 			if (vim_iswhite(cc))
-			    continue;	/* one-letter, contiue */
-			++curwin->w_cursor.col;
+			    continue;	/* one-letter, continue */
+			curwin->w_cursor.col = col;
 		    }
-		    foundcol = curwin->w_cursor.col + 1;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			foundcol = curwin->w_cursor.col
+			   + (*mb_ptr2len_check)(line + curwin->w_cursor.col);
+		    else
+#endif
+			foundcol = curwin->w_cursor.col + 1;
 		    if (curwin->w_cursor.col < (colnr_t)wantcol)
 			break;
 		}
-		--curwin->w_cursor.col;
+		dec_cursor();
 	    }
 
 	    if (foundcol == 0)		/* no spaces, cannot break line */
@@ -3593,11 +3740,8 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	     */
 	    curwin->w_cursor.col = foundcol;
 	    while (cc = gchar_cursor(), vim_iswhite(cc))
-	    {
-		++curwin->w_cursor.col;
-		--startcol;
-	    }
-	    startcol -= foundcol;
+		inc_cursor();
+	    startcol -= curwin->w_cursor.col;
 	    if (startcol < 0)
 		startcol = 0;
 
@@ -4501,7 +4645,7 @@ replace_join(off)
 }
 
 /*
- * Pop characters from the replace stack until a NUL is found, and insert them
+ * Pop bytes from the replace stack until a NUL is found, and insert them
  * before the cursor.  Can only be used in REPLACE or VREPLACE mode.
  */
     static void
@@ -4595,7 +4739,7 @@ replace_flush()
  * Handle doing a BS for one character.
  * cc < 0: replace stack empty, just move cursor
  * cc == 0: character was inserted, delete it
- * cc > 0: character was replace, put original back
+ * cc > 0: character was replaced, put cc (original char) back
  */
     static void
 replace_do_bs()
@@ -4605,7 +4749,15 @@ replace_do_bs()
     cc = replace_pop();
     if (cc > 0)
     {
-	pchar_cursor(cc);
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    del_char(FALSE);
+	    replace_push(cc);
+	}
+	else
+#endif
+	    pchar_cursor(cc);
 	replace_pop_ins();
 	/* mark the buffer as changed and prepare for displaying */
 	changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
@@ -4888,9 +5040,23 @@ in_cinkeys(keytyped, when, line_is_empty)
 		    /* Just completed a word, check if it starts with "look".
 		     * search back for the start of a word. */
 		    line = ml_get_curline();
-		    for (s = line + curwin->w_cursor.col; s > line; --s)
-			if (!vim_iswordc(s[-1]))
-			    break;
+# ifdef FEAT_MBYTE
+		    if (has_mbyte)
+		    {
+			char_u	*n;
+
+			for (s = line + curwin->w_cursor.col; s > line; s = n)
+			{
+			    n = mb_prevptr(line, s);
+			    if (!vim_iswordp(n))
+				break;
+			}
+		    }
+		    else
+# endif
+			for (s = line + curwin->w_cursor.col; s > line; --s)
+			    if (!vim_iswordc(s[-1]))
+				break;
 		    if (s + (p - look) <= line + curwin->w_cursor.col
 			    && (icase
 				? STRNICMP(s, look, p - look)
@@ -4899,6 +5065,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 		}
 		else
 #endif
+		    /* TODO: multi-byte */
 		    if (keytyped == (int)p[-1])
 		{
 		    line = ml_get_cursor();
@@ -5160,6 +5327,10 @@ ins_esc(count, cmdchar)
 #if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
 /* GIME_TEST */
     ImeSetEnglishMode();
+#endif
+#ifdef FEAT_XIM
+    /* Disable XIM to allow typing English directly for Normal mode commands. */
+    xim_set_focus(FALSE);
 #endif
 
 #if defined(FEAT_HANGULIN)
@@ -5727,7 +5898,7 @@ ins_bs(c, mode, inserted_space_p)
 	    else
 	    {
 #ifdef FEAT_MBYTE
-		if (p_deco)
+		if (enc_utf8 && p_deco)
 		    utfc_ptr2char(ml_get_cursor(), &p1, &p2);
 #endif
 		(void)del_char(FALSE);
@@ -5737,7 +5908,7 @@ ins_bs(c, mode, inserted_space_p)
 		 * need to take account of.  Don't back up before the base
 		 * character.
 		 */
-		if (p_deco && (p1 != NUL || p2 != NUL))
+		if (enc_utf8 && p_deco && (p1 != NUL || p2 != NUL))
 		    inc_cursor();
 #endif
 #ifdef FEAT_RIGHTLEFT
@@ -5942,7 +6113,7 @@ ins_s_left()
     if (curwin->w_cursor.lnum > 1 || curwin->w_cursor.col > 0)
     {
 	start_arrow(&curwin->w_cursor);
-	(void)bck_word(1L, 0, FALSE);
+	(void)bck_word(1L, FALSE, FALSE);
 	curwin->w_set_curswant = TRUE;
     }
     else
@@ -6003,7 +6174,7 @@ ins_s_right()
 	    || gchar_cursor() != NUL)
     {
 	start_arrow(&curwin->w_cursor);
-	(void)fwd_word(1L, 0, 0);
+	(void)fwd_word(1L, FALSE, 0);
 	curwin->w_set_curswant = TRUE;
     }
     else

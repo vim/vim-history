@@ -18,6 +18,9 @@
 #ifdef FEAT_GUI_MOTIF
 # define FEAT_GUI_X11
 # include <Xm/Xm.h>
+# ifdef FEAT_BEVAL
+#  include "gui_beval.h"
+# endif
 #endif
 
 #ifdef FEAT_GUI_ATHENA

@@ -885,8 +885,10 @@ typedef enum auto_event EVENT_T;
  */
 enum hlf_value
 {
-    HLF_8 = 0	    /* Meta & special keys listed with ":map" */
-    , HLF_AT	    /* @ and ~ characters at end of screen */
+    HLF_8 = 0	    /* Meta & special keys listed with ":map", text that is
+		       displayed different from what it is */
+    , HLF_AT	    /* @ and ~ characters at end of screen, characters that
+		       don't really exist in the text */
     , HLF_D	    /* directories in CTRL-D listing */
     , HLF_E	    /* error messages */
     , HLF_H	    /* obsolete, ignored */
@@ -1414,7 +1416,7 @@ typedef struct VimClipboard
 /* On Win32 iconv.dll is dynamically loaded. */
 #  ifdef DYNAMIC_ICONV
 #   define ICONV_ENABLED iconv_enabled()
-#   define ICONV_ERRNO (*iconv_errno)
+#   define ICONV_ERRNO (*iconv_errno())
 #  else
 #   define ICONV_ENABLED 1
 #   define ICONV_ERRNO errno

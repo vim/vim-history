@@ -32,7 +32,6 @@ void buflist_slash_adjust __ARGS((void));
 void buflist_altfpos __ARGS((void));
 int otherfile __ARGS((char_u *ffname));
 void fileinfo __ARGS((int fullname, int shorthelp, int dont_truncate));
-void cursor_pos_info __ARGS((void));
 void col_print __ARGS((char_u *buf, int col, int vcol));
 void maketitle __ARGS((void));
 void resettitle __ARGS((void));

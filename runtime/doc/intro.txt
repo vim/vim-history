@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0w.  Last change: 2001 Feb 13
+*intro.txt*     For Vim version 6.0x.  Last change: 2001 Mar 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -471,9 +471,9 @@ flag is excluded from 'cpoptions' (when 'compatible' is not set, it already is
 by default). >
 	:set cpo-=<
 The <> notation uses <lt> to escape the special meaning of key names.  Using a
-backslash also work, but only when 'cpoptions' does not include the 'B' flag.
+backslash also works, but only when 'cpoptions' does not include the 'B' flag.
 
-Examples for using a literal "<Home>" in a mapping: >
+Examples for mapping CTRL-H to the six characters "<Home>": >
 	:imap <C-H> \<Home>
 	:imap <C-H> <lt>Home>
 The first one only works when the 'B' flag is not in 'cpoptions'.  The second

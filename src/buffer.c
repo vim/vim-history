@@ -43,7 +43,6 @@ static int	buf_same_ino __ARGS((buf_t *buf, struct stat *stp));
 #else
 static int	otherfile_buf __ARGS((buf_t *buf, char_u *ffname));
 #endif
-static long	line_count_info __ARGS((char_u *line, long *wc, long limit, int eol_size));
 #ifdef FEAT_TITLE
 static int	ti_change __ARGS((char_u *str, char_u **last));
 #endif
@@ -104,6 +103,10 @@ open_buffer(read_stdin, eap)
     old_curbuf = curbuf;
     modified_was_set = FALSE;
 #endif
+
+    /* mark cursor position as being invalid */
+    changed_line_abv_curs();
+
     if (curbuf->b_ffname != NULL)
     {
 	retval = readfile(curbuf->b_ffname, curbuf->b_fname,
@@ -145,7 +148,7 @@ open_buffer(read_stdin, eap)
 		    ml_delete(line_count, FALSE);
 	    }
 	    /* Put the cursor on the first line. */
-	    curwin->w_cursor.lnum = 0;
+	    curwin->w_cursor.lnum = 1;
 	    curwin->w_cursor.col = 0;
 #ifdef FEAT_AUTOCMD
 	    apply_autocmds(EVENT_STDINREADPOST, NULL, NULL, FALSE, curbuf);
@@ -184,7 +187,9 @@ open_buffer(read_stdin, eap)
 	curbuf->b_flags |= BF_READERR;
 
 #ifdef FEAT_AUTOCMD
-    curwin->w_topline = 1;
+    /* need to set w_topline, unless some autocommand already did that. */
+    if (!(curwin->w_valid & VALID_TOPLINE))
+	curwin->w_topline = 1;
     apply_autocmds(EVENT_BUFENTER, NULL, NULL, FALSE, curbuf);
 #endif
 
@@ -2425,235 +2430,6 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	msg_trunc_attr(buffer, FALSE, 0);
 
     vim_free(buffer);
-}
-
-/*
- *  Count the number of characters and "words" in a line.
- *
- *  "Words" are counted by looking for boundaries between non-space and
- *  space characters.  (it seems to produce results that match 'wc'.)
- *
- *  Return value is character count; word count for the line is ADDED
- *  to "*wc".
- *
- *  The function will only examine the first "limit" characters in the
- *  line, stopping if it encounters an end-of-line (NUL byte).  In that
- *  case, eol_size will be added to the character count to account for
- *  the size of the EOL character.
- */
-    static long
-line_count_info(line, wc, limit, eol_size)
-    char_u	*line;
-    long	*wc;
-    long	limit;
-    int		eol_size;
-{
-    long	i, words = 0;
-    int		is_word = 0;
-
-    for (i = 0; line[i] && i < limit; i++)
-    {
-	if (is_word)
-	{
-	    if (vim_isspace(line[i]))
-	    {
-		words++;
-		is_word = 0;
-	    }
-	}
-	else if (!vim_isspace(line[i]))
-	    is_word = 1;
-    }
-
-    if (is_word)
-	words++;
-    *wc += words;
-
-    /* Add eol_size if the end of line was reached before hitting limit. */
-    if (!line[i] && i < limit)
-	i += eol_size;
-    return i;
-}
-
-/*
- * Give some info about the position of the cursor (for "g CTRL-G").
- * In Visual mode, give some info about the selected region.  (In this case,
- * the *_count_cursor variables store running totals for the selection.)
- */
-    void
-cursor_pos_info()
-{
-    char_u	*p;
-    char_u	buf1[20];
-    char_u	buf2[20];
-    linenr_t	lnum;
-    long	char_count = 0;
-    long	char_count_cursor = 0;
-    int		eol_size;
-    long	last_check = 100000L;
-    long	word_count = 0;
-    long	word_count_cursor = 0;
-#ifdef FEAT_VISUAL
-    long	line_count_selected = 0;
-    pos_t	min_pos, max_pos;
-#endif
-
-    /*
-     * Compute the length of the file in characters.
-     */
-    if (curbuf->b_ml.ml_flags & ML_EMPTY)
-    {
-	MSG(_(no_lines_msg));
-    }
-    else
-    {
-	if (get_fileformat(curbuf) == EOL_DOS)
-	    eol_size = 2;
-	else
-	    eol_size = 1;
-
-#ifdef FEAT_VISUAL
-	if (VIsual_active)
-	{
-	    if (lt(VIsual, curwin->w_cursor))
-	    {
-		min_pos = VIsual;
-		max_pos = curwin->w_cursor;
-	    }
-	    else
-	    {
-		min_pos = curwin->w_cursor;
-		max_pos = VIsual;
-	    }
-	    if (VIsual_mode == Ctrl_V)
-	    {
-		/* For block visual mode, a little monkey business here cuts
-		 * a couple special cases later on. It's not enough to
-		 * just use getvcols here, because those column numbers
-		 * can't be trusted as buffer indices. */
-		if (max_pos.col < min_pos.col)
-		{
-		    min_pos.col += max_pos.col;
-		    max_pos.col = min_pos.col - max_pos.col;
-		    min_pos.col -= max_pos.col;
-		}
-	    }
-	    line_count_selected = max_pos.lnum - min_pos.lnum + 1;
-	}
-#endif
-
-	for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
-	{
-	    /* Check for a CTRL-C every 100000 characters. */
-	    if (char_count > last_check)
-	    {
-		ui_breakcheck();
-		if (got_int)
-		    return;
-		last_check = char_count + 100000L;
-	    }
-
-#ifdef FEAT_VISUAL
-	    /* Do extra processing for VIsual mode. */
-	    if (VIsual_active
-		    && lnum >= min_pos.lnum && lnum <= max_pos.lnum)
-	    {
-		switch (VIsual_mode)
-		{
-		    case Ctrl_V:
-			char_count_cursor += line_count_info(ml_get(lnum)
-				+ min_pos.col, &word_count_cursor,
-			     (long)(max_pos.col - min_pos.col + 1), eol_size);
-			break;
-		    case 'V':
-			char_count_cursor += line_count_info(ml_get(lnum),
-				&word_count_cursor, MAXCOL, eol_size);
-			break;
-		    case 'v':
-			{
-			    colnr_t start_col = (lnum == min_pos.lnum)
-							   ? min_pos.col : 0;
-			    colnr_t end_col = (lnum == max_pos.lnum)
-				      ? max_pos.col - start_col + 1 : MAXCOL;
-
-			    char_count_cursor +=
-				line_count_info(ml_get(lnum) + start_col,
-				 &word_count_cursor, (long)end_col, eol_size);
-			}
-			break;
-		}
-	    }
-	    else
-#endif
-	    {
-		/* In non-visual mode, check for the line the cursor is on */
-		if (lnum == curwin->w_cursor.lnum)
-		{
-		    word_count_cursor += word_count;
-		    char_count_cursor = char_count +
-			line_count_info(ml_get(lnum), &word_count_cursor,
-				  (long)(curwin->w_cursor.col + 1), eol_size);
-		}
-	    }
-	    /* Add to the running totals */
-	    char_count += line_count_info(ml_get(lnum), &word_count, MAXCOL,
-								    eol_size);
-	}
-
-	/* Correction for when last line doesn't have an EOL. */
-	if (!curbuf->b_p_eol && curbuf->b_p_bin)
-	    char_count -= eol_size;
-
-#ifdef FEAT_VISUAL
-	if (VIsual_active)
-	{
-	    if (VIsual_mode == Ctrl_V)
-	    {
-		getvcols(curwin, &min_pos, &max_pos, &min_pos.col,
-			&max_pos.col);
-		sprintf((char *)buf1, _("%ld Cols; "),
-				       (long)(max_pos.col - min_pos.col + 1));
-	    }
-	    else
-		buf1[0] = NUL;
-
-	    sprintf((char *)IObuff,
-	    _("Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Chars"),
-			buf1, line_count_selected,
-			(long)curbuf->b_ml.ml_line_count,
-			word_count_cursor, word_count,
-			char_count_cursor, char_count);
-	}
-	else
-#endif
-	{
-	    p = ml_get_curline();
-	    validate_virtcol();
-	    col_print(buf1, (int)curwin->w_cursor.col + 1,
-		    (int)curwin->w_virtcol + 1);
-	    col_print(buf2, (int)STRLEN(p), linetabsize(p));
-
-	    sprintf((char *)IObuff,
-		_("Col %s of %s; Line %ld of %ld; Word %ld of %ld; Char %ld of %ld"),
-		    (char *)buf1, (char *)buf2,
-		    (long)curwin->w_cursor.lnum,
-		    (long)curbuf->b_ml.ml_line_count,
-		    word_count_cursor, word_count,
-		    char_count_cursor, char_count);
-	}
-
-#ifdef FEAT_MBYTE
-	char_count = bomb_size();
-	if (char_count > 0)
-	    sprintf((char *)IObuff + STRLEN(IObuff), _("(+%ld for BOM)"),
-								  char_count);
-#endif
-	/* Don't shorten this message, the user asked for it. */
-	p = p_shm;
-	p_shm = (char_u *)"";
-	msg(IObuff);
-	p_shm = p;
-    }
 }
 
     void

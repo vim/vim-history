@@ -117,10 +117,10 @@ gui_w16_get_menu_height(
 	int capht = GetSystemMetrics(SM_CYCAPTION);
 
 	/*	get window rect of s_hwnd
-	    get client rect of s_hwnd
-	    get cap height
-	    subtract from window rect, the sum of client height,
-	    (if not maximized)frame thickness, and caption height.
+		 * get client rect of s_hwnd
+		 * get cap height
+		 * subtract from window rect, the sum of client height,
+		 * (if not maximized)frame thickness, and caption height.
 	 */
 	GetWindowRect(s_hwnd, &r1);
 	GetClientRect(s_hwnd, &r2);
@@ -137,38 +137,9 @@ gui_w16_get_menu_height(
 #endif /*FEAT_MENU*/
 
 
-/*
- * Get this message when the user double-clicks the control box.
- */
-    static void
-_OnClose(
-    HWND hwnd)
-{
-    gui_shell_closed();
-}
 
 /*
- * Get a message when the user switches back to vim
- */
-    static LRESULT
-_OnActivateApp(
-    HWND hwnd,
-    BOOL fActivate,
-    DWORD dwThreadId)
-{
-    /* When activated: Check if any file was modified outside of Vim. */
-    if (fActivate)
-	check_timestamps(TRUE);
-#ifdef FEAT_AUTOCMD
-    /* In any case, fire the appropriate autocommand */
-    apply_autocmds(fActivate ? EVENT_FOCUSGAINED : EVENT_FOCUSLOST,
-						   NULL, NULL, FALSE, curbuf);
-#endif
-     return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
-}
-
-/*
- * Get a message when the the window is being destroyed.
+ * Get a message when the window is being destroyed.
  */
     static void
 _OnDestroy(
@@ -296,6 +267,18 @@ _OnPaint(
 	out_flush();	    /* make sure all output has been processed */
 	(void)BeginPaint(hwnd, &ps);
 
+#ifdef FEAT_MBYTE
+	/* prevent multi-byte characters from misprinting on an invalid
+	 * rectangle */
+	if (has_mbyte)
+	{
+	    RECT rect;
+
+	    GetClientRect(hwnd, &rect);
+	    ps.rcPaint.left = rect.left;
+	    ps.rcPaint.right = rect.right;
+	}
+#endif
 
 	if (!IsRectEmpty(&ps.rcPaint))
 	    gui_redraw(ps.rcPaint.left, ps.rcPaint.top,
@@ -329,7 +312,7 @@ _OnSetFocus(
     HWND hwndOldFocus)
 {
     gui_focus_change(TRUE);
-     (void) DefWindowProc(WM_SETFOCUS, hwnd, hwndOldFocus,0)  ;
+    (void)DefWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
 }
 
     static void
@@ -338,32 +321,9 @@ _OnKillFocus(
     HWND hwndNewFocus)
 {
     gui_focus_change(FALSE);
-    (void) DefWindowProc(WM_KILLFOCUS, hwnd, hwndNewFocus,0) ;
+    (void)DefWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
 }
 
-/*
- * Find the scrollbar with the given hwnd.
- */
-	 static scrollbar_t *
-gui_w16_find_scrollbar(HWND hwnd)
-{
-    win_t		*wp;
-
-    if (gui.bottom_sbar.id == hwnd)
-	return &gui.bottom_sbar;
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
-    {
-	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
-	    return &wp->w_scrollbars[SBAR_LEFT];
-	if (wp->w_scrollbars[SBAR_RIGHT].id == hwnd)
-	    return &wp->w_scrollbars[SBAR_RIGHT];
-    }
-    return NULL;
-}
 
     static int
 _OnScroll(
@@ -376,8 +336,9 @@ _OnScroll(
     long	val;
     int		dragging = FALSE;
     int		nPos;
+    static UINT	prev_code = 0;   /* code of previous call */
 
-    sb = gui_w16_find_scrollbar(hwndCtl);
+    sb = gui_mswin_find_scrollbar(hwndCtl);
     if (sb == NULL)
 	return 0;
 
@@ -426,20 +387,24 @@ _OnScroll(
 	    val = sb_info->max;
 	    break;
 	case SB_ENDSCROLL:
-	    /*
-	     * "pos" only gives us 16-bit data.  In case of large file, use
-	     * GetScrollPos() which returns 32-bit.  Unfortunately it is not
-	     * valid while the scrollbar is being dragged.
-	     */
-	    val = GetScrollPos(hwndCtl, SB_CTL);
-	    if (sb->scroll_shift > 0)
-		val <<= sb->scroll_shift;
+	    if (prev_code == SB_THUMBTRACK)
+	    {
+		/*
+		 * "pos" only gives us 16-bit data.  In case of large file,
+		 * use GetScrollPos() which returns 32-bit.  Unfortunately it
+		 * is not valid while the scrollbar is being dragged.
+		 */
+		val = GetScrollPos(hwndCtl, SB_CTL);
+		if (sb->scroll_shift > 0)
+		    val <<= sb->scroll_shift;
+	    }
 	    break;
 
 	default:
 	    /* TRACE("Unknown scrollbar event %d\n", code); */
 	    return 0;
     }
+    prev_code = code;
 
     if (sb->scroll_shift > 0)
 	nPos = val >> sb->scroll_shift;
@@ -560,11 +525,6 @@ _OnWindowPosChanging(
 
 
 
-    static BOOL
-_OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
-{
-    return 0;
-}
 
 
     static LRESULT CALLBACK
@@ -611,7 +571,7 @@ _WndProc(
 	HANDLE_MSG(hwnd, WM_ACTIVATEAPP, _OnActivateApp);
 
     case WM_QUERYENDSESSION:	/* System wants to go down. */
-	gui_shell_closed();    /* Will exit when no changed buffers. */
+	gui_shell_closed();	/* Will exit when no changed buffers. */
 	return FALSE;		/* Do NOT allow system to go down. */
 
     case WM_ENDSESSION:
@@ -639,8 +599,11 @@ _WndProc(
 
     case WM_SYSKEYUP:
 #ifdef FEAT_MENU
+	/* Only when menu is active, ALT key is used for that. */
 	if (gui.menu_is_active)
+	{
 	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
 	else
 #endif
 	    return 0;
@@ -660,7 +623,7 @@ _WndProc(
 	    int	idx;
 	    vimmenu_t *pMenu;
 
-	    idButton = (UINT)(wParam);
+	    idButton = (UINT)LOWORD(wParam);
 	    pMenu = gui_mswin_find_menu(root_menu, idButton);
 	    if (pMenu)
 	    {
@@ -680,7 +643,7 @@ _WndProc(
 	{
 	    LRESULT	result;
 	    int x, y;
-	    int xPos = LOWORD(lParam);
+	    int xPos = GET_X_LPARAM(lParam);
 
 	    result = DefWindowProc(hwnd, uMsg, wParam, lParam);
 	    if (result == HTCLIENT)
@@ -771,12 +734,16 @@ gui_mch_init(void)
 	wndclass.lpszMenuName = NULL;
 	wndclass.lpszClassName = szVimWndClass;
 
-	if (RegisterClass(&wndclass) == 0)
+    if ((
+#ifdef GLOBAL_IME
+	atom =
+#endif
+		RegisterClass(&wndclass)) == 0)
 	    return FAIL;
     }
 
     s_hwnd = CreateWindow(
-	szVimWndClass, "Vim W16 GUI",
+	szVimWndClass, "Vim MSWindows GUI",
 	WS_OVERLAPPEDWINDOW,
 	CW_USEDEFAULT, CW_USEDEFAULT,
 	100,				/* Any value will do */
@@ -786,6 +753,10 @@ gui_mch_init(void)
 
     if (s_hwnd == NULL)
 	return FAIL;
+
+#ifdef GLOBAL_IME
+    global_ime_init(atom, s_hwnd);
+#endif
 
     /* Create the text area window */
     if (GetClassInfo(s_hinst, szTextAreaClass, &wndclass) == 0) {
@@ -874,12 +845,12 @@ gui_mch_init(void)
 
     /* Initialise the struct */
     s_findrep_struct.lStructSize = sizeof(s_findrep_struct);
-    s_findrep_struct.lpstrFindWhat = alloc(256);
+    s_findrep_struct.lpstrFindWhat = alloc(MSWIN_FR_BUFSIZE);
     s_findrep_struct.lpstrFindWhat[0] = NUL;
-    s_findrep_struct.lpstrReplaceWith = alloc(256);
+    s_findrep_struct.lpstrReplaceWith = alloc(MSWIN_FR_BUFSIZE);
     s_findrep_struct.lpstrReplaceWith[0] = NUL;
-    s_findrep_struct.wFindWhatLen = 256;
-    s_findrep_struct.wReplaceWithLen = 256;
+    s_findrep_struct.wFindWhatLen = MSWIN_FR_BUFSIZE;
+    s_findrep_struct.wReplaceWithLen = MSWIN_FR_BUFSIZE;
 #endif
 
     return OK;
@@ -898,6 +869,10 @@ gui_mch_exit(int rc)
 	destroying = TRUE;	/* ignore WM_DESTROY message now */
 	DestroyWindow(s_hwnd);
     }
+
+#ifdef GLOBAL_IME
+    global_ime_end();
+#endif
 }
 
 
@@ -1007,99 +982,7 @@ gui_mch_set_scrollbar_thumb(
     SetScrollPos(sb->id, SB_CTL, (int) val, TRUE);
 }
 
-#if defined(FEAT_WINDOWS) || defined(PROTO)
-    void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
-{
-    DestroyWindow(sb->id);
-}
-#endif
 
-/*
- * Initialise vim to use the font with the given name.	Return FAIL if the font
- * could not be loaded, OK otherwise.
- */
-    int
-gui_mch_init_font(char_u *font_name, int fontset)
-{
-    LOGFONT	lf;
-    GuiFont	font = NOFONT;
-    char	*p;
-
-    /* Load the font */
-    if (get_logfont(&lf, font_name))
-	font = get_font_handle(&lf);
-    if (font == NOFONT)
-	return FAIL;
-    if (font_name == NULL)
-	font_name = lf.lfFaceName;
-    gui_mch_free_font(gui.norm_font);
-    gui.norm_font = font;
-    current_font_height = lf.lfHeight;
-    GetFontSize(font);
-    hl_set_font_name(lf.lfFaceName);
-    if (STRCMP(font_name, "*") == 0)
-    {
-	struct charset_pair *cp;
-
-	/* Try to find a charset we recognize. */
-	for (cp = charset_pairs; cp->name != NULL; ++cp)
-	    if (lf.lfCharSet == cp->charset)
-		break;
-
-	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
-		    + (cp->name == NULL ? 0 : strlen(cp->name) + 2)));
-	if (p != NULL)
-	{
-	    /* make a normal font string out of the lf thing:*/
-	    sprintf(p, "%s:h%d", lf.lfFaceName, pixels_to_points(
-			 lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight, TRUE));
-	    vim_free(p_guifont);
-	    p_guifont = p;
-	    while (*p)
-	    {
-		if (*p == ' ')
-		    *p = '_';
-		++p;
-	    }
-#ifndef MSWIN16_FASTTEXT
-	    if (lf.lfItalic)
-		strcat(p, ":i");
-	    if (lf.lfWeight >= FW_BOLD)
-		strcat(p, ":b");
-#endif
-	    if (lf.lfUnderline)
-		strcat(p, ":u");
-	    if (lf.lfStrikeOut)
-		strcat(p, ":s");
-	    if (cp->name != NULL)
-	    {
-		strcat(p, ":c");
-		strcat(p, cp->name);
-	    }
-	}
-    }
-#ifndef MSWIN16_FASTTEXT
-    if (!lf.lfItalic)
-    {
-	lf.lfItalic = TRUE;
-	gui.ital_font = get_font_handle(&lf);
-	lf.lfItalic = FALSE;
-    }
-    if (lf.lfWeight < FW_BOLD)
-    {
-	lf.lfWeight = FW_BOLD;
-	gui.bold_font = get_font_handle(&lf);
-	if (!lf.lfItalic)
-	{
-	    lf.lfItalic = TRUE;
-	    gui.boldital_font = get_font_handle(&lf);
-	}
-    }
-#endif
-
-    return OK;
-}
 
 
 /*
@@ -1265,17 +1148,6 @@ gui_mch_flash(int msec)
 }
 
 
-/*
- * Set the window title
- */
-    void
-gui_mch_settitle(
-    char_u  *title,
-    char_u  *icon)
-{
-    if (title != NULL)
-	SetWindowText(s_hwnd, (LPCSTR)title);
-}
 
 
 
@@ -1728,8 +1600,8 @@ dialog_callback(
 	/* Set focus to the dialog.  Set the default button, if specified. */
 	(void)SetFocus(hwnd);
 	if (dialog_default_button > 0)
-	    SetFocus(GetDlgItem(hwnd, dialog_default_button + IDCANCEL));
-	return (FALSE);
+	    (void)SetFocus(GetDlgItem(hwnd, dialog_default_button + IDCANCEL));
+	return FALSE;
     }
 
     if (message == WM_COMMAND)
@@ -2008,7 +1880,7 @@ gui_mch_dialog(
 	 * NOTE:
 	 * setting the BS_DEFPUSHBUTTON style doesn't work because Windows sets
 	 * the focus to the first tab-able button and in so doing makes that
-	 * the default!! Grrr.	Workaround: Make the default button the only
+	 * the default!! Grrr.  Workaround: Make the default button the only
 	 * one with WS_TABSTOP style. Means user can't tab between buttons, but
 	 * he/she can use arrow keys.
 	 */

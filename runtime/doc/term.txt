@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0w.  Last change: 2001 Jan 25
+*term.txt*      For Vim version 6.0x.  Last change: 2001 Mar 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -710,7 +710,11 @@ For MS-DOS and xterm the time for double clicking can be set with the
 Vim.
 An example, for using a double click to jump to the tag under the cursor: >
 	:map <2-LeftMouse> :exe "tag ". expand("<cword>")<CR>
-<
+
+Dragging the mouse with a double click (button-down, button-up, button-down
+and then drag) will result in whole words to be selected.  This continues
+until the button is released, the selection is per character again.
+
 							*gpm-mouse*
 The GPM mouse is only supported when the |+mouse_gpm| feature was enabled at
 compile time.  The GPM mouse driver (Linux console) does not support quadruple

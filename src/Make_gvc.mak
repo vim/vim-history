@@ -2858,6 +2858,7 @@ DEP_CPP_GUI_W=\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
+	".\gui_w48.c"\
 	".\keymap.h"\
 	".\macros.h"\
 	".\option.h"\
@@ -2881,6 +2882,7 @@ DEP_CPP_GUI_W=\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
+	".\gui_w48.c"\
 	".\keymap.h"\
 	".\macros.h"\
 	".\option.h"\
@@ -2906,6 +2908,7 @@ DEP_CPP_GUI_W=\
 	".\feature.h"\
 	".\globals.h"\
 	".\gui.h"\
+	".\gui_w48.c"\
 	".\keymap.h"\
 	".\macros.h"\
 	".\option.h"\

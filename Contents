@@ -9,11 +9,11 @@ Vim		Vi IMproved.  A clone of the UNIX text editor Vi.  Very useful
 		messages, shows current file name in window title, on-line
 		help, rectangular cut/paste, etc., etc., etc...
 
-		Version 6.0w.  Also runs under UNIX, MSDOS and other systems.
-		vim60wrt.tgz  contains the documentation and syntax files.
-		vim60wbin.tgz contains the normal binaries.
-		vim60wbig.tgz contains a binary with more features.
-		vim60wsrc.tgz contains the sources.
+		Version 6.0x.  Also runs under UNIX, MSDOS and other systems.
+		vim60xrt.tgz  contains the documentation and syntax files.
+		vim60xbin.tgz contains the normal binaries.
+		vim60xbig.tgz contains a binary with more features.
+		vim60xsrc.tgz contains the sources.
 		Author: Bram Moolenaar et al.
 
 

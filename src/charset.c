@@ -126,7 +126,7 @@ buf_init_chartab(buf, global)
     {
 #ifdef FEAT_MBYTE
 	/* double-byte characters are probably word characters */
-	if (enc_dbcs && MB_BYTE2LEN(c) == 2)
+	if (enc_dbcs != 0 && MB_BYTE2LEN(c) == 2)
 	    buf->b_chartab[c] = TRUE;
 	else
 #endif
@@ -265,18 +265,18 @@ buf_init_chartab(buf, global)
 
 #if defined(FEAT_STL_OPT) || defined(FEAT_WINDOWS) || defined(PROTO)
 /*
- * Translate any special characters in buf[bufsize].
+ * Translate any special characters in buf[bufsize] in-place.
  * If there is not enough room, not all characters will be translated.
  */
     void
 trans_characters(buf, bufsize)
-    char_u  *buf;
-    int	    bufsize;
+    char_u	*buf;
+    int		bufsize;
 {
-    int	    len;	    /* length of string needing translation */
-    int	    room;	    /* room in buffer after string */
-    char_u  *new;	    /* translated character */
-    int	    new_len;	    /* length of new[] */
+    int		len;		/* length of string needing translation */
+    int		room;		/* room in buffer after string */
+    char_u	*trs;		/* translated character */
+    int		trs_len;	/* length of trs[] */
 
     len = STRLEN(buf);
     room = bufsize - len;
@@ -284,24 +284,24 @@ trans_characters(buf, bufsize)
     {
 #ifdef FEAT_MBYTE
 	/* Assume a multi-byte character doesn't need translation. */
-	if (has_mbyte && (new_len = (*mb_ptr2len_check)(buf)) > 1)
-	    len -= new_len;
+	if (has_mbyte && (trs_len = (*mb_ptr2len_check)(buf)) > 1)
+	    len -= trs_len;
 	else
 #endif
 	{
-	    new = transchar(*buf);
-	    new_len = STRLEN(new);
-	    if (new_len > 1)
+	    trs = transchar(*buf);
+	    trs_len = STRLEN(trs);
+	    if (trs_len > 1)
 	    {
-		room -= new_len - 1;
+		room -= trs_len - 1;
 		if (room <= 0)
 		    return;
-		mch_memmove(buf + new_len, buf + 1, (size_t)len);
+		mch_memmove(buf + trs_len, buf + 1, (size_t)len);
 	    }
-	    mch_memmove(buf, new, (size_t)new_len);
+	    mch_memmove(buf, trs, (size_t)trs_len);
 	    --len;
 	}
-	buf += new_len;
+	buf += trs_len;
     }
 }
 #endif
@@ -660,12 +660,36 @@ vim_isIDc(c)
 /*
  * return TRUE if 'c' is a keyword character: Letters and characters from
  * 'iskeyword' option for current buffer.
+ * For multi-byte characters mb_get_class() is used (builtin rules).
  */
     int
 vim_iswordc(c)
     int c;
 {
+#ifdef FEAT_MBYTE
+    if (c >= 0x100)
+    {
+	if (enc_dbcs != 0)
+	    return dbcs_class((unsigned)c >> 8, c & 0xff) >= 2;
+	if (enc_utf8)
+	    return utf_class(c) >= 2;
+    }
+#endif
     return (c > 0 && c < 0x100 && curbuf->b_chartab[c]);
+}
+
+/*
+ * Just like vim_iswordc() but uses a pointer to the (multi-byte) character.
+ */
+    int
+vim_iswordp(p)
+    char_u *p;
+{
+#ifdef FEAT_MBYTE
+    if (has_mbyte && MB_BYTE2LEN(*p) > 1)
+	return mb_get_class(p) >= 2;
+#endif
+    return curbuf->b_chartab[*p];
 }
 
 #if defined(FEAT_SYN_HL) || defined(PROTO)

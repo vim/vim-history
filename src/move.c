@@ -72,8 +72,7 @@ comp_botline(wp)
 	    n = plines_win(wp, lnum, TRUE);
 	if (
 #ifdef FEAT_FOLDING
-		lnum <= wp->w_cursor.lnum
-		&& last >= wp->w_cursor.lnum
+		lnum <= wp->w_cursor.lnum && last >= wp->w_cursor.lnum
 #else
 		lnum == wp->w_cursor.lnum
 #endif
@@ -889,8 +888,8 @@ curs_columns(scroll)
      */
 #ifdef FEAT_FOLDING
     if (curwin->w_cline_folded)
-	/* In a folded line the cursor is always in column 0 */
-	startcol = curwin->w_virtcol = endcol = 0;
+	/* In a folded line the cursor is always in the first column */
+	startcol = curwin->w_virtcol = endcol = curwin->w_leftcol;
     else
 #endif
 	getvcol(curwin, &curwin->w_cursor,

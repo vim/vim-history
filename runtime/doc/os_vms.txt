@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0w.  Last change: 2000 Sep 1
+*os_vms.txt*    For Vim version 6.0x.  Last change: 2000 Sep 1
 
 
 		  VIM REFERENCE MANUAL

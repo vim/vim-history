@@ -291,7 +291,8 @@ static win_t *find_win_by_nr __ARGS((VAR vp));
 static pos_t *var2fpos __ARGS((VAR varp, int lnum));
 static int get_env_len __ARGS((char_u **arg));
 static int get_id_len __ARGS((char_u **arg));
-static int get_func_len __ARGS((char_u **arg));
+static int get_func_len __ARGS((char_u **arg, char_u **alias));
+static char_u *find_name_end __ARGS((char_u *arg, char_u **expr_start, char_u **expr_end));
 static int eval_isnamec __ARGS((int c));
 static int find_vim_var __ARGS((char_u *name, int len));
 static int get_var_var __ARGS((char_u *name, int len, VAR retvar));
@@ -321,6 +322,11 @@ static void cat_func_name __ARGS((char_u *buf, ufunc_t *fp));
 static ufunc_t *find_func __ARGS((char_u *name));
 static void call_func __ARGS((ufunc_t *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
 
+#define FEAT_MAGIC_BRACES
+
+#ifdef FEAT_MAGIC_BRACES
+static char_u * make_expanded_name __ARGS((char_u *in_start,  char_u *expr_start,  char_u *expr_end,  char_u *in_end));
+#endif
 
 #if defined(FEAT_STL_OPT) || defined(PROTO)
 /*
@@ -527,6 +533,74 @@ eval_foldexpr(arg, cp)
 }
 #endif
 
+#ifdef FEAT_MAGIC_BRACES
+/*
+ * Expands out the 'magic' {}'s in a variable/function name.
+ * Note that this can call itself recursively, to deal with
+ * constructs like foo{bar}{baz}{bam}
+ * The four pointer arguments point to "foo{expre}ss{ion}bar"
+ *			"in_start"      ^
+ *			"expr_start"	   ^
+ *			"expr_end"		 ^
+ *			"in_end"			    ^
+ *
+ * Returns a new allocated string, which the caller must free.
+ * Returns NULL for failure.
+ */
+    static char_u *
+make_expanded_name(in_start, expr_start, expr_end, in_end)
+    char_u	*in_start;
+    char_u	*expr_start;
+    char_u	*expr_end;
+    char_u	*in_end;
+{
+    char_u	c1;
+    char_u	*retval = NULL;
+    char_u	*temp_result;
+
+    *expr_start	= NUL;
+    *expr_end = NUL;
+    c1 = *in_end;
+    *in_end = NUL;
+
+    temp_result = eval_to_string(expr_start + 1, NULL);
+    if (temp_result != NULL)
+    {
+	retval = alloc(STRLEN(temp_result) + (expr_start - in_start)
+						   + (in_end - expr_end) + 1);
+
+	if (retval != NULL)
+	{
+	    STRCPY(retval, in_start);
+	    STRCAT(retval, temp_result);
+	    STRCAT(retval, expr_end + 1);
+	}
+
+	vim_free(temp_result);
+    }
+
+    *in_end = c1;		/* put char back for error messages */
+    *expr_start = '{';
+    *expr_end = '}';
+
+    if (retval != NULL)
+    {
+	temp_result = find_name_end(retval, &expr_start, &expr_end);
+	if (expr_start != NULL)
+	{
+	    /* Further expansion! */
+	    temp_result = make_expanded_name(retval, expr_start,
+						       expr_end, temp_result);
+	    vim_free(retval);
+	    retval = temp_result;
+	}
+    }
+
+    return retval;
+
+}
+#endif /* FEAT_MAGIC_BRACES */
+
 /*
  * ":let var = expr"	assignment command.
  * ":let var"		list one variable value
@@ -675,9 +749,24 @@ ex_let(eap)
 
 	    /*
 	     * ":let &option = expr": Set option value.
+	     * ":let &l:option = expr": Set local option value.
+	     * ":let &g:option = expr": Set global option value.
 	     */
 	    else if (*arg == '&')
 	    {
+		int opt_flags = 0;
+
+		if (*arg == 'g' && arg[1] == ':')
+		{
+		    opt_flags = OPT_GLOBAL;
+		    arg += 2;
+		}
+		else if (*arg == 'l' && arg[1] == ':')
+		{
+		    opt_flags = OPT_LOCAL;
+		    arg += 2;
+		}
+
 		/*
 		 * Find the end of the name;
 		 */
@@ -690,7 +779,7 @@ ex_let(eap)
 		    c1 = *p;
 		    *p = NUL;
 		    set_option_value(arg, get_var_number(&retvar),
-					  get_var_string(&retvar), OPT_LOCAL);
+					  get_var_string(&retvar), opt_flags);
 		    *p = c1;		    /* put back for error messages */
 		}
 	    }
@@ -713,13 +802,30 @@ ex_let(eap)
 	     */
 	    else if (eval_isnamec(*arg) && !isdigit(*arg))
 	    {
-		/*
-		 * Find the end of the name;
-		 */
-		for (p = arg; eval_isnamec(*p); ++p)
-		    ;
+		char_u *expr_start;
+		char_u *expr_end;
+
+		/* Find the end of the name. */
+		p = find_name_end(arg, &expr_start, &expr_end);
+
 		if (*skipwhite(p) != '=')
 		    EMSG(_(e_letunexp));
+#ifdef FEAT_MAGIC_BRACES
+		else if (expr_start != NULL)
+		{
+		    char_u  *temp_string;
+
+		    temp_string = make_expanded_name(arg, expr_start,
+								 expr_end, p);
+		    if (temp_string == NULL)
+			EMSG2(_(e_invarg2), arg);
+		    else
+		    {
+			set_var(temp_string, &retvar);
+			vim_free(temp_string);
+		    }
+		}
+#endif
 		else
 		{
 		    c1 = *p;
@@ -835,6 +941,7 @@ ex_call(eap)
 {
     char_u	*arg = eap->arg;
     char_u	*startarg;
+    char_u	*alias;
     char_u	*name;
     var		retvar;
     int		len;
@@ -843,14 +950,17 @@ ex_call(eap)
     int		failed = FALSE;
 
     name = arg;
-    len = get_func_len(&arg);
+    len = get_func_len(&arg, &alias);
+    if (alias != NULL)
+	name = alias;
+
     startarg = arg;
     retvar.var_type = VAR_UNKNOWN;	/* clear_var() uses this */
 
     if (*startarg != '(')
     {
 	EMSG2(_("Missing braces: %s"), name);
-	return;
+	goto end;
     }
 
     /*
@@ -890,6 +1000,11 @@ ex_call(eap)
 	else
 	    eap->nextcmd = check_nextcmd(arg);
     }
+
+end:
+    if (alias != NULL)
+	vim_free(alias);
+
 }
 
 /*
@@ -1655,6 +1770,7 @@ eval7(arg, retvar, evaluate)
     int		val;
     char_u	*start_leader, *end_leader;
     int		ret = OK;
+    char_u	*alias;
 
     /*
      * Initialise variable so that clear_var() can't mistake this for a string
@@ -1749,8 +1865,11 @@ eval7(arg, retvar, evaluate)
      * Must be a variable or function name then.
      */
     default:	s = *arg;
-		len = get_func_len(arg);
-		if (len)
+		len = get_func_len(arg, &alias);
+		if (alias != NULL)
+		    s = alias;
+
+		if (len != 0)
 		{
 		    if (**arg == '(')		/* recursive! */
 			ret = get_func_var(s, len, retvar, arg,
@@ -1761,6 +1880,10 @@ eval7(arg, retvar, evaluate)
 		}
 		else
 		    ret = FAIL;
+
+		if (alias != NULL)
+		    vim_free(alias);
+
 		break;
     }
     *arg = skipwhite(*arg);
@@ -2006,7 +2129,7 @@ get_string_var(arg, retvar, evaluate)
 
 			    /* Special key, e.g.: "\<C-W>" */
 		case '<': extra = trans_special(&p, name + i, FALSE);
-			  if (extra)
+			  if (extra != 0)
 			  {
 			      i += extra;
 			      --p;
@@ -4266,6 +4389,9 @@ f_iconv(argvars, retvar)
     str = get_var_string(&argvars[0]);
     from = enc_canonize(enc_skip(get_var_string_buf(&argvars[1], buf1)));
     to = enc_canonize(enc_skip(get_var_string_buf(&argvars[2], buf2)));
+# ifdef USE_ICONV
+    vimconv.vc_fd = (iconv_t)-1;
+# endif
     convert_setup(&vimconv, from, to);
 
     /* If the encodings are equal, no conversion needed. */
@@ -4348,7 +4474,8 @@ f_input(argvars, retvar)
 	cmdline_row = msg_row;
     }
 
-    stuffReadbuffSpec(get_var_string_buf(&argvars[1], buf));
+    if (argvars[1].var_type != VAR_UNKNOWN)
+	stuffReadbuffSpec(get_var_string_buf(&argvars[1], buf));
 
     retvar->var_val.var_string =
 		getcmdline_prompt(inputsecret_flag ? NUL : '@', p, echo_attr);
@@ -5740,12 +5867,22 @@ get_id_len(arg)
  * Get the length of the name of a function.
  * "arg" is advanced to the first non-white character after the name.
  * Return 0 if something is wrong.
+ * If the name contains 'magic' {}'s, expand them and return the
+ * expanded name in an allocated string via 'alias' - caller must free.
  */
     static int
-get_func_len(arg)
+get_func_len(arg, alias)
     char_u	**arg;
+    char_u	**alias;
 {
     int		len;
+#ifdef FEAT_MAGIC_BRACES
+    char_u	*p;
+    char_u	*expr_start;
+    char_u	*expr_end;
+#endif
+
+    *alias = NULL;  /* default to no alias */
 
     if ((*arg)[0] == K_SPECIAL && (*arg)[1] == KS_EXTRA
 						  && (*arg)[2] == (int)KE_SNR)
@@ -5759,16 +5896,78 @@ get_func_len(arg)
     {
 	/* literal "<SID>", "s:" or "<SNR>" */
 	*arg += len;
-	return get_id_len(arg) + len;
     }
-    return get_id_len(arg);
+
+#ifdef FEAT_MAGIC_BRACES
+    /*
+     * Find the end of the name;
+     */
+    p = find_name_end(*arg, &expr_start, &expr_end);
+    /* check for {} construction */
+    if (expr_start != NULL)
+    {
+	char_u	*temp_string;
+
+	/*
+	 * Include any <SID> etc in the expanded string:
+	 * Thus the -len here.
+	 */
+	temp_string = make_expanded_name(*arg - len, expr_start, expr_end, p);
+	if (temp_string != NULL)
+	{
+	    *alias = temp_string;
+	    *arg = skipwhite(p);
+	    return STRLEN(temp_string);
+	}
+    }
+#endif
+
+    return get_id_len(arg) + len;
 }
+
+    static char_u *
+find_name_end(arg, expr_start, expr_end)
+    char_u	*arg;
+    char_u	**expr_start;
+    char_u	**expr_end;
+{
+    int		nesting = 0;
+    char_u	*p;
+
+    *expr_start = NULL;
+    *expr_end = NULL;
+
+    for (p = arg; (*p != NUL && (eval_isnamec(*p) || nesting != 0)); ++p)
+    {
+#ifdef FEAT_MAGIC_BRACES
+	if (*p == '{')
+	{
+	    nesting++;
+	    if (*expr_start == NULL)
+		*expr_start = p;
+	}
+	else if (*p == '}')
+	{
+	    nesting--;
+	    if (nesting == 0 && *expr_end == NULL)
+		*expr_end = p;
+	}
+#endif
+    }
+
+    return p;
+}
+
 
     static int
 eval_isnamec(c)
     int	    c;
 {
+#ifdef FEAT_MAGIC_BRACES
+    return (isalpha(c) || isdigit(c) || c == '_' || c == ':' || c == '{' || c == '}');
+#else
     return (isalpha(c) || isdigit(c) || c == '_' || c == ':');
+#endif
 }
 
 /*
@@ -6902,35 +7101,48 @@ trans_function_name(pp)
     char_u	*name;
     char_u	*start;
     char_u	*end;
-    int		j;
+    int		lead;
     char_u	sid_buf[20];
+    char_u	*temp_string = NULL;
+    char_u	*expr_start, *expr_end;
+    int		len;
 
     /* A name starting with "<SID>" or "<SNR>" is local to a script. */
     start = *pp;
-    j = eval_fname_script(start);
-    if (j > 0)
-	start += j;
+    lead = eval_fname_script(start);
+    if (lead > 0)
+	start += lead;
     else if (!isupper(*start))
     {
 	EMSG2(_("Function name must start with a capital: %s"), start);
 	return NULL;
     }
-    for (end = start; isalpha(*end) || isdigit(*end) || *end == '_'; ++end)
-	;
+    end = find_name_end(start, &expr_start, &expr_end);
     if (end == start)
     {
 	EMSG(_("Function name required"));
 	return NULL;
     }
+    if (expr_start != NULL)
+    {
+	/* expand magic curlies */
+	temp_string = make_expanded_name(start, expr_start, expr_end, end);
+	if (temp_string == NULL)
+	    return NULL;
+	start = temp_string;
+	len = STRLEN(temp_string);
+    }
+    else
+	len = end - start;
 
     /*
      * Copy the function name to allocated memory.
      * Accept <SID>name() inside a script, translate into <SNR>123_name().
      * Accept <SNR>123_name() outside a script.
      */
-    if (start > *pp)
+    if (lead > 0)
     {
-	j = 3;
+	lead = 3;
 	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
 	{
 	    if (current_SID <= 0)
@@ -6939,26 +7151,28 @@ trans_function_name(pp)
 		return NULL;
 	    }
 	    sprintf((char *)sid_buf, "%ld_", (long)current_SID);
-	    j += STRLEN(sid_buf);
+	    lead += STRLEN(sid_buf);
 	}
     }
     else
-	j = 0;
-    name = alloc((unsigned)(end - start + j + 1));
-    if (name == NULL)
-	return NULL;
-    if (start > *pp)
+	lead = 0;
+    name = alloc((unsigned)(len + lead + 1));
+    if (name != NULL)
     {
-	name[0] = K_SPECIAL;
-	name[1] = KS_EXTRA;
-	name[2] = (int)KE_SNR;
-	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
-	    STRCPY(name + 3, sid_buf);
+	if (lead > 0)
+	{
+	    name[0] = K_SPECIAL;
+	    name[1] = KS_EXTRA;
+	    name[2] = (int)KE_SNR;
+	    if (eval_fname_sid(*pp))	/* If it's "<SID>" */
+		STRCPY(name + 3, sid_buf);
+	}
+	mch_memmove(name + lead, start, len);
+	name[len + lead] = NUL;
     }
-    mch_memmove(name + j, start, end - start);
-    name[end - start + j] = NUL;
-
     *pp = end;
+
+    vim_free(temp_string);
     return name;
 }
 

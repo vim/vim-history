@@ -2224,18 +2224,18 @@ startPS(lnum, para, both)
  * The classes are:
  *
  * 0 - white space
- * 1 - keyword charactes (letters, digits and underscore)
- * 2 - everything else
+ * 1 - punctuation
+ * 2 or higher - keyword characters (letters, digits and underscore)
  */
 
-static int	stype;		/* type of the word motion being performed */
+static int	cls_bigword;	/* TRUE for "W", "B" or "E" */
 
 /*
  * cls() - returns the class of character at curwin->w_cursor
  *
- * The 'type' of the current search modifies the classes of characters if a
- * 'W', 'B', or 'E' motion is being done. In this case, chars. from class 2
- * are reported as class 1 since only white space boundaries are of interest.
+ * If a 'W', 'B', or 'E' motion is being done (cls_bigword == TRUE), chars
+ * from class 2 and higher are reported as class 1 since only white space
+ * boundaries are of interest.
  */
     static int
 cls()
@@ -2250,24 +2250,31 @@ cls()
     if (c == ' ' || c == '\t' || c == NUL)
 	return 0;
 #ifdef FEAT_MBYTE
-    if (enc_dbcs && c > 0xFF)
+    if (enc_dbcs != 0 && c > 0xFF)
     {
-	/* If stype is non-zero, report these as class 1. */
-	if (enc_dbcs == DBCS_KOR && stype != 0)
+	/* If cls_bigword, report multi-byte chars as class 1. */
+	if (enc_dbcs == DBCS_KOR && cls_bigword)
 	    return 1;
 
 	/* process code leading/trailing bytes */
-	return mb_class(((unsigned)c >> 8), (c & 0xFF));
+	return dbcs_class(((unsigned)c >> 8), (c & 0xFF));
+    }
+    if (enc_utf8)
+    {
+	c = utf_class(c);
+	if (c != 0 && cls_bigword)
+	    return 1;
+	return c;
     }
 #endif
 
-    if (vim_iswordc(c))
+    /* If cls_bigword is TRUE, report all non-blanks as class 1. */
+    if (cls_bigword)
 	return 1;
 
-    /*
-     * If stype is non-zero, report these as class 1.
-     */
-    return (stype == 0) ? 2 : 1;
+    if (vim_iswordc(c))
+	return 2;
+    return 1;
 }
 
 
@@ -2278,9 +2285,9 @@ cls()
  * If eol is TRUE, last word stops at end of line (for operators).
  */
     int
-fwd_word(count, type, eol)
+fwd_word(count, bigword, eol)
     long	count;
-    int		type;
+    int		bigword;    /* "W", "E" or "B" */
     int		eol;
 {
     int		sclass;	    /* starting class */
@@ -2290,7 +2297,7 @@ fwd_word(count, type, eol)
 #ifdef FEAT_VIRTUALEDIT
     curwin->w_cursor.coladd = 0;
 #endif
-    stype = type;
+    cls_bigword = bigword;
     while (--count >= 0)
     {
 #ifdef FEAT_FOLDING
@@ -2350,9 +2357,9 @@ fwd_word(count, type, eol)
  * Returns FAIL if top of the file was reached.
  */
     int
-bck_word(count, type, stop)
+bck_word(count, bigword, stop)
     long	count;
-    int		type;
+    int		bigword;
     int		stop;
 {
     int		sclass;	    /* starting class */
@@ -2360,7 +2367,7 @@ bck_word(count, type, stop)
 #ifdef FEAT_VIRTUALEDIT
     curwin->w_cursor.coladd = 0;
 #endif
-    stype = type;
+    cls_bigword = bigword;
     while (--count >= 0)
     {
 #ifdef FEAT_FOLDING
@@ -2418,9 +2425,9 @@ finished:
  * If empty is TRUE stop on an empty line.
  */
     int
-end_word(count, type, stop, empty)
+end_word(count, bigword, stop, empty)
     long	count;
-    int		type;
+    int		bigword;
     int		stop;
     int		empty;
 {
@@ -2429,7 +2436,7 @@ end_word(count, type, stop, empty)
 #ifdef FEAT_VIRTUALEDIT
     curwin->w_cursor.coladd = 0;
 #endif
-    stype = type;
+    cls_bigword = bigword;
     while (--count >= 0)
     {
 #ifdef FEAT_FOLDING
@@ -2483,17 +2490,15 @@ finished:
 }
 
 /*
- * bckend_word(count, type) - move back to the end of the word
- *
- * If 'eol' is TRUE, stop at end of line.
+ * Move back to the end of the word.
  *
  * Returns FAIL if start of the file was reached.
  */
     int
-bckend_word(count, type, eol)
+bckend_word(count, bigword, eol)
     long	count;
-    int		type;
-    int		eol;
+    int		bigword;    /* TRUE for "B" */
+    int		eol;	    /* TRUE: stop at end of line. */
 {
     int		sclass;	    /* starting class */
     int		i;
@@ -2501,7 +2506,7 @@ bckend_word(count, type, eol)
 #ifdef FEAT_VIRTUALEDIT
     curwin->w_cursor.coladd = 0;
 #endif
-    stype = type;
+    cls_bigword = bigword;
     while (--count >= 0)
     {
 	sclass = cls();
@@ -2540,8 +2545,8 @@ bckend_word(count, type, eol)
  */
     static int
 skip_chars(cclass, dir)
-    int	    cclass;
-    int	    dir;
+    int		cclass;
+    int		dir;
 {
     while (cls() == cclass)
 	if ((dir == FORWARD ? inc_cursor() : dec_cursor()) == -1)
@@ -2613,17 +2618,17 @@ findsent_forward(count, at_start_sent)
  * Used while an operator is pending, and in Visual mode.
  */
     int
-current_word(oap, count, include, type)
+current_word(oap, count, include, bigword)
     oparg_t	*oap;
     long	count;
-    int		include;    /* TRUE: include word and white space */
-    int		type;	    /* FALSE == word, TRUE == WORD */
+    int		include;	/* TRUE: include word and white space */
+    int		bigword;	/* FALSE == word, TRUE == WORD */
 {
     pos_t	start_pos;
     pos_t	pos;
     int		inclusive = TRUE;
 
-    stype = type;
+    cls_bigword = bigword;
 
 #ifdef FEAT_VISUAL
     /* Correct cursor when 'selection' is exclusive */
@@ -2650,7 +2655,7 @@ current_word(oap, count, include, type)
 	 */
 	if ((cls() == 0) == include)
 	{
-	    if (end_word(1L, type, TRUE, TRUE) == FAIL)
+	    if (end_word(1L, bigword, TRUE, TRUE) == FAIL)
 		return FAIL;
 	}
 	else
@@ -2660,7 +2665,7 @@ current_word(oap, count, include, type)
 	     * included ("word	 "), or start is on white space and white
 	     * space should not be included ("	 "), find start of word.
 	     */
-	    if (fwd_word(1L, type, TRUE) == FAIL)
+	    if (fwd_word(1L, bigword, TRUE) == FAIL)
 		return FAIL;
 	    /*
 	     * If end is just past a new-line, we don't want to include the
@@ -2724,12 +2729,12 @@ current_word(oap, count, include, type)
 		return FAIL;
 	    if (include != (cls() != 0))
 	    {
-		if (bck_word(1L, type, TRUE) == FAIL)
+		if (bck_word(1L, bigword, TRUE) == FAIL)
 		    return FAIL;
 	    }
 	    else
 	    {
-		if (bckend_word(1L, type, TRUE) == FAIL)
+		if (bckend_word(1L, bigword, TRUE) == FAIL)
 		    return FAIL;
 		(void)incl(&curwin->w_cursor);
 	    }
@@ -2744,7 +2749,7 @@ current_word(oap, count, include, type)
 		return FAIL;
 	    if (include != (cls() == 0))
 	    {
-		if (fwd_word(1L, type, TRUE) == FAIL)
+		if (fwd_word(1L, bigword, TRUE) == FAIL)
 		    return FAIL;
 		/*
 		 * If end is just past a new-line, we don't want to include
@@ -2755,7 +2760,7 @@ current_word(oap, count, include, type)
 	    }
 	    else
 	    {
-		if (end_word(1L, type, TRUE, TRUE) == FAIL)
+		if (end_word(1L, bigword, TRUE, TRUE) == FAIL)
 		    return FAIL;
 	    }
 	}
@@ -3661,13 +3666,11 @@ search_line:
 		if (continue_status & CONT_ADDING)
 		{
 		    p += completion_length;
-		    if (vim_iswordc(*p))
+		    if (vim_iswordp(p))
 			goto exit_matched;
-		    while (*p && *p != '\n' && !vim_iswordc(*p++))
-			;
+		    p = find_word_start(p);
 		}
-		while (vim_iswordc(*p))
-		    ++p;
+		p = find_word_end(p);
 		i = p - aux;
 
 		if ((continue_status & CONT_ADDING) && i == completion_length)
@@ -3687,10 +3690,8 @@ search_line:
 		     * if depth >= 0 we'll increase files[depth].lnum far
 		     * bellow  -- Acevedo */
 		    already = aux = p = skipwhite(line);
-		    while (*p && *p != '\n' && !vim_iswordc(*p++))
-			;
-		    while (vim_iswordc(*p))
-			p++;
+		    p = find_word_start(p);
+		    p = find_word_end(p);
 		    if (p > aux)
 		    {
 			if (*aux != ')' && IObuff[i-1] != TAB)

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0w.  Last change: 2001 Feb 21
+*options.txt*   For Vim version 6.0x.  Last change: 2001 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -208,9 +208,9 @@ right after the split the contents of the two windows look the same.
 
 When editing a new buffer, its local option values must be initialized.  Since
 the local options of the current buffer might be specifically for that buffer,
-these are not used.  Instead, for each local buffer option there also is a
+these are not used.  Instead, for each buffer-local option there also is a
 global value, which is used for new buffers.  With ":set" both the local and
-global value is changed".  With "setlocal" only the local value is changed,
+global value is changed.  With "setlocal" only the local value is changed,
 thus this value is not used when editing a new buffer.
 
 When editing a buffer that has been edited before, the last used window
@@ -439,6 +439,13 @@ that a normal word like "lex:" is caught.  There is one exception: "vi:" and
 "vim:" can also be at the start of the line (for compatibility with version
 3.0).  Using "ex:" at the start of the line will be ignored (this could be
 short for "example:").
+
+							*modeline-local*
+The options are set like with ":setlocal": The new value only applies to the
+buffer that contains the window.  Although it's possible to set global options
+from a modeline, this is unusual.  If you have two windows open and the files
+in it set the same global option to a different value, the result depends on
+which one was opened last.
 
 							*modeline-version*
 If the modeline is only to be used for some versions of Vim, the version
@@ -1528,7 +1535,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			":map X <Tab>" results in X being mapped to:
 				'<' included:   "<Tab>"  (5 characters)
 				'<' excluded:   "^I"     (^I is a real <Tab>)
-			Also see the 'k' flag below.
+			Also see the 'k' flag above.
 
 						*'cscopeprg'* *'csprg'*
 'cscopeprg' 'csprg'	string	(default "cscope")
@@ -1850,6 +1857,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	See 'encoding' for the possible values.  Additionally, values may be
 	specified that can be handled by the converter (either iconv() or
 	specified with 'charconvert').
+	When reading a file 'fileencoding' will be set from 'fileencodings'.
+	To read a file in a certain encoding it won't work by setting
+	'fileencoding', use the |++enc| argument.
 	Prepending "8bit-" and "2byte-" has no meaning here, they are ignored.
 	When the option is set, the value is converted to lower case.  Thus
 	you can set it with upper case values too.  '_' characters are
@@ -2400,7 +2410,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	used.  In 'guifontset' the whole string is one fontset name,
 	including the commas.  It is not possible to specify alternative
 	fontset names.
-
+	This example works on many X11 systems: >
+		:set guifontset=-*-*-medium-r-normal--16-*-*-*-c-*-*-*
+<
 						*'guifontwide'* *'gfw'*
 'guifontwide' 'gfw'	string	(default "")
 			global
@@ -2551,7 +2563,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				     "8:SpecialKey,@:NonText,d:Directory,
 				     e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,
 				     M:ModeMsg,n:LineNr,r:Question,
-				     s:StatusLine,S:StatusLineNC,c:VerticalSep,
+				     s:StatusLine,S:StatusLineNC,c:VertSplit
 				     t:Title,v:Visual,w:WarningMsg,W:WildMenu,
 				     f:Folded,F:FoldColumn")
 			global
@@ -2576,7 +2588,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|hl-StatusLine|	 s  status line of current window |status-line|
 	|hl-StatusLineNC| S  status lines of not-current windows
 	|hl-Title|	 t  Titles for output from ":set all", ":autocmd" etc.
-	|hl-FillColumn|	 c  column used to separate vertically split windows
+	|hl-VertSplit|	 c  column used to separate vertically split windows
 	|hl-Visual|	 v  Visual mode
 	|hl-VisualNOS|	 V  Visual mode when Vim does is "Not Owning the
 			    Selection" Only X11 Gui's |gui-x11| and
@@ -2722,11 +2734,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{not available when compiled without the
 			|+find_in_path| or |+eval| feature}
-	Expression to be used to transform the string find with the 'include'
+	Expression to be used to transform the string found with the 'include'
 	option to a file name.  Mostly useful to change "." to "/" for Java: >
 		:set includeexpr=substitute(v:fname,'\\.','/','g')
 <	The "v:fname" variable will be set to the file name that was detected.
 	Evaluated in the |sandbox|.
+	Also used for the |gf| command if an unmodified file name can't be
+	found.  Allows doing "gf" on the name after an 'include' statement.
+	Also used for |<cfile>|.
 
 				 *'incsearch'* *'is'* *'noincsearch'* *'nois'*
 'incsearch' 'is'	boolean	(default off)
@@ -3641,7 +3656,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 <	- To include a comma in a directory name precede it with an extra
 	  backslash: >
 		:set path=.,/dir/with\\,comma
-<	- To search relative to the directory where the current file is use >
+<	- To search relative to the directory of the current file, use: >
 		:set path=.
 <	- To search in the current directory use an empty string between two
 	  commas: >
@@ -3651,7 +3666,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	- When using |netrw.vim| URLs can be used.  For example, adding
 	  "http://www.vim.org" will make ":find index.html" work.
 	- Search upwards and downwards in a directory tree:
-	  1) "*" matches a sequence of characters, e.g., >
+	  1) "*" matches a sequence of characters, e.g.: >
 		:set path=/usr/include/*
 <	     means all subdirectories in /usr/include (but not /usr/include
 	     itself). >
@@ -4296,6 +4311,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	to separate the part that is shown at the end and at the start of a
 	line).  The characters are highlighted according to the '@' flag in
 	'highlight'.
+	Note that tabs after the showbreak will be displayed differently.
 
 				     *'showcmd'* *'sc'* *'noshowcmd'* *'nosc'*
 'showcmd' 'sc'		boolean	(Vim default: on, off for Unix, Vi default:
@@ -4949,27 +4965,27 @@ A jump table for the options with a short description can be found at |Q_op|.
 	These two options together determine the behavior when part of a
 	mapped key sequence or keyboard code has been received:
 
-	timeout		ttimeout	action	~
-	off		off		no time out
-	on		on or off	time out on :mappings and key codes
-	off		on		time out on key codes
+	'timeout'    'ttimeout'		action	~
+	   off		off		do not time out
+	   on		on or off	time out on :mappings and key codes
+	   off		on		time out on key codes
 
-	If there is no time out, Vim will wait until either the complete
+	If both options are off, Vim will wait until either the complete
 	mapping or key sequence has been received, or it is clear that there
 	is no mapping or key sequence for the received characters.  For
 	example: if you have mapped "vl" and Vim has received 'v', the next
-	character is needed to see if the 'v' is followed by an 'l'.  With a
-	time out Vim will wait for about 1 second for the next character to
-	arrive.  After that the already received characters are interpreted
-	as single characters.  The waiting time can be changed with the
-	'timeoutlen' option.
-	On slow terminals or very busy systems time out may cause
+	character is needed to see if the 'v' is followed by an 'l'.
+	When one of the options is on, Vim will wait for about 1 second for
+	the next character to arrive.  After that the already received
+	characters are interpreted as single characters.  The waiting time can
+	be changed with the 'timeoutlen' option.
+	On slow terminals or very busy systems timing out may cause
 	malfunctioning cursor keys.  If both options are off, Vim waits
 	forever after an entered <Esc> if there are key codes that start
 	with <Esc>.  You will have to type <Esc> twice.  If you do not have
 	problems with key codes, but would like to have :mapped key
-	sequences not time out in 1 second, set the ttimeout option and
-	reset the timeout option.
+	sequences not timing out in 1 second, set the 'ttimeout' option and
+	reset the 'timeout' option.
 
 	NOTE: 'ttimeout' is reset when 'compatible' is set.
 
@@ -5517,7 +5533,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	While the "wildmenu" is active the following keys have special
 	meanings:
 
-	<Left> <Right>	- select previous/next match (like CTRL-P/N)
+	<Left> <Right>	- select previous/next match (like CTRL-P/CTRL-N)
 	<Down>		- in filename/menu name completion: move into a
 			  subdirectory or submenu.
 	<CR>		- in menu completion, when the cursor is just after a
@@ -5527,6 +5543,11 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	This makes the menus accessible from the console |console-menus|.
 
+	If you prefer the <Left> and <Right> keys to move the cursor instead
+	of selecting a different match, use this: >
+		:cnoremap <Left> <Space><BS><Left>
+		:cnoremap <Right> <Space><BS><Right>
+<
 	The "WildMenu" highlighting is used for displaying the current match
 	|hl-WildMenu|.
 

@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Feb 11
+" Last Change:	2001 Mar 06
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -37,15 +37,19 @@ menutrans E&xit<Tab>:qa			&Afsluiten<Tab>:qa
 menutrans &Edit				Be&werken
 menutrans &Undo<Tab>u			Terug<Tab>u
 menutrans &Redo<Tab>^R			Voo&ruit<Tab>^R
-menutrans Repea&t<Tab>\.		&Herhalen<Tab>\.
+menutrans Rep&eat<Tab>\.		&Herhalen<Tab>\.
 menutrans Cu&t<Tab>"*x			&Knippen<Tab>"*x
-menutrans &Copy<Tab>"*y			&Kopiëeren<Tab>"*y
+menutrans &Copy<Tab>"*y			K&opiëeren<Tab>"*y
 menutrans &Paste<Tab>"*p		Plakken<Tab>"*p
 menutrans Put\ &Before<Tab>[p		Ervoor\ invoegen<Tab>[p
 menutrans Put\ &After<Tab>]p		Erachter\ invoegen<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Alles\ &Markeren<Tab>ggVG
 menutrans &Find\.\.\.			&Zoeken\.\.\.
-menutrans Find\ and\ R&eplace\.\.\.	Zoeken\ en\ &Vervangen\.\.\.
+menutrans &Find<Tab>/			&Zoeken<Tab>/
+menutrans Find\ and\ Rep&lace\.\.\.	Zoeken\ en\ &Vervangen\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:%s	Zoeken\ en\ &Vervangen<Tab>:%s
+menutrans Find\ and\ Rep&lace		Zoeken\ en\ &Vervangen
+menutrans Find\ and\ Rep&lace<Tab>:s	Zoeken\ en\ &Vervangen<Tab>:s
 menutrans Options\.\.\.			Opties\.\.\.
 
 " Programming menu
@@ -76,7 +80,7 @@ menutrans &Window			&Venster
 menutrans &New<Tab>^Wn			&Nieuw<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Splitsen<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	Splits\ naar\ #<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv	S&plits\ Vertikaal<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv	Splits\ &Vertikaal<Tab>^Wv
 menutrans &Close<Tab>^Wc		&Sluiten<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	&Sluit\ Andere<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			Volgende<Tab>^Ww
@@ -87,7 +91,7 @@ menutrans M&in\ Height<Tab>^W1_		Mi&nimale\ hoogte<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Maximale\ breedte<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Minimale\ breedte<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Roteren\ naar\ &boven<Tab>^WR
-menutrans Rotate\ &Down<Tab>^Wr		Roieren\ naar\ &onder<Tab>^Wr
+menutrans Rotate\ &Down<Tab>^Wr		Roteren\ naar\ &onder<Tab>^Wr
 menutrans Select\ &Font\.\.\.		Selecteer\ font\.\.\.
 
 " The popup menu
@@ -140,7 +144,7 @@ menutrans Set\ 'filetype'\ too	Ook\ 'filetype'\ wijzigen
 menutrans &Off			&Uit
 menutrans &Manual		&Handmatig
 menutrans A&utomatic		A&utomatisch
-menutrans &on\ (this\ file)	Aa&n\ (dit\ Bestand)
+menutrans o&n\ (this\ file)	Aa&n\ (dit\ Bestand)
 menutrans o&ff\ (this\ file)	&Uit\ (dit\ Bestand)
 menutrans Co&lor\ test		Test\ de\ &Kleuren
 menutrans &Highlight\ test	Test\ de\ Markeringen

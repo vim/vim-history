@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 15
+" Last Change:	2001 Feb 28
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -17,6 +17,5 @@ setlocal cindent
 " and insert the comment leader when hitting <CR> or using "o".
 setlocal fo-=t fo+=croql
 
-" Set 'comments' to format dashed lists in comments and not see preprocessor
-" lines as comments.
-setlocal com& com^=sO:*\ -,mO:*\ \ ,exO:*/ com-=b:#
+" Set 'comments' to format dashed lists in comments.
+setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,://

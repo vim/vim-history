@@ -16,7 +16,9 @@
 #include "vim.h"
 
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
+
 #include "StandardFile.h"
+
 /*
  * Implements the corresponding unix function
  */
@@ -31,6 +33,7 @@ stat(
      */
     return 0;
 }
+
 /*
  * change the current working directory
  */
@@ -40,7 +43,9 @@ mch_chdir(char *p_name)
     /* TODO */
     return FAIL;
 }
+
 #endif
+
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by mch_expandpath().

@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0w.  Last change: 2001 Feb 13
+*multibyte.txt* For Vim version 6.0x.  Last change: 2001 Mar 10
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -256,20 +256,20 @@ explicitly specifies the charsets, like: >
 
 Alternatively, the user could supply a base font name list that omits the
 |CCS| name, letting Xlib select font characters required for the locale. For
-example:
+example: >
 
-guifontset=-misc-fixed-medium-r-normal--14-130-75-75-c-140,
-    \-misc-fixed-medium-r-normal--14-130-75-75-c-70
+ :set guifontset=-misc-fixed-medium-r-normal--14-130-75-75-c-140,
+	\-misc-fixed-medium-r-normal--14-130-75-75-c-70
 
 Alternatively, the user could supply a single base font name that allows Xlib
-to select from all available fonts.  For example:
+to select from all available fonts.  For example: >
 
-guifontset=-misc-fixed-medium-r-normal--14-*
+ :set guifontset=-misc-fixed-medium-r-normal--14-*
 
 Alternatively, the user could specify the alias name.  See fonts.alias in
-the fonts directory.
+the fonts directory. >
 
-guifontset=k14,r14
+ :set guifontset=k14,r14
 
 Note that in East Asian fonts, the standard character cell is square.  When
 mixing Latin font and East Asian font, East Asian font width should be twice
@@ -331,10 +331,9 @@ Wnn 4.2 can be found at:
 
 - Input Style
 							*xim-input-style*
-  When inputting CJK, there needs four areas.
-
-      1. The area to perform display of input in the midst
-      2. The area to display input mode.
+  When inputting CJK, there are four areas:
+      1. The area to display of the input while it is being composed
+      2. The area to display the currently active input mode.
       3. The area to display the next candidate for the selection.
       4. The area to display other tools.
 
@@ -371,9 +370,9 @@ Wnn 4.2 can be found at:
     provides display windows for the pre-edit data to the input method which
     displays into them directly.
 *.  root-window						*Root*
-    Preedit Area and Status Area are performed outside of the area of
-    application.  The input method displays all pre-edit data in a separate
-    area of the screen in a window specific to the input method.
+    Preedit Area and Status Area are outside of the application.  The input
+    method displays all pre-edit data in a separate area of the screen in a
+    window specific to the input method.
 
 
 LOCALIZATION, INTERNATIONALIZATION AND MULTILINGUALIZATION
@@ -433,6 +432,11 @@ options.txt for detailed information.
 		these will be tried and the first one that doesn't cause an
 		error is used for 'fileencoding'
 'charconvert'	Expression used to convert files from one encoding to another.
+
+'formatoptions' The 'm' flag can be included to have formatting break a line
+		at a multibyte character of 256 or higher.  Thus is useful for
+		languages where a sequence of characters can be broken
+		anywhere.
 
 ==============================================================================
 4. Display						*multibyte-display*

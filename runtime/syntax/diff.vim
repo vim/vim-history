@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Mar 06
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -21,7 +21,7 @@ syn match diffAdded	"^+.*"
 syn match diffAdded	"^>.*"
 syn match diffChanged	"^! .*"
 
-syn match diffSubname	" @@..*" contained
+syn match diffSubname	" @@..*"ms=s+3 contained
 syn match diffLine	"^@.*" contains=diffSubname
 syn match diffLine	"^\<\d\+\>.*"
 syn match diffLine	"^\*\*\*\*.*"

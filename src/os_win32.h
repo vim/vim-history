@@ -29,7 +29,10 @@
 #define HAVE_LOCALE_H
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
-#if !defined(__MINGW32__) && (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550)
+
+#if !defined(__MINGW32__) \
+	&& (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550) \
+	&& (!defined(_MSC_VER) || _MSC_VER > 1010)
 /*
  * Access Control List (actually security info).
  * Mingw doesn't have the acl stuff.
@@ -37,6 +40,7 @@
  */
 # define HAVE_ACL
 #endif
+
 #define USE_FNAME_CASE		/* adjust case of file names */
 #ifndef FEAT_CLIPBOARD
 # define FEAT_CLIPBOARD		/* include clipboard support */
@@ -161,4 +165,4 @@ Trace(char *pszFormat, ...);
 
 #define mch_setenv(name, val, x) setenv(name, val, x)
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
-#define mch_mkdir(x, y) _mkdir(x)
+#define vim_mkdir(x, y) _mkdir(x)

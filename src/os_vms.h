@@ -42,6 +42,9 @@
 /* use delete() to remove files */
 #define mch_remove(x) delete((char *)(x))
 
+/* Does this really work? */
+#define vim_mkdir(x, y) mkdir((char *)(x), y)
+
 /* The number of arguments to a signal handler is configured here. */
 /* It used to be a long list of almost all systems. Any system that doesn't
  * have an argument??? */

@@ -34,6 +34,17 @@ CROSS=0
 # set to path to iconv.h and libiconv.a to enable using 'iconv.dll'
 #ICONV="."
 
+# added by E.F. Amatria <eferna1@platea.ptic.mec.es> 2001 Feb 23
+# Uncomment the first line and one of the others if you want National Language
+# Support.  You'll need gnu_gettext.win32, a MINGW32 Windows PORT of gettext by
+# Franco Bez <franco.bez@gmx.de> It may be found at
+# http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
+# Tested with mingw32 with GCC-2.95.2 on Win98
+#NLS=nls
+#NLS_DYNAMIC=nls_dynamic
+#NLS_SAFE_DYNAMIC=nls_safe_dynamic (this don't work)
+#NLS_STATIC=nls_static
+ 
 # uncomment 'PERL' if you want a perl-enabled version
 #PERL=perl
 DYNAMIC_PERL=perl56.dll
@@ -150,7 +161,23 @@ endif
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
-LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32
+
+# added by E.F. Amatria to include NLS
+ifdef NLS
+LIB += -lgnu_gettext
+   ifdef NLS_DYNAMIC
+	CFLAGS += -DUSE_GETTEXT_DLL
+   else
+   #	ifdef NLS_SAFE_DYNAMIC # this does not work ?:-((
+   #	     CFLAGS += -DUSE_SAFE_GETTEXT_DLL
+   #	     LIB += -lstdc++
+   #	else
+	     CFLAGS += -DUSE_GETTEXT_STATIC
+	     LIB += -lintl
+   #	endif
+   endif
+endif
 
 ifdef PERL
 ifndef DYNAMIC_PERL
@@ -164,17 +191,26 @@ DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 
-all: $(TARGET) vimrun.exe xxd/xxd.exe
+GUI_LIB = $(LIB) -lcomdlg32 -lcomctl32
+
+
+all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe tee/tee.exe
 
 vimrun.exe: vimrun.c
-	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c
+	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
 
+install.exe: dosinst.c 
+	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB)
+
+uninstall.exe: uninstal.c 
+	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c $(LIB)
+ 
 vim.exe: $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ -lkernel32 -luser32 -lgdi32 -ladvapi32
+	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB) $(PYTHONLIB)
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(GUI_LIB) $(PYTHONLIB)
 
 exes:
 	@$(DEL) *.o
@@ -184,12 +220,12 @@ exes:
 	@$(DEL) *.o
 
 xxd/xxd.exe: xxd/xxd.c
-	cd xxd && $(CC) $(CFLAGS) -o xxd.exe -s -DWIN32 xxd.c && cd ..
+	$(CC) $(CFLAGS) -o xxd/xxd.exe -s -DWIN32 xxd/xxd.c $(LIB)
 
 clean:
 	-$(DEL) *.o
 	-$(DEL) *.exe
-	cd xxd && $(DEL) *.exe && cd ..
+	-$(DEL) xxd\*.exe
 
 ###########################################################################
 vimres.res: vim.rc

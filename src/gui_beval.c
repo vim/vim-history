@@ -8,16 +8,9 @@
  * See README.txt for an overview of the Vim source code.
  */
 
-#ifdef HAVE_CONFIG_H
-# include "auto/config.h"
-#endif
-#include "feature.h"
+#include "vim.h"
 
 #if defined(FEAT_BEVAL) || defined(PROTO)
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/param.h>
 
 #include <X11/keysym.h>
 #include <Xm/PushB.h>
@@ -27,29 +20,34 @@
 #include <Xm/AtomMgr.h>
 #include <Xm/Protocols.h>
 
-#include "vim.h"
 #include "gui_beval.h"
 
 extern Widget vimShell;
 
-static void addEventHandler(Widget, BalloonEval *);
-static void removeEventHandler(BalloonEval *);
-static void pointerEventEH(Widget, XtPointer, XEvent *, Boolean *);
-static void pointerEvent(BalloonEval *, XEvent *);
-static void timerRoutine(XtPointer, XtIntervalId *);
-static void cancelBalloon(BalloonEval *);
-static void requestBalloon(BalloonEval *);
-static void drawBalloon(BalloonEval *);
-static void createBalloonEvalWindow(BalloonEval *);
-static int virtlen(buf_t *, char_u *);
-
+static void addEventHandler __ARGS((Widget, BalloonEval *));
+static void removeEventHandler __ARGS((BalloonEval *));
+static void pointerEventEH __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+static void pointerEvent __ARGS((BalloonEval *, XEvent *));
+static void timerRoutine __ARGS((XtPointer, XtIntervalId *));
+static void cancelBalloon __ARGS((BalloonEval *));
+static void requestBalloon __ARGS((BalloonEval *));
+static void drawBalloon __ARGS((BalloonEval *));
+static void undrawBalloon __ARGS((BalloonEval *beval));
+static void createBalloonEvalWindow __ARGS((BalloonEval *));
 
 
 #define EVAL_OFFSET_X 10 /* displacement of beval topleft corner from pointer */
 #define EVAL_OFFSET_Y 5
 
 
-
+/*
+ * Create a balloon-evaluation area for a Widget.
+ * There can be either a "msg" for a fixed string or "msgCB" to generate a
+ * message by calling this callback function.
+ * When "msg" is not NULL it must remain valid for as long as the balloon is
+ * used.  It is not freed here.
+ * Returns a pointer to the resulting object (NULL when out of memory).
+ */
     BalloonEval *
 gui_mch_create_beval_area(target, msg, msgCB, clientData)
     Widget	target;
@@ -57,10 +55,10 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
     void	(*msgCB)__ARGS((BalloonEval *, int));
     XtPointer	clientData;
 {
-    BalloonEval	*beval;
     char	*display_name;	    /* get from gui.dpy */
     int		screen_num;
     char	*p;
+    BalloonEval	*beval;
 
     if (msg != NULL && msgCB != NULL)
     {
@@ -68,7 +66,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 	return NULL;
     }
 
-    beval = (BalloonEval *) alloc(sizeof(BalloonEval));
+    beval = (BalloonEval *)alloc(sizeof(BalloonEval));
     if (beval != NULL)
     {
 	beval->target = target;
@@ -87,8 +85,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 	 * and when the pointer rests in a certain spot for a given time
 	 * interval, show the beval.
 	 */
-	if (p_beval)
-		addEventHandler(target, beval);
+	addEventHandler(target, beval);
 	createBalloonEvalWindow(beval);
 
 	/*
@@ -107,26 +104,34 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
     return beval;
 }
 
+/*
+ * Destroy a ballon-eval and free its associated memory.
+ */
     void
 gui_mch_destroy_beval_area(beval)
     BalloonEval	*beval;
 {
     cancelBalloon(beval);
     removeEventHandler(beval);
+    /* Children will automatically be destroyed */
+    XtDestroyWidget(beval->balloonShell);
+    vim_free(beval);
 }
 
     void
 gui_mch_enable_beval_area(beval)
-    BalloonEval *beval;
+    BalloonEval	*beval;
 {
-    addEventHandler(beval->target, beval);
+    if (beval != NULL)
+	addEventHandler(beval->target, beval);
 }
 
     void
 gui_mch_disable_beval_area(beval)
-    BalloonEval *beval;
+    BalloonEval	*beval;
 {
-    removeEventHandler(beval);
+    if (beval != NULL)
+	removeEventHandler(beval);
 }
 
     Boolean
@@ -175,7 +180,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 	if (col > 0)
 	{
 	    lbuf = ml_get_buf(wp->w_buffer, row, FALSE);
-	    i = virtlen(wp->w_buffer, lbuf);
+	    win_linetabsize(wp, lbuf);
 	    if (i >= col)		/* don't send if past end of line */
 	    {
 		*filename = wp->w_buffer->b_ffname;
@@ -191,13 +196,19 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
     return False;
 }
 
+/*
+ * Show a balloon with "msg".
+ */
     void
 gui_mch_post_balloon(beval, msg)
     BalloonEval	*beval;
     char	*msg;
 {
     beval->msg = msg;
-    drawBalloon(beval);
+    if (msg != NULL)
+	drawBalloon(beval);
+    else
+	undrawBalloon(beval);
 }
 
     static void
@@ -212,7 +223,6 @@ addEventHandler(target, beval)
 			False,
 			pointerEventEH, (XtPointer)beval);
 }
-
 
     static void
 removeEventHandler(beval)
@@ -256,9 +266,6 @@ pointerEvent(beval, event)
     Position	distance;	    /* a measure of how much the ponter moved */
     Position	delta;		    /* used to compute distance */
 
-    if (!p_beval)
-	return;
-
     switch (event->type)
     {
 	case EnterNotify:
@@ -294,8 +301,11 @@ pointerEvent(beval, event)
 		    beval->x_root = event->xmotion.x_root;
 		    beval->y_root = event->xmotion.y_root;
 		    cancelBalloon(beval);
-		    beval->showState = ShS_PENDING;
-		    (*beval->msgCB)(beval, beval->state);
+		    if (beval->msgCB != NULL)
+		    {
+			beval->showState = ShS_PENDING;
+			(*beval->msgCB)(beval, beval->state);
+		    }
 		}
 		else
 		{
@@ -311,7 +321,7 @@ pointerEvent(beval, event)
 	    break;
 
 	case KeyPress:
-	    if (beval->showState == ShS_SHOWING)
+	    if (beval->showState == ShS_SHOWING && beval->msgCB != NULL)
 	    {
 		Modifiers   modifier;
 		KeySym	    keysym;
@@ -319,12 +329,12 @@ pointerEvent(beval, event)
 		XtTranslateKeycode(gui.dpy,
 				       event->xkey.keycode, event->xkey.state,
 				       &modifier, &keysym);
-		if ((keysym == XK_Shift_L) || (keysym == XK_Shift_R))
+		if (keysym == XK_Shift_L || keysym == XK_Shift_R)
 		{
 		    beval->showState = ShS_UPDATE_PENDING;
 		    (*beval->msgCB)(beval, ShiftMask);
 		}
-		else if ((keysym == XK_Control_L) || (keysym == XK_Control_R))
+		else if (keysym == XK_Control_L || keysym == XK_Control_R)
 		{
 		    beval->showState = ShS_UPDATE_PENDING;
 		    (*beval->msgCB)(beval, ControlMask);
@@ -337,7 +347,7 @@ pointerEvent(beval, event)
 	    break;
 
 	case KeyRelease:
-	    if (beval->showState == ShS_SHOWING)
+	    if (beval->showState == ShS_SHOWING && beval->msgCB != NULL)
 	    {
 		Modifiers modifier;
 		KeySym keysym;
@@ -366,27 +376,7 @@ pointerEvent(beval, event)
 
 	default:
 	    break;
-	}
-}
-
-    static int
-virtlen(buf, line)
-    buf_t	*buf;
-    char_u	*line;
-{
-    int		count = 0;
-    int		ts = buf->b_p_ts;
-
-    while (*line)
-    {
-	if (*line == '\t')
-	    count += ts - (count % ts);
-	else
-	    count++;
-	line++;
     }
-
-    return count;
 }
 
     static void
@@ -395,6 +385,8 @@ timerRoutine(dx, id)
     XtIntervalId    *id;
 {
     BalloonEval *beval = (BalloonEval *)dx;
+
+    beval->timerID = NULL;
 
     /*
      * If the timer event happens then the mouse has stopped long enough for
@@ -408,13 +400,12 @@ timerRoutine(dx, id)
 requestBalloon(beval)
     BalloonEval	*beval;
 {
-    beval->timerID = NULL;
     if (beval->showState != ShS_PENDING)
     {
 	/* Determine the beval to display */
-	if (beval->msg)
-		drawBalloon(beval);
-	else if (beval->msgCB)
+	if (beval->msg != NULL)
+	    drawBalloon(beval);
+	else if (beval->msgCB != NULL)
 	{
 	    beval->showState = ShS_PENDING;
 	    (*beval->msgCB)(beval, beval->state);
@@ -422,66 +413,73 @@ requestBalloon(beval)
     }
 }
 
+/*
+ * Draw a balloon.
+ */
     static void
 drawBalloon(beval)
     BalloonEval	*beval;
 {
-	XmString s;
-	Position tx;
-	Position ty;
-	Dimension	w;
-	Dimension	h;
+    XmString s;
+    Position tx;
+    Position ty;
+    Dimension	w;
+    Dimension	h;
 
-	if (beval->msg != NULL)
-	{
-	    /* Show the Balloon */
+    if (beval->msg != NULL)
+    {
+	/* Show the Balloon */
 
-	    s = XmStringCreateLocalized((char *)beval->msg);
-	    XmStringExtent(gui.balloonEval_fontList, s, &w, &h);
-	    w += gui.border_offset << 1;
-	    h += gui.border_offset << 1;
-	    XtVaSetValues(beval->balloonLabel,
-			XmNlabelString, s,
-			NULL);
-	    XmStringFree(s);
+	s = XmStringCreateLocalized((char *)beval->msg);
+	XmStringExtent(gui.balloonEval_fontList, s, &w, &h);
+	w += gui.border_offset << 1;
+	h += gui.border_offset << 1;
+	XtVaSetValues(beval->balloonLabel,
+		XmNlabelString, s,
+		NULL);
+	XmStringFree(s);
 
-	    /* Compute position of the balloon area */
-	    tx = beval->x_root + EVAL_OFFSET_X;
-	    ty = beval->y_root + EVAL_OFFSET_Y;
-	    if ((tx + w) > beval->screen_width)
-		tx = beval->screen_width - w;
-	    if ((ty + h) > beval->screen_height)
-		ty = beval->screen_height - h;
-	    XtVaSetValues(beval->balloonShell,
-			XmNx, tx,
-			XmNy, ty,
-			XmNwidth, w,
-			XmNheight, h,
-			NULL);
+	/* Compute position of the balloon area */
+	tx = beval->x_root + EVAL_OFFSET_X;
+	ty = beval->y_root + EVAL_OFFSET_Y;
+	if ((tx + w) > beval->screen_width)
+	    tx = beval->screen_width - w;
+	if ((ty + h) > beval->screen_height)
+	    ty = beval->screen_height - h;
+	XtVaSetValues(beval->balloonShell,
+		XmNx, tx,
+		XmNy, ty,
+		XmNwidth, w,
+		XmNheight, h,
+		NULL);
 
-	    XtPopup(beval->balloonShell, XtGrabNone);
+	XtPopup(beval->balloonShell, XtGrabNone);
 
-	    beval->showState = ShS_SHOWING;
-	}
-	else
-	{
-	    if (beval->balloonShell)
-		    XtPopdown(beval->balloonShell);
-	}
+	beval->showState = ShS_SHOWING;
+    }
+}
+
+/*
+ * Undraw a balloon.
+ */
+    static void
+undrawBalloon(beval)
+    BalloonEval *beval;
+{
+    if (beval->balloonShell != (Widget)0)
+	XtPopdown(beval->balloonShell);
+    beval->showState = ShS_NEUTRAL;
 }
 
     static void
 cancelBalloon(beval)
     BalloonEval	*beval;
 {
-    if (beval->showState == ShS_SHOWING ||
-		    beval->showState == ShS_UPDATE_PENDING)
-    {
-	beval->msg = NULL;		/* don't free message */
-	drawBalloon(beval);
-    }
+    if (beval->showState == ShS_SHOWING
+	    || beval->showState == ShS_UPDATE_PENDING)
+	undrawBalloon(beval);
 
-    if (beval->timerID)
+    if (beval->timerID != NULL)
     {
 	XtRemoveTimeOut(beval->timerID);
 	beval->timerID = NULL;

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0w.  Last change: 2001 Feb 13
+*quickfix.txt*  For Vim version 6.0x.  Last change: 2001 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -198,8 +198,8 @@ Others are invalid.
 	%n		error number (finds a number)
 	%m		error message (finds a string)
 	%r		matches the "rest" of a single-line file message %O/P/Q
-	%p		pointer line (finds a sequence of '-' or ' ' and uses
-			the length for the column number)
+	%p		pointer line (finds a sequence of '-', '.' or ' ' and
+			uses the length for the column number)
 	%*{conv}	any scanf non-assignable conversion
 	%%		the single '%' character
 

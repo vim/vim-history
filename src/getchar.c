@@ -798,6 +798,7 @@ start_redo(count, old_redo)
     {
 	VIsual = curwin->w_cursor;
 	VIsual_active = TRUE;
+	VIsual_select = FALSE;
 	VIsual_reselect = TRUE;
 	redo_VIsual_busy = TRUE;
 	c = read_redo(FALSE, old_redo);
@@ -1430,8 +1431,8 @@ vgetc()
 		     * or a CSI - KS_EXTRA - KE_CSI sequence, which represents
 		     * a CSI (0x9B),
 		     * of a K_SPECIAL - KS_EXTRA - KE_CSI, which is CSI too. */
-		    if (vgetorpeek(TRUE) == KS_EXTRA
-			    && vgetorpeek(TRUE) == (int)KE_CSI)
+		    c = vgetorpeek(TRUE);
+		    if (vgetorpeek(TRUE) == (int)KE_CSI && c == KS_EXTRA)
 			buf[i] = CSI;
 		}
 	    }
@@ -1533,10 +1534,16 @@ vungetc(c)	/* unget one character (can only be done once!) */
 }
 
 /*
- * get a character: 1. from a previously ungotten character
- *		    2. from the stuffbuffer
- *		    3. from the typeahead buffer
- *		    4. from the user
+ * get a character:
+ * 1. from the stuffbuffer
+ *	This is used for abbreviated commands like "D" -> "d$".
+ *	Also used to redo a command for ".".
+ * 2. from the typeahead buffer
+ *	Stores text obtained previously but not used yet.
+ *	Also stores the result of mappings.
+ *	Also used for the ":normal" command.
+ * 3. from the user
+ *	This may do a blocking wait if "advance" is TRUE.
  *
  * if "advance" is TRUE (vgetc()):
  *	really get the character.
@@ -1544,6 +1551,8 @@ vungetc(c)	/* unget one character (can only be done once!) */
  *	KeyStuffed is TRUE if the character comes from the stuff buffer.
  * if "advance" is FALSE (vpeekc()):
  *	just look whether there is a character available.
+ *
+ * When "no_mapping" is zero, checks for mappings in the current mode.
  * Only returns one byte (of a multi-byte character).
  * K_SPECIAL and CSI may be escaped, need to get two more bytes then.
  */
@@ -1607,7 +1616,7 @@ vgetorpeek(advance)
     do
     {
 /*
- * get a character: 2. from the stuffbuffer
+ * get a character: 1. from the stuffbuffer
  */
 	c = read_stuff(advance);
 	if (c != NUL && !got_int)
@@ -1877,7 +1886,7 @@ vgetorpeek(advance)
 #endif
 			    {
 /*
- * get a character: 3. from the typeahead buffer
+ * get a character: 2. from the typeahead buffer
  */
 				c = typebuf[typeoff] & 255;
 				if (advance)	/* remove chars from typebuf */
@@ -2107,7 +2116,7 @@ vgetorpeek(advance)
 		    continue;
 		}
 /*
- * get a character: 4. from the user
+ * get a character: 3. from the user
  */
 		/* In insert mode a screen update is skipped when characters
 		 * are still available.  But when those available characters
@@ -2587,15 +2596,42 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	     * rest must be all keyword-char or all non-keyword-char.
 	     * Otherwise we won't be able to find the start of it in a
 	     * vi-compatible way.
-	     * An abbrevation cannot contain white space.
 	     */
-	    if (vim_iswordc(keys[len - 1]))	/* ends in keyword char */
-		for (n = 0; n < len - 2; ++n)
-		    if (vim_iswordc(keys[n]) != vim_iswordc(keys[len - 2]))
-		    {
-			retval = 1;
-			goto theend;
-		    }
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		char_u	*p;
+		int	first, last;
+		int	same = -1;
+
+		first = vim_iswordp(keys);
+		last = first;
+		p = keys + mb_ptr2len_check(keys);
+		n = 1;
+		while (p < keys + len)
+		{
+		    ++n;			/* nr of multi-byte chars */
+		    last = vim_iswordp(p);	/* type of last char */
+		    if (same == -1 && last != first)
+			same = n;		/* count of same char type */
+		    p += mb_ptr2len_check(p);
+		}
+		if (last && n > 2 && same < n - 1)
+		{
+		    retval = 1;
+		    goto theend;
+		}
+	    }
+	    else
+#endif
+		if (vim_iswordc(keys[len - 1]))	/* ends in keyword char */
+		    for (n = 0; n < len - 2; ++n)
+			if (vim_iswordc(keys[n]) != vim_iswordc(keys[len - 2]))
+			{
+			    retval = 1;
+			    goto theend;
+			}
+	    /* An abbrevation cannot contain white space. */
 	    for (n = 0; n < len; ++n)
 		if (vim_iswhite(keys[n]))
 		{
@@ -3455,17 +3491,46 @@ check_abbr(c, ptr, col, mincol)
     if (col == 0)				/* cannot be an abbr. */
 	return FALSE;
 
-    if (!vim_iswordc(ptr[col - 1]))
-	vim_abbr = TRUE;			/* Vim added abbr. */
-    else
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
     {
-	vim_abbr = FALSE;			/* vi compatible abbr. */
-	if (col > 1)
-	    is_id = vim_iswordc(ptr[col - 2]);
+	char_u *p;
+
+	p = mb_prevptr(ptr, ptr + col);
+	if (!vim_iswordp(p))
+	    vim_abbr = TRUE;			/* Vim added abbr. */
+	else
+	{
+	    vim_abbr = FALSE;			/* vi compatible abbr. */
+	    if (p > ptr)
+		is_id = vim_iswordp(mb_prevptr(ptr, p));
+	}
+	while (p > ptr)
+	{
+	    p = mb_prevptr(ptr, p);
+	    if (vim_isspace(*p) || (!vim_abbr && is_id != vim_iswordp(p)))
+	    {
+		p += (*mb_ptr2len_check)(p);
+		break;
+	    }
+	}
+	len = p - ptr;
     }
-    for (len = col - 1; len > 0 && !vim_isspace(ptr[len - 1]) &&
-		       (vim_abbr || is_id == vim_iswordc(ptr[len - 1])); --len)
-	;
+    else
+#endif
+    {
+	if (!vim_iswordc(ptr[col - 1]))
+	    vim_abbr = TRUE;			/* Vim added abbr. */
+	else
+	{
+	    vim_abbr = FALSE;			/* vi compatible abbr. */
+	    if (col > 1)
+		is_id = vim_iswordc(ptr[col - 2]);
+	}
+	for (len = col - 1; len > 0 && !vim_isspace(ptr[len - 1]) &&
+		(vim_abbr || is_id == vim_iswordc(ptr[len - 1])); --len)
+	    ;
+    }
 
     if (len < mincol)
 	len = mincol;

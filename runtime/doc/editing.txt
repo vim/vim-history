@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0w.  Last change: 2001 Feb 13
+*editing.txt*   For Vim version 6.0x.  Last change: 2001 Mar 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -303,6 +303,8 @@ unmodified.
 			relative to the current file.
 			Uses the 'suffixesadd' option to check for file names
 			with a suffix added.
+			If the file can't be found, 'includeexpr' is used to
+			modify the name and another attempt is done.
 			If a [count] is given, the count'th file that is found
 			in the 'path' is edited.
 			This command fails if Vim refuses to |abandon| the
@@ -344,7 +346,11 @@ allow file names with embedded spaces (like the Amiga).  Example: The command
 command that accepts more than one file name (like ":next file1 file2")
 embedded spaces must be escaped with a backslash.
 
-						*backtick-expansion*
+You can use the ":e!" command if you messed up the buffer and want to start
+all over again.  The ":e" command is only useful if you have changed the
+current file name.
+
+					*backtick-expansion* *`-expansion*
 On Unix you can also use backticks in the file name, for example: >
 	:e `find . -name ver\\*.c -print`
 The backslashes before the star are required to prevent "ver*.c" to be
@@ -356,19 +362,15 @@ directly before the first or just after the last backtick.
 You can have the backicks expanded as a Vim expression, instead of
 an external command, by using the syntax `={expr}` e.g. >
  	:let foo='bar'
- 	:e `=foo . '.c' `
+ 	:e `=foo . ".c" `
 edits "bar.c".  Note that the expression cannot contain a backtick.
-
-You can use the ":e!" command if you messed up the buffer and want to start
-all over again.  The ":e" command is only useful if you have changed the
-current file name.
 
 							*++opt* *[++opt]*
 The [++opt] argument can be used to force the value of 'fileformat' or
 'fileencoding' to a value for one command.  The form is: >
 	++{optname}={value}
 
-Where {optname} is one of:
+Where {optname} is one of:				*++ff* *++enc*
     ff  or  fileformat	    overrides 'fileformat'
     enc  or  encoding	    overrides 'fileencoding'
 

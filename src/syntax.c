@@ -5632,7 +5632,7 @@ static char *(highlight_init_both[]) =
 	"NonText term=bold ctermfg=Blue gui=bold guifg=Blue",
 	"StatusLine term=reverse,bold cterm=reverse,bold gui=reverse,bold",
 	"StatusLineNC term=reverse cterm=reverse gui=reverse",
-	"FillColumn term=reverse cterm=reverse gui=reverse",
+	"VertSplit term=reverse cterm=reverse gui=reverse",
 	"Visual term=reverse cterm=reverse gui=reverse guifg=Grey guibg=fg",
 	"VisualNOS term=underline,bold cterm=underline,bold gui=underline,bold",
 	NULL

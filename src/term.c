@@ -2421,7 +2421,7 @@ out_trash()
 #endif
 
 /*
- * out_char(c): put a character into the output buffer.
+ * out_char(c): put a byte into the output buffer.
  *		Flush it if it becomes full.
  * This should not be used for outputting text on the screen (use functions
  * like msg_puts() and screen_putchar() for that).
@@ -2486,7 +2486,7 @@ out_str_nf(s)
 }
 
 /*
- * out_str(s): Put a string character at a time into the output buffer.
+ * out_str(s): Put a character string a byte at a time into the output buffer.
  * If HAVE_TGETENT is defined use the termcap parser. (jw)
  * This should only be used for writing terminal codes, not for outputting
  * normal text (use functions like msg_puts() and screen_putchar() for that).
@@ -3701,7 +3701,7 @@ check_termcode(max_offset, buf, buflen)
 #ifdef FEAT_TERMRESPONSE
 	if (key_name[0] == NUL)
 	{
-	    /* Check for xterm version string: "<Esc>[><x>;<vers>;<y>c".  Also
+	    /* Check for xterm version string: "<Esc>[>{x};{vers};{y}c".  Also
 	     * eat other possible responses to t_RV, rxvt returns
 	     * "<Esc>[?1;2c".  Also accept CSI instead of <Esc>[. */
 	    if (*T_CRV != NUL && ((tp[0] == ESC && tp[1] == '[' && len >= 3)

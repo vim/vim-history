@@ -691,26 +691,38 @@ getcmdline(firstc, count, indent)
 #endif
 		if (ccline.cmdpos > 0)
 		{
+		    char_u *p;
+
 		    j = ccline.cmdpos;
-		    if (c == Ctrl_W)
+		    p = ccline.cmdbuff + j;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
 		    {
-			while (ccline.cmdpos &&
-			       vim_isspace(ccline.cmdbuff[ccline.cmdpos - 1]))
-			    --ccline.cmdpos;
-			i = vim_iswordc(ccline.cmdbuff[ccline.cmdpos - 1]);
-			while (ccline.cmdpos && !vim_isspace(
-					 ccline.cmdbuff[ccline.cmdpos - 1]) &&
-				vim_iswordc(
-				      ccline.cmdbuff[ccline.cmdpos - 1]) == i)
-			    --ccline.cmdpos;
+			p = mb_prevptr(ccline.cmdbuff, p);
+			if (c == Ctrl_W)
+			{
+			    while (p > ccline.cmdbuff && vim_isspace(*p))
+				p = mb_prevptr(ccline.cmdbuff, p);
+			    i = mb_get_class(p);
+			    while (p > ccline.cmdbuff && mb_get_class(p) == i)
+				p = mb_prevptr(ccline.cmdbuff, p);
+			    p += (*mb_ptr2len_check)(p);
+			}
 		    }
 		    else
-			--ccline.cmdpos;
-#ifdef FEAT_MBYTE
-		    if (c != Ctrl_W && has_mbyte)
-			ccline.cmdpos -= (*mb_head_off)(ccline.cmdbuff,
-					      ccline.cmdbuff + ccline.cmdpos);
 #endif
+			if (c == Ctrl_W)
+		    {
+			while (p > ccline.cmdbuff && vim_isspace(p[-1]))
+			    --p;
+			i = vim_iswordc(p[-1]);
+			while (p > ccline.cmdbuff && !vim_isspace(p[-1])
+				&& vim_iswordc(p[-1]) == i)
+			    --p;
+		    }
+		    else
+			--p;
+		    ccline.cmdpos = p - ccline.cmdbuff;
 		    ccline.cmdlen -= j - ccline.cmdpos;
 		    i = ccline.cmdpos;
 		    while (i < ccline.cmdlen)
@@ -1409,7 +1421,7 @@ set_cmdspos_cursor()
 		&& (*mb_ptr2cells)(ccline.cmdbuff + i) > 1
 		&& ccline.cmdspos % Columns + c == Columns)
 	    ccline.cmdspos++;
- #endif
+#endif
 	/* If the cmdline doesn't fit, put cursor on last visible char. */
 	if ((ccline.cmdspos += c) >= m)
 	{
@@ -1787,8 +1799,34 @@ put_on_cmdline(str, len, redraw)
 				     (size_t)(ccline.cmdlen - ccline.cmdpos));
 	    ccline.cmdlen += len;
 	}
-	else if (ccline.cmdpos + len > ccline.cmdlen)
-	    ccline.cmdlen = ccline.cmdpos + len;
+	else
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		/* Count nr of characters in the new string. */
+		m = 0;
+		for (i = 0; i < len; i += (*mb_ptr2len_check)(str + i))
+		    ++m;
+		/* Count nr of bytes in cmdline that are overwritten by these
+		 * characters. */
+		for (i = ccline.cmdpos; i < ccline.cmdlen && m > 0;
+				 i += (*mb_ptr2len_check)(ccline.cmdbuff + i))
+		    --m;
+		if (i < ccline.cmdlen)
+		{
+		    mch_memmove(ccline.cmdbuff + ccline.cmdpos + len,
+			    ccline.cmdbuff + i, (size_t)(ccline.cmdlen - i));
+		    ccline.cmdlen += ccline.cmdpos + len - i;
+		}
+		else
+		    ccline.cmdlen = ccline.cmdpos + len;
+	    }
+	    else
+#endif
+	    if (ccline.cmdpos + len > ccline.cmdlen)
+		ccline.cmdlen = ccline.cmdpos + len;
+	}
 	mch_memmove(ccline.cmdbuff + ccline.cmdpos, str, (size_t)len);
 	if (redraw)
 	{
@@ -1802,6 +1840,7 @@ put_on_cmdline(str, len, redraw)
 		msg_no_more = TRUE;
 		msg_outtrans_len(ccline.cmdbuff + ccline.cmdpos,
 					       ccline.cmdlen - ccline.cmdpos);
+		msg_clr_eos();
 		msg_no_more = FALSE;
 	    }
 	}

@@ -180,3 +180,4 @@ int setenv(const char *, const char *);
 #define mch_remove(x) remove((char *)(x))
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_chdir(s) chdir(s)
+#define vim_mkdir(x, y) mch_mkdir(x)

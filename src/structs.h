@@ -1443,6 +1443,9 @@ struct VimMenu
 #endif
 #ifdef FEAT_GUI_MOTIF
     int		sensitive;	    /* turn button on/off */
+# ifdef FEAT_BEVAL
+    BalloonEval *tip;		    /* tooltip for this menu item */
+# endif
 #endif
 #ifdef FEAT_GUI_W16
     UINT	id;		    /* Id of menu item */
