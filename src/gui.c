@@ -125,17 +125,31 @@ gui_start()
 	else		/* parent */
 	{
 	    int gui_in_use;
+	    int i;
 
 	    (void)close(pfd[1]);	/* parent closes its write end */
-	    if (read(pfd[0], &gui_in_use, sizeof(int)) <= 0 || !gui_in_use)
+
+	    /*
+	     * Repeat the read() when interrupted by a signal.  Could be a
+	     * harmless SIGWINCH.
+	     */
+	    for (;;)
 	    {
-		EMSG("child process failed to start gui");
-		(void)close(pfd[0]);
-		/* terminate the child process, in case it's still around */
-		(void)kill(pid, SIGTERM);
+		i = read(pfd[0], &gui_in_use, sizeof(int));
+		if (i != sizeof(int))
+		    gui_in_use = 0;
+#ifdef EINTR
+		if (i >= 0 || errno != EINTR)
+#endif
+		    break;
 	    }
-	    else
+	    if (gui_in_use)
 		exit(0);	/* child was successful, parent can exit */
+
+	    EMSG("child process failed to start gui");
+	    (void)close(pfd[0]);
+	    /* terminate the child process, in case it's still around */
+	    (void)kill(pid, SIGTERM);
 	}
     }
     else
