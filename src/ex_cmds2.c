@@ -2864,7 +2864,8 @@ prt_header(psettings, pagenum, lnum)
 	curwin->w_botline = lnum + 63;
 	printer_page_num = pagenum;
 
-	build_stl_str_hl(curwin, tbuf, p_header, ' ', width, NULL);
+	build_stl_str_hl(curwin, tbuf, (size_t)(width + IOSIZE),
+						  p_header, ' ', width, NULL);
 
 	/* Reset line numbers */
 	curwin->w_cursor.lnum = tmp_lnum;
