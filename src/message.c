@@ -20,6 +20,8 @@
 #endif
 
 static void reset_last_sourcing __ARGS((void));
+static char_u *get_emsg_source __ARGS((int other));
+static char_u *get_emsg_lnum __ARGS((int other));
 static void add_msg_hist __ARGS((char_u *s, int len, int attr));
 static void hit_return_msg __ARGS((void));
 static void msg_home_replace_attr __ARGS((char_u *fname, int attr));
@@ -397,6 +399,54 @@ reset_last_sourcing()
 }
 
 /*
+ * Get the message about the source, as used for an error message.
+ * Returns an allocated string with room for one more character.
+ * Returns NULL when no message is to be given.
+ */
+    static char_u *
+get_emsg_source(other)
+    int		other;	/* TRUE when "sourcing_name" differs from last time */
+{
+    char_u	*Buf, *p;
+
+    if (sourcing_name != NULL && other)
+    {
+	p = (char_u *)_("Error detected while processing %s:");
+	Buf = alloc((unsigned)(STRLEN(sourcing_name) + STRLEN(p)));
+	if (Buf != NULL)
+	    sprintf((char *)Buf, (char *)p, sourcing_name);
+	return Buf;
+    }
+    return NULL;
+}
+
+/*
+ * Get the message about the source lnum, as used for an error message.
+ * Returns an allocated string with room for one more character.
+ * Returns NULL when no message is to be given.
+ */
+    static char_u *
+get_emsg_lnum(other)
+    int		other;	/* TRUE when "sourcing_name" differs from last time */
+{
+    char_u	*Buf, *p;
+
+    /* lnum is 0 when executing a command from the command line
+     * argument, we don't want a line number then */
+    if (sourcing_name != NULL
+	    && (other || sourcing_lnum != last_sourcing_lnum)
+	    && sourcing_lnum != 0)
+    {
+	p = (char_u *)_("line %4ld:");
+	Buf = alloc((unsigned)(STRLEN(p) + 20));
+	if (Buf != NULL)
+	    sprintf((char *)Buf, (char *)p, (long)sourcing_lnum);
+	return Buf;
+    }
+    return NULL;
+}
+
+/*
  * emsg() - display an error message
  *
  * Rings the bell, if appropriate, and calls message() to do the real work
@@ -408,10 +458,9 @@ reset_last_sourcing()
 emsg(s)
     char_u	*s;
 {
-    char_u	*Buf;
     int		attr;
     int		other_sourcing_name;
-    char	*p;
+    char_u	*p;
 #ifdef FEAT_EVAL
     int		ignore = FALSE;
     int		severe;
@@ -439,6 +488,16 @@ emsg(s)
 #endif
 	    )
 	return TRUE;
+
+    if (sourcing_name != NULL)
+    {
+	if (last_sourcing_name != NULL)
+	    other_sourcing_name = STRCMP(sourcing_name, last_sourcing_name);
+	else
+	    other_sourcing_name = TRUE;
+    }
+    else
+	other_sourcing_name = FALSE;
 
     if (!emsg_off)
     {
@@ -468,6 +527,20 @@ emsg(s)
 	if (emsg_silent != 0)
 	{
 	    msg_start();
+	    p = get_emsg_source(other_sourcing_name);
+	    if (p != NULL)
+	    {
+		STRCAT(p, "\n");
+		redir_write(p, -1);
+		vim_free(p);
+	    }
+	    p = get_emsg_lnum(other_sourcing_name);
+	    if (p != NULL)
+	    {
+		STRCAT(p, "\n");
+		redir_write(p, -1);
+		vim_free(p);
+	    }
 	    redir_write(s, -1);
 	    return TRUE;
 	}
@@ -503,42 +576,24 @@ emsg(s)
 				     * and a redraw is expected because
 				     * msg_scrolled is non-zero */
 
-/*
- * First output name and line number of source of error message
- */
-    if (sourcing_name != NULL)
+    /*
+     * Display name and line number for the source of the error.
+     */
+    ++no_wait_return;
+    p = get_emsg_source(other_sourcing_name);
+    if (p != NULL)
     {
-	if (last_sourcing_name != NULL)
-	    other_sourcing_name = STRCMP(sourcing_name, last_sourcing_name);
-	else
-	    other_sourcing_name = TRUE;
+	msg_attr(p, attr);
+	vim_free(p);
     }
-    else
-	other_sourcing_name = FALSE;
-
-    p = _("Error detected while processing %s:");
-    if (sourcing_name != NULL
-	    && (other_sourcing_name || sourcing_lnum != last_sourcing_lnum)
-	    && (Buf = alloc((unsigned)(STRLEN(sourcing_name)
-						       + STRLEN(p)))) != NULL)
+    p = get_emsg_lnum(other_sourcing_name);
+    if (p != NULL)
     {
-	++no_wait_return;
-	if (other_sourcing_name)
-	{
-	    sprintf((char *)Buf, p, sourcing_name);
-	    msg_attr(Buf, attr);
-	}
-	    /* lnum is 0 when executing a command from the command line
-	     * argument, we don't want a line number then */
-	if (sourcing_lnum != 0)
-	{
-	    sprintf((char *)Buf, _("line %4ld:"), (long)sourcing_lnum);
-	    msg_attr(Buf, hl_attr(HLF_N));
-	}
-	--no_wait_return;
+	msg_attr(p, hl_attr(HLF_N));
+	vim_free(p);
 	last_sourcing_lnum = sourcing_lnum;  /* only once for each line */
-	vim_free(Buf);
     }
+    --no_wait_return;
 
     /* remember the last sourcing name printed, also when it's empty */
     if (sourcing_name == NULL || other_sourcing_name)
@@ -551,6 +606,9 @@ emsg(s)
     }
     msg_nowait = FALSE;			/* wait for this msg */
 
+    /*
+     * Display the error message itself.
+     */
     return msg_attr(s, attr);
 }
 
