@@ -3045,7 +3045,10 @@ set_shellsize(width, height, mustset)
     }
     else
 	check_shellsize();
-    win_new_shellsize();    /* fit the windows in the new sized shell */
+
+    /* The window layout used to be adjusted here, but it now happens in
+     * screenalloc() (also invoked from screenclear()).  That is because the
+     * "busy" check above may skip this, but not screenalloc(). */
 
     if (State != ASKMORE && State != EXTERNCMD && State != CONFIRM)
 	screenclear();
