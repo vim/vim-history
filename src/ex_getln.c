@@ -1258,6 +1258,10 @@ returncmd:
     msg_scroll = save_msg_scroll;
     redir_off = FALSE;
 
+    /* When the command line was typed, no need for a wait-return prompt. */
+    if (some_key_typed)
+	need_wait_return = FALSE;
+
     State = save_State;
 #ifdef USE_MOUSE
     setmouse();
