@@ -2618,8 +2618,10 @@ typedef struct
     long_u	bytes_printed;	    /* bytes printed so far */
 } prt_pos_T;
 
+#ifdef FEAT_SYN_HL
 static long_u darken_rgb __ARGS((long_u rgb));
 static long_u prt_get_term_color __ARGS((int colorindex));
+#endif
 static void prt_set_fg __ARGS((long_u fg));
 static void prt_set_bg __ARGS((long_u bg));
 static void prt_set_font __ARGS((int bold, int italic, int underline));
@@ -2628,6 +2630,7 @@ static void prt_header __ARGS((prt_settings_T *psettings, int pagenum, linenr_T 
 static void prt_message __ARGS((char_u *s));
 static colnr_T hardcopy_line __ARGS((prt_settings_T *psettings, int page_line, prt_pos_T *ppos));
 
+#ifdef FEAT_SYN_HL
 /*
  * If using a dark background, the colors will probably be too bright to show
  * up well on white paper, so reduce their brightness.
@@ -2650,6 +2653,7 @@ prt_get_term_color(colorindex)
 	return cterm_color_16[colorindex % 16];
     return cterm_color_8[colorindex % 8];
 }
+#endif
 
     static void
 prt_set_fg(fg)
@@ -3116,13 +3120,13 @@ hardcopy_line(psettings, page_line, ppos)
     char_u	*line;
     int		need_break = FALSE;
     int		outputlen;
+    int		tab_spaces;
+    long_u	print_pos;
+#ifdef FEAT_SYN_HL
     int		colorindex;
     char	*color;
     int		id;
-    int		tab_spaces;
-    long_u	print_pos;
     long_u	this_color;
-#ifdef FEAT_SYN_HL
     char	modec;
 #endif
 
@@ -4300,7 +4304,12 @@ mch_print_begin(psettings)
     resource[0] = PRT_RESOURCE_ENCODING;
     prt_dsc_resources(NULL, "encoding", 1, resource);
     prt_dsc_requirements(prt_duplex, prt_tumble, prt_collate,
-					psettings->do_syntax, prt_num_copies);
+#ifdef FEAT_SYN_HL
+					psettings->do_syntax
+#else
+					0
+#endif
+					, prt_num_copies);
     prt_dsc_noarg("EndComments");
 
     /*
