@@ -1142,7 +1142,14 @@ ml_recover()
     if (got_int)
 	EMSG(_("E311: Recovery Interrupted"));
     else if (error)
+    {
+	++no_wait_return;
+	MSG(">>>>>>>>>>>>>");
 	EMSG(_("E312: Errors detected while recovering; look for lines starting with ???"));
+	--no_wait_return;
+	MSG(_("See \":help E312\" for more information."));
+	MSG(">>>>>>>>>>>>>");
+    }
     else
     {
 	MSG(_("Recovery completed. You should check if everything is OK."));
