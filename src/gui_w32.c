@@ -2097,7 +2097,7 @@ gui_mch_menu_grey(
 	if (menu->children == NULL)
 	    menuID = (WORD)(menu->id);
 	else
-	    menuID = (WORD)((WORD)(menu->submenu_id) | (WORD)0x8000);
+	    menuID = (WORD)((DWORD)(menu->submenu_id) | (DWORD)0x8000);
 	menuHandle = GetDlgItem(menu->parent->tearoff_handle, menuID);
 	if (menuHandle)
 	    EnableWindow(menuHandle, !grey);
@@ -3107,7 +3107,7 @@ gui_mch_tearoff(
 	else
 	{
 	    len += (int)STRLEN(TEAROFF_SUBMENU_LABEL);
-	    menuID = (WORD)((WORD)(menu->submenu_id) | (WORD)0x8000);
+	    menuID = (WORD)((DWORD)(menu->submenu_id) | (DWORD)0x8000);
 	}
 
 	/* Allocate menu label and fill it in */
