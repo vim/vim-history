@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2.  Last change: 2003 Jun 01
+*eval.txt*      For Vim version 6.2.  Last change: 2003 Aug 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -885,6 +885,7 @@ setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setreg( {n}, {v}[, {opt}])	Number  set register to value and type
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
+simplify( {filename})		String  simplify filename as much as possible
 strftime( {format}[, {time}])	String	time in specified format
 stridx( {haystack}, {needle})	Number	first index of {needle} in {haystack}
 strlen( {expr})			Number	length of the String {expr}
@@ -2104,13 +2105,18 @@ rename({from}, {to})					*rename()*
 		successfully, and non-zero when the renaming failed.
 		This function is not available in the |sandbox|.
 
-resolve({filename})					*resolve()*
+resolve({filename})					*resolve()* *E655*
 		On MS-Windows, when {filename} is a shortcut (a .lnk file),
-		returns the path the shortcut points to.
-		On Unix, when {filename} is a symbolic link, returns the path
-		the symlink points to.  This only happens once, the returned
-		path could be a symlink again.
-		Otherwise {filename} is returned.
+		returns the path the shortcut points to in a simplified form.
+		On Unix, repeat resolving symbolic links in all path
+		components of {filename} and return the simplified result.
+		To cope with link cycles, resolving of symbolic links is
+		stopped after 100 iterations.
+		On other systems, return the simplified {filename}.
+		The simplification step is done as by |simplify()|.
+		resolve() keeps a leading path component specifying the
+		current directory (provided the result is still a relative
+		path name) and also keeps a trailing path separator.
 
 search({pattern} [, {flags}])				*search()*
 		Search for regexp pattern {pattern}.  The search starts at the
@@ -2301,6 +2307,21 @@ setwinvar({nr}, {varname}, {val})			*setwinvar()*
 			:call setwinvar(1, "&list", 0)
 			:call setwinvar(2, "myvar", "foobar")
 <		This function is not available in the |sandbox|.
+
+simplify({filename})					*simplify()*
+		Simplify the file name as much as possible without changing
+		the meaning.  Shortcuts (on MS-Windows) or symbolic links (on
+		Unix) are not resolved.  If the first path component in
+		{filename} designates the current directory, this will be
+		valid for the result as well.  A trailing path separator is
+		not removed either.
+		Example: >
+			simplify("./dir/.././/file/") == "./file/"
+<		Note: The combination "dir/.." is only removed if "dir" is
+		a searchable directory or does not exist.  On Unix, it is also
+		removed when "dir" is a symbolic link within the same
+		directory.  In order to resolve all the involved symbolic
+		links before simplifying the path name, use |resolve()|.
 
 strftime({format} [, {time}])				*strftime()*
 		The result is a String, which is a formatted date and time, as

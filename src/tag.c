@@ -2864,12 +2864,8 @@ simplify_filename(filename)
 #ifndef AMIGA	    /* Amiga doesn't have "..", it uses "/" */
     int		components = 0;
     char_u	*p, *tail, *start;
-#ifdef UNIX
-    char_u	*orig = vim_strsave(filename);
-
-    if (orig == NULL)
-	return;
-#endif
+    int		stripping_disabled = FALSE;
+    int		relative = TRUE;
 
     p = filename;
 #ifdef BACKSLASH_IN_FILENAME
@@ -2877,13 +2873,19 @@ simplify_filename(filename)
 	p += 2;
 #endif
 
-    while (vim_ispathsep(*p))
-	++p;
-    start = p;	    /* remember start after "c:/" or "/" or "//" */
+    if (vim_ispathsep(*p))
+    {
+	relative = FALSE;
+	do
+	    ++p;
+	while (vim_ispathsep(*p));
+    }
+    start = p;	    /* remember start after "c:/" or "/" or "///" */
 
     do
     {
-	/* At this point "p" is pointing to the char following a "/". */
+	/* At this point "p" is pointing to the char following a single "/"
+	 * or "p" is at the "start" of the (absolute or relative) path name. */
 #ifdef VMS
 	/* VMS allows device:[path] - don't strip the [ in directory  */
 	if ((*p == '[' || *p == '<') && p > filename && p[-1] == ':')
@@ -2898,55 +2900,165 @@ simplify_filename(filename)
 	    /* ":: composition: vms host/passwd component */
 	    ++components;
 	    p = getnextcomp(p + 2);
-
 	}
 	else
 #endif
 	  if (vim_ispathsep(*p))
 	    movetail(p, p + 1);		/* remove duplicate "/" */
-	else if (p[0] == '.' && vim_ispathsep(p[1]))
-	    movetail(p, p + 2);		/* strip "./" */
-	else if (p[0] == '.' && p[1] == '.' && vim_ispathsep(p[2]))
+	else if (p[0] == '.' && (vim_ispathsep(p[1]) || p[1] == NUL))
 	{
+	    if (p == start && relative)
+		p += 1 + (p[1] != NUL);	/* keep single "." or leading "./" */
+	    else
+	    {
+		/* Strip "./" or ".///".  If we are at the end of the file name
+		 * and there is no trailing path separator, either strip "/." if
+		 * we are after "start", or strip "." if we are at the beginning
+		 * of an absolute path name . */
+		tail = p + 1;
+		if (p[1] != NUL)
+		    while (vim_ispathsep(*tail))
+			++tail;
+		else if (p > start)
+		    --p;		/* strip preceding path separator */
+		movetail(p, tail);
+	    }
+	}
+	else if (p[0] == '.' && p[1] == '.' &&
+	    (vim_ispathsep(p[2]) || p[2] == NUL))
+	{
+	    /* Skip to after ".." or "../" or "..///". */
+	    tail = p + 2;
+	    while (vim_ispathsep(*tail))
+		++tail;
+
 	    if (components > 0)		/* strip one preceding component */
 	    {
-		tail = p + 3;		/* skip to after "../" or "..///" */
-		while (vim_ispathsep(*tail))
-		    ++tail;
-		--p;
-		/* skip back to after previous '/' */
-		while (p > start && !vim_ispathsep(p[-1]))
+		int		do_strip = FALSE;
+		char_u		saved_char;
+		struct stat	st, new_st;
+
+		/* Don't strip for an erroneous file name. */
+		if (!stripping_disabled)
+		{
+		    /* If the preceding component does not exist in the file
+		     * system, we strip it.  On Unix, we don't accept a symbolic
+		     * link that refers to a non-existent file. */
+		    saved_char = p[-1];
+		    p[-1] = NUL;
+#ifdef UNIX
+		    if (mch_lstat((char *)filename, &st) < 0)
+#else
+			if (mch_stat((char *)filename, &st) < 0)
+#endif
+			    do_strip = TRUE;
+		    p[-1] = saved_char;
+
 		    --p;
-		/* skip back to after first '/' in a row */
-		while (p - 1 > start && vim_ispathsep(p[-2]))
-		    --p;
-		movetail(p, tail);	/* strip previous component */
-		--components;
+		    /* Skip back to after previous '/'. */
+		    while (p > start && !vim_ispathsep(p[-1]))
+			--p;
+
+		    if (!do_strip)
+		    {
+			/* If the component exists in the file system, check
+			 * that stripping it won't change the meaning of the
+			 * file name.  First get information about the
+			 * unstripped file name.  This may fail if the component
+			 * to strip is not a searchable directory (but a regular
+			 * file, for instance), since the trailing "/.." cannot
+			 * be applied then.  We don't strip it then since we
+			 * don't want to replace an erroneous file name by
+			 * a valid one, and we disable stripping of later
+			 * components. */
+			saved_char = *tail;
+			*tail = NUL;
+			if (mch_stat((char *)filename, &st) >= 0)
+			    do_strip = TRUE;
+			else
+			    stripping_disabled = TRUE;
+			*tail = saved_char;
+#ifdef UNIX
+			if (do_strip)
+			{
+			    /* On Unix, the check for the unstripped file name
+			     * above works also for a symbolic link pointing to
+			     * a searchable directory.  But then the parent of
+			     * the directory pointed to by the link must be the
+			     * same as the stripped file name.  (The latter
+			     * exists in the file system since it is the
+			     * component's parent directory.) */
+			    if (p == start && relative)
+				(void)mch_stat(".", &new_st);
+			    else
+			    {
+				saved_char = *p;
+				*p = NUL;
+				(void)mch_stat((char *)filename, &new_st);
+				*p = saved_char;
+			    }
+
+			    if (new_st.st_ino != st.st_ino ||
+				new_st.st_dev != st.st_dev)
+			    {
+				do_strip = FALSE;
+				/* We don't disable stripping of later
+				 * components since the unstripped path name is
+				 * still valid. */
+			    }
+			}
+#endif
+		    }
+		}
+
+		if (!do_strip)
+		{
+		    /* Skip the ".." or "../" and reset the counter for the
+		     * components that might be stripped later on. */
+		    p = tail;
+		    components = 0;
+		}
+		else
+		{
+		    /* Strip previous component.  If the result would get empty
+		     * and there is no trailing path separator, leave a single
+		     * "." instead.  If we are at the end of the file name and
+		     * there is no trailing path separator and a preceding
+		     * component is left after stripping, strip its trailing
+		     * path separator as well. */
+		    if (p == start && relative && tail[-1] == '.')
+		    {
+			*p++ = '.';
+			*p = NUL;
+		    }
+		    else
+		    {
+			if (p > start && tail[-1] == '.')
+			    --p;
+			movetail(p, tail);	/* strip previous component */
+		    }
+
+		    --components;
+		}
 	    }
-	    else			/* leading "../" */
-		p += 3;			/* skip to char after "/" */
+	    else if (p == start && !relative)	/* leading "/.." or "/../" */
+		movetail(p, tail);		/* strip ".." or "../" */
+	    else
+	    {
+		if (p == start + 2 && p[-2] == '.')	/* leading "./../" */
+		{
+		    movetail(p - 2, p);			/* strip leading "./" */
+		    tail -= 2;
+		}
+		p = tail;		/* skip to char after ".." or "../" */
+	    }
 	}
 	else
 	{
 	    ++components;		/* simple path component */
 	    p = getnextcomp(p);
 	}
-    } while (p != NULL && *p != NUL);
-
-#ifdef UNIX
-    /* Check that the new file name is really the same file.  This will not be
-     * the case when using symbolic links: "dir/link/../name" != "dir/name". */
-    {
-	struct stat	orig_st, new_st;
-
-	if (	   mch_stat((char *)orig, &orig_st) < 0
-		|| mch_stat((char *)filename, &new_st) < 0
-		|| orig_st.st_ino != new_st.st_ino
-		|| orig_st.st_dev != new_st.st_dev)
-	    STRCPY(filename, orig);
-	vim_free(orig);
-    }
-#endif
+    } while (*p != NUL);
 #endif /* !AMIGA */
 }
 

@@ -1,6 +1,6 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 May 30
+" Last Change:	2003 Jul 30
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1
@@ -5076,7 +5076,10 @@ catch /.*/
 	    Xpath 1048576			" X: 1048576
 	    let exception  = v:exception
 	    let throwpoint = v:throwpoint
-	    call CHECK(7, "autsch", scriptT, '\<6\>')
+	    " Symbolic links in tempname()s are not resolved, whereas resolving
+	    " is done for v:throwpoint.  Resolve the temporary file name for
+	    " scriptT, so that it can be matched against v:throwpoint.
+	    call CHECK(7, "autsch", resolve(scriptT), '\<6\>')
 	finally
 	    Xpath 2097152			" X: 2097152
 	    let exception  = v:exception
@@ -5091,7 +5094,8 @@ catch /.*/
 		Xpath 8388608			" X: 8388608
 		let exception  = v:exception
 		let throwpoint = v:throwpoint
-		call CHECK(9, "brrrr", scriptT, '\<8\>')
+		" Resolve scriptT for matching it against v:throwpoint.
+		call CHECK(9, "brrrr", resolve(scriptT), '\<8\>')
 	    finally
 		Xpath 16777216			" X: 16777216
 		let exception  = v:exception
