@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.1.  Last change: 2001 Sep 21
+*quickfix.txt*  For Vim version 6.1.  Last change: 2002 Apr 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -101,6 +101,11 @@ The following commands can be used if you are in QuickFix mode:
 			keep Vim running while compiling.  If you give the
 			name of the errorfile, the 'errorfile' option will
 			be set to [errorfile].  See |:cc| for [!].
+
+							*:cg* *:cgetfile*
+:cg[etfile][!] [errorfile]
+			Read the error file.  Just like ":cfile" but don't
+			jump to the first error.
 
 							*:cl* *:clist*
 :cl[ist] [from] [, [to]]

@@ -2020,7 +2020,7 @@ ex_cfile(eap)
 {
     if (*eap->arg != NUL)
 	set_string_option_direct((char_u *)"ef", -1, eap->arg, OPT_FREE);
-    if (qf_init(p_ef, p_efm, TRUE) > 0)
+    if (qf_init(p_ef, p_efm, TRUE) > 0 && eap->cmdidx == CMD_cfile)
 	qf_jump(0, 0, eap->forceit);		/* display first error */
 }
 

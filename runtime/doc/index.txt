@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.1.  Last change: 2002 Mar 09
+*index.txt*     For Vim version 6.1.  Last change: 2002 Apr 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1036,8 +1036,9 @@ The commands are sorted on the non-optional part of their name.
 |:cclose|	:ccl[ose]	close quickfix window
 |:cd|		:cd		change directory
 |:center|	:ce[nter]	format lines at the center
-|:cfile|	:cf[ile]	read the file with error messages
+|:cfile|	:cf[ile]	read file with error messages and jump to first
 |:cfirst|	:cfir[st]	go to the specified error, default first one
+|:cgetfile|	:cg[etfile]	read file with error messages
 |:chdir|	:chd[ir]	change directory
 |:checkpath|	:che[ckpath]	list included files
 |:checktime|	:checkt[ime]	check timestamp of loaded buffers
