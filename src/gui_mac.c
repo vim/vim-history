@@ -2081,7 +2081,7 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
 {
     /* TODO: add support for COMMAND KEY */
     long		menu;
-    unsigned char	string[10];
+    unsigned char	string[20];
     short		num, i;
     short		len = 0;
     KeySym		key_sym;
@@ -2190,7 +2190,36 @@ gui_mac_doKeyEvent(EventRecord *theEvent)
 	}
 	else
 	{
-	    string[ len++ ] = key_char;
+#ifdef FEAT_MBYTE
+	    if (input_conv.vc_type != CONV_NONE)
+	    {
+		char_u	from[2], *to;
+		int	l;
+
+		from[0] = key_char;
+		from[1] = NUL;
+		l = 1;
+		to = string_convert(&input_conv, from, &l);
+		if (to != NULL)
+		{
+		    for (i = 0; i < l && len < 19; i++)
+		    {
+			if (to[i] == CSI)
+			{
+			    string[len++] = KS_EXTRA;
+			    string[len++] = KE_CSI;
+			}
+			else
+			    string[len++] = to[i];
+		    }
+		    vim_free(to);
+		}
+		else
+		    string[len++] = key_char;
+	    }
+	    else
+#endif
+		string[len++] = key_char;
 	}
 
 	if (len == 1 && string[0] == CSI)
@@ -3021,6 +3050,10 @@ gui_mch_init()
     }
 #endif
 
+#ifdef FEAT_MBYTE
+    set_option_value((char_u *)"termencoding", 0L, (char_u *)"macroman", 0);
+#endif
+
     /* TODO: Load bitmap if using TOOLBAR */
     return OK;
 }
@@ -3498,12 +3531,25 @@ gui_mch_draw_string(row, col, s, len, flags)
     int		len;
     int		flags;
 {
+#if defined(FEAT_GUI) && defined(MACOS_X)
+    SInt32	sys_version;
+#endif
+#ifdef FEAT_MBYTE
+    char_u	*tofree = NULL;
+
+    if (output_conv.vc_type != CONV_NONE)
+    {
+	tofree = string_convert(&output_conv, s, &len);
+	if (tofree != NULL)
+	    s = tofree;
+    }
+#endif
 
 #if defined(FEAT_GUI) && defined(MACOS_X)
     /*
      * On OS X, try using Quartz-style text antialiasing.
      */
-    SInt32 sys_version = 0;
+    sys_version = 0;
 
     Gestalt(gestaltSystemVersion, &sys_version);
     if (sys_version >= 0x1020)
@@ -3578,6 +3624,10 @@ gui_mch_draw_string(row, col, s, len, flags)
 	    LineTo (FILL_X(col + len) - 1, FILL_Y(row + 1) - 1);
 	}
     }
+
+#ifdef FEAT_MBYTE
+    vim_free(tofree);
+#endif
 }
 
 /*
@@ -3984,7 +4034,7 @@ clip_mch_request_selection(cbd)
 #endif
     int		type;
     char	*searchCR;
-    char	*tempclip;
+    char_u	*tempclip;
 
 
 #ifdef USE_CARBONIZED
@@ -4012,7 +4062,7 @@ clip_mch_request_selection(cbd)
 #ifdef USE_CARBONIZED
 	/* In CARBON we don't need a Handle, a pointer is good */
 	textOfClip = NewHandle (scrapSize);
-	/* tempclip = (char *)lalloc(scrapSize+1, TRUE); */
+	/* tempclip = lalloc(scrapSize+1, TRUE); */
 #else
 	textOfClip = NewHandle(0);
 #endif
@@ -4025,11 +4075,11 @@ clip_mch_request_selection(cbd)
 
 	type = (strchr(*textOfClip, '\r') != NULL) ? MLINE : MCHAR;
 
-	tempclip = (char *)lalloc(scrapSize+1, TRUE);
+	tempclip = lalloc(scrapSize+1, TRUE);
 	STRNCPY(tempclip, *textOfClip, scrapSize);
 	tempclip[scrapSize] = 0;
 
-	searchCR = tempclip;
+	searchCR = (char *)tempclip;
 	while (searchCR != NULL)
 	{
 	    searchCR = strchr(searchCR, '\r');
@@ -4039,9 +4089,24 @@ clip_mch_request_selection(cbd)
 
 	}
 
-	clip_yank_selection(type, (char_u *) tempclip, scrapSize, cbd);
+#ifdef FEAT_MBYTE
+	if (input_conv.vc_type != CONV_NONE)
+	{
+	    char_u	*to;
+	    int		l = scrapSize;
 
-	free(tempclip);
+	    to = string_convert(&input_conv, tempclip, &l);
+	    if (to != NULL)
+	    {
+		vim_free(tempclip);
+		tempclip = to;
+		scrapSize = l;
+	    }
+	}
+#endif
+	clip_yank_selection(type, tempclip, scrapSize, cbd);
+
+	vim_free(tempclip);
 	HUnlock(textOfClip);
 
 	DisposeHandle(textOfClip);
@@ -4094,6 +4159,22 @@ clip_mch_set_selection(cbd)
     cbd->owned = FALSE;
 
     type = clip_convert_selection(&str, (long_u *) &scrapSize, cbd);
+
+#ifdef FEAT_MBYTE
+    if (str != NULL && output_conv.vc_type != CONV_NONE)
+    {
+	char_u	*to;
+	int	l = scrapSize;
+
+	to = string_convert(&output_conv, str, &l);
+	if (to != NULL)
+	{
+	    vim_free(str);
+	    str = to;
+	    scrapSize = l;
+	}
+    }
+#endif
 
     if (type >= 0)
     {
