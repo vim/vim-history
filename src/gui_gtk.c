@@ -109,7 +109,11 @@
 #ifdef FEAT_GUI_GTK
 # include <gdk/gdkkeysyms.h>
 # include <gdk/gdk.h>
-# include <gdk/gdkx.h>
+# ifdef WIN3264
+#  include <gdk/gdkwin32.h>
+# else
+#  include <gdk/gdkx.h>
+# endif
 
 # include <gtk/gtk.h>
 #else

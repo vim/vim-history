@@ -32,7 +32,11 @@
 			   runtime! */
 #include "gui_gtk_f.h"
 #include <gtk/gtksignal.h>
-#include <gdk/gdkx.h>
+#ifdef WIN3264
+# include <gdk/gdkwin32.h>
+#else
+# include <gdk/gdkx.h>
+#endif
 
 typedef struct _GtkFormChild GtkFormChild;
 
