@@ -50,6 +50,8 @@ the String doesn't start with digits, the result is zero.  Examples: >
 	String "foo"	-->	Number 0
 	String "0xf1"	-->	Number 241
 	String "0100"	-->	Number 64
+	String "-8"	-->	Number -8
+	String "+8"	-->	Number 0
 
 To force conversion from String to Number, add zero to it: >
 	:echo "0100" + 0
@@ -135,7 +137,7 @@ func{ti}on(expr1, ...)	function call with curly braces
 
 ".." indicates that the operations in this level can be concatenated.
 Example: >
-&nu || &list && &shell == "csh"
+	&nu || &list && &shell == "csh"
 
 All expressions within one level are parsed from left to right.
 
@@ -149,19 +151,19 @@ The expression before the '?' is evaluated to a number.  If it evaluates to
 non-zero, the result is the value of the expression between the '?' and ':',
 otherwise the result is the value of the expression after the ':'.
 Example: >
-:echo lnum == 1 ? "top" : lnum
+	:echo lnum == 1 ? "top" : lnum
 
 Since the first expression is an "expr2", it cannot contain another ?:.  The
 other two expressions can, thus allow for recursive use of ?:.
 Example: >
-:echo lnum == 1 ? "top" : lnum == 1000 ? "last" : lnum
+	:echo lnum == 1 ? "top" : lnum == 1000 ? "last" : lnum
 
 To keep this readable, using |line-continuation| is suggested: >
-:echo lnum == 1
-:\	? "top"
-:\	: lnum == 1000
-:\		? "last"
-:\		: lnum
+	:echo lnum == 1
+	:\	? "top"
+	:\	: lnum == 1000
+	:\		? "last"
+	:\		: lnum
 
 
 expr2 and expr3						*expr2* *expr3*
@@ -180,22 +182,22 @@ non-zero	non-zero	non-zero	non-zero
 
 The operators can be concatenated, for example: >
 
-&nu || &list && &shell == "csh"
+	&nu || &list && &shell == "csh"
 
 Note that "&&" takes precedence over "||", so this has the meaning of: >
 
-&nu || (&list && &shell == "csh")
+	&nu || (&list && &shell == "csh")
 
 Once the result is known, the expression "short-circuits", that is, further
 arguments are not evaluated.  This is like what happens in C.  For example: >
 
-let a = 1
-echo a || b
+	let a = 1
+	echo a || b
 
 This is valid even if there is no variable called "b" because "a" is non-zero,
 so the result must be non-zero.  Similarly below: >
 
-echo exists("b") && b == "yes"
+	echo exists("b") && b == "yes"
 
 This is valid whether "b" has been defined or not.  The second clause will
 only be evaluated if "b" has been defined.
@@ -299,13 +301,14 @@ expr8							*expr8*
 -----
 expr9[expr1]		index in String		*expr-[]* *E111*
 
-This results in a String that contains the expr1'th single character from
-expr9.  expr9 is used as a String, expr1 as a Number.
+This results in a String that contains the expr1'th single byte from expr9.
+expr9 is used as a String, expr1 as a Number.  Note that this doesn't work for
+multi-byte encodings.
 
 Note that index zero gives the first character.  This is like it works in C.
 Careful: text column numbers start with one!  Example, to get the character
 under the cursor: >
-:let c = getline(line("."))[col(".") - 1]
+	:let c = getline(line("."))[col(".") - 1]
 
 If the length of the String is less than the index, the result is an empty
 String.
@@ -380,8 +383,8 @@ register						*expr-register*
 
 The result is the contents of the named register, as a single string.
 Newlines are inserted where required.  To get the contents of the unnamed
-register use @@.  The '=' register can not be used here.  See |registers| for
-an explanation of the available registers.
+register use @" or @@.  The '=' register can not be used here.  See
+|registers| for an explanation of the available registers.
 
 
 nesting							*expr-nesting* *E110*
@@ -402,8 +405,8 @@ are known inside the current Vim session.  Using expand() will first try using
 the environment variables known inside the current Vim session.  If that
 fails, a shell will be used to expand the variable.  This can be slow, but it
 does expand all variables that the shell knows about.  Example: >
-:echo $version
-:echo expand("$version")
+	:echo $version
+	:echo expand("$version")
 The first one probably doesn't echo anything, the second echoes the $version
 variable (if your shell supports it).
 
@@ -492,7 +495,7 @@ Thus not in:
 - etc.
 
 script variables can be used to avoid conflicts with global variable names.
-An example that works: >
+Take this example:
 
 	let s:counter = 0
 	function MyCounter()
@@ -501,15 +504,19 @@ An example that works: >
 	endfunction
 	command Tick call MyCounter()
 
-And an example that does NOT work: >
+You can now invoke "Tick" from any script, and the "s:counter" variable in
+that script will not be changed, only the "s:counter" in the script where
+"Tick" was defined is used.
+
+Another example that does the same: >
 
 	let s:counter = 0
 	command Tick let s:counter = s:counter + 1 | echo s:counter
 
-When the ":Tick" command is executed outside the script, the s:counter
-variable will not be available.  In the previous example, calling the
-MyCounter() function sets the context for script variables to where the
-function was defined, then s:counter can be used.
+When calling a function and invoking a user-defined command, the context for
+script varialbes is set to the script where the function or command was
+defined.
+
 The script variables are also available when a function is defined inside a
 function that is defined in a script.  Example: >
 
@@ -619,7 +626,7 @@ v:exception	The value of the exception most recently caught and not
 	:catch /.*/
 	:  echo "caught" v:exception
 	:endtry
-<		Output: "caught oops"
+<		Output: "caught oops".
 
 					*v:fname_in* *fname_in-variable*
 v:fname_in	The name of the input file.  Only valid while evaluating:
@@ -806,7 +813,7 @@ did_filetype()			Number	TRUE if FileType autocommand event used
 escape( {string}, {chars})	String	escape {chars} in {string} with '\'
 eventhandler( )			Number  TRUE if inside an event handler
 executable( {expr})		Number	1 if executable {expr} exists
-exists( {var})			Number	TRUE if {var} exists
+exists( {expr})			Number	TRUE if {expr} exists
 expand( {expr})			String	expand special keywords in {expr}
 filereadable( {file})		Number	TRUE if {file} is a readable file
 filewritable( {file})		Number	TRUE if {file} is a writable file
@@ -982,7 +989,7 @@ bufname({expr})						*bufname()*
 		":ls" command.
 		If {expr} is a Number, that buffer number's name is given.
 		Number zero is the alternate buffer for the current window.
-		If {expr} is a String, it is used as a regexp pattern to match
+		If {expr} is a String, it is used as a |file-pattern| to match
 		with the buffer names.  This is always done like 'magic' is
 		set and 'cpoptions' is empty.  When there is more than one
 		match an empty string is returned.
@@ -1025,8 +1032,13 @@ bufwinnr({expr})					*bufwinnr()*
 		window associated with buffer {expr}.  For the use of {expr},
 		see |bufname()| above.  If buffer {expr} doesn't exist or
 		there is no such window, -1 is returned.  Example: >
+
 	echo "A window containing buffer 1 is " . (bufwinnr(1))
-<
+
+<		The number can be used with |CTRL-W_w| and ":wincmd w"
+		|:wincmd|.
+
+
 byte2line({byte})					*byte2line()*
 		Return the line number that contains the character at byte
 		count {byte} in the current buffer.  This includes the
@@ -1061,6 +1073,7 @@ col({expr})	The result is a Number, which is the column of the file
 			    number of characters in the cursor line plus one)
 		    'x	    position of mark x (if the mark is not set, 0 is
 			    returned)
+		For the screen column position use |virtcol()|.
 		Note that only marks in the current file can be used.
 		Examples: >
 			col(".")		column of cursor
@@ -1092,7 +1105,7 @@ confirm({msg} [, {choices} [, {default} [, {type}]]])
 		by '\n', e.g. >
 			confirm("Save changes?", "&Yes\n&No\n&Cancel")
 <		The letter after the '&' is the shortcut key for that choice.
-		Thus you can type 'c' to select "Cancel".  The shorcut does
+		Thus you can type 'c' to select "Cancel".  The shortcut does
 		not need to be the first letter: >
 			confirm("file has been modified", "&Save\nSave &All")
 <		For the console, the first letter of each choice is used as
@@ -1155,7 +1168,7 @@ cscope_connection([{num} , {dbpath} [, {prepend}]])
   # pid    database name			prepend path
   0 27664  cscope.out				/usr/local
 <
-		Invokation					Return Val ~
+		Invocation					Return Val ~
 		----------					---------- >
 		cscope_connection()					1
 		cscope_connection(1, "out")				1
@@ -1190,7 +1203,7 @@ did_filetype()	Returns non-zero when autocommands are being executed and the
 		When editing another file, the counter is reset, thus this
 		really checks if the FileType event has been triggered for the
 		current buffer.  This allows an autocommand that starts
-		editing another buffer to set 'filetype' and load a sytnax
+		editing another buffer to set 'filetype' and load a syntax
 		file.
 
 escape({string}, {chars})				*escape()*
@@ -1215,9 +1228,9 @@ executable({expr})					*executable()*
 			-1	not implemented on this system
 
 							*exists()*
-exists({expr})	The result is a Number, which is non-zero if {var} is defined,
-		zero otherwise.  The {expr} argument is a string, which
-		contains one of these:
+exists({expr})	The result is a Number, which is non-zero if {expr} is
+		defined, zero otherwise.  The {expr} argument is a string,
+		which contains one of these:
 			&option-name	Vim option (only checks if it exists,
 					not if it really works)
 			+option-name	Vim option that works.
@@ -1230,9 +1243,9 @@ exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 			varname		internal variable (see
 					|internal-variables|).  Does not work
 					for |curly-braces-names|.
-			:cmdname	Ex command, both built-in and user
-					commands |:command|
-					returns:
+			:cmdname	Ex command: built-in command, user
+					command or command modifier |:command|.
+					Returns:
 					1  for match with start of a command
 					2  full match with a command
 					3  matches several user commands
@@ -1242,6 +1255,7 @@ exists({expr})	The result is a Number, which is non-zero if {var} is defined,
 					literally and compared to the
 					autocommand patterns character by
 					character)
+		For checking for a supported feature use |has()|.
 
 		Examples: >
 			exists("&shortname")
@@ -1327,7 +1341,9 @@ expand({expr} [, {flag}])				*expand()*
 		variables that are only known in a shell.  But this can be
 		slow, because a shell must be started.  See |expr-env-expand|.
 		The expanded variable is still handled like a list of file
-		names.
+		names.  When an environment variable cannot be expanded, it is
+		left unchanged.  Thus ":echo expand('$FOOBAR')" results in
+		"$FOOBAR".
 
 		See |glob()| for finding existing files.  See |system()| for
 		getting the raw output of an external command.
@@ -1374,7 +1390,8 @@ foldlevel({lnum})					*foldlevel()*
 		returned.  It doesn't matter if the folds are open or closed.
 		When used while updating folds (from 'foldexpr') -1 is
 		returned for lines where folds are still to be updated and the
-		foldlevel is unknown.
+		foldlevel is unknown.  As a special case the level of the
+		previous line is usually available.
 
 							*foldtext()*
 foldtext()	Returns a String, to be displayed for a closed fold.  This is
@@ -1567,6 +1584,7 @@ globpath({path}, {expr})				*globpath()*
 has({feature})	The result is a Number, which is 1 if the feature {feature} is
 		supported, zero otherwise.  The {feature} argument is a
 		string.  See |feature-list| below.
+		Also see |exists()|.
 
 hasmapto({what} [, {mode}])				*hasmapto()*
 		The result is a Number, which is 1 if there is a mapping that
@@ -1833,7 +1851,7 @@ libcall({libname}, {funcname}, {argument})
 		without the ".DLL" suffix.  A full path is only required if
 		the DLL is not in the usual places.
 		For Unix: When compiling your own plugins, remember that the
-		object code must be compiled as position-independant ('PIC').
+		object code must be compiled as position-independent ('PIC').
 		{only in Win32 on some Unix versions, when the |+libcall|
 		feature is present}
 		Examples: >
@@ -2016,6 +2034,10 @@ nr2char({expr})						*nr2char()*
 			nr2char(32)		returns " "
 <		The current 'encoding' is used.  Example for "utf-8": >
 			nr2char(300)		returns I with bow character
+<		Note that a NUL character in the file is specified with
+		nr2char(10), because NULs are represented with newline
+		characters.  nr2char(0) is a real NUL and terminates the
+		string, thus isn't very useful.
 
 prevnonblank({lnum})					*prevnonblank()*
 		Return the line number of the first line at or above {lnum}
@@ -2400,7 +2422,7 @@ submatch({nr})						*submatch()*
 		Example: >
 			:s/\d\+/\=submatch(0) + 1/
 <		This finds the first number in the line and adds one to it.
-		Line breaks are included as a newline character.
+		A line break is included as a newline character.
 
 substitute({expr}, {pat}, {sub}, {flags})		*substitute()*
 		The result is a String, which is a copy of {expr}, in which
@@ -2534,6 +2556,7 @@ virtcol({expr})						*virtcol()*
 		position, the returned Number will be the column at the end of
 		the <Tab>.  For example, for a <Tab> in column 1, with 'ts'
 		set to 8, it returns 8.
+		For the byte position use |col()|.
 		When Virtual editing is active in the current mode, a position
 		beyond the end of the line can be returned. |'virtualedit'|
 		The accepted positions are:
@@ -2906,7 +2929,7 @@ Example: >
   :  echohl None
   :  let idx = 1
   :  while idx <= a:0
-  :    exe "echo a:" . idx
+  :    echo a:{idx} . ' '
   :    let idx = idx + 1
   :  endwhile
   :  return idx
@@ -2921,7 +2944,7 @@ To return more than one value, pass the name of a global variable: >
   :  if a:n2 == 0
   :    return "fail"
   :  endif
-  :  exe "let g:" . a:divname . " = ". a:n1 / a:n2
+  :  let g:{a:divname} = a:n1 / a:n2
   :  return "ok"
   :endfunction
 
@@ -2986,7 +3009,8 @@ option.
 
 							*autoload-functions*
 When using many or large functions, it's possible to automatically define them
-only when they are used.  Example: >
+only when they are used.  Use the FuncUndefined autocommand event with a
+pattern that matches the function(s) to be defined.  Example: >
 
 	:au FuncUndefined BufNet* source ~/vim/bufnetfuncs.vim
 
@@ -3248,8 +3272,9 @@ This would call the function "my_func_whizz(parameter)".
 <
 
 							*:ec* *:echo*
-:ec[ho] {expr1} ..	Echoes each {expr1}, with a space in between and a
-			terminating <EOL>.  Also see |:comment|.
+:ec[ho] {expr1} ..	Echoes each {expr1}, with a space in between.  The
+			first {expr1} starts on a new line.
+			Also see |:comment|.
 			Use "\n" to start a new line.  Use "\r" to move the
 			cursor to the first column.
 			Uses the highlighting set by the |:echohl| command.
@@ -3372,7 +3397,7 @@ TRY CONDITIONALS					*try-conditionals*
 Exceptions can be caught or can cause cleanup code to be executed.  You can
 use a try conditional to specify catch clauses (that catch exceptions) and/or
 a finally clause (to be executed for cleanup).
-    A try conditional begins with a |:try| command and ends at the matching
+   A try conditional begins with a |:try| command and ends at the matching
 |:endtry| command.  In between, you can use a |:catch| command to start
 a catch clause, or a |:finally| command to start a finally clause.  There may
 be none or multiple catch clauses, but there is at most one finally clause,
@@ -3475,7 +3500,7 @@ as usual.
 For examples see |throw-catch|.
 
 
-EXAMINIG EXCEPTION HANDLING CODE			*except-examine*
+EXAMINING EXCEPTION HANDLING CODE			*except-examine*
 
 Exception handling code can get tricky.  If you are in doubt what happens, set
 'verbose' to 13 or use the ":13verbose" command modifier when sourcing your
@@ -3698,9 +3723,9 @@ the original error exception value, you can use the |:echoerr| command: >
 	:  echo v:exception
 	:endtry
 
-This code displays >
+This code displays
 
-	Vim(echoerr):Vim:E492: Not an editor command:   asdf
+	Vim(echoerr):Vim:E492: Not an editor command:   asdf ~
 
 
 CLEANUP CODE						*try-finally*
@@ -4244,7 +4269,7 @@ exceptions with the "Vim" prefix; they are reserved for Vim.
 failed, if known.  See |catch-errors|.
 
 
-PECULARITIES
+PECULIARITIES
 							*except-compat*
 The exception handling concept requires that the command sequence causing the
 exception is aborted immediately and control is transferred to finally clauses
@@ -4489,7 +4514,7 @@ missing: >
 	:else
 	:  echo "You will _never_ see this message"
 	:endif
-<
+
 ==============================================================================
 11. The sandbox					*eval-sandbox* *sandbox* *E48*
 
