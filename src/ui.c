@@ -1455,8 +1455,7 @@ clip_gen_request_selection(cbd)
  * input buffer.
  */
 
-#if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS) \
-	|| defined(FEAT_CLIENTSERVER) || defined(PROTO)
+#if defined(USE_INPUT_BUF) || defined(PROTO)
 
 /*
  * Internal typeahead buffer.  Includes extra space for long key code
@@ -1512,6 +1511,47 @@ vim_free_in_input_buf()
 vim_used_in_input_buf()
 {
     return inbufcount;
+}
+#endif
+
+#if defined(FEAT_EVAL) || defined(FEAT_EX_EXTRA) || defined(PROTO)
+/*
+ * Return the current contents of the input buffer and make it empty.
+ * The returned pointer must be passed to set_input_buf() later.
+ */
+    char_u *
+get_input_buf()
+{
+    garray_T	*gap;
+
+    /* We use a growarray to store the data pointer and the length. */
+    gap = (garray_T *)alloc((unsigned)sizeof(garray_T));
+    if (gap != NULL)
+    {
+	/* Add one to avoid a zero size. */
+	gap->ga_data = alloc((unsigned)inbufcount + 1);
+	if (gap->ga_data != NULL)
+	    mch_memmove(gap->ga_data, inbuf, (size_t)inbufcount);
+	gap->ga_len = inbufcount;
+    }
+    trash_input_buf();
+    return (char_u *)gap;
+}
+
+/*
+ * Restore the input buffer with a pointer returned from get_input_buf().
+ */
+    void
+set_input_buf(p)
+    char_u	*p;
+{
+    garray_T	*gap = (garray_T *)p;
+
+    if (gap != NULL && gap->ga_data != NULL)
+    {
+	mch_memmove(inbuf, gap->ga_data, gap->ga_len);
+	inbufcount = gap->ga_len;
+    }
 }
 #endif
 

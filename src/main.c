@@ -2835,7 +2835,8 @@ build_drop_cmd(filec, filev, sendReply)
     ga_init2(&ga, 1, 100);
     ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd ");
     ga_concat(&ga, p);
-    ga_concat(&ga, (char_u *)"<CR>:drop");
+    /* Call inputsave() so that a prompt for an encryption key works. */
+    ga_concat(&ga, (char_u *)"<CR>:if exists('*inputsave')|call inputsave()|endif|drop");
     vim_free(p);
     for (i = 0; i < filec; i++)
     {
@@ -2860,7 +2861,7 @@ build_drop_cmd(filec, filev, sendReply)
     }
     /* The :drop commands goes to Insert mode when 'insertmode' is set, use
      * CTRL-\ CTRL-N again. */
-    ga_concat(&ga, (char_u *)"<CR><C-\\><C-N>:cd -");
+    ga_concat(&ga, (char_u *)"<CR><C-\\><C-N>:if exists('*inputrestore')|call inputrestore()|endif|cd -");
     if (sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:call SetupRemoteReplies()");
     if (inicmd != NULL)

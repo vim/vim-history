@@ -27,6 +27,8 @@ void del_typebuf __ARGS((int len, int offset));
 int alloc_typebuf __ARGS((void));
 void free_typebuf __ARGS((void));
 int save_typebuf __ARGS((void));
+void save_typeahead __ARGS((tasave_T *tp));
+void restore_typeahead __ARGS((tasave_T *tp));
 void openscript __ARGS((char_u *name, int directly));
 int using_script __ARGS((void));
 void updatescript __ARGS((int c));

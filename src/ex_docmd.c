@@ -6879,10 +6879,9 @@ ex_normal(eap)
     int		save_restart_edit = restart_edit;
     int		save_msg_didout = msg_didout;
     int		save_State = State;
-    typebuf_T	saved_typebuf;
+    tasave_T	tabuf;
     int		save_insertmode = p_im;
     int		save_finish_op = finish_op;
-    struct buffheader save_stuffbuff;
 #ifdef FEAT_MBYTE
     char_u	*arg = NULL;
     int		l;
@@ -6969,13 +6968,9 @@ ex_normal(eap)
      * from an event handler and makes sure we don't hang when the argument
      * ends with half a command.
      */
-    saved_typebuf = typebuf;
-    if (alloc_typebuf() == OK)
+    save_typeahead(&tabuf);
+    if (tabuf.typebuf_valid)
     {
-	/* Also save the stuff buffer and make it empty. */
-	save_stuffbuff = stuffbuff;
-	stuffbuff.bh_first.b_next = NULL;
-
 	/*
 	 * Repeat the :normal command for each line in the range.  When no
 	 * range given, execute it just once, without positioning the cursor
@@ -7009,16 +7004,13 @@ ex_normal(eap)
 	    }
 	}
 	while (eap->addr_count > 0 && eap->line1 <= eap->line2 && !got_int);
-
-	stuffbuff = save_stuffbuff;
     }
 
     /* Might not return to the main loop when in an event handler. */
     update_topline_cursor();
 
     /* Restore the previous typeahead. */
-    free_typebuf();
-    typebuf = saved_typebuf;
+    restore_typeahead(&tabuf);
 
     --ex_normal_busy;
     msg_scroll = save_msg_scroll;
