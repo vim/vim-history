@@ -490,6 +490,9 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
 #if defined(MACOS) && !defined(MACOS_X_UNIX)
     GrafPtr		oldPort;
 #endif
+#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    char		*saved_locale;
+#endif
 
 #ifndef PY_CAN_RECURSE
     if (recursive)
@@ -513,6 +516,19 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     RangeEnd = eap->line2;
     Python_Release_Vim();	    /* leave vim */
 
+#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    /* Python only works properly when the LC_NUMERIC locale is "C". */
+    saved_locale = setlocale(LC_NUMERIC, NULL);
+    if (saved_locale == NULL || STRCMP(saved_locale, "C") == 0)
+	saved_locale = NULL;
+    else
+    {
+	/* Need to make a copy, value may change when setting new locale. */
+	saved_locale = vim_strsave(saved_locale);
+	(void)setlocale(LC_NUMERIC, "C");
+    }
+#endif
+
 #ifdef PY_CAN_RECURSE
     pygilstate = PyGILState_Ensure();
 #else
@@ -525,6 +541,14 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
     PyGILState_Release(pygilstate);
 #else
     Python_SaveThread();	    /* leave python */
+#endif
+
+#if defined(HAVE_LOCALE_H) || defined(X_LOCALE)
+    if (saved_locale != NULL)
+    {
+	(void)setlocale(LC_NUMERIC, saved_locale);
+	vim_free(saved_locale);
+    }
 #endif
 
     Python_Lock_Vim();		    /* enter vim */
