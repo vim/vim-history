@@ -695,7 +695,12 @@ do_one_cmd(cmdlinep, sourcing,
     ea.line2 = 1;
 
 	/* when not editing the last file :q has to be typed twice */
-    if (quitmore)
+    if (quitmore
+#ifdef WANT_EVAL
+	    /* avoid that a function call in 'statusline' does this */
+	    && getline != get_func_line
+#endif
+	    )
 	--quitmore;
 /*
  * 2. skip comment lines and leading space and colons
