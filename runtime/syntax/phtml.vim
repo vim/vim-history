@@ -1,15 +1,18 @@
 " Vim syntax file
 " Language:	phtml PHP 2.0
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
-" URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
+" URL:		http://www.isp.de/data/phtml.vim
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2001 Jan 15
+" Last change:	2001 Mai 02
 "
 " Options	phtml_sql_query = 1 for SQL syntax highligthing inside strings
 "		phtml_minlines = x     to sync at least x lines backwards
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -17,8 +20,13 @@ if !exists("main_syntax")
   let main_syntax = 'phtml'
 endif
 
-runtime! syntax/html.vim
-unlet b:current_syntax
+if version < 600
+  so <sfile>:p:h/html.vim
+else 
+  runtime! syntax/html.vim
+  unlet b:current_syntax  
+endif
+
 syn cluster htmlPreproc add=phtmlRegionInsideHtmlTags
 
 if exists( "phtml_sql_query")
@@ -191,28 +199,41 @@ else
   syn sync minlines=100
 endif
 
-" The default highlighting.
-hi def link phtmlComment	Comment
-hi def link phtmlString		String
-hi def link phtmlNumber		Number
-hi def link phtmlFloat		Float
-hi def link phtmlIdentifier	Identifier
-hi def link phtmlIntVar		Identifier
-hi def link phtmlEnvVar		Identifier
-hi def link phtmlFunctions	Function
-hi def link phtmlRepeat		Repeat
-hi def link phtmlConditional	Conditional
-hi def link phtmlLabel		Label
-hi def link phtmlStatement	Statement
-hi def link phtmlType		Type
-hi def link phtmlInclude	Include
-hi def link phtmlDefine		Define
-hi def link phtmlSpecialChar	SpecialChar
-hi def link phtmlParentError	Error
-hi def link phtmlOctalError	Error
-hi def link phtmlTodo		Todo
-hi def link phtmlOperator	Operator
-hi def link phtmlRelation       Operator
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_phtml_syn_inits")
+  if version < 508
+    let did_phtml_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink phtmlComment		Comment
+  HiLink phtmlString		String
+  HiLink phtmlNumber		Number
+  HiLink phtmlFloat		Float
+  HiLink phtmlIdentifier	Identifier 
+  HiLink phtmlIntVar		Identifier 
+  HiLink phtmlEnvVar		Identifier 
+  HiLink phtmlFunctions	Function
+  HiLink phtmlRepeat		Repeat
+  HiLink phtmlConditional	Conditional
+  HiLink phtmlLabel		Label
+  HiLink phtmlStatement	Statement
+  HiLink phtmlType		Type
+  HiLink phtmlInclude		Include
+  HiLink phtmlDefine		Define
+  HiLink phtmlSpecialChar	SpecialChar
+  HiLink phtmlParentError	Error
+  HiLink phtmlOctalError	Error
+  HiLink phtmlTodo		Todo
+  HiLink phtmlOperator		Operator 
+  HiLink phtmlRelation         Operator
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "phtml"
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	awk, nawk, gawk, mawk
 " Maintainer:	Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 30
 
 " AWK  ref.  is: Alfred V. Aho, Brian W. Kernighan, Peter J. Weinberger
 " The AWK Programming Language, Addison-Wesley, 1988
@@ -18,8 +18,11 @@
 " TODO:
 " Dig into the commented out syntax expressions below.
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -148,50 +151,63 @@ syn region awkArray		transparent start="\[" end="\]" contains=awkArray,awkArrayE
 " (for the few instances where it would be more than "oneline")
 syn sync ccomment awkArray maxlines=10
 
-" The default highlighting.
-hi def link awkConditional	Conditional
-hi def link awkFunction		Function
-hi def link awkRepeat		Repeat
-hi def link awkStatement	Statement
+" define the default highlighting
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlightling yet
+if version >= 508 || !exists("did_awk_syn_inits")
+  if version < 508
+    let did_awk_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link awkString		String
-hi def link awkSpecialPrintf	Special
-hi def link awkSpecialCharacter Special
+  HiLink awkConditional		Conditional
+  HiLink awkFunction		Function
+  HiLink awkRepeat		Repeat
+  HiLink awkStatement		Statement
 
-hi def link awkSearch		String
-hi def link awkBrackets		awkRegExp
-hi def link awkBrktRegExp	awkNestRegExp
-hi def link awkCharClass	awkNestRegExp
-hi def link awkNestRegExp	Keyword
-hi def link awkRegExp		Special
+  HiLink awkString		String
+  HiLink awkSpecialPrintf	Special
+  HiLink awkSpecialCharacter	Special
 
-hi def link awkNumber		Number
-hi def link awkFloat		Float
+  HiLink awkSearch		String
+  HiLink awkBrackets		awkRegExp
+  HiLink awkBrktRegExp		awkNestRegExp
+  HiLink awkCharClass		awkNestRegExp
+  HiLink awkNestRegExp		Keyword
+  HiLink awkRegExp		Special
 
-hi def link awkFileIO		Special
-"hi def link awkOperator	Special
-"hi def link awkExpression	Special
-hi def link awkBoolLogic	Special
+  HiLink awkNumber		Number
+  HiLink awkFloat		Float
 
-hi def link awkPatterns		Special
-hi def link awkVariables	Special
-hi def link awkFieldVars	Special
+  HiLink awkFileIO		Special
+  "HiLink awkOperator		Special
+  "HiLink awkExpression		Special
+  HiLink awkBoolLogic		Special
 
-hi def link awkLineSkip		Special
-hi def link awkSemicolon	Special
-hi def link awkComma		Special
-"hi def link awkIdentifier	Identifier
+  HiLink awkPatterns		Special
+  HiLink awkVariables		Special
+  HiLink awkFieldVars		Special
 
-hi def link awkComment		Comment
-hi def link awkTodo		Todo
+  HiLink awkLineSkip		Special
+  HiLink awkSemicolon		Special
+  HiLink awkComma		Special
+  "HiLink awkIdentifier		Identifier
 
-" Change this if you want nested array names to be highlighted.
-hi def link awkArrayArray	awkArray
-hi def link awkArrayElement	Special
+  HiLink awkComment		Comment
+  HiLink awkTodo		Todo
 
-hi def link awkParenError	awkError
-hi def link awkInParen		awkError
-hi def link awkError		Error
+  " Change this if you want nested array names to be highlighted.
+  HiLink awkArrayArray		awkArray
+  HiLink awkArrayElement	Special
+
+  HiLink awkParenError		awkError
+  HiLink awkInParen		awkError
+  HiLink awkError		Error
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "awk"
 

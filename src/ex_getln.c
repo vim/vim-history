@@ -85,6 +85,9 @@ static int	nextwild __ARGS((expand_T *xp, int type, int options));
 static int	showmatches __ARGS((expand_T *xp, int wildmenu));
 static void	set_expand_context __ARGS((expand_T *xp));
 static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, int));
+#ifdef FEAT_CMDL_COMPL
+static int	ExpandColors __ARGS((char_u *pat, int *num_file, char_u ***file));
+#endif
 
 #ifdef FEAT_CMDWIN
 static int	ex_window __ARGS((void));
@@ -2784,7 +2787,7 @@ addstar(fname, len, context)
 	 */
 
 	/* for help tags the translation is done in find_help_tags() */
-	if (context == EXPAND_HELP)
+	if (context == EXPAND_HELP || context == EXPAND_COLORS)
 	    retval = vim_strnsave(fname, len);
 	else
 	{
@@ -3071,12 +3074,13 @@ ExpandFromContext(xp, pat, num_file, file, options)
 #else
     if (xp->xp_context == EXPAND_OLD_SETTING)
 	return ExpandOldSetting(num_file, file);
-
     if (xp->xp_context == EXPAND_BUFFERS)
 	return ExpandBufnames(pat, num_file, file, options);
-    else if (xp->xp_context == EXPAND_TAGS
+    if (xp->xp_context == EXPAND_TAGS
 	    || xp->xp_context == EXPAND_TAGS_LISTFILES)
 	return expand_tags(xp->xp_context == EXPAND_TAGS, pat, num_file, file);
+    if (xp->xp_context == EXPAND_COLORS)
+	return ExpandColors(pat, num_file, file);
 
     regmatch.regprog = vim_regcomp(pat, (int)p_magic);
     if (regmatch.regprog == NULL)
@@ -3226,6 +3230,123 @@ ExpandGeneric(xp, regmatch, num_file, file, func)
     }
     return OK;
 }
+
+/*
+ * Expand color scheme names: 'runtimepath'/colors/{pat}.vim
+ */
+    static int
+ExpandColors(pat, num_file, file)
+    char_u	*pat;
+    int		*num_file;
+    char_u	***file;
+{
+    char_u	*all;
+    char_u	*s;
+    char_u	*e;
+    garray_T	ga;
+
+    *num_file = 0;
+    *file = NULL;
+    s = alloc((unsigned)(STRLEN(pat) + 13));
+    if (s == NULL)
+	return FAIL;
+    sprintf((char *)s, "colors/%s*.vim", pat);
+    all = globpath(p_rtp, s);
+    vim_free(s);
+    if (all == NULL)
+	return FAIL;
+
+    ga_init2(&ga, sizeof(char *), 3);
+    for (s = all; *s != NUL; s = e)
+    {
+	e = vim_strchr(s, '\n');
+	if (e == NULL)
+	    e = s + STRLEN(s);
+	if (ga_grow(&ga, 1) == FAIL)
+	    break;
+	if (e - 4 > s && STRNICMP(e - 4, ".vim", 4) == 0)
+	{
+	    for (s = e - 4; s > all; --s)
+		if (*s == '\n' || vim_ispathsep(*s))
+		    break;
+	    ++s;
+	    ((char_u **)ga.ga_data)[ga.ga_len] = vim_strnsave(s, e - s - 4);
+	    ++ga.ga_len;
+	    --ga.ga_room;
+	}
+	if (*e != NUL)
+	    ++e;
+    }
+    vim_free(all);
+    *file = ga.ga_data;
+    *num_file = ga.ga_len;
+    return OK;
+}
+
+#endif
+
+#if defined(FEAT_CMDL_COMPL) || defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Expand "file" for all comma-separated directories in "path".
+ * Returns an allocated strings with all matches concatenated, separated by
+ * newlines.  Returns NULL for an error or no matches.
+ */
+    char_u *
+globpath(path, file)
+    char_u	*path;
+    char_u	*file;
+{
+    expand_T	xpc;
+    char_u	*buf;
+    garray_T	ga;
+    int		len;
+    char_u	*p;
+
+    buf = alloc(MAXPATHL);
+    if (buf == NULL)
+	return NULL;
+
+    xpc.xp_context = EXPAND_FILES;
+    ga_init2(&ga, 1, 100);
+
+    /* Loop over all entries in {path}. */
+    while (*path != NUL)
+    {
+	/* Copy one item of the path to buf[] and concatenate the file name. */
+	copy_option_part(&path, buf, MAXPATHL, ",");
+	if (STRLEN(buf) + STRLEN(file) + 2 < MAXPATHL)
+	{
+	    add_pathsep(buf);
+	    STRCAT(buf, file);
+	    p = ExpandOne(&xpc, buf, NULL, WILD_USE_NL|WILD_SILENT, WILD_ALL);
+	    if (p != NULL)
+	    {
+		len = STRLEN(p);
+		if (ga.ga_data == NULL)
+		{
+		    ga.ga_data = p;
+		    ga.ga_room = 0;
+		    ga.ga_len = len;
+		}
+		else
+		{
+		    /* Concatenate new results to previous ones. */
+		    if (ga_grow(&ga, len + 2) == OK)
+		    {
+			STRCAT(ga.ga_data, "\n");
+			STRCAT(ga.ga_data, p);
+			ga.ga_len += len;
+			ga.ga_room -= len;
+		    }
+		    vim_free(p);
+		}
+	    }
+	}
+    }
+    vim_free(buf);
+    return ga.ga_data;
+}
+
 #endif
 
 #if defined(FEAT_CMDHIST) || defined(PROTO)
@@ -4049,7 +4170,7 @@ cmd_pchar(c, offset)
 {
     if (ccline.cmdpos + offset >= ccline.cmdlen || ccline.cmdpos + offset < 0)
     {
-	EMSG(_("cmd_pchar beyond the command length"));
+	EMSG(_("(ep6) cmd_pchar beyond the command length"));
 	return;
     }
     ccline.cmdbuff[ccline.cmdpos + offset] = (char_u)c;
@@ -4213,7 +4334,7 @@ ex_window()
     if (!win_valid(old_curwin) || !buf_valid(old_curbuf))
     {
 	cmdwin_result = ESC;
-	EMSG(_("Active window or buffer deleted"));
+	EMSG(_("(ew9) Active window or buffer deleted"));
     }
     else
     {

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	AYacc
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" LastChange:	25 Apr 2001 
+" LastChange:	02 May 2001 
 " Original:	Yacc, maintained by Dr. Charles E. Campbell, Jr.
 "			<Charles.Campbell@gsfc.nasa.gov>
 " Comment:          Replaced sourcing c.vim file by ada.vim and rename yacc*
@@ -17,10 +17,10 @@ endif
 
 " Read the Ada syntax to start with
 if version < 600
-  source <sfile>:p:h/ada.vim
+   so <sfile>:p:h/ada.vim
 else
-  runtime! syntax/ada.vim
-  unlet b:current_syntax
+   runtime! syntax/ada.vim
+   unlet b:current_syntax
 endif
 
 " Clusters

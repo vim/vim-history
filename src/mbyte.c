@@ -168,33 +168,27 @@ enc_canon_table[] =
     {"ucs-4le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_4BYTE, 0},
 #define IDX_DEBUG	22
     {"debug",		ENC_DBCS,		DBCS_DEBUG},
-#ifdef WIN32
-# define IDX_CP932	23
+#define IDX_CP932	23
     {"cp932",		ENC_DBCS,		DBCS_JPN},
-# define IDX_CP949	24
+#define IDX_CP949	24
     {"cp949",		ENC_DBCS,		DBCS_KOR},
-# define IDX_CP936	25
+#define IDX_CP936	25
     {"cp936",		ENC_DBCS,		DBCS_CHS},
-# define IDX_CP950	26
+#define IDX_CP950	26
     {"cp950",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	27
-#else
-# define IDX_EUC_JP	23
+#define IDX_EUC_JP	27
     {"euc-jp",		ENC_DBCS,		DBCS_JPNU},
-# define IDX_SJIS	24
+#define IDX_SJIS	28
     {"sjis",		ENC_DBCS,		DBCS_JPN},
-# define IDX_EUC_KR	25
+#define IDX_EUC_KR	29
     {"euc-kr",		ENC_DBCS,		DBCS_KORU},
-# define IDX_CP949	26
-    {"cp949",		ENC_DBCS,		DBCS_KOR},
-# define IDX_EUC_CN	27
+#define IDX_EUC_CN	30
     {"euc-cn",		ENC_DBCS,		DBCS_CHSU},
-# define IDX_EUC_TW	28
+#define IDX_EUC_TW	31
     {"euc-tw",		ENC_DBCS,		DBCS_CHTU},
-# define IDX_BIG5	29
+#define IDX_BIG5	32
     {"big5",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	30
-#endif
+#define IDX_COUNT	33
 };
 
 /*
@@ -239,39 +233,32 @@ enc_alias_table[] =
     {"ucs4be",		IDX_UCS4},
     {"ucs-4be",		IDX_UCS4},
     {"ucs4le",		IDX_UCS4LE},
-#if defined(WIN32) || defined(WIN32UNIX)
-    {"japan",		IDX_CP932},
     {"932",		IDX_CP932},
-    {"shift-jis",	IDX_CP932}, /* not exactly the same */
-    {"sjis",		IDX_CP932}, /* not exactly the same */
-    {"korea",		IDX_CP949},
     {"949",		IDX_CP949},
-    {"prc",		IDX_CP936},
-    {"chinese",		IDX_CP936},
     {"936",		IDX_CP936},
-    {"taiwan",		IDX_CP950},
     {"950",		IDX_CP950},
-    {"big5",		IDX_CP950},
-#else
-    {"japan",		IDX_EUC_JP},
     {"eucjp",		IDX_EUC_JP},
     {"unix-jis",	IDX_EUC_JP},
     {"ujis",		IDX_EUC_JP},
-    {"932",		IDX_SJIS}, /* not exactly the same */
-    {"cp932",		IDX_SJIS}, /* not exactly the same */
     {"shift-jis",	IDX_SJIS},
-    {"korea",		IDX_EUC_KR},
     {"euckr",		IDX_EUC_KR},
     {"5601",		IDX_EUC_KR},	/* Sun: KS C 5601 */
-    {"949",		IDX_CP949},
-    {"chinese",		IDX_EUC_CN},
-    {"prc",		IDX_EUC_CN},
     {"euccn",		IDX_EUC_CN},
     {"gb2312",		IDX_EUC_CN},
-    {"cp936",		IDX_EUC_CN}, /* ? */
-    {"936",		IDX_EUC_CN}, /* ? */
-    {"taiwan",		IDX_EUC_TW},
     {"euctw",		IDX_EUC_TW},
+#if defined(WIN32) || defined(WIN32UNIX)
+    {"japan",		IDX_CP932},
+    {"korea",		IDX_CP949},
+    {"prc",		IDX_CP936},
+    {"chinese",		IDX_CP936},
+    {"taiwan",		IDX_CP950},
+    {"big5",		IDX_CP950},
+#else
+    {"japan",		IDX_EUC_JP},
+    {"korea",		IDX_EUC_KR},
+    {"prc",		IDX_EUC_CN},
+    {"chinese",		IDX_EUC_CN},
+    {"taiwan",		IDX_EUC_TW},
     {"cp950",		IDX_BIG5},
     {"950",		IDX_BIG5},
 #endif
@@ -906,6 +893,8 @@ utf_char2cells(c)
 {
     if (c <= 0x9f && c >= 0x80)	    /* unprintable, displays <xx> */
 	return 4;
+    if (c >= 0x100 && !utf_printable(c))
+	return 6;		    /* unprintable, displays <xxxx> */
     if (c >= 0x1100
 	    && (c <= 0x115f			/* Hangul Jamo */
 		|| (c >= 0x2e80 && c <= 0xa4cf && (c & ~0x0011) != 0x300a
@@ -1332,6 +1321,44 @@ utf_char2bytes(c, buf)
     return 6;
 }
 
+struct interval
+{
+    unsigned short first;
+    unsigned short last;
+};
+static int intable __ARGS((struct interval *table, int size, int c));
+
+/*
+ * Return TRUE if "c" is in "table[size]".
+ */
+    static int
+intable(table, size, c)
+    struct interval	*table;
+    int			size;
+    int			c;
+{
+    int mid, bot, top;
+
+    /* first quick check for Latin1 etc. characters */
+    if (c < table[0].first)
+	return FALSE;
+
+    /* binary search in table */
+    bot = 0;
+    top = size - 1;
+    while (top >= bot)
+    {
+	mid = (bot + top) / 2;
+	if (table[mid].last < c)
+	    bot = mid + 1;
+	else if (table[mid].first > c)
+	    top = mid - 1;
+	else
+	    return TRUE;
+    }
+    return FALSE;
+}
+
 /*
  * Return TRUE if "c" is a composing UTF-8 character.  This means it will be
  * drawn on top of the preceding character.
@@ -1342,60 +1369,52 @@ utf_iscomposing(c)
     int		c;
 {
     /* sorted list of non-overlapping intervals */
-    static struct interval
-    {
-	unsigned short first;
-	unsigned short last;
-    }
-    combining[] =
+    static struct interval combining[] =
     {
 	{0x0300, 0x034E}, {0x0360, 0x0362}, {0x0483, 0x0486}, {0x0488, 0x0489},
 	{0x0591, 0x05A1}, {0x05A3, 0x05B9}, {0x05BB, 0x05BD}, {0x05BF, 0x05BF},
 	{0x05C1, 0x05C2}, {0x05C4, 0x05C4}, {0x064B, 0x0655}, {0x0670, 0x0670},
-	{0x06D6, 0x06E4}, {0x06E7, 0x06E8}, {0x06EA, 0x06ED}, {0x070F, 0x070F},
-	{0x0711, 0x0711}, {0x0730, 0x074A}, {0x07A6, 0x07B0}, {0x0901, 0x0902},
-	{0x093C, 0x093C}, {0x0941, 0x0948}, {0x094D, 0x094D}, {0x0951, 0x0954},
-	{0x0962, 0x0963}, {0x0981, 0x0981}, {0x09BC, 0x09BC}, {0x09C1, 0x09C4},
-	{0x09CD, 0x09CD}, {0x09E2, 0x09E3}, {0x0A02, 0x0A02}, {0x0A3C, 0x0A3C},
-	{0x0A41, 0x0A42}, {0x0A47, 0x0A48}, {0x0A4B, 0x0A4D}, {0x0A70, 0x0A71},
-	{0x0A81, 0x0A82}, {0x0ABC, 0x0ABC}, {0x0AC1, 0x0AC5}, {0x0AC7, 0x0AC8},
-	{0x0ACD, 0x0ACD}, {0x0B01, 0x0B01}, {0x0B3C, 0x0B3C}, {0x0B3F, 0x0B3F},
-	{0x0B41, 0x0B43}, {0x0B4D, 0x0B4D}, {0x0B56, 0x0B56}, {0x0B82, 0x0B82},
-	{0x0BC0, 0x0BC0}, {0x0BCD, 0x0BCD}, {0x0C3E, 0x0C40}, {0x0C46, 0x0C48},
-	{0x0C4A, 0x0C4D}, {0x0C55, 0x0C56}, {0x0CBF, 0x0CBF}, {0x0CC6, 0x0CC6},
-	{0x0CCC, 0x0CCD}, {0x0D41, 0x0D43}, {0x0D4D, 0x0D4D}, {0x0DCA, 0x0DCA},
-	{0x0DD2, 0x0DD4}, {0x0DD6, 0x0DD6}, {0x0E31, 0x0E31}, {0x0E34, 0x0E3A},
-	{0x0E47, 0x0E4E}, {0x0EB1, 0x0EB1}, {0x0EB4, 0x0EB9}, {0x0EBB, 0x0EBC},
-	{0x0EC8, 0x0ECD}, {0x0F18, 0x0F19}, {0x0F35, 0x0F35}, {0x0F37, 0x0F37},
-	{0x0F39, 0x0F39}, {0x0F71, 0x0F7E}, {0x0F80, 0x0F84}, {0x0F86, 0x0F87},
-	{0x0F90, 0x0F97}, {0x0F99, 0x0FBC}, {0x0FC6, 0x0FC6}, {0x102D, 0x1030},
-	{0x1032, 0x1032}, {0x1036, 0x1037}, {0x1039, 0x1039}, {0x1058, 0x1059},
-	{0x1160, 0x11FF}, {0x17B7, 0x17BD}, {0x17C6, 0x17C6}, {0x17C9, 0x17D3},
-	{0x180B, 0x180E}, {0x18A9, 0x18A9}, {0x200B, 0x200F}, {0x202A, 0x202E},
-	{0x206A, 0x206F}, {0x20D0, 0x20E3}, {0x302A, 0x302F}, {0x3099, 0x309A},
-	{0xFB1E, 0xFB1E}, {0xFE20, 0xFE23}, {0XFFF9, 0XFFFB}
+	{0x06D6, 0x06E4}, {0x06E7, 0x06E8}, {0x06EA, 0x06ED}, {0x0711, 0x0711},
+	{0x0730, 0x074A}, {0x07A6, 0x07B0}, {0x0901, 0x0902}, {0x093C, 0x093C},
+	{0x0941, 0x0948}, {0x094D, 0x094D}, {0x0951, 0x0954}, {0x0962, 0x0963},
+	{0x0981, 0x0981}, {0x09BC, 0x09BC}, {0x09C1, 0x09C4}, {0x09CD, 0x09CD},
+	{0x09E2, 0x09E3}, {0x0A02, 0x0A02}, {0x0A3C, 0x0A3C}, {0x0A41, 0x0A42},
+	{0x0A47, 0x0A48}, {0x0A4B, 0x0A4D}, {0x0A70, 0x0A71}, {0x0A81, 0x0A82},
+	{0x0ABC, 0x0ABC}, {0x0AC1, 0x0AC5}, {0x0AC7, 0x0AC8}, {0x0ACD, 0x0ACD},
+	{0x0B01, 0x0B01}, {0x0B3C, 0x0B3C}, {0x0B3F, 0x0B3F}, {0x0B41, 0x0B43},
+	{0x0B4D, 0x0B4D}, {0x0B56, 0x0B56}, {0x0B82, 0x0B82}, {0x0BC0, 0x0BC0},
+	{0x0BCD, 0x0BCD}, {0x0C3E, 0x0C40}, {0x0C46, 0x0C48}, {0x0C4A, 0x0C4D},
+	{0x0C55, 0x0C56}, {0x0CBF, 0x0CBF}, {0x0CC6, 0x0CC6}, {0x0CCC, 0x0CCD},
+	{0x0D41, 0x0D43}, {0x0D4D, 0x0D4D}, {0x0DCA, 0x0DCA}, {0x0DD2, 0x0DD4},
+	{0x0DD6, 0x0DD6}, {0x0E31, 0x0E31}, {0x0E34, 0x0E3A}, {0x0E47, 0x0E4E},
+	{0x0EB1, 0x0EB1}, {0x0EB4, 0x0EB9}, {0x0EBB, 0x0EBC}, {0x0EC8, 0x0ECD},
+	{0x0F18, 0x0F19}, {0x0F35, 0x0F35}, {0x0F37, 0x0F37}, {0x0F39, 0x0F39},
+	{0x0F71, 0x0F7E}, {0x0F80, 0x0F84}, {0x0F86, 0x0F87}, {0x0F90, 0x0F97},
+	{0x0F99, 0x0FBC}, {0x0FC6, 0x0FC6}, {0x102D, 0x1030}, {0x1032, 0x1032},
+	{0x1036, 0x1037}, {0x1039, 0x1039}, {0x1058, 0x1059}, {0x17B7, 0x17BD},
+	{0x17C6, 0x17C6}, {0x17C9, 0x17D3}, {0x18A9, 0x18A9}, {0x20D0, 0x20E3},
+	{0x302A, 0x302F}, {0x3099, 0x309A}, {0xFB1E, 0xFB1E}, {0xFE20, 0xFE23}
     };
-    int min = 0;
-    int max = sizeof(combining) / sizeof(struct interval) - 1;
-    int mid;
 
-    /* first quick check for Latin1 etc. characters */
-    if (c < combining[0].first)
-	return FALSE;
+    return intable(combining, sizeof(combining) / sizeof(struct interval), c);
+}
 
-    /* binary search in table */
-    while (max >= min)
+/*
+ * Return TRUE for characters that can be displayed in a normal way.
+ * Only for characters of 0x100 and above!
+ */
+    int
+utf_printable(c)
+    int		c;
+{
+    /* sorted list of non-overlapping intervals */
+    static struct interval nonprint[] =
     {
-	mid = (min + max) / 2;
-	if (combining[mid].last < c)
-	    min = mid + 1;
-	else if (combining[mid].first > c)
-	    max = mid - 1;
-	else
-	    return TRUE;
-    }
+	{0x070f, 0x070f}, {0x180b, 0x180e}, {0x200b, 0x200f}, {0x202a, 0x202e},
+	{0x206a, 0x206f}, {0xfeff, 0xfeff}, {0xfff9, 0xfffb}
+    };
 
-    return FALSE;
+    return !intable(nonprint, sizeof(nonprint) / sizeof(struct interval), c);
 }
 
 /*
@@ -1444,8 +1463,8 @@ utf_class(c)
 	{0xff3b, 0xff40, 1},		/* half/fullwidth ASCII */
 	{0xff5b, 0xff64, 1},		/* half/fullwidth ASCII */
     };
-    int min = 0;
-    int max = sizeof(classes) / sizeof(struct interval) - 1;
+    int bot = 0;
+    int top = sizeof(classes) / sizeof(struct interval) - 1;
     int mid;
 
     /* First quick check for Latin1 characters, use 'iskeyword'. */
@@ -1459,13 +1478,13 @@ utf_class(c)
     }
 
     /* binary search in table */
-    while (max >= min)
+    while (top >= bot)
     {
-	mid = (min + max) / 2;
+	mid = (bot + top) / 2;
 	if (classes[mid].last < c)
-	    min = mid + 1;
+	    bot = mid + 1;
 	else if (classes[mid].first > c)
-	    max = mid - 1;
+	    top = mid - 1;
 	else
 	    return (int)classes[mid].class;
     }
@@ -2433,7 +2452,7 @@ xim_set_preedit()
 					    XNLineSpace, line_space,
 					    NULL);
 	    if (XSetICValues(xic, XNPreeditAttributes, attr_list, NULL))
-		EMSG(_("Cannot set IC values"));
+		EMSG(_("(ex2) Cannot set IC values"));
 	    XFree(attr_list);
 	}
     }
@@ -2727,7 +2746,7 @@ xim_real_init(x11_window, x11_display)
 	/* Only give this message when verbose is set, because too many people
 	 * got this message when they didn't want to use a XIM. */
 	if (p_verbose > 0)
-	    EMSG(_("Failed to open input method"));
+	    EMSG(_("(ex3) Failed to open input method"));
 	return FALSE;
     }
 
@@ -2738,13 +2757,13 @@ xim_real_init(x11_window, x11_display)
 	destroy_cb.callback = xim_destroy_cb;
 	destroy_cb.client_data = NULL;
 	if (XSetIMValues(xim, XNDestroyCallback, &destroy_cb, NULL))
-	    EMSG(_("Warning: Could not set destroy callback to IM"));
+	    EMSG(_("(ex4) Warning: Could not set destroy callback to IM"));
     }
 #endif
 
     if (XGetIMValues(xim, XNQueryInputStyle, &xim_styles, NULL) || !xim_styles)
     {
-	EMSG(_("input method doesn't support any style"));
+	EMSG(_("(ex5) input method doesn't support any style"));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2798,7 +2817,10 @@ xim_real_init(x11_window, x11_display)
 
     if (!found)
     {
-	EMSG(_("input method doesn't support my preedit type"));
+	/* Only give this message when verbose is set, because too many people
+	 * got this message when they didn't want to use a XIM. */
+	if (p_verbose > 0)
+	    EMSG(_("(ex6) input method doesn't support my preedit type"));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2859,7 +2881,7 @@ xim_real_init(x11_window, x11_display)
     }
     else
     {
-	EMSG(_("Failed to create input context"));
+	EMSG(_("(ex7) Failed to create input context"));
 	XCloseIM(xim);
 	return FALSE;
     }
@@ -2896,7 +2918,7 @@ xim_decide_input_style()
 	    use_status_area = TRUE;
 	else
 	{
-	    EMSG(_("Your GTK+ is older than 1.2.3. Status area disabled"));
+	    EMSG(_("(ex8) Your GTK+ is older than 1.2.3. Status area disabled"));
 	    use_status_area = FALSE;
 	}
 #ifdef FEAT_XFONTSET
@@ -3131,7 +3153,7 @@ xim_init(void)
     if (!gdk_im_ready())
     {
 	if (p_verbose > 0)
-	    EMSG(_("Input Method Server is not running"));
+	    EMSG(_("(ex9) Input Method Server is not running"));
 	return;
     }
     if ((xic_attr = gdk_ic_attr_new()) != NULL)
@@ -3166,7 +3188,7 @@ xim_init(void)
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
 	    {
-		EMSG(_("over-the-spot style requires fontset"));
+		EMSG(_("(ex0) over-the-spot style requires fontset"));
 	    }
 	    else
 	    {
@@ -3189,7 +3211,7 @@ xim_init(void)
 	    if (gui.fontset == NOFONTSET
 		    || gui.fontset->type != GDK_FONT_FONTSET)
 	    {
-		EMSG(_("over-the-spot style requires fontset"));
+		EMSG(_("(ez3) over-the-spot style requires fontset"));
 	    }
 	    else
 	    {
@@ -3212,7 +3234,7 @@ xim_init(void)
 	xic = gdk_ic_new(attr, (GdkICAttributesType)attrmask);
 
 	if (xic == NULL)
-	    EMSG(_("Can't create input context."));
+	    EMSG(_("(ez4) Can't create input context."));
 	else
 	{
 	    mask = (int)gdk_window_get_events(widget->window);
@@ -3237,6 +3259,12 @@ xim_get_status_area_height(void)
 	return gui.char_height;
 #endif
     return 0;
+}
+
+    int
+input_method_active()
+{
+    return xim_preediting;
 }
 
 #endif /* FEAT_XIM */

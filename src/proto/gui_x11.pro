@@ -61,4 +61,5 @@ XImage *gui_mch_register_sign __ARGS((char *signfile));
 void gui_mch_mousehide __ARGS((int hide));
 void mch_set_mouse_shape __ARGS((int shape));
 void get_pixmap __ARGS((char_u *name, Pixmap *sen, Pixmap *insen));
+void gui_mch_menu_set_tip __ARGS((vimmenu_T *menu));
 /* vim: set ft=c : */

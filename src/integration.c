@@ -70,7 +70,7 @@
 extern char *strdup(const char *s1);
 
 
-// Functions private to this file
+/* Functions private to this file */
 static void workshop_connection_closed(void);
 static void messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2);
 static void workshop_disconnect(void);
@@ -101,16 +101,16 @@ static void unrecognised_message(char *);
 #define	PROTOCOL_VERSION	"4.0.0"
 
 static int sd = -1;
-static XtInputId inputHandler;		// Cookie for input
+static XtInputId inputHandler;		/* Cookie for input */
 
-Boolean save_files = True;		// When true, save all files before build actions
+Boolean save_files = True;		/* When true, save all files before build actions */
 
 void
 workshop_connection_closed(void)
 {
-	//
-	// socket closed on other end
-	//
+	/*
+	 * socket closed on other end
+	 */
 	XtRemoveInput(inputHandler);
 	inputHandler = NULL;
 	sd = -1;
@@ -119,14 +119,14 @@ workshop_connection_closed(void)
 	static char *
 getCommand(void)
 {
-	int	 len;		// length of this command
-	char	 lenbuf[7];	// get the length string here
-	char	*newcb;		// used to realloc cmdbuf
-	static char	*cmdbuf;// get the command string here
-	static int	 cbsize;// size of cmdbuf
+	int	 len;		/* length of this command */
+	char	 lenbuf[7];	/* get the length string here */
+	char	*newcb;		/* used to realloc cmdbuf */
+	static char	*cmdbuf;/* get the command string here */
+	static int	 cbsize;/* size of cmdbuf */
 
 	if ((len = read(sd, &lenbuf, 6)) == 6) {
-		lenbuf[6] = 0; // Terminate buffer such that atoi() works right
+		lenbuf[6] = 0; /* Terminate buffer such that atoi() works right */
 		len = atoi(lenbuf);
 		if (cbsize < (len + 1)) {
 			newcb = (char *) realloc(cmdbuf,
@@ -143,7 +143,7 @@ getCommand(void)
 			return NULL;
 		}
 	} else {
-		if (len == 0) { // EOF
+		if (len == 0) { /* EOF */
 			workshop_connection_closed();
 		}
 		return NULL;
@@ -155,7 +155,7 @@ getCommand(void)
 void
 messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 {
-	char	*cmd;		// the 1st word of the command
+	char	*cmd;		/* the 1st word of the command */
 
 	cmd = getCommand();
 	if (cmd == NULL) {
@@ -185,14 +185,14 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 			index = atoi(strtok(&cmd[12], " "));
 			color  = strtok(NULL, NOCATGETS("\001"));
 			sign  = strtok(NULL, NOCATGETS("\001"));
-			// Skip space that separates names
+			/* Skip space that separates names */
 			if (color) {
 				color++;
 			}
 			if (sign) {
 				sign++;
 			}
-			// Change sign name to accomodate a different size?
+			/* Change sign name to accomodate a different size? */
 			adjust_sign_name(sign);
 			workshop_add_mark_type(index, color, sign);
 		}
@@ -375,8 +375,8 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 			int pingNum;
 
 			pingNum = atoi(&cmd[5]);
-			// workshop_send_ack(ackNum);
-			// WHAT DO I DO HERE?
+			/* workshop_send_ack(ackNum);
+			 * WHAT DO I DO HERE? */
 		}
 		HANDLE_ERRORS(cmd);
 		break;
@@ -458,10 +458,10 @@ messageFromEserve(XtPointer clientData, int *NOTUSED1, XtInputId *NOTUSED2)
 			}
 		} else if (cmd[1] == 'e' && cmd[2] == 'n' && cmd[3] == 'd' &&
 			   strncmp(cmd, NOCATGETS("sendVerb "), 9) == 0) {
-			// Send the given verb back (used for the
-			// debug.lineno callback (such that other tools
-			// can obtain the position coordinates or the
-			// selection)
+			/* Send the given verb back (used for the
+			 * debug.lineno callback (such that other tools
+			 * can obtain the position coordinates or the
+			 * selection) */
 			char *verb;
 
 			verb = strtok(&cmd[9], " ");
@@ -560,17 +560,17 @@ unrecognised_message(
 	char	*cmd)
 {
 	pldebug("Unrecognised eserve message:\n\t%s\n", cmd);
-	//abort();
+	/* abort(); */
 }
 #endif
 
 
-// Change sign name to accomodate a different size:
-// Create the filename based on the height. The filename format
-// of multisize icons are:
-//    x.xpm   : largest icon
-//    x1.xpm  : smaller icon
-//    x2.xpm  : smallest icon
+/* Change sign name to accomodate a different size:
+ * Create the filename based on the height. The filename format
+ * of multisize icons are:
+ *    x.xpm   : largest icon
+ *    x1.xpm  : smaller icon
+ *    x2.xpm  : smallest icon */
 	void
 adjust_sign_name(char *filename)
 {
@@ -584,12 +584,12 @@ adjust_sign_name(char *filename)
 	if (filename[0] == '-')
 		return;
 
-	// This is ugly: later we should instead pass the fontheight over
-	// to eserve on startup and let eserve just send the right filenames
-	// to us in the first place
+	/* This is ugly: later we should instead pass the fontheight over
+	 * to eserve on startup and let eserve just send the right filenames
+	 * to us in the first place
 
-	// I know that the filename will end with 1.xpm (see
-	// GuiEditor.cc`LispPrintSign if you wonder why)
+	 * I know that the filename will end with 1.xpm (see
+	 * GuiEditor.cc`LispPrintSign if you wonder why) */
 	s = filename+strlen(filename)-5;
 	if (fontSize <= 11)
 		strcpy(s, "2.xpm");
@@ -689,9 +689,9 @@ void	workshop_connect(XtAppContext context)
 		}
 	}
 
-	// tell notifier we are interested in being called
-	// when there is input on the editor connection socket
-	//
+	/* tell notifier we are interested in being called
+	 * when there is input on the editor connection socket
+	 */
 	inputHandler = XtAppAddInput(context, sd, (XtPointer) XtInputReadMask,
 				     messageFromEserve, NULL);
 #ifdef DEBUG
@@ -721,9 +721,9 @@ void	workshop_disconnect()
 {
 	/* Probably need to send some message here */
 
-	//
-	// socket closed on other end
-	//
+	/*
+	 * socket closed on other end
+	 */
 	XtRemoveInput(inputHandler);
 	close(sd);
 	inputHandler = NULL;
@@ -731,11 +731,11 @@ void	workshop_disconnect()
 
 }
 
-/////////////////////////////////////////////////////////////////////////
-// Utility functions
-/////////////////////////////////////////////////////////////////////////
+/*
+ * Utility functions
+ */
 
-// Set icon for the window
+/* Set icon for the window */
 void
 workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 		  int width, int height)
@@ -815,19 +815,19 @@ widgetIsIconified(
         Widget           w)
 {
         Atom             wm_state;
-        Atom             act_type;              // actual Atom type returned
-        int              act_fmt;               // actual format returned
-        u_long           nitems_ret;            // number of items returned
-        u_long           bytes_after;           // number of bytes remaining
-        u_long          *property;              // actual property returned
+        Atom             act_type;              /* actual Atom type returned */
+        int              act_fmt;               /* actual format returned */
+        u_long           nitems_ret;            /* number of items returned */
+        u_long           bytes_after;           /* number of bytes remaining */
+        u_long          *property;              /* actual property returned */
 
-        //
-        // If a window is iconified its WM_STATE is set to IconicState. See
-        // ICCCM Version 2.0, section 4.1.3.1 for more details.
-        //
+        /*
+         * If a window is iconified its WM_STATE is set to IconicState. See
+         * ICCCM Version 2.0, section 4.1.3.1 for more details.
+         */
 
         wm_state = XmInternAtom(XtDisplay(w), NOCATGETS("WM_STATE"), False);
-        if (XtWindow(w) != 0) {                 // only check if window exists!
+        if (XtWindow(w) != 0) {                 /* only check if window exists! */
                 XGetWindowProperty(XtDisplay(w), XtWindow(w), wm_state, 0, 2,
                     False, AnyPropertyType, &act_type, &act_fmt, &nitems_ret,
                     &bytes_after, (u_char **) &property);
@@ -838,7 +838,7 @@ widgetIsIconified(
 
         return False;
 
-}    // end widgetIsIconified
+}    /* end widgetIsIconified */
 
 void
 workshop_minimize_shell(Widget shell)
@@ -880,19 +880,19 @@ void workshop_maximize_shell(Widget shell)
         }
 }
 
-//
-//	This function fills in the XRectangle object with the current
-//	x,y coordinates and height, width so that an XtVaSetValues to
-//	the same shell of those resources will restore the window to its
-//	formar position and dimensions.
-//
-//	Note: This function may fail, in which case the XRectangle will
-//	be unchanged.  Be sure to have the XRectangle set with the
-//	proper values for a failed condition prior to calling this
-//	function.
-//
-// THIS FUNCTION IS LIFTED FROM libutil/src/Session.cc
-//
+/*
+ *	This function fills in the XRectangle object with the current
+ *	x,y coordinates and height, width so that an XtVaSetValues to
+ *	the same shell of those resources will restore the window to its
+ *	formar position and dimensions.
+ *
+ *	Note: This function may fail, in which case the XRectangle will
+ *	be unchanged.  Be sure to have the XRectangle set with the
+ *	proper values for a failed condition prior to calling this
+ *	function.
+ *
+ * THIS FUNCTION IS LIFTED FROM libutil/src/Session.cc
+ */
 void	shellRectangle(Widget shell, XRectangle *r)
 {
 	Window		rootw, shellw, child, parentw;
@@ -986,13 +986,13 @@ Boolean workshop_get_rows_cols(int *rows, int *cols)
 	return success;
 }
 
-/////////////////////////////////////////////////////////////////////////
-// Toolbar code
-/////////////////////////////////////////////////////////////////////////
+/*
+ * Toolbar code
+ */
 
 void workshop_sensitivity(int num, char *table)
 {
-	// build up a verb table
+	/* build up a verb table */
 	VerbSense *vs;
 	int i;
 	char *s;
@@ -1040,17 +1040,17 @@ void workshop_sensitivity(int num, char *table)
 	free(vs);
 }
 
-/////////////////////////////////////////////////////////////////////////
-// Options code
-/////////////////////////////////////////////////////////////////////////
+/*
+ * Options code
+ */
 /* Set an editor option.
  * IGNORE an option if you do not recognize it.
  */
 void workshop_set_option_first(char *name, char *value)
 {
-	// Currently value can only be on/off. This may change later (for
-	// example to set an option like "balloon evaluate delay", but
-	// for now just convert it into a boolean
+	/* Currently value can only be on/off. This may change later (for
+	 * example to set an option like "balloon evaluate delay", but
+	 * for now just convert it into a boolean */
 	Boolean on = !strcmp(value, "on");
 
 	if (!strcmp(name, "workshopkeys")) {
@@ -1061,20 +1061,20 @@ void workshop_set_option_first(char *name, char *value)
 		workshop_balloon_mode(on);
 	} else if (!strcmp(name, "balloondelay")) {
 		int delay = atoi(value);
-		// Should I validate the number here??
+		/* Should I validate the number here?? */
 		workshop_balloon_delay(delay);
 	} else {
-		// Let editor interpret it
+		/* Let editor interpret it */
 		workshop_set_option(name, value);
 	}
 }
 
 
 
-/////////////////////////////////////////////////////////////////////////
-// Send information to eserve on certain editor events
-// You must make sure these are called when necessary
-/////////////////////////////////////////////////////////////////////////
+/*
+ * Send information to eserve on certain editor events
+ * You must make sure these are called when necessary
+ */
 
 void workshop_file_closed(char *filename)
 {
@@ -1104,8 +1104,8 @@ void workshop_file_saved(char *filename)
 	sprintf(buffer, NOCATGETS("savedFile %s\n"), filename);
 	write(sd, buffer, strlen(buffer));
 
-	// Let editor report any moved marks that the eserve client
-	// should deal with (for example, moving location-based breakpoints)
+	/* Let editor report any moved marks that the eserve client
+	 * should deal with (for example, moving location-based breakpoints) */
 	workshop_moved_marks(filename);
 }
 
@@ -1135,11 +1135,11 @@ void workshop_frame_moved(int new_x, int new_y, int new_w, int new_h)
 	}
 }
 
-// A button in the toolbar has been pushed.
-// Clientdata is a pointer used by the editor code to figure out the
-// positions for this toolbar (probably by storing a window pointer,
-// and then fetching the current buffer for that window and looking up
-// cursor and selection positions etc.)
+/* A button in the toolbar has been pushed.
+ * Clientdata is a pointer used by the editor code to figure out the
+ * positions for this toolbar (probably by storing a window pointer,
+ * and then fetching the current buffer for that window and looking up
+ * cursor and selection positions etc.) */
 void workshop_perform_verb(char *verb, void *clientData)
 {
 	char *filename;
@@ -1153,9 +1153,9 @@ void workshop_perform_verb(char *verb, void *clientData)
 	char *selection;
 
 	char buf[2*MAXPATHLEN];
-// Later: needsFilePos indicates whether or not we need to fetch all this
-// info for this verb... for now, however, it looks as if
-// eserve parsing routines depend on it always being present
+/* Later: needsFilePos indicates whether or not we need to fetch all this
+ * info for this verb... for now, however, it looks as if
+ * eserve parsing routines depend on it always being present */
 
 	if (workshop_get_positions(clientData,
 				   &filename,
@@ -1197,7 +1197,7 @@ void workshop_perform_verb(char *verb, void *clientData)
 	}
 }
 
-// Send a message to eserve
+/* Send a message to eserve */
 void workshop_send_message(char *buf)
 {
 	write(sd, buf, strlen(buf));
@@ -1213,7 +1213,7 @@ void workshop_send_message(char *buf)
 
 void
 pldebug(
-	char		*fmt,	// a printf style format line
+	char		*fmt,	/* a printf style format line */
 	...)
 {
 	va_list		 ap;
@@ -1225,6 +1225,6 @@ pldebug(
 		fflush(dfd);
 	}
 
-}    // end pldebug
+}    /* end pldebug */
 
 #endif

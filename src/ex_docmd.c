@@ -599,7 +599,7 @@ do_cmdline(cmdline, getline, cookie, flags)
      * here.  The value of 200 allows nested function calls, ":source", etc. */
     if (call_depth == 200)
     {
-	EMSG(_("Command too recursive"));
+	EMSG(_("(er8) Command too recursive"));
 	return FAIL;
     }
     ++call_depth;
@@ -915,9 +915,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 		|| (getline == get_func_line && !func_has_ended(cookie))))
     {
 	if (cstack.cs_flags[cstack.cs_idx] & CSF_WHILE)
-	    EMSG(_("Missing :endwhile"));
+	    EMSG(_("(ee6) Missing :endwhile"));
 	else
-	    EMSG(_("Missing :endif"));
+	    EMSG(_("(ee7) Missing :endif"));
     }
 
     /*
@@ -2620,6 +2620,11 @@ set_one_cmd_context(xp, buff)
 	    return set_context_in_menu_cmd(xp, cmd, arg, forceit);
 #endif
 
+	case CMD_colorscheme:
+	    xp->xp_context = EXPAND_COLORS;
+	    xp->xp_pattern = arg;
+	    break;
+
 #if (defined(HAVE_LOCALE_H) || defined(X_LOCALE)) \
 	&& (defined(FEAT_GETTEXT) || defined(FEAT_MBYTE))
 	case CMD_language:
@@ -3588,7 +3593,7 @@ check_more(message, forceit)
 		return FAIL;
 	    }
 #endif
-	    EMSGN(_("%ld more files to edit"), n);
+	    EMSGN(_("(be5) %ld more files to edit"), n);
 	    quitmore = 2;	    /* next try to quit is allowed */
 	}
 	return FAIL;
@@ -3682,7 +3687,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
 	{
 	    if (!force)
 	    {
-		EMSG(_("Command already exists: use ! to redefine"));
+		EMSG(_("(ec7) Command already exists: use ! to redefine"));
 		goto fail;
 	    }
 
@@ -3905,7 +3910,7 @@ uc_scan_attr(attr, len, argt, def, flags, compl)
 
     if (len == 0)
     {
-	EMSG(_("No attribute specified"));
+	EMSG(_("(ec8) No attribute specified"));
 	return FAIL;
     }
 
@@ -3957,7 +3962,7 @@ uc_scan_attr(attr, len, argt, def, flags, compl)
 	    else
 	    {
 wrong_nargs:
-		EMSG(_("Invalid number of arguments"));
+		EMSG(_("(ec9) Invalid number of arguments"));
 		return FAIL;
 	    }
 	}
@@ -3972,7 +3977,7 @@ wrong_nargs:
 		if (*def >= 0)
 		{
 two_count:
-		    EMSG(_("Count cannot be specified twice"));
+		    EMSG(_("(ec0) Count cannot be specified twice"));
 		    return FAIL;
 		}
 
@@ -3982,7 +3987,7 @@ two_count:
 		if (p != val + vallen)
 		{
 invalid_count:
-		    EMSG(_("Invalid default value for count"));
+		    EMSG(_("(ed7) Invalid default value for count"));
 		    return FAIL;
 		}
 	    }
@@ -4010,7 +4015,7 @@ invalid_count:
 	{
 	    if (val == NULL)
 	    {
-		EMSG(_("argument required for complete"));
+		EMSG(_("(ea6) argument required for complete"));
 		return FAIL;
 	    }
 
@@ -4029,7 +4034,7 @@ invalid_count:
 
 	    if (command_complete[i].expand == 0)
 	    {
-		EMSG2(_("Invalid complete value: %s"), val);
+		EMSG2(_("(ea7) Invalid complete value: %s"), val);
 		return FAIL;
 	    }
 	}
@@ -4037,7 +4042,7 @@ invalid_count:
 	{
 	    char_u ch = attr[len];
 	    attr[len] = '\0';
-	    EMSG2(_("Invalid attribute: %s"), attr);
+	    EMSG2(_("(ea8) Invalid attribute: %s"), attr);
 	    attr[len] = ch;
 	    return FAIL;
 	}
@@ -4078,7 +4083,7 @@ ex_command(eap)
 	    ++p;
     if (!ends_excmd(*p) && !vim_iswhite(*p))
     {
-	EMSG(_("Invalid command name"));
+	EMSG(_("(ei2) Invalid command name"));
 	return;
     }
     end = p;
@@ -4093,7 +4098,7 @@ ex_command(eap)
     }
     else if (!ASCII_ISUPPER(*name))
     {
-	EMSG(_("User defined commands must start with an uppercase letter"));
+	EMSG(_("(ei3) User defined commands must start with an uppercase letter"));
 	return;
     }
     else
@@ -4164,7 +4169,7 @@ ex_delcommand(eap)
 
     if (cmp != 0)
     {
-	EMSG2(_("No such user-defined command: %s"), eap->arg);
+	EMSG2(_("(de6) No such user-defined command: %s"), eap->arg);
 	return;
     }
 
@@ -4609,7 +4614,7 @@ ex_colorscheme(eap)
     exarg_T	*eap;
 {
     if (load_colors(eap->arg) == FAIL)
-	EMSG2(_("Cannot find color scheme %s"), eap->arg);
+	EMSG2(_("(ce1) Cannot find color scheme %s"), eap->arg);
 }
 
     static void
@@ -5824,7 +5829,7 @@ ex_cd(eap)
 	{
 	    if (prev_dir == NULL)
 	    {
-		EMSG(_("No previous directory"));
+		EMSG(_("(ed8) No previous directory"));
 		return;
 	    }
 	    new_dir = prev_dir;
@@ -6020,7 +6025,7 @@ ex_winpos(eap)
 	}
 	else
 # endif
-	    EMSG(_("Obtaining window position not implemented for this platform"));
+	    EMSG(_("(ew8) Obtaining window position not implemented for this platform"));
     }
     else
     {
@@ -6557,18 +6562,18 @@ open_exfile(fname, forceit, mode)
     /* with Unix it is possible to open a directory */
     if (mch_isdir(fname))
     {
-	EMSG2(_("\"%s\" is a directory"), fname);
+	EMSG2(_(e_isadir2), fname);
 	return NULL;
     }
 #endif
     if (!forceit && *mode != 'a' && vim_fexists(fname))
     {
-	EMSG2(_("\"%s\" exists (use ! to override)"), fname);
+	EMSG2(_("(we9) \"%s\" exists (use ! to override)"), fname);
 	return NULL;
     }
 
     if ((fd = mch_fopen((char *)fname, mode)) == NULL)
-	EMSG2(_("Cannot open \"%s\" for writing"), fname);
+	EMSG2(_("(we0) Cannot open \"%s\" for writing"), fname);
 
     return fd;
 }
@@ -6592,7 +6597,7 @@ ex_mark(eap)
 	curwin->w_cursor.lnum = eap->line2;
 	beginline(BL_WHITE | BL_FIX);
 	if (setmark(*eap->arg) == FAIL)	/* set mark */
-	    EMSG(_("Argument must be a letter or forward/backward quote"));
+	    EMSG(_("(em8) Argument must be a letter or forward/backward quote"));
 	curwin->w_cursor = pos;		/* restore curwin->w_cursor */
     }
 }
@@ -7211,7 +7216,7 @@ ex_endwhile(eap)
 ex_endfunction(eap)
     exarg_T	*eap;
 {
-    EMSG(_(":endfunction not inside a function"));
+    EMSG(_("(ee8) :endfunction not inside a function"));
 }
 
 /*
@@ -8281,7 +8286,7 @@ get_view_file(c)
 
     if (curbuf->b_ffname == NULL)
     {
-	EMSG(_("No file name"));
+	EMSG(_(e_noname));
 	return NULL;
     }
     sname = home_replace_save(NULL, curbuf->b_ffname);
@@ -8391,7 +8396,7 @@ ex_viminfo(eap)
     if (eap->cmdidx == CMD_rviminfo)
     {
 	if (read_viminfo(eap->arg, TRUE, TRUE, eap->forceit) == FAIL)
-	    EMSG(_("Cannot open viminfo file for reading"));
+	    EMSG(_("(ev0) Cannot open viminfo file for reading"));
     }
     else
 	write_viminfo(eap->arg, eap->forceit);
@@ -8712,7 +8717,7 @@ ex_digraphs(eap)
     else
 	listdigraphs();
 #else
-    EMSG(_("No digraphs in this version"));
+    EMSG(_("(ed9) No digraphs in this version"));
 #endif
 }
 
@@ -8997,7 +9002,7 @@ ex_language(eap)
     {
 	loc = setlocale(what, (char *)name);
 	if (loc == NULL)
-	    EMSG2(_("Cannot set language to \"%s\""), name);
+	    EMSG2(_("(le4) Cannot set language to \"%s\""), name);
 	else
 	{
 	    /* Reset $LC_ALL, otherwise it would overrule everyting. */

@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	SQL, PL/SQL (Oracle 8i)
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Apr 30
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -54,15 +57,28 @@ syn match sqlComment	"--.*"
 
 syn sync ccomment sqlComment
 
-" The default highlighting.
-hi def link sqlComment		Comment
-hi def link sqlKeyword		sqlSpecial
-hi def link sqlNumber		Number
-hi def link sqlOperator		sqlStatement
-hi def link sqlSpecial		Special
-hi def link sqlStatement	Statement
-hi def link sqlString		String
-hi def link sqlType		Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sql_syn_inits")
+  if version < 508
+    let did_sql_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink sqlComment	Comment
+  HiLink sqlKeyword	sqlSpecial
+  HiLink sqlNumber	Number
+  HiLink sqlOperator	sqlStatement
+  HiLink sqlSpecial	Special
+  HiLink sqlStatement	Statement
+  HiLink sqlString	String
+  HiLink sqlType	Type
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "sql"
 

@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 06
+*repeat.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -35,7 +35,7 @@ the same SIZE of area is used, see |visual-repeat|.
 ==============================================================================
 2. Multiple repeats					*multi-repeat*
 
-							*:g* *:global*
+						*:g* *:global* *eg2* *eg3*
 :[range]g[lobal]/{pattern}/[cmd]
 			Execute the Ex command [cmd] (default ":p") on the
 			lines within [range] where {pattern} matches.
@@ -56,7 +56,7 @@ buffer (1,$).  Use "CTRL-C" to interrupt the command.  If an error message is
 given for a line, the command for that line is aborted and the global command
 continues with the next matching line.
 
-To repeat a non-Ex command, you can use the ":normal" command:
+To repeat a non-Ex command, you can use the ":normal" command: >
 	:g/pat/normal {commands}
 Make sure that {commands} ends with a whole command, otherwise Vim will wait
 for you to type the rest of the command for each match.  The screen will not
@@ -160,7 +160,7 @@ q			Stops recording.  (Implementation note: The 'q' that
 			about each searched file.
 			{not in Vi}
 
-:scripte[ncoding] [encoding]			*:scripte* *:scriptencoding*
+:scripte[ncoding] [encoding]		*:scripte* *:scriptencoding* *ee5*
 			Specify the character encoding used in the script.
 			The following lines will be converted from [encoding]
 			to the value of the 'encoding' option, if they are
@@ -193,7 +193,7 @@ q			Stops recording.  (Implementation note: The 'q' that
 			{not in Vi} {not available when compiled without the
 			|+eval| feature}
 
-							*:fini* *:finish*
+						*:fini* *:finish* *ef5*
 :fini[sh]		Stop sourcing a script.  Can only be used in a Vim
 			script file.  This is a quick way to skip the rest of
 			the file.
@@ -248,7 +248,7 @@ found in the list |key-notation|.  Any of these codes can also be entered
 with CTRL-V followed by the three digit decimal code.  This does NOT work for
 the <t_xx> termcap codes, these can only be used in mappings.
 
-							*:source_crnl*
+							*:source_crnl* *ws1*
 MS-DOS, Win32 and OS/2: Files that are read with ":source" normally have
 <CR><NL> <EOL>s.  These always work.  If you are using a file with <NL> <EOL>s
 (for example, a file made on Unix), this will be recognized if 'fileformats'
@@ -439,7 +439,7 @@ is prepended.
 
 
 DELETING BREAKPOINTS
-							*:breakd* *:breakdel*
+						*:breakd* *:breakdel* *be3*
 :breakd[el] {nr}
 		Delete breakpoint {nr}.  Use |:breaklist| to see the number of
 		each breakpoint.

@@ -1097,8 +1097,8 @@ msgid "Evaluates to an empty string"
 msgstr "Evalueer na 'n leë string"
 
 #: ex_docmd.c:8207 globals.h:954
-msgid "No file name"
-msgstr "Geen lêernaam"
+msgid "(ef1) No file name"
+msgstr "(ef1) Geen lêernaam"
 
 #: ex_docmd.c:8317
 msgid "Cannot open viminfo file for reading"
@@ -2084,8 +2084,8 @@ msgid "writelines() requires list of strings"
 msgstr "'writelines()' benodig 'n lys van stringe"
 
 #: globals.h:974 if_python.c:672
-msgid "Out of memory!"
-msgstr "Geheue op!"
+msgid "(em4) Out of memory!"
+msgstr "(em4) Geheue op!"
 
 #: if_python.c:757
 msgid "Python: Error initialising I/O objects"
@@ -4472,8 +4472,8 @@ msgstr "Geen sodanige sintakskluster nie: %s"
 
 #: syntax.c:3121 syntax.c:3324
 #, c-format
-msgid "No such highlight group name: %s"
-msgstr "Geen sodanige uitliggroepnaam nie: %s"
+msgid "(eh3) No such highlight group name: %s"
+msgstr "(eh3) Geen sodanige uitliggroepnaam nie: %s"
 
 #: syntax.c:3260
 msgid "No Syntax items defined for this buffer"
@@ -5194,21 +5194,21 @@ msgid "Argument required"
 msgstr "Parameter benodig"
 
 #: globals.h:910
-msgid "\\ should be followed by /, ? or &"
-msgstr "\\ moet gevolg word deur /, ? of &"
+msgid "(eb1) \\ should be followed by /, ? or &"
+msgstr "(eb1) \\ moet gevolg word deur /, ? of &"
 
 #: globals.h:912
-msgid "Invalid in command-line window; <CR> executes, CTRL-C quits"
-msgstr "Ongeldig in bevelreël venster: <CR> voer uit, CTRL-C stop"
+msgid "(ec4) Invalid in command-line window; <CR> executes, CTRL-C quits"
+msgstr "(ec4) Ongeldig in bevelreël venster: <CR> voer uit, CTRL-C stop"
 
 #: globals.h:914
-msgid "Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr ""
+msgid "(ea2) Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr "(ea2) "
 "Bevel uit exrc/vimrc nie toegelaat in huidige gids- of etiketsoektog nie"
 
 #: globals.h:915
-msgid "File exists (use ! to override)"
-msgstr "Lêer bestaan (gebruik ! om te dwing)"
+msgid "(ee2) File exists (use ! to override)"
+msgstr "(ee2) Lêer bestaan (gebruik ! om te dwing)"
 
 #: globals.h:916
 msgid "Command failed"
@@ -5223,8 +5223,8 @@ msgid "Interrupted"
 msgstr "Onderbreek"
 
 #: globals.h:919
-msgid "Invalid address"
-msgstr "Ongeldige adres"
+msgid "(er3) Invalid address"
+msgstr "(er3) Ongeldige adres"
 
 #: globals.h:920
 msgid "Invalid argument"
@@ -5237,76 +5237,76 @@ msgstr "Ongeldige parameter: %s"
 
 #: globals.h:923
 #, c-format
-msgid "Invalid expression: %s"
-msgstr "Ongeldige uitdrukking: %s"
+msgid "(ee3) Invalid expression: %s"
+msgstr "(ee3) Ongeldige uitdrukking: %s"
 
 #: globals.h:925
-msgid "Invalid range"
-msgstr "Ongeldige omvang"
+msgid "(er4) Invalid range"
+msgstr "(er4) Ongeldige omvang"
 
 #: globals.h:926
 msgid "Invalid command"
 msgstr "Ongeldige bevel"
 
 #: globals.h:928
-msgid "Unexpected characters before '='"
-msgstr "Onverwagte karakters voor '='"
+msgid "(el1) Unexpected characters before '='"
+msgstr "(el1) Onverwagte karakters voor '='"
 
 #: globals.h:930
-msgid "Mark has invalid line number"
-msgstr "Merker het ongeldige reëlnommer"
+msgid "(em1) Mark has invalid line number"
+msgstr "(em1) Merker het ongeldige reëlnommer"
 
 #: globals.h:931
-msgid "Mark not set"
-msgstr "Merker nie gestel nie"
+msgid "(em5) Mark not set"
+msgstr "(em5) Merker nie gestel nie"
 
 #: globals.h:932
-msgid "Cannot make changes, 'modifiable' is off"
-msgstr "Kan nie wysig nie, 'modifiable' is af"
+msgid "(ec5) Cannot make changes, 'modifiable' is off"
+msgstr "(ec5) Kan nie wysig nie, 'modifiable' is af"
 
 #: globals.h:934
 msgid "GUI is not running"
 msgstr "GUI voer nie uit nie"
 
 #: globals.h:936
-msgid "Scripts nested too deep"
-msgstr "Skripte te diep ge-nes"
+msgid "(es4) Scripts nested too deep"
+msgstr "(es4) Skripte te diep ge-nes"
 
 #: globals.h:937
-msgid "No alternate file"
-msgstr "Geen alternatiewe lêer nie"
+msgid "(en2) No alternate file"
+msgstr "(en2) Geen alternatiewe lêer nie"
 
 #: globals.h:938
-msgid "No such abbreviation"
-msgstr "Afkorting bestaan nie"
+msgid "(ea2) No such abbreviation"
+msgstr "(ea2) Afkorting bestaan nie"
 
 #: globals.h:939
 msgid "No ! allowed"
 msgstr "Geen ! toegelaat nie"
 
 #: globals.h:941
-msgid "GUI cannot be used: Not enabled at compile time"
-msgstr "GUI kan nie gebruik word nie: Nie tydens kompilering gekies nie"
+msgid "(eg1) GUI cannot be used: Not enabled at compile time"
+msgstr "(eg1) GUI kan nie gebruik word nie: Nie tydens kompilering gekies nie"
 
 #: globals.h:944
-msgid "Hebrew cannot be used: Not enabled at compile time\n"
-msgstr "Hebreeus kan nie gebruik word nie: Nie tydens kompilering gekies nie\n"
+msgid "(eh2) Hebrew cannot be used: Not enabled at compile time\n"
+msgstr "(eh2) Hebreeus kan nie gebruik word nie: Nie tydens kompilering gekies nie\n"
 
 #: globals.h:947
-msgid "Farsi cannot be used: Not enabled at compile time\n"
-msgstr "Farsi kan nie gebruik word nie: Nie tydens kompilering gekies nie\n"
+msgid "(ef3) Farsi cannot be used: Not enabled at compile time\n"
+msgstr "(ef3) Farsi kan nie gebruik word nie: Nie tydens kompilering gekies nie\n"
 
 #: globals.h:949
-msgid "No inserted text yet"
-msgstr "Nog geen ingevoegde teks nie"
+msgid "(ei1) No inserted text yet"
+msgstr "(ei1) Nog geen ingevoegde teks nie"
 
 #: globals.h:950
-msgid "No previous command line"
-msgstr "Geen vorige bevelreël nie"
+msgid "(ec6) No previous command line"
+msgstr "(ec6) Geen vorige bevelreël nie"
 
 #: globals.h:951
-msgid "No such mapping"
-msgstr "Geen so 'n binding nie"
+msgid "(em3) No such mapping"
+msgstr "(em3) Geen so 'n binding nie"
 
 #: globals.h:952
 msgid "No match"
@@ -5318,24 +5318,24 @@ msgid "No match: %s"
 msgstr "Geen treffer: %s"
 
 #: globals.h:955
-msgid "No previous substitute regular expression"
-msgstr "Geen vorige vervangingspatroon nie"
+msgid "(es3) No previous substitute regular expression"
+msgstr "(es3) Geen vorige vervangingspatroon nie"
 
 #: globals.h:956
-msgid "No previous command"
-msgstr "Geen vorige bevel nie"
+msgid "(ep3) No previous command"
+msgstr "(ep3) Geen vorige bevel nie"
 
 #: globals.h:957
-msgid "No previous regular expression"
-msgstr "Geen vorige patroon nie"
+msgid "(ep1) No previous regular expression"
+msgstr "(ep1) Geen vorige patroon nie"
 
 #: globals.h:958
 msgid "No range allowed"
 msgstr "Geen omvang toegelaat nie"
 
 #: globals.h:960
-msgid "Not enough room"
-msgstr "Te min plek"
+msgid "(er5) Not enough room"
+msgstr "(er5) Te min plek"
 
 #: globals.h:962
 #, c-format
@@ -5357,111 +5357,111 @@ msgid "Can't read file %s"
 msgstr "Kan nie lêer %s lees nie"
 
 #: globals.h:966
-msgid "No write since last change (use ! to override)"
-msgstr "Ongeskryf sedert vorige verandering (gebruik ! om te dwing)"
+msgid "(ew2) No write since last change (use ! to override)"
+msgstr "(ew2) Ongeskryf sedert vorige verandering (gebruik ! om te dwing)"
 
 #: globals.h:967
-msgid "Null argument"
-msgstr "Nul parameter"
+msgid "(en5) Null argument"
+msgstr "(en5) Nul parameter"
 
 #: globals.h:969
-msgid "Number expected"
-msgstr "Nommer verwag"
+msgid "(ed1) Number expected"
+msgstr "(ed1) Nommer verwag"
 
 #: globals.h:972
 #, c-format
-msgid "Can't open errorfile %s"
-msgstr "Kan nie foutlêer %s oopmaak nie"
+msgid "(ee1) Can't open errorfile %s"
+msgstr "(ee1) Kan nie foutlêer %s oopmaak nie"
 
 #: globals.h:976
-msgid "Pattern not found"
-msgstr "Patroon nie gevind nie"
+msgid "(ep2) Pattern not found"
+msgstr "(ep2) Patroon nie gevind nie"
 
 #: globals.h:978
 #, c-format
-msgid "Pattern not found: %s"
-msgstr "Patroon nie gevind nie: %s"
+msgid "(ep2) Pattern not found: %s"
+msgstr "(ep2) Patroon nie gevind nie: %s"
 
 #: globals.h:979
 msgid "Argument must be positive"
 msgstr "Parameter moet positief wees"
 
 #: globals.h:981
-msgid "No Errors"
-msgstr "Geen Foute"
+msgid "(ee4) No Errors"
+msgstr "(ee4) Geen Foute"
 
 #: globals.h:983
-msgid "Damaged match string"
-msgstr "Beskadige trefferstring"
+msgid "(ed2) Damaged match string"
+msgstr "(ed2) Beskadige trefferstring"
 
 #: globals.h:984
-msgid "Corrupted regexp program"
-msgstr "Korrupte patroonprogram"
+msgid "(ed2) Corrupted regexp program"
+msgstr "(ed2) Korrupte patroonprogram"
 
 #: globals.h:985
-msgid "'readonly' option is set (use ! to override)"
-msgstr "'readonly' opsie is aan (gebruik ! om te dwing)"
+msgid "(er1) 'readonly' option is set (use ! to override)"
+msgstr "(er1) 'readonly' opsie is aan (gebruik ! om te dwing)"
 
 #: globals.h:987
 #, c-format
-msgid "Cannot set read-only variable \"%s\""
-msgstr "Kan nie lees-alleen veranderlike stel nie \"%s\""
+msgid "(er6) Cannot set read-only variable \"%s\""
+msgstr "(er6) Kan nie lees-alleen veranderlike stel nie \"%s\""
 
 #: globals.h:990
-msgid "Error while reading errorfile"
-msgstr "Fout tydens lees van 'errorfile'"
+msgid "(er2) Error while reading errorfile"
+msgstr "(er2) Fout tydens lees van 'errorfile'"
 
 #: globals.h:993
-msgid "Not allowed in sandbox"
-msgstr "Nie toegelaat in sandput nie"
+msgid "(es5) Not allowed in sandbox"
+msgstr "(es5) Nie toegelaat in sandput nie"
 
 #: globals.h:995
-msgid "Invalid scroll size"
-msgstr "Ongeldige rolgrootte"
+msgid "(es2) Invalid scroll size"
+msgstr "(es2) Ongeldige rolgrootte"
 
 #: globals.h:996
-msgid "'shell' option is empty"
-msgstr "'shell' (dop) opsie is leeg"
+msgid "(es1) 'shell' option is empty"
+msgstr "(es1) 'shell' (dop) opsie is leeg"
 
 #: globals.h:997
-msgid "tag stack empty"
-msgstr "etiketstapel leeg"
+msgid "(et1) tag stack empty"
+msgstr "(et1) etiketstapel leeg"
 
 #: globals.h:998
-msgid "Command too complex"
-msgstr "Bevel te kompleks"
+msgid "(ec3) Command too complex"
+msgstr "(ec3) Bevel te kompleks"
 
 #: globals.h:999
-msgid "Name too long"
-msgstr "Naam te lank"
+msgid "(en1) Name too long"
+msgstr "(en1) Naam te lank"
 
 #: globals.h:1000
-msgid "Too many ["
-msgstr "Te veel ["
+msgid "(ep4) Too many ["
+msgstr "(ep4) Te veel ["
 
 #: globals.h:1002
 msgid "Command too long"
 msgstr "Bevel te lank"
 
 #: globals.h:1004
-msgid "Too many file names"
-msgstr "Te veel lêername"
+msgid "(et3) Too many file names"
+msgstr "(et3) Te veel lêername"
 
 #: globals.h:1006
-msgid "Unknown mark"
-msgstr "Onbekende merker"
+msgid "(em6) Unknown mark"
+msgstr "(em6) Onbekende merker"
 
 #: globals.h:1007
 msgid "Unknown"
 msgstr "Onbekend"
 
 #: globals.h:1008
-msgid "Cannot expand wildcards"
-msgstr "Kan nie plekhouers uitbrei nie"
+msgid "(ew3) Cannot expand wildcards"
+msgstr "(ew3) Kan nie plekhouers uitbrei nie"
 
 #: globals.h:1009
-msgid "Error while writing"
-msgstr "Fout tydens skryfoperasie"
+msgid "(ew4) Error while writing"
+msgstr "(ew4) Fout tydens skryfoperasie"
 
 #: globals.h:1010
 msgid "Zero count"

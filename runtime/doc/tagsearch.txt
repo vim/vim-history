@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0ad.  Last change: 2001 Apr 29
+*tagsearch.txt* For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -34,7 +34,7 @@ function name and hit CTRL-].  This will bring you to the function definition.
 An easy way back is with the CTRL-T command.  Also read about the tag stack
 below.
 
-							*:ta* *:tag*
+						*:ta* *:tag* *te0* *je1*
 :ta[g][!] {ident}	Jump to the definition of {ident}, using the
 			information in the tags file(s).  Put {ident} in the
 			tag stack.  See |tag-!| for [!].
@@ -83,7 +83,7 @@ using ignore-case tag searching disables binary searching in the tags file,
 which causes a slowdown.
 
 ==============================================================================
-2. Tag stack						*tag-stack* *tagstack*
+2. Tag stack				*tag-stack* *tagstack* *te3*
 
 On the tag stack is remembered which tags you jumped to, and from where.
 Tags are only pushed onto the stack when the 'tagstack' option is set.
@@ -164,7 +164,7 @@ When you try to use the tag stack while it doesn't contain anything you will
 get an error message.
 
 ==============================================================================
-3. Tag match list					*tag-matchlist*
+3. Tag match list				*tag-matchlist* *te4* *te5*
 
 When there are several matching tags, these commands can be used to jump
 between them.  Note that these command don't change the tag stack, they keep
@@ -391,7 +391,7 @@ for.  In Vim this is not done, the previous search pattern is still remembered,
 unless the 't' flag is present in 'cpoptions'.  The search pattern is always
 put in the search history, so you can modify it if searching fails.
 
-						*emacs-tags* *emacs_tags*
+					*emacs-tags* *emacs_tags* *je2*
 Emacs style tag files are only supported if Vim was compiled with the
 |+emacs_tags| feature enabled.  Sorry, there is no explanation about Emacs tag
 files here, it is only supported for backwards compatibility :-).
@@ -447,7 +447,7 @@ in another directory, file names in that tag file are relative to the
 directory where the tag file is.
 
 ==============================================================================
-5. Tags file format					*tags-file-format*
+5. Tags file format				*tags-file-format* *je3*
 
 						*ctags* *jtags*
 A tags file can be created with an external command, for example "ctags".  It
@@ -549,6 +549,7 @@ characters in a search pattern are "^" (begin-of-line) and "$" (<EOL>).
 See |pattern|.  Note that you must put a backslash before each backslash in
 the search text.  This is for backwards compatibility with Vi.
 
+							*te7* *te8*
 If the command is a normal search command (it starts and ends with "/" or
 "?"), some special handling is done:
 - Searching starts on line 1 of the file.
@@ -571,6 +572,7 @@ If the command is a normal search command (it starts and ends with "/" or
 
 ==============================================================================
 6. Include file searches		*include-search* *definition-search*
+							*se9* *de1* *de2*
 
 These commands look for a string in the current file and in all encountered
 included files (recursively).  This can be used to find the definition of a

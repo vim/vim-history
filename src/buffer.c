@@ -95,10 +95,10 @@ open_buffer(read_stdin, eap)
 	 */
 	if (curbuf == NULL)
 	{
-	    EMSG(_("Cannot allocate any buffer, exiting..."));
+	    EMSG(_("(eb2) Cannot allocate any buffer, exiting..."));
 	    getout(2);
 	}
-	EMSG(_("Cannot allocate buffer, using other one..."));
+	EMSG(_("(eb3) Cannot allocate buffer, using other one..."));
 	enter_buffer(curbuf);
 	return FAIL;
     }
@@ -779,7 +779,7 @@ do_buffer(action, start, dir, count, forceit)
 	}
 	if (!bufIsChanged(buf))
 	{
-	    EMSG(_("No modified buffer found"));
+	    EMSG(_("(eb4) No modified buffer found"));
 	    return FAIL;
 	}
     }
@@ -818,7 +818,7 @@ do_buffer(action, start, dir, count, forceit)
 	    if (bp == buf)
 	    {
 		/* back where we started, didn't find anything. */
-		EMSG(_("There is no listed buffer"));
+		EMSG(_("(eb5) There is no listed buffer"));
 		return FAIL;
 	    }
 	}
@@ -830,12 +830,12 @@ do_buffer(action, start, dir, count, forceit)
 	{
 	    /* don't warn when deleting */
 	    if (!unload)
-		EMSGN(_("Cannot go to buffer %ld"), count);
+		EMSGN(_("(eb6) Cannot go to buffer %ld"), count);
 	}
 	else if (dir == FORWARD)
-	    EMSG(_("Cannot go beyond last buffer"));
+	    EMSG(_("(eb7) Cannot go beyond last buffer"));
 	else
-	    EMSG(_("Cannot go before first buffer"));
+	    EMSG(_("(eb8) Cannot go before first buffer"));
 	return FAIL;
     }
 
@@ -859,7 +859,7 @@ do_buffer(action, start, dir, count, forceit)
 
 	if (!forceit && bufIsChanged(buf))
 	{
-	    EMSGN(_("No write since last change for buffer %ld (use ! to override)"),
+	    EMSGN(_("(ew5) No write since last change for buffer %ld (use ! to override)"),
 			buf->b_fnum);
 	    return FAIL;
 	}
@@ -875,7 +875,7 @@ do_buffer(action, start, dir, count, forceit)
 	{
 	    if (action == DOBUF_UNLOAD)
 	    {
-		EMSG(_("Cannot unload last buffer"));
+		EMSG(_("(eu2) Cannot unload last buffer"));
 		return FAIL;
 	    }
 
@@ -1295,7 +1295,7 @@ buflist_new(ffname, sfname, lnum, use_curbuf, listed)
 	buf->b_fnum = top_file_num++;
 	if (top_file_num < 0)		/* wrap around (may cause duplicates) */
 	{
-	    EMSG(_("Warning: List of file names overflow"));
+	    EMSG(_("(wo1) Warning: List of file names overflow"));
 	    if (emsg_silent == 0)
 	    {
 		out_flush();
@@ -1459,7 +1459,7 @@ buflist_getfile(n, lnum, options, forceit)
 	if ((options & GETF_ALT) && n == 0)
 	    EMSG(_(e_noalt));
 	else
-	    EMSGN(_("buffer %ld not found"), n);
+	    EMSGN(_("(eb9) Buffer %ld not found"), n);
 	return FAIL;
     }
 
@@ -1670,9 +1670,9 @@ buflist_findpat(pattern, pattern_end, unlisted, diffmode)
     }
 
     if (match == -2)
-	EMSG2(_("More than one match for %s"), pattern);
+	EMSG2(_("(be1) More than one match for %s"), pattern);
     else if (match < 0)
-	EMSG2(_("No matching buffer for %s"), pattern);
+	EMSG2(_("(be2) No matching buffer for %s"), pattern);
     return match;
 }
 #endif
@@ -2144,7 +2144,7 @@ setfname(ffname, sfname, message)
 	    if (buf->b_ml.ml_mfp != NULL)	/* it's loaded, fail */
 	    {
 		if (message)
-		    EMSG(_("Buffer with this name already exists"));
+		    EMSG(_("(ez1) Buffer with this name already exists"));
 		vim_free(ffname);
 		return FAIL;
 	    }

@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 18
+*if_ole.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -114,18 +114,18 @@ harmlessly, although possibly in unpredictable ways.
 There is currently no practical way to trap this situation, and users must
 simply be aware of the limitation.
 ==============================================================================
-4. Registration						*ole-registration*
+4. Registration					*ole-registration* *oe1*
 
 Before Vim will act as an OLE server, it must be registered in the system
 registry. In order to do this, Vim should be run with a single parameter of
-"-register". >
-
+"-register".
+							*-register*  >
 	gvim -register
 
 Once vim is registered, the application path is stored in the registry. Before
 moving, deleting, or upgrading Vim, the registry entries should be removed
-using the "-unregister" switch. >
-
+using the "-unregister" switch.
+							*-unregister*  >
 	gvim -unregister
 
 The OLE mechanism will use the first registered Vim it finds.  If a Vim is

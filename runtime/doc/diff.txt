@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 21
+*diff.txt*      For Vim version 6.0ae.  Last change: 2001 May 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -62,6 +62,7 @@ diff mode.  You could use a construct like this: >
 
 While already in Vim you can start diff mode in two ways.
 
+							*ed3*
 :diffsplit {filename}					*:diffs* *:diffsplit*
 		Open a new window on the file {filename}.  The options are set
 		as for "vimdiff" for the current and the newly opened window.
@@ -85,6 +86,9 @@ To make these commands use a vertical split, prepend |:vertical|.  Examples: >
 
 	:vert diffsplit main.c~
 	:vert diffpatch /tmp/diff
+<
+							*de3*
+There can be up to four buffers with 'diff' set.
 
 ==============================================================================
 2. Viewing diffs						*view-diffs*
@@ -153,7 +157,7 @@ The diffs are highlighted with these groups:
 				buffer.
 
 ==============================================================================
-3. Diff copying						*copy-diffs*
+3. Diff copying			*copy-diffs* *ed4* *ed5* *ed6* *de4* *de5*
 
 There are two commands to copy text from one buffer to another.  The result is
 that the buffers will be equal within the specified range.
@@ -241,6 +245,15 @@ Example (this does the same as 'diffexpr' being empty): >
 	   silent execute "!diff " . opt . v:fname_in . " " . v:fname_new .
 	   	\  " > " . v:fname_out
 	endfunction
+<
+						*de7*
+Vim will do a test if the diff output looks alright.  If it doesn't, you will
+get an error message.  Possible causes:
+-  The "diff" program cannot be executed.
+-  The "diff" program doesn't produce normal "ed" style diffs (see above).
+-  The 'shell' and associated options are not set correctly.  Try if filtering
+   works with a command like ":!sort".
+-  You are using 'diffexpr' and it doesn't work.
 
 
 USING PATCHES					*diff-patchexpr*

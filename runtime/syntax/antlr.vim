@@ -1,15 +1,15 @@
 " Vim syntax file
 " Antlr:	ANTLR, Another Tool For Language Recognition <www.antlr.org>
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" LastChange:	25 Apr 2001 
+" LastChange:	02 May 2001 
 " Original:	Comes from JavaCC.vim
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
-  syntax clear
+   syntax clear
 elseif exists("b:current_syntax")
-  finish
+   finish
 endif
 
 " This syntac file is a first attempt. It is far from perfect...
@@ -19,10 +19,10 @@ endif
 
 " source the java.vim file
 if version < 600
-  source <sfile>:p:h/java.vim
+   so <sfile>:p:h/java.vim
 else
-  runtime! syntax/java.vim
-  unlet b:current_syntax
+   runtime! syntax/java.vim
+   unlet b:current_syntax
 endif
 
 "remove catching errors caused by wrong parenthesis (does not work in antlr
@@ -54,14 +54,14 @@ syn keyword antlrActionToken TOKEN SKIP MORE SPECIAL_TOKEN
 syn keyword antlrError DEBUG IGNORE_IN_BNF
 
 if version >= 508 || !exists("did_antlr_syntax_inits")
-  if version < 508
-    let did_antlr_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
-  HiLink antlrSep Statement
-  HiLink antlrPackages Statement
+   if version < 508
+      let did_antlr_syntax_inits = 1
+      command -nargs=+ HiLink hi link <args>
+   else
+      command -nargs=+ HiLink hi def link <args>
+   endif
+   HiLink antlrSep Statement
+   HiLink antlrPackages Statement
   delcommand HiLink
 endif
 

@@ -2,12 +2,15 @@
 " Language:	Pascal
 " Current  Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
 " Previous Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
-" Version: 2.3
-" Last Change:	2001 Jan 15
-" Contributions: Tim Chase <tchase@csc.com>, Stas Grabois <stsi@vtrails.com>
+" Version: 2.4
+" Last Change:	2001 May 2
+" Contributors: Tim Chase <tchase@csc.com>, Stas Grabois <stsi@vtrails.com>
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -30,14 +33,35 @@ syn keyword pascalType		string text
 
 syn keyword pascalTodo contained	TODO
 
+
 " String
-syn region  pascalString matchgroup=pascalString start=+'+ end=+'+ contains=pascalStringEscape
-if exists("pascal_gpc")
-  syn region  pascalString matchgroup=pascalString start=+"+ end=+"+ contains=pascalStringEscapeGPC
+if !exists("pascal_one_line_string")
+  syn region  pascalString matchgroup=pascalString start=+'+ end=+'+ contains=pascalStringEscape
+  if exists("pascal_gpc")
+    syn region  pascalString matchgroup=pascalString start=+"+ end=+"+ contains=pascalStringEscapeGPC
+  else
+    syn region  pascalStringError matchgroup=pascalStringError start=+"+ end=+"+ contains=pascalStringEscape
+  endif
 else
-  syn region  pascalError matchgroup=pascalError start=+"+ end=+"+ contains=pascalStringEscape
-endif
-syn match   pascalStringEscape	contained "''"
+  "wrong strings
+  syn region  pascalStringError matchgroup=pascalStringError start=+'+ end=+'+ end=+$+ contains=pascalStringEscape
+  if exists("pascal_gpc")
+    syn region  pascalStringError matchgroup=pascalStringError start=+"+ end=+"+ end=+$+ contains=pascalStringEscapeGPC
+  else
+    syn region  pascalStringError matchgroup=pascalStringError start=+"+ end=+"+ end=+$+ contains=pascalStringEscape
+  endif
+
+  "right strings
+  syn region  pascalString matchgroup=pascalString start=+'+ end=+'+ oneline contains=pascalStringEscape
+  " To see the start and end of strings:
+  " syn region  pascalString matchgroup=pascalStringError start=+'+ end=+'+ oneline contains=pascalStringEscape
+  if exists("pascal_gpc")
+    syn region  pascalString matchgroup=pascalString start=+"+ end=+"+ oneline contains=pascalStringEscapeGPC
+  else
+    syn region  pascalStringError matchgroup=pascalStringError start=+"+ end=+"+ oneline contains=pascalStringEscape
+  endif
+end
+syn match   pascalStringEscape		contained "''"
 syn match   pascalStringEscapeGPC	contained '""'
 
 
@@ -274,42 +298,55 @@ if !exists("pascal_traditional")
     syn keyword pascalFunction	StrUpper
   endif
 
-
 endif
 
-" The default highlighting.
-hi def link pascalAcces			pascalStatement
-hi def link pascalBoolean		Boolean
-hi def link pascalComment		Comment
-hi def link pascalConditional		Conditional
-hi def link pascalConstant		Constant
-hi def link pascalDelimiter		Identifier
-hi def link pascalDirective		pascalStatement
-hi def link pascalException		Exception
-hi def link pascalFloat			Float
-hi def link pascalFunction		Function
-hi def link pascalLabel			Label
-hi def link pascalMatrixDelimiter	Identifier
-hi def link pascalModifier		Type
-hi def link pascalNumber		Number
-hi def link pascalOperator		Operator
-hi def link pascalPredefined		pascalStatement
-hi def link pascalPreProc		PreProc
-hi def link pascalRepeat		Repeat
-hi def link pascalStatement		Statement
-hi def link pascalString		String
-hi def link pascalStringEscape		Special
-hi def link pascalStringEscapeGPC	Special
-hi def link pascalStruct		pascalStatement
-hi def link pascalSymbolOperator	pascalOperator
-hi def link pascalTodo			Todo
-hi def link pascalType			Type
-hi def link pascalUnclassified		pascalStatement
-"  hi link pascalAsm			Assembler
-hi def link pascalError			Error
-hi def link pascalAsmKey		pascalStatement
-"optional highlighting
-hi def link pascalShowTab		Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_pascal_syn_inits")
+  if version < 508
+    let did_pascal_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink pascalAcces		pascalStatement
+  HiLink pascalBoolean		Boolean
+  HiLink pascalComment		Comment
+  HiLink pascalConditional	Conditional
+  HiLink pascalConstant		Constant
+  HiLink pascalDelimiter	Identifier
+  HiLink pascalDirective	pascalStatement
+  HiLink pascalException	Exception
+  HiLink pascalFloat		Float
+  HiLink pascalFunction		Function
+  HiLink pascalLabel		Label
+  HiLink pascalMatrixDelimiter	Identifier
+  HiLink pascalModifier		Type
+  HiLink pascalNumber		Number
+  HiLink pascalOperator		Operator
+  HiLink pascalPredefined	pascalStatement
+  HiLink pascalPreProc		PreProc
+  HiLink pascalRepeat		Repeat
+  HiLink pascalStatement	Statement
+  HiLink pascalString		String
+  HiLink pascalStringEscape	Special
+  HiLink pascalStringEscapeGPC	Special
+  HiLink pascalStringError	Error
+  HiLink pascalStruct		pascalStatement
+  HiLink pascalSymbolOperator	pascalOperator
+  HiLink pascalTodo		Todo
+  HiLink pascalType		Type
+  HiLink pascalUnclassified	pascalStatement
+  "  HiLink pascalAsm		Assembler
+  HiLink pascalError		Error
+  HiLink pascalAsmKey		pascalStatement
+  HiLink pascalShowTab		Error
+
+  delcommand HiLink
+endif
+
 
 let b:current_syntax = "pascal"
 

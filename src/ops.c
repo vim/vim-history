@@ -2749,7 +2749,7 @@ do_put(regname, dir, count, flags)
 
     if (y_size == 0 || y_array == NULL)
     {
-	EMSG2(_("Nothing in register %s"),
+	EMSG2(_("(pe7) Nothing in register %s"),
 		  regname == 0 ? (char_u *)"\"" : transchar(regname));
 	goto end;
     }
@@ -4277,7 +4277,7 @@ do_addsub(command, Prenum1)
 	    --length;
 	while (todel-- > 0)
 	{
-	    if (isalpha(c))
+	    if (c < 0x100 && isalpha(c))
 	    {
 		if (isupper(c))
 		    hexupper = TRUE;
@@ -4858,7 +4858,7 @@ write_reg_contents(name, str, must_append)
 
     if (!valid_yank_reg(name, TRUE))	    /* check for valid reg name */
     {
-	EMSG2(_("Invalid register name: '%s'"), transchar(name));
+	EMSG2(_("(pe8) Invalid register name: '%s'"), transchar(name));
 	return;
     }
 

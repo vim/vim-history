@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
+*message.txt*   For Vim version 6.0ae.  Last change: 2001 May 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -33,16 +33,67 @@ it, you can see it again with: >
 or view a list of recent messages with: >
   :messages
 
-Many messages start with a three character ID, like "ec1:" or "wf3:".  You
+Many messages start with a three character ID, like "(ec1)" or "(wf3)".  You
 can use this ID to find help on the subject: >
 	:help ec1
 	:help wf3
 <
+
+LIST OF MESSAGES
+			*ei4* *ei5* *ei6* *ei7* *el5* *eg7* *ei8* *ei9*
+			*ei0* *eq3* *ue1* *ue2* *ue3* *me5* *me6* *me7*
+			*me8* *me9*  >
+  Add to read buffer
+  makemap: Illegal mode
+  Cannot create BalloonEval with both message and callback
+  Hangul automata ERROR
+  block was not locked
+  Didn't get block nr {N}?
+  ml_timestamp: Didn't get block 0??
+  pointer block id wrong {N}
+  Updated too many blocks?
+  get_varp ERROR
+  u_undo: line numbers wrong
+  undo list corrupt
+  undo line missing
+  ml_get: cannot find line {N}
+  cannot find line {N}
+  line number out of range: {N} past the end
+  line count wrong in block {N}
+
+This is an internal error.  If you can reproduce it, please send in a bug
+report. |bugs|
+
 >
   ATTENTION
   Found a swap file by the name ...
 
 See |ATTENTION|.
+
+							*eb9*  >
+  Buffer {N} not found
+
+The buffer you requested does not exist.  This can also happen when you have
+wiped out a buffer which contains a mark or is referenced in another way.
+|:bwipeout|
+
+							*ez1*  >
+  Buffer with this name already exists
+
+You cannot have two buffers with the same name.
+
+							*el4*  >
+  Close error on swap file
+
+The |swap-file|, that is used to keep a copy of the edited text, could not be
+closed properly.  Mostly harmless.
+
+							*er8*  >
+  Command too recursive
+
+This happens when an Ex command executes an Ex command that executes an Ex
+command, etc.  This is only allowed 200 times.  When it's more there probably
+is an endless loop.  Probably a |:execute| or |:source| command is involved.
 
 							*ec2*  >
   Cannot allocate color {name}
@@ -75,11 +126,24 @@ A filename contains a strange combination of characters, which causes Vim to
 attempt expanding wildcards but this fails.  This does NOT mean that no
 matching file names could be found, but that the pattern was illegal.
 
+							*we0*  >
+  Cannot open "{filename}" for writing
+
+For some reason the file you are writing to cannot be be created or
+overwritten.  The reason could be that you do not have permission to write in
+the directory or the file name is not valid.
+
 							*er6*  >
   Cannot set read-only variable "{name}"
 
 You are trying to assign a value to an argument of a function |a:var| or a Vim
 internal variagble |v:var| which is read-only.
+
+							*eu2*  >
+  Cannot unload last buffer
+
+Vim always requires one buffer to be loaded, otherwise there would be nothing
+to display in the window.
 
 							*ee1*  >
   Can't open errorfile <filename>
@@ -92,7 +156,7 @@ messages or grep output cannot be opened.  This can have several causes:
   make command is still executed in the wrong directory.
 - 'makeef' has a wrong value.
 
-							*ea2:*  >
+							*ea2*  >
   Command not allowed from exrc/vimrc in current dir or tag search
 
 Some commands are not allowed for security reasons.  These commands mostly
@@ -115,12 +179,28 @@ about the loss of information, set the 'fileencoding' option to another value
 that can handle the characters in the buffer and write again.  If you don't
 care, you can abandon the buffer or reset the 'modified' option.
 
+							*eo7*  >
+  Could not rename swap file
+
+When the file name changes, Vim tries to rename the |swap-file| as well.
+This failed and the old swap file is now still used.  Mostly harmless.
+
 							*ed2*  >
   Damaged match string
   Corrupted regexp program
 
 Something inside Vim went wrong and resulted in a corrupted regexp.  If you
 know how to reproduce this problem, please report it. |bugs|
+
+							*re8* *re9* *re0*  >
+  Error writing to "{filename}"
+  Error closing "{filename}"
+  Error reading "{filename}"
+
+This occurs when Vim is trying to rename a file, but a simple change of file
+name doesn't work.  Then the file will be copied, but somehow this failed.
+The result may be that both the original file and the destination file exist
+and the destination file may be incomplete.
 
 							*er2*  >
   Error while reading errorfile
@@ -134,8 +214,9 @@ message that was not recognized.
 Writing a file was not completed successfully.  The file is probably
 incomplete.
 
-							*ee2*  >
+							*ee2* *we9*  >
   File exists (use ! to override)
+  "{filename}" exists (use ! to override)
 
 You are protected from accidentally overwriting a file.  When you want to
 write anyway, use the same command, but add a "!" just after the command.
@@ -144,6 +225,12 @@ Example: >
 changes to: >
 	:w! /tmp/test
 <
+							*ew6*  >
+  File is loaded in another buffer
+
+You are trying to write a file under a name which is also used in another
+buffer.  This would result in two versions of the same file.
+
 							*ew1*  >
   File not written: Writing is disabled by 'write' option
 
@@ -163,6 +250,12 @@ You are running a version of Vim that doesn't include the GUI code.  Therefore
 This is caused by setting an invalid value for the 'scroll', 'scrolljump' or
 'scrolloff' options.
 
+							*we7*  >
+  "{filename}" is a directory
+
+You tried to write a file with the name of a directory.  This is not possible.
+You probably need to append a file name.
+
 							*em1*  >
   Mark has invalid line number
 
@@ -170,11 +263,27 @@ You are using a mark that has a line number that doesn't exist.  This can
 happen when you have a mark in another file, and some other program has
 deleted lines from it.
 
+							*em9* *em0*  >
+  Missing {.
+  Missing }.
+
+Using a {} construct in a file name, but there is a { without a matching } or
+the other way around.  It should be used like this: {foo,bar}.  This matches
+"foo" and "bar".
+
 							*em2*  >
   ml_get: invalid lnum:
 
 This is an internal Vim error.  Please try to find out how it can be
 reproduced, and submit a bug report |bugreport.vim|.
+
+							*be5*  >
+  {number} more files to edit
+
+You are trying to exit, while the last item in the argument list has not been
+edited.  This protects you from accidentally exiting when you still have more
+files to work on.  See |argument-list|.  If you do want to exit, just do it
+again and it will work.
 
 							*en2* *en3*  >
   No alternate file
@@ -188,6 +297,14 @@ The alternate file is not defined yet.  See |alternate-file|.
 The current buffer has no name.  To write it, use ":w fname".  Or give the
 buffer a name with ":file fname".
 
+							*be4*  >
+  No file name name for buffer {number}
+
+One of the buffers that was changed does not have a file name.  Therefore it
+cannot be written.  You need to give the buffer a file name: >
+	:buffer {number}
+	:file {filename}
+<
 							*es3*  >
   No previous substitute regular expression
 
@@ -201,7 +318,7 @@ been used yet.  See |/~|.
 When using an empty search pattern, the previous search pattern is used.  But
 that is not possible if there was no previous search.
 
-							*ea2*  >
+							*eb0*  >
   No such abbreviation
 
 You have used an ":unabbreviate" command with an argument which is not an
@@ -221,8 +338,9 @@ You have used an ":unmap" command with an argument which is not an existing
 mapping.  All variations of this command give the same message: ":cunmap",
 ":unmap!", etc.  Check for trailing white space.
 
-							*ew2*  >
+							*ew2* *ew5*  >
   No write since last change (use ! to override)
+  No write since last change for buffer {N} (use ! to override)
 
 You are trying to |abandon| a file that has changes.  Vim protects you from
 losing your work.  You can either write the changed file with ":w", or, if you
@@ -232,6 +350,15 @@ adding a '!' character just after the command you used.  Example: >
 changes to: >
 	:e! other_file
 <
+							*we8*  >
+  No write since last change for buffer "{name}"
+
+This appears when you try to exit Vim while some buffers are changed.  You
+will either have to write the changed buffer (with |:w|), or use a command to
+abandon the buffer forcefully, e.g., with ":qa!".  Careful, make sure you
+don't throw away changes you really want to keep.  You might have forgotten
+about a buffer, especially when 'hidden' is set.
+
 							*en5*  >
   Null argument
 
@@ -244,8 +371,11 @@ how to reproduce this problem, please report it. |bugs|
 The ":edit" command only accepts one file name.  When you want to specify
 several files for editing use ":next" |:next|.
 
-							*em4*  >
+						*em4* *eb2* *eb3* *me4*  >
   Out of memory!
+  Out of memory!  (allocating {number} bytes)
+  Cannot allocate any buffer, exiting...
+  Cannot allocate buffer, using other one...
 
 Oh, oh.  You must have been doing something complicated, or some other program
 is consuming your memory.  Be careful!  Vim is not completely prepared for an
@@ -269,6 +399,16 @@ after the command you used.  Example: >
 changes to: >
 	:w!
 <
+							*el6* *el7* *eo6*  >
+  Read error in swap file
+  Seek error in swap file read
+  Oops, lost the swap file!!!
+
+Vim tried to read text from the |swap-file|, but something went wrong.  The
+text in the related buffer may now be corrupted!  Check carefully before you
+write a buffer.  You may want to write it in another file and check for
+differences.
+
 							*en4*  >
   Recursive use of :normal too deep
 
@@ -309,12 +449,29 @@ arguments.  A ":highlight link" is not counted.
 When expanding file names, more than one match was found.  Only one match is
 allowed for the command that was used.
 
+							*ue4*  >
+  Unable to open swap file for "{filename}", recovery impossible
+
+Vim was not able to create a swap file.  You can still edit the file, but if
+Vim unexpected exits the changes will be lost.  And Vim may consume a lot of
+memory when editing a big file.  You may want to change the 'directory' option
+to avoid this error.  See |swap-file|.
+
+							*ew7*  >
+  Use ! to write partial buffer
+
+When using a range to write part of a buffer, it is unusual to overwrite the
+original file.  It is probably a mistake (e.g., when Visual mode was active
+when using ":w"), therefore Vim requires using a !  after the command, e.g.:
+":3,10w!".
+
 							*wc1*  >
   Warning: Changing a readonly file
 
 The file is read-only and you are making a change to it anyway.  You can use
 the |FileChangedRO| autocommand event to avoid this message (the autocommand
-must reset the 'readonly' option).
+must reset the 'readonly' option).  See 'modifiable' to completely disallow
+making changes to a file.
 
 							*wc4*  >
   Warning: File "{filename}" has been created after editing started
@@ -350,6 +507,21 @@ The file which you have started editing has disappeared, or is no longer
 accessible.  Make sure you write the buffer somewhere to avoid loosing
 changes.
 
+	    						*wo1*  >
+  Warning: List of file names overflow
+
+You must be using an awful lot of buffers.  It's now possible that two buffers
+have the same number, which causes various problems.  You might want to exit
+Vim and restart it.
+
+  							*el8* *el9*  >
+  Seek error in swap file write
+  Write error in swap file
+
+This mostly happens when the disk is full.  Vim could not write text into the
+|swap-file|.  It's not directly harmful, but when Vim unexpectedly exits some
+text may be lost without recovery being possible.  Vim might run out of memory
+when this problem persists.
 
 						*connection-refused*  >
   Xlib: connection to "<machine-name:0.0" refused by server

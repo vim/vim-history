@@ -730,6 +730,12 @@
 /* #define DEBUG */
 
 /*
+ * STARTUPTIME		Timme the startup process.  Writes a "vimstartup" file
+ *			with timestamps.
+ */
+/* #define STARTUPTIME "vimstartup" */
+
+/*
  * MEM_PROFILE		Debugging of memory allocation and freeing.
  */
 /* #define MEM_PROFILE */

@@ -157,3 +157,9 @@
 # define ZDECODE(c)   update_keys(c ^= decrypt_byte())
 
 #endif
+
+#ifdef STARTUPTIME
+# define TIME_MSG(s) time_msg(s)
+#else
+# define TIME_MSG(s)
+#endif

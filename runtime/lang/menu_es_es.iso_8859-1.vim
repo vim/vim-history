@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 apr 26
+" Last Change:		2001 May 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -41,7 +41,7 @@ menutrans &Redo<Tab>^R			&Rehacer<Tab>^R
 menutrans Rep&eat<Tab>\.                Repe&tir<Tab>\.
 menutrans Cu&t<Tab>"+x			Cor&tar<Tab>"+x
 menutrans &Copy<Tab>"+y			&Copiar<Tab>"+y
-menutrans &Paste<Tab>"+p		&Pegar<Tab>"+p
+menutrans &Paste<Tab>"+P		&Pegar<Tab>"+P
 menutrans Put\ &Before<Tab>[p		Poner\ &antes<Tab>[p
 menutrans Put\ &After<Tab>]p		Poner\ &después<Tab>]p
 if has("win32") || has("win16")
@@ -51,22 +51,61 @@ menutrans &Select\ all<Tab>ggVG		&Seleccionar\ todo<Tab>ggVG
 menutrans &Find\.\.\.			&Buscar\.\.\.
 menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&eemplazar\.\.\.
 menutrans Settings\ &Window		&Ventana\ de\ opciones
-menutrans Se&ttings			&Opciones
 
-" Build boolean options
-menutrans Toggle\ Line\ Numbering<TAB>:set\ number!	Activar/Desactivar\ numeración\ de\ líneas<TAB>:set\ number!
-menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!		Activar/Desactivar\ doblado\ de\ líneas<TAB>:set\ wrap!	
-menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!		Activar/Desactivar\ búsqueda\ realzada<TAB>:set\ hlsearch!	
-menutrans Toggle\ expandtab<TAB>:set\ expandtab!	Activar/Desactivar\ expansión\ de\ tabs<TAB>:set\ expandtab!	
+" Edit/Global Settings
+menutrans Global\ Settings		Opciones\ globales
 
-" Build GUI options
-menutrans Toggle\ Toolbar		Activar/Desactivar\ barra\ de\ herramientas
-menutrans Toggle\ Bottom\ Scrollbar	Activar/Desactivar\ barra\ de\ desplazamiento\ inferior
-menutrans Toggle\ Left\ Scrollbar	Activar/Desactivar\ barra\ de\ desplazamiento\ izquierda
-menutrans Toggle\ Right\ Scrolbar	Activar/Desactivar\ barra\ de\ desplazamiento\ derecha
-" Build variable options
-menutrans Text\ Width\.\.\. 		Anchura\ del\ texto\.\.\. 
+menutrans Toggle\ Pattern\ Highlight<Tab>:set\ hls!	Activar/Desactivar\ realzado\ de\ patrones<Tab>:set\ hls!
+menutrans Toggle\ ignore-case<Tab>:set\ ic!		Activar/Desactivar\ ignorar\ la\ caja<Tab>:set\ ic!
+menutrans Toggle\ showmatch<Tab>:set\ sm!		Activar/Desactivar\ mostrar\ coincidencias<Tab>:set\ sm!
+
+menutrans Context\ lines		Líneas\ de\ contexto
+
+menutrans Virtual\ Edit			Edición\ virtual
+menutrans Never				Nunca
+menutrans Block\ Selection		Selección\ de\ bloque
+menutrans Insert\ mode			Modo\ insertar
+menutrans Block\ and\ Insert		Bloque\ e\ insertar
+menutrans Always			Siempre
+
+menutrans Toggle\ Insert\ mode<Tab>:set\ im!	Activar/Desactivar\ modo\ de\ inserción<Tab>:set\ im!
+
+menutrans Search\ Path\.\.\.		Ruta\ de\ búsqueda\.\.\.
+
+menutrans Tag\ Files\.\.\.		Ficheros\ de\ «tags»\.\.\.
+
+" GUI options
+menutrans Toggle\ Toolbar		Ocultar/Mostrar\ barra\ de\ herramientas
+menutrans Toggle\ Bottom\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ inferior
+menutrans Toggle\ Left\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ izquierda
+menutrans Toggle\ Right\ Scrolbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ derecha
+
+" Edit/File Settings
+menutrans File\ Settings		Opciones\ del\ fichero
+
+" Boolean options
+menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!		Activar/Desactivar\ numeración\ de\ líneas<Tab>:set\ nu!
+menutrans Toggle\ List\ Mode<Tab>:set\ list!		Activar/Desactivar\ modo\ «list»<Tab>:set\ list!
+menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		Activar/Desactivar\ doblado\ de\ líneas<Tab>:set\ wrap!	
+menutrans Toggle\ Wrap\ at\ word<Tab>:set\ lbr!		Activar/Desactivar\ doblado\ en\ palabra<Tab>:set\ lbr!
+menutrans Toggle\ expand-tab<Tab>:set\ et!		Activar/Desactivar\ expansión\ de\ tabs<Tab>:set\ et!	
+menutrans Toggle\ auto-indent<Tab>:set\ ai!		Activar/Desactivar\ auto-sangrado<Tab>:set\ ai!
+menutrans Toggle\ C-indenting<Tab>:set\ cin!		Activar/Desactivar\ sangrado\ C<Tab>:set\ cin!
+
+" other options
 menutrans Shiftwidth	 		Anchura\ del\ sangrado
+
+menutrans Soft\ Tabstop			Tabulado\ suave
+
+menutrans Text\ Width\.\.\. 		Anchura\ del\ texto\.\.\.
+
+menutrans File\ Format\.\.\.		Formato\ del\ fichero\.\.\.
+let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
+
+menutrans Color\ Scheme			Esquema\ de\ colores
+
+menutrans Keymap	Asociación\ de\ teclas
+menutrans None		Ninguna
 
 " Programming menu
 menutrans &Tools			&Herramientas
@@ -86,9 +125,9 @@ menutrans Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ &HEX<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	&Convertir\ al\ anterior<Tab>:%!xxd\ -r
 
 " Tools.Fold Menu
-menutrans &Enable/Disable\ folds<TAB>zi		&Activar/Desactivar\ pliegues<TAB>zi
-menutrans &View\ Cursor\ Line<TAB>zv		&Ver\ línea\ del\ cursor<TAB>zv
-menutrans Vie&w\ Cursor\ Line\ only<TAB>zMzx	Ve&r\ sólo\ la\ línea\ del\ cursor<TAB>zMzx
+menutrans &Enable/Disable\ folds<Tab>zi		&Activar/Desactivar\ pliegues<Tab>zi
+menutrans &View\ Cursor\ Line<Tab>zv		&Ver\ línea\ del\ cursor<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	Ve&r\ sólo\ la\ línea\ del\ cursor<Tab>zMzx
 menutrans C&lose\ more\ folds<Tab>zm		C&errar\ más\ pliegues<Tab>zm
 menutrans &Close\ all\ folds<Tab>zM		&Cerrar\ todos\ los\ pliegues<Tab>zM
 menutrans O&pen\ more\ folds<Tab>zr		Abrir\ &más\ pliegues<Tab>zr
@@ -96,11 +135,15 @@ menutrans &Open\ all\ folds<Tab>zR		&Abrir\ todos\ los\ pliegues<Tab>zR
 " fold method
 menutrans Fold\ Met&hod				&Método\ de\ plegado
 " create and delete folds
-menutrans Create\ &Fold<TAB>zf			Crear\ &pliegue<TAB>zf
-menutrans &Delete\ Fold<TAB>zd			&Suprimir\ pliegue<TAB>zd
-menutrans Delete\ &All\ Folds<TAB>zD		Suprimir\ &todos\ los\ pligues<TAB>zD
+menutrans Create\ &Fold<Tab>zf			Crear\ &pliegue<Tab>zf
+menutrans &Delete\ Fold<Tab>zd			&Suprimir\ pliegue<Tab>zd
+menutrans Delete\ &All\ Folds<Tab>zD		Suprimir\ &todos\ los\ pligues<Tab>zD
 " moving around in folds
 menutrans Fold\ column\ &width			A&nchura\ de\ columna\ del\ pliegue
+
+menutrans &Update	&Actualizar
+menutrans &Get\ Block	&Obtener\ bloque
+menutrans &Put\ Block	&Poner\ bloque
 
 " Names for buffer menu.
 menutrans &Buffers		&Buffers
@@ -109,7 +152,7 @@ menutrans &Delete		&Suprimir
 menutrans A&lternate		&Alternar
 menutrans &Next			Si&guiente
 menutrans &Previous		&Previo 
-menutrans [No File]    		[Sin fichero]
+let g:menutrans_no_file = "[Sin fichero]"
 
 " Window menu
 menutrans &Window			&Ventana
@@ -125,15 +168,13 @@ menutrans &Top<Tab>^WK			&Arriba<Tab>^WK
 menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ		
 menutrans &Left\ side<Tab>^WH		Lado\ &izquierdo<Tab>^WH		
 menutrans &Right\ side<Tab>^WL		Lado\ &derecho<Tab>^WL		
-" menutrans Ne&xt<Tab>^Ww		&Siguiente<Tab>^Ww
-" menutrans P&revious<Tab>^WW		&Previa<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Misma\ altura<Tab>^W=
+menutrans Rotate\ &Up<Tab>^WR		&Rotar\ hacia\ arriba<Tab>^WR
+menutrans Rotate\ &Down<Tab>^Wr		Rotar\ hacia\ a&bajo<Tab>^Wr
+menutrans &Equal\ Size<Tab>^W=		Mismo\ &tamaño<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Altura\ mí&nima<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		Anchura\ máxima<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Anchura\ mínima<Tab>^W1\|
-menutrans Rotate\ &Up<Tab>^WR		&Rotar\ hacia\ arriba<Tab>^WR
-menutrans Rotate\ &Down<Tab>^Wr		Rotar\ hacia\ a&bajo<Tab>^Wr
 menutrans Select\ &Font\.\.\.		Seleccionar\ &fuente\.\.\.
 
 " The popup menu
@@ -148,8 +189,8 @@ menutrans Select\ &Line		Seleccionar\ una\ &línea
 menutrans Select\ &Block	Seleccionar\ un\ &bloque
 menutrans Select\ &All		Seleccionar\ &todo
  
-" The GUI toolbar
-if has("toolbar")
+" The GUI toolbar (for Win32 or GTK)
+if has("win32") || has("gui_gtk")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif
@@ -191,3 +232,6 @@ menutrans o&ff\ (this\ file)	D&esactivar (en\ este\ fichero)
 menutrans Co&lor\ test		&Prueba\ del\ color
 menutrans &Highlight\ test	Prueba\ del\ &realzado
 menutrans &Convert\ to\ HTML	&Convertir\ en\ HTML
+
+" Find Help dialog text
+let find_help_dialog = "Introduzca un mandato o palabra para obtener ayuda;\n\nAnteponga i_ para mandatos de entrada (e.g.: i_CTRL-X)\nAnteponga c_ para mandatos de la línea de mandatos (e.g.: c_<Del>)\nAnteponga ` para un nombre de opción 8(e.g.: `shiftwidth`)"

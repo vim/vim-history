@@ -23,6 +23,6 @@
 # endif
 #endif
 
-extern int	usingSunWorkShop;	/* set if -ws flag is used */
+extern int		usingSunWorkShop;	/* set if -ws flag is used */
 
 #endif

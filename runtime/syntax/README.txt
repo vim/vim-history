@@ -49,6 +49,8 @@ Rules for making a syntax file:
 - Avoid using specific colors.  Use the standard highlight groups whenever
   possible.  Don't forget that some people use a different background color,
   or have only eight colors available.
+- Add the "display" argument to items that are not used when syncing, to speed
+  up scrolling backwards and CTRL-L.
 
 If you have remarks about an existing file, send them to the maintainer of
 that file.  Only when you get no response send a message to Bram@vim.org.

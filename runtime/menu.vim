@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 29
+" Last Change:	2001 May 06
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -53,10 +53,10 @@ amenu 9999.70 &Help.&Version			:version<CR>
 amenu 9999.80 &Help.&About			:intro<CR>
 
 fun! s:Helpfind()
-  if !exists("g:find_help_dialog")
-    let g:find_help_dialog = "Enter a command or word to find help on:\n\nPrepend i_ for Input mode commands (e.g.: i_CTRL-X)\nPrepend c_ for command-line editing commands (e.g.: c_<Del>)\nPrepend ' for an option name (e.g.: 'shiftwidth')"
+  if !exists("g:menutrans_help_dialog")
+    let g:menutrans_help_dialog = "Enter a command or word to find help on:\n\nPrepend i_ for Input mode commands (e.g.: i_CTRL-X)\nPrepend c_ for command-line editing commands (e.g.: c_<Del>)\nPrepend ' for an option name (e.g.: 'shiftwidth')"
   endif
-  let h = inputdialog(g:find_help_dialog)
+  let h = inputdialog(g:menutrans_help_dialog)
   if h != ""
     let v:errmsg = ""
     silent! exe "help " . h
@@ -77,17 +77,33 @@ amenu 10.350 &File.Save\ &As\.\.\.<Tab>:sav	:browse confirm saveas<CR>
 
 if has("diff")
   amenu 10.400 &File.-SEP2-			:
-  amenu 10.410 &File.Show\ &Diff\ with\.\.\.	:browse vert diffsplit<CR>
-  amenu 10.420 &File.Show\ &Patched\ by\.\.\.	:browse vert diffpatch<CR>
+  amenu 10.410 &File.Split\ &Diff\ with\.\.\.	:browse vert diffsplit<CR>
+  amenu 10.420 &File.Split\ Patched\ &By\.\.\.	:browse vert diffpatch<CR>
 endif
 
 if has("win32")
   amenu 10.500 &File.-SEP3-			:
-  " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
   amenu 10.510 &File.&Print			:call Win32Print(":")<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				<Esc>:call Win32Print(":'<,'>")<CR>
+elseif has("unix")
+  amenu 10.500 &File.-SEP3-			:
+  amenu 10.510 &File.&Print			:w !lpr<CR>
+  vunmenu &File.&Print
+  vmenu &File.&Print				:w !lpr<CR>
+elseif has("vms")
+  amenu 10.500 &File.-SEP3-                     :
+  amenu 10.510 &File.&Print			:call VMSPrint(":")<CR>
+  vunmenu &File.&Print
+  vmenu &File.&Print				<Esc>:call VMSPrint(":'<,'>")<CR>
+endif
+amenu 10.600 &File.-SEP4-			:
+amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
+amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
+
+if has("win32")
   if !exists("*Win32Print")
+    " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
     fun Win32Print(range)
       let mod_save = &mod
       let ff_save = &ff
@@ -101,16 +117,7 @@ if has("win32")
       exec "bdel " . ttt
     endfun
   endif
-elseif has("unix")
-  amenu 10.500 &File.-SEP3-			:
-  amenu 10.510 &File.&Print			:w !lpr<CR>
-  vunmenu &File.&Print
-  vmenu &File.&Print				:w !lpr<CR>
 elseif has("vms")
-  amenu 10.500 &File.-SEP3-                     :
-  amenu 10.510 &File.&Print			:call VMSPrint(":")<CR>
-  vunmenu &File.&Print
-  vmenu &File.&Print				<Esc>:call VMSPrint(":'<,'>")<CR>
   if !exists("*VMSPrint")
     fun VMSPrint(range)
       let mod_save = &mod
@@ -122,10 +129,6 @@ elseif has("vms")
     endfun
   endif
 endif
-amenu 10.600 &File.-SEP4-			:
-amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
-amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
-
 
 " Tricky stuff to make pasting work as expected.
 nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
@@ -166,49 +169,54 @@ amenu 20.425 &Edit.-SEP3-			:
 amenu 20.430 &Edit.Settings\ &Window		:options<CR>
 
 " Edit/Global Settings
-amenu 20.440.100 &Edit.Global\ Settings.Toggle\ Pattern\ Highlight<Tab>:set\ hls!	:set hls! hls?<CR>
-amenu 20.440.110 &Edit.Global\ Settings.Toggle\ ignore-case<Tab>:set\ ic!	:set ic! ic?<CR>
-amenu 20.440.110 &Edit.Global\ Settings.Toggle\ showmatch<Tab>:set\ sm!	:set sm! sm?<CR>
+amenu 20.440.100 &Edit.&Global\ Settings.Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	:set hls! hls?<CR>
+amenu 20.440.110 &Edit.&Global\ Settings.Toggle\ &Ignore-case<Tab>:set\ ic!	:set ic! ic?<CR>
+amenu 20.440.110 &Edit.&Global\ Settings.Toggle\ &Showmatch<Tab>:set\ sm!	:set sm! sm?<CR>
 
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 1\  :set so=1<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 2\  :set so=2<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 3\  :set so=3<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 4\  :set so=4<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 5\  :set so=5<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 7\  :set so=7<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 10\  :set so=10<CR>
-amenu 20.440.120 &Edit.Global\ Settings.Context\ lines.\ 100\  :set so=100<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 1\  :set so=1<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 2\  :set so=2<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 3\  :set so=3<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 4\  :set so=4<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 5\  :set so=5<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 7\  :set so=7<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 10\  :set so=10<CR>
+amenu 20.440.120 &Edit.&Global\ Settings.&Context\ lines.\ 100\  :set so=100<CR>
 
-amenu 20.440.130.40 &Edit.Global\ Settings.Virtual\ Edit.Never :set ve=<CR>
-amenu 20.440.130.50 &Edit.Global\ Settings.Virtual\ Edit.Block\ Selection :set ve=block<CR>
-amenu 20.440.130.60 &Edit.Global\ Settings.Virtual\ Edit.Insert\ mode :set ve=insert<CR>
-amenu 20.440.130.70 &Edit.Global\ Settings.Virtual\ Edit.Block\ and\ Insert :set ve=block,insert<CR>
-amenu 20.440.130.80 &Edit.Global\ Settings.Virtual\ Edit.Always :set ve=all<CR>
+amenu 20.440.130.40 &Edit.&Global\ Settings.&Virtual\ Edit.Never :set ve=<CR>
+amenu 20.440.130.50 &Edit.&Global\ Settings.&Virtual\ Edit.Block\ Selection :set ve=block<CR>
+amenu 20.440.130.60 &Edit.&Global\ Settings.&Virtual\ Edit.Insert\ mode :set ve=insert<CR>
+amenu 20.440.130.70 &Edit.&Global\ Settings.&Virtual\ Edit.Block\ and\ Insert :set ve=block,insert<CR>
+amenu 20.440.130.80 &Edit.&Global\ Settings.&Virtual\ Edit.Always :set ve=all<CR>
+amenu 20.440.140 &Edit.&Global\ Settings.Toggle\ Insert\ &Mode<Tab>:set\ im!	:set im!<CR>
+amenu 20.440.150 &Edit.&Global\ Settings.Search\ &Path\.\.\.  :call <SID>SearchP()<CR>
+amenu 20.440.160 &Edit.&Global\ Settings.Ta&g\ Files\.\.\.  :call <SID>TagFiles()<CR>
+"
+" GUI options
+amenu 20.440.300 &Edit.&Global\ Settings.-SEP1-	    :
+amenu 20.440.310 &Edit.&Global\ Settings.Toggle\ &Toolbar		:call <SID>ToggleGuiOption("T")<CR>
+amenu 20.440.320 &Edit.&Global\ Settings.Toggle\ &Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
+amenu 20.440.330 &Edit.&Global\ Settings.Toggle\ &Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
+amenu 20.440.340 &Edit.&Global\ Settings.Toggle\ &Right\ Scrollbar	:call <SID>ToggleGuiOption("r")<CR>
 
-amenu 20.440.140 &Edit.Global\ Settings.Toggle\ Insert\ mode<Tab>:set\ im!	:set im!<CR>
-
-amenu 20.440.150 &Edit.Global\ Settings.Search\ Path\.\.\.  :call <SID>SearchP()<CR>
 fun! s:SearchP()
-  let n = inputdialog("Enter search path for files.\nSeparate directory names with a comma.", substitute(&path, '\\ ', ' ', 'g'))
+  if !exists("g:menutrans_path_dialog")
+    let g:menutrans_path_dialog = "Enter search path for files.\nSeparate directory names with a comma."
+  endif
+  let n = inputdialog(g:menutrans_path_dialog, substitute(&path, '\\ ', ' ', 'g'))
   if n != ""
     let &path = substitute(n, ' ', '\\ ', 'g')
   endif
 endfun
 
-amenu 20.440.160 &Edit.Global\ Settings.Tag\ Files\.\.\.  :call <SID>TagFiles()<CR>
 fun! s:TagFiles()
-  let n = inputdialog("Enter names of tag files.\nSeparate the names with a comma.", substitute(&tags, '\\ ', ' ', 'g'))
+  if !exists("g:menutrans_tags_dialog")
+    let g:menutrans_tags_dialog = "Enter names of tag files.\nSeparate the names with a comma."
+  endif
+  let n = inputdialog(g:menutrans_tags_dialog, substitute(&tags, '\\ ', ' ', 'g'))
   if n != ""
     let &tags = substitute(n, ' ', '\\ ', 'g')
   endif
 endfun
-
-" GUI options
-amenu 20.440.300 &Edit.Global\ Settings.-SEP1-	    :
-amenu 20.440.310 &Edit.Global\ Settings.Toggle\ Toolbar		:call <SID>ToggleGuiOption("T")<CR>
-amenu 20.440.320 &Edit.Global\ Settings.Toggle\ Bottom\ Scrollbar	:call <SID>ToggleGuiOption("b")<CR>
-amenu 20.440.330 &Edit.Global\ Settings.Toggle\ Left\ Scrollbar	:call <SID>ToggleGuiOption("l")<CR>
-amenu 20.440.340 &Edit.Global\ Settings.Toggle\ Right\ Scrolbar	:call <SID>ToggleGuiOption("r")<CR>
 
 fun <SID>ToggleGuiOption(option)
     " If a:option is already set in guioptions, then we want to remove it
@@ -222,40 +230,47 @@ endfun
 " Edit/File Settings
 
 " Boolean options
-amenu 20.440.100 &Edit.File\ Settings.Toggle\ Line\ Numbering<Tab>:set\ nu!	:set nu! nu?<CR>
-amenu 20.440.110 &Edit.File\ Settings.Toggle\ List\ Mode<Tab>:set\ list!	:set list! list?<CR>
-amenu 20.440.120 &Edit.File\ Settings.Toggle\ Line\ Wrap<Tab>:set\ wrap!	:set wrap! wrap?<CR>
-amenu 20.440.130 &Edit.File\ Settings.Toggle\ Wrap\ at\ word<Tab>:set\ lbr!	:set lbr! lbr?<CR>
-amenu 20.440.160 &Edit.File\ Settings.Toggle\ expand-tab<Tab>:set\ et!	:set et! et?<CR>
-amenu 20.440.170 &Edit.File\ Settings.Toggle\ auto-indent<Tab>:set\ ai!	:set ai! ai?<CR>
-amenu 20.440.180 &Edit.File\ Settings.Toggle\ C-indenting<Tab>:set\ cin!	:set cin! cin?<CR>
+amenu 20.440.100 &Edit.F&ile\ Settings.Toggle\ Line\ &Numbering<Tab>:set\ nu!	:set nu! nu?<CR>
+amenu 20.440.110 &Edit.F&ile\ Settings.Toggle\ &List\ Mode<Tab>:set\ list!	:set list! list?<CR>
+amenu 20.440.120 &Edit.F&ile\ Settings.Toggle\ Line\ &Wrap<Tab>:set\ wrap!	:set wrap! wrap?<CR>
+amenu 20.440.130 &Edit.F&ile\ Settings.Toggle\ W&rap\ at\ word<Tab>:set\ lbr!	:set lbr! lbr?<CR>
+amenu 20.440.160 &Edit.F&ile\ Settings.Toggle\ &expand-tab<Tab>:set\ et!	:set et! et?<CR>
+amenu 20.440.170 &Edit.F&ile\ Settings.Toggle\ &auto-indent<Tab>:set\ ai!	:set ai! ai?<CR>
+amenu 20.440.180 &Edit.F&ile\ Settings.Toggle\ &C-indenting<Tab>:set\ cin!	:set cin! cin?<CR>
 
 " other options
-amenu 20.440.600 &Edit.File\ Settings.-SEP2-	    :
-amenu 20.440.610.20 &Edit.File\ Settings.Shiftwidth.2   :set sw=2 sw?<CR>
-amenu 20.440.610.30 &Edit.File\ Settings.Shiftwidth.3   :set sw=3 sw?<CR>
-amenu 20.440.610.40 &Edit.File\ Settings.Shiftwidth.4   :set sw=4 sw?<CR>
-amenu 20.440.610.50 &Edit.File\ Settings.Shiftwidth.5   :set sw=5 sw?<CR>
-amenu 20.440.610.60 &Edit.File\ Settings.Shiftwidth.6   :set sw=6 sw?<CR>
-amenu 20.440.610.80 &Edit.File\ Settings.Shiftwidth.8   :set sw=8 sw?<CR>
+amenu 20.440.600 &Edit.F&ile\ Settings.-SEP2-	    :
+amenu 20.440.610.20 &Edit.F&ile\ Settings.&Shiftwidth.2   :set sw=2 sw?<CR>
+amenu 20.440.610.30 &Edit.F&ile\ Settings.&Shiftwidth.3   :set sw=3 sw?<CR>
+amenu 20.440.610.40 &Edit.F&ile\ Settings.&Shiftwidth.4   :set sw=4 sw?<CR>
+amenu 20.440.610.50 &Edit.F&ile\ Settings.&Shiftwidth.5   :set sw=5 sw?<CR>
+amenu 20.440.610.60 &Edit.F&ile\ Settings.&Shiftwidth.6   :set sw=6 sw?<CR>
+amenu 20.440.610.80 &Edit.F&ile\ Settings.&Shiftwidth.8   :set sw=8 sw?<CR>
 
-amenu 20.440.620.20 &Edit.File\ Settings.Soft\ Tabstop.2   :set sts=2 sts?<CR>
-amenu 20.440.620.30 &Edit.File\ Settings.Soft\ Tabstop.3   :set sts=3 sts?<CR>
-amenu 20.440.620.40 &Edit.File\ Settings.Soft\ Tabstop.4   :set sts=4 sts?<CR>
-amenu 20.440.620.50 &Edit.File\ Settings.Soft\ Tabstop.5   :set sts=5 sts?<CR>
-amenu 20.440.620.60 &Edit.File\ Settings.Soft\ Tabstop.6   :set sts=6 sts?<CR>
-amenu 20.440.620.80 &Edit.File\ Settings.Soft\ Tabstop.8   :set sts=8 sts?<CR>
+amenu 20.440.620.20 &Edit.F&ile\ Settings.Soft\ &Tabstop.2   :set sts=2 sts?<CR>
+amenu 20.440.620.30 &Edit.F&ile\ Settings.Soft\ &Tabstop.3   :set sts=3 sts?<CR>
+amenu 20.440.620.40 &Edit.F&ile\ Settings.Soft\ &Tabstop.4   :set sts=4 sts?<CR>
+amenu 20.440.620.50 &Edit.F&ile\ Settings.Soft\ &Tabstop.5   :set sts=5 sts?<CR>
+amenu 20.440.620.60 &Edit.F&ile\ Settings.Soft\ &Tabstop.6   :set sts=6 sts?<CR>
+amenu 20.440.620.80 &Edit.F&ile\ Settings.Soft\ &Tabstop.8   :set sts=8 sts?<CR>
 
-amenu 20.440.630 &Edit.File\ Settings.Text\ Width\.\.\.  :call <SID>TextWidth()<CR>
+amenu 20.440.630 &Edit.F&ile\ Settings.Te&xt\ Width\.\.\.  :call <SID>TextWidth()<CR>
+amenu 20.440.640 &Edit.F&ile\ Settings.&File\ Format\.\.\.  :call <SID>FileFormat()<CR>
 fun! s:TextWidth()
-  let n = inputdialog("Enter new text width (0 to disable formatting): ", &tw)
+  if !exists("g:menutrans_textwidth_dialog")
+    let g:menutrans_textwidth_dialog = "Enter new text width (0 to disable formatting): "
+  endif
+  let n = inputdialog(g:menutrans_textwidth_dialog, &tw)
   if n != ""
     " remove leading zeros to avoid it being used as an octal number
     let &tw = substitute(n, "^0*", "", "")
   endif
 endfun
-amenu 20.440.640 &Edit.File\ Settings.File\ Format\.\.\.  :call <SID>FileFormat()<CR>
+
 fun! s:FileFormat()
+  if !exists("g:menutrans_fileformat_dialog")
+    let g:menutrans_fileformat_dialog = "Select format for writing the file"
+  endif
   if &ff == "dos"
     let def = 2
   elseif &ff == "mac"
@@ -263,8 +278,7 @@ fun! s:FileFormat()
   else
     let def = 1
   endif
-  let n = confirm("Select format for writing the file", "&Unix\n&Dos\n&Mac",
-	\ def, "Question")
+  let n = confirm(g:menutrans_fileformat_dialog, "&Unix\n&Dos\n&Mac", def, "Question")
   if n == 1
     set ff=unix
   elseif n == 2
@@ -275,50 +289,53 @@ fun! s:FileFormat()
 endfun
 
 " Setup the Edit.Color Scheme submenu
-if exists("*expandpath")
-  let s:n = expandpath("colors/*.vim", &runtimepath)
-  let s:idx = 100
-  while strlen(s:n) > 0
-    let s:i = stridx(s:n, "\n")
-    if s:i < 0
-      let s:name = s:n
-      let s:n = ""
-    else
-      let s:name = strpart(s:n, 0, s:i)
-      let s:n = strpart(s:n, s:i + 1, 19999)
-    endif
-    let s:name = substitute(s:name, '.*\W\(\w*\)\.vim', '\1', '')
-    exe "amenu 20.450." . s:idx . ' &Edit.Color\ Scheme.' . s:name . " :colors " . s:name . "<CR>"
-    unlet s:name
-    unlet s:i
-    let s:idx = s:idx + 10
-  endwhile
-  unlet s:n
-  unlet s:idx
-endif
+let s:n = globpath(&runtimepath, "colors/*.vim")
+let s:idx = 100
+while strlen(s:n) > 0
+  let s:i = stridx(s:n, "\n")
+  if s:i < 0
+    let s:name = s:n
+    let s:n = ""
+  else
+    let s:name = strpart(s:n, 0, s:i)
+    let s:n = strpart(s:n, s:i + 1, 19999)
+  endif
+  let s:name = substitute(s:name, '.*[/\\:]\([^/\\:]*\)\.vim', '\1', '')
+  exe "amenu 20.450." . s:idx . ' &Edit.C&olor\ Scheme.' . s:name . " :colors " . s:name . "<CR>"
+  unlet s:name
+  unlet s:i
+  let s:idx = s:idx + 10
+endwhile
+unlet s:n
+unlet s:idx
 
 " Setup the Edit.Keymap submenu
 if has("keymap")
-  amenu 20.460.90 &Edit.Keymap.None :set keymap=<CR>
-  let s:n = expandpath("keymap/*.vim", &runtimepath)
-  let s:idx = 100
-  while strlen(s:n) > 0
-    let s:i = stridx(s:n, "\n")
-    if s:i < 0
-      let s:name = s:n
-      let s:n = ""
-    else
-      let s:name = strpart(s:n, 0, s:i)
-      let s:n = strpart(s:n, s:i + 1, 19999)
-    endif
-    let s:name = substitute(s:name, '.*[/\\:]\([0-9a-zA-Z_-]*\)\.vim', '\1', '')
-    exe "amenu 20.460." . s:idx . ' &Edit.Keymap.' . s:name . " :set keymap=" . s:name . "<CR>"
-    unlet s:name
-    unlet s:i
-    let s:idx = s:idx + 10
-  endwhile
+  let s:n = globpath(&runtimepath, "keymap/*.vim")
+  if s:n != ""
+    let s:idx = 100
+    amenu 20.460.90 &Edit.&Keymap.None :set keymap=<CR>
+    while strlen(s:n) > 0
+      let s:i = stridx(s:n, "\n")
+      if s:i < 0
+	let s:name = s:n
+	let s:n = ""
+      else
+	let s:name = strpart(s:n, 0, s:i)
+	let s:n = strpart(s:n, s:i + 1, 19999)
+      endif
+      let s:name = substitute(s:name, '.*[/\\:]\([^/\\:_]*\)\(_[0-9a-zA-Z-]*\)\=\.vim', '\1', '')
+      exe "amenu 20.460." . s:idx . ' &Edit.&Keymap.' . s:name . " :set keymap=" . s:name . "<CR>"
+      unlet s:name
+      unlet s:i
+      let s:idx = s:idx + 10
+    endwhile
+    unlet s:idx
+  endif
   unlet s:n
-  unlet s:idx
+endif
+if has("win32") || has("win16") || has("gui_gtk") || has("qui_photon")
+  amenu 20.470 &Edit.Select\ &Font\.\.\.	:set guifont=*<CR>
 endif
 
 " Programming menu
@@ -384,23 +401,23 @@ amenu 40.420 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
 amenu 40.430 &Tools.Error\ &Window<Tab>:cwin	:cwin<CR>
 amenu 40.520 &Tools.-SEP3-                      :
 if has("vms")
-  amenu 40.530 &Tools.Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
+  amenu 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
 	\ :let b:mod = &mod<CR>
 	\ :%!mc vim:xxd<CR>
 	\ :set ft=xxd<CR>
 	\ :let &mod = b:mod<CR>
-  amenu 40.540 &Tools.Convert\ back<Tab>:%!mc\ vim:xxd\ -r
+  amenu 40.540 &Tools.Conve&rt\ back<Tab>:%!mc\ vim:xxd\ -r
 	\ :let b:mod = &mod<CR>
 	\ :%!mc vim:xxd -r<CR>
 	\ :doautocmd filetypedetect BufReadPost<CR>
 	\ :let &mod = b:mod<CR>
 else
-  amenu 40.530 &Tools.Convert\ to\ HEX<Tab>:%!xxd
+  amenu 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!xxd
 	\ :let b:mod = &mod<CR>
 	\ :silent %!xxd<CR>
 	\ :set ft=xxd<CR>
 	\ :let &mod = b:mod<CR>
-  amenu 40.540 &Tools.Convert\ back<Tab>:%!xxd\ -r
+  amenu 40.540 &Tools.Conve&rt\ back<Tab>:%!xxd\ -r
 	\ :let b:mod = &mod<CR>
 	\ :%!xxd -r<CR>
 	\ :doautocmd filetypedetect BufReadPost<CR>
@@ -473,7 +490,7 @@ func! <SID>BMShow(...)
   set cpo&vim
   exe 'am ' . g:bmenu_priority . ".2 &Buffers.&Refresh\\ menu :call <SID>BMShow()<CR>"
   exe 'am ' . g:bmenu_priority . ".4 &Buffers.&Delete :bd<CR>"
-  exe 'am ' . g:bmenu_priority . ".6 &Buffers.A&lternate :b #<CR>"
+  exe 'am ' . g:bmenu_priority . ".6 &Buffers.&Alternate :b #<CR>"
   exe 'am ' . g:bmenu_priority . ".7 &Buffers.&Next :bnext<CR>"
   exe 'am ' . g:bmenu_priority . ".8 &Buffers.&Previous :bprev<CR>"
   exe 'am ' . g:bmenu_priority . ".9 &Buffers.-SEP- :"
@@ -564,8 +581,11 @@ endfunc
 
 func! <SID>BMMunge(fname, bnum)
   let name = a:fname
+  if !exists("g:menutrans_no_file")
+    let g:menutrans_no_file = "[No file]"
+  endif
   if name == ''
-    let name = "[No File]"
+    let name = g:menutrans_no_file
   else
     let name = fnamemodify(name, ':p:~')
   endif
@@ -624,12 +644,8 @@ amenu 70.365 &Window.-SEP3-			:
 amenu 70.370 &Window.&Equal\ Size<Tab>^W=	<C-W>=
 amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
 amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
-amenu 70.400 &Window.Max\ Width<Tab>^W\|	<C-W>\|
-amenu 70.410 &Window.Min\ Width<Tab>^W1\|	<C-W>1\|
-if has("win32") || has("win16") || has("gui_gtk") || has("qui_photon")
-  amenu 70.440 &Window.-SEP4-			:
-  amenu 70.450 &Window.Select\ &Font\.\.\.	:set guifont=*<CR>
-endif
+amenu 70.400 &Window.Max\ &Width<Tab>^W\|	<C-W>\|
+amenu 70.410 &Window.Min\ Widt&h<Tab>^W1\|	<C-W>1\|
 
 " The popup menu
 amenu 1.10 PopUp.&Undo		u
@@ -809,343 +825,299 @@ fun! SetSyn(name)
   endif
 endfun
 
-" Use the SynMenu command and function to define all menu entries
-command -nargs=* SynMenu call <SID>Syn(<q-args>)
+" The following menu items are generated by makemenu.vim.
+" The Start Of The Syntax Menu
 
-let s:cur_menu_name = ""
-let s:cur_menu_nr = 0
-let s:cur_menu_item = 0
-let s:cur_menu_char = ""
+am 50.10.100 &Syntax.AB.Abaqus :cal SetSyn("abaqus")<CR>
+am 50.10.110 &Syntax.AB.ABC :cal SetSyn("abc")<CR>
+am 50.10.120 &Syntax.AB.ABEL :cal SetSyn("abel")<CR>
+am 50.10.130 &Syntax.AB.Ada :cal SetSyn("ada")<CR>
+am 50.10.140 &Syntax.AB.Aflex :cal SetSyn("aflex")<CR>
+am 50.10.150 &Syntax.AB.AHDL :cal SetSyn("ahdl")<CR>
+am 50.10.160 &Syntax.AB.Amiga\ DOS :cal SetSyn("amiga")<CR>
+am 50.10.170 &Syntax.AB.Antlr :cal SetSyn("antlr")<CR>
+am 50.10.180 &Syntax.AB.Apache\ config :cal SetSyn("apache")<CR>
+am 50.10.190 &Syntax.AB.Apache-style\ config :cal SetSyn("apachestyle")<CR>
+am 50.10.200 &Syntax.AB.Applix\ ELF :cal SetSyn("elf")<CR>
+am 50.10.210 &Syntax.AB.Arc\ Macro\ Language :cal SetSyn("aml")<CR>
+am 50.10.220 &Syntax.AB.ASP\ with\ VBSages :cal SetSyn("aspvbs")<CR>
+am 50.10.230 &Syntax.AB.ASP\ with\ Perl :cal SetSyn("aspperl")<CR>
+am 50.10.240 &Syntax.AB.Assembly.680x0 :cal SetSyn("asm68k")<CR>
+am 50.10.250 &Syntax.AB.Assembly.GNU :cal SetSyn("asm")<CR>
+am 50.10.260 &Syntax.AB.Assembly.H8300 :cal SetSyn("asmh8300")<CR>
+am 50.10.270 &Syntax.AB.Assembly.Intel\ Itanum :cal SetSyn("ia64")<CR>
+am 50.10.280 &Syntax.AB.Assembly.Microsoft :cal SetSyn("masm")<CR>
+am 50.10.290 &Syntax.AB.Assembly.Netwide :cal SetSyn("nasm")<CR>
+am 50.10.300 &Syntax.AB.Assembly.PIC :cal SetSyn("pic")<CR>
+am 50.10.310 &Syntax.AB.Assembly.Turbo :cal SetSyn("tasm")<CR>
+am 50.10.320 &Syntax.AB.Assembly.Z-80 :cal SetSyn("z8a")<CR>
+am 50.10.330 &Syntax.AB.ASN\.1 :cal SetSyn("asn")<CR>
+am 50.10.340 &Syntax.AB.Atlas :cal SetSyn("atlas")<CR>
+am 50.10.350 &Syntax.AB.Automake :cal SetSyn("automake")<CR>
+am 50.10.360 &Syntax.AB.Avenue :cal SetSyn("ave")<CR>
+am 50.10.370 &Syntax.AB.Awk :cal SetSyn("awk")<CR>
+am 50.10.380 &Syntax.AB.Ayacc :cal SetSyn("ayacc")<CR>
+am 50.10.400 &Syntax.AB.B :cal SetSyn("b")<CR>
+am 50.10.410 &Syntax.AB.BASIC :cal SetSyn("basic")<CR>
+am 50.10.420 &Syntax.AB.BC\ calculator :cal SetSyn("bc")<CR>
+am 50.10.430 &Syntax.AB.BibFile :cal SetSyn("bib")<CR>
+am 50.10.440 &Syntax.AB.BIND\ configuration :cal SetSyn("named")<CR>
+am 50.10.450 &Syntax.AB.BIND\ zone :cal SetSyn("bindzone")<CR>
+am 50.10.460 &Syntax.AB.Blank :cal SetSyn("blank")<CR>
+am 50.20.100 &Syntax.CD.C :cal SetSyn("c")<CR>
+am 50.20.110 &Syntax.CD.C++ :cal SetSyn("cpp")<CR>
+am 50.20.120 &Syntax.CD.C# :cal SetSyn("cs")<CR>
+am 50.20.130 &Syntax.CD.Crontab :cal SetSyn("crontab")<CR>
+am 50.20.140 &Syntax.CD.Cyn++ :cal SetSyn("cynpp")<CR>
+am 50.20.150 &Syntax.CD.Cynlib :cal SetSyn("cynlib")<CR>
+am 50.20.160 &Syntax.CD.Cascading\ Style\ Sheets :cal SetSyn("css")<CR>
+am 50.20.170 &Syntax.CD.Century\ Term :cal SetSyn("cterm")<CR>
+am 50.20.180 &Syntax.CD.CFG :cal SetSyn("cfg")<CR>
+am 50.20.190 &Syntax.CD.CHILL :cal SetSyn("ch")<CR>
+am 50.20.200 &Syntax.CD.Change :cal SetSyn("change")<CR>
+am 50.20.210 &Syntax.CD.ChangeLog :cal SetSyn("changelog")<CR>
+am 50.20.220 &Syntax.CD.Clean :cal SetSyn("clean")<CR>
+am 50.20.230 &Syntax.CD.Clever :cal SetSyn("cl")<CR>
+am 50.20.240 &Syntax.CD.Clipper :cal SetSyn("clipper")<CR>
+am 50.20.250 &Syntax.CD.Cold\ Fusion :cal SetSyn("cf")<CR>
+am 50.20.260 &Syntax.CD.Configure\ script :cal SetSyn("config")<CR>
+am 50.20.270 &Syntax.CD.Csh\ shell\ script :cal SetSyn("csh")<CR>
+am 50.20.280 &Syntax.CD.Ctrl-H :cal SetSyn("ctrlh")<CR>
+am 50.20.290 &Syntax.CD.Cobol :cal SetSyn("cobol")<CR>
+am 50.20.300 &Syntax.CD.CSP :cal SetSyn("csp")<CR>
+am 50.20.310 &Syntax.CD.CUPL.CUPL :cal SetSyn("cupl")<CR>
+am 50.20.320 &Syntax.CD.CUPL.simulation :cal SetSyn("cuplsim")<CR>
+am 50.20.330 &Syntax.CD.CVS\ commit :cal SetSyn("cvs")<CR>
+am 50.20.340 &Syntax.CD.CWEB :cal SetSyn("cweb")<CR>
+am 50.20.360 &Syntax.CD.Debian.Debian\ ChangeLog :cal SetSyn("debchangelog")<CR>
+am 50.20.370 &Syntax.CD.Debian.Debian\ Control :cal SetSyn("debcontrol")<CR>
+am 50.20.380 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
+am 50.20.390 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
+am 50.20.400 &Syntax.CD.Diva\ (with\ SKILL) :cal SetSyn("diva")<CR>
+am 50.20.410 &Syntax.CD.DNS :cal SetSyn("dns")<CR>
+am 50.20.420 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
+am 50.20.430 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
+am 50.20.440 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
+am 50.20.450 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
+am 50.20.460 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
+am 50.20.470 &Syntax.CD.Dylan.Dylan\ intr :cal SetSyn("dylanintr")<CR>
+am 50.20.480 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
+am 50.30.100 &Syntax.EFG.Eiffel :cal SetSyn("eiffel")<CR>
+am 50.30.110 &Syntax.EFG.Elm\ Filter :cal SetSyn("elmfilt")<CR>
+am 50.30.120 &Syntax.EFG.Embedix\ Component\ Description :cal SetSyn("ecd")<CR>
+am 50.30.130 &Syntax.EFG.ERicsson\ LANGuage :cal SetSyn("erlang")<CR>
+am 50.30.140 &Syntax.EFG.ESQL-C :cal SetSyn("esqlc")<CR>
+am 50.30.150 &Syntax.EFG.Expect :cal SetSyn("expect")<CR>
+am 50.30.160 &Syntax.EFG.Exports :cal SetSyn("exports")<CR>
+am 50.30.180 &Syntax.EFG.Focus\ Executable :cal SetSyn("focexec")<CR>
+am 50.30.190 &Syntax.EFG.Focus\ Master :cal SetSyn("master")<CR>
+am 50.30.200 &Syntax.EFG.FORM :cal SetSyn("form")<CR>
+am 50.30.210 &Syntax.EFG.Forth :cal SetSyn("forth")<CR>
+am 50.30.220 &Syntax.EFG.Fortran :cal SetSyn("fortran")<CR>
+am 50.30.230 &Syntax.EFG.FoxPro :cal SetSyn("foxpro")<CR>
+am 50.30.240 &Syntax.EFG.Fvwm\ configuration :cal SetSyn("fvwm1")<CR>
+am 50.30.250 &Syntax.EFG.Fvwm2\ configuration :cal SetSyn("fvwm2")<CR>
+am 50.30.270 &Syntax.EFG.GDB\ command\ file :cal SetSyn("gdb")<CR>
+am 50.30.280 &Syntax.EFG.GDMO :cal SetSyn("gdmo")<CR>
+am 50.30.290 &Syntax.EFG.Gedcom :cal SetSyn("gedcom")<CR>
+am 50.30.300 &Syntax.EFG.GP :cal SetSyn("gp")<CR>
+am 50.30.310 &Syntax.EFG.GNU\ Server\ Pages :cal SetSyn("gsp")<CR>
+am 50.30.320 &Syntax.EFG.GNUplot :cal SetSyn("gnuplot")<CR>
+am 50.40.100 &Syntax.HIJK.Haskell :cal SetSyn("haskell")<CR>
+am 50.40.110 &Syntax.HIJK.Haskell-literal :cal SetSyn("lhaskell")<CR>
+am 50.40.120 &Syntax.HIJK.Hercules :cal SetSyn("hercules")<CR>
+am 50.40.130 &Syntax.HIJK.HTML :cal SetSyn("html")<CR>
+am 50.40.140 &Syntax.HIJK.HTML\ with\ M4 :cal SetSyn("htmlm4")<CR>
+am 50.40.150 &Syntax.HIJK.HTML/OS :cal SetSyn("htmlos")<CR>
+am 50.40.160 &Syntax.HIJK.Hyper\ Builder :cal SetSyn("hb")<CR>
+am 50.40.180 &Syntax.HIJK.Icon :cal SetSyn("icon")<CR>
+am 50.40.190 &Syntax.HIJK.IDL :cal SetSyn("idl")<CR>
+am 50.40.200 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
+am 50.40.210 &Syntax.HIJK.Inform :cal SetSyn("inform")<CR>
+am 50.40.220 &Syntax.HIJK.Informix\ 4GL :cal SetSyn("fgl")<CR>
+am 50.40.230 &Syntax.HIJK.Inno\ Setup :cal SetSyn("iss")<CR>
+am 50.40.240 &Syntax.HIJK.InstallShield\ Rules :cal SetSyn("ishd")<CR>
+am 50.40.260 &Syntax.HIJK.Jam :cal SetSyn("jam")<CR>
+am 50.40.270 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
+am 50.40.280 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
+am 50.40.290 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
+am 50.40.300 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+am 50.40.310 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+am 50.40.320 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
+am 50.40.330 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
+am 50.40.350 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
+am 50.40.360 &Syntax.HIJK.Kimwitu :cal SetSyn("kwt")<CR>
+am 50.40.370 &Syntax.HIJK.Kixtart :cal SetSyn("kix")<CR>
+am 50.50.100 &Syntax.L-Ma.Lace :cal SetSyn("lace")<CR>
+am 50.50.110 &Syntax.L-Ma.Lamda\ Prolog :cal SetSyn("lprolog")<CR>
+am 50.50.120 &Syntax.L-Ma.Latte :cal SetSyn("latte")<CR>
+am 50.50.130 &Syntax.L-Ma.Lex :cal SetSyn("lex")<CR>
+am 50.50.140 &Syntax.L-Ma.Lilo :cal SetSyn("lilo")<CR>
+am 50.50.150 &Syntax.L-Ma.Lisp :cal SetSyn("lisp")<CR>
+am 50.50.160 &Syntax.L-Ma.Lite :cal SetSyn("lite")<CR>
+am 50.50.170 &Syntax.L-Ma.LOTOS :cal SetSyn("lotos")<CR>
+am 50.50.180 &Syntax.L-Ma.Lout :cal SetSyn("lout")<CR>
+am 50.50.190 &Syntax.L-Ma.Lua :cal SetSyn("lua")<CR>
+am 50.50.200 &Syntax.L-Ma.Lynx\ Style :cal SetSyn("lss")<CR>
+am 50.50.220 &Syntax.L-Ma.M4 :cal SetSyn("m4")<CR>
+am 50.50.230 &Syntax.L-Ma.MaGic\ Point :cal SetSyn("mgp")<CR>
+am 50.50.240 &Syntax.L-Ma.Mail :cal SetSyn("mail")<CR>
+am 50.50.250 &Syntax.L-Ma.Makefile :cal SetSyn("make")<CR>
+am 50.50.260 &Syntax.L-Ma.MakeIndex :cal SetSyn("ist")<CR>
+am 50.50.270 &Syntax.L-Ma.Man\ page :cal SetSyn("man")<CR>
+am 50.50.280 &Syntax.L-Ma.Maple :cal SetSyn("maple")<CR>
+am 50.50.290 &Syntax.L-Ma.Mason :cal SetSyn("mason")<CR>
+am 50.50.300 &Syntax.L-Ma.Mathematica :cal SetSyn("mma")<CR>
+am 50.50.310 &Syntax.L-Ma.Matlab :cal SetSyn("matlab")<CR>
+am 50.60.100 &Syntax.Me-NO.MEL\ (for\ Maya) :cal SetSyn("mel")<CR>
+am 50.60.110 &Syntax.Me-NO.Metafont :cal SetSyn("mf")<CR>
+am 50.60.120 &Syntax.Me-NO.MetaPost :cal SetSyn("mp")<CR>
+am 50.60.130 &Syntax.Me-NO.MS\ Module\ Definition :cal SetSyn("def")<CR>
+am 50.60.140 &Syntax.Me-NO.Model :cal SetSyn("model")<CR>
+am 50.60.150 &Syntax.Me-NO.Modsim\ III :cal SetSyn("modsim3")<CR>
+am 50.60.160 &Syntax.Me-NO.Modula\ 2 :cal SetSyn("modula2")<CR>
+am 50.60.170 &Syntax.Me-NO.Modula\ 3 :cal SetSyn("modula3")<CR>
+am 50.60.180 &Syntax.Me-NO.Msql :cal SetSyn("msql")<CR>
+am 50.60.190 &Syntax.Me-NO.MS-DOS.MS-DOS\ \.bat\ file :cal SetSyn("dosbatch")<CR>
+am 50.60.200 &Syntax.Me-NO.MS-DOS.4DOS\ \.bat\ file :cal SetSyn("btm")<CR>
+am 50.60.210 &Syntax.Me-NO.MS-DOS.MS-DOS\ \.ini\ file :cal SetSyn("dosini")<CR>
+am 50.60.220 &Syntax.Me-NO.MS\ Resource\ file :cal SetSyn("rc")<CR>
+am 50.60.230 &Syntax.Me-NO.Muttrc :cal SetSyn("muttrc")<CR>
+am 50.60.250 &Syntax.Me-NO.Nastran\ input/DMAP :cal SetSyn("nastran")<CR>
+am 50.60.260 &Syntax.Me-NO.Novell\ batch :cal SetSyn("ncf")<CR>
+am 50.60.270 &Syntax.Me-NO.Not\ Quite\ C :cal SetSyn("nqc")<CR>
+am 50.60.280 &Syntax.Me-NO.Nroff :cal SetSyn("nroff")<CR>
+am 50.60.300 &Syntax.Me-NO.Objective\ C :cal SetSyn("objc")<CR>
+am 50.60.310 &Syntax.Me-NO.OCAML :cal SetSyn("ocaml")<CR>
+am 50.60.320 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
+am 50.60.330 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
+am 50.60.340 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
+am 50.60.350 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
+am 50.70.100 &Syntax.PQ.PApp :cal SetSyn("papp")<CR>
+am 50.70.110 &Syntax.PQ.Pascal :cal SetSyn("pascal")<CR>
+am 50.70.120 &Syntax.PQ.PCCTS :cal SetSyn("pccts")<CR>
+am 50.70.130 &Syntax.PQ.PPWizard :cal SetSyn("ppwiz")<CR>
+am 50.70.140 &Syntax.PQ.Perl.Perl :cal SetSyn("perl")<CR>
+am 50.70.150 &Syntax.PQ.Perl.Perl\ POD :cal SetSyn("pod")<CR>
+am 50.70.160 &Syntax.PQ.Perl.Perl\ XS :cal SetSyn("xs")<CR>
+am 50.70.170 &Syntax.PQ.PHP\ 3-4 :cal SetSyn("php")<CR>
+am 50.70.180 &Syntax.PQ.Phtml :cal SetSyn("phtml")<CR>
+am 50.70.190 &Syntax.PQ.Pike :cal SetSyn("pike")<CR>
+am 50.70.200 &Syntax.PQ.Pine\ RC :cal SetSyn("pine")<CR>
+am 50.70.210 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
+am 50.70.220 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
+am 50.70.230 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
+am 50.70.240 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
+am 50.70.250 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
+am 50.70.260 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
+am 50.70.270 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
+am 50.70.280 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
+am 50.70.290 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
+am 50.70.300 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
+am 50.70.310 &Syntax.PQ.Python :cal SetSyn("python")<CR>
+am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
+am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
+am 50.80.120 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
+am 50.80.130 &Syntax.R-Sg.Rebol :cal SetSyn("rebol")<CR>
+am 50.80.140 &Syntax.R-Sg.Registry\ of\ MS-Windows :cal SetSyn("registry")<CR>
+am 50.80.150 &Syntax.R-Sg.Remind :cal SetSyn("remind")<CR>
+am 50.80.160 &Syntax.R-Sg.Renderman\ Shader\ Lang :cal SetSyn("sl")<CR>
+am 50.80.170 &Syntax.R-Sg.Rexx :cal SetSyn("rexx")<CR>
+am 50.80.180 &Syntax.R-Sg.Robots\.txt :cal SetSyn("robots")<CR>
+am 50.80.190 &Syntax.R-Sg.Rpcgen :cal SetSyn("rpcgen")<CR>
+am 50.80.200 &Syntax.R-Sg.RTF :cal SetSyn("rtf")<CR>
+am 50.80.210 &Syntax.R-Sg.Ruby :cal SetSyn("ruby")<CR>
+am 50.80.230 &Syntax.R-Sg.S-lang :cal SetSyn("slang")<CR>
+am 50.80.240 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
+am 50.80.250 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
+am 50.80.260 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
+am 50.80.270 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
+am 50.80.280 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
+am 50.80.290 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
+am 50.80.300 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
+am 50.80.310 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
+am 50.80.320 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
+am 50.80.330 &Syntax.R-Sg.SGML.SGML\ Declarations :cal SetSyn("sgmldecl")<CR>
+am 50.80.340 &Syntax.R-Sg.SGML.SGML\ linuxdoc :cal SetSyn("sgmllnx")<CR>
+am 50.90.100 &Syntax.Sh-S.Sh\ shell\ script :cal SetSyn("sh")<CR>
+am 50.90.110 &Syntax.Sh-S.SiCAD :cal SetSyn("sicad")<CR>
+am 50.90.120 &Syntax.Sh-S.Simula :cal SetSyn("simula")<CR>
+am 50.90.130 &Syntax.Sh-S.Sinda.Sinda\ compare :cal SetSyn("sindacmp")<CR>
+am 50.90.140 &Syntax.Sh-S.Sinda.Sinda\ input :cal SetSyn("sinda")<CR>
+am 50.90.150 &Syntax.Sh-S.Sinda.Sinda\ output :cal SetSyn("sindaout")<CR>
+am 50.90.160 &Syntax.Sh-S.SKILL :cal SetSyn("skill")<CR>
+am 50.90.170 &Syntax.Sh-S.SLRN.SLRN\ rc :cal SetSyn("slrnrc")<CR>
+am 50.90.180 &Syntax.Sh-S.SLRN.SLRN\ score :cal SetSyn("slrnsc")<CR>
+am 50.90.190 &Syntax.Sh-S.SmallTalk :cal SetSyn("st")<CR>
+am 50.90.200 &Syntax.Sh-S.SMIL :cal SetSyn("smil")<CR>
+am 50.90.210 &Syntax.Sh-S.SMITH :cal SetSyn("smith")<CR>
+am 50.90.220 &Syntax.Sh-S.SNMP\ MIB :cal SetSyn("mib")<CR>
+am 50.90.230 &Syntax.Sh-S.SNNS.SNNS\ network :cal SetSyn("snnsnet")<CR>
+am 50.90.240 &Syntax.Sh-S.SNNS.SNNS\ pattern :cal SetSyn("snnspat")<CR>
+am 50.90.250 &Syntax.Sh-S.SNNS.SNNS\ result :cal SetSyn("snnsres")<CR>
+am 50.90.260 &Syntax.Sh-S.Snobol4 :cal SetSyn("snobol4")<CR>
+am 50.90.270 &Syntax.Sh-S.SPEC\ (Linux\ RPM) :cal SetSyn("spec")<CR>
+am 50.90.280 &Syntax.Sh-S.Spice :cal SetSyn("spice")<CR>
+am 50.90.290 &Syntax.Sh-S.Speedup :cal SetSyn("spup")<CR>
+am 50.90.300 &Syntax.Sh-S.Squid :cal SetSyn("squid")<CR>
+am 50.90.310 &Syntax.Sh-S.SQL :cal SetSyn("sql")<CR>
+am 50.90.320 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
+am 50.90.330 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
+am 50.90.340 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
+am 50.90.350 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
+am 50.100.100 &Syntax.TUV.Tads :cal SetSyn("tads")<CR>
+am 50.100.110 &Syntax.TUV.Tags :cal SetSyn("tags")<CR>
+am 50.100.120 &Syntax.TUV.TAK.TAK\ compare :cal SetSyn("tak")<CR>
+am 50.100.130 &Syntax.TUV.TAK.TAK\ input :cal SetSyn("tak")<CR>
+am 50.100.140 &Syntax.TUV.TAK.TAK\ output :cal SetSyn("takout")<CR>
+am 50.100.150 &Syntax.TUV.Tcl/Tk :cal SetSyn("tcl")<CR>
+am 50.100.160 &Syntax.TUV.TealInfo :cal SetSyn("tli")<CR>
+am 50.100.170 &Syntax.TUV.Telix\ Salt :cal SetSyn("tsalt")<CR>
+am 50.100.180 &Syntax.TUV.Termcap :cal SetSyn("ptcap")<CR>
+am 50.100.190 &Syntax.TUV.TeX :cal SetSyn("tex")<CR>
+am 50.100.200 &Syntax.TUV.TeX\ configuration :cal SetSyn("texmf")<CR>
+am 50.100.210 &Syntax.TUV.Texinfo :cal SetSyn("texinfo")<CR>
+am 50.100.220 &Syntax.TUV.TF\ mud\ client :cal SetSyn("tf")<CR>
+am 50.100.230 &Syntax.TUV.Trasys\ input :cal SetSyn("trasys")<CR>
+am 50.100.240 &Syntax.TUV.TSS.Command\ Line :cal SetSyn("tsscl")<CR>
+am 50.100.250 &Syntax.TUV.TSS.Geometry :cal SetSyn("tssgm")<CR>
+am 50.100.260 &Syntax.TUV.TSS.Optics :cal SetSyn("tssop")<CR>
+am 50.100.280 &Syntax.TUV.UIT/UIL :cal SetSyn("uil")<CR>
+am 50.100.290 &Syntax.TUV.UnrealScript :cal SetSyn("uc")<CR>
+am 50.100.310 &Syntax.TUV.Verilog\ HDL :cal SetSyn("verilog")<CR>
+am 50.100.320 &Syntax.TUV.Vgrindefs :cal SetSyn("vgrindefs")<CR>
+am 50.100.330 &Syntax.TUV.VHDL :cal SetSyn("vhdl")<CR>
+am 50.100.340 &Syntax.TUV.Vim.Vim\ help\ file :cal SetSyn("help")<CR>
+am 50.100.350 &Syntax.TUV.Vim.Vim\ script :cal SetSyn("vim")<CR>
+am 50.100.360 &Syntax.TUV.Vim.Viminfo\ file :cal SetSyn("viminfo")<CR>
+am 50.100.370 &Syntax.TUV.Virata :cal SetSyn("virata")<CR>
+am 50.100.380 &Syntax.TUV.Visual\ Basic :cal SetSyn("vb")<CR>
+am 50.100.390 &Syntax.TUV.VRML :cal SetSyn("vrml")<CR>
+am 50.100.400 &Syntax.TUV.VSE\ JCL :cal SetSyn("vsejcl")<CR>
+am 50.110.100 &Syntax.WXYZ.WEB :cal SetSyn("web")<CR>
+am 50.110.110 &Syntax.WXYZ.Webmacro :cal SetSyn("webmacro")<CR>
+am 50.110.120 &Syntax.WXYZ.Website\ MetaLanguage :cal SetSyn("wml")<CR>
+am 50.110.130 &Syntax.WXYZ.Wdiff :cal SetSyn("wdiff")<CR>
+am 50.110.140 &Syntax.WXYZ.Whitespace\ (add) :cal SetSyn("whitespace")<CR>
+am 50.110.150 &Syntax.WXYZ.WinBatch/Webbatch :cal SetSyn("winbatch")<CR>
+am 50.110.160 &Syntax.WXYZ.Windows\ Scripting\ Host :cal SetSyn("wsh")<CR>
+am 50.110.180 &Syntax.WXYZ.X\ Keyboard\ Extension :cal SetSyn("xkb")<CR>
+am 50.110.190 &Syntax.WXYZ.X\ Pixmap :cal SetSyn("xpm")<CR>
+am 50.110.200 &Syntax.WXYZ.X\ Pixmap\ (2) :cal SetSyn("xpm2")<CR>
+am 50.110.210 &Syntax.WXYZ.X\ resources :cal SetSyn("xdefaults")<CR>
+am 50.110.220 &Syntax.WXYZ.Xmath :cal SetSyn("xmath")<CR>
+am 50.110.230 &Syntax.WXYZ.XML :cal SetSyn("xml")<CR>
+am 50.110.240 &Syntax.WXYZ.XXD\ hex\ dump :cal SetSyn("xxd")<CR>
+am 50.110.260 &Syntax.WXYZ.Yacc :cal SetSyn("yacc")<CR>
+am 50.110.280 &Syntax.WXYZ.Zsh\ shell\ script :cal SetSyn("zsh")<CR>
 
-fun <SID>Syn(arg)
-  " isolate menu name: until the first dot
-  let i = match(a:arg, '\.')
-  let menu_name = strpart(a:arg, 0, i)
-  let r = strpart(a:arg, i + 1, 999)
-  " isolate submenu name: until the colon
-  let i = match(r, ":")
-  let submenu_name = strpart(r, 0, i)
-  " after the colon is the syntax name
-  let syntax_name = strpart(r, i + 1, 999)
+" The End Of The Syntax Menu
 
-  if s:cur_menu_name != menu_name
-    let s:cur_menu_name = menu_name
-    let s:cur_menu_nr = s:cur_menu_nr + 10
-    let s:cur_menu_item = 100
-    let s:cur_menu_char = submenu_name[0]
-  else
-    " When starting a new letter, insert a menu separator.
-    let c = submenu_name[0]
-    if c != s:cur_menu_char
-      exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . ".-" . c . '- <nul>'
-      let s:cur_menu_item = s:cur_menu_item + 10
-      let s:cur_menu_char = c
-    endif
-  endif
-  exe 'am 50.' . s:cur_menu_nr . '.' . s:cur_menu_item . ' &Syntax.' . menu_name . "." . submenu_name . ' :cal SetSyn("' . syntax_name . '")<CR>'
-  let s:cur_menu_item = s:cur_menu_item + 10
-endfun
-
-SynMenu AB.Abaqus:abaqus
-SynMenu AB.ABC:abc
-SynMenu AB.ABEL:abel
-SynMenu AB.Ada:ada
-SynMenu AB.Aflex:aflex
-SynMenu AB.AHDL:ahdl
-SynMenu AB.Amiga\ DOS:amiga
-SynMenu AB.Antlr:antlr
-SynMenu AB.Apache\ config:apache
-SynMenu AB.Apache-style\ config:apachestyle
-SynMenu AB.Applix\ ELF:elf
-SynMenu AB.Arc\ Macro\ Language:aml
-SynMenu AB.ASP\ with\ VBSages:aspvbs
-SynMenu AB.ASP\ with\ Perl:aspperl
-SynMenu AB.Assembly.Assembly\ (GNU):asm
-SynMenu AB.Assembly.Assembly\ (H8300):asmh8300
-SynMenu AB.Assembly.Assembly\ (Intel\ Itanum):ia64
-SynMenu AB.Assembly.Assembly\ (Microsoft):masm
-SynMenu AB.Assembly.Assembly\ (Netwide):nasm
-SynMenu AB.Assembly.PIC\ assembly:pic
-SynMenu AB.Assembly.Turbo\ assembly:tasm
-SynMenu AB.Assembly.Z-80\ assembly:z8a
-SynMenu AB.ASN\.1:asn
-SynMenu AB.Atlas:atlas
-SynMenu AB.Automake:automake
-SynMenu AB.Avenue:ave
-SynMenu AB.Awk:awk
-SynMenu AB.Ayacc:ayacc
-SynMenu AB.B:b
-SynMenu AB.BASIC:basic
-SynMenu AB.BC\ calculator:bc
-SynMenu AB.BibFile:bib
-SynMenu AB.BIND\ configuration:named
-SynMenu AB.BIND\ zone:bindzone
-SynMenu AB.Blank:blank
-
-SynMenu CD.C:c
-SynMenu CD.C++:cpp
-SynMenu CD.C#:cs
-SynMenu CD.Crontab:crontab
-SynMenu CD.Cyn++:cynpp
-SynMenu CD.Cynlib:cynlib
-SynMenu CD.Cascading\ Style\ Sheets:css
-SynMenu CD.Century\ Term:cterm
-SynMenu CD.CFG:cfg
-SynMenu CD.CHILL:ch
-SynMenu CD.Change:change
-SynMenu CD.ChangeLog:changelog
-SynMenu CD.Clean:clean
-SynMenu CD.Clever:cl
-SynMenu CD.Clipper:clipper
-SynMenu CD.Cold\ Fusion:cf
-SynMenu CD.Configure\ script:config
-SynMenu CD.Csh\ shell\ script:csh
-SynMenu CD.Ctrl-H:ctrlh
-SynMenu CD.Cobol:cobol
-SynMenu CD.CSP:csp
-SynMenu CD.CUPL:cupl
-SynMenu CD.CUPL\ simulation:cuplsim
-SynMenu CD.CVS\ commit:cvs
-SynMenu CD.CWEB:cweb
-SynMenu CD.Debian.Debian\ ChangeLog:debchangelog
-SynMenu CD.Debian.Debian\ Control:debcontrol
-SynMenu CD.Diff:diff
-SynMenu CD.Digital\ Command\ Lang:dcl
-SynMenu CD.Diva\ (with\ SKILL):diva
-SynMenu CD.DNS:dns
-SynMenu CD.Dracula:dracula
-SynMenu CD.DSSSL:dsl
-SynMenu CD.DTD:dtd
-SynMenu CD.DTML\ (Zope):dtml
-SynMenu CD.Dylan.Dylan:dylan
-SynMenu CD.Dylan.Dylan\ intr:dylanintr
-SynMenu CD.Dylan.Dylan\ lid:dylanlid
-
-SynMenu EFG.Eiffel:eiffel
-SynMenu EFG.Elm\ Filter:elmfilt
-SynMenu EFG.Embedix\ Component\ Description:ecd
-SynMenu EFG.ERicsson\ LANGuage:erlang
-SynMenu EFG.ESQL-C:esqlc
-SynMenu EFG.Expect:expect
-SynMenu EFG.Exports:exports
-SynMenu EFG.Focus\ Executable:focexec
-SynMenu EFG.Focus\ Master:master
-SynMenu EFG.FORM:form
-SynMenu EFG.Forth:forth
-SynMenu EFG.Fortran:fortran
-SynMenu EFG.FoxPro:foxpro
-SynMenu EFG.Fvwm\ configuration:fvwm1
-SynMenu EFG.Fvwm2\ configuration:fvwm2
-SynMenu EFG.GDB\ command\ file:gdb
-SynMenu EFG.GDMO:gdmo
-SynMenu EFG.Gedcom:gedcom
-SynMenu EFG.GP:gp
-SynMenu EFG.GNU\ Server\ Pages:gsp
-SynMenu EFG.GNUplot:gnuplot
-
-SynMenu HIJK.Haskell:haskell
-SynMenu HIJK.Haskell-literal:lhaskell
-SynMenu HIJK.Hercules:hercules
-SynMenu HIJK.HTML:html
-SynMenu HIJK.HTML\ with\ M4:htmlm4
-SynMenu HIJK.HTML/OS:htmlos
-SynMenu HIJK.Hyper\ Builder:hb
-SynMenu HIJK.Icon:icon
-SynMenu HIJK.IDL:idl
-SynMenu HIJK.Interactive\ Data\ Lang:idlang
-SynMenu HIJK.Inform:inform
-SynMenu HIJK.Informix\ 4GL:fgl
-SynMenu HIJK.Inno\ Setup:iss
-SynMenu HIJK.InstallShield\ Rules:ishd
-SynMenu HIJK.Jam:jam
-SynMenu HIJK.Java.Java:java
-SynMenu HIJK.Java.JavaCC:javacc
-SynMenu HIJK.Java.JavaScript:javascript
-SynMenu HIJK.Java.Java\ Server\ Pages:jsp
-SynMenu HIJK.Java.Java\ Properties:jproperties
-SynMenu HIJK.Jess:jess
-SynMenu HIJK.Jgraph:jgraph
-SynMenu HIJK.KDE\ script:kscript
-SynMenu HIJK.Kimwitu:kwt
-SynMenu HIJK.Kixtart:kix
-
-SynMenu L-Ma.Lace:lace
-SynMenu L-Ma.Lamda\ Prolog:lprolog
-SynMenu L-Ma.Latte:latte
-SynMenu L-Ma.Lex:lex
-SynMenu L-Ma.Lilo:lilo
-SynMenu L-Ma.Lisp:lisp
-SynMenu L-Ma.Lite:lite
-SynMenu L-Ma.LOTOS:lotos
-SynMenu L-Ma.Lout:lout
-SynMenu L-Ma.Lua:lua
-SynMenu L-Ma.Lynx\ Style:lss
-SynMenu L-Ma.M4:m4
-SynMenu L-Ma.MaGic\ Point:mgp
-SynMenu L-Ma.Mail:mail
-SynMenu L-Ma.Makefile:make
-SynMenu L-Ma.MakeIndex:ist
-SynMenu L-Ma.Man\ page:man
-SynMenu L-Ma.Maple:maple
-SynMenu L-Ma.Mason:mason
-SynMenu L-Ma.Mathematica:mma
-SynMenu L-Ma.Matlab:matlab
-
-SynMenu Me-NO.MEL\ (for\ Maya):mel
-SynMenu Me-NO.Metafont:mf
-SynMenu Me-NO.MetaPost:mp
-SynMenu Me-NO.MS\ Module\ Definition:def
-SynMenu Me-NO.Model:model
-SynMenu Me-NO.Modsim\ III:modsim3
-SynMenu Me-NO.Modula\ 2:modula2
-SynMenu Me-NO.Modula\ 3:modula3
-SynMenu Me-NO.Msql:msql
-SynMenu Me-NO.MS-DOS.MS-DOS\ \.bat\ file:dosbatch
-SynMenu Me-NO.MS-DOS.4DOS\ \.bat\ file:btm
-SynMenu Me-NO.MS-DOS.MS-DOS\ \.ini\ file:dosini
-SynMenu Me-NO.MS\ Resource\ file:rc
-SynMenu Me-NO.Muttrc:muttrc
-SynMenu Me-NO.Nastran\ input/DMAP:nastran
-SynMenu Me-NO.Novell\ batch:ncf
-SynMenu Me-NO.Not\ Quite\ C:nqc
-SynMenu Me-NO.Nroff:nroff
-SynMenu Me-NO.Objective\ C:objc
-SynMenu Me-NO.OCAML:ocaml
-SynMenu Me-NO.Omnimark:omnimark
-SynMenu Me-NO.OpenROAD:openroad
-SynMenu Me-NO.Open\ Psion\ Lang:opl
-SynMenu Me-NO.Oracle\ config:ora
-
-SynMenu PQ.PApp:papp
-SynMenu PQ.Pascal:pascal
-SynMenu PQ.PCCTS:pccts
-SynMenu PQ.PPWizard:ppwiz
-SynMenu PQ.Perl.Perl:perl
-SynMenu PQ.Perl.Perl\ POD:pod
-SynMenu PQ.Perl.Perl\ XS:xs
-SynMenu PQ.PHP\ 3-4:php
-SynMenu PQ.Phtml:phtml
-SynMenu PQ.Pike:pike
-SynMenu PQ.Pine\ RC:pine
-SynMenu PQ.PL/SQL:plsql
-SynMenu PQ.PO\ (GNU\ gettext):po
-SynMenu PQ.PostScript:postscr
-SynMenu PQ.Povray:pov
-SynMenu PQ.Printcap:pcap
-SynMenu PQ.Procmail:procmail
-SynMenu PQ.Product\ Spec\ File:psf
-SynMenu PQ.Progress:progress
-SynMenu PQ.Prolog:prolog
-SynMenu PQ.Purify\ log:purifylog
-SynMenu PQ.Python:python
-
-SynMenu R-Sg.R:r
-SynMenu R-Sg.Radiance:radiance
-SynMenu R-Sg.RCS\ log\ output:rcslog
-SynMenu R-Sg.Rebol:rebol
-SynMenu R-Sg.Registry\ of\ MS-Windows:registry
-SynMenu R-Sg.Remind:remind
-SynMenu R-Sg.Renderman\ Shader\ Lang:sl
-SynMenu R-Sg.Rexx:rexx
-SynMenu R-Sg.Robots\.txt:robots
-SynMenu R-Sg.Rpcgen:rpcgen
-SynMenu R-Sg.RTF:rtf
-SynMenu R-Sg.Ruby:ruby
-SynMenu R-Sg.S-lang:slang
-SynMenu R-Sg.Samba\ config:samba
-SynMenu R-Sg.SAS:sas
-SynMenu R-Sg.Sather:sather
-SynMenu R-Sg.Scheme:scheme
-SynMenu R-Sg.SDL:sdl
-SynMenu R-Sg.Sed:sed
-SynMenu R-Sg.Sendmail\.cf:sm
-SynMenu R-Sg.SGML.SGML\ catalog:catalog
-SynMenu R-Sg.SGML.SGML\ DTD:sgml
-SynMenu R-Sg.SGML.SGML\ Declarations:sgmldecl
-SynMenu R-Sg.SGML.SGML\ linuxdoc:sgmllnx
-
-SynMenu Sh-S.Sh\ shell\ script:sh
-SynMenu Sh-S.SiCAD:sicad
-SynMenu Sh-S.Simula:simula
-SynMenu Sh-S.Sinda.Sinda\ compare:sindacmp
-SynMenu Sh-S.Sinda.Sinda\ input:sinda
-SynMenu Sh-S.Sinda.Sinda\ output:sindaout
-SynMenu Sh-S.SKILL:skill
-SynMenu Sh-S.SLRN.SLRN\ rc:slrnrc
-SynMenu Sh-S.SLRN.SLRN\ score:slrnsc
-SynMenu Sh-S.SmallTalk:st
-SynMenu Sh-S.SMIL:smil
-SynMenu Sh-S.SMITH:smith
-SynMenu Sh-S.SNMP\ MIB:mib
-SynMenu Sh-S.SNNS.SNNS\ network:snnsnet
-SynMenu Sh-S.SNNS.SNNS\ pattern:snnspat
-SynMenu Sh-S.SNNS.SNNS\ result:snnsres
-SynMenu Sh-S.Snobol4:snobol4
-SynMenu Sh-S.SPEC\ (Linux\ RPM):spec
-SynMenu Sh-S.Spice:spice
-SynMenu Sh-S.Speedup:spup
-SynMenu Sh-S.Squid:squid
-SynMenu Sh-S.SQL:sql
-SynMenu Sh-S.SQR:sqr
-SynMenu Sh-S.Standard\ ML:sml
-SynMenu Sh-S.Stored\ Procedures:stp
-SynMenu Sh-S.Strace:strace
-
-SynMenu TUV.Tads:tads
-SynMenu TUV.Tags:tags
-SynMenu TUV.TAK.TAK\ compare:tak
-SynMenu TUV.TAK.TAK\ input:tak
-SynMenu TUV.TAK.TAK\ output:takout
-SynMenu TUV.Tcl/Tk:tcl
-SynMenu TUV.TealInfo:tli
-SynMenu TUV.Telix\ Salt:tsalt
-SynMenu TUV.Termcap:ptcap
-SynMenu TUV.TeX:tex
-SynMenu TUV.TeX\ configuration:texmf
-SynMenu TUV.Texinfo:texinfo
-SynMenu TUV.TF\ mud\ client:tf
-SynMenu TUV.Trasys\ input:trasys
-SynMenu TUV.UIT/UIL:uil
-SynMenu TUV.UnrealScript:uc
-SynMenu TUV.Verilog\ HDL:verilog
-SynMenu TUV.Vgrindefs:vgrindefs
-SynMenu TUV.VHDL:vhdl
-SynMenu TUV.Vim.Vim\ help\ file:help
-SynMenu TUV.Vim.Vim\ script:vim
-SynMenu TUV.Vim.Viminfo\ file:viminfo
-SynMenu TUV.Virata:virata
-SynMenu TUV.Visual\ Basic:vb
-SynMenu TUV.VRML:vrml
-SynMenu TUV.VSE\ JCL:vsejcl
-
-SynMenu WXYZ.WEB:web
-SynMenu WXYZ.Webmacro:webmacro
-SynMenu WXYZ.Website\ MetaLanguage:wml
-SynMenu WXYZ.Wdiff:wdiff
-SynMenu WXYZ.Whitespace\ (add):whitespace
-SynMenu WXYZ.WinBatch/Webbatch:winbatch
-SynMenu WXYZ.Windows\ Scripting\ Host:wsh
-SynMenu WXYZ.X\ Keyboard\ Extension:xkb
-SynMenu WXYZ.X\ Pixmap:xpm
-SynMenu WXYZ.X\ Pixmap\ (2):xpm2
-SynMenu WXYZ.X\ resources:xdefaults
-SynMenu WXYZ.Xmath:xmath
-SynMenu WXYZ.XML:xml
-SynMenu WXYZ.XXD\ hex\ dump:xxd
-SynMenu WXYZ.Yacc:yacc
-SynMenu WXYZ.Zsh\ shell\ script:zsh
-
-unlet s:cur_menu_name
-unlet s:cur_menu_nr
-unlet s:cur_menu_item
-unlet s:cur_menu_char
-delcommand SynMenu
-delfun <SID>Syn
 
 am 50.195 &Syntax.-SEP1-				:
 
-am 50.200 &Syntax.Set\ 'syntax'\ only		:let s:syntax_menu_synonly=1<CR>
-am 50.202 &Syntax.Set\ 'filetype'\ too		:call <SID>Nosynonly()<CR>
+am 50.200 &Syntax.Set\ '&syntax'\ only		:let s:syntax_menu_synonly=1<CR>
+am 50.202 &Syntax.Set\ '&filetype'\ too		:call <SID>Nosynonly()<CR>
 fun! <Sid>Nosynonly()
   if exists("s:syntax_menu_synonly")
     unlet s:syntax_menu_synonly
@@ -1156,14 +1128,17 @@ am 50.210 &Syntax.&Off			:syn off<CR>
 am 50.212 &Syntax.&Manual		:syn manual<CR>
 am 50.214 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.216 &Syntax.o&n\ (this\ file)	:call <SID>Synoff()<CR>
-fun! <SID>Synoff()
-  if !exists("g:syntax_on")
-    syn manual
+am 50.216 &Syntax.on/off\ for\ &This\ file	:call <SID>SynOnOff()<CR>
+fun! <SID>SynOnOff()
+  if has("syntax_items")
+    syn clear
+  else
+    if !exists("g:syntax_on")
+      syn manual
+    endif
+    set syn=ON
   endif
-  set syn=ON
 endfun
-am 50.218 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
 
 am 50.700 &Syntax.-SEP3-		:
 am 50.710 &Syntax.Co&lor\ test		:sp $VIMRUNTIME/syntax/colortest.vim<Bar>so %<CR>

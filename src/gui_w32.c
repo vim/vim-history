@@ -874,7 +874,8 @@ _WndProc(
     static void
 gui_w32_oleerr(char *arg)
 {
-    EMSG2(_("Argument not supported: \"-%s\"; Use the OLE version."), arg);
+    EMSG2(_("(oe1) Argument not supported: \"-%s\"; Use the OLE version."),
+									 arg);
 }
 
 /*
@@ -1389,24 +1390,10 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 /*
  * When status IME is 'open' change cursor color to hilight 'CursorIM'
  */
-    guicolor_T
-ImeGetCursorColor(guicolor_T color)
+    int
+input_method_active()
 {
-    static int id = 0;
-    guicolor_T fg, bg;
-
-    if (bImeStatus)
-    {
-	if (!id)
-	    id = syn_name2id("CursorIM");
-	if (id)
-	{
-	    syn_id2colors(id, &fg, &bg);
-	    if (bg)
-		color = bg - 1;
-	}
-    }
-    return color;
+    return bImeStatus;
 }
 
 /*

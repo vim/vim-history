@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2001 Jan 15
+" Last change: 2001 May 01
 " URL:         http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
@@ -13,21 +13,31 @@
 "  - Fix <%text> blocks to show HTML tags but ignore Mason tags.
 "
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" Clear previous syntax settings unless this is v6 or above, in which case just
+" exit without doing anything.
+"
+if version < 600
+	syn clear
+elseif exists("b:current_syntax")
+	finish
 endif
 
+" The HTML syntax file included below uses this variable.
+"
 if !exists("main_syntax")
-  let main_syntax = 'mason'
+	let main_syntax = 'mason'
 endif
 
-runtime! syntax/html.vim
-unlet b:current_syntax
+if version < 600
+  so <sfile>:p:h/html.vim
+else
+  runtime! syntax/html.vim
+  unlet b:current_syntax
+endif
+
 syn cluster htmlPreproc add=@masonTop
 
 syn include @perlTop <sfile>:p:h/perl.vim
-unlet b:current_syntax
 
 " It's hard to reduce down to the correct sub-set of Perl to highlight in some
 " of these cases so I've taken the safe option of just using perlTop in all of
@@ -58,4 +68,24 @@ syn region masonText matchgroup=Delimiter start="<%text>" end="</%text>"
 
 syn cluster masonTop contains=masonLine,masonExpr,masonPerl,masonComp,masonArgs,masonInit,masonCleanup,masonOnce,masonShared,masonDef,masonMethod,masonFlags,masonAttr,masonFilter,masonDoc,masonText
 
-hi def link masonDoc Comment
+" Set up default highlighting. Almost all of this is done in the included
+" syntax files.
+"
+if version >= 508 || !exists("did_mason_syn_inits")
+	if version < 508
+		let did_mason_syn_inits = 1
+		com -nargs=+ HiLink hi link <args>
+	else
+		com -nargs=+ HiLink hi def link <args>
+	endif
+	
+	HiLink masonDoc Comment
+
+	delc HiLink
+endif
+
+let b:current_syntax = "mason"
+
+if main_syntax == 'mason'
+	unlet main_syntax
+endif

@@ -1,15 +1,18 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 Feb 04
+" Last Change:  2001-05-02 16:08:57 Mountain Daylight Time
 " Filenames:    *.tak
 " URL:          http://www.naglenet.org/vim/syntax/tak.vim
-" MAIN URL:     http://www.naglenet.org/vim
+" MAIN URL:     http://www.naglenet.org/vim/
 
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -26,11 +29,15 @@ syn case ignore
 "
 
 " Load FORTRAN syntax file
-runtime! syntax/fortran.vim
+if version < 600
+  source <sfile>:p:h/fortran.vim
+else
+  runtime! syntax/fortran.vim
+endif
 unlet b:current_syntax
 
+" Delete fortran syntax definition for line error format.
 syn clear fortranCommentError
-syn clear fortranNoLabelNumber
 
 
 
@@ -75,33 +82,48 @@ syn match  takScientific  "-\=\<[0-9]*\.[0-9]*E[-+]\=[0-9]\+\>"
 syn match  takEndData     "END OF DATA"
 
 if exists("thermal_todo")
-   execute 'syn match  takTodo ' . '"^'.thermal_todo.'.*$"'
+  execute 'syn match  takTodo ' . '"^'.thermal_todo.'.*$"'
 else
-   syn match  takTodo        "^?.*$"
+  syn match  takTodo        "^?.*$"
 endif
 
 
-" The default highlighting.
-hi def link takMacro               Macro
-hi def link takOptions             Special
-hi def link takRoutine             Type
-hi def link takControl             Special
-hi def link takIdentifier          Identifier
 
-hi def link takFortran             PreProc
-hi def link takMotran              PreProc
+" Define the default highlighting
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_tak_syntax_inits")
+  if version < 508
+    let did_tak_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link takComment             Comment
-hi def link takHeader              Typedef
-hi def link takIncludeFile         Type
-hi def link takInteger             Number
-hi def link takFloat               Float
-hi def link takScientific          Float
+  HiLink takMacro               Macro
+  HiLink takOptions             Special
+  HiLink takRoutine             Type
+  HiLink takControl             Special
+  HiLink takIdentifier          Identifier
 
-hi def link takEndData             Macro
+  HiLink takFortran             PreProc
+  HiLink takMotran              PreProc
 
-hi def link takTodo                Todo
+  HiLink takComment             Comment
+  HiLink takHeader              Typedef
+  HiLink takIncludeFile         Type
+  HiLink takInteger             Number
+  HiLink takFloat               Float
+  HiLink takScientific          Float
+
+  HiLink takEndData             Macro
+
+  HiLink takTodo                Todo
+
+  delcommand HiLink
+endif
 
 
 let b:current_syntax = "tak"
 
+" vim: ts=8 sw=2

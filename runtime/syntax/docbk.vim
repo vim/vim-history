@@ -1,9 +1,8 @@
 " Vim syntax file
 " Language:	DocBook
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
-" URL:		ftp://tritarget.com/pub/vim/syntax/docbk.vim
-" Last Change:	Sam, 11 Nov 2000 04:01:05 +0100
-" $Id$
+" URL:		http://tritarget.com/pub/vim/syntax/docbk.vim
+" Last Change:	2001 May 03
 
 " REFERENCES:
 "   http://docbook.org/
@@ -101,8 +100,21 @@ syn keyword docbkKeyword varargs variablelist varlistentry varname contained
 syn keyword docbkKeyword videodata videoobject void volumenum warning contained
 syn keyword docbkKeyword wordasword xref year contained
 
-" The default highlighting.
-hi def link docbkKeyword	Statement
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_docbk_syn_inits")
+  if version < 508
+    let did_docbk_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink docbkKeyword	Statement
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "docbk"
 

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
+*windows.txt*   For Vim version 6.0ae.  Last change: 2001 mei 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -191,7 +191,7 @@ window will appear.
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will be split vertically.
 
-						*:topleft*
+						*:topleft* *we1*
 :to[pleft] {cmd}
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will appear at the top and occupy the full width of the Vim
@@ -234,7 +234,7 @@ CTRL-W c					*CTRL-W_c* *:clo* *:close*
 :clo[se][!]	Close current window.  When the 'hidden' option is set, or
 		when the buffer was changed and the [!] is used, the buffer
 		becomes hidden (unless there is another window editing it).
-		This command fails when:
+		This command fails when:			*we3*
 		- There is only one window on the screen.
 		- When 'hidden' is not set, [!] is not used, the buffer has
 		  changes, and there is no other window on this buffer.
@@ -261,7 +261,7 @@ CTRL-W CTRL-C						*CTRL-W_CTRL-C*
 < 		This will edit "Makefile", and hide the current buffer if it
 		has any changes.
 
-CTRL-W o						*CTRL-W_o*
+CTRL-W o						*CTRL-W_o* *we4*
 CTRL-W CTRL-O					*CTRL-W_CTRL-O* *:on* *:only*
 :on[ly][!]	Make the current window the only one on the screen.  All other
 		windows are closed.
@@ -318,7 +318,7 @@ CTRL-W CTRL-B	Move cursor to bottom-right window.
 CTRL-W p					*CTRL-W_p* *CTRL-W_CTRL-P*
 CTRL-W CTRL-P	Go to previous (last accessed) window.
 
-						*CTRL-W_P*
+						*CTRL-W_P* *pe1*
 CTRL-W P	Go to preview window.  When there is no preview window this is
 		an error.
 		{not available when compiled without the |+quickfix| feature}
@@ -341,7 +341,7 @@ These commands can also be executed with ":wincmd":
 ==============================================================================
 5. Moving windows around				*window-moving*
 
-CTRL-W r					*CTRL-W_r* *CTRL-W_CTRL-R*
+CTRL-W r				*CTRL-W_r* *CTRL-W_CTRL-R* *we2*
 CTRL-W CTRL-R	Rotate windows downwards/rightwards.  The first window becomes
 		the second one, the second one becomes the third one, etc.
 		The last window becomes the first window.  The cursor remains
@@ -881,7 +881,7 @@ list of buffers. |unlisted-buffer|
 		from the buffer list |unlisted-buffer|.  Option values and
 		local variables are cleared.
 
-:bdelete[!] {bufname}
+:bdelete[!] {bufname}						*be1* *be2*
 		Like ":bdelete[!] [N]", but buffer given by name.  Note that a
 		buffer whose name is a number cannot be referenced by that
 		name; use the buffer number instead.  Insert a backslash
@@ -931,7 +931,7 @@ list of buffers. |unlisted-buffer|
 		a number).  Insert a backslash before a space in a buffer
 		name.
 
-:[N]b[uffer][!] [N]					*:b* *:bu* *:buffer*
+:[N]b[uffer][!] [N]			*:b* *:bu* *:buf* *:buffer* *eb6*
 		Edit buffer [N] from the buffer list.  If [N] is not given,
 		the current buffer remains being edited.  See |:buffer-!| for
 		[!].  This will also edit a buffer that is not in the buffer
@@ -954,7 +954,7 @@ list of buffers. |unlisted-buffer|
 		list.  This will also edit a buffer that is not in the buffer
 		list, without setting the 'buflisted' flag.
 
-							*:bn* *:bnext*
+							*:bn* *:bnext* *eb7*
 :[N]bn[ext][!] [N]
 		Go to [N]th next buffer in buffer list.  [N] defaults to one.
 		Wraps around the end of the buffer list.  
@@ -971,7 +971,7 @@ list of buffers. |unlisted-buffer|
 		Split window and go to [N]th next buffer in buffer list.
 		Wraps around the end of the buffer list.  Uses 'switchbuf'
 
-:[N]bN[ext][!] [N]			*:bN* *:bNext* *:bp* *:bprevious*
+:[N]bN[ext][!] [N]			*:bN* *:bNext* *:bp* *:bprevious* *eb8*
 :[N]bp[revious][!] [N]
 		Go to [N]th previous buffer in buffer list.  [N] defaults to
 		one.  Wraps around the start of the buffer list.
@@ -1009,9 +1009,10 @@ list of buffers. |unlisted-buffer|
 		buffer list is empty, go to the last unlisted buffer.
 		Respects 'switchbuf' option.
 
-:[N]bm[odified][!] [N]					*:bm* *:bmodified*
+:[N]bm[odified][!] [N]				*:bm* *:bmodified* *eb4*
 		Go to [N]th next modified buffer.  Note: this command also
-		finds buffers not in the buffer list.
+		finds unlisted buffers.  If there is no modified buffer the
+		command fails.
 
 :[N]sbm[odified] [N]					*:sbm* *:sbmodified*
 		Split window and go to [N]th next modified buffer.

@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0ad.  Last change: 2000 Aug 16
+*sign.txt*     For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -40,12 +40,12 @@ and manipulate signs within a buffer or file.
 ==============================================================================
 2. Commands					*sign-commands*
 
-						*:sig* *:sign*
+			*:sig* *:sign* *es7* *es8* *es9* *es0* *le1* *le2*
 :sig[n] id linenum index file		Create a new sign
 :sig[n] id index file			Change sign types
 :sig[n] id file			Jump to sign
 :signs					Display all signs
-						*:uns* *:unsign*
+						*:uns* *:unsign* *le3*
 :uns[ign] id file			Delete a sign
 
 Where:

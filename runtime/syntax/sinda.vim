@@ -1,20 +1,27 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 Feb 04
+" Last Change:  2001-05-02 16:08:21 Mountain Daylight Time
 " Filenames:    *.sin
 " URL:          http://www.naglenet.org/vim/syntax/sinda.vim
-" MAIN URL:     http://www.naglenet.org/vim
+" MAIN URL:     http://www.naglenet.org/vim/
 
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
 
+
 " Ignore case
 syn case ignore
+
+
 
 "
 "
@@ -22,11 +29,15 @@ syn case ignore
 "
 
 " Load FORTRAN syntax file
-runtime! syntax/fortran.vim
+if version < 600
+  source <sfile>:p:h/fortran.vim
+else
+  runtime! syntax/fortran.vim
+endif
 unlet b:current_syntax
 
+" Delete fortran syntax definition for line error format.
 syn clear fortranCommentError
-syn clear fortranNoLabelNumber
 
 
 
@@ -87,35 +98,49 @@ syn match  sindaScientific  "-\=\<[0-9]*\.[0-9]*E[-+]\=[0-9]\+\>"
 syn match  sindaEndData          "^END OF DATA"
 
 if exists("thermal_todo")
-   execute 'syn match  sindaTodo ' . '"^'.thermal_todo.'.*$"'
+  execute 'syn match  sindaTodo ' . '"^'.thermal_todo.'.*$"'
 else
-   syn match  sindaTodo     "^?.*$"
+  syn match  sindaTodo     "^?.*$"
 endif
 
 
 
-" The default highlighting.
-hi def link sindaMacro             Macro
-hi def link sindaOptions           Special
-hi def link sindaRoutine           Type
-hi def link sindaControl           Special
-hi def link sindaSubRoutine        Function
-hi def link sindaIdentifier        Identifier
+" Define the default highlighting
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_sinda_syntax_inits")
+  if version < 508
+    let did_sinda_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link sindaFortran           PreProc
-hi def link sindaMotran            PreProc
+  HiLink sindaMacro             Macro
+  HiLink sindaOptions           Special
+  HiLink sindaRoutine           Type
+  HiLink sindaControl           Special
+  HiLink sindaSubRoutine        Function
+  HiLink sindaIdentifier        Identifier
 
-hi def link sindaComment           Comment
-hi def link sindaHeader            Typedef
-hi def link sindaIncludeFile       Type
-hi def link sindaInteger           Number
-hi def link sindaFloat             Float
-hi def link sindaScientific        Float
+  HiLink sindaFortran           PreProc
+  HiLink sindaMotran            PreProc
 
-hi def link sindaEndData           Macro
+  HiLink sindaComment           Comment
+  HiLink sindaHeader            Typedef
+  HiLink sindaIncludeFile       Type
+  HiLink sindaInteger           Number
+  HiLink sindaFloat             Float
+  HiLink sindaScientific        Float
 
-hi def link sindaTodo              Todo
+  HiLink sindaEndData           Macro
+
+  HiLink sindaTodo              Todo
+
+  delcommand HiLink
+endif
 
 
 let b:current_syntax = "sinda"
 
+" vim: ts=8 sw=2

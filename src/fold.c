@@ -474,7 +474,7 @@ foldOpenCursor()
     void
 newFoldLevel()
 {
-    fold_T	*fp = (fold_T *)curwin->w_folds.ga_data;
+    fold_T	*fp;
     int		i;
 
     checkupdate(curwin);
@@ -483,6 +483,7 @@ newFoldLevel()
 	/* Set all flags for the first level of folds to FD_LEVEL.  Following
 	 * manual open/close will then change the flags to FD_OPEN or
 	 * FD_CLOSED for those folds that don't use 'foldlevel'. */
+	fp = (fold_T *)curwin->w_folds.ga_data;
 	for (i = 0; i < curwin->w_folds.ga_len; ++i)
 	    fp[i].fd_flags = FD_LEVEL;
 	curwin->w_fold_manual = FALSE;
@@ -1669,7 +1670,7 @@ foldCreateMarkers(start, end)
     }
     if (*curbuf->b_p_cms == NUL)
     {
-	EMSG(_("'commentstring' is empty"));
+	EMSG(_("(ef6) 'commentstring' is empty"));
 	return;
     }
     parseMarker(curwin);
@@ -1977,9 +1978,10 @@ foldUpdateIEMS(wp, top, bot)
 	    getlevel(&fline);
 
 	    /* If a fold started here, we already had the level, if it stops
-	     * here, we need to use lvl_next. */
+	     * here, we need to use lvl_next.  Could also start and end a fold
+	     * in the same line. */
 	    if (fline.lvl > level)
-		fline.lvl = level;
+		fline.lvl = level - (fline.lvl - fline.lvl_next);
 	    else
 		fline.lvl = fline.lvl_next;
 	}
@@ -2150,7 +2152,8 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
     if (getlevel == foldlevelMarker && flp->start == 0 && flp->lvl > 0)
     {
 	foldFind(gap, startlnum - 1, &fp);
-	if (fp->fd_top >= startlnum)
+	if (fp >= ((fold_T *)gap->ga_data) + gap->ga_len
+						   || fp->fd_top >= startlnum)
 	    fp = NULL;
     }
 
@@ -2182,7 +2185,7 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		&& (level > lvl - flp->start || level >= flp->had_end))
 	    lvl = 0;
 
-	if (flp->lnum > bot && !finish)
+	if (flp->lnum > bot && !finish && fp != NULL)
 	{
 	    /* For "marker" and "syntax" methods:
 	     * - If a change caused a nested fold to be removed, we need to

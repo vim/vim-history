@@ -1,17 +1,23 @@
 " Vim syntax file
-" Language:    mgp - MaGic Point
-" Maintainer:  Gerfried Fuchs <alfie@innocent.com>
-" Filenames:   *.mgp
-" Last Change: 17 Sep 2000
-" URL:         http://alfie.ist.org/vim/syntax/mgp.vim
+" Language:     mgp - MaGic Point
+" Maintainer:   Gerfried Fuchs <alfie@ist.org>
+" Filenames:    *.mgp
+" Last Change:  25 Apr 2001
+" URL:          http://alfie.ist.org/vim/syntax/mgp.vim
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
+" SPAM is _NOT_ welcome - be ready to be reported!
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syn clear
+elseif exists("b:current_syntax")
   finish
 endif
+
 
 syn match mgpLineSkip "\\$"
 
@@ -40,22 +46,38 @@ syn match mgpHash      +^#.*$+
 syn match mgpPage      +^%page$+
 syn match mgpNoDefault +^%nodefault$+
 
-hi def link mgpLineSkip   Special
 
-hi def link mgpHash       mgpComment
-hi def link mgpPercent    mgpComment
-hi def link mgpComment    Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_mgp_syn_inits")
+  let did_mgp_syn_inits = 1
+  if version < 508
+    let did_mgp_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link mgpCommand    Identifier
+  HiLink mgpLineSkip    Special
 
-hi def link mgpLine       Type
+  HiLink mgpHash        mgpComment
+  HiLink mgpPercent     mgpComment
+  HiLink mgpComment     Comment
 
-hi def link mgpFile       String
-hi def link mgpSize       Number
-hi def link mgpValue      Number
+  HiLink mgpCommand     Identifier
 
-hi def link mgpPage       mgpDefine
-hi def link mgpNoDefault  mgpDefine
-hi def link mgpDefine     Define
+  HiLink mgpLine        Type
+
+  HiLink mgpFile        String
+  HiLink mgpSize        Number
+  HiLink mgpValue       Number
+
+  HiLink mgpPage        mgpDefine
+  HiLink mgpNoDefault   mgpDefine
+  HiLink mgpDefine      Define
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "mgp"

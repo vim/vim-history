@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	Sat, 08 Apr 2000 11:26:31 +0200
+" Last Change:	Don, 03 Mai 2001 09:57:15 +0200
 " URL:		http://www.zellner.org/vim/syntax/xdefaults.vim
 " $Id$
 "
@@ -31,7 +31,7 @@ endif
 
 
 " syn region  xdefaultsLabel   start=+^[^:]\{-}:+he=e-1 skip=+\\+ end="$"
-syn match   xdefaultsLabel   +^[^:]\{-}:+he=e-1                      contains=xdefaultsPunct
+syn match   xdefaultsLabel   +[^:]\{-}:+he=e-1                       contains=xdefaultsPunct,xdefaultsSpecial,xdefaultsLineEnd
 syn region  xdefaultsValue   keepend start=+:+lc=1 skip=+\\+ end=+$+ contains=xdefaultsSpecial,xdefaultsLabel,xdefaultsLineEnd
 
 syn match   xdefaultsSpecial	contained +#override+
@@ -58,7 +58,7 @@ syn region  xdefaultsComment start="/\*" end="\*/"       contains=xdefaultsTodo
 
 syntax match xdefaultsCommentError	"\*/"
 
-syn keyword xdefaultsTodo contained TODO FIXME XXX
+syn keyword xdefaultsTodo contained TODO FIXME XXX display
 
 
 

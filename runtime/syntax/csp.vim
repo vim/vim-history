@@ -1,14 +1,25 @@
 " Vim syntax file
 " Language:	CSP (Communication Sequential Processes, using FDR input syntax)
 " Maintainer:	Jan Bredereke <brederek@tzi.de>
-" Version:	0.4.0
-" Last change:	Tue Apr 25, 2000
+" Version:	0.5.0
+" Last change:	Fri May 4, 2001
 " URL:          http://www.tzi.de/~brederek/vim/
 " Copying:	You may distribute and use this file freely, in the same
 "		way as the vim editor itself.
 "
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" To Do:	- Probably I missed some keywords or operators, please
+"		  fix them and notify me, the maintainer.
+"		- Currently, we do lexical highlighting only. It would be
+"		  nice to have more actual syntax checks, including
+"		  highlighting of wrong syntax.
+"		- The additional syntax for the RT-Tester (pseudo-comments)
+"		  should be optional.
+
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -18,7 +29,7 @@ syn case match
 " Block comments in CSP are between {- and -}
 syn region cspComment	start="{-"  end="-}" contains=cspTodo
 " Single-line comments start with --
-syn region cspComment	start="--"  end="$" contains=cspTodo,cspRttComment
+syn region cspComment	start="--"  end="$" contains=cspTodo,cspOldRttComment,cspSdlRttComment keepend
 
 " Numbers:
 syn match  cspNumber "\<\d\+\>"
@@ -73,7 +84,8 @@ syn keyword cspKeyword		Bool Int
 syn keyword cspReserved		attribute embed module subtype
 
 " Include:
-syn keyword cspInclude		include
+syn region cspInclude matchgroup=cspIncludeKeyword start="^include" end="$" keepend contains=cspIncludeArg
+syn region cspIncludeArg start='\s\+\"' end= '\"\s*' contained
 
 " Assertions:
 syn keyword cspAssert		assert deterministic divergence free deadlock
@@ -84,9 +96,9 @@ syn match cspAssert		"\[FD="
 syn match cspAssert		"\[FD\]"
 syn match cspAssert		"\[F\]"
 
-" Types and Sets
+" Types and Sets 
 " (first char a capital, later at least one lower case, no trailing underscore):
-syn match cspType     "\<[A-Z_][A-Z_0-9]*[a-z]\(\|[A-Za-z_0-9]*[A-Za-z0-9]\)\>"
+syn match cspType     "\<_*[A-Z][A-Z_0-9]*[a-z]\(\|[A-Za-z_0-9]*[A-Za-z0-9]\)\>"
 
 " Processes (all upper case, no trailing underscore):
 " (For identifiers that could be types or sets, too, this second rule set
@@ -99,35 +111,84 @@ syn match cspReservedIdentifier	"\<[A-Za-z_][A-Za-z_0-9]*_\>"
 
 " ToDo markers:
 syn match cspTodo		"FIXME"	contained
+syn match cspTodo		"TODO"	contained
 syn match cspTodo		"!!!"	contained
 
 " RT-Tester pseudo comments:
-syn match cspRttComment		"^--\$\$AM_UNDEF"lc=2		contained
-syn match cspRttComment		"^--\$\$AM_ERROR"lc=2		contained
-syn match cspRttComment		"^--\$\$AM_WARNING"lc=2		contained
-syn match cspRttComment		"^--\$\$AM_SET_TIMER"lc=2	contained
-syn match cspRttComment		"^--\$\$AM_RESET_TIMER"lc=2	contained
-syn match cspRttComment		"^--\$\$AM_ELAPSED_TIMER"lc=2	contained
-syn match cspRttComment		"^--\$\$AM_OUTPUT"lc=2		contained
-syn match cspRttComment		"^--\$\$AM_INPUT"lc=2		contained
+" (The now obsolete syntax:)
+syn match cspOldRttComment	"^--\$\$AM_UNDEF"lc=2		contained
+syn match cspOldRttComment	"^--\$\$AM_ERROR"lc=2		contained
+syn match cspOldRttComment	"^--\$\$AM_WARNING"lc=2		contained
+syn match cspOldRttComment	"^--\$\$AM_SET_TIMER"lc=2	contained
+syn match cspOldRttComment	"^--\$\$AM_RESET_TIMER"lc=2	contained
+syn match cspOldRttComment	"^--\$\$AM_ELAPSED_TIMER"lc=2	contained
+syn match cspOldRttComment	"^--\$\$AM_OUTPUT"lc=2		contained
+syn match cspOldRttComment	"^--\$\$AM_INPUT"lc=2		contained
+" (The current syntax:)
+syn region cspRttPragma matchgroup=cspRttPragmaKeyword start="^pragma\s\+" end="\s*$" oneline keepend contains=cspRttPragmaArg,cspRttPragmaSdl
+syn keyword cspRttPragmaArg	AM_ERROR AM_WARNING AM_SET_TIMER contained
+syn keyword cspRttPragmaArg	AM_RESET_TIMER AM_ELAPSED_TIMER  contained
+syn keyword cspRttPragmaArg	AM_OUTPUT AM_INPUT AM_INTERNAL   contained
+" the "SDL_MATCH" extension:
+syn region cspRttPragmaSdl	matchgroup=cspRttPragmaKeyword start="SDL_MATCH\s\+" end="\s*$" contains=cspRttPragmaSdlArg contained
+syn keyword cspRttPragmaSdlArg	TRANSLATE nextgroup=cspRttPragmaSdlTransName contained
+syn keyword cspRttPragmaSdlArg	PARAM SKIP OPTIONAL CHOICE ARRAY nextgroup=cspRttPragmaSdlName contained
+syn match cspRttPragmaSdlName	"\s*\S\+\s*" nextgroup=cspRttPragmaSdlTail contained
+syn region cspRttPragmaSdlTail  start="" end="\s*$" contains=cspRttPragmaSdlTailArg contained
+syn keyword cspRttPragmaSdlTailArg	SUBSET_USED DEFAULT_VALUE Present contained
+syn match cspRttPragmaSdlTransName	"\s*\w\+\s*" nextgroup=cspRttPragmaSdlTransTail contained
+syn region cspRttPragmaSdlTransTail  start="" end="\s*$" contains=cspRttPragmaSdlTransTailArg contained
+syn keyword cspRttPragmaSdlTransTailArg	sizeof contained
+syn match cspRttPragmaSdlTransTailArg	"\*" contained
+syn match cspRttPragmaSdlTransTailArg	"(" contained
+syn match cspRttPragmaSdlTransTailArg	")" contained
+
+" temporary syntax extension for commented-out "pragma SDL_MATCH":
+syn match cspSdlRttComment	"pragma\s\+SDL_MATCH\s\+" nextgroup=cspRttPragmaSdlArg contained
 
 syn sync lines=250
 
-" The default highlighting.
-hi def link cspComment		Comment
-hi def link cspNumber		Number
-hi def link cspConditional	Conditional
-hi def link cspOperator		Delimiter
-hi def link cspKeyword		Keyword
-hi def link cspReserved		SpecialChar
-hi def link cspInclude		Include
-hi def link cspAssert		PreCondit
-hi def link cspType		Type
-hi def link cspProcess		Function
-hi def link cspTodo		Todo
-hi def link cspRttComment	Define
-hi def link cspReservedIdentifier Error
-" (Currently unused vim method: Debug)
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_csp_syn_inits")
+  if version < 508
+    let did_csp_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  " The default methods for highlighting.  Can be overridden later
+  " (For vim version <=5.7, the command groups are defined in
+  " $VIMRUNTIME/syntax/synload.vim )
+  HiLink cspComment			Comment
+  HiLink cspNumber			Number
+  HiLink cspConditional			Conditional
+  HiLink cspOperator			Delimiter
+  HiLink cspKeyword			Keyword
+  HiLink cspReserved			SpecialChar
+  HiLink cspInclude			Error
+  HiLink cspIncludeKeyword		Include
+  HiLink cspIncludeArg			Include
+  HiLink cspAssert			PreCondit
+  HiLink cspType			Type
+  HiLink cspProcess			Function
+  HiLink cspTodo			Todo
+  HiLink cspOldRttComment		Define
+  HiLink cspRttPragmaKeyword		Define
+  HiLink cspSdlRttComment		Define
+  HiLink cspRttPragmaArg		Define
+  HiLink cspRttPragmaSdlArg		Define
+  HiLink cspRttPragmaSdlName		Default
+  HiLink cspRttPragmaSdlTailArg		Define
+  HiLink cspRttPragmaSdlTransName	Default
+  HiLink cspRttPragmaSdlTransTailArg	Define
+  HiLink cspReservedIdentifier	Error
+  " (Currently unused vim method: Debug)
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "csp"
 

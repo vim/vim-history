@@ -123,7 +123,7 @@ static void exact_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
 #ifdef FEAT_TOOLBAR
-static void get_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
+static void get_gtk_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
 #endif
 
 #if defined(FEAT_MENU) || defined(PROTO)
@@ -339,7 +339,7 @@ gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 	    GdkPixmap *pixmap;
 	    GdkBitmap *mask;
 
-	    get_pixmap(menu->name, &pixmap, &mask);
+	    get_gtk_pixmap(menu->name, &pixmap, &mask);
 	    if (pixmap == NULL)
 		return; /* should at least have blank pixmap, but if not... */
 
@@ -498,7 +498,7 @@ pixmap_create_by_dir(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
  * find the toolbar pixmap.
  */
     static void
-get_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
+get_gtk_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     *pixmap = NULL;
     *mask = NULL;

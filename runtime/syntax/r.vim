@@ -1,17 +1,25 @@
 " Vim syntax file
-" Language:	R
+" Language:	R (GNU S)
 " Maintainer:	Tom Payne <tom@tompayne.org>
-" Last change:  2001 Apr 20
+" Last Change:  2001 April 28
 " Filenames:	*.r
 " URL:		http://www.tompayne.org/vim/syntax/r.vim
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
+if version >= 600
+  setlocal iskeyword=@,48-57,_,.
+else
+  set iskeyword=@,48-57,_,.
+endif
+
 syn case match
-setlocal iskeyword=@,48-57,.
 
 " Comment
 syn match rComment /\#.*/
@@ -22,19 +30,19 @@ syn region rString start=/"/ skip=/\\\\\|\\"/ end=/"/
 " string enclosed in single quotes
 syn region rString start=/'/ skip=/\\\\\|\\'/ end=/'/
 " number with no fractional part or exponent
-syn match rNumber  /\d\+/
+syn match rNumber /\d\+/
 " floating point number with integer and fractional parts and optional exponent
-syn match rFloat   /\d\+\.\d*\([Ee][-+]\=\d\+\)\=/
+syn match rFloat /\d\+\.\d*\([Ee][-+]\=\d\+\)\=/
 " floating point number with no integer part and optional exponent
-syn match rFloat   /\.\d\+\([Ee][-+]\=\d\+\)\=/
+syn match rFloat /\.\d\+\([Ee][-+]\=\d\+\)\=/
 " floating point number with no fractional part and optional exponent
-syn match rFloat   /\d\+[Ee][-+]\=\d\+/
+syn match rFloat /\d\+[Ee][-+]\=\d\+/
 
 " Identifier
 " identifier with leading letter and optional following keyword characters
-"syn match rIdentifier /\a\k*/
+syn match rIdentifier /\a\k*/
 " identifier with leading period, one or more digits, and at least one non-digit keyword character
-"syn match rIdentifier /\.\d*\K\k*/
+syn match rIdentifier /\.\d*\K\k*/
 
 " Statement
 syn keyword rStatement   break next return
@@ -62,23 +70,35 @@ syn match rBraceError /[)}]/ contained
 syn match rCurlyError /[)\]]/ contained
 syn match rParenError /[\]}]/ contained
 
-" The default highlighting.
-hi def link rComment     Comment
-hi def link rConstant    Constant
-hi def link rString      String
-hi def link rNumber      Number
-hi def link rBoolean     Boolean
-hi def link rFloat       Float
-hi def link rStatement   Statement
-hi def link rConditional Conditional
-hi def link rRepeat      Repeat
-hi def link rIdentifier  Identifier
-hi def link rType        Type
-hi def link rDelimiter   Delimiter
-hi def link rError       Error
-hi def link rBraceError  Error
-hi def link rCurlyError  Error
-hi def link rParenError  Error
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_r_syn_inits")
+  if version < 508
+    let did_r_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+  HiLink rComment     Comment
+  HiLink rConstant    Constant
+  HiLink rString      String
+  HiLink rNumber      Number
+  HiLink rBoolean     Boolean
+  HiLink rFloat       Float
+  HiLink rStatement   Statement
+  HiLink rConditional Conditional
+  HiLink rRepeat      Repeat
+  HiLink rIdentifier  Identifier
+  HiLink rType        Type
+  HiLink rDelimiter   Delimiter
+  HiLink rError       Error
+  HiLink rBraceError  Error
+  HiLink rCurlyError  Error
+  HiLink rParenError  Error
+  delcommand HiLink
+endif
 
 let b:current_syntax="r"
-" vim: ts=8
+
+" vim: ts=8 sw=2

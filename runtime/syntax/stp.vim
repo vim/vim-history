@@ -1,11 +1,14 @@
 " Vim syntax file
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-" Last Change: January 16, 2001
-"     Version: 5.7-4
+"         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
+" Last Change: April 30, 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x, clear all syntax items.
+" For version 6.x, quit when a syntax file was already loaded.
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -81,21 +84,39 @@ syn match   stpParenError ")"
 " Syntax Synchronizing
 syn sync    minlines=10	maxlines=100
 
-" The default highlighting.
-hi def link stpComment Comment
-hi def link stpKeyword Keyword
-hi def link stpNumber	Number
-hi def link stpOperator	Operator
-hi def link stpSpecial Special
-hi def link stpStatement	Statement
-hi def link stpString	String
-hi def link stpStringError Error
-hi def link stpType Type
-hi def link stpTodo Todo
-hi def link stpFunction	Function
-hi def link stpGlobals Macro
-hi def link stpParen Normal
-hi def link stpParenError Error
-hi def link stpSQLKeyword Function
+" Syntax Synchronizing
+syn sync minlines=10 maxlines=100
+
+" Define the default highlighting.
+" For version 5.x and earlier, only when not done already.
+" For version 5.8 and later, only when and item doesn't have highlighting yet.
+if version >= 508 || !exists("did_stp_syn_inits")
+  if version < 508
+    let did_stp_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink stpComment Comment
+  HiLink stpKeyword Keyword
+  HiLink stpNumber	Number
+  HiLink stpOperator	Operator
+  HiLink stpSpecial Special
+  HiLink stpStatement	Statement
+  HiLink stpString	String
+  HiLink stpStringError Error
+  HiLink stpType Type
+  HiLink stpTodo Todo
+  HiLink stpFunction	Function
+  HiLink stpGlobals Macro
+  HiLink stpParen Normal
+  HiLink stpParenError Error
+  HiLink stpSQLKeyword Function
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "stp"
+
+" vim ts=8 sw=2

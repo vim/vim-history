@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0ad.  Last change: 2001 Mar 29
+*term.txt*      For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -196,7 +196,7 @@ starts with CSI, it assumes that the terminal is in 8-bit mode and will
 convert all key sequences to their 8-bit variants.
 
 ==============================================================================
-2. Terminal options					*terminal-options*
+2. Terminal options				*terminal-options* *ye1*
 
 The terminal options can be set just like normal options.  But they are not
 shown with the ":set all" command.  Instead use ":set termcap".
@@ -228,7 +228,7 @@ OUTPUT CODES
 	t_cd	clear to end of screen				*t_cd* *'t_cd'*
 	t_ce	clear to end of line				*t_ce* *'t_ce'*
 	t_cl	clear screen					*t_cl* *'t_cl'*
-	t_cm	cursor motion (required!)			*t_cm* *'t_cm'*
+	t_cm	cursor motion (required!)		  *te9* *t_cm* *'t_cm'*
 	t_Co	number of colors				*t_Co* *'t_Co'*
 	t_CS	if non-empty, cursor relative to scroll region	*t_CS* *'t_CS'*
 	t_cs	define scrolling region				*t_cs* *'t_cs'*
@@ -476,7 +476,7 @@ correct values.
 
 One command can be used to set the screen size:
 
-							*:mod* *:mode*
+						*:mod* *:mode* *et8* *et9*
 :mod[e] [mode]
 
 Without argument this only detects the screen size and redraws the screen.

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 29
+*change.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -596,7 +596,7 @@ command.
 For compatibility with Vi these two exceptions are allowed:
 "\/{string}/" and "\?{string}?" do the same as "//{string}/r".
 "\&{string}&" does the same as "//{string}/".
-
+							*es6*
 Instead of the '/' which surrounds the pattern and replacement string, you
 can use any other character, but not an alphanumeric character, '\', '"' or
 '|'.  This is useful if you want to include a '/' in the search pattern or
@@ -768,7 +768,7 @@ inside of strings can change!  Also see 'softtabstop' option. >
 			in [range] (default: current line |cmdline-ranges|),
 			[into register x].
 
-							*p* *put*
+							*p* *put* *pe7*
 ["x]p			Put the text [from register x] after the cursor
 			[count] times.  {Vi: no count}
 
@@ -864,7 +864,7 @@ Rationale:	In Vi the "y" command followed by a backwards motion would
 		because redisplaying was skipped.  In Vim it always moves to
 		the first character, as specified by Posix.
 
-There are nine types of registers:			*registers*
+There are nine types of registers:			*registers* *pe8*
 1. The unnamed register ""
 2. 10 numbered registers "0 to "9
 3. The small delete register "-
@@ -980,7 +980,7 @@ The next three commands always work on whole lines.
 							*:t*
 :t			Synonym for copy.
 
-:[range]m[ove] {address}				*:m* *:mo* *:move*
+:[range]m[ove] {address}			*:m* *:mo* *:move* *em7*
 			Move the lines given by [range] to below the line
 			given by {address}.
 
@@ -1521,9 +1521,9 @@ assume a 'shiftwidth' of 4.
 		   */			     */
 <
 	(N    When in unclosed parentheses, indent N characters from the line
-	      with the unclosed parentheses.  When N is 0 or the line starts
-	      with '(', line up with the unclosed parentheses.  (default
-	      'shiftwidth' * 2).
+	      with the unclosed parentheses.  Add a 'shiftwidth' for every
+	      unclosed parentheses.  When N is 0 line up with the unclosed
+	      parentheses.  (default 'shiftwidth' * 2).
 
 		cino=			  cino=(0 >
 		  if (c1 && (c2 ||	    if (c1 && (c2 ||

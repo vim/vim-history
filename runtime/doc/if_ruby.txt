@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 27
+*if_ruby.txt*   For Vim version 6.0ae.  Last change: 2001 mei 04
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -13,6 +13,7 @@ The Ruby Interface to Vim				*ruby* *Ruby*
 5. Global variables		|ruby-globals|
 
 {Vi does not have any of these commands}
+			*el3* *re1* *re2* *re3* *re4* *re5* *re6* *re7*
 
 The Ruby interface only works when Vim was compiled with the |+ruby| feature.
 
@@ -54,7 +55,7 @@ Example Vim script: >
 	endfunction
 <
 
-							*:rubydo* *:rubyd*
+						*:rubydo* *:rubyd* *er0*
 :[range]rubyd[o] {cmd}	Evaluate Ruby command {cmd} for each line in the
 			[range], with $_ being set to the text of each line in
 			turn, without a trailing <EOL>. Setting $_ will change

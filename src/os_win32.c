@@ -2829,7 +2829,7 @@ mch_call_shell(
 		{
 		    x = -1;
 #ifdef FEAT_GUI_W32
-		    EMSG(_("Command not found"));
+		    EMSG(_("(eq6) Command not found"));
 #endif
 		}
 		/* Close the handles to the subprocess, so that it goes away */

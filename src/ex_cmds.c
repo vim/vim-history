@@ -47,7 +47,7 @@ do_ascii(eap)
     int		c;
     char	buf1[20];
     char	buf2[20];
-    char_u	buf3[5];
+    char_u	buf3[7];
 #ifdef FEAT_MBYTE
     int		c1 = 0;
     int		c2 = 0;
@@ -424,7 +424,7 @@ do_move(line1, line2, dest)
 
     if (dest >= line1 && dest < line2)
     {
-	EMSG(_("Move lines into themselves"));
+	EMSG(_("(em7) Move lines into themselves"));
 	return FAIL;
     }
 
@@ -913,7 +913,7 @@ filterend:
     if (curbuf != old_curbuf)
     {
 	--no_wait_return;
-	EMSG(_("*Filter* Autocommands must not change current buffer"));
+	EMSG(_("(ef4) *Filter* Autocommands must not change current buffer"));
     }
 #endif
     if (itmp != NULL)
@@ -1233,7 +1233,7 @@ viminfo_error(message, line)
     emsg(IObuff);
     if (++viminfo_errcnt >= 10)
     {
-	EMSG(_("viminfo: Too many errors, skipping rest of file"));
+	EMSG(_("(et4) viminfo: Too many errors, skipping rest of file"));
 	return TRUE;
     }
     return FALSE;
@@ -1356,7 +1356,7 @@ write_viminfo(file, forceit)
 
 	    /* avoid a wait_return for this message, it's annoying */
 	    tt = msg_didany;
-	    EMSG2(_("Viminfo file is not writable: %s"), fname);
+	    EMSG2(_("(we5) Viminfo file is not writable: %s"), fname);
 	    msg_didany = tt;
 	    goto end;
 	}
@@ -1481,7 +1481,7 @@ write_viminfo(file, forceit)
      */
     if (fp_out == NULL)
     {
-	EMSG2(_("Can't write viminfo file %s!"),
+	EMSG2(_("(we6) Can't write viminfo file %s!"),
 					    fp_in == NULL ? fname : tempname);
 	if (fp_in != NULL)
 	    fclose(fp_in);
@@ -2075,7 +2075,7 @@ do_write(eap)
 	{
 	    /* Overwriting a file that is loaded in another buffer is not a
 	     * good idea. */
-	    EMSG(_("File is loaded in another buffer"));
+	    EMSG(_("(ew6) File is loaded in another buffer"));
 	    goto theend;
 	}
     }
@@ -2116,7 +2116,7 @@ do_write(eap)
 	    else
 #endif
 	    {
-		EMSG(_("Use ! to write partial buffer"));
+		EMSG(_("(ew7) Use ! to write partial buffer"));
 		goto theend;
 	    }
 	}
@@ -2185,7 +2185,7 @@ check_overwrite(eap, buf, fname, ffname, other)
 	    /* with UNIX it is possible to open a directory */
 	if (mch_isdir(ffname))
 	{
-	    EMSG2(_("\"%s\" is a directory"), ffname);
+	    EMSG2(_(e_isadir2), ffname);
 	    return FAIL;
 	}
 #endif
@@ -2265,7 +2265,7 @@ do_wqall(eap)
 #endif
 	    if (buf->b_ffname == NULL)
 	    {
-		EMSGN(_("No file name for buffer %ld"), (long)buf->b_fnum);
+		EMSGN(_("(be4) No file name for buffer %ld"), (long)buf->b_fnum);
 		++error;
 	    }
 	    else if (check_readonly(&eap->forceit, buf)
@@ -2982,7 +2982,7 @@ theend:
 delbuf_msg(name)
     char_u	*name;
 {
-    EMSG2(_("Autocommands unexpectedly deleted new buffer %s"),
+    EMSG2(_("(ae1) Autocommands unexpectedly deleted new buffer %s"),
 	    name == NULL ? (char_u *)"" : name);
     vim_free(name);
     au_new_curbuf = NULL;
@@ -3103,7 +3103,7 @@ ex_z(eap)
     {
 	if (!isdigit(*x))
 	{
-	    EMSG(_("non-numeric argument to :z"));
+	    EMSG(_("(ez2) non-numeric argument to :z"));
 	    return;
 	}
 	else
@@ -3192,7 +3192,7 @@ check_restricted()
 {
     if (restricted)
     {
-	EMSG(_("Shell commands not allowed in rvim"));
+	EMSG(_("(er7) Shell commands not allowed in rvim"));
 	return TRUE;
     }
     return FALSE;
@@ -3299,7 +3299,7 @@ do_sub(eap)
 				/* don't accept alphanumeric for separator */
 	if (isalpha(*cmd))
 	{
-	    EMSG(_("Regular expressions can't be delimited by letters"));
+	    EMSG(_("(es6) Regular expressions can't be delimited by letters"));
 	    return;
 	}
 	/*
@@ -3826,6 +3826,10 @@ do_sub(eap)
 			    p1 = new_start - 1;
 			}
 		    }
+#ifdef FEAT_MBYTE
+		    else if (has_mbyte)
+			p1 += (*mb_ptr2len_check)(p1) - 1;
+#endif
 		}
 
 		/*
@@ -4042,7 +4046,7 @@ ex_global(eap)
 
     if (global_busy)
     {
-	EMSG(_("Cannot do :global recursive"));	/* will increment global_busy */
+	EMSG(_("(eg2) Cannot do :global recursive"));	/* will increment global_busy */
 	return;
     }
 
@@ -4077,7 +4081,7 @@ ex_global(eap)
     }
     else if (*cmd == NUL)
     {
-	EMSG(_("Regular expression missing from global"));
+	EMSG(_("(eg3) Regular expression missing from global"));
 	return;
     }
     else
@@ -4301,7 +4305,7 @@ ex_help(eap)
 	n = find_help_tags(arg, &num_matches, &matches);
 	if (num_matches == 0 || n == FAIL)
 	{
-	    EMSG2(_("Sorry, no help for %s"), arg);
+	    EMSG2(_("(he4) Sorry, no help for %s"), arg);
 	    return;
 	}
 
@@ -4774,7 +4778,7 @@ ex_helptags(eap)
 
     if (!mch_isdir(eap->arg))
     {
-	EMSG2(_("Not a directory: %s"), eap->arg);
+	EMSG2(_("(he5) Not a directory: %s"), eap->arg);
 	return;
     }
 
@@ -4788,7 +4792,7 @@ ex_helptags(eap)
 						    EW_FILE|EW_SILENT) == FAIL
 	    || filecount == 0)
     {
-	EMSG2("No match: %s", NameBuff);
+	EMSG2("(he6) No match: %s", NameBuff);
 	return;
     }
 
@@ -4802,7 +4806,7 @@ ex_helptags(eap)
     fd_tags = fopen((char *)NameBuff, "w");
     if (fd_tags == NULL)
     {
-	EMSG2(_("Cannot open %s for writing"), NameBuff);
+	EMSG2(_("(he7) Cannot open %s for writing"), NameBuff);
 	FreeWild(filecount, files);
 	return;
     }
@@ -4816,7 +4820,7 @@ ex_helptags(eap)
 	fd = fopen((char *)files[fi], "r");
 	if (fd == NULL)
 	{
-	    EMSG2(_("Unable to open %s for reading"), files[fi]);
+	    EMSG2(_("(he8) Unable to open %s for reading"), files[fi]);
 	    continue;
 	}
 	fname = gettail(files[fi]);
@@ -4895,7 +4899,7 @@ ex_helptags(eap)
 		{
 		    *p2 = NUL;
 		    sprintf((char *)NameBuff,
-			    _("Duplicate tag \"%s\" in file %s"),
+			    _("(et5) Duplicate tag \"%s\" in file %s"),
 			    ((char_u **)ga.ga_data)[i], p2 + 1);
 		    EMSG(NameBuff);
 		    *p2 = '\t';
@@ -4987,7 +4991,7 @@ ex_sign(eap)
     }
     else
     {
-	EMSG(_("Missing sign ID"));
+	EMSG(_("(es7) Missing sign ID"));
 	return;
     }
 
@@ -5020,7 +5024,7 @@ ex_sign(eap)
     /* Verify filename is a string */
     if (*filename == NUL)
     {
-	EMSG(_("Missing filename"));
+	EMSG(_("(es8) Missing filename"));
 	return;
     }
 
@@ -5052,10 +5056,10 @@ ex_sign(eap)
 	    }
 	}
 	else
-	    EMSG2(_("Invalid line number: %ld"), (long)lnum);
+	    EMSG2(_("(le1) Invalid line number: %ld"), (long)lnum);
     }
     else
-	EMSG2(_("Invalid buffer name: %s"), filename);
+	EMSG2(_("(le2) Invalid buffer name: %s"), filename);
 }
 
     void
@@ -5091,7 +5095,7 @@ ex_unsign(eap)
 		update_debug_sign(curwin->w_buffer, curwin->w_cursor.lnum);
 	    }
 	    else
-		EMSG(_("Missing sign ID"));
+		EMSG(_("(es9) Missing sign ID"));
 	    return;
 	}
 	arg = skipwhite(arg);
@@ -5112,7 +5116,7 @@ ex_unsign(eap)
 		    update_debug_sign(buf, lnum);
 	    }
 	    else
-		EMSG2(_("Cannot find buffer: %s"), filename);
+		EMSG2(_("(le3) Cannot find buffer: %s"), filename);
 	}
     }
 }

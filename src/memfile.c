@@ -237,7 +237,7 @@ mf_close(mfp, del_file)
     if (mfp->mf_fd >= 0)
     {
 	if (close(mfp->mf_fd) < 0)
-	    EMSG(_("Close error on swap file"));
+	    EMSG(_(e_swapclose));
     }
     if (del_file && mfp->mf_fname != NULL)
 	mch_remove(mfp->mf_fname);
@@ -287,7 +287,7 @@ mf_close_file(buf, getlines)
     }
 
     if (close(mfp->mf_fd) < 0)			/* close the file */
-	EMSG(_("Close error on swap file"));
+	EMSG(_(e_swapclose));
     mfp->mf_fd = -1;
 
     if (mfp->mf_fname != NULL)
@@ -470,7 +470,7 @@ mf_put(mfp, hp, dirty, infile)
     flags = hp->bh_flags;
 
     if ((flags & BH_LOCKED) == 0)
-	EMSG(_("block was not locked"));
+	EMSG(_("(el5) block was not locked"));
     flags &= ~BH_LOCKED;
     if (dirty)
     {
@@ -955,12 +955,12 @@ mf_read(mfp, hp)
     size = page_size * hp->bh_page_count;
     if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
     {
-	EMSG(_("Seek error in swap file read"));
+	EMSG(_("(el6) Seek error in swap file read"));
 	return FAIL;
     }
     if ((unsigned)read(mfp->mf_fd, (char *)hp->bh_data, (size_t)size) != size)
     {
-	EMSG(_("Read error in swap file"));
+	EMSG(_("(el7) Read error in swap file"));
 	return FAIL;
     }
     return OK;
@@ -1012,7 +1012,7 @@ mf_write(mfp, hp)
 	offset = (off_t)page_size * nr;
 	if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 	{
-	    EMSG(_("Seek error in swap file write"));
+	    EMSG(_("(el8) Seek error in swap file write"));
 	    return FAIL;
 	}
 	if (hp2 == NULL)	    /* freed block, fill with dummy data */
@@ -1030,7 +1030,7 @@ mf_write(mfp, hp)
 	     * space becomes available.
 	     */
 	    if (!did_swapwrite_msg)
-		EMSG(_("Write error in swap file"));
+		EMSG(_("(el9) Write error in swap file"));
 	    did_swapwrite_msg = TRUE;
 	    return FAIL;
 	}

@@ -1,10 +1,10 @@
-*eval.txt*      For Vim version 6.0ad.  Last change: 2001 Apr 29
+*eval.txt*      For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
-Expression evaluation				*expression* *expr* *ee3*
+Expression evaluation			*expression* *expr* *ee3* *eval*
 
 Note: Expression evaluation can be disabled at compile time.  If this has been
 done, the features in this document are not available.  See |+eval| and the
@@ -137,7 +137,7 @@ Example: >
 All expressions within one level are parsed from left to right.
 
 
-expr1							*expr1*
+expr1							*expr1* *ev1*
 -----
 
 expr2 ? expr1 : expr1
@@ -293,7 +293,7 @@ These three can be repeated and mixed.  Examples:
 
 expr8							*expr8*
 -----
-expr9[expr1]		index in String		*expr-[]*
+expr9[expr1]		index in String		*expr-[]* *ev3*
 
 This results in a String that contains the expr1'th single character from
 expr9.  expr9 is used as a String, expr1 as a Number.
@@ -314,7 +314,7 @@ number			number constant		*expr-number*
 Decimal, Hexadecimal (starting with 0x or 0X), or Octal (starting with 0).
 
 
-string							*expr-string*
+string							*expr-string* *ve6*
 ------
 "string"		string constant		*expr-quote*
 
@@ -341,7 +341,7 @@ A string constant accepts these special characters:
 Note that "\000" and "\x00" force the end of the string.
 
 
-literal-string						*literal-string*
+literal-string						*literal-string* *ve7*
 ---------------
 'string'		literal string constant		*expr-'*
 
@@ -352,7 +352,7 @@ meaning.  A literal-string cannot contain a single quote.  Use a normal string
 for that.
 
 
-option							*expr-option*
+option						*expr-option* *ve4* *ve5*
 ------
 &option			option value
 
@@ -370,7 +370,7 @@ register use @@.  The '=' register can not be used here.  See |registers| for
 an explanation of the available registers.
 
 
-nesting							*expr-nesting*
+nesting							*expr-nesting* *ev2*
 -------
 (expr1)			nested expression
 
@@ -400,14 +400,14 @@ variable		internal variable
 See below |internal-variables|.
 
 
-function call						*expr-function*
+function call			*expr-function* *fe1* *fe2* *fe3* *fe4* *fe6* 
 -------------
 function(expr1, ...)	function call
 See below |functions|.
 
 
 ==============================================================================
-3. Internal variable					*internal-variables*
+3. Internal variable				*internal-variables* *ve8*
 
 An internal variable name can be made up of letters, digits and '_'.  But it
 cannot start with a digit.  It's also possible to use curly braces, see
@@ -818,6 +818,10 @@ append({lnum}, {string}					*append()*
 							*argc()*
 argc()		The result is the number of files in the argument list of the
 		current window.  See |arglist|.
+
+							*argidx()*
+argidx()	The result is the current index in the argument list.  0 is
+		the first file.  argc() - 1 is the last one.  See |arglist|.
 
 							*argv()*
 argv({nr})	The result is the {nr}th file in the argument list of the
@@ -1566,7 +1570,7 @@ isdirectory({directory})				*isdirectory()*
 		exist, or isn't a directory, the result is FALSE.  {directory}
 		is any expression, which is used as a String.
 
-							*libcall()*
+						*libcall()* *eq5* *ge6*
 libcall({libname}, {funcname}, {argument})
 		Call function {funcname} in the run-time library {libname}
 		with single argument {argument}.
@@ -2363,11 +2367,11 @@ and autocommands defined in the script.  It is also possible to call the
 function from a mappings defined in the script, but then |<SID>| must be used
 instead of "s:" when the mapping is expanded outside of the script.
 
-							*:fu* *:function*
+					*:fu* *:function* *ev5* *ev6* *ve9*
 :fu[nction]		List all functions and their arguments.
 
 :fu[nction] {name}	List function {name}.
-
+							*ve0* *iv1*
 :fu[nction][!] {name}([arguments]) [range] [abort]
 			Define a new function by the name {name}.  The name
 			must be made of alphanumeric characters and '_', and
@@ -2391,6 +2395,7 @@ instead of "s:" when the mapping is expanded outside of the script.
 			The body of the function follows in the next lines,
 			until the matching |:endfunction|.  It is allowed to
 			define another function inside a function body.
+								*fe7* *fe8*
 			When a function by this name already exists and [!] is
 			not used an error message is given.  When [!] is used,
 			an existing function is silently replaced.
@@ -2405,13 +2410,13 @@ instead of "s:" when the mapping is expanded outside of the script.
 			The last used search pattern and the redo command "."
 			will not be changed by the function.
 
-							*:endf* *:endfunction*
+					*:endf* *:endfunction* *ev4* *ee8*
 :endf[unction]		The end of a function definition.
 
-							*:delf* *:delfunction*
+					*:delf* *:delfunction* *fd1* *fd2*
 :delf[unction] {name}	Delete function {name}.
 
-							*:retu* *:return*
+							*:retu* *:return* *ev9*
 :retu[rn] [expr]	Return from a function.  When "[expr]" is given, it is
 			evaluated and returned as the result of the function.
 			If "[expr]" is not given, the number 0 is returned.
@@ -2470,7 +2475,7 @@ with local variables in a calling function.  Example: >
 The names "lnum" and "col" could also be passed as argument to Bar(), to allow
 the caller to set the names.
 
-							*:cal* *:call*
+							*:cal* *:call* *ve2*
 :[range]cal[l] {name}([arguments])
 		Call a function.  The name of the function and its arguments
 		are as specified with |:function|.  Up to 20 arguments can be
@@ -2505,7 +2510,7 @@ the caller to set the names.
 		This function inserts the continuation character "\" in front
 		of all the lines in the range, except the first one.
 
-
+								*ev8*
 The recursiveness of user functions is restricted with the |'maxfuncdepth'|
 option.
 
@@ -2602,14 +2607,20 @@ This would call the function "my_func_whizz(parameter)"
 			Like above, but only set the global value of an option
 			(if there is one).  Works like |:setglobal|.
 
-							*:unlet* *:unl*
+							*ve1*
+:let {var-name}	..	List the value of variable {var-name}.  Several
+			variable names may be given.
+
+:let			Liset the values of all variables.
+
+							*:unlet* *:unl* *ve3*
 :unl[et][!] {var-name} ...
 			Remove the internal variable {var-name}.  Several
 			variable names can be given, they are all removed.
 			With [!] no error message is given for non-existing
 			variables.
 
-:if {expr1}						*:if* *:endif* *:en*
+:if {expr1}					*:if* *:endif* *:en* *ee7*
 :en[dif]		Execute the commands until the next matching ":else"
 			or ":endif" if {expr1} evaluates to non-zero.
 
@@ -2635,7 +2646,7 @@ This would call the function "my_func_whizz(parameter)"
 :elsei[f] {expr1}	Short for ":else" ":if", with the addition that there
 			is no extra ":endif".
 
-:wh[ile] {expr1}			*:while* *:endwhile* *:wh* *:endw*
+:wh[ile] {expr1}		*:while* *:endwhile* *:wh* *:endw* *ee6*
 :endw[hile]		Repeat the commands between ":while" and ":endwhile",
 			as long as {expr1} evaluates to non-zero.
 			When an error is detected from a command inside the

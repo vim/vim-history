@@ -496,11 +496,20 @@ transchar_hex(buf, c)
     char_u	*buf;
     int		c;
 {
+    int		i = 0;
+
     buf[0] = '<';
-    buf[1] = nr2hex((unsigned)c >> 4);
-    buf[2] = nr2hex(c);
-    buf[3] = '>';
-    buf[4] = NUL;
+#ifdef FEAT_MBYTE
+    if (c > 255)
+    {
+	buf[++i] = nr2hex((unsigned)c >> 12);
+	buf[++i] = nr2hex((unsigned)c >> 8);
+    }
+#endif
+    buf[++i] = nr2hex((unsigned)c >> 4);
+    buf[++i] = nr2hex(c);
+    buf[++i] = '>';
+    buf[++i] = NUL;
 }
 
 /*
@@ -757,12 +766,17 @@ vim_isfilec(c)
 
 /*
  * return TRUE if 'c' is a printable character
- * Assume characters above 0x100 are printable (multi-byte).
+ * Assume characters above 0x100 are printable (multi-byte), except for
+ * Unicode.
  */
     int
 vim_isprintc(c)
     int c;
 {
+#ifdef FEAT_MBYTE
+    if (enc_utf8 && c >= 0x100)
+	return utf_printable(c);
+#endif
     return (c >= 0x100 || (c > 0 && (chartab[c] & CT_PRINT_CHAR)));
 }
 
@@ -777,6 +791,8 @@ vim_isprintc_strict(c)
 #ifdef FEAT_MBYTE
     if (enc_dbcs != 0 && c < 0x100 && MB_BYTE2LEN(c) > 1)
 	return FALSE;
+    if (enc_utf8 && c >= 0x100)
+	return utf_printable(c);
 #endif
     return (c >= 0x100 || (c > 0 && (chartab[c] & CT_PRINT_CHAR)));
 }

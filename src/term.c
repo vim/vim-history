@@ -1478,16 +1478,14 @@ static void set_color_count __ARGS((int nr));
 set_color_count(nr)
     int		nr;
 {
-    static char	nr_colors[20];		/* string for number of colors */
+    char_u	nr_colors[20];		/* string for number of colors */
 
     t_colors = nr;
     if (t_colors > 1)
-    {
-	sprintf(nr_colors, "%d", t_colors);
-	T_CCO = (char_u *)nr_colors;
-    }
+	sprintf((char *)nr_colors, "%d", t_colors);
     else
-	T_CCO = empty_option;
+	*nr_colors = NUL;
+    set_string_option_direct((char_u *)"t_Co", -1, nr_colors, OPT_FREE);
 }
 #endif
 
@@ -2232,7 +2230,7 @@ add_termcap_entry(name, force)
 	    EMSG(error_msg);
 	else
 #endif
-	    EMSG2(_("No \"%s\" entry in termcap"), name);
+	    EMSG2(_("(ye1) No \"%s\" entry in termcap"), name);
     }
     return FAIL;
 }
@@ -2693,7 +2691,7 @@ ttest(pairs)
      * MUST have "cm": cursor motion.
      */
     if (*T_CM == NUL)
-	EMSG(_("terminal capability \"cm\" required"));
+	EMSG(_("(te9) terminal capability \"cm\" required"));
 
     /*
      * if "cs" defined, use a scroll region, it's faster.
@@ -2927,7 +2925,7 @@ shell_resized_check()
 }
 
 /*
- * Set size if the Vim shell.
+ * Set size of the Vim shell.
  * If 'mustset' is TRUE, we must set Rows and Columns, do not get real
  * window size (this is used for the :win command).
  * If 'mustset' is FALSE, we may try to get the real window size and if
@@ -4606,7 +4604,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	    if (STRNICMP(src, "<SID>", 5) == 0)
 	    {
 		if (current_SID <= 0)
-		    EMSG(_("Using <SID> not in a script context"));
+		    EMSG(_(e_usingsid));
 		else
 		{
 		    src += 5;

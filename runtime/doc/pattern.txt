@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
+*pattern.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -53,7 +53,7 @@ n			Repeat the latest "/" or "?" [count] times.
 N			Repeat the latest "/" or "?" [count] times in
 			opposite direction. |last-pattern| {Vi: no count}
 
-							*star*
+							*star* *eq1* *eq2*
 *			Search forward for the [count]'th occurrence of the
 			word nearest to the cursor.  The word used for the
 			search is the first of:
@@ -169,7 +169,7 @@ with another word: >
 	beep<Esc>	type another replacement
 			etc.
 <
-							*//;*
+							*//;* *se8*
 A very special offset is ';' followed by another search command.  For example: >
 
    /test 1/;/test
@@ -247,7 +247,7 @@ the "*" is under your right hand middle finger (search to the right and down).
 ==============================================================================
 2. The definition of a pattern		*search-pattern* *pattern* *[pattern]*
 					*regular-expression* *regexp* *Pattern*
-					*ep2* *ep4*
+						*ep2* *ep4* *ey8* *ey9* *ie1*
 						*/bar* */\bar* */pattern*
 1. A pattern is one or more branches, separated by "\|".  It matches anything
    that matches one of the branches.  Example: "foo\|beep" matches "foo" and

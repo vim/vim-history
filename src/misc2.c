@@ -106,63 +106,81 @@ coladvance2(addspaces, finetune, wcol)
     int		idx;
     char_u	*ptr;
     char_u	*line;
-    colnr_T	col;
-    int		csize;
+    colnr_T	col = 0;
+    int		csize = 0;
     int		one_more;
+#ifdef FEAT_VIRTUALEDIT
+    int		need_spaces = FALSE;
+#endif
 
     one_more = (State & INSERT) || restart_edit != NUL
 #ifdef FEAT_VISUAL
 					  || (VIsual_active && *p_sel != 'o')
 #endif
 					  ;
-
-#ifdef FEAT_VIRTUALEDIT
-    curwin->w_cursor.coladd = 0;
-
-    if ((addspaces || finetune)
-	    && curwin->w_p_wrap
-#ifdef FEAT_VERTSPLIT
-	    && curwin->w_width != 0
-#endif
-	    && wcol >= (colnr_T)W_WIDTH(curwin)
-	    && wcol < MAXCOL)
-    {
-	csize = linetabsize(ml_get_curline()) - 1;
-	if (wcol / W_WIDTH(curwin) > (colnr_T)csize / W_WIDTH(curwin))
-	{
-	    /* In case of line wrapping don't move the cursor beyond the
-	     * right screen edge. */
-	    wcol = (csize / W_WIDTH(curwin) + 1) * W_WIDTH(curwin) - 1;
-	}
-    }
-#endif
-
-    /* try to advance to the specified column by counting char widths. */
-    col = 0;
     line = ml_get_curline();
 
+    /* The difference between wcol and col will be used to set coladd
+     * and insert spaces.
+     */
     if (wcol >= MAXCOL)
     {
-	/*
-	 * Commands like <End> give us a very big value to indicate they want
-	 * to be as much on right side as possible.  Then stay in the column
-	 * when moving up/down.
-	 * Don't do this in Visual mode, each line must select until the EOL.
-	 */
-	idx = STRLEN(line) - 1 + one_more;
 #ifdef FEAT_VIRTUALEDIT
-	if ((addspaces || finetune) && !VIsual_active)
+	/* Move to the end of the line */
+	if(!virtual_active() || line[curwin->w_cursor.col] != NUL)
 	{
-	    curwin->w_curswant = linetabsize(line) + one_more;
-	    if (curwin->w_curswant > 0)
-		--curwin->w_curswant;
+#endif
+	    idx = STRLEN(line) - 1 + one_more;
+	    col = wcol;
+	    
+#ifdef FEAT_VIRTUALEDIT
+	    if ((addspaces || finetune) && !VIsual_active)
+	    {
+		curwin->w_curswant = linetabsize(line) + one_more;
+		if (curwin->w_curswant > 0)
+		    --curwin->w_curswant;
+	    }
+	}
+	/* Off the end of the line in virtual mode -- stay put. */
+	else 
+	{
+	    idx = curwin->w_cursor.col;
+	    /* HACK: Can't use one_more here, because then using '$'
+	     * in virtual space with visual mode will move the cursor
+	     * forward an extra (incorect) column.  (phew!)
+	     */
+	    wcol = curwin->w_cursor.coladd + 
+		((State & INSERT) || restart_edit != NUL);
+
+	    need_spaces = TRUE;
+	    curwin->w_curswant = wcol;
 	}
 #endif
     }
-    else
+    else 
     {
+#ifdef FEAT_VIRTUALEDIT
+	if ((addspaces || finetune)
+		&& curwin->w_p_wrap
+#ifdef FEAT_VERTSPLIT
+		&& curwin->w_width != 0
+#endif
+		&& wcol >= (colnr_T)W_WIDTH(curwin))
+	{
+	    csize = linetabsize(line);
+	    if (csize > 0)
+		csize--;
+
+	    if (wcol / W_WIDTH(curwin) > (colnr_T)csize / W_WIDTH(curwin))
+	    {
+		/* In case of line wrapping don't move the cursor beyond the
+		 * right screen edge. */
+		wcol = (csize / W_WIDTH(curwin) + 1) * W_WIDTH(curwin) - 1;
+	    }
+	}
+#endif
+
 	idx = -1;
-	csize = 0;
 	ptr = line;
 	while (col <= wcol && *ptr != NUL)
 	{
@@ -182,100 +200,107 @@ coladvance2(addspaces, finetune, wcol)
 		    !virtual_active() &&
 #endif
 		    one_more == 0))
+	{
 	    idx -= 1;
+	    col -= csize;
+	}
 
 #ifdef FEAT_VIRTUALEDIT
-	if (addspaces && (col != wcol + 1 || csize > 1))
-	{
-	    /*
-	     * If line is too short, or a character doesn't allow to be at the
-	     * wanted position, need to insert spaces.
-	     */
-	    if (col <= wcol)
-	    {
-		int	correct = wcol - col;
-		char_u	*newline = alloc(idx + 1 + correct + 1);
-		int	t;
-
-		/*
-		 * Line is too short: append spaces.
-		 */
-		if (newline == NULL)
-		    return FAIL;
-		for (t = 0; t < idx + 1; ++t)
-		    newline[t] = line[t];
-
-		for (t = 0; t < correct; ++t)
-		    newline[t + idx + 1] = ' ';
-
-		newline[idx + 1 + correct] = NUL;
-
-		ml_replace(curwin->w_cursor.lnum, newline, FALSE);
-		changed_bytes(curwin->w_cursor.lnum, (colnr_T)idx);
-		idx += correct;
-		col += correct;
-	    }
-	    else
-	    {
-		int	linelen = STRLEN(line);
-		int	correct = wcol - col + 1; /* negative!! */
-		char_u	*newline = alloc(linelen + csize);
-		int	t, s = 0;
-		int	v;
-
-		/*
-		 * break a tab
-		 */
-		if (newline == NULL || -correct > csize)
-		    return FAIL;
-
-		for (t = 0; t < linelen; t++)
-		{
-		    if (t != idx)
-			newline[s++] = line[t];
-		    else
-			for (v = 0; v < csize; v++)
-			    newline[s++] = ' ';
-		}
-
-		newline[linelen + csize - 1] = NUL;
-
-		ml_replace(curwin->w_cursor.lnum, newline, FALSE);
-		changed_bytes(curwin->w_cursor.lnum, idx);
-		idx += (csize - 1 + correct);
-		col += correct;
-	    }
-	}
+	if (col != wcol + 1 || csize > 1)
+	    need_spaces = TRUE;
 #endif
     }
+
+#ifdef FEAT_VIRTUALEDIT
+    if (addspaces && need_spaces) 
+    {
+	if (virtual_active() && line[idx] == NUL)
+	{
+	    /* Append spaces */
+	    int correct = wcol - col;
+	    char_u *newline = alloc(idx + correct + 1);
+	    int	t;
+
+	    if (newline == NULL)
+		return FAIL;
+
+	    for (t = 0; t < idx; ++t)
+		newline[t] = line[t];
+
+	    for (t = 0; t < correct; ++t)
+		newline[t + idx] = ' ';
+
+	    newline[idx + correct] = NUL;
+
+	    ml_replace(curwin->w_cursor.lnum, newline, FALSE);
+	    changed_bytes(curwin->w_cursor.lnum, (colnr_T)idx);
+	    idx += correct;
+	    col = wcol;
+	}
+	else
+	{
+	    /* Break a tab */
+	    int	linelen = STRLEN(line);
+	    int	correct = wcol - col - csize + 1; /* negative!! */
+	    char_u	*newline = alloc(linelen + csize);
+	    int	t, s = 0;
+	    int	v;
+
+	    /*
+	     * break a tab
+	     */
+	    if (newline == NULL || -correct > csize)
+		return FAIL;
+
+	    for (t = 0; t < linelen; t++)
+	    {
+		if (t != idx)
+		    newline[s++] = line[t];
+		else
+		    for (v = 0; v < csize; v++)
+			newline[s++] = ' ';
+	    }
+
+	    newline[linelen + csize - 1] = NUL;
+
+	    ml_replace(curwin->w_cursor.lnum, newline, FALSE);
+	    changed_bytes(curwin->w_cursor.lnum, idx);
+	    idx += (csize - 1 + correct);
+	    col += correct;
+	}
+    }
+
+#endif
 
     if (idx < 0)
 	curwin->w_cursor.col = 0;
     else
 	curwin->w_cursor.col = idx;
-#ifdef FEAT_MBYTE
-    /* prevent cursor from moving on the trail byte */
-    if (has_mbyte)
-	mb_adjust_cursor();
-#endif
 
 #ifdef FEAT_VIRTUALEDIT
-    if (finetune && wcol < MAXCOL)
+    curwin->w_cursor.coladd = 0;
+
+    if (finetune)
     {
-	int a = getviscol();
+	int a = col;	
 	int b = wcol - a;
 
-	/* modify the real cursor position to make the cursor appear at the
-	 * wanted column */
+	/* modify the real cursor position to make the cursor appear at 
+	 * the wanted column */
 	if (b > 0 && b < (MAXCOL - 2 * W_WIDTH(curwin)))
 	    curwin->w_cursor.coladd = b;
     }
 #endif
 
+#ifdef FEAT_MBYTE
+    /* prevent cursor from moving on the trail byte */
+    if (has_mbyte)
+	mb_adjust_cursor();
+#endif
     if (col <= wcol)
-	return FAIL;	    /* Couldn't reach column */
+	return FAIL;
     else
-	return OK;	    /* Reached column */
+	return OK;
 }
 
 /*
@@ -695,7 +720,7 @@ alloc_check(size)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSG(_("Line is becoming too long"));
+	EMSG(_("(el0) Line is becoming too long"));
 	return NULL;
     }
 #endif
@@ -740,7 +765,7 @@ lalloc(size, message)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSGN(_("Internal error: lalloc(%ld, )"), size);
+	EMSGN(_("(me9) Internal error: lalloc(%ld, )"), size);
 	return NULL;
     }
 
@@ -849,7 +874,7 @@ do_outofmem_msg(size)
 	/* Don't hide this message */
 	emsg_silent = 0;
 	msg_silent = 0;
-	EMSG2(_("Out of memory!  (allocating %lu bytes)"), size);
+	EMSG2(_("(me4) Out of memory!  (allocating %lu bytes)"), size);
 	did_outofmem_msg = TRUE;
     }
 }
@@ -3550,7 +3575,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 		wc_part = errpt;
 		if (*wc_part != PATHSEP && *wc_part != NUL)
 		{
-		    EMSG2(_("Invalid path: '**[number]' must be at the end of the path or be followed by '%s'. See :help path."), PATHSEPSTR);
+		    EMSG2(_("(pe2) Invalid path: '**[number]' must be at the end of the path or be followed by '%s'."), PATHSEPSTR);
 		    goto error_return;
 		}
 	    }
@@ -4777,17 +4802,20 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	if (first == TRUE)
 	{
 	    if (need_dir)
-		EMSG2(_("Can't find directory \"%s\" in cdpath"), file_to_find);
+		EMSG2(_("(pe3) Can't find directory \"%s\" in cdpath"),
+			file_to_find);
 	    else
-		EMSG2(_("Can't find file \"%s\" in path"), file_to_find);
+		EMSG2(_("(pe4) Can't find file \"%s\" in path"),
+			file_to_find);
 	}
 	else
 	{
 	    if (need_dir)
-		EMSG2(_("No more directory \"%s\" found in cdpath"),
+		EMSG2(_("(pe5) No more directory \"%s\" found in cdpath"),
 			file_to_find);
 	    else
-		EMSG2(_("No more file \"%s\" found in path"), file_to_find);
+		EMSG2(_("(pe6) No more file \"%s\" found in path"),
+			file_to_find);
 	}
     }
 

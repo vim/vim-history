@@ -945,7 +945,7 @@ gui_mch_init_font(char_u *font_name, int fontset)
 	    zap_redraw = TRUE;
 	else
 	{
-	    EMSG2(_("Can't load Zap font '%s'"), font_name);
+	    EMSG2(_("(fe0) Can't load Zap font '%s'"), font_name);
 	    font_name = "System";   /* Error - use system font */
 	    zap_redraw = FALSE;
 	}
@@ -1041,7 +1041,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
     if (!handle)
     {
 	if (giveErrorIfMissing)
-	    EMSG2(_("Can't use font %s"), name);
+	    EMSG2(_("(fe0) Can't use font %s"), name);
 	return NOFONT;
     }
 
@@ -1161,7 +1161,7 @@ gui_mch_get_color(char_u *name)
 	int level = (255 * atoi(name + 4)) / 100;
 	return (guicolor_T) grgb(level, level, level);
     }
-    EMSG2(_("Missing colour : %s"), name);
+    EMSG2(_("(ce2) Missing colour : %s"), name);
     return (guicolor_T) -1;
 }
 

@@ -63,6 +63,10 @@ static char_u *menutrans_lookup __ARGS((char_u *name, int len));
 /* The character for each menu mode */
 static char_u	menu_mode_chars[] = {'n', 'v', 'o', 'i', 'c', 't'};
 
+static char_u e_notsubmenu[] = N_("(eu5) Part of menu-item path is not sub-menu");
+static char_u e_othermode[] = N_("(eu0) Menu only exists in another mode");
+static char_u e_nomenu[] = N_("(en9) No menu of that name");
+
 /*
  * Do the :menu command and relatives.
  */
@@ -218,7 +222,7 @@ ex_menu(eap)
     }
     else if (*map_to != NUL && (unmenu || enable != MAYBE))
     {
-	EMSG(_("Trailing characters"));
+	EMSG(_(e_trailing));
 	goto theend;
     }
 #if defined(FEAT_GUI) && !(defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON))
@@ -403,7 +407,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		if (*next_name == NUL && menu->children != NULL)
 		{
 		    if (!sys_menu)
-			EMSG(_("Menu path must not lead to a sub-menu"));
+			EMSG(_("(eu4) Menu path must not lead to a sub-menu"));
 		    goto erret;
 		}
 		if (*next_name != NUL && menu->children == NULL
@@ -413,7 +417,7 @@ add_menu_path(menu_path, modes, pri_tab,
 			)
 		{
 		    if (!sys_menu)
-			EMSG(_("Part of menu-item path is not sub-menu"));
+			EMSG(_(e_notsubmenu));
 		    goto erret;
 		}
 		break;
@@ -442,13 +446,13 @@ add_menu_path(menu_path, modes, pri_tab,
 	{
 	    if (*next_name == NUL && parent == NULL)
 	    {
-		EMSG(_("Must not add menu items directly to menu bar"));
+		EMSG(_("(eu6) Must not add menu items directly to menu bar"));
 		goto erret;
 	    }
 
 	    if (menu_is_separator(dname) && *next_name != NUL)
 	    {
-		EMSG(_("Separator cannot be part of a menu path"));
+		EMSG(_("(eu7) Separator cannot be part of a menu path"));
 		goto erret;
 	    }
 
@@ -469,6 +473,9 @@ add_menu_path(menu_path, modes, pri_tab,
 #endif
 #ifdef FEAT_BEVAL
 	    menu->tip = NULL;
+#endif
+#ifdef FEAT_GUI_ATHENA
+	    menu->image = None;		    /* X-Windows definition for NULL*/
 #endif
 
 	    /*
@@ -519,11 +526,17 @@ add_menu_path(menu_path, modes, pri_tab,
 		    STRCPY(tearpath, menu_path);
 		    idx = next_name - path_name - 1;
 		    for (s = tearpath; *s && s < tearpath + idx; ++s)
+		    {
 			if ((*s == '\\' || *s == Ctrl_V) && s[1])
 			{
 			    ++idx;
 			    ++s;
 			}
+#ifdef FEAT_MBYTE
+			if (has_mbyte)
+			    s += (*mb_ptr2len_check)(s) - 1;
+#endif
+		    }
 		    tearpath[idx] = NUL;
 		    gui_add_tearoff(tearpath, pri_tab, pri_idx);
 		    vim_free(tearpath);
@@ -620,7 +633,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		menu->noremap[i] = noremap;
 	    }
 	}
-#ifdef FEAT_GUI_X11
+#if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
 	/* Need to update the menu tip. */
 	if (modes & MENU_TIP_MODE)
 	    gui_mch_menu_set_tip(menu);
@@ -662,7 +675,7 @@ menu_nable_recurse(menu, name, modes, enable)
 	    {
 		if (menu->children == NULL)
 		{
-		    EMSG(_("Part of menu-item path is not sub-menu"));
+		    EMSG(_(e_notsubmenu));
 		    return FAIL;
 		}
 		if (menu_nable_recurse(menu->children, p, modes, enable)
@@ -687,7 +700,7 @@ menu_nable_recurse(menu, name, modes, enable)
     }
     if (*name != NUL && *name != '*' && menu == NULL)
     {
-	EMSG(_("No menu of that name"));
+	EMSG(_(e_nomenu));
 	return FAIL;
     }
 
@@ -728,7 +741,7 @@ remove_menu(menup, name, modes, silent)
 	    if (*p != NUL && menu->children == NULL)
 	    {
 		if (!silent)
-		    EMSG(_("Part of menu-item path is not sub-menu"));
+		    EMSG(_(e_notsubmenu));
 		return FAIL;
 	    }
 	    if ((menu->modes & modes) != 0x0)
@@ -750,7 +763,7 @@ remove_menu(menup, name, modes, silent)
 	    else if (*name != NUL)
 	    {
 		if (!silent)
-		    EMSG(_("Menu only exists in another mode"));
+		    EMSG(_(e_othermode));
 		return FAIL;
 	    }
 
@@ -761,14 +774,6 @@ remove_menu(menup, name, modes, silent)
 	     */
 	    if (*name != NUL)
 		break;
-
-#ifdef FEAT_GUI_ATHENA
-	    if (((menu->modes & ~modes) & MENU_ALL_MODES) == 0)
-	    {
-		EMSG(_("Sorry, deleting a menu is not possible in the Athena version"));
-		return FAIL;
-	    }
-#endif
 
 	    /* Remove the menu item for the given mode[s].  If the menu item
 	     * is no longer valid in ANY mode, delete it */
@@ -788,7 +793,7 @@ remove_menu(menup, name, modes, silent)
 	if (menu == NULL)
 	{
 	    if (!silent)
-		EMSG(_("No menu of that name"));
+		EMSG(_(e_nomenu));
 	    return FAIL;
 	}
 
@@ -903,13 +908,13 @@ show_menus(path_name, modes)
 		/* Found menu */
 		if (*p != NUL && menu->children == NULL)
 		{
-		    EMSG(_("Part of menu-item path is not sub-menu"));
+		    EMSG(_(e_notsubmenu));
 		    vim_free(path_name);
 		    return FAIL;
 		}
 		else if ((menu->modes & modes) == 0x0)
 		{
-		    EMSG(_("Menu only exists in another mode"));
+		    EMSG(_(e_othermode));
 		    vim_free(path_name);
 		    return FAIL;
 		}
@@ -919,7 +924,7 @@ show_menus(path_name, modes)
 	}
 	if (menu == NULL)
 	{
-	    EMSG(_("No menu of that name"));
+	    EMSG(_(e_nomenu));
 	    vim_free(path_name);
 	    return FAIL;
 	}
@@ -1896,12 +1901,12 @@ ex_emenu(eap)
 	    {
 		if (*p == NUL && menu->children != NULL)
 		{
-		    EMSG(_("Menu path must lead to a menu item"));
+		    EMSG(_("(eu9) Menu path must lead to a menu item"));
 		    menu = NULL;
 		}
 		else if (*p != NUL && menu->children == NULL)
 		{
-		    EMSG(_("Part of menu-item path is not sub-menu"));
+		    EMSG(_(e_notsubmenu));
 		    menu = NULL;
 		}
 		break;
@@ -1916,7 +1921,7 @@ ex_emenu(eap)
     vim_free(saved_name);
     if (menu == NULL)
     {
-	EMSG2(_("Menu not found: %s"), eap->arg);
+	EMSG2(_("(me2) Menu not found: %s"), eap->arg);
 	return;
     }
 
@@ -1985,7 +1990,7 @@ ex_emenu(eap)
     if (idx != MENU_INDEX_INVALID && menu->strings[idx] != NULL)
 	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0, TRUE);
     else
-	EMSG2(_("Menu not defined for %s mode"),mode);
+	EMSG2(_("(me3) Menu not defined for %s mode"), mode);
 }
 
 #if defined(FEAT_GUI_MSWIN) || defined(PROTO)
@@ -2021,9 +2026,9 @@ gui_find_menu(path_name)
 		{
 		    /* found a menu item instead of a sub-menu */
 		    if (*p == NUL)
-			EMSG(_("Menu path must lead to a sub-menu"));
+			EMSG(_("(eu8) Menu path must lead to a sub-menu"));
 		    else
-			EMSG(_("Part of menu-item path is not sub-menu"));
+			EMSG(_(e_notsubmenu));
 		    menu = NULL;
 		    goto theend;
 		}
@@ -2042,7 +2047,7 @@ gui_find_menu(path_name)
     }
 
     if (menu == NULL)
-	EMSG(_("Menu not found - check menu names"));
+	EMSG(_("(en0) Menu not found - check menu names"));
 theend:
     vim_free(saved_name);
     return menu;
@@ -2093,6 +2098,10 @@ ex_menutranslate(eap)
 	    vim_free(tp[i].to);
 	}
 	ga_clear(&menutrans_ga);
+# ifdef FEAT_EVAL
+	/* Delete all "menutrans_" global variables. */
+	del_menutrans_vars();
+# endif
     }
     else
     {

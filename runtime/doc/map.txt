@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ad.  Last change: 2001 Apr 23
+*map.txt*       For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -113,7 +113,7 @@ characters.  You can use this to put command sequences under function keys,
 translate one key into another, etc.  See |:mkexrc| for how to save and
 restore the current mappings.
 
-						*:map-local* *:map-<buffer>*
+				*:map-local* *:map-<buffer>* *ge1* *ge2*
 If the first argument to one of these commands is "<buffer>" it will apply to
 mappings locally to the current buffer only.  Example: >
 	:map <buffer>  ,w  /[.,;]<CR>
@@ -131,7 +131,7 @@ Note: ":map <script>" and ":noremap <script>" do the same thing.  The
 "<script>" overrules the command name.  Using ":noremap <script>" is
 preferred, because it's clearer that remapping is (mostly) disabled.
 
-							*:map-<unique>*
+						*:map-<unique>* *ge3* *ge4*
 If the first argument to one of these commands is "<unique>" and it is used to
 define a new mapping or abbreviation, the command will fail if the mapping or
 abbreviation already exists.  Example: >
@@ -712,7 +712,7 @@ When using several Vim script files, there is the danger that mappings and
 functions used in one script use the same name as in other scripts.  To avoid
 this, they can be made local to the script.
 
-								*<SID>* *<SNR>*
+						*<SID>* *<SNR>* *ev7*
 The string "<SID>" can be used in a mapping.  This requires that the '<' flag
 is not present in 'cpoptions'.
 When executing the map command, Vim will replace "<SID>" with the special key
@@ -757,6 +757,7 @@ just like a built-in command (it can have a range or arguments, arguments can
 be completed as filenames or buffer names, etc), except that when the command
 is executed, it is transformed into a normal ex command and then executed.
 
+							*ei3*
 All user defined commands must start with an uppercase letter, to avoid
 confusion with builtin commands. (There are a few builtin commands, notably
 :Next, :Print and :X, which do start with an uppercase letter.  The builtin
@@ -793,6 +794,7 @@ scripts.
 
 :com[mand] {cmd}	List the user-defined commands that start with {cmd}
 
+							*ec7* *ei2*
 :com[mand][!] [{attr}...] {cmd} {rep}
 			Define a user command.  The name of the command is
 			{cmd} and its replacement text is {rep}. The command's
@@ -800,7 +802,7 @@ scripts.
 			already exists, an error is reported, unless a ! is
 			specified, in which case the command is redefined.
 
-:delc[ommand] {cmd}					*:delc* *:delcommand*
+:delc[ommand] {cmd}				*:delc* *:delcommand* *de6*
 			Delete the user-defined command {cmd}.
 
 :comc[lear]						*:comc* *:comclear*
@@ -817,7 +819,7 @@ There are a number of attributes, split into four categories: argument
 handling, completion behavior, range handling, and special cases. The
 attributes are described below, by category.
 
-Argument handling
+Argument handling					*ec8* *ec9*
 
 By default, a user defined command will take no arguments (and an error is
 reported if any are supplied). However, it is possible to specify that the
@@ -832,7 +834,7 @@ command can take arguments, using the -nargs attribute. Valid cases are:
 Arguments are considered to be separated by (unescaped) spaces or Tabs in this
 context.
 
-Completion behavior
+Completion behavior					*ea6* *ea7* *ea8*
 
 By default, the arguments of user defined commands do not undergo completion.
 However, by specifying one or the other of the following attributes, argument
@@ -856,7 +858,7 @@ completion can be enabled:
 	-complete=tag_listfiles	tags, file names are shown when CTRL-D is hit
 	-complete=var		user variables
 
-Range handling
+Range handling						*ec0* *ed7*
 
 By default, user-defined commands do not accept a line number range. However,
 it is possible to specify that the command does take a range (the -range
@@ -980,8 +982,8 @@ This will invoke: >
 	:call Allargs("%s/foo/bar/ge|update")
 <
 When defining an user command in a script, it will be able to call functions
-local to the script and use mappings local the the script.  When user invokes
-the user command, it will run in the context of the script it was defined in.
-This matters if |<SID>| is used in a command.
+local to the script and use mappings local the the script.  When the user
+invokes the user command, it will run in the context of the script it was
+defined in.  This matters if |<SID>| is used in a command.
 
  vim:tw=78:

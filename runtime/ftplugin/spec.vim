@@ -1,7 +1,7 @@
 " Plugin to update the %changelog section of RPM spec files
 " Filename: spec.vim
 " Maintainer: Gustavo Niemeyer <niemeyer@conectiva.com>
-" Last Change: Thu, 26 Apr 2001 17:35:42 -0300
+" Last Change: Thu, 03 May 2001 14:52:48 -0300
 
 if exists("b:did_ftplugin")
 	finish
@@ -14,9 +14,9 @@ if !exists("no_plugin_maps") && !exists("no_spec_maps")
 	endif
 endif
 
-noremap <unique> <script> <Plug>SpecChangelog :call <SID>SpecChangelog("")<CR>
+noremap <buffer> <unique> <script> <Plug>SpecChangelog :call <SID>SpecChangelog("")<CR>
 
-if !exists("*s:SpecChangeLog")
+if !exists("*s:SpecChangelog")
 	function s:SpecChangelog(format)
 		if strlen(a:format) == 0
 			if !exists("g:spec_chglog_format")

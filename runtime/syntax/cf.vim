@@ -1,14 +1,17 @@
 " Vim syntax file
 "    Language: Cold Fusion
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
-" Last Change: November 8, 2000
-"       Usage: Since Cold Fusion has its own version of html
-"              comments, make sure that you put
+"         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
+" Last Change: April 30, 2001
+"       Usage: Since Cold Fusion has its own version of html comments,
+"              make sure that you put
 "              'let html_wrong_comments=1' in your _vimrc file.
-"     Version: 6.0-1
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x, clear all syntax items.
+" For version 6.x, quit when a syntax file was already loaded.
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -122,11 +125,24 @@ syn cluster htmlArgCluster add=cfArg,cfFunctionName
 
 syn region cfFunctionRegion start='#' end='#' contains=cfFunctionName
 
-" The default highlighting.
-hi def link cfTagName Statement 
-hi def link cfArg Type
-hi def link cfFunctionName Function
+" Define the default highlighting.
+" For version 5.x and earlier, only when not done already.
+" For version 5.8 and later, only when and item doesn't have highlighting yet.
+if version >= 508 || !exists("did_cf_syn_inits")
+  if version < 508
+    let did_cf_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink cfTagName Statement 
+  HiLink cfArg Type
+  HiLink cfFunctionName Function
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "cf"
 
-" vim: ts=8
+" vim: ts=8 sw=2

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	WEB
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
-" Last Change:	April 29, 2001
+" Last Change:	April 30, 2001
 
 " Details of the WEB language can be found in the article by Donald E. Knuth,
 " "The WEB System of Structured Documentation", included as "webman.tex" in
@@ -24,8 +24,8 @@ if version < 600
   source <sfile>:p:h/cweb.vim
 else
   runtime! syntax/cweb.vim
+  unlet b:current_syntax
 endif
-unlet b:current_syntax
 
 " Replace C/C++ syntax by Pascal syntax.
 syntax include @webIncludedC <sfile>:p:h/pascal.vim

@@ -1125,6 +1125,9 @@ struct window
 #ifdef FEAT_DIFF
     int		w_topfill;	    /* number of filler lines above w_topline */
     int		w_old_topfill;	    /* w_topfill at last redraw */
+    int		w_botfill;	    /* TRUE when filler lines are actually
+				       below w_topline (at end of file) */
+    int		w_old_botfill;	    /* w_botfill at last redraw */
 #endif
     colnr_T	w_leftcol;	    /* window column number of the left most
 				       character in the window; used when
@@ -1502,6 +1505,12 @@ struct VimMenu
 #endif
 #ifdef FEAT_GUI_MOTIF
     int		sensitive;	    /* turn button on/off */
+#endif
+#if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)
+    Pixmap	image;		    /* Toolbar image */
+#endif
+#ifdef FEAT_GUI_MOTIF
+    Pixmap	image_ins;	    /* Toolbar image insensitive */
 #endif
 #if defined(FEAT_BEVAL) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
     BalloonEval *tip;		    /* tooltip for this menu item */

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	MetaPost
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
-" Last Change:	April 25, 2001
+" Last Change:	April 30, 2001
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -19,7 +19,6 @@ if version < 600
   source <sfile>:p:h/mf.vim
 else
   runtime! syntax/mf.vim
-  unlet b:current_syntax
 endif
 
 " MetaPost has TeX inserts for typeset labels

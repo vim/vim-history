@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran95 (and Fortran90, Fortran77, F and elf90)
-" Version:	6.0b
-" Last Change:	2001 Mar 23
+" Version:	0.80
+" Last Change:	2001 Apr 30
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " For instructions on use, do :help fortran from vim
@@ -11,8 +11,11 @@
 "   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile,
 "   Walter Dieudonné and Alexander Wagner.
 
-" Quit if a syntax file is already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit if a syntax file is already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -31,21 +34,22 @@ endif
 " fortran_dialect not set or set incorrectly by user,
 if b:fortran_dialect == "unknown"
   " set b:fortran_dialect from directive in first three lines of file
-  let s:fortran_retype = getline(1)." ".getline(2)." ".getline(3)
-  if s:fortran_retype =~ '\<fortran_dialect\s*=\s*F\>'
+  let b:fortran_retype = getline(1)." ".getline(2)." ".getline(3)
+  if b:fortran_retype =~ '\<fortran_dialect\s*=\s*F\>'
     let b:fortran_dialect = "F"
-  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*elf\>'
+  elseif b:fortran_retype =~ '\<fortran_dialect\s*=\s*elf\>'
     let b:fortran_dialect = "elf"
-  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f90\>'
+  elseif b:fortran_retype =~ '\<fortran_dialect\s*=\s*f90\>'
     let b:fortran_dialect = "f90"
-  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f95\>'
+  elseif b:fortran_retype =~ '\<fortran_dialect\s*=\s*f95\>'
     let b:fortran_dialect = "f95"
-  elseif s:fortran_retype =~ '\<fortran_dialect\s*=\s*f77\>'
+  elseif b:fortran_retype =~ '\<fortran_dialect\s*=\s*f77\>'
     let b:fortran_dialect = "f77"
   else
     " no directive found, so assume f95
     let b:fortran_dialect = "f95"
   endif
+  unlet b:fortran_retype
 endif
 
 " Choose between fixed and free source form if this hasn't been done yet
@@ -62,24 +66,25 @@ if !exists("b:fortran_fixed_source")
   else
     " f90 and f95 allow both fixed and free source form.
     " Assume fixed source form unless signs of free source form
-    " are detected in the first five columns of the first s:lmax lines.
+    " are detected in the first five columns of the first b:lmax lines.
     " Detection becomes more accurate and time-consuming if more lines
     " are checked. Increase the limit below if you keep lots of comments at
     " the very top of each file and you have a fast computer.
-    let s:lmax = 25
-    if ( s:lmax > line("$") )
-      let s:lmax = line("$")
+    let b:lmax = 25
+    if ( b:lmax > line("$") )
+      let b:lmax = line("$")
     endif
     let b:fortran_fixed_source = 1
-    let s:ln=1
-    while s:ln <= s:lmax
-      let s:test = strpart(getline(s:ln),0,5)
-      if s:test[0] !~ '[Cc*!#]' && s:test !~ "^ \+!" && s:test =~ '[^ 0-9\t]'
+    let b:ln=1
+    while b:ln <= b:lmax
+      let b:test = strpart(getline(b:ln),0,5)
+      if b:test[0] !~ '[Cc*!#]' && b:test !~ "^ \+!" && b:test =~ '[^ 0-9\t]'
 	let b:fortran_fixed_source = 0
 	break
       endif
-      let s:ln = s:ln + 1
+      let b:ln = b:ln + 1
     endwhile
+    unlet b:lmax b:ln b:test
   endif
 endif
 
@@ -94,7 +99,7 @@ else
   else
     syn match fortranConstructName	"^\s*\a\w*\s*:"
   endif
-  if exists("fortran_more_precise")
+  if version >= 600 && exists("fortran_more_precise")
     syn match fortranConstructName "\(\<end\s*do\s\+\)\@<=\a\w*\>"
     syn match fortranConstructName "\(\<end\s*if\s\+\)\@<=\a\w*\>"
     syn match fortranConstructName "\(\<end\s*select\s\+\)\@<=\a\w*\>"
@@ -163,6 +168,7 @@ syn keyword fortranExtraIntrinsic	qtanh qmax1 qmin1
 syn keyword fortranExtraIntrinsic	dimag qimag dcmplx qcmplx dconjg qconjg
 syn keyword fortranExtraIntrinsic	gamma dgamma qgamma algama dlgama qlgama
 syn keyword fortranExtraIntrinsic	erf derf qerf erfc derfc qerfc
+syn keyword fortranExtraIntrinsic	dfloat
 
 syn keyword fortran77Intrinsic	abs acos aimag aint anint asin atan atan2
 syn keyword fortran77Intrinsic	cos sin tan sinh cosh tanh exp log log10
@@ -194,7 +200,7 @@ syn match fortranFormatSpec	display	"\d*f\d\+\.\d\+"
 syn match fortranFormatSpec	display	"\d*e[sn]\=\d\+\.\d\+\(e\d+\>\)\="
 syn match fortranFormatSpec	display	"\d*\(d\|q\|g\)\d\+\.\d\+\(e\d+\)\="
 syn match fortranFormatSpec	display	"\d\+x\>"
-" The next match would pick up identifiers as well
+" The next match cannot be used because it would pick up identifiers as well
 " syn match fortranFormatSpec	display	"\<\(a\|i\)\d\+"
 
 " Numbers as labels
@@ -204,7 +210,7 @@ syn match fortranLabelNumber	display	"^  \d\{1,3}\>"ms=s+2
 syn match fortranLabelNumber	display	"^   \d\d\=\>"ms=s+3
 syn match fortranLabelNumber	display	"^    \d\>"ms=s+4
 
-if exists("fortran_more_precise")
+if version >= 600 && exists("fortran_more_precise")
   " Numbers as targets
   syn match fortranTarget	display	"\(\<if\s*(.\+)\s*\)\@<=\(\d\+\s*,\s*\)\{2}\d\+\>"
   syn match fortranTarget	display	"\(\<do\s\+\)\@<=\d\+\>"
@@ -341,126 +347,137 @@ else
   syn sync minlines=20
 endif
 
-if exists("fortran_fold")
+if version >= 600 && exists("fortran_fold")
   syn sync fromstart
   syn region fortranProgram transparent fold keepend start="^\s*program\s\+\z(\a\w*\)" excludenl end="\<end\s*\(program\(\s\+\z1\>\)\=\|$\)" contains=ALLBUT,fortranModule
   syn region fortranModule transparent fold keepend start="^\s*module\s\+\z(\a\w*\)" excludenl end="\<end\s*\(module\(\s\+\z1\>\)\=\|$\)" contains=ALLBUT,fortranProgram
-
   syn region fortranFunction transparent fold keepend extend start="^\s*function\s\+\z(\a\w*\)" excludenl end="\<end\s*\($\|function\(\s\+\z1\>\)\=\)" contains=ALLBUT,fortranProgram,fortranModule
   syn region fortranSubroutine transparent fold keepend extend start="^\s*subroutine\s\+\z(\a\w*\)" excludenl end="\<end\s*\($\|subroutine\(\s\+\z1\>\)\=\)" contains=ALLBUT,fortranProgram,fortranModule
   syn region fortranBlockData transparent fold keepend start="\<block\s*data\s\+\z(\a\w*\)" excludenl end="\<end\s*\($\|block\s*data\(\s\+\z1\>\)\=\)" contains=ALLBUT,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortran77Loop,fortranCase,fortran90Loop
 
-  syn region fortran77Loop transparent fold keepend start="\<do\s\+\z(\d\+\)" end="^\s*\z1\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
-  syn region fortran90Loop transparent fold keepend extend start="\(\<end\s\+\)\@<!\<do\(\s\+\a\|\s*$\)" excludenl end="\<end\s*do\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
-
   if exists("fortran_fold_conditionals")
+    syn region fortran77Loop transparent fold keepend start="\<do\s\+\z(\d\+\)" end="^\s*\z1\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
+    syn region fortran90Loop transparent fold keepend extend start="\(\<end\s\+\)\@<!\<do\(\s\+\a\|\s*$\)" excludenl end="\<end\s*do\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
     syn region fortranIfBlock transparent fold keepend extend start="\(\<e\(nd\|lse\)\s\+\)\@<!\<if\s*(.\+)\s*then\>" end="\<end\s*if\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
     syn region fortranCase transparent fold keepend extend start="\<select\s*case\>" end="\<end\s*select\>" contains=ALLBUT,fortranUnitHeader,fortranStructure,fortranStorageClass,fortranType,fortranProgram,fortranModule,fortranSubroutine,fortranFunction,fortranBlockData
   endif
 endif
 
-" The default highlighting differs for each dialect.
-" Transparent groups:
-" fortranParen, fortranLeftMargin
-" fortranProgram, fortranModule, fortranSubroutine, fortranFunction,
-" fortranBlockData
-" fortran77Loop, fortran90Loop, fortranIfBlock, fortranCase
-hi def link fortranStatement		Statement
-hi def link fortranConstructName	Special
-hi def link fortranConditional		Conditional
-hi def link fortranRepeat		Repeat
-hi def link fortranTodo			Todo
-hi def link fortranContinueMark		Todo
-hi def link fortranString		String
-hi def link fortranNumber		Number
-hi def link fortranOperator		Operator
-hi def link fortranBoolean		Boolean
-hi def link fortranLabelError		Error
-hi def link fortranObsolete		Todo
-hi def link fortranType			Type
-hi def link fortranStructure		Type
-hi def link fortranStorageClass		StorageClass
-hi def link fortranCall			fortranUnitHeader
-hi def link fortranUnitHeader		fortranPreCondit
-hi def link fortranReadWrite		fortran90Intrinsic
-hi def link fortranIO			fortran90Intrinsic
-hi def link fortran95Intrinsic		fortran90Intrinsic
-hi def link fortran77Intrinsic		fortran90Intrinsic
-hi def link fortran90Intrinsic		Special
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_fortran_syn_inits")
+  if version < 508
+    let did_fortran_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-if ( b:fortran_dialect == "elf" || b:fortran_dialect == "F" )
-  hi def link fortranStatementOb	fortranObsolete
-  hi def link fortran66Intrinsic	fortranObsolete
-  hi def link fortran77IntrinsicR	fortranObsolete
-  hi def link fortranUnitHeaderR	fortranObsolete
-  hi def link fortranTypeR		fortranObsolete
-  hi def link fortranStorageClassR	fortranObsolete
-  hi def link fortran90StorageClassR	fortranObsolete
-  hi def link fortran77OperatorR	fortranObsolete
-  hi def link fortranInclude		fortranObsolete
-else
-  hi def link fortranStatementOb	Statement
-  hi def link fortran66Intrinsic	fortran90Intrinsic
-  hi def link fortran77IntrinsicR	fortran90Intrinsic
-  hi def link fortranUnitHeaderR	fortranPreCondit
-  hi def link fortranTypeR		fortranType
-  hi def link fortranStorageClassR	fortranStorageClass
-  hi def link fortran77OperatorR	fortranOperator
-  hi def link fortranInclude		Include
-  hi def link fortran90StorageClassR	fortranStorageClass
+  " The default highlighting differs for each dialect.
+  " Transparent groups:
+  " fortranParen, fortranLeftMargin
+  " fortranProgram, fortranModule, fortranSubroutine, fortranFunction,
+  " fortranBlockData
+  " fortran77Loop, fortran90Loop, fortranIfBlock, fortranCase
+  HiLink fortranStatement		Statement
+  HiLink fortranConstructName	Special
+  HiLink fortranConditional		Conditional
+  HiLink fortranRepeat		Repeat
+  HiLink fortranTodo			Todo
+  HiLink fortranContinueMark		Todo
+  HiLink fortranString		String
+  HiLink fortranNumber		Number
+  HiLink fortranOperator		Operator
+  HiLink fortranBoolean		Boolean
+  HiLink fortranLabelError		Error
+  HiLink fortranObsolete		Todo
+  HiLink fortranType			Type
+  HiLink fortranStructure		Type
+  HiLink fortranStorageClass		StorageClass
+  HiLink fortranCall			fortranUnitHeader
+  HiLink fortranUnitHeader		fortranPreCondit
+  HiLink fortranReadWrite		fortran90Intrinsic
+  HiLink fortranIO			fortran90Intrinsic
+  HiLink fortran95Intrinsic		fortran90Intrinsic
+  HiLink fortran77Intrinsic		fortran90Intrinsic
+  HiLink fortran90Intrinsic		Special
+
+  if ( b:fortran_dialect == "elf" || b:fortran_dialect == "F" )
+    HiLink fortranStatementOb	fortranObsolete
+    HiLink fortran66Intrinsic	fortranObsolete
+    HiLink fortran77IntrinsicR	fortranObsolete
+    HiLink fortranUnitHeaderR	fortranObsolete
+    HiLink fortranTypeR		fortranObsolete
+    HiLink fortranStorageClassR	fortranObsolete
+    HiLink fortran90StorageClassR	fortranObsolete
+    HiLink fortran77OperatorR	fortranObsolete
+    HiLink fortranInclude		fortranObsolete
+  else
+    HiLink fortranStatementOb	Statement
+    HiLink fortran66Intrinsic	fortran90Intrinsic
+    HiLink fortran77IntrinsicR	fortran90Intrinsic
+    HiLink fortranUnitHeaderR	fortranPreCondit
+    HiLink fortranTypeR		fortranType
+    HiLink fortranStorageClassR	fortranStorageClass
+    HiLink fortran77OperatorR	fortranOperator
+    HiLink fortranInclude		Include
+    HiLink fortran90StorageClassR	fortranStorageClass
+  endif
+
+  if ( b:fortran_dialect == "F" )
+    HiLink fortranLabelNumber	fortranObsolete
+    HiLink fortranTarget		fortranObsolete
+    HiLink fortranFormatSpec		fortranObsolete
+    HiLink fortranFloatDExp		fortranObsolete
+    HiLink fortranFloatNoDec		fortranObsolete
+    HiLink fortranFloatIniDec	fortranObsolete
+    HiLink fortranFloatEndDec	fortranObsolete
+    HiLink fortranTypeEx		fortranObsolete
+    HiLink fortranIOEx		fortranObsolete
+    HiLink fortranStatementEx	fortranObsolete
+    HiLink fortranStringEx		fortranObsolete
+    HiLink fortran77IntrinsicEx	fortranObsolete
+    HiLink fortranUnitHeaderEx	fortranObsolete
+    HiLink fortranConditionalEx	fortranObsolete
+    HiLink fortran90IntrinsicEx	fortranObsolete
+  else
+    HiLink fortranLabelNumber	Special
+    HiLink fortranTarget		Special
+    HiLink fortranFormatSpec		Identifier
+    HiLink fortranFloatDExp		fortranFloat
+    HiLink fortranFloatNoDec		fortranFloat
+    HiLink fortranFloatIniDec	fortranFloat
+    HiLink fortranFloatEndDec	fortranFloat
+    HiLink fortranTypeEx		fortranType
+    HiLink fortranIOEx		fortranIO
+    HiLink fortranStatementEx	fortranStatement
+    HiLink fortranStringEx		fortranString
+    HiLink fortran77IntrinsicEx	fortran90Intrinsic
+    HiLink fortranUnitHeaderEx	fortranUnitHeader
+    HiLink fortranConditionalEx	fortranConditional
+    HiLink fortran90IntrinsicEx	fortran90Intrinsic
+  endif
+
+  HiLink fortranFloat		Float
+  HiLink fortran90Identifier		fortranIdentifier
+  "Uncomment the next line if you want all fortran variables to be highlighted
+  "HiLink fortranIdentifier		Identifier
+  HiLink fortranPreCondit		PreCondit
+  HiLink fortranInclude		Include
+  HiLink cIncluded			fortranString
+  HiLink cInclude			Include
+  HiLink cPreProc			PreProc
+  HiLink cPreCondit			PreCondit
+  HiLink fortranParenError		Error
+  HiLink fortranComment		Comment
+  HiLink fortranSerialNumber		Todo
+  HiLink fortranTab			Error
+  " Vendor extensions
+  HiLink fortranExtraIntrinsic	Special
+
+  delcommand HiLink
 endif
-
-if ( b:fortran_dialect == "F" )
-  hi def link fortranLabelNumber	fortranObsolete
-  hi def link fortranTarget		fortranObsolete
-  hi def link fortranFormatSpec		fortranObsolete
-  hi def link fortranFloatDExp		fortranObsolete
-  hi def link fortranFloatNoDec		fortranObsolete
-  hi def link fortranFloatIniDec	fortranObsolete
-  hi def link fortranFloatEndDec	fortranObsolete
-  hi def link fortranTypeEx		fortranObsolete
-  hi def link fortranIOEx		fortranObsolete
-  hi def link fortranStatementEx	fortranObsolete
-  hi def link fortranStringEx		fortranObsolete
-  hi def link fortran77IntrinsicEx	fortranObsolete
-  hi def link fortranUnitHeaderEx	fortranObsolete
-  hi def link fortranConditionalEx	fortranObsolete
-  hi def link fortran90IntrinsicEx	fortranObsolete
-else
-  hi def link fortranLabelNumber	Special
-  hi def link fortranTarget		Special
-  hi def link fortranFormatSpec		Identifier
-  hi def link fortranFloatDExp		fortranFloat
-  hi def link fortranFloatNoDec		fortranFloat
-  hi def link fortranFloatIniDec	fortranFloat
-  hi def link fortranFloatEndDec	fortranFloat
-  hi def link fortranTypeEx		fortranType
-  hi def link fortranIOEx		fortranIO
-  hi def link fortranStatementEx	fortranStatement
-  hi def link fortranStringEx		fortranString
-  hi def link fortran77IntrinsicEx	fortran90Intrinsic
-  hi def link fortranUnitHeaderEx	fortranUnitHeader
-  hi def link fortranConditionalEx	fortranConditional
-  hi def link fortran90IntrinsicEx	fortran90Intrinsic
-endif
-hi def link fortranFloat		Float
-
-hi def link fortran90Identifier		fortranIdentifier
-"Uncomment the next line if you want all fortran variables to be highlighted
-"hi def link fortranIdentifier		Identifier
-hi def link fortranPreCondit		PreCondit
-hi def link fortranInclude		Include
-hi def link cIncluded			fortranString
-hi def link cInclude			Include
-hi def link cPreProc			PreProc
-hi def link cPreCondit			PreCondit
-hi def link fortranParenError		Error
-hi def link fortranComment		Comment
-hi def link fortranSerialNumber		Todo
-hi def link fortranTab			Error
-
-" Vendor extensions
-hi def link fortranExtraIntrinsic	Special
 
 let b:current_syntax = "fortran"
 

@@ -1174,8 +1174,8 @@ msgid "Evaluates to an empty string"
 msgstr "輸入為空字串"
 
 #: ex_docmd.c:8273 globals.h:974
-msgid "No file name"
-msgstr "沒有檔名"
+msgid "(ef1) No file name"
+msgstr "(ef1) 沒有檔名"
 
 #: ex_docmd.c:8383
 msgid "Cannot open viminfo file for reading"
@@ -2182,8 +2182,8 @@ msgstr "不正確的屬性"
 #~ msgstr ""
 
 #: globals.h:994 if_python.c:676
-msgid "Out of memory!"
-msgstr "記憶體不足!"
+msgid "(em4) Out of memory!"
+msgstr "(em4) 記憶體不足!"
 
 #: if_python.c:761
 #~ msgid "Python: Error initialising I/O objects"
@@ -5302,20 +5302,20 @@ msgid "Argument required"
 msgstr "需要指令參數"
 
 #: globals.h:930
-msgid "\\ should be followed by /, ? or &"
-msgstr "\\ 後面應該有 / ? 或 &"
+msgid "(eb1) \\ should be followed by /, ? or &"
+msgstr "(eb1) \\ 後面應該有 / ? 或 &"
 
 #: globals.h:932
-msgid "Invalid in command-line window; <CR> executes, CTRL-C quits"
-msgstr "不能在命令列視窗中使用。<CR>執行，CTRL-C 離開"
+msgid "(ec4) Invalid in command-line window; <CR> executes, CTRL-C quits"
+msgstr "(ec4) 不能在命令列視窗中使用。<CR>執行，CTRL-C 離開"
 
 #: globals.h:934
-msgid "Command not allowed from exrc/vimrc in current dir or tag search"
-msgstr "exrc/vimrc 裡的指令無法執行"
+msgid "(ea2) Command not allowed from exrc/vimrc in current dir or tag search"
+msgstr "(ea2) exrc/vimrc 裡的指令無法執行"
 
 #: globals.h:935
-msgid "File exists (use ! to override)"
-msgstr "檔案已經存在 (可用 ! 強制取代)"
+msgid "(ee2) File exists (use ! to override)"
+msgstr "(ee2) 檔案已經存在 (可用 ! 強制取代)"
 
 #: globals.h:936
 msgid "Command failed"
@@ -5330,8 +5330,8 @@ msgid "Interrupted"
 msgstr "已中斷"
 
 #: globals.h:939
-msgid "Invalid address"
-msgstr "不正確的位址"
+msgid "(er3) Invalid address"
+msgstr "(er3) 不正確的位址"
 
 #: globals.h:940
 msgid "Invalid argument"
@@ -5344,77 +5344,77 @@ msgstr "不正確的參數: %s"
 
 #: globals.h:943
 #, c-format
-msgid "Invalid expression: %s"
-msgstr "不正確的運算式: %s"
+msgid "(ee3) Invalid expression: %s"
+msgstr "(ee3) 不正確的運算式: %s"
 
 #: globals.h:945
-msgid "Invalid range"
-msgstr "不正確的範圍"
+msgid "(er4) Invalid range"
+msgstr "(er4) 不正確的範圍"
 
 #: globals.h:946
 msgid "Invalid command"
 msgstr "不正確的命令"
 
 #: globals.h:948
-msgid "Unexpected characters before '='"
-msgstr "'=' 前面出現了錯誤的字元"
+msgid "(el1) Unexpected characters before '='"
+msgstr "(el1) '=' 前面出現了錯誤的字元"
 
 #: globals.h:950
-msgid "Mark has invalid line number"
-msgstr "標記的行號錯誤"
+msgid "(em1) Mark has invalid line number"
+msgstr "(em1) 標記的行號錯誤"
 
 #: globals.h:951
-msgid "Mark not set"
-msgstr "沒有設定標記"
+msgid "(em5) Mark not set"
+msgstr "(em5) 沒有設定標記"
 
 #: globals.h:952
-msgid "Cannot make changes, 'modifiable' is off"
-msgstr "因為 'modifiable' 選項是關閉的，斫以不能修改"
+msgid "(ec5) Cannot make changes, 'modifiable' is off"
+msgstr "(ec5) 因為 'modifiable' 選項是關閉的，斫以不能修改"
 
 #: globals.h:953
-msgid "Scripts nested too deep"
-msgstr "巢狀遞迴呼叫太多層"
+msgid "(es4) Scripts nested too deep"
+msgstr "(es4) 巢狀遞迴呼叫太多層"
 
 #: globals.h:954
-msgid "No alternate file"
-msgstr "沒有替代的檔案"
+msgid "(en2) No alternate file"
+msgstr "(en2) 沒有替代的檔案"
 
 #: globals.h:955
-msgid "No such abbreviation"
-msgstr "沒有這個 abbreviation 對應"
+msgid "(ea2) No such abbreviation"
+msgstr "(ea2) 沒有這個 abbreviation 對應"
 
 #: globals.h:956
 msgid "No ! allowed"
 msgstr "不可使用 '!'"
 
 #: globals.h:958
-msgid "GUI cannot be used: Not enabled at compile time"
-msgstr "因為編譯時沒有加入圖型界面的程式碼，所以無法使用圖型界面"
+msgid "(eg1) GUI cannot be used: Not enabled at compile time"
+msgstr "(eg1) 因為編譯時沒有加入圖型界面的程式碼，所以無法使用圖型界面"
 
 #: globals.h:961
-msgid "Hebrew cannot be used: Not enabled at compile time\n"
-msgstr "因為編譯時沒有加入 Hebrew 的程式碼，所以無法使用 Hebrew\n"
+msgid "(eh2) Hebrew cannot be used: Not enabled at compile time\n"
+msgstr "(eh2) 因為編譯時沒有加入 Hebrew 的程式碼，所以無法使用 Hebrew\n"
 
 #: globals.h:964
-msgid "Farsi cannot be used: Not enabled at compile time\n"
-msgstr "因為編譯時沒有加入 Farsi 的程式碼，所以無法使用 Farsi\n"
+msgid "(ef3) Farsi cannot be used: Not enabled at compile time\n"
+msgstr "(ef3) 因為編譯時沒有加入 Farsi 的程式碼，所以無法使用 Farsi\n"
 
 #: globals.h:967
 #, c-format
-msgid "No such highlight group name: %s"
-msgstr "沒有名為 '%s' 的 highlight group"
+msgid "(eh3) No such highlight group name: %s"
+msgstr "(eh3) 沒有名為 '%s' 的 highlight group"
 
 #: globals.h:969
-msgid "No inserted text yet"
-msgstr "還沒有插入文字過"
+msgid "(ei1) No inserted text yet"
+msgstr "(ei1) 還沒有插入文字過"
 
 #: globals.h:970
-msgid "No previous command line"
-msgstr "沒有前一項命令"
+msgid "(ec6) No previous command line"
+msgstr "(ec6) 沒有前一項命令"
 
 #: globals.h:971
-msgid "No such mapping"
-msgstr "沒有這個 mapping 對應"
+msgid "(em3) No such mapping"
+msgstr "(em3) 沒有這個 mapping 對應"
 
 #: globals.h:972
 msgid "No match"
@@ -5426,24 +5426,24 @@ msgid "No match: %s"
 msgstr "找不到: %s"
 
 #: globals.h:975
-msgid "No previous substitute regular expression"
-msgstr "沒有前一個搜尋/取代的命令"
+msgid "(es3) No previous substitute regular expression"
+msgstr "(es3) 沒有前一個搜尋/取代的命令"
 
 #: globals.h:976
-msgid "No previous command"
-msgstr "沒有前一個命令"
+msgid "(ep3) No previous command"
+msgstr "(ep3) 沒有前一個命令"
 
 #: globals.h:977
-msgid "No previous regular expression"
-msgstr "沒有前一個搜尋指令"
+msgid "(ep1) No previous regular expression"
+msgstr "(ep1) 沒有前一個搜尋指令"
 
 #: globals.h:978
 msgid "No range allowed"
 msgstr "不可使用範圍指令"
 
 #: globals.h:980
-msgid "Not enough room"
-msgstr "沒有足夠的空間"
+msgid "(er5) Not enough room"
+msgstr "(er5) 沒有足夠的空間"
 
 #: globals.h:982
 #, c-format
@@ -5465,111 +5465,111 @@ msgid "Can't read file %s"
 msgstr "無法讀取檔案 %s"
 
 #: globals.h:986
-msgid "No write since last change (use ! to override)"
-msgstr "已更改過檔案但尚未存檔 (可用 ! 強制執行)"
+msgid "(ew2) No write since last change (use ! to override)"
+msgstr "(ew2) 已更改過檔案但尚未存檔 (可用 ! 強制執行)"
 
 #: globals.h:987
-msgid "Null argument"
-msgstr "空的 (Null) 參數"
+msgid "(en5) Null argument"
+msgstr "(en5) 空的 (Null) 參數"
 
 #: globals.h:989
-msgid "Number expected"
-msgstr "應該要有數字"
+msgid "(ed1) Number expected"
+msgstr "(ed1) 應該要有數字"
 
 #: globals.h:992
 #, c-format
-msgid "Can't open errorfile %s"
-msgstr "無法開啟錯誤檔案 %s"
+msgid "(ee1) Can't open errorfile %s"
+msgstr "(ee1) 無法開啟錯誤檔案 %s"
 
 #: globals.h:996
-msgid "Pattern not found"
-msgstr "找不到"
+msgid "(ep2) Pattern not found"
+msgstr "(ep2) 找不到"
 
 #: globals.h:998
 #, c-format
-msgid "Pattern not found: %s"
-msgstr "找不到 %s"
+msgid "(ep2) Pattern not found: %s"
+msgstr "(ep2) 找不到 %s"
 
 #: globals.h:999
 msgid "Argument must be positive"
 msgstr "參數應該是正數"
 
 #: globals.h:1001
-msgid "No Errors"
-msgstr "沒有錯誤"
+msgid "(ee4) No Errors"
+msgstr "(ee4) 沒有錯誤"
 
 #: globals.h:1003
-msgid "Damaged match string"
-msgstr "符合字串有問題"
+msgid "(ed2) Damaged match string"
+msgstr "(ed2) 符合字串有問題"
 
 #: globals.h:1004
-msgid "Corrupted regexp program"
-msgstr "regexp 有問題"
+msgid "(ed2) Corrupted regexp program"
+msgstr "(ed2) regexp 有問題"
 
 #: globals.h:1005
-msgid "'readonly' option is set (use ! to override)"
-msgstr "有設定 'readonly' 選項(唯讀) (可用 ! 強制執行)"
+msgid "(er1) 'readonly' option is set (use ! to override)"
+msgstr "(er1) 有設定 'readonly' 選項(唯讀) (可用 ! 強制執行)"
 
 #: globals.h:1007
 #, c-format
-msgid "Cannot set read-only variable \"%s\""
-msgstr "無法設定唯讀變數 \"%s\""
+msgid "(er6) Cannot set read-only variable \"%s\""
+msgstr "(er6) 無法設定唯讀變數 \"%s\""
 
 #: globals.h:1010
-msgid "Error while reading errorfile"
-msgstr "讀取錯誤檔案失敗"
+msgid "(er2) Error while reading errorfile"
+msgstr "(er2) 讀取錯誤檔案失敗"
 
 #: globals.h:1013
-msgid "Not allowed in sandbox"
-msgstr "不能在 sandbox 裡出現"
+msgid "(es5) Not allowed in sandbox"
+msgstr "(es5) 不能在 sandbox 裡出現"
 
 #: globals.h:1015
-msgid "Invalid scroll size"
-msgstr "錯誤的捲動大小"
+msgid "(es2) Invalid scroll size"
+msgstr "(es2) 錯誤的捲動大小"
 
 #: globals.h:1016
-msgid "'shell' option is empty"
-msgstr "選項 'shell' 未設定"
+msgid "(es1) 'shell' option is empty"
+msgstr "(es1) 選項 'shell' 未設定"
 
 #: globals.h:1017
-msgid "tag stack empty"
-msgstr "標籤堆疊已空"
+msgid "(et1) tag stack empty"
+msgstr "(et1) 標籤堆疊已空"
 
 #: globals.h:1018
-msgid "Command too complex"
-msgstr "命令太複雜"
+msgid "(ec3) Command too complex"
+msgstr "(ec3) 命令太複雜"
 
 #: globals.h:1019
-msgid "Name too long"
-msgstr "名字太長"
+msgid "(en1) Name too long"
+msgstr "(en1) 名字太長"
 
 #: globals.h:1020
-msgid "Too many ["
-msgstr "太多 ["
+msgid "(ep4) Too many ["
+msgstr "(ep4) 太多 ["
 
 #: globals.h:1022
 msgid "Command too long"
 msgstr "命令列過長"
 
 #: globals.h:1024
-msgid "Too many file names"
-msgstr "太多檔名"
+msgid "(et3) Too many file names"
+msgstr "(et3) 太多檔名"
 
 #: globals.h:1026
-msgid "Unknown mark"
-msgstr "無法辦識的標記"
+msgid "(em6) Unknown mark"
+msgstr "(em6) 無法辦識的標記"
 
 #: globals.h:1027
 msgid "Unknown"
 msgstr "無法辦識"
 
 #: globals.h:1028
-msgid "Cannot expand wildcards"
-msgstr "無法展開萬用字元"
+msgid "(ew3) Cannot expand wildcards"
+msgstr "(ew3) 無法展開萬用字元"
 
 #: globals.h:1029
-msgid "Error while writing"
-msgstr "寫入錯誤"
+msgid "(ew4) Error while writing"
+msgstr "(ew4) 寫入錯誤"
 
 #: globals.h:1030
 msgid "Zero count"

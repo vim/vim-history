@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ad.  Last change: 2001 Apr 28
+*multibyte.txt* For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -274,7 +274,7 @@ Supported 'encoding' values are:			*encoding-values*
 2   cp949	Korean (Unix and Windows)
 2   euc-kr	Korean (Unix only)
 2   cp936	simplified Chinese (Windows only)
-2   euc-cn	simplified Chinese (Unix only, on Windows an alias for cp936)
+2   euc-cn	simplified Chinese (Unix only)
 2   cp950	traditional Chinese (on Unix alias for big5)
 2   big5	traditional Chinese (on Windows alias for cp950)
 2   euc-tw	traditional Chinese (Unix only)
@@ -301,7 +301,7 @@ Several aliases can be used, they are translated to one of the names above.
 An incomplete list:
 
 1   ansi	same as latin1 (obsolete, for backward compatibility)
-2   japan	Japanese: on Unix "euc-jp", on MS-Windows shift-JIS (cp932)
+2   japan	Japanese: on Unix "euc-jp", on MS-Windows cp932
 2   korea	Korean: on Unix "euc-kr", on MS-Windows cp949
 2   prc		simplified Chinese: on Unix "chinese", on MS-Windows cp936
 2   taiwan	traditional Chinese: on Unix "euc-tw", on MS-Windows cp950
@@ -323,6 +323,13 @@ first):
 On MS-Windows systems you often want to use "ucs-2le", because it uses little
 endian UCS-2.
 
+There are a few encodings which are similar, but exactly the same.  Vim treats
+them as if they were different encodings, so that conversion will be done when
+needed.  You might want to use the similar name to avoid conversion or when
+conversion is not possible:
+
+	cp932, shift-jis, sjis
+	cp936, euc-cn
 
 							*encoding-table*
 Normally 'encoding' is equal to your current locale and 'termencoding' is
@@ -593,7 +600,8 @@ Alternatively, you can specify alias names.  See the fonts.alias file in the
 fonts directory (e.g., /usr/X11R6/lib/X11/fonts/).  For example: >
 
  :set guifontset=k14,r14
-
+<
+							*oe2*
 Note that in East Asian fonts, the standard character cell is square.  When
 mixing a Latin font and an East Asian font, the East Asian font width should
 be twice the Latin font width.
@@ -767,7 +775,8 @@ Wnn 4.2 can be found at:
     window specific to the input method.
 
 
-USING XIM 						*multibyte-input*
+USING XIM 			*multibyte-input* *ex2* *ex3* *ex4* *ex5* *ex6*
+				*ex7* *ex8* *ex9* *ex0* *ez3* *ez4*
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.  But when your Display
@@ -841,11 +850,12 @@ IME status to that momorized automatically.
 This works on not only insert-normal mode, but also search-command input and
 replace mode.
 
-Cursor color when IME is on				*CursorIM*
+Cursor color when IME or XIM is on				*CursorIM*
     There is a little cute feature for IME.  Cursor can indicate status of IME
     by changing its color.  Usually status of IME was indicated by little icon
     at a corner of desktop (or taskbar).  It is not easy to verify status of
     IME.  But this feature help this.
+    This works in the same way when using XIM.
 
     You can select cursor color when status is on by using highlight group
     CursorIM.  For example, add these lines to your _gvimrc: >
@@ -921,7 +931,7 @@ use a brightly colored cursor: >
 	:highlight Cursor guifg=NONE guibg=Green
 	:highlight lCursor guifg=NONE guibg=Cyan
 <
-				*keymap-file-format* *:loadk* *:loadkeymap*
+			*keymap-file-format* *:loadk* *:loadkeymap* *ek1*
 The keymap file looks something like this: >
 
 	" Maintainer:	name <email@address>

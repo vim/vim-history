@@ -1,11 +1,13 @@
 " Vim syntax file
-" Language:	Inno Setup File (*.iss) 
-" Maintainer:	Dominique Stéphan (stephan@my-deja.com)
-" URL:		http://www.geocities.com/SiliconValley/Bit/1809/vim/syntax/iss.vim
-" Last change:	2001 Jan 15
+" Language:	Inno Setup File (iss file) and My InnoSetup extension
+" Maintainer:	Dominique Stéphan (dominique@mggen.com)
+" Last change:	2001 Mai 2
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -32,6 +34,7 @@ syn match  issName		"Section:\|Key:\|String:"
 syn match  issName		"Root:\|SubKey:\|ValueType:\|ValueName:\|ValueData:"
 syn match  issName		"RunOnceId:"
 syn match  issName		"Type:"
+syn match  issName		"Components:\|Description:\|GroupDescription\|Types:"
 
 syn match  issComment		"^;.*$"
 
@@ -53,8 +56,7 @@ syn keyword issFilesFlags regserver regtypelib restartreplace
 syn keyword issFilesFlags sharedfile skipifsourcedoesntexist uninsneveruninstall 
 
 " [Icons]
-syn keyword issIconsFlags createonlyiffileexists runminimized 
-syn keyword uninsneveruninstall useapppaths closeonexit dontcloseonexit
+syn keyword issIconsFlags createonlyiffileexists runminimized uninsneveruninstall useapppaths 
 
 " [INI]
 syn keyword issINIFlags createkeyifdoesntexist uninsdeleteentry uninsdeletesection uninsdeletesectionifempty 
@@ -63,32 +65,60 @@ syn keyword issINIFlags createkeyifdoesntexist uninsdeleteentry uninsdeletesecti
 syn keyword issRegRootKey   HKCR HKCU HKLM HKU HKCC
 syn keyword issRegValueType none string expandsz multisz dword binary 
 syn keyword issRegFlags createvalueifdoesntexist deletekey deletevalue preservestringtype 
-syn keyword issRegFlags uninsclearvalue uninsdeletekey uninsdeletekeyifempty uninsdeletevalue noerror
+syn keyword issRegFlags uninsclearvalue uninsdeletekey uninsdeletekeyifempty uninsdeletevalue 
 
 " [Run] and [UninstallRun]
 syn keyword issRunFlags nowait shellexec skipifdoesntexist runminimized waituntilidle 
+syn keyword issRunFlags postinstall unchecked showcheckbox
+
+" [Types]
+syn keyword issTypesFlags iscustom
+
+" [Components]
+syn keyword issComponentsFlags fixed restart disablenouninstallwarning
+
+" [UninstallDelete] and [InstallDelete]
+syn keyword issInstallDeleteType files filesandordirs dirifempty 
 
 
-" The default highlighting.
-hi def link issHeader		Special
-hi def link issComment		Comment
-hi def link issLabel		Type
-hi def link issName		Type
-hi def link issFolder		Special
-hi def link issString		String
-hi def link issValue		String
-hi def link issURL		Include
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_iss_syntax_inits")
+  if version < 508
+    let did_iss_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-hi def link issDirsFlags	Keyword
-hi def link issFilesCopyMode	Keyword
-hi def link issFilesAttribs	Keyword
-hi def link issFilesFlags	Keyword
-hi def link issIconsFlags	Keyword
-hi def link issINIFlags		Keyword
-hi def link issRegRootKey	Keyword
-hi def link issRegValueType	Keyword
-hi def link issRegFlags		Keyword
-hi def link issRunFlags		Keyword
+   " The default methods for highlighting.  Can be overridden later
+   HiLink issHeader	Special
+   HiLink issComment	Comment
+   HiLink issLabel	Type
+   HiLink issName	Type
+   HiLink issFolder	Special
+   HiLink issString	String
+   HiLink issValue	String
+   HiLink issURL	Include
+
+   HiLink issDirsFlags		Keyword
+   HiLink issFilesCopyMode 	Keyword
+   HiLink issFilesAttribs 	Keyword
+   HiLink issFilesFlags 	Keyword
+   HiLink issIconsFlags		Keyword
+   HiLink issINIFlags		Keyword
+   HiLink issRegRootKey		Keyword
+   HiLink issRegValueType	Keyword
+   HiLink issRegFlags		Keyword
+   HiLink issRunFlags		Keyword
+   HiLink issTypesFlags		Keyword
+   HiLink issComponentsFlags	Keyword
+   HiLink issInstallDeleteType	Keyword
+
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "iss"
 

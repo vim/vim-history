@@ -2,11 +2,15 @@
 " Language:     PPWizard (preprocessor by Dennis Bareis)
 " Maintainer:   Stefan Schwarzer <s.schwarzer@ndh.net>
 " URL:          http://www.ndh.net/home/sschwarzer/download/ppwiz.vim
-" Last Change:  2001 Jan 15
+" Last Change:  2001 Apr 29
 " Filename:     ppwiz.vim
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" Remove old syntax stuff
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -58,21 +62,34 @@ syn match   ppwizInteger  "\d\+" contained
 " Clusters
 syn cluster ppwizArgVal add=ppwizString,ppwizInteger
 
-" The default highlighting.
-hi def link ppwizSpecial  Special
-hi def link ppwizEqual    ppwizSpecial
-hi def link ppwizOperator ppwizSpecial
-hi def link ppwizComment  Comment
-hi def link ppwizDef      PreProc
-hi def link ppwizMacro    Statement
-hi def link ppwizArg      Identifier
-hi def link ppwizStdVar   Identifier
-hi def link ppwizRexxVar  Identifier
-hi def link ppwizString   Constant
-hi def link ppwizInteger  Constant
-hi def link ppwizCont     ppwizSpecial
-hi def link ppwizError    Error
-hi def link ppwizHTML     Type
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_ppwiz_syn_inits")
+    if version < 508
+        let did_ppwiz_syn_inits = 1
+        command -nargs=+ HiLink hi link <args>
+    else
+        command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink ppwizSpecial  Special
+    HiLink ppwizEqual    ppwizSpecial
+    HiLink ppwizOperator ppwizSpecial
+    HiLink ppwizComment  Comment
+    HiLink ppwizDef      PreProc
+    HiLink ppwizMacro    Statement
+    HiLink ppwizArg      Identifier
+    HiLink ppwizStdVar   Identifier
+    HiLink ppwizRexxVar  Identifier
+    HiLink ppwizString   Constant
+    HiLink ppwizInteger  Constant
+    HiLink ppwizCont     ppwizSpecial
+    HiLink ppwizError    Error
+    HiLink ppwizHTML     Type
+
+    delcommand HiLink
+endif
 
 let b:current_syntax = "ppwiz"
 

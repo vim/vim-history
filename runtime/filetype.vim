@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Apr 25
+" Last change:	2001 May 05
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -107,13 +107,7 @@ fun! <SID>FTasm()
   endif
 
   if b:asmsyntax == ""
-    " see if file contains any asmsyntax=foo overrides. If so, change
-    " b:asmsyntax appropriately
-    let head = " ".getline(1)." ".getline(2)." ".getline(3)." ".getline(4).
-	\" ".getline(5)." "
-    if head =~ '\sasmsyntax=\S\+\s'
-      let b:asmsyntax = substitute(head, '.*\sasmsyntax=\(\S\+\)\s.*','\1', "")
-    endif
+    call FTCheck_asmsyntax()
   endif
 
   " if b:asmsyntax still isn't set, default to asmsyntax or GNU
@@ -126,6 +120,16 @@ fun! <SID>FTasm()
   endif
 
   exe "setf " . b:asmsyntax
+endfun
+
+fun! FTCheck_asmsyntax()
+  " see if file contains any asmsyntax=foo overrides. If so, change
+  " b:asmsyntax appropriately
+  let head = " ".getline(1)." ".getline(2)." ".getline(3)." ".getline(4).
+	\" ".getline(5)." "
+  if head =~ '\sasmsyntax=\S\+\s'
+    let b:asmsyntax = substitute(head, '.*\sasmsyntax=\(\S\+\)\s.*','\1', "")
+  endif
 endfun
 
 " Atlas
@@ -523,7 +527,7 @@ au BufNewFile,BufRead *.man			setf man
 au BufNewFile,BufRead *.mv,*.mpl,*.mws		setf maple
 
 " Mason
-au BufNewFile,BufRead *.mason			setf mason
+au BufNewFile,BufRead *.mason,*.mhtml		setf mason
 
 " Matlab
 au BufNewFile,BufRead *.m			call FTCheck_m()
@@ -675,14 +679,22 @@ au BufNewFile,BufRead *.ps,*.eps		setf postscr
 au BufNewFile,BufRead *.pov			setf pov
 "
 " Povray, PHP or assembly
-au BufNewFile,BufRead *.inc
-	\ if exists("g:filetype_inc") |
-	\   exe "setf " . g:filetype_inc |
-	\ elseif getline(1).getline(2).getline(3) =~ "<?" |
-	\   setf php |
-	\ else |
-	\   setf pov |
-	\ endif
+au BufNewFile,BufRead *.inc			call FTCheck_inc()
+
+fun! FTCheck_inc()
+  if exists("g:filetype_inc")
+    exe "setf " . g:filetype_inc
+  elseif getline(1).getline(2).getline(3) =~ "<?"
+    setf php
+  else
+    call FTCheck_asmsyntax()
+    if exists("b:asmsyntax")
+      exe "setf " . b:asmsyntax
+    else
+      setf pov
+    endif
+  endif
+endfun
 
 " Printcap and Termcap
 au BufNewFile,BufRead *printcap
@@ -728,7 +740,7 @@ function! <SID>FTprogress_asm()
   let lnum = 1
   while lnum <= 10
     let line = getline(lnum)
-    if line =~ '^\s*;'
+    if line =~ '^\s*;' || line =~ '^\*'
       call FTCheck_asm()
       return
     elseif line !~ '^\s*$' || line =~ '^/\*'
@@ -989,6 +1001,15 @@ au BufNewFile,BufRead texmf.cnf			setf texmf
 
 " TF mud client
 au BufNewFile,BufRead *.tf			setf tf
+
+" TSS - Geometry
+au BufNewFile,BufReadPost *.tssgm		setf tssgm
+
+" TSS - Optics
+au BufNewFile,BufReadPost *.tssop		setf tssop
+
+" TSS - Command Line (temporary)
+au BufNewFile,BufReadPost *.tsscl		setf tsscl
 
 " Motif UIT/UIL files
 au BufNewFile,BufRead *.uit,*.uil		setf uil

@@ -261,11 +261,15 @@ gvim.exe: $(OBJ) $(GUIOBJ)
 	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(GUI_LIB) $(PYTHONLIB) $(RUBYLIB)
 
 exes:
-	@$(DEL) *.o
+	-$(DEL) *.o
 	$(MAKE) -f Make_ming.mak gvim.exe
-	@$(DEL) *.o
+	-$(DEL) *.o
 	$(MAKE) -f Make_ming.mak vim.exe
-	@$(DEL) *.o
+	-$(DEL) *.o
+
+upx: exes
+	upx gvim.exe
+	upx vim.exe
 
 xxd/xxd.exe: xxd/xxd.c
 	$(CC) $(CFLAGS) -o xxd/xxd.exe -s -DWIN32 xxd/xxd.c $(LIB)

@@ -1,14 +1,18 @@
 " Vim syntax file
 " Language:	Rexx
 " Maintainer:	Thomas Geulig <geulig@nentec.de>
-" Last Change:	2001 Jan 15
-" URL:		http://www.linuxstart.com/~vimuser/vim/syntax/rexx.vim
+" Last Change:	2001 May 2
+" URL:		http://sites.netscape.net/sharpPeople/vim/syntax/rexx.vim
+"            or http://www.crosswinds.net/~vimuser/vim/syntax/rexx.vim
 "
 " Special Thanks to Dan Sharp <dwsharp@hotmail.com> for comments and additions
 " (and providing the webspace)
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -76,21 +80,34 @@ if !exists("rexx_minlines")
 endif
 exec "syn sync ccomment rexxComment minlines=" . rexx_minlines
 
-" The default highlighting.
-hi def link rexxUserLabel	Function
-hi def link rexxCharacter	Character
-hi def link rexxParenError	rexxError
-hi def link rexxInParen		rexxError
-hi def link rexxCommentError	rexxError
-hi def link rexxError		Error
-hi def link rexxKeyword		Statement
-hi def link rexxKeyword2	rexxKeyword
-hi def link rexxFunction	Function
-hi def link rexxString		String
-hi def link rexxComment		Comment
-hi def link rexxTodo		Todo
-hi def link rexxSpecialVariable	Special
-hi def link rexxConditional	rexxKeyword
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_rexx_syn_inits")
+  if version < 508
+    let did_rexx_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink rexxUserLabel		Function
+  HiLink rexxCharacter		Character
+  HiLink rexxParenError		rexxError
+  HiLink rexxInParen		rexxError
+  HiLink rexxCommentError	rexxError
+  HiLink rexxError		Error
+  HiLink rexxKeyword		Statement
+  HiLink rexxKeyword2		rexxKeyword
+  HiLink rexxFunction		Function
+  HiLink rexxString		String
+  HiLink rexxComment		Comment
+  HiLink rexxTodo		Todo
+  HiLink rexxSpecialVariable	Special
+  HiLink rexxConditional	rexxKeyword
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "rexx"
 

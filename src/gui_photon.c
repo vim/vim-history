@@ -2715,7 +2715,7 @@ gui_mch_get_font(char_u *vim_font_name, int report_error)
     }
 
     if( report_error )
-	EMSG2( "Unknown font: %s", vim_font_name );
+	EMSG2("(fe0) Unknown font: %s", vim_font_name );
 
     return( FAIL );
 }

@@ -2,7 +2,7 @@
 " Language:	HTML and M4
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/htmlm4.vim
-" Last Change:	2001 Apr 27
+" Last Change:	2001 Apr 30
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -21,6 +21,7 @@ if version < 600
   so <sfile>:p:h/html.vim
 else
   runtime! syntax/html.vim
+endif
 unlet b:current_syntax
 syn case match
 

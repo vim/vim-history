@@ -1,18 +1,23 @@
 " Vim syntax file
 " Language:	kimwitu++
 " Maintainer:	Michael Piefel <piefel@informatik.hu-berlin.de>
-" Last Change:	17 January 2001
+" Last Change:	2 May 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
-  finish
+" For version 5.x: Clear all syntax items
+" For version 6.x: Quit when a syntax file was already loaded
+if version < 600
+    syntax clear
+elseif exists("b:current_syntax")
+    finish
 endif
 
-"syn region cParen		transparent start='(' end=')' contains=ALLBUT,@cParenGroup,cCppParen,cErrInBracket,cCppBracket,cCppString,kwtViewName
-
 " Read the C++ syntax to start with
-runtime! syntax/cpp.vim
-unlet b:current_syntax
+if version < 600
+  source <sfile>:p:h/cpp.vim
+else
+  runtime! syntax/cpp.vim
+  unlet b:current_syntax
+endif
 
 " kimwitu++ extentions
 
@@ -52,15 +57,28 @@ syn match kwtViews		"\(\[\|<\)\@<=[ [:alnum:]_]\{-}:"
 syn region kwtUnpBody		transparent keepend extend fold start="->\s*\[" start="^\s*\[" skip="\$\@<!{\_.\{-}\$\@<!}" end="\s]\s\=;\=$" end="^]\s\=;\=$" end="}]\s\=;\=$"
 syn region kwtRewBody		transparent keepend extend fold start="->\s*<" start="^\s*<" end="\s>\s\=;\=$" end="^>\s\=;\=$"
 
-" The default highlighting.
-hi def link kwtStatement	cppStatement
-hi def link kwtDecl	cppStatement
-hi def link kwtCast	cppStatement
-hi def link kwtSep	Delimiter
-hi def link kwtViews	Label
-hi def link kwtPhylum	Type
-hi def link kwtOption	PreProc
-"hi def link cText	Comment
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
+" For version 5.8 and later: only when an item doesn't have highlighting yet
+if version >= 508 || !exists("did_kwt_syn_inits")
+    if version < 508
+	let did_kwt_syn_inits = 1
+	command -nargs=+ HiLink hi link <args>
+    else
+	command -nargs=+ HiLink hi def link <args>
+    endif
+
+    HiLink kwtStatement	cppStatement
+    HiLink kwtDecl	cppStatement
+    HiLink kwtCast	cppStatement
+    HiLink kwtSep	Delimiter
+    HiLink kwtViews	Label
+    HiLink kwtPhylum	Type
+    HiLink kwtOption	PreProc
+    "HiLink cText	Comment
+
+    delcommand HiLink
+endif
 
 syn sync lines=300
 

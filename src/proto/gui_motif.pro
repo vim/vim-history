@@ -14,6 +14,7 @@ void gui_mch_compute_menu_height __ARGS((Widget id));
 void gui_mch_add_menu_item __ARGS((vimmenu_T *menu, int idx));
 void gui_motif_update_mousemodel __ARGS((vimmenu_T *menu));
 void gui_mch_new_menu_colors __ARGS((void));
+void gui_mch_def_colors __ARGS((void));
 void gui_mch_new_menu_font __ARGS((void));
 void gui_mch_destroy_menu __ARGS((vimmenu_T *menu));
 void gui_mch_show_popupmenu __ARGS((vimmenu_T *menu));

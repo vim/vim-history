@@ -111,7 +111,6 @@ static char	*initialFileCmd;	/* save command but defer doing it */
     void
 workshop_init()
 {
-    char_u	*guiOptions;
     char_u	 buf[64];
     int		 is_dirty = FALSE;
     int		 width, height;
@@ -120,27 +119,24 @@ workshop_init()
     /*
      * Turn on MenuBar, ToolBar, and Footer.
      */
-    if (get_option_value((char_u *) "go", NULL, &guiOptions, 0) == 0)
+    STRCPY(buf, p_go);
+    if (vim_strchr(p_go, 'm') == NULL)
     {
-	strcpy((char *) buf, (char *) guiOptions);
-	if (strchr((char *) guiOptions, 'm') == 0)
-	{
-	    strcat((char *) buf, "m");
-	    is_dirty = TRUE;
-	}
-	if (strchr((char *) guiOptions, 'T') == 0)
-	{
-	    strcat((char *) buf, "T");
-	    is_dirty = TRUE;
-	}
-	if (strchr((char *) guiOptions, 'F') == 0)
-	{
-	    strcat((char *) buf, "F");
-	    is_dirty = TRUE;
-	}
-	if (is_dirty)
-	    set_option_value((char_u *) "go", 0, buf, 0);
+	STRCAT(buf, "m");
+	is_dirty = TRUE;
     }
+    if (vim_strchr(p_go, 'T') == NULL)
+    {
+	STRCAT(buf, "T");
+	is_dirty = TRUE;
+    }
+    if (vim_strchr(p_go, 'F') == NULL)
+    {
+	STRCAT(buf, "F");
+	is_dirty = TRUE;
+    }
+    if (is_dirty)
+	set_option_value((char_u *) "go", 0, buf, 0);
 
     /*
      * Set size from workshop_get_width_height().
@@ -231,7 +227,7 @@ workshop_load_file(
 	 */
 	balloonEval = gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
 	if (!p_beval)
-	    gui_mch_disable_beval_area(balloonEval)
+	    gui_mch_disable_beval_area(balloonEval);
     }
 
     load_window(filename, line);
@@ -868,9 +864,7 @@ workshop_toolbar_begin()
     void
 workshop_toolbar_end()
 {
-    char_u	*guiOptions;
     char_u	buf[64];
-    int		is_dirty = FALSE;
 
 #ifdef WSDEBUG_TRACE
     if (WSDLEVEL(WS_TRACE_VERBOSE | WS_TRACE))
@@ -880,18 +874,13 @@ workshop_toolbar_end()
 #endif
 
     /*
-     * Turn on MenuBar, ToolBar, and Footer.
+     * Turn on ToolBar.
      */
-    if (get_option_value((char_u *) "go", NULL, &guiOptions, 0) == 0)
+    STRCPY(buf, p_go);
+    if (vim_strchr(p_go, 'T') == NULL)
     {
-	strcpy((char *) buf, (char *) guiOptions);
-	if (strchr((char *) guiOptions, 'T') == 0)
-	{
-	    strcat((char *) buf, "T");
-	    is_dirty = TRUE;
-	}
-	if (is_dirty)
-	    set_option_value((char_u *) "go", 0, buf, 0);
+	STRCAT(buf, "T");
+	set_option_value((char_u *)"go", 0, buf, 0);
     }
     workshopInitDone = True;
 }

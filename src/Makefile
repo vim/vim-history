@@ -182,8 +182,8 @@
 #Linux 2.0.33	      gcc-2.7.2.1    X11R6, Lesstif	5.0s	 Tony Nugent
 #Linux 2.0.34	      gcc-2.90.29    +X11 +GTK 1.2.2	5.4m	 Ant. Colombo
 #Linux 2.2.16	      egcs-1.1.2     +X11               6.0s	 Ant. Colombo
-#LynxOS 2.5.0	      gcc-2.7-96q1   +X11 +GUI Athena	5.0  (O) Lorenz Hahn
-#LynxOS 2.5.0	      gcc-2.7-96q1   +X11 -GUI Athena	5.0  (O) Lorenz Hahn
+#LynxOS 3.0.1	      2.9-gnupro-98r2 +X11 +GUI Athena  5.7.1(O) Lorenz Hahn
+#LynxOS 3.1.0	      2.9-gnupro-98r2 +X11 +GUI Athena  5.7.1(O) Lorenz Hahn
 #MacOS		 CodeWarrior Pro 2   -			5.4i	 Axel Kielhorn
 #NEC UP4800 UNIX_SV 4.2MP  cc	     +X11R6 Motif,Athena4.6b (Q) Lennart Schultz
 #NetBSD 1.0A	      gcc-2.4.5      -X11 -GUI		3.21 (X) Juergen Weigert
@@ -457,6 +457,7 @@ CClink = $(CC)
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
+#CFLAGS = -g -O2 -DSTARTUPTIME=\"vimstartup\" -fno-strength-reduce -Wall -Wmissing-prototypes
 
 # EFENCE - Electric-Fence malloc debugging: catches memory accesses beyond
 # allocated memory (and makes every malloc()/free() very slow).
@@ -720,8 +721,8 @@ LINT_OPTIONS = -beprxzF
 ### (O)  For LynxOS 2.5.0, tested on PC.
 #EXTRA_LIBS = -lXext -lSM -lICE -lbsd
 ###	 For LynxOS 3.0.1, tested on PPC
-#EXTRA_LIBS= -lXext -lSM -lICE -lnetinet -lXmu -liberty
-###	 For LynxOS 3.0.1, tested on PC
+#EXTRA_LIBS= -lXext -lSM -lICE -lnetinet -lXmu -liberty -lX11
+###	 For LynxOS 3.1.0, tested on PC
 #EXTRA_LIBS= -lXext -lSM -lICE -lnetinet -lXmu
 
 
@@ -792,8 +793,9 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ad
+VIMRTDIR = /vim60ae
 HELPSUBDIR = /doc
+COLSUBDIR = /colors
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
 PLUGSUBDIR = /plugin
@@ -810,6 +812,7 @@ PODIR = po
 ### VIMRCLOC	compiled-in location for global [g]vimrc files (all versions)
 ### VIMRUNTIMEDIR  compiled-in location for runtime files (optional)
 ### HELPSUBLOC	location for help files
+### COLSUBLOC	location for colorscheme files
 ### SYNSUBLOC	location for syntax files
 ### INDSUBLOC	location for indent files
 ### PLUGSUBLOC	location for standard plugin files
@@ -826,6 +829,7 @@ VIMLOC		= $(DATADIR)$(VIMDIR)
 VIMRTLOC	= $(DATADIR)$(VIMDIR)$(VIMRTDIR)
 VIMRCLOC	= $(VIMLOC)
 HELPSUBLOC	= $(VIMRTLOC)$(HELPSUBDIR)
+COLSUBLOC	= $(VIMRTLOC)$(COLSUBDIR)
 SYNSUBLOC	= $(VIMRTLOC)$(SYNSUBDIR)
 INDSUBLOC	= $(VIMRTLOC)$(INDSUBDIR)
 PLUGSUBLOC	= $(VIMRTLOC)$(PLUGSUBDIR)
@@ -851,8 +855,6 @@ HELPENDLOC = $(HELPSUBLOC)
 #HELPENDLOC = /usr/doc/vim
 SYNTAXENDLOC = $(SYNSUBLOC)
 #SYNTAXENDLOC = /usr/lib/vim/syntax
-INDENTENDLOC = $(INDSUBLOC)
-#INDENTENDLOC = /usr/lib/vim/indent
 PLUGINFTENDLOC = $(PLUGSUBLOC)
 #PLUGINFTENDLOC = /usr/lib/vim/plugin
 FTPLUGINFTENDLOC = $(FTPLUGSUBLOC)
@@ -936,6 +938,9 @@ HELPSOURCE = ../runtime/doc
 
 # Where to copy the script files from (menu, bugreport)
 SCRIPTSOURCE = ../runtime
+
+# Where to copy the colorscheme files from
+COLSOURCE = ../runtime/colors
 
 # Where to copy the syntax files from
 SYNSOURCE = ../runtime/syntax
@@ -1504,8 +1509,8 @@ installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 
 # install the help files; first adjust the contents for the location
 installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
-		$(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) \
-		$(PLUGSUBLOC) $(TUTORSUBLOC)
+		$(HELPSUBLOC) $(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) \
+		$(FTPLUGSUBLOC) $(PLUGSUBLOC) $(TUTORSUBLOC)
 	@echo generating $(MANSUBDIR)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
@@ -1569,6 +1574,9 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 	chmod $(VIMSCRIPTMOD) $(SYS_INDOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
+# install the colorscheme files
+	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(COLSUBLOC)
+	cd $(COLSUBLOC); chmod $(HELPMOD) *.vim README.txt
 # install the syntax files
 	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim README.txt $(SYNSUBLOC)
 	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim README.txt
@@ -1633,8 +1641,8 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	test -f error
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
-		$(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) $(LANGSUBLOC) \
-		$(KMAPSUBLOC) \
+		$(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) \
+		$(LANGSUBLOC) $(KMAPSUBLOC) \
 		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC) $(PLUGSUBLOC):
 	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
@@ -1764,13 +1772,14 @@ uninstall_runtime:
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
 	-rm -f $(SYS_OPTWIN_FILE)
+	-rm -f $(COLSUBLOC)/*.vim $(COLSUBLOC)/README.txt
 	-rm -f $(SYNSUBLOC)/*.vim $(SYNSUBLOC)/README.txt $(INDSUBLOC)/*.vim
 	-rm -rf $(MACROSUBLOC)
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
 	-rm -rf $(LANGSUBLOC)
 	-rm -rf $(KMAPSUBLOC)
-	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
+	-rmdir $(HELPSUBLOC) $(COLSUBLOC) $(SYNSUBLOC) $(INDSUBLOC)
 	-rm -rf $(FTPLUGSUBLOC)/*.vim $(FTPLUGSUBLOC)/README.txt
 	-rm -f $(PLUGSUBLOC)/*.vim $(PLUGSUBLOC)/README.txt
 	-rmdir $(FTPLUGSUBLOC) $(PLUGSUBLOC) $(VIMRTLOC)
@@ -1804,6 +1813,7 @@ shadow:	runtime pixmaps
 	cd $(SHADOWDIR)/testdir; ln -s ../../testdir/Makefile \
 				 ../../testdir/vimrc.unix \
 				 ../../testdir/*.in \
+				 ../../testdir/unix.vim \
 				 ../../testdir/*.ok .
 
 # Link needed for doing "make install" in a shadow directory.
@@ -1813,6 +1823,11 @@ runtime:
 # Link needed for doing "make" using GTK in a shadow directory.
 pixmaps:
 	-ln -s ../pixmaps .
+
+# Update the menu.vim file with the latest Syntax menu.
+# This is only needed when runtime/makemenu.vim was changed.
+menu: ./vim ../runtime/makemenu.vim
+	./vim -u ../runtime/makemenu.vim
 
 # Start configure from scratch
 scrub scratch:

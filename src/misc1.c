@@ -1535,7 +1535,9 @@ ins_char_bytes(buf, newlen)
     int		old_list;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (virtual_active() && curwin->w_cursor.coladd)
+    /* Break tabs if needed. */
+    if (virtual_active() && 
+	    (chartabsize(ml_get_cursor(), curwin->w_cursor.col) > 1))
 	coladvance_force(getviscol());
 #endif
 
@@ -4698,6 +4700,9 @@ get_c_indent()
 	int	start_off = 0;
 	int	done = FALSE;
 
+	/* To be sure later on, we set NUL. */
+	lead_middle[0] = NUL;
+
 	/* find how indented the line beginning the comment is */
 	getvcol(curwin, trypos, &col, NULL, NULL);
 	amount = col;
@@ -4768,14 +4773,26 @@ get_c_indent()
 
 	/* If our line starts with an asterisk, line up with the
 	 * asterisk in the comment opener; otherwise, line up
-	 * with the first character of the comment text.
+	 * with the first character of the comment text. Unless
+	 * we have a middle string defined. Then use that offset.
 	 */
 	if (done)
 	    ;
-	else if (theline[0] == '*')
+	else if (lead_middle[0] != NUL)
 	{
-	    amount += 1;
+	    /* If we indent a non-empty line, which does not start
+	     * with our middle string, we have to indent a little
+	     * bit more. */
+	    if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) != 0
+		    && theline[0] != NUL)
+		amount += ind_in_comment;
+	    /* Else we may be in INSERT-state. Then increase indent
+	     * by the start offset. */
+	    else
+		amount += start_off;
 	}
+	else if (theline[0] == '*')
+	    amount += 1;
 	else
 	{
 	    /*
@@ -4804,6 +4821,26 @@ get_c_indent()
 		if (*look == NUL)
 		    amount += ind_in_comment;
 	    }
+	}
+
+	/*
+	 * If we have a middle string, the current line is empty and
+	 * we are in INSERT-state, we want to insert the middle string.
+	 */
+	if (lead_middle[0] != NUL && theline[0] == NUL && (State & INSERT))
+	{
+	    n = 0;
+	    while (lead_middle[n] != NUL && n < (int)STRLEN(lead_middle))
+	    {
+		ins_char(lead_middle[n]);
+		n++;
+	    }
+	    /* Without this, we would exceed the memory of the linepointer
+	     * and would find ourselves in the data-nirwana. */
+	    ins_char(' ');
+
+	    /* Update Cursor-position, since inserted some text. */
+	    cur_curpos.col += STRLEN(lead_middle) + 1;
 	}
     }
 

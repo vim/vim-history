@@ -1,6 +1,8 @@
+" vi:set ts=8 sts=8 sw=8 tw=0:
+"
 " Menu Translations:	Japanese (UTF-8)
 " Translated By: 	Muraoka Taro  <koron@tka.att.ne.jp>
-" Last Change:		2001 apr 26
+" Last Change:		21:36:27 30-Apr-2001.
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -40,7 +42,7 @@ menutrans &Redo<Tab>^R			もう一度やる(&R)<Tab>^R
 menutrans Rep&eat<Tab>\.		繰り返す(&T)<Tab>\.
 menutrans Cu&t<Tab>"+x			切り取り(&T)<Tab>"+x
 menutrans &Copy<Tab>"+y			コピー(&C)<Tab>"+y
-menutrans &Paste<Tab>"+p		貼り付け(&P)<Tab>"+p
+menutrans &Paste<Tab>"+P		貼り付け(&P)<Tab>"+P
 menutrans Put\ &Before<Tab>[p		前に貼る(&B)<Tab>[p
 menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
@@ -50,28 +52,60 @@ menutrans Find\ and\ Rep&lace\.\.\.	置換(&E)\.\.\.
 "menutrans Options\.\.\.			オプション(&O)\.\.\.
 menutrans Settings\ &Window		設定ウィンドウ(&W)
 
-" Edit/Settings
-menutrans Se&ttings			設定
+" Edit/Global Settings
+menutrans Global\ Settings		全体設定
+menutrans Toggle\ Pattern\ Highlight<Tab>:set\ hls!
+	\	パターン強調切替<Tab>:set\ hls!
+menutrans Toggle\ ignore-case<Tab>:set\ ic!
+	\	大小文字区別切替<Tab>:set\ ic!
+menutrans Toggle\ showmatch<Tab>:set\ sm!
+	\	マッチ表示切替<Tab>:set\ sm!
+menutrans Context\ lines		カーソル周辺行数
+menutrans Virtual\ Edit			仮想編集
+menutrans Never				無効
+menutrans Block\ Selection		ブロック選択時
+menutrans Insert\ mode			挿入モード時
+menutrans Block\ and\ Insert		ブロック/挿入モード時
+menutrans Always			常時
+menutrans Toggle\ Insert\ mode<Tab>:set\ im!
+	\	挿入(初心者)モード切替<Tab>:set\ im!
+menutrans Search\ Path\.\.\.		検索パス\.\.\.
+menutrans Tag\ Files\.\.\.		タグファイル\.\.\.
 
-" Build boolean options
-menutrans Toggle\ Line\ Numbering<TAB>:set\ number!
-	\	行番号表示切替<TAB>:set\ number!
-menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!		
-	\	行折返し切替<TAB>:set\ wrap!
-menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!
-	\	強調検索切替<TAB>:set\ hlsearch!
-menutrans Toggle\ expandtab<TAB>:set\ expandtab!
-	\	タブ展開切替<TAB>:set\ expandtab!
-
-" Build GUI options
+" GUI options
 menutrans Toggle\ Toolbar		ツールバー表示切替
 menutrans Toggle\ Bottom\ Scrollbar	スクロールバー(下)表示切替
 menutrans Toggle\ Left\ Scrollbar	スクロールバー(左)表示切替
 menutrans Toggle\ Right\ Scrolbar	スクロールバー(右)表示切替
 
-" Build variable options
+" Edit/File Settings
+
+" Boolean options
+menutrans File\ Settings		ファイル設定
+menutrans Toggle\ Line\ Numbering<Tab>:set\ nu!
+	\	行番号表示切替<Tab>:set\ nu!
+menutrans Toggle\ List\ Mode<Tab>:set\ list!
+	\ リストモード切替<Tab>:set\ list!
+menutrans Toggle\ Line\ Wrap<Tab>:set\ wrap!		
+	\	行折返し切替<Tab>:set\ wrap!
+menutrans Toggle\ Wrap\ at\ word<Tab>:set\ lbr!
+	\	単語折返し切替<Tab>:set\ lbr!
+menutrans Toggle\ Search\ Patn\ Highl<Tab>:set\ hls!
+	\	強調検索切替<Tab>:set\ hls!
+menutrans Toggle\ expand-tab<Tab>:set\ et!
+	\	タブ展開切替<Tab>:set\ et!
+menutrans Toggle\ auto-indent<Tab>:set\ ai!
+	\	自動字下げ切替<Tab>:set\ ai!
+menutrans Toggle\ C-indenting<Tab>:set\ cin!
+	\	C言語字下げ切替<Tab>:set\ cin!
+
+" other options
 menutrans Shiftwidth			シフト幅
+menutrans Soft\ Tabstop			ソフトウェアタブ幅
 menutrans Text\ Width\.\.\.		テキスト幅\.\.\.
+menutrans File\ Format\.\.\.		改行記号選択\.\.\.
+menutrans Keymap			キーマップ
+menutrans None				なし
 
 " Programming menu
 menutrans &Tools			ツール(&T)
@@ -92,9 +126,9 @@ menutrans Convert\ back<Tab>:%!xxd\ -r	HEXから逆変換<Tab>%!xxd\ -r
 " Tools.Fold Menu
 menutrans &Folding			折畳み(&F)
 " open close folds 
-menutrans &Enable/Disable\ folds<TAB>zi	有効/無効切替(&E)<TAB>zi
-menutrans &View\ Cursor\ Line<TAB>zv	カーソル行を表示(&V)<TAB>zv
-menutrans Vie&w\ Cursor\ Line\ only<TAB>zMzx	カーソル行だけを表示(&W)<TAB>zMzx
+menutrans &Enable/Disable\ folds<Tab>zi	有効/無効切替(&E)<Tab>zi
+menutrans &View\ Cursor\ Line<Tab>zv	カーソル行を表示(&V)<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx	カーソル行だけを表示(&W)<Tab>zMzx
 menutrans C&lose\ more\ folds<Tab>zm	折畳みを閉じる(&L)<Tab>zm
 menutrans &Close\ all\ folds<Tab>zM	全折畳みを閉じる(&C)<Tab>zM
 menutrans O&pen\ more\ folds<Tab>zr	折畳みを開く(&P)<Tab>zr
@@ -108,11 +142,15 @@ menutrans S&yntax			シンタックス
 menutrans &Diff				差分
 menutrans Ma&rker			マーカー
 " create and delete folds
-menutrans Create\ &Fold<TAB>zf		折畳み作成(&F)<TAB>zf
-menutrans &Delete\ Fold<TAB>zd		折畳み削除(&D)<TAB>zd
-menutrans Delete\ &All\ Folds<TAB>zD	全折畳み削除(&A)<TAB>zD
+menutrans Create\ &Fold<Tab>zf		折畳み作成(&F)<Tab>zf
+menutrans &Delete\ Fold<Tab>zd		折畳み削除(&D)<Tab>zd
+menutrans Delete\ &All\ Folds<Tab>zD	全折畳み削除(&A)<Tab>zD
 " moving around in folds
 menutrans Fold\ column\ &width		折畳みカラム幅
+
+menutrans &Update		更新(&U)
+menutrans &Get\ Block		ブロック抽出(&G)
+menutrans &Put\ Block		ブロック適用(&P)
 
 " Names for buffer menu.
 menutrans &Buffers		バッファ(&B)
@@ -140,7 +178,7 @@ menutrans &Right\ side<Tab>^WL		右(&R)
 menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww
 menutrans P&revious<Tab>^WW		前へ(&R)<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	同じ高さに(&E)<Tab>^W=
+menutrans &Equal\ Size<Tab>^W=	同じ高さに(&E)<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		最大高に(&M)<Tab>^W
 menutrans M&in\ Height<Tab>^W1_		最小高に(&i)<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		最大幅に<Tab>^W\|

@@ -496,7 +496,7 @@ u_undoredo()
 	    bot = curbuf->b_ml.ml_line_count + 1;
 	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
 	{
-	    EMSG(_("u_undo: line numbers wrong"));
+	    EMSG(_("(ue1) u_undo: line numbers wrong"));
 	    changed();		/* don't want UNCHANGED now */
 	    return;
 	}
@@ -696,7 +696,7 @@ u_get_headentry()
 {
     if (curbuf->b_u_newhead == NULL || curbuf->b_u_newhead->uh_entry == NULL)
     {
-	EMSG(_("undo list corrupt"));
+	EMSG(_("(ue2) undo list corrupt"));
 	return NULL;
     }
     return curbuf->b_u_newhead->uh_entry;
@@ -726,7 +726,7 @@ u_getbot()
 				(curbuf->b_ml.ml_line_count - uep->ue_lcount);
 	if (uep->ue_bot < 1 || uep->ue_bot > curbuf->b_ml.ml_line_count)
 	{
-	    EMSG(_("undo line missing"));
+	    EMSG(_("(ue3) undo line missing"));
 	    uep->ue_bot = uep->ue_top + 1;  /* assume all lines deleted, will
 					     * get all the old lines back
 					     * without deleting the current

@@ -2,11 +2,13 @@
 "    Language: Oracle Procedureal SQL (PL/SQL)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
 "         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
-" Last Change: April 4, 2001
-"     Version: 6.0-6
+" Last Change: April 30, 2001
 
-" Quit when a syntax file was already loaded
-if exists("b:current_syntax")
+" For version 5.x, clear all syntax items.
+" For version 6.x, quit when a syntax file was already loaded.
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
   finish
 endif
 
@@ -125,33 +127,46 @@ syn match plsqlParenError	")"
 " Syntax Synchronizing
 syn sync minlines=10 maxlines=100
 
-" The default highlighting.
-hi def link plsqlAttribute Macro
-hi def link plsqlBooleanLiteral Boolean
-hi def link plsqlCharLiteral Character
-hi def link plsqlComment Comment
-hi def link plsqlConditional Conditional
-hi def link plsqlFloatLiteral Float
-hi def link plsqlFunction Function
-hi def link plsqlGarbage Error
-hi def link plsqlHostIdentifier Label
-hi def link plsqlIdentifier Normal
-hi def link plsqlIntLiteral Number
-hi def link plsqlOperator Operator
-hi def link plsqlParen Normal
-hi def link plsqlParenError Error
-hi def link plsqlPseudo PreProc
-hi def link plsqlKeyword Keyword
-hi def link plsqlRepeat Repeat
-hi def link plsqlStorage StorageClass
-hi def link plsqlSQLKeyword Statement
-hi def link plsqlStringError Error
-hi def link plsqlStringLiteral String
-hi def link plsqlSymbol Normal
-hi def link plsqlTrigger Function
-hi def link plsqlTypeAttribute StorageClass
-hi def link plsqlTodo Todo
+" Define the default highlighting.
+" For version 5.x and earlier, only when not done already.
+" For version 5.8 and later, only when and item doesn't have highlighting yet.
+if version >= 508 || !exists("did_plsql_syn_inits")
+  if version < 508
+    let did_plsql_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
+
+  HiLink plsqlAttribute Macro
+  HiLink plsqlBooleanLiteral Boolean
+  HiLink plsqlCharLiteral Character
+  HiLink plsqlComment Comment
+  HiLink plsqlConditional Conditional
+  HiLink plsqlFloatLiteral Float
+  HiLink plsqlFunction Function
+  HiLink plsqlGarbage Error
+  HiLink plsqlHostIdentifier Label
+  HiLink plsqlIdentifier Normal
+  HiLink plsqlIntLiteral Number
+  HiLink plsqlOperator Operator
+  HiLink plsqlParen Normal
+  HiLink plsqlParenError Error
+  HiLink plsqlPseudo PreProc
+  HiLink plsqlKeyword Keyword
+  HiLink plsqlRepeat Repeat
+  HiLink plsqlStorage StorageClass
+  HiLink plsqlSQLKeyword Statement
+  HiLink plsqlStringError Error
+  HiLink plsqlStringLiteral String
+  HiLink plsqlSymbol Normal
+  HiLink plsqlTrigger Function
+  HiLink plsqlTypeAttribute StorageClass
+  HiLink plsqlTodo Todo
+
+  delcommand HiLink
+endif
 
 let b:current_syntax = "plsql"
 
-" vim: ts=3
+" vim: ts=8 sw=2

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ad.  Last change: 2001 Apr 29
+*syntax.txt*    For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -376,8 +376,9 @@ Unix shell: >
    $ for f in *.[ch]; do gvim -f +"syn on" +"so \$VIMRUNTIME/syntax/2html.vim" +"wq" +"q" $f; done
 <
 
-		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim*
+		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
 Assembly	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
+		*asm68k-syntax*
 
 Files matching "*.i" could be Progress or Assembly  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
@@ -390,6 +391,7 @@ extensions.  Therefore you will have to select the type yourself, or add a
 line in the assembly file that Vim will recognize.  Currently these syntax
 files are included:
 	asm		GNU assembly (the default)
+	asm68k		Motorola 680x0 assembly
 	asmh8300	Hitachi H-8300 version of GNU assembly
 	ia64		Intel Itanium 64
 	masm		Microsoft assembly (probably works for any 80x86)
@@ -933,6 +935,23 @@ To have *.inc files be recognized as IA64, add this to your .vimrc file: >
 	:let g:filetype_inc = "ia64"
 
 
+INFORM						*inform.vim* *inform-syntax*
+
+Inform highlighting includes symbols provided by the Inform Library, as
+most programs make extensive use of it.  If do not wish Library symbols
+to be highlighted add this to your vim startup: >
+	:let inform_highlight_simple=1
+
+By default it is assumed that Inform programs are Z-machine targetted,
+and highlights Z-machine assembly language symbols appropriately.  If
+you intend your program to be targetted to a Glulx/Glk environment you
+need to add this to your startup sequence: >
+	:let inform_highlight_glulx=1
+
+This will highlight Glulx opcodes instead, and also adds glk() to the
+set of highlighted system functions.
+
+
 JAVA						*java.vim* *java-syntax*
 
 The java.vim syntax highlighting file offers several options:
@@ -1127,16 +1146,17 @@ The newest version of the papp.vim syntax file can usually be found at
 http://papp.plan9.de.
 
 
-PASCAL						*pascal.vim* *pascal-syntax*
+PASCAL 						*pascal.vim* *pascal-syntax*
 
 Files matching "*.p" could be Progress or Pascal.  If the automatic detection
 doesn't work for you, or you don't edit Progress at all, use this in your
 startup vimrc: >
-   :let filetype_p = "pascal"
+
+   :let filetype_p = "pascal"  
 
 The Pascal syntax file has been extended to take into account some extensions
-provided by Turbo Pascal, Free Pascal Compiler, GNU Pascal Compiler.  Delphi
-keywords are also supported.  By default, Turbo Pascal 7.0 features are
+provided by Turbo Pascal, Free Pascal Compiler and GNU Pascal Compiler.
+Delphi keywords are also supported. By default, Turbo Pascal 7.0 features are
 enabled.  If you prefer to stick with the standard Pascal keywords, add the
 following line to your startup file: >
 
@@ -1168,10 +1188,16 @@ or >
 
    :let pascal_fpc=1
 
+To ensure that strings are defined on a single line, you can define the
+pascal_one_line_string variable. >
+
+   :let pascal_one_line_string=1
+
 If you dislike <Tab> chars, you can set the pascal_no_tabs variable.  Tabs
 will be highlighted as Error. >
 
    :let pascal_no_tabs=1
+
 
 
 PERL						*perl.vim* *perl-syntax*
@@ -1679,7 +1705,7 @@ It will look much better with a font in a quadratic cell size, e.g. for X: >
 	:set guifont=-*-clean-medium-r-*-*-8-*-*-*-*-80-*
 
 ==============================================================================
-5. Defining a syntax					*:syn-define*
+5. Defining a syntax					*:syn-define* *sy3*
 
 Vim understands three types of syntax items:
 1. A keyword.  It can only contain keyword characters, according to the
@@ -1714,7 +1740,7 @@ match or region.  And a keyword with matching case always goes before a
 keyword with ignoring case.
 
 
-DEFINING CASE						*:syn-case*
+DEFINING CASE						*:syn-case* *ce4*
 
 :sy[ntax] case [match|ignore]
 	This defines if the following ":syntax" commands will work with
@@ -1794,7 +1820,7 @@ DEFINING MATCHES					*:syn-match*
 <
 
 DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
-
+							*ce8* *ce9*
 :sy[ntax] region {group-name} [{options}]
 		[matchgroup={group_name}]
 		[keepend]
@@ -1965,7 +1991,7 @@ and may be mixed with patterns.
 
 Not all commands accept all arguments.  This table shows which arguments
 can not be used for all commands:
-
+							*sx2* *sx3*
 		    contains  oneline	fold  display  extend~
 :syntax keyword		 -	 -	 -	 -	 -
 :syntax match		yes	 -	yes	yes	yes
@@ -2096,7 +2122,8 @@ The 'foldnestmax' option limits the nesting of syntax folds.
 {not available when Vim was compiled without |+folding| feature}
 
 
-contains={groupname},..					*:syn-contains*
+				*:syn-contains* *sx8* *sx9* *sx0* *sy1* *sy2*
+contains={groupname},..
 
 The "contains" argument is followed by a list of syntax group names.  These
 groups will be allowed to begin inside the item (they may extend past the
@@ -2234,7 +2261,7 @@ Note that this example doesn't work for nested "if"s.  You need to add
 example).
 
 ==============================================================================
-7. Syntax patterns					*:syn-pattern*
+7. Syntax patterns				*:syn-pattern* *pe9* *pe0*
 
 In the syntax commands, a pattern must be surrounded by two identical
 characters.  This is like it works for the ":s" command.  The most common to
@@ -2406,7 +2433,7 @@ Note that only matches within a single line can be used.  Multi-line matches
 cannot be referred to.
 
 ==============================================================================
-8. Syntax clusters					*:syn-cluster*
+8. Syntax clusters					*:syn-cluster* *sx5*
 
 :sy[ntax] cluster {cluster-name} [contains={group-name}..]
 				 [add={group-name}..]
@@ -2448,7 +2475,7 @@ This also has implications for nested clusters: >
    :syntax cluster SmallGroup remove=B  " now bbb isn't matched within Stuff
 
 ==============================================================================
-9. Including syntax files				*:syn-include*
+9. Including syntax files				*:syn-include* *sx4*
 
 It is often useful for one language's syntax file to include a syntax file for
 a related language.  Depending on the exact relationship, this can be done in
@@ -2485,7 +2512,7 @@ two different ways:
 	  version, without replacing the file that does the ":syn include".
 
 ==============================================================================
-10. Synchronizing					*:syn-sync*
+10. Synchronizing					*:syn-sync* *sx6* *sx7*
 
 Vim wants to be able to start redrawing in any position in the document.  To
 make this possible it needs to know the syntax item at the position where
@@ -2618,7 +2645,7 @@ search for the sync point can be much simpler than figuring out the
 highlighting.  The reduced number of patterns means it will go (much)
 faster.]
 
-						*syn-sync-grouphere*
+					    *syn-sync-grouphere* *sx1* *ce7*
     :syntax sync match {sync-group-name} grouphere {group-name} "pattern" ..
 
 	Define a match that is used for syncing.  {group-name} is the
@@ -2665,17 +2692,17 @@ You can clear specific sync patterns with: >
    :syntax sync clear {sync-group-name} ..
 
 ==============================================================================
-11. Listing syntax items				*:syntax* *:sy* *:syn*
+11. Listing syntax items		*:syntax* *:sy* *:syn* *:syn-list*
 
-This commands lists all the syntax items:
+This commands lists all the syntax items: >
 
     :sy[ntax] [list]
 
-To show the syntax items for one syntax group:
+To show the syntax items for one syntax group: >
 
     :sy[ntax] list {group-name}
 
-To list the syntax groups in one cluster:
+To list the syntax groups in one cluster:			*ce6*  >
 
     :sy[ntax] list @{cluster-name}
 
@@ -2685,7 +2712,7 @@ Note that the ":syntax" command can be abbreviated to ":sy", although ":syn"
 is mostly used, because it looks better.
 
 ==============================================================================
-12. Highlight command				*:highlight* *:hi* *eh3*
+12. Highlight command			*:highlight* *:hi* *eh3* *he9* *hl3*
 
 There are three types of highlight groups:
 - The ones used for specific languages.  For these the name starts with the
@@ -2699,7 +2726,7 @@ You can see all the groups currently active with this command: >
 This will open a new window containing all highlight group names, displayed
 in their own color.
 
-						*:colo* *:colorscheme*
+						*:colo* *:colorscheme* *ce1*
 :colo[rscheme] {name}	Load color scheme {name}.  This searches 'runtimepath'
 			for the file "colors/{name}.vim.  The first one that
 			is found is loaded.
@@ -2713,12 +2740,13 @@ in their own color.
 :hi[ghlight] {group-name}
 			List one highlight group.
 
-:hi[ghlight] clear	Disable all highlighting.  Only useful when new
-			highlighting is going to be defined next!
+:hi[ghlight] clear	Reset all highlighting to the defaults.  Removes all
+			highlighting for groups added by the user!
 
 :hi[ghlight] clear {group-name}
 :hi[ghlight] {group-name} NONE
-			Disable the highlighting for one highlight group.
+			Disable the highlighting for one highlight group.  It
+			is _not_ set back to the default colors.
 
 :hi[ghlight] [default] {group-name} {key}={arg} ..
 			Add a highlight group, or change the highlighting for
@@ -2744,7 +2772,7 @@ specified field is used, and settings are merged with previous ones.  So, the
 result is like this single command has been used: >
    :hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff gui=bold
 <
-						*highlight-args*
+					    *highlight-args* *hl4* *hl5* *hl6*
 There are three types of terminals for highlighting:
 term	a normal terminal (vt100, xterm)
 cterm	a color terminal (MS-DOS console, color-xterm, these have the "Co"
@@ -2756,7 +2784,7 @@ the same syntax file on all terminals, and use the optimal highlighting.
 
 1. highlight arguments for normal terminals
 
-term={attr-list}				*attr-list* *highlight-term*
+term={attr-list}			*attr-list* *highlight-term* *hl9*
 	attr-list is a comma separated list (without spaces) of the
 	following items (in any order):
 		bold
@@ -2770,7 +2798,7 @@ term={attr-list}				*attr-list* *highlight-term*
 	Note that "bold" can be used here and by using a bold font.  They
 	have the same effect.
 
-start={term-list}				*highlight-start*
+start={term-list}				*highlight-start* *hl7*
 stop={term-list}				*term-list* *highlight-stop*
 	These lists of terminal codes can be used to get
 	non-standard attributes on a terminal.
@@ -2809,8 +2837,8 @@ cterm={attr-list}					*highlight-cterm*
 	Note: Many terminals (e.g., DOS console) can't mix these attributes
 	with coloring.  Use only one of "cterm=" OR "ctermfg=" OR "ctermbg=".
 
-ctermfg={color-nr}					*highlight-ctermfg*
-ctermbg={color-nr}					*highlight-ctermbg*
+ctermfg={color-nr}				*highlight-ctermfg* *hl8*
+ctermbg={color-nr}				*highlight-ctermbg*
 	The {color-nr} argument is a color number.  Its range is zero to
 	(not including) the number given by the termcap entry "Co".
 	The actual color with this number depends on the type of terminal
@@ -2882,7 +2910,7 @@ ctermbg={color-nr}					*highlight-ctermbg*
 	needs to reset the color when exiting.  This is done with the "op"
 	termcap entry |t_op|.  If this doesn't work correctly, try setting the
 	't_op' option in your .vimrc.
-
+							*he2* *he3*
 	When Vim knows the normal foreground and background colors, "fg" and
 	"bg" can be used as color names.  This only works after setting the
 	colors for the Normal group and for the MS-DOS console.  Example, for
@@ -2930,7 +2958,7 @@ guibg={color-name}					*highlight-guibg*
 	Example: >
 	    :hi comment guifg='salmon pink'
 <
-							*gui-colors*
+							*gui-colors* *ce2*
 	Suggested color names (these are available on most systems):
 	    Red		LightRed	DarkRed
 	    Green	LightGreen	DarkGreen	SeaGreen
@@ -3034,7 +3062,7 @@ scrollbars.  They don't have defaults.  This doesn't work for the Win32 GUI.
     Scrollbar						    *hl-Scrollbar*
 
 ==============================================================================
-13. Linking groups				*:hi-link* *:highlight-link*
+13. Linking groups		*:hi-link* *:highlight-link* *hl1* *hl2*
 
 When you want to use the same highlighting for several syntax groups, you
 can do this more easily by linking the groups into one common highlight
@@ -3048,7 +3076,7 @@ To remove a link:
 
     :hi[ghlight][!] [default] link {from-group} NONE
 
-Notes:
+Notes:							*he1*
 - If the {from-group} and/or {to-group} doesn't exist, it is created.  You
   don't get an error message for a non-existing group.
 - As soon as you use a ":highlight" command for a linked group, the link is
@@ -3072,7 +3100,7 @@ Without the "default" in the C syntax file, the highlighting would be
 overruled when the syntax file is loaded.
 
 ==============================================================================
-14. Cleaning up						*:syn-clear*
+14. Cleaning up						*:syn-clear* *ce5*
 
 If you want to clear the syntax stuff for the current buffer, you can use this
 command: >

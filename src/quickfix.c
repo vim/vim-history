@@ -270,7 +270,7 @@ qf_init(efile, errorformat, newlist)
 		    if (fmt_ptr->addr[idx])
 		    {
 			sprintf((char *)errmsg,
-				_("Too many %%%c in format string"), *efmp);
+				_("(eq7) Too many %%%c in format string"), *efmp);
 			EMSG(errmsg);
 			goto error2;
 		    }
@@ -283,7 +283,7 @@ qf_init(efile, errorformat, newlist)
 						    fmt_ptr->prefix) == NULL))
 		    {
 			sprintf((char *)errmsg,
-				_("Unexpected %%%c in format string"), *efmp);
+				_("(eq8) Unexpected %%%c in format string"), *efmp);
 			EMSG(errmsg);
 			goto error2;
 		    }
@@ -337,7 +337,7 @@ qf_init(efile, errorformat, newlist)
 				    /* skip */;
 				if (efmp == efm + len)
 				{
-				    EMSG(_("Missing ] in format string"));
+				    EMSG(_("(eq9) Missing ] in format string"));
 				    goto error2;
 				}
 			    }
@@ -351,7 +351,7 @@ qf_init(efile, errorformat, newlist)
 		    {
 			/* TODO: scanf()-like: %*ud, %*3c, %*f, ... ? */
 			sprintf((char *)errmsg,
-				_("Unsupported %%%c in format string"), *efmp);
+				_("(eq0) Unsupported %%%c in format string"), *efmp);
 			EMSG(errmsg);
 			goto error2;
 		    }
@@ -369,7 +369,7 @@ qf_init(efile, errorformat, newlist)
 		    else
 		    {
 			sprintf((char *)errmsg,
-				_("Invalid %%%c in format string prefix"), *efmp);
+				_("(ey1) Invalid %%%c in format string prefix"), *efmp);
 			EMSG(errmsg);
 			goto error2;
 		    }
@@ -377,7 +377,7 @@ qf_init(efile, errorformat, newlist)
 		else
 		{
 		    sprintf((char *)errmsg,
-			    _("Invalid %%%c in format string"), *efmp);
+			    _("(ey2) Invalid %%%c in format string"), *efmp);
 		    EMSG(errmsg);
 		    goto error2;
 		}
@@ -403,7 +403,7 @@ qf_init(efile, errorformat, newlist)
     }
     if (fmt_first == NULL)	/* nothing found */
     {
-	EMSG(_("'errorformat' contains no pattern"));
+	EMSG(_("(ey3) 'errorformat' contains no pattern"));
 	goto error2;
     }
 
@@ -503,7 +503,7 @@ restofline:
 		{
 		    if (*namebuf == NUL)
 		    {
-			EMSG(_("Missing or empty directory name"));
+			EMSG(_("(ey4) Missing or empty directory name"));
 			goto error1;
 		    }
 		    if ((directory = qf_push_dir(namebuf, &dir_stack)) == NULL)
@@ -1128,17 +1128,8 @@ qf_jump(dir, errornr, forceit)
 		msg_scroll = TRUE;
 	    else if (!msg_scrolled && shortmess(SHM_OVERALL))
 		msg_scroll = FALSE;
-	    msg(IObuff);
+	    msg_attr_keep(IObuff, 0, TRUE);
 	    msg_scroll = i;
-
-	    /*
-	     * If the message is short, redisplay after redrawing the screen
-	     */
-	    if (linetabsize(IObuff) < ((int)p_ch - 1) * Columns + sc_col)
-	    {
-		set_keep_msg(IObuff);
-		keep_msg_attr = 0;
-	    }
 	}
     }
     else
@@ -1317,7 +1308,7 @@ qf_age(eap)
 	{
 	    if (qf_curlist == 0)
 	    {
-		EMSG(_("At bottom of quickfix stack"));
+		EMSG(_("(ey5) At bottom of quickfix stack"));
 		return;
 	    }
 	    --qf_curlist;
@@ -1326,7 +1317,7 @@ qf_age(eap)
 	{
 	    if (qf_curlist >= qf_listcount - 1)
 	    {
-		EMSG(_("At top of quickfix stack"));
+		EMSG(_("(ey6) At top of quickfix stack"));
 		return;
 	    }
 	    ++qf_curlist;
@@ -1749,7 +1740,7 @@ bt_dontwrite_msg(buf)
 {
     if (bt_dontwrite(buf))
     {
-	EMSG(_("Cannot write, 'buftype' option is set"));
+	EMSG(_("(ey7) Cannot write, 'buftype' option is set"));
 	return TRUE;
     }
     return FALSE;

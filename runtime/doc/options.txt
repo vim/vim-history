@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ad.  Last change: 2001 Apr 29
+*options.txt*   For Vim version 6.0ae.  Last change: 2001 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -293,8 +293,12 @@ files.  You use this command: >
 	:setlocal makeprg=perlmake
 You can switch back to using the global value by making the local value empty: >
 	:setlocal makeprg=
-This only works for a string option.  For a boolean option you cannot go back
-to using the global value.
+This only works for a string option.  For a boolean option you need to use the
+"<" flag, like this: >
+	:setlocal autoread<
+Note that for non-boolean options using "<" copies the global value to the
+local value, it doesn't switch back to using the global value (that matters
+when changing the global value later).
 
 
 Setting the filetype
@@ -531,6 +535,7 @@ is entered, this is almost like having global options.  If 's' and 'S' are not
 present, the options are copied from the currently active buffer when the
 buffer is created.
 
+							*oe3*
 A jump table for the options with a short description can be found at |Q_op|.
 
 					*'aleph'* *'al'* *aleph* *Aleph*
@@ -595,7 +600,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	When a file has been detected to have been changed outside of Vim and
 	it has not been changed inside of Vim, automatically read it again.
 	When the file has been deleted this is not done.  |timestamp|
-
+	If this option has a local value, use this command to switch back to
+	using the global value: >
+		:set autoread<
+<
 				 *'autowrite'* *'aw'* *'noautowrite'* *'noaw'*
 'autowrite' 'aw'	boolean	(default off)
 			global
@@ -894,6 +902,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	   last		Use same directory as with last file browser.
 	   buffer	Use the directory of the related buffer.
 	   current	Use the current directory.
+	   {path}	Use the specified directory
 
 						*'bufhidden'* *'bh'*
 'bufhidden' 'bh'	string (default: "")
@@ -915,7 +924,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This option is used together with 'buftype' and 'swapfile' to specify
 	special kinds of buffers.   See |special-buffers|.
 
-						*'buflisted'* *'bl'*
+						*'buflisted'* *'bl'* *eb5*
 'buflisted' 'bl'	boolean (default: on)
 			local to buffer
 			{not in Vi}
@@ -925,7 +934,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	a file name or marks.  Vim sets it when starting to edit a buffer.
 	But not when moving to a buffer with ":buffer".
 
-						*'buftype'* *'bt'*
+						*'buftype'* *'bt'* *ey7*
 'buftype' 'bt'		string (default: "")
 			local to buffer
 			{not in Vi}
@@ -959,7 +968,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			file name.  It is not modified in response to a |:cd|
 			command.
 
-						*'cdpath'* *'cd'*
+						*'cdpath'* *'cd'* *pe3* *pe5*
 'cdpath' 'cd'		string	(default: equivalent to $CDPATH or ",,")
 			global
 			{not in Vi}
@@ -1044,7 +1053,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
 	 not set yet, the default for 'fileencodings' is changed.
 
-					*'charconvert'* *'ccv'*
+					*'charconvert'* *'ccv'* *eu3*
 'charconvert' 'ccv'	string (default "")
 			global
 			{only available when compiled with the |+multi_byte|
@@ -1229,7 +1238,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|format-comments|.  See |option-backslash| about using backslashes to
 	insert a space.
 
-						*'commentstring'* *'cms'*
+						*'commentstring'* *'cms'* *ef6*
 'commentstring' 'cms'	string	(default "/*%s*/")
 			local to buffer
 			{not in Vi}
@@ -2130,7 +2139,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  diff:c	DiffDelete		|hl-DiffDelete|
 
 					*'fkmap'* *'fk'* *'nofkmap'* *'nofk'*
-'fkmap' 'fk'		boolean (default off)
+'fkmap' 'fk'		boolean (default off)			*ep6*
 			global
 			{not in Vi}
 			{only available when compiled with the |+rightleft|
@@ -2279,6 +2288,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		all		any
 		block		"(", "{", "[[", "[{", etc.
 		hor		horizontal movements: "l", "w", "fx", etc.
+		insert		any in Insert mode
 		mark		jumping to a mark: "'m", CTRL-O, etc.
 		percent		"%"
 		quickfix	":cn", ":crew", ":make", etc.
@@ -2291,7 +2301,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	whole closed fold. 
 	Note that vertical movements are not here, because it would make it
 	very difficult to move onto a closed fold.
-	In insert mode the folds containing the cursor will always be open.
+	In insert mode the folds containing the cursor will always be open
+	when text is inserted.
 	To close folds you can re-apply 'foldlevel' with the |zx| command or
 	set the 'foldclose' option to "all".
 
@@ -2452,7 +2463,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	changed.  This can be done by specifying a block cursor, or a
 	percentage for a vertical or horizontal cursor.
 
-						*'guifont'* *'gfn'*
+						*'guifont'* *'gfn'* *fe0*
 'guifont' 'gfn'		string	(default "")
 			global
 			{not in Vi}
@@ -2470,6 +2481,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	    :set guifont=Screen15,\ 7x13,font\\,with\\,commas
 <	will make vim try to use the font "Screen15" first, and if it fails it
 	will try to use "7x13" and then "font,with,commas" instead.
+								*ne1*
 	Note that the fonts must be mono-spaced (all characters have the same
 	width).
 	To preview a font on X11, you might be able to use the "xfontsel"
@@ -2483,7 +2495,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	will try some builtin default which should always be there ("7x13" in
 	the case of X).  The font names given should be "normal" fonts.  Vim
 	will try to find the related bold and italic fonts.
-	For the Win32 GUI
+	For the Win32 GUI					*en7* *en8*
 	- takes these options in the font name:
 		hXX - height is XX (points)
 		wXX - width is XX (points)
@@ -2505,7 +2517,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	mono-spaced fonts and comments on them.
 	See also |font-sizes|.
 
-						*'guifontset'* *'gfs'*
+				*'guifontset'* *'gfs'* *ef7* *ef8* *fe9*
 'guifontset' 'gfs'	string	(default "")
 			global
 			{not in Vi}
@@ -2528,7 +2540,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	This example works on many X11 systems: >
 		:set guifontset=-*-*-medium-r-normal--16-*-*-*-c-*-*-*
 <
-						*'guifontwide'* *'gfw'*
+						*'guifontwide'* *'gfw'* *eg5*
 'guifontwide' 'gfw'	string	(default "")
 			global
 			{not in Vi}
@@ -3063,6 +3075,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	characters up to 255 are specified with this option.  When a character
 	is printable but it is not available in the current font, a
 	replacement character will be shown.
+	Unprintable and zero-width Unicode characters are displayed as <xxxx>.
+	There is no option to specify these characters.
 
 			*'joinspaces'* *'js'* *'nojoinspaces'* *'nojs'*
 'joinspaces' 'js'	boolean	(default on)
@@ -3124,7 +3138,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:set keywordprg=man\ -s
 <	This option cannot be set from a |modeline|, for security reasons.
 
-					*'langmap'* *'lmap'*
+					*'langmap'* *'lmap'* *le5* *le6*
 'langmap' 'lmap'	string	(default "")
 			global
 			{not in Vi}
@@ -3389,7 +3403,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	more memory, there is the danger of failing when memory is exhausted.
 	See also |:function|.
 
-						*'maxmapdepth'* *'mmd'*
+						*'maxmapdepth'* *'mmd'* *er9*
 'maxmapdepth' 'mmd'	number	(default 1000)
 			global
 			{not in Vi}
@@ -3663,7 +3677,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	characters are put before the number.
 	See |hl-LineNr| for the highlighting used for the number.
 
-					*'osfiletype'* *'oft'*
+					*'osfiletype'* *'oft'* *eq4*
 'osfiletype' 'oft'	string (RISC-OS default: "Text",
 				others default: "")
 			local to buffer
@@ -3755,7 +3769,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Expression which is evaluated to apply a patch to a file and generate
 	the resulting new version of the file.  See |diff-patchexpr|.
 
-						*'patchmode'* *'pm'*
+						*'patchmode'* *'pm'* *ee9*
 'patchmode' 'pm'	string	(default "")
 			global
 			{not in Vi}
@@ -3772,7 +3786,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	created.
 	When the 'backupskip' pattern matches, a patchmode file is not made.
 
-						*'path'* *'pa'*
+					*'path'* *'pa'* *pe2* *pe4* *pe6*
 'path' 'pa'		string	(default on Unix: ".,/usr/include,,"
 				   on OS/2:       ".,/emx/include,,"
 				   other systems: ".,,")
@@ -4950,7 +4964,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	NOTE: This option is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
-						*'tags'* *'tag'*
+						*'tags'* *'tag'* *te6*
 'tags' 'tag'		string	(default "./tags,tags", when compiled with
 				|+emacs_tags|: "./tags,./TAGS,tags,TAGS")
 			global or local to buffer |global-local|
@@ -5256,7 +5270,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 <	Motif and Athena cannot display icons and text at the same time.  They
 	will show icons if both are requested.
 
-	If none of the strings specified in 'toolbar' are valid of if
+	If none of the strings specified in 'toolbar' are valid or if
 	'toolbar' is empty, this option is ignored.  If you want to disable
 	the toolbar, you need to set the 'guioptions' option.  For example: >
 		:set guioptions-=T
@@ -5841,7 +5855,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|ins-textwidth|.  {Vi: works differently and less useful}
 
 				   *'wrapscan'* *'ws'* *'nowrapscan'* *'nows'*
-'wrapscan' 'ws'		boolean	(default on)
+'wrapscan' 'ws'		boolean	(default on)			*se6* *se7*
 			global
 	Searches wrap around the end of the file.
 
