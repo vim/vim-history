@@ -1829,6 +1829,11 @@ gui_mch_wait_for_chars(int wtime)
 		s_wait_timer = 0;
 	    }
 	    allow_scrollbar = FALSE;
+
+	    /* Clear pending mouse button, the release event may have been
+	     * taken by the dialog window. */
+	    s_button_pending = -1;
+
 	    return OK;
 	}
     }
