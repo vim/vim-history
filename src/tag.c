@@ -2961,8 +2961,6 @@ simplify_filename(filename)
 
 		    if (!do_strip)
 		    {
-			struct stat	new_st;
-
 			/* If the component exists in the file system, check
 			 * that stripping it won't change the meaning of the
 			 * file name.  First get information about the
@@ -2983,6 +2981,8 @@ simplify_filename(filename)
 #ifdef UNIX
 			if (do_strip)
 			{
+			    struct stat	new_st;
+
 			    /* On Unix, the check for the unstripped file name
 			     * above works also for a symbolic link pointing to
 			     * a searchable directory.  But then the parent of
