@@ -297,7 +297,7 @@ netbeans_connect(void)
     sprintf(buf, "0:version=0 \"%s\"\n", ExtEdProtocolVersion);
     nb_send(buf, "externaleditor_version");
 
-    nbdebug(("netbeans_connect: Connnection succeeded\n"));
+    nbdebug(("netbeans_connect: Connection succeeded\n"));
 
 /*    nb_init_graphics();  delay until needed */
 
@@ -493,8 +493,10 @@ nb_parse_messages(void)
 		vim_free(node);
 	    }
 	    else
+	    {
 		/* more follows, move to the start */
 		mch_memmove(node->buffer, p, STRLEN(p) + 1);
+	    }
 	}
     }
 }
@@ -630,8 +632,7 @@ nb_parse_cmd(char_u *cmd)
     char_u	*verb;
     char_u	*q;
     int		bufno;
-    int		iscmd = 0;
-    int		isfunc = 0;
+    int		isfunc = -1;
 
     if (STRCMP(cmd, "DISCONNECT") == 0)
     {
@@ -668,7 +669,7 @@ nb_parse_cmd(char_u *cmd)
 	if (*q == '!')
 	{
 	    *q++ = NUL;
-	    iscmd = 1;
+	    isfunc = 0;
 	    break;
 	}
 	else if (*q == '/')
@@ -679,7 +680,7 @@ nb_parse_cmd(char_u *cmd)
 	}
     }
 
-    if (!iscmd && !isfunc)
+    if (isfunc < 0)
     {
 	warn("missing ! or / in: %s", cmd);
 	return;
@@ -688,7 +689,10 @@ nb_parse_cmd(char_u *cmd)
     cmdno = strtol((char *)q, (char **)&q, 10);
 
     if (nb_do_cmd(bufno, verb, isfunc, cmdno, q) == FAIL)
+    {
+	nbdebug(("nb_parse_cmd: Command error for \"%s\"\n", cmd));
 	die("bad return from nb_do_cmd");
+    }
 }
 
 struct nbbuf_struct
@@ -747,7 +751,8 @@ nb_getbufno(buf_T *bufp)
 
 /*
  * Given a Netbeans buffer number, return the netbeans buffer.
- * Returns NULL for a negative number.
+ * Returns NULL for 0 or a negative number. A 0 bufno means a
+ * non-buffer related command has been sent.
  */
     static nbbuf_T *
 nb_get_buf(int bufno)
@@ -755,7 +760,7 @@ nb_get_buf(int bufno)
     /* find or create a buffer with the given number */
     int incr;
 
-    if (bufno < 0)
+    if (bufno <= 0)
 	return NULL;
 
     if (!buf_list)
@@ -1075,6 +1080,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
+		nbdebug(("    null bufp in getLength"));
 		die("null bufp in getLength");
 		retval = FAIL;
 	    }
@@ -1103,6 +1109,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
+		nbdebug(("    null bufp in getText"));
 		die("null bufp in getText");
 		retval = FAIL;
 	    }
@@ -1113,7 +1120,10 @@ nb_do_cmd(
 		text = alloc((unsigned)((len > 0)
 						 ? ((len + nlines) * 2) : 4));
 		if (text == NULL)
+		{
+		    nbdebug(("    nb_do_cmd: getText has null text field\n"));
 		    retval = FAIL;
+		}
 		else
 		{
 		    p = text;
@@ -1161,6 +1171,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
+		nbdebug(("    null bufp in remove"));
 		die("null bufp in remove");
 		retval = FAIL;
 	    }
@@ -1264,6 +1275,7 @@ nb_do_cmd(
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
+		nbdebug(("    null bufp in insert"));
 		die("null bufp in insert");
 		retval = FAIL;
 	    }
@@ -1366,12 +1378,22 @@ nb_do_cmd(
 /* =====================================================================*/
 	if (streq((char *)cmd, "create"))
 	{
-#if 0  /* never used */
-	    buf->internalname = (char *)alloc_clear(8);
-	    sprintf(buf->internalname, "<%d>", bufno);
-	    buf->netbeansOwns = 1;
-#endif
-	    /* not really created until setFullName */
+	    /* Create a buffer without a name. */
+	    if (buf == NULL)
+	    {
+		die("null buf in create");
+		return FAIL;
+	    }
+	    vim_free(buf->displayname);
+	    buf->displayname = NULL;
+	    nbdebug(("    CREATE %d\n", bufno));
+
+	    netbeansReadFile = 0; /* don't try to open disk file */
+	    do_ecmd(0, NULL, 0, 0, ECMD_ONE, ECMD_HIDE + ECMD_OLDBUF);
+	    netbeansReadFile = 1;
+	    buf->bufp = curbuf;
+	    maketitle();
+	    gui_update_menus(0);
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "startDocumentListen"))
