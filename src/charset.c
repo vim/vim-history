@@ -276,7 +276,8 @@ buf_init_chartab(buf, global)
 
 /*
  * Translate any special characters in buf[bufsize] in-place.
- * If there is not enough room, not all characters will be translated.
+ * The result is a string with only printable characters, but if there is not
+ * enough room, not all characters will be translated.
  */
     void
 trans_characters(buf, bufsize)
@@ -293,24 +294,13 @@ trans_characters(buf, bufsize)
     while (*buf != 0)
     {
 #ifdef FEAT_MBYTE
-	char    bstr[7];
-
 	/* Assume a multi-byte character doesn't need translation. */
 	if (has_mbyte && (trs_len = (*mb_ptr2len_check)(buf)) > 1)
 	    len -= trs_len;
 	else
 #endif
 	{
-#ifdef FEAT_MBYTE
-	    /* catch illegal UTF-8 byte */
-	    if (enc_utf8 && *buf >= 0x80)
-	    {
-		transchar_nonprint(bstr, *buf);
-		trs = bstr;
-	    }
-	    else
-#endif
-		trs = transchar(*buf);
+	    trs = transchar_byte(*buf);
 	    trs_len = (int)STRLEN(trs);
 	    if (trs_len > 1)
 	    {
@@ -361,7 +351,7 @@ transstr(s)
 		if (l > 0)
 		    len += l;
 		else
-		    ++len;	/* illegal byte sequence */
+		    len += 4;	/* illegal byte sequence */
 	    }
 	}
 	res = alloc((unsigned)(len + 1));
@@ -378,12 +368,12 @@ transstr(s)
 #ifdef FEAT_MBYTE
 	    if (has_mbyte && (l = (*mb_ptr2len_check)(p)) > 1)
 	    {
-		STRNCAT(res, p, l);
+		STRNCAT(res, p, l);	/* append printable multi-byte char */
 		p += l;
 	    }
 	    else
 #endif
-		STRCAT(res, transchar(*p++));
+		STRCAT(res, transchar_byte(*p++));
 	}
     }
     return res;
@@ -430,19 +420,22 @@ str_foldcase(p)
  * initialized, and initializing options may cause transchar() to be called!
  * When chartab_initialized == FALSE don't use chartab[].
  * Does NOT work for multi-byte characters, c must be <= 255.
+ * Also doesn't work for the first byte of a multi-byte, "c" must be a
+ * character!
  */
+static char_u	transchar_buf[7];
+
     char_u *
 transchar(c)
     int		c;
 {
-    static char_u	buf[7];
     int			i;
 
     i = 0;
     if (IS_SPECIAL(c))	    /* special key code, display as ~@ char */
     {
-	buf[0] = '~';
-	buf[1] = '@';
+	transchar_buf[0] = '~';
+	transchar_buf[1] = '@';
 	i = 2;
 	c = K_SECOND(c);
     }
@@ -459,13 +452,31 @@ transchar(c)
 		)) || (c < 256 && vim_isprintc_strict(c)))
     {
 	/* printable character */
-	buf[i] = c;
-	buf[i + 1] = NUL;
+	transchar_buf[i] = c;
+	transchar_buf[i + 1] = NUL;
     }
     else
-	transchar_nonprint(buf + i, c);
-    return buf;
+	transchar_nonprint(transchar_buf + i, c);
+    return transchar_buf;
 }
+
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Like transchar(), but called with a byte instead of a character.  Checks
+ * for an illegal UTF-8 byte.
+ */
+    char_u *
+transchar_byte(c)
+    int		c;
+{
+    if (enc_utf8 && c >= 0x80)
+    {
+	transchar_nonprint(transchar_buf, c);
+	return transchar_buf;
+    }
+    return transchar(c);
+}
+#endif
 
 /*
  * Convert non-printable character to two or more printable characters in
