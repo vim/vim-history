@@ -32,7 +32,7 @@
 #endif
 #include "if_cscope.h"
 
-static void	    cs_usage_msg __ARGS((int x));
+static void	    cs_usage_msg __ARGS((csid_e x));
 static int	    cs_add __ARGS((exarg_T *eap));
 static void	    cs_stat_emsg __ARGS((char *fname));
 static int	    cs_add_common __ARGS((char *, char *, char *));
@@ -89,9 +89,9 @@ static cscmd_T	    cs_cmds[] =
 
     static void
 cs_usage_msg(x)
-    int x;
+    csid_e x;
 {
-    (void)EMSG2(_("E560: Usage: cs[cope] %s"), cs_cmds[x].usage);
+    (void)EMSG2(_("E560: Usage: cs[cope] %s"), cs_cmds[(int)x].usage);
 }
 
 /*

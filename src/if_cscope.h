@@ -81,7 +81,7 @@ typedef struct csi {
     FILE *	    to_fp;	/* to cscope: FILE. */
 } csinfo_T;
 
-enum { Add, Find, Help, Kill, Reset, Show } csid_e;
+typedef enum { Add, Find, Help, Kill, Reset, Show } csid_e;
 
 typedef enum {
     Store,
