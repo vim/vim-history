@@ -989,7 +989,7 @@ do_search(oap, dirc, str, count, options)
 	    }
 
 	    /* compute length of search command for get_address() */
-	    searchcmdlen += (int)(p - searchstr);
+	    searchcmdlen += (int)(p - str);
 
 	    str = p;			    /* put str after search command */
 	}
