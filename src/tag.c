@@ -2789,7 +2789,8 @@ jumpto_tag(lbuf, forceit, keep_help)
     /* if it was a CTRL-W CTRL-] command split window now */
     if (postponed_split)
     {
-	win_split(postponed_split > 0 ? postponed_split : 0, 0);
+	win_split(postponed_split > 0 ? postponed_split : 0,
+						       postponed_split_flags);
 # ifdef FEAT_SCROLLBIND
 	curwin->w_p_scb = FALSE;
 # endif
