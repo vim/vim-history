@@ -67,8 +67,13 @@
 # else
 #  define DFLT_FF	"unix"
 #  define DFLT_FFS_VIM	"unix,dos"
-#  define DFLT_FFS_VI	""
-#  define DFLT_TEXTAUTO	FALSE
+#  ifdef __CYGWIN__
+#   define DFLT_FFS_VI	"unix,dos"	/* Cygwin always needs file detection */
+#   define DFLT_TEXTAUTO TRUE
+#  else
+#   define DFLT_FFS_VI	""
+#   define DFLT_TEXTAUTO FALSE
+#  endif
 # endif
 #endif
 
