@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ar.  Last change: 2001 Jul 30
+*diff.txt*      For Vim version 6.0as.  Last change: 2001 Aug 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -63,7 +63,7 @@ diff mode.  You could use a construct like this: >
 	   setup for non-diff mode
 	endif
 
-While already in Vim you can start diff mode in two ways.
+While already in Vim you can start diff mode in three ways.
 
 							*E98*
 :diffsplit {filename}					*:diffs* *:diffsplit*
@@ -96,6 +96,14 @@ To make these commands use a vertical split, prepend |:vertical|.  Examples: >
 <
 							*E96*
 There can be up to four buffers with 'diff' set.
+
+Since the option values are remembered with the buffer, you can edit another
+file for a moment and come back to the same file and be in diff mode again.
+If you don't want diff mode, reset the 'diff' option.  And you probably want
+to get rid of the fold column: >
+
+	:set nodiff
+	:set foldcolumn=0
 
 ==============================================================================
 2. Viewing diffs						*view-diffs*

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 12
+*options.txt*   For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1148,7 +1148,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
 			Also applies to the modeless selection.
-	
+
 	autoselectml	Like "autoselect", but for the modeless selection
 			only.  Compare to the 'A' flag in 'guioptions'.
 
@@ -2623,7 +2623,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		windowing system's global selection unless explicitly told to
 		by a yank or delete operation for the "* register.
 		The same applies to the modeless selection.
-	
+
 	  'A'	Autoselect for the modeless selection.  Like 'a', but only
 	  	applies to the modeless selection.
 
@@ -4036,7 +4036,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	    system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice)
 	    		. ' ' . v:fname_in) . delete(v:fname_in)
-<	
+<
 	If you change this option, using a function is an easy way to avoid
 	having to escape all the spaces.  Example: >
 
@@ -4060,7 +4060,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	command's output.  It has the same format as the 'guifont' option,
 	except that only one font may be named, and the special "guifont=*"
 	syntax is not available.
-	Currently only works in the Win32 GUI version.
+	In the Win32 GUI version this specifies a font name with its extra
+	attributes, as with the 'guifont' option.
+	For other systems, only ":h11" is recognized, where "11" is the point
+	size of the font.  When omitted, the points size is 10.
 
 						*'printheader'* *'pheader'*
 'printheader' 'pheader'  string  (default "%<%f%h%m%=Page %N")
@@ -4117,12 +4120,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  duplex:short		Print on both sides (when possible), bind on
 				short side.
 
+	  collate:y  (default)	Collating: 1 2 3, 1 2 3, 1 2 3
+	  collate:n		No collating: 1 1 1, 2 2 2, 3 3 3
+
 	  portrait:y (default)	Orientation is portrait.
 	  portrait:n		Orientation is landscape.
 
 	  paper:A4   (default)	Paper size: A4
 	  paper:letter		Paper size: Letter
-	
+
 	The item indicated with (default) is used when the item is not
 	present.  The values are not always used, especially when using a
 	dialog to select the printer and options.

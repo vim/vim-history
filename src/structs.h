@@ -771,6 +771,7 @@ struct file_buffer
     pos_T	b_visual_start;	/* start pos of last VIsual */
     pos_T	b_visual_end;	/* end position of last VIsual */
     int		b_visual_mode;	/* VIsual_mode of last VIsual */
+    colnr_T	b_visual_curswant;   /* MAXCOL from w_curswant */
 #endif
 
     pos_T	b_last_cursor;	/* cursor position when last unloading this
@@ -1382,6 +1383,8 @@ typedef struct oparg
     int		regname;	/* register to use for the operator */
     int		motion_type;	/* type of the current cursor motion */
     int		motion_force;	/* force motion type: 'v', 'V' or CTRL-V */
+    int		use_reg_one;	/* TRUE if delete uses reg 1 even when not
+				   linewise */
     int		inclusive;	/* TRUE if char motion is inclusive (only
 				   valid when motion_type is MCHAR */
     int		end_adjusted;	/* backuped b_op_end one char (only used by

@@ -50,13 +50,15 @@
 
 /* Default resource values */
 #define DFLT_FONT		"7x13"
+#define DFLT_TOOLTIP_FONT	XtDefaultFontSet
+
 #ifdef FEAT_GUI_ATHENA
 # define DFLT_MENU_BG_COLOR	"gray77"
 # define DFLT_MENU_FG_COLOR	"black"
 # define DFLT_SCROLL_BG_COLOR	"gray60"
 # define DFLT_SCROLL_FG_COLOR	"gray77"
 # define DFLT_TOOLTIP_BG_COLOR	"#ffffffff9191"
-# define DFLT_TOOLTIP_FG_COLOR	"black"
+# define DFLT_TOOLTIP_FG_COLOR	"#000000000000"
 #else
 /* use the default (CDE) colors */
 # define DFLT_MENU_BG_COLOR	""
@@ -64,7 +66,7 @@
 # define DFLT_SCROLL_BG_COLOR	""
 # define DFLT_SCROLL_FG_COLOR	""
 # define DFLT_TOOLTIP_BG_COLOR	"#ffffffff9191"
-# define DFLT_TOOLTIP_FG_COLOR	"black"
+# define DFLT_TOOLTIP_FG_COLOR	"#000000000000"
 #endif
 
 Widget vimShell = (Widget)0;
@@ -123,7 +125,7 @@ static void gui_x11_mouse_cb __ARGS((Widget w, XtPointer data, XEvent *event, Bo
 static void gui_x11_sniff_request_cb __ARGS((XtPointer closure, int *source, XtInputId *id));
 #endif
 static void gui_x11_check_copy_area __ARGS((void));
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
 static void gui_x11_send_event_handler __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 #endif
 static void gui_x11_wm_protocol_handler __ARGS((Widget, XtPointer, XEvent *, Boolean *));
@@ -266,6 +268,8 @@ static struct specialkey
 #define XtCTooltipBackground	"TooltipBackground"
 #define XtNtooltipForeground	"tooltipForeground"
 #define XtCTooltipForeground	"TooltipForeground"
+#define XtNtooltipFont		"tooltipFont"
+#define XtCTooltipFont		"TooltipFont"
 
 /*
  * X Resources:
@@ -448,6 +452,15 @@ static XtResource vim_resources[] =
 	XtRString,
 	DFLT_TOOLTIP_BG_COLOR
     },
+    {
+	XtNtooltipFont,
+	XtCTooltipFont,
+	XtRString,
+	sizeof(char *),
+	XtOffsetOf(gui_T, tooltip_font),
+	XtRString,
+	DFLT_TOOLTIP_FONT
+    },
 #ifdef FEAT_XIM
     {
 	"preeditType",
@@ -479,44 +492,14 @@ static XtResource vim_resources[] =
 #endif /* FEAT_XIM */
 #ifdef FEAT_BEVAL
     {
-	XtNballoonEvalForeground,
-	XtCForeground,
-	XtRPixel,
-	sizeof(Pixel),
-	XtOffsetOf(gui_T, balloonEval_fg_pixel),
-	XtRString,
-	DFLT_TOOLTIP_FG_COLOR
-    },
-    {
-	XtNballoonEvalBackground,
-	XtCBackground,
-	XtRPixel,
-	sizeof(Pixel),
-	XtOffsetOf(gui_T, balloonEval_bg_pixel),
-	XtRString,
-	DFLT_TOOLTIP_BG_COLOR
-    },
-#ifdef FEAT_GUI_MOTIF
-    {
-	XmNballoonEvalFontList,
-	XmCFontList,
-	XmRFontList,
-	sizeof(XmFontList),
-	XtOffsetOf(gui_T, balloonEval_fontList),
-	XtRString,
-	"fixed"
-    },
-#elif defined(FEAT_GUI_ATHENA)
-    {
-	XtNballoonEvalFontList,
+	"balloonEvalFontSet",
 	XtCFontSet,
 	XtRFontSet,
 	sizeof(XFontSet),
-	XtOffsetOf(gui_T, balloonEval_fontList),
-	XtRString,
-	"-*-*-medium-r-normal--*-*-*-*-*-*-*" /* Uses whatever fontset is appropriate */
+	XtOffsetOf(gui_T, balloonEval_fontset),
+	XtRImmediate,
+	(XtPointer)NOFONTSET
     },
-#endif
 #endif /* FEAT_BEVAL */
 };
 
@@ -1223,7 +1206,7 @@ gui_mch_init_check()
     int
 gui_mch_init()
 {
-    long_u	gc_mask;
+    XtGCMask	gc_mask;
     XGCValues	gc_vals;
     int		x, y, mask;
     unsigned	w, h;
@@ -1248,10 +1231,19 @@ gui_mch_init()
      * Get the colors ourselves.  Using the automatic conversion doesn't
      * handle looking for approximate colors.
      */
+    /* NOTE: These next few lines are an exact duplicate of gui_athena.c's
+     * gui_mch_def_colors().  Why?
+     */
     gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.menu_fg_color);
     gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.menu_bg_color);
     gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.scroll_fg_color);
     gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.scroll_bg_color);
+#ifdef FEAT_BEVAL
+    gui.balloonEval_fg_pixel =
+			    gui_mch_get_color((char_u *)gui.tooltip_fg_color);
+    gui.balloonEval_bg_pixel =
+			    gui_mch_get_color((char_u *)gui.tooltip_bg_color);
+#endif
 
 #ifdef FEAT_MENU
     /* If the menu height was set, don't change it at runtime */
@@ -1288,20 +1280,17 @@ gui_mch_init()
     gc_mask = GCForeground | GCBackground;
     gc_vals.foreground = gui.norm_pixel;
     gc_vals.background = gui.back_pixel;
-    gui.text_gc = XCreateGC(gui.dpy, DefaultRootWindow(gui.dpy), gc_mask,
-	    &gc_vals);
+    gui.text_gc = XtGetGC(vimShell, gc_mask, &gc_vals);
 
     gc_vals.foreground = gui.back_pixel;
     gc_vals.background = gui.norm_pixel;
-    gui.back_gc = XCreateGC(gui.dpy, DefaultRootWindow(gui.dpy), gc_mask,
-	    &gc_vals);
+    gui.back_gc = XtGetGC(vimShell, gc_mask, &gc_vals);
 
     gc_mask |= GCFunction;
     gc_vals.foreground = gui.norm_pixel ^ gui.back_pixel;
     gc_vals.background = gui.norm_pixel ^ gui.back_pixel;
     gc_vals.function   = GXxor;
-    gui.invert_gc = XCreateGC(gui.dpy, DefaultRootWindow(gui.dpy), gc_mask,
-	    &gc_vals);
+    gui.invert_gc = XtGetGC(vimShell, gc_mask, &gc_vals);
 
     gui.visibility = VisibilityUnobscured;
     x11_setup_atoms(gui.dpy);
@@ -1436,6 +1425,10 @@ gui_mch_init()
     sign_gui_started();
 #endif
 
+# ifdef FEAT_BEVAL
+    gui_init_tooltip_font();
+# endif
+
     return OK;
 }
 
@@ -1515,7 +1508,7 @@ gui_mch_open()
 	    (XtPointer)NULL);
 #endif
 
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
@@ -1560,6 +1553,28 @@ gui_mch_open()
 
     return OK;
 }
+
+#if defined(FEAT_BEVAL) || defined(PROTO)
+/*
+ * Convert the tooltip fontset name to an XFontSet.
+ */
+    void
+gui_init_tooltip_font()
+{
+    XrmValue from, to;
+
+    from.addr = (char *)gui.tooltip_font;
+    from.size = strlen(from.addr);
+    to.addr = (XtPointer)&gui.balloonEval_fontset;
+    to.size = sizeof(XFontSet);
+
+    if (XtConvertAndStore(vimShell, XtRString, &from, XtRFontSet, &to) == False)
+    {
+	/* Failed. What to do? */
+    }
+    gui_mch_new_tooltip_font();
+}
+#endif
 
 /*ARGSUSED*/
     void
@@ -2475,6 +2490,17 @@ gui_mch_iconify()
     XIconifyWindow(gui.dpy, XtWindow(vimShell), DefaultScreen(gui.dpy));
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    XRaiseWindow(gui.dpy, XtWindow(vimShell));
+}
+#endif
+
 /*
  * Draw a cursor without focus.
  */
@@ -2888,7 +2914,7 @@ gui_x11_wm_protocol_handler(w, client_data, event, dum)
     gui_shell_closed();
 }
 
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
 /*
  * Function called when property changed. Check for incoming commands
  */

@@ -1542,8 +1542,8 @@ gui_mch_set_winpos(int x, int y)
 }
 
     void
-gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
-	int base_width, int base_height)
+gui_mch_set_shellsize(int width, int height,
+	int min_width, int min_height, int base_width, int base_height)
 {
     PhDim_t window_size = { width, height };
     PhDim_t min_size = { min_width, min_height };
@@ -1579,6 +1579,17 @@ gui_mch_iconify(void)
     event.rid = PtWidgetRid( gui.vimWindow );
     PtForwardWindowEvent( &event );
 }
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    /* TODO */
+}
+#endif
 
     void
 gui_mch_settitle(char_u *title,	char_u *icon)

@@ -224,6 +224,7 @@ static void f_foldclosedend __ARGS((VAR argvars, VAR retvar));
 static void foldclosed_both __ARGS((VAR argvars, VAR retvar, int end));
 static void f_foldlevel __ARGS((VAR argvars, VAR retvar));
 static void f_foldtext __ARGS((VAR argvars, VAR retvar));
+static void f_foreground __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_getchar __ARGS((VAR argvars, VAR retvar));
 static void f_getcharmod __ARGS((VAR argvars, VAR retvar));
@@ -274,11 +275,12 @@ static void f_resolve __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
 static void f_searchpair __ARGS((VAR argvars, VAR retvar));
 static int get_search_arg __ARGS((VAR varp, int *flagsp));
-static void f_servernames __ARGS((VAR argvars, VAR retvar));
-static void f_serverreplypeek __ARGS((VAR argvars, VAR retvar));
-static void f_serverreplyread __ARGS((VAR argvars, VAR retvar));
-static void f_serverreplysend __ARGS((VAR argvars, VAR retvar));
-static void f_serversend __ARGS((VAR argvars, VAR retvar));
+static void f_serverlist __ARGS((VAR argvars, VAR retvar));
+static void f_remote_peek __ARGS((VAR argvars, VAR retvar));
+static void f_remote_read __ARGS((VAR argvars, VAR retvar));
+static void f_server2client __ARGS((VAR argvars, VAR retvar));
+static void f_remote_send __ARGS((VAR argvars, VAR retvar));
+static void f_remote_expr __ARGS((VAR argvars, VAR retvar));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
 static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
@@ -2329,6 +2331,7 @@ static struct fst
     {"foldclosedend",	1, 1, f_foldclosedend},
     {"foldlevel",	1, 1, f_foldlevel},
     {"foldtext",	0, 0, f_foldtext},
+    {"foreground",	0, 0, f_foreground},
     {"getbufvar",	2, 2, f_getbufvar},
     {"getchar",		0, 1, f_getchar},
     {"getcharmod",	0, 0, f_getcharmod},
@@ -2373,15 +2376,16 @@ static struct fst
     {"nextnonblank",	1, 1, f_nextnonblank},
     {"nr2char",		1, 1, f_nr2char},
     {"prevnonblank",	1, 1, f_prevnonblank},
+    {"remote_expr",	2, 3, f_remote_expr},
+    {"remote_peek",	1, 2, f_remote_peek},
+    {"remote_read",	1, 1, f_remote_read},
+    {"remote_send",	2, 2, f_remote_send},
     {"rename",		2, 2, f_rename},
     {"resolve",         1, 1, f_resolve},
     {"search",		1, 2, f_search},
     {"searchpair",	3, 5, f_searchpair},
-    {"servernames",	0, 0, f_servernames},
-    {"serverreply_peek",1, 2, f_serverreplypeek},
-    {"serverreply_read",1, 1, f_serverreplyread},
-    {"serverreply_send",2, 2, f_serverreplysend},
-    {"serversend",	2, 4, f_serversend},
+    {"server2client",	2, 2, f_server2client},
+    {"serverlist",	0, 0, f_serverlist},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
     {"setwinvar",	3, 3, f_setwinvar},
@@ -3556,6 +3560,20 @@ f_foldtext(argvars, retvar)
 }
 
 /*
+ * "foreground()" function
+ */
+/*ARGSUSED*/
+    static void
+f_foreground(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_GUI
+    gui_mch_set_foreground();
+#endif
+}
+
+/*
  * "getchar()" function
  */
     static void
@@ -3949,6 +3967,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_CINDENT
 	"cindent",
 #endif
+#ifdef FEAT_CLIENTSERVER
+	"clientserver",
+#endif
 #ifdef FEAT_CLIPBOARD
 	"clipboard",
 #endif
@@ -4259,9 +4280,6 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_XTERM_SAVE
 	"xterm_save",
-#endif
-#ifdef FEAT_XCMDSRV
-	"xcmdsrv",
 #endif
 #if defined(UNIX) && defined(FEAT_X11)
 	"X11",
@@ -5420,17 +5438,13 @@ f_prevnonblank(argvars, retvar)
     retvar->var_val.var_number = lnum;
 }
 
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
 static int check_connection __ARGS((void));
 
     static int
 check_connection()
 {
-# ifdef FEAT_XCMDSRV
     if (X_DISPLAY == NULL)
-# else
-    if (ole_client_init() == FAIL)
-# endif
     {
 	EMSG(_("E240: No connection to Vim server"));
 	return FAIL;
@@ -5441,142 +5455,147 @@ check_connection()
 
 /*ARGSUSED*/
     static void
-f_servernames(argvars, retvar)
+f_serverlist(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef FEAT_XCMDSRV
-    char_u	*r;
+    char_u	*r = NULL;
 
-    retvar->var_val.var_number = 0;
-    if (!check_connection())
-	return;
-
-    r = serverGetVimNames(X_DISPLAY);
+#ifdef FEAT_CLIENTSERVER
+# ifdef WIN32
+    r = serverGetVimNames();
+# else
+    if (check_connection() == OK)
+	r = serverGetVimNames(X_DISPLAY);
+# endif
+#endif
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = r;
-#endif
 }
 
 /*ARGSUSED*/
     static void
-f_serverreplypeek(argvars, retvar)
+f_remote_peek(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
     var		v;
     char_u	*s;
 
+# ifdef WIN32
+    s = serverGetReply(get_var_string(&argvars[0]), 0, 0);
+    retvar->var_val.var_number = (s != NULL);
+# else
     retvar->var_val.var_number = 0;
     if (!check_connection())
 	return;
 
-    retvar->var_val.var_number =
-	serverPeekReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
-		        &s);
+    retvar->var_val.var_number = serverPeekReply(X_DISPLAY,
+			     serverStrToWin(get_var_string(&argvars[0])), &s);
+# endif
+
     if (argvars[1].var_type != VAR_UNKNOWN && retvar->var_val.var_number > 0)
     {
 	v.var_type = VAR_STRING;
 	v.var_val.var_string = vim_strsave(s);
 	set_var(get_var_string(&argvars[1]), &v);
     }
+#else
+    retvar->var_val.var_number = -1;
 #endif
 }
 
 /*ARGSUSED*/
     static void
-f_serverreplyread(argvars, retvar)
+f_remote_read(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef FEAT_XCMDSRV
     char_u	*r = NULL;
 
-    retvar->var_val.var_number = -1;
-    if (!check_connection())
-	return;
-
-    if (serverReadReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
-		        &r, FALSE) < 0)
-    {
-	EMSG(_("Unable to read a server reply"));
-	return;
-    }
+#ifdef FEAT_CLIENTSERVER
+# ifdef WIN32
+    r = serverGetReply(get_var_string(&argvars[0]), 1, 0);
+    if (r == NULL)
+# else
+    if (check_connection() == FAIL
+	    || serverReadReply(X_DISPLAY,
+		  serverStrToWin(get_var_string(&argvars[0])), &r, FALSE) < 0)
+# endif
+	EMSG(_("E277: Unable to read a server reply"));
+#endif
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = r;
-#endif
 }
 
 /*ARGSUSED*/
     static void
-f_serverreplysend(argvars, retvar)
+f_server2client(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
+    char_u	buf[NUMBUFLEN];
+    char_u	*server = get_var_string(&argvars[0]);
+    char_u	*reply = get_var_string_buf(&argvars[1], buf);
+
     retvar->var_val.var_number = -1;
+# ifndef WIN32
     if (!check_connection())
 	return;
+# endif
 
-    if (serverSendReply(X_DISPLAY, serverStrToWin(get_var_string(&argvars[0])),
-		                   get_var_string(&argvars[1])) < 0)
+    if (serverSendReply(server, reply) < 0)
     {
-	EMSG(_("Unable to send reply"));
+	EMSG(_("E258: Unable to send to client"));
 	return;
     }
     retvar->var_val.var_number = 0;
+#else
+    retvar->var_val.var_number = -1;
 #endif
 }
 
-/*ARGSUSED*/
+#ifdef FEAT_CLIENTSERVER
+static void remote_common __ARGS((VAR argvars, VAR retvar, int expr));
+
     static void
-f_serversend(argvars, retvar)
+remote_common(argvars, retvar, expr)
     VAR		argvars;
     VAR		retvar;
+    int		expr;
 {
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
     char_u	*server_name;
     char_u	*keys;
     char_u	*r = NULL;
-    int		asExpr = 0;
-# ifdef FEAT_XCMDSRV
+    char_u	buf[NUMBUFLEN];
+# ifdef WIN32
+    HWND	w;
+# else
     Window	w;
 # endif
 
-    retvar->var_val.var_number = -1;
+# ifdef FEAT_X11
     if (!check_connection())
 	return;
+# endif
 
     server_name = get_var_string(&argvars[0]);
-    keys = get_var_string(&argvars[1]);
-    if (argvars[2].var_type != VAR_UNKNOWN && get_var_number(&argvars[2]) != 0)
-	asExpr = 1;
-# ifdef FEAT_XCMDSRV
-    if (serverSendToVim(X_DISPLAY, server_name, keys, &r, &w, asExpr, 0) < 0)
+    keys = get_var_string_buf(&argvars[1], buf);
+# ifdef WIN32
+    if (serverSendToVim(server_name, keys, &r, &w, expr) < 0)
+# else
+    if (serverSendToVim(X_DISPLAY, server_name, keys, &r, &w, expr, 0) < 0)
+# endif
     {
 	EMSG2(_("E241: Unable to send to %s"), server_name);
 	return;
     }
-# else
-    if (asExpr)
-	r = ole_Eval(keys);
-    else
-    {
-	if (ole_SendKeys(keys) == FAIL)
-	{
-	    EMSG(_("E241: Unable to send to Vim server"));
-	    return;
-	}
-    }
-# endif
 
-    retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = r;
 
-# ifdef FEAT_XCMDSRV
-    if (argvars[2].var_type != VAR_UNKNOWN
-	    && argvars[3].var_type != VAR_UNKNOWN)
+    if (argvars[2].var_type != VAR_UNKNOWN)
     {
 	var	v;
 	char_u	str[30];
@@ -5584,12 +5603,36 @@ f_serversend(argvars, retvar)
 	sprintf((char *)str, "0x%x", (unsigned int)w);
 	v.var_type = VAR_STRING;
 	v.var_val.var_string = vim_strsave(str);
-	set_var(get_var_string(&argvars[3]), &v);
+	set_var(get_var_string(&argvars[2]), &v);
     }
-# endif
+}
+#endif
+
+/*ARGSUSED*/
+    static void
+f_remote_send(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+#ifdef FEAT_CLIENTSERVER
+    remote_common(argvars, retvar, FALSE);
 #endif
 }
 
+/*ARGSUSED*/
+    static void
+f_remote_expr(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_type = VAR_STRING;
+    retvar->var_val.var_string = NULL;
+#ifdef FEAT_CLIENTSERVER
+    remote_common(argvars, retvar, TRUE);
+#endif
+}
 
 #ifdef HAVE_STRFTIME
 /*

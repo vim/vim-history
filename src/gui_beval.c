@@ -449,13 +449,18 @@ drawBalloon(beval)
 	XmString s;
 
 	s = XmStringCreateLocalized((char *)beval->msg);
-	XmStringExtent(gui.balloonEval_fontList, s, &w, &h);
+	{
+	    XmFontList fl;
+
+	    fl = gui_motif_fontset2fontlist(&gui.balloonEval_fontset);
+	    XmStringExtent(fl, s, &w, &h);
+	    XmFontListFree(fl);
+	}
 	w += gui.border_offset << 1;
 	h += gui.border_offset << 1;
 	XtVaSetValues(beval->balloonLabel, XmNlabelString, s, NULL);
 	XmStringFree(s);
-#else
-	/* Athena */
+#else /* Athena */
 	/* Assume XtNinternational == True */
 	XFontSet	fset;
 	XFontSetExtents *ext;
@@ -466,6 +471,8 @@ drawBalloon(beval)
 	w = XmbTextEscapement(fset,
 			      (char *)beval->msg,
 			      (int)STRLEN(beval->msg));
+	w += gui.border_offset << 1;
+	h += gui.border_offset << 1;
 	XtVaSetValues(beval->balloonLabel, XtNlabel, beval->msg, NULL);
 #endif
 
@@ -545,17 +552,22 @@ createBalloonEvalWindow(beval)
 #endif
 
 #ifdef FEAT_GUI_MOTIF
-    XtSetArg(args[n], XmNforeground, gui.balloonEval_fg_pixel); n++;
-    XtSetArg(args[n], XmNbackground, gui.balloonEval_bg_pixel); n++;
-    XtSetArg(args[n], XmNfontList, gui.balloonEval_fontList); n++;
-    XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
-    beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
-		    xmLabelWidgetClass, beval->balloonShell, args, n);
-#elif FEAT_GUI_ATHENA
+    {
+	XmFontList fl;
+
+	fl = gui_motif_fontset2fontlist(&gui.balloonEval_fontset);
+	XtSetArg(args[n], XmNforeground, gui.balloonEval_fg_pixel); n++;
+	XtSetArg(args[n], XmNbackground, gui.balloonEval_bg_pixel); n++;
+	XtSetArg(args[n], XmNfontList, fl); n++;
+	XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+	beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
+			xmLabelWidgetClass, beval->balloonShell, args, n);
+    }
+#else /* FEAT_GUI_ATHENA */
     XtSetArg(args[n], XtNforeground, gui.balloonEval_fg_pixel); n++;
     XtSetArg(args[n], XtNbackground, gui.balloonEval_bg_pixel); n++;
     XtSetArg(args[n], XtNinternational, True); n++;
-    XtSetArg(args[n], XtNfontSet, gui.balloonEval_fontList); n++;
+    XtSetArg(args[n], XtNfontSet, gui.balloonEval_fontset); n++;
     beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 		    labelWidgetClass, beval->balloonShell, args, n);
 #endif

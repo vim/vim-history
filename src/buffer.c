@@ -2648,7 +2648,7 @@ maketitle()
 
 	    append_arg_number(curwin, buf, FALSE, IOSIZE);
 
-#ifdef FEAT_XCMDSRV
+#if defined(FEAT_CLIENTSERVER)
 	    if (serverName != NULL)
 	    {
 		STRCAT(buf, " - ");

@@ -5146,7 +5146,7 @@ xterm_update()
     while (XtAppPending(app_context) && !vim_is_input_buf_full())
     {
         XtAppNextEvent(app_context, &event);
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
 	{
 	    XPropertyEvent *e = (XPropertyEvent *)&event;
 

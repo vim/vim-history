@@ -84,6 +84,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifndef STRICT
+# define STRICT
+#endif
+#ifndef COBJMACROS
+# define COBJMACROS	/* For OLE: Enable "friendlier" access to objects */
+#endif
+#include <windows.h>
+
 /*
  * Win32 has plenty of memory, use large buffers
  */

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ar.  Last change: 2001 Aug 12
+*todo.txt*      For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,35 +29,28 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-After "hi Tooltip font=5x7", "hi clear" the tooltips are empty or crash.
-(David Harrison)
+Win32 client-server:
+- In the console version a received message isn't handled until a key is
+  pressed.
+- In the GUI a received message isn't handled until the mouse pointer is in
+  the window or the cursor is blinking.
 
-OLE version of vim client:
-- Make --serverlist work.  Make it possible to address a specific server.
-- Make --remote-wait work.
-- Use a solution with windows messages instead? (Paul Moore)
+Fonts for tooltips and balloons can be set with two resources, but there is
+actually only one font.
 
-The X11 server code uses replace_termcodes(), which depends on 'cpoptions'.
-(Paul Moore)
+When 'virtualedit' is "block", I# moves to before a TAB.
+When 'virtualedit' is "all", I# inserts one space too many on Tabs. (Karlsen)
+Using 'virtualedit' in Insert mode: When typing at the end of the line a
+character overwrites the last one in the line. (Ed Ralston)
 
 
 Vi incompatibility:
-8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
-    are flags re-used?  What is a Vim extension?
 8   With undo/redo only marks in the changed lines should be changed.  Other
     marks should be kept.  Vi keeps each mark at the same text, even when it
     is deleted or restored. (Webb)
     Also: A mark is lost after: make change, undo, redo and undo.
     Example: "{d''" then "u" then "d''": deletes an extra line, because the ''
     position is one line down. (Veselinovic)
-8   When using ":s" to split a line, marks are moved to the next line. (Geddes)
-8   When using ":n" ":rew", the prev. context mark is in the same place as the
-    cursor, not on the first line.
-8   "zt" should scroll one screen forward and put the cursor in the first
-    line.
-8   text is put in register 1 when using "c" and "d" with a motion character:
-    <control-A>   %   (   ) `<character>   /   ?   N n	 {   }
-    (from Nvi manual).
 8   When stdin is not a tty, and Vim reads commands from it, an error should
     make Vim exit.
 8   Unix Vim (not gvim): Typing CTRL-C in Ex mode should finish the line
@@ -124,10 +117,6 @@ GTK+ GUI known bugs:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
-    When using confirm() the mouse pointer is invisible in the main window.
-    Dialogs may appear far from the cursor and the Vim window.
-    A dialog with a textfield (for inputdialog()) looks different from other
-    dialogs.
 9   When logging out from KDE, vim is not told to save its files.  Catching
     the WM_SAVE_YOURSELF event doesn't work.
 9   When selecting a font from the font selector with an embedded space it
@@ -246,10 +235,10 @@ Athena GUI:
 
 
 Motif GUI:
+8   In Japanese, Athena automatically uses the right fonts for the menus.  Why
+    doesn't this happen for Motif?
 8   Popup menu ordering is wrong.
 8   Dialog: Accelerators don't work yet.
-8   Lesstif 0.89.4: Tearing-off a menu sometimes gives a "Restoring focus to
-    NULL widget!" error.  Probably a Lesstif problem.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
     (Phillipps)
@@ -451,8 +440,10 @@ VMS:
       Williams)
     - Need to handle unprintable characters.
     - ml_get error? (Xiangjiang Ma)
-    - On a B&W printer syntax highlighting is disabled.  Perform dithering to
-      make grey text?
+    - On a B&W printer syntax highlighting isn't visible.  Perform dithering
+      to make grey text?
+8   In Visual block mode with 'lbr' set, a change command doesn't insert the
+    text in following lines where the linebreak changes.
 9   dosinst.c: The DJGPP version can't uninstall the Uninstall registry key on
     Windows NT.  How to install a .inf file on Windows NT and how to detect
     that Windows NT is being used?
@@ -750,6 +741,8 @@ Folding:
 -   Can set 'foldtext' to empty string: don't display any line.  How to
     implement this?
 -   Apply a new foldlevel to a range of lines. (Steve Litt)
+-   Have some way to restrict commands to not folded text.  Also commands like
+    searches.
 
 
 Multi-byte characters:
@@ -947,7 +940,8 @@ Built-in script language:
 7   Be able to call a function while passing on a variable number of
     arguments:
 	:function Foo(abc, ...)
-	:  call Bar(a:abc, ...)    of call Bar(a:abc, a:*)
+	:  call Bar(a:abc, a:*)
+    Charles Campbell has a patch for this
 8   Have a look at VSEL.  Would it be useful to include? (Bigham)
 8   Add ":fungroup" command, to group function definitions together.  When
     encountered, all functions in the group are removed.  Suggest using an
@@ -2306,6 +2300,7 @@ Registers:
 
 
 Various improvements:
+7   Include patch to support Netbeans ingegration? (Dave Weatherford)
 7   Some compilers give error messages in which the file name does not have a
     path.  Be able to specify that 'path' is used for these files.
 8   Add term entries for function keys on xterm with alt and ctrl (new in pl

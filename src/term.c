@@ -2970,7 +2970,7 @@ shell_resized_check()
 
 /*
  * Set size of the Vim shell.
- * If 'mustset' is TRUE, we must set Rows and Columns, do not get real
+ * If 'mustset' is TRUE, we must set Rows and Columns, do not get the real
  * window size (this is used for the :win command).
  * If 'mustset' is FALSE, we may try to get the real window size and if
  * it fails use 'width' and 'height'.
@@ -3010,7 +3010,7 @@ set_shellsize(width, height, mustset)
 	Rows = height;
 	Columns = width;
 	check_shellsize();
-	ui_set_shellsize();
+	ui_set_shellsize(mustset);
     }
     else
 	check_shellsize();

@@ -11,11 +11,24 @@ let b:did_ftplugin = 1
 " and insert the comment leader when hitting <CR> or using "o".
 setlocal fo-=t fo+=croql
 
-setlocal com& com+=:#
+setlocal com=:#
 
-if has("gui") && !exists("b:browsefilter")
+" Change the browse dialog on Win32 to show mainly Perl-related files
+if has("gui_win32") && !exists("b:browsefilter")
     let b:browsefilter = "Perl Source Files (*.pl)\t*.pl\n" .
 		       \ "Perl Modules (*.pm)\t*.pm\n" .
 		       \ "Perl Documentation Files (*.pod)\t*.pod\n" .
 		       \ "All Files (*.*)\t*.*\n"
 endif
+
+" Provided by Ned Konz <ned@bike-nomad.com>
+---------------------------------------------
+setlocal include=\\<\\(use\|require\\)\\s*
+setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.pm','')
+setlocal isfname=A-Z,a-z,:,48-57,_
+setlocal keywordprg=perldoc
+setlocal iskeyword=48-57,_,A-Z,a-z,:
+setlocal isident=48-57,_,A-Z,a-z
+setlocal define=[^A-Za-z_]
+let &path=system('perl -e "print join(\",\",@INC)"')
+

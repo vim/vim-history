@@ -423,7 +423,7 @@ ex_menu(eap)
 		|| gui.toolbar_height != old_toolbar_height
 # endif
 	    ))
-	gui_set_shellsize(FALSE);
+	gui_set_shellsize(FALSE, FALSE);
 #endif
 
 theend:
@@ -2082,18 +2082,15 @@ ex_emenu(eap)
 	if ((curbuf->b_visual_start.lnum == eap->line1)
 		&& (curbuf->b_visual_end.lnum) == eap->line2)
 	{
-
-	    /* Set it up for visual mode - equivalent to gv.
-	     */
+	    /* Set it up for visual mode - equivalent to gv.  */
 	    VIsual_mode = curbuf->b_visual_mode;
 	    tpos = curbuf->b_visual_end;
 	    curwin->w_cursor = curbuf->b_visual_start;
-
+	    curwin->w_curswant = curbuf->b_visual_curswant;
 	}
 	else
 	{
-	    /* Set it up for line-wise visual mode
-	     */
+	    /* Set it up for line-wise visual mode */
 	    VIsual_mode = 'V';
 	    curwin->w_cursor.lnum = eap->line1;
 	    curwin->w_cursor.col = 1;

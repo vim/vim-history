@@ -1543,8 +1543,9 @@ ga_grow(gap, n)
     return OK;
 }
 
-#if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(PROTO) || \
-    defined(FEAT_PYTHON) || defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL)
+#if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(FEAT_PYTHON) \
+	|| defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL) \
+	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
 /*
  * Concatenate a string to a growarray which contains characters.
  * Note: Does NOT copy the NUL at the end!

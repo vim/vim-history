@@ -15,7 +15,7 @@ int gui_get_base_height __ARGS((void));
 void gui_resize_shell __ARGS((int pixel_width, int pixel_height));
 void gui_may_resize_shell __ARGS((void));
 int gui_get_shellsize __ARGS((void));
-void gui_set_shellsize __ARGS((int fit_to_display));
+void gui_set_shellsize __ARGS((int mustset, int fit_to_display));
 void gui_new_shellsize __ARGS((void));
 void gui_reset_scroll_region __ARGS((void));
 void gui_start_highlight __ARGS((int mask));
@@ -51,4 +51,7 @@ void ex_gui __ARGS((exarg_T *eap));
 int gui_find_bitmap __ARGS((char_u *name, char_u *buffer, char *ext));
 void display_errors __ARGS((void));
 int no_console_input __ARGS((void));
+void gui_update_screen __ARGS((void));
+char_u *get_find_dialog_text __ARGS((char_u *arg, int *wordp));
+int gui_do_findrepl __ARGS((int flags, char_u *find_text, char_u *repl_text, int down, int exact));
 /* vim: set ft=c : */

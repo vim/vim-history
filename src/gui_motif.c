@@ -407,8 +407,7 @@ gui_motif_create_fontlist(font)
     return font_list;
 }
 
-# if ((XmVersion > 1001) && defined(FEAT_BEVAL) && defined(FEAT_XFONTSET)) \
-	|| defined(PROTO)
+# if ((XmVersion > 1001) && defined(FEAT_XFONTSET)) || defined(PROTO)
     XmFontList
 gui_motif_fontset2fontlist(fontset)
     XFontSet	*fontset;
@@ -1063,7 +1062,7 @@ gui_mch_new_menu_font()
 #endif
 		     );
     }
-    gui_set_shellsize(TRUE);
+    gui_set_shellsize(FALSE, TRUE);
     ui_new_shellsize();
 }
 
@@ -1153,7 +1152,8 @@ gui_mch_submenu_change(menu, colors)
 		    Arg args[1];
 
 		    args[0].name = XmNfontList;
-		    args[0].value = (XtArgVal)gui.balloonEval_fontList;
+		    args[0].value = (XtArgVal)gui_motif_fontset2fontlist(
+						    &gui.balloonEval_fontset);
 		    XtSetValues(mp->tip->balloonLabel,
 				&args[0], XtNumber(args));
 		}
@@ -1268,6 +1268,12 @@ gui_mch_def_colors()
 	gui.menu_bg_pixel = gui.menu_def_bg_pixel;
 	gui.scroll_fg_pixel = gui.scroll_def_fg_pixel;
 	gui.scroll_bg_pixel = gui.scroll_def_bg_pixel;
+#ifdef FEAT_BEVAL
+	gui.balloonEval_fg_pixel =
+	    gui_mch_get_color((char_u *)gui.tooltip_fg_color);
+	gui.balloonEval_bg_pixel =
+	    gui_mch_get_color((char_u *)gui.tooltip_bg_color);
+#endif
     }
 }
 
@@ -2353,7 +2359,7 @@ gui_mch_show_toolbar(int showit)
 
 	XtUnmanageChild(XtParent(toolBar));
     }
-    gui_set_shellsize(FALSE);
+    gui_set_shellsize(FALSE, FALSE);
 }
 
 /*
@@ -2518,15 +2524,9 @@ gui_motif_scroll_colors(id)
 }
 
 #ifdef FEAT_MENU
-#ifdef FONTSET_ALWAYS
 /*
- * Set the fontlist for Widget "id" to use gui.menu_fontset.
+ * Set the fontlist for Widget "id" to use gui.menu_fontset or gui.menu_font.
  */
-#else
-/*
- * Set the fontlist for Widget "id" to use gui.menu_font.
- */
-#endif
     static void
 gui_motif_menu_fontlist(id)
     Widget  id;
@@ -2579,16 +2579,6 @@ gui_motif_menu_fontlist(id)
 #endif
 
 /*
- * Flags used to distinguish the different contexts in which the
- * find/replace callback may be called.
- */
-#define FR_DIALOGTERM	1
-#define FR_FINDNEXT	2
-#define FR_R_FINDNEXT	3
-#define FR_REPLACE	4
-#define FR_REPLACEALL	5
-
-/*
  * We don't create it twice for the sake of speed.
  */
 
@@ -2603,6 +2593,7 @@ typedef struct _SharedFindReplace
     Widget find;	/* 'Find Next' action button */
     Widget replace;	/* 'Replace With' action button */
     Widget all;		/* 'Replace All' action button */
+    Widget undo;	/* 'Undo' action button */
 
     Widget cancel;
 } SharedFindReplace;
@@ -2658,139 +2649,51 @@ entry_activate_callback(w, client_data, call_data)
 find_replace_callback(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data;
-    XtPointer call_data;
+    XtPointer	call_data;
 {
-    unsigned long flags = (unsigned long)client_data;
-
-    char	*find_text, *repl_text, *cmd;
+    long_u	flags = (long_u)client_data;
+    char	*find_text, *repl_text;
     Boolean	direction_down = TRUE;
     Boolean	exact_match = FALSE;
-    int		len;
+    SharedFindReplace *sfr;
 
-    if (flags == FR_DIALOGTERM && State == CONFIRM)
+    if (flags == FR_UNDO)
     {
-	add_to_input_buf((char_u *)"q", 1);
+	char_u	*save_cpo = p_cpo;
+
+	/* No need to be Vi compatible here. */
+	p_cpo = (char_u *)"";
+	u_undo(1);
+	p_cpo = save_cpo;
+	gui_update_screen();
 	return;
     }
 
     /* Get the search/replace strings from the dialog */
     if (flags == FR_FINDNEXT)
     {
-	find_text = XmTextFieldGetString(find_widgets.what);
 	repl_text = NULL;
-	XtVaGetValues(find_widgets.down, XmNset, &direction_down, NULL);
-	XtVaGetValues(find_widgets.exact, XmNset, &exact_match, NULL);
+	sfr = &find_widgets;
     }
-    else if (flags == FR_R_FINDNEXT || flags == FR_REPLACE
-						    || flags == FR_REPLACEALL)
+    else
     {
-	find_text = XmTextFieldGetString(repl_widgets.what);
 	repl_text = XmTextFieldGetString(repl_widgets.with);
-	XtVaGetValues(repl_widgets.down, XmNset, &direction_down, NULL);
-	XtVaGetValues(repl_widgets.exact, XmNset, &exact_match, NULL);
+	sfr = &repl_widgets;
     }
-    else
-    {
-	find_text = NULL;
-	repl_text = NULL;
-    }
+    find_text = XmTextFieldGetString(sfr->what);
+    XtVaGetValues(sfr->down, XmNset, &direction_down, NULL);
+    XtVaGetValues(sfr->exact, XmNset, &exact_match, NULL);
 
-    /* Calculate exact length of cmd buffer.  See below to count characters */
-    len = 2;
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
-    {
-	len += (strlen(find_text) + 1);
-	if (State != CONFIRM && exact_match)
-	    len += 4;   /* \< and \>*/
-    }
-    else if (flags == FR_REPLACE || flags == FR_REPLACEALL)
-    {
-	if (State == CONFIRM)
-	    len++;
-	else
-	    len += (strlen(find_text) + strlen(repl_text) + 11);
-    }
+    (void)gui_do_findrepl((int)flags, (char_u *)find_text, (char_u *)repl_text,
+						 direction_down, exact_match);
 
-    cmd = malloc(sizeof(char) * len);
-
-    /* start stuffing in the command text */
-    if (State & INSERT)
-	cmd[0] = Ctrl_O;
-    else if ((State | NORMAL) == 0 && State != CONFIRM)
-	cmd[0] = ESC;
-    else
-	cmd[0] = NUL;
-    cmd[1] = NUL;
-
-    /* Synthesize the input corresponding to the particular actions. */
-    if (flags == FR_FINDNEXT || flags == FR_R_FINDNEXT)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "n");
-	}
-	else
-	{
-	    if (direction_down)
-		STRCAT(cmd, "/");
-	    else
-		STRCAT(cmd, "?");
-
-	    if (exact_match)
-		STRCAT(cmd, "\\<");
-	    STRCAT(cmd, find_text);
-	    if (exact_match)
-		STRCAT(cmd, "\\>");
-
-	    STRCAT(cmd, "\r");
-	}
-    }
-    else if (flags == FR_REPLACE)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "y");
-	}
-	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, find_text);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, repl_text);
-	    STRCAT(cmd, "/gc\r");
-	}
-	/*
-	 * Give main window the focus back: this is to allow
-	 * handling of the confirmation y/n/a/q stuff.
-	 */
-	/*(void)SetFocus(s_hwnd); */
-    }
-    else if (flags == FR_REPLACEALL)
-    {
-	if (State == CONFIRM)
-	{
-	    STRCAT(cmd, "a");
-	}
-	else
-	{
-	    STRCAT(cmd, ":%sno/");
-	    STRCAT(cmd, find_text);
-	    STRCAT(cmd, "/");
-	    STRCAT(cmd, repl_text);
-	    STRCAT(cmd, "/g\r");
-	}
-    }
-    if (*cmd)
-	add_to_input_buf((char_u *)cmd, STRLEN(cmd));
-
-    free(cmd);
-
-    if (find_text)
+    if (find_text != NULL)
 	XtFree(find_text);
-    if (repl_text)
+    if (repl_text != NULL)
 	XtFree(repl_text);
 }
 
+/*ARGSUSED*/
     static void
 find_replace_keypress(w, frdp, event)
     Widget		w;
@@ -2806,15 +2709,12 @@ find_replace_keypress(w, frdp, event)
 
     /* the scape key pops the whole dialog down */
     if (keysym == XK_Escape)
-    {
-	find_replace_callback(w, (XtPointer)FR_DIALOGTERM, NULL);
 	XtUnmanageChild(frdp->dialog);
-    }
 }
 
     static void
-find_replace_dialog_create(entry_text, do_replace)
-    char_u	*entry_text;
+find_replace_dialog_create(arg, do_replace)
+    char_u	*arg;
     int		do_replace;
 {
     SharedFindReplace	*frdp;
@@ -2826,43 +2726,22 @@ find_replace_dialog_create(entry_text, do_replace)
     int			n;
     Arg			args[6];
     int			exact_word = FALSE;
+    Dimension		width;
+    Dimension		widest;
+    char_u		*entry_text;
 
-    frdp = do_replace ? &repl_widgets: &find_widgets;
+    frdp = do_replace ? &repl_widgets : &find_widgets;
 
-    /* If the argument is emtpy, get the last used search pattern.  If it is
-     * surrounded by "\<..\>" remove that and set the "exact_word" toggle
-     * button.
-     */
-
-    if (*entry_text == NUL)
-	entry_text = last_search_pat();
-    if (entry_text != NULL)
-    {
-	entry_text = vim_strsave(entry_text);
-	if (entry_text != NULL)
-	{
-	    int len = STRLEN(entry_text);
-
-	    if (len >= 4
-		    && STRNCMP(entry_text, "\\<", 2) == 0
-		    && STRNCMP(entry_text + len - 2, "\\>", 2) == 0)
-	    {
-		exact_word = TRUE;
-		mch_memmove(entry_text, entry_text + 2, (size_t)(len - 4));
-		entry_text[len - 4] = NUL;
-	    }
-	}
-    }
+    /* Get the search string to use. */
+    entry_text = get_find_dialog_text(arg, &exact_word);
 
     /* If the dialog already exists, just raise it. */
     if (frdp->dialog)
     {
 	/* If the window is already up, just pop it to the top */
 	if (XtIsManaged(frdp->dialog))
-	{
 	    XMapRaised(XtDisplay(frdp->dialog),
 					    XtWindow(XtParent(frdp->dialog)));
-	}
 	else
 	    XtManageChild(frdp->dialog);
 	XtPopup(XtParent(frdp->dialog), XtGrabNone);
@@ -2891,8 +2770,6 @@ find_replace_dialog_create(entry_text, do_replace)
     XmStringFree(str);
     XtAddCallback(frdp->dialog, XmNdestroyCallback,
 	    find_replace_destroy_callback, frdp);
-    XtAddCallback(frdp->dialog, XmNdestroyCallback,
-	    find_replace_callback, (XtPointer) FR_DIALOGTERM);
 
     button_form = XtVaCreateWidget("buttonForm",
 	    xmFormWidgetClass,	frdp->dialog,
@@ -2931,9 +2808,8 @@ find_replace_dialog_create(entry_text, do_replace)
 		XmNrightAttachment, XmATTACH_FORM,
 		NULL);
 	XmStringFree(str);
-
 	XtAddCallback(frdp->replace, XmNactivateCallback,
-	    find_replace_callback, (XtPointer) FR_REPLACE);
+		find_replace_callback, (XtPointer)FR_REPLACE);
 
 	str = XmStringCreateSimple(_("Replace All"));
 	frdp->all = XtVaCreateManagedWidget("replaceAllButton",
@@ -2942,12 +2818,24 @@ find_replace_dialog_create(entry_text, do_replace)
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, frdp->replace,
 		XmNleftAttachment, XmATTACH_FORM,
-		XmNrightAttachment,	XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
 		NULL);
 	XmStringFree(str);
+	XtAddCallback(frdp->all, XmNactivateCallback,
+		find_replace_callback, (XtPointer)FR_REPLACEALL);
 
-	XtAddCallback(frdp->replace, XmNactivateCallback,
-	    find_replace_callback, (XtPointer) FR_REPLACEALL);
+	str = XmStringCreateSimple(_("Undo"));
+	frdp->undo = XtVaCreateManagedWidget("undoButton",
+		xmPushButtonWidgetClass, button_form,
+		XmNlabelString, str,
+		XmNtopAttachment, XmATTACH_WIDGET,
+		XmNtopWidget, frdp->all,
+		XmNleftAttachment, XmATTACH_FORM,
+		XmNrightAttachment, XmATTACH_FORM,
+		NULL);
+	XmStringFree(str);
+	XtAddCallback(frdp->undo, XmNactivateCallback,
+		find_replace_callback, (XtPointer)FR_UNDO);
     }
 
     str = XmStringCreateSimple(_("Cancel"));
@@ -2961,8 +2849,6 @@ find_replace_dialog_create(entry_text, do_replace)
     XmStringFree(str);
     XtAddCallback(frdp->cancel, XmNactivateCallback,
 	    find_replace_dismiss_callback, frdp);
-    XtAddCallback(frdp->cancel, XmNactivateCallback,
-	    find_replace_callback, (XtPointer) FR_DIALOGTERM);
 
     XtManageChild(button_form);
 
@@ -2989,6 +2875,7 @@ find_replace_dialog_create(entry_text, do_replace)
 
     {
 	Widget label_what;
+	Widget label_with = (Widget)0;
 
 	str = XmStringCreateSimple(_("Find what:"));
 	label_what = XtVaCreateManagedWidget("whatLabel",
@@ -3004,8 +2891,7 @@ find_replace_dialog_create(entry_text, do_replace)
 		xmTextFieldWidgetClass, input_form,
 		XmNtopAttachment, XmATTACH_FORM,
 		XmNrightAttachment, XmATTACH_FORM,
-		XmNleftAttachment, XmATTACH_WIDGET,
-		XmNleftWidget, label_what,
+		XmNleftAttachment, XmATTACH_FORM,
 		NULL);
 
 	if (do_replace)
@@ -3015,8 +2901,7 @@ find_replace_dialog_create(entry_text, do_replace)
 		    XmNtopAttachment, XmATTACH_WIDGET,
 		    XmNtopWidget, frdp->what,
 		    XmNtopOffset, 4,
-		    XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-		    XmNleftWidget, frdp->what,
+		    XmNleftAttachment, XmATTACH_FORM,
 		    XmNrightAttachment, XmATTACH_FORM,
 		    XmNbottomAttachment, XmATTACH_FORM,
 		    NULL);
@@ -3025,12 +2910,10 @@ find_replace_dialog_create(entry_text, do_replace)
 		    find_replace_callback, (XtPointer) FR_R_FINDNEXT);
 
 	    str = XmStringCreateSimple(_("Replace with:"));
-	    (void)XtVaCreateManagedWidget("withLabel",
+	    label_with = XtVaCreateManagedWidget("withLabel",
 		    xmLabelGadgetClass, input_form,
 		    XmNlabelString, str,
 		    XmNleftAttachment, XmATTACH_FORM,
-		    XmNrightAttachment, XmATTACH_OPPOSITE_WIDGET,
-		    XmNrightWidget, label_what,
 		    XmNtopAttachment, XmATTACH_WIDGET,
 		    XmNtopWidget, frdp->what,
 		    XmNtopOffset, 4,
@@ -3055,11 +2938,29 @@ find_replace_dialog_create(entry_text, do_replace)
 	     * Make the entry activation do the search.
 	     */
 	    XtAddCallback(frdp->what, XmNactivateCallback,
-		    find_replace_callback, (XtPointer) FR_FINDNEXT);
+		    find_replace_callback, (XtPointer)FR_FINDNEXT);
 	}
 	XtAddEventHandler(frdp->what, KeyPressMask, False,
 			    (XtEventHandler)find_replace_keypress,
 			    (XtPointer)frdp);
+
+	/* Get the maximum width between the label widgets and line them up.
+	 */
+	n = 0;
+	XtSetArg(args[n], XmNwidth, &width); n++;
+	XtGetValues(label_what, args, n);
+	widest = width;
+	if (do_replace)
+	{
+	    XtGetValues(label_with, args, n);
+	    if (width > widest)
+		widest = width;
+	}
+
+	XtVaSetValues(frdp->what, XmNleftOffset, widest, NULL);
+	if (do_replace)
+	    XtVaSetValues(frdp->with, XmNleftOffset, widest, NULL);
+
     }
 
     XtManageChild(input_form);

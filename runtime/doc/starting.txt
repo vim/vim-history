@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 11
+*starting.txt*  For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -136,6 +136,13 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 			-u NONE			no		    no
 			-u NORC			no		    yes
 			--noplugin		yes		    no
+
+							*--literal*
+--literal	Take file names literally, don't expand wildcards.  Not needed
+		for Unix, because Vim always takes file names literally (the
+		shell expands wildcards).
+		Applies to all the names, also the ones that come before this
+		argument.
 
 							*-+*
 +[num]		The cursor will be positioned on line "num" for the first
@@ -458,14 +465,14 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Specify the name of the Vim server to send to or to become.
 		See |--servername|. {not in Vi}
 
---serversend {keys}
+--remote-send {keys}
 		Send {keys} to a Vim server and exit.
-		See |--serversend|. {not in Vi}
+		See |--remote-send|. {not in Vi}
 
---serverexpr {expr}
+--remote-expr {expr}
 		Evaluate {expr} in another Vim that functions as a server.
 		The result is printed on stdout.
-		See |--serverexpr|. {not in Vi}
+		See |--remote-expr|. {not in Vi}
 
 --serverlist	Output a list of Vim server names and exit.  See
 		|--serverlist|. {not in Vi}
@@ -496,7 +503,7 @@ will accept only ":" commands.  But when the "-v" argument is given, Vim will
 start in in Normal mode anyway.
 
 Additional arguments are available on unix like systems when compiled with
-X11 GUI support. See |gui-resources| and |x11-command-server|
+X11 GUI support.  See |gui-resources|.
 
 ==============================================================================
 2. Vim on the Amiga					*starting-amiga*

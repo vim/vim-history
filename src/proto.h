@@ -202,7 +202,7 @@ extern char *vim_SelFile __ARGS((Widget toplevel, char *prompt, char *init_path,
 # ifdef FEAT_OLE
 #  include "if_ole.pro"
 # endif
-# ifdef FEAT_XCMDSRV
+# if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
 #  include "if_xcmdsrv.pro"
 # endif
 

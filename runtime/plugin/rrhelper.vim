@@ -1,8 +1,8 @@
 " Vim plugin with helper function(s) for --remote-wait
 " Maintainer: Flemming Madsen <fma@cci.dk>
-" Last Change: 2001 Jul 28
+" Last Change: 2001 Aug 19
 
-if has("xcmdsrv")
+if has("clientserver")
   function SetupRemoteReplies()
     let cnt = 0
     let max = argc()
@@ -10,9 +10,7 @@ if has("xcmdsrv")
     let ID = expand("<client>")
     augroup RemoteReplyGroup
     while cnt < max
-      execute 'autocmd RemoteReplyGroup BufUnload '.argv(cnt)
-	\.' call serverreply_send("'.ID.'", "'.cnt.'")'
-	\.'| autocmd! RemoteReplyGroup BufUnload '.argv(cnt)
+      execute 'autocmd RemoteReplyGroup BufUnload ' . argv(cnt) . ' call server2client("'.ID.'", "'.cnt.'")' . '| autocmd! RemoteReplyGroup BufUnload ' . argv(cnt)
       let cnt = cnt + 1
     endwhile
     augroup END

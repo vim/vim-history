@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ar.  Last change: 2001 Jul 28
+*syntax.txt*    For Vim version 6.0as.  Last change: 2001 Aug 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2021,9 +2021,9 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 
 	In a start or end pattern that is highlighted with "matchgroup" the
 	contained items of the region are not used.  This can be used to avoid
-	that a contained item matches in the start or end pattern.  When using
-	"transparent", it does not apply to a start or end pattern that is
-	highlighted with "matchgroup".
+	that a contained item matches in the start or end pattern match.  When
+	using "transparent", this does not apply to a start or end pattern
+	match that is highlighted with "matchgroup".
 
 	Here is an example, which highlights three levels of parentheses in
 	different colors: >

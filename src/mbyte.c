@@ -77,10 +77,6 @@
 
 #include "vim.h"
 #if defined(WIN3264) || defined(WIN32UNIX)
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
-# endif
-# include <windows.h>
 # ifndef __MINGW32__
 #  include <winnls.h>
 # endif
@@ -3178,7 +3174,7 @@ xim_instantiate_cb(display, client_data, call_data)
 	return;
 
     xim_real_init(x11_window, x11_display);
-    gui_set_shellsize(FALSE);
+    gui_set_shellsize(FALSE, FALSE);
     if (xic != NULL)
 	XUnregisterIMInstantiateCallback(x11_display, NULL, NULL, NULL,
 					 xim_instantiate_cb, NULL);
@@ -3199,7 +3195,7 @@ xim_destroy_cb(im, client_data, call_data)
     xic = NULL;
     status_area_enabled = FALSE;
 
-    gui_set_shellsize(FALSE);
+    gui_set_shellsize(FALSE, FALSE);
 
     XRegisterIMInstantiateCallback(x11_display, NULL, NULL, NULL,
 				   xim_instantiate_cb, NULL);
@@ -3219,7 +3215,7 @@ xim_init()
     if (xim_real_init(x11_window, x11_display))
 	return;
 
-    gui_set_shellsize(FALSE);
+    gui_set_shellsize(FALSE, FALSE);
 
 #ifdef USE_X11R6_XIM
     XRegisterIMInstantiateCallback(x11_display, NULL, NULL, NULL,
@@ -3426,7 +3422,7 @@ xim_real_init(x11_window, x11_display)
 	    status_area_enabled = TRUE;
 	}
 	else
-	    gui_set_shellsize(FALSE);
+	    gui_set_shellsize(FALSE, FALSE);
     }
     else
     {

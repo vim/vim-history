@@ -228,6 +228,9 @@ gui_init_check()
 #if defined(FEAT_FOOTER) && defined(FEAT_GUI_MOTIF)
     gui.footer_height = 0;
 #endif
+#ifdef FEAT_BEVAL
+    gui.balloonEval_fontset = NOFONTSET;
+#endif
 
     gui.scrollbar_width = gui.scrollbar_height = SB_DEFAULT_WIDTH;
     gui.prev_wrap = -1;
@@ -455,7 +458,7 @@ gui_init()
 #ifndef FEAT_GUI_GTK
     /* Set the shell size, adjusted for the screen size.  For GTK this only
      * works after the shell has been opened, thus it is further down. */
-    gui_set_shellsize(TRUE);
+    gui_set_shellsize(FALSE, TRUE);
 #endif
 #if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
     /* Need to set the size of the menubar after all the menus have been
@@ -477,7 +480,7 @@ gui_init()
 	/* Give GTK+ a chance to put all widget's into place. */
 	gui_mch_update();
 	/* Now make sure the shell fits on the screen. */
-	gui_set_shellsize(TRUE);
+	gui_set_shellsize(FALSE, TRUE);
 #endif
 	return;
     }
@@ -615,12 +618,7 @@ gui_init_font(font_list, fontset)
 	else
 #endif
 	    gui_mch_set_font(gui.norm_font);
-#ifdef MSWIN
-	if (gui_mch_maximized())
-	    gui_mch_newfont();
-	else
-#endif
-	    gui_set_shellsize(
+	gui_set_shellsize(FALSE,
 #ifdef MSWIN
 		TRUE
 #else
@@ -1192,8 +1190,10 @@ gui_get_shellsize()
 /*
  * Set the size of the Vim shell according to Rows and Columns.
  */
+/*ARGSUSED*/
     void
-gui_set_shellsize(fit_to_display)
+gui_set_shellsize(mustset, fit_to_display)
+    int		mustset;		/* set by the user */
     int		fit_to_display;
 {
     int		base_width;
@@ -1208,10 +1208,21 @@ gui_set_shellsize(fit_to_display)
     if (!gui.shell_created)
 	return;
 
+#ifdef MSWIN
+    /* If not setting to a user specified size and maximized, calculate the
+     * number of characters that fit in the maximized window. */
+    if (!mustset && gui_mch_maximized())
+    {
+	gui_mch_newfont();
+	return;
+    }
+#endif
+
     base_width = gui_get_base_width();
     base_height = gui_get_base_height();
 #ifdef USE_SUN_WORKSHOP
-    if (usingSunWorkShop && workshop_get_width_height(&width, &height))
+    if (!mustset && usingSunWorkShop
+				&& workshop_get_width_height(&width, &height))
     {
 	Columns = (width - base_width + gui.char_width - 1) / gui.char_width;
 	Rows = (height - base_height + gui.char_height - 1) / gui.char_height;
@@ -1247,7 +1258,7 @@ gui_set_shellsize(fit_to_display)
     min_height = base_height + MIN_LINES * gui.char_height;
 
     gui_mch_set_shellsize(width, height, min_width, min_height,
-			base_width, base_height);
+						     base_width, base_height);
     gui_position_components(width);
     gui_update_scrollbars(TRUE);
     gui_reset_scroll_region();
@@ -2885,7 +2896,7 @@ gui_init_which_components(oldval)
 	}
 #endif
 	if (need_set_size)
-	    gui_set_shellsize(FALSE);
+	    gui_set_shellsize(FALSE, FALSE);
     }
 }
 
@@ -3914,4 +3925,128 @@ no_console_input()
 # endif
 	    );
 }
+#endif
+
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
+/*
+ * Update the current window and the screen.
+ */
+    void
+gui_update_screen()
+{
+    update_topline();
+    validate_cursor();
+    update_screen(0);	/* may need to update the screen */
+    setcursor();
+    out_flush();		/* make sure output has been written */
+    gui_update_cursor(TRUE, FALSE);
+    gui_mch_flush();
+}
+#endif
+
+#if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
+/*
+ * Get the text to use in a find/replace dialog.  Uses the last search pattern
+ * if the argument is empty.
+ * Returns an allocated string.
+ */
+    char_u *
+get_find_dialog_text(arg, wordp)
+    char_u	*arg;
+    int		*wordp;		/* return: TRUE if \< \> found */
+{
+    char_u	*text;
+
+    if (*arg == NUL)
+	text = last_search_pat();
+    else
+	text = arg;
+    if (text != NULL)
+    {
+	text = vim_strsave(text);
+	if (text != NULL)
+	{
+	    int len = STRLEN(text);
+
+	    /* Remove "\V" */
+	    if (len >= 2 && STRNCMP(text, "\\V", 2) == 0)
+		mch_memmove(text, text + 2, (size_t)(len - 2));
+
+	    /* Recognize "\<text\>" and remove. */
+	    if (len >= 4
+		    && STRNCMP(text, "\\<", 2) == 0
+		    && STRNCMP(text + len - 2, "\\>", 2) == 0)
+	    {
+		*wordp = TRUE;
+		mch_memmove(text, text + 2, (size_t)(len - 4));
+		text[len - 4] = NUL;
+	    }
+	}
+    }
+    return text;
+}
+
+/*
+ * Handle the press of a button in the find-replace dialog.
+ * Return TRUE when something was added to the input buffer.
+ */
+    int
+gui_do_findrepl(flags, find_text, repl_text, down, exact)
+    int		flags;		/* one of FR_REPLACE, FR_FINDNEXT, etc. */
+    char_u	*find_text;
+    char_u	*repl_text;
+    int		down;		/* Search downwards. */
+    int		exact;		/* Exact word match. */
+{
+    garray_T	ga;
+
+    ga_init2(&ga, 1, 100);
+
+    /* start stuffing in the command text */
+    if (State & INSERT)
+	ga_append(&ga, Ctrl_O);
+    else if ((State | NORMAL) == 0)
+	ga_append(&ga, ESC);
+
+    if (flags == FR_REPLACE)
+    {
+	/* Do the replacement when the text under the cursor matches. */
+	if (STRNCMP(ml_get_cursor(), find_text, STRLEN(find_text)) == 0
+		&& u_save_cursor() == OK)
+	{
+	    del_bytes((long)STRLEN(find_text), FALSE);
+	    ins_str(repl_text);
+	}
+    }
+    else if (flags == FR_REPLACEALL)
+    {
+	ga_concat(&ga, (char_u *)":%sno/");
+	ga_concat(&ga, find_text);
+	ga_concat(&ga, (char_u *)"/");
+	ga_concat(&ga, repl_text);
+	ga_concat(&ga, (char_u *)"/g\r");
+    }
+
+    if (flags != FR_REPLACEALL)
+    {
+	/* Search for the next match. */
+	if (down)
+	    ga_concat(&ga, (char_u *)"/\\V");
+	else
+	    ga_concat(&ga, (char_u *)"?\\V");
+	if (exact)
+	    ga_concat(&ga, (char_u *)"\\<");
+	ga_concat(&ga, find_text);
+	if (exact)
+	    ga_concat(&ga, (char_u *)"\\>");
+	ga_concat(&ga, (char_u *)"\r");
+    }
+
+    if (ga.ga_len > 0)
+	add_to_input_buf((char_u *)ga.ga_data, ga.ga_len);
+
+    vim_free(ga.ga_data);
+    return (ga.ga_len > 0);
+}
+
 #endif

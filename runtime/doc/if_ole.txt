@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.0ar.  Last change: 2001 Aug 12
+*if_ole.txt*    For Vim version 6.0as.  Last change: 2001 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -16,6 +16,7 @@ The OLE Interface to Vim				*ole-interface*
 
 OLE is only available when compiled with the |+ole| feature.  See
 src/if_ole.INSTALL.
+An alternative is using the client-server communication |clientserver|.
 
 ==============================================================================
 1. Activation						*ole-activation*

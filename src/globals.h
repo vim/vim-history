@@ -651,11 +651,6 @@ EXTERN int	ctrl_x_mode INIT(= 0);	/* Which Ctrl-X mode are we in? */
 #endif
 
 EXTERN int	no_abbr INIT(= TRUE);	/* TRUE when no abbreviations loaded */
-#ifdef FEAT_COMMENTS
-EXTERN int	fo_do_comments INIT(= FALSE);
-					/* TRUE when comments are to be
-					 * formatted */
-#endif
 #ifdef MSDOS
 EXTERN int	beep_count INIT(= 0);	/* nr of beeps since last char typed */
 #endif
@@ -907,8 +902,9 @@ extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 # define OPT_PRINT_DUPLEX	8
 # define OPT_PRINT_PORTRAIT	9
 # define OPT_PRINT_PAPER	10
+# define OPT_PRINT_COLLATE	11
 
-# define OPT_PRINT_NUM_OPTIONS	11
+# define OPT_PRINT_NUM_OPTIONS	12
 
 EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
 # ifdef DO_INIT
@@ -925,6 +921,7 @@ EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
     {"duplex",	FALSE, 0, NULL, 0, FALSE},
     {"portrait", FALSE, 0, NULL, 0, FALSE},
     {"paper",	FALSE, 0, NULL, 0, FALSE},
+    {"collate",	FALSE, 0, NULL, 0, FALSE},
 }
 # endif
 ;
@@ -943,12 +940,19 @@ EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 EXTERN guint32	gtk_socket_id INIT(= 0);
 #endif
 
-#ifdef FEAT_XCMDSRV
+#ifdef FEAT_CLIENTSERVER
+EXTERN char_u	*serverName INIT(= NULL);	/* name of the server */
+# ifdef FEAT_X11
 EXTERN Window	commWindow INIT(= None);
 EXTERN Window	clientWindow INIT(= None);
 EXTERN Atom	commProperty INIT(= None);
-EXTERN char_u	*serverName INIT(= NULL);	/* name of the server */
 EXTERN char_u	*serverDelayedStartName INIT(= NULL);
+# else
+# ifdef PROTO
+#  define HWND int
+# endif
+EXTERN HWND	clientWindow INIT(= 0);
+# endif
 #endif
 
 #if defined(UNIX) || defined(VMS)

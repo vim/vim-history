@@ -33,7 +33,7 @@ static void main_start_gui __ARGS((void));
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 static void check_swap_exists_action __ARGS((void));
 #endif
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#ifdef FEAT_CLIENTSERVER
 static void cmdsrv_main __ARGS((int *argc, char **argv, char_u *serverName_arg, char_u **serverStr));
 #endif
 
@@ -129,10 +129,13 @@ main
 #ifdef MSWIN
     int		full_path = FALSE;
 #endif
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#ifdef FEAT_CLIENTSERVER
     char_u	*serverStr = NULL;
     char_u	*serverName_arg = NULL;
     int         serverArg = FALSE;
+#endif
+#if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
+    int		literal = FALSE;	/* don't expand file names */
 #endif
 
     /*
@@ -219,7 +222,7 @@ main
     TIME_MSG("locale set");
 #endif
 
-#if defined(FEAT_XCLIPBOARD) || defined(FEAT_OLE)
+#if defined(FEAT_XCLIPBOARD) || defined(FEAT_CLIENTSERVER)
     /*
      * Get the name of the display, before gui_prepare() removes it from
      * argv[].  Used for the xterm-clipboard display.
@@ -230,19 +233,19 @@ main
     {
 	if (STRCMP(argv[i], "--") == 0)
 	    break;
-#ifdef FEAT_XCLIPBOARD
+# ifdef FEAT_XCLIPBOARD
 	else if (STRICMP(argv[i], "-display") == 0
-# ifdef FEAT_GUI_GTK
+#  ifdef FEAT_GUI_GTK
 		|| STRICMP(argv[i], "--display") == 0
-# endif
+#  endif
 		)
 	{
 	    if (i == argc - 1)
 		mainerr_arg_missing((char_u *)argv[i]);
 	    xterm_display = argv[++i];
 	}
-#endif
-# if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+# endif
+# ifdef FEAT_CLIENTSERVER
 	else if (STRICMP(argv[i], "--servername") == 0)
 	{
 	    if (i == argc - 1)
@@ -250,8 +253,8 @@ main
 	    serverName_arg = (char_u *)argv[++i];
 	}
 	else if (STRICMP(argv[i], "--serverlist") == 0
-	         || STRICMP(argv[i], "--serversend") == 0
-	         || STRICMP(argv[i], "--serverexpr") == 0
+	         || STRICMP(argv[i], "--remote-send") == 0
+	         || STRICMP(argv[i], "--remote-expr") == 0
 	         || STRICMP(argv[i], "--remote-wait") == 0
 	         || STRICMP(argv[i], "--remote") == 0 )
 	    serverArg = TRUE;
@@ -274,13 +277,39 @@ main
 # endif
     }
 
-# if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+# ifdef FEAT_CLIENTSERVER
+#  ifdef WIN32
+    /* Initialise the client/server messaging infrastructure */
+    serverInitMessaging();
+#  endif
+
     /*
      * When a command server argument was found, execute it.  This may exit
      * Vim when it was successful.
      */
     if (serverArg && !(serverName_arg != NULL && *serverName_arg == NUL))
 	cmdsrv_main(&argc, argv, serverName_arg, &serverStr);
+
+#  ifdef WIN32
+    /* If we're still running, register ourselves */
+    p = NULL;
+    if (serverName_arg == NULL || *serverName_arg == NUL)
+    {
+	serverName_arg = gettail((char_u *)argv[0]);
+	if (vim_strchr(serverName_arg, '.') != NULL)
+	{
+	    /* Remove .exe or .bat from the name. */
+	    p = vim_strsave(serverName_arg);
+	    if (p != NULL)
+	    {
+		*vim_strchr(p, '.') = NUL;
+		serverName_arg = p;
+	    }
+	}
+    }
+    serverSetName(serverName_arg);
+    vim_free(p);
+#  endif
 # endif
 #endif
 
@@ -466,6 +495,7 @@ main
 	    case '-':		/* "--" don't take any more options */
 				/* "--help" give help message */
 				/* "--version" give version message */
+				/* "--literal" take files literally */
 				/* "--noplugin[s]" skip plugins */
 				/* "--cmd <cmd>" execute cmd before vimrc */
 		if (STRICMP(argv[0] + argv_idx, "help") == 0)
@@ -476,6 +506,12 @@ main
 		    list_version();
 		    mch_exit(1);
 		}
+		else if (STRNICMP(argv[0] + argv_idx, "literal", 7) == 0)
+		{
+#if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
+		    literal = TRUE;
+#endif
+		}
 		else if (STRNICMP(argv[0] + argv_idx, "noplugin", 8) == 0)
 		    p_lpl = FALSE;
 #ifdef FEAT_PRECOMMANDS
@@ -485,7 +521,7 @@ main
 		    argv_idx += 3;
 		}
 #endif
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#ifdef FEAT_CLIENTSERVER
 		else if (STRNICMP(argv[0] + argv_idx, "serverlist", 10) == 0)
 		    ; /* already processed -- no arg */
 		else if (STRNICMP(argv[0] + argv_idx, "servername", 10) == 0
@@ -891,7 +927,7 @@ scripterror:
 		mch_exit(2);
 	    alist_add(&global_alist, p,
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
-		    0		/* add buffer number after expanding */
+		    literal ? 2 : 0	/* add buffer number after expanding */
 #else
 		    2		/* add buffer number now and use curbuf */
 #endif
@@ -945,7 +981,8 @@ scripterror:
 	/*
 	 * Expand wildcards in file names.
 	 */
-	alist_expand();
+	if (!literal)
+	    alist_expand();
 #endif
 	fname = alist_name(&GARGLIST[0]);
     }
@@ -1370,7 +1407,7 @@ scripterror:
     }
 #endif
 
-#if defined(FEAT_XCMDSRV)
+#if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
     /*
      * Register for remote command execution with :serversend and --remote
      * unless there was a -X or a --servername '' on the command line.
@@ -1392,7 +1429,7 @@ scripterror:
 	serverDelayedStartName = initstr;
 #endif
 
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#ifdef FEAT_CLIENTSERVER
     /*
      * Execute command ourselves if we're here because the send failed (or
      * else we would have exited above).
@@ -1840,10 +1877,11 @@ main_loop(cmdwin)
 	    /* display message after redraw */
 	    if (keep_msg != NULL)
 	    {
-		char_u *p = keep_msg;
+		char_u *p;
 
-		/* msg_start() frees keep_msg(), must avoid that here */
-		keep_msg = NULL;
+		/* msg_attr_keep() will set keep_msg to NULL, must free the
+		 * string here. */
+		p = keep_msg;
 		msg_attr(p, keep_msg_attr);
 		vim_free(p);
 	    }
@@ -1966,9 +2004,6 @@ getout(exitval)
 #endif
 #if defined(USE_ICONV) && defined(DYNAMIC_ICONV)
     iconv_end();
-#endif
-#ifdef FEAT_OLE
-    ole_client_close();
 #endif
 
     mch_exit(exitval);
@@ -2207,13 +2242,11 @@ usage()
     main_msg(_("-display <display>\tConnect vim to this particular X-server"));
 # endif
     main_msg(_("-X\t\t\tDo not connect to X server"));
-# if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+# ifdef FEAT_CLIENTSERVER
     main_msg(_("--remote <files>\tEdit <files> in a Vim server"));
     main_msg(_("--remote-wait <files>\tAs --remote but wait for files to end edit"));
-    main_msg(_("--serversend <keys>\tSend <keys> to a Vim server and exit"));
-    main_msg(_("--serverexpr <expr>\tExecute <expr> in server and print result"));
-# endif
-# ifdef FEAT_XCMDSRV
+    main_msg(_("--remote-send <keys>\tSend <keys> to a Vim server and exit"));
+    main_msg(_("--remote-expr <expr>\tExecute <expr> in server and print result"));
     main_msg(_("--serverlist\t\tList available Vim server names and exit"));
     main_msg(_("--servername <name>\tSend to/become the Vim server <name>"));
 # endif
@@ -2381,10 +2414,10 @@ time_msg(msg, tv_start)
 }
 #endif
 
-#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+#if defined(FEAT_CLIENTSERVER) || defined(PROTO)
 
 /*
- * Common code for the X command server and the OLE client.
+ * Common code for the X command server and the Win32 command server.
  */
 
 static char_u *build_drop_cmd __ARGS((int filec, char **filev, int sendReply));
@@ -2403,17 +2436,17 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     char	**newArgV = argv + 1;
     int		newArgC = 1,
 		Argc = *argc;
-# ifdef FEAT_XCMDSRV
+# ifdef FEAT_X11
     Window	srv;
 
     setup_term_clip();
+# else
+    HWND	srv;
 # endif
 
     s = (serverName_arg != NULL ? serverName_arg : gettail((char_u *)argv[0]));
-# ifdef FEAT_XCMDSRV
-    if (xterm_dpy != NULL)
-# else
-    if (ole_client_init() == OK)
+# ifdef FEAT_X11
+    if (xterm_dpy != NULL)	/* Win32 always works */
 # endif
     {
 	/*
@@ -2434,85 +2467,108 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 	    }
 	    else if (STRICMP(argv[i], "--remote") == 0
 		     || STRICMP(argv[i], "--remote-wait") == 0
-		     || STRICMP(argv[i], "--serversend") == 0)
+		     || STRICMP(argv[i], "--remote-send") == 0)
 	    {
 		if (i == *argc - 1)
 		    mainerr_arg_missing((char_u *)argv[i]);
-		if (argv[i][2] == 'r')
+		if (STRICMP(argv[i], "--remote-send") == 0)
+		{
+		    *serverStr = (char_u *)argv[i + 1];
+		    i++;
+		}
+		else
 		{
 		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
 			                        argv[i][8] == '-');
 		    Argc = i;
 		}
-		else
-		{
-		    *serverStr = (char_u *)argv[i + 1];
-		    i++;
-		}
-# ifdef FEAT_XCMDSRV
+# ifdef FEAT_X11
 		ret =
 		    serverSendToVim(xterm_dpy, s, *serverStr, NULL, &srv, 0, 0);
 # else
-		if (ole_SendKeys(*serverStr) == FAIL)
-		    ret = -1;
-		else
-		{
-		    ret = 0;
-		    ole_SetForeground();
-		}
+		ret =
+		    serverSendToVim(s, *serverStr, NULL, &srv, 0);
 # endif
 		if (ret < 0)
 		{
-		    if (STRICMP(argv[i], "--remote-wait") == 0)
-		    {
-			fputs(_("\nSend failed. No command server present ?\n"),
-			      stderr);
-		    }
-		    else
-		    {
-			MSG_ATTR(_("Send failed. Trying to execute locally"),
-				  hl_attr(HLF_W));
-			break;      /* Break out to let vim start normally.  */
-		    }
+		    mch_errmsg(_("Send failed. Trying to execute locally\n"));
+		    break;      /* Break out to let vim start normally.  */
 		}
-# ifdef FEAT_XCMDSRV
+
 		if (ret >= 0 && STRICMP(argv[i], "--remote-wait") == 0)
 		{
 		    int	    numFiles = *argc - i - 1;
 		    int	    j;
 		    char_u  *done = alloc(numFiles);
 		    char_u  *p;
+# ifdef WIN32
+		    char_u  id[30];
+
+#  ifdef FEAT_GUI_W32
+		    NOTIFYICONDATA ni;
+		    int count = 0;
+		    extern HWND message_window;
+
+		    ni.cbSize = sizeof(ni);
+		    ni.hWnd = message_window;
+		    ni.uID = 0;
+		    ni.uFlags = NIF_ICON|NIF_TIP;
+		    ni.hIcon = LoadIcon((HINSTANCE)GetModuleHandle(0), "IDR_VIM");
+		    sprintf(ni.szTip, "%d of %d edited", count, numFiles);
+		    Shell_NotifyIcon(NIM_ADD, &ni);
+#  endif
+
+		    sprintf((char *)id, "0x%x", (unsigned int)srv);
+# endif
 
 		    /* Wait for all files to unload in remote */
 		    memset(done, 0, numFiles);
 		    while (memchr(done, 0, numFiles) != NULL)
 		    {
+# ifdef WIN32
+			p = serverGetReply(id, 1, 1);
+			if (p == NULL)
+			    break;
+# else
 			if (serverReadReply(xterm_dpy, srv, &p, TRUE) < 0)
 			    break;
+# endif
 			j = atoi((char *)p);
 			if (j >= 0 && j < numFiles)
+			{
+# ifdef FEAT_GUI_W32
+			    ++count;
+			    sprintf(ni.szTip, "%d of %d edited", count, numFiles);
+			    Shell_NotifyIcon(NIM_MODIFY, &ni);
+# endif
 			    done[j] = 1;
+			}
 		    }
+# ifdef FEAT_GUI_W32
+		    Shell_NotifyIcon(NIM_DELETE, &ni);
+# endif
 		}
-#endif
 	    }
-	    else if (STRICMP(argv[i], "--serverexpr") == 0)
+	    else if (STRICMP(argv[i], "--remote-expr") == 0)
 	    {
 		if (i == *argc - 1)
 		    mainerr_arg_missing((char_u *)argv[i]);
-# ifdef FEAT_XCMDSRV
+# ifdef WIN32
+		if (serverSendToVim(s, (char_u *)argv[i + 1],
+							&res, NULL, 1) < 0)
+# else
 		if (serverSendToVim(xterm_dpy, s, (char_u *)argv[i + 1],
 							&res, NULL, 1, 1) < 0)
-# else
-		res = ole_Eval(argv[i + 1]);
-		if (res == NULL)
 # endif
 		    mch_errmsg(_("Send expression failed.\n"));
 	    }
-# ifdef FEAT_XCMDSRV
 	    else if (STRICMP(argv[i], "--serverlist") == 0)
 	    {
+# ifdef WIN32
+		res = serverGetVimNames();
+#else
 		res = serverGetVimNames(xterm_dpy);
+#endif
 	    }
 	    else if (STRICMP(argv[i], "--servername") == 0)
 	    {
@@ -2520,7 +2576,6 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		i++;
 		continue;
 	    }
-# endif
 	    else
 	    {
 		*newArgV++ = argv[i];
@@ -2575,18 +2630,28 @@ build_drop_cmd(filec, filev, sendReply)
     ga_init2(&ga, 1, 100);
     ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd ");
     ga_concat(&ga, p);
-    ga_concat(&ga, (char_u *)"<CR>:drop ");
+    ga_concat(&ga, (char_u *)"<CR>:drop");
+    vim_free(p);
     for (i = 0; i < filec; i++)
     {
-	vim_free(p);
-	p = vim_strsave_escaped((char_u *)filev[i], PATH_ESC_CHARS);
+	/* On Unix the shell has already expanded the wildcards, don't want to
+	 * do it again in the Vim server.  On MS-Windows only need to escape a
+	 * space. */
+	p = vim_strsave_escaped((char_u *)filev[i],
+#ifdef UNIX
+		PATH_ESC_CHARS
+#else
+		(char_u *)" "
+#endif
+		);
 	if (p == NULL)
 	{
 	    vim_free(ga.ga_data);
 	    return NULL;
 	}
-	ga_concat(&ga, p);
 	ga_concat(&ga, (char_u *)" ");
+	ga_concat(&ga, p);
+	vim_free(p);
     }
     ga_concat(&ga, (char_u *)"<CR>:cd -");
     if (sendReply)
@@ -2596,7 +2661,9 @@ build_drop_cmd(filec, filev, sendReply)
 	ga_concat(&ga, (char_u *)"<CR>:");
 	ga_concat(&ga, inicmd);
     }
-    ga_concat(&ga, (char_u *)"<CR>:<Esc>"); /* Execute & clear command line */
+    /* Bring the window to the foreground & clear command line */
+    ga_concat(&ga, (char_u *)"<CR>:call foreground()<CR>:<CR>");
+    ga_append(&ga, NUL);
     return ga.ga_data;
 }
 
@@ -2608,8 +2675,20 @@ server_to_input_buf(str)
     char_u	*str;
 {
     char_u      *ptr = NULL;
+    char_u      *cpo_save = p_cpo;
 
+    /* Set 'cpoptions' the way we want it.
+     *    B set - backslashes are *not* treated specially
+     *    k set - keycodes are *not* reverse-engineered
+     *    < unset - <Key> sequenecs *are* interpreted
+     *  last parameter of replace_termcodes() is TRUE so that
+     *  the <lt> sequence is recognised - needed as backslash
+     *  is not special...
+     */
+    p_cpo = (char_u *)"Bk";
     str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
+    p_cpo = cpo_save;
+
 # if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS)
     add_to_input_buf(str, STRLEN(str));
 # else

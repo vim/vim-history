@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 03
+*autocmd.txt*   For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -251,13 +251,15 @@ FileAppendPost			After appending to a file.
 FileAppendCmd			Before appending to a file.  Should do the
 				appending to the file. |Cmd-event|
 							*FilterWritePre*
-FilterWritePre			Before writing a file for a filter command.
+FilterWritePre			Before writing a file for a filter command or
+				making a diff.
 				Vim checks the pattern against the name of
 				the current buffer, not the name of the
 				temporary file that is the output of the
 				filter command.
 							*FilterWritePost*
-FilterWritePost			After writing a file for a filter command.
+FilterWritePost			After writing a file for a filter command or
+				making a diff.
 				Vim checks the pattern against the name of
 				the current buffer as with FilterWritePre.
 							*FileChangedShell*
@@ -458,15 +460,15 @@ EncodingChanged			Fires off when the 'encoding' option is
 							*FileEncoding*
 FileEncoding			Obsolete.  It still works and is equivalent
 				to |EncodingChanged|.
-							*ServerReplyRecv*
-ServerReplyRecv			When a reply from a Vim that functions as
-				server was received |serverreply_send()|.
+							*RemoteReply*
+RemoteReply			When a reply from a Vim that functions as
+				server was received |server2client()|.
 				<amatch> is equal to the {serverid} from which
 				the reply was sent, and <afile> is the actual
 				reply string.
 				Note that even if an auto command is defined,
-				the reply should be read with
-				|serverreply_read()| to consume it.
+				the reply should be read with |remote_read()|
+				to consume it.
 							*TermChanged*
 TermChanged			After the value of 'term' has changed.  Useful
 				for re-loading the syntax file to update the
@@ -478,7 +480,7 @@ TermResponse			After the response to |t_RV| is received from
 				can be used to do things depending on the
 				terminal version.
 							*UserGettingBored*
-UserGettingBored		When the user hits CTRL-C.  Just kidding!
+UserGettingBored		When the user hits CTRL-C.  Just kidding! :-)
 							*User*
 User				Never executed automatically.  To be used for
 				autocommands that are only executed with
@@ -871,6 +873,6 @@ you expect the file to be modified.
 The |v:cmdarg| variable holds the "++enc=" and "++ff=" argument that are
 effective.  These should be used for the command that reads/writes the file.
 
-See the $VIMRUNTIME/netrw.vim for examples.
+See the $VIMRUNTIME/plugin/netrw.vim for examples.
 
  vim:tw=78:

@@ -2312,7 +2312,7 @@ ins_compl_prep(c)
 	    {
 		/* put the cursor on the last char, for 'tw' formatting */
 		curwin->w_cursor.col--;
-		insertchar(NUL, FALSE, -1, FALSE);
+		insertchar(NUL, 0, -1);
 		curwin->w_cursor.col++;
 	    }
 
@@ -3616,7 +3616,7 @@ insert_special(c, allow_modmask, ctrlv)
 	    ctrlv = FALSE;
 	}
     }
-    insertchar(c, FALSE, -1, ctrlv);
+    insertchar(c, ctrlv ? INSCHAR_CTRLV : 0, -1);
 }
 
 /*
@@ -3635,11 +3635,10 @@ insert_special(c, allow_modmask, ctrlv)
 #endif
 
     void
-insertchar(c, force_formatting, second_indent, ctrlv)
-    int		c;
-    int		force_formatting;	/* format line regardless of p_fo */
+insertchar(c, flags, second_indent)
+    int		c;			/* character to insert or NUL */
+    int		flags;			/* INSCHAR_FORMAT, etc. */
     int		second_indent;		/* indent for second line if >= 0 */
-    int		ctrlv;			/* c typed just after CTRL-V */
 {
     int		haveto_redraw = FALSE;
     int		textwidth;
@@ -3647,6 +3646,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
     colnr_T	leader_len;
     char_u	*p;
     int		no_leader = FALSE;
+    int		do_comments = (flags & INSCHAR_DO_COM);
 #endif
     int		first_line = TRUE;
     int		fo_ins_blank;
@@ -3659,7 +3659,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
     if (stop_arrow() == FAIL)
 	return;
 
-    textwidth = comp_textwidth(force_formatting);
+    textwidth = comp_textwidth(flags & INSCHAR_FORMAT);
     fo_ins_blank = has_format_option(FO_INS_BLANK);
 #ifdef FEAT_MBYTE
     fo_multibyte = has_format_option(FO_MULTIBYTE);
@@ -3679,7 +3679,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
      *	      before 'textwidth'
      */
     if (textwidth
-	    && (force_formatting
+	    && ((flags & INSCHAR_FORMAT)
 		|| (!vim_iswhite(c)
 		    && !((State & REPLACE_FLAG)
 #ifdef FEAT_VREPLACE
@@ -3730,12 +3730,13 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
 #ifdef FEAT_COMMENTS
 	    if (no_leader)
-		fo_do_comments = FALSE;
-	    else if (!force_formatting && has_format_option(FO_WRAP_COMS))
-		fo_do_comments = TRUE;
+		do_comments = FALSE;
+	    else if (!(flags & INSCHAR_FORMAT)
+					   && has_format_option(FO_WRAP_COMS))
+		do_comments = TRUE;
 
 	    /* Don't break until after the comment leader */
-	    if (fo_do_comments)
+	    if (do_comments)
 		leader_len = get_leader_len(ml_get_curline(), NULL, FALSE);
 	    else
 		leader_len = 0;
@@ -3747,7 +3748,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	    if (leader_len == 0)
 		no_leader = TRUE;
 #endif
-	    if (!force_formatting
+	    if (!(flags & INSCHAR_FORMAT)
 #ifdef FEAT_COMMENTS
 		    && leader_len == 0
 #endif
@@ -3896,7 +3897,11 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 	     * Split the line just before the margin.
 	     * Only insert/delete lines, but don't really redraw the window.
 	     */
-	    open_line(FORWARD, TRUE, old_indent);
+	    open_line(FORWARD, OPENLINE_DELSPACES
+#ifdef FEAT_COMMENTS
+		    + (do_comments ? OPENLINE_DO_COM : 0)
+#endif
+		    , old_indent);
 	    old_indent = 0;
 
 	    replace_offset = 0;
@@ -3958,9 +3963,6 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
 	if (c == NUL)			/* formatting only */
 	    return;
-#ifdef FEAT_COMMENTS
-	fo_do_comments = FALSE;
-#endif
 	if (haveto_redraw)
 	{
 	    update_topline();
@@ -4104,7 +4106,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #endif
 	buf[i] = NUL;
 	ins_str(buf);
-	if (ctrlv)
+	if (flags & INSCHAR_CTRLV)
 	{
 	    redo_literal(*buf);
 	    i = 1;
@@ -4130,7 +4132,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #endif
 	{
 	    ins_char(c);
-	    if (ctrlv)
+	    if (flags & INSCHAR_CTRLV)
 		redo_literal(c);
 	    else
 		AppendCharToRedobuff(c);
@@ -6785,15 +6787,12 @@ ins_eol(c)
 #endif
 
     AppendToRedobuff(NL_STR);
+    i = open_line(FORWARD,
 #ifdef FEAT_COMMENTS
-    if (has_format_option(FO_RET_COMS))
-	fo_do_comments = TRUE;
+	    has_format_option(FO_RET_COMS) ? OPENLINE_DO_COM :
 #endif
-    i = open_line(FORWARD, FALSE, old_indent);
+	    0, old_indent);
     old_indent = 0;
-#ifdef FEAT_COMMENTS
-    fo_do_comments = FALSE;
-#endif
 #ifdef FEAT_CINDENT
     can_cindent = TRUE;
 #endif

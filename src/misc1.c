@@ -257,9 +257,9 @@ cin_is_cinword(line)
  * Return TRUE for success, FALSE for failure
  */
     int
-open_line(dir, del_spaces, old_indent)
+open_line(dir, flags, old_indent)
     int		dir;		/* FORWARD or BACKWARD */
-    int		del_spaces;	/* delete spaces after cursor */
+    int		flags;		/* OPENLINE_DELSPACES and OPENLINE_DO_COM */
     int		old_indent;	/* indent for after ^^D in Insert mode */
 {
     char_u	*saved_line;		/* copy of the original line */
@@ -411,7 +411,7 @@ open_line(dir, del_spaces, old_indent)
 	    old_cursor = curwin->w_cursor;
 	    ptr = saved_line;
 # ifdef FEAT_COMMENTS
-	    if (fo_do_comments)
+	    if (flags & OPENLINE_DO_COM)
 		lead_len = get_leader_len(ptr, NULL, FALSE);
 	    else
 		lead_len = 0;
@@ -433,7 +433,7 @@ open_line(dir, del_spaces, old_indent)
 		    newindent = get_indent();
 		}
 # ifdef FEAT_COMMENTS
-		if (fo_do_comments)
+		if (flags & OPENLINE_DO_COM)
 		    lead_len = get_leader_len(ptr, NULL, FALSE);
 		else
 		    lead_len = 0;
@@ -576,7 +576,7 @@ open_line(dir, del_spaces, old_indent)
      * This may then be inserted in front of the new line.
      */
     end_comment_pending = NUL;
-    if (fo_do_comments)
+    if (flags & OPENLINE_DO_COM)
 	lead_len = get_leader_len(saved_line, &lead_flags, dir == BACKWARD);
     else
 	lead_len = 0;
@@ -921,14 +921,15 @@ open_line(dir, del_spaces, old_indent)
 	*p_extra = saved_char;		/* restore char that NUL replaced */
 
 	/*
-	 * When 'ai' set or "del_spaces" TRUE, skip to the first non-blank.
+	 * When 'ai' set or "flags" has OPENLINE_DELSPACES, skip to the first
+	 * non-blank.
 	 *
 	 * When in REPLACE mode, put the deleted blanks on the replace stack,
 	 * preceded by a NUL, so they can be put back when a BS is entered.
 	 */
 	if (REPLACE_NORMAL(State))
 	    replace_push(NUL);	    /* end of extra blanks */
-	if (curbuf->b_p_ai || del_spaces)
+	if (curbuf->b_p_ai || (flags & OPENLINE_DELSPACES))
 	{
 	    while (*p_extra == ' ' || *p_extra == '\t')
 	    {
@@ -6396,13 +6397,6 @@ static int expand_backtick __ARGS((garray_T *gap, char_u *pat, int flags));
  * File name expansion code for MS-DOS, Win16 and Win32.  It's here because
  * it's shared between these systems.
  */
-#ifdef WIN3264
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
-# endif
-# include <windows.h>
-#endif
-
 # if defined(DJGPP) || defined(PROTO)
 #  define _cdecl	    /* DJGPP doesn't have this */
 # else

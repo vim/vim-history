@@ -78,7 +78,8 @@ static int msg_hist_off = FALSE;	/* don't add messages to history */
  *		    has answered some other prompt.
  *		    Set: When the ruler or typeahead display is overwritten,
  *		    scrolling the screen for some message.
- * keep_msg	    Message to be displayed after redrawing the screen.
+ * keep_msg	    Message to be displayed after redrawing the screen, in
+ *		    main_loop().
  *		    This is an allocated string or NULL when not used.
  */
 
@@ -89,11 +90,8 @@ static int msg_hist_off = FALSE;	/* don't add messages to history */
  */
     int
 msg(s)
-    char_u	    *s;
+    char_u	*s;
 {
-#ifdef FEAT_EVAL
-    set_vim_var_string(VV_STATUSMSG, s, -1);
-#endif
     return msg_attr_keep(s, 0, FALSE);
 }
 
@@ -115,6 +113,11 @@ msg_attr_keep(s, attr, keep)
     int		retval;
     char_u	*buf = NULL;
 
+#ifdef FEAT_EVAL
+    if (attr == 0)
+	set_vim_var_string(VV_STATUSMSG, s, -1);
+#endif
+
     /*
      * It is possible that displaying a messages causes a problem (e.g.,
      * when redrawing the window), which causes another message, etc..	To
@@ -132,6 +135,11 @@ msg_attr_keep(s, attr, keep)
 		&& last_msg_hist->msg != NULL
 		&& STRCMP(s, last_msg_hist->msg)))
 	add_msg_hist(s, -1, attr);
+
+    /* When displaying keep_msg, don't let msg_start() free it, caller must do
+     * that. */
+    if (s == keep_msg)
+	keep_msg = NULL;
 
     /* Truncate the message if needed. */
     buf = msg_strtrunc(s);
@@ -303,11 +311,7 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
     char_u	*s;
     long	a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
 {
-    int ret = smsg_attr(0, s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-#ifdef FEAT_EVAL
-    set_vim_var_string(VV_STATUSMSG, IObuff, -1);
-#endif
-    return ret;
+    return smsg_attr(0, s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
 /* VARARGS */

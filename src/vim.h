@@ -360,9 +360,19 @@ typedef unsigned short u8char_T;
 /* ================ end of the header file puzzle =============== */
 
 /*
+ * For dynamically loaded imm library. Currently, only for Win32.
+ */
+#ifdef DYNAMIC_IME
+# ifndef FEAT_MBYTE_IME
+#  define FEAT_MBYTE_IME
+# endif
+#endif
+
+/*
  * Check input method control.
  */
-#if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME) || defined(FEAT_XIM)
+#if defined(FEAT_XIM) || \
+    (defined(FEAT_GUI) && (defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME)))
 # define USE_IM_CONTROL
 #endif
 
@@ -808,6 +818,15 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define SIN_INSERT	2	/* insert indent before existing text */
 #define SIN_UNDO	4	/* save line for undo before changing it */
 
+/* flags for insertchar() */
+#define INSCHAR_FORMAT	1	/* force formatting */
+#define INSCHAR_DO_COM	2	/* format comments */
+#define INSCHAR_CTRLV	4	/* char typed just after CTRL-V */
+
+/* flags for open_line() */
+#define OPENLINE_DELSPACES  1	/* delete spaces after cursor */
+#define OPENLINE_DO_COM	    2	/* format comments */
+
 /*
  * There are four history tables:
  */
@@ -981,7 +1000,7 @@ enum auto_event
     EVENT_ENCODINGCHANGED,	/* after changing the 'encoding' option */
     EVENT_CURSORHOLD,		/* cursor in same position for a while */
     EVENT_FUNCUNDEFINED,	/* if calling a function which doesn't exist */
-    EVENT_SERVERREPLYRECV,	/* upon string reception from a remote vim */
+    EVENT_REMOTEREPLY,		/* upon string reception from a remote vim */
     NUM_EVENTS			/* MUST be the last one */
 };
 

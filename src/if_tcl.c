@@ -71,8 +71,6 @@ TODO:
 
 #ifdef DYNAMIC_TCL
 # define USE_TCL_STUBS /* use tcl's stubs mechanism */
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
 #endif
 
 #include <tcl.h>

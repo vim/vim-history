@@ -7,7 +7,7 @@ void ui_delay __ARGS((long msec, int ignoreinput));
 void ui_suspend __ARGS((void));
 void suspend_shell __ARGS((void));
 int ui_get_shellsize __ARGS((void));
-void ui_set_shellsize __ARGS((void));
+void ui_set_shellsize __ARGS((int mustset));
 void ui_new_shellsize __ARGS((void));
 void ui_breakcheck __ARGS((void));
 void clip_init __ARGS((int can_use));

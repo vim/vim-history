@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ar.  Last change: 2001 Aug 10
+*eval.txt*      For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -670,7 +670,7 @@ v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
 		Read-only. |fold-expr| 'indentexpr'
 
 					*v:servername* *servername-variable*
-v:servername	The resulting registered |x11-command-server| name if any.
+v:servername	The resulting registered |x11-clientserver| name if any.
 
 					*v:shell_error* *shell_error-variable*
 v:shell_error	Result of the last shell command.  When non-zero, the last
@@ -800,19 +800,21 @@ mode()				String  current editing mode
 nextnonblank( {lnum})		Number	line nr of non-blank line >= {lnum}
 nr2char( {expr})		String	single char with ASCII value {expr}
 prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
+remote_expr( {server}, {string} [, {idvar}])
+				String	send expression
+remote_peek( {serverid} [, {retvar}])
+				Number	check for reply string
+remote_read( {serverid})	String	read reply string
+remote_send( {server}, {string})
+				String	send key sequence
 rename( {from}, {to})		Number  rename (move) file from {from} to {to}
 resolve( {filename})		String  get filename a shortcut points to
 search( {pattern} [, {flags}])	Number  search for {pattern}
 searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
 				Number  search for other end of start/end pair
-servernames()			String	get a list of available servers
-serverreply_peek( {serverid} [, {retvar}])
-				Number	check for reply string
-serverreply_read( {serverid})	String	read reply string
-serverreply_send( {serverid}, {string})
+server2client( {serverid}, {string})
 				Number	send reply string
-serversend( {server}, {string} [, {type} [, {idvar}]])
-				String	send key sequence or expression
+serverlist()			String	get a list of available servers
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -1283,6 +1285,11 @@ foldtext()	Returns a String, to be displayed for a closed fold.  This is
 		or "/*" and the text from the 'foldmarker' and 'commentstring'
 		options is removed.
 		{not available when compiled without the |+folding| feature}
+
+							*foreground()*
+foreground()	Move the Vim window to the foreground.  Useful when sent from
+		a client to a Vim server. |remote_send()|
+		{only in the Win32, Athena, Motif and GTK GUI versions}
 
 getchar([expr])						*getchar()*
 		Get a single character from the user.  If it is an 8-bit
@@ -1833,6 +1840,63 @@ prevnonblank({lnum})					*prevnonblank()*
 <		When {lnum} is invalid or there is no non-blank line at or
 		above it, zero is returned.
 
+							*remote_expr()*
+remote_expr({server}, {string} [, {idvar}])
+		Send the {string} to {server}.  The string is sent as an
+		expression and the result is returned after evaluation.
+		If {idvar} is present, it is taken as the name of a
+		variable and a {serverid} for later use with
+		remote_read() is stored there.
+		See also |clientserver| |RemoteReply|.
+		{only available when compiled with the |+clientserver| feature}
+		Note: Any errors will be reported in the server and may mess
+		up the display.
+		Examples: >
+		:echo remote_expr("gvim", "2+2")
+		:echo remote_expr("gvim-001", "b:current_syntax")
+
+
+remote_peek({serverid} [, {retvar}])		*remote_peek()*
+		Returns a positive number if there are available strings
+		from {serverid}.  Copies any reply string into the variable
+		{retvar} if specified.  {retvar} must be a string with the
+		name of a variable.
+		Returns zero if none are available.
+		See also |clientserver|.
+		{only available when compiled with the |+clientserver| feature}
+		Examples: >
+			:let repl = ""
+			:echo "PEEK: ".remote_peek(id, "repl").": ".repl
+
+remote_read({serverid})				*remote_read()*
+		Return the oldest available reply from {serverid} and consume
+		it.
+		See also |clientserver|.
+		{only available when compiled with the |+clientserver| feature}
+		Examples: >
+			:echo remote_read(id)
+<
+							*remote_send()* *E241*
+remote_send({server}, {string} [, {idvar}]) 
+		Send the {string} to {server}.  The string is sent as
+		input keys and the function returns immediately.
+		If {idvar} is present, it is taken as the name of a
+		variable and a {serverid} for later use with
+		remote_read() is stored there.
+		See also |clientserver| |RemoteReply|.
+		{only available when compiled with the |+clientserver| feature}
+		Note: Any errors will be reported in the server and may mess
+		up the display.
+		Examples: >
+		:echo remote_send("gvim", ":DropAndReply ".file, "serverid").
+		 \ remote_read(serverid)
+
+		:autocmd NONE RemoteReply *
+		 \ echo remote_read(expand("<amatch>"))
+		:echo remote_send("gvim", ":sleep 10 | echo ".
+		 \ 'server2client(expand("<client>"), "HELLO")<CR>')
+
+
 rename({from}, {to})					*rename()*
 		Rename the file by the name {from} to the name {to}.  This
 		should also work to move files across file systems.  The
@@ -1950,74 +2014,25 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 	:echo searchpair('{', '', '}', 'bW',
 	     \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"')
 <
-servernames()					*servernames()* *E240*
-		Return a list of available servernames. One per line.
-		See also |x11-command-server|.
-		{only available when compiled with the +xcmdsrv feature}
-		Examples: >
-		:echo servernames()
-
-serverreply_peek({serverid} [, {retvar}])		*serverreply_peek()*
-		Returns a positive number if there are available strings
-		from {serverid}.  Copies any reply string into the variable
-		{retvar} if specified.  {retvar} must be a string with the
-		name of a variable.
-		Returns zero if none are available.
-		See also |x11-command-server|.
-		{only available when compiled with the +xcmdsrv feature}
-		Examples: >
-		:let repl = ""
-		:echo "PEEK: ".serverreply_peek(id, "repl").": ".repl
-
-serverreply_read({serverid})				*serverreply_read()*
-		Return the oldest available reply from {serverid} and consume
-		it.
-		See also |x11-command-server|.
-		{only available when compiled with the +xcmdsrv feature}
-		Examples: >
-		:echo serverreply_read(id)
-
-serverreply_send( {clientid}, {string})			*serverreply_send()*
+server2client( {clientid}, {string})			*server2client()*
 		Send a reply string to {clientid}. The most recent {clientid}
 		that sent a string can be retrieved with expand("<client>").
-		{only available when compiled with the +xcmdsrv feature}
+		{only available when compiled with the |+clientserver| feature}
 		Note:
 		This id has to be stored before the next command can be
 		received. Ie. before returning from the received command and
 		before calling any commands that waits for input.
-		See also |x11-command-server|.
+		See also |clientserver|.
 		Examples: >
-		:echo serverreply_send(expand("<client>"), "HELLO")
+		:echo server2client(expand("<client>"), "HELLO")
 <
-							*serversend()* *E241*
-serversend({server}, {string} [, {eval} [, {idvar}]]) 
-		Send the {string} to {server}.  On MS-Windows {server} is
-		ignored, but it must be present; use an empty string.
-		If {eval} is present and non-zero, the string is sent as an
-		expression and the result is returned after evaluation.
-		Otherwise the string is sent as input keys and the function
-		returns immediately.
-		Unix only: If {idvar} is present, it is taken as the name of a
-		variable and a {serverid} for later use with
-		serverreply_read() is stored there.
-		See also |x11-command-server| |ServerReplyRecv|.
-		{only available when compiled with the +ole or +xcmdsrv
-		feature}
-		Note: Any errors will be reported in the server and may mess
-		up the display.
+serverlist()					*serverlist()* *E240*
+		Return a list of available server names. One per line.
+		See also |clientserver|.
+		{only available when compiled with the |+clientserver| feature}
 		Examples: >
-		:echo serversend("gvim", "2+2", 1)
-		:echo serversend("gvim-001", "b:current_syntax", 1)
-
-		:echo serversend("gvim", ":DropAndReply ".file, 0, "serverid").
-		 \ serverreply_read(serverid)
-
-		:autocmd NONE ServerReplyRecv *
-		 \ echo serverreply_read(expand("<amatch>"))
-		:echo serversend("gvim", ":sleep 10 | echo ".
-		 \ 'serverreply_send(expand("<client>"), "HELLO")<CR>')
-
-
+		:echo serverlist()
+<
 setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Set option or local variable {varname} in buffer {expr} to
 		{val}.
@@ -2330,6 +2345,7 @@ browse			Compiled with |:browse| support, and browse() will
 builtin_terms		Compiled with some builtin terminals.
 byte_offset		Compiled with support for 'o' in 'statusline'
 cindent			Compiled with 'cindent' support.
+clientserver		Compiled with remote invocation support |clientserver|.
 clipboard		Compiled with 'clipboard' support.
 cmdline_compl		Compiled with |cmdline-completion| support.
 cmdline_hist		Compiled with |cmdline-history| support.
@@ -2456,7 +2472,6 @@ win16			Win16 version of Vim (MS-Windows 3.1).
 win32			Win32 version of Vim (MS-Windows 95/98/ME/NT/2000/XP).
 win95			Win32 version for MS-Windows 95/98/ME.
 writebackup		Compiled with 'writebackup' default on.
-xcmdsrv			Compiled with |x11-command-server| support.
 xfontset		Compiled with X fontset support |xfontset|.
 xim			Compiled with X input method support |xim|.
 xterm_clipboard		Compiled with support for xterm clipboard.

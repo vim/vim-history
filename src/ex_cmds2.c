@@ -1252,6 +1252,9 @@ do_argfile(eap, argn)
 		      eap, ECMD_LAST,
 		      (P_HID(curwin->w_buffer) ? ECMD_HIDE : 0) +
 					   (eap->forceit ? ECMD_FORCEIT : 0));
+
+	/* like Vi: set the mark where the cursor is in the file. */
+	setmark('\'');
     }
 }
 
@@ -3261,6 +3264,8 @@ mch_print_init(psettings, jobname, forceit)
     int		i;
     char_u	*paper_name;
     int		paper_strlen;
+    int		fontsize;
+    char_u	*p;
 
 #if 0
     /*
@@ -3280,6 +3285,9 @@ mch_print_init(psettings, jobname, forceit)
 	s_pd.Flags |= PD_RETURNDEFAULT;
 #endif
 
+    /*
+     * Find the size of the paper and set the margins.
+     */
     portrait = (!printer_opts[OPT_PRINT_PORTRAIT].present
 	      || TO_LOWER(printer_opts[OPT_PRINT_PORTRAIT].string[0]) == 'y');
     if (printer_opts[OPT_PRINT_PAPER].present)
@@ -3301,10 +3309,14 @@ mch_print_init(psettings, jobname, forceit)
 	    paper = i;
 	    break;
 	}
-
-    /* Set up font and page size 10pt Courier on a4 */
     prt_page_margins(&prt_pagesize[paper]);
-    prt_font_metrics(PRT_PS_DEFAULT_FONTSIZE);
+
+    /* Set up the font size. */
+    fontsize = PRT_PS_DEFAULT_FONTSIZE;
+    for (p = p_pfn; (p = vim_strchr(p, ':')) != NULL; ++p)
+	if (p[1] == 'h' && isdigit(p[2]))
+	    fontsize = atoi((char *)p + 2);
+    prt_font_metrics(fontsize);
 
     /*
      * Fill in the settings struct

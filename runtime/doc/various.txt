@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 11
+*various.txt*   For Vim version 6.0as.  Last change: 2001 Aug 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -221,6 +221,7 @@ B  *++builtin_terms*	maximal terminals builtin |builtin-terms|
 N  *+byte_offset*	support for 'o' flag in 'statusline' option, "go"
 			and ":goto" commands.
 N  *+cindent*		|'cindent'|, C indenting
+N  *+clientserver*	Unix and Win32: Remote invocation |clientserver|
    *+clipboard*		|clipboard| support
 N  *+cmdline_compl*	command line completion |cmdline-completion|
 N  *+cmdline_hist*	command line history |cmdline-history|
@@ -319,7 +320,6 @@ S  *+windows*		more than one window
 m  *+writebackup*	|'writebackup'| is default on
 m  *+xim*		X input method |xim|
    *+xfontset*		X fontset support |xfontset|
-N  *+xcmdsrv*		Unix only: Remote invocation |x11-command-server|
 N  *+xterm_clipboard*	Unix only: xterm clipboard handling
 m  *+xterm_save*	save and restore xterm screen |xterm-screens|
 N  *+X11*		Unix only: can restore window title |X11|
@@ -597,7 +597,8 @@ used.
 			written in a temp file and 'printexpr' is used to
 			actually print it.  Then [arguments] can be used by
 			'printexpr' through |v:cmdarg|.  Otherwise [arguments]
-			is ignored.
+			is ignored.  'printoptions' can be used to specify
+			paper size, duplex, etc.
 
 :[range]ha[hardcopy][!] >{filename}
 			As above, but write the resulting PostScript in file

@@ -818,7 +818,8 @@ fkmap(c)
 				|| gchar_cursor() == F_DIVIDE
 				|| gchar_cursor() == F_PERCENT
 				|| gchar_cursor() == F_EQUALS))
-			    && --curwin->w_cursor.col);
+			    && --curwin->w_cursor.col)
+			;
 
 		if (!F_isdigit(gchar_cursor()))
 		    ++curwin->w_cursor.col;

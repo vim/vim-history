@@ -1518,7 +1518,7 @@ static struct vimoption
     {"printexpr", "pexpr",  P_STRING|P_VI_DEF,
 #ifdef FEAT_POSTSCRIPT
 			    (char_u *)&p_pexpr, PV_NONE,
-			    {(char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in . ') . delete(v:fname_in)", (char_u *)0L}
+			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
@@ -2494,6 +2494,12 @@ set_init_1()
     }
 #endif
 
+#ifdef FEAT_POSTSCRIPT
+    /* 'printexpr' must be allocated to be able to evaluate it. */
+    set_string_default("pexpr",
+	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)");
+#endif
+
     /*
      * Set all the options (except the terminal options) to their default
      * value.  Also set the global value for local options.
@@ -2519,12 +2525,6 @@ set_init_1()
      * initialize the table for 'breakat'.
      */
     fill_breakat_flags();
-#endif
-
-#ifdef FEAT_POSTSCRIPT
-    /* 'printexpr' must be allocated to be able to evaluate it. */
-    set_string_default("pexpr",
-	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)");
 #endif
 
     /*
@@ -5879,7 +5879,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     else if (pp == &p_linespace)
     {
 	if (gui.in_use && gui_mch_adjust_charsize() == OK)
-	    gui_set_shellsize(FALSE);
+	    gui_set_shellsize(FALSE, FALSE);
     }
 #endif
 

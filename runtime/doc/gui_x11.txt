@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 12
+*gui_x11.txt*   For Vim version 6.0as.  Last change: 2001 Aug 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,7 +14,6 @@ Vim's Graphical User Interface				*gui-x11* *GUI-X11*
 6. GNOME version		|gui-gnome|
 7. Compiling			|gui-x11-compiling|
 8. X11 selection mechanism	|x11-selection|
-9. X11 command server		|x11-command-server|
 
 Other relevant documentation:
 |gui.txt|	For generic items of the GUI.
@@ -491,88 +490,5 @@ Most newer applications will provide their current selection via PRIMARY ("*)
 and use CLIPBOARD ("+) for cut/copy/paste operations.  You thus have access to
 both by choosing to use either of the "* or "+ registers.
 
-
-==============================================================================
-9. X11 command server			    *x11-xcmdsrv* *x11-command-server*
-						*E247* *E248* *E249* *E251*
-When compiled with the |+xcmdsrv| option, Vim can act as a command server.
-Somewhat like what is available with the |ole-interface| on the windows
-platform.
-
-By default, a GUI Vim will register a name on the X-server by which it can be
-addressed for subsequent execution of injected strings.  Vim can also act as
-a client and send strings to other instances of Vim on the same X11 display.
-
-The following command line arguments are available:
-
-    argument			meaning	~
-
-   --remote [+{cmd}] {file} ...					*--remote*
-   				Open the file list in a remote
-				Vim. The rest of the command line
-				is taken as the file list.  Thus any
-				non-file arguments must come before this.
-   --remote-wait [+{cmd}] {file} ...				*--remote-wait*
-   				As above, but wait for files to
-				complete (unload) in remote Vim.
-   --servername {name}		Send to or become the server	*--servername*
-				{name}
-   --serversend {keys}		Send {keys} to server and exit.	*--serversend*
-   --serverexpr {expr}		Evaluate {expr} in server and	*--serverexpr*
-				print the result on stdout.
-   --serverlist			Output a list of server names.	*--serverlist*
-
-When an X11 GUI Vim (gvim) is started, it will try to register a send-server
-name on the 'VimRegistry' property on the root window.  By default it will try
-to register the name under which it was invoked (gvim, egvim ...).  This can
-be overridden with the --servername argument.  If the specified name is not
-available, a postfix is applied until a free name is encountered, ie. "gvim1"
-for the second invocation of gvim on a particular X-server.  The resulting
-name is available in the servername builtin variable |v:servername|.
-
-A non GUI Vim with access to the X11 display (|xterm-clipboard| enabled), can
-also act as a command server if a server name is explicitly given with the
---servername argument.
-
-An empty --servername argument will cause the command server to be disabled.
-
-When Vim is invoked with --serversend it will try to locate the server name
-determined by the invocation name and --servername argument as described
-above.  If an exact match is not available, the first server with the 3 digit
-postfix will be used.  If no server can be located, Vim will start up
-according to the rest of the command line and execute the kestrokes by itself.
-This way it is not necessary to know whether gvim is already started when
-sending command to it.  if a name with the 3 digit postfix is specified with
-the --servername argument, it must match exactly.
-
-The --remote argument will cause a |:drop| command to be constructed from the
-rest of the command line and sent as described above.
-The --remote-wait argument does the same thing and additionally sets up to
-wait for earch of the files to have been edited.  This uses the BufUnload
-event, thus as soon as a file has been unloaded, Vim assumes you are done
-editing it.
-Note that the --remote and --remote-wait arguments will consume the rest of
-the command line.  Ie. all remaining arguments will be regarded as filenames.
-You can not put options there!
-
-The --serverlist argument will cause Vim to print a list of registered command
-servers on the standard output (stdout) and exit.
-
-Functions
----------
-There are a number of VimL functions for scripting the command server.  See
-the description in |eval.txt| or use CTRL-] on the function name to jump to
-the full explanation.
-
-    synopsis				     explanation ~
-    serversend(server, string, type, idvar)  send key sequence or expression
-    servernames()			     get a list of available servers
-    serverreply_peek(serverid, retvar)	     check for reply string
-    serverreply_read(serverid)		     read reply string
-    serverreply_send(serverid, string)	     send reply string
-
-See also the explanation of |CTRL-\_CTRL-N|.  Very useful as a leading key
-sequence.
-The {serverid} for serverreply_send() can be obtained with expand("<client>")
 
  vim:tw=78:sw=4

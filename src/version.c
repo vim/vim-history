@@ -94,6 +94,11 @@ static char *(features[]) =
 #else
 	"-cindent",
 #endif
+#ifdef FEAT_CLIENTSERVER
+	"+clientserver",
+#else
+	"-clientserver",
+#endif
 #ifdef FEAT_CLIPBOARD
 	"+clipboard",
 #else
@@ -269,11 +274,6 @@ static char *(features[]) =
 	"+localmap",
 #else
 	"-localmap",
-#endif
-#ifdef FEAT_KEYMAP
-	"+keymap",
-#else
-	"-keymap",
 #endif
 #ifdef FEAT_MENU
 	"+menu",
@@ -582,11 +582,6 @@ static char *(features[]) =
 	"-xim",
 #endif
 #if defined(UNIX) || defined(VMS)
-# ifdef FEAT_XCMDSRV
-	"+xcmdsrv",
-# else
-	"-xcmdsrv",
-# endif
 # ifdef FEAT_XCLIPBOARD
 	"+xterm_clipboard",
 # else

@@ -35,13 +35,6 @@
 # include <gtk/gtk.h>
 #endif
 
-#ifdef FEAT_GUI_MSWIN
-# ifndef COBJMACROS
-#  define COBJMACROS /* For OLE: Enable "friendlier" access to objects */
-# endif
-# include <windows.h>
-#endif
-
 #ifdef FEAT_GUI_BEOS
 # include "gui_beos.h"
 #endif
@@ -334,6 +327,7 @@ typedef struct Gui
     guicolor_T	scroll_bg_pixel;    /* Same in Pixel format */
     char	*tooltip_fg_color;  /* Color of tooltip foreground */
     char	*tooltip_bg_color;  /* Color of tooltip background */
+
 # ifdef FEAT_GUI_MOTIF
     guicolor_T	menu_def_fg_pixel;  /* Default menu foreground */
     guicolor_T	menu_def_bg_pixel;  /* Default menu background */
@@ -349,11 +343,12 @@ typedef struct Gui
     Cursor	blank_pointer;	    /* Blank pointer */
 
     /* X Resources */
-    char_u	*dflt_font;	    /* Resource font, used if 'guifont' not set
-				     */
-    char_u	*dflt_bold_fn;	    /* Resource bold font */
-    char_u	*dflt_ital_fn;	    /* Resource italic font */
-    char_u	*dflt_boldital_fn;  /* Resource bold-italic font */
+    char_u	*dflt_font;	    /* Resource font name, used if 'guifont'
+				       not set */
+    char_u	*dflt_bold_fn;	    /* Resource bold font name */
+    char_u	*dflt_ital_fn;	    /* Resource italic font name */
+    char_u	*dflt_boldital_fn;  /* Resource bold-italic font name */
+    char_u	*tooltip_font;	    /* Resource tooltip Font name */
     char_u	*geom;		    /* Geometry, eg "80x24" */
     Bool	rev_video;	    /* Use reverse video? */
     Bool	color_approx;	    /* Some color was approximated */
@@ -395,30 +390,20 @@ typedef struct Gui
     char_u	*browse_fname;	    /* file name from filedlg */
 #endif	/* FEAT_GUI_GTK */
 
-#ifdef FEAT_GUI_ATHENA
-# ifdef FEAT_TOOLBAR
-    int		toolbar_height;	    /* height of the toolbar */
-# endif
-# ifdef FEAT_BEVAL
-    guicolor_T	balloonEval_fg_pixel;/* foreground color of balloon eval win */
-    guicolor_T	balloonEval_bg_pixel;/* background color of balloon eval win */
-    XFontSet	balloonEval_fontList;/* balloon evaluation fontset */
-# endif
-#endif  /* FEAT_GUI_ATHENA */
-
-#ifdef FEAT_GUI_MOTIF
-# ifdef FEAT_TOOLBAR
-    int		toolbar_height;	    /* height of the toolbar */
-# endif
-# ifdef FEAT_FOOTER
+#ifdef FEAT_FOOTER
     int		footer_height;	    /* height of the message footer */
-# endif
-# ifdef FEAT_BEVAL
+#endif
+
+#if defined(FEAT_TOOLBAR) \
+	&& (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF))
+    int		toolbar_height;	    /* height of the toolbar */
+#endif
+
+#ifdef FEAT_BEVAL
     guicolor_T	balloonEval_fg_pixel;/* foreground color of balloon eval win */
     guicolor_T	balloonEval_bg_pixel;/* background color of balloon eval win */
-    XmFontList	balloonEval_fontList;/* balloon evaluation fontList */
-# endif
-#endif /* FEAT_GUI_MOTIF */
+    XFontSet	balloonEval_fontset;/* balloon evaluation fontset */
+#endif
 
 #ifdef FEAT_GUI_MSWIN
     GuiFont	currFont;	    /* Current font */
@@ -476,7 +461,7 @@ typedef struct Gui
     PtWidget_t	*vimWindow;		/* PtWindow */
     PtWidget_t	*vimTextArea;		/* PtRaw */
     PtWidget_t	*vimContainer;		/* PtPanel */
-# if defined( FEAT_MENU ) || defined( FEAT_TOOLBAR )
+# if defined(FEAT_MENU) || defined(FEAT_TOOLBAR)
     PtWidget_t	*vimToolBarGroup;
 # endif
 # ifdef FEAT_MENU
@@ -498,16 +483,6 @@ typedef struct Gui
 
 extern gui_T gui;			/* this is defined in gui.c */
 
-#ifdef FEAT_BEVAL
-#  define XtNballoonEvalForeground  "balloonEvalForeground"
-#  define XtNballoonEvalBackground  "balloonEvalBackground"
-# ifdef FEAT_GUI_MOTIF
-#  define XmNballoonEvalFontList    "balloonEvalFontList"
-# elif defined(FEAT_GUI_ATHENA)
-#  define XtNballoonEvalFontList    "balloonEvalFontList"
-# endif
-#endif
-
 /* definitions of available window positionings for gui_*_position_in_parent()
  */
 typedef enum
@@ -516,3 +491,15 @@ typedef enum
     VW_POS_CENTER,
     VW_POS_TOP_CENTER
 } gui_win_pos_T;
+
+#if defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK)
+/*
+ * Flags used to distinguish the different contexts in which the
+ * find/replace callback may be called.
+ */
+# define FR_FINDNEXT	1	/* Find next in find dialog */
+# define FR_R_FINDNEXT	2	/* Find next in repl dialog */
+# define FR_REPLACE	3
+# define FR_REPLACEALL	4
+# define FR_UNDO	5
+#endif

@@ -63,10 +63,6 @@ struct PyMethodDef { int a; };
 #define eval_input	258
 
 #if defined(DYNAMIC_PYTHON) || defined(PROTO)
-/* Console Vim doesn't include this, but we need it for dynamic loading */
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
-
 # ifndef DYNAMIC_PYTHON
 #  define HINSTANCE int		/* for generating prototypes */
 # endif

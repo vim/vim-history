@@ -32,14 +32,6 @@
 #include <limits.h>
 #include <process.h>
 
-#ifndef STRICT
-# define STRICT
-#endif
-#ifndef WIN32_LEAN_AND_MEAN
-# define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-
 #if defined(__MINGW32__) && defined(GETTEXT_DYNAMIC)
 # include "dyn-ming.h"
 #endif
@@ -815,7 +807,7 @@ decode_mouse_event(
 		{
 		    /* wait a short time for next input event */
 		    if (WaitForSingleObject(g_hConIn, p_mouset / 3)
-			!= WAIT_OBJECT_0)
+							     != WAIT_OBJECT_0)
 			break;
 		    else
 		    {
@@ -1031,9 +1023,9 @@ WaitForChar(long msec)
     {
 	if (g_chPending != NUL
 #ifdef FEAT_MOUSE
-				|| g_nMouseClick != -1
+		|| g_nMouseClick != -1
 #endif
-							    )
+	   )
 	    return TRUE;
 
 	if (msec > 0)
@@ -1048,6 +1040,27 @@ WaitForChar(long msec)
 
 	cRecords = 0;
 	PeekConsoleInput(g_hConIn, &ir, 1, &cRecords);
+
+#ifdef FEAT_MBYTE_IME
+	if (State & CMDLINE)
+	{
+	    if (msg_row == Rows-1)
+	    {
+		CONSOLE_SCREEN_BUFFER_INFO csbi;
+		if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
+		{
+		    if (csbi.dwCursorPosition.Y != msg_row)
+		    {
+			/* The screen is now messed up, must redraw the
+			 * command line and later all the windows. */
+			redraw_all_later(CLEAR);
+			cmdline_row -= (msg_row - csbi.dwCursorPosition.Y);
+			redrawcmd();
+		    }
+		}
+	    }
+	}
+#endif
 
 	if (cRecords > 0)
 	{
@@ -1186,6 +1199,11 @@ mch_inchar(
     static int	once_already = 0;
 #endif
 
+
+#ifdef FEAT_CLIENTSERVER
+    /* Pump windows messages here, in case a client is trying to talk to us */
+    serverProcessPendingMessages();
+#endif
 
 #ifdef FEAT_SNIFF
     if (want_sniff_request)
@@ -2687,7 +2705,28 @@ mch_system(char *cmd, int options)
     /* Wait for the command to terminate before continuing */
     if (g_PlatformId != VER_PLATFORM_WIN32s)
     {
+#ifdef FEAT_GUI
+	/* Keep updating the window while waiting for the shell to finish. */
+	for (;;)
+	{
+	    MSG	msg;
+
+	    if (PeekMessage(&msg, (HWND)NULL, 0, 0, PM_REMOVE))
+	    {
+		if (msg.message == WM_PAINT
+			|| msg.message == WM_ERASEBKGND
+			|| msg.message == WM_NCPAINT)
+		{
+		    TranslateMessage(&msg);
+		    DispatchMessage(&msg);
+		}
+	    }
+	    if (WaitForSingleObject(pi.hProcess, 100) == WAIT_OBJECT_0)
+		break;
+	}
+#else
 	WaitForSingleObject(pi.hProcess, INFINITE);
+#endif
 
 	/* Get the command exit code */
 	GetExitCodeProcess(pi.hProcess, &ret);

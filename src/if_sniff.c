@@ -10,10 +10,6 @@
 #include "vim.h"
 
 #ifdef WIN32
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
-# endif
-# include <windows.h>
 # include <stdio.h>
 # include <fcntl.h>
 # include <io.h>

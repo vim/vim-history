@@ -573,6 +573,8 @@ getGvimName(char *name)
 	strcpy(name, searchpath("gvim.bat"));
     if (name[0] == 0)
 	strcpy(name, "gvim");		/* finds gvim.bat or gvim.exe */
+
+    strcat(name, " --literal");		/* file names don't need expansion */
 }
 
 STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,

@@ -66,6 +66,14 @@ typedef long off_t;
 #include <dos.h>
 #include <dir.h>
 
+#ifndef STRICT
+# define STRICT
+#endif
+#ifndef COBJMACROS
+# define COBJMACROS	/* For OLE: Enable "friendlier" access to objects */
+#endif
+#include <windows.h>
+
 /*
  *  plenty of memory, use large buffers
  */
@@ -101,7 +109,6 @@ typedef long off_t;
 # define CONSOLE_CURSOR_INFO int
 # define LPCSTR char_u *
 #endif
-
 
 /*
  * Some simple debugging macros that look and behave a lot like their

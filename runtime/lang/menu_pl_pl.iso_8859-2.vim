@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:		2001 Jul 28
+" Last Change:		2001 Aug 14
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -42,39 +42,58 @@ menutrans &Redo<Tab>^R			&Ponów<Tab>^R
 menutrans Rep&eat<Tab>\.		P&owtórz<Tab>\.
 menutrans Cu&t<Tab>"+x			W&ytnij<Tab>"+x
 menutrans &Copy<Tab>"+y			&Kopiuj<Tab>"+y
-menutrans &Paste<Tab>"+p		&Wklej<Tab>"+p
+menutrans &Paste<Tab>"+P			&Wklej<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Wstaw\ p&rzed<Tab>[p
 menutrans Put\ &After<Tab>]p		Wstaw\ p&o<Tab>]p
 menutrans &Select\ all<Tab>ggVG		Z&aznacz\ ca³o¶æ<Tab>ggVG
 menutrans &Find\.\.\.			&Szukaj\.\.\.
 menutrans &Find<Tab>/			&Szukaj<Tab>/
-menutrans Find\ and\ Rep&lace\.\.\.	&Zamieniaj\.\.\.
-menutrans Find\ and\ Rep&lace<Tab>:%s	&Zamieniaj<Tab>:%s
-menutrans Find\ and\ Rep&lace		&Zamieniaj
-menutrans Find\ and\ Rep&lace<Tab>:s	&Zamieniaj<Tab>:s
+menutrans Find\ and\ Rep&lace\.\.\.	&Zamieñ\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:%s	&Zamieñ<Tab>:%s
+menutrans Find\ and\ Rep&lace		&Zamieñ
+menutrans Find\ and\ Rep&lace<Tab>:s	&Zamieñ<Tab>:s
 menutrans Options\.\.\.			Opcje\.\.\.
 menutrans Settings\ &Window		Ustawienia
-menutrans &Global\ Settings		Globalne\ Ustawienia
+menutrans &Global\ Settings		Ustawienia\ &globalne
 menutrans F&ile\ Settings		Ustawienia\ dla\ pliku
+menutrans Toggle\ Line\ &Numbering<Tab>:set\ nu!			&Numerowanie\ wierszy<Tab>:set\ nu!
+menutrans Toggle\ &List\ Mode<Tab>:set\ list!					Tryb\ &listowania<Tab>:set\ list!
+menutrans Toggle\ Line\ &Wrap<Tab>:set\ wrap!			Za&wijanie\ wierszy<Tab>:set\ wrap!
+menutrans Toggle\ W&rap\ at\ word<Tab>:set\ lbr!			£amanie\ wie&rsza<Tab>:set\ lbr!
+menutrans Toggle\ &expand-tab<Tab>:set\ et!			Rozwijani&e\ tabulatorów<Tab>:set\ et!
+menutrans Toggle\ &auto-indent<Tab>:set\ ai!			&Automatyczne\ wciêcia<Tab>:set\ ai!
+menutrans Toggle\ &C-indenting<Tab>:set\ cin!			Wciêcia\ &C<Tab>:set\ cin!
+menutrans &Shiftwidth				&Szeroko¶æ\ wciêcia
+menutrans Te&xt\ Width\.\.\.			D³ugo¶æ\ linii\.\.\.
+menutrans &File\ Format\.\.\.			&Format\ pliku\.\.\.
+menutrans Soft\ &Tabstop				Rozmiar\ &tabulacji
 menutrans C&olor\ Scheme		Zestawy\ kolorów
 menutrans &Keymap			Uk³ady\ klawiatury
 menutrans None				¯aden
+menutrans accents			akcenty
+menutrans hebrew			hebrajski
+menutrans hebrewp			hebrajski\ p
+menutrans russian-jcuken		rosyjski-jcuken
+menutrans russian-jcukenwin		rosyjski-jcukenwin
+
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	Prze³±cz\ podkre¶lanie\ &wzorców<Tab>:set\ hls!
+
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		Prze³±cz\ &ignorowanie\ wielko¶ci<Tab>:set\ ic!
 menutrans Toggle\ &Showmatch<Tab>:set\ sm!		Prze³±cz\ &pokazywanie\ pasuj±cych<Tab>:set\ sm!
 
-menutrans &Context\ lines	Wiersze\ kontekstowe
-menutrans &Virtual\ Edit	Wirtualna\ Obróbka
+menutrans &Context\ lines	Wiersze\ &kontekstowe
+menutrans &Virtual\ Edit	Obróbka\ &wirtualna
 
 menutrans Never			Nigdy
 menutrans Block\ Selection	Zaznaczanie\ zakresu
 menutrans Insert\ mode		Tryb\ wprowadzania
-menutrans Block\ and\ Insert	Zakres\ i\ Wprowadzanie
+menutrans Block\ and\ Insert	Zakres\ i\ wprowadzanie
 menutrans Always		Zawsze
 
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!	Prze³±cz\ tryb\ wprowadzania<Tab>:set\ im!
-menutrans Search\ &Path\.\.\.	Trop\ poszukiwania\.\.\.
-menutrans Ta&g\ Files\.\.\.	Pilki\ Szyldów\.\.\.
+menutrans Search\ &Path\.\.\.	Scie¿ka\ poszukiwania\.\.\.
+menutrans Ta&g\ Files\.\.\.	Pliki\ tagów\.\.\.
+
 
 "
 " GUI options
@@ -87,23 +106,55 @@ menutrans Toggle\ &Right\ Scrollbar	Prze³±cz\ prawy\ przewijacz
 menutrans &Tools			&Narzêdzia
 menutrans &Jump\ to\ this\ tag<Tab>g^]	&Skocz\ do\ taga<Tab>g^]
 menutrans Jump\ &back<Tab>^T		Skok\ w\ &ty³<Tab>^T
-menutrans Build\ &Tags\ File		&Zrób\ plik\ tagów
+menutrans Build\ &Tags\ File		&Twórz\ plik\ tagów
+" Folding
+menutrans &Folding				&Zwijanie
+menutrans &Enable/Disable\ folds<Tab>zi		&Zwiñ/rozwiñ<Tab>zi
+menutrans &View\ Cursor\ Line<Tab>zv			&Linia\ kursora<Tab>zv
+menutrans Vie&w\ Cursor\ Line\ only<Tab>zMzx			&Tylko\ linia\ kursora<Tab>zMzx
+menutrans C&lose\ more\ folds<Tab>zm				Zwiñ\ wiêcej<Tab>zm
+menutrans &Close\ all\ folds<Tab>zM				Z&wiñ\ wszystkie<Tab>zM
+menutrans &Open\ all\ folds<Tab>zR				Rozwiñ\ wszystkie<Tab>zR
+menutrans O&pen\ more\ folds<Tab>zr				R&ozwiñ\ wiêcej<Tab>zr
+
+menutrans Create\ &Fold<Tab>zf				T&wórz\ zawiniêcie<Tab>zf
+menutrans &Delete\ Fold<Tab>zd				U&suñ\ zawiniêcie<Tab>zd
+menutrans Delete\ &All\ Folds<Tab>zD				&Usuñ\ wszystkie\ zawiniêcia<Tab>zD
+menutrans Fold\ column\ &width				Szeroko¶æ\ kolumny\ za&winiêæ
+menutrans Fold\ Met&hod		Me&toda\ zawijania
+menutrans M&anual			&Rêcznie
+menutrans I&ndent			W&ciêcie
+menutrans E&xpression W&yrazenie
+menutrans S&yntax			S&k³adnia
+menutrans Ma&rker			Zn&acznik
+
+" Diff
+menutrans &Update					&Od¶wie¿
+menutrans &Get\ Block			&Pobierz\ blok
+menutrans &Put\ Block			&Wstaw\ blok
+
+" Make and stuff...
 menutrans &Make<Tab>:make		M&ake<Tab>:make
-menutrans &List\ Errors<Tab>:cl		&Wylicz\ b³êdy<Tab>:cl
+menutrans &List\ Errors<Tab>:cl		&Poka¿\ b³êdy<Tab>:cl
 menutrans L&ist\ Messages<Tab>:cl!	W&ylicz\ powiadomienia<Tab>:cl!
 menutrans &Next\ Error<Tab>:cn		&Nastêpny\ b³±d<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	&Poprzedni\ b³±d<Tab>:cp
 menutrans &Older\ List<Tab>:cold	&Starsza\ lista<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	N&owsza\ lista<Tab>:cnew
-menutrans Error\ &Window<Tab>:cwin  Okno\ komu&nikatów<Tab>:cwin
-menutrans Convert\ to\ HEX<Tab>:%!xxd     Kody\ szesnastkowe<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r     Zwyk³y\ tekst<Tab>:%!xxd\ -r
+menutrans Error\ &Window  Okno\ komu&nikatów
+menutrans &Update<Tab>:cwin			Akt&ualizuj<Tab>:cwin
+menutrans &Close<Tab>:cclose			&Zamknij<Tab>:cclose
+menutrans &Open<Tab>:copen			&Otworz<Tab>:copen
+
+menutrans &Set\ Compiler				U&staw\ kompilator
+menutrans &Convert\ to\ HEX<Tab>:%!xxd     Kody\ szesnastkowe<Tab>:%!xxd
+menutrans Conve&rt\ back<Tab>:%!xxd\ -r     Zwyk³y\ tekst<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers	&Bufory
-menutrans Refresh	Od¶wie¿
+menutrans &Refresh\ menu	Od¶wie¿
 menutrans Delete	Skasuj
-menutrans Alternate	Zmieñ
+menutrans &Alternate	&Zmieñ
 menutrans &Next		&Nastêpny
 menutrans &Previous	&Poprzedni
 menutrans [No\ File]	[Brak\ Pliku]
@@ -114,6 +165,8 @@ menutrans &New<Tab>^Wn			&Nowy<Tab>^Wn
 menutrans S&plit<Tab>^Ws		Po&dziel<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	P&odziel\ na\ #<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv	Podziel\ pionowo<Tab>^Wv
+menutrans Split\ File\ E&xplorer		Otworz\ menedzer\ plikow
+
 menutrans &Close<Tab>^Wc		&Zamknij<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Zamknij\ &inne<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			&Nastêpny<Tab>^Ww
@@ -141,11 +194,11 @@ menutrans Cu&t			W&ytnij
 menutrans &Copy			&Kopiuj
 menutrans &Paste		&Wklej
 menutrans &Delete		&Skasuj
-menutrans Select\ Blockwise	Zaznacz\ &Blok
-menutrans Select\ &Word		Zaznacz\ &S³owo
-menutrans Select\ &Line		Zaznacz\ W&iersz
-menutrans Select\ &Block	Zaznacz\ &Blok
-menutrans Select\ &All		Zaznacz\ C&a³o¶æ
+menutrans Select\ Blockwise	Zaznacz\ &blok
+menutrans Select\ &Word		Zaznacz\ &s³owo
+menutrans Select\ &Line		Zaznacz\ w&iersz
+menutrans Select\ &Block	Zaznacz\ &blok
+menutrans Select\ &All		Zaznacz\ c&a³o¶æ
 
 " The GUI toolbar
 if has("toolbar")
@@ -163,45 +216,44 @@ if has("toolbar")
     tmenu ToolBar.Copy		Skopiuj
     tmenu ToolBar.Paste		Wklej
     tmenu ToolBar.Find		Szukaj...
-    tmenu ToolBar.FindNext	Szukaj Nastêpnego
-    tmenu ToolBar.FindPrev	Szukaj Poprzedniego
-    tmenu ToolBar.Replace		Szukaj i Zamieniaj...
+    tmenu ToolBar.FindNext	Szukaj nastêpnego
+    tmenu ToolBar.FindPrev	Szukaj poprzedniego
+    tmenu ToolBar.Replace		Szukaj i zamieniaj...
     if 0	" disabled; These are in the Windows menu
-      tmenu ToolBar.New		Nowy Widok
-      tmenu ToolBar.WinSplit	Podziel Widok
-      tmenu ToolBar.WinMax		Zmaksymalizuj Widok
-      tmenu ToolBar.WinMin		Zminimalizuj Widok
-      tmenu ToolBar.WinClose	Zamknij Widok
+      tmenu ToolBar.New		Nowy widok
+      tmenu ToolBar.WinSplit	Podziel widok
+      tmenu ToolBar.WinMax		Zmaksymalizuj widok
+      tmenu ToolBar.WinMin		Zminimalizuj widok
+      tmenu ToolBar.WinClose	Zamknij widok
     endif
     tmenu ToolBar.LoadSesn	Za³aduj sesjê
     tmenu ToolBar.SaveSesn	Zachowaj bie¿±c± sesjê
-    tmenu ToolBar.RunScript	Uruchom script Vim-a
-    tmenu ToolBar.Make		Zrób bie¿±cy projekt
-    tmenu ToolBar.Shell		Otwórz otoczkê
-    tmenu ToolBar.RunCtags	Zrób tag-i w bie¿±cym katalogu
-    tmenu ToolBar.TagJump		Skok do tag-a pod kursorem
+    tmenu ToolBar.RunScript	Uruchom skrypt Vima
+    tmenu ToolBar.Make		Wykonaj bie¿±cy projekt
+    tmenu ToolBar.Shell		Otwórz pow³okê
+    tmenu ToolBar.RunCtags	Twórz tagi w bie¿±cym katalogu
+    tmenu ToolBar.TagJump		Skok do taga pod kursorem
     tmenu ToolBar.Help		Pomoc Vima
-    tmenu ToolBar.FindHelp	Przeszukuj Pomoc Vim-a
+    tmenu ToolBar.FindHelp	Przeszukuj pomoc Vim-a
   endfun
 endif
 
 " Syntax menu
 menutrans &Syntax &Sk³adnia
-menutrans Set\ 'syntax'\ only	Ustaw\ tylko\ 'syntax'
-menutrans Set\ 'filetype'\ too	Ustaw\ równie¿\ 'filetype'
+menutrans Set\ '&syntax'\ only	Ustaw\ tylko\ '&syntax'
+menutrans Set\ '&filetype'\ too	Ustaw\ równie¿\ '&filetype'
 menutrans &Off			&Wy³±cz
 menutrans &Manual		&Rêcznie
 menutrans A&utomatic		A&utomatyczne
-menutrans o&n\ (this\ file)	w&³±cz\ (dla\ danego\ pliku)
-menutrans o&ff\ (this\ file)	w&y³±cz\ (dla\ danego\ pliku)
+menutrans on/off\ for\ &This\ file			w³±cz/w&y³±cz\ dla\ pliku
 menutrans Co&lor\ test		Test\ &kolorów
 menutrans &Highlight\ test	&Test\ pod¶wietlania
 menutrans &Convert\ to\ HTML	Przetwórz\ na\ &HTML
 
 " dialog texts
 let menutrans_no_file = "[Brak pliku]"
-let menutrans_help_dialog = "Wprowad¼ komendê lub s³owo, aby otrzymaæ pomoc o:\n\nPrzedpis i_ oznacza komendê trybu Wprowadzania (np. i_CTRL-X)\nPrzedpis c_ oznacza komendê edycji wiersza komend (np. c_<Del>)\nPrzedpis ' oznacza nazwê opcji (np. 'shiftwidth')"
-let g:menutrans_path_dialog = "Proszê wprowadziæ trop poszukiwania plików.\nProszê rozdzielaæ nazwy katalogów przecinkiem."
-let g:menutrans_tags_dialog = "Proszê podaæ nazwy plików szyldów.\nProszê rozdzielaæ nazwy przecinkiem."
+let menutrans_help_dialog = "Wprowad¼ komendê lub s³owo, aby otrzymaæ pomoc o:\n\nPrzedrostek i_ oznacza komendê trybu Wprowadzania (np. i_CTRL-X)\nPrzedrostek c_ oznacza komendê edycji wiersza komend (np. c_<Del>)\nPrzedrostek ' oznacza nazwê opcji (np. 'shiftwidth')"
+let g:menutrans_path_dialog = "Proszê wprowadziæ ¶cie¿kê poszukiwania plików.\nProszê rozdzielaæ nazwy katalogów przecinkiem."
+let g:menutrans_tags_dialog = "Proszê podaæ nazwy plików tagów.\nProszê rozdzielaæ nazwy przecinkiem."
 let g:menutrans_textwidth_dialog = "Proszê wprowadziæ now± szeroko¶æ tekstu (0 wy³±cza przewijanie): "
-let g:menutrans_fileformat_dialog = "Proszê wybraæ format w którym ten pilk ma byæ zapisany"
+let g:menutrans_fileformat_dialog = "Proszê wybraæ format w którym ten plik ma byæ zapisany"

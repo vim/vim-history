@@ -21,13 +21,6 @@
 
 #include "vim.h"
 
-#ifdef WIN3264
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN
-# endif
-# include <windows.h>	/* For DeleteFile(), GetTempPath(), etc. */
-#endif
-
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -5488,7 +5481,7 @@ static struct event_name
     {"FocusLost",	EVENT_FOCUSLOST},
     {"FuncUndefined",	EVENT_FUNCUNDEFINED},
     {"GUIEnter",	EVENT_GUIENTER},
-    {"ServerReplyRecv", EVENT_SERVERREPLYRECV},
+    {"RemoteReply",	EVENT_REMOTEREPLY},
     {"StdinReadPost",	EVENT_STDINREADPOST},
     {"StdinReadPre",	EVENT_STDINREADPRE},
     {"Syntax",		EVENT_SYNTAX},
@@ -6647,7 +6640,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 	sfname = vim_strsave(fname);
 	/* Don't try expanding FileType, Syntax or WindowID. */
 	if (event == EVENT_FILETYPE || event == EVENT_SYNTAX
-		|| event == EVENT_SERVERREPLYRECV)
+		|| event == EVENT_REMOTEREPLY)
 	    fname = vim_strsave(fname);
 	else
 	    fname = FullName_save(fname, FALSE);

@@ -32,14 +32,6 @@
 #include <limits.h>
 #include <process.h>
 
-#ifndef STRICT
-# define STRICT
-#endif
-#ifndef WIN32_LEAN_AND_MEAN
-# define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-
 #undef chdir
 #include <direct.h>
 #include <shellapi.h>	/* required for FindExecutable() */

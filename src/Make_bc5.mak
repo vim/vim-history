@@ -246,9 +246,9 @@ RUBY_VER_LONG = 1.6
 RUBY_PLATFORM = i586-mswin32
 !endif
 !if ("$(OS)" == "Windows_NT") && ("$(RUBY_VER)" == "16")
-#!error Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
-#!undef RUBY
-#!else
+!error Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
+!undef RUBY
+!else
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
 INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
@@ -289,13 +289,10 @@ DEFINES = $(DEFINES) -DFEAT_OLE
 !endif
 #
 !if ("$(MBYTE)"=="yes")
-MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_GETTEXT
-!if ("$(GUI)"=="yes")
-MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE_IME -DDYNAMIC_IME
+MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_GETTEXT -DDYNAMIC_IME
 !endif
 !if ("$(ICONV)"=="yes")
 MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
-!endif
 !endif
 
 !if ("$(GUI)"=="yes")
@@ -678,10 +675,8 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !else
 	cw32.lib
 !endif
-!if ("$(GUI)"=="yes")
 
 	$(OBJDIR)\$(RESFILE)
-!endif
 !else
 	emu.lib + cl.lib
 !endif
@@ -808,12 +803,10 @@ ruby.lib: $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
 	coff2omf $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib $@
 
 tcl.lib: $(TCL_LIB)
-
-tcl.lib: $(TCL_LIB)
 !if ("$(DYNAMIC_TCL)" == "yes")
 	copy $(TCL_LIB) $@
-!if ("$(DYNAMIC_TCL)" == "yes")
-	copy $(TCL_LIB) $@
+!else
+	coff2omf $(TCL_LIB) $@
 !endif
 
 !if ("$(DYNAMIC_TCL)" == "yes")

@@ -109,7 +109,7 @@ static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, lon
 #endif
 #ifdef FEAT_COMMENTS
 static int	same_leader __ARGS((int, char_u *, int, char_u *));
-static int	fmt_check_par __ARGS((linenr_T, int *, char_u **));
+static int	fmt_check_par __ARGS((linenr_T, int *, char_u **, int do_comments));
 #else
 static int	fmt_check_par __ARGS((linenr_T));
 #endif
@@ -1491,10 +1491,10 @@ op_delete(oap)
 
 	/*
 	 * Put deleted text into register 1 and shift number registers if the
-	 * delete contains a line break, or when a regname has been specified!
+	 * delete contains a line break, or when a regname has been specified.
 	 */
 	if (oap->regname != 0 || oap->motion_type == MLINE
-						       || oap->line_count > 1)
+				   || oap->line_count > 1 || oap->use_reg_one)
 	{
 	    y_current = &y_regs[9];
 	    free_yank_all();			/* free register nine */
@@ -1502,17 +1502,21 @@ op_delete(oap)
 		y_regs[n] = y_regs[n - 1];
 	    y_previous = y_current = &y_regs[1];
 	    y_regs[1].y_array = NULL;		/* set register one to empty */
-	    oap->regname = 0;
-	}
-	else if (oap->regname == 0)		/* yank into unnamed register */
-	{
-	    oap->regname = '-';		/* use special delete register */
-	    get_yank_register(oap->regname, TRUE);
-	    oap->regname = 0;
+	    if (op_yank(oap, TRUE, FALSE) == OK)
+		did_yank = TRUE;
 	}
 
-	if (oap->regname == 0 && op_yank(oap, TRUE, FALSE) == OK)
-	    did_yank = TRUE;
+	/* Yank into small delete register when no register specified and the
+	 * delete is within one line. */
+	if (oap->regname == 0 && oap->motion_type != MLINE
+						      && oap->line_count == 1)
+	{
+	    oap->regname = '-';
+	    get_yank_register(oap->regname, TRUE);
+	    if (op_yank(oap, TRUE, FALSE) == OK)
+		did_yank = TRUE;
+	    oap->regname = 0;
+	}
 
 	/*
 	 * If there's too much stuff to fit in the yank register, then get a
@@ -1545,6 +1549,10 @@ op_delete(oap)
 	    if (bd.textlen == 0)	/* nothing to delete */
 		continue;
 
+	    /* Adjust cursor position for tab replaced by spaces and 'lbr'. */
+	    if (lnum == curwin->w_cursor.lnum)
+		curwin->w_cursor.col = bd.textcol + bd.startspaces;
+
 	    /* n == number of chars deleted
 	     * If we delete a TAB, it may be replaced by several characters.
 	     * Thus the number of characters may increase!
@@ -1570,8 +1578,6 @@ op_delete(oap)
 	/* Put cursor back at start of changed block */
 	changed_lines(curwin->w_cursor.lnum, curwin->w_cursor.col,
 						       oap->end.lnum + 1, 0L);
-	/* Adjust cursor position for tab replaced by spaces. */
-	coladvance(oap->start_vcol);
 	oap->line_count = 0;	    /* no lines deleted */
     }
     else if (oap->motion_type == MLINE)
@@ -3797,6 +3803,7 @@ op_format(oap)
     int		next_leader_len;	/* leader len of next line */
     char_u	*leader_flags = NULL;	/* flags for leader of current line */
     char_u	*next_leader_flags;	/* flags for leader of next line */
+    int		do_comments;		/* format comments */
 #endif
     int		advance = TRUE;
     int		second_indent = -1;
@@ -3827,7 +3834,7 @@ op_format(oap)
 
     /* check for 'q', '2' and '1' in 'formatoptions' */
 #ifdef FEAT_COMMENTS
-    fo_do_comments = has_format_option(FO_Q_COMS);
+    do_comments = has_format_option(FO_Q_COMS);
 #endif
     do_second_indent = has_format_option(FO_Q_SECOND);
     do_number_indent = has_format_option(FO_Q_NUMBER);
@@ -3838,14 +3845,14 @@ op_format(oap)
     if (curwin->w_cursor.lnum > 1)
 	is_not_par = fmt_check_par(curwin->w_cursor.lnum - 1
 #ifdef FEAT_COMMENTS
-				, &leader_len, &leader_flags
+				, &leader_len, &leader_flags, do_comments
 #endif
 				);
     else
 	is_not_par = TRUE;
     next_is_not_par = fmt_check_par(curwin->w_cursor.lnum
 #ifdef FEAT_COMMENTS
-				, &next_leader_len, &next_leader_flags
+			   , &next_leader_len, &next_leader_flags, do_comments
 #endif
 				);
     is_end_par = (is_not_par || next_is_not_par);
@@ -3882,7 +3889,7 @@ op_format(oap)
 	{
 	    next_is_not_par = fmt_check_par(curwin->w_cursor.lnum + 1
 #ifdef FEAT_COMMENTS
-					, &next_leader_len, &next_leader_flags
+			   , &next_leader_len, &next_leader_flags, do_comments
 #endif
 					);
 	    if (do_number_indent)
@@ -3949,7 +3956,11 @@ op_format(oap)
 		State = INSERT;	/* for open_line() */
 		smd_save = p_smd;
 		p_smd = FALSE;
-		insertchar(NUL, TRUE, second_indent, FALSE);
+		insertchar(NUL, INSCHAR_FORMAT
+#ifdef FEAT_COMMENTS
+			+ (do_comments ? INSCHAR_DO_COM : 0)
+#endif
+			, second_indent);
 		State = NORMAL;
 		p_smd = smd_save;
 		second_indent = -1;
@@ -3988,9 +3999,6 @@ op_format(oap)
 	}
 	line_breakcheck();
     }
-#ifdef FEAT_COMMENTS
-    fo_do_comments = FALSE;
-#endif
 
     /*
      * Leave the cursor at the first non-blank of the last formatted line.
@@ -4016,16 +4024,17 @@ op_format(oap)
  */
 #ifdef FEAT_COMMENTS
     static int
-fmt_check_par(lnum, leader_len, leader_flags)
+fmt_check_par(lnum, leader_len, leader_flags, do_comments)
     linenr_T	lnum;
     int		*leader_len;
     char_u	**leader_flags;
+    int		do_comments;
 {
     char_u	*flags = NULL;	    /* init for GCC */
     char_u	*ptr;
 
     ptr = ml_get(lnum);
-    if (fo_do_comments)
+    if (do_comments)
 	*leader_len = get_leader_len(ptr, leader_flags, FALSE);
     else
 	*leader_len = 0;

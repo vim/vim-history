@@ -172,6 +172,9 @@ CVARS = $(cvars)
 # gdi32.lib and comdlg32.lib for printing support
 # ole32.lib and uuid.lib are needed for FEAT_SHORTCUT
 CON_LIB = advapi32.lib shell32.lib gdi32.lib comdlg32.lib ole32.lib uuid.lib
+!if "$(VC6)" == "yes"
+CON_LIB = $(CON_LIB) /DELAYLOAD:comdlg32.dll /DELAYLOAD:ole32.dll DelayImp.lib
+!endif
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
@@ -326,7 +329,7 @@ GUI_OBJ = \
 	$(OUTDIR)\os_w32exe.obj
 GUI_LIB = \
 	oldnames.lib kernel32.lib gdi32.lib $(IME_LIB) \
-	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
+	winspool.lib comctl32.lib advapi32.lib shell32.lib \
 	/machine:$(CPU) /nodefaultlib
 !else
 SUBSYSTEM = console

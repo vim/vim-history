@@ -844,14 +844,14 @@ gui_mch_set_winpos(int x, int y)
 }
 
     void
-gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
-		    int base_width, int base_height)
+gui_mch_set_shellsize(int width, int height,
+	int min_width, int min_height, int base_width, int base_height)
 {
     D("gui_mch_set_shellsize");
 
     ChangeWindowBox(gui.window, gui.window->TopEdge,
 	    gui.window->LeftEdge, widthCharToPoint(width),
-	    heightCharToPoint(height)) ;
+	    heightCharToPoint(height));
     checkEventHandler();
 }
 
@@ -1113,6 +1113,17 @@ gui_mch_iconify(void)
 {
     D("gui_mch_iconify");
 }
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Bring the Vim window to the foreground.
+ */
+    void
+gui_mch_set_foreground()
+{
+    D("gui_mch_set_foreground");
+}
+#endif
 
     void
 gui_mch_settitle(char_u  *title, char_u  *icon)
