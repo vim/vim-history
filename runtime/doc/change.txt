@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.1.  Last change: 2002 Jul 28
+*change.txt*    For Vim version 6.1.  Last change: 2002 Sep 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1239,6 +1239,8 @@ w	Trailing white space indicates a paragraph continues in the next line.
 	A line that ends in a non-white character ends a paragraph.
 a	Automatic formatting of paragraphs.  Every time text is inserted or
 	deleted the paragraph will be reformatted.  See |auto-format|.
+	When the 'c' flag is present this only happens for recognized
+	comments.
 n	When formatting text, recognize numbered lists.  The indent of the
 	text after the number is used for the next line.  The number may
 	optionally be followed by '.', ':', ')', ']' or '}'.  Note that
@@ -1331,12 +1333,14 @@ editing text paragraphs.  A few hints on how to use this:
 - You can set the 'formatoptions' based on the type of file |filetype| or
   specifically for one file with a |modeline|.
 
-- Set 'formatoptions' to "aw2tcq" to make text with indents like this:
+- Set 'formatoptions' to "aw2tq" to make text with indents like this:
 
 	    bla bla foobar bla 
 	bla foobar bla foobar bla
 	    bla bla foobar bla 
 	bla foobar bla bla foobar
+
+- Add the 'c' flag to only auto-format comments.  Useful in source code.
 
 And a few warnings:
 
