@@ -2318,7 +2318,7 @@ set_file_time(fname, atime, mtime)
 #   ifdef NeXT
     (void)utimes((char *)fname, tvp);
 #   else
-    (void)utimes((char *)fname, &tvp);
+    (void)utimes((char *)fname, (const struct timeval *)&tvp);
 #   endif
 #  endif
 # endif
