@@ -1517,7 +1517,9 @@ nb_do_cmd(
 		return FAIL;
 	    }
 	    buf->fireChanges = 0;
-	    if (buf->bufp != NULL && !buf->bufp->b_netbeans_file)
+	    if (buf->bufp != NULL
+		    && buf->bufp->b_was_netbeans_file
+		    && !buf->bufp->b_netbeans_file)
 		EMSGN(_("E658: NetBeans connection lost for buffer %ld"),
 							   buf->bufp->b_fnum);
 /* =====================================================================*/
@@ -2077,7 +2079,13 @@ nb_do_cmd(
 		nbdebug(("    null bufp in %s command", cmd));
 		return FAIL;
 	    }
-	    buf->bufp->b_netbeans_file = *args == 'T' ? TRUE : FALSE;
+	    if (*args == 'T')
+	    {
+		buf->bufp->b_netbeans_file = TRUE;
+		buf->bufp->b_was_netbeans_file = TRUE;
+	    }
+	    else
+		buf->bufp->b_netbeans_file = FALSE;
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "version"))
