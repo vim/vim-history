@@ -347,6 +347,7 @@ u_savecommon(top, bot, newbot)
     return OK;
 
 nomem:
+    msg_silent = 0;	/* must display the prompt */
     if (ask_yesno((char_u *)_("No undo possible; continue anyway"), TRUE)
 								       == 'y')
     {

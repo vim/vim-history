@@ -2613,7 +2613,7 @@ VimErrorCheck(void)
 
 /* Don't generate a prototype for the next function, it generates an error on
  * newer Python versions. */
-#if PYTHON_API_VERSION < 1007 /* Python 1.4 */
+#if PYTHON_API_VERSION < 1007 /* Python 1.4 */ && !defined(PROTO)
 
     char *
 Py_GetProgramName(void)

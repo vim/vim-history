@@ -1,4 +1,4 @@
-*os_beos.txt*	For Vim version 6.0as.  Last change: 2001 Feb 07
+*os_beos.txt*	For Vim version 6.0at.  Last change: 2001 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -26,11 +26,10 @@ matters not discussed in this file, Vim behaves very much like the Unix
 11. Mouse key mappings		|beos-mouse|
 12. Color names			|beos-colors|
 13. Compiling with Perl		|beos-perl|
-14. WARNING: Intel
-    "architecture" detected!	|beos-ppc|
 
 
-							*beos-general*
+1. General						*beos-general*
+
 The default syntax highlighting mostly works with different foreground colors
 to highlight items. This works best if you set your Terminal window to a
 darkish background and light letters. Some middle-grey background (for
@@ -45,15 +44,15 @@ the escape character): >
   :    set t_AF=<Esc>[4%dm
   :endif
 
-Compiling Vim						*beos-compiling*
+
+2. Compiling Vim					*beos-compiling*
 
 From the Advanced Access Preview Release (AAPR) on, Vim can be configured with
 the standard configure script. To get the compiler and its flags right, use
 the following command-line in the shell (you can cut and paste it in one go):
 
 CC=$BE_C_COMPILER CFLAGS="$BE_DEFAULT_C_FLAGS -O7" \
-    ./configure --prefix=/boot/home/config \
-    --disable-perlinterp --disable-pythoninterp
+    ./configure --prefix=/boot/home/config
 
 $BE_C_COMPILER is usually "mwcc", $BE_DEFAULT_C_FLAGS is usually "-I- -I."
 
@@ -94,7 +93,8 @@ There are currently no other linkers that can do the job.
 This won't be able to include the Perl or Python interfaces even if
 you have the appropriate files installed. |beos-perl|
 
-Timeout in the Terminal					*beos-timeout*
+
+3. Timeout in the Terminal				*beos-timeout*
 
 Because some POSIX/UNIX features are still missing[1], there is no direct OS
 support for read-with-timeout in the Terminal. This would meat that you cannot
@@ -116,7 +116,7 @@ settings do not seem to work properly. This has been the case since DR7 at
 least and still has not been fixed as of PR2.
 
 							*beos-unicode*
-Unicode vs. Latin1					*beos-utf8*
+4. Unicode vs. Latin1					*beos-utf8*
 
 BeOS uses Unicode and UTF-8 for text strings (16-bit characters encoded to
 8-bit characters). Vim assumes ISO-Latin1 or other 8-bit character codes.
@@ -128,7 +128,8 @@ better in the GUI, depending on which font you use (below).
 You may also use the /boot/bin/xtou command to convert UTF-8 files from (xtou
 -f iso1 filename) or to (xtou -t iso1 filename) ISO-Latin1 characters.
 
-Some remarks about the GUI:				*beos-gui*
+
+5. The BeOS GUI						*beos-gui*
 
 Normally Vim starts with the GUI if you start it as gvim or vim -g.  The BeOS
 version tries to determine if it was started from the Tracker instead of the
@@ -163,8 +164,8 @@ Stuff that does not work yet:
 - The cursor does not flash (very low priority; I'm not sure I even like it
   when it flashes)
 
-							*beos-vimdir*
-The $VIM directory
+
+The $VIM directory					*beos-vimdir*
 
 $VIM is the symbolic name for the place where Vims support files are stored.
 The default value for $VIM is set at compile time and can be determined with >
@@ -180,7 +181,8 @@ set the VIM environment variable to override this, or set 'helpfile' in your
   :    syntax on
   :endif
 
-Drag & Drop						*beos-dragndrop*
+
+7. Drag & Drop						*beos-dragndrop*
 
 You can drop files and directories on either the Vim icon (starts a new Vim
 session, unless you use the File Types application to set Vim to be "Single
@@ -192,7 +194,8 @@ press shift: Vim behaves as if you do.
 
 Files dropped set the current argument list. |argument-list|
 
-Single Launch vs. Multiple Launch			*beos-launch*
+
+8. Single Launch vs. Multiple Launch			*beos-launch*
 
 As distributed Vim's Application Flags (as seen in the FileTypes preference)
 are set to Multiple Launch. If you prefer, you can set them to Single Launch
@@ -203,7 +206,8 @@ line. In the latter case, non-file (option) arguments are not supported.
 NB: Only the GUI version has a BApplication (and hence Application Flags).
 This section does not apply to the GUI-less version, should you compile one.
 
-Fonts							*beos-fonts*
+
+9. Fonts						*beos-fonts*
 
 Set fonts with >
 
@@ -255,12 +259,14 @@ Standard proportional system fonts are:
 
 Try some of them, just for fun.
 
-The meta key modifier					*beos-meta*
+
+10. The meta key modifier				*beos-meta*
 
 The META key modifier is obtained by the left or right OPTION keys.  This is
 because the ALT (aka COMMAND) keys are not passed to applications.
 
-Mouse key mappings					*beos-mouse*
+
+11. Mouse key mappings					*beos-mouse*
 
 Vim calls the various mouse buttons LeftMouse, MiddleMouse and RightMouse.  If
 you use the default Mouse preference settings these names indeed correspond to
@@ -274,13 +280,15 @@ If your mouse has fewer than 3 buttons you can provide your own mapping from
 mouse clicks with modifier(s) to other mouse buttons. See the file
 vim-5.x/macros/swapmous.vim for an example.		|gui-mouse-mapping|
 
-Color names						*beos-colors*
+
+12. Color names						*beos-colors*
 
 Vim has a number of color names built-in. Additional names are read from the
 file $VIMRUNTIME/rgb.txt, if present. This file is basically the color
 database from X. Names used from this file are cached for efficiency.
 
-Compiling with Perl					*beos-perl*
+
+13. Compiling with Perl					*beos-perl*
 
 Compiling with Perl support enabled is slightly tricky. The Metrowerks
 compiler has some strange ideas where to search for include files. Since
@@ -326,24 +334,10 @@ script while in the vim-5.0/src directory: >
 
 It expands the "perl.h" header file, using only other Perl header files.
 
-Now you can configure & make Vim without the --disable-perlinterp option.
+Now you can configure & make Vim with the --enable-perlinterp option.
 Be warned though that this adds about 616 kilobytes to the size of Vim!
 Without Perl, Vim with default features and GUI is about 575K, with Perl
 it is about 1191K.
-
-WARNING: Intel "architecture" detected!			*beos-ppc*
-or, Waiter, there is a fly in my soup!
-
-This means that you have made a poor choice of hardware platform.
-You'll be pleased to know that the Intel (compatibe) CPU that's inside
-your computer is nothing more than a souped-up 8-bit machine. Or perhaps I
-should not say that: it's an insult to other 8-bit CPUs.
-
-However, apart from the occasional derisory remark, you have nothing to fear
-from Vim. If you don't like them, "Use The Source, Luke!", and remove them.
-However, the copyright that I claim on the files os_beos* and gui_beos*
-prevents you from making your changed version available to others.
-I don't think this is an unreasonable limitation.
 
 -Olaf Seibert
 <rhialto@polder.ubc.kun.nl>

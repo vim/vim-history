@@ -156,14 +156,14 @@ mch_inchar(buf, maxlen, time)
 	    if (WaitForChar(raw_in, p_ut * 1000L) == 0)
 	{
 #ifdef FEAT_AUTOCMD
-            if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
-            {
-                apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
-                update_screen(VALID);
+	    if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+	    {
+		apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+		update_screen(VALID);
 		once_already = 1;
-                return 0;
-            }
-            else
+		return 0;
+	    }
+	    else
 #endif
 		updatescript(0);
 	}
@@ -175,7 +175,7 @@ mch_inchar(buf, maxlen, time)
 	if (len > 0)
 	{
 #ifdef FEAT_AUTOCMD
-            once_already = 0;
+	    once_already = 0;
 #endif
 #ifdef FEAT_MBYTE
 	    /* Convert from 'termencoding' to 'encoding'. */
@@ -1487,14 +1487,14 @@ mch_has_wildcard(p)
     {
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-        else
+	else
 	    if (vim_strchr((char_u *)
 #  ifdef VIM_BACKTICK
 				    "*?[(#$`"
 #  else
 				    "*?[(#$"
 #  endif
-                                                , *p) != NULL
+						, *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
     }

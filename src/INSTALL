@@ -12,7 +12,7 @@ Contents:
 6. Atari MiNT
 
 For OS/390 Unix see ../runtime/doc/os_390.txt
-For BeBox see ../runtime/doc/os_bebox.txt.
+For BeBox see ../runtime/doc/os_beos.txt.
 For Amiga see INSTALLami.txt
 For PC (MS-DOS, Windows NT, Windows 95) see INSTALLpc.txt
 For Macintosh see INSTALLmac.txt

@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0as.  Last change: 2001 Jul 12
+*multibyte.txt* For Vim version 6.0at.  Last change: 2001 Aug 25
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -495,12 +495,16 @@ For Vim you may need to set 'encoding' to "utf-8".
 Unfortunately, using fonts in X11 is complicated.  The name of a single-byte
 font is a long string.  For multi-byte fonts we need several of these...
 
-First of all, Vim only accepts fixed-width fonts.  You cannot use
-proportionally spaced fonts.  This excludes many of the available (and nicer
-looking) fonts.
+First of all, Vim only accepts fixed-width fonts for displaying text.  You
+cannot use proportionally spaced fonts.  This excludes many of the available
+(and nicer looking) fonts.  However, for menus and tooltips any font can be
+used.
 
 Note that Display and Input are independent.  It is possible to see your
 language even though you have no input method for it.
+
+You should get a default font for menus and tooltips that works, but it might
+be ugly.  Read the following to find out how to select a better font.
 
 
 X LOGICAL FONT DESCRIPTION (XLFD)
@@ -622,7 +626,7 @@ Also make sure that you set 'guifontset' before setting fonts for highlight
 groups.
 
 
-USING DEFAULT FILES
+USING RESOURCE FILES
 
 Instead of specifying 'guifontset', you can set X11 resources and Vim will
 pick them up.  This is only for people who know how X resource files work.

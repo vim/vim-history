@@ -757,10 +757,10 @@ qf_push_dir(dirbuf, stackptr)
 	(*stackptr)->dirname = vim_strsave(dirbuf);
     else
     {
-        /* Okay we don't have an absolute path.
-         * dirbuf must be a subdir of one of the directories on the stack.
-         * Let's search...
-         */
+	/* Okay we don't have an absolute path.
+	 * dirbuf must be a subdir of one of the directories on the stack.
+	 * Let's search...
+	 */
 	ds_new = (*stackptr)->next;
 	(*stackptr)->dirname = NULL;
 	while (ds_new)
@@ -774,11 +774,11 @@ qf_push_dir(dirbuf, stackptr)
 	    ds_new = ds_new->next;
 	}
 
-        /* clean up all dirs we already left */
+	/* clean up all dirs we already left */
 	while ((*stackptr)->next != ds_new)
 	{
-            ds_ptr = (*stackptr)->next;
-            (*stackptr)->next = (*stackptr)->next->next;
+	    ds_ptr = (*stackptr)->next;
+	    (*stackptr)->next = (*stackptr)->next->next;
 	    vim_free(ds_ptr->dirname);
 	    vim_free(ds_ptr);
 	}
@@ -872,11 +872,11 @@ qf_guess_filepath(filename)
 {
     struct dir_stack_T     *ds_ptr;
     struct dir_stack_T     *ds_tmp;
-    char_u                 *fullname;
+    char_u		   *fullname;
 
     /* no dirs on the stack - there's nothing we can do */
     if (dir_stack == NULL)
-        return NULL;
+	return NULL;
 
     ds_ptr = dir_stack->next;
     fullname = NULL;
@@ -1658,9 +1658,8 @@ qf_win_pos_update(old_qf_index)
 	curwin->w_redr_status = TRUE;	/* update ruler */
 	curwin = old_curwin;
 	curbuf = curwin->w_buffer;
-	return TRUE;
     }
-    return FALSE;
+    return win != NULL;
 }
 
 /*

@@ -29,7 +29,7 @@ stat(
 {
     /*
        TODO: Use functions which fill the FileParam struct (Files.h)
-             and copy these contents to our self-defined stat struct
+	     and copy these contents to our self-defined stat struct
      */
     return 0;
 }
@@ -1298,7 +1298,7 @@ mch_copy_file_attribute(from, to)
 
      if (frRFid != -1)
      {
-	 FSpCreateResFile(&toFSSpec, 'TEXT', UNKNOWN_CREATOR, nil);
+	 FSpCreateResFile(&toFSSpec, 'TEXT', UNKNOWN_CREATOR, 0);
 	 toRFid = FSpOpenResFile (&toFSSpec, fsRdWrPerm);
 
 	 UseResFile (frRFid);

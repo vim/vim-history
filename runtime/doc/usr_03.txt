@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0as.  Last change: 2001 Aug 05
+*usr_03.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -62,11 +62,11 @@ what Vim considers to be a word, see the 'iskeyword' option.
 word in the normal sense, that's why the uppercase is used.  The commands for
 moving by WORDs are also uppercase, as this figure shows:
 
-	       ge      b	  w			        e
-	       <-     <-         --->                          --->
+	       ge      b	  w				e
+	       <-     <-	 --->			       --->
 	This is-a line, with special/separated/words (and some more). ~
-	   <----- <-----         -------------------->         ----->
-	     gE      B                   W                       E
+	   <----- <-----	 -------------------->	       ----->
+	     gE      B			 W			 E
 
 With this mix of lowercase and uppercase commands, you can quickly move
 forward and backward through a paragraph.
@@ -207,15 +207,15 @@ it's currently visible or not.  What if you want to move to one of the lines
 you can see?  This figure shows the three commands you can use:
 
 			+---------------------------+
-		H -->	| text sample text          |
-			| sample text               |
-			| text sample text          |
-			| sample text               |
-		M -->	| text sample text          |
-			| sample text               |
-			| text sample text          |
-			| sample text               |
-		L -->	| text sample text          |
+		H -->	| text sample text	    |
+			| sample text		    |
+			| text sample text	    |
+			| sample text		    |
+		M -->	| text sample text	    |
+			| sample text		    |
+			| text sample text	    |
+			| sample text		    |
+		L -->	| text sample text	    |
 			+---------------------------+
 
 Hints: "H" stands for Home, "M" for Middle and "L" for Last.

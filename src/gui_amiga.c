@@ -1349,33 +1349,14 @@ clip_mch_set_selection(VimClipboard *cbd)
 {
 }
 
-    int
-gui_mch_get_lightness(guicolor_T pixel)
-{
-    unsigned long  color=0;
-    unsigned long  rc = 255;
-
-    color = GetRGB4(gui.window->WScreen->ViewPort.ColorMap, pixel);
-
-    if (color != 1)
-	rc = ((((color&0xf00)>>8)*3 + ((color&0x0f0)>>4)*6+ color&0x00f)*256)/160;
-
-    return (int)rc;
-}
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-    char_u *
+    long_u
 gui_mch_get_rgb(guicolor_T pixel)
 {
-    static char_u retval[10];
     unsigned long  color;
 
     color = GetRGB4(gui.window->WScreen->ViewPort.ColorMap, pixel);
-
-    sprintf((char *)retval, "#%2x%2x%2x", (color&0xf00)>>8, (color&0x0f0)>>4, (color&0x00f));
-
-    return retval;
+    return ((color & 0xf00) << 12) + ((color & 0x0f0) << 8)
+						     + ((color & 0x00f) << 4);
 }
-#endif
 
 #endif /* USE_AMIGA_GUI*/

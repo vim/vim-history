@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 6.0as.  Last change: 2001 Aug 07
+*os_msdos.txt*  For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -183,11 +183,11 @@ of memory, because each change is remembered for undo.  In this case set
 
 						*msdos-clipboard-limits*
 In the Dos32 version, extended memory is used to avoid these problems.
-However, if you are using the clipboard, you can still run into memory 
-limitations because the Windows clipboard can only communicate with Vim using 
-Dos memory.  This means that the largest amount of text that can be sent to 
+However, if you are using the clipboard, you can still run into memory
+limitations because the Windows clipboard can only communicate with Vim using
+Dos memory.  This means that the largest amount of text that can be sent to
 or received from the Windows clipboard is limited by how much free Dos memory
-is available on your system.  
+is available on your system.
 
 You can usually maximize the amount of available Dos memory by adding the
 following lines to Dos's "config.sys" file: >

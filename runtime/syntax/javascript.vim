@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	2001 Apr 26
+" Last Change:	2001 Aug 24
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -30,7 +30,7 @@ syn match   javaScriptSpecialCharacter "'\\.'"
 syn match   javaScriptNumber           "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 syn keyword javaScriptConditional      if else
 syn keyword javaScriptRepeat           while for
-syn keyword javaScriptBranch           break continue
+syn keyword javaScriptBranch           break continue switch case default
 syn keyword javaScriptOperator         new in
 syn keyword javaScriptType             this var
 syn keyword javaScriptStatement        return with

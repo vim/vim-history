@@ -51,7 +51,7 @@ int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int force
 int mch_print_begin __ARGS((prt_settings_T *psettings));
 void mch_print_end __ARGS((prt_settings_T *psettings));
 int mch_print_end_page __ARGS((void));
-int mch_print_begin_page __ARGS((void));
+int mch_print_begin_page __ARGS((char_u *msg));
 int mch_print_blank_page __ARGS((void));
 void mch_print_start_line __ARGS((int margin, int page_line));
 int mch_print_text_out __ARGS((char_u *p, int len));

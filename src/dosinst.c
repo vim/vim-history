@@ -459,36 +459,36 @@ uninstall_check(void)
     CHECK_REG_ERROR(code);
 
     for (key_index = 0;
-        RegEnumKeyEx(key_handle, key_index, subkey_name_buff, &local_bufsize,
-		    NULL, NULL, NULL, &temp_pfiletime) != ERROR_NO_MORE_ITEMS;
-        key_index++)
+	 RegEnumKeyEx(key_handle, key_index, subkey_name_buff, &local_bufsize,
+		NULL, NULL, NULL, &temp_pfiletime) != ERROR_NO_MORE_ITEMS;
+	    key_index++)
     {
-        local_bufsize = BUFSIZE;
-        if (strncmp("Vim", subkey_name_buff, 3) == 0)
-        {
-            /* Open the key named Vim* */
-            code = RegOpenKeyEx(key_handle, subkey_name_buff, 0, KEY_READ,
-						       &uninstall_key_handle);
-            CHECK_REG_ERROR(code);
+	local_bufsize = BUFSIZE;
+	if (strncmp("Vim", subkey_name_buff, 3) == 0)
+	{
+	    /* Open the key named Vim* */
+	    code = RegOpenKeyEx(key_handle, subkey_name_buff, 0, KEY_READ,
+		    &uninstall_key_handle);
+	    CHECK_REG_ERROR(code);
 
-            /* get the DisplayName out of it to show the user */
-            code = RegQueryValueEx(uninstall_key_handle, "displayname", 0,
-			     &value_type, (LPBYTE)temp_string_buffer,
-							      &local_bufsize);
-            local_bufsize = BUFSIZE;
-            CHECK_REG_ERROR(code);
+	    /* get the DisplayName out of it to show the user */
+	    code = RegQueryValueEx(uninstall_key_handle, "displayname", 0,
+		    &value_type, (LPBYTE)temp_string_buffer,
+		    &local_bufsize);
+	    local_bufsize = BUFSIZE;
+	    CHECK_REG_ERROR(code);
 
 	    foundone = 1;
-            printf("\n*********************************************************\n");
-            printf("Vim Install found what looks like an existing Vim version.\n");
-            printf("The name of the entry is:\n");
-            printf("\n        \"%s\"\n\n", temp_string_buffer);
+	    printf("\n*********************************************************\n");
+	    printf("Vim Install found what looks like an existing Vim version.\n");
+	    printf("The name of the entry is:\n");
+	    printf("\n        \"%s\"\n\n", temp_string_buffer);
 
-            printf("Installing the new version will disable part of the existing version.\n");
-            printf("(The batch files used in a console and the \"Edit with Vim\" entry in\n");
+	    printf("Installing the new version will disable part of the existing version.\n");
+	    printf("(The batch files used in a console and the \"Edit with Vim\" entry in\n");
 	    printf("the popup menu will use the new version)\n");
 
-            printf("\nDo you want to uninstall \"%s\" now?\n(y)es/(n)o)  ", temp_string_buffer);
+	    printf("\nDo you want to uninstall \"%s\" now?\n(y)es/(n)o)  ", temp_string_buffer);
 	    fflush(stdout);
 
 	    /* get the UninstallString */
@@ -503,28 +503,28 @@ uninstall_check(void)
 	    remove_tail(default_vim_dir);
 	    remove_tail(default_vim_dir);
 
-            input = 'n';
-            do
-            {
-                if (input != 'n')
-                    printf("%c is an invalid reply.  Please enter either 'y' or 'n'\n", input);
+	    input = 'n';
+	    do
+	    {
+		if (input != 'n')
+		    printf("%c is an invalid reply.  Please enter either 'y' or 'n'\n", input);
 
-                rewind(stdin);
-                scanf("%c", &input);
-                switch (input)
-                {
-                    case 'y':
-                    case 'Y':
+		rewind(stdin);
+		scanf("%c", &input);
+		switch (input)
+		{
+		    case 'y':
+		    case 'Y':
 			/* save the number of uninstall keys so we can know if
 			 * it changed */
-                        RegQueryInfoKey(key_handle, NULL, NULL, NULL,
+			RegQueryInfoKey(key_handle, NULL, NULL, NULL,
 					     &orig_num_keys, NULL, NULL, NULL,
 						      NULL, NULL, NULL, NULL);
 
-                        /* Delete the uninstall key.  It has no subkeys, so
-                         * this is easy.  Do this before uninstalling, that
+			/* Delete the uninstall key.  It has no subkeys, so
+			 * this is easy.  Do this before uninstalling, that
 			 * may try to delete the key as well. */
-                        RegDeleteKey(key_handle, subkey_name_buff);
+			RegDeleteKey(key_handle, subkey_name_buff);
 
 			/* Find existing .bat files before deleting them.  */
 			find_bat_exe(TRUE);
@@ -540,33 +540,33 @@ uninstall_check(void)
 			}
 			run_command(temp_string_buffer);
 
-                        /* Check if an unistall reg key was deleted.
-                         * if it was, we want to decrement key_index.
-                         * if we don't do this, we will skip the key
-                         * immediately after any key that we delete.  */
-                        RegQueryInfoKey(key_handle, NULL, NULL, NULL,
+			/* Check if an unistall reg key was deleted.
+			 * if it was, we want to decrement key_index.
+			 * if we don't do this, we will skip the key
+			 * immediately after any key that we delete.  */
+			RegQueryInfoKey(key_handle, NULL, NULL, NULL,
 					      &new_num_keys, NULL, NULL, NULL,
 						      NULL, NULL, NULL, NULL);
-                        if (new_num_keys < orig_num_keys)
-                            key_index--;
+			if (new_num_keys < orig_num_keys)
+			    key_index--;
 
 			input = 'y';
-                        break;
+			break;
 
-                    case 'n':
-                    case 'N':
-                        /* Do not uninstall */
+		    case 'n':
+		    case 'N':
+			/* Do not uninstall */
 			input = 'n';
-                        break;
+			break;
 
-                    default: /* just drop through and redo the loop */
-                        break;
-                }
+		    default: /* just drop through and redo the loop */
+			break;
+		}
 
-            } while (input != 'n' && input != 'y');
+	    } while (input != 'n' && input != 'y');
 
-            RegCloseKey(uninstall_key_handle);
-        }
+	    RegCloseKey(uninstall_key_handle);
+	}
     }
     RegCloseKey(key_handle);
 
@@ -1267,7 +1267,7 @@ install_registry(void)
 
 	run_command("regedit /s vim.reg");
 
-        remove("vim.reg");
+	remove("vim.reg");
     }
 #endif /* if defined(DJGPP) || defined(WIN3264) */
 }
@@ -1895,12 +1895,12 @@ command_line_setup_choices(int argc, char **argv)
     for (i = 1; i < argc; i++)
     {
 	if (strcmp(argv[i], "-create-batfiles") == 0)
-        {
-            if (i + 1 == argc)
-                continue;
-            while (argv[i + 1][0] != '-' && i < argc)
-            {
-                i++;
+	{
+	    if (i + 1 == argc)
+		continue;
+	    while (argv[i + 1][0] != '-' && i < argc)
+	    {
+		i++;
 		for (j = 1; j < TARGET_COUNT; ++j)
 		    if ((targets[j].exenamearg[0] == 'g' ? has_gvim : has_vim)
 			    && strcmp(argv[i], targets[j].name) == 0)
@@ -1909,68 +1909,68 @@ command_line_setup_choices(int argc, char **argv)
 			break;
 		    }
 		if (j == TARGET_COUNT)
-                    printf("%s is not a valid choice for -create-batfiles\n",
+		    printf("%s is not a valid choice for -create-batfiles\n",
 								     argv[i]);
 
-                if (i + 1 == argc)
-                    break;
-            }
-        }
+		if (i + 1 == argc)
+		    break;
+	    }
+	}
 	else if (strcmp(argv[i], "-create-vimrc") == 0)
-        {
-            /* Setup default vimrc choices.  If there is already a _vimrc file,
-             * it will NOT be overwritten.
-             */
-            init_vimrc_choices();
-        }
-        else if (strcmp(argv[i], "-install-popup") == 0)
-        {
-            init_popup_choice();
-        }
-        else if (strcmp(argv[i], "-add-start-menu") == 0)
+	{
+	    /* Setup default vimrc choices.  If there is already a _vimrc file,
+	     * it will NOT be overwritten.
+	     */
+	    init_vimrc_choices();
+	}
+	else if (strcmp(argv[i], "-install-popup") == 0)
+	{
+	    init_popup_choice();
+	}
+	else if (strcmp(argv[i], "-add-start-menu") == 0)
 	{
 	    init_startmenu_choice();
 	}
-        else if (strcmp(argv[i], "-install-icons") == 0)
-        {
-            init_shortcut_choices();
-        }
-        else if (strcmp(argv[i], "-create-directories") == 0)
-        {
-            init_directories_choice();
-            if (argv[i + 1][0] != '-')
-            {
-                i++;
-                if (strcmp(argv[i], "vim") == 0)
-                    vimfiles_dir_choice = (int)vimfiles_dir_vim;
-                else if (strcmp(argv[i], "home") == 0)
-                {
-                    if (getenv("HOME") == NULL) /* No $HOME in environment */
-                        vimfiles_dir_choice = (int)vimfiles_dir_vim;
-                    else
-                        vimfiles_dir_choice = (int)vimfiles_dir_home;
-                }
+	else if (strcmp(argv[i], "-install-icons") == 0)
+	{
+	    init_shortcut_choices();
+	}
+	else if (strcmp(argv[i], "-create-directories") == 0)
+	{
+	    init_directories_choice();
+	    if (argv[i + 1][0] != '-')
+	    {
+		i++;
+		if (strcmp(argv[i], "vim") == 0)
+		    vimfiles_dir_choice = (int)vimfiles_dir_vim;
+		else if (strcmp(argv[i], "home") == 0)
+		{
+		    if (getenv("HOME") == NULL) /* No $HOME in environment */
+			vimfiles_dir_choice = (int)vimfiles_dir_vim;
+		    else
+			vimfiles_dir_choice = (int)vimfiles_dir_home;
+		}
 		else
 		{
 		    printf("Unknown argument for -create-directories: %s\n",
 								     argv[i]);
 		    print_cmd_line_help();
 		}
-            }
-            else /* No choice specified, default to vim directory */
-                vimfiles_dir_choice = (int)vimfiles_dir_vim;
-        }
+	    }
+	    else /* No choice specified, default to vim directory */
+		vimfiles_dir_choice = (int)vimfiles_dir_vim;
+	}
 #ifdef WIN3264
-        else if (strcmp(argv[i], "-register-OLE") == 0)
-        {
+	else if (strcmp(argv[i], "-register-OLE") == 0)
+	{
 	    /* This is always done when gvim is found */
-        }
+	}
 #endif
-        else /* Unknown switch */
-        {
-            printf("Got unknown argument argv[%d] = %s\n", i, argv[i]);
-            print_cmd_line_help();
-        }
+	else /* Unknown switch */
+	{
+	    printf("Got unknown argument argv[%d] = %s\n", i, argv[i]);
+	    print_cmd_line_help();
+	}
     }
 }
 
@@ -2126,12 +2126,12 @@ install(void)
     static void
 request_choice(void)
 {
-    int               i;
+    int		      i;
 
     printf("\n\nInstall will do for you:\n");
     for (i = 0; i < choice_count; ++i)
       if (choices[i].active)
-          printf("%2d  %s\n", i + 1, choices[i].text);
+	  printf("%2d  %s\n", i + 1, choices[i].text);
     printf("To change an item, enter its number\n\n");
     printf("Enter item number, h (help), d (do it) or q (quit): ");
 }
@@ -2188,56 +2188,56 @@ main(int argc, char **argv)
 
     if (interactive)
     {
-        /* Setup all the choices. */
-        setup_choices();
+	/* Setup all the choices. */
+	setup_choices();
 
-        /* Let the user change choices and finally install (or quit). */
-        for (;;)
-        {
-            request_choice();
+	/* Let the user change choices and finally install (or quit). */
+	for (;;)
+	{
+	    request_choice();
 	    rewind(stdin);
-            if (scanf("%99s", buf) == 1)
-            {
-                if (isdigit(buf[0]))
-                {
-                    /* Change a choice. */
-                    i = atoi(buf);
-                    if (i > 0 && i <= choice_count && choices[i - 1].active)
-                        (choices[i - 1].changefunc)(i - 1);
-                    else
-                        printf("\nIllegal choice\n");
-                }
-                else if (buf[0] == 'h' || buf[0] == 'H')
-                {
-                    /* Help */
-                    show_help();
-                }
-                else if (buf[0] == 'd' || buf[0] == 'D')
-                {
-                    /* Install! */
-                    install();
-                    printf("\nThat finishes the installation.  Happy Vimming!\n");
-                    break;
-                }
-                else if (buf[0] == 'q' || buf[0] == 'Q')
-                {
-                    /* Quit */
-                    printf("\nExiting without anything done\n");
-                    break;
-                }
-                else
-                    printf("\nIllegal choice\n");
-            }
-        }
-        printf("\n");
+	    if (scanf("%99s", buf) == 1)
+	    {
+		if (isdigit(buf[0]))
+		{
+		    /* Change a choice. */
+		    i = atoi(buf);
+		    if (i > 0 && i <= choice_count && choices[i - 1].active)
+			(choices[i - 1].changefunc)(i - 1);
+		    else
+			printf("\nIllegal choice\n");
+		}
+		else if (buf[0] == 'h' || buf[0] == 'H')
+		{
+		    /* Help */
+		    show_help();
+		}
+		else if (buf[0] == 'd' || buf[0] == 'D')
+		{
+		    /* Install! */
+		    install();
+		    printf("\nThat finishes the installation.  Happy Vimming!\n");
+		    break;
+		}
+		else if (buf[0] == 'q' || buf[0] == 'Q')
+		{
+		    /* Quit */
+		    printf("\nExiting without anything done\n");
+		    break;
+		}
+		else
+		    printf("\nIllegal choice\n");
+	    }
+	}
+	printf("\n");
     }
     else
     {
 	/*
 	 * Run non-interactive - setup according to the command line switches
 	 */
-        command_line_setup_choices(argc, argv);
-        install();
+	command_line_setup_choices(argc, argv);
+	install();
     }
 
     myexit(0);

@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2001 May 10
+" Last Change:  2001 Aug 27
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -48,6 +48,7 @@ syn keyword javaType            void
 syn keyword javaStatement       return
 syn keyword javaStorageClass    static synchronized transient volatile final strictfp serializable
 syn keyword javaExceptions      throw try catch finally
+syn keyword javaAssert          assert
 syn keyword javaMethodDecl      synchronized throws
 syn keyword javaClassDecl       extends implements interface
 " to differentiate the keyword class from MyClass.class we use a match here
@@ -62,13 +63,13 @@ if exists("java_highlight_java_lang_ids") || exists("java_highlight_java_lang") 
   " java.lang.*
   syn match javaLangClass "\<System\>"
   syn keyword javaLangClass  Cloneable Comparable Runnable Boolean Byte Class
-  syn keyword javaLangClass  Character ClassLoader Compiler Double Float
-  syn keyword javaLangClass  Integer Long Math Number Object Package Process
+  syn keyword javaLangClass  Character CharSequence ClassLoader Compiler Double Float
+  syn keyword javaLangClass  Integer InheritableThreadLocal Long Math Number Object Package Process
   syn keyword javaLangClass  Runtime RuntimePermission InheritableThreadLocal
-  syn keyword javaLangClass  SecurityManager Short String
+  syn keyword javaLangClass  SecurityManager Short String StrictMath StackTraceElement
   syn keyword javaLangClass  StringBuffer Thread ThreadGroup
   syn keyword javaLangClass  ThreadLocal Throwable Void ArithmeticException
-  syn keyword javaLangClass  ArrayIndexOutOfBoundsException
+  syn keyword javaLangClass  ArrayIndexOutOfBoundsException AssertionError
   syn keyword javaLangClass  ArrayStoreException ClassCastException
   syn keyword javaLangClass  ClassNotFoundException
   syn keyword javaLangClass  CloneNotSupportedException Exception
@@ -126,7 +127,7 @@ if !exists("java_allow_cpp_keywords")
 endif
 
 " The following cluster contains all java groups except the contained ones
-syn cluster javaTop add=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel,javaLangObject
+syn cluster javaTop add=javaExternal,javaError,javaError,javaBranch,javaLabelRegion,javaLabel,javaConditional,javaRepeat,javaBoolean,javaConstant,javaTypedef,javaOperator,javaType,javaType,javaStatement,javaStorageClass,javaAssert,javaExceptions,javaMethodDecl,javaClassDecl,javaClassDecl,javaClassDecl,javaScopeDecl,javaError,javaError2,javaUserLabel,javaLangObject
 
 
 " Comments
@@ -278,12 +279,13 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaConditional		Conditional
   JavaHiLink javaRepeat			Repeat
   JavaHiLink javaExceptions		Exception
+  JavaHiLink javaAssert			Statement
   JavaHiLink javaStorageClass		StorageClass
   JavaHiLink javaMethodDecl		javaStorageClass
   JavaHiLink javaClassDecl		javaStorageClass
   JavaHiLink javaScopeDecl		javaStorageClass
-  JavaHiLink javaBoolean			Boolean
-  JavaHiLink javaSpecial			Special
+  JavaHiLink javaBoolean		Boolean
+  JavaHiLink javaSpecial		Special
   JavaHiLink javaSpecialError		Error
   JavaHiLink javaSpecialCharError	Error
   JavaHiLink javaString			String
@@ -294,22 +296,22 @@ if version >= 508 || !exists("did_java_syn_inits")
   JavaHiLink javaStringError		Error
   JavaHiLink javaStatement		Statement
   JavaHiLink javaOperator		Operator
-  JavaHiLink javaComment			Comment
+  JavaHiLink javaComment		Comment
   JavaHiLink javaDocComment		Comment
   JavaHiLink javaLineComment		Comment
   JavaHiLink javaConstant		javaBoolean
-  JavaHiLink javaTypedef			Typedef
+  JavaHiLink javaTypedef		Typedef
   JavaHiLink javaTodo			Todo
 
   JavaHiLink javaCommentTitle		SpecialComment
-  JavaHiLink javaDocTags			Special
+  JavaHiLink javaDocTags		Special
   JavaHiLink javaDocParam		Function
   JavaHiLink javaCommentStar		javaComment
 
   JavaHiLink javaType			Type
   JavaHiLink javaExternal		Include
 
-  JavaHiLink htmlComment			Special
+  JavaHiLink htmlComment		Special
   JavaHiLink htmlCommentPart		Special
   JavaHiLink javaSpaceError		Error
 endif

@@ -1147,6 +1147,11 @@ normal_end:
     checkpcmark();		/* check if we moved since setting pcmark */
     vim_free(ca.searchbuf);
 
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	mb_adjust_cursor();
+#endif
+
 #ifdef FEAT_SCROLLBIND
     if (curwin->w_p_scb && toplevel)
     {
@@ -1188,11 +1193,6 @@ normal_end:
 #ifdef FEAT_VISUAL
     if (restart_VIsual_select == 2)
 	restart_VIsual_select = 1;
-#endif
-
-#ifdef FEAT_MBYTE
-    if (has_mbyte)
-	mb_adjust_cursor();
 #endif
 
     /* Save count before an operator for next time. */
@@ -2503,7 +2503,7 @@ do_mouse(oap, c, dir, count, fixindent)
 	 * Remember where the paste started, so in edit() Insstart can be set
 	 * to this position
 	 */
-	if (restart_edit)
+	if (restart_edit != 0)
 	    where_paste_started = curwin->w_cursor;
 	do_put(regname, dir, count, fixindent | PUT_CURSEND);
     }
@@ -5523,6 +5523,18 @@ nv_brackets(cap)
     }
 #endif
 
+#ifdef FEAT_DIFF
+    /*
+     * "[c" and "]c": move to next or previous diff-change.
+     */
+    else if (cap->nchar == 'c')
+    {
+	if (diff_move_to(cap->cmdchar == ']' ? FORWARD : BACKWARD,
+							 cap->count1) == FAIL)
+	    clearopbeep(cap->oap);
+    }
+#endif
+
     /* Not a valid cap->nchar. */
     else
 	clearopbeep(cap->oap);
@@ -7036,7 +7048,7 @@ nv_dot(cap)
 	 * instead of the last command (inserting text). This is used for
 	 * CTRL-O <.> in insert mode
 	 */
-	if (start_redo(cap->count0, restart_edit && !arrow_used) == FAIL)
+	if (start_redo(cap->count0, restart_edit != 0 && !arrow_used) == FAIL)
 	    clearopbeep(cap->oap);
     }
 }

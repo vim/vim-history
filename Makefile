@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0as
+MINOR = 0at
 
 # CHECKLIST for creating a new version:
 #
@@ -611,6 +611,7 @@ RT_ALL =	\
 		runtime/ftplugof.vim \
 		runtime/indent.vim \
 		runtime/indoff.vim \
+		runtime/procset.ps \
 		runtime/termcap \
 		runtime/tools \
 		runtime/tutor/README.txt \

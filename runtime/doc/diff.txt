@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0as.  Last change: 2001 Aug 16
+*diff.txt*      For Vim version 6.0at.  Last change: 2001 Aug 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -12,8 +12,9 @@ The basics are explained in section |08.7| of the user manual.
 
 1. Starting diff mode		|vimdiff|
 2. Viewing diffs		|view-diffs|
-3. Copying diffs		|copy-diffs|
-4. Diff options			|diff-options|
+3. Jumping to diffs		|jumpto-diffs|
+4. Copying diffs		|copy-diffs|
+5. Diff options			|diff-options|
 
 {not in Vi}
 
@@ -162,17 +163,32 @@ The diffs are highlighted with these groups:
 |hl-DiffAdd|	DiffAdd		Added (inserted) lines.  These lines exist in
 				this buffer buffer but not in another.
 |hl-DiffChange|	DiffChange	Changed lines.
-|hl-DiffText|	DiffText	Changed text inside a Changed line.  Vim tries
-				to locate this by comparing text at the start
-				and end of the line.  Parts in the middle that
-				are still the same are not found and
-				highlighted anyway.
+|hl-DiffText|	DiffText	Changed text inside a Changed line.  Vim
+				finds the first character that is different,
+				and the last character that is different
+				(searching from the end of the line).  The
+				text in between is highlighted.  This means
+				that parts in the middle that are still the
+				same are highlighted anyway.
 |hl-DiffDelete| DiffDelete	Deleted lines.  Also called filler lines,
 				because they don't really exist in this
 				buffer.
 
 ==============================================================================
-3. Diff copying			*copy-diffs* *E99* *E100* *E101* *E102* *E103*
+3. Jumping to diffs					*jumpto-diffs*
+
+Two commands can be used to jump to diffs:
+								*[c*
+	[c		Jump backwards to the previous start of a change.
+			When a count is used, do it that many times.
+								*]c*
+	]c		Jump forwards to the next start of a change.
+			When a count is used, do it that many times.
+
+It is an error if there is no change to move to.
+
+==============================================================================
+4. Diff copying			*copy-diffs* *E99* *E100* *E101* *E102* *E103*
 
 There are two commands to copy text from one buffer to another.  The result is
 that the buffers will be equal within the specified range.
@@ -215,7 +231,7 @@ plus one.  This command gets all diffs from the other buffer: >
 	:1,$+1diffget
 
 ==============================================================================
-4. Diff options						*diff-options*
+5. Diff options						*diff-options*
 
 Also see |'diffopt'| and the "diff" item of |'fillchars'|.
 

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 13
+" Last change:	2001 Aug 23
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -1111,6 +1111,9 @@ au BufRead,BufNewFile *.hw,*.module,*.pkg	setf virata
 
 " Visual Basic (also uses *.bas) or FORM
 au BufNewFile,BufRead *.frm			call <SID>FTVB("form")
+
+" SaxBasic is close to Visual Basic
+au BufNewFile,BufRead *.sba			setf vb
 
 " Vgrindefs file
 au BufNewFile,BufRead vgrindefs			setf vgrindefs

@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.0as.  Last change: 2001 Aug 07
+*usr_31.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -94,10 +94,10 @@ editing another file with: >
 Vim will pop up a dialog that looks something like this:
 
 	+-----------------------------------+
-	|                                   |
-	|   ?   Save changes to "bar.txt"?  |
-	|                                   |
-	|   YES   NO             CANCEL     |
+	|				    |
+	|   ?	Save changes to "bar.txt"?  |
+	|				    |
+	|   YES   NO		 CANCEL     |
 	+-----------------------------------+
 
 Now make your choice.  If you do want to save the changes, select "YES".  If

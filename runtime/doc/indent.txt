@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0as.  Last change: 2001 Jul 26
+*indent.txt*    For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -230,11 +230,11 @@ assume a 'shiftwidth' of 4.
 	lN    If N != 0 Vim will align with a case label instead of the
 	      statement after it.
 
-		cino=                       cino=l1 >
-		    switch (a) {              switch (a) {
-			case 1: {                 case 1: {
-				    break;            break;
-				}                 }
+		cino=			    cino=l1 >
+		    switch (a) {	      switch (a) {
+			case 1: {		  case 1: {
+				    break;	      break;
+				}		  }
 <
 	gN    Place C++ scope declarations N characters from the indent of the
 	      block they are in.  (default 'shiftwidth').  A scope declaration

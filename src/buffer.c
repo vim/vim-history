@@ -269,6 +269,7 @@ close_buffer(win, buf, action)
 {
 #ifdef FEAT_AUTOCMD
     int		is_curbuf;
+    int		nwindows = buf->b_nwindows;
 #endif
     int		unload_buf = (action != 0);
     int		del_buf = (action == DOBUF_DEL || action == DOBUF_WIPE);
@@ -308,7 +309,7 @@ close_buffer(win, buf, action)
 
 #ifdef FEAT_AUTOCMD
     /* When the buffer is no longer in a window, trigger BufWinLeave */
-    if (buf->b_nwindows == 0)
+    if (buf->b_nwindows == 0 && nwindows > 0)
     {
 	apply_autocmds(EVENT_BUFWINLEAVE, buf->b_fname, buf->b_fname,
 								  FALSE, buf);
@@ -2558,7 +2559,7 @@ maketitle()
     char_u	*i_str = NULL;
     int		maxlen = 0;
     int		len;
-    int         mustset;
+    int		mustset;
     char_u	buf[IOSIZE];
     int		off;
 
@@ -2889,8 +2890,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		else
 		{
 		    mch_memmove(item[groupitem[groupdepth]].start + n - l,
-			        item[groupitem[groupdepth]].start,
-			        (size_t)l);
+				item[groupitem[groupdepth]].start,
+				(size_t)l);
 		    l = n - l;
 		    p += l;
 		    for (n = groupitem[groupdepth] + 1; n < curitem; n++)
@@ -3099,7 +3100,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    l = ml_find_line_or_offset(wp->w_buffer, wp->w_cursor.lnum, NULL);
 	    num = (wp->w_buffer->b_ml.ml_flags & ML_EMPTY) || l < 0 ?
 		  0L : l + 1 + (!(State & INSERT) && empty_line ?
-			        0 : (int)wp->w_cursor.col);
+				0 : (int)wp->w_cursor.col);
 #endif
 	    break;
 
@@ -3154,7 +3155,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    {
 		sprintf((char *)tmp, ",%s", wp->w_buffer->b_p_ft);
 		for (t = tmp; *t != 0; t++)
-                    *t = TO_UPPER(*t);
+		    *t = TO_UPPER(*t);
 		str = tmp;
 	    }
 	    break;

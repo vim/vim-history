@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.0as.  Last change: 2001 Jul 28
+*usr_29.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -82,9 +82,9 @@ CTRL-].  Now you are at the definition of "write_char".
 The ":tags" command shows the list of tags that you traversed through:
 
 	:tags
-	  # TO tag         FROM line  in file/text ~
-	  1  1 write_line          8  write_block.c ~
-	  2  1 write_char          7  write_line.c ~
+	  # TO tag	   FROM line  in file/text ~
+	  1  1 write_line	   8  write_block.c ~
+	  2  1 write_char	   7  write_line.c ~
 	> ~
 >
 Now to go back.  The CTRL-T command goes to the preceding tag.  In the example
@@ -172,14 +172,14 @@ one to jump to: >
 
 Vim will present you with a list of choices:
 
-	  # pri kind tag               file ~
-	  1 F   f    mch_init          os_amiga.c ~
+	  # pri kind tag	       file ~
+	  1 F	f    mch_init	       os_amiga.c ~
 		       mch_init() ~
-	  2 F   f    mch_init          os_mac.c ~
+	  2 F	f    mch_init	       os_mac.c ~
 		       mch_init() ~
-	  3 F   f    mch_init          os_msdos.c ~
+	  3 F	f    mch_init	       os_msdos.c ~
 		       mch_init(void) ~
-	  4 F   f    mch_init          os_riscos.c ~
+	  4 F	f    mch_init	       os_riscos.c ~
 		       mch_init() ~
 	Enter nr of choice (<CR> to abort):  ~
 
@@ -394,16 +394,16 @@ in the first column.
 				{
 					return 1;
 		  +---------->  }
-                  |
-	      []  |             int func2(void)
-		  |        +->  {
+		  |
+	      []  |		int func2(void)
+		  |	   +->	{
 		  |    [[  |		if (flag)
-	start     +--      +--			return flag;
+	start	  +--	   +--			return flag;
 		  |    ][  |		return 2;
-		  |        +->  }
-              ]]  |
-	          |             int func3(void)
-		  +---------->  {
+		  |	   +->	}
+	      ]]  |
+		  |		int func3(void)
+		  +---------->	{
 					return 3;
 				}
 
@@ -429,14 +429,14 @@ MOVING IN COMMENTS
 To move back to the start of a comment use "[/".  Move forward to the end of a
 comment with "]/".  This only works for /* - */ comments.
 
-          +->     +-> /*
-          |    [/ |    * A comment about      --+
-       [/ |       +--  * wonderful life.        | ]/
-          |            */                     <-+
-          |
-          +--          foo = bar * 3;         --+
-                                                | ]/
-	               /* a short comment */  <-+
+	  +->	  +-> /*
+	  |    [/ |    * A comment about      --+
+       [/ |	  +--  * wonderful life.	| ]/
+	  |	       */		      <-+
+	  |
+	  +--	       foo = bar * 3;	      --+
+						| ]/
+		       /* a short comment */  <-+
 
 ==============================================================================
 *29.4*	Finding global identifiers
@@ -585,7 +585,7 @@ function that was declared locally ("static", in C terms).  Example (cursor on
 	gD |     {
 	   |	     ++counter;
 	   +--	     return counter;
-	         }
+		 }
 
 To restrict the search even further, and look only in the current function,
 use this command: >

@@ -205,7 +205,10 @@ EXTERN linenr_T	search_match_lines;		/* lines of of matched string */
 EXTERN colnr_T	search_match_endcol;		/* col nr of match end */
 
 EXTERN int	no_smartcase INIT(= FALSE);	/* don't use 'smartcase' once */
-EXTERN int	need_check_timestamps INIT(= FALSE); /* got STOP signal */
+EXTERN int	need_check_timestamps INIT(= FALSE); /* need to check file
+							timestamps asap */
+EXTERN int	did_check_timestamps INIT(= FALSE); /* did check timestamps
+						       recently */
 EXTERN int	highlight_attr[HLF_COUNT];  /* Highl. attr for each context. */
 #ifdef FEAT_STL_OPT
 # define USER_HIGHLIGHT
@@ -903,8 +906,9 @@ extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 # define OPT_PRINT_PORTRAIT	9
 # define OPT_PRINT_PAPER	10
 # define OPT_PRINT_COLLATE	11
+# define OPT_PRINT_JOBSPLIT	12
 
-# define OPT_PRINT_NUM_OPTIONS	12
+# define OPT_PRINT_NUM_OPTIONS	13
 
 EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
 # ifdef DO_INIT
@@ -922,6 +926,7 @@ EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
     {"portrait", FALSE, 0, NULL, 0, FALSE},
     {"paper",	FALSE, 0, NULL, 0, FALSE},
     {"collate",	FALSE, 0, NULL, 0, FALSE},
+    {"jobsplit", FALSE, 0, NULL, 0, FALSE},
 }
 # endif
 ;
@@ -949,7 +954,7 @@ EXTERN Atom	commProperty INIT(= None);
 EXTERN char_u	*serverDelayedStartName INIT(= NULL);
 # else
 # ifdef PROTO
-#  define HWND int
+typedef int HWND;
 # endif
 EXTERN HWND	clientWindow INIT(= 0);
 # endif

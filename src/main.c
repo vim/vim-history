@@ -35,6 +35,7 @@ static void check_swap_exists_action __ARGS((void));
 #endif
 #ifdef FEAT_CLIENTSERVER
 static void cmdsrv_main __ARGS((int *argc, char **argv, char_u *serverName_arg, char_u **serverStr));
+static char_u *serverMakeName __ARGS((char_u *arg, char *cmd));
 #endif
 
 
@@ -131,8 +132,9 @@ main
 #endif
 #ifdef FEAT_CLIENTSERVER
     char_u	*serverStr = NULL;
-    char_u	*serverName_arg = NULL;
-    int         serverArg = FALSE;
+    char_u	*serverName_arg = NULL;	/* cmdline arg for server name */
+    int		serverArg = FALSE;	/* TRUE when argument for a server */
+    char_u	*servername = NULL;	/* allocated name for our server */
 #endif
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
     int		literal = FALSE;	/* don't expand file names */
@@ -253,64 +255,61 @@ main
 	    serverName_arg = (char_u *)argv[++i];
 	}
 	else if (STRICMP(argv[i], "--serverlist") == 0
-	         || STRICMP(argv[i], "--remote-send") == 0
-	         || STRICMP(argv[i], "--remote-expr") == 0
-	         || STRICMP(argv[i], "--remote-wait") == 0
-	         || STRICMP(argv[i], "--remote") == 0 )
+		 || STRICMP(argv[i], "--remote-send") == 0
+		 || STRICMP(argv[i], "--remote-expr") == 0
+		 || STRICMP(argv[i], "--remote-wait") == 0
+		 || STRICMP(argv[i], "--remote") == 0 )
 	    serverArg = TRUE;
 # endif
 # ifdef FEAT_GUI_GTK
 	else if (STRICMP(argv[i], "--socketid") == 0)
 	{
-            int count;
+	    int count;
 
 	    if (i == argc - 1)
 		mainerr_arg_missing((char_u *)argv[i]);
-            if (STRNICMP(argv[i+1], "0x", 2) == 0)
-                count = sscanf(&(argv[i + 1][2]), "%x", &gtk_socket_id);
-            else
-                count = sscanf(argv[i+1], "%d", &gtk_socket_id);
-            if (count != 1)
+	    if (STRNICMP(argv[i+1], "0x", 2) == 0)
+		count = sscanf(&(argv[i + 1][2]), "%x", &gtk_socket_id);
+	    else
+		count = sscanf(argv[i+1], "%d", &gtk_socket_id);
+	    if (count != 1)
 		mainerr(ME_INVALID_ARG, (char_u *)argv[i]);
-            i++;
+	    i++;
 	}
 # endif
     }
+#endif
 
-# ifdef FEAT_CLIENTSERVER
-#  ifdef WIN32
-    /* Initialise the client/server messaging infrastructure */
-    serverInitMessaging();
-#  endif
-
+#ifdef FEAT_CLIENTSERVER
     /*
-     * When a command server argument was found, execute it.  This may exit
-     * Vim when it was successful.
+     * Do the client-server stuff, unless "--servername ''" was used.
      */
-    if (serverArg && !(serverName_arg != NULL && *serverName_arg == NUL))
-	cmdsrv_main(&argc, argv, serverName_arg, &serverStr);
-
-#  ifdef WIN32
-    /* If we're still running, register ourselves */
-    p = NULL;
-    if (serverName_arg == NULL || *serverName_arg == NUL)
+    if (serverName_arg == NULL || *serverName_arg != NUL)
     {
-	serverName_arg = gettail((char_u *)argv[0]);
-	if (vim_strchr(serverName_arg, '.') != NULL)
-	{
-	    /* Remove .exe or .bat from the name. */
-	    p = vim_strsave(serverName_arg);
-	    if (p != NULL)
-	    {
-		*vim_strchr(p, '.') = NUL;
-		serverName_arg = p;
-	    }
-	}
-    }
-    serverSetName(serverName_arg);
-    vim_free(p);
-#  endif
+# ifdef WIN32
+	/* Initialise the client/server messaging infrastructure. */
+	serverInitMessaging();
 # endif
+
+	/*
+	 * When a command server argument was found, execute it.  This may
+	 * exit Vim when it was successful.
+	 */
+	if (serverArg)
+	    cmdsrv_main(&argc, argv, serverName_arg, &serverStr);
+
+	/* If we're still running, get the name to register ourselves.
+	 * On Win32 can register right now, for X11 need to setup the
+	 * clipboard first, it's further down. */
+	servername = serverMakeName(serverName_arg, argv[0]);
+# ifdef WIN32
+	if (servername != NULL)
+	{
+	    serverSetName(servername);
+	    vim_free(servername);
+	}
+# endif
+    }
 #endif
 
 #ifdef FEAT_SUN_WORKSHOP
@@ -525,7 +524,7 @@ main
 		else if (STRNICMP(argv[0] + argv_idx, "serverlist", 10) == 0)
 		    ; /* already processed -- no arg */
 		else if (STRNICMP(argv[0] + argv_idx, "servername", 10) == 0
-		         || STRNICMP(argv[0] + argv_idx, "serversend", 10) == 0)
+		       || STRNICMP(argv[0] + argv_idx, "serversend", 10) == 0)
 		{
 		    /* already processed -- snatch the following arg */
 		    if (argc > 1)
@@ -536,15 +535,15 @@ main
 		}
 #endif
 #ifdef FEAT_GUI_GTK
-                else if (STRNICMP(argv[0] + argv_idx, "socketid", 8) == 0)
-                {
-                    /* already processed -- snatch the following arg */
+		else if (STRNICMP(argv[0] + argv_idx, "socketid", 8) == 0)
+		{
+		    /* already processed -- snatch the following arg */
 		    if (argc > 1)
 		    {
 			--argc;
 			++argv;
 		    }
-                }
+		}
 #endif
 		else
 		{
@@ -613,15 +612,15 @@ main
 		break;
 
 #ifdef TARGET_API_MAC_OSX
-            /* For some reason on MacOS X, an argument like:
-               -psn_0_10223617 is passed in wjen invoke from Finder
-               or with the 'open' command */
-            case 'p':
-                mch_errmsg("What does this mean: ");
-                mch_errmsg(argv[0]);
-                mch_errmsg("\n");
-                argv_idx = -1; /* bypass full -psn */
-                break;
+		/* For some reason on MacOS X, an argument like:
+		   -psn_0_10223617 is passed in when invoke from Finder
+		   or with the 'open' command */
+	    case 'p':
+		mch_errmsg("What does this mean: ");
+		mch_errmsg(argv[0]);
+		mch_errmsg("\n");
+		argv_idx = -1; /* bypass full -psn */
+		break;
 #endif
 	    case 'M':		/* "-M"  no changes or writing of files */
 		reset_modifiable();
@@ -925,6 +924,20 @@ scripterror:
 	    if (ga_grow(&global_alist.al_ga, 1) == FAIL
 		    || (p = vim_strsave((char_u *)argv[0])) == NULL)
 		mch_exit(2);
+#ifdef FEAT_DIFF
+	    if (diff_mode && mch_isdir(p) && GARGCOUNT > 0
+				      && !mch_isdir(alist_name(&GARGLIST[0])))
+	    {
+		char_u	    *r;
+
+		r = concat_fnames(p, gettail(alist_name(&GARGLIST[0])), TRUE);
+		if (r != NULL)
+		{
+		    vim_free(p);
+		    p = r;
+		}
+	    }
+#endif
 	    alist_add(&global_alist, p,
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
 		    literal ? 2 : 0	/* add buffer number after expanding */
@@ -1138,7 +1151,7 @@ scripterror:
     if (p_commands > 0)
     {
 	curwin->w_cursor.lnum = 0; /* just in case.. */
-	sourcing_name = (char_u *)"pre-vimrc command line";
+	sourcing_name = (char_u *)_("pre-vimrc command line");
 	for (i = 0; i < p_commands; ++i)
 	    do_cmdline_cmd(pre_commands[i]);
 	sourcing_name = NULL;
@@ -1413,20 +1426,17 @@ scripterror:
      * unless there was a -X or a --servername '' on the command line.
      * Only register nongui-vim's with an explicit --servername argument.
      */
-    if ((
+    if (X_DISPLAY != NULL && servername != NULL && (
 # ifdef FEAT_GUI
-	    (gui.in_use && !(serverName_arg != NULL && *serverName_arg == 0)) ||
+		gui.in_use ||
 # endif
-	    (serverName_arg != NULL && *serverName_arg)) && X_DISPLAY != NULL)
+		serverName_arg != NULL ))
     {
-	if (serverName_arg == NULL)
-	    serverName_arg = initstr;
-	(void)serverRegisterName(X_DISPLAY, serverName_arg);
+	(void)serverRegisterName(X_DISPLAY, servername);
+	vim_free(servername);
     }
-    else if (serverName_arg == NULL)
-	 /* Cater for delayed start of server upon :gui in a plain vim.  Only
-	  * when server has not been disabled with --servername '' */
-	serverDelayedStartName = initstr;
+    else
+	serverDelayedStartName = servername;
 #endif
 
 #ifdef FEAT_CLIENTSERVER
@@ -1719,6 +1729,7 @@ scripterror:
 	 * We start commands on line 0, make "vim +/pat file" match a
 	 * pattern on line 1.
 	 */
+	msg_scroll = TRUE;
 	curwin->w_cursor.lnum = 0;
 	sourcing_name = (char_u *)"command line";
 	for (i = 0; i < n_commands; ++i)
@@ -1726,6 +1737,9 @@ scripterror:
 	sourcing_name = NULL;
 	if (curwin->w_cursor.lnum == 0)
 	    curwin->w_cursor.lnum = 1;
+
+	if (!exmode_active)
+	    msg_scroll = FALSE;
 
 #ifdef FEAT_QUICKFIX
 	/* When started with "-q errorfile" jump to first again. */
@@ -1766,8 +1780,8 @@ scripterror:
 
     /* If ":startinsert" command used, stuff a dummy command to be able to
      * call normal_cmd(), which will then start Insert mode. */
-    if (restart_edit)
-	stuffReadbuff((char_u *)"\034\016");
+    if (restart_edit != 0)
+	stuffcharReadbuff(K_IGNORE);
 
     TIME_MSG("before starting main loop");
 
@@ -1800,6 +1814,7 @@ main_loop(cmdwin)
     {
 	if (stuff_empty())
 	{
+	    did_check_timestamps = FALSE;
 	    if (need_check_timestamps)
 		check_timestamps(FALSE);
 	    if (need_wait_return)	/* if wait_return still needed ... */
@@ -2242,17 +2257,17 @@ usage()
     main_msg(_("-display <display>\tConnect vim to this particular X-server"));
 # endif
     main_msg(_("-X\t\t\tDo not connect to X server"));
-# ifdef FEAT_CLIENTSERVER
-    main_msg(_("--remote <files>\tEdit <files> in a Vim server"));
-    main_msg(_("--remote-wait <files>\tAs --remote but wait for files to end edit"));
-    main_msg(_("--remote-send <keys>\tSend <keys> to a Vim server and exit"));
-    main_msg(_("--remote-expr <expr>\tExecute <expr> in server and print result"));
-    main_msg(_("--serverlist\t\tList available Vim server names and exit"));
-    main_msg(_("--servername <name>\tSend to/become the Vim server <name>"));
-# endif
 # ifdef FEAT_GUI_GTK
     main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
 # endif
+#endif
+#ifdef FEAT_CLIENTSERVER
+    main_msg(_("--remote <files>\tEdit <files> in a Vim server and exit"));
+    main_msg(_("--remote-wait <files>  As --remote but wait for files to have been edited"));
+    main_msg(_("--remote-send <keys>\tSend <keys> to a Vim server and exit"));
+    main_msg(_("--remote-expr <expr>\tEvaluate <expr> in a Vim server and print result"));
+    main_msg(_("--serverlist\t\tList available Vim server names and exit"));
+    main_msg(_("--servername <name>\tSend to/become the Vim server <name>"));
 #endif
 #ifdef FEAT_VIMINFO
     main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
@@ -2429,8 +2444,9 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     char_u	*serverName_arg;
     char_u	**serverStr;
 {
-    char_u	*res, *s;
+    char_u	*res;
     int		i;
+    char_u	*sname;
     int		ret;
     int		didone = FALSE;
     char	**newArgV = argv + 1;
@@ -2444,9 +2460,12 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     HWND	srv;
 # endif
 
-    s = (serverName_arg != NULL ? serverName_arg : gettail((char_u *)argv[0]));
+    sname = serverMakeName(serverName_arg, argv[0]);
+    if (sname == NULL)
+	return;
+
 # ifdef FEAT_X11
-    if (xterm_dpy != NULL)	/* Win32 always works */
+    if (xterm_dpy != NULL)	/* Win32 always works? */
 # endif
     {
 	/*
@@ -2479,15 +2498,14 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		else
 		{
 		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
-			                        argv[i][8] == '-');
+						argv[i][8] == '-');
 		    Argc = i;
 		}
 # ifdef FEAT_X11
-		ret =
-		    serverSendToVim(xterm_dpy, s, *serverStr, NULL, &srv, 0, 0);
+		ret = serverSendToVim(xterm_dpy, sname, *serverStr,
+							    NULL, &srv, 0, 0);
 # else
-		ret =
-		    serverSendToVim(s, *serverStr, NULL, &srv, 0);
+		ret = serverSendToVim(sname, *serverStr, NULL, &srv, 0);
 # endif
 		if (ret < 0)
 		{
@@ -2501,10 +2519,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    int	    j;
 		    char_u  *done = alloc(numFiles);
 		    char_u  *p;
-# ifdef WIN32
-		    char_u  id[30];
-
-#  ifdef FEAT_GUI_W32
+# ifdef FEAT_GUI_W32
 		    NOTIFYICONDATA ni;
 		    int count = 0;
 		    extern HWND message_window;
@@ -2513,12 +2528,10 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    ni.hWnd = message_window;
 		    ni.uID = 0;
 		    ni.uFlags = NIF_ICON|NIF_TIP;
-		    ni.hIcon = LoadIcon((HINSTANCE)GetModuleHandle(0), "IDR_VIM");
-		    sprintf(ni.szTip, "%d of %d edited", count, numFiles);
+		    ni.hIcon = LoadIcon((HINSTANCE)GetModuleHandle(0),
+								   "IDR_VIM");
+		    sprintf(ni.szTip, _("%d of %d edited"), count, numFiles);
 		    Shell_NotifyIcon(NIM_ADD, &ni);
-#  endif
-
-		    sprintf((char *)id, "0x%x", (unsigned int)srv);
 # endif
 
 		    /* Wait for all files to unload in remote */
@@ -2526,7 +2539,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		    while (memchr(done, 0, numFiles) != NULL)
 		    {
 # ifdef WIN32
-			p = serverGetReply(id, 1, 1);
+			p = serverGetReply(srv, FALSE, TRUE, TRUE);
 			if (p == NULL)
 			    break;
 # else
@@ -2538,7 +2551,8 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 			{
 # ifdef FEAT_GUI_W32
 			    ++count;
-			    sprintf(ni.szTip, "%d of %d edited", count, numFiles);
+			    sprintf(ni.szTip, _("%d of %d edited"),
+							     count, numFiles);
 			    Shell_NotifyIcon(NIM_MODIFY, &ni);
 # endif
 			    done[j] = 1;
@@ -2554,10 +2568,10 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		if (i == *argc - 1)
 		    mainerr_arg_missing((char_u *)argv[i]);
 # ifdef WIN32
-		if (serverSendToVim(s, (char_u *)argv[i + 1],
+		if (serverSendToVim(sname, (char_u *)argv[i + 1],
 							&res, NULL, 1) < 0)
 # else
-		if (serverSendToVim(xterm_dpy, s, (char_u *)argv[i + 1],
+		if (serverSendToVim(xterm_dpy, sname, (char_u *)argv[i + 1],
 							&res, NULL, 1, 1) < 0)
 # endif
 		    mch_errmsg(_("Send expression failed.\n"));
@@ -2600,6 +2614,7 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
     }
     /* Return back into main() */
     *argc = newArgC;
+    vim_free(sname);
 }
 
 /*
@@ -2689,15 +2704,34 @@ server_to_input_buf(str)
     str = replace_termcodes((char_u *)str, &ptr, FALSE, TRUE);
     p_cpo = cpo_save;
 
-# if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS)
     add_to_input_buf(str, STRLEN(str));
-# else
-    ins_typebuf(str, REMAP_NONE, 0, TRUE, TRUE);
-# endif
     vim_free((char_u *)(ptr));
 }
 
-#endif
+/*
+ * Make our basic server name: use the specified "arg" if given, otherwise use
+ * the tail of the command "cmd" we were started with.
+ * Return the name in allocated memory.  This doesn't include a serial number.
+ */
+    static char_u *
+serverMakeName(arg, cmd)
+    char_u	*arg;
+    char	*cmd;
+{
+    char_u *p;
+
+    if (arg != NULL && *arg != NUL)
+	p = vim_strsave_up(arg);
+    else
+    {
+	p = vim_strsave_up(gettail((char_u *)cmd));
+	/* Remove .exe or .bat from the name. */
+	if (p != NULL && vim_strchr(p, '.') != NULL)
+	    *vim_strchr(p, '.') = NUL;
+    }
+    return p;
+}
+#endif /* FEAT_CLIENTSERVER */
 
 /*
  * When FEAT_FKMAP is defined, also compile the Farsi source code.

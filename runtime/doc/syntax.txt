@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0as.  Last change: 2001 Aug 15
+*syntax.txt*    For Vim version 6.0at.  Last change: 2001 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3129,6 +3129,11 @@ Menu		Current font, background and foreground colors of the menus.
 		Also used for the toolbar.
 		Applicable highlight arguments: font, guibg, guifg.
 
+		NOTE: For Motif and Athena the font argument actually
+		specifies a fontset at all times, no matter if 'guifontset' is
+		empty, and as such it is tied to the current |:language| when
+		set.
+
 							*hl-Scrollbar*
 Scrollbar	Current background and foreground of the main window's
 		scrollbars.
@@ -3138,12 +3143,10 @@ Scrollbar	Current background and foreground of the main window's
 Tooltip		Current font, background and foreground of the tooltips.
 		Applicable highlight arguments: font, guibg, guifg.
 
-		NOTE: For Athena, the font argument actually
-		specifies a fontset at all times (see 'guifontset'), and
-		as such, it is tied to the current |:language| when set.
-		This is done because there is no run-time support for
-		switching between the display of a single font and a fontset.
-
+		NOTE: For Motif and Athena the font argument actually
+		specifies a fontset at all times, no matter if 'guifontset' is
+		empty, and as such it is tied to the current |:language| when
+		set.
 
 ==============================================================================
 13. Linking groups		*:hi-link* *:highlight-link* *E412* *E413*

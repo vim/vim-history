@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0as.  Last change: 2001 Aug 17
+*remote.txt*    For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,12 +24,12 @@ The following command line arguments are available:
     argument			meaning	~
 
    --remote [+{cmd}] {file} ...					*--remote*
-   				Open the file list in a remote
+				Open the file list in a remote
 				Vim. The rest of the command line
 				is taken as the file list.  Thus any
 				non-file arguments must come before this.
    --remote-wait [+{cmd}] {file} ...				*--remote-wait*
-   				As above, but wait for files to
+				As above, but wait for files to
 				complete (unload) in remote Vim.
    --servername {name}		Send to or become the server	*--servername*
 				{name}

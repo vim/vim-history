@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.0as.  Last change: 2001 Aug 03
+*usr_04.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -148,7 +148,7 @@ Using a count with "r" causes that many characters to be replaced with the
 same character.  Example:
 
 	There is something wrong here ~
-	                   5rx
+			   5rx
 
 	There is something xxxxx here ~
 
@@ -226,11 +226,11 @@ selection is extended whole lines at a time.
    For example, select three lines with "Vjj":
 
 			  +------------------------+
-			  | text more text         |
+			  | text more text	   |
 		       >> | more text more text    | |
-	selected lines >> | text text text         | | Vjj
-		       >> | text more              | V
-			  | more text more         |
+	selected lines >> | text text text	   | | Vjj
+		       >> | text more		   | V
+			  | more text more	   |
 			  +------------------------+
 
 
@@ -336,7 +336,7 @@ Since "y" is an operator, you use "yw" to yank a word.  A count is possible as
 usual.  To yank two workds use "y2w".  Example:
 
 	let sqr = LongVariable * ~
-	         -------------->
+		 -------------->
 		       y2w
 
 	let sqr = LongVariable * ~

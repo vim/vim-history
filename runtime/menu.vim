@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 31
+" Last Change:	2001 Aug 24
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -29,15 +29,23 @@ if exists("v:lang") || &langmenu != ""
   if strlen(s:lang) > 1
     " We always use a lowercase name.
     " Change "iso-8859" to "iso_8859", some systems appear to use this.
+    " Change spaces to underscores.
     let s:lang = substitute(s:lang, ".*", "\\L&", "")
     let s:lang = substitute(s:lang, "\\.iso-", "\\.iso_", "")
+    let s:lang = substitute(s:lang, " ", "_", "g")
     menutrans clear
     exe "runtime! lang/menu_" . s:lang . ".vim"
-    " If there is no exact match, try matching with a wildcard added.
-    " (e.g. find menu_de_de.iso_8859-1.vim if s:lang == de_DE)
+
     if !exists("did_menu_trans")
-      " try to get the first long file name which matches v:lang.
+      " There is no exact match, try matching with a wildcard added
+      " (e.g. find menu_de_de.iso_8859-1.vim if s:lang == de_DE).
       exe "runtime! lang/menu_" . s:lang . "*.vim"
+
+      if !exists("did_menu_trans") && strlen($LANG) > 1 && strlen($LANG) <= 5
+	" On windows locale names are complicated, try using $LANG if
+	" it is only a few letters (like it's set in set_init_1()).
+	exe "runtime! lang/menu_" . $LANG . "*.vim"
+      endif
     endif
   endif
 endif
@@ -515,7 +523,7 @@ func! s:BMShow(...)
   " figure out how many buffers there are
   let buf = 1
   while buf <= bufnr('$')
-    if bufexists(buf) && !isdirectory(bufname(buf))
+    if bufexists(buf) && !isdirectory(bufname(buf)) && buflisted(buf)
 					    \ && !getbufvar(buf, "&bufsecret")
       let s:bmenu_count = s:bmenu_count + 1
     endif
@@ -528,7 +536,7 @@ func! s:BMShow(...)
   " iterate through buffer list, adding each buffer to the menu:
   let buf = 1
   while buf <= bufnr('$')
-    if bufexists(buf) && !isdirectory(bufname(buf))
+    if bufexists(buf) && !isdirectory(bufname(buf)) && buflisted(buf)
 					    \ && !getbufvar(buf, "&bufsecret")
       call <SID>BMFilename(bufname(buf), buf)
     endif
@@ -787,7 +795,7 @@ else
   tmenu ToolBar.Find		Find...
   tmenu ToolBar.FindNext	Find Next
   tmenu ToolBar.FindPrev	Find Previous
-  tmenu ToolBar.Replace		Find & Replace...
+  tmenu ToolBar.Replace		Find / Replace...
  if 0	" disabled; These are in the Windows menu
   tmenu ToolBar.New		New Window
   tmenu ToolBar.WinSplit	Split Window

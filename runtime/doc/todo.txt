@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0as.  Last change: 2001 Aug 19
+*todo.txt*      For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,19 +29,14 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32 client-server:
-- In the console version a received message isn't handled until a key is
-  pressed.
-- In the GUI a received message isn't handled until the mouse pointer is in
-  the window or the cursor is blinking.
+GTK with Gnome: inputdialog() doesn't work, it always returns the default
+text.
 
-Fonts for tooltips and balloons can be set with two resources, but there is
-actually only one font.
+Client-server: When using "vim --remote-wait file" twice, one of the clients
+will block forever. 
 
-When 'virtualedit' is "block", I# moves to before a TAB.
-When 'virtualedit' is "all", I# inserts one space too many on Tabs. (Karlsen)
-Using 'virtualedit' in Insert mode: When typing at the end of the line a
-character overwrites the last one in the line. (Ed Ralston)
+Win32 console: There is a delay when exiting.  Because of the client-server
+code?
 
 
 Vi incompatibility:
@@ -199,13 +194,16 @@ Win32 GUI known bugs:
     area (Koloseike).
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
+6   When Vim is minimized and has a changed file, closing Vim makes the dialog
+    appear in the left-upper corner of the screen.  Should be in the middle.
 
 
 Athena and Motif:
 8   Perhaps use fontsets for everything?
 6   When starting in English and switching the language to Japanese, setting
     the locale with ":lang", 'guifontset' and "hi menu font=", deleting all
-    menus and setting them again, the menus don't use the new font.
+    menus and setting them again, the menus don't use the new font.  Most of
+    the tooltips work though...
 
 
 Athena GUI:
@@ -235,9 +233,8 @@ Athena GUI:
 
 
 Motif GUI:
-8   In Japanese, Athena automatically uses the right fonts for the menus.  Why
-    doesn't this happen for Motif?
 8   Popup menu ordering is wrong.
+8   The texts in the find/replace dialog don't use the right font.
 8   Dialog: Accelerators don't work yet.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
@@ -708,6 +705,13 @@ User Friendlier:
     the user asks for it.  Requires an implementation of "rm -rf".
 -   Add a way to save local settings and mappings into a new plugin file.
     ":mkplugin <file>"?
+8   Add ":plugininstall" command.  Can be used to install a plugin file that
+    includes documentation.  Let the user select a directory from
+    'runtimepath'.
+	" Vim plugin
+	<main plugin code>
+	" >>> plugin help start <<<
+	<plugin docs>
 9   Buffer-local autocommands?
 	:au BufEnter <current> menu enable ...
 	:au BufLeave <current> menu disable ...
@@ -781,12 +785,10 @@ Multi-byte characters:
 
 Printing:
 -   Add "page width" to wrap long lines.
--   Unix: make conversion to PostScript work better.  Allow selecting a
-    different font size.
 -   Unix: Use some dialog box to do the obvious settings (paper size, printer
     name, portrait/landscape, etc).
--   Unix: allow selecting a printer program or a file (with the name of the
-    file).
+-   PostScript: only works for 7-bit ASCII.
+-   PostScript: duplex is not supported.
 
 
 Syntax highlighting:
@@ -1284,8 +1286,6 @@ Security:
 
 
 Win32 GUI:
-8   Should make --remote work with OLE, just like it works for Unix.  Also
-    the other --server arguments and server...() functions.
 8   Make debug mode work while starting up (vim -D).  Open console window for
     the message and input?
 8   Add font argument to set the lfCharSet. (Bobcik)
@@ -1831,6 +1831,8 @@ Mappings and Abbreviations:
 8   Allow mapping of CTRL-@ (anywhere in the LHS).
 8   Give a warning when using CTRL-C in the lhs of a mapping.  It will never
     (?) work.
+7   ":verbose map" should display where a mapping was defined, like ":verbose
+    set".
 8   Add a way to save a current mapping and restore it later.  Use a function
     that returns the mapping command to restore it: mapcmd()?  mapcheck() is
     not fool proof.  How to handle ambigious mappings?
@@ -2155,8 +2157,6 @@ External commands:
 
 
 Multiple Windows:
-8   Diff mode: add a command like ":diffput" that only moves part of a diff
-    block.
 6   Add an option to resize the shell when splitting and/or closing a window.
     ":vsp" would make the shell wider by as many columns as needed for the new
     window.  Specify a maximum size (or use the screen size). ":close" would
@@ -2165,11 +2165,6 @@ Multiple Windows:
     communication between the different Vims.  Feels like one Vim running with
     multiple top-level windows.  Esp. useful when Vim is started from an IDE
     too.  Requires some form of inter process communication.
-7   Run Vim as a server, and let other started Vims send an edit command to
-    the server.  Consider patch from Brent Verner to add sockets interface?
-    ~/vim/patches/verner_socket.tgz
-    Or use the nedit way to communicate between a Vim server and client?
-    Flemming Madsen offered to work on this.
 -   Support a connection to an external viewer.  Could call the viewer
     automatically after some seconds of non-activity, or with a command.
     Allow some way of reporting scrolling and cursor positioning in the viewer
@@ -2342,10 +2337,6 @@ Various improvements:
     Also cursor-row highlighting.
 7   Highlight the characters after the end-of-line differently.
 7   When 'whichwrap' contains "l", "$dl" should join lines?
-7   Open a server socket (with an option for IP/port nr) to allow remote
-    control.  Optionally with a password to restrict access.
-    Use the Simple Sockets Library? (Campbell)
-    Same sample code (brent verner): http://linux1.org/misc/vim_socket.tar.bz2
 8   Include a connection to an external program through a pipe?  See patches
     from Felbinger for a mathematica inteface.
     Or use emacs server kind of thing?

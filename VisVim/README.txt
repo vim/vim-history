@@ -53,7 +53,8 @@ Installation
 2) Copy VisVim.dll into a convenient directory like \vim,
    \vim\lib, or \vim\addin
 
-3) Register the DLL using regsvr32.exe ... for example:
+3) Register the DLL using regsvr32.exe ...  (Skip this on Windows 95/98)
+   Example:
    > cd \vim\addin
    > regsvr32 VisVim.dll
    On NT, you should do this from an administrator account.

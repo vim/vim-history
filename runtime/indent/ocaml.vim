@@ -1,8 +1,8 @@
 " Vim indent file
 " Language:	OCaml
 " Maintainer:	Markus Mottl <markus@oefai.at>
-" Last Change:	2001 Jul 30
-"             	2001 July 17 - first release
+" Last Change:	2001 Aug 27
+"		2001 July 17 - first release
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")

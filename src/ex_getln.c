@@ -432,7 +432,7 @@ getcmdline(firstc, count, indent)
 	    if (ccline.cmdbuff[ccline.cmdpos - 1] == PATHSEP
 		    && c == K_DOWN
 		    && (ccline.cmdbuff[ccline.cmdpos - 2] != '.'
-		        || ccline.cmdbuff[ccline.cmdpos - 3] != '.'))
+			|| ccline.cmdbuff[ccline.cmdpos - 3] != '.'))
 	    {
 		/* go down a directory */
 		c = p_wc;
@@ -882,19 +882,21 @@ getcmdline(firstc, count, indent)
 		if (exmode_active)
 		    goto cmdline_not_changed;
 
-		gotesc = TRUE;	    /* will free ccline.cmdbuff after putting
-				       it in history */
-		goto returncmd;	    /* back to cmd mode */
+		gotesc = TRUE;		/* will free ccline.cmdbuff after
+					   putting it in history */
+		goto returncmd;		/* back to cmd mode */
 
-	case Ctrl_R:		    /* insert register */
+	case Ctrl_R:			/* insert register */
 #ifdef USE_ON_FLY_SCROLL
-		dont_scroll = TRUE; /* disallow scrolling here */
+		dont_scroll = TRUE;	/* disallow scrolling here */
 #endif
 		putcmdline('"', TRUE);
 		++no_mapping;
-		i = c = safe_vgetc(); /* CTRL-R <char> */
-		if (c == Ctrl_R)
-		    c = safe_vgetc(); /* CTRL-R CTRL-R <char> */
+		i = c = safe_vgetc();	/* CTRL-R <char> */
+		if (i == Ctrl_O)
+		    i = Ctrl_R;		/* CTRL-R CTRL-O == CTRL-R CTRL-R */
+		if (i == Ctrl_R)
+		    c = safe_vgetc();	/* CTRL-R CTRL-R <char> */
 		--no_mapping;
 #ifdef FEAT_EVAL
 		/*

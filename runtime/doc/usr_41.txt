@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0as.  Last change: 2001 Aug 19
+*usr_41.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -566,6 +566,8 @@ Working with text in the current buffer:
 	setline()		replace a line in the buffer
 	append()		append {string} below line {lnum}
 	indent()		indent of a specific line
+	cindent()		indent according to C indenting
+	lispindent()		indent according to Lisp indenting
 	nextnonblank()		find next non-blank line
 	prevnonblank()		find previous non-blank line
 	search()		find a match for a pattern
@@ -820,12 +822,12 @@ functions: >
 To see what a function does, use its name as an argument for ":function": >
 
 	:function Show
-<	1          :  echo "Show is " . a:start ~
-	2          :  let index = 1 ~
-	3          :  while index <= a:0 ~
-	4          :    execute 'echo "Arg " . index . " is " . a:' . index ~
-	5          :    let index = index + 1 ~
-	6          :  endwhile ~
+<	1	   :  echo "Show is " . a:start ~
+	2	   :  let index = 1 ~
+	3	   :  while index <= a:0 ~
+	4	   :	execute 'echo "Arg " . index . " is " . a:' . index ~
+	5	   :	let index = index + 1 ~
+	6	   :  endwhile ~
 	   endfunction ~
 
 
@@ -968,11 +970,11 @@ What this does: >
 <	ma			set mark a at cursor position
 	  "aY			yank current line into register a
 	     Hmb		go to top line in window and set mark b there
-	        gg		go to first line in file
-	          "aP		put the yanked line above it
-	             `b		go back to top line in display
+		gg		go to first line in file
+		  "aP		put the yanked line above it
+		     `b		go back to top line in display
 		       zt	position the text in the window as before
-		         `a	go back to saved cursor position
+			 `a	go back to saved cursor position
 
 
 PACKAGING
@@ -1189,7 +1191,12 @@ s:Add() in other places (the script itself, autocommands, user commands).
 
 We can also add a menu entry to do the same as the mapping: >
 
- 25	noremenu <script> Tools.Add\ Correction      <SID>Add
+ 25	noremenu <script> Plugin.Add\ Correction      <SID>Add
+
+The "Plugin" menu is recommended for adding menu items for plugins.  In this
+case only one item is used.  When adding more items, creating a submenu is
+recommended.  For example, "Plugin.CVS" could be used for a plugin that offers
+CVS operations "Plugin.CVS.checkin", "Plugin.CVS.checkout", etc.
 
 Note that in line 27 ":noremap" is used to avoid that any other mappings cause
 trouble.  Someone may have remapped ":call", for example.  In line 23 we also
@@ -1292,7 +1299,7 @@ Here is the resulting complete example: >
  22	endif
  23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
  24
- 25	noremenu <script> Tools.Add\ Correction      <SID>Add
+ 25	noremenu <script> Plugin.Add\ Correction      <SID>Add
  26
  27	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
  28

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0as.  Last change: 2001 Aug 19
+*eval.txt*      For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -740,6 +740,7 @@ bufnr( {expr})			Number	Number of the buffer {expr}
 bufwinnr( {expr})		Number	window number of buffer {expr}
 byte2line( {byte})		Number	line number at byte count {byte}
 char2nr( {expr})		Number	ASCII value of first char in {expr}
+cindent( {lnum})		Number  C indent for line {lnum}
 col( {expr})			Number	column nr of cursor or mark
 confirm( {msg}, {choices} [, {default} [, {type}]])
 				Number	number of choice picked by user
@@ -787,6 +788,7 @@ libcall( {lib}, {func}, {arg})	String  call {func} in library {lib} with {arg}
 libcallnr( {lib}, {func}, {arg})  Number  idem, but return a Number
 line( {expr})			Number	line nr of cursor, last line or mark
 line2byte( {lnum})		Number	byte count of line {lnum}
+lispindent( {lnum})		Number  Lisp indent for line {lnum}
 localtime()			Number	current time
 maparg( {name}[, {mode}])	String	rhs of mapping {name} in mode {mode}
 mapcheck( {name}[, {mode}])	String	check for mappings matching {name}
@@ -967,6 +969,14 @@ char2nr({expr})						*char2nr()*
 			char2nr(" ")		returns 32
 			char2nr("ABC")		returns 65
 <
+cindent({lnum})						*cindent()*
+		Get the amount of indent for line {lnum} according the C
+		indenting rules, as with 'cindent'.
+		The indent is counted in spaces, the value of 'tabstop' is
+		relevant.  {lnum} is used just like in |getline()|.
+		When {lnum} is invalid or Vim was not compiled the |+cindent|
+		feature, -1 is returned.
+
 							*col()*
 col({expr})	The result is a Number, which is the column of the file
 		position given with {expr}.  The accepted positions are:
@@ -1707,6 +1717,14 @@ line2byte({lnum})					*line2byte()*
 		disabled at compile time, -1 is returned.
 		Also see |byte2line()|, |go| and |:goto|.
 
+lispindent({lnum})					*lispindent()*
+		Get the amount of indent for line {lnum} according the lisp
+		indenting rules, as with 'lisp'.
+		The indent is counted in spaces, the value of 'tabstop' is
+		relevant.  {lnum} is used just like in |getline()|.
+		When {lnum} is invalid or Vim was not compiled the
+		|+lispindent| feature, -1 is returned.
+
 localtime()						*localtime()*
 		Return the current time, measured as seconds since 1st Jan
 		1970.  See also |strftime()| and |getftime()|.
@@ -1870,14 +1888,14 @@ remote_peek({serverid} [, {retvar}])		*remote_peek()*
 
 remote_read({serverid})				*remote_read()*
 		Return the oldest available reply from {serverid} and consume
-		it.
+		it.  It blocks until a reply is available.
 		See also |clientserver|.
 		{only available when compiled with the |+clientserver| feature}
 		Examples: >
 			:echo remote_read(id)
 <
 							*remote_send()* *E241*
-remote_send({server}, {string} [, {idvar}]) 
+remote_send({server}, {string} [, {idvar}])
 		Send the {string} to {server}.  The string is sent as
 		input keys and the function returns immediately.
 		If {idvar} is present, it is taken as the name of a

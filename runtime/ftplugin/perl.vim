@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Perl
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Tue, 31 Jul 2001 14:00:43 Eastern Daylight Time
+" Last Change:	Tue, 21 Aug 2001 16:54:23 
 " Current version is at http://sites.netscape.net/sharppeople/vim/scripts
 
 if exists("b:did_ftplugin") | finish | endif
@@ -22,7 +22,7 @@ if has("gui_win32") && !exists("b:browsefilter")
 endif
 
 " Provided by Ned Konz <ned@bike-nomad.com>
----------------------------------------------
+"---------------------------------------------
 setlocal include=\\<\\(use\|require\\)\\s*
 setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.pm','')
 setlocal isfname=A-Z,a-z,:,48-57,_
@@ -30,5 +30,11 @@ setlocal keywordprg=perldoc
 setlocal iskeyword=48-57,_,A-Z,a-z,:
 setlocal isident=48-57,_,A-Z,a-z
 setlocal define=[^A-Za-z_]
-let &path=system('perl -e "print join(\",\",@INC)"')
 
+" Set this once, globally.
+if !exists("perlpath")
+  let perlpath = system('perl -e "print join(q/,/,@INC)"')
+  let perlpath = substitute(perlpath,',.$',',,','')
+endif
+
+let &l:path=perlpath

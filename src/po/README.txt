@@ -20,6 +20,20 @@ environment variables.  When you use the Makefile in this directory that will
 be done for you.  This does NOT work with gettext 0.10.36.  Don't use it.
 
 
+ON MS-WINDOWS
+
+The distributed files are generated on Unix, but this should also be possible
+on MS-Windows.  Download the gettext packages, for example from:
+
+	http://sourceforge.net/projects/gettext
+
+You might have to do the commands manually.  Example:
+
+   cd c:\vim\vim60
+   mkdir runtime\lang\ja\LC_MESSAGES
+   msgfmt -o runtime\lang\ja\LC_MESSAGES\vim.mo src\po\ja.po
+
+
 WHEN THERE IS A MISTAKE
 
 If you find there is a mistake in one of the translations, please report this
@@ -35,22 +49,29 @@ will use "xx.po" as an example here, replace "xx" with the name of your
 language.
 
 (1) Add new and changed messages from the Vim sources:
+
 	make xx
+
     This will extract all the strings from Vim and merge them in with the
-    existing translations.  Requires the GNU gettext utilities.  Once you do
-    this, you MUST do the next three steps!
+    existing translations.  Requires the GNU gettext utilities.  Also requires
+    unpacking the extra archive.
+    Your original xx.po file will be copied to xx.po.orig
+
+    -- After you do this, you MUST do the next three steps! --
 
 (2) Translate
     See the gettext documentation on how to do this.  You can also find
     examples in the other po files.
     Search the po file for items that require translation:
+
 	/fuzzy\|^msgstr ""\(\n"\)\@!
+
     Remove the "#, fuzzy" line after adding the translation.
 
     There is one special message:
 	msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
     You should include your name and E-mail address instead, for example:
-	msgstr "Berichten übersetzt bei: Johannes Zellner <johannes@zellner.org>"
+	msgstr "Berichten übersetzt bei: John Doe <john@doe.org>"
 
 (3) Clean up
     This is very important to make sure the translation works on all systems.
@@ -58,10 +79,14 @@ language.
     - items marked with "#, fuzzy"
     - items with an empty msgstr
     You can do this with the cleanup.vim script:
+
 	:source cleanup.vim
+
     Background: on Solaris an empty msgstr results in an empty message; GNU
     gettext ignores empty strings and items marked with "#, fuzzy".
 
 (4) Check:
+
 	make xx.mo
-    This checks for syntax errors.
+
+    Look out for syntax errors and fix them.

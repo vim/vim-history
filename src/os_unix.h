@@ -432,10 +432,10 @@ typedef struct dsc$descriptor   DESC;
 # endif
 #else
 # ifndef DFLT_MAXMEM
-#  define DFLT_MAXMEM   (5*1024)         /* use up to 5 Mbyte for a buffer */
+#  define DFLT_MAXMEM	(5*1024)	 /* use up to 5 Mbyte for a buffer */
 # endif
 # ifndef DFLT_MAXMEMTOT
-#  define DFLT_MAXMEMTOT        (10*1024)    /* use up to 10 Mbyte for Vim */
+#  define DFLT_MAXMEMTOT	(10*1024)    /* use up to 10 Mbyte for Vim */
 # endif
 #endif
 
@@ -515,7 +515,7 @@ int mch_rename __ARGS((const char *src, const char *dest));
 # endif
 #endif
 
-#define HAVE_DUP                /* have dup() */
+#define HAVE_DUP		/* have dup() */
 #define HAVE_ST_MODE		/* have stat.st_mode */
 
 /* We have three kinds of ACL support. */

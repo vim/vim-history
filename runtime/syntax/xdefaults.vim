@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	Don, 03 Mai 2001 09:57:15 +0200
+" Last Change:	Mon, 27 Aug 2001 00:07:39 +0200
 " URL:		http://www.zellner.org/vim/syntax/xdefaults.vim
 " $Id$
 "
@@ -136,6 +136,7 @@ if version >= 508 || !exists("did_xdefaults_syntax_inits")
   HiLink xdefaultsCommentError	Error
   HiLink xdefaultsPunct		Normal
   HiLink xdefaultsLineEnd	Special
+  HiLink xdefaultsTodo		Todo
 
   delcommand HiLink
 endif

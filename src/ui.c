@@ -425,19 +425,19 @@ clip_own_selection(cbd)
      */
     if (!cbd->owned && cbd->available)
     {
-        cbd->owned = (clip_gen_own_selection(cbd) == OK);
+	cbd->owned = (clip_gen_own_selection(cbd) == OK);
 #ifdef FEAT_X11
-        if (cbd == &clip_star)
-        {
-            /* May have to show a different kind of highlighting for the selected
-             * area.  There is no specific redraw command for this, just redraw
-             * all windows on the current buffer. */
-            if (cbd->owned
-                    && get_real_state() == VISUAL
-                    && clip_isautosel()
-                    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
-                redraw_curbuf_later(INVERTED_ALL);
-        }
+	if (cbd == &clip_star)
+	{
+	    /* May have to show a different kind of highlighting for the selected
+	     * area.  There is no specific redraw command for this, just redraw
+	     * all windows on the current buffer. */
+	    if (cbd->owned
+		    && get_real_state() == VISUAL
+		    && clip_isautosel()
+		    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
+		redraw_curbuf_later(INVERTED_ALL);
+	}
 #endif
     }
 }
@@ -454,24 +454,24 @@ clip_lose_selection(cbd)
     clip_free_selection(cbd);
     cbd->owned = FALSE;
     if (visual_selection)
-        clip_clear_selection();
+	clip_clear_selection();
     clip_gen_lose_selection(cbd);
 #ifdef FEAT_X11
     if (visual_selection)
     {
-        /* May have to show a different kind of highlighting for the selected
-         * area.  There is no specific redraw command for this, just redraw all
-         * windows on the current buffer. */
-        if (was_owned
-                && get_real_state() == VISUAL
-                && clip_isautosel()
-                && hl_attr(HLF_V) != hl_attr(HLF_VNC))
-        {
-            update_curbuf(INVERTED_ALL);
-            setcursor();
-            cursor_on();
-            out_flush();
-        }
+	/* May have to show a different kind of highlighting for the selected
+	 * area.  There is no specific redraw command for this, just redraw all
+	 * windows on the current buffer. */
+	if (was_owned
+		&& get_real_state() == VISUAL
+		&& clip_isautosel()
+		&& hl_attr(HLF_V) != hl_attr(HLF_VNC))
+	{
+	    update_curbuf(INVERTED_ALL);
+	    setcursor();
+	    cursor_on();
+	    out_flush();
+	}
     }
 #endif
 }
@@ -1430,9 +1430,13 @@ clip_gen_request_selection(cbd)
  * For Unix, the input characters are buffered to be able to check for a
  * CTRL-C.  This should be done with signals, but I don't know how to do that
  * in a portable way for a tty in RAW mode.
+ *
+ * For the client-server code in the console the received keys are put in the
+ * input buffer.
  */
 
-#if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS)
+#if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS) \
+	|| defined(FEAT_CLIENTSERVER) || defined(PROTO)
 
 /*
  * Internal typeahead buffer.  Includes extra space for long key code
@@ -1447,7 +1451,6 @@ clip_gen_request_selection(cbd)
     * Sun WorkShop stuffs debugger commands into the input buffer. This requires
     * a larger buffer...
     * (Madsen) Go with this for remote input as well ...
-    * (Moore) Win32 does remote input, so use it here too ...
     */
 #  define INBUFLEN 4096
 # else
@@ -1494,7 +1497,7 @@ vim_used_in_input_buf()
 
 #if defined(FEAT_GUI) || defined(FEAT_MOUSE_GPM) \
 	|| defined(FEAT_XCLIPBOARD) || defined(VMS) \
-	|| defined(FEAT_SNIFF) || defined(PROTO)
+	|| defined(FEAT_SNIFF) || defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * Add the given bytes to the input buffer
  * Special keys start with CSI.  A real CSI must have been translated to
@@ -1781,9 +1784,9 @@ static Atom	targets_atom;
 x11_setup_atoms(dpy)
     Display	*dpy;
 {
-    vim_atom           = XInternAtom(dpy, VIM_ATOM_NAME,   False);
+    vim_atom	       = XInternAtom(dpy, VIM_ATOM_NAME,   False);
     compound_text_atom = XInternAtom(dpy, "COMPOUND_TEXT", False);
-    text_atom          = XInternAtom(dpy, "TEXT",          False);
+    text_atom	       = XInternAtom(dpy, "TEXT",	   False);
     targets_atom       = XInternAtom(dpy, "TARGETS",       False);
     clip_star.sel_atom = XA_PRIMARY;
     clip_plus.sel_atom = XInternAtom(dpy, "CLIPBOARD",     False);
@@ -1816,7 +1819,7 @@ clip_x11_request_selection_cb(w, success, sel_atom, type, value, length,
     if (*sel_atom == clip_plus.sel_atom)
 	cbd = &clip_plus;
     else
-        cbd = &clip_star;
+	cbd = &clip_star;
 
     if (value == NULL || *length == 0)
     {
@@ -1919,11 +1922,11 @@ clip_x11_request_selection(myShell, dpy, cbd)
     buffer = (char_u *)XFetchBuffer(dpy, &nbytes, 0);
     if (nbytes > 0)
     {
-        /* Got something */
-        clip_yank_selection(MCHAR, buffer, (long)nbytes, cbd);
-        XFree((void *)buffer);
-        if (p_verbose > 0)
-            smsg((char_u *)_("Used CUT_BUFFER0 instead of empty selection") );
+	/* Got something */
+	clip_yank_selection(MCHAR, buffer, (long)nbytes, cbd);
+	XFree((void *)buffer);
+	if (p_verbose > 0)
+	    smsg((char_u *)_("Used CUT_BUFFER0 instead of empty selection") );
     }
 }
 
@@ -1948,7 +1951,7 @@ clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
     if (*sel_atom == clip_plus.sel_atom)
 	cbd = &clip_plus;
     else
-        cbd = &clip_star;
+	cbd = &clip_star;
 
     if (!cbd->owned)
 	return False;	    /* Shouldn't ever happen */
@@ -2037,9 +2040,9 @@ clip_x11_lose_ownership_cb(w, sel_atom)
     Atom    *sel_atom;
 {
     if (*sel_atom == clip_plus.sel_atom)
-        clip_lose_selection(&clip_plus);
+	clip_lose_selection(&clip_plus);
     else
-        clip_lose_selection(&clip_star);
+	clip_lose_selection(&clip_star);
 }
 
     void

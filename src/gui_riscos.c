@@ -2802,33 +2802,13 @@ gui_mch_start_blink(void)
 }
 
 /*
- * Return the lightness of a pixel.  White is 255.
- * Uses CIE luminance weights as given in the ChangeFSI help file.
+ * Return the RGB value of a pixel as a long.
  */
-    int
-gui_mch_get_lightness(guicolor_T pixel)
-{
-    int red   = (pixel >> 16) & 0xff;
-    int green = (pixel >> 8)  & 0xff;
-    int blue  = (pixel)       & 0xff;
-    return ((red * 299) + (green * 587) + (blue * 114)) / 1000;
-}
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as "#RRGGBB".
- */
-    char_u *
+    long_u
 gui_mch_get_rgb(guicolor_T pixel)
 {
-    static char_u retval[10];
-    sprintf((char *)retval, "#%02x%02x%02x",
-	    (unsigned) ((pixel)       & 0xff),
-	    (unsigned) ((pixel >> 8)  & 0xff),
-	    (unsigned) ((pixel >> 16) & 0xff));
-    return retval;
+    return (long_u)pixel;
 }
-#endif
 
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)

@@ -3,15 +3,15 @@
 " Filenames:     *.dot
 " Maintainer:    Markus Mottl  mottl@miss.wu-wien.ac.at
 " URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/dot.vim
-" Last Change:   2001 May 04 - initial version
+" Last Change:   2001 Aug 27
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
-if version < 600                                             
-  syntax clear                                               
-elseif exists("b:current_syntax")                            
-  finish                                                     
-endif                                                        
+if version < 600
+  syntax clear
+elseif exists("b:current_syntax")
+  finish
+endif
 
 " Errors
 syn match    dotParErr     ")"
@@ -72,14 +72,14 @@ syn match    dotIdentifier /\<\w\+\>/
 syn sync minlines=50
 syn sync maxlines=500
 
-" Define the default highlighting.                                          
-" For version 5.7 and earlier: only when not done already                   
+" Define the default highlighting.
+" For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_dot_syntax_inits")
-  if version < 508                            
-    let did_dot_syntax_inits = 1                   
-    command -nargs=+ HiLink hi link <args>    
-  else                                        
+  if version < 508
+    let did_dot_syntax_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
     command -nargs=+ HiLink hi def link <args>
   endif
 

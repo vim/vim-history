@@ -246,14 +246,14 @@ diff_mark_adjust(line1, line2, amount, amount_after)
 
 	/*
 	 * Check for these situations:
-	 *        1  2  3
-	 *        1  2  3
-	 * line1     2  3  4  5
-	 *           2  3  4  5
-	 *           2  3  4  5
-	 * line2     2  3  4  5
-	 *              3     5  6
-	 *              3     5  6
+	 *	  1  2	3
+	 *	  1  2	3
+	 * line1     2	3  4  5
+	 *	     2	3  4  5
+	 *	     2	3  4  5
+	 * line2     2	3  4  5
+	 *		3     5  6
+	 *		3     5  6
 	 */
 	/* compute last line of this change */
 	last = dp->df_lnum[idx] + dp->df_count[idx] - 1;
@@ -521,7 +521,7 @@ diff_check_sanity(dp)
 
     for (i = 0; i < DB_COUNT; ++i)
 	if (diffbuf[i] != NULL)
-	    if (dp->df_lnum[i] + dp->df_count[i]
+	    if (dp->df_lnum[i] + dp->df_count[i] - 1
 					     > diffbuf[i]->b_ml.ml_line_count)
 		return FAIL;
     return OK;
@@ -728,6 +728,7 @@ ex_diffpatch(eap)
     char_u	*newname = NULL;	/* name of patched file buffer */
 #ifdef UNIX
     char_u	dirbuf[MAXPATHL];
+    char_u	*fullname = NULL;
 #endif
 #ifdef FEAT_BROWSE
     char_u	*browseFile = NULL;
@@ -756,8 +757,15 @@ ex_diffpatch(eap)
 				     NULL, FALSE, FALSE, FALSE, TRUE) == FAIL)
 	goto theend;
 
-    buf = alloc((unsigned)(STRLEN(tmp_orig) + STRLEN(eap->arg)
-						     + STRLEN(tmp_new) + 14));
+#ifdef UNIX
+    /* Get the absolute path of the patchfile, changing directory below. */
+    fullname = FullName_save(eap->arg, FALSE);
+#endif
+    buf = alloc((unsigned)(STRLEN(tmp_orig) + (
+# ifdef UNIX
+		    fullname != NULL ? STRLEN(fullname) :
+# endif
+		    STRLEN(eap->arg)) + STRLEN(tmp_new) + 16));
     if (buf == NULL)
 	goto theend;
 
@@ -783,14 +791,21 @@ ex_diffpatch(eap)
 #ifdef FEAT_EVAL
     if (*p_pex != NUL)
 	/* Use 'patchexpr' to generate the new file. */
-	eval_patch(tmp_orig, eap->arg, tmp_new);
+	eval_patch(tmp_orig,
+# ifdef UNIX
+		fullname != NULL ? fullname :
+# endif
+		eap->arg, tmp_new);
     else
 #endif
     {
 	/* Build the patch command and execute it.  Ignore errors.  Switch to
 	 * cooked mode to allow the user to respond to prompts. */
-	sprintf((char *)buf, "patch -o %s %s < \"%s\"",
-		tmp_new, tmp_orig, eap->arg);
+	sprintf((char *)buf, "patch -o %s %s < \"%s\"", tmp_new, tmp_orig,
+# ifdef UNIX
+		fullname != NULL ? fullname :
+# endif
+		eap->arg);
 	(void)call_shell(buf, SHELL_FILTER | SHELL_COOKED);
     }
 
@@ -860,6 +875,9 @@ theend:
     vim_free(tmp_new);
     vim_free(newname);
     vim_free(buf);
+#ifdef UNIX
+    vim_free(fullname);
+#endif
 #ifdef FEAT_BROWSE
     vim_free(browseFile);
 #endif
@@ -1520,8 +1538,9 @@ diffopt_changed()
 
 /*
  * Find the difference within a changed line.
+ * Returns TRUE if the line was added, no other buffer has it.
  */
-    void
+    int
 diff_find_change(wp, lnum, startp, endp)
     win_T	*wp;
     linenr_T	lnum;
@@ -1535,22 +1554,23 @@ diff_find_change(wp, lnum, startp, endp)
     diff_T	*dp;
     int		idx;
     int		off;
+    int		added = TRUE;
 
     /* Make a copy of the line, the next ml_get() will invalidate it. */
     line_org = vim_strsave(ml_get_buf(wp->w_buffer, lnum, FALSE));
     if (line_org == NULL)
-	return;
+	return FALSE;
 
     idx = diff_buf_idx(wp->w_buffer);
     if (idx == DB_COUNT)	/* cannot happen */
-	return;
+	return FALSE;
 
     /* search for a change that includes "lnum" in the list of diffblocks. */
     for (dp = first_diff; dp != NULL; dp = dp->df_next)
 	if (lnum <= dp->df_lnum[idx] + dp->df_count[idx])
 	    break;
     if (dp == NULL || diff_check_sanity(dp) == FAIL)
-	return;
+	return FALSE;
 
     off = lnum - dp->df_lnum[idx];
 
@@ -1560,6 +1580,7 @@ diff_find_change(wp, lnum, startp, endp)
 	    /* Skip lines that are not in the other change (filler lines). */
 	    if (off >= dp->df_count[i])
 		continue;
+	    added = FALSE;
 	    line_new = ml_get_buf(diffbuf[i], dp->df_lnum[i] + off, FALSE);
 
 	    /* Search for start of difference */
@@ -1586,6 +1607,7 @@ diff_find_change(wp, lnum, startp, endp)
 	}
 
     vim_free(line_org);
+    return added;
 }
 
 #if defined(FEAT_FOLDING) || defined(PROTO)
@@ -1847,7 +1869,7 @@ ex_diffgetput(eap)
 	    /* Adjust marks.  This will change the following entries! */
 	    if (added != 0)
 	    {
-		mark_adjust(lnum, lnum + count, (long)MAXLNUM, (long)added);
+		mark_adjust(lnum, lnum + count - 1, (long)MAXLNUM, (long)added);
 		if (curwin->w_cursor.lnum >= lnum)
 		{
 		    /* Adjust the cursor position if it's in/after the changed
@@ -1887,7 +1909,14 @@ ex_diffgetput(eap)
 
     /* restore curwin/curbuf and a few other things */
     if (idx_other == idx_to)
+    {
+	/* Syncing undo only works for the current buffer, but we change
+	 * another buffer.  Sync undo if the command was typed.  This isn't
+	 * 100% right when ":diffput" is used in a function or mapping. */
+	if (KeyTyped)
+	    u_sync();
 	aucmd_restbuf(&aco);
+    }
 
     diff_busy = FALSE;
 
@@ -1932,4 +1961,54 @@ diff_mode_buf(buf)
     return diff_buf_idx(buf) != DB_COUNT;
 }
 
+/*
+ * Move "count" times in direction "dir" to the next diff block.
+ * Return FAIL if there isn't such a diff block.
+ */
+    int
+diff_move_to(dir, count)
+    int		dir;
+    long	count;
+{
+    int		idx;
+    linenr_T	lnum = curwin->w_cursor.lnum;
+    diff_T	*dp;
+
+    idx = diff_buf_idx(curbuf);
+    if (idx == DB_COUNT || first_diff == NULL)
+	return FAIL;
+
+    if (diff_invalid)
+	ex_diffupdate(NULL);		/* update after a big change */
+
+    if (first_diff == NULL)		/* no diffs today */
+	return FAIL;
+
+    while (--count >= 0)
+    {
+	/* Check if already before first diff. */
+	if (dir == BACKWARD && lnum <= first_diff->df_lnum[idx])
+	    return FAIL;
+
+	for (dp = first_diff; ; dp = dp->df_next)
+	{
+	    if (dp == NULL)
+		return FAIL;
+	    if ((dir == FORWARD && lnum < dp->df_lnum[idx])
+		    || (dir == BACKWARD
+			&& (dp->df_next == NULL
+			    || lnum <= dp->df_next->df_lnum[idx])))
+	    {
+		lnum = dp->df_lnum[idx];
+		break;
+	    }
+	}
+    }
+
+    setpcmark();
+    curwin->w_cursor.lnum = lnum;
+    curwin->w_cursor.col = 0;
+
+    return OK;
+}
 #endif	/* FEAT_DIFF */

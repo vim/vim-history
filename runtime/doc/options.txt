@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0as.  Last change: 2001 Aug 19
+*options.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -242,14 +242,14 @@ You will not get back the 'list' value as it was the last time you edited
 
 							*:setl* *:setlocal*
 :setl[ocal] ...		Like ":set" but set only the value local to the
-			current buffer or window.
+			current buffer or window (if there is one).
 			With the "all" argument: display all local option's
 			local values.
-			Without argument: display all local option's local
+			Without argument: Display all local option's local
 			values which are different from the default.
 			When displaying a specific local option, show the
 			local value.  For a global option the global value is
-			shown.
+			shown (but that might change in the future).
 			{not in Vi}
 
 :setl[ocal] {option}<	Set the local value of {option} to its global value.
@@ -299,6 +299,8 @@ This only works for a string option.  For a boolean option you need to use the
 Note that for non-boolean options using "<" copies the global value to the
 local value, it doesn't switch back to using the global value (that matters
 when changing the global value later).
+Note: In the future more global options can be made global-local.  Using
+":setlocal" on a global option might work differently then.
 
 
 Setting the filetype
@@ -2625,7 +2627,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 		The same applies to the modeless selection.
 
 	  'A'	Autoselect for the modeless selection.  Like 'a', but only
-	  	applies to the modeless selection.
+		applies to the modeless selection.
 
 		    'guioptions'   autoselect Visual  autoselect modeless ~
 			 ""		 -			 -
@@ -3024,6 +3026,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The expression must return the number of spaces worth of indent.  It
 	can return "-1" to keep the current indent (this means 'autoindent' is
 	used for the indent).
+	Functions useful for computing the indent are |indent()|, |cindent()|
+	and |lispindent()|.
 	The evaluation of the expression must not have side effects!  It must
 	not change the text, jump to another window, etc.  Afterwards the
 	cursor position is always restored, thus the cursor may be moved.
@@ -4032,10 +4036,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The file name to be printed is in |v:fname_in|.
 	The arguments to the ":hardcopy" command are in |v:cmdarg|.
 	The expression must take care of deleting the file after printing it.
-	The default simply uses "lpr" to print the file: >
+	The default for non MS-Windows machines is to simply use "lpr" to
+	print the file: >
 
 	    system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice)
-	    		. ' ' . v:fname_in) . delete(v:fname_in)
+			. ' ' . v:fname_in) . delete(v:fname_in)
+<
+	On MS-Windows machines the default is to copy the file to the
+	currently specified printdevice: >
+
+	    system('copy' . ' ' . v:fname_in . ' ' &printdevice)
+			. delete(v:fname_in)
 <
 	If you change this option, using a function is an easy way to avoid
 	having to escape all the spaces.  Example: >
@@ -4098,7 +4109,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 				when {nr} is 2 there is one empty line.  The
 				header is formatted according to
 				'printheader'.
-	  header:0  		Do not print a header.
+	  header:0		Do not print a header.
 	  header:2  (default)	Use two lines for the header
 
 	  syntax:n		Do not use syntax highlighting.  This is
@@ -4122,6 +4133,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	  collate:y  (default)	Collating: 1 2 3, 1 2 3, 1 2 3
 	  collate:n		No collating: 1 1 1, 2 2 2, 3 3 3
+
+	  jobsplit:n (default)	Do all copies in one print job
+	  jobsplit:y		Do each copy as a separate print job.  Useful
+				when doing N-up postprocessing.
 
 	  portrait:y (default)	Orientation is portrait.
 	  portrait:n		Orientation is landscape.

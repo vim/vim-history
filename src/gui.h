@@ -317,16 +317,14 @@ typedef struct Gui
     guicolor_T	def_norm_pixel;	    /* default Color of normal text */
 
 #ifdef FEAT_GUI_X11
-    char	*menu_fg_color;	    /* Color of menu and dialog foregound */
-    guicolor_T	menu_fg_pixel;	    /* Same in Pixel format */
-    char	*menu_bg_color;	    /* Color of menu and dialog backgound */
-    guicolor_T	menu_bg_pixel;	    /* Same in Pixel format */
-    char	*scroll_fg_color;   /* Color of scrollbar foreground */
-    guicolor_T	scroll_fg_pixel;    /* Same in Pixel format */
-    char	*scroll_bg_color;   /* Color of scrollbar background */
-    guicolor_T	scroll_bg_pixel;    /* Same in Pixel format */
-    char	*tooltip_fg_color;  /* Color of tooltip foreground */
-    char	*tooltip_bg_color;  /* Color of tooltip background */
+    char	*rsrc_menu_fg_name;	/* Color of menu and dialog foregound */
+    guicolor_T	menu_fg_pixel;		/* Same in Pixel format */
+    char	*rsrc_menu_bg_name;	/* Color of menu and dialog backgound */
+    guicolor_T	menu_bg_pixel;		/* Same in Pixel format */
+    char	*rsrc_scroll_fg_name;	/* Color of scrollbar foreground */
+    guicolor_T	scroll_fg_pixel;	/* Same in Pixel format */
+    char	*rsrc_scroll_bg_name;	/* Color of scrollbar background */
+    guicolor_T	scroll_bg_pixel;	/* Same in Pixel format */
 
 # ifdef FEAT_GUI_MOTIF
     guicolor_T	menu_def_fg_pixel;  /* Default menu foreground */
@@ -343,14 +341,15 @@ typedef struct Gui
     Cursor	blank_pointer;	    /* Blank pointer */
 
     /* X Resources */
-    char_u	*dflt_font;	    /* Resource font name, used if 'guifont'
+    char_u	*rsrc_font_name;    /* Resource font name, used if 'guifont'
 				       not set */
-    char_u	*dflt_bold_fn;	    /* Resource bold font name */
-    char_u	*dflt_ital_fn;	    /* Resource italic font name */
-    char_u	*dflt_boldital_fn;  /* Resource bold-italic font name */
-    char_u	*tooltip_font;	    /* Resource tooltip Font name */
+    char_u	*rsrc_bold_font_name; /* Resource bold font name */
+    char_u	*rsrc_ital_font_name; /* Resource italic font name */
+    char_u	*rsrc_boldital_font_name;  /* Resource bold-italic font name */
+    char_u	*rsrc_menu_font_name;    /* Resource menu Font name */
+    Bool	rsrc_rev_video;	    /* Use reverse video? */
+
     char_u	*geom;		    /* Geometry, eg "80x24" */
-    Bool	rev_video;	    /* Use reverse video? */
     Bool	color_approx;	    /* Some color was approximated */
 #endif
 
@@ -361,7 +360,6 @@ typedef struct Gui
 
     /* X Resources */
     char_u	*geom;		    /* Geometry, eg "80x24" */
-    Bool	rev_video;	    /* Use reverse video? */
 
     GtkWidget	*mainwin;	    /* top level GTK window */
     GtkWidget	*formwin;	    /* manages all the windows below */
@@ -400,9 +398,13 @@ typedef struct Gui
 #endif
 
 #ifdef FEAT_BEVAL
-    guicolor_T	balloonEval_fg_pixel;/* foreground color of balloon eval win */
-    guicolor_T	balloonEval_bg_pixel;/* background color of balloon eval win */
-    XFontSet	balloonEval_fontset;/* balloon evaluation fontset */
+    /* Tooltip properties; also used for balloon evaluation */
+    char_u	*rsrc_tooltip_font_name; /* tooltip font name */
+    char	*rsrc_tooltip_fg_name;	/* tooltip foreground color name */
+    char	*rsrc_tooltip_bg_name;	/* tooltip background color name */
+    guicolor_T	tooltip_fg_pixel;	/* tooltip foreground color */
+    guicolor_T	tooltip_bg_pixel;	/* tooltip background color */
+    XFontSet	tooltip_fontset;	/* tooltip fontset */
 #endif
 
 #ifdef FEAT_GUI_MSWIN
@@ -424,23 +426,8 @@ typedef struct Gui
     MenuHandle	MacOSHelpMenu;	    /* Help menu provided by the MacOS */
     int		MacOSHelpItems;	    /* Nr of help-items supplied by MacOS */
     int		MacOSHaveCntxMenu;  /* Contextual menu available */
-    guicolor_T	menu_fg_pixel;	    /* Color of menu and dialog foregound */
-    guicolor_T	menu_bg_pixel;	    /* Color of menu and dialog backgound */
-    guicolor_T	scroll_fg_pixel;    /* Color of scrollbar foregrnd */
-    guicolor_T	scroll_bg_pixel;    /* Color of scrollbar backgrnd */
     WindowPtr	wid;		    /* Window id of text area */
     int		visibility;	    /* Is window partially/fully obscured? */
-    /*	GC			text_gc;
-	GC			back_gc;
-	GC			invert_gc;
-     */
-    char_u	*dflt_font;		/* Resource font, used if 'guifont' not
-					   set */
-    char_u	*dflt_bold_fn;		/* Resource bold font */
-    char_u	*dflt_ital_fn;		/* Resource italic font */
-    char_u	*dflt_boldital_fn;	/* Resource bold-italic font */
-    char_u	*geom;			/* Geometry, eg "80x24" */
-    char_u	rev_video;		/* Use reverse video? */
 #endif
 
 #if defined(FEAT_GUI_AMIGA)
@@ -475,9 +462,8 @@ typedef struct Gui
 #endif
 
 #ifdef FEAT_XIM
-    char	*input_method;
-    char	*preedit_type;
-    Boolean	open_im;
+    char	*rsrc_input_method;
+    char	*rsrc_preedit_type_name;
 #endif
 } gui_T;
 

@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0as.  Last change: 2001 Aug 05
+*usr_05.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -128,13 +128,13 @@ type the character to find and "2f" is displayed.  When you press "w" next,
 the "2fw" command is executed and the displayed "2f" is removed.
 
 	+-------------------------------------------------+
-	|text in the Vim window                           |
-	|~                                                |
-	|~                                                |
-	|-- VISUAL --                   2f     43,8   17% |
+	|text in the Vim window				  |
+	|~						  |
+	|~						  |
+	|-- VISUAL --			2f     43,8   17% |
 	+-------------------------------------------------+
-	 ^^^^^^^^^^^                  ^^^^^^^^ ^^^^^^^^^^
-	  'showmode'                 'showcmd'  'ruler'
+	 ^^^^^^^^^^^		      ^^^^^^^^ ^^^^^^^^^^
+	  'showmode'		     'showcmd'	'ruler'
 
 >
 	set incsearch

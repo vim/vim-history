@@ -229,7 +229,7 @@ gui_init_check()
     gui.footer_height = 0;
 #endif
 #ifdef FEAT_BEVAL
-    gui.balloonEval_fontset = NOFONTSET;
+    gui.tooltip_fontset = NOFONTSET;
 #endif
 
     gui.scrollbar_width = gui.scrollbar_height = SB_DEFAULT_WIDTH;
@@ -3634,6 +3634,20 @@ gui_set_bg_color(name)
     hl_set_bg_color_name(vim_strsave(name));
 }
 
+/*
+ * Return the grey value of a color (range 0-255).
+ */
+    int
+gui_get_lightness(pixel)
+    guicolor_T	pixel;
+{
+    long_u	rgb = gui_mch_get_rgb(pixel);
+
+    return (  (((rgb >> 16) & 0xff) * 299)
+	    + (((rgb >> 8)  & 0xff) * 587)
+	    +  ((rgb	    & 0xff) * 114)) / 1000;
+}
+
 #if defined(FEAT_GUI_X11) || defined(PROTO)
     void
 gui_new_scrollbar_colors()
@@ -3914,14 +3928,15 @@ display_errors()
 /*
  * Return TRUE if still starting up and there is no place to enter text.
  * For GTK and X11 we check if stderr is not a tty, which means we were
- * (probably) started from the desktop.
+ * (probably) started from the desktop.  Also check stdin, "vim >& file" does
+ * allow typing on stdin.
  */
     int
 no_console_input()
 {
     return ((!gui.in_use || gui.starting)
 # ifndef NO_CONSOLE
-	    && !isatty(2)
+	    && !isatty(0) && !isatty(2)
 # endif
 	    );
 }

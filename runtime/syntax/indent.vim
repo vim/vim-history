@@ -1,6 +1,7 @@
 "  vim: set sw=4 sts=4:
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Tue, 24 Jul 2001 18:56:15 CEST
+"  URL		: http://www.pcppopper.org/
+"  Revised on	: Wed, 22 Aug 2001 20:48:04 +0200
 "  TODO		: is the deny-all (a la lilo.vim nice or no?)...
 "		: irritating to be wrong to the last char...
 "		: would be sweet if right until one char fails
@@ -32,9 +33,7 @@ syn region  indentComment matchgroup=indentComment start="/\*" end="\*/" contain
 syn keyword indentTodo contained TODO
 
 " keywords (command-line switches)
-" this one is not 100% right. there is no --no-blank-after-sizeof. however,
-" this is the gnu indent fellas fault, not mine; there should be such a switch
-syn match   indentOptions "\<--\(no-\)\=blank-\(after-sizeof\|lines-\(after-\(commas\|declarations\|procedures\)\|before-block-comments\)\)\>"
+syn match   indentOptions "\<--\(no-\)\=blank-\(before-sizeof\|Bill-Shannon\|lines-\(after-\(commas\|declarations\|procedures\)\|before-block-comments\)\)\>"
 syn match   indentOptions "\<--brace-indent\s*\d\+\>"
 syn match   indentOptions "\<--braces-\(after\|on\)-\(if\|struct-decl\)-line\>"
 syn match   indentOptions "\<--break-\(\(after\|before\)-boolean-operator\|function-decl-args\)\>"
@@ -64,7 +63,7 @@ syn match   indentOptions "\<-\(bli\|cbi\|cd\|ci\|cli\|c\|cp\|di\|d\|i\|ip\|l\|l
 syn match   indentOptions "\<-T\s\+\w\+\>"
 syn keyword indentOptions --format-all-comments --continue-at-parentheses --dont-line-up-parentheses
 syn keyword indentOptions --no-space-after-function-call-names
-syn keyword indentOptions -bad -bap -bbb -bbo -bc -bfda -bl -br -bs -cdb -cdw -ce -cs -dce -fc1 -fca
+syn keyword indentOptions -bad -bap -bbb -bbo -bc -bfda -bl -br -bs -nbs -cdb -cdw -ce -cs -dce -fc1 -fca
 syn keyword indentOptions -gnu -hnl -kr -lp -lps -nbad -nbap -nbbb -nbbo -nbc -nbfda -ncdb -ncdw -nprs
 syn keyword indentOptions -nce -ncs -nfc1 -nfca -nhnl -nip -nlp -nlps -npcs -npmt -npro -npsl -nsaf -nsai
 syn keyword indentOptions -nsaw -nsc -nsob -nss -nv -o -orig -pcs -pmt -prs -psl -saf -sai -saw -sc

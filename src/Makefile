@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60as
+VIMRTDIR = /vim60at
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -860,6 +860,9 @@ SYS_INDOFF_FILE = $(DESTDIR)$(SCRIPTLOC)/indoff.vim
 
 ### Name of the option window script file target.
 SYS_OPTWIN_FILE = $(DESTDIR)$(SCRIPTLOC)/optwin.vim
+
+### Name of the PostScript procset file target.
+SYS_PROCSET_FILE = $(DESTDIR)$(SCRIPTLOC)/procset.ps
 
 # Program to install the program in the target directory.  Could also be "mv".
 INSTALL_PROG	= cp
@@ -1483,7 +1486,7 @@ testclean:
 #
 install: installvim installtools install-languages install-icons
 
-installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor $(INSTALLVIMDIFF)
+installvim: installvimbin installruntime installlinks installhelplinks installmacros installtutor
 
 installvimbin: $(VIMTARGET) $(DESTDIR)$(exec_prefix) $(DEST_BIN)
 	-if test -f $(DEST_BIN)/$(VIMTARGET); then \
@@ -1513,6 +1516,7 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 		-e s+$(VIMLOC)/ftoff.vim+$(SCRIPTLOC)/ftoff.vim+ \
 		-e s+$(VIMLOC)/scripts.vim+$(SCRIPTLOC)/scripts.vim+ \
 		-e s+$(VIMLOC)/optwin.vim+$(SCRIPTLOC)/optwin.vim+ \
+		-e s+$(VIMLOC)/procset.ps+$(SCRIPTLOC)/procset.ps+ \
 		$(HELPSOURCE)/vim.1 > $(DEST_MAN)/$(VIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(VIMNAME).1
 	@echo generating $(DEST_MAN)/$(VIMNAME)tutor.1
@@ -1565,6 +1569,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	chmod $(VIMSCRIPTMOD) $(SYS_INDOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/procset.ps $(SYS_PROCSET_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_PROCSET_FILE)
 # install the colorscheme files
 	cd $(COLSOURCE); $(INSTALL_DATA) *.vim README.txt $(DEST_COL)
 	cd $(DEST_COL); chmod $(HELPMOD) *.vim README.txt
@@ -1634,9 +1640,9 @@ install-languages: languages $(DEST_LANG) $(DEST_KMAP)
 	fi
 
 # install the icons for KDE, if the directory exists and the icon doesn't.
-ICON48PATH = $(DATADIR)/icons/hicolor/48x48/apps
-ICON32PATH = $(DATADIR)/icons/locolor/32x32/apps
-ICON16PATH = $(DATADIR)/icons/locolor/16x16/apps
+ICON48PATH = $(DESTDIR)$(DATADIR)/icons/hicolor/48x48/apps
+ICON32PATH = $(DESTDIR)$(DATADIR)/icons/locolor/32x32/apps
+ICON16PATH = $(DESTDIR)$(DATADIR)/icons/locolor/16x16/apps
 KDEPATH = $(HOME)/.kde/share/icons
 install-icons:
 	if test -d $(ICON48PATH) -a -w $(ICON48PATH) \
@@ -1671,16 +1677,19 @@ installlinks: $(GUI_TARGETS) \
 			$(DEST_BIN)/$(EXTARGET) \
 			$(DEST_BIN)/$(VIEWTARGET) \
 			$(DEST_BIN)/$(RVIMTARGET) \
-			$(DEST_BIN)/$(RVIEWTARGET)
+			$(DEST_BIN)/$(RVIEWTARGET) \
+			$(INSTALLVIMDIFF)
 
 installglinks: $(DEST_BIN)/$(GVIMTARGET) \
 			$(DEST_BIN)/$(GVIEWTARGET) \
 			$(DEST_BIN)/$(RGVIMTARGET) \
 			$(DEST_BIN)/$(RGVIEWTARGET) \
 			$(DEST_BIN)/$(EVIMTARGET) \
-			$(DEST_BIN)/$(EVIEWTARGET)
+			$(DEST_BIN)/$(EVIEWTARGET) \
+			$(INSTALLGVIMDIFF)
 
-installvimdiff: $(DEST_BIN)/$(VIMDIFFTARGET) $(DEST_BIN)/$(GVIMDIFFTARGET)
+installvimdiff: $(DEST_BIN)/$(VIMDIFFTARGET)
+installgvimdiff: $(DEST_BIN)/$(GVIMDIFFTARGET)
 
 $(DEST_BIN)/$(EXTARGET):
 	cd $(DEST_BIN); ln -s $(VIMTARGET) $(EXTARGET)
@@ -1790,7 +1799,7 @@ uninstall_runtime:
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
 	-rm -f $(SYS_INDOFF_FILE) $(SYS_INDENT_FILE)
 	-rm -f $(SYS_FTPLUGOF_FILE) $(SYS_FTPLUGIN_FILE)
-	-rm -f $(SYS_OPTWIN_FILE)
+	-rm -f $(SYS_OPTWIN_FILE) $(SYS_PROCSET_FILE)
 	-rm -f $(DEST_COL)/*.vim $(DEST_COL)/README.txt
 	-rm -f $(DEST_SYN)/*.vim $(DEST_SYN)/README.txt $(DEST_IND)/*.vim
 	-rm -rf $(DEST_MACRO)
@@ -1990,6 +1999,9 @@ objects/gui_at_sb.o: gui_at_sb.c
 objects/gui_athena.o: gui_athena.c
 	$(CCC) -o $@ gui_athena.c
 
+objects/gui_beos.o: gui_beos.cc
+	$(CCC) -o $@ gui_beos.cc
+
 objects/gui_beval.o: gui_beval.c
 	$(CCC) -o $@ gui_beval.c
 
@@ -2170,7 +2182,7 @@ objects/ex_cmds.o: ex_cmds.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/ex_cmds2.o: ex_cmds2.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h
 objects/ex_docmd.o: ex_docmd.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h

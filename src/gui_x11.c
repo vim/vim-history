@@ -50,6 +50,7 @@
 
 /* Default resource values */
 #define DFLT_FONT		"7x13"
+#define DFLT_MENU_FONT		XtDefaultFontSet
 #define DFLT_TOOLTIP_FONT	XtDefaultFontSet
 
 #ifdef FEAT_GUI_ATHENA
@@ -299,7 +300,7 @@ static XtResource vim_resources[] =
 	XtCFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_T, dflt_font),
+	XtOffsetOf(gui_T, rsrc_font_name),
 	XtRImmediate,
 	XtDefaultFont
     },
@@ -308,7 +309,7 @@ static XtResource vim_resources[] =
 	XtCBoldFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_T, dflt_bold_fn),
+	XtOffsetOf(gui_T, rsrc_bold_font_name),
 	XtRImmediate,
 	""
     },
@@ -317,7 +318,7 @@ static XtResource vim_resources[] =
 	XtCItalicFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_T, dflt_ital_fn),
+	XtOffsetOf(gui_T, rsrc_ital_font_name),
 	XtRImmediate,
 	""
     },
@@ -326,7 +327,7 @@ static XtResource vim_resources[] =
 	XtCBoldItalicFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_T, dflt_boldital_fn),
+	XtOffsetOf(gui_T, rsrc_boldital_font_name),
 	XtRImmediate,
 	""
     },
@@ -344,7 +345,7 @@ static XtResource vim_resources[] =
 	XtCReverseVideo,
 	XtRBool,
 	sizeof(Bool),
-	XtOffsetOf(gui_T, rev_video),
+	XtOffsetOf(gui_T, rsrc_rev_video),
 	XtRImmediate,
 	(XtPointer)False
     },
@@ -376,34 +377,27 @@ static XtResource vim_resources[] =
 	XtRImmediate,
 	(XtPointer)MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
     },
-# ifdef FONTSET_ALWAYS
     {
+# ifdef FONTSET_ALWAYS
 	XtNmenuFontSet,
 	XtCMenuFontSet,
-	XtRFontSet,
-	sizeof(XFontSet),
-	XtOffsetOf(gui_T, menu_fontset),
-	XtRImmediate,
-	(XtPointer)NOFONTSET
-    },
-# else
-    {
+#else
 	XtNmenuFont,
 	XtCMenuFont,
-	XtRFontStruct,
-	sizeof(XFontStruct *),
-	XtOffsetOf(gui_T, menu_font),
-	XtRImmediate,
-	(XtPointer)NOFONT
+#endif
+	XtRString,
+	sizeof(char *),
+	XtOffsetOf(gui_T, rsrc_menu_font_name),
+	XtRString,
+	DFLT_MENU_FONT
     },
-# endif
 #endif
     {
 	XtNmenuForeground,
 	XtCMenuForeground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, menu_fg_color),
+	XtOffsetOf(gui_T, rsrc_menu_fg_name),
 	XtRString,
 	DFLT_MENU_FG_COLOR
     },
@@ -412,7 +406,7 @@ static XtResource vim_resources[] =
 	XtCMenuBackground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, menu_bg_color),
+	XtOffsetOf(gui_T, rsrc_menu_bg_name),
 	XtRString,
 	DFLT_MENU_BG_COLOR
     },
@@ -421,7 +415,7 @@ static XtResource vim_resources[] =
 	XtCScrollForeground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, scroll_fg_color),
+	XtOffsetOf(gui_T, rsrc_scroll_fg_name),
 	XtRString,
 	DFLT_SCROLL_FG_COLOR
     },
@@ -430,16 +424,17 @@ static XtResource vim_resources[] =
 	XtCScrollBackground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, scroll_bg_color),
+	XtOffsetOf(gui_T, rsrc_scroll_bg_name),
 	XtRString,
 	DFLT_SCROLL_BG_COLOR
     },
+#ifdef FEAT_BEVAL
     {
 	XtNtooltipForeground,
 	XtCTooltipForeground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, tooltip_fg_color),
+	XtOffsetOf(gui_T, rsrc_tooltip_fg_name),
 	XtRString,
 	DFLT_TOOLTIP_FG_COLOR
     },
@@ -448,7 +443,7 @@ static XtResource vim_resources[] =
 	XtCTooltipBackground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, tooltip_bg_color),
+	XtOffsetOf(gui_T, rsrc_tooltip_bg_name),
 	XtRString,
 	DFLT_TOOLTIP_BG_COLOR
     },
@@ -457,17 +452,28 @@ static XtResource vim_resources[] =
 	XtCTooltipFont,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_T, tooltip_font),
+	XtOffsetOf(gui_T, rsrc_tooltip_font_name),
 	XtRString,
 	DFLT_TOOLTIP_FONT
     },
+    /* This one isn't really needed, keep for Sun Workshop? */
+    {
+	"balloonEvalFontSet",
+	XtCFontSet,
+	XtRFontSet,
+	sizeof(XFontSet),
+	XtOffsetOf(gui_T, tooltip_fontset),
+	XtRImmediate,
+	(XtPointer)NOFONTSET
+    },
+#endif /* FEAT_BEVAL */
 #ifdef FEAT_XIM
     {
 	"preeditType",
 	"PreeditType",
 	XtRString,
 	sizeof(char*),
-	XtOffsetOf(gui_T, preedit_type),
+	XtOffsetOf(gui_T, rsrc_preedit_type_name),
 	XtRString,
 	(XtPointer)"OverTheSpot,OffTheSpot,Root"
     },
@@ -476,31 +482,11 @@ static XtResource vim_resources[] =
 	"InputMethod",
 	XtRString,
 	sizeof(char*),
-	XtOffsetOf(gui_T, input_method),
+	XtOffsetOf(gui_T, rsrc_input_method),
 	XtRString,
 	NULL
     },
-    {
-	"openIM",
-	"OpenIM",
-	XtRBoolean,
-	sizeof(Boolean),
-	XtOffsetOf(gui_T, open_im),
-	XtRImmediate,
-	(XtPointer)TRUE
-    },
 #endif /* FEAT_XIM */
-#ifdef FEAT_BEVAL
-    {
-	"balloonEvalFontSet",
-	XtCFontSet,
-	XtRFontSet,
-	sizeof(XFontSet),
-	XtOffsetOf(gui_T, balloonEval_fontset),
-	XtRImmediate,
-	(XtPointer)NOFONTSET
-    },
-#endif /* FEAT_BEVAL */
 };
 
 /*
@@ -722,8 +708,8 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if (xic)
     {
 # ifdef USE_UTF8LOOKUP
-	/* XFree86 4.0.2 or newer: Be able to get UTF-8 charatcers even when
-	 * the locale isn't utf-8.  */
+	/* XFree86 4.0.2 or newer: Be able to get UTF-8 characters even when
+	 * the locale isn't utf-8. */
 	if (enc_utf8)
 	    len = Xutf8LookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
@@ -1234,15 +1220,13 @@ gui_mch_init()
     /* NOTE: These next few lines are an exact duplicate of gui_athena.c's
      * gui_mch_def_colors().  Why?
      */
-    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.menu_fg_color);
-    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.menu_bg_color);
-    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.scroll_fg_color);
-    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.scroll_bg_color);
+    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_fg_name);
+    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_bg_name);
+    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_fg_name);
+    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_bg_name);
 #ifdef FEAT_BEVAL
-    gui.balloonEval_fg_pixel =
-			    gui_mch_get_color((char_u *)gui.tooltip_fg_color);
-    gui.balloonEval_bg_pixel =
-			    gui_mch_get_color((char_u *)gui.tooltip_bg_color);
+    gui.tooltip_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+    gui.tooltip_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
 
 #ifdef FEAT_MENU
@@ -1256,8 +1240,8 @@ gui_mch_init()
     gui.back_pixel = gui.def_back_pixel;
 
     /* Check if reverse video needs to be applied (on Sun it's done by X) */
-    if (gui.rev_video && gui_mch_get_lightness(gui.back_pixel)
-				      > gui_mch_get_lightness(gui.norm_pixel))
+    if (gui.rsrc_rev_video && gui_get_lightness(gui.back_pixel)
+					  > gui_get_lightness(gui.norm_pixel))
     {
 	gui.norm_pixel = gui.def_back_pixel;
 	gui.back_pixel = gui.def_norm_pixel;
@@ -1428,6 +1412,9 @@ gui_mch_init()
 # ifdef FEAT_BEVAL
     gui_init_tooltip_font();
 # endif
+# ifdef FEAT_MENU
+    gui_init_menu_font();
+# endif
 
     return OK;
 }
@@ -1524,7 +1511,7 @@ gui_mch_open()
 	serverChangeRegisteredWindow(gui.dpy, XtWindow(vimShell));
     }
     XtAddEventHandler(vimShell, PropertyChangeMask, False,
-	              gui_x11_send_event_handler, NULL);
+		      gui_x11_send_event_handler, NULL);
 #endif
 
 
@@ -1563,16 +1550,46 @@ gui_init_tooltip_font()
 {
     XrmValue from, to;
 
-    from.addr = (char *)gui.tooltip_font;
+    from.addr = (char *)gui.rsrc_tooltip_font_name;
     from.size = strlen(from.addr);
-    to.addr = (XtPointer)&gui.balloonEval_fontset;
+    to.addr = (XtPointer)&gui.tooltip_fontset;
     to.size = sizeof(XFontSet);
 
     if (XtConvertAndStore(vimShell, XtRString, &from, XtRFontSet, &to) == False)
     {
 	/* Failed. What to do? */
     }
-    gui_mch_new_tooltip_font();
+}
+#endif
+
+#if defined(FEAT_MENU) || defined(PROTO)
+/* Convert the menu font/fontset name to an XFontStruct/XFontset */
+    void
+gui_init_menu_font()
+{
+    XrmValue from, to;
+
+#ifdef FONTSET_ALWAYS
+    from.addr = (char *)gui.rsrc_menu_font_name;
+    from.size = strlen(from.addr);
+    to.addr = (XtPointer)&gui.menu_fontset;
+    to.size = sizeof(GuiFontset);
+
+    if (XtConvertAndStore(vimShell, XtRString, &from, XtRFontSet, &to) == False)
+    {
+	/* Failed. What to do? */
+    }
+#else
+    from.addr = (char *)gui.rsrc_menu_font_name;
+    from.size = strlen(from.addr);
+    to.addr = (XtPointer)&gui.menu_font;
+    to.size = sizeof(GuiFont);
+
+    if (XtConvertAndStore(vimShell, XtRString, &from, XtRFontStruct, &to) == False)
+    {
+	/* Failed. What to do? */
+    }
+#endif
 }
 #endif
 
@@ -1699,7 +1716,7 @@ gui_mch_init_font(font_name, do_fontset)
 	     * in the X resource, and finally just try using DFLT_FONT, which
 	     * will hopefully always be there.
 	     */
-	    font_name = gui.dflt_font;
+	    font_name = gui.rsrc_font_name;
 	    font = (XFontStruct *)gui_mch_get_font(font_name, FALSE);
 	    if (font == NULL)
 		font_name = (char_u *)DFLT_FONT;
@@ -1741,20 +1758,21 @@ gui_mch_init_font(font_name, do_fontset)
      * We should also try to work out what font to use for these when they are
      * not specified by X resources, but we don't yet.
      */
-    if (font_name == gui.dflt_font)
+    if (font_name == gui.rsrc_font_name)
     {
 	if (gui.bold_font == NOFONT
-		&& gui.dflt_bold_fn != NULL
-		&& *gui.dflt_bold_fn != NUL)
-	    gui.bold_font = gui_mch_get_font(gui.dflt_bold_fn, FALSE);
+		&& gui.rsrc_bold_font_name != NULL
+		&& *gui.rsrc_bold_font_name != NUL)
+	    gui.bold_font = gui_mch_get_font(gui.rsrc_bold_font_name, FALSE);
 	if (gui.ital_font == NOFONT
-		&& gui.dflt_ital_fn != NULL
-		&& *gui.dflt_ital_fn != NUL)
-	    gui.ital_font = gui_mch_get_font(gui.dflt_ital_fn, FALSE);
+		&& gui.rsrc_ital_font_name != NULL
+		&& *gui.rsrc_ital_font_name != NUL)
+	    gui.ital_font = gui_mch_get_font(gui.rsrc_ital_font_name, FALSE);
 	if (gui.boldital_font == NOFONT
-		&& gui.dflt_boldital_fn != NULL
-		&& *gui.dflt_boldital_fn != NUL)
-	    gui.boldital_font = gui_mch_get_font(gui.dflt_boldital_fn, FALSE);
+		&& gui.rsrc_boldital_font_name != NULL
+		&& *gui.rsrc_boldital_font_name != NUL)
+	    gui.boldital_font = gui_mch_get_font(gui.rsrc_boldital_font_name,
+								       FALSE);
     }
     else
     {
@@ -3022,69 +3040,21 @@ gui_x11_blink_cb(timed_out, interval_id)
 }
 
 /*
- * Return the lightness of a pixel.  White is 255.
+ * Return the RGB value of a pixel as a long.
  */
-    int
-gui_mch_get_lightness(pixel)
-    guicolor_T	pixel;
+    long_u
+gui_mch_get_rgb(guicolor_T pixel)
 {
     XColor	xc;
     Colormap	colormap;
 
     colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
-
     xc.pixel = pixel;
     XQueryColor(gui.dpy, colormap, &xc);
 
-    return (int)(xc.red * 3 + xc.green * 6 + xc.blue) / (10 * 256);
+    return ((xc.red & 0xff00) << 8) + (xc.green & 0xff00)
+						   + ((unsigned)xc.blue >> 8);
 }
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as "#RRGGBB".
- */
-    char_u *
-gui_mch_get_rgb(pixel)
-    guicolor_T	pixel;
-{
-    XColor	xc;
-    Colormap	colormap;
-    static char_u retval[10];
-
-    colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
-
-    xc.pixel = pixel;
-    XQueryColor(gui.dpy, colormap, &xc);
-
-    sprintf((char *)retval, "#%02x%02x%02x",
-	    (unsigned)xc.red >> 8,
-	    (unsigned)xc.green >> 8,
-	    (unsigned)xc.blue >> 8);
-    return retval;
-}
-#endif
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as long.
- */
-    unsigned long
-gui_mch_get_rgb_long(
-    guicolor_T	pixel)
-{
-    XColor	xc;
-    Colormap	colormap;
-
-    colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
-
-    xc.pixel = pixel;
-    XQueryColor(gui.dpy, colormap, &xc);
-
-    return ((xc.red & 0xff00) << 8)
-	+ (xc.green & 0xff00)
-	+ ((unsigned)xc.blue >> 8);
-}
-#endif
 
 /*
  * Add the callback functions.

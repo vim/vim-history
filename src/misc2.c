@@ -26,9 +26,9 @@ static int coladvance2 __ARGS((pos_T *pos, int addspaces, int finetune, colnr_T 
 virtual_active()
 {
     return (ve_flags == VE_ALL
-#ifdef FEAT_VISUAL
+# ifdef FEAT_VISUAL
 	    || ((ve_flags & VE_BLOCK) && VIsual_active && VIsual_mode == Ctrl_V)
-#endif
+# endif
 	    || ((ve_flags & VE_INSERT) && (State & INSERT)));
 }
 
@@ -76,6 +76,7 @@ coladvance_force(wcol)
     colnr_T wcol;
 {
     int rc = coladvance2(&curwin->w_cursor, TRUE, FALSE, wcol);
+
     if (wcol == MAXCOL)
 	curwin->w_valid &= ~VALID_VIRTCOL;
     else
@@ -209,64 +210,64 @@ coladvance2(pos, addspaces, finetune, wcol)
 	}
 
 #ifdef FEAT_VIRTUALEDIT
-	if (addspaces && (col != wcol + 1 || csize > 1))
-    {
-	if (virtual_active() && line[idx] == NUL)
+	if (virtual_active() && addspaces
+		&& ((col != wcol && col != wcol + 1) || csize > 1))
 	{
-	    /* Append spaces */
-	    int correct = wcol - col;
-	    char_u *newline = alloc(idx + correct + 1);
-	    int	t;
-
-	    if (newline == NULL)
-		return FAIL;
-
-	    for (t = 0; t < idx; ++t)
-		newline[t] = line[t];
-
-	    for (t = 0; t < correct; ++t)
-		newline[t + idx] = ' ';
-
-	    newline[idx + correct] = NUL;
-
-	    ml_replace(pos->lnum, newline, FALSE);
-	    changed_bytes(pos->lnum, (colnr_T)idx);
-	    idx += correct;
-	    col = wcol;
-	}
-	else
-	{
-	    /* Break a tab */
-	    int	linelen = (int)STRLEN(line);
-	    int	correct = wcol - col - csize + 1; /* negative!! */
-	    char_u	*newline = alloc(linelen + csize);
-	    int	t, s = 0;
-	    int	v;
-
-	    /*
-	     * break a tab
-	     */
-	    if (newline == NULL || -correct > csize)
-		return FAIL;
-
-	    for (t = 0; t < linelen; t++)
+	    if (line[idx] == NUL)
 	    {
-		if (t != idx)
-		    newline[s++] = line[t];
-		else
-		    for (v = 0; v < csize; v++)
-			newline[s++] = ' ';
+		/* Append spaces */
+		int	correct = wcol - col;
+		char_u	*newline = alloc(idx + correct + 1);
+		int	t;
+
+		if (newline == NULL)
+		    return FAIL;
+
+		for (t = 0; t < idx; ++t)
+		    newline[t] = line[t];
+
+		for (t = 0; t < correct; ++t)
+		    newline[t + idx] = ' ';
+
+		newline[idx + correct] = NUL;
+
+		ml_replace(pos->lnum, newline, FALSE);
+		changed_bytes(pos->lnum, (colnr_T)idx);
+		idx += correct;
+		col = wcol;
 	    }
+	    else
+	    {
+		/* Break a tab */
+		int	linelen = (int)STRLEN(line);
+		int	correct = wcol - col - csize + 1; /* negative!! */
+		char_u	*newline = alloc(linelen + csize);
+		int	t, s = 0;
+		int	v;
 
-	    newline[linelen + csize - 1] = NUL;
+		/*
+		 * break a tab
+		 */
+		if (newline == NULL || -correct > csize)
+		    return FAIL;
 
-	    ml_replace(pos->lnum, newline, FALSE);
-	    changed_bytes(pos->lnum, idx);
-	    idx += (csize - 1 + correct);
-	    col += correct;
+		for (t = 0; t < linelen; t++)
+		{
+		    if (t != idx)
+			newline[s++] = line[t];
+		    else
+			for (v = 0; v < csize; v++)
+			    newline[s++] = ' ';
+		}
+
+		newline[linelen + csize - 1] = NUL;
+
+		ml_replace(pos->lnum, newline, FALSE);
+		changed_bytes(pos->lnum, idx);
+		idx += (csize - 1 + correct);
+		col += correct;
+	    }
 	}
-    }
-
 #endif
     }
 

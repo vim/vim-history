@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0as.  Last change: 2001 Aug 19
+*version6.txt*  For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -364,6 +364,9 @@ movement command.  Thus it no longer aborts a pending operator.
 For the Amiga the "-d {device}" argument was possible.  When compiled with the
 diff feature, this no longer works.  Use "-dev {device}" instead. |-dev|
 
+Made the default mappings for <S-Insert> in Insert mode insert the text
+literally, avoids that special characters like BS cause side effects.
+
 ==============================================================================
 NEW FEATURES
 
@@ -481,6 +484,8 @@ Differences can be removed with the |:diffget| and |:diffput| commands.
   specify the highlighting for differences.  The defaults are ugly...
 - Unix: make a vimdiff symbolic link for "make install".
 - Removed the now obsolete "vimdiff.vim" script from the distribution.
+- Added the "[c" and "]c" commands to move to the next/previous change in diff
+  mode.
 
 
 Easy Vim: click-and-type				*new-evim*
@@ -745,6 +750,10 @@ MS-Windows. (Dan Sharp)
 - Added gettext support for Win32.  This means messages will be translated
   when the locale is set and libintl.dll can be found.  (Muraoka Taro)
   Also made it work with MingW compiler.  (Eduardo Fernandez)
+  Detect the language and set $LANG to get the appropriate translated messages
+  (if supported).  Also use $LANG to select a language, v:lang is a very
+  different kind of name.
+- Made gvimext.dll use translated messages, if possible. (Yasuhiro Matsumoto)
 
 
 Plugin support					*new-plugins*
@@ -1290,6 +1299,7 @@ last insert position or changed text.
 New functions: ~
 argidx()	Current index in argument list.
 buflisted()	Checks if the buffer exists and has 'buflisted' set.
+cindent()	Get indent according to 'cindent'.
 eventhandler()	Returns 1 when inside an event handler and interactive
 		commands can't be used.
 executable()	Checks if a program or batch script can be executed.
@@ -1320,6 +1330,7 @@ inputsecret()	Ask the user to type a string without showing the typed keys.
 		(Charles Campbell)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
 libcallnr()	for Win32 and Unix
+lispindent()	Get indent according to 'lisp'.
 mode()		Return a string that indicates the current mode.
 nextnonblank()	Skip blank lines forwards.
 prevnonblank()	Skip blank lines backwards.  Useful to for indent scripts.
@@ -1700,7 +1711,7 @@ GTK GUI: (partly by Marcin Dalecki)
 - Cleanup in font handling.
 - Replace XQueryColor with GDK calls.
 - Gnome support.  Detects Gnome in configure and uses different widgets.
-  Otherwise it's much like GTK. (Kahn)
+  Otherwise it's much like GTK. (Andy Kahn)
   It is disabled by default, because it causes a few problems.
 - Removed the special code to fork first and then start the GUI.  Now use
   _exit() instead of exit(), this works fine without special tricks.
@@ -2025,6 +2036,9 @@ use the current directory, this causes the original file to be deleted,
 without the possibility to create a new file.  Give an extra error message
 then to warn to user about this.
 
+Made CTRL-R CTRL-O at the command line work like CTRL-R CTRL-R, so that it's
+consistent with Insert mode.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -2128,6 +2142,9 @@ Win32: Load comdlg32.dll delayed for faster startup.  Only when using VC 6.
 (Vipin Aravind)
 
 Win32: When compiling with Borland, allow using IME. (Yasuhiro Matsumoto)
+
+Win32: Added Makefile for Borland 5 to compile gvimext.dll. (Yasuhiro
+Matsumoto)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -3167,5 +3184,41 @@ while Vi puts it in the same place as the cursor.  Made it Vi compatible.
 Fixed Vi incompatibility: Text was not put in register 1 when using "c" and
 "d" with a motion character, when deleting within one line with one of the
 commands: % ( ) `<character> / ? N n { }
+
+Win32 GUI: The tooltip for tear-off items remained when the tear-off item was
+no longer selected.
+
+GUI: When typing ":" at the more prompt, would return to Normal mode and not
+redraw the screen.
+
+When starting Vim with an argument "-c g/at/p" the printed lines would
+overwrite eachother.
+
+BeOS: Didn't compile.  Configure didn't add the os_beos files, the QNX check
+removed them.  Various changes to os_beos.cc. (Joshua Haberman)
+Removed the check for the hardware platform, the BeBox has not been produced
+for a long time now.
+
+Win32 GUI: don't use a message box when the shell returns an error code,
+display the message in the Vim window.
+
+Make_mvc.mak always included "/debug" for linking.  "GUI=no" argument didn't
+work.  Use "DEBUG=yes" instead of "DEBUG=1" to make it consistent. (Dan Sharp)
+
+When a line in the tags file ended in ;" (no TAB following) the command would
+not be recognized as a search command.
+
+X11: The inputMethod resource never worked.  Don't use the "none" input method
+for SGI, it apparently makes the first character in Input method dropped.
+
+Fixed incorrect tests in os_mac.h. (Axel Kielhorn)
+
+Win32 console: When the console where Vim runs in is closed, Vim could hang in
+trying to restore the window icon. (Yasuhiro Matsumoto)
+
+When using ":3call func()" or ":3,3call func() the line number was ignored.
+
+When 'showbreak' and 'linebreak' were both set, Visual highlighting sometimes
+continued until the end of the line.
 
  vim:tw=78:

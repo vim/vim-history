@@ -1,7 +1,7 @@
 "  vim: set sw=4 sts=4:
-"  File		: make.vim
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Tue, 24 Jul 2001 17:52:45 CEST
+"  URL		: http://www.pcppopper.org/
+"  Revised on	: Sun, 26 Aug 2001 15:14:43 +0200
 "  Language	: Makefile
 
 " Only load this indent file when no other was loaded.
@@ -32,7 +32,7 @@ function GetMakeIndent()
     elseif line =~ '^[^ \t#:][^#:]*:\{1,2}\([^=:]\|$\)'
 	let ind = ind + &ts
     elseif line =~ '^\s*\h\w*\s*=\s*.\+\\$'
-	let ind = ind + matchend(line, '=\s*.')
+	let ind = ind + matchend(line, '=\s*')
     else
 	let ind = indent(v:lnum)
     endif

@@ -1,4 +1,4 @@
-*usr_25.txt*	For Vim version 6.0as.  Last change: 2001 Jul 29
+*usr_25.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -318,16 +318,16 @@ Let's attempt to show this with one line of text.  The cursor is on the "w" of
 currently visible.  The "window"s below the text indicate the text that is
 visible after the command left of it.
 
-		              |<-- current window -->|
+			      |<-- current window -->|
 		some long text, part of which is visible in the window~
-	ze        |<--     window     -->|
-	zH         |<--     window     -->|
-	4zh               |<--     window     -->|
-	zh                   |<--     window     -->|
-	zl                     |<--     window     -->|
-	4zl                       |<--     window     -->|
-	zL                              |<--     window     -->|
-	zs                             |<--     window     -->|
+	ze	  |<--	   window     -->|
+	zH	   |<--     window     -->|
+	4zh		  |<--	   window     -->|
+	zh		     |<--     window	 -->|
+	zl		       |<--	window	   -->|
+	4zl			  |<--	   window     -->|
+	zL				|<--	 window     -->|
+	zs			       |<--	window	   -->|
 
 
 MOVING WITH WRAP OFF
@@ -342,9 +342,9 @@ scroll:
 	gm		to middle of this line
 	g$		to last visible character in this line
 
-	        |<--     window    -->|
+		|<--	 window    -->|
 	some long    text, part of which is visible ~
-		 g0  g^    gm        g$
+		 g0  g^    gm	     g$
 
 
 BREAKING AT WORDS
@@ -403,9 +403,9 @@ the cursor keys: >
 
 Suppose you are editing a table with four columns:
 
-	nice table        test 1        test 2      test 3 ~
-	input A           0.534 ~
-	input B           0.913 ~
+	nice table	  test 1	test 2	    test 3 ~
+	input A		  0.534 ~
+	input B		  0.913 ~
 
 You need to enter numbers in the third column.  You could move to the second
 line, use "A", enter a lot of spaces and type the text.
@@ -503,9 +503,9 @@ the wrong characters:
 
 	inp	0	0.534	0.693 ~
 
-	        |
+		|
 	 R0.786 |
-	        V
+		V
 
 	inp	0.78634	0.693 ~
 
@@ -513,9 +513,9 @@ The "gR" command uses virtual replace mode.  This preserves the layout:
 
 	inp	0	0.534	0.693 ~
 
-	        |
+		|
 	gR0.786 |
-	        V
+		V
 
 	inp	0.786	0.534	0.693 ~
 

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0as.  Last change: 2001 Aug 19
+*various.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -446,7 +446,7 @@ K			Run a program to lookup the keyword under the
   :sleep	  "sleep for one second
   :5sleep	  "sleep for five seconds
   :sleep 100m     "sleep for a hundred milliseconds
-  500gs		  "slee for half a second
+  10gs		  "sleep for ten seconds
 <			Can be interrupted with CTRL-C (CTRL-Break on MS-DOS).
 			"gs" stands for "goto sleep".  While sleeping the
 			cursor is positioned in the text (if visible).  {not
@@ -626,6 +626,30 @@ considerations:
 3) If 'background' is "dark", then the colours are darkened to compensate for
    the fact that otherwise they would be too bright to show up clearly on
    white paper.
+
+
+3.1 PostScript Printing
+							*E455* *E456* *E457*
+Provided you have enough disk space there should be no problems generating a
+PostScript file.  One file from the runtime files is used:
+$VIMRUNTIME/procset.ps.  If you do have problems check that this file exists.
+
+There are currently a number of limitations with PostScript printing:
+
+- 'printfont' - The font name is ignored (the Courier family is always used -
+  it should be available on all PostScript printers) but the font size is
+  used.
+
+- 'printoptions' - The duplex setting is ignored.
+
+- EBCDIC - There is no explicit support for PostScript generation on EBCDIC
+  platforms.  If you keep to characters that translate to printable 7-bit
+  ASCII characters then translating the generated PostScript file to ASCII may
+  produce a file that will successfully print on a PostScript printer.
+
+- 8-bit and Multi-byte support - There is no support for alternate 8-bit code
+  pages or multi-byte characters, just 7-bit ASCII.  Any multi-byte characters
+  in the file are printed as spaces.
 
 ==============================================================================
 4. Using Vim like less or more					*less*

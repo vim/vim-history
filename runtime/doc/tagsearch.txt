@@ -1,4 +1,4 @@
-*tagsearch.txt* For Vim version 6.0as.  Last change: 2001 Jul 24
+*tagsearch.txt* For Vim version 6.0at.  Last change: 2001 Aug 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -520,8 +520,8 @@ only supported by new versions of ctags (like the one that comes with Vim).
 		commands, which are mostly used.
 {term}		;" The two characters semicolon and double quote.  This is
 		interpreted by Vi as the start of a comment, which makes the
-		following be ignored.  This is only for backwards
-		compatibility with Vi.
+		following be ignored.  This is for backwards compatibility
+		with Vi, it ignores the following fields.
 {field} ..	A list of optional fields.  Each field has the form:
 
 			<Tab>{fieldname}:{value}

@@ -63,6 +63,5 @@ void gui_mch_show_popupmenu __ARGS((vimmenu_T *menu));
 void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
 void clip_mch_request_selection __ARGS((VimClipboard *cbd));
 void clip_mch_set_selection __ARGS((VimClipboard *cbd));
-int gui_mch_get_lightness __ARGS((guicolor_T pixel));
-char_u *gui_mch_get_rgb __ARGS((guicolor_T pixel));
+long_u gui_mch_get_rgb __ARGS((guicolor_T pixel));
 /* vim: set ft=c : */

@@ -378,7 +378,8 @@
 	&& !defined(AMIGA)
 # define FEAT_PRINTER
 #endif
-#if defined(FEAT_PRINTER) && !defined(MSWIN) && defined(FEAT_EVAL)
+#if defined(FEAT_PRINTER) && ((defined(MSWIN) && defined(MSWINPS)) \
+	|| (!defined(MSWIN) && defined(FEAT_EVAL)))
 # define FEAT_POSTSCRIPT
 #endif
 
@@ -956,7 +957,7 @@
 #endif
 #if defined(WIN32) || defined(FEAT_XCLIPBOARD)
 /* +clientserver	Remote control via the remote_send() function
-                        and the --remote argument */
+			and the --remote argument */
 # define FEAT_CLIENTSERVER
 #endif
 #if defined(FEAT_NORMAL) && defined(HAVE_GPM)
@@ -1062,6 +1063,9 @@
 #if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
 	&& (defined(FEAT_TOOLBAR) || defined(FEAT_SUN_WORKSHOP))
 # define FEAT_BEVAL
+# ifndef FEAT_XFONTSET
+#  define FEAT_XFONTSET
+# endif
 #endif
 
 #if defined(FEAT_SUN_WORKSHOP)

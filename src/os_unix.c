@@ -2,7 +2,7 @@
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *	      OS/2 port by Paul Slootman
- *            VMS merge by Zoltan Arpadffy
+ *	      VMS merge by Zoltan Arpadffy
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -338,20 +338,20 @@ mch_inchar(buf, maxlen, wtime)
 	 * flush all the swap files to disk
 	 * Also done when interrupted by SIGWINCH.
 	 */
-        if (WaitForChar(p_ut) == 0)
-        {
+	if (WaitForChar(p_ut) == 0)
+	{
 #ifdef FEAT_AUTOCMD
-            if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
-            {
-                apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
-                update_screen(VALID);
+	    if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+	    {
+		apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+		update_screen(VALID);
 		once_already = 1;
-                return 0;
-            }
-            else
+		return 0;
+	    }
+	    else
 #endif
-                updatescript(0);
-        }
+		updatescript(0);
+	}
     }
 
     for (;;)	/* repeat until we got a character */
@@ -383,7 +383,7 @@ mch_inchar(buf, maxlen, wtime)
 		    buf[i] = K_NUL;
 #endif
 #ifdef FEAT_AUTOCMD
-            once_already = 0;
+	    once_already = 0;
 #endif
 	    return len;
 	}
@@ -854,10 +854,10 @@ mch_suspend()
     if (clip_star.owned || clip_plus.owned)
     {
 	x11_export_final_selection();
-        if (clip_star.owned)
-            clip_lose_selection(&clip_star);
-        if (clip_plus.owned)
-            clip_lose_selection(&clip_plus);
+	if (clip_star.owned)
+	    clip_lose_selection(&clip_star);
+	if (clip_plus.owned)
+	    clip_lose_selection(&clip_plus);
 	if (x11_display != NULL)
 	    XFlush(x11_display);
     }
@@ -883,6 +883,7 @@ mch_suspend()
 # endif
     settmode(TMODE_RAW);
     need_check_timestamps = TRUE;
+    did_check_timestamps = FALSE;
 #else
     suspend_shell();
 #endif
@@ -1699,11 +1700,11 @@ vim_is_vt300(name)
     char_u  *name;
 {
     if (name == NULL)
-        return FALSE;          /* actually all ANSI comp. terminals should be here  */
+	return FALSE;	       /* actually all ANSI comp. terminals should be here  */
     return (STRNICMP(name, "vt3", 3) == 0     /* it will cover all from VT100-VT300 */
-            || STRNICMP(name, "vt2", 3) == 0  /* TODO: from VT340 can hanle colors  */
-            || STRNICMP(name, "vt1", 3) == 0
-            || STRCMP(name, "builtin_vt320") == 0);
+	    || STRNICMP(name, "vt2", 3) == 0  /* TODO: from VT340 can hanle colors  */
+	    || STRNICMP(name, "vt1", 3) == 0
+	    || STRCMP(name, "builtin_vt320") == 0);
 }
 
 /*
@@ -2023,8 +2024,8 @@ mch_isFullName(fname)
 #else
 # ifdef VMS
     return ( fname[0] == '/' || fname[0] == '.' || strchr((char *)fname, ':') ||
-             strchr((char *)fname,'[') || strchr((char *)fname,']') ||
-             strchr((char *)fname,'<') || strchr((char *)fname,'>')      );
+	     strchr((char *)fname,'[') || strchr((char *)fname,']') ||
+	     strchr((char *)fname,'<') || strchr((char *)fname,'>')	 );
 # else
     return (*fname == '/' || *fname == '~');
 # endif
@@ -2324,13 +2325,16 @@ mch_exit(r)
 	 * A newline is only required after a message in the alternate screen.
 	 * This is set to TRUE by wait_return().
 	 */
-	if (newline_on_exit || (msg_didout && !swapping_screen()))
-	    out_char('\n');
-	else
+	if (!swapping_screen())
 	{
-	    restore_cterm_colors();	/* get original colors back */
-	    msg_clr_eos();		/* clear the rest of the display */
-	    windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
+	    if (newline_on_exit || msg_didout)
+		out_char('\n');
+	    else
+	    {
+		restore_cterm_colors();	/* get original colors back */
+		msg_clr_eos();		/* clear the rest of the display */
+		windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
+	    }
 	}
 
 	/* Cursor may have been switched off without calling starttermcap()
@@ -2849,8 +2853,8 @@ mch_call_shell(cmd, options)
     int		options;	/* SHELL_*, see vim.h */
 {
 #ifdef VMS
-    char        *ifn = NULL;
-    char        *ofn = NULL;
+    char	*ifn = NULL;
+    char	*ofn = NULL;
 #endif
 #ifdef USE_SYSTEM	/* use system() to start the shell: simple but slow */
     int	    x;
@@ -2902,19 +2906,21 @@ mch_call_shell(cmd, options)
     else
     {
 # ifdef VMS
-        if (ofn = strchr((char *)cmd, '>'))
-            *ofn++ = '\0';
-        if (ifn = strchr((char *)cmd, '<')) {
-           char *p;
-            *ifn++ = '\0';
-            p = strchr(ifn,' '); /* chop off any trailing spaces */
-            if (p)
-                *p = '\0';
-        }
-        if (ofn)
-            x = vms_sys((char *)cmd, ofn, ifn);
-        else
-            x = system((char *)cmd);
+	if (ofn = strchr((char *)cmd, '>'))
+	    *ofn++ = '\0';
+	if (ifn = strchr((char *)cmd, '<'))
+	{
+	    char *p;
+
+	    *ifn++ = '\0';
+	    p = strchr(ifn,' '); /* chop off any trailing spaces */
+	    if (p)
+		*p = '\0';
+	}
+	if (ofn)
+	    x = vms_sys((char *)cmd, ofn, ifn);
+	else
+	    x = system((char *)cmd);
 # else
 	newcmd = lalloc(STRLEN(p_sh)
 		+ (extra_shell_arg == NULL ? 0 : STRLEN(extra_shell_arg))
@@ -4571,11 +4577,11 @@ mch_has_wildcard(p)
 #ifndef OS2
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-        else
+	else
 #endif
 	    if (vim_strchr((char_u *)
 #ifdef VMS
-                                    "*?%$"
+				    "*?%$"
 #else
 # ifdef OS2
 #  ifdef VIM_BACKTICK
@@ -4587,7 +4593,7 @@ mch_has_wildcard(p)
 				    "*?[{`'$"
 # endif
 #endif
-                                                , *p) != NULL
+						, *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
     }
@@ -5145,7 +5151,7 @@ xterm_update()
 
     while (XtAppPending(app_context) && !vim_is_input_buf_full())
     {
-        XtAppNextEvent(app_context, &event);
+	XtAppNextEvent(app_context, &event);
 #ifdef FEAT_CLIENTSERVER
 	{
 	    XPropertyEvent *e = (XPropertyEvent *)&event;

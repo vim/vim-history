@@ -38,7 +38,7 @@
 #define DCS		0x90	/* Device Control String */
 #define STERM		0x9c	/* String Terminator */
 
-#define POUND           0xA3
+#define POUND		0xA3
 
 #define Ctrl_chr(x)	(TO_UPPER(x) ^ 0x40) /* '?' -> DEL, '@' -> ^@, etc. */
 #define Meta(x)		((x) | 0x80)
@@ -122,7 +122,7 @@
 #define DCS		0x90	/* Device Control String */
 #define STERM		0x9c	/* String Terminator */
 
-#define POUND           '£'
+#define POUND		'£'
 
 #define CTRL_F_STR	"\056"
 #define CTRL_H_STR	"\026"

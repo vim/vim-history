@@ -38,13 +38,14 @@
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
 #	    You must set TCL_VER_LONG when you set TCL_VER.
-#	Debug version: DEBUG=1
+#	Debug version: DEBUG=yes
 #	SNiFF+ interface: SNIFF=yes
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
 #	Intl library support (always dynamically loaded):
 #	  INTL=[yes or no]  (default is yes)
 #	See http://sourceforge.net/projects/gettext/
+#       PostScript printing: POSTSCRIPT=yes
 #
 # You can combine any of these interfaces
 #
@@ -60,9 +61,9 @@
 #	Make_dvc.mak is a Visual C++ project to access that support.
 #	To use Make_dvc.mak:
 #	1) Build Vim with Make_mvc.mak.
-#	     Use a "DEBUG=1" argument to build Vim with debug support.
+#	     Use a "DEBUG=yes" argument to build Vim with debug support.
 #	     E.g. the following builds gvimd.exe:
-#		nmake -f Make_mvc.mak debug=1 gui=yes
+#		nmake -f Make_mvc.mak debug=yes gui=yes
 #	2) Use MS Devstudio and set it up to allow that file to be debugged:
 #	    i) Pass Make_dvc.mak to the IDE.
 #	         Use the "open workspace" menu entry to load Make_dvc.mak.
@@ -94,15 +95,15 @@ TARGETOS = BOTH
 
 # Select one of eight object code directories, depends on GUI, OLE and DEBUG.
 # If you change something else, do "make clean" first!
-!ifdef GUI
+!if "$(GUI)" == "yes"
 OBJDIR = .\ObjG
 !else
 OBJDIR = .\ObjC
 !endif
-!ifdef OLE
+!if "$(OLE)" == "yes"
 OBJDIR = $(OBJDIR)O
 !endif
-!ifdef DEBUG
+!if "$(DEBUG)" == "yes"
 OBJDIR = $(OBJDIR)d
 !endif
 
@@ -122,7 +123,7 @@ CPU = i386
 
 # Build a retail version by default
 
-!ifndef DEBUG
+!if "$(DEBUG)" != "yes"
 NODEBUG = 1
 !endif
 
@@ -467,13 +468,20 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\
 !endif # RUBY
 
 #
+# Support PostScript printing
+#
+!if "$(POSTSCRIPT)" == "yes"
+CFLAGS = $(CFLAGS) -DMSWINPS
+!endif # POSTSCRIPT
+
+#
 # End extra featuare include
 #
 !message
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-LINKARGS1 = /debug $(linkdebug) $(conflags) /nodefaultlib:libc
+LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) $(LINK_PDB)
 

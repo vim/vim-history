@@ -1875,9 +1875,6 @@ gui_mch_draw_menubar(void)
 }
 #endif /*FEAT_MENU*/
 
-/* cproto doesn't create a prototype for main() */
-int main __ARGS((int argc, char **argv));
-
 #ifndef PROTO
 void
 #ifdef VIMDLL
@@ -1891,41 +1888,14 @@ SaveInst(HINSTANCE hInst)
 #endif
 
 /*
- * Return the lightness of a pixel.  White is 255.
+ * Return the RGB value of a pixel as a long.
  */
-    int
-gui_mch_get_lightness(pixel)
-    guicolor_T	pixel;
+    long_u
+gui_mch_get_rgb(guicolor_T pixel)
 {
-    return (GetRValue(pixel)*3 + GetGValue(pixel)*6 + GetBValue(pixel)) / 10;
+    return (GetRValue(pixel) << 16) + (GetGValue(pixel) << 8)
+							   + GetBValue(pixel);
 }
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as "#RRGGBB".
- */
-    char_u *
-gui_mch_get_rgb(
-    guicolor_T	pixel)
-{
-    static char_u retval[10];
-
-    sprintf((char *)retval, "#%02x%02x%02x",
-	    GetRValue(pixel), GetGValue(pixel), GetBValue(pixel));
-    return retval;
-}
-#endif
-#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as long.
- */
-    unsigned long
-gui_mch_get_rgb_long(
-    guicolor_T	pixel)
-{
-    return (GetRValue(pixel) << 16) + (GetGValue(pixel) << 8) + GetBValue(pixel);
-}
-#endif
 
 #if defined(FEAT_GUI_DIALOG) || defined(PROTO)
 /* Convert pixels in X to dialog units */
@@ -2593,7 +2563,7 @@ gui_mch_newfont()
     gui_resize_shell(rect.right - rect.left
 			- GetSystemMetrics(SM_CXFRAME) * 2,
 		     rect.bottom - rect.top
-		        - GetSystemMetrics(SM_CYFRAME) * 2
+			- GetSystemMetrics(SM_CYFRAME) * 2
 			- GetSystemMetrics(SM_CYCAPTION)
 #ifdef FEAT_MENU
 			- gui_mswin_get_menu_height(FALSE)

@@ -44,7 +44,7 @@ void gui_mch_set_blinking (long waittime, long on, long off);
 void gui_mch_stop_blink (void);
 void gui_mch_start_blink (void);
 int gui_mch_get_lightness (GuiColor pixel);
-char_u *gui_mch_get_rgb (GuiColor pixel);
+long_u gui_mch_get_rgb (GuiColor pixel);
 void gui_mch_show_popupmenu(GuiMenu *menu);
 
 void process_event(int event, int *block);

@@ -1351,9 +1351,16 @@ do_one_cmd(cmdlinep, sourcing,
 		errormsg = (char_u *)_("Backwards range given");
 		goto doend;
 	    }
-	    else if (ask_yesno((char_u *)
-			   _("Backwards range given, OK to swap"), FALSE) != 'y')
+	    else
+	    {
+		int	msg_silent_save = msg_silent;
+
+		msg_silent = 0;
+		if (ask_yesno((char_u *)
+			_("Backwards range given, OK to swap"), FALSE) != 'y')
 		goto doend;
+		msg_silent = msg_silent_save;
+	    }
 	    lnum = ea.line1;
 	    ea.line1 = ea.line2;
 	    ea.line2 = lnum;
@@ -8141,7 +8148,9 @@ put_view(fd, wp, add_edit, flagp)
 			|| wp->w_localdir != NULL, flagp) == FAIL)
 	    return FAIL;
     }
-    if (wp->w_arg_idx != 0)
+
+    /* Only when part of a session: restore the argument index. */
+    if (wp->w_arg_idx != 0 && flagp == &ssop_flags)
     {
 	if (fprintf(fd, "%ldnext", (long)wp->w_arg_idx) < 0
 		|| put_eol(fd) == FAIL)

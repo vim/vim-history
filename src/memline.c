@@ -849,7 +849,8 @@ ml_recover()
     {
 	msg_start();
 	msg_outtrans_attr(mfp->mf_fname, MSG_HIST);
-	MSG_PUTS_ATTR(_(" cannot be used with this version of Vim.\n"), MSG_HIST);
+	MSG_PUTS_ATTR(_(" cannot be used with this version of Vim.\n"),
+								    MSG_HIST);
 	MSG_PUTS_ATTR(_("Use Vim version 3.0.\n"), MSG_HIST);
 	msg_end();
 	goto theend;
@@ -1291,7 +1292,7 @@ recover_names(fname, list, nr)
 		if (vim_ispathsep(p[-1]) && p[-1] == p[-2])
 		{
 		    /* Ends with '//', Use Full path for swap name */
-                    tail = make_percent_swname(dir_name, *fname);
+		    tail = make_percent_swname(dir_name, *fname);
 		}
 		else
 #endif
@@ -1440,16 +1441,16 @@ make_percent_swname(dir, name)
     d = NULL;
     if (f != NULL)
     {
-        s = alloc((unsigned)(STRLEN(f) + 1));
-        if (s != NULL)
-        {
-            for (d = s, p = f; *p; p++, d++)
-                *d = vim_ispathsep(*p) ? '%' : *p;
-            *d = 0;
-            d = concat_fnames(dir, s, TRUE);
-            vim_free(s);
-        }
-        vim_free(f);
+	s = alloc((unsigned)(STRLEN(f) + 1));
+	if (s != NULL)
+	{
+	    for (d = s, p = f; *p; p++, d++)
+		*d = vim_ispathsep(*p) ? '%' : *p;
+	    *d = 0;
+	    d = concat_fnames(dir, s, TRUE);
+	    vim_free(s);
+	}
+	vim_free(f);
     }
     return d;
 }
@@ -1726,6 +1727,7 @@ ml_sync_all(check_file, check_char)
 		    || (size_t)st.st_size != buf->b_orig_size)
 	    {
 		ml_preserve(buf, FALSE);
+		did_check_timestamps = FALSE;
 		need_check_timestamps = TRUE;	/* give message later */
 	    }
 	}
@@ -3232,13 +3234,13 @@ makeswapname(buf, dir_name)
     s = dir_name + STRLEN(dir_name);
     if (vim_ispathsep(s[-1]) && s[-1] == s[-2])
     {			       /* Ends with '//', Use Full path */
-        r = NULL;
-        if ((s = make_percent_swname(dir_name, buf->b_fname)) != NULL)
-        {
-            r = modname(s, (char_u *)".swp", FALSE);
-            vim_free(s);
-        }
-        return r;
+	r = NULL;
+	if ((s = make_percent_swname(dir_name, buf->b_fname)) != NULL)
+	{
+	    r = modname(s, (char_u *)".swp", FALSE);
+	    vim_free(s);
+	}
+	return r;
     }
 #endif
 
@@ -3942,7 +3944,7 @@ ml_setdirty(buf, flag)
 /*
  * Keep information for finding byte offset of a line, updtytpe may be one of:
  * ML_CHNK_ADDLINE: Add len to parent chunk, possibly splitting it
- *         Careful: ML_CHNK_ADDLINE may cause ml_find_line() to be called.
+ *	   Careful: ML_CHNK_ADDLINE may cause ml_find_line() to be called.
  * ML_CHNK_DELLINE: Subtract len from parent chunk, possibly deleting it
  * ML_CHNK_UPDLINE: Add len to parent chunk, as a signed entity.
  */
@@ -4214,7 +4216,7 @@ ml_find_line_or_offset(buf, line, offp)
     else
 	offset = *offp;
     if (line == 0 && offset <= 0)
-        return 1;   /* Not a "find offset" and offset 0 _must_ be in line 1 */
+	return 1;   /* Not a "find offset" and offset 0 _must_ be in line 1 */
     /*
      * Find the last chunk before the one containing our line. Last chunk is
      * special because it will never qualify
@@ -4273,7 +4275,7 @@ ml_find_line_or_offset(buf, line, offp)
 	}
 	len = text_end - ((dp->db_index[idx]) & DB_INDEX_MASK);
 	size += len;
-        if (offp != NULL && size >= offset)
+	if (offp != NULL && size >= offset)
 	{
 	    if (size + ffdos == offset)
 		*offp = 0;
@@ -4282,7 +4284,7 @@ ml_find_line_or_offset(buf, line, offp)
 	    else
 		*offp = offset - size + len
 		     - (text_end - ((dp->db_index[idx - 1]) & DB_INDEX_MASK));
-            return curline + idx - start_idx;
+	    return curline + idx - start_idx;
 	}
 	curline = buf->b_ml.ml_locked_high + 1;
     }

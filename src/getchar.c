@@ -69,6 +69,8 @@ static struct buffheader save_old_redobuff = {{NULL, {NUL}}, NULL, 0, 0};
 #endif
 static struct buffheader recordbuff = {{NULL, {NUL}}, NULL, 0, 0};
 
+static int typeahead_char = 0;		/* typeahead char that's not flushed */
+
 /*
  * when block_redo is TRUE redo buffer will not be changed
  * used by edit() to repeat insertions and 'V' command for redoing
@@ -222,7 +224,7 @@ get_recorded()
      * When stopping recording from Insert mode with CTRL-O q, also remove the
      * CTRL-O.
      */
-    if (len > 0 && restart_edit && p[len - 1] == Ctrl_O)
+    if (len > 0 && restart_edit != 0 && p[len - 1] == Ctrl_O)
 	p[len - 1] = NUL;
 
     return (p);
@@ -419,6 +421,16 @@ start_stuff()
 stuff_empty()
 {
     return (stuffbuff.bh_first.b_next == NULL);
+}
+
+/*
+ * Set a typeahead character that won't be flushed.
+ */
+    void
+typeahead_noflush(c)
+    int		c;
+{
+    typeahead_char = c;
 }
 
 /*
@@ -1663,7 +1675,14 @@ vgetorpeek(advance)
 /*
  * get a character: 1. from the stuffbuffer
  */
-	c = read_stuff(advance);
+	if (typeahead_char != 0)
+	{
+	    c = typeahead_char;
+	    if (advance)
+		typeahead_char = 0;
+	}
+	else
+	    c = read_stuff(advance);
 	if (c != NUL && !got_int)
 	{
 	    if (advance)
@@ -4295,12 +4314,12 @@ static struct initmap
 	/* paste, copy and cut */
 	{(char_u *)"<S-Insert> \"*P", NORMAL},
 	{(char_u *)"<S-Insert> \"-d\"*P", VISUAL},
-	{(char_u *)"<S-Insert> <C-R>*", INSERT+CMDLINE},
+	{(char_u *)"<S-Insert> <C-R><C-O>*", INSERT+CMDLINE},
 	{(char_u *)"<C-Insert> \"*y", VISUAL},
 	{(char_u *)"<S-Del> \"*d", VISUAL},
 	{(char_u *)"<C-Del> \"*d", VISUAL},
 	{(char_u *)"<C-X> \"*d", VISUAL},
-	/* Missing: CTRL-C (can't be mapped) and CTRL-V (means something) */
+	/* Missing: CTRL-C (cancel) and CTRL-V (block selection) */
 # else
 	{(char_u *)"\316\204 H", NORMAL+VISUAL},    /* CTRL-PageUp is "H" */
 	{(char_u *)"\316\204 \017H",INSERT},	    /* CTRL-PageUp is "^OH"*/
@@ -4316,7 +4335,7 @@ static struct initmap
 #   ifdef DJGPP
 	{(char_u *)"\316\122 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
 	{(char_u *)"\316\122 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
-	{(char_u *)"\316\122 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
+	{(char_u *)"\316\122 \022\017*", INSERT},  /* SHIFT-Insert is ^R^O* */
 	{(char_u *)"\316\222 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
 	{(char_u *)"\316\123 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
 	{(char_u *)"\316\223 \"*d", VISUAL},	    /* CTRL-Del is "*d */
@@ -4324,7 +4343,7 @@ static struct initmap
 #   else
 	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
 	{(char_u *)"\316\324 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
-	{(char_u *)"\316\324 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
+	{(char_u *)"\316\324 \022\017*", INSERT},  /* SHIFT-Insert is ^R^O* */
 	{(char_u *)"\316\325 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
 	{(char_u *)"\316\327 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
 	{(char_u *)"\316\330 \"*d", VISUAL},	    /* CTRL-Del is "*d */
@@ -4332,8 +4351,8 @@ static struct initmap
 #   endif
 #  else
 	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
-	{(char_u *)"\316\324 d\"0P", VISUAL},	    /* SHIFT-Insert is d"0P */
-	{(char_u *)"\316\324 \017P", INSERT},	    /* SHIFT-Insert is ^OP */
+	{(char_u *)"\316\324 \"-dP", VISUAL},	    /* SHIFT-Insert is "-dP */
+	{(char_u *)"\316\324 \022\017\"", INSERT}, /* SHIFT-Insert is ^R^O" */
 	{(char_u *)"\316\325 y", VISUAL},	    /* CTRL-Insert is y */
 	{(char_u *)"\316\327 d", VISUAL},	    /* SHIFT-Del is d */
 	{(char_u *)"\316\330 d", VISUAL},	    /* CTRL-Del is d */

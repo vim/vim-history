@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0as.  Last change: 2001 Aug 01
+*quickfix.txt*  For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -575,8 +575,8 @@ additionally to the default. >
 	\%C%*\\s%tarning:%m,
 	\%C%m
 <
-Jikes(TM) produces a single-line error message when invoked with the 
-option "+E", and can be matched with the following: >
+Jikes(TM) produces a single-line error message when invoked with the option
+"+E", and can be matched with the following: >
 
   :set efm=%f:%l:%v:%*\\d:%*\\d:%*\\s%m
 <

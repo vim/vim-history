@@ -1,8 +1,12 @@
+TRANSLATING VIM MESSAGES
+
 This file explains how to create and maintain po files using
 gnu-gettext.win32, a MINGW32 Windows port of gettext by Franco Bez
 <franco.bez@gmx.de>.  You can find it at:
 
 	http://home.a-city.de/franco.bez/gettext/gettext_win32_en.html
+
+First read the README.txt file for the general remarks
 
 
 The file that does the work is Make_ming.mak in the po directory. It is an
@@ -40,10 +44,12 @@ the same as in the Unix case, only the commands change):
 
 	make -f Make_ming.mak xx
 
-This will extract all the strings from Vim and merge them in with the
-    existing translations.  Requires the GNU gettext utilities.
+    This will extract all the strings from Vim and merge them in with the
+    existing translations.  Requires the GNU gettext utilities.  Also requires
+    unpacking the extra archive.
     Your original xx.po file will be copied to xx.po.orig
-    Once you do this, you MUST do the next three steps!
+
+    -- After you do this, you MUST do the next three steps! --
 
 (2) Translate
     See the gettext documentation on how to do this.  You can also find
@@ -55,7 +61,7 @@ This will extract all the strings from Vim and merge them in with the
     There is one special message:
 	msgid "Messages maintainer: Bram Moolenaar <Bram@vim.org>"
     You should include your name and E-mail address instead, for example:
-	msgstr "Berichten übersetzt bei: Johannes Zellner <johannes@zellner.org>"
+	msgstr "Berichten übersetzt bei: John Doe <john@doe.org>"
 
 (3) Clean up
     This is very important to make sure the translation works on all systems.
@@ -63,13 +69,14 @@ This will extract all the strings from Vim and merge them in with the
     - items marked with "#, fuzzy"
     - items with an empty msgstr
     You can do this with the cleanup.vim script:
+
 	:source cleanup.vim
 
 (4) Check:
 
 	make -f Make_ming.mak xx.mo
 
-    This checks for syntax errors.
+    Look out for syntax errors and fix them.
 
 (5) This is an extra step, ;-). If you want the vim.mo file installed in your
     system you must run:

@@ -201,7 +201,7 @@ WinMain(
 #endif
 		);
 #endif
-	pmain (argc, argv);
+	pmain(argc, argv);
 
 #ifdef VIMDLL
 	FreeLibrary(hLib);

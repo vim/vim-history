@@ -308,8 +308,8 @@ gui_athena_create_pullright_pixmap(w)
 	to.size = sizeof(XFontStruct *);
 #endif
 	/* Assumption: The menuBar children will use the same font as the
-	 *             pulldown menu items AND they will all be of type
-	 *             XtNfont.
+	 *	       pulldown menu items AND they will all be of type
+	 *	       XtNfont.
 	 */
 	XtVaGetValues(menuBar, XtNchildren, &children,
 			       XtNnumChildren, &num_children,
@@ -523,7 +523,7 @@ gui_mch_set_menu_pos(x, y, w, h)
  * neighbors.
  *
  * Valid range of return values is: 0 (beginning of children) to
- *                                  numChildren (end of children).
+ *				    numChildren (end of children).
  */
     static Cardinal
 athena_calculate_ins_pos(widget)
@@ -902,11 +902,10 @@ gui_mch_submenu_change(menu, colors)
 		    Arg args[2];
 
 		    args[0].name = XtNbackground;
-		    args[0].value = gui.balloonEval_bg_pixel;
+		    args[0].value = gui.tooltip_bg_pixel;
 		    args[1].name = XtNforeground;
-		    args[1].value = gui.balloonEval_fg_pixel;
-		    XtSetValues(mp->tip->balloonLabel,
-				&args[0], XtNumber(args));
+		    args[1].value = gui.tooltip_fg_pixel;
+		    XtSetValues(mp->tip->balloonLabel, &args[0], XtNumber(args));
 		}
 # endif
 #endif
@@ -923,9 +922,8 @@ gui_mch_submenu_change(menu, colors)
 		    Arg args[1];
 
 		    args[0].name = XtNfontSet;
-		    args[0].value = (XtArgVal)gui.balloonEval_fontset;
-		    XtSetValues(mp->tip->balloonLabel,
-				&args[0], XtNumber(args));
+		    args[0].value = (XtArgVal)gui.tooltip_fontset;
+		    XtSetValues(mp->tip->balloonLabel, &args[0], XtNumber(args));
 		}
 #endif
 	    }
@@ -1127,10 +1125,10 @@ gui_mch_show_toolbar(int showit)
 		    if (menu_is_toolbar(toolbar->dname))
 			break;
 		/* Assumption: toolbar is NULL if there is no toolbar,
-		 *             otherwise it contains the toolbar menu structure.
+		 *	       otherwise it contains the toolbar menu structure.
 		 *
 		 * Assumption: "numChildren" == the number of items in the list
-		 *             of items beginning with toolbar->children.
+		 *	       of items beginning with toolbar->children.
 		 */
 		if (toolbar)
 		{
@@ -1614,7 +1612,7 @@ submenu_widget(widget)
     Widget  widget;
 {
     /* Precondition: has_submenu(widget) == True
-     *               XtIsSubclass(XtParent(widget),simpleMenuWidgetClass) == True
+     *	    XtIsSubclass(XtParent(widget),simpleMenuWidgetClass) == True
      */
 
     char_u	*pullright_name;
@@ -1625,9 +1623,8 @@ submenu_widget(widget)
     vim_free(pullright_name);
 
     return popup;
-    /* Postcondition:
-     * (popup != NULL) implies (XtIsSubclass(popup,simpleMenuWidgetClass) == True)
-     */
+    /* Postcondition: (popup != NULL) implies
+     * (XtIsSubclass(popup,simpleMenuWidgetClass) == True) */
 }
 
 /* ARGSUSED */
@@ -1674,15 +1671,13 @@ gui_mch_def_colors()
      * Get the colors ourselves.  Using the automatic conversion doesn't
      * handle looking for approximate colors.
      */
-    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.menu_fg_color);
-    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.menu_bg_color);
-    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.scroll_fg_color);
-    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.scroll_bg_color);
+    gui.menu_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_fg_name);
+    gui.menu_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_menu_bg_name);
+    gui.scroll_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_fg_name);
+    gui.scroll_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_scroll_bg_name);
 #ifdef FEAT_BEVAL
-    gui.balloonEval_fg_pixel = gui_mch_get_color(
-					(char_u *)gui.tooltip_fg_color);
-    gui.balloonEval_bg_pixel = gui_mch_get_color(
-					(char_u *)gui.tooltip_bg_color);
+    gui.tooltip_fg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+    gui.tooltip_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
 }
 

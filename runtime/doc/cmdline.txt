@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0as.  Last change: 2001 Jul 24
+*cmdline.txt*   For Vim version 6.0at.  Last change: 2001 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -165,7 +165,9 @@ CTRL-R CTRL-A				*c_CTRL-R_CTRL-A* *c_<C-R>_<C-A>*
 		included}
 
 					*c_CTRL-R_CTRL-R* *c_<C-R>_<C-R>*
+					*c_CTRL-R_CTRL-O* *c_<C-R>_<C-O>*
 CTRL-R CTRL-R {0-9a-z"%#:-=. CTRL-F CTRL-P CTRL-W CTRL-A}
+CTRL-R CTRL-O {0-9a-z"%#:-=. CTRL-F CTRL-P CTRL-W CTRL-A}
 		Insert register or object under the cursor.  Works like
 		|c_CTRL-R| but inserts the text literally.  For example, if
 		register a contains "xy^Hz" (where ^H is a backspace),
