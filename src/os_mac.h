@@ -118,6 +118,7 @@
 # define USE_UNIXFILENAME
 #else
 # define COLON_AS_PATHSEP
+# define DONT_ADD_PATHSEP_TO_DIR
 #endif
 
 
@@ -128,7 +129,6 @@
 #define FEAT_SOURCE_FFS
 #define FEAT_SOURCE_FF_MAC
 
-#define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
