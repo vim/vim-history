@@ -6549,7 +6549,7 @@ nv_gomark(cap)
 }
 
 /*
- * Handle CTRL-O and CTRL-I commands.
+ * Handle CTRL-O, CTRL-I, "g;" and "g," commands.
  */
     static void
 nv_pcmark(cap)
@@ -6575,6 +6575,15 @@ nv_pcmark(cap)
 	}
 	else if (pos != NULL)		    /* can jump */
 	    nv_cursormark(cap, FALSE, pos);
+	else if (cap->cmdchar == 'g')
+	{
+	    if (curbuf->b_changelistlen == 0)
+		EMSG(_("E664: changelist is empty"));
+	    else if (cap->count1 < 0)
+		EMSG(_("E662: At start of changelist"));
+	    else
+		EMSG(_("E663: At end of changelist"));
+	}
 	else
 	    clearopbeep(cap->oap);
 # ifdef FEAT_FOLDING
