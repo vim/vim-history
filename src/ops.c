@@ -3649,7 +3649,7 @@ ex_display(eap)
     long		j;
     char_u		*p;
     struct yankreg	*yb;
-    char_u		name;
+    int			name;
     int			attr;
     char_u		*arg = eap->arg;
 
@@ -3661,6 +3661,18 @@ ex_display(eap)
     MSG_PUTS_TITLE(_("\n--- Registers ---"));
     for (i = -1; i < NUM_REGISTERS && !got_int; ++i)
     {
+	name = get_register_name(i);
+	if (arg != NULL && vim_strchr(arg, name) == NULL)
+	    continue;	    /* did not ask for this register */
+
+#ifdef FEAT_CLIPBOARD
+	/* Adjust register name for "unnamed" in 'clipboard'.
+	 * When it's a clipboard register, fill it with the current contents
+	 * of the clipboard.  */
+	adjust_clip_reg(&name);
+	(void)may_get_selection(name);
+#endif
+
 	if (i == -1)
 	{
 	    if (y_previous != NULL)
@@ -3670,9 +3682,7 @@ ex_display(eap)
 	}
 	else
 	    yb = &(y_regs[i]);
-	name = get_register_name(i);
-	if (yb->y_array != NULL
-		&& (arg == NULL || vim_strchr(arg, name) != NULL))
+	if (yb->y_array != NULL)
 	{
 	    msg_putchar('\n');
 	    msg_putchar('"');
