@@ -1184,10 +1184,7 @@ scripterror:
     /* Set the 'diff' option now, so that it can be checked for in a .vimrc
      * file.  There is no buffer yet though. */
     if (diff_mode)
-    {
 	diff_win_options(firstwin, FALSE);
-	p_sbo = (char_u *)"ver,hor,jump";
-    }
 #endif
 
     cmdline_row = Rows - p_ch;
