@@ -694,6 +694,9 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 			pos->lnum = lnum;
 			pos->col = startcol;
 		    }
+#ifdef FEAT_VIRTUALEDIT
+		    pos->coladd = 0;
+#endif
 		    found = 1;
 
 		    /* Set variables used for 'incsearch' highlighting. */
