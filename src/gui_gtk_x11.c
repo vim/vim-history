@@ -298,6 +298,8 @@ const special_keys[] =
 #define ARG_NEEDS_GUI	0x0200	/* need to initialize the GUI for this	  */
 #define ARG_FOR_GTK	0x0400	/* argument is handled by GTK+ or GNOME   */
 #define ARG_COMPAT_LONG	0x0800	/* accept -foo but substitute with --foo  */
+#define ARG_KEEP	0x1000	/* don't remove argument from argv[] */
+
 /*
  * This table holds all the X GUI command line options allowed.  This includes
  * the standard ones so that we can skip them when Vim is started without the
@@ -379,7 +381,7 @@ static const cmdline_option_T cmdline_options[] =
     {"--disable-sound",		ARG_FOR_GTK},
     {"--espeaker",		ARG_FOR_GTK|ARG_HAS_VALUE},
     {"-?",			ARG_FOR_GTK|ARG_NEEDS_GUI},
-    {"--help",			ARG_FOR_GTK|ARG_NEEDS_GUI},
+    {"--help",			ARG_FOR_GTK|ARG_NEEDS_GUI|ARG_KEEP},
     {"--usage",			ARG_FOR_GTK|ARG_NEEDS_GUI},
 # if 0 /* conflicts with Vim's own --version argument */
     {"--version",		ARG_FOR_GTK|ARG_NEEDS_GUI},
@@ -560,27 +562,32 @@ gui_mch_prepare(int *argc, char **argv)
 	if (option->flags & ARG_NEEDS_GUI)
 	    gui.starting = TRUE;
 
-	/* Now remove the flag from the argument vector. */
-	if (--*argc > i)
+	if (option->flags & ARG_KEEP)
+	    ++i;
+	else
 	{
-	    int n_strip = 1;
-
-	    /* Move the argument's value as well, if there is one. */
-	    if ((option->flags & ARG_HAS_VALUE)
-		    && argv[i][len] != '='
-		    && strcmp(argv[i + 1], "--") != 0)
+	    /* Remove the flag from the argument vector. */
+	    if (--*argc > i)
 	    {
-		++n_strip;
-		--*argc;
-		if (option->flags & ARG_FOR_GTK)
-		    gui_argv[gui_argc++] = argv[i + 1];
-	    }
+		int n_strip = 1;
 
-	    if (*argc > i)
-		mch_memmove(&argv[i], &argv[i + n_strip],
-			    (*argc - i) * sizeof(char *));
+		/* Move the argument's value as well, if there is one. */
+		if ((option->flags & ARG_HAS_VALUE)
+			&& argv[i][len] != '='
+			&& strcmp(argv[i + 1], "--") != 0)
+		{
+		    ++n_strip;
+		    --*argc;
+		    if (option->flags & ARG_FOR_GTK)
+			gui_argv[gui_argc++] = argv[i + 1];
+		}
+
+		if (*argc > i)
+		    mch_memmove(&argv[i], &argv[i + n_strip],
+						(*argc - i) * sizeof(char *));
+	    }
+	    argv[*argc] = NULL;
 	}
-	argv[*argc] = NULL;
     }
 
     gui_argv[gui_argc] = NULL;
