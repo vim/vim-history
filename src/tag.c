@@ -1022,6 +1022,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	off_t	high_offset;	/* offset of char after last line that could
 				   match */
 	off_t	curr_offset;	/* Current file offset in search range */
+	off_t	curr_offset_used; /* curr_offset used when skipping back */
 	off_t	match_offset;	/* Where the binary search found a tag */
 	int	low_char;	/* first char at low_offset */
 	int	high_char;	/* first char at high_offset */
@@ -1271,6 +1272,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 	    if (state == TS_BINARY || state == TS_SKIP_BACK)
 	    {
 		/* Adjust the search file offset to the correct position */
+		search_info.curr_offset_used = search_info.curr_offset;
 #ifdef HAVE_FSEEKO
 		fseeko(fp, search_info.curr_offset, SEEK_SET);
 #else
@@ -1303,6 +1305,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 		    /* Hit end of file.  Skip backwards. */
 		    state = TS_SKIP_BACK;
 		    search_info.match_offset = ftell(fp);
+		    search_info.curr_offset = search_info.curr_offset_used;
 		    continue;
 		}
 	    }
@@ -1628,6 +1631,10 @@ line_read_in:
 		{
 		    if (MB_STRNICMP(tagp.tagname, pathead, cmplen) != 0)
 			state = TS_STEP_FORWARD;
+		    else
+			/* Have to skip back more.  Restore the curr_offset
+			 * used, otherwise we get stuck at a long line. */
+			search_info.curr_offset = search_info.curr_offset_used;
 		    continue;
 		}
 		else if (state == TS_STEP_FORWARD)
