@@ -5793,6 +5793,10 @@ ins_try_si(c)
 	old_indent = get_indent();
 	set_indent(0, TRUE);
     }
+
+    /* Adjust ai_col, the char at this position can be deleted. */
+    if (ai_col > curwin->w_cursor.col)
+	ai_col = curwin->w_cursor.col;
 }
 #endif
 
