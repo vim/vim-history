@@ -1790,7 +1790,7 @@ syn_current_attr(syncing, displaying)
 	else
 	    cur_si = NULL;
 
-	if (curbuf->b_syn_containedin || cur_si == NULL
+	if (syn_buf->b_syn_containedin || cur_si == NULL
 					      || cur_si->si_cont_list != NULL)
 	{
 	    /*
