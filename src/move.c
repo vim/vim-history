@@ -775,7 +775,8 @@ curs_rows(wp, do_botline)
 	    /* a line that is too long to fit on the last screen line */
 	    wp->w_cline_height = 0;
 #ifdef FEAT_FOLDING
-	    wp->w_cline_folded = FALSE;
+	    wp->w_cline_folded = hasFoldingWin(wp, wp->w_cursor.lnum,
+						      NULL, NULL, TRUE, NULL);
 #endif
 	}
 	else
