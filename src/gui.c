@@ -3294,7 +3294,14 @@ gui_drag_scrollbar(sb, value, still_dragging)
 	gui.dragged_wp = sb->wp;
     }
     else
+    {
 	gui.dragged_sb = SBAR_NONE;
+#ifdef HAVE_GTK2
+	/* Keep the "dragged_wp" value until after the scrolling, for when the
+	 * moust button is released.  GTK2 doesn't send the button-up event. */
+	gui.dragged_wp = NULL;
+#endif
+    }
 
     /* Vertical sbar info is kept in the first sbar (the left one) */
     if (sb->wp != NULL)
