@@ -54,7 +54,7 @@ mainerr(n, str)
 	"Too many \"+command\" or \"-c command\" arguments",
     };
 
-#if defined(UNIX) || defined(__EMX__)
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
     reset_signals();		/* kill us with CTRL-C here, if you like */
 #endif
 
@@ -98,7 +98,7 @@ usage()
 #endif
     };
 
-#if defined(UNIX) || defined(__EMX__)
+#if defined(UNIX) || defined(__EMX__) || defined(VMS)
     reset_signals();		/* kill us with CTRL-C here, if you like */
 #endif
 

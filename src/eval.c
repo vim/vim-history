@@ -2999,7 +2999,7 @@ f_has(argvars, retvar)
 #ifdef USE_MOUSE
 	"mouse",
 #endif
-#ifdef UNIX
+#if defined(UNIX) || defined(VMS)
 # ifdef DEC_MOUSE
 	"mouse_dec",
 # endif
@@ -5618,6 +5618,10 @@ repeat:
 	while (tail > s && vim_ispathsep(tail[-1]))
 	    --tail;
 	*fnamelen = tail - *fnamep;
+#ifdef VMS
+	if (*fnamelen > 0)
+	    *fnamelen += 1; /* the path separator is part of the path */
+#endif
 	while (tail > s && !vim_ispathsep(tail[-1]))
 	    --tail;
     }
@@ -5652,6 +5656,15 @@ repeat:
 	    {
 		*fnamelen += *fnamep - (s + 1);
 		*fnamep = s + 1;
+#ifdef VMS
+		/* cut version from the extension */
+		s = *fnamep + *fnamelen - 1;
+		for ( ; s > *fnamep; --s)
+		    if (s[0] == ';')
+			break;
+		if (s > *fnamep)
+		    *fnamelen = s - *fnamep;
+#endif
 	    }
 	    else if (*fnamep <= tail)
 		*fnamelen = 0;

@@ -1,4 +1,7 @@
-/* os_vms_conf.h.  Replaces config.h for VMS with GUI */
+/* gui_vms_conf.h.  Replaces config.h for VMS with GUI */
+
+/* Open VMS is case insensitive */
+#define CASE_INSENSITIVE_FILENAME 1
 
 /* Define unless no X support found */
 #define HAVE_X11 1
@@ -179,7 +182,7 @@
 #define HAVE_SYS_TIME_H 1
 
 /* Define if you have the <termio.h> header file.  */
-#define HAVE_TERMIO_H 1
+/* #define HAVE_TERMIO_H 1 */
 
 /* Define if you have the <unistd.h> header file.  */
 #define HAVE_UNISTD_H 1

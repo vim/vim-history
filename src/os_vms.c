@@ -31,7 +31,7 @@ static int	vms_x(unsigned int fun);
 static int	vms_inchar(int wtime);
 static int	vms_sys(char *cmd, char *log, char *inp);
 
-char	ibuf[16 /*1*/];			/* Input buffer */
+char	ibuf[16];			/* Input buffer */
 
 #define NOTIM	0
 #define TIM_0	1
@@ -1022,6 +1022,18 @@ vim_is_iris(name)
 	    || STRCMP(name, "builtin_iris-ansi") == 0);
 }
 
+    int
+vim_is_vt300(name)
+    char_u  *name;
+{
+    if (name == NULL)
+        return FALSE;       /* actually all ANSI comp. terminals should be here  */
+    return (STRNICMP(name, "vt3", 3) == 0  /* it will cover all from VT100-VT300 */
+         || STRNICMP(name, "vt2", 3) == 0  /* Note: from VT340 can hanle colors  */
+         || STRNICMP(name, "vt1", 3) == 0  
+         || STRCMP(name, "builtin_vt320") == 0);
+}
+
 
 /*
  * Return TRUE if "name" is a terminal for which 'ttyfast' should be set.
@@ -1033,7 +1045,7 @@ vim_is_fastterm(name)
 {
     if (name == NULL)
 	return FALSE;
-    if (vim_is_xterm(name) || vim_is_iris(name))
+    if (vim_is_vt300(name) || vim_is_xterm(name) || vim_is_iris(name) )
 	return TRUE;
     return (   STRNICMP(name, "hpterm", 6) == 0
 	    || STRNICMP(name, "sun-cmd", 7) == 0
@@ -1110,28 +1122,19 @@ mch_dirname(char_u *buf, int len)
 	STRCPY(buf, strerror(errno));
 	return FAIL;
     }
-    /* tranlate from VMS to UNIX format */
+
+    /********************************************* 
+    If we want tranlate from VMS to UNIX format, but
+    it is much more useful to use native VMS path
+    internally as well.  
+
     STRNCPY(buf, decc$translate_vms((char *)buf), len);
-    STRCAT(buf, "/");
+    STRCAT(buf, "/"); 
+
+    **********************************************/
+
     return OK;
 }
-
-/*
- * Get name of current directory into buffer 'buf' of length 'len' bytes.
- * In VMS format
- * Return OK for success, FAIL for failure.
- */
-    int
-mch_dirname_vms(char_u *buf, int len)
-{
-    if (!getcwd((char *)buf, len))
-    {
-	STRCPY(buf, strerror(errno));
-	return FAIL;
-    }
-    return OK;
-}
-
 
 /*
  *	mch_FullName	get absolute filename into buffer 'buf' of
@@ -1202,7 +1205,7 @@ mch_FullName(char_u *fname, char_u *buf, int len, int force)
     int
 mch_isFullName(char_u *fname)
 {
-    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'[') || strchr((char *)fname,'>') )
+    if (fname[0] == '/' || strchr((char *)fname, ':') || strchr((char *)fname,'[') || strchr((char *)fname,']') || strchr((char *)fname,'<') || strchr((char *)fname,'>') )
 	return 1;
     else
 	return 0;
@@ -1276,6 +1279,11 @@ mch_windexit(int r)
 	mch_restore_title(3);   /* restore xterm title and icon name */
 #endif
 	stoptermcap();
+
+	/* Cursor may have been switched off without calling starttermcap()
+	 * when doing "vim -u vimrc" and vimrc contains ":q". */
+	if (full_screen)
+	    cursor_on();
     }
     vms_flushbuf();
     ml_close_all(TRUE);			/* remove all memfiles */
@@ -1516,6 +1524,62 @@ mch_setmouse(int on)
     }
     ison = on;
 }
+
+/*
+ * Set the mouse termcode, depending on the 'term' and 'ttymouse' options.
+ */
+    void
+check_mouse_termcode()
+{
+# ifdef XTERM_MOUSE
+    if (use_xterm_mouse())
+    {
+        set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
+        if (*p_mouse != NUL)
+        {
+            /* force mouse off and maybe on to send possibly new mouse
+             * activation sequence to the xterm, with(out) drag tracing. */
+            mch_setmouse(FALSE);
+            setmouse();
+        }
+    }
+    else
+        del_mouse_termcode(KS_MOUSE);
+# endif
+# ifdef GPM_MOUSE
+    if (!use_xterm_mouse())
+        set_mouse_termcode(KS_MOUSE, (char_u *)"\033MG");
+# endif
+# ifdef NETTERM_MOUSE
+    /* can be added always, there is no conflict */
+    set_mouse_termcode(KS_NETTERM_MOUSE, (char_u *)"\033}");
+# endif
+# ifdef DEC_MOUSE
+    /* conflicts with xterm mouse: "\033[" and "\033[M" */
+    if (!use_xterm_mouse())
+        set_mouse_termcode(KS_DEC_MOUSE, (char_u *)"\033[");
+    else
+        del_mouse_termcode(KS_DEC_MOUSE);
+# endif
+}
+
+/*
+ * Return non-zero when using an xterm mouse, according to 'ttymouse'.
+ * Return 1 for "xterm".
+ * Return 2 for "xterm2".
+ */
+    int
+use_xterm_mouse()
+{
+    if (STRNICMP(p_ttym, "xterm", 5) == 0)
+    {
+        if (isdigit(p_ttym[5]))
+            return atoi((char *)&p_ttym[5]);
+        return 1;
+    }
+    return 0;
+}
+
 #endif
 
 /*
@@ -1832,7 +1896,7 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 	    /* files should exist if expanding interactively */
 	    if (!(flags & EW_NOTFOUND) && mch_getperm(vms_fmatch[i]) < 0)
 		continue;
-	    /* check if this entry should be included */
+	    /* do not include directories */
 	    dir = (mch_isdir(vms_fmatch[i]));
 	    if (( dir && !(flags & EW_DIR)) || (!dir && !(flags & EW_FILE)))
 		continue;
@@ -1850,7 +1914,6 @@ mch_expand_wildcards(int num_pat, char_u **pat, int *num_file, char_u ***file, i
 		}
 		files_free = EXPL_ALLOC_INC;
 	    }
-	    /* need to append '/' on directories here?? */
 
 	    (*file)[*num_file++] = vms_fmatch[i];
 	}
@@ -2142,7 +2205,7 @@ vms_unix_mixed_filespec(char *in, char *out)
 
     /* start of directory portion */
     ch = *in;
-    if ((ch == '[') || (ch == '/')) {	/* start of directory(s) ? */
+    if ((ch == '[') || (ch == '/') || (ch == '<') ) {	/* start of directory(s) ? */
 	ch = '[';
 	SKIP_FOLLOWING_SLASHES(in);
     } else if (EQN(in, "../", 3)) { /* Unix parent directory? */
@@ -2175,7 +2238,7 @@ vms_unix_mixed_filespec(char *in, char *out)
 
     while (*in != '\0') {
 	ch = *in;
-	if ((ch == ']') || (ch == '/')) {	/* end of (sub)directory ? */
+	if ((ch == ']') || (ch == '/') || (ch == '>') ) {	/* end of (sub)directory ? */
 	    end_of_dir = out;
 	    ch = '.';
 	    SKIP_FOLLOWING_SLASHES(in);
@@ -2241,11 +2304,32 @@ vms_fixfilename(void *instring)
      * else translate mixed unix-vms file specs to pure vms
      */
 
-    Fspec_Rms = buf;	/* for decc$to_vms */
+    Fspec_Rms = buf;	                        /* for decc$to_vms              */
     if (strchr(instring,'/') == NULL)
-	strcpy(buf, instring);  /* already a vms file spec */
-    else if (decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0)
-	vms_unix_mixed_filespec(instring, buf);
+	strcpy(buf, instring);                  /* already a vms file spec      */
+    else if (strchr(instring,'"') == NULL){     /* regular file                 */
+	if (decc$to_vms(instring, vms_fspec_proc, 0, 0) <= 0)
+	    vms_unix_mixed_filespec(instring, buf);
+        }
+    else 
+	vms_unix_mixed_filespec(instring, buf); /* we have a passwd in the path */    
 
     return buf;
 }
+/*
+ * Remove version number from file name
+ * we need it in some special cases as:
+ * creating swap file name and writing new file 
+ */
+
+void *
+vms_remove_version(void * fname)
+{
+    char_u          *cp;
+
+    if ((cp = vim_strchr( fname, ';')) != NULL) /* remove version */
+        *cp = '\0';
+    vms_fixfilename(fname);
+    return fname;
+}
+

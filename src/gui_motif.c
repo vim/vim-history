@@ -861,11 +861,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	dflt = (char_u *)"";
     if (initdir == NULL || *initdir == NUL)
     {
-#ifdef VMS
-	mch_dirname_vms(dirbuf, MAXPATHL);
-#else
 	mch_dirname(dirbuf, MAXPATHL);
-#endif
 	initdir = dirbuf;
     }
 
