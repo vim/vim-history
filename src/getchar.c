@@ -3727,7 +3727,8 @@ ExpandMappings(regmatch, num_file, file)
 /*
  * Check for an abbreviation.
  * Cursor is at ptr[col]. When inserting, mincol is where insert started.
- * "c" is the character typed before check_abbr was called.
+ * "c" is the character typed before check_abbr was called.  It may have
+ * ABBR_OFF added to avoid prepending a CTRL-V to it.
  *
  * Historic vi practice: The last character of an abbreviation must be an id
  * character ([a-zA-Z0-9_]). The characters in front of it must be all id
@@ -3879,7 +3880,12 @@ check_abbr(c, ptr, col, mincol)
 			tb[j++] = Ctrl_V;	/* special char needs CTRL-V */
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
+		    {
+			/* if ABBR_OFF has been added, remove it here */
+			if (c >= ABBR_OFF)
+			    c -= ABBR_OFF;
 			j += (*mb_char2bytes)(c, tb + j);
+		    }
 		    else
 #endif
 			tb[j++] = c;

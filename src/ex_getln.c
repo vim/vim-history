@@ -1341,7 +1341,13 @@ getcmdline(firstc, count, indent)
 	 * We come here if we have a normal character.
 	 */
 
-	if (do_abbr && (IS_SPECIAL(c) || !vim_iswordc(c)) && ccheck_abbr(c))
+	if (do_abbr && (IS_SPECIAL(c) || !vim_iswordc(c)) && ccheck_abbr(
+#ifdef FEAT_MBYTE
+			/* Add ABBR_OFF for characters above 0x100, this is
+			 * what check_abbr() expects. */
+			(has_mbyte && c >= 0x100) ? (c + ABBR_OFF) :
+#endif
+									c))
 	    goto cmdline_changed;
 
 	/*
