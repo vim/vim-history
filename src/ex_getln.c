@@ -955,6 +955,10 @@ getcmdline(firstc, count, indent)
 #ifdef CURSOR_SHAPE
 		ui_cursor_shape();	/* may show different cursor shape */
 #endif
+#if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
+		/* Show/unshow value of 'keymap' in status lines later. */
+		status_redraw_curbuf();
+#endif
 		goto cmdline_not_changed;
 
 /*	case '@':   only in very old vi */
