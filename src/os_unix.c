@@ -383,6 +383,11 @@ mch_inchar(buf, maxlen, wtime)
 	if (do_resize)	    /* interrupted by SIGWINCH signal */
 	    continue;
 
+#ifdef FEAT_CLIENTSERVER
+	if (received_from_client)
+	    return 0;	    /* Input was put directly in typeahead buffer */
+#endif
+
 	/*
 	 * For some terminals we only get one character at a time.
 	 * We want the get all available characters, so we could keep on
