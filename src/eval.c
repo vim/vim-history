@@ -656,16 +656,16 @@ ex_let(eap)
 		/*
 		 * List all variables.
 		 */
-		for (i = 0; i < variables.ga_len; ++i)
+		for (i = 0; i < variables.ga_len && !got_int; ++i)
 		    if (VAR_ENTRY(i).var_name != NULL)
 			list_one_var(&VAR_ENTRY(i), (char_u *)"");
-		for (i = 0; i < curbuf->b_vars.ga_len; ++i)
+		for (i = 0; i < curbuf->b_vars.ga_len && !got_int; ++i)
 		    if (BVAR_ENTRY(i).var_name != NULL)
 			list_one_var(&BVAR_ENTRY(i), (char_u *)"b:");
-		for (i = 0; i < curwin->w_vars.ga_len; ++i)
+		for (i = 0; i < curwin->w_vars.ga_len && !got_int; ++i)
 		    if (WVAR_ENTRY(i).var_name != NULL)
 			list_one_var(&WVAR_ENTRY(i), (char_u *)"w:");
-		for (i = 0; i < VV_LEN; ++i)
+		for (i = 0; i < VV_LEN && !got_int; ++i)
 		    if (vimvars[i].type == VAR_NUMBER || vimvars[i].val != NULL)
 			list_vim_var(i);
 	    }
