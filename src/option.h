@@ -292,7 +292,7 @@ EXTERN char_u	*p_bex;		/* 'backupext' */
 EXTERN char_u	*p_bsk;		/* 'backupskip' */
 #endif
 #ifdef FEAT_BEVAL
-EXTERN int	p_bdlay;	/* 'balloondelay' */
+EXTERN long	p_bdlay;	/* 'balloondelay' */
 #endif
 #ifdef FEAT_SUN_WORKSHOP
 EXTERN int	p_beval;	/* 'ballooneval' */
