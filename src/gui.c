@@ -450,6 +450,9 @@ gui_init()
     if (usingSunWorkShop)
 	workshop_init();
 #endif
+#ifdef FEAT_SIGN_ICONS
+    sign_gui_started();
+#endif
 
     /* Configure the desired menu and scrollbars */
     gui_init_which_components(NULL);
