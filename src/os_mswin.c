@@ -2336,9 +2336,7 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    /* Remember who sent this, for <client> */
 	    clientWindow = sender;
 
-	    ++emsg_skip;
-	    res = eval_to_string(data->lpData, NULL);
-	    --emsg_skip;
+	    res = eval_client_expr_to_string(data->lpData);
 	    if (res == NULL)
 	    {
 		res = vim_strsave(_(e_invexprmsg));
