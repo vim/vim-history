@@ -2784,6 +2784,12 @@ vim_regexec_both(line, col)
 #endif
 
     reg_tofree = NULL;
+
+#ifdef HAVE_TRY_EXCEPT
+    __try
+    {
+#endif
+
 #ifdef HAVE_SETJMP_H
     /*
      * Matching with a regexp may cause a very deep recursive call of
@@ -2939,6 +2945,21 @@ vim_regexec_both(line, col)
 
     if (out_of_stack)
 	EMSG(_("E363: pattern caused out-of-stack error"));
+
+#ifdef HAVE_TRY_EXCEPT
+    }
+    __except(EXCEPTION_EXECUTE_HANDLER)
+    {
+	if (GetExceptionCode() == EXCEPTION_STACK_OVERFLOW)
+	{
+	    RESETSTKOFLW();
+	    EMSG(_("E363: pattern caused out-of-stack error"));
+	}
+	else
+	    EMSG(_("E361: Crash intercepted; regexp too complex?"));
+	retval = 0L;
+    }
+#endif
 
 theend:
     /* Didn't find a match. */

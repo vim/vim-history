@@ -738,6 +738,10 @@ mch_libcall(
     // If the handle is valid, try to get the function address.
     if (hinstLib != NULL)
     {
+#ifdef HAVE_TRY_EXCEPT
+	__try
+	{
+#endif
 	if (argstring != NULL)
 	{
 	    /* Call with string argument */
@@ -782,6 +786,16 @@ mch_libcall(
 	    if (*string_result != NULL)
 		mch_memmove(*string_result, retval_str, len);
 	}
+
+#ifdef HAVE_TRY_EXCEPT
+	}
+	__except(EXCEPTION_EXECUTE_HANDLER)
+	{
+	    if (GetExceptionCode() == EXCEPTION_STACK_OVERFLOW)
+		RESETSTKOFLW();
+	    fRunTimeLinkSuccess = 0;
+	}
+#endif
 
 	// Free the DLL module.
 	(void)FreeLibrary(hinstLib);
