@@ -5973,7 +5973,12 @@ handle_drop(filec, filev, split)
 
     for (i = 0; i < arg_file_count; ++i)
 	if (arg_files[i] != NULL)
+	{
+#ifdef BACKSLASH_IN_FILENAME
+	    slash_adjust(arg_files[i]);
+#endif
 	    (void)buflist_add(arg_files[i]);
+	}
 
     /*
      * Move to the first file.
