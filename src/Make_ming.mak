@@ -19,7 +19,7 @@
 #     http://upx.tsx.org/
 #
 # Maintained by Ron Aaron <ron@mossbayeng.com>
-# updated 2000 Oct 16
+# updated 2003 Jan 20
 
 #>>>>> choose options:
 # set to '1' for a debug build
@@ -206,7 +206,7 @@ CFLAGS += -DDYNAMIC_PYTHON
 endif
 endif
 
-ifdef POSTSCRIPT
+ifeq ($(POSTSCRIPT),1)
 CFLAGS += -DMSWINPS
 endif
 
