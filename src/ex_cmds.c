@@ -293,6 +293,11 @@ ex_retab(eap)
     curwin->w_p_list = 0;	    /* don't want list mode here */
 
     new_ts = getdigits(&(eap->arg));
+    if (new_ts < 0)
+    {
+	EMSG(_(e_positive));
+	return;
+    }
     if (new_ts == 0)
 	new_ts = curbuf->b_p_ts;
     for (lnum = eap->line1; !got_int && lnum <= eap->line2; ++lnum)
