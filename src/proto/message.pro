@@ -2,12 +2,13 @@
 int msg __ARGS((char_u *s));
 int msg_attr __ARGS((char_u *s, int attr));
 char_u *msg_strtrunc __ARGS((char_u *s));
+void trunc_string __ARGS((char_u *s, char_u *buf, int room));
 int emsg __ARGS((char_u *s));
 int emsg2 __ARGS((char_u *s, char_u *a1));
 int emsgn __ARGS((char_u *s, long n));
 char_u *msg_trunc_attr __ARGS((char_u *s, int force, int attr));
 char_u *msg_may_trunc __ARGS((int force, char_u *s));
-void ex_messages __ARGS((exarg_t *eap));
+void ex_messages __ARGS((exarg_T *eap));
 void wait_return __ARGS((int redraw));
 void msg_start __ARGS((void));
 void msg_starthere __ARGS((void));
@@ -45,5 +46,5 @@ void display_confirm_msg __ARGS((void));
 int vim_dialog_yesno __ARGS((int type, char_u *title, char_u *message, int dflt));
 int vim_dialog_yesnocancel __ARGS((int type, char_u *title, char_u *message, int dflt));
 int vim_dialog_yesnoallcancel __ARGS((int type, char_u *title, char_u *message, int dflt));
-char_u *do_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter, buf_t *buf));
+char_u *do_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter, buf_T *buf));
 /* vim: set ft=c : */

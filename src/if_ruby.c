@@ -11,6 +11,34 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __MINGW32__
+# include "dyn-ming.h"
+#endif
+
+#ifdef _WIN32
+# define NT
+# ifndef DYNAMIC_RUBY
+#  define IMPORT /* For static dll usage __declspec(dllimport) */
+#  define RUBYEXTERN __declspec(dllimport)
+# endif
+#endif
+#ifndef RUBYEXTERN
+# define RUBYEXTERN extern
+#endif
+
+/*
+ * This is tricky.  In ruby.h there is (inline) function rb_class_of()
+ * definition.  This function use these variables.  But we want function to
+ * use dll_* variables.
+ */
+#ifdef DYNAMIC_RUBY
+#define rb_cFalseClass                  (*dll_rb_cFalseClass)
+#define rb_cFixnum                      (*dll_rb_cFixnum)
+#define rb_cNilClass                    (*dll_rb_cNilClass)
+#define rb_cSymbol                      (*dll_rb_cSymbol)
+#define rb_cTrueClass                   (*dll_rb_cTrueClass)
+#endif
+
 #include <ruby.h>
 
 #undef EXTERN
@@ -32,61 +60,296 @@ static VALUE cWindow;
 static VALUE eDeletedBufferError;
 static VALUE eDeletedWindowError;
 
-static void ensure_ruby_initialized(void);
+static int ensure_ruby_initialized(void);
 static void error_print(int);
 static void ruby_io_init(void);
 static void ruby_vim_init(void);
 
-void ex_ruby(exarg_t *eap)
-{
-    int state;
+#if defined(DYNAMIC_RUBY) || defined(PROTO)
+/* Console Vim doesn't include this, but we need it for dynamic loading */
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
-    ensure_ruby_initialized();
-    rb_eval_string_protect((char *) eap->arg, &state);
-    if (state) error_print(state);
+#ifdef PROTO
+# define HINSTANCE int		/* for generating prototypes */
+#endif
+
+/*
+ * Wrapper defines
+ */
+#define rb_assoc_new                    dll_rb_assoc_new
+#define rb_cObject                      (*dll_rb_cObject)
+#define rb_check_type                   dll_rb_check_type
+#define rb_class_path                   dll_rb_class_path
+#define rb_data_object_alloc            dll_rb_data_object_alloc
+#define rb_define_class_under           dll_rb_define_class_under
+#define rb_define_const                 dll_rb_define_const
+#define rb_define_global_function       dll_rb_define_global_function
+#define rb_define_method                dll_rb_define_method
+#define rb_define_module                dll_rb_define_module
+#define rb_define_module_function       dll_rb_define_module_function
+#define rb_define_singleton_method      dll_rb_define_singleton_method
+#define rb_define_virtual_variable      dll_rb_define_virtual_variable
+#define rb_defout                       (*dll_rb_defout)
+#define rb_eArgError                    (*dll_rb_eArgError)
+#define rb_eIndexError                  (*dll_rb_eIndexError)
+#define rb_eRuntimeError                (*dll_rb_eRuntimeError)
+#define rb_eStandardError               (*dll_rb_eStandardError)
+#define rb_eval_string_protect          dll_rb_eval_string_protect
+#define rb_global_variable              dll_rb_global_variable
+#define rb_hash_aset                    dll_rb_hash_aset
+#define rb_hash_new                     dll_rb_hash_new
+#define rb_inspect                      dll_rb_inspect
+#define rb_int2inum                     dll_rb_int2inum
+#define rb_lastline_get                 dll_rb_lastline_get
+#define rb_lastline_set                 dll_rb_lastline_set
+#define rb_load_protect                 dll_rb_load_protect
+#define rb_num2long                     dll_rb_num2long
+#define rb_num2ulong                    dll_rb_num2ulong
+#define rb_obj_alloc                    dll_rb_obj_alloc
+#define rb_obj_as_string                dll_rb_obj_as_string
+#define rb_obj_id                       dll_rb_obj_id
+#define rb_raise                        dll_rb_raise
+#define rb_str2cstr                     dll_rb_str2cstr
+#define rb_str_cat                      dll_rb_str_cat
+#define rb_str_concat                   dll_rb_str_concat
+#define rb_str_new                      dll_rb_str_new
+#define rb_str_new2                     dll_rb_str_new2
+#define ruby_errinfo                    (*dll_ruby_errinfo)
+#define ruby_init                       dll_ruby_init
+#define ruby_init_loadpath              dll_ruby_init_loadpath
+
+/*
+ * Pointers for dynamic link
+ */
+static VALUE (*dll_rb_assoc_new) (VALUE, VALUE);
+static VALUE *dll_rb_cFalseClass;
+static VALUE *dll_rb_cFixnum;
+static VALUE *dll_rb_cNilClass;
+static VALUE *dll_rb_cObject;
+static VALUE *dll_rb_cSymbol;
+static VALUE *dll_rb_cTrueClass;
+static void (*dll_rb_check_type) (VALUE,int);
+static VALUE (*dll_rb_class_path) (VALUE);
+static VALUE (*dll_rb_data_object_alloc) (VALUE,void*,RUBY_DATA_FUNC,RUBY_DATA_FUNC);
+static VALUE (*dll_rb_define_class_under) (VALUE, const char*, VALUE);
+static void (*dll_rb_define_const) (VALUE,const char*,VALUE);
+static void (*dll_rb_define_global_function) (const char*,VALUE(*)(),int);
+static void (*dll_rb_define_method) (VALUE,const char*,VALUE(*)(),int);
+static VALUE (*dll_rb_define_module) (const char*);
+static void (*dll_rb_define_module_function) (VALUE,const char*,VALUE(*)(),int);
+static void (*dll_rb_define_singleton_method) (VALUE,const char*,VALUE(*)(),int);
+static void (*dll_rb_define_virtual_variable) (const char*,VALUE(*)(),void(*)());
+static VALUE *dll_rb_defout;
+static VALUE *dll_rb_eArgError;
+static VALUE *dll_rb_eIndexError;
+static VALUE *dll_rb_eRuntimeError;
+static VALUE *dll_rb_eStandardError;
+static VALUE (*dll_rb_eval_string_protect) (const char*, int*);
+static void (*dll_rb_global_variable) (VALUE*);
+static VALUE (*dll_rb_hash_aset) (VALUE, VALUE, VALUE);
+static VALUE (*dll_rb_hash_new) (void);
+static VALUE (*dll_rb_inspect) (VALUE);
+static VALUE (*dll_rb_int2inum) (long);
+static VALUE (*dll_rb_int2inum) (long);
+static VALUE (*dll_rb_lastline_get) (void);
+static void (*dll_rb_lastline_set) (VALUE);
+static void (*dll_rb_load_protect) (VALUE, int, int*);
+static long (*dll_rb_num2long) (VALUE);
+static unsigned long (*dll_rb_num2ulong) (VALUE);
+static VALUE (*dll_rb_obj_alloc) (VALUE);
+static VALUE (*dll_rb_obj_as_string) (VALUE);
+static VALUE (*dll_rb_obj_id) (VALUE);
+static void (*dll_rb_raise) (VALUE, const char*, ...);
+static char *(*dll_rb_str2cstr) (VALUE,int*);
+static VALUE (*dll_rb_str_cat) (VALUE, const char*, long);
+static VALUE (*dll_rb_str_concat) (VALUE, VALUE);
+static VALUE (*dll_rb_str_new) (const char*, long);
+static VALUE (*dll_rb_str_new2) (const char*);
+static VALUE *dll_ruby_errinfo;
+static void (*dll_ruby_init) (void);
+static void (*dll_ruby_init_loadpath) (void);
+
+static HINSTANCE hinstRuby = 0; /* Instance of ruby.dll */
+
+/*
+ * Table of name to function pointer of python.
+ */
+#define RUBY_PROC FARPROC
+static struct
+{
+    char *name;
+    RUBY_PROC *ptr;
+} ruby_funcname_table[] =
+{
+    {"rb_assoc_new", (RUBY_PROC*)&dll_rb_assoc_new},
+    {"rb_cFalseClass", (RUBY_PROC*)&dll_rb_cFalseClass},
+    {"rb_cFixnum", (RUBY_PROC*)&dll_rb_cFixnum},
+    {"rb_cNilClass", (RUBY_PROC*)&dll_rb_cNilClass},
+    {"rb_cObject", (RUBY_PROC*)&dll_rb_cObject},
+    {"rb_cSymbol", (RUBY_PROC*)&dll_rb_cSymbol},
+    {"rb_cTrueClass", (RUBY_PROC*)&dll_rb_cTrueClass},
+    {"rb_check_type", (RUBY_PROC*)&dll_rb_check_type},
+    {"rb_class_path", (RUBY_PROC*)&dll_rb_class_path},
+    {"rb_data_object_alloc", (RUBY_PROC*)&dll_rb_data_object_alloc},
+    {"rb_define_class_under", (RUBY_PROC*)&dll_rb_define_class_under},
+    {"rb_define_const", (RUBY_PROC*)&dll_rb_define_const},
+    {"rb_define_global_function", (RUBY_PROC*)&dll_rb_define_global_function},
+    {"rb_define_method", (RUBY_PROC*)&dll_rb_define_method},
+    {"rb_define_module", (RUBY_PROC*)&dll_rb_define_module},
+    {"rb_define_module_function", (RUBY_PROC*)&dll_rb_define_module_function},
+    {"rb_define_singleton_method", (RUBY_PROC*)&dll_rb_define_singleton_method},
+    {"rb_define_virtual_variable", (RUBY_PROC*)&dll_rb_define_virtual_variable},
+    {"rb_defout", (RUBY_PROC*)&dll_rb_defout},
+    {"rb_eArgError", (RUBY_PROC*)&dll_rb_eArgError},
+    {"rb_eIndexError", (RUBY_PROC*)&dll_rb_eIndexError},
+    {"rb_eRuntimeError", (RUBY_PROC*)&dll_rb_eRuntimeError},
+    {"rb_eStandardError", (RUBY_PROC*)&dll_rb_eStandardError},
+    {"rb_eval_string_protect", (RUBY_PROC*)&dll_rb_eval_string_protect},
+    {"rb_global_variable", (RUBY_PROC*)&dll_rb_global_variable},
+    {"rb_hash_aset", (RUBY_PROC*)&dll_rb_hash_aset},
+    {"rb_hash_new", (RUBY_PROC*)&dll_rb_hash_new},
+    {"rb_inspect", (RUBY_PROC*)&dll_rb_inspect},
+    {"rb_int2inum", (RUBY_PROC*)&dll_rb_int2inum},
+    {"rb_lastline_get", (RUBY_PROC*)&dll_rb_lastline_get},
+    {"rb_lastline_set", (RUBY_PROC*)&dll_rb_lastline_set},
+    {"rb_load_protect", (RUBY_PROC*)&dll_rb_load_protect},
+    {"rb_num2long", (RUBY_PROC*)&dll_rb_num2long},
+    {"rb_num2ulong", (RUBY_PROC*)&dll_rb_num2ulong},
+    {"rb_obj_alloc", (RUBY_PROC*)&dll_rb_obj_alloc},
+    {"rb_obj_as_string", (RUBY_PROC*)&dll_rb_obj_as_string},
+    {"rb_obj_id", (RUBY_PROC*)&dll_rb_obj_id},
+    {"rb_raise", (RUBY_PROC*)&dll_rb_raise},
+    {"rb_str2cstr", (RUBY_PROC*)&dll_rb_str2cstr},
+    {"rb_str_cat", (RUBY_PROC*)&dll_rb_str_cat},
+    {"rb_str_concat", (RUBY_PROC*)&dll_rb_str_concat},
+    {"rb_str_new", (RUBY_PROC*)&dll_rb_str_new},
+    {"rb_str_new2", (RUBY_PROC*)&dll_rb_str_new2},
+    {"ruby_errinfo", (RUBY_PROC*)&dll_ruby_errinfo},
+    {"ruby_init", (RUBY_PROC*)&dll_ruby_init},
+    {"ruby_init_loadpath", (RUBY_PROC*)&dll_ruby_init_loadpath},
+    {"", NULL},
+};
+
+/*
+ * Free ruby.dll
+ */
+    static void
+end_dynamic_ruby()
+{
+    if (hinstRuby)
+    {
+	FreeLibrary(hinstRuby);
+	hinstRuby = 0;
+    }
 }
 
-void ex_rubydo(exarg_t *eap)
+/*
+ * Load library and get all pointers.  If failed, function returns 0.
+ * Succeeded 1.
+ *
+ * Parameter 'libname' provides name of DLL.
+ */
+    static int
+ruby_runtime_link_init(char* libname)
 {
-    int state;
-    linenr_t i;
+    int i;
 
-    ensure_ruby_initialized();
-    if (u_save(eap->line1 - 1, eap->line2 + 1) != OK)
-	return;
-    for (i = eap->line1; i <= eap->line2; i++) {
-	VALUE line, oldline;
+    if (hinstRuby)
+	return 1;
+    hinstRuby = LoadLibrary(libname);
+    if (!hinstRuby)
+	return 0;
 
-	line = oldline = rb_str_new2(ml_get(i));
-	rb_lastline_set(line);
-	rb_eval_string_protect((char *) eap->arg, &state);
-	if (state) {
-	    error_print(state);
-	    break;
-	}
-	line = rb_lastline_get();
-	if (!NIL_P(line)) {
-	    ml_replace(i, (char_u *) STR2CSTR(line), 1);
-	    changed();
-#ifdef SYNTAX_HL
-	    syn_changed(i); /* recompute syntax hl. for this line */
-#endif
+    for (i = 0; ruby_funcname_table[i].ptr; ++i)
+    {
+	if (!(*ruby_funcname_table[i].ptr = GetProcAddress(hinstRuby,
+			ruby_funcname_table[i].name)))
+	{
+	    FreeLibrary(hinstRuby);
+	    hinstRuby = 0;
+	    return 0;
 	}
     }
-    check_cursor();
-    update_curbuf(NOT_VALID);
+    return 1;
 }
 
-void ex_rubyfile(exarg_t *eap)
+/*
+ * If ruby is enabled (there is installed ruby on Windows system) return 1,
+ * else 0.
+ */
+    int
+ruby_enabled()
+{
+    return ruby_runtime_link_init(DYNAMIC_RUBY_DLL);
+}
+#endif /* defined(DYNAMIC_RUBY) || defined(PROTO) */
+
+    void
+ruby_end()
+{
+#ifdef DYNAMIC_RUBY
+    end_dynamic_ruby();
+#endif
+}
+
+void ex_ruby(exarg_T *eap)
 {
     int state;
 
-    ensure_ruby_initialized();
-    rb_load_protect(rb_str_new2((char *) eap->arg), 0, &state);
-    if (state) error_print(state);
+    if (ensure_ruby_initialized())
+    {
+	rb_eval_string_protect((char *) eap->arg, &state);
+	if (state)
+	    error_print(state);
+    }
 }
 
-void ruby_buffer_free(buf_t *buf)
+void ex_rubydo(exarg_T *eap)
+{
+    int state;
+    linenr_T i;
+
+    if (ensure_ruby_initialized())
+    {
+	if (u_save(eap->line1 - 1, eap->line2 + 1) != OK)
+	    return;
+	for (i = eap->line1; i <= eap->line2; i++) {
+	    VALUE line, oldline;
+
+	    line = oldline = rb_str_new2(ml_get(i));
+	    rb_lastline_set(line);
+	    rb_eval_string_protect((char *) eap->arg, &state);
+	    if (state) {
+		error_print(state);
+		break;
+	    }
+	    line = rb_lastline_get();
+	    if (!NIL_P(line)) {
+		ml_replace(i, (char_u *) STR2CSTR(line), 1);
+		changed();
+#ifdef SYNTAX_HL
+		syn_changed(i); /* recompute syntax hl. for this line */
+#endif
+	    }
+	}
+	check_cursor();
+	update_curbuf(NOT_VALID);
+    }
+}
+
+void ex_rubyfile(exarg_T *eap)
+{
+    int state;
+
+    if (ensure_ruby_initialized())
+    {
+	rb_load_protect(rb_str_new2((char *) eap->arg), 0, &state);
+	if (state) error_print(state);
+    }
+}
+
+void ruby_buffer_free(buf_T *buf)
 {
     if (buf->ruby_ref) {
 	rb_hash_aset(objtbl, rb_obj_id((VALUE) buf->ruby_ref), Qnil);
@@ -94,7 +357,7 @@ void ruby_buffer_free(buf_t *buf)
     }
 }
 
-void ruby_window_free(win_t *win)
+void ruby_window_free(win_T *win)
 {
     if (win->ruby_ref) {
 	rb_hash_aset(objtbl, rb_obj_id((VALUE) win->ruby_ref), Qnil);
@@ -102,20 +365,36 @@ void ruby_window_free(win_t *win)
     }
 }
 
-static void ensure_ruby_initialized(void)
+static int ensure_ruby_initialized(void)
 {
-    if (!ruby_initialized) {
-	ruby_init();
-	ruby_init_loadpath();
-	ruby_io_init();
-	ruby_vim_init();
-	ruby_initialized = 1;
+    if (!ruby_initialized)
+    {
+#ifdef DYNAMIC_RUBY
+	if (ruby_enabled())
+	{
+#endif
+	    ruby_init();
+	    ruby_init_loadpath();
+	    ruby_io_init();
+	    ruby_vim_init();
+	    ruby_initialized = 1;
+#ifdef DYNAMIC_RUBY
+	}
+	else
+	{
+	    EMSG(_("Sorry, this command is disabled, the Ruby library could not be loaded."));
+	    return 0;
+	}
+#endif
     }
+    return ruby_initialized;
 }
 
 static void error_print(int state)
 {
-    extern VALUE ruby_errinfo;
+#ifndef DYNAMIC_RUBY
+    RUBYEXTERN VALUE ruby_errinfo;
+#endif
     VALUE eclass;
     VALUE einfo;
     char buff[BUFSIZ];
@@ -214,7 +493,7 @@ static VALUE vim_evaluate(VALUE self, VALUE str)
 	return Qnil;
 }
 
-static VALUE buffer_new(buf_t *buf)
+static VALUE buffer_new(buf_T *buf)
 {
     if (buf->ruby_ref) {
 	return (VALUE) buf->ruby_ref;
@@ -227,11 +506,11 @@ static VALUE buffer_new(buf_t *buf)
     }
 }
 
-static buf_t *get_buf(VALUE obj)
+static buf_T *get_buf(VALUE obj)
 {
-    buf_t *buf;
+    buf_T *buf;
 
-    Data_Get_Struct(obj, buf_t, buf);
+    Data_Get_Struct(obj, buf_T, buf);
     if (buf == NULL)
 	rb_raise(eDeletedBufferError, "attempt to refer to deleted buffer");
     return buf;
@@ -244,7 +523,7 @@ static VALUE buffer_s_current()
 
 static VALUE buffer_s_count()
 {
-    buf_t *b;
+    buf_T *b;
     int n = 0;
 
     for (b = firstbuf; b; b = b->b_next) n++;
@@ -253,7 +532,7 @@ static VALUE buffer_s_count()
 
 static VALUE buffer_s_aref(VALUE self, VALUE num)
 {
-    buf_t *b;
+    buf_T *b;
     int n = NUM2INT(num);
 
     for (b = firstbuf; b; b = b->b_next, --n) {
@@ -265,28 +544,28 @@ static VALUE buffer_s_aref(VALUE self, VALUE num)
 
 static VALUE buffer_name(VALUE self)
 {
-    buf_t *buf = get_buf(self);
+    buf_T *buf = get_buf(self);
 
     return buf->b_ffname ? rb_str_new2(buf->b_ffname) : Qnil;
 }
 
 static VALUE buffer_number(VALUE self)
 {
-    buf_t *buf = get_buf(self);
+    buf_T *buf = get_buf(self);
 
     return INT2NUM(buf->b_fnum);
 }
 
 static VALUE buffer_count(VALUE self)
 {
-    buf_t *buf = get_buf(self);
+    buf_T *buf = get_buf(self);
 
     return INT2NUM(buf->b_ml.ml_line_count);
 }
 
 static VALUE buffer_aref(VALUE self, VALUE num)
 {
-    buf_t *buf = get_buf(self);
+    buf_T *buf = get_buf(self);
     long n = NUM2LONG(num);
 
     if (n > 0 && n <= buf->b_ml.ml_line_count) {
@@ -295,13 +574,14 @@ static VALUE buffer_aref(VALUE self, VALUE num)
     }
     else {
 	rb_raise(rb_eIndexError, "index %d out of buffer", n);
+	return Qnil; /* For stop warning */
     }
 }
 
 static VALUE buffer_aset(VALUE self, VALUE num, VALUE str)
 {
-    buf_t *buf = get_buf(self);
-    buf_t *savebuf = curbuf;
+    buf_T *buf = get_buf(self);
+    buf_T *savebuf = curbuf;
     char *line = STR2CSTR(str);
     long n = NUM2LONG(num);
 
@@ -319,14 +599,15 @@ static VALUE buffer_aset(VALUE self, VALUE num, VALUE str)
     }
     else {
 	rb_raise(rb_eIndexError, "index %d out of buffer", n);
+	return Qnil; /* For stop warning */
     }
     return str;
 }
 
 static VALUE buffer_delete(VALUE self, VALUE num)
 {
-    buf_t *buf = get_buf(self);
-    buf_t *savebuf = curbuf;
+    buf_T *buf = get_buf(self);
+    buf_T *savebuf = curbuf;
     long n = NUM2LONG(num);
 
     if (n > 0 && n <= buf->b_ml.ml_line_count) {
@@ -347,8 +628,8 @@ static VALUE buffer_delete(VALUE self, VALUE num)
 
 static VALUE buffer_append(VALUE self, VALUE num, VALUE str)
 {
-    buf_t *buf = get_buf(self);
-    buf_t *savebuf = curbuf;
+    buf_T *buf = get_buf(self);
+    buf_T *savebuf = curbuf;
     char *line = STR2CSTR(str);
     long n = NUM2LONG(num);
 
@@ -356,7 +637,7 @@ static VALUE buffer_append(VALUE self, VALUE num, VALUE str)
 	curbuf = buf;
 	if (u_inssub(n + 1) == OK) {
 	    mark_adjust(n + 1, MAXLNUM, 1L, 0L);
-	    ml_append(n, (char_u *) line, (colnr_t) 0, FALSE);
+	    ml_append(n, (char_u *) line, (colnr_T) 0, FALSE);
 	    changed();
 	}
 	curbuf = savebuf;
@@ -368,7 +649,7 @@ static VALUE buffer_append(VALUE self, VALUE num, VALUE str)
     return str;
 }
 
-static VALUE window_new(win_t *win)
+static VALUE window_new(win_T *win)
 {
     if (win->ruby_ref) {
 	return (VALUE) win->ruby_ref;
@@ -381,11 +662,11 @@ static VALUE window_new(win_t *win)
     }
 }
 
-static win_t *get_win(VALUE obj)
+static win_T *get_win(VALUE obj)
 {
-    win_t *win;
+    win_T *win;
 
-    Data_Get_Struct(obj, win_t, win);
+    Data_Get_Struct(obj, win_T, win);
     if (win == NULL)
 	rb_raise(eDeletedWindowError, "attempt to refer to deleted window");
     return win;
@@ -399,7 +680,7 @@ static VALUE window_s_current()
 static VALUE window_s_count()
 {
 #ifdef FEAT_WINDOWS
-    win_t	*w;
+    win_T	*w;
     int n = 0;
 
     for (w = firstwin; w; w = w->w_next)
@@ -412,7 +693,7 @@ static VALUE window_s_count()
 
 static VALUE window_s_aref(VALUE self, VALUE num)
 {
-    win_t *w;
+    win_T *w;
     int n = NUM2INT(num);
 
 #ifndef FEAT_WINDOWS
@@ -427,22 +708,22 @@ static VALUE window_s_aref(VALUE self, VALUE num)
 
 static VALUE window_buffer(VALUE self)
 {
-    win_t *win = get_win(self);
+    win_T *win = get_win(self);
 
     return buffer_new(win->w_buffer);
 }
 
 static VALUE window_height(VALUE self)
 {
-    win_t *win = get_win(self);
+    win_T *win = get_win(self);
 
     return INT2NUM(win->w_height);
 }
 
 static VALUE window_set_height(VALUE self, VALUE height)
 {
-    win_t *win = get_win(self);
-    win_t *savewin = curwin;
+    win_T *win = get_win(self);
+    win_T *savewin = curwin;
 
     curwin = win;
     win_setheight(NUM2INT(height));
@@ -452,7 +733,7 @@ static VALUE window_set_height(VALUE self, VALUE height)
 
 static VALUE window_cursor(VALUE self)
 {
-    win_t *win = get_win(self);
+    win_T *win = get_win(self);
 
     return rb_assoc_new(INT2NUM(win->w_cursor.lnum), INT2NUM(win->w_cursor.col));
 }
@@ -460,7 +741,7 @@ static VALUE window_cursor(VALUE self)
 static VALUE window_set_cursor(VALUE self, VALUE pos)
 {
     VALUE lnum, col;
-    win_t *win = get_win(self);
+    win_T *win = get_win(self);
 
     Check_Type(pos, T_ARRAY);
     if (RARRAY(pos)->len != 2)
@@ -489,7 +770,9 @@ static VALUE f_p(int argc, VALUE *argv, VALUE self)
 
 static void ruby_io_init(void)
 {
-    extern VALUE rb_defout;
+#ifndef DYNAMIC_RUBY
+    RUBYEXTERN VALUE rb_defout;
+#endif
 
     rb_defout = rb_obj_alloc(rb_cObject);
     rb_define_singleton_method(rb_defout, "write", vim_message, 1);

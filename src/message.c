@@ -136,6 +136,7 @@ msg_attr(s, attr)
 
 /*
  * Truncate a string such that it can be printed without causing a scroll.
+ * Returns an allocated string or NULL when no truncating is done.
  */
     char_u *
 msg_strtrunc(s)
@@ -144,9 +145,6 @@ msg_strtrunc(s)
     char_u	*buf = NULL;
     int		len;
     int		room;
-    int		half;
-    int		i;
-    int		n;
 
     /* May truncate message to avoid a hit-return prompt */
     if (!msg_scroll && !need_wait_return && shortmess(SHM_TRUNCALL)
@@ -168,72 +166,87 @@ msg_strtrunc(s)
 #endif
 		buf = alloc(room + 2);
 	    if (buf != NULL)
-	    {
-		room -= 3;
-		half = room / 2;
-		len = 0;
-
-		/* First part: Start of the string. */
-		for (i = 0; len < half; ++i)
-		{
-		    n = ptr2cells(s + i);
-		    if (len + n >= half)
-			break;
-		    len += n;
-		    buf[i] = s[i];
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)
-			for (n = (*mb_ptr2len_check)(s + i); --n > 0; )
-			{
-			    ++i;
-			    buf[i] = s[i];
-			}
-#endif
-		}
-
-		/* Middle: "..." */
-		STRCPY(buf + i, "...");
-
-		/* Last part: End of the string. */
-#ifdef FEAT_MBYTE
-		if (enc_dbcs != 0)
-		{
-		    /* For DBCS going backwards in a string is slow, but
-		     * computing the cell width isn't too slow: go forward
-		     * until the rest fits. */
-		    n = vim_strsize(s + i);
-		    while (len + n > room)
-		    {
-			n -= ptr2cells(s + i);
-			i += (*mb_ptr2len_check)(s + i);
-		    }
-		}
-		else if (enc_utf8)
-		{
-		    /* For UTF-8 we can go backwards easily. */
-		    i = STRLEN(s);
-		    for (;;)
-		    {
-			half = i - (*mb_head_off)(s, s + i - 1) - 1;
-			n = ptr2cells(s + half);
-			if (len + n > room)
-			    break;
-			len += n;
-			i = half;
-		    }
-		}
-		else
-#endif
-		{
-		    for (i = STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room;
-									  --i)
-			len += n;
-		}
-		STRCAT(buf, s + i);
-	    }
+		trunc_string(s, buf, room);
 	}
     }
     return buf;
+}
+
+/*
+ * Truncate a string "s"  to "buf" with cell width "room".
+ * "s" and "buf" may be equal.
+ */
+    void
+trunc_string(s, buf, room)
+    char_u	*s;
+    char_u	*buf;
+    int		room;
+{
+    int		half;
+    int		len;
+    int		i;
+    int		n;
+
+    room -= 3;
+    half = room / 2;
+    len = 0;
+
+    /* First part: Start of the string. */
+    for (i = 0; len < half; ++i)
+    {
+	n = ptr2cells(s + i);
+	if (len + n >= half)
+	    break;
+	len += n;
+	buf[i] = s[i];
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    for (n = (*mb_ptr2len_check)(s + i); --n > 0; )
+	    {
+		++i;
+		buf[i] = s[i];
+	    }
+#endif
+    }
+
+    /* Middle: "..." */
+    STRCPY(buf + i, "...");
+
+    /* Last part: End of the string. */
+#ifdef FEAT_MBYTE
+    if (enc_dbcs != 0)
+    {
+	/* For DBCS going backwards in a string is slow, but
+	 * computing the cell width isn't too slow: go forward
+	 * until the rest fits. */
+	n = vim_strsize(s + i);
+	while (len + n > room)
+	{
+	    n -= ptr2cells(s + i);
+	    i += (*mb_ptr2len_check)(s + i);
+	}
+    }
+    else if (enc_utf8)
+    {
+	/* For UTF-8 we can go backwards easily. */
+	i = STRLEN(s);
+	for (;;)
+	{
+	    half = i - (*mb_head_off)(s, s + i - 1) - 1;
+	    n = ptr2cells(s + half);
+	    if (len + n > room)
+		break;
+	    len += n;
+	    i = half;
+	}
+    }
+    else
+#endif
+    {
+	for (i = STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room; --i)
+	    len += n;
+    }
+    STRCAT(buf, s + i);
 }
 
 /*
@@ -474,8 +487,10 @@ emsg2(s, a1)
     /* Check for NULL strings (just in case) */
     if (a1 == NULL)
 	a1 = (char_u *)"[NULL]";
-    /* Check for very long strings (can happen with ":help ^A<CR>") */
-    if (STRLEN(s) + STRLEN(a1) >= (size_t)IOSIZE)
+    /* Check for very long strings (can happen with ":help ^A<CR>").
+     * Careful, the argument could actually be a long. */
+    if (STRLEN(s) + (strstr((char *)s, "%s") != NULL ? STRLEN(a1) : 20)
+							    >= (size_t)IOSIZE)
 	a1 = (char_u *)_("[string too long]");
     sprintf((char *)IObuff, (char *)s, (char *)a1);
     return emsg(IObuff);
@@ -535,11 +550,25 @@ msg_may_trunc(force, s)
     char_u	*s;
 {
     int		n;
+    int		room;
 
+    room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 1;
     if ((force || (shortmess(SHM_TRUNC) && !exmode_active))
-	    && (n = (int)STRLEN(s) -
-		    (int)(Rows - cmdline_row - 1) * Columns - sc_col + 1) > 0)
+	    && (n = (int)STRLEN(s) - room) > 0)
     {
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    int	size = vim_strsize(s);
+
+	    for (n = 0; size >= room; )
+	    {
+		size -= (*mb_ptr2cells)(s + n);
+		n += (*mb_ptr2len_check)(s + n);
+	    }
+	    --n;
+	}
+#endif
 	s += n;
 	*s = '<';
     }
@@ -598,7 +627,7 @@ add_msg_hist(s, len, attr)
 /*ARGSUSED*/
     void
 ex_messages(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     struct msg_hist *p;
     char_u	    *s;
@@ -1110,7 +1139,7 @@ str2special(sp, from)
     int		from;	/* TRUE for lhs of mapping */
 {
     int			c;
-    static char_u	buf[2];
+    static char_u	buf[5];
     char_u		*str = *sp;
     int			modifiers = 0;
     int			special = FALSE;
@@ -1148,6 +1177,15 @@ str2special(sp, from)
 	    special = TRUE;
     }
     *sp = str + 1;
+
+#ifdef FEAT_MBYTE
+    /* For multi-byte characters check for an illegal byte. */
+    if (has_mbyte && MB_BYTE2LEN(*str) > (*mb_ptr2len_check)(str))
+    {
+	transchar_nonprint(buf, c);
+	return buf;
+    }
+#endif
 
     /* Make unprintable characters in <> form, also <M-Space> and <Tab>.
      * Use <Space> only for lhs of a mapping. */
@@ -1507,7 +1545,7 @@ msg_puts_attr(s, attr)
 		/* Also clear the last char of the last but one line if it was
 		 * not cleared before to avoid a scroll-up. */
 		if (ScreenAttrs[LineOffset[Rows - 2] + Columns - 1]
-							       == (sattr_t)-1)
+							       == (sattr_T)-1)
 		    screen_fill((int)Rows - 2, (int)Rows - 1,
 				 (int)Columns - 1, (int)Columns, ' ', ' ', 0);
 	    }
@@ -2166,40 +2204,6 @@ display_confirm_msg()
 
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 
-/*
- * Various stock dialogs used throughout Vim when :confirm is used.
- */
-#if 0	/* not used yet */
-    void
-vim_dialog_ok(type, title, message)
-    int		type;
-    char_u	*title;
-    char_u	*message;
-{
-    (void)do_dialog(type,
-			  title == NULL ? (char_u *)"Information" : title,
-			  message,
-			  (char_u *)"&OK", 1);
-}
-#endif
-
-#if 0	/* not used yet */
-    int
-vim_dialog_okcancel(type, title, message, dflt)
-    int		type;
-    char_u	*title;
-    char_u	*message;
-    int		dflt;
-{
-    if (do_dialog(type,
-		title == NULL ? (char_u *)"Confirmation" : title,
-		message,
-		(char_u *)"&OK\n&Cancel", dflt) == 1)
-	return VIM_OK;
-    return VIM_CANCEL;
-}
-#endif
-
     int
 vim_dialog_yesno(type, title, message, dflt)
     int		type;
@@ -2268,7 +2272,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     char_u	*ext;		/* extension added */
     char_u	*initdir;	/* initial directory, NULL for current dir */
     char_u	*filter;	/* file name filter */
-    buf_t	*buf;		/* buffer to read/write for */
+    buf_T	*buf;		/* buffer to read/write for */
 {
     char_u		*fname;
     static char_u	*last_dir = NULL;    /* last used directory */

@@ -1,4 +1,4 @@
-*if_ole.txt*    For Vim version 6.0aa.  Last change: 2000 Jul 07
+*if_ole.txt*    For Vim version 6.0ab.  Last change: 2000 Jul 07
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -48,7 +48,7 @@ execute a quit command (for example, :qa!, :wqa).
 ==============================================================================
 2. Methods						*ole-methods*
 
-Vim exposes three methods for use by clients.
+Vim exposes four methods for use by clients.
 
 							*ole-sendkeys*
 SendKeys(keys)		Execute a series of keys.
@@ -90,6 +90,18 @@ This method takes no arguments.  No value is returned.
 
 Example (Visual Basic syntax) >
 	Vim.SetForeground
+<
+
+							*ole-gethwnd*
+GetHwnd()		Return the handle of the Vim window.
+
+This method takes no arguments.  It returns the hwnd of the main Vimwindow.
+You can use this if you are writing something which needs to manipulatethe
+Vim window, or to track it in the z-order, etc.
+
+Example (Visual Basic syntax) >
+	Vim_Hwnd = Vim.GetHwnd
+<
 
 ==============================================================================
 3. The "normal" command					*ole-normal*

@@ -123,11 +123,7 @@ static void exact_match_cb(GtkWidget *widget, gpointer data);
 static void repl_dir_cb(GtkWidget * widget, gpointer data);
 
 #ifdef FEAT_TOOLBAR
-static void get_pixmap(char *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
-static void pixmap_create_blank(GdkPixmap **pixmap, GdkBitmap **mask);
-static void pixmap_create_by_name(char *name, GdkPixmap **, GdkBitmap **mask);
-static void pixmap_create_by_num(int pixmap_num, GdkPixmap **, GdkBitmap **);
-static void pixmap_create_by_dir(char *name, GdkPixmap **, GdkBitmap **mask);
+static void get_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask);
 #endif
 
 #if defined(FEAT_MENU) || defined(PROTO)
@@ -153,7 +149,7 @@ static void pixmap_create_by_dir(char *name, GdkPixmap **, GdkBitmap **mask);
  */
 /*ARGSUSED*/
     static void
-menu_item_new(vimmenu_t *menu, GtkWidget *parent_widget, int sub_menu)
+menu_item_new(vimmenu_T *menu, GtkWidget *parent_widget, int sub_menu)
 {
     char *name, *tmp;
     GtkWidget *widget;
@@ -265,9 +261,9 @@ menu_item_new(vimmenu_t *menu, GtkWidget *parent_widget, int sub_menu)
 
 /*ARGSUSED*/
     void
-gui_mch_add_menu(vimmenu_t *menu, int idx)
+gui_mch_add_menu(vimmenu_T *menu, int idx)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     if (menu_is_popup(menu->name))
     {
@@ -318,7 +314,7 @@ gui_mch_add_menu(vimmenu_t *menu, int idx)
     static void
 menu_item_activate(GtkWidget * widget, gpointer data)
 {
-    gui_menu_cb((vimmenu_t *) data);
+    gui_menu_cb((vimmenu_T *) data);
 
     /* make sure the menu action is taken immediately */
     if (gtk_main_level() > 0)
@@ -327,9 +323,9 @@ menu_item_activate(GtkWidget * widget, gpointer data)
 
 /*ARGSUSED*/
     void
-gui_mch_add_menu_item(vimmenu_t *menu, int idx)
+gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
 # ifdef FEAT_TOOLBAR
     if (menu_is_toolbar(parent->name))
@@ -343,7 +339,7 @@ gui_mch_add_menu_item(vimmenu_t *menu, int idx)
 	    GdkPixmap *pixmap;
 	    GdkBitmap *mask;
 
-	    get_pixmap((char *)(menu->name), &pixmap, &mask);
+	    get_pixmap(menu->name, &pixmap, &mask);
 	    if (pixmap == NULL)
 		return; /* should at least have blank pixmap, but if not... */
 
@@ -438,79 +434,19 @@ static const struct NameToPixmap built_in_pixmaps[] =
     { NULL, NULL} /* end tag */
 };
 
-
-/*
- * do ":h toolbar" for details on the order of things searched to
- * find the toolbar pixmap.
- */
-    static void
-get_pixmap(char *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    int builtin_num;
-
-    *pixmap = NULL;
-    *mask = NULL;
-    if (strncmp(menuname, "BuiltIn", (size_t)7) == 0)
-    {
-	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
-	{
-	    builtin_num = atoi(menuname + 7);
-	    pixmap_create_by_num(builtin_num, pixmap, mask);
-	}
-	else
-	{
-	    pixmap_create_blank(pixmap, mask);
-	}
-    }
-    else
-    {
-	pixmap_create_by_dir(menuname, pixmap, mask);
-	if (*pixmap == NULL)
-	{
-	    pixmap_create_by_name(menuname, pixmap, mask);
-	    if (*pixmap == NULL)
-		pixmap_create_blank(pixmap, mask);
-	}
-    }
-}
-
-
 /*
  * creates a blank pixmap using tb_blank
  */
     static void
-pixmap_create_blank(GdkPixmap **pixmap, GdkBitmap **mask)
+pixmap_create_from_xpm(char **xpm, GdkPixmap **pixmap, GdkBitmap **mask)
 {
     *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
 	    NULL,
 	    gtk_widget_get_colormap(gui.mainwin),
 	    mask,
 	    NULL,
-	    tb_blank_xpm);
+	    xpm);
 }
-
-
-/*
- * creates a pixmap using one of the built-in pixmap names
- */
-    static void
-pixmap_create_by_name(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
-{
-    const struct NameToPixmap *tmp = built_in_pixmaps;
-
-    /* lookup if we have a corresponding build-in pixmap */
-    for (tmp = built_in_pixmaps; tmp->name; tmp++)
-	if (STRCMP(tmp->name, name) == 0)
-	    break;
-
-    *pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-	    NULL,
-	    gtk_widget_get_colormap(gui.mainwin),
-	    mask,
-	    NULL,
-	    (tmp->xpm) ? tmp->xpm : tb_blank_xpm);
-}
-
 
 /*
  * creates a pixmap by using a built-in number
@@ -518,58 +454,69 @@ pixmap_create_by_name(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
     static void
 pixmap_create_by_num(int pixmap_num, GdkPixmap **pixmap, GdkBitmap **mask)
 {
-    int num_pixmaps;
-
-    num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
-
-	*pixmap = gdk_pixmap_colormap_create_from_xpm_d(
-		NULL,
-		gtk_widget_get_colormap(gui.mainwin),
-		mask,
-		NULL,
-		(pixmap_num < 0 || pixmap_num >= num_pixmaps)
-		    ?  tb_blank_xpm
-		    : built_in_pixmaps[pixmap_num].xpm);
+    if (pixmap_num >= 0 && pixmap_num < (sizeof(built_in_pixmaps)
+					   / sizeof(built_in_pixmaps[0])) - 1)
+	pixmap_create_from_xpm(built_in_pixmaps[pixmap_num].xpm, pixmap, mask);
 }
 
 /*
- * creates a pixmap by using the pixmap name found in $VIM/bitmaps/
- *
- * MAYBE: if the custom pixmap found in the directory is "big", should we scale
- * the bitmap like the help documentation says so or leave it alone?  i think
- * it's user error if there is a bitmap of the wrong size.
+ * creates a pixmap using one of the built-in pixmap names
  */
     static void
-pixmap_create_by_dir(char *name, GdkPixmap **pixmap, GdkBitmap **mask)
+pixmap_create_by_name(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
 {
-    char_u *full_pathname;
+    const struct NameToPixmap *tmp = built_in_pixmaps;
 
-    if ((full_pathname = (char_u *)alloc(MAXPATHL+1)) == NULL)
+    /* lookup if we have a corresponding build-in pixmap */
+    for (tmp = built_in_pixmaps; tmp->name != NULL; tmp++)
+	if (STRCMP(tmp->name, name) == 0)
+	{
+	    pixmap_create_from_xpm(tmp->xpm, pixmap, mask);
+	    break;
+	}
+}
+
+/*
+ * Creates a pixmap by using the pixmap "name" found in 'runtimepath'/bitmaps/
+ */
+    static void
+pixmap_create_by_dir(char_u *name, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    char_u full_pathname[MAXPATHL + 1];
+
+    if (gui_find_bitmap(name, full_pathname, "xpm") == OK)
+	*pixmap = gdk_pixmap_colormap_create_from_xpm(
+		NULL,
+		gtk_widget_get_colormap(gui.mainwin),
+		mask,
+		&gui.mainwin->style->bg[GTK_STATE_NORMAL],
+		(const char *)full_pathname);
+}
+
+/*
+ * do ":h toolbar" for details on the order of things searched to
+ * find the toolbar pixmap.
+ */
+    static void
+get_pixmap(char_u *menuname, GdkPixmap **pixmap, GdkBitmap **mask)
+{
+    *pixmap = NULL;
+    *mask = NULL;
+    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
     {
-	pixmap_create_blank(pixmap, mask);
+	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
+	    pixmap_create_by_num(atoi((char *)menuname + 7), pixmap, mask);
     }
     else
     {
-	expand_env((char_u *)"$VIM/bitmaps/",
-		   full_pathname,
-		   (MAXPATHL + 1) - strlen(name) - 5);
-	STRCAT(full_pathname, name);
-	STRCAT(full_pathname, ".xpm");
-	if (mch_access((const char *)full_pathname, F_OK) == 0)
-	    *pixmap = gdk_pixmap_colormap_create_from_xpm(
-				    NULL,
-				    gtk_widget_get_colormap(gui.mainwin),
-				    mask,
-				    &gui.mainwin->style->bg[GTK_STATE_NORMAL],
-				    (const char *)full_pathname);
-	else
-	    *pixmap = NULL;
-
-	vim_free(full_pathname);
+	pixmap_create_by_dir(menuname, pixmap, mask);
+	if (*pixmap == NULL)
+	    pixmap_create_by_name(menuname, pixmap, mask);
     }
+    if (*pixmap == NULL)
+	pixmap_create_from_xpm(tb_blank_xpm, pixmap, mask);
 }
 #endif
-
 
     void
 gui_mch_set_text_area_pos(int x, int y, int w, int h)
@@ -586,7 +533,7 @@ gui_mch_set_text_area_pos(int x, int y, int w, int h)
     void
 gui_gtk_set_mnemonics(int enable)
 {
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     guint	accel_key;
     char	*accel;
     char	*blank;
@@ -662,7 +609,7 @@ gui_gtk_set_mnemonics(int enable)
 
 
     static void
-recurse_tearoffs(vimmenu_t *menu, int val)
+recurse_tearoffs(vimmenu_T *menu, int val)
 {
     while (menu != NULL)
     {
@@ -739,7 +686,7 @@ toolbar_remove_item_by_text(GtkToolbar *tb, const char *text)
  * Destroy the machine specific menu widget.
  */
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
 #ifdef FEAT_TOOLBAR
     if (menu->parent && menu_is_toolbar(menu->parent->name))
@@ -774,7 +721,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
 static int did_ask_for_change = FALSE;
 
     void
-gui_mch_set_scrollbar_thumb(scrollbar_t * sb, long val, long size, long max)
+gui_mch_set_scrollbar_thumb(scrollbar_T * sb, long val, long size, long max)
 {
     if (sb->id != 0)
     {
@@ -792,7 +739,7 @@ gui_mch_set_scrollbar_thumb(scrollbar_t * sb, long val, long size, long max)
 }
 
     void
-gui_mch_set_scrollbar_pos(scrollbar_t * sb, int x, int y, int w, int h)
+gui_mch_set_scrollbar_pos(scrollbar_T * sb, int x, int y, int w, int h)
 {
     if (!sb->id)
 	return;
@@ -805,7 +752,7 @@ gui_mch_set_scrollbar_pos(scrollbar_t * sb, int x, int y, int w, int h)
     static void
 adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
 {
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     long	value;
 
     if (did_ask_for_change)
@@ -825,7 +772,7 @@ adjustment_value_changed(GtkAdjustment * adjustment, gpointer data)
 
 /* SBAR_VERT or SBAR_HORIZ */
     void
-gui_mch_create_scrollbar(scrollbar_t * sb, int orient)
+gui_mch_create_scrollbar(scrollbar_T * sb, int orient)
 {
     if (orient == SBAR_HORIZ)
     {
@@ -854,7 +801,7 @@ gui_mch_create_scrollbar(scrollbar_t * sb, int orient)
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-gui_mch_destroy_scrollbar(scrollbar_t * sb)
+gui_mch_destroy_scrollbar(scrollbar_T * sb)
 {
     if (sb->id != 0)
     {
@@ -874,7 +821,7 @@ gui_mch_destroy_scrollbar(scrollbar_t * sb)
     static void
 browse_ok_cb(GtkWidget *widget, gpointer cbdata)
 {
-    gui_t *vw = (gui_t *)cbdata;
+    gui_T *vw = (gui_T *)cbdata;
 
     if (vw->browse_fname != NULL)
 	g_free(vw->browse_fname);
@@ -890,7 +837,7 @@ browse_ok_cb(GtkWidget *widget, gpointer cbdata)
     static void
 browse_cancel_cb(GtkWidget *widget, gpointer cbdata)
 {
-    gui_t *vw = (gui_t *)cbdata;
+    gui_T *vw = (gui_T *)cbdata;
 
     if (vw->browse_fname != NULL)
     {
@@ -1424,7 +1371,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 
 #if defined(FEAT_MENU) || defined(PROTO)
     void
-gui_mch_show_popupmenu(vimmenu_t *menu)
+gui_mch_show_popupmenu(vimmenu_T *menu)
 {
     gtk_menu_popup(GTK_MENU(menu->submenu_id),
 		   NULL, NULL, NULL, NULL, 3, (guint32)GDK_CURRENT_TIME);
@@ -1759,7 +1706,7 @@ find_replace_dialog_create(char_u *arg, int do_replace)
 }
 
     void
-gui_mch_find_dialog(exarg_t *eap)
+gui_mch_find_dialog(exarg_T *eap)
 {
     if (gui.in_use)
 	find_replace_dialog_create(eap->arg, FALSE);
@@ -1767,7 +1714,7 @@ gui_mch_find_dialog(exarg_t *eap)
 
 
     void
-gui_mch_replace_dialog(exarg_t *eap)
+gui_mch_replace_dialog(exarg_T *eap)
 {
     if (gui.in_use)
 	find_replace_dialog_create(eap->arg, TRUE);
@@ -2196,7 +2143,7 @@ helpfind_key_press_event(GtkWidget *widget, GdkEventKey *event)
 /*ARGSUSED*/
     void
 ex_helpfind(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     GtkWidget *frame;
     GtkWidget *vbox;
@@ -2320,7 +2267,7 @@ ex_helpfind(eap)
 gui_gtk_position_in_parent(
 	GtkWidget	*parent,
 	GtkWidget	*child,
-	gui_win_pos_t	where)
+	gui_win_pos_T	where)
 {
     GtkRequisition	c_size;
     gint		xPm, yPm;

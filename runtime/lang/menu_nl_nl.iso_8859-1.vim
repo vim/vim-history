@@ -1,6 +1,6 @@
 " Menu Translations:	Nederlands
 " Maintainer:		Bram Moolenaar
-" Last Change:	2001 Apr 01
+" Last Change:	2001 Apr 12
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -69,11 +69,11 @@ menutrans Convert\ to\ HEX<Tab>:%!xxd	Converteer\ naar\ HEX<Tab>:%!xxd
 menutrans Convert\ back<Tab>:%!xxd\ -r	Converteer\ terug<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
-menutrans &Buffers	&Buffer
-menutrans Refresh	Verversen
-menutrans Delete	Wissen
-menutrans Alternate	Vorige
-menutrans [No\ File]	[Keine\ Datei]
+menutrans &Buffers		&Buffer
+menutrans Refresh \menu		Ververs\ menu
+menutrans Delete		Wissen
+menutrans Alternate		Vorige
+menutrans [No\ File]		[Geen\ Bestand]
 
 " Window menu
 menutrans &Window			&Venster

@@ -35,7 +35,7 @@ typedef struct
     unsigned		regflags;
     char_u		reghasz;
     char_u		program[1];		/* actually longer.. */
-} regprog_t;
+} regprog_T;
 
 /*
  * Structure to be used for single-line matching.
@@ -44,11 +44,11 @@ typedef struct
  */
 typedef struct
 {
-    regprog_t		*regprog;
+    regprog_T		*regprog;
     char_u		*startp[NSUBEXP];
     char_u		*endp[NSUBEXP];
     int			rm_ic;
-} regmatch_t;
+} regmatch_T;
 
 /*
  * Structure to be used for multi-line matching.
@@ -60,11 +60,11 @@ typedef struct
  */
 typedef struct
 {
-    regprog_t		*regprog;
-    pos_t		startpos[NSUBEXP];
-    pos_t		endpos[NSUBEXP];
+    regprog_T		*regprog;
+    pos_T		startpos[NSUBEXP];
+    pos_T		endpos[NSUBEXP];
     int			rmm_ic;
-} regmmatch_t;
+} regmmatch_T;
 
 /*
  * Structure used to store external references: "\z\(\)" to "\z\1".
@@ -75,6 +75,6 @@ typedef struct
 {
     short		refcnt;
     char_u		*matches[NSUBEXP];
-} reg_extmatch_t;
+} reg_extmatch_T;
 
 #endif	/* _REGEXP_H */

@@ -37,7 +37,7 @@ enum event {
 
 struct MyMenuItem {
     struct MenuItem menuItem;
-    vimmenu_t	*guiMenu;
+    vimmenu_T	*guiMenu;
 };
 
 union myMenuItemUnion {

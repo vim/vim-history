@@ -27,6 +27,9 @@
 # define FEAT_GUI_X11
 # include <X11/Intrinsic.h>
 # include <X11/StringDefs.h>
+# ifdef FEAT_BEVAL
+#  include "gui_beval.h"
+# endif
 #endif
 
 #ifdef FEAT_GUI_GTK
@@ -207,9 +210,9 @@ typedef struct GuiScrollbar
 #ifdef FEAT_GUI_PHOTON
     PtWidget_t	*id;
 #endif
-} scrollbar_t;
+} scrollbar_T;
 
-typedef long	    guicolor_t;	/* handle for a GUI color */
+typedef long	    guicolor_T;	/* handle for a GUI color */
 
 #ifdef FEAT_GUI_GTK
   typedef GdkFont	*GuiFont;	/* handle for a GUI font */
@@ -239,7 +242,7 @@ typedef struct Gui
     int		dying;		    /* Is vim dying? Then output to terminal */
     int		dofork;		    /* Use fork() when GUI is starting */
     int		dragged_sb;	    /* Which scrollbar being dragged, if any? */
-    win_t	*dragged_wp;	    /* Which WIN's sb being dragged, if any? */
+    win_T	*dragged_wp;	    /* Which WIN's sb being dragged, if any? */
     int		pointer_hidden;	    /* Is the mouse pointer hidden? */
     int		col;		    /* Current cursor column in GUI display */
     int		row;		    /* Current cursor row in GUI display */
@@ -267,7 +270,7 @@ typedef struct Gui
     char	menu_height_fixed;  /* TRUE if menu height fixed */
 #endif
 
-    scrollbar_t bottom_sbar;	    /* Bottom scrollbar */
+    scrollbar_T bottom_sbar;	    /* Bottom scrollbar */
     int		which_scrollbars[3];/* Which scrollbar boxes are active? */
     int		prev_wrap;	    /* For updating the horizontal scrollbar */
     int		char_width;	    /* Width of char in pixels */
@@ -281,6 +284,11 @@ typedef struct Gui
     GuiFont	boldital_font;	    /* Bold-Italic font */
 #ifdef FEAT_MENU
     GuiFont	menu_font;	    /* menu item font */
+#ifdef EXPERIMENTAL
+# ifdef FEAT_XFONTSET
+    GuiFontset	menu_fontset;	    /* set of fonts for multi-byte chars */
+# endif
+#endif
 #endif
 #ifdef FEAT_MBYTE
     GuiFont	wide_font;	    /* 'guifontwide' font */
@@ -288,20 +296,20 @@ typedef struct Gui
 #ifdef FEAT_XFONTSET
     GuiFontset	fontset;	    /* set of fonts for multi-byte chars */
 #endif
-    guicolor_t	back_pixel;	    /* Color of background */
-    guicolor_t	norm_pixel;	    /* Color of normal text */
-    guicolor_t	def_back_pixel;	    /* default Color of background */
-    guicolor_t	def_norm_pixel;	    /* default Color of normal text */
+    guicolor_T	back_pixel;	    /* Color of background */
+    guicolor_T	norm_pixel;	    /* Color of normal text */
+    guicolor_T	def_back_pixel;	    /* default Color of background */
+    guicolor_T	def_norm_pixel;	    /* default Color of normal text */
 
 #ifdef FEAT_GUI_X11
     char	*menu_fg_color;	    /* Color of menu and dialog foregound */
-    guicolor_t	menu_fg_pixel;	    /* Same in Pixel format */
+    guicolor_T	menu_fg_pixel;	    /* Same in Pixel format */
     char	*menu_bg_color;	    /* Color of menu and dialog backgound */
-    guicolor_t	menu_bg_pixel;	    /* Same in Pixel format */
+    guicolor_T	menu_bg_pixel;	    /* Same in Pixel format */
     char	*scroll_fg_color;   /* Color of scrollbar foreground */
-    guicolor_t	scroll_fg_pixel;    /* Same in Pixel format */
+    guicolor_T	scroll_fg_pixel;    /* Same in Pixel format */
     char	*scroll_bg_color;   /* Color of scrollbar background */
-    guicolor_t	scroll_bg_pixel;    /* Same in Pixel format */
+    guicolor_T	scroll_bg_pixel;    /* Same in Pixel format */
     Display	*dpy;		    /* X display */
     Window	wid;		    /* Window id of text area */
     int		visibility;	    /* Is shell partially/fully obscured? */
@@ -361,6 +369,10 @@ typedef struct Gui
 # ifdef FEAT_TOOLBAR
     int		toolbar_height;	    /* height of the toolbar */
 # endif
+# ifdef FEAT_BEVAL
+    Pixel	balloonEval_fg_pixel;/* foreground color of balloon eval win */
+    Pixel	balloonEval_bg_pixel;/* background color of balloon eval win */
+# endif
 #endif  /* FEAT_GUI_ATHENA */
 
 #ifdef FEAT_GUI_MOTIF
@@ -375,12 +387,12 @@ typedef struct Gui
     Pixel	balloonEval_bg_pixel;/* background color of balloon eval win */
     XmFontList	balloonEval_fontList;/* balloon evaluation fontList */
 # endif
-#endif
+#endif /* FEAT_GUI_MOTIF */
 
 #ifdef FEAT_GUI_MSWIN
     GuiFont	currFont;	    /* Current font */
-    guicolor_t	currFgColor;	    /* Current foreground text color */
-    guicolor_t	currBgColor;	    /* Current background text color */
+    guicolor_T	currFgColor;	    /* Current foreground text color */
+    guicolor_T	currBgColor;	    /* Current background text color */
 #endif
 
 #ifdef FEAT_GUI_BEOS
@@ -396,10 +408,10 @@ typedef struct Gui
     MenuHandle	MacOSHelpMenu;	    /* Help menu provided by the MacOS */
     int		MacOSHelpItems;	    /* Nr of help-items supplied by MacOS */
     int		MacOSHaveCntxMenu;  /* Contextual menu available */
-    guicolor_t	menu_fg_pixel;	    /* Color of menu and dialog foregound */
-    guicolor_t	menu_bg_pixel;	    /* Color of menu and dialog backgound */
-    guicolor_t	scroll_fg_pixel;    /* Color of scrollbar foregrnd */
-    guicolor_t	scroll_bg_pixel;    /* Color of scrollbar backgrnd */
+    guicolor_T	menu_fg_pixel;	    /* Color of menu and dialog foregound */
+    guicolor_T	menu_bg_pixel;	    /* Color of menu and dialog backgound */
+    guicolor_T	scroll_fg_pixel;    /* Color of scrollbar foregrnd */
+    guicolor_T	scroll_bg_pixel;    /* Color of scrollbar backgrnd */
     WindowPtr	wid;		    /* Window id of text area */
     int		visibility;	    /* Is window partially/fully obscured? */
     /*	GC			text_gc;
@@ -451,14 +463,16 @@ typedef struct Gui
     char	*preedit_type;
     Boolean	open_im;
 #endif
-} gui_t;
+} gui_T;
 
-extern gui_t gui;			/* this is defined in gui.c */
+extern gui_T gui;			/* this is defined in gui.c */
 
 #ifdef FEAT_BEVAL
-#  define XmNballoonEvalForeground  "balloonEvalForeground"
-#  define XmNballoonEvalBackground  "balloonEvalBackground"
+#  define XtNballoonEvalForeground  "balloonEvalForeground"
+#  define XtNballoonEvalBackground  "balloonEvalBackground"
+# ifdef FEAT_GUI_MOTIF
 #  define XmNballoonEvalFontList    "balloonEvalFontList"
+# endif
 #endif
 
 /* definitions of available window positionings for gui_*_position_in_parent()
@@ -468,4 +482,4 @@ typedef enum
     VW_POS_MOUSE,
     VW_POS_CENTER,
     VW_POS_TOP_CENTER
-} gui_win_pos_t;
+} gui_win_pos_T;

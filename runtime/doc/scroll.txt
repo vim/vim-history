@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 01
+*scroll.txt*    For Vim version 6.0ab.  Last change: 2001 Apr 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -102,7 +102,7 @@ z^			Without [count]: Redraw with the line just above the
 The following commands reposition the edit window (the part of the buffer that
 you see) while keeping the cursor on the same line:
 
-							*z* *z<CR>*
+							*z<CR>*
 z<CR>			Redraw, line [count] at top of window (default
 			cursor line).  Put cursor at first non-blank in the
 			line.

@@ -815,7 +815,7 @@ mch_breakcheck()
  */
     int
 mch_expandpath(gap, path, flags)
-    garray_t	*gap;	/* Grow array for results. */
+    garray_T	*gap;	/* Grow array for results. */
     char_u	*path;
     int		flags;	/* EW_* flags */
 {
@@ -855,7 +855,7 @@ mch_expandpath(gap, path, flags)
  */
     static int
 expand_section(gap, root, rest, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*root;	/* Non-wildcarded path to search */
     char_u	*rest;	/* Wildcarded remainder of path */
     int		flags;	/* Add dirs/files/missing objects. */

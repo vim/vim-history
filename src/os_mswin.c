@@ -182,7 +182,7 @@ int _stricoll(char *a, char *b)
 #endif
 
 
-garray_t error_ga = {0, 0, 0, 0, NULL};
+garray_T error_ga = {0, 0, 0, 0, NULL};
 
 
 

@@ -24,6 +24,12 @@
 #	  PYTHON=[Path to Python directory]
 #	  DYNAMIC_PYTHON=yes (to load the Python DLL dynamically)
 #	  PYTHON_VER=[Python version, eg 15, 20]  (default is 15)
+#	Ruby interface:
+#	  RUBY=[Path to Ruby directory]
+#	  DYNAMIC_RUBY=yes (to load the Ruby DLL dynamically)
+#	  RUBY_VER=[Ruby version, eg 16, 17] (default is 16)
+#	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
+#	    You must set RUBY_VER_LONG when change RUBY_VER.
 #	Tcl interface:
 #	  TCL=[Path to Tcl directory]
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
@@ -31,6 +37,9 @@
 #	SNiFF+ interface: SNIFF=yes
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
+#	Intl library support (always dynamically loaded):
+#	  INTL=[yes or no]  (default is yes)
+#	See http://sourceforge.net/projects/gettext/
 #
 # You can combine any of these interfaces
 #
@@ -283,6 +292,14 @@ ICONV = yes
 CFLAGS = $(CFLAGS) -DDYNAMIC_ICONV
 !endif
 
+# libintl.dll library
+!ifndef INTL
+INTL = yes
+!endif
+!if "$(INTL)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
+!endif
+
 # TCL interface
 !ifdef TCL
 !ifndef TCL_VER
@@ -327,7 +344,6 @@ PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
 !undef DYNAMIC_PERL
 !endif
 !endif
-!message
 
 # Is Perl installed in architecture-specific directories?
 !if exist($(PERL)\Bin\MSWin32-x86)
@@ -360,17 +376,50 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 
 !endif
 
+#
+# Support Ruby interface
+#
+!ifdef RUBY
+#  Set default value
+!ifndef RUBY_VER
+RUBY_VER = 16
+!endif
+!ifndef RUBY_VER_LONG
+RUBY_VER_LONG = 1.6
+!endif
+!ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i586-mswin32
+!endif
+RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+
+!message Ruby detected (version $(RUBY_VER)) - root dir is "$(RUBY)"
+CFLAGS = $(CFLAGS) -DFEAT_RUBY
+RUBY_OBJ = $(OUTDIR)\if_ruby.obj
+RUBY_INC = /I "$(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM)"
+RUBY_LIB = $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
+# Do we want to load Ruby dynamically?
+!if "$(DYNAMIC_RUBY)" == "yes"
+CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
+!undef RUBY_LIB
+!endif
+!endif # RUBY
+
+#
+# End extra featuare include
+#
+!message
+
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
 LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
-		$(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(LINK_PDB)
+		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) $(LINK_PDB)
 
 all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe
 
-$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(OUTDIR)\version.obj
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
-		$(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
+		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
 		$(OUTDIR)\version.obj $(LINKARGS2)
 	if exist $(OUTDIR)\version.obj del $(OUTDIR)\version.obj
 	if exist auto\pathdef.c del auto\pathdef.c
@@ -490,6 +539,9 @@ $(OUTDIR)/if_python.obj: $(OUTDIR) if_python.c  $(INCL)
 
 $(OUTDIR)/if_ole.obj: $(OUTDIR) if_ole.cpp  $(INCL) if_ole.h
 	$(CC) $(CFLAGS) if_ole.cpp /Fo$(OUTDIR)/if_ole.obj $(PDB)
+
+$(OUTDIR)/if_ruby.obj: $(OUTDIR) if_ruby.c  $(INCL)
+	$(CC) $(CFLAGS) $(RUBY_INC) if_ruby.c /Fo$(OUTDIR)/if_ruby.obj $(PDB)
 
 $(OUTDIR)/if_sniff.obj:	$(OUTDIR) if_sniff.c  $(INCL)
 	$(CC) $(CFLAGS) if_sniff.c /Fo$(OUTDIR)/if_sniff.obj $(PDB)

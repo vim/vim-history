@@ -107,10 +107,12 @@ ui_inchar_undo(s, len)
  */
     int
 ui_inchar(buf, maxlen, wtime)
-    char_u  *buf;
-    int	    maxlen;
-    long    wtime;	    /* don't use "time", MIPS cannot handle it */
+    char_u	*buf;
+    int		maxlen;
+    long	wtime;	    /* don't use "time", MIPS cannot handle it */
 {
+    int		retval = 0;
+
 #if defined(FEAT_GUI) && defined(UNIX)
     /*
      * Use the typeahead if there is any.
@@ -139,19 +141,29 @@ ui_inchar(buf, maxlen, wtime)
 	return 1;
     }
 #endif
+
+    /* When doing a blocking wait there is no need for CTRL-C to interrupt
+     * something, don't let it set got_int when it was mapped. */
+    if (mapped_ctrl_c && (wtime == -1 || wtime > 100L))
+	ctrl_c_interrupts = FALSE;
+
 #ifdef FEAT_GUI
     if (gui.in_use)
     {
-	if (!gui_wait_for_chars(wtime))
-	    return 0;
-	return read_from_input_buf(buf, (long)maxlen);
+	if (gui_wait_for_chars(wtime))
+	    retval = read_from_input_buf(buf, (long)maxlen);
     }
 #endif
 #ifndef NO_CONSOLE
-    return mch_inchar(buf, maxlen, wtime);
-#else
-    return 0;
+# ifdef FEAT_GUI
+    else
+# endif
+	retval = mch_inchar(buf, maxlen, wtime);
 #endif
+
+    ctrl_c_interrupts = TRUE;
+
+    return retval;
 }
 
 /*
@@ -364,7 +376,7 @@ clip_init(can_use)
     void
 clip_update_selection()
 {
-    pos_t    start, end;
+    pos_T    start, end;
 
     /* If visual mode is only due to a redo command ("."), then ignore it */
     if (!redo_VIsual_busy && VIsual_active)
@@ -493,33 +505,70 @@ clip_isautosel()
 #ifdef FEAT_GUI
 	    gui.in_use ? (vim_strchr(p_go, GO_ASEL) != NULL) :
 #endif
-	    (vim_strchr(p_cb, 't') != NULL));
+	    clip_autoselect);
 }
 
-
-#if defined(FEAT_GUI) || defined(PROTO)
 
 /*
  * Stuff for general mouse selection, without using Visual mode.
  */
 
 static int clip_compare_pos __ARGS((int row1, int col1, int row2, int col2));
-static void clip_invert_area __ARGS((int, int, int, int));
-static void clip_yank_non_visual_selection __ARGS((int, int, int, int));
+static void clip_invert_area __ARGS((int, int, int, int, int how));
+static void clip_invert_rectangle __ARGS((int row, int col, int height, int width, int invert));
+static void clip_yank_modeless_selection __ARGS((int, int, int, int));
 static void clip_get_word_boundaries __ARGS((VimClipboard *, int, int));
 static int  clip_get_line_end __ARGS((int));
-static void clip_update_non_visual_selection __ARGS((VimClipboard *, int, int,
+static void clip_update_modeless_selection __ARGS((VimClipboard *, int, int,
 						    int, int));
+
+/* flags for clip_invert_area() */
+#define CLIP_CLEAR	1
+#define CLIP_SET	2
+#define CLIP_TOGGLE	3
+
+/*
+ * Start, continue or end a modeless selection.  Used when editing the
+ * command-line and in the cmdline window.
+ */
+    void
+clip_modeless(button, is_click, is_drag)
+    int		button;
+    int		is_click;
+    int		is_drag;
+{
+    int		repeat;
+
+    repeat = ((clip_star.mode == SELECT_MODE_CHAR
+		|| clip_star.mode == SELECT_MODE_LINE)
+					      && (mod_mask & MOD_MASK_2CLICK))
+	    || (clip_star.mode == SELECT_MODE_WORD
+					     && (mod_mask & MOD_MASK_3CLICK));
+    if (is_click && button == MOUSE_RIGHT)
+    {
+	/* Right mouse button: If there was no selection, start one.
+	 * Otherwise extend the existing selection. */
+	if (clip_star.state == SELECT_CLEARED)
+	    clip_start_selection(mouse_col, mouse_row, FALSE);
+	clip_process_selection(button, mouse_col, mouse_row, repeat);
+    }
+    else if (is_click)
+	clip_start_selection(mouse_col, mouse_row, repeat);
+    else if (is_drag)
+	clip_process_selection(button, mouse_col, mouse_row, repeat);
+    else /* release */
+	clip_process_selection(MOUSE_RELEASE, mouse_col, mouse_row, FALSE);
+}
 
 /*
  * Compare two screen positions ala strcmp()
  */
     static int
 clip_compare_pos(row1, col1, row2, col2)
-    int	    row1;
-    int	    col1;
-    int	    row2;
-    int	    col2;
+    int		row1;
+    int		col1;
+    int		row2;
+    int		col2;
 {
     if (row1 > row2) return(1);
     if (row1 < row2) return(-1);
@@ -529,38 +578,38 @@ clip_compare_pos(row1, col1, row2, col2)
 }
 
 /*
- * Start out the selection
+ * Start the selection
  */
-/* ARGSUSED */
     void
-clip_start_selection(button, x, y, repeated_click, modifiers)
-    int	    button;
-    int	    x;
-    int	    y;
-    int	    repeated_click;
-    int_u   modifiers;
+clip_start_selection(col, row, repeated_click)
+    int		col;
+    int		row;
+    int		repeated_click;
 {
-    VimClipboard    *cb = &clip_star;
+    VimClipboard	*cb = &clip_star;
 
     if (cb->state == SELECT_DONE)
 	clip_clear_selection();
 
-    cb->start.lnum  = check_row(Y_2_ROW(y));
-    cb->start.col   = check_col(X_2_COL(x));
+    cb->start.lnum  = check_row(row);
+    cb->start.col   = check_col(col);
     cb->end	    = cb->start;
     cb->origin_row  = (short_u)cb->start.lnum;
     cb->state	    = SELECT_IN_PROGRESS;
 
     if (repeated_click)
     {
-	if (++(cb->mode) > SELECT_MODE_LINE)
+	if (++cb->mode > SELECT_MODE_LINE)
 	    cb->mode = SELECT_MODE_CHAR;
     }
     else
 	cb->mode = SELECT_MODE_CHAR;
 
+#ifdef FEAT_GUI
     /* clear the cursor until the selection is made */
-    gui_undraw_cursor();
+    if (gui.in_use)
+	gui_undraw_cursor();
+#endif
 
     switch (cb->mode)
     {
@@ -575,14 +624,14 @@ clip_start_selection(button, x, y, repeated_click, modifiers)
 	    cb->origin_end_col	 = cb->word_end_col;
 
 	    clip_invert_area((int)cb->start.lnum, cb->word_start_col,
-			    (int)cb->end.lnum, cb->word_end_col);
+			    (int)cb->end.lnum, cb->word_end_col, CLIP_SET);
 	    cb->start.col = cb->word_start_col;
 	    cb->end.col   = cb->word_end_col;
 	    break;
 
 	case SELECT_MODE_LINE:
 	    clip_invert_area((int)cb->start.lnum, 0, (int)cb->start.lnum,
-			    (int)Columns);
+			    (int)Columns, CLIP_SET);
 	    cb->start.col = 0;
 	    cb->end.col   = Columns;
 	    break;
@@ -598,27 +647,25 @@ clip_start_selection(button, x, y, repeated_click, modifiers)
 /*
  * Continue processing the selection
  */
-/* ARGSUSED */
     void
-clip_process_selection(button, x, y, repeated_click, modifiers)
-    int	    button;
-    int	    x;
-    int	    y;
-    int	    repeated_click;
-    int_u   modifiers;
+clip_process_selection(button, col, row, repeated_click)
+    int		button;
+    int		col;
+    int		row;
+    int_u	repeated_click;
 {
-    VimClipboard    *cb = &clip_star;
-    int		    row;
-    int_u	    col;
-    int		    diff;
+    VimClipboard	*cb = &clip_star;
+    int			diff;
 
     if (button == MOUSE_RELEASE)
     {
 	/* Check to make sure we have something selected */
 	if (cb->start.lnum == cb->end.lnum && cb->start.col == cb->end.col)
 	{
+#ifdef FEAT_GUI
 	    if (gui.in_use)
 		gui_update_cursor(FALSE, FALSE);
+#endif
 	    cb->state = SELECT_CLEARED;
 	    return;
 	}
@@ -629,20 +676,22 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 #endif
 	clip_free_selection(&clip_star);
 	clip_own_selection(&clip_star);
-	clip_yank_non_visual_selection((int)cb->start.lnum, cb->start.col,
+	clip_yank_modeless_selection((int)cb->start.lnum, cb->start.col,
 					      (int)cb->end.lnum, cb->end.col);
 	clip_gen_set_selection(&clip_star);
+#ifdef FEAT_GUI
 	if (gui.in_use)
 	    gui_update_cursor(FALSE, FALSE);
+#endif
 
 	cb->state = SELECT_DONE;
 	return;
     }
 
-    row = check_row(Y_2_ROW(y));
-    col = check_col(X_2_COL(x));
+    row = check_row(row);
+    col = check_col(col);
 
-    if (col == cb->prev.col && row == cb->prev.lnum)
+    if (col == (int)cb->prev.col && row == cb->prev.lnum && !repeated_click)
 	return;
 
     /*
@@ -663,7 +712,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 			    && cb->end.col - col > col - cb->start.col))
 			|| ((diff = (cb->end.lnum - row) -
 						   (row - cb->start.lnum)) > 0
-			    || (diff == 0 && col < (cb->start.col +
+			    || (diff == 0 && col < (int)(cb->start.col +
 							 cb->end.col) / 2)))))
 	{
 	    cb->origin_row = (short_u)cb->end.lnum;
@@ -676,12 +725,8 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	    cb->origin_start_col = cb->start.col;
 	    cb->origin_end_col = cb->start.col;
 	}
-	if (cb->mode == SELECT_MODE_WORD)
-	{
-	    clip_get_word_boundaries(cb, cb->origin_row, cb->origin_start_col);
-	    cb->origin_start_col = cb->word_start_col;
-	    cb->origin_end_col	 = cb->word_end_col;
-	}
+	if (cb->mode == SELECT_MODE_WORD && !repeated_click)
+	    cb->mode = SELECT_MODE_CHAR;
     }
 
     /* set state, for when using the right mouse button */
@@ -690,6 +735,9 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 #ifdef DEBUG_SELECTION
     printf("Selection extending to (%d,%d)\n", row, col);
 #endif
+
+    if (repeated_click && ++cb->mode > SELECT_MODE_LINE)
+	cb->mode = SELECT_MODE_CHAR;
 
     switch (cb->mode)
     {
@@ -703,19 +751,19 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 						   cb->origin_start_col) >= 0)
 	    {
 		if (col >= (int)cb->word_end_col)
-		    clip_update_non_visual_selection(cb, cb->origin_row,
+		    clip_update_modeless_selection(cb, cb->origin_row,
 			    cb->origin_start_col, row, (int)Columns);
 		else
-		    clip_update_non_visual_selection(cb, cb->origin_row,
+		    clip_update_modeless_selection(cb, cb->origin_row,
 			    cb->origin_start_col, row, col + 1);
 	    }
 	    else
 	    {
 		if (col >= (int)cb->word_end_col)
-		    clip_update_non_visual_selection(cb, row, cb->word_end_col,
+		    clip_update_modeless_selection(cb, row, cb->word_end_col,
 			    cb->origin_row, cb->origin_start_col + 1);
 		else
-		    clip_update_non_visual_selection(cb, row, col,
+		    clip_update_modeless_selection(cb, row, col,
 			    cb->origin_row, cb->origin_start_col + 1);
 	    }
 	    break;
@@ -723,7 +771,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	case SELECT_MODE_WORD:
 	    /* If we are still within the same word, do nothing */
 	    if (row == cb->prev.lnum && col >= (int)cb->word_start_col
-		    && col < (int)cb->word_end_col)
+		    && col < (int)cb->word_end_col && !repeated_click)
 		return;
 
 	    /* Get new word boundaries */
@@ -732,23 +780,23 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	    /* Handle being after the origin point of selection */
 	    if (clip_compare_pos(row, col, cb->origin_row,
 		    cb->origin_start_col) >= 0)
-		clip_update_non_visual_selection(cb, cb->origin_row,
+		clip_update_modeless_selection(cb, cb->origin_row,
 			cb->origin_start_col, row, cb->word_end_col);
 	    else
-		clip_update_non_visual_selection(cb, row, cb->word_start_col,
+		clip_update_modeless_selection(cb, row, cb->word_start_col,
 			cb->origin_row, cb->origin_end_col);
 	    break;
 
 	case SELECT_MODE_LINE:
-	    if (row == cb->prev.lnum)
+	    if (row == cb->prev.lnum && !repeated_click)
 		return;
 
 	    if (clip_compare_pos(row, col, cb->origin_row,
 		    cb->origin_start_col) >= 0)
-		clip_update_non_visual_selection(cb, cb->origin_row, 0, row,
+		clip_update_modeless_selection(cb, cb->origin_row, 0, row,
 			(int)Columns);
 	    else
-		clip_update_non_visual_selection(cb, row, 0, cb->origin_row,
+		clip_update_modeless_selection(cb, row, 0, cb->origin_row,
 			(int)Columns);
 	    break;
     }
@@ -820,8 +868,10 @@ clip_redraw_selection(x, y, w, h)
 }
 #endif
 
+# if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Redraw part of the selection if character at "row,col" is inside of it.
+ * Only used for the GUI.
  */
     void
 clip_may_redraw_selection(row, col, len)
@@ -840,9 +890,10 @@ clip_may_redraw_selection(row, col, len)
 	if (row == clip_star.end.lnum && end > (int)clip_star.end.col)
 	    end = clip_star.end.col;
 	if (end > start)
-	    clip_invert_area(row, start, row, end);
+	    clip_invert_area(row, start, row, end, 0);
     }
 }
+# endif
 
 /*
  * Called from outside to clear selected region from the display
@@ -856,7 +907,7 @@ clip_clear_selection()
 	return;
 
     clip_invert_area((int)cb->start.lnum, cb->start.col, (int)cb->end.lnum,
-	    cb->end.col);
+						     cb->end.col, CLIP_CLEAR);
     cb->state = SELECT_CLEARED;
 }
 
@@ -905,18 +956,30 @@ clip_scroll_selection(rows)
 
 /*
  * Invert a region of the display between a starting and ending row and column
+ * Values for "how":
+ * CLIP_CLEAR:  undo inversion
+ * CLIP_SET:    set inversion
+ * CLIP_TOGGLE: set inversion if pos1 < pos2, undo inversion otherwise.
+ * 0: invert (GUI only).
  */
     static void
-clip_invert_area(row1, col1, row2, col2)
-    int	    row1;
-    int	    col1;
-    int	    row2;
-    int	    col2;
+clip_invert_area(row1, col1, row2, col2, how)
+    int		row1;
+    int		col1;
+    int		row2;
+    int		col2;
+    int		how;
 {
+    int		invert = FALSE;
+
+    if (how == CLIP_SET)
+	invert = TRUE;
+
     /* Swap the from and to positions so the from is always before */
     if (clip_compare_pos(row1, col1, row2, col2) > 0)
     {
 	int tmp_row, tmp_col;
+
 	tmp_row = row1;
 	tmp_col = col1;
 	row1	= row2;
@@ -924,31 +987,55 @@ clip_invert_area(row1, col1, row2, col2)
 	row2	= tmp_row;
 	col2	= tmp_col;
     }
+    else if (how == CLIP_TOGGLE)
+	invert = TRUE;
 
     /* If all on the same line, do it the easy way */
     if (row1 == row2)
     {
-	gui_mch_invert_rectangle(row1, col1, 1, col2 - col1);
-	return;
+	clip_invert_rectangle(row1, col1, 1, col2 - col1, invert);
     }
-
-    /* Handle a piece of the first line */
-    if (col1 > 0)
+    else
     {
-	gui_mch_invert_rectangle(row1, col1, 1, (int)Columns - col1);
-	row1++;
-    }
+	/* Handle a piece of the first line */
+	if (col1 > 0)
+	{
+	    clip_invert_rectangle(row1, col1, 1, (int)Columns - col1, invert);
+	    row1++;
+	}
 
-    /* Handle a piece of the last line */
-    if (col2 < Columns - 1)
-    {
-	gui_mch_invert_rectangle(row2, 0, 1, col2);
-	row2--;
-    }
+	/* Handle a piece of the last line */
+	if (col2 < Columns - 1)
+	{
+	    clip_invert_rectangle(row2, 0, 1, col2, invert);
+	    row2--;
+	}
 
-    /* Handle the rectangle thats left */
-    if (row2 >= row1)
-	gui_mch_invert_rectangle(row1, 0, row2 - row1 + 1, (int)Columns);
+	/* Handle the rectangle thats left */
+	if (row2 >= row1)
+	    clip_invert_rectangle(row1, 0, row2 - row1 + 1, (int)Columns,
+								      invert);
+    }
+}
+
+/*
+ * Invert or un-invert a rectangle of the screen.
+ * "invert" is true if the result is inverted.
+ */
+    static void
+clip_invert_rectangle(row, col, height, width, invert)
+    int		row;
+    int		col;
+    int		height;
+    int		width;
+    int		invert;
+{
+#ifdef FEAT_GUI
+    if (gui.in_use)
+	gui_mch_invert_rectangle(row, col, height, width);
+    else
+#endif
+	screen_draw_rectangle(row, col, height, width, invert);
 }
 
 /*
@@ -956,7 +1043,7 @@ clip_invert_area(row1, col1, row2, col2)
  * will be available for pasting.
  */
     static void
-clip_yank_non_visual_selection(row1, col1, row2, col2)
+clip_yank_modeless_selection(row1, col1, row2, col2)
     int		row1;
     int		col1;
     int		row2;
@@ -1179,7 +1266,7 @@ clip_get_line_end(row)
  * beginning or end and inverting the changed area(s).
  */
     static void
-clip_update_non_visual_selection(cb, row1, col1, row2, col2)
+clip_update_modeless_selection(cb, row1, col1, row2, col2)
     VimClipboard    *cb;
     int		    row1;
     int		    col1;
@@ -1189,7 +1276,8 @@ clip_update_non_visual_selection(cb, row1, col1, row2, col2)
     /* See if we changed at the beginning of the selection */
     if (row1 != cb->start.lnum || col1 != (int)cb->start.col)
     {
-	clip_invert_area(row1, col1, (int)cb->start.lnum, cb->start.col);
+	clip_invert_area(row1, col1, (int)cb->start.lnum, cb->start.col,
+								 CLIP_TOGGLE);
 	cb->start.lnum = row1;
 	cb->start.col  = col1;
     }
@@ -1197,30 +1285,12 @@ clip_update_non_visual_selection(cb, row1, col1, row2, col2)
     /* See if we changed at the end of the selection */
     if (row2 != cb->end.lnum || col2 != (int)cb->end.col)
     {
-	clip_invert_area(row2, col2, (int)cb->end.lnum, cb->end.col);
+	clip_invert_area((int)cb->end.lnum, cb->end.col, row2, col2,
+								 CLIP_TOGGLE);
 	cb->end.lnum = row2;
 	cb->end.col  = col2;
     }
 }
-
-#else /* If FEAT_GUI not defined */
-
-/*
- * Called from outside to clear selected region from the display
- */
-    void
-clip_clear_selection()
-{
-    /*
-     * Dummy version for now... the point of this code is to set the selected
-     * area back to "normal" colour if we are clearing the selection. As we
-     * don't have GUI-style mouse selection, we can ignore this for now.
-     * Eventually we could actually invert the area in a terminal by redrawing
-     * in reverse mode, but we don't do that yet.
-     */
-    clip_star.state = SELECT_CLEARED;
-}
-#endif /* FEAT_GUI */
 
     int
 clip_gen_own_selection(cbd)
@@ -1525,7 +1595,7 @@ fill_input_buf(exit_on_error)
 	    /*
 	     * if a CTRL-C was typed, remove it from the buffer and set got_int
 	     */
-	    if (inbuf[inbufcount] == 3)
+	    if (inbuf[inbufcount] == 3 && ctrl_c_interrupts)
 	    {
 		/* remove everything typed before the CTRL-C */
 		mch_memmove(inbuf, inbuf + inbufcount, (size_t)(len + 1));
@@ -1560,7 +1630,7 @@ ui_cursor_shape()
 {
 # ifdef FEAT_GUI
     if (gui.in_use)
-	gui_upd_cursor_shape();
+	gui_update_cursor_later();
 # endif
 # ifdef MCH_CURSOR_SHAPE
     mch_update_cursor();
@@ -1568,7 +1638,7 @@ ui_cursor_shape()
 }
 #endif
 
-#if defined(FEAT_XCLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
 /*
  * Check bounds for column number
  */
@@ -1933,7 +2003,7 @@ clip_x11_set_selection(cbd)
 #endif
 
 #if defined(FEAT_MOUSE) || defined(PROTO)
-static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_t *lnump));
+static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_T *lnump));
 
 /*
  * Move the cursor to the specified row and column on the screen.
@@ -1973,8 +2043,8 @@ jump_to_mouse(flags, inclusive)
     static int	prev_row = -1;
     static int	prev_col = -1;
 
-    win_t	*wp, *old_curwin;
-    pos_t	old_cursor;
+    win_T	*wp, *old_curwin;
+    pos_T	old_cursor;
     int		count;
     int		first;
     int		row = mouse_row;
@@ -2005,6 +2075,11 @@ retnomove:
 	    end_visual_mode();
 	    redraw_curbuf_later(INVERTED);	/* delete the inversion */
 	}
+#endif
+#if defined(FEAT_CMDWIN) && defined(FEAT_CLIPBOARD)
+	/* Continue a modeless selection in another window. */
+	if (cmdwin_type != 0 && row < W_WINROW(curwin))
+	    return IN_OTHER_WIN;
 #endif
 	return IN_BUFFER;
     }
@@ -2091,13 +2166,17 @@ retnomove:
 #ifdef FEAT_CMDWIN
 	if (cmdwin_type != 0 && wp != curwin)
 	{
-	    /* Don't allow a click outside the command-line window.  Pretend
-	     * it was in the current window. */
+	    /* A click outside the command-line window: Use modeless
+	     * selection if possible. */
+# ifdef FEAT_CLIPBOARD
+	    return IN_OTHER_WIN;
+# else
 	    row = 0;
 	    col += wp->w_wincol;
 	    wp = curwin;
 	    on_status_line = 0;
 	    on_sep_line = 0;
+# endif
 	}
 #endif
 #ifdef FEAT_WINDOWS
@@ -2163,6 +2242,12 @@ retnomove:
 	    end_visual_mode();
 	    redraw_curbuf_later(INVERTED);	/* delete the inversion */
 	}
+#endif
+
+#if defined(FEAT_CMDWIN) && defined(FEAT_CLIPBOARD)
+	/* Continue a modeless selection in another window. */
+	if (cmdwin_type != 0 && row < W_WINROW(curwin))
+	    return IN_OTHER_WIN;
 #endif
 
 	row -= W_WINROW(curwin);
@@ -2327,11 +2412,11 @@ retnomove:
 mouse_comp_pos(rowp, colp, lnump)
     int		*rowp;
     int		*colp;
-    linenr_t	*lnump;
+    linenr_T	*lnump;
 {
     int		col = *colp;
     int		row = *rowp;
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		retval = FALSE;
     int		off;
     int		count;
@@ -2402,12 +2487,12 @@ mouse_comp_pos(rowp, colp, lnump)
  * updated to become relative to the top-left of the window.
  */
 /*ARGSUSED*/
-    win_t *
+    win_T *
 mouse_find_win(rowp, colp)
     int		*rowp;
     int		*colp;
 {
-    frame_t	*fp;
+    frame_T	*fp;
 
     fp = topframe;
     for (;;)
@@ -2447,9 +2532,9 @@ mouse_find_win(rowp, colp)
  */
     int
 get_fpos_of_mouse(mpos)
-    pos_t	*mpos;
+    pos_T	*mpos;
 {
-    win_t	*wp;
+    win_T	*wp;
     int		count;
     char_u	*ptr;
     int		row = mouse_row;

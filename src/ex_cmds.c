@@ -16,16 +16,16 @@
 #ifdef FEAT_EX_EXTRA
 static int linelen __ARGS((int *has_tab));
 #endif
-static void do_filter __ARGS((linenr_t line1, linenr_t line2, exarg_t *eap, char_u *cmd, int do_in, int do_out));
+static void do_filter __ARGS((linenr_T line1, linenr_T line2, exarg_T *eap, char_u *cmd, int do_in, int do_out));
 #ifdef FEAT_VIMINFO
 static char_u *viminfo_filename __ARGS((char_u	*));
 static void do_viminfo __ARGS((FILE *fp_in, FILE *fp_out, int want_info, int want_marks, int force_read));
-static int viminfo_encoding __ARGS((vir_t *virp));
-static int read_viminfo_up_to_marks __ARGS((vir_t *virp, int forceit, int writing));
+static int viminfo_encoding __ARGS((vir_T *virp));
+static int read_viminfo_up_to_marks __ARGS((vir_T *virp, int forceit, int writing));
 #endif
 
-static int check_overwrite __ARGS((exarg_t *eap, buf_t *buf, char_u *fname, char_u *ffname, int other));
-static int check_readonly __ARGS((int *forceit, buf_t *buf));
+static int check_overwrite __ARGS((exarg_T *eap, buf_T *buf, char_u *fname, char_u *ffname, int other));
+static int check_readonly __ARGS((int *forceit, buf_T *buf));
 #ifdef FEAT_AUTOCMD
 static void delbuf_msg __ARGS((char_u *name));
 #endif
@@ -42,7 +42,7 @@ static int
 /*ARGSUSED*/
     void
 do_ascii(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		c;
     char	buf1[20];
@@ -134,9 +134,9 @@ do_ascii(eap)
  */
     void
 ex_align(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    pos_t	save_curpos;
+    pos_T	save_curpos;
     int		len;
     int		indent = 0;
     int		new_indent;
@@ -176,7 +176,7 @@ ex_align(eap)
 	    width = 80;
     }
 
-    if (u_save((linenr_t)(eap->line1 - 1), (linenr_t)(eap->line2 + 1)) == FAIL)
+    if (u_save((linenr_T)(eap->line1 - 1), (linenr_T)(eap->line2 + 1)) == FAIL)
 	return;
 
     for (curwin->w_cursor.lnum = eap->line1;
@@ -267,9 +267,9 @@ linelen(has_tab)
  */
     void
 ex_retab(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		got_tab = FALSE;
     long	num_spaces = 0;
     long	num_tabs;
@@ -285,8 +285,8 @@ ex_retab(eap)
     int		did_undo;		/* called u_save for current line */
     int		new_ts;
     int		save_list;
-    linenr_t	first_line = 0;		/* first changed line */
-    linenr_t	last_line = 0;		/* last changed line */
+    linenr_T	first_line = 0;		/* first changed line */
+    linenr_T	last_line = 0;		/* last changed line */
 
     save_list = curwin->w_p_list;
     curwin->w_p_list = 0;	    /* don't want list mode here */
@@ -341,8 +341,8 @@ ex_retab(eap)
 			if (did_undo == FALSE)
 			{
 			    did_undo = TRUE;
-			    if (u_save((linenr_t)(lnum - 1),
-						(linenr_t)(lnum + 1)) == FAIL)
+			    if (u_save((linenr_T)(lnum - 1),
+						(linenr_T)(lnum + 1)) == FAIL)
 			    {
 				new_line = NULL;	/* flag out-of-memory */
 				break;
@@ -376,7 +376,7 @@ ex_retab(eap)
 	    }
 	    if (ptr[col] == NUL)
 		break;
-	    vcol += chartabsize(ptr + col, (colnr_t)vcol);
+	    vcol += chartabsize(ptr + col, (colnr_T)vcol);
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		col += (*mb_ptr2len_check)(ptr + col);
@@ -412,15 +412,15 @@ ex_retab(eap)
  */
     int
 do_move(line1, line2, dest)
-    linenr_t	line1;
-    linenr_t	line2;
-    linenr_t	dest;
+    linenr_T	line1;
+    linenr_T	line2;
+    linenr_T	dest;
 {
     char_u	*str;
-    linenr_t	l;
-    linenr_t	extra;	    /* Num lines added before line1 */
-    linenr_t	num_lines;  /* Num lines moved */
-    linenr_t	last_line;  /* Last line in file after adding new text */
+    linenr_T	l;
+    linenr_T	extra;	    /* Num lines added before line1 */
+    linenr_T	num_lines;  /* Num lines moved */
+    linenr_T	last_line;  /* Last line in file after adding new text */
 
     if (dest >= line1 && dest < line2)
     {
@@ -441,7 +441,7 @@ do_move(line1, line2, dest)
 	str = vim_strsave(ml_get(l + extra));
 	if (str != NULL)
 	{
-	    ml_append(dest + l - line1, str, (colnr_t)0, FALSE);
+	    ml_append(dest + l - line1, str, (colnr_T)0, FALSE);
 	    vim_free(str);
 	    if (dest < line1)
 		extra++;
@@ -519,11 +519,11 @@ do_move(line1, line2, dest)
  */
     void
 ex_copy(line1, line2, n)
-    linenr_t	line1;
-    linenr_t	line2;
-    linenr_t	n;
+    linenr_T	line1;
+    linenr_T	line2;
+    linenr_T	n;
 {
-    linenr_t	count;
+    linenr_T	count;
     char_u	*p;
 
     count = line2 - line1 + 1;
@@ -553,7 +553,7 @@ ex_copy(line1, line2, n)
 	p = vim_strsave(ml_get(line1));
 	if (p != NULL)
 	{
-	    ml_append(curwin->w_cursor.lnum, p, (colnr_t)0, FALSE);
+	    ml_append(curwin->w_cursor.lnum, p, (colnr_T)0, FALSE);
 	    vim_free(p);
 	}
 	/* situation 2: skip already copied lines */
@@ -583,13 +583,13 @@ ex_copy(line1, line2, n)
     void
 do_bang(addr_count, eap, forceit, do_in, do_out)
     int		addr_count;
-    exarg_t	*eap;
+    exarg_T	*eap;
     int		forceit;
     int		do_in, do_out;
 {
     char_u		*arg = eap->arg;	/* command */
-    linenr_t		line1 = eap->line1;	/* start of range */
-    linenr_t		line2 = eap->line2;	/* end of range */
+    linenr_T		line1 = eap->line1;	/* start of range */
+    linenr_T		line2 = eap->line2;	/* end of range */
     static char_u	*prevcmd = NULL;	/* the previous command */
     char_u		*newcmd = NULL;		/* the new command */
     int			free_newcmd = FALSE;    /* need to free() newcmd */
@@ -735,18 +735,18 @@ do_bang(addr_count, eap, forceit, do_in, do_out)
  */
     static void
 do_filter(line1, line2, eap, cmd, do_in, do_out)
-    linenr_t	line1, line2;
-    exarg_t	*eap;		/* for forced 'ff' and 'fenc' */
+    linenr_T	line1, line2;
+    exarg_T	*eap;		/* for forced 'ff' and 'fenc' */
     char_u	*cmd;
     int		do_in, do_out;
 {
     char_u	*itmp = NULL;
     char_u	*otmp = NULL;
-    linenr_t	linecount;
-    pos_t	cursor_save;
+    linenr_T	linecount;
+    pos_T	cursor_save;
     char_u	*cmd_buf;
 #ifdef FEAT_AUTOCMD
-    buf_t	*old_curbuf = curbuf;
+    buf_T	*old_curbuf = curbuf;
 #endif
 
     if (*cmd == NUL)	    /* no filter command */
@@ -842,10 +842,10 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
 
     if (do_out)
     {
-	if (u_save((linenr_t)(line2), (linenr_t)(line2 + 1)) == FAIL)
+	if (u_save((linenr_T)(line2), (linenr_T)(line2 + 1)) == FAIL)
 	    goto error;
 	redraw_curbuf_later(VALID);
-	if (readfile(otmp, NULL, line2, (linenr_t)0, (linenr_t)MAXLNUM, eap,
+	if (readfile(otmp, NULL, line2, (linenr_T)0, (linenr_T)MAXLNUM, eap,
 							 READ_FILTER) == FAIL)
 	{
 	    msg_putchar('\n');
@@ -932,7 +932,7 @@ do_shell(cmd, flags)
     char_u	*cmd;
     int		flags;	/* may be SHELL_DOOUT when output is redirected */
 {
-    buf_t	*buf;
+    buf_T	*buf;
 #ifndef FEAT_GUI_MSWIN
     int		save_nwr;
 #endif
@@ -1297,7 +1297,7 @@ write_viminfo(file, forceit)
     struct stat	st_new;		/* mch_stat() of potential new file */
     char_u	*wp;
 #if defined(UNIX) || defined(VMS)
-     mode_t	umask_save;
+    mode_t	umask_save;
 #endif
 #ifdef UNIX
     int		shortname = FALSE;	/* use 8.3 file name */
@@ -1564,7 +1564,7 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
 {
     int		count = 0;
     int		eof = FALSE;
-    vir_t	vir;
+    vir_T	vir;
 
     if ((vir.vir_line = alloc(LSIZE)) == NULL)
 	return;
@@ -1625,12 +1625,12 @@ do_viminfo(fp_in, fp_out, want_info, want_marks, force_read)
  */
     static int
 read_viminfo_up_to_marks(virp, forceit, writing)
-    vir_t	*virp;
+    vir_T	*virp;
     int		forceit;
     int		writing;
 {
     int		eof;
-    buf_t	*buf;
+    buf_T	*buf;
 
 #ifdef FEAT_CMDHIST
     prepare_viminfo_history(forceit ? 9999 : 0);
@@ -1718,7 +1718,7 @@ read_viminfo_up_to_marks(virp, forceit, writing)
  */
     static int
 viminfo_encoding(virp)
-    vir_t	*virp;
+    vir_T	*virp;
 {
 #ifdef FEAT_MBYTE
     char_u	*p;
@@ -1748,7 +1748,7 @@ viminfo_encoding(virp)
  */
     int
 viminfo_readline(virp)
-    vir_t	*virp;
+    vir_T	*virp;
 {
     return vim_fgets(virp->vir_line, LSIZE, virp->vir_fd);
 }
@@ -1766,7 +1766,7 @@ viminfo_readline(virp)
 /*ARGSUSED*/
     char_u *
 viminfo_readstring(virp, off, convert)
-    vir_t	*virp;
+    vir_T	*virp;
     int		off;		    /* offset for virp->vir_line */
     int		convert;	    /* convert the string */
 {
@@ -1883,7 +1883,7 @@ viminfo_writestring(fd, p)
 /*ARGSUSED*/
     void
 do_fixdel(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u  *p;
 
@@ -1894,7 +1894,7 @@ do_fixdel(eap)
 
     void
 print_line_no_prefix(lnum, use_number)
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		use_number;
 {
     char_u	numbuf[20];
@@ -1912,7 +1912,7 @@ print_line_no_prefix(lnum, use_number)
  */
     void
 print_line(lnum, use_number)
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		use_number;
 {
     int		save_silent = silent_mode;
@@ -1934,10 +1934,10 @@ print_line(lnum, use_number)
  */
     void
 ex_file(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*fname, *sfname, *xfname;
-    buf_t	*buf;
+    buf_T	*buf;
 
     if (*eap->arg != NUL)
     {
@@ -1983,18 +1983,18 @@ ex_file(eap)
  */
     void
 ex_update(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     if (curbufIsChanged())
 	(void)do_write(eap);
 }
 
 /*
- * ":write".
+ * ":write" and ":saveas".
  */
     void
 ex_write(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     if (eap->usefilter)		/* input lines to shell command */
 	do_bang(1, eap, FALSE, TRUE, FALSE);
@@ -2012,7 +2012,7 @@ ex_write(eap)
  */
     int
 do_write(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		other;
     char_u	*fname = NULL;		/* init to shut up gcc */
@@ -2022,6 +2022,7 @@ do_write(eap)
 #ifdef FEAT_BROWSE
     char_u	*browse_file = NULL;
 #endif
+    buf_T	*alt_buf = NULL;
 
     if (not_writing())		/* check 'write' option */
 	return FAIL;
@@ -2038,7 +2039,14 @@ do_write(eap)
     }
 #endif
     if (*ffname == NUL)
+    {
+	if (eap->cmdidx == CMD_saveas)
+	{
+	    EMSG(_(e_argreq));
+	    goto theend;
+	}
 	other = FALSE;
+    }
     else
     {
 	fname = ffname;
@@ -2055,8 +2063,21 @@ do_write(eap)
     /*
      * If we have a new file, put its name in the list of alternate file names.
      */
-    if (other && vim_strchr(p_cpo, CPO_ALTWRITE) != NULL)
-	setaltfname(ffname, fname, (linenr_t)1);
+    if (other)
+    {
+	if (vim_strchr(p_cpo, CPO_ALTWRITE) != NULL
+						 || eap->cmdidx == CMD_saveas)
+	    alt_buf = setaltfname(ffname, fname, (linenr_T)1);
+	else
+	    alt_buf = buflist_findname(ffname);
+	if (alt_buf != NULL && alt_buf->b_ml.ml_mfp != NULL)
+	{
+	    /* Overwriting a file that is loaded in another buffer is not a
+	     * good idea. */
+	    EMSG(_("File is loaded in another buffer"));
+	    goto theend;
+	}
+    }
 
     /*
      * Writing to the current file is not allowed in readonly mode
@@ -2104,6 +2125,23 @@ do_write(eap)
 	retval = buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
 				 eap, eap->append, eap->forceit, TRUE, FALSE);
 
+    if (eap->cmdidx == CMD_saveas && retval == OK && alt_buf != NULL)
+    {
+	/* Exchange the file names for the current and the alternate buffer.
+	 * This makes it look like we are now editing the buffer under the new
+	 * name. */
+	fname = alt_buf->b_fname;
+	alt_buf->b_fname = curbuf->b_fname;
+	curbuf->b_fname = fname;
+	fname = alt_buf->b_ffname;
+	alt_buf->b_ffname = curbuf->b_ffname;
+	curbuf->b_ffname = fname;
+	fname = alt_buf->b_sfname;
+	alt_buf->b_sfname = curbuf->b_sfname;
+	curbuf->b_sfname = fname;
+	buf_name_changed();
+    }
+
 theend:
 #ifdef FEAT_BROWSE
     vim_free(browse_file);
@@ -2121,8 +2159,8 @@ theend:
 /*ARGSUSED*/
     static int
 check_overwrite(eap, buf, fname, ffname, other)
-    exarg_t	*eap;
-    buf_t	*buf;
+    exarg_T	*eap;
+    buf_T	*buf;
     char_u	*fname;	    /* file name to be used (can differ from
 			       buf->ffname) */
     char_u	*ffname;    /* full path version of fname */
@@ -2175,7 +2213,7 @@ check_overwrite(eap, buf, fname, ffname, other)
  */
     void
 ex_wnext(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
 
@@ -2194,9 +2232,9 @@ ex_wnext(eap)
  */
     void
 do_wqall(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    buf_t	*buf;
+    buf_T	*buf;
     int		error = 0;
 
     if (eap->cmdidx == CMD_xall || eap->cmdidx == CMD_wqall)
@@ -2275,7 +2313,7 @@ not_writing()
     static int
 check_readonly(forceit, buf)
     int		*forceit;
-    buf_t	*buf;
+    buf_T	*buf;
 {
     if (!*forceit && buf->b_p_ro)
     {
@@ -2318,7 +2356,7 @@ getfile(fnum, ffname, sfname, setpm, lnum, forceit)
     char_u	*ffname;
     char_u	*sfname;
     int		setpm;
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		forceit;
 {
     int		other;
@@ -2404,8 +2442,8 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     int		fnum;
     char_u	*ffname;
     char_u	*sfname;
-    exarg_t	*eap;			/* can be NULL! */
-    linenr_t	newlnum;
+    exarg_T	*eap;			/* can be NULL! */
+    linenr_T	newlnum;
     int		flags;
 {
     int		other_file;		/* TRUE if editing another file */
@@ -2415,9 +2453,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 					   into the buffer unexpectedly */
     char_u	*new_name = NULL;
 #endif
-    buf_t	*buf;
+    buf_T	*buf;
 #if defined(FEAT_AUTOCMD) || defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
-    buf_t	*old_curbuf = curbuf;
+    buf_T	*old_curbuf = curbuf;
 #endif
     char_u	*free_fname = NULL;
 #ifdef FEAT_BROWSE
@@ -2425,11 +2463,11 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #endif
     int		retval = FAIL;
     long	n;
-    linenr_t	lnum;
-    linenr_t	topline = 0;
+    linenr_T	lnum;
+    linenr_T	topline = 0;
     int		newcol = -1;
     int		solcol = -1;
-    pos_t	*pos;
+    pos_T	*pos;
 #ifdef FEAT_SUN_WORKSHOP
     char_u	*cp;
 #endif
@@ -2506,7 +2544,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 					(flags & ECMD_FORCEIT), FALSE))
     {
 	if (fnum == 0 && other_file && ffname != NULL)
-	    setaltfname(ffname, sfname, newlnum < 0 ? 0 : newlnum);
+	    (void)setaltfname(ffname, sfname, newlnum < 0 ? 0 : newlnum);
 	goto theend;
     }
 
@@ -2539,7 +2577,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_LISTCMDS
 	    if (flags & ECMD_ADDBUF)
 	    {
-		linenr_t	tlnum = 1L;
+		linenr_T	tlnum = 1L;
 
 		if (command != NULL)
 		{
@@ -2955,11 +2993,11 @@ delbuf_msg(name)
  */
     void
 ex_append(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*theline;
     int		did_undo = FALSE;
-    linenr_t	lnum = eap->line2;
+    linenr_T	lnum = eap->line2;
 
     if (eap->cmdidx != CMD_append)
 	--lnum;
@@ -2990,7 +3028,7 @@ ex_append(eap)
 	if (!did_undo && u_save(lnum, lnum + 1) == FAIL)
 	    break;
 	did_undo = TRUE;
-	ml_append(lnum, theline, (colnr_t)0, FALSE);
+	ml_append(lnum, theline, (colnr_T)0, FALSE);
 	appended_lines_mark(lnum, 1L);
 
 	vim_free(theline);
@@ -3021,9 +3059,9 @@ ex_append(eap)
  */
     void
 ex_change(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
 
     if (eap->line2 >= eap->line1
 	    && u_save(eap->line1 - 1, eap->line2 + 1) == FAIL)
@@ -3044,14 +3082,14 @@ ex_change(eap)
 
     void
 ex_z(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*x;
     int		bigness = curwin->w_height - 3;
     char_u	kind;
     int		minus = 0;
-    linenr_t	start, end, curs, i;
-    linenr_t	lnum = eap->line2;
+    linenr_T	start, end, curs, i;
+    linenr_T	lnum = eap->line2;
 
     if (bigness < 1)
 	bigness = 1;
@@ -3195,7 +3233,7 @@ static int	global_need_beginline;	/* call beginline() after ":g" */
  * accumulated until it's finished.
  */
 static long	sub_nsubs;	/* total number of substitutions */
-static linenr_t	sub_nlines;	/* total number of lines changed */
+static linenr_T	sub_nlines;	/* total number of lines changed */
 
 /* do_sub()
  *
@@ -3208,11 +3246,11 @@ static linenr_t	sub_nlines;	/* total number of lines changed */
  */
     void
 do_sub(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	i = 0;
-    regmmatch_t regmatch;
+    regmmatch_T regmatch;
     static int	do_all = FALSE;		/* do multiple substitutions per line */
     static int	do_ask = FALSE;		/* ask for confirmation */
     static int	do_error = TRUE;	/* if false, ignore errors */
@@ -3227,13 +3265,13 @@ do_sub(eap)
     int		which_pat;
     char_u	*cmd;
     int		save_State;
-    linenr_t	first_line = 0;	/* first changed line */
-    linenr_t	last_line= 0;	/* below last changed line AFTER the
+    linenr_T	first_line = 0;	/* first changed line */
+    linenr_T	last_line= 0;	/* below last changed line AFTER the
 					 * change */
-    linenr_t	old_line_count = curbuf->b_ml.ml_line_count;
-    linenr_t	line2;
+    linenr_T	old_line_count = curbuf->b_ml.ml_line_count;
+    linenr_T	line2;
     long	nmatch;		/* number of lines in match */
-    linenr_t	sub_firstlnum;	/* nr of first sub line */
+    linenr_T	sub_firstlnum;	/* nr of first sub line */
     char_u	*sub_firstline;	/* allocated copy of first sub line */
 
     cmd = eap->arg;
@@ -3436,12 +3474,12 @@ do_sub(eap)
     for (lnum = eap->line1; lnum <= line2 && !(got_int || got_quit); ++lnum)
     {
 	sub_firstlnum = lnum;
-	nmatch = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_t)0);
+	nmatch = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_T)0);
 	if (nmatch)
 	{
-	    colnr_t	copycol;
-	    colnr_t	matchcol;
-	    colnr_t	prev_matchcol = MAXCOL;
+	    colnr_T	copycol;
+	    colnr_T	matchcol;
+	    colnr_T	prev_matchcol = MAXCOL;
 	    char_u	*new_end, *new_start = NULL;
 	    unsigned	new_start_len = 0;
 	    char_u	*p1;
@@ -3767,8 +3805,8 @@ do_sub(eap)
 			{
 			    *p1 = NUL;		    /* truncate up to the CR */
 			    ml_append(lnum - 1, new_start,
-					(colnr_t)(p1 - new_start + 1), FALSE);
-			    mark_adjust(lnum, (linenr_t)MAXLNUM, 1L, 0L);
+					(colnr_T)(p1 - new_start + 1), FALSE);
+			    mark_adjust(lnum, (linenr_T)MAXLNUM, 1L, 0L);
 			    if (do_ask)
 				appended_lines(lnum - 1, 1L);
 			    else
@@ -3987,16 +4025,16 @@ do_sub_msg()
  */
     void
 ex_global(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    linenr_t	lnum;		/* line number according to old situation */
+    linenr_T	lnum;		/* line number according to old situation */
     int		ndone;
     int		type;		/* first char of cmd: 'v' or 'g' */
     char_u	*cmd;		/* command argument */
 
     char_u	delim;		/* delimiter, normally '/' */
     char_u	*pat;
-    regmmatch_t	regmatch;
+    regmmatch_T	regmatch;
     int		match;
     int		which_pat;
 
@@ -4069,7 +4107,7 @@ ex_global(eap)
     for (lnum = eap->line1; lnum <= eap->line2 && !got_int; ++lnum)
     {
 	/* a match on this line? */
-	match = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_t)0);
+	match = vim_regexec_multi(&regmatch, curwin, curbuf, lnum, (colnr_T)0);
 	if ((type == 'g' && match) || (type == 'v' && !match))
 	{
 	    ml_setmarked(lnum);
@@ -4099,8 +4137,8 @@ ex_global(eap)
 global_exe(cmd)
     char_u	*cmd;
 {
-    linenr_t	old_lcount;	/* b_ml.ml_line_count before the command */
-    linenr_t	lnum;		/* line number according to old situation */
+    linenr_T	old_lcount;	/* b_ml.ml_line_count before the command */
+    linenr_T	lnum;		/* line number according to old situation */
 
     /*
      * Set current position only once for a global command.
@@ -4146,7 +4184,7 @@ global_exe(cmd)
 #ifdef FEAT_VIMINFO
     int
 read_viminfo_sub_string(virp, force)
-    vir_t	*virp;
+    vir_T	*virp;
     int		force;
 {
     if (old_sub != NULL && force)
@@ -4175,7 +4213,7 @@ write_viminfo_sub_string(fp)
     void
 prepare_tagpreview()
 {
-    win_t	*wp;
+    win_T	*wp;
 
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
@@ -4212,13 +4250,13 @@ prepare_tagpreview()
  */
     void
 ex_help(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*arg;
     FILE	*helpfd;	/* file descriptor of help file */
     int		n;
 #ifdef FEAT_WINDOWS
-    win_t	*wp;
+    win_T	*wp;
 #endif
     int		num_matches;
     char_u	**matches;
@@ -4591,7 +4629,7 @@ find_help_tags(arg, num_matches, matches)
     void
 fix_help_buffer()
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	*line;
     int		in_example = FALSE;
     int		len;
@@ -4694,7 +4732,7 @@ fix_help_buffer()
 						*s = NUL;
 					    ++s;
 					}
-					ml_append(lnum, IObuff, (colnr_t)0,
+					ml_append(lnum, IObuff, (colnr_T)0,
 								       FALSE);
 					++lnum;
 				    }
@@ -4719,11 +4757,11 @@ fix_help_buffer()
  */
     void
 ex_helptags(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     FILE	*fd_tags;
     FILE	*fd;
-    garray_t	ga;
+    garray_T	ga;
     int		filecount;
     char_u	**files;
     char_u	*p1, *p2;
@@ -4912,17 +4950,17 @@ static void show_signs __ARGS((void));
  */
     void
 ex_sign(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*arg;			/* parse command line */
     char_u	*arg1;			/* the 1st argument */
     char_u	*arg2;			/* the second argument */
     char_u	*arg3;			/* the third argument */
     int		markId;			/* unique mark identifier */
-    linenr_t	lnum = 0;		/* line number mark displayed on */
+    linenr_T	lnum = 0;		/* line number mark displayed on */
     int		type;			/* which mark to use */
     char_u	*filename;		/* filename which gets the mark */
-    buf_t	*buf;			/* buffer to set mark in */
+    buf_T	*buf;			/* buffer to set mark in */
     char_u	cmd[MAXPATHL];		/* build :edit command here */
 
     if (eap->cmdidx == CMD_signs)
@@ -5020,13 +5058,13 @@ ex_sign(eap)
 
     void
 ex_unsign(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*arg;			/* argument pointer */
     char_u	*filename;		/* filename which gets the mark */
     int		markId;			/* unique mark identifier */
-    linenr_t	lnum;			/* line number mark displayed on */
-    buf_t	*buf;			/* buffer of mark we want to delete */
+    linenr_T	lnum;			/* line number mark displayed on */
+    buf_T	*buf;			/* buffer of mark we want to delete */
 
     arg = eap->arg;
     if (vim_iswhite(*arg))
@@ -5035,7 +5073,7 @@ ex_unsign(eap)
     if (*arg == '*')
     {
 	buf_delete_all_signs();
-	update_debug_sign(NULL, (linenr_t)0);
+	update_debug_sign(NULL, (linenr_T)0);
     }
     else
     {
@@ -5079,7 +5117,7 @@ ex_unsign(eap)
 
     static void
 print_sign(glist)
-    signlist_t	*glist;
+    signlist_T	*glist;
 {
     char	lbuf[BUFSIZ];
 
@@ -5093,8 +5131,8 @@ print_sign(glist)
     static void
 show_signs()
 {
-    buf_t	*buf;
-    signlist_t	*glist;
+    buf_T	*buf;
+    signlist_T	*glist;
     char	lbuf[BUFSIZ];
 
     MSG_PUTS_TITLE(_("\n--- Signs ---"));

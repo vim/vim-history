@@ -13,5 +13,5 @@ int cmdl_fkmap __ARGS((int c));
 int F_isalpha __ARGS((int c));
 int F_isdigit __ARGS((int c));
 int F_ischar __ARGS((int c));
-void farsi_fkey __ARGS((cmdarg_t *cap));
+void farsi_fkey __ARGS((cmdarg_T *cap));
 /* vim: set ft=c : */

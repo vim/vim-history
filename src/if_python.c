@@ -286,7 +286,7 @@ get_exceptions()
  * Internal function prototypes.
  */
 
-static void DoPythonCommand(exarg_t *, const char *);
+static void DoPythonCommand(exarg_T *, const char *);
 static int RangeStart;
 static int RangeEnd;
 
@@ -297,12 +297,12 @@ static int PythonMod_Init(void);
 /* Utility functions for the vim/python interface
  * ----------------------------------------------
  */
-static PyObject *GetBufferLine(buf_t *, int);
-static PyObject *GetBufferLineList(buf_t *, int, int);
+static PyObject *GetBufferLine(buf_T *, int);
+static PyObject *GetBufferLineList(buf_T *, int, int);
 
-static int SetBufferLine(buf_t *, int, PyObject *, int *);
-static int SetBufferLineList(buf_t *, int, int, PyObject *, int *);
-static int InsertBufferLines(buf_t *, int, PyObject *, int *);
+static int SetBufferLine(buf_T *, int, PyObject *, int *);
+static int SetBufferLineList(buf_T *, int, int, PyObject *, int *);
+static int InsertBufferLines(buf_T *, int, PyObject *, int *);
 
 static PyObject *LineToString(const char *);
 static char *StringToLine(PyObject *);
@@ -407,7 +407,7 @@ fail:
  */
 
     static void
-DoPythonCommand(exarg_t *eap, const char *cmd)
+DoPythonCommand(exarg_T *eap, const char *cmd)
 {
 #ifdef macintosh
     GrafPtr oldPort;
@@ -436,7 +436,7 @@ DoPythonCommand(exarg_t *eap, const char *cmd)
  * ":python"
  */
     void
-ex_python(exarg_t *eap)
+ex_python(exarg_T *eap)
 {
     DoPythonCommand(eap, (char *)eap->arg);
 }
@@ -447,7 +447,7 @@ ex_python(exarg_t *eap)
  * ":pyfile"
  */
     void
-ex_pyfile(exarg_t *eap)
+ex_pyfile(exarg_T *eap)
 {
     static char buffer[BUFFER_SIZE];
     const char *file = (char *)eap->arg;
@@ -781,15 +781,15 @@ static PyObject *VimEval(PyObject *, PyObject *);
 typedef struct
 {
     PyObject_HEAD
-    win_t	*win;
+    win_T	*win;
 }
 WindowObject;
 
-#define INVALID_WINDOW_VALUE ((win_t *)(-1))
+#define INVALID_WINDOW_VALUE ((win_T *)(-1))
 
 #define WindowType_Check(obj) ((obj)->ob_type == &WindowType)
 
-static PyObject *WindowNew(win_t *);
+static PyObject *WindowNew(win_T *);
 
 static void WindowDestructor(PyObject *);
 static PyObject *WindowGetattr(PyObject *, char *);
@@ -803,15 +803,15 @@ static PyObject *WindowRepr(PyObject *);
 typedef struct
 {
     PyObject_HEAD
-    buf_t *buf;
+    buf_T *buf;
 }
 BufferObject;
 
-#define INVALID_BUFFER_VALUE ((buf_t *)(-1))
+#define INVALID_BUFFER_VALUE ((buf_T *)(-1))
 
 #define BufferType_Check(obj) ((obj)->ob_type == &BufferType)
 
-static PyObject *BufferNew (buf_t *);
+static PyObject *BufferNew (buf_T *);
 
 static void BufferDestructor(PyObject *);
 static PyObject *BufferGetattr(PyObject *, char *);
@@ -842,7 +842,7 @@ RangeObject;
 
 #define RangeType_Check(obj) ((obj)->ob_type == &RangeType)
 
-static PyObject *RangeNew(buf_t *, int, int);
+static PyObject *RangeNew(buf_T *, int, int);
 
 static void RangeDestructor(PyObject *);
 static PyObject *RangeGetattr(PyObject *, char *);
@@ -1149,10 +1149,10 @@ static PyTypeObject BufferType = {
  */
 
     static PyObject *
-BufferNew(buf_t *buf)
+BufferNew(buf_T *buf)
 {
     /* We need to handle deletion of buffers underneath us.
-     * If we add a "python_ref" field to the buf_t structure,
+     * If we add a "python_ref" field to the buf_T structure,
      * then we can get at it in buf_freeall() in vim. We then
      * need to create only ONE Python object per buffer - if
      * we try to create a second, just INCREF the existing one
@@ -1161,7 +1161,7 @@ BufferNew(buf_t *buf)
      * Question: what to do on a buf_freeall(). We'll probably
      * have to either delete the Python object (DECREF it to
      * zero - a bad idea, as it leaves dangling refs!) or
-     * set the buf_t * value to an invalid value (-1?), which
+     * set the buf_T * value to an invalid value (-1?), which
      * means we need checks in all access functions... Bah.
      */
 
@@ -1293,9 +1293,9 @@ BufferAppend(PyObject *self, PyObject *args)
     static PyObject *
 BufferMark(PyObject *self, PyObject *args)
 {
-    pos_t	*posp;
+    pos_T	*posp;
     char	mark;
-    buf_t	*curbuf_save;
+    buf_T	*curbuf_save;
 
     if (CheckBuffer((BufferObject *)(self)))
 	return NULL;
@@ -1389,7 +1389,7 @@ static PyTypeObject RangeType = {
  */
 
     static PyObject *
-RangeNew(buf_t *buf, int start, int end)
+RangeNew(buf_T *buf, int start, int end)
 {
     BufferObject *bufr;
     RangeObject *self;
@@ -1561,7 +1561,7 @@ static PyTypeObject BufListType = {
     static int
 BufListLength(PyObject *self)
 {
-    buf_t	*b = firstbuf;
+    buf_T	*b = firstbuf;
     int		n = 0;
 
     while (b)
@@ -1577,7 +1577,7 @@ BufListLength(PyObject *self)
     static PyObject *
 BufListItem(PyObject *self, int n)
 {
-    buf_t *b;
+    buf_T *b;
 
     for (b = firstbuf; b; b = b->b_next, --n)
     {
@@ -1624,18 +1624,18 @@ static PyTypeObject WindowType = {
  */
 
     static PyObject *
-WindowNew(win_t *win)
+WindowNew(win_T *win)
 {
     /* We need to handle deletion of windows underneath us.
-     * If we add a "python_ref" field to the win_t structure,
+     * If we add a "python_ref" field to the win_T structure,
      * then we can get at it in win_free() in vim. We then
      * need to create only ONE Python object per window - if
      * we try to create a second, just INCREF the existing one
      * and return it. The (single) Python object referring to
      * the window is stored in "python_ref".
-     * On a win_free() we set the Python object's win_t* field
+     * On a win_free() we set the Python object's win_T* field
      * to an invalid value. We trap all uses of a window
-     * object, and reject them if the win_t* field is invalid.
+     * object, and reject them if the win_T* field is invalid.
      */
 
     WindowObject *self;
@@ -1692,7 +1692,7 @@ WindowGetattr(PyObject *self, char *name)
 	return (PyObject *)BufferNew(this->win->w_buffer);
     else if (strcmp(name, "cursor") == 0)
     {
-	pos_t *pos = &this->win->w_cursor;
+	pos_T *pos = &this->win->w_cursor;
 
 	return Py_BuildValue("(ll)", (long)(pos->lnum), (long)(pos->col));
     }
@@ -1750,7 +1750,7 @@ WindowSetattr(PyObject *self, char *name, PyObject *val)
     else if (strcmp(name, "height") == 0)
     {
 	int	height;
-	win_t	*savewin;
+	win_T	*savewin;
 
 	if (!PyArg_Parse(val, "i", &height))
 	    return -1;
@@ -1773,7 +1773,7 @@ WindowSetattr(PyObject *self, char *name, PyObject *val)
     else if (strcmp(name, "width") == 0)
     {
 	int	width;
-	win_t	*savewin;
+	win_T	*savewin;
 
 	if (!PyArg_Parse(val, "i", &width))
 	    return -1;
@@ -1814,7 +1814,7 @@ WindowRepr(PyObject *self)
     else
     {
 	int	i = 0;
-	win_t	*w;
+	win_T	*w;
 
 	for (w = firstwin; w != NULL && w != this->win; w = W_NEXT(w))
 	    ++i;
@@ -1876,7 +1876,7 @@ static PyTypeObject WinListType = {
     static int
 WinListLength(PyObject *self)
 {
-    win_t	*w = firstwin;
+    win_T	*w = firstwin;
     int		n = 0;
 
     while (w)
@@ -1892,7 +1892,7 @@ WinListLength(PyObject *self)
     static PyObject *
 WinListItem(PyObject *self, int n)
 {
-    win_t *w;
+    win_T *w;
 
     for (w = firstwin; w; w = W_NEXT(w), --n)
 	if (n == 0)
@@ -1979,7 +1979,7 @@ CurrentSetattr(PyObject *self, char *name, PyObject *value)
  */
 
     void
-python_buffer_free(buf_t *buf)
+python_buffer_free(buf_T *buf)
 {
     if (buf->python_ref)
     {
@@ -1991,7 +1991,7 @@ python_buffer_free(buf_t *buf)
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-python_window_free(win_t *win)
+python_window_free(win_T *win)
 {
     if (win->python_ref)
     {
@@ -2056,9 +2056,9 @@ PythonMod_Init(void)
  * string object.
  */
     static PyObject *
-GetBufferLine(buf_t *buf, int n)
+GetBufferLine(buf_T *buf, int n)
 {
-    return LineToString((char *)ml_get_buf(buf, (linenr_t)n, FALSE));
+    return LineToString((char *)ml_get_buf(buf, (linenr_T)n, FALSE));
 }
 
 /* Get a list of lines from the specified buffer. The line numbers
@@ -2066,7 +2066,7 @@ GetBufferLine(buf_t *buf, int n)
  * including, hi. The list is returned as a Python list of string objects.
  */
     static PyObject *
-GetBufferLineList(buf_t *buf, int lo, int hi)
+GetBufferLineList(buf_T *buf, int lo, int hi)
 {
     int i;
     int n = hi - lo;
@@ -2077,7 +2077,7 @@ GetBufferLineList(buf_t *buf, int lo, int hi)
 
     for (i = 0; i < n; ++i)
     {
-	PyObject *str = LineToString((char *)ml_get_buf(buf, (linenr_t)(lo+i), FALSE));
+	PyObject *str = LineToString((char *)ml_get_buf(buf, (linenr_T)(lo+i), FALSE));
 
 	/* Error check - was the Python string creation OK? */
 	if (str == NULL)
@@ -2112,7 +2112,7 @@ GetBufferLineList(buf_t *buf, int lo, int hi)
  * is set to the change in the buffer length.
  */
     static int
-SetBufferLine(buf_t *buf, int n, PyObject *line, int *len_change)
+SetBufferLine(buf_T *buf, int n, PyObject *line, int *len_change)
 {
     /* First of all, we check the thpe of the supplied Python object.
      * There are three cases:
@@ -2122,17 +2122,17 @@ SetBufferLine(buf_t *buf, int n, PyObject *line, int *len_change)
      */
     if (line == Py_None || line == NULL)
     {
-	buf_t *savebuf = curbuf;
+	buf_T *savebuf = curbuf;
 
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_savedel((linenr_t)n, 1L) == FAIL)
+	if (u_savedel((linenr_T)n, 1L) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
-	else if (ml_delete((linenr_t)n, FALSE) == FAIL)
+	else if (ml_delete((linenr_T)n, FALSE) == FAIL)
 	    PyErr_SetVim(_("cannot delete line"));
 	else
-	    deleted_lines_mark((linenr_t)n, 1L);
+	    deleted_lines_mark((linenr_T)n, 1L);
 
 	curbuf = savebuf;
 
@@ -2147,7 +2147,7 @@ SetBufferLine(buf_t *buf, int n, PyObject *line, int *len_change)
     else if (PyString_Check(line))
     {
 	char *save = StringToLine(line);
-	buf_t *savebuf = curbuf;
+	buf_T *savebuf = curbuf;
 
 	if (save == NULL)
 	    return FAIL;
@@ -2158,12 +2158,12 @@ SetBufferLine(buf_t *buf, int n, PyObject *line, int *len_change)
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_savesub((linenr_t)n) == FAIL)
+	if (u_savesub((linenr_T)n) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
-	else if (ml_replace((linenr_t)n, (char_u *)save, TRUE) == FAIL)
+	else if (ml_replace((linenr_T)n, (char_u *)save, TRUE) == FAIL)
 	    PyErr_SetVim(_("cannot replace line"));
 	else
-	    changed_bytes((linenr_t)n, 0);
+	    changed_bytes((linenr_T)n, 0);
 
 	curbuf = savebuf;
 
@@ -2191,7 +2191,7 @@ SetBufferLine(buf_t *buf, int n, PyObject *line, int *len_change)
  * is set to the change in the buffer length.
  */
     static int
-SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
+SetBufferLineList(buf_T *buf, int lo, int hi, PyObject *list, int *len_change)
 {
     /* First of all, we check the thpe of the supplied Python object.
      * There are three cases:
@@ -2203,24 +2203,24 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
     {
 	int	i;
 	int	n = hi - lo;
-	buf_t	*savebuf = curbuf;
+	buf_T	*savebuf = curbuf;
 
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_savedel((linenr_t)lo, (long)n) == FAIL)
+	if (u_savedel((linenr_T)lo, (long)n) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
 	else
 	{
 	    for (i = 0; i < n; ++i)
 	    {
-		if (ml_delete((linenr_t)lo, FALSE) == FAIL)
+		if (ml_delete((linenr_T)lo, FALSE) == FAIL)
 		{
 		    PyErr_SetVim(_("cannot delete line"));
 		    break;
 		}
 	    }
-	    deleted_lines_mark((linenr_t)lo, (long)i);
+	    deleted_lines_mark((linenr_T)lo, (long)i);
 	}
 
 	curbuf = savebuf;
@@ -2240,7 +2240,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	int	old_len = hi - lo;
 	int	extra = 0;	/* lines added to text, can be negative */
 	char	**array;
-	buf_t	*savebuf;
+	buf_T	*savebuf;
 
 	array = (char **)alloc((unsigned)(new_len * sizeof(char *)));
 	if (array == NULL)
@@ -2268,7 +2268,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_save((linenr_t)(lo-1), (linenr_t)hi) == FAIL)
+	if (u_save((linenr_T)(lo-1), (linenr_T)hi) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
 
 	/* If the size of the range is reducing (ie, new_len < old_len) we
@@ -2278,7 +2278,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	if (!PyErr_Occurred())
 	{
 	    for (i = 0; i < old_len - new_len; ++i)
-		if (ml_delete((linenr_t)lo, FALSE) == FAIL)
+		if (ml_delete((linenr_T)lo, FALSE) == FAIL)
 		{
 		    PyErr_SetVim(_("cannot delete line"));
 		    break;
@@ -2293,7 +2293,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	if (!PyErr_Occurred())
 	{
 	    for (i = 0; i < old_len && i < new_len; ++i)
-		if (ml_replace((linenr_t)(lo+i), (char_u *)array[i], TRUE)
+		if (ml_replace((linenr_T)(lo+i), (char_u *)array[i], TRUE)
 								      == FAIL)
 		{
 		    PyErr_SetVim(_("cannot replace line"));
@@ -2309,7 +2309,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	{
 	    while (i < new_len)
 	    {
-		if (ml_append((linenr_t)(lo + i - 1),
+		if (ml_append((linenr_T)(lo + i - 1),
 					(char_u *)array[i], 0, FALSE) == FAIL)
 		{
 		    PyErr_SetVim(_("cannot insert line"));
@@ -2337,9 +2337,9 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
 	/* Adjust marks. Invalidate any which lie in the
 	 * changed range, and move any in the remainder of the buffer.
 	 */
-	mark_adjust((linenr_t)lo, (linenr_t)(hi - 1),
+	mark_adjust((linenr_T)lo, (linenr_T)(hi - 1),
 						  (long)MAXLNUM, (long)extra);
-	changed_lines((linenr_t)lo, 0, (linenr_t)hi, (long)extra);
+	changed_lines((linenr_T)lo, 0, (linenr_T)hi, (long)extra);
 
 	curbuf = savebuf;
 
@@ -2367,7 +2367,7 @@ SetBufferLineList(buf_t *buf, int lo, int hi, PyObject *list, int *len_change)
  * is set to the change in the buffer length.
  */
     static int
-InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
+InsertBufferLines(buf_T *buf, int n, PyObject *lines, int *len_change)
 {
     /* First of all, we check the type of the supplied Python object.
      * It must be a string or a list, or the call is in error.
@@ -2375,7 +2375,7 @@ InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
     if (PyString_Check(lines))
     {
 	char	*str = StringToLine(lines);
-	buf_t	*savebuf;
+	buf_T	*savebuf;
 
 	if (str == NULL)
 	    return FAIL;
@@ -2385,12 +2385,12 @@ InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_save((linenr_t)n, (linenr_t)(n+1)) == FAIL)
+	if (u_save((linenr_T)n, (linenr_T)(n+1)) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
-	else if (ml_append((linenr_t)n, (char_u *)str, 0, FALSE) == FAIL)
+	else if (ml_append((linenr_T)n, (char_u *)str, 0, FALSE) == FAIL)
 	    PyErr_SetVim(_("cannot insert line"));
 	else
-	    appended_lines_mark((linenr_t)n, 1L);
+	    appended_lines_mark((linenr_T)n, 1L);
 
 	vim_free(str);
 	curbuf = savebuf;
@@ -2409,7 +2409,7 @@ InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
 	int	i;
 	int	size = PyList_Size(lines);
 	char	**array;
-	buf_t	*savebuf;
+	buf_T	*savebuf;
 
 	array = (char **)alloc((unsigned)(size * sizeof(char *)));
 	if (array == NULL)
@@ -2437,13 +2437,13 @@ InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
 	PyErr_Clear();
 	curbuf = buf;
 
-	if (u_save((linenr_t)n, (linenr_t)(n + 1)) == FAIL)
+	if (u_save((linenr_T)n, (linenr_T)(n + 1)) == FAIL)
 	    PyErr_SetVim(_("cannot save undo information"));
 	else
 	{
 	    for (i = 0; i < size; ++i)
 	    {
-		if (ml_append((linenr_t)(n + i),
+		if (ml_append((linenr_T)(n + i),
 					(char_u *)array[i], 0, FALSE) == FAIL)
 		{
 		    PyErr_SetVim(_("cannot insert line"));
@@ -2457,7 +2457,7 @@ InsertBufferLines(buf_t *buf, int n, PyObject *lines, int *len_change)
 		vim_free(array[i]);
 	    }
 	    if (i > 0)
-		appended_lines_mark((linenr_t)n, (long)i);
+		appended_lines_mark((linenr_T)n, (long)i);
 	}
 
 	/* Free the array of lines. All of its contents have now

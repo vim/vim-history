@@ -1,7 +1,7 @@
 /* workshop.c */
 void workshop_init __ARGS((void));
 void workshop_postinit __ARGS((void));
-void ex_wsverb __ARGS((exarg_t *eap));
+void ex_wsverb __ARGS((exarg_T *eap));
 char *workshop_get_editor_name __ARGS((void));
 char *workshop_get_editor_version __ARGS((void));
 void workshop_load_file __ARGS((char *filename, int line, char *frameid));

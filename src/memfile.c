@@ -78,20 +78,20 @@ extern int dos2;			/* this is in os_amiga.c */
 static long_u	total_mem_used = 0;	/* total memory used for memfiles */
 static int	dont_release = FALSE;	/* don't release blocks */
 
-static void mf_ins_hash __ARGS((memfile_t *, bhdr_t *));
-static void mf_rem_hash __ARGS((memfile_t *, bhdr_t *));
-static bhdr_t *mf_find_hash __ARGS((memfile_t *, blocknr_t));
-static void mf_ins_used __ARGS((memfile_t *, bhdr_t *));
-static void mf_rem_used __ARGS((memfile_t *, bhdr_t *));
-static bhdr_t *mf_release __ARGS((memfile_t *, int));
-static bhdr_t *mf_alloc_bhdr __ARGS((memfile_t *, int));
-static void mf_free_bhdr __ARGS((bhdr_t *));
-static void mf_ins_free __ARGS((memfile_t *, bhdr_t *));
-static bhdr_t *mf_rem_free __ARGS((memfile_t *));
-static int  mf_read __ARGS((memfile_t *, bhdr_t *));
-static int  mf_write __ARGS((memfile_t *, bhdr_t *));
-static int  mf_trans_add __ARGS((memfile_t *, bhdr_t *));
-static void mf_do_open __ARGS((memfile_t *, char_u *, int));
+static void mf_ins_hash __ARGS((memfile_T *, bhdr_T *));
+static void mf_rem_hash __ARGS((memfile_T *, bhdr_T *));
+static bhdr_T *mf_find_hash __ARGS((memfile_T *, blocknr_T));
+static void mf_ins_used __ARGS((memfile_T *, bhdr_T *));
+static void mf_rem_used __ARGS((memfile_T *, bhdr_T *));
+static bhdr_T *mf_release __ARGS((memfile_T *, int));
+static bhdr_T *mf_alloc_bhdr __ARGS((memfile_T *, int));
+static void mf_free_bhdr __ARGS((bhdr_T *));
+static void mf_ins_free __ARGS((memfile_T *, bhdr_T *));
+static bhdr_T *mf_rem_free __ARGS((memfile_T *));
+static int  mf_read __ARGS((memfile_T *, bhdr_T *));
+static int  mf_write __ARGS((memfile_T *, bhdr_T *));
+static int  mf_trans_add __ARGS((memfile_T *, bhdr_T *));
+static void mf_do_open __ARGS((memfile_T *, char_u *, int));
 
 /*
  * The functions for using a memfile:
@@ -121,12 +121,12 @@ static void mf_do_open __ARGS((memfile_t *, char_u *, int));
  *
  * return value: identifier for this memory block file.
  */
-    memfile_t *
+    memfile_T *
 mf_open(fname, flags)
     char_u	*fname;
     int		flags;
 {
-    memfile_t		*mfp;
+    memfile_T		*mfp;
     int			i;
     off_t		size;
 #if defined(STATFS) && defined(UNIX) && !defined(__QNX__)
@@ -134,7 +134,7 @@ mf_open(fname, flags)
     struct STATFS	stf;
 #endif
 
-    if ((mfp = (memfile_t *)alloc((unsigned)sizeof(memfile_t))) == NULL)
+    if ((mfp = (memfile_T *)alloc((unsigned)sizeof(memfile_T))) == NULL)
 	return NULL;
 
     if (fname == NULL)	    /* no file for this memfile, use memory only */
@@ -186,7 +186,7 @@ mf_open(fname, flags)
 		      || (size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	mfp->mf_blocknr_max = 0;	/* no file or empty file */
     else
-	mfp->mf_blocknr_max = (blocknr_t)((size + mfp->mf_page_size - 1)
+	mfp->mf_blocknr_max = (blocknr_T)((size + mfp->mf_page_size - 1)
 							 / mfp->mf_page_size);
     mfp->mf_blocknr_min = -1;
     mfp->mf_neg_count = 0;
@@ -208,7 +208,7 @@ mf_open(fname, flags)
  */
     int
 mf_open_file(mfp, fname)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     char_u	*fname;
 {
     mf_do_open(mfp, fname, O_RDWR|O_CREAT|O_EXCL); /* try to open the file */
@@ -225,10 +225,10 @@ mf_open_file(mfp, fname)
  */
     void
 mf_close(mfp, del_file)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		del_file;
 {
-    bhdr_t	*hp, *nextp;
+    bhdr_T	*hp, *nextp;
     NR_TRANS	*tp, *tpnext;
     int		i;
 
@@ -266,11 +266,11 @@ mf_close(mfp, del_file)
  */
     void
 mf_close_file(buf, getlines)
-    buf_t	*buf;
+    buf_T	*buf;
     int		getlines;	/* get all lines into memory? */
 {
-    memfile_t	*mfp;
-    linenr_t	lnum;
+    memfile_T	*mfp;
+    linenr_T	lnum;
 
     mfp = buf->b_ml.ml_mfp;
     if (mfp == NULL || mfp->mf_fd < 0)		/* nothing to close */
@@ -305,19 +305,19 @@ mf_close_file(buf, getlines)
  *
  *   negative: TRUE if negative block number desired (data block)
  */
-    bhdr_t *
+    bhdr_T *
 mf_new(mfp, negative, page_count)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		negative;
     int		page_count;
 {
-    bhdr_t    *hp;	    /* new bhdr_t */
-    bhdr_t    *freep;	    /* first block in free list */
+    bhdr_T    *hp;	    /* new bhdr_T */
+    bhdr_T    *freep;	    /* first block in free list */
     char_u  *p;
 
     /*
      * If we reached the maximum size for the used memory blocks, release one
-     * If a bhdr_t is returned, use it and adjust the page_count if necessary.
+     * If a bhdr_T is returned, use it and adjust the page_count if necessary.
      */
     hp = mf_release(mfp, page_count);
 
@@ -332,13 +332,13 @@ mf_new(mfp, negative, page_count)
     {
 	/*
 	 * If the block in the free list has more pages, take only the number
-	 * of pages needed and allocate a new bhdr_t with data
+	 * of pages needed and allocate a new bhdr_T with data
 	 *
-	 * If the number of pages matches and mf_release did not return a bhdr_t,
-	 * use the bhdr_t from the free list and allocate the data
+	 * If the number of pages matches and mf_release did not return a bhdr_T,
+	 * use the bhdr_T from the free list and allocate the data
 	 *
-	 * If the number of pages matches and mf_release returned a bhdr_t,
-	 * just use the number and free the bhdr_t from the free list
+	 * If the number of pages matches and mf_release returned a bhdr_T,
+	 * just use the number and free the bhdr_T from the free list
 	 */
 	if (freep->bh_page_count > page_count)
 	{
@@ -397,13 +397,13 @@ mf_new(mfp, negative, page_count)
  *
  * Note: The caller should first check a negative nr with mf_trans_del()
  */
-    bhdr_t *
+    bhdr_T *
 mf_get(mfp, nr, page_count)
-    memfile_t	*mfp;
-    blocknr_t	nr;
+    memfile_T	*mfp;
+    blocknr_T	nr;
     int		page_count;
 {
-    bhdr_t    *hp;
+    bhdr_T    *hp;
 						/* doesn't exist */
     if (nr >= mfp->mf_blocknr_max || nr <= mfp->mf_blocknr_min)
 	return NULL;
@@ -460,8 +460,8 @@ mf_get(mfp, nr, page_count)
  */
     void
 mf_put(mfp, hp, dirty, infile)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
     int		dirty;
     int		infile;
 {
@@ -487,8 +487,8 @@ mf_put(mfp, hp, dirty, infile)
  */
     void
 mf_free(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     vim_free(hp->bh_data);	/* free the memory */
     mf_rem_hash(mfp, hp);	/* get *hp out of the hash list */
@@ -517,11 +517,11 @@ mf_free(mfp, hp)
  */
     int
 mf_sync(mfp, flags)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		flags;
 {
     int		status;
-    bhdr_t	*hp;
+    bhdr_T	*hp;
 #if defined(SYNC_DUP_CLOSE) && !defined(MSDOS)
     int		fd;
 #endif
@@ -653,10 +653,10 @@ mf_sync(mfp, flags)
  */
     static void
 mf_ins_hash(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
-    bhdr_t	*hhp;
+    bhdr_T	*hhp;
     int		hash;
 
     hash = MEMHASH(hp->bh_bnum);
@@ -673,8 +673,8 @@ mf_ins_hash(mfp, hp)
  */
     static void
 mf_rem_hash(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     if (hp->bh_hash_prev == NULL)
 	mfp->mf_hash[MEMHASH(hp->bh_bnum)] = hp->bh_hash_next;
@@ -688,12 +688,12 @@ mf_rem_hash(mfp, hp)
 /*
  * look in hash lists of memfile *mfp for block header with number 'nr'
  */
-    static bhdr_t *
+    static bhdr_T *
 mf_find_hash(mfp, nr)
-    memfile_t	*mfp;
-    blocknr_t	nr;
+    memfile_T	*mfp;
+    blocknr_T	nr;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
 
     for (hp = mfp->mf_hash[MEMHASH(nr)]; hp != NULL; hp = hp->bh_hash_next)
 	if (hp->bh_bnum == nr)
@@ -706,8 +706,8 @@ mf_find_hash(mfp, nr)
  */
     static void
 mf_ins_used(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     hp->bh_next = mfp->mf_used_first;
     mfp->mf_used_first = hp;
@@ -725,8 +725,8 @@ mf_ins_used(mfp, hp)
  */
     static void
 mf_rem_used(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     if (hp->bh_next == NULL)	    /* last block in used list */
 	mfp->mf_used_last = hp->bh_prev;
@@ -747,14 +747,14 @@ mf_rem_used(mfp, hp)
  * Return the block header to the caller, including the memory block, so
  * it can be re-used. Make sure the page_count is right.
  */
-    static bhdr_t *
+    static bhdr_T *
 mf_release(mfp, page_count)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		page_count;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     int		need_release;
-    buf_t	*buf;
+    buf_T	*buf;
 
     /* don't release while in mf_close_file() */
     if (dont_release)
@@ -809,7 +809,7 @@ mf_release(mfp, page_count)
     mf_rem_hash(mfp, hp);
 
     /*
-     * If a bhdr_t is returned, make sure that the page_count of bh_data is
+     * If a bhdr_T is returned, make sure that the page_count of bh_data is
      * right
      */
     if (hp->bh_page_count != page_count)
@@ -834,9 +834,9 @@ mf_release(mfp, page_count)
     int
 mf_release_all()
 {
-    buf_t	*buf;
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    buf_T	*buf;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
     int		retval = FALSE;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
@@ -875,14 +875,14 @@ mf_release_all()
 /*
  * Allocate a block header and a block of memory for it
  */
-    static bhdr_t *
+    static bhdr_T *
 mf_alloc_bhdr(mfp, page_count)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		page_count;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
 
-    if ((hp = (bhdr_t *)alloc((unsigned)sizeof(bhdr_t))) != NULL)
+    if ((hp = (bhdr_T *)alloc((unsigned)sizeof(bhdr_T))) != NULL)
     {
 	if ((hp->bh_data = (char_u *)alloc(mfp->mf_page_size * page_count))
 								      == NULL)
@@ -900,7 +900,7 @@ mf_alloc_bhdr(mfp, page_count)
  */
     static void
 mf_free_bhdr(hp)
-    bhdr_t	*hp;
+    bhdr_T	*hp;
 {
     vim_free(hp->bh_data);
     vim_free(hp);
@@ -911,8 +911,8 @@ mf_free_bhdr(hp)
  */
     static void
 mf_ins_free(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     hp->bh_next = mfp->mf_free_first;
     mfp->mf_free_first = hp;
@@ -922,11 +922,11 @@ mf_ins_free(mfp, hp)
  * remove the first entry from the free list and return a pointer to it
  * Note: caller must check that mfp->mf_free_first is not NULL!
  */
-    static bhdr_t *
+    static bhdr_T *
 mf_rem_free(mfp)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
 
     hp = mfp->mf_free_first;
     mfp->mf_free_first = hp->bh_next;
@@ -940,8 +940,8 @@ mf_rem_free(mfp)
  */
     static int
 mf_read(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     off_t	offset;
     unsigned	page_size;
@@ -973,12 +973,12 @@ mf_read(mfp, hp)
  */
     static int
 mf_write(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
     off_t	offset;	    /* offset in the file */
-    blocknr_t	nr;	    /* block nr which is being written */
-    bhdr_t	*hp2;
+    blocknr_T	nr;	    /* block nr which is being written */
+    bhdr_T	*hp2;
     unsigned	page_size;  /* number of bytes in a page */
     unsigned	page_count; /* number of pages written */
     unsigned	size;	    /* number of bytes written */
@@ -1038,7 +1038,7 @@ mf_write(mfp, hp)
 	if (hp2 != NULL)		    /* written a non-dummy block */
 	    hp2->bh_flags &= ~BH_DIRTY;
 					    /* appended to the file */
-	if (nr + (blocknr_t)page_count > mfp->mf_infile_count)
+	if (nr + (blocknr_T)page_count > mfp->mf_infile_count)
 	    mfp->mf_infile_count = nr + page_count;
 	if (nr == hp->bh_bnum)		    /* written the desired block */
 	    break;
@@ -1053,11 +1053,11 @@ mf_write(mfp, hp)
  */
     static int
 mf_trans_add(mfp, hp)
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
 {
-    bhdr_t	*freep;
-    blocknr_t	new_bnum;
+    bhdr_T	*freep;
+    blocknr_T	new_bnum;
     int		hash;
     NR_TRANS	*np;
     int		page_count;
@@ -1121,14 +1121,14 @@ mf_trans_add(mfp, hp)
  *
  * Return the positive new number when found, the old number when not found
  */
-    blocknr_t
+    blocknr_T
 mf_trans_del(mfp, old_nr)
-    memfile_t	*mfp;
-    blocknr_t	old_nr;
+    memfile_T	*mfp;
+    blocknr_T	old_nr;
 {
     int		hash;
     NR_TRANS	*np;
-    blocknr_t	new_bnum;
+    blocknr_T	new_bnum;
 
     hash = MEMHASH(old_nr);
     for (np = mfp->mf_trans[hash]; np != NULL; np = np->nt_next)
@@ -1157,7 +1157,7 @@ mf_trans_del(mfp, old_nr)
  */
     void
 mf_set_ffname(mfp)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
 {
     mfp->mf_ffname = FullName_save(mfp->mf_fname, FALSE);
 }
@@ -1168,7 +1168,7 @@ mf_set_ffname(mfp)
  */
     void
 mf_fullname(mfp)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
 {
     if (mfp != NULL && mfp->mf_fname != NULL && mfp->mf_ffname != NULL)
     {
@@ -1183,7 +1183,7 @@ mf_fullname(mfp)
  */
     int
 mf_need_trans(mfp)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
 {
     return (mfp->mf_fname != NULL && mfp->mf_neg_count > 0);
 }
@@ -1195,7 +1195,7 @@ mf_need_trans(mfp)
  */
     static void
 mf_do_open(mfp, fname, flags)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     char_u	*fname;
     int		flags;		/* flags for open() */
 {

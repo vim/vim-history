@@ -2223,7 +2223,7 @@ mch_input_isatty(void)
  */
 
     int
-mch_expandpath(garray_t *gap, char_u *path, int flags)
+mch_expandpath(garray_T *gap, char_u *path, int flags)
 {
     int		i,cnt = 0;
     char	*cp;

@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 30
+*various.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -111,11 +111,11 @@ g8			Print the hex values of the bytes used in the
 			typed.  For undo all commands are undone together.
 			If the [!] is given, mappings will not be used.
 			{commands} should be a complete command.  If
-			{commands} does not finish a command, more characters
-			need to be typed, but the display isn't updated while
-			doing this.  This implies that an insert command must
-			be completed (to start Insert mode, see
-			|:startinsert|).
+			{commands} does not finish a command, the last one
+			will be aborted as if <Esc> was typed.  The display
+			isn't updated while doing this.  This implies that an
+			insert command must be completed (to start Insert
+			mode, see |:startinsert|).
 			This command cannot be followed by another command,
 			since any '|' is considered part of the command.
 			This command can be used recursively, but the depth is
@@ -126,12 +126,7 @@ g8			Print the hex values of the bytes used in the
 			expression as argument.  This allows the use of
 			printable characters.  Example: >
 				:exe "normal \<c-w>\<c-w>"
-<			Hint: If the {commands} ends in an <Esc>, Vim may
-			think it's the start of a function key, and 'ttimeout'
-			will apply, which makes things very slow, or even wait
-			indefinitely for anything to be typed.  Include the
-			[!] in this case.
-			{not in Vi, of course}
+<			{not in Vi, of course}
 			Not available when |+ex_extra| feature was disabled at
 			compile time.
 

@@ -42,6 +42,9 @@ typedef struct
     Dimension		screen_height;	/* screen height in pixels */
 } BalloonEval;
 
-#include "proto/gui_beval.pro"
+#define EVAL_OFFSET_X 10 /* displacement of beval topleft corner from pointer */
+#define EVAL_OFFSET_Y 5
+
+#include "gui_beval.pro"
 
 #endif /* GUI_BEVAL_H and FEAT_BEVAL */

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 20
+*editing.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -297,7 +297,8 @@ unmodified.
 [count]gf		Edit the file whose name is under or after the cursor.
 			Mnemonic: "goto file".
 			Uses the 'isfname' option to find out which characters
-			are supposed to be in a file name.
+			are supposed to be in a file name.  Trailing
+			punctuation characters ".,:;!" are ignored.
 			Uses the 'path' option as a list of directory names
 			to look for the file.  Also looks for the file
 			relative to the current file.
@@ -900,6 +901,13 @@ Example: >
 This sets the 'fileformat' option to "unix" and writes the file if is now
 changed.  This is done for all *.c files.
 
+Example: >
+	:args *.[ch]
+	:argdo %s/\<my_foo\>/My_Foo/ge | update
+This changes the word "my_foo" to "My_Foo" in all *.c and *.h files.  The "e"
+flag is used for the ":substitute" command to avoid an error for files where
+"my_foo" isn't used.  ":update" writes the file only if changes were made.
+
 ==============================================================================
 5. Writing and quitting				*write-quit* *save-file*
 
@@ -935,13 +943,21 @@ used, for example, when the write fails and you want to try again later with
 ":w #".  This can be switched off by removing the 'A' flag from the
 'cpoptions' option.
 
+							*:sav* *:saveas*
+:sav[eas][!] {file}	Save the current buffer under the name {file} and set
+			the filename of the current buffer to {file}.  The
+			previous name is used for the alternate file name.
+			The [!] is needed to overwrite an existing file.
+			{not in Vi}
+
 							*:up* *:update*
 :[range]up[date][!] [>>] [file]
 			Like ":write", but only write when the buffer has been
 			modified.  {not in Vi}
 
 							*:q* *:quit*
-:q[uit]			Quit Vim.  This fails when changes have been made and
+:q[uit]			Quit the current window.  Quit Vim if this is the last
+			window.  This fails when changes have been made and
 			Vim refuses to |abandon| the current buffer, and when
 			not editing the last file in the argument list.
 
@@ -958,16 +974,16 @@ used, for example, when the write fails and you want to try again later with
 			|quickfix|).  {not in Vi}
 
 							*:wq*
-:wq			Write the current file and exit (unless editing the
+:wq			Write the current file and quit (unless editing the
 			last file in the argument list or the file is
 			read-only).
 
-:wq!			Write the current file and exit.
+:wq!			Write the current file and quit.
 
-:wq {file}		Write to {file}.  Exit if not editing the last
+:wq {file}		Write to {file}.  Quit if not editing the last
 			file in the argument list.
 
-:wq! {file}		Write to {file} and exit.
+:wq! {file}		Write to {file} and quit.
 
 :[range]wq[!] [file]	Same as above, but only write the lines in [range].
 
@@ -983,15 +999,14 @@ used, for example, when the write fails and you want to try again later with
 			Same as :xit.
 
 							*ZZ*
-ZZ			Write current file, if modified, and exit (same as
+ZZ			Write current file, if modified, and quit (same as
 			":x").  (Note: If there are several windows for the
 			current file, the file is written if it was modified
 			and the window is closed).
 
 							*ZQ*
-ZQ			Quit current file and exit (same as ":q!").  (Note: If
-			there are several windows for the current file, only
-			the window is closed).
+ZQ			Quit without checking for changes (same as ":q!").
+			{not in Vi}
 
 							*timestamp*
 Vim remembers the modification timestamp of a file when you begin editing it.

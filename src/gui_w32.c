@@ -195,7 +195,7 @@ add_dialog_element(
 	const char *caption);
 static LPWORD lpwAlign(LPWORD);
 static int nCopyAnsiToWideChar(LPWORD, LPSTR);
-static void gui_mch_tearoff(char_u *title, vimmenu_t *menu, int initX, int initY);
+static void gui_mch_tearoff(char_u *title, vimmenu_T *menu, int initX, int initY);
 static void get_dialog_font_metrics(void);
 
 static int dialog_default_button = -1;
@@ -405,7 +405,7 @@ _OnScroll(
     UINT code,
     int pos)
 {
-    scrollbar_t *sb, *sb_info;
+    scrollbar_T *sb, *sb_info;
     long	val;
     int		dragging = FALSE;
 #ifdef WIN32
@@ -770,7 +770,7 @@ _WndProc(
 		    LPTOOLTIPTEXT	lpttt;
 		    UINT		idButton;
 		    int			idx;
-		    vimmenu_t		*pMenu;
+		    vimmenu_T		*pMenu;
 
 		    lpttt = (LPTOOLTIPTEXT)lParam;
 		    idButton = lpttt->hdr.idFrom;
@@ -800,7 +800,7 @@ _WndProc(
 	{
 	    UINT	idButton;
 	    int		idx;
-	    vimmenu_t	*pMenu;
+	    vimmenu_T	*pMenu;
 
 	    idButton = (UINT)LOWORD(wParam);
 	    pMenu = gui_mswin_find_menu(root_menu, idButton);
@@ -1188,7 +1188,7 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
 
     void
 gui_mch_set_scrollbar_thumb(
-    scrollbar_t *sb,
+    scrollbar_T *sb,
     long	val,
     long	size,
     long	max)
@@ -1233,7 +1233,7 @@ gui_mch_set_font(GuiFont font)
  * Set the current text foreground color.
  */
     void
-gui_mch_set_fg_color(guicolor_t color)
+gui_mch_set_fg_color(guicolor_T color)
 {
     gui.currFgColor = color;
 }
@@ -1242,7 +1242,7 @@ gui_mch_set_fg_color(guicolor_t color)
  * Set the current text background color.
  */
     void
-gui_mch_set_bg_color(guicolor_t color)
+gui_mch_set_bg_color(guicolor_T color)
 {
     gui.currBgColor = color;
 }
@@ -1338,7 +1338,7 @@ DisplayCompStringOpaque(char_u *s, int len)
     int OldBkMode = GetBkMode(s_hdc);
 
     SetBkMode(s_hdc, OPAQUE);
-    gui_outstr_nowrap(s, len, GUI_MON_TRS_CURSOR, (guicolor_t)0, (guicolor_t)0, 0);
+    gui_outstr_nowrap(s, len, GUI_MON_TRS_CURSOR, (guicolor_T)0, (guicolor_T)0, 0);
     SetBkMode(s_hdc, OldBkMode);
 }
 
@@ -1389,11 +1389,11 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 /*
  * When status IME is 'open' change cursor color to hilight 'CursorIM'
  */
-    guicolor_t
-ImeGetCursorColor(guicolor_t color)
+    guicolor_T
+ImeGetCursorColor(guicolor_T color)
 {
     static int id = 0;
-    guicolor_t fg, bg;
+    guicolor_T fg, bg;
 
     if (bImeStatus)
     {
@@ -2008,10 +2008,10 @@ clear_rect(RECT *rcp)
  */
     void
 gui_mch_add_menu(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		pos)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     menu->submenu_id = CreatePopupMenu();
     menu->id = s_menu_id++;
@@ -2051,7 +2051,7 @@ gui_mch_add_menu(
 }
 
     void
-gui_mch_show_popupmenu(vimmenu_t *menu)
+gui_mch_show_popupmenu(vimmenu_T *menu)
 {
     POINT mp;
 
@@ -2062,7 +2062,7 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
     void
 gui_make_popup(char_u *path_name)
 {
-    vimmenu_t	*menu = gui_find_menu(path_name);
+    vimmenu_T	*menu = gui_find_menu(path_name);
 
     if (menu != NULL)
     {
@@ -2088,7 +2088,7 @@ gui_make_popup(char_u *path_name)
     void
 gui_make_tearoff(char_u *path_name)
 {
-    vimmenu_t	*menu = gui_find_menu(path_name);
+    vimmenu_T	*menu = gui_find_menu(path_name);
 
     /* Found the menu, so tear it off. */
     if (menu != NULL)
@@ -2101,10 +2101,10 @@ gui_make_tearoff(char_u *path_name)
  */
     void
 gui_mch_add_menu_item(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		idx)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     menu->id = s_menu_id++;
     menu->submenu_id = NULL;
@@ -2158,7 +2158,7 @@ gui_mch_add_menu_item(
  * Destroy the machine specific menu widget.
  */
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
 #ifdef FEAT_TOOLBAR
     /*
@@ -2196,7 +2196,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
 
 #ifdef FEAT_TEAROFF
     static void
-rebuild_tearoff(vimmenu_t *menu)
+rebuild_tearoff(vimmenu_T *menu)
 {
     /*hackish*/
     char_u	tbuf[128];
@@ -2239,7 +2239,7 @@ rebuild_tearoff(vimmenu_t *menu)
  */
     void
 gui_mch_menu_grey(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int	    grey)
 {
 #ifdef FEAT_TOOLBAR
@@ -3066,7 +3066,7 @@ get_dialog_font_metrics(void)
     static void
 gui_mch_tearoff(
     char_u	*title,
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		initX,
     int		initY)
 {
@@ -3076,8 +3076,8 @@ gui_mch_tearoff(
     DWORD	lExtendedStyle;
     WORD	dlgwidth;
     WORD	menuID;
-    vimmenu_t	*pmenu;
-    vimmenu_t	*the_menu = menu;
+    vimmenu_T	*pmenu;
+    vimmenu_T	*the_menu = menu;
     HWND	hwnd;
     HDC		hdc;
     HFONT	font, oldFont;
@@ -3415,19 +3415,13 @@ get_toolbar_bitmap(char_u *name)
      */
     if (!is_winnt_3())
     {
-	char_u *fname;
-	char_u *ffname;
-	HANDLE hbitmap;
+	char_u fname[MAXPATHL];
+	HANDLE hbitmap = NULL;
 
-	fname = alloc(_MAX_PATH);
-	STRCPY(fname, "$VIM\\bitmaps\\");
-	strcat(fname, name);
-	strcat(fname, ".bmp");
-	ffname = expand_env_save(fname);
-
-	hbitmap = LoadImage(
+	if (gui_find_bitmap(name, fname, ".bmp") == OK)
+	    hbitmap = LoadImage(
 		    NULL,
-		    ffname,
+		    fname,
 		    IMAGE_BITMAP,
 		    TOOLBAR_BUTTON_WIDTH,
 		    TOOLBAR_BUTTON_HEIGHT,
@@ -3444,10 +3438,7 @@ get_toolbar_bitmap(char_u *name)
 	    i = SendMessage(s_toolbarhwnd, TB_ADDBITMAP,
 			    (WPARAM)1, (LPARAM)&tbAddBitmap);
 	    /* i will be set to -1 if it fails */
-
 	}
-	vim_free(fname);
-	vim_free(ffname);
     }
     if (i != -1)
 	return i;

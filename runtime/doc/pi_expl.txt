@@ -1,4 +1,4 @@
-*pi_expl.txt*    For Vim version 6.0aa.  Last change: 2000 Dec 29
+*pi_expl.txt*    For Vim version 6.0ab.  Last change: 2001 Apr 12
 
 
 		  VIM REFERENCE MANUAL    by M A Aziz Ahmed
@@ -22,10 +22,14 @@ You can avoid loading this plugin by setting the "loaded_explorer" variable: >
 
 This plugin is used to explore directories inside Vim. The file explorer is
 launched whenever the user tries to edit a directory.
+						*:Explore* *:Sexplore*
 To launch the explorer in the directory of the file currently edited: >
 	:Explore
 If the file has changes the window is split.  To always split the window: >
 	:Sexplore
+To launch the explorer in a specific directory: >
+	:Explore dirname
+	:Sexplore dirname
 
 From inside the explorer move your cursor to a line containing a file or
 directory name.  The following command keys are available:

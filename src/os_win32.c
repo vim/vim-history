@@ -116,6 +116,7 @@ FILE* fdDump = NULL;
 # define PSID int
 # define PACL int
 # define HICON int
+# define HINSTANCE int
 #endif
 
 #ifndef FEAT_GUI_W32
@@ -192,6 +193,88 @@ static char *vimrun_path = "vimrun ";
 #ifndef FEAT_GUI_W32
 static int suppress_winsize = 1;	/* don't fiddle with console */
 #endif
+
+#if defined(DYNAMIC_GETTEXT) || defined(PROTO)
+# ifndef GETTEXT_DLL
+#  define GETTEXT_DLL "libintl.dll"
+# endif
+/* Dummy funcitons */
+static char* null_libintl_gettext(const char *);
+static char* null_libintl_textdomain(const char *);
+static char* null_libintl_bindtextdomain(const char *, const char *);
+
+static HINSTANCE hLibintlDLL = 0;
+char* (*dyn_libintl_gettext)(const char *) = null_libintl_gettext;
+char* (*dyn_libintl_textdomain)(const char *) = null_libintl_textdomain;
+char* (*dyn_libintl_bindtextdomain)(const char *, const char *)
+						= null_libintl_bindtextdomain;
+
+    int
+dyn_libintl_init(char* libname)
+{
+    int i;
+    static struct
+    {
+	char	    *name;
+	FARPROC	    *ptr;
+    } libintl_entry[] =
+    {
+	{"gettext", (FARPROC*)&dyn_libintl_gettext},
+	{"textdomain", (FARPROC*)&dyn_libintl_textdomain},
+	{"bindtextdomain", (FARPROC*)&dyn_libintl_bindtextdomain},
+	NULL, NULL
+    };
+
+    /* No need to initialize twice. */
+    if (hLibintlDLL)
+	return 1;
+    /* Load gettext library (libintl.dll) */
+    hLibintlDLL = LoadLibrary(libname ? libname : GETTEXT_DLL);
+    if (!hLibintlDLL)
+	return 0;
+    for (i = 0; libintl_entry[i].name != NULL
+	    && libintl_entry[i].ptr != NULL; ++i)
+    {
+	if (!(*libintl_entry[i].ptr = GetProcAddress(hLibintlDLL,
+			libintl_entry[i].name)))
+	{
+	    dyn_libintl_end();
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+    void
+dyn_libintl_end()
+{
+    if (hLibintlDLL)
+	FreeLibrary(hLibintlDLL);
+    hLibintlDLL			= NULL;
+    dyn_libintl_gettext		= null_libintl_gettext;
+    dyn_libintl_textdomain	= null_libintl_textdomain;
+    dyn_libintl_bindtextdomain	= null_libintl_bindtextdomain;
+}
+
+    char*
+null_libintl_gettext(const char* msgid)
+{
+    return (char*)msgid;
+}
+
+    char*
+null_libintl_bindtextdomain(const char* domainname, const char* dirname)
+{
+    return NULL;
+}
+
+    char*
+null_libintl_textdomain(const char* domainname)
+{
+    return NULL;
+}
+
+#endif /* DYNAMIC_GETTEXT */
 
 /* This symbol is not defined in older versions of the SDK or Visual C++ */
 
@@ -389,9 +472,9 @@ const static struct
 #pragma optimize("", off)
 
 #if defined(__GNUC__) && !defined(__MINGW32__)  && !defined(__CYGWIN__)
-#define AChar AsciiChar
+# define AChar AsciiChar
 #else
-#define AChar uChar.AsciiChar
+# define AChar uChar.AsciiChar
 #endif
 
 /* The return code indicates key code size. */
@@ -601,7 +684,7 @@ mch_setmouse(
 {
     DWORD cmodein;
 
-    if (! g_fMouseAvail)
+    if (!g_fMouseAvail)
 	return;
 
     g_fMouseActive = on;
@@ -651,7 +734,7 @@ decode_mouse_event(
     static int s_nOldMouseClick = -1;
     static int s_xOldMouse = -1;
     static int s_yOldMouse = -1;
-    static linenr_t s_old_topline = 0;
+    static linenr_T s_old_topline = 0;
 #ifdef FEAT_DIFF
     static int s_old_topfill = 0;
 #endif
@@ -667,7 +750,7 @@ decode_mouse_event(
 
     int nButton;
 
-    if (! g_fMouseAvail || !g_fMouseActive)
+    if (!g_fMouseAvail || !g_fMouseActive)
     {
 	g_nMouseClick = -1;
 	return FALSE;
@@ -2170,12 +2253,12 @@ struct my_acl
  * Return a pointer to the ACL of file "fname" in allocated memory.
  * Return NULL if the ACL is not available for whatever reason.
  */
-    vim_acl_t
+    vim_acl_T
 mch_get_acl(fname)
     char_u	*fname;
 {
 #ifndef HAVE_ACL
-    return (vim_acl_t)NULL;
+    return (vim_acl_T)NULL;
 #else
     struct my_acl   *p = NULL;
 
@@ -2200,13 +2283,13 @@ mch_get_acl(fname)
 			&p->pSecurityDescriptor
 				    ) != ERROR_SUCCESS)
 	    {
-		mch_free_acl((vim_acl_t)p);
+		mch_free_acl((vim_acl_T)p);
 		p = NULL;
 	    }
 	}
     }
 
-    return (vim_acl_t)p;
+    return (vim_acl_T)p;
 #endif
 }
 
@@ -2218,7 +2301,7 @@ mch_get_acl(fname)
     void
 mch_set_acl(fname, acl)
     char_u	*fname;
-    vim_acl_t	acl;
+    vim_acl_T	acl;
 {
 #ifdef HAVE_ACL
     struct my_acl   *p = (struct my_acl *)acl;
@@ -2242,7 +2325,7 @@ mch_set_acl(fname, acl)
 
     void
 mch_free_acl(acl)
-    vim_acl_t	acl;
+    vim_acl_T	acl;
 {
 #ifdef HAVE_ACL
     struct my_acl   *p = (struct my_acl *)acl;
@@ -2267,7 +2350,8 @@ handler_routine(
     switch (dwCtrlType)
     {
     case CTRL_C_EVENT:
-	g_fCtrlCPressed = TRUE;
+	if (ctrl_c_interrupts)
+	    g_fCtrlCPressed = TRUE;
 	return TRUE;
 
     case CTRL_BREAK_EVENT:
@@ -2479,15 +2563,18 @@ mch_set_shellsize()
 	return;
     }
 
-    coordScreen = GetLargestConsoleWindowSize(g_hConOut);
+    if (term_console)
+    {
+	coordScreen = GetLargestConsoleWindowSize(g_hConOut);
 
-    /* Clamp Rows and Columns to reasonable values */
-    if (Rows > coordScreen.Y)
-	Rows = coordScreen.Y;
-    if (Columns > coordScreen.X)
-	Columns = coordScreen.X;
+	/* Clamp Rows and Columns to reasonable values */
+	if (Rows > coordScreen.Y)
+	    Rows = coordScreen.Y;
+	if (Columns > coordScreen.X)
+	    Columns = coordScreen.X;
 
-    ResizeConBufAndWindow(g_hConOut, Columns, Rows);
+	ResizeConBufAndWindow(g_hConOut, Columns, Rows);
+    }
 }
 
 /*
@@ -2825,7 +2912,7 @@ pstrcmp(
  */
     static int
 win32_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     char_u	*wildc,
     int		flags)		/* EW_* flags */
@@ -2955,7 +3042,7 @@ win32_expandpath(
 
     int
 mch_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     int		flags)		/* EW_* flags */
 {

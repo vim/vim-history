@@ -13,6 +13,6 @@ extern int  sniff_connected;
 extern int  fd_from_sniff;
 extern void sniff_disconnect __ARGS((int immediately));
 extern void ProcessSniffRequests __ARGS((void));
-extern void ex_sniff __ARGS((exarg_t *eap));
+extern void ex_sniff __ARGS((exarg_T *eap));
 
 #endif

@@ -17,7 +17,7 @@
 #endif
 
 #if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
-static int coladvance2 __ARGS((int addspaces, int finetune, colnr_t wcol));
+static int coladvance2 __ARGS((int addspaces, int finetune, colnr_T wcol));
 
 /*
  * Return TRUE if in the current mode we need to use virtual.
@@ -42,7 +42,7 @@ getviscol()
     char_u	*line = ml_get_curline();
     char_u	*p;
 
-    for (p = line; (colnr_t)(p - line) < curwin->w_cursor.col; )
+    for (p = line; (colnr_T)(p - line) < curwin->w_cursor.col; )
 	x += lbr_chartabsize_adv(&p, x);
 
     return x + curwin->w_cursor.coladd;
@@ -53,14 +53,14 @@ getviscol()
  */
     int
 getviscol2(col, coladd)
-    colnr_t	col;
-    colnr_t	coladd;
+    colnr_T	col;
+    colnr_T	coladd;
 {
     int		x = 0;
     char_u	*line = ml_get_curline();
     char_u	*p;
 
-    for (p = line; (colnr_t)(p - line) < col; )
+    for (p = line; (colnr_T)(p - line) < col; )
 	x += lbr_chartabsize_adv(&p, x);
 
     return x + coladd;
@@ -73,7 +73,7 @@ getviscol2(col, coladd)
  */
     int
 coladvance_force(wcol)
-    colnr_t wcol;
+    colnr_T wcol;
 {
     return coladvance2(TRUE, FALSE, wcol);
 }
@@ -82,12 +82,15 @@ coladvance_force(wcol)
 /*
  * Try to advance the Cursor to the specified column.
  * If virtual editing: fine tune the cursor position.
+ * Note that all virtual positions off the end of a line should share
+ * a curwin->w_cursor.col value (n.b. this is equal to STRLEN(line)),
+ * beginning at coladd 0.
  *
  * return OK if desired column is reached, FAIL if not
  */
     int
 coladvance(wcol)
-    colnr_t	wcol;
+    colnr_T	wcol;
 {
 #ifdef FEAT_VIRTUALEDIT
     return coladvance2(FALSE, virtual_active(), wcol);
@@ -97,13 +100,13 @@ coladvance(wcol)
 coladvance2(addspaces, finetune, wcol)
     int		addspaces;	/* change the text to achieve our goal? */
     int		finetune;	/* change char offset for the excact column */
-    colnr_t	wcol;		/* column to move to */
+    colnr_T	wcol;		/* column to move to */
 {
 #endif
     int		idx;
     char_u	*ptr;
     char_u	*line;
-    colnr_t	col;
+    colnr_T	col;
     int		csize;
     int		one_more;
 
@@ -121,11 +124,11 @@ coladvance2(addspaces, finetune, wcol)
 #ifdef FEAT_VERTSPLIT
 	    && curwin->w_width != 0
 #endif
-	    && wcol >= (colnr_t)W_WIDTH(curwin)
+	    && wcol >= (colnr_T)W_WIDTH(curwin)
 	    && wcol < MAXCOL)
     {
 	csize = linetabsize(ml_get_curline()) - 1;
-	if (wcol / W_WIDTH(curwin) > (colnr_t)csize / W_WIDTH(curwin))
+	if (wcol / W_WIDTH(curwin) > (colnr_T)csize / W_WIDTH(curwin))
 	{
 	    /* In case of line wrapping don't move the cursor beyond the
 	     * right screen edge. */
@@ -146,7 +149,7 @@ coladvance2(addspaces, finetune, wcol)
 	 * when moving up/down.
 	 * Don't do this in Visual mode, each line must select until the EOL.
 	 */
-	idx = STRLEN(line) - 1;
+	idx = STRLEN(line) - 1 + one_more;
 #ifdef FEAT_VIRTUALEDIT
 	if ((addspaces || finetune) && !VIsual_active)
 	{
@@ -167,7 +170,19 @@ coladvance2(addspaces, finetune, wcol)
 	    csize = lbr_chartabsize_adv(&ptr, col);
 	    col += csize;
 	}
-	idx = ptr - line - 1;
+	idx = ptr - line;
+	/*
+	 * Handle all the special cases.  The virtual_active() check
+	 * is needed to ensure that a virtual position off the end of
+	 * a line has the correct indexing.  The one_more comparison
+	 * replaces an explicit add of one_more later on.
+	 */
+	if (col > wcol || (
+#ifdef FEAT_VIRTUALEDIT
+		    !virtual_active() &&
+#endif
+		    one_more == 0))
+	    idx -= 1;
 
 #ifdef FEAT_VIRTUALEDIT
 	if (addspaces && (col != wcol + 1 || csize > 1))
@@ -196,7 +211,7 @@ coladvance2(addspaces, finetune, wcol)
 		newline[idx + 1 + correct] = NUL;
 
 		ml_replace(curwin->w_cursor.lnum, newline, FALSE);
-		changed_bytes(curwin->w_cursor.lnum, (colnr_t)idx);
+		changed_bytes(curwin->w_cursor.lnum, (colnr_T)idx);
 		idx += correct;
 		col += correct;
 	    }
@@ -234,12 +249,6 @@ coladvance2(addspaces, finetune, wcol)
 #endif
     }
 
-    /*
-     * In Insert mode it is allowed to be one char beyond the end of the line.
-     * Also in Visual mode, when 'selection' is not "old".
-     */
-    if (one_more && col <= wcol)
-	++idx;
     if (idx < 0)
 	curwin->w_cursor.col = 0;
     else
@@ -286,7 +295,7 @@ inc_cursor()
 
     int
 inc(lp)
-    pos_t  *lp;
+    pos_T  *lp;
 {
     char_u  *p = ml_get_pos(lp);
 
@@ -324,7 +333,7 @@ inc(lp)
  */
     int
 incl(lp)
-    pos_t    *lp;
+    pos_T    *lp;
 {
     int	    r;
 
@@ -351,7 +360,7 @@ dec_cursor()
 
     int
 dec(lp)
-    pos_t  *lp;
+    pos_T  *lp;
 {
     if (lp->col > 0)
     {		/* still within line */
@@ -372,7 +381,7 @@ dec(lp)
  */
     int
 decl(lp)
-    pos_t    *lp;
+    pos_T    *lp;
 {
     int	    r;
 
@@ -407,9 +416,9 @@ check_cursor_lnum()
     void
 check_cursor_col()
 {
-    colnr_t len;
+    colnr_T len;
 #ifdef FEAT_VIRTUALEDIT
-    colnr_t oldcol = curwin->w_cursor.col + curwin->w_cursor.coladd;
+    colnr_T oldcol = curwin->w_cursor.col + curwin->w_cursor.coladd;
 #endif
 
     len = STRLEN(ml_get_curline());
@@ -472,7 +481,7 @@ adjust_cursor_col()
 leftcol_changed()
 {
     long	lastcol;
-    colnr_t	s, e;
+    colnr_T	s, e;
     int		retval = FALSE;
 
     changed_cline_bef_curs();
@@ -483,10 +492,10 @@ leftcol_changed()
      * If the cursor is right or left of the screen, move it to last or first
      * character.
      */
-    if (curwin->w_virtcol > (colnr_t)lastcol)
+    if (curwin->w_virtcol > (colnr_T)lastcol)
     {
 	retval = TRUE;
-	coladvance((colnr_t)lastcol);
+	coladvance((colnr_T)lastcol);
     }
     else if (curwin->w_virtcol < curwin->w_leftcol)
     {
@@ -500,7 +509,7 @@ leftcol_changed()
      * line) adjust the scrolling.
      */
     getvcol(curwin, &curwin->w_cursor, &s, NULL, &e);
-    if (e > (colnr_t)lastcol)
+    if (e > (colnr_T)lastcol)
     {
 	retval = TRUE;
 	coladvance(s - 1);
@@ -1431,7 +1440,7 @@ vim_isspace(x)
  */
     void
 ga_clear(gap)
-    garray_t *gap;
+    garray_T *gap;
 {
     vim_free(gap->ga_data);
     ga_init(gap);
@@ -1443,7 +1452,7 @@ ga_clear(gap)
  */
     void
 ga_clear_strings(gap)
-    garray_t *gap;
+    garray_T *gap;
 {
     int		i;
 
@@ -1459,7 +1468,7 @@ ga_clear_strings(gap)
  */
     void
 ga_init(gap)
-    garray_t *gap;
+    garray_T *gap;
 {
     gap->ga_data = NULL;
     gap->ga_room = 0;
@@ -1468,7 +1477,7 @@ ga_init(gap)
 
     void
 ga_init2(gap, itemsize, growsize)
-    garray_t	*gap;
+    garray_T	*gap;
     int		itemsize;
     int		growsize;
 {
@@ -1483,7 +1492,7 @@ ga_init2(gap, itemsize, growsize)
  */
     int
 ga_grow(gap, n)
-    garray_t	*gap;
+    garray_T	*gap;
     int		n;
 {
     size_t	len;
@@ -1516,7 +1525,7 @@ ga_grow(gap, n)
  */
     void
 ga_concat(gap, s)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*s;
 {
     size_t    len = STRLEN(s);
@@ -1534,7 +1543,7 @@ ga_concat(gap, s)
  */
     void
 ga_append(gap, c)
-    garray_t	*gap;
+    garray_T	*gap;
     int		c;
 {
     if (ga_grow(gap, 1) == OK)
@@ -2350,7 +2359,7 @@ get_pseudo_mouse_code(button, is_click, is_drag)
  */
     int
 get_fileformat(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     int		c = *buf->b_p_ff;
 
@@ -2367,8 +2376,8 @@ get_fileformat(buf)
  */
     int
 get_fileformat_force(buf, eap)
-    buf_t	*buf;
-    exarg_t	*eap;	    /* can be NULL! */
+    buf_T	*buf;
+    exarg_T	*eap;	    /* can be NULL! */
 {
     int		c;
 
@@ -2449,6 +2458,9 @@ call_shell(cmd, opt)
 {
     char_u	*ncmd;
     int		retval;
+
+    if (p_verbose > 3)
+	smsg((char_u *)_("Calling shell to execute: \"%s\""), cmd);
 
     if (*p_sh == NUL)
     {
@@ -2551,7 +2563,7 @@ vim_chdirfile(fname)
  * Handling of cursor and mouse pointer shapes in various modes.
  */
 
-cursorentry_t shape_table[SHAPE_IDX_COUNT] =
+cursorentry_T shape_table[SHAPE_IDX_COUNT] =
 {
     /* The values will be filled in from the 'guicursor' and 'mouseshape'
      * defaults when Vim starts.
@@ -3140,7 +3152,7 @@ typedef struct ff_stack
 
     /* Did we already expand '**' to an empty string? */
     int			ffs_star_star_empty;
-} ff_stack_t;
+} ff_stack_T;
 
 /*
  * type for already visited directories or files.
@@ -3166,7 +3178,7 @@ typedef struct ff_visited
      * ffv_fname.
      */
     char_u		ffv_fname[1];	/* actually longer */
-} ff_visited_t;
+} ff_visited_T;
 
 /*
  * We might have to manage several visited lists during a search.
@@ -3189,9 +3201,9 @@ typedef struct ff_visited_list_hdr
     /* the filename the attached visited list is for */
     char_u			*ffvl_filename;
 
-    ff_visited_t		*ffvl_visited_list;
+    ff_visited_T		*ffvl_visited_list;
 
-} ff_visited_list_hdr_t;
+} ff_visited_list_hdr_T;
 
 
 /*
@@ -3213,11 +3225,11 @@ typedef struct ff_visited_list_hdr
  *   ffsc_stopdirs_v:	array of stop directories for upward search
  *   ffsc_need_dir:	TRUE if we search for a directory
  */
-typedef struct ff_search_ctx_t
+typedef struct ff_search_ctx_T
 {
-     ff_stack_t			*ffsc_stack_ptr;
-     ff_visited_list_hdr_t	*ffsc_visited_list;
-     ff_visited_list_hdr_t	*ffsc_visited_lists_list;
+     ff_stack_T			*ffsc_stack_ptr;
+     ff_visited_list_hdr_T	*ffsc_visited_list;
+     ff_visited_list_hdr_T	*ffsc_visited_lists_list;
      char_u			*ffsc_file_to_search;
      char_u			*ffsc_start_dir;
      char_u			*ffsc_fix_path;
@@ -3227,32 +3239,32 @@ typedef struct ff_search_ctx_t
      char_u			**ffsc_stopdirs_v;
 #endif
      int			ffsc_need_dir;
-}ff_search_ctx_t;
-static ff_search_ctx_t *ff_search_ctx = NULL;
+}ff_search_ctx_T;
+static ff_search_ctx_T *ff_search_ctx = NULL;
 
 /* used for expanding filenames */
 static char_u		*ff_expand_buffer = NULL;
 
 /* locally needed functions */
 #ifdef FEAT_PATH_EXTRA
-static int ff_check_visited __ARGS((ff_visited_t **, char_u *, char_u *));
+static int ff_check_visited __ARGS((ff_visited_T **, char_u *, char_u *));
 #else
-static int ff_check_visited __ARGS((ff_visited_t **, char_u *));
+static int ff_check_visited __ARGS((ff_visited_T **, char_u *));
 #endif
-static void ff_free_visited_list __ARGS((ff_visited_t *vl));
-static ff_visited_list_hdr_t* ff_get_visited_list __ARGS((char_u *));
+static void ff_free_visited_list __ARGS((ff_visited_T *vl));
+static ff_visited_list_hdr_T* ff_get_visited_list __ARGS((char_u *));
 #ifdef FEAT_PATH_EXTRA
 static int ff_wc_equal __ARGS((char_u *s1, char_u *s2));
 #endif
 
-static void ff_push __ARGS((ff_stack_t *));
-static ff_stack_t * ff_pop __ARGS((void));
+static void ff_push __ARGS((ff_stack_T *));
+static ff_stack_T * ff_pop __ARGS((void));
 static void ff_clear __ARGS((void));
-static void ff_free_stack_element __ARGS((ff_stack_t *));
+static void ff_free_stack_element __ARGS((ff_stack_T *));
 #ifdef FEAT_PATH_EXTRA
-static ff_stack_t *ff_create_stack_element __ARGS((char_u *, char_u *, int, int));
+static ff_stack_T *ff_create_stack_element __ARGS((char_u *, char_u *, int, int));
 #else
-static ff_stack_t *ff_create_stack_element __ARGS((char_u *, int, int));
+static ff_stack_T *ff_create_stack_element __ARGS((char_u *, int, int));
 #endif
 #ifdef FEAT_PATH_EXTRA
 static int ff_path_in_stoplist __ARGS((char_u *, int, char_u **));
@@ -3365,7 +3377,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 #ifdef FEAT_PATH_EXTRA
     char_u	*wc_part;
 #endif
-    ff_stack_t	*sptr;
+    ff_stack_T	*sptr;
 
     /* If a search context is given by the caller, reuse it, else allocate a
      * new one.
@@ -3374,11 +3386,11 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 	ff_search_ctx = search_ctx;
     else
     {
-	ff_search_ctx = (ff_search_ctx_t*)alloc(
-					   (unsigned)sizeof(ff_search_ctx_t));
+	ff_search_ctx = (ff_search_ctx_T*)alloc(
+					   (unsigned)sizeof(ff_search_ctx_T));
 	if (ff_search_ctx == NULL)
 	    goto error_return;
-	memset(ff_search_ctx, 0, sizeof(ff_search_ctx_t));
+	memset(ff_search_ctx, 0, sizeof(ff_search_ctx_T));
     }
 
     /* clear the search context, but NOT the visited lists */
@@ -3666,7 +3678,7 @@ vim_findfile(void *search_ctx)
     char_u	*rest_of_wildcards;
     char_u	*path_end = NULL;
 #endif
-    ff_stack_t	*ctx;
+    ff_stack_T	*ctx;
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_PATH_EXTRA)
     int		len;
 #endif
@@ -3679,7 +3691,7 @@ vim_findfile(void *search_ctx)
     if (search_ctx == NULL)
 	return NULL;
 
-    ff_search_ctx = (ff_search_ctx_t*)search_ctx;
+    ff_search_ctx = (ff_search_ctx_T*)search_ctx;
 
     /*
      * filepath is used as buffer for various actions and as the storage to
@@ -4052,7 +4064,7 @@ vim_findfile(void *search_ctx)
 	if (ff_search_ctx->ffsc_start_dir
 		&& ff_search_ctx->ffsc_stopdirs_v != NULL && !got_int)
 	{
-	    ff_stack_t  *sptr;
+	    ff_stack_T  *sptr;
 
 	    /* is the last starting directory in the stop list? */
 	    if (ff_path_in_stoplist(ff_search_ctx->ffsc_start_dir,
@@ -4100,12 +4112,12 @@ vim_findfile(void *search_ctx)
     void
 vim_findfile_free_visited(void *search_ctx)
 {
-    ff_visited_list_hdr_t *vp;
+    ff_visited_list_hdr_T *vp;
 
     if (NULL == search_ctx)
 	return;
 
-    ff_search_ctx = (ff_search_ctx_t*)search_ctx;
+    ff_search_ctx = (ff_search_ctx_T*)search_ctx;
 
     while (NULL != ff_search_ctx->ffsc_visited_lists_list)
     {
@@ -4122,9 +4134,9 @@ vim_findfile_free_visited(void *search_ctx)
 
     static void
 ff_free_visited_list(vl)
-    ff_visited_t *vl;
+    ff_visited_T *vl;
 {
-    ff_visited_t *vp;
+    ff_visited_T *vp;
 
     while (vl != NULL)
     {
@@ -4139,11 +4151,11 @@ ff_free_visited_list(vl)
  * Returns the already visited list for the given filename. If none is found it
  * allocates a new one.
  */
-    static ff_visited_list_hdr_t*
+    static ff_visited_list_hdr_T*
 ff_get_visited_list(filename)
     char_u	*filename;
 {
-    ff_visited_list_hdr_t  *retptr = NULL;
+    ff_visited_list_hdr_T  *retptr = NULL;
 
     /* check if a visited list for the given filename exists */
     if (ff_search_ctx->ffsc_visited_lists_list!= NULL)
@@ -4187,7 +4199,7 @@ ff_get_visited_list(filename)
     /*
      * if we reach this we didn't find a list and we have to allocate new list
      */
-    retptr = (ff_visited_list_hdr_t*)alloc((unsigned)sizeof(*retptr));
+    retptr = (ff_visited_list_hdr_T*)alloc((unsigned)sizeof(*retptr));
     if (retptr == NULL)
 	return NULL;
 
@@ -4262,13 +4274,13 @@ ff_check_visited(visited_list, fname
 	, wc_path
 #endif
 	)
-    ff_visited_t	**visited_list;
+    ff_visited_T	**visited_list;
     char_u		*fname;
 #ifdef FEAT_PATH_EXTRA
     char_u		*wc_path;
 #endif
 {
-    ff_visited_t	*vp;
+    ff_visited_T	*vp;
 #ifdef UNIX
     struct stat		st;
     int			url = FALSE;
@@ -4319,7 +4331,7 @@ ff_check_visited(visited_list, fname
     /*
      * New file/dir.  Add it to the list of visited files/dirs.
      */
-    vp = (ff_visited_t *)alloc((unsigned)(sizeof(ff_visited_t)
+    vp = (ff_visited_T *)alloc((unsigned)(sizeof(ff_visited_T)
 						 + STRLEN(ff_expand_buffer)));
 
     if (vp != NULL)
@@ -4357,7 +4369,7 @@ ff_check_visited(visited_list, fname
 /*
  * create stack element from given path pieces
  */
-    static ff_stack_t *
+    static ff_stack_T *
 ff_create_stack_element(fix_part,
 #ifdef FEAT_PATH_EXTRA
 	wc_part,
@@ -4370,9 +4382,9 @@ ff_create_stack_element(fix_part,
     int		level;
     int		star_star_empty;
 {
-    ff_stack_t	*new;
+    ff_stack_T	*new;
 
-    new = (ff_stack_t *)alloc((unsigned)sizeof(ff_stack_t));
+    new = (ff_stack_T *)alloc((unsigned)sizeof(ff_stack_T));
     if (new == NULL)
 	return NULL;
 
@@ -4413,7 +4425,7 @@ ff_create_stack_element(fix_part,
  */
     static void
 ff_push(ctx)
-    ff_stack_t *ctx;
+    ff_stack_T *ctx;
 {
     /* check for NULL pointer, not to return an error to the user, but
      * to prevent a crash
@@ -4429,10 +4441,10 @@ ff_push(ctx)
  * pop a dir from the directory stack
  * returns NULL if stack is empty
  */
-    static ff_stack_t *
+    static ff_stack_T *
 ff_pop()
 {
-    ff_stack_t  *sptr;
+    ff_stack_T  *sptr;
 
     sptr = ff_search_ctx->ffsc_stack_ptr;
     if (ff_search_ctx->ffsc_stack_ptr != NULL)
@@ -4446,7 +4458,7 @@ ff_pop()
  */
     static void
 ff_free_stack_element(ctx)
-    ff_stack_t  *ctx;
+    ff_stack_T  *ctx;
 {
     /* vim_free handles possible NULL pointers */
     vim_free(ctx->ffs_fix_path);
@@ -4466,7 +4478,7 @@ ff_free_stack_element(ctx)
     static void
 ff_clear()
 {
-    ff_stack_t   *sptr;
+    ff_stack_T   *sptr;
 
     /* clear up stack */
     while ((sptr = ff_pop()) != NULL)

@@ -22,6 +22,9 @@
 #ifndef USR_VIMRC_FILE2
 # define USR_VIMRC_FILE2	"$VIM\\_vimrc"
 #endif
+#ifndef EVIM_FILE
+# define EVIM_FILE		"$VIMRUNTIME\\evim.vim"
+#endif
 
 #ifndef USR_EXRC_FILE
 # define USR_EXRC_FILE		"$HOME\\_exrc"

@@ -125,6 +125,9 @@ typedef long off_t;
 #ifndef USR_VIMRC_FILE3
 # define USR_VIMRC_FILE3 "$VIM/.vimrc"
 #endif
+#ifndef EVIM_FILE
+# define EVIM_FILE	"$VIMRUNTIME/evim.vim"
+#endif
 
 #ifndef USR_GVIMRC_FILE
 # define USR_GVIMRC_FILE "s:.gvimrc"

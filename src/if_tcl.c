@@ -115,13 +115,13 @@ struct ref
     Tcl_Interp	*interp;
     Tcl_Command cmd;	    /* Tcl command that represents this object */
     Tcl_Obj	*delcmd;    /* Tcl command to call when object is being del. */
-    void	*vimobj;    /* Vim window or buffer (win_t* or buf_t*) */
+    void	*vimobj;    /* Vim window or buffer (win_T* or buf_T*) */
 };
-static char * tclgetbuffer _ANSI_ARGS_((Tcl_Interp *interp, buf_t *buf));
-static char * tclgetwindow _ANSI_ARGS_((Tcl_Interp *interp, win_t *win));
+static char * tclgetbuffer _ANSI_ARGS_((Tcl_Interp *interp, buf_T *buf));
+static char * tclgetwindow _ANSI_ARGS_((Tcl_Interp *interp, win_T *win));
 static int tclsetdelcmd _ANSI_ARGS_((Tcl_Interp *interp, struct ref *reflist, void *vimobj, Tcl_Obj *delcmd));
-static int tclgetlinenum _ANSI_ARGS_ ((Tcl_Interp *interp, Tcl_Obj *obj, int *valueP, buf_t *buf));
-static win_t *tclfindwin _ANSI_ARGS_ ((buf_t *buf));
+static int tclgetlinenum _ANSI_ARGS_ ((Tcl_Interp *interp, Tcl_Obj *obj, int *valueP, buf_T *buf));
+static win_T *tclfindwin _ANSI_ARGS_ ((buf_T *buf));
 static int tcldoexcommand _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
 static int tclsetoption _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
 static int tclvimexpr _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
@@ -246,7 +246,7 @@ buffercmd(dummy, interp, objc, objv)
     Tcl_Obj *CONST objv[];
 {
     char	*name;
-    buf_t	*buf;
+    buf_T	*buf;
     Tcl_Obj	*resobj;
     int		err, n, idx;
 
@@ -344,7 +344,7 @@ windowcmd(dummy, interp, objc, objv)
     Tcl_Obj	*CONST objv[];
 {
     char	*what, *string;
-    win_t	*win;
+    win_T	*win;
 
     if (objc != 2)
     {
@@ -354,7 +354,7 @@ windowcmd(dummy, interp, objc, objv)
     what = Tcl_GetStringFromObj(objv[1], NULL);
     if (strcmp(what, "list") == 0)
     {
-	for (win = firstwin; win != NULL; win = W_NEXT(win))
+	FOR_ALL_WINDOWS(win)
 	{
 	    string = tclgetwindow(interp, win);
 	    if (string == NULL)
@@ -386,10 +386,10 @@ bufselfcmd(ref, interp, objc, objv)
 {
     int		opt, err, idx, flags;
     int		val1, val2, n, i;
-    buf_t	*buf, *savebuf;
-    win_t	*win, *savewin;
+    buf_T	*buf, *savebuf;
+    win_T	*win, *savewin;
     Tcl_Obj	*resobj;
-    pos_t	*pos;
+    pos_T	*pos;
     char	*line;
 
     enum
@@ -415,7 +415,7 @@ bufselfcmd(ref, interp, objc, objv)
     if (err != TCL_OK)
 	return err;
 
-    buf = (buf_t *)((struct ref *)ref)->vimobj;
+    buf = (buf_T *)((struct ref *)ref)->vimobj;
     savebuf = curbuf;  curbuf = buf;
     savewin = curwin;  curwin = tclfindwin(buf);
     flags = 0;
@@ -514,7 +514,7 @@ bufselfcmd(ref, interp, objc, objv)
 
 		for (n = val1; n <= val2 && err == TCL_OK; n++)
 		{
-		    line = (char *)ml_get_buf(buf, (linenr_t)n, FALSE);
+		    line = (char *)ml_get_buf(buf, (linenr_T)n, FALSE);
 		    if (line)
 			Tcl_AppendElement(interp, line);
 		    else
@@ -522,7 +522,7 @@ bufselfcmd(ref, interp, objc, objv)
 		}
 	    }
 	    else {  /* objc == 3 */
-		line = (char *)ml_get_buf(buf, (linenr_t)val1, FALSE);
+		line = (char *)ml_get_buf(buf, (linenr_T)val1, FALSE);
 		Tcl_SetResult(interp, line, TCL_VOLATILE);
 	    }
 	    break;
@@ -544,20 +544,20 @@ bufselfcmd(ref, interp, objc, objv)
 		 *	$buf set {n} {string}
 		 */
 		line = Tcl_GetStringFromObj(objv[3], NULL);
-		if (u_savesub((linenr_t)val1) != OK)
+		if (u_savesub((linenr_T)val1) != OK)
 		{
 		    Tcl_SetResult(interp, _("cannot save undo information"), TCL_STATIC);
 		    err = TCL_ERROR;
 		}
 		else
-		if (ml_replace((linenr_t)val1, (char_u *)line, TRUE) != OK)
+		if (ml_replace((linenr_T)val1, (char_u *)line, TRUE) != OK)
 		{
 		    Tcl_SetResult(interp, _("cannot replace line"), TCL_STATIC);
 		    err = TCL_ERROR;
 		}
 		else
 		{
-		    changed_bytes((linenr_t)val1, 0);
+		    changed_bytes((linenr_T)val1, 0);
 		    flags |= FL_UPDATE_CURBUF;
 		}
 		break;
@@ -589,7 +589,7 @@ bufselfcmd(ref, interp, objc, objv)
 		}
 
 		n = val1;
-		if (u_save((linenr_t)(val1 - 1), (linenr_t)(val2 + 1)) != OK)
+		if (u_save((linenr_T)(val1 - 1), (linenr_T)(val2 + 1)) != OK)
 		{
 		    Tcl_SetResult(interp, _("cannot save undo information"),
 								  TCL_STATIC);
@@ -601,7 +601,7 @@ bufselfcmd(ref, interp, objc, objv)
 		for (i = 0; i < lc && n <= val2; i++)
 		{
 		    line = Tcl_GetStringFromObj(lv[i], NULL);
-		    if (ml_replace((linenr_t)n, (char_u *)line, TRUE) != OK)
+		    if (ml_replace((linenr_T)n, (char_u *)line, TRUE) != OK)
 			goto setListError;
 		    ++n;
 		}
@@ -611,7 +611,7 @@ bufselfcmd(ref, interp, objc, objv)
 		    do
 		    {
 			line = Tcl_GetStringFromObj(lv[i], NULL);
-			if (ml_append((linenr_t)(n - 1),
+			if (ml_append((linenr_T)(n - 1),
 					      (char_u *)line, 0, FALSE) != OK)
 			    goto setListError;
 			++n;
@@ -624,15 +624,15 @@ bufselfcmd(ref, interp, objc, objv)
 		    i = n;
 		    do
 		    {
-			if (ml_delete((linenr_t)i, FALSE) != OK)
+			if (ml_delete((linenr_T)i, FALSE) != OK)
 			    goto setListError;
 			++n;
 		    } while (n <= val2);
 		}
 		lc -= val2 - val1 + 1;	/* number of lines to be replaced */
-		mark_adjust((linenr_t)val1, (linenr_t)val2, (long)MAXLNUM,
+		mark_adjust((linenr_T)val1, (linenr_T)val2, (long)MAXLNUM,
 								    (long)lc);
-		changed_lines((linenr_t)val1, 0, (linenr_t)val2 + 1, (long)lc);
+		changed_lines((linenr_T)val1, 0, (linenr_T)val2 + 1, (long)lc);
 		break;
     setListError:
 		u_undo(1);  /* ??? */
@@ -663,7 +663,7 @@ bufselfcmd(ref, interp, objc, objv)
 		}
 	    }
 	    n = val2 - val1 + 1;
-	    if (u_savedel((linenr_t)val1, (long)n) != OK)
+	    if (u_savedel((linenr_T)val1, (long)n) != OK)
 	    {
 		Tcl_SetResult(interp, _("cannot save undo information"),
 								  TCL_STATIC);
@@ -672,13 +672,13 @@ bufselfcmd(ref, interp, objc, objv)
 	    }
 	    for (i = 0; i < n; i++)
 	    {
-		ml_delete((linenr_t)val1, FALSE);
+		ml_delete((linenr_T)val1, FALSE);
 		err = vimerror(interp);
 		if (err != TCL_OK)
 		    break;
 	    }
 	    if (i > 0)
-		deleted_lines_mark((linenr_t)val1, (long)i);
+		deleted_lines_mark((linenr_T)val1, (long)i);
 	    flags |= FL_ADJUST_CURSOR|FL_UPDATE_SCREEN;
 	    break;
 
@@ -733,7 +733,7 @@ bufselfcmd(ref, interp, objc, objv)
 		break;
 	    if (opt)
 		--val1;
-	    if (u_save((linenr_t)val1, (linenr_t)(val1+1)) != OK)
+	    if (u_save((linenr_T)val1, (linenr_T)(val1+1)) != OK)
 	    {
 		Tcl_SetResult(interp, _("cannot save undo information"), TCL_STATIC);
 		err = TCL_ERROR;
@@ -741,13 +741,13 @@ bufselfcmd(ref, interp, objc, objv)
 	    }
 
 	    line = Tcl_GetStringFromObj(objv[3], NULL);
-	    if (ml_append((linenr_t)val1, (char_u *)line, 0, FALSE) != OK)
+	    if (ml_append((linenr_T)val1, (char_u *)line, 0, FALSE) != OK)
 	    {
 		Tcl_SetResult(interp, _("cannot insert/append line"), TCL_STATIC);
 		err = TCL_ERROR;
 		break;
 	    }
-	    appended_lines_mark((linenr_t)val1, 1L);
+	    appended_lines_mark((linenr_T)val1, 1L);
 	    flags |= FL_UPDATE_SCREEN;
 	    break;
 
@@ -762,7 +762,7 @@ bufselfcmd(ref, interp, objc, objv)
 		break;
 	    }
 	    Tcl_ResetResult(interp);
-	    for (win = firstwin; win != NULL; win = W_NEXT(win))
+	    FOR_ALL_WINDOWS(win)
 	    {
 		if (win->w_buffer == buf)
 		{
@@ -822,8 +822,8 @@ winselfcmd(ref, interp, objc, objv)
     int		err, idx, flags;
     int		val1, val2;
     Tcl_Obj	*resobj;
-    win_t	*savewin, *win;
-    buf_t	*savebuf;
+    win_T	*savewin, *win;
+    buf_T	*savebuf;
     char	*str;
 
     enum
@@ -847,7 +847,7 @@ winselfcmd(ref, interp, objc, objv)
     if (err != TCL_OK)
 	return TCL_ERROR;
 
-    win = (win_t *)((struct ref *)ref)->vimobj;
+    win = (win_T *)((struct ref *)ref)->vimobj;
     savewin = curwin;  curwin = win;
     savebuf = curbuf;  curbuf = win->w_buffer;
     flags = 0;
@@ -1038,7 +1038,7 @@ tclgetlinenum(interp, obj, valueP, buf)
     Tcl_Interp	*interp;
     Tcl_Obj	*obj;
     int		*valueP;
-    buf_t	*buf;
+    buf_T	*buf;
 {
     int err, i;
 
@@ -1086,15 +1086,17 @@ tclgetlinenum(interp, obj, valueP, buf)
 /*
  * Find the first window in the window list that displays the buffer.
  */
-    static win_t *
+    static win_T *
 tclfindwin(buf)
-    buf_t *buf;
+    buf_T *buf;
 {
-    win_t *win;
+    win_T *win;
 
-    for (win = firstwin; win != NULL; win = W_NEXT(win))
+    FOR_ALL_WINDOWS(win)
+    {
 	if (win->w_buffer == buf)
 	    return win;
+    }
     return curwin;  /* keep current window context */
 }
 
@@ -1297,7 +1299,7 @@ vimerror(interp)
 /*
  * Functions that handle the reference lists:
  *   delref() - callback for Tcl's DeleteCommand
- *   tclgetref() - find/create Tcl command for a win_t* or buf_t* object
+ *   tclgetref() - find/create Tcl command for a win_T* or buf_T* object
  *   tclgetwindow() - window frontend for tclgetref()
  *   tclgetbuffer() - buffer frontend for tclgetref()
  *   tclsetdelcmd() - add Tcl callback command to a vim object
@@ -1319,9 +1321,9 @@ delref(cref)
     static char *
 tclgetref(interp, refstartP, prefix, vimobj, proc)
     Tcl_Interp	*interp;
-    void	**refstartP;	/* ptr to tcl_ref member of win_t/buf_t struct */
+    void	**refstartP;	/* ptr to tcl_ref member of win_T/buf_T struct */
     char	*prefix;	/* "win" or "buf" */
-    void	*vimobj;	/* win_t* or buf_t* */
+    void	*vimobj;	/* win_T* or buf_T* */
     Tcl_ObjCmdProc *proc;	/* winselfcmd or bufselfcmd */
 {
     struct ref *ref, *unused = NULL;
@@ -1383,7 +1385,7 @@ tclgetref(interp, refstartP, prefix, vimobj, proc)
     static char *
 tclgetwindow(interp, win)
     Tcl_Interp	*interp;
-    win_t	*win;
+    win_T	*win;
 {
     return tclgetref(interp, &(win->tcl_ref), "win", (void *)win, winselfcmd);
 }
@@ -1391,7 +1393,7 @@ tclgetwindow(interp, win)
     static char *
 tclgetbuffer(interp, buf)
     Tcl_Interp	*interp;
-    buf_t	*buf;
+    buf_T	*buf;
 {
     return tclgetref(interp, &(buf->tcl_ref), "buf", (void *)buf, bufselfcmd);
 }
@@ -1576,7 +1578,7 @@ tclupdatevars()
 
     static int
 tclinit(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char varname[VARNAME_SIZE];	/* Tcl_LinkVar requires writeable varname */
     char *name;
@@ -1781,7 +1783,7 @@ tclexit(error)
  */
     void
 ex_tcl(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char	*script = (char *)eap->arg;
     int		err;
@@ -1800,7 +1802,7 @@ ex_tcl(eap)
  */
     void
 ex_tclfile(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char *file = (char *)eap->arg;
     int err;
@@ -1819,14 +1821,14 @@ ex_tclfile(eap)
  */
     void
 ex_tcldo(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char	*script, *line;
     int		err, rs, re, lnum;
     char	var_lnum[VARNAME_SIZE]; /* must be writeable memory */
     char	var_line[VARNAME_SIZE];
-    linenr_t	first_line = 0;
-    linenr_t	last_line = 0;
+    linenr_T	first_line = 0;
+    linenr_T	last_line = 0;
 
     rs = eap->line1;
     re = eap->line2;
@@ -1841,14 +1843,14 @@ ex_tcldo(eap)
     lnum = row2tcl(rs);
     Tcl_LinkVar(tclinfo.interp, var_lnum, (char *)&lnum, TCL_LINK_INT|TCL_LINK_READ_ONLY);
     err = TCL_OK;
-    if (u_save((linenr_t)(rs-1), (linenr_t)(re+1)) != OK)
+    if (u_save((linenr_T)(rs-1), (linenr_T)(re+1)) != OK)
     {
 	Tcl_SetResult(tclinfo.interp, _("cannot save undo information"), TCL_STATIC);
 	err = TCL_ERROR;
     }
     while (err == TCL_OK  &&  rs <= re)
     {
-	line = (char *)ml_get_buf(curbuf, (linenr_t)rs, FALSE);
+	line = (char *)ml_get_buf(curbuf, (linenr_T)rs, FALSE);
 	if (!line)
 	{
 	    Tcl_SetResult(tclinfo.interp, _("cannot get line"), TCL_STATIC);
@@ -1863,7 +1865,7 @@ ex_tcldo(eap)
 	line = Tcl_GetVar(tclinfo.interp, var_line, 0);
 	if (line)
 	{
-	    if (ml_replace((linenr_t)rs, (char_u *)line, TRUE) != OK)
+	    if (ml_replace((linenr_T)rs, (char_u *)line, TRUE) != OK)
 	    {
 		Tcl_SetResult(tclinfo.interp, _("cannot replace line"), TCL_STATIC);
 		err = TCL_ERROR;
@@ -1922,7 +1924,7 @@ tcldelallrefs(ref)
 
     void
 tcl_buffer_free(buf)
-    buf_t *buf;
+    buf_T *buf;
 {
     struct ref *reflist;
 
@@ -1938,7 +1940,7 @@ tcl_buffer_free(buf)
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 tcl_window_free(win)
-    win_t *win;
+    win_T *win;
 {
     struct ref *reflist;
 

@@ -36,8 +36,8 @@ EXTERN long	Columns INIT(= 80);	/* nr of columns in the screen */
  * "LineOffset[n]" is the offset from ScreenLines[] for the start of line 'n'.
  * The same value is used for ScreenLinesUC[] and ScreenAttrs[].
  */
-EXTERN schar_t	*ScreenLines INIT(= NULL);
-EXTERN sattr_t	*ScreenAttrs INIT(= NULL);
+EXTERN schar_T	*ScreenLines INIT(= NULL);
+EXTERN sattr_T	*ScreenAttrs INIT(= NULL);
 EXTERN unsigned	*LineOffset INIT(= NULL);
 
 #ifdef FEAT_MBYTE
@@ -48,13 +48,13 @@ EXTERN unsigned	*LineOffset INIT(= NULL);
  * The composing characters are to be drawn on top of the original character.
  * Note: These three are only allocated when enc_utf8 is set!
  */
-EXTERN u8char_t	*ScreenLinesUC INIT(= NULL);	/* decoded UTF-8 characters */
-EXTERN u8char_t	*ScreenLinesC1 INIT(= NULL);	/* first composing char */
-EXTERN u8char_t	*ScreenLinesC2 INIT(= NULL);	/* second composing char */
+EXTERN u8char_T	*ScreenLinesUC INIT(= NULL);	/* decoded UTF-8 characters */
+EXTERN u8char_T	*ScreenLinesC1 INIT(= NULL);	/* first composing char */
+EXTERN u8char_T	*ScreenLinesC2 INIT(= NULL);	/* second composing char */
 
 /* Only used for euc-jp: Second byte of a character that starts with 0x8e.
  * These are single-width. */
-EXTERN schar_t	*ScreenLines2 INIT(= NULL);
+EXTERN schar_T	*ScreenLines2 INIT(= NULL);
 #endif
 
 EXTERN int	screen_Rows INIT(= 0);	    /* actual size of ScreenLines[] */
@@ -94,7 +94,7 @@ EXTERN int	screen_cleared INIT(= FALSE);	/* screen has been cleared */
  * is put at the end of the changed text. dollar_vcol is set to the virtual
  * column of this '$'.
  */
-EXTERN colnr_t	dollar_vcol INIT(= 0);
+EXTERN colnr_T	dollar_vcol INIT(= 0);
 
 #ifdef FEAT_INS_EXPAND
 /*
@@ -173,7 +173,7 @@ EXTERN int	msg_no_more INIT(= FALSE);  /* don't use more prompt, truncate
 					       messages */
 
 EXTERN char_u	*sourcing_name INIT( = NULL);/* name of error message source */
-EXTERN linenr_t	sourcing_lnum INIT(= 0);    /* line number of the source file */
+EXTERN linenr_T	sourcing_lnum INIT(= 0);    /* line number of the source file */
 
 #ifdef FEAT_EVAL
 EXTERN int	debug_level INIT(= 0);		/* nesting level */
@@ -183,7 +183,7 @@ EXTERN int	debug_tick INIT(= 0);		/* breakpoint change count */
 #endif
 
 #ifdef FEAT_EVAL
-EXTERN scid_t	current_SID INIT(= 0);	    /* ID of script being sourced or
+EXTERN scid_T	current_SID INIT(= 0);	    /* ID of script being sourced or
 					       was sourced to define the
 					       current function. */
 #endif
@@ -197,8 +197,8 @@ EXTERN int	t_colors INIT(= 0);	    /* int value of T_CCO */
  * character just after the match in the last line.
  */
 EXTERN int	highlight_match INIT(= FALSE);	/* show search match pos */
-EXTERN linenr_t	search_match_lines;		/* lines of of matched string */
-EXTERN colnr_t	search_match_endcol;		/* col nr of match end */
+EXTERN linenr_T	search_match_lines;		/* lines of of matched string */
+EXTERN colnr_T	search_match_endcol;		/* col nr of match end */
 
 EXTERN int	no_smartcase INIT(= FALSE);	/* don't use 'smartcase' once */
 EXTERN int	need_check_timestamps INIT(= FALSE); /* got STOP signal */
@@ -228,7 +228,7 @@ EXTERN int	did_filetype INIT(= FALSE);	/* FileType event found */
 
 /* When deleting the current buffer, another one must be loaded.  If we know
  * which one is preferred, au_new_curbuf is set to it */
-EXTERN buf_t	*au_new_curbuf INIT(= NULL);
+EXTERN buf_T	*au_new_curbuf INIT(= NULL);
 #endif
 
 #ifdef FEAT_MOUSE
@@ -256,7 +256,7 @@ EXTERN int	WantQueryMouse INIT(= 0);
 EXTERN int	need_mouse_correct INIT(= FALSE);
 
 /* When double clicking, topline must be the same */
-EXTERN linenr_t gui_prev_topline INIT(= 0);
+EXTERN linenr_T gui_prev_topline INIT(= 0);
 #  ifdef FEAT_DIFF
 EXTERN int	gui_prev_topfill INIT(= 0);
 #  endif
@@ -273,7 +273,7 @@ EXTERN int	drag_sep_line INIT(= FALSE);	/* dragging vert separator */
 
 #ifdef FEAT_MENU
 /* The root of the menu hierarchy. */
-EXTERN vimmenu_t	*root_menu INIT(= NULL);
+EXTERN vimmenu_T	*root_menu INIT(= NULL);
 /*
  * While defining the system menu, sys_menu is TRUE.  This avoids
  * overruling of menus that the user already defined.
@@ -283,7 +283,7 @@ EXTERN int	sys_menu INIT(= FALSE);
 
 #ifdef FEAT_GUI
 /* Menu item just selected, set by check_termcode() */
-EXTERN vimmenu_t	*current_menu;
+EXTERN vimmenu_T	*current_menu;
 
 # ifdef FEAT_MENU
 /* Set to TRUE after adding/removing menus to ensure they are updated */
@@ -331,35 +331,37 @@ EXTERN VimClipboard clip_plus;	/* CLIPBOARD selection in X11 */
  * Without the FEAT_WINDOWS they are all equal.
  */
 #ifdef FEAT_WINDOWS
-EXTERN win_t	*firstwin;	/* first window */
-EXTERN win_t	*lastwin;	/* last window */
+EXTERN win_T	*firstwin;	/* first window */
+EXTERN win_T	*lastwin;	/* last window */
 # define W_NEXT(wp) ((wp)->w_next)
+# define FOR_ALL_WINDOWS(wp) for (wp = firstwin; wp != NULL; wp = wp->w_next)
 #else
 # define firstwin curwin
 # define lastwin curwin
 # define W_NEXT(wp) NULL
+# define FOR_ALL_WINDOWS(wp) wp = curwin;
 #endif
-EXTERN win_t	*curwin;	/* currently active window */
+EXTERN win_T	*curwin;	/* currently active window */
 
 /*
  * The window layout is kept in a tree of frames.  topframe points to the top
  * of the tree.
  */
-EXTERN frame_t	*topframe;	/* top of the window frame tree */
+EXTERN frame_T	*topframe;	/* top of the window frame tree */
 
 /*
  * All buffers are linked in a list. 'firstbuf' points to the first entry,
  * 'lastbuf' to the last entry and 'curbuf' to the currently active buffer.
  */
-EXTERN buf_t	*firstbuf INIT(= NULL);	/* first buffer */
-EXTERN buf_t	*lastbuf INIT(= NULL);	/* last buffer */
-EXTERN buf_t	*curbuf INIT(= NULL);	/* currently active buffer */
+EXTERN buf_T	*firstbuf INIT(= NULL);	/* first buffer */
+EXTERN buf_T	*lastbuf INIT(= NULL);	/* last buffer */
+EXTERN buf_T	*curbuf INIT(= NULL);	/* currently active buffer */
 
 /*
  * List of files being edited (global argument list).  curwin->w_alist points
  * to this when the window is using the global argument list.
  */
-EXTERN alist_t	global_alist;	/* global argument list */
+EXTERN alist_T	global_alist;	/* global argument list */
 EXTERN int	arg_had_last INIT(= FALSE); /* accessed last file in
 					       global_alist */
 
@@ -406,7 +408,7 @@ EXTERN int	silent_mode INIT(= FALSE);
 				 * used for ex */
 
 #ifdef FEAT_VISUAL
-EXTERN pos_t	VIsual;		/* start position of active Visual selection */
+EXTERN pos_T	VIsual;		/* start position of active Visual selection */
 EXTERN int	VIsual_active INIT(= FALSE);
 				/* whether Visual mode is active */
 EXTERN int	VIsual_select INIT(= FALSE);
@@ -427,7 +429,7 @@ EXTERN int	redo_VIsual_busy INIT(= FALSE);
  * When pasting text with the middle mouse button in visual mode with
  * restart_edit set, remember where it started so we can set Insstart.
  */
-EXTERN pos_t	where_paste_started;
+EXTERN pos_T	where_paste_started;
 #endif
 
 /*
@@ -442,7 +444,7 @@ EXTERN int     did_ai INIT(= FALSE);
  * Column of first char after autoindent.  0 when no autoindent done.  Used
  * when 'backspace' is 0, to avoid backspacing over autoindent.
  */
-EXTERN colnr_t	ai_col INIT(= 0);
+EXTERN colnr_T	ai_col INIT(= 0);
 
 #ifdef FEAT_COMMENTS
 /*
@@ -487,7 +489,7 @@ EXTERN int	can_si_back INIT(= FALSE);
 /*
  * Stuff for insert mode.
  */
-EXTERN pos_t	Insstart;		/* This is where the latest
+EXTERN pos_T	Insstart;		/* This is where the latest
 					 * insert/append mode started. */
 
 /*
@@ -495,7 +497,7 @@ EXTERN pos_t	Insstart;		/* This is where the latest
  */
 EXTERN int	orig_line_count INIT(= 0);  /* Line count when "gR" started */
 EXTERN int	vr_lines_changed INIT(= 0); /* #Lines changed by "gR" so far */
-EXTERN colnr_t	vr_virtcol INIT(= MAXCOL);  /* Virtual column for "gR" */
+EXTERN colnr_T	vr_virtcol INIT(= MAXCOL);  /* Virtual column for "gR" */
 EXTERN int	vr_virtoffset INIT(= 0);  /* Offset when columns can't align */
 
 #if defined(HAVE_SETJMP_H)
@@ -546,8 +548,8 @@ EXTERN char	mb_bytelen_tab[256];
 
 /* Variables that tell what conversion is used for keyboard input and display
  * output. */
-EXTERN vimconv_t input_conv;			/* type of input conversion */
-EXTERN vimconv_t output_conv;			/* type of output conversion */
+EXTERN vimconv_T input_conv;			/* type of input conversion */
+EXTERN vimconv_T output_conv;			/* type of output conversion */
 
 /*
  * Function pointers, used to quickly get to the right function.  Each has
@@ -582,8 +584,8 @@ EXTERN GdkIC		*xic INIT(= NULL);
 # else
 EXTERN XIC		xic INIT(= NULL);
 # endif
-EXTERN guicolor_t	xim_fg_color INIT(= -1);
-EXTERN guicolor_t	xim_bg_color INIT(= -1);
+EXTERN guicolor_T	xim_fg_color INIT(= -1);
+EXTERN guicolor_T	xim_bg_color INIT(= -1);
 #endif
 
 #ifdef FEAT_HANGULIN
@@ -647,16 +649,15 @@ EXTERN char_u	*exe_name;		/* the name of the executable */
 #ifdef USE_ON_FLY_SCROLL
 EXTERN int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
 #endif
-#ifdef FEAT_GUI_MSWIN
 EXTERN int	mapped_ctrl_c INIT(= FALSE); /* CTRL-C is mapped */
-#endif
+EXTERN int	ctrl_c_interrupts INIT(= TRUE);	/* CTRL-C sets got_int */
 
 EXTERN int	b_lmap_def INIT(= 0);	/* default for b_lmap, used when
 					   entering a new buffer; it's global
 					   because the new buffer may already
 					   be freed by then */
 
-EXTERN cmdmod_t	cmdmod;			/* Ex command modifiers */
+EXTERN cmdmod_T	cmdmod;			/* Ex command modifiers */
 
 EXTERN int	msg_silent INIT(= 0);	/* don't print messages */
 EXTERN int	emsg_silent INIT(= 0);	/* don't print error messages */
@@ -678,10 +679,15 @@ EXTERN int	RedrawingDisabled INIT(= 0);
 EXTERN int	readonlymode INIT(= FALSE); /* Set to TRUE for "view" */
 EXTERN int	recoverymode INIT(= FALSE); /* Set to TRUE for "-r" option */
 
-EXTERN char_u	*typebuf INIT(= NULL);	/* buffer for typed characters */
-EXTERN int	typebuflen;		/* size of typebuf */
-EXTERN int	typeoff;		/* current position in typebuf */
-EXTERN int	typelen;		/* number of valid chars in typebuf */
+EXTERN typebuf_T typebuf		/* typeahead buffer */
+# ifdef DO_INIT
+		    = {NULL, NULL}
+# endif
+		    ;
+#ifdef FEAT_EX_EXTRA
+EXTERN int	ex_normal_busy INIT(= 0); /* recursivenes of ex_normal() */
+#endif
+
 EXTERN int	KeyTyped;		/* TRUE if user typed current char */
 EXTERN int	KeyStuffed;		/* TRUE if current char from stuffbuf */
 EXTERN int	maptick INIT(= 0);	/* tick for each non-mapped char */
@@ -715,9 +721,9 @@ EXTERN int	reg_syn INIT(= 0);	    /* vim_regexec() used for syntax */
 EXTERN int	reg_do_extmatch INIT(= 0);  /* Used when compiling regexp:
 					     * REX_SET to allow \z\(...\),
 					     * REX_USE to allow \z\1 et al. */
-EXTERN reg_extmatch_t *re_extmatch_in INIT(= NULL); /* Used by vim_regexec():
+EXTERN reg_extmatch_T *re_extmatch_in INIT(= NULL); /* Used by vim_regexec():
 					     * strings for \z\1...\z\9 */
-EXTERN reg_extmatch_t *re_extmatch_out INIT(= NULL); /* Set by vim_regexec()
+EXTERN reg_extmatch_T *re_extmatch_out INIT(= NULL); /* Set by vim_regexec()
 					     * to store \z\(...\) matches */
 #endif
 
@@ -871,7 +877,7 @@ EXTERN int	no_hlsearch INIT(= FALSE);
 
 #ifdef CURSOR_SHAPE
 /* the table is in misc2.c, because of initializations */
-extern cursorentry_t shape_table[SHAPE_IDX_COUNT];
+extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 #endif
 
 #ifdef FEAT_XCLIPBOARD
@@ -903,7 +909,7 @@ EXTERN char	psepsN[2]		/* abnormal path separator string */
 
 #ifdef FEAT_SYN_HL
 /* Display tick, incremented for each call to update_screen() */
-EXTERN disptick_t	display_tick INIT(= 0);
+EXTERN disptick_T	display_tick INIT(= 0);
 #endif
 
 #ifdef ALT_X_INPUT

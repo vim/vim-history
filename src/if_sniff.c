@@ -128,7 +128,7 @@ static void vi_error_msg __ARGS((char *));
 static char *vi_symbol_under_cursor __ARGS((void));
 static void vi_open_file __ARGS((char *));
 static char *vi_buffer_name __ARGS((void));
-static buf_t *vi_find_buffer __ARGS((char *));
+static buf_T *vi_find_buffer __ARGS((char *));
 static void vi_exec_cmd __ARGS((char *));
 static void vi_set_cursor_pos __ARGS((long char_nr));
 static long vi_cursor_pos __ARGS((void));
@@ -443,7 +443,7 @@ ProcessSniffRequests()
  */
     void
 ex_sniff(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*arg = eap->arg;
     char	*symbol = NULL;
@@ -674,7 +674,7 @@ HandleSniffRequest(buffer)
     char	*arguments;
     char	file[256], new_path[256];
     int		position, writable, tab_width;
-    buf_t	*buf;
+    buf_T	*buf;
 
     const char * SetTab     = "set tabstop=%d";
     const char * SelectBuf  = "buf %s";
@@ -971,11 +971,11 @@ vi_open_file(fname)
     --no_wait_return;					/* [ex_docmd.c] */
 }
 
-    static buf_t *
+    static buf_T *
 vi_find_buffer(fname)
     char *fname;
 {			    /* derived from buflist_findname() [buffer.c] */
-    buf_t	*buf;
+    buf_T	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (buf->b_sfname != NULL && fnamecmp(fname, buf->b_sfname) == 0)
@@ -1024,7 +1024,7 @@ vi_exec_cmd(vicmd)
 vi_set_cursor_pos(char_pos)
     long char_pos;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	char_count = 1;  /* first position = 1 */
     int		line_size;
     int		eol_size;
@@ -1046,7 +1046,7 @@ vi_set_cursor_pos(char_pos)
     static long
 vi_cursor_pos()
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	char_count=1;  /* sniff starts with pos 1 */
     int		line_size;
     int		eol_size;

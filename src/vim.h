@@ -247,17 +247,17 @@ typedef unsigned long	long_u;
  * The characters and attributes cached for the screen.
  * Currently a single byte.  The attributes may become larger some day.
  */
-#define schar_t	char_u
-#define sattr_t	char_u
+#define schar_T	char_u
+#define sattr_T	char_u
 
 /*
- * The u8char_t can hold one decoded UTF-8 character.
+ * The u8char_T can hold one decoded UTF-8 character.
  * Vim always use an int (32 bits) for characters most places, so that we can
- * handle 32 bit characters in the file.  u8char_t is only used for
+ * handle 32 bit characters in the file.  u8char_T is only used for
  * displaying.  That should be enough, because there is no font for > 16 bits.
  */
 #ifdef FEAT_MBYTE
-typedef unsigned short u8char_t;
+typedef unsigned short u8char_T;
 #endif
 
 #ifndef UNIX		    /* For Unix this is included in os_unix.h */
@@ -302,19 +302,42 @@ typedef unsigned short u8char_t;
 # endif
 #endif /* NON-UNIX */
 
+#include <assert.h>
+
 /* ================ end of the header file puzzle =============== */
+
+/*
+ * For dynamically loaded gettext library.  Currently, only for Win32.
+ */
+#ifdef DYNAMIC_GETTEXT
+# ifndef FEAT_GETTEXT
+#  define FEAT_GETTEXT
+# endif
+/* These are in os_win32.c */
+extern char* (*dyn_libintl_gettext)(const char* msgid);
+extern char* (*dyn_libintl_bindtextdomain)(const char* domainname, const char* dirname);
+extern char* (*dyn_libintl_textdomain)(const char* domainname);
+#endif
+
 
 /*
  * The _() stuff is for using gettext().  It is a no-op when libintl.h is not
  * found or the +multilang feature is disabled.
  */
 #ifdef FEAT_GETTEXT
-# include <libintl.h>
-# define _(x) gettext((char *)(x))
-# ifdef gettext_noop
-#  define N_(x) gettext_noop(x)
-# else
+# ifdef DYNAMIC_GETTEXT
+#  define _(x) (*dyn_libintl_gettext)((char *)(x))
 #  define N_(x) x
+#  define bindtextdomain(domain,dir) (*dyn_libintl_bindtextdomain)(domain,dir)
+#  define textdomain(domain) (*dyn_libintl_textdomain)(domain)
+# else
+#  include <libintl.h>
+#  define _(x) gettext((char *)(x))
+#  ifdef gettext_noop
+#   define N_(x) gettext_noop(x)
+#  else
+#   define N_(x) x
+#  endif
 # endif
 #else
 # define _(x) ((char *)(x))
@@ -560,7 +583,7 @@ typedef unsigned short u8char_t;
 # endif
 # define SST_FIX_STATES	 7	/* size of sst_stack[]. */
 # define SST_DIST	 16	/* normal distance between entries */
-# define SST_INVALID	(synstate_t *)-1	/* invalid syn_state pointer */
+# define SST_INVALID	(synstate_T *)-1	/* invalid syn_state pointer */
 #endif
 
 /* Values for 'options' argument in do_search() and searchit() */
@@ -675,9 +698,9 @@ typedef unsigned short u8char_t;
 #define ECMD_ADDBUF	0x10	/* don't edit, just add to buffer list */
 
 /* for lnum argument in do_ecmd() */
-#define ECMD_LASTL	(linenr_t)0	/* use last position in loaded file */
-#define ECMD_LAST	(linenr_t)-1	/* use last position in all files */
-#define ECMD_ONE	(linenr_t)1	/* use first line */
+#define ECMD_LASTL	(linenr_T)0	/* use last position in loaded file */
+#define ECMD_LAST	(linenr_T)-1	/* use last position in all files */
+#define ECMD_ONE	(linenr_T)1	/* use first line */
 
 /* flags for do_cmdline() */
 #define DOCMD_VERBOSE	0x01	/* included command in error message */
@@ -1084,9 +1107,9 @@ enum hlf_value
 #define MSG_PUTS_LONG(s)	    msg_puts_long((char_u *)(s))
 #define MSG_PUTS_LONG_ATTR(s, a)    msg_puts_long_attr((char_u *)(s), (a))
 
-typedef long	    linenr_t;		/* line number type */
-typedef unsigned    colnr_t;		/* column number type */
-typedef unsigned short disptick_t;	/* display tick type */
+typedef long	    linenr_T;		/* line number type */
+typedef unsigned    colnr_T;		/* column number type */
+typedef unsigned short disptick_T;	/* display tick type */
 
 #define MAXLNUM (0x7fffffffL)		/* maximum (invalid) line number */
 
@@ -1099,7 +1122,7 @@ typedef unsigned short disptick_t;	/* display tick type */
 #define SHOWCMD_COLS 10			/* columns needed by shown command */
 #define STL_MAX_ITEM 50			/* max count of %<flag> in statusline*/
 
-typedef void	    *vim_acl_t;		/* dummy to pass an ACL to a function */
+typedef void	    *vim_acl_T;		/* dummy to pass an ACL to a function */
 
 /*
  * Include a prototype for mch_memmove(), it may not be in alloc.pro.
@@ -1205,6 +1228,7 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # define IN_BUFFER		1
 # define IN_STATUS_LINE		2	/* on status or command line */
 # define IN_SEP_LINE		4	/* on vertical separator line */
+# define IN_OTHER_WIN		8	/* in other window but can't go there */
 # define CURSOR_MOVED		0x100
 # define MOUSE_FOLD_CLOSE	0x200	/* clicked on '-' in fold column */
 # define MOUSE_FOLD_OPEN	0x400	/* clicked on '+' in fold column */
@@ -1278,8 +1302,8 @@ typedef struct VimClipboard
 {
     int		available;	/* Is clipboard available? */
     int		owned;		/* Flag: do we own the selection? */
-    pos_t	start;		/* Start of selected area */
-    pos_t	end;		/* End of selected area */
+    pos_T	start;		/* Start of selected area */
+    pos_T	end;		/* End of selected area */
     int		vmode;		/* Visual mode character */
 
     /* Fields for selection that doesn't use Visual mode */
@@ -1289,7 +1313,7 @@ typedef struct VimClipboard
     short_u	word_start_col;
     short_u	word_end_col;
 
-    pos_t	prev;		/* Previous position */
+    pos_T	prev;		/* Previous position */
     short_u	state;		/* Current selection state */
     short_u	mode;		/* Select by char, word, or line. */
 

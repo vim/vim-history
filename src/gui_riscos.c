@@ -1089,14 +1089,14 @@ gui_mch_free_font(GuiFont font)
  * Return -1 for error.
  * NB: I've changed Green for now, since it looked really sick
  */
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(char_u *name)
 {
     int		i;
     struct colour
     {
 	char_u		*name;
-	guicolor_t	value;
+	guicolor_T	value;
     } colours[] =
     {
 	{ "Red",		grgb(255,	0,	0)	},
@@ -1148,7 +1148,7 @@ gui_mch_get_color(char_u *name)
 	int	    c;
 
 	c = strtol(name + 1, &end, 16);
-	return (guicolor_t) ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16);
+	return (guicolor_T) ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16);
     }
 
     for (i = 0; colours[i].name != NULL; i++)
@@ -1159,10 +1159,10 @@ gui_mch_get_color(char_u *name)
     if (strnicmp(name, "grey", 4) == 0 || strnicmp(name, "gray", 4) == 0)
     {
 	int level = (255 * atoi(name + 4)) / 100;
-	return (guicolor_t) grgb(level, level, level);
+	return (guicolor_T) grgb(level, level, level);
     }
     EMSG2(_("Missing colour : %s"), name);
-    return (guicolor_t) -1;
+    return (guicolor_T) -1;
 }
 
 /*
@@ -1170,7 +1170,7 @@ gui_mch_get_color(char_u *name)
  * If we are using fonts then set the antialiasing colours too.
  */
     void
-gui_mch_set_colors(guicolor_t fg, guicolor_t bg)
+gui_mch_set_colors(guicolor_T fg, guicolor_T bg)
 {
     zap_redraw_colours[0] = bg << 8;	/* JK230798, register new background colour */
     zap_redraw_colours[1] = fg << 8;	/* JK230798, register new foreground colour */
@@ -1392,7 +1392,7 @@ draw_hollow(w, h)
  * Draw a cursor without focus.
  */
     void
-gui_mch_draw_hollow_cursor(guicolor_t colour)
+gui_mch_draw_hollow_cursor(guicolor_T colour)
 {
     int x = FILL_X(gui.cursor_col);	/* Window relative, top-left */
     int y = -FILL_Y(gui.cursor_row);
@@ -1433,7 +1433,7 @@ gui_mch_draw_hollow_cursor(guicolor_t colour)
 gui_mch_draw_part_cursor(w, h, colour)
     int w;
     int h;
-    guicolor_t colour;
+    guicolor_T colour;
 {
     int x = FILL_X(gui.cursor_col);
     int y = -FILL_Y(gui.cursor_row);
@@ -1602,7 +1602,7 @@ ro_insert_key(code)
     char b = code[1];
     int base, modifier;
 
-    if (a == 3)
+    if (a == 3 && ctrl_c_interrupts)
 	got_int = TRUE;
 
     /* Is it a normal key? */
@@ -2086,19 +2086,15 @@ ro_message(block)
  * Converts a scrollbar's window handle into a scrollbar pointer.
  * NULL on failure.
  */
-    scrollbar_t *
+    scrollbar_T *
 ro_find_sbar(id)
     int		id;
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (gui.bottom_sbar.id == id)
 	return &gui.bottom_sbar;
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
     {
 	if (wp->w_scrollbars[SBAR_LEFT].id == id)
 	    return &wp->w_scrollbars[SBAR_LEFT];
@@ -2169,9 +2165,9 @@ h_scroll_to(col)
 ro_scroll(block)
     int		*block;
 {
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     int		offset;
-    win_t	*wp;
+    win_T	*wp;
 
     /* Block is ready for Wimp_OpenWindow, and also contains:
      *
@@ -2265,7 +2261,7 @@ ro_open_main(block)
 	int	pos_wanted, pos_got;
 	int	left_bar  = gui.which_scrollbars[SBAR_LEFT];
 	int	right_bar = gui.which_scrollbars[SBAR_RIGHT];
-	win_t	*wp;
+	win_T	*wp;
 
 	/* Three cases to think about:
 	 * 1) Move to top. Open each window at the top.
@@ -2286,11 +2282,7 @@ ro_open_main(block)
 	if (x_offset || y_offset || pos_wanted == -1 || pos_wanted == -2)
 	{
 	    /* If parent has moved, re-open all the child windows. */
-#ifndef FEAT_WINDOWS
-	    wp = curwin;
-#else
-	    for (wp = firstwin; wp != NULL; wp = wp -> w_next)
-#endif
+	    FOR_ALL_WINDOWS(wp)
 	    {
 		/* Reopen scrollbars for this window. */
 		if (left_bar)
@@ -2326,7 +2318,7 @@ ro_open_window(block)
     int		*block;
 {
     int		pos;
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 
     if (block[0] == gui.window_handle)
 	ro_open_main(block);
@@ -2352,7 +2344,7 @@ ro_menu_selection(block)
     int		*block;
 {
     int		*item = wimp_menu + 7;
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     /* wimp_menu points to a wimp menu structure */
 
     for (;;)
@@ -2365,7 +2357,7 @@ ro_menu_selection(block)
 	block++;
     }
     /* item points to the wimp menu item structure chosen */
-    menu = (vimmenu_t *) item[5];
+    menu = (vimmenu_T *) item[5];
 
     swi(Wimp_GetPointerInfo, 0, block);
     if (block[2] == 1)
@@ -2728,7 +2720,7 @@ clip_mch_set_selection(VimClipboard *cbd)
  * Make a menu either grey or not grey.
  */
     void
-gui_mch_menu_grey(vimmenu_t *menu, int grey)
+gui_mch_menu_grey(vimmenu_T *menu, int grey)
 {
     menu-> greyed_out = grey;
 }
@@ -2737,7 +2729,7 @@ gui_mch_menu_grey(vimmenu_t *menu, int grey)
  * Make menu item hidden or not hidden
  */
     void
-gui_mch_menu_hidden(vimmenu_t *menu, int hidden)
+gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
 {
     menu-> hidden = hidden;
 }
@@ -2764,7 +2756,7 @@ gui_mch_draw_menubar(void)
  */
     void
 gui_mch_enable_scrollbar(sb, flag)
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     int		flag;
 {
     if (!flag)
@@ -2799,7 +2791,7 @@ gui_mch_start_blink(void)
  * Uses CIE luminance weights as given in the ChangeFSI help file.
  */
     int
-gui_mch_get_lightness(guicolor_t pixel)
+gui_mch_get_lightness(guicolor_T pixel)
 {
     int red   = (pixel >> 16) & 0xff;
     int green = (pixel >> 8)  & 0xff;
@@ -2812,7 +2804,7 @@ gui_mch_get_lightness(guicolor_t pixel)
  * Return the RGB value of a pixel as "#RRGGBB".
  */
     char_u *
-gui_mch_get_rgb(guicolor_t pixel)
+gui_mch_get_rgb(guicolor_T pixel)
 {
     static char_u retval[10];
     sprintf((char *)retval, "#%02x%02x%02x",
@@ -2839,12 +2831,12 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_add_menu(vimmenu_t *menu, int idx)
+gui_mch_add_menu(vimmenu_T *menu, int idx)
 {
 }
 
     void
-gui_mch_add_menu_item(vimmenu_t *menu, int idx)
+gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 {
 }
 
@@ -2854,7 +2846,7 @@ gui_mch_new_menu_colors(void)
 }
 
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
 }
 
@@ -2863,7 +2855,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
  */
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     long	val;
     long	size;
     long	max;
@@ -2900,7 +2892,7 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
  */
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		x;		/* Horizontal sb position */
     int		y;		/* Top of scroll bar */
     int		w;		/* Width */
@@ -2970,7 +2962,7 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
  */
     void
 gui_mch_create_scrollbar(sb, orient)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		orient;	/* orient is SBAR_HORIZ or SBAR_VERT */
 {
     int bar[] =
@@ -2997,7 +2989,7 @@ gui_mch_create_scrollbar(sb, orient)
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
+gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
     swi(Wimp_DeleteWindow, 0, & (sb->id));
     sb -> id = -1;
@@ -3005,7 +2997,7 @@ gui_mch_destroy_scrollbar(scrollbar_t *sb)
 #endif
 
     void
-gui_mch_set_scrollbar_colors(scrollbar_t *sb)
+gui_mch_set_scrollbar_colors(scrollbar_T *sb)
 {
     /* Always use default RO colour scheme. */
 }
@@ -3090,19 +3082,19 @@ ro_redraw_title(window)
     }
 }
 
-/* Turn a vimmenu_t structure into a wimp menu structure.
+/* Turn a vimmenu_T structure into a wimp menu structure.
  * -1 if resulting menu is empty.
  * Only the children and dname items in the root menu are used.
  */
     int *
 ro_build_menu(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     int		*wimp_menu;
     int		width = 4;
     int		w;
     int		size = 28;
-    vimmenu_t	*item;
+    vimmenu_T	*item;
     int		*wimp_item;
 
     /* Find out how big the menu is so we can allocate memory for it */
@@ -3181,7 +3173,7 @@ ro_remove_menu(menu)
 
     void
 gui_mch_show_popupmenu(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     int		block[10];
 

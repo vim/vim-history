@@ -485,6 +485,15 @@ a = b;
 	f2();
 }
 
+{
+do {
+if (foo) {
+} else
+;
+} while (foo);
+foo();	// was wrong
+}
+
 /* end of AUTO */
 
 STARTTEST
@@ -711,6 +720,20 @@ label1:
 }
 
 STARTTEST
-:1;/ENDTEST/+1,$wq! test.out
+:set comments& comments^=s:/*,m:**,ex:*/
+/simple
+=5j
 ENDTEST
 
+/*
+  * A simple comment
+   */
+
+/*
+  ** A different comment
+   */
+
+STARTTEST
+:g/^STARTTEST/.,/^ENDTEST/d
+:1;/start of AUTO/,$wq! test.out
+ENDTEST

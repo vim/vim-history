@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 26
+" Last change:	2001 Apr 13
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -57,6 +57,8 @@ if has("autocmd")
   au FileType text setlocal tw=78
 
   " When editing a file, always jump to the last known cursor position.
+  " Don't do it when the position is invalid or when inside an event handler
+  " (happens when dropping a file on gvim).
   autocmd BufReadPost *
     \ if line("'\"") > 0 && line("'\"") <= line("$") |
     \   exe "normal g`\"" |

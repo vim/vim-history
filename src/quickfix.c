@@ -15,9 +15,9 @@
 
 #if defined(FEAT_QUICKFIX) || defined(PROTO)
 
-struct dir_stack_t
+struct dir_stack_T
 {
-    struct dir_stack_t	*next;
+    struct dir_stack_T	*next;
     char_u		*dirname;
 };
 
@@ -25,20 +25,20 @@ static void	qf_msg __ARGS((void));
 static void	qf_free __ARGS((int idx));
 static char_u	*qf_types __ARGS((int, int));
 static int	qf_get_fnum __ARGS((char_u *, char_u *));
-static char_u	*qf_push_dir __ARGS((char_u *, struct dir_stack_t **));
-static char_u	*qf_pop_dir __ARGS((struct dir_stack_t **));
+static char_u	*qf_push_dir __ARGS((char_u *, struct dir_stack_T **));
+static char_u	*qf_pop_dir __ARGS((struct dir_stack_T **));
 static char_u	*qf_guess_filepath __ARGS((char_u *));
 static void	qf_fmt_text __ARGS((char_u *text, char_u *buf, int bufsize));
-static void	qf_clean_dir_stack __ARGS((struct dir_stack_t **));
+static void	qf_clean_dir_stack __ARGS((struct dir_stack_T **));
 #ifdef FEAT_WINDOWS
 static int	qf_win_pos_update __ARGS((int old_qf_index));
-static buf_t	*qf_find_buf __ARGS((void));
+static buf_T	*qf_find_buf __ARGS((void));
 static void	qf_update_buffer __ARGS((void));
 static void	qf_fill_buffer __ARGS((void));
 #endif
 static char_u	*get_mef_name __ARGS((void));
 
-static struct dir_stack_t   *dir_stack = NULL;
+static struct dir_stack_T   *dir_stack = NULL;
 
 /*
  * for each error the next struct is allocated and linked in a list
@@ -47,7 +47,7 @@ struct qf_line
 {
     struct qf_line  *qf_next;	/* pointer to next error in the list */
     struct qf_line  *qf_prev;	/* pointer to previous error in the list */
-    linenr_t	     qf_lnum;	/* line number where the error occurred */
+    linenr_T	     qf_lnum;	/* line number where the error occurred */
     int		     qf_fnum;	/* file number for the line */
     int		     qf_col;	/* column where the error occurred */
     int		     qf_nr;	/* error number */
@@ -81,7 +81,7 @@ static int	qf_listcount = 0;   /* current number of lists */
  */
 struct eformat
 {
-    regprog_t	    *prog;	/* pre-formatted part of 'errorformat' */
+    regprog_T	    *prog;	/* pre-formatted part of 'errorformat' */
     struct eformat  *next;	/* pointer to next (NULL if last) */
     char_u	    addr[FMT_PATTERNS]; /* indices of used % patterns */
     char_u	    prefix;	/* prefix of this format line: */
@@ -106,9 +106,10 @@ struct eformat
  * Return -1 for error, number of errors for success.
  */
     int
-qf_init(efile, errorformat)
+qf_init(efile, errorformat, newlist)
     char_u	    *efile;
     char_u	    *errorformat;
+    int		    newlist;		/* TRUE: start a new error list */
 {
     char_u	    *namebuf;
     char_u	    *errmsg;
@@ -138,8 +139,8 @@ qf_init(efile, errorformat)
     char_u	    *directory = NULL;
     char_u	    *currfile = NULL;
     char_u	    *tail = NULL;
-    struct dir_stack_t  *file_stack = NULL;
-    regmatch_t	    regmatch;
+    struct dir_stack_T  *file_stack = NULL;
+    regmatch_T	    regmatch;
     static struct fmtpattern
     {
 	char_u	convchar;
@@ -170,29 +171,39 @@ qf_init(efile, errorformat)
 	goto qf_init_end;
     }
 
-    /*
-     * If the current entry is not the last entry, delete entries below the
-     * current entry.  This makes it possible to browse in a tree-like way
-     * with ":grep'.
-     */
-    while (qf_listcount > qf_curlist + 1)
-	qf_free(--qf_listcount);
-
-    /*
-     * When the stack is full, remove to oldest entry
-     * Otherwise, add a new entry.
-     */
-    if (qf_listcount == LISTCOUNT)
+    if (newlist || qf_curlist == qf_listcount)
     {
-	qf_free(0);
-	for (i = 1; i < LISTCOUNT; ++i)
-	    qf_lists[i - 1] = qf_lists[i];
-	qf_curlist = LISTCOUNT - 1;
+	/*
+	 * If the current entry is not the last entry, delete entries below
+	 * the current entry.  This makes it possible to browse in a tree-like
+	 * way with ":grep'.
+	 */
+	while (qf_listcount > qf_curlist + 1)
+	    qf_free(--qf_listcount);
+
+	/*
+	 * When the stack is full, remove to oldest entry
+	 * Otherwise, add a new entry.
+	 */
+	if (qf_listcount == LISTCOUNT)
+	{
+	    qf_free(0);
+	    for (i = 1; i < LISTCOUNT; ++i)
+		qf_lists[i - 1] = qf_lists[i];
+	    qf_curlist = LISTCOUNT - 1;
+	}
+	else
+	    qf_curlist = qf_listcount++;
+	qf_lists[qf_curlist].qf_index = 0;
+	qf_lists[qf_curlist].qf_count = 0;
     }
-    else
-	qf_curlist = qf_listcount++;
-    qf_lists[qf_curlist].qf_index = 0;
-    qf_lists[qf_curlist].qf_count = 0;
+    else if (qf_lists[qf_curlist].qf_count > 0)
+    {
+	/* Adding to existing list, find last entry. */
+	for (qfprev = qf_lists[qf_curlist].qf_start;
+			    qfprev->qf_next != qfprev; qfprev = qfprev->qf_next)
+	    ;
+    }
 
 /*
  * Each part of the format string is copied and modified from errorformat to
@@ -440,7 +451,7 @@ restofline:
 	    tail = NULL;
 
 	    regmatch.regprog = fmt_ptr->prog;
-	    if (vim_regexec(&regmatch, IObuff, (colnr_t)0))
+	    if (vim_regexec(&regmatch, IObuff, (colnr_T)0))
 	    {
 		if ((idx == 'C' || idx == 'Z') && !multiline)
 		    continue;
@@ -615,7 +626,11 @@ restofline:
 	    qf_lists[qf_curlist].qf_nonevalid = TRUE;
 	}
 	else
+	{
 	    qf_lists[qf_curlist].qf_nonevalid = FALSE;
+	    if (qf_lists[qf_curlist].qf_ptr == NULL)
+		qf_lists[qf_curlist].qf_ptr = qf_lists[qf_curlist].qf_start;
+	}
 	retval = qf_lists[qf_curlist].qf_count;	/* return number of matches */
 	goto qf_init_ok;
     }
@@ -702,13 +717,13 @@ qf_get_fnum(directory, fname)
     static char_u *
 qf_push_dir(dirbuf, stackptr)
     char_u		*dirbuf;
-    struct dir_stack_t	**stackptr;
+    struct dir_stack_T	**stackptr;
 {
-    struct dir_stack_t  *ds_new;
-    struct dir_stack_t  *ds_ptr;
+    struct dir_stack_T  *ds_new;
+    struct dir_stack_T  *ds_ptr;
 
     /* allocate new stack element and hook it in */
-    ds_new = (struct dir_stack_t *)alloc((unsigned)sizeof(struct dir_stack_t));
+    ds_new = (struct dir_stack_T *)alloc((unsigned)sizeof(struct dir_stack_T));
     if (ds_new == NULL)
 	return NULL;
 
@@ -774,9 +789,9 @@ qf_push_dir(dirbuf, stackptr)
  */
     static char_u *
 qf_pop_dir(stackptr)
-    struct dir_stack_t	**stackptr;
+    struct dir_stack_T	**stackptr;
 {
-    struct dir_stack_t  *ds_ptr;
+    struct dir_stack_T  *ds_ptr;
 
     /* TODO: Should we check if dirbuf is the directory on top of the stack?
      * What to do if it isn't? */
@@ -799,9 +814,9 @@ qf_pop_dir(stackptr)
  */
     static void
 qf_clean_dir_stack(stackptr)
-    struct dir_stack_t	**stackptr;
+    struct dir_stack_T	**stackptr;
 {
-    struct dir_stack_t  *ds_ptr;
+    struct dir_stack_T  *ds_ptr;
 
     while ((ds_ptr = *stackptr) != NULL)
     {
@@ -835,8 +850,8 @@ qf_clean_dir_stack(stackptr)
 qf_guess_filepath(filename)
     char_u *filename;
 {
-    struct dir_stack_t     *ds_ptr;
-    struct dir_stack_t     *ds_tmp;
+    struct dir_stack_T     *ds_ptr;
+    struct dir_stack_T     *ds_tmp;
     char_u                 *fullname;
 
     /* no dirs on the stack - there's nothing we can do */
@@ -894,12 +909,12 @@ qf_jump(dir, errornr, forceit)
     int		    old_qf_index;
     static char_u   *e_no_more_items = (char_u *)N_("No more items");
     char_u	    *err = e_no_more_items;
-    linenr_t	    i;
-    buf_t	    *old_curbuf;
-    linenr_t	    old_lnum;
+    linenr_T	    i;
+    buf_T	    *old_curbuf;
+    linenr_T	    old_lnum;
 #ifdef FEAT_WINDOWS
     int		    opened_window = FALSE;
-    win_t	    *win;
+    win_T	    *win;
 #endif
     int		    print_message = TRUE;
     int		    len;
@@ -1061,7 +1076,7 @@ qf_jump(dir, errornr, forceit)
     old_curbuf = curbuf;
     old_lnum = curwin->w_cursor.lnum;
     if (qf_ptr->qf_fnum == 0 || buflist_getfile(qf_ptr->qf_fnum,
-		    (linenr_t)1, GETF_SETMARK | GETF_SWITCH, forceit) == OK)
+		    (linenr_T)1, GETF_SETMARK | GETF_SWITCH, forceit) == OK)
     {
 	/* When not switched to another buffer, still need to set pc mark */
 	if (curbuf == old_curbuf)
@@ -1154,9 +1169,9 @@ theend:
  */
     void
 qf_list(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    buf_t		*buf;
+    buf_T		*buf;
     char_u		*fname;
     struct qf_line	*qfp;
     int			i;
@@ -1287,7 +1302,7 @@ qf_fmt_text(text, buf, bufsize)
  */
     void
 qf_age(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		count;
 
@@ -1353,8 +1368,8 @@ qf_free(idx)
  */
    void
 qf_mark_adjust(line1, line2, amount, amount_after)
-    linenr_t	line1;
-    linenr_t	line2;
+    linenr_T	line1;
+    linenr_T	line2;
     long	amount;
     long	amount_after;
 {
@@ -1431,11 +1446,11 @@ qf_types(c, nr)
  */
     void
 ex_cwindow(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		height;
-    buf_t	*buf;
-    win_t	*win;
+    buf_T	*buf;
+    win_T	*win;
     int		save_p_sb;
     int		i;
 
@@ -1502,6 +1517,16 @@ ex_cwindow(eap)
 }
 
 /*
+ * Return the number of the current entry (line number in the quickfix
+ * window).
+ */
+     linenr_T
+qf_current_entry()
+{
+    return qf_lists[qf_curlist].qf_index;
+}
+
+/*
  * Update the cursor position in the quickfix window to the current error.
  * Return TRUE if there is a quickfix window.
  */
@@ -1509,7 +1534,7 @@ ex_cwindow(eap)
 qf_win_pos_update(old_qf_index)
     int		old_qf_index;	/* previous qf_index or zero */
 {
-    win_t	*win;
+    win_T	*win;
     int		qf_index = qf_lists[qf_curlist].qf_index;
 
     /*
@@ -1523,7 +1548,7 @@ qf_win_pos_update(old_qf_index)
 	    && qf_index <= win->w_buffer->b_ml.ml_line_count
 	    && old_qf_index != qf_index)
     {
-	win_t	*old_curwin = curwin;
+	win_T	*old_curwin = curwin;
 
 	curwin = win;
 	curbuf = win->w_buffer;
@@ -1552,10 +1577,10 @@ qf_win_pos_update(old_qf_index)
 /*
  * Find quickfix buffer.
  */
-    static buf_t *
+    static buf_T *
 qf_find_buf()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (bt_quickfix(buf))
@@ -1569,11 +1594,11 @@ qf_find_buf()
     static void
 qf_update_buffer()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 #ifdef FEAT_AUTOCMD
-    aco_save_t	aco;
+    aco_save_T	aco;
 #else
-    buf_t	*save_curbuf;
+    buf_T	*save_curbuf;
 #endif
 
     /* Check if a buffer for the quickfix list exists.  Update it. */
@@ -1608,14 +1633,14 @@ qf_update_buffer()
     static void
 qf_fill_buffer()
 {
-    linenr_t		lnum;
+    linenr_T		lnum;
     struct qf_line	*qfp;
-    buf_t		*errbuf;
+    buf_T		*errbuf;
     int			len;
 
     /* delete all existing lines */
     while ((curbuf->b_ml.ml_flags & ML_EMPTY) == 0)
-	(void)ml_delete((linenr_t)1, FALSE);
+	(void)ml_delete((linenr_T)1, FALSE);
 
     /* Check if there is anything to display */
     if (qf_curlist < qf_listcount)
@@ -1655,7 +1680,7 @@ qf_fill_buffer()
 
 	    qf_fmt_text(qfp->qf_text, IObuff + len, IOSIZE - len);
 
-	    if (ml_append(lnum, IObuff, (colnr_t)STRLEN(IObuff) + 1, FALSE)
+	    if (ml_append(lnum, IObuff, (colnr_T)STRLEN(IObuff) + 1, FALSE)
 								      == FAIL)
 		break;
 	    qfp = qfp->qf_next;
@@ -1690,7 +1715,7 @@ qf_fill_buffer()
  */
     int
 bt_quickfix(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     return (buf->b_p_bt[0] == 'q');
 }
@@ -1700,7 +1725,7 @@ bt_quickfix(buf)
  */
     int
 bt_nofile(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     return (buf->b_p_bt[0] == 'n' && buf->b_p_bt[2] == 'f');
 }
@@ -1710,14 +1735,14 @@ bt_nofile(buf)
  */
     int
 bt_dontwrite(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     return (buf->b_p_bt[0] == 'n');
 }
 
     int
 bt_dontwrite_msg(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     if (bt_dontwrite(buf))
     {
@@ -1733,7 +1758,7 @@ bt_dontwrite_msg(buf)
  */
     int
 buf_hide(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     /* 'bufhidden' overrules 'hidden' and ":hide", check it first */
     switch (buf->b_p_bh[0])
@@ -1746,11 +1771,11 @@ buf_hide(buf)
 }
 
 /*
- * Used for ":make" and ":grep".
+ * Used for ":make", ":grep" and ":grepadd".
  */
     void
 ex_make(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*name;
 
@@ -1787,7 +1812,9 @@ ex_make(eap)
     (void)char_avail();
 #endif
 
-    if (qf_init(name, eap->cmdidx == CMD_grep ? p_gefm : p_efm) > 0)
+    if (qf_init(name, eap->cmdidx != CMD_make ? p_gefm : p_efm,
+					      eap->cmdidx != CMD_grepadd) > 0
+	    && !eap->forceit)
 	qf_jump(0, 0, FALSE);		/* display first error */
 
     mch_remove(name);
@@ -1856,7 +1883,7 @@ get_mef_name()
  */
     void
 ex_cc(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     qf_jump(0,
 	    eap->addr_count > 0
@@ -1874,7 +1901,7 @@ ex_cc(eap)
  */
     void
 ex_cnext(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     qf_jump(eap->cmdidx == CMD_cnext
 	    ? FORWARD
@@ -1889,11 +1916,11 @@ ex_cnext(eap)
  */
     void
 ex_cfile(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     if (*eap->arg != NUL)
 	set_string_option_direct((char_u *)"ef", -1, eap->arg, OPT_FREE);
-    if (qf_init(p_ef, p_efm) > 0)
+    if (qf_init(p_ef, p_efm, TRUE) > 0)
 	qf_jump(0, 0, eap->forceit);		/* display first error */
 }
 

@@ -227,6 +227,9 @@
 #ifndef USR_GVIMRC_FILE
 # define USR_GVIMRC_FILE "$HOME/.gvimrc"
 #endif
+#ifndef EVIM_FILE
+# define EVIM_FILE	"$VIMRUNTIME/evim.vim"
+#endif
 
 #ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE

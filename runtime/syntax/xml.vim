@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Die, 20 Mär 2001 21:19:54 +0100
+" Last Change:	Fre, 13 Apr 2001 23:10:08 +0200
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -156,7 +156,7 @@ syn match   xmlEntityPunct  contained "[&.;]"
 
 " The real comments (this implements the comments as defined by xml,
 " but not all xml pages actually conform to it. Errors are flagged.
-syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo
+syn region  xmlComment                start=+<!+        end=+>+ contains=xmlCommentPart,xmlString,xmlCommentError,xmlTodo,@xmlCommentHook
 syn keyword xmlTodo         contained TODO FIXME XXX
 syn match   xmlCommentError contained "[^><!]"
 syn region  xmlCommentPart  contained start=+--+        end=+--+

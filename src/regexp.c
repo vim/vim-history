@@ -326,7 +326,7 @@ static int cstrncmp __ARGS((char_u *s1, char_u *s2, int n));
 static char_u *cstrchr __ARGS((char_u *, int));
 
 #ifdef DEBUG
-static void	regdump __ARGS((char_u *, regprog_t *));
+static void	regdump __ARGS((char_u *, regprog_T *));
 static char_u	*regprop __ARGS((char_u *));
 #endif
 
@@ -682,7 +682,7 @@ static void	regoptail __ARGS((char_u *, char_u *));
  */
     int
 re_multiline(prog)
-    regprog_t *prog;
+    regprog_T *prog;
 {
     return (prog->regflags & RF_HASNL);
 }
@@ -752,12 +752,12 @@ skip_regexp(p, dirc, magic)
  * Beware that the optimization-preparation code in here knows about some
  * of the structure of the compiled regexp.
  */
-    regprog_t *
+    regprog_T *
 vim_regcomp(expr, magic)
     char_u	*expr;
     int		magic;
 {
-    regprog_t	*r;
+    regprog_T	*r;
     char_u	*scan;
     char_u	*longest;
     int		len;
@@ -784,7 +784,7 @@ vim_regcomp(expr, magic)
 #endif
 
     /* Allocate space. */
-    r = (regprog_t *)lalloc(sizeof(regprog_t) + regsize, TRUE);
+    r = (regprog_T *)lalloc(sizeof(regprog_T) + regsize, TRUE);
     if (r == NULL)
 	return NULL;
 
@@ -2452,7 +2452,7 @@ read_limits(minval, maxval)
  */
 
 /* The current match-position is remembered with these variables: */
-static linenr_t	reglnum;	/* line number, relative to first line */
+static linenr_T	reglnum;	/* line number, relative to first line */
 static char_u	*regline;	/* start of current line */
 static char_u	*reginput;	/* current input, points into "regline" */
 
@@ -2474,9 +2474,9 @@ typedef struct
     union
     {
 	char_u	*ptr;	/* reginput pointer, for single-line regexp */
-	pos_t	pos;	/* reginput pos, for multi-line regexp */
+	pos_T	pos;	/* reginput pos, for multi-line regexp */
     } rs_u;
-} regsave_t;
+} regsave_T;
 
 /* struct to save start/end pointer/position in for \(\) */
 typedef struct
@@ -2484,23 +2484,23 @@ typedef struct
     union
     {
 	char_u	*ptr;
-	pos_t	pos;
+	pos_T	pos;
     } se_u;
-} save_se_t;
+} save_se_T;
 
-static char_u	*reg_getline __ARGS((linenr_t lnum));
-static long	vim_regexec_both __ARGS((char_u *line, colnr_t col));
-static long	regtry __ARGS((regprog_t *prog, colnr_t col));
+static char_u	*reg_getline __ARGS((linenr_T lnum));
+static long	vim_regexec_both __ARGS((char_u *line, colnr_T col));
+static long	regtry __ARGS((regprog_T *prog, colnr_T col));
 static void	cleanup_subexpr __ARGS((void));
 #ifdef FEAT_SYN_HL
 static void	cleanup_zsubexpr __ARGS((void));
 #endif
 static void	reg_nextline __ARGS((void));
-static void	reg_save __ARGS((regsave_t *save));
-static void	reg_restore __ARGS((regsave_t *save));
-static int	reg_save_equal __ARGS((regsave_t *save));
-static void	save_se __ARGS((save_se_t *savep, pos_t *posp, char_u **pp));
-static void	restore_se __ARGS((save_se_t *savep, pos_t *posp, char_u **pp));
+static void	reg_save __ARGS((regsave_T *save));
+static void	reg_restore __ARGS((regsave_T *save));
+static int	reg_save_equal __ARGS((regsave_T *save));
+static void	save_se __ARGS((save_se_T *savep, pos_T *posp, char_u **pp));
+static void	restore_se __ARGS((save_se_T *savep, pos_T *posp, char_u **pp));
 static int	re_num_cmp __ARGS((long_u val, char_u *scan));
 static int	regmatch __ARGS((char_u *prog));
 static int	regrepeat __ARGS((char_u *p, long maxcount));
@@ -2529,8 +2529,8 @@ static unsigned	reg_tofreelen;
  * Which ones are set depends on whethere a single-line or multi-line match is
  * done:
  *			single-line		multi-line
- * reg_match		&regmatch_t		NULL
- * reg_mmatch		NULL			&regmmatch_t
+ * reg_match		&regmatch_T		NULL
+ * reg_mmatch		NULL			&regmmatch_T
  * reg_startp		reg_match->startp	<invalid>
  * reg_endp		reg_match->endp		<invalid>
  * reg_startpos		<invalid>		reg_mmatch->startpos
@@ -2540,23 +2540,23 @@ static unsigned	reg_tofreelen;
  * reg_firstlnum	<invalid>		first line in which to search
  * reg_maxline		0			last line nr
  */
-static regmatch_t	*reg_match;
-static regmmatch_t	*reg_mmatch;
+static regmatch_T	*reg_match;
+static regmmatch_T	*reg_mmatch;
 static char_u		**reg_startp;
 static char_u		**reg_endp;
-static pos_t		*reg_startpos;
-static pos_t		*reg_endpos;
-static win_t		*reg_win;
-static buf_t		*reg_buf;
-static linenr_t		reg_firstlnum;
-static linenr_t		reg_maxline;
+static pos_T		*reg_startpos;
+static pos_T		*reg_endpos;
+static win_T		*reg_win;
+static buf_T		*reg_buf;
+static linenr_T		reg_firstlnum;
+static linenr_T		reg_maxline;
 
 /*
  * Get pointer to the line "lnum", which is relative to "reg_firstlnum".
  */
     static char_u *
 reg_getline(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     /* when looking behind for a match/no-match lnum is negative.  But we
      * can't go before line 1 */
@@ -2568,8 +2568,8 @@ reg_getline(lnum)
 #ifdef FEAT_SYN_HL
 static char_u	*reg_startzp[NSUBEXP];	/* Workspace to mark beginning */
 static char_u	*reg_endzp[NSUBEXP];	/*   and end of \z(...\) matches */
-static pos_t	reg_startzpos[NSUBEXP];	/* idem, beginning pos */
-static pos_t	reg_endzpos[NSUBEXP];	/* idem, end pos */
+static pos_T	reg_startzpos[NSUBEXP];	/* idem, beginning pos */
+static pos_T	reg_endzpos[NSUBEXP];	/* idem, end pos */
 #endif
 
 /* TRUE if using multi-line regexp. */
@@ -2584,9 +2584,9 @@ static pos_t	reg_endzpos[NSUBEXP];	/* idem, end pos */
  */
     int
 vim_regexec(rmp, line, col)
-    regmatch_t	*rmp;
+    regmatch_T	*rmp;
     char_u	*line;	/* string to match against */
-    colnr_t	col;	/* column to start looking for match */
+    colnr_T	col;	/* column to start looking for match */
 {
     reg_match = rmp;
     reg_mmatch = NULL;
@@ -2606,14 +2606,14 @@ vim_regexec(rmp, line, col)
  */
     long
 vim_regexec_multi(rmp, win, buf, lnum, col)
-    regmmatch_t	*rmp;
-    win_t	*win;		/* window in which to search or NULL */
-    buf_t	*buf;		/* buffer in which to search */
-    linenr_t	lnum;		/* nr of line to start looking for match */
-    colnr_t	col;		/* column to start looking for match */
+    regmmatch_T	*rmp;
+    win_T	*win;		/* window in which to search or NULL */
+    buf_T	*buf;		/* buffer in which to search */
+    linenr_T	lnum;		/* nr of line to start looking for match */
+    colnr_T	col;		/* column to start looking for match */
 {
     long	r;
-    buf_t	*save_curbuf = curbuf;
+    buf_T	*save_curbuf = curbuf;
 
     reg_match = NULL;
     reg_mmatch = rmp;
@@ -2639,20 +2639,20 @@ vim_regexec_multi(rmp, win, buf, lnum, col)
     static long
 vim_regexec_both(line_arg, col_arg)
     char_u	*line_arg;
-    colnr_t	col_arg;	/* column to start looking for match */
+    colnr_T	col_arg;	/* column to start looking for match */
 #else
     static long
 vim_regexec_both(line, col)
     char_u	*line;
-    colnr_t	col;		/* column to start looking for match */
+    colnr_T	col;		/* column to start looking for match */
 #endif
 {
-    regprog_t	*prog;
+    regprog_T	*prog;
     char_u	*s;
     long	retval;
 #ifdef HAVE_SETJMP_H
     char_u	*line;
-    colnr_t	col;
+    colnr_T	col;
 #endif
 
     reg_tofree = NULL;
@@ -2683,7 +2683,7 @@ vim_regexec_both(line, col)
     if (REG_MULTI)
     {
 	prog = reg_mmatch->regprog;
-	line = reg_getline((linenr_t)0);
+	line = reg_getline((linenr_T)0);
 	reg_startpos = reg_mmatch->startpos;
 	reg_endpos = reg_mmatch->endpos;
     }
@@ -2788,7 +2788,7 @@ vim_regexec_both(line, col)
 	    /* if not currently on the first line, get it again */
 	    if (reglnum != 0)
 	    {
-		regline = reg_getline((linenr_t)0);
+		regline = reg_getline((linenr_T)0);
 		reglnum = 0;
 	    }
 	    if (regline[col] == NUL)
@@ -2815,17 +2815,17 @@ theend:
 }
 
 #ifdef FEAT_SYN_HL
-static reg_extmatch_t *make_extmatch __ARGS((void));
+static reg_extmatch_T *make_extmatch __ARGS((void));
 
 /*
  * Create a new extmatch and mark it as referenced once.
  */
-    static reg_extmatch_t *
+    static reg_extmatch_T *
 make_extmatch()
 {
-    reg_extmatch_t	*em;
+    reg_extmatch_T	*em;
 
-    em = (reg_extmatch_t *)alloc_clear((unsigned)sizeof(reg_extmatch_t));
+    em = (reg_extmatch_T *)alloc_clear((unsigned)sizeof(reg_extmatch_T));
     if (em != NULL)
 	em->refcnt = 1;
     return em;
@@ -2834,9 +2834,9 @@ make_extmatch()
 /*
  * Add a reference to an extmatch.
  */
-    reg_extmatch_t *
+    reg_extmatch_T *
 ref_extmatch(em)
-    reg_extmatch_t	*em;
+    reg_extmatch_T	*em;
 {
     if (em != NULL)
 	em->refcnt++;
@@ -2849,7 +2849,7 @@ ref_extmatch(em)
  */
     void
 unref_extmatch(em)
-    reg_extmatch_t	*em;
+    reg_extmatch_T	*em;
 {
     int i;
 
@@ -2868,8 +2868,8 @@ unref_extmatch(em)
  */
     static long
 regtry(prog, col)
-    regprog_t	*prog;
-    colnr_t	col;
+    regprog_T	*prog;
+    colnr_T	col;
 {
     reginput = regline + col;
     need_clear_subexpr = TRUE;
@@ -3097,7 +3097,7 @@ regmatch(scan)
 	     * should always return NULL if the current line is the first
 	     * line of the file. */
 	    if (reglnum != 0 || reginput != regline
-			|| (REG_MULTI && reg_getline((linenr_t)-1) != NULL))
+			|| (REG_MULTI && reg_getline((linenr_T)-1) != NULL))
 		return FALSE;
 	    break;
 
@@ -3111,7 +3111,7 @@ regmatch(scan)
 	     * reg_win->w_cursor position to the match position. */
 	    if (reg_win == NULL
 		    || (reglnum + reg_firstlnum != reg_win->w_cursor.lnum)
-		    || ((colnr_t)(reginput - regline) != reg_win->w_cursor.col))
+		    || ((colnr_T)(reginput - regline) != reg_win->w_cursor.col))
 		return FALSE;
 	    break;
 
@@ -3129,7 +3129,7 @@ regmatch(scan)
 	  case RE_VCOL:
 	    if (!re_num_cmp((long_u)win_linetabsize(
 			    reg_win == NULL ? curwin : reg_win,
-			    regline, (colnr_t)(reginput - regline)) + 1, scan))
+			    regline, (colnr_T)(reginput - regline)) + 1, scan))
 		return FALSE;
 	    break;
 
@@ -3423,7 +3423,7 @@ regmatch(scan)
 	  case MOPEN + 9:
 	    {
 		int		no;
-		save_se_t	save;
+		save_se_T	save;
 
 		no = op - MOPEN;
 		cleanup_subexpr();
@@ -3456,7 +3456,7 @@ regmatch(scan)
 	  case ZOPEN + 9:
 	    {
 		int		no;
-		save_se_t	save;
+		save_se_T	save;
 
 		no = op - ZOPEN;
 		cleanup_zsubexpr();
@@ -3483,7 +3483,7 @@ regmatch(scan)
 	  case MCLOSE + 9:
 	    {
 		int		no;
-		save_se_t	save;
+		save_se_T	save;
 
 		no = op - MCLOSE;
 		cleanup_subexpr();
@@ -3509,7 +3509,7 @@ regmatch(scan)
 	  case ZCLOSE + 9:
 	    {
 		int		no;
-		save_se_t	save;
+		save_se_T	save;
 
 		no = op - ZCLOSE;
 		cleanup_zsubexpr();
@@ -3536,8 +3536,8 @@ regmatch(scan)
 	    {
 		int		no;
 		int		len;
-		linenr_t	clnum;
-		colnr_t		ccol;
+		linenr_T	clnum;
+		colnr_T		ccol;
 		char_u		*p;
 
 		no = op - BACKREF;
@@ -3677,7 +3677,7 @@ regmatch(scan)
 		    next = OPERAND(scan);	/* Avoid recursion. */
 		else
 		{
-		    regsave_t	save;
+		    regsave_T	save;
 
 		    do
 		    {
@@ -3730,7 +3730,7 @@ regmatch(scan)
 	  case BRACE_COMPLEX + 9:
 	    {
 		int		no;
-		regsave_t	save;
+		regsave_T	save;
 
 		no = op - BRACE_COMPLEX;
 		++brace_count[no];
@@ -3784,7 +3784,7 @@ regmatch(scan)
 		int		nextb;		/* next byte */
 		int		nextb_ic;	/* next byte reverse case */
 		long		count;
-		regsave_t	save;
+		regsave_T	save;
 		long		minval;
 		long		maxval;
 
@@ -3892,7 +3892,7 @@ regmatch(scan)
 
 	  case NOMATCH:
 	    {
-		regsave_t	save;
+		regsave_T	save;
 
 		/* If the operand matches, we fail.  Otherwise backup and
 		 * continue with the next item. */
@@ -3906,7 +3906,7 @@ regmatch(scan)
 	  case MATCH:
 	  case SUBPAT:
 	    {
-		regsave_t	save;
+		regsave_T	save;
 
 		/* If the operand doesn't match, we fail.  Otherwise backup
 		 * and continue with the next item. */
@@ -3921,7 +3921,7 @@ regmatch(scan)
 	  case BEHIND:
 	  case NOBEHIND:
 	    {
-		regsave_t	save_before, save_after, save_start;
+		regsave_T	save_before, save_after, save_start;
 		int		needmatch = (op == BEHIND);
 		long		col;
 
@@ -4445,8 +4445,8 @@ cleanup_subexpr()
 	if (REG_MULTI)
 	{
 	    /* Use 0xff to set lnum to -1 */
-	    vim_memset(reg_startpos, 0xff, sizeof(pos_t) * NSUBEXP);
-	    vim_memset(reg_endpos, 0xff, sizeof(pos_t) * NSUBEXP);
+	    vim_memset(reg_startpos, 0xff, sizeof(pos_T) * NSUBEXP);
+	    vim_memset(reg_endpos, 0xff, sizeof(pos_T) * NSUBEXP);
 	}
 	else
 	{
@@ -4466,8 +4466,8 @@ cleanup_zsubexpr()
 	if (REG_MULTI)
 	{
 	    /* Use 0xff to set lnum to -1 */
-	    vim_memset(reg_startzpos, 0xff, sizeof(pos_t) * NSUBEXP);
-	    vim_memset(reg_endzpos, 0xff, sizeof(pos_t) * NSUBEXP);
+	    vim_memset(reg_startzpos, 0xff, sizeof(pos_T) * NSUBEXP);
+	    vim_memset(reg_endzpos, 0xff, sizeof(pos_T) * NSUBEXP);
 	}
 	else
 	{
@@ -4491,11 +4491,11 @@ reg_nextline()
 }
 
 /*
- * Save the input line and position in a regsave_t.
+ * Save the input line and position in a regsave_T.
  */
     static void
 reg_save(save)
-    regsave_t	*save;
+    regsave_T	*save;
 {
     if (REG_MULTI)
     {
@@ -4507,11 +4507,11 @@ reg_save(save)
 }
 
 /*
- * Restore the input line and position from a regsave_t.
+ * Restore the input line and position from a regsave_T.
  */
     static void
 reg_restore(save)
-    regsave_t	*save;
+    regsave_T	*save;
 {
     if (REG_MULTI)
     {
@@ -4533,7 +4533,7 @@ reg_restore(save)
  */
     static int
 reg_save_equal(save)
-    regsave_t	*save;
+    regsave_T	*save;
 {
     if (REG_MULTI)
 	return reglnum == save->rs_u.pos.lnum
@@ -4549,8 +4549,8 @@ reg_save_equal(save)
  */
     static void
 save_se(savep, posp, pp)
-    save_se_t	*savep;
-    pos_t	*posp;
+    save_se_T	*savep;
+    pos_T	*posp;
     char_u	**pp;
 {
     if (REG_MULTI)
@@ -4571,8 +4571,8 @@ save_se(savep, posp, pp)
  */
     static void
 restore_se(savep, posp, pp)
-    save_se_t	*savep;
-    pos_t	*posp;
+    save_se_T	*savep;
+    pos_T	*posp;
     char_u	**pp;
 {
     if (REG_MULTI)
@@ -4607,7 +4607,7 @@ re_num_cmp(val, scan)
     static void
 regdump(pattern, r)
     char_u	*pattern;
-    regprog_t	*r;
+    regprog_T	*r;
 {
     char_u  *s;
     int	    op = EXACTLY;	/* Arbitrary non-END op. */
@@ -5251,7 +5251,7 @@ static int can_f_submatch = FALSE;	/* TRUE when submatch() can be used */
  */
     int
 vim_regsub(rmp, source, dest, copy, magic, backslash)
-    regmatch_t	*rmp;
+    regmatch_T	*rmp;
     char_u	*source;
     char_u	*dest;
     int		copy;
@@ -5267,8 +5267,8 @@ vim_regsub(rmp, source, dest, copy, magic, backslash)
 
     int
 vim_regsub_multi(rmp, lnum, source, dest, copy, magic, backslash)
-    regmmatch_t	*rmp;
-    linenr_t	lnum;
+    regmmatch_T	*rmp;
+    linenr_T	lnum;
     char_u	*source;
     char_u	*dest;
     int		copy;
@@ -5297,7 +5297,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
     int		c;
     int		no = -1;
     fptr	func = (fptr)NULL;
-    linenr_t	clnum = 0;	/* init for GCC */
+    linenr_T	clnum = 0;	/* init for GCC */
     int		len = 0;	/* init for GCC */
 #ifdef FEAT_EVAL
     static char_u *eval_result = NULL;
@@ -5545,7 +5545,7 @@ reg_submatch(no)
     char_u	*s;
     int		len;
     int		round;
-    linenr_t	lnum;
+    linenr_T	lnum;
 
     if (!can_f_submatch)
 	return NULL;

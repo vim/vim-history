@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0aa.  Last change: 2001 Apr 04
+*syntax.txt*    For Vim version 6.0ab.  Last change: 2001 Apr 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -391,6 +391,7 @@ line in the assembly file that Vim will recognize.  Currently these syntax
 files are included:
 	asm		GNU assembly (the default)
 	asmh8300	Hitachi H-8300 version of GNU assembly
+	ia64		Intel Itanium 64
 	masm		Microsoft assembly (probably works for any 80x86)
 	nasm		Netwide assembly
 	tasm		Turbo Assembly (with opcodes 80x86 up to Pentium, and
@@ -902,6 +903,36 @@ Now you just need to make sure that you add all regions that contain
 the preprocessor language to the cluster htmlPreproc.
 
 
+HTML/OS (by Aestiva)				*htmlos.vim* *htmlos-syntax*
+
+The coloring scheme for HTML/OS works as follows:
+
+Functions and variable names are the same color by default, because VIM
+doesn't specify different colors for Functions and Identifiers.  To change
+this (which is recommended if you want function names to be recognizable in a
+different color) you need to add the following line to either your ~/.vimrc: >
+  :hi Function term=underline cterm=bold ctermfg=LightGray
+
+Of course, the ctermfg can be a different color if you choose.
+
+Another issues that HTML/OS runs into is that there is no special filetype to
+signify that it is a file with HTML/OS coding.  You can change this by opening
+a file and turning on HTML/OS syntax by doing the following: >
+  :set syntax=htmlos
+
+Lastly, it should be noted that the opening and closing characters to begin a
+block of HTML/OS code can either be << or [[ and >> or ]], respectively.
+
+
+IA64				*ia64.vim* *intel-itanium* *ia64-syntax*
+
+Highlighting for the Intel Itanium 64 assembly language.  See |asm.vim| for
+how to recognize this filetype.
+
+To have *.inc files be recognized as IA64, add this to your .vimrc file: >
+	:let g:filetype_inc = "ia64"
+
+
 JAVA						*java.vim* *java-syntax*
 
 The java.vim syntax highlighting file offers several options:
@@ -1097,6 +1128,11 @@ http://papp.plan9.de.
 
 
 PASCAL						*pascal.vim* *pascal-syntax*
+
+Files matching "*.p" could be Progress or Pascal.  If the automatic detection
+doesn't work for you, or you don't edit Progress at all, use this in your
+startup vimrc: >
+   :let filetype_p = "pascal"
 
 The Pascal syntax file has been extended to take into account some extensions
 provided by Turbo Pascal, Free Pascal Compiler, GNU Pascal Compiler.  Delphi
@@ -1352,18 +1388,6 @@ The same happens for "*.i", which could be assembly, and "*.p", which could be
 Pascal.  Use this if you don't use assembly and Pascal: >
    :let filetype_i = "progress"
    :let filetype_p = "progress"
-
-The number of reserved words in Progress is so large that a number of the
-less-used words have been disabled in this syntax file, but they can
-be enabled if you add this line to your .vimrc: >
-
-  let progress_full_syntax=1
-
-If this is defined, vim will recognize many words of the less-used syntax,
-but beware that there is a performance hit for using this.
-
-To disable it again, use this: >
-  unlet progress_full_syntax
 
 
 PYTHON						*python.vim* *python-syntax*

@@ -159,7 +159,7 @@
 #define MOUSE_A		"nvich"		/* used for 'a' flag */
 #define MOUSE_ALL	"anvichr"	/* all possible characters */
 #define MOUSE_NONE	' '		/* don't use Visual selection */
-#define MOUSE_NONEF	'x'		/* forced non-Visual selection */
+#define MOUSE_NONEF	'x'		/* forced modeless selection */
 
 /* characters for p_shm option: */
 #define SHM_RO		'r'		/* readonly */
@@ -302,6 +302,9 @@ EXTERN long	p_cwh;		/* 'cmdwinheight' */
 #endif
 #ifdef FEAT_CLIPBOARD
 EXTERN char_u	*p_cb;		/* 'clipboard' */
+EXTERN int	clip_unnamed INIT(= FALSE);
+EXTERN int	clip_autoselect INIT(= FALSE);
+EXTERN regprog_T *clip_exclude_prog INIT(= NULL);
 #endif
 EXTERN long	p_ch;		/* 'cmdheight' */
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)

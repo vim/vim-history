@@ -571,7 +571,7 @@ highest_patch()
 
     void
 ex_version(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     /*
      * Ignore a ":version 9.99" command.
@@ -968,7 +968,7 @@ do_intro_line(row, msg, add_version, attr)
 /*ARGSUSED*/
     void
 ex_intro(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     screenclear();
     intro_message();

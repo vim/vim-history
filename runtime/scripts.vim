@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 21
+" Last change:	2001 Apr 16
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -183,9 +183,17 @@ elseif getline(4) =~ 'K & K  Associates' || getline(2) =~ 'TAK 2000'
 elseif getline(3) =~ 'S Y S T E M S   I M P R O V E D '
   set ft=sindaout
 elseif getline(6) =~ 'Run Date: '
-  set filetype=takcmp
+  set ft=takcmp
 elseif getline(9) =~ 'Node    File  1'
-  set filetype=sindacmp
+  set ft=sindacmp
+
+" DNS zone files
+elseif getline(1) =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
+      \ || getline(2) =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
+      \ || getline(1).getline(2).getline(3).getline(4) =~ 'BIND.*named'
+  set ft=dns
+
+
 
 " Generic configuration file (check this last, it's just guessing!)
 elseif s:line1 =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'

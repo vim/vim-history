@@ -182,6 +182,10 @@
 # define USR_VIMRC_FILE2	"sys$login:_vimrc"
 #endif
 
+#ifndef EVIM_FILE
+# define EVIM_FILE		"$VIMRUNTIME/evim.vim"
+#endif
+
 #ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE
 #  define USR_GVIMRC_FILE	"sys$login:.gvimrc"

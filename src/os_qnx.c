@@ -56,7 +56,7 @@ clip_mch_lose_selection( VimClipboard *cbd )
 void
 clip_mch_request_selection( VimClipboard *cbd )
 {
-    int		    type = 'L', clip_length = 0;
+    int		    type = MLINE, clip_length = 0;
     void	    *cbdata;
     PhClipHeader    *clip_header;
     char_u	    *clip_text = NULL;

@@ -1797,7 +1797,7 @@ conv_to_pvim()
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
-	ptr = ml_get((linenr_t)lnum);
+	ptr = ml_get((linenr_T)lnum);
 
 	llen = STRLEN(ptr);
 
@@ -1852,7 +1852,7 @@ conv_to_pstd()
 
     for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
     {
-	ptr = ml_get((linenr_t)lnum);
+	ptr = ml_get((linenr_T)lnum);
 
 	llen = STRLEN(ptr);
 
@@ -2269,7 +2269,7 @@ F_ischar(c)
 
     void
 farsi_fkey(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     int		c = cap->cmdchar;
 

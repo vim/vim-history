@@ -40,7 +40,7 @@ typedef struct tag_pointers
 #endif
     char_u	*tagkind;	/* "kind:" value */
     char_u	*tagkind_end;	/* end of tagkind */
-} tagptrs_t;
+} tagptrs_T;
 
 /*
  * The matching tags are first stored in ga_match[].  In which one depends on
@@ -72,13 +72,13 @@ static int get_tagfname __ARGS((int first, char_u *buf));
 
 static int jumpto_tag __ARGS((char_u *lbuf, int forceit));
 #ifdef FEAT_EMACS_TAGS
-static int parse_tag_line __ARGS((char_u *lbuf, int is_etag, tagptrs_t *tagp));
+static int parse_tag_line __ARGS((char_u *lbuf, int is_etag, tagptrs_T *tagp));
 #else
-static int parse_tag_line __ARGS((char_u *lbuf, tagptrs_t *tagp));
+static int parse_tag_line __ARGS((char_u *lbuf, tagptrs_T *tagp));
 #endif
-static int test_for_static __ARGS((tagptrs_t *));
-static int parse_match __ARGS((char_u *lbuf, tagptrs_t *tagp));
-static char_u *tag_full_fname __ARGS((tagptrs_t *tagp));
+static int test_for_static __ARGS((tagptrs_T *));
+static int parse_match __ARGS((char_u *lbuf, tagptrs_T *tagp));
+static char_u *tag_full_fname __ARGS((tagptrs_T *tagp));
 static char_u *expand_tag_fname __ARGS((char_u *fname, char_u *tag_fname, int expand));
 #ifdef FEAT_EMACS_TAGS
 static int test_for_current __ARGS((int, char_u *, char_u *, char_u *));
@@ -105,7 +105,7 @@ static char_u	*tagmatchname = NULL;	/* name of last used tag */
  * Tag for preview window is remembered separately, to avoid messing up the
  * normal tagstack.
  */
-static taggy_t ptag_entry = {NULL};
+static taggy_T ptag_entry = {NULL};
 #endif
 
 /*
@@ -134,7 +134,7 @@ do_tag(tag, type, count, forceit, verbose)
     int		forceit;	/* :ta with ! */
     int		verbose;	/* print "tag not found" message */
 {
-    taggy_t	*tagstack = curwin->w_tagstack;
+    taggy_T	*tagstack = curwin->w_tagstack;
     int		tagstackidx = curwin->w_tagstackidx;
     int		tagstacklen = curwin->w_tagstacklen;
     int		cur_match = 0;
@@ -151,12 +151,12 @@ do_tag(tag, type, count, forceit, verbose)
     int		error_cur_match = 0;
     char_u	*command_end;
     int		save_pos = FALSE;
-    fmark_t	saved_fmark;
+    fmark_T	saved_fmark;
     int		taglen;
 #ifdef FEAT_CSCOPE
     int		jumped_to_tag = FALSE;
 #endif
-    tagptrs_t	tagp, tagp2;
+    tagptrs_T	tagp, tagp2;
     int		new_num_matches;
     char_u	**new_matches;
     int		attr;
@@ -880,11 +880,11 @@ taglen_advance(l)
 /*ARGSUSED*/
     void
 do_tags(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
     char_u	*name;
-    taggy_t	*tagstack = curwin->w_tagstack;
+    taggy_T	*tagstack = curwin->w_tagstack;
     int		tagstackidx = curwin->w_tagstackidx;
     int		tagstacklen = curwin->w_tagstacklen;
 
@@ -953,7 +953,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     char_u     *lbuf;			/* line buffer */
     char_u     *tag_fname;		/* name of tag file */
     int		first_file;		/* trying first tag file */
-    tagptrs_t	tagp;
+    tagptrs_T	tagp;
     int		did_open = FALSE;	/* did open a tag file */
     int		stop_searching = FALSE;	/* stop when match found or error */
     int		retval = FAIL;		/* return value */
@@ -963,7 +963,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     char_u	*p;
     char_u	*s;
     int		i;
-    regmatch_t	regmatch;		/* regexp program may be NULL */
+    regmatch_T	regmatch;		/* regexp program may be NULL */
 #ifdef FEAT_TAG_BINS
     struct tag_search_info	/* Binary search file offsets */
     {
@@ -1014,7 +1014,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     int		is_etag;		/* current file is emaces style */
 #endif
 
-    garray_t	ga_match[MT_COUNT];
+    garray_T	ga_match[MT_COUNT];
     int		match_count = 0;		/* number of matches found */
     char_u	**matches;
     int		mtt;
@@ -1645,13 +1645,13 @@ line_read_in:
 
 		cc = *tagp.tagname_end;
 		*tagp.tagname_end = NUL;
-		match = vim_regexec(&regmatch, tagp.tagname, (colnr_t)0);
+		match = vim_regexec(&regmatch, tagp.tagname, (colnr_T)0);
 		matchoff = (int)(regmatch.startp[0] - tagp.tagname);
 		if (match && regmatch.rm_ic)
 		{
 		    regmatch.rm_ic = FALSE;
 		    match_no_ic = vim_regexec(&regmatch, tagp.tagname,
-								  (colnr_t)0);
+								  (colnr_T)0);
 		    regmatch.rm_ic = TRUE;
 		}
 		*tagp.tagname_end = cc;
@@ -2065,7 +2065,7 @@ parse_tag_line(lbuf,
 #ifdef FEAT_EMACS_TAGS
     int		is_etag;
 #endif
-    tagptrs_t	*tagp;
+    tagptrs_T	*tagp;
 {
     char_u	*p;
 
@@ -2176,7 +2176,7 @@ parse_tag_line(lbuf,
  */
     static int
 test_for_static(tagp)
-    tagptrs_t	*tagp;
+    tagptrs_T	*tagp;
 {
     char_u	*p;
 
@@ -2224,7 +2224,7 @@ test_for_static(tagp)
     static int
 parse_match(lbuf, tagp)
     char_u	*lbuf;	    /* input: matching line */
-    tagptrs_t	*tagp;	    /* output: pointers into the line */
+    tagptrs_T	*tagp;	    /* output: pointers into the line */
 {
     int		retval;
     char_u	*p;
@@ -2302,7 +2302,7 @@ parse_match(lbuf, tagp)
  */
     static char_u *
 tag_full_fname(tagp)
-    tagptrs_t	*tagp;
+    tagptrs_T	*tagp;
 {
     char_u	*fullname;
     int		c;
@@ -2339,14 +2339,14 @@ jumpto_tag(lbuf, forceit)
     int		save_secure;
     int		save_magic;
     int		save_p_ws, save_p_scs, save_p_ic;
-    linenr_t	save_lnum;
+    linenr_T	save_lnum;
     int		csave = 0;
     char_u	*str;
     char_u	*pbuf;			/* search pattern buffer */
     char_u	*pbuf_end;
     char_u	*tofree_fname = NULL;
     char_u	*fname;
-    tagptrs_t	tagp;
+    tagptrs_T	tagp;
     int		retval = FAIL;
     int		getfile_result;
     int		search_options;
@@ -2354,7 +2354,7 @@ jumpto_tag(lbuf, forceit)
     int		save_no_hlsearch;
 #endif
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
-    win_t	*curwin_save = NULL;
+    win_T	*curwin_save = NULL;
 #endif
     char_u	*full_fname = NULL;
 #ifdef FEAT_FOLDING
@@ -2468,7 +2468,7 @@ jumpto_tag(lbuf, forceit)
     else
 #endif
 	keep_help_flag = curbuf->b_help;
-    getfile_result = getfile(0, fname, NULL, TRUE, (linenr_t)0, forceit);
+    getfile_result = getfile(0, fname, NULL, TRUE, (linenr_T)0, forceit);
     keep_help_flag = FALSE;
 
     if (getfile_result <= 0)		/* got to the right file */
@@ -2685,7 +2685,7 @@ expand_tag_fname(fname, tag_fname, expand)
     char_u	*p;
     char_u	*retval;
     char_u	*expanded_fname = NULL;
-    expand_t	xpc;
+    expand_T	xpc;
 
     /*
      * Expand file name (for environment variables) when needed.
@@ -2926,7 +2926,7 @@ expand_tags(tagnames, pat, num_file, file)
     int		c;
     int		tagnmflag;
     char_u      tagnm[100];
-    tagptrs_t	t_p;
+    tagptrs_T	t_p;
     int		ret;
 
     if (tagnames)

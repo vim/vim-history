@@ -58,11 +58,11 @@
 #if HAVE_STROPTS_H
 #include <sys/types.h>
 #ifdef sinix
-#define buf_t __system_buf_t__
+#define buf_T __system_buf_t__
 #endif
 #include <stropts.h>
 #ifdef sinix
-#undef buf_t
+#undef buf_T
 #endif
 # ifdef sun
 #  include <sys/conf.h>

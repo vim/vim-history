@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 30
+" Last change:	2001 Apr 16
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -303,8 +303,12 @@ au BufNewFile,BufRead *.rul
 	\   setf diva |
 	\ endif
 
-" DCL (Digital Command Language - vms)
-au BufNewFile,BufRead *.com			setf dcl
+" DCL (Digital Command Language - vms) or DNS zone file
+au BufNewFile,BufRead *.com
+	\ if getline(1) =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
+	\	|| getline(2) =~ '\($ORIGIN\|$TTL\|IN\s*SOA\)'
+	\	|| getline(1).getline(2).getline(3).getline(4) =~ 'BIND.*named'
+	\ | setf dns | else | setf dcl | endif
 
 " Dylan - lid files
 au BufNewFile,BufRead *.lid			setf dylanlid
@@ -658,10 +662,14 @@ au BufNewFile,BufRead *.po			setf po
 " PostScript
 au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
-" Povray (or PHP)
+" Povray
 au BufNewFile,BufRead *.pov			setf pov
+"
+" Povray, PHP or assembly
 au BufNewFile,BufRead *.inc
-	\ if getline(1).getline(2).getline(3) =~ "<?" |
+	\ if exists("g:filetype_inc") |
+	\   exe "setf " . g:filetype_inc |
+	\ elseif getline(1).getline(2).getline(3) =~ "<?" |
 	\   setf php |
 	\ else |
 	\   setf pov |

@@ -1,20 +1,22 @@
-*diff.txt*      For Vim version 6.0aa.  Last change: 2001 Apr 04
+*diff.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
+				*diff* *vimdiff* *gvimdiff* *diff-mode*
 This file describes the +diff feature: Showing differences between two or
 three versions of the same file.
 
 1. Starting diff mode		|vimdiff|
 2. Viewing diffs		|view-diffs|
-3. Diff options			|diff-options|
+3. Copying diffs		|copy-diffs|
+4. Diff options			|diff-options|
 
 {not in Vi}
 
 ==============================================================================
-1. Starting diff mode				*diff* *vimdiff* *gvimdiff*
+1. Starting diff mode
 
 The easiest way to start editing in diff mode is with the "vimdiff" command.
 This starts Vim as usual, and additionally sets up for viewing the differences
@@ -47,10 +49,10 @@ In each of the edited files these options are set:
 	'foldcolumn'	2
 
 These options are set local to the window.  Thus when splitting the window or
-editing another file they are rest to the global value.
+editing another file they are reset to the global value.
 
 In your .vimrc file you could do something special when Vim was started in
-diff mode.  You could a construct like this: >
+diff mode.  You could use a construct like this: >
 
 	if &diff
 	   setup for diff mode
@@ -93,7 +95,7 @@ text in other windows to be scrolled as well.  With vertical splits the text
 should be aligned properly.
 
 The alignment of text will go wrong when:
-- 'wrap' is on, some lines will be wrappend and occupy two or more screen
+- 'wrap' is on, some lines will be wrapped and occupy two or more screen
   lines
 - folds are open in one window but not another
 - 'scrollbind' is off
@@ -151,9 +153,40 @@ The diffs are highlighted with these groups:
 				buffer.
 
 ==============================================================================
-3. Diff options						*diff-options*
+3. Diff copying						*copy-diffs*
 
-Also see |'diffopt'|.
+There are two commands to copy text from one buffer to another.  The result is
+that the buffers will be equal within the specified range.
+
+							*:diffg* *:diffget*
+:[range]diffg[et] [bufspec]
+		Modify the current buffer to undo difference with another
+		buffer.  If [bufspec] is given, that buffer is used.
+		Otherwise this only works if there is one other buffer in diff
+		mode.
+		[range] specifies the lines in the current buffer for which
+		differences are removed.  When omitted, the diff at the cursor
+		position and in the line above it is affected.  Partly
+		included diffs are handled like they were included completely.
+
+							*:diffpu* *:diffput*
+:[range]diffpu[t] [bufspec]
+		Modify another buffer to undo difference with the current
+		buffer.  Just like ":diffget" but the other buffer is modified
+		instead of the current one.
+
+The [bufspec] argument above can be a buffer number, a pattern for a buffer
+name or a part of a buffer name.  Examples:
+
+	:diffget		Use the other buffer which is in diff mode
+	:diffget 3		Use buffer 3
+	:diffget v2		Use the buffer which matches "v2" and is in
+				diff mode (e.g., "file.c.v2")
+
+==============================================================================
+4. Diff options						*diff-options*
+
+Also see |'diffopt'| and the "diff" item of |'fillchars'|.
 
 
 FINDING THE DIFFERENCES					*diff-diffexpr*
@@ -191,12 +224,22 @@ format mentioned.  These variables are set to the file names used:
 	v:fname_new		new version of the same file
 	v:fname_out		resulting diff file
 
+Additionally, 'diffexpr' should take care of "icase", "itrail" and "iwhite" in
+the 'diffopt' option.
+
 Example (this does the same as 'diffexpr' being empty): >
 
 	let diffexpr=MyDiff()
 	function MyDiff()
-	   :call system("diff " . v:fname_in . " " . v:fname_new .
-	   \  " > " . v:fname_out)
+	   let opt = ""
+	   if &diffopt =~ "icase"
+	     let opt = opt . "-i "
+	   endif
+	   if &diffopt =~ "iwhite"
+	     let opt = opt . "-b "
+	   endif
+	   silent execute "!diff " . opt . v:fname_in . " " . v:fname_new .
+	   	\  " > " . v:fname_out
 	endfunction
 
 

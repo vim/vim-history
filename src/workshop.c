@@ -42,14 +42,14 @@
 void		 workshop_hotkeys(Boolean);
 
 static Boolean	 isShowing(int);
-static win_t	*get_window(buf_t *);
+static win_T	*get_window(buf_T *);
 #if 0
-static int	 get_buffer_number(buf_t *);
+static int	 get_buffer_number(buf_T *);
 #endif
 static void	 updatePriority(Boolean);
 static char	*addUniqueMnemonic(char *, char *);
 static char	*fixup(char *);
-static char	*get_selection(buf_t *);
+static char	*get_selection(buf_T *);
 static char	*append_selection(int, char *, int *, int *);
 static void	 load_buffer_by_name(char *, int);
 #if 0
@@ -172,7 +172,7 @@ workshop_postinit()
 }
 
     void
-ex_wsverb(exarg_t *eap)
+ex_wsverb(exarg_T *eap)
 {
     msg_clr_cmdline();
     workshop_perform_verb((char *) eap->arg, NULL);
@@ -554,7 +554,7 @@ workshop_get_mark_lineno(
 	char	*filename,
 	int	 markId)
 {
-    buf_t	*buf;		/* buffer containing filename */
+    buf_T	*buf;		/* buffer containing filename */
     int		lineno;		/* line number of filename in buf */
 
     /* Get mark line number */
@@ -655,7 +655,7 @@ workshop_footer_message(
 workshop_menu_begin(
 	char		*label)
 {
-    vimmenu_t	*menu;			/* pointer to last menu */
+    vimmenu_T	*menu;			/* pointer to last menu */
     int		menuPriority = 0;	/* priority of new menu */
     char	mnembuf[64];		/* store menubar mnemonics here */
     char	*name;			/* label with a mnemonic */
@@ -1268,10 +1268,10 @@ workshop_get_positions(
 
     static char *
 get_selection(
-	buf_t		*buf)		/* buffer whose selection we want */
+	buf_T		*buf)		/* buffer whose selection we want */
 {
-    pos_t	*start;		/* start of the selection */
-    pos_t	*end;		/* end of the selection */
+    pos_T	*start;		/* start of the selection */
+    pos_T	*end;		/* end of the selection */
     char	*lp;		/* pointer to actual line data */
     int		 llen;		/* length of actual line data */
     char	*sp;		/* pointer to selection  buffer */
@@ -1403,8 +1403,8 @@ load_window(
 	char	*filename,		/* filename to load */
 	int	 lnum)			/* linenumber to go to */
 {
-    buf_t	*buf;		/* buffer filename is stored in */
-    win_t	*win;		/* window filenme is displayed in */
+    buf_T	*buf;		/* buffer filename is stored in */
+    win_T	*win;		/* window filenme is displayed in */
 
     /*
      * Make sure filename is displayed and is the current window.
@@ -1472,11 +1472,11 @@ isShowing(
 
 
 
-    static win_t *
+    static win_T *
 get_window(
-	buf_t	*buf)		/* buffer to find window for */
+	buf_T	*buf)		/* buffer to find window for */
 {
-    win_t	*wp = NULL;	/* window filename is in */
+    win_T	*wp = NULL;	/* window filename is in */
 
     for (wp = firstwin; wp != NULL; wp = W_NEXT(wp))
 	if (buf == wp->w_buffer)
@@ -1488,9 +1488,9 @@ get_window(
 #if 0 /* not used */
     static int
 get_buffer_number(
-	buf_t		*buf)		/* buffer to get position of */
+	buf_T		*buf)		/* buffer to get position of */
 {
-    buf_t	*bp;		/* iterate over buffer list */
+    buf_T	*bp;		/* iterate over buffer list */
     int		 pos;		/* the position in the buffer list */
 
     pos = 1;

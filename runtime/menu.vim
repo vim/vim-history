@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Apr 04
+" Last Change:	2001 Apr 16
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -57,22 +57,18 @@ amenu 10.325 &File.&New<Tab>:enew		:confirm enew<CR>
 amenu 10.330 &File.&Close<Tab>:q		:confirm q<CR>
 amenu 10.335 &File.-SEP1-			:
 amenu 10.340 &File.&Save<Tab>:w			:confirm w<CR>
-amenu 10.350 &File.Save\ &As\.\.\.<Tab>:w	:call FileSaveAs()<CR>
+amenu 10.350 &File.Save\ &As\.\.\.<Tab>:sav	:browse confirm saveas<CR>
 
-if !exists("*FileSaveAs")
-  func FileSaveAs()
-    let bn = bufnr("#")
-    browse confirm w
-    if bufnr("#") != bn
-      silent edit #
-    endif
-  endfunc
+if has("diff")
+  amenu 10.400 &File.-SEP2-			:
+  amenu 10.410 &File.Show\ &Diff\ with\.\.\.	:browse vert diffsplit<CR>
+  amenu 10.420 &File.Show\ &Patched\ by\.\.\.	:browse vert diffpatch<CR>
 endif
 
 if has("win32")
-  amenu 10.355 &File.-SEP2-			:
+  amenu 10.500 &File.-SEP3-			:
   " Use Notepad for printing. ":w >> prn" doesn't work for PostScript printers.
-  amenu 10.360 &File.&Print			:call Win32Print(":")<CR>
+  amenu 10.510 &File.&Print			:call Win32Print(":")<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				<Esc>:call Win32Print(":'<,'>")<CR>
   if !exists("*Win32Print")
@@ -90,13 +86,13 @@ if has("win32")
     endfun
   endif
 elseif has("unix")
-  amenu 10.355 &File.-SEP2-			:
-  amenu 10.360 &File.&Print			:w !lpr<CR>
+  amenu 10.500 &File.-SEP3-			:
+  amenu 10.510 &File.&Print			:w !lpr<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				:w !lpr<CR>
 elseif has("vms")
-  amenu 10.355 &File.-SEP2-                     :
-  amenu 10.360 &File.&Print			:call VMSPrint(":")<CR>
+  amenu 10.500 &File.-SEP3-                     :
+  amenu 10.510 &File.&Print			:call VMSPrint(":")<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				<Esc>:call VMSPrint(":'<,'>")<CR>
   if !exists("*VMSPrint")
@@ -110,9 +106,9 @@ elseif has("vms")
     endfun
   endif
 endif
-amenu 10.365 &File.-SEP3-			:
-amenu 10.370 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
-amenu 10.380 &File.E&xit<Tab>:qa		:confirm qa<CR>
+amenu 10.600 &File.-SEP4-			:
+amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
+amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
 
 
 " Edit menu
@@ -194,34 +190,70 @@ if has("vms")
 else
   amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
 endif
-amenu 40.330 &Tools.-SEP1-			:
-amenu 40.340 &Tools.&Make<Tab>:make		:make<CR>
-amenu 40.350 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
-amenu 40.360 &Tools.L&ist\ Messages<Tab>:cl!	:cl!<CR>
-amenu 40.370 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
-amenu 40.380 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
-amenu 40.390 &Tools.&Older\ List<Tab>:cold	:colder<CR>
-amenu 40.400 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
-amenu 40.410 &Tools.Error\ &Window<Tab>:cwin	:cwin<CR>
-amenu 40.500 &Tools.-SEP2-                      :
+
+" Tools.Fold Menu
+if has("folding")
+  amenu 40.330 &Tools.-SEP1-			:
+  " open close folds 
+  amenu 40.340.110 &Tools.&Folding.&Enable/Disable\ folds<TAB>zi	zi
+  amenu 40.340.120 &Tools.&Folding.&View\ Cursor\ Line<TAB>zv	zv
+  amenu 40.340.120 &Tools.&Folding.Vie&w\ Cursor\ Line\ only<TAB>zMzx	zMzx
+  amenu 40.340.130 &Tools.&Folding.C&lose\ more\ folds<Tab>zm	zm
+  amenu 40.340.140 &Tools.&Folding.&Close\ all\ folds<Tab>zM	zM
+  amenu 40.340.150 &Tools.&Folding.O&pen\ more\ folds<Tab>zr	zr
+  amenu 40.340.160 &Tools.&Folding.&Open\ all\ folds<Tab>zR	zR
+  " fold method
+  amenu 40.340.200 &Tools.&Folding.-SEP1-			:
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.M&anual	:set fdm=manual<CR>
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.I&ndent	:set fdm=indent<CR>
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.E&xpression	:set fdm=expr<CR>
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.S&yntax	:set fdm=syntax<CR>
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.&Diff		:set fdm=diff<CR>
+  amenu 40.340.210 &Tools.&Folding.Fold\ Met&hod.Ma&rker	:set fdm=marker<CR>
+  " create and delete folds
+  vmenu 40.340.220 &Tools.&Folding.Create\ &Fold<TAB>zf		zf
+  amenu 40.340.230 &Tools.&Folding.&Delete\ Fold<TAB>zd		zd
+  amenu 40.340.240 &Tools.&Folding.Delete\ &All\ Folds<TAB>zD	zD
+  " moving around in folds
+  amenu 40.340.300 &Tools.&Folding.-SEP2-			:
+  amenu 40.340.310.10 &Tools.&Folding.Fold\ column\ &width.0	:set fdc=0<CR>
+  amenu 40.340.310.20 &Tools.&Folding.Fold\ column\ &width.2	:set fdc=2<CR>
+  amenu 40.340.310.30 &Tools.&Folding.Fold\ column\ &width.3	:set fdc=3<CR>
+  amenu 40.340.310.40 &Tools.&Folding.Fold\ column\ &width.4	:set fdc=4<CR>
+  amenu 40.340.310.50 &Tools.&Folding.Fold\ column\ &width.5	:set fdc=5<CR>
+  amenu 40.340.310.60 &Tools.&Folding.Fold\ column\ &width.6	:set fdc=6<CR>
+  amenu 40.340.310.70 &Tools.&Folding.Fold\ column\ &width.7	:set fdc=7<CR>
+  amenu 40.340.310.80 &Tools.&Folding.Fold\ column\ &width.8	:set fdc=8<CR>
+endif  " has folding
+
+amenu 40.350 &Tools.-SEP2-			:
+amenu 40.360 &Tools.&Make<Tab>:make		:make<CR>
+amenu 40.370 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
+amenu 40.380 &Tools.L&ist\ Messages<Tab>:cl!	:cl!<CR>
+amenu 40.390 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
+amenu 40.400 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
+amenu 40.410 &Tools.&Older\ List<Tab>:cold	:colder<CR>
+amenu 40.420 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
+amenu 40.430 &Tools.Error\ &Window<Tab>:cwin	:cwin<CR>
+amenu 40.520 &Tools.-SEP3-                      :
 if has("vms")
-  amenu 40.510 &Tools.Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
+  amenu 40.530 &Tools.Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
 	\ :let b:mod = &mod<CR>
 	\ :%!mc vim:xxd<CR>
 	\ :set ft=xxd<CR>
 	\ :let &mod = b:mod<CR>
-  amenu 40.520 &Tools.Convert\ back<Tab>:%!mc\ vim:xxd\ -r
+  amenu 40.540 &Tools.Convert\ back<Tab>:%!mc\ vim:xxd\ -r
 	\ :let b:mod = &mod<CR>
 	\ :%!mc vim:xxd -r<CR>
 	\ :doautocmd filetypedetect BufReadPost<CR>
 	\ :let &mod = b:mod<CR>
 else
-  amenu 40.510 &Tools.Convert\ to\ HEX<Tab>:%!xxd
+  amenu 40.530 &Tools.Convert\ to\ HEX<Tab>:%!xxd
 	\ :let b:mod = &mod<CR>
 	\ :silent %!xxd<CR>
 	\ :set ft=xxd<CR>
 	\ :let &mod = b:mod<CR>
-  amenu 40.520 &Tools.Convert\ back<Tab>:%!xxd\ -r
+  amenu 40.540 &Tools.Convert\ back<Tab>:%!xxd\ -r
 	\ :let b:mod = &mod<CR>
 	\ :%!xxd -r<CR>
 	\ :doautocmd filetypedetect BufReadPost<CR>
@@ -292,10 +324,12 @@ func! <SID>BMShow(...)
   " create new menu; set 'cpo' to include the <CR>
   let cpo_save = &cpo
   set cpo&vim
-  exe 'am ' . g:bmenu_priority . ".2 &Buffers.Refresh :call <SID>BMShow()<CR>"
-  exe 'am ' . g:bmenu_priority . ".4 &Buffers.Delete :bd<CR>"
-  exe 'am ' . g:bmenu_priority . ".6 &Buffers.Alternate :b #<CR>"
-  exe 'am ' . g:bmenu_priority . ".8 &Buffers.-SEP- :"
+  exe 'am ' . g:bmenu_priority . ".2 &Buffers.&Refresh\\ menu :call <SID>BMShow()<CR>"
+  exe 'am ' . g:bmenu_priority . ".4 &Buffers.&Delete :bd<CR>"
+  exe 'am ' . g:bmenu_priority . ".6 &Buffers.A&lternate :b #<CR>"
+  exe 'am ' . g:bmenu_priority . ".7 &Buffers.&Next :bnext<CR>"
+  exe 'am ' . g:bmenu_priority . ".8 &Buffers.&Previous :bprev<CR>"
+  exe 'am ' . g:bmenu_priority . ".9 &Buffers.-SEP- :"
   let &cpo = cpo_save
 
   " figure out how many buffers there are
@@ -682,6 +716,7 @@ SynMenu AB.ASP\ with\ VBSages:aspvbs
 SynMenu AB.ASP\ with\ Perl:aspperl
 SynMenu AB.Assembly.Assembly\ (GNU):asm
 SynMenu AB.Assembly.Assembly\ (H8300):asmh8300
+SynMenu AB.Assembly.Assembly\ (Intel\ Itanum):ia64
 SynMenu AB.Assembly.Assembly\ (Microsoft):masm
 SynMenu AB.Assembly.Assembly\ (Netwide):nasm
 SynMenu AB.Assembly.PIC\ assembly:pic
@@ -731,6 +766,7 @@ SynMenu CD.Debian.Debian\ Control:debcontrol
 SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva
+SynMenu CD.DNS:dns
 SynMenu CD.Dracula:dracula
 SynMenu CD.DSSSL:dsl
 SynMenu CD.DTD:dtd
@@ -765,6 +801,7 @@ SynMenu HIJK.Haskell-literal:lhaskell
 SynMenu HIJK.Hercules:hercules
 SynMenu HIJK.HTML:html
 SynMenu HIJK.HTML\ with\ M4:htmlm4
+SynMenu HIJK.HTML/OS:htmlos
 SynMenu HIJK.Hyper\ Builder:hb
 SynMenu HIJK.Icon:icon
 SynMenu HIJK.IDL:idl

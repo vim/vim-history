@@ -169,7 +169,7 @@ do_debug(cmd)
  */
     void
 ex_debug(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		debug_break_level_save = debug_break_level;
 
@@ -179,7 +179,7 @@ ex_debug(eap)
 }
 
 static char_u	*debug_breakpoint_name = NULL;
-static linenr_t	debug_breakpoint_lnum;
+static linenr_T	debug_breakpoint_lnum;
 
 /*
  * Go to debug mode when a breakpoint was encountered or "debug_level" is
@@ -189,7 +189,7 @@ static linenr_t	debug_breakpoint_lnum;
  */
     void
 dbg_check_breakpoint(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*p;
 
@@ -226,11 +226,11 @@ struct debuggy
     int		dbg_nr;		/* breakpoint number */
     int		dbg_type;	/* DBG_FUNC or DBG_FILE */
     char_u	*dbg_name;	/* function or file name */
-    regprog_t	*dbg_prog;	/* regexp program */
-    linenr_t	dbg_lnum;	/* line number in function or file */
+    regprog_T	*dbg_prog;	/* regexp program */
+    linenr_T	dbg_lnum;	/* line number in function or file */
 };
 
-static garray_t dbg_breakp = {0, 0, sizeof(struct debuggy), 4, NULL};
+static garray_T dbg_breakp = {0, 0, sizeof(struct debuggy), 4, NULL};
 #define BREAKP(idx)	(((struct debuggy *)dbg_breakp.ga_data)[idx])
 static int last_breakp = 0;	/* nr of last defined breakpoint */
 
@@ -293,7 +293,7 @@ dbg_parsearg(arg)
  */
     void
 ex_breakadd(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     struct debuggy *bp;
     char_u	*pat;
@@ -325,13 +325,13 @@ ex_breakadd(eap)
  */
     void
 ex_breakdel(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     struct debuggy *bp, *bpi;
     int		nr;
     int		todel = -1;
     int		i;
-    linenr_t	best_lnum = 0;
+    linenr_T	best_lnum = 0;
 
     if (isdigit(*eap->arg))
     {
@@ -388,7 +388,7 @@ ex_breakdel(eap)
 /*ARGSUSED*/
     void
 ex_breaklist(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     struct debuggy *bp;
     int		i;
@@ -411,16 +411,16 @@ ex_breaklist(eap)
  * Find a breakpoint for a function or sourced file.
  * Returns line number at which to break; zero when no matching breakpoint.
  */
-    linenr_t
+    linenr_T
 dbg_find_breakpoint(file, fname, after)
     int		file;	    /* TRUE for a file, FALSE for a function */
     char_u	*fname;	    /* file or function name */
-    linenr_t	after;	    /* after this line number */
+    linenr_T	after;	    /* after this line number */
 {
     struct debuggy *bp;
     int		i;
-    linenr_t	lnum = 0;
-    regmatch_t	regmatch;
+    linenr_T	lnum = 0;
+    regmatch_T	regmatch;
     char_u	*name = fname;
 
     /* Replace K_SNR in function name with "<SNR>". */
@@ -447,7 +447,7 @@ dbg_find_breakpoint(file, fname, after)
 	{
 	    regmatch.regprog = bp->dbg_prog;
 	    regmatch.rm_ic = FALSE;
-	    if (vim_regexec(&regmatch, name, (colnr_t)0))
+	    if (vim_regexec(&regmatch, name, (colnr_T)0))
 		lnum = bp->dbg_lnum;
 	}
     }
@@ -463,7 +463,7 @@ dbg_find_breakpoint(file, fname, after)
     void
 dbg_breakpoint(name, lnum)
     char_u	*name;
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     /* We need to check if this line is actually executed in do_one_cmd() */
     debug_breakpoint_name = name;
@@ -479,7 +479,7 @@ dbg_breakpoint(name, lnum)
  */
     int
 autowrite(buf, forceit)
-    buf_t	*buf;
+    buf_T	*buf;
     int		forceit;
 {
     if (!(p_aw || p_awa) || !p_write
@@ -498,7 +498,7 @@ autowrite(buf, forceit)
     void
 autowrite_all()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     if (!(p_aw || p_awa) || !p_write)
 	return;
@@ -520,7 +520,7 @@ autowrite_all()
 /*ARGSUSED*/
     int
 check_changed(buf, checkaw, mult_win, forceit, allbuf)
-    buf_t	*buf;
+    buf_T	*buf;
     int		checkaw;	/* do autowrite if buffer was changed */
     int		mult_win;	/* check also when several wins for the buf */
     int		forceit;
@@ -534,7 +534,7 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	if ((p_confirm || cmdmod.confirm) && p_write)
 	{
-	    buf_t	*buf2;
+	    buf_T	*buf2;
 	    int		count = 0;
 
 	    if (allbuf)
@@ -566,14 +566,14 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG) || defined(PROTO)
 
 #ifdef FEAT_BROWSE
-static void	browse_save_fname __ARGS((buf_t *buf));
+static void	browse_save_fname __ARGS((buf_T *buf));
 
 /*
  * When wanting to write a file without a file name, ask the user for a name.
  */
     static void
 browse_save_fname(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     if (buf->b_fname == NULL)
     {
@@ -595,12 +595,12 @@ browse_save_fname(buf)
  */
     void
 dialog_changed(buf, checkall)
-    buf_t	*buf;
+    buf_T	*buf;
     int		checkall;	/* may abandon all changed buffers */
 {
     char_u	buff[IOSIZE];
     int		ret;
-    buf_t	*buf2;
+    buf_T	*buf2;
 
     dialog_msg(buff, _("Save changes to \"%.*s\"?"),
 			(buf->b_fname != NULL) ?
@@ -671,7 +671,7 @@ dialog_changed(buf, checkall)
  */
     int
 can_abandon(buf, forceit)
-    buf_t	*buf;
+    buf_T	*buf;
     int		forceit;
 {
     return (	   P_HID(buf)
@@ -689,10 +689,10 @@ can_abandon(buf, forceit)
 check_changed_any(hidden)
     int		hidden;		/* Only check hidden buffers */
 {
-    buf_t	*buf;
+    buf_T	*buf;
     int		save;
 #ifdef FEAT_WINDOWS
-    win_t	*wp;
+    win_T	*wp;
 #endif
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
@@ -796,16 +796,16 @@ check_fname()
  */
     int
 buf_write_all(buf, forceit)
-    buf_t	*buf;
+    buf_T	*buf;
     int		forceit;
 {
     int	    retval;
 #ifdef FEAT_AUTOCMD
-    buf_t	*old_curbuf = curbuf;
+    buf_T	*old_curbuf = curbuf;
 #endif
 
     retval = (buf_write(buf, buf->b_ffname, buf->b_fname,
-				   (linenr_t)1, buf->b_ml.ml_line_count, NULL,
+				   (linenr_T)1, buf->b_ml.ml_line_count, NULL,
 						  FALSE, forceit, TRUE, FALSE));
 #ifdef FEAT_AUTOCMD
     if (curbuf != old_curbuf)
@@ -840,7 +840,7 @@ do_arglist(str, what, after)
     int		what;
     int		after;		/* 0 means before first one */
 {
-    garray_t	new_ga;
+    garray_T	new_ga;
     int		exp_count;
     char_u	**exp_files;
     char_u	*p;
@@ -902,7 +902,7 @@ do_arglist(str, what, after)
 #ifdef FEAT_LISTCMDS
     if (what == AL_DEL)
     {
-	regmatch_t	regmatch;
+	regmatch_T	regmatch;
 	int		didone;
 
 	/*
@@ -930,12 +930,12 @@ do_arglist(str, what, after)
 	    didone = FALSE;
 	    for (match = 0; match < ARGCOUNT; ++match)
 		if (vim_regexec(&regmatch, alist_name(&ARGLIST[match]),
-								  (colnr_t)0))
+								  (colnr_T)0))
 		{
 		    didone = TRUE;
 		    vim_free(ARGLIST[match].ae_fname);
 		    mch_memmove(ARGLIST + match, ARGLIST + match + 1,
-			    (ARGCOUNT - match - 1) * sizeof(aentry_t));
+			    (ARGCOUNT - match - 1) * sizeof(aentry_T));
 		    --ALIST(curwin)->al_ga.ga_len;
 		    ++ALIST(curwin)->al_ga.ga_room;
 		    if (curwin->w_arg_idx > match)
@@ -987,7 +987,7 @@ do_arglist(str, what, after)
 alist_check_arg_idx()
 {
 #ifdef FEAT_WINDOWS
-    win_t	*win;
+    win_T	*win;
 
     for (win = firstwin; win != NULL; win = win->w_next)
 	if (win->w_alist == curwin->w_alist)
@@ -1002,7 +1002,7 @@ alist_check_arg_idx()
  */
     void
 check_arg_idx(win)
-    win_t	*win;
+    win_T	*win;
 {
     if (WARGCOUNT(win) > 1
 	    && (win->w_arg_idx >= WARGCOUNT(win)
@@ -1048,7 +1048,7 @@ check_arg_idx(win)
  */
     void
 ex_args(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
 
@@ -1101,7 +1101,7 @@ ex_args(eap)
 #if defined(FEAT_WINDOWS) && defined(FEAT_LISTCMDS)
     else if (eap->cmdidx == CMD_arglocal)
     {
-	garray_t	*gap = &curwin->w_alist->al_ga;
+	garray_T	*gap = &curwin->w_alist->al_ga;
 
 	/*
 	 * ":argslocal": make a local copy of the global argument list.
@@ -1126,7 +1126,7 @@ ex_args(eap)
  */
     void
 ex_previous(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     /* If past the last one already, go to the last one. */
     if (curwin->w_arg_idx - (int)eap->line2 >= ARGCOUNT)
@@ -1140,7 +1140,7 @@ ex_previous(eap)
  */
     void
 ex_rewind(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     do_argfile(eap, 0);
 }
@@ -1150,7 +1150,7 @@ ex_rewind(eap)
  */
     void
 ex_last(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     do_argfile(eap, ARGCOUNT - 1);
 }
@@ -1160,7 +1160,7 @@ ex_last(eap)
  */
     void
 ex_argument(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
 
@@ -1176,7 +1176,7 @@ ex_argument(eap)
  */
     void
 do_argfile(eap, argn)
-    exarg_t	*eap;
+    exarg_T	*eap;
     int		argn;
 {
     int		other;
@@ -1244,7 +1244,7 @@ do_argfile(eap, argn)
  */
     void
 ex_next(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
 
@@ -1274,7 +1274,7 @@ ex_next(eap)
  */
     void
 ex_argedit(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		fnum;
     int		i;
@@ -1311,7 +1311,7 @@ ex_argedit(eap)
  */
     void
 ex_argadd(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     do_arglist(eap->arg, AL_ADD,
 	       eap->addr_count > 0 ? (int)eap->line2 : curwin->w_arg_idx + 1);
@@ -1325,7 +1325,7 @@ ex_argadd(eap)
  */
     void
 ex_argdelete(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
     int		n;
@@ -1343,7 +1343,7 @@ ex_argdelete(eap)
 	    for (i = eap->line1; i <= eap->line2; ++i)
 		vim_free(ARGLIST[i - 1].ae_fname);
 	    mch_memmove(ARGLIST + eap->line1 - 1, ARGLIST + eap->line2,
-			(size_t)((ARGCOUNT - eap->line2) * sizeof(aentry_t)));
+			(size_t)((ARGCOUNT - eap->line2) * sizeof(aentry_T)));
 	    ALIST(curwin)->al_ga.ga_len -= n;
 	    ALIST(curwin)->al_ga.ga_room += n;
 	    if (curwin->w_arg_idx >= eap->line2)
@@ -1366,13 +1366,13 @@ ex_argdelete(eap)
  */
     void
 ex_listdo(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int		i;
 #ifdef FEAT_WINDOWS
-    win_t	*win;
+    win_T	*win;
 #endif
-    buf_t	*buf;
+    buf_T	*buf;
 #ifdef FEAT_AUTOCMD
     char_u	*save_ei = vim_strsave(p_ei);
     char_u	*new_ei;
@@ -1479,7 +1479,7 @@ alist_add_list(count, files, after)
 	    after = ARGCOUNT;
 	if (after < ARGCOUNT)
 	    mch_memmove(&(ARGLIST[after + count]), &(ARGLIST[after]),
-				       (ARGCOUNT - after) * sizeof(aentry_t));
+				       (ARGCOUNT - after) * sizeof(aentry_T));
 	for (i = 0; i < count; ++i)
 	{
 	    ARGLIST[after + i].ae_fname = files[i];
@@ -1518,12 +1518,12 @@ struct source_cookie
     int		error;		/* TRUE if LF found after CR-LF */
 #endif
 #ifdef FEAT_EVAL
-    linenr_t	breakpoint;	/* next line with breakpoint or zero */
+    linenr_T	breakpoint;	/* next line with breakpoint or zero */
     char_u	*fname;		/* name of sourced file */
     int		dbg_tick;	/* debug_tick when breakpoint was set */
 #endif
 #ifdef FEAT_MBYTE
-    vimconv_t	conv;		/* type of conversion */
+    vimconv_T	conv;		/* type of conversion */
 #endif
 };
 
@@ -1531,7 +1531,7 @@ static char_u *get_one_sourceline __ARGS((struct source_cookie *sp));
 
 #ifdef FEAT_EVAL
 /* Growarray to store the names of sourced scripts. */
-static garray_t script_names = {0, 0, sizeof(char_u *), 4, NULL};
+static garray_T script_names = {0, 0, sizeof(char_u *), 4, NULL};
 #define SCRIPT_NAME(id) (((char_u **)script_names.ga_data)[(id) - 1])
 #endif
 
@@ -1550,13 +1550,13 @@ do_source(fname, check_other, is_vimrc)
 {
     struct source_cookie    cookie;
     char_u		    *save_sourcing_name;
-    linenr_t		    save_sourcing_lnum;
+    linenr_T		    save_sourcing_lnum;
     char_u		    *p;
     char_u		    *fname_exp;
     int			    retval = FAIL;
 #ifdef FEAT_EVAL
-    scid_t		    save_current_SID;
-    static scid_t	    last_current_SID = 0;
+    scid_T		    save_current_SID;
+    static scid_T	    last_current_SID = 0;
     void		    *save_funccalp;
     int			    save_debug_break_level = debug_break_level;
 #endif
@@ -1571,6 +1571,12 @@ do_source(fname, check_other, is_vimrc)
 #ifdef macintosh
     slash_n_colon_adjust(fname_exp);
 #endif
+    if (mch_isdir(fname_exp))
+    {
+	smsg((char_u *)_("Cannot source a directory: \"%s\""), fname);
+	goto theend;
+    }
+
     cookie.fp = mch_fopen((char *)fname_exp, READBIN);
     if (cookie.fp == NULL && check_other)
     {
@@ -1646,7 +1652,7 @@ do_source(fname, check_other, is_vimrc)
     /*
      * Check if this script has a breakpoint.
      */
-    cookie.breakpoint = dbg_find_breakpoint(TRUE, fname_exp, (linenr_t)0);
+    cookie.breakpoint = dbg_find_breakpoint(TRUE, fname_exp, (linenr_T)0);
     cookie.fname = fname_exp;
     cookie.dbg_tick = debug_tick;
 #endif
@@ -1744,7 +1750,7 @@ theend:
 /*ARGSUSED*/
     void
 ex_scriptnames(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int i;
 
@@ -1758,7 +1764,7 @@ ex_scriptnames(eap)
  */
     char_u *
 get_scriptname(id)
-    scid_t	id;
+    scid_T	id;
 {
     if (id == SID_MODELINE)
 	return (char_u *)"modeline";
@@ -1902,7 +1908,7 @@ getsourceline(c, cookie, indent)
 get_one_sourceline(sp)
     struct source_cookie    *sp;
 {
-    garray_t		ga;
+    garray_T		ga;
     int			len;
     int			c;
     char_u		*buf;
@@ -2054,7 +2060,7 @@ get_one_sourceline(sp)
 /*ARGSUSED*/
     void
 ex_scriptencoding(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
 #ifdef FEAT_MBYTE
     struct source_cookie	*sp;
@@ -2090,7 +2096,7 @@ ex_scriptencoding(eap)
  */
     void
 ex_finish(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     if (eap->getline == getsourceline)
 	((struct source_cookie *)eap->cookie)->finished = TRUE;

@@ -47,10 +47,10 @@
 
 typedef struct {
     char *  name;
-    int     (*func) __ARGS((exarg_t *eap));
+    int     (*func) __ARGS((exarg_T *eap));
     char *  help;
     char *  usage;
-} cscmd_t;
+} cscmd_T;
 
 typedef struct csi {
     char *	    fname;	/* cscope db name */
@@ -64,7 +64,7 @@ typedef struct csi {
     int		    fr_fd;	/* from cscope: file descriptor. */
     FILE *	    to_fp;	/* to cscope: FILE. */
     int		    to_fd;	/* to cscope: file descriptor. */
-} csinfo_t;
+} csinfo_T;
 
 enum { Add, Find, Help, Kill, Reset, Show } csid_e;
 
@@ -74,9 +74,6 @@ typedef enum {
     Free,
     Print
 } mcmd_e;
-
-
-typedef unsigned char bool_t;	/* should prob go elsewhere */
 
 
 #endif	/* FEAT_CSCOPE */

@@ -68,14 +68,18 @@ AC_SUBST(OS_EXTRA_SRC)
 AC_SUBST(OS_EXTRA_OBJ)
 
 dnl Add /usr/local/lib to $LDFLAGS and /usr/local/include to CFLAGS.
-dnl Only when the directory exists and add it only once.
+dnl Only when the directory exists and it wasn't there yet.
 if test -d /usr/local/lib; then
-  LDFLAGS=`echo "$LDFLAGS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
-  LDFLAGS="$LDFLAGS -L/usr/local/lib"
+  tt=`echo "$LDFLAGS" | sed -e 's+-L/usr/local/lib ++g' -e 's+-L/usr/local/lib$++g'`
+  if test "$tt" = "$LDFLAGS"; then
+    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+  fi
 fi
 if test -d /usr/local/include; then
-  CPPFLAGS=`echo "$CPPFLAGS" | sed -e 's+-I/usr/local/include ++g' -e 's+-I/usr/local/include$++g'`
-  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+  tt=`echo "$CPPFLAGS" | sed -e 's+-I/usr/local/include ++g' -e 's+-I/usr/local/include$++g'`
+  if test "$tt" = "$CPPFLAGS"; then
+    CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+  fi
 fi
 
 AC_MSG_CHECKING(--with-vim-name argument)
@@ -140,7 +144,7 @@ AC_MSG_CHECKING(--with-features argument)
 AC_ARG_WITH(features, [  --with-features=TYPE    tiny, small, normal, big or huge (default: normal)],
 	features="$withval"; AC_MSG_RESULT($features),
 	features="normal"; AC_MSG_RESULT(Defaulting to normal))
-	
+
 dovimdiff=""
 case "$features" in
   tiny)		AC_DEFINE(FEAT_TINY) ;;
@@ -148,7 +152,7 @@ case "$features" in
   normal)	AC_DEFINE(FEAT_NORMAL) dovimdiff="installvimdiff" ;;
   big)		AC_DEFINE(FEAT_BIG) dovimdiff="installvimdiff" ;;
   huge)		AC_DEFINE(FEAT_HUGE) dovimdiff="installvimdiff" ;;
-  *)		AC_MSG_RESULT(Sorry, $features is not supported) ;;
+  *)		AC_MSG_RESULT([Sorry, $features is not supported]) ;;
 esac
 
 AC_SUBST(dovimdiff)
@@ -584,7 +588,7 @@ else
     CFLAGS="$CFLAGS -W c,dll"
     LDFLAGS="$LDFLAGS -W l,dll"
   fi
- 
+
   dnl On my HPUX system the X include dir is found, but the lib dir not.
   dnl This is a desparate try to fix this.
 
@@ -647,7 +651,22 @@ else
     AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData, [X_PRE_LIBS="$X_PRE_LIBS -lXpm"],,
 		[-lXt $X_PRE_LIBS -lXpm -lX11 $X_EXTRA_LIBS])
 
+    dnl Check that the X11 header files don't use implicit declarations
+    AC_MSG_CHECKING(if X11 header files implicitly declare return values)
+    cflags_save=$CFLAGS
+    CFLAGS="$CFLAGS $X_CFLAGS -Werror"
+    AC_TRY_COMPILE([#include <X11/Xlib.h>], ,
+	AC_MSG_RESULT(no),
+	CFLAGS="$CFLAGS -Wno-implicit-int"
+	AC_TRY_COMPILE([#include <X11/Xlib.h>], ,
+	    AC_MSG_RESULT(yes); cflags_save="$cflags_save -Wno-implicit-int",
+	    AC_MSG_RESULT(test failed)
+	)
+    )
+    CFLAGS=$cflags_save
+
     LDFLAGS="$ac_save_LDFLAGS"
+
   fi
 fi
 
@@ -673,7 +692,7 @@ if test "x$BEOS" = "xyes"; then
     yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
     auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
     beos|BeOS|BEOS)	AC_MSG_RESULT(BeOS GUI support) ;;
-    *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+    *)			AC_MSG_RESULT([Sorry, $enable_gui GUI is not supported]) ;;
   esac
 
 elif test "x$QNX" = "xyes" -a "x$with_x" = "xno" ; then
@@ -691,7 +710,7 @@ elif test "x$QNX" = "xyes" -a "x$with_x" = "xno" ; then
     yes|Yes|YES|"")	AC_MSG_RESULT(yes - automatic GUI support) ;;
     auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
     photon|Photon|PHOTON)	AC_MSG_RESULT(Photon GUI support) ;;
-    *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+    *)			AC_MSG_RESULT([Sorry, $enable_gui GUI is not supported]) ;;
   esac
 
 else
@@ -711,11 +730,13 @@ else
     auto|Auto|AUTO|"")	AC_MSG_RESULT(auto - automatic GUI support) ;;
     gtk|Gtk|GTK)		AC_MSG_RESULT(GTK GUI support)
 			SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
+    gnome|Gnome|GNOME)		AC_MSG_RESULT(Gnome GUI support)
+			SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
     motif|Motif|MOTIF)	AC_MSG_RESULT(Motif GUI support)
 			SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_ATHENA=YES ;;
     athena|Athena|ATHENA)	AC_MSG_RESULT(Athena GUI support)
 			SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES ;;
-    *)			AC_MSG_RESULT(Sorry, $enable_gui GUI is not supported) ;;
+    *)			AC_MSG_RESULT([Sorry, $enable_gui GUI is not supported]) ;;
   esac
 
 fi
@@ -928,7 +949,7 @@ AC_DEFUN([GNOME_INIT_HOOK],
     else
       gnome_prefix=`eval echo \`echo $libdir\``
     fi
-	
+
     if test "$no_gnome_config" = "yes"; then
       AC_MSG_CHECKING(for gnomeConf.sh file in $gnome_prefix)
       if test -f $gnome_prefix/gnomeConf.sh; then
@@ -1092,10 +1113,10 @@ if test -z "$SKIP_MOTIF"; then
       dnl Remove /usr/lib, it causes trouble on some systems
       if test "$GUI_LIB_LOC" = /usr/lib; then
 	GUI_LIB_LOC=
-        AC_MSG_RESULT(in default path)
+	AC_MSG_RESULT(in default path)
       else
-        if test -n "$GUI_LIB_LOC"; then
-          AC_MSG_RESULT($GUI_LIB_LOC)
+	if test -n "$GUI_LIB_LOC"; then
+	  AC_MSG_RESULT($GUI_LIB_LOC)
 	  if test "`(uname) 2>/dev/null`" = SunOS &&
 					 uname -r | grep '^5' >/dev/null; then
 	    GUI_LIB_LOC="$GUI_LIB_LOC -R $GUI_LIB_LOC"

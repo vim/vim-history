@@ -232,7 +232,7 @@ _OnScroll(
     UINT code,
     int pos)
 {
-    scrollbar_t *sb, *sb_info;
+    scrollbar_T *sb, *sb_info;
     long	val;
     int		dragging = FALSE;
 #ifdef WIN32
@@ -455,7 +455,7 @@ _WndProc(
 	{
 	    UINT idButton;
 	    int	idx;
-	    vimmenu_t *pMenu;
+	    vimmenu_T *pMenu;
 
 	    idButton = (UINT)LOWORD(wParam);
 	    pMenu = gui_mswin_find_menu(root_menu, idButton);
@@ -761,7 +761,7 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
 
     void
 gui_mch_set_scrollbar_thumb(
-    scrollbar_t     *sb,
+    scrollbar_T     *sb,
     long	    val,
     long	    size,
     long	    max)
@@ -800,7 +800,7 @@ gui_mch_set_font(GuiFont font)
  * Set the current text foreground color.
  */
     void
-gui_mch_set_fg_color(guicolor_t color)
+gui_mch_set_fg_color(guicolor_T color)
 {
     gui.currFgColor = color;
     SetTextColor(s_hdc, gui.currFgColor);
@@ -810,7 +810,7 @@ gui_mch_set_fg_color(guicolor_t color)
  * Set the current text background color.
  */
     void
-gui_mch_set_bg_color(guicolor_t color)
+gui_mch_set_bg_color(guicolor_T color)
 {
     if (gui.currBgColor == color)
 	return;
@@ -982,10 +982,10 @@ clear_rect(RECT *rcp)
  */
     void
 gui_mch_add_menu(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		pos)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     menu->submenu_id = CreatePopupMenu();
     menu->id = s_menu_id++;
@@ -1003,7 +1003,7 @@ gui_mch_add_menu(
 }
 
     void
-gui_mch_show_popupmenu(vimmenu_t *menu)
+gui_mch_show_popupmenu(vimmenu_T *menu)
 {
     POINT mp;
 
@@ -1014,7 +1014,7 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
     void
 gui_make_popup(char_u *path_name)
 {
-    vimmenu_t	*menu = gui_find_menu(path_name);
+    vimmenu_T	*menu = gui_find_menu(path_name);
 
     if (menu!=NULL)
     {
@@ -1039,10 +1039,10 @@ gui_make_popup(char_u *path_name)
  */
     void
 gui_mch_add_menu_item(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		idx)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     menu->id = s_menu_id++;
     menu->submenu_id = NULL;
@@ -1083,7 +1083,7 @@ gui_mch_add_menu_item(
  * Destroy the machine specific menu widget.
  */
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
     UINT i, j;
     char pants[80]; /*<VN> hack*/
@@ -1153,7 +1153,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
  */
     void
 gui_mch_menu_grey(
-    vimmenu_t *menu,
+    vimmenu_T *menu,
     int	    grey)
 {
 #ifdef FEAT_TOOLBAR

@@ -1369,7 +1369,7 @@ Chk_Abort(void)
 
     int
 mch_expandpath(gap, pat, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*pat;
     int		flags;		/* EW_* flags */
 {
