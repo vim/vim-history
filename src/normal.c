@@ -4521,19 +4521,29 @@ nv_replace(cap)
 		/* Handle three situations:
 		 * 1. replace double-byte with double-byte: set trailbyte.
 		 * 2. replace single-byte with double-byte: insert trailbyte.
-		 * 3. replace double-byte with single-bute: delete char.
+		 * 3. replace double-byte with single-byte: delete char.
 		 */
 		if (trailbyte != NUL)
 		{
 		    if (IsLeadByte(prechar))
+		    {
 			ptr[curwin->w_cursor.col] = trailbyte;
+			++curwin->w_cursor.col;
+		    }
 		    else
+		    {
 			(void)ins_char(trailbyte);
+			if (n > 1)
+			    /* pointer will have changed, get it again */
+			   ptr = ml_get_buf(curbuf, curwin->w_cursor.lnum,
+									TRUE);
+		    }
 		}
 		else if (IsLeadByte(prechar))
 		{
-		    (void)del_char(TRUE);
-		    ++curwin->w_cursor.col;
+		    mch_memmove(ptr + curwin->w_cursor.col,
+			    ptr + curwin->w_cursor.col + 1,
+			    STRLEN(ptr + curwin->w_cursor.col));
 		}
 	    }
 #endif
