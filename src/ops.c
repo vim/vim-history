@@ -2201,11 +2201,11 @@ op_insert(oap, count1)
 #endif
 	   )
 	{
-	    /* this lil bit if code adapted from nv_append() */
+	    /* Move the cursor to the character right of the block. */
 	    curwin->w_set_curswant = TRUE;
-	    while (inc_cursor() == 0
+	    while (*ml_get_cursor() != NUL
 		    && (curwin->w_cursor.col < bd.textcol + bd.textlen))
-		;
+		++curwin->w_cursor.col;
 	    if (bd.is_short && !bd.is_MAX)
 	    {
 		/* First line was too short, make it longer and adjust the
