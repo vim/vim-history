@@ -1931,14 +1931,22 @@ tgetent_error(tbuf, term)
     int	    i;
 
     i = TGETENT(tbuf, term);
-    if (i == -1)
-	return (char_u *)"Cannot open termcap file";
-    if (i == 0)
+    if (i < 1)
+    {
+	/* On FreeBSD tputs() gets a SEGV after a tgetent() which fails.  Call
+	 * tgetent() with the always existing "dumb" entry to avoid a crash or
+	 * hang. */
+	(void)TGETENT(tbuf, "dumb");
+
+	if (i == -1)
+	    return (char_u *)"Cannot open termcap file";
+	if (i == 0)
 #ifdef TERMINFO
-	return (char_u *)"Terminal entry not found in terminfo";
+	    return (char_u *)"Terminal entry not found in terminfo";
 #else
-	return (char_u *)"Terminal entry not found in termcap";
+	    return (char_u *)"Terminal entry not found in termcap";
 #endif
+    }
     return NULL;
 }
 
@@ -1972,7 +1980,7 @@ getlinecol()
 {
     char_u	    tbuf[TBUFSZ];
 
-    if (T_NAME != NULL && *T_NAME != NUL && TGETENT(tbuf, T_NAME) > 0)
+    if (T_NAME != NULL && *T_NAME != NUL && tgetent_error(tbuf, T_NAME) == NULL)
     {
 	if (Columns == 0)
 	    Columns = tgetnum("co");
