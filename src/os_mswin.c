@@ -1456,7 +1456,8 @@ init_fail_dlg:
 			  FORMAT_MESSAGE_FROM_SYSTEM |
 			  FORMAT_MESSAGE_IGNORE_INSERTS,
 			  NULL, err, 0, (LPTSTR)(&buf), 0, NULL);
-	    EMSG2(_("E238: Print error: %s"), buf == NULL ? _("Unknown") : buf);
+	    EMSG2(_("E238: Print error: %s"),
+				  buf == NULL ? (char_u *)_("Unknown") : buf);
 	    LocalFree((LPVOID)(buf));
 #endif
 	}

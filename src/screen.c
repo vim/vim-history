@@ -771,7 +771,10 @@ win_update(wp)
 
     /* Window is zero-height: nothing to draw. */
     if (wp->w_height == 0)
+    {
+	wp->w_redr_type = 0;
 	return;
+    }
 
 #ifdef FEAT_VERTSPLIT
     /* Window is zero-width: Only need to draw the separator. */
@@ -7374,7 +7377,8 @@ showmode()
 	{
 	    MSG_PUTS_ATTR("--", attr);
 #if defined(FEAT_XIM)
-	    if (xic != NULL && im_get_status())
+	    if (xic != NULL && im_get_status() && !p_imdisable
+					&& curbuf->b_p_iminsert == B_IMODE_IM)
 		MSG_PUTS_ATTR(" XIM", attr);
 #endif
 #if defined(FEAT_HANGULIN) && defined(FEAT_GUI)

@@ -1,4 +1,4 @@
-*pi_gzip.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 17
+*pi_gzip.txt*   For Vim version 6.0.  Last change: 2001 Sep 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -30,6 +30,10 @@ That's actually the only thing you need to know.  There are no options.
 
 After decompressing a file, the filetype will be detected again.  This will
 make a file like "foo.c.gz" get the "c" filetype.
+
+If you have 'patchmode' set, it will be appended after the extension for
+compression.  Thus editing the patchmode file will not give you the automatic
+decopression.  You have to rename the file if you want this.
 
 ==============================================================================
  vim:tw=78:ts=8:ft=help:norl:

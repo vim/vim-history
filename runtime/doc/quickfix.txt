@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 19
+*quickfix.txt*  For Vim version 6.0.  Last change: 2001 Sep 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -128,6 +128,8 @@ The following commands can be used if you are in QuickFix mode:
 			4. The errorfile is read
 			5. If [!] is not given the first error is jumped to.
 			6. The errorfile is deleted.
+			7. You can now move through the errors with commands
+			   like |:cnext| and |:cprevious|, see above.
 			This command does not accept a comment, any "
 			characters are considered part of the arguments.
 

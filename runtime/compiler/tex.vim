@@ -1,7 +1,7 @@
 " Vim compiler file
 " Compiler:     TeX
 " Maintainer:   Artem Chuprina <ran@ran.pp.ru>
-" Last Change:  2001 Sep 13
+" Last Change:  2001 Sep 20
 
 if exists("current_compiler")
 	finish
@@ -15,6 +15,9 @@ elseif exists("g:tex_flavor")
 else
 	let current_compiler = "latex"
 endif
+
+let s:cpo_save = &cpo
+set cpo-=C
 
 " Values for makeprg and errorformat are taken from vim help, see
 " :help errorformat-LaTeX
@@ -50,3 +53,6 @@ setlocal errorformat=%E!\ LaTeX\ %trror:\ %m,
 	\%+Q)%r,
 	\%+Q%*[^()])%r,
 	\%+Q[%\\d%*[^()])%r
+
+let &cpo = s:cpo_save
+unlet s:cpo_save

@@ -1998,7 +1998,7 @@ do_mouse(oap, c, dir, count, fixindent)
 #endif
     int		c1, c2;
 #if defined(FEAT_FOLDING)
-    pos_T	save_cursor = curwin->w_cursor;
+    pos_T	save_cursor;
 #endif
     win_T	*old_curwin = curwin;
 #ifdef FEAT_VISUAL
@@ -2010,6 +2010,10 @@ do_mouse(oap, c, dir, count, fixindent)
     int		old_mode = VIsual_mode;
 #endif
     int		regname;
+
+#if defined(FEAT_FOLDING)
+    save_cursor = curwin->w_cursor;
+#endif
 
     /*
      * When GUI is active, always recognize mouse events, otherwise:

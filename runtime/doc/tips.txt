@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 18
+*tips.txt*      For Vim version 6.0.  Last change: 2001 Sep 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -357,25 +357,14 @@ files a bit slower and requires the "gzip" program.
 (2) Edit "doc/tags" and change the ".txt" to ".txt.gz": >
 	:%s=\(\t.*\.txt\)\t=\1.gz\t=
 
-(3) Add these lines to your vimrc: >
-	augroup helpgzip
-	autocmd!
-	autocmd BufReadPre  *.txt.gz set bin
-	autocmd BufReadPost *.txt.gz let ch_save = &ch|set ch=2
-	autocmd BufReadPost *.txt.gz '[,']!gunzip
-	autocmd BufReadPost *.txt.gz set nobin
-	autocmd BufReadPost *.txt.gz let &ch = ch_save|unlet ch_save
-	autocmd BufReadPost *.txt.gz execute ":doautocmd BufReadPost " . expand("%:r")
-	augroup END
+(3) Add this line to your vimrc: >
 	set helpfile={dirname}/help.txt.gz
 
-Where {dirname} is the directory where the help files are.  If you have
-already included autocommands to edit ".gz" files (from
-$VIMRUNTIME/vimrc_example.vim), you should omit the three "autocmd" lines.
-Setting 'cmdheight' to two is to avoid the |hit-enter| prompt; it is not
-mandatory.  You must also make sure that $VIMRUNTIME is set to where the other
-Vim files are, when they are not in the same location as the compressed "doc"
-directory.  See |$VIMRUNTIME|.
+Where {dirname} is the directory where the help files are.  The |gzip| plugin
+will take care of decompressing the files.
+You must make sure that $VIMRUNTIME is set to where the other Vim files are,
+when they are not in the same location as the compressed "doc" directory.  See
+|$VIMRUNTIME|.
 
 ==============================================================================
 Executing shell commands in a window			*shell-window*

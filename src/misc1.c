@@ -5976,8 +5976,9 @@ find_match(lookfor, ourscope, ind_maxparen, ind_maxcomment)
 get_expr_indent()
 {
     int		indent;
-    pos_T	pos = curwin->w_cursor;
+    pos_T	pos;
 
+    pos = curwin->w_cursor;
     set_vim_var_nr(VV_LNUM, curwin->w_cursor.lnum);
     ++sandbox;
     indent = eval_to_number(curbuf->b_p_inde);

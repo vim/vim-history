@@ -1971,8 +1971,9 @@ syn_current_attr(syncing, displaying)
 			    if (spp->sp_type == SPTYPE_START
 					      && (spp->sp_flags & HL_ONELINE))
 			    {
-				lpos_T	startpos = endpos;
+				lpos_T	startpos;
 
+				startpos = endpos;
 				find_endpos(idx, &startpos, &endpos, &hl_endpos,
 				    &flags, &eoe_pos, &end_idx, cur_extmatch);
 				if (endpos.lnum == 0)

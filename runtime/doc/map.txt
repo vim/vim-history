@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0ax.  Last change: 2001 Sep 18
+*map.txt*       For Vim version 6.0.  Last change: 2001 Sep 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -429,7 +429,7 @@ character.  This is because Vim cannot know if the next character will be a
 'q' or not.  If the 'timeout' option is on (which is the default) Vim will
 only wait for one second (or as long as specified with the 'timeoutlen'
 option).  After that it assumes that the 'q' is to be interpreted as such.  If
-type slowly, or your system is slow, reset the 'timeout' option.  Then you
+you type slowly, or your system is slow, reset the 'timeout' option.  Then you
 might want to set the 'ttimeout' option.
 
 							*map-keys-fails*

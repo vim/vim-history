@@ -4,6 +4,8 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
+# Last updated by Dan Sharp.  Last Change: 2001 Sep 20
+#
 
 #>>>>> choose options:
 
@@ -21,9 +23,9 @@ OUTDIR = obj
 
 #>>>>> uncomment this block to build a GUI version
 #OUTDIR = gobj
-#DEFINES = $(DEFINES) -DFEAT_GUI_W32
+#DEFINES += -DFEAT_GUI_W32
 #GUI_OBJ = $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o $(OUTDIR)/vimrc.o
-#GUI_LIBS = -lcomctl32 -lcomdlg32
+#GUI_LIBS = -lcomctl32
 #EXE = gvim.exe
 
 #>>>>> end of choices
@@ -31,7 +33,7 @@ OUTDIR = obj
 
 INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h os_win32.h structs.h
 CFLAGS = -O2 -D_MAX_PATH=256 -DWIN32 -DPC -Iproto $(DEFINES) $(INCLUDES)
-RCFLAGS = -D_MAX_PATH=256 -DWIN32 -DPC -O coff $(DEFINES) $(INCLUDES)
+RCFLAGS = -D_MAX_PATH=256 -DWIN32 -DPC -O coff $(DEFINES)
 
 OBJ = \
 	$(OUTDIR)/buffer.o \
@@ -78,12 +80,10 @@ OBJ = \
 all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstal.exe
 
 $(EXE): $(OUTDIR) $(OBJ) version.c version.h
-	$(CC) $(CFLAGS) -s -o $(EXE) version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32 $(GUI_LIBS)
+	$(CC) $(CFLAGS) -s -o $(EXE) version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32 -luuid -lole32 -lcomdlg32 $(GUI_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
-	cd xxd
-	$(MAKE) -f Make_cyg.mak
-	cd ..
+	cd xxd ; $(MAKE) -f Make_cyg.mak ; cd ..
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  -lkernel32 -luser32 -lgdi32 -ladvapi32

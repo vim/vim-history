@@ -2515,6 +2515,9 @@ SFgetText()
 	    XtNstring, &wcbuf,
 	NULL);
 	mbslength = wcstombs(NULL, wcbuf, 0);
+	/* Hack: some broken wcstombs() returns zero, just get a large buffer */
+	if (mbslength == 0 && wcbuf != NULL && wcbuf[0] != 0)
+	    mbslength = MAXPATHL;
 	buf=(char *)XtMalloc(mbslength + 1);
 	wcstombs(buf, wcbuf, mbslength +1);
 	return buf;

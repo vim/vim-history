@@ -2602,7 +2602,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
      */
     if (!(append && *p_pm == NUL) && !filtering && perm >= 0 && dobackup)
     {
-
 	if (*p_bkc == 'y' || append)	/* "yes" */
 	    backup_copy = TRUE;
 #ifdef UNIX

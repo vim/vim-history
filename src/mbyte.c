@@ -2730,8 +2730,16 @@ im_set_active(active)
     if (xic == NULL)
 	return;
 
+    /* If 'imdisable' is set, XIM is never active. */
     if (p_imdisable)
 	active = FALSE;
+#ifndef FEAT_GUI_GTK
+    else if (input_style & XIMPreeditPosition)
+	/* There is a problem in switching XIM off when preediting is used,
+	 * and it is not clear how this can be solved.  For now, keep XIM on
+	 * all the time, like it was done in Vim 5.8. */
+	active = TRUE;
+#endif
 
     /* Remember the active state, it is needed when Vim gets keyboard focus. */
     xim_is_active = active;
@@ -2815,7 +2823,7 @@ im_set_active(active)
 	    im_xim_send_event_imactivate();
 # endif
 #endif
-    xim_set_focus(TRUE);
+    xim_set_preedit();
 }
 
 /*
@@ -2823,7 +2831,8 @@ im_set_active(active)
  * "xim_is_active" changes.
  */
     void
-xim_set_focus(int focus)
+xim_set_focus(focus)
+    int		focus;
 {
     if (xic == NULL)
 	return;
@@ -3810,7 +3819,7 @@ xim_init(void)
 #endif /* FEAT_GUI_GTK */
 
     int
-xim_get_status_area_height(void)
+xim_get_status_area_height()
 {
 #ifdef FEAT_GUI_GTK
     if (xim_input_style & (int)GDK_IM_STATUS_AREA)
@@ -3824,6 +3833,9 @@ xim_get_status_area_height(void)
 
 /*
  * Get IM status.  When IM is on, return TRUE.  Else return FALSE.
+ * FIXME: This doesn't work correctly: Having focus doesn't always mean XIM is
+ * active, when not having focus XIM may still be active (e.g., when using a
+ * tear-off menu item).
  */
     int
 im_get_status()

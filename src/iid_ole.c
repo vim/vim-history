@@ -4,17 +4,17 @@
 /* link this file in with the server and any clients */
 
 
-/* File created by MIDL compiler version 5.01.0164 */
-/* at Wed Sep 19 21:02:07 2001
+/* File created by MIDL compiler version 3.00.44 */
+/* at Sat Jan 03 16:34:55 1998
  */
 /* Compiler settings for if_ole.idl:
     Os (OptLev=s), W1, Zp8, env=Win32, ms_ext, c_ext
-    error checks: allocation ref bounds_check enum stub_data 
+    error checks: none
 */
 //@@MIDL_FILE_HEADING(  )
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
 
 #ifndef __IID_DEFINED__

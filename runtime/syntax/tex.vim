@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-8
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: May 16, 2001
+" Last Change: September 11, 2001
+" Version:     6.0-9
 "
 " Notes:
 "
@@ -256,12 +256,12 @@ else
   endif
 endif
 syn region texZone	start="@samp{"		end="}\|%stopzone\>"
-syn region texRefZone	matchgroup=texStatement start="\\nocite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\nocite{"	   keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 syn region texRefZone	matchgroup=texStatement start="\\bibliography{" keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\cite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\label{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\pageref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
-syn region texRefZone	matchgroup=texStatement start="\\ref{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\cite\([tp]\*\=\)\={"   keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\label{"	   keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\pageref{"	   keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
+syn region texRefZone	matchgroup=texStatement start="\\v\=ref{"	   keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
 
 " handle newcommand, newenvironment
 syn match  texNewCmd		"\\newcommand\>"		nextgroup=texCmdName skipwhite skipnl
@@ -339,7 +339,8 @@ syn sync match texSyncMathZoneT	groupthere NONE	"\\)"
 syn sync match texSyncMathZoneU	groupthere NONE	"\\\]"
 syn sync match texSyncStop		groupthere NONE	"%stopzone\>"
 
-" The $..$ and $$..$$ make for impossible sync patterns.
+" The $..$ and $$..$$ make for impossible sync patterns
+" (one can't tell if a "$$" starts or stops a math zone by itself)
 " The following grouptheres coupled with minlines above
 " help improve the odds of good syncing.
 syn sync match texSyncMathZoneS	groupthere NONE	"\\end{abstract}"

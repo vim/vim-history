@@ -3749,7 +3749,7 @@ to_device_units(idx, physsize, def_number)
 	    ret = (float)(nr * PRT_PS_DEFAULT_DPI);
 	    break;
 	case PRT_UNIT_MM:
-	    ret = (float)(nr * PRT_PS_DEFAULT_DPI) / 25.4;
+	    ret = (float)(nr * PRT_PS_DEFAULT_DPI) / (float)25.4;
 	    break;
 	case PRT_UNIT_POINT:
 	    ret = (float)nr;
@@ -3817,11 +3817,11 @@ prt_get_lpp()
      * font height (based on its bounding box) and the line height, handling the
      * case where the font height can exceed the line height.
      */
-    prt_bgcol_offset = PRT_PS_FONT_TO_USER(prt_line_height,
+    prt_bgcol_offset = (float)PRT_PS_FONT_TO_USER(prt_line_height,
 					   prt_ps_font.bbox_min_y);
     if ((prt_ps_font.bbox_max_y - prt_ps_font.bbox_min_y) < 1000.0)
     {
-	prt_bgcol_offset -= PRT_PS_FONT_TO_USER(prt_line_height,
+	prt_bgcol_offset -= (float)PRT_PS_FONT_TO_USER(prt_line_height,
 				(1000.0 - (prt_ps_font.bbox_max_y -
 					    prt_ps_font.bbox_min_y)) / 2);
     }

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	VisualBasic (ft=vb)
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
-" Last Change:	Thu, 23 Aug 2001 11:18:55 W. Europe Standard Time
+" Last Change:	Tue, 18 Sep 2001 23:00:50 +0200
 
 if exists("b:did_ftplugin") | finish | endif
 let b:did_ftplugin = 1
@@ -9,6 +9,7 @@ let b:did_ftplugin = 1
 setlocal nocindent
 setlocal autoindent
 setlocal foldmethod=syntax
+setlocal com=sr:'\ -,mb:'\ \ ,el:'\ \ ,:'
 
 " we need this wrapper, as call doesn't allow a count
 fun! <SID>VbSearch(pattern, flags)
@@ -23,10 +24,10 @@ let s:cpo_save = &cpo
 set cpo&vim
 
 " NOTE the double escaping \\|
-nnoremap <silent> [[ :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'bW')<cr>
-nnoremap <silent> ]] :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'W')<cr>
-nnoremap <silent> [] :call <SID>VbSearch('^\s*\<end\>\s\+\(function\\|sub\)', 'bW')<cr>
-nnoremap <silent> ][ :call <SID>VbSearch('^\s*\<end\>\s\+\(function\\|sub\)', 'W')<cr>
+nnoremap <buffer> <silent> [[ :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'bW')<cr>
+nnoremap <buffer> <silent> ]] :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'W')<cr>
+nnoremap <buffer> <silent> [] :call <SID>VbSearch('^\s*\<end\>\s\+\(function\\|sub\)', 'bW')<cr>
+nnoremap <buffer> <silent> ][ :call <SID>VbSearch('^\s*\<end\>\s\+\(function\\|sub\)', 'W')<cr>
 
 " matchit support
 if exists("loaded_matchit")

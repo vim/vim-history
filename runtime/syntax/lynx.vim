@@ -3,7 +3,7 @@
 " Language:     Lynx configuration file ( lynx.cfg )
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
 " URL:          http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/lynx.vim
-" Last Change:  2001 Aug 31
+" Last Change:  2001 Sep 24
 
 " TODO: more intelligent and complete argument highlighting
 
@@ -65,8 +65,8 @@ syn match   lynxOption "^\s*DEFAULT_BOOKMARK_FILE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_CACHE_SIZE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_EDITOR" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_INDEX_FILE" nextgroup=lynxDelimiter
-syn match   lynxOption "^\s*DEFAULT_KEYPAD_MODE_IS_NUMBERS_AS_ARROWS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_KEYPAD_MODE" nextgroup=lynxDelimiter
+syn match   lynxOption "^\s*DEFAULT_KEYPAD_MODE_IS_NUMBERS_AS_ARROWS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_USER_MODE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DEFAULT_VIRTUAL_MEMORY_SIZE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*DIRED_MENU" nextgroup=lynxDelimiter
@@ -100,8 +100,8 @@ syn match   lynxOption "^\s*INFOSECS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*JUMPBUFFER" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*JUMPFILE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*JUMP_PROMPT" nextgroup=lynxDelimiter
-syn match   lynxOption "^\s*JUSTIFY_MAX_VOID_PERCENT" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*JUSTIFY" nextgroup=lynxDelimiter
+syn match   lynxOption "^\s*JUSTIFY_MAX_VOID_PERCENT" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*KEYBOARD_LAYOUT" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*KEYMAP" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*LEFTARROW_IN_TEXTFIELD_PROMPT" nextgroup=lynxDelimiter
@@ -173,16 +173,16 @@ syn match   lynxOption "^\s*SNEWSPOST_PROXY" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SNEWS_PROXY" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SNEWSREPLY_PROXY" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SOFT_DQUOTES" nextgroup=lynxDelimiter
-syn match   lynxOption "^\s*SOURCE_CACHE_FOR_ABORTED" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SOURCE_CACHE" nextgroup=lynxDelimiter
+syn match   lynxOption "^\s*SOURCE_CACHE_FOR_ABORTED" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*STARTFILE" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*STRIP_DOTDOT_URLS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SUBSTITUTE_UNDERSCORES" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SUFFIX" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SUFFIX_ORDER" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SYSTEM_EDITOR" nextgroup=lynxDelimiter
-syn match   lynxOption "^\s*SYSTEM_MAIL_FLAGS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*SYSTEM_MAIL" nextgroup=lynxDelimiter
+syn match   lynxOption "^\s*SYSTEM_MAIL_FLAGS" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*TAGSOUP" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*TEXTFIELDS_NEED_ACTIVATION" nextgroup=lynxDelimiter
 syn match   lynxOption "^\s*TIMEOUT" nextgroup=lynxDelimiter

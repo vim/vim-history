@@ -1,7 +1,7 @@
 "  vim: set sw=4 sts=4:
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
 "  URL		: http://www.pcppopper.org/
-"  Revised on	: Mon, 27 Aug 2001 16:32:59 +0200
+"  Revised on	: Sun, 23 Sep 2001 16:26:03 +0200
 "  Language	: Shell Script
 
 " Only load this indent file when no other was loaded.
@@ -19,7 +19,7 @@ if exists("*GetShIndent")
     finish
 endif
 
-set cpo-=C
+set cpoptions-=C
 
 function GetShIndent()
     " Find a non-blank line above the current line.

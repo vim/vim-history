@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Java
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Mon, 17 Sep 2001 11:28:40 Eastern Daylight Time
+" Last Change:	Wed, 19 Sep 2001 16:27:23 Eastern Daylight Time
 " Current version is at http://sites.netscape.net/sharppeople/vim/ftplugin
 
 " Only do this when not done yet for this buffer
@@ -24,7 +24,11 @@ setlocal cinoptions+=+0		" Align continuation lines with the previous line
 
 " For filename completion, prefer the .java extension over the .class
 " extension.
-setlocal suffixes+=.class
+set suffixes+=.class
+
+" Automatically add the java extension when searching for files, like with gf
+" or [i
+setlocal suffixesadd=.java
 
 " Set 'formatoptions' to break comment lines but not other lines,
 " and insert the comment leader when hitting <CR> or using "o".

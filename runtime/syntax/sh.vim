@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	August 31, 2001
-" Version: 25
+" Last Change:	September 18, 2001
+" Version: 26
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
@@ -48,16 +48,16 @@ endif
 " sh syntax is case sensitive
 syn case match
 
-" This one is needed INSIDE a CommandSub, so that
-" `echo bla` be correct
-syn cluster shEchoList	contains=shNumber,shArithmetic,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
+" This one is needed INSIDE a CommandSub, so that `echo bla` be correct
+syn cluster shEchoList	contains=shNumber,shArithmetic,shCommandSub,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass,shPosnParm
 syn region shEcho matchgroup=shStatement start="\<echo\>"  skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=@shEchoList
 syn region shEcho matchgroup=shStatement start="\<print\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|()]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=@shEchoList
 
 " This must be after the strings, so that bla \" be correct
 syn region shEmbeddedEcho contained matchgroup=shStatement start="\<print\>" skip="\\$" matchgroup=shOperator end="$" matchgroup=NONE end="[<>;&|`)]"me=e-1 end="\d[<>]"me=e-2 end="#"me=e-1 contains=shNumber,shSinglequote,shDeref,shSpecialVar,shSpecial,shOperator,shDoubleQuote,shCharClass
 
-"Error Codes
+" Error Codes
+" ===========
 syn match   shDoError "\<done\>"
 syn match   shIfError "\<fi\>"
 syn match   shInError "\<in\>"
@@ -86,8 +86,9 @@ syn cluster shErrorNoneList	contains=shDerefError
 " clusters: contains=@... clusters
 "==================================
 syn cluster shCaseEsacList	contains=shCaseStart,shCase,shCaseBar,shCaseIn,shComment,shDeref,shCommandSub
-syn cluster shIdList	contains=shCommandSub,shWrapLineOperator,shIdWhiteSpace,shDeref,shSpecial
 syn cluster shDblQuoteList	contains=shCommandSub,shDeref,shSpecial,shPosnParm
+syn cluster shDerefList	contains=shDerefOp,shDerefError,shDerefOpError,shExpr
+syn cluster shIdList	contains=shCommandSub,shWrapLineOperator,shIdWhiteSpace,shDeref,shSpecial
 
 " clusters: contains=ALLBUT,@... clusters
 "=========================================
@@ -111,10 +112,15 @@ if exists("b:is_kornshell")
 endif
 syn match   shTestOpr contained "[!=]\|-.\>\|-\(nt\|ot\|ef\|eq\|ne\|lt\|le\|gt\|ge\)\>"
 
-" do, if
+" do, if, while, until
 syn region shDo  transparent matchgroup=shConditional start="\<do\>" matchgroup=shConditional end="\<done\>" contains=ALLBUT,@shLoopList
 syn region shIf  transparent matchgroup=shConditional start="\<if\>" matchgroup=shConditional end="\<fi\>"   contains=ALLBUT,@shLoopList
 syn region shFor matchgroup=shStatement start="\<for\>" end="\<in\>" end="\<do\>"me=e-2	contains=ALLBUT,@shLoopList
+if exists("b:is_kornshell") || exists("b:is_bash")
+  syn region shRepeat   matchgroup=shStatement   start="\<while\>" end="\<in\>" end="\<do\>"me=e-2	contains=ALLBUT,@shLoopList
+  syn region shRepeat   matchgroup=shStatement   start="\<until\>" end="\<in\>" end="\<do\>"me=e-2	contains=ALLBUT,@shLoopList
+  syn region shCaseEsac matchgroup=shConditional start="\<select\>" matchgroup=shConditional end="\<in\>" end="\<do\>" contains=ALLBUT,@shLoopList
+endif
 
 " case
 syn region  shCaseEsac	matchgroup=shConditional start="\<case\>" matchgroup=shConditional end="\<esac\>" contains=@shCaseEsacList
@@ -242,20 +248,23 @@ else
   syn match  shStatement "\<\(set\|export\|unset\)$"
 endif
 
-" The [^/] in the start pattern is a kludge to avoid bad
-" highlighting with cd /usr/local/lib...
-syn region shFunction	transparent	matchgroup=shFunctionName start="^\s*\<\h\w*\>\s*()\s*{" end="}" contains=ALLBUT,@shFunctionList
+if exists("b:is_bash") || exists("b:is_kornshell")
+  " handles functions which start:  Function () {
+  syn match  shFunction	"^\s*\<\h\w*\>\s*()"	skipwhite skipnl nextgroup=shFunctionRegion
+  syn region shFunctionRegion	transparent	matchgroup=Delimiter	start="{" end="}" contains=ALLBUT,@shFunctionList
+endif
 syn region shDeref	oneline	start="\${" end="}"	contains=shDeref,shDerefVar
 syn match  shDeref		"\$\h\w*\>"
-syn match  shPosnParm		"\$[-#@*$?!0-9]"
-syn match  shDerefVar	contained	"\d\+\>"		nextgroup=shDerefOp,shDerefError,shDerefOpError,shExpr
-syn match  shDerefVar	contained	"\h\w*\>"		nextgroup=shDerefOp,shDerefError,shDerefOpError,shExpr
+syn match  shDerefVar	contained	"\d\+\>"		nextgroup=@shDerefList
+syn match  shDerefVar	contained	"\h\w*\>"		nextgroup=@shDerefList
 if exists("b:is_bash")
- syn match  shDerefVar	contained	"[-@*?!]"		nextgroup=shDerefOp,shDerefError,shDerefOpError,shExpr
+  syn match  shDerefVar	contained	"[-@*?!]"		nextgroup=@shDerefList
+  syn match  shDerefOp	contained	":[^-=?+]"me=e-1	nextgroup=shDeref,shDerefVar,shPosnParm
 else
- syn match  shDerefVar	contained	"[-#@*?!]"		nextgroup=shDerefOp,shDerefError,shDerefOpError,shExpr
+  syn match  shDerefVar	contained	"[-#@*?!]"		nextgroup=@shDerefList
 endif
-syn match  shDerefVar	contained	"\$[^{(]"me=s+1	nextgroup=shDerefOp,shDerefError,shDerefOpError,shExpr
+syn match  shDerefVar	contained	"\$[^{(]"me=s+1	nextgroup=@shDerefList
+syn match  shPosnParm		"\$[-#@*$?!0-9]"	nextgroup=shDerefOp
 syn match  shDerefOpError	contained	"[^:}[]"
 syn match  shDerefOp	contained	":\=[-=?+]"		nextgroup=shDerefText
 syn region shDerefText	contained	start="[^{}]"	end="}"me=e-1	contains=shDeref,shCommandSub,shDoubleQuote,shSingleQuote,shDerefTextError
@@ -273,11 +282,10 @@ syn keyword shStatement	break	eval	newgrp	return	ulimit
 syn keyword shStatement	cd	exec	pwd	shift	umask
 syn keyword shStatement	chdir	exit	read	test	wait
 syn keyword shStatement	continue	kill	readonly	trap
-syn keyword shConditional	elif	else	then	while
+syn keyword shConditional	elif	else	then
 
 if exists("b:is_kornshell") || exists("b:is_bash")
  syn keyword shFunction	function
- syn keyword shRepeat	select	until
  syn keyword shStatement	alias	fg	integer	printf	times
  syn keyword shStatement	autoload	functions	jobs	r	true
  syn keyword shStatement	bg	getopts	let	stop	type
@@ -302,14 +310,16 @@ if !exists("sh_maxlines")
   let sh_maxlines = 2 * sh_minlines
 endif
 exec "syn sync minlines=" . sh_minlines . " maxlines=" . sh_maxlines
-syn sync match shDoSync       grouphere  shDo       "\<do\>"
-syn sync match shDoSync       groupthere shDo       "\<done\>"
-syn sync match shIfSync       grouphere  shIf       "\<if\>"
-syn sync match shIfSync       groupthere shIf       "\<fi\>"
-syn sync match shForSync      grouphere  shFor      "\<for\>"
-syn sync match shForSync      groupthere shFor      "\<in\>"
-syn sync match shCaseEsacSync grouphere  shCaseEsac "\<case\>"
-syn sync match shCaseEsacSync groupthere shCaseEsac "\<esac\>"
+syn sync match shCaseEsacSync grouphere	shCaseEsac	"\<case\>"
+syn sync match shCaseEsacSync groupthere	shCaseEsac	"\<esac\>"
+syn sync match shDoSync	grouphere	shDo	"\<do\>"
+syn sync match shDoSync	groupthere	shDo	"\<done\>"
+syn sync match shForSync	grouphere	shFor	"\<for\>"
+syn sync match shForSync	groupthere	shFor	"\<in\>"
+syn sync match shIfSync	grouphere	shIf	"\<if\>"
+syn sync match shIfSync	groupthere	shIf	"\<fi\>"
+syn sync match shUntilSync	grouphere	shRepeat	"\<until\>"
+syn sync match shWhileSync	grouphere	shRepeat	"\<while\>"
 
 " The default highlighting.
 hi def link shArithRegion		shShellVariables

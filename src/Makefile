@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ax
+VIMRTDIR = /vim60
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1530,7 +1530,7 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(DEST_MAN)/$(VIMDIFFNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(VIMDIFFNAME).1
 	@echo generating $(DEST_MAN)/$(EVIMNAME).1
-	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
+	@sed -e s+/usr/local/lib/vim+$(SCRIPTLOC)+ \
 		$(HELPSOURCE)/evim.1 > $(DEST_MAN)/$(EVIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(EVIMNAME).1
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(DEST_HELP)

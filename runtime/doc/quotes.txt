@@ -1,4 +1,4 @@
-*quotes.txt*    For Vim version 6.0ax.  Last change: 2001 Sep 04
+*quotes.txt*    For Vim version 6.0.  Last change: 2001 Sep 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -18,6 +18,10 @@ Although all of the programs were used during the preparation of the new and
 revised material, most of the editing was done with VIM versions 4.5 and 5.0
 under GNU-Linux (Redhat 4.2).  (Arnold Robbins, Israel, author of "Learning
 the Vi editor")
+
+Out of all the open software i've ever seen and used, and i've seen alot, Vim
+is the best, most useful and highest quality to work with, second only to the
+linux kernel itself. (Peter Jay Salzman)
 
 It's well worth noting that the _entirety_ of SourceForge was written using
 vim and its nifty PHP syntax highlighting. I think the entire SF.net tech

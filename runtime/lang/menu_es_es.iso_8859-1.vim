@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Sep 09
+" Last Change:		2001 Sep 23
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -51,7 +51,11 @@ if has("win32") || has("win16")
 endif
 menutrans &Select\ all<Tab>ggVG		&Seleccionar\ todo<Tab>ggVG
 menutrans &Find\.\.\.			&Buscar\.\.\.
+menutrans &Find<Tab>/			&Buscar<Tab>/
 menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&eemplazar\.\.\.
+menutrans Find\ and\ Rep&lace<Tab>:%s	Buscar\ y\ R&eemplazar<Tab>:%s
+menutrans Find\ and\ Rep&lace		Buscar\ y\ R&eemplazar
+menutrans Find\ and\ Rep&lace<Tab>:s	Buscar\ y\ R&eemplazar<Tab>:s
 menutrans Settings\ &Window		&Ventana\ de\ opciones
 
 " Edit/Global Settings
@@ -109,10 +113,20 @@ menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
 let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
 
 menutrans C&olor\ Scheme		Esquema\ de\ c&olores
+menutrans blue		azul
+menutrans default	normal
+menutrans evening	vespertino
+menutrans morning	matutino
+menutrans peachpuff	melocotón
+menutrans shine		brillante
+
 menutrans Select\ Fo&nt\.\.\.		Seleccionar\ fue&nte\.\.\.
 
 menutrans &Keymap	Asociación\ de\ teclas
 menutrans None		Ninguna
+menutrans accents	acentos
+menutrans greek		griego
+menutrans hebrew	hebreo
 
 " Programming menu
 menutrans &Tools			&Herramientas
@@ -202,7 +216,7 @@ menutrans Select\ &Line		Seleccionar\ una\ &línea
 menutrans Select\ &Block	Seleccionar\ un\ &bloque
 menutrans Select\ &All		Seleccionar\ &todo
 
-" The GUI toolbar (for Win32, GTK, Motif or Athena)
+" The GUI toolbar
 if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
@@ -221,14 +235,16 @@ if has("toolbar")
     tmenu ToolBar.FindNext	Buscar siguiente
     tmenu ToolBar.FindPrev	Buscar precedente
     tmenu ToolBar.Replace	Buscar y reemplazar
-    tmenu ToolBar.New		Ventana nueva
-    tmenu ToolBar.WinSplit	Dividir ventana
-    tmenu ToolBar.WinMax	Ventana máxima
-    tmenu ToolBar.WinMin	Ventana mínima
-    tmenu ToolBar.WinVSplit	Dividir verticalmente
-    tmenu ToolBar.WinMaxWidth	Anchura máxima
-    tmenu ToolBar.WinMinWidth	Anchura mínima
-    tmenu ToolBar.WinClose	Cerrar ventana
+    if 0	" disabled; These are in the Windows menu
+      tmenu ToolBar.New		Ventana nueva
+      tmenu ToolBar.WinSplit	Dividir ventana
+      tmenu ToolBar.WinMax	Ventana máxima
+      tmenu ToolBar.WinMin	Ventana mínima
+      tmenu ToolBar.WinVSplit	Dividir verticalmente
+      tmenu ToolBar.WinMaxWidth	Anchura máxima
+      tmenu ToolBar.WinMinWidth	Anchura mínima
+      tmenu ToolBar.WinClose	Cerrar ventana
+    endif
     tmenu ToolBar.LoadSesn	Cargar sesión
     tmenu ToolBar.SaveSesn	Guardar sesión
     tmenu ToolBar.RunScript	Ejecutar un «script»

@@ -2396,11 +2396,11 @@ set_init_1()
      * temp files.
      */
     {
-	char	*(names[]) = {
 # ifdef UNIX
-			    "",
+	static char	*(names[4]) = {"", "TMPDIR", "TEMP", "TMP"};
+# else
+	static char	*(names[3]) = {"TMPDIR", "TEMP", "TMP"};
 # endif
-				"TMPDIR", "TEMP", "TMP"};
 	int	len;
 	garray_T ga;
 

@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 16
+" Last Change:	2001 Sep 24
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -150,7 +150,7 @@ SynMenu EFG.GNUplot:gnuplot
 SynMenu EFG.GTKrc:gtkrc
 
 SynMenu HIJK.Haskell:haskell
-SynMenu HIJK.Haskell-literal:lhaskell
+SynMenu HIJK.Haskell-literate:lhaskell
 SynMenu HIJK.Hercules:hercules
 SynMenu HIJK.HTML:html
 SynMenu HIJK.HTML\ with\ M4:htmlm4

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    Lisp
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: Aug 15, 2001
-" Version:     1.08
+" Last Change: September 17, 2001
+" Version:     1.09
 "  Thanks to F Xavier Noria for a list of 978 Common Lisp symbols
 "  taken from the HyperSpec
 
@@ -418,7 +418,7 @@ syn keyword lispDecl	defun	dotimes	macrolet
 syn keyword lispDecl	do*	flet	multiple-value-bind
 
 " Numbers: supporting integers and floating point numbers
-syn match lispNumber	"-\=\(\.\d\+\|\d\+\(.\d*\)\=\)\(e[-+]\=\d\+\)\="
+syn match lispNumber	"-\=\(\.\d\+\|\d\+\(\.\d*\)\=\)\(e[-+]\=\d\+\)\="
 
 syn match lispSpecial	"\*[a-zA-Z_][a-zA-Z_0-9-]*\*"
 syn match lispSpecial	!#|[^()'`,"; \t]\+|#!

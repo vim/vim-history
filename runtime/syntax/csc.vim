@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Essbase script
-" Maintainer:	Raul Segura Acevedo <raul@turing.iquimica.unam.mx>
-" Last change:	2001 Jul 28
+" Maintainer:	Raul Segura Acevedo <raulseguraaceved@netscape.net>
+" Last change:	2001 Sep 25
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

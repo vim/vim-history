@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0ax.  Last change: 2001 Sep 03
+*usr_toc.txt*	For Vim version 6.0.  Last change: 2001 Sep 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -46,6 +46,11 @@ Tuning Vim
 Making Vim Run
 |usr_90.txt|  Installing Vim
 
+
+The user manual is availble as a single, ready to print HTML file here:
+
+	http://www.erebus.demon.nl/vim/
+	
 ==============================================================================
 Getting Started ~
 
