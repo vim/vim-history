@@ -114,12 +114,9 @@ do_ascii(eap)
 		)
 	    IObuff[len++] = ' '; /* draw composing char on top of a space */
 	IObuff[len + (*mb_char2bytes)(c, IObuff + len)] = NUL;
-	if (c < 0x10000)
-	    sprintf((char *)IObuff + STRLEN(IObuff),
-					 "> %d, Hex %04x, Octal %o", c, c, c);
-	else
-	    sprintf((char *)IObuff + STRLEN(IObuff),
-					 "> %d, Hex %08x, Octal %o", c, c, c);
+	sprintf((char *)IObuff + STRLEN(IObuff),
+			c < 0x10000 ? _("> %d, Hex %04x, Octal %o")
+				    : _("> %d, Hex %08x, Octal %o"), c, c, c);
 	c = c1;
 	c1 = c2;
 	c2 = 0;
