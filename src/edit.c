@@ -335,9 +335,7 @@ edit(cmdchar, startln, count)
     else
 	State = INSERT;
 
-#ifdef FEAT_EX_EXTRA
     stop_insert_mode = FALSE;
-#endif
 
     /*
      * Need to recompute the cursor position, it might move when the cursor is
@@ -494,14 +492,12 @@ edit(cmdchar, startln, count)
 	if (arrow_used)	    /* don't repeat insert when arrow key used */
 	    count = 0;
 
-#ifdef FEAT_EX_EXTRA
 	if (stop_insert_mode)
 	{
-	    /* ":stopinsert" used */
+	    /* ":stopinsert" used or 'insertmode' reset */
 	    count = 0;
 	    goto doESCkey;
 	}
-#endif
 
 	/* set curwin->w_curswant for next K_DOWN or K_UP */
 	if (!arrow_used)
