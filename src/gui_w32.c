@@ -2716,7 +2716,7 @@ gui_mch_init_font(char_u *font_name)
     hl_set_font_name(lf.lfFaceName);
     if (STRCMP(font_name, "*") == 0)
     {
-	p = alloc((unsigned)(strlen(lf.lfFaceName) + 10));
+	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14));
 	if (p != NULL)
 	{
 	    /* make a normal font string out of the lf thing:*/
@@ -2730,6 +2730,10 @@ gui_mch_init_font(char_u *font_name)
 		    *p = '_';
 		++p;
 	    }
+	    if (lf.lfItalic)
+		strcat(p, ":i");
+	    if (lf.lfWeight >= FW_BOLD)
+		strcat(p, ":b");
 	}
     }
 
