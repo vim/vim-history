@@ -1475,6 +1475,20 @@ if test $ac_cv_type_stack_t = no; then
 EOF
 fi
 
+dnl BSDI uses ss_base while others use ss_sp for the stack pointer.
+AC_MSG_CHECKING(whether stack_t has an ss_base field)
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+#include <signal.h>
+#include "confdefs.h"
+			], [stack_t sigstk; sigstk.ss_base = 0; ],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SS_BASE),
+	AC_MSG_RESULT(no))
+
 olibs="$LIBS"
 AC_MSG_CHECKING(--with-tlib argument)
 AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)

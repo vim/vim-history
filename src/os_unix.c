@@ -664,7 +664,11 @@ init_signal_stack()
     if (signal_stack != NULL)
     {
 # ifdef HAVE_SIGALTSTACK
+#  ifdef HAVE_SS_BASE
+	sigstk.ss_base = signal_stack;
+#  else
 	sigstk.ss_sp = signal_stack;
+#  endif
 	sigstk.ss_size = SIGSTKSZ;
 	sigstk.ss_flags = 0;
 	(void)sigaltstack(&sigstk, NULL);

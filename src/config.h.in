@@ -92,6 +92,9 @@
 /* Define to `struct sigaltstack' if <signal.h> doesn't define.  */
 #undef stack_t
 
+/* Define if stack_t has the ss_base field. */
+#undef HAVE_SS_BASE
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #undef TIME_WITH_SYS_TIME
 
