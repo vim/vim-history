@@ -6675,12 +6675,14 @@ do_exat(eap)
 	beep_flush();
     else
     {
+	int	save_efr = exec_from_reg;
+
+	exec_from_reg = TRUE;
 	/* execute from the mapbuf */
 	while (vpeekc() == ':')
-	{
-	    (void)vgetc();
 	    (void)do_cmdline(NULL, getexline, NULL, DOCMD_NOWAIT|DOCMD_VERBOSE);
-	}
+
+	exec_from_reg = save_efr;
     }
 }
 

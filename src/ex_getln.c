@@ -1360,6 +1360,9 @@ getexline(c, dummy, indent)
     void	*dummy;		/* cookie not used */
     int		indent;		/* indent for inside conditionals */
 {
+    /* When executing a register, remove ':' that's in front of each line. */
+    if (exec_from_reg && vpeekc() == ':')
+	(void)vgetc();
     return getcmdline(c, 1L, indent);
 }
 
