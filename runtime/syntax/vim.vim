@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	Vim 6.0ai script
+" Language:	Vim 6.0ak script
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	June 04, 2001
-" Version:	6.0ai-01
+" Last Change:	June 18, 2001
+" Version:	6.0ak-01
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -15,80 +15,81 @@ syn keyword vimTodo contained	COMBAK	NOT	RELEASED	TODO
 syn cluster vimCommentGroup	contains=vimTodo
 
 " regular vim commands
-syn keyword vimCommand contained	N[ext]	colo[rscheme]	inorea[bbrev]	po[p]	sno[magic]
-syn keyword vimCommand contained	Nread	comc[lear]	inoreme	pop[up]	so[urce]
-syn keyword vimCommand contained	Nw	conf[irm]	inoremenu	pp[op]	sp[lit]
-syn keyword vimCommand contained	P[rint]	con[tinue]	is[earch]	pre[serve]	spr[evious]
-syn keyword vimCommand contained	X	co[py]	isp[lit]	prev[ious]	sr[ewind]
-syn keyword vimCommand contained	ab[breviate]	cp[revious]	iuna[bbrev]	p[rint]	sta[g]
-syn keyword vimCommand contained	abc[lear]	cq[uit]	iu[nmap]	promptf[ind]	star[tinsert]
-syn keyword vimCommand contained	abo[veleft]	cr[ewind]	iunme	promptr[epl]	stj[ump]
-syn keyword vimCommand contained	aboveright	cuna[bbrev]	iunmenu	ps[earch]	st[op]
-syn keyword vimCommand contained	al[l]	cu[nmap]	j[oin]	ptN[ext]	sts[elect]
-syn keyword vimCommand contained	am	cunme	ju[mps]	pta[g]	sun[hide]
-syn keyword vimCommand contained	amenu	cunmenu	k	ptf[irst]	sus[pend]
-syn keyword vimCommand contained	an	cw[indow]	lan[guage]	ptj[ump]	sv[iew]
-syn keyword vimCommand contained	anoremenu	delc[ommand]	la[st]	ptl[ast]	syncbind
-syn keyword vimCommand contained	arga[dd]	d[elete]	lc[d]	ptn[ext]	t
-syn keyword vimCommand contained	argd[elete]	delf[unction]	lch[dir]	ptp[revious]	tN[ext]
-syn keyword vimCommand contained	argdo	diffg[et]	le[ft]	ptr[ewind]	ta[g]
-syn keyword vimCommand contained	arge[dit]	diffpatch	lefta[bove]	pts[elect]	tags
-syn keyword vimCommand contained	argg[lobal]	diffpu[t]	leftbelow	pu[t]	tc[l]
-syn keyword vimCommand contained	argl[ocal]	diffsplit	l[ist]	pw[d]	tcld[o]
-syn keyword vimCommand contained	ar[gs]	dig[raphs]	lm[ap]	pyf[ile]	tclf[ile]
-syn keyword vimCommand contained	argu[ment]	di[splay]	lmapc[lear]	py[thon]	te[aroff]
-syn keyword vimCommand contained	as[cii]	dj[ump]	lno[remap]	qa[ll]	tf[irst]
-syn keyword vimCommand contained	aun	dl[ist]	lo[adview]	q[uit]	tj[ump]
-syn keyword vimCommand contained	aunmenu	dr[op]	ls	quita[ll]	tl[ast]
-syn keyword vimCommand contained	bN[ext]	ds[earch]	lu[nmap]	r[ead]	tm[enu]
-syn keyword vimCommand contained	bad[d]	dsp[lit]	mak[e]	rec[over]	tn[ext]
-syn keyword vimCommand contained	ba[ll]	echoe[rr]	ma[rk]	redi[r]	to[pleft]
-syn keyword vimCommand contained	bd[elete]	echom[sg]	marks	red[o]	tp[revious]
-syn keyword vimCommand contained	belowleft	echon	mat[ch]	redr[aw]	tr[ewind]
-syn keyword vimCommand contained	bel[owright]	e[dit]	me	reg[isters]	ts[elect]
-syn keyword vimCommand contained	bf[irst	el[se]	menu	res[ize]	tu[nmenu]
-syn keyword vimCommand contained	bl[ast]	elsei[f]	menu-disable	ret[ab]	una[bbreviate]
-syn keyword vimCommand contained	bm[odified]	em[eenu]	menu-enable	retu[rn]	u[ndo]
-syn keyword vimCommand contained	bn[ext]	emenu	menu-<script>	rew[ind]	unh[ide]
-syn keyword vimCommand contained	bo[tright]	emenu*	menut[ranslate]	ri[ght]	unm[ap]
-syn keyword vimCommand contained	bp[revious]	endf[unction]	mk[exrc]	rightabove	unme
-syn keyword vimCommand contained	brea[k]	en[dif]	mks[ession]	rightb[elow]	unmenu
-syn keyword vimCommand contained	breaka[dd]	endw[hile]	mkvie[w]	rub[y]	verb[ose]
-syn keyword vimCommand contained	breakd[el]	ene[w]	mkv[imrc]	rubyd[o]	ve[rsion]
-syn keyword vimCommand contained	breakl[ist]	ex	mod[e]	rubyf[ile]	vert[ical]
-syn keyword vimCommand contained	br[ewind]	exi[t]	m[ove]	ru[ntime]	v[global]
-syn keyword vimCommand contained	bro[wse]	f[ile]	new	rv[iminfo]	vie[w]
-syn keyword vimCommand contained	bufdo	files	n[ext]	sN[ext]	vi[sual]
-syn keyword vimCommand contained	b[uffer]	filetype	nmapc[lear]	sal[l]	vmapc[lear]
-syn keyword vimCommand contained	buffers	fin[d]	nme	sa[rgument]	vme
-syn keyword vimCommand contained	bun[load]	fini[sh]	nmenu	sav[eas]	vmenu
-syn keyword vimCommand contained	bw[ipeout]	fir[st]	nnoreme	sbN[ext]	vne[w]
-syn keyword vimCommand contained	cN[ext]	fix[del]	nnoremenu	sba[ll]	vnoreme
-syn keyword vimCommand contained	ca[bbrev]	fo[ld]	noh[lsearch]	sbf[irst]	vnoremenu
-syn keyword vimCommand contained	cabc[lear]	foldc[lose]	norea[bbrev]	sbl[ast]	vs[plit]
-syn keyword vimCommand contained	cal[l]	folddoc[losed]	noreme	sbm[odified]	vu[nmap]
-syn keyword vimCommand contained	cc	foldd[oopen]	noremenu	sbn[ext]	vunme
-syn keyword vimCommand contained	cd	foldo[pen]	norm[al]	sbp[revious]	vunmenu
-syn keyword vimCommand contained	ce[nter]	fu[nction]	nu[mber]	sbr[ewind]	wN[ext]
-syn keyword vimCommand contained	cf[ile]	g[lobal]	nun[map]	sb[uffer]	wa[ll]
-syn keyword vimCommand contained	cfir[st]	go[to]	nunme	scripte[ncoding]	wh[ile]
-syn keyword vimCommand contained	c[hange]	gr[ep]	nunmenu	scrip[tnames]	win
-syn keyword vimCommand contained	chd[ir]	grepa[dd]	omapc[lear]	se[t]	winc[md]
-syn keyword vimCommand contained	che[ckpath]	ha[hardcopy]	ome	setf[iletype]	windo
-syn keyword vimCommand contained	checkt[ime]	hardcopy	omenu	setg[lobal]	winp[os]
-syn keyword vimCommand contained	cla[st]	h[elp]	on[ly]	setl[ocal]	winpos*
-syn keyword vimCommand contained	cl[ist]	helpf[ind]	onoreme	sf[ind]	win[size]
-syn keyword vimCommand contained	clo[se]	helpt[ags]	onoremenu	sfir[st	wn[ext]
-syn keyword vimCommand contained	cmapc[lear]	hid[e]	o[pen]	sh[ell]	wp[revous]
-syn keyword vimCommand contained	cme	his[tory]	opt[ions]	sign	wq
-syn keyword vimCommand contained	cmenu	ia[bbrev]	ou[nmap]	sil[ent]	wqa[ll]
-syn keyword vimCommand contained	cnew[er]	iabc[lear]	ounme	si[malt]	w[rite]
-syn keyword vimCommand contained	cn[ext]	if	ounmenu	sla[st]	ws[verb]
-syn keyword vimCommand contained	cnf[ile]	ij[ump]	pc[lose]	sl[eep]	wv[iminfo]
-syn keyword vimCommand contained	cnorea[bbrev]	il[ist]	ped[it]	sm[agic]	xa[ll]
-syn keyword vimCommand contained	cnoreme	imapc[lear]	pe[rl]	sn[ext]	x[it]
-syn keyword vimCommand contained	cnoremenu	ime	perld[o]	sni[ff]	y[ank]
-syn keyword vimCommand contained	col[der]	imenu
+syn keyword vimCommand contained	N[ext]	comc[lear]	imenu	po[p]	sni[ff]
+syn keyword vimCommand contained	Nread	compiler	inorea[bbrev]	pop[up]	sno[magic]
+syn keyword vimCommand contained	Nw	conf[irm]	inoreme	pp[op]	so[urce]
+syn keyword vimCommand contained	P[rint]	con[tinue]	inoremenu	pre[serve]	sp[lit]
+syn keyword vimCommand contained	X	co[py]	is[earch]	prev[ious]	spr[evious]
+syn keyword vimCommand contained	ab[breviate]	cp[revious]	isp[lit]	p[rint]	sr[ewind]
+syn keyword vimCommand contained	abc[lear]	cq[uit]	iuna[bbrev]	promptf[ind]	sta[g]
+syn keyword vimCommand contained	abo[veleft]	cr[ewind]	iu[nmap]	promptr[epl]	star[tinsert]
+syn keyword vimCommand contained	aboveright	cuna[bbrev]	iunme	ps[earch]	stj[ump]
+syn keyword vimCommand contained	al[l]	cu[nmap]	iunmenu	ptN[ext]	st[op]
+syn keyword vimCommand contained	am	cunme	j[oin]	pta[g]	sts[elect]
+syn keyword vimCommand contained	amenu	cunmenu	ju[mps]	ptf[irst]	sun[hide]
+syn keyword vimCommand contained	an	cw[indow]	k	ptj[ump]	sus[pend]
+syn keyword vimCommand contained	anoremenu	delc[ommand]	lan[guage]	ptl[ast]	sv[iew]
+syn keyword vimCommand contained	arga[dd]	d[elete]	la[st]	ptn[ext]	syncbind
+syn keyword vimCommand contained	argd[elete]	delf[unction]	lc[d]	ptp[revious]	t
+syn keyword vimCommand contained	argdo	diffg[et]	lch[dir]	ptr[ewind]	tN[ext]
+syn keyword vimCommand contained	arge[dit]	diffpatch	le[ft]	pts[elect]	ta[g]
+syn keyword vimCommand contained	argg[lobal]	diffpu[t]	lefta[bove]	pu[t]	tags
+syn keyword vimCommand contained	argl[ocal]	diffsplit	leftbelow	pw[d]	tc[l]
+syn keyword vimCommand contained	ar[gs]	diffthis	l[ist]	pyf[ile]	tcld[o]
+syn keyword vimCommand contained	argu[ment]	dig[raphs]	lm[ap]	py[thon]	tclf[ile]
+syn keyword vimCommand contained	as[cii]	di[splay]	lmapc[lear]	qa[ll]	te[aroff]
+syn keyword vimCommand contained	aun	dj[ump]	lno[remap]	q[uit]	tf[irst]
+syn keyword vimCommand contained	aunmenu	dl[ist]	lo[adview]	quita[ll]	tj[ump]
+syn keyword vimCommand contained	bN[ext]	dr[op]	ls	r[ead]	tl[ast]
+syn keyword vimCommand contained	bad[d]	ds[earch]	lu[nmap]	rec[over]	tm[enu]
+syn keyword vimCommand contained	ba[ll]	dsp[lit]	mak[e]	redi[r]	tn[ext]
+syn keyword vimCommand contained	bd[elete]	echoe[rr]	ma[rk]	red[o]	to[pleft]
+syn keyword vimCommand contained	belowleft	echom[sg]	marks	redr[aw]	tp[revious]
+syn keyword vimCommand contained	bel[owright]	echon	mat[ch]	reg[isters]	tr[ewind]
+syn keyword vimCommand contained	bf[irst	e[dit]	me	res[ize]	ts[elect]
+syn keyword vimCommand contained	bl[ast]	el[se]	menu	ret[ab]	tu[nmenu]
+syn keyword vimCommand contained	bm[odified]	elsei[f]	menu-disable	retu[rn]	una[bbreviate]
+syn keyword vimCommand contained	bn[ext]	em[eenu]	menu-enable	rew[ind]	u[ndo]
+syn keyword vimCommand contained	bo[tright]	emenu	menu-<script>	ri[ght]	unh[ide]
+syn keyword vimCommand contained	bp[revious]	emenu*	menut[ranslate]	rightabove	unm[ap]
+syn keyword vimCommand contained	brea[k]	endf[unction]	mk[exrc]	rightb[elow]	unme
+syn keyword vimCommand contained	breaka[dd]	en[dif]	mks[ession]	rub[y]	unmenu
+syn keyword vimCommand contained	breakd[el]	endw[hile]	mkvie[w]	rubyd[o]	verb[ose]
+syn keyword vimCommand contained	breakl[ist]	ene[w]	mkv[imrc]	rubyf[ile]	ve[rsion]
+syn keyword vimCommand contained	br[ewind]	ex	mod[e]	ru[ntime]	vert[ical]
+syn keyword vimCommand contained	bro[wse]	exi[t]	m[ove]	rv[iminfo]	v[global]
+syn keyword vimCommand contained	bufdo	f[ile]	new	sN[ext]	vie[w]
+syn keyword vimCommand contained	b[uffer]	files	n[ext]	sal[l]	vi[sual]
+syn keyword vimCommand contained	buffers	filetype	nmapc[lear]	sa[rgument]	vmapc[lear]
+syn keyword vimCommand contained	bun[load]	fin[d]	nme	sav[eas]	vme
+syn keyword vimCommand contained	bw[ipeout]	fini[sh]	nmenu	sbN[ext]	vmenu
+syn keyword vimCommand contained	cN[ext]	fir[st]	nnoreme	sba[ll]	vne[w]
+syn keyword vimCommand contained	ca[bbrev]	fix[del]	nnoremenu	sbf[irst]	vnoreme
+syn keyword vimCommand contained	cabc[lear]	fo[ld]	noh[lsearch]	sbl[ast]	vnoremenu
+syn keyword vimCommand contained	cal[l]	foldc[lose]	norea[bbrev]	sbm[odified]	vs[plit]
+syn keyword vimCommand contained	cc	folddoc[losed]	noreme	sbn[ext]	vu[nmap]
+syn keyword vimCommand contained	cd	foldd[oopen]	noremenu	sbp[revious]	vunme
+syn keyword vimCommand contained	ce[nter]	foldo[pen]	norm[al]	sbr[ewind]	vunmenu
+syn keyword vimCommand contained	cf[ile]	fu[nction]	nu[mber]	sb[uffer]	wN[ext]
+syn keyword vimCommand contained	cfir[st]	g[lobal]	nun[map]	scripte[ncoding]	wa[ll]
+syn keyword vimCommand contained	c[hange]	go[to]	nunme	scrip[tnames]	wh[ile]
+syn keyword vimCommand contained	chd[ir]	gr[ep]	nunmenu	ser[verlist]	win
+syn keyword vimCommand contained	che[ckpath]	grepa[dd]	omapc[lear]	servers[end]	winc[md]
+syn keyword vimCommand contained	checkt[ime]	ha[hardcopy]	ome	se[t]	windo
+syn keyword vimCommand contained	cla[st]	hardcopy	omenu	setf[iletype]	winp[os]
+syn keyword vimCommand contained	cl[ist]	h[elp]	on[ly]	setg[lobal]	winpos*
+syn keyword vimCommand contained	clo[se]	helpf[ind]	onoreme	setl[ocal]	win[size]
+syn keyword vimCommand contained	cmapc[lear]	helpt[ags]	onoremenu	sf[ind]	wn[ext]
+syn keyword vimCommand contained	cme	hid[e]	o[pen]	sfir[st	wp[revous]
+syn keyword vimCommand contained	cmenu	his[tory]	opt[ions]	sh[ell]	wq
+syn keyword vimCommand contained	cnew[er]	ia[bbrev]	ou[nmap]	sign	wqa[ll]
+syn keyword vimCommand contained	cn[ext]	iabc[lear]	ounme	sil[ent]	w[rite]
+syn keyword vimCommand contained	cnf[ile]	if	ounmenu	si[malt]	ws[verb]
+syn keyword vimCommand contained	cnorea[bbrev]	ij[ump]	pc[lose]	sla[st]	wv[iminfo]
+syn keyword vimCommand contained	cnoreme	il[ist]	ped[it]	sl[eep]	xa[ll]
+syn keyword vimCommand contained	cnoremenu	imapc[lear]	pe[rl]	sm[agic]	x[it]
+syn keyword vimCommand contained	col[der]	ime	perld[o]	sn[ext]	y[ank]
+syn keyword vimCommand contained	colo[rscheme]
 syn match   vimCommand contained	"\<z[-+^.=]"
 
 " vimOptions are caught only when contained in a vimSet
@@ -309,27 +310,27 @@ syn keyword vimHLGroup contained	DiffText	LineNr	Question	Title
 syn case match
 
 " Function Names
-syn keyword vimFuncName contained	MyCounter	executable	getwinvar	line2byte	strridx
-syn keyword vimFuncName contained	append	exists	glob	localtime	strtrans
-syn keyword vimFuncName contained	argc	expand	globpath	maparg	submatch
-syn keyword vimFuncName contained	argidx	expandpath	has	mapcheck	substitute
-syn keyword vimFuncName contained	argv	filereadable	hasmapto	match	synID
-syn keyword vimFuncName contained	browse	filewritable	histadd	matchend	synIDattr
-syn keyword vimFuncName contained	bufexists	fnamemodify	histdel	matchstr	synIDtrans
-syn keyword vimFuncName contained	buflisted	foldclosed	histget	mode	system
-syn keyword vimFuncName contained	bufloaded	foldclosedend	histnr	nextnonblank	tempname
-syn keyword vimFuncName contained	bufname	foldlevel	hlID	nr2char	tolower
-syn keyword vimFuncName contained	bufnr	foldtext	hlexists	prevnonblank	toupper
-syn keyword vimFuncName contained	bufwinnr	function	hostname	rename	type
-syn keyword vimFuncName contained	byte2line	getbufvar	iconv	search	virtcol
-syn keyword vimFuncName contained	char2nr	getchar	indent	searchpair	visualmode
-syn keyword vimFuncName contained	col	getcharmod	input	setbufvar	winbufnr
-syn keyword vimFuncName contained	confirm	getcwd	inputdialog	setline	wincol
-syn keyword vimFuncName contained	cscope_connection	getfsize	inputsecret	setwinvar	winheight
-syn keyword vimFuncName contained	delete	getftime	isdirectory	strftime	winline
-syn keyword vimFuncName contained	did_filetype	getline	libcall	stridx	winnr
-syn keyword vimFuncName contained	escape	getwinposx	libcallnr	strlen	winwidth
-syn keyword vimFuncName contained	eventhandler	getwinposy	line	strpart
+syn keyword vimFuncName contained	MyCounter	executable	getwinvar	line2byte	strpart
+syn keyword vimFuncName contained	append	exists	glob	localtime	strridx
+syn keyword vimFuncName contained	argc	expand	globpath	maparg	strtrans
+syn keyword vimFuncName contained	argidx	expandpath	has	mapcheck	submatch
+syn keyword vimFuncName contained	argv	filereadable	hasmapto	match	substitute
+syn keyword vimFuncName contained	browse	filewritable	histadd	matchend	synID
+syn keyword vimFuncName contained	bufexists	fnamemodify	histdel	matchstr	synIDattr
+syn keyword vimFuncName contained	buflisted	foldclosed	histget	mode	synIDtrans
+syn keyword vimFuncName contained	bufloaded	foldclosedend	histnr	nextnonblank	system
+syn keyword vimFuncName contained	bufname	foldlevel	hlID	nr2char	tempname
+syn keyword vimFuncName contained	bufnr	foldtext	hlexists	prevnonblank	tolower
+syn keyword vimFuncName contained	bufwinnr	function	hostname	rename	toupper
+syn keyword vimFuncName contained	byte2line	getbufvar	iconv	resolve	type
+syn keyword vimFuncName contained	char2nr	getchar	indent	search	virtcol
+syn keyword vimFuncName contained	col	getcharmod	input	searchpair	visualmode
+syn keyword vimFuncName contained	confirm	getcwd	inputdialog	setbufvar	winbufnr
+syn keyword vimFuncName contained	cscope_connection	getfsize	inputsecret	setline	wincol
+syn keyword vimFuncName contained	delete	getftime	isdirectory	setwinvar	winheight
+syn keyword vimFuncName contained	did_filetype	getline	libcall	strftime	winline
+syn keyword vimFuncName contained	escape	getwinposx	libcallnr	stridx	winnr
+syn keyword vimFuncName contained	eventhandler	getwinposy	line	strlen	winwidth
 
 "--- syntax above generated by mkvimvim ---
 

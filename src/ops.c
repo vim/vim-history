@@ -4152,7 +4152,7 @@ block_prep(oap, bdp, lnum, is_del)
 		 * Disadvantage: can lead to trailing spaces when the line is
 		 * short where the text is put */
 		/* if (!is_del || oap->op_type == OP_APPEND) */
-		if (oap->op_type == OP_APPEND)
+		if (oap->op_type == OP_APPEND || virtual_active())
 		    bdp->endspaces = oap->end_vcol - bdp->end_vcol + 1;
 		else
 		    bdp->endspaces = 0; /* replace doesn't add characters */
@@ -4160,8 +4160,12 @@ block_prep(oap, bdp, lnum, is_del)
 	    else if (bdp->end_vcol > oap->end_vcol)
 	    {
 		bdp->endspaces = bdp->end_vcol - oap->end_vcol - 1;
-		if (!is_del && pend != pstart && bdp->endspaces)
+		if (!is_del && bdp->endspaces)
+		{
+		    bdp->endspaces = incr - bdp->endspaces;
+		    if (pend != pstart)
 		    pend = prev_pend;
+		}
 	    }
 	}
 #ifdef FEAT_VISUALEXTRA

@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0ak.  Last change: 2001 May 12
+*if_python.txt* For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -54,6 +54,8 @@ range.
 
 In the case of :python, the code to execute is in the command-line.
 In the case of :pyfile, the code to execute is the contents of the given file.
+
+Python commands cannot be used in the |sandbox|.
 
 Here are some examples					*python-examples*  >
 

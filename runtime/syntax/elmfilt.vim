@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Elm Filter rules
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	November 11, 1998
+" Last Change:	June 12, 2001
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -13,7 +13,7 @@ endif
 
 syn keyword	elmfiltAction	delete execute executec forward forwardc leave save savecopy
 syn match	elmfiltArg	"[^\\]%[&0-9]"lc=1	contained
-syn keyword	elmfiltCond	lines always subject sender from to lines received
+syn keyword	elmfiltCond	cc bcc lines always subject sender from to lines received
 syn region	elmfiltMatch	start="/" skip="\\/" end="/"
 syn match	elmfiltNumber	"\d\+"
 syn keyword	elmfiltOper	and not matches

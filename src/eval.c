@@ -5384,7 +5384,7 @@ f_prevnonblank(argvars, retvar)
     linenr_T	lnum;
 
     lnum = get_var_lnum(argvars);
-    if (lnum > curbuf->b_ml.ml_line_count)
+    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
 	lnum = 0;
     else
 	while (lnum >= 1 && *skipwhite(ml_get(lnum)) == NUL)

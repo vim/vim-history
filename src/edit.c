@@ -326,10 +326,10 @@ edit(cmdchar, startln, count)
     else
 	State = INSERT;
 
-    if (curbuf->b_im_insert == B_IMODE_LMAP)
+    if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 	State |= LANGMAP;
 #ifdef USE_IM_CONTROL
-    im_set_active(curbuf->b_im_insert == B_IMODE_IM);
+    im_set_active(curbuf->b_p_iminsert == B_IMODE_IM);
 #endif
 
 #if defined(FEAT_MBYTE) && defined(macintosh)
@@ -818,20 +818,20 @@ doESCkey:
 
 	case Ctrl_HAT:
 	    /* Toggle use of ":lmap" mappings. */
-	    if (curbuf->b_im_insert == B_IMODE_LMAP)
+	    if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 	    {
-		curbuf->b_im_insert = B_IMODE_NONE;
+		curbuf->b_p_iminsert = B_IMODE_NONE;
 		State &= ~LANGMAP;
 	    }
 	    else
 	    {
-		curbuf->b_im_insert = B_IMODE_LMAP;
+		curbuf->b_p_iminsert = B_IMODE_LMAP;
 		State |= LANGMAP;
 #ifdef USE_IM_CONTROL
 		im_set_active(FALSE);
 #endif
 	    }
-	    b_im_insert_def = curbuf->b_im_insert;
+	    set_iminsert_global();
 	    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 	    /* Show/unshow value of 'keymap' in status lines. */
@@ -2101,6 +2101,7 @@ ins_compl_clear()
     vim_free(complete_pat);
     complete_pat = NULL;
     save_sm = -1;
+    edit_submode_extra = NULL;
 }
 
 /*
@@ -2114,6 +2115,12 @@ ins_compl_prep(c)
     char_u	*tmp_ptr;
     int		temp;
     int		want_cindent;
+
+    /* Forget any previous 'special' messages if this is actually
+     * a ^X mode key - bar ^R, in which case we wait to see what it gives us.
+     */
+    if (c != Ctrl_R  &&  vim_is_ctrl_x_key(c))
+        edit_submode_extra = NULL;
 
     /* Ignore end of Select mode mapping */
     if (c == K_SELECT)
@@ -2865,7 +2872,7 @@ ins_compl_check_keys()
     c = vpeekc_any();
     if (c != NUL)
     {
-	if (vim_is_ctrl_x_key(c) && c != Ctrl_X)
+	if (vim_is_ctrl_x_key(c) && c != Ctrl_X && c != Ctrl_R)
 	{
 	    c = safe_vgetc();	/* Eat the character */
 	    if (c == Ctrl_P || c == Ctrl_L)
@@ -2874,7 +2881,7 @@ ins_compl_check_keys()
 		shown_direction = FORWARD;
 	    (void)ins_compl_next(FALSE);
 	}
-	else
+	else if (c != Ctrl_R)
 	    completion_interrupted = TRUE;
     }
     if (completion_pending && !got_int)
@@ -3306,12 +3313,17 @@ ins_complete(c)
 	     * a safety check. */
 	    if (curr_match->number != -1)
 	    {
+                /* Space for 10 text chars. + 2x10-digit no.s */
+                static char_u match_ref[31];
+
 		if (completion_matches > 0)
 		    sprintf((char *)IObuff, _("match %d of %d"),
 				      curr_match->number, completion_matches);
 		else
 		    sprintf((char *)IObuff, _("match %d"), curr_match->number);
-		edit_submode_extra = IObuff;
+                STRNCPY( match_ref, IObuff, 30 );
+                match_ref[30] = '\0';
+		edit_submode_extra = match_ref;
 		edit_submode_highl = HLF_R;
 		if (dollar_vcol)
 		    curs_columns(FALSE);
@@ -3327,7 +3339,6 @@ ins_complete(c)
 	    msg_attr(edit_submode_extra,
 		    edit_submode_highl < HLF_COUNT
 		    ? hl_attr(edit_submode_highl) : 0);
-	edit_submode_extra = NULL;
     }
     else
 	msg_clr_cmdline();	/* necessary for "noshowmode" */
@@ -3603,6 +3614,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 #ifdef FEAT_COMMENTS
     colnr_T	leader_len;
     char_u	*p;
+    int		no_leader = FALSE;
 #endif
     int		first_line = TRUE;
     int		fo_ins_blank;
@@ -3683,7 +3695,9 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		break;
 
 #ifdef FEAT_COMMENTS
-	    if (!force_formatting && has_format_option(FO_WRAP_COMS))
+	    if (no_leader)
+		fo_do_comments = FALSE;
+	    else if (!force_formatting && has_format_option(FO_WRAP_COMS))
 		fo_do_comments = TRUE;
 
 	    /* Don't break until after the comment leader */
@@ -3691,6 +3705,13 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		leader_len = get_leader_len(ml_get_curline(), NULL, FALSE);
 	    else
 		leader_len = 0;
+
+	    /* If the line doesn't start with a comment leader, then don't
+	     * start one in a following broken line.  Avoids that a %word
+	     * moved to the start of the next line causes all following lines
+	     * to start with %. */
+	    if (leader_len == 0)
+		no_leader = TRUE;
 #endif
 	    if (!force_formatting
 #ifdef FEAT_COMMENTS
@@ -3711,13 +3732,9 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 
 	    curwin->w_cursor.col = startcol - 1;
 #ifdef FEAT_MBYTE
+	    /* Correct cursor for multi-byte character. */
 	    if (has_mbyte)
-	    {
-		/* Correct cursor for multi-byte character. */
-		line = ml_get_curline();
-		curwin->w_cursor.col -=
-			    (*mb_head_off)(line, line + curwin->w_cursor.col);
-	    }
+		mb_adjust_cursor();
 #endif
 	    foundcol = 0;
 
@@ -4350,7 +4367,10 @@ oneright()
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active())
     {
-	coladvance(getviscol() + 1);
+	/* Adjust for multi-wide char (not include TAB) */
+	ptr = ml_get_cursor();
+	coladvance(getviscol() + ((*ptr != TAB && *ptr != NUL)
+		    ? ptr2cells(ptr) : 1));
 	curwin->w_set_curswant = TRUE;
 	return OK;
     }
@@ -4384,11 +4404,19 @@ oneleft()
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active())
     {
+	int width;
+	char_u *ptr;
 	int v = getviscol();
 
 	if (v == 0)
 	    return FAIL;
+
 	coladvance(v - 1);
+	/* Adjust for multi-wide char (not include TAB) */
+	ptr = ml_get_cursor();
+	if (*ptr != TAB && *ptr != NUL && (width = ptr2cells(ptr)) > 1)
+	    coladvance(v - width);
+
 	curwin->w_set_curswant = TRUE;
 	return OK;
     }
@@ -5536,7 +5564,7 @@ ins_esc(count, cmdchar)
 
 #ifdef USE_IM_CONTROL
     /* Disable IM to allow typing English directly for Normal mode commands. */
-    im_save_status(&curbuf->b_im_insert);
+    im_save_status(&curbuf->b_p_iminsert);
     im_set_active(FALSE);
 #endif
 

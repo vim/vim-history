@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0ak.  Last change: 2001 Jun 03
+*multibyte.txt* For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -266,6 +266,8 @@ when compiled for EBCDIC).
 Supported 'encoding' values are:			*encoding-values*
 1   latin1	8-bit characters (ISO 8859-1)
 1   iso-8859-n	ISO_8859 variant (n = 2 to 15)
+1   koi8-r	Russian
+1   koi8-u	Ukrainian
 1   8bit-{name} any 8-bit encoding (Vim specific name)
 1   cp{number}	MS-Windows: any installed single-byte codepage
 2   cp932	Japanese (Windows only)

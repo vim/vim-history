@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 12
+*change.txt*    For Vim version 6.0al.  Last change: 2001 Jun 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -957,7 +957,8 @@ nothing is returned.  {not in Vi}
 
 9. Last search pattern register	"/			*quote_/* *quote/*
 Contains the most recent search-pattern.  This is used for "n" and 'hlsearch'.
-It is read-only.  {not in Vi}
+It is writable, you can change it to have 'hlsearch' highlight other matches
+without actually searching.  {not in Vi}
 
 							*@/*
 You can write to a register with a ":let" command |:let-@|.  Example: >

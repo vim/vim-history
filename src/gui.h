@@ -313,6 +313,8 @@ typedef struct Gui
     guicolor_T	scroll_fg_pixel;    /* Same in Pixel format */
     char	*scroll_bg_color;   /* Color of scrollbar background */
     guicolor_T	scroll_bg_pixel;    /* Same in Pixel format */
+    char	*tooltip_fg_color;  /* Color of tooltip foreground */
+    char	*tooltip_bg_color;  /* Color of tooltip background */
 # ifdef FEAT_GUI_MOTIF
     guicolor_T	menu_def_fg_pixel;  /* Default menu foreground */
     guicolor_T	menu_def_bg_pixel;  /* Default menu background */
@@ -379,9 +381,9 @@ typedef struct Gui
     int		toolbar_height;	    /* height of the toolbar */
 # endif
 # ifdef FEAT_BEVAL
-    Pixel	balloonEval_fg_pixel;/* foreground color of balloon eval win */
-    Pixel	balloonEval_bg_pixel;/* background color of balloon eval win */
-    XFontStruct *balloonEval_fontList;/* balloon evaluation font */
+    guicolor_T	balloonEval_fg_pixel;/* foreground color of balloon eval win */
+    guicolor_T	balloonEval_bg_pixel;/* background color of balloon eval win */
+    XFontSet	balloonEval_fontList;/* balloon evaluation fontset */
 # endif
 #endif  /* FEAT_GUI_ATHENA */
 
@@ -393,8 +395,8 @@ typedef struct Gui
     int		footer_height;	    /* height of the message footer */
 # endif
 # ifdef FEAT_BEVAL
-    Pixel	balloonEval_fg_pixel;/* foreground color of balloon eval win */
-    Pixel	balloonEval_bg_pixel;/* background color of balloon eval win */
+    guicolor_T	balloonEval_fg_pixel;/* foreground color of balloon eval win */
+    guicolor_T	balloonEval_bg_pixel;/* background color of balloon eval win */
     XmFontList	balloonEval_fontList;/* balloon evaluation fontList */
 # endif
 #endif /* FEAT_GUI_MOTIF */

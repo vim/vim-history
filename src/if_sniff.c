@@ -95,7 +95,7 @@ static struct sn_cmd sniff_cmds[] =
 static char *SniffEmacs[2] = {"sniffemacs", (char *)NULL};  /* Yes, Emacs! */
 static int fd_to_sniff;
 static int sniff_will_disconnect = 0;
-static char msg_sniff_disconnect[] = N_("aCannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n");
+static char msg_sniff_disconnect[] = N_("Cannot connect to SNiFF+. Check environment (sniffemacs must be found in $PATH).\n");
 static char* sniff_rq_sep = " ";
 static struct sn_cmd_list *sniff_cmd_ext = NULL;
 
@@ -116,7 +116,7 @@ static char *init_cmds[]= {
 	    "if exists('$SNIFF_DIR4')|"
 		"let g:sniff_mappings='$SNIFF_DIR4/config/integrations/vim/sniff.vim'|"
 	    "else|"
-	    	"let g:sniff_mappings='$SNIFF_DIR/config/sniff.vim'|"
+		"let g:sniff_mappings='$SNIFF_DIR/config/sniff.vim'|"
 	    "endif|"
 	"endif|"
 	"let g:sniff_mappings=expand(g:sniff_mappings)|"
@@ -564,7 +564,7 @@ ex_sniff(eap)
 	symbol = skipwhite(symbol);
 	if (ends_excmd(*symbol))
 	    symbol = NULL;
-	if (!strcmp(cmd, "addcmd"))
+	if (!strcmp((char *)cmd, "addcmd"))
 	{
 	    char_u *def = skiptowhite(symbol);
 	    char_u *name = vim_strnsave(symbol, (int)(def-symbol));
@@ -579,16 +579,16 @@ ex_sniff(eap)
 		msg = vim_strnsave(msg, (int)(skiptowhite_esc(msg)-msg));
 	    if (!add_sniff_cmd((char*)name, (char*)def, (char*)msg))
 	    {
-	    	vim_free(msg);
-	    	vim_free(def);
-	    	vim_free(name);
+		vim_free(msg);
+		vim_free(def);
+		vim_free(name);
 	    }
 	}
 	else
 	{
 	    struct sn_cmd* sniff_cmd = find_sniff_cmd((char*)cmd);
 	    if (sniff_cmd)
-		SendRequest(sniff_cmd, symbol);
+		SendRequest(sniff_cmd, (char *)symbol);
 	    else
 		EMSG2(_("E275: Unknown SNiFF+ request: %s"), cmd);
 	}
@@ -796,7 +796,7 @@ HandleSniffRequest(buffer)
     {
 	if (token)
 	{
-	    argv[argc] = (char*)vim_strsave(token);
+	    argv[argc] = (char*)vim_strsave((char_u *)token);
 	    token = strtok(0, sniff_rq_sep);
 	}
 	else
@@ -893,7 +893,6 @@ HandleSniffRequest(buffer)
 
 	case 't' :  /* Set tab width */
 	{
-	    char *file = argv[0];
 	    int tab_width = atoi(argv[1]);
 
 	    if (tab_width > 0 && tab_width <= 16)
@@ -1033,7 +1032,7 @@ SendRequest(command, symbol)
 	}
 
 	if (symbol)
-	    sprintf(cmdstr, "%c%s%s%ld%s%s\n", 
+	    sprintf(cmdstr, "%c%s%s%ld%s%s\n",
 		command->cmd_code,
 		buffer_name,
 		sniff_rq_sep,
@@ -1176,7 +1175,7 @@ vi_set_cursor_pos(char_pos)
 
     if (char_pos == 0)
     {
-    	char_pos = 1;
+	char_pos = 1;
     }
     if (get_fileformat(curbuf) == EOL_DOS)
 	eol_size = 2;

@@ -770,7 +770,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60ak
+VIMRTDIR = /vim60al
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1820,7 +1820,7 @@ menu: ./vim ../runtime/makemenu.vim
 
 # Start configure from scratch
 scrub scratch:
-	-rm -f auto/config.status auto/config.cache auto/config.log
+	-rm -f auto/config.status auto/config.cache config.log auto/config.log
 	-rm -f auto/config.h auto/link.log auto/link.sed
 	touch auto/config.h
 	cp -f config.mk.dist auto/config.mk

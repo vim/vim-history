@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 15
+" Last Change:	2001 Jun 23
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -108,7 +108,11 @@ fun! <SID>Update(lnum, line, local, thiswin)
   else
     let name = substitute(a:line, '^set \(no\)\=\([a-z]*\).*', '\2', "")
   endif
-  exe "let val = substitute(&" . name . ', "[ \\t\\\\\"|]", "\\\\\\0", "g")'
+  if name == "pt" && &pt =~ "\x80"
+    let val = <SID>PTvalue()
+  else
+    exe "let val = substitute(&" . name . ', "[ \\t\\\\\"|]", "\\\\\\0", "g")'
+  endif
   if a:local
     exe "norm! " . a:thiswin . "\<C-W>w"
   endif
@@ -176,8 +180,8 @@ fun! <SID>Option(name)
 endfun
 
 fun! <SID>OptionL(name, val)
-  call append("$", "set " . a:name . "=" . substitute(a:val, "[ \\t\\\\\"|]",
-	\"\\\\\\0", "g"))
+  call append("$", "set " . a:name . "=" . substitute(a:val, '[ \t\\"|]',
+	\ '\\\0', "g"))
 endfun
 
 let s:idx = 1
@@ -197,6 +201,14 @@ fun! <SID>Header(text)
   let s:lnum = s:lnum + 1
 endfun
 
+" Get the value of 'pastetoggle'.  It could be a special key.
+fun! <SID>PTvalue()
+  redir @a
+  silent set pt
+  redir END
+  return substitute(@a, '[^=]*=\(.*\)', '\1', "")
+endfun
+
 " Restore the previous value of 'cpoptions' here, it's used below.
 let &cpo = s:cpo_save
 
@@ -213,7 +225,11 @@ call <SID>BinOptionL("im", &im)
 call append("$", "paste\tpaste mode, insert typed text literally")
 call <SID>BinOptionL("paste", &paste)
 call append("$", "pastetoggle\tkey sequence to toggle paste mode")
-call <SID>OptionL("pt", &pt)
+if &pt =~ "\x80"
+  call append("$", "set pt=" . <SID>PTvalue())
+else
+  call <SID>OptionL("pt", &pt)
+endif
 call append("$", "helpfile\tname of the main help file")
 call <SID>OptionL("hf", &hf)
 

@@ -435,11 +435,8 @@ requestBalloon(beval)
 drawBalloon(beval)
     BalloonEval	*beval;
 {
-#ifdef FEAT_GUI_MOTIF
-    XmString s;
     Dimension	w;
     Dimension	h;
-#endif
     Position tx;
     Position ty;
 
@@ -447,36 +444,44 @@ drawBalloon(beval)
     {
 	/* Show the Balloon */
 
-#if defined(FEAT_GUI_MOTIF)
+	/* Calculate the label's width and height */
+#ifdef FEAT_GUI_MOTIF
+	XmString s;
+
 	s = XmStringCreateLocalized((char *)beval->msg);
 	XmStringExtent(gui.balloonEval_fontList, s, &w, &h);
 	w += gui.border_offset << 1;
 	h += gui.border_offset << 1;
-	XtVaSetValues(beval->balloonLabel,
-		XmNlabelString, s,
-		NULL);
+	XtVaSetValues(beval->balloonLabel, XmNlabelString, s, NULL);
 	XmStringFree(s);
-#elif defined(FEAT_GUI_ATHENA)
-	XtVaSetValues(beval->balloonLabel,
-		XtNlabel, beval->msg,
-		NULL);
+#else
+	/* Athena */
+	/* Assume XtNinternational == True */
+	XFontSet	fset;
+	XFontSetExtents *ext;
+
+	XtVaGetValues(beval->balloonLabel, XtNfontSet, &fset, NULL);
+	ext = XExtentsOfFontSet(fset);
+	h = ext->max_ink_extent.height;
+	w = XmbTextEscapement(fset, (char *)beval->msg,
+						     (int)STRLEN(beval->msg));
+	XtVaSetValues(beval->balloonLabel, XtNlabel, beval->msg, NULL);
 #endif
 
 	/* Compute position of the balloon area */
 	tx = beval->x_root + EVAL_OFFSET_X;
 	ty = beval->y_root + EVAL_OFFSET_Y;
-#ifdef FEAT_GUI_MOTIF
 	if ((tx + w) > beval->screen_width)
 	    tx = beval->screen_width - w;
 	if ((ty + h) > beval->screen_height)
 	    ty = beval->screen_height - h;
+#ifdef FEAT_GUI_MOTIF
 	XtVaSetValues(beval->balloonShell,
 		XmNx, tx,
 		XmNy, ty,
-		XmNwidth, w,
-		XmNheight, h,
 		NULL);
-#elif defined(FEAT_GUI_ATHENA)
+#else
+	/* Athena */
 	XtVaSetValues(beval->balloonShell,
 		XtNx, tx,
 		XtNy, ty,
@@ -526,8 +531,17 @@ createBalloonEvalWindow(beval)
     int		n;
 
     n = 0;
+#ifdef FEAT_GUI_MOTIF
+    XtSetArg(args[n], XmNallowShellResize, True); n++;
     beval->balloonShell = XtAppCreateShell("balloonEval", "BalloonEval",
-		    overrideShellWidgetClass, gui.dpy, NULL, 0);
+		    overrideShellWidgetClass, gui.dpy, args, n);
+#else
+    /* Athena */
+    XtSetArg(args[n], XtNallowShellResize, True); n++;
+    beval->balloonShell = XtAppCreateShell("balloonEval", "BalloonEval",
+		    overrideShellWidgetClass, gui.dpy, args, n);
+    n = 0;
+#endif
 
 #ifdef FEAT_GUI_MOTIF
     XtSetArg(args[n], XmNforeground, gui.balloonEval_fg_pixel); n++;
@@ -539,7 +553,8 @@ createBalloonEvalWindow(beval)
 #elif FEAT_GUI_ATHENA
     XtSetArg(args[n], XtNforeground, gui.balloonEval_fg_pixel); n++;
     XtSetArg(args[n], XtNbackground, gui.balloonEval_bg_pixel); n++;
-    XtSetArg(args[n], XtNfont, gui.balloonEval_fontList); n++;
+    XtSetArg(args[n], XtNinternational, True); n++;
+    XtSetArg(args[n], XtNfontSet, gui.balloonEval_fontList); n++;
     beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 		    labelWidgetClass, beval->balloonShell, args, n);
 #endif

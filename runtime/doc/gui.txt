@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ak.  Last change: 2001 Jun 11
+*gui.txt*       For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -399,13 +399,16 @@ selection without prepending "* to commands.
 ==============================================================================
 5. Menus						*menus*
 
+For an introduction see |usr_42.txt| in the user manual.
+
+
 5.1 Using Menus						*using-menus*
 
 Basically, menus can be used just like mappings.  You can define you own
-menus, as many as you like.  There is a default set of menus, so that you
-don't have to start from scratch.  Long-time Vim users won't use menus much.
-But the power is in adding your own menus and menu items.  They are most
-useful for things that you can't remember what the key sequence was.
+menus, as many as you like.
+Long-time Vim users won't use menus much.  But the power is in adding your own
+menus and menu items.  They are most useful for things that you can't remember
+what the key sequence was.
 
 For creating menus in a different language, see |:menutrans|.
 
@@ -419,15 +422,17 @@ this line to your .vimrc file (NOT your .gvimrc file!): >
 	:let did_install_default_menus = 1
 If you also want to avoid the Syntax menu: >
 	:let did_install_syntax_menu = 1
-
+<
+							*bufmenu_maxlen*
 The contents of the buffer menu can be controlled by setting the variables
-bufmenu_fullpath and bufmenu_maxlen. The former specifies full path of files
-to be used in the menu if set to 1. The latter specifies the maximum length of
-the path in the menu label. If the path is longer, path elements other than the
-first and last are removed. Then trailing and leading characters are removed
-from these if necessary.  Last all path elements are removed.  These variables
-must be set in .vimrc or similar, since .gvimrc is executed after menu.vim.
-Default values are bufmenu_fullpath=0 and bufmenu_maxlen=50.
+"bufmenu_fullpath" and "bufmenu_maxlen".  The former specifies full path of
+files to be used in the menu if set to 1. The latter specifies the maximum
+length of the path in the menu label.  If the path is longer, path elements
+other than the first and last are removed. Then trailing and leading
+characters are removed from these if necessary.  Last all path elements are
+removed.  These variables must be set in .vimrc or similar, since .gvimrc is
+executed after menu.vim.  Default values are bufmenu_fullpath=0 and
+bufmenu_maxlen=50.
 
 							*console-menus*
 Although this documentation is in the GUI section, you can actually use menus
@@ -470,6 +475,7 @@ create floating menus that do not appear on the main menu bar.
 To create a new menu item, use the ":menu" commands.  They are exactly like
 the ":map" set of commands but the first argument is a menu item name, given
 as a path of menus and submenus with a '.' between them. eg: >
+
    :menu File.Save  :w<CR>
    :inoremenu File.Save  <C-O>:w<CR>
    :menu Edit.Big\ Changes.Delete\ All\ Spaces  :%s/[ ^I]//g<CR>
@@ -480,6 +486,7 @@ the mouse button down on this will pop up a menu containing the item
 which when selected, performs the operation.
 
 Special characters in a menu name:
+
 	&	The next character is the shortcut key.  Make sure each
 		shortcut key is only used once in a (sub)menu.
 	<Tab>	Separates the menu name from right-aligned text.  This can be
@@ -487,7 +494,9 @@ Special characters in a menu name:
 		can be used here for convenience.  If you are using a real
 		Tab, don't forget to put a backslash before it!
 Example: >
+
    :amenu &File.&Open<Tab>:e  :browse e<CR>
+
 [typed literally]
 With the shortcut "F" (while keeping the <Alt> key pressed), and then "O",
 this menu can be used.  The second part is shown as "Open     :e".  The ":e"
@@ -504,8 +513,11 @@ some modes:
 	Op-pending	<Esc>
 
 Example: >
+
    :amenu File.Exit	:qa!^M
+
 is equal to: >
+
    :nmenu File.Exit	:qa!^M
    :vmenu File.Exit	^[:qa!^M
    :imenu File.Exit	^O:qa!^M
@@ -516,6 +528,7 @@ Careful: In Insert mode this only works for a SINGLE Normal mode command,
 because of the CTRL-O.  If you have two or more commands, you will need to use
 the ":imenu" command.  For inserting text in any mode, you can use the
 expression register: >
+
    :amenu Insert.foobar   "='foobar'<CR>P
 
 Note that the '<' and 'k' flags in 'cpoptions' also apply here (when
@@ -719,7 +732,7 @@ using the last visual selection.
 						*:iunme* *:iunmenu*
 						*:cunme* *:cunmenu*
 To delete a menu item or a whole submenu, use the unmenu commands, which are
-analogous to the unmap commands.  Eg:
+analogous to the unmap commands.  Eg: >
     :unmenu! Edit.Paste
 
 This will remove the Paste item from the Edit menu for Insert and
@@ -764,52 +777,62 @@ item for the keyword under the cursor.  The register "z" is used. >
 mappings, or put these lines in your gvimrc; "<C-R>" is CTRL-R, "<CR>" is
 the <CR> key.  |<>|)
 
+
 Tooltips & Menu tips
 
-These are currently only supported for the Win32 GUI. However, they should
-appear for the other gui platforms in the not too distant future.
+See section |42.4| in the user manual.
 
 							*:tmenu* *:tm*
 :tm[enu] {menupath} {rhs}	Define a tip for a menu or tool.  {only in
-				GTK+ and Win32 GUI}
+				X11 and Win32 GUI}
 
-:tm[enu] [menupath]		List menu tips. {only in GTK+ and Win32 GUI}
+:tm[enu] [menupath]		List menu tips. {only in X11 and Win32 GUI}
 
-A "tip" can be defined for each menu item. For example, after defining an item
-like this: >
-	:amenu MyMenu.Hello :echo "Hello"<CR>
-The tip is defined like this: >
-	:tmenu MyMenu.Hello Displays a greeting.
+							*:tunmenu* *:tu*
+:tu[nmenu] {menupath}		Remove a tip for a menu or tool.
+				{only in X11 and Win32 GUI}
 
 When a tip is defined for a menu item, it appears in the command-line area
 when the mouse is over that item, much like a standard Windows menu hint in
 the status bar. (Except when Vim is in Command-line mode, when of course
 nothing is displayed.)
-When a tip is defined for a toolbar item, it appears as a tooltip when the
-mouse pauses over that button, in the usual fashion.
+When a tip is defined for a ToolBar item, it appears as a tooltip when the
+mouse pauses over that button, in the usual fashion.  Use the |hl-Tooltip|
+highlight group to change its colors.
+
+A "tip" can be defined for each menu item.  For example, when defining a menu
+item like this: >
+	:amenu MyMenu.Hello :echo "Hello"<CR>
+The tip is defined like this: >
+	:tmenu MyMenu.Hello Displays a greeting.
+And delete it with: >
+	:tunmenu MyMenu.Hello
+
+When using the GTK GUI, and Vim has already opened the GUI window, the tooltip
+must be defined before the ToolBar menu.  Otherwise it won't show up.
+
+Tooltips are currently only supported for the X11 and Win32 GUI. However, they
+should appear for the other gui platforms in the not too distant future.
 
 The ":tmenu" command works just like other menu commands, it uses the same
-arguments.
+arguments.  ":tunmenu" deletes an existing menu tip, in the same way as the
+other unmenu commands.
 
-							*:tunmenu* *:tu*
-:tu[nmenu] {menupath}		Remove a tip for a menu or tool.  {only in
-				GTK+ and Win32 GUI}
-
-:tunmenu deletes an existing menu tip, in the same way as the other unmenu
-commands.  Example: >
-	:tunmenu MyMenu.Hello
 If a menu item becomes invalid (i.e. its actions in all modes are deleted) Vim
 deletes the menu tip (and the item) for you.  This means that :aunmenu deletes
 a menu item - you don't need to do a :tunmenu as well.
 
+
 5.8 Popup Menus
+
 In the win32 gui, you can cause a menu to popup at the cursor.  This behaves
 similarly to the PopUp menus except that any menu tree can be popped up
 
 							*:popup* *:popu*
-:pop[up] {name}			Popup the menu {name}.  The menu named must have at
-				least one subentry, but need not appear on the
-				menu-bar (see |win32-hidden-menus|).
+:pop[up] {name}			Popup the menu {name}.  The menu named must
+				have at least one subentry, but need not
+				appear on the menu-bar (see
+				|win32-hidden-menus|).
 
 Example: >
 	:popup File

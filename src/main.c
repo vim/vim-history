@@ -297,7 +297,7 @@ main
 		else if (STRICMP(argv[i], "--serverlist") == 0)
 		{
 		    res = serverGetVimNames(xterm_dpy);
-		    if (res && *res)
+		    if (res != NULL && *res)
 			mch_msg((char *)res);
 		    vim_free(res);
 		}
@@ -1370,21 +1370,26 @@ scripterror:
      * unless there was a -X or a --servername '' on the command line.
      * Only register nongui-vim's with an explicit --servername argument.
      */
-    if ((gui.in_use && !(cmdTarget != NULL && *cmdTarget == 0))
-	|| (cmdTarget != NULL && *cmdTarget))
+    if ((
+# ifdef FEAT_GUI
+	    (gui.in_use && !(cmdTarget != NULL && *cmdTarget == 0)) ||
+# endif
+	    (cmdTarget != NULL && *cmdTarget)) && X_DISPLAY != NULL)
     {
 	if (cmdTarget == NULL)
 	    cmdTarget = initstr;
-	if (gui.in_use)
-	    serverRegisterName(gui.dpy, cmdTarget);
-	else if (xterm_dpy != NULL)
-	    serverRegisterName(xterm_dpy, cmdTarget);
+	serverRegisterName(X_DISPLAY, cmdTarget);
     }
+    else if (cmdTarget == NULL)
+	 /* Cater for delayed start of server upon :gui in a plain vim.  Only
+	  * when server has not been disabled with --servername '' */
+	serverDelayedStartName = initstr;
+
     /*
      * Execute command if we're here because the send failed
      * (or else we would have exited above)
      */
-    if (serverStr)
+    if (serverStr != NULL)
 	serverSendToVim(NULL, NULL, serverStr);
 #endif
 
@@ -2179,9 +2184,10 @@ usage()
 # endif
     main_msg(_("-X\t\t\tDo not connect to X server"));
 # ifdef FEAT_XCMDSRV
-    main_msg(_("--serverlist\t\tList available command server names & die"));
-    main_msg(_("--serversend <keys>\tSend <keys> to command server & die"));
-    main_msg(_("--servername <name>\tSend to/become the server <name>"));
+    main_msg(_("--serverlist\t\tList available Vim server names and exit"));
+    main_msg(_("--serversend <keys>\tSend <keys> to a Vim server and exit"));
+    main_msg(_("--servername <name>\tSend to/become the Vim server <name>"));
+    main_msg(_("--remote\t\tEdit the files in a Vim server"));
 # endif
 #endif
 #ifdef FEAT_VIMINFO

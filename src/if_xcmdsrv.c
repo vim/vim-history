@@ -1,6 +1,7 @@
 /* vi:set ts=8 sts=4 sw=4:
  *
  * VIM - Vi IMproved	by Bram Moolenaar
+ * X command server by Flemming Madsen
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -120,7 +121,7 @@
  */
 
 static int	x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
-static int 	AppendPropCarefully __ARGS((Display *display,
+static int	AppendPropCarefully __ARGS((Display *display,
 		    Window window, Atom property, char_u *value, int length));
 static Window	LookupName __ARGS((Display *dpy, char_u *name,
 		    int delete, char_u **loose));
@@ -146,15 +147,15 @@ static int	got_x_error = FALSE;
  */
     int
 serverRegisterName(dpy, name)
-    Display *dpy;		/* Display to register with */
-    char_u *name;			/* The name that will be used to
+    Display	*dpy;		/* Display to register with */
+    char_u	*name;		/* The name that will be used to
 				 * refer to the vim instance in later
 				 * "server" commands.  Must be globally
 				 * unique. */
 {
-    int	    i;
-    int	    res;
-    char_u  *p = NULL;
+    int		i;
+    int		res;
+    char_u	*p = NULL;
 
     res = DoRegisterName(dpy, name);
     if (res < 0)
@@ -186,8 +187,8 @@ serverRegisterName(dpy, name)
 
     static int
 DoRegisterName(dpy, name)
-    Display *dpy;
-    char_u *name;
+    Display	*dpy;
+    char_u	*name;
 {
     Window	w;
     XErrorHandler old_handler;
@@ -257,18 +258,18 @@ DoRegisterName(dpy, name)
     return -2;
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * serverChangeRegisteredWindow --
  *	Clean out new ID from registry and set it as comm win.
  *	Change any registered window ID.
  */
-
     void
 serverChangeRegisteredWindow(dpy, newwin)
-    Display *dpy;		/* Display to register with */
-    Window newwin;		/* Re-register to this ID */
+    Display	*dpy;		/* Display to register with */
+    Window	newwin;		/* Re-register to this ID */
 {
-    char_u propInfo[MAX_NAME_LENGTH + 20];
+    char_u	propInfo[MAX_NAME_LENGTH + 20];
 
     commWindow = newwin;
     if (registryProperty == None)
@@ -290,6 +291,7 @@ serverChangeRegisteredWindow(dpy, newwin)
     }
     XUngrabServer(dpy);
 }
+#endif
 
 /*
  * serverSendToVim --
@@ -404,7 +406,7 @@ serverSendToVim(dpy, name, cmd)
 
     char_u *
 serverGetVimNames(dpy)
-    Display *dpy;
+    Display	*dpy;
 {
     char_u	    *regProp;
     char_u	    *entry;
@@ -415,7 +417,7 @@ serverGetVimNames(dpy)
     Atom	    *plist;
     Window          w;
     garray_T	    ga;
-    XErrorHandler old_handler;
+    XErrorHandler   old_handler;
 
     if (registryProperty == None)
     {
@@ -437,7 +439,7 @@ serverGetVimNames(dpy)
 
     if (actualType == None)
     {
-	EMSG(_("E249: couldn't read VIM instance registry property !"));
+	EMSG(_("E249: couldn't read VIM instance registry property"));
 	return NULL;
     }
 
@@ -452,7 +454,7 @@ serverGetVimNames(dpy)
 	{
 	    XFree(regProp);
 	}
-	EMSG(_("E251: VIM instance registry property is badly formed. Deleted !!!"));
+	EMSG(_("E251: VIM instance registry property is badly formed.  Deleted!"));
 	return NULL;
     }
 
@@ -476,9 +478,8 @@ serverGetVimNames(dpy)
 	    XSync(dpy, False);
 	    if (!got_x_error)
 	    {
-		if (ga.ga_len > 0)
-		    ga_concat(&ga, (char_u *)"\n");
 		ga_concat(&ga, p + 1);
+		ga_concat(&ga, (char_u *)"\n");
 	    }
 	    if (plist != NULL)
 		XFree(plist);

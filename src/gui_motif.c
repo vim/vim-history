@@ -48,7 +48,6 @@
 extern Widget vimShell;
 
 static Widget vimForm;
-static Widget textAreaFrame;
 static Widget textAreaForm;
 Widget textArea;
 #ifdef FEAT_TOOLBAR
@@ -187,7 +186,9 @@ gui_x11_create_widgets()
      */
     toolBarFrame = XtVaCreateWidget("toolBarFrame",
 	xmFrameWidgetClass, vimForm,
-	XmNshadowType, XmSHADOW_OUT,
+	XmNshadowThickness, 0,
+	XmNmarginHeight, 0,
+	XmNmarginWidth, 0,
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
 	NULL);
@@ -202,6 +203,11 @@ gui_x11_create_widgets()
 	XmNisHomogeneous, False,
 	XmNpacking, XmPACK_TIGHT,
 	XmNspacing, 0,
+	XmNshadowThickness, 0,
+	XmNhighlightThickness, 0,
+	XmNmarginHeight, 0,
+	XmNmarginWidth, 0,
+	XmNadjustLast, True,
 	NULL);
     gui_motif_menu_colors(toolBar);
 
@@ -211,21 +217,11 @@ gui_x11_create_widgets()
 	    toolbar_leave_cb, NULL);
 #endif
 
-    textAreaFrame = XtVaCreateManagedWidget("textAreaFrame",
-	xmFrameWidgetClass, vimForm,
-	XmNchildType, XmFRAME_WORKAREA_CHILD,
-	XmNshadowType, XmSHADOW_OUT,
+    textAreaForm = XtVaCreateManagedWidget("textAreaForm",
+	xmFormWidgetClass, vimForm,
 	XmNleftAttachment, XmATTACH_FORM,
-	XmNtopAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
 	XmNbottomAttachment, XmATTACH_FORM,
-	NULL);
-    gui_motif_scroll_colors(textAreaFrame);
-
-    textAreaForm = XtVaCreateManagedWidget("textAreaForm",
-	xmFormWidgetClass, textAreaFrame,
-	XmNborderWidth, 0,
-	XmNshadowThickness, 0,
 	XmNmarginWidth, 0,
 	XmNmarginHeight, 0,
 	XmNresizePolicy, XmRESIZE_ANY,
@@ -255,7 +251,7 @@ gui_x11_create_widgets()
      * Create the Footer.
      */
     footer = XtVaCreateWidget("footer",
-	xmLabelWidgetClass, vimForm,
+	xmLabelGadgetClass, vimForm,
 	XmNalignment, XmALIGNMENT_BEGINNING,
 	XmNmarginHeight, 0,
 	XmNmarginWidth, 0,
@@ -345,6 +341,26 @@ gui_motif_create_fontlist(font)
 #endif
     return font_list;
 }
+
+#if (XmVersion > 1001)
+    XmFontList
+gui_motif_create_fontlist_from_fontset(fontset)
+    XFontSet	*fontset;
+{
+    XmFontList font_list;
+
+    /* Motif 1.2 method */
+    XmFontListEntry font_list_entry;
+
+    font_list_entry = XmFontListEntryCreate(STRING_TAG,
+					    XmFONT_IS_FONTSET,
+					    (XtPointer)*fontset);
+    font_list = XmFontListAppendEntry(NULL, font_list_entry);
+    XmFontListEntryFree(&font_list_entry);
+    return font_list;
+}
+#endif
+
 #endif
 
 #if defined(FEAT_MENU) || defined(PROTO)
@@ -377,7 +393,7 @@ gui_mch_enable_menu(flag)
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, menuBar,
 		NULL);
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, XtParent(toolBar),
 		NULL);
@@ -385,7 +401,7 @@ gui_mch_enable_menu(flag)
 	else
 #endif
 	{
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, menuBar,
 		NULL);
@@ -400,7 +416,7 @@ gui_mch_enable_menu(flag)
 	    XtVaSetValues(XtParent(toolBar),
 		XmNtopAttachment, XmATTACH_FORM,
 		NULL);
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, XtParent(toolBar),
 		NULL);
@@ -408,7 +424,7 @@ gui_mch_enable_menu(flag)
 	else
 #endif
 	{
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_FORM,
 		NULL);
 	}
@@ -435,7 +451,7 @@ gui_motif_set_mnemonics(enable)
     int		enable;
 {
     /*
-     * Don't enable menu mnemonics when the menu bar is disabled, Lesstif
+     * Don't enable menu mnemonics when the menu bar is disabled, LessTif
      * crashes when using a mnemonic then.
      */
     if (!menu_enabled)
@@ -636,7 +652,7 @@ gui_mch_text_area_extra_height()
 {
     Dimension	shadowHeight;
 
-    XtVaGetValues(textAreaFrame, XmNshadowThickness, &shadowHeight, NULL);
+    XtVaGetValues(textAreaForm, XmNshadowThickness, &shadowHeight, NULL);
     return shadowHeight;
 }
 
@@ -744,7 +760,7 @@ gui_mch_add_menu_item(menu, idx)
 	WidgetClass	type;
 	XmString	xms = NULL;    /* fallback label if pixmap not found */
 	int		n;
-	Arg		args[15];
+	Arg		args[18];
 
 	n = 0;
 	if (menu_is_separator(menu->name))
@@ -760,9 +776,12 @@ gui_mch_add_menu_item(menu, idx)
 	    if (cp != NULL)
 		wid = (Dimension)atoi(++cp);
 	    else
-		wid = 5;
+		wid = 4;
 
-	    type = xmDrawingAreaWidgetClass;
+	    /* We better use a FormWidget here, since it's far more
+	     * flexible in terms of size.
+	     */
+	    type = xmFormWidgetClass;
 	    XtSetArg(args[n], XmNwidth, wid); n++;
 	    XtSetArg(args[n], XmNmappedWhenManaged, False); n++;
 	}
@@ -785,7 +804,12 @@ gui_mch_add_menu_item(menu, idx)
 		XtSetArg(args[n], XmNlabelInsensitivePixmap, menu->image_ins); n++;
 		XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
 #ifndef FEAT_SUN_WORKSHOP
-		XtSetArg(args[n], XmNshadowThickness, 0); n++;
+
+		/* Without shadows one can't sense whatever the button has been
+		 * pressed or not! However we wan't to save a bit of space...
+		 */
+		XtSetArg(args[n], XmNhighlightThickness, 0); n++;
+		XtSetArg(args[n], XmNhighlightOnEnter, True); n++;
 		XtSetArg(args[n], XmNmarginWidth, 0); n++;
 		XtSetArg(args[n], XmNmarginHeight, 0); n++;
 #endif
@@ -842,9 +866,9 @@ gui_mch_add_menu_item(menu, idx)
     if (menu_is_separator(menu->name))
     {
 	menu->id = XtVaCreateWidget("subMenu",
-		xmSeparatorWidgetClass, parent->submenu_id,
+		xmSeparatorGadgetClass, parent->submenu_id,
 #if (XmVersion >= 1002)
-		/* count the tearoff item (neede for LessTif) */
+		/* count the tearoff item (needed for LessTif) */
 		XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
 								     ? 1 : 0),
 #endif
@@ -970,6 +994,24 @@ gui_mch_new_menu_font()
     ui_new_shellsize();
 }
 
+    void
+gui_mch_new_tooltip_font()
+{
+    if (toolBar == (Widget)0)
+	return;
+
+    gui_mch_submenu_change(root_menu, FALSE);
+}
+
+    void
+gui_mch_new_tooltip_colors()
+{
+    if (toolBar == (Widget)0)
+	return;
+
+    gui_mch_submenu_change(root_menu, TRUE);
+}
+
     static void
 gui_mch_submenu_change(menu, colors)
     vimmenu_T	*menu;
@@ -998,10 +1040,38 @@ gui_mch_submenu_change(menu, colors)
 				XmNlabelInsensitivePixmap, mp->image_ins,
 				NULL);
 		}
+# ifdef FEAT_BEVAL
+		/* If we have a tooltip, then we need to change it's font */
+		if (mp->tip != NULL)
+		{
+		    Arg args[2];
+
+		    args[0].name = XmNbackground;
+		    args[0].value = gui.balloonEval_bg_pixel;
+		    args[1].name = XmNforeground;
+		    args[1].value = gui.balloonEval_fg_pixel;
+		    XtSetValues(mp->tip->balloonLabel,
+				&args[0], XtNumber(args));
+		}
+# endif
 #endif
 	    }
 	    else
+	    {
 		gui_motif_menu_fontlist(mp->id);
+#ifdef FEAT_BEVAL
+		/* If we have a tooltip, then we need to change it's font */
+		if (mp->tip != NULL)
+		{
+		    Arg args[1];
+
+		    args[0].name = XmNfontList;
+		    args[0].value = (XtArgVal)gui.balloonEval_fontList;
+		    XtSetValues(mp->tip->balloonLabel,
+				&args[0], XtNumber(args));
+		}
+#endif
+	    }
 	}
 
 	if (mp->children != NULL)
@@ -1318,10 +1388,7 @@ gui_mch_set_scrollbar_colors(sb)
 
     /* This is needed for the rectangle below the vertical scrollbars. */
     if (sb == &gui.bottom_sbar && textAreaForm != (Widget)0)
-    {
 	gui_motif_scroll_colors(textAreaForm);
-	gui_motif_scroll_colors(textAreaFrame);
-    }
 }
 
 /*
@@ -1899,7 +1966,7 @@ gui_mch_dialog(type, title, message, button_names, dfltbutton, textfield)
     if (label == NULL)
 	return -1;
     (void)XtVaCreateManagedWidget("dialogMessage",
-				xmLabelWidgetClass, form,
+				xmLabelGadgetClass, form,
 				XmNlabelString, label,
 				XmNtopAttachment, XmATTACH_FORM,
 				XmNtopOffset, 8,
@@ -2043,7 +2110,7 @@ gui_mch_enable_footer(showit)
 	gui.footer_height = 0;
 	XtUnmanageChild(footer);
     }
-    XtVaSetValues(textAreaFrame, XmNbottomOffset, gui.footer_height, NULL);
+    XtVaSetValues(textAreaForm, XmNbottomOffset, gui.footer_height, NULL);
 }
 
     void
@@ -2134,7 +2201,7 @@ gui_mch_show_toolbar(int showit)
 	}
 	gui.toolbar_height = gui_mch_compute_toolbar_height();
 	XtManageChild(XtParent(toolBar));
-	XtVaSetValues(textAreaFrame,
+	XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, XtParent(toolBar),
 		NULL);
@@ -2152,12 +2219,12 @@ gui_mch_show_toolbar(int showit)
     {
 	gui.toolbar_height = 0;
 	if (XtIsManaged(menuBar))
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_WIDGET,
 		XmNtopWidget, menuBar,
 		NULL);
 	else
-	    XtVaSetValues(textAreaFrame,
+	    XtVaSetValues(textAreaForm,
 		XmNtopAttachment, XmATTACH_FORM,
 		NULL);
 
@@ -2861,7 +2928,7 @@ find_replace_dialog_create(entry_text, do_replace)
 
 	str = XmStringCreateSimple(_("Direction"));
 	(void)XtVaCreateManagedWidget("directionFrameLabel",
-		xmLabelWidgetClass, frame,
+		xmLabelGadgetClass, frame,
 		XmNlabelString, str,
 		XmNchildHorizontalAlignment, XmALIGNMENT_BEGINNING,
 		XmNchildType, XmFRAME_TITLE_CHILD,

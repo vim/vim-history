@@ -184,9 +184,11 @@ static void	ex_topleft __ARGS((exarg_T *eap));
 static void	ex_botright __ARGS((exarg_T *eap));
 static void	ex_find __ARGS((exarg_T *eap));
 static void	ex_edit __ARGS((exarg_T *eap));
+#if !defined(FEAT_GUI) && !defined(FEAT_XCMDSRV)
+# define ex_drop		ex_ni
+#endif
 #ifndef FEAT_GUI
 # define ex_gui			ex_nogui
-# define ex_drop		ex_ni
 static void	ex_nogui __ARGS((exarg_T *eap));
 #endif
 #if defined(FEAT_GUI_W32) && defined(FEAT_MENU) && defined(FEAT_TEAROFF)
@@ -10120,7 +10122,7 @@ static int check_connection __ARGS((void));
     static int
 check_connection()
 {
-    if (!gui.in_use && xterm_dpy == NULL)
+    if (X_DISPLAY == NULL)
     {
 	EMSG(_("E240: No connection to X server"));
 	return FAIL;
@@ -10145,7 +10147,7 @@ ex_serversend(eap)
 	return;
     p = skipwhite(p);
 
-    if (serverSendToVim(gui.in_use ? gui.dpy : xterm_dpy, s, p) < 0)
+    if (serverSendToVim(X_DISPLAY, s, p) < 0)
 	EMSG2(_("E241: Unable to send to %s"), s);
     vim_free(s);
 }
@@ -10162,27 +10164,33 @@ ex_serverlist(eap)
 
     if (check_connection() == FAIL)
 	return;
-    p = serverGetVimNames(gui.in_use ? gui.dpy : xterm_dpy);
-    next = cur = p;
-    while (*next)
+    p = serverGetVimNames(X_DISPLAY);
+    if (p == NULL)
+	MSG(_("No servers found for this display"));
+    else
     {
-	cur = next;
-	if ((next = vim_strchr(cur, '\n')) == NULL)
-	    next = cur + STRLEN(cur);
-	if (next > cur)
+	next = cur = p;
+	while (*next)
 	{
-	    msg_putchar('\n');
-	    if (serverName != NULL && STRNCMP(serverName, cur, next - cur) == 0
-		    && (next - cur) == STRLEN(serverName))
-		msg_outtrans((char_u *)"> ");
-	    else
-		msg_outtrans((char_u *)"  ");
-	    msg_outtrans_len(cur, next - cur);
+	    cur = next;
+	    if ((next = vim_strchr(cur, '\n')) == NULL)
+		next = cur + STRLEN(cur);
+	    if (next > cur)
+	    {
+		msg_putchar('\n');
+		if (serverName != NULL
+			&& STRNCMP(serverName, cur, next - cur) == 0
+			&& (next - cur) == STRLEN(serverName))
+		    msg_outtrans((char_u *)"> ");
+		else
+		    msg_outtrans((char_u *)"  ");
+		msg_outtrans_len(cur, next - cur);
+	    }
+	    if (*next == '\n')
+		next++;
+	    out_flush();
 	}
-	if (*next == '\n')
-	    next++;
-	out_flush();
+	vim_free(p);
     }
-    vim_free(p);
 }
 #endif

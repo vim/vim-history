@@ -1,8 +1,8 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@123india.com)
-" Last Change: 2001 Jun 09
-" Version: 2.3
+" Last Change:	Thu, 21 Jun 2001 07:42:08
+" Version: 2.5
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
 " This file implements a file explorer. Latest version available at:
@@ -24,6 +24,10 @@
 " See :help file-explorer for more details
 "
 "-----------------------------------------------------------------------------
+"Updates in version 2.5 by Doug Potts
+" - Added explStartBelow and explStartRight, so that a different set of
+"   split options, from the file/dir options, may be used for that first
+"   explorer window.
 "Updates in version 2.4 by Mark Waggoner, Bram Moolenaar, & Thomas Köhler
 " - Respect the g:explVertical when running :Sexplore
 " - Doubleclick on filename to 'O' the file
@@ -97,6 +101,18 @@ endif
 " 1 = to right, 0 = to left
 if !exists("g:explSplitRight")
   let g:explSplitRight = &splitright
+endif
+
+" Start the first explorer window...
+" Defaults to be the same as explSplitBelow
+if !exists("g:explStartBelow")
+  let g:explStartBelow = g:explSplitBelow
+endif
+
+" Start the first explorer window...
+" Defaults to be the same as explSplitRight
+if !exists("g:explStartRight")
+  let g:explStartRight = g:explSplitRight
 endif
 
 " Show detailed help?
@@ -193,8 +209,8 @@ function! s:StartExplorer(split, start_dir)
 
   if a:split || &modified 
     let startcmd = splitMode . " " . g:explWinSize . "new " . fname
-    let &splitbelow = g:explSplitBelow
-    let &splitright = g:explSplitRight
+    let &splitbelow = g:explStartBelow
+    let &splitright = g:explStartRight
   else
     let startcmd = "edit " . fname
   endif

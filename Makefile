@@ -70,7 +70,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ak
+MINOR = 0al
 
 # CHECKLIST for creating a new version:
 #
@@ -267,8 +267,8 @@ SRC_UNIX =	\
 		src/Makefile \
 		src/auto/configure \
 		src/config.h.in \
-		src/config.mk.in \
 		src/config.mk.dist \
+		src/config.mk.in \
 		src/configure \
 		src/configure.in \
 		src/gui_at_fs.c \
@@ -287,7 +287,7 @@ SRC_UNIX =	\
 		src/if_cscope.c \
 		src/if_cscope.h \
 		src/if_ruby.c \
-		src/proto/if_ruby.pro \
+		src/if_xcmdsrv.c \
 		src/integration.c \
 		src/integration.h \
 		src/link.sh \
@@ -307,6 +307,8 @@ SRC_UNIX =	\
 		src/proto/gui_x11.pro \
 		src/proto/hangulin.pro \
 		src/proto/if_cscope.pro \
+		src/proto/if_ruby.pro \
+		src/proto/if_xcmdsrv.pro \
 		src/proto/os_unix.pro \
 		src/proto/pty.pro \
 		src/proto/workshop.pro \
@@ -638,6 +640,7 @@ RT_AMI_DOS =	\
 RT_DOS =	\
 		README_dos.txt \
 		runtime/rgb.txt \
+		vimtutor.bat \
 
 # Amiga runtime (also in the extra archive)
 RT_AMI =	\

@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	May 1, 2001
-" Version: 22
+" Last Change:	June 14, 2001
+" Version: 23
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
@@ -200,7 +200,7 @@ syn match	shComment		"#.*$" contains=@shCommentGroup
 " String and Character constants
 "===============================
 syn match   shNumber		"-\=\<\d\+\>"
-syn match   shSpecial	contained	"\\\d\d\d\|\\[abcfnrtv]"
+syn match   shSpecial	contained	"\\\d\d\d\|\\[abcfnrtv0]"
 syn region  shSinglequote	matchgroup=shOperator start=+'+ end=+'+		contains=shStringSpecial
 syn region  shDoubleQuote     matchgroup=shOperator start=+"+ skip=+\\"+ end=+"+	contains=@shDblQuoteList,shStringSpecial
 syn match   shStringSpecial	contained	"[^[:print:]]"
@@ -216,14 +216,14 @@ syn match	shRedir	"\d<<-\="
 " Shell Input Redirection (Here Documents)
 if version < 600
  syn region shHereDoc matchgroup=shRedir start="<<\s*\**END[a-zA-Z_0-9]*\**"  matchgroup=shRedir end="^END[a-zA-Z_0-9]*$"
- syn region shHereDoc matchgroup=shRedir start="<<-\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^\t*END[a-zA-Z_0-9]*$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**END[a-zA-Z_0-9]*\**" matchgroup=shRedir end="^\s*END[a-zA-Z_0-9]*$"
  syn region shHereDoc matchgroup=shRedir start="<<\s*\**EOF\**"  matchgroup=shRedir end="^EOF$"
- syn region shHereDoc matchgroup=shRedir start="<<-\s*\**EOF\**" matchgroup=shRedir end="^\t*EOF$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**EOF\**" matchgroup=shRedir end="^\s*EOF$"
  syn region shHereDoc matchgroup=shRedir start="<<\s*\**\.\**"  matchgroup=shRedir end="^\.$"
- syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\.\**" matchgroup=shRedir end="^\t*\.$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\.\**" matchgroup=shRedir end="^\s*\.$"
 else
  syn region shHereDoc matchgroup=shRedir start="<<\s*\**\z(\h\w*\)\**"  matchgroup=shRedir end="^\z1$"
- syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\z(\h\w*\)\**" matchgroup=shRedir end="^\t*\z1$"
+ syn region shHereDoc matchgroup=shRedir start="<<-\s*\**\z(\h\w*\)\**" matchgroup=shRedir end="^\s*\z1$"
 endif
 
 " Identifiers

@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 15
+*syntax.txt*    For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2232,7 +2232,7 @@ separated by commas (just like with "contains", so you can also use patterns).
 If the "nextgroup" argument is given, the mentioned syntax groups will be
 tried for a match, after the match or region ends.  If none of the groups have
 a match, highlighting continues normally.  If there is a match, this group
-will used, even when it is not mentioned in the "contains" field of the
+will be used, even when it is not mentioned in the "contains" field of the
 current group.  This is like giving the mentioned group priority over all
 other groups.  Example: >
    :syntax match  ccFoobar  "Foo.\{-}Bar"  contains=ccFoo
@@ -2244,7 +2244,7 @@ This will highlight "Foo" and "Bar" differently, and only when there is a
 highlighting, and "bbb" where ccBar is used. >
 
    Foo asdfasd Bar asdf Foo asdf Bar asdf
-   fff		bbb      fff      bbb
+   fff	       bbb      fff      bbb
 
 Note the use of ".\{-}" to skip as little as possible until the next Bar.
 when ".*" would be used, the "asdf" in between "Bar" and "Foo" would be
@@ -2305,6 +2305,7 @@ independent of 'compatible' and 'magic' settings.
 Try to avoid patterns that can match an empty string, such as "[a-z]*".
 This slows down the highlighting a lot, because it matches everywhere.
 
+						*:syn-pattern-offset*
 The pattern can be followed by a character offset.  This can be used to
 change the highlighted part, and to change the text area included in the
 match or region (which only matters when trying to match other items).  Both
@@ -2968,10 +2969,13 @@ font={font-name}					*highlight-font*
 	When setting the font for the "Normal" group, this becomes the default
 	font (until the 'guifont' option is changed; the last one set is
 	used).
-	When setting the font for the "Menu" group, the menus will be changed
-	when running Motif.  This does not work for other GUIs.
-	All fonts used should be of the same character size as the default
-	font!  Otherwise redrawing problems will occur.
+ 	The following only works with Motif, not with other GUIs:
+	When setting the font for the "Menu" group, the menus will be changed.
+	When setting the font for the "Tooltip" group, the tooltips will be
+	changed.
+	All fonts used, except for Menu and Tooltip, should be of the same
+	character size as the default font!  Otherwise redrawing problems will
+	occur.
 
 guifg={color-name}					*highlight-guifg*
 guibg={color-name}					*highlight-guibg*
@@ -3085,10 +3089,12 @@ WildMenu	current match in 'wildmenu' completion
 The 'statusline' syntax allows the use of 9 different highlights in the
 statusline and ruler (via 'rulerformat'). The names are User1 to User9.
 
-For the GUI you can use these groups to set the colors for the menu and
-scrollbars.  They don't have defaults.  This doesn't work for the Win32 GUI.
-    Menu						    *hl-Menu*
-    Scrollbar						    *hl-Scrollbar*
+For the GUI you can use these groups to set the colors for the menu,
+scrollbars and tooltips.  They don't have defaults.  This doesn't work for the
+Win32 GUI.
+    Menu						*hl-Menu*
+    Scrollbar						*hl-Scrollbar*
+    Tooltip						*hl-Tooltip*
 
 ==============================================================================
 13. Linking groups		*:hi-link* *:highlight-link* *E412* *E413*

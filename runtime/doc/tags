@@ -300,6 +300,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'lines'	options.txt	/*'lines'*
 'linespace'	options.txt	/*'linespace'*
 'lisp'	options.txt	/*'lisp'*
+'lispwords'	options.txt	/*'lispwords'*
 'list'	options.txt	/*'list'*
 'listchars'	options.txt	/*'listchars'*
 'lm'	options.txt	/*'lm'*
@@ -308,6 +309,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'lpl'	options.txt	/*'lpl'*
 'ls'	options.txt	/*'ls'*
 'lsp'	options.txt	/*'lsp'*
+'lw'	options.txt	/*'lw'*
 'lz'	options.txt	/*'lz'*
 'ma'	options.txt	/*'ma'*
 'magic'	options.txt	/*'magic'*
@@ -1374,10 +1376,23 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 41.8	usr_41.txt	/*41.8*
 41.9	usr_41.txt	/*41.9*
 42.1	usr_42.txt	/*42.1*
+42.2	usr_42.txt	/*42.2*
+42.3	usr_42.txt	/*42.3*
+42.4	usr_42.txt	/*42.4*
 43.1	usr_43.txt	/*43.1*
 43.2	usr_43.txt	/*43.2*
-43.3	usr_43.txt	/*43.3*
 44.1	usr_44.txt	/*44.1*
+44.10	usr_44.txt	/*44.10*
+44.11	usr_44.txt	/*44.11*
+44.12	usr_44.txt	/*44.12*
+44.2	usr_44.txt	/*44.2*
+44.3	usr_44.txt	/*44.3*
+44.4	usr_44.txt	/*44.4*
+44.5	usr_44.txt	/*44.5*
+44.6	usr_44.txt	/*44.6*
+44.7	usr_44.txt	/*44.7*
+44.8	usr_44.txt	/*44.8*
+44.9	usr_44.txt	/*44.9*
 45.1	usr_45.txt	/*45.1*
 90.1	usr_90.txt	/*90.1*
 90.2	usr_90.txt	/*90.2*
@@ -2175,6 +2190,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-on	syntax.txt	/*:syn-on*
 :syn-oneline	syntax.txt	/*:syn-oneline*
 :syn-pattern	syntax.txt	/*:syn-pattern*
+:syn-pattern-offset	syntax.txt	/*:syn-pattern-offset*
 :syn-qstart	syntax.txt	/*:syn-qstart*
 :syn-region	syntax.txt	/*:syn-region*
 :syn-reset	syntax.txt	/*:syn-reset*
@@ -3517,6 +3533,7 @@ buffers	windows.txt	/*buffers*
 buffers-menu	gui.txt	/*buffers-menu*
 buflisted()	eval.txt	/*buflisted()*
 bufloaded()	eval.txt	/*bufloaded()*
+bufmenu_maxlen	gui.txt	/*bufmenu_maxlen*
 bufname()	eval.txt	/*bufname()*
 bufnr()	eval.txt	/*bufnr()*
 bufwinnr()	eval.txt	/*bufwinnr()*
@@ -4044,6 +4061,8 @@ g:explHideFiles	pi_expl.txt	/*g:explHideFiles*
 g:explSortBy	pi_expl.txt	/*g:explSortBy*
 g:explSplitBelow	pi_expl.txt	/*g:explSplitBelow*
 g:explSplitRight	pi_expl.txt	/*g:explSplitRight*
+g:explStartBelow	pi_expl.txt	/*g:explStartBelow*
+g:explStartRight	pi_expl.txt	/*g:explStartRight*
 g:explSuffixesLast	pi_expl.txt	/*g:explSuffixesLast*
 g:explUseSeparators	pi_expl.txt	/*g:explUseSeparators*
 g:explVertical	pi_expl.txt	/*g:explVertical*
@@ -4250,6 +4269,7 @@ hl-SpecialKey	syntax.txt	/*hl-SpecialKey*
 hl-StatusLine	syntax.txt	/*hl-StatusLine*
 hl-StatusLineNC	syntax.txt	/*hl-StatusLineNC*
 hl-Title	syntax.txt	/*hl-Title*
+hl-Tooltip	syntax.txt	/*hl-Tooltip*
 hl-User1	syntax.txt	/*hl-User1*
 hl-User1..9	syntax.txt	/*hl-User1..9*
 hl-VertSplit	syntax.txt	/*hl-VertSplit*

@@ -48,6 +48,15 @@
 # include "dyn-ming.h"
 #endif
 
+#if !defined(FEAT_PYTHON) && defined(PROTO)
+/* Use this to be able to generate prototypes without python being used. */
+# define PyObject int
+# define PyThreadState int
+# define PyTypeObject int
+struct PyMethodDef { int a; };
+# define PySequenceMethods int
+#endif
+
 /* Parser flags */
 #define single_input	256
 #define file_input	257
@@ -137,8 +146,8 @@ static PyTypeObject* dll_PyString_Type;
 static int(*dll_PySys_SetObject)(char *, PyObject *);
 static PyTypeObject* dll_PyType_Type;
 static PyObject*(*dll_Py_BuildValue)(char *, ...);
-static PyObject*(*dll_Py_FindMethod)(PyMethodDef[], PyObject *, char *);
-static PyObject*(*dll_Py_InitModule4)(char *, PyMethodDef *, char *, PyObject *, int);
+static PyObject*(*dll_Py_FindMethod)(struct PyMethodDef[], PyObject *, char *);
+static PyObject*(*dll_Py_InitModule4)(char *, struct PyMethodDef *, char *, PyObject *, int);
 static void(*dll_Py_Initialize)(void);
 static PyObject*(*dll__PyObject_New)(PyTypeObject *, PyObject *);
 static PyObject*(*dll__PyObject_Init)(PyObject *, PyTypeObject *);
@@ -2606,7 +2615,7 @@ VimErrorCheck(void)
 }
 
 
-#if PYTHON_API_VERSION < 1007 /* Python 1.4 */
+#if PYTHON_API_VERSION < 1007 /* Python 1.4 */ || defined(PROTO)
 
     char *
 Py_GetProgramName(void)

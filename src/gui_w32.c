@@ -1377,7 +1377,7 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 		    old_row = gui.row;
 		    old_col = gui.col;
 
-		    curbuf->b_im_insert = B_IMODE_IM;
+		    curbuf->b_p_iminsert = B_IMODE_IM;
 		    showmode();
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 		    /* Show/unshow value of 'keymap' in status lines. */
@@ -1590,7 +1590,7 @@ im_set_active(int active)
     int
 im_get_status()
 {
-    return global_ime_get_status()
+    return global_ime_get_status();
 }
 #endif
 

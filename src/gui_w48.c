@@ -2056,7 +2056,11 @@ gui_mch_wait_for_chars(int wtime)
 
 	if (s_need_activate)
 	{
+#ifdef WIN32
+	    (void)SetForegroundWindow(s_hwnd);
+#else
 	    (void)SetActiveWindow(s_hwnd);
+#endif
 	    s_need_activate = FALSE;
 	}
 

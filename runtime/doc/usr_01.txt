@@ -1,4 +1,4 @@
-*usr_01.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 02
+*usr_01.txt*	For Vim version 6.0al.  Last change: 2001 Jun 02
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		

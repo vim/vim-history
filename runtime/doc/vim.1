@@ -145,6 +145,11 @@ Example: Vim "+set si" main.c
 .br
 Note: You can use up to 10 "+" or "-c" commands.
 .TP
+--cmd {command}
+Like using "-c", but the command is executed just before
+processing any vimrc file.
+You can use up to 10 of these commands, independently from "-c" commands.
+.TP
 -b
 Binary mode.
 A few options will be set that makes it possible to edit a binary or
@@ -344,6 +349,26 @@ Restricted mode.  Works like the executable starts with "r".
 Denotes the end of the options.
 Arguments after this will be handled as a file name.
 This can be used to edit a filename that starts with a '-'.
+.TP
+--help
+Give a help message and exit, just like "-h".
+.TP
+--remote
+Connect to a Vim server and make it edit the files given in the rest of the
+arguments.
+.TP
+--serverlist
+List the names of all Vim servers that can be found.
+.TP
+--servername {name}
+Use {name} as the server name.  Used for the current Vim, unless used with a
+--serversend or --remote, then it's the name of the server to connect to.
+.TP
+--serversend {keys}
+Connect to a Vim server and send {keys} to it.
+.TP
+--version
+Print version information and exit.
 .SH ON-LINE HELP
 Type ":help" in
 .B Vim

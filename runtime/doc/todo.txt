@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 17
+*todo.txt*      For Vim version 6.0al.  Last change: 2001 Jun 24
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,11 +29,20 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Win32: search for "expression" in doc/eval.txt.  When wrapping around all the
+text gets red? (Chan)  I can't reproduce it.
+
+"--remote": add a simple way to make the caller wait.  "--remote-wait"?
+Make "--remote" work with OLE?
+
+Problem with searchpair() when using \v: (Sekera)
+    :echo searchpair('\v^\s*<case>', '', '\v^\s*<esac>','nbW')
+
 Win32: Try out new Make_ivc.mak.  Should make it a lot shorter, but keep it
 working for VC 4.0 to VC 7, and with nmake.
 
-Win32: search for "expression" in doc/eval.txt.  When wrapping around all the
-text gets red? (Chan)  I can't reproduce it.
+MS install program: include patch? (Jon Merz)  No, first make sure it still
+works with DJGPP.
 
 Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
 
@@ -66,16 +75,13 @@ J.  User Friendlier
 
 
 E. Virtual edit:
--   Still some work to do.  Need to test various commands.
--   Visual selection of virtual space does not work when 'list' is on.
+-   Need to test various commands.
 -   Add more documentation.
 -   Use lpos_T instead of pos_T for positions that do not have a coladd?
 -   coladvance2() can be a bit slow.  Check with profiling.
 -   Add a mode where the cursor is only allowed to go one character after the
     end of the line?
 -   Allow specifying it separately for Tabs and beyond end-of-line?
--   When the cursor reaches the right border of the window, make the text
-    scroll left?
 
 
 J. User Friendlier
@@ -380,19 +386,30 @@ Athena GUI:
 9   When using "menu a.b.c.d lll", the "b" submenu does not disappear.
 9   When dragging the scrollbar thumb very fast, focus is only obtained in
     the scrollbar itself.
-9   The pullright pixmap seems to be a pixel too high.
 8   When "j" or "k" repeated quickly, display is messed up (Lauther).
 8   Has extra stripes here and there. (Zeitlin).
     When dragging last status line with the mouse, small black lines appear in
     the command line pseudo-scrollbar (only when status line moved quickly).
 7   The file selector is not resizable.  With a big font it is difficult to
     read long file names. (Schroeder)
-9   The pullright pixmap isn't changed when the menubar's foreground or
-    background color is changed.
 7   The file selector's scrollbar colors are not set after doing a
     ":hi Scrollbar guifg=color". (David Harrison)
 7   The file selector's colors are not changed by the colorscheme command.
-    Related to the above problem.
+    Related to the above problem.  Actually, the file selector gets it's
+    colors from the menu's background color upon creation.  Is this what we
+    really want?  The solution for this should match the solution for the
+    Motif version.
+4   Re-write the widget attachments and code so that we will not have to go
+    through and calculate the absolute position of every widget every time the
+    window is refreshed/changes size.  This will help the "flashing-widgets"
+    problem during a refresh.
+5   When starting gvim with all the default colors and then typing
+    ":hi Menu guibg=cyan", the menus change color but the background of the
+    pullright pixmap doesn't change colors.
+    If you type ":hi Menu guibg=cyan font=anyfont", then the pixmap changes
+    colors as it should.
+    Allocating a new pixmap and setting the resource doesn't change the
+    pullright pixmap's colors.  Why?  Possible Athena bug?
 
 
 Motif GUI:
@@ -433,7 +450,7 @@ GUI:
     Need better separation of Vim core and GUI code.
 8   When fontset support is enabled, setting 'guifont' to a single font
     doesn't work.
-8   Menu priority for sub-menus for: Athena, Amiga, Mac, VMS, BeOS.
+8   Menu priority for sub-menus for: Amiga, Mac, VMS, BeOS.
 8   Add menu separators for Amiga, Mac, RISCOS.
 8   Add way to specify the file filter for the browse dialog.  At least for
     browse().
@@ -476,6 +493,9 @@ GUI:
     When the size changes, on Solaris 2.5 there isn't a redraw for the
     remaining part of the window (Phillipps).
 -   Flashes really badly in certain cases when running remotely from a Sun.
+4   Re-write the code so that the highlighting isn't changed multiple times
+    when doing a ":hi clear".  The color changes happen three or more times
+    currently.  This is very obvious on a 66Mhz 486.
 
 
 MSDOS/DJGPP:
@@ -1289,7 +1309,6 @@ Code size:
 8   GUI: When NO_CONSOLE is defined, more code can be excluded.
 -   Put getline() and cookie in a struct, so only one argument has to be
     passed to do_cmdline() and other functions.
-8   move common files between os_unix.c and os_vms.c to one file?
 8   Make a GUI-only version for Unix?
 
 
@@ -1542,6 +1561,9 @@ GUI:
     simple enough). Terminal codes to/from shell should be translated.
 -   Would it be useful to be able to quit the GUI and go back to the terminal
     where it was started from?
+7   X11: Add a "Tooltip" highlight group that allows the user to set the
+    colors and font of the tooltip menus.  This should allow non-English
+    languages to be displayed.
 
 
 Autocommands:
@@ -1599,8 +1621,9 @@ Autocommands:
     BufWriteAction  - replaces writing a file
     ShutDown	    - when the system is about to shut down
     InsertCharPre   - user typed character Insert mode, before inserting the
-		      char.  Set v:char to the character, can be changed. (not
-		      when 'paste' is set).
+		      char.  Pattern is matched with text before the cursor.
+		      Set v:char to the character, can be changed.
+		      (not triggered when 'paste' is set).
     InsertCharPost  - user typed a character in Insert mode, after inserting
 		      the char.
     BufModified	    - When a buffer becomes modified, or unmodified (for

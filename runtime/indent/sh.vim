@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Shell script
-" Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2001 Jan 15
+" Maintainer:	Nikolai Weibull <da.box@home.se>
+" Last Change:	2001 Jun 20
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -32,7 +32,9 @@ function GetShIndent()
   if line =~ '^\s*\(if\|else\|elif\|case\|while\|until\|for\)\>'
       \ || line =~ '^\s*\<\h\w*\>\s*()\s*{'
       \ || line =~ '^\s*{'
-    let ind = ind + &sw
+    if line !~ '\(esac\|fi\|done\)\>\s*$' && line !~ '}\s*$'
+      let ind = ind + &sw
+    endif
   endif
 
   " Subtract a 'shiftwidth' on a else, esac, fi, done
@@ -43,3 +45,5 @@ function GetShIndent()
 
   return ind
 endfunction
+
+" vim: set sw=2 :

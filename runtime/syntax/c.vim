@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 12
+" Last Change:	2001 Jun 18
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -126,6 +126,7 @@ syntax match	cCommentStartError display "/\*"me=e-1 contained
 
 syn keyword	cOperator	sizeof
 if exists("c_gnu")
+  syn keyword	cStatement	__asm__
   syn keyword	cOperator	typeof __real__ __imag__
 endif
 syn keyword	cType		int long short char void
@@ -135,7 +136,7 @@ if !exists("c_no_ansi") || exists("c_ansi_typedefs")
   syn keyword   cType		clock_t time_t va_list jmp_buf FILE DIR div_t ldiv_t
 endif
 if exists("c_gnu")
-  syn keyword	cType		__label__ __complex__
+  syn keyword	cType		__label__ __complex__ __volatile__
 endif
 
 syn keyword	cStructure	struct union enum typedef

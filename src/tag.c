@@ -536,8 +536,9 @@ do_tag(tag, type, count, forceit, verbose)
 		    taglen = 18;
 		if (taglen > Columns - 25)
 		    taglen = MAXCOL;
-		if (msg_col > 0)
-		    msg_putchar('\n');
+		if (msg_col == 0)
+		    msg_didout = FALSE;	/* overwrite previous message */
+		msg_start();
 		MSG_PUTS_ATTR(_("  # pri kind tag"), hl_attr(HLF_T));
 		msg_clr_eos();
 		taglen_advance(taglen);

@@ -842,8 +842,7 @@ wait_return(redraw)
 
     need_wait_return = FALSE;
     emsg_on_display = FALSE;	/* can delete error message now */
-    msg_didany = FALSE;		/* reset lines_left at next msg_start() */
-    lines_left = -1;
+    lines_left = -1;		/* reset lines_left at next msg_start() */
     reset_last_sourcing();
     if (keep_msg != NULL && vim_strsize(keep_msg) >=
 				  (Rows - cmdline_row - 1) * Columns + sc_col)
@@ -921,7 +920,7 @@ msg_start()
 	if (exmode_active != EXMODE_NORMAL)
 	    cmdline_row = msg_row;
     }
-    if (!msg_didany)
+    if (!msg_didany || lines_left < 0)
 	msg_starthere();
     msg_didout = FALSE;			    /* no output on current line yet */
     cursor_off();

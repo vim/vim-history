@@ -49,6 +49,7 @@
 # define GdkEventExpose int
 # define GdkEventFocus int
 # define GdkEventVisibility int
+# define GdkEventProperty int
 # define GtkContainer int
 # define GtkTargetEntry int
 # define GtkType int
@@ -64,17 +65,17 @@
 # define GdkDragContext int
 # define GdkEventConfigure int
 # define GdkEventClient int
+#else
+# include <gdk/gdkkeysyms.h>
+# include <gdk/gdk.h>
+# include <gdk/gdkx.h>
+
+# include <gtk/gtk.h>
+# include "gui_gtk_f.h"
 #endif
 
-#include <gdk/gdkkeysyms.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkx.h>
-
-#include <gtk/gtk.h>
-#include "gui_gtk_f.h"
-
 #ifdef HAVE_X11_SUNKEYSYM_H
-#include <X11/Sunkeysym.h>
+# include <X11/Sunkeysym.h>
 #endif
 
 #define VIM_NAME	"vim"
@@ -1611,20 +1612,29 @@ mainwin_realize(GtkWidget *widget)
 	icon = gdk_pixmap_create_from_xpm_d(gui.mainwin->window,
 						    &icon_mask, NULL, magick);
     gdk_window_set_icon(gui.mainwin->window, NULL, icon, icon_mask);
-#if 0
 
+#if 0
     /* Setup to indicate to the window manager that we want to catch the
      * WM_SAVE_YOURSELF event. */
     setup_save_yourself();
 #endif
+
 #ifdef FEAT_XCMDSRV
-    /*
-     * Cannot handle "XLib-only" windows with gtk event routines, we'll
-     * have to change the "send" registration to that of the main window.
-     * If we have not opened the send stuff yet, remember the window.
-     */
-    serverChangeRegisteredWindow(GDK_DISPLAY(),
+    if (serverName == NULL && serverDelayedStartName != NULL)
+    {
+	/* This is a :gui command in a plain vim with no previous server */
+	serverRegisterName(gui.dpy, serverDelayedStartName);
+    }
+    else
+    {
+	/*
+	 * Cannot handle "XLib-only" windows with gtk event routines, we'll
+	 * have to change the "server" registration to that of the main window
+	 * If we have not registered a name yet, remember the window
+	 */
+	serverChangeRegisteredWindow(GDK_DISPLAY(),
 			       GDK_WINDOW_XWINDOW(gui.mainwin->window));
+    }
     gtk_widget_add_events (gui.mainwin, GDK_PROPERTY_CHANGE_MASK);
     gtk_signal_connect(GTK_OBJECT(gui.mainwin), "property_notify_event",
 		       GTK_SIGNAL_FUNC(property_event), NULL);

@@ -265,7 +265,7 @@ DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 
-all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe
+all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstal.exe
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c $(LIB)
@@ -273,8 +273,8 @@ vimrun.exe: vimrun.c
 install.exe: dosinst.c
 	$(CC) $(CFLAGS) -s -o install.exe dosinst.c $(LIB) -lole32 -luuid
 
-uninstall.exe: uninstal.c
-	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c $(LIB)
+uninstal.exe: uninstal.c
+	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c $(LIB)
 
 vim.exe: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIB)

@@ -2924,8 +2924,7 @@ gui_find_scrollbar(ident)
 }
 
 /*
- * For most systems: Put a code in the input buffer for a dragged scrollbar.
- *
+ * For most systems: Put a code in the input buffer for a dragged scrollbar. *
  * For Win32 and Macintosh:
  * Scrollbars seem to grab focus and vim doesn't read the input queue until
  * you stop dragging the scrollbar.  We get here each time the scrollbar is
@@ -3810,38 +3809,6 @@ ex_gui(eap)
     }
     if (!ends_excmd(*eap->arg))
 	ex_next(eap);
-}
-
-/*
- * ":drop"
- */
-    void
-ex_drop(eap)
-    exarg_T	*eap;
-{
-    int		split = FALSE;
-
-    /* Check whether the current buffer is changed. If so, we will need
-     * to split the current window or data could be lost.
-     * We don't need to check if the 'hidden' option is set, as in this
-     * case the buffer won't be lost.
-     */
-    if (!P_HID(curbuf))
-    {
-	++emsg_off;
-	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
-	--emsg_off;
-    }
-
-    /* Fake a ":snext" or ":next" command. */
-    if (split)
-    {
-	eap->cmdidx = CMD_snext;
-	eap->cmd[0] = 's';
-    }
-    else
-	eap->cmdidx = CMD_next;
-    ex_next(eap);
 }
 
 #if ((defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32)) \

@@ -924,7 +924,8 @@
 # endif
 #endif
 
-#if defined(FEAT_NORMAL) && defined(FEAT_VISUAL) && defined(UNIX) \
+#if defined(FEAT_NORMAL) && defined(FEAT_VISUAL) \
+	&& (defined(UNIX) || defined(VMS)) \
 	&& defined(WANT_X11) && defined(HAVE_X11)
 # define FEAT_XCLIPBOARD
 # ifndef FEAT_CLIPBOARD

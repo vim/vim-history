@@ -595,7 +595,6 @@ EXTERN XIC		xic INIT(= NULL);
 # endif
 EXTERN guicolor_T	xim_fg_color INIT(= -1);
 EXTERN guicolor_T	xim_bg_color INIT(= -1);
-EXTERN int		xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 #endif
 
 #ifdef FEAT_HANGULIN
@@ -661,12 +660,6 @@ EXTERN int	dont_scroll INIT(= FALSE);/* don't use scrollbars when TRUE */
 #endif
 EXTERN int	mapped_ctrl_c INIT(= FALSE); /* CTRL-C is mapped */
 EXTERN int	ctrl_c_interrupts INIT(= TRUE);	/* CTRL-C sets got_int */
-
-/* default for b_im_insert and b_im_search, used when entering entering a
- * new buffer; it's global because the new buffer may already be freed by
- * then */
-EXTERN int	b_im_insert_def INIT(= B_IMODE_NONE);
-EXTERN int	b_im_search_def INIT(= B_IMODE_NONE);
 
 EXTERN cmdmod_T	cmdmod;			/* Ex command modifiers */
 
@@ -906,9 +899,10 @@ EXTERN XtAppContext app_context INIT(= (XtAppContext)NULL);
 #endif
 
 #ifdef FEAT_XCMDSRV
-Window		commWindow INIT(= None);
-Atom		commProperty INIT(= None);
-char_u		*serverName INIT(= NULL);
+EXTERN Window	commWindow INIT(= None);
+EXTERN Atom	commProperty INIT(= None);
+EXTERN char_u	*serverName INIT(= NULL);
+EXTERN char_u	*serverDelayedStartName INIT(= NULL);
 #endif
 
 #if defined(UNIX) || defined(VMS)

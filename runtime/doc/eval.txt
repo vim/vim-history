@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 16
+*eval.txt*      For Vim version 6.0al.  Last change: 2001 Jun 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -829,7 +829,7 @@ winline()			Number	window line of the cursor
 winnr()				Number	number of current window
 winwidth( {nr})			Number	width of window {nr}
 
-append({lnum}, {string}					*append()*
+append({lnum}, {string})				*append()*
 		Append the text {string} after line {lnum} in the current
 		buffer.  {lnum} can be zero, to insert a line before the first
 		one.  Returns 1 for failure ({lnum} out of range) or 0 for

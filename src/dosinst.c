@@ -1553,18 +1553,17 @@ uninstall_old_popups()
             printf("\"%s\" from the list.\n", subkey_name_buff);
 
             printf("\nDo you want to uninstall \"%s\" now?\n    (y)es (n)o)\n\n", temp_string_buffer);
-            
+
             input = 'n';
             do
             {
-                if(input != 'n')
+                if (input != 'n')
                 {
                     printf("%c is an invalid option.  Please enter either 'y' or 'n'\n", input);
                 }
 
-                fflush(stdin);
-                fscanf(stdin, "%c", &input);
-                switch(input)
+                scanf("%c", &input);
+                switch (input)
                 {
                     case 'y':
                     case 'Y':
@@ -1576,14 +1575,14 @@ uninstall_old_popups()
 
                         if (value_type == REG_EXPAND_SZ)
                         {
-                            /* There are environment variables (%WINDIR% for example) in the
-                             * path */
+			    /* There are environment variables (%WINDIR% for
+			     * example) in the path */
                             ExpandEnvironmentStrings(temp_string_buffer, uninstall_string, BUFSIZE);
                         }
                         else
                         {
-                            /* no environment variables, just copy the result to the pointer we
-                             * got */
+			    /* no environment variables, just copy the result
+			     * to the pointer we got */
                             strcpy(uninstall_string, temp_string_buffer);
                         }
 
@@ -1604,7 +1603,7 @@ uninstall_old_popups()
                          * immediately after any key that we delete.
                          */
                         RegQueryInfoKey(key_handle, NULL, NULL, NULL, &new_num_keys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-                        if(new_num_keys < orig_num_keys)
+                        if (new_num_keys < orig_num_keys)
                         {
                             key_index--;
                         }
@@ -1620,8 +1619,8 @@ uninstall_old_popups()
                     default: /* just drop through and redo the loop */
                         break;
                 }
-                
-            }while((input != 'n') && (input != 'y'));
+
+            } while ((input != 'n') && (input != 'y'));
         }
     }
 }

@@ -20,43 +20,17 @@ hitest.vim	View the current highlight settings.
 whitespace.vim  View Tabs and Spaces.
 
 
-If you want to add your own syntax file for your personal use, read the docs
-at ":help mysyntaxfile".
+If you want to write a syntax, read the docs at ":help usr_44.txt".
 
 If you make a new syntax file which would be useful for others, please send it
 to Bram@vim.org.  Include instructions for detecting the file type for this
 language, by file name extension or by checking a few lines in the file.
-And please stick to the rules below.
-
-
-Rules for making a syntax file:
-- Use the same layout as the other syntax files.  Using an existing syntax
-  file as an example will save you a lot of time.
-- The name of the file must be the same as the head of the group names in the
-  file.  This avoids using the same group name as another syntax file.  Use
-  the same name for the string that b:current_syntax is set to.  Always use
-  lower case.  A name of six characters or shorter is preferred.
-- Start with a check for "b:current_syntax".  If it is defined, some other
-  syntax file, earlier in 'runtimepath' was already loaded.
-- Set "b:current_syntax" to the name of the syntax at the end.  Don't forget
-  that included files do this too, you might have to reset "b:current_syntax"
-  if you include two files.
-- If you want your syntax file to work with Vim 5.x, add a check for
-  v:version.  See yacc.vim for an example.
-- Do not include anything that is a user preference.
-- Do not include mappings or abbreviations.  Only include setting 'iskeyword'
-  if it is really necessary for recognizing keywords.
-- Avoid using specific colors.  Use the standard highlight groups whenever
-  possible.  Don't forget that some people use a different background color,
-  or have only eight colors available.
-- Add the "display" argument to items that are not used when syncing, to speed
-  up scrolling backwards and CTRL-L.
+And please write the file in a portable way, see ":help 44.12".
 
 If you have remarks about an existing file, send them to the maintainer of
 that file.  Only when you get no response send a message to Bram@vim.org.
 
 If you are the maintainer of a syntax file and make improvements, send the new
 version to Bram@vim.org.
-
 
 For further info see ":help syntax" in Vim.

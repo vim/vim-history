@@ -3289,12 +3289,9 @@ win_line(wp, lnum, startrow, endrow)
 		    {
 			c = lcs_tab1;
 			c_extra = lcs_tab2;
-			if (area_attr == 0 && search_attr == 0)
-			{
-			    n_attr = n_extra + 1;
-			    extra_attr = hl_attr(HLF_8);
-			    saved_attr2 = char_attr; /* save current attr */
-			}
+			n_attr = n_extra + 1;
+			extra_attr = hl_attr(HLF_8);
+			saved_attr2 = char_attr; /* save current attr */
 		    }
 		    else
 		    {
@@ -3323,9 +3320,19 @@ win_line(wp, lnum, startrow, endrow)
 		       )
 #endif
 		    {
-			p_extra = at_end_str;
-			n_extra = 1;
-			c_extra = NUL;
+#ifdef FEAT_VIRTUALEDIT
+			/* In virtualedit, visual selections may extend
+			 * beyond end of line. */
+			if (area_highlighting && virtual_active()
+				&& tocol != MAXCOL && vcol < tocol)
+			    n_extra = 0;
+			else
+#endif
+			{
+			    p_extra = at_end_str;
+			    n_extra = 1;
+			    c_extra = NUL;
+			}
 		    }
 		    c = lcs_eol;
 		    lcs_eol_one = NUL;
@@ -3428,7 +3435,10 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 	}
 
-	if (n_attr > 0)
+	/* Don't override visual selection highlighting */
+	if (n_attr > 0
+		&& (area_attr == 0 || char_attr != area_attr)
+		&& (search_attr == 0 || char_attr != search_attr))
 	    char_attr = extra_attr;
 
 	/*
@@ -4689,7 +4699,7 @@ get_keymap_str(wp, buf, len)
 {
     char_u	*p;
 
-    if (wp->w_buffer->b_im_insert != B_IMODE_LMAP)
+    if (wp->w_buffer->b_p_iminsert != B_IMODE_LMAP)
 	return FALSE;
 
     {
@@ -7233,7 +7243,7 @@ showmode()
 	{
 	    MSG_PUTS_ATTR("--", attr);
 #if defined(FEAT_XIM)
-	    if (xim_preediting)
+	    if (im_get_status())
 		MSG_PUTS_ATTR(" XIM", attr);
 #endif
 #if defined(FEAT_HANGULIN) && defined(FEAT_GUI)

@@ -862,7 +862,7 @@ getcount:
 		ui_cursor_shape();	/* show different cursor shape */
 	    }
 #endif
-	    if (lang && curbuf->b_im_insert == B_IMODE_LMAP)
+	    if (lang && curbuf->b_p_iminsert == B_IMODE_LMAP)
 	    {
 		/* Allow mappings defined with ":lmap". */
 		--no_mapping;
@@ -874,7 +874,7 @@ getcount:
 		langmap_active = TRUE;
 	    }
 #ifdef USE_IM_CONTROL
-	    if (lang && curbuf->b_im_insert == B_IMODE_IM)
+	    if (lang && curbuf->b_p_iminsert == B_IMODE_IM)
 		im_set_active(TRUE);
 #endif
 
@@ -890,7 +890,7 @@ getcount:
 #ifdef USE_IM_CONTROL
 	    if (lang)
 	    {
-		im_save_status(&curbuf->b_im_insert);
+		im_save_status(&curbuf->b_p_iminsert);
 		im_set_active(FALSE);
 	    }
 #endif
@@ -3180,26 +3180,27 @@ clear_showcmd()
  */
     int
 add_to_showcmd(c)
-    int	    c;
+    int		c;
 {
-    char_u  *p;
-    int	    old_len;
-    int	    extra_len;
-    int	    overflow;
+    char_u	*p;
+    int		old_len;
+    int		extra_len;
+    int		overflow;
 #if defined(FEAT_MOUSE)
-    int	    i;
-    static int	    ignore[] =
-	       {
+    int		i;
+    static int	ignore[] =
+    {
 #ifdef FEAT_GUI
-		K_VER_SCROLLBAR, K_HOR_SCROLLBAR,
-		K_LEFTMOUSE_NM, K_LEFTRELEASE_NM,
+	K_VER_SCROLLBAR, K_HOR_SCROLLBAR,
+	K_LEFTMOUSE_NM, K_LEFTRELEASE_NM,
 #endif
-		K_IGNORE,
-		K_LEFTMOUSE, K_LEFTDRAG, K_LEFTRELEASE,
-		K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
-		K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
-		K_MOUSEDOWN, K_MOUSEUP,
-		0};
+	K_IGNORE,
+	K_LEFTMOUSE, K_LEFTDRAG, K_LEFTRELEASE,
+	K_MIDDLEMOUSE, K_MIDDLEDRAG, K_MIDDLERELEASE,
+	K_RIGHTMOUSE, K_RIGHTDRAG, K_RIGHTRELEASE,
+	K_MOUSEDOWN, K_MOUSEUP,
+	0
+    };
 #endif
 
     if (!p_sc)
@@ -3213,9 +3214,10 @@ add_to_showcmd(c)
 
 #if defined(FEAT_MOUSE)
     /* Ignore keys that are scrollbar updates and mouse clicks */
-    for (i = 0; ignore[i]; ++i)
-	if (ignore[i] == c)
-	    return FALSE;
+    if (IS_SPECIAL(c))
+	for (i = 0; ignore[i] != 0; ++i)
+	    if (ignore[i] == c)
+		return FALSE;
 #endif
 
     p = transchar(c);

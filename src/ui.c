@@ -1750,16 +1750,6 @@ check_row(row)
 # include <X11/Xatom.h>
 # include <X11/Intrinsic.h>
 
-# if defined(FEAT_GUI) && defined(FEAT_XCLIPBOARD)
-#  define X_DISPLAY	gui.in_use ? gui.dpy : xterm_dpy
-# else
-#  ifdef FEAT_GUI
-#   define X_DISPLAY	gui.dpy
-#  else
-#   define X_DISPLAY	xterm_dpy
-#  endif
-# endif
-
 /*
  * Open the application context (if it hasn't been opened yet).
  * Used for Motif and Athena GUI and the xterm clipboard.
