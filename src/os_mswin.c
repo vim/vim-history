@@ -451,7 +451,7 @@ vim_stat(const char *name, struct stat *stp)
     if (p > buf && (*p == '\\' || *p == '/') && p[-1] != ':')
 	*p = NUL;
 #ifdef FEAT_MBYTE
-    if ((int)GetACP() != enc_codepage)
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
     {
 	WCHAR	*wp = enc_to_ucs2(buf, NULL);
 	int	n;
@@ -1034,7 +1034,7 @@ enc_to_ucs2(char_u *str, int *lenp)
 	lenp = &len_loc;
     }
 
-    if (enc_codepage != 0)
+    if (enc_codepage > 0)
     {
 	/* We can do any CP### -> UCS-2 in one pass, and we can do it
 	 * without iconv() (convert_* may need iconv). */
@@ -1093,7 +1093,7 @@ ucs2_to_enc(short_u *str, int *lenp)
 	lenp = &len_loc;
     }
 
-    if (enc_codepage != 0)
+    if (enc_codepage > 0)
     {
 	/* We can do any UCS-2 -> CP### in one pass. */
 	int length;

@@ -1832,7 +1832,7 @@ gui_mch_draw_string(
     /* Check if the Unicode buffer exists and is big enough.  Create it
      * with the same lengt as the multi-byte string, the number of wide
      * characters is always equal or smaller. */
-    if ((enc_utf8 || (enc_codepage != 0 && (int)GetACP() != enc_codepage))
+    if ((enc_utf8 || (enc_codepage > 0 && (int)GetACP() != enc_codepage))
 	    && (unicodebuf == NULL || len > unibuflen))
     {
 	vim_free(unicodebuf);
@@ -1875,7 +1875,7 @@ gui_mch_draw_string(
 			     foptions, pcliprect, unicodebuf, clen, unicodepdy);
 	len = cells;	/* used for underlining */
     }
-    else if (enc_codepage != 0 && (int)GetACP() != enc_codepage)
+    else if (enc_codepage > 0 && (int)GetACP() != enc_codepage)
     {
 	/* If we want to display codepage data, and the current CP is not the
 	 * ANSI one, we need to go via Unicode. */
