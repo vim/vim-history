@@ -1854,8 +1854,8 @@ gui_mch_get_color(char_u *name)
 
     for( i = 0; i < ARRAY_LENGTH( table ); i++ )
     {
-	if( STRICMP( name, table[i].name ) == 0 )
-	    return( table[i].colour );
+	if(STRICMP(name, table[i].name) == 0)
+	    return (table[i].colour);
     }
 
     /*

@@ -670,6 +670,7 @@ set_b0_fname(b0p, buf)
 	    long_to_char((long)st.st_ino, b0p->b0_ino);
 #endif
 	    buf->b_mtime = buf->b_mtime_read = (long)st.st_mtime;
+	    buf->b_orig_size = (size_t)st.st_size;
 	}
 	else
 	{
@@ -679,6 +680,7 @@ set_b0_fname(b0p, buf)
 #endif
 	    buf->b_mtime = 0;
 	    buf->b_mtime_read = 0;
+	    buf->b_orig_size = 0;
 	}
     }
 }
@@ -1703,11 +1705,12 @@ ml_sync_all(check_file, check_char)
 						     && buf->b_ffname != NULL)
 	{
 	    /*
-	     * if original file does not exist anymore or has been changed
-	     * call ml_preserve to get rid of all negative numbered blocks
+	     * If the original file does not exist anymore or has been changed
+	     * call ml_preserve() to get rid of all negative numbered blocks.
 	     */
 	    if (mch_stat((char *)buf->b_ffname, &st) == -1
-					  || st.st_mtime != buf->b_mtime_read)
+		    || st.st_mtime != buf->b_mtime_read
+		    || (size_t)st.st_size != buf->b_orig_size)
 	    {
 		ml_preserve(buf, FALSE);
 		need_check_timestamps = TRUE;	/* give message later */

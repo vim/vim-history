@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0aj.  Last change: 2000 Jul 17
+*gui.txt*       For Vim version 6.0ak.  Last change: 2001 Jun 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -314,6 +314,8 @@ use the right mouse button when 'mousemodel' is "extend", or the left mouse
 button with the shift key pressed when 'mousemodel' is "popup".
 The middle mouse button pastes the text.
 The selection is removed when the selected text is scrolled or changed. 
+On the command line CTRL-Y can be used to copy the selection into the
+clipboard.
 
 
 3.4 Using Mouse on Status Lines				*gui-mouse-status*

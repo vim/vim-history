@@ -691,7 +691,7 @@
 # if defined(FEAT_GUI_MSWIN) || defined(macintosh)
 #  define FEAT_GUI_DIALOG
 # else
-#  if defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
+#  if ((defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF)) && defined(HAVE_X11_XPM_H)) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
 #   define FEAT_CON_DIALOG
 #   define FEAT_GUI_DIALOG
 #  else
@@ -930,6 +930,11 @@
 # ifndef FEAT_CLIPBOARD
 #  define FEAT_CLIPBOARD
 # endif
+#endif
+#ifdef FEAT_XCLIPBOARD
+/* +xcmdsrv		Remote control via the :serversend command
+                        and the --remote argument */
+# define FEAT_XCMDSRV
 #endif
 #if defined(FEAT_NORMAL) && defined(HAVE_GPM)
 # define FEAT_MOUSE_GPM

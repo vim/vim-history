@@ -1470,7 +1470,8 @@ syn_stack_equal(sp)
 				|| six->matches[j] == NULL)
 			    break;
 			if ((SYN_ITEMS(syn_buf)[CUR_STATE(i).si_idx]).sp_ic
-				? STRICMP(bsx->matches[j], six->matches[j]) != 0
+				? MB_STRICMP(bsx->matches[j],
+							 six->matches[j]) != 0
 				: STRCMP(bsx->matches[j], six->matches[j]) != 0)
 			    break;
 		    }
@@ -5468,6 +5469,8 @@ in_id_list(cur_si, list, ssp, contained)
     short	*scl_list;
     short	item;
     short	id = ssp->id;
+    static int	depth = 0;
+    int		r;
 
     /* If spp has a "containedin" list and "cur_si" is in it, return TRUE. */
     if (cur_si != NULL
@@ -5526,8 +5529,16 @@ in_id_list(cur_si, list, ssp, contained)
 	if (item >= SYNID_CLUSTER)
 	{
 	    scl_list = SYN_CLSTR(syn_buf)[item - SYNID_CLUSTER].scl_list;
-	    if (scl_list != NULL && in_id_list(NULL, scl_list, ssp, contained))
-		return retval;
+	    /* restrict recursiveness to 30 to avoid an endless loop for a
+	     * cluster that includes itself (indirectly) */
+	    if (scl_list != NULL && depth < 30)
+	    {
+		++depth;
+		r = in_id_list(NULL, scl_list, ssp, contained);
+		--depth;
+		if (r)
+		    return retval;
+	    }
 	}
 	item = *++list;
     }

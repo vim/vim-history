@@ -1,613 +1,637 @@
-*usr_40.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 10
+*usr_40.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
-			      Write a Vim script
+			      Make new commands
 
 
-Introduction.
+Vim is an extensible editor.  You can take a sequence of commands you use
+often and turn it into a new command.  Or redefine an existing command.
+Autocommands make it possible to execute commands automatically.
 
-|40.1|	Introduction
-|40.2|	Expressions
-|40.3|	If and while
-|40.4|	Using :execute
-|40.5|	Functions
-|40.6|	Autocommands
-|40.7|	Writing a plugin
-|40.8|	Writing a filetype plugin
-|40.9|	Writing a compiler plugin
+|40.1|	Key mapping
+|40.2|	Defining command-line commands
+|40.3|	Autocommands
 
-     Next chapter: |usr_41.txt|  Make new commands
+     Next chapter: |usr_41.txt|  Write a Vim script
  Previous chapter: |usr_31.txt|  Exploiting the GUI
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*40.1*	Introduction
+*40.1*	Key mapping
 
-used for |vimrc|
-variables
-:let
-:unlet
-simple :if
+A simple mapping was explained in section |05.3|.  The principle is that one
+sequence of key strokes is translated into another sequence of key strokes.
+This is a simple, yet powerful mechanism.
+   The simplest form is that one key is mapped to a sequence of keys.  Since
+the function keys, except <F1>, have no predefined meaning in Vim, these are a
+good choice to map.  Example: >
+
+	:map <F2> GoDate: <Esc>:read !date<CR>kJ
+
+This shows how three modes are used.  After going to the last line with "G",
+the "o" command opens a new line and starts Insert mode.  The text "Date: " is
+inserted and <Esc> takes you out of insert mode.
+   Notice the use of special keys inside <>.  This is called angle bracket
+notation.  You type these as separate characters, not by pressing the key
+itself.  This makes the mappings better readable and you can copy and paste
+the text without problems.
+   The ":" character takes Vim to the command line.  The ":read !date" command
+reads the output from the "date" command and appends it below the current
+line.  The <CR> is required to executed the ":read" command.
+   At this point of executing the mapping the text looks like this:
+
+   	Date:  ~
+	Fri Jun 15 12:54:34 CEST 2001 ~
+
+Now "kJ" moves the cursor up and joins the lines together.
+   To decide which key or keys you use for mapping, see |map-which-keys|.
+
+
+MAPPING AND MODES
+
+The ":map" command defines remapping for keys in Normal mode.  You can also
+define mappings for other modes.  For example, ":imap" applies to Insert mode.
+You can use it to insert a date below the cursor: >
+
+	:imap <F2> <CR>Date: <Esc>:read !date<CR>kJ
+
+It looks a lot like the mapping for <F2> in Normal mode, only the start is
+different.  The <F2> mapping for Normal mode is still there.  Thus you can map
+the same key differently for each mode.
+   Notice that, although this mapping starts in Insert mode, it ends in Normal
+mode.  If you would want it to start Insert mode, append a "a" to the mapping.
+
+Here is an overview of map commands and in which mode they work:
+
+	:map		Normal, Visual and Operator-pending
+	:vmap		Visual
+	:nmap		Normal
+	:omap		Operator-pending
+	:map!		Insert and Command-line
+	:imap		Insert
+	:cmap		Command-line
+
+Operator-pending mode is when you typed an operator character, such as "d" or
+"y", and you are expected to type the motion command or a text object.  Thus
+when you type "dw", the "w" is entered in operator-pending mode.
+
+Suppose that you want to define <F7> so that the command d<F7> deletes a C
+program block (text enclosed in curly braces, {}).  Similarly y<F7> would yank
+the program block into the unnamed register.  Therefore, what you need to do
+is to define <F7> to select the current program block.  You can do this with
+the following command: >
+
+	:omap <F7> a{
+
+This causes <F7> to perform a select block "a{" in operator-pending mode, just
+like you typed it.  This mapping is useful if typing a { on your keyboard is a
+bit difficult.
+
+
+REMAPPING
+
+The result of a mapping is inspected for other mappings in it.  For example,
+the mappings for <F2> above could be shortened too: >
+
+	:map <F2> G<F3>
+	:imap <F2> <Esc><F3>
+	:map <F3>  oDate: <Esc>:read !date<CR>kJ
+
+For Normal mode <F2> is mapped to go to the last line, and then behave like
+<F3> was pressed.  In Insert mode <F2> stops Insert mode with <Esc> and then
+also uses <F3>.  Then <F3> is mapped to do the actual work.
+
+Suppose you hardly ever use Ex mode, and want to use the "Q" command to format
+text (this was so in old versions of Vim).  This mapping will do it: >
+
+	:map Q gq
+
+But, in rare cases you need to use Ex mode anyway.  Let's map "gQ" to Q, so
+that you can still go to Ex mode: >
+
+	:map gQ Q
+
+What happens now is that when you type "gQ" it is mapped to "Q".  So far so
+good.  But then "Q" is mapped to "gq", thus typing "gQ" results in "gq", and
+you don't get to Ex mode at all.
+   To avoid keys to be mapped again, use the ":noremap" command: >
+
+   	:noremap gQ Q
+
+Now Vim knows that the "Q" is not to be inspected for mappings that apply to
+it.  There is a similar command for every mode:
+
+	:noremap	Normal, Visual and Operator-pending
+	:vnoremap	Visual
+	:nnoremap	Normal
+	:onoremap	Operator-pending
+	:noremap!	Insert and Command-line
+	:inoremap	Insert
+	:cnoremap	Command-line
+
+
+RECURSIVE MAPPING
+
+When a mapping triggers itself, it will run forever.  This can be used to
+repeat an action an unlimted number of times.
+   For example, you have a list of files that contain a version number in the
+first line.  You edit these files with "vim *.txt".  You are now editing the
+first file.  Define this mapping: >
+
+	:map ,, :s/5.1/5.2/<CR>:wnext<CR>,,
+
+Now you type ",,".  This triggers the mapping.  It replaces "5.1" with "5.2"
+in the first line.  Then it does a ":wnext" to write the file and edit the
+next one.  The mapping ends in ",,".  This triggers the same mapping again,
+thus doing the substitution, etc.
+   This continues until there is an error.  In this case it could be a file
+where the substitute command doesn't find a match for "5.1".  You can then
+make a change to insert "5.1" and continue by typing ",," again.  Or the
+":wnext" fails, becacause you are in the last file in the list.
+   When a mapping runs into an error halfway, the rest of the mapping is
+discarded.  CTRL-C interrupts the mapping (CTRL-Break on MS-Windows).
+
+
+DELETE A MAPPING
+
+To remove a mapping use the ":unmap" command.  Again, the mode the unmapping
+applies to depends on the command used:
+
+	:unmap		Normal, Visual and Operator-pending
+	:vunmap		Visual
+	:nunmap		Normal
+	:ounmap		Operator-pending
+	:unmap!		Insert and Command-line
+	:iunmap		Insert
+	:cunmap		Command-line
+
+There is a trick to define a mapping that works in Normal and Operator-pending
+mode, but not in Visual mode.  First define it for all three modes, then
+delete it for Visual mode: >
+
+	:map <C-A> /---><CR>
+	:vunmap <C-A>
+
+Notice that the five characters "<C-A>" stand for the single key CTRL-A.
+
+To remove all mappings use the ":mapclear" command.  You can guess the
+variations for different modes by now.  Be careful with this command, it can't
+be undone.
+
+
+SPECIAL CHARACTERS
+
+The ":map" command can be followed by another command.  A | character
+separates the two commands.  This also means that a | character can't be used
+inside a map command.  To include one, use <Bar> (five characters).  Example:
+>
+	:map <F8> :write <Bar> !checkin %<CR> 
+
+The same problem applies to the ":unmap" command, with the addition that you
+have to watch out for trailing white space.  These two commands are different:
+>
+	:unmap a | unmap b
+	:unmap a| unmap b
+
+The first command tries to unmap "a ", with a trailing space.
+
+When using a space inside a mapping, use <Space> (seven characters): >
+
+	:map <Space> W
+
+This makes the spacebar move a blank-separated word forward.
+
+It is not possible to put a comment after a mapping, because the " character
+is considered to be part of the mapping.
+
+
+MAPPINGS AND ABBREVIATIONS
+
+Abbreviations are a lot like Insert mode mappings.  The arguments are handled
+in the same way.  The main difference is the way they are triggered.  An
+abbreviation is triggered by typing a non-word character after the word.  A
+mapping is triggered when typing the last character.
+   Another difference is that the characters you type for an abbreviation are
+inserted in the text while you type them.  When the abbreviation is triggered
+these characters are deleted and replaced by what the abbreviation produces.
+When typing the characters for a mapping, nothing is inserted until you type
+the last character that triggers it.  If the 'showcmd' option is set, the
+typed characters are displayed in the last line of the Vim window.
+   An exception is when a mapping is ambiguous.  Suppose you have done two
+mappings: >
+
+	:imap aa foo
+	:imap aaa bar
+
+Now, when you type "aa", Vim doesn't know if it should apply the first or the
+second mapping.  It waits for another character to be typed.  If it is an "a",
+the second mapping is applied and results in "bar".  If it is a space, for
+example, the first mapping is applied, resulting in "foo", and then the space
+is inserted.
+
+
+ADDITIONALLY...
+
+The <script> keyword can be used to make a mapping local to a script.  See
+|:map-<script>|.
+
+The <buffer> keyword can be used to make a mapping local to a specific buffer.
+See |:map-<buffer>|
+
+The <unique> keyword can be used to make defining a new mapping fail when it
+already exits.  Otherwise a new mapping simply overwrites the old one.  See
+|:map-<unique>|.
+
+To make a key do nothing, map it to <Nop> (five characters).  This will make
+the <F7> key do nothing at all: >
+
+	:map <F7> <Nop>| map! <F7> <Nop>
+
+There must be no space after <Nop>.
 
 ==============================================================================
-*40.2*	Expressions
+*40.2*	Defining command-line commands
 
-:echo "The value of 'tabstop' is " . &ts
+The Vim editor enables you to define your own commands.  You execute these
+commands just like any other Command-line mode command.
+   To define a command, use the ":command" command, as follows: >
+   
+   	:command Delete_first 1delete
 
-The |:echo| is a good way to test an expression.
+Now when you execute the command ":Delete_first" Vim excutes ":1delete", which
+deletes the first line.
+
+	Note:
+	User-defined commands must start with a capital letter.  You cannot
+	use ":X", ":Next" and ":Print".  You can use digits, but this is
+	discouraged.
+	
+To list the user-defined commands, execute the following command: >
+
+	:command
+
+To remove the definition of a user-defined command, use: >
+
+	:delcommand Delete_one
+
+You can clear all user-defined commands with the following command: >
+
+	:comclear
+
+Just like with the builtin commands, the user defined commands can be
+abbreviated.  You need to type just enough to distinguish the command from
+another.  Command line completion can be used to get the full name.
+
+
+NUMBER OF ARGUMENTS
+
+User-defined commands can take a series of arguments.  The number of arguments
+must be specified by the -nargs option.  For instance, the example :Delete_one
+command takes no arguments, so you could have defined it as follows: >
+
+	:command Delete_first -nargs=0 1delete
+
+However, because zero arguments is the default, you do not need to add
+"-nargs=0".  The other values of -nargs are as follows:
+
+	-nargs=0	No arguments
+	-nargs=1	One argument
+	-nargs=*	Any number of arguments
+	-nargs=?	Zero or one argument
+	-nargs=+	One or more arguments
+
+
+USING THE ARGUMENTS
+
+Inside the command definition, the arguments are represented by the
+<args> keyword.  For example: >
+
+	:command -nargs=+ Say :echo "<args>"
+
+Now when you type >
+
+	:Say Hello World
+
+Vim echoes "Hello World".  However, if you add a double quote, it won't work.
+For example: >
+
+	:Say he said "hello"
+
+To get special characters turned into a string, properly escaped to use as an
+expression, use "<q-args>": >
+
+	:command -nargs=+ Say :echo <q-args>
+
+Now the above ":Say" command will result in this to be executed: >
+
+	:echo "he said \"hello\""
+
+The <f-args> keyword contains the same information as the <args> keyword,
+except in a format suitable for use as function call arguments.  For example:
+>
+	:command -nargs=* DoIt :call AFunction(<f-args>)
+	:DoIt a b c
+
+Execute the following command: >
+
+	:call AFunction("a", "b", "c")
+
+
+LINE RANGE
+
+Some commands take a range as their argument.  To tell Vim that you are
+defining such a command, you need to specify a -range option.  The values for
+this option are as follows:
+
+	-range		Range is allowed; default is the current line.
+	-range=%	Range is allowed; default is the whole file.
+	-range={count}	Range is allowed; the last number in it is used as a
+			single number whose default is {count}.
+		
+When a range is specified, the keywords <line1> and <line2> get the values of
+the first and last line in the range.  For example, the following command
+defines the SaveIt command, which writes out the specified range to the file
+"save_file": >
+
+	:command -range=% SaveIt :<line1>,<line2>write! save_file
+
+
+OTHER OPTIONS
+
+Some of the other options and keywords are as follows:
+
+	-count={number}		The command can take a count whose default is
+				{number}.  The resulting count can be used
+				through the <count> keyword.
+	-bang			You can use a !. If present, using <bang> will
+				result in a !.
+	-register		You can specify a register. (The default is
+				the unnamed register.)
+				The register specification is available as
+				<reg> (a.k.a. <register>).
+	-complete={type}	Type of command-line completion used.  See
+				|:command-completion| for the list of possible
+				values.
+	-bar			The command can be followed by | and another
+				command, or " and a comment.
+	-buffer			The command is only available for the current
+				buffer.
+
+Finally, you have the <lt> keyword.  It stands for the character <.  Use this
+to escape the special meaning of the <> items mentioned.
+
+
+REDEFINING AND DELETING
+
+To redefine the same command use the ! argument: >
+
+	:command -nargs=+ Say :echo "<args>"
+	:command! -nargs=+ Say :echo <q-args>
+
+To delete a user command use ":delcommand".  It takes a single argument, which
+is the name of the command.  Example: >
+
+	:delcommand SaveIt
+
+To delete all the user commands: >
+
+	:comclear
+
+Careful, this can't be undone!
+
+More details about all this in the reference manual: |user-commands|.
 
 ==============================================================================
-*40.3*	If and while
+*40.3*	Autocommands
 
-:if version >= 600
-:else
-:endif
+An autocommand is a command that is executed automatically in response to some
+event, such as a file being read or written or a buffer change. Through the
+use of autocommands you can train Vim to edit compressed files, for example.
+That is used in the |gzip| plugin.
+   Autocommands are very powerful.  Use them with care and they will help you
+avoid having to type commands.  Use them careless and they will cause a lot of
+trouble.
 
-==============================================================================
-*40.4*	Using :execute
-==============================================================================
-*40.5*	Functions
-==============================================================================
-*40.6*	Autocommands
-|autocmd-<>|
-==============================================================================
-*40.7*	Writing a plugin				*write-plugin*
+Suppose you want to replace a date stamp on the end of a file every time it is
+written.  First you define a function: >
 
-You can write a Vim script in such a way that many people can use it.  This is
-called a plugin.  Vim users can drop your script in their plugin directory and
-use its features right away |add-plugin|.
+	:function DateInsert()
+	:  $delete
+	:  read !date
+	:endfunction
 
-There are actually two types of plugins:
+You want this function to be called each time, just before a file is written.
+This will make that happen: >
 
-  global plugins: For all types of files.
-filetype plugins: Only for files of a specific type.
+	:autocmd FileWritePre *  call DateInsert()
 
-In this section the first type is explained.  Most items are also relevant for
-writing filetype plugins.  The specifics for filetype plugins are in the next
-section |write-filetype-plugin|.
+"FileWritePre" is the event for which this autocommand is triggered: Just
+before (pre) writing a file.  The "*" is a pattern to match with the file
+name.  In this case it matches all files.
+   With this command enabled, when you do a ":write", Vim checks for any
+matching FileWritePre autocommands and executes them, and then it
+performs the ":write".
+   The general form of the :autocmd command is as follows: >
 
+	:autocmd [group] {events} {file_pattern} [nested] {command}
 
-NAME
+The [group] name is optional.  It is used in managing and calling the commands
+(more on this later).  The {events} parameter is a list of events (comma
+separated) that trigger the command.
+   {file_pattern} is a filename, usually with wildcards.  For example, using
+"*.txt" makes the autocommand be used for all files whose name end in ".txt".
+The optional [nested] flag allows for nesting of autocommands (see below), and
+finally, {command} is the command to be executed.
 
-First of all you must choose a name for your plugin.  The features provided
-by the plugin should be clear from its name.  And it should be unlikely that
-someone else writes a plugin with the same name but which does something
-different.  And please limit the name to 8 characters, to avoid problems on
-old Windows systems.
 
-A script that corrects typing mistakes could be called "typecorr.vim".  We
-will use it here as an example.
+EVENTS
 
-For the plugin to work for everybody, it should follow a few guidelines.  This
-will be explained step-by-step.  The complete example plugin is at the end.
+One of the most useful events is BufReadPost.  It is triggered after a new
+file is being edited.  It is commonly used to set option values.  For example,
+you know that "*.gsm" files are GNU assembly language.  To get the syntax file
+right, define this autocommand: >
 
+	:autocmd BufReadPost *.gsm  set filetype=asm
 
-BODY
+If Vim is able to detect the type of file, it will set the 'filetype' option
+for you.  This triggers the Filetype event.  Use this to do something when a
+certain type of file is edited.  For example, to load a list of abbreviations
+for text files: >
 
-Let's start with the body of the plugin, the lines that do the actual work: >
+	:autocmd Filetype text  source ~/.vim/abbrevs.vim
 
- 13	iabbrev teh the
- 14	iabbrev otehr other
- 15	iabbrev wnat want
- 16	iabbrev synchronisation
- 17		\ synchronization
- 18	let s:count = 4
+When starting to edit a new file, you could make Vim insert a skeleton: >
 
-The actual list should be much longer, of course.
+	:autocmd BufNewFile *.[ch]  0read ~/skeletons/skel.c
 
-The line numbers have only been added to explain a few things, don't put them
-in your plugin file!
+See |autocmd-events| for a complete list of events.
 
 
-HEADER
+PATTERNS
 
-You will probably add new corrections to the plugin and soon have several
-versions laying around.  And when distributing this file, people will want to
-know who wrote this wonderful plugin and where they can send remarks.
-Therefore, put a header at the top of your plugin: >
+The {file_pattern} argument can actually be a comma-separated list of file
+patterns.  For example: "*.c,*.h" matches files ending in ".c" and ".h".
+   The usual file wildcards can be used.  Here is a summary of the most often
+used ones:
 
-  1	" Vim global plugin for correcting typing mistakes
-  2	" Last Change: 2000 Oct 15
-  3	" Maintainer: Bram Moolenaar <Bram@vim.org>
+	*		Match any character any number of times
+	?		Match any character once
+	[abc]		Match the character a, b or c
+	.		Matches a dot
+	a{b,c}		Matches "ab" and "ac"
 
+When the pattern includes a slash (/) Vim will compare directory names.
+Without the slash only the last part of a file name is used.  For example,
+"*.txt" matches "/home/biep/readme.txt".  The pattern "/home/biep/*" would
+also match it.  But "home/foo/*.txt" doesn't.
+   When including a slash, Vim matches the pattern against both the full path
+of the file ("/home/biep/readme.txt") and the relative path (e.g.,
+"biep/readme.txt").
 
-LINE CONTINUATION, AVOIDING SIDE EFFECTS
+	Note:
+	When working on a system that uses a backslash as file separater, such
+	as MS-Windows, you still use forward slashes in autocommands.  This
+	makes it easier to write the pattern, since a backslash has a special
+	meaning.  It also makes the autocommands portable.
 
-In line 17 above, the line-continuation mechanism is used |line-continuation|.
-Users with 'compatible' set will run into trouble here, they will get an error
-message.  We can't just reset 'compatible', because that has a lot of side
-effects.  To avoid this, we will set the 'cpoptions' option to its Vim default
-value and restore it later.  That will allow the use of line-continuation and
-make the script work for most people.  It is done like this: >
 
- 10	let s:save_cpo = &cpo
- 11	set cpo&vim
- .. 
- 41	let &cpo = s:save_cpo
+DELETING
 
-We first store the old value of 'cpoptions' in the s:save_cpo variable.  At
-the end of the plugin this value is restored.
+To delete an autocommand, use the same command as what it was defined with,
+but leave out the {command} at the end and use a !.  Example: >
 
-Note that a script-local variable is used |s:var|.  A global variable could
-already be in use for something else.  Always use script-local variables for
-things that are only used in the script.
+	:autocmd! FileWritePre *
 
+This will delete all autocommands for the "FileWritePre" event that use the
+"*" pattern.
 
-NOT LOADING
 
-It's possible that a user doesn't always want to load this plugin.  Or the
-system administrator has dropped it in the system-wide plugin directory, but a
-user has his own plugin he wants to use.  Then the user must have a chance to
-disable loading this specific plugin.  This will make it possible: >
+LISTING
 
-  5	if exists("loaded_typecorr")
-  6	  finish
-  7	endif
-  8	let loaded_typecorr = 1
+To list all the currently defined autocommands, use this: >
 
-This also avoids that when the script is loaded twice it would cause error
-messages for redefining functions and cause trouble for autocommands that are
-added twice.
+	:autocmd
 
+The list can be very long, especially when filetype detection is used.  To
+list only part of the commands, specify the group, event and/or pattern.  For
+example, to list all BufNewFile autocommands: >
 
-MAPPING
+	:autocmd BufNewFile
 
-Now let's make the plugin more interesting: We will add a mapping that adds a
-correction for the word under the cursor.  We could just pick a key sequence
-for this mapping, but the user might already use it for something else.  To
-allow the user to define which keys a mapping in a plugin uses, the <Leader>
-item can be used: >
+To list all autocommands for the pattern "*.c": >
 
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
+	:autocmd * *.c
 
-The "<Plug>TypecorrAdd" thing will do the work, more about that further on.
+Using "*" for the event will list all the events.  To list all autocommands
+for the cprograms group: >
 
-The user can set the "mapleader" variable to the key sequence that he wants
-this mapping to start with.  Thus if the user has done: >
+	:autocmd cprograms
 
-	let mapleader = "_"
 
-the mapping will define "_a".  If the user didn't do this, the default value
-will be used, which is a backslash.  Then a map for "\a" will be defined.
+GROUPS
 
-Note that <unique> is used, this will cause an error message if the mapping
-already happened to exist. |:map-<unique>|
+The {group} item used when defining an autocommand groups related autocommands
+together.  This can be used to delete all the autocommands in a certain group,
+for example.
+   When defining several autocommands for a certain group, use the ":augroup"
+command.  For example, let's define autocommands for C programs: >
 
-But what if the user wants to define his own key sequence?  We can allow that
-with this mechanism: >
+	:augroup cprograms
+	:  autocmd BufReadPost *.c,*.h :set sw=4 sts=4
+	:  autocmd BufReadPost *.cpp   :set sw=3 sts=3
+	:augroup END
 
- 20	if !hasmapto('<Plug>TypecorrAdd')
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
- 22	endif
+This will do the same as: >
 
-This checks if a mapping to "<Plug>TypecorrAdd" already exists, and only
-defines the mapping from "<Leader>a" if it doesn't.  The user then has a
-chance of putting this in his vimrc file: >
+	:autocmd cprograms BufReadPost *.c,*.h :set sw=4 sts=4
+	:autocmd cprograms BufReadPost *.cpp   :set sw=3 sts=3
 
-	map ,c  <Plug>TypecorrAdd
+To delete all autocommands in the "cprograms" group: >
 
-Then the mapped key sequence will be ",c" instead of "_a" or "\a".
+	:autocmd! cprograms
 
 
-PIECES
+NESTING
 
-If a script gets longer, you often want to break up the work in pieces.  You
-can use functions or mappings for this.  But you don't want these functions
-and mappings to interfere with the ones from other scripts.  For example, you
-could define a function Add(), but another script could try to define the same
-function.  To avoid this, we define the function local to the script by
-prepending it with "s:".
+Generally, commands executed as the result of an autocommand event will not
+trigger any new events.  If you read a file in response to a FileChangedShell
+event, it will not trigger the autocommands that would set the syntax, for
+example.  To make the events triggered, add the "nested" argument: >
 
-We will define a function that adds a new typing correction: >
+	:autocmd FileChangedShell * nested  edit
 
- 29	function s:Add(from, correct)
- 30	  let to = input("type the correction for " . a:from . ": ")
- 31	  exe ":iabbrev " . a:from . " " . to
- ..
- 35	endfunction
 
-Now we can call the function s:Add() from within this script.  If another
-script also defines s:Add(), it will be local to that script and can only
-be called from the script it was defined in.  There can also be a global Add()
-function (without the "s:"), which is again another function.
+EXECUTING AUTOCOMMANDS
 
-<SID> can be used way mappings.  It generates a script ID, which identifies
-the current script.  In our typing correction plugin we use it like this: >
+It is possible to trigger an autocommand by pretending an event has occurred.
+This is useful to have one autocommand trigger another one.  Example: >
 
- 23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
- ..
- 27	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
+	:autocmd BufReadPost *.new  execute "doautocmd BufReadPost " . expand("<afile>:r")
 
-Thus when a user types "\a", this sequence is invoked: >
+This defines an autocommand that is triggered when a new file has been edited.
+The file name must end in ".new".  The ":execute" command uses expression
+evaluation to form a new command and execute it.  When editing the file
+"tryout.c.new" the executed command will be: >
 
-	\a  ->  <Plug>TypecorrAdd  ->  <SID>Add  ->  :call <SID>Add()
+	:doautocmd BufReadPost tryout.c
 
-If another script would also map <SID>Add, it would get another script ID and
-thus define another mapping.
+The expand() function takes the "<afile>" argument, which stands for the file
+name the autocommand was executed for, and takes the root of the file name
+with ":r".
 
-Note that instead of s:Add() we use <SID>Add() here.  That is because the
-mapping is typed by the user, thus outside of the script.  The <SID> is
-translated to the script ID, so that Vim knows in which script to look for
-the Add() function.
+":doautocmd" executes on the current buffer.  The ":doautoall" command works
+like "doautocmd" except it executes on all the buffers.
 
-This is a bit complicated, but it's required for the plugin to work together
-with other plugins.  The basic rule is that you use <SID>Add() in mappings and
-s:Add() in other places (the script itself, autocommands, user commands).
 
-We can also add a menu entry to do the same as the mapping: >
+USING NORMAL MODE COMMANDS
 
- 25	noremenu <script> Tools.Add\ Correction      <SID>Add
+The commands executed by an autocommand are Command-line command.  If you want
+to use a Normal mode command, the ":normal" command can be used.  Example: >
 
-Note that in line 27 ":noremap" is used to avoid that any other mappings cause
-trouble.  Someone may have remapped ":call", for example.  In line 23 we also
-use ":noremap", but we do want "<SID>Add" to be remapped.  This is why
-"<script>" is used here.  This only allows mappings which are local to the
-script. |:map-<script>|  The same is done in line 25 for ":noremenu".
-|:menu-<script>|
-
-
-<SID> AND <Plug>
-
-Both <SID> and <Plug> are used to avoid that mappings of typed keys interfere
-with mappings that are only to be used from other mappings.  Note the
-difference between using <SID> and <Plug>:
-
-<Plug>	is visible outside of the script.  It is used for mappings which the
-	user might want to map a key sequence to.  <Plug> is a special code
-	that a typed key will never produce.
-	To make it very unlikely that other plugins use the same sequence of
-	characters, use this structure: <Plug> scriptname mapname
-	In our example the scriptname is "Typecorr" and the mapname is "Add".
-	This results in "<Plug>TypecorrAdd".  Only the first character of
-	scriptname and mapname is upper case, so that we can see where mapname
-	starts.
-
-<SID>	is the script ID, a unique identifier for a script.
-	Internally Vim translates <SID> to "<SNR>123_", where "123" can be any
-	number.  Thus a function "<SID>Add()" will have a name "<SNR>11_Add()"
-	in one script, and "<SNR>22_Add()" in another.  You can see this if
-	you use the ":function" command to get a list of functions.  The
-	translation of <SID> in mappings is exactly the same, that's how you
-	can call a script-local function from a mapping.
- 
-
-USER COMMAND
-
-Now let's add a user command to add a correction: >
-
- 37	if !exists(":Correct")
- 38	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
- 39	endif
-
-The user command is defined only if no command with the same name already
-exists.  Otherwise we would get an error here.  Overriding the existing user
-command with ":command!" is not a good idea, this would probably make the user
-wonder why the command he defined himself doesn't work.  |:command|
-
-
-SCRIPT VARIABLES
-
-When a variable starts with "s:" it is a script variable.  It can only be used
-inside a script.  Outside the script it's not visible  This avoids trouble
-with using the same variable name in different scripts.  The variables will be
-kept as long as Vim is running.  And the same variables are used when sourcing
-the same script again. |s:var|
-
-The fun is that these variables can also be used in functions, autocommands
-and user commands that are defined in the script.  In our example we can add
-a few lines to count the number of corrections: >
-
- 18	let s:count = 4
- ..
- 29	function s:Add(from, correct)
- ..
- 33	  let s:count = s:count + 1
- 34	  echo s:count . " corrections now"
- 35	endfunction
-
-First s:count is initialized to 4 in the script itself.  When later the
-s:Add() function is called, it increments s:count.  It doesn't matter from
-where the function was called, since it has been defined in the script, it
-will use the local variables from this script.
-
-
-THE RESULT
-
-Here is the resulting complete example: >
-
-  1	" Vim global plugin for correcting typing mistakes
-  2	" Last Change: 2000 Oct 15
-  3	" Maintainer: Bram Moolenaar <Bram@vim.org>
-  4
-  5	if exists("loaded_typecorr")
-  6	  finish
-  7	endif
-  8	let loaded_typecorr = 1
-  9
- 10	let s:save_cpo = &cpo
- 11	set cpo&vim
- 12
- 13	iabbrev teh the
- 14	iabbrev otehr other
- 15	iabbrev wnat want
- 16	iabbrev synchronisation
- 17		\ synchronization
- 18	let s:count = 4
- 19
- 20	if !hasmapto('<Plug>TypecorrAdd')
- 21	  map <unique> <Leader>a  <Plug>TypecorrAdd
- 22	endif
- 23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
- 24
- 25	noremenu <script> Tools.Add\ Correction      <SID>Add
- 26
- 27	noremap <SID>Add  :call <SID>Add(expand("<cword>"), 1)<CR>
- 28
- 29	function s:Add(from, correct)
- 30	  let to = input("type the correction for " . a:from . ": ")
- 31	  exe ":iabbrev " . a:from . " " . to
- 32	  if a:correct | exe "normal viws\<C-R>\" \b\e" | endif
- 33	  let s:count = s:count + 1
- 34	  echo s:count . " corrections now"
- 35	endfunction
- 36
- 37	if !exists(":Correct")
- 38	  command -nargs=1  Correct  :call s:Add(<q-args>, 0)
- 39	endif
- 40
- 41	let &cpo = s:save_cpo
+	:autocmd BufReadPost *.log normal G
 
-Line 32 wasn't explained yet.  It applies the new correction to the word under
-the cursor.  The |:normal| command is used to use the new abbreviation.  Note
-that mappings and abbreviations are expanded here, even though the function
-was called from a mapping defined with ":noremap".
+This will make the cursor jump to the last line of *.log files when you start
+to edit it.
+   Using the ":normal" command is a bit tricky.  First of all, make sure its
+argument is a complete command, including all the arguments.  When you use "i"
+to go to Insert mode, there must also be a <Esc> to leave Insert mode again.
+If you use a "/" to start a search pattern, there must be a <CR> to execute
+it.
+   The ":normal" command uses all the text after it as commands.  Thus there
+can be no | and another command following.  To work around this, put the
+":normal" command inside an ":execute" command.  This also makes it possible
+to pass unprintable characters in a convenient way.  Example: >
 
+	:autocmd BufReadPost *.chg execute "normal ONew entry:\<Esc>" |
+		\ 1read !date
 
-DOCUMENTATION
-							*write-local-help*
-It's a good idea to also write some documentation for your plugin.  Especially
-when its behavior can be changed by the user.  See |add-local-help| for how
-they are installed.
+This also shows the use of a backslash to break a long command into more
+lines.  This can be used in Vim scripts (not at the command line).
 
-Here is a simple example for a plugin help file, called "typecorr.txt": >
+When you want the autocommand do something complicated, which involves jumping
+around in the file and then returning to the original position, you may want
+to restore the view on the file.  See |restore-position| for an example.
 
-  1	*typecorr.txt*	Plugin for correcting typing mistakes
-  2
-  3	If you make typing mistakes, this plugin will have them corrected
-  4	automatically.
-  5
-  6	There are currently only a few corrections.  Add your own if you like.
-  7
-  8	Mappings:
-  9	<Leader>a   or   <Plug>TypecorrAdd
- 10		Add a correction for the word under the cursor.
- 11
- 12	Commands:
- 13	:Correct {word}
- 14		Add a correction for {word}.
- 15
- 16							*typecorr-settings*
- 17	This plugin doesn't have any settings.
 
-The first line is actually the only one for which the format matters.  It will
-be extracted from the help file to be put in the "LOCAL ADDITIONS:" section of
-help.txt.  The first "*" must be in the first column of the first line.
+IGNORING EVENTS
 
-You can add more tags inside ** in your help file.  But be careful not to use
-existing help tags.  You would probably use the name of your plugin in most of
-them, like "typecorr-settings" in the example.
+At times, you will not want to trigger an autocommand.  The 'eventignore'
+option contains a list of events that will be totally ignored.  For example,
+the following causes events for entering and leaving a window to be ignored: >
 
-Using references to other parts of the help in || is recommended.  This makes
-it easy for the user to find associated help.
+	:set eventignore=WinEnter,WinLeave
 
+To ignore all events, use the following command: >
 
-SUMMARY							*plugin-special*
+	:set eventignore=all
 
-Summary of special things to use in a plugin:
+To set it back to the normal behavior, make 'eventignore' empty: >
 
-s:name			Variables local to the script.
-
-<SID>			Script-ID, used for mappings and functions local to
-			the script.
-
-hasmapto()		Function to test if the user already defined a mapping
-			for functionality the script offers.
-
-<Leader>		Value of "mapleader", which the user defines as the
-			keys that plugin mappings start with.
-
-:map <unique>		Give a warning if a mapping already exists.
-
-:noremap <script>	Use only mappings local to the script, not global
-			mappings.
-
-exists(":cmd")		Check if a user command doesn't exist yet.
-
-==============================================================================
-*40.8*	Writing a filetype plugin	*write-filetype-plugin* *ftplugin*
-
-A filetype plugin is like a global plugin, except that it sets options and
-defines mappings for the current buffer only.  See |add-filetype-plugin| for
-how this type of plugin is used.
-
-First read the section on global plugins above |40.7|.  All that is said there
-also applies to filetype plugins.  There are a few extras, which are explained
-here.  The essential thing is that a filetype plugin should only have an
-effect on the current buffer.
-
-
-DISABLING
-
-If you are writing a filetype plugin to be used by many people, they need a
-chance to disable loading it.  Put this at the top of the plugin: >
-
-	" Only do this when not done yet for this buffer
-	if exists("b:did_ftplugin")
-	  finish
-	endif
-	let b:did_ftplugin = 1
-
-This also needs to be used to avoid that the same plugin is executed twice for
-the same buffer (happens when using an ":edit" command without arguments).  
-
-Now you can disable loading the default plugin completely by making a filetype
-plugin with only this line: >
-
-	let b:did_ftplugin = 1
-
-This does require that your filetype plugin directory comes before $VIMRUNTIME
-in 'runtimepath'!
-
-If you do want to use the default plugin, but overrule one of the settings,
-you can make a filetype plugin like this: >
-
-	source $VIMRUNTIME/ftplugin/vim.vim
-	set textwidth=70
-
-This first loads the default filetype plugin to get all its settings.  Then
-the value for the 'textwidth' option is changed to "70".  Note that the
-default plugin will have set "b:did_ftplugin", thus when it's sourced later,
-it won't do anything.
-
-
-OPTIONS
-
-To make sure the filetype plugin only affects the current buffer use the >
-	:setlocal
-command to set options.  And only set options which are local to a buffer (see
-the help for the option to check that).  When using |:setlocal| for global
-options or options local to a window, the value will change for many buffers,
-and that is not what a filetype plugin should do.
-
-When an option has a value that is a list of flags or items, consider using
-"+=" and "-=" to keep the existing value.  Be aware that the user may have
-changed an option value already.  First resetting to the default value and
-then changing it often a good idea.  Example: >
-	:setlocal formatoptions& formatoptions+=ro
-
-
-MAPPINGS
-
-To make sure mappings will only work in the current buffer use the >
-	:map <buffer>
-command.  This needs to be combined with the two-step mapping explained above.
-An example of how to define funcionality in a filetype plugin: >
-
-	if !hasmapto('<Plug>JavaImport')
-	  map <buffer> <unique> <LocalLeader>i <Plug>JavaImport
-	endif
-	noremap <buffer> <unique> <Plug>JavaImport oimport ""<Left><Esc>
-
-|hasmapto()| is used to check if the user has already defined a map to
-<Plug>JavaImport.  If not, then the filetype plugin defines the default
-mapping.  This starts with |<LocalLeader>|, which allows the user to select
-the key(s) he wants filetype plugin mappings to start with.  The default is a
-backslash.
-"<unique>" is used to give an error message if the mapping already exists or
-overlaps with an existing mapping.
-|:noremap| is used to avoid that any other mappings that the user has defined
-interferes.  You might want to use ":noremap <script>" to allow remapping
-mappings defined in this script that start with <SID>.
-
-The user must have a chance to disable the mappings in a filetype plugin,
-without disabling everything.  Here is an example of how this is done for a
-plugin for the mail filetype: >
-
-	" Add mappings, unless the user didn't want this.
-	if !exists("no_plugin_maps") && !exists("no_mail_maps")
-	  " Quote text by inserting "> "
-	  if !hasmapto('<Plug>MailQuote')
-	    vmap <buffer> <LocalLeader>q <Plug>MailQuote
-	    nmap <buffer> <LocalLeader>q <Plug>MailQuote
-	  endif
-	  vnoremap <buffer> <Plug>MailQuote :s/^/> /<CR>
-	  nnoremap <buffer> <Plug>MailQuote :.,$s/^/> /<CR>
-	endif
-
-Two global variables are used:
-no_plugin_maps		disables mappings for all filetype plugins
-no_mail_maps		disables mappings for a specific filetype
-
-
-USER COMMANDS
-
-To add a user command for a specific file type, so that it can only be used in
-one buffer, use the "-buffer" argument to |:command|.  Example: >
-
-	:command -buffer  Make  make %:r.s
-
-
-VARIABLES
-
-A filetype plugin will be sourced for each buffer of the type it's for.  Local
-script variables |s:var| will be shared between all invocations.  Use local
-buffer variables |b:var| if you want a variable specifically for one buffer.
-
-
-FUNCTIONS
-
-When defining a function, this only needs to be done once.  But the filetype
-plugin will be sourced every time a file with this filetype will be opened.
-This construct make sure the function is only defined once: >
-
-	if !exists("*s:Func")
-	  function s:Func(arg)
-	    ...
-	  endfunction
-	endif
-<
-
-SUMMARY							*ftplugin-special*
-
-Summary of special things to use in a filetype plugin:
-
-<LocalLeader>		Value of "maplocalleader", which the user defines as
-			the keys that filetype plugin mappings start with.
-
-:map <buffer>		Define a mapping local to the buffer.
-
-:noremap <script>	Only remap mappings defined in this script that start
-			with <SID>.
-
-:setlocal		Set an option for the current buffer only.
-
-:command -buffer	Define a user command local to the buffer.
-
-exists("*s:Func")	Check if a function was already defined.
-
-Also see |plugin-special|, the special things used for all plugins.
-
-==============================================================================
-*40.9*	Writing a compiler plugin		*write-compiler-plugin*
-
-A compiler plugin sets options for use with a specific compiler.  The user can
-load it with the |:compiler| command.  The main use is to set the
-'errorformat' and 'makeprg' options.
-
-The only special item about these files is a mechanism to allow a user to
-overrule or add to the default file.  The default files start with: >
-
-	if exists("did_load_compiler")
-	  finish
-	endif
-	let did_load_compiler = 1
-
-When you write a compiler file and put it in your personal runtime directory
-(e.g., ~/.vim/runtime/compiler for Unix), you can set the "did_load_compiler"
-variable to make the default file skip the settings.
-
-When you write a compiler plugin for the Vim distribution or for a system-wide
-runtime directory, use the mechanism mentioned above.  When
-"did_load_compiler" was already set by a user plugin nothing will be done.
-
-When you write a compiler plugin to overrule settings from a default plugin,
-you don't check "did_load_compiler".  This plugin is supposed to be loaded
-last, thus it should be in a directory at the end of 'runtimepath'.  For Unix
-that could be ~/.vim/runtime/after/compiler.
+	:set eventignore=
 
 ==============================================================================
 
-Next chapter: |usr_41.txt|  Make new commands
+Next chapter: |usr_41.txt|  Write a Vim script
 
 Copyright: see |manual-copyright|  vim:tw=78:

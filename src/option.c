@@ -57,26 +57,27 @@ typedef enum
     , PV_CINK
     , PV_CINO
     , PV_CINW
-    , PV_COM
     , PV_CMS
+    , PV_COM
     , PV_CPT
     , PV_DEF
     , PV_DICT
     , PV_DIFF
+    , PV_EFM
     , PV_EOL
     , PV_EP
     , PV_ET
-    , PV_FENC
     , PV_FDC
     , PV_FDE
     , PV_FDI
     , PV_FDL
     , PV_FDM
-    , PV_FML
     , PV_FDN
     , PV_FDT
     , PV_FEN
+    , PV_FENC
     , PV_FF
+    , PV_FML
     , PV_FMR
     , PV_FO
     , PV_FT
@@ -736,7 +737,7 @@ static struct vimoption
 			    },
     {"errorformat", "efm",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_QUICKFIX
-			    (char_u *)&p_efm, PV_NONE,
+			    (char_u *)&p_efm, OPT_BOTH(PV_EFM),
 			    {(char_u *)DFLT_EFM, (char_u *)0L},
 #else
 			    (char_u *)NULL, PV_NONE,
@@ -1041,10 +1042,20 @@ static struct vimoption
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"iminsert",    "imi",  P_NUM|P_VIM,
 			    (char_u *)&p_iminsert, PV_IMI,
-			    {(char_u *)B_IMODE_NONE, (char_u *)0L}},
+#ifdef B_IMODE_IM
+			    {(char_u *)B_IMODE_IM, (char_u *)0L}
+#else
+			    {(char_u *)B_IMODE_NONE, (char_u *)0L}
+#endif
+			    },
     {"imsearch",    "ims",  P_NUM|P_VIM,
 			    (char_u *)&p_imsearch, PV_IMS,
-			    {(char_u *)B_IMODE_NONE, (char_u *)0L}},
+#ifdef B_IMODE_IM
+			    {(char_u *)B_IMODE_IM, (char_u *)0L}
+#else
+			    {(char_u *)B_IMODE_NONE, (char_u *)0L}
+#endif
+			    },
     {"include",	    "inc",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
 			    (char_u *)&p_inc, PV_INC,
@@ -3951,6 +3962,7 @@ check_buf_options(buf)
 #ifdef FEAT_QUICKFIX
     check_string_option(&buf->b_p_gp);
     check_string_option(&buf->b_p_mp);
+    check_string_option(&buf->b_p_efm);
 #endif
     check_string_option(&buf->b_p_ep);
     check_string_option(&buf->b_p_path);
@@ -5118,7 +5130,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     }
 #endif
 
-    curwin->w_set_curswant = TRUE;  /* in case 'showbreak' changed */
+    if (curwin->w_curswant != MAXCOL)
+	curwin->w_set_curswant = TRUE;  /* in case 'showbreak' changed */
     check_redraw(options[opt_idx].flags);
 
     return errmsg;
@@ -5639,7 +5652,8 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     options[opt_idx].flags |= P_WAS_SET;
 
     comp_col();			    /* in case 'ruler' or 'showcmd' changed */
-    curwin->w_set_curswant = TRUE;  /* in case 'list' changed */
+    if (curwin->w_curswant != MAXCOL)
+	curwin->w_set_curswant = TRUE;  /* in case 'list' changed */
     check_redraw(options[opt_idx].flags);
 
     return NULL;
@@ -6005,7 +6019,8 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     options[opt_idx].flags |= P_WAS_SET;
 
     comp_col();			    /* in case 'columns' or 'ls' changed */
-    curwin->w_set_curswant = TRUE;  /* in case 'tabstop' changed */
+    if (curwin->w_curswant != MAXCOL)
+	curwin->w_set_curswant = TRUE;  /* in case 'tabstop' changed */
     check_redraw(options[opt_idx].flags);
 
     return errmsg;
@@ -6791,6 +6806,7 @@ get_varp_scope(p, opt_flags)
 #ifdef FEAT_QUICKFIX
 	    case OPT_BOTH(PV_GP):   return (char_u *)&(curbuf->b_p_gp);
 	    case OPT_BOTH(PV_MP):   return (char_u *)&(curbuf->b_p_mp);
+	    case OPT_BOTH(PV_EFM):  return (char_u *)&(curbuf->b_p_efm);
 #endif
 	    case OPT_BOTH(PV_EP):   return (char_u *)&(curbuf->b_p_ep);
 	    case OPT_BOTH(PV_PATH): return (char_u *)&(curbuf->b_p_path);
@@ -6848,6 +6864,8 @@ get_varp(p)
 				    ? (char_u *)&(curbuf->b_p_gp) : p->var;
 	case OPT_BOTH(PV_MP):	return *curbuf->b_p_mp != NUL
 				    ? (char_u *)&(curbuf->b_p_mp) : p->var;
+	case OPT_BOTH(PV_EFM):	return *curbuf->b_p_efm != NUL
+				    ? (char_u *)&(curbuf->b_p_efm) : p->var;
 #endif
 
 	case PV_LIST:	return (char_u *)&(curwin->w_p_list);
@@ -7273,6 +7291,7 @@ buf_copy_options(buf, flags)
 #ifdef FEAT_QUICKFIX
 	    buf->b_p_gp = empty_option;
 	    buf->b_p_mp = empty_option;
+	    buf->b_p_efm = empty_option;
 #endif
 	    buf->b_p_ep = empty_option;
 	    buf->b_p_path = empty_option;

@@ -171,7 +171,9 @@ struct vimvar
     {"foldstart", sizeof("foldstart") - 1, NULL, VAR_NUMBER, VV_RO},
     {"foldend", sizeof("foldend") - 1, NULL, VAR_NUMBER, VV_RO},
     {"folddashes", sizeof("folddashes") - 1, NULL, VAR_STRING, VV_RO},
+    {"foldlevel", sizeof("foldlevel") - 1, NULL, VAR_NUMBER, VV_RO},
     {"progname", sizeof("progname") - 1, NULL, VAR_STRING, VV_RO},
+    {"servername", sizeof("servername") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -1549,7 +1551,7 @@ eval4(arg, retvar, evaluate)
 		s1 = get_var_string_buf(retvar, buf1);
 		s2 = get_var_string_buf(&var2, buf2);
 		if (type != TYPE_MATCH && type != TYPE_NOMATCH)
-		    i = ic ? STRICMP(s1, s2) : STRCMP(s1, s2);
+		    i = ic ? MB_STRICMP(s1, s2) : STRCMP(s1, s2);
 		else
 		    i = 0;
 		n1 = FALSE;
@@ -2598,7 +2600,9 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	if (*argp != ',')
 	    break;
     }
-    if (*argp != ')' && error == ERROR_NONE)
+    if (*argp == ')')
+	++argp;
+    else if (error == ERROR_NONE)
 	error = ERROR_INVARG;
 
     /* execute the function if no errors detected and executing */
@@ -2672,7 +2676,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
     if (error == ERROR_NONE)
 	ret = OK;
 
-    *arg = skipwhite(argp + 1);
+    *arg = skipwhite(argp);
 
     while (--argcount >= 0)
 	clear_var(&argvars[argcount]);
@@ -4236,6 +4240,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_XTERM_SAVE
 	"xterm_save",
 #endif
+#ifdef FEAT_XCMDSRV
+	"xcmdsrv",
+#endif
 #if defined(UNIX) && defined(FEAT_X11)
 	"X11",
 #endif
@@ -5043,6 +5050,7 @@ f_searchpair(argvars, retvar)
     pos_T	pos;
     pos_T	firstpos;
     pos_T	save_cursor;
+    pos_T	save_pos;
     int		save_p_ws = p_ws;
     char_u	*save_cpo;
     int		dir;
@@ -5051,6 +5059,7 @@ f_searchpair(argvars, retvar)
     char_u	nbuf2[NUMBUFLEN];
     char_u	nbuf3[NUMBUFLEN];
     int		n;
+    int		r;
     int		nest = 1;
     int		err;
 
@@ -5067,15 +5076,15 @@ f_searchpair(argvars, retvar)
 
     /* Make two search patterns: start/end (pat2, for in nested pairs) and
      * start/middle/end (pat3, for the top pair). */
-    pat2 = alloc((unsigned)(STRLEN(spat) + STRLEN(epat) + 17));
-    pat3 = alloc((unsigned)(STRLEN(spat) + STRLEN(mpat) + STRLEN(epat) + 17));
+    pat2 = alloc((unsigned)(STRLEN(spat) + STRLEN(epat) + 15));
+    pat3 = alloc((unsigned)(STRLEN(spat) + STRLEN(mpat) + STRLEN(epat) + 23));
     if (pat2 == NULL || pat3 == NULL)
 	goto theend;
-    sprintf((char *)pat2, "\\(%s\\)\\|\\(%s\\)", spat, epat);
+    sprintf((char *)pat2, "\\(%s\\m\\)\\|\\(%s\\m\\)", spat, epat);
     if (*mpat == NUL)
 	STRCPY(pat3, pat2);
     else
-	sprintf((char *)pat3, "\\(%s\\)\\|\\(%s\\)\\|\\(%s\\)",
+	sprintf((char *)pat3, "\\(%s\\m\\)\\|\\(%s\\m\\)\\|\\(%s\\m\\)",
 							    spat, epat, mpat);
 
     /* Handle the optional fourth argument: flags */
@@ -5103,8 +5112,12 @@ f_searchpair(argvars, retvar)
 	    firstpos = pos;
 
 	/* If the skip pattern matches, ignore this match. */
-	if (*skip != NUL && (eval_to_bool(skip, &err, NULL, FALSE) || err))
+	if (*skip != NUL)
 	{
+	    save_pos = curwin->w_cursor;
+	    curwin->w_cursor = pos;
+	    r = eval_to_bool(skip, &err, NULL, FALSE);
+	    curwin->w_cursor = save_pos;
 	    if (err)
 	    {
 		/* Evaluating {skip} caused an error, break here. */
@@ -5112,7 +5125,8 @@ f_searchpair(argvars, retvar)
 		retvar->var_val.var_number = -1;
 		break;
 	    }
-	    continue;
+	    if (r)
+		continue;
 	}
 
 	if ((dir == BACKWARD && n == 3) || (dir == FORWARD && n == 2))

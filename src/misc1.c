@@ -6395,7 +6395,7 @@ dos_expandpath(
     int			len;
     char_u		*pat;
     regmatch_T		regmatch;
-    char		saved[4];
+    char_u		*matchname;
 
     /* make room for file name */
     buf = alloc((unsigned int)STRLEN(path) + BASENAMELEN + 5);
@@ -6457,18 +6457,19 @@ dos_expandpath(
 	return 0;
     }
 
+    /* remember the pattern or file name being looked for */
+    matchname = vim_strsave(s);
+
     /* Scan all files in the directory with "dir/ *.*" */
-    mch_memmove(saved, s, 4);
     STRCPY(s, "*.*");
 #ifdef WIN3264
     hFind = FindFirstFile(buf, &fb);
     ok = (hFind != INVALID_HANDLE_VALUE);
 #else
     /* If we are expanding wildcards we try both files and directories */
-    ok =  (findfirst((char *)buf, &fb,
+    ok = (findfirst((char *)buf, &fb,
 			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
 #endif
-    mch_memmove(s, saved, 4);
 
     while (ok)
     {
@@ -6477,9 +6478,11 @@ dos_expandpath(
 #else
 	p = (char_u *)fb.ff_name;
 #endif
-	/* Ignore entries starting with a dot, unless when asked for. */
+	/* Ignore entries starting with a dot, unless when asked for.  Accept
+	 * all entries found with "matchname". */
 	if ((p[0] != '.' || starts_with_dot)
-		&& vim_regexec(&regmatch, p, (colnr_T)0))
+		&& (matchname == NULL
+		    || vim_regexec(&regmatch, p, (colnr_T)0)))
 	{
 #ifdef WIN3264
 	    STRCPY(s, p);
@@ -6509,6 +6512,23 @@ dos_expandpath(
 #else
 	ok = (findnext(&fb) == 0);
 #endif
+
+	/* If no more matches and no match was used, try expanding the name
+	 * itself.  Finds the long name of a short filename. */
+	if (!ok && matchname != NULL && gap->ga_len == start_len)
+	{
+	    STRCPY(s, matchname);
+#ifdef WIN3264
+	    FindClose(hFind);
+	    hFind = FindFirstFile(buf, &fb);
+	    ok = (hFind != INVALID_HANDLE_VALUE);
+#else
+	    ok = (findfirst((char *)buf, &fb,
+			    (*path || (flags & EW_DIR)) ? FA_DIREC : 0) == 0);
+#endif
+	    vim_free(matchname);
+	    matchname = NULL;
+	}
     }
 
 #ifdef WIN3264
@@ -6516,6 +6536,7 @@ dos_expandpath(
 #endif
     vim_free(buf);
     vim_free(regmatch.regprog);
+    vim_free(matchname);
 
     matches = gap->ga_len - start_len;
     if (matches)

@@ -1,9 +1,9 @@
 " Vim syntax file
-" Language:	 VRML97
-" Modified from: VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
-" Maintainer:	 Gregory Seidman <gseidman@acm.org>
-" URL:		 http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
-" Last Change:	 2001 May 09
+" Language:        VRML97
+" Modified from:   VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
+" Maintainer:      Gregory Seidman <gseidman@acm.org>
+" URL:             http://www.cs.brown.edu/~gss/vim/syntax/vrml.vim
+" Last change:     2001 Jun 12
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -45,7 +45,7 @@ syn keyword VRMLFields         top topToBottom topUrl translation
 syn keyword VRMLFields         transparency type url vector visibilityLimit
 syn keyword VRMLFields         visibilityRange whichChoice xDimension
 syn keyword VRMLFields         xSpacing zDimension zSpacing
-syn match   VRMLFields         "\<[A-Za-z_][A-Za-z0-9_]*\>" contains=VRMLComment,VRMLProtos
+syn match   VRMLFields         "\<[A-Za-z_][A-Za-z0-9_]*\>" contains=VRMLComment,VRMLProtos,VRMLfTypes
 " syn match   VRMLFields         "\<[A-Za-z_][A-Za-z0-9_]*\>\(,\|\s\)*\(#.*$\)*\<IS\>\(#.*$\)*\(,\|\s\)*\<[A-Za-z_][A-Za-z0-9_]*\>\(,\|\s\)*\(#.*$\)*" contains=VRMLComment,VRMLProtos
 " syn region  VRMLFields         start="\<[A-Za-z_][A-Za-z0-9_]*\>" end=+\(,\|#\|\s\)+me=e-1 contains=VRMLComment,VRMLProtos
 
@@ -158,7 +158,7 @@ syn region  VRMLNodes          start="PROTO\>\(,\|\s\)*[A-Za-z_]"ms=e start="PRO
 syn keyword VRMLTypes          SFBool SFColor MFColor SFFloat MFFloat
 syn keyword VRMLTypes          SFImage SFInt32 MFInt32 SFNode MFNode
 syn keyword VRMLTypes          SFRotation MFRotation SFString MFString
-syn keyword VRMLTypes          SFTime SFVec2f MFVec2f SFVec3f MFVec3f
+syn keyword VRMLTypes          SFTime MFTime SFVec2f MFVec2f SFVec3f MFVec3f
 
 syn keyword VRMLfTypes         field exposedField eventIn eventOut
 
@@ -168,11 +168,17 @@ syn keyword VRMLProtos         contained EXTERNPROTO PROTO IS
 
 syn keyword VRMLRoutes         contained ROUTE TO
 
+if version >= 502
+"containment!
+  syn include @jscript $VIMRUNTIME/syntax/javascript.vim
+  syn region VRMLjScriptString contained start=+"\(\(javascript\)\|\(vrmlscript\)\|\(ecmascript\)\):+ms=e+1 skip=+\\\\\|\\"+ end=+"+me=e-1 contains=@jscript
+endif
+
 " match definitions.
 syn match   VRMLSpecial           contained "\\[0-9][0-9][0-9]\|\\."
-syn region  VRMLString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=VRMLSpecial
+syn region  VRMLString            start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=VRMLSpecial,VRMLjScriptString
 syn match   VRMLCharacter         "'[^\\]'"
-"syn match   VRMLSpecialCharacter  "'\\.'"
+syn match   VRMLSpecialCharacter  "'\\.'"
 syn match   VRMLNumber            "[-+]\=\<[0-9]\+\(\.[0-9]\+\)\=\([eE]\{1}[-+]\=[0-9]\+\)\=\>\|0[xX][0-9a-fA-F]\+\>"
 syn match   VRMLNumber            "0[xX][0-9a-fA-F]\+\>"
 syn match   VRMLComment           "#.*$"
@@ -185,8 +191,15 @@ syn region  VRMLInstName          start="USE\>"hs=e+1 skip="USE\(,\|\s\)*" end="
 
 syn keyword VRMLInstances      contained DEF USE
 syn sync minlines=1
-syn match   VRMLBraces         "[{}]"
-syn match   VRMLBrackets       "[\[\]]"
+
+if version >= 600
+"FOLDS!
+  syn sync fromstart
+  setlocal foldmethod=syntax
+  syn region braceFold start="{" end="}" transparent fold contains=TOP
+  syn region bracketFold start="\[" end="]" transparent fold contains=TOP
+  syn region VRMLString start=+"+ skip=+\\\\\|\\"+ end=+"+ fold contains=VRMLSpecial,VRMLjScriptString
+endif
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -209,7 +222,8 @@ if version >= 508 || !exists("did_VRML_syntax_inits")
   HiLink VRMLNodes      Statement
   HiLink VRMLFields     Type
   HiLink VRMLEvents     Type
-  HiLink VRMLfTypes     ctermfg=6 guifg=Brown
+  HiLink VRMLfTypes     LineNr
+"  hi     VRMLfTypes     ctermfg=6 guifg=Brown
   HiLink VRMLInstances  PreCondit
   HiLink VRMLRoutes     PreCondit
   HiLink VRMLProtos     PreProc

@@ -428,6 +428,14 @@ static void	ex_language __ARGS((exarg_T *eap));
 # define ex_jumps		ex_ni
 #endif
 
+#ifndef FEAT_XCMDSRV
+# define ex_serversend		ex_ni
+# define ex_serverlist		ex_ni
+#else
+static void	ex_serversend __ARGS((exarg_T *eap));
+static void	ex_serverlist __ARGS((exarg_T *eap));
+#endif
+
 /*
  * Declare cmdnames[].
  */
@@ -5559,9 +5567,22 @@ ex_find(eap)
 {
 #ifdef FEAT_SEARCHPATH
     char_u	*fname;
+    int		count;
 
     fname = find_file_in_path(eap->arg, (int)STRLEN(eap->arg), FNAME_MESS,
 									TRUE);
+    if (eap->addr_count > 0)
+    {
+	/* Repeat finding the file "count" times.  This matters when it
+	 * appears several times in the path. */
+	count = eap->line2;
+	while (fname != NULL && --count > 0)
+	{
+	    vim_free(fname);
+	    fname = find_file_in_path(NULL, 0, FNAME_MESS, FALSE);
+	}
+    }
+
     if (fname != NULL)
     {
 	eap->arg = fname;
@@ -6869,8 +6890,10 @@ ex_startinsert(eap)
 	coladvance((colnr_T)MAXCOL);
 	curwin->w_curswant = MAXCOL;
 	curwin->w_set_curswant = FALSE;
+	restart_edit = 'a';
     }
-    restart_edit = 'i';
+    else
+	restart_edit = 'i';
 }
 #endif
 
@@ -7876,7 +7899,7 @@ makeopens(fd, dirnow)
 		    continue;
 
 		/* restore height when not full height */
-		if (wp->w_height + wp->w_status_height < Rows - p_ch
+		if (wp->w_height + wp->w_status_height < topframe->fr_height
 			&& (fprintf(fd,
 				"exe 'resize ' . ((&lines * %ld + %ld) / %ld)",
 				(long)wp->w_height, Rows / 2, Rows) < 0
@@ -8501,13 +8524,21 @@ ex_compiler(eap)
 {
     char_u	*buf;
 
-    buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
-    if (buf != NULL)
+    if (*eap->arg == NUL)
     {
-	do_unlet((char_u *)"did_load_compiler");
-	sprintf((char *)buf, "compiler/%s.vim", eap->arg);
-	(void)cmd_runtime(buf, TRUE);
-	vim_free(buf);
+	/* List all compiler scripts. */
+	do_cmdline_cmd((char_u *)"echo globpath(&rtp, 'compiler/*.vim')");
+    }
+    else
+    {
+	buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
+	if (buf != NULL)
+	{
+	    do_unlet((char_u *)"current_compiler");
+	    sprintf((char *)buf, "compiler/%s.vim", eap->arg);
+	    (void)cmd_runtime(buf, TRUE);
+	    vim_free(buf);
+	}
     }
 }
 #endif
@@ -10081,3 +10112,77 @@ mch_print_set_fg(fgcol)
 
 #endif /*FEAT_POSTSCRIPT*/
 #endif /*FEAT_PRINTER*/
+
+#ifdef FEAT_XCMDSRV
+
+static int check_connection __ARGS((void));
+
+    static int
+check_connection()
+{
+    if (!gui.in_use && xterm_dpy == NULL)
+    {
+	EMSG(_("E240: No connection to X server"));
+	return FAIL;
+    }
+    return OK;
+}
+
+/*
+ * Implements ":serversend {server} {string}"
+ */
+    static void
+ex_serversend(eap)
+    exarg_T	*eap;
+{
+    char_u	*p;
+    char_u	*s;
+
+    if (check_connection() == FAIL)
+	return;
+    p = skiptowhite(eap->arg);
+    if ((s = vim_strnsave(eap->arg, p - eap->arg)) == NULL)
+	return;
+    p = skipwhite(p);
+
+    if (serverSendToVim(gui.in_use ? gui.dpy : xterm_dpy, s, p) < 0)
+	EMSG2(_("E241: Unable to send to %s"), s);
+    vim_free(s);
+}
+
+/*
+ * Implements ":serverlist"
+ */
+/*ARGSUSED*/
+    static void
+ex_serverlist(eap)
+    exarg_T	*eap;
+{
+    char_u	*p, *cur, *next;
+
+    if (check_connection() == FAIL)
+	return;
+    p = serverGetVimNames(gui.in_use ? gui.dpy : xterm_dpy);
+    next = cur = p;
+    while (*next)
+    {
+	cur = next;
+	if ((next = vim_strchr(cur, '\n')) == NULL)
+	    next = cur + STRLEN(cur);
+	if (next > cur)
+	{
+	    msg_putchar('\n');
+	    if (serverName != NULL && STRNCMP(serverName, cur, next - cur) == 0
+		    && (next - cur) == STRLEN(serverName))
+		msg_outtrans((char_u *)"> ");
+	    else
+		msg_outtrans((char_u *)"  ");
+	    msg_outtrans_len(cur, next - cur);
+	}
+	if (*next == '\n')
+	    next++;
+	out_flush();
+    }
+    vim_free(p);
+}
+#endif

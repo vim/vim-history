@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 6.0aj.  Last change: 2001 Jun 03
+*term.txt*      For Vim version 6.0ak.  Last change: 2001 Jun 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -603,6 +603,10 @@ at the insert position.
 Note: When the |-X| command line argument is used, Vim will not connect to the
 X server and copy/paste to the X clipboard (selection) will not work.  Use the
 shift key with the mouse buttons to let the xterm do the selection.
+
+							*xterm-command-server*
+When the X-server clipboard is available, the command server described in
+|x11-xcmdsrv| can be enabled with the --servername command line argument.
 
 							*xterm-copy-paste*
 NOTE: In some (older) xterms, it's not possible to move the cursor past column

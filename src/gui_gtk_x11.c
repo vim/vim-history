@@ -478,6 +478,33 @@ expose_event(GtkWidget * widget, GdkEventExpose * event)
     return FALSE;
 }
 
+#ifdef FEAT_XCMDSRV
+/*
+ * Handle changes to the "Comm" property
+ */
+/*ARGSUSED*/
+    static gint
+property_event(GtkWidget * widget, GdkEventProperty * e)
+{
+    if (e->type == GDK_PROPERTY_NOTIFY
+	    && GDK_WINDOW_XWINDOW(e->window) == commWindow
+	    && e->atom == commProperty &&  e->state == GDK_PROPERTY_NEW_VALUE)
+    {
+	XEvent	    xev;
+
+	/* Translate to XLib */
+	xev.xproperty.type = PropertyNotify;
+	xev.xproperty.atom = commProperty;
+	xev.xproperty.window = commWindow;
+	xev.xproperty.state = PropertyNewValue;
+	serverEventProc(GDK_WINDOW_XDISPLAY(widget->window), &xev);
+	if (gtk_main_level() > 0)
+	    gtk_main_quit();
+    }
+    return FALSE;
+}
+#endif
+
 
 /****************************************************************************
  * Focus handlers:
@@ -1532,7 +1559,7 @@ setup_save_yourself(void)
 #endif
 
 /*
- * Setup the window icon after the main window has been realized.
+ * Setup the window icon & xcmdsrv comm after the main window has been realized.
  */
 /*ARGSUSED*/
     static void
@@ -1589,6 +1616,18 @@ mainwin_realize(GtkWidget *widget)
     /* Setup to indicate to the window manager that we want to catch the
      * WM_SAVE_YOURSELF event. */
     setup_save_yourself();
+#endif
+#ifdef FEAT_XCMDSRV
+    /*
+     * Cannot handle "XLib-only" windows with gtk event routines, we'll
+     * have to change the "send" registration to that of the main window.
+     * If we have not opened the send stuff yet, remember the window.
+     */
+    serverChangeRegisteredWindow(GDK_DISPLAY(),
+			       GDK_WINDOW_XWINDOW(gui.mainwin->window));
+    gtk_widget_add_events (gui.mainwin, GDK_PROPERTY_CHANGE_MASK);
+    gtk_signal_connect(GTK_OBJECT(gui.mainwin), "property_notify_event",
+		       GTK_SIGNAL_FUNC(property_event), NULL);
 #endif
 }
 
@@ -2651,15 +2690,15 @@ gui_mch_get_color(char_u * name)
     static char *(vimnames[][2]) =
     {
     /* A number of colors that some X11 systems don't have */
-	{"LightRed",	"#FFBBBB"},
-	{"LightGreen",	"#88FF88"},
+	{"LightRed",	 "#FFBBBB"},
+	{"LightGreen",	 "#88FF88"},
 	{"LightMagenta", "#FFBBFF"},
-	{"DarkCyan",	"#008888"},
-	{"DarkBlue",	"#0000BB"},
-	{"DarkRed",	"#BB0000"},
-	{"DarkMagenta", "#BB00BB"},
-	{"DarkGrey",	"#BBBBBB"},
-	{"DarkYellow",	"#BBBB00"},
+	{"DarkCyan",	 "#008888"},
+	{"DarkBlue",	 "#0000BB"},
+	{"DarkRed",	 "#BB0000"},
+	{"DarkMagenta",  "#BB00BB"},
+	{"DarkGrey",	 "#BBBBBB"},
+	{"DarkYellow",	 "#BBBB00"},
 	{NULL, NULL}
     };
 
@@ -2710,7 +2749,7 @@ gui_mch_get_color(char_u * name)
 	    return (guicolor_T) color.pixel;
 	}
 	/* add a few builtin names and try again */
-	for (i = 0;; ++i)
+	for (i = 0; ; ++i)
 	{
 	    if (vimnames[i][0] == NULL)
 	    {
@@ -2720,7 +2759,7 @@ gui_mch_get_color(char_u * name)
 	    }
 	    if (STRICMP(name, vimnames[i][0]) == 0)
 	    {
-		name = (char_u *) vimnames[i][1];
+		name = (char_u *)vimnames[i][1];
 		break;
 	    }
 	}

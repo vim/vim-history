@@ -52,6 +52,7 @@ struct qf_line
     int		     qf_col;	/* column where the error occurred */
     int		     qf_nr;	/* error number */
     char_u	    *qf_text;	/* description of the error */
+    char_u	     qf_virt_col; /* set to TRUE if qf_col is screen column */
     char_u	     qf_cleared;/* set to TRUE if line has been deleted */
     char_u	     qf_type;	/* type of the error (mostly 'E') */
     char_u	     qf_valid;	/* valid error message detected */
@@ -74,7 +75,7 @@ struct qf_list
 static int	qf_curlist = 0;	/* current error list */
 static int	qf_listcount = 0;   /* current number of lists */
 
-#define FMT_PATTERNS 8		/* maximum number of % recognized */
+#define FMT_PATTERNS 9		/* maximum number of % recognized */
 
 /*
  * Structure used to hold the info of one part of 'errorformat'
@@ -115,6 +116,7 @@ qf_init(efile, errorformat, newlist)
     char_u	    *errmsg;
     char_u	    *fmtstr = NULL;
     int		    col = 0;
+    char_u	    use_virt_col = FALSE;
     int		    type = 0;
     int		    valid;
     long	    lnum = 0L;
@@ -154,7 +156,8 @@ qf_init(efile, errorformat, newlist)
 			{'t', "."},
 			{'m', ".\\+"},
 			{'r', ".*"},
-			{'p', "[- .]*"}
+			{'p', "[- .]*"},
+			{'v', "\\d\\+"}
 		    };
 
     if (efile == NULL)
@@ -209,7 +212,11 @@ qf_init(efile, errorformat, newlist)
  * Each part of the format string is copied and modified from errorformat to
  * regex prog.  Only a few % characters are allowed.
  */
-    efm = errorformat;
+    /* Use the local value of 'errorformat' if it's set. */
+    if (errorformat == p_efm && *curbuf->b_p_efm != NUL)
+	efm = curbuf->b_p_efm;
+    else
+	efm = errorformat;
     /*
      * Get some space to modify the format string into.
      */
@@ -446,6 +453,7 @@ restofline:
 		errmsg[0] = NUL;
 	    lnum = 0;
 	    col = 0;
+	    use_virt_col = FALSE;
 	    enr = -1;
 	    type = 0;
 	    tail = NULL;
@@ -491,6 +499,11 @@ restofline:
 		    tail = regmatch.startp[i];
 		if ((i = (int)fmt_ptr->addr[7]) > 0)		/* %p */
 		    col = (int)(regmatch.endp[i] - regmatch.startp[i] + 1);
+		if ((i = (int)fmt_ptr->addr[8]) > 0)		/* %v */
+		{
+		    col = (int)atol((char *)regmatch.startp[i]);
+		    use_virt_col = TRUE;
+		}
 		break;
 	    }
 	}
@@ -547,6 +560,7 @@ restofline:
 		    qfp->qf_lnum = lnum;
 		if (!qfp->qf_col)
 		    qfp->qf_col = col;
+		qfp->qf_virt_col = use_virt_col;
 		if (!qfp->qf_fnum)
 		    qfp->qf_fnum = qf_get_fnum(directory,
 					*namebuf || directory ? namebuf
@@ -563,7 +577,7 @@ restofline:
 		if (*namebuf == NUL || mch_getperm(namebuf) >= 0)
 		{
 		    if (*namebuf && idx == 'P')
-			qf_push_dir(currfile = namebuf, &file_stack);
+			currfile = qf_push_dir(namebuf, &file_stack);
 		    else if (idx == 'Q')
 			currfile = qf_pop_dir(&file_stack);
 		    *namebuf = NUL;
@@ -591,6 +605,7 @@ restofline:
 	    type = 0;
 	qfp->qf_lnum = lnum;
 	qfp->qf_col = col;
+	qfp->qf_virt_col = use_virt_col;
 	qfp->qf_nr = enr;
 	qfp->qf_type = type;
 	qfp->qf_valid = valid;
@@ -913,6 +928,7 @@ qf_jump(dir, errornr, forceit)
     linenr_T		i;
     buf_T		*old_curbuf;
     linenr_T		old_lnum;
+    char_u		*line;
 #ifdef FEAT_WINDOWS
     int			opened_window = FALSE;
     win_T		*win;
@@ -1090,6 +1106,19 @@ qf_jump(dir, errornr, forceit)
 	if (qf_ptr->qf_col > 0)
 	{
 	    curwin->w_cursor.col = qf_ptr->qf_col - 1;
+	    if (qf_ptr->qf_virt_col == TRUE)
+	    {
+		/*
+		 * Check each character from the beginning of the error
+		 * line up to the error column.  For each tab character
+		 * found, reduce the error column value tabstop - 1
+		 * characters.
+		 */
+		line = ml_get_curline();
+		for (len = 0; len < (int)curwin->w_cursor.col; ++len)
+		    if (line[len] == '\t')
+			curwin->w_cursor.col -= (curwin->w_buffer->b_p_ts - 1);
+	    }
 	    check_cursor();
 	}
 	else

@@ -1989,12 +1989,14 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	set_vim_var_nr(VV_FOLDEND, lnume);
 
 	/* Set "v:folddashes" to a string of "level" dashes. */
+	/* Set "v:foldlevel" to "level". */
 	level = foldinfo->fi_level;
 	if (level > 50)
 	    level = 50;
 	vim_memset(dashes, '-', (size_t)level);
 	dashes[level] = NUL;
 	set_vim_var_string(VV_FOLDDASHES, dashes, -1);
+	set_vim_var_nr(VV_FOLDLEVEL, (long)level);
 	save_curwin = curwin;
 	curwin = wp;
 	curbuf = wp->w_buffer;
@@ -6022,7 +6024,10 @@ screenclear2()
     if (starting == NO_SCREEN || ScreenLines == NULL)
 	return;
 
-    screen_attr = -1;		/* force setting the Normal colors */
+#ifdef FEAT_GUI
+    if (!gui.in_use)
+#endif
+	screen_attr = -1;	/* force setting the Normal colors */
     screen_stop_highlight();	/* don't want highlighting here */
 
 #ifdef FEAT_CLIPBOARD

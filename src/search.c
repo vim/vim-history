@@ -1187,32 +1187,13 @@ search_for_exact_line(buf, pos, dir, pat)
 	 * ignored because we are interested in the next line -- Acevedo */
 	if ((continue_status & CONT_ADDING) && !(continue_status & CONT_SOL))
 	{
-	    if (p_ic)
-	    {
-		/*
-		if (STRICMP(p, pat) == 0)
-		*/
-		for (ptr = pat; TO_LOWER(*p) == *ptr && *p; p++, ptr++)
-		    ;
-		if (*p == *ptr)	/* only possible if both NUL, exact match */
-		    return OK;
-	    }
-	    else if (STRCMP(p, pat) == 0)
+	    if ((p_ic ? MB_STRICMP(p, pat) : STRCMP(p, pat)) == 0)
 		return OK;
 	}
-	else if (*p)	/* ignore empty lines */
+	else if (*p != NUL)	/* ignore empty lines */
 	{	/* expanding lines or words */
-	    if (p_ic)
-	    {
-		/*
-		if (STRNICMP(p, pat, completion_length) == 0)
-		*/
-		for (ptr = pat; TO_LOWER(*p) == *ptr && *p; p++, ptr++)
-		    ;
-		if (*ptr == NUL)
-		    return OK;
-	    }
-	    else if (STRNCMP(p, pat, completion_length) == 0)
+	    if ((p_ic ? MB_STRNICMP(p, pat, completion_length)
+				   : STRNCMP(p, pat, completion_length)) == 0)
 		return OK;
 	}
     }
@@ -3621,7 +3602,7 @@ search_line:
 		    /* compare the first "len" chars from "ptr" */
 		    startp = skipwhite(p);
 		    if (p_ic)
-			matched = !STRNICMP(startp, ptr, len);
+			matched = !MB_STRNICMP(startp, ptr, len);
 		    else
 			matched = !STRNCMP(startp, ptr, len);
 		    if (matched && define_matched && whole

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0aj.  Last change: 2001 Jun 03
+*editing.txt*   For Vim version 6.0ak.  Last change: 2001 Jun 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -291,6 +291,13 @@ difficult to start editing a file of a different type.
 			{not in Vi} {not available when the |+file_in_path|
 			feature was disabled at compile time}
 
+:{count}fin[d][!] [++opt] [+cmd] {file}
+			Just like ":find", but use the {count} match in
+			'path'.  Thus ":2find file" will find the second
+			"file" found in 'path'.  When there are less matches
+			for the file in 'path' than asked for, you get an
+			error message.
+
 							*:ex*
 :ex [++opt] [+cmd] [file]
 			Same as |:edit|, but also switch to "Ex" mode.  See
@@ -298,7 +305,7 @@ difficult to start editing a file of a different type.
 
 							*:vi* *:visual*
 :vi[sual][!] [++opt] [+cmd] [file]
-			When entered in Ex mode: Leave Ex mode, go back to
+			When entered in Ex mode: Leave |Ex-mode|, go back to
 			Normal mode.  Otherwise same as |:edit|.
 
 							*:vie* *:view*

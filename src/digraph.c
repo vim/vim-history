@@ -2248,8 +2248,8 @@ printdigraph(dp)
     if ((dy_flags & DY_UHEX)
 #ifdef FEAT_MBYTE
 	    || has_mbyte
-	    )
 #endif
+	    )
 	list_width = 13;
     else
 	list_width = 11;

@@ -759,6 +759,7 @@ struct file_buffer
 
     long	b_mtime;	/* last change time of original file */
     long	b_mtime_read;	/* last change time when reading */
+    size_t	b_orig_size;	/* size of original file in bytes */
 
     pos_T	b_namedm[NMARKS]; /* current named marks (mark.c) */
 
@@ -953,6 +954,7 @@ struct file_buffer
 #ifdef FEAT_QUICKFIX
     char_u	*b_p_gp;	/* 'grepprg' local value */
     char_u	*b_p_mp;	/* 'makeprg' local value */
+    char_u	*b_p_efm;	/* 'errorformat' local value */
 #endif
     char_u	*b_p_ep;	/* 'equalprg' local value */
     char_u	*b_p_path;	/* 'path' local value */

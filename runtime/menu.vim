@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 08
+" Last Change:	2001 Jun 12
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -46,14 +46,15 @@ endif
 
 " Help menu
 amenu 9999.10 &Help.&Overview<Tab><F1>		:help<CR>
-amenu 9999.20 &Help.&How-to\ links		:help how-to<CR>
-amenu 9999.30 &Help.&GUI			:help gui<CR>
-amenu 9999.40 &Help.&Credits			:help credits<CR>
-amenu 9999.50 &Help.Co&pying			:help uganda<CR>
-amenu 9999.60 &Help.&Find\.\.\.			:call <SID>Helpfind()<CR>
-amenu 9999.65 &Help.-sep-			<nul>
-amenu 9999.70 &Help.&Version			:version<CR>
-amenu 9999.80 &Help.&About			:intro<CR>
+amenu 9999.20 &Help.&User\ Manual		:help usr_toc<CR>
+amenu 9999.30 &Help.&How-to\ links		:help how-to<CR>
+amenu 9999.40 &Help.&GUI			:help gui<CR>
+amenu 9999.50 &Help.&Credits			:help credits<CR>
+amenu 9999.60 &Help.Co&pying			:help uganda<CR>
+amenu 9999.70 &Help.&Find\.\.\.			:call <SID>Helpfind()<CR>
+amenu 9999.75 &Help.-sep-			<nul>
+amenu 9999.80 &Help.&Version			:version<CR>
+amenu 9999.90 &Help.&About			:intro<CR>
 
 fun! s:Helpfind()
   if !exists("g:menutrans_help_dialog")
@@ -330,7 +331,7 @@ vunmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]
 vmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]	g<C-]>
 amenu 40.310 &Tools.Jump\ &back<Tab>^T		<C-T>
 if has("vms")
-  amenu 40.320 &Tools.Build\ &Tags\ File                :!mc vim:ctags -R .<CR>
+  amenu 40.320 &Tools.Build\ &Tags\ File                :!mc vim:ctags .<CR>
 else
   amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
 endif

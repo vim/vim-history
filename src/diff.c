@@ -725,12 +725,15 @@ ex_diffpatch(eap)
     if (mch_dirname(dirbuf, MAXPATHL) != OK)
 	dirbuf[0] = NUL;
     else
-#ifdef TEMPDIRNAMES
+    {
+# ifdef TEMPDIRNAMES
 	if (vim_tempdir != NULL)
 	    mch_chdir((char *)vim_tempdir);
 	else
-#endif
+# endif
 	    mch_chdir("/tmp");
+	shorten_fnames(TRUE);
+    }
 #endif
 
 #ifdef FEAT_EVAL
@@ -749,7 +752,10 @@ ex_diffpatch(eap)
 
 #ifdef UNIX
     if (dirbuf[0] != NUL)
+    {
 	mch_chdir((char *)dirbuf);
+	shorten_fnames(TRUE);
+    }
 #endif
 
     /* patch probably has written over the screen */
@@ -882,6 +888,7 @@ diff_win_options(wp, addbuf)
 # endif
     if (addbuf)
 	diff_buf_add(wp->w_buffer);
+    redraw_win_later(wp, NOT_VALID);
 }
 
 /*
@@ -1255,7 +1262,7 @@ diff_cmp(s1, s2)
     if ((diff_flags & (DIFF_ICASE | DIFF_IWHITE)) == 0)
 	return STRCMP(s1, s2);
     if ((diff_flags & DIFF_ICASE) && !(diff_flags & DIFF_IWHITE))
-	return STRICMP(s1, s2);
+	return MB_STRICMP(s1, s2);
 
     /* Ignore case AND ignore white space changes. */
     p1 = s1;

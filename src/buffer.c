@@ -1433,6 +1433,7 @@ free_buf_options(buf, free_p_ff)
 #ifdef FEAT_QUICKFIX
     clear_string_option(&buf->b_p_gp);
     clear_string_option(&buf->b_p_mp);
+    clear_string_option(&buf->b_p_efm);
 #endif
     clear_string_option(&buf->b_p_ep);
     clear_string_option(&buf->b_p_path);

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0aj.  Last change: 2001 Jun 09
+*options.txt*   For Vim version 6.0ak.  Last change: 2001 Jun 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1901,7 +1901,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 						*'errorformat'* *'efm'*
 'errorformat' 'efm'	string	(default is very long)
-			global
+			global or local to buffer |global-local|
 			{not in Vi}
 			{not available when compiled without the |+quickfix|
 			feature}
@@ -2867,30 +2867,30 @@ A jump table for the options with a short description can be found at |Q_op|.
 	|/ignorecase|.
 
 						*'iminsert'* *'imi'*
-'iminsert' 'imi'	number (default 0)
+'iminsert' 'imi'	number (default 0, 2 when an input method is supported)
 			local to buffer
 			{not in Vi}
-	Specifies wither langmap or an Input Method (IM) is to be used in
+	Specifies whether langmap or an Input Method (IM) is to be used in
 	Insert mode.  Valid values:
 		0	langmap is off and IM is off
 		1	langmap is on and IM is off
 		2	IM is on and langmap is off
-	2 is available when compiled with the |+multi_byte_ime| or |+xim| or
-	|global-ime|.
+	2 is available only when compiled with the |+multi_byte_ime|, |+xim|
+	or |global-ime|.
 	To always reset the option to zero when leaving Insert mode with <Esc>
 	this can be used: >
 		:inoremap <ESC> <ESC>:set iminsert=0<CR>
-<	This make langmap and IM turn off automatically when leaving Insert
+<	This makes langmap and IM turn off automatically when leaving Insert
 	mode.
 	Note that this option changes when using CTRL-^. |i_CTRL-^|
 	The value is set to 1 when defining a new |:lmap| mapping.
 	It is also used for the argument of commands like "r" and "f".
 
 						*'imsearch'* *'ims'*
-'imsearch' 'ims'	number (default 0)
+'imsearch' 'ims'	number (default 0, 2 when an input method is supported)
 			local to buffer
 			{not in Vi}
-	Specifies wither langmap or an Input Method (IM) is to be used when
+	Specifies whether langmap or an Input Method (IM) is to be used when
 	entering a search pattern.
 	The value has the same meaning as 'iminsert'.  Additionally -1 can be
 	used.  This means that the value of 'iminsert' is used.  This makes it
@@ -5532,7 +5532,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 						*'verbose'* *'vbs'*
 'verbose' 'vbs'		number	(default 0)
 			global
-			{not in Vi}
+			{not in Vi, although some versions have a boolean
+			verbose option}
 	When bigger than zero, Vim will give messages about what it is doing.
 	Currently, these messages are given:
 	>= 1	When the viminfo file is read or written.

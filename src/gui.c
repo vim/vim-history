@@ -611,7 +611,12 @@ gui_init_font(font_list, fontset)
 	else
 #endif
 	    gui_mch_set_font(gui.norm_font);
-	gui_set_shellsize(
+#ifdef MSWIN
+	if (gui_mch_maximized())
+	    gui_mch_newfont();
+	else
+#endif
+	    gui_set_shellsize(
 #ifdef MSWIN
 		TRUE
 #else
@@ -2467,7 +2472,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
      * Visual selection.
      */
     if ((State == NORMAL || State == NORMAL_BUSY || (State & INSERT))
-	    && Y_2_ROW(y) >= gui.num_rows - p_ch
+	    && Y_2_ROW(y) >= topframe->fr_height
 	    && button != MOUSE_DRAG
 # ifdef FEAT_MOUSESHAPE
 	    && !drag_status_line

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0aj.  Last change: 2001 Jun 09
+*change.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1580,7 +1580,9 @@ each language, it is defined in a Vim script file in the "indent" directory,
 in one of the directories in 'runtimepath'.
 
 To start using the supplied indent files: >
+
 	:filetype indent on
+
 That's all!  See |:filetype-indent-on|.
 
 If you want to define the indenting for another language, write an indent file

@@ -164,22 +164,24 @@ coladvance2(pos, addspaces, finetune, wcol)
     else
     {
 #ifdef FEAT_VIRTUALEDIT
+	int width = W_WIDTH(curwin) - win_col_off(curwin);
+
 	if ((addspaces || finetune)
 		&& curwin->w_p_wrap
-#ifdef FEAT_VERTSPLIT
+# ifdef FEAT_VERTSPLIT
 		&& curwin->w_width != 0
-#endif
-		&& wcol >= (colnr_T)W_WIDTH(curwin))
+# endif
+		&& wcol >= (colnr_T)width)
 	{
 	    csize = linetabsize(line);
 	    if (csize > 0)
 		csize--;
 
-	    if (wcol / W_WIDTH(curwin) > (colnr_T)csize / W_WIDTH(curwin))
+	    if (wcol / width > (colnr_T)csize / width)
 	    {
 		/* In case of line wrapping don't move the cursor beyond the
 		 * right screen edge. */
-		wcol = (csize / W_WIDTH(curwin) + 1) * W_WIDTH(curwin) - 1;
+		wcol = (csize / width + 1) * width - 1;
 	    }
 	}
 #endif
@@ -1603,6 +1605,8 @@ static struct modmasktable
 #ifdef macintosh
     {MOD_MASK_CMD,		MOD_MASK_CMD,		(char_u)'D'},
 #endif
+    /* 'A' must be the last one */
+    {MOD_MASK_ALT,		MOD_MASK_ALT,		(char_u)'A'},
     {0, 0, NUL}
 };
 
@@ -1876,13 +1880,14 @@ name_to_mod_mask(c)
 {
     int	    i;
 
-    if (c <= 255)	/* avoid TO_UPPER() with number > 255 */
+    if (c > 0 && c <= 255)	/* avoid TO_UPPER() with number > 255 */
     {
+	c = TO_UPPER(c);
 	for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
-	    if (TO_UPPER(c) == mod_mask_table[i].name)
+	    if (c == mod_mask_table[i].name)
 		return mod_mask_table[i].mod_flag;
     }
-    return 0x0;
+    return 0;
 }
 
 #if 0 /* not used */
@@ -2005,7 +2010,7 @@ get_special_key_name(c, modifiers)
     }
 
     /* translate the modifier into a string */
-    for (i = 0; mod_mask_table[i].mod_mask != 0; i++)
+    for (i = 0; mod_mask_table[i].name != 'A'; i++)
 	if ((modifiers & mod_mask_table[i].mod_mask)
 						== mod_mask_table[i].mod_flag)
 	{
@@ -4657,6 +4662,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
     char_u		save_char;
     char_u		*file_name = NULL;
     char_u		*buf = NULL;
+    int			l;
 #ifdef AMIGA
     struct Process	*proc = (struct Process *)FindTask(0L);
     APTR		save_winptr = proc->pr_WindowPtr;
@@ -4720,7 +4726,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 		goto theend;
 	    }
 	    buf = curbuf->b_p_sua;
-	    len = (int)STRLEN(NameBuff);
+	    l = (int)STRLEN(NameBuff);
 	    for (;;)
 	    {
 		if (mch_getperm(NameBuff) >= 0
@@ -4731,7 +4737,7 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 		}
 		if (*buf == NUL)
 		    break;
-		copy_option_part(&buf, NameBuff + len, MAXPATHL - len, ",");
+		copy_option_part(&buf, NameBuff + l, MAXPATHL - l, ",");
 	    }
 	}
     }

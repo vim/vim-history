@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2001 Jun 09
+" Last Change:	2001 Jun 14
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -12,7 +12,7 @@ elseif exists("b:current_syntax")
 endif
 
 syn match helpHeadline		"^[A-Z ]\+[ ]\+\*"me=e-1
-syn match helpSectionDelim	"^=\{3,}.*==$"
+syn match helpSectionDelim	"^=\{3,}.*===$"
 syn match helpSectionDelim	"^-\{3,}.*--$"
 syn region helpExample		matchgroup=helpIgnore start=" >$" start="^>$" end="^[^ \t]"me=e-1 end="^<"
 if has("ebcdic")
@@ -24,7 +24,7 @@ else
   syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*\s"he=e-1
   syn match helpHyperTextEntry	"\*[#-)!+-~]\+\*$"
 endif
-syn match helpNormal		"|.*===*|"
+syn match helpNormal		"|.*====*|"
 syn match helpVim		"Vim version [0-9.a-z]\+"
 syn match helpVim		"VIM REFERENCE.*"
 syn match helpOption		"'[a-z]\{2,\}'"

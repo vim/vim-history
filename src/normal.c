@@ -574,16 +574,7 @@ normal_cmd(oap, toplevel)
     /*
      * Get the command character from the user.
      */
-#if defined(WIN3264) && defined(FEAT_SNIFF)
-    if (sniff_request_waiting)
-    {
-	c = K_SNIFF;
-	sniff_request_waiting = 0;
-	want_sniff_request = 0;
-    }
-    else
-#endif
-	c = safe_vgetc();
+    c = safe_vgetc();
 
 #ifdef FEAT_LANGMAP
     LANGMAP_ADJUST(c, TRUE);
@@ -825,7 +816,7 @@ getcount:
 	int	*cp;
 	int	repl = FALSE;	/* get character for replace mode */
 	int	lit = FALSE;	/* get extra character literally */
-	int	langmap = FALSE;    /* using :lmap mappings */
+	int	langmap_active = FALSE;    /* using :lmap mappings */
 	int	lang;		/* getting a text character */
 
 	++no_mapping;
@@ -871,7 +862,7 @@ getcount:
 		ui_cursor_shape();	/* show different cursor shape */
 	    }
 #endif
-	    if (lang && (curbuf->b_im_insert == B_IMODE_LMAP))
+	    if (lang && curbuf->b_im_insert == B_IMODE_LMAP)
 	    {
 		/* Allow mappings defined with ":lmap". */
 		--no_mapping;
@@ -880,25 +871,29 @@ getcount:
 		    State = LREPLACE;
 		else
 		    State = LANGMAP;
-#ifdef USE_IM_CONTROL
-		im_set_active(curbuf->b_im_insert == B_IMODE_IM);
-#endif
-		langmap = TRUE;
+		langmap_active = TRUE;
 	    }
+#ifdef USE_IM_CONTROL
+	    if (lang && curbuf->b_im_insert == B_IMODE_IM)
+		im_set_active(TRUE);
+#endif
 
 	    *cp = safe_vgetc();
 
-	    if (langmap)
+	    if (langmap_active)
 	    {
 		/* Undo the decrement done above */
 		++no_mapping;
 		++allow_keys;
 		State = NORMAL_BUSY;
-#ifdef USE_IM_CONTROL
-		im_save_status(&curbuf->b_im_insert);
-		im_set_active(0);
-#endif
 	    }
+#ifdef USE_IM_CONTROL
+	    if (lang)
+	    {
+		im_save_status(&curbuf->b_im_insert);
+		im_set_active(FALSE);
+	    }
+#endif
 #ifdef CURSOR_SHAPE
 	    State = NORMAL_BUSY;
 #endif
@@ -1505,7 +1500,8 @@ do_pending_operator(cap, old_col, gui_yank)
 	    else
 	    {
 		oap->motion_type = MCHAR;
-		if (VIsual_mode != Ctrl_V && *ml_get_pos(&(oap->end)) == NUL)
+		if (VIsual_mode != Ctrl_V && *ml_get_pos(&(oap->end)) == NUL
+			&& !virtual_active())
 		{
 		    oap->inclusive = FALSE;
 		    /* Try to include the newline, unless it's an operator
@@ -1516,6 +1512,9 @@ do_pending_operator(cap, old_col, gui_yank)
 		    {
 			++oap->end.lnum;
 			oap->end.col = 0;
+#ifdef FEAT_VIRTULEDIT
+			oap->end.coladd = 0;
+#endif
 			++oap->line_count;
 		    }
 		}
@@ -1962,8 +1961,8 @@ do_mouse(oap, c, dir, count, fix_indent)
     int		c1, c2;
 #if defined(FEAT_FOLDING)
     pos_T	save_cursor = curwin->w_cursor;
-    win_T	*save_curwin = curwin;
 #endif
+    win_T	*old_curwin = curwin;
 #ifdef FEAT_VISUAL
     static pos_T orig_cursor;
     colnr_T	leftcol, rightcol;
@@ -2321,6 +2320,11 @@ do_mouse(oap, c, dir, count, fix_indent)
     in_sep_line = (jump_flags & IN_SEP_LINE);
 #endif
 
+    /* When jumping to another window, clear a pending operator.  That's a bit
+     * friendlier than beeping and not jumping to that window. */
+    if (curwin != old_curwin && oap != NULL && oap->op_type != OP_NOP)
+	clearop(oap);
+
 #ifdef FEAT_FOLDING
     if (mod_mask == 0
 	    && !is_drag
@@ -2333,7 +2337,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	else
 	    closeFold(curwin->w_cursor.lnum, 1L);
 	/* don't move the cursor if still in the same window */
-	if (curwin == save_curwin)
+	if (curwin == old_curwin)
 	    curwin->w_cursor = save_cursor;
     }
 #endif

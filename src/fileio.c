@@ -407,6 +407,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	if (mch_stat((char *)fname, &st) >= 0)
 	{
 	    curbuf->b_mtime = curbuf->b_mtime_read = (long)st.st_mtime;
+	    curbuf->b_orig_size = (size_t)st.st_size;
 #if defined(RISCOS) && defined(FEAT_OSFILETYPE)
 	    /* Read the filetype into the buffer local filetype option. */
 	    mch_read_filetype(fname);
@@ -435,6 +436,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	{
 	    curbuf->b_mtime = 0;
 	    curbuf->b_mtime_read = 0;
+	    curbuf->b_orig_size = 0;
 	}
 
 	/* Reset the "new file" flag.  It will be set again below when the
@@ -3796,6 +3798,8 @@ msg_add_eol()
 
 /*
  * Check modification time of file, before writing to it.
+ * The size isn't checked, because using a tool like "gzip" takes care of
+ * using the same timestamp but can't set the size.
  */
     static int
 check_mtime(buf, st)
@@ -4868,6 +4872,7 @@ buf_check_timestamp(buf, focus)
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
     int		can_reload = FALSE;
 #endif
+    size_t	orig_size = buf->b_orig_size;
 
     /* If there is no file name, the buffer is not loaded, or 'buftype' is
      * set: ignore this buffer. */
@@ -4888,9 +4893,15 @@ buf_check_timestamp(buf, focus)
 
 	/* set b_mtime to stop further warnings */
 	if (stat_res < 0)
+	{
 	    buf->b_mtime = 0;
+	    buf->b_orig_size = 0;
+	}
 	else
+	{
 	    buf->b_mtime = (long)st.st_mtime;
+	    buf->b_orig_size = (size_t)st.st_size;
+	}
 
 	/* Don't do anything for a directory.  Might contain the file
 	 * explorer. */
@@ -4939,7 +4950,8 @@ buf_check_timestamp(buf, focus)
 		     */
 		    if (bufIsChanged(buf))
 			mesg = _("W12: Warning: File \"%s\" has changed and the buffer was changed in Vim as well");
-		    else if (buf_contents_changed(buf))
+		    else if (orig_size != buf->b_orig_size
+			    || buf_contents_changed(buf))
 			mesg = _("W11: Warning: File \"%s\" has changed since editing started");
 		}
 	    }
@@ -5079,9 +5091,7 @@ vim_deltempdir()
 	    FreeWild(file_count, files);
 	}
 	gettail(NameBuff)[-1] = NUL;
-# ifndef VAX	/* temporary fix: VAX doesn't have rmdir() */
 	(void)mch_rmdir(NameBuff);
-# endif
 
 	vim_free(vim_tempdir);
 	vim_tempdir = NULL;

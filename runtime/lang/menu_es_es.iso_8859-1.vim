@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Jun 7
+" Last Change:		2001 Jun 16
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -29,7 +29,7 @@ menutrans &New<Tab>:enew		&Nuevo<Tab>:enew
 menutrans &Close<Tab>:q			&Cerrar<Tab>:q
 menutrans &Save<Tab>:w			&Guardar<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Guardar\ &como\.\.\.<Tab>:sav
-menutrans Show\ &Diff\ with\.\.\.	&Mostrar\ diferencias\ con\.\.\.
+menutrans Split\ &Diff\ with\.\.\.	&Mostrar\ diferencias\ con\.\.\.
 menutrans &Print			&Imprimir
 menutrans Sa&ve-Exit<Tab>:wqa		Gua&rdar\ y\ salir<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Salir<Tab>:qa
@@ -76,9 +76,12 @@ menutrans Ta&g\ Files\.\.\.		Ficheros\ de\ «ta&gs»\.\.\.
 
 " GUI options
 menutrans Toggle\ &Toolbar		Ocultar/Mostrar\ barra\ de\ &herramientas
-menutrans Toggle\ &Bottom\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desp&lazamiento\ inferior
-menutrans Toggle\ &Left\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desp&lazamiento\ i&zquierda
+menutrans Toggle\ &Bottom\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ &inferior
+menutrans Toggle\ &Left\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ i&zquierda
 menutrans Toggle\ &Right\ Scrollbar	Ocultar/Mostrar\ barra\ de\ desplazamiento\ &derecha
+
+let g:menutrans_path_dialog = "Introduzca la ruta de búsqueda para los ficheros.\nSepare los nombres de los directorios con una coma."
+let g:menutrans_tags_dialog = "Introduzca los nombres de los fichero de tags.\nSepare los nombres con una coma."
 
 " Edit/File Settings
 menutrans F&ile\ Settings		Opciones\ del\ &fichero
@@ -98,6 +101,7 @@ menutrans &Shiftwidth	 		Anchura\ del\ &sangrado
 menutrans Soft\ &Tabstop		&Tabulado\ suave
 
 menutrans Te&xt\ Width\.\.\. 		Anchura\ del\ te&xto\.\.\.
+let g:menutrans_textwidth_dialog = "Introduzca la nueva anchura del texto (0 para desactivar el formateo): "
 
 menutrans &File\ Format\.\.\.		&Formato\ del\ fichero\.\.\.
 let g:menutrans_fileformat_dialog = "Seleccione el formato para escribir el fichero"
@@ -189,8 +193,8 @@ menutrans Select\ &Line		Seleccionar\ una\ &línea
 menutrans Select\ &Block	Seleccionar\ un\ &bloque
 menutrans Select\ &All		Seleccionar\ &todo
  
-" The GUI toolbar (for Win32 or GTK)
-if has("win32") || has("gui_gtk")
+" The GUI toolbar (for Win32, GTK, Motif or Athena)
+if has("toolbar")
   if exists("*Do_toolbar_tmenu")
     delfun Do_toolbar_tmenu
   endif

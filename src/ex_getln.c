@@ -826,9 +826,13 @@ getcmdline(firstc, count, indent)
 #ifdef FEAT_CLIPBOARD
 	case Ctrl_Y:
 		/* Copy the modeless selection, if there is one. */
-		if (clip_star.state == SELECT_DONE)
-		    clip_copy_modeless_selection(TRUE);
-		goto cmdline_not_changed;
+		if (clip_star.state != SELECT_CLEARED)
+		{
+		    if (clip_star.state == SELECT_DONE)
+			clip_copy_modeless_selection(TRUE);
+		    goto cmdline_not_changed;
+		}
+		break;
 #endif
 
 	case ESC:	/* get here if p_wc != ESC or when ESC typed twice */
@@ -2544,17 +2548,7 @@ ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
 #endif
 		    }
 		}
-		p = vim_strsave_escaped(cmd_files[i],
-#ifdef BACKSLASH_IN_FILENAME
-			(char_u *)" *?[{`%#"
-#else
-# ifdef COLON_AS_PATHSEP
-			(char_u *)" *?[{`$%#/"
-# else
-			(char_u *)" *?[{`$\\%#'\"|"
-# endif
-#endif
-				       );
+		p = vim_strsave_escaped(cmd_files[i], PATH_ESC_CHARS);
 		if (p != NULL)
 		{
 		    vim_free(cmd_files[i]);

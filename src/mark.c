@@ -1214,7 +1214,7 @@ removable(name)
 	{
 	    copy_option_part(&p, part, 51, ", ");
 	    if (part[0] == 'r'
-			   && STRNICMP(part + 1, name, STRLEN(part + 1)) == 0)
+			&& MB_STRNICMP(part + 1, name, STRLEN(part + 1)) == 0)
 	    {
 		retval = TRUE;
 		break;

@@ -1,4 +1,4 @@
-*multilang.txt* For Vim version 6.0aj.  Last change: 2001 Jun 01
+*multilang.txt* For Vim version 6.0ak.  Last change: 2001 Jun 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

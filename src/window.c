@@ -3159,13 +3159,19 @@ win_free_lsize(wp)
     void
 shell_new_rows()
 {
+    int		h = (int)(Rows - p_ch);
+
     if (firstwin == NULL)	/* not initialized yet */
 	return;
 #ifdef FEAT_WINDOWS
-    frame_new_height(topframe, (int)(Rows - p_ch), FALSE);
+    if (h < frame_minheight(topframe, NULL))
+	h = frame_minheight(topframe, NULL);
+    frame_new_height(topframe, h, FALSE);
     (void)win_comp_pos();		/* recompute w_winrow and w_wincol */
 #else
-    win_new_height(firstwin, (int)(Rows - p_ch));
+    if (h < 1)
+	h = 1;
+    win_new_height(firstwin, h);
 #endif
     compute_cmdrow();
 #if 0
@@ -3354,8 +3360,8 @@ win_setheight_win(height, win)
     /* recompute the window positions */
     row = win_comp_pos();
 #else
-    if (height > Rows - p_ch)
-	height = Rows - p_ch;
+    if (height > topframe->fr_height)
+	height = topframe->fr_height;
     win->w_height = height;
     row = height;
 #endif
@@ -3412,7 +3418,8 @@ frame_setheight(curfrp, height)
 	/* topframe: can only change the command line */
 	if (height > Rows - p_ch)
 	    height = Rows - p_ch;
-	frame_new_height(curfrp, height, FALSE);
+	if (height > 0)
+	    frame_new_height(curfrp, height, FALSE);
     }
     else if (curfrp->fr_parent->fr_layout == FR_ROW)
     {
@@ -3464,8 +3471,12 @@ frame_setheight(curfrp, height)
 		room_cmdline = 0;
 	    else
 #endif
+	    {
 		room_cmdline = Rows - p_ch - (lastwin->w_winrow
 			       + lastwin->w_height + lastwin->w_status_height);
+		if (room_cmdline < 0)
+		    room_cmdline = 0;
+	    }
 
 	    if (height <= room + room_cmdline)
 		break;
@@ -3762,13 +3773,12 @@ win_drag_status_line(offset)
 	}
     }
 
-    /* If this is the last frame in a column, may want to resize a parent
-     * frame instead. */
-    while (curfr->fr_next == NULL)
+    /* If this is the last frame in a column, may want to resize the parent
+     * frame instead (go two up to skip a row of frames). */
+    while (curfr != topframe && curfr->fr_next == NULL)
     {
-	if (fr == topframe)
-	    break;
-	fr = fr->fr_parent;
+	if (fr != topframe)
+	    fr = fr->fr_parent;
 	curfr = fr;
 	if (fr != topframe)
 	    fr = fr->fr_parent;
@@ -3807,6 +3817,8 @@ win_drag_status_line(offset)
 	    room -= 1;
 	else
 	    room -= p_ch;
+	if (room < 0)
+	    room = 0;
 	/* sum up the room of frames below of the current one */
 	for (fr = curfr->fr_next; fr != NULL; fr = fr->fr_next)
 	    room += fr->fr_height - frame_minheight(fr, NULL);
@@ -3855,6 +3867,8 @@ win_drag_status_line(offset)
     screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ', 0);
     cmdline_row = row;
     p_ch = Rows - cmdline_row;
+    if (p_ch < 1)
+	p_ch = 1;
     redraw_all_later(NOT_VALID);
     showmode();
 }
@@ -4539,7 +4553,7 @@ min_rows()
     if (firstwin == NULL)	/* not initialized yet */
 	return MIN_LINES;
 
-    total = p_ch;	/* count the room for the status line */
+    total = 1;		/* count the room for the command line */
 #ifdef FEAT_WINDOWS
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	total += p_wmh + W_STATUS_HEIGHT(wp);

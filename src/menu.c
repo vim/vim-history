@@ -67,6 +67,7 @@ static char_u e_notsubmenu[] = N_("E327: Part of menu-item path is not sub-menu"
 static char_u e_othermode[] = N_("E328: Menu only exists in another mode");
 static char_u e_nomenu[] = N_("E329: No menu of that name");
 
+#ifdef FEAT_TOOLBAR
 static const char *toolbar_names[] =
 {
     /*  0 */ "New", "Open", "Save", "Undo", "Redo",
@@ -77,7 +78,8 @@ static const char *toolbar_names[] =
     /* 25 */ "Make", "TagJump", "RunCtags", "WinVSplit", "WinMaxWidth",
     /* 30 */ "WinMinWidth", "Exit"
 };
-#define TOOLBAR_NAME_COUNT (sizeof(toolbar_names) / sizeof(char *))
+# define TOOLBAR_NAME_COUNT (sizeof(toolbar_names) / sizeof(char *))
+#endif
 
 /*
  * Do the :menu command and relatives.
@@ -358,7 +360,12 @@ ex_menu(eap)
 	map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
 	add_menu_path(menu_path, modes, pri_tab,
 #ifdef FEAT_GUI
-		gui_menu_cb, icon, iconidx, icon_builtin,
+		gui_menu_cb,
+# ifdef FEAT_TOOLBAR
+		icon, iconidx, icon_builtin,
+# else
+		NULL, -1, FALSE,
+# endif
 #endif
 		map_to, noremap
 #ifdef FEAT_GUI_W32
@@ -380,7 +387,7 @@ ex_menu(eap)
 			/* Include all modes, to make ":amenu" work */
 			add_menu_path(p, modes, pri_tab,
 #ifdef FEAT_GUI
-				gui_menu_cb, NULL, iconidx, icon_builtin,
+				gui_menu_cb, NULL, -1, FALSE,
 #endif
 				map_to, noremap
 #ifdef FEAT_GUI_W32

@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0aj.  Last change: 2001 Jun 03
+*os_vms.txt*    For Vim version 6.0ak.  Last change: 2001 Jun 12
 
 
 		  VIM REFERENCE MANUAL
@@ -385,7 +385,15 @@ Example: Instead of :%!xxd command use: >
 ... or in general: >
 	:!mc <path>filename <parameters>
 
-Note: from version 6.0 you can use XXD, and CTAGS from GUI menu.
+Note: You can use XXD, and CTAGS from GUI menu.
+
+To customise ctags it is possible to define logical $CTAGS with standard 
+parameters as: >
+
+	define/nolog CTAGS "--totals -o sys$login:tags"
+
+For additional information, please read :help tagsearch and CTAGS
+documentation at http://ctags.sourceforge.net/ctags.html.
 
 (Zoltan Arpadffy, <arpadffy@altavista.net> Vim 5.6-70)
 

@@ -1779,8 +1779,11 @@ op_replace(oap, c)
 		n = (bd.startspaces ? bd.start_char_vcols - 1 : 0);
 
 	    /* allow for post spp */
-	    n += (bd.endspaces && !bd.is_oneChar && bd.end_char_vcols > 0
-						 ? bd.end_char_vcols - 1 : 0);
+	    n += (bd.endspaces
+#ifdef FEAT_VIRTUALEDIT
+		    && !bd.is_oneChar
+#endif
+		    && bd.end_char_vcols > 0 ? bd.end_char_vcols - 1 : 0);
 	    n += (oap->end_vcol - oap->start_vcol) - bd.textlen + 1;
 
 	    oldp = ml_get_curline();
@@ -2027,7 +2030,19 @@ swapchar(op_type, pos)
     }
     if (nc != c)
     {
-	pchar(*pos, nc);
+#ifdef FEAT_MBYTE
+	if (enc_utf8 && (c >= 0x80 || nc >= 0x80))
+	{
+	    pos_T   sp = curwin->w_cursor;
+
+	    curwin->w_cursor = *pos;
+	    del_char(FALSE);
+	    ins_char(nc);
+	    curwin->w_cursor = sp;
+	}
+	else
+#endif
+	    pchar(*pos, nc);
 	return TRUE;
     }
     return FALSE;
@@ -2362,7 +2377,6 @@ op_yank(oap, deleting, mess)
     char_u		**new_ptr;
     linenr_T		lnum;		/* current line number */
     long		j;
-    long		len;
     int			yanktype = oap->motion_type;
     long		yanklines = oap->line_count;
     linenr_T		yankendlnum = oap->end.lnum;
@@ -2429,89 +2443,124 @@ op_yank(oap, deleting, mess)
     y_idx = 0;
     lnum = oap->start.lnum;
 
-    /*
-     * Visual block mode
-     */
     if (oap->block_mode)
     {
+	/* Visual block mode */
 	y_current->y_type = MBLOCK;	    /* set the yank register type */
 	y_current->y_width = oap->end_vcol - oap->start_vcol;
 
 	if (curwin->w_curswant == MAXCOL && y_current->y_width > 0)
 	    y_current->y_width--;
-
-	for ( ; lnum <= yankendlnum; ++lnum)
-	{
-	    block_prep(oap, &bd, lnum, FALSE);
-
-	    if ((pnew = alloc(bd.startspaces + bd.endspaces +
-					  bd.textlen + 1)) == NULL)
-		goto fail;
-	    y_current->y_array[y_idx++] = pnew;
-
-	    copy_spaces(pnew, (size_t)bd.startspaces);
-	    pnew += bd.startspaces;
-
-	    mch_memmove(pnew, bd.textstart, (size_t)bd.textlen);
-	    pnew += bd.textlen;
-
-	    copy_spaces(pnew, (size_t)bd.endspaces);
-	    pnew += bd.endspaces;
-
-	    *pnew = NUL;
-	}
     }
-    else
+
+    for ( ; lnum <= yankendlnum; lnum++, y_idx++)
     {
-	/*
-	 * there are three parts for non-block mode:
-	 * 1. if yanktype != MLINE yank last part of the top line
-	 * 2. yank the lines between op_start and op_end, inclusive when
-	 *    yanktype == MLINE
-	 * 3. if yanktype != MLINE yank first part of the bot line
-	 */
-	if (yanktype != MLINE)
+	switch (y_current->y_type)
 	{
-	    if (yanklines == 1)	    /* op_start and op_end on same line */
-	    {
-		j = oap->end.col - oap->start.col + 1 - !oap->inclusive;
-		/* Watch out for very big endcol (MAXCOL) */
-		p = ml_get(lnum) + oap->start.col;
-		len = (long)STRLEN(p);
-		if (j > len || j < 0)
-		    j = len;
-		if ((y_current->y_array[0] = vim_strnsave(p, (int)j)) == NULL)
+	    case MBLOCK:
+		block_prep(oap, &bd, lnum, FALSE);
+copyline:
+		if ((pnew = alloc(bd.startspaces + bd.endspaces
+						   + bd.textlen + 1)) == NULL)
 		{
-fail:
-		    /* free the allocated lines */
-		    free_yank(y_idx);
+fail:		     /* free the allocated lines */
+		    free_yank(y_idx + 1);
 		    y_current = curr;
 		    return FAIL;
 		}
-		goto success;
-	    }
-	    if ((y_current->y_array[0] =
-			vim_strsave(ml_get(lnum++) + oap->start.col)) == NULL)
-		goto fail;
-	    ++y_idx;
-	}
+		y_current->y_array[y_idx] = pnew;
+		copy_spaces(pnew, (size_t)bd.startspaces);
+		pnew += bd.startspaces;
+		mch_memmove(pnew, bd.textstart, (size_t)bd.textlen);
+		pnew += bd.textlen;
+		copy_spaces(pnew, (size_t)bd.endspaces);
+		pnew += bd.endspaces;
+		*pnew = NUL;
+		break;
 
-	while (yanktype == MLINE ? (lnum <= yankendlnum) : (lnum < yankendlnum))
-	{
-	    if ((y_current->y_array[y_idx] =
-					 vim_strsave(ml_get(lnum++))) == NULL)
-		goto fail;
-	    ++y_idx;
-	}
-	if (yanktype != MLINE)
-	{
-	    if ((y_current->y_array[y_idx] = vim_strnsave(ml_get(yankendlnum),
-				 oap->end.col + 1 - !oap->inclusive)) == NULL)
-		goto fail;
+	    case MLINE:
+		if ((y_current->y_array[y_idx] =
+			    vim_strsave(ml_get(lnum))) == NULL)
+		    goto fail;
+		break;
+
+	    case MCHAR:
+		{
+		    colnr_T startcol = 0, endcol = MAXCOL;
+#ifdef FEAT_VIRTUALEDIT
+		    int is_oneChar = FALSE;
+		    colnr_T cs, ce;
+#endif
+		    p = ml_get(lnum);
+		    bd.startspaces = 0;
+		    bd.endspaces = 0;
+
+		    if (lnum == oap->start.lnum)
+		    {
+			startcol = oap->start.col;
+#ifdef FEAT_VIRTUALEDIT
+			if (virtual_active())
+			{
+			    getvcol(curwin, &oap->start, &cs, NUL, &ce);
+			    if (ce != cs && oap->start.coladd > 0)
+			    {
+				/* Part of a tab selected -- but don't
+				 * double-count it. */
+				bd.startspaces = (ce - cs + 1)
+				    - oap->start.coladd;
+				startcol++;
+			    }
+			}
+#endif
+		    }
+
+		    if (lnum == oap->end.lnum)
+		    {
+			endcol = oap->end.col;
+#ifdef FEAT_VIRTUALEDIT
+			if (virtual_active())
+			{
+			    getvcol(curwin, &oap->end, &cs, NUL, &ce);
+			    if (p[endcol] == NUL || cs + oap->end.coladd < ce)
+			    {
+				/* Special case: inside a single char */
+				if (oap->start.lnum == oap->end.lnum
+					    && oap->start.col == oap->end.col)
+				{
+				    is_oneChar = TRUE;
+				    bd.startspaces = oap->end.coladd
+					 - oap->start.coladd + oap->inclusive;
+				    endcol = startcol;
+				}
+				else
+				{
+				    bd.endspaces = oap->end.coladd
+							     + oap->inclusive;
+				    endcol--;
+				}
+			    }
+			}
+#endif
+		    }
+		    if (startcol > endcol
+#ifdef FEAT_VIRTUALEDIT
+			    || is_oneChar
+#endif
+			    )
+			bd.textlen = 0;
+		    else
+		    {
+			if (endcol == MAXCOL)
+			    endcol = STRLEN(p);
+			bd.textlen = endcol - startcol + oap->inclusive;
+		    }
+		    bd.textstart = p + startcol;
+		    goto copyline;
+		}
+		/* NOTREACHED */
 	}
     }
 
-success:
     if (curr != y_current)	/* append the new block to the old block */
     {
 	new_ptr = (char_u **)lalloc((long_u)(sizeof(char_u *) *

@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0aj.  Last change: 2001 Jun 09
+*usr_toc.txt*	For Vim version 6.0ak.  Last change: 2001 Jun 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -41,8 +41,8 @@ Editing Effectively
 |usr_31.txt|  Exploiting the GUI
 
 Tuning Vim
-|usr_40.txt|  Write a Vim script
-|usr_41.txt|  Make new commands
+|usr_40.txt|  Make new commands
+|usr_41.txt|  Write a Vim script
 |usr_42.txt|  Add new menus
 |usr_43.txt|  Using filetypes
 |usr_44.txt|  Your own syntax highlighted
@@ -239,71 +239,52 @@ Subjects that can be read independently.
 		|28.10| Which fold method to use?
 
 |usr_29.txt|  Moving through programs
-		tags (chap 7) link to 'tagbsearch' and 'taglength'
-			example: edit tags file, map <Enter> to show match in
-			other window)
-			:ts
-			ctags -R .
-			'tags'
-		tag preview, preview window
-			mention cscope
-			mention sniff
-		Moving through programs
-			"%" on #if-#endif
-			[{, [#, [m and [(  (chap 23)
-		finding indentifiers
-			"[I", ]D
-			:checkpath (chap 23) link to 'include' and 'define'
-			"gd", "gD"
+		|29.1|	Using tags
+		|29.2|	The preview window
+		|29.3|	Moving through a program
+		|29.4|	Finding global identifiers
+		|29.5|	Finding local identifiers
 
 |usr_30.txt|  Editing programs
-		Compiling
-			:make (chap 7)
-			:cn
-			:colder (chap 23)
-			a few hints how to set 'errorformat' (escape comma).
-			link to 'makeprg' and 'errorformat'
-		indenting
-			">>", "<<", ">%"
-			'ts', 'sts', 'sw'
-			'cindent', 'smartindent', link to 'cinoptions'
-			"="
-			indent files
-		formatting comments, link to 'comments'
+		|30.1|	Compiling
+		|30.2|	Indenting C files
+		|30.3|	Automatic indenting
+		|30.4|	Other indenting
+		|30.5|	Tabs and spaces
+		|30.6|	Formatting comments
 
 |usr_31.txt|  Exploiting the GUI
-		:browse (chap 26)
-		:confirm (chap 26)
-		menu shortcuts
-		:winpos
-		:set 'lines' and 'columns'
+		|31.1|	The file browser
+		|31.2|	Confirmation
+		|31.3|	Menu shortcuts
+		|31.4|	Vim window position and size
 
 ==============================================================================
 Tuning Vim ~
 
 Make Vim work as you like it.
 
-|usr_40.txt|  Write a Vim script (chap 27 but shorter)
-		|40.1|	Introduction
-		|40.2|	Expressions, variables, ":echo"
-		|40.3|	If and while
-			:sleep
-		|40.4|	Using :execute
-		|40.5|	Functions, user functions
-		|40.6|	Autocommands (chap 13)
-		|40.7|	Writing a plugin
-		|40.8|	Writing a filetype plugin
+|usr_40.txt|  Make new commands
+		|40.1|	Key mapping
+		|40.2|	Defining command-line commands
+		|40.3|	Autocommands
 
-|usr_41.txt|  Make new commands
-		mappings (chap 8) (chap 24)
-		user commands (chap 27)
-		:normal
-		|restore-position|
+|usr_41.txt|  Write a Vim script
+		|41.1|	Introduction
+		|41.2|	Variables
+		|41.3|	Expressions
+		|41.4|	Conditionals
+		|41.5|	Executing an expression
+		|41.6|	Using functions
+		|41.7|	Defining a function
+		|41.8|	Writing a plugin
+		|41.9|	Writing a filetype plugin
+		|41.10|	Writing a compiler plugin
 
 |usr_42.txt|  Add new menus (chap 26)
 		add a toolbar item
 		tooltips (chap 26)
-		:browse and :confirm
+		using :browse and :confirm
 
 |usr_43.txt|  Using filetypes
 		|43.1|  Settings for a filetype

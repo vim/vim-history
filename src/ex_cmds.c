@@ -3696,7 +3696,15 @@ do_sub(eap)
 		    setmouse();
 #endif
 		    if (i == 'n')
+		    {
+			/* For a multi-line match, put matchcol at the NUL at
+			 * the end of the line, so that we continue looking
+			 * for a match on the next line.  Avoids that
+			 * ":s/\n//gc" get stuck. */
+			if (nmatch > 1)
+			    matchcol = STRLEN(sub_firstline);
 			goto skip;
+		    }
 		    if (got_quit)
 			break;
 		}

@@ -505,19 +505,14 @@ VIM_init()
 {
     static char cw[] = "main::curwin";
     static char cb[] = "main::curbuf";
-    MAGIC *m;
     SV *sv;
 
     sv = perl_get_sv(cw, TRUE);
-    sv_magic(sv, NULL, 'U', cw, strlen(cw));
-    m = mg_find(sv, 'U');
-    m->mg_ptr = (char *)&cw_funcs;
+    sv_magic(sv, NULL, 'U', (char *)&cw_funcs, sizeof(cw_funcs));
     SvREADONLY_on(sv);
 
     sv = perl_get_sv(cb, TRUE);
-    sv_magic(sv, NULL, 'U', cb, strlen(cb));
-    m = mg_find(sv, 'U');
-    m->mg_ptr = (char *)&cb_funcs;
+    sv_magic(sv, NULL, 'U', (char *)&cb_funcs, sizeof(cb_funcs));
     SvREADONLY_on(sv);
 }
 
