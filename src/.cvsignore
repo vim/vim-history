@@ -6,3 +6,4 @@ vimres.res
 gobj
 obj
 pathdef.c
+.arch-ids
