@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.2.  Last change: 2003 May 10
+*starting.txt*  For Vim version 6.2.  Last change: 2004 Apr 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -530,10 +530,19 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		restoring the session on login.  See |gui-gnome-session|
 		{not in Vi}
 
+-P {parent-title}					*-P*
+		Win32 only: Specify the title of the parent application.  When
+		possible, Vim will run in an MDI window inside the
+		application.
+		{parent-title} must appear in the window title of the parent
+		application.  Make sure that it is specific enough.
+
 -nb							*-nb*
+-nb={fname}
 -nb:{hostname}:{addr}:{password}
 		Attempt connecting to Netbeans and become an editor server for
-		it.  The second form specifies the hostname, address and
+		it.  The second form specifies a file to read connection info
+		from.  The third form specifies the hostname, address and
 		password for connecting to Netbeans. |netbeans-run|
 
 Example for using a script file to change a name in several files:
