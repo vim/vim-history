@@ -1562,7 +1562,7 @@ test check:
 	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET) VIMPROG=../$(VIMTARGET)
 
 testclean:
-	-rm -f testdir/*.out testdir/test.log
+	cd testdir; $(MAKE) -f Makefile clean
 
 #
 # Avoid overwriting an existing executable, somebody might be running it and
