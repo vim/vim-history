@@ -274,6 +274,9 @@
 /* Define if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
+/* Define if you have the <Xm/Xm.h> header file (only used by configure). */
+#undef HAVE_XM_XM_H
+
 /* Define if strings.h cannot be included when strings.h already is */
 #undef NO_STRINGS_WITH_STRING_H
 

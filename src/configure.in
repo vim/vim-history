@@ -940,13 +940,16 @@ AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
 	unistd.h stropts.h errno.h strings.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
-	poll.h sys/poll.h pwd.h utime.h sys/param.h)
+	poll.h sys/poll.h pwd.h utime.h sys/param.h Xm/Xm.h)
 
 dnl Check if strings.h and string.h can both be included when defined.
 AC_MSG_CHECKING([if strings.h can be included after string.h])
 AC_TRY_COMPILE([
 #if defined(_AIX) && !defined(_NO_PROTO)
 # define _NO_PROTO	/* like in os_unix.h, causes conflict for AIX (Winn) */
+#endif
+#ifdef HAVE_XM_XM_H
+# include <Xm/Xm.h>	/* This breaks it for HP-UX 11 (Squassabia) */
 #endif
 #ifdef HAVE_STRING_H
 # include <string.h>
