@@ -2930,6 +2930,7 @@ current_word(oap, count, include, bigword)
     pos_T	start_pos;
     pos_T	pos;
     int		inclusive = TRUE;
+    int		include_white = FALSE;
 
     cls_bigword = bigword;
 
@@ -2977,26 +2978,7 @@ current_word(oap, count, include, bigword)
 		oneleft();
 
 	    if (include)
-	    {
-		/*
-		 * If we don't include white space at the end, move the start
-		 * to include some white space there. This makes "daw" work
-		 * better on the last word in a sentence. Don't delete white
-		 * space at start of line (indent).
-		 */
-		if (cls() != 0)
-		{
-		    pos = curwin->w_cursor;	/* save cursor position */
-		    curwin->w_cursor = start_pos;
-		    if (oneleft() == OK)
-		    {
-			back_in_line();
-			if (cls() == 0 && curwin->w_cursor.col > 0)
-			    start_pos = curwin->w_cursor;
-		    }
-		    curwin->w_cursor = pos;	/* put cursor back at end */
-		}
-	    }
+		include_white = TRUE;
 	}
 
 #ifdef FEAT_VISUAL
@@ -3068,6 +3050,33 @@ current_word(oap, count, include, bigword)
 	}
 	--count;
     }
+
+    if (include_white && cls() != 0)
+    {
+	/*
+	 * If we don't include white space at the end, move the start
+	 * to include some white space there. This makes "daw" work
+	 * better on the last word in a sentence (and "2daw" on last-but-one
+	 * word).  But don't delete white space at start of line (indent).
+	 */
+	pos = curwin->w_cursor;	/* save cursor position */
+	curwin->w_cursor = start_pos;
+	if (oneleft() == OK)
+	{
+	    back_in_line();
+	    if (cls() == 0 && curwin->w_cursor.col > 0)
+	    {
+#ifdef FEAT_VISUAL
+		if (VIsual_active)
+		    VIsual = curwin->w_cursor;
+		else
+#endif
+		    oap->start = curwin->w_cursor;
+	    }
+	}
+	curwin->w_cursor = pos;	/* put cursor back at end */
+    }
+
 #ifdef FEAT_VISUAL
     if (VIsual_active)
     {
