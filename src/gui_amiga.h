@@ -33,7 +33,7 @@ enum event {
     ev_IntuiTicks,
     ev_MenuHelp,
     ev_GadgetHelp,
-    
+
     ev_Ignore
 };
 

@@ -2,7 +2,7 @@
 " Author:	    Nikolai Weibull <lone-star@home.se>
 " URL:		    http://www.pcppopper.org/
 " Latest Revision:  2003-07-24
-" Color definition coloring implemented my Mikolaj Machowski <mikmach@wp.pl> 
+" Color definition coloring implemented my Mikolaj Machowski <mikmach@wp.pl>
 
 if version < 600
     syntax clear
@@ -75,7 +75,7 @@ if version >= 508 || !exists("did_dircolors_syn_inits")
 
     HiDef dircolors01		term=bold cterm=bold gui=bold
     HiDef dircolors04		term=underline cterm=underline gui=underline
-"    HiDef dircolors05		
+"    HiDef dircolors05
     HiDef dircolors07		term=reverse cterm=reverse gui=reverse
     HiLink dircolors08		Ignore
     HiDef dircolors30		ctermfg=Black guifg=Black

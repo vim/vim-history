@@ -160,7 +160,7 @@ get_buffcont(buffer, dozero)
     char_u	    *str;
     struct buffblock *bp;
 
-/* compute the total length of the string */
+    /* compute the total length of the string */
     for (bp = buffer->bh_first.b_next; bp != NULL; bp = bp->b_next)
 	count += (long_u)STRLEN(bp->b_str);
 

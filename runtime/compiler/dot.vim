@@ -1,7 +1,7 @@
 " Vim compiler file
-" Compiler:     ATT dot	
+" Compiler:     ATT dot
 " Maintainer:	Marcos Macedo <bar4ka@bol.com.br>
-" Last Change:	2004 Mar 27
+" Last Change:	2004 May 16
 
 if exists("current_compiler")
   finish

@@ -5,7 +5,7 @@
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
-    
+
 " Make sure the continuation lines below do not cause problems in
 " compatibility mode.
 let s:save_cpo = &cpo

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	grads (GrADS scripts)
 " Maintainer:	Stefan Fronzek (sfronzek at gmx dot net)
-" Last change: 13 Feb 2004	
+" Last change: 13 Feb 2004
 
 " Grid Analysis and Display System (GrADS); http://grads.iges.org/grads
 " This syntax file defines highlighting for only very few features of

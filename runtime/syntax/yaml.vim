@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    YAML (YAML Ain't Markup Language) 
+" Language:	    YAML (YAML Ain't Markup Language)
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/yaml/
 " Latest Revision:  2004-04-20
@@ -25,8 +25,8 @@ syn match   yamlAnchor	'&.\+'
 " Aliases (4.3.7)
 syn match   yamlAlias	'\*.\+'
 
-" Operators, Blocks, Keys, and Delimiters 
-syn match   yamlDelimiter   '[-,:]' 
+" Operators, Blocks, Keys, and Delimiters
+syn match   yamlDelimiter   '[-,:]'
 syn match   yamlBlock	    '[\[\]{}>|]'
 syn match   yamlOperator    '[?+-]'
 syn match   yamlKey	    '\w\+\(\s\+\w\+\)*\ze\s*:'
@@ -43,7 +43,7 @@ syn match   yamlEscape	'\\\%(\r\n\|[\r\n]\)'
 syn match   yamlSingleEscape contained +''+
 
 " Numbers
-" TODO: sexagecimal and fixed (20:30.15 and 1,230.15) 
+" TODO: sexagecimal and fixed (20:30.15 and 1,230.15)
 syn match   yamlNumber	'[+-]\=\d\+\%(\.\d\+\%([eE][+-]\=\d\+\)\=\)\='
 syn match   yamlNumber	'0\o\+'
 syn match   yamlNumber	'0x\x\+'
@@ -51,13 +51,13 @@ syn match   yamlNumber	'([+-]\=[iI]nf)'
 syn match   yamlNumber	'(NaN)'
 
 " Constants
-syn match   yamlConstant    '\<[~yn]\>' 
+syn match   yamlConstant    '\<[~yn]\>'
 syn keyword yamlConstant    true True TRUE false False FALSE
 syn keyword yamlConstant    yes Yes on ON no No off OFF
 syn keyword yamlConstant    null Null NULL nil Nil NIL
 
 " Timestamps
-syn match   yamlTimestamp   '\d\d\d\d-\%(1[0-2]\|\d\)-\%(3[0-2]\|2\d\|1\d\|\d\)\%( \%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\d\d [+-]\%([01]\d\|2[0-3]\):[0-5]\d\|t\%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\d\d[+-]\%([01]\d\|2[0-3]\):[0-5]\d\|T\%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\dZ\)\=' 
+syn match   yamlTimestamp   '\d\d\d\d-\%(1[0-2]\|\d\)-\%(3[0-2]\|2\d\|1\d\|\d\)\%( \%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\d\d [+-]\%([01]\d\|2[0-3]\):[0-5]\d\|t\%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\d\d[+-]\%([01]\d\|2[0-3]\):[0-5]\d\|T\%([01]\d\|2[0-3]\):[0-5]\d:[0-5]\d.\dZ\)\='
 
 " Documents (4.3.1)
 syn region  yamlDocumentHeader	start='---' end='$' contains=yamlDirective

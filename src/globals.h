@@ -174,9 +174,11 @@ EXTERN int	intr_char INIT(= 0);	    /* extra interrupt character */
 #endif
 #if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
 EXTERN int	x_no_connect INIT(= FALSE); /* don't connect to X server */
+# if defined(FEAT_CLIENTSERVER)
 EXTERN int	x_force_connect INIT(= FALSE); /* Do connect to X server.
 						  Overrules x_no_connect and
 						  "exclude" in 'clipboard'. */
+# endif
 #endif
 EXTERN int	vgetc_busy INIT(= FALSE);   /* inside vgetc() now */
 

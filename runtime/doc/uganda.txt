@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.3a.  Last change: 2004 Jan 05
+*uganda.txt*    For Vim version 6.3b.  Last change: 2004 May 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -135,8 +135,8 @@ District.  The population is mostly farmers.  Although people are poor, there
 is enough food.  But this district is suffering from AIDS more than any other
 part of the world.  Some say that it started there.  Estimations are that 10
 to 30% of the Ugandans are infected with HIV.  Because parents die, there are
-many orphans.  In this district about 60.000 children have lost one or both
-parents, out of a population of 350.000.  And this is still continuing.
+many orphans.  In this district about 60,000 children have lost one or both
+parents, out of a population of 350,000.  And this is still continuing.
 
 The children need a lot of help.  The KCC is working hard to provide the needy
 with food, medical care and education.  Food and medical care to keep them

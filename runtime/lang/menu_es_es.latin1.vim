@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Alejandro López-Valencia <dradul@yahoo.com>
-" Last Change:		2003 Apr 26
+" Last Change:		2004 May 12
 "
 
 " Quit when menu translations have already been done.
@@ -25,6 +25,7 @@ menutrans &Find\.\.\.		&Buscar\ en\ la\ ayuda
 menutrans &Credits		&Reconocimientos
 menutrans O&rphans		Ayude\ a\ los\ niños\ &huérfanos
 menutrans Co&pying		&Términos\ de\ Licencia
+menutrans Sponsor/Register	Benefactor/Regístrese
 menutrans &Version		&Versión\ e\ \información\ de\ configuración
 menutrans &About		&Acerca\ de\ Vim.
 
@@ -163,7 +164,7 @@ menutrans &Previous\ Error<Tab>:cp	Error\ p&revio<Tab>:cp
 menutrans &Older\ List<Tab>:cold	Lista\ de\ &viejos\ a\ nuevos<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ de\ &nuevos\ a\ viejos<Tab>:cnew
 menutrans Error\ &Window		Ven&tana\ de\ errores
-menutrans &Set\ Compiler		Esco&ger\ el\ compilador
+menutrans &Set\ Compiler		Esco&ger\ el\ compilador\ a\ usar
 menutrans &Convert\ to\ HEX<Tab>:%!xxd	Convertir\ a\ formato\ &hexadecimal<Tab>:%!xxd
 menutrans Conve&rt\ back<Tab>:%!xxd\ -r	&Convertir\ al\ formato\ original<Tab>:%!xxd\ -r
 

@@ -229,6 +229,7 @@ CON_LIB = $(CON_LIB) /DELAYLOAD:comdlg32.dll /DELAYLOAD:ole32.dll DelayImp.lib
 !endif
 
 ### Set the default $(WINVER) to make it work with VC++7.0 (VS.NET)
+#  When set to 0x0500 ":browse" stops working.
 !ifndef WINVER
 WINVER = 0x0400
 !endif

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.3a.  Last change: 2004 May 06
+*version6.txt*  For Vim version 6.3b.  Last change: 2004 May 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -5015,8 +5015,8 @@ Solution:   Search the icon file using the specified path.  Expand environment
 Files:	    src/gui_gtk.c, src/gui_x11.c
 
 Patch 6.0.203
-Problem:    Can change 'fileformat' even though 'modifiable is off. (Servatius
-	    Brandt)
+Problem:    Can change 'fileformat' even though 'modifiable' is off.
+	    (Servatius Brandt)
 Solution:   Correct check for kind of set command.
 Files:	    src/option.c
 
@@ -9803,6 +9803,7 @@ VERSION 6.3						*version-6.3*
 This section is about improvements made between version 6.2 and 6.3.
 
 This is mainly a bug-fix release.  There are also a few new features.
+The major number of new items is in the runtime files and translations.
 
 
 Changed							*changed-6.3*
@@ -9899,11 +9900,12 @@ Keymaps:
 
 Message translations:
 	Catalan (Ernest Adrogue)
-	Russian (Steve L. Kuznetsov)
+	Russian (Vassily Ragosin)
 	Swedish (Johan Svedberg)
 
 Menu translations:
 	Catalan (Ernest Adrogue)
+	Russian (Tim Alexeevsky)
 	Swedish (Johan Svedberg)
 
 Tutor translations:
@@ -9925,12 +9927,19 @@ that is actually being used. (idea from Yakov Lerner)
 The big Win32 version is now compiled with Ruby interface, version 1.8.  For
 Python version 2.3 is used.  For Perl version 5.8 is used.
 
+The "ftdetect" directory is mentioned in the documentation.  Have the install
+program create it.
+
 
 Fixed							*fixed-6.3*
 -----
 
 Test 42 failed on MS-Windows.  Set and reset 'fileformat' and 'binary' options
 here and there.  (Walter Briscoe)
+
+The explorer plugin didn't work for double-byte 'encoding's.
+
+Use "copy /y" in Make_bc5.mak to avoid a prompt for overwriting.
 
 Patch 6.2.001
 Problem:    The ":stopinsert" command doesn't have a help tag.
@@ -13445,5 +13454,197 @@ Files:	    src/dosinst.h, src/fileio.c
 
 Win32 console: After patch 6.2.398 Ex mode did not work. (Yasuhiro Matsumoto)
 
+Patch 6.3a.001
+Problem:    Win32: if testing for the "--binary" option fails, diff isn't used
+	    at all.
+Solution:   Handle the "ok" flag properly. (Yasuhiro Matsumoto)
+Files:	    src/diff.c
+
+Patch 6.3a.002
+Problem:    NetBeans: An insert command from NetBeans beyond the end of a
+	    buffer crashes Vim. (Xavier de Gaye)
+Solution:   Use a local pos_T structure for the position.
+Files:	    src/netbeans.c
+
+Patch 6.3a.003
+Problem:    E315 error with auto-formatting comments. (Henry Van Roessel)
+Solution:   Pass the line number to same_leader().
+Files:	    src/ops.c
+
+Patch 6.3a.004
+Problem:    Test32 fails on Windows XP for the DJGPP version.  Renaming
+	    test11.out fails.
+Solution:   Don't try renaming, create new files to use for the test.
+Files:	    src/testdir/test32.in, src/testdir/test32.ok
+
+Patch 6.3a.005
+Problem:    ":checkpath!" does not use 'includeexpr'.
+Solution:   Use a file name that was found directly.  When a file was not
+	    found and the located name is empty, use the rest of the line.
+Files:	    src/search.c
+
+Patch 6.3a.006
+Problem:    "yip" moves the cursor to the first yanked line, but not to the
+	    first column.  Looks like not all text was yanked. (Jens Paulus)
+Solution:   Move the cursor to the first column.
+Files:	    src/search.c
+
+Patch 6.3a.007
+Problem:    'cindent' recognizes "enum" but not "typedef enum".
+Solution:   Skip over "typedef" before checking for "enum". (Helmut Stiegler)
+	    Also avoid that searching for this item goes too far back.
+Files:	    src/misc1.c, src/testdir/test3.in, src/testdir/test3.ok
+
+Patch 6.3a.008 (extra)
+Problem:    Windows 98: Some of the wide functions are not implemented,
+	    resulting in file I/O to fail.  This depends on what Unicode
+	    support is installed.
+Solution:   Handle the failure and fall back to non-wide functions.
+Files:	    src/os_win32.c
+
+Patch 6.3a.009
+Problem:    Win32: Completion of filenames does not work properly when
+	    'encoding' differs from the active code page.
+Solution:   Use wide functions for expanding wildcards when appropriate.
+Files:	    src/misc1.c
+
+Patch 6.3a.010 (extra)
+Problem:    Win32: Characters in the window title that do not appear in the
+	    active codepage are replaced by a question mark.
+Solution:   Use DefWindowProcW() instead of DefWindowProc() when possible.
+Files:	    src/glbl_ime.cpp, src/globals.h, src/proto/gui_w16.pro,
+	    src/proto/gui_w32.pro, src/gui_w16.c, src/gui_w32.c, src/gui_w48.c
+
+Patch 6.3a.011
+Problem:    Using the explorer plugin changes a local directory to the global
+	    directory.
+Solution:   Don't use ":chdir" to restore the current directory.  Make
+	    "expand('%:p')" remove "/../" and "/./" items from the path.
+Files:	    runtime/plugin/explorer.vim, src/eval.c, src/os_unix.c
+
+Patch 6.3a.012 (extra)
+Problem:    On Windows 98 the installer doesn't work, don't even get the "I
+	    agree" button.  The check for the path ending in "vim" makes the
+	    browse dialog hard to use.  The default path when no previous Vim
+	    is installed is "c:\vim" instead of "c:\Program Files\Vim".
+Solution:   Remove the background gradient command.  Change the
+	    .onVerifyInstDir function to a leave function for the directory
+	    page.  Don't let the install program default to c:\vim when no
+	    path could be found.
+Files:	    nsis/gvim.nsi, src/dosinst.c
+
+Patch 6.3a.013 (extra)
+Problem:    Win32: Characters in the menu that are not in the active codepage
+	    are garbled.
+Solution:   Convert menu strings from 'encoding' to the active codepage.
+Files:	    src/gui_w32.c, src/gui_w48.c
+
+Patch 6.3a.014
+Problem:    Using multi-byte text and highlighting in a statusline causes gaps
+	    to appear. (Helmut Stiegler)
+Solution:   Advance the column by text width instead of number of bytes.  Add
+	    the vim_strnsize() function.
+Files:	    src/charset.c, src/proto/charset.pro, src/screen.c
+
+Patch 6.3a.015
+Problem:    Using the "select all" menu item when 'insertmode' is set and
+	    clicking the mouse button doesn't return to Insert mode.  The
+	    Buffers/Delete menu doesn't offer a choice to abandon a changed
+	    buffer.  (Jens Paulus)
+Solution:   Don't use CTRL-\ CTRL-N.  Add ":confirm" for the Buffers menu
+	    items.
+Files:	    runtime/menu.vim
+
+Patch 6.3a.016
+Problem:    After cancelling the ":confirm" dialog the error message and
+	    hit-enter prompt may not be displayed properly.
+Solution:   Flush output after showing the dialog.
+Files:	    src/message.c
+
+Patch 6.3a.017
+Problem:    servername() doesn't work when Vim was started with the "-X"
+	    argument or when the "exclude" in 'clipboard' matches the terminal
+	    name.  (Robert Nowotniak)
+Solution:   Force connecting to the X server when using client-server
+	    commands.
+Files:	    src/eval.c, src/globals.h, src/os_unix.c
+
+Patch 6.3a.018 (after 6.3a.017)
+Problem:    Compiler warning for return value of make_connection().
+Solution:   Use void return type.
+Files:	    src/eval.c
+
+Patch 6.3a.019 (extra)
+Problem:    Win32: typing non-latin1 characters doesn't work.
+Solution:   Invoke _OnChar() directly to avoid that the argument is truncated
+	    to a byte.  Convert the UTF-16 character to bytes according to
+	    'encoding' and ignore 'termencoding'.  Same for _OnSysChar().
+Files:	    src/gui_w32.c, src/gui_w48.c
+
+Patch 6.3a.020 (extra)
+Problem:    Missing support for AROS (AmigaOS reimplementation).  Amiga GUI
+	    doesn't work.
+Solution:   Add AROS support.  (Adam Chodorowski)
+	    Fix Amiga GUI problems. (Georg Steger, Ali Akcaagac)
+Files:	    Makefile, src/Make_aros.mak, src/gui_amiga.c, src/gui_amiga.h,
+	    src/memfile.c, src/os_amiga.c, src/term.c
+
+Patch 6.3a.021 (after 6.3a.017)
+Problem:    Can't compile with X11 but without GUI.
+Solution:   Put use of "gui.in_use" inside an #ifdef.
+Files:	    src/eval.c
+
+Patch 6.3a.022
+Problem:    When typing Tabs when 'softtabstop' is used and 'list' is set a
+	    tab is counted for two spaces.
+Solution:   Use the "L" flag in 'cpoptions' to tell whether a tab is counted
+	    as two spaces or as 'tabstop'. (Antony Scriven)
+Files:	    runtime/doc/options.txt, src/edit.c
+
+Patch 6.3a.023
+Problem:    Completion on the command line doesn't handle backslashes
+	    properly.  Only the tail of matches is shown, even when not
+	    completing filenames.
+Solution:   When turning the string into a pattern double backslashes.  Don't
+	    omit the path when not expanding files or directories.
+Files:	    src/ex_getln.c
+
+Patch 6.3a.024
+Problem:    The "save all" toolbar item fails for buffers that don't have a
+	    name.  When using ":wa" or closing the Vim window and there are
+	    nameless buffers, browsing for a name may cause the name being
+	    given to the wrong buffer or not stored properly.  ":browse" only
+	    worked for one file.
+Solution:   Use ":confirm browse" for "save all".
+	    Pass buffer argument to setfname().  Restore "browse" flag and
+	    "forceit" after doing the work for one file.
+Files:	    runtime/menu.vim, src/buffer.c, src/ex_cmds.c, src/ex_cmds2.c,
+	    src/ex_docmd.c, src/ex_getln.c, src/fileio.c, src/memline.c,
+	    src/message.c, src/window.c, src/proto/buffer.pro,
+	    src/proto/ex_cmds2.pro, src/proto/memline.pro
+
+Patch 6.3a.025
+Problem:    Setting 'virtualedit' moves the cursor. (Benji Fisher)
+Solution:   Update the virtual column before using it.
+Files:	    src/option.c
+
+Patch 6.3a.026 (extra, after 6.3a.008)
+Problem:    Editing files on Windows 98 doesn't work when 'encoding' is
+	    "utf-8" (Antoine Mechelynck)
+	    Warning for missing function prototype.
+Solution:   For all wide functions check if it failed because it is not
+	    implemented.  Use ANSI function declaration for char_to_string().
+Files:	    src/gui_w48.c, src/os_mswin.c, src/os_win32.c
+
+Patch 6.3a.027 (extra, after 6.3a.026)
+Problem:    Compiler warning for function argument.
+Solution:   Declare both char and WCHAR arrays.
+Files:	    src/gui_w48.c
+
+Patch 6.3a.028
+Problem:    ":normal ." doesn't work inside a function, because redo is saved
+	    and restored. (Benji Fisher)
+Solution:   Make a copy of the redo buffer when executing a function.
+Files:	    src/getchar.c
 
  vim:tw=78:ts=8:ft=help:norl:

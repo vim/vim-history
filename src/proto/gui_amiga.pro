@@ -40,7 +40,7 @@ void gui_mch_settitle __ARGS((char_u *title, char_u *icon));
 void gui_mch_stop_blink __ARGS((void));
 void gui_mch_start_blink __ARGS((void));
 void gui_mch_draw_hollow_cursor __ARGS((guicolor_T color));
-void gui_mch_draw_part_cursor __ARGS((int col, int row, guicolor_T color));
+void gui_mch_draw_part_cursor __ARGS((int w, int h, guicolor_T color));
 void gui_mch_update __ARGS((void));
 int gui_mch_wait_for_chars __ARGS((int wtime));
 void gui_mch_flush __ARGS((void));

@@ -6606,9 +6606,9 @@ static int check_connection __ARGS((void));
 make_connection()
 {
     if (X_DISPLAY == NULL
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
 	    && !gui.in_use
-#endif
+# endif
 	    )
     {
 	x_force_connect = TRUE;

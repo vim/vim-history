@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:	TCL/TK
 " Maintainer:	Dean Copsey <copsey@cs.ucdavis.edu>
-" 		(previously Matt Neumann <mattneu@purpleturtle.com>)
+"		(previously Matt Neumann <mattneu@purpleturtle.com>)
 "		(previously Allan Kelly <allan@fruitloaf.co.uk>)
 " Original:	Robin Becker <robin@jessikat.demon.co.uk>
-" Last Change:	2003 Sep 25
+" Last Change:	2004 May 16
 "
 " Keywords TODO: format clock click anchor
 

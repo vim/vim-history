@@ -2,7 +2,7 @@
 "
 " Language:	Logtalk
 " Maintainer:	Paulo Moura <pmoura@logtalk.org>
-" Last Change:	2004 Feb 02
+" Last Change:	2004 May 16
 
 
 " Quit when a syntax file was already loaded:
@@ -359,7 +359,7 @@ syn region	logtalkBlockComment	start="/\*"	end="\*/"
 syn match	logtalkLineComment	"%.*"
 
 
-" Logtalk numbers 
+" Logtalk numbers
 
 syn match	logtalkNumber		"\<[0-9]\+\>"
 syn match	logtalkNumber		"\<[0-9]\+\.[0-9]\+\>"
@@ -384,7 +384,7 @@ if version >= 508 || !exists("did_logtalk_syn_inits")
 	else
 		command -nargs=+ HiLink hi def link <args>
 	endif
-	
+
 	HiLink	logtalkBlockComment	Comment
 	HiLink	logtalkLineComment	Comment
 

@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.3a.  Last change: 2004 Mar 26
+*pattern.txt*   For Vim version 6.3b.  Last change: 2004 May 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1059,9 +1059,9 @@ matches a <NL> in the string.  The use of "\n" (backslash n) to match a <NL>
 doesn't work there, it only works to match text in the buffer.
 
 						*pattern-multi-byte*
-Patterns will also work with multi-byte charaters, mostly as you would expect.
-But invalid bytes may cause trouble, a pattern with an invalid byte will
-probably never match.
+Patterns will also work with multi-byte characters, mostly as you would
+expect.  But invalid bytes may cause trouble, a pattern with an invalid byte
+will probably never match.
 
 ==============================================================================
 8. Compare with Perl patterns				*perl-patterns*

@@ -1,11 +1,11 @@
 " Vim syntax file
-" Language:		Haskell with literate comments, Bird style, 
-"			TeX style and plain text surrounding 
+" Language:		Haskell with literate comments, Bird style,
+"			TeX style and plain text surrounding
 "			\begin{code} \end{code} blocks
 " Maintainer:		Haskell Cafe mailinglist <haskell-cafe@haskell.org>
 " Original Author:	Arthur van Leeuwen <arthurvl@cs.uu.nl>
-" Last Change:		2004 February 23
-" Version:      	1.01
+" Last Change:		2004 May 16
+" Version:		1.01
 "
 " Thanks to Ian Lynagh for thoughtful comments on initial versions and
 " for the inspiration for writing this in the first place.
@@ -15,20 +15,20 @@
 " This behaviour can be overridden, both glabally and locally using
 " the lhs_markup variable or b:lhs_markup variable respectively.
 "
-" lhs_markup        must be set to either  tex  or  none  to indicate that
-"                   you always want (La)TeX highlighting or no highlighting
-"                   must not be set to let the highlighting be guessed
-" b:lhs_markup      must be set to eiterh  tex  or  none  to indicate that
-"                   you want (La)TeX highlighting or no highlighting for
-"                   this particular buffer
-"                   must not be set to let the highlighting be guessed
-" 
+" lhs_markup	    must be set to either  tex	or  none  to indicate that
+"		    you always want (La)TeX highlighting or no highlighting
+"		    must not be set to let the highlighting be guessed
+" b:lhs_markup	    must be set to eiterh  tex	or  none  to indicate that
+"		    you want (La)TeX highlighting or no highlighting for
+"		    this particular buffer
+"		    must not be set to let the highlighting be guessed
+"
 "
 " 2004 February 18: New version, based on Ian Lynagh's TeX guessing
-"                   lhaskell.vim, cweb.vim, tex.vim, sh.vim and fortran.vim 
+"		    lhaskell.vim, cweb.vim, tex.vim, sh.vim and fortran.vim
 " 2004 February 20: Cleaned up the guessing and overriding a bit
 " 2004 February 23: Cleaned up syntax highlighting for \begin{code} and
-"                   \end{code}, added some clarification to the attributions
+"		    \end{code}, added some clarification to the attributions
 "
 
 
@@ -63,11 +63,11 @@ let s:oldline=line(".")
 let s:oldcolumn=col(".")
 call cursor(1,1)
 
-" If no user preference, scan buffer for our guess of the markup to 
-" highlight. We only differentiate between TeX and plain markup, where 
-" plain is not highlighted. The heuristic for finding TeX markup is if 
-" one of the following occurs anywhere in the file: 
-"   - \documentclass 
+" If no user preference, scan buffer for our guess of the markup to
+" highlight. We only differentiate between TeX and plain markup, where
+" plain is not highlighted. The heuristic for finding TeX markup is if
+" one of the following occurs anywhere in the file:
+"   - \documentclass
 "   - \begin{env}       (for env != code)
 "   - \part, \chapter, \section, \subsection, \subsubsection, etc
 if b:lhs_markup == "unknown"
@@ -88,7 +88,7 @@ if b:lhs_markup == "tex"
     endif
 endif
 
-" Literate Haskell is Haskell in between text, so at least read Haskell 
+" Literate Haskell is Haskell in between text, so at least read Haskell
 " highlighting
 if version < 600
     syntax include @haskellTop <sfile>:p:h/haskell.vim
@@ -102,7 +102,7 @@ syntax region lhsHaskellBeginEndBlock start="^\\begin{code}\s*$" matchgroup=NONE
 syntax match lhsBirdTrack "^>" contained
 
 syntax match beginCodeBegin "^\\begin" nextgroup=beginCodeCode contained
-syntax region beginCodeCode  matchgroup=texDelimiter start="{" end="}" 
+syntax region beginCodeCode  matchgroup=texDelimiter start="{" end="}"
 syntax cluster beginCode    contains=beginCodeBegin,beginCodeCode
 
 " Define the default highlighting.

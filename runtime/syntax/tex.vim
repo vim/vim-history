@@ -231,9 +231,9 @@ endif
 " Math Zones: {{{1
 if !exists("tex_no_math")
  " TexNewMathZone: creates a mathzone with the given suffix and mathzone name. {{{2
- "                 Starred forms are created if starform is true.  Starred
- "                 forms have syntax group and synchronization groups with a
- "                 "S" appended.  Handles: cluster, syntax, sync, and HiLink.
+ "		   Starred forms are created if starform is true.  Starred
+ "		   forms have syntax group and synchronization groups with a
+ "		   "S" appended.  Handles: cluster, syntax, sync, and HiLink.
  fun! TexNewMathZone(sfx,mathzone,starform)
    let grpname  = "texMathZone".a:sfx
    let syncname = "texSyncMathZone".a:sfx
@@ -283,11 +283,11 @@ if !exists("tex_no_math")
  syn match   texMathDelim			"\\lefteqn\>"
  syn match   texMathDelimSet2	contained	"\\"		nextgroup=texMathDelimKey,texMathDelimBad
  syn match   texMathDelimSet1	contained	"[<>()[\]|/.]\|\\[{}|]"
- syn keyword texMathDelimKey	contained	backslash       lceil           lVert           rgroup          uparrow          
- syn keyword texMathDelimKey	contained	downarrow       lfloor          rangle          rmoustache      Uparrow          
- syn keyword texMathDelimKey	contained	Downarrow       lgroup          rbrace          rvert           updownarrow      
- syn keyword texMathDelimKey	contained	langle          lmoustache      rceil           rVert           Updownarrow      
- syn keyword texMathDelimKey	contained	lbrace          lvert           rfloor                                           
+ syn keyword texMathDelimKey	contained	backslash	lceil		lVert		rgroup		uparrow
+ syn keyword texMathDelimKey	contained	downarrow	lfloor		rangle		rmoustache	Uparrow
+ syn keyword texMathDelimKey	contained	Downarrow	lgroup		rbrace		rvert		updownarrow
+ syn keyword texMathDelimKey	contained	langle		lmoustache	rceil		rVert		Updownarrow
+ syn keyword texMathDelimKey	contained	lbrace		lvert		rfloor
 endif
 
 " Special TeX characters  ( \$ \& \% \# \{ \} \_ \S \P ) : {{{1

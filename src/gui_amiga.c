@@ -34,21 +34,23 @@
 
 #if defined(FEAT_GUI_AMIGA) || defined(PROTO)
 
-#define KEYUP 	    	76
-#define KEYDOWN     	77
-#define KEYRIGHT    	78
-#define KEYLEFT     	79
-#define KEYBACKSPACE 	0x41
-#define KEYDELETE    	0x46
-#define KEYINSERT    	0x47
-#define KEYHOME      	0x70
-#define KEYEND	     	0x71
-#define KEYWHEELUP  	0x7A
+#define KEYUP		76
+#define KEYDOWN		77
+#define KEYRIGHT	78
+#define KEYLEFT		79
+#define KEYBACKSPACE	0x41
+#define KEYDELETE	0x46
+#define KEYINSERT	0x47
+#define KEYHOME		0x70
+#define KEYEND		0x71
+#define KEYWHEELUP	0x7A
 #define KEYWHEELDOWN	0x7B
 
 /* When generating prototypes on Unix, these need to be defined */
 #ifdef PROTO
 # define STRPTR char *
+# define BOOL int
+# define UBYTE int
 #endif
 
 static struct PropInfo Gadget2SInfo = { AUTOKNOB+PROPBORDERLESS+FREEVERT+PROPNEWLOOK, 0, 0, MAXBODY, MAXBODY, };
@@ -62,7 +64,7 @@ static struct Gadget propGadget = { NULL, -12, 15, 10, -28,
 
 static struct timerequest *TimerIO;
 static struct MsgPort	  *TimerMP;
-static BOOL 	    	   TimerSent;
+static BOOL		   TimerSent;
 
 struct GFXBase		*gfxBase;
 struct ExecBase		*execBase;
@@ -276,25 +278,25 @@ refreshBorder(void)
 
     static void
 drawBox(enum DrawBoxMode mode, unsigned short col, unsigned short row, int w, int h, guicolor_T color)
-{    
-    LONG apen = GetAPen(gui.window->RPort);    
+{
+    LONG apen = GetAPen(gui.window->RPort);
     LONG x1, y1, x2, y2;
-    
+
 kprintf(" drawbox %d,%d color %d\n", col, row, color);
 
     SetAPen(gui.window->RPort, getrealcolor(color));
-       
+
     x1 = posWidthCharToPoint(col);
     y1 = posHeightCharToPoint(row + 1) - h;
     x2 = x1 + w - 1;
     y2 = posHeightCharToPoint(row + 1) - 1;
-    
+
     switch(mode)
     {
-    	case DB_Filled:
+	case DB_Filled:
 	    RectFill(gui.window->RPort, x1, y1, x2, y2);
 	    break;
-	    
+
 	case DB_NotFilled:
 	    Move(gui.window->RPort, x1, y1);
 	    Draw(gui.window->RPort, x2, y1);
@@ -303,9 +305,9 @@ kprintf(" drawbox %d,%d color %d\n", col, row, color);
 	    Draw(gui.window->RPort, x1, y1);
 	    break;
     }
-    
+
     SetAPen(gui.window->RPort, apen);
-     
+
 }
 
     static enum event
@@ -317,7 +319,7 @@ EventHandler(void)
     static int		dragging = 0;
     static int		mouseX, mouseY;
     char_u		string[40];
-    BOOL    	    	quit_request = FALSE;
+    BOOL		quit_request = FALSE;
 
     msg = (struct IntuiMessage *)GetMsg(gui.window->UserPort);
 
@@ -374,7 +376,7 @@ EventHandler(void)
 		   returnEvent = ev_IntuiTicks;
 		   */
 		   break;
-		   
+
 	    case IDCMP_MOUSEBUTTONS:
 		   {
 		       int vim_modifiers=0;
@@ -386,7 +388,7 @@ EventHandler(void)
 			       D("detected a Alt key");
 			       vim_modifiers|=MOUSE_ALT;
 			       break;
-		            	
+
 			   case IEQUALIFIER_LSHIFT:
 			   case IEQUALIFIER_RSHIFT:
 			       D("detected a Shift key");
@@ -434,7 +436,7 @@ EventHandler(void)
 			       D("detected a Alt key");
 			       vim_modifiers|=MOUSE_ALT;
 			       break;
-		            	
+
 			   case IEQUALIFIER_LSHIFT:
 			   case IEQUALIFIER_RSHIFT:
 			       D("detected a Shift key");
@@ -462,7 +464,7 @@ EventHandler(void)
 		   returnEvent = ev_MouseMove;
 		   break;
 	    case IDCMP_VANILLAKEY:
-kprintf("===vanillakey %d\n", code);	    
+kprintf("===vanillakey %d\n", code);
 		   {
 		       string[0] = (char_u)code;
 		       if (code == CSI)
@@ -474,14 +476,14 @@ kprintf("===vanillakey %d\n", code);
 		       }
 		       else if (code == 8)
 		       {
-		            string[0] = CSI;
+			    string[0] = CSI;
 			    string[1] = 'k';
 			    string[2] = 'b';
 			    add_to_input_buf(string, 3);
 		       }
 		       else if (code == 127)
 		       {
-		            string[0] = CSI;
+			    string[0] = CSI;
 			    string[1] = 'k';
 			    string[2] = 'D';
 			    add_to_input_buf(string, 3);
@@ -496,7 +498,7 @@ kprintf("===vanillakey %d\n", code);
 		       }
 		       returnEvent = ev_KeyStroke;
 		       break;
-		       
+
 		case IDCMP_RAWKEY:
 		       if (msg->Qualifier & IEQUALIFIER_LSHIFT)
 		       {
@@ -597,8 +599,8 @@ kprintf("## keyright");
 				   vim_modifiers |= MOUSE_CTRL;
 				   break;
 			   }
-		    	   gui_send_mouse_event(MOUSE_4, 0, 1, FALSE, vim_modifiers);
-			   
+			   gui_send_mouse_event(MOUSE_4, 0, 1, FALSE, vim_modifiers);
+
 		       }
 		       else if (msg->Code == KEYWHEELDOWN)
 		       {
@@ -622,9 +624,9 @@ kprintf("## keyright");
 				   vim_modifiers |= MOUSE_CTRL;
 				   break;
 			   }
-		    	   gui_send_mouse_event(MOUSE_5, 0, 1, FALSE, vim_modifiers);
+			   gui_send_mouse_event(MOUSE_5, 0, 1, FALSE, vim_modifiers);
 		       }
-		       
+
 		       returnEvent = ev_KeyStroke;
 		       break;
 		   }
@@ -672,18 +674,18 @@ kprintf("## keyright");
 		   }
 		   break;
 	    case IDCMP_CLOSEWINDOW:
-	    	    quit_request = TRUE;
+		    quit_request = TRUE;
 		    break;
-		    
+
 	    case IDCMP_NEWSIZE:
 		   {
 		       int cx, cy;
 		       //cx = widthPointToChar(gui.window->GZZWidth);
 		       //cy = heightPointToChar(gui.window->GZZHeight);
 
-    	    	       cx = gui.window->GZZWidth;
+		       cx = gui.window->GZZWidth;
 		       cy = gui.window->GZZHeight - characterHeight;
-		       
+
 		       gui_resize_shell(cx, cy);
 
 		       returnEvent = ev_NewSize;
@@ -970,12 +972,12 @@ gui_mch_init(void)
 
     TimerMP = CreateMsgPort();
     if (!TimerMP) return FAIL;
-    
+
     TimerIO = (struct timerequest *)CreateIORequest(TimerMP, sizeof(*TimerIO));
     if (!TimerIO) return FAIL;
 
     if (OpenDevice("timer.device", UNIT_VBLANK, &TimerIO->tr_node, 0)) return FAIL;
-        
+
     gui.window = OpenWindowTagList(&vimNewWindow, tags);
     if (gui.window)
     {
@@ -983,21 +985,21 @@ gui_mch_init(void)
 	gui.in_focus=TRUE;
 	gui.norm_pixel = gui.def_norm_pixel = 1;
 	gui.back_pixel = gui.def_back_pixel = 0;
-	
+
 	set_normal_colors();
 	gui_check_colors();
-	
+
 	SetDrMd(gui.window->RPort, JAM2);
-    	gui_mch_set_colors(gui.norm_pixel, gui.back_pixel);
-	
+	gui_mch_set_colors(gui.norm_pixel, gui.back_pixel);
+
 	atexit(atexitDoThis);
-	
+
 	TextDimensions();
 	returnCode = OK; /* we've had success */
 	if (gui_win_x != -1 && gui_win_y != -1)
 	    gui_mch_set_winpos(gui_win_x, gui_win_y);
 
-    	gui_mch_clear_all();
+	gui_mch_clear_all();
 
     }
     gui.menu = NULL;
@@ -1011,7 +1013,7 @@ gui_mch_new_colors(void)
 kprintf("### gui_mch_new_colors\n");
     SetAPen(gui.window->RPort, getrealcolor(gui.norm_pixel));
     SetBPen(gui.window->RPort, getrealcolor(gui.back_pixel));
-    
+
     D("gui_mch_new_colors");
 }
 
@@ -1029,40 +1031,40 @@ gui_mch_exit(int returnCode)
 {
 kprintf("###gui_mch_exit\n");
     D("****gui_mch_exit");
-    
+
     if (TimerSent)
     {
-    	if (!CheckIO(&TimerIO->tr_node)) AbortIO(&TimerIO->tr_node);
+	if (!CheckIO(&TimerIO->tr_node)) AbortIO(&TimerIO->tr_node);
 	WaitIO(&TimerIO->tr_node);
 	TimerSent = FALSE;
     }
-    
+
     if (TimerIO)
     {
-    	CloseDevice(&TimerIO->tr_node);
+	CloseDevice(&TimerIO->tr_node);
 	DeleteIORequest(&TimerIO->tr_node);
 	TimerIO = NULL;
     }
-    
+
     if (TimerMP)
     {
-    	DeleteMsgPort(TimerMP);
+	DeleteMsgPort(TimerMP);
 	TimerMP = NULL;
     }
-    
+
     if (gui.window)
     {
-    	int i;
-	
+	int i;
+
 	for(i = 0; i < sizeof(MyColorTable) / sizeof(MyColorTable[0]); i++)
 	{
 	    if (MyColorTable[i].alloced)
 	    {
-	    	ReleasePen(gui.window->WScreen->ViewPort.ColorMap, MyColorTable[i].pen);
+		ReleasePen(gui.window->WScreen->ViewPort.ColorMap, MyColorTable[i].pen);
 		MyColorTable[i].alloced = FALSE;
 	    }
 	}
-	
+
 	D("Closeing window ");
 	CloseWindow(gui.window);
 	CloseLibrary((struct Library*)execBase);
@@ -1081,14 +1083,14 @@ gui_mch_get_winpos(int *x, int *y)
 {
     if (gui.window)
     {
-    	*x = gui.window->LeftEdge;
-    	*y = gui.window->TopEdge;
+	*x = gui.window->LeftEdge;
+	*y = gui.window->TopEdge;
     }
     else
     {
-    	return FAIL;
+	return FAIL;
     }
-    
+
     return OK;
 }
 
@@ -1101,7 +1103,7 @@ gui_mch_set_winpos(int x, int y)
 {
     if (gui.window)
     {
-    	ChangeWindowBox(gui.window, x, y, gui.window->Width, gui.window->Height);
+	ChangeWindowBox(gui.window, x, y, gui.window->Width, gui.window->Height);
     }
 }
 
@@ -1154,36 +1156,36 @@ gui_mch_set_scrollbar_thumb(scrollbar_T *sb, long val, long size, long max)
 {
     ULONG total = max;
     ULONG visible = size;
-    ULONG top = val;    
+    ULONG top = val;
     ULONG hidden;
     ULONG overlap = 0;
     UWORD body, pot;
 
 kprintf("__set_scrollbar_thumb val %d  size %d  max %d\n", val, size, max);
-    
+
     if (total > visible)
-        hidden = total - visible;
+	hidden = total - visible;
     else
-        hidden = 0;
+	hidden = 0;
 
     if (top > hidden)
-        top = hidden;
+	top = hidden;
 
     body = (hidden > 0) ?
-            (UWORD)(((ULONG)(visible - overlap) * MAXBODY) / (total - overlap)) :
-            MAXBODY;
+	    (UWORD)(((ULONG)(visible - overlap) * MAXBODY) / (total - overlap)) :
+	    MAXBODY;
 
     pot  = (hidden > 0) ? (UWORD)(((ULONG) top * MAXPOT) / hidden) : 0;
 
 kprintf("__pot %x  body %x\n", pot, body);
 
     NewModifyProp(&propGadget, gui.window, NULL,
-    	    	  Gadget2SInfo.Flags,
-    	    	  MAXPOT, pot,
+		  Gadget2SInfo.Flags,
+		  MAXPOT, pot,
 		  MAXBODY, body,
 		  1);
     return;
-    
+
 }
 
     void
@@ -1210,11 +1212,11 @@ gui_mch_destroy_scrollbar(scrollbar_T *sb)
 int gui_mch_init_font(char_u *font_name, int fontset)
 {
     /*D("gui_mch_init_font");*/
-    
+
     gui.char_width = characterWidth;
     gui.char_height = characterHeight;
     gui.char_ascent = gui.window->RPort->TxBaseline;
-    
+
     return OK;
 }
 
@@ -1263,9 +1265,9 @@ gui_mch_free_font(GuiFont font)
     {
 	char	    *name;
 	unsigned long    color;
-	UBYTE	    	red;
-	UBYTE	    	green;
-	UBYTE	    	blue;
+	UBYTE		red;
+	UBYTE		green;
+	UBYTE		blue;
     } guicolor_tTable;
 
     static guicolor_tTable table[] =
@@ -1306,7 +1308,7 @@ gui_mch_free_font(GuiFont font)
 	{"grey80",	34, 204, 204, 204},
 	{NULL, NULL},
     };
- 
+
     guicolor_T
 gui_mch_get_color(char_u *name)
 {
@@ -1336,7 +1338,7 @@ gui_mch_get_color(char_u *name)
 #endif
 
     kprintf("gui_mch_get_color[%s] = %s\n", name, table[color].name);
-    
+
     return color;
 }
 
@@ -1345,18 +1347,18 @@ static UBYTE getrealcolor(guicolor_T i)
     if (!MyColorTable[i].alloced)
     {
 	MyColorTable[i].pen = ObtainBestPen(gui.window->WScreen->ViewPort.ColorMap,
-		    	    	    	    table[i].red * 0x01010101,
+					    table[i].red * 0x01010101,
 					    table[i].green * 0x01010101,
 					    table[i].blue * 0x01010101,
 					    OBP_FailIfBad, FALSE,
 					    OBP_Precision, PRECISION_GUI,
 					    TAG_DONE);
-    	if (MyColorTable[i].pen != -1)
+	if (MyColorTable[i].pen != -1)
 	{
 	    MyColorTable[i].alloced = TRUE;
 	}
     }
-    
+
     return MyColorTable[i].pen;
 }
 
@@ -1369,7 +1371,7 @@ gui_mch_set_colors(guicolor_T fg, guicolor_T bg)
     {
 	fg = 1;
     }
-#endif    
+#endif
     SetABPenDrMd(gui.window->RPort, getrealcolor(fg), getrealcolor(bg), JAM2);
 
 kprintf("gui_mch_set_colors %s,%s\n", table[fg].name, table[bg].name);
@@ -1406,10 +1408,10 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 {
 #if 1
     char tempstring[300];
-    
+
     memcpy(tempstring, s, len);
     tempstring[len] = '\0';
-    
+
     kprintf("gui_mch_draw_string(%s) flags %x\n", tempstring, flags);
 #endif
 
@@ -1425,20 +1427,20 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 	Move(gui.window->RPort, posWidthCharToPoint(col), posHeightCharToPoint(row) + gui.window->RPort->TxBaseline);
 	Text(gui.window->RPort, s, len);
     }
-    
+
     if (flags & DRAW_BOLD)
     {
 	SetDrMd(gui.window->RPort, JAM1);
 	Move(gui.window->RPort, posWidthCharToPoint(col)+1, posHeightCharToPoint(row) + gui.window->RPort->TxBaseline);
 	Text(gui.window->RPort, s, len);
     }
-    
+
     if (flags & DRAW_UNDERL)
     {
 	Move(gui.window->RPort, posWidthCharToPoint(col), posHeightCharToPoint(row + 1) - 1);
 	Draw(gui.window->RPort, posWidthCharToPoint(col+len) - 1, posHeightCharToPoint(row + 1) - 1);
     }
-    
+
     SetDrMd(gui.window->RPort, JAM2);
 }
 
@@ -1466,10 +1468,10 @@ gui_mch_beep(void)
 gui_mch_flash(int msec)
 {
     D("gui_mch_flash");
-    
+
     SetDrMd(gui.window->RPort, COMPLEMENT);
     RectFill(gui.window->RPort, 0, 0, gui.window->GZZWidth - 1, gui.window->GZZHeight - 1);
-    Delay(msec * 50 / 1000);    
+    Delay(msec * 50 / 1000);
     RectFill(gui.window->RPort, 0, 0, gui.window->GZZWidth - 1, gui.window->GZZHeight - 1);
     SetDrMd(gui.window->RPort, JAM2);
 }
@@ -1545,52 +1547,52 @@ gui_mch_wait_for_chars(int wtime)
     ULONG timermask = 1L << TimerMP->mp_SigBit;
     ULONG winmask = 1L << gui.window->UserPort->mp_SigBit;
     int retval = FAIL;
-    
+
     kprintf("========== gui_mch_wait_for_chars %d\n", wtime);
 
     if (wtime == -1) wtime = 1000000000;
     if (wtime < 20) wtime = 20;
-    
+
     SetSignal(0, timermask);
     TimerIO->tr_node.io_Command = TR_ADDREQUEST;
     TimerIO->tr_time.tv_secs = wtime / 1000;
     TimerIO->tr_time.tv_micro = (wtime % 1000) * 1000;
     SendIO(&TimerIO->tr_node);
     TimerSent = TRUE;
-    
+
     for(;;)
     {
-    	ULONG sigs = Wait(winmask | timermask);
+	ULONG sigs = Wait(winmask | timermask);
 
 	if (sigs & winmask)
 	{
 	    checkEventHandler();
 	    if (!vim_is_input_buf_empty())
 	    {
-	    	retval = OK;
+		retval = OK;
 		if (!CheckIO(&TimerIO->tr_node)) AbortIO(&TimerIO->tr_node);
 		WaitIO(&TimerIO->tr_node);
 		TimerSent = FALSE;
-		break; 
+		break;
 	    }
 	}
-	
+
 	if (sigs & timermask)
 	{
 	    struct Message *msg;
-	    
+
 	    if ((msg = GetMsg(TimerMP)))
 	    {
-	    	ReplyMsg(msg);
+		ReplyMsg(msg);
 		TimerSent = FALSE;
 		retval = FAIL;
 		break;
 	    }
-	}	
+	}
     }
-    
+
     return retval;
-    
+
 //    assert(wtime != 0);
 //    return charEventHandler(wtime);
 }
@@ -1604,15 +1606,15 @@ gui_mch_flush(void)
 gui_mch_clear_block(int row1, int col1, int row2, int col2)
 {
     UBYTE apen = GetAPen(gui.window->RPort);
-    
+
     SetAPen(gui.window->RPort, getrealcolor(gui.back_pixel));
     RectFill(gui.window->RPort,
-    	     posWidthCharToPoint(col1),
+	     posWidthCharToPoint(col1),
 	     posHeightCharToPoint(row1),
-    	     posWidthCharToPoint(col2 + 1) - 1,
+	     posWidthCharToPoint(col2 + 1) - 1,
 	     posHeightCharToPoint(row2 + 1) - 1);
     SetAPen(gui.window->RPort, apen);
-	         
+
 }
 
     void
@@ -1635,7 +1637,7 @@ gui_mch_delete_lines(int row, int num_lines)
 	    posHeightCharToPoint(gui.scroll_region_bot + 1) - 1);
 
     gui_clear_block(gui.scroll_region_bot - num_lines + 1,
-    	    	    gui.scroll_region_left,
+		    gui.scroll_region_left,
 		    gui.scroll_region_bot,
 		    gui.scroll_region_right);
 
@@ -1653,7 +1655,7 @@ gui_mch_insert_lines(int row, int num_lines)
 	    posHeightCharToPoint(gui.scroll_region_bot +1 ) - 1);
 
     gui_clear_block(row, gui.scroll_region_left,
-    		    row + num_lines - 1, gui.scroll_region_right);
+		    row + num_lines - 1, gui.scroll_region_right);
 
 }
 
@@ -1779,14 +1781,14 @@ gui_mch_get_rgb(guicolor_T pixel)
     ULONG coltable[3], color;
 
     GetRGB32(gui.window->WScreen->ViewPort.ColorMap,
-    	     getrealcolor(pixel),
+	     getrealcolor(pixel),
 	     1,
 	     coltable);
-	     
+
     color = ((coltable[0] & 0xFF000000) >> 8) |
-    	    ((coltable[1] & 0xFF000000) >> 16) |
+	    ((coltable[1] & 0xFF000000) >> 16) |
 	    ((coltable[2] & 0xFF000000) >> 24);
-    
+
     return color;
 }
 

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:     Inform
 " Maintainer:   Stephen Thomas (informvim@stephenthomas.uklinux.net)
-" URL:          http://www.stephenthomas.uklinux.net/informvim
-" Last Change:  2004 Mar 1
+" URL:		http://www.stephenthomas.uklinux.net/informvim
+" Last Change:  2004 May 16
 
 " Quit when a syntax file was already loaded
 if version < 600
@@ -99,7 +99,7 @@ if !exists("inform_highlight_simple")
      syn keyword informLibRoutine  UpperCase LowerCase PrintCapitalised
      syn keyword informLibRoutine  Cap Centre
      if exists("inform_highlight_glulx")
-        syn keyword informLibRoutine  PrintAnything PrintAnyToArray
+	syn keyword informLibRoutine  PrintAnything PrintAnyToArray
      endif
   endif
 
@@ -355,50 +355,50 @@ if version >= 508 || !exists("did_inform_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink informDefine           Define
-  HiLink informType             Type
-  HiLink informInclude          Include
-  HiLink informPreCondit        PreCondit
-  HiLink informPreProc          PreProc
-  HiLink informGramPreProc      PreProc
-  HiLink informAsm              Special
+  HiLink informDefine		Define
+  HiLink informType		Type
+  HiLink informInclude		Include
+  HiLink informPreCondit	PreCondit
+  HiLink informPreProc		PreProc
+  HiLink informGramPreProc	PreProc
+  HiLink informAsm		Special
   if !exists("inform_suppress_obsolete")
-    HiLink informAsmObsolete            informError
-    HiLink informKeywordObsolete        informError
+    HiLink informAsmObsolete		informError
+    HiLink informKeywordObsolete	informError
   else
-    HiLink informAsmObsolete            Special
-    HiLink informKeywordObsolete        Keyword
+    HiLink informAsmObsolete		Special
+    HiLink informKeywordObsolete	Keyword
   endif
-  HiLink informPredicate        Operator
-  HiLink informSysFunc          Identifier
-  HiLink informSysConst         Identifier
-  HiLink informConditional      Conditional
-  HiLink informRepeat           Repeat
-  HiLink informStatement        Statement
-  HiLink informOperator         Operator
-  HiLink informKeyword          Keyword
-  HiLink informGrammar          Keyword
-  HiLink informDictString       String
-  HiLink informNumber           Number
-  HiLink informError            Error
-  HiLink informString           String
-  HiLink informComment          Comment
-  HiLink informAccent           Special
-  HiLink informStringUnicode    Special
-  HiLink informStringCode       Special
-  HiLink informTodo             Todo
+  HiLink informPredicate	Operator
+  HiLink informSysFunc		Identifier
+  HiLink informSysConst		Identifier
+  HiLink informConditional	Conditional
+  HiLink informRepeat		Repeat
+  HiLink informStatement	Statement
+  HiLink informOperator		Operator
+  HiLink informKeyword		Keyword
+  HiLink informGrammar		Keyword
+  HiLink informDictString	String
+  HiLink informNumber		Number
+  HiLink informError		Error
+  HiLink informString		String
+  HiLink informComment		Comment
+  HiLink informAccent		Special
+  HiLink informStringUnicode	Special
+  HiLink informStringCode	Special
+  HiLink informTodo		Todo
   if !exists("inform_highlight_simple")
-    HiLink informLibAttrib      Identifier
-    HiLink informLibProp        Identifier
-    HiLink informLibObj         Identifier
-    HiLink informLibRoutine     Identifier
-    HiLink informLibVariable    Identifier
-    HiLink informLibConst       Identifier
-    HiLink informLibAction      Identifier
+    HiLink informLibAttrib	Identifier
+    HiLink informLibProp	Identifier
+    HiLink informLibObj		Identifier
+    HiLink informLibRoutine	Identifier
+    HiLink informLibVariable	Identifier
+    HiLink informLibConst	Identifier
+    HiLink informLibAction	Identifier
   endif
-  HiLink informBadDictString    informError
-  HiLink informBadAccent        informError
-  HiLink informBadStrUnicode    informError
+  HiLink informBadDictString	informError
+  HiLink informBadAccent	informError
+  HiLink informBadStrUnicode	informError
 
   delcommand HiLink
 endif

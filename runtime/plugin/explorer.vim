@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com - doesn't work)
-" Last Change:	2004 May 12
+" Last Change:	2004 May 13
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -305,7 +305,7 @@ function! s:EditDir()
     syn match browseSortBy      "^\" Sorted by .*$"  contains=browseSuffixInfo
     syn match browseSuffixInfo  "(.*)$"  contained
     syn match browseFilter      "^\" Not Showing:.*$"
-    syn match browseFiletime    "л\d\+$"
+    syn match browseFiletime    "лл\d\+$"
     exec('syn match browseSuffixes    "' . b:suffixesHighlight . '"')
 
     "hi def link browseSynopsis    PreProc
@@ -763,7 +763,7 @@ function! s:ExtractFileDate(line)
   if w:longlist==0
     return getftime(s:ExtractFileName(a:line))
   else
-    return strpart(matchstr(strpart(a:line,b:maxFileLen+b:maxFileSizeLen+4),"л.*"),1) + 0
+    return strpart(matchstr(strpart(a:line,b:maxFileLen+b:maxFileSizeLen+4),"лл.*"),2) + 0
   endif
 endfunction
 
@@ -852,7 +852,7 @@ endfunction
 function! s:FileModDate(name)
   let filetime=getftime(a:name)
   if filetime > 0
-    return strftime(g:explDateFormat,filetime) . " л" . filetime
+    return strftime(g:explDateFormat,filetime) . " лл" . filetime
   else
     return ""
   endif

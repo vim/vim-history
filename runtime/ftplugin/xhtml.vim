@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	xhtml
 " Maintainer:	Dan Sharp <dwsharp at hotmail dot com>
-" Last Changed: 2003 Sep 29
+" Last Changed: 2004 May 11
 " URL:		http://mywebpage.netscape.com/sharppeople/vim/ftplugin
 
 if exists("b:did_ftplugin") | finish | endif
@@ -18,7 +18,7 @@ let s:browsefilter = "HTML Files (*.html, *.htm)\t*.htm*\n" .
 	    \	     "All Files (*.*)\t*.*\n"
 let s:match_words = ""
 
-runtime! ftplugin/html.vim ftplugin/html_*.vim ftplugin/html/*.vim
+runtime! ftplugin/xml.vim ftplugin/xml_*.vim ftplugin/xml/*.vim
 unlet b:did_ftplugin
 
 " Override our defaults if these were set by an included ftplugin.
@@ -35,7 +35,7 @@ if exists("b:match_words")
     unlet b:match_words
 endif
 
-runtime! ftplugin/xml.vim ftplugin/xml_*.vim ftplugin/xml/*.vim
+runtime! ftplugin/html.vim ftplugin/html_*.vim ftplugin/html/*.vim
 let b:did_ftplugin = 1
 
 " Combine the new set of values with those previously included.
@@ -48,7 +48,7 @@ endif
 if exists("b:match_words")
     let s:match_words = b:match_words . "," . s:match_words
 endif
- 
+
 " Load the combined list of match_words for matchit.vim
 if exists("loaded_matchit")
     let b:match_words = s:match_words

@@ -4,7 +4,7 @@
 " Last Change:	Tue Dec  9 21:08:22 EST 2003
 " Extensions:	~/.icewm/menu
 " Comment:	Icewm is a lightweight window manager.  This adds syntax
-" 		highlighting when editing your user's menu file (~/.icewm/menu).
+"		highlighting when editing your user's menu file (~/.icewm/menu).
 
 " clear existing syntax
 if version < 600

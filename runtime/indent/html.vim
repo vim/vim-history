@@ -1,8 +1,8 @@
 " Description:	html indenter
 " Author:	Johannes Zellner <johannes@zellner.org>
 " Last Change:	Tue, 27 Apr 2004 10:28:39 CEST
-" Globals:	g:html_indent_tags         -- indenting tags
-"		g:html_indent_strict       -- inhibit 'O O' elements
+" Globals:	g:html_indent_tags	   -- indenting tags
+"		g:html_indent_strict	   -- inhibit 'O O' elements
 "		g:html_indent_strict_table -- inhibit 'O -' elements
 
 " Only load this indent file when no other was loaded.
@@ -147,7 +147,7 @@ endfun
 " [-- return the sum of indents respecting the syntax of a:lnum --]
 fun! <SID>HtmlIndentSum(lnum, style)
     if a:style == match(getline(a:lnum), '^\s*</')
-	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>') 
+	if a:style == match(getline(a:lnum), '^\s*</\<\('.g:html_indent_tags.'\)\>')
 	    let open = <SID>HtmlIndentOpen(a:lnum, g:html_indent_tags)
 	    let close = <SID>HtmlIndentClose(a:lnum, g:html_indent_tags)
 	    if 0 != open || 0 != close

@@ -2668,7 +2668,7 @@ free_yank_all()
 }
 
 /*
- * Yank the text between curwin->w_cursor and startpos into a yank register.
+ * Yank the text between "oap->start" and "oap->end" into a yank register.
  * If we are to append (uppercase register), we first yank into a new yank
  * register and then concatenate the old and the new one (so we keep the old
  * one in case of out-of-memory).

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     SNOBOL4
 " Maintainer:   Rafal Sulejman <rms@poczta.onet.pl>
-" Last change:  2004 May 05
+" Last change:  2004 May 16
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -13,26 +13,26 @@ endif
 
 syntax case ignore
 " Vanilla Snobol4 keywords
-syn keyword 	snobol4Keywoard   any apply arb arbno arg array
-syn keyword 	snobol4Keywoard   break
-syn keyword 	snobol4Keywoard   char clear code collect convert copy
-syn keyword 	snobol4Keywoard   data datatype date define detach differ dump dupl
-syn keyword 	snobol4Keywoard   endfile eq eval
-syn keyword 	snobol4Keywoard   field
-syn keyword 	snobol4Keywoard   ge gt ident
-syn keyword 	snobol4Keywoard   input integer item
-syn keyword 	snobol4Keywoard   le len lgt local lpad lt
-syn keyword 	snobol4Keywoard   ne notany
-syn keyword 	snobol4Keywoard   opsyn output
-syn keyword 	snobol4Keywoard   pos prototype
-syn keyword 	snobol4Keywoard   remdr replace rpad rpos rtab
-syn keyword 	snobol4Keywoard   size span stoptr
-syn keyword 	snobol4Keywoard   tab table time trace trim
-syn keyword 	snobol4Keywoard   unload
-syn keyword 	snobol4Keywoard   value
+syn keyword	snobol4Keywoard   any apply arb arbno arg array
+syn keyword	snobol4Keywoard   break
+syn keyword	snobol4Keywoard   char clear code collect convert copy
+syn keyword	snobol4Keywoard   data datatype date define detach differ dump dupl
+syn keyword	snobol4Keywoard   endfile eq eval
+syn keyword	snobol4Keywoard   field
+syn keyword	snobol4Keywoard   ge gt ident
+syn keyword	snobol4Keywoard   input integer item
+syn keyword	snobol4Keywoard   le len lgt local lpad lt
+syn keyword	snobol4Keywoard   ne notany
+syn keyword	snobol4Keywoard   opsyn output
+syn keyword	snobol4Keywoard   pos prototype
+syn keyword	snobol4Keywoard   remdr replace rpad rpos rtab
+syn keyword	snobol4Keywoard   size span stoptr
+syn keyword	snobol4Keywoard   tab table time trace trim
+syn keyword	snobol4Keywoard   unload
+syn keyword	snobol4Keywoard   value
 " Spitbol keywords
 " CSNOBOL keywords
-syn keyword 	snobol4Keywoard   sset
+syn keyword	snobol4Keywoard   sset
 
 syn region      snobol4String       matchgroup=Quote start=+"+ skip=+\\"+ end=+"+
 syn region      snobol4String       matchgroup=Quote start=+'+ skip=+\\'+ end=+'+
@@ -68,20 +68,20 @@ if version >= 508 || !exists("did_snobol4_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink snobol4Label           Label
-  HiLink snobol4Conditional     Conditional
-  HiLink snobol4Repeat          Repeat
-  HiLink snobol4Number          Number
-  HiLink snobol4Error           Error
-  HiLink snobol4Statement       PreProc
-  HiLink snobol4String          String
-  HiLink snobol4Comment         Comment
-  HiLink snobol4Special         Special
-  HiLink snobol4Todo            Todo
-  HiLink snobol4Keyword         Statement
-  HiLink snobol4Function        Statement
-  HiLink snobol4Keyword         Keyword
-  HiLink snobol4MathsOperator   Operator
+  HiLink snobol4Label		Label
+  HiLink snobol4Conditional	Conditional
+  HiLink snobol4Repeat		Repeat
+  HiLink snobol4Number		Number
+  HiLink snobol4Error		Error
+  HiLink snobol4Statement	PreProc
+  HiLink snobol4String		String
+  HiLink snobol4Comment		Comment
+  HiLink snobol4Special		Special
+  HiLink snobol4Todo		Todo
+  HiLink snobol4Keyword		Statement
+  HiLink snobol4Function	Statement
+  HiLink snobol4Keyword		Keyword
+  HiLink snobol4MathsOperator	Operator
   HiLink snobol4ParenError      snobol4Error
   HiLink snobol4ErrInParen      snobol4Error
   HiLink snobol4ErrInBracket    snobol4Error

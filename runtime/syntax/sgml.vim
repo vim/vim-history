@@ -42,7 +42,7 @@ syn region  sgmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=sgm
 syn region  sgmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=sgmlEntity,sgmlUnicodeNumberAttr display
 
 " punctuation (within attributes) e.g. <tag sgml:foo.attribute ...>
-"                                               ^   ^
+"						^   ^
 syn match   sgmlAttribPunct +[:.]+ contained display
 
 
@@ -73,7 +73,7 @@ syn match   sgmlAttrib
 " EXAMPLE:
 "
 " <tag foo.attribute = value>
-"                      ^^^^^
+"		       ^^^^^
 "
 syn match   sgmlValue
     \ +[^"' =/!?<>][^ =/!?<>]*+
@@ -89,9 +89,9 @@ syn match   sgmlValue
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"                      ^^^^^^^
+"		       ^^^^^^^
 " <tag foo.attribute = 'value'>
-"                      ^^^^^^^
+"		       ^^^^^^^
 "
 syn region  sgmlValue contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 	    \ contains=sgmlEntity,sgmlUnicodeNumberAttr,@sgmlValueHook
@@ -105,9 +105,9 @@ syn region  sgmlValue contained start=+'+ skip=+\\\\\|\\'+ end=+'+
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"                    ^^^^^^^^^
+"		     ^^^^^^^^^
 " <tag foo.attribute = value>
-"                    ^^^^^^^
+"		     ^^^^^^^
 "
 syn match   sgmlEqualValue
     \ +=\s*[^ =/!?<>]\++
@@ -239,7 +239,7 @@ syn cluster sgmlRegionCluster contains=sgmlRegion,sgmlEmptyRegion,sgmlAbbrRegion
 
 
 " &entities; compare with dtd
-syn match   sgmlEntity                 "&[^; \t]*;" contains=sgmlEntityPunct
+syn match   sgmlEntity		       "&[^; \t]*;" contains=sgmlEntityPunct
 syn match   sgmlEntityPunct  contained "[&.;]"
 
 

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.3a.  Last change: 2004 Mar 31
+*change.txt*    For Vim version 6.3b.  Last change: 2004 May 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -938,13 +938,16 @@ this happen.  However, if the width of the block is not a multiple of a <Tab>
 width and the text after the inserted block contains <Tab>s, that text may be
 misaligned.
 
-Note that after a yank command, Vim leaves the cursor on the first yanked
-character that is closest to the start of the buffer.  This means that "yl"
-doesn't move the cursor, but "yh" moves the cursor one character left.
+Note that after a characterwise yank command, Vim leaves the cursor on the
+first yanked character that is closest to the start of the buffer.  This means
+that "yl" doesn't move the cursor, but "yh" moves the cursor one character
+left.
 Rationale:	In Vi the "y" command followed by a backwards motion would
 		sometimes not move the cursor to the first yanked character,
 		because redisplaying was skipped.  In Vim it always moves to
 		the first character, as specified by Posix.
+With a linewise yank command the cursor is put in the first line, but the
+column is unmodified, thus it may not be on the first yanked character.
 
 There are nine types of registers:			*registers* *E354*
 1. The unnamed register ""

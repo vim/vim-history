@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	fdcc or locale files
 " Maintainer:	Dwayne Bailey <dwayne@translate.org.za>
-" Last Change:	2004 Jan 18
+" Last Change:	2004 May 16
 " Remarks:      FDCC (Formal Definitions of Cultural Conventions) see ISO TR 14652
 
 " For version 5.x: Clear all syntax items
@@ -21,14 +21,14 @@ syn match fdccNumber /[0-9]*/ contained
 " Unicode codings and strings
 syn match fdccUnicodeInValid /<[^<]*>/ contained
 syn match fdccUnicodeValid /<U[0-9A-F][0-9A-F][0-9A-F][0-9A-F]>/ contained
-syn region fdccString start=/"/ end=/"/ contains=fdccUnicodeInValid,fdccUnicodeValid 
+syn region fdccString start=/"/ end=/"/ contains=fdccUnicodeInValid,fdccUnicodeValid
 
 " Valid LC_ Keywords
 syn keyword fdccKeyword escape_char comment_char
-syn keyword fdccKeywordIdentification title source address contact email tel fax language territory revision date category 
+syn keyword fdccKeywordIdentification title source address contact email tel fax language territory revision date category
 syn keyword fdccKeywordCtype copy space translit_start include translit_end outdigit class
 syn keyword fdccKeywordCollate copy script order_start order_end collating-symbol reorder-after reorder-end collating-element symbol-equivalence
-syn keyword fdccKeywordMonetary copy int_curr_symbol currency_symbol mon_decimal_point mon_thousands_sep mon_grouping positive_sign negative_sign int_frac_digits frac_digits p_cs_precedes p_sep_by_space n_cs_precedes n_sep_by_space p_sign_posn n_sign_posn int_p_cs_precedes int_p_sep_by_space int_n_cs_precedes int_n_sep_by_space  int_p_sign_posn int_n_sign_posn 
+syn keyword fdccKeywordMonetary copy int_curr_symbol currency_symbol mon_decimal_point mon_thousands_sep mon_grouping positive_sign negative_sign int_frac_digits frac_digits p_cs_precedes p_sep_by_space n_cs_precedes n_sep_by_space p_sign_posn n_sign_posn int_p_cs_precedes int_p_sep_by_space int_n_cs_precedes int_n_sep_by_space  int_p_sign_posn int_n_sign_posn
 syn keyword fdccKeywordNumeric copy decimal_point thousands_sep grouping
 syn keyword fdccKeywordTime copy abday day abmon mon d_t_fmt d_fmt t_fmt am_pm t_fmt_ampm date_fmt era_d_fmt first_weekday first_workday week cal_direction time_zone era alt_digits era_d_t_fmt
 syn keyword fdccKeywordMessages copy yesexpr noexpr yesstr nostr
@@ -68,43 +68,43 @@ if version >= 508 || !exists("did_fdcc_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink fdccBlank               Blank
+  HiLink fdccBlank		 Blank
 
-  HiLink fdccTodo                Todo
-  HiLink fdccComment             Comment
-  HiLink fdccVariable            Type
+  HiLink fdccTodo		 Todo
+  HiLink fdccComment		 Comment
+  HiLink fdccVariable		 Type
 
-  HiLink fdccLCIdentification    Statement
-  HiLink fdccLCCtype             Statement
-  HiLink fdccLCCollate           Statement
-  HiLink fdccLCMonetary          Statement
-  HiLink fdccLCNumeric           Statement
-  HiLink fdccLCTime              Statement
-  HiLink fdccLCMessages          Statement
-  HiLink fdccLCPaper             Statement
-  HiLink fdccLCTelephone         Statement
-  HiLink fdccLCMeasurement       Statement
-  HiLink fdccLCName              Statement
-  HiLink fdccLCAddress           Statement
+  HiLink fdccLCIdentification	 Statement
+  HiLink fdccLCCtype		 Statement
+  HiLink fdccLCCollate		 Statement
+  HiLink fdccLCMonetary		 Statement
+  HiLink fdccLCNumeric		 Statement
+  HiLink fdccLCTime		 Statement
+  HiLink fdccLCMessages		 Statement
+  HiLink fdccLCPaper		 Statement
+  HiLink fdccLCTelephone	 Statement
+  HiLink fdccLCMeasurement	 Statement
+  HiLink fdccLCName		 Statement
+  HiLink fdccLCAddress		 Statement
 
-  HiLink fdccUnicodeInValid      Error
-  HiLink fdccUnicodeValid        String
-  HiLink fdccString              String
-  HiLink fdccNumber              Blank
+  HiLink fdccUnicodeInValid	 Error
+  HiLink fdccUnicodeValid	 String
+  HiLink fdccString		 String
+  HiLink fdccNumber		 Blank
 
   HiLink fdccKeywordIdentification fdccKeyword
-  HiLink fdccKeywordCtype          fdccKeyword
-  HiLink fdccKeywordCollate        fdccKeyword
-  HiLink fdccKeywordMonetary       fdccKeyword
-  HiLink fdccKeywordNumeric        fdccKeyword
-  HiLink fdccKeywordTime           fdccKeyword
-  HiLink fdccKeywordMessages       fdccKeyword
-  HiLink fdccKeywordPaper          fdccKeyword
-  HiLink fdccKeywordTelephone      fdccKeyword
+  HiLink fdccKeywordCtype	   fdccKeyword
+  HiLink fdccKeywordCollate	   fdccKeyword
+  HiLink fdccKeywordMonetary	   fdccKeyword
+  HiLink fdccKeywordNumeric	   fdccKeyword
+  HiLink fdccKeywordTime	   fdccKeyword
+  HiLink fdccKeywordMessages	   fdccKeyword
+  HiLink fdccKeywordPaper	   fdccKeyword
+  HiLink fdccKeywordTelephone	   fdccKeyword
   HiLink fdccKeywordMeasurement    fdccKeyword
-  HiLink fdccKeywordName           fdccKeyword
-  HiLink fdccKeywordAddress        fdccKeyword
-  HiLink fdccKeyword               Identifier
+  HiLink fdccKeywordName	   fdccKeyword
+  HiLink fdccKeywordAddress	   fdccKeyword
+  HiLink fdccKeyword		   Identifier
 
   delcommand HiLink
 endif

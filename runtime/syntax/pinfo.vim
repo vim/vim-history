@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    pinfo(1) configuration file 
+" Language:	    pinfo(1) configuration file
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/
 " Latest Revision:  2004-04-20
@@ -22,7 +22,7 @@ SetIsk @,48-57,_,-
 delcommand SetIsk
 
 " Ignore Case
-syn case ignore 
+syn case ignore
 
 " Todo
 syn keyword pinfoTodo	contained FIXME TODO XXX
@@ -76,7 +76,7 @@ syn keyword pinfoKeys	KEY_DIRPAGE_1 KEY_DIRPAGE_2
 
 " Special Keys
 syn keyword pinfoSpecialKeys	KEY_BREAK KEY_DOWN KEY_UP KEY_LEFT KEY_RIGHT
-syn keyword pinfoSpecialKeys	KEY_DOWN KEY_HOME KEY_BACKSPACE KEY_NPAGE 
+syn keyword pinfoSpecialKeys	KEY_DOWN KEY_HOME KEY_BACKSPACE KEY_NPAGE
 syn keyword pinfoSpecialKeys	KEY_PPAGE KEY_END KEY_IC KEY_DC
 syn region  pinfoSpecialKeys	matchgroup=pinfoSpecialKeys transparent start=+KEY_\%(F\|CTRL\|ALT\)(+ end=+)+
 syn region  pinfoSimpleKey	matchgroup=pinfoSimpleKey start=+'+ skip=+\\'+ end=+'+ contains=pinfoSimpleKeyEscape

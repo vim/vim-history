@@ -1,4 +1,4 @@
-*os_unix.txt*   For Vim version 6.3a.  Last change: 2003 Mar 15
+*os_unix.txt*   For Vim version 6.3b.  Last change: 2003 Mar 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

@@ -3,7 +3,7 @@
 " Maintainer:	Tim Chase <vb.vim@tim.thechases.com>
 " Former Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
 "	(tried multiple times to contact, but email bounced)
-" Last Change:	2004 January 20
+" Last Change:	2004 May 16
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
@@ -23,8 +23,8 @@ syn case ignore
 syn keyword vbStatement AppActivate As Base Beep Call Case ChDir ChDrive Const
 syn keyword vbStatement Declare DefBool DefByte DefCur DefDate DefDbl DefDec
 syn keyword vbStatement DefInt DefLng DefObj DefSng DefStr Deftype DefVar
-syn keyword vbStatement DeleteSetting Dim Do Else ElseIf End Enum Erase Event 
-syn keyword vbStatement Exit Explicit FileCopy For ForEach Function Get GoSub 
+syn keyword vbStatement DeleteSetting Dim Do Else ElseIf End Enum Erase Event
+syn keyword vbStatement Exit Explicit FileCopy For ForEach Function Get GoSub
 syn keyword vbStatement GoTo If Implements Kill Let LineInput Lock Loop LSet
 syn keyword vbStatement MkDir Name Next OnError On Option Private Property
 syn keyword vbStatement Public Put RaiseEvent Randomize ReDim Reset Resume

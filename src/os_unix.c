@@ -1295,8 +1295,10 @@ x_connect_to_server()
 {
     regmatch_T	regmatch;
 
+#if defined(FEAT_CLIENTSERVER)
     if (x_force_connect)
 	return TRUE;
+#endif
     if (x_no_connect)
 	return FALSE;
 

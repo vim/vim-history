@@ -1,5 +1,5 @@
 " Vim syntax file
-" Language:	    elinks(1) configuration file 
+" Language:	    elinks(1) configuration file
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/
 " Latest Revision:  2004-04-25
@@ -39,7 +39,7 @@ syn region  elinksString    matchgroup=elinksString start=+"+ skip=+\\\\\|\\"+ e
 syn keyword elinksKeyword   set bind
 
 " Options
-syn keyword elinksPrefix    bookmarks 
+syn keyword elinksPrefix    bookmarks
 syn keyword elinksOptions   file_format
 
 syn keyword elinksPrefix    config

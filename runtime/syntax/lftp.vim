@@ -42,7 +42,7 @@ syn match   lftpInterval	contained "\<\(\d\+\(\.\d\+\)\=[dhms]\)\+\>"
 
 " commands
 syn keyword lftpKeywords	alias anon at bookmark cache cat cd chmod close
-syn keyword lftpKeywords	cls command debug du echo exit fg find get get1 
+syn keyword lftpKeywords	cls command debug du echo exit fg find get get1
 syn keyword lftpKeywords	glob help history jobs kill lcd lftp lpwd ls
 syn keyword lftpKeywords	mget mirror mkdir module
 syn keyword lftpKeywords	more mput mrm mv nlist open pget put pwd queue

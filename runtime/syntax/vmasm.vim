@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	(VAX) Macro Assembly
 " Maintainer:	Tom Uijldert <tom.uijldert [at] cmg.nl>
-" Last change:	2004 Feb 12
+" Last change:	2004 May 16
 "
 " This is incomplete. Feel free to contribute...
 "
@@ -120,14 +120,14 @@ syn keyword vmasmTodo		contained todo
 syn match vmasmComment		";.*" contains=vmasmTodo
 
 " Include
-syn match vmasmInclude	        "\.library\>"
+syn match vmasmInclude		"\.library\>"
 
 " Macro definition
 syn match vmasmMacro		"\.macro\>"
 syn match vmasmMacro		"\.mexit\>"
 syn match vmasmMacro		"\.endm\>"
-syn match vmasmMacro	        "\.mcall\>"
-syn match vmasmMacro	        "\.mdelete\>"
+syn match vmasmMacro		"\.mcall\>"
+syn match vmasmMacro		"\.mdelete\>"
 
 " Conditional assembly
 syn match vmasmPreCond		"\.iff\=\>"
@@ -137,7 +137,7 @@ syn match vmasmPreCond		"\.if_true\(_false\)\=\>"
 syn match vmasmPreCond		"\.iif\>"
 
 " Loop control
-syn match vmasmRepeat	        "\.irpc\=\>"
+syn match vmasmRepeat		"\.irpc\=\>"
 syn match vmasmRepeat		"\.repeat\>"
 syn match vmasmRepeat		"\.rept\>"
 syn match vmasmRepeat		"\.endr\>"
@@ -234,7 +234,7 @@ if version >= 508 || !exists("did_macro_syntax_inits")
   HiLink vmasmMacro		Macro		" PreProc
   " HiLink vmasmMacroParam	Keyword		" Statement
 
-  HiLink vmasmDirective	        Special
+  HiLink vmasmDirective		Special
   HiLink vmasmPreCond		Special
 
 
