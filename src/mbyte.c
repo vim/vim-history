@@ -2242,8 +2242,10 @@ utf_head_off(base, p)
 	/* Move q to the first byte of this char. */
 	while (q > base && (*q & 0xc0) == 0x80)
 	    --q;
-	/* Check for illegal sequence. */
-	if (utf8len_tab[*q] != (int)(s - q + 1))
+	/* Check for illegal sequence. Do allow an illegal byte after where we
+	 * started. */
+	if (utf8len_tab[*q] != (int)(s - q + 1)
+				       && utf8len_tab[*q] != (int)(p - q + 1))
 	    return 0;
 
 	if (q <= base)
