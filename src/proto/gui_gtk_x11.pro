@@ -16,6 +16,7 @@ void gui_mch_enable_menu __ARGS((int flag));
 void gui_mch_show_toolbar __ARGS((int showit));
 int gui_mch_adjust_charsize __ARGS((void));
 GuiFontset gui_mch_get_fontset __ARGS((char_u *name, int report_error, int fixed_width));
+char_u *gui_mch_font_dialog __ARGS((char_u *oldval));
 int gui_mch_init_font __ARGS((char_u *font_name, int fontset));
 GuiFont gui_mch_get_font __ARGS((char_u *name, int report_error));
 void gui_mch_set_font __ARGS((GuiFont font));

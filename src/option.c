@@ -4734,12 +4734,33 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'guifont' */
     else if (varp == &p_guifont)
     {
-	if (gui.in_use && gui_init_font(p_guifont, FALSE) != OK
-# if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_PHOTON)
-		&& *p_guifont != '*'
+	if (gui.in_use)
+	{
+# ifdef FEAT_GUI_GTK
+	    if (STRCMP(p_guifont, "*") == 0)
+	    {
+		/*
+		 * Put up a font dialog and let the user select a new value.
+		 * If this is cancelled go back to the old value but don't
+		 * give an error message.
+		 */
+		p = gui_mch_font_dialog(oldval);
+		if (p != NULL)
+		{
+		    free_string_option(p_guifont);
+		    p_guifont = p;
+		}
+		else
+		    errmsg = (char_u *)"";
+	    }
 # endif
-		)
-	    errmsg = (char_u *)N_("Invalid font(s)");
+	    if (errmsg == NULL && gui_init_font(p_guifont, FALSE) != OK
+# if defined(FEAT_GUI_MSWIN) || defined(FEAT_GUI_PHOTON)
+		    && STRCMP(p_guifont, "*") != 0
+# endif
+	       )
+		errmsg = (char_u *)N_("Invalid font(s)");
+	}
     }
 # ifdef FEAT_XFONTSET
     else if (varp == &p_guifontset)

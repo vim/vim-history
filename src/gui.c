@@ -19,7 +19,7 @@ static void set_guifontwide __ARGS((char_u *font_name));
 static void gui_check_pos __ARGS((void));
 static void gui_position_components __ARGS((int));
 static void gui_outstr __ARGS((char_u *, int));
-static void gui_screenchar __ARGS((int off, int flags, guicolor_T fg, guicolor_T bg, int back));
+static int gui_screenchar __ARGS((int off, int flags, guicolor_T fg, guicolor_T bg, int back));
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
 static void gui_do_scrollbar __ARGS((win_T *wp, int which, int enable));
@@ -909,11 +909,11 @@ gui_update_cursor(force, clear_selection)
 	    gui.highlight_mask = (cattr | attr);
 #ifdef FEAT_HANGULIN
 	    if (composing_hangul)
-		gui_outstr_nowrap(composing_hangul_buffer, 2,
+		(void)gui_outstr_nowrap(composing_hangul_buffer, 2,
 			GUI_MON_IS_CURSOR | GUI_MON_NOCLEAR, cfg, cbg, 0);
 	    else
 #endif
-		gui_screenchar(LineOffset[gui.row] + gui.col,
+		(void)gui_screenchar(LineOffset[gui.row] + gui.col,
 			GUI_MON_IS_CURSOR | GUI_MON_NOCLEAR, cfg, cbg, 0);
 	}
 	else
@@ -942,7 +942,7 @@ gui_update_cursor(force, clear_selection)
 
 #ifndef FEAT_GUI_MSWIN	    /* doesn't seem to work for MSWindows */
 	    gui.highlight_mask = ScreenAttrs[LineOffset[gui.row] + gui.col];
-	    gui_screenchar(LineOffset[gui.row] + gui.col,
+	    (void)gui_screenchar(LineOffset[gui.row] + gui.col,
 		    GUI_MON_TRS_CURSOR | GUI_MON_NOCLEAR,
 		    (guicolor_T)0, (guicolor_T)0, 0);
 #endif
@@ -1627,13 +1627,14 @@ gui_outstr(s, len)
 	else
 	    this_len = len;
 
-	gui_outstr_nowrap(s, this_len, 0, (guicolor_T)0, (guicolor_T)0, 0);
+	(void)gui_outstr_nowrap(s, this_len,
+					  0, (guicolor_T)0, (guicolor_T)0, 0);
 	s += this_len;
 	len -= this_len;
 #ifdef FEAT_MBYTE
 	/* fill up for a double-width char that doesn't fit. */
 	if (len > 0 && gui.col < Columns)
-	    gui_outstr_nowrap((char_u *)" ", 1,
+	    (void)gui_outstr_nowrap((char_u *)" ", 1,
 					  0, (guicolor_T)0, (guicolor_T)0, 0);
 #endif
 	/* The cursor may wrap to the next line. */
@@ -1648,8 +1649,9 @@ gui_outstr(s, len)
 /*
  * Output one character (may be one or two display cells).
  * Caller must check for valid "off".
+ * Returns FAIL or OK, just like gui_outstr_nowrap().
  */
-    static void
+    static int
 gui_screenchar(off, flags, fg, bg, back)
     int		off;	    /* Offset from start of screen */
     int		flags;
@@ -1661,27 +1663,26 @@ gui_screenchar(off, flags, fg, bg, back)
 
     /* Don't draw right halve of a double-width UTF-8 char. "cannot happen" */
     if (enc_utf8 && ScreenLines[off] == 0)
-	return;
+	return OK;
+
     if (enc_utf8 && ScreenLinesUC[off] != 0)
 	/* Draw UTF-8 multi-byte character. */
-	gui_outstr_nowrap(buf,
-		utfc_char2bytes(off, buf),
-		flags, fg, bg, 0);
-    else if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+	return gui_outstr_nowrap(buf, utfc_char2bytes(off, buf),
+							 flags, fg, bg, back);
+
+    if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
     {
 	buf[0] = ScreenLines[off];
 	buf[1] = ScreenLines2[off];
-	gui_outstr_nowrap(buf, 2, flags, fg, bg, 0);
+	return gui_outstr_nowrap(buf, 2, flags, fg, bg, back);
     }
-    else
-	/* Draw non-multi-byte character or DBCS character. */
-	gui_outstr_nowrap(ScreenLines + off,
-		enc_dbcs ? (*mb_ptr2len_check)(ScreenLines + off) : 1,
-		flags, fg, bg, back);
+
+    /* Draw non-multi-byte character or DBCS character. */
+    return gui_outstr_nowrap(ScreenLines + off,
+	    enc_dbcs ? (*mb_ptr2len_check)(ScreenLines + off) : 1,
+							 flags, fg, bg, back);
 #else
-	gui_outstr_nowrap(ScreenLines + off,
-		1,
-		flags, fg, bg, back);
+    return gui_outstr_nowrap(ScreenLines + off, 1, flags, fg, bg, back);
 #endif
 }
 
@@ -1693,8 +1694,10 @@ gui_screenchar(off, flags, fg, bg, back)
  * actually draw (an inverted) cursor.
  * GUI_MON_TRS_CURSOR is used to draw the cursor text with a transparant
  * background.
+ * Returns OK, unless "back" is non-zero and using the bold trick, then return
+ * FAIL (the caller should start drawing "back" chars back).
  */
-    void
+    int
 gui_outstr_nowrap(s, len, flags, fg, bg, back)
     char_u	*s;
     int		len;
@@ -1722,7 +1725,7 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     if (len < 0)
 	len = (int)STRLEN(s);
     if (len == 0)
-	return;
+	return OK;
 
 #ifdef FEAT_SIGN_ICONS
     if (*s == SIGN_BYTE)
@@ -1853,15 +1856,11 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 
     /*
      * When drawing bold or italic characters the spill-over from the left
-     * neighbor may be destroyed.  Backup to start redrawing just after a
-     * blank.
+     * neighbor may be destroyed.  Let the caller backup to start redrawing
+     * just after a blank.
      */
-    if ((draw_flags & DRAW_BOLD) || (highlight_mask & HL_ITALIC))
-    {
-	s -= back;
-	len += back;
-	col -= back;
-    }
+    if (back != 0 && ((draw_flags & DRAW_BOLD) || (highlight_mask & HL_ITALIC)))
+	return FAIL;
 
 #ifdef RISCOS
     /* If there's no italic font, then fake it */
@@ -2022,6 +2021,8 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 	/* Draw the sign on top of the spaces. */
 	gui_mch_drawsign(gui.row, col, gui.highlight_mask);
 #endif
+
+    return OK;
 }
 
 /*
@@ -2036,7 +2037,7 @@ gui_undraw_cursor()
 #ifdef FEAT_HANGULIN
 	if (composing_hangul
 		    && gui.col == gui.cursor_col && gui.row == gui.cursor_row)
-	    gui_outstr_nowrap(composing_hangul_buffer, 2,
+	    (void)gui_outstr_nowrap(composing_hangul_buffer, 2,
 		    GUI_MON_IS_CURSOR | GUI_MON_NOCLEAR,
 		    gui.norm_pixel, gui.back_pixel, 0);
 	else
@@ -2102,7 +2103,7 @@ gui_redraw_block(row1, col1, row2, col2, flags)
     int		off;
     char_u	first_attr;
     int		idx, len;
-    int		back;
+    int		back, nback;
     int		retval = FALSE;
 #ifdef FEAT_MBYTE
     int		orig_col1, orig_col2;
@@ -2160,10 +2161,11 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	    if (ScreenAttrs[off - 1 - back] != ScreenAttrs[off]
 		    || ScreenLines[off - 1 - back] == ' ')
 		break;
-	retval = (col1 > 0 && ScreenAttrs[off - 1] != 0 && back == 0);
+	retval = (col1 > 0 && ScreenAttrs[off - 1] != 0 && back == 0
+					      && ScreenLines[off - 1] != ' ');
 
-	/* break it up in strings of characters with the same attributes */
-	/* print UTF-8 characters individually */
+	/* Break it up in strings of characters with the same attributes. */
+	/* Print UTF-8 characters individually. */
 	while (len > 0)
 	{
 	    first_attr = ScreenAttrs[off];
@@ -2172,26 +2174,24 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 	    if (enc_utf8 && ScreenLinesUC[off] != 0)
 	    {
 		/* output multi-byte character separately */
-		gui_screenchar(off, flags, (guicolor_T)0, (guicolor_T)0, back);
-		++off;
-		--len;
-		if (ScreenLines[off] == 0)
-		{
-		    ++off;
-		    --len;
-		}
+		nback = gui_screenchar(off, flags,
+					  (guicolor_T)0, (guicolor_T)0, back);
+		if (gui.col < Columns && ScreenLines[off + 1] == 0)
+		    idx = 2;
+		else
+		    idx = 1;
 	    }
 	    else if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
 	    {
 		/* output double-byte, single-width character separately */
-		gui_screenchar(off, flags, (guicolor_T)0, (guicolor_T)0, back);
-		++off;
-		--len;
+		nback = gui_screenchar(off, flags,
+					  (guicolor_T)0, (guicolor_T)0, back);
+		idx = 1;
 	    }
 	    else
 #endif
 	    {
-		for (idx = 0; len > 0 && ScreenAttrs[off + idx] == first_attr;
+		for (idx = 0; idx < len && ScreenAttrs[off + idx] == first_attr;
 									idx++)
 		{
 #ifdef FEAT_MBYTE
@@ -2205,17 +2205,25 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 			    break;
 			if (len > 1 && (*mb_ptr2len_check)(ScreenLines
 							    + off + idx) == 2)
-			{
 			    ++idx;  /* skip second byte of double-byte char */
-			    --len;
-			}
 		    }
 #endif
-		    --len;
 		}
-		gui_outstr_nowrap(ScreenLines + off, idx, flags,
+		nback = gui_outstr_nowrap(ScreenLines + off, idx, flags,
 					  (guicolor_T)0, (guicolor_T)0, back);
+	    }
+	    if (nback == FAIL)
+	    {
+		/* Must back up to start drawing where a bold or italic word
+		 * starts. */
+		off -= back;
+		len += back;
+		gui.col -= back;
+	    }
+	    else
+	    {
 		off += idx;
+		len -= idx;
 	    }
 	    back = 0;
 	}
