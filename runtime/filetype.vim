@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Feb 26
+" Last change:	2002 Mar 01
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -172,7 +172,7 @@ au BufNewFile,BufRead *.bas			call <SID>FTVB("basic")
 " Check if one of the first five lines contains "VB_Name".  In that case it is
 " probably a Visual Basic file.  Otherwise it's assumed to be "alt" filetype.
 fun! <SID>FTVB(alt)
-  if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name\|Begin VB\.Form'
+  if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name\|Begin VB\.\(Form\|MDIForm\|UserControl\)'
     setf vb
   else
     exe "setf " . a:alt
@@ -180,7 +180,7 @@ fun! <SID>FTVB(alt)
 endfun
 
 " Visual Basic Script (close to Visual Basic)
-au BufNewFile,BufRead *.vbs,*.dsm		setf vb
+au BufNewFile,BufRead *.vbs,*.dsm,*.ctl		setf vb
 
 " Batch file for MSDOS (*.cmd is close enough)
 au BufNewFile,BufRead *.bat,*.cmd,*.sys		setf dosbatch
