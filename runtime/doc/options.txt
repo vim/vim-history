@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
+*options.txt*   For Vim version 5.5.  Last change: 1999 Oct 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -974,6 +974,8 @@ A jump table for the options with a short description can be found at |X_op|.
 				'B' included:	"\^["    (^[ is a real <Esc>)
 				'B' excluded:   "<Esc>"  (5 characters)
 				('<' excluded in both cases)
+		C	Do not concatenate sourced lines that start with a
+			backslash.  See |line-continuation|.
 		<	Disable the recognition of special key codes in |<>|
 			form in mappings, abbreviations, and the "to" part of
 			menu commands.  For example, the command

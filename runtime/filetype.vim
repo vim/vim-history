@@ -1,10 +1,14 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Sep 12
+" Last change:	1999 Oct 02
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
+
+" Line continuation is used here, remove 'C' from 'cpoptions'
+let ft_cpo_save = &cpo
+set cpo-=C
 
 augroup filetype
 
@@ -550,6 +554,10 @@ augroup END
 if has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "M"
   source <sfile>:p:h/menu.vim
 endif
+
+" Restore 'cpoptions'
+let &cpo = ft_cpo_save
+unlet ft_cpo_save
 
 
 endif " !exists("did_load_filetypes")

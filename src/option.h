@@ -105,6 +105,7 @@
 #define CPO_BAR		'b'	/* "\|" ends a mapping */
 #define CPO_BSLASH	'B'	/* backslash in mapping is not special */
 #define CPO_SEARCH	'c'
+#define CPO_CONCAT	'C'	/* Don't concatenate sourced lines */
 #define CPO_DOTTAG	'd'	/* "./tags" in 'tags' is in current dir */
 #define CPO_EXECBUF	'e'
 #define CPO_EMPTYREGION	'E'	/* operating on empty region is an error */
@@ -135,7 +136,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcdeEfFjJkKlLmoOprsStuwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdeEfFjJkKlLmoOprsStuwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"
