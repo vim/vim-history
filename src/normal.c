@@ -1515,8 +1515,12 @@ do_pending_operator(cap, old_col, gui_yank)
 		    && oap->motion_force == NUL
 		    )
 	    {
-		prep_redo(oap->regname, 0L, NUL, 'v', get_op_char(oap->op_type),
-				 get_extra_op_char(oap->op_type), cap->nchar);
+		/* Prepare for redoing.  Only use the nchar field for "r",
+		 * otherwise it might be the second char of the operator. */
+		prep_redo(oap->regname, 0L, NUL, 'v',
+				get_op_char(oap->op_type),
+				get_extra_op_char(oap->op_type),
+				oap->op_type == OP_REPLACE ? cap->nchar : NUL);
 		redo_VIsual_mode = resel_VIsual_mode;
 		redo_VIsual_col = resel_VIsual_col;
 		redo_VIsual_line_count = resel_VIsual_line_count;
