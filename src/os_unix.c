@@ -3042,14 +3042,18 @@ mch_get_shellsize()
     /*
      * 1. try using an ioctl. It is the most accurate method.
      *
-     * Try using TIOCGWINSZ first, some systems that have it also define TIOCGSIZE
-     * but don't have a struct ttysize.
+     * Try using TIOCGWINSZ first, some systems that have it also define
+     * TIOCGSIZE but don't have a struct ttysize.
      */
 # ifdef TIOCGWINSZ
     {
 	struct winsize	ws;
+	int fd = 1;
 
-	if (ioctl(1, TIOCGWINSZ, &ws) == 0)
+	/* When stdout is not a tty, use stdin for the ioctl(). */
+	if (!isatty(fd) && isatty(read_cmd_fd))
+	    fd = read_cmd_fd;
+	if (ioctl(fd, TIOCGWINSZ, &ws) == 0)
 	{
 	    columns = ws.ws_col;
 	    rows = ws.ws_row;
@@ -3059,8 +3063,12 @@ mch_get_shellsize()
 #  ifdef TIOCGSIZE
     {
 	struct ttysize	ts;
+	int fd = 1;
 
-	if (ioctl(1, TIOCGSIZE, &ts) == 0)
+	/* When stdout is not a tty, use stdin for the ioctl(). */
+	if (!isatty(fd) && isatty(read_cmd_fd))
+	    fd = read_cmd_fd;
+	if (ioctl(fd, TIOCGSIZE, &ts) == 0)
 	{
 	    columns = ts.ts_cols;
 	    rows = ts.ts_lines;
