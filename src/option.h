@@ -142,6 +142,7 @@
 #define CPO_OVERNEW	'O'	/* silently overwrite new file */
 #define CPO_LISP	'p'	/* 'lisp' indenting */
 #define CPO_REDO	'r'
+#define CPO_REMMARK	'R'	/* remove marks when filtering */
 #define CPO_BUFOPT	's'
 #define CPO_BUFOPTGLOB	'S'
 #define CPO_TAGPAT	't'
@@ -157,7 +158,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmMnoOprsStuvwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdDeEfFgijJkKlLmMnoOprRsStuvwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"
