@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.5.  Last change: 1999 Sep 19
+*syntax.txt*    For Vim version 5.5.  Last change: 1999 Oct 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1046,6 +1046,10 @@ DEFINING KEYWORDS					*:syn-keyword*
 	variations at once:
 >  :syntax keyword   VimCommand   ab[breviate] n[ext]
 
+	Don't forget that a keyword can only be recognized if all the
+	characters are included in the 'iskeyword' option.  If one character
+	isn't, the keyword will never be recognized.
+
 	A keyword always has higher priority than a match or region, the
 	keyword is used if more than one item matches.  Keywords do not nest
 	and a keyword can't contain anything else.
@@ -1069,12 +1073,15 @@ DEFINING KEYWORDS					*:syn-keyword*
 
 DEFINING MATCHES					*:syn-match*
 
-:sy[ntax] match {group-name} [{options}] {pattern} [{options}]
+:sy[ntax] match {group-name} [{options}] [excludenl] {pattern} [{options}]
 
 	This defines one match.
 
 	{group-name}		A syntax group name such as "Comment".
 	[{options}]		See |:syn-arguments| below.
+	[excludenl]		Don't make a pattern with the end-of-line "$"
+				extend a containing match or region.  Must be
+				given before the pattern. |:syn-excludenl|
 	{pattern}		The search pattern that defines the match.
 				See |:syn-pattern| below.
 
@@ -1087,6 +1094,7 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 :sy[ntax] region {group-name} [{options}]
 		[matchgroup={group_name}]
 		[keepend]
+		[excludenl]
 		start={start_pattern} ..
 		[skip={skip_pattern}]
 		end={end_pattern} ..
@@ -1105,6 +1113,10 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	keepend			Don't allow contained matches to go past a
 				match with the end pattern.  See
 				|:syn-keepend|.
+	excludenl		Don't make a pattern with the end-of-line "$"
+				extend a containing match or item.  Only
+				useful for end patterns.  Must be given before
+				the patterns it applies to. |:syn-excludenl|
 	start={start_pattern}	The search pattern that defines the start of
 				the region.  See |:syn-pattern| below.
 	skip={skip_pattern}	The search pattern that defines text inside
@@ -1125,7 +1137,7 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 
 	When more than one start pattern is given, a match with one of these
 	is sufficient.  This means there is an OR relation between the start
-	patterns.  The first one that matches is used.  The same is true for
+	patterns.  The last one that matches is used.  The same is true for
 	the end patterns.
 
 	The search for the end pattern starts at the start of the region.
@@ -1163,6 +1175,21 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	after each contained match.  When "keepend" is included, the first
 	encountered match with an end pattern is used, truncating any
 	contained matches.
+
+							*:syn-excludenl*
+	When a pattern for a match or end pattern of a region includes a '$'
+	to match the end-of-line, it will make an item that it is contained in
+	continue on the next line.  For example, a match with "\\$" (backslash
+	at the end of the line) can make a match continue that would normally
+	stop at the end of the line.  This is the default behaviour.  If this
+	is not wanted, there are two ways to avoid it:
+	1. Use "keepend" for the the containing item.  This will keep all
+	   contained matches from extending the match or region.  It can be
+	   used when all contained items must not extend the containing item.
+	2. Use "excludenl" in the contained item.  This will keep that match
+	   from extending the containing match or region.  It can be used if
+	   only some contained items must not extend the containing item.
+	   "excludenl" must be given before the pattern it applies to.
 
 							*:syn-matchgroup*
 	"matchgroup" can be used to highlight the start and/or end pattern
