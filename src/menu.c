@@ -331,10 +331,26 @@ ex_menu(eap)
     {
 	/*
 	 * Change sensitivity of the menu.
+	 * For the PopUp menu, remove a menu for each mode separately.
 	 * Careful: menu_nable_recurse() changes menu_path.
 	 */
 	if (STRCMP(menu_path, "*") == 0)	/* meaning: do all menus */
 	    menu_path = (char_u *)"";
+
+	if (menu_is_popup(menu_path))
+	{
+	    for (i = 0; i < MENU_INDEX_TIP; ++i)
+		if (modes & (1 << i))
+		{
+		    p = popup_mode_name(menu_path, i);
+		    if (p != NULL)
+		    {
+			menu_nable_recurse(root_menu, p, MENU_ALL_MODES,
+								      enable);
+			vim_free(p);
+		    }
+		}
+	}
 	menu_nable_recurse(root_menu, menu_path, modes, enable);
     }
     else if (unmenu)
@@ -1629,9 +1645,9 @@ menu_is_popup(name)
     return (STRNCMP(name, "PopUp", 5) == 0);
 }
 
-#if defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if (defined(FEAT_GUI_MOTIF) && (XmVersion <= 1002)) || defined(PROTO)
 /*
- * Return TRUE if "name" is part of a poup menu.
+ * Return TRUE if "name" is part of a popup menu.
  */
     int
 menu_is_child_of_popup(menu)
