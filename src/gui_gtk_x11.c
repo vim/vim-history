@@ -4296,6 +4296,8 @@ get_styled_font_variants(char_u * font_name)
 #endif /* !HAVE_GTK2 */
 
 #ifdef HAVE_GTK2
+static PangoEngineShape *default_shape_engine = NULL;
+
 /*
  * Create a map from ASCII characters in the range [32,126] to glyphs
  * of the current font.  This is used by gui_gtk2_draw_string() to skip
@@ -4335,6 +4337,9 @@ ascii_glyph_table_init(void)
 
 	item  = (PangoItem *)item_list->data;
 	width = gui.char_width * PANGO_SCALE;
+
+	/* Remember the shape engine used for ASCII. */
+	default_shape_engine = item->analysis.shape_engine;
 
 	gui.ascii_font = item->analysis.font;
 	g_object_ref(gui.ascii_font);
@@ -5146,6 +5151,10 @@ not_ascii:
 	     */
 	    item->analysis.level = (item->analysis.level + 1) & (~1U);
 
+	    /* HACK: Overrule the shape engine, we don't want shaping to be
+	     * done, because drawing the cursor would change the display. */
+	    item->analysis.shape_engine = default_shape_engine;
+
 	    pango_shape((const char *)s + item->offset, item->length,
 			&item->analysis, glyphs);
 	    /*
@@ -5194,7 +5203,7 @@ not_ascii:
 		    item_cells += cellcount;
 		    cells = cellcount;
 		}
-		else if (i > 0) /* i == 0 "cannot happen" */
+		else if (i > 0)
 		{
 		    int width;
 
@@ -5208,7 +5217,7 @@ not_ascii:
 					    MAX(0, width - cluster_width) / 2;
 		    glyph->geometry.width = width;
 		}
-		else
+		else /* i == 0 "cannot happen" */
 		{
 		    glyph->geometry.width = 0;
 		}
