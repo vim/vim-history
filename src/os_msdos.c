@@ -1432,7 +1432,6 @@ mch_init(void)
 	clip_init(FALSE);		/* no clipboard available, too bad */
     else				/* else, running under Windows, OK */
 	clip_init(TRUE);		/* clipboard is available */
-
 #endif
 }
 
@@ -2938,6 +2937,7 @@ SetClipboardData(
     int		real_mode_segment_address;
     int		protected_mode_selector;
     long_u	protected_mode_offset = 0L;
+    int		total_size = clip_data_size;
 
     char_u	*clip_sel_type;
 
@@ -2946,7 +2946,7 @@ SetClipboardData(
      * of text selection: MLINE, MCHAR, or MBLOCK.
      */
     if (clip_data_format == CF_VIMCLIP)
-	clip_data_size++;			/* extra byte for marker */
+	total_size++;			/* extra byte for marker */
 
     /* Data cannot be sent directly from a Vim string (pClipData) to
      * the Windows clipboard, because the Windows clipboard interface
@@ -2963,7 +2963,7 @@ SetClipboardData(
      * we can do about this, we simply have to fail.
      */
     real_mode_segment_address = __dpmi_allocate_dos_memory(
-	    (clip_data_size + 15) >> 4,	/* buffer size, in 16-byte paragraphs */
+	    (total_size + 15) >> 4,	/* buffer size, in 16-byte paragraphs */
 	    &protected_mode_selector);	/* prot-mode selector for the address */
 
     if (real_mode_segment_address == -1)
@@ -2980,8 +2980,7 @@ SetClipboardData(
 
     /* Copy data from Vim's buffer (clip_data) into the DOS transfer buffer.
      * This can be larger than 64K; movedata() takes care of crossing any
-     * 16-bit segment boundaries.  Note that clip_data_size's null terminator
-     * is copied.
+     * 16-bit segment boundaries.
      *
      * If we're using Vim's custom clipboard format, we must copy one extra
      * byte to indicate the type of selection: line, character, or block.
@@ -3002,7 +3001,7 @@ SetClipboardData(
 		_my_ds(), (unsigned)clip_sel_type,
 					    /* source: normal memory address */
 		protected_mode_selector, 0, /* target: DOS ad (via selector) */
-		STRLEN(clip_sel_type));	    /* how many bytes to copy */
+		1);			    /* how many bytes to copy */
 
 	protected_mode_offset += STRLEN(clip_sel_type);	/* allow for marker */
     }
@@ -3019,13 +3018,13 @@ SetClipboardData(
      */
     dpmi_regs.x.ax = 0x1703;			/* send clipboard data */
     dpmi_regs.x.dx = clip_data_format;		/* flag: format of the data */
-    dpmi_regs.x.si = ((clip_data_size >> 16)
+    dpmi_regs.x.si = ((total_size >> 16)
 	    & 0x0000ffffL);			/* hi word of data size */
-    dpmi_regs.x.cx = (clip_data_size & 0x0000ffffL);
+    dpmi_regs.x.cx = (total_size & 0x0000ffffL);
 						/* lo word of data size */
     dpmi_regs.x.es = real_mode_segment_address;	/* buffer address: segment */
     dpmi_regs.x.bx = 0;				/* buffer address: offset */
-    if (__dpmi_int( 0x2f, &dpmi_regs) == -1)
+    if (__dpmi_int(0x2f, &dpmi_regs) == -1)
     {
 	/* real-mode interrupt failed. */
 	FreeDOSMemory(protected_mode_selector);   /* clean up DOS memory */
