@@ -2465,7 +2465,7 @@ onepage(dir, count)
      * But make sure we scroll at least one line (happens with mix of long
      * wrapping lines and non-wrapping line).
      */
-    if (dir == FORWARD && check_top_offset())
+    if (retval == OK && dir == FORWARD && check_top_offset())
     {
 	scroll_cursor_top(1, FALSE);
 	if (curwin->w_topline <= old_topline
