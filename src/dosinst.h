@@ -49,7 +49,7 @@ char *searchpath(char *name);
 #if defined(DJGPP) || defined(UNIX_LINT)
 # define vim_mkdir(x, y) mkdir((char *)(x), y)
 #else
-# ifdef WIN3264
+# if defined(WIN3264) && !defined(__BORLANDC__)
 #  define vim_mkdir(x, y) _mkdir((char *)(x))
 # else
 #  define vim_mkdir(x, y) mkdir((char *)(x))
