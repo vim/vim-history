@@ -1,8 +1,8 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	Thu, 21 Jun 2001 07:42:08
-" Version: 2.5
+" Last Change:	2002 Feb 11
+" Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
 " This file implements a file explorer. Latest version available at:
@@ -1225,6 +1225,20 @@ function! s:SortListing(msg)
 
 endfunction
 
+"---
+" Setup for editing directories after starting up by going to each window.
+" Required for "vim -o filename dirname"
+"
+function! s:EditAll()
+  let t = winnr()
+  while 1
+    wincmd w
+    if winnr() == t
+      break
+    endif
+    call s:EditDir()
+  endwhile
+endfunction
 
 "---
 " Set up the autocommand to allow directories to be edited
@@ -1232,6 +1246,7 @@ endfunction
 augroup fileExplorer
   au!
   au BufEnter * call s:EditDir()
+  au VimEnter * call s:EditAll()
 augroup end
 
 " restore 'cpo'
