@@ -2,7 +2,7 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Sep 16
+# Last change:  2001 Oct 12
 #
 # This has script been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX
 # with MMS and MMK
@@ -16,10 +16,21 @@
 # To build:    mms/descrip=Make_vms.mms
 # To clean up: mms/descrip=Make_vms.mms clean
 #
+# Hints and detailed description could be found in INSTALLVMS.TXT file.
+#
 ######################################################################
 # Configuration section.
 ######################################################################
 
+# Build model selection
+# TINY   - Almost no features enabled, not even multiple windows
+# SMALL  - Few features enabled, as basic as possible
+# NORMAL - A default selection of features enabled 
+# BIG    - Many features enabled, as rich as possible. (default)
+# HUGE   - All possible featues enabled.
+# Please select one of these alternatives above.
+MODEL = BIG
+ 
 # GUI or terminal mode executable.
 # Comment out if you want just the character terminal mode only.
 GUI = YES
@@ -55,6 +66,10 @@ CCVER = YES
 # Internal Hangul input method. GUI only.
 # If you don't need it really, leave it behind the comment.
 # VIM_HANGULIN = YES
+
+# Allow any white space to separate the fields in a tags file
+# When not defined, only a TAB is allowed.
+# VIM_TAG_ANYWHITE = YES
 
 ######################################################################
 # Directory, library and include files configuration section.
@@ -145,6 +160,11 @@ HANGULIN_OBJ = hangulin.obj
 .ENDIF
 .ENDIF
 
+.IFDEF VIM_TAG_ANYWHITE
+# TAG_ANYWHITE related setup.
+TAG_DEF = ,"FEAT_TAG_ANYWHITE"
+.ENDIF
+
 ######################################################################
 # End of configuration section.
 # Please, do not change anything below without programming experience.
@@ -174,13 +194,15 @@ CFLAGS	  = /opt$(PREFIX)/include=[.proto]
 LDFLAGS	  =
 .ENDIF
 
+MODEL_DEF = "FEAT_$(MODEL)",
+
 # These go into pathdef.c
 VIMUSER = "''f$extract(f$locate(",",f$user())+1,f$length(f$user())-f$locate(",",f$user())-2,f$user())'"
 VIMHOST = "''f$trnlnm("sys$node")'''f$trnlnm("ucx$inet_host")'.''f$trnlnm("ucx$inet_domain")'"
 
 .SUFFIXES : .obj .c
 
-ALL_CFLAGS = /def=($(DEFS) $(DEBUG_DEF) $(PERL_DEF) $(PYTHON_DEF) $(TCL_DEF) $(SNIFF_DEF) $(RUBY_DEF) $(XIM_DEF) $(HANGULIN_DEF)) $(CFLAGS)
+ALL_CFLAGS = /def=($(MODEL_DEF)$(DEFS)$(DEBUG_DEF)$(PERL_DEF)$(PYTHON_DEF)$(TCL_DEF)$(SNIFF_DEF)$(RUBY_DEF)$(XIM_DEF)$(HANGULIN_DEF)$(TAG_DEF)) $(CFLAGS)
 
 ALL_LIBS = $(LIBS) $(GUI_LIB_DIR) $(X_LIB_DIR) $(GUI_LIB) $(X_LIB) $(EXTRA_LIB)\
 	   $(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(SNIFF_LIB) $(RUBY_LIB)

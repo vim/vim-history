@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.0.  Last change: 2001 Sep 03
+*os_vms.txt*    For Vim version 6.0.  Last change: 2001 Oct 23
 
 
 		  VIM REFERENCE MANUAL
@@ -43,12 +43,13 @@ For using Vim's full power you will need the runtime files as well.
 
 You can download precompiled executables from:
 	http://www.polarfox.com/vim/
+        ftp://ftp.polarhome.com/pub/vim/
 
 ==============================================================================
 
 3. Compiling						*vms-compiling*
 
-See the file src/INSTALLvms.txt.
+See the file [.SRC]INSTALLVMS.TXT.
 
 ==============================================================================
 
@@ -57,7 +58,7 @@ See the file src/INSTALLvms.txt.
 The code has been tested under Open VMS 6.2 - 7.2 on Alpha and VAX platforms
 with the DECC compiler. It should work without bigger problems.
 If it happened that your system does not have some include libraries you can
-tune up in OS_VMS_CONF.H or GUI_VMS_CONF.H files.
+tune up in OS_VMS_CONF.H file.
 
 If you decided to build Vim with +perl, +python, etc. options, first you need
 to download OpenVMS distributions of Perl and Python. Build and deploy the
@@ -73,6 +74,9 @@ MMS_VIM.EXE is building together with VIM.EXE, but for CTAGS.EXE and XXD.EXE
 you should change to subdirectory <.CTAGS> or <.XXD> and build them
 separately. You have to be prepared that the CTAGS and XXD make files are not
 always up to date.
+
+CTAGS is not part of Vim source distribution any more, however the OpenVMS
+specific source might contain CTAGS source files as it is described above.
 
 Advanced users may try some acrobatics in FEATURE.H file also.
 
@@ -189,7 +193,7 @@ $VIMRUNTIME logical by typing :help runtime as a Vim command.
 VMS is not a native X window environment, so you can not start Vim in GUI mode
 "just like that". But anyhow it is not too complicate to get a running Vim.
 
-1) If you are working on the VMS X console:
+1) If you are working on the VMS X/Motif console:
    Start Vim with the command: >
 
 	$ mc device:<path>VIM.EXE -g
@@ -425,6 +429,7 @@ Example: >
 	$define SYS$PRINT HP5ANSI
 
 You can print out whole buffer or just the marked area.
+More info under :help hardcopy
 
 (Zoltan Arpadffy, <arpadffy@altavista.net> Vim 6.0c)
 
@@ -441,31 +446,43 @@ parent terminal, to block signals from the parent window.
 Without the -GEOMETRY, the GVIM window size will be minimal and the menu
 will be confused after a window-resize.
 
-(Coen Engelbarts, <@hotmail.com> Vim 6.0ac)
+(Carlo Mekenkamp, Coen Engelbarts, Vim 6.0ac)
 
 ==============================================================================
 
 9. VMS related changes					*vms-changes*
 
-Version 6.0 (2001 May 29)
-- Unix and VMS code has been merged
-	- separated "really" VMS related code
-	- included all possible Unix functionality
-	- simplified or deleted the configuration files
-	- makefile MAKE_VMS.MMS reviewed
-- menu changes (fixed printing, CTAGS and XXD usage)
-- created OS_VMS_FILTER.COM - DECC->VAXC pre-processor directive convert
-  script.
-- changed quickfix parameters:
-	- errormessage format to suite DECC
-	- search, make and other commands to suite VMS system
-- updated and renamed MMS make files for Vim and CTAGS.
-- CTAGS has been removed from source distribution of Vim but it will remain
-  in OpenVMS binary distributions.
-- created INSTALLvms.txt - detailed compiling instructions under VMS.
-- updated test scrips.
-- OS_VMS.TXT updated with new features.
-- other minor fixes.
+Version 6.0 (2001 Sep 28) 
+- Unix and VMS code has been merged 
+        - separated "really" VMS related code 
+        - included all possible Unix functionality 
+        - simplified or deleted the configuration files 
+        - makefile MAKE_VMS.MMS reviewed 
+- menu changes (fixed printing, CTAGS and XXD usage) 
+- fixed variable RMS record format handling anomaly 
+- corrected syntax, ftplugin etc files load 
+- changed expand_wildcards and expandpath functions to work more general 
+- created OS_VMS_FILTER.COM - DECC->VAXC pre-processor directive convert 
+  script. 
+- Improved code's VAXC and new DECC compilers compatibility 
+- changed quickfix parameters: 
+        - errormessage format to suite DECC 
+        - search, make and other commands to suite VMS system 
+- updated and renamed MMS make files for Vim and CTAGS. 
+- CTAGS has been removed from source distribution of Vim but it will remain 
+  in OpenVMS binary distributions. 
+- simplified build/configuration procedure 
+- created INSTALLvms.txt - detailed compiling instructions under VMS. 
+- updated test scrips. 
+- OS_VMS.TXT updated with new features. 
+- other minor fixes. 
+- documentation updated 
+- this version had been tested much more than any other OpenVMS version
+  earlier 
+
+Version 5.8 (2001 Jun 1) 
+- New CTAGS v5.0 in disribution 
+- Documentation updated 
 
 Version 5.7 (2000 Jun 24)
 

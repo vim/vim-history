@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Sep 21
+" Last Change:	2001 Oct 25
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -106,27 +106,10 @@ elseif has("unix")
   amenu 10.510 &File.&Print			:w !lpr<CR>
   vunmenu &File.&Print
   vmenu &File.&Print				:w !lpr<CR>
-elseif has("vms")
-  amenu 10.500 &File.-SEP3-			:
-  amenu <silent> 10.510 &File.&Print		:call VMSPrint(":")<CR>
-  vunmenu &File.&Print
-  vmenu <silent> &File.&Print			<Esc>:call VMSPrint(":'<,'>")<CR>
 endif
 amenu 10.600 &File.-SEP4-			:
 amenu 10.610 &File.Sa&ve-Exit<Tab>:wqa		:confirm wqa<CR>
 amenu 10.620 &File.E&xit<Tab>:qa		:confirm qa<CR>
-
-if has("vms")
-  if !exists("*VMSPrint")
-    fun VMSPrint(range)
-      let mod_save = &mod
-      let ttt = tempname()
-      exec a:range . "w! " . ttt
-      let &mod = mod_save
-      exec "!print/delete " . ttt
-    endfun
-  endif
-endif
 
 " Tricky stuff to make pasting work as expected.
 nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
@@ -730,10 +713,6 @@ if has("toolbar")
     amenu 1.40 ToolBar.Print	:w !lpr<CR>
     vunmenu ToolBar.Print
     vmenu ToolBar.Print		:w !lpr<CR>
-  elseif has("vms")
-    amenu <silent> 1.40 ToolBar.Print	:call VMSPrint(":")<CR>
-    vunmenu ToolBar.Print
-    vmenu <silent> ToolBar.Print	<Esc>:call VMSPrint(":'<,'>")<CR>
   endif
 
   amenu 1.45 ToolBar.-sep1-	<nul>

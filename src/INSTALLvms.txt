@@ -1,5 +1,5 @@
 INSTALLvms.txt - Installation of Vim on OpenVMS
-Last change: 2001 Jul 28
+Last change: 2001 Oct 12
 
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
@@ -45,6 +45,10 @@ Contents:
 1.5. If you want to have Perl, Python or Tcl support in Vim you will need VMS
      distributions for them as well.
 
+NOTE: procedure in chapter 1 describes source code preparation from multi OS code,
+however it is available OpenVMS oprimized (and tested) source code from:
+ftp://ftp.polarhome.com/pub/vim/source/vms/
+
 2.   Configuration
 
 2.1. Edit vim-X.X/src/feature.h for your preference.  (You can skip
@@ -55,6 +59,16 @@ Contents:
      #define MULTI_BYTE
 
 2.2  Edit vim-X.X/src/Make_vms.mms to customise your Vim. Options are:
+
+        Parameter name  : MODEL
+        Description     : Build model selection
+        Options:        : TINY    - Almost no features enabled, not even multiple windows
+                          SMALL   - Few features enabled, as basic as possible
+                          NORMAL  - A default selection of features enabled
+                          BIG     - Many features enabled, as rich as possible. (OpenVMS default)
+                          HUGE    - All possible featues enabled.
+                          Uncommented - will default to BIG
+        Default         : MODEL = BIG
 
         Parameter name  : GUI
         Description     : GUI or terminal mode executable
@@ -98,6 +112,28 @@ Contents:
                           Uncommented - build without support.
         Default         : Uncommented
 
+
+        Parameter name  : VIM_XIM
+        Description     : X Input Method.  For entering special languages like chinese and
+                          Japanese. Please define just one: VIM_XIM or VIM_HANGULIN
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+                                     
+        Parameter name  : VIM_HANGULIN
+        Description     : Internal Hangul input method. GUI only.
+                          Please define just one: VIM_XIM or VIM_HANGULIN
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+
+        Parameter name  : VIM_TAG_ANYWHITE
+        Description     : Allow any white space to separate the fields in a tags file
+                          When not defined, only a TAB is allowed.
+        Options:        : YES - Build with support
+                          Uncommented - build without support.
+        Default         : Uncommented
+
      You can edit the *_INC and *_LIB qualifiers, but it is really
      not recommended for beginners.
 
@@ -128,6 +164,10 @@ Contents:
         @os_vms_fix.com *.c *.h <.proto>*.pro
 
      more information can be found in os_vms_fix.com file itself.
+    
+     NOTE: even if os_vms_fix.com will fix all pre-processor directives it will
+     leave singe (long) line directives. You have to fix them manually.
+     Known problematic files are option.h and option.c 
 
 4.2. After the conversion you can continue building as it has been described
      above.
