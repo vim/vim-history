@@ -817,11 +817,11 @@ write_viminfo_filemarks(fp)
 	if (name == NULL)
 	    continue;
 
-	fprintf(fp, "'%c  %ld  %ld  %s\n",
+	fprintf(fp, "'%c  %ld  %ld  ",
 		    i < NMARKS ? i + 'A' : i - NMARKS + '0',
 		    (long)namedfm[i].mark.lnum,
-		    (long)namedfm[i].mark.col,
-		    name);
+		    (long)namedfm[i].mark.col);
+	viminfo_writestring(fp, name);
 	if (namedfm[i].fnum)
 	    vim_free(name);
     }
@@ -902,7 +902,8 @@ write_viminfo_marks(fp_out)
 		 buf->b_ffname[0] != NUL && !removable(buf->b_ffname))
 	    {
 		home_replace(NULL, buf->b_ffname, IObuff, IOSIZE, TRUE);
-		fprintf(fp_out, "\n> %s\n", (char *)IObuff);
+		fprintf(fp_out, "\n> ");
+		viminfo_writestring(fp_out, IObuff);
 		if (buf->b_last_cursor.lnum != 0)
 		    fprintf(fp_out, "\t\"\t%ld\t%d\n",
 			    buf->b_last_cursor.lnum, buf->b_last_cursor.col);
@@ -933,7 +934,6 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 {
     BUF		*buf;
     int		num_marked_files;
-    char_u	save_char;
     int		load_marks;
     int		copy_marks_out;
     char_u	*str;
@@ -960,16 +960,19 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	}
 
 	/*
+	 * Handle long line and translate escaped characters.
 	 * Find file name, set str to start.
 	 * Ignore leading and trailing white space.
 	 */
 	str = skipwhite(line + 1);
+	str = viminfo_readstring(str, fp_in);
+	if (str == NULL)
+	    continue;
 	p = str + STRLEN(str);
 	while (p != str && (*p == NUL || vim_isspace(*p)))
 	    p--;
 	if (*p)
 	    p++;
-	save_char = *p;
 	*p = NUL;
 
 	/*
@@ -1003,12 +1006,13 @@ copy_viminfo_marks(line, fp_in, fp_out, count, eof)
 	    if (buf == NULL || !buf->b_marks_read)
 	    {
 		copy_marks_out = TRUE;
-		*p = save_char;
-		fputs("\n", fp_out);
-		fputs((char *)line, fp_out);
+		fputs("\n> ", fp_out);
+		viminfo_writestring(fp_out, str);
 		count++;
 	    }
 	}
+	vim_free(str);
+
 	while (!(eof = vim_fgets(line, LSIZE, fp_in)) && line[0] == TAB)
 	{
 	    if (load_marks)

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jan 02
+" Last change:	2000 Apr 15
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -69,7 +69,7 @@ imenu	     &Edit.Put\ &After<Tab>]p		<C-O>]p
 if has("win32")
   vmenu 20.390 &Edit.&Delete<Tab>x		x
 endif
-amenu 20.400 &Edit.&Select\ all<Tab>ggvG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
+amenu 20.400 &Edit.&Select\ all<Tab>ggVG	:if &slm != ""<Bar>exe ":norm gggH<C-O>G"<Bar>else<Bar>exe ":norm ggVG"<Bar>endif<CR>
 amenu 20.405 &Edit.-SEP2-			:
 if has("win32") || has("gui_gtk")
   amenu 20.410 &Edit.&Find\.\.\.		:promptfind<CR>
@@ -246,7 +246,8 @@ func! BmenuMunge(fname, bnum)
 	endif
 	let name = name2 . "\t" . fnamemodify(name,':h')
     endif
-    let name = escape(name, '\\. 	|')
+    let name = escape(name, "\\. \t|")
+    let name = substitute(name, "\n", "^@", "g")
     return name
 endfunc
 

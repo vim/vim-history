@@ -2607,20 +2607,25 @@ read_viminfo_bufferlist(line, fp, writing)
     colnr_t	col;
     BUF		*buf;
     char_u	*sfname;
+    char_u	*xline;
+
+    /* Handle long line and escaped characters. */
+    xline = viminfo_readstring(line + 1, fp);
 
     /* don't read in if there are files on the command-line or if writing: */
-    if (!writing && arg_file_count == 0 && find_viminfo_parameter('%') != NULL)
+    if (xline != NULL && !writing && arg_file_count == 0
+				       && find_viminfo_parameter('%') != NULL)
     {
 	/* Format is: <fname> Tab <lnum> Tab <col>.
 	 * Watch out for a Tab in the file name, work from the end. */
 	lnum = 0;
 	col = 0;
-	tab = vim_strrchr(line + 1, '\t');
+	tab = vim_strrchr(xline, '\t');
 	if (tab != NULL)
 	{
 	    *tab++ = '\0';
 	    col = atoi((char *)tab);
-	    tab = vim_strrchr(line + 1, '\t');
+	    tab = vim_strrchr(xline, '\t');
 	    if (tab != NULL)
 	    {
 		*tab++ = '\0';
@@ -2630,7 +2635,7 @@ read_viminfo_bufferlist(line, fp, writing)
 
 	/* Expand "~/" in the file name at "line + 1" to a full path.
 	 * Then try shortening it by comparing with the current directory */
-	expand_env(line + 1, NameBuff, MAXPATHL);
+	expand_env(xline, NameBuff, MAXPATHL);
 	mch_dirname(IObuff, IOSIZE);
 	sfname = shorten_fname(NameBuff, IObuff);
 	if (sfname == NULL)
@@ -2644,6 +2649,7 @@ read_viminfo_bufferlist(line, fp, writing)
 	    buflist_setfpos(buf, lnum, col);
 	}
     }
+    vim_free(xline);
 
     return vim_fgets(line, LSIZE, fp);
 }
@@ -2654,8 +2660,14 @@ write_viminfo_bufferlist(fp)
 {
     BUF		*buf;
     WIN		*win;
+    char_u	*line;
 
     if (find_viminfo_parameter('%') == NULL)
+	return;
+
+    /* Allocate room for the file name, lnum and col. */
+    line = alloc(MAXPATHL + 30);
+    if (line == NULL)
 	return;
 
     for (win = firstwin; win != NULL; win = win->w_next)
@@ -2667,11 +2679,12 @@ write_viminfo_bufferlist(fp)
 	if (buf->b_fname == NULL || buf->b_help || removable(buf->b_ffname))
 	    continue;
 
-	home_replace(NULL, buf->b_ffname, NameBuff, MAXPATHL, TRUE);
-
-	fprintf(fp, "%%%s\t%ld\t%d\n", NameBuff,
+	putc('%', fp);
+	home_replace(NULL, buf->b_ffname, line, MAXPATHL, TRUE);
+	sprintf(line + STRLEN(line), "\t%ld\t%d",
 			(long)buf->b_last_cursor.lnum,
 			buf->b_last_cursor.col);
+	viminfo_writestring(fp, line);
     }
 }
 #endif
