@@ -1677,6 +1677,26 @@ diff_infold(wp, lnum)
 #endif
 
 /*
+ * "dp" and "do" commands.
+ */
+    void
+nv_diffgetput(put)
+    int		put;
+{
+    exarg_T	ea;
+
+    ea.arg = "";
+    if (put)
+	ea.cmdidx = CMD_diffput;
+    else
+	ea.cmdidx = CMD_diffget;
+    ea.addr_count = 0;
+    ea.line1 = curwin->w_cursor.lnum;
+    ea.line2 = curwin->w_cursor.lnum;
+    ex_diffgetput(&ea);
+}
+
+/*
  * ":diffget"
  * ":diffput"
  */
