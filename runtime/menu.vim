@@ -281,6 +281,9 @@ fun! s:FileFormat()
   if !exists("g:menutrans_fileformat_dialog")
     let g:menutrans_fileformat_dialog = "Select format for writing the file"
   endif
+  if !exists("g:menutrans_fileformat_choices")
+    let g:menutrans_fileformat_choices = "&Unix\n&Dos\n&Mac\n&Cancel"
+  endif
   if &ff == "dos"
     let def = 2
   elseif &ff == "mac"
@@ -288,7 +291,7 @@ fun! s:FileFormat()
   else
     let def = 1
   endif
-  let n = confirm(g:menutrans_fileformat_dialog, "&Unix\n&Dos\n&Mac\n&Cancel", def, "Question")
+  let n = confirm(g:menutrans_fileformat_dialog, g:menutrans_fileformat_choices, def, "Question")
   if n == 1
     set ff=unix
   elseif n == 2
