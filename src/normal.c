@@ -3662,10 +3662,14 @@ nv_gd(oap, nchar)
     while ((t = searchit(curwin, curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
 							     RE_LAST)) != FAIL
 #ifdef FEAT_COMMENTS
-	    && get_leader_len(ml_get_curline(), NULL, FALSE)
+	    && get_leader_len(ml_get_curline(), NULL, FALSE) > 0
 #endif
 	    && old_pos.lnum > curwin->w_cursor.lnum)
+    {
+	/* Ignore this line, continue at start of next line. */
 	++curwin->w_cursor.lnum;
+	curwin->w_cursor.col = 0;
+    }
     if (t == FAIL || old_pos.lnum <= curwin->w_cursor.lnum)
     {
 	clearopbeep(oap);
