@@ -1006,7 +1006,7 @@ win_split_ins(size, flags, newwin, dir)
     {
 	msg_row = Rows - 1;
 	msg_col = sc_col;
-	msg_clr_eos();	/* Old command/ruler may still be there -- webb */
+	msg_clr_eos_force();	/* Old command/ruler may still be there */
 	comp_col();
 	msg_row = Rows - 1;
 	msg_col = 0;	/* put position back at start of line */

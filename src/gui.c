@@ -4200,7 +4200,7 @@ ex_gui(eap)
     {
 	/* Clear the command.  Needed for when forking+exiting, to avoid part
 	 * of the argument ending up after the shell prompt. */
-	msg_clr_eos();
+	msg_clr_eos_force();
 	gui_start();
     }
     if (!ends_excmd(*eap->arg))

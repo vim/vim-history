@@ -1066,7 +1066,8 @@ do_search(oap, dirc, pat, count, options)
 	    pat = p;			    /* put pat after search command */
 	}
 
-	if ((options & SEARCH_ECHO) && messaging() && !cmd_silent)
+	if ((options & SEARCH_ECHO) && messaging()
+					    && !cmd_silent && msg_silent == 0)
 	{
 	    char_u	*msgbuf;
 	    char_u	*trunc;

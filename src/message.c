@@ -151,8 +151,7 @@ msg_attr_keep(s, attr, keep)
 
     msg_start();
     msg_outtrans_attr(s, attr);
-    if (msg_silent == 0)
-	msg_clr_eos();
+    msg_clr_eos();
     retval = msg_end();
 
     if (keep && retval && vim_strsize(s) < (int)(Rows - cmdline_row - 1)
@@ -2343,11 +2342,22 @@ msg_check_screen()
 
 /*
  * Clear from current message position to end of screen.
+ * Skip this when ":silent" was used, no need to clear for redirection.
+ */
+    void
+msg_clr_eos()
+{
+    if (msg_silent == 0)
+	msg_clr_eos_force();
+}
+
+/*
+ * Clear from current message position to end of screen.
  * Note: msg_col is not updated, so we remember the end of the message
  * for msg_check().
  */
     void
-msg_clr_eos()
+msg_clr_eos_force()
 {
     if (msg_use_printf())
     {
@@ -2385,7 +2395,7 @@ msg_clr_cmdline()
 {
     msg_row = cmdline_row;
     msg_col = 0;
-    msg_clr_eos();
+    msg_clr_eos_force();
 }
 
 /*
