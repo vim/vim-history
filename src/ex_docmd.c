@@ -8410,9 +8410,11 @@ put_view(fd, wp, add_edit, flagp)
 
 #ifdef FEAT_FOLDING
     /*
-     * Folds.
+     * Save Folds when 'buftype' is empty and for help files.
      */
-    if (*flagp & SSOP_FOLDS)
+    if ((*flagp & SSOP_FOLDS)
+	    && wp->w_buffer->b_ffname != NULL
+	    && (*wp->w_buffer->b_p_bt == NUL || wp->w_buffer->b_help))
     {
 	if (put_folds(fd, wp) == FAIL)
 	    return FAIL;
