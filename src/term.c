@@ -1470,6 +1470,15 @@ set_termname(term)
 		    break;
 #endif
 
+#ifdef USE_GUI_GTK
+		/*
+		 * Skip the error message when the GUI is about to start.  Can
+		 * happen when using GTK version of gvim when $term is
+		 * invalid.
+		 */
+		if (!gui.starting)
+		{
+#endif
 		mch_errmsg("\r\n");
 		if (error_msg != NULL)
 		{
@@ -1493,6 +1502,9 @@ set_termname(term)
 			mch_errmsg("\r\n");
 		    }
 		}
+#ifdef USE_GUI_GTK
+		}
+#endif
 		/* when user typed :set term=xxx, quit here */
 		if (starting != NO_SCREEN)
 		{
@@ -1501,14 +1513,24 @@ set_termname(term)
 		    return FAIL;
 		}
 		term = DEFAULT_TERM;
+#ifdef USE_GUI_GTK
+		if (!gui.starting)
+		{
+#endif
 		mch_errmsg("defaulting to '");
 		mch_errmsg((char *)term);
 		mch_errmsg("'\r\n");
 		screen_start();		/* don't know where cursor is now */
 		out_flush();
 		ui_delay(2000L, TRUE);
+#ifdef USE_GUI_GTK
+		}
+#endif
 		set_string_option_direct((char_u *)"term", -1, term, TRUE);
-		mch_display_error();
+#ifdef USE_GUI_GTK
+		if (!gui.starting)
+#endif
+		    mch_display_error();
 	    }
 	    out_flush();
 #ifdef HAVE_TGETENT
