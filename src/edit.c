@@ -1510,7 +1510,7 @@ change_indent(type, amount, round, replaced)
 	{
 	    last_vcol = vcol;
 #ifdef FEAT_MBYTE
-	    if (has_mbyte)
+	    if (has_mbyte && new_cursor_col >= 0)
 		new_cursor_col += (*mb_ptr2len_check)(ptr + new_cursor_col);
 	    else
 #endif
