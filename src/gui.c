@@ -3687,6 +3687,8 @@ gui_get_color(name)
 {
     guicolor_T	t;
 
+    if (*name == NUL)
+	return (guicolor_T)-1;
     t = gui_mch_get_color(name);
     if (t < 0
 #if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)

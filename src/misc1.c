@@ -2725,7 +2725,13 @@ vim_beep()
 {
     if (emsg_silent == 0)
     {
-	if (p_vb)
+	if (p_vb
+#ifdef FEAT_GUI
+		/* While the GUI is starting up the termcap is set for the GUI
+		 * but the output still goes to a terminal. */
+		&& !(gui.in_use && gui.starting)
+#endif
+		)
 	{
 	    out_str(T_VB);
 	}

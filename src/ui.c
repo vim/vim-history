@@ -24,7 +24,7 @@ ui_write(s, len)
     int	    len;
 {
 #ifdef FEAT_GUI
-    if (gui.in_use && !gui.dying)
+    if (gui.in_use && !gui.dying && !gui.starting)
     {
 	gui_write(s, len);
 	if (p_wd)
