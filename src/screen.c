@@ -7995,14 +7995,22 @@ showmode()
 #ifdef FEAT_VISUAL
 		if (VIsual_active)
 		{
-		    if (VIsual_select)
-			MSG_PUTS_ATTR(_(" SELECT"), attr);
-		    else
-			MSG_PUTS_ATTR(_(" VISUAL"), attr);
-		    if (VIsual_mode == Ctrl_V)
-			MSG_PUTS_ATTR(_(" BLOCK"), attr);
-		    else if (VIsual_mode == 'V')
-			MSG_PUTS_ATTR(_(" LINE"), attr);
+		    char *p;
+
+		    /* Don't concatenate separate words to avoid translation
+		     * problems. */
+		    switch ((VIsual_select ? 4 : 0)
+			    + (VIsual_mode == Ctrl_V) * 2
+			    + (VIsual_mode == 'V'))
+		    {
+			case 0:	p = N_(" VISUAL"); break;
+			case 1: p = N_(" VISUAL LINE"); break;
+			case 2: p = N_(" VISUAL BLOCK"); break;
+			case 4: p = N_(" SELECT"); break;
+			case 5: p = N_(" SELECT LINE"); break;
+			default: p = N_(" SELECT BLOCK"); break;
+		    }
+		    MSG_PUTS_ATTR(_(p), attr);
 		}
 #endif
 		MSG_PUTS_ATTR(" --", attr);
