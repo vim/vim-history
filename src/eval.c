@@ -3467,7 +3467,7 @@ f_expand(argvars, retvar)
     char_u	*s;
     int		len;
     char_u	*errormsg;
-    int		flags = WILD_SILENT|WILD_USE_NL;
+    int		flags = WILD_SILENT|WILD_USE_NL|WILD_LIST_NOTFOUND;
     expand_T	xpc;
 
     retvar->var_type = VAR_STRING;
