@@ -872,6 +872,7 @@ EXTERN int	listcmd_busy INIT(= FALSE); /* set when :argdo, :windo or
 EXTERN int	need_start_insertmode INIT(= FALSE);
 					    /* start insert mode soon */
 EXTERN char_u	*last_cmdline INIT(= NULL); /* last command line (for ":) */
+EXTERN char_u	*repeat_cmdline INIT(= NULL); /* command line for "." */
 #ifdef FEAT_CMDHIST
 EXTERN char_u	*new_last_cmdline INIT(= NULL);	/* new value for last_cmdline */
 #endif

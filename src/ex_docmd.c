@@ -570,6 +570,7 @@ typedef struct
  * DOCMD_REPEAT   - Repeat execution until getline() returns NULL.
  * DOCMD_KEYTYPED - Don't reset KeyTyped.
  * DOCMD_EXCRESET - Reset the exception environment (used for debugging).
+ * DOCMD_KEEPLINE - Store first typed line (for repeating with ".").
  *
  * return FAIL if cmdline could not be executed, OK otherwise
  */
@@ -816,6 +817,18 @@ do_cmdline(cmdline, getline, cookie, flags)
 		    need_wait_return = FALSE;
 		retval = FAIL;
 		break;
+	    }
+
+	    /*
+	     * Keep the first typed line.  Clear it when more lines are typed.
+	     */
+	    if (flags & DOCMD_KEEPLINE)
+	    {
+		vim_free(repeat_cmdline);
+		if (count == 0)
+		    repeat_cmdline = vim_strsave(next_cmdline);
+		else
+		    repeat_cmdline = NULL;
 	    }
 	}
 
