@@ -2221,18 +2221,33 @@ get_string_var(arg, retvar, evaluate)
 		case 'r': name[i++] = CR; break;
 		case 't': name[i++] = TAB; break;
 
-			  /* hex: "\x1", "\x12" */
-		case 'X':
-		case 'x': if (isxdigit(p[1]))
+		case 'X': /* hex: "\x1", "\x12" */
+		case 'x':
+		case 'u': /* Unicode: "\u0023" */
+		case 'U':
+			  if (isxdigit(p[1]))
 			  {
-			      ++p;
-			      name[i] = hex2nr(*p);
-			      if (isxdigit(p[1]))
+			      int	n, nr;
+			      int	c = toupper(*p);
+
+			      if (c == 'X')
+				  n = 2;
+			      else
+				  n = 4;
+			      nr = 0;
+			      while (--n >= 0 && isxdigit(p[1]))
 			      {
 				  ++p;
-				  name[i] = (name[i] << 4) + hex2nr(*p);
+				  nr = (nr << 4) + hex2nr(*p);
 			      }
-			      ++i;
+#ifdef FEAT_MBYTE
+			      /* For "\u" store the number according to
+			       * 'encoding'. */
+			      if (c != 'X')
+				  i += (*mb_char2bytes)(nr, name + i);
+			      else
+#endif
+				  name[i++] = nr;
 			  }
 			  else
 			      name[i++] = *p;
