@@ -4343,9 +4343,24 @@ auto_format()
     old = ml_get_curline();
 
     /* Don't format in Insert mode when the cursor is on a trailing blank, the
-     * user might insert normal text next. */
-    if (*old != NUL && pos.col == STRLEN(old) && vim_iswhite(old[pos.col - 1]))
-	return;
+     * user might insert normal text next.  Also skip formatting when "1" is
+     * in 'formatoptions' and there is a single character before the cursor.
+     * Otherwise the line would be broken and when typing another non-white
+     * next they are not joined back together. */
+    if (*old != NUL && pos.col == STRLEN(old))
+    {
+	dec_cursor();
+	if (!WHITECHAR(gchar_cursor())
+		&& curwin->w_cursor.col > 0
+		&& has_format_option(FO_ONE_LETTER))
+	    dec_cursor();
+	if (WHITECHAR(gchar_cursor()))
+	{
+	    curwin->w_cursor = pos;
+	    return;
+	}
+	curwin->w_cursor = pos;
+    }
 
 #ifdef FEAT_COMMENTS
     /* With the 'c' flag in 'formatoptions' only format comments. */
