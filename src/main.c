@@ -551,7 +551,7 @@ main
 		    Columns = 80;	/* need to init Columns */
 		    info_message = TRUE; /* use mch_msg(), not mch_errmsg() */
 		    list_version();
-		    mch_exit(1);
+		    mch_exit(0);
 		}
 		else if (STRNICMP(argv[0] + argv_idx, "literal", 7) == 0)
 		{
@@ -2460,7 +2460,7 @@ usage()
     main_msg(_("--help\t\tShow Gnome arguments"));
 # endif
 #endif
-    mch_exit(1);
+    mch_exit(0);
 }
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
