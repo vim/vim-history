@@ -2467,6 +2467,36 @@ mb_tail_off(base, p)
     return 1 - dbcs_head_off(base, p);
 }
 
+#if (defined(HAVE_GTK2) && defined(FEAT_TOOLBAR)) || defined(PROTO)
+/*
+ * Return TRUE if string "s" is a valid utf-8 string.
+ * When "end" is NULL stop at the first NUL.
+ * When "end" is positive stop there.
+ */
+    int
+utf_valid_string(s, end)
+    char_u	*s;
+    char_u	*end;
+{
+    int		l;
+    char_u	*p = s;
+
+    while (end == NULL ? *p != NUL : p < end)
+    {
+	if ((*p & 0xc0) == 0x80)
+	    return FALSE;	/* invalid lead byte */
+	l = utf8len_tab[*p];
+	if (end != NULL && p + l > end)
+	    return FALSE;	/* incomplete byte sequence */
+	++p;
+	while (--l > 0)
+	    if ((*p++ & 0xc0) != 0x80)
+		return FALSE;	/* invalid trail byte */
+    }
+    return TRUE;
+}
+#endif
+
 #if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Special version of mb_tail_off() for use in ScreenLines[].

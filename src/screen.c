@@ -6608,9 +6608,14 @@ screenalloc(clear)
 			len = screen_Columns;
 		    else
 			len = Columns;
-		    mch_memmove(new_ScreenLines + new_LineOffset[new_row],
-			    ScreenLines + LineOffset[old_row],
-			    (size_t)len * sizeof(schar_T));
+#ifdef FEAT_MBYTE
+		    /* When switching to utf-8 don't copy characters, they
+		     * may be invalid now. */
+		    if (!(enc_utf8 && ScreenLinesUC == NULL))
+#endif
+			mch_memmove(new_ScreenLines + new_LineOffset[new_row],
+				ScreenLines + LineOffset[old_row],
+				(size_t)len * sizeof(schar_T));
 #ifdef FEAT_MBYTE
 		    if (enc_utf8 && ScreenLinesUC != NULL)
 		    {
