@@ -3248,15 +3248,29 @@ clear_showcmd()
 #ifdef FEAT_VISUAL
     if (VIsual_active)
     {
-	int	i = lt(VIsual, curwin->w_cursor);
-	long	lines;
-	colnr_T	leftcol, rightcol;
+	int		i = lt(VIsual, curwin->w_cursor);
+	long		lines;
+	colnr_T		leftcol, rightcol;
+	linenr_T	top, bot;
 
 	/* Show the size of the Visual area. */
 	if (i)
-	    lines = curwin->w_cursor.lnum - VIsual.lnum + 1;
+	{
+	    top = VIsual.lnum;
+	    bot = curwin->w_cursor.lnum;
+	}
 	else
-	    lines = VIsual.lnum - curwin->w_cursor.lnum + 1;
+	{
+	    top = curwin->w_cursor.lnum;
+	    bot = VIsual.lnum;
+	}
+# ifdef FEAT_FOLDING
+	/* Include closed folds as a whole. */
+	hasFolding(top, &top, NULL);
+	hasFolding(bot, NULL, &bot);
+# endif
+	lines = bot - top + 1;
+
 	if (VIsual_mode == Ctrl_V)
 	{
 	    getvcols(curwin, &curwin->w_cursor, &VIsual, &leftcol, &rightcol);
