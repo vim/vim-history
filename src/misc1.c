@@ -4792,6 +4792,8 @@ get_c_indent()
 	    && (trypos = find_start_comment(ind_maxcomment)) != NULL) /* XXX */
     {
 	int	lead_start_len = 2;
+	int	lead_middle_len = 1;
+	char_u	lead_start[COM_MAX_LEN];	/* start-comment string */
 	char_u	lead_middle[COM_MAX_LEN];	/* middle-comment string */
 	char_u	lead_end[COM_MAX_LEN];		/* end-comment string */
 	char_u	*p;
@@ -4827,32 +4829,50 @@ get_c_indent()
 	    (void)copy_option_part(&p, lead_end, COM_MAX_LEN, ",");
 	    if (what == COM_START)
 	    {
-		lead_start_len = (int)STRLEN(lead_end);
+		STRCPY(lead_start, lead_end);
+		lead_start_len = (int)STRLEN(lead_start);
 		start_off = off;
 		start_align = align;
 	    }
 	    else if (what == COM_MIDDLE)
 	    {
 		STRCPY(lead_middle, lead_end);
+		lead_middle_len = (int)STRLEN(lead_middle);
 	    }
 	    else if (what == COM_END)
 	    {
 		/* If our line starts with the middle comment string, line it
 		 * up with the comment opener per the 'comments' option. */
-		if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) == 0
+		if (STRNCMP(theline, lead_middle, lead_middle_len) == 0
 			&& STRNCMP(theline, lead_end, STRLEN(lead_end)) != 0)
 		{
+		    done = TRUE;
+		    if (curwin->w_cursor.lnum > 1)
+		    {
+			/* If the start comment string matches in the previous
+			 * line, use the indent of that line pluss offset.  If
+			 * the middle comment string matches in the previous
+			 * line, use the indent of that line.  XXX */
+			look = skipwhite(ml_get(curwin->w_cursor.lnum - 1));
+			if (STRNCMP(look, lead_start, lead_start_len) == 0)
+			    amount = get_indent_lnum(curwin->w_cursor.lnum - 1);
+			else if (STRNCMP(look, lead_middle,
+							lead_middle_len) == 0)
+			{
+			    amount = get_indent_lnum(curwin->w_cursor.lnum - 1);
+			    break;
+			}
+		    }
 		    if (start_off != 0)
 			amount += start_off;
 		    else if (start_align == COM_RIGHT)
-			amount += lead_start_len - (int)STRLEN(lead_middle);
-		    done = TRUE;
+			amount += lead_start_len - lead_middle_len;
 		    break;
 		}
 
 		/* If our line starts with the end comment string, line it up
 		 * with the middle comment */
-		if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) != 0
+		if (STRNCMP(theline, lead_middle, lead_middle_len) != 0
 			&& STRNCMP(theline, lead_end, STRLEN(lead_end)) == 0)
 		{
 		    amount = get_indent_lnum(curwin->w_cursor.lnum - 1);
@@ -4860,7 +4880,7 @@ get_c_indent()
 		    if (off != 0)
 			amount += off;
 		    else if (align == COM_RIGHT)
-			amount += lead_start_len - (int)STRLEN(lead_middle);
+			amount += lead_start_len - lead_middle_len;
 		    done = TRUE;
 		    break;
 		}
