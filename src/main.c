@@ -2612,6 +2612,12 @@ cmdsrv_main(argc, argv, serverName_arg, serverStr)
 		{
 		    *serverStr = build_drop_cmd(*argc - i - 1, argv + i + 1,
 						argtype == ARGTYPE_EDIT_WAIT);
+		    if (*serverStr == NULL)
+		    {
+			/* Probably out of memory, exit. */
+			didone = TRUE;
+			break;
+		    }
 		    Argc = i;
 		}
 # ifdef FEAT_X11
@@ -2771,7 +2777,10 @@ build_drop_cmd(filec, filev, sendReply)
 	filev++;
 	filec--;
     }
-    if (filec <= 0 || mch_dirname(cwd, MAXPATHL) != OK)
+    /* Check if we have at least one argument. */
+    if (filec <= 0)
+	mainerr_arg_missing((char_u *)filev[-1]);
+    if (mch_dirname(cwd, MAXPATHL) != OK)
 	return NULL;
     if ((p = vim_strsave_escaped(cwd, PATH_ESC_CHARS)) == NULL)
 	return NULL;
