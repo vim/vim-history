@@ -123,9 +123,11 @@ gui_mswin_get_menu_height(
     }
 
     if (fix_window && menu_height != old_menu_height)
+    {
+	old_menu_height = menu_height;
 	gui_set_shellsize(FALSE, FALSE);
+    }
 
-    old_menu_height = menu_height;
     return menu_height;
 }
 #endif /*FEAT_MENU*/
@@ -1481,7 +1483,7 @@ gui_mch_dialog(
     /* Edit box */
     if (textfield != NULL)
     {
-	p = add_dialog_element(p, ES_LEFT | WS_TABSTOP | WS_BORDER,
+	p = add_dialog_element(p, ES_LEFT | ES_AUTOHSCROLL | WS_TABSTOP | WS_BORDER,
 		PixelToDialogX(2 * dlgPaddingX),
 		PixelToDialogY(2 * dlgPaddingY + msgheight),
 		PixelToDialogX(dlgwidth - 4 * dlgPaddingX),
