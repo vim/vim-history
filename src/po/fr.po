@@ -960,7 +960,7 @@ msgstr "%3d  %s %s  ligne %ld"
 #: ex_cmds2.c:625
 #, c-format
 msgid "Save changes to \"%.*s\"?"
-msgstr "Enregistrer les changements dans \"%.s\" ?"
+msgstr "Enregistrer les changements dans \"%.*s\" ?"
 
 #: ex_cmds2.c:627 ex_docmd.c:8659
 msgid "Untitled"
