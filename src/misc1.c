@@ -7828,6 +7828,10 @@ dos_expandpath(
 #ifdef WIN3264
     WIN32_FIND_DATA	fb;
     HANDLE		hFind;
+# ifdef FEAT_MBYTE
+    WIN32_FIND_DATAW    wfb;
+    WCHAR		*wn = NULL;	/* UCS-2 name, NULL when not used. */
+# endif
 #else
     struct ffblk	fb;
 #endif
@@ -7917,7 +7921,28 @@ dos_expandpath(
     /* Scan all files in the directory with "dir/ *.*" */
     STRCPY(s, "*.*");
 #ifdef WIN3264
-    hFind = FindFirstFile(buf, &fb);
+# ifdef FEAT_MBYTE
+    if (enc_codepage >= 0 && (int)GetACP() != enc_codepage)
+    {
+	/* The active codepage differs from 'encoding'.  Attempt using the
+	 * wide function.  If it fails because it is not implemented fall back
+	 * to the non-wide version (for Windows 98) */
+	wn = enc_to_ucs2(buf, NULL);
+	if (wn != NULL)
+	{
+	    hFind = FindFirstFileW(wn, &wfb);
+	    if (hFind == INVALID_HANDLE_VALUE
+			      && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	    {
+		vim_free(wn);
+		wn = NULL;
+	    }
+	}
+    }
+
+    if (wn == NULL)
+# endif
+	hFind = FindFirstFile(buf, &fb);
     ok = (hFind != INVALID_HANDLE_VALUE);
 #else
     /* If we are expanding wildcards we try both files and directories */
@@ -7928,7 +7953,12 @@ dos_expandpath(
     while (ok)
     {
 #ifdef WIN3264
-	p = (char_u *)fb.cFileName;
+# ifdef FEAT_MBYTE
+	if (wn != NULL)
+	    p = ucs2_to_enc(wfb.cFileName, NULL);   /* p is allocated here */
+	else
+# endif
+	    p = (char_u *)fb.cFileName;
 #else
 	p = (char_u *)fb.ff_name;
 #endif
@@ -7961,8 +7991,17 @@ dos_expandpath(
 		    addfile(gap, buf, flags);
 	    }
 	}
+
 #ifdef WIN3264
-	ok = FindNextFile(hFind, &fb);
+# ifdef FEAT_MBYTE
+	if (wn != NULL)
+	{
+	    vim_free(p);
+	    ok = FindNextFileW(hFind, &wfb);
+	}
+	else
+# endif
+	    ok = FindNextFile(hFind, &fb);
 #else
 	ok = (findnext(&fb) == 0);
 #endif
@@ -7974,7 +8013,17 @@ dos_expandpath(
 	    STRCPY(s, matchname);
 #ifdef WIN3264
 	    FindClose(hFind);
-	    hFind = FindFirstFile(buf, &fb);
+# ifdef FEAT_MBYTE
+	    if (wn != NULL)
+	    {
+		vim_free(wn);
+		wn = enc_to_ucs2(buf, NULL);
+		if (wn != NULL)
+		    hFind = FindFirstFileW(wn, &wfb);
+	    }
+	    if (wn == NULL)
+# endif
+		hFind = FindFirstFile(buf, &fb);
 	    ok = (hFind != INVALID_HANDLE_VALUE);
 #else
 	    ok = (findfirst((char *)buf, &fb,
@@ -7987,6 +8036,9 @@ dos_expandpath(
 
 #ifdef WIN3264
     FindClose(hFind);
+# ifdef FEAT_MBYTE
+    vim_free(wn);
+# endif
 #endif
     vim_free(buf);
     vim_free(regmatch.regprog);
