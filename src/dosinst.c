@@ -32,6 +32,7 @@ char	*default_bat_dir = NULL;  /* when not NULL, use this as the default
 				     directory to write .bat files in */
 char	*default_vim_dir = NULL;  /* when not NULL, use this as the default
 				     install dir for NSIS */
+char	homedir[BUFSIZE];	/* home directory or "" */
 
 /*
  * Structure used for each choice the user can make.
@@ -677,6 +678,37 @@ inspect_system(void)
 	fclose(fd);
     else
 	*oldvimrc = NUL;
+
+    /*
+     * Get default home directory.
+     * Prefer $HOME if it's set.  For Win NT use $HOMEDRIVE and $HOMEPATH.
+     * Otherwise, if there is a "c:" drive use that.
+     */
+    p = getenv("HOME");
+    if (p != NULL && *p != NUL && strlen(p) < BUFSIZE)
+	strcpy(homedir, p);
+    else
+    {
+	p = getenv("HOMEDRIVE");
+	if (p != NULL && *p != NUL && strlen(p) + 2 < BUFSIZE)
+	{
+	    strcpy(homedir, p);
+	    p = getenv("HOMEPATH");
+	    if (p != NULL && *p != NUL && strlen(homedir) + strlen(p) < BUFSIZE)
+		strcat(homedir, p);
+	    else
+		strcat(homedir, "\\");
+	}
+	else
+	{
+	    struct stat st;
+
+	    if (stat("c:\\", &st) == 0)
+		strcpy(homedir, "c:\\");
+	    else
+		*homedir = NUL;
+	}
+    }
 }
 
 /*
@@ -1519,40 +1551,42 @@ install_start_menu(int idx)
     printf("Creating start menu\n");
     if (has_vim)
     {
-	if (build_shortcut("Vim", "vim.exe", "", VIM_STARTMENU, "") == FAIL)
+	if (build_shortcut("Vim", "vim.exe", "",
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
-	if (build_shortcut("Vim Read-only", "vim.exe", "-R", VIM_STARTMENU, "")
-								      == FAIL)
+	if (build_shortcut("Vim Read-only", "vim.exe", "-R",
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
-	if (build_shortcut("Vim Diff", "vim.exe", "-d", VIM_STARTMENU, "")
-								      == FAIL)
+	if (build_shortcut("Vim Diff", "vim.exe", "-d",
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
     }
     if (has_gvim)
     {
-	if (build_shortcut("gVim", "gvim.exe", "", VIM_STARTMENU, "") == FAIL)
+	if (build_shortcut("gVim", "gvim.exe", "",
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
 	if (build_shortcut("gVim Easy", "gvim.exe", "-y",
-						   VIM_STARTMENU, "") == FAIL)
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
 	if (build_shortcut("gVim Read-only", "gvim.exe", "-R",
-						   VIM_STARTMENU, "") == FAIL)
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
 	if (build_shortcut("gVim Diff", "gvim.exe", "-d",
-						   VIM_STARTMENU, "") == FAIL)
+					      VIM_STARTMENU, homedir) == FAIL)
 	    return;
     }
     if (build_shortcut("Uninstall",
-		interactive ? "uninstal.exe" : "uninstall-gui.exe",
-					       "", VIM_STARTMENU, "") == FAIL)
+		interactive ? "uninstal.exe" : "uninstall-gui.exe", "",
+					   VIM_STARTMENU, installdir) == FAIL)
 	return;
     /* For Windows NT the working dir of the vimtutor.bat must be right,
      * otherwise gvim.exe won't be found and using gvimbat doesn't work. */
-    if (build_shortcut("Vim tutor", "vimtutor.bat", "", VIM_STARTMENU,
-							  installdir) == FAIL)
+    if (build_shortcut("Vim tutor", "vimtutor.bat", "",
+					   VIM_STARTMENU, installdir) == FAIL)
 	return;
     if (build_shortcut("Help", has_gvim ? "gvim.exe" : "vim.exe", "-c h",
-						   VIM_STARTMENU, "") == FAIL)
+					      VIM_STARTMENU, homedir) == FAIL)
 	return;
     {
 	char	shell_folder_path[BUFSIZE];
@@ -1604,7 +1638,8 @@ install_shortcut_gvim(int idx)
     /* Create shortcut(s) on the desktop */
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[0], "gvim.exe", "", "desktop", "");
+	(void)build_shortcut(icon_names[0], "gvim.exe",
+						      "", "desktop", homedir);
 	need_uninstall_entry = 1;
     }
 }
@@ -1614,7 +1649,8 @@ install_shortcut_evim(int idx)
 {
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[1], "gvim.exe", "-y", "desktop", "");
+	(void)build_shortcut(icon_names[1], "gvim.exe",
+						    "-y", "desktop", homedir);
 	need_uninstall_entry = 1;
     }
 }
@@ -1624,7 +1660,8 @@ install_shortcut_gview(int idx)
 {
     if (choices[idx].arg)
     {
-	(void)build_shortcut(icon_names[2], "gvim.exe", "-R", "desktop", "");
+	(void)build_shortcut(icon_names[2], "gvim.exe",
+						    "-R", "desktop", homedir);
 	need_uninstall_entry = 1;
     }
 }
