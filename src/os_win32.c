@@ -1492,14 +1492,24 @@ mch_init()
     /* Look for 'vimrun' */
     if (!gui_is_win32s())
     {
-	char_u vimrun_location[_MAX_PATH + 2];
+	char_u vimrun_location[_MAX_PATH + 4];
 
 	/* First try in same directory as gvim.exe */
 	STRCPY(vimrun_location, exe_name);
 	STRCPY(gettail(vimrun_location), "vimrun.exe");
 	if (mch_getperm(vimrun_location) >= 0)
 	{
-	    STRCPY(gettail(vimrun_location), "vimrun ");
+	    if (*skiptowhite(vimrun_location) != NUL)
+	    {
+		/* Enclose path with white space in double quotes. */
+		mch_memmove(vimrun_location + 1, vimrun_location,
+						 STRLEN(vimrun_location) + 1);
+		*vimrun_location = '"';
+		STRCPY(gettail(vimrun_location), "vimrun\" ");
+	    }
+	    else
+		STRCPY(gettail(vimrun_location), "vimrun ");
+
 	    vimrun_path = (char *)vim_strsave(vimrun_location);
 	    s_dont_use_vimrun = FALSE;
 	}
