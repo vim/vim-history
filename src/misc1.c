@@ -2834,6 +2834,16 @@ expand_env(src, dst, dstlen)
     char_u	*dst;		/* where to put the result */
     int		dstlen;		/* maximum length of the result */
 {
+    expand_env_esc(src, dst, dstlen, FALSE);
+}
+
+    void
+expand_env_esc(src, dst, dstlen, esc)
+    char_u	*src;		/* input string e.g. "$HOME/vim.hlp" */
+    char_u	*dst;		/* where to put the result */
+    int		dstlen;		/* maximum length of the result */
+    int		esc;		/* escape spaces in expanded variables */
+{
     char_u	*tail;
     int		c;
     char_u	*var;
@@ -2999,6 +3009,21 @@ expand_env(src, dst, dstlen)
 		var = NULL;
 		tail = (char_u *)"";	/* for gcc */
 #endif /* UNIX || VMS */
+	    }
+
+	    /* If "var" contains white space, escape it with a backslash.
+	     * Required for ":e ~/tt" $HOME includes a space. */
+	    if (esc && var != NULL && vim_strpbrk(var, (char_u *)" \t") != NULL)
+	    {
+		char_u	*p = vim_strsave_escaped(var, (char_u *)" \t");
+
+		if (p != NULL)
+		{
+		    if (mustfree)
+			vim_free(var);
+		    var = p;
+		    mustfree = TRUE;
+		}
 	    }
 
 	    if (var != NULL && *var != NUL
