@@ -2,7 +2,7 @@
 " Language:     wDiff (wordwise diff)
 " Maintainer:   Gerfried Fuchs <alfie@ist.org>
 " Last Change:  25 Apr 2001
-" URL:          http://alfie.ist.org/vim/syntax/wdiff.vim
+" URL:		http://alfie.ist.org/vim/syntax/wdiff.vim
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.

@@ -1652,7 +1652,11 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 
-    ni = (cmdnames[ea.cmdidx].cmd_func == ex_ni);
+    ni = (
+#ifdef FEAT_USR_CMDS
+	    !USER_CMDIDX(ea.cmdidx) &&
+#endif
+	    cmdnames[ea.cmdidx].cmd_func == ex_ni);
 
 #ifndef FEAT_EVAL
     /*
@@ -2218,8 +2222,11 @@ doend:
     }
 #ifdef FEAT_EVAL
     do_errthrow(cstack,
-	    (ea.cmdidx != CMD_SIZE) ? cmdnames[(int)ea.cmdidx].cmd_name
-							    : (char_u *)NULL);
+	    (ea.cmdidx != CMD_SIZE
+# ifdef FEAT_USR_CMDS
+	     && !USER_CMDIDX(ea.cmdidx)
+# endif
+	    ) ? cmdnames[(int)ea.cmdidx].cmd_name : (char_u *)NULL);
 #endif
 
     if (verbose_save >= 0)
@@ -3552,11 +3559,19 @@ expand_filename(eap, cmdlinep, errormsgp)
 		)
 	{
 	    char_u	*l;
+#ifdef BACKSLASH_IN_FILENAME
+	    /* Don't escape a backslash here, because rem_backslash() doesn't
+	     * remove it later. */
+	    static char_u *nobslash = (char_u *)" \t\"|";
+# define ESCAPE_CHARS nobslash
+#else
+# define ESCAPE_CHARS escape_chars
+#endif
 
 	    for (l = repl; *l; ++l)
-		if (vim_strchr(escape_chars, *l) != NULL)
+		if (vim_strchr(ESCAPE_CHARS, *l) != NULL)
 		{
-		    l = vim_strsave_escaped(repl, escape_chars);
+		    l = vim_strsave_escaped(repl, ESCAPE_CHARS);
 		    if (l != NULL)
 		    {
 			vim_free(repl);
@@ -3638,18 +3653,11 @@ expand_filename(eap, cmdlinep, errormsgp)
 		 * Halve the number of backslashes (this is Vi compatible).
 		 * For Unix and OS/2, when wildcards are expanded, this is
 		 * done by ExpandOne() below.
-		 * For MS-DOS and MS-Windows, "\\server\path" should keep the
-		 * double backslash at the start.
 		 */
 #if defined(UNIX) || defined(OS2)
 		if (!has_wildcards)
 #endif
-#ifdef BACKSLASH_IN_FILENAME
-		    if (*eap->arg != NUL)
-			backslash_halve(eap->arg + 1);
-#else
 		    backslash_halve(eap->arg);
-#endif
 #ifdef MACOS_CLASSIC
 		/*
 		 * translate unix-like path components
@@ -4136,7 +4144,8 @@ ends_excmd(c)
     return (c == NUL || c == '|' || c == '"' || c == '\n');
 }
 
-#if defined(FEAT_SYN_HL) || defined(FEAT_SEARCH_EXTRA) || defined(PROTO)
+#if defined(FEAT_SYN_HL) || defined(FEAT_SEARCH_EXTRA) || defined(FEAT_EVAL) \
+	|| defined(PROTO)
 /*
  * Return the next command, after the first '|' or '\n'.
  * Return NULL if not found.
@@ -4682,7 +4691,7 @@ invalid_count:
 		return FAIL;
 	    }
 	    if (arg != NULL)
-		*compl_arg = vim_strnsave(arg, arglen);
+		*compl_arg = vim_strnsave(arg, (int)arglen);
 	}
 	else
 	{
@@ -6975,7 +6984,7 @@ ex_redir(eap)
 			|| redir_reg == '"')
 		{
 		    /* make register empty */
-		    write_reg_contents(redir_reg, (char_u *)"", FALSE);
+		    write_reg_contents(redir_reg, (char_u *)"", -1, FALSE);
 		}
 	    }
 	    else

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 2c
+MINOR = 2d
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -110,10 +110,11 @@ MINOR = 2c
 # PC:
 # - "make dossrc" and "make dosrt".  Unpack the archives on a PC.
 # 16 bit DOS version:
-# - Set environment for compiling with Borland C++ 3.1.  Adjust the paths in
-#   src/Make_bc3.mak.
-# - "ren Make_bc3.mak Makefile", "make" (compiling xxd will fail)
-# - Set environment for compiling with Borland C++ 4.0 and "make xxd/xxd.exe".
+# - Set environment for compiling with Borland C++ 3.1.
+# - Copy "Make_bc3.mak" to "Makefile"
+# - "make BOR=E:\borlandc" (compiling xxd might fail, in that case set
+#   environment for compiling with Borland C++ 4.0 and do
+#   "make -f make_bc3.mak #   xxd/xxd.exe").
 # - "make test" and check the output.
 # - Rename the executables to "vimd16.exe", "xxdd16.exe", "installd16.exe" and
 #   "uninstald16.exe".

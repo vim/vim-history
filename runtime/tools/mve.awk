@@ -10,14 +10,14 @@
 BEGIN { FS="[:,]" }
 
 /^cfe/ { file=$3
-         msg=$5
-         split($4,s," ")
-         line=s[2]
+	 msg=$5
+	 split($4,s," ")
+	 line=s[2]
 }
 
 # You may have to substitute a tab character for the \t here:
 /^[\t-]*\^/ {
-        p=match($0, ".*\\^" )
-        col=RLENGTH-2
-        printf("%s, line %d, col %d : %s\n", file,line,col,msg)
+	p=match($0, ".*\\^" )
+	col=RLENGTH-2
+	printf("%s, line %d, col %d : %s\n", file,line,col,msg)
 }

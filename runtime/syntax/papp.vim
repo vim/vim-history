@@ -2,7 +2,7 @@
 "
 " Language:	papp
 " Maintainer:	Marc Lehmann <pcg@goof.com>
-" Last Change:	2001 May 10
+" Last Change:	2003 May 11
 " Filenames:    *.papp *.pxml *.pxsl
 " URL:		http://papp.plan9.de/
 
@@ -60,26 +60,26 @@ syn cluster PAppHtml add=papp_gettext,papp_prep
 syn region papp_perl  matchgroup=xmlTag start="<perl>"  end="</perl>"  contains=papp_CDATAp,@PAppPerl keepend
 syn region papp_xperl matchgroup=xmlTag start="<xperl>" end="</xperl>" contains=papp_CDATAp,@PAppPerl keepend
 syn region papp_phtml matchgroup=xmlTag start="<phtml>" end="</phtml>" contains=papp_CDATAh,papp_ph_perl,papp_ph_html,papp_ph_hint,@PAppHtml keepend
-syn region papp_pxml  matchgroup=xmlTag start="<pxml>"  end="</pxml>"  contains=papp_CDATAx,papp_ph_perl,papp_ph_xml,papp_ph_xint            keepend
+syn region papp_pxml  matchgroup=xmlTag start="<pxml>"	end="</pxml>"  contains=papp_CDATAx,papp_ph_perl,papp_ph_xml,papp_ph_xint	     keepend
 syn region papp_perlPOD start="^=[a-z]" end="^=cut" contains=@Pod,perlTodo keepend
 
 " cdata sections
-syn region papp_CDATAp matchgroup=xmlCdataDecl start="<!\[CDATA\[" end="\]\]>" contains=@PAppPerl                                        contained keepend
+syn region papp_CDATAp matchgroup=xmlCdataDecl start="<!\[CDATA\[" end="\]\]>" contains=@PAppPerl					 contained keepend
 syn region papp_CDATAh matchgroup=xmlCdataDecl start="<!\[CDATA\[" end="\]\]>" contains=papp_ph_perl,papp_ph_html,papp_ph_hint,@PAppHtml contained keepend
-syn region papp_CDATAx matchgroup=xmlCdataDecl start="<!\[CDATA\[" end="\]\]>" contains=papp_ph_perl,papp_ph_xml,papp_ph_xint            contained keepend
+syn region papp_CDATAx matchgroup=xmlCdataDecl start="<!\[CDATA\[" end="\]\]>" contains=papp_ph_perl,papp_ph_xml,papp_ph_xint		 contained keepend
 
-syn region papp_ph_perl matchgroup=Delimiter start="<[:?]" end="[:?]>"me=e-2 nextgroup=papp_ph_html contains=@PAppPerl               contained keepend
-syn region papp_ph_html matchgroup=Delimiter start=":>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=@PAppHtml               contained keepend
+syn region papp_ph_perl matchgroup=Delimiter start="<[:?]" end="[:?]>"me=e-2 nextgroup=papp_ph_html contains=@PAppPerl		     contained keepend
+syn region papp_ph_html matchgroup=Delimiter start=":>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=@PAppHtml		     contained keepend
 syn region papp_ph_hint matchgroup=Delimiter start="?>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=@perlInterpDQ,@PAppHtml contained keepend
-syn region papp_ph_xml  matchgroup=Delimiter start=":>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=                        contained keepend
-syn region papp_ph_xint matchgroup=Delimiter start="?>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=@perlInterpDQ           contained keepend
+syn region papp_ph_xml	matchgroup=Delimiter start=":>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=			     contained keepend
+syn region papp_ph_xint matchgroup=Delimiter start="?>"    end="<[:?]"me=e-2 nextgroup=papp_ph_perl contains=@perlInterpDQ	     contained keepend
 
 " synchronization is horrors!
 syn sync clear
 syn sync match pappSync grouphere papp_CDATAh "</\(perl\|xperl\|phtml\|macro\|module\)>"
 syn sync match pappSync grouphere papp_CDATAh "^# *\(if\|elsif\|else\|endif\)"
 syn sync match pappSync grouphere papp_CDATAh "</\(tr\|td\|table\|hr\|h1\|h2\|h3\)>"
-syn sync match pappSync grouphere NONE        "</\=\(module\|state\|macro\)>"
+syn sync match pappSync grouphere NONE	      "</\=\(module\|state\|macro\)>"
 
 syn sync maxlines=300
 syn sync minlines=5

@@ -70,7 +70,7 @@ Line formats are delimited by the ^ (caret) symbol.
 5)  ATT / NCR:
     Recognized lines are of the format:
     - ^<SEVERITY> "<FILE>",L<ROW>/C<COL><>:<REASON>^
-                         or
+			 or
     - ^<SEVERITY> "<FILE>",L<ROW>/C<COL>:<REASON>^
       Following lines beginning with a pipe (|) are continuation
       lines, and are therefore appended to the <REASON>
@@ -84,7 +84,7 @@ Line formats are delimited by the ^ (caret) symbol.
 6)  SGI-IRIX:
     Recognized lines are of the format:
     - ^cfe: <SEVERITY>: <FILE>: <ROW>: <REASON>^
-                         or
+			 or
       ^cfe: <SEVERITY>: <FILE>, line <ROW>: <REASON>^
       Following lines beginning with a dash (-) are "column-bar"
       that end with a caret in the column of the error. These lines

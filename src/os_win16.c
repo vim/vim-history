@@ -96,13 +96,8 @@ WinMain(
 {
     int		argc;
     char	**argv;
-
-    int		i;
-    char	*pch;
-    char	*pszNewCmdLine;
+    char	*tofree
     char	prog[256];
-    char	*p;
-    int		fIsQuote;
 
     /*
      * Ron: added full path name so that the $VIM variable will get set to our
@@ -113,96 +108,21 @@ WinMain(
     if (*prog != NUL)
 	exe_name = FullName_save((char_u *)prog, FALSE);
 
-    p = strrchr(prog, '.');
-    if (p != NULL)
-	*p = '\0';
-    for (p = prog; *p != '\0' && *p == ' '; ++p)
-	;
-
-    /*
-     * Add the size of the string, two quotes, the separating space, and a
-     * terminating '\0'.
-     */
-    pszNewCmdLine = (char *)malloc(STRLEN(lpszCmdLine) + STRLEN(prog) + 4);
-    if (pszNewCmdLine == NULL)
+    /* Separate the command line into arguments. */
+    argc = get_cmd_args(prog, (char *)lpszCmdLine, &argv, &tofree);
+    if (argc == 0)
+    {
+	/* Error message? */
 	return 0;
-
-    /* put double quotes around the prog name, it could contain spaces */
-    pszNewCmdLine[0] = '"';
-    STRCPY(pszNewCmdLine + 1, p);
-    STRCAT(pszNewCmdLine, "\" ");
-    STRCAT(pszNewCmdLine, lpszCmdLine);
-
-    /*
-     * Isolate each argument and put it in argv[].
-     */
-    pch = pszNewCmdLine;
-    argc = 0;
-    while ( *pch != '\0' )
-    {
-	/* Ron: Handle quoted strings in args list */
-	fIsQuote = (*pch == '\"');
-	if (fIsQuote)
-	    ++pch;
-
-	argc++;			    /* this is an argument */
-	if (fIsQuote)
-	{
-	    while (*pch != '\0' && *pch != '\"')
-		pch++;		    /* advance until a closing quote */
-	    if (*pch)
-		pch++;
-	}
-	else
-	{
-	    while ((*pch != '\0') && (*pch != ' '))
-		pch++;		    /* advance until a space */
-	}
-	while (*pch && *pch == ' ' )
-	    pch++;		    /* advance until a non-space */
     }
-
-    argv = (char**) malloc((argc+1) * sizeof(char*));
-    if (argv == NULL )
-	return 0;		   /* malloc error */
-
-    i = 0;
-    pch = pszNewCmdLine;
-
-    while ((i < argc) && (*pch != '\0'))
-    {
-	fIsQuote = (*pch == '\"');
-	if (fIsQuote)
-	    ++pch;
-
-	argv[i++] = pch;
-	if (fIsQuote)
-	{
-	    while (*pch != '\0' && *pch != '\"')
-		pch++;		    /* advance until the closing quote */
-	}
-	else
-	{
-	    while (*pch != '\0' && *pch != ' ')
-		pch++;		    /* advance until a space */
-	}
-	if (*pch != '\0')
-	    *(pch++) = '\0';	    /* parse argument here */
-	while (*pch && *pch == ' ')
-	    pch++;		    /* advance until a non-space */
-    }
-
-    argv[argc] = (char *) NULL;    /* NULL-terminated list */
 
     pSaveInst = SaveInst;
-    pmain = VimMain ;
-    pSaveInst(
-	    hInstance
-	    );
-    pmain (argc, argv);
+    pmain = VimMain;
+    pSaveInst(hInstance);
+    pmain(argc, argv);
 
     free(argv);
-    free(pszNewCmdLine);
+    free(tofree);
 
     return 0;
 }
@@ -279,54 +199,6 @@ mch_check_win(
 
 
 /*
- * Turn a file name into its canonical form.  Replace slashes with backslashes.
- * This used to replace backslashes with slashes, but that caused problems
- * when using the file name as a command.  We can't have a mix of slashes and
- * backslashes, because comparing file names will not work correctly.  The
- * commands that use file names should be prepared to handle the backslashes.
- */
-    static void
-canonicalize_filename(
-    char *pszName)
-{
-    if (pszName == NULL)
-	return;
-
-    for ( ; *pszName;  pszName++)
-    {
-	if (*pszName == '/')
-	    *pszName = '\\';
-    }
-}
-
-
-
-/*
- * Insert user name in s[len].
- */
-    int
-mch_get_user_name(
-    char_u	*s,
-    int		len)
-{
-    *s = NUL;
-    return FAIL;
-}
-
-/*
- * Insert host name is s[len].
- */
-    void
-mch_get_host_name(
-    char_u	*s,
-    int		len)
-{
-    STRNCPY(s, "PC (16 bits Vim)", len);
-    s[len - 1] = NUL;	/* make sure it's terminated */
-}
-
-
-/*
  * return process ID
  */
     long
@@ -335,120 +207,6 @@ mch_get_pid()
     return (long)GetCurrentTask();
 }
 
-
-/*
- * Get name of current directory into buffer 'buf' of length 'len' bytes.
- * Return OK for success, FAIL for failure.
- */
-    int
-mch_dirname(
-    char_u	*buf,
-    int		len)
-{
-    return (getcwd(buf, len) != NULL ? OK : FAIL);
-}
-
-
-/*
- * get file permissions for 'name'
- * -1 : error
- * else FA_attributes defined in dos.h
- */
-    long
-mch_getperm(char_u *name)
-{
-    return (long)_chmod((char *)name, 0, 0);	 /* get file mode */
-}
-
-/*
- * set file permission for 'name' to 'perm'
- *
- * return FAIL for failure, OK otherwise
- */
-    int
-mch_setperm(
-    char_u	*name,
-    long	perm)
-{
-    perm |= FA_ARCH;	    /* file has changed, set archive bit */
-    return (_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
-}
-
-
-/*
- * Set hidden flag for "name".
- */
-    void
-mch_hide(char_u *name)
-{
-    /* DOS 6.2 share.exe causes "seek error on file write" errors when making
-     * the swap file hidden.  Thus don't do it. */
-}
-
-/*
- * return TRUE if "name" is a directory
- * return FALSE if "name" is not a directory
- * return FALSE for error
- *
- * beware of a trailing backslash
- */
-    int
-mch_isdir(char_u *name)
-{
-    int	    f;
-    char_u  *p;
-
-    p = name + strlen((char *)name);
-    if (p > name)
-	--p;
-    if (*p == '\\')		    /* remove trailing backslash for a moment */
-	*p = NUL;
-    else
-	p = NULL;
-    f = _chmod((char *)name, 0, 0);
-    if (p != NULL)
-	*p = '\\';		    /* put back backslash */
-    if (f == -1)
-	return FALSE;		    /* file does not exist at all */
-    if ((f & FA_DIREC) == 0)
-	return FALSE;		    /* not a directory */
-    return TRUE;
-}
-
-#if defined(FEAT_EVAL) || defined(PROTO)
-/*
- * Return 1 if "name" can be executed, 0 if not.
- * Return -1 if unknown.
- */
-    int
-mch_can_exe(char_u *name)
-{
-    return (searchpath(name) != NULL);
-}
-#endif
-
-/*
- * Check what "name" is:
- * NODE_NORMAL: file or directory (or doesn't exist)
- * NODE_WRITABLE: writable device, socket, fifo, etc.
- * NODE_OTHER: non-writable things
- */
-    int
-mch_nodetype(char_u *name)
-{
-    if (STRICMP(name, "AUX") == 0
-	    || STRICMP(name, "CON") == 0
-	    || STRICMP(name, "CLOCK$") == 0
-	    || STRICMP(name, "NUL") == 0
-	    || STRICMP(name, "PRN") == 0
-	    || ((STRNICMP(name, "COM", 3) == 0
-		    || STRNICMP(name, "LPT", 3) == 0)
-		&& isdigit(name[3])
-		&& name[4] == NUL))
-	return NODE_WRITABLE;
-    /* TODO: NODE_OTHER? */
-    return NODE_NORMAL;
-}
 
 /*
  * Specialised version of system().
@@ -610,17 +368,6 @@ mch_delay(
 #ifdef MUST_FIX
     Sleep((int)msec);	    /* never wait for input */
 #endif
-}
-
-
-/*
- * this version of remove is not scared by a readonly (backup) file
- */
-    int
-mch_remove(char_u *name)
-{
-    (void)mch_setperm(name, 0);    /* default permissions */
-    return unlink((char *)name);
 }
 
 

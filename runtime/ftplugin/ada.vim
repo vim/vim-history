@@ -1,7 +1,7 @@
 " Vim Ada plugin file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2002 Mar 09
+" Last Change:	2003 May 11
 " Version:	$Id$
 " Look for the latest version at http://vim.sourceforge.net/
 "
@@ -117,11 +117,11 @@ function! AdaWord(...)
       " Have to include previous line from file
       let linenr = linenr - 1
       if linenr < 1  ||  !search_prev_lines
-        " Start of file or matching in a comment
-        let linenr = 1
-        let newcol = 0
-        let ourmatch = match( line, s:AdaWordRegex )
-        break
+	" Start of file or matching in a comment
+	let linenr = 1
+	let newcol = 0
+	let ourmatch = match( line, s:AdaWordRegex )
+	break
       endif
       " Get previous line, and prepend it to our search string
       let newline = substitute( getline(linenr), s:AdaComment, '', '' )

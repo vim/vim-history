@@ -1,150 +1,117 @@
-*rileft.txt*    For Vim version 6.2c.  Last change: 2002 Oct 29
+*rileft.txt*    For Vim version 6.2d.  Last change: 2003 May 07
 
 
 		  VIM REFERENCE MANUAL    by Avner Lottem
+					  updated by Nadim Shaikli
 
 
-Right to Left displaying and Hebrew Mapping for Vim		*hebrew*
+Right to Left display mode for Vim				*rileft*
 
 
-These functions have been made by Avner Lottem
-E-mail: <alottem@iil.intel.com>
-Phone:  +972-4-8307322
+These functions were originally created by Avner Lottem:
+   E-mail: alottem@iil.intel.com
+   Phone:  +972-4-8307322
 
 {Vi does not have any of these commands}
 
-							*E26*
-All this is only available when the |+rightleft| feature was enabled at
-compile time.
+								*E26*
+This feature is only available when the |+rightleft| feature was enabled
+at compile time.
 
 
 Introduction
 ------------
-In right-to-left oriented files the characters appear on the screen from right
-to left.  This kind of file is most useful when writing Hebrew documents using
-TeX--XeT, troffh, composing faxes or writing Hebrew memos.
+Some languages such as Arabic, Farsi, Hebrew (among others) require the
+ability to display their text from right-to-left.  Files in those languages
+are stored conventionally and the right-to-left requirement is only a
+function of the display engine (per the Unicode specification).  In
+right-to-left oriented files the characters appear on the screen from
+right to left.
 
-Logical order files, where direction is encoded for every character (or group
-of characters) are not supported as this kind of support is out of the scope
-of a simple addition to an existing editor.  Also, no Hebrew commands, prompts
-and help files were added, the standard Vi interface was maintained.  The
-intention here was to incorporate Hebrew support to an existing modern and
-live editor, hoping that the Hebrew support will continue to live in
-subsequent versions.  Many other Hebrew supported packages were designed for a
-particular version of the original (English) software and when it continued
-developing, the Hebrew version stayed behind.  Therefore this particular
-support to Vim tries to be as simple (and short) as possible, so that it could
-be incorporated into the official source.
-
-Note that most of the other documentation files ignore rightleft mode and talk
-about movement and character positions as if there was no rightleft mode.
+Bidirectionality (or bidi for short) is what Unicode offers as a full
+solution to these languages.  Bidi offers the user the ability to view
+both right-to-left as well as left-to-right text properly at the same time
+within the same window.  Vim currently, due to simplicity, does not offer
+bidi and is merely opting to present a functional means to display/enter/use
+right-to-left languages.  An older hybrid solution in which direction is
+encoded for every character (or group of characters) are not supported either
+as this kind of support is out of the scope of a simple addition to an
+existing editor (and its not sanctioned by Unicode either).
 
 
 Highlights
 ----------
 o  Editing left-to-right files as in the original Vim, no change.
 
-o  Viewing and editing files in right-to-left windows.   File orientation
+o  Viewing and editing files in right-to-left windows.  File orientation
    is per window, so it is possible to view the same file in right-to-left
-   and left-to-right modes, simultaneously.
-   (This is sometimes useful when editing documents with TeX--XeT.)
+   and left-to-right modes, simultaneously.  (Useful for editing mixed files
+   in which both right-to-left and left-to-right text exist).
 
-o  Compatibility to the original Vim.   Almost all features work in
+o  Compatibility to the original Vim.  Almost all features work in
    right-to-left mode (see Bugs below).
-
-o  Changing keyboard mapping and reverse insert modes using a single
-   command.
 
 o  Backing from reverse insert mode to the correct place in the file
    (if possible).
 
 o  No special terminal with right-to-left capabilities is required.  The
-   right-to-left changes are completely hardware independent.  Only
-   Hebrew font is necessary.
+   right-to-left changes are completely hardware independent.
 
-   The MIT X distribution includes at least two fonts: heb6x13 and heb8x13.
-   Some fonts are on
-	http://sunsite.unc.edu/pub/Linux/X11/fonts/hebxfonts-0.2.tgz
-   More pointers are in the Hebrew HOWTO on
-	http://sunsite.unc.edu/pub/Linux/docs/HOWTO
-   To create a Hebrew font for a DOS box under MS-Windows, refer to a hack on
-   ftp://tochna.technion.ac.il/pub/staff/lottem/doswin-0.1.tgz.
-
-o  Many other languages that use and require right-to-left support can
-   quite easily be supported given the inclusion of their required keyboard
-   mappings and some possible minor code change.  Some of these languages
-   (such as |arabic| and |farsi|) have already added their required code
-   and mappings.
+o  Many languages use and require right-to-left support.  These languages
+   can quite easily be supported given the inclusion of their required
+   keyboard mappings and some possible minor code change.  Some of the
+   current supported languages include - |arabic.txt|, |farsi.txt| and
+   |hebrew.txt|.
 
 
-Change details
+Of Interest...
 --------------
-+  Options:
-   +  'rightleft' ('rl') sets window orientation to right-to-left.
-   +  'hkmap' ('hk') sets keyboard mapping to Hebrew, in insert/replace modes.
-   +  'aleph' ('al'), numeric, holds the decimal code of Aleph, for keyboard
-      mapping.
-   +  'delcombine' ('deco'), boolean, if editing UTF-8 encoded Hebrew, allows
-      one to remove the niqud by pressing 'x' on a character (with associated
-      niqud).
 
-+  Encoding:
-   +  Under Unix, ISO 8859-8 encoding (Hebrew letters codes: 224-250).
-   +  Under MS DOS, PC encoding (Hebrew letters codes: 128-154).
-   These are defaults, that can be overridden using the 'aleph' option.
+o  Invocations
+   -----------
+   + 'rightleft' ('rl') sets window orientation to right-to-left.
+   + 'delcombine' ('deco'), boolean, if editing UTF-8 encoded languages,
+     allows one to remove a composing character which gets superimposed
+     on those that proceeded them (some languages require this).
+   + 'rightleftcmd' ('rlc') sets the command-line within certain modes
+     (such as search) to be utilized in right-to-left orientation as well.
 
-+  Vim arguments:
-   +  'vim -H file' starts editing a Hebrew file, i.e. 'rightleft' and 'hkmap'
-      are set.
+o  Typing backwards					*ins-reverse*
+   ----------------
+   In lieu of using full-fledged the 'rightleft' option, one can opt for
+   reverse insertion.  When the 'revins' (reverse insert) option is set,
+   inserting happens backwards.  This can be used to type right-to-left
+   text.  When inserting characters the cursor is not moved and the text
+   moves rightwards.  A <BS> deletes the character under the cursor.
+   CTRL-W and CTRL-U also work in the opposite direction.  <BS>, CTRL-W
+   and CTRL-U do not stop at the start of insert or end of line, no matter
+   how the 'backspace' option is set.
 
-+  Keyboard:
-   +  The 'allowrevins' option enables the CTRL-_ command in Insert mode and
-      in Command-line mode.
+   There is no reverse replace mode (yet).
 
-   +  CTRL-_ in insert/replace modes toggles 'revins' and 'hkmap' as follows:
+   If the 'showmode' option is set, "-- REVERSE INSERT --" will be shown
+   in the status line when reverse Insert mode is active.
 
-      When in rightleft window, 'revins' and 'nohkmap' are toggled, since
-      English will likely be inserted in this case.
-
-      When in norightleft window, 'revins' 'hkmap' are toggled, since Hebrew
-      will likely be inserted in this case.
-
-      CTRL-_ moves the cursor to the end of the typed text.
-
-   +  CTRL-_ in command mode only toggles keyboard mapping (see Bugs below).
-      This setting is independent of 'hkmap' option, which only applies to
-      insert/replace mode.
-
-      Note: On some keyboards, CTRL-_ is mapped to CTRL-?.
-
-   +  Keyboard mapping while 'hkmap' is set:
-
-	q w e r t y u i o p		The characters in the mapping shown
-	/ ' ÷ ø à è å ï í ô		here are for ISO 8859-8.
-
-	 a s d f g h j k l ; '
-	 ù ã â ë ò é ç ì ê ó ,
-
-	  z x c v b n m , . /
-	  æ ñ á ä ð î ö ú õ .
+o  Pasting when in a rightleft window
+   ----------------------------------
+   When cutting text with the mouse and pasting it in a rightleft window
+   the text will be reversed, because the characters come from the cut buffer
+   from the left to the right, while inserted in the file from the right to
+   the left.   In order to avoid it, toggle 'revins' before pasting.
 
 
 Bugs
 ----
-o  Does not handle CTRL-A and CTRL-X commands (add and subtract)
-   correctly when in rightleft window.
+o  Does not handle CTRL-A and CTRL-X commands (add and subtract) correctly
+   when in rightleft window.
 
 o  Does not support reverse insert and rightleft modes on the command-line.
    However, functionality of the editor is not reduced, because it is
-   possible to enter mappings, abbreviations and searches with Hebrew text,
-   typed from the left to the right on the command-line.
+   possible to enter mappings, abbreviations and searches typed from the
+   left to the right on the command-line.
 
 o  Somewhat slower in right-to-left mode, because right-to-left motion is
    emulated inside Vim, not by the controlling terminal.
-
-o  Does not support 7 bit terminals.  Only a terminal with complete
-   Hebrew English font (without need to send escape sequences to switch
-   between Hebrew and English) is supported.
 
 o  When the Athena GUI is used, the bottom scrollbar works in the wrong
    direction.  This is difficult to fix.
@@ -152,49 +119,7 @@ o  When the Athena GUI is used, the bottom scrollbar works in the wrong
 o  When both 'rightleft' and 'revins' are on: 'textwidth' does not work.
    Lines do not wrap at all; you just get a single, long line.
 
-
-Typing backwards					*ins-reverse*
-
-If the 'revins' (reverse insert) option is set, inserting happens backwards.
-This can be used to type Hebrew.  When inserting characters the cursor is not
-moved and the text moves rightwards.  A <BS> deletes the character under the
-cursor.  CTRL-W and CTRL-U also work in the opposite direction.  <BS>, CTRL-W
-and CTRL-U do not stop at the start of insert or end of line, no matter how
-the 'backspace' option is set.
-
-There is no reverse replace mode (yet).
-
-If the 'showmode' option is set, "-- REVERSE INSERT --" will be shown in the
-status line when reverse Insert mode is active.
-
-When the 'allowrevins' option is set, reverse Insert mode can be also entered
-via CTRL-_, which has some extra functionality: First, keyboard mapping is
-changed according to the window orientation -- if in a left-to-right window,
-'revins' is used to enter Hebrew text, so the keyboard changes to Hebrew
-('hkmap' is set); if in a right-to-left window, 'revins' is used to enter
-English text, so the keyboard changes to English ('hkmap' is reset).  Second,
-when exiting 'revins' via CTRL-_, the cursor moves to the end of the typed
-text (if possible).
-
-
-Pasting when in a rightleft window
-----------------------------------
-
-When cutting text with the mouse and pasting it in a rightleft window
-the text will be reversed, because the characters come from the cut buffer
-from the left to the right, while inserted in the file from the right to
-the left.   In order to avoid it, toggle 'revins' (by typing CTRL-? or CTRL-_)
-before pasting.
-
-
-Hebrew characters and the 'isprint' variable
---------------------------------------------
-
-Sometimes Hebrew character codes are in the non-printable range defined by
-the 'isprint' variable.  For example in the Linux console, the Hebrew font
-encoding starts from 128, while the default 'isprint' variable is @,161-255.
-The result is that all Hebrew characters are displayed as ~x.  To solve this
-problem, set isprint=@,128-255.
+o  There is no full bidirectionality (bidi) support.
 
 
  vim:tw=78:ts=8:ft=help:norl:

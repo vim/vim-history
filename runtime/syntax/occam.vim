@@ -2,7 +2,7 @@
 " Language:	occam
 " Copyright:	Fred Barnes <frmb2@kent.ac.uk>, Mario Schweigler <ms44@kent.ac.uk>
 " Maintainer:	Mario Schweigler <ms44@kent.ac.uk>
-" Last Change:	23 April 2003
+" Last Change:	07 May 2003
 
 if version < 600
   syntax clear
@@ -95,7 +95,7 @@ if version >= 508 || !exists("did_occam_syn_inits")
   HiLink occamNumber Number
   HiLink occamCDirective PreProc
   HiLink occamBoolean Boolean
-  HiLink occamSpecial SpecialChar
+  HiLink occamSpecialChar SpecialChar
   HiLink occamChar Character
   HiLink occamStructure Structure
   HiLink occamIdentifier Identifier

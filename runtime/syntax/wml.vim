@@ -3,7 +3,7 @@
 " Maintainer:   Gerfried Fuchs <alfie@ist.org>
 " Filenames:    *.wml
 " Last Change:  07 Feb 2002
-" URL:          http://alfie.ist.org/software/vim/syntax/wml.vim
+" URL:		http://alfie.ist.org/software/vim/syntax/wml.vim
 "
 " Original Version: Craig Small <csmall@eye-net.com.au>
 
@@ -85,11 +85,11 @@ syn keyword htmlArg contained mode columns localsrc ordered
 syn match   wmlComment     "^\s*#.*"
 " The different exceptions to comments
 syn match   wmlSharpBang   "^#!.*"
-syn match   wmlUsed        contained "\s\s*[A-Za-z:_-]*"
-syn match   wmlUse         "^\s*#\s*use\s\+" contains=wmlUsed
-syn match   wmlInclude     "^\s*#\s*include.+"
+syn match   wmlUsed	   contained "\s\s*[A-Za-z:_-]*"
+syn match   wmlUse	   "^\s*#\s*use\s\+" contains=wmlUsed
+syn match   wmlInclude	   "^\s*#\s*include.+"
 
-syn region  wmlBody        contained start=+<<+ end=+>>+
+syn region  wmlBody	   contained start=+<<+ end=+>>+
 
 syn match   wmlLocationId  contained "[A-Za-z]\+"
 syn region  wmlLocation    start=+<<+ end=+>>+ contains=wmlLocationId
@@ -151,20 +151,20 @@ if version >= 508 || !exists("did_wml_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink wmlNextLine    Special
-  HiLink wmlUse         Include
-  HiLink wmlUsed        String
-  HiLink wmlBody        Special
-  HiLink wmlDiverted    Label
-  HiLink wmlDivert      Delimiter
-  HiLink wmlDivertEnd   Delimiter
-  HiLink wmlLocationId  Label
-  HiLink wmlLocation    Delimiter
-" HiLink wmlLocationed  Delimiter
-  HiLink wmlDefineName  String
-  HiLink wmlComment     Comment
-  HiLink wmlInclude     Include
-  HiLink wmlSharpBang   PreProc
+  HiLink wmlNextLine	Special
+  HiLink wmlUse		Include
+  HiLink wmlUsed	String
+  HiLink wmlBody	Special
+  HiLink wmlDiverted	Label
+  HiLink wmlDivert	Delimiter
+  HiLink wmlDivertEnd	Delimiter
+  HiLink wmlLocationId	Label
+  HiLink wmlLocation	Delimiter
+" HiLink wmlLocationed	Delimiter
+  HiLink wmlDefineName	String
+  HiLink wmlComment	Comment
+  HiLink wmlInclude	Include
+  HiLink wmlSharpBang	PreProc
 
   delcommand HiLink
 endif

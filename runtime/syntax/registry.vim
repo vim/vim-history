@@ -2,7 +2,7 @@
 " Language:	Windows Registry export with regedit (*.reg)
 " Maintainer:	Dominique Stéphan (stephan@my-deja.com)
 " URL: http://www.mggen.com/vim/syntax/registry.zip
-" Last change:	2001 May 10
+" Last change:	2003 May 11
 
 " clear any unwanted syntax defs
 " For version 5.x: Clear all syntax items
@@ -56,9 +56,9 @@ syn region  registryPath		start="\[" end="\]" contains=registryHKEY,registryGUID
 syn region registryRemove	start="\[\-" end="\]" contains=registryHKEY,registryGUID,registrySpecial
 
 " Subkey
-syn match  registrySubKey	        "^\".*\"="
+syn match  registrySubKey		"^\".*\"="
 " Default value
-syn match  registrySubKey	        "^\@="
+syn match  registrySubKey		"^\@="
 
 " Numbers
 
@@ -91,16 +91,16 @@ if version >= 508 || !exists("did_registry_syntax_inits")
 
 " The default methods for highlighting.  Can be overridden later
    HiLink registryComment	Comment
-   HiLink registryHead	        Constant
-   HiLink registryHKEY          Constant
-   HiLink registryPath          Special
-   HiLink registryRemove        PreProc
-   HiLink registryGUID          Identifier
-   HiLink registrySpecial       Special
-   HiLink registrySubKey        Type
-   HiLink registryString        String
-   HiLink registryHex           Number
-   HiLink registryDword         Number
+   HiLink registryHead		Constant
+   HiLink registryHKEY		Constant
+   HiLink registryPath		Special
+   HiLink registryRemove	PreProc
+   HiLink registryGUID		Identifier
+   HiLink registrySpecial	Special
+   HiLink registrySubKey	Type
+   HiLink registryString	String
+   HiLink registryHex		Number
+   HiLink registryDword		Number
 
    delcommand HiLink
 endif

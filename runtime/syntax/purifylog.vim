@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	purify log files
 " Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -105,11 +105,11 @@ if version >= 508 || !exists("did_purifyLog_syntax_inits")
 	HiLink purifyLogZPR purifyLogFatal
 	HiLink purifyLogZPW purifyLogFatal
 
-	HiLink purifyLogHeader        Comment
-	HiLink purifyLogInformational PreProc
-	HiLink purifyLogWarning       Type
-	HiLink purifyLogCorrupting    Error
-	HiLink purifyLogFatal	       Error
+	HiLink purifyLogHeader		Comment
+	HiLink purifyLogInformational	PreProc
+	HiLink purifyLogWarning		Type
+	HiLink purifyLogCorrupting	Error
+	HiLink purifyLogFatal		Error
 
 	delcommand HiLink
 endif

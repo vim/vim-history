@@ -36,33 +36,33 @@ syn case match
 
 if ! exists ("erlang_characters")
 	" Basic elements
-	syn match   erlangComment          +%.*$+
-	syn match   erlangModifier         "\~\a\|\\\a" contained
+	syn match   erlangComment	   +%.*$+
+	syn match   erlangModifier	   "\~\a\|\\\a" contained
 	syn match   erlangSpecialCharacter ":\|_\|@\|\\\|\"\|\."
-	syn match   erlangSeparator        "(\|)\|{\|}\|\[\|]\||\|||\|;\|,\|?\|->\|#" contained
-	syn region  erlangString           start=+"+ skip=+\\"+ end=+"+ contains=erlangModifier
-	syn region  erlangAtom             start=+'+ skip=+\\'+ end=+'+
+	syn match   erlangSeparator	   "(\|)\|{\|}\|\[\|]\||\|||\|;\|,\|?\|->\|#" contained
+	syn region  erlangString	   start=+"+ skip=+\\"+ end=+"+ contains=erlangModifier
+	syn region  erlangAtom		   start=+'+ skip=+\\'+ end=+'+
 
 	" Operators
-	syn match   erlangOperator         "+\|-\|\*\|\/"
-	syn keyword erlangOperator         div rem or xor bor bxor bsl bsr
-	syn keyword erlangOperator         and band not bnot
-	syn match   erlangOperator         "==\|/=\|=:=\|=/=\|<\|=<\|>\|>="
-	syn match   erlangOperator         "++\|--\|=\|!\|<-"
+	syn match   erlangOperator	   "+\|-\|\*\|\/"
+	syn keyword erlangOperator	   div rem or xor bor bxor bsl bsr
+	syn keyword erlangOperator	   and band not bnot
+	syn match   erlangOperator	   "==\|/=\|=:=\|=/=\|<\|=<\|>\|>="
+	syn match   erlangOperator	   "++\|--\|=\|!\|<-"
 
 	" Numbers
 	syn match   erlangNumberInteger    "[+-]\=\d\+" contains=erlangSeparator
-	syn match   erlangNumberFloat1     "[+-]\=\d\+.\d\+" contains=erlangSeparator
-	syn match   erlangNumberFloat2     "[+-]\=\d\+\(.\d\+\)\=[eE][+-]\=\d\+\(.\d\+\)\=" contains=erlangSeparator
-	syn match   erlangNumberFloat3     "[+-]\=\d\+[#]\x\+" contains=erlangSeparator
-	syn match   erlangNumberFloat4     "[+-]\=[eE][+-]\=\d\+" contains=erlangSeparator
-	syn match   erlangNumberHex        "$\x\+" contains=erlangSeparator
+	syn match   erlangNumberFloat1	   "[+-]\=\d\+.\d\+" contains=erlangSeparator
+	syn match   erlangNumberFloat2	   "[+-]\=\d\+\(.\d\+\)\=[eE][+-]\=\d\+\(.\d\+\)\=" contains=erlangSeparator
+	syn match   erlangNumberFloat3	   "[+-]\=\d\+[#]\x\+" contains=erlangSeparator
+	syn match   erlangNumberFloat4	   "[+-]\=[eE][+-]\=\d\+" contains=erlangSeparator
+	syn match   erlangNumberHex	   "$\x\+" contains=erlangSeparator
 
 	" Ignore '_' and '-' in words
-	syn match   erlangWord             "\w\+[_-]\+\w\+"
+	syn match   erlangWord		   "\w\+[_-]\+\w\+"
 
 	" Ignore numbers in words
-	syn match   erlangWord             "\w\+\d\+\(\(.\d\+\)\=\(\w\+\)\=\)\="
+	syn match   erlangWord		   "\w\+\d\+\(\(.\d\+\)\=\(\w\+\)\=\)\="
 endif
 
 if ! exists ("erlang_functions")
@@ -70,41 +70,41 @@ if ! exists ("erlang_functions")
 	syn match   erlangFCall      "\w\+\(\s\+\)\=[:@]\(\s\+\)\=\w\+" contains=ALLBUT,erlangFunction,erlangBIF,erlangWord
 
 	" build-in-functions (BIFs)
-	syn keyword erlangBIF        abs alive apply atom_to_list
-	syn keyword erlangBIF        binary_to_list binary_to_term
-	syn keyword erlangBIF        concat_binary
-	syn keyword erlangBIF        date disconnect_node
-	syn keyword erlangBIF        element erase exit
-	syn keyword erlangBIF        float float_to_list
-	syn keyword erlangBIF        get get_keys group_leader
-	syn keyword erlangBIF        halt hd
-	syn keyword erlangBIF        integer_to_list is_alive
-	syn keyword erlangBIF        length link list_to_atom list_to_binary
-	syn keyword erlangBIF        list_to_float list_to_integer list_to_pid
-	syn keyword erlangBIF        list_to_tuple load_module
-	syn keyword erlangBIF        make_ref monitor_node
-	syn keyword erlangBIF        node nodes now
-	syn keyword erlangBIF        open_port
-	syn keyword erlangBIF        pid_to_list process_flag
-	syn keyword erlangBIF        process_info process put
-	syn keyword erlangBIF        register registered round
-	syn keyword erlangBIF        self setelement size spawn
-	syn keyword erlangBIF        spawn_link split_binary statistics
-	syn keyword erlangBIF        term_to_binary throw time tl trunc
-	syn keyword erlangBIF        tuple_to_list
-	syn keyword erlangBIF        unlink unregister
-	syn keyword erlangBIF        whereis
+	syn keyword erlangBIF	     abs alive apply atom_to_list
+	syn keyword erlangBIF	     binary_to_list binary_to_term
+	syn keyword erlangBIF	     concat_binary
+	syn keyword erlangBIF	     date disconnect_node
+	syn keyword erlangBIF	     element erase exit
+	syn keyword erlangBIF	     float float_to_list
+	syn keyword erlangBIF	     get get_keys group_leader
+	syn keyword erlangBIF	     halt hd
+	syn keyword erlangBIF	     integer_to_list is_alive
+	syn keyword erlangBIF	     length link list_to_atom list_to_binary
+	syn keyword erlangBIF	     list_to_float list_to_integer list_to_pid
+	syn keyword erlangBIF	     list_to_tuple load_module
+	syn keyword erlangBIF	     make_ref monitor_node
+	syn keyword erlangBIF	     node nodes now
+	syn keyword erlangBIF	     open_port
+	syn keyword erlangBIF	     pid_to_list process_flag
+	syn keyword erlangBIF	     process_info process put
+	syn keyword erlangBIF	     register registered round
+	syn keyword erlangBIF	     self setelement size spawn
+	syn keyword erlangBIF	     spawn_link split_binary statistics
+	syn keyword erlangBIF	     term_to_binary throw time tl trunc
+	syn keyword erlangBIF	     tuple_to_list
+	syn keyword erlangBIF	     unlink unregister
+	syn keyword erlangBIF	     whereis
 
 	" Other BIFs
-	syn keyword erlangBIF        atom binary constant function integer
-	syn keyword erlangBIF        list number pid ports port_close port_info
-	syn keyword erlangBIF        reference record
+	syn keyword erlangBIF	     atom binary constant function integer
+	syn keyword erlangBIF	     list number pid ports port_close port_info
+	syn keyword erlangBIF	     reference record
 
 	" erlang:BIFs
-	syn keyword erlangBIF        check_process_code delete_module
-	syn keyword erlangBIF        get_cookie hash math module_loaded
-	syn keyword erlangBIF        preloaded processes purge_module set_cookie
-	syn keyword erlangBIF        set_node
+	syn keyword erlangBIF	     check_process_code delete_module
+	syn keyword erlangBIF	     get_cookie hash math module_loaded
+	syn keyword erlangBIF	     preloaded processes purge_module set_cookie
+	syn keyword erlangBIF	     set_node
 
 	" functions of math library
 	syn keyword erlangFunction   acos asin atan atan2 cos cosh exp

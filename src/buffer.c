@@ -3003,6 +3003,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
     int		prevchar_isflag;
     int		prevchar_isitem;
     int		itemisflag;
+    int		fillable;
     char_u	*str;
     long	num;
     int		width;
@@ -3234,6 +3235,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	/* OK - now for the real work */
 	base = 'D';
 	itemisflag = FALSE;
+	fillable = TRUE;
 	num = -1;
 	str = NULL;
 	switch (opt)
@@ -3241,6 +3243,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	case STL_FILEPATH:
 	case STL_FULLPATH:
 	case STL_FILENAME:
+	    fillable = FALSE;	/* don't change ' ' to fillchar */
 	    if (buf_spname(wp->w_buffer) != NULL)
 		STRCPY(NameBuff, buf_spname(wp->w_buffer));
 	    else
@@ -3339,12 +3342,14 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    break;
 
 	case STL_ARGLISTSTAT:
+	    fillable = FALSE;
 	    tmp[0] = 0;
 	    if (append_arg_number(wp, tmp, FALSE, (int)sizeof(tmp)))
 		str = tmp;
 	    break;
 
 	case STL_KEYMAP:
+	    fillable = FALSE;
 	    if (get_keymap_str(wp, tmp, TMPLEN))
 		str = tmp;
 	    break;
@@ -3490,7 +3495,13 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    if (minwid > 0)
 	    {
 		for (; l < minwid && p + 1 < out + outlen; l++)
-		    *p++ = fillchar;
+		{
+		    /* Don't put a "-" in front of a digit. */
+		    if (l + 1 == minwid && fillchar == '-' && isdigit(*t))
+			*p++ = ' ';
+		    else
+			*p++ = fillchar;
+		}
 		minwid = 0;
 	    }
 	    else
@@ -3498,7 +3509,10 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    while (*t && p + 1 < out + outlen)
 	    {
 		*p++ = *t++;
-		if (p[-1] == ' ')
+		/* Change a space by fillchar, unless fillchar is '-' and a
+		 * digit follows. */
+		if (fillable && p[-1] == ' '
+					 && (!isdigit(*t) || fillchar != '-'))
 		    p[-1] = fillchar;
 	    }
 	    for (; l < minwid && p + 1 < out + outlen; l++)

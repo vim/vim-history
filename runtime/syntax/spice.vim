@@ -62,15 +62,15 @@ if version >= 508 || !exists("did_spice_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink spiceTodo	Todo
-  HiLink spiceWrapLineOperator spiceOperator
-  HiLink spiceSinglequote      spiceExpr
-  HiLink spiceExpr             Function
-  HiLink spiceParenError       Error
-  HiLink spiceStatement        Statement
-  HiLink spiceNumber           Number
-  HiLink spiceComment          Comment
-  HiLink spiceOperator         Operator
+  HiLink spiceTodo		Todo
+  HiLink spiceWrapLineOperator	spiceOperator
+  HiLink spiceSinglequote	spiceExpr
+  HiLink spiceExpr		Function
+  HiLink spiceParenError	Error
+  HiLink spiceStatement		Statement
+  HiLink spiceNumber		Number
+  HiLink spiceComment		Comment
+  HiLink spiceOperator		Operator
 
   delcommand HiLink
 endif

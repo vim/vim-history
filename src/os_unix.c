@@ -33,6 +33,10 @@
 
 #include "os_unixx.h"	    /* unix includes for os_unix.c only */
 
+#ifdef USE_XSMP
+# include <X11/SM/SMlib.h>
+#endif
+
 /*
  * Use this prototype for select, some include files have a wrong prototype
  */
@@ -181,6 +185,18 @@ static int	show_shell_mess = TRUE;
 static int	deadly_signal = 0;	    /* The signal we caught */
 
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
+
+#ifdef USE_XSMP
+typedef struct
+{
+    SmcConn smcconn;	    /* The SM connection ID */
+    IceConn iceconn;	    /* The ICE connection ID */
+    Bool save_yourself;     /* If we're in the middle of a save_yourself */
+    Bool shutdown;	    /* If we're in shutdown mode */
+} xsmp_config_T;
+
+static xsmp_config_T xsmp;
+#endif
 
 #ifdef SYS_SIGLIST_DECLARED
 /*
@@ -1500,7 +1516,7 @@ get_x11_thing(get_title, test_only)
 	 * keep traversing up the tree until a window with a title/icon is
 	 * found.
 	 */
-	if (term_is_xterm)
+	/* if (term_is_xterm) */
 	{
 	    Window	    root;
 	    Window	    parent;
@@ -1815,6 +1831,7 @@ vim_is_xterm(name)
     return (STRNICMP(name, "xterm", 5) == 0
 		|| STRNICMP(name, "nxterm", 6) == 0
 		|| STRNICMP(name, "kterm", 5) == 0
+		|| STRNICMP(name, "rxvt", 4) == 0
 		|| STRCMP(name, "builtin_xterm") == 0);
 }
 
@@ -1872,7 +1889,6 @@ vim_is_fastterm(name)
     return (   STRNICMP(name, "hpterm", 6) == 0
 	    || STRNICMP(name, "sun-cmd", 7) == 0
 	    || STRNICMP(name, "screen", 6) == 0
-	    || STRNICMP(name, "rxvt", 4) == 0
 	    || STRNICMP(name, "dtterm", 6) == 0);
 }
 
@@ -3968,20 +3984,43 @@ RealWaitForChar(fd, msec, check_for_gpm)
     int		*check_for_gpm;
 {
     int		ret;
-# if defined(FEAT_XCLIPBOARD) && defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+# if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H) \
+	&& (defined(FEAT_XCLIPBOARD) || defined(USE_XSMP))
+    /* We may be interrupted halfway, remember at what time we started, so
+     * that we know how much longer we should wait. */
+#  define USE_START_TV
     struct timeval  start_tv;
-# endif
+
+    if (msec > 0 && (
+#  ifdef FEAT_XCLIPBOARD
+	    xterm_Shell != (Widget)0
+#   ifdef USE_XSMP
+	    ||
+#   endif
+#  endif
+#  ifdef USE_XSMP
+	    xsmp_icefd != -1
+#  endif
+	    ))
+	gettimeofday(&start_tv, NULL);
 
     while (1)
+# endif
     {
+#ifdef USE_START_TV
+	int		finished = TRUE; /* default is to 'loop' just once */
+#endif
 #ifndef HAVE_SELECT
-	struct pollfd   fds[4];
+	struct pollfd   fds[5];
 	int		nfd;
 # ifdef FEAT_XCLIPBOARD
 	int		xterm_idx = -1;
 # endif
 # ifdef FEAT_MOUSE_GPM
 	int		gpm_idx = -1;
+# endif
+# ifdef USE_XSMP
+	int		xsmp_idx = -1;
 # endif
 
 	fds[0].fd = fd;
@@ -4004,10 +4043,6 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    fds[nfd].fd = ConnectionNumber(xterm_dpy);
 	    fds[nfd].events = POLLIN;
 	    nfd++;
-#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-	    if (msec >= 0)
-		gettimeofday(&start_tv, NULL);
-#  endif
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
@@ -4015,6 +4050,15 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	{
 	    gpm_idx = nfd;
 	    fds[nfd].fd = gpm_fd;
+	    fds[nfd].events = POLLIN;
+	    nfd++;
+	}
+# endif
+# ifdef USE_XSMP
+	if (xsmp_icefd != -1)
+	{
+	    xsmp_idx = nfd;
+	    fds[nfd].fd = xsmp_icefd;
 	    fds[nfd].events = POLLIN;
 	    nfd++;
 	}
@@ -4038,40 +4082,33 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	{
 	    xterm_update();      /* Maybe we should hand out clipboard */
 	    if (--ret == 0 && vim_is_input_buf_empty())
-	    {
-		if (msec > 0)
-		{
-#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-		    struct timeval  tv;
-
-		    /* Compute remaining wait time. */
-		    gettimeofday(&tv, NULL);
-		    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
-				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
-		    if (msec <= 0)
-			break;	/* waited long enough */
-#  else
-		    /* Guess we got interrupted halfway. */
-		    msec = msec / 2;
-#  endif
-		}
-		continue;
-	    }
+		/* Try again */
+		finished = FALSE;
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
 	if (gpm_idx >= 0 && (fds[gpm_idx].revents & POLLIN))
 	{
 	    *check_for_gpm = 1;
-	    if (--ret == 0)
-	    {
-		if (msec > 0)
-		    msec = msec / 2;
-		continue;
-	    }
 	}
 # endif
-	break;
+# ifdef USE_XSMP
+	if (xsmp_idx >= 0)
+	{
+	    if (fds[xsmp_idx].revents & POLLIN)
+		xsmp_handle_requests();
+	    else if (fds[xsmp_idx].revents & POLLHUP)
+	    {
+		if (p_verbose > 0)
+		    MSG(_("XSMP lost ICE connection"));
+		xsmp_close();
+	    }
+	    if (--ret == 0)
+		/* Try again */
+		finished = FALSE;
+	}
+# endif
+
 
 #else /* HAVE_SELECT */
 
@@ -4119,10 +4156,6 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    FD_SET(ConnectionNumber(xterm_dpy), &rfds);
 	    if (maxfd < ConnectionNumber(xterm_dpy))
 		maxfd = ConnectionNumber(xterm_dpy);
-#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-	    if (msec >= 0)
-		gettimeofday(&start_tv, NULL);
-#  endif
 	}
 # endif
 # ifdef FEAT_MOUSE_GPM
@@ -4132,6 +4165,15 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	    FD_SET(gpm_fd, &efds);
 	    if (maxfd < gpm_fd)
 		maxfd = gpm_fd;
+	}
+# endif
+# ifdef USE_XSMP
+	if (xsmp_icefd != -1)
+	{
+	    FD_SET(xsmp_icefd, &rfds);
+	    FD_SET(xsmp_icefd, &efds);
+	    if (maxfd < xsmp_icefd)
+		maxfd = xsmp_icefd;
 	}
 # endif
 
@@ -4163,21 +4205,8 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	     * buffer is empty */
 	    if (--ret == 0 && vim_is_input_buf_empty())
 	    {
-		if (msec > 0)
-		{
-#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
-		    /* Compute remaining wait time. */
-		    gettimeofday(&tv, NULL);
-		    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
-				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
-		    if (msec <= 0)
-			break;	/* waited long enough */
-#  else
-		    /* Guess we got interrupted halfway. */
-		    msec = msec / 2;
-#  endif
-		}
-		continue;
+		/* Try again */
+		finished = FALSE;
 	    }
 	}
 # endif
@@ -4190,10 +4219,52 @@ RealWaitForChar(fd, msec, check_for_gpm)
 		*check_for_gpm = 1;
 	}
 # endif
+# ifdef USE_XSMP
+	if (ret > 0 && xsmp_icefd != -1)
+	{
+	    if (FD_ISSET(xsmp_icefd, &efds))
+	    {
+		if (p_verbose > 0)
+		    MSG(_("XSMP lost ICE connection"));
+		xsmp_close();
+		if (--ret == 0)
+		    finished = FALSE;   /* keep going if event was only one */
+	    }
+	    else if (FD_ISSET(xsmp_icefd, &rfds))
+	    {
+		xsmp_handle_requests();
+		if (--ret == 0)
+		    finished = FALSE;   /* keep going if event was only one */
+	    }
+	}
+# endif
 
-	break;
 #endif /* HAVE_SELECT */
+
+#ifdef USE_START_TV
+	if (finished)
+	    break;
+
+	/* We're going to loop around again, find out for how long */
+	if (msec >= 0)
+	{
+#  if defined(HAVE_GETTIMEOFDAY) && defined(HAVE_SYS_TIME_H)
+	    struct timeval  tv;
+
+	    /* Compute remaining wait time. */
+	    gettimeofday(&tv, NULL);
+	    msec -= (tv.tv_sec - start_tv.tv_sec) * 1000L
+				    + (tv.tv_usec - start_tv.tv_usec) / 1000L;
+#  else
+	    /* Guess we got interrupted halfway. */
+	    msec = msec / 2;
+#  endif
+	    if (msec <= 0)
+		break;	/* waited long enough */
+	}
+#endif
     }
+
     return (ret > 0);
 }
 
@@ -5639,6 +5710,275 @@ clip_xterm_set_selection(cbd)
     clip_x11_set_selection(cbd);
 }
 #endif
+
+
+#if defined(USE_XSMP) || defined(PROTO)
+/*
+ * Code for X Session Management Protocol.
+ */
+static void xsmp_handle_save_yourself __ARGS((SmcConn smc_conn, SmPointer client_data, int save_type, Bool shutdown, int interact_style, Bool fast));
+static void xsmp_die __ARGS((SmcConn smc_conn, SmPointer client_data));
+static void xsmp_save_complete __ARGS((SmcConn smc_conn, SmPointer client_data));
+static void xsmp_shutdown_cancelled __ARGS((SmcConn smc_conn, SmPointer	client_data));
+static void xsmp_ice_connection __ARGS((IceConn iceConn, IcePointer clientData, Bool opening, IcePointer *watchData));
+
+
+# if defined(FEAT_GUI) && defined(USE_XSMP_INTERACT)
+static void xsmp_handle_interaction __ARGS((SmcConn smc_conn, SmPointer client_data));
+
+/*
+ * This is our chance to ask the user if they want to save,
+ * or abort the logout
+ */
+/*ARGSUSED*/
+    static void
+xsmp_handle_interaction(smc_conn, client_data)
+    SmcConn	smc_conn;
+    SmPointer	client_data;
+{
+    cmdmod_T	save_cmdmod;
+    int		cancel_shutdown = False;
+
+    save_cmdmod = cmdmod;
+    cmdmod.confirm = TRUE;
+    if (check_changed_any(FALSE))
+	/* Mustn't logout */
+	cancel_shutdown = True;
+    cmdmod = save_cmdmod;
+    setcursor();		/* position cursor */
+    out_flush();
+
+    /* Done interaction */
+    SmcInteractDone(smc_conn, cancel_shutdown);
+
+    /* Finish off
+     * Only end save-yourself here if we're not cancelling shutdown;
+     * we'll get a cancelled callback later in which we'll end it.
+     * Hopefully get around glitchy SMs (like GNOME-1)
+     */
+    if (!cancel_shutdown)
+    {
+	xsmp.save_yourself = False;
+	SmcSaveYourselfDone(smc_conn, True);
+    }
+}
+# endif
+
+/*
+ * Callback that starts save-yourself.
+ */
+/*ARGSUSED*/
+    static void
+xsmp_handle_save_yourself(smc_conn, client_data, save_type,
+					       shutdown, interact_style, fast)
+    SmcConn	smc_conn;
+    SmPointer	client_data;
+    int		save_type;
+    Bool	shutdown;
+    int		interact_style;
+    Bool	fast;
+{
+    /* Handle already biung in saveyourself */
+    if (xsmp.save_yourself)
+	SmcSaveYourselfDone(smc_conn, True);
+    xsmp.save_yourself = True;
+    xsmp.shutdown = shutdown;
+
+    /* First up, preserve all files */
+    out_flush();
+    ml_sync_all(FALSE, FALSE);	/* preserve all swap files */
+
+    if (p_verbose > 0)
+	MSG(_("XSMP handling save-yourself request"));
+
+# if defined(FEAT_GUI) && defined(USE_XSMP_INTERACT)
+    /* Now see if we can ask about unsaved files */
+    if (shutdown && !fast && gui.in_use)
+	/* Need to interact with user, but need SM's permission */
+	SmcInteractRequest(smc_conn, SmDialogError,
+					xsmp_handle_interaction, client_data);
+    else
+# endif
+    {
+	/* Can stop the cycle here */
+	SmcSaveYourselfDone(smc_conn, True);
+	xsmp.save_yourself = False;
+    }
+}
+
+
+/*
+ * Callback to warn us of imminent death.
+ */
+/*ARGSUSED*/
+    static void
+xsmp_die(smc_conn, client_data)
+    SmcConn	smc_conn;
+    SmPointer	client_data;
+{
+    xsmp_close();
+
+    /* quit quickly leaving swapfiles for modified buffers behind */
+    getout_preserve_modified(0);
+}
+
+
+/*
+ * Callback to tell us that save-yourself has completed.
+ */
+/*ARGSUSED*/
+    static void
+xsmp_save_complete(smc_conn, client_data)
+    SmcConn	smc_conn;
+    SmPointer	client_data;
+{
+    xsmp.save_yourself = False;
+}
+
+
+/*
+ * Callback to tell us that an instigated shutdown was cancelled
+ * (maybe even by us)
+ */
+/*ARGSUSED*/
+    static void
+xsmp_shutdown_cancelled(smc_conn, client_data)
+    SmcConn	smc_conn;
+    SmPointer	client_data;
+{
+    if (xsmp.save_yourself)
+	SmcSaveYourselfDone(smc_conn, True);
+    xsmp.save_yourself = False;
+    xsmp.shutdown = False;
+}
+
+
+/*
+ * Callback to tell us that a new ICE connection has been established.
+ */
+/*ARGSUSED*/
+    static void
+xsmp_ice_connection(iceConn, clientData, opening, watchData)
+    IceConn	iceConn;
+    IcePointer	clientData;
+    Bool	opening;
+    IcePointer	*watchData;
+{
+    /* Intercept creation of ICE connection fd */
+    if (opening)
+    {
+	xsmp_icefd = IceConnectionNumber(iceConn);
+	IceRemoveConnectionWatch(xsmp_ice_connection, NULL);
+    }
+}
+
+
+/* Handle any ICE processing that's required; return FAIL if SM lost */
+    int
+xsmp_handle_requests()
+{
+    Bool rep;
+    if (IceProcessMessages(xsmp.iceconn, NULL, &rep)
+						 == IceProcessMessagesIOError)
+    {
+	/* Lost ICE */
+	if (p_verbose > 0)
+	    MSG(_("XSMP lost ICE connection"));
+	xsmp_close();
+	return FAIL;
+    }
+    else
+	return OK;
+}
+
+
+/* Set up X Session Management Protocol */
+    void
+xsmp_init(void)
+{
+    char		errorstring[80];
+    char		*clientid;
+    SmcCallbacks	smcallbacks;
+#if 0
+    SmPropValue		smname;
+    SmProp		smnameprop;
+    SmProp		*smprops[1];
+#endif
+
+    if (p_verbose > 0)
+	MSG(_("XSMP opening connection"));
+
+    xsmp.save_yourself = xsmp.shutdown = False;
+
+    /* Set up SM callbacks - must have all, even if they're not used */
+    smcallbacks.save_yourself.callback = xsmp_handle_save_yourself;
+    smcallbacks.save_yourself.client_data = NULL;
+    smcallbacks.die.callback = xsmp_die;
+    smcallbacks.die.client_data = NULL;
+    smcallbacks.save_complete.callback = xsmp_save_complete;
+    smcallbacks.save_complete.client_data = NULL;
+    smcallbacks.shutdown_cancelled.callback = xsmp_shutdown_cancelled;
+    smcallbacks.shutdown_cancelled.client_data = NULL;
+
+    /* Set up a watch on ICE connection creations */
+    if (IceAddConnectionWatch(xsmp_ice_connection, NULL) == 0)
+    {
+	if (p_verbose > 0)
+	    MSG(_("XSMP ICE connection watch failed"));
+	return;
+    }
+
+    /* Create an SM connection */
+    xsmp.smcconn = SmcOpenConnection(
+	    NULL,
+	    NULL,
+	    SmProtoMajor,
+	    SmProtoMinor,
+	    SmcSaveYourselfProcMask | SmcDieProcMask
+		     | SmcSaveCompleteProcMask | SmcShutdownCancelledProcMask,
+	    &smcallbacks,
+	    NULL,
+	    &clientid,
+	    sizeof(errorstring),
+	    errorstring);
+    if (xsmp.smcconn == NULL)
+    {
+	char errorreport[132];
+	sprintf(errorreport, _("XSMP SmcOpenConnection failed: %s"),
+		errorstring);
+	if (p_verbose > 0)
+	    MSG(errorreport);
+	return;
+    }
+    xsmp.iceconn = SmcGetIceConnection(xsmp.smcconn);
+
+#if 0
+    /* ID ourselves */
+    smname.value = "vim";
+    smname.length = 3;
+    smnameprop.name = "SmProgram";
+    smnameprop.type = "SmARRAY8";
+    smnameprop.num_vals = 1;
+    smnameprop.vals = &smname;
+
+    smprops[0] = &smnameprop;
+    SmcSetProperties(xsmp.smcconn, 1, smprops);
+#endif
+}
+
+
+/* Shut down XSMP comms. */
+    void
+xsmp_close()
+{
+    if (xsmp_icefd != -1)
+    {
+	SmcCloseConnection(xsmp.smcconn, 0, NULL);
+	xsmp_icefd = -1;
+    }
+}
+#endif /* USE_XSMP */
+
 
 #ifdef EBCDIC
 /* Translate character to its CTRL- value */

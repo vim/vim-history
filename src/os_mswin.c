@@ -856,7 +856,8 @@ ucs2_to_utf8(short_u *instr, int inlen, char_u *outstr)
 
 /*
  * Call MultiByteToWideChar() and allocate memory for the result.
- * Returns the result in "*out[*outlen]".  "outlen" is in words.
+ * Returns the result in "*out[*outlen]" with an extra zero appended.
+ * "outlen" is in words.
  */
     void
 MultiByteToWideChar_alloc(UINT cp, DWORD flags,
@@ -867,12 +868,15 @@ MultiByteToWideChar_alloc(UINT cp, DWORD flags,
     /* Add one one word to avoid a zero-length alloc(). */
     *out = (LPWSTR)alloc(sizeof(WCHAR) * (*outlen + 1));
     if (*out != NULL)
+    {
 	MultiByteToWideChar(cp, flags, in, inlen, *out, *outlen);
+	(*out)[*outlen] = 0;
+    }
 }
 
 /*
  * Call WideCharToMultiByte() and allocate memory for the result.
- * Returns the result in "*out[*outlen]".
+ * Returns the result in "*out[*outlen]" with an extra NUL appended.
  */
     void
 WideCharToMultiByte_alloc(UINT cp, DWORD flags,
@@ -884,7 +888,10 @@ WideCharToMultiByte_alloc(UINT cp, DWORD flags,
     /* Add one one byte to avoid a zero-length alloc(). */
     *out = alloc((unsigned)*outlen + 1);
     if (*out != NULL)
+    {
 	WideCharToMultiByte(cp, flags, in, inlen, *out, *outlen, def, useddef);
+	(*out)[*outlen] = 0;
+    }
 }
 
 #endif /* FEAT_MBYTE */

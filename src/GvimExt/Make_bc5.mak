@@ -23,3 +23,8 @@ gvimext.res : gvimext.rc
 
 gvimext.dll : gvimext.obj gvimext.res
 	ilink32 -aa gvimext.obj, gvimext.dll, , c0d32.obj $(RT_LIB) import32.lib, gvimext.def, gvimext.res
+
+clean :
+	-@del gvimext.obj
+	-@del gvimext.res
+	-@del gvimext.dll

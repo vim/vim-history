@@ -28,11 +28,11 @@ menutrans &About		Про\ &програму
 
 " File menu
 menutrans &File				&Файл
-menutrans &Open\.\.\.<Tab>:e        &В╕дкрити\.\.\.<Tab>:e
+menutrans &Open\.\.\.<Tab>:e	    &В╕дкрити\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp &Розд╕лити\ в╕кно\.\.\.<Tab>:sp
-menutrans &New<Tab>:enew            &Новий<Tab>:enew
-menutrans &Close<Tab>:close         &Закрити<Tab>:close
-menutrans &Save<Tab>:w              За&пам'ятати<Tab>:w
+menutrans &New<Tab>:enew	    &Новий<Tab>:enew
+menutrans &Close<Tab>:close	    &Закрити<Tab>:close
+menutrans &Save<Tab>:w		    За&пам'ятати<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Запам'ятати\ &як\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	По&р╕вняти\ з\.\.\.
 menutrans Split\ Patched\ &By\.\.\.	За&латати\.\.\.
@@ -136,7 +136,7 @@ menutrans &Next\ Error<Tab>:cn		&Наступна\ помилка<Tab>:cn
 menutrans &Previous\ Error<Tab>:cp	&Попередня\ помилка<Tab>:cp
 menutrans &Older\ List<Tab>:cold	&Бувш╕\ помилки<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	&Майбутн╕\ помилки<Tab>:cnew
-menutrans Error\ &Window            &В╕кно\ помилок
+menutrans Error\ &Window	    &В╕кно\ помилок
 menutrans &Update<Tab>:cwin			&Поновити<Tab>:cwin
 menutrans &Close<Tab>:cclose		&Закрити<Tab>:cclose
 menutrans &Open<Tab>:copen			&В╕дкрити<Tab>:copen

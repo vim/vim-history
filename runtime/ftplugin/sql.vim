@@ -22,13 +22,13 @@ let b:did_ftplugin = 1
 if !exists("b:match_words")
     let b:match_ignorecase = 0
     let b:match_words =
-                \ '\<begin\>:\<end\>\(;\)\?$,'.
-                \ '\<if\>:\<elsif\>:\<elseif\>:\<else\>:'.
-                \ '\%(\<end\s\+\)\@<!' . '\<if\>:\<end\s\+if\>,'.
-                \ '\<loop\>:\<break\>:\<continue\>:'.
-                \ '\%(\<end\s\+\)\@<!' . '\<loop\>:\<end\s\+loop\>,'.
-                \ '\<for\>:\<break\>:\<continue\>:'.
-                \ '\%(\<end\s\+\)\@<!' . '\<for\>:\<end\s\+for\>,'.
-                \ '\<case\>:\<when\>:\<default\>:'.
-                \ '\%(\<end\s\+\)\@<!' . '\<case\>:\<end\s\+case\>'
+		\ '\<begin\>:\<end\>\(;\)\?$,'.
+		\ '\<if\>:\<elsif\>:\<elseif\>:\<else\>:'.
+		\ '\%(\<end\s\+\)\@<!' . '\<if\>:\<end\s\+if\>,'.
+		\ '\<loop\>:\<break\>:\<continue\>:'.
+		\ '\%(\<end\s\+\)\@<!' . '\<loop\>:\<end\s\+loop\>,'.
+		\ '\<for\>:\<break\>:\<continue\>:'.
+		\ '\%(\<end\s\+\)\@<!' . '\<for\>:\<end\s\+for\>,'.
+		\ '\<case\>:\<when\>:\<default\>:'.
+		\ '\%(\<end\s\+\)\@<!' . '\<case\>:\<end\s\+case\>'
 endif

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Z80 assembler asz80
 " Maintainer:	Milan Pikula <www@fornax.elf.stuba.sk>
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -70,14 +70,14 @@ syn match z8aString		"\".*\""
 syn match z8aString		"\'.*\'"
 
 " Numbers
-syn match z8aNumber             "[0-9]\+"
-syn match z8aNumber             "0[xXhH][0-9a-fA-F]\+"
-syn match z8aNumber             "0[bB][0-1]*"
-syn match z8aNumber             "0[oO\@qQ][0-7]\+"
-syn match z8aNumber             "0[dD][0-9]\+"
+syn match z8aNumber		"[0-9]\+"
+syn match z8aNumber		"0[xXhH][0-9a-fA-F]\+"
+syn match z8aNumber		"0[bB][0-1]*"
+syn match z8aNumber		"0[oO\@qQ][0-7]\+"
+syn match z8aNumber		"0[dD][0-9]\+"
 
 " Character constant
-syn match z8aString             "\#\'."hs=s+1
+syn match z8aString		"\#\'."hs=s+1
 
 " Comments
 syn match z8aComment		";.*"

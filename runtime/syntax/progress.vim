@@ -4,7 +4,7 @@
 "						*.i (collides with assembler)
 "						*.w (collides with cweb)
 " Maintainer:			Philip Uren			<philu@computer.org>
-" Contributors:         Chris Ruprecht		<chrup@mac.com>
+" Contributors:			Chris Ruprecht		<chrup@mac.com>
 "						Philip Uren			<philu@computer.org>
 "						Mikhail Kuperblum	<mikhail@whasup.com>
 " URL:					http://www.zeta.org.au/~philu/vim/progress.vim

@@ -19,15 +19,15 @@ endif
 syn case ignore
 
 " Hercules runset sections
-syn keyword   herculesType        header assign_property alias assign
-syn keyword   herculesType        options preprocess_options
-syn keyword   herculesType        explode_options technology_options
-syn keyword   herculesType        drc_options database_options
-syn keyword   herculesType        text_options lpe_options evaccess_options
-syn keyword   herculesType        check_point compare_group environment
-syn keyword   herculesType        grid_check include layer_stats load_group
-syn keyword   herculesType        restart run_only self_intersect set snap
-syn keyword   herculesType        system variable waiver
+syn keyword   herculesType	  header assign_property alias assign
+syn keyword   herculesType	  options preprocess_options
+syn keyword   herculesType	  explode_options technology_options
+syn keyword   herculesType	  drc_options database_options
+syn keyword   herculesType	  text_options lpe_options evaccess_options
+syn keyword   herculesType	  check_point compare_group environment
+syn keyword   herculesType	  grid_check include layer_stats load_group
+syn keyword   herculesType	  restart run_only self_intersect set snap
+syn keyword   herculesType	  system variable waiver
 
 " Hercules commands
 syn keyword   herculesStatement   attach_property boolean cell_extent
@@ -67,8 +67,8 @@ syn keyword   herculesStatement   by_property cutting edge_touch enclosing insid
 syn keyword   herculesStatement   inside_hole interact touching vertex
 
 " Hercules comments
-syn region    herculesComment           start="/\*" skip="/\*" end="\*/" contains=herculesTodo
-syn match     herculesComment           "//.*" contains=herculesTodo
+syn region    herculesComment		start="/\*" skip="/\*" end="\*/" contains=herculesTodo
+syn match     herculesComment		"//.*" contains=herculesTodo
 
 " Preprocessor directives
 syn match     herculesPreProc "^#.*"
@@ -79,7 +79,7 @@ syn match     herculesPreProc "macros"
 syn match     herculesCmdCmnt "comment.*=.*"
 
 " Spacings, Resolutions, Ranges, Ratios, etc.
-syn match     herculesNumber          "-\=\<[0-9]\+L\=\>\|0[xX][0-9]\+\>"
+syn match     herculesNumber	      "-\=\<[0-9]\+L\=\>\|0[xX][0-9]\+\>"
 
 " Parenthesis sanity checker
 syn region    herculesZone       matchgroup=Delimiter start="(" matchgroup=Delimiter end=")" transparent contains=ALLBUT,herculesError,herculesBraceError,herculesCurlyError

@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.2c.  Last change: 2003 May 04
+*os_vms.txt*    For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL
@@ -632,18 +632,28 @@ it with: >
 
 9. VMS related changes					*vms-changes*
 
-Version 6.1 (2002 Mar 25)
-- Minor "casting" changes
-- TCL init_tcl() problem fixed
-- CTAGS v5.2.3 included
-- GNU tools binaries for OpenVMS
-- GTK runtime libraries available
-- VMS VIMtutor created
+Version 6.2 (2003 May 7)
+- Corrected VMS system call results
+- Low level character input is rewritten
+- Correction in tag and quickfix handling
+- First GTK build
 - Make file changes
-	- GTK feature added
-	- PERL, PYTHON and TCL support improved
-- Documantation updated with GTK features
-- INSTALLVMS.TXT files updated with new build possibilities
+    - GTK feature added
+    - Define for OLD_VMS
+    - OpenVMS version 6.2 or older
+- Documentation updated with GTK features
+- CTAGS v5.5 included
+- VMS VIM tutor created
+
+Version 6.1 (2002 Mar 25)
+- TCL init_tcl() problem fixed
+- CTAGS v5.4 included
+- GNU tools binaries for OpenVMS
+- Make file changes
+    - PERL, PYTHON and TCL support improved
+    - InstallVMS.txt has a detailed description HOWTO build
+- VMS/Unix file handling rewritten
+- Minor casting and bug fixes
 
 Version 6.0 (2001 Sep 28)
 - Unix and VMS code has been merged
@@ -667,73 +677,19 @@ Version 6.0 (2001 Sep 28)
 - simplified build/configuration procedure
 - created INSTALLvms.txt - detailed compiling instructions under VMS.
 - updated test scripts.
+
+Version 5.8 (2001 Jun 1)
 - OS_VMS.TXT updated with new features.
 - other minor fixes.
 - documentation updated
 - this version had been tested much more than any other OpenVMS version
   earlier
 
-Version 5.8 (2001 Jun 1)
+Version 5.7 (2000 Jun 24)
 - New CTAGS v5.0 in distribution
 - Documentation updated
 
-Version 5.7 (2000 Jun 24)
-
-Version 5.6 patches 46-70 (2000 May 5)
-- VMS filename related changes:
-	- version handling (open everything, save to new version)
-	- correct file extension matching for syntax (version problem)
-	- handle <,> characters and passwords in directory definition
-	- handle internode/remote invocation and editing with passwords
-	- OpenVMS files will be treated case insensitive from now
-	- corrected response of expand("%:.") etc path related functions
-	(in one word: VMS directory handling internally)
-- version command
-	- corrected (+,-) information data
-	- added compiler and OS version
-	- added user and host information
-	- resolving $VIM and $VIMRUNTIME logicals
-- VMS port is in MAX_FEAT (maximum features) club with Unix, Win32 and OS/2.
-	- enabled farsi, rightleft etc. features
-	- undo level raised up to 1000
-- Updated OS_VMS.MMS file.
-	- maximum features ON is default
-	- Vim is compilable with +perl, +python and +tcl features.
-	- improved MMK compatibility
-- Created MAKEFILE_VMS.MMS, makefile for testing Vim during development.
-- Defined DEC terminal VT320
-	- compatibility for VT3*0, VT2*0 and VT1*0 - ANSI terminals
-	  backwards, but not VT340 and newer with colour capability.
-	- VT320 is default terminal for OpenVMS
-	- these new terminals are also fast ttys (default for OpenVMS).
-	- allowed dec_mouse ttym
-- Updated files vimrc and gvimrc with VMS specific suggestions.
-- OS_VMS.TXT updated with new features.
-
-Version 5.6 (2000 Jan 17)
-- Popup menu line crash corrected.
-- Handle full file names with version numbers.
-- Directory handling (CD command etc.)
-- Corrected file name conversion VMS to Unix and v.v.
-- Correct response of expand wildcards
-- Recovery is working from this version under VMS as well.
-- Improved terminal and signal handing.
-- Improved OS_VMS.TXT
-
-Version 5.5 (1999 Dec 3)
-- Cut & paste mismatch corrected.
-- Motif directories during open and save are corrected.
-
-Version 5.4 (1999 Sep 9)
-- Minor changes in the code
-- Standard distribution with +GUI option
-
-Version 5.3 (1998 Oct 12)
-- Syntax and DEC C changes in the code
-- Fixing problems with the /doc subdirectory
-- Improve OS_VMS.MMS
-
-Version 5.1 (1998 Apr 21)
+[older changes omitted]
 
 Version 4.5 (1996 Dec 16)
 - First VMS port by Henk Elbers <henk@xs4all.nl>

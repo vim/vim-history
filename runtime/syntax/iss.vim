@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Inno Setup File (iss file) and My InnoSetup extension
 " Maintainer:	Dominique Stéphan (dominique@mggen.com)
-" Last change:	2001 May 10
+" Last change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -18,7 +18,7 @@ syn case ignore
 syn region issHeader		start="\[" end="\]"
 
 " Label in the [Setup] Section
-syn match  issLabel	        "^[^=]\+="
+syn match  issLabel		"^[^=]\+="
 
 " URL
 syn match  issURL		"http[s]\=:\/\/.*$"

@@ -2,8 +2,8 @@
 " Filename:     ratpoison.vim
 " Language:     Ratpoison configuration/commands file ( /etc/ratpoisonrc ~/.ratpoisonrc )
 " Maintainer:   Doug Kearns <djkea2@mugca.cc.monash.edu.au>
-" URL:          http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/ratpoison.vim
-" Last Change:  2001 Sep 25
+" URL:		http://mugca.cc.monash.edu.au/~djkea2/vim/syntax/ratpoison.vim
+" Last Change:  2003 May 11
 
 " TODO: improve KeySym name support in ratpoisonKeySeqArg group
 
@@ -17,7 +17,7 @@ endif
 
 syn match   ratpoisonComment     "^\s*#.*$"			contains=ratpoisonTodo
 
-syn keyword ratpoisonTodo        TODO NOTE FIXME XXX		contained
+syn keyword ratpoisonTodo	 TODO NOTE FIXME XXX		contained
 
 syn match   ratpoisonBooleanArg  "\<\(on\|off\)\>"		contained
 
@@ -83,7 +83,7 @@ syn match   ratpoisonWinNameArg  "\<\(name\|title\|class\)\>"	contained
 
 syn match   ratpoisonStringCommand   "^\s*bind\s*"		nextgroup=ratpoisonKeySeqArg
 syn match   ratpoisonStringCommand   "^\s*chdir\s*"
-syn match   ratpoisonStringCommand   "^\s*colon\s*"             nextgroup=ratpoisonCommandArg
+syn match   ratpoisonStringCommand   "^\s*colon\s*"		nextgroup=ratpoisonCommandArg
 syn match   ratpoisonStringCommand   "^\s*echo\s*"
 syn match   ratpoisonStringCommand   "^\s*escape\s*"		nextgroup=ratpoisonKeySeqArg
 syn match   ratpoisonStringCommand   "^\s*exec\s*"
@@ -154,19 +154,19 @@ if version >= 508 || !exists("did_ratpoison_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink ratpoisonArg           Constant
-  HiLink ratpoisonBooleanArg    Boolean
-  HiLink ratpoisonCommandArg    Constant
-  HiLink ratpoisonComment       Comment
-  HiLink ratpoisonDefCommand    Identifier
-  HiLink ratpoisonGravityArg    Constant
-  HiLink ratpoisonKeySeqArg     Special
-  HiLink ratpoisonNumberArg     Number
+  HiLink ratpoisonArg		Constant
+  HiLink ratpoisonBooleanArg	Boolean
+  HiLink ratpoisonCommandArg	Constant
+  HiLink ratpoisonComment	Comment
+  HiLink ratpoisonDefCommand	Identifier
+  HiLink ratpoisonGravityArg	Constant
+  HiLink ratpoisonKeySeqArg	Special
+  HiLink ratpoisonNumberArg	Number
   HiLink ratpoisonStringCommand Identifier
-  HiLink ratpoisonTodo          Todo
-  HiLink ratpoisonVoidCommand    Identifier
-  HiLink ratpoisonWinFmtArg     Special
-  HiLink ratpoisonWinNameArg Constant
+  HiLink ratpoisonTodo		Todo
+  HiLink ratpoisonVoidCommand	 Identifier
+  HiLink ratpoisonWinFmtArg	Special
+  HiLink ratpoisonWinNameArg	Constant
 
   delcommand HiLink
 endif

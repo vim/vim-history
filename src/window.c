@@ -1874,7 +1874,7 @@ win_close(win, free_buf)
 	return;
 
     /* reduce the reference count to the argument list. */
-    alist_unlink(curwin->w_alist);
+    alist_unlink(win->w_alist);
 
     /* remove the window and its frame from the tree of frames. */
     frp = win->w_frame;

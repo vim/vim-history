@@ -1372,7 +1372,7 @@ im_set_font(LOGFONT *lf)
 {
     HIMC hImc;
 
-    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)) != (HIMC)0)
     {
 	pImmSetCompositionFont(hImc, lf);
 	pImmReleaseContext(s_hwnd, hImc);
@@ -1387,7 +1387,7 @@ im_set_position(int row, int col)
 {
     HIMC hImc;
 
-    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)) != (HIMC)0)
     {
 	COMPOSITIONFORM	cfs;
 
@@ -1446,7 +1446,7 @@ im_get_status()
     int		status = 0;
     HIMC	hImc;
 
-    if (pImmGetContext && ((hImc = pImmGetContext(s_hwnd))))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)) != (HIMC)0)
     {
 	status = pImmGetOpenStatus(hImc) ? 1 : 0;
 	pImmReleaseContext(s_hwnd, hImc);
@@ -1792,7 +1792,7 @@ gui_mch_draw_string(
     void
 gui_mch_flush(void)
 {
-#   if defined(__BORLANDC__) && __BORLANDC__ <= 0x0500
+#   if defined(__BORLANDC__)
     /*
      * The GdiFlush declaration (in Borland C 5.01 <wingdi.h>) is not a
      * prototype declaration.
@@ -3438,7 +3438,8 @@ gui_mch_register_sign(signfile)
     }
 
     psign = NULL;
-    if (sign.hImage && ((psign = (signicon_t *)alloc(sizeof(signicon_t)))))
+    if (sign.hImage && (psign = (signicon_t *)alloc(sizeof(signicon_t)))
+								      != NULL)
 	*psign = sign;
 
     if (!psign)

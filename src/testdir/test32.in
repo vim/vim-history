@@ -9,7 +9,8 @@ Test for insert expansion
 * i-add-expands and switches to local
 * add-expands lines (it would end in an empty line if it didn't ignored it self)
 :se cpt=kXtestfile
-* checks k-expansion, and file expansion
+* checks k-expansion, and file expansion; rename test11.out to avoid matching
+* it (on PC it may be upper case and matched first).
 :se cpt=w
 * checks make_cyclic in other window
 :se cpt=u nohid
@@ -31,7 +32,11 @@ O
 kOM
 
 :se cpt=kXtestfile
+:!ren test11.out tt
+:!move test11.out tt
 O
+:!ren tt test11.out
+:!move tt test11.out
 :se cpt=w
 OST
 :se cpt=u nohid

@@ -27,24 +27,24 @@ syn keyword tadsLabel		case default
 syn keyword tadsConditional	if else switch
 syn keyword tadsRepeat		while for do
 syn keyword tadsStorageClass	local compoundWord formatstring specialWords
-syn keyword tadsBoolean         nil true
+syn keyword tadsBoolean		nil true
 
 " TADS keywords
-syn keyword tadsKeyword         replace modify
-syn keyword tadsKeyword         global self inherited
+syn keyword tadsKeyword		replace modify
+syn keyword tadsKeyword		global self inherited
 " builtin functions
-syn keyword tadsKeyword         cvtstr cvtnum caps lower upper substr
-syn keyword tadsKeyword         say length
-syn keyword tadsKeyword         setit setscore
-syn keyword tadsKeyword         datatype proptype
-syn keyword tadsKeyword         car cdr
-syn keyword tadsKeyword         defined isclass
-syn keyword tadsKeyword         find firstobj nextobj
-syn keyword tadsKeyword         getarg argcount
-syn keyword tadsKeyword         input yorn askfile
-syn keyword tadsKeyword         rand randomize
-syn keyword tadsKeyword         restart restore quit save undo
-syn keyword tadsException       abort exit exitobj
+syn keyword tadsKeyword		cvtstr cvtnum caps lower upper substr
+syn keyword tadsKeyword		say length
+syn keyword tadsKeyword		setit setscore
+syn keyword tadsKeyword		datatype proptype
+syn keyword tadsKeyword		car cdr
+syn keyword tadsKeyword		defined isclass
+syn keyword tadsKeyword		find firstobj nextobj
+syn keyword tadsKeyword		getarg argcount
+syn keyword tadsKeyword		input yorn askfile
+syn keyword tadsKeyword		rand randomize
+syn keyword tadsKeyword		restart restore quit save undo
+syn keyword tadsException	abort exit exitobj
 
 syn keyword tadsTodo contained	TODO FIXME XXX
 
@@ -104,12 +104,12 @@ syn region tadsPreProc start="^\s*#\s*\(pragma\>\|line\>\|warning\>\|warn\>\|err
 
 " identifier: class-name [, class-name [...]] [property-list] ;
 " Don't highlight comment in class def
-syn match tadsClassDef          "\<class\>[^/]*" contains=tadsObjectDef,tadsClass
+syn match tadsClassDef		"\<class\>[^/]*" contains=tadsObjectDef,tadsClass
 syn match tadsClass contained   "\<class\>"
 syn match tadsObjectDef "\<[a-zA-Z][a-zA-Z0-9_$]*\s*:\s*[a-zA-Z0-9_$]\+\(\s*,\s*[a-zA-Z][a-zA-Z0-9_$]*\)*\(\s*;\)\="
 syn keyword tadsFunction contained function
-syn match tadsFunctionDef        "\<[a-zA-Z][a-zA-Z0-9_$]*\s*:\s*function[^{]*" contains=tadsFunction
-"syn region tadsObject            transparent start = '[a-zA-Z][\i$]\s*:\s*' end=";" contains=tadsBrace,tadsObjectDef
+syn match tadsFunctionDef	 "\<[a-zA-Z][a-zA-Z0-9_$]*\s*:\s*function[^{]*" contains=tadsFunction
+"syn region tadsObject		  transparent start = '[a-zA-Z][\i$]\s*:\s*' end=";" contains=tadsBrace,tadsObjectDef
 
 " How far back do we go to find matching groups
 if !exists("tads_minlines")

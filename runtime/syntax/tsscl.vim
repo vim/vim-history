@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Command Line
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 10
+" Last Change:  2003 May 11
 " Filenames:    *.tsscl
-" URL:          http://www.naglenet.org/vim/syntax/tsscl.vim
+" URL:		http://www.naglenet.org/vim/syntax/tsscl.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -149,8 +149,8 @@ syn match  tssclContChar  "-$"
 " IF, ELSE IF, END
 " *IF value       *IF I==10
 " *ELSE IF value  *ELSE IF I<10
-" *ELSE           *ELSE
-" *ENDIF          *ENDIF
+" *ELSE		  *ELSE
+" *ENDIF	  *ENDIF
 "
 "
 " Iterative looping:
@@ -189,24 +189,24 @@ if version >= 508 || !exists("did_tsscl_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink tssclCommand          Statement
-  HiLink tssclKeyword          Special
-  HiLink tssclEnd              Macro
-  HiLink tssclUnits            Special
+  HiLink tssclCommand		Statement
+  HiLink tssclKeyword		Special
+  HiLink tssclEnd		Macro
+  HiLink tssclUnits		Special
 
-  HiLink tssclComment          Comment
-  HiLink tssclDirective        Statement
-  HiLink tssclConditional      Conditional
-  HiLink tssclContChar         Macro
-  HiLink tssclQualifier        Typedef
-  HiLink tssclSymbol           Identifier
-  HiLink tssclSymbol2          Symbol
-  HiLink tssclString           String
-  HiLink tssclOper             Operator
+  HiLink tssclComment		Comment
+  HiLink tssclDirective		Statement
+  HiLink tssclConditional	Conditional
+  HiLink tssclContChar		Macro
+  HiLink tssclQualifier		Typedef
+  HiLink tssclSymbol		Identifier
+  HiLink tssclSymbol2		Symbol
+  HiLink tssclString		String
+  HiLink tssclOper		Operator
 
-  HiLink tssclInteger          Number
-  HiLink tssclFloat            Number
-  HiLink tssclScientific       Number
+  HiLink tssclInteger		Number
+  HiLink tssclFloat		Number
+  HiLink tssclScientific	Number
 
   delcommand HiLink
 endif

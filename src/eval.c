@@ -685,7 +685,7 @@ call_vim_function(func, argc, argv, safe)
     int		doesrange;
     void	*save_funccalp = NULL;
 
-    argvars = (VAR)alloc(argc * sizeof(var));
+    argvars = (VAR)alloc((unsigned)(argc * sizeof(var)));
     if (argvars == NULL)
 	return NULL;
 
@@ -712,7 +712,7 @@ call_vim_function(func, argc, argv, safe)
     }
 
     retvar.var_type = VAR_UNKNOWN;	/* clear_var() uses this */
-    if (call_func(func, STRLEN(func), &retvar, argc, argvars,
+    if (call_func(func, (int)STRLEN(func), &retvar, argc, argvars,
 		    curwin->w_cursor.lnum, curwin->w_cursor.lnum,
 		    &doesrange, TRUE) == OK)
 	retval = vim_strsave(get_var_string(&retvar));
@@ -726,6 +726,27 @@ call_vim_function(func, argc, argv, safe)
 	restore_funccal(save_funccalp);
     }
     return retval;
+}
+
+/*
+ * Save the current function call pointer, and set it to NULL.
+ * Used when executing autocommands and for ":source".
+ */
+    void *
+save_funccal()
+{
+    struct funccall *fc;
+
+    fc = current_funccal;
+    current_funccal = NULL;
+    return (void *)fc;
+}
+
+    void
+restore_funccal(fc)
+    void *fc;
+{
+    current_funccal = (struct funccall *)fc;
 }
 
 #ifdef FEAT_FOLDING
@@ -1075,7 +1096,7 @@ ex_let(eap)
 		    EMSG(_(e_letunexp));
 		else
 		    write_reg_contents(*arg == '@' ? '"' : *arg,
-					      get_var_string(&retvar), FALSE);
+					  get_var_string(&retvar), -1, FALSE);
 	    }
 
 	    /*
@@ -4928,6 +4949,12 @@ f_has(argvars, retvar)
 #ifdef FEAT_XFONTSET
 	"xfontset",
 #endif
+#ifdef USE_XSMP
+	"xsmp",
+#endif
+#ifdef USE_XSMP_INTERACT
+	"xsmp_interact",
+#endif
 #ifdef FEAT_XCLIPBOARD
 	"xterm_clipboard",
 #endif
@@ -6145,7 +6172,7 @@ f_setreg(argvars, retvar)
 	    }
     }
 
-    write_reg_contents_ex(regname, get_var_string(&argvars[1]),
+    write_reg_contents_ex(regname, get_var_string(&argvars[1]), -1,
 						append, yank_type, block_len);
     retvar->var_val.var_number = 0;
 }
@@ -9150,27 +9177,6 @@ call_user_func(fp, argcount, argvars, retvar, firstline, lastline)
 
     var_clear(&fc.l_vars);		/* free all local variables */
     --depth;
-}
-
-/*
- * Save the current function call pointer, and set it to NULL.
- * Used when executing autocommands and for ":source".
- */
-    void *
-save_funccal()
-{
-    struct funccall *fc;
-
-    fc = current_funccal;
-    current_funccal = NULL;
-    return (void *)fc;
-}
-
-    void
-restore_funccal(fc)
-    void *fc;
-{
-    current_funccal = (struct funccall *)fc;
 }
 
 /*

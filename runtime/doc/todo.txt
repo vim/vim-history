@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.2c.  Last change: 2003 May 04
+*todo.txt*      For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,46 +29,8 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-X11: patch for session management (Neil Bird)
-   http://www.fnxweb.com/data/vim-xsmp.patch.gz
-9   When logging out from KDE, Vim is not told to save its files.  Catching
-    the WM_SAVE_YOURSELF event doesn't work.  The code that uses
-    gdk_add_client_message_filter() also doesn't work.
-    Fixed in the GNOME 2 port by connecting to the session manager.
-    (Also, GNOME 2 Vim comes with _real_ session support for a change!)
-
-Patch from Nikolai Weibull (Jan 14) for this problem and others:
-7   When using "%P" in 'statusline' and the fillchar is "-", a percentage
-    of 3% can result in "-3%". (Pritesh Mistry)
-
-A patch for utf-8 clipboard for GTK by seer26 (Aug 17).
-8   X11: Support UTF8_STRING for the clipboard when 'encoding' is utf-8.
-patch from Jason Maiorana (seer26), Aug 21. Sep 6.
-    http://members.telocity.com/~seer26/UTF8_STRING.patch
-
-Win32 GUI: quote handling in WinMain() is not correct. (Walter Briscoe, Oct
-22; Patch Oct 28, patch Nov 8)
-
-Support 8-bit encodings for printing, patch from Mike Williams 2003 Apr 27.
-Patch to support page breaks for printing. (Mike Williams June 24)
-Patch for number color for printing (Mike Williams, Aug 3)
-Make printing PostScript work on Mac.  Patch from Mike Williams
-    2002 feb 24 (VMS already works?)
-
-Fix runtime/optwin.vim for new options.
-
-Mac OSX multi-lang patch. (Muraoka Taro, Jul 1; update by Axel Jul 30)
-
-Patch to add "\Z" in regexp. (Ron Aaron, May 1)
-
-When auto-indenting doesn't change the indent, don't change the line at all.
-Add an option for this, because I sometimes use "==" to change spaces to tabs.
-Patch from Chris Leishman, Jan 23.
-
-NSIS 2.0 patch from Rene de Zwart. (18 dec 2002)
-Also check work from Steve Hall for NSIS.
-
-Unicode 4.0 tables from Raphael Finkel (Apr 29).
+Patch for cscope to use the quickfix window.  Adds 'cscopequickfix' option.
+(Khorev Sergey, May 6)
 
 8   Make 'keywordprg' global-local.  Patch from Christian Robinson (Dec 26
     2002)
@@ -76,10 +38,32 @@ Unicode 4.0 tables from Raphael Finkel (Apr 29).
 "%" does not ignore "\(".  Patch from Haakon Riiser (Feb 25).
 Is this Vi compatible?  If not, disable it for some flag in 'cpoptions'.
 
+Patches from Yasuhiro Matsumoto, Apr 9:
+    cui_cursor_correct.diff	Win32: console cursor position
+    gui_cursor_dust.diff	old problem with cursor not always removed
+    mapping_m_x.diff		old problem with mapping byte of multi-byte
+    max_window.diff		Win32: startup window size
+    mb_printdlg.diff		Win32: print dialog
+    remote_send_termcode.diff_	(doesn't work correctly)
+    utf_caption.diff		Win32: multi-byte window title
+
+Using "gvim --remote []" where [] is a double byte character and "]" is
+K_SPECIAL doesn't work.  It's translated into a three byte sequence in
+server_to_input_buf(). (Yasuhiro Matsumoto, patch Nov 14, new one Apr 17)
+Change K_SPECIAL to CSI there?  Would only work for the GUI.
+Also a patch from Taro Muraoka, Jan 20.
+"gvim --remote '<Up>'" beeps.  Already done wrong?
+Another patch from Yasuhiro Matsumoto, Apr 15, using ins_typebuf().
+
+NSIS 2.0 patch from Rene de Zwart. (18 dec 2002)
+Also check work from Steve Hall for NSIS.
+
+Fix runtime/optwin.vim for new options.
+
 Perl: cur_val() now works for Perl 5.8 but not for 5.6.  How can it be made to
 work for both?
 
-Exception hanlding: (Servatius Brandt)
+Exception handling: (Servatius Brandt)
 - Add section to user manual
 - remove the workarounds for not being able to define a function in a while
   loop.  It's not supported.
@@ -108,6 +92,8 @@ GTK2 patch problems:
 - ":sp" ":q" leaves cursor on the cmdline.
 - DND doesn't work with KDE?
 - Title leaves tail of old title behind: shows "GVIMIM" instead of "GVIM".
+- Combining UTF-8 characters not displayed properly in menus (Mikolaj
+  Machowski)
 
 Check that these problems are fixed by the GTK 2 port:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
@@ -146,6 +132,9 @@ Also: is order of composing characters ignored?
 
 UTF-8: When three combining chars and 'delcombine' set, "x" deletes all the
 bytes instead of the last combining char. (Raphael Finkel)
+Backspacing also does this, and moves the cursor to the start of the next
+line. (Nadim Shaikli)
+Should implement 'delcombine' for command line editing.
 
 diff_find_change() isn't multi-byte aware.  Should highlight a char when it's
 combining char changes. (Raphael Finkel, Jul 3)
@@ -155,23 +144,6 @@ trigger the rest, and load the rest when it's needed?
 
 In filetype plugins only set 'tw' when it's zero.  Avoid overwriting a user
 preference. (Piet Delport)
-
-Patches from Yasuhiro Matsumoto, Apr 9:
-    cui_cursor_correct.diff	Win32: console cursor position
-    gui_cursor_dust.diff	old problem with cursor not always removed
-    mapping_m_x.diff		old problem with mapping byte of multi-byte
-    max_window.diff		Win32: startup window size
-    mb_printdlg.diff		Win32: print dialog
-    remote_send_termcode.diff_	(doesn't work correctly)
-    utf_caption.diff		Win32: multi-byte window title
-
-Using "gvim --remote []" where [] is a double byte character and "]" is
-K_SPECIAL doesn't work.  It's translated into a three byte sequence in
-server_to_input_buf(). (Yasuhiro Matsumoto, patch Nov 14, new one Apr 17)
-Change K_SPECIAL to CSI there?  Would only work for the GUI.
-Also a patch from Taro Muraoka, Jan 20.
-"gvim --remote '<Up>'" beeps.  Already done wrong?
-Another patch from Yasuhiro Matsumoto, Apr 15, using ins_typebuf().
 
 "func name" puts "endfunction" in message history.  More prompt doesn't work
 properly (Hara Krishna Dara, Mar 1)
@@ -258,12 +230,6 @@ utf-8.  (Mikolaj Machowski, Apr 3)
 Win32 clipboard: Add another type of clipboard data that is the raw bytes with
 the 'encoding' setting.  Use this when pasting and 'encoding' matches, so that
 illegal bytes are also included unchanged.
-
-DJGPP: Fix for FullName().  Uses _truename(). (Walter Briscoe, Apr 2)
-
-New Make_w16.mak makefile. (Walter Briscoe, Mar 10)  OK with Vince.
-
-Better Make_djg.mak makefile. (Walter Briscoe, Mar 23).
 
 Don't include 'bufhidden' in ":mkvimrc". (Michael Naumann)
 
@@ -1361,7 +1327,7 @@ Multi-byte characters:
     For Windows, the charset_pairs[] table could be used.  But how do we know
     if a font exists?
 -   Do keyboard conversion from 'termencoding' to 'encoding' with
-    convert_input() for Mac GUI, RiscOS GUI, BeOS GUI, VMS.
+    convert_input() for Mac GUI, RiscOS GUI, BeOS GUI.
 -   Add mnemonics from RFC1345 longer than two characters.
     Support CTRL-K _{mnemonic}_
 -   Make 'langmap' accept multi-byte characters.
@@ -2080,11 +2046,8 @@ GUI:
 
 VMS:
 -   Improvement: rewrite term/TTY handling.
--   Improvement: improve vms_read() function to move more functionality from C
-    to sys$qio flags but keep compatibility with old VMS versions.
 -   Improvement: create VMS GTK runtime libraries on OpenVMS 7.1-2 (today GTK
     works just on 7.3).
--   Cosmetic: fix warning "can't read file tmp:..." during print.
 
 
 Autocommands:
@@ -2305,7 +2268,7 @@ Insert mode:
     ":map <F2> 5aabc<Esc>" works only once from Insert mode.
 7   Make ":startinsert" command work directly for functions and scripts?
     Also make it possible to append (it's difficult at end of line).
-    And add ":startreplace" (patch by Charles Campbell, 2002 Nov 27)
+    And add ":startreplace" (patch by Charles Campbell, 2003 May 6)
 7   Use 'matchpairs' for 'showmatch': When inserting a character check if it
     appears in the rhs of 'matchpairs'.
 -   In Insert mode (and command line editing?): Allow undo of the last typed
@@ -3051,6 +3014,7 @@ Mouse support:
 Crypt:
 8   Also crypt the swapfile, each block separately.  Change mf_write() and
     mf_read().  How to get b_p_key to these functions?
+7   Support a stronger encryption.  Jason Holt implemented AES (May 6 2003).
 
 
 Argument list:

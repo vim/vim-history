@@ -637,7 +637,7 @@ char *argv[];
 	  long s = seekoff;
 
 	  while (s--)
-	    getc(fp);
+	    (void)getc(fp);
 	}
     }
 

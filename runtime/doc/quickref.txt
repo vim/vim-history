@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.2c.  Last change: 2003 Mar 03
+*quickref.txt*  For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -627,6 +627,7 @@ Short explanation of each option:		*option-list*
 |'complete'|	  |'cpt'|    specify how Insert mode completion works
 |'confirm'|	  |'cf'|     ask what to do about unsaved/read-only files
 |'conskey'|	  |'consk'|  get keys directly from console (MS-DOS only)
+|'copyindent'|    |'ci'|     make 'autoindent' use existing indent structure
 |'cpoptions'|	  |'cpo'|    flags for Vi-compatible behavior
 |'cscopepathcomp'| |'cspc'|  how many components of the path to show
 |'cscopeprg'|	  |'csprg'|  command to execute cscope
@@ -761,6 +762,7 @@ Short explanation of each option:		*option-list*
 |'patchexpr'|	  |'pex'|    expression used to patch a file
 |'patchmode'|	  |'pm'|     keep the oldest version of a file
 |'path'|	  |'pa'|     list of directories searched with "gf" et.al.
+|'preserveindent'| |'pi'|    preserve the indent structure when reindenting
 |'previewheight'| |'pvh'|    height of the preview window
 |'previewwindow'| |'pvw'|    identifies the preview window
 |'printdevice'|   |'pdev'|   name of the printer to be used for :hardcopy

@@ -2,10 +2,10 @@
 " Language:     LambdaProlog (Teyjus)
 " Filenames:    *.mod *.sig
 " Maintainer:   Markus Mottl  <markus@oefai.at>
-" URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/lprolog.vim
-" Last Change:  2001 Aug 28 - Upgraded URL & mail address
-"               2001 Apr 26 - Upgraded for new Vim version
-"               2000 Jun  5 - Initial release
+" URL:		http://www.ai.univie.ac.at/~markus/vim/syntax/lprolog.vim
+" Last Change:	2003 May 11
+"		2001 Apr 26 - Upgraded for new Vim version
+"		2000 Jun  5 - Initial release
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -107,7 +107,7 @@ if version >= 508 || !exists("did_lprolog_syntax_inits")
   endif
 
   HiLink lprologComment     Comment
-  HiLink lprologTodo        Todo
+  HiLink lprologTodo	    Todo
 
   HiLink lprologKeyword     Keyword
   HiLink lprologSpecial     Special
@@ -115,8 +115,8 @@ if version >= 508 || !exists("did_lprolog_syntax_inits")
   HiLink lprologIdentifier  Normal
 
   HiLink lprologInteger     Number
-  HiLink lprologReal        Number
-  HiLink lprologString      String
+  HiLink lprologReal	    Number
+  HiLink lprologString	    String
 
   HiLink lprologCommentErr  Error
   HiLink lprologBrackErr    Error
@@ -126,12 +126,12 @@ if version >= 508 || !exists("did_lprolog_syntax_inits")
   HiLink lprologTypeName    Identifier
 
   HiLink lprologVariable    Keyword
-  HiLink lprologAtom        Normal
-  HiLink lprologClause      Type
+  HiLink lprologAtom	    Normal
+  HiLink lprologClause	    Type
 
   delcommand HiLink
 endif
 
 let b:current_syntax = "lprolog"
 
-" vim: ts=28
+" vim: ts=8

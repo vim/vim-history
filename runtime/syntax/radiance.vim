@@ -71,22 +71,22 @@ syn region radianceID start="\<alias\>"      end="\<\k*\>" contains=radianceExtr
 syn region radianceID start="\<instance\>"   end="\<\k*\>" contains=radianceExtraType
 
 syn region radianceID start="\<source\>"     end="\<\k*\>" contains=radianceSurfType
-syn region radianceID start="\<ring\>"       end="\<\k*\>" contains=radianceSurfType
+syn region radianceID start="\<ring\>"	     end="\<\k*\>" contains=radianceSurfType
 syn region radianceID start="\<polygon\>"    end="\<\k*\>" contains=radianceSurfType
 syn region radianceID start="\<sphere\>"     end="\<\k*\>" contains=radianceSurfType
 syn region radianceID start="\<bubble\>"     end="\<\k*\>" contains=radianceSurfType
-syn region radianceID start="\<cone\>"       end="\<\k*\>" contains=radianceSurfType
-syn region radianceID start="\<cup\>"        end="\<\k*\>" contains=radianceSurfType
+syn region radianceID start="\<cone\>"	     end="\<\k*\>" contains=radianceSurfType
+syn region radianceID start="\<cup\>"	     end="\<\k*\>" contains=radianceSurfType
 syn region radianceID start="\<cylinder\>"   end="\<\k*\>" contains=radianceSurfType
-syn region radianceID start="\<tube\>"       end="\<\k*\>" contains=radianceSurfType
+syn region radianceID start="\<tube\>"	     end="\<\k*\>" contains=radianceSurfType
 
 syn region radianceID start="\<light\>"      end="\<\k*\>" contains=radianceLightType
-syn region radianceID start="\<glow\>"       end="\<\k*\>" contains=radianceLightType
+syn region radianceID start="\<glow\>"	     end="\<\k*\>" contains=radianceLightType
 syn region radianceID start="\<illum\>"      end="\<\k*\>" contains=radianceLightType
 syn region radianceID start="\<spotlight\>"  end="\<\k*\>" contains=radianceLightType
 
 syn region radianceID start="\<mirror\>"     end="\<\k*\>" contains=radianceMatType
-syn region radianceID start="\<mist\>"       end="\<\k*\>" contains=radianceMatType
+syn region radianceID start="\<mist\>"	     end="\<\k*\>" contains=radianceMatType
 syn region radianceID start="\<prism1\>"     end="\<\k*\>" contains=radianceMatType
 syn region radianceID start="\<prism2\>"     end="\<\k*\>" contains=radianceMatType
 syn region radianceID start="\<metal\>"      end="\<\k*\>" contains=radianceMatType
@@ -139,18 +139,18 @@ if version >= 508 || !exists("did_radiance_syn_inits")
   else
     command -nargs=+ HiLink hi def link <args>
   endif
-  HiLink radianceKeyword   Keyword
-  HiLink radianceExtraType Type
-  HiLink radianceSurfType  Type
-  HiLink radianceLightType Type
-  HiLink radianceMatType   Type
-  HiLink radiancePatType   Type
-  HiLink radianceTexType   Type
-  HiLink radianceMixType   Type
-  HiLink radianceComment   Comment
-  HiLink radianceCommand   Function
-  HiLink radianceID        String
-  HiLink radianceTodo      Todo
+  HiLink radianceKeyword	Keyword
+  HiLink radianceExtraType	Type
+  HiLink radianceSurfType	Type
+  HiLink radianceLightType	Type
+  HiLink radianceMatType	Type
+  HiLink radiancePatType	Type
+  HiLink radianceTexType	Type
+  HiLink radianceMixType	Type
+  HiLink radianceComment	Comment
+  HiLink radianceCommand	Function
+  HiLink radianceID		String
+  HiLink radianceTodo		Todo
   delcommand HiLink
 endif
 

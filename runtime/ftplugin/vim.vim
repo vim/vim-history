@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 May 01
+" Last Change:	2003 May 08
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -15,7 +15,7 @@ let cpo_save = &cpo
 set cpo-=C
 
 let b:undo_ftplugin = "setl fo< com< tw< commentstring<"
-	\ . "| unlet b:match_ignorecase b:match_words b:match_skip"
+	\ . "| unlet! b:match_ignorecase b:match_words b:match_skip"
 
 " Set 'formatoptions' to break comment lines but not other lines,
 " and insert the comment leader when hitting <CR> or using "o".

@@ -5436,24 +5436,28 @@ get_reg_contents(regname, allowexpr)
 
 /*
  * Store string "str" in register "name".
+ * "maxlen" is the maximum number of bytes to use, -1 for all bytes.
  * If "must_append" is TRUE, always append to the register.  Otherwise append
  * if "name" is an uppercase letter.
+ * Note: "maxlen" and "must_append" don't work for the "/" register.
  * Careful: 'str' is modified, you may have to use a copy!
  * If "str" ends in '\n' or '\r', use linewise, otherwise use characterwise.
  */
     void
-write_reg_contents(name, str, must_append)
+write_reg_contents(name, str, maxlen, must_append)
     int		name;
     char_u	*str;
+    int		maxlen;
     int		must_append;
 {
-    write_reg_contents_ex(name, str, must_append, MAUTO, 0L);
+    write_reg_contents_ex(name, str, maxlen, must_append, MAUTO, 0L);
 }
 
     void
-write_reg_contents_ex(name, str, must_append, yank_type, block_len)
+write_reg_contents_ex(name, str, maxlen, must_append, yank_type, block_len)
     int		name;
     char_u	*str;
+    int		maxlen;
     int		must_append;
     int		yank_type;
     long	block_len;
@@ -5484,7 +5488,10 @@ write_reg_contents_ex(name, str, must_append, yank_type, block_len)
     get_yank_register(name, TRUE);
     if (!y_append && !must_append)
 	free_yank_all();
-    len = (long)STRLEN(str);
+    if (maxlen >= 0)
+	len = maxlen;
+    else
+	len = (long)STRLEN(str);
 #ifndef FEAT_VISUAL
     /* Just in case - make sure we don't use MBLOCK */
     if (yank_type == MBLOCK)

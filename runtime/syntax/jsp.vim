@@ -2,7 +2,7 @@
 " Language:	JSP (Java Server Pages)
 " Maintainer:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/syntax/jsp.vim
-" Last change:	2002 Oct 13
+" Last change:	2003 May 11
 " Credits : Patch by Darren Greaves (recognizes <jsp:...> tags)
 "	    Patch by Thomas Kimpton (recognizes jspExpr inside HTML tags)
 
@@ -33,15 +33,15 @@ syn case match
 syn include @jspJava <sfile>:p:h/java.vim
 
 syn region jspScriptlet matchgroup=jspTag start=/<%/  keepend end=/%>/ contains=@jspJava
-syn region jspComment                     start=/<%--/        end=/--%>/
-syn region jspDecl      matchgroup=jspTag start=/<%!/ keepend end=/%>/ contains=@jspJava
-syn region jspExpr      matchgroup=jspTag start=/<%=/ keepend end=/%>/ contains=@jspJava
-syn region jspDirective                   start=/<%@/         end=/%>/ contains=htmlString,jspDirName,jspDirArg
+syn region jspComment			  start=/<%--/	      end=/--%>/
+syn region jspDecl	matchgroup=jspTag start=/<%!/ keepend end=/%>/ contains=@jspJava
+syn region jspExpr	matchgroup=jspTag start=/<%=/ keepend end=/%>/ contains=@jspJava
+syn region jspDirective			  start=/<%@/	      end=/%>/ contains=htmlString,jspDirName,jspDirArg
 
 syn keyword jspDirName contained include page taglib
 syn keyword jspDirArg contained file uri prefix language extends import session buffer autoFlush
 syn keyword jspDirArg contained isThreadSafe info errorPage contentType isErrorPage
-syn region jspCommand                     start=/<jsp:/ start=/<\/jsp:/ keepend end=/>/ end=/\/>/ contains=htmlString,jspCommandName,jspCommandArg
+syn region jspCommand			  start=/<jsp:/ start=/<\/jsp:/ keepend end=/>/ end=/\/>/ contains=htmlString,jspCommandName,jspCommandArg
 syn keyword jspCommandName contained include forward getProperty plugin setProperty useBean param params fallback
 syn keyword jspCommandArg contained id scope class type beanName page flush name value property
 syn keyword jspCommandArg contained code codebase name archive align height
@@ -61,17 +61,17 @@ if version >= 508 || !exists("did_jsp_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
   " java.vim has redefined htmlComment highlighting
-  HiLink htmlComment     Comment
+  HiLink htmlComment	 Comment
   HiLink htmlCommentPart Comment
   " Be consistent with html highlight settings
-  HiLink jspComment      htmlComment
-  HiLink jspTag          htmlTag
-  HiLink jspDirective    jspTag
-  HiLink jspDirName      htmlTagName
-  HiLink jspDirArg       htmlArg
-  HiLink jspCommand      jspTag
+  HiLink jspComment	 htmlComment
+  HiLink jspTag		 htmlTag
+  HiLink jspDirective	 jspTag
+  HiLink jspDirName	 htmlTagName
+  HiLink jspDirArg	 htmlArg
+  HiLink jspCommand	 jspTag
   HiLink jspCommandName  htmlTagName
-  HiLink jspCommandArg   htmlArg
+  HiLink jspCommandArg	 htmlArg
   delcommand HiLink
 endif
 

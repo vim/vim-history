@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	LotusScript
 " Maintainer:	Taryn East (taryneast@hotmail.com)
-" Last Change:	2002 Mar 03
+" Last Change:	2003 May 11
 
 " This is a rough  amalgamation of the visual basic syntax file, and the UltraEdit
 " and Textpad syntax highlighters.
@@ -191,19 +191,19 @@ if version >= 508 || !exists("did_lscript_syntax_inits")
 
   hi lscriptNotesType	term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
 
-  HiLink lscriptNotesConst		lscriptNotesType
-  HiLink lscriptLineNumber	        Comment
-  HiLink lscriptDatatype		Type
+  HiLink lscriptNotesConst	lscriptNotesType
+  HiLink lscriptLineNumber	Comment
+  HiLink lscriptDatatype	Type
   HiLink lscriptNumber		Number
   HiLink lscriptError		Error
-  HiLink lscriptStatement	        Statement
+  HiLink lscriptStatement	Statement
   HiLink lscriptString		String
   HiLink lscriptComment		Comment
   HiLink lscriptTodo		Todo
-  HiLink lscriptFunction		Identifier
-  HiLink lscriptMethods             PreProc
-  HiLink lscriptEvents              Special
-  HiLink lscriptTypeSpecifier       Type
+  HiLink lscriptFunction	Identifier
+  HiLink lscriptMethods		PreProc
+  HiLink lscriptEvents		Special
+  HiLink lscriptTypeSpecifier	Type
 
   delcommand HiLink
 endif

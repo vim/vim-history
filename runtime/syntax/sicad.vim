@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:     SiCAD (procedure language)
 " Maintainer:   Zsolt Branyiczky <zbranyiczky@lmark.mgx.hu>
-" Last Change:  2001 May 22
-" URL:          http://lmark.mgx.hu:81/download/vim/sicad.vim
+" Last Change:  2003 May 11
+" URL:		http://lmark.mgx.hu:81/download/vim/sicad.vim
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

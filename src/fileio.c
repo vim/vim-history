@@ -2534,28 +2534,28 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	if (append)
 	{
 	    if (!(did_cmd = apply_autocmds_exarg(EVENT_FILEAPPENDCMD,
-					   fname, fname, FALSE, curbuf, eap)))
+					 sfname, sfname, FALSE, curbuf, eap)))
 		apply_autocmds_exarg(EVENT_FILEAPPENDPRE,
-					    fname, fname, FALSE, curbuf, eap);
+					  sfname, sfname, FALSE, curbuf, eap);
 	}
 	else if (filtering)
 	{
 	    apply_autocmds_exarg(EVENT_FILTERWRITEPRE,
-					     NULL, fname, FALSE, curbuf, eap);
+					    NULL, sfname, FALSE, curbuf, eap);
 	}
 	else if (reset_changed && whole)
 	{
 	    if (!(did_cmd = apply_autocmds_exarg(EVENT_BUFWRITECMD,
-					   fname, fname, FALSE, curbuf, eap)))
+					 sfname, sfname, FALSE, curbuf, eap)))
 		apply_autocmds_exarg(EVENT_BUFWRITEPRE,
-					    fname, fname, FALSE, curbuf, eap);
+					  sfname, sfname, FALSE, curbuf, eap);
 	}
 	else
 	{
 	    if (!(did_cmd = apply_autocmds_exarg(EVENT_FILEWRITECMD,
-					   fname, fname, FALSE, curbuf, eap)))
+					 sfname, sfname, FALSE, curbuf, eap)))
 		apply_autocmds_exarg(EVENT_FILEWRITEPRE,
-					    fname, fname, FALSE, curbuf, eap);
+					  sfname, sfname, FALSE, curbuf, eap);
 	}
 
 	/* restore curwin/curbuf and a few other things */

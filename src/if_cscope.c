@@ -25,10 +25,6 @@
 # include <io.h>
 # include <fcntl.h>
 # include <process.h>
-# ifdef __BORLANDC__
-/* BCC 5.5 uses a different function name for spawnlp */
-#  define _spawnlp spawnlp
-# endif
 # define STDIN_FILENO    0
 # define STDOUT_FILENO   1
 # define STDERR_FILENO   2
@@ -835,7 +831,12 @@ err_closing:
 	}
 # endif
 	/* May be use &shell, &shellquote etc */
+# ifdef __BORLANDC__
+	/* BCC 5.5 uses a different function name for spawnlp */
+	ph = spawnlp(P_NOWAIT, prog, cmd, NULL);
+# else
 	ph = _spawnlp(_P_NOWAIT, prog, cmd, NULL);
+# endif
 	vim_free(prog);
 	vim_free(cmd);
 # ifdef FEAT_GUI
@@ -844,7 +845,9 @@ err_closing:
 	{
 	    HWND h;
 
-	    if (h = FindWindow(NULL, "GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS"))
+	    h = FindWindow(NULL,
+			"GVIMCS{5499421B-CBEF-45b0-85EF-38167FDEA5C5}GVIMCS");
+	    if (h)
 		ShowWindow(h, SW_HIDE);
 	    SetConsoleTitle(console);
 	    FreeConsole();
@@ -1238,7 +1241,7 @@ cs_kill(eap)
     {
 	i = atoi(stok);
 	if (p_csverbose)
-	    printbuf = (char *)alloc(strlen(stok) + 32);
+	    printbuf = (char *)alloc(MAXPATHL + 64);
     }
     else
     {
@@ -1300,20 +1303,20 @@ cs_kill_execute(i, printbuf, cname)
     char *printbuf; /* pre-allocated buffer to be printed (freed by caller) */
     char *cname;    /* cscope database name */
 {
-    if (printbuf == NULL && p_csverbose)
-	MSG_PUTS_ATTR(_("cscope connection closed"),
-		      hl_attr(HLF_R) | MSG_HIST);
-    else
+    if (p_csverbose)
     {
-	cs_release_csp(i, TRUE);
-	if (p_csverbose)
+	msg_clr_eos();
+	if (printbuf == NULL)
+	    MSG_PUTS_ATTR(_("cscope connection closed"),
+						   hl_attr(HLF_R) | MSG_HIST);
+	else
 	{
-	    msg_clr_eos();
 	    sprintf(printbuf, _("cscope connection %s closed\n"), cname);
 	    MSG_PUTS_ATTR(printbuf, hl_attr(HLF_R) | MSG_HIST);
 	}
     }
-} /* cs_kill_execute */
+    cs_release_csp(i, TRUE);
+}
 
 
 /*

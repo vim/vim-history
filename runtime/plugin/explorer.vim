@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com)
-" Last Change:	2003 Apr 25
+" Last Change:	2003 May 11
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -401,21 +401,21 @@ function! s:OpenEntryPrevWindow()
       let action=confirm("Save Changes in " . bufname . "?","&Yes\n&No\n&Cancel")
       " Yes - try to save - if there is an error, cancel
       if action == 1
-        let v:errmsg = ""
-        silent w
-        if v:errmsg != ""
-          echoerr "Unable to write buffer!"
-          wincmd p
-          return
-        endif
+	let v:errmsg = ""
+	silent w
+	if v:errmsg != ""
+	  echoerr "Unable to write buffer!"
+	  wincmd p
+	  return
+	endif
       " No, abandon changes
       elseif action == 2
-        set nomodified
-        echomsg "Warning, abandoning changes in " . bufname
+	set nomodified
+	echomsg "Warning, abandoning changes in " . bufname
       " Cancel (or any other result), don't do the open
       else
-        wincmd p
-        return
+	wincmd p
+	return
       endif
     endif
     wincmd p
@@ -743,9 +743,9 @@ endfunction
 function! s:ExtractFullFileName(line)
       let fn=s:ExtractFileName(a:line)
       if fn == '/'
-              return b:completePath
+	return b:completePath
       else
-              return b:completePath . s:ExtractFileName(a:line)
+	return b:completePath . s:ExtractFileName(a:line)
       endif
 endfunction
 
@@ -826,20 +826,20 @@ function! s:AddFileInfo()
     let b:maxFileSizeLen = 0
     0
     /^"=/+1,$g/^/let fn=s:GetFullFileName() |
-                   \let fileSize=getfsize(fn) |
-                   \let fileSizeLen=strlen(fileSize) |
-                   \if fileSizeLen > b:maxFileSizeLen |
-                   \  let b:maxFileSizeLen = fileSizeLen |
-                   \endif |
-                   \exec "normal! ".(b:maxFileLen-strlen(getline("."))+2)."A \<esc>" |
-                   \exec 's/$/'.fileSize.'/'
+		   \let fileSize=getfsize(fn) |
+		   \let fileSizeLen=strlen(fileSize) |
+		   \if fileSizeLen > b:maxFileSizeLen |
+		   \  let b:maxFileSizeLen = fileSizeLen |
+		   \endif |
+		   \exec "normal! ".(b:maxFileLen-strlen(getline("."))+2)."A \<esc>" |
+		   \exec 's/$/'.fileSize.'/'
 
     " Right justify the file sizes and
     " add file modification date
     0
     /^"=/+1,$g/^/let fn=s:GetFullFileName() |
-                   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>\"_x" |
-                   \exec 's/$/ '.escape(s:FileModDate(fn), '/').'/'
+		   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>\"_x" |
+		   \exec 's/$/ '.escape(s:FileModDate(fn), '/').'/'
     setlocal nomodified
   endif
 
@@ -886,26 +886,26 @@ function! s:DeleteFile() range
       let currLine = currLine + 1
     else
       if delAll == 0
-        let sure=input("Delete ".fileName." (y/n/a/q)? ")
-        if sure=="a"
-          let delAll = 1
-        endif
+	let sure=input("Delete ".fileName." (y/n/a/q)? ")
+	if sure=="a"
+	  let delAll = 1
+	endif
       endif
       if (sure=="y") || (sure=="a")
-        let success=delete(fileName)
-        if success!=0
-          exec (" ")
-          echo "\nCannot delete ".fileName
-          let currLine = currLine + 1
-        else
-          d _
-          let filesDeleted = filesDeleted + 1
-          let lastLine = lastLine - 1
-        endif
+	let success=delete(fileName)
+	if success!=0
+	  exec (" ")
+	  echo "\nCannot delete ".fileName
+	  let currLine = currLine + 1
+	else
+	  d _
+	  let filesDeleted = filesDeleted + 1
+	  let lastLine = lastLine - 1
+	endif
       elseif sure=="q"
-        let stopDel = 1
+	let stopDel = 1
       elseif sure=="n"
-        let currLine = currLine + 1
+	let currLine = currLine + 1
       endif
     endif
   endwhile
@@ -1051,14 +1051,14 @@ function! s:AddSeparators()
   let lastsec=s:GetSection()
   +1
   .,$g/^/let sec=s:GetSection() |
-               \if g:explDirsFirst != 0 && sec != lastsec &&
-               \   (lastsec == "directory" || sec == "directory") |
-               \  exec "normal! I" . s:separator . "\n\<esc>" |
-               \elseif g:explSuffixesLast != 0 && sec != lastsec &&
-               \   (lastsec == "suffixes" || sec == "suffixes") |
-               \  exec "normal! I" . s:separator . "\n\<esc>" |
-               \endif |
-               \let lastsec=sec
+	       \if g:explDirsFirst != 0 && sec != lastsec &&
+	       \   (lastsec == "directory" || sec == "directory") |
+	       \  exec "normal! I" . s:separator . "\n\<esc>" |
+	       \elseif g:explSuffixesLast != 0 && sec != lastsec &&
+	       \   (lastsec == "suffixes" || sec == "suffixes") |
+	       \  exec "normal! I" . s:separator . "\n\<esc>" |
+	       \endif |
+	       \let lastsec=sec
 endfunction
 
 "---
@@ -1176,12 +1176,12 @@ function! s:SortR(start, end, cmp, direction)
       " Need to put it before the partition.  Swap lines i and partition.
       let partition = partition + 1
       if result == 0
-        let middle = partition
+	let middle = partition
       endif
       if i != partition
-        let str2 = getline(partition)
-        call setline(i, str2)
-        call setline(partition, str)
+	let str2 = getline(partition)
+	call setline(i, str2)
+	call setline(partition, str)
       endif
     endif
     let i = i + 1

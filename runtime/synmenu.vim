@@ -333,10 +333,12 @@ an 50.90.400 &Syntax.Sh-S.SQL.SQL :cal SetSyn("sql")<CR>
 an 50.90.410 &Syntax.Sh-S.SQL.SQL\ Forms :cal SetSyn("sqlforms")<CR>
 an 50.90.420 &Syntax.Sh-S.SQL.SQLJ :cal SetSyn("sqlj")<CR>
 an 50.90.430 &Syntax.Sh-S.SQR :cal SetSyn("sqr")<CR>
-an 50.90.440 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
-an 50.90.450 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
-an 50.90.460 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
-an 50.90.470 &Syntax.Sh-S.Subversion\ commit :cal SetSyn("svn")<CR>
+an 50.90.440 &Syntax.Sh-S.Ssh.ssh_config :cal SetSyn("sshconfig")<CR>
+an 50.90.450 &Syntax.Sh-S.Ssh.sshd_config :cal SetSyn("sshdconfig")<CR>
+an 50.90.460 &Syntax.Sh-S.Standard\ ML :cal SetSyn("sml")<CR>
+an 50.90.470 &Syntax.Sh-S.Stored\ Procedures :cal SetSyn("stp")<CR>
+an 50.90.480 &Syntax.Sh-S.Strace :cal SetSyn("strace")<CR>
+an 50.90.490 &Syntax.Sh-S.Subversion\ commit :cal SetSyn("svn")<CR>
 an 50.100.100 &Syntax.TUV.TADS :cal SetSyn("tads")<CR>
 an 50.100.110 &Syntax.TUV.Tags :cal SetSyn("tags")<CR>
 an 50.100.120 &Syntax.TUV.TAK.TAK\ compare :cal SetSyn("takcmp")<CR>

@@ -2,9 +2,9 @@
 " vim: tw=0 ts=4 sw=4
 " Vim color file
 " Maintainer:	Steven Vertigan <steven@vertigan.wattle.id.au>
-" Last Change:	2002 Mar 09
+" Last Change:	2003 May 11
 " Revision #4: Support for new "Underline" group. Removed superfluous html
-"              formatting.
+"			   formatting.
 
 set background=dark
 hi clear

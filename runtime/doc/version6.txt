@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.2c.  Last change: 2003 May 05
+*version6.txt*  For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -6046,6 +6046,7 @@ New syntax files:
 	Spyce (Rimon Barr)
 	Resolv.conf (Radu Dineiu)
 	A65 (Clemens Kirchgatterer)
+	sshconfig and sshdconfig (David Necas)
 
 New indent files:
 	Eiffel (David Clarke)
@@ -6140,6 +6141,28 @@ When completing a wildcard in a leading path element, as in "../*/Makefile",
 only the last part ("Makefile") was listed.  Support custom defined
 command line completion.  (Flemming Madsen)
 
+Also recognize "rxvt" as an xterm-like terminal. (Tomas Styblo)
+
+Proper X11 session management.  Fixes that the WM_SAVE_YOURSELF event was not
+used by popular desktops.  (Neil Bird)
+Not used for Gnome 2, it has its own handling.
+
+Support BOR, DEBUG and SPAWNO arguments for the Borland 3 Makefile. (Walter
+Briscoe)
+
+Support page breaks for printing.  Adds the "formfeed" field in
+'printoptions'.  (Mike Williams)
+
+Mac OSX: multi-language support: iconv and gettext. (Muraoka Taro, Axel
+Kielhorn)
+
+"\Z" flag in patterns: ignore differences in combining characters. (Ron Aaron)
+
+Added 'preserveindent' and 'copyindent' options.  They use existing white
+space characters instead of using Tabs as much as possible. (Chris Leishman)
+
+Updated Unicode tables to Unicode 4.0. (Raphael Finkel)
+
 
 Fixed							*fixed-6.2*
 -----
@@ -6214,6 +6237,67 @@ Made ":redraw" also update the Visual area.
 When a not implemented command, such as ":perl", has wrong arguments the less
 important error was reported, giving the user the idea the command could work.
 
+On non-Unix systems autocommands for writing did not attempt a match with the
+short file name, causing a pattern like "a/b" to fail.
+
+VMS: e_screenmode was not defined and a few other fixes for VMS. (Zoltan
+Arpadffy)
+
+redraw_msg() depended on FEAT_ARABIC instead of FEAT_RIGHTLEFT. (Walter
+Briscoe)
+
+Various changes for the PC Makefiles. (Walter Briscoe)
+
+Use _truename() instead of our own code to expand a file name into a full
+path. (Walter Briscoe)
+
+Error in filetype check for /etc/modutils. (Lubomir Host)
+
+Cscope interface: allocated a buffer too small.
+
+Win16: remove a trailing backslash from a path when obtaining the permission
+flags. (Vince Negri)
+
+When searching for tags with case ignored Vim could hang.
+
+When searching directories with a stopdir could get a crash.  Did not
+re-allocate enough memory. (Vince Negri)
+
+A user command may cause a crash.  Don't use the command index when it's
+negative. (Vince Negri)
+
+putenv() didn't work for MingW and Cygwin. (Dan Sharp)
+
+Many functions were common between os_msdos.c and os_win16.c.  Use os_msdos.c
+for compiling the Win16 version and remove the functions from os_win16.c.
+(Vince Negri)
+
+For terminals that behave like an xterm but didn't have a name that is
+recognized, the window title would not always be set.
+
+When syntax highlighting is off ":hardcopy" could still attempt printing
+colors.
+
+Crash when using ":catch" without an argument.  (Servatius Brandt)
+
+Win32: ":n #" doubled the backslashes.
+
+Fixed Arabic shaping for the command line. (Nadim Shaikli)
+
+Avoid splitting up a string displayed on the command line into individual
+characters, it breaks Arabic shaping.
+
+When a local argument list is used and doing ":only" Vim could crash later.
+(Muraoka Taro)
+
+When using "%P" in 'statusline' and the fillchar is "-", a percentage of 3%
+could result in "-3%".  Also avoid changing a space inside a filename to the
+fill character.
+
+MSwin: Handling of backslashes and double quotes for command line arguments
+was not like what other applications do.  (Walter Briscoe)
+
+Test32 sometimes didn't work, because test11.out was written as TEST11.OUT.
 
 Patch 6.1.001
 Problem:    When formatting UTF-8 text it might be wrapped at a space that is

@@ -20,42 +20,44 @@
     #
 
     # Run autoconf when configure.in has been changed since it was last run.
-    # This is skipped when the signatures in "mysign" are up-to-date.
+    # This is skipped when the signatures in "mysign" are up-to-date.  When
+    # there is no autoconf program or it is the wrong version (2.5x doesn't
+    # work) skip this (the signature is often the only thing that's outdated)
     auto/configure {signfile = mysign} : configure.in
-	# Move configure aside, autoconf would overwrite it
-	:move {exist} configure configure.save
-	:sys autoconf
-	:cat configure | :eval re.sub('\\./config.log', 'auto/config.log', stdin) >! auto/configure
-	:chmod 755 auto/configure
-	:move configure.save configure
-	:del {force} auto/config.cache auto/config.status
+	@if not program_path("autoconf"):
+	    :print Can't find autoconf, using existing configure script.
+	@else:
+	    av = `redir_system("autoconf --version", 0)`
+	    @if not re.search('version 2\\.1', av):
+		:print Sorry, your autoconf is not a usable version.
+			    Vim requires version 2.1x.
+		:print Using existing configure script.
+	    @else:
+		# Move configure aside, autoconf would overwrite it
+		:move {exist} configure configure.save
+		:sys autoconf
+		:cat configure | :eval re.sub('\\./config.log', 'auto/config.log', stdin) >! auto/configure
+		:chmod 755 auto/configure
+		:move configure.save configure
+		:del {force} auto/config.cache auto/config.status
 
-    # Only update auto/configure when asked to do it.  This solves the problem
-    # that autoconf is run when "mysign" was not updated properly.
-    # Unfortunately, this means autoconf must be run manually with
-    # "aap configure".
-    @if _no.targetarg == "configure":
-	:update auto/configure
-    @if _no.targetarg != "comment" and _no.targetarg != "make":
+    # Change the configure script to produce config.aap instead of config.mk.
+    auto/configure.aap : auto/configure
 	:print Adjusting auto/configure for A-A-P.
 	:cat auto/configure | :eval re.sub("config.mk", "config.aap", stdin)
-							       >! auto/configure
+							>! auto/configure.aap
+	:chmod 755 auto/configure.aap
 
-    # Undo the change to auto/configure.  Useful when building with "aap"
-    # doesn't work and wanting to use "make".
-    make {virtual}:
-	:print Adjusting auto/configure for "make".
-	:cat auto/configure | :eval re.sub("config.aap", "config.mk", stdin)
-							       >! auto/configure
-    :attr make {comment = prepare for using make instead of aap}
+    # The configure script uses the directory where it's located, use a link.
+    configure.aap:  {buildcheck=}
+	:sys ln -s auto/configure.aap configure.aap
 
-    # Dependency: run configure to update config.h and config.aap in the "auto"
-    # directory.  The dependency on auto/configure is missing, because we don't
-    # want to run autoconf automatically.
-    config {virtual} auto/config.h auto/config.aap : \
-			     config.arg \
-			     config.h.in config.aap.in
-	:sys ./configure `file2string("config.arg")`
+    # Dependency: run configure.aap to update config.h and config.aap in the
+    # "auto" directory.
+    config {virtual} auto/config.h auto/config.aap :
+			 auto/configure.aap configure.aap
+			 config.arg config.h.in config.aap.in
+	:sys ./configure.aap `file2string("config.arg")`
 
     # Configure arguments: create an empty "config.arg" file when its missing
     config.arg:
@@ -403,7 +405,7 @@ MANSUBDIR = $MANDIR/man1
 ### Location of Vim files (should not need to be changed, and
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-@r = re.compile('.*VIM_VERSION_NODOT\\s*"(vim\\d\\d.*)".*', re.S)
+@r = re.compile('.*VIM_VERSION_NODOT\\s*"(vim\\d\\d[^"]*)".*', re.S)
 VIMRTDIR = /`r.match(open("version.h").read()).group(1)`
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
@@ -585,7 +587,7 @@ DEST_MAN = $DESTDIR$MANSUBDIR
 :attr {directory = $DIRMOD} $DEST_BIN $DEST_VIM $DEST_RT $DEST_HELP $DEST_COL
 		$DEST_SYN $DEST_IND $DEST_PLUG $DEST_FTP $DEST_LANG
 		$DEST_COMP $DEST_KMAP $DEST_MACRO $DEST_TOOLS $DEST_TUTOR
-		$DEST_SCRIPT $DEST_MAN
+		$DEST_SCRIPT $DEST_PRINT $DEST_MAN
 
 #
 # I N S T A L L
@@ -610,9 +612,9 @@ installvimbin {virtual}{force}: $TARGET $DEST_BIN
 	    :sys $LINKIT
 
 # install the help files; first adjust the contents for the location
-installruntime {virtual}{force}: $HELPSOURCE/vim.1 $DEST_MAN $DEST_VIM $DEST_RT \
-		$DEST_HELP $DEST_COL $DEST_SYN $DEST_IND \
-		$DEST_FTP $DEST_PLUG $DEST_TUTOR $DEST_COMP
+installruntime {virtual}{force}: $HELPSOURCE/vim.1 $DEST_MAN $DEST_VIM
+		$DEST_RT $DEST_HELP $DEST_COL $DEST_SYN $DEST_IND
+		$DEST_FTP $DEST_PLUG $DEST_TUTOR $DEST_COMP $DEST_PRINT
 	:print generating $DEST_MAN/$(VIMNAME).1
 	:cat $HELPSOURCE/vim.1 |
 		:eval re.sub("/usr/local/lib/vim", _no.VIMLOC, stdin) |

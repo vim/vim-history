@@ -74,8 +74,10 @@ static Widget menuBar;
 
 static void scroll_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_data));
 #ifdef FEAT_TOOLBAR
+# if 0
 static void toolbar_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbar_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
+# endif
 # ifdef FEAT_FOOTER
 static void toolbarbutton_enter_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
 static void toolbarbutton_leave_cb __ARGS((Widget, XtPointer, XEvent *, Boolean *));
@@ -218,10 +220,12 @@ gui_x11_create_widgets()
 	NULL);
     gui_motif_menu_colors(toolBar);
 
+# if 0	/* these don't work, because of the XmNtraversalOn above. */
     XtAddEventHandler(toolBar, EnterWindowMask, False,
 	    toolbar_enter_cb, NULL);
     XtAddEventHandler(toolBar, LeaveWindowMask, False,
 	    toolbar_leave_cb, NULL);
+# endif
 #endif
 
     textAreaForm = XtVaCreateManagedWidget("textAreaForm",
@@ -2403,7 +2407,7 @@ gui_mch_compute_toolbar_height()
     return (int)(height + (marginHeight << 1) + (shadowThickness << 1));
 }
 
-
+#if 0 /* these are never called. */
 /*
  * The next toolbar enter/leave callbacks make sure the text area gets the
  * keyboard focus when the pointer is not in the toolbar.
@@ -2429,6 +2433,7 @@ toolbar_leave_cb(w, client_data, event, cont)
 {
     XmProcessTraversal(textArea, XmTRAVERSE_CURRENT);
 }
+#endif
 
 # ifdef FEAT_FOOTER
 /*

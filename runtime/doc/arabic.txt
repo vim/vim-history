@@ -1,14 +1,14 @@
-*arabic.txt*	For Vim version 6.2c.  Last change: 2003 May 04
+*arabic.txt*	For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL	  by Nadim Shaikli
 
 
-Right to Left and Arabic Mapping for Vim	*arabic* *Arabic*
+Arabic Language support (options & mappings) for Vim		*Arabic*
 
 {Vi does not have any of these commands}
 
-						*E800*
+								*E800*
 In order to use right-to-left and Arabic mapping support, it is
 necessary to compile VIM with the |+arabic| feature.
 
@@ -70,8 +70,8 @@ o  Proper Bidirectional functionality is possible given VIM is
    started within a Bidi capable terminal emulator.
 
 
-Arabic Fonts					*arabic fonts*
------------
+Arabic Fonts						*arabicfonts*
+------------
 
 VIM requires monospaced fonts of which there are many out there.
 Arabic requires ISO-8859-6 as well as Presentation Form-B fonts
@@ -131,7 +131,7 @@ o  Setting the appropriate character Encoding
    Attempts to use Arabic without UTF-8 will result the following
    warning message,
 
-							*W17*  >
+								*W17*  >
      Arabic requires UTF-8, do ':set encoding=utf-8'
 
 o  Enable Arabic settings [short-cut]
@@ -258,7 +258,7 @@ o  Enable Arabic settings [short-cut]
       ':set arabicshape' to your .vimrc file.
 
 
-Keymap/Keyboard
+Keymap/Keyboard						*arabickeymap*
 ---------------
 
 The character/letter encoding used in VIM is the standard UTF-8.
@@ -278,10 +278,10 @@ o  Keyboard
       defacto standard in the Arab world):
 
   +---------------------------------------------------------------------+
-  |!   |@   |#	 |$   |%   |^	|&   |*   |(   |)   |_	 |+   ||   |~  ّ |
-  |1 ١ |2 ٢ |3 ٣ |4 ٤ |5 ٥ |6 ٦ |7 ٧ |8 ٨ |9 ٩ |0 ٠ |-   |=   |\	|` ذ |
+  |!   |@   |#   |$   |%   |^   |&   |*   |(   |)   |_   |+   ||   |~  ّ |
+  |1 ١ |2 ٢ |3 ٣ |4 ٤ |5 ٥ |6 ٦ |7 ٧ |8 ٨ |9 ٩ |0 ٠ |-   |=   |\   |` ذ |
   +---------------------------------------------------------------------+
-       |Q  َ |W  ً |E  ُ |R  ٌ |T لإ |Y إ |U ` |I I |O x |P ؛ |{ < |} > |
+       |Q  َ |W  ً |E  ُ |R  ٌ |T لإ |Y إ |U ` |I ÷ |O x |P ؛ |{ < |} > |
        |q ض |w ص |e ث |r ق |t ف |y غ |u ع |i ه |o خ |p ح |[ ج |] د |
        +-----------------------------------------------------------+
 	 |A  ِ |S  ٍ |D [ |F ] |G لأ |H أ |J ـ |K ، |L / |:   |"	 |

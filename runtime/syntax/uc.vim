@@ -3,7 +3,7 @@
 " Maintainer:	Mark Ferrell <major@chaoticdreams.org>
 " URL:		ftp://ftp.chaoticdreams.org/pub/ut/vim/uc.vim
 " Credits:	Based on the java.vim syntax file by Claudio Fleiner
-" Last change:	2001 May 10
+" Last change:	2003 May 11
 
 " Please check :help uc.vim for comments on some of the options available.
 
@@ -27,14 +27,14 @@ endif
 syntax case ignore
 
 " keyword definitions
-syn keyword ucBranch          break continue
+syn keyword ucBranch	      break continue
 syn keyword ucConditional     if else switch
-syn keyword ucRepeat          while for do foreach
-syn keyword ucBoolean         true false
-syn keyword ucConstant        null
-syn keyword ucOperator        new instanceof
-syn keyword ucType            boolean char byte short int long float double
-syn keyword ucType            void Pawn sound state auto exec function ipaddr
+syn keyword ucRepeat	      while for do foreach
+syn keyword ucBoolean	      true false
+syn keyword ucConstant	      null
+syn keyword ucOperator	      new instanceof
+syn keyword ucType	      boolean char byte short int long float double
+syn keyword ucType	      void Pawn sound state auto exec function ipaddr
 syn keyword ucType	      ELightType actor ammo defaultproperties bool
 syn keyword ucType	      native noexport var out vector name local string
 syn keyword ucType	      event
@@ -55,19 +55,19 @@ syn match   ucClassLabel      "[a-zA-Z0-9]*\'[a-zA-Z0-9]*\'" contains=ucCharacte
 
 syn region  ucLabelRegion     transparent matchgroup=ucLabel start="\<case\>" matchgroup=NONE end=":" contains=ucNumber
 syn match   ucUserLabel       "^\s*[_$a-zA-Z][_$a-zA-Z0-9_]*\s*:"he=e-1 contains=ucLabel
-syn keyword ucLabel           default
+syn keyword ucLabel	      default
 
 " The following cluster contains all java groups except the contained ones
 syn cluster ucTop contains=ucExternal,ucError,ucError,ucBranch,ucLabelRegion,ucLabel,ucConditional,ucRepeat,ucBoolean,ucConstant,ucTypedef,ucOperator,ucType,ucType,ucStatement,ucStorageClass,ucMethodDecl,ucClassDecl,ucClassDecl,ucClassDecl,ucScopeDecl,ucError,ucError2,ucUserLabel,ucClassLabel
 
 " Comments
-syn keyword ucTodo             contained TODO FIXME XXX
+syn keyword ucTodo	       contained TODO FIXME XXX
 syn region  ucCommentString    contained start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=ucSpecial,ucCommentStar,ucSpecialChar
 syn region  ucComment2String   contained start=+"+  end=+$\|"+  contains=ucSpecial,ucSpecialChar
 syn match   ucCommentCharacter contained "'\\[^']\{1,6\}'" contains=ucSpecialChar
 syn match   ucCommentCharacter contained "'\\''" contains=ucSpecialChar
 syn match   ucCommentCharacter contained "'[^\\]'"
-syn region  ucComment          start="/\*"  end="\*/" contains=ucCommentString,ucCommentCharacter,ucNumber,ucTodo
+syn region  ucComment	       start="/\*"  end="\*/" contains=ucCommentString,ucCommentCharacter,ucNumber,ucTodo
 syn match   ucCommentStar      contained "^\s*\*[^/]"me=e-1
 syn match   ucCommentStar      contained "^\s*\*$"
 syn match   ucLineComment      "//.*" contains=ucComment2String,ucCommentCharacter,ucNumber,ucTodo
@@ -120,51 +120,51 @@ if version >= 508 || !exists("did_uc_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink ucFuncDef                       Conditional
-  HiLink ucEventDef                      Conditional
-  HiLink ucBraces                        Function
-  HiLink ucBranch                        Conditional
-  HiLink ucLabel                         Label
-  HiLink ucUserLabel                     Label
-  HiLink ucConditional                   Conditional
-  HiLink ucRepeat                        Repeat
-  HiLink ucStorageClass                  StorageClass
-  HiLink ucMethodDecl                    ucStorageClass
-  HiLink ucClassDecl                     ucStorageClass
-  HiLink ucScopeDecl                     ucStorageClass
-  HiLink ucBoolean                       Boolean
-  HiLink ucSpecial                       Special
-  HiLink ucSpecialError                  Error
-  HiLink ucSpecialCharError              Error
-  HiLink ucString                        String
-  HiLink ucCharacter                     Character
-  HiLink ucSpecialChar		    SpecialChar
-  HiLink ucNumber                        Number
-  HiLink ucError                         Error
-  HiLink ucStringError                   Error
-  HiLink ucStatement                     Statement
-  HiLink ucOperator                      Operator
-  HiLink ucOverLoaded			  Operator
-  HiLink ucComment                       Comment
-  HiLink ucDocComment                    Comment
-  HiLink ucLineComment                   Comment
-  HiLink ucConstant			    ucBoolean
-  HiLink ucTypedef			    Typedef
-  HiLink ucTodo                          Todo
+  HiLink ucFuncDef			Conditional
+  HiLink ucEventDef			Conditional
+  HiLink ucBraces			Function
+  HiLink ucBranch			Conditional
+  HiLink ucLabel			Label
+  HiLink ucUserLabel			Label
+  HiLink ucConditional			Conditional
+  HiLink ucRepeat			Repeat
+  HiLink ucStorageClass			StorageClass
+  HiLink ucMethodDecl			ucStorageClass
+  HiLink ucClassDecl			ucStorageClass
+  HiLink ucScopeDecl			ucStorageClass
+  HiLink ucBoolean			Boolean
+  HiLink ucSpecial			Special
+  HiLink ucSpecialError			Error
+  HiLink ucSpecialCharError		Error
+  HiLink ucString			String
+  HiLink ucCharacter			Character
+  HiLink ucSpecialChar			SpecialChar
+  HiLink ucNumber			Number
+  HiLink ucError			Error
+  HiLink ucStringError			Error
+  HiLink ucStatement			Statement
+  HiLink ucOperator			Operator
+  HiLink ucOverLoaded			Operator
+  HiLink ucComment			Comment
+  HiLink ucDocComment			Comment
+  HiLink ucLineComment			Comment
+  HiLink ucConstant			ucBoolean
+  HiLink ucTypedef			Typedef
+  HiLink ucTodo				Todo
 
-  HiLink ucCommentTitle                  SpecialComment
-  HiLink ucDocTags			    Special
-  HiLink ucDocParam			    Function
-  HiLink ucCommentStar                   ucComment
+  HiLink ucCommentTitle			SpecialComment
+  HiLink ucDocTags			Special
+  HiLink ucDocParam			Function
+  HiLink ucCommentStar			ucComment
 
-  HiLink ucType                          Type
-  HiLink ucExternal                      Include
+  HiLink ucType				Type
+  HiLink ucExternal			Include
 
-  HiLink ucClassKeys			  Conditional
-  HiLink ucClassLabel			  Conditional
+  HiLink ucClassKeys			Conditional
+  HiLink ucClassLabel			Conditional
 
-  HiLink htmlComment                       Special
-  HiLink htmlCommentPart                   Special
+  HiLink htmlComment			Special
+  HiLink htmlCommentPart		Special
 
   delcommand HiLink
 endif

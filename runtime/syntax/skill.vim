@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:		SKILL
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
@@ -17,7 +17,7 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-syn keyword skillConstants          t nil unbound
+syn keyword skillConstants			t nil unbound
 
 " enumerate all the SKILL reserved words/functions
 syn match skillFunction     "(abs\>"hs=s+1
@@ -487,40 +487,40 @@ syn match skillFunction     "\<zxtd("he=e-1
 " DFII procedural interface routines
 
 " CDF functions
-syn match skillcdfFunctions         "(cdf\u\a\+\>"hs=s+1
-syn match skillcdfFunctions         "\<cdf\u\a\+("he=e-1
+syn match skillcdfFunctions			"(cdf\u\a\+\>"hs=s+1
+syn match skillcdfFunctions			"\<cdf\u\a\+("he=e-1
 " graphic editor functions
-syn match skillgeFunctions          "(ge\u\a\+\>"hs=s+1
-syn match skillgeFunctions          "\<ge\u\a\+("he=e-1
+syn match skillgeFunctions			"(ge\u\a\+\>"hs=s+1
+syn match skillgeFunctions			"\<ge\u\a\+("he=e-1
 " human interface functions
-syn match skillhiFunctions          "(hi\u\a\+\>"hs=s+1
-syn match skillhiFunctions          "\<hi\u\a\+("he=e-1
+syn match skillhiFunctions			"(hi\u\a\+\>"hs=s+1
+syn match skillhiFunctions			"\<hi\u\a\+("he=e-1
 " layout editor functions
-syn match skillleFunctions          "(le\u\a\+\>"hs=s+1
-syn match skillleFunctions          "\<le\u\a\+("he=e-1
+syn match skillleFunctions			"(le\u\a\+\>"hs=s+1
+syn match skillleFunctions			"\<le\u\a\+("he=e-1
 " database|design editor|design flow functions
-syn match skilldbefFunctions        "(d[bef]\u\a\+\>"hs=s+1
-syn match skilldbefFunctions        "\<d[bef]\u\a\+("he=e-1
+syn match skilldbefFunctions		"(d[bef]\u\a\+\>"hs=s+1
+syn match skilldbefFunctions		"\<d[bef]\u\a\+("he=e-1
 " design management & design data services functions
-syn match skillddFunctions          "(dd[s]\=\u\a\+\>"hs=s+1
-syn match skillddFunctions          "\<dd[s]\=\u\a\+("he=e-1
+syn match skillddFunctions			"(dd[s]\=\u\a\+\>"hs=s+1
+syn match skillddFunctions			"\<dd[s]\=\u\a\+("he=e-1
 " parameterized cell functions
-syn match skillpcFunctions          "(pc\u\a\+\>"hs=s+1
-syn match skillpcFunctions          "\<pc\u\a\+("he=e-1
+syn match skillpcFunctions			"(pc\u\a\+\>"hs=s+1
+syn match skillpcFunctions			"\<pc\u\a\+("he=e-1
 " tech file functions
-syn match skilltechFunctions        "(\(tech\|tc\)\u\a\+\>"hs=s+1
-syn match skilltechFunctions        "\<\(tech\|tc\)\u\a\+("he=e-1
+syn match skilltechFunctions		"(\(tech\|tc\)\u\a\+\>"hs=s+1
+syn match skilltechFunctions		"\<\(tech\|tc\)\u\a\+("he=e-1
 
 " strings
-syn region skillString              start=+"+ skip=+\\"+ end=+"+
+syn region skillString				start=+"+ skip=+\\"+ end=+"+
 
-syn keyword skillTodo contained     TODO FIXME XXX
-syn keyword skillNote contained     NOTE IMPORTANT
+syn keyword skillTodo contained		TODO FIXME XXX
+syn keyword skillNote contained		NOTE IMPORTANT
 
 " comments are either C-style or begin with a semicolon
-syn region skillComment             start="/\*" end="\*/" contains=skillTodo,skillNote
-syn match skillComment              ";.*" contains=skillTodo,skillNote
-syn match skillCommentError         "\*/"
+syn region skillComment				start="/\*" end="\*/" contains=skillTodo,skillNote
+syn match skillComment				";.*" contains=skillTodo,skillNote
+syn match skillCommentError			"\*/"
 
 syn sync ccomment skillComment minlines=10
 
@@ -535,24 +535,24 @@ if version >= 508 || !exists("did_skill_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-    HiLink skillcdfFunctions       Function
-    HiLink skillgeFunctions        Function
-    HiLink skillhiFunctions        Function
-    HiLink skillleFunctions        Function
-    HiLink skilldbefFunctions      Function
-    HiLink skillddFunctions        Function
-    HiLink skillpcFunctions        Function
-    HiLink skilltechFunctions      Function
-    HiLink skillConstants          Constant
-    HiLink skillFunction           Function
-    HiLink skillKeywords           Statement
-    HiLink skillConditional        Conditional
-    HiLink skillRepeat             Repeat
-    HiLink skillString             String
-    HiLink skillTodo               Todo
-    HiLink skillNote               Todo
-    HiLink skillComment            Comment
-    HiLink skillCommentError       Error
+	HiLink skillcdfFunctions	Function
+	HiLink skillgeFunctions		Function
+	HiLink skillhiFunctions		Function
+	HiLink skillleFunctions		Function
+	HiLink skilldbefFunctions	Function
+	HiLink skillddFunctions		Function
+	HiLink skillpcFunctions		Function
+	HiLink skilltechFunctions	Function
+	HiLink skillConstants		Constant
+	HiLink skillFunction		Function
+	HiLink skillKeywords		Statement
+	HiLink skillConditional		Conditional
+	HiLink skillRepeat			Repeat
+	HiLink skillString			String
+	HiLink skillTodo			Todo
+	HiLink skillNote			Todo
+	HiLink skillComment			Comment
+	HiLink skillCommentError	Error
 
 	delcommand HiLink
 endif

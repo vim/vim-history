@@ -2,8 +2,8 @@
 " Filename:     wget.vim
 " Language:     Wget configuration file ( /etc/wgetrc ~/.wgetrc )
 " Maintainer:   Doug Kearns <djkea2@mugca.its.monash.edu.au>
-" URL:          http://mugca.its.monash.edu.au/~djkea2/vim/syntax/wget.vim
-" Last Change:  2002 May 18
+" URL:		http://mugca.its.monash.edu.au/~djkea2/vim/syntax/wget.vim
+" Last Change:  2003 May 11
 
 " TODO: all commands are actually underscore and hyphen insensitive, though
 "       they are normally named as listed below
@@ -144,14 +144,14 @@ if version >= 508 || !exists("did_wget_syn_inits")
   endif
 
   HiLink wgetAssignmentOperator Special
-  HiLink wgetBoolean            Boolean
-  HiLink wgetCommand            Identifier
-  HiLink wgetComment            Comment
-  HiLink wgetNumber             Number
-  HiLink wgetQuota              Number
-  HiLink wgetString             String
-  HiLink wgetTodo               Todo
-  HiLink wgetValue              Constant
+  HiLink wgetBoolean		Boolean
+  HiLink wgetCommand		Identifier
+  HiLink wgetComment		Comment
+  HiLink wgetNumber		Number
+  HiLink wgetQuota		Number
+  HiLink wgetString		String
+  HiLink wgetTodo		Todo
+  HiLink wgetValue		Constant
 
   delcommand HiLink
 endif

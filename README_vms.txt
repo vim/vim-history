@@ -1,4 +1,4 @@
-README_vms.txt for version 6.2c of Vim: Vi IMproved.
+README_vms.txt for version 6.2d of Vim: Vi IMproved.
 
 This file explains the installation of Vim on VMS systems.
 See "README.txt" in the runtime archive for information about Vim.

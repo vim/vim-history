@@ -75,7 +75,7 @@ syn keyword specmanConstraint  gen keep keeping soft	before
 
 syn keyword specmanSpecial     untyped symtab ECHO DOECHO
 syn keyword specmanFile        files load module ntv source_ref script read write
-syn keyword specmanFSM         initial idle others posedge clock cycles
+syn keyword specmanFSM	       initial idle others posedge clock cycles
 
 
 syn match   specmanOperator    "[&|~><!)(*%@+/=?:;}{,.\^\-\[\]]"
@@ -87,7 +87,7 @@ syn match   specmanComment     "//.*"  contains=specmanTodo
 syn match   specmanComment     "--.*"
 syn region  specmanComment     start="^'>"hs=s+2 end="^<'"he=e-2
 
-syn match   specmanHDL         "'[`.a-zA-Z0-9_@\[\]]\+\>'"
+syn match   specmanHDL	       "'[`.a-zA-Z0-9_@\[\]]\+\>'"
 
 
 syn match   specmanCompare    "=="
@@ -119,14 +119,14 @@ syn region  specmanString start=+"+  end=+"+
 "syn cluster     specmanParenGroup     contains=specmanParenError
 "" ,specmanNumbera,specmanComment
 "if exists("specman_no_bracket_error")
-"syn region    specmanParen          transparent start='(' end=')' contains=ALLBUT,@specmanParenGroup
+"syn region    specmanParen	     transparent start='(' end=')' contains=ALLBUT,@specmanParenGroup
 "syn match     specmanParenError     ")"
 "syn match     specmanErrInParen     contained "[{}]"
 "else
-"syn region    specmanParen          transparent start='(' end=')' contains=ALLBUT,@specmanParenGroup,specmanErrInBracket
+"syn region    specmanParen	     transparent start='(' end=')' contains=ALLBUT,@specmanParenGroup,specmanErrInBracket
 "syn match     specmanParenError     "[\])]"
 "syn match     specmanErrInParen     contained "[\]{}]"
-"syn region    specmanBracket        transparent start='\[' end=']' contains=ALLBUT,@specmanParenGroup,specmanErrInParen
+"syn region    specmanBracket	     transparent start='\[' end=']' contains=ALLBUT,@specmanParenGroup,specmanErrInParen
 "syn match     specmanErrInBracket   contained "[);{}]"
 "endif
 "

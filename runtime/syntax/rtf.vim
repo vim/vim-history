@@ -71,9 +71,9 @@ if version >= 508 || !exists("did_rtf_syntax_inits")
    HiLink rtfFootNote		Comment
 
    " Define colors for the syntax file
-   hi rtfRed          term=underline cterm=underline ctermfg=DarkRed gui=underline guifg=DarkRed
-   hi rtfGreen        term=underline cterm=underline ctermfg=DarkGreen gui=underline guifg=DarkGreen
-   hi rtfBlue         term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=DarkBlue
+   hi rtfRed	      term=underline cterm=underline ctermfg=DarkRed gui=underline guifg=DarkRed
+   hi rtfGreen	      term=underline cterm=underline ctermfg=DarkGreen gui=underline guifg=DarkGreen
+   hi rtfBlue	      term=underline cterm=underline ctermfg=DarkBlue gui=underline guifg=DarkBlue
 
    HiLink rtfRed	rtfRed
    HiLink rtfGreen	rtfGreen

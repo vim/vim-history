@@ -2,10 +2,10 @@
 " Language:	SAS
 " Maintainer:	James Kidd <james.kidd@covance.com>
 " Last Change:	26 Sep 2001
-"               Added keywords for use in SAS SQL procedure and hilighting for
-"               SAS base procedures, added logic to distinqush between versions
-"               for SAS macro variable hi-lighting (Thanks to user Ronald
-"               Höllwarth for pointing out bug)
+"		Added keywords for use in SAS SQL procedure and hilighting for
+"		SAS base procedures, added logic to distinqush between versions
+"		for SAS macro variable hi-lighting (Thanks to user Ronald
+"		Höllwarth for pointing out bug)
 "  For version 5.x: Clear all syntax items
 "  For version 6.x: Quit when a syntax file was already loaded
 if version < 600
@@ -37,54 +37,54 @@ syn match sasComment  "^\s*\*.*;"
 
 if version < 600
    syn region sasMacroVar   start="\&" skip="[_&]" end="\W"he=e-1
-else             " for the older Vim's just do it their way ...
+else		 " for the older Vim's just do it their way ...
    syn region sasMacroVar   start="&" skip="[_&]" end="\W"he=e-1
 endif
 
-syn keyword sasStep           RUN QUIT
-syn match   sasStep        "^\s*DATA\s"
-"syn match   sasProcs        "^\s*PROC\s"
+syn keyword sasStep	      RUN QUIT
+syn match   sasStep	   "^\s*DATA\s"
+"syn match   sasProcs	     "^\s*PROC\s"
 
 " Base SAS Procs - version 8.1
-syn region  sasProcs        start="PROC FORMAT" end="\W"
-syn region  sasProcs        start="PROC APPEND" end="\W"
-syn region  sasProcs        start="PROC CALENDAR" end="\W"
-syn region  sasProcs        start="PROC CATALOG" end="\W"
-syn region  sasProcs        start="PROC CHART" end="\W"
-syn region  sasProcs        start="PROC CIMPORT" end="\W"
-syn region  sasProcs        start="PROC COMPARE" end="\W"
-syn region  sasProcs        start="PROC CONTENTS" end="\W"
-syn region  sasProcs        start="PROC COPY" end="\W"
-syn region  sasProcs        start="PROC CORR" end="\W"
-syn region  sasProcs        start="PROC CPORT" end="\W"
-syn region  sasProcs        start="PROC DATASETS" end="\W"
-syn region  sasProcs        start="PROC DBCSTAB" end="\W"
-syn region  sasProcs        start="PROC DISPLAY" end="\W"
-syn region  sasProcs        start="PROC EXPLODE" end="\W"
-syn region  sasProcs        start="PROC EXPORT" end="\W"
-syn region  sasProcs        start="PROC FORMAT" end="\W"
-syn region  sasProcs        start="PROC FORMS" end="\W"
-syn region  sasProcs        start="PROC FREQ" end="\W"
-syn region  sasProcs        start="PROC FSLIST" end="\W"
-syn region  sasProcs        start="PROC IMPORT" end="\W"
-syn region  sasProcs        start="PROC MEANS" end="\W"
-syn region  sasProcs        start="PROC OPTIONS" end="\W"
-syn region  sasProcs        start="PROC PLOT" end="\W"
-syn region  sasProcs        start="PROC PMENU" end="\W"
-syn region  sasProcs        start="PROC PRINT" end="\W"
-syn region  sasProcs        start="PROC PRINTTO" end="\W"
-syn region  sasProcs        start="PROC RANK" end="\W"
-syn region  sasProcs        start="PROC REGISTRY" end="\W"
-syn region  sasProcs        start="PROC REPORT" end="\W"
-syn region  sasProcs        start="PROC SORT" end="\W"
-syn region  sasProcs        start="PROC SQL" end="\W"
-syn region  sasProcs        start="PROC STANDARD" end="\W"
-syn region  sasProcs        start="PROC SUMMARY" end="\W"
-syn region  sasProcs        start="PROC TABULATE" end="\W"
-syn region  sasProcs        start="PROC TIMEPLOT" end="\W"
-syn region  sasProcs        start="PROC TRANSPOSE" end="\W"
-syn region  sasProcs        start="PROC TRANTAB" end="\W"
-syn region  sasProcs        start="PROC UNIVARIATE" end="\W"
+syn region  sasProcs	    start="PROC FORMAT" end="\W"
+syn region  sasProcs	    start="PROC APPEND" end="\W"
+syn region  sasProcs	    start="PROC CALENDAR" end="\W"
+syn region  sasProcs	    start="PROC CATALOG" end="\W"
+syn region  sasProcs	    start="PROC CHART" end="\W"
+syn region  sasProcs	    start="PROC CIMPORT" end="\W"
+syn region  sasProcs	    start="PROC COMPARE" end="\W"
+syn region  sasProcs	    start="PROC CONTENTS" end="\W"
+syn region  sasProcs	    start="PROC COPY" end="\W"
+syn region  sasProcs	    start="PROC CORR" end="\W"
+syn region  sasProcs	    start="PROC CPORT" end="\W"
+syn region  sasProcs	    start="PROC DATASETS" end="\W"
+syn region  sasProcs	    start="PROC DBCSTAB" end="\W"
+syn region  sasProcs	    start="PROC DISPLAY" end="\W"
+syn region  sasProcs	    start="PROC EXPLODE" end="\W"
+syn region  sasProcs	    start="PROC EXPORT" end="\W"
+syn region  sasProcs	    start="PROC FORMAT" end="\W"
+syn region  sasProcs	    start="PROC FORMS" end="\W"
+syn region  sasProcs	    start="PROC FREQ" end="\W"
+syn region  sasProcs	    start="PROC FSLIST" end="\W"
+syn region  sasProcs	    start="PROC IMPORT" end="\W"
+syn region  sasProcs	    start="PROC MEANS" end="\W"
+syn region  sasProcs	    start="PROC OPTIONS" end="\W"
+syn region  sasProcs	    start="PROC PLOT" end="\W"
+syn region  sasProcs	    start="PROC PMENU" end="\W"
+syn region  sasProcs	    start="PROC PRINT" end="\W"
+syn region  sasProcs	    start="PROC PRINTTO" end="\W"
+syn region  sasProcs	    start="PROC RANK" end="\W"
+syn region  sasProcs	    start="PROC REGISTRY" end="\W"
+syn region  sasProcs	    start="PROC REPORT" end="\W"
+syn region  sasProcs	    start="PROC SORT" end="\W"
+syn region  sasProcs	    start="PROC SQL" end="\W"
+syn region  sasProcs	    start="PROC STANDARD" end="\W"
+syn region  sasProcs	    start="PROC SUMMARY" end="\W"
+syn region  sasProcs	    start="PROC TABULATE" end="\W"
+syn region  sasProcs	    start="PROC TIMEPLOT" end="\W"
+syn region  sasProcs	    start="PROC TRANSPOSE" end="\W"
+syn region  sasProcs	    start="PROC TRANTAB" end="\W"
+syn region  sasProcs	    start="PROC UNIVARIATE" end="\W"
 
 syn keyword sasConditional    DO ELSE END IF THEN UNTIL WHILE
 
@@ -223,9 +223,9 @@ syn keyword sasFunction VTYPEX WEEKDAY YEAR YYQ ZIPFIPS ZIPNAME ZIPNAMEL
 syn keyword sasFunction ZIPSTATE
 
 " Handy settings for using vim with log files
-syn keyword sasErrMsg         ERROR
-syn keyword sasWarnMsg        WARNING
-syn keyword sasLogMsg         NOTE
+syn keyword sasErrMsg	      ERROR
+syn keyword sasWarnMsg	      WARNING
+syn keyword sasLogMsg	      NOTE
 
 " End of SAS Functions
 
@@ -241,17 +241,17 @@ if version >= 508 || !exists("did_sas_syntax_inits")
       command -nargs=+ HiLink hi def link <args>
    endif
 " Special hilighting for the SAS proc section
-   hi     sasProcs              term=bold ctermfg=Blue gui=bold guifg=Blue
+   hi	  sasProcs		term=bold ctermfg=Blue gui=bold guifg=Blue
 
-   HiLink sasComment            Comment
-   HiLink sasConditional        Statement
-   HiLink sasStep               Statement
-   HiLink sasFunction           Function
-   HiLink sasMacro              PreProc
-   HiLink sasMacroVar           NonText
-   HiLink sasNumber             Number
-   HiLink sasStatement          Statement
-   HiLink sasString             String
+   HiLink sasComment		Comment
+   HiLink sasConditional	Statement
+   HiLink sasStep		Statement
+   HiLink sasFunction		Function
+   HiLink sasMacro		PreProc
+   HiLink sasMacroVar		NonText
+   HiLink sasNumber		Number
+   HiLink sasStatement		Statement
+   HiLink sasString		String
    HiLink sasErrMsg		ErrorMsg
    HiLink sasWarnMsg		WarningMsg
    HiLink sasLogMsg		MoreMsg

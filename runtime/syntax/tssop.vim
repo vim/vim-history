@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Optics
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 10
+" Last Change:  2003 May 11
 " Filenames:    *.tssop
-" URL:          http://www.naglenet.org/vim/syntax/tssop.vim
+" URL:		http://www.naglenet.org/vim/syntax/tssop.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -44,8 +44,8 @@ syn keyword tssopArgs   turquoise grey black
 syn match  tssopComment       /comment \+= \+".*"/ contains=tssopParam,tssopCommentString
 syn match  tssopCommentString /".*"/ contained
 
-syn match  tssopProp        "property "
-syn match  tssopProp        "edit/optic "
+syn match  tssopProp	    "property "
+syn match  tssopProp	    "edit/optic "
 syn match  tssopPropName    "^property \S\+" contains=tssopProp
 syn match  tssopPropName    "^edit/optic \S\+$" contains=tssopProp
 
@@ -66,17 +66,17 @@ if version >= 508 || !exists("did_tssop_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink tssopParam            Statement
-  HiLink tssopProp             Identifier
-  HiLink tssopArgs             Special
+  HiLink tssopParam		Statement
+  HiLink tssopProp		Identifier
+  HiLink tssopArgs		Special
 
-  HiLink tssopComment          Statement
-  HiLink tssopCommentString    Comment
-  HiLink tssopPropName         Typedef
+  HiLink tssopComment		Statement
+  HiLink tssopCommentString	Comment
+  HiLink tssopPropName		Typedef
 
-  HiLink tssopInteger          Number
-  HiLink tssopFloat            Float
-  HiLink tssopScientific       Float
+  HiLink tssopInteger		Number
+  HiLink tssopFloat		Float
+  HiLink tssopScientific	Float
 
   delcommand HiLink
 endif

@@ -31,7 +31,7 @@ endif
 
 
 " FIXME: uses and changes several clusters defined in c.vim
-"        so watch for changes there
+"	 so watch for changes there
 
 " TODO: make a little more grammar explicit
 "	match flags with hyphen and underscore notation
@@ -82,7 +82,7 @@ syn keyword splintMacro		contained notfunction
 syn match   splintSpecType	contained "\(\|unsigned\|signed\)integraltype"
 
 " Flags taken from 'splint -help flags full' divided in local and global flags
-"                                Local Flags:
+"				 Local Flags:
 syn keyword splintFlag contained abstract accessall accessczech accessczechoslovak accessfile
 syn keyword splintFlag contained accessmodule accessslovak aliasunique allblock allempty
 syn keyword splintFlag contained allglobs allimponly allmacros alwaysexits annotationerror
@@ -168,7 +168,7 @@ syn keyword splintFlag contained usevarargs varuse voidabstract warnflags warnli
 syn keyword splintFlag contained warnmissingglobs warnmissingglobsnoglobs warnposixheaders warnrc warnsysfiles
 syn keyword splintFlag contained warnunixlib warnuse whileblock whileempty whileloopexec
 syn keyword splintFlag contained zerobool zeroptr
-"                                      Global Flags:
+"				       Global Flags:
 syn keyword splintGlobalFlag contained dump expect help isolib
 syn keyword splintGlobalFlag contained larchpath lclexpect lclimportdir lcs lh
 syn keyword splintGlobalFlag contained load mts neverinclude nof nolib

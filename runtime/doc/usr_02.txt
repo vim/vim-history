@@ -1,4 +1,4 @@
-*usr_02.txt*	For Vim version 6.2c.  Last change: 2003 May 04
+*usr_02.txt*	For Vim version 6.2d.  Last change: 2003 May 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

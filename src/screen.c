@@ -2178,7 +2178,7 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 			prev_c = u8c;
 
 			u8c = arabic_shape(u8c, &firstbyte, &u8c_c1,
-						     pc, pc1, nc, wp->w_p_rl);
+								 pc, pc1, nc);
 			ScreenLines[idx] = firstbyte;
 		    }
 		    else
@@ -3380,8 +3380,7 @@ win_line(wp, lnum, startrow, endrow)
 			}
 			prev_c = mb_c;
 
-			mb_c = arabic_shape(mb_c, &c, &u8c_c1, pc, pc1, nc,
-								  wp->w_p_rl);
+			mb_c = arabic_shape(mb_c, &c, &u8c_c1, pc, pc1, nc);
 		    }
 		    else
 			prev_c = mb_c;
@@ -5179,7 +5178,6 @@ win_redr_custom(wp, Ruler)
     int		fillchar;
     char_u	buf[MAXPATHL];
     char_u	*p;
-    char_u	c;
     struct	stl_hlrec hl[STL_MAX_ITEM];
 
     /* setup environment for the task at hand */
@@ -5245,12 +5243,9 @@ win_redr_custom(wp, Ruler)
     p = buf;
     for (n = 0; hl[n].start != NULL; n++)
     {
-	c = hl[n].start[0];
-	hl[n].start[0] = 0;
-	screen_puts(p, row, col, curattr);
-
-	hl[n].start[0] = c;
-	col += (int)(hl[n].start - p);
+	len = (int)(hl[n].start - p);
+	screen_puts_len(p, len, row, col, curattr);
+	col += len;
 	p = hl[n].start;
 
 	if (hl[n].userhl == 0)
@@ -5340,6 +5335,21 @@ screen_puts(text, row, col, attr)
     int		col;
     int		attr;
 {
+    screen_puts_len(text, -1, row, col, attr);
+}
+
+/*
+ * Like screen_puts(), but output "text[len]".  When "len" is -1 output up to
+ * a NUL.
+ */
+    void
+screen_puts_len(text, len, row, col, attr)
+    char_u	*text;
+    int		len;
+    int		row;
+    int		col;
+    int		attr;
+{
     unsigned	off;
     char_u	*ptr = text;
     int		c;
@@ -5350,187 +5360,195 @@ screen_puts(text, row, col, attr)
     int		u8c_c1 = 0;
     int		u8c_c2 = 0;
     int		clear_next_cell = FALSE;
-#endif
 # ifdef FEAT_ARABIC
-    int	prev_c = 0;		/* previous Arabic character */
+    int		prev_c = 0;		/* previous Arabic character */
+    int		pc, nc, nc1, dummy;
 # endif
+#endif
 
-    if (ScreenLines != NULL && row < screen_Rows)	/* safety check */
+    if (ScreenLines == NULL || row >= screen_Rows)	/* safety check */
+	return;
+
+    off = LineOffset[row] + col;
+    while (*ptr != NUL && col < screen_Columns
+				      && (len < 0 || (int)(ptr - text) < len))
     {
-	off = LineOffset[row] + col;
-	while (*ptr != NUL && col < screen_Columns)
+	c = *ptr;
+#ifdef FEAT_MBYTE
+	/* check if this is the first byte of a multibyte */
+	if (has_mbyte)
 	{
-	    c = *ptr;
-#ifdef FEAT_MBYTE
-	    /* check if this is the first byte of a multibyte */
-	    if (has_mbyte)
+	    mbyte_blen = (*mb_ptr2len_check)(ptr);
+	    if (enc_dbcs == DBCS_JPNU && c == 0x8e)
+		mbyte_cells = 1;
+	    else if (enc_dbcs != 0)
+		mbyte_cells = mbyte_blen;
+	    else	/* enc_utf8 */
 	    {
-		mbyte_blen = (*mb_ptr2len_check)(ptr);
-		if (enc_dbcs == DBCS_JPNU && c == 0x8e)
-		    mbyte_cells = 1;
-		else if (enc_dbcs != 0)
-		    mbyte_cells = mbyte_blen;
-		else	/* enc_utf8 */
+		u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
+		mbyte_cells = utf_char2cells(u8c);
+		/* Non-BMP character: display as ? or fullwidth ?. */
+		if (u8c >= 0x10000)
 		{
-		    u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
-		    mbyte_cells = utf_char2cells(u8c);
-		    /* Non-BMP character: display as ? or fullwidth ?. */
-		    if (u8c >= 0x10000)
+		    u8c = (mbyte_cells == 2) ? 0xff1f : (int)'?';
+		    if (attr == 0)
+			attr = hl_attr(HLF_8);
+		}
+# ifdef FEAT_ARABIC
+		if (p_arshape && !p_tbidi && ARABIC_CHAR(u8c))
+		{
+		    /* Do Arabic shaping. */
+		    if (len >= 0 && (int)(ptr - text) + mbyte_blen >= len)
 		    {
-			u8c = (mbyte_cells == 2) ? 0xff1f : (int)'?';
-			if (attr == 0)
-			    attr = hl_attr(HLF_8);
-		    }
-#ifdef FEAT_ARABIC
-		    if (p_arshape && !p_tbidi && ARABIC_CHAR(u8c))
-		    {
-			/* Do Arabic shaping. */
-			int	pc, pc1, nc, dummy;
-
-			/* This is never drawn right-left, that may not work
-			 * properly here... */
-			pc = utfc_ptr2char(ptr + mbyte_blen, &pc1, &dummy);
-			nc = prev_c;
-			prev_c = u8c;
-			u8c = arabic_shape(u8c, &c, &u8c_c1, pc, pc1, nc, 0);
+			/* Past end of string to be displayed. */
+			nc = NUL;
+			nc1 = NUL;
 		    }
 		    else
-			prev_c = u8c;
-#endif
-		}
-	    }
-#endif
-
-	    if (ScreenLines[off] != c
-#ifdef FEAT_MBYTE
-		    || (mbyte_cells == 2
-			&& ScreenLines[off + 1] != (enc_dbcs ? ptr[1] : 0))
-		    || (enc_dbcs == DBCS_JPNU
-			&& c == 0x8e
-			&& ScreenLines2[off] != ptr[1])
-		    || (enc_utf8
-			&& mbyte_blen > 1
-			&& (ScreenLinesUC[off] != u8c
-			    || ScreenLinesC1[off] != u8c_c1
-			    || ScreenLinesC2[off] != u8c_c2))
-#endif
-		    || ScreenAttrs[off] != attr
-		    || exmode_active
-		    )
-	    {
-#if defined(FEAT_GUI) || defined(UNIX)
-		/* The bold trick makes a single row of pixels appear in the
-		 * next character.  When a bold character is removed, the next
-		 * character should be redrawn too.  This happens for our own
-		 * GUI and for some xterms.
-		 * Force the redraw by setting the attribute to a different
-		 * value than "attr", the contents of ScreenLines[] may be
-		 * needed by mb_off2cells() further on.
-		 * Don't do this for the last drawn character, because the
-		 * next character may not be redrawn. */
-		if (
-# ifdef FEAT_GUI
-			gui.in_use
-# endif
-# if defined(FEAT_GUI) && defined(UNIX)
-			||
-# endif
-# ifdef UNIX
-			term_is_xterm
-# endif
-		   )
-		{
-		    int		n;
-
-		    n = ScreenAttrs[off];
-# ifdef FEAT_MBYTE
-		    if (col + mbyte_cells < screen_Columns
-			    && (n > HL_ALL || (n & HL_BOLD))
-			    && ptr[mbyte_blen] != NUL)
-			ScreenAttrs[off + mbyte_cells] = attr + 1;
-# else
-		    if (col + 1 < screen_Columns
-			    && (n > HL_ALL || (n & HL_BOLD))
-			    && ptr[1] != NUL)
-			ScreenLines[off + 1] = 0;
-# endif
-		}
-#endif
-#ifdef FEAT_MBYTE
-		/* When at the end of the text and overwriting a two-cell
-		 * character with a one-cell character, need to clear the next
-		 * cell.  Also when overwriting the left halve of a two-cell
-		 * char with the right halve of a two-cell char.  Do this only
-		 * once (mb_off2cells() may return 2 on the right halve). */
-		if (clear_next_cell)
-		    clear_next_cell = FALSE;
-		else if (has_mbyte && ptr[mbyte_blen] == NUL
-			&& ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
-			    || (mbyte_cells == 2
-				&& (*mb_off2cells)(off) == 1
-				&& (*mb_off2cells)(off + 1) > 1)))
-		    clear_next_cell = TRUE;
-
-		/* Make sure we never leave a second byte of a double-byte
-		 * behind, it confuses mb_off2cells(). */
-		if (enc_dbcs
-			&& ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
-			    || (mbyte_cells == 2
-				&& (*mb_off2cells)(off) == 1
-				&& (*mb_off2cells)(off + 1) > 1)))
-		    ScreenLines[off + mbyte_blen] = 0;
-#endif
-		ScreenLines[off] = c;
-		ScreenAttrs[off] = attr;
-#ifdef FEAT_MBYTE
-		if (enc_utf8)
-		{
-		    if (c < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
-			ScreenLinesUC[off] = 0;
-		    else
-		    {
-			ScreenLinesUC[off] = u8c;
-			ScreenLinesC1[off] = u8c_c1;
-			ScreenLinesC2[off] = u8c_c2;
-		    }
-		    if (mbyte_cells == 2)
-		    {
-			ScreenLines[off + 1] = 0;
-			ScreenAttrs[off + 1] = attr;
-		    }
-		    screen_char(off, row, col);
-		}
-		else if (mbyte_cells == 2)
-		{
-		    ScreenLines[off + 1] = ptr[1];
-		    ScreenAttrs[off + 1] = attr;
-		    screen_char_2(off, row, col);
-		}
-		else if (enc_dbcs == DBCS_JPNU && c == 0x8e)
-		{
-		    ScreenLines2[off] = ptr[1];
-		    screen_char(off, row, col);
+			nc = utfc_ptr2char(ptr + mbyte_blen, &nc1, &dummy);
+		    pc = prev_c;
+		    prev_c = u8c;
+		    u8c = arabic_shape(u8c, &c, &u8c_c1, nc, nc1, pc);
 		}
 		else
-#endif
-		    screen_char(off, row, col);
+		    prev_c = u8c;
+# endif
 	    }
+	}
+#endif
+
+	if (ScreenLines[off] != c
 #ifdef FEAT_MBYTE
-	    if (has_mbyte)
+		|| (mbyte_cells == 2
+		    && ScreenLines[off + 1] != (enc_dbcs ? ptr[1] : 0))
+		|| (enc_dbcs == DBCS_JPNU
+		    && c == 0x8e
+		    && ScreenLines2[off] != ptr[1])
+		|| (enc_utf8
+		    && mbyte_blen > 1
+		    && (ScreenLinesUC[off] != u8c
+			|| ScreenLinesC1[off] != u8c_c1
+			|| ScreenLinesC2[off] != u8c_c2))
+#endif
+		|| ScreenAttrs[off] != attr
+		|| exmode_active
+		)
+	{
+#if defined(FEAT_GUI) || defined(UNIX)
+	    /* The bold trick makes a single row of pixels appear in the next
+	     * character.  When a bold character is removed, the next
+	     * character should be redrawn too.  This happens for our own GUI
+	     * and for some xterms.
+	     * Force the redraw by setting the attribute to a different value
+	     * than "attr", the contents of ScreenLines[] may be needed by
+	     * mb_off2cells() further on.
+	     * Don't do this for the last drawn character, because the next
+	     * character may not be redrawn. */
+	    if (
+# ifdef FEAT_GUI
+		    gui.in_use
+# endif
+# if defined(FEAT_GUI) && defined(UNIX)
+		    ||
+# endif
+# ifdef UNIX
+		    term_is_xterm
+# endif
+	       )
 	    {
-		off += mbyte_cells;
-		col += mbyte_cells;
-		ptr += mbyte_blen;
-		if (clear_next_cell)
-		    ptr = (char_u *)" ";
+		int		n;
+
+		n = ScreenAttrs[off];
+# ifdef FEAT_MBYTE
+		if (col + mbyte_cells < screen_Columns
+			&& (n > HL_ALL || (n & HL_BOLD))
+			&& (len < 0 ? ptr[mbyte_blen] != NUL
+					     : ptr + mbyte_blen < text + len))
+		    ScreenAttrs[off + mbyte_cells] = attr + 1;
+# else
+		if (col + 1 < screen_Columns
+			&& (n > HL_ALL || (n & HL_BOLD))
+			&& (len < 0 ? ptr[1] != NUL : ptr + 1 < text + len))
+		    ScreenLines[off + 1] = 0;
+# endif
+	    }
+#endif
+#ifdef FEAT_MBYTE
+	    /* When at the end of the text and overwriting a two-cell
+	     * character with a one-cell character, need to clear the next
+	     * cell.  Also when overwriting the left halve of a two-cell char
+	     * with the right halve of a two-cell char.  Do this only once
+	     * (mb_off2cells() may return 2 on the right halve). */
+	    if (clear_next_cell)
+		clear_next_cell = FALSE;
+	    else if (has_mbyte
+		    && (len < 0 ? ptr[mbyte_blen] == NUL
+					     : ptr + mbyte_blen >= text + len)
+		    && ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
+			|| (mbyte_cells == 2
+			    && (*mb_off2cells)(off) == 1
+			    && (*mb_off2cells)(off + 1) > 1)))
+		clear_next_cell = TRUE;
+
+	    /* Make sure we never leave a second byte of a double-byte behind,
+	     * it confuses mb_off2cells(). */
+	    if (enc_dbcs
+		    && ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
+			|| (mbyte_cells == 2
+			    && (*mb_off2cells)(off) == 1
+			    && (*mb_off2cells)(off + 1) > 1)))
+		ScreenLines[off + mbyte_blen] = 0;
+#endif
+	    ScreenLines[off] = c;
+	    ScreenAttrs[off] = attr;
+#ifdef FEAT_MBYTE
+	    if (enc_utf8)
+	    {
+		if (c < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
+		    ScreenLinesUC[off] = 0;
+		else
+		{
+		    ScreenLinesUC[off] = u8c;
+		    ScreenLinesC1[off] = u8c_c1;
+		    ScreenLinesC2[off] = u8c_c2;
+		}
+		if (mbyte_cells == 2)
+		{
+		    ScreenLines[off + 1] = 0;
+		    ScreenAttrs[off + 1] = attr;
+		}
+		screen_char(off, row, col);
+	    }
+	    else if (mbyte_cells == 2)
+	    {
+		ScreenLines[off + 1] = ptr[1];
+		ScreenAttrs[off + 1] = attr;
+		screen_char_2(off, row, col);
+	    }
+	    else if (enc_dbcs == DBCS_JPNU && c == 0x8e)
+	    {
+		ScreenLines2[off] = ptr[1];
+		screen_char(off, row, col);
 	    }
 	    else
 #endif
-	    {
-		++off;
-		++col;
-		++ptr;
-	    }
+		screen_char(off, row, col);
+	}
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    off += mbyte_cells;
+	    col += mbyte_cells;
+	    ptr += mbyte_blen;
+	    if (clear_next_cell)
+		ptr = (char_u *)" ";
+	}
+	else
+#endif
+	{
+	    ++off;
+	    ++col;
+	    ++ptr;
 	}
     }
 }

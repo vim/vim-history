@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Pascal
 " Version: 2.7
-" Last Change:	2002/03/08 14:11:57
+" Last Change:	2003 May 11
 " Maintainer:  Xavier Crégut <xavier.cregut@enseeiht.fr>
 " Previous Maintainer:	Mario Eusebio <bio@dq.fct.unl.pt>
 
@@ -151,7 +151,7 @@ if !exists("pascal_traditional")
   endif
 
   if exists("pascal_fpc")
-    syn region pascalComment        start="//" end="$"
+    syn region pascalComment	start="//" end="$"
     syn keyword pascalStatement	fail otherwise operator
     syn keyword pascalDirective	popstack
     syn keyword pascalPredefined self

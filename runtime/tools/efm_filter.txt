@@ -9,8 +9,8 @@ The compiler that generates this kind of error messages (4 lines):
 
 "/tmp_mnt/cm/src/apertos/MoU/MetaCore/MetaCore/common/src/MetaCoreImp_M.cc",
 line 50: error(3114):
-           identifier "PRIMITIVE_M" is undefined
-         return(ExecuteCore(PRIMITIVE_M,
+	   identifier "PRIMITIVE_M" is undefined
+	 return(ExecuteCore(PRIMITIVE_M,
 
 You can find a small perl program at the end.
 The way I use it is:
@@ -24,8 +24,8 @@ of with this code.
 
 -Ives
 ____________________________________________________________
-Ives Aerts (SW Developer)           Sony Telecom Europe
-ives@sonytel.be                     St.Stevens Woluwestr. 55
+Ives Aerts (SW Developer)	    Sony Telecom Europe
+ives@sonytel.be			    St.Stevens Woluwestr. 55
 `Death could create most things,    B-1130 Brussels, Belgium
- except for plumbing.'              PHONE : +32 2 724 19 67
-         (Soul Music - T.Pratchett) FAX   : +32 2 726 26 86
+ except for plumbing.'		    PHONE : +32 2 724 19 67
+	 (Soul Music - T.Pratchett) FAX   : +32 2 726 26 86

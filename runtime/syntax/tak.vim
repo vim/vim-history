@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 Jul 28
+" Last Change:  2003 May 11
 " Filenames:    *.tak
-" URL:          http://www.naglenet.org/vim/syntax/tak.vim
+" URL:		http://www.naglenet.org/vim/syntax/tak.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -89,7 +89,7 @@ syn match  takEndData     "END OF DATA"
 if exists("thermal_todo")
   execute 'syn match  takTodo ' . '"^'.thermal_todo.'.*$"'
 else
-  syn match  takTodo        "^?.*$"
+  syn match  takTodo	    "^?.*$"
 endif
 
 
@@ -105,27 +105,27 @@ if version >= 508 || !exists("did_tak_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink takMacro               Macro
-  HiLink takOptions             Special
-  HiLink takRoutine             Type
-  HiLink takControl             Special
-  HiLink takSolids              Special
-  HiLink takSolidsArg           Statement
-  HiLink takIdentifier          Identifier
+  HiLink takMacro		Macro
+  HiLink takOptions		Special
+  HiLink takRoutine		Type
+  HiLink takControl		Special
+  HiLink takSolids		Special
+  HiLink takSolidsArg		Statement
+  HiLink takIdentifier		Identifier
 
-  HiLink takFortran             PreProc
-  HiLink takMotran              PreProc
+  HiLink takFortran		PreProc
+  HiLink takMotran		PreProc
 
-  HiLink takComment             Comment
-  HiLink takHeader              Typedef
-  HiLink takIncludeFile         Type
-  HiLink takInteger             Number
-  HiLink takFloat               Float
-  HiLink takScientific          Float
+  HiLink takComment		Comment
+  HiLink takHeader		Typedef
+  HiLink takIncludeFile		Type
+  HiLink takInteger		Number
+  HiLink takFloat		Float
+  HiLink takScientific		Float
 
-  HiLink takEndData             Macro
+  HiLink takEndData		Macro
 
-  HiLink takTodo                Todo
+  HiLink takTodo		Todo
 
   delcommand HiLink
 endif

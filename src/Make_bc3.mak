@@ -3,27 +3,50 @@
 # Can also be used for Turbo C++
 #
 # The compilation options are at the end of this file
-#
+
+# Command line variables:
+# BOR		path to root of Borland C (E:\BORLANDC)
+# DEBUG		set to "yes" for debugging (no)
+# SPAWNO	path to the spawno library directory, empty if you do not have
+#		it; use 8.3 filenames! (C:\CC\SPAWN)
 
 .AUTODEPEND
 
-#		*Translator Definitions*
+!ifndef BOR
+BOR = E:\BORLANDC
+# Bcc 3.1 doesn't work for xxd
+BORXXD = E:\BC4
+!else
+BORXXD = $(BOR)
+!endif
+
+!if ("$(DEBUG)" == "yes")
+DEBUG_FLAG = -v
+!else
+DEBUG_FLAG =
+!endif
+
 #   use tcc for Turbo C++
-CC = bcc +VIM.CFG
-#CC = tcc +VIM.CFG
-TASM = TASM
-TLIB = tlib
-TLINK = tlink
-#
-# Adjust the paths for your environment
-# use the first two if you don't have the spawno library
-#	then also remove the SPAWNO define further down and the line
-#	with spawnl.lib
-#
-#LIBPATH = C:\BC4\LIB
-#INCLUDEPATH = C:\BC4\INCLUDE
-LIBPATH = E:\BORLANDC\LIB;C:\CC\SPAWN
-INCLUDEPATH = E:\BORLANDC\INCLUDE;C:\CC\SPAWN
+CC = $(BOR)\bin\bcc.exe +VIM.CFG
+#CC = $(BOR)\bin\tcc.exe +VIM.CFG
+
+TLINK = $(BOR)\bin\tlink.exe
+
+!ifndef SPAWNO
+SPAWNO = C:\CC\SPAWN
+!endif
+
+!if ("$(SPAWNO)" == "")
+LIBPATH = $(BOR)\LIB
+INCLUDEPATH = $(BOR)\INCLUDE
+SPAWND =
+SPAWNL =
+!else
+LIBPATH = $(BOR)\LIB;$(SPAWNO)
+INCLUDEPATH = $(BOR)\INCLUDE;$(SPAWNO)
+SPAWND = ;SPAWNO
+SPAWNL = spawnl.lib
+!endif
 
 
 #		*Implicit Rules*
@@ -31,8 +54,7 @@ INCLUDEPATH = E:\BORLANDC\INCLUDE;C:\CC\SPAWN
 # use -v for debugging
 #
 .c.obj:
-  $(CC) -c {$< }
-#  $(CC) -c -v {$< }
+  $(CC) -c $(DEBUG_FLAG) {$< }
 
 #		*List Macros*
 
@@ -82,8 +104,8 @@ all: vim.exe install.exe uninstal.exe xxd/xxd.exe
 #		*Explicit Rules*
 #  add /v to TLINK for debugging
 vim.exe: vim.cfg $(EXE_dependencies)
-  $(CC) -c version.c
-  $(TLINK) /x/c/L$(LIBPATH) @&&|
+  $(CC) $(DEBUG_FLAG) -c version.c
+  $(TLINK) /x/c/L$(LIBPATH) $(DEBUG_FLAG) @&&|
 c0l.obj+
 buffer.obj+
 charset.obj+
@@ -127,29 +149,26 @@ vim
 		# no map file
 fp87.lib+
 mathl.lib+
-spawnl.lib+
-cl.lib
+$(SPAWNL) cl.lib
 |
 
 install.exe: dosinst.c
-	$(CC) dosinst.c
-	-del install.exe
-	ren dosinst.exe install.exe
+	$(CC) -einstall $(DEBUG_FLAG) dosinst.c
 
 uninstal.exe: uninstal.c
-	$(CC) uninstal.c
+	$(CC) $(DEBUG_FLAG) uninstal.c
 
+# This may fail for older make versions, building xxd will fail anyway then.
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
-	copy Make_bc3.mak Makefile
-	$(MAKE)
+	$(MAKE) -f Make_bc3.mak BOR=$(BORXXD) DEBUG=$(DEBUG)
 	cd ..
-
 
 # cleaning up: Delete all generated files
 clean:
 	-del *.obj
 	-del vim.exe
+	-del vim.sym
 	-del install.exe
 	-del xxd\*.obj
 	-del xxd\xxd.exe
@@ -258,7 +277,7 @@ vim.cfg: Makefile
 -Iproto
 -I$(INCLUDEPATH)
 -L$(LIBPATH)
--DPC;MSDOS;SPAWNO
+-DPC;MSDOS$(SPAWND)
 | vim.cfg
 
 test:

@@ -2,9 +2,9 @@
 " Language:     Dot
 " Filenames:    *.dot
 " Maintainer:   Markus Mottl  <markus@oefai.at>
-" URL:          http://www.ai.univie.ac.at/~markus/vim/syntax/dot.vim
-" Last Change:  2001 Aug 28 - Upgraded URL & mail address
-"               2001 May 04 - initial version
+" URL:		http://www.ai.univie.ac.at/~markus/vim/syntax/dot.vim
+" Last Change:	2003 May 11
+"		2001 May 04 - initial version
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -84,27 +84,27 @@ if version >= 508 || !exists("did_dot_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink dotParErr       Error
-  HiLink dotBraceErr     Error
-  HiLink dotBrackErr     Error
+  HiLink dotParErr	 Error
+  HiLink dotBraceErr	 Error
+  HiLink dotBrackErr	 Error
 
-  HiLink dotComment      Comment
-  HiLink dotTodo         Todo
+  HiLink dotComment	 Comment
+  HiLink dotTodo	 Todo
 
-  HiLink dotParEncl      Keyword
-  HiLink dotBrackEncl    Keyword
-  HiLink dotBraceEncl    Keyword
+  HiLink dotParEncl	 Keyword
+  HiLink dotBrackEncl	 Keyword
+  HiLink dotBraceEncl	 Keyword
 
-  HiLink dotKeyword      Keyword
-  HiLink dotType         Type
-  HiLink dotKeyChar      Keyword
+  HiLink dotKeyword	 Keyword
+  HiLink dotType	 Type
+  HiLink dotKeyChar	 Keyword
 
-  HiLink dotString       String
-  HiLink dotIdentifier   Identifier
+  HiLink dotString	 String
+  HiLink dotIdentifier	 Identifier
 
   delcommand HiLink
 endif
 
 let b:current_syntax = "dot"
 
-" vim: ts=28
+" vim: ts=8

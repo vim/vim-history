@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.2c.  Last change: 2003 May 05
+*options.txt*	For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -1501,6 +1501,20 @@ A jump table for the options with a short description can be found at |Q_op|.
 	   off		on	    BIOS
 	   off		off	    STDIN
 
+			*'copyindent'* *'ci'* *'nocopyindent'* *'noci'*
+'copyindent' 'ci'	boolean	(default off)
+			local to buffer
+			{not in Vi}
+	Copy the structure of the existing lines indent when autoindenting a
+	new line.  Normally the new indent is reconstructed by a series of
+	tabs followed by spaces as required (unless |'expandtab'| is enabled,
+	in which case only spaces are used).  Enabling this option makes the
+	new line copy whatever characters were used for indenting on the
+	existing line.  If the new indent is greater than on the existing
+	line, the remaining space is filled in the normal manner.
+	NOTE: 'copyindent' is reset when 'compatible' is set.
+	Also see 'preserveindent'.
+
 						*'cpoptions'* *'cpo'*
 'cpoptions' 'cpo'	string	(Vim default: "aABceFs",
 				 Vi default:  all flags)
@@ -1762,9 +1776,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	default) the character along with its combining characters are
 	deleted.
 
-	This is useful for Hebrew or other languages where one may have
-	combining characters overtop of base characters, and want to remove
-	only the combining ones.
+	This is useful for Arabic, Hebrew and many other languages where one
+	may have combining characters overtop of base characters, and want
+	to remove only the combining ones.
 
 						*'dictionary'* *'dict'*
 'dictionary' 'dict'	string	(default "")
@@ -4217,6 +4231,19 @@ A jump table for the options with a short description can be found at |Q_op|.
 <	Replace the ';' with a ':' or whatever separator is used.  Note that
 	this doesn't work when $INCL contains a comma or white space.
 
+			*'preserveindent'* *'pi'* *'nopreserveindent'* *'nopi'*
+'preserveindent' 'pi'	boolean	(default off)
+			local to buffer
+			{not in Vi}
+	When changing the indent of the current line, preserve as much of the
+	indent structure as possible.  Normally the indent is replaced by a
+	series of tabs followed by spaces as required (unless |'expandtab'| is
+	enabled, in which case only spaces are used).  Enabling this option
+	means the indent will preserve as many existing characters as possible
+	for indenting, and only add additional tabs or spaces as required.
+	NOTE: 'preserveindent' is reset when 'compatible' is set.
+	Also see 'copyindent'.
+
 				    *'previewheight'* *'pvh'*
 'previewheight' 'pvh'	number (default 12)
 			global
@@ -4427,7 +4454,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 	  portrait:y (default)	Orientation is portrait.
 	  portrait:n		Orientation is landscape.
-
 							*a4* *letter*
 	  paper:A4   (default)	Paper size: A4
 	  paper:{name}		Paper size from this table:
@@ -4446,6 +4472,12 @@ A jump table for the options with a short description can be found at |Q_op|.
 				quarto	    21.59 x 27.5      8.5  x 10.83
 				statement   13.97 x 21.59     5.5  x  8.5
 				tabloid     27.96 x 43.13    11    x 17
+
+	  formfeed:n (default)	Treat form feed characters (0x0c) as a normal
+				print character.
+	  formfeed:y		When a form feed character is encountered,
+				continue printing of the current line at the
+				beginning of the first line on a new page.
 
 	The item indicated with (default) is used when the item is not
 	present.  The values are not always used, especially when using a
@@ -4510,13 +4542,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{only available when compiled with the |+rightleft|
 			feature}
 	When on, display orientation becomes right-to-left, i.e., character
-	that are stored in the file appear from the right to the left.	Using
-	this option, it is possible to edit files for languages that are
-	written from the right to the left such as Hebrew and Arabic.  This
-	option is per window, so it is possible to edit mixed files
+	that are stored in the file appear from the right to the left.
+	Using this option, it is possible to edit files for languages that
+	are written from the right to the left such as Hebrew and Arabic.
+	This option is per window, so it is possible to edit mixed files
 	simultaneously, or to view the same file in both ways (this is
-	sometimes useful when editing Hebrew TeX--XeT files).
-	See |rileft.txt|.
+	useful whenever you have a mixed text file with both right-to-left
+	and left-to-right strings so that both sets are displayed properly
+	in different windows).  Also see |rileft.txt|.
 
 			*'rightleftcmd'* *'rlc'* *'norightleftcmd'* *'norlc'*
 'rightleftcmd' 'rlc'	string	(default "search")

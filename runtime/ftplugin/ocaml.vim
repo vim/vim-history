@@ -1,12 +1,12 @@
 " Vim settings file
 " Language:     OCaml
 " Maintainers:  Mike Leary    <leary@nwlink.com>
-"               Markus Mottl  <markus@oefai.at>
-" URL:          http://www.ai.univie.ac.at/~markus/vim/ftplugin/ocaml.vim
-" Last Change:  2001 Nov 08 - changed 'assert false'-mapping to abbreviation
-"               2001 Nov 01 - added local bindings for inserting
-"                             type holes using 'assert false' (MM)
-"               2001 Oct 02 - insert spaces in line comments (MM)
+"		Markus Mottl  <markus@oefai.at>
+" URL:		http://www.ai.univie.ac.at/~markus/vim/ftplugin/ocaml.vim
+" Last Change:	2003 May 11
+"		2001 Nov 01 - added local bindings for inserting
+"			      type holes using 'assert false' (MM)
+"		2001 Oct 02 - insert spaces in line comments (MM)
 
 " Only do these settings when not done yet for this buffer
 if exists("b:did_ftplugin")

@@ -207,7 +207,7 @@ NOTA: Per amanti dell'avventura: premendo solo il tasto che indica l'oggetto
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Lezione 2.4: UNA ECCEZIONE A 'COMANDO-OGGETTO'
 
-            ** Batti	 dd   per cancellare un'intera linea. **
+	    ** Batti	 dd   per cancellare un'intera linea. **
 
   Per la frequenza con cui capita di cancellare linee intere, chi
   ha progettato Vi ha deciso che sarebbe stato più semplice
@@ -269,9 +269,9 @@ NOTA: Per amanti dell'avventura: premendo solo il tasto che indica l'oggetto
        oggetto - indica dove il comando va applicato, ad es.  w [word] parola,
 		$ (fino alla fine della linea), etc.
 
-  5. Per annullare i comandi precedenti,          batti:	  u (u minuscola)
+  5. Per annullare i comandi precedenti,	  batti:	  u (u minuscola)
      Per annullare tutte le modifiche a una linea batti:    U (U Maiuscola)
-     Per annullare l'annullamento [gli "undo"]        batti:	  CTRL-r
+     Per annullare l'annullamento [gli "undo"]	      batti:	  CTRL-r
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			 Lezione 3.1: IL COMANDO PUT [METTI, PONI]
@@ -546,7 +546,7 @@ NOTA: Questo è molto utile nel "debug" di un programma con parentesi errate!
      il file sarà una copia esatta di "tutor.it" al momento del salvataggio.
 
   5. Ora cancella il file battendo:   :!rm      TEST    [sotto Unix] oppure
-                                      :!del     TEST    [sotto MSDOS]
+				      :!del	TEST	[sotto MSDOS]
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -602,7 +602,7 @@ NOTA: Il file che tu richiedi è inserito a partire da dove si trova il cursore.
   1.  :!comando  esegue un comando esterno.
 
       Alcuni esempi utili sono [in MSDOS]:
-	  :!dir              -  visualizza lista directory
+	  :!dir		     -	visualizza lista directory
 	  :!del NOMEFILE     -	cancella file NOMEFILE.
 
   2.  :w NOMEFILE  scrive su disco il file che stai editando con nome NOMEFILE.
@@ -665,7 +665,7 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-           Lezione 6.3: UN'ALTRA VARIANTE DI REPLACE [RIMPIAZZA]
+	   Lezione 6.3: UN'ALTRA VARIANTE DI REPLACE [RIMPIAZZA]
 
 
      ** Batti una  R  Maiuscola per rimpiazzare più di un carattere. **
@@ -688,10 +688,10 @@ NOTA: Eviti così di battere   i   , l'ultimo carattere, il testo da aggiungere,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	          Lezione 6.4: SET [IMPOSTA] UN'OPZIONE
+		  Lezione 6.4: SET [IMPOSTA] UN'OPZIONE
 
       ** Imposta un'opzione per ignorare maiuscole/minuscole
-         durante la ricerca/sostituzione **
+	 durante la ricerca/sostituzione **
 
  1. Ricerca 'ignora' battendo:
     /ignora

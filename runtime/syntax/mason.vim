@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    Mason (Perl embedded in HTML)
 " Maintainer:  Andrew Smith <andrewdsmith@yahoo.com>
-" Last change: 2001 Jul 28
-" URL:         http://www.masonhq.com/editors/mason.vim
+" Last change: 2003 May 11
+" URL:	       http://www.masonhq.com/editors/mason.vim
 "
 " This seems to work satisfactorily with html.vim and perl.vim for version 5.5.
 " Please mail any fixes or improvements to the above address. Things that need

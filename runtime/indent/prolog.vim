@@ -52,7 +52,7 @@ function! GetPrologIndent()
     endif
     " Check for closing an unclosed paren, or middle ; or ->
     if line =~ '^\s*\([);]\|->\)'
-        let ind = ind - &sw
+	let ind = ind - &sw
     endif
     return ind
 endfunction

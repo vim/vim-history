@@ -2,7 +2,7 @@
 " Language:	   SPYCE
 " Maintainer:	 Rimon Barr <rimon AT acm DOT org>
 " URL:		     http://spyce.sourceforge.net
-" Last Change: 2003 Mar 29
+" Last Change: 2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -18,7 +18,7 @@ if !exists("main_syntax")
 endif
 
 " Read the HTML syntax to start with
-let b:did_indent = 1         " don't perform HTML indentation!
+let b:did_indent = 1	     " don't perform HTML indentation!
 let html_no_rendering = 1    " do not render <b>,<i>, etc...
 if version < 600
   so <sfile>:p:h/html.vim
@@ -47,8 +47,8 @@ syn cluster spyceEndError contains=spyceEndErrorS,spyceEndErrorA
 syn match spyceEscBeginS       ,\\\[\[,
 syn match spyceEscBeginA       ,\\<%,
 syn cluster spyceEscBegin contains=spyceEscBeginS,spyceEscBeginA
-syn match spyceEscEndS         ,\\\]\],
-syn match spyceEscEndA         ,\\%>,
+syn match spyceEscEndS	       ,\\\]\],
+syn match spyceEscEndA	       ,\\%>,
 syn cluster spyceEscEnd contains=spyceEscEndS,spyceEscEndA
 syn match spyceEscEndCommentS  ,--\\\]\],
 syn match spyceEscEndCommentA  ,--\\%>,
@@ -71,37 +71,37 @@ syn cluster spyce contains=spyceStmtS,spyceStmtA,spyceChunkS,spyceChunkA,spyceEv
 
 syn cluster htmlPreproc contains=@spyce
 
-hi link spyceDirectiveKeyword Special
-hi link spyceDirectiveArg     Type
-hi link spyceDirectiveString  String
-hi link spyceDirectiveValue   String
+hi link spyceDirectiveKeyword	Special
+hi link spyceDirectiveArg	Type
+hi link spyceDirectiveString	String
+hi link spyceDirectiveValue	String
 
-hi link spyceDelim            Special
-hi link spyceStmtDelim        spyceDelim
-hi link spyceChunkDelim       spyceDelim
-hi link spyceEvalDelim        spyceDelim
-hi link spyceLambdaDelim      spyceDelim
-hi link spyceCommentDelim     Comment
+hi link spyceDelim		Special
+hi link spyceStmtDelim		spyceDelim
+hi link spyceChunkDelim		spyceDelim
+hi link spyceEvalDelim		spyceDelim
+hi link spyceLambdaDelim	spyceDelim
+hi link spyceCommentDelim	Comment
 
-hi link spyceBeginErrorS      Error
-hi link spyceBeginErrorA      Error
-hi link spyceEndErrorS        Error
-hi link spyceEndErrorA        Error
+hi link spyceBeginErrorS	Error
+hi link spyceBeginErrorA	Error
+hi link spyceEndErrorS		Error
+hi link spyceEndErrorA		Error
 
-hi link spyceStmtS            spyce
-hi link spyceStmtA            spyce
-hi link spyceChunkS           spyce
-hi link spyceChunkA           spyce
-hi link spyceEvalS            spyce
-hi link spyceEvalA            spyce
-hi link spyceDirectiveS       spyce
-hi link spyceDirectiveA       spyce
-hi link spyceCommentS         Comment
-hi link spyceCommentA         Comment
-hi link spyceLambdaS          Normal
-hi link spyceLambdaA          Normal
+hi link spyceStmtS		spyce
+hi link spyceStmtA		spyce
+hi link spyceChunkS		spyce
+hi link spyceChunkA		spyce
+hi link spyceEvalS		spyce
+hi link spyceEvalA		spyce
+hi link spyceDirectiveS		spyce
+hi link spyceDirectiveA		spyce
+hi link spyceCommentS		Comment
+hi link spyceCommentA		Comment
+hi link spyceLambdaS		Normal
+hi link spyceLambdaA		Normal
 
-hi link spyce                 Statement
+hi link spyce			Statement
 
 let b:current_syntax = "spyce"
 if main_syntax == 'spyce'

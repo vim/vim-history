@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TSS (Thermal Synthesizer System) Geometry
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 10
+" Last Change:  2003 May 11
 " Filenames:    *.tssgm
-" URL:          http://www.naglenet.org/vim/syntax/tssgm.vim
+" URL:		http://www.naglenet.org/vim/syntax/tssgm.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -66,7 +66,7 @@ syn match  tssgmSurfIdent   " \S\+\.\d\+ \=$"
 
 syn match  tssgmString      /"[^" ]\+"/ms=s+1,me=e-1 contains=ALLBUT,tssInteger
 
-syn match  tssgmArgs        / = [xyz],"/ms=s+3,me=e-2
+syn match  tssgmArgs	    / = [xyz],"/ms=s+3,me=e-2
 
 syn match  tssgmInteger     "-\=\<[0-9]*\>"
 syn match  tssgmFloat       "-\=\<[0-9]*\.[0-9]*"
@@ -85,22 +85,22 @@ if version >= 508 || !exists("did_tssgm_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink tssgmParam            Statement
-  HiLink tssgmSurfType         Type
-  HiLink tssgmArgs             Special
-  HiLink tssgmDelim            Typedef
-  HiLink tssgmEnd              Macro
-  HiLink tssgmUnits            Special
+  HiLink tssgmParam		Statement
+  HiLink tssgmSurfType		Type
+  HiLink tssgmArgs		Special
+  HiLink tssgmDelim		Typedef
+  HiLink tssgmEnd		Macro
+  HiLink tssgmUnits		Special
 
-  HiLink tssgmDefault          SpecialComment
-  HiLink tssgmComment          Statement
-  HiLink tssgmCommentString    Comment
-  HiLink tssgmSurfIdent        Identifier
-  HiLink tssgmString           Delimiter
+  HiLink tssgmDefault		SpecialComment
+  HiLink tssgmComment		Statement
+  HiLink tssgmCommentString	Comment
+  HiLink tssgmSurfIdent		Identifier
+  HiLink tssgmString		Delimiter
 
-  HiLink tssgmInteger          Number
-  HiLink tssgmFloat            Float
-  HiLink tssgmScientific       Float
+  HiLink tssgmInteger		Number
+  HiLink tssgmFloat		Float
+  HiLink tssgmScientific	Float
 
   delcommand HiLink
 endif

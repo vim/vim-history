@@ -66,7 +66,7 @@
 # VIMDLL	no or yes: create vim32.dll, and stub (g)vim.exe (no)
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
 # FASTCALL	no or yes: set to yes to use register-based function protocol (yes)
-# OPTIMIZE	SPEED or SPACE: type of optimization (SPEED)
+# OPTIMIZE	SPACE, SPEED, or MAXSPEED: type of optimization (MAXSPEED)
 # POSTSCRIPT	no or yes: set to yes for PostScript printing
 # FEATURES	TINY, SMALL, NORMAL, BIG or HUGE
 #		(BIG for WIN32, SMALL for DOS16)
@@ -196,8 +196,9 @@ FASTCALL = yes
 
 ### OPTIMIZE: SPEED to optimize for speed, SPACE otherwise (SPEED RECOMMENDED)
 !if ("$(OPTIMIZE)"=="")
-OPTIMIZE = SPEED
+OPTIMIZE = MAXSPEED
 !endif
+
 ### FEATURES: TINY, SMALL, NORMAL, BIG or HUGE (BIG for WIN32, SMALL for DOS16)
 !if ("$(FEATURES)"=="")
 ! if ($(OSTYPE)==DOS16)
@@ -250,10 +251,12 @@ WINVER = 0x400
 !if ("$(DEBUG)"=="yes")
 OPT = -Od -N
 !else
-!if ($(OPTIMIZE)==SPACE)
+!if ("$(OPTIMIZE)"=="SPACE")
 OPT = -O1 -f- -d
+!elif ("$(OPTIMIZE)"=="MAXSPEED")
+OPT = -O2 -f- -d -Ocavi -O
 !else
-OPT = -O2 -f- -d -Oca -O
+OPT = -O2 -f- -d -Oc -O
 !endif
 !if ("$(FASTCALL)"=="yes")
 OPT = $(OPT) -pr
@@ -695,7 +698,8 @@ uninstal.exe: uninstal.c $(OBJDIR)\bcc.cfg
 clean:
 !if "$(OS)" == "Windows_NT"
 	# For Windows NT/2000, doesn't work on Windows 95/98...
-	-@rmdir /s /q $(OBJDIR)
+	# $(COMSPEC) needed to ensure rmdir.exe is not run
+	-@$(COMSPEC) /C rmdir /Q /S $(OBJDIR)
 !else
 	# For Windows 95/98, doesn't work on Windows NT/2000...
 	-@deltree /y $(OBJDIR)
@@ -724,12 +728,12 @@ clean:
 !ifdef TCL
 	-@del tcl.lib
 !endif
-	@cd xxd
+	cd xxd
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
-	@cd ..
-	@cd GvimExt
+	cd ..
+	cd GvimExt
 	$(MAKE) /f Make_bc5.mak BOR="$(BOR)" clean
-	@cd ..
+	cd ..
 
 $(DLLTARGET): $(OBJDIR) $(vimdllobj)
   $(LINK) @&&|
@@ -816,99 +820,11 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !endif
 |
 
-$(OBJDIR)\buffer.obj:  buffer.c
-
-$(OBJDIR)\charset.obj:	charset.c
-
-$(OBJDIR)\diff.obj:	diff.c
-
-$(OBJDIR)\digraph.obj:	digraph.c
-
-$(OBJDIR)\edit.obj:  edit.c
-
-$(OBJDIR)\eval.obj:  eval.c
-
-$(OBJDIR)\ex_cmds.obj:	ex_cmds.c
-
-$(OBJDIR)\ex_cmds2.obj:	ex_cmds2.c
-
 $(OBJDIR)\ex_docmd.obj:  ex_docmd.c ex_cmds.h
 
 $(OBJDIR)\ex_eval.obj:  ex_eval.c ex_cmds.h
 
-$(OBJDIR)\ex_getln.obj:  ex_getln.c
-
-$(OBJDIR)\fileio.obj:  fileio.c
-
-$(OBJDIR)\fold.obj:  fold.c
-
-$(OBJDIR)\getchar.obj:	getchar.c
-
-$(OBJDIR)\main.obj:  main.c
-
-$(OBJDIR)\mark.obj:  mark.c
-
-$(OBJDIR)\memfile.obj:	memfile.c
-
-$(OBJDIR)\memline.obj:	memline.c
-
-$(OBJDIR)\menu.obj:	menu.c
-
-$(OBJDIR)\message.obj:	message.c
-
-$(OBJDIR)\misc1.obj:  misc1.c
-
-$(OBJDIR)\misc2.obj:  misc2.c
-
-$(OBJDIR)\move.obj:  move.c
-
-$(OBJDIR)\mbyte.obj:  mbyte.c
-
-$(OBJDIR)\normal.obj:  normal.c
-
-$(OBJDIR)\ops.obj:  ops.c
-
-$(OBJDIR)\option.obj:  option.c
-
-$(OBJDIR)\quickfix.obj:  quickfix.c
-
-$(OBJDIR)\regexp.obj:  regexp.c
-
-$(OBJDIR)\screen.obj:  screen.c
-
-$(OBJDIR)\search.obj:  search.c
-
-$(OBJDIR)\syntax.obj:  syntax.c
-
-$(OBJDIR)\tag.obj:  tag.c
-
-$(OBJDIR)\term.obj:  term.c
-
-$(OBJDIR)\ui.obj:  ui.c
-
-$(OBJDIR)\undo.obj:  undo.c
-
-$(OBJDIR)\version.obj:	version.c
-
-$(OBJDIR)\os_win32.obj:  os_win32.c
-
-$(OBJDIR)\os_mswin.obj:  os_mswin.c
-
-$(OBJDIR)\os_msdos.obj:  os_msdos.c
-
-$(OBJDIR)\window.obj:  window.c
-
-$(OBJDIR)\gui.obj: gui.c
-
-$(OBJDIR)\gui_w32.obj: gui_w32.c
-
-$(OBJDIR)\os_w32dll.obj: os_w32dll.c
-
-$(OBJDIR)\if_cscope.obj: if_cscope.c
-
 $(OBJDIR)\if_ole.obj: if_ole.cpp
-
-$(OBJDIR)\os_w32exe.obj: os_w32exe.c
 
 $(OBJDIR)\if_perl.obj: if_perl.c perl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_perl.c
@@ -927,9 +843,10 @@ $(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_tcl.c
 
 $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
-	vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
-    $(BRC) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc @&&|
+		vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
+	$(BRC) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc @&&|
 	$(DEFINES)
+|
 
 $(OBJDIR)\pathdef.obj:	auto\pathdef.c
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ auto\pathdef.c

@@ -321,7 +321,7 @@ toggle_Magic(x)
 #define MAX_LIMIT	(32767L << 16L)
 
 static int re_multi_type __ARGS((int));
-static int cstrncmp __ARGS((char_u *s1, char_u *s2, int n));
+static int cstrncmp __ARGS((char_u *s1, char_u *s2, int *n));
 static char_u *cstrchr __ARGS((char_u *, int));
 
 #ifdef DEBUG
@@ -601,6 +601,7 @@ init_class_tab()
 #define RF_ICASE    1	/* ignore case */
 #define RF_NOICASE  2	/* don't ignore case */
 #define RF_HASNL    4	/* can match a NL */
+#define RF_ICOMBINE 8	/* ignore combining characters */
 
 /*
  * Global work variables for vim_regcomp().
@@ -652,8 +653,8 @@ static char_u META_flags[] = {
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
 /*  @  A     C	D     F     H  I     K	L  M	 O */
     1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1,
-/*  P	     S	   U  V  W  X	     [		 _ */
-    1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1,
+/*  P	     S	   U  V  W  X	  Z  [		 _ */
+    1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1,
 /*     a     c	d     f     h  i     k	l  m  n  o */
     0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1,
 /*  p	     s	   u  v  w  x	  z  {	|     ~    */
@@ -1152,6 +1153,12 @@ regconcat(flagp)
 	    case Magic('&'):
 	    case Magic(')'):
 			    cont = FALSE;
+			    break;
+	    case Magic('Z'):
+#ifdef FEAT_MBYTE
+			    regflags |= RF_ICOMBINE;
+#endif
+			    skipchr_keepstart();
 			    break;
 	    case Magic('c'):
 			    regflags |= RF_ICASE;
@@ -2344,7 +2351,7 @@ peekchr()
 
 		/* ignore \c \C \m and \M after '$' */
 		while (p[0] == '\\' && (p[1] == 'c' || p[1] == 'C'
-					       || p[1] == 'm' || p[1] == 'M'))
+				|| p[1] == 'm' || p[1] == 'M' || p[1] == 'Z'))
 		    p += 2;
 		if (p[0] == NUL
 			|| (p[0] == '\\'
@@ -2621,6 +2628,14 @@ int		regnarrate = 0;
  */
 static int	ireg_ic;
 
+#ifdef FEAT_MBYTE
+/*
+ * Similar to ireg_ic, but only for 'combining' characters.  Set with \Z flag
+ * in the regexp.  Defaults to false, always.
+ */
+static int	ireg_icombine;
+#endif
+
 /*
  * Sometimes need to save a copy of a line.  Since alloc()/free() is very
  * slow, we keep one allocated piece of memory and only re-allocate it when
@@ -2700,6 +2715,9 @@ vim_regexec(rmp, line, col)
     reg_maxline = 0;
     reg_win = NULL;
     ireg_ic = rmp->rm_ic;
+#ifdef FEAT_MBYTE
+    ireg_icombine = FALSE;
+#endif
     return (vim_regexec_both(line, col) != 0);
 }
 
@@ -2729,6 +2747,9 @@ vim_regexec_multi(rmp, win, buf, lnum, col)
     reg_firstlnum = lnum;
     reg_maxline = reg_buf->b_ml.ml_line_count - lnum;
     ireg_ic = rmp->rmm_ic;
+#ifdef FEAT_MBYTE
+    ireg_icombine = FALSE;
+#endif
 
     /* Need to switch to buffer "buf" to make vim_iswordc() work. */
     curbuf = buf;
@@ -2818,6 +2839,12 @@ vim_regexec_both(line, col)
     else if (prog->regflags & RF_NOICASE)
 	ireg_ic = FALSE;
 
+#ifdef FEAT_MBYTE
+    /* If pattern contains "\Z" overrule value of ireg_icombine */
+    if (prog->regflags & RF_ICOMBINE)
+	ireg_icombine = TRUE;
+#endif
+
     /* If there is a "must appear" string, look for it. */
     if (prog->regmust != NULL)
     {
@@ -2832,7 +2859,7 @@ vim_regexec_both(line, col)
 	s = line + col;
 	while ((s = cstrchr(s, c)) != NULL)
 	{
-	    if (cstrncmp(s, prog->regmust, prog->regmlen) == 0)
+	    if (cstrncmp(s, prog->regmust, &prog->regmlen) == 0)
 		break;		/* Found it. */
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
@@ -3471,12 +3498,19 @@ regmatch(scan)
 		{
 		    len = (int)STRLEN(opnd);
 		    /* Need to match first byte again for multi-byte. */
-		    if (cstrncmp(opnd, reginput, len) != 0)
+		    if (cstrncmp(opnd, reginput, &len) != 0)
 			return FALSE;
 #ifdef FEAT_MBYTE
 		    /* Check for following composing character. */
 		    if (enc_utf8 && UTF_COMPOSINGLIKE(reginput, reginput + len))
-			return FALSE;
+		    {
+			/* raaron: This code makes a composing character get
+			 * ignored, which is the correct behavior (sometimes)
+			 * for voweled Hebrew texts. */
+			if (!ireg_icombine)
+			    return FALSE;
+		    }
+		    else
 #endif
 		    reginput += len;
 		}
@@ -3663,7 +3697,7 @@ regmatch(scan)
 			/* Compare current input with back-ref in the same
 			 * line. */
 			len = (int)(reg_endp[no] - reg_startp[no]);
-			if (cstrncmp(reg_startp[no], reginput, len) != 0)
+			if (cstrncmp(reg_startp[no], reginput, &len) != 0)
 			    return FALSE;
 		    }
 		}
@@ -3682,7 +3716,7 @@ regmatch(scan)
 			    /* Compare back-ref within the current line. */
 			    len = reg_endpos[no].col - reg_startpos[no].col;
 			    if (cstrncmp(regline + reg_startpos[no].col,
-							  reginput, len) != 0)
+							  reginput, &len) != 0)
 				return FALSE;
 			}
 			else
@@ -3721,7 +3755,7 @@ regmatch(scan)
 				else
 				    len = (int)STRLEN(p + ccol);
 
-				if (cstrncmp(p + ccol, reginput, len) != 0)
+				if (cstrncmp(p + ccol, reginput, &len) != 0)
 				    return FALSE;	/* doesn't match */
 				if (clnum == reg_endpos[no].lnum)
 				    break;		/* match and at end! */
@@ -3768,7 +3802,7 @@ regmatch(scan)
 		{
 		    len = (int)STRLEN(re_extmatch_in->matches[no]);
 		    if (cstrncmp(re_extmatch_in->matches[no],
-							  reginput, len) != 0)
+							  reginput, &len) != 0)
 			return FALSE;
 		    reginput += len;
 		}
@@ -5186,18 +5220,147 @@ regprop(op)
 }
 #endif
 
+#ifdef FEAT_MBYTE
+static void mb_decompose __ARGS((int c, int *c1, int *c2, int *c3));
+
+typedef struct
+{
+    int a, b, c;
+} decomp_T;
+
+
+/* 0xfb20 - 0xfb4f */
+decomp_T decomp_table[0xfb4f-0xfb20+1] =
+{
+    {0x5e2,0,0},		/* 0xfb20	alt ayin */
+    {0x5d0,0,0},		/* 0xfb21	alt alef */
+    {0x5d3,0,0},		/* 0xfb22	alt dalet */
+    {0x5d4,0,0},		/* 0xfb23	alt he */
+    {0x5db,0,0},		/* 0xfb24	alt kaf */
+    {0x5dc,0,0},		/* 0xfb25	alt lamed */
+    {0x5dd,0,0},		/* 0xfb26	alt mem-sofit */
+    {0x5e8,0,0},		/* 0xfb27	alt resh */
+    {0x5ea,0,0},		/* 0xfb28	alt tav */
+    {'+', 0, 0},		/* 0xfb29	alt plus */
+    {0x5e9, 0x5c1, 0},		/* 0xfb2a	shin+shin-dot */
+    {0x5e9, 0x5c2, 0},		/* 0xfb2b	shin+sin-dot */
+    {0x5e9, 0x5c1, 0x5bc},	/* 0xfb2c	shin+shin-dot+dagesh */
+    {0x5e9, 0x5c2, 0x5bc},	/* 0xfb2d	shin+sin-dot+dagesh */
+    {0x5d0, 0x5b7, 0},		/* 0xfb2e	alef+patah */
+    {0x5d0, 0x5b8, 0},		/* 0xfb2f	alef+qamats */
+    {0x5d0, 0x5b4, 0},		/* 0xfb30	alef+hiriq */
+    {0x5d1, 0x5bc, 0},		/* 0xfb31	bet+dagesh */
+    {0x5d2, 0x5bc, 0},		/* 0xfb32	gimel+dagesh */
+    {0x5d3, 0x5bc, 0},		/* 0xfb33	dalet+dagesh */
+    {0x5d4, 0x5bc, 0},		/* 0xfb34	he+dagesh */
+    {0x5d5, 0x5bc, 0},		/* 0xfb35	vav+dagesh */
+    {0x5d6, 0x5bc, 0},		/* 0xfb36	zayin+dagesh */
+    {0xfb37, 0, 0},		/* 0xfb37 -- UNUSED */
+    {0x5d8, 0x5bc, 0},		/* 0xfb38	tet+dagesh */
+    {0x5d9, 0x5bc, 0},		/* 0xfb39	yud+dagesh */
+    {0x5da, 0x5bc, 0},		/* 0xfb3a	kaf sofit+dagesh */
+    {0x5db, 0x5bc, 0},		/* 0xfb3b	kaf+dagesh */
+    {0x5dc, 0x5bc, 0},		/* 0xfb3c	lamed+dagesh */
+    {0xfb3d, 0, 0},		/* 0xfb3d -- UNUSED */
+    {0x5de, 0x5bc, 0},		/* 0xfb3e	mem+dagesh */
+    {0xfb3f, 0, 0},		/* 0xfb3f -- UNUSED */
+    {0x5e0, 0x5bc, 0},		/* 0xfb40	nun+dagesh */
+    {0x5e1, 0x5bc, 0},		/* 0xfb41	samech+dagesh */
+    {0xfb42, 0, 0},		/* 0xfb42 -- UNUSED */
+    {0x5e3, 0x5bc, 0},		/* 0xfb43	pe sofit+dagesh */
+    {0x5e4, 0x5bc,0},		/* 0xfb44	pe+dagesh */
+    {0xfb45, 0, 0},		/* 0xfb45 -- UNUSED */
+    {0x5e6, 0x5bc, 0},		/* 0xfb46	tsadi+dagesh */
+    {0x5e7, 0x5bc, 0},		/* 0xfb47	qof+dagesh */
+    {0x5e8, 0x5bc, 0},		/* 0xfb48	resh+dagesh */
+    {0x5e9, 0x5bc, 0},		/* 0xfb49	shin+dagesh */
+    {0x5ea, 0x5bc, 0},		/* 0xfb4a	tav+dagesh */
+    {0x5d5, 0x5b9, 0},		/* 0xfb4b	vav+holam */
+    {0x5d1, 0x5bf, 0},		/* 0xfb4c	bet+rafe */
+    {0x5db, 0x5bf, 0},		/* 0xfb4d	kaf+rafe */
+    {0x5e4, 0x5bf, 0},		/* 0xfb4e	pe+rafe */
+    {0x5d0, 0x5dc, 0}		/* 0xfb4f	alef-lamed */
+};
+
+    static void
+mb_decompose(c, c1, c2, c3)
+    int c, *c1, *c2, *c3;
+{
+    decomp_T d;
+
+    if (c >= 0x4b20 && c <= 0xfb4f)
+    {
+	d = decomp_table[c - 0xfb20];
+	*c1 = d.a;
+	*c2 = d.b;
+	*c3 = d.c;
+    }
+    else
+    {
+	*c1 = c;
+	*c2 = *c3 = 0;
+    }
+}
+#endif
+
 /*
  * Compare two strings, ignore case if ireg_ic set.
  * Return 0 if strings match, non-zero otherwise.
+ * Correct the length "*n" when composing characters are ignored.
  */
     static int
 cstrncmp(s1, s2, n)
     char_u	*s1, *s2;
-    int		n;
+    int		*n;
 {
+    int		result;
+
     if (!ireg_ic)
-	return STRNCMP(s1, s2, n);
-    return MB_STRNICMP(s1, s2, n);
+	result = STRNCMP(s1, s2, *n);
+    else
+	result = MB_STRNICMP(s1, s2, *n);
+
+#ifdef FEAT_MBYTE
+    /* if it failed and it's utf8 and we want to combineignore: */
+    if (result != 0 && enc_utf8 && ireg_icombine)
+    {
+	char_u	*str1, *str2;
+	int	c1, c2, c11, c12;
+	int	ix;
+	int	junk;
+
+	/* we have to handle the strcmp ourselves, since it is necessary to
+	 * deal with the composing characters by ignoring them: */
+	str1 = s1;
+	str2 = s2;
+	c1 = c2 = 0;
+	for (ix = 0; ix < *n; )
+	{
+	    c1 = mb_ptr2char_adv(&str1);
+	    c2 = mb_ptr2char_adv(&str2);
+	    ix += utf_char2len(c1);
+
+	    /* decompose the character if necessary, into 'base' characters
+	     * because I don't care about Arabic, I will hard-code the Hebrew
+	     * which I *do* care about!  So sue me... */
+	    if (c1 != c2 && (!ireg_ic || utf_fold(c1) != utf_fold(c2)))
+	    {
+		/* decomposition necessary? */
+		mb_decompose(c1, &c11, &junk, &junk);
+		mb_decompose(c2, &c12, &junk, &junk);
+		c1 = c11;
+		c2 = c12;
+		if (c11 != c12 && (!ireg_ic || utf_fold(c11) != utf_fold(c12)))
+		    break;
+	    }
+	}
+	result = c2 - c1;
+	if (result == 0)
+	    *n = (int)(str2 - s2);
+    }
+#endif
+
+    return result;
 }
 
 /*

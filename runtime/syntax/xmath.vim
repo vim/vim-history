@@ -170,7 +170,7 @@ syn keyword xmathFunc	extractseg	iqmix	querystd
 syn case match
 
 " Labels (supports xmath's goto)
-syn match   xmathLabel             "^\s*<[a-zA-Z_][a-zA-Z0-9]*>"
+syn match   xmathLabel	 "^\s*<[a-zA-Z_][a-zA-Z0-9]*>"
 
 " String and Character constants
 " Highlight special characters (those which have a backslash) differently

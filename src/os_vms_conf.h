@@ -112,6 +112,7 @@
 #define HAVE_OPENDIR
 #define HAVE_PUTENV
 #define HAVE_SETENV
+#define HAVE_SETJMP_H
 
 #undef	HAVE_DIRENT_H
 #undef	HAVE_SYS_NDIR_H
@@ -142,11 +143,13 @@
 #undef  HAVE_USLEEP
 #undef  HAVE_STRCASECMP
 #undef  HAVE_STRINGS_H
+#undef	HAVE_SIGSETJMP
 #else
 #define HAVE_GETTIMEOFDAY
 #define HAVE_USLEEP
 #define HAVE_STRCASECMP
 #define HAVE_STRINGS_H
+#define	HAVE_SIGSETJMP
 #endif
 
 /* Compiler specific */

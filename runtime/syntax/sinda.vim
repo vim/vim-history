@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 15
+" Last Change:  2003 May 11
 " Filenames:    *.sin
-" URL:          http://www.naglenet.org/vim/syntax/sinda.vim
+" URL:		http://www.naglenet.org/vim/syntax/sinda.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -95,7 +95,7 @@ syn match  sindaInteger     "-\=\<[0-9]*\>"
 syn match  sindaFloat       "-\=\<[0-9]*\.[0-9]*"
 syn match  sindaScientific  "-\=\<[0-9]*\.[0-9]*E[-+]\=[0-9]\+\>"
 
-syn match  sindaEndData          "^END OF DATA"
+syn match  sindaEndData		 "^END OF DATA"
 
 if exists("thermal_todo")
   execute 'syn match  sindaTodo ' . '"^'.thermal_todo.'.*$"'
@@ -116,26 +116,26 @@ if version >= 508 || !exists("did_sinda_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink sindaMacro             Macro
-  HiLink sindaOptions           Special
-  HiLink sindaRoutine           Type
-  HiLink sindaControl           Special
-  HiLink sindaSubRoutine        Function
-  HiLink sindaIdentifier        Identifier
+  HiLink sindaMacro		Macro
+  HiLink sindaOptions		Special
+  HiLink sindaRoutine		Type
+  HiLink sindaControl		Special
+  HiLink sindaSubRoutine	Function
+  HiLink sindaIdentifier	Identifier
 
-  HiLink sindaFortran           PreProc
-  HiLink sindaMotran            PreProc
+  HiLink sindaFortran		PreProc
+  HiLink sindaMotran		PreProc
 
-  HiLink sindaComment           Comment
-  HiLink sindaHeader            Typedef
-  HiLink sindaIncludeFile       Type
-  HiLink sindaInteger           Number
-  HiLink sindaFloat             Float
-  HiLink sindaScientific        Float
+  HiLink sindaComment		Comment
+  HiLink sindaHeader		Typedef
+  HiLink sindaIncludeFile	Type
+  HiLink sindaInteger		Number
+  HiLink sindaFloat		Float
+  HiLink sindaScientific	Float
 
-  HiLink sindaEndData           Macro
+  HiLink sindaEndData		Macro
 
-  HiLink sindaTodo              Todo
+  HiLink sindaTodo		Todo
 
   delcommand HiLink
 endif

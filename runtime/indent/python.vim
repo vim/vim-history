@@ -2,7 +2,7 @@
 " Language:	Python
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
 " Original Author:	David Bustos <bustos@caltech.edu>
-" Last Change:	2003 Mar 26
+" Last Change:	2003 May 11
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -131,7 +131,7 @@ function GetPythonIndent(lnum)
     while lnum >= 1
       echomsg 'got here'
       if getline(lnum) =~ '^\s*\(try\|except\)\>'
-        let ind = indent(lnum)
+	let ind = indent(lnum)
 	echomsg 'got here, indent is ' . ind
 	if ind >= indent(a:lnum)
 	  return -1	" indent is already less than this

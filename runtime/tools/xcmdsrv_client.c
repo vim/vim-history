@@ -402,7 +402,7 @@ SendEventProc(dpy, eventPtr, expected, code)
     Display	   *dpy;
     XEvent	    *eventPtr;		/* Information about event. */
     int		    expected;		/* The one were waiting for */
-    int		    *code;              /* Return code. 0 => OK */
+    int		    *code;		/* Return code. 0 => OK */
 {
     unsigned char   *propInfo;
     unsigned char   *p;

@@ -56,6 +56,7 @@
 #       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE] (default is BIG)
 #       Version Support: WINVER=[0x400, 0x500] (default is 0x400)
 #       Processor Version: CPUNR=[i386, i486, i586, i686] (default is i386)
+#       Optimization: OPTIMIZE=[SPACE, SPEED, MAXSPEED] (default is MAXSPEED)
 #
 # You can combine any of these interfaces
 #
@@ -239,7 +240,14 @@ CPUARG =
 
 !ifdef NODEBUG
 VIM = vim
-CFLAGS = $(CFLAGS) -DNDEBUG /Ox /Zi $(CPUARG)
+!if "$(OPTIMIZE)" == "SPACE"
+OPTFLAG = /O1
+!elseif "$(OPTIMIZE)" == "SPEED"
+OPTFLAG = /O2
+!else # MAXSPEED
+OPTFLAG = /Ox
+!endif
+CFLAGS = $(CFLAGS) $(OPTFLAG) -DNDEBUG /Zi $(CPUARG)
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
 PDB = /Fd$(OUTDIR)/
 LINK_PDB = /PDB:$(OUTDIR)/

@@ -1270,7 +1270,7 @@ ex_catch(eap)
     int		skip = FALSE;
     int		caught = FALSE;
     char_u	*end;
-    int		save_char;
+    int		save_char = 0;
     char_u	*save_cpo;
     regmatch_T	regmatch;
     int		prev_got_int;
@@ -1354,9 +1354,11 @@ ex_catch(eap)
 	    {
 		/* Terminate the pattern and avoid the 'l' flag in 'cpoptions'
 		 * while compiling it. */
-		save_char = *end;
 		if (end != NULL)
+		{
+		    save_char = *end;
 		    *end = NUL;
+		}
 		save_cpo  = p_cpo;
 		p_cpo = (char_u *)"";
 		regmatch.regprog = vim_regcomp(pat, TRUE);

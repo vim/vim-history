@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	PL/M
 " Maintainer:	Philippe Coulonges <cphil@cphil.net>
-" Last change:	2001 Jul 28
+" Last change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -47,7 +47,7 @@ endif
   " users will want the same behavior
 if exists("c_comment_strings")
   " FIXME : don't work fine with c_comment_strings set,
-  "         which I don't care as I don't use
+  "	    which I don't care as I don't use
 
   " A comment can contain plmString, plmCharacter and plmNumber.
   " But a "*/" inside a plmString in a plmComment DOES end the comment!  So we

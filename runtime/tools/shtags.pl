@@ -55,7 +55,7 @@ $tags_file = $opt_t || 'tags';
 $explicit = $opt_x;
 $variable_tags = $opt_v;
 $allow_warnings = ! $opt_w;
-&version          if $opt_V;
+&version	  if $opt_V;
 &usage()	unless @ARGV != 0;
 
 # slurp up the existing tags. Some will be replaced, the ones that aren't

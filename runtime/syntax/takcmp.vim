@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling compare file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 10:18:11 Mountain Daylight Time
+" Last Change:  2003 May 11
 " Filenames:    *.cmp
-" URL:          http://www.naglenet.org/vim/syntax/takcmp.vim
+" URL:		http://www.naglenet.org/vim/syntax/takcmp.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -61,17 +61,17 @@ if version >= 508 || !exists("did_takcmp_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink takcmpTitle               Type
-  HiLink takcmpUnit                PreProc
+  HiLink takcmpTitle		   Type
+  HiLink takcmpUnit		   PreProc
 
-  HiLink takcmpLabel               Statement
+  HiLink takcmpLabel		   Statement
 
-  HiLink takcmpHeader              takHeader
+  HiLink takcmpHeader		   takHeader
 
-  HiLink takcmpDate                Identifier
-  HiLink takcmpTime                Identifier
-  HiLink takcmpInteger             Number
-  HiLink takcmpFloat               Special
+  HiLink takcmpDate		   Identifier
+  HiLink takcmpTime		   Identifier
+  HiLink takcmpInteger		   Number
+  HiLink takcmpFloat		   Special
 
   delcommand HiLink
 endif
