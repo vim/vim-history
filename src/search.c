@@ -3794,26 +3794,44 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 		{
 		    for (i = 0; i <= depth_displayed; i++)
 			MSG_PUTS("  ");
-		    /*
-		     * Isolate the file name.
-		     * Include the surrounding "" or <> if present.
-		     */
-		    for (p = incl_regmatch.endp[0] + 1; !vim_isfilec(*p); p++)
-			;
-		    for (i = 0; vim_isfilec(p[i]); i++)
-			;
-		    if (p[-1] == '"' || p[-1] == '<')
+		    if (new_fname != NULL)
 		    {
-			--p;
-			++i;
+			/* using "new_fname" is more reliable, e.g., when
+			 * 'includeexpr' is set. */
+			msg_outtrans_attr(new_fname, hl_attr(HLF_D));
 		    }
-		    if (p[i] == '"' || p[i] == '>')
-			++i;
-		    save_char = p[i];
-		    p[i] = NUL;
-				/* Same highlighting as for directories */
-		    msg_outtrans_attr(p, hl_attr(HLF_D));
-		    p[i] = save_char;
+		    else
+		    {
+			/*
+			 * Isolate the file name.
+			 * Include the surrounding "" or <> if present.
+			 */
+			for (p = incl_regmatch.endp[0]; !vim_isfilec(*p); p++)
+			    ;
+			for (i = 0; vim_isfilec(p[i]); i++)
+			    ;
+			if (i == 0)
+			{
+			    /* Nothing found, use the rest of the line. */
+			    p = incl_regmatch.endp[0];
+			    i = STRLEN(p);
+			}
+			else
+			{
+			    if (p[-1] == '"' || p[-1] == '<')
+			    {
+				--p;
+				++i;
+			    }
+			    if (p[i] == '"' || p[i] == '>')
+				++i;
+			}
+			save_char = p[i];
+			p[i] = NUL;
+			msg_outtrans_attr(p, hl_attr(HLF_D));
+			p[i] = save_char;
+		    }
+
 		    if (new_fname == NULL && action == ACTION_SHOW_ALL)
 		    {
 			if (already_searched)
