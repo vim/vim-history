@@ -50,6 +50,14 @@
 
 #undef EXTERN
 #undef _
+
+/* T_DATA defined both by Ruby and Mac header files, hack around it... */
+#ifdef FEAT_GUI_MAC
+# define __OPENTRANSPORT__
+# define __OPENTRANSPORTPROTOCOL__
+# define __OPENTRANSPORTPROVIDERS__
+#endif
+
 #include "vim.h"
 #include "version.h"
 
@@ -64,7 +72,7 @@ static VALUE objtbl;
 
 static VALUE mVIM;
 static VALUE cBuffer;
-static VALUE cWindow;
+static VALUE cVimWindow;
 static VALUE eDeletedBufferError;
 static VALUE eDeletedWindowError;
 
@@ -682,7 +690,7 @@ static VALUE window_new(win_T *win)
 	return (VALUE) win->ruby_ref;
     }
     else {
-	VALUE obj = Data_Wrap_Struct(cWindow, 0, 0, win);
+	VALUE obj = Data_Wrap_Struct(cVimWindow, 0, 0, win);
 	win->ruby_ref = (void *) obj;
 	rb_hash_aset(objtbl, rb_obj_id(obj), obj);
 	return obj;
@@ -843,15 +851,15 @@ static void ruby_vim_init(void)
     rb_define_method(cBuffer, "delete", buffer_delete, 1);
     rb_define_method(cBuffer, "append", buffer_append, 2);
 
-    cWindow = rb_define_class_under(mVIM, "Window", rb_cObject);
-    rb_define_singleton_method(cWindow, "current", window_s_current, 0);
-    rb_define_singleton_method(cWindow, "count", window_s_count, 0);
-    rb_define_singleton_method(cWindow, "[]", window_s_aref, 1);
-    rb_define_method(cWindow, "buffer", window_buffer, 0);
-    rb_define_method(cWindow, "height", window_height, 0);
-    rb_define_method(cWindow, "height=", window_set_height, 1);
-    rb_define_method(cWindow, "cursor", window_cursor, 0);
-    rb_define_method(cWindow, "cursor=", window_set_cursor, 1);
+    cVimWindow = rb_define_class_under(mVIM, "Window", rb_cObject);
+    rb_define_singleton_method(cVimWindow, "current", window_s_current, 0);
+    rb_define_singleton_method(cVimWindow, "count", window_s_count, 0);
+    rb_define_singleton_method(cVimWindow, "[]", window_s_aref, 1);
+    rb_define_method(cVimWindow, "buffer", window_buffer, 0);
+    rb_define_method(cVimWindow, "height", window_height, 0);
+    rb_define_method(cVimWindow, "height=", window_set_height, 1);
+    rb_define_method(cVimWindow, "cursor", window_cursor, 0);
+    rb_define_method(cVimWindow, "cursor=", window_set_cursor, 1);
 
     rb_define_virtual_variable("$curbuf", buffer_s_current, 0);
     rb_define_virtual_variable("$curwin", window_s_current, 0);
