@@ -607,9 +607,15 @@ WaitForChar(long msec)
 	 * We busy-wait here.  Unfortunately, delay() and usleep() have been
 	 * reported to give problems with the original Windows 95.  This is
 	 * fixed in service pack 1, but not everybody installed that.
+	 * The DJGPP implementation of usleep() uses a busy-wait loop too.
 	 */
 	if (msec != FOREVER && biostime(0, 0L) > starttime + msec / BIOSTICK)
 	    break;
+
+#ifdef DJGPP
+	/* Yield the CPU to the next process. */
+	__dpmi_yield();
+#endif
     }
     return FALSE;
 }
