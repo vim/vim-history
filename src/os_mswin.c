@@ -122,8 +122,12 @@ extern char g_szOrigTitle[];
 # define WORD int
 # define DWORD int
 # define BOOL int
+# define UINT int
+# define CALLBACK
 # define LPSTR int
 # define LPTSTR int
+# define WPARAM int
+# define LPARAM int
 # define KEY_EVENT_RECORD int
 # define MOUSE_EVENT_RECORD int
 # define WINAPI
@@ -142,6 +146,7 @@ extern char g_szOrigTitle[];
 # define PRINTDLG int
 # define TEXTMETRIC int
 # define COLORREF int
+# define HDC int
 #endif
 
 
@@ -911,12 +916,17 @@ Trace(
  */
 
 static HFONT		prt_font_handles[2][2][2];
-static PRINTDLG		s_pd;
-static const int	boldface[2] = {  FW_REGULAR , FW_BOLD  };
-static TEXTMETRIC	s_tm;
-static int		s_left_margin;
-static int		s_right_margin;
-static int		s_top_margin;
+static PRINTDLG		prt_dlg;
+static const int	boldface[2] = {FW_REGULAR, FW_BOLD};
+static TEXTMETRIC	prt_tm;
+static int		prt_line_height;
+static int		prt_number_width;
+static int		prt_left_margin;
+static int		prt_right_margin;
+static int		prt_top_margin;
+static char_u		szAppName[] = TEXT("VIM");
+static HWND		hDlgPrint;
+static int		*bUserAbort = NULL;
 
 /*
  * Convert BGR to RGB for Windows GDI calls
@@ -931,6 +941,42 @@ swap_me(COLORREF colorref)
     *(ptr ) = *(ptr + 2);
     *(ptr + 2) = temp;
     return colorref;
+}
+
+    static BOOL CALLBACK
+PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+     switch (message)
+     {
+     case WM_INITDIALOG:
+          SetWindowText(hDlg, szAppName);
+          EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
+          return TRUE;
+
+     case WM_COMMAND:
+          *bUserAbort = TRUE;
+          EnableWindow(GetParent(hDlg), TRUE);
+          DestroyWindow(hDlg);
+          hDlgPrint = NULL;
+          return TRUE;
+     }
+     return FALSE;
+}
+
+    static BOOL CALLBACK
+AbortProc(HDC hdcPrn, int iCode)
+{
+     MSG msg;
+
+     while (!*bUserAbort && PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+     {
+          if (!hDlgPrint || !IsDialogMessage(hDlgPrint, &msg))
+          {
+               TranslateMessage(&msg);
+               DispatchMessage(&msg);
+          }
+     }
+     return !*bUserAbort;
 }
 
 #ifndef FEAT_GUI
@@ -1029,13 +1075,18 @@ mch_print_cleanup(void)
     int pifBold;
     int pifUnderline;
 
-    for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
-	for (pifItalic = 0 ; pifItalic <= 1; pifItalic++)
+    for (pifBold = 0; pifBold <= 1; pifBold++)
+	for (pifItalic = 0; pifItalic <= 1; pifItalic++)
 	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
 		DeleteObject(prt_font_handles[pifBold][pifItalic][pifUnderline]);
 
-    if (s_pd.hDC != NULL)
-	DeleteDC (s_pd.hDC);
+    if (prt_dlg.hDC != NULL)
+	DeleteDC(prt_dlg.hDC);
+    if (!*bUserAbort)
+    {
+	EnableWindow(prt_dlg.hwndOwner, TRUE);
+	DestroyWindow(hDlgPrint);
+    }
 }
 
 #ifdef FEAT_GUI
@@ -1061,52 +1112,51 @@ to_device_units(int idx, int dpi, int physsize, int offset)
 }
 
     static int
-mch_print_get_cpl(int *yChar_out, int *number_width_out)
+mch_print_get_cpl(void)
 {
-    int cpl;
-    int hr;
-    int phyw;
-    int dvoff;
-    int rev_offset;
-    int dpi;
+    int		hr;
+    int		phyw;
+    int		dvoff;
+    int		rev_offset;
+    int		dpi;
 #ifdef WIN16
-    POINT pagesize;
+    POINT	pagesize;
 #endif
 
-    GetTextMetrics(s_pd.hDC, &s_tm);
-    *yChar_out = s_tm.tmHeight + s_tm.tmExternalLeading;
+    GetTextMetrics(prt_dlg.hDC, &prt_tm);
+    prt_line_height = prt_tm.tmHeight + prt_tm.tmExternalLeading;
 
-    hr	    = GetDeviceCaps(s_pd.hDC, HORZRES);
+    hr	    = GetDeviceCaps(prt_dlg.hDC, HORZRES);
 #ifdef WIN16
-    Escape(s_pd.hDC, GETPHYSPAGESIZE, NULL, NULL, &pagesize);
+    Escape(prt_dlg.hDC, GETPHYSPAGESIZE, NULL, NULL, &pagesize);
     phyw    = pagesize.x;
-    Escape(s_pd.hDC, GETPRINTINGOFFSET, NULL, NULL, &pagesize);
+    Escape(prt_dlg.hDC, GETPRINTINGOFFSET, NULL, NULL, &pagesize);
     dvoff   = pagesize.x;
 #else
-    phyw    = GetDeviceCaps(s_pd.hDC, PHYSICALWIDTH);
-    dvoff   = GetDeviceCaps(s_pd.hDC, PHYSICALOFFSETX);
+    phyw    = GetDeviceCaps(prt_dlg.hDC, PHYSICALWIDTH);
+    dvoff   = GetDeviceCaps(prt_dlg.hDC, PHYSICALOFFSETX);
 #endif
-    dpi	    = GetDeviceCaps(s_pd.hDC, LOGPIXELSY);
+    dpi	    = GetDeviceCaps(prt_dlg.hDC, LOGPIXELSY);
 
     rev_offset = phyw - (dvoff + hr);
 
-    s_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
+    prt_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
     if (printer_opts[OPT_PRINT_NUMBER].present)
     {
-	*number_width_out = 8 * s_tm.tmAveCharWidth;
-	s_left_margin += *number_width_out;
+	prt_number_width = 8 * prt_tm.tmAveCharWidth;
+	prt_left_margin += prt_number_width;
     }
+    else
+	prt_number_width = 0;
 
-    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
+    prt_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
 								  rev_offset);
 
-    cpl	= (s_right_margin - s_left_margin) / s_tm.tmAveCharWidth ;
-
-    return cpl;
+    return (prt_right_margin - prt_left_margin) / prt_tm.tmAveCharWidth;
 }
 
     static int
-mch_print_get_lpp(int yCharsize)
+mch_print_get_lpp(void)
 {
     int vr;
     int phyw;
@@ -1118,30 +1168,30 @@ mch_print_get_lpp(int yCharsize)
     POINT pagesize;
 #endif
 
-    vr	    = GetDeviceCaps(s_pd.hDC, VERTRES);
+    vr	    = GetDeviceCaps(prt_dlg.hDC, VERTRES);
 #ifdef WIN16
-    Escape(s_pd.hDC, GETPHYSPAGESIZE, NULL, NULL, &pagesize);
+    Escape(prt_dlg.hDC, GETPHYSPAGESIZE, NULL, NULL, &pagesize);
     phyw    = pagesize.y;
-    Escape(s_pd.hDC, GETPRINTINGOFFSET, NULL, NULL, &pagesize);
+    Escape(prt_dlg.hDC, GETPRINTINGOFFSET, NULL, NULL, &pagesize);
     dvoff   = pagesize.y;
 #else
-    phyw    = GetDeviceCaps(s_pd.hDC, PHYSICALHEIGHT);
-    dvoff   = GetDeviceCaps(s_pd.hDC, PHYSICALOFFSETY);
+    phyw    = GetDeviceCaps(prt_dlg.hDC, PHYSICALHEIGHT);
+    dvoff   = GetDeviceCaps(prt_dlg.hDC, PHYSICALOFFSETY);
 #endif
-    dpi	    = GetDeviceCaps(s_pd.hDC, LOGPIXELSY);
+    dpi	    = GetDeviceCaps(prt_dlg.hDC, LOGPIXELSY);
 
     rev_offset = phyw - (dvoff + vr);
 
-    s_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
+    prt_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
 
     /* adjust top margin if there is a header */
     if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-	s_top_margin += (yCharsize
+	prt_top_margin += (prt_line_height
 			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
 
     bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
 
-    return (bottom_margin - s_top_margin) / yCharsize ;
+    return (bottom_margin - prt_top_margin) / prt_line_height;
 }
 
     int
@@ -1159,25 +1209,26 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 
     LPVOID		mem = NULL;
 
-    memset(&s_pd, 0, sizeof(PRINTDLG));
-    s_pd.lStructSize = sizeof(PRINTDLG);
+    bUserAbort = &(psettings->user_abort);
+    memset(&prt_dlg, 0, sizeof(PRINTDLG));
+    prt_dlg.lStructSize = sizeof(PRINTDLG);
 #ifdef FEAT_GUI
-    s_pd.hwndOwner = s_hwnd;
+    prt_dlg.hwndOwner = s_hwnd;
 #else
-    s_pd.hwndOwner = GetConsoleHwnd();
+    prt_dlg.hwndOwner = GetConsoleHwnd();
 #endif
-    s_pd.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
-    s_pd.hDevMode = stored_dm;
-    s_pd.hDevNames = stored_devn;
-    s_pd.lCustData = stored_nCopies; /* work around bug in print dialogue */
+    prt_dlg.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
+    prt_dlg.hDevMode = stored_dm;
+    prt_dlg.hDevNames = stored_devn;
+    prt_dlg.lCustData = stored_nCopies; /* work around bug in print dialogue */
 #ifndef FEAT_GUI
     /*
      * Use hook to prevent console window being sent to back
      */
-    s_pd.lpfnPrintHook = PrintHookProc;
-    s_pd.Flags |= PD_ENABLEPRINTHOOK;
+    prt_dlg.lpfnPrintHook = PrintHookProc;
+    prt_dlg.Flags |= PD_ENABLEPRINTHOOK;
 #endif
-    s_pd.Flags |= stored_nFlags;
+    prt_dlg.Flags |= stored_nFlags;
     /*
      * If bang present, return default printer setup with no dialogue
      * never show dialogue if we are running over telnet
@@ -1188,39 +1239,42 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 #endif
 	    )
     {
-	s_pd.Flags |= PD_RETURNDEFAULT;
+	prt_dlg.Flags |= PD_RETURNDEFAULT;
 #ifdef WIN3264
 	/*
 	 * MSDN suggests setting the first parameter to WINSPOOL for
 	 * NT, but NULL appears to work just as well.
 	 */
 	if (STRLEN(p_prtname))
-	    s_pd.hDC = CreateDC(NULL, p_prtname, NULL, NULL);
+	    prt_dlg.hDC = CreateDC(NULL, p_prtname, NULL, NULL);
 	else
 #endif
 	{
-	    s_pd.Flags |= PD_RETURNDEFAULT;
-	    if (PrintDlg(&s_pd) == 0)
+	    prt_dlg.Flags |= PD_RETURNDEFAULT;
+	    if (PrintDlg(&prt_dlg) == 0)
 		goto init_fail_dlg;
 	}
     }
-    else if (PrintDlg(&s_pd) == 0)
+    else if (PrintDlg(&prt_dlg) == 0)
 	goto init_fail_dlg;
-
-    if (s_pd.hDC == NULL)
+    hDlgPrint = CreateDialog(GetModuleHandle(NULL), TEXT("PrintDlgBox"),
+                               prt_dlg.hwndOwner, PrintDlgProc);
+    if (prt_dlg.hDC == NULL)
     {
 	EMSG(_("E237: Printer selection failed"));
 	mch_print_cleanup();
 	return FALSE;
     }
 
+    SetAbortProc(prt_dlg.hDC, AbortProc);
+
     /*
      * keep the previous driver context
      */
-    stored_dm = s_pd.hDevMode;
-    stored_devn = s_pd.hDevNames;
-    stored_nFlags = s_pd.Flags;
-    stored_nCopies = s_pd.nCopies;
+    stored_dm = prt_dlg.hDevMode;
+    stored_devn = prt_dlg.hDevNames;
+    stored_nFlags = prt_dlg.Flags;
+    stored_nCopies = prt_dlg.nCopies;
 
 #ifdef WIN3264
     /*
@@ -1229,7 +1283,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * hDevMode struct.
      */
     psettings->duplex = FALSE;
-    mem = GlobalLock(s_pd.hDevMode);
+    mem = GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
 	if (((DEVMODE *)mem)->dmCopies != 1)
@@ -1238,7 +1292,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 		&& (((DEVMODE *)mem)->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
     }
-    GlobalUnlock(s_pd.hDevMode);
+    GlobalUnlock(prt_dlg.hDevMode);
 #endif
 
     memset(&fLogFont, 0, sizeof(fLogFont));
@@ -1246,7 +1300,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * Initialise the font according to 'printerfont'
      */
 #ifdef FEAT_GUI
-    if (!get_logfont(&fLogFont, p_prtfont, s_pd.hDC))
+    if (!get_logfont(&fLogFont, p_prtfont, prt_dlg.hDC))
 	return FALSE;
 #else
     /*<VN> need to rearrange win32 code so we can call get_logfont*/
@@ -1254,36 +1308,36 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     STRCPY(fLogFont.lfFaceName, "Courier New");
 #endif
 
-    for (pifBold = 0 ; pifBold <= 1 ; pifBold++)
-	for (pifItalic = 0 ; pifItalic <= 1; pifItalic++)
+    for (pifBold = 0; pifBold <= 1; pifBold++)
+	for (pifItalic = 0; pifItalic <= 1; pifItalic++)
 	    for (pifUnderline = 0; pifUnderline <= 1; pifUnderline++)
 	    {
 		fLogFont.lfWeight =  boldface[pifBold];
 		fLogFont.lfCharSet = DEFAULT_CHARSET;
 		fLogFont.lfItalic = pifItalic;
 		fLogFont.lfUnderline = pifUnderline;
-		prt_font_handles[pifBold][pifItalic][pifUnderline] =  CreateFontIndirect(&fLogFont);
+		prt_font_handles[pifBold][pifItalic][pifUnderline]
+					      = CreateFontIndirect(&fLogFont);
 	    }
 
-    SetBkMode(s_pd.hDC , OPAQUE);
-    SelectObject(s_pd.hDC , prt_font_handles[0][0][0]);
+    SetBkMode(prt_dlg.hDC , OPAQUE);
+    SelectObject(prt_dlg.hDC , prt_font_handles[0][0][0]);
 
     /*
      * Fill in the settings struct
      */
-    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height,
-						    &psettings->number_width);
-    psettings->lines_per_page = mch_print_get_lpp(psettings->line_height);
-    psettings->n_collated_copies =  (s_pd.Flags & PD_COLLATE)
-							   ? s_pd.nCopies : 1;
-    psettings->n_uncollated_copies =  (s_pd.Flags & PD_COLLATE)
-							   ? 1 : s_pd.nCopies;
+    psettings->chars_per_line = mch_print_get_cpl();
+    psettings->lines_per_page = mch_print_get_lpp();
+    psettings->n_collated_copies = (prt_dlg.Flags & PD_COLLATE)
+							? prt_dlg.nCopies : 1;
+    psettings->n_uncollated_copies = (prt_dlg.Flags & PD_COLLATE)
+							? 1 : prt_dlg.nCopies;
 
     if (psettings->n_collated_copies == 0)
-	    psettings->n_collated_copies = 1;
+	psettings->n_collated_copies = 1;
 
     if (psettings->n_uncollated_copies == 0)
-	    psettings->n_uncollated_copies = 1;
+	psettings->n_uncollated_copies = 1;
 
     psettings->jobname = jobname;
 
@@ -1328,10 +1382,10 @@ mch_print_begin(prt_settings_T *psettings)
     int			ret;
     static DOCINFO	di;
 
-    memset(&di, 0, sizeof (DOCINFO));
-    di.cbSize = sizeof (DOCINFO);
+    memset(&di, 0, sizeof(DOCINFO));
+    di.cbSize = sizeof(DOCINFO);
     di.lpszDocName = psettings->jobname;
-    ret = StartDoc (s_pd.hDC, &di);
+    ret = StartDoc(prt_dlg.hDC, &di);
 
     return (ret > 0);
 }
@@ -1339,29 +1393,24 @@ mch_print_begin(prt_settings_T *psettings)
     void
 mch_print_end(void)
 {
-    EndDoc(s_pd.hDC) ;
-}
-
-    void
-mch_print_abort(void)
-{
-#ifdef WIN16
-    Escape(s_pd.hDC, ABORTDOC, NULL, NULL, NULL);
-#else
-    AbortDoc(s_pd.hDC);
-#endif
+    EndDoc(prt_dlg.hDC);
+    if (!*bUserAbort)
+    {
+          EnableWindow(prt_dlg.hwndOwner, TRUE);
+          DestroyWindow(hDlgPrint);
+    }
 }
 
     int
 mch_print_end_page(void)
 {
-    return (EndPage(s_pd.hDC) > 0);
+    return (EndPage(prt_dlg.hDC) > 0);
 }
 
     int
 mch_print_begin_page(void)
 {
-    return (StartPage(s_pd.hDC) > 0);
+    return (StartPage(prt_dlg.hDC) > 0);
 }
 
     int
@@ -1370,55 +1419,65 @@ mch_print_blank_page(void)
     return (mch_print_begin_page() ? (mch_print_end_page()) : FALSE);
 }
 
+static int prt_pos_x = 0;
+static int prt_pos_y = 0;
+
+    void
+mch_print_start_line(margin, page_line)
+    int		margin;
+    int		page_line;
+{
+    if (margin)
+	prt_pos_x = -prt_number_width;
+    else
+	prt_pos_x = 0;
+    prt_pos_y = page_line * prt_line_height;
+}
+
     int
-mch_print_text_out(int x, int y, char_u *p, int len, int *must_break)
+mch_print_text_out(char_u *p, int len)
 {
     SIZE	sz;
-    int		step;
 
-    TextOut (s_pd.hDC, x + s_left_margin, y + s_top_margin, p, len);
+    TextOut(prt_dlg.hDC, prt_pos_x + prt_left_margin,
+					  prt_pos_y + prt_top_margin, p, len);
 #ifdef WIN16
-    GetTextExtentPoint(s_pd.hDC, p, len , &sz);
+    GetTextExtentPoint(prt_dlg.hDC, p, len, &sz);
 #else
-    GetTextExtentPoint32(s_pd.hDC, p, len , &sz);
+    GetTextExtentPoint32(prt_dlg.hDC, p, len, &sz);
 #endif
-    step = (sz.cx - s_tm.tmOverhang);
+    prt_pos_x += (sz.cx - prt_tm.tmOverhang);
 #ifndef FEAT_PROPORTIONAL_FONTS
-    *must_break = ((x + s_left_margin + step + s_tm.tmAveCharWidth
-					     + s_tm.tmOverhang)
-			> s_right_margin);
+    return (prt_pos_x + prt_left_margin + prt_tm.tmAveCharWidth
+				     + prt_tm.tmOverhang > prt_right_margin);
 #else
-    if (*(p+len) == NUL)
-	*must_break = FALSE;
-    else
-    {
-#ifdef WIN16
-	GetTextExtentPoint(s_pd.hDC, p + len, 1 , &sz);
-#else
-	GetTextExtentPoint32(s_pd.hDC, p + len, 1 , &sz);
+    /* This is wrong when printing spaces for a TAB. */
+    if (p[len] == NUL)
+	return FALSE;
+# ifdef WIN16
+    GetTextExtentPoint(prt_dlg.hDC, p + len, 1, &sz);
+# else
+    GetTextExtentPoint32(prt_dlg.hDC, p + len, 1, &sz);
+# endif
+    return (prt_pos_x + prt_left_margin + sz.cx > prt_right_margin);
 #endif
-	*must_break = ((x + s_left_margin + step + sz.cx)
-			> s_right_margin);
-    }
-#endif
-    return step;
 }
 
     void
 mch_print_setfont(int iBold, int iItalic, int iUnderline)
 {
-    SelectObject(s_pd.hDC , prt_font_handles[iBold][iItalic][iUnderline]);
+    SelectObject(prt_dlg.hDC, prt_font_handles[iBold][iItalic][iUnderline]);
 }
 
     void
 mch_print_set_bg(unsigned long bgcol)
 {
-    SetBkColor(s_pd.hDC, swap_me(bgcol));
+    SetBkColor(prt_dlg.hDC, swap_me(bgcol));
 }
     void
 mch_print_set_fg(unsigned long fgcol)
 {
-    SetTextColor(s_pd.hDC, GetNearestColor(s_pd.hDC, swap_me(fgcol)));
+    SetTextColor(prt_dlg.hDC, GetNearestColor(prt_dlg.hDC, swap_me(fgcol)));
 }
 
 #endif /*FEAT_PRINTER*/

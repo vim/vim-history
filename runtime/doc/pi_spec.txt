@@ -1,4 +1,4 @@
-*pi_spec.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 06
+*pi_spec.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 30
 
 by Gustavo Niemeyer ~
 
@@ -64,7 +64,7 @@ this: >
 	let spec_chglog_format = "%a %b %d %Y My Name <my@email.com>"
 
 Note that "%a %b %d %Y" is the most used time format. If you don't provide
-a format string, when you run the |SpecChangelog| command for the first
+a format string, when you run the SpecChangelog command for the first
 time, it will ask you an email address and build the |spec_chglog_format|
 variable for you. This way, you will only need to provide your email
 address once.

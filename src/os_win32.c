@@ -2019,27 +2019,34 @@ fname_case(
 	return;
 
     STRNCPY(szTrueName, name, _MAX_PATH);
-    szTrueName[_MAX_PATH] = '\0';   /* ensure it's sealed off! */
-    STRCAT(szTrueName, pseps);	/* sentinel */
+    szTrueName[_MAX_PATH] = NUL;   /* ensure it's sealed off! */
 
     slash_adjust(szTrueName);
 
-    psz = pszPrev = szTrueName;
+    psz = szTrueName;
 
     /* Skip leading \\ in UNC name or drive letter */
     if (len > 2 && ((psz[0] == psepc && psz[1] == psepc)
 				       || (isalpha(psz[0]) && psz[1] == ':')))
-    {
-	psz = pszPrev = szTrueName + 2;
-    }
+	psz = szTrueName + 2;
 
     while (*psz != NUL)
     {
 	WIN32_FIND_DATA	fb;
 	HANDLE		hFind;
+	int		c;
 
-	while (*psz != psepc)
-	    psz++;
+	pszPrev = psz;
+	while (*psz != NUL && (*psz != psepc || psz == pszPrev))
+	{
+#ifdef FEAT_MBYTE
+	    if (enc_dbcs)
+		psz += (*mb_ptr2len_check)(psz);
+	    else
+#endif
+		psz++;
+	}
+	c = *psz;
 	*psz = NUL;
 
 	if ((hFind = FindFirstFile(szTrueName, &fb)) != INVALID_HANDLE_VALUE)
@@ -2062,11 +2069,10 @@ fname_case(
 	    FindClose(hFind);
 	}
 
-	*psz++ = psepc;
-	pszPrev = psz;
+	if (c == NUL)
+	    break;
+	*psz++ = c;
     }
-
-    *--psz = NUL;   /* remove sentinel */
 
     STRCPY(name, szTrueName);
 }
@@ -2865,7 +2871,7 @@ mch_call_shell(
 		    /* Use vimrun to execute the command.  It opens a console
 		     * window, which can be closed without killing Vim. */
 		    sprintf((char *)newcmd, "%s%s%s %s %s",
-			    vimrun_path, msg_silent ? "-s " : "",
+			    vimrun_path, msg_silent != 0 ? "-s " : "",
 			    p_sh, p_shcf, cmd);
 		else
 #endif

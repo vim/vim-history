@@ -246,14 +246,14 @@ npipe > 2 && nstar > 2 {
 	for ( j=1; j <= nstar ; j=j+2 ) {
 		npipe = split(s[j],p,"YXXY");
 		if ( npipe > 1 ) {
-		this=p[1];
-		put_this();
-		i=2;find_tag1();
-		this=p[3];
-		put_this();
+			for ( np=1; np<=npipe; np=np+2 ) {
+				this=p[np];
+				put_this();
+				i=np+1;find_tag1();
+			}
 		} else {
-		this=s[j];
-		put_this();
+			this=s[j];
+			put_this();
 		}
 		jj=j+1;
 		nbla = split(s[jj],blata," ");

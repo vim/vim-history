@@ -990,7 +990,7 @@ do_shell(cmd, flags)
 #ifdef FEAT_AUTOCMD
 		&& !autocmd_busy
 #endif
-		&& !msg_silent)
+		&& msg_silent == 0)
 	for (buf = firstbuf; buf; buf = buf->b_next)
 	    if (bufIsChanged(buf))
 	    {
@@ -1027,7 +1027,7 @@ do_shell(cmd, flags)
 #ifdef FEAT_AUTOCMD
     if (autocmd_busy)
     {
-	if (!msg_silent)
+	if (msg_silent == 0)
 	    redraw_later_clear();
     }
     else
@@ -1046,7 +1046,7 @@ do_shell(cmd, flags)
 # endif
 	   )
 	{
-	    if (!msg_silent)
+	    if (msg_silent == 0)
 		redraw_later_clear();
 	    need_wait_return = FALSE;
 	}
@@ -1060,9 +1060,9 @@ do_shell(cmd, flags)
 	    if (swapping_screen())
 		no_wait_return = FALSE;
 # ifdef AMIGA
-	    wait_return(term_console ? -1 : !msg_silent);	/* see below */
+	    wait_return(term_console ? -1 : msg_silent == 0);	/* see below */
 # else
-	    wait_return(!msg_silent);
+	    wait_return(msg_silent == 0);
 # endif
 	    no_wait_return = save_nwr;
 	}
@@ -1083,13 +1083,13 @@ do_shell(cmd, flags)
 #ifdef AMIGA
 	if (skip_redraw)		/* ':' hit in wait_return() */
 	{
-	    if (!msg_silent)
+	    if (msg_silent == 0)
 		redraw_later_clear();
 	}
 	else if (term_console)
 	{
 	    OUT_STR(IF_EB("\033[0 q", ESC_STR "[0 q"));	/* get window size */
-	    if (got_int && !msg_silent)
+	    if (got_int && msg_silent == 0)
 		redraw_later_clear();	/* if got_int is TRUE, redraw needed */
 	    else
 		must_redraw = 0;	/* no extra redraw needed */

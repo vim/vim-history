@@ -11,7 +11,12 @@
 
 /* use fastcall for Borland, when compiling for Win32 (not for DOS16) */
 #if defined(__BORLANDC__) && defined(WIN32) && !defined(DEBUG)
-# if defined(FEAT_PERL) || defined(FEAT_PYTHON) || defined(FEAT_RUBY) || defined(FEAT_TCL)
+#if defined(FEAT_PERL) || \
+    defined(FEAT_PYTHON) || \
+    defined(FEAT_RUBY) || \
+    defined(FEAT_TCL) || \
+    defined(DYNAMIC_GETTEXT) || \
+    defined(DYNAMIC_IME)
 #  pragma option -pc
 # else
 #  pragma option -pr
@@ -31,6 +36,14 @@
  */
 # if (SIZEOF_INT == 0)
     Error: configure did not run properly.  Check auto/config.log.
+# endif
+
+/*
+ * Cygwin may have fchdir() in a newer rleease, but in most versions it
+ * doesn't work well and avoiding it keeps the binary backward compatible.
+ */
+# if defined(__CYGWIN32__) && defined(HAVE_FCHDIR)
+#  undef HAVE_FCHDIR
 # endif
 #endif
 
@@ -99,6 +112,7 @@
 #   define SIZEOF_INT 4		/* 32 bit ints */
 #  endif
 #  define DOS32
+#  define FEAT_CLIPBOARD
 # else
 #  ifndef FEAT_GUI_GTK		/* avoid problems when generating prototypes */
 #   define SIZEOF_INT 2		/* 16 bit ints */
@@ -217,7 +231,7 @@
 # include "os_mint.h"
 #endif
 
-#if defined(MACOS) || (defined(__APPLE__) && defined(FEAT_GUI))
+#if defined(MACOS)
 # if defined(__MRC__) || defined(__SC__) /* MPW Compilers */
 #  define HAVE_SETENV
 # endif

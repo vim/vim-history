@@ -1786,6 +1786,7 @@ qf_fill_buffer()
      * resembles reading a file into a buffer, it's more logical when using
      * autocommands. */
     set_option_value((char_u *)"ft", 0L, (char_u *)"qf", OPT_LOCAL);
+    curbuf->b_p_ma = FALSE;
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFREADPOST, (char_u *)"quickfix", NULL,

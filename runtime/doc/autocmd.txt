@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
+*autocmd.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -435,7 +435,7 @@ GUIEnter			After starting the GUI successfully, and after
 				opening the window.  It is triggered before
 				VimEnter when using gvim.  Can be used to
 				position the window from a .gvimrc file: >
-	:autocommand GUIEnter * winpos 100 50
+	:autocmd GUIEnter * winpos 100 50
 <							*VimEnter*
 VimEnter			After doing all the startup stuff, including
 				loading .vimrc files, executing the "-c cmd"

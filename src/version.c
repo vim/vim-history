@@ -94,6 +94,11 @@ static char *(features[]) =
 #else
 	"-cindent",
 #endif
+#ifdef FEAT_CLIPBOARD
+	"+clipboard",
+#else
+	"-clipboard",
+#endif
 #ifdef FEAT_CMDL_COMPL
 	"+cmdline_compl",
 #else
@@ -182,11 +187,6 @@ static char *(features[]) =
 #else
 	"-file_in_path",
 #endif
-#ifdef FEAT_OSFILETYPE
-	"+osfiletype",
-#else
-	"-osfiletype",
-#endif
 #ifdef FEAT_FIND_ID
 	"+find_in_path",
 #else
@@ -215,6 +215,11 @@ static char *(features[]) =
 	"+hangul_input",
 #else
 	"-hangul_input",
+#endif
+#if defined(HAVE_ICONV_H) && defined(USE_ICONV)
+	"+iconv",
+#else
+	"-iconv",
 #endif
 #ifdef FEAT_INS_EXPAND
 	"+insert_expand",
@@ -345,6 +350,11 @@ static char *(features[]) =
 # else
 	"-ole",
 # endif
+#endif
+#ifdef FEAT_OSFILETYPE
+	"+osfiletype",
+#else
+	"-osfiletype",
 #endif
 #ifdef FEAT_PATH_EXTRA
 	"+path_extra",
@@ -612,7 +622,8 @@ list_version()
     MSG(longVersion);
 #ifdef WIN3264
 # ifdef FEAT_GUI_W32
-#  if (_MSC_VER <= 1010)    /* Only MS VC 4.1 and earlier can do Win32s */
+#  if defined(_MSC_VER) && (_MSC_VER <= 1010)
+    /* Only MS VC 4.1 and earlier can do Win32s */
     MSG_PUTS(_("\nMS-Windows 16/32 bit GUI version"));
 #  else
     MSG_PUTS(_("\nMS-Windows 32 bit GUI version"));
@@ -956,7 +967,10 @@ intro_message(colon)
 	}
 #endif
     }
-    msg_row = row;
+
+    /* Make the wait-return message appear just below the text. */
+    if (colon)
+	msg_row = row;
 }
 
     static void

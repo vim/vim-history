@@ -556,8 +556,14 @@ struct builtin_term builtin_termcaps[] =
     {(int)KS_DL,	"\033|M"},
 #  ifdef TERMINFO
     {(int)KS_CS,	"\033|%i%p1%d;%p2%dr"},
+#   ifdef FEAT_VERTSPLIT
+    {(int)KS_CSV,	"\033|%i%p1%d;%p2%dV"},
+#   endif
 #  else
     {(int)KS_CS,	"\033|%i%d;%dr"},
+#   ifdef FEAT_VERTSPLIT
+    {(int)KS_CSV,	"\033|%i%d;%dV"},
+#   endif
 #  endif
     {(int)KS_CL,	"\033|J"},
     {(int)KS_ME,	"\033|0m"},	/* normal */
@@ -4532,7 +4538,7 @@ check_termcode(max_offset, buf, buflen)
 		del_typebuf(-extra, offset);
 	    else if (extra > 0)
 		/* insert the extra space we need */
-		ins_typebuf(string + slen, REMAP_YES, offset, FALSE);
+		ins_typebuf(string + slen, REMAP_YES, offset, FALSE, FALSE);
 
 	    /*
 	     * Careful: del_typebuf() and ins_typebuf() may have reallocated

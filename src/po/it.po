@@ -1701,8 +1701,8 @@ msgstr ""
 "&Carica File"
 
 #: fileio.c:5081
-msgid "E321: Could not reload \"\""
-msgstr "E321: Non riesco a ri-caricare \"\""
+msgid "E321: Could not reload \"%s\""
+msgstr "E321: Non riesco a ri-caricare \"%s\""
 
 #: fileio.c:5809
 #, c-format
@@ -3588,7 +3588,7 @@ msgid ""
 "    to recover the changes (see \":help recovery\").\n"
 msgstr ""
 "\"\n"
-"    per recuperare modifiche fatte (vedi \":help recovery)\".\n"
+"    per recuperare modifiche fatte (vedi \":help recovery\").\n"
 
 #: memline.c:3660
 msgid "    If you did this already, delete the swap file \""

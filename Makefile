@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ap
+MINOR = 0aq
 
 # CHECKLIST for creating a new version:
 #
@@ -428,14 +428,19 @@ SRC_DOS =	\
 
 # source files for DOS without CR/LF translation (also in the extra archive)
 SRC_DOS_BIN =	\
+		OleVim/OleVim.mak \
 		OleVim/OpenWithVim.bas \
+		OleVim/OpenWithVim.c \
 		OleVim/OpenWithVim.pyw \
 		OleVim/OpenWithVim.vbp \
 		OleVim/OpenWithVim.vbw \
 		OleVim/README.txt \
 		OleVim/SendToVim.bas \
+		OleVim/SendToVim.c \
 		OleVim/SendToVim.vbp \
 		OleVim/SendToVim.vbw \
+		OleVim/uvim.c \
+		OleVim/uvim.h \
 		VisVim/Commands.cpp \
 		VisVim/Commands.h \
 		VisVim/DSAddIn.cpp \

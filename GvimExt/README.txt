@@ -62,7 +62,7 @@ THE SOURCE CODE
 I have provided the source code here in hope that gvim users around world can
 further enhance this little dll.  I believe the only thing you need to change
 is gvimext.cpp file.  The important two functions you need to look at are
-QueryContextMenu and InvokeCommand.  You can modify righ-click menus in the
+QueryContextMenu and InvokeCommand.  You can modify right-click menus in the
 QueryContextMenu function and invoke gvim in the InvokeCommand function.  Note
 the selected files can be accessed from the DragQueryFile function.  I am not
 familiar with the invoking options for gvim.  I believe there are some

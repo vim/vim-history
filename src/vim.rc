@@ -22,6 +22,11 @@
 #endif
 #include "version.h"
 #include "gui_w32_rc.h"
+#ifdef __BORLANDC__
+# include <winresrc.h>
+#else
+# include <winres.h>
+#endif
 
 //
 // Icons
@@ -95,4 +100,15 @@ BEGIN
   BEGIN
 	VALUE "Translation", 0x409, 0x4E4
   END
+END
+
+/*
+ *  Printing Status Dialog (should only be used when FEAT_PRINTER is defined)
+ */
+PRINTDLGBOX DIALOG DISCARDABLE  20, 20, 186, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,67,42,50,14
+    CTEXT           "Cancel Printing",IDC_STATIC,7,21,172,8
 END

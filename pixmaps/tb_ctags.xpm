@@ -5,11 +5,11 @@ static char * tb_ctags_xpm[] = {
 /* colors */
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
-"X	s iconColor2	m white	c #FFFFFF",
+"X	s iconColor2	m none	c #FFFFFF",
 "o	s bottomShadowColor	m black	c #5D6069",
-"O	c #888800",
-"+	s topShadowColor	m white	c #DCDEE5",
-"@	s iconColor6	m white	c #FFFF00",
+"O	m black	c #888800",
+"+	s topShadowColor	m none	c #DCDEE5",
+"@	s iconColor6	m none	c #FFFF00",
 /* pixels */
 "     .. .....     ",
 "    .XX.XXXXX.    ",

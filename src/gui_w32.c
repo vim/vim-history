@@ -1044,7 +1044,8 @@ gui_mch_init(void)
     s_hwnd = CreateWindow(
 	szVimWndClass, "Vim MSWindows GUI",
 	WS_OVERLAPPEDWINDOW,
-	CW_USEDEFAULT, CW_USEDEFAULT,
+	gui_win_x == -1 ? CW_USEDEFAULT : gui_win_x,
+	gui_win_y == -1 ? CW_USEDEFAULT : gui_win_y,
 	100,				/* Any value will do */
 	100,				/* Any value will do */
 	NULL, NULL,
@@ -3381,15 +3382,9 @@ gui_mch_set_foreground(void)
     static void
 dyn_imm_load(void)
 {
-    OSVERSIONINFO ovi;
     int	nImmFunc = 0;
 
-    ovi.dwOSVersionInfoSize = sizeof(ovi);
-    GetVersionEx(&ovi);
-    if (ovi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) /* Windows 95 */
-	hLibImm = LoadLibrary("imm.dll");
-    else
-	hLibImm = LoadLibrary("imm32.dll");	    /* Windows NT */
+    hLibImm = LoadLibrary("imm32.dll");
     if (hLibImm == NULL)
 	return;
     if ((*((FARPROC*)&pImmGetCompositionString)

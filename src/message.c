@@ -140,7 +140,7 @@ msg_attr_keep(s, attr, keep)
 
     msg_start();
     msg_outtrans_attr(s, attr);
-    if (!msg_silent)
+    if (msg_silent == 0)
 	msg_clr_eos();
     retval = msg_end();
 
@@ -418,7 +418,7 @@ emsg(s)
 
 	/* Reset msg_silent, an error causes messages to be switched back on. */
 	msg_silent = 0;
-	cmd_silent = 0;
+	cmd_silent = FALSE;
 
 	if (global_busy)		/* break :global command */
 	    ++global_busy;
@@ -709,7 +709,7 @@ wait_return(redraw)
 
     /* If using ":silent cmd", don't wait for a return.  Also don't set
      * need_wait_return to do it later. */
-    if (msg_silent)
+    if (msg_silent != 0)
 	return;
 
 /*
@@ -775,7 +775,7 @@ wait_return(redraw)
 		c = K_IGNORE;
 	    }
 #endif
-	} while (c == Ctrl_C || c == K_IGNORE || c == K_SILENT
+	} while (c == Ctrl_C || c == K_IGNORE
 #ifdef FEAT_GUI
 				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
 #endif
@@ -893,7 +893,7 @@ set_keep_msg(s)
     char_u	*s;
 {
     vim_free(keep_msg);
-    if (s != NULL && !msg_silent)
+    if (s != NULL && msg_silent == 0)
 	keep_msg = vim_strsave(s);
     else
 	keep_msg = NULL;
@@ -1494,7 +1494,7 @@ msg_puts_attr(s, attr)
     /*
      * Don't print anything when using ":silent cmd".
      */
-    if (msg_silent)
+    if (msg_silent != 0)
 	return;
 
     /* if MSG_HIST flag set, add message to history */
@@ -1651,7 +1651,8 @@ msg_puts_attr(s, attr)
 			c = *current_menu->strings[idx];
 			if (c != NUL && current_menu->strings[idx][1] != NUL)
 			    ins_typebuf(current_menu->strings[idx] + 1,
-				    current_menu->noremap[idx], 0, TRUE);
+				    current_menu->noremap[idx], 0, TRUE,
+				    current_menu->silent[idx]);
 		    }
 #endif
 
@@ -2120,7 +2121,7 @@ give_warning(message, hl)
     int	    hl;
 {
     /* Don't do this for ":silent". */
-    if (msg_silent)
+    if (msg_silent != 0)
 	return;
 
 #ifdef FEAT_EVAL
@@ -2150,7 +2151,7 @@ give_warning(message, hl)
 msg_advance(col)
     int	    col;
 {
-    if (msg_silent)		/* nothing to advance to */
+    if (msg_silent != 0)	/* nothing to advance to */
     {
 	msg_putchar(' ');	/* insert something for redirection */
 	return;

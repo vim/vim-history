@@ -961,12 +961,6 @@ doESCkey:
 	case K_IGNORE:
 	    break;
 
-	/* end of silent menu entry */
-	case K_SILENT:
-	    if (cmd_silent > 0)
-		--cmd_silent;
-	    break;
-
 #ifdef FEAT_GUI
 	case K_VER_SCROLLBAR:
 	    ins_scroll();
@@ -3490,7 +3484,7 @@ get_literal()
     {
 	do
 	    nc = safe_vgetc();
-	while (nc == K_IGNORE || nc == K_SILENT || nc == K_VER_SCROLLBAR
+	while (nc == K_IGNORE || nc == K_VER_SCROLLBAR
 						    || nc == K_HOR_SCROLLBAR);
 #ifdef FEAT_CMDL_INFO
 	if (!(State & CMDLINE)

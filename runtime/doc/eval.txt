@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 29
+*eval.txt*      For Vim version 6.0aq.  Last change: 2001 Aug 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -800,14 +800,14 @@ resolve( {filename})		String  get filename a shortcut points to
 search( {pattern} [, {flags}])	Number  search for {pattern}
 searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
 				Number  search for other end of start/end pair
-serversend( {server}, {string} [, {type} [, {idvar}]])
-				String	send key sequence or expression
 servernames()			String	get a list of available servers
 serverreply_peek( {serverid} [, {retvar}])
 				Number	check for reply string
 serverreply_read( {serverid})	String	read reply string
 serverreply_send( {serverid}, {string})
 				Number	send reply string
+serversend( {server}, {string} [, {type} [, {idvar}]])
+				String	send key sequence or expression
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -1944,33 +1944,8 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 
 	:echo searchpair('{', '', '}', 'bW',
 	     \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"')
-
-serversend({server}, {string} [, {eval} [, {idvar}]])  *serversend()*
-		Send the {string} to {server}.
-		If {eval} is present and non-zero, the string is sent as an
-		expression and the result is returned after evaluation.
-		Otherwise the string is sent as input keys and the function
-		returns immediately.
-		If {idvar} is present, it is taken as the name of a variable
-		and a {serverid} for later use with serverreply_read() is
-		stored there.
-		See also |x11-command-server| |ServerReplyRecv|.
-		Note: Any errors will be reported in the server and may mess
-		up the display.
-		Examples: >
-		:echo serversend("gvim", "2+2", 1)
-		:echo serversend("gvim-001", "b:current_syntax", 1)
-
-		:echo serversend("gvim", ":DropAndReply ".file, 0, "serverid").
-		 \ serverreply_read(serverid)
-
-		:autocmd NONE ServerReplyRecv *
-		 \ echo serverreply_read(expand("<amatch>"))
-		:echo serversend("gvim", ":sleep 10 | echo ".
-		 \ 'serverreply_send(expand("<client>"), "HELLO")<CR>')
-
-
-servernames()						*servernames()*
+<
+servernames()					*servernames()* *E240*
 		Return a list of available servernames. One per line.
 		See also |x11-command-server|.
 		Examples: >
@@ -2004,6 +1979,32 @@ serverreply_send( {clientid}, {string})			*serverreply_send()*
 		See also |x11-command-server|.
 		Examples: >
 		:echo serverreply_send(expand("<client>"), "HELLO")
+<
+							*serversend()* *E241*
+serversend({server}, {string} [, {eval} [, {idvar}]]) 
+		Send the {string} to {server}.
+		If {eval} is present and non-zero, the string is sent as an
+		expression and the result is returned after evaluation.
+		Otherwise the string is sent as input keys and the function
+		returns immediately.
+		If {idvar} is present, it is taken as the name of a variable
+		and a {serverid} for later use with serverreply_read() is
+		stored there.
+		See also |x11-command-server| |ServerReplyRecv|.
+		Note: Any errors will be reported in the server and may mess
+		up the display.
+		Examples: >
+		:echo serversend("gvim", "2+2", 1)
+		:echo serversend("gvim-001", "b:current_syntax", 1)
+
+		:echo serversend("gvim", ":DropAndReply ".file, 0, "serverid").
+		 \ serverreply_read(serverid)
+
+		:autocmd NONE ServerReplyRecv *
+		 \ echo serverreply_read(expand("<amatch>"))
+		:echo serversend("gvim", ":sleep 10 | echo ".
+		 \ 'serverreply_send(expand("<client>"), "HELLO")<CR>')
+
 
 setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Set option or local variable {varname} in buffer {expr} to
@@ -2396,6 +2397,7 @@ python			Compiled with Python interface.
 qnx			QNX version of vim.
 quickfix		Compiled with |quickfix| support.
 rightleft		Compiled with 'rightleft' support.
+ruby			Compiled with Ruby interface |ruby|.
 scrollbind		Compiled with 'scrollbind' support.
 showcmd			Compiled with 'showcmd' support.
 signs			Compiled with |:sign| support.

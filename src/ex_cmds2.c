@@ -2391,9 +2391,6 @@ ex_checktime(eap)
  * void mch_print_end()
  * Called at end of print job
  *
- * mch_print_abort(void)
- * Called to abort the doc on user interrupt.
- *
  * void mch_print_cleanup()
  * Called if print job is abandoned. Free any memory, close devices and
  * handles.
@@ -2409,16 +2406,16 @@ ex_checktime(eap)
  * Called whenever the foreground color changes. Parameter is an RGB
  * value.
  *
- * int mch_print_text_out(int x, int y, char_u *p, int len, int *must_break);
- * Output text 'p' of 'len' characters at position x,y in device units.
- * set 'must_break' to TRUE if there is not room for another character after
- * the string printed. Return the width of the string 'p' printed in device
- * units.
- * x = 0 is the left margin.
+ * mch_print_start_line(int margin, int page_line)
+ * Sets the current position at the start of line "page_line".
+ * If margin is TRUE start in the left margin (for header and line number).
+ *
+ * int mch_print_text_out(char_u *p, int len);
+ * Output text p[len] at the current position.
+ * Return TRUE if there is no room for another character in the same line.
  *
  * Note that the generic code has no idea of margins. The machine code should
  * simply make the page look smaller!
- *
  */
 
 #ifdef FEAT_SYN_HL
@@ -2443,14 +2440,14 @@ static int		curr_underline;
 # endif
 static unsigned long	current_bg;
 static unsigned long	current_fg;
-static int		current_id;
+static int		current_syn_id;
 #endif
 static int		page_count;
 
 static unsigned long darken_rgb __ARGS((unsigned long rgb));
 static unsigned long prt_get_term_color __ARGS((int colorindex));
-static void ex_print_number __ARGS((int offset, int y_pos, linenr_T lnum, int format, int wrapped));
-static void ex_print_header __ARGS((int offset, int width, int pagenum, linenr_T lnum, int format));
+static void prt_print_number __ARGS((int page_line, linenr_T lnum, int colors));
+static void print_header __ARGS((prt_settings_T *psettings, int pagenum, linenr_T lnum, int colors));
 
 /*
  * If using a dark background, the colors will probably be too bright to show
@@ -2475,28 +2472,21 @@ prt_get_term_color(colorindex)
     return cterm_color_8[colorindex % 8];
 }
 
+/*
+ * Print the line number in the left margin.
+ */
     static void
-ex_print_number(offset, y_pos, lnum, format, wrapped)
-    int		offset;
-    int		y_pos;
+prt_print_number(page_line, lnum, colors)
+    int		page_line;
     linenr_T	lnum;
-    int		format;
-    int		wrapped;
+    int		colors;
 {
-    /*
-     * A simple header for demos
-     */
-    int	x_pos = 0 - (offset);
-    char_u tbuf[8];
-    int needbreak;
+    char_u	tbuf[20];
 
-    if (!wrapped)
-	sprintf((char *)tbuf, "%6ld", (long)lnum);
-    else
-	STRCPY(tbuf, "      ");
+    sprintf((char *)tbuf, "%6ld", (long)lnum);
 
 #ifdef FEAT_SYN_HL
-    if (format)
+    if (colors)
     {
 	current_fg = 0x808080UL;
 	current_bg = 0xFFFFFFUL;
@@ -2509,117 +2499,115 @@ ex_print_number(offset, y_pos, lnum, format, wrapped)
 	curr_bold = FALSE;
 	mch_print_setfont(FALSE, TRUE, FALSE);
 # endif
-	current_id = -1;
+	current_syn_id = -1;
     }
 #endif /*FEAT_SYN_HL*/
 
-    x_pos += mch_print_text_out(x_pos, y_pos,
-	    tbuf,
-	    6,
-	    &needbreak);
+    mch_print_start_line(TRUE, page_line);
+    (void)mch_print_text_out(tbuf, 6);
 }
+
+static linenr_T printer_page_num;
 
     int
 get_printer_page_num()
 {
-    return page_count + 1;
+    return printer_page_num;
 }
 
+/*
+ * Print the page header.
+ */
 /*ARGSUSED*/
     static void
-ex_print_header(offset, width, pagenum, lnum, format)
-    int		offset;
-    int		width;
+print_header(psettings, pagenum, lnum, colors)
+    prt_settings_T  *psettings;
     int		pagenum;
     linenr_T	lnum;
-    int		format;
+    int		colors;
 {
-    /*
-     * A simple header for demos
-     */
-    int		needbreak;
-    int		x_pos = 0;
-    int		y_pos = 0 - (offset
-			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+    int		width = psettings->chars_per_line;
+    int		page_line;
     char_u	*tbuf;
     char_u	*p;
-#ifdef FEAT_STL_OPT
-    linenr_T	tmp_lnum, tmp_topline, tmp_botline;
-#endif
 #ifdef FEAT_MBYTE
     int		l;
 #endif
 
-    p = tbuf = alloc(width + 1);
+    /* Also use the space for the line number. */
+    if (printer_opts[OPT_PRINT_NUMBER].present)
+	width += 8;
 
-    if (p == NULL)
+    tbuf = alloc(width + 1);
+    if (tbuf == NULL)
 	return;
 
 #ifdef FEAT_STL_OPT
-    /*
-     * Need to (temporarily) set current line number and first/last line
-     * number on the 'window'.  Since we don't know how long the page is, set
-     * the first and current line number to the top line, and guess that the
-     * page length is 64.
-     */
-    tmp_lnum = curwin->w_cursor.lnum;
-    tmp_topline = curwin->w_topline;
-    tmp_botline = curwin->w_botline;
-    curwin->w_cursor.lnum = lnum;
-    curwin->w_topline = lnum;
-    curwin->w_botline = lnum + 63;
+    if (*p_headerfmt != NUL)
+    {
+	linenr_T	tmp_lnum, tmp_topline, tmp_botline;
 
-    build_stl_str_hl(curwin, p, p_headerfmt, ' ', width, NULL);
+	/*
+	 * Need to (temporarily) set current line number and first/last line
+	 * number on the 'window'.  Since we don't know how long the page is,
+	 * set the first and current line number to the top line, and guess
+	 * that the page length is 64.
+	 */
+	tmp_lnum = curwin->w_cursor.lnum;
+	tmp_topline = curwin->w_topline;
+	tmp_botline = curwin->w_botline;
+	curwin->w_cursor.lnum = lnum;
+	curwin->w_topline = lnum;
+	curwin->w_botline = lnum + 63;
+	printer_page_num = pagenum;
 
-    /* Reset line numbers */
-    curwin->w_cursor.lnum = tmp_lnum;
-    curwin->w_topline = tmp_topline;
-    curwin->w_botline = tmp_botline;
-#else
-    sprintf((char *)tbuf, "Page %d", pagenum);
+	build_stl_str_hl(curwin, tbuf, p_headerfmt, ' ', width, NULL);
+
+	/* Reset line numbers */
+	curwin->w_cursor.lnum = tmp_lnum;
+	curwin->w_topline = tmp_topline;
+	curwin->w_botline = tmp_botline;
+    }
+    else
 #endif
+	sprintf((char *)tbuf, "Page %d", pagenum);
 
 
 #ifdef FEAT_SYN_HL
-    if (format)
+    if (colors)
     {
 	current_fg = 0;
 	current_bg = 0xFFFFFFUL;
 	mch_print_set_fg(current_fg);
 	mch_print_set_bg(current_bg);
 
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
 	curr_underline = FALSE;
 	curr_italic = FALSE;
 	curr_bold = TRUE;
 	mch_print_setfont(TRUE, FALSE, FALSE);
-#endif
-	current_id = -1;
+# endif
+	current_syn_id = -1;
     }
-#endif /*FEAT_SYN_HL*/
-
-    /*
-     * We can print to a -ve offset since the top margin
-     * has been moved down 2 lines from the printable area
-     * extent
-     */
-    while (*p != NUL)
-    {
-	x_pos += mch_print_text_out(x_pos, y_pos,
-		p,
-#ifdef FEAT_MBYTE
-		(l = (*mb_ptr2len_check)(p)),
-#else
-		1,
 #endif
-		&needbreak);
-	if (needbreak)
-	{
-	    y_pos += offset;
-	    x_pos = 0;
 
-	    if (y_pos >= 0) /* out of room in header */
+    /* Use a negative line number to indicate printing in the top margin. */
+    page_line = 0 - printer_opts[OPT_PRINT_HEADERHEIGHT].number;
+    mch_print_start_line(TRUE, page_line);
+    for (p = tbuf; *p != NUL; )
+    {
+	if (mch_print_text_out(p,
+#ifdef FEAT_MBYTE
+		(l = (*mb_ptr2len_check)(p))
+#else
+		1
+#endif
+		    ))
+	{
+	    ++page_line;
+	    if (page_line >= 0) /* out of room in header */
 		break;
+	    mch_print_start_line(TRUE, page_line);
 	}
 #ifdef FEAT_MBYTE
 	p += l;
@@ -2631,7 +2619,7 @@ ex_print_header(offset, width, pagenum, lnum, format)
     vim_free(tbuf);
 }
 
-static colnr_T hardcopy_line __ARGS((colnr_T column, linenr_T file_line, int page_line, int mono, prt_settings_T *settingsp, int *lead_spaces, int wrapped));
+static colnr_T hardcopy_line __ARGS((colnr_T start_col, linenr_T file_line, int page_line, int mono, int *lead_spaces, int wrapped));
 
     void
 ex_hardcopy(eap)
@@ -2658,6 +2646,7 @@ ex_hardcopy(eap)
      * if applicable. (It may not be a real printer - for example
      * the engine might generate HTML or PS.)
      */
+    memset(&settings, 0, sizeof(prt_settings_T));
     if (!mch_print_init(&settings,
 			curbuf->b_fname == NULL
 			    ? (char_u *)buf_spname(curbuf)
@@ -2675,7 +2664,7 @@ ex_hardcopy(eap)
     if (bytes_to_print == 0)
     {
 	MSG(_("No text to be printed"));
-	return;
+	goto print_fail_no_begin;
     }
 
 #ifdef FEAT_SYN_HL
@@ -2686,7 +2675,7 @@ ex_hardcopy(eap)
 # endif
     current_bg = 0xffffffffUL;
     current_fg = 0xffffffffUL;
-    current_id = -1;
+    current_syn_id = -1;
 #endif
 
     if (!mch_print_begin(&settings))
@@ -2741,12 +2730,8 @@ ex_hardcopy(eap)
 
 		    /* Check for interrupt character every page. */
 		    ui_breakcheck();
-		    if (got_int)
-		    {
-			mch_print_abort();
-			return;
-		    }
-		    if (!mch_print_begin_page())
+		    if (got_int || settings.user_abort
+						   || !mch_print_begin_page())
 			goto print_fail;
 
 		    sprintf((char *)IObuff, _("Printing page %d (%d%%)"),
@@ -2766,18 +2751,14 @@ ex_hardcopy(eap)
 		     * Output header if required
 		     */
 		    if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-			ex_print_header(settings.line_height,
-				settings.chars_per_line,
-				page_count + 1 + side,
-				file_line,
-				!mono);
+			print_header(&settings, page_count + 1 + side,
+							    file_line, !mono);
 
-		    for (page_line = 0 ; page_line < settings.lines_per_page;
+		    for (page_line = 0; page_line < settings.lines_per_page;
 								  ++page_line)
 		    {
 			column = hardcopy_line(column, file_line, page_line,
-				mono, &settings, &lead_spaces,
-				wrapped);
+						 mono, &lead_spaces, wrapped);
 			if (column == 0)
 			{
 			    /* finished a file line */
@@ -2793,6 +2774,8 @@ ex_hardcopy(eap)
 
 		    if (!mch_print_end_page())
 			goto print_fail;
+		    if (file_line > eap->line2)
+			break; /* reached the end */
 		}
 
 		/*
@@ -2831,18 +2814,16 @@ print_fail_no_begin:
  * Return the next column to print, or zero if the line is finished.
  */
     static colnr_T
-hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrapped)
-    colnr_T		column;
+hardcopy_line(start_col, file_line, page_line, mono, lead_spaces, wrapped)
+    colnr_T		start_col;
     linenr_T		file_line;
     int			page_line;
     int			mono;
-    prt_settings_T	*settingsp;
     int			*lead_spaces;
     int			wrapped;
 {
-    char_u		*p;
-    char_u		*start_line;
-    int			x_position = 0;
+    colnr_T		col;
+    char_u		*line;
     int			need_break = FALSE;
     int			outputlen;
     int			colorindex;
@@ -2855,10 +2836,8 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
     char		modec = NUL;
 #endif
 
-    start_line = p = ml_get(file_line);
-    p += column;
     print_pos = 0;
-    if (column == 0)
+    if (start_col == 0)
 	tab_spaces = 0;
     else
 	tab_spaces = *lead_spaces;   /* left over from wrap halfway a tab */
@@ -2875,21 +2854,20 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
     }
 #endif
 
-    if (printer_opts[OPT_PRINT_NUMBER].present)
-	ex_print_number(settingsp->number_width,
-			settingsp->line_height * page_line,
-			file_line,
-			!mono,
-			wrapped);
+    if (printer_opts[OPT_PRINT_NUMBER].present && !wrapped)
+	prt_print_number(page_line, file_line, !mono);
+
+    mch_print_start_line(0, page_line);
+    line = ml_get(file_line);
 
     /*
      * Loop over the columns until the end of the file line or right margin.
      */
-    for ( ; *p != NUL && !need_break; p++)
+    for (col = start_col; line[col] != NUL && !need_break; col += outputlen)
     {
 	outputlen = 1;
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (outputlen = (*mb_ptr2len_check)(p)) < 1)
+	if (has_mbyte && (outputlen = (*mb_ptr2len_check)(line + col)) < 1)
 	    outputlen = 1;
 #endif
 #ifdef FEAT_SYN_HL
@@ -2898,15 +2876,17 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
 	 */
 	if (!mono)
 	{
-	    id = syn_get_id(file_line, (long)(p - start_line), 1);
+	    id = syn_get_id(file_line, (long)col, 1);
 	    if (id > 0)
 		id = syn_get_final_id(id);
 	    else
 		id = 0;
+	    /* Get the line again, a multi-line regexp may invalidate it. */
+	    line = ml_get(file_line);
 
-	    if (id != current_id)
+	    if (id != current_syn_id)
 	    {
-		current_id = id;
+		current_syn_id = id;
 #ifdef	FEAT_GUI
 		if (gui.in_use)
 		{
@@ -2980,34 +2960,28 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
 	/*
 	 * Appropriately expand any tabs to spaces.
 	 */
-	if (*p == TAB || tab_spaces != 0)
+	if (line[col] == TAB || tab_spaces != 0)
 	{
 	    if (tab_spaces == 0)
 		tab_spaces = curbuf->b_p_ts - (print_pos % curbuf->b_p_ts);
 
 	    while (tab_spaces > 0)
 	    {
-		x_position += mch_print_text_out(x_position,
-			 settingsp->line_height * page_line,
-				    (char_u *)" ",
-				    1,
-				    &need_break);
+		need_break = mch_print_text_out((char_u *)" ", 1);
 		print_pos++;
 		tab_spaces--;
 		if (need_break)
 		    break;
 	    }
+	    /* Keep the TAB if we didn't finish it. */
+	    if (need_break && tab_spaces > 0)
+		break;
 	}
 	else
 	{
-	    x_position += mch_print_text_out(x_position,
-			    settingsp->line_height * page_line,
-			    p,
-			    outputlen,
-			    &need_break);
+	    need_break = mch_print_text_out(line + col, outputlen);
 	    print_pos++;
 	}
-	p += outputlen - 1;
     }
 
     *lead_spaces = tab_spaces;
@@ -3016,10 +2990,10 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
      * Start next line of file if we clip lines, or have reached end of the
      * line.
      */
-    if (*p == NUL || (printer_opts[OPT_PRINT_WRAP].present
+    if (line[col] == NUL || (printer_opts[OPT_PRINT_WRAP].present
 		&& printer_opts[OPT_PRINT_WRAP].string[0] == 'n'))
 	return 0;
-    return p - start_line;
+    return col;
 }
 
 # if defined(FEAT_POSTSCRIPT) || defined(PROTO)
@@ -3031,27 +3005,23 @@ hardcopy_line(column, file_line, page_line, mono, settingsp, lead_spaces, wrappe
 #define CHAR_HEIGHT_IN_POINTS	(12)
 #define CHAR_WIDTH_IN_POINTS	(7) /*<VN> */
 
-static FILE *s_ps_file;
+static FILE *prt_ps_file;
 
-static int s_left_margin;
-static int s_right_margin;
-static int s_top_margin;
+static int prt_left_margin;
+static int prt_right_margin;
+static int prt_top_margin;
+static int prt_line_height;
+static int prt_number_width;
 
     void
 mch_print_cleanup()
 {
-    if (s_ps_file != NULL)
-	fclose(s_ps_file);
-}
-
-    void
-mch_print_abort(void)
-{
-    mch_print_end();
+    if (prt_ps_file != NULL)
+	fclose(prt_ps_file);
 }
 
 static int to_device_units __ARGS((int idx, int dpi, int physsize, int offset));
-static int mch_print_get_cpl __ARGS((int *yChar_out, int *number_width_out));
+static int mch_print_get_cpl __ARGS((void));
 static int mch_print_get_lpp __ARGS((int yCharsize));
 
     static int
@@ -3077,18 +3047,15 @@ to_device_units(idx, dpi, physsize, offset)
 }
 
     static int
-mch_print_get_cpl(yChar_out, number_width_out)
-    int *yChar_out;
-    int *number_width_out;
+mch_print_get_cpl()
 {
-    int cpl;
     int hr;
     int phyw;
     int dvoff;
     int rev_offset;
     int dpi = 72;
 
-    *yChar_out = CHAR_HEIGHT_IN_POINTS;
+    prt_line_height = CHAR_HEIGHT_IN_POINTS;
 
     hr	    = 595;
     phyw    = 595;
@@ -3096,16 +3063,19 @@ mch_print_get_cpl(yChar_out, number_width_out)
 
     rev_offset = phyw - (dvoff + hr);
 
-    s_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
+    prt_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
     if (printer_opts[OPT_PRINT_NUMBER].present)
-		*number_width_out = 8 * CHAR_WIDTH_IN_POINTS;
+    {
+	prt_number_width = 8 * CHAR_WIDTH_IN_POINTS;
+	prt_left_margin += prt_number_width;
+    }
+    else
+	prt_number_width = 0;
 
-    s_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
+    prt_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
 								  rev_offset);
 
-    cpl	= (s_right_margin - s_left_margin) / CHAR_WIDTH_IN_POINTS;
-
-    return cpl;
+    return (prt_right_margin - prt_left_margin) / CHAR_WIDTH_IN_POINTS;
 }
 
 /*
@@ -3128,17 +3098,17 @@ mch_print_get_lpp(yCharsize)
     dpi	    = 72;
 
     rev_offset = phyw - (dvoff + vr);
-    s_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
+    prt_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
 
     /* adjust top margin if there is a header */
     if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-	s_top_margin += (yCharsize
+	prt_top_margin += (yCharsize
 			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
 
     bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
 
 
-    return (bottom_margin - s_top_margin) / yCharsize ;
+    return (bottom_margin - prt_top_margin) / yCharsize ;
 }
 
     int
@@ -3155,25 +3125,22 @@ mch_print_init(psettings, jobname, forceit)
 	s_pd.Flags |= PD_RETURNDEFAULT;
 #endif
 
-    s_ps_file = open_exfile((char_u *)"test.ps", forceit, WRITEBIN);
-    if (s_ps_file == NULL)
+    prt_ps_file = open_exfile((char_u *)"test.ps", forceit, WRITEBIN);
+    if (prt_ps_file == NULL)
     {
 	EMSG(_("E324: Can't open PostScript output file"));
 	mch_print_cleanup();
 	return FALSE;
     }
 
-    (void)put_line(s_ps_file, "%!");
-    (void)put_line(s_ps_file, "/Courier findfont");
-    (void)put_line(s_ps_file, "12 scalefont");
-    (void)put_line(s_ps_file, "setfont");
+    (void)put_line(prt_ps_file, "%!PS");
+    (void)put_line(prt_ps_file, "/Courier 12 selectfont");
 
     /*
      * Fill in the settings struct
      */
-    psettings->chars_per_line = mch_print_get_cpl(&psettings->line_height,
-						    &psettings->number_width);
-    psettings->lines_per_page = mch_print_get_lpp(psettings->line_height);
+    psettings->chars_per_line = mch_print_get_cpl();
+    psettings->lines_per_page = mch_print_get_lpp(prt_line_height);
     psettings->n_collated_copies = 1;
     psettings->n_uncollated_copies = 1;
 
@@ -3193,13 +3160,13 @@ mch_print_begin(psettings)
     void
 mch_print_end()
 {
-    fclose(s_ps_file);
+    fclose(prt_ps_file);
 }
 
     int
 mch_print_end_page()
 {
-    (void)put_line(s_ps_file, "showpage");
+    (void)put_line(prt_ps_file, "showpage");
     return TRUE;
 }
 
@@ -3215,34 +3182,39 @@ mch_print_blank_page()
     return (mch_print_begin_page() ? (mch_print_end_page()) : FALSE);
 }
 
+static int prt_pos_x = 0;
+static int prt_pos_y = 0;
+
+    void
+mch_print_start_line(margin, page_line)
+    int		margin;
+    int		page_line;
+{
+    if (margin)
+	prt_pos_x = -prt_number_width;
+    else
+	prt_pos_x = 0;
+    prt_pos_y = page_line * prt_line_height;
+}
+
 /*ARGSUSED*/
     int
-mch_print_text_out(x, y, p, len, must_break)
-    int		x;
-    int		y;
+mch_print_text_out(p, len)
     char_u	*p;
     int		len;
-    int		*must_break;
 {
-    int		sz;
-
-    (void)fprintf(s_ps_file, "%d %d moveto\n",
-			    x + s_left_margin,
-			    842 - (y + s_top_margin));
+    (void)fprintf(prt_ps_file, "%d %d moveto\n",
+			    prt_pos_x + prt_left_margin,
+			    842 - (prt_pos_y + prt_top_margin));
 
     if (*p == '(' || *p == ')' || *p == '\\')
-	(void)fprintf(s_ps_file, "(\\%c) show\n", *p);
+	(void)fprintf(prt_ps_file, "(\\%c) show\n", *p);
     else
-	(void)fprintf(s_ps_file, "(%c) show\n", *p);
+	(void)fprintf(prt_ps_file, "(%c) show\n", *p);
 
-#ifndef FEAT_PROPORTIONAL_FONTS
-	sz = CHAR_WIDTH_IN_POINTS;
-#else
-	sz = CHAR_WIDTH_IN_POINTS;
-#endif
-    *must_break = ((x + s_left_margin + sz) > s_right_margin);
-
-    return sz;
+    prt_pos_x += CHAR_WIDTH_IN_POINTS;
+    return (prt_pos_x + prt_left_margin + CHAR_WIDTH_IN_POINTS
+							  > prt_right_margin);
 }
 
 #if defined(FEAT_GUI) || defined(PROTO)
@@ -3273,7 +3245,7 @@ mch_print_set_fg(fgcol)
     r = (fgcol & 0xff0000) >> 16;
     g = (fgcol & 0xff00) >> 8;
     b = fgcol & 0xff;
-    (void)fprintf(s_ps_file, "%d.%02d %d.%02d %d.%02d setrgbcolor\n",
+    (void)fprintf(prt_ps_file, "%d.%02d %d.%02d %d.%02d setrgbcolor\n",
 		  r / 255, (r * 100 + 127) / 255 % 100,
 		  g / 255, (g * 100 + 127) / 255 % 100,
 		  b / 255, (b * 100 + 127) / 255 % 100);

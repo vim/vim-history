@@ -21,11 +21,11 @@
 
 #include "vim.h"
 
-#if defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF)
-# include <Xm/XpmP.h>
+#ifdef HAVE_X11_XPM_H
+# include <X11/xpm.h>
 #else
-# ifdef HAVE_X11_XPM_H
-#  include <X11/xpm.h>
+# if defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF)
+#  include <Xm/XpmP.h>
 # endif
 #endif
 
@@ -100,7 +100,6 @@ static XFontSet current_fontset = NULL;
 
 static int check_fontset_sanity __ARGS((XFontSet fs));
 static int fontset_width __ARGS((XFontSet fs));
-static int fontset_height __ARGS((XFontSet fs));
 static int fontset_ascent __ARGS((XFontSet fs));
 #endif
 
@@ -373,26 +372,27 @@ static XtResource vim_resources[] =
 	XtRImmediate,
 	(XtPointer)MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
     },
+# ifdef FONTSET_ALWAYS
+    {
+	XtNmenuFontSet,
+	XtCMenuFontSet,
+	XtRFontSet,
+	sizeof(XFontSet),
+	XtOffsetOf(gui_T, menu_fontset),
+	XtRImmediate,
+	(XtPointer)NOFONTSET
+    },
+# else
     {
 	XtNmenuFont,
 	XtCMenuFont,
-	XtRFontStruct,
+	XtRFontSet,
 	sizeof(XFontStruct *),
 	XtOffsetOf(gui_T, menu_font),
 	XtRImmediate,
 	(XtPointer)NOFONT
     },
-#ifdef EXPERIMENTAL
-    {
-	XtNmenuFontSet,
-	XtCMenuFontSet,
-	XtRFontSet,
-	sizeof(XFontSet *),
-	XtOffsetOf(gui_T, menu_fontset),
-	XtRImmediate,
-	(XtPointer)NOFONTSET
-    },
-#endif
+# endif
 #endif
     {
 	XtNmenuForeground,
@@ -1300,6 +1300,9 @@ gui_mch_init()
     gui.visibility = VisibilityUnobscured;
     x11_setup_atoms(gui.dpy);
 
+    if (gui_win_x != -1 && gui_win_y != -1)
+	gui_mch_set_winpos(gui_win_x, gui_win_y);
+
     /* Now adapt the supplied(?) geometry-settings */
     /* Added by Kjetil Jacobsen <kjetilja@stud.cs.uit.no> */
     if (gui.geom != NULL && *gui.geom != NUL)
@@ -2008,7 +2011,7 @@ fontset_width(fs)
     return XmbTextEscapement(fs, "Vim", 3) / 3;
 }
 
-    static int
+    int
 fontset_height(fs)
     XFontSet fs;
 {
@@ -2017,6 +2020,23 @@ fontset_height(fs)
     extents = XExtentsOfFontSet(fs);
     return extents->max_logical_extent.height;
 }
+
+#if (defined(FONTSET_ALWAYS) && defined(FEAT_GUI_ATHENA) \
+	    && defined(FEAT_MENU)) || defined(PROTO)
+/*
+ * Returns the bounding box height around the actual glyph image of all
+ * characters in all fonts of the fontset.
+ */
+    int
+fontset_height2(fs)
+    XFontSet fs;
+{
+    XFontSetExtents *extents;
+
+    extents = XExtentsOfFontSet(fs);
+    return extents->max_ink_extent.height;
+}
+#endif
 
 /* NOT USED YET
     static int

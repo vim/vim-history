@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 26
+" Last Change:	2001 Aug 01
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -116,6 +116,7 @@ SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.Diva\ (with\ SKILL):diva
 SynMenu CD.DNS:dns
+SynMenu CD.DOT:dto
 SynMenu CD.Dracula:dracula
 SynMenu CD.DSSSL:dsl
 SynMenu CD.DTD:dtd
@@ -243,6 +244,7 @@ SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
 SynMenu PQ.PostScript:postscr
 SynMenu PQ.Povray:pov
+SynMenu PQ.Povray\ configuration:povini
 SynMenu PQ.Printcap:pcap
 SynMenu PQ.Procmail:procmail
 SynMenu PQ.Product\ Spec\ File:psf
@@ -268,6 +270,7 @@ SynMenu R-Sg.Samba\ config:samba
 SynMenu R-Sg.SAS:sas
 SynMenu R-Sg.Sather:sather
 SynMenu R-Sg.Scheme:scheme
+SynMenu R-Sg.Screen\ RC:screen
 SynMenu R-Sg.SDL:sdl
 SynMenu R-Sg.Sed:sed
 SynMenu R-Sg.Sendmail\.cf:sm
@@ -314,6 +317,7 @@ SynMenu TUV.Tcl/Tk:tcl
 SynMenu TUV.TealInfo:tli
 SynMenu TUV.Telix\ Salt:tsalt
 SynMenu TUV.Termcap:ptcap
+SynMenu TUV.Terminfo:terminfo
 SynMenu TUV.TeX:tex
 SynMenu TUV.TeX\ configuration:texmf
 SynMenu TUV.Texinfo:texinfo

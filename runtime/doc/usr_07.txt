@@ -1,4 +1,4 @@
-*usr_07.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_07.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -104,7 +104,7 @@ This is short for "arguments".  The output might look like this: >
 	one.c [two.c] three.c
 
 These are the files you started Vim with.  The one you are currently editing,
-"two.c", is in sqare brackets.
+"two.c", is in square brackets.
 
 
 MOVING TO OTHER ARGUMENTS
@@ -219,9 +219,9 @@ Suppose you are editing the file "one.txt".  Somewhere halfway the file you
 use "x" to delete a character.  Then you go to the last line with "G" and
 write the file with ":w".  You edit several other files, and then use ":edit
 one.txt" to come back to "one.txt".  If you now use `" Vim jumps to the last
-line of the file.  Using `. takes you to the position where deleted the
-character.  Even when move around in the file `" and `. will take you to the
-remembered position.  At least until you make another change or leave the
+line of the file.  Using `. takes you to the position where you deleted the
+character.  Even when you move around in the file `" and `. will take you to
+the remembered position.  At least until you make another change or leave the
 file.
 
 
@@ -296,7 +296,7 @@ directory as the original file, will mostly be the right thing.
 KEEPING THE ORIGINAL FILE
 
 If you are editing source files, you might want to keep the file before you
-made any changes.  But the backup file will be overwritten each time you write
+make any changes.  But the backup file will be overwritten each time you write
 the file.  Thus it only contains the previous version, not the first one.
    To make Vim keep the original file, set the 'patchmode' option.  This
 specifies the extension used for the first backup of a changed file.  Usually
@@ -325,7 +325,7 @@ the selected text.
 
 	:edit thisfile
 	/This
-	jjjj$y
+	vjjjj$y
 
 Now edit the file you want to put the text in.  Move the cursor to the
 character where you want the text to appear after.  Use "p" to put the text
@@ -438,7 +438,7 @@ for example.  If you try to make a change you get this error message:
 You could use the -M argument to setup Vim to work in a viewer mode.  This is
 only voluntary though, since these commands will remove the protection: >
 
-	:set nomodifiable
+	:set modifiable
 	:set write
 
 ==============================================================================

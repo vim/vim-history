@@ -5,11 +5,11 @@ static char * tb_new_session_xpm[] = {
 /* colors */
 " 	s none	m none	c none",
 ".	s bottomShadowColor	m black	c #5D6069",
-"X	s iconColor2	m white	c #FFFFFF",
+"X	s iconColor2	m none	c #FFFFFF",
 "o	s iconColor1	m black	c #000000",
-"O	s iconGray2	m white	c #bdbdbd",
+"O	s iconGray2	m none	c #bdbdbd",
 "+	s iconGray5	m black	c #737373",
-"@	s iconGray4	m white	c #949494",
+"@	s iconGray4	m none	c #949494",
 "#	s iconColor3	m black	c #FF0000",
 /* pixels */
 "    .  .X.  .     ",

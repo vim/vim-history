@@ -2092,6 +2092,9 @@ gui_mch_open()
 {
     int x = -1, y = -1;
 
+    if (gui_win_x != -1 && gui_win_y != -1)
+	gtk_widget_set_uposition(gui.mainwin, gui_win_x, gui_win_y);
+
     /* Determine user specified geometry, if present. */
     if (gui.geom != NULL)
     {

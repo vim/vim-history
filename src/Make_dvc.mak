@@ -20,7 +20,7 @@ CFG=Vim - Win32 IDE for Make_mvc.mak
 !MESSAGE
 !MESSAGE "Vim - Win32 IDE for Make_mvc.mak" (based on\
  "Win32 (x86) Console Application")
-!MESSAGE
+!MESSAGE 
 !ERROR An invalid configuration is specified.
 !ENDIF
 

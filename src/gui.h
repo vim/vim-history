@@ -94,6 +94,14 @@
 #endif
 
 /*
+ * This define makes menus always use a fontset.
+ * We're not sure if this code always works, thus it can be disabled.
+ */
+#ifdef FEAT_XFONTSET
+# define FONTSET_ALWAYS
+#endif
+
+/*
  * These macros convert between character row/column and pixel coordinates.
  * TEXT_X   - Convert character column into X pixel coord for drawing strings.
  * TEXT_Y   - Convert character row into Y pixel coord for drawing strings.
@@ -288,12 +296,11 @@ typedef struct Gui
     GuiFont	ital_font;	    /* Italic font */
     GuiFont	boldital_font;	    /* Bold-Italic font */
 #ifdef FEAT_MENU
-    GuiFont	menu_font;	    /* menu item font */
-#ifdef EXPERIMENTAL
-# ifdef FEAT_XFONTSET
+# ifdef FONTSET_ALWAYS
     GuiFontset	menu_fontset;	    /* set of fonts for multi-byte chars */
+# else
+    GuiFont	menu_font;	    /* menu item font */
 # endif
-#endif
 #endif
 #ifdef FEAT_MBYTE
     GuiFont	wide_font;	    /* 'guifontwide' font */

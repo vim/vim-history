@@ -39,6 +39,7 @@
 # define HAVE_FCNTL_H
 #endif
 #define HAVE_QSORT
+#define HAVE_ST_MODE		/* have stat.st_mode */
 
 #define FEAT_SHORTCUT		/* resolve shortcuts */
 

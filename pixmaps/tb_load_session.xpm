@@ -4,13 +4,13 @@ static char * tb_load_session_xpm[] = {
 "18 18 9 1 0 0",
 /* colors */
 " 	s none	m none	c none",
-".	c #880000",
+".	m black	c #880000",
 "X	s iconColor3	m black	c #FF0000",
 "o	s iconColor1	m black	c #000000",
-"O	s iconColor2	m white	c #FFFFFF",
-"+	s iconGray2	m white	c #bdbdbd",
+"O	s iconColor2	m none	c #FFFFFF",
+"+	s iconGray2	m none	c #bdbdbd",
 "@	s iconGray5	m black	c #737373",
-"#	s iconGray4	m white	c #949494",
+"#	s iconGray4	m none	c #949494",
 "$	s bottomShadowColor	m black	c #5D6069",
 /* pixels */
 "        ..        ",

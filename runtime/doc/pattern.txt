@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 28
+*pattern.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -615,14 +615,13 @@ endless loop.  If you try it, you will get this error message: >
 \@>	Matches the preceding atom like matching a whole pattern. {not in Vi}
 	Like '(?>pattern)" in Perl.
 	Example		matches ~
-	\(.\{-}{{{\)\@>
 	\(a*\)\@>a	nothing (the "a*" takes all the "a"'s, there can't be
 			another one following)
 
 	This matches the preceding atom as if it was a pattern by itself.  If
 	it doesn't match, there is no retry with shorter sub-matches or
 	anything.  Observe this difference: "a*b" and "a*ab" both match
-	"aaab", but in the first case the "a*" matches only the first two
+	"aaab", but in the second case the "a*" matches only the first two
 	"a"s.  "\(a*\)\@>ab" will not match "aaab", because the "a*" matches
 	the "aaa" (as many "a"s as possible), thus the "ab" can't match.
 

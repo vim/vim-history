@@ -627,6 +627,7 @@ op_reindent(oap, how)
     int		count;
     linenr_T	first_changed = 0;
     linenr_T	last_changed = 0;
+    linenr_T	start_lnum = curwin->w_cursor.lnum;
 
     for (i = oap->line_count; --i >= 0 && !got_int; )
     {
@@ -665,14 +666,20 @@ op_reindent(oap, how)
     }
 
     /* put cursor on first non-blank of indented line */
-    curwin->w_cursor.lnum -= oap->line_count;
+    curwin->w_cursor.lnum = start_lnum;
     beginline(BL_SOL | BL_FIX);
 
+    /* Mark changed lines so that they will be redrawn.  When Visual
+     * highlighting was present, need to continue until the last line.  When
+     * there is no change still need to remove the Visual highlighting. */
     if (last_changed != 0)
-	changed_lines(first_changed, 0, last_changed + 1, 0L);
+	changed_lines(first_changed, 0,
+#ifdef FEAT_VISUAL
+		oap->is_VIsual ? start_lnum + oap->line_count :
+#endif
+		last_changed + 1, 0L);
 #ifdef FEAT_VISUAL
     else if (oap->is_VIsual)
-	/* No lines changed; still need to remove the Visual highlighting. */
 	redraw_curbuf_later(INVERTED);
 #endif
 
@@ -734,9 +741,21 @@ set_expr_line(new_line)
     static char_u *
 get_expr_line()
 {
+    char_u	*expr_copy;
+    char_u	*rv;
+
     if (expr_line == NULL)
 	return NULL;
-    return eval_to_string(expr_line, NULL);
+
+    /* Make a copy of the expression, because evaluating it may cause it to be
+     * changed. */
+    expr_copy = vim_strsave(expr_line);
+    if (expr_copy == NULL)
+	return NULL;
+
+    rv = eval_to_string(expr_copy, NULL);
+    vim_free(expr_copy);
+    return rv;
 }
 #endif /* FEAT_EVAL */
 
@@ -1026,12 +1045,14 @@ do_execreg(regname, colon, addcr)
 	    if (y_current->y_type == MLINE || i < y_current->y_size - 1
 								     || addcr)
 	    {
-		if (ins_typebuf((char_u *)"\n", remap, 0, TRUE) == FAIL)
+		if (ins_typebuf((char_u *)"\n", remap, 0, TRUE, FALSE) == FAIL)
 		    return FAIL;
 	    }
-	    if (ins_typebuf(y_current->y_array[i], remap, 0, TRUE) == FAIL)
+	    if (ins_typebuf(y_current->y_array[i], remap, 0, TRUE, FALSE)
+								      == FAIL)
 		return FAIL;
-	    if (colon && ins_typebuf((char_u *)":", remap, 0, TRUE) == FAIL)
+	    if (colon && ins_typebuf((char_u *)":", remap, 0, TRUE, FALSE)
+								      == FAIL)
 		return FAIL;
 	}
 	Exec_reg = TRUE;	/* disable the 'q' command */
@@ -1047,11 +1068,11 @@ put_in_typebuf(s, colon)
     int		retval = OK;
 
     if (colon)
-	retval = ins_typebuf((char_u *)"\n", REMAP_YES, 0, TRUE);
+	retval = ins_typebuf((char_u *)"\n", REMAP_YES, 0, TRUE, FALSE);
     if (retval == OK)
-	retval = ins_typebuf(s, REMAP_YES, 0, TRUE);
+	retval = ins_typebuf(s, REMAP_YES, 0, TRUE, FALSE);
     if (colon && retval == OK)
-	retval = ins_typebuf((char_u *)":", REMAP_YES, 0, TRUE);
+	retval = ins_typebuf((char_u *)":", REMAP_YES, 0, TRUE, FALSE);
     return retval;
 }
 

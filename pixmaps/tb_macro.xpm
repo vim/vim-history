@@ -6,7 +6,7 @@ static char * tb_macro_xpm[] = {
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
 "X	s bottomShadowColor	m black	c #5D6069",
-"o	s iconColor2	m white	c #FFFFFF",
+"o	s iconColor2	m none	c #FFFFFF",
 /* pixels */
 "       ..X        ",
 "      .oo.X       ",

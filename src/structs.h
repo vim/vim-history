@@ -634,6 +634,7 @@ typedef struct
     int		tb_off;		/* current position in tb_buf[] */
     int		tb_len;		/* number of valid chars in tb_buf[] */
     int		tb_maplen;	/* nr of mapped characters in tb_buf[] */
+    int		tb_silent;	/* nr of silently mapped chars in tb_buf[] */
     int		tb_no_abbr_cnt; /* nr of chars without abbrev. in tb_buf[] */
 } typebuf_T;
 
@@ -761,6 +762,7 @@ struct file_buffer
     long	b_mtime;	/* last change time of original file */
     long	b_mtime_read;	/* last change time when reading */
     size_t	b_orig_size;	/* size of original file in bytes */
+    int		b_orig_mode;	/* mode of original file */
 
     pos_T	b_namedm[NMARKS]; /* current named marks (mark.c) */
 
@@ -1632,10 +1634,10 @@ typedef struct
     int		n_collated_copies;
     int		n_uncollated_copies;
     int		duplex;
-    int		line_height;
     int		chars_per_line;
     int		lines_per_page;
     int		number_width;
+    int		user_abort;
     char_u	*jobname;
 } prt_settings_T;
 

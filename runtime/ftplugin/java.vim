@@ -1,8 +1,8 @@
 " Vim filetype plugin file
 " Language:	Java
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Fri, 27 Jul 2001 11:32:31 Eastern Daylight Time
-" Current version can be found at http://sites.netscape.net/dwsharp/vim/scripts
+" Last Change:	Tue, 31 Jul 2001 14:00:20 Eastern Daylight Time
+" Current version is at http://sites.netscape.net/sharppeople/vim/scripts
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -28,7 +28,7 @@ setlocal fo-=t fo+=croql
 setlocal com& com^=sO:*\ -,mO:*\ \ ,exO:*/  " Behaves just like C
 
 " Change the :browse e filter to primarily show Java-related files.
-if has("gui")
+if has("gui") && !exists("b:browsefilter")
     let  b:browsefilter="Java Files (*.java)\t*.java\n" .
 	        \	"Properties Files (*.prop*)\t*.prop*\n" .
 		\	"Manifest Files (*.mf)\t*.mf\n" .

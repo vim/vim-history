@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 28
+" Last Change:	2001 Jul 31
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -320,7 +320,7 @@ if has("keymap")
   endif
   unlet s:n
 endif
-if has("win32") || has("win16") || has("gui_gtk") || has("qui_photon")
+if has("win32") || has("win16") || has("gui_gtk") || has("gui_photon")
   amenu 20.470 &Edit.Select\ Fo&nt\.\.\.	:set guifont=*<CR>
 endif
 
@@ -950,13 +950,14 @@ am 50.20.370 &Syntax.CD.Diff :cal SetSyn("diff")<CR>
 am 50.20.380 &Syntax.CD.Digital\ Command\ Lang :cal SetSyn("dcl")<CR>
 am 50.20.390 &Syntax.CD.Diva\ (with\ SKILL) :cal SetSyn("diva")<CR>
 am 50.20.400 &Syntax.CD.DNS :cal SetSyn("dns")<CR>
-am 50.20.410 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
-am 50.20.420 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
-am 50.20.430 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
-am 50.20.440 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
-am 50.20.450 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
-am 50.20.460 &Syntax.CD.Dylan.Dylan\ intr :cal SetSyn("dylanintr")<CR>
-am 50.20.470 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
+am 50.20.410 &Syntax.CD.DOT :cal SetSyn("dto")<CR>
+am 50.20.420 &Syntax.CD.Dracula :cal SetSyn("dracula")<CR>
+am 50.20.430 &Syntax.CD.DSSSL :cal SetSyn("dsl")<CR>
+am 50.20.440 &Syntax.CD.DTD :cal SetSyn("dtd")<CR>
+am 50.20.450 &Syntax.CD.DTML\ (Zope) :cal SetSyn("dtml")<CR>
+am 50.20.460 &Syntax.CD.Dylan.Dylan :cal SetSyn("dylan")<CR>
+am 50.20.470 &Syntax.CD.Dylan.Dylan\ intr :cal SetSyn("dylanintr")<CR>
+am 50.20.480 &Syntax.CD.Dylan.Dylan\ lid :cal SetSyn("dylanlid")<CR>
 am 50.30.100 &Syntax.EFG.Eiffel :cal SetSyn("eiffel")<CR>
 am 50.30.110 &Syntax.EFG.Elm\ Filter :cal SetSyn("elmfilt")<CR>
 am 50.30.120 &Syntax.EFG.Embedix\ Component\ Description :cal SetSyn("ecd")<CR>
@@ -1072,13 +1073,14 @@ am 50.70.240 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
 am 50.70.250 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
 am 50.70.260 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
 am 50.70.270 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
-am 50.70.280 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
-am 50.70.290 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
-am 50.70.300 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
-am 50.70.310 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
-am 50.70.320 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
-am 50.70.330 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
-am 50.70.340 &Syntax.PQ.Python :cal SetSyn("python")<CR>
+am 50.70.280 &Syntax.PQ.Povray\ configuration :cal SetSyn("povini")<CR>
+am 50.70.290 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
+am 50.70.300 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
+am 50.70.310 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
+am 50.70.320 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
+am 50.70.330 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
+am 50.70.340 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
+am 50.70.350 &Syntax.PQ.Python :cal SetSyn("python")<CR>
 am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
 am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
 am 50.80.120 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>
@@ -1096,13 +1098,14 @@ am 50.80.240 &Syntax.R-Sg.Samba\ config :cal SetSyn("samba")<CR>
 am 50.80.250 &Syntax.R-Sg.SAS :cal SetSyn("sas")<CR>
 am 50.80.260 &Syntax.R-Sg.Sather :cal SetSyn("sather")<CR>
 am 50.80.270 &Syntax.R-Sg.Scheme :cal SetSyn("scheme")<CR>
-am 50.80.280 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
-am 50.80.290 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
-am 50.80.300 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
-am 50.80.310 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
-am 50.80.320 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
-am 50.80.330 &Syntax.R-Sg.SGML.SGML\ Declarations :cal SetSyn("sgmldecl")<CR>
-am 50.80.340 &Syntax.R-Sg.SGML.SGML\ linuxdoc :cal SetSyn("sgmllnx")<CR>
+am 50.80.280 &Syntax.R-Sg.Screen\ RC :cal SetSyn("screen")<CR>
+am 50.80.290 &Syntax.R-Sg.SDL :cal SetSyn("sdl")<CR>
+am 50.80.300 &Syntax.R-Sg.Sed :cal SetSyn("sed")<CR>
+am 50.80.310 &Syntax.R-Sg.Sendmail\.cf :cal SetSyn("sm")<CR>
+am 50.80.320 &Syntax.R-Sg.SGML.SGML\ catalog :cal SetSyn("catalog")<CR>
+am 50.80.330 &Syntax.R-Sg.SGML.SGML\ DTD :cal SetSyn("sgml")<CR>
+am 50.80.340 &Syntax.R-Sg.SGML.SGML\ Declarations :cal SetSyn("sgmldecl")<CR>
+am 50.80.350 &Syntax.R-Sg.SGML.SGML\ linuxdoc :cal SetSyn("sgmllnx")<CR>
 am 50.90.100 &Syntax.Sh-S.Sh\ shell\ script :cal SetSyn("sh")<CR>
 am 50.90.110 &Syntax.Sh-S.SiCAD :cal SetSyn("sicad")<CR>
 am 50.90.120 &Syntax.Sh-S.Simula :cal SetSyn("simula")<CR>
@@ -1140,27 +1143,28 @@ am 50.100.150 &Syntax.TUV.Tcl/Tk :cal SetSyn("tcl")<CR>
 am 50.100.160 &Syntax.TUV.TealInfo :cal SetSyn("tli")<CR>
 am 50.100.170 &Syntax.TUV.Telix\ Salt :cal SetSyn("tsalt")<CR>
 am 50.100.180 &Syntax.TUV.Termcap :cal SetSyn("ptcap")<CR>
-am 50.100.190 &Syntax.TUV.TeX :cal SetSyn("tex")<CR>
-am 50.100.200 &Syntax.TUV.TeX\ configuration :cal SetSyn("texmf")<CR>
-am 50.100.210 &Syntax.TUV.Texinfo :cal SetSyn("texinfo")<CR>
-am 50.100.220 &Syntax.TUV.TF\ mud\ client :cal SetSyn("tf")<CR>
-am 50.100.230 &Syntax.TUV.Tidy\ configuration :cal SetSyn("tidy")<CR>
-am 50.100.240 &Syntax.TUV.Trasys\ input :cal SetSyn("trasys")<CR>
-am 50.100.250 &Syntax.TUV.TSS.Command\ Line :cal SetSyn("tsscl")<CR>
-am 50.100.260 &Syntax.TUV.TSS.Geometry :cal SetSyn("tssgm")<CR>
-am 50.100.270 &Syntax.TUV.TSS.Optics :cal SetSyn("tssop")<CR>
-am 50.100.290 &Syntax.TUV.UIT/UIL :cal SetSyn("uil")<CR>
-am 50.100.300 &Syntax.TUV.UnrealScript :cal SetSyn("uc")<CR>
-am 50.100.320 &Syntax.TUV.Verilog\ HDL :cal SetSyn("verilog")<CR>
-am 50.100.330 &Syntax.TUV.Vgrindefs :cal SetSyn("vgrindefs")<CR>
-am 50.100.340 &Syntax.TUV.VHDL :cal SetSyn("vhdl")<CR>
-am 50.100.350 &Syntax.TUV.Vim.Vim\ help\ file :cal SetSyn("help")<CR>
-am 50.100.360 &Syntax.TUV.Vim.Vim\ script :cal SetSyn("vim")<CR>
-am 50.100.370 &Syntax.TUV.Vim.Viminfo\ file :cal SetSyn("viminfo")<CR>
-am 50.100.380 &Syntax.TUV.Virata :cal SetSyn("virata")<CR>
-am 50.100.390 &Syntax.TUV.Visual\ Basic :cal SetSyn("vb")<CR>
-am 50.100.400 &Syntax.TUV.VRML :cal SetSyn("vrml")<CR>
-am 50.100.410 &Syntax.TUV.VSE\ JCL :cal SetSyn("vsejcl")<CR>
+am 50.100.190 &Syntax.TUV.Terminfo :cal SetSyn("terminfo")<CR>
+am 50.100.200 &Syntax.TUV.TeX :cal SetSyn("tex")<CR>
+am 50.100.210 &Syntax.TUV.TeX\ configuration :cal SetSyn("texmf")<CR>
+am 50.100.220 &Syntax.TUV.Texinfo :cal SetSyn("texinfo")<CR>
+am 50.100.230 &Syntax.TUV.TF\ mud\ client :cal SetSyn("tf")<CR>
+am 50.100.240 &Syntax.TUV.Tidy\ configuration :cal SetSyn("tidy")<CR>
+am 50.100.250 &Syntax.TUV.Trasys\ input :cal SetSyn("trasys")<CR>
+am 50.100.260 &Syntax.TUV.TSS.Command\ Line :cal SetSyn("tsscl")<CR>
+am 50.100.270 &Syntax.TUV.TSS.Geometry :cal SetSyn("tssgm")<CR>
+am 50.100.280 &Syntax.TUV.TSS.Optics :cal SetSyn("tssop")<CR>
+am 50.100.300 &Syntax.TUV.UIT/UIL :cal SetSyn("uil")<CR>
+am 50.100.310 &Syntax.TUV.UnrealScript :cal SetSyn("uc")<CR>
+am 50.100.330 &Syntax.TUV.Verilog\ HDL :cal SetSyn("verilog")<CR>
+am 50.100.340 &Syntax.TUV.Vgrindefs :cal SetSyn("vgrindefs")<CR>
+am 50.100.350 &Syntax.TUV.VHDL :cal SetSyn("vhdl")<CR>
+am 50.100.360 &Syntax.TUV.Vim.Vim\ help\ file :cal SetSyn("help")<CR>
+am 50.100.370 &Syntax.TUV.Vim.Vim\ script :cal SetSyn("vim")<CR>
+am 50.100.380 &Syntax.TUV.Vim.Viminfo\ file :cal SetSyn("viminfo")<CR>
+am 50.100.390 &Syntax.TUV.Virata :cal SetSyn("virata")<CR>
+am 50.100.400 &Syntax.TUV.Visual\ Basic :cal SetSyn("vb")<CR>
+am 50.100.410 &Syntax.TUV.VRML :cal SetSyn("vrml")<CR>
+am 50.100.420 &Syntax.TUV.VSE\ JCL :cal SetSyn("vsejcl")<CR>
 am 50.110.100 &Syntax.WXYZ.WEB :cal SetSyn("web")<CR>
 am 50.110.110 &Syntax.WXYZ.Webmacro :cal SetSyn("webmacro")<CR>
 am 50.110.120 &Syntax.WXYZ.Website\ MetaLanguage :cal SetSyn("wml")<CR>

@@ -2,7 +2,7 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	2001 Jul 07
+" Last Change:	2001 Jul 21
 " CSS2 by Nikolai Weibull
 
 " For version 5.x: Clear all syntax items
@@ -43,8 +43,8 @@ syn keyword cssFontProperties contained xyz
 syn keyword cssFontAttr contained cursive fantasy monospace normal italic oblique
 syn keyword cssFontAttr contained bold bolder lighter medium larger smaller
 syn match cssFontAttr contained "\<\(sans\>-\)\=\<serif\>"
-syn match cssFontAttr contained "\<small-caps\>"
 syn match cssFontAttr contained "\<\(x\{1,2\}-\)\=\(\<small\>\|\<large\>\)\>"
+syn match cssFontAttr contained "\<small-caps\>"
 
 syn match cssColorProperties contained "\<color\>"
 syn match cssColorProperties contained "\<background\>\(-\(color\|image\|repeat\|attachment\|position\)\>\)\="
@@ -154,3 +154,4 @@ if main_syntax == 'css'
 endif
 
 " vim: ts=8
+

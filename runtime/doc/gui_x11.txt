@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0ap.  Last change: 2001 Jul 29
+*gui_x11.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -346,6 +346,9 @@ of the normal GtkWindow.  This enables Vim to act as a GTK+ plugin.
 This really is a programmer's interface, and is of no use without a supporting
 application to spawn the Vim correctly.  For more details on GTK+ sockets, see
 http://www.gtk.org/api/
+
+Note that this feature requires the latest GTK version.  GTK 1.2.10 still has
+a small problem.
 
 ==============================================================================
 6. GNOME version				*gui-gnome* *Gnome* *GNOME*

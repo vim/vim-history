@@ -1,4 +1,4 @@
-*usr_26.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 29
+*usr_26.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -12,7 +12,7 @@ will be explained.
 |26.1|	Repeating with Visual mode
 |26.2|	Add and subtract
 |26.3|	Making a change in many files
-|26.4|	Using Vim from shell script
+|26.4|	Using Vim from a shell script
 
      Next chapter: |usr_27.txt|  Search commands and patterns
  Previous chapter: |usr_25.txt|  Editing formatted text

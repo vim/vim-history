@@ -16,7 +16,7 @@
  *
  * DJGPP changes by Gert van Antwerpen
  * Faster text screens by John Lange (jlange@zilker.net)
- *
+ * Windows clipboard functionality added by David Kotchan (dk)
  */
 
 #include <io.h>
@@ -32,6 +32,9 @@
 # include <signal.h>
 # include <sys/movedata.h>
 # include <crt0.h>
+# ifdef FEAT_CLIPBOARD
+#  include <sys/segments.h>
+# endif
 #else
 # include <alloc.h>
 #endif
@@ -67,10 +70,29 @@ static int mouse_x_div = 8;		/* column = x coord / mouse_x_div */
 static int mouse_y_div = 8;		/* line   = y coord / mouse_y_div */
 #endif
 
-#define BIOSTICK    55		    /* biostime() increases one tick about
-					every 55 msec */
+#define BIOSTICK    55			/* biostime() increases one tick about
+					   every 55 msec */
 
 static int orig_attr = 0x0700;		/* video attributes when starting */
+
+static int S_iLeft = 0;			/* Scroll window; these are 1 offset */
+static int S_iTop = 0;
+static int S_iRight = 0;
+static int S_iBottom = 0;
+
+/*
+ * Need to remember the values, because we set horizontal and vertical
+ * edges separately.
+ */
+    static void
+mywindow(int iLeft, int iTop, int iRight, int iBottom)
+{
+    S_iLeft = iLeft;
+    S_iTop = iTop;
+    S_iRight = iRight;
+    S_iBottom = iBottom;
+    window(iLeft, iTop, iRight, iBottom);
+}
 
 #ifdef DJGPP
 /*
@@ -81,10 +103,6 @@ unsigned long	S_ulScreenBase = 0xb8000;
 unsigned short	S_uiAttribute = 0;
 int		S_iCurrentRow = 0;	/* These are 0 offset */
 int		S_iCurrentColumn = 0;
-int		S_iLeft = 0;	/* Scroll window; these are 1 offset */
-int		S_iTop = 0;
-int		S_iRight = 0;
-int		S_iBottom = 0;
 short		S_selVideo;	/* Selector for DJGPP direct video transfers */
 
 /*
@@ -146,16 +164,17 @@ mydelline(void)
 {
     short iRow, iColumn;
 
+    iColumn = (S_iLeft - 1) << 1;
+
     /* Copy the lines underneath */
     for (iRow = S_iCurrentRow; iRow < S_iBottom - 1; iRow++)
-	movedata(S_selVideo, ((iRow + 1) * Columns) << 1,
-		S_selVideo, (iRow * Columns) << 1,
+	movedata(S_selVideo, (((iRow + 1) * Columns) << 1) + iColumn,
+		S_selVideo, ((iRow * Columns) << 1) + iColumn,
 		(S_iRight - S_iLeft + 1) << 1);
 
     /* Clear the new row */
     setblankbuffer(S_uiAttribute | ' ');
 
-    iColumn = (S_iLeft - 1) << 1;
     _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
 			 + (S_iBottom - 1) * (Columns << 1) + iColumn);
 }
@@ -165,16 +184,17 @@ myinsline(void)
 {
     short iRow, iColumn;
 
+    iColumn = (S_iLeft - 1) << 1;
+
     /* Copy the lines underneath */
     for (iRow = S_iBottom - 1; iRow >= S_iTop; iRow--)
-	movedata(S_selVideo, ((iRow - 1) * Columns) << 1,
-		S_selVideo, (iRow * Columns) << 1,
+	movedata(S_selVideo, (((iRow - 1) * Columns) << 1) + iColumn,
+		S_selVideo, ((iRow * Columns) << 1) + iColumn,
 		(S_iRight - S_iLeft + 1) << 1);
 
     /* Clear the new row */
     setblankbuffer(S_uiAttribute | ' ');
 
-    iColumn = (S_iLeft - 1) << 1;
     _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
 			 + (S_iTop - 1) * (Columns << 1) + iColumn);
 }
@@ -187,16 +207,17 @@ myscroll(void)
 {
     short		iRow, iColumn;
 
+    iColumn = (S_iLeft - 1) << 1;
+
     /* Copy the screen */
     for (iRow = S_iTop; iRow < S_iBottom; iRow++)
-	movedata(S_selVideo, (iRow * Columns) << 1,
-		S_selVideo, ((iRow - 1) * Columns) << 1,
+	movedata(S_selVideo, ((iRow * Columns) << 1) + iColumn,
+		S_selVideo, (((iRow - 1) * Columns) << 1) + iColumn,
 		(S_iRight - S_iLeft + 1) << 1);
 
     /* Clear the bottom row */
     setblankbuffer(S_uiAttribute | ' ');
 
-    iColumn = (S_iLeft - 1) << 1;
     _dosmemputw(S_blankbuffer, (S_iRight - S_iLeft) + 1, S_ulScreenBase
 			 + (S_iBottom - 1) * (Columns << 1) + iColumn);
 }
@@ -275,16 +296,6 @@ myputch(int iChar)
 }
 
     static void
-mywindow(int iLeft, int iTop, int iRight, int iBottom)
-{
-    S_iLeft = iLeft;
-    S_iTop = iTop;
-    S_iRight = iRight;
-    S_iBottom = iBottom;
-    window(iLeft, iTop, iRight, iBottom);
-}
-
-    static void
 mytextinit(struct text_info *pTextinfo)
 {
     S_selVideo = __dpmi_segment_to_descriptor(S_ulScreenBase >> 4);
@@ -360,7 +371,6 @@ mygetdigits(pp)
 # define mygotoxy gotoxy
 # define myputch putch
 # define myscroll scroll
-# define mywindow window
 # define mynormvideo normvideo
 # define mytextattr textattr
 # define mytextcolor textcolor
@@ -903,15 +913,17 @@ got3:			    s += 3;
 				col = mygetdigits(&p); /* no check for length! */
 				if (p > s + len)
 				    break;
-				if (*p == 'H' || *p == 'r')
+				if (*p == 'H' || *p == 'r' || *p == 'V')
 				{
 #ifdef DJGPP
 				    myflush();
 #endif
 				    if (*p == 'H')  /* set cursor position */
 					mygotoxy(col, row);
+				    else if (*p == 'V')
+					mywindow(row, S_iTop, col, S_iBottom);
 				    else	    /* set scroll region  */
-					mywindow(1, row, Columns, col);
+					mywindow(S_iLeft, row, S_iRight, col);
 				    len -= p - s;
 				    s = p + 1;
 				    continue;
@@ -1299,6 +1311,10 @@ mch_init(void)
 {
     union REGS regs;
 
+#if defined(DJGPP) && defined(FEAT_CLIPBOARD)
+    __dpmi_regs  dpmi_regs;
+#endif
+
     /*
      * Get the video attributes at the cursor.  These will be used as the
      * default attributes.
@@ -1381,6 +1397,31 @@ mch_init(void)
     mch_restore_cursor_shape(FALSE);
     /* Initialise the cursor shape */
     mch_update_cursor();
+#endif
+
+#if defined(DJGPP) && defined(FEAT_CLIPBOARD)
+    /*
+     * Check to see if the Windows clipboard is available, ie. are we
+     * running from a DOS session within Windows.  Obviously, the Windows
+     * clipboard will not be available if we're running under pure DOS.
+     *
+     * int 0x2f, AX = 0x1700 identifies the Windows version we're running
+     * under.  Upon return from the interrupt, if AX is unchanged, we're
+     * running under pure DOS and no Windows clipboard is available.
+     *
+     * Remark: could use int86() here but __dpmi_int() is recommended in
+     * the DJGPP docs, since int86() doesn't cover all available interrupts.
+     */
+    dpmi_regs.x.ax = 0x1700;
+    if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+	/* real-mode interrupt failed? */
+	dpmi_regs.x.ax = 0x1700;	/* force failure */
+
+    if (dpmi_regs.x.ax == 0x1700)	/* no change in AX? */
+	clip_init(FALSE);		/* no clipboard available, too bad */
+    else				/* else, running under Windows, OK */
+	clip_init(TRUE);		/* clipboard is available */
+
 #endif
 }
 
@@ -1678,7 +1719,7 @@ vim_chmod(char_u *name)
 
     /* DJGPP can't handle a file name with a trailing slash, remove it.
      * But don't remove it for "/" or "c:/". */
-    p = name + strlen((char *)name);
+    p = name + STRLEN(name);
     if (p > name)
 	--p;
     if (p > name && (*p == '\\' || *p == '/') && p[-1] != ':')
@@ -2270,4 +2311,647 @@ djgpp_setlocale(void)
 
     return "C";
 }
+
+#if defined(FEAT_CLIPBOARD) || defined(PROTO)
+
+/*
+ * Clipboard stuff, for cutting and pasting text to other windows.
+ *
+ * Implementation of DOS/Windows clipboard data transfer
+ * by David Kotchan (dkotchan@sympatico.ca)
+ */
+
+#define CF_TEXT	    0x01    /* Windows clipboard format: Windows (ANSI) text */
+#define CF_OEMTEXT  0x07    /* Windows clipboard format: OEM (DOS) text */
+#define CF_VIMCLIP  0x04    /* trick: SYLK clipboard format for VimClipboard */
+
+/*
+ * Make vim the owner of the current selection.  Return OK upon success.
+ */
+    int
+clip_mch_own_selection(VimClipboard *cbd)
+{
+    /*
+     * Never actually own the clipboard.  If another application sets the
+     * clipboard, we don't want to think that we still own it.
+     */
+    return FAIL;
+}
+
+/*
+ * Make vim NOT the owner of the current selection.
+ */
+    void
+clip_mch_lose_selection(VimClipboard *cbd)
+{
+    /* Nothing needs to be done here */
+}
+
+/*
+ * Read the Windows clipboard text and put it in Vim's clipboard register.
+ */
+    void
+clip_mch_request_selection(VimClipboard *cbd)
+{
+    int		type = MCHAR;
+    char_u	*pAllocated = NULL;
+    char_u	*pClipText = NULL;
+    int		clip_data_format = 0;
+
+    if (OpenClipboard())
+    {
+	/* Check for Vim's own clipboard format first.  The CF_VIMCLIP format
+	 * is just ordinary text (like CF_TEXT) except prepended by the
+	 * selection type (as a single character).  Note that under DOS we
+	 * actually cannot define a custom CF_VIMCLIP clipboard format; we
+	 * use instead one of the existing Windows-defined formats, usually
+	 * "DIF" or "SYLK".  See GetClipboardData() for details.
+	 *
+	 * Note that GetClipboardData() returns the address of the memory
+	 * block it allocated.  This is not necessary the start of the
+	 * clipboard text data: there may be other bytes ahead of the
+	 * text (particularly for CF_VIMCLIP) which are used for data
+	 * management.  So pClipText is not necessarily == pAllocated.
+	 */
+
+	if ((pAllocated = GetClipboardData(CF_VIMCLIP)) != NULL)
+	{
+	    clip_data_format = CF_VIMCLIP;
+	    pClipText = pAllocated;
+
+	    switch (*pClipText++)	/* after ++, pClipText points to text */
+	    {
+		default:
+		case 'L':	type = MLINE;	break;
+		case 'C':	type = MCHAR;	break;
+		case 'B':	type = MBLOCK;	break;
+	    }
+	}
+
+	/* Otherwise, check for the normal Windows text formats.  There are
+	 * two of these: CF_TEXT (common) and CF_OEMTEXT (used for DOS
+	 * compatibility).  Experiments show that, under the DOS/Windows
+	 * clipboard interface, writing CF_TEXT data to the clipboard
+	 * automatically creates a CF_OEMTEXT format as well.
+	 */
+
+	else if ((pAllocated = GetClipboardData(CF_TEXT)) != NULL)
+	{
+	    clip_data_format = CF_TEXT;
+	    pClipText = pAllocated;
+	    type = (vim_strchr((char*)pClipText, '\r') != NULL) ? MLINE : MCHAR;
+	}
+
+	else if ((pAllocated = GetClipboardData(CF_OEMTEXT)) != NULL)
+	{
+	    clip_data_format = CF_OEMTEXT;
+	    pClipText = pAllocated;
+	    type = (vim_strchr((char*)pClipText, '\r') != NULL) ? MLINE : MCHAR;
+	}
+
+	/* Did we get anything? */
+
+	if (pClipText != NULL)
+	{
+	    char_u *pDest;
+	    char_u *pStart;
+	    char_u *pEnd;
+
+	    long_u clip_data_size = 0;
+
+	    /* The Windows clipboard normally stores its text lines terminated
+	     * by <CR><NL>.  But Vim uses only <NL>, so translate the <CR><NL>
+	     * into <NL>.  Also, watch for possible null bytes at the end of
+	     * pClipText.  These are padding added by "get_clipboard_data"
+	     * (int 0x2f, AX= 0x1705) in order to round the data size up to the
+	     * next multiple of 32 bytes.  See GetClipboardData() for details.
+	     */
+
+	    pDest = strstr( pClipText, "\r\n" );    /* find first <CR><NL> */
+
+	    if (pDest != NULL)			/* found one? */
+	    {
+		pStart = pDest + 1;		/* points to <NL> after <CR> */
+		pEnd = strstr( pStart, "\r\n" );/* find next <CR><NL> */
+
+		while (pEnd != NULL)		/* found one? */
+		{
+		    memmove(pDest, pStart, (long)(pEnd - pStart));
+							/* exclude <CR> */
+		    pDest += (long)(pEnd - pStart);	/* new destination */
+		    pStart = pEnd + 1;			/* new starting point */
+		    pEnd = strstr(pStart, "\r\n");	/* find next <CR><NL> */
+		}
+
+		/* Fell out of while() loop: no more <CR><NL> pairs.  Just copy
+		 * the rest of the data, up to the first null byte.  */
+		pEnd = strchr(pStart, '\0');		/* find first null */
+
+		memmove(pDest, pStart, (long)(pEnd - pStart)); /* exclude nul */
+		pDest += (long)(pEnd - pStart);
+		*pDest = '\0';				    /* terminate */
+
+		/* Now that all <CR><NL> pairs have been "compressed" into just
+		 * <NL>'s, determine the true text length.  */
+		clip_data_size = (long_u)(pDest - pClipText);
+	    }
+	    else
+	    {
+		/* no <CR><NL> pairs at all */
+		/* Since the data may have been padded with trailing nulls,
+		 * determine the true string length. */
+		clip_data_size = STRLEN(pClipText);	/* true data length */
+	    }
+
+	    /* Copy the cleaned-up data over to Vim's clipboard "*" register. */
+	    clip_yank_selection(type, pClipText, clip_data_size, cbd);
+
+	    /* Free the memory that GetClipboardData() allocated. */
+	    vim_free(pAllocated);
+	}
+
+	CloseClipboard();
+
+    }  // end if (OpenClipboard())
+}
+
+/*
+ * Send the currently selected Vim text to the Windows clipboard.
+ */
+    void
+clip_mch_set_selection( VimClipboard *cbd )
+{
+    char_u	*pClipData = NULL;
+    long_u	clip_data_size;
+    int		clip_data_type;
+
+    /* If the '*' register isn't already filled in, fill it in now. */
+    cbd->owned = TRUE;
+    clip_get_selection(cbd);
+    cbd->owned = FALSE;
+
+    /*
+     * clip_convert_selection() returns a pointer to a buffer containing
+     * the text to send to the Windows clipboard, together with a count
+     * of the number of characters (bytes) in the buffer.  The function's
+     * return value is the 'type' of selection: MLINE, MCHAR, or MBLOCK;
+     * or -1 for failure.
+     */
+    clip_data_type = clip_convert_selection(&pClipData, &clip_data_size, cbd);
+
+    if (clip_data_type < 0)	    /* could not convert? */
+	return;			    /* early exit */
+
+    if (OpenClipboard())
+    {
+	if (EmptyClipboard())
+	{
+	    int sentOK;
+
+	    sentOK = SetClipboardData(CF_TEXT, pClipData,
+					      clip_data_size, clip_data_type);
+	    sentOK = SetClipboardData(CF_VIMCLIP,
+			 pClipData, clip_data_size, clip_data_type) && sentOK;
+
+	    if (!sentOK)
+	    {
+		/* one or both of SetClipboardData() failed. */
+		/* Technically we don't know why SetClipboardData() failed, but
+		 * almost always it will be because there wasn't enough DOS
+		 * memory to bufer the data, so report that as the problem.
+		 *
+		 * We report the error here (instead of in SetClipboardData())
+		 * because we don't want the error reported twice.
+		 */
+		EMSG("Selection too large, cannot allocate DOS buffer");
+	    }
+	}
+
+	CloseClipboard();
+    }
+
+    /* release memory allocated by clip_convert_selection() */
+    vim_free(pClipData);
+
+    return;
+}
+
+/*
+ * OpenClipboard: open the Windows clipboard.  The clipboard must be open
+ * before it can be communicated with at all.  Return TRUE on success,
+ * FALSE on failure.
+ */
+    int
+OpenClipboard()
+{
+    __dpmi_regs  dpmi_regs;
+
+    long    start_time;
+    int	    tick_count;
+
+    /* int 02xf, AX = 0x1701 attempts to open the Windows clipboard.  Upon
+     * return from the interrupt, if AX is non-zero, the clipboard was
+     * successfully opened.  If AX is zero, the clipboard could not be opened
+     * because it is currently in use by another process.
+     *
+     * Remark: other DOS programs I (dk) have written that use the Windows
+     * clipboard sometimes encounter the problem that the clipboard cannot
+     * be opened even though it is demonstrably not in use by any other
+     * process.  In all cases, repeated attempts to open the clipboard
+     * eventually succeed, but the initial attempt occasionally fails.
+     *
+     * The problem is intermittent and appears to be related to DOS being
+     * "busy" at certain unpredictable times.  DOS maintains two internal
+     * flags that indicate whether it's busy: InDOS and CritErr.  The
+     * location of InDOS can be found by calling int 0x21, AH = 0x34.  The
+     * location of CritErr can be found by calling int 0x21, AX = 0x5d06.
+     * If either of these flags is set, DOS is "busy" and cannot be
+     * interrupted.  See "Undocumented DOS" by Schulman et al for details.
+     *
+     * However here I take the easier approach that if the first call to open
+     * the clipboard does not succeed, just try again.  In fact, try once per
+     * biostime() clock tick, up to 18 times (about one second).
+     */
+
+    tick_count = 0;
+
+    dpmi_regs.x.ax = 0x1701;	/* open Windows clipboard */
+    if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+    {
+	/* real-mode interrupt failed? */
+	return FALSE;		/* FALSE --> clipboard not open */
+    }
+
+    /* wait up to one second */
+    while (dpmi_regs.x.ax == 0 && tick_count++ < 18)
+    {
+	/* Wait one clock tick (18.2 ticks/sec = 55 msec per tick).
+	 *
+	 * We busy-wait here.  Unfortunately, delay() and usleep() have been
+	 * reported to give problems with the original Windows 95.  This is
+	 * fixed in service pack 1, but not everybody installed that.
+	 */
+	start_time = biostime(0, 0L);
+	while (biostime(0, 0L) == start_time)
+	    ;
+
+	dpmi_regs.x.ax = 0x1701;    /* open Windows clipboard */
+	if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+	{
+	    /* real-mode interrupt failed? */
+	    return FALSE;		/* FALSE --> clipboard not open */
+	}
+    }
+
+    /* Couldn't open the clipboard, even after 18 attempts? */
+
+    if (tick_count >= 18 && dpmi_regs.x.ax == 0)
+	return FALSE;		/* FALSE --> clipboard not open */
+
+    return TRUE;	/* TRUE --> clipboard opened successfully, OK */
+}
+
+/*
+ * CloseClipboard: close the Windows clipboard.  Return TRUE on
+ * success, FALSE on failure.  This function can always be called,
+ * whether the clipboard is open or not.
+ */
+    int
+CloseClipboard()
+{
+    __dpmi_regs  dpmi_regs;
+
+    /* Close the clipboard.  This interrupt can always be called, even
+     * if the clipboard is already closed.
+     */
+
+    dpmi_regs.x.ax = 0x1708;	    /* close the clipboard */
+    if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+    {
+	/* real-mode interrupt failed? */
+	return FALSE;		/* FALSE --> clipboard could not be closed */
+    }
+
+    return TRUE;	/* TRUE --> clipboard closed successfully, OK */
+}
+
+/*
+ * EmptyClipboard: empty the (previously opened) Windows clipboard.
+ * Return TRUE on success, FALSE on failure.
+ */
+    int
+EmptyClipboard()
+{
+    __dpmi_regs  dpmi_regs;
+
+    /* int 02xf, AX = 0x1702 attempts to empty the Windows clipboard.  Upon
+     * return from the interrupt, if AX == 0, the clipboard could not be
+     * emptied (for some reason).
+     */
+    dpmi_regs.x.ax = 0x1702;    /*  empty the Windows clipboard */
+    if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+    {
+	/* real-mode interrupt failed? */
+	return FALSE;		/* FALSE --> clipboard could not be emptied */
+    }
+
+    /* Did we succeed in clearing the clipboard? */
+    if (dpmi_regs.x.ax == 0)
+	return FALSE;		/* FALSE --> clipboard could not be emptied */
+
+    return TRUE;		/* TRUE --> clipboard was emptied, OK */
+}
+
+/*
+ * FreeDOSMemory: a helper function to free memory previously
+ * allocated by a call to __dpmi_allocate_dos_memory().
+ */
+    void
+FreeDOSMemory(int protected_mode_selector)
+{
+    /* Free the DOS buffer and release the DPMI prot-mode selector.
+     *
+     * It's important that DOS memory be properly released because
+     * there's only a limited amount of it.  Therefore, if the call
+     * to __dpmi_free_dos_memory() fails, emit an error message
+     * unconditionally.
+     */
+    if (__dpmi_free_dos_memory(protected_mode_selector) == -1)
+	EMSG("E453: could not free DOS memory buffer (DJGPP)");
+}
+
+/*
+ * GetClipboardData: query the Windows clipboard as to whether data
+ * is available in a particular clipboard format.  If data is
+ * available, allocate a buffer for it and read the data from the
+ * clipboard into the buffer.  Return a pointer to the buffer.  If
+ * no data is available in the requested format, return NULL.
+ *
+ * This routine allocates memory to hold the retrieved clipboard
+ * data.  It's the caller's responsibility to free this memory
+ * once it's finished using it.  The memory should be freed by
+ * calling vim_free().
+ */
+    char_u*
+GetClipboardData(int clip_data_format)
+{
+    __dpmi_regs  dpmi_regs;
+
+    int		real_mode_segment_address;
+    int		protected_mode_selector;
+
+    char_u	*clip_data_buffer;
+    long_u	clip_data_size;
+
+    /* We only handle clipboard formats we recognize, others are ignored.
+     *
+     * It's not possible to create a custom clipboard format for VimClipboard
+     * data under DOS, so one of the predefined Windows formats had to be
+     * used for CF_VIMCLIP.  Two obscure formats, popular when Windows 3.0
+     * came out but no longer in much use today, are the DIF and SYLK formats.
+     * DIF is the Data Interchange Format, SYLK is the Symbolic Link format.
+     * They are both text formats and either one can be hijacked for use as
+     * "the VimClipboard format".  Of course, this conflicts with anyone who
+     * still *is* using DIF or SYLK data formats, but that will be very few
+     * people.
+     *
+     * I (dk) chose SYLK as the more obscure format because it was used
+     * mostly for Microsoft Multiplan (the pre-cursor to Excel) and it's not
+     * likely Multiplan is used anywhere much anymore.  Mind you, Excel can
+     * still export to both DIF and SYLK formats.
+     */
+
+    switch (clip_data_format)
+    {
+    case CF_VIMCLIP:		    /* Vim's own special clipboard format */
+    case CF_TEXT:		    /* Windows text */
+    case CF_OEMTEXT:		    /* DOS (OEM) text */
+
+	/* int 02xf, AX = 0x1704 returns the number of bytes of data currently
+	 * on the Windows clipboard, for the specified format.  Upon return
+	 * from the interrupt, DX:AX = the number of bytes, rounded up to the
+	 * nearest multiple of 32.
+	 */
+
+	dpmi_regs.x.ax = 0x1704;    /* get size of clipbd data */
+	dpmi_regs.x.dx = clip_data_format;
+	if (__dpmi_int(0x2f, &dpmi_regs) == -1)
+	{
+	    /* real-mode interrupt failed? */
+	    return NULL;				    /* early exit */
+	}
+
+	/* Did we get anything?  If not, this is not an error. */
+	if (dpmi_regs.x.dx == 0 && dpmi_regs.x.ax == 0)
+	{
+	    /* no CF_VIMCLIP data? */
+	    return NULL;				    /* early exit */
+	}
+
+	/* There is data available in the requested clipboard format.
+	 *
+	 * Calculate data size.  Remember this is rounded up to the nearest
+	 * multiple of 32, so clip_data_size is actually an upper limit.
+	 * The extra bytes, if any, are set to null (0x00) when the data is
+	 * read from the clipboard.  (Later:) actually I'm no longer sure
+	 * this is strictly true: the end-of-data is marked by a null, but
+	 * the extra bytes appear to sometimes be null, sometimes not.
+	 * They may just be garbage.
+	 */
+	clip_data_size = dpmi_regs.x.ax + (dpmi_regs.x.dx << 16);
+
+	/* Allocate memory to retrieve the data.  The buffer has to lie in the
+	 * DOS memory region (in the first 1 MByte of address space) because
+	 * the Windows clipboard interface expects a 16-bit segment:offset
+	 * pointer to a buffer address within the DOS region.  Must therefore
+	 * use __dpmi_allocate_dos_memory() instead of lalloc() or alloc().
+	 */
+	real_mode_segment_address = __dpmi_allocate_dos_memory(
+		(clip_data_size + 15) >> 4,	/* buffer size, in 16-byte paragraphs */
+		&protected_mode_selector);	/* prot-mode selector for the address */
+
+	if (real_mode_segment_address == -1)
+	{
+	    /* memory allocation failed. */
+
+	    /* Technically we don't know why the allocation failed, but
+	     * almost always it will be because there wasn't enough DOS
+	     * memory to satisfy the request, so report that as the problem.
+	     * On my system, DJGPP is able to satisfy a DOS allocation request
+	     * up to about 600K in size.  This depends on your HIMEM.SYS and
+	     * EMM386.EXE settings however.
+	     */
+	    EMSG("Clipboard data too large, cannot allocate DOS buffer");
+	    return NULL;				    /* early exit */
+	}
+
+	/* Copy data from the clipboard into the buffer.  Experiments show that
+	 * the Windows clipboard is smart enough to handle data transfers
+	 * larger than 64K properly, even though the buffer address is a 16-bit
+	 * segment:offset (which would normally limit the block size to 64K
+	 * unless ES gets incremented).
+	 */
+	dpmi_regs.x.ax = 0x1705;	/* get clipboard data */
+	dpmi_regs.x.dx = clip_data_format;		/* CF_VIMCLIP */
+	dpmi_regs.x.es = real_mode_segment_address;	/* buffer ad: segment */
+	dpmi_regs.x.bx = 0;				/* buffer ad: offset */
+	if (__dpmi_int( 0x2f, &dpmi_regs) == -1)
+	{
+	    /* real-mode interrupt failed? */
+	    EMSG("E452: could not copy clipboard data to DOS buffer");
+	    FreeDOSMemory(protected_mode_selector);	/* clean up DOS mem */
+	    return NULL;				/* early exit */
+	}
+
+	/* Clipboard data is now in DOS memory in the buffer pointed to by
+	 * ES:BX.  Copy this into ordinary memory that Vim can access (ie.
+	 * prot-mode memory).  Allocate one extra byte to ensure the text
+	 * is terminated properly (in case it was somehow corrupted).
+	 */
+	clip_data_buffer = (char_u *)lalloc(clip_data_size + 1, TRUE);
+
+	if (clip_data_buffer == NULL)
+	{
+	    /* allocation failed? */
+	    EMSG("E453: could not allocate clipboard memory buffer");
+	    FreeDOSMemory(protected_mode_selector);	/* clean up DOS mem */
+	    return NULL;				/* early exit */
+	}
+
+	*(clip_data_buffer + clip_data_size) = '\0';	/* ensure terminated */
+
+	/* Copy the data from DOS memory to Vim-accessible memory. */
+	movedata(				/* DJGPP version of memcpy() */
+		protected_mode_selector, 0, /* source: DOS ad (via selector) */
+		_my_ds(), (unsigned)clip_data_buffer,
+						/* target: normal mem address */
+		clip_data_size);		/* how many bytes */
+
+	/* Free the DOS buffer and release the DPMI prot-mode selector. */
+	FreeDOSMemory(protected_mode_selector);	 /* clean up DOS memory */
+
+	return clip_data_buffer;    /* return pointer to allocated buffer */
+
+    default:		/* unknown clipboard format */
+	return NULL;
+    }
+}
+
+/*
+ * SetClipboardData: send 'clip_data_size' bytes of data from the buffer
+ * pointed to by 'clip_data', to the Windows clipboard.  The data is
+ * registered with the clipboard as being in the 'clip_data_format'
+ * format.
+ */
+    int
+SetClipboardData(
+	int	clip_data_format,
+	char_u	*clip_data,
+	int	clip_data_size,
+	int	clip_data_type)
+{
+    __dpmi_regs  dpmi_regs;
+
+    int		real_mode_segment_address;
+    int		protected_mode_selector;
+    long_u	protected_mode_offset = 0L;
+
+    char_u	*clip_sel_type;
+
+    /* If we're using the CF_VIMCLIP custom format, allocate an extra
+     * byte for clip_sel_type, which is a character indicating the type
+     * of text selection: MLINE, MCHAR, or MBLOCK.
+     */
+    if (clip_data_format == CF_VIMCLIP)
+	clip_data_size++;			/* extra byte for marker */
+
+    /* Data cannot be sent directly from a Vim string (pClipData) to
+     * the Windows clipboard, because the Windows clipboard interface
+     * expects a 16-bit (DOS) segment:offset address for the source
+     * buffer.  Therefore we must create a "transfer buffer" in the DOS
+     * memory region (in the first 1 MByte of address space) and copy
+     * the Vim string into that.  From there, the data can then be sent
+     * to the Windows clipboard.
+     *
+     * To allocate DOS memory, we must use __dpmi_allocate_dos_memory()
+     * instead of lalloc() or alloc().  If the allocation fails, it will
+     * almost invariably be because there is not enough DOS memory
+     * available to accommodate the size of clip_data.  There is nothing
+     * we can do about this, we simply have to fail.
+     */
+    real_mode_segment_address = __dpmi_allocate_dos_memory(
+	    (clip_data_size + 15) >> 4,	/* buffer size, in 16-byte paragraphs */
+	    &protected_mode_selector);	/* prot-mode selector for the address */
+
+    if (real_mode_segment_address == -1)
+    {
+	/* memory allocation failed. */
+	/* Technically we don't know why the allocation failed, but
+	 * almost always it will be because there wasn't enough DOS
+	 * memory to satisfy the request.  On my system, DJGPP is able
+	 * to satisfy a DOS allocation request up to about 600K in size.
+	 * This depends however on HIMEM.SYS and EMM386.EXE settings.
+	 */
+	return FALSE;				/* early exit */
+    }
+
+    /* Copy data from Vim's buffer (clip_data) into the DOS transfer buffer.
+     * This can be larger than 64K; movedata() takes care of crossing any
+     * 16-bit segment boundaries.  Note that clip_data_size's null terminator
+     * is copied.
+     *
+     * If we're using Vim's custom clipboard format, we must copy one extra
+     * byte to indicate the type of selection: line, character, or block.
+     */
+    if (clip_data_format == CF_VIMCLIP)
+    {
+	switch (clip_data_type)
+	{
+	    default:
+	    case MLINE:	    clip_sel_type = "L";	break;
+	    case MCHAR:	    clip_sel_type = "C";	break;
+	    case MBLOCK:    clip_sel_type = "B";	break;
+	}
+
+	movedata(
+		_my_ds(), (unsigned)clip_sel_type,
+					    /* source: normal memory address */
+		protected_mode_selector, 0, /* target: DOS ad (via selector) */
+		STRLEN(clip_sel_type));	    /* how many bytes to copy */
+
+	protected_mode_offset += STRLEN(clip_sel_type);	/* allow for marker */
+    }
+
+    movedata(
+	_my_ds(), (unsigned)clip_data,	/* source: normal memory address */
+	protected_mode_selector,	/* target: DOS address (via selector) */
+	protected_mode_offset,		/* non-zero, if using clip_sel_type */
+	clip_data_size);		/* how many bytes to copy */
+
+    /* Send data from the DOS transfer buffer to the Windows clipboard.
+     * int 02xf, AX = 0x1703 sends SI:CX bytes of data from the buffer
+     * at ES:BX, to the clipboard.
+     */
+    dpmi_regs.x.ax = 0x1703;			/* send clipboard data */
+    dpmi_regs.x.dx = clip_data_format;		/* flag: format of the data */
+    dpmi_regs.x.si = ((clip_data_size >> 16)
+	    & 0x0000ffffL);			/* hi word of data size */
+    dpmi_regs.x.cx = (clip_data_size & 0x0000ffffL);
+						/* lo word of data size */
+    dpmi_regs.x.es = real_mode_segment_address;	/* buffer address: segment */
+    dpmi_regs.x.bx = 0;				/* buffer address: offset */
+    if (__dpmi_int( 0x2f, &dpmi_regs) == -1)
+    {
+	/* real-mode interrupt failed. */
+	FreeDOSMemory(protected_mode_selector);   /* clean up DOS memory */
+	return FALSE;				  /* early exit */
+    }
+
+    /* Free the DOS buffer and release the DPMI prot-mode selector. */
+    FreeDOSMemory(protected_mode_selector);	  /* clean up DOS memory */
+
+    return TRUE;	/* TRUE --> data successfully sent to clipboard */
+}
+
+#endif	/* FEAT_CLIPBOARD */
 #endif /* DJGPP */

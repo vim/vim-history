@@ -918,6 +918,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +builtin_terms	various.txt	/*+builtin_terms*
 +byte_offset	various.txt	/*+byte_offset*
 +cindent	various.txt	/*+cindent*
++clipboard	various.txt	/*+clipboard*
 +cmd	editing.txt	/*+cmd*
 +cmdline_compl	various.txt	/*+cmdline_compl*
 +cmdline_hist	various.txt	/*+cmdline_hist*
@@ -2856,6 +2857,8 @@ E237	various.txt	/*E237*
 E238	various.txt	/*E238*
 E239	sign.txt	/*E239*
 E24	message.txt	/*E24*
+E240	eval.txt	/*E240*
+E241	eval.txt	/*E241*
 E242	syntax.txt	/*E242*
 E243	if_ole.txt	/*E243*
 E244	options.txt	/*E244*
@@ -3324,6 +3327,7 @@ W12	message.txt	/*W12*
 W13	message.txt	/*W13*
 W14	message.txt	/*W14*
 W15	repeat.txt	/*W15*
+W16	message.txt	/*W16*
 WORD	motion.txt	/*WORD*
 Win32	os_win32.txt	/*Win32*
 WinEnter	autocmd.txt	/*WinEnter*
@@ -4078,6 +4082,7 @@ ftplugin	usr_41.txt	/*ftplugin*
 ftplugin-docs	filetype.txt	/*ftplugin-docs*
 ftplugin-overrule	filetype.txt	/*ftplugin-overrule*
 ftplugin-special	usr_41.txt	/*ftplugin-special*
+ftplugins	usr_05.txt	/*ftplugins*
 function-argument	eval.txt	/*function-argument*
 function-key	intro.txt	/*function-key*
 function-list	usr_41.txt	/*function-list*
@@ -4866,6 +4871,7 @@ phtml.vim	syntax.txt	/*phtml.vim*
 pi_expl.txt	pi_expl.txt	/*pi_expl.txt*
 pi_gzip.txt	pi_gzip.txt	/*pi_gzip.txt*
 pi_netrw.txt	pi_netrw.txt	/*pi_netrw.txt*
+pi_spec.txt	pi_spec.txt	/*pi_spec.txt*
 plugin	usr_05.txt	/*plugin*
 plugin-details	filetype.txt	/*plugin-details*
 plugin-special	usr_41.txt	/*plugin-special*
@@ -5090,7 +5096,13 @@ sniff-commands	if_sniff.txt	/*sniff-commands*
 sniff-compiling	if_sniff.txt	/*sniff-compiling*
 sniff-intro	if_sniff.txt	/*sniff-intro*
 space	intro.txt	/*space*
+spec-customizing	pi_spec.txt	/*spec-customizing*
+spec-how-to-use-it	pi_spec.txt	/*spec-how-to-use-it*
 spec-plugin	filetype.txt	/*spec-plugin*
+spec-setting-a-map	pi_spec.txt	/*spec-setting-a-map*
+spec_chglog_format	pi_spec.txt	/*spec_chglog_format*
+spec_chglog_prepend	pi_spec.txt	/*spec_chglog_prepend*
+spec_chglog_release_info	pi_spec.txt	/*spec_chglog_release_info*
 special-buffers	windows.txt	/*special-buffers*
 speed-up	tips.txt	/*speed-up*
 splitfind	windows.txt	/*splitfind*

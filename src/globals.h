@@ -324,6 +324,10 @@ EXTERN int	hold_gui_events INIT(= 0);
 EXTERN int	updating_screen INIT(= FALSE);
 EXTERN int	new_pixel_width INIT(= 0);
 EXTERN int	new_pixel_height INIT(= 0);
+
+/* Window position from ":winpos", to be used when opening the GUI window. */
+EXTERN int	gui_win_x INIT(= -1);
+EXTERN int	gui_win_y INIT(= -1);
 #endif
 
 #ifdef FEAT_CLIPBOARD
@@ -667,7 +671,7 @@ EXTERN cmdmod_T	cmdmod;			/* Ex command modifiers */
 
 EXTERN int	msg_silent INIT(= 0);	/* don't print messages */
 EXTERN int	emsg_silent INIT(= 0);	/* don't print error messages */
-EXTERN int	cmd_silent INIT(= 0);	/* don't echo the command line */
+EXTERN int	cmd_silent INIT(= FALSE); /* don't echo the command line */
 
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 EXTERN int	swap_exists_action INIT(= 0);	/* use dialog when swap file

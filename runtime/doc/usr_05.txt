@@ -1,4 +1,4 @@
-*usr_05.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_05.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -9,20 +9,20 @@ Vim can be tuned to work like you want it to.  This chapter shows you how to
 make Vim start with options set to different values.  Add plugins to extend
 Vims capabilities.  Or define your own macros.
 
-|05.1|  The vimrc file
-|05.2|  The example vimrc file explained
-|05.3|  Simple mappings
-|05.4|  Adding a plugin
-|05.5|  Adding a help file
-|05.6|  The option window
-|05.7|  Often used options
+|05.1|	The vimrc file
+|05.2|	The example vimrc file explained
+|05.3|	Simple mappings
+|05.4|	Adding a plugin
+|05.5|	Adding a help file
+|05.6|	The option window
+|05.7|	Often used options
 
      Next chapter: |usr_06.txt|  Using syntax highlighting
  Previous chapter: |usr_04.txt|  Making small changes
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*05.1*  The vimrc file
+*05.1*	The vimrc file
 
 You probably got tired of typing commands that you use very often.  To start
 with all your favorite option settings and mappings, you write them in what is
@@ -61,7 +61,7 @@ This chapter only explains the most basic items.  For more information on how
 to write a Vim script file: |usr_41.txt|.
 
 ==============================================================================
-*05.2*  The example vimrc file explained		*vimrc_example.vim*
+*05.2*	The example vimrc file explained		*vimrc_example.vim*
 
 In the first chapter was explained how the example vimrc (included in the
 Vim distribution) file can be used to make Vim startup in not-compatible mode
@@ -104,7 +104,7 @@ new line.
 	endif
 
 This tells Vim to keep a backup copy of a file when overwriting it.  But not
-on the VMS system, since that keeps old versions of files already.  The backup
+on the VMS system, since it keeps old versions of files already.  The backup
 file will have the same name as the original file with "~" added.  See |07.4|
 >
 
@@ -218,7 +218,7 @@ See |line-continuation|.  This only works in a Vim script file, not when
 typing commands at the command-line.
 
 ==============================================================================
-*05.3*  Simple mappings
+*05.3*	Simple mappings
 
 A mapping enables you to bind a set of Vim commands to a single key.  Suppose,
 for example, that you need to surround certain words with curly braces.  In
@@ -265,7 +265,7 @@ The ":map" command (with no arguments) lists out your current mappings.  At
 least the ones for Normal mode.  More about mappings in section |40.1|.
 
 ==============================================================================
-*05.4*  Adding a plugin					*add-plugin* *plugin*
+*05.4*	Adding a plugin					*add-plugin* *plugin*
 
 Vim's functionality can be extended by adding plugins.  A plugin is nothing
 more than a Vim script file that is loaded automatically when Vim starts.  You
@@ -328,7 +328,7 @@ That's all!  Now you can use the commands defined in this plugin to justify
 text.
 
 
-FILETYPE PLUGINS					*add-filetype-plugin*
+FILETYPE PLUGINS			*add-filetype-plugin* *ftplugins*
 
 The Vim distribution comes with a set of plugins for different filetypes that
 you can start using with this command: >
@@ -407,7 +407,7 @@ Further reading:
 			plugin doesn't work.
 
 ==============================================================================
-*05.5*  Adding a help file			*add-local-help*
+*05.5*	Adding a help file			*add-local-help*
 
 If you are lucky, the plugin you installed also comes with a help file.  We
 will explain how to install the help file, so that you can easily find help
@@ -454,7 +454,7 @@ help files have been added and jump to them through the tag.
 For writing a local help file, see |write-local-help|.
 
 ==============================================================================
-*05.6*  The option window
+*05.6*	The option window
 
 If you are looking for an option that does what you want, you can search in
 the help files here: |options|.  Another way is by using this command: >
@@ -493,7 +493,7 @@ border.  This is what the 'scrolloff' option does, it specifies an offset
 from the window border where scrolling starts.
 
 ==============================================================================
-*05.7*  Often used options
+*05.7*	Often used options
 
 There are an awful lot of options.  Most of them you will hardly ever use.
 Some of the more useful ones will be mentioned here.  Don't forget you can
@@ -605,7 +605,7 @@ messages.  Example: >
 
 	:set cmdheight=3
 
-This does mean there is less room to edit text, thus it's a compromize.
+This does mean there is less room to edit text, thus it's a compromise.
 
 ==============================================================================
 

@@ -1,4 +1,4 @@
-*usr_45.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_45.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 

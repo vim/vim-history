@@ -3,21 +3,141 @@ INSTALLmac.txt - Installation of Vim on Macintosh
 This file contains instructions for compiling Vim. If you already have an
 executable version of Vim, you don't need this.
 
+-----------------------------------------------------------
+
+Here's a summary of how Vim can be compiled under MacOS, depending on
+the version of MacOS, the compiler and the interface.
+
+A. Supported compiler and environement
+
+ 1. CodeWarrior (pre-MacOS X)
+ 2. MPW (pre-MacOS X)
+ 3. Project Builder (MacOS X)
+ 4. Unix Compiler (MacOS X) 
+
+B. Supported user interface
+
+ 1. Original MacOS Toolbox   [Compile with A.1 and A.2]
+ 2. Carbon MacOS             [Compile with A.3]
+ 3. X (Athena, GTK, Motif).  [Compile with A.4]
+ 4. Plain Text               [Compile with A.4]
+
+ NOTE: Sorry, Cocoa is not expected to be supported for now.
+
+C. Supported "OS" style
+
+ 1. MacOS                    [Compile as B.1]
+ 2. MacOS X                  [Compile as B.2]
+ 3. BSD Unix                 [Compile as B.2, B.3 and B.4]
+ 
+-----------------------------------------------------------
+
+Special Consideration
+---------------------
+
+B.2: Compiling for Carbon
+
+ Currently the Carbon version can only be compiled properly under MacOS X.
+ The binary created in that way does'nt work under previous version.
+
+B.3: Compiling for X
+
+ You need to first install XFree86 and XDarwin.
+ Please visit http://www.XDarwin.org
+
+C.1: The MacOS version
+
+ Both ':' and '/' supported as path separator.
+
+C.2: The MacOS X version
+
+ Only '/' supported as path separator.
+
+C.3: The BSD Unix version
+
+ Only '/' supported as path separator.
+ Shell command can be invoked (:!)
+
+-----------------------------------------------------------
+
+A.1: Compiling with CodeWarior
+ 
+ 1. Expand the resource file:
+   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
+
+ 2. Expand the project file:
+   - ../src/os_mac.sit.hqx (to produce ../src/vim.mcp)
+
+ 3. Open vim.mcp with CodeWarior
+ 
+   This is a CodeWarior 9 project file. When using a newer version,
+   you need to convert the file. you may also need to change some
+   access path.
+
+   NOTE: the current project file is old, you need to add a few files:
+         (ex_cmds2.c, fold.c, mbyte.c, move.c)
+
+ 4. Select the target PPC, 68k FAT (with/without debugger)
+
+ 5. Compile
+ 
+ 
+A.2: Compiling with MPW.
+
+  TODO:
+
+
+
+A.3: Compiling with Project Builder.
+
+ 1. Expand the resource file:
+   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
+
+ 2. Open ../src/os_mac.pbproject with Project Builder
+
+ 3. Choose between C.2 and C.3
+
+    In Target ... CCFLAGS use:
+
+     -DMACOS_X
+       if you want a normal MacOS X version (using os_mac.c)
+
+     -DMACOS_X_UNIX
+       if you want to use shell commands (using os_unix.c)
+       NOTE: some functionality may be missing
+  
+ 4. Hammer the build button in ;)
+
+
+A.4: Using the unix compiler.
+
+ From Terminal.app you can use "configure" and "make". Refer to INSTALL for
+ full detail. The MacOS port is not involve here.
+
+
+------------------------------------------------------
+
+OLD FILE: SOME INFO MAY STILL BE USEFUL
+
 NOTE: Users of more recent CodeWarrior version may have to reset the library
       path, and change the mch_delay in os_mac.c so the finalTick is unsigned.
 
 Compilation instructions:
 
 1. Visit the Vim ftp site (see ftp://ftp.vim.org/pub/vim/MIRRORS)
-   and obtain the following three files:
+   and obtain the following five files:
 
-   unix/vim-X.X-src.tar.gz
-   unix/vim-X.X-rt.tar.gz
+   unix/vim-X.X-src1.tar.gz
+   unix/vim-X.X-src2.tar.gz
+   unix/vim-X.X-rt1.tar.gz
+   unix/vim-X.X-rt2.tar.gz
    extra/vim-X.X-extra.tar.gz
 
    where X.X is the version number.
+   
+   NOTE: the language support is not yet supported 
 
-2. Expand the three archives.
+2. Expand the archives.
 
 3. Apply patches if they exist.  (Patch files are found in the ftp
    site in the "patches" directory.)
@@ -29,18 +149,21 @@ Compilation instructions:
    For example, if you want to add the FEAT_MBYTE feature, turn on
    #define FEAT_MBYTE
 
-5. Expand the following two files:
+5. Expand the resource file:
 
    - vim-X.X/src/os_mac.rsr.hqx (to produce vim-X.X/src/gui_mac.rsrc)
+
+6. If using CodeWarrior, expand the project file:
+
    - vim-X.X/src/os_mac.sit.hqx (to produce vim-X.X/src/vim.mcp)
 
    The latter file is the CodeWarrior project file to be used.
 
-6. Launch CodeWarrior by double clicking vim.mcp.
+7. Launch CodeWarrior by double clicking vim.mcp.
 
-7. Check additional files if you include non-standard features.
+8. Check additional files if you include non-standard features.
 
    For example, if you added the MULTI_BYTE feature, check
    Extras/mbyte.c in the project window.
 
-8. Compile and you will obtain binaries: vimPPC, Vim 68k, and/or vimFAT.
+9. Compile and you will obtain binaries: vimPPC, Vim 68k, and/or vimFAT.

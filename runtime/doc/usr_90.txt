@@ -1,4 +1,4 @@
-*usr_90.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_90.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -9,17 +9,17 @@ Before you can use Vim you have to install it.  Depending on your system it's
 simple or easy.  This chapter gives a few hints and also explains how
 upgrading to a new version is done.
 
-|90.1|  Unix
-|90.2|  MS-Windows
-|90.3|  Upgrading
-|90.4|  Common installation issues
-|90.5|  Uninstalling Vim
+|90.1|	Unix
+|90.2|	MS-Windows
+|90.3|	Upgrading
+|90.4|	Common installation issues
+|90.5|	Uninstalling Vim
 
  Previous chapter: |usr_45.txt|  Select your language
 Table of contents: |usr_toc.txt|
 
 ==============================================================================
-*90.1*  Unix
+*90.1*	Unix
 
 First you have to decide if you are going to install Vim system-wide or for a
 single user.  The installation is almost the same, but the directory where Vim
@@ -202,7 +202,7 @@ information here: |feature-list|.
 source code yourself!
 
 ==============================================================================
-*90.2*  MS-Windows
+*90.2*	MS-Windows
 
 To install the Vim program for Microsoft Windows, you will need:
 
@@ -264,7 +264,7 @@ Borland command-line compiler 5.5 can be used, as well as the free MingW and
 Cygwin compilers.  Check the file src/INSTALLpc.txt for hints.
 
 ==============================================================================
-*90.3*  Upgrading
+*90.3*	Upgrading
 
 If you are running one version of Vim and want to install another, here is
 what to do.
@@ -317,7 +317,7 @@ somewhere.
 previous version.  See |90.5|.
 
 ==============================================================================
-*90.4*  Common installation issues
+*90.4*	Common installation issues
 
 This section describes some of the common problems that occur when installing
 Vim and suggests some solutions.  It also contains answers to many
@@ -394,7 +394,7 @@ See the Vim-online site: http://vim.sf.net.  There is an archive with hints
 from Vim users.  You might also want to search in the |maillist-archive|.
 
 ==============================================================================
-*90.5*  Uninstalling Vim
+*90.5*	Uninstalling Vim
 
 In the unlikely event you want to uninstall Vim completely, this is how you do
 it.

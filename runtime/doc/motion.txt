@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0ap.  Last change: 2001 Jul 28
+*motion.txt*    For Vim version 6.0aq.  Last change: 2001 Jul 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -302,8 +302,8 @@ gg			Goto line [count], default first line, on the first
 			non-blank character (linewise).  If 'startofline' not
 			set, keep the same column.
 
-:[range]		Set the cursor on the (last) specified line number
-			(cannot be used with an operator).
+:[range]		Set the cursor on the specified line number.  If
+			there are several numbers, the last one is used.
 
 							*N%*
 {count}%		Go to {count} percentage in the file, on the first

@@ -785,6 +785,8 @@ gui_mch_init(void)
 	atexit(atexitDoThis);
 	TextDimensions();
 	returnCode = OK; /* we've had sucess */
+	if (gui_win_x != -1 && gui_win_y != -1)
+	    gui_mch_set_winpos(gui_win_x, gui_win_y)
     }
     gui.menu = NULL;
 

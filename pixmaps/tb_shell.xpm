@@ -6,8 +6,8 @@ static char * tb_shell_xpm[] = {
 " 	s none	m none	c none",
 ".	s iconColor1	m black	c #000000",
 "X	s iconGray6	m black	c #636363",
-"o	s iconGray2	m white	c #bdbdbd",
-"O	s iconColor2	m white	c #FFFFFF",
+"o	s iconGray2	m none	c #bdbdbd",
+"O	s iconColor2	m none	c #FFFFFF",
 "+	s bottomShadowColor	m black	c #5D6069",
 /* pixels */
 "                  ",

@@ -358,9 +358,10 @@ main(int argc, char *argv[])
 	system("gvim.exe -unregister");
     }
 
+    delete_uninstall_key();
+
     if (interactive)
     {
-	delete_uninstall_key();
 	printf("\nYou may now want to delete the Vim executables and runtime files.\n");
 	printf("(They are still where you unpacked them.)\n");
     }

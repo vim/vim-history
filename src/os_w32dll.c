@@ -12,6 +12,9 @@
  *
  * Ron Aaron <ron@mossbayeng.com> wrote this and  the DLL support code.
  */
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 BOOL WINAPI DllMain(HINSTANCE  hinstDLL, DWORD	fdwReason, LPVOID  lpvReserved)

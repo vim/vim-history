@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ap.  Last change: 2001 Jul 28
+*gui.txt*       For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -125,6 +125,9 @@ with the 'guiheadroom' option.
 		The coordinates should specify the position in pixels of the
 		top left corner of the window.  Does not work in all versions.
 		Does work in an (new) xterm |xterm-color|.
+		When the GUI window has not been opened yet, the values are
+		remembered until the window is opened.  The position is
+		adjusted to make the window fit on the screen (if possible).
 
 							*:win* *:winsize*
 :win[size] {width} {height}
@@ -315,7 +318,7 @@ button with the shift key pressed when 'mousemodel' is "popup".
 The middle mouse button pastes the text.
 The selection is removed when the selected text is scrolled or changed.
 On the command line CTRL-Y can be used to copy the selection into the
-clipboard.
+clipboard.  To do this from Insert mode, use CTRL-O : CTRL-Y <CR>.
 
 
 3.4 Using Mouse on Status Lines				*gui-mouse-status*
@@ -376,12 +379,14 @@ selected is about to change (eg with a left mouse click somewhere), or when
 another application wants to paste the selected text.  Then the text is put
 in the "* register.  For example, to cut a line and make it the current
 selection/put it on the clipboard: >
+
 	"*dd
 
 Similarly, when you want to paste a selection from another application, e.g.,
 by clicking the middle mouse button, the selection is put in the "* register
 first, and then 'put' like any other register.  For example, to put the
 selection (contents of the clipboard): >
+
 	"*p
 
 When using this register under X11, also see |x11-selection|.  This also

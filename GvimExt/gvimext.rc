@@ -48,7 +48,7 @@ BEGIN
             VALUE "CompanyName", "Tianmiao Hu's Developer Studio\0"
             VALUE "FileDescription", "A small project for the context menu of gvim!\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "gvim righ-click menu extension\0"
+            VALUE "InternalName", "gvim right-click menu extension\0"
             VALUE "LegalCopyright", "Copyright © 1999 Tianmiao Hu\0"
             VALUE "LegalTrademarks", "Tianmiao Hu's Gvim Context Menu Extension\0"
             VALUE "OriginalFilename", "gvimext.dll\0"

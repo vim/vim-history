@@ -198,7 +198,7 @@ getcmdline(firstc, count, indent)
     ccline.cmdbuff[0] = NUL;
 
     redir_off = TRUE;		/* don't redirect the typed command */
-    if (cmd_silent == 0)
+    if (!cmd_silent)
     {
 	i = msg_scrolled;
 	msg_scrolled = 0;		/* avoid wait_return message */
@@ -568,7 +568,7 @@ getcmdline(firstc, count, indent)
 				   truncate the cmdline now. */
 	    if (ccheck_abbr(c + ABBR_OFF))
 		goto cmdline_changed;
-	    if (cmd_silent == 0)
+	    if (!cmd_silent)
 	    {
 		windgoto(msg_row, 0);
 		out_flush();
@@ -781,7 +781,7 @@ getcmdline(firstc, count, indent)
 
 		    vim_free(ccline.cmdbuff);	/* no commandline to return */
 		    ccline.cmdbuff = NULL;
-		    if (cmd_silent == 0)
+		    if (!cmd_silent)
 		    {
 			msg_col = 0;
 			msg_putchar(' ');		/* delete ':' */
@@ -985,14 +985,6 @@ getcmdline(firstc, count, indent)
 		if (has_mbyte)
 		    set_cmdspos_cursor();
 #endif
-		goto cmdline_not_changed;
-
-	case K_SILENT:				/* end of silent menu entry */
-		if (cmd_silent > 0)
-		{
-		    if (--cmd_silent == 0)
-			redrawcmd();
-		}
 		goto cmdline_not_changed;
 
 	case K_IGNORE:
@@ -1359,7 +1351,7 @@ cmdline_changed:
 	/*
 	 * 'incsearch' highlighting.
 	 */
-	if (p_is && cmd_silent == 0 && (firstc == '/' || firstc == '?'))
+	if (p_is && !cmd_silent && (firstc == '/' || firstc == '?'))
 	{
 	    /* if there is a character waiting, search and redraw later */
 	    if (char_avail())
@@ -1894,7 +1886,7 @@ putcmdline(c, shift)
     int		c;
     int		shift;
 {
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
     msg_no_more = TRUE;
     msg_putchar(c);
@@ -1911,7 +1903,7 @@ putcmdline(c, shift)
     void
 unputcmdline()
 {
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
     msg_no_more = TRUE;
     if (ccline.cmdlen == ccline.cmdpos)
@@ -2015,7 +2007,7 @@ put_on_cmdline(str, len, redraw)
 	}
 #endif
 
-	if (redraw && cmd_silent == 0)
+	if (redraw && !cmd_silent)
 	{
 #if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
 	    if (cmdline_star)		/* only write '*' characters */
@@ -2102,7 +2094,7 @@ cmdline_del(from)
     void
 redrawcmdline()
 {
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
     need_wait_return = FALSE;
     compute_cmdrow();
@@ -2115,7 +2107,7 @@ redrawcmdprompt()
 {
     int		i;
 
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
     if (ccline.cmdfirstc)
 	msg_putchar(ccline.cmdfirstc);
@@ -2139,7 +2131,7 @@ redrawcmd()
     int		i;
 #endif
 
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
 
     msg_start();
@@ -2187,7 +2179,7 @@ compute_cmdrow()
     static void
 cursorcmd()
 {
-    if (cmd_silent > 0)
+    if (cmd_silent)
 	return;
     msg_row = cmdline_row + (ccline.cmdspos / (int)Columns);
     msg_col = ccline.cmdspos % (int)Columns;

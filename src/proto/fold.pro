@@ -20,6 +20,7 @@ void openFoldRecurse __ARGS((linenr_T lnum));
 void foldOpenCursor __ARGS((void));
 void newFoldLevel __ARGS((void));
 void foldCheckClose __ARGS((void));
+int foldManualAllowed __ARGS((int create));
 void foldCreate __ARGS((linenr_T start, linenr_T end));
 void deleteFold __ARGS((linenr_T start, linenr_T end, int recursive, int had_visual));
 void clearFolding __ARGS((win_T *win));

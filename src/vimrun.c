@@ -31,9 +31,15 @@ _oscmd;
 # define _getch getch
 #else
 # ifdef __MINGW32__
+#  ifndef WIN32_LEAN_AND_MEAN
+#   define WIN32_LEAN_AND_MEAN
+#  endif
 #  include <windows.h>
 # else
 #  ifdef __CYGWIN__
+#   ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN
+#   endif
 #   include <windows.h>
 #   define _getch getchar
 #  else

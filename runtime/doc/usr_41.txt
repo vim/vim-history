@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0ap.  Last change: 2001 Jul 28
+*usr_41.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -16,7 +16,7 @@ script.  There are a lot of them, thus this is a long chapter.
 |41.5|	Executing an expression
 |41.6|	Using functions
 |41.7|	Defining a function
-|41.8|  Various remarks
+|41.8|	Various remarks
 |41.9|	Writing a plugin
 |41.10|	Writing a filetype plugin
 |41.11|	Writing a compiler plugin
@@ -837,7 +837,7 @@ To delete the Show() function: >
 You get an error when the function doesn't exist.
 
 ==============================================================================
-*41.8*  Various remarks
+*41.8*	Various remarks
 
 Here is a summary of items that apply to Vim scripts.  They are also mentioned
 elsewhere, but form a nice checklist.

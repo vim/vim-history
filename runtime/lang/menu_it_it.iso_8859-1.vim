@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
-" Last Change:	2001 Jul 28
+" Last Change:	2001 Jul 31
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,6 +13,7 @@ scriptencoding iso-8859-1
 " Help menu
 menut &Help			&Aiuto
 menut &Overview<Tab><F1>	&Panoramica<Tab><F1>
+menut &User\ Manual		Manuale\ &Utente
 menut &How-to\ links	Co&me\.\.\.
 "menutrans &GUI			&GUI
 menut &Credits		&Crediti

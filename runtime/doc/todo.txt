@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 29
+*todo.txt*      For Vim version 6.0aq.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -32,7 +32,6 @@ See |develop.txt| for development plans.
 Amiga: test 47 fails.  Fails to read diff or does this in a wrong way,
 resulting in a ml_get error.
 
-Test printing with duplex and uncollated copies, odd nr of pages.
 
 Vi incompatibility:
 8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
@@ -69,6 +68,9 @@ Vi incompatibility:
     then editing "test2", you end up editing buffer "test" again.  Change the
     name of the buffer to the actual file, instead of using the name of the
     symlink?
+7   The ":undo" command works differently in Ex mode.  Edit a file, make some
+    changes, "Q", "undo" and _all_ changes are undone, like editing the file
+    was one command.
 7   The ":map" command output overwrites the command.  Perhaps it should keep
     the ":map" when it's used without arguments?
 7   When interrupting reading a file, Vi considers the buffer modified.  Add a
@@ -114,6 +116,7 @@ GTK+ GUI known bugs:
 9   GTK GUI with Gnome: When $DISPLAY is wrong, ":gui" unexpectedly exits.
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
+    When using confirm() the mouse pointer is invisible in the main window.
 9   When logging out from KDE, vim is not told to save its files.  Catching
     the WM_SAVE_YOURSELF event doesn't work.
 9   When selecting a font from the font selector with an embedded space it
@@ -194,15 +197,18 @@ Win32 GUI known bugs:
 7   When scrolling, and a background color is dithered, the dither pattern
     doesn't always join correctly between the scolled area and the new drawn
     area (Koloseike).
-9   Replace SendToVim and OpenWithVim with C++ versions? (Rafal Dibrowa)
 8   Tear-off menu causes a crash when it contains many items (>100).
     (Pedro Gomes)  Probably because DLG_ALLOC_SIZE is a fixed number.
 
 
+Athena and Motif:
+8   Perhaps use fontsets for everything?
+6   When starting in English and switching the language to Japanese, setting
+    the locale with ":lang", 'guifontset' and "hi menu font=", deleting all
+    menus and setting them again, the menus don't use the new font.
+
+
 Athena GUI:
-8   Athena: using a fontset for menus doesn't work.  Check code for
-    menu_fontset marked with EXPERIMENTAL.  Perhaps use fontsets for
-    everything?
 9   When dragging the scrollbar thumb very fast, focus is only obtained in
     the scrollbar itself.  And the thumb is no longer updated when moving
     through files.
@@ -429,9 +435,13 @@ VMS:
 
 
 "Small" problems:
-8   ":hardcopy": When printing collated copies with duplex and there is an odd
-    number of pages, the first page of the second copy goes on the back of the
-    last page of the first copy. (Mike Williams)
+8   ":hardcopy":
+    - Separate the machine independent and machine specific parts better. (Mike
+      Williams)
+    - When printing on HP Laserjet L5 some of the colored text disappears.
+      Probably have to do our own dithering.
+    - Need to handle unprintable characters.
+    - ml_get error? (Xiangjiang Ma)
 9   dosinst.c: The DJGPP version can't uninstall the Uninstall registry key on
     Windows NT.  How to install a .inf file on Windows NT and how to detect
     that Windows NT is being used?
@@ -691,6 +701,9 @@ User Friendlier:
     links, so that command line arguments are passed on unmodified? (Walter
     Briscoe)
 8   Windows install: Be able to associate Vim with a selection of file types?
+8   Windows uninstall: Have uninstal.c delete the vimfiles directories that
+    dosinst.c creates.  List the contents of the directory (recursively) if
+    the user asks for it.  Requires an implementation of "rm -rf".
 
 
 Folding:
@@ -2279,7 +2292,6 @@ Registers:
 8   Should be able to yank and delete into the "/ register.
     How to take care of the flags (offset, magic)?
 7   Add ! register, for shell commands. (patch from Grenie)
-8   Make clipboard work for Dos32 version. (Negri)
 
 
 Various improvements:

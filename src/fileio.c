@@ -22,6 +22,9 @@
 #include "vim.h"
 
 #ifdef WIN3264
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
 # include <windows.h>	/* For DeleteFile(), GetTempPath(), etc. */
 #endif
 
@@ -140,7 +143,7 @@ filemess(buf, name, s, attr)
 {
     int		msg_scroll_save;
 
-    if (msg_silent)
+    if (msg_silent != 0)
 	return;
     msg_add_fname(buf, name);	    /* put file name in IObuff with quotes */
     /* If it's extremely long, truncate it. */
@@ -410,6 +413,11 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	{
 	    curbuf->b_mtime = curbuf->b_mtime_read = (long)st.st_mtime;
 	    curbuf->b_orig_size = (size_t)st.st_size;
+#ifdef HAVE_ST_MODE
+	    curbuf->b_orig_mode = (int)st.st_mode;
+#else
+	    curbuf->b_orig_mode = mch_getperm(fname);
+#endif
 #if defined(RISCOS) && defined(FEAT_OSFILETYPE)
 	    /* Read the filetype into the buffer local filetype option. */
 	    mch_read_filetype(fname);
@@ -439,6 +447,7 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 	    curbuf->b_mtime = 0;
 	    curbuf->b_mtime_read = 0;
 	    curbuf->b_orig_size = 0;
+	    curbuf->b_orig_mode = 0;
 	}
 
 	/* Reset the "new file" flag.  It will be set again below when the
@@ -4903,6 +4912,7 @@ buf_check_timestamp(buf, focus)
     int		can_reload = FALSE;
 #endif
     size_t	orig_size = buf->b_orig_size;
+    int		orig_mode = buf->b_orig_mode;
 
     /* If there is no file name, the buffer is not loaded, or 'buftype' is
      * set: ignore this buffer. */
@@ -4926,11 +4936,17 @@ buf_check_timestamp(buf, focus)
 	{
 	    buf->b_mtime = 0;
 	    buf->b_orig_size = 0;
+	    buf->b_orig_mode = 0;
 	}
 	else
 	{
 	    buf->b_mtime = (long)st.st_mtime;
 	    buf->b_orig_size = (size_t)st.st_size;
+#ifdef HAVE_ST_MODE
+	    buf->b_orig_mode = (int)st.st_mode;
+#else
+	    buf->b_orig_mode = mch_getperm(buf->b_ffname);
+#endif
 	}
 
 	/* Don't do anything for a directory.  Might contain the file
@@ -4983,6 +4999,8 @@ buf_check_timestamp(buf, focus)
 		    else if (orig_size != buf->b_orig_size
 			    || buf_contents_changed(buf))
 			mesg = _("W11: Warning: File \"%s\" has changed since editing started");
+		    else if (orig_mode != buf->b_orig_mode)
+			mesg = _("W16: Warning: Mode of file \"%s\" has changed since editing started");
 		}
 	    }
 	}
@@ -5078,9 +5096,10 @@ buf_check_timestamp(buf, focus)
 	{
 	    if (bufempty())
 		old_line_count = 0;
+	    curbuf->b_flags |= BF_CHECK_RO;	/* check for RO again */
 	    if (readfile(buf->b_ffname, buf->b_fname, (linenr_T)0, (linenr_T)0,
 			(linenr_T)MAXLNUM, &ea, READ_NEW) == FAIL)
-		EMSG2(_("E321: Could not reload \"\""), buf->b_fname);
+		EMSG2(_("E321: Could not reload \"%s\""), buf->b_fname);
 	    else
 	    {
 		/* Delete the old lines. */

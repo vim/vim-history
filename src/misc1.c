@@ -2549,7 +2549,6 @@ get_keystroke()
 	    n = TO_SPECIAL(buf[1], buf[2]);
 	    if (buf[1] == KS_MODIFIER
 		    || n == K_IGNORE
-		    || n == K_SILENT
 #ifdef FEAT_MOUSE
 		    || n == K_LEFTMOUSE
 		    || n == K_LEFTMOUSE_NM
@@ -6397,6 +6396,9 @@ static int expand_backtick __ARGS((garray_T *gap, char_u *pat, int flags));
  * it's shared between these systems.
  */
 #ifdef WIN3264
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
 # include <windows.h>
 #endif
 

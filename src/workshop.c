@@ -393,7 +393,7 @@ workshop_add_mark_type(
 	    sprintf(cibuf, "linehl=WS%s", gbuf);
 	}
 	else
-	    cibuf[0] = NULL;
+	    cibuf[0] = NUL;
 
 	sprintf(cbuf, "sign define %d %s icon=%s", idx, cibuf, sign);
 	coloncmd(cbuf, TRUE);
@@ -638,7 +638,7 @@ workshop_menu_begin(
 	    break;
 	}
     }
-    mnembuf[idx++] = NULL;
+    mnembuf[idx++] = NUL;
     name = addUniqueMnemonic(mnembuf, label);
 
     sprintf(curMenuName, "%s", name);
@@ -681,11 +681,11 @@ workshop_submenu_end()
 
     p = strrchr(curMenuPriority, '.');
     ASSERT(p != NULL);
-    *p = NULL;
+    *p = NUL;
 
     p = strrchr(curMenuName, '.');
     ASSERT(p != NULL);
-    *p = NULL;
+    *p = NUL;
 }
 
 /*
@@ -745,7 +745,7 @@ workshop_menu_item(
     if (acceleratorText != NULL)
 	sprintf(accText, "<Tab>%s", acceleratorText);
     else
-	accText[0] = NULL;
+	accText[0] = NUL;
     updatePriority(False);
     sprintf(namebuf, "%s.%s", curMenuName, fixup(label));
     sprintf(cbuf, "amenu %s %s%s\t:wsverb %s<CR>",
@@ -964,7 +964,7 @@ workshop_set_option(
     }
 #endif
 
-    cbuf[0] = NULL;
+    cbuf[0] = NUL;
     switch (*option)		/* switch on 1st letter */
     {
 	case 's':
@@ -995,7 +995,7 @@ workshop_set_option(
 	    break;
 
 	case 'b':	/* these options are set from direct calls */
-	    if (option[7] == NULL && strcmp(option, "balloon") == 0)
+	    if (option[7] == NUL && strcmp(option, "balloon") == 0)
 	    {
 #ifdef WSDEBUG
 		/* set by direct call to workshop_balloon_mode */
@@ -1013,7 +1013,7 @@ workshop_set_option(
 	    }
 	    break;
     }
-    if (cbuf[0] != NULL)
+    if (cbuf[0] != NUL)
 	coloncmd(cbuf, TRUE);
 }
 
@@ -1185,7 +1185,7 @@ get_selection(
 	    if (sp != NULL)
 	    {
 		strncpy(sp, lp, llen);
-		sp[llen] = NULL;
+		sp[llen] = NUL;
 	    }
 	}
 	else
@@ -1220,7 +1220,7 @@ get_selection(
 		if ((slen + llen) < size)
 		{
 		    strncpy(&sp[slen], lp, llen);
-		    sp[slen + llen] = NULL;
+		    sp[slen + llen] = NUL;
 		}
 
 	    }
@@ -1249,7 +1249,7 @@ append_selection(
     if ((*slen + llen) <= *size)
     {
 	new_sp = (char *) realloc((void *) sp, BUFSIZ + *slen + llen);
-	if (*new_sp != NULL)
+	if (*new_sp != NUL)
 	{
 	    *size = BUFSIZ + *slen + llen;
 	    sp = new_sp;
@@ -1278,7 +1278,7 @@ load_buffer_by_name(
     if (lnum > 0)
 	sprintf(lnumbuf, "+%d", lnum);
     else
-	lnumbuf[0] = NULL;
+	lnumbuf[0] = NUL;
 
     sprintf(cbuf, "e %s %s", lnumbuf, filename);
     coloncmd(cbuf, False);
@@ -1395,7 +1395,7 @@ updatePriority(
 
     p = strrchr(curMenuPriority, '.');
     ASSERT(p != NULL);
-    *p++ = NULL;
+    *p++ = NUL;
 
     pri = atoi(p) + 10;		/* our new priority */
 
@@ -1415,7 +1415,7 @@ addUniqueMnemonic(
     char	*found;		/* pointer to possible mnemonic */
 
     found = NULL;
-    for (p = label; *p != NULL; p++)
+    for (p = label; *p != NUL; p++)
 	if (strchr(mnemonics, *p) == 0)
 	    if (found == NULL || (isupper(*p) && islower(*found)))
 		found = p;
@@ -1446,13 +1446,13 @@ fixup(
 
     lp = label;
     bp = buf;
-    while (*lp != NULL)
+    while (*lp != NUL)
     {
 	if (*lp == ' ' || *lp == '.')
 	    *bp++ = '\\';
 	*bp++ = *lp++;
     }
-    *bp = NULL;
+    *bp = NUL;
 
     return buf;
 }
@@ -1541,7 +1541,7 @@ fixAccelText(
 	return NULL;
 
     /* If the accelerator is shifted use the vim form */
-    if (strncmp("Shift+", ap, 6) == NULL)
+    if (strncmp("Shift+", ap, 6) == 0)
     {
 	shift = "S-";
 	ap += 6;
@@ -1692,7 +1692,7 @@ nameStrip(
 	    *bp++ = *raw;
 	raw++;
     }
-    *bp = NULL;
+    *bp = NUL;
     return buf;
 }
 
@@ -1705,7 +1705,7 @@ lookupVerb(
     int		i;		/* loop iterator */
 
     for (i = 0; i < menuMapSize; i++)
-	if (strcmp(menuMap[i].verb, verb) == NULL && skip-- == 0)
+	if (strcmp(menuMap[i].verb, verb) == 0 && skip-- == 0)
 	    return nameStrip(menuMap[i].name);
 
     return NULL;
@@ -1861,11 +1861,11 @@ findYourself(
 	path = strrchr(runbuf, '/');
 	if (path != NULL)
 	{
-	    if (strncmp(path, "/bin", 4) == NULL)
+	    if (strncmp(path, "/bin", 4) == 0)
 		setDollarVim(runbuf);
-	    else if (strncmp(path, "/src", 4) == NULL)
+	    else if (strncmp(path, "/src", 4) == 0)
 	    {
-		*path = NULL;	/* development tree */
+		*path = NUL;	/* development tree */
 		setDollarVim(runbuf);
 	    }
 	}

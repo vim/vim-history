@@ -27,7 +27,8 @@
 #define HAVE_LOCALE_H
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
-//#define USE_FNAME_CASE		/* adjust case of file names */
+#define HAVE_ST_MODE		/* have stat.st_mode */
+//#define USE_FNAME_CASE	/* adjust case of file names */
 #ifndef FEAT_CLIPBOARD
 # define FEAT_CLIPBOARD		/* include clipboard support */
 #endif

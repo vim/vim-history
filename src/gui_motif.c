@@ -34,11 +34,11 @@
 
 #include "vim.h"
 
-#ifdef HAVE_XM_XPMP_H
-# include <Xm/XpmP.h>
+#ifdef HAVE_X11_XPM_H
+# include <X11/xpm.h>
 #else
-# ifdef HAVE_X11_XPM_H
-#  include <X11/xpm.h>
+# ifdef HAVE_XM_XPMP_H
+#  include <Xm/XpmP.h>
 # endif
 #endif
 
@@ -229,6 +229,7 @@ gui_x11_create_widgets()
 	XmNleftAttachment, XmATTACH_FORM,
 	XmNrightAttachment, XmATTACH_FORM,
 	XmNbottomAttachment, XmATTACH_FORM,
+	XmNtopAttachment, XmATTACH_FORM,
 	XmNmarginWidth, 0,
 	XmNmarginHeight, 0,
 	XmNresizePolicy, XmRESIZE_ANY,
@@ -398,11 +399,8 @@ gui_motif_create_fontlist(font)
     /* Motif 1.2 method */
     XmFontListEntry font_list_entry;
 
-    font_list_entry = XmFontListEntryCreate(STRING_TAG,
-#  ifdef FEAT_XFONTSET
-	    gui.fontset != NOFONTSET ? XmFONT_IS_FONTSET :
-#  endif
-	    XmFONT_IS_FONT, (XtPointer)font);
+    font_list_entry = XmFontListEntryCreate(STRING_TAG, XmFONT_IS_FONT,
+					    (XtPointer)font);
     font_list = XmFontListAppendEntry(NULL, font_list_entry);
     XmFontListEntryFree(&font_list_entry);
 # endif
@@ -846,11 +844,18 @@ gui_mch_add_menu_item(menu, idx)
 	    else
 		wid = 4;
 
+#if 0
 	    /* We better use a FormWidget here, since it's far more
-	     * flexible in terms of size.
-	     */
+	     * flexible in terms of size.  */
 	    type = xmFormWidgetClass;
 	    XtSetArg(args[n], XmNwidth, wid); n++;
+#else
+	    type = xmSeparatorWidgetClass;
+	    XtSetArg(args[n], XmNwidth, wid); n++;
+	    XtSetArg(args[n], XmNminWidth, wid); n++;
+	    XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
+	    XtSetArg(args[n], XmNseparatorType, XmNO_LINE); n++;
+#endif
 	}
 	else
 	{
@@ -1066,31 +1071,31 @@ gui_mch_new_menu_font()
     void
 gui_mch_new_tooltip_font()
 {
+# ifdef FEAT_TOOLBAR
+    vimmenu_T   *menu;
+
     if (toolBar == (Widget)0)
 	return;
 
-    {
-	vimmenu_T   *toolbar;
-
-	toolbar = gui_find_menu((char_u *)"ToolBar");
-	if (toolbar != NULL)
-	    gui_mch_submenu_change(toolbar, FALSE);
-    }
+    menu = gui_find_menu((char_u *)"ToolBar");
+    if (menu != NULL)
+	gui_mch_submenu_change(menu, FALSE);
+# endif
 }
 
     void
 gui_mch_new_tooltip_colors()
 {
+# ifdef FEAT_TOOLBAR
+    vimmenu_T   *toolbar;
+
     if (toolBar == (Widget)0)
 	return;
 
-    {
-	vimmenu_T   *toolbar;
-
-	toolbar = gui_find_menu((char_u *)"ToolBar");
-	if (toolbar != NULL)
-	    gui_mch_submenu_change(toolbar, TRUE);
-    }
+    toolbar = gui_find_menu((char_u *)"ToolBar");
+    if (toolbar != NULL)
+	gui_mch_submenu_change(toolbar, TRUE);
+# endif
 }
 #endif
 
@@ -1748,11 +1753,13 @@ gui_motif_set_fontlist(wg)
 {
     XmFontList fl;
 
-    fl = gui_motif_create_fontlist((XFontStruct *)(
+    fl =
 #ifdef FEAT_XFONTSET
-		gui.fontset != NOFONTSET ? gui.fontset :
+	    gui.fontset != NOFONTSET ?
+		    gui_motif_fontset2fontlist((XFontSet *)&gui.fontset)
+				     :
 #endif
-		gui.norm_font));
+		    gui_motif_create_fontlist((XFontStruct *)gui.norm_font);
     if (fl != NULL)
     {
 	XtVaSetValues(wg, XmNfontList, fl, NULL);
@@ -2511,13 +2518,41 @@ gui_motif_scroll_colors(id)
 }
 
 #ifdef FEAT_MENU
+#ifdef FONTSET_ALWAYS
+/*
+ * Set the fontlist for Widget "id" to use gui.menu_fontset.
+ */
+#else
 /*
  * Set the fontlist for Widget "id" to use gui.menu_font.
  */
+#endif
     static void
 gui_motif_menu_fontlist(id)
     Widget  id;
 {
+#ifdef FONTSET_ALWAYS
+    if (gui.menu_fontset != NOFONTSET)
+    {
+	XmFontList fl;
+
+	fl = gui_motif_fontset2fontlist((XFontSet *)&gui.menu_fontset);
+	if (fl != NULL)
+	{
+	    if (XtIsManaged(id))
+	    {
+		XtUnmanageChild(id);
+		XtVaSetValues(id, XmNfontList, fl, NULL);
+		/* We should force the widget to recalculate it's
+		 * geometry now. */
+		XtManageChild(id);
+	    }
+	    else
+		XtVaSetValues(id, XmNfontList, fl, NULL);
+	    XmFontListFree(fl);
+	}
+    }
+#else
     if (gui.menu_font != NOFONT)
     {
 	XmFontList fl;
@@ -2538,6 +2573,7 @@ gui_motif_menu_fontlist(id)
 	    XmFontListFree(fl);
 	}
     }
+#endif
 }
 
 #endif

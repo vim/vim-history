@@ -538,6 +538,25 @@ checkCloseRec(gap, lnum, level)
     return retval;
 }
 
+/* foldCreateAllowed() {{{2 */
+/*
+ * Return TRUE if it's allowed to manually create or delete a fold.
+ * Give an error message and return FALSE if not.
+ */
+    int
+foldManualAllowed(create)
+    int		create;
+{
+    if (foldmethodIsManual(curwin)
+		   || (foldmethodIsMarker(curwin) && *curbuf->b_p_cms != NUL))
+	return TRUE;
+    if (create)
+	EMSG(_("E350: Cannot create fold with current 'foldmethod'"));
+    else
+	EMSG(_("E351: Cannot delete fold with current 'foldmethod'"));
+    return FALSE;
+}
+
 /* foldCreate() {{{2 */
 /*
  * Create a fold from line "start" to line "end" (inclusive) in the current

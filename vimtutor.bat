@@ -17,7 +17,7 @@ FOR %%d in (. %TMP% %TEMP%) DO IF EXIST %%d\nul SET TUTORCOPY=%%d\$tutor$
 
 :: The script tutor.vim tells Vim which file to copy.
 :: For Windows NT "start" works a bit differently.
-if .%OS%==.Windows_NT goto ntaction
+IF .%OS%==.Windows_NT GOTO ntaction
 
 start /w gvim -u NONE -c "so $VIMRUNTIME/tutor/tutor.vim"
 IF ERRORLEVEL 1 GOTO use_vim
@@ -55,3 +55,4 @@ ECHO Check your installation or re-run install.exe
 :end
 :: remove the copy of the tutor
 IF EXIST %TUTORCOPY% DEL %TUTORCOPY%
+SET xx=

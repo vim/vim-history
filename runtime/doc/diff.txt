@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0ap.  Last change: 2001 Jul 28
+*diff.txt*      For Vim version 6.0aq.  Last change: 2001 Jul 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -253,7 +253,7 @@ Additionally, 'diffexpr' should take care of "icase" and "iwhite" in the
 Example (this does the same as 'diffexpr' being empty, but adds the "-a"
 flag to force comparing them as text): >
 
-	let diffexpr=MyDiff()
+	set diffexpr=MyDiff()
 	function MyDiff()
 	   let opt = ""
 	   if &diffopt =~ "icase"

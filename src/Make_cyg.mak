@@ -1,6 +1,9 @@
 #
 # Makefile for VIM on Win32, using Cygnus gcc
 #
+# This compiles Vim as a Windows application.  If you want Vim to run as a
+# Cygwin application use the Makefile (just like on Unix).
+#
 
 #>>>>> choose options:
 

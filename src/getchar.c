@@ -104,6 +104,7 @@ static mapblock_T	*first_abbr = NULL; /* first entry in abbrlist */
  * typebuf.tb_buf[typebuf.tb_off + typebuf.tb_len] must be NUL.
  * The head of the buffer may contain the result of mappings, abbreviations
  * and @a commands.  The length of this part is typebuf.tb_maplen.
+ * typebuf.tb_silent is the part where <silent> applies.
  * After the head are characters that come from the terminal.
  * typebuf.tb_no_abbr_cnt is the number of characters in typebuf.tb_buf that
  * should not be considered for abbreviations.
@@ -453,8 +454,9 @@ flush_buffers(typeahead)
 	typebuf.tb_len -= typebuf.tb_maplen;
     }
     typebuf.tb_maplen = 0;
+    typebuf.tb_silent = 0;
+    cmd_silent = FALSE;
     typebuf.tb_no_abbr_cnt = 0;
-    cmd_silent = 0;	    /* may have flushed a K_SILENT */
 }
 
 /*
@@ -890,14 +892,17 @@ init_typebuf()
  * If nottyped is TRUE, the string does not return KeyTyped (don't use when
  * offset is non-zero!).
  *
+ * If silent is TRUE, cmd_silent is set when the characters are obtained.
+ *
  * return FAIL for failure, OK otherwise
  */
     int
-ins_typebuf(str, noremap, offset, nottyped)
+ins_typebuf(str, noremap, offset, nottyped, silent)
     char_u	*str;
     int		noremap;
     int		offset;
     int		nottyped;
+    int		silent;
 {
     char_u	*s1, *s2;
     int		newlen;
@@ -994,9 +999,16 @@ ins_typebuf(str, noremap, offset, nottyped)
 	typebuf.tb_noremap[typebuf.tb_off + i + offset] =
 						  (--nrm >= 0) ? val : RM_YES;
 
-    /* this is only correct for offset == 0! */
-    if (nottyped)			/* the inserted string is not typed */
+    /* tb_maplen and tb_silent only remember the length of mapped and/or
+     * silent mappings at the start of the buffer, assuming that a mapped
+     * sequence doesn't result in typed characters. */
+    if (nottyped || typebuf.tb_maplen > offset)
 	typebuf.tb_maplen += addlen;
+    if (silent || typebuf.tb_silent > offset)
+    {
+	typebuf.tb_silent += addlen;
+	cmd_silent = TRUE;
+    }
     if (typebuf.tb_no_abbr_cnt && offset == 0)	/* and not used for abbrev.s */
 	typebuf.tb_no_abbr_cnt += addlen;
 
@@ -1072,6 +1084,13 @@ del_typebuf(len, offset)
 	    typebuf.tb_maplen = offset;
 	else
 	    typebuf.tb_maplen -= len;
+    }
+    if (typebuf.tb_silent > offset)		/* adjust tb_silent */
+    {
+	if (typebuf.tb_silent < offset + len)
+	    typebuf.tb_silent = offset;
+	else
+	    typebuf.tb_silent -= len;
     }
     if (typebuf.tb_no_abbr_cnt > offset)	/* adjust tb_no_abbr_cnt */
     {
@@ -1157,6 +1176,7 @@ alloc_typebuf()
     typebuf.tb_off = 0;
     typebuf.tb_len = 0;
     typebuf.tb_maplen = 0;
+    typebuf.tb_silent = 0;
     typebuf.tb_no_abbr_cnt = 0;
     return OK;
 }
@@ -1698,6 +1718,7 @@ vgetorpeek(advance)
 		     * get out of Insert mode. */
 		    *typebuf.tb_buf = c;
 		    gotchars(typebuf.tb_buf, 1);
+		    cmd_silent = FALSE;
 
 		    break;
 		}
@@ -1989,7 +2010,8 @@ vgetorpeek(advance)
 				c = typebuf.tb_buf[typebuf.tb_off] & 255;
 				if (advance)	/* remove chars from tb_buf */
 				{
-				    if (typebuf.tb_maplen)
+				    cmd_silent = (typebuf.tb_silent > 0);
+				    if (typebuf.tb_maplen > 0)
 					KeyTyped = FALSE;
 				    else
 				    {
@@ -2031,15 +2053,13 @@ vgetorpeek(advance)
 				    {
 					VIsual_select = FALSE;
 					(void)ins_typebuf(K_SELECT_STRING,
-							  REMAP_NONE, 0, TRUE);
+						  REMAP_NONE, 0, TRUE, FALSE);
 				    }
 # endif
-
-				    if (current_menu->silent[idx])
-					start_silent_cmd();
-
 				    ins_typebuf(current_menu->strings[idx],
-					 current_menu->noremap[idx], 0, TRUE);
+						current_menu->noremap[idx],
+						0, TRUE,
+						   current_menu->silent[idx]);
 				}
 			    }
 #endif /* FEAT_GUI */
@@ -2063,6 +2083,7 @@ vgetorpeek(advance)
 							  + typebuf.tb_maplen,
 						  keylen - typebuf.tb_maplen);
 
+			cmd_silent = (typebuf.tb_silent > 0);
 			del_typebuf(keylen, 0);	/* remove the mapped keys */
 
 			/*
@@ -2092,15 +2113,9 @@ vgetorpeek(advance)
 			{
 			    VIsual_select = FALSE;
 			    (void)ins_typebuf(K_SELECT_STRING, REMAP_NONE,
-								     0, TRUE);
+							      0, TRUE, FALSE);
 			}
 #endif
-
-			/*
-			 * Silent mapping, set cmd_silent.
-			 */
-			if (mp->m_silent)
-			    start_silent_cmd();
 
 			/*
 			 * Insert the 'to' part in the typebuf.tb_buf.
@@ -2115,7 +2130,7 @@ vgetorpeek(advance)
 					    : STRNCMP(mp->m_str, mp->m_keys,
 							       (size_t)keylen)
 							      ? REMAP_YES : 1,
-				0, TRUE) == FAIL)
+				0, TRUE, cmd_silent || mp->m_silent) == FAIL)
 			{
 			    c = -1;
 			    break;
@@ -2425,22 +2440,6 @@ vgetorpeek(advance)
     vgetc_busy = FALSE;
 
     return c;
-}
-
-/*
- * Switch cmd_silent on now, it will be switched off with K_SILENT.
- */
-    void
-start_silent_cmd()
-{
-    char_u	temp[4];
-
-    ++cmd_silent;
-    temp[0] = K_SPECIAL;
-    temp[1] = K_SECOND(K_SILENT);
-    temp[2] = K_THIRD(K_SILENT);
-    temp[3] = NUL;
-    (void)ins_typebuf(temp, REMAP_NONE, 0, TRUE);
 }
 
 /*
@@ -3814,17 +3813,17 @@ check_abbr(c, ptr, col, mincol)
 		tb[j++] = c;
 		tb[j] = NUL;
 					    /* insert the last typed char */
-		(void)ins_typebuf(tb, 1, 0, TRUE);
+		(void)ins_typebuf(tb, 1, 0, TRUE, mp->m_silent);
 	    }
 					    /* insert the to string */
-	    (void)ins_typebuf(mp->m_str, mp->m_noremap, 0, TRUE);
+	    (void)ins_typebuf(mp->m_str, mp->m_noremap, 0, TRUE, mp->m_silent);
 					    /* no abbrev. for these chars */
 	    typebuf.tb_no_abbr_cnt += (int)STRLEN(mp->m_str) + j + 1;
 
 	    tb[0] = Ctrl_H;
 	    tb[1] = NUL;
 	    while (len--)		    /* delete the from string */
-		(void)ins_typebuf(tb, 1, 0, TRUE);
+		(void)ins_typebuf(tb, 1, 0, TRUE, mp->m_silent);
 	    return TRUE;
 	}
     }
@@ -4289,6 +4288,15 @@ static struct initmap
 
 	/* paste, copy and cut */
 #  ifdef FEAT_CLIPBOARD
+#   ifdef DJGPP
+	{(char_u *)"\316\122 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
+	{(char_u *)"\316\122 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
+	{(char_u *)"\316\122 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
+	{(char_u *)"\316\222 \"*y", VISUAL},	    /* CTRL-Insert is "*y */
+	{(char_u *)"\316\123 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
+	{(char_u *)"\316\223 \"*d", VISUAL},	    /* CTRL-Del is "*d */
+	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
+#   else
 	{(char_u *)"\316\324 \"*P", NORMAL},	    /* SHIFT-Insert is "*P */
 	{(char_u *)"\316\324 \"-d\"*P", VISUAL},    /* SHIFT-Insert is "-d"*P */
 	{(char_u *)"\316\324 \017\"*P", INSERT},    /* SHIFT-Insert is ^O"*P */
@@ -4296,6 +4304,7 @@ static struct initmap
 	{(char_u *)"\316\327 \"*d", VISUAL},	    /* SHIFT-Del is "*d */
 	{(char_u *)"\316\330 \"*d", VISUAL},	    /* CTRL-Del is "*d */
 	{(char_u *)"\030 \"-d", VISUAL},	    /* CTRL-X is "-d */
+#   endif
 #  else
 	{(char_u *)"\316\324 P", NORMAL},	    /* SHIFT-Insert is P */
 	{(char_u *)"\316\324 d\"0P", VISUAL},	    /* SHIFT-Insert is d"0P */
