@@ -5284,6 +5284,10 @@ handle_drop(filec, filev, split)
     ea.force_enc = 0;
 # endif
     do_argfile(&ea, 0);
+
+    /* do_ecmd() may set need_start_insertmode, but since we never left Insert
+     * mode that is not needed here. */
+    need_start_insertmode = FALSE;
 }
 #endif
 
