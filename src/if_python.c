@@ -521,7 +521,7 @@ DoPythonCommand(exarg_T *eap, const char *cmd)
 
 theend:
 #ifndef PY_CAN_RECURSE
-    --recursive
+    --recursive;
 #endif
     return;	    /* keeps lint happy */
 }
