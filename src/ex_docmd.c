@@ -5554,7 +5554,7 @@ ex_splitview(eap)
 	    && eap->cmdidx != CMD_new)
     {
 	fname = do_browse(FALSE, (char_u *)_("Edit File in new window"),
-					  NULL, NULL, eap->arg, NULL, curbuf);
+					  eap->arg, NULL, NULL, NULL, curbuf);
 	if (fname == NULL)
 	    goto theend;
 	eap->arg = fname;
@@ -5923,8 +5923,8 @@ ex_read(eap)
 	{
 	    char_u *browseFile;
 
-	    browseFile = do_browse(FALSE, (char_u *)_("Append File"), NULL,
-						NULL, eap->arg, NULL, curbuf);
+	    browseFile = do_browse(FALSE, (char_u *)_("Append File"), eap->arg,
+						    NULL, NULL, NULL, curbuf);
 	    if (browseFile != NULL)
 	    {
 		i = readfile(browseFile, NULL,
@@ -6449,7 +6449,7 @@ ex_redir(eap)
 	    if (cmdmod.browse)
 	    {
 		browseFile = do_browse(TRUE, (char_u *)_("Save Redirection"),
-		       NULL, NULL, eap->arg, BROWSE_FILTER_ALL_FILES, curbuf);
+		       eap->arg, NULL, NULL, BROWSE_FILTER_ALL_FILES, curbuf);
 		if (browseFile == NULL)
 		    return;		/* operation cancelled */
 		eap->arg = browseFile;
@@ -6601,7 +6601,7 @@ ex_mkrc(eap)
 		eap->cmdidx == CMD_mksession ? (char_u *)_("Save Session") :
 # endif
 		(char_u *)_("Save Setup"),
-		NULL, (char_u *)"vim", fname, BROWSE_FILTER_MACROS, curbuf);
+		fname, (char_u *)"vim", NULL, BROWSE_FILTER_MACROS, NULL);
 	if (browseFile == NULL)
 	    goto theend;
 	fname = browseFile;

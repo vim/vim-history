@@ -1531,7 +1531,8 @@ set_predefined_label(parent, name, new_label)
 
     str = XmStringCreate(new_label, STRING_TAG);
 
-    if (str) {
+    if (str)
+    {
 	XtVaSetValues(w, XmNlabelString, str, NULL);
 	XmStringFree(str);
     }
@@ -1552,17 +1553,28 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     char_u	*filter;	/* file name filter */
 {
     char_u	dirbuf[MAXPATHL];
+    char_u	dfltbuf[MAXPATHL];
     char_u	*pattern;
     char_u	*tofree = NULL;
 
     dialog_wgt = XmCreateFileSelectionDialog(vimShell, (char *)title, NULL, 0);
 
-    if (dflt == NULL)
-	dflt = (char_u *)"";
     if (initdir == NULL || *initdir == NUL)
     {
 	mch_dirname(dirbuf, MAXPATHL);
 	initdir = dirbuf;
+    }
+
+    if (dflt == NULL)
+	dflt = (char_u *)"";
+    else if (STRLEN(initdir) + STRLEN(dflt) + 2 < MAXPATHL)
+    {
+	/* The default selection should be the full path, "dflt" is only the
+	 * file name. */
+	STRCPY(dfltbuf, initdir);
+	add_pathsep(dfltbuf);
+	STRCAT(dfltbuf, dflt);
+	dflt = dfltbuf;
     }
 
     /* Can only use one pattern for a file name.  Get the first pattern out of

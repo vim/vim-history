@@ -1711,8 +1711,8 @@ ex_source(eap)
     {
 	char_u *fname = NULL;
 
-	fname = do_browse(FALSE, (char_u *)_("Run Macro"),
-		NULL, NULL, eap->arg, BROWSE_FILTER_MACROS, curbuf);
+	fname = do_browse(FALSE, (char_u *)_("Run Macro"), eap->arg,
+				      NULL, NULL, BROWSE_FILTER_MACROS, NULL);
 	if (fname != NULL)
 	{
 	    cmd_source(fname, eap);

@@ -2050,8 +2050,8 @@ do_write(eap)
 #ifdef FEAT_BROWSE
     if (cmdmod.browse)
     {
-	browse_file = do_browse(TRUE, (char_u *)_("Save As"), NULL,
-						  NULL, ffname, NULL, curbuf);
+	browse_file = do_browse(TRUE, (char_u *)_("Save As"), ffname,
+						    NULL, NULL, NULL, curbuf);
 	if (browse_file == NULL)
 	    goto theend;
 	ffname = browse_file;
@@ -2308,7 +2308,7 @@ do_wqall(eap)
 	    /* ":browse wall": ask for file name if there isn't one */
 	    if (buf->b_ffname == NULL && cmdmod.browse)
 		buf->b_ffname = do_browse(TRUE, (char_u *)_("Save As"), NULL,
-					       NULL, (char_u *)"", NULL, buf);
+						       NULL, NULL, NULL, buf);
 #endif
 	    if (buf->b_ffname == NULL)
 	    {
@@ -2535,8 +2535,8 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_BROWSE
 	if (cmdmod.browse)
 	{
-	    browse_file = do_browse(FALSE, (char_u *)_("Edit File"), NULL,
-						  NULL, ffname, NULL, curbuf);
+	    browse_file = do_browse(FALSE, (char_u *)_("Edit File"), ffname,
+						    NULL, NULL, NULL, curbuf);
 	    if (browse_file == NULL)
 		goto theend;
 	    ffname = browse_file;

@@ -1836,6 +1836,21 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     char_u	*filter;	/* not used (file name filter) */
 {
     Position x, y;
+    char_u	dirbuf[MAXPATHL];
+
+    /* Concatenate "initdir" and "dflt". */
+    if (initdir == NULL || *initdir == NUL)
+	mch_dirname(dirbuf, MAXPATHL);
+    else if (STRLEN(initdir) + 2 < MAXPATHL)
+	STRCPY(dirbuf, initdir);
+    else
+	dirbuf[0] = NUL;
+    if (dflt != NULL && *dflt != NUL
+			      && STRLEN(dirbuf) + 2 + STRLEN(dflt) < MAXPATHL)
+    {
+	add_pathsep(dirbuf);
+	STRCAT(dirbuf, dflt);
+    }
 
     /* Position the file selector just below the menubar */
     XtTranslateCoords(vimShell, (Position)0, (Position)
@@ -1845,7 +1860,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	    0
 #endif
 	    , &x, &y);
-    return (char_u *)vim_SelFile(vimShell, (char *)title, (char *)initdir,
+    return (char_u *)vim_SelFile(vimShell, (char *)title, (char *)dirbuf,
 		  NULL, (int)x, (int)y, gui.menu_fg_pixel, gui.menu_bg_pixel);
 }
 #endif
