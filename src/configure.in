@@ -1382,7 +1382,7 @@ AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
 	libgen.h util/debug.h util/msg18n.h frame.h \
-	sys/acl.h sys/access.h)
+	sys/acl.h sys/access.h sys/sysctl.h sys/sysinfo.h)
 
 dnl Check if strings.h and string.h can both be included when defined.
 AC_MSG_CHECKING([if strings.h can be included after string.h])
@@ -1842,6 +1842,46 @@ AC_MSG_CHECKING(for rename)
 AC_TRY_LINK([#include <stdio.h>], [rename("this", "that")],
 	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_RENAME),
 	AC_MSG_RESULT(no))
+
+dnl sysctl() may exist but not the arguments we use
+AC_MSG_CHECKING(for sysctl)
+AC_TRY_COMPILE(
+[#include <sys/types.h>
+#include <sys/sysctl.h>],
+[	int mib[2], r;
+	size_t len;
+
+	mib[0] = CTL_HW;
+	mib[1] = HW_USERMEM;
+	len = sizeof(r);
+	(void)sysctl(mib, 2, &r, &len, (void *)0, (size_t)0);
+	],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCTL),
+	AC_MSG_RESULT(not usable))
+
+dnl sysinfo() may exist but not be Linux compatible
+AC_MSG_CHECKING(for sysinfo)
+AC_TRY_COMPILE(
+[#include <sys/types.h>
+#include <sys/sysinfo.h>],
+[	struct sysinfo sinfo;
+	int t;
+
+	(void)sysinfo(&sinfo);
+	t = sinfo.totalram;
+	],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSINFO),
+	AC_MSG_RESULT(not usable))
+
+dnl sysconf() may exist but not support what we want to use
+AC_MSG_CHECKING(for sysconf)
+AC_TRY_COMPILE(
+[#include <unistd.h>],
+[	(void)sysconf(_SC_PAGESIZE);
+	(void)sysconf(_SC_PHYS_PAGES);
+	],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_SYSCONF),
+	AC_MSG_RESULT(not usable))
 
 dnl Our own version of AC_CHECK_SIZEOF(int); fixes a bug when sizeof() can't
 dnl be printed with "%d", and avoids a warning for cross-compiling.

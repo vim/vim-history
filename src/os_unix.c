@@ -412,6 +412,12 @@ mch_char_avail()
 # ifdef HAVE_SYS_RESOURCE_H
 #  include <sys/resource.h>
 # endif
+# ifdef HAVE_SYS_SYSCTL_H
+#  include <sys/sysctl.h>
+# endif
+# ifdef HAVE_SYS_SYSINFO_H
+#  include <sys/sysinfo.h>
+# endif
 
 /*
  * Return total amount of memory available.  Doesn't change when memory has
@@ -425,15 +431,63 @@ mch_total_mem(special)
 # ifdef __EMX__
     return ulimit(3, 0L);   /* always 32MB? */
 # else
-    struct rlimit	rlp;
+    long_u	mem = 0;
 
-    if (getrlimit(RLIMIT_DATA, &rlp) == 0
-	    && rlp.rlim_cur < ((rlim_t)1 << (sizeof(long_u) * 8 - 1))
-#  ifdef RLIM_INFINITY
-	    && rlp.rlim_cur != RLIM_INFINITY
+#  ifdef HAVE_SYSCTL
+    int		mib[2], physmem;
+    size_t	len;
+
+    /* BSD way of getting the amount of RAM available. */
+    mib[0] = CTL_HW;
+    mib[1] = HW_USERMEM;
+    len = sizeof(physmem);
+    if (sysctl(mib, 2, &physmem, &len, NULL, 0) == 0)
+	mem = (long_u)physmem;
 #  endif
-	    )
-	return (long_u)rlp.rlim_cur;
+
+#  if defined(HAVE_SYS_SYSINFO_H) && defined(HAVE_SYSINFO)
+    if (mem == 0)
+    {
+	struct sysinfo sinfo;
+
+	/* Linux way of getting amount of RAM available */
+	if (sysinfo(&sinfo) == 0)
+	    mem = sinfo.totalram;
+    }
+#  endif
+
+#  ifdef HAVE_SYSCONF
+    if (mem == 0)
+    {
+	long	    pagesize, pagecount;
+
+	/* Solaris way of getting amount of RAM available */
+	pagesize = sysconf(_SC_PAGESIZE);
+	pagecount = sysconf(_SC_PHYS_PAGES);
+	if (pagesize > 0 && pagecount > 0)
+	    mem = (long_u)pagesize * pagecount;
+    }
+#  endif
+
+    /* Return the minimum of the physical memory and the user limit, because
+     * using more than the user limit may cause Vim to be terminated. */
+#  if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT)
+    {
+	struct rlimit	rlp;
+
+	if (getrlimit(RLIMIT_DATA, &rlp) == 0
+		&& rlp.rlim_cur < ((rlim_t)1 << (sizeof(long_u) * 8 - 1))
+#   ifdef RLIM_INFINITY
+		&& rlp.rlim_cur != RLIM_INFINITY
+#   endif
+		&& (long_u)rlp.rlim_cur < mem
+	   )
+	    return (long_u)rlp.rlim_cur;
+    }
+#  endif
+
+    if (mem > 0)
+	return mem;
     return (long_u)0x7fffffff;
 # endif
 }
