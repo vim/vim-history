@@ -4118,7 +4118,7 @@ RealWaitForChar(fd, msec, check_for_gpm)
 	}
 # endif
 
-	ret = poll(&fds, nfd, (int)msec);
+	ret = poll(fds, nfd, (int)msec);
 
 # ifdef FEAT_SNIFF
 	if (ret < 0)
