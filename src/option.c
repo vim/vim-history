@@ -1902,6 +1902,19 @@ set_init_3()
 #ifdef WANT_TITLE
     set_title_defaults();
 #endif
+
+#ifdef BACKSLASH_IN_FILENAME
+    /* If 'shellslash' was set in a vimrc file, need to adjust the file name
+     * arguments. */
+    if (p_ssl)
+    {
+	int i;
+
+	for (i = 0; i < arg_file_count; ++i)
+	    if (arg_files[i] != NULL)
+		slash_adjust(arg_files[i]);
+    }
+#endif
 }
 
 #ifdef USE_GUI
