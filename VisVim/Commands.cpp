@@ -521,8 +521,13 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 	VimCmd[1] = 0x0e;
 	VimCmdStart = VimCmd + 2;
 
+#ifdef SINGLE_WINDOW
 	// Update the current file in Vim if it has been modified
 	sprintf (VimCmdStart, ":up\n");
+#else
+	// Split the window if the current file has been modified
+	sprintf (VimCmdStart, ":if &mod | split | endif\n");
+#endif
 	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
 		goto OleError;
 
