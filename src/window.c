@@ -1422,9 +1422,13 @@ win_totop(size, flags)
 
 #if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
     /* When 'guioptions' includes 'L' or 'R' may have to remove or add
-     * scrollbars. */
+     * scrollbars.  Have to update them anyway. */
     if (gui.in_use)
+    {
 	gui_init_which_components(NULL);
+	gui_update_scrollbars(TRUE);
+    }
+    need_mouse_correct = TRUE;
 #endif
 
 }
