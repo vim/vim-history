@@ -747,7 +747,7 @@ win_linetabsize(wp, p, len)
     colnr_T	col = 0;
     char_u	*s;
 
-    for (s = p; *s != NUL && s < p + len; )
+    for (s = p; *s != NUL && (len == MAXCOL || s < p + len); )
     {
 	col += win_lbr_chartabsize(wp, s, col, NULL);
 #ifdef FEAT_MBYTE
