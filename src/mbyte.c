@@ -2685,6 +2685,19 @@ static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
 #endif
 
+#ifdef FEAT_GUI_GTK
+# include <gdk/gdkx.h>
+#else
+# ifdef PROTO
+/* Define a few things to be able to generate prototypes while not configured
+ * for GTK. */
+#  define GSList int
+#  define gboolean int
+   typedef int GdkEvent;
+#  define GdkIC int
+# endif
+#endif
+
 #if defined(FEAT_GUI_GTK) || defined(PROTO)
 static int	preedit_buf_len = 0;
 static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
@@ -2888,6 +2901,30 @@ im_set_active(active)
 		xim_preediting = TRUE;
 	    }
 	}
+    }
+    else
+    {
+	XIMPreeditState preedit_state = XIMPreeditUnKnown;
+	XVaNestedList preedit_attr;
+	XIC pxic;
+
+	preedit_attr = XVaCreateNestedList(0,
+				XNPreeditState, &preedit_state,
+				NULL);
+	pxic = ((GdkICPrivate *)xic)->xic;
+
+	if (!XGetICValues(pxic, XNPreeditAttributes, preedit_attr, NULL))
+	{
+	    XFree(preedit_attr);
+	    preedit_attr = XVaCreateNestedList(0,
+				XNPreeditState,
+				active ? XIMPreeditEnable : XIMPreeditDisable,
+				NULL);
+	    XSetICValues(pxic, XNPreeditAttributes, preedit_attr, NULL);
+	    xim_preediting = active;
+	    xim_is_active = TRUE;
+	}
+	XFree(preedit_attr);
     }
     if (xim_input_style & XIMPreeditCallbacks)
     {
@@ -3593,17 +3630,6 @@ xim_decide_input_style()
 	xim_input_style = (int)gdk_im_decide_style((GdkIMStyle)supported_style);
     }
 }
-
-#ifdef FEAT_GUI_GTK
-# include <gdk/gdkx.h>
-#else
-/* Define a few things to be able to generate prototypes while not configured
- * for GTK. */
-# define GSList int
-# define gboolean int
-  typedef int GdkEvent;
-# define GdkIC int
-#endif
 
 /*ARGSUSED*/
     static void
