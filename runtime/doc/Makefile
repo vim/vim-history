@@ -243,11 +243,13 @@ HTMLS = \
 
 all: tags vim.man vimdiff.man vimtutor.man xxd.man
 
-# We should use Vim to generate the tags file:
-#	vim -c "helptags ." -c quit
-#
+# Use Vim to generate the tags file.  Can only be used when Vim has been
+# compiled and installed.
+vimtags: $(DOCS)
+	vim -c "helptags ." -c quit
+
 tags: doctags $(DOCS)
-	./doctags $(DOCS) | sort >tags
+	./doctags $(DOCS) | LANG=C LC_ALL=C sort >tags
 	uniq -d -2 tags
 
 doctags: doctags.c
