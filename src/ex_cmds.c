@@ -2835,12 +2835,39 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 
     if ((flags & ECMD_SET_HELP) || keep_help_flag)
     {
+	char_u	*p;
+
 	curbuf->b_help = TRUE;
 #ifdef FEAT_QUICKFIX
 	set_string_option_direct((char_u *)"buftype", -1,
-				       (char_u *)"help", OPT_FREE |OPT_LOCAL);
+				       (char_u *)"help", OPT_FREE|OPT_LOCAL);
 #endif
-	curbuf->b_p_ma = FALSE;
+
+	/*
+	 * Always set these options after jumping to a help tag, because the
+	 * user may have an autocommand that gets in the way.
+	 * Accept all ASCII chars for keywords, except ' ', '*', '"', '|', and
+	 * latin1 word characters (for translated help files).
+	 * Only set it when needed, buf_init_chartab() is some work.
+	 */
+	p =
+#ifdef EBCDIC
+		(char_u *)"65-255,^*,^|,^\"";
+#else
+		(char_u *)"!-~,^*,^|,^\",192-255";
+#endif
+	if (STRCMP(curbuf->b_p_isk, p) != 0)
+	{
+	    set_string_option_direct((char_u *)"isk", -1, p,
+							  OPT_FREE|OPT_LOCAL);
+	    check_buf_options(curbuf);
+	    (void)buf_init_chartab(curbuf, FALSE);
+	}
+
+	curbuf->b_p_ts = 8;		/* 'tabstop' is 8 */
+	curwin->w_p_list = FALSE;	/* no list mode */
+
+	curbuf->b_p_ma = FALSE;		/* not modifiable */
 	curbuf->b_p_bin = FALSE;	/* reset 'bin' before reading file */
 	curwin->w_p_nu = 0;		/* no line numbers */
 #ifdef FEAT_SCROLLBIND
@@ -2869,7 +2896,10 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 #ifdef FEAT_AUTOCMD
 	buf = curbuf;
 #endif
-	set_buflisted(TRUE);
+	/* Don't make a buffer listed if it's a help buffer.  Useful when
+	 * using CTRL-O to go back to a help file. */
+	if (!curbuf->b_help)
+	    set_buflisted(TRUE);
     }
 
 #ifdef FEAT_AUTOCMD
@@ -4648,29 +4678,6 @@ ex_help(eap)
     /* keep the previous alternate file */
     if (alt_fnum != 0 && curwin->w_alt_fnum == empty_fnum)
 	curwin->w_alt_fnum = alt_fnum;
-
-    /*
-     * Always set these options after jumping to a help tag, because the user
-     * may have an autocommand that gets in the way.
-     * Accept all ASCII chars for keywords, except ' ', '*', '"', '|', and
-     * latin1 word characters (for translated help files).
-     * Only set it when needed, buf_init_chartab() is some work.
-     */
-    p =
-#ifdef EBCDIC
-	    (char_u *)"65-255,^*,^|,^\"";
-#else
-	    (char_u *)"!-~,^*,^|,^\",192-255";
-#endif
-    if (STRCMP(curbuf->b_p_isk, p) != 0)
-    {
-	set_string_option_direct((char_u *)"isk", -1, p, OPT_FREE|OPT_LOCAL);
-	check_buf_options(curbuf);
-	(void)buf_init_chartab(curbuf, FALSE);
-    }
-
-    curbuf->b_p_ts = 8;
-    curwin->w_p_list = FALSE;
 
 erret:
     if (need_free)
