@@ -6491,9 +6491,13 @@ n_start_visual_mode(c)
     clip_star.vmode = NUL;
 #endif
 
-    /* Only need to redraw this line. */
-    curwin->w_old_cursor_lnum = curwin->w_cursor.lnum;
-    curwin->w_old_visual_lnum = curwin->w_cursor.lnum;
+    /* Only need to redraw this line, unless still need to redraw an old
+     * Visual area (when 'lazyredraw' is set). */
+    if (curwin->w_redr_type < INVERTED)
+    {
+	curwin->w_old_cursor_lnum = curwin->w_cursor.lnum;
+	curwin->w_old_visual_lnum = curwin->w_cursor.lnum;
+    }
 }
 
 #endif /* FEAT_VISUAL */
