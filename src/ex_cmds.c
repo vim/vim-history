@@ -2711,8 +2711,13 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	{
 	    oldbuf = TRUE;
 	    (void)buf_check_timestamp(buf, FALSE);
-	    /* Check if autocommands made buffer invalid. */
-	    if (!buf_valid(buf))
+	    /* Check if autocommands made buffer invalid or changed the current
+	     * buffer. */
+	    if (!buf_valid(buf)
+#ifdef FEAT_AUTOCMD
+		    || curbuf != old_curbuf
+#endif
+		    )
 		goto theend;
 #ifdef FEAT_EVAL
 	    if (aborting())	    /* autocmds may abort script processing */

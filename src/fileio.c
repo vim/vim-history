@@ -1701,7 +1701,7 @@ rewind_retry:
 			++lnum;
 			if (--read_count == 0)
 			{
-			    error = TRUE;	    /* break loop */
+			    error = TRUE;	/* break loop */
 			    line_start = ptr;	/* nothing left to write */
 			    break;
 			}
@@ -5503,6 +5503,8 @@ buf_check_timestamp(buf, focus)
     char_u	*path;
     char_u	*tbuf;
     char	*mesg = NULL;
+    char	*mesg2;
+    int		helpmesg = FALSE;
     int		reload = FALSE;
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
     int		can_reload = FALSE;
@@ -5512,15 +5514,22 @@ buf_check_timestamp(buf, focus)
 #ifdef FEAT_GUI
     int		save_mouse_correct = need_mouse_correct;
 #endif
+#ifdef FEAT_AUTOCMD
+    static int	busy = FALSE;
+#endif
 
     /* If there is no file name, the buffer is not loaded, 'buftype' is
-     * set, or we are in the middle of a save: ignore this buffer. */
+     * set, we are in the middle of a save or being called recursively: ignore
+     * this buffer. */
     if (buf->b_ffname == NULL
 	    || buf->b_ml.ml_mfp == NULL
 #if defined(FEAT_QUICKFIX)
 	    || *buf->b_p_bt != NUL
 #endif
 	    || buf->b_saving
+#ifdef FEAT_AUTOCMD
+	    || busy
+#endif
 	    )
 	return 0;
 
@@ -5563,17 +5572,21 @@ buf_check_timestamp(buf, focus)
 	else
 	{
 #ifdef FEAT_AUTOCMD
+	    int n;
+
 	    /*
 	     * Only give the warning if there are no FileChangedShell
 	     * autocommands.
+	     * Avoid being called recursively by setting "busy".
 	     */
-	    if (apply_autocmds(EVENT_FILECHANGEDSHELL,
-				      buf->b_fname, buf->b_fname, FALSE, buf))
+	    busy = TRUE;
+	    n = apply_autocmds(EVENT_FILECHANGEDSHELL,
+				      buf->b_fname, buf->b_fname, FALSE, buf);
+	    busy = FALSE;
+	    if (n)
 	    {
 		if (!buf_valid(buf))
-		{
 		    EMSG(_("E246: FileChangedShell autocommand deleted buffer"));
-		}
 		return 2;
 	    }
 	    else
@@ -5583,6 +5596,7 @@ buf_check_timestamp(buf, focus)
 		    mesg = _("E211: Warning: File \"%s\" no longer available");
 		else
 		{
+		    helpmesg = TRUE;
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 		    can_reload = TRUE;
 #endif
@@ -5620,11 +5634,21 @@ buf_check_timestamp(buf, focus)
 	path = home_replace_save(buf, buf->b_fname);
 	if (path != NULL)
 	{
-	    tbuf = alloc((unsigned)(STRLEN(path) + STRLEN(mesg)));
+	    if (helpmesg)
+		mesg2 = _("See \":help W11\" for more info.");
+	    else
+		mesg2 = "";
+	    tbuf = alloc((unsigned)(STRLEN(path) + STRLEN(mesg)
+							+ STRLEN(mesg2) + 2));
 	    sprintf((char *)tbuf, mesg, path);
 #if defined(FEAT_CON_DIALOG) || defined(FEAT_GUI_DIALOG)
 	    if (can_reload)
 	    {
+		if (*mesg2 != NUL)
+		{
+		    STRCAT(tbuf, "\n");
+		    STRCAT(tbuf, mesg2);
+		}
 		if (do_dialog(VIM_WARNING, (char_u *)_("Warning"), tbuf,
 				(char_u *)_("&OK\n&Load File"), 1, NULL) == 2)
 		    reload = TRUE;
@@ -5633,6 +5657,11 @@ buf_check_timestamp(buf, focus)
 #endif
 	    if (State > NORMAL_BUSY || (State & CMDLINE) || already_warned)
 	    {
+		if (*mesg2 != NUL)
+		{
+		    STRCAT(tbuf, "; ");
+		    STRCAT(tbuf, mesg2);
+		}
 		EMSG(tbuf);
 		retval = 2;
 	    }
@@ -5647,6 +5676,9 @@ buf_check_timestamp(buf, focus)
 		{
 		    msg_start();
 		    msg_puts_attr(tbuf, hl_attr(HLF_E) + MSG_HIST);
+		    if (*mesg2 != NUL)
+			msg_puts_attr((char_u *)mesg2,
+						   hl_attr(HLF_W) + MSG_HIST);
 		    msg_clr_eos();
 		    (void)msg_end();
 		    if (emsg_silent == 0)
