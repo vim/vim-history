@@ -110,7 +110,7 @@ SRC = \
 	misc1.c \
 	misc2.c \
 	move.c \
-	multibyte.c \
+	mbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -149,7 +149,7 @@ OBJ = \
 	misc1.o \
 	misc2.o \
 	move.o \
-	multibyte.o \
+	mbyte.o \
 	normal.o \
 	ops.o \
 	option.o \
@@ -188,7 +188,7 @@ PRO = \
 	proto/misc1.pro \
 	proto/misc2.pro \
 	proto/move.pro \
-	proto/multibyte.pro \
+	proto/mbyte.pro \
 	proto/normal.pro \
 	proto/ops.pro \
 	proto/option.pro \
@@ -302,8 +302,8 @@ misc2.o:		misc2.c
 proto/misc2.pro:	misc2.c
 move.o:			move.c
 proto/move.pro:		move.c
-multibyte.o:		multibyte.c
-proto/multibyte.pro:	multibyte.c
+mbyte.o:		mbyte.c
+proto/mbyte.pro:	mbyte.c
 normal.o:		normal.c
 proto/normal.pro:	normal.c
 ops.o:			ops.c

@@ -212,6 +212,7 @@ ui_suspend()
 #if !defined(UNIX) || !defined(SIGTSTP) || defined(PROTO) || defined(__BEOS__)
 /*
  * When the OS can't really suspend, call this function to start a shell.
+ * This is never called in the GUI.
  */
     void
 suspend_shell()
@@ -221,8 +222,7 @@ suspend_shell()
     else
     {
 	MSG_PUTS(_("new shell started\n"));
-	(void)mch_call_shell(NULL, SHELL_COOKED);
-	need_check_timestamps = TRUE;
+	do_shell(NULL, 0);
     }
 }
 #endif
@@ -311,6 +311,11 @@ ui_breakcheck()
  * This is always included in a GUI version, but may also be included when the
  * clipboard and mouse is available to a terminal version such as xterm.
  * Note: there are some more functions in ops.c that handle selection stuff.
+ *
+ * Also note that the majority of functions here deal with the X 'primary'
+ * (visible - for Visual mode use) selection, and only that. There are no
+ * versions of these for the 'clipboard' selection, as Visual mode has no use
+ * for them.
  */
 
 #if defined(FEAT_CLIPBOARD) || defined(PROTO)
@@ -330,13 +335,23 @@ ui_breakcheck()
 clip_init(can_use)
     int	    can_use;
 {
-    clipboard.available = can_use;
-    clipboard.owned = FALSE;
-    clipboard.start.lnum = 0;
-    clipboard.start.col = 0;
-    clipboard.end.lnum = 0;
-    clipboard.end.col = 0;
-    clipboard.state = SELECT_CLEARED;
+    VimClipboard *cb;
+
+    cb = &clip_star;
+    for (;;)
+    {
+	cb->available  = can_use;
+	cb->owned      = FALSE;
+	cb->start.lnum = 0;
+	cb->start.col  = 0;
+	cb->end.lnum   = 0;
+	cb->end.col    = 0;
+	cb->state      = SELECT_CLEARED;
+
+	if (cb == &clip_plus)
+	    break;
+	cb = &clip_plus;
+    }
 }
 
 /*
@@ -368,67 +383,77 @@ clip_update_selection()
 	    start = curwin->w_cursor;
 	    end = VIsual;
 	}
-	if (!equal(clipboard.start, start) || !equal(clipboard.end, end)
-					    || clipboard.vmode != VIsual_mode)
+	if (!equal(clip_star.start, start) || !equal(clip_star.end, end)
+					    || clip_star.vmode != VIsual_mode)
 	{
 	    clip_clear_selection();
-	    clipboard.start = start;
-	    clipboard.end = end;
-	    clipboard.vmode = VIsual_mode;
-	    clip_free_selection();
-	    clip_own_selection();
-	    clip_gen_set_selection();
+	    clip_star.start = start;
+	    clip_star.end = end;
+	    clip_star.vmode = VIsual_mode;
+	    clip_free_selection(&clip_star);
+	    clip_own_selection(&clip_star);
+	    clip_gen_set_selection(&clip_star);
 	}
     }
 }
 
     void
-clip_own_selection()
+clip_own_selection(cbd)
+    VimClipboard	*cbd;
 {
     /*
      * Also want to check somehow that we are reading from the keyboard rather
      * than a mapping etc.
      */
-    if (!clipboard.owned && clipboard.available)
+    if (!cbd->owned && cbd->available)
     {
-	clipboard.owned = (clip_gen_own_selection() == OK);
+        cbd->owned = (clip_gen_own_selection(cbd) == OK);
 #ifdef FEAT_X11
-	/* May have to show a different kind of highlighting for the selected
-	 * area.  There is no specific redraw command for this, just redraw
-	 * all windows on the current buffer. */
-	if (clipboard.owned
-		&& get_real_state() == VISUAL
-		&& clip_isautosel()
-		&& hl_attr(HLF_V) != hl_attr(HLF_VNC))
-	    redraw_curbuf_later(INVERTED_ALL);
+        if (cbd == &clip_star)
+        {
+            /* May have to show a different kind of highlighting for the selected
+             * area.  There is no specific redraw command for this, just redraw
+             * all windows on the current buffer. */
+            if (cbd->owned
+                    && get_real_state() == VISUAL
+                    && clip_isautosel()
+                    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
+                redraw_curbuf_later(INVERTED_ALL);
+        }
 #endif
     }
 }
 
     void
-clip_lose_selection()
+clip_lose_selection(cbd)
+    VimClipboard	*cbd;
 {
 #ifdef FEAT_X11
-    int	    was_owned = clipboard.owned;
+    int	    was_owned = cbd->owned;
 #endif
+    int     visual_selection = (cbd == &clip_star);
 
-    clip_free_selection();
-    clipboard.owned = FALSE;
-    clip_clear_selection();
-    clip_gen_lose_selection();
+    clip_free_selection(cbd);
+    cbd->owned = FALSE;
+    if (visual_selection)
+        clip_clear_selection();
+    clip_gen_lose_selection(cbd);
 #ifdef FEAT_X11
-    /* May have to show a different kind of highlighting for the selected
-     * area.  There is no specific redraw command for this, just redraw all
-     * windows on the current buffer. */
-    if (was_owned
-	    && get_real_state() == VISUAL
-	    && clip_isautosel()
-	    && hl_attr(HLF_V) != hl_attr(HLF_VNC))
+    if (visual_selection)
     {
-	update_curbuf(INVERTED_ALL);
-	setcursor();
-	cursor_on();
-	out_flush();
+        /* May have to show a different kind of highlighting for the selected
+         * area.  There is no specific redraw command for this, just redraw all
+         * windows on the current buffer. */
+        if (was_owned
+                && get_real_state() == VISUAL
+                && clip_isautosel()
+                && hl_attr(HLF_V) != hl_attr(HLF_VNC))
+        {
+            update_curbuf(INVERTED_ALL);
+            setcursor();
+            cursor_on();
+            out_flush();
+        }
     }
 #endif
 }
@@ -436,15 +461,15 @@ clip_lose_selection()
     void
 clip_copy_selection()
 {
-    if (VIsual_active && clipboard.available)
+    if (VIsual_active && clip_star.available)
     {
 	if (clip_isautosel())
 	    clip_update_selection();
-	clip_free_selection();
-	clip_own_selection();
-	if (clipboard.owned)
-	    clip_get_selection();
-	clip_gen_set_selection();
+	clip_free_selection(&clip_star);
+	clip_own_selection(&clip_star);
+	if (clip_star.owned)
+	    clip_get_selection(&clip_star);
+	clip_gen_set_selection(&clip_star);
     }
 }
 
@@ -496,11 +521,11 @@ clip_compare_pos(row1, col1, row2, col2)
     int	    row2;
     int	    col2;
 {
-    if (row1 > row2) return( 1);
+    if (row1 > row2) return(1);
     if (row1 < row2) return(-1);
-    if (col1 > col2) return( 1);
+    if (col1 > col2) return(1);
     if (col1 < col2) return(-1);
-		     return( 0);
+		     return(0);
 }
 
 /*
@@ -515,7 +540,7 @@ clip_start_selection(button, x, y, repeated_click, modifiers)
     int	    repeated_click;
     int_u   modifiers;
 {
-    VimClipboard    *cb = &clipboard;
+    VimClipboard    *cb = &clip_star;
 
     if (cb->state == SELECT_DONE)
 	clip_clear_selection();
@@ -582,7 +607,7 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
     int	    repeated_click;
     int_u   modifiers;
 {
-    VimClipboard    *cb = &clipboard;
+    VimClipboard    *cb = &clip_star;
     int		    row;
     int_u	    col;
     int		    diff;
@@ -602,11 +627,11 @@ clip_process_selection(button, x, y, repeated_click, modifiers)
 	printf("Selection ended: (%u,%u) to (%u,%u)\n", cb->start.lnum,
 		cb->start.col, cb->end.lnum, cb->end.col);
 #endif
-	clip_free_selection();
-	clip_own_selection();
+	clip_free_selection(&clip_star);
+	clip_own_selection(&clip_star);
 	clip_yank_non_visual_selection((int)cb->start.lnum, cb->start.col,
 					      (int)cb->end.lnum, cb->end.col);
-	clip_gen_set_selection();
+	clip_gen_set_selection(&clip_star);
 	if (gui.in_use)
 	    gui_update_cursor(FALSE, FALSE);
 
@@ -748,7 +773,7 @@ clip_redraw_selection(x, y, w, h)
     int	    w;
     int	    h;
 {
-    VimClipboard    *cb = &clipboard;
+    VimClipboard    *cb = &clip_star;
     int		    row1, col1, row2, col2;
     int		    row;
     int		    start;
@@ -806,14 +831,14 @@ clip_may_redraw_selection(row, col, len)
     int		start = col;
     int		end = col + len;
 
-    if (clipboard.state != SELECT_CLEARED
-	    && row >= clipboard.start.lnum
-	    && row <= clipboard.end.lnum)
+    if (clip_star.state != SELECT_CLEARED
+	    && row >= clip_star.start.lnum
+	    && row <= clip_star.end.lnum)
     {
-	if (row == clipboard.start.lnum && start < (int)clipboard.start.col)
-	    start = clipboard.start.col;
-	if (row == clipboard.end.lnum && end > (int)clipboard.end.col)
-	    end = clipboard.end.col;
+	if (row == clip_star.start.lnum && start < (int)clip_star.start.col)
+	    start = clip_star.start.col;
+	if (row == clip_star.end.lnum && end > (int)clip_star.end.col)
+	    end = clip_star.end.col;
 	if (end > start)
 	    clip_invert_area(row, start, row, end);
     }
@@ -825,7 +850,7 @@ clip_may_redraw_selection(row, col, len)
     void
 clip_clear_selection()
 {
-    VimClipboard    *cb = &clipboard;
+    VimClipboard    *cb = &clip_star;
 
     if (cb->state == SELECT_CLEARED)
 	return;
@@ -842,9 +867,9 @@ clip_clear_selection()
 clip_may_clear_selection(row1, row2)
     int	row1, row2;
 {
-    if (clipboard.state == SELECT_DONE
-	    && row2 >= clipboard.start.lnum
-	    && row1 <= clipboard.end.lnum)
+    if (clip_star.state == SELECT_DONE
+	    && row2 >= clip_star.start.lnum
+	    && row1 <= clip_star.end.lnum)
 	clip_clear_selection();
 }
 
@@ -858,24 +883,24 @@ clip_scroll_selection(rows)
 {
     int	    lnum;
 
-    if (clipboard.state == SELECT_CLEARED)
+    if (clip_star.state == SELECT_CLEARED)
 	return;
 
-    lnum = clipboard.start.lnum - rows;
+    lnum = clip_star.start.lnum - rows;
     if (lnum <= 0)
-	clipboard.start.lnum = 0;
+	clip_star.start.lnum = 0;
     else if (lnum >= screen_Rows)	/* scrolled off of the screen */
-	clipboard.state = SELECT_CLEARED;
+	clip_star.state = SELECT_CLEARED;
     else
-	clipboard.start.lnum = lnum;
+	clip_star.start.lnum = lnum;
 
-    lnum = clipboard.end.lnum - rows;
+    lnum = clip_star.end.lnum - rows;
     if (lnum < 0)			/* scrolled off of the screen */
-	clipboard.state = SELECT_CLEARED;
+	clip_star.state = SELECT_CLEARED;
     else if (lnum >= screen_Rows)
-	clipboard.end.lnum = screen_Rows - 1;
+	clip_star.end.lnum = screen_Rows - 1;
     else
-	clipboard.end.lnum = lnum;
+	clip_star.end.lnum = lnum;
 }
 
 /*
@@ -1075,7 +1100,7 @@ clip_yank_non_visual_selection(row1, col1, row2, col2)
     if (add_newline_flag)
 	*bufp++ = NL;
 
-    clip_yank_selection(MCHAR, buffer, (long)(bufp - buffer));
+    clip_yank_selection(MCHAR, buffer, (long)(bufp - buffer), &clip_star);
     vim_free(buffer);
 }
 
@@ -1190,67 +1215,71 @@ clip_clear_selection()
      * Eventually we could actually invert the area in a terminal by redrawing
      * in reverse mode, but we don't do that yet.
      */
-    clipboard.state = SELECT_CLEARED;
+    clip_star.state = SELECT_CLEARED;
 }
 #endif /* FEAT_GUI */
 
     int
-clip_gen_own_selection()
+clip_gen_own_selection(cbd)
+    VimClipboard	*cbd;
 {
 #ifdef FEAT_XCLIPBOARD
 # ifdef FEAT_GUI
     if (gui.in_use)
-	return clip_mch_own_selection();
+	return clip_mch_own_selection(cbd);
     else
 # endif
-	return clip_xterm_own_selection();
+	return clip_xterm_own_selection(cbd);
 #else
-    return clip_mch_own_selection();
+    return clip_mch_own_selection(cbd);
 #endif
 }
 
     void
-clip_gen_lose_selection()
+clip_gen_lose_selection(cbd)
+    VimClipboard	*cbd;
 {
 #ifdef FEAT_XCLIPBOARD
 # ifdef FEAT_GUI
     if (gui.in_use)
-	clip_mch_lose_selection();
+	clip_mch_lose_selection(cbd);
     else
 # endif
-	clip_xterm_lose_selection();
+	clip_xterm_lose_selection(cbd);
 #else
-    clip_mch_lose_selection();
+    clip_mch_lose_selection(cbd);
 #endif
 }
 
     void
-clip_gen_set_selection()
+clip_gen_set_selection(cbd)
+    VimClipboard	*cbd;
 {
 #ifdef FEAT_XCLIPBOARD
 # ifdef FEAT_GUI
     if (gui.in_use)
-	clip_mch_set_selection();
+	clip_mch_set_selection(cbd);
     else
 # endif
-	clip_xterm_set_selection();
+	clip_xterm_set_selection(cbd);
 #else
-    clip_mch_set_selection();
+    clip_mch_set_selection(cbd);
 #endif
 }
 
     void
-clip_gen_request_selection()
+clip_gen_request_selection(cbd)
+    VimClipboard	*cbd;
 {
 #ifdef FEAT_XCLIPBOARD
 # ifdef FEAT_GUI
     if (gui.in_use)
-	clip_mch_request_selection();
+	clip_mch_request_selection(cbd);
     else
 # endif
-	clip_xterm_request_selection();
+	clip_xterm_request_selection(cbd);
 #else
-    clip_mch_request_selection();
+    clip_mch_request_selection(cbd);
 #endif
 }
 
@@ -1598,14 +1627,21 @@ open_app_context()
     }
 }
 
+static Atom	vim_atom;	/* Vim's own special selection format */
+static Atom	compound_text_atom;
+static Atom	text_atom;
+static Atom	targets_atom;
+
     void
 x11_setup_atoms(dpy)
     Display	*dpy;
 {
-    clipboard.xatom = XInternAtom(dpy, "_VIM_TEXT", False);
-    clipboard.xa_compound_text = XInternAtom(dpy, "COMPOUND_TEXT", False);
-    clipboard.xa_text = XInternAtom(dpy, "TEXT", False);
-    clipboard.xa_targets = XInternAtom(dpy, "TARGETS", False);
+    vim_atom           = XInternAtom(dpy, VIM_ATOM_NAME,   False);
+    compound_text_atom = XInternAtom(dpy, "COMPOUND_TEXT", False);
+    text_atom          = XInternAtom(dpy, "TEXT",          False);
+    targets_atom       = XInternAtom(dpy, "TARGETS",       False);
+    clip_star.sel_atom = XA_PRIMARY;
+    clip_plus.sel_atom = XInternAtom(dpy, "CLIPBOARD",     False);
 }
 
 /*
@@ -1616,11 +1652,11 @@ static void  clip_x11_request_selection_cb __ARGS((Widget, XtPointer, Atom *, At
 
 /* ARGSUSED */
     static void
-clip_x11_request_selection_cb(w, success, selection, type, value, length,
+clip_x11_request_selection_cb(w, success, sel_atom, type, value, length,
 			      format)
     Widget	w;
     XtPointer	success;
-    Atom	*selection;
+    Atom	*sel_atom;
     Atom	*type;
     XtPointer	value;
     long_u	*length;
@@ -1630,26 +1666,32 @@ clip_x11_request_selection_cb(w, success, selection, type, value, length,
     long_u	len;
     char_u	*p;
     char	**text_list = NULL;
+    VimClipboard	*cbd;
+
+    if (*sel_atom == clip_plus.sel_atom)
+	cbd = &clip_plus;
+    else
+        cbd = &clip_star;
 
     if (value == NULL || *length == 0)
     {
-	clip_free_selection();	/* ??? */
+	clip_free_selection(cbd);	/* ???  [what's the query?] */
 	*(int *)success = FALSE;
 	return;
     }
     motion_type = MCHAR;
     p = (char_u *)value;
     len = *length;
-    if (*type == clipboard.xatom)
+    if (*type == vim_atom)
     {
 	motion_type = *p++;
 	len--;
     }
-    else if (*type == clipboard.xa_compound_text || (
+    else if (*type == compound_text_atom || (
 #ifdef FEAT_MBYTE
 		enc_dbcs != 0 &&
 #endif
-		*type == clipboard.xa_text))
+		*type == text_atom))
     {
 	XTextProperty	text_prop;
 	int		n_text = 0;
@@ -1669,7 +1711,7 @@ clip_x11_request_selection_cb(w, success, selection, type, value, length,
 	p = (char_u *)text_list[0];
 	len = STRLEN(p);
     }
-    clip_yank_selection(motion_type, p, (long)len);
+    clip_yank_selection(motion_type, p, (long)len, cbd);
 
     if (text_list != NULL)
 	XFreeStringList(text_list);
@@ -1679,25 +1721,28 @@ clip_x11_request_selection_cb(w, success, selection, type, value, length,
 }
 
     void
-clip_x11_request_selection(myShell, dpy)
+clip_x11_request_selection(myShell, dpy, cbd)
     Widget	myShell;
     Display	*dpy;
+    VimClipboard	*cbd;
 {
     XEvent	event;
     Atom	type;
     static int	success;
     int		i;
+    int		nbytes = 0;
+    char_u	*buffer;
 
     for (i = 0; i < 4; i++)
     {
 	switch (i)
 	{
-	    case 0:  type = clipboard.xatom;	break;
-	    case 1:  type = clipboard.xa_compound_text; break;
-	    case 2:  type = clipboard.xa_text;	break;
+	    case 0:  type = vim_atom;	break;
+	    case 1:  type = compound_text_atom; break;
+	    case 2:  type = text_atom;	break;
 	    default: type = XA_STRING;
 	}
-	XtGetSelectionValue(myShell, XA_PRIMARY, type,
+	XtGetSelectionValue(myShell, cbd->sel_atom, type,
 	    clip_x11_request_selection_cb, (XtPointer)&success, CurrentTime);
 
 	/* Make sure the request for the selection goes out before waiting for
@@ -1724,15 +1769,26 @@ clip_x11_request_selection(myShell, dpy)
 	if (success)
 	    return;
     }
+
+    /* Final fallback position - use the X CUT_BUFFER0 store */
+    buffer = (char_u *)XFetchBuffer(dpy, &nbytes, 0);
+    if (nbytes > 0)
+    {
+        /* Got something */
+        clip_yank_selection(MCHAR, buffer, (long)nbytes, cbd);
+        XFree((void *)buffer);
+        if (p_verbose > 0)
+            smsg((char_u *)_("Used CUT_BUFFER0 instead of empty selection") );
+    }
 }
 
 static Boolean	clip_x11_convert_selection_cb __ARGS((Widget, Atom *, Atom *, Atom *, XtPointer *, long_u *, int *));
 
 /* ARGSUSED */
     static Boolean
-clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
+clip_x11_convert_selection_cb(w, sel_atom, target, type, value, length, format)
     Widget	w;
-    Atom	*selection;
+    Atom	*sel_atom;
     Atom	*target;
     Atom	*type;
     XtPointer	*value;
@@ -1742,12 +1798,18 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
     char_u	*string;
     char_u	*result;
     int		motion_type;
+    VimClipboard	*cbd;
 
-    if (!clipboard.owned)
+    if (*sel_atom == clip_plus.sel_atom)
+	cbd = &clip_plus;
+    else
+        cbd = &clip_star;
+
+    if (!cbd->owned)
 	return False;	    /* Shouldn't ever happen */
 
     /* requestor wants to know what target types we support */
-    if (*target == clipboard.xa_targets)
+    if (*target == targets_atom)
     {
 	Atom *array;
 
@@ -1755,10 +1817,10 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
 	    return False;
 	*value = (XtPointer)array;
 	array[0] = XA_STRING;
-	array[1] = clipboard.xa_targets;
-	array[2] = clipboard.xatom;
-	array[3] = clipboard.xa_text;
-	array[4] = clipboard.xa_compound_text;
+	array[1] = targets_atom;
+	array[2] = vim_atom;
+	array[3] = text_atom;
+	array[4] = compound_text_atom;
 	*type = XA_ATOM;
 	*format = sizeof(Atom) * 8;
 	*length = 5;
@@ -1766,18 +1828,18 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
     }
 
     if (       *target != XA_STRING
-	    && *target != clipboard.xatom
-	    && *target != clipboard.xa_text
-	    && *target != clipboard.xa_compound_text)
+	    && *target != vim_atom
+	    && *target != text_atom
+	    && *target != compound_text_atom)
 	return False;
 
-    clip_get_selection();
-    motion_type = clip_convert_selection(&string, length);
+    clip_get_selection(cbd);
+    motion_type = clip_convert_selection(&string, length, cbd);
     if (motion_type < 0)
 	return False;
 
     /* For our own format, the first byte contains the motion type */
-    if (*target == clipboard.xatom)
+    if (*target == vim_atom)
 	(*length)++;
 
     *value = XtMalloc((Cardinal)*length);
@@ -1793,8 +1855,8 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
 	mch_memmove(result, string, (size_t)(*length));
 	*type = XA_STRING;
     }
-    else if (*target == clipboard.xa_compound_text
-	    || *target == clipboard.xa_text)
+    else if (*target == compound_text_atom
+	    || *target == text_atom)
     {
 	XTextProperty	text_prop;
 	char		*string_nt = (char *)alloc((unsigned)*length + 1);
@@ -1808,13 +1870,13 @@ clip_x11_convert_selection_cb(w, selection, target, type, value, length, format)
 	XtFree(*value);			/* replace with COMPOUND text */
 	*value = (XtPointer)(text_prop.value);	/*    from plain text */
 	*length = text_prop.nitems;
-	*type = clipboard.xa_compound_text;
+	*type = compound_text_atom;
     }
     else
     {
 	result[0] = motion_type;
 	mch_memmove(result + 1, string, (size_t)(*length - 1));
-	*type = clipboard.xatom;
+	*type = vim_atom;
     }
     *format = 8;	    /* 8 bits per char */
     vim_free(string);
@@ -1825,25 +1887,30 @@ static void  clip_x11_lose_ownership_cb __ARGS((Widget, Atom *));
 
 /* ARGSUSED */
     static void
-clip_x11_lose_ownership_cb(w, selection)
+clip_x11_lose_ownership_cb(w, sel_atom)
     Widget  w;
-    Atom    *selection;
+    Atom    *sel_atom;
 {
-    clip_lose_selection();
+    if (*sel_atom == clip_plus.sel_atom)
+        clip_lose_selection(&clip_plus);
+    else
+        clip_lose_selection(&clip_star);
 }
 
     void
-clip_x11_lose_selection(myShell)
+clip_x11_lose_selection(myShell, cbd)
     Widget	myShell;
+    VimClipboard	*cbd;
 {
-    XtDisownSelection(myShell, XA_PRIMARY, CurrentTime);
+    XtDisownSelection(myShell, cbd->sel_atom, CurrentTime);
 }
 
     int
-clip_x11_own_selection(myShell)
+clip_x11_own_selection(myShell, cbd)
     Widget	myShell;
+    VimClipboard	*cbd;
 {
-    if (XtOwnSelection(myShell, XA_PRIMARY, CurrentTime,
+    if (XtOwnSelection(myShell, cbd->sel_atom, CurrentTime,
 	    clip_x11_convert_selection_cb, clip_x11_lose_ownership_cb,
 							       NULL) == False)
 	return FAIL;
@@ -1854,8 +1921,10 @@ clip_x11_own_selection(myShell)
  * Send the current selection to the clipboard.  Do nothing for X because we
  * will fill in the selection only when requested by another app.
  */
+/*ARGSUSED*/
     void
-clip_x11_set_selection()
+clip_x11_set_selection(cbd)
+    VimClipboard *cbd;
 {
 }
 #endif

@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0x.  Last change: 2001 Feb 19
+*index.txt*     For Vim version 6.0y.  Last change: 2001 Mar 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1269,6 +1269,7 @@ The commands are sorted on the non-optional part of their name.
 |:wall|		:wa[ll]		write all (changed) buffers
 |:while|	:wh[ile]	execute loop for as long as condition met
 |:winsize|	:wi[nsize]	get or set window size (obsolete)
+|:wincmd|	:winc[md]	execute a Window (CTRL-W) command
 |:winpos|	:winp[os]	get or set window position
 |:wnext|	:wn[ext]	write to a file and go to next file in
 				argument list

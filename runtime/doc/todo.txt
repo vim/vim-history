@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0x.  Last change: 2001 Mar 11
+*todo.txt*      For Vim version 6.0y.  Last change: 2001 Mar 18
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,6 +29,18 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Athena: With tiny features vertical scrollbar doesn't connect at the top.
+
+Motif GUI: ":hi menu font=name" crashes Vim in some situations. E.g.:
+    :hi menu font=fixed
+    :hi menu font=asdf
+
+MS-DOS 16 bit: runs out of memory for "make test".
+
+Win32 GUI: Find dialog gives focus back to main window, when typing a
+character mouse pointer is blanked, it doesn't reappear when moving it in the
+dialog window.
+
 The source archive is over the 1.4M floppy limit.  How to avoid this?
 
 
@@ -36,13 +48,11 @@ Main items for 6.0:
 A.  Folding
 	Works.
 B.  UTF-8 support
-	Mostly works.  Many small items still to be fixed.
-	Make regexp patterns multi-byte aware.
+	Mostly works.  A few small items still to be fixed.
 C.  Multi-line regexp patterns
 	Works.
 D.  Vertical window split
-	Works.
-	A few improvements to do.
+	Works.  A few improvements to do.
 E.  Virtual edit
 	Works for some commands.  Still needs to be improved a lot.
 F.  Sun Visual workshop (debugger) interface
@@ -63,11 +73,6 @@ J.  User Friendlier
 
 B. UTF-8 support:
     See ASCII graphics in multibyte.c.
--   Check use of mb_head_off(): can mb_prevptr() be used?
--   Check MBYTE code in regexp.c to add UTF-8 support.
--   Substitute doesn't work well on multibyte characters:
-    ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
-    Requires regexp code that sees a multibyte character as one char.
 -   Check replace stack for mbyte.
 -   Check if "gR" (virtual replace) works with mbyte.
     Check "gR" for proper working of backspacing.
@@ -280,7 +285,8 @@ Various recent:
 	    {
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
-8   Motif GUI: Add tooltips, using the gui_beval.c code.
+8   Motif GUI: The tooltips disappear after one or two seconds.  Why don't
+    they stay?
 8   Implement ":tearoff" for other systems than Win32 GUI
 8   ":let @" = "val" should not have side effects for other registers (after
     "ayy). (Raul Acevedo)
@@ -641,8 +647,8 @@ Athena GUI:
 Motif GUI:
 9   When starting GUI with ":gui" while 'writedel' is non-zero, escape
     sequences are split up.  Motif version crashes.
-9   Motif 1.2: Adding many menu items, making two rows, still doesn't work
-    properly on HPUX.
+8   When changing the color of the toolbar with ":hi toolbar", the pixmaps are
+    not updated.  Need to destroy them and allocate with the new colors.
 8   Popup menu ordering is wrong.
 8   Dialog: Pointer should be moved to the default button.  Accelerators don't
     work yet.
@@ -898,21 +904,9 @@ VMS:
     should include it already.
 8   When in Insert mode with 'scrolloff' set, inserting text at the end of the
     file, "!" lines will stay there while they could be used. (Park)
-8   Unix in an xterm: Select something on the cmdline; go back to text; now
-    <S-MiddleMouse> pastes the selection, but <MiddleMouse> doesn't.  Xterm
-    first tries getting the primary selection, and if that doesn't work it
-    gets CUT_BUFFER0.
-8   When owning the PRIMARY selection, also get the CLIPBOARD selection.
-    (Neil Bird)  Use the "+ register to access the clipboard? (Bird)
-    Use "unnamed", "clipboard" and "autoselect" in the 'clipboard' option.
-    (Wall)  Also copy text to CUT_BUFFER0, but don't do it too often (can be
-    slow when there is a lot of text).  Only do it when exiting and still
-    owning the selection?  Or just recommend xcb?
-8   When compiled with "xterm_clipboard", startup can be slower and might get
-    error message for invalid $DISPLAY.  Use an option to disable connecting
-    to the X server, so that Vim doesn't have to be recompiled for this?
-    Better: Try connecting to the X server in the background (forked), so that
-    Vim starts up quicker.
+7   When compiled with "xterm_clipboard", startup can be slower and might get
+    error message for invalid $DISPLAY.  Try connecting to the X server in the
+    background (forked), so that Vim starts up quicker?
 8   For xterm need to open a connection to the X server to get the window
     title, which can be slow.  Can also get the title with "<Esc>[21t", no
     need to use X11 calls.  This returns "<Esc>]l{title}<Esc>\".
@@ -1174,8 +1168,6 @@ Syntax highlighting:
 8   Add a "keepend-contained" argument: Don't change the end of an item this
     one is contained in.  Like "keepend" but specified on the contained item,
     instead of the containing item.
-8   Add a "containedin" argument, to later add contained items (e.g., to
-    highlight a name in a comment).
 8   For keywords, allow to define the size of the hash table with ":syn
     clear".  Change KHASH_ defines into variables stored in buffer struct.
     Use something else than linear linked list from the hash table. (Campbell)
@@ -1688,7 +1680,6 @@ GUI:
 8   Add 'c' flag in 'guioptios' to use console dialogs instead of GUI dialogs.
     Esp. for the ATTENTION prompt.
 8   Add flag to 'guioptions' to not put anything in the clipboard at all?
-8   ":let @* = 'text'" should set the selection. (Krishna)
 8   Should take font from xterm where gvim was started (if no other default).
 8   Selecting font names in X11 is difficult, make a script or something to
     select one.
@@ -2616,6 +2607,7 @@ Registers:
 
 
 Various improvements:
+8   Allow using "**" as a wildcard in commands like ":next" and ":args".
 7   Add a message area for the user.  Set some option to reserve space (above
     the command line?).  Use an ":echouser" command to display the message
     (truncated to fit in the space).
@@ -2788,7 +2780,6 @@ Various improvements:
 	nrformats=hex:$,binary:b,octal:0
     Add setting of 'nrformats' to syntax files.
 -   'path' can become very long, don't use NameBuff for expansion.
--   Allow the use of wildcards in 'path'.
 -   When unhiding a hidden buffer, put the same line at top of the window as
     the one before hiding it. Or: keep the same relative cursor position (so
     many percent down the windows).
@@ -2986,7 +2977,6 @@ From Elvis:
 
 
 From Nvi:
--   'cdpath' option.
 -   'searchincr' option, alias for 'incsearch'?
 -   'leftright' option, alias for 'nowrap'?
 -   Have a look at "vi/doc/vi.chart", for Nvi specialities.

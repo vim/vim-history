@@ -41,7 +41,7 @@ SRC =	buffer.c \
 	misc1.c \
 	misc2.c \
 	move.c \
-	multibyte.c \
+	mbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -79,7 +79,7 @@ OBJ =	objects/buffer.obj \
 	objects/misc1.obj \
 	objects/misc2.obj \
 	objects/move.obj \
-	objects/multibyte.obj \
+	objects/mbyte.obj \
 	objects/normal.obj \
 	objects/ops.obj \
 	objects/option.obj \
@@ -171,8 +171,8 @@ objects/misc2.obj:	misc2.c  $(INCL)
 objects/move.obj:	move.c  $(INCL)
 	$(CC) $(CFLAGS) move.c -o objects/move.obj
 
-objects/multibyte.obj:	multibyte.c  $(INCL)
-	$(CC) $(CFLAGS) multibyte.c -o objects/multibyte.obj
+objects/mbyte.obj:	mbyte.c  $(INCL)
+	$(CC) $(CFLAGS) mbyte.c -o objects/mbyte.obj
 
 objects/normal.obj:	normal.c  $(INCL)
 	$(CC) $(CFLAGS) normal.c -o objects/normal.obj

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0x.  Last change: 2001 Feb 16
+*windows.txt*   For Vim version 6.0y.  Last change: 2001 Mar 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -63,6 +63,9 @@ state		displayed	loaded		":buffers"  ~
 active		  yes		 yes		  ' '
 hidden		  no		 yes		  'h'
 inactive	  no		 no		  '-'
+
+Note: All CTRL-W commands can also be executed with |:wincmd|, for those
+places where a Normal mode command can't be used or is inconvenient.
 
 ==============================================================================
 2. Starting Vim						*windows-starting*
@@ -325,6 +328,17 @@ CTRL-W P	Go to preview window.  When there is no preview window this is
 If Visual mode is active and the new window is not for the same buffer, the
 Visual mode is ended.  If the window is on the same buffer, the cursor
 position is set to keep the same Visual area selected.
+
+						*:winc* *:wincmd*
+These commands can also be executed with ":wincmd":
+
+:[count]winc[md] {arg}
+		Like executing CTRL-W [count] {arg}.  Example: >
+			:wincmd j
+<		Moves to the window below the current one.
+		This command is useful when a Normal mode cannot be used (for
+		the |CursorHold| autocommand event).  Or when a Normal mode
+		command is inconvenient.
 
 ==============================================================================
 5. Moving windows around				*window-moving*
@@ -692,14 +706,7 @@ preview window to be able to recognize it.
 		(like a help window is).  If a new one is opened,
 		'previewheight' is used for the height of the window.   See
 		also |:tag|.
-		Example:				*CursorHold-example*  >
-  :au! CursorHold *.[ch] nested exe "silent! ptag " . expand("<cword>")
-<		This will cause a ":ptag" to be executed for the keyword under
-		the cursor, when the cursor hasn't moved for the time set with
-		'updatetime'.  The "nested" makes other autocommands be
-		executed, so that syntax highlighting works in the preview
-		window.  Also see |CursorHold|.  To disable this again: >
-  :au! CursorHold
+		See below for an example. |CursorHold-example|
 
 CTRL-W z					*CTRL-W_z*
 CTRL-W CTRL-Z					*CTRL-W_CTRL-Z* *:pc* *:pclose*
@@ -745,6 +752,58 @@ CTRL-W g }						*CTRL-W_g}*
 		include files.  Example: >
   :au! CursorHold *.[ch] nested exe "silent! psearch " . expand("<cword>")
 <		Warning: This can be slow.
+
+Example						*CursorHold-example*  >
+
+  :au! CursorHold *.[ch] nested exe "silent! ptag " . expand("<cword>")
+
+This will cause a ":ptag" to be executed for the keyword under the cursor,
+when the cursor hasn't moved for the time set with 'updatetime'.  The "nested"
+makes other autocommands be executed, so that syntax highlighting works in the
+preview window.  The "silent!" avoids an error message when the tag could not
+be found.  Also see |CursorHold|.  To disable this again: >
+
+  :au! CursorHold
+
+A nice addition is to highlight the found tag, avoid the ":ptag" when there
+is no word under the cursor, and a few other things: >
+
+  :au! CursorHold *.[ch] nested call PreviewWord()
+  :func PreviewWord()
+  :  if &previewwindow			" don't do this in the preview window
+  :    return
+  :  endif
+  :  let w = expand("<cword>")		" get the word under cursor
+  :  if w != ""				" if there is one ":ptag" to it
+  :
+  :    " Delete any existing highlight before showing another tag
+  :    silent! wincmd P			" jump to preview window
+  :    if &previewwindow			" if we really get there...
+  :      silent! syn clear previewWord	" delete existing highlight
+  :      wincmd p			" back to old window
+  :    endif
+  :
+  :    " Try displaying a matching tag for the word under the cursor
+  :    let v:errmsg = ""
+  :    exe "silent! ptag " . w
+  :    if v:errmsg =~ "tag not found"
+  :      return
+  :    endif
+  :
+  :    silent! wincmd P			" jump to preview window
+  :    if &previewwindow		" if we really get there...
+  :	 if has("folding")
+  :	   silent! .foldopen		" don't want a closed fold
+  :	 endif
+  :	 call search("$", "b")		" to end of previous line
+  :	 call search('\<' . w . '\>')	" position cursor on match
+  :	 " Add a syntax item to the word at this position
+  :	 exe 'syn match previewWord "\%' . line(".") . 'l\%' . col(".") . 'c\k*" containedin=ALL'
+  :      hi previewWord term=bold ctermbg=green guibg=green
+  :      wincmd p			" back to old window
+  :    endif
+  :  endif
+  :endfun
 
 ==============================================================================
 13. Using hidden buffers				*buffer-hidden*

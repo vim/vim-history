@@ -499,6 +499,7 @@ struct sp_syn
 {
     int		inc_tag;	/* ":syn include" unique tag */
     short	id;		/* highlight group ID of item */
+    short	*cont_in_list;	/* cont.in group IDs, if non-zero */
 };
 
 /*

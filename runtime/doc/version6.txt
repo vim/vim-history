@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0x.  Last change: 2001 Mar 11
+*version6.txt*  For Vim version 6.0y.  Last change: 2001 Mar 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -301,6 +301,10 @@ The idea is that unprintable text or any text that's displayed differently
 from the characters in the file is using "SpecialKey", and "NonText" is used
 for text that doesn't really exist in the file.
 
+Motif and Athena now use the system default colors for the menu and scrollbar.
+Used to be grey.  It's still possible to set the colors with ":highlight"
+commands and resources.
+
 ==============================================================================
 NEW FEATURES
 
@@ -406,6 +410,8 @@ Multi-line patterns: (partly by Loic Grenie)
 \C		match case for the whole pattern
 \m		magic on for the following
 \M		magic off for the following
+\v		make following characters "very magic"
+\V		make following characters "very nomagic"
 
 \@!		don't match atom before it.
 		Example: "foo\(bar\)\@!" matches "foo " but not "foobar".
@@ -423,6 +429,15 @@ Multi-line patterns: (partly by Loic Grenie)
 		any number of these, overcomes the limit of nine \( \) pairs
 \%^		match start-of-file (Chase Tingley)
 \%$		match end-of-file (Chase Tingley)
+\%#		Match with the cursor position. (Chase Tingley)
+\?		Just like "\=" but can't be used in a "?" command.
+
+\%23l		match in line 23
+\%<23l		match before line 23
+\%>23l		match after line 23
+\%23c, \%<23c, \%>23c   match in/before/after column 23
+\%23v, \%<23v, \%>23v	match in/before/after virtual column 23
+
 
 For syntax items:
 \z(...\)	external reference match set (in region start pattern)
@@ -489,6 +504,7 @@ Many new items for Multi-byte support:
   command.
 - Added 'm' flag to 'formatoptions': When wrapping words, allow splitting at
   each multibyte character, not only at a space.
+- Patterns should now work properly with all kinds of multi-byte characters.
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -539,6 +555,8 @@ Multi-language support					*new-multi-lang*
 - --disable-nls argument for configure: Disable use of gettext(). (Sung-Hyun
   Nam)
 - Added NLS support for Win32 with the MingW compiler. (Eduardo Fernandez)
+- Made it possible to have vimtutor use different languages.  Spanish and
+  Italian translations are included. (Eduardo Fernandez)
 
 
 Plugin support					*new-plugins*
@@ -888,6 +906,10 @@ Ex commands: ~
 :windo		Execute a command in all windows.
 :bufdo		Execute a command in all buffers.
 
+:wincmd		Window (CTRL-W) command.  Useful when a Normal mode command
+		can't be used (e.g., for a CursorHold autocommand).  See
+		|CursorHold-example| for a nice application with it.
+
 :lcd and :lchdir
 		Set local directory for a window. (Benjie Chen)
 
@@ -1016,6 +1038,9 @@ Macintosh.
 "gf" works in Visual mode: Use the selected text as the file name. (Chase
 Tingley)
 
+Allow ambiguous mappings.  Thus "aa" and "aaa" can both be mapped, the longest
+matching one is used.  Especially useful for ":lmap" and 'keymap'.
+
 Encryption: Ask the key to be typed twice when crypting the first time.
 Otherwise a typo might cause the text to be lost forever. (Chase Tingley)
 
@@ -1100,7 +1125,7 @@ complicated patterns on a longer text.
 Syntax highlighting:
 - Optimized by caching the state stack all over the file, not just the part
   being displayed.  Required for folding.
-- Added ":syn sync fromstart": Always parse from the start of the file.
+- Added ":syntax sync fromstart": Always parse from the start of the file.
 - Added "display" argument: use this item only when displaying the result.
   Can make parsing faster for text that isn't going to be displayed.
 - When using CTRL-L, the cached states are deleted, to force parsing the text
@@ -1112,10 +1137,16 @@ Syntax highlighting:
 - Syntax items can have the "extend" argument to undo the effect of a
   "keepend" argument of an item it is contained in.  Makes it possible to have
   some contained items extend a region while others don't.
-- ":syn clear" now deletes the b:current_syntax variable.  That's logical,
+- ":syntax clear" now deletes the b:current_syntax variable.  That's logical,
   since no syntax is defined after this command.
+- Added ":syntax enable": switch on syntax highlighting without changing the
+  colors.  This allows specifying the colors in the .vimrc file without the
+  need for a mysyntaxfile.
+- Added ":syntax reset": reset the colors to their defaults.
 - Added the "contains=TOP" and "contains=CONTAINED" arguments.  Makes it
   possible to define a transparent item that doesn't contain itself.
+- Added a "containedin" argument to syntax items.  Allows adding a contained
+  item to an existing item (e.g., to highlight a name in a comment).
 
 Win32 console version:
 - Includes the user and system name in the ":version" message, when available.
@@ -1155,6 +1186,15 @@ GUI:
   Khodush)
 - When no --enable-xim argument is given, automatically enable it when a X GUI
   is used.  Required for dead key support (and multi-byte input).
+- X11: Support for the clipboard selection as register "+.  When exiting or
+  suspending copy the selection to cut buffer 0.  Should allow copy/paste with
+  more applications in a X11-standard way.  (Neil Bird)
+- After a file selection dialog, check that the edited files were not changed
+  or deleted.  The Win32 dialog allows deleting and renaming files.
+- Motif and Athena: Added support for "editres". (Martin Dalecki)
+- Motif: Added "menuFont" to be able to specify a font or fontset for the
+  menus.  Useful when the locale is different from 'encoding'. (David
+  Harrison)
 
 GTK GUI: (partly by Marcin Dalecki)
 -   With some fonts the characters can be taller than ascent + descent.  E.g.,
@@ -1249,6 +1289,7 @@ Internal changes:
   big.  Also moved some code from screen.c to move.c.
 - Don't include the CRC table for encryption, generate it.  Saves quite a bit
   of space in the source code. (Matthias Kramm)
+- Renamed multibyte.c to mbyte.c to avoid a problem with 8.3 filesystems.
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -1346,6 +1387,11 @@ also accept a line of dots.
 
 The "p" command can now be used in Visual mode.  It overwrites the selected
 text with the contents of a register.
+
+Highlight the <> items in the intro message to make clear they are special.
+
+When using the "c" flag for ":substitute", allow typing "l" for replacing this
+item and then stop: "last".
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1937,5 +1983,29 @@ uninitialzed value happens to be half the size of the tag file. (Narendran)
 
 When using BufEnter and BufLeave autocommands to enable/disable a menu, it
 wasn't updated right away.
+
+When doing a replace with the "c"onfirm flag, the cursor was positioned after
+the ruler, instead of after the question.  With a long replacement string the
+screen could scroll up and cause a "more" prompt.  Now the message is
+truncated to make it fit.
+
+Motif: The autoconf check for the Xp library didn't work.
+
+When 'verbose' is set to list lines of a sourced file, defining a function
+would reset the counter used for the "more" prompt.
+
+In the Win32 find/replace dialog, a '/' character caused problems.  Escape it
+with a backslash.
+
+VMS: added VMS-specific defaults for the 'isfname' and 'isprint' options.
+(Zoltan Arpadffy)
+
+Starting a shell with ":sh" was different from starting a shell for CTRL-Z
+when suspending doesn't work.  They now work the same way.
+
+Jumping to a file mark while in a changed buffer gave a "mark not set" error.
+
+":execute histget("cmd")" causes an endless loop and crashed Vim.  Now catch
+all commands that cause too much recursiveness.
 
  vim:tw=78:

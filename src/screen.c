@@ -142,7 +142,7 @@ static void draw_vsep_win __ARGS((win_t *wp, int row));
 #ifdef FEAT_SEARCH_EXTRA
 static void start_search_hl __ARGS((void));
 static void end_search_hl __ARGS((void));
-static void next_search_hl __ARGS((linenr_t lnum, colnr_t mincol));
+static void next_search_hl __ARGS((win_t *win, linenr_t lnum, colnr_t mincol));
 #endif
 static void screen_start_highlight __ARGS((int attr));
 static void screen_char __ARGS((unsigned off, int row, int col));
@@ -482,7 +482,7 @@ update_screen(type)
 # endif
 # ifdef FEAT_CLIPBOARD
 		/* When Visual area changed, may have to update selection. */
-		if (clipboard.available && clip_isautosel())
+		if (clip_star.available && clip_isautosel())
 		    clip_update_selection();
 # endif
 	    }
@@ -611,7 +611,7 @@ updateWindow(wp)
 #endif
 #ifdef FEAT_CLIPBOARD
     /* When Visual area changed, may have to update selection. */
-    if (clipboard.available && clip_isautosel())
+    if (clip_star.available && clip_isautosel())
 	clip_update_selection();
 #endif
     win_update(wp);
@@ -1198,16 +1198,14 @@ win_update(wp)
 	    mid_end = wp->w_height;
 	    for ( ; idx < wp->w_lines_valid; ++idx)		/* find end */
 	    {
-		if (wp->w_lines[idx].wl_valid)
+		if (wp->w_lines[idx].wl_valid
+			&& wp->w_lines[idx].wl_lnum >= to + 1)
 		{
-		    if (wp->w_lines[idx].wl_lnum >= to + 1)
-		    {
-			/* Only update up to first row of this line */
-			mid_end = srow;
-			break;
-		    }
-		    srow += wp->w_lines[idx].wl_size;
+		    /* Only update until first row of this line */
+		    mid_end = srow;
+		    break;
 		}
+		srow += wp->w_lines[idx].wl_size;
 	    }
 	}
     }
@@ -1514,7 +1512,7 @@ win_update(wp)
 		    n = 0;
 		    while (first_search_lnum < lnum)
 		    {
-			next_search_hl(first_search_lnum, (colnr_t)n);
+			next_search_hl(wp, first_search_lnum, (colnr_t)n);
 			if (search_hl_lnum != 0)
 			{
 			    first_search_lnum = search_hl_lnum
@@ -2316,7 +2314,7 @@ win_line(wp, lnum, startrow, endrow)
 	    area_highlighting = TRUE;
 	    attr = hl_attr(HLF_V);
 #if defined(FEAT_CLIPBOARD) && defined(FEAT_X11)
-	    if (clipboard.available && !clipboard.owned && clip_isautosel())
+	    if (clip_star.available && !clip_star.owned && clip_isautosel())
 		attr = hl_attr(HLF_VNC);
 #endif
 	}
@@ -2441,7 +2439,7 @@ win_line(wp, lnum, startrow, endrow)
     if (search_hl_rm.regprog != NULL)
     {
 	v = ptr - line;
-	next_search_hl(lnum, (colnr_t)v);
+	next_search_hl(wp, lnum, (colnr_t)v);
 
 	/* Need to get the line again, a multi-line regexp may have made it
 	 * invalid. */
@@ -2461,9 +2459,23 @@ win_line(wp, lnum, startrow, endrow)
 		search_hl_end = line + MAXCOL;
 	    /* Highlight one character for an empty match. */
 	    if (*search_hl_start == NUL && search_hl_start > line)
-		--search_hl_start;
+	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    search_hl_start = mb_prevptr(line, search_hl_start);
+		else
+#endif
+		    --search_hl_start;
+	    }
 	    else if (search_hl_start == search_hl_end)
-		++search_hl_end;
+	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    search_hl_end += (*mb_ptr2len_check)(search_hl_end);
+		else
+#endif
+		    ++search_hl_end;
+	    }
 	    if (search_hl_start < ptr)  /* match at leftcol */
 		search_attr = search_hl_attr;
 	    area_highlighting = TRUE;
@@ -2686,7 +2698,7 @@ win_line(wp, lnum, startrow, endrow)
 			search_attr = 0;
 
 			v = ptr - line;
-			next_search_hl(lnum, (colnr_t)v);
+			next_search_hl(wp, lnum, (colnr_t)v);
 
 			/* Need to get the line again, a multi-line regexp may
 			 * have made it invalid. */
@@ -2707,7 +2719,15 @@ win_line(wp, lnum, startrow, endrow)
 			     * in the line. */
 			    if (*search_hl_start == NUL
 						    && search_hl_start > line)
-				--search_hl_start;
+			    {
+#ifdef FEAT_MBYTE
+				if (has_mbyte)
+				    search_hl_start =
+					    mb_prevptr(line, search_hl_start);
+				else
+#endif
+				    --search_hl_start;
+			    }
 
 			    /* for a non-null match, loop to check if the
 			     * match starts at the current position */
@@ -2715,7 +2735,13 @@ win_line(wp, lnum, startrow, endrow)
 				continue;
 
 			    /* highlight empty match, try again after it */
-			    ++search_hl_end;
+#ifdef FEAT_MBYTE
+			    if (has_mbyte)
+				search_hl_end +=
+					   (*mb_ptr2len_check)(search_hl_end);
+			    else
+#endif
+				++search_hl_end;
 			}
 		    }
 		    break;
@@ -4601,18 +4627,6 @@ end_search_hl()
     }
 }
 
-static char_u *search_hl_getline __ARGS((linenr_t lnum));
-
-    static char_u *
-search_hl_getline(lnum)
-    linenr_t	lnum;
-{
-    /* when looking behind for a match/no-match we can't go before line 1 */
-    if (search_hl_lnum + lnum < 1)
-	return NULL;
-    return ml_get_buf(search_hl_buf, search_hl_lnum + lnum, FALSE);
-}
-
 /*
  * Search for a next 'searchl' match.
  * Uses search_hl_buf.
@@ -4622,14 +4636,14 @@ search_hl_getline(lnum)
  * Careful: Any pointers for buffer lines will become invalid.
  */
     static void
-next_search_hl(lnum, mincol)
+next_search_hl(win, lnum, mincol)
+    win_t	*win;
     linenr_t	lnum;
     colnr_t	mincol;		/* minimal column for a match */
 {
     linenr_t	l;
     colnr_t	matchcol;
     long	nmatched;
-    buf_t	*curbuf_save;
 
     if (search_hl_lnum != 0)
     {
@@ -4645,10 +4659,6 @@ next_search_hl(lnum, mincol)
 	else if (lnum < l || search_hl_rm.endpos[0].col > mincol)
 	    return;
     }
-
-    /* use the right buffer for multi-line regexp and 'iskeyword' */
-    curbuf_save = curbuf;
-    curbuf = search_hl_buf;
 
     /*
      * Repeat searching for a match until one is found that includes "mincol"
@@ -4680,8 +4690,8 @@ next_search_hl(lnum, mincol)
 	    matchcol = search_hl_rm.endpos[0].col;
 
 	search_hl_lnum = lnum;
-	nmatched = vim_regexec_multi(&search_hl_rm, search_hl_getline,
-				 matchcol, curbuf->b_ml.ml_line_count - lnum);
+	nmatched = vim_regexec_multi(&search_hl_rm, win, search_hl_buf,
+							      lnum, matchcol);
 	if (nmatched == 0)
 	{
 	    search_hl_lnum = 0;		/* no match found */
@@ -4696,7 +4706,6 @@ next_search_hl(lnum, mincol)
 	    break;			/* useful match found */
 	}
     }
-    curbuf = curbuf_save;
 }
 #endif
 
@@ -5793,7 +5802,7 @@ windgoto(row, col)
 }
 
 /*
- * Set cursor to current position.
+ * Set cursor to its position in the current window.
  */
     void
 setcursor()

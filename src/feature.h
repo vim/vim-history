@@ -33,7 +33,7 @@
  *
  * +tiny		almost no features enabled, not even multiple windows
  * +small		few features enabled, as basic as possible
- * +normal		A defalut selection of features enabled
+ * +normal		A default selection of features enabled
  * +big			many features enabled, as rich as possible.
  * +huge		all possible featues enabled.
  *
@@ -633,7 +633,7 @@
  * +toolbar		Include code for a toolbar (for the Win32 GUI, GTK
  *			always has it).  But only if menus are enabled.
  */
-#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32) \
+#if defined(FEAT_NORMAL) && (defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN) \
 		|| (defined(FEAT_GUI_MOTIF) && defined(HAVE_X11_XPM_H))) \
 		&& defined(FEAT_MENU)
 # define FEAT_TOOLBAR
@@ -998,11 +998,6 @@
  */
 # define FEAT_FOOTER
 
-/*
- * +cde_colors		Use CDE colors rather than overriding with explicit
- *			color settings.
- */
-# define FEAT_CDE_COLORS
 #endif
 
 #endif

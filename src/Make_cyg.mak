@@ -50,7 +50,7 @@ OBJ = \
 	obj/misc1.o \
 	obj/misc2.o \
 	obj/move.o \
-	obj/multibyte.o \
+	obj/mbyte.o \
 	obj/normal.o \
 	obj/ops.o \
 	obj/option.o \
@@ -172,8 +172,8 @@ obj/misc2.o:	misc2.c $(INCL)
 obj/move.o:	move.c $(INCL)
 	$(CC) -c $(CFLAGS) move.c -o obj/move.o
 
-obj/multibyte.o: multibyte.c $(INCL)
-	$(CC) -c $(CFLAGS) multibyte.c -o obj/multibyte.o
+obj/mbyte.o: mbyte.c $(INCL)
+	$(CC) -c $(CFLAGS) mbyte.c -o obj/mbyte.o
 
 obj/normal.o:	normal.c $(INCL)
 	$(CC) -c $(CFLAGS) normal.c -o obj/normal.o

@@ -2,13 +2,37 @@
 #
 # Start Vim on a copy of the tutor file.
 
+# Usage: vimtutor [xx], where xx is a language code.
+# When an argument is given, it tries loading that tutor. 
+# When this fails or no argument was given, it tries using 'v:lang'
+# When that also fails, it uses the English version.
+
+xx=$1
+export xx
+
 # Use Vim to copy the tutor, it knows the value of $VIMRUNTIME
 TUTORCOPY=`tempfile -p tutor || mktemp /tmp/tutorXXXXXX || echo /tmp/tutor$$`
 export TUTORCOPY
-vim -u NONE -c 'e $VIMRUNTIME/tutor/tutor' -c 'w! $TUTORCOPY' -c 'q'
+
+# Vim could be called "vim" or "vi".  Also check for "vim6", for people who
+# have Vim 5.x installed as "vim" and Vim 6.0 as "vim6".
+testvim=`which vim6`
+if test -n "$testvim"; then
+	VIM=vim6
+else
+	testvim=`which vim`
+	if test -n "$testvim"; then
+		VIM=vim
+	else
+		VIM=vi
+	fi
+fi
+
+# The script tutor.vim tells Vim which file to copy
+$VIM -u NONE -c 'so $VIMRUNTIME/tutor/tutor.vim'
 
 # Start vim without any .vimrc, set 'nocompatible'
-vim -u NONE -c "set nocp" $TUTORCOPY
+$VIM -u NONE -c "set nocp" $TUTORCOPY
 
 # remove the copy of the tutor
 rm $TUTORCOPY

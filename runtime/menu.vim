@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Mar 09
+" Last Change:	2001 Mar 18
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -120,12 +120,12 @@ amenu 20.310 &Edit.&Undo<Tab>u			u
 amenu 20.320 &Edit.&Redo<Tab>^R			<C-R>
 amenu 20.330 &Edit.Rep&eat<Tab>\.		.
 amenu 20.335 &Edit.-SEP1-			:
-vmenu 20.340 &Edit.Cu&t<Tab>"*x			"*x
-vmenu 20.350 &Edit.&Copy<Tab>"*y		"*y
-nmenu 20.360 &Edit.&Paste<Tab>"*p		"*p
-vmenu	     &Edit.&Paste<Tab>"*p		"*P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
-imenu	     &Edit.&Paste<Tab>"*p		<Esc>:if col(".")!=1<Bar>exe 'norm "*p'<Bar>else<Bar>exe 'norm "*P'<Bar>endif<CR>`]a
-cmenu	     &Edit.&Paste<Tab>"*p		<C-R>*
+vmenu 20.340 &Edit.Cu&t<Tab>"+x			"+x
+vmenu 20.350 &Edit.&Copy<Tab>"+y		"+y
+nmenu 20.360 &Edit.&Paste<Tab>"+p		"+p
+vmenu	     &Edit.&Paste<Tab>"+p		"+P`]:if col(".")!=1<Bar>exe "norm l"<Bar>endif<CR>
+imenu	     &Edit.&Paste<Tab>"+p		<Esc>:if col(".")!=1<Bar>exe 'norm "+p'<Bar>else<Bar>exe 'norm "+P'<Bar>endif<CR>`]a
+cmenu	     &Edit.&Paste<Tab>"+p		<C-R>+
 nmenu 20.370 &Edit.Put\ &Before<Tab>[p		[p
 imenu	     &Edit.Put\ &Before<Tab>[p		<C-O>[p
 nmenu 20.380 &Edit.Put\ &After<Tab>]p		]p
@@ -772,6 +772,7 @@ SynMenu Me-NO.MS\ Resource\ file:rc
 SynMenu Me-NO.Muttrc:muttrc
 SynMenu Me-NO.Nastran\ input/DMAP:nastran
 SynMenu Me-NO.Novell\ batch:ncf
+SynMenu Me-NO.Not\ Quite\ C:nqc
 SynMenu Me-NO.Nroff:nroff
 SynMenu Me-NO.Objective\ C:objc
 SynMenu Me-NO.OCAML:ocaml

@@ -1552,6 +1552,7 @@ buflist_findpat(pattern, pattern_end, unlisted)
     buf_t	*buf;
     regprog_t	*prog;
     int		match = -1;
+    int		find_listed;
     char_u	*pat;
     char_u	*patend;
     int		attempt;
@@ -1596,17 +1597,26 @@ buflist_findpat(pattern, pattern_end, unlisted)
 		return -1;
 	    }
 
-	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-		if ((buf->b_p_bl || unlisted)
-			&& buflist_match(prog, buf) != NULL)
-		{
-		    if (match >= 0)		/* already found a match */
+	    /* First try finding a listed buffer, if not found and "unlisted"
+	     * is TRUE, try finding an unlisted buffer. */
+	    find_listed = TRUE;
+	    for (;;)
+	    {
+		for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+		    if (buf->b_p_bl == find_listed
+			    && buflist_match(prog, buf) != NULL)
 		    {
-			match = -2;
-			break;
+			if (match >= 0)		/* already found a match */
+			{
+			    match = -2;
+			    break;
+			}
+			match = buf->b_fnum;	/* remember first match */
 		    }
-		    match = buf->b_fnum;	/* remember first match */
-		}
+		if (!unlisted || !find_listed || match >= 0)
+		    break;
+		find_listed = FALSE;
+	    }
 
 	    vim_free(prog);
 	    if (match >= 0)			/* found one match */

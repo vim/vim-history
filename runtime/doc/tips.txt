@@ -1,4 +1,4 @@
-*tips.txt*      For Vim version 6.0x.  Last change: 2000 Oct 29
+*tips.txt*      For Vim version 6.0y.  Last change: 2001 Mar 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -208,7 +208,7 @@ contain entries similar to: >
 PS: If you find any difference, someone (your sysadmin?) should better check
     the complete termcap and terminfo database for consistency.
 
-NOTE 1: If you recompile Vim with SAVE_XTERM_SCREEN defined in feature.h, the
+NOTE 1: If you recompile Vim with FEAT_XTERM_SAVE defined in feature.h, the
 builtin xterm will include the mentioned "te" and "ti" entries.
 
 NOTE 2: If you want to disable the screen switching, and you don't want to

@@ -47,7 +47,7 @@ SRC = \
 	misc1.c \
 	misc2.c \
 	move.c \
-	multibyte.c \
+	mbyte.c \
 	normal.c \
 	ops.c \
 	option.c \
@@ -85,7 +85,7 @@ OBJ =	o/buffer.o \
 	o/misc1.o \
 	o/misc2.o \
 	o/move.o \
-	o/multibyte.o \
+	o/mbyte.o \
 	o/normal.o \
 	o/ops.o \
 	o/option.o \
@@ -163,7 +163,7 @@ o/misc2.o:	misc2.c  $(SYMS)
 
 o/move.o:	move.c  $(SYMS)
 
-o/multibyte.o:	multibyte.c  $(SYMS)
+o/mbyte.o:	mbyte.c  $(SYMS)
 
 o/normal.o:	normal.c  $(SYMS)
 

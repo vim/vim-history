@@ -1538,15 +1538,11 @@ getexmodeline(c, dummy, indent)
 	    {
 		c1 = *p++;
 		--len;
-# ifndef NO_COOKED_INPUT
-		if ((c1 == K_SPECIAL || c1 == CSI) && len >= 2)
-# else
-#  ifdef FEAT_GUI
-		if ((c1 == K_SPECIAL || (c1 == CSI && gui.in_use)) && len >= 2)
-#  else
-		if (c1 == K_SPECIAL && len >= 2)
+		if ((c1 == K_SPECIAL
+#  if !defined(NO_COOKED_INPUT) || defined(FEAT_GUI)
+			    || c1 == CSI
 #  endif
-# endif
+		    ) && len >= 2)
 		{
 		    c1 = TO_SPECIAL(p[0], p[1]);
 		    p += 2;

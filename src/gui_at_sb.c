@@ -1138,7 +1138,7 @@ _Xaw3dDrawShadows(gw, event, region, out)
      *	no point to do anything if the shadow_width is 0 or the
      *	widget has not been realized.
      */
-    if ((s > 0) && XtIsRealized (gw))
+    if (s > 0 && XtIsRealized(gw))
     {
 	Dimension   h = sbw->core.height;
 	Dimension   w = sbw->core.width;
@@ -1170,7 +1170,7 @@ _Xaw3dDrawShadows(gw, event, region, out)
 	    pt[3].x = wms;  pt[3].y = s;
 	    pt[4].x =	    pt[4].y = s;
 	    pt[5].x = s;    pt[5].y = hms;
-	    XFillPolygon (dpy, win, top, pt, 6,Complex,CoordModeOrigin);
+	    XFillPolygon (dpy, win, top, pt, 6, Complex, CoordModeOrigin);
 	}
 
 	/* bottom-right shadow */
@@ -1184,7 +1184,7 @@ _Xaw3dDrawShadows(gw, event, region, out)
 	    pt[3].x = wms;  pt[3].y = s;
 	    pt[4].x = wms;  pt[4].y = hms;
 	    pt[5].x = s;    pt[5].y = hms;
-	    XFillPolygon (dpy, win, bot, pt,6, Complex,CoordModeOrigin);
+	    XFillPolygon (dpy, win, bot, pt, 6, Complex, CoordModeOrigin);
 	}
     }
 }

@@ -787,9 +787,12 @@ getcount:
 #endif
 
 #ifdef FEAT_RIGHTLEFT
-    if (curwin->w_p_rl && KeyTyped && (nv_cmds[idx].cmd_flags & NV_RL))
+    if (curwin->w_p_rl && KeyTyped && !KeyStuffed
+					  && (nv_cmds[idx].cmd_flags & NV_RL))
     {
-	/* invert horizontal movements and operations */
+	/* Invert horizontal movements and operations.  Only when typed by the
+	 * user directly, not when the result of a mapping or "x" translated
+	 * to "dl". */
 	switch (ca.cmdchar)
 	{
 	    case 'l':	    ca.cmdchar = 'h'; break;
@@ -1195,7 +1198,7 @@ do_pending_operator(cap, old_col, gui_yank)
      * This could call do_pending_operator() recursively, but that's OK
      * because gui_yank will be TRUE for the nested call.
      */
-    if (clipboard.available
+    if (clip_star.available
 	    && oap->op_type != OP_NOP
 	    && !gui_yank
 #ifdef FEAT_VISUAL
@@ -2134,7 +2137,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    else
 	    {
 #ifdef FEAT_CLIPBOARD
-		if (clipboard.available && regname == 0)
+		if (clip_star.available && regname == 0)
 		    regname = '*';
 #endif
 		if ((State & REPLACE_FLAG) && !yank_register_mline(regname))
@@ -2443,7 +2446,7 @@ do_mouse(oap, c, dir, count, fix_indent)
     if (which_button == MOUSE_MIDDLE)
     {
 #ifdef FEAT_CLIPBOARD
-	if (clipboard.available && regname == 0)
+	if (clip_star.available && regname == 0)
 	    regname = '*';
 #endif
 	if (yank_register_mline(regname))
@@ -2573,7 +2576,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 #ifdef FEAT_CLIPBOARD
 	    /* Make sure the clipboard gets updated.  Needed because start and
 	     * end may still be the same, and the selection needs to be owned */
-	    clipboard.vmode = NUL;
+	    clip_star.vmode = NUL;
 #endif
 	}
 	/*
@@ -2767,7 +2770,7 @@ end_visual_mode()
      * Only do this when the clipboard is already owned.  Don't want to grab
      * the selection when hitting ESC.
      */
-    if (clipboard.available && clipboard.owned)
+    if (clip_star.available && clip_star.owned)
 	clip_auto_select();
 #endif
 
@@ -2932,11 +2935,11 @@ find_ident_under_cursor(string, find_type)
 	}
     }
 
-    if (ptr[col] == NUL || (i == 0 &&
+    if (ptr[col] == NUL || (i == 0 && (
 #ifdef FEAT_MBYTE
-		has_mbyte ? this_class != 1 :
+		has_mbyte ? this_class != 2 :
 #endif
-		!vim_iswordc(ptr[col])))
+		!vim_iswordc(ptr[col]))))
     {
 	/*
 	 * didn't find an identifier or string
@@ -3537,7 +3540,7 @@ nv_gd(oap, nchar)
     curwin->w_cursor.col = 0;
 
     /* Search forward for the identifier, ignore comment lines. */
-    while ((t = searchit(curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
+    while ((t = searchit(curwin, curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
 							     RE_LAST)) != FAIL
 #ifdef FEAT_COMMENTS
 	    && get_leader_len(ml_get_curline(), NULL, FALSE)
@@ -4583,7 +4586,7 @@ nv_ident(cap)
     {
 	if (!g_cmd && (
 #ifdef FEAT_MBYTE
-		has_mbyte ? vim_iswordp(mb_prevptr(NULL, ptr)) :
+		has_mbyte ? vim_iswordp(mb_prevptr(ml_get_curline(), ptr)) :
 #endif
 		vim_iswordc(ptr[-1])))
 	    STRCAT(buf, "\\>");
@@ -6355,7 +6358,7 @@ n_start_visual_mode(c)
 #ifdef FEAT_CLIPBOARD
     /* Make sure the clipboard gets updated.  Needed because start and
      * end may still be the same, and the selection needs to be owned */
-    clipboard.vmode = NUL;
+    clip_star.vmode = NUL;
 #endif
 
     /* Only need to redraw this line. */
@@ -6507,7 +6510,7 @@ nv_g_cmd(cap)
 #ifdef FEAT_CLIPBOARD
 	    /* Make sure the clipboard gets updated.  Needed because start and
 	     * end are still the same, and the selection needs to be owned */
-	    clipboard.vmode = NUL;
+	    clip_star.vmode = NUL;
 #endif
 	    redraw_curbuf_later(INVERTED);
 	    showmode();

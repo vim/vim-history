@@ -51,7 +51,7 @@ static void createBalloonEvalWindow __ARGS((BalloonEval *));
     BalloonEval *
 gui_mch_create_beval_area(target, msg, msgCB, clientData)
     Widget	target;
-    char	*msg;
+    char_u	*msg;
     void	(*msgCB)__ARGS((BalloonEval *, int));
     XtPointer	clientData;
 {
@@ -180,7 +180,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 	if (col > 0)
 	{
 	    lbuf = ml_get_buf(wp->w_buffer, row, FALSE);
-	    win_linetabsize(wp, lbuf);
+	    win_linetabsize(wp, lbuf, MAXCOL);
 	    if (i >= col)		/* don't send if past end of line */
 	    {
 		*filename = wp->w_buffer->b_ffname;
@@ -202,7 +202,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
     void
 gui_mch_post_balloon(beval, msg)
     BalloonEval	*beval;
-    char	*msg;
+    char_u	*msg;
 {
     beval->msg = msg;
     if (msg != NULL)

@@ -28,7 +28,7 @@
  */
 typedef struct
 {
-    char_u		regstart;
+    int			regstart;
     char_u		reganch;
     char_u		*regmust;
     int			regmlen;

@@ -27,7 +27,7 @@ Most code can be found in a file with an obvious name (incomplete list):
 	memline.c	storing lines for buffers in memory
 	menu.c		menus
 	message.c	(error) messages
-	multibyte.c	multy-byte character handling
+	mbyte.c		multy-byte character handling
 	ops.c		handling operators ("d", "y", "p")
 	option.c	options
 	quickfix.c	quickfix commands (":make", ":cn")

@@ -76,7 +76,7 @@ CLEAN :
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
 	-@erase "$(INTDIR)\move.obj"
-	-@erase "$(INTDIR)\multibyte.obj"
+	-@erase "$(INTDIR)\mbyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
 	-@erase "$(INTDIR)\option.obj"
@@ -149,7 +149,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
 	"$(INTDIR)\move.obj" \
-	"$(INTDIR)\multibyte.obj" \
+	"$(INTDIR)\mbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -236,8 +236,8 @@ CLEAN :
 	-@erase "$(INTDIR)\misc2.sbr"
 	-@erase "$(INTDIR)\move.obj"
 	-@erase "$(INTDIR)\move.sbr"
-	-@erase "$(INTDIR)\multibyte.obj"
-	-@erase "$(INTDIR)\multibyte.sbr"
+	-@erase "$(INTDIR)\mbyte.obj"
+	-@erase "$(INTDIR)\mbyte.sbr"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\normal.sbr"
 	-@erase "$(INTDIR)\ops.obj"
@@ -319,7 +319,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\misc1.sbr" \
 	"$(INTDIR)\misc2.sbr" \
 	"$(INTDIR)\move.sbr" \
-	"$(INTDIR)\multibyte.sbr" \
+	"$(INTDIR)\mbyte.sbr" \
 	"$(INTDIR)\normal.sbr" \
 	"$(INTDIR)\ops.sbr" \
 	"$(INTDIR)\option.sbr" \
@@ -373,7 +373,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
 	"$(INTDIR)\move.obj" \
-	"$(INTDIR)\multibyte.obj" \
+	"$(INTDIR)\mbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -437,7 +437,7 @@ CLEAN :
 	-@erase "$(INTDIR)\misc1.obj"
 	-@erase "$(INTDIR)\misc2.obj"
 	-@erase "$(INTDIR)\move.obj"
-	-@erase "$(INTDIR)\multibyte.obj"
+	-@erase "$(INTDIR)\mbyte.obj"
 	-@erase "$(INTDIR)\normal.obj"
 	-@erase "$(INTDIR)\ops.obj"
 	-@erase "$(INTDIR)\option.obj"
@@ -511,7 +511,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\misc1.obj" \
 	"$(INTDIR)\misc2.obj" \
 	"$(INTDIR)\move.obj" \
-	"$(INTDIR)\multibyte.obj" \
+	"$(INTDIR)\mbyte.obj" \
 	"$(INTDIR)\normal.obj" \
 	"$(INTDIR)\ops.obj" \
 	"$(INTDIR)\option.obj" \
@@ -2805,7 +2805,7 @@ NODEP_CPP_MISC2=\
 ################################################################################
 # Begin Source File
 
-SOURCE=.\multibyte.c
+SOURCE=.\mbyte.c
 DEP_CPP_MULTI=\
 	".\ascii.h"\
 	".\feature.h"\
@@ -2826,21 +2826,21 @@ NODEP_CPP_MISC2=\
 !IF  "$(CFG)" == "Vim - Win32 Release"
 
 
-"$(INTDIR)\multibyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
+"$(INTDIR)\mbyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
 
 
-"$(INTDIR)\multibyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
+"$(INTDIR)\mbyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
 
-"$(INTDIR)\multibyte.sbr" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
+"$(INTDIR)\mbyte.sbr" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
 
 
 !ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
 
 
-"$(INTDIR)\multibyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
+"$(INTDIR)\mbyte.obj" : $(SOURCE) $(DEP_CPP_MULTI) "$(INTDIR)"
 
 
 !ENDIF 

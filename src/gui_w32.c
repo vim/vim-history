@@ -156,17 +156,6 @@
 #define WM_MOUSEWHEEL	0x20a
 #endif
 
-#ifdef FEAT_MBYTE
-# ifdef FEAT_MBYTE_IME
-static LOGFONT norm_logfont;
-static LRESULT _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData);
-# endif
-# if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
-/* GIME_TEST */
-static LOGFONT norm_logfont;
-# endif
-#endif
-
 
 /* Local variables: */
 
@@ -1475,7 +1464,7 @@ HanExtTextOut(HDC hdc, int X, int Y, UINT fuOption, const RECT *lprc,
 	i = 0;
 	while (cbCount > 0)
 	{
-	    if (cbCount > 1 && (n = MB_BYTE2LEN(*pszTemp)) > 1)
+	    if (cbCount > 1 && (n = MB_BYTE2LEN(*(char_u *)pszTemp)) > 1)
 	    {
 		cbCount -= n;
 		pszTemp += n;
@@ -3751,49 +3740,6 @@ get_toolbar_bitmap(char_u *name)
 #endif
 
 
-#ifdef FEAT_MOUSESHAPE
-/* Table for shape IDCs.  Keep in sync with the mshape_names[] table in
- * misc2.c! */
-static LPCSTR mshape_idcs[] =
-{
-    MAKEINTRESOURCE(IDC_ARROW),		/* arrow */
-    MAKEINTRESOURCE(0),			/* blank */
-    MAKEINTRESOURCE(IDC_IBEAM),		/* beam */
-    MAKEINTRESOURCE(IDC_SIZENS),	/* updown */
-    MAKEINTRESOURCE(IDC_SIZENS),	/* udsizing */
-    MAKEINTRESOURCE(IDC_SIZEWE),	/* leftright */
-    MAKEINTRESOURCE(IDC_SIZEWE),	/* lrsizing */
-    MAKEINTRESOURCE(IDC_WAIT),		/* busy */
-    MAKEINTRESOURCE(IDC_NO),		/* no */
-    MAKEINTRESOURCE(IDC_ARROW),		/* crosshair */
-    MAKEINTRESOURCE(IDC_ARROW),		/* hand1 */
-    MAKEINTRESOURCE(IDC_ARROW),		/* hand2 */
-    MAKEINTRESOURCE(IDC_ARROW),		/* pencil */
-    MAKEINTRESOURCE(IDC_ARROW),		/* question */
-    MAKEINTRESOURCE(IDC_ARROW),		/* right-arrow */
-    MAKEINTRESOURCE(IDC_UPARROW),	/* up-arrow */
-    MAKEINTRESOURCE(IDC_ARROW)		/* last one */
-};
-
-    void
-mch_set_mouse_shape(int shape)
-{
-    LPCSTR idc;
-
-    if (shape == MSHAPE_HIDE)
-	ShowCursor(FALSE);
-    else
-    {
-	if (shape >= MSHAPE_NUMBERED)
-	    idc = MAKEINTRESOURCE(IDC_ARROW);
-	else
-	    idc = mshape_idcs[shape];
-	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
-	if (!p_mh)
-	    ShowCursor(TRUE);
-    }
-}
-#endif
 #if defined(FEAT_OLE) || defined(PROTO)
 /*
  * Make the GUI window come to the foreground.

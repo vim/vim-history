@@ -1136,7 +1136,7 @@ str2special(sp, from)
 		n += 2;
 	    }
 # ifdef FEAT_GUI
-	    else if (gui.in_use && str[n] == CSI
+	    else if (str[n] == CSI
 		    && str[n + 1] == KS_EXTRA
 		    && str[n + 2] == (int)KE_CSI)
 	    {
@@ -2335,6 +2335,10 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     if (gui.in_use)		/* when this changes, also adjust f_has()! */
     {
 	fname = gui_mch_browse(saving, title, dflt, ext, initdir, filter);
+	/* We hang around in the dialog for a while, the user might do some
+	 * things to our files.  The Win32 dialog allows deleting or renaming
+	 * a file, check timestamps. */
+	need_check_timestamps = TRUE;
     }
     else
 # endif

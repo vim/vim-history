@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0x.  Last change: 2001 Mar 09
+*syntax.txt*    For Vim version 6.0y.  Last change: 2001 Mar 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -17,7 +17,9 @@ Vim supports syntax highlighting on all terminals.  But since most ordinary
 terminals have very limited highlighting possibilities, it works best in the
 GUI version, gvim.
 
-|usr_07.txt| of the User Manual explains syntax highlighting.
+In the User Manual:
+|usr_07.txt| introduces syntax highlighting.
+|usr_44.txt| introduces writing a syntax file.
 
 1.  Quick start			|:syn-qstart|
 2.  Syntax files		|:syn-files|
@@ -44,11 +46,14 @@ disabled at compile time.
 ==============================================================================
 1. Quick start						*:syn-qstart*
 
-							*:syn-on* *:syntax-on*
+						*:syn-enable* *:syntax-enable*
 Syntax highlighting is switched on with this command: >
-	:syntax on
+
+	:syntax enable
+
 What this command actually does, is executing the command >
    :source $VIMRUNTIME/syntax/syntax.vim
+
 If the VIM environment variable is not set, Vim will try to find
 the path in another way (see |$VIMRUNTIME|).  Normally this will work just
 fine.  If it doesn't, try setting the VIM environment variable to the
@@ -56,6 +61,12 @@ directory where the Vim stuff is located.  For example, if your syntax files
 are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
 "/usr/vim/vim50".  You must do this in the shell, before starting Vim.
 
+							*:syn-on* *:syntax-on*
+The ":syntax enable" command will keep your current color settings.  This
+allows using ":highlight" commands to set your preferred colors before or
+after using this command.  If you want Vim to overrule your settings with the
+defaults, use: >
+	:syntax on
 
 					*:hi-normal* *:highlight-normal*
 If you are running in the GUI, you can get white text on a black background
@@ -82,16 +93,21 @@ foreground!  Use ":gui -f" then.
 
 
 You can toggle the syntax on/off with this command >
-   :if exists("syntax_on") | syntax off | else | syntax on | endif
+   :if exists("syntax_on") | syntax off | else | syntax enable | endif
 
 To put this into a mapping, you can use: >
-   :map <F7> :if exists("syntax_on") <Bar> syntax off <Bar> else <Bar> syntax on <Bar> endif <CR>
+   :map <F7> :if exists("syntax_on") <Bar>
+   	\   syntax off <Bar>
+	\ else <Bar>
+	\   syntax enable <Bar>
+	\ endif <CR>
 [using the |<>| notation, type this literally]
 
 Details
 The ":syntax" commands are implemented by sourcing a file.  To see exactly how
 this works, look in the file:
     command		file ~
+    :syntax enable	$VIMRUNTIME/syntax/syntax.vim
     :syntax on		$VIMRUNTIME/syntax/syntax.vim
     :syntax manual	$VIMRUNTIME/syntax/manual.vim
     :syntax off		$VIMRUNTIME/syntax/nosyntax.vim
@@ -123,7 +139,7 @@ These commands are normally in the file $VIMRUNTIME/syntax/synload.vim.
 MAKING YOUR OWN SYNTAX FILES				*mysyntaxfile*
 
 When you create your own syntax files, and you want to have these
-automatically used with ":syntax on", do this:
+automatically used with ":syntax enable", do this:
 
 1. Create your user runtime directory.  You would normally use the first item
    of the 'runtimepath' option.  Example for Unix: >
@@ -243,11 +259,11 @@ The following names are reserved and cannot be used as a group name:
 ==============================================================================
 3. Syntax loading procedure				*syntax-loading*
 
-This explains the details that happen when the command ":syntax on" is issued.
-When Vim initializes itself, it finds out where the runtime files are located.
-This is used here as the variable |$VIMRUNTIME|.
+This explains the details that happen when the command ":syntax enable" is
+issued.  When Vim initializes itself, it finds out where the runtime files are
+located.  This is used here as the variable |$VIMRUNTIME|.
 
-What ":syntax on" does:
+What ":syntax enable" and ":syntax on" do:
 
     Source $VIMRUNTIME/syntax/syntax.vim
     |
@@ -255,7 +271,9 @@ What ":syntax on" does:
     |
     +-	Source $VIMRUNTIME/syntax/synload.vim from 'runtimepath'
     |	|
-    |	+-  Set up standard highlighting groups
+    |	+-  Source $VIMRUNTIME/syntax/syncolor.vim to set up standard
+    |   |   highlighting groups.  ":syntax on" overrules existing colors,
+    |   |   ":syntax enable" only sets groups that weren't set yet.
     |	|
     |	+-  Set up syntax autocmds to load the appropriate syntax file when
     |	|   the 'syntax' option is set. *synload-1*
@@ -1852,6 +1870,7 @@ can not be used for all commands:
 
 These arguments can be used for all three commands:
 	contained
+        containedin
 	nextgroup
 	transparent
 	skipwhite
@@ -2025,6 +2044,28 @@ region.  If this is not wanted, the "matchgroup" argument can be used
 |:syn-matchgroup|.  The "ms=" and "me=" offsets can be used to change the
 region where contained items do match.  Note that this may also limit the
 area that is highlighted
+
+
+containedin={groupname}...				*:syn-containedin*
+
+The "containedin" argument is followed by a list of syntax group names.  The
+item will be allowed to begin inside these groups.  This works as if the
+containing item has a "contains=" argument that includes this item.
+
+The {groupname}... can be used just like for "contains", as explained above.
+
+This is useful when adding a syntax item afterwards.  An item can be told to
+be included inside an already existing item, without changing the definition
+of that item.  For example, to highlight a word in a C comment after loading
+the C syntax: >
+	:syn keyword myword HELP containedin=cComment contained
+Note that "contained" is also used, to avoid that the item matches at the top
+level.
+
+Matches for "containedin" are added to the other places where the item can
+appear.  A "contains" argument may also be added as usual.  Don't forget that
+keywords never contain another item, thus adding them to "containedin" won't
+work.
 
 
 nextgroup={groupname},..				*:syn-nextgroup*
@@ -2535,12 +2576,12 @@ is mostly used, because it looks better.
 ==============================================================================
 12. Highlight command					*:highlight* *:hi*
 
-There are two types of highlight groups:
+There are three types of highlight groups:
 - The ones used for specific languages.  For these the name starts with the
   name of the language.  Many of these don't have any attributes, but are
   linked to a group of the second type.
-- The ones used for all languages.  These are also used for the 'highlight'
-  option.
+- The ones used for all syntax languages.
+- The ones used for the 'highlight' option.
 							*hitest.vim*
 You can see all the groups currently active with this command: >
     :so $VIMRUNTIME/syntax/hitest.vim
@@ -2580,7 +2621,7 @@ Note that all settings that are not included remain the same, only the
 specified field is used, and settings are merged with previous ones.  So, the
 result is like this single command has been used: >
    :hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff gui=bold
-
+<
 						*highlight-args*
 There are three types of terminals for highlighting:
 term	a normal terminal (vt100, xterm)
@@ -2747,9 +2788,11 @@ font={font-name}					*highlight-font*
 	The font-name "NONE" can be used to revert to the default font.
 	When setting the font for the "Normal" group, this becomes the default
 	font (until the 'guifont' option is changed; the last one set is
-	used).  All fonts used should be of the same character size as the
-	default font!  Otherwise redrawing problems will occur.
-	Setting the font does not work for the "Menu" group.
+	used).
+	When setting the font for the "Menu" group, the menus will be changed
+	when running Motif.  This does not work for other GUIs.
+	All fonts used should be of the same character size as the default
+	font!  Otherwise redrawing problems will occur.
 
 guifg={color-name}					*highlight-guifg*
 guibg={color-name}					*highlight-guibg*
@@ -2808,7 +2851,8 @@ Folded		line used for closed folds
 							*hl-FoldColumn*
 FoldColumn	'foldcolumn'
 							*hl-IncSearch*
-IncSearch	'incsearch' highlighting
+IncSearch	'incsearch' highlighting; also used for the text replaced with
+		":s///c"
 							*hl-LineNr*
 LineNr		line number for ":number" and ":#" commands, and when 'number'
 		option is set.
@@ -2850,7 +2894,7 @@ WarningMsg	warning messages
 							*hl-WildMenu*
 WildMenu	current match in 'wildmenu' completion
 
-							*hl-User1..9*
+						*hl-User1* *hl-User1..9*
 The 'statusline' syntax allows the use of 9 different highlights in the
 statusline and ruler (via 'rulerformat'). The names are User1 to User9.
 
@@ -2927,6 +2971,16 @@ This removes all patterns and keywords for {group-name}.
 To clean up specific syntax group lists for the current buffer: >
   :syntax clear @{grouplist-name} ..
 This sets {grouplist-name}'s contents to an empty list.
+
+							*:syntax-reset*
+To reset the highlighting used for syntax items: >
+  :syntax reset
+This doesn't change the colors for the 'highlight' option.
+
+What this command actually does, is executing the command >
+  :source $VIMRUNTIME/syntax/syncolor.vim
+With the "syntax_cmd" variable set to "reset".
+Note that for this to work $VIMRUNTIME must be valid.  See |$VIMRUNTIME|.
 
 ==============================================================================
 15. Highlighting tags					*tag-highlight*

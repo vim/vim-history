@@ -389,7 +389,7 @@ EventHandler(void)
 		       {
 			   /* Insert CSI as K_CSI.  Untested! */
 			   string[1] = KS_EXTRA;
-			   string[2] = KE_CSI;
+			   string[2] = (int)KE_CSI;
 			   add_to_input_buf(string, 3);
 		       }
 		       else
@@ -1287,7 +1287,7 @@ AmigaError(const char *string)
 }
 
     int
-clip_mch_own_selection(void)
+clip_mch_own_selection(VimClipboard *cbd)
 {
     D("clib_mch_own_selection");
     return OK;
@@ -1331,19 +1331,19 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
 }
 
     void
-clip_mch_lose_selection(void)
+clip_mch_lose_selection(VimClipboard *cbd)
 {
     D("clip_mch_lose_selecction");
 }
 
     void
-clip_mch_request_selection(void)
+clip_mch_request_selection(VimClipboard *cbd)
 {
     D("clip_mch_requst_selection");
 }
 
     void
-clip_mch_set_selection(void)
+clip_mch_set_selection(VimClipboard *cbd)
 {
 }
 

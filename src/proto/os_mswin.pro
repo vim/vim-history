@@ -16,7 +16,10 @@ int mch_has_wildcard __ARGS((char_u *s));
 int mch_chdir __ARGS((char *path));
 int can_end_termcap_mode __ARGS((int give_msg));
 int mch_screenmode __ARGS((char_u *arg));
-void clip_mch_lose_selection __ARGS((void));
-int clip_mch_own_selection __ARGS((void));
+int mch_libcall __ARGS((char_u *libname, char_u *funcname, char_u *argstring, int argint, char_u **string_result, int *number_result));
+int clip_mch_own_selection __ARGS((VimClipboard *cbd));
+void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
+void clip_mch_request_selection __ARGS((VimClipboard *cbd));
+void clip_mch_set_selection __ARGS((VimClipboard *cbd));
 void DumpPutS __ARGS((const char *psz));
 /* vim: set ft=c : */

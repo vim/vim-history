@@ -996,21 +996,21 @@ qf_jump(dir, errornr, forceit)
 	    break;
     if (win != NULL
 	    && qf_index <= win->w_buffer->b_ml.ml_line_count
-	    && win->w_cursor.lnum != qf_index)
+	    && old_qf_index != qf_index)
     {
 	win_t	*old_curwin = curwin;
 
 	curwin = win;
 	curbuf = win->w_buffer;
-	if (qf_index > curwin->w_cursor.lnum)
+	if (qf_index > old_qf_index)
 	{
-	    curwin->w_redraw_top = curwin->w_cursor.lnum;
+	    curwin->w_redraw_top = old_qf_index;
 	    curwin->w_redraw_bot = qf_index;
 	}
 	else
 	{
 	    curwin->w_redraw_top = qf_index;
-	    curwin->w_redraw_bot = curwin->w_cursor.lnum;
+	    curwin->w_redraw_bot = old_qf_index;
 	}
 	curwin->w_cursor.lnum = qf_index;
 	curwin->w_cursor.col = 0;

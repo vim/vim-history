@@ -202,6 +202,7 @@ gui_init_check()
 #endif
 
 #ifdef FEAT_MENU
+    gui.menu_font = NOFONT;
     gui.menu_is_active = TRUE;	    /* default: include menu */
 # ifndef FEAT_GUI_GTK
     gui.menu_height = MENU_DEFAULT_HEIGHT;
@@ -1182,17 +1183,17 @@ gui_set_shellsize(fit_to_display)
 	    Columns = (screen_w - base_width) / gui.char_width;
 	    if (Columns < MIN_COLUMNS)
 		Columns = MIN_COLUMNS;
-	    gui.num_cols = Columns;
 	    width = Columns * gui.char_width + base_width;
 	}
 	if (height > screen_h)
 	{
 	    Rows = (screen_h - base_height) / gui.char_height;
 	    check_shellsize();
-	    gui.num_rows = Rows;
 	    height = Rows * gui.char_height + base_height;
 	}
     }
+    gui.num_cols = Columns;
+    gui.num_rows = Rows;
 
     min_width = base_width + MIN_COLUMNS * gui.char_width;
     min_height = base_height + MIN_LINES * gui.char_height;
@@ -2287,7 +2288,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 
 #ifdef FEAT_CLIPBOARD
     /* If a clipboard selection is in progress, handle it */
-    if (clipboard.state == SELECT_IN_PROGRESS)
+    if (clip_star.state == SELECT_IN_PROGRESS)
     {
 	clip_process_selection(button, x, y, repeated_click, modifiers);
 	return;
@@ -2386,7 +2387,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	 * from the cursor position. */
 	if (button == MOUSE_RIGHT)
 	{
-	    if (clipboard.state == SELECT_CLEARED)
+	    if (clip_star.state == SELECT_CLEARED)
 	    {
 		if (State & CMDLINE)
 		{
@@ -2437,7 +2438,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
 	repeated_click = FALSE;
     }
 
-    if (clipboard.state != SELECT_CLEARED && !did_clip)
+    if (clip_star.state != SELECT_CLEARED && !did_clip)
 	clip_clear_selection();
 #endif
 
@@ -3426,6 +3427,10 @@ gui_set_bg_color(name)
 gui_new_scrollbar_colors()
 {
     win_t	*wp;
+
+    /* Nothing to do if GUI hasn't started yet. */
+    if (!gui.in_use)
+	return;
 
 # ifndef FEAT_WINDOWS
     wp = curwin;

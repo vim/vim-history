@@ -42,6 +42,11 @@ static XtActionsRec	pullAction[2] = {{ "menu-pullright",
 
 static void gui_athena_scroll_cb_jump	__ARGS((Widget, XtPointer, XtPointer));
 static void gui_athena_scroll_cb_scroll __ARGS((Widget, XtPointer, XtPointer));
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_MENU)
+static void gui_athena_menu_colors __ARGS((Widget id));
+#endif
+static void gui_athena_scroll_colors __ARGS((Widget id));
+
 #ifdef FEAT_MENU
 static XtTranslations	popupTrans, parentTrans, menuTrans, supermenuTrans;
 static Pixmap		pullerBitmap;
@@ -182,9 +187,8 @@ gui_x11_create_widgets()
     vimForm = XtVaCreateManagedWidget("vimForm",
 	formWidgetClass,	vimShell,
 	XtNborderWidth,		0,
-	XtNforeground,		gui.menu_fg_pixel,
-	XtNbackground,		gui.menu_bg_pixel,
 	NULL);
+    gui_athena_scroll_colors(vimForm);
 
 #ifdef FEAT_MENU
     /* The top menu bar */
@@ -195,10 +199,10 @@ gui_x11_create_widgets()
 	XtNbottom,		XtChainTop,
 	XtNleft,		XtChainLeft,
 	XtNright,		XtChainRight,
-	XtNforeground,		gui.menu_fg_pixel,
-	XtNbackground,		gui.menu_bg_pixel,
-	XtNborderColor,		gui.menu_fg_pixel,
 	NULL);
+    gui_athena_menu_colors(menuBar);
+    if (gui.menu_fg_pixel != -1)
+	XtVaSetValues(menuBar, XtNborderColor, gui.menu_fg_pixel, NULL);
 #endif
 
     /* The text area. */
@@ -335,26 +339,23 @@ gui_mch_add_menu(menu, idx)
 	{
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, vimShell,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
 		NULL);
+	    gui_athena_menu_colors(menu->submenu_id);
 	}
 	else if (menu_is_menubar(menu->dname))
 	{
 	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		menuButtonWidgetClass, menuBar,
 		XtNmenuName, menu->dname,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
 		NULL);
 	    if (menu->id == (Widget)0)
 		return;
+	    gui_athena_menu_colors(menu->id);
 
 	    menu->submenu_id = XtVaCreatePopupShell((char *)menu->dname,
 		simpleMenuWidgetClass, menu->id,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
 		NULL);
+	    gui_athena_menu_colors(menu->submenu_id);
 
 	    /* Don't update the menu height when it was set at a fixed value */
 	    if (!gui.menu_height_fixed)
@@ -380,23 +381,21 @@ gui_mch_add_menu(menu, idx)
     {
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 	    smeBSBObjectClass, parent->submenu_id,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
 	    XtNrightMargin, puller_width,
 	    XtNrightBitmap, pullerBitmap,
 	    NULL);
 	if (menu->id == (Widget)0)
 	    return;
+	gui_athena_menu_colors(menu->id);
 	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 	    (XtPointer)menu);
 
 	pullright_name = make_pull_name(menu->dname);
 	menu->submenu_id = XtVaCreatePopupShell((char *)pullright_name,
 	    simpleMenuWidgetClass, parent->submenu_id,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
 	    XtNtranslations, menuTrans,
 	    NULL);
+	gui_athena_menu_colors(menu->submenu_id);
 	vim_free(pullright_name);
 
 	XtOverrideTranslations(parent->submenu_id, parentTrans);
@@ -441,11 +440,10 @@ gui_mch_add_menu_item(menu, idx)
 	menu->submenu_id = (Widget)0;
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
 		smeBSBObjectClass, parent->submenu_id,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
 		NULL);
 	if (menu->id == (Widget)0)
 	    return;
+	gui_athena_menu_colors(menu->id);
 	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
 		(XtPointer)menu);
     }
@@ -462,13 +460,11 @@ gui_mch_toggle_tearoffs(enable)
     void
 gui_mch_new_menu_colors()
 {
-    if (menuBar == NULL)
+    if (menuBar == (Widget)0)
 	return;
-    XtVaSetValues(menuBar,
-	XtNforeground, gui.menu_fg_pixel,
-	XtNbackground, gui.menu_bg_pixel,
-	XtNborderColor,	gui.menu_fg_pixel,
-	NULL);
+    if (gui.menu_fg_pixel != -1)
+	XtVaSetValues(menuBar, XtNborderColor,	gui.menu_fg_pixel, NULL);
+    gui_athena_menu_colors(menuBar);
 
     gui_mch_submenu_colors(root_menu);
 }
@@ -480,15 +476,9 @@ gui_mch_submenu_colors(mp)
     while (mp != NULL)
     {
 	if (mp->id != (Widget)0)
-	    XtVaSetValues(mp->id,
-		    XtNforeground, gui.menu_fg_pixel,
-		    XtNbackground, gui.menu_bg_pixel,
-		    NULL);
+	    gui_athena_menu_colors(mp->id);
 	if (mp->submenu_id != (Widget)0)
-	    XtVaSetValues(mp->submenu_id,
-		    XtNforeground, gui.menu_fg_pixel,
-		    XtNbackground, gui.menu_bg_pixel,
-		    NULL);
+	    gui_athena_menu_colors(mp->submenu_id);
 
 	/* Set the colors for the children */
 	if (mp->children != NULL)
@@ -866,6 +856,10 @@ gui_mch_set_scrollbar_colors(sb)
 	    XtNforeground, gui.scroll_fg_pixel,
 	    XtNbackground, gui.scroll_bg_pixel,
 	    NULL);
+
+    /* This is needed for the rectangle below the vertical scrollbars. */
+    if (sb == &gui.bottom_sbar && vimForm != (Widget)0)
+	gui_athena_scroll_colors(vimForm);
 }
 
 /*
@@ -874,7 +868,7 @@ gui_mch_set_scrollbar_colors(sb)
     Window
 gui_x11_get_wid()
 {
-    return( XtWindow(textArea) );
+    return XtWindow(textArea);
 }
 
 #if defined(FEAT_BROWSE) || defined(PROTO)
@@ -967,11 +961,10 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     dialog = XtVaCreateManagedWidget("dialog",
 	    formWidgetClass, dialogshell,
 	    XtNdefaultDistance, 20,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
 	    NULL);
     if (dialog == (Widget)0)
 	goto error;
+    gui_athena_menu_colors(dialog);
     dialogmessage = XtVaCreateManagedWidget("dialogMessage",
 	    labelWidgetClass, dialog,
 	    XtNlabel, message,
@@ -981,9 +974,8 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 	    XtNright, XtChainLeft,
 	    XtNresizable, True,
 	    XtNborderWidth, 0,
-	    XtNforeground, gui.menu_fg_pixel,
-	    XtNbackground, gui.menu_bg_pixel,
 	    NULL);
+    gui_athena_menu_colors(dialogmessage);
 
     /* make a copy, so that we can insert NULs */
     buts = vim_strsave(buttons);
@@ -1012,10 +1004,9 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 		XtNright, XtChainLeft,
 		XtNfromVert, dialogmessage,
 		XtNvertDistance, vertical ? 4 : 20,
-		XtNforeground, gui.menu_fg_pixel,
-		XtNbackground, gui.menu_bg_pixel,
 		XtNresizable, False,
 		NULL);
+	gui_athena_menu_colors(dialogButton);
 	if (butcount > 0)
 	    XtVaSetValues(dialogButton,
 		    vertical ? XtNfromVert : XtNfromHoriz, prev_dialogButton,
@@ -1067,3 +1058,31 @@ error:
     return dialogStatus;
 }
 #endif
+
+#if defined(FEAT_GUI_DIALOG) || defined(FEAT_MENU)
+/*
+ * Set the colors of Widget "id" to the menu colors.
+ */
+    static void
+gui_athena_menu_colors(id)
+    Widget  id;
+{
+    if (gui.menu_bg_pixel != -1)
+	XtVaSetValues(id, XtNbackground, gui.menu_bg_pixel, NULL);
+    if (gui.menu_fg_pixel != -1)
+	XtVaSetValues(id, XtNforeground, gui.menu_fg_pixel, NULL);
+}
+#endif
+
+/*
+ * Set the colors of Widget "id" to the scroll colors.
+ */
+    static void
+gui_athena_scroll_colors(id)
+    Widget  id;
+{
+    if (gui.scroll_bg_pixel != -1)
+	XtVaSetValues(id, XtNbackground, gui.scroll_bg_pixel, NULL);
+    if (gui.scroll_fg_pixel != -1)
+	XtVaSetValues(id, XtNforeground, gui.scroll_fg_pixel, NULL);
+}

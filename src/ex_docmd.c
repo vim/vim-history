@@ -29,14 +29,14 @@ typedef struct ucmd
     long	uc_def;		/* The default value for a range/count */
     scid_t	uc_scriptID;	/* SID where the command was defined */
     int		uc_compl;	/* completion type */
-} UCMD;
+} ucmd_t;
 
 #define UC_BUFFER	1	/* -buffer: local to current buffer */
 
-garray_t ucmds = {0, 0, sizeof(UCMD), 4, NULL};
+garray_t ucmds = {0, 0, sizeof(ucmd_t), 4, NULL};
 
-#define USER_CMD(i) (&((UCMD *)(ucmds.ga_data))[i])
-#define USER_CMD_GA(gap, i) (&((UCMD *)((gap)->ga_data))[i])
+#define USER_CMD(i) (&((ucmd_t *)(ucmds.ga_data))[i])
+#define USER_CMD_GA(gap, i) (&((ucmd_t *)((gap)->ga_data))[i])
 
 static void do_ucmd __ARGS((exarg_t *eap));
 static void ex_command __ARGS((exarg_t *eap));
@@ -241,6 +241,11 @@ static void	ex_equal __ARGS((exarg_t *eap));
 static void	ex_sleep __ARGS((exarg_t *eap));
 static void	do_exmap __ARGS((exarg_t *eap, int isabbrev));
 static void	ex_winsize __ARGS((exarg_t *eap));
+#ifdef FEAT_WINDOWS
+static void	ex_wincmd __ARGS((exarg_t *eap));
+#else
+# define ex_wincmd	    ex_ni
+#endif
 #if defined(FEAT_GUI) || defined(UNIX) || defined(VMS)
 static void	ex_winpos __ARGS((exarg_t *eap));
 #else
@@ -574,6 +579,16 @@ do_cmdline(cmdline, getline, cookie, flags)
     garray_t	lines_ga;		/* keep lines for ":while" */
     int		current_line = 0;	/* active line in lines_ga */
 #endif
+    static int	call_depth = 0;		/* recursiveness */
+
+    /* It's possible to create an endless loop with ":execute", catch that
+     * here.  The value of 200 allows nested function calls, ":source", etc. */
+    if (call_depth == 200)
+    {
+	EMSG(_("Command too recursive"));
+	return FAIL;
+    }
+    ++call_depth;
 
 #ifdef FEAT_EVAL
     cstack.cs_idx = -1;
@@ -948,6 +963,7 @@ do_cmdline(cmdline, getline, cookie, flags)
     if_level = 0;
 #endif
 
+    --call_depth;
     return retval;
 }
 
@@ -1788,7 +1804,7 @@ find_command(eap, full)
 	/* Look for a user defined command as a last resort */
 	if (eap->cmdidx == CMD_SIZE && *eap->cmd >= 'A' && *eap->cmd <= 'Z')
 	{
-	    UCMD	*cmd;
+	    ucmd_t	*cmd;
 	    int		j, k, matchlen = 0;
 	    int		found = FALSE, possible = FALSE;
 	    char_u	*cp, *np;	/* Point into typed cmd and test name */
@@ -2019,7 +2035,7 @@ set_one_cmd_context(xp, buff)
 	else if (cmd[0] >= 'A' && cmd[0] <= 'Z')
 	{
 	    /* Look for a user defined command as a last resort */
-	    UCMD	*uc;
+	    ucmd_t	*uc;
 	    int		j, k, matchlen = 0;
 	    int		found = FALSE, possible = FALSE;
 	    char_u	*cp, *np;	/* Point into typed cmd and test name */
@@ -2741,7 +2757,7 @@ get_address(ptr, skip)
 				pos.col = MAXCOL;
 			    else
 				pos.col = 0;
-			    if (searchit(curbuf, &pos,
+			    if (searchit(curwin, curbuf, &pos,
 					*cmd == '?' ? BACKWARD : FORWARD,
 					(char_u *)"", 1L,
 					SEARCH_MSG + SEARCH_START, i) != FAIL)
@@ -3549,7 +3565,7 @@ static int	uc_add_command __ARGS((char_u *name, size_t name_len, char_u *rep, lo
 static void	uc_list __ARGS((char_u *name, size_t name_len));
 static int	uc_scan_attr __ARGS((char_u *attr, size_t len, long *argt, long *def, int *flags, int *compl));
 static char_u	*uc_split_args __ARGS((char_u *arg, size_t *lenp));
-static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, UCMD *cmd, exarg_t *eap, char_u **split_buf, size_t *split_len));
+static size_t	uc_check_code __ARGS((char_u *code, size_t len, char_u *buf, ucmd_t *cmd, exarg_t *eap, char_u **split_buf, size_t *split_len));
 
     static int
 uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
@@ -3562,7 +3578,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     int		compl;
     int		force;
 {
-    UCMD	*cmd;
+    ucmd_t	*cmd;
     char_u	*p;
     int		i;
     int		cmp = 1;
@@ -3585,7 +3601,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
     {
 	gap = &curbuf->b_ucmds;
 	if (gap->ga_itemsize == 0)
-	    ga_init2(gap, (int)sizeof(UCMD), 4);
+	    ga_init2(gap, (int)sizeof(ucmd_t), 4);
     }
     else
 	gap = &ucmds;
@@ -3636,7 +3652,7 @@ uc_add_command(name, name_len, rep, argt, def, flags, compl, force)
 	    goto fail;
 
 	cmd = USER_CMD_GA(gap, i);
-	mch_memmove(cmd + 1, cmd, (gap->ga_len - i) * sizeof(UCMD));
+	mch_memmove(cmd + 1, cmd, (gap->ga_len - i) * sizeof(ucmd_t));
 
 	++gap->ga_len;
 	--gap->ga_room;
@@ -3694,7 +3710,7 @@ uc_list(name, name_len)
 {
     int		i, j;
     int		found = FALSE;
-    UCMD	*cmd;
+    ucmd_t	*cmd;
     int		len;
     long	a;
     garray_t	*gap;
@@ -4052,7 +4068,7 @@ uc_clear(gap)
     garray_t	*gap;
 {
     int		i;
-    UCMD	*cmd;
+    ucmd_t	*cmd;
 
     for (i = 0; i < gap->ga_len; ++i)
     {
@@ -4068,7 +4084,7 @@ ex_delcommand(eap)
     exarg_t	*eap;
 {
     int		i = 0;
-    UCMD	*cmd;
+    ucmd_t	*cmd;
     int		cmp = -1;
     garray_t	*gap;
 
@@ -4103,7 +4119,7 @@ ex_delcommand(eap)
     ++gap->ga_room;
 
     if (i < gap->ga_len)
-	mch_memmove(cmd, cmd + 1, (gap->ga_len - i) * sizeof(UCMD));
+	mch_memmove(cmd, cmd + 1, (gap->ga_len - i) * sizeof(ucmd_t));
 }
 
     static char_u *
@@ -4203,7 +4219,7 @@ uc_check_code(code, len, buf, cmd, eap, split_buf, split_len)
     char_u	*code;
     size_t	len;
     char_u	*buf;
-    UCMD	*cmd;		/* the user command we're expanding */
+    ucmd_t	*cmd;		/* the user command we're expanding */
     exarg_t	*eap;		/* ex arguments */
     char_u	**split_buf;
     size_t	*split_len;
@@ -4386,7 +4402,7 @@ do_ucmd(eap)
 
     size_t	split_len = 0;
     char_u	*split_buf = NULL;
-    UCMD	*cmd;
+    ucmd_t	*cmd;
     scid_t	save_current_SID = current_SID;
 
     if (eap->cmdidx == CMD_USER)
@@ -5874,37 +5890,17 @@ do_exmap(eap, isabbrev)
 {
     int	    mode;
     char_u  *cmdp;
-#ifdef FEAT_CMDL_COMPL
-    char_u  *ambigstr;
-#endif
 
     cmdp = eap->cmd;
     mode = get_map_mode(&cmdp, eap->forceit || isabbrev);
 
     switch (do_map((*cmdp == 'n') ? 2 : (*cmdp == 'u'),
-					eap->arg, mode, isabbrev,
-#ifdef FEAT_CMDL_COMPL
-					&ambigstr
-#else
-					NULL
-#endif
-					))
+						    eap->arg, mode, isabbrev))
     {
 	case 1: EMSG(_(e_invarg));
 		break;
 	case 2: EMSG(isabbrev ? _(e_noabbr) : _(e_nomap));
 		break;
-	case 3:
-#ifdef FEAT_CMDL_COMPL
-		ambigstr = translate_mapping(ambigstr, FALSE);
-		if (ambigstr == NULL)
-#endif
-		    EMSG(_("Ambiguous mapping"));
-#ifdef FEAT_CMDL_COMPL
-		else
-		    EMSG2(_("Ambiguous mapping, conflicts with \"%s\""), ambigstr);
-		vim_free(ambigstr);
-#endif
     }
 }
 
@@ -5923,6 +5919,25 @@ ex_winsize(eap)
     h = getdigits(&arg);
     set_shellsize(w, h, TRUE);
 }
+
+#ifdef FEAT_WINDOWS
+    static void
+ex_wincmd(eap)
+    exarg_t	*eap;
+{
+    if (*eap->arg == 'g' || *eap->arg == Ctrl_G)
+    {
+	/* CTRL-W g and CTRL-W CTRL-G  have an extra command character */
+	if (eap->arg[1] == NUL)
+	{
+	    EMSG(_(e_invarg));
+	    return;
+	}
+	stuffcharReadbuff(eap->arg[1]);
+    }
+    do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L);
+}
+#endif
 
 #if defined(FEAT_GUI) || defined(UNIX) || defined(VMS)
 /*
@@ -6571,13 +6586,13 @@ ex_normal(eap)
 	for (p = eap->arg; *p != NUL; ++p)
 	{
 # ifdef FEAT_GUI
-	    if (gui.in_use && *p == CSI)  /* leadbyte CSI */
+	    if (*p == CSI)  /* leadbyte CSI */
 		len += 2;
 # endif
 	    for (l = (*mb_ptr2len_check)(p) - 1; l > 0; --l)
 		if (*++p == K_SPECIAL	  /* trailbyte K_SPECIAL or CSI */
 # ifdef FEAT_GUI
-			|| (gui.in_use && *p == CSI)
+			|| *p == CSI
 # endif
 			)
 		    len += 2;
@@ -6592,7 +6607,7 @@ ex_normal(eap)
 		{
 		    arg[len++] = *p;
 # ifdef FEAT_GUI
-		    if (gui.in_use && *p == CSI)
+		    if (*p == CSI)
 		    {
 			arg[len++] = KS_EXTRA;
 			arg[len++] = (int)KE_CSI;
@@ -6607,7 +6622,7 @@ ex_normal(eap)
 			    arg[len++] = KE_FILLER;
 			}
 # ifdef FEAT_GUI
-			else if (gui.in_use && *p == CSI)
+			else if (*p == CSI)
 			{
 			    arg[len++] = KS_EXTRA;
 			    arg[len++] = (int)KE_CSI;

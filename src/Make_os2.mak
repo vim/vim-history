@@ -60,7 +60,7 @@ OBJ = \
 	misc1.o \
 	misc2.o \
 	move.o \
-	multibyte.o \
+	mbyte.o \
 	normal.o \
 	ops.o \
 	option.o \
@@ -127,7 +127,7 @@ message.o:	message.c  $(INCL)
 misc1.o:	misc1.c  $(INCL)
 misc2.o:	misc2.c  $(INCL)
 move.o:		move.c  $(INCL)
-multibyte.o:	multibyte.c  $(INCL)
+mbyte.o:	mbyte.c  $(INCL)
 normal.o:	normal.c  $(INCL)
 ops.o:		ops.c  $(INCL)
 option.o:	option.c  $(INCL)

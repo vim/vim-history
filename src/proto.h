@@ -110,7 +110,7 @@ void qsort __ARGS((void *base, size_t elm_count, size_t elm_size, int (*cmp)(con
 #endif
 # include "move.pro"
 # if defined(FEAT_MBYTE) || defined(FEAT_XIM)
-#  include "multibyte.pro"
+#  include "mbyte.pro"
 # endif
 # include "normal.pro"
 # include "ops.pro"

@@ -306,7 +306,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\misc1.obj \
 	$(OBJDIR)\misc2.obj \
 	$(OBJDIR)\move.obj \
-	$(OBJDIR)\multibyte.obj \
+	$(OBJDIR)\mbyte.obj \
 	$(OBJDIR)\normal.obj \
 	$(OBJDIR)\ops.obj \
 	$(OBJDIR)\option.obj \
@@ -540,7 +540,7 @@ $(OBJDIR)\misc2.obj:  misc2.c
 
 $(OBJDIR)\move.obj:  move.c
 
-$(OBJDIR)\multibyte.obj:  multibyte.c
+$(OBJDIR)\mbyte.obj:  mbyte.c
 
 $(OBJDIR)\normal.obj:  normal.c
 

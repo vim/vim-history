@@ -261,6 +261,9 @@ typedef struct Gui
     GuiFont	bold_font;	    /* Bold font */
     GuiFont	ital_font;	    /* Italic font */
     GuiFont	boldital_font;	    /* Bold-Italic font */
+#ifdef FEAT_MENU
+    GuiFont	menu_font;	    /* menu item font */
+#endif
 #ifdef FEAT_MBYTE
     GuiFont	wide_font;	    /* 'guifontwide' font */
 #endif

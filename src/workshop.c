@@ -120,7 +120,7 @@ workshop_init()
     /*
      * Turn on MenuBar, ToolBar, and Footer.
      */
-    if (get_option_value((char_u *) "go", NULL, &guiOptions) == 0)
+    if (get_option_value((char_u *) "go", NULL, &guiOptions, 0) == 0)
     {
 	strcpy((char *) buf, (char *) guiOptions);
 	if (strchr((char *) guiOptions, 'm') == 0)
@@ -605,34 +605,6 @@ workshop_moved_marks(char *filename)
 #endif
 }
 
-static XmFontList gui_motif_create_fontlist __ARGS((XFontStruct *font));
-
-/*
- * Encapsulate the way an XmFontList is created.
- */
-    static XmFontList
-gui_motif_create_fontlist(font)
-    XFontStruct    *font;
-{
-    XmFontList font_list;
-
-# if (XmVERSION >= 1)
-#   if (XmREVISION == 1)
-    /* Motif 1.1 method */
-    font_list = XmFontListCreate(font, STRING_TAG);
-#   else
-    /* Motif 1.2 method */
-    XmFontListEntry font_list_entry;
-
-    font_list_entry = XmFontListEntryCreate(STRING_TAG, XmFONT_IS_FONT,
-							     (XtPointer)font);
-    font_list = XmFontListAppendEntry(NULL, font_list_entry);
-    XmFontListEntryFree(&font_list_entry);
-#   endif
-# endif
-    return font_list;
-}
-
     int
 workshop_get_font_height()
 {
@@ -910,7 +882,7 @@ workshop_toolbar_end()
     /*
      * Turn on MenuBar, ToolBar, and Footer.
      */
-    if (get_option_value((char_u *) "go", NULL, &guiOptions) == 0)
+    if (get_option_value((char_u *) "go", NULL, &guiOptions, 0) == 0)
     {
 	strcpy((char *) buf, (char *) guiOptions);
 	if (strchr((char *) guiOptions, 'T') == 0)
@@ -1184,7 +1156,7 @@ workshop_show_balloon_tip(
 #endif
 
     if (balloonEval != NULL)
-	gui_mch_post_balloon(balloonEval, tip);
+	gui_mch_post_balloon(balloonEval, (char_u *)tip);
 }
 
 

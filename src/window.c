@@ -186,7 +186,7 @@ do_window(nchar, Prenum)
 		    if (wp->w_p_pvw)
 			break;
 		if (wp == NULL)
-		    beep_flush();
+		    EMSG(_("There is no preview window"));
 		else
 		    win_goto(wp);
 		break;
@@ -1654,7 +1654,6 @@ win_close(win, free_buf)
     int		old_height = 0;
 #endif
 
-
     if (lastwin == firstwin)
     {
 	EMSG(_("Cannot close last window"));
@@ -1773,7 +1772,30 @@ win_close(win, free_buf)
     if (win == curwin)
     {
 	curwin = wp;
-	curbuf = wp->w_buffer;
+#ifdef FEAT_QUICKFIX
+	if (wp->w_p_pvw || bt_quickfix(wp->w_buffer))
+	{
+	    /*
+	     * When the cursor goes to the preview or the quickfix window, try
+	     * finding another window to go to.
+	     */
+	    for (;;)
+	    {
+		if (wp->w_next == NULL)
+		    wp = firstwin;
+		else
+		    wp = wp->w_next;
+		if (wp == curwin)
+		    break;
+		if (!wp->w_p_pvw && !bt_quickfix(wp->w_buffer))
+		{
+		    curwin = wp;
+		    break;
+		}
+	    }
+	}
+#endif
+	curbuf = curwin->w_buffer;
 	close_curwin = TRUE;
     }
     if (p_ea)

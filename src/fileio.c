@@ -813,7 +813,7 @@ retry:
 #  ifdef FEAT_EVAL
 		&& !did_iconv
 #  endif
-		&& ICONV_ENABLED)
+		)
 	    iconv_fd = (iconv_t)my_iconv_open(
 				  enc_utf8 ? (char_u *)"utf-8" : p_enc, fenc);
 # endif
@@ -2987,11 +2987,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 * Use iconv() conversion when conversion is needed and it's not done
 	 * internally.
 	 */
-	if (ICONV_ENABLED)
-	    write_info.bw_iconv_fd = (iconv_t)my_iconv_open(fenc,
+	write_info.bw_iconv_fd = (iconv_t)my_iconv_open(fenc,
 					enc_utf8 ? (char_u *)"utf-8" : p_enc);
-	else
-	    write_info.bw_iconv_fd = (iconv_t)-1;
 	if (write_info.bw_iconv_fd != (iconv_t)-1)
 	{
 	    /* We're going to use iconv(), allocate a buffer to convert in. */

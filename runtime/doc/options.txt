@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0x.  Last change: 2001 Mar 09
+*options.txt*   For Vim version 6.0y.  Last change: 2001 Mar 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1140,7 +1140,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	"if,If,IF".
 
 						*'clipboard'* *'cb'*
-'clipboard' 'cb'	string	(default "")
+'clipboard' 'cb'	string	(default "autoselect" for X-windows,
+								 "" otherwise)
 			global
 			{not in Vi}
 			{only in GUI versions or when the |+xterm_clipboard|
@@ -1161,8 +1162,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			then whenever Visual mode is started, or the Visual
 			area extended, Vim tries to become the owner of the
 			windowing system's global selection or put the
-			selected text on the clipboard.  See |guioptions_a|
-			for details.  When the GUI is active, the 'a' flag in
+			selected text on the clipboard used by the selection
+                        register "*.  See |guioptions_a| and |quotestar| for
+			details.  When the GUI is active, the 'a' flag in
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
 
@@ -1870,9 +1872,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	option is set, because the file would be different when written.
 	This option can not be changed when 'modifiable' is off.
 
+							*'fe'*
 	NOTE: Before version 6.0 this option specified the encoding for the
-	whole of Vim, this was a mistake.  Now use 'encoding' instead.
-
+	whole of Vim, this was a mistake.  Now use 'encoding' instead.  The
+	old short name was 'fe', which is no longer used.
 
 					*'fileencodings'* *'fencs'*
 'fileencodings' 'fencs'	string (default: "ucs-bom", "ucs-bom,utf-8,latin1"
@@ -2442,8 +2445,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	screen.
 
 						*'guioptions'* *'go'*
-'guioptions' 'go'	string	(default "agimrtT" (Win32 and GTK),
-					 "agimrt" (Unix) or "gmrt")
+'guioptions' 'go'	string	(default "gmrtT"   (MS-Windows),
+					 "gmrt"	   (MS-Windows no toolbar)
+					 "agimrtT" (Unix GTK and Motif),
+					 "agimrt"  (Unix Athena)
 			global
 			{not in Vi}
 			{only available when compiled with GUI enabled}
@@ -3129,6 +3134,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{only in the GUI}
 	Number of pixel lines inserted between characters.  Useful if the font
 	uses the full character cell height, making lines touch eachother.
+	When non-zero there is room for underlining.
 
 						*'lisp'* *'nolisp'*
 'lisp'			boolean	(default off)

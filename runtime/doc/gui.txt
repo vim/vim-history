@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0x.  Last change: 2001 Feb 02
+*gui.txt*       For Vim version 6.0y.  Last change: 2001 Mar 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -359,7 +359,8 @@ You may make selections with the mouse (see |gui-mouse-select|), or by using
 Vim's Visual mode (see |v|).  If 'a' is present in 'guioptions', then
 whenever a selection is started (Visual or Select mode), or when the selection
 is changed, Vim becomes the owner of the windowing system's primary selection
-(on MS-Windows the |gui-clipboard| is used).
+(on MS-Windows the |gui-clipboard| is used; under X11, the |x11-selection| is
+used - you should read whichever of these is appropriate now).
 
 There is a special register for storing this selection, it is the "*
 register.  Nothing is put in here unless the information about what text is
@@ -375,9 +376,13 @@ first, and then 'put' like any other register.  For example, to put the
 selection (contents of the clipboard): >
 	"*p
 
+When using this register under X11, also see |x11-selection|.  This also
+explains the related "+ register.
+
 Note that when pasting text from one Vim into another separate Vim, the type
 of selection (character, line, or block) will also be copied.  For other
-applications the type is always character.
+applications the type is always character.  However, if the text gets
+transferred via the |x11-cut-buffer|, the selection type is ALWAYS lost.
 
 When the "unnamed" string is included in the 'clipboard' option, the unnamed
 register is the same as the "* register.  Thus you can yank to and paste the
@@ -775,7 +780,7 @@ similarly to the PopUp menus except that any menu tree can be popped up
 				menu-bar (see |win32-hidden-menus|).
 
 Example: >
-	:poup File
+	:popup File
 will make the "File" menu (if there is one) appear at the cursor. >
 
 	:amenu ]Toolbar.Make	:make<CR>

@@ -35,7 +35,7 @@ typedef struct
     Position		y_root;
     int			state;		/* Button/Modifier key state */
     int			ts;		/* tabstop setting for this buffer */
-    char		*msg;
+    char_u		*msg;
     void		(*msgCB)();
     void		*clientData;	/* For callback */
     Dimension		screen_width;	/* screen width in pixels */

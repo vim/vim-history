@@ -508,11 +508,16 @@ static struct vimoption options[] =
 			    },
     {"clipboard",   "cb",   P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_CLIPBOARD
-                            (char_u *)&p_cb, PV_NONE,
+			    (char_u *)&p_cb, PV_NONE,
+# ifdef FEAT_XCLIPBOARD
+			    {(char_u *)"autoselect", (char_u *)0L}},
+# else
+			    {(char_u *)"", (char_u *)0L}},
+# endif
 #else
 			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}},
 #endif
-                            {(char_u *)"", (char_u *)0L}},
     {"cmdheight",   "ch",   P_NUM|P_VI_DEF|P_RALL,
 			    (char_u *)&p_ch, PV_NONE,
 			    {(char_u *)1L, (char_u *)0L}},
@@ -905,8 +910,12 @@ static struct vimoption options[] =
     {"guioptions",  "go",   P_STRING|P_VI_DEF|P_RALL|P_FLAGLIST,
 #if defined(FEAT_GUI)
 			    (char_u *)&p_go, PV_NONE,
-# if defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32) || defined(FEAT_GUI_MOTIF)
+# ifdef FEAT_TOOLBAR
+#  ifdef UNIX
 			    {(char_u *)"agimrtT", (char_u *)0L}
+#  else
+			    {(char_u *)"gmrtT", (char_u *)0L}
+#  endif
 # else
 #  ifdef UNIX
 			    {(char_u *)"agimrt", (char_u *)0L}
@@ -1036,11 +1045,15 @@ static struct vimoption options[] =
 #else
 # ifdef AMIGA
 			    (char_u *)"@,48-57,/,.,-,_,+,,,$,:",
-# else /* UNIX et al. */
-#  ifdef EBCDIC
+# else
+#  ifdef VMS
+			    (char_u *)"@,48-57,/,.,-,_,+,,,#,$,%,<,>,[,],:,;,~",
+#  else /* UNIX et al. */
+#   ifdef EBCDIC
 			    (char_u *)"@,240-249,/,.,-,_,+,,,#,$,%,~",
-#  else
+#   else
 			    (char_u *)"@,48-57,/,.,-,_,+,,,#,$,%,~",
+#   endif
 #  endif
 # endif
 #endif
@@ -1084,7 +1097,8 @@ static struct vimoption options[] =
     {"isprint",	    "isp",  P_STRING|P_VI_DEF|P_RALL|P_COMMA|P_NODUP,
 			    (char_u *)&p_isp, PV_NONE,
 			    {
-#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(macintosh)
+#if defined(MSDOS) || defined(MSWIN) || defined(OS2) || defined(macintosh) \
+		|| defined(VMS)
 			    (char_u *)"@,~-255",
 #else
 # ifdef EBCDIC
@@ -1186,7 +1200,7 @@ static struct vimoption options[] =
 			    (char_u *)24L,
 #endif
 					    (char_u *)0L}},
-    {"linespace",   "lsp",  P_NUM|P_VIM|P_RCLR,
+    {"linespace",   "lsp",  P_NUM|P_VI_DEF|P_RCLR,
 #ifdef FEAT_GUI
 			    (char_u *)&p_linespace, PV_NONE,
 #else
@@ -4460,8 +4474,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 
 #ifdef FEAT_TITLE
     /* 'titlestring' and 'iconstring' */
-    else if (varp == &p_titlestring
-	         || varp == &p_iconstring)
+    else if (varp == &p_titlestring || varp == &p_iconstring)
     {
 # ifdef FEAT_STL_OPT
 	int	flagval = (varp == &p_titlestring) ? STL_IN_TITLE : STL_IN_ICON;
@@ -5006,7 +5019,7 @@ check_stl_option(s)
     char_u	*s;
 {
     int		itemcnt = 0;
-    int         groupdepth = 0;
+    int		groupdepth = 0;
     static char_u   errbuf[80];
 
     while (*s && itemcnt < STL_MAX_ITEM)
@@ -5826,10 +5839,11 @@ findoption(arg)
  *	    unknown option: -2.
  */
     int
-get_option_value(name, numval, stringval)
+get_option_value(name, numval, stringval, opt_flags)
     char_u	*name;
     long	*numval;
     char_u	**stringval;	    /* NULL when only checking existance */
+    int		opt_flags;
 {
     int	    opt_idx;
     char_u  *varp;
@@ -5838,7 +5852,7 @@ get_option_value(name, numval, stringval)
     if (opt_idx < 0)		    /* unknown option */
 	return -2;
 
-    varp = get_varp(&(options[opt_idx]));
+    varp = get_varp_scope(&(options[opt_idx]), opt_flags);
     if (varp == NULL)		    /* hidden option */
 	return -1;
 
@@ -7564,7 +7578,7 @@ langmap_set()
  */
     int
 has_format_option(x)
-    int	    x;
+    int		x;
 {
     if (p_paste)
 	return FALSE;

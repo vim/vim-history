@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0x.  Last change: 2000 Jul 07
+*gui_x11.txt*   For Vim version 6.0y.  Last change: 2001 Mar 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,6 +13,7 @@ Vim's Graphical User Interface				*gui-x11* *GUI-X11*
 5. GTK version			|gui-gtk|
 6. GNOME version		|gui-gnome|
 7. Compiling			|gui-x11-compiling|
+8. X11 selection mechanism	|x11-selection|
 
 Other relevant documentation:
 |gui.txt|	For generic items of the GUI.
@@ -73,6 +74,7 @@ version), a number of X resources are available.  You should use Vim's class
     boldFont		Name of font used for bold text.
     italicFont		Name of font used for italic text.
     boldItalicFont	Name of font used for bold, italic text.
+    menuFont		Name of font used for the menus
     geometry		Initial geometry to use for gvim's window (default
 			is same size as terminal that started it).
     scrollbarWidth	Thickness of scrollbars.
@@ -84,8 +86,11 @@ the user has specified one via a resource.  No attempt is made to guess what
 fonts should be used for these based on the normal text font at the moment.
 
 Note that the colors can also be set with the ":highlight" command, using the
-"Normal", "Menu" and "Scrollbar" groups.
-
+"Normal", "Menu" and "Scrollbar" groups.  Example: >
+	:highlight Menu guibg=lightblue
+	:highlight Scrollbar guibg=lightblue guifg=blue
+	:highlight Normal guibg=grey90
+<
 							*font-sizes*
 Note: All fonts must be of the same size!!!  If you don't do this, text will
 disappear or mess up the display.  Vim does not check the font sizes.  It's
@@ -383,5 +388,79 @@ In general, do not try to mix files from different GTK+, Motif, Athena and X11
 versions.  This will cause problems.  For example, using header files for
 X11R5 with a library for X11R6 probably doesn't work (although the linking
 won't give an error message, Vim will crash later).
+
+==============================================================================
+8. X11 selection mechanism				*x11-selection*
+
+If using X11, in either the GUI or an xterm with an X11-aware Vim, then Vim
+provides varied access to the X11 selection and clipboard.  These are accessed
+by using the two selection registers "* and "+.
+
+X11 provides two basic types of global store, selections and cut-buffers,
+which differ in one important aspect: selections are "owned" by an
+application, and disappear when that application (e.g., Vim) exits, thus
+losing the data, whereas cut-buffers, are stored within the X-server itself
+and remain until written over or the X-server exits (e.g., upon logging out).
+
+The contents of selections are held by the originating application (e.g., upon
+a copy), and only passed on to another application when that other application
+asks for them (e.g., upon a paste).
+
+The contents of cut-buffers are immediately written to, and are then
+accessible directly from the X-server, without contacting the originating
+application.
+
+							*quoteplus*
+There are three documented X selections: PRIMARY (which is expected to
+represent the current visual selection - as in Vim's Visual mode), SECONDARY
+(which is ill-defined) and CLIPBOARD (which is expected to be used for
+cut, copy and paste operations).
+
+Of these three, Vim uses PRIMARY when reading and writing the "* register
+(hence when the X11 selections are available, Vim sets a default value for
+|'clipboard'| of "autoselect"), and CLIPBOARD when reading and writing the "+
+register.  Vim does not access the SECONDARY selection.
+
+Examples: (assuming the default option values)
+- Select an URL in Visual mode in Vim.  Go to a text field in Netscape and
+  click the middle mouse button.  The selected text will be inserted
+  (hopefully!).
+- Select some text in Netscape by dragging with the mouse.  Go to Vim and
+  press the middle mouse button: The selected text is inserted.
+- Select some text in Vim and do "+y.  Go to Netscape, select some text in a
+  textfield by dragging with the mouse.  Now use the right mouse button and
+  select "Paste" from the popup menu.  The selected text is overwritten by the
+  text from Vim.
+Note that the text in the "+ register remains available when making a Visual
+selection, which makes other text available in the "* register.  That allows
+overwriting selected text.
+							*x11-cut-buffer*
+There are, by default, 8 cut-buffers: CUT_BUFFER0 to CUT_BUFFER7.  Vim only
+uses CUT_BUFFER0, which is the one that xterm uses by default.
+
+Whenever Vim is about to become unavailable (either via exiting or becoming
+suspended), and thus unable to respond to another application's selection
+request, it writes the contents of any owned selection to CUT_BUFFER0.  If the
+"+ CLIPBOARD selection is owned by Vim, then this is written in preference,
+otherwise if the "* PRIMARY selection is owned by Vim, then that is written.
+
+Similarly, when Vim tries to paste from "* or "+ (either explicitly, or, in
+the case of the "* register, when the middle mouse button is clicked), if the
+requested X selection is empty or unavailable, Vim reverts to reading the
+current value of the CUT_BUFFER0.
+
+Note that when text is copied to CUT_BUFFER0 in this way, the type of
+selection (character, line or block) is always lost, even if it is a Vim which
+later pastes it.
+
+Xterm, by default, always writes visible selections to both PRIMARY and
+CUT_BUFFER0.  When it pastes, it uses PRIMARY if this is available, or else
+falls back upon CUT_BUFFER0.  For this reason, when cutting and pasting
+between Vim and an xterm, you should use the "* register.  Xterm doesn't use
+CLIPBOARD, thus the "+ doesn't work with xterm.
+
+Most newer applications will provide their current selection via PRIMARY ("*)
+and use CLIPBOARD ("+) for cut/copy/paste operations.  You thus have access to
+both by choosing to use either of the "* or "+ registers.
 
  vim:tw=78:sw=4

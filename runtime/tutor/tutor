@@ -51,15 +51,15 @@ Note: The cursor keys should also work.  But using hjkl you will be able to
 
   1. Press the <ESC> key (to make sure you are in Normal mode).
 
-  2. Type:     			:q! <RETURN>.
+  2. Type:     			:q! <ENTER>.
 
 ---> This exits the editor WITHOUT saving any changes you have made.
      If you want to save the changes and exit type:
-     				:wq  <RETURN>
+     				:wq  <ENTER>
 
   3. When you see the shell prompt, type the command that got you into this
-     tutor.  That could be:	vimtutor <RETURN>
-     Normally you would use:	vim tutor <RETURN>
+     tutor.  That could be:	vimtutor <ENTER>
+     Normally you would use:	vim tutor <ENTER>
 
 ---> 'vim' means enter the vim editor, 'tutor' is the file you wish to edit.
 
@@ -119,10 +119,10 @@ NOTE: As you go through this tutor, do not try to memorize, learn by usage.
   1. The cursor is moved using either the arrow keys or the hjkl keys.
 	 h (left)	j (down)       k (up)	    l (right)
 
-  2. To enter Vim (from the % prompt) type:  vim FILENAME <RETURN>
+  2. To enter Vim (from the % prompt) type:  vim FILENAME <ENTER>
 
-  3. To exit Vim type:	   <ESC>   :q!	 <RETURN>  to trash all changes.
-	     OR type:	   <ESC>   :wq	 <RETURN>  to save the changes.
+  3. To exit Vim type:	   <ESC>   :q!	 <ENTER>  to trash all changes.
+	     OR type:	   <ESC>   :wq	 <ENTER>  to save the changes.
 
   4. To delete a character under the cursor in Normal mode type:  x
 
@@ -420,7 +420,7 @@ Now go on to the next lesson.
   1. In Normal mode type the  /  character.  Notice that it and the cursor
      appear at the bottom of the screen as with the  :	command.
 
-  2. Now type 'errroor' <RETURN>.  This is the word you want to search for.
+  2. Now type 'errroor' <ENTER>.  This is the word you want to search for.
 
   3. To search for the same phrase again, simply type  n .
      To search for the same phrase in the opposite direction, type  Shift-N .
@@ -465,7 +465,7 @@ Note: This is very useful in debugging a program with unmatched parentheses!
 
   1. Move the cursor to the line below marked --->.
 
-  2. Type  :s/thee/the <RETURN> .  Note that this command only changes the
+  2. Type  :s/thee/the <ENTER> .  Note that this command only changes the
      first occurrence on the line.
 
   3. Now type	 :s/thee/the/g	   meaning substitute globally on the line.
@@ -515,13 +515,13 @@ Note: This is very useful in debugging a program with unmatched parentheses!
   2. Now type the  !  (exclamation point) character.  This allows you to
      execute any external shell command.
 
-  3. As an example type   ls   following the ! and then hit <RETURN>.  This
+  3. As an example type   ls   following the ! and then hit <ENTER>.  This
      will show you a listing of your directory, just as if you were at the
      shell prompt.  Or use   :!dir  if ls doesn't work.
 
 ---> Note:  It is possible to execute any external command this way.
 
----> Note:  All  :  commands must be finished by hitting <RETURN>
+---> Note:  All  :  commands must be finished by hitting <ENTER>
 
 
 
@@ -533,7 +533,7 @@ Note: This is very useful in debugging a program with unmatched parentheses!
      ** To save the changes made to the file, type  :w FILENAME. **
 
   1. Type  :!dir  or  :!ls  to get a listing of your directory.
-     You already know you must hit <RETURN> after this.
+     You already know you must hit <ENTER> after this.
 
   2. Choose a filename that does not exist yet, such as TEST.
 
@@ -742,16 +742,16 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   these three:
 	- press the <HELP> key (if you have one)
 	- press the <F1> key (if you have one)
-	- type   :help <RETURN>
+	- type   :help <ENTER>
 
-  Type   :q <RETURN>   to close the help window.
+  Type   :q <ENTER>   to close the help window.
 
   You can find help on just about any subject, by giving an argument to the
   ":help" command.  Try these:
 
-  :help w <RETURN>
-  :help c_<T <RETURN>
-  :help insert-index <RETURN>
+  :help w <ENTER>
+  :help c_<T <ENTER>
+  :help insert-index <ENTER>
 
 
 
@@ -763,6 +763,13 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
   It is far from complete as Vim has many many more commands.
 
   For further reading and studying, this book is recommended:
+  	Vim - Vi Improved - by Steve Oualline
+	Publisher: New Riders
+  The first book completely dedicated to Vim.  Especially useful for beginners.
+  There are many examples and pictures.
+  See http://www.iccf.nl/click5.html
+
+  This book is older and more about Vi than Vim, but also recommended:
 	Learning the Vi Editor - by Linda Lamb
 	Publisher: O'Reilly & Associates Inc.
   It is a good book to get to know almost anything you want to do with Vi.

@@ -310,6 +310,23 @@ static HWND		s_findrep_hwnd = NULL;
 static int		s_findrep_is_find;
 #endif
 
+/*
+ * For control IME.
+ */
+#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE_IME
+static LOGFONT norm_logfont;
+# endif
+# if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
+/* GIME_TEST */
+static LOGFONT norm_logfont;
+# endif
+#endif
+
+#ifdef FEAT_MBYTE_IME
+static LRESULT _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData);
+#endif
+
 #ifdef DEBUG
 /*
  * Print out the last Windows error message
@@ -495,7 +512,7 @@ _OnChar(
     {
 	/* Insert CSI as K_CSI. */
 	string[1] = KS_EXTRA;
-	string[2] = KE_CSI;
+	string[2] = (int)KE_CSI;
 	add_to_input_buf(string, 3);
     }
     else
@@ -566,7 +583,7 @@ _OnSysChar(
     {
 	string[len++] = CSI;
 	string[len++] = KS_EXTRA;
-	string[len++] = KE_CSI;
+	string[len++] = (int)KE_CSI;
     }
     else
     {
@@ -574,6 +591,17 @@ _OnSysChar(
 #ifdef FEAT_MBYTE
 	if (input_conv.vc_type != CONV_NONE)
 	    len += convert_input(string + len - 1, 1, sizeof(string) - len) - 1;
+	else if (enc_utf8 && string[len - 1] >= 0x80)
+	{
+	    /* convert to utf-8 */
+	    string[len] = string[len - 1] & 0xbf;
+	    string[len - 1] = ((unsigned)string[len - 1] >> 6) + 0xc0;
+	    if (string[len++] == CSI)
+	    {
+		string[len++] = KS_EXTRA;
+		string[len++] = (int)KE_CSI;
+	    }
+	}
 #endif
     }
 
@@ -779,12 +807,31 @@ _OnMenu(
 #endif
 
 #if defined(MSWIN_FIND_REPLACE)
+/*
+ * Copy the "from" string to the end of cmd[], escaping any '/'.
+ */
+    static void
+fr_copy_escape(char *from, char_u *to)
+{
+    char	*s;
+    char_u	*d;
+
+    d = to + STRLEN(to);
+    for (s = from; *s != NUL; ++s)
+    {
+	if (*s == '/')
+	    *d++ = '\\';
+	*d++ = *s;
+    }
+    *d = NUL;
+}
+
     static void
 fr_setwhat(char_u *cmd)
 {
     if (s_findrep_struct.Flags & FR_WHOLEWORD)
 	STRCAT(cmd, "\\<");
-    STRCAT(cmd, s_findrep_struct.lpstrFindWhat);
+    fr_copy_escape(s_findrep_struct.lpstrFindWhat, cmd);
     if (s_findrep_struct.Flags & FR_WHOLEWORD)
 	STRCAT(cmd, "\\>");
 }
@@ -795,7 +842,7 @@ fr_setreplcmd(char_u *cmd)
     STRCAT(cmd, ":%sno/");
     fr_setwhat(cmd);
     STRCAT(cmd, "/");
-    STRCAT(cmd, s_findrep_struct.lpstrReplaceWith);
+    fr_copy_escape(s_findrep_struct.lpstrReplaceWith, cmd);
     if (s_findrep_struct.Flags & FR_REPLACE)
 	STRCAT(cmd, "/gc");
     else
@@ -2597,4 +2644,56 @@ gui_mch_settitle(
 {
     SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : (char *)title));
 }
+
+#ifdef FEAT_MOUSESHAPE
+/* Table for shape IDCs.  Keep in sync with the mshape_names[] table in
+ * misc2.c! */
+static LPCSTR mshape_idcs[] =
+{
+    MAKEINTRESOURCE(IDC_ARROW),		/* arrow */
+    MAKEINTRESOURCE(0),			/* blank */
+    MAKEINTRESOURCE(IDC_IBEAM),		/* beam */
+    MAKEINTRESOURCE(IDC_SIZENS),	/* updown */
+    MAKEINTRESOURCE(IDC_SIZENS),	/* udsizing */
+    MAKEINTRESOURCE(IDC_SIZEWE),	/* leftright */
+    MAKEINTRESOURCE(IDC_SIZEWE),	/* lrsizing */
+    MAKEINTRESOURCE(IDC_WAIT),		/* busy */
+#ifdef WIN32
+    MAKEINTRESOURCE(IDC_NO),		/* no */
+#else
+    MAKEINTRESOURCE(IDC_ICON),		/* no */
+#endif
+    MAKEINTRESOURCE(IDC_ARROW),		/* crosshair */
+    MAKEINTRESOURCE(IDC_ARROW),		/* hand1 */
+    MAKEINTRESOURCE(IDC_ARROW),		/* hand2 */
+    MAKEINTRESOURCE(IDC_ARROW),		/* pencil */
+    MAKEINTRESOURCE(IDC_ARROW),		/* question */
+    MAKEINTRESOURCE(IDC_ARROW),		/* right-arrow */
+    MAKEINTRESOURCE(IDC_UPARROW),	/* up-arrow */
+    MAKEINTRESOURCE(IDC_ARROW)		/* last one */
+};
+
+    void
+mch_set_mouse_shape(int shape)
+{
+    LPCSTR idc;
+
+    if (shape == MSHAPE_HIDE)
+	ShowCursor(FALSE);
+    else
+    {
+	if (shape >= MSHAPE_NUMBERED)
+	    idc = MAKEINTRESOURCE(IDC_ARROW);
+	else
+	    idc = mshape_idcs[shape];
+#ifdef WIN32
+	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
+#else
+	SetClassWord(s_textArea, GCW_HCURSOR, LoadCursor(NULL, idc));
+#endif
+	if (!p_mh)
+	    ShowCursor(TRUE);
+    }
+}
+#endif
 

@@ -2041,9 +2041,11 @@ trans_special(srcp, dst, keycode)
 	dst[dlen++] = KEY2TERMCAP1(key);
     }
 #ifdef FEAT_MBYTE
-    else if (has_mbyte)
+    else if (has_mbyte && !keycode)
 	dlen += (*mb_char2bytes)(key, dst + dlen);
 #endif
+    else if (keycode)
+	dlen = add_char2buf(key, dst + dlen) - dst;
     else
 	dst[dlen++] = key;
 

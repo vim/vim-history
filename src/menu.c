@@ -2052,7 +2052,7 @@ theend:
 typedef struct
 {
     char_u	*from;		/* English name */
-    char_u	*to;		/* translaged name */
+    char_u	*to;		/* translated name */
 } menutrans_t;
 
 static garray_t menutrans_ga = {0, 0, 0, 0, NULL};

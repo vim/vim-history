@@ -20,7 +20,8 @@ SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test23.out test24.out test26.out \
 		test28.out test29.out test30.out test31.out test32.out \
 		test33.out test34.out test35.out test36.out test37.out \
-		test38.out test39.out test40.out test41.out test42.out
+		test38.out test39.out test40.out test41.out test42.out \
+		test43.out test44.out
 
 .SUFFIXES: .in .out
 

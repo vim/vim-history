@@ -171,6 +171,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'fdn'	options.txt	/*'fdn'*
 'fdo'	options.txt	/*'fdo'*
 'fdt'	options.txt	/*'fdt'*
+'fe'	options.txt	/*'fe'*
 'fen'	options.txt	/*'fen'*
 'fenc'	options.txt	/*'fenc'*
 'fencs'	options.txt	/*'fencs'*
@@ -1059,11 +1060,21 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /[]	pattern.txt	/*\/[]*
 /\	pattern.txt	/*\/\\*
 /\$	pattern.txt	/*\/\\$*
+/\%#	pattern.txt	/*\/\\%#*
 /\%$	pattern.txt	/*\/\\%$*
 /\%(	pattern.txt	/*\/\\%(*
 /\%(\)	pattern.txt	/*\/\\%(\\)*
+/\%<c	pattern.txt	/*\/\\%<c*
+/\%<l	pattern.txt	/*\/\\%<l*
+/\%<v	pattern.txt	/*\/\\%<v*
+/\%>c	pattern.txt	/*\/\\%>c*
+/\%>l	pattern.txt	/*\/\\%>l*
+/\%>v	pattern.txt	/*\/\\%>v*
 /\%[]	pattern.txt	/*\/\\%[]*
 /\%^	pattern.txt	/*\/\\%^*
+/\%c	pattern.txt	/*\/\\%c*
+/\%l	pattern.txt	/*\/\\%l*
+/\%v	pattern.txt	/*\/\\%v*
 /\&	pattern.txt	/*\/\\&*
 /\(	pattern.txt	/*\/\\(*
 /\(\)	pattern.txt	/*\/\\(\\)*
@@ -1077,6 +1088,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\<	pattern.txt	/*\/\\<*
 /\=	pattern.txt	/*\/\\=*
 /\>	pattern.txt	/*\/\\>*
+/\?	pattern.txt	/*\/\\?*
 /\@!	pattern.txt	/*\/\\@!*
 /\@<!	pattern.txt	/*\/\\@<!*
 /\@<=	pattern.txt	/*\/\\@<=*
@@ -1095,6 +1107,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\P	pattern.txt	/*\/\\P*
 /\S	pattern.txt	/*\/\\S*
 /\U	pattern.txt	/*\/\\U*
+/\V	pattern.txt	/*\/\\V*
 /\W	pattern.txt	/*\/\\W*
 /\X	pattern.txt	/*\/\\X*
 /\[]	pattern.txt	/*\/\\[]*
@@ -1126,6 +1139,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 /\star	pattern.txt	/*\/\\star*
 /\t	pattern.txt	/*\/\\t*
 /\u	pattern.txt	/*\/\\u*
+/\v	pattern.txt	/*\/\\v*
 /\w	pattern.txt	/*\/\\w*
 /\x	pattern.txt	/*\/\\x*
 /\z(	syntax.txt	/*\/\\z(*
@@ -1170,6 +1184,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 07.3	usr_07.txt	/*07.3*
 07.4	usr_07.txt	/*07.4*
 07.5	usr_07.txt	/*07.5*
+07.6	usr_07.txt	/*07.6*
 2/sys/	editing.txt	/*2\/sys\/*
 28.1	usr_28.txt	/*28.1*
 28.2	usr_28.txt	/*28.2*
@@ -1910,11 +1925,13 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-clear	syntax.txt	/*:syn-clear*
 :syn-cluster	syntax.txt	/*:syn-cluster*
 :syn-contained	syntax.txt	/*:syn-contained*
+:syn-containedin	syntax.txt	/*:syn-containedin*
 :syn-contains	syntax.txt	/*:syn-contains*
 :syn-context	syntax.txt	/*:syn-context*
 :syn-default-override	usr_07.txt	/*:syn-default-override*
 :syn-define	syntax.txt	/*:syn-define*
 :syn-display	syntax.txt	/*:syn-display*
+:syn-enable	syntax.txt	/*:syn-enable*
 :syn-end	syntax.txt	/*:syn-end*
 :syn-excludenl	syntax.txt	/*:syn-excludenl*
 :syn-ext-match	syntax.txt	/*:syn-ext-match*
@@ -1938,6 +1955,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-pattern	syntax.txt	/*:syn-pattern*
 :syn-qstart	syntax.txt	/*:syn-qstart*
 :syn-region	syntax.txt	/*:syn-region*
+:syn-reset	usr_07.txt	/*:syn-reset*
 :syn-skip	syntax.txt	/*:syn-skip*
 :syn-skipempty	syntax.txt	/*:syn-skipempty*
 :syn-skipnl	syntax.txt	/*:syn-skipnl*
@@ -1954,7 +1972,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :syn-transparent	syntax.txt	/*:syn-transparent*
 :syncbind	scroll.txt	/*:syncbind*
 :syntax	syntax.txt	/*:syntax*
+:syntax-enable	syntax.txt	/*:syntax-enable*
 :syntax-on	syntax.txt	/*:syntax-on*
+:syntax-reset	syntax.txt	/*:syntax-reset*
 :t	change.txt	/*:t*
 :tN	tagsearch.txt	/*:tN*
 :tNext	tagsearch.txt	/*:tNext*
@@ -2052,6 +2072,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :wh	eval.txt	/*:wh*
 :while	eval.txt	/*:while*
 :win	gui.txt	/*:win*
+:winc	windows.txt	/*:winc*
+:wincmd	windows.txt	/*:wincmd*
 :windo	windows.txt	/*:windo*
 :winp	gui.txt	/*:winp*
 :winpos	gui.txt	/*:winpos*
@@ -2650,6 +2672,7 @@ ZZ	editing.txt	/*ZZ*
 [star	motion.txt	/*[star*
 [z	fold.txt	/*[z*
 [{	motion.txt	/*[{*
+\%#\k	pattern.txt	/*\\%#\\k*
 \z9	syntax.txt	/*\\z9*
 ]	index.txt	/*]*
 ]#	motion.txt	/*]#*
@@ -3007,6 +3030,7 @@ cursor-blinking	options.txt	/*cursor-blinking*
 cursor-down	intro.txt	/*cursor-down*
 cursor-left	intro.txt	/*cursor-left*
 cursor-motions	motion.txt	/*cursor-motions*
+cursor-position	pattern.txt	/*cursor-position*
 cursor-right	intro.txt	/*cursor-right*
 cursor-up	intro.txt	/*cursor-up*
 cursor_down	intro.txt	/*cursor_down*
@@ -3113,6 +3137,7 @@ encoding-names	multibyte.txt	/*encoding-names*
 encoding-table	multibyte.txt	/*encoding-table*
 encryption	editing.txt	/*encryption*
 end	intro.txt	/*end*
+end-of-file	pattern.txt	/*end-of-file*
 enlightened-terminal	syntax.txt	/*enlightened-terminal*
 erlang-syntax	syntax.txt	/*erlang-syntax*
 erlang.vim	syntax.txt	/*erlang.vim*
@@ -3511,6 +3536,7 @@ hl-SpecialKey	syntax.txt	/*hl-SpecialKey*
 hl-StatusLine	syntax.txt	/*hl-StatusLine*
 hl-StatusLineNC	syntax.txt	/*hl-StatusLineNC*
 hl-Title	syntax.txt	/*hl-Title*
+hl-User1	syntax.txt	/*hl-User1*
 hl-User1..9	syntax.txt	/*hl-User1..9*
 hl-VertSplit	syntax.txt	/*hl-VertSplit*
 hl-Visual	syntax.txt	/*hl-Visual*
@@ -3778,6 +3804,7 @@ maillist	intro.txt	/*maillist*
 maillist-archive	intro.txt	/*maillist-archive*
 man-plugin	filetype.txt	/*man-plugin*
 map-<SID>	map.txt	/*map-<SID>*
+map-ambiguous	map.txt	/*map-ambiguous*
 map-backtick	tips.txt	/*map-backtick*
 map-comments	map.txt	/*map-comments*
 map-examples	map.txt	/*map-examples*
@@ -4111,6 +4138,7 @@ quote_number	change.txt	/*quote_number*
 quote_quote	change.txt	/*quote_quote*
 quotea	change.txt	/*quotea*
 quotecommandquote	intro.txt	/*quotecommandquote*
+quoteplus	gui_x11.txt	/*quoteplus*
 quotequote	change.txt	/*quotequote*
 quotes	quotes.txt	/*quotes*
 quotes.txt	quotes.txt	/*quotes.txt*
@@ -4251,6 +4279,7 @@ sscanf	eval.txt	/*sscanf*
 standard-plugin	usr_06.txt	/*standard-plugin*
 standard-plugin-list	help.txt	/*standard-plugin-list*
 star	pattern.txt	/*star*
+start-of-file	pattern.txt	/*start-of-file*
 starting	starting.txt	/*starting*
 starting-amiga	starting.txt	/*starting-amiga*
 starting.txt	starting.txt	/*starting.txt*
@@ -4852,6 +4881,8 @@ www	intro.txt	/*www*
 x	change.txt	/*x*
 x-input-method	multibyte.txt	/*x-input-method*
 x-resources	version5.txt	/*x-resources*
+x11-cut-buffer	gui_x11.txt	/*x11-cut-buffer*
+x11-selection	gui_x11.txt	/*x11-selection*
 xargs	starting.txt	/*xargs*
 xfontset	multibyte.txt	/*xfontset*
 xfree-xterm	syntax.txt	/*xfree-xterm*

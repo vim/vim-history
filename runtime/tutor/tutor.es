@@ -168,7 +168,7 @@ Ahora continúe con la Lección 2.
 
   1. Pulse  <ESC>  para asegurarse de que está en el modo Normal.
 
-  2. Mueva el cursor a la linea de abajo señalada con --->.
+  2. Mueva el cursor a la línea de abajo señalada con --->.
 
   3. Mueva el cursor al final de la línea correcta (DESPUÉS del primer . ).
 
@@ -190,8 +190,9 @@ Ahora continúe con la Lección 2.
 
          [número]   d   objeto      O        d   [número]   objeto
   donde:
-   número - es cuántas veces se ha de ejecutar el mandato (opcional, defecto=1).   d - es el mandato para borrar.
-   objeto - es sobre lo que el mandato va a operar (lista abajo).
+   número - es cuántas veces se ha de ejecutar el mandato (opcional, defecto=1).
+   d - es el mandato para borrar.
+   objeto - es sobre lo que el mandato va a operar (lista, abajo).
 
   Una lista corta de objetos:
    w - desde el cursor hasta el final de la palabra, incluyendo el espacio.
@@ -219,7 +220,10 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
      líneas.
 
       1) Las rosas son rojas, 
+      2) El barro es divertido,
       3) El cielo es azul,
+      4) Yo tengo un coche,
+      5) Los relojes marcan la hora,
       6) El azucar es dulce,
       7) Y así eres tu.
 
@@ -269,33 +273,28 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lección 3.1: EL MANDATO PUT
+                         Lección 3.1: EL MANDATO «PUT» (poner)
 
-  ** Pulse p para pones lo último que ha borrado después del cursor. **
+  ** Pulse p para poner lo último que ha borrado después del cursor. **
 
   1. Mueva el cursor al final de la lista de abajo.
 
-  2. Escriba  dd  para borrar la línea y almacenarla en el tampón de Vim.
+  2. Escriba  dd  para borrar la línea y almacenarla en el buffer de Vim.
 
   3. Mueva el cursor a la línea que debe quedar por debajo de la
-    línea a mover.
+     línea a mover.
 
   4. Estando en mod Normal, pulse   p   para restituir la línea borrada.
 
   5. Repita los pasos 2 a 4 para poner todas las líneas en el orden correcto.
 
-     d) Can you learn too?
-     b) Violets are blue,
-     c) Intelligence is learned,
-     a) Roses are red,
-
-     d) 
-     b)
-     c)
-     a)
+     d) ¿Puedes aprenderla tu?
+     b) Las violetas son azules,
+     c) La inteligencia se aprende,
+     a) Las rosas son rojas,
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       Lección 3.2: EL MANDATO REPLACE
+                       Lección 3.2: EL MANDATO «REPLACE» (remplazar)
  
 
   ** Pulse  r  y un carácter para sustituir el carácter sobre el cursor. **
@@ -318,7 +317,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 3.3: EL MANDATO CHANGE 
+                        Lección 3.3: EL MANDATO «CHANGE» (cambiar)
 
 
      ** Para cambiar parte de una palabra o toda ella escriba  cw . **
@@ -328,7 +327,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
   2. Sitúe el cursor en la u de lubrs.
   
-  3. Escriba  cw  y corrija la palabra (en este caso, escriba 'íne').
+  3. Escriba  cw  y corrija la palabra (en este caso, escriba 'ínea').
 
   4. Pulse <ESC> y mueva el cursor al error siguiente (el primer carácter
      que deba cambiarse).
@@ -395,7 +394,8 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
   1. Mantenga pulsada la tecla Ctrl y pulse  g . Aparece una línea de estado
-     al final de la pantalla con el nombre del fichero y la línea en la que está     situado. Recuerde el número de la línea para el Paso 3.
+     al final de la pantalla con el nombre del fichero y la línea en la que
+     está situado. Recuerde el número de la línea para el Paso 3.
 
   2. Pulse Mayu-G para ir al final del fichero.
 
@@ -403,10 +403,10 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
      le volverá a la línea en la que estaba cuando pulsó Ctrl-g.
      (Cuando escriba los números NO se mostrarán en la pantalla).
 
-  4. Si se siente confiado en hacer esto ejecute los pasos 1 a 3.
+  4. Si se siente confiado en poder hacer esto ejecute los pasos 1 a 3.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 4.2: EL MANDATO SEARCH 
+                        Lección 4.2: EL MANDATO «SEARCH» (buscar)
 
      ** Escriba  /  seguido de una frase para buscar la frase. **
 
@@ -488,7 +488,7 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
   3. Pulsando  %  cuando el cursor esta sobre (,), [,], { o } localiza
      la pareja correspondiente.
   
-  4. Para caambiar viejo por nuevo en una línea pulse          :s/viejo/nuevo
+  4. Para cambiar viejo por nuevo en una línea pulse          :s/viejo/nuevo
      Para cambiar todos los viejo por nuevo en una línea pulse :s/viejo/nuevo/g
      Para cambiar frases entre dos números de líneas pulse  :#,#s/viejo/nuevo/g
      Para cambiar viejo por nuevo en todo el fichero pulse  :%s/viejo/nuevo/g
@@ -512,7 +512,7 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
      le mostrará una lista de su directorio, igual que si estuviera en el
      símbolo del sistema. Si  ls  no funciona utilice   !:dir   .
 
---->Note: De esta manera es posible ejecutar cualquier mandato externo.
+--->Nota: De esta manera es posible ejecutar cualquier mandato externo.
 
 --->Nota: Todos los mandatos   :   deben finalizarse pulsando <INTRO>.
 
@@ -575,7 +575,7 @@ NOTA: Después de ejecutar el paso 3 se verá la Lección 5.3. Luego muévase
       hacia ABAJO para ver esta lección de nuevo.
 
   3. Ahora recupere el fichero TEST utilizando el mandato  :r TEST  donde
-    TEST es el nombre del fichero.
+     TEST es el nombre del fichero.
 
 NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 
@@ -606,7 +606,7 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lección 6.1: EL MANDAT OPEN
+                         Lección 6.1: EL MANDATO «OPEN» (abrir)
 
 
          ** Pulse  o  para abrir una línea debajo del cursor
@@ -628,7 +628,7 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 Abra una línea sobre ésta pulsando Mayu-O cuando el curso está en esta línea.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 6.2: EL MANDATO APPEND
+                        Lección 6.2: EL MANDATO «APPEND» (añadir)
 
          ** Pulse  a  para insertar texto DESPUÉS del cursor. **
 
@@ -650,7 +650,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
 ---> Esta línea le permitirá praticar el añadido de texto al final de una línea.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lección 6.3: OTRA VERSIÓN DE REPLACE
+                     Lección 6.3: OTRA VERSIÓN DE «REPLACE» (remplazar)
 
     ** Pulse una  R  mayúscula para sustituir más de un carácter. **
 
@@ -660,7 +660,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   2. Sitúe el cursor al comienzo de la primera palabra que sea diferente
      de las de la segunda línea marcada con ---> (la palabra 'anterior').
 
-  3. Ahora pulse  R  y sustituya el resto del terxto de la primera línea
+  3. Ahora pulse  R  y sustituya el resto del texto de la primera línea
      escribiendo sobre el viejo texto para que la primera línea sea igual
      que la primera.
 
@@ -700,12 +700,14 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
 
   1. Pulsando  o  abre una línea por DEBAJO del cursor y sitúa el cursor en
      la línea abierta en modo Insert.
+     Pulsando una O mayúscula se abre una línea SOBRE la que está el cursor.
 
   2. Pulse una  a  para insertar texto DESPUÉS del carácter sobre el cursor.
-     Pulsando una  A  mayúscula añade automáticaamente texto al final de la
+     Pulsando una  A  mayúscula añade automáticamente texto al final de la
      línea.
 
-  3. Pulsando una  R  mayúscula se entra en modo Replace hasta que, para salir,       se pulse <ESC>.
+  3. Pulsando una  R  mayúscula se entra en modo Replace hasta que, para salir,
+     se pulse <ESC>.
 
   4. Escribiendo «:set xxx» fija la opción «xxx»
 
@@ -745,7 +747,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   mandatos.
 
   Para lecturas y estudios posteriores se recomienda el libro:
-        Learning the Vi Editor - by Linda Lamb
+        Learning the Vi Editor - por Linda Lamb
         Editorial: O'Reilly & Associates Inc.
   Es un buen libro para llegar a saber casi todo lo que desee hacer con Vi.
   La sexta edición incluye también información sobre Vim.
@@ -762,14 +764,6 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   Traducido del inglés por:
 
   Eduardo F. Amatria
-  Departamento de Matemáticas
-  I.E.S. Vega del Prado
-
   Correo electrónico: eferna1@platea.pntic.mec.es
-
-  Correo del caracol:
-  Plaza de la cebada, 1
-  47014  Valladolid
-  España
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

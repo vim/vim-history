@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0x.  Last change: 2001 Mar 06
+*map.txt*       For Vim version 6.0y.  Last change: 2001 Mar 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -13,6 +13,13 @@ Key mapping and abbreviations.
 
 ==============================================================================
 1. Key mapping				*key-mapping* *mapping* *macro*
+
+Key mapping is used to change the meaning of typed keys.  The most common use
+is to define a sequence commands for a function key.  Example: >
+
+	:map <F2> a<C-R>=strftime("%c")<CR><Es>
+
+This appends the current date and time after the cursor. (in <> notation |<>|)
 
 There are commands to enter new mappings, remove mappings and list mappings.
 See |map-overview| for the various forms of "map" and their relationships with
@@ -127,7 +134,7 @@ define a new mapping or abbreviation, the command will fail if the mapping or
 abbreviation already exists.  Example: >
 	:map <unique> ,w  /[#&!]<CR>
 When defining a local mapping, there will also be a check if a global map
-already exists which is already defined ambiguous.
+already exists which is equal.
 Example of what will fail: >
 	:map ,w  /[#&!]<CR>
 	:map <buffer> <unique> ,w  /[.,;]<CR>
@@ -226,9 +233,23 @@ To map a backslash, or use a backslash literally in the {rhs}, the special
 sequence "<Bslash>" can be used.  This avoids the need to double backslashes
 when using nested mappings.
 
+							*map-ambiguous*
+When two mappings start with the same sequence of characters, they are
+ambiguous.  Example: >
+	:imap aa foo
+	:imap aaa bar
+When Vim has read "aa", it will need to get another character to be able to
+decide if "aa" or "aaa" should be mapped.  This means that after typing "aa"
+that mapping won't get expanded yet, Vim is waiting for another character.
+If you type a space, then "foo" will get inserted, plus the space.  If you
+type "a", then "bar" will get inserted.
+{Vi does not allow ambiguous mappings}
+
 							*map_CTRL_C*
 It's not possible to use a CTRL-C in the {lhs}.  You just can't map CTRL-C.
 The reason is that CTRL-C must always be available to break a running command.
+Exception: When using the GUI version on MS-Windows CTRL-C can be mapped to
+allow a Copy command to the clipboard.  Use CTRL-Break to interrupt Vim.
 
 							*map_space_in_lhs*
 To include a space in {lhs} precede it with a CTRL-V (type two CTRL-Vs for
