@@ -1734,7 +1734,8 @@ failed:
 	    if (!(flags & READ_DUMMY))
 	    {
 		filemess(curbuf, sfname, (char_u *)_(e_interr), 0);
-		curbuf->b_p_ro = TRUE;	/* must use "w!" now */
+		if (newfile)
+		    curbuf->b_p_ro = TRUE;	/* must use "w!" now */
 	    }
 	    msg_scroll = msg_save;
 #ifdef FEAT_VIMINFO

@@ -842,6 +842,12 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     did_check_timestamps = FALSE;
     need_check_timestamps = TRUE;
 
+    /* When interrupting the shell command, it may still have produced some
+     * useful output.  Reset got_int here, so that readfile() won't cancel
+     * reading. */
+    ui_breakcheck();
+    got_int = FALSE;
+
     if (do_out)
     {
 	if (u_save((linenr_T)(line2), (linenr_T)(line2 + 1)) == FAIL)
