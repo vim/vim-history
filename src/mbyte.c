@@ -216,7 +216,9 @@ enc_canon_table[] =
     {"big5",		ENC_DBCS,		DBCS_CHT},
 #define IDX_CP1251	35
     {"cp1251",		ENC_8BIT,		1251},
-#define IDX_COUNT	36
+#define IDX_MACROMAN	36
+    {"macroman",	ENC_8BIT,		0},
+#define IDX_COUNT	37
 };
 
 /*
@@ -290,6 +292,7 @@ enc_alias_table[] =
     {"cp950",		IDX_BIG5},
     {"950",		IDX_BIG5},
 #endif
+    {"mac",		IDX_MACROMAN},
     {NULL,		0}
 };
 
@@ -523,7 +526,7 @@ codepage_invalid:
      */
     for (i = 0; i < 256; ++i)
     {
-	/* Our own function to reliably check the lenght of UTF-8 characters,
+	/* Our own function to reliably check the length of UTF-8 characters,
 	 * independent of mblen(). */
 	if (enc_utf8)
 	    n = utf8len_tab[i];
