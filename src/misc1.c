@@ -20,9 +20,6 @@
 
 static char_u *vim_version_dir __ARGS((char_u *vimdir));
 static char_u *remove_tail __ARGS((char_u *p, char_u *pend, char_u *name));
-#if defined(USE_EXE_NAME) && defined(MACOS_X)
-static char_u *remove_tail_with_ext __ARGS((char_u *p, char_u *pend, char_u *name));
-#endif
 static int get_indent_str __ARGS((char_u *ptr, int ts));
 static int copy_indent __ARGS((int size, char_u	*src));
 
@@ -3398,7 +3395,6 @@ vim_getenv(name, mustfree)
 	    if (p == exe_name)
 	    {
 		pend = remove_tail(p, pend, (char_u *)"Contents/MacOS");
-		pend = remove_tail_with_ext(p, pend, (char_u *)".app");
 		pend = remove_tail(p, pend, (char_u *)"build");
 	    }
 # endif
@@ -3544,30 +3540,6 @@ remove_tail(p, pend, name)
 	return newend;
     return pend;
 }
-
-#if defined(USE_EXE_NAME) && defined(MACOS_X)
-/*
- * If the string between "p" and "pend" ends in "???.ext/", return "pend" minus
- * the length of "???.ext/".  Otherwise return "pend".
- */
-    static char_u *
-remove_tail_with_ext(p, pend, ext)
-    char_u	*p;
-    char_u	*pend;
-    char_u	*ext;
-{
-    int		len = (int)STRLEN(ext) + 1;
-    char_u	*newend = pend - len;
-
-    if (newend >= p
-	    && fnamencmp(newend, ext, len - 1) == 0)
-	for (;newend != p && !vim_ispathsep(*(newend -1)); newend--);
-
-    if (newend == p || vim_ispathsep(*(newend - 1)))
-	return newend;
-    return pend;
-}
-#endif
 
 /*
  * Call expand_env() and store the result in an allocated string.
