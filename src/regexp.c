@@ -3898,8 +3898,9 @@ regmatch(scan)
 			    reg_restore(&save);
 			}
 			/* Couldn't or didn't match -- back up one char. */
-			--count;
-			if (reginput == regline && count >= minval)
+			if (--count < minval)
+			    break;
+			if (reginput == regline)
 			{
 			    /* backup to last char of previous line */
 			    --reglnum;
