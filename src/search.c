@@ -2375,7 +2375,7 @@ findpar(oap, dir, count, what, both)
 #ifdef FEAT_FOLDING
 	    /* skip folded lines */
 	    fold_skipped = FALSE;
-	    while (hasFolding(curr, &fold_first, &fold_last))
+	    if (first && hasFolding(curr, &fold_first, &fold_last))
 	    {
 		curr = ((dir > 0) ? fold_last : fold_first) + dir;
 		fold_skipped = TRUE;
