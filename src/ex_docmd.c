@@ -127,6 +127,10 @@ static int	getargopt __ARGS((exarg_T *eap));
 
 static int	check_more __ARGS((int, int));
 static linenr_T get_address __ARGS((char_u **, int skip, int to_other_file));
+#if !defined(FEAT_PERL) || !defined(FEAT_PYTHON) || !defined(FEAT_TCL) \
+	|| !defined(FEAT_RUBY)
+static void	ex_script_ni __ARGS((exarg_T *eap));
+#endif
 static char_u	*invalid_range __ARGS((exarg_T *eap));
 static void	correct_range __ARGS((exarg_T *eap));
 static char_u	*repl_cmdline __ARGS((exarg_T *eap, char_u *src, int srclen, char_u *repl, char_u **cmdlinep));
@@ -217,20 +221,20 @@ static void	ex_popup __ARGS((exarg_T *eap));
 # define ex_syntax		ex_ni
 #endif
 #ifndef FEAT_PERL
-# define ex_perl		ex_ni
+# define ex_perl		ex_script_ni
 # define ex_perldo		ex_ni
 #endif
 #ifndef FEAT_PYTHON
-# define ex_python		ex_ni
+# define ex_python		ex_script_ni
 # define ex_pyfile		ex_ni
 #endif
 #ifndef FEAT_TCL
-# define ex_tcl			ex_ni
+# define ex_tcl			ex_script_ni
 # define ex_tcldo		ex_ni
 # define ex_tclfile		ex_ni
 #endif
 #ifndef FEAT_RUBY
-# define ex_ruby		ex_ni
+# define ex_ruby		ex_script_ni
 # define ex_rubydo		ex_ni
 # define ex_rubyfile		ex_ni
 #endif
@@ -2367,15 +2371,19 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_let:
 	    case CMD_lockmarks:
 	    case CMD_match:
+	    case CMD_perl:
 	    case CMD_psearch:
+	    case CMD_python:
 	    case CMD_return:
-	    case CMD_throw:
 	    case CMD_rightbelow:
+	    case CMD_ruby:
 	    case CMD_silent:
 	    case CMD_smagic:
 	    case CMD_snomagic:
 	    case CMD_substitute:
 	    case CMD_syntax:
+	    case CMD_tcl:
+	    case CMD_throw:
 	    case CMD_tilde:
 	    case CMD_topleft:
 	    case CMD_unlet:
@@ -3779,6 +3787,23 @@ ex_ni(eap)
     if (!eap->skip)
 	eap->errmsg = (char_u *)N_("E319: Sorry, the command is not available in this version");
 }
+
+#if !defined(FEAT_PERL) || !defined(FEAT_PYTHON) || !defined(FEAT_TCL) \
+	|| !defined(FEAT_RUBY)
+/*
+ * Function called for script command which is Not Implemented.  NI!
+ * Skips over ":perl <<EOF" constructs.
+ */
+    static void
+ex_script_ni(eap)
+    exarg_T	*eap;
+{
+    if (!eap->skip)
+	ex_ni(eap);
+    else
+	vim_free(script_get(eap, eap->arg));
+}
+#endif
 
 /*
  * Check range in Ex command for validity.

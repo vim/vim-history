@@ -325,19 +325,17 @@ void ex_ruby(exarg_T *eap)
     int state;
     char *script = NULL;
 
-    if (ensure_ruby_initialized())
+    script = script_get(eap, eap->arg);
+    if (!eap->skip && ensure_ruby_initialized())
     {
-	script = script_get(eap, eap->arg);
 	if (script == NULL)
 	    rb_eval_string_protect((char *)eap->arg, &state);
 	else
-	{
 	    rb_eval_string_protect(script, &state);
-	    vim_free(script);
-	}
 	if (state)
 	    error_print(state);
     }
+    vim_free(script);
 }
 
 void ex_rubydo(exarg_T *eap)

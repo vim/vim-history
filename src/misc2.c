@@ -1582,11 +1582,6 @@ ga_grow(gap, n)
     return OK;
 }
 
-#if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(FEAT_PYTHON) \
-	|| defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL) \
-	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
-	|| defined(MSWIN_FIND_REPLACE) \
-	|| defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * Concatenate a string to a growarray which contains characters.
  * Note: Does NOT copy the NUL at the end!
@@ -1605,14 +1600,7 @@ ga_concat(gap, s)
 	gap->ga_room -= len;
     }
 }
-#endif
 
-#if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(FEAT_PYTHON) \
-	|| defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL) \
-	|| defined(FEAT_CLIENTSERVER) \
-	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
-	|| defined(MSWIN_FIND_REPLACE) \
-	|| (defined(FEAT_PRINTER) && defined(FEAT_POSTSCRIPT)) || defined(PROTO)
 /*
  * Append one byte to a growarray which contains bytes.
  */
@@ -1628,7 +1616,6 @@ ga_append(gap, c)
 	--gap->ga_room;
     }
 }
-#endif
 
 /************************************************************************
  * functions that use lookup tables for various things, generally to do with
