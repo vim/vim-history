@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 May 07
+" Last Change:	2002 May 15
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -313,7 +313,8 @@ while strlen(s:n) > 0
     let s:name = strpart(s:n, 0, s:i)
     let s:n = strpart(s:n, s:i + 1, 19999)
   endif
-  let s:name = substitute(s:name, '.*[/\\:]\([^/\\:]*\)\.vim', '\1', '')
+  " Ignore case for VMS and windows
+  let s:name = substitute(s:name, '\c.*[/\\:\]]\([^/\\:]*\)\.vim', '\1', '')
   exe "an 20.450." . s:idx . ' &Edit.C&olor\ Scheme.' . s:name . " :colors " . s:name . "<CR>"
   unlet s:name
   unlet s:i
@@ -337,7 +338,8 @@ if has("keymap")
 	let s:name = strpart(s:n, 0, s:i)
 	let s:n = strpart(s:n, s:i + 1, 19999)
       endif
-      let s:name = substitute(s:name, '.*[/\\:]\([^/\\:_]*\)\(_[0-9a-zA-Z-]*\)\=\.vim', '\1', '')
+      " Ignore case for VMS and windows
+      let s:name = substitute(s:name, '\c.*[/\\:\]]\([^/\\:_]*\)\(_[0-9a-zA-Z-]*\)\=\.vim', '\1', '')
       exe "an 20.460." . s:idx . ' &Edit.&Keymap.' . s:name . " :set keymap=" . s:name . "<CR>"
       unlet s:name
       unlet s:i
@@ -475,7 +477,8 @@ while strlen(s:n) > 0
     let s:name = strpart(s:n, 0, s:i)
     let s:n = strpart(s:n, s:i + 1, 19999)
   endif
-  let s:name = substitute(s:name, '.*[/\\:]\([^/\\:]*\)\.vim', '\1', '')
+  " Ignore case for VMS and windows
+  let s:name = substitute(s:name, '\c.*[/\\:\]]\([^/\\:]*\)\.vim', '\1', '')
   exe "an 30.440." . s:idx . ' &Tools.&Set\ Compiler.' . s:name . " :compiler " . s:name . "<CR>"
   unlet s:name
   unlet s:i
