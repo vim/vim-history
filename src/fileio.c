@@ -78,6 +78,11 @@ static int apply_autocmds_exarg __ARGS((EVENT_T event, char_u *fname, char_u *fn
 # define FIO_UCS2	0x04	/* convert UCS-2 */
 # define FIO_UCS4	0x08	/* convert UCS-4 */
 # define FIO_UTF16	0x10	/* convert UTF-16 */
+# ifdef WIN3264
+#  define FIO_CODEPAGE	0x20	/* convert MS-Windows codepage */
+#  define FIO_PUT_CP(x) (((x) & 0xffff) << 16)	/* put codepage in top word */
+#  define FIO_GET_CP(x)	(((x)>>16) & 0xffff)	/* get codepage from top word */
+# endif
 # define FIO_ENDIAN_L	0x80	/* little endian */
 # define FIO_ENCRYPTED	0x1000	/* encrypt written bytes */
 # define FIO_NOCONVERT	0x2000	/* skip encoding conversion */
@@ -125,7 +130,11 @@ static int same_encoding __ARGS((char_u *a, char_u *b));
 static int get_fio_flags __ARGS((char_u *ptr));
 static char_u *check_for_bom __ARGS((char_u *p, long size, int *lenp, int flags));
 static int make_bom __ARGS((char_u *buf, char_u *name));
+# ifdef WIN3264
+static int get_win_fio_flags __ARGS((char_u *ptr));
+# endif
 #endif
+static int move_lines __ARGS((buf_T *frombuf, buf_T *tobuf));
 
 static linenr_T	write_no_eol_lnum = 0;	/* non-zero lnum when last line of
 					   next binary write should not have
@@ -851,6 +860,14 @@ retry:
 	else if (enc_utf8 || STRCMP(p_enc, "latin1") == 0)
 	    fio_flags = get_fio_flags(fenc);
 
+# ifdef WIN3264
+	/*
+	 * Conversion from an MS-Windows codepage to UTF-8 is handled here.
+	 */
+	if (fio_flags == 0 && enc_utf8)
+	    fio_flags = get_win_fio_flags(fenc);
+# endif
+
 # ifdef USE_ICONV
 	/*
 	 * Try using iconv() if we can't convert internally.
@@ -1007,6 +1024,10 @@ retry:
 		    size = (size * 2 / 3) & ~3;
 		else if (fio_flags == FIO_UCSBOM)
 		    size = size / ICONV_MULT;	/* worst case */
+# ifdef WIN3264
+		else if (fio_flags & FIO_CODEPAGE)
+		    size = size / ICONV_MULT;	/* also worst case */
+# endif
 #endif
 
 #ifdef FEAT_MBYTE
@@ -1213,6 +1234,67 @@ retry:
 	    }
 # endif
 
+# ifdef WIN3264
+	    if (fio_flags & FIO_CODEPAGE)
+	    {
+		/*
+		 * Conversion from an MS-Windows codepage to UTF-8, using
+		 * standard MS-Windows functions.
+		 */
+		char_u	*ucsp;
+		size_t	from_size;
+		int	needed;
+		char_u	*p;
+		int	u8c;
+
+		/*
+		 * We can't tell if the last byte of an MBCS string is valid
+		 * and MultiByteToWideChar() returns zero if it isn't.
+		 * Try the whole string, and if that fails, bump the last byte
+		 * into conv_rest and try again.
+		 */
+		from_size = size;
+		needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
+			       MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
+								     NULL, 0);
+		if (needed == 0)
+		{
+		    conv_rest[0] = ptr[from_size - 1];
+		    conv_restlen = 1;
+		    --from_size;
+		    needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
+			       MB_ERR_INVALID_CHARS, (LPCSTR)ptr, from_size,
+								     NULL, 0);
+		}
+
+		/* If there really is a conversion error, try using another
+		 * conversion. */
+		if (needed == 0)
+		    goto rewind_retry;
+
+		/* Put the result of conversion to UCS-2 at the end of the
+		 * buffer, then convert from UCS-2 to UTF-8 into the start of
+		 * the buffer.  If there is not enough space just fail, there
+		 * is probably something wrong. */
+		ucsp = ptr + real_size - (needed * sizeof(WCHAR));
+		if (ucsp < ptr + size)
+		    goto rewind_retry;
+		needed = MultiByteToWideChar(FIO_GET_CP(fio_flags),
+					    MB_ERR_INVALID_CHARS, (LPCSTR)ptr,
+					     from_size, (LPWSTR)ucsp, needed);
+
+		/* Now go from UCS-2 to UTF-8. */
+		p = ptr;
+		for (; needed > 0; --needed)
+		{
+		    u8c = *ucsp++;
+		    u8c += (*ucsp++ << 8);
+		    p += utf_char2bytes(u8c, p);
+		}
+		size = p - ptr;
+	    }
+	    else
+# endif
 	    if (fio_flags != 0)
 	    {
 		int	u8c;
@@ -3146,6 +3228,20 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
     }
 
+# ifdef WIN3264
+    if (converted && wb_flags == 0 && get_win_fio_flags(fenc))
+    {
+	wb_flags = get_win_fio_flags(fenc);
+
+	/* Convert UTF-8 -> UCS-2 and UCS-2 -> DBCS.  Worst-case * 4: */
+	write_info.bw_conv_buflen = bufsize * 4;
+	write_info.bw_conv_buf
+			    = lalloc((long_u)write_info.bw_conv_buflen, TRUE);
+	if (write_info.bw_conv_buf == NULL)
+	    end = 0;
+    }
+# endif
+
 # if defined(FEAT_EVAL) || defined(USE_ICONV)
     if (converted && wb_flags == 0)
     {
@@ -4126,6 +4222,69 @@ buf_write_bytes(ip)
 	    }
 	}
 
+# ifdef WIN3264
+	else if (flags & FIO_CODEPAGE)
+	{
+	    /*
+	     * Convert UTF-8 to UCS-2 and then to MS-Windows codepage.
+	     */
+	    char_u	*from;
+	    size_t	fromlen;
+	    char_u	*to;
+	    int		u8c;
+	    BOOL	bad = FALSE;
+
+	    if (ip->bw_restlen > 0)
+	    {
+		/* Need to concatenate the remainder of the previous call and
+		 * the bytes of the current call.  Use the end of the
+		 * conversion buffer for this. */
+		fromlen = len + ip->bw_restlen;
+		from = ip->bw_conv_buf + ip->bw_conv_buflen - fromlen;
+		mch_memmove(from, ip->bw_rest, (size_t)ip->bw_restlen);
+		mch_memmove(from + ip->bw_restlen, buf, (size_t)len);
+	    }
+	    else
+	    {
+		from = buf;
+		fromlen = len;
+	    }
+
+	    /* Convert from UTF-8 to UCS-2, to the start of the buffer.
+	     * The buffer has been allocated to be big enough. */
+	    to = ip->bw_conv_buf;
+	    while (fromlen > 0)
+	    {
+		n = utf_ptr2len_check_len(from, fromlen);
+		if (n > (int)fromlen)
+		    break;
+		u8c = utf_ptr2char(from);
+		*to++ = (u8c & 0xff);
+		*to++ = (u8c >> 8);
+		fromlen -= n;
+		from += n;
+	    }
+
+	    /* copy remainder to ip->bw_rest[] to be used for the next call. */
+	    mch_memmove(ip->bw_rest, from, fromlen);
+	    ip->bw_restlen = fromlen;
+
+	    /* Convert from UCS-2 to the codepage, using the remainder of the
+	     * conversion buffer.  If the conversion uses the default
+	     * character "0", the data doesn't fit in this encoding, so fail. */
+	    fromlen = to - ip->bw_conv_buf;
+	    len = WideCharToMultiByte(FIO_GET_CP(flags), 0,
+		    (LPCWSTR)ip->bw_conv_buf, (int)fromlen / sizeof(WCHAR),
+		    (LPSTR)to, ip->bw_conv_buflen - fromlen, 0, &bad);
+	    if (bad)
+	    {
+		ip->bw_conv_error = TRUE;
+		return FAIL;
+	    }
+	    buf = to;
+	}
+# endif
+
 # ifdef USE_ICONV
 	if (ip->bw_iconv_fd != (iconv_t)-1)
 	{
@@ -4364,6 +4523,21 @@ get_fio_flags(ptr)
     /* must be ENC_DBCS, requires iconv() */
     return 0;
 }
+
+#ifdef WIN3264
+/*
+ * Check "ptr" for a MS-Windows codepage name and return the FIO_ flags needed
+ * for the conversion MS-Windows can do for us.
+ */
+    static int
+get_win_fio_flags(ptr)
+    char_u	*ptr;
+{
+    if (ptr[0] == 'c' && ptr[1] == 'p' && isdigit(ptr[2]))
+	return FIO_PUT_CP(atoi(ptr + 2)) | FIO_CODEPAGE;
+    return 0;
+}
+#endif
 
 /*
  * Check for a Unicode BOM (Byte Order Mark) at the start of p[size].
