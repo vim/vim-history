@@ -7854,7 +7854,18 @@ nv_put(cap)
     int		flags = 0;
 
     if (cap->oap->op_type != OP_NOP)
+    {
+#ifdef FEAT_DIFF
+	/* "dp" is ":diffput" */
+	if (cap->oap->op_type == OP_DELETE && cap->cmdchar == 'p')
+	{
+	    clearop(cap->oap);
+	    nv_diffgetput(TRUE);
+	}
+	else
+#endif
 	clearopbeep(cap->oap);
+    }
     else
     {
 	dir = (cap->cmdchar == 'P'
@@ -7917,6 +7928,15 @@ nv_put(cap)
 nv_open(cap)
     cmdarg_T	*cap;
 {
+#ifdef FEAT_DIFF
+    /* "do" is ":diffget" */
+    if (cap->oap->op_type == OP_DELETE && cap->cmdchar == 'o')
+    {
+	clearop(cap->oap);
+	nv_diffgetput(FALSE);
+    }
+    else
+#endif
 #ifdef FEAT_VISUAL
     if (VIsual_active)  /* switch start and end of visual */
 	v_swap_corners(cap->cmdchar);

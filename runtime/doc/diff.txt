@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.1a.  Last change: 2001 Nov 06
+*diff.txt*      For Vim version 6.1a.  Last change: 2002 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -223,6 +223,13 @@ that the buffers will be equal within the specified range.
 		buffer.  Just like ":diffget" but the other buffer is modified
 		instead of the current one.
 		See below for [range].
+
+							*do*
+do		Same as ":diffget" without argument or range.  The "o" stands
+		for "obtain" ("dg" can't be used for this!).
+
+							*dp*
+dp		Same as ":diffput" without argument or range.
 
 When no [range] is given, the diff at the cursor position or just above it is
 affected.  When [range] is used, Vim tries to only put or get the specified
