@@ -2169,7 +2169,10 @@ redrawcmdprompt()
     if (ccline.cmdprompt != NULL)
     {
 	msg_puts_attr(ccline.cmdprompt, ccline.cmdattr);
-	ccline.cmdindent = msg_col;
+	ccline.cmdindent = msg_col + (msg_row - cmdline_row) * Columns;
+	/* do the reverse of set_cmdspos() */
+	if (ccline.cmdfirstc)
+	    --ccline.cmdindent;
     }
     else
 	for (i = ccline.cmdindent; i > 0; --i)
