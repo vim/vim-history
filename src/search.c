@@ -1961,6 +1961,15 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	    /* FALLTHROUGH */
 
 	default:
+#ifdef FEAT_LISP
+	    /* For Lisp skip over backslashed (), {} and []. */
+	    if (curbuf->b_p_lisp
+		    && vim_strchr((char_u *)"(){}[]", c) != NULL
+		    && pos.col > 0
+		    && linep[pos.col - 1] == '\\')
+		break;
+#endif
+
 	    /* Check for match outside of quotes, and inside of
 	     * quotes when the start is also inside of quotes */
 	    if (!inquote || start_in_quotes == TRUE)
