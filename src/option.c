@@ -5627,9 +5627,12 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	if (opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE) != OK)
 	    errmsg = e_invarg;
 	else if (STRCMP(p_ve, oldval) != 0)
-	    /* Recompute cursor position in case the new ve setting
+	{
+	    /* Recompute cursor position in case the new 've' setting
 	     * changes something. */
+	    validate_virtcol();
 	    coladvance(curwin->w_virtcol);
+	}
     }
 #endif
 
