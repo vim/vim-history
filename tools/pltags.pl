@@ -1,5 +1,11 @@
 #!/usr/local/bin/perl -w
 
+# pltags - create a tags file for Perl code, for use by vi(m)
+# 
+# Written by Michael Schaap <mscha@ctp.com>
+#
+# This script will not work with Perl 4 or below!
+
 use strict;
 
 my $file = "";
@@ -8,10 +14,12 @@ my @funcs = ();
 my %tags = ();
 my @conflicts = ();
 
+print "\npltags - by Michael Schaap <mscha\@ctp.com>\n\n";
+
 unless (@ARGV)
 {
-    print "\nUsage: pltags filename ...\n\n";
-    print "Example: pltags *.pl *.pm ../shared/*.pm\n\n";
+    print "Usage: $0 filename ...\n\n";
+    print "Example: $0 *.pl *.pm ../shared/*.pm\n\n";
     exit;
 }
 

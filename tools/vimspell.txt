@@ -1,0 +1,28 @@
+[ this file contains edited excerpts from e-mail messages ]
+
+From: krishna@stdavids.picker.com (Krishna Gadepalli) 
+Subject: highlighting spelling errors
+
+I write most of my documents using vi (i.e. vim) so I wrote the followin
+macro/script to highlight errors in my documents.
+
+I have the following map in my .vimrc
+
+"
+" F8    - spell file & hilite spelling mistakes
+"
+noremap <F8> :so `vimspell %`<CR>:!vimspell % -r<CR><CR>
+
+Then, I have this "vimspell" script in my path...
+Then I just hit F8 whenver I want my document spell-checked...
+
+The script is way too simplistic & could be improved ...
+Especially I dont know how it will handle any special characters
+that vim interprets, like /, $, ... etc.
+
+Better spell checkers than spell ?
+
+I am not much of a perl programmer, but I bet a better, more robust, simpler
+version can be written in perl.
+
+-krishna

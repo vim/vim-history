@@ -1,0 +1,195 @@
+dnl $Id: configure.in,v 5.1 1998/02/19 03:47:18 darren Exp $
+
+dnl	Copyright (c) 1996-1997, Darren Hiebert
+dnl
+dnl	This source code is released for free distribution under the terms
+dnl	of the GNU General Public License.
+
+dnl	Process this file with autoconf to produce a configure script.
+
+AC_INIT(ctags.h)
+AC_CONFIG_HEADER(config.h)
+
+
+dnl Define convenience macros
+dnl -------------------------
+dnl CHECK_HEADER_DEFINE(LABEL, HEADER [,ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND ] ])
+AC_DEFUN(CHECK_HEADER_DEFINE,
+[
+	AC_MSG_CHECKING("if $1 is defined in $2")
+	AC_EGREP_CPP(yes,
+[#include <$2>
+#ifdef $1
+  yes
+#endif
+], [
+	AC_MSG_RESULT(yes)
+	$3
+], [
+	AC_MSG_RESULT(no)
+	$4
+]) ])
+
+dnl Checks for configuration options
+dnl --------------------------------
+
+AC_ARG_ENABLE(etags,
+	[  --disable-etags         disable the installation of links for etags],,
+	enable_etags=yes)
+
+AC_ARG_ENABLE(external-sort,
+[  --disable-external-sort use internal sort algorithm instead of system sort
+                          utility],,
+	enable_external_sort=yes)
+
+AC_ARG_ENABLE(macro-patterns,
+[  --enable-macro-patterns use patterns as default method to locate macros
+                          instead of line numbers])
+
+AC_ARG_ENABLE(extended-format,
+[  --disable-extended-format
+                          disable extension flags; use original ctag file
+                          format only],
+	AC_DEFINE(DEFAULT_FILE_FORMAT, 1), AC_DEFINE(DEFAULT_FILE_FORMAT, 2))
+
+
+dnl Process configuration options
+dnl -----------------------------
+
+if test "$enable_etags" = yes ;then
+	install_targets="install-ctags install-etags"
+	AC_MSG_RESULT(links for etags will be installed)
+else
+	install_targets="install-ctags"
+	AC_MSG_RESULT(do not install links for etags)
+fi
+AC_SUBST(install_targets)
+
+if test "$enable_macro_patterns" = yes ;then
+	AC_DEFINE(MACROS_USE_PATTERNS)
+	AC_MSG_RESULT(tag file will use patterns for macros by default)
+fi
+
+if test "$enable_external_sort" = yes; then
+	enable_external_sort=no
+    AC_CHECK_PROG(sort_found, sort, yes, no)
+	if test "$sort_found" = yes; then
+		AC_MSG_CHECKING(whether sort accepts our command line)
+		touch /tmp/sort.test
+		sort -u -o /tmp/sort.test /tmp/sort.test 1>/dev/null 2>&1
+		if test $? -ne 0; then
+			AC_MSG_RESULT(no)
+		else
+			AC_MSG_RESULT(yes)
+			AC_PROG_AWK
+			if test -z "$AWK"; then
+				AC_MSG_RESULT(no awk found)
+			else
+				AC_DEFINE_UNQUOTED(AWK, "$AWK")
+				AC_DEFINE(EXTERNAL_SORT)
+				AC_MSG_RESULT(using external sort utility)
+				enable_external_sort=yes
+			fi
+		fi
+		rm -f /tmp/sort.test
+    fi
+fi
+if test "$enable_external_sort" != yes; then
+	AC_MSG_RESULT(using internal sort algorithm)
+fi
+
+
+dnl Checks for programs
+dnl -------------------
+
+AC_PROG_CC
+AC_PROG_LN_S
+
+
+dnl Checks for typedefs, structures, and compiler characteristics
+dnl -------------------------------------------------------------
+
+AC_C_CONST
+AC_TYPE_SIZE_T
+
+AC_MSG_CHECKING("for clock_t")
+AC_EGREP_HEADER(clock_t, time.h, AC_MSG_RESULT(yes),
+[
+	AC_MSG_RESULT(no)
+	AC_DEFINE(clock_t, long)
+])
+
+
+dnl Checks for header files
+dnl -----------------------
+
+AC_CHECK_HEADERS(dirent.h stdlib.h time.h unistd.h)
+AC_CHECK_HEADERS(sys/stat.h sys/times.h sys/types.h)
+
+
+dnl Checks for header file macros
+dnl -----------------------------
+
+CHECK_HEADER_DEFINE(L_tmpnam, stdio.h,, AC_DEFINE(L_tmpnam, 20))
+CHECK_HEADER_DEFINE(SEEK_SET, stdio.h,, AC_DEFINE(SEEK_SET, 0))
+CHECK_HEADER_DEFINE(SEEK_END, stdio.h,, AC_DEFINE(SEEK_END, 2))
+
+CHECK_HEADER_DEFINE(INT_MAX, limits.h,,
+	CHECK_HEADER_DEFINE(MAXINT, limits.h,
+		AC_DEFINE(INT_MAX, MAXINT), AC_DEFINE(INT_MAX, 32767)))
+
+dnl This check is for informational purposes only. It doesn't set anything.
+CHECK_HEADER_DEFINE(PATH_MAX, limits.h,,
+	CHECK_HEADER_DEFINE(MAXNAMLEN, dirent.h))
+
+
+dnl Checks for library functions
+dnl ----------------------------
+
+AC_REPLACE_FUNCS(strstr)
+
+AC_CHECK_FUNCS(strerror)
+AC_CHECK_FUNCS(clock times, break)
+
+AC_CHECK_FUNCS(remove, have_remove=yes,
+	CHECK_HEADER_DEFINE(remove, unistd.h,, AC_DEFINE(remove, unlink)))
+
+AC_CHECK_FUNCS(truncate, have_truncate=yes)
+dnl Cannot nest AC_CHECK_FUNCS() calls
+if test "$have_truncate" != yes ;then
+	AC_CHECK_FUNCS(ftruncate, have_ftruncate=yes)
+	if test "$have_ftruncate" != yes ;then
+		AC_CHECK_FUNCS(chsize)
+	fi
+fi
+
+
+dnl Checks for missing prototypes
+dnl -----------------------------
+AC_CHECKING("for missing prototypes")
+
+AC_DEFUN(CHECK_PROTO, [AC_EGREP_HEADER([[ 	*]$1[ 	]*\(], $2,, AC_DEFINE(patsubst([NEED_PROTO_NAME], [NAME], translit($1, [a-z], [A-Z]))) AC_MSG_RESULT(adding prototype for $1))])
+
+if test "$have_remove" = yes; then
+	CHECK_PROTO(remove, stdio.h)
+else
+	CHECK_PROTO(unlink,	unistd.h)
+fi
+CHECK_PROTO(malloc,	stdlib.h)
+CHECK_PROTO(getenv,	stdlib.h)
+CHECK_PROTO(strstr,	string.h)
+CHECK_PROTO(stat,	sys/stat.h)
+if test "$have_truncate" = yes; then
+	CHECK_PROTO(truncate, unistd.h)
+fi
+if test "$have_ftruncate" = yes; then
+	CHECK_PROTO(ftruncate, unistd.h)
+fi
+
+
+dnl Output files
+dnl ------------
+
+AC_OUTPUT(Makefile)
+
+dnl vim:ts=4:sw=4:

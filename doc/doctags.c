@@ -28,7 +28,7 @@ main(argc, argv)
 		fprintf(stderr, "Usage: doctags docfile ... >tags\n");
 		exit(1);
 	}
-	printf("vim_tags\tvim_tags\t1\n");
+	printf("help-tags\ttags\t1\n");
 	while (--argc > 0)
 	{
 		++argv;
@@ -44,7 +44,7 @@ main(argc, argv)
 			while (p1 != NULL)
 			{
 				p2 = strchr(p1 + 1, '*');		/* find second '*' */
-				if (p2 != NULL)
+				if (p2 != NULL && p2 > p1 + 1)	/* skip "*" and "**" */
 				{
 					for (p = p1 + 1; p < p2; ++p)
 						if (*p == ' ' || *p == '\t' || *p == '|')
@@ -54,7 +54,7 @@ main(argc, argv)
 					 * characters and is followed by a white character or
 					 * end-of-line.
 					 */
-					if (p == p2 && 
+					if (p == p2 &&
 							(strchr(" \t\n\r", p[1]) != NULL || p[1] == '\0'))
 					{
 						*p2 = '\0';

@@ -1,44 +1,49 @@
 /* xxd: my hexdump facility. jw
- * changed to word output 2.10.90
- * new indent style, dumb bug inserted and fixed. 3.3.93
- * -c option, mls
- * better option parser, -ps, -l, -s  added, 26.4.94
- * -r badly needs - as input file, added. 1.7.94
- * Per default autoskip over consequtive lines of zeroes, as unix od does.
- * -a shows them too.
- * -i dump as c-style #include "file.h"
- *    if "xxd -i" knows the filename, an 'unsigned char filename_bits[]' array
- *    is written in correct c-syntax. added 1.11.95
- * -s improved, now defaults to absolute seek, relative requires a '+'.
- * -r improved, now -r -s -0x... is supported change/suppress leading \0 bytes.
- * -l n improved: stops exactly after n bytes, even if partial lines result.
- * -r improved, better handling of partial lines with trailing garbage.
- * -r improved, now -r -p works again!
- * -r improved, less flushing, much faster now! (that was silly)
- * Per repeated request of a single person: autoskip defaults to off.
- *	3.4.96. jw.
- * -v added. They want to know the version. 15.5.96
- * -a fixed, to show last line inf file ends in all zeros.
- * -u added: Print upper case hex-letters, as preferred by unix bc.
- * -h added to usage message. Usage message extended.
- * Now using outfile if specified even in normal mode, aehem.
- * No longer mixing of ints and longs. May help doze people.
- * Added binify ioctl for same reason. (Enough Doze stress for 1996!)
- * -p improved, removed occasional superfluous linefeed.  16.5.96
- * -l 0 fixed. tried to read anyway. 20.5.96
- * -i fixed. now honours -u, and prepends __ to numeric filenames. 21.5.96
- * compile -DWIN32 for NT or W95. George V. Reilly, * -v improved :-)
- * support --gnuish-longhorn-options
- * MAC support added: CodeWarrior already uses ``outline'' in Types.h which is
- *     included by MacHeaders (Axel Kielhorn 1996/05/25). Renamed to xxdline().
- *     jw.
- * -i printed 'int' instead of 'char'. *blush* 7.6.96
- * added Bram's OS2 ifdefs...
- * gcc -Wall @ SunOS4 is now slient. 18.7.96
- * Added osver for MSDOS/DJGPP/WIN32.
- * Added size_t to strncmp() for Amiga. 29.8.96
  *
- * (c) 1990-1996 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
+ *  2.10.90 changed to word output
+ *  3.03.93 new indent style, dumb bug inserted and fixed.
+ *          -c option, mls
+ * 26.04.94 better option parser, -ps, -l, -s added.
+ *  1.07.94 -r badly needs - as input file.  Per default autoskip over
+ *             consequtive lines of zeroes, as unix od does.
+ *          -a shows them too.
+ *          -i dump as c-style #include "file.h"
+ *  1.11.95 if "xxd -i" knows the filename, an 'unsigned char filename_bits[]'
+ *          array is written in correct c-syntax.
+ *          -s improved, now defaults to absolute seek, relative requires a '+'.
+ *          -r improved, now -r -s -0x... is supported.
+ *             change/suppress leading '\0' bytes.
+ *          -l n improved: stops exactly after n bytes.
+ *          -r improved, better handling of partial lines with trailing garbage.
+ *          -r improved, now -r -p works again!
+ *          -r improved, less flushing, much faster now! (that was silly)
+ *  3.04.96 Per repeated request of a single person: autoskip defaults to off.
+ * 15.05.96 -v added. They want to know the version.
+ *          -a fixed, to show last line inf file ends in all zeros.
+ *          -u added: Print upper case hex-letters, as preferred by unix bc.
+ *          -h added to usage message. Usage message extended.
+ *          Now using outfile if specified even in normal mode, aehem.
+ *          No longer mixing of ints and longs. May help doze people.
+ *          Added binify ioctl for same reason. (Enough Doze stress for 1996!)
+ * 16.05.96 -p improved, removed occasional superfluous linefeed.
+ * 20.05.96 -l 0 fixed. tried to read anyway.
+ * 21.05.96 -i fixed. now honours -u, and prepends __ to numeric filenames.
+ *          compile -DWIN32 for NT or W95. George V. Reilly, * -v improved :-)
+ *          support --gnuish-longhorn-options
+ * 25.05.96 MAC support added: CodeWarrior already uses ``outline'' in Types.h
+ *          which is included by MacHeaders (Axel Kielhorn). Renamed to
+ *          xxdline().
+ *  7.06.96 -i printed 'int' instead of 'char'. *blush*
+ *          added Bram's OS2 ifdefs...
+ * 18.07.96 gcc -Wall @ SunOS4 is now slient.
+ *          Added osver for MSDOS/DJGPP/WIN32.
+ * 29.08.96 Added size_t to strncmp() for Amiga.
+ * 24.03.97 Windows NT support (Phil Hanna). Clean exit for Amiga WB (Bram)
+ * 02.04.97 Added -E option, to have EBCDIC translation instead of ASCII
+ *          (antonio.colombo@jrc.org)
+ * 22.05.97 added -g (group octets) option (jcook@namerica.kla.com).
+ *
+ * (c) 1990-1997 by Juergen Weigert (jnweiger@informatik.uni-erlangen.de)
  *
  * Distribute freely and credit me,
  * make money and share with me,
@@ -62,17 +67,30 @@
 #include <stdlib.h>
 #include <string.h>	/* for strncmp() */
 #include <ctype.h>	/* for isalnum() */
-#if __MWERKS__
+#if __MWERKS__ && !defined(__BEOS__)
 # include <unix.h>	/* for fdopen() on MAC */
 #endif
 
 /*
+ * This corrects the problem of missing prototypes for certain functions
+ * in some GNU installations (e.g. SunOS 4.1.x).
+ */
+#if defined(__GNUC__) && defined(__STDC__)
+# ifndef __USE_FIXED_PROTOTYPES__
+#  define __USE_FIXED_PROTOTYPES__
+# endif
+#endif
+
+#ifndef __USE_FIXED_PROTOTYPES__
+/*
+ * This is historic and works only if the compiler really has no prototypes:
+ *
  * Include prototypes for Sun OS 4.x, when using an ANSI compiler.
  * FILE is defined on OS 4.x, not on 5.x (Solaris).
  * if __SVR4 is defined (some Solaris versions), don't include this.
  */
 #if defined(sun) && defined(FILE) && !defined(__SVR4) && defined(__STDC__)
-#define __P(a) a
+#  define __P(a) a
 /* excerpt from my sun_stdlib.h */
 extern int fprintf __P((FILE *, char *, ...));
 extern int fputs   __P((char *, FILE *));
@@ -84,12 +102,13 @@ extern int fseek   __P((FILE *, long, int));
 extern int rewind  __P((FILE *));
 
 extern void perror __P((char *));
+# endif
 #endif
 
 extern long int strtol();
 extern long int ftell();
 
-char version[] = "xxd V1.5mj 29aug96 by Juergen Weigert";
+char version[] = "xxd V1.8 22may97 by Juergen Weigert";
 #ifdef WIN32
 char osver[] = " (Win32)";
 #else
@@ -107,15 +126,19 @@ char osver[] = "";
 #if defined(MSDOS) || defined(WIN32) || defined(OS2)
 # define BIN_READ(yes)  ((yes) ? "rb" : "rt")
 # define BIN_WRITE(yes) ((yes) ? "wb" : "wt")
+# define BIN_CREAT(yes) ((yes) ? (O_CREAT|O_BINARY) : O_CREAT)
 # define BIN_ASSIGN(fp, yes) setmode(fileno(fp), (yes) ? O_BINARY : O_TEXT)
+# define PATH_SEP '\\'
 #else
 # define BIN_READ(dummy)  "r"
 # define BIN_WRITE(dummy) "w"
+# define BIN_CREAT(dummy) O_CREAT
 # define BIN_ASSIGN(fp, dummy) fp
+# define PATH_SEP '/'
 #endif
 
 /* open has only to arguments on the Mac */
-#if __MWERKS__		
+#if __MWERKS__
 # define OPEN(name, mode, umask) open(name, mode)
 #else
 # define OPEN(name, mode, umask) open(name, mode, umask)
@@ -142,8 +165,8 @@ static int huntype __P((FILE *, FILE *, FILE *, char *, int, int, long));
 static void xxdline __P((FILE *, char *, int));
 
 #define TRY_SEEK 	/* attempt to use lseek, or skip forward by reading */
-#define COLS 64		/* change here, if you ever need more columns */
-#define LLEN (9 + (5*COLS-1)/2 + 2 + COLS)
+#define COLS 256	/* change here, if you ever need more columns */
+#define LLEN (9 + 3*COLS + 2 + COLS)
 
 char hexxa[] = "0123456789abcdef0123456789ABCDEF", *hexx = hexxa;
 
@@ -161,13 +184,15 @@ char *pname;
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "    -a          toggle autoskip: A single '*' replaces nul-lines. Default off.\n");
   fprintf(stderr, "    -c cols     format <cols> octets per line. Default 16 (-i: 12, -ps: 30).\n");
+  fprintf(stderr, "    -E          show characters in EBCDIC. Default ASCII.\n");
+  fprintf(stderr, "    -g          number of octets per group in normal output. Default 2.\n");
   fprintf(stderr, "    -h          print this summary.\n");
   fprintf(stderr, "    -i          output in C include file style.\n");
   fprintf(stderr, "    -l len      stop after <len> octets.\n");
   fprintf(stderr, "    -ps         output in postscript continuous hexdump style.\n");
   fprintf(stderr, "    -r          reverse operation: convert (or patch) hexdump into binary.\n");
   fprintf(stderr, "    -r -s off   revert with <off> added to file positions found in hexdump.\n");
-  fprintf(stderr, "    -s %sseek  start at <seek> bytes abs. %sinfile offset.\n", 
+  fprintf(stderr, "    -s %sseek  start at <seek> bytes abs. %sinfile offset.\n",
 #ifdef TRY_SEEK
 	  "[+][-]", "(or +: rel.) ");
 #else
@@ -178,10 +203,10 @@ char *pname;
   exit(1);
 }
 
-/* 
+/*
  * Max. cols binary characters are decoded from the input stream per line.
  * Two adjacent garbage characters after evaluated data delimit valid data.
- * Everything up to the next newline is discarded. 
+ * Everything up to the next newline is discarded.
  *
  * The name is historic and came from 'undo type opt h'.
  */
@@ -211,7 +236,7 @@ long base_off;
         n1 = c - 'a' + 10;
       else if (c >= 'A' && c <= 'F')
         n1 = c - 'A' + 10;
-      else 
+      else
         {
           n1 = -1;
 	  if (ign_garb)
@@ -287,15 +312,15 @@ long base_off;
 }
 
 /*
- * Print line l. If nz is false, xxdline regards the line a line of 
+ * Print line l. If nz is false, xxdline regards the line a line of
  * zeroes. If there are three or more consecutive lines of zeroes,
- * they are replaced by a single '*' character. 
+ * they are replaced by a single '*' character.
  *
  * If the output ends with more than two lines of zeroes, you
- * should call xxdline again with l being the last line and nz 
+ * should call xxdline again with l being the last line and nz
  * negative. This ensures that the last line is shown even when
  * it is all zeroes.
- * 
+ *
  * If nz is always positive, lines are never suppressed.
  */
 static void
@@ -328,23 +353,60 @@ int nz;
     }
 }
 
+/* This is an EBCDIC to ASCII conversion table */
+/* from a proposed BTL standard April 16, 1979 */
+static unsigned char etoa64[] =
+{
+    0040,0240,0241,0242,0243,0244,0245,0246,
+    0247,0250,0325,0056,0074,0050,0053,0174,
+    0046,0251,0252,0253,0254,0255,0256,0257,
+    0260,0261,0041,0044,0052,0051,0073,0176,
+    0055,0057,0262,0263,0264,0265,0266,0267,
+    0270,0271,0313,0054,0045,0137,0076,0077,
+    0272,0273,0274,0275,0276,0277,0300,0301,
+    0302,0140,0072,0043,0100,0047,0075,0042,
+    0303,0141,0142,0143,0144,0145,0146,0147,
+    0150,0151,0304,0305,0306,0307,0310,0311,
+    0312,0152,0153,0154,0155,0156,0157,0160,
+    0161,0162,0136,0314,0315,0316,0317,0320,
+    0321,0345,0163,0164,0165,0166,0167,0170,
+    0171,0172,0322,0323,0324,0133,0326,0327,
+    0330,0331,0332,0333,0334,0335,0336,0337,
+    0340,0341,0342,0343,0344,0135,0346,0347,
+    0173,0101,0102,0103,0104,0105,0106,0107,
+    0110,0111,0350,0351,0352,0353,0354,0355,
+    0175,0112,0113,0114,0115,0116,0117,0120,
+    0121,0122,0356,0357,0360,0361,0362,0363,
+    0134,0237,0123,0124,0125,0126,0127,0130,
+    0131,0132,0364,0365,0366,0367,0370,0371,
+    0060,0061,0062,0063,0064,0065,0066,0067,
+    0070,0071,0372,0373,0374,0375,0376,0377
+};
+
 int
 main(argc, argv)
 int argc;
 char *argv[];
 {
   FILE *fp, *fpo;
-  int c, e, p = 0, relseek = 1, negseek = 0, hextype, revert = 0;
-  int autoskip = 0;
+  int c, e, p = 0, relseek = 1, negseek = 0, revert = 0;
+  int cols = 0, nonzero = 0, autoskip = 0, hextype = HEX_NORMAL;
+  int ebcdic = 0;
+  int octspergrp = 2;	/* number of octets grouped in output */
+  int grplen;		/* total chars per octet group */
   long length = -1, n = 0, seekoff = 0;
   char l[LLEN+1];
-  int cols = 0, nonzero = 0;
   char *pname, *pp;
-  hextype = HEX_NORMAL;
+
+#ifdef AMIGA
+  /* This program doesn't work when started from the Workbench */
+  if (argc == 0)
+    exit(1);
+#endif
 
   pname = argv[0];
   for (pp = pname; *pp; )
-    if (*pp++ == '/')
+    if (*pp++ == PATH_SEP)
       pname = pp;
 
   while (argc >= 2)
@@ -355,7 +417,8 @@ char *argv[];
       else if (!STRNCMP(pp, "-p", 2)) hextype = HEX_POSTSCRIPT;
       else if (!STRNCMP(pp, "-i", 2)) hextype = HEX_CINCLUDE;
       else if (!STRNCMP(pp, "-r", 2)) revert++;
-      else if (!STRNCMP(pp, "-v", 2)) 
+      else if (!STRNCMP(pp, "-E", 2)) ebcdic++;
+      else if (!STRNCMP(pp, "-v", 2))
         {
 	  fprintf(stderr, "%s%s\n", version, osver);
 	  exit(0);
@@ -372,6 +435,14 @@ char *argv[];
 	      argv++;
 	      argc--;
 	    }
+	}
+      else if (!STRNCMP(pp, "-g", 2))
+        {
+	  if (!argv[2])
+	    exit_with_usage(pname);
+	  octspergrp = (int)strtol(argv[2], NULL, 0);
+	  argv++;
+	  argc--;
 	}
       else if (!STRNCMP(pp, "-s", 2))
 	{
@@ -423,13 +494,13 @@ char *argv[];
 	}
       else if (pp[0] == '-' && pp[1])	/* unknown option */
         exit_with_usage(pname);
-      else 
+      else
         break;				/* not an option */
 
       argv++;				/* advance to next argument */
       argc--;
     }
-
+  
   if (!cols)
     switch (hextype)
       {
@@ -445,7 +516,10 @@ char *argv[];
       exit(1);
     }
 
-  if (argc > 3) 
+  if (octspergrp < 1)
+    octspergrp = cols;
+
+  if (argc > 3)
     exit_with_usage(pname);
 
   if (argc == 1 || (argv[1][0] == '-' && !argv[1][1]))
@@ -459,14 +533,14 @@ char *argv[];
 	  return 2;
 	}
     }
-  
+
   if (argc < 3 || (argv[2][0] == '-' && !argv[2][1]))
     BIN_ASSIGN(fpo = stdout, revert);
   else
     {
       int fd;
 
-      if (((fd = OPEN(argv[2], O_WRONLY | O_CREAT, 0666)) < 0) ||
+      if (((fd = OPEN(argv[2], O_WRONLY | BIN_CREAT(revert), 0666)) < 0) ||
           (fpo = fdopen(fd, BIN_WRITE(revert))) == NULL)
 	{
 	  fprintf(stderr, "%s: ", pname);
@@ -475,7 +549,7 @@ char *argv[];
 	}
       rewind(fpo);
     }
-  
+
   if (revert)
     {
       if (hextype && (hextype != HEX_POSTSCRIPT))
@@ -483,7 +557,7 @@ char *argv[];
           fprintf(stderr, "%s: sorry, cannot revert this type of hexdump\n", pname);
 	  return -1;
 	}
-      return huntype(fp, fpo, stderr, pname, cols, hextype, 
+      return huntype(fp, fpo, stderr, pname, cols, hextype,
       		negseek ? -seekoff : seekoff);
     }
 
@@ -507,7 +581,7 @@ char *argv[];
 	  long s = seekoff;
 
 	  while (s--)
-	    getc(fp); 
+	    getc(fp);
 	}
     }
 
@@ -568,6 +642,8 @@ char *argv[];
 
   /* hextype == HEX_NORMAL */
 
+  grplen = octspergrp + octspergrp + 1;		/* chars per octet group */
+
   while ((length < 0 || n < length) && (e = getc(fp)) != EOF)
     {
       if (p == 0)
@@ -575,15 +651,17 @@ char *argv[];
 	  sprintf(l, "%07lx: ", n + seekoff);
 	  for (c = 9; c < LLEN; l[c++] = ' ');
 	}
-      l[ 9 + (5 * p) / 2] = hexx[(e >> 4) & 0xf];
-      l[10 + (5 * p) / 2] = hexx[ e       & 0xf];
-      l[11 + (5 * cols - 1) / 2 + p] = (e > 31 && e < 127) ? e : '.';
-      if (e) 
+      l[c = (9 + (grplen * p) / octspergrp)] = hexx[(e >> 4) & 0xf];
+      l[++c]                                 = hexx[ e       & 0xf];
+      if (ebcdic) 
+        e = (e < 64) ? '.' : etoa64[e-64];
+      l[11 + (grplen * cols - 1)/octspergrp + p] = (e > 31 && e < 127) ? e : '.';
+      if (e)
         nonzero++;
       n++;
       if (++p == cols)
 	{
-	  l[c = (11 + (5 * cols - 1) / 2 + p)] = '\n'; l[++c] = '\0';
+	  l[c = (11 + (grplen * cols - 1)/octspergrp + p)] = '\n'; l[++c] = '\0';
 	  xxdline(fpo, l, autoskip ? nonzero : 1);
 	  nonzero = 0;
 	  p = 0;
@@ -591,12 +669,12 @@ char *argv[];
     }
   if (p)
     {
-      l[c = (11 + (5 * cols - 1) / 2 + p)] = '\n'; l[++c] = '\0';
+      l[c = (11 + (grplen * cols - 1)/octspergrp + p)] = '\n'; l[++c] = '\0';
       xxdline(fpo, l, 1);
     }
   else if (autoskip)
     xxdline(fpo, l, -1);	/* last chance to flush out supressed lines */
-    
+
   fclose(fp);
   fclose(fpo);
   return 0;

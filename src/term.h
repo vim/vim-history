@@ -1,6 +1,6 @@
-/* vi:set ts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4:
  *
- * VIM - Vi IMproved		by Bram Moolenaar
+ * VIM - Vi IMproved	by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -14,9 +14,10 @@
  * and works around the deficiency, if necessary.
  */
 
-#ifdef SASC
+#if defined(SASC) && SASC < 658
 /*
- * the SAS C compiler has a bug that makes typedefs being forgot sometimes
+ * The SAS C compiler has a bug that makes typedefs being forgot in include
+ * files.  Has been fixed in version 6.58.
  */
 typedef unsigned char char_u;
 #endif
@@ -24,45 +25,55 @@ typedef unsigned char char_u;
 /*
  * Index of the termcap codes in the term_strings array.
  */
-enum SpecialKeys
+enum SpecialKey
 {
-	KS_NAME = 0,		/* name of this terminal entry */
-	KS_CE,		/* clear to end of line */
-	KS_AL,		/* add new blank line */
-	KS_CAL,		/* add number of blank lines */
-	KS_DL,		/* delete line */
-	KS_CDL,		/* delete number of lines */
-	KS_CS,		/* scroll region */
-	KS_CL,		/* clear screen */
-	KS_CD,		/* clear to end of display */
-	KS_DA,		/* text may be scrolled down from up */
-	KS_DB,		/* text may be scrolled up from down */
-	KS_VI,		/* cursor invisible */
-	KS_VE,		/* cursor visible */
-	KS_VS,		/* cursor very visible */
-	KS_ME,		/* normal mode */
-	KS_MR,		/* reverse mode */
-	KS_MD,		/* bold mode */
-	KS_SE,		/* normal mode */
-	KS_SO,		/* standout mode */
-	KS_CZH,		/* italic mode start */
-	KS_CZR,		/* italic mode end */
-	KS_UE,		/* exit underscore mode */
-	KS_US,		/* underscore mode */
-	KS_MS,		/* save to move cur in reverse mode */
-	KS_CM,		/* cursor motion */
-	KS_SR,		/* scroll reverse (backward) */
-	KS_CRI,		/* cursor number of chars right */
-	KS_VB,		/* visual bell */
-	KS_KS,		/* put term in "keypad transmit" mode */
-	KS_KE,		/* out of "keypad transmit" mode */
-	KS_TI,		/* put terminal in termcap mode */
-	KS_TE,		/* out of termcap mode */
-	
-	KS_CSC		/* cur is relative to scroll region */
+    KS_NAME = 0,/* name of this terminal entry */
+    KS_CE,	/* clear to end of line */
+    KS_AL,	/* add new blank line */
+    KS_CAL,	/* add number of blank lines */
+    KS_DL,	/* delete line */
+    KS_CDL,	/* delete number of lines */
+    KS_CS,	/* scroll region */
+    KS_CL,	/* clear screen */
+    KS_CD,	/* clear to end of display */
+    KS_DA,	/* text may be scrolled down from up */
+    KS_DB,	/* text may be scrolled up from down */
+    KS_VI,	/* cursor invisible */
+    KS_VE,	/* cursor visible */
+    KS_VS,	/* cursor very visible */
+    KS_ME,	/* normal mode */
+    KS_MR,	/* reverse mode */
+    KS_MD,	/* bold mode */
+    KS_SE,	/* normal mode */
+    KS_SO,	/* standout mode */
+    KS_CZH,	/* italic mode start */
+    KS_CZR,	/* italic mode end */
+    KS_UE,	/* exit underscore mode */
+    KS_US,	/* underscore mode */
+    KS_MS,	/* save to move cur in reverse mode */
+    KS_CM,	/* cursor motion */
+    KS_SR,	/* scroll reverse (backward) */
+    KS_CRI,	/* cursor number of chars right */
+    KS_VB,	/* visual bell */
+    KS_KS,	/* put term in "keypad transmit" mode */
+    KS_KE,	/* out of "keypad transmit" mode */
+    KS_TI,	/* put terminal in termcap mode */
+    KS_TE,	/* out of termcap mode */
+    KS_BC,	/* backspace character (cursor left) */
+    KS_CCS,	/* cur is relative to scroll region */
+    KS_CCO,	/* number of colors */
+    KS_CSF,	/* set foreground color */
+    KS_CSB,	/* set background color */
+    KS_XS,	/* standout not erased by overwriting (hpterm) */
+    KS_MB,	/* blink mode */
+    KS_CAF,	/* set foreground color (ANSI) */
+    KS_CAB,	/* set background color (ANSI) */
+    KS_LE,	/* cursor left (mostly backspace) */
+    KS_ND,	/* cursor right */
+    KS_OP	/* original color pair */
 };
 
-#define KS_LAST		KS_CSC
+#define KS_LAST	    KS_OP
 
 /*
  * the terminal capabilities are stored in this array
@@ -72,11 +83,12 @@ enum SpecialKeys
  * - there should be code in term.c to obtain the value from the termcap
  */
 
-extern char_u *(term_strings[]);	/* current terminal strings */
+extern char_u *(term_strings[]);    /* current terminal strings */
 
 /*
  * strings used for terminal
  */
+#define T_NAME	(term_strings[KS_NAME])	/* terminal name */
 #define T_CE	(term_strings[KS_CE])	/* clear to end of line */
 #define T_AL	(term_strings[KS_AL])	/* add new blank line */
 #define T_CAL	(term_strings[KS_CAL])	/* add number of blank lines */
@@ -108,4 +120,18 @@ extern char_u *(term_strings[]);	/* current terminal strings */
 #define T_KE	(term_strings[KS_KE])	/* out of "keypad transmit" mode */
 #define T_TI	(term_strings[KS_TI])	/* put terminal in termcap mode */
 #define T_TE	(term_strings[KS_TE])	/* out of termcap mode */
-#define T_CSC	(term_strings[KS_CSC])	/* cur is relative to scroll region */
+#define T_BC	(term_strings[KS_BC])	/* backspace character */
+#define T_CCS	(term_strings[KS_CCS])	/* cur is relative to scroll region */
+#define T_CCO	(term_strings[KS_CCO])	/* number of colors */
+#define T_CSF	(term_strings[KS_CSF])	/* set foreground color */
+#define T_CSB	(term_strings[KS_CSB])	/* set background color */
+#define T_XS	(term_strings[KS_XS])	/* standout not erased by overwriting */
+#define T_MB	(term_strings[KS_MB])	/* blink mode */
+#define T_CAF	(term_strings[KS_CAF])	/* set foreground color (ANSI) */
+#define T_CAB	(term_strings[KS_CAB])	/* set background color (ANSI) */
+#define T_LE	(term_strings[KS_LE])	/* cursor left */
+#define T_ND	(term_strings[KS_ND])	/* cursor right */
+#define T_OP	(term_strings[KS_OP])	/* original color pair */
+
+#define TMODE_COOK  0	    /* terminal mode for external cmds and Ex mode */
+#define TMODE_RAW   1	    /* terminal mode for Normal and Insert mode */

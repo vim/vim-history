@@ -1,0 +1,133 @@
+/* $Id: config.h.in,v 5.1 1998/02/19 03:47:18 darren Exp $   */
+/*****************************************************************************
+*   Copyright (c) 1996-1997, Darren Hiebert
+*
+*   This source code is released for free distribution under the terms of the
+*   GNU General Public License.
+*
+*   This file should be processed by the "configure" shell script to
+*   automatically generate a customized config.h file. Otherwise, copy
+*   config.h.in to config.h and customize by hand.
+*****************************************************************************/
+
+/*============================================================================
+=	User customization section
+============================================================================*/
+
+/*  Define this label if the const keyword is not supported (or is improperly
+ *  implemented) by your compiler.
+ */
+#undef const
+
+/*  Define each of these to the appropriate type if no typedef exists.
+ */
+#undef size_t
+#undef clock_t
+
+/*  Define to the appropriate size for tmpnam() if <stdio.h> does not define
+ *  this.
+ */
+#undef L_tmpnam
+
+/*  Define remove to unlink if you have unlink(), but not remove().
+ */
+#undef remove
+
+/*  Define these values used by fseek() appropriately if <stdio.h> does not
+ *  define them.
+ */
+#undef SEEK_SET
+#undef SEEK_END
+
+/*  Define as the maximum integer on your system if not defined <limits.h>.
+ */
+#undef INT_MAX
+
+/*----------------------------------------------------------------------------
+-	Library function availability
+----------------------------------------------------------------------------*/
+#undef HAVE_STRERROR		/* define if you have strerror() */
+#undef HAVE_REMOVE		/* define if you have remove() */
+
+/*  Define the label for whichever of the following library functions you
+ *  have.
+ */
+#undef HAVE_CLOCK		/* first preference : clock() */
+#undef HAVE_TIMES		/* second preference: times() */
+
+/*  Define the label for whichever of the following library functions you
+ *  have.
+ */
+#undef HAVE_TRUNCATE		/* first preference : truncate() */
+#undef HAVE_FTRUNCATE		/* second preference: ftruncate() */
+#undef HAVE_CHSIZE		/* third preference : chsize() */
+
+/*----------------------------------------------------------------------------
+-	Header files
+----------------------------------------------------------------------------*/
+#undef HAVE_DIRENT_H		/* define if you have <dirent.h> */
+#undef HAVE_STDLIB_H		/* define if you have <stdlib.h> */
+#undef HAVE_TIME_H		/* define if you have <time.h> */
+#undef HAVE_UNISTD_H		/* define if you have <unistd.h> */
+
+#undef HAVE_SYS_STAT_H		/* define if you have <sys/stat.h> */
+#undef HAVE_SYS_TIMES_H		/* define if you have <sys/times.h> */
+#undef HAVE_SYS_TYPES_H		/* define if you have <sys/types.h> */
+
+/*----------------------------------------------------------------------------
+-	Features
+----------------------------------------------------------------------------*/
+/*  Define this label if you want macro tags (defined lables) to use patterns
+ *  in the EX command by default (original ctags behavior is to use line
+ *  numbers).
+ */
+#undef MACROS_USE_PATTERNS
+
+/*  Define this as desired.
+ *    1:  Original ctags format
+ *    2:  Extended ctags format with extension flags in EX-style comment.
+ */
+#define DEFAULT_FILE_FORMAT	2
+
+/*  Define this label to use the system sort utility (which is probably more
+ *  efficient) over the interal sorting algorithm.
+ */
+#undef EXTERNAL_SORT
+
+/*  If you are using the system sort utility (i.e. external sort), define
+ *  this label to be the name of your awk program, which is used to report
+ *  duplicate tags when the -W option is specified.
+ */
+#define AWK "awk"
+
+/*----------------------------------------------------------------------------
+-	Prototypes
+----------------------------------------------------------------------------*/
+/*  If you receive error or warning messages indicating that you are missing
+ *  a prototype for, or a type mismatch using, one of the following functions,
+ *  define the appropriate label and remake.
+ */
+#undef NEED_PROTO_REMOVE
+#undef NEED_PROTO_UNLINK
+#undef NEED_PROTO_MALLOC
+#undef NEED_PROTO_GETENV
+#undef NEED_PROTO_STRSTR
+#undef NEED_PROTO_STAT
+#undef NEED_PROTO_TRUNCATE
+#undef NEED_PROTO_FTRUNCATE
+
+/*============================================================================
+=	You should not need to change anything below this line
+============================================================================*/
+#ifndef __unused__
+# define __unused__
+#endif
+
+/*  This corrects the problem of missing prototypes for certain functions
+ *  in some GNU installations (e.g. SunOS 4.1.x).
+ */
+#if defined(__GNUC__) && defined(__STDC__) && !defined(__USE_FIXED_PROTOTYPES__)
+# define __USE_FIXED_PROTOTYPES__
+#endif
+
+/* vi:set tabstop=8 shiftwidth=4: */

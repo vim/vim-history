@@ -7,7 +7,7 @@
 # (C) Michael Schroeder, Juergen Weigert
 #
 # split osdef.h.in into osdef1.h.in and osdef2.h.in, because some sed's could
-# not handle the amount of commands.
+# not handle the amount of commands (is 50 commands the limit?).
 #
 # 31.10.95 jw.
 
@@ -24,14 +24,16 @@ cat << EOF > osdef0.c
 #define select select_declared_wrong
 #define tgetstr tgetstr_declared_wrong
 #include "config.h"
-#include "unix.h"	/* bring in most header files, more follow below */
-#include "unixunix.h"	/* bring in header files for unix.c */
+#include "os_unix.h"	/* bring in most header files, more follow below */
+#include "os_unixx.h"	/* bring in header files for os_unix.c */
 
 #ifdef HAVE_TERMCAP_H
 # include <termcap.h>	/* only for term.c */
 #endif
 
-#include <fcntl.h>		/* only used in a few files */
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>		/* only used in a few files */
+#endif
 
 #ifdef HAVE_SYS_STATFS_H
 # include <sys/types.h>
@@ -41,10 +43,10 @@ EOF
 
 $CC -I. -I$srcdir -E osdef0.c >osdef0.ccc
 
-sed < $srcdir/osdef1.h.in -n -e '/^extern/s@.*[)* 	][)* 	]*\([^ *]*\) __ARGS.*@/[)*, 	]\1[ 	(]/i\\\
+sed < $srcdir/osdef1.h.in -n -e '/^extern/s@.*[)* 	][)* 	]*\([a-zA-Z_][a-zA-Z0-9_]*\) __ARGS.*@/[)*, 	]\1[ 	(]/i\\\
 \\/\\[^a-zA-Z_\\]\1 __ARGS\\/d@p' > osdef11.sed
 
-sed < $srcdir/osdef2.h.in -n -e '/^extern/s@.*[)* 	][)* 	]*\([^ *]*\) __ARGS.*@/[)*, 	]\1[ 	(]/i\\\
+sed < $srcdir/osdef2.h.in -n -e '/^extern/s@.*[)* 	][)* 	]*\([a-zA-Z_][a-zA-Z0-9_]*\) __ARGS.*@/[)*, 	]\1[ 	(]/i\\\
 \\/\\[^a-zA-Z_\\]\1 __ARGS\\/d@p' > osdef21.sed
 
 cat << EOF > osdef2.sed
@@ -72,7 +74,7 @@ if test -f core*; then
   echo "  ones from osdef1.h.in and osdef2.h.in to osdef.h."
   exit 1
 fi
-cat osdef1.h.in osdef2.h.in >osdefX.h.in
+cat $srcdir/osdef1.h.in $srcdir/osdef2.h.in >osdefX.h.in
 if eval test "`diff osdef.h osdefX.h.in | wc -l`" -eq 4; then
   echo "  Hmm, sed is very pessimistic about your system header files."
   echo "  But it did not dump core -- strange! Let's continue carefully..."

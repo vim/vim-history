@@ -1,0 +1,203 @@
+*farsi.txt*     For Vim version 5.0.  Last modification: 1998 Feb 14
+
+
+		  VIM REFERENCE MANUAL    by Mortaza Ghassab Shiran
+
+
+Right to Left and Farsi Mapping for Vim		*farsi*
+
+
+These functions have been made by Mortaza G. Shiran
+E-mail: <shiran@scn.de>
+
+{Vi does not have any of these commands}
+
+In order to use right-to-left and Farsi mapping support, it is necessary to
+compile Vim with the |+farsi| feature.
+
+
+Introduction
+------------
+In right-to-left oriented files the characters appear on the screen from right
+to left.  This kind of file is most useful when writing Farsi documents,
+composing faxes or writing Farsi memos.
+
+The commands, prompts and help files are not in Farsi, therefore the user
+interface remains the standard Vi interface.
+
+
+Highlights
+----------
+o  Editing left-to-right files as in the original Vim, no change.
+
+o  Viewing and editing files in right-to-left windows.   File orientation is
+   per window, so it is possible to view the same file in right-to-left and
+   left-to-right modes, simultaneously.
+
+o  Compatibility to the original Vim.   Almost all features work in
+   right-to-left mode (see Bugs below).
+
+o  Changing keyboard mapping and reverse insert modes using a single
+   command.
+
+o  Backing from reverse insert mode to the correct place in the file
+   (if possible).
+
+o  While in Farsi mode, numbers are entered from left to right. Upon entering
+   a character (not a number), that character will be inserted just into the
+   left of the last number.
+
+o  No special terminal with right-to-left capabilities is required.  The
+   right-to-left changes are completely hardware independent.  Only
+   Farsi font is necessary.
+
+o  Farsi keymapping on the command line in reverse insert mode.
+
+o  Toggling between from left-to-right and right-to-left via F8 function key.
+
+o  Toggling between Farsi 3342 standard encoding and VIM Farsi via F9 function
+   key. Since this makes sence only for the text written in right-to-left mode,
+   this function is also supported only in right-to-left mode.
+
+
+Usage
+-----
+Prior to starting the vim, the environment in which the vim-persian can run
+properly must be set.  Following points describe some environment settings
+that may be needed:
+Key code mapping, loading graphic card in ASCII screen mode, setting the IO
+driver in 8 bit clean mode ... .
+For details on environment setting, refer to Farsi-HOWTO-1.txt contained in
+the Farsi-HOWTO-package.tar .
+
+o  Farsi Keymapping Activation
+
+   Entering 'set akm' or 'set fk' command while in editor command line mode,
+   activates the Farsi keymapping (akm/fk are the abbreviations for altkeymap/
+   fkmap which stand for alternative keymap/farsi keymap). Note that
+   'altkeymap' is the default setting and in this mode the Farsi keymapping
+   is active. To turn off the Farsi as a default second language, put the
+   'set noakm' line in your '.vimrc' file.
+
+o  Right-To-Left Farsi Mode
+
+   By default vim starts in Left-to-Right mode. Following are ways to change
+   the window orientation:
+
+   + Start the vim with -F option (e.g. vim -F ... ).
+
+   + Use F8 function key to toggle between left-to-right and right-to-left.
+
+   + While in Left-to-Right mode, enter 'set rl' in the command line ('rl' is
+     the abbreviation for rightleft).
+
+   + Put the 'set rl' line in your '.vimrc' file to start the  vim in
+     Right-to-Left mode permanently.
+
+Encoding
+--------
+
+The Farsi 3342 standard defines only the codes for the capital letters, which
+may be suitable for graphical environments. Since I wanted to be conformed
+to the Farsi 3342 standard and had to fulfill the VIM requirements (which runs
+in a none graphical as well as graphical environment). So I used the Farsi
+3342 standard and added new codes for joining (small) letters. In addition
+a conversion function has built in, which allows converting between VIM Farsi
+and Farsi 3342 standard via F9.
+
+A set of Farsi extended ASCII fonts are composed for both X environment
+and ASCII screen mode (using graphic card). The letter codes will be the
+same for different platforms (i.e. UNIX's, MS DOS, ...). In this release the
+fonts available are suitable for LINUX, SUN-OS, DOS and maybe some other
+platforms that I am not aware of by now.
+
+For details on the Farsi fonts and font installation, refer to
+Farsi-HOWTO-1.txt contained in the Farsi-HOWTO-package.tar .
+
+o  Keyboard
+
+   +  CTRL-_ in insert/replace modes toggles between Farsi(akm)/Latin
+      mode as follows:
+
+   +  CTRL-_ moves the cursor to the end of the typed text in edit mode.
+
+   +  CTRL-_ in command mode only toggles keyboard mapping between Farsi(akm)/
+      Latin. The Farsi text is then entered in reverse insert mode.
+
+   +  F8 - Toggles between left-to-right and right-to-left.
+
+   +  F9 - Toggles the encoding between Farsi 3342 standard and VIM Farsi.
+
+   +  Following is the keyboard mapping while Farsi(akm) mode set (the
+      mapping is based on the Iranian standard 'ISIRI 2901' - hopefully right):
+
+        -------------------------------------
+	`  1  2  3  4  5  6  7  8  9  0  -  =
+	¢  ±  ²  ³  ´  µ  ¶  ·  ¸  ¹  °  ­  ½
+        -------------------------------------
+	~  !  @  #  $  %  ^  &  *  (  )  _  +
+	~  £  §  ®  ¤  ¥  ª  ¬  è  ¨  ©  é  «
+        -------------------------------------
+	q  w  e  r  t  y  u  i  o  p  [  ]
+	Ó  Ò  Æ  Ù  Ø  Õ  Ö  à  Ê  É  Ç  ˆ
+        -------------------------------------
+	Q  W  E  R  T  Y  U  I  O  P  {  }
+	÷  õ  ô  ó  ò  ñ  ð  ö  [  ]  {  }
+        -------------------------------------
+	a  s  d  f  g  h  j  k  l  ;  '  \
+	Ñ  Ð  á  Ã  Ü  Á  Å  Þ  Ý  Ú  Û  ë
+        -------------------------------------
+	A  S  D  F  G  H  J  K  L  :  "  |
+	ù  û  þ  ú  ø  À  ü  æ  ç  º  »  ê
+        -------------------------------------
+	<  z  x  c  v  b  n  m  ,  .  /
+	¾  ×  Ô  Î  Í  Ì  Ë  Ä  ß  ¦  ¯
+        -------------------------------------
+	>  Z  X  C  V  B  N  M  <  >  ?
+	¼  ñ  Ô  Ï  Í  ¡  Ë  Â  ¾  ¼  ¿
+        -------------------------------------
+
+Note:
+	¡  stands for Farsi PSP (beark without space)
+
+	¢  stands for Farsi PCN (for HAMZE attribute )
+
+Restrictions
+------------
+
+o  In insert/replace mode and fkmap (Farsi mode) set, CTRL-B is not
+   supported.
+
+o  If you change the character mapping between Latin/Farsi, the redo buffer
+   will be reset (emptied). That is, redo is valid and will function (using '.')
+   only within the mode you are in.
+
+o  While numbers are entered in Farsi mode, the redo buffer will be reset
+   (emptied). That is, you can not redo the last changes (using '.') after
+   entering numbers.
+
+o  While in left-to-right and Farsi mode set, CTRL-R is not supported.
+
+o  While in right-to-left mode, the search on 'Latin' pattern does not work,
+   except if you enter the Latin search pattern in reverse.
+
+o  On the command line, there is no support for entering the numbers from left
+   to right and also for the sake of the flexibility the keymapping logic is
+   restricted.
+
+o  Under the X window environment, if you want to run the vim-persian in a
+   xterm, you need to have an ANSI compatible xterm. This is because the
+   letter codes above 128 decimal have certain meanings in the standard xterm.
+   This is actually no problem, since under the X environment you can run the
+   vim-persian in its own Motif/Athena window with more comfort.
+
+
+Bugs
+----
+While in insert/replace and Farsi mode set, if you repeatedly change the
+cursor position (via cursor movement) and enter new text and then try to undo
+the last change, the undo will lag one change behind.  But as you continue to
+undo, you will reach the original line of text. You can also use U to undo all
+changes made in the current line.
+
+For more information about the bugs refer to rightleft.txt.

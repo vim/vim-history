@@ -1,0 +1,17 @@
+Tests for "vaBiB", end could be wrong.
+
+STARTTEST
+/Start cursor here
+vaBiBD:?Bug?,$w! test.out
+:qa!
+ENDTEST
+
+- Bug in "vPPPP" on this text (Webb):
+	{
+		cmd;
+		{
+			cmd;	/* <-- Start cursor here */
+			{
+			}
+		}
+	}

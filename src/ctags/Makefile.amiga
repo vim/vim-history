@@ -1,7 +1,9 @@
 # Makefile for ctags on the Amiga, using Aztec/Manx C 5.0 or later
 #
 
-CC = cc
+SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
+OBJECTS	= entry.o get.o main.o options.o parse.o read.o sort.o
+CC	= cc
 
 #>>>>> choose between debugging (-bs) or optimizing (-so)
 OPTIONS = -so
@@ -13,8 +15,8 @@ LN_DEBUG =
 
 CFLAGS = $(OPTIONS) -wapruq -ps -qf -DAMIGA -Dconst=
 
-Ctags: ctags.o
-	ln +q -m $(LN_DEBUG) -o Ctags ctags.o -lc16
+Ctags: $(OBJECTS)
+	ln +q -m $(LN_DEBUG) -o Ctags $(OBJECTS) -lc16 -lm16
 
-ctags.o: ctags.c
-	$(CC) $(CFLAGS) ctags.c -o ctags.o
+.c.o:
+	$(CC) $(CFLAGS) -o $*.o $*.c

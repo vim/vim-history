@@ -1,0 +1,152 @@
+===============================
+Visual Studio - VIM Integration
+===============================
+
+Copyright (C) 1997 Heiko Erhardt
+
+VisVim is a Visual Studio Add-In that allows VIM to be integrated
+as the default text editor. It will be used instead of the Visual
+Studio built-in editor when you double-click on a file or press F4
+after compiling (it will go to the proper line in the VIM buffer).
+The file can be loaded exclusively by VIM or additionally to the
+builtin Visual Studio editor (this option can be set in the VisVim
+configuration dialog inside Visual Studio).
+
+VisVim is based upon VisEmacs by Christopher Payne
+(Copyright (C) Christopher Payne 1997).
+
+Author: Heiko Erhardt <Heiko.Erhardt@munich.netsurf.de>
+Based upon: VisEmacs by Christopher Payne <payneca@sagian.com>
+Version: 1.0
+Created: 23 Oct 1997
+Date: 23 Oct 1997
+
+VisVim is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+VisVim is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+
+Requirements
+------------
+
+VisVim works with the OLE-enabled version of Vim only!!!
+You must download the extra archive containing the OLE-enabled executable from
+you Vim download site.
+When building your own Vim executable, define the preprocessor string HAVE_OLE
+for the source (Project-Settings-C/C++-Pre processor-Pre processor definitions)
+*and* the resource files (Project-Settings-Resources-Pre processor definitions).
+
+VisVim needs DevStudio 5.0 or higher.
+
+
+Installation
+------------
+
+1) Copy VisVim.dll into a convenient directory like \vim,
+   \vim\lib, or \vim\addin
+
+2) Register the DLL using regsvr32.exe ... for example:
+   > cd \vim\addin
+   > regsvr32 VisVim.dll
+   On NT, you should do this from an administrator account.
+
+3) Start Visual Studio and go to:
+      Tools
+         Customize...
+            Add-Ins and Macro Files
+
+4) Click on Browse, and point Visual Studio to your VisVim.dll file.
+
+5) Click the checkbox to indicate that you want to use the Add-In, and
+   Close the Customize dialog box.
+
+7) You should notice the VisVim Toolbar with the Vim Icon.
+   Click the toolbar to get to the options dialog.
+
+
+Compiling VisVim
+----------------
+
+Two Options:
+
+1) Use the pre-compiled version of the DLL in the Release\ directory.
+
+2) Open the VisVim Workspace in Visual Studio and compile
+
+
+Using VisVim
+------------
+
+Clicking the 'Vim' Toolbar will show the VisVim configuration dialog.
+
+Choose 'Enable Vim' to open all files you click in DevStudio with Vim.
+Choose 'Disable Vim' to use the builtin editor instead.
+
+DevStudio uses the selected editor to open files when:
+
+1. Clicking a file in the file view
+2. Clicking a compiler error message line
+3. Using the 'File-Open' Dialog
+4. Showing the current source line when encountering a debugger breakpoint.
+
+You cannot use DevStudio's debugger commands from inside Vim, so you should
+disable Vim before running the debugger.
+To have fast access to the VisVim options dialog I suggest to create a keyboard
+shortcut:
+
+1) Choose
+      Tools
+         Customize...
+            Keyboard
+2) Choose Category:AddIns and Commands:VisVim.
+3) For every editor type enter ALT+V as hotkey and press the Assign button.
+4) Close the dialog
+
+To enable Vim now, press "ALT+v v", to disable Vim press "ALT+V d".
+Easy, isn't it?
+
+
+Problems
+--------
+
+1. VisVim works by hooks exposed by Visual Studio.  Most of the
+   functionality works from the OpenDocument (look it up in VS 5) hook.
+   So...If a document is open in Visual Studio, and you double click 
+   the file in the File Browser...VIM will NOT come to the foreground.
+   Since the document was open in the Visual Studio editor, the 
+   OpenDocument event never occurred.
+   To work around, just close the document in Visual Studio first.
+2. Problems have been reported when trying to add the VisVim DLL to Developer
+   Studio. With some DevStudio configurations this seems to be not possible,
+   the Vim toolbar does not appear. Reinstalling DevStudio and (in one case)
+   adding the DevStudio service pack 1 helped.
+
+
+Change history
+--------------
+
+1.0a to 1.0
+-----------
+
+- All settings in the VisVim dialog are remembered between DevStudio sessions
+  by keeping them in the registry (HKEY_CURRENT_USER\Software\Vim\VisVim).
+- Added an option to do a :cd before opening the file (having a file opened
+  by clicking it but finding out to be still in C:\Windows\system when trying to
+  open another file by ":e" can be annoying). Change directory can be
+  done to the source file's directory or it's parent directory.
+- Added some explanations to the error message for the CO_E_CLASSSTRING error
+  ("Use OLE Vim and make sure to register...").
+  
+
+
+Have fun!
+
+Heiko Erhardt
+Heiko.Erhardt@munich.netsurf.de
+

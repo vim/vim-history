@@ -1,0 +1,276 @@
+*visual.txt*    For Vim version 5.0.  Last modification: 1998 Feb 07
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Visual mode					*Visual-mode* *visual-mode*
+
+Visual mode is a flexible and easy way to select a piece of text for an
+operator.  It is the only way to select a block of text.
+
+1. Using Visual mode			|visual-use|
+2. Starting and stopping Visual mode	|visual-start|
+3. Changing the Visual area		|visual-change|
+4. Operating on the Visual area		|visual-operators|
+5. Repeating				|visual-repeat|
+6. Examples				|visual-examples|
+
+{Vi has no Visual mode, the name "visual" is used for Normal mode, to
+distinguish it from Ex mode}
+
+==============================================================================
+1. Using Visual mode					*visual-use*
+
+Using Visual mode consists of three parts:
+1. Mark the start of the text with "v", "V" or CTRL-V.
+   The character under the cursor will be used as the start.
+2. Move to the end of the text.
+   The text from the start of the Visual mode up to and including the
+   character under the cursor is highlighted.
+3. Hit an operator.
+   The highlighted characters will be operated upon.
+
+The 'highlight' option can be used to set the display mode to use for
+highlighting in Visual mode.
+
+The highlighted text includes the character under the cursor.  On terminals
+where it is possible to make the cursor invisible the cursor position is
+also highlighted.  On terminals where this is not possible the cursor is
+displayed normally.  If your cursor cannot be made invisible and you want Vim
+to highlight the character under the cursor anyway, you could set the 't_cv'
+and 't_ci' options to something harmless, for example:
+>	:set t_cv=^[^[ t_ci=^[^[
+
+With "v" the text before the start position and after the end position will
+not be highlighted.  However, All uppercase and non-alpha operators, except
+"~", will work on whole lines anyway.  See the list of operators below.
+
+							*visual-block*
+With CTRL-V (blockwise Visual mode) the highlighted text will be a rectangle
+between start position and the cursor.  However, some operators work on whole
+lines anyway (see the list below).  The change and substitute operators will
+delete the highlighted text and then start insertion at the top left
+position.
+
+==============================================================================
+2. Starting and stopping Visual mode			*visual-start*
+
+						*v* *characterwise-visual*
+v			start Visual mode per character.
+
+						*V* *linewise-visual*
+V			start Visual mode linewise.
+
+						*CTRL-V* *blockwise-visual*
+CTRL-V			start Visual mode blockwise.
+
+If you use <Esc>, click the left mouse button or use any command that
+does a jump to another buffer while in Visual mode, the highlighting stops
+and no text is affected.  Also when you hit "v" in characterwise Visual mode,
+"CTRL-V" in blockwise Visual mode or "V" in linewise Visual mode.  If you hit
+CTRL-Z the highlighting stops and the editor is suspended or a new shell is
+started |CTRL-Z|.
+
+              new mode after typing:		*v_v* *v_CTRL-V* *v_V*
+old mode             "v"              "CTRL-V"               "V"	~
+
+Normal              Visual         blockwise Visual       linewise Visual
+Visual              Normal         blockwise Visual       linewise Visual
+blockwise Visual    Visual         Normal                 linewise Visual
+linewise Visual     Visual         blockwise Visual       Normal
+
+							*gv* *v_gv*
+gv			Start Visual mode with the same area as the previous
+			area and the same mode.  In Visual mode the current and
+			the previous Visual area are exchanged.
+
+							*<LeftMouse>*
+<LeftMouse>		Set the current cursor position.  If Visual mode is
+			active it is stopped.  Only when 'mouse' option is
+			contains 'n' or 'a'.  If the position is within 'so'
+			lines from the last line on the screen the text is
+			scrolled up.  If the position is within 'so' lines from
+			the first line on the screen the text is scrolled
+			down.
+
+							*<RightMouse>*
+<RightMouse>		Start Visual mode if it is not active.  The text from
+			the cursor position to the position of the click is
+			highlighted.  If Visual mode was already active move
+			the start or end of the highlighted text, which ever
+			is closest, to the position of the click.  Only when
+			'mouse' option contains 'n' or 'a'.
+
+							*<LeftRelease>*
+<LeftRelease>		This works like a <LeftMouse>, if it is not a
+			the same position as <LeftMouse>.  In an xterm you
+			won't see the selected area until the button is
+			released.  Only when 'mouse' option contains 'n' or
+			'a'.
+
+If Visual mode is not active and the "v", "V" or CTRL-V is preceded with a
+count, the size of the previously highlighted area is used for a start.  You
+can then move the end of the highlighted area and give an operator.  The type
+of the old area is used (character, line or blockwise).
+- Linewise Visual mode: The number of lines is multiplied with the count.
+- Blockwise Visual mode: The number of lines and columns is multiplied with
+  the count.
+- Normal Visual mode within one line: The number of characters is multiplied
+  with the count.
+- Normal Visual mode with several lines: The number of lines is multiplied
+  with the count, in the last line the same number of characters is used as
+  in the last line in the previously highlighted area.
+The start of the text is the Cursor position.  If the "$" command was used as
+one of the last commands to extend the highlighted text, the area will be
+extended to the rightmost column of the longest line.
+
+If you want to highlight exactly the same area as the last time, you can use
+"gv" |gv| |v_gv|.
+
+							*v_CTRL-C*
+CTRL-C			In Visual mode: Stop Visual mode.  When insert mode is
+			pending (the mode message shows
+			"-- (insert) VISUAL --"), it is also stopped.
+
+==============================================================================
+3. Changing the Visual area				*visual-change*
+
+							*v_o*
+o			Go to Other end of highlighted text: The current
+			cursor position becomes the start of the highlighted
+			text and the cursor is moved to the other end of the
+			highlighted text.  The highlighted area remains the
+			same.
+
+							*v_O*
+O			Go to Other end of highlighted text.  This is like
+			"o", but in Visual block mode the cursor moves to the
+			other corner in the same line.  When the corner is at
+			a character that occupies more than one position on
+			the screen (e.g., a <Tab>), the highlighted text may
+			change.
+
+When the "$" command is used with blockwise Visual mode, the right end of the
+highlighted text will be determined by the longest highlighted line.  This
+stops when a motion command is used that does not move straight up or down.
+
+For moving the end of the block many commands can be used, but you cannot
+use Ex commands, commands that make changes or abandon the file.  Commands
+(starting with) ".pPiIaAO&", CTRL-^, "Z", CTRL-], CTRL-T, CTRL-R, CTRL-I
+and CTRL-O cause a beep and Visual mode continues.
+
+
+==============================================================================
+4. Operating on the Visual area				*visual-operators*
+
+The operators that can be used are:
+	~	switch case					|v_~|
+	d	delete						|v_d|
+	c	change						|v_c|
+	y	yank						|v_y|
+	>	shift right (1)(*)				|v_>|
+	<	shift left (1)(*)				|v_<|
+	!	filter through external command (1)		|v_!|
+	=	filter through 'equalprg' option command (1)	|v_=|
+	gq	format lines to 'textwidth' length (1)		|v_gq|
+
+The objects that can be used are:
+	aw	a word (with white space)			|v_aw|
+	iw	inner word					|v_iw|
+	aW	a WORD (with white space)			|v_aW|
+	iW	inner WORD					|v_iW|
+	as	a sentence (with white space)			|v_as|
+	is	inner sentence					|v_is|
+	ap	a paragraph (with white space)			|v_ap|
+	ip	inner paragraph					|v_ip|
+	ab	a () block (with braces)			|v_ab|
+	ib	inner () block					|v_ib|
+	aB	a {} block (with brackets)			|v_aB|
+	iB	inner {} block					|v_iB|
+
+Additionally the following commands can be used:
+	:	start ex command for highlighted lines (1)	|v_:|
+	r	change						|v_r|
+	s	change						|v_s|
+	C	change (2)					|v_C|
+	S	change (2)					|v_S|
+	R	change (2)					|v_R|
+	x	delete						|v_x|
+	D	delete (3)					|v_D|
+	X	delete (2)					|v_X|
+	Y	yank (2)					|v_Y|
+	J	join (1)					|v_J|
+	U	make uppercase					|v_U|
+	u	make lowercase					|v_u|
+	^]	find tag					|v_CTRL-]|
+
+(1): Always whole lines, see |:visual_example|.
+(2): Whole lines when not using CTRL-V.
+(3): Whole lines when not using CTRL-V, delete until the end of the line when
+     using CTRL-V.
+(*): In a future a blockwise shift will move the block only, not whole
+     lines.
+
+Note that the ":vmap" command can be used to specifically map keys in Visual
+mode.
+
+If you want to give a register name using the """ command, do this just before
+typing the operator character: "v{move-around}"xd".
+
+If you want to give a count to the command, do this just before typing the
+operator character: "v{move-around}3>" (move lines 3 indents to the right).
+
+							*{move-around}*
+The {move-around} is any sequence of movement commands.  Note the difference
+with {motion}, which is only ONE movement command.
+
+==============================================================================
+5. Repeating						*visual-repeat*
+
+When repeating a Visual mode operator, the operator will be applied to the
+same amount of text as the last time:
+- Linewise Visual mode: The same number of lines.
+- Blockwise Visual mode: The same number of lines and columns.
+- Normal Visual mode within one line: The same number of characters.
+- Normal Visual mode with several lines: The same number of lines, in the
+  last line the same number of characters as in the last line the last time.
+The start of the text is the Cursor position.  If the "$" command was used as
+one of the last commands to extend the highlighted text, the repeating will
+be applied up to the rightmost column of the longest line.
+
+
+==============================================================================
+6. Examples						*visual-examples*
+
+							*:visual_example*
+Currently the ":" command works on whole lines only.  When you select part of
+a line, doing something like ":!date" will replace the whole line.  If you
+want only part of the line to be replaced you will have to make a mapping for
+it.  In a future release ":" may work on partial lines.
+
+Here is an example, to replace the selected text with the output of "date":
+>	:vmap _a <Esc>a<CR><Esc>`\<i<CR><Esc>!!date<CR>kJJ
+
+(In the <> notation |<>|, when typing it you should type it literally; you
+need to remove the 'B' and '<' flags from 'cpoptions')
+
+What this does is:
+<Esc>		stop Visual mode
+a<CR><Esc>	break the line after the Visual area
+`\<		jump to the start of the Visual area
+i<CR><Esc>	break the line before the Visual area
+!!date<CR>	filter the Visual text through date
+kJJ		Join the lines again
+
+							*visual-search*
+Here is an idea for a mapping that makes it possible to do a search for the
+selected text:
+>	:vmap X y/<C-R>"<CR>
+
+(In the <> notation |<>|, when typing it you should type it literally; you
+need to remove the 'B' and '<' flags from 'cpoptions')
+
+Note that special characters (like '.' and '*') will cause problems.
+
+ vim:tw=78:ts=8:sw=8:

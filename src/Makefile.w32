@@ -1,0 +1,336 @@
+#
+# Makefile for Vim on Win32 (Windows NT and Windows 95), using the
+# Microsoft Visual C++ 2.x and MSVC 4.x compilers.  It builds on Windows 95
+# and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
+# binary and the Windows 95 binary are identical.
+#
+# To build the GUI version with Microsoft Visual C++, use Gvim_vc.mak.
+# To build using Borland C++, use Makefile.bor.
+#
+
+# to build the retail version:
+#	nmake -f Makefile.w32
+# to build the debug version:
+#	nmake DEBUG=1 -f Makefile.w32
+
+### See feature.h for a list of optionals.
+# If you want to build some optional features without modifying the source,
+# you can set DEFINES on the command line, e.g.,
+#	nmake -f makefile.w32 "DEFINES=-DEMACS_TAGS"
+
+
+# Build on both Windows NT and Windows 95
+
+TARGETOS = BOTH
+
+
+# ntwin32.mak requires that CPU be set appropriately
+
+!ifdef PROCESSOR_ARCHITECTURE
+# We're on Windows NT
+CPU = $(PROCESSOR_ARCHITECTURE)
+! if "$(CPU)" == "x86"
+CPU = i386
+! endif
+!else  # !PROCESSOR_ARCHITECTURE
+# We're on Windows 95
+CPU = i386
+!endif # !PROCESSOR_ARCHITECTURE
+
+
+# Build a retail version by default
+
+!ifndef DEBUG
+NODEBUG = 1
+!endif
+
+
+# Build a multithreaded version for the Windows 95 dead keys hack
+# Commented out because it doesn't work.
+# MULTITHREADED = 1
+
+
+# Get all sorts of useful, standard macros from the SDK.  (Note that
+# MSVC 2.2 does not install <ntwin32.mak> in the \msvc20\include
+# directory, but you can find it in \msvc20\include on the CD-ROM.
+# You may also need <win32.mak> from the same place.)
+
+!include <ntwin32.mak>
+
+
+#>>>>> path of the compiler and linker; name of include and lib directories
+# PATH = c:\msvc20\bin;$(PATH)
+# INCLUDE = c:\msvc20\include
+# LIB = c:\msvc20\lib
+
+!ifndef CTAGS
+CTAGS = ctags
+!endif
+
+!ifdef MULTITHREADED
+CVARS = $(cvarsmt)
+CONLIBS = $(conlibsmt)
+!else
+CVARS = $(cvars)
+CONLIBS = $(conlibs)
+!endif
+
+
+CFLAGS = -c /W3 /nologo $(CVARS) -Iproto $(cflags) $(DEFINES)
+
+#>>>>> end of choices
+###########################################################################
+
+!ifdef PROCESSOR_ARCHITECTURE
+OS_TYPE	= winnt
+DEL_TREE = rmdir /s /q
+!else
+OS_TYPE	= win95
+DEL_TREE = deltree /y
+!endif
+
+!ifdef NODEBUG
+OUTDIR=.\Objects
+VIM = vim
+CFLAGS = $(CFLAGS) -DNDEBUG /Ox
+RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
+!else  # DEBUG
+OUTDIR=.\Debug
+VIM = vimd
+# MSVC 4.1
+PDB = /Fd$(OUTDIR)/
+LINK_PDB = /PDB:$(OUTDIR)/
+# MSVC 2.2
+# PDB = /Fd$(OUTDIR)/vim.pdb
+# LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
+CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
+RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
+!endif # DEBUG
+
+
+INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
+	proto.h option.h structs.h term.h
+
+
+OBJ = \
+	$(OUTDIR)\buffer.obj \
+	$(OUTDIR)\charset.obj \
+	$(OUTDIR)\digraph.obj \
+	$(OUTDIR)\edit.obj \
+	$(OUTDIR)\eval.obj \
+	$(OUTDIR)\ex_cmds.obj \
+	$(OUTDIR)\ex_docmd.obj \
+	$(OUTDIR)\ex_getln.obj \
+	$(OUTDIR)\fileio.obj \
+	$(OUTDIR)\getchar.obj \
+	$(OUTDIR)\main.obj \
+	$(OUTDIR)\mark.obj \
+	$(OUTDIR)\memfile.obj \
+	$(OUTDIR)\memline.obj \
+	$(OUTDIR)\message.obj \
+	$(OUTDIR)\misc1.obj \
+	$(OUTDIR)\misc2.obj \
+	$(OUTDIR)\normal.obj \
+	$(OUTDIR)\option.obj \
+	$(OUTDIR)\ops.obj \
+	$(OUTDIR)\os_win32.obj \
+	$(OUTDIR)\quickfix.obj \
+	$(OUTDIR)\regexp.obj \
+	$(OUTDIR)\screen.obj \
+	$(OUTDIR)\search.obj \
+	$(OUTDIR)\syntax.obj \
+	$(OUTDIR)\tag.obj \
+	$(OUTDIR)\term.obj \
+	$(OUTDIR)\ui.obj \
+	$(OUTDIR)\undo.obj \
+	$(OUTDIR)\window.obj \
+	$(OUTDIR)\vim.res
+
+# PYTHON interface
+!ifdef PYTHON_BASE
+!message Python detected - root dir is "$(PYTHON_BASE)"
+CFLAGS    = $(CFLAGS) -DHAVE_PYTHON
+PYTHONOBJ = $(OUTDIR)\if_python.obj
+PYTHONINC = /I "$(PYTHON_BASE)\Include" /I "$(PYTHON_BASE)\PC"
+PYTHONLIB = $(PYTHON_BASE)\vc40\python14.lib
+!endif
+
+all:	$(VIM) ctags/ctags.exe xxd/xxd.exe
+
+$(VIM): $(OUTDIR) $(OBJ) $(PYTHONOBJ) $(OUTDIR)\version.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) $(PYTHONOBJ) \
+		$(OUTDIR)\version.obj $(CONLIBS) user32.lib $(PYTHONLIB) $(LINK_PDB)
+        del $(OUTDIR)\version.obj
+
+$(VIM).exe: $(VIM)
+
+$(OUTDIR):
+	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
+
+ctags/ctags.exe: ctags/main.c
+	cd ctags
+	$(MAKE) -f Makefile.w32
+	cd ..
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd
+	$(MAKE) -f Makefile.w32
+	cd ..
+
+
+ctags tags: notags
+	$(CTAGS) *.c *.h proto\*.pro
+
+notags:
+	- del tags
+
+clean:
+	- $(DEL_TREE) $(OUTDIR)
+	- del $(VIM).exe
+	- del $(VIM).ilk
+	- del $(VIM).pdb
+	- del $(VIM).map
+	- del $(VIM).ncb
+
+test:
+	cd testdir
+	$(MAKE) -f Makefile.dos
+	cd ..
+
+###########################################################################
+
+$(OUTDIR)/buffer.obj:	$(OUTDIR) buffer.c  $(INCL)
+	$(CC) $(CFLAGS) buffer.c /Fo$(OUTDIR)/buffer.obj $(PDB)
+
+$(OUTDIR)/charset.obj:	$(OUTDIR) charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c /Fo$(OUTDIR)/charset.obj $(PDB)
+
+$(OUTDIR)/digraph.obj:	$(OUTDIR) digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c /Fo$(OUTDIR)/digraph.obj $(PDB)
+
+$(OUTDIR)/edit.obj:	$(OUTDIR) edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c /Fo$(OUTDIR)/edit.obj $(PDB)
+
+$(OUTDIR)/eval.obj:	$(OUTDIR) eval.c  $(INCL)
+	$(CC) $(CFLAGS) eval.c /Fo$(OUTDIR)/eval.obj $(PDB)
+
+$(OUTDIR)/ex_cmds.obj:	$(OUTDIR) ex_cmds.c  $(INCL) ex_cmds.h
+	$(CC) $(CFLAGS) ex_cmds.c /Fo$(OUTDIR)/ex_cmds.obj $(PDB)
+
+$(OUTDIR)/ex_docmd.obj:	$(OUTDIR) ex_docmd.c  $(INCL) ex_cmds.h
+	$(CC) $(CFLAGS) ex_docmd.c /Fo$(OUTDIR)/ex_docmd.obj $(PDB)
+
+$(OUTDIR)/ex_getln.obj:	$(OUTDIR) ex_getln.c  $(INCL)
+	$(CC) $(CFLAGS) ex_getln.c /Fo$(OUTDIR)/ex_getln.obj $(PDB)
+
+$(OUTDIR)/fileio.obj:	$(OUTDIR) fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c /Fo$(OUTDIR)/fileio.obj $(PDB)
+
+$(OUTDIR)/getchar.obj:	$(OUTDIR) getchar.c  $(INCL)
+	$(CC) $(CFLAGS) getchar.c /Fo$(OUTDIR)/getchar.obj $(PDB)
+
+$(OUTDIR)/if_python.obj: $(OUTDIR) if_python.c  $(INCL)
+	$(CC) $(CFLAGS) $(PYTHONINC) if_python.c \
+		/Fo$(OUTDIR)/if_python.obj $(PDB)
+
+$(OUTDIR)/main.obj:	$(OUTDIR) main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c /Fo$(OUTDIR)/main.obj $(PDB)
+
+$(OUTDIR)/mark.obj:	$(OUTDIR) mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c /Fo$(OUTDIR)/mark.obj $(PDB)
+
+$(OUTDIR)/memfile.obj:	$(OUTDIR) memfile.c  $(INCL)
+	$(CC) $(CFLAGS) memfile.c /Fo$(OUTDIR)/memfile.obj $(PDB)
+
+$(OUTDIR)/memline.obj:	$(OUTDIR) memline.c  $(INCL)
+	$(CC) $(CFLAGS) memline.c /Fo$(OUTDIR)/memline.obj $(PDB)
+
+$(OUTDIR)/message.obj:	$(OUTDIR) message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c /Fo$(OUTDIR)/message.obj $(PDB)
+
+$(OUTDIR)/misc1.obj:	$(OUTDIR) misc1.c  $(INCL)
+	$(CC) $(CFLAGS) misc1.c /Fo$(OUTDIR)/misc1.obj $(PDB)
+
+$(OUTDIR)/misc2.obj:	$(OUTDIR) misc2.c  $(INCL)
+	$(CC) $(CFLAGS) misc2.c /Fo$(OUTDIR)/misc2.obj $(PDB)
+
+$(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL)
+	$(CC) $(CFLAGS) normal.c /Fo$(OUTDIR)/normal.obj $(PDB)
+
+$(OUTDIR)/option.obj:	$(OUTDIR) option.c  $(INCL)
+	$(CC) $(CFLAGS) option.c /Fo$(OUTDIR)/option.obj $(PDB)
+
+$(OUTDIR)/ops.obj:	$(OUTDIR) ops.c  $(INCL)
+	$(CC) $(CFLAGS) ops.c /Fo$(OUTDIR)/ops.obj $(PDB)
+
+$(OUTDIR)/os_win32.obj:	$(OUTDIR) os_win32.c  $(INCL) os_win32.h
+	$(CC) $(CFLAGS) os_win32.c /Fo$(OUTDIR)/os_win32.obj $(PDB)
+
+$(OUTDIR)/quickfix.obj:	$(OUTDIR) quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c /Fo$(OUTDIR)/quickfix.obj $(PDB)
+
+$(OUTDIR)/regexp.obj:	$(OUTDIR) regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c /Fo$(OUTDIR)/regexp.obj $(PDB)
+
+$(OUTDIR)/screen.obj:	$(OUTDIR) screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c /Fo$(OUTDIR)/screen.obj $(PDB)
+
+$(OUTDIR)/search.obj:	$(OUTDIR) search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c /Fo$(OUTDIR)/search.obj $(PDB)
+
+$(OUTDIR)/syntax.obj:	$(OUTDIR) syntax.c  $(INCL)
+	$(CC) $(CFLAGS) syntax.c /Fo$(OUTDIR)/syntax.obj $(PDB)
+
+$(OUTDIR)/tag.obj:	$(OUTDIR) tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c /Fo$(OUTDIR)/tag.obj $(PDB)
+
+$(OUTDIR)/term.obj:	$(OUTDIR) term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c /Fo$(OUTDIR)/term.obj $(PDB)
+
+$(OUTDIR)/ui.obj:	$(OUTDIR) ui.c  $(INCL)
+	$(CC) $(CFLAGS) ui.c /Fo$(OUTDIR)/ui.obj $(PDB)
+
+$(OUTDIR)/undo.obj:	$(OUTDIR) undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c /Fo$(OUTDIR)/undo.obj $(PDB)
+
+$(OUTDIR)/version.obj: $(OUTDIR) version.c version.h
+	$(CC) $(CFLAGS) version.c /Fo$(OUTDIR)/version.obj $(PDB)
+
+$(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
+	$(CC) $(CFLAGS) window.c /Fo$(OUTDIR)/window.obj $(PDB)
+
+$(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h
+	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
+
+proto.h: \
+	proto/buffer.pro \
+	proto/charset.pro \
+	proto/digraph.pro \
+	proto/edit.pro \
+	proto/eval.pro \
+	proto/ex_cmds.pro \
+	proto/ex_docmd.pro \
+	proto/ex_getln.pro \
+	proto/fileio.pro \
+	proto/getchar.pro \
+	proto/main.pro \
+	proto/mark.pro \
+	proto/memfile.pro \
+	proto/memline.pro \
+	proto/message.pro \
+	proto/misc1.pro \
+	proto/misc2.pro \
+	proto/normal.pro \
+	proto/ops.pro \
+	proto/option.pro \
+	proto/os_win32.pro \
+	proto/quickfix.pro \
+	proto/regexp.pro \
+	proto/screen.pro \
+	proto/search.pro \
+	proto/syntax.pro \
+	proto/tag.pro \
+	proto/term.pro \
+	proto/ui.pro \
+	proto/undo.pro \
+	proto/window.pro

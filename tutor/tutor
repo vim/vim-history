@@ -1,5 +1,5 @@
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*
-*    W e l c o m e   t o   V I	 T u t o r    -    V e r s i o n   1 . 2      *
+*    W e l c o m e   t o   V I	 T u t o r    -    V e r s i o n   1 . 3      *
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*
 			     **************
 			     * Lesson 1.0 *
@@ -707,21 +707,38 @@ Note: This avoids typing  i , the last character, the text to insert, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+				*************
+				* LESSON 7  *
+				*************
+		=====>>>>> ON-LINE HELP COMMANDS <<<<<=====
+
+  Vim has a comprehensive on-line help system.  To get started, try one of
+  these three:
+	- press the <HELP> key (if you have one)
+	- press the <F1> key (if you have one)
+	- type   :help <RETURN>
+
+  Type   :q <RETURN>   to close the help window.
+
+  You can find help on just about any subject, by giving an argument to the
+  ":help" command.  Try these:
+
+  Type   :help w <RETURN>
+  Type   c_<T <RETURN>
+  Type   :help insert-index <RETURN>
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   This concludes the Vim Tutor.  It was intended to give a brief overview of
   the Vim editor, just enough to allow you to use the editor fairly easily.
   It is far from complete as Vim has many many more commands.
 
-  For more information on Vim please refer to:
-
-	doc/vim_ref.txt  - a complete description of Vim
-	doc/vim_help.txt - a short summary of all commands
-	doc/vim_diff.txt - summary of differences between vi and Vim
-
-  Or use the on-line help!  This can be accessed by one of:
-	pressing the <Help> key
-	pressing the <F1> key
-	typing ":help" and pressing the <Enter> key
+  For further reading and studying, this book is recommended:
+  	Learning the Vi Editor - by Linda Lamb
+	Publisher: O'Reilly & Associates Inc.
+  This is only about Vi, not about things that are new in Vim.  It is a good
+  book to get to know almost anything you want to do with Vi.
 
   This tutorial was written by Michael C. Pierce and Robert K. Ware,
   Colorado School of Mines using ideas supplied by Charles Smith,

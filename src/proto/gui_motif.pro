@@ -1,13 +1,16 @@
 /* gui_motif.c */
-void gui_mch_create_widgets __PARMS((void));
-int gui_mch_get_winsize __PARMS((void));
-void gui_mch_set_winsize __PARMS((void));
-void gui_mch_add_menu __PARMS((GuiMenu *menu, GuiMenu *parent));
-void gui_mch_add_menu_item __PARMS((GuiMenu *menu, GuiMenu *parent));
-void gui_mch_destroy_menu __PARMS((GuiMenu *menu));
-void gui_mch_create_which_components __PARMS((void));
-void gui_mch_update_scrollbars __PARMS((int worst_update, int which_sb));
-void gui_mch_reorder_scrollbars __PARMS((int which_sb));
-void gui_mch_destroy_scrollbar __PARMS((WIN *wp));
-void gui_mch_update_horiz_scrollbar __PARMS((int value, int size, int max));
-Window gui_mch_get_wid __PARMS((void));
+void gui_x11_create_widgets __ARGS((void));
+void gui_mch_set_text_area_pos __ARGS((int x, int y, int w, int h));
+void gui_x11_set_back_color __ARGS((void));
+void gui_mch_enable_menu __ARGS((int flag));
+void gui_mch_set_menu_pos __ARGS((int x, int y, int w, int h));
+void gui_mch_add_menu __ARGS((GuiMenu *menu, GuiMenu *parent));
+void gui_mch_add_menu_item __ARGS((GuiMenu *menu, GuiMenu *parent));
+void gui_mch_new_menu_colors __ARGS((void));
+void gui_mch_destroy_menu __ARGS((GuiMenu *menu));
+void gui_mch_set_scrollbar_thumb __ARGS((GuiScrollbar *sb, int val, int size, int max));
+void gui_mch_set_scrollbar_pos __ARGS((GuiScrollbar *sb, int x, int y, int w, int h));
+void gui_mch_create_scrollbar __ARGS((GuiScrollbar *sb, int orient));
+void gui_mch_destroy_scrollbar __ARGS((GuiScrollbar *sb));
+void gui_mch_set_scrollbar_colors __ARGS((GuiScrollbar *sb));
+Window gui_x11_get_wid __ARGS((void));

@@ -1,0 +1,180 @@
+*if_perl.txt*   For Vim version 5.0.  Last modification: 1998 Feb 14
+
+
+		  VIM REFERENCE MANUAL    by Sven Verdoolaege
+		  			 and Matt Gerassimof
+
+Perl and Vim				*perl*
+
+1. Editing Perl files			|perl-editing|
+2. Compiling VIM with Perl interface	|perl-compiling|
+3. Using the Perl interface		|perl-using|
+
+{Vi does not have any of these commands}
+
+The Perl interface only works when Vim was compiled with the |+perl| feature.
+
+==============================================================================
+1. Editing Perl files					*perl-editing*
+
+When syntax highlighting is enabled, Perl files can be colored.  This is done
+automatically for "*.pl" and "*.pm" files.  POD files ("*.pod") can also be
+highlighted.
+
+To use tags with Perl, you need a script that generates the tags file from a
+Perl script.  Here's the URL for two of these:
+<URL:http://fohnix.metronet.com/perlinfo/scripts/text-processing/newptags.pl>
+<URL:http://www.geek-girl.com/perl/coombs-scripts/ptags>
+
+==============================================================================
+2. Compiling VIM with Perl interface			*perl-compiling*
+
+To compile Vim with Perl interface, you need Perl 5.004 (or later).  It must
+have been installed already, before starting to compile Vim.  It will NOT work
+with the 5.003 version that has been officially released!  It will probably
+work with Perl 5.003_05 and later.
+
+The Perl patches for Vim were made by:
+	Sven Verdoolaege <skimo@breughel.ufsia.ac.be>
+	Matt Gerassimof
+
+==============================================================================
+3. Using the Perl interface				*perl-using*
+
+							*:perl* *:pe*
+:pe[rl] {cmd}		Execute Perl command {cmd}. The current package
+			is "main". {not in Vi}
+
+							*:perldo* *:perld*
+:[range]perld[o] {cmd}	Execute Perl command {cmd} for each line in the
+			[range], with $_ being set to the text of each line in
+			turn, without a trailing <EOL>. Setting $_ will change
+			the text, but note that it is not possible to add or
+			delete lines using this command.  (default whole
+			file).  {not in Vi}
+
+Here are some things you can try:
+
+>  :perl $a=1
+>  :perldo $_=reverse($_);1
+>  :perl VIM::Msg("hello")
+>  :perl $line = $curwin->Buffer->Get(42)
+
+
+							*perl-overview*
+Here is an overview of the functions that are available to Perl:
+
+>  :perl VIM::Msg("Text")		# displays a message
+>  :perl VIM::SetOption("ai")		# sets a vim option
+>  :perl ($v, $success) = VIM::Eval('&path') # $v=option 'path', $success=1
+>  :perl ($v, $success) = VIM::Eval('&xyz')  # $v='' and $success=0 (no option)
+>  :perl $v = VIM::Eval(expand("<cfile>"))   # expand <cfile>
+>  :perl $curwin->SetHeight(10)		# sets the window height
+>  :perl @pos = $curwin->Cursor()	# returns (row, col) array
+>  :perl @pos = (10, 10)
+>  :perl $curwin->Cursor(@pos)		# sets cursor to @pos
+>  :perl $curwin->Cursor(10,10)		# sets cursor to row 10 col 10
+>  :perl $b = $curwin->Buffer
+>  :perl $b->Name()			# returns buffer name
+>  :perl $b->Count()			# returns the number of lines
+>  :perl $l = $b->Get(10)		# returns line 10
+>  :perl @l = $b->Get(1 .. 5)		# returns lines 1 through 5
+>  :perl $b->Delete(10)			# deletes line 10
+>  :perl $b->Delete(10, 20)		# delete lines 10 through 20
+>  :perl $b->Append(10, "Line")		# appends a line
+>  :perl $b->Append(10, "Line1", "Line2", "Line3") # appends 3 lines
+>  :perl @l = ("L1", "L2", "L3")
+>  :perl $b->Append(10, @l)		# appends L1, L2 and L3
+>  :perl $b->Set(10, "Line")		# replaces line 10
+>  :perl $b->Set(10, "Line1", "Line2")	# replaces lines 10 and 11
+>  :perl $b->Set(10, @l)		# replaces 3 lines
+
+							*perl-Msg*
+VIM::Msg({message})	Displays the message {message}.
+
+							*perl-SetOption*
+VIM::SetOption({arg})	Sets a vim option.  {arg} can be any argument that the
+			":set" command accepts.  Note that this means that no
+			spaces are allowed in the argument!  See |:set|.
+
+							*perl-Buffers*
+VIM::Buffers({bn}?)	If {bn} is not specified the function will return
+			a list of all the buffers in an array context and will
+			return the number of buffers in a scalar context.
+			If {bn} is given, it will return the buffer number
+			{bn} if it exists or undef if not.
+
+							*perl-Windows*
+VIM::Windows({wn}?)	If {bn} is not specified the function will return
+			a list of all the windows in an array context and will
+			return the number of windows in a scalar context.
+			If {bn} is given, it will return the window number
+			{wn} if it exists or undef if not.
+
+							*perl-DoCommand*
+VIM::DoCommand({cmd})	Executes Ex command {cmd}.
+
+							*perl-Eval*
+VIM::Eval({expr})    	Evaluates {expr} and returns (val, success).
+			success=1 indicates that val contains the value of
+			{expr}; success=0 indicates a failure to evaluation
+			the expression.  '@x' returns the contents of register
+			x, '&x' returns the value of option x, 'x' returns the
+			value of internal |variables| x, and '$x' is equivalent
+			to perl's $ENV{x}.  All |functions| accessible from
+			the command line can be used in {expr}.
+
+							*perl-SetHeight*
+Window->SetHeight({height})
+			Sets the Window height to {height}.  The resulting
+			height is limited by the height of the screen.
+
+							*perl-GetCursor*
+Window->Cursor({row}?, {col}?)
+			Returns (row, col) array for the current cursor
+			position in the Window if {row} and {col} are not
+			specified.  If {row} and {col} are specified, it sets
+			the Window's cursor position to {row} and {col}.
+			Note that {col} is numbered from 0, Perl-fashion, and
+			thus is one less than the value reported in the ruler.
+
+Window->Buffer()					*perl-Buffer*
+			Returns the Buffer object corresponding to the given
+			Window.
+
+							*perl-Name*
+Buffer->Name()		Returns the filename for the Buffer.
+
+							*perl-Count*
+Buffer->Count()		Returns the number of lines in the Buffer.
+
+							*perl-Get*
+Buffer->Get({lnum}, {lnum}?, ...)
+			Returns a text string of line {lnum} in the Buffer
+			for each {lnum} specified. An array can be passed
+			with a list of {lnum}'s specified.
+
+							*perl-Delete*
+Buffer->Delete({lnum}, {lnum}?)
+			Deletes line {lnum} in the Buffer. If the second
+			{lnum} is specified,  the range of lines from the
+			first {lnum} to the second {lnum} are deleted.
+
+							*perl-Append*
+Buffer->Append({lnum}, {line}, {line}?, ...)
+			Appends the string {line} after line {lnum} in the
+			Buffer for each {line} specified.  An array can be
+			passed with a list of {line}'s specified.
+
+							*perl-Set*
+Buffer->Set({lnum}, {line}, {line}?, ...)
+			Replaces line {lnum} with string {line} for each
+			{line} specified. An array of {lines} can be passed
+			and each subsequent line will be replaced.  If the
+			arguments are invalid, the line is not replaced.
+
+$main::curwin
+			The current window object.
+
+
+ vim:tw=78:ts=8:sw=8:

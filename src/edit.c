@@ -1,1964 +1,1041 @@
-/* vi:set ts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4:
  *
- * VIM - Vi IMproved		by Bram Moolenaar
+ * VIM - Vi IMproved	by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
- * edit.c: functions for insert mode
+ * edit.c: functions for Insert mode
  */
 
 #include "vim.h"
-#include "globals.h"
-#include "proto.h"
-#include "option.h"
-#include "ops.h"	/* for op_type */
 
 #ifdef INSERT_EXPAND
 /*
  * definitions used for CTRL-X submode
  */
-#define CTRL_X_WANT_IDENT		0x100
+#define CTRL_X_WANT_IDENT	0x100
 
 #define CTRL_X_NOT_DEFINED_YET	(1)
-#define CTRL_X_SCROLL			(2)
-#define CTRL_X_WHOLE_LINE		(3)
-#define CTRL_X_FILES			(4)
-#define CTRL_X_TAGS				(5 + CTRL_X_WANT_IDENT)
+#define CTRL_X_SCROLL		(2)
+#define CTRL_X_WHOLE_LINE	(3)
+#define CTRL_X_FILES		(4)
+#define CTRL_X_TAGS		(5 + CTRL_X_WANT_IDENT)
 #define CTRL_X_PATH_PATTERNS	(6 + CTRL_X_WANT_IDENT)
-#define CTRL_X_PATH_DEFINES		(7 + CTRL_X_WANT_IDENT)
-#define CTRL_X_FINISHED			(8)
-#define CTRL_X_DICTIONARY		(9 + CTRL_X_WANT_IDENT)
-  
-struct Completion
+#define CTRL_X_PATH_DEFINES	(7 + CTRL_X_WANT_IDENT)
+#define CTRL_X_FINISHED		(8)
+#define CTRL_X_DICTIONARY	(9 + CTRL_X_WANT_IDENT)
+
+#define C_X_SKIP		(7) /* length of " Adding" */
+char *ctrl_x_msgs[] =
 {
-	char_u				*str;
-	char_u				*fname;
-	int					original;
-	struct Completion	*next;
-	struct Completion	*prev;
+    " Adding Keyword completion (^N/^P)", /* ctrl_x_mode == 0, ^P/^N compl. */
+    " ^X mode (^E/^Y/^L/^]/^F/^I/^K/^D/^N/^P)",
+    /* Scroll has it's own msgs, in it's place there is the msg for local
+     * ctrl_x_mode = 0 (eg continue_status & CONT_LOCAL)  -- Acevedo */
+    " Adding Keyword Local completion (^N/^P)",
+    " Adding Whole line completion (^L/^N/^P)",
+    " Adding File name completion (^F/^N/^P)",
+    " Adding Tag completion (^]/^N/^P)",
+    " Adding Path pattern completion (^N/^P)",
+    " Adding Definition completion (^D/^N/^P)",
+    NULL,
+    " Adding Dictionary completion (^K/^N/^P)"
 };
 
-struct Completion *first_match = NULL;
-struct Completion *curr_match = NULL;
+char_u e_hitend[] = "Hit end of paragraph";
+char_u e_hitend_f[] = "Hit end of paragraph (forward)";
+char_u e_hitend_b[] = "Hit end of paragraph (backward)";
+char_u e_patnotf_f[] = "Pattern not found (forward)";
+char_u e_patnotf_b[] = "Pattern not found (backward)";
 
-static int add_completion __ARGS((char_u *str, int len, char_u *, int dir));
-static int make_cyclic __ARGS((void));
-static void complete_dictionaries __ARGS((char_u *, int));
+/*
+ * Structure used to store one match for insert completion.
+ */
+struct Completion
+{
+    struct Completion	*next;
+    struct Completion	*prev;
+    char_u		*str;	  /* matched text */
+    char_u		*fname;	  /* file containing the match */
+    int			original; /* ORIGINAL_TEXT, CONT_S_IPOS or FREE_FNAME */
+};
+
+/* the original text when the expansion begun */
+#define ORIGINAL_TEXT	(1)
+#define FREE_FNAME	(2)
+/*
+ * All the current matches are stored in a list.
+ * "first_match" points to the start of the list.
+ * "curr_match" points to the currently selected entry.
+ */
+static struct Completion    *first_match = NULL;
+static struct Completion    *curr_match = NULL;
+static int		    started_completion;
+static char_u		    *complete_pat;
+static int		    save_sm;
+static char_u		    *original_text = NULL;  /* text before completion */
+static int		    continue_mode = 0;
+
+static int  add_completion __ARGS((char_u *str, int len, char_u *, int dir, int reuse));
+static int  make_cyclic __ARGS((void));
+static void complete_dictionaries __ARGS((char_u *dict, char_u *pat, int dir, int flags));
 static void free_completions __ARGS((void));
-static int count_completions __ARGS((void));
+static void clear_insexp __ARGS((void));
+static int  ins_expand_pre __ARGS((int c));
+static BUF  *next_buf __ARGS((BUF *buf, int flag));
+static int  get_expansion __ARGS((FPOS *ini, int dir));
+static int  ins_complete __ARGS((int c));
+static int  quote_meta __ARGS((char_u *dest, char_u *str, int len));
 #endif /* INSERT_EXPAND */
 
-#define BACKSPACE_CHAR				1
-#define BACKSPACE_WORD				2
-#define BACKSPACE_WORD_NOT_SPACE	3
-#define BACKSPACE_LINE				4
+#define BACKSPACE_CHAR		    1
+#define BACKSPACE_WORD		    2
+#define BACKSPACE_WORD_NOT_SPACE    3
+#define BACKSPACE_LINE		    4
 
-static void change_indent __ARGS((int type, int amount, int round));
-static void insert_special __ARGS((int, int));
+static void edit_putchar __ARGS((int c, int highlight));
+static void undisplay_dollar __ARGS((void));
+static void change_indent __ARGS((int type, int amount, int round, int replaced));
+static void insert_special __ARGS((int, int, int));
+static void redo_literal __ARGS((int c));
 static void start_arrow __ARGS((FPOS *end_insert_pos));
-static void stop_arrow __ARGS((void));
 static void stop_insert __ARGS((FPOS *end_insert_pos));
-static int echeck_abbr __ARGS((int));
+static int  echeck_abbr __ARGS((int));
+static void replace_push_off __ARGS((int c));
+static int  replace_pop __ARGS((void));
+static void replace_join __ARGS((int off));
+static void replace_pop_ins __ARGS((void));
+static void replace_flush __ARGS((void));
+static void replace_do_bs __ARGS((void));
+static int  ins_reg __ARGS((void));
+static int  ins_esc __ARGS((long *count, int need_redraw, int cmdchar));
+#ifdef RIGHTLEFT
+static void ins_ctrl_ __ARGS((void));
+#endif
+static void ins_shift __ARGS((int c, int lastc));
+static void ins_del __ARGS((void));
+static int  ins_bs __ARGS((int c, int mode, int *inserted_space_p));
+#ifdef USE_MOUSE
+static void ins_mouse __ARGS((int c));
+#endif
+static void ins_left __ARGS((void));
+static void ins_home __ARGS((void));
+static void ins_end __ARGS((void));
+static void ins_s_left __ARGS((void));
+static void ins_right __ARGS((void));
+static void ins_s_right __ARGS((void));
+static void ins_up __ARGS((void));
+static void ins_pageup __ARGS((void));
+static void ins_down __ARGS((void));
+static void ins_pagedown __ARGS((void));
+static int  ins_tab __ARGS((void));
+static int  ins_eol __ARGS((int c));
+#ifdef DIGRAPHS
+static int  ins_digraph __ARGS((void));
+#endif
+static int  ins_copychar __ARGS((linenr_t lnum));
+#ifdef SMARTINDENT
+static void ins_try_si __ARGS((int c));
+#endif
+static colnr_t get_nolist_virtcol __ARGS((void));
 
-static FPOS 	Insstart;		/* This is where the latest insert/append
-								 * mode started. */
+static FPOS	Insstart;		/* This is where the latest
+					 * insert/append mode started. */
 static colnr_t	Insstart_textlen;	/* length of line when insert started */
 static colnr_t	Insstart_blank_vcol;	/* vcol for first inserted blank */
 
-static char_u	*last_insert = NULL;
-							/* the text of the previous insert */
-static int		last_insert_skip;
-							/* number of chars in front of previous insert */
-static int		new_insert_skip;
-							/* number of chars in front of the current insert */
-#ifdef INSERT_EXPAND
-static char_u	*original_text = NULL;
-							/* Original text typed before completion */
-#endif
+static char_u	*last_insert = NULL;	/* the text of the previous insert */
+static int	last_insert_skip; /* nr of chars in front of previous insert */
+static int	new_insert_skip;  /* nr of chars in front of current insert */
 
 #ifdef CINDENT
-static int		can_cindent;	/* may do cindenting on this line */
+static int	can_cindent;		/* may do cindenting on this line */
+#endif
+
+static int	old_indent = 0;		/* for ^^D command in insert mode */
+
+#ifdef RIGHTLEFT
+int	    revins_on;		    /* reverse insert mode on */
+int	    revins_chars;	    /* how much to skip after edit */
+int	    revins_legal;	    /* was the last char 'legal'? */
+int	    revins_scol;	    /* start column of revins session */
 #endif
 
 /*
- * edit() returns TRUE if it returns because of a CTRL-O command
+ * edit(): Start insering text.
+ *
+ * "cmdchar" can be:
+ * 'i'	normal insert command
+ * 'a'	normal append command
+ * 'R'	replace command
+ * 'r'	"r<CR>" command: insert one <CR>.  Note: count can be > 1, for redo,
+ *	but still only one <CR> is inserted.  The <Esc> is not used for redo.
+ * 'g'	"gI" command.
+ *
+ * This function is not called recursively.  For CTRL-O commands, it returns
+ * and lets the caller handle the Normal-mode command.
+ *
+ * Return TRUE if a CTRL-O command caused the return (insert mode pending).
  */
-	int
-edit(initstr, startln, count)
-	int			initstr;
-	int 		startln;		/* if set, insert at start of line */
-	long 		count;
+    int
+edit(cmdchar, startln, count)
+    int		cmdchar;
+    int		startln;	/* if set, insert at start of line */
+    long	count;
 {
-	int			 c;
-	int			 cc;
-	char_u		*ptr;
-	linenr_t	 lnum;
-	int 		 temp = 0;
-	int			 mode;
-	int			 lastc = 0;
-	colnr_t		 mincol;
-	static linenr_t o_lnum = 0;
-	static int	 o_eol = FALSE;
-	int			 need_redraw = FALSE;
-	int			 i;
-	int			 did_backspace = TRUE;		/* previous char was backspace */
-#ifdef RIGHTLEFT
-	int			revins;						/* reverse insert mode */
-	int			revinschars = 0;			/* how much to skip after edit */
-	int			revinslegal = 0;			/* was the last char 'legal'? */
-	int			revinsscol = -1;			/* start column of revins session */
+    int		 c = 0;
+    char_u	*ptr;
+    int		 lastc;
+    colnr_t	 mincol;
+    static linenr_t o_lnum = 0;
+    static int	 o_eol = FALSE;
+    int		 need_redraw = FALSE;
+    int		 i;
+    int		 did_backspace = TRUE;	    /* previous char was backspace */
+#ifdef CINDENT
+    int		 line_is_white = FALSE;	    /* line is empty before insert */
 #endif
+    linenr_t	 old_topline = 0;	    /* topline before insertion */
+    int		 inserted_space = FALSE;    /* just inserted a space */
+
+    /* sleep before redrawing, needed for "CTRL-O :" that results in an
+     * error message */
+    check_for_delay(TRUE);
+
 #ifdef INSERT_EXPAND
-	FPOS		 first_match_pos;
-	FPOS		 last_match_pos;
-	FPOS		*complete_pos;
-	char_u		*complete_pat = NULL;
-	char_u		*tmp_ptr;
-	char_u		*mesg = NULL;				/* Message about completion */
-	int			 started_completion = FALSE;
-	colnr_t		 complete_col = 0;			/* init for gcc */
-	int			 complete_direction;
-	int			 done_dir = 0;				/* Found all matches in this
-											 * direction */
-	int			 num_matches;
-	char_u		**matches;
-	regexp		*prog;
-	int			 save_sm = -1;				/* init for gcc */
-	int			 save_p_scs;
+    clear_insexp();	    /* clear stuff for ctrl-x mode */
 #endif
-#ifdef CINDENT
-	int			 line_is_white = FALSE;		/* line is empty before insert */
-#endif
-	FPOS		 tpos;
 
 #ifdef USE_MOUSE
-	/*
-	 * When doing a paste with the middle mouse button, Insstart is set to
-	 * where the paste started.
-	 */
-	if (where_paste_started.lnum != 0)
-		Insstart = where_paste_started;
+    /*
+     * When doing a paste with the middle mouse button, Insstart is set to
+     * where the paste started.
+     */
+    if (where_paste_started.lnum != 0)
+	Insstart = where_paste_started;
+    else
+#endif
+    {
+	Insstart = curwin->w_cursor;
+	if (startln)
+	    Insstart.col = 0;
+    }
+    Insstart_textlen = linetabsize(ml_get_curline());
+    Insstart_blank_vcol = MAXCOL;
+
+    if (cmdchar != NUL && !restart_edit)
+    {
+	ResetRedobuff();
+	AppendNumberToRedobuff(count);
+	AppendCharToRedobuff(cmdchar);
+	if (cmdchar == 'g')		    /* "gI" command */
+	    AppendCharToRedobuff('I');
+	else if (cmdchar == 'r')	    /* "r<CR>" command */
+	    count = 1;			    /* insert only one <CR> */
+    }
+
+    if (cmdchar == 'R')
+    {
+#ifdef FKMAP
+	if (p_fkmap && p_ri)
+	{
+	    beep_flush();
+	    EMSG(farsi_text_3);	    /* encoded in Farsi */
+	    State = INSERT;
+	}
 	else
 #endif
-	{
-		Insstart = curwin->w_cursor;
-		if (startln)
-			Insstart.col = 0;
-	}
-	Insstart_textlen = linetabsize(ml_get_curline());
-	Insstart_blank_vcol = MAXCOL;
-
-	if (initstr != NUL && !restart_edit)
-	{
-		ResetRedobuff();
-		AppendNumberToRedobuff(count);
-		AppendCharToRedobuff(initstr);
-		if (initstr == 'g')					/* "gI" command */
-			AppendCharToRedobuff('I');
-		else if (initstr == 'r')			/* "r<CR>" command */
-			count = 1;						/* insert only one <CR> */
-	}
-
-	if (initstr == 'R')
-		State = REPLACE;
-	else
-		State = INSERT;
+	State = REPLACE;
+    }
+    else
+	State = INSERT;
+    /*
+     * Need to recompute the cursor position, it might move when the cursor is
+     * on a TAB or special character.
+     */
+    curs_columns(TRUE);
 
 #ifdef USE_MOUSE
-	setmouse();
+    setmouse();
 #endif
-	clear_showcmd();
+#ifdef SHOWCMD
+    clear_showcmd();
+#endif
 #ifdef RIGHTLEFT
-	revins = (State == INSERT && p_ri);	/* there is no reverse replace mode */
-	if (revins)
-		undisplay_dollar();
+    /* there is no reverse replace mode */
+    revins_on = (State == INSERT && p_ri);
+    if (revins_on)
+	undisplay_dollar();
+    revins_chars = 0;
+    revins_legal = 0;
+    revins_scol = -1;
 #endif
 
+    /*
+     * Handle restarting Insert mode.
+     * Don't do this for CTRL-O . (repeat an insert): we get here with
+     * restart_edit non-zero, and something in the stuff buffer.
+     */
+    if (restart_edit && stuff_empty())
+    {
+#ifdef USE_MOUSE
 	/*
-	 * When CTRL-O . is used to repeat an insert, we get here with
-	 * restart_edit non-zero, but something in the stuff buffer
+	 * After a paste we consider text typed to be part of the insert for
+	 * the pasted text. You can backspace over the paste text too.
 	 */
-	if (restart_edit && stuff_empty())
-	{
-#ifdef USE_MOUSE
-		/*
-		 * After a paste we consider text typed to be part of the insert for
-		 * the pasted text. You can backspace over the paste text too.
-		 */
-		if (where_paste_started.lnum)
-			arrow_used = FALSE;
-		else
-#endif
-			arrow_used = TRUE;
-		restart_edit = 0;
-		/*
-		 * If the cursor was after the end-of-line before the CTRL-O
-		 * and it is now at the end-of-line, put it after the end-of-line
-		 * (this is not correct in very rare cases).
-		 * Also do this if curswant is greater than the current virtual column.
-		 * Eg after "^O$" or "^O80|".
-		 */
-		if (((o_eol && curwin->w_cursor.lnum == o_lnum) ||
-								curwin->w_curswant > curwin->w_virtcol) &&
-				*(ptr = ml_get_curline() + curwin->w_cursor.col)
-																	!= NUL &&
-				*(ptr + 1) == NUL)
-			++curwin->w_cursor.col;
-	}
+	if (where_paste_started.lnum)
+	    arrow_used = FALSE;
 	else
-	{
-		arrow_used = FALSE;
-		o_eol = FALSE;
-	}
+#endif
+	    arrow_used = TRUE;
+	restart_edit = 0;
+
+	/*
+	 * If the cursor was after the end-of-line before the CTRL-O and it is
+	 * now at the end-of-line, put it after the end-of-line (this is not
+	 * correct in very rare cases).
+	 * Also do this if curswant is greater than the current virtual
+	 * column.  Eg after "^O$" or "^O80|".
+	 */
+	validate_virtcol();
+	update_curswant();
+	if (	   ((o_eol && curwin->w_cursor.lnum == o_lnum)
+		    || curwin->w_curswant > curwin->w_virtcol)
+		&& *(ptr = ml_get_curline() + curwin->w_cursor.col) != NUL
+		&& *(ptr + 1) == NUL)
+	    ++curwin->w_cursor.col;
+    }
+    else
+    {
+	arrow_used = FALSE;
+	o_eol = FALSE;
+    }
 #ifdef USE_MOUSE
-	where_paste_started.lnum = 0;
+    where_paste_started.lnum = 0;
 #endif
 #ifdef CINDENT
-	can_cindent = TRUE;
+    can_cindent = TRUE;
 #endif
 
-	/*
-	 * If 'showmode' is set, show the current (insert/replace/..) mode.
-	 * A warning message for changing a readonly file is given here, before
-	 * actually changing anything.  It's put after the mode, if any.
-	 */
-	i = 0;
-	if (p_smd)
-		i = showmode();
+    /*
+     * If 'showmode' is set, show the current (insert/replace/..) mode.
+     * A warning message for changing a readonly file is given here, before
+     * actually changing anything.  It's put after the mode, if any.
+     */
+    i = 0;
+    if (p_smd)
+	i = showmode();
 
-	if (!p_im)
-		change_warning(i + 1);
+    if (!p_im)
+	change_warning(i + 1);
 
+#ifdef USE_GUI
+    if (gui.in_use)
+	gui_upd_cursor_shape();	    /* may show different cursor shape */
+#endif
 #ifdef DIGRAPHS
-	do_digraph(-1);					/* clear digraphs */
+    do_digraph(-1);		    /* clear digraphs */
 #endif
 
 /*
  * Get the current length of the redo buffer, those characters have to be
  * skipped if we want to get to the inserted characters.
  */
-	ptr = get_inserted();
+    ptr = get_inserted();
+    if (ptr == NULL)
+	new_insert_skip = 0;
+    else
+    {
 	new_insert_skip = STRLEN(ptr);
 	vim_free(ptr);
+    }
 
-	old_indent = 0;
+    old_indent = 0;
 
-	for (;;)
+    for (;;)
+    {
+#ifdef RIGHTLEFT
+	if (!revins_legal)
+	    revins_scol = -1;	    /* reset on illegal motions */
+	else
+	    revins_legal = 0;
+#endif
+	if (arrow_used)	    /* don't repeat insert when arrow key used */
+	    count = 0;
+
+	    /* set curwin->w_curswant for next K_DOWN or K_UP */
+	if (!arrow_used)
+	    curwin->w_set_curswant = TRUE;
+
+	/*
+	 * When emsg() was called msg_scroll will have been set.
+	 */
+	msg_scroll = FALSE;
+
+	/*
+	 * If we inserted a character at the last position of the last line in
+	 * the window, scroll the window one line up. This avoids an extra
+	 * redraw.
+	 * This is detected when the cursor column is smaller after inserting
+	 * something.
+	 * Don't do this when the topline changed already, it has
+	 * already been adjusted (by insertchar() calling open_line())).
+	 */
+	if (need_redraw && curwin->w_p_wrap && !did_backspace &&
+					     curwin->w_topline == old_topline)
 	{
+	    mincol = curwin->w_wcol;
+	    validate_cursor_col();
+
+	    if ((int)curwin->w_wcol < (int)mincol - curbuf->b_p_ts &&
+		    curwin->w_wrow == curwin->w_winpos +
+						curwin->w_height - 1 - p_so &&
+		    curwin->w_cursor.lnum != curwin->w_topline)
+	    {
+		set_topline(curwin, curwin->w_topline + 1);
+		update_topline();
+		update_screen(VALID_TO_CURSCHAR);
+		need_redraw = FALSE;
+	    }
+	    else
+		update_topline();
+	}
+	else
+	    update_topline();
+	did_backspace = FALSE;
+
+	/*
+	 * redraw is postponed until here to make 'dollar' option work
+	 * correctly.
+	 */
+	validate_cursor();		/* may set must_redraw */
+	if (need_redraw || must_redraw)
+	{
+	    update_screenline();
+	    if (curwin->w_redr_status == TRUE)
+		win_redr_status(curwin);	/* display [+] if required */
+	    need_redraw = FALSE;
+	}
+	else if (clear_cmdline || redraw_cmdline)
+	    showmode();		    /* clear cmdline, show mode and ruler */
+
+	showruler(FALSE);
+	setcursor();
+	update_curswant();
+	emsg_on_display = FALSE;	/* may remove error message now */
+	old_topline = curwin->w_topline;
+
+#ifdef USE_GUI_WIN32
+	dont_scroll = FALSE;		/* allow scrolling here */
+#endif
+	lastc = c;			/* remember previous char for CTRL-D */
+	c = vgetc();
+
 #ifdef RIGHTLEFT
-		if (!revinslegal)
-			revinsscol = -1;		/* reset on illegal motions */
+	if (p_hkmap && KeyTyped)
+	    c = hkmap(c);		/* Hebrew mode mapping */
+#endif
+#ifdef FKMAP
+	if (p_fkmap && KeyTyped)
+	    c = fkmap(c);		/* Farsi mode mapping */
+#endif
+
+#ifdef INSERT_EXPAND
+	/*
+	 * Prepare for or stop ctrl-x mode.
+	 */
+	need_redraw |= ins_expand_pre(c);
+#endif
+
+#ifdef DIGRAPHS
+	c = do_digraph(c);
+#endif
+
+	if (c == Ctrl('V') || c == Ctrl('Q'))
+	{
+	    if (redrawing() && !char_avail())
+		edit_putchar('^', TRUE);
+	    AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+
+#ifdef SHOWCMD
+	    add_to_showcmd_c(c);
+#endif
+
+	    c = get_literal();
+#ifdef SHOWCMD
+	    clear_showcmd();
+#endif
+	    insert_special(c, TRUE, TRUE);
+	    need_redraw = TRUE;
+#ifdef RIGHTLEFT
+	    revins_chars++;
+	    revins_legal++;
+#endif
+	    c = Ctrl('V');	/* pretend CTRL-V is last typed character */
+	    continue;
+	}
+
+#ifdef CINDENT
+	if (curbuf->b_p_cin
+# ifdef INSERT_EXPAND
+			    && !ctrl_x_mode
+# endif
+					       )
+	{
+	    line_is_white = inindent(0);
+
+	    /*
+	     * A key name preceded by a bang means that this
+	     * key wasn't destined to be inserted.  Skip ahead
+	     * to the re-indenting if we find one.
+	     */
+	    if (in_cinkeys(c, '!', line_is_white))
+		goto force_cindent;
+
+	    /*
+	     * A key name preceded by a star means that indenting
+	     * has to be done before inserting the key.
+	     */
+	    if (can_cindent && in_cinkeys(c, '*', line_is_white))
+	    {
+		stop_arrow();
+
+		/* re-indent the current line */
+		fixthisline(get_c_indent);
+
+		/* draw the changes on the screen later */
+		need_redraw = TRUE;
+	    }
+	}
+#endif /* CINDENT */
+
+#ifdef RIGHTLEFT
+	if (curwin->w_p_rl)
+	    switch (c)
+	    {
+		case K_LEFT:	c = K_RIGHT; break;
+		case K_S_LEFT:	c = K_S_RIGHT; break;
+		case K_RIGHT:	c = K_LEFT; break;
+		case K_S_RIGHT: c = K_S_LEFT; break;
+	    }
+#endif
+
+	/*
+	 * The big switch to handle a character in insert mode.
+	 */
+	switch (c)
+	{
+	case K_INS:	    /* toggle insert/replace mode */
+#ifdef FKMAP
+	    if (p_fkmap && p_ri)
+	    {
+		beep_flush();
+		EMSG(farsi_text_3);	/* encoded in Farsi */
+		break;
+	    }
+#endif
+	    if (State == REPLACE)
+		State = INSERT;
+	    else
+		State = REPLACE;
+	    AppendCharToRedobuff(K_INS);
+	    showmode();
+#ifdef USE_GUI
+	    if (gui.in_use)
+		gui_upd_cursor_shape();	/* may show different cursor shape */
+#endif
+	    break;
+
+#ifdef INSERT_EXPAND
+	case Ctrl('X'):	    /* Enter ctrl-x mode */
+	    /* if the next ^X<> won't ADD nothing, then reset continue_status */
+	    continue_status = continue_status & CONT_N_ADDS ?
+		continue_status | CONT_INTRPT : 0;
+	    /* We're not sure which ctrl-x mode it will be yet */
+	    ctrl_x_mode = CTRL_X_NOT_DEFINED_YET;
+	    edit_submode = (char_u *)ctrl_x_msgs[ctrl_x_mode & 15];
+	    showmode();
+	    break;
+#endif
+
+	case Ctrl('Z'):	    /* suspend when 'insertmode' set */
+	    if (!p_im)
+		goto normalchar;	/* insert CTRL-Z as normal char */
+	    stuffReadbuff((char_u *)":st\r");
+	    c = Ctrl('O');
+	    /*FALLTHROUGH*/
+
+	case Ctrl('O'):	    /* execute one command */
+	    if (echeck_abbr(Ctrl('O') + ABBR_OFF))
+		break;
+	    count = 0;
+	    if (State == INSERT)
+		restart_edit = 'I';
+	    else
+		restart_edit = 'R';
+	    o_lnum = curwin->w_cursor.lnum;
+	    o_eol = (gchar_cursor() == NUL);
+	    goto doESCkey;
+
+#ifdef USE_SNIFF
+	case K_SNIFF:
+	    stuffcharReadbuff(K_SNIFF);
+	    goto doESCkey;
+#endif
+
+	  /* Hitting the help key in insert mode is like <ESC> <Help> */
+	case K_HELP:
+	case K_F1:
+	    stuffcharReadbuff(K_HELP);
+	    if (p_im)
+		stuffcharReadbuff('i');
+	    goto doESCkey;
+
+	case ESC:	    /* an escape ends input mode */
+	    if (echeck_abbr(ESC + ABBR_OFF))
+		break;
+	    /*FALLTHROUGH*/
+
+	case Ctrl('C'):
+#ifdef UNIX
+do_intr:
+#endif
+	    if (p_im)
+	    {
+		if (got_int)
+		{
+		    (void)vgetc();		/* flush all buffers */
+		    got_int = FALSE;
+		}
 		else
-			revinslegal = 0;
-#endif
-		if (arrow_used)		/* don't repeat insert when arrow key used */
-			count = 0;
-
-			/* set curwin->w_curswant for next K_DOWN or K_UP */
-		if (!arrow_used)
-			curwin->w_set_curswant = TRUE;
-
-			/* Figure out where the cursor is based on curwin->w_cursor. */
-		mincol = curwin->w_col;
-		i = curwin->w_row;
-		cursupdate();
-
-		/*
-		 * When emsg() was called msg_scroll will have been set.
-		 */
-		msg_scroll = FALSE;
-
-		/*
-		 * If we inserted a character at the last position of the last line in
-		 * the window, scroll the window one line up. This avoids an extra
-		 * redraw.
-		 * This is detected when the cursor column is smaller after inserting
-		 * something.
-		 */
-		if (curwin->w_p_wrap && !did_backspace &&
-						  (int)curwin->w_col < (int)mincol - curbuf->b_p_ts &&
-							   i == curwin->w_winpos + curwin->w_height - 1 &&
-								   curwin->w_cursor.lnum != curwin->w_topline)
-		{
-			++curwin->w_topline;
-			updateScreen(VALID_TO_CURSCHAR);
-			cursupdate();
-			need_redraw = FALSE;
-		}
-		did_backspace = FALSE;
-
-		/*
-		 * redraw is postponed until after cursupdate() to make 'dollar'
-		 * option work correctly.
-		 */
-		if (need_redraw)
-		{
-			updateline();
-			need_redraw = FALSE;
-		}
-
-		showruler(0);
-		setcursor();
-		emsg_on_display = FALSE;		/* may remove error message now */
-
-		c = vgetc();
-
-#ifdef RIGHTLEFT
-		if (p_hkmap && KeyTyped)
-			c = hkmap(c);				/* Hebrew mode mapping */
-#endif
-
-#ifdef INSERT_EXPAND
-		if (ctrl_x_mode == CTRL_X_NOT_DEFINED_YET)
-		{
-			/* We have just entered ctrl-x mode and aren't quite sure which
-			 * ctrl-x mode it will be yet.  Now we decide -- webb
-			 */
-			switch (c)
-			{
-				case Ctrl('E'):
-				case Ctrl('Y'):
-					ctrl_x_mode = CTRL_X_SCROLL;
-					if (State == INSERT)
-						edit_submode = (char_u *)" (insert) Scroll (^E/^Y)";
-					else
-						edit_submode = (char_u *)" (replace) Scroll (^E/^Y)";
-					break;
-				case Ctrl('L'):
-					ctrl_x_mode = CTRL_X_WHOLE_LINE;
-					edit_submode = (char_u *)" Whole line completion (^L/^N/^P)";
-					break;
-				case Ctrl('F'):
-					ctrl_x_mode = CTRL_X_FILES;
-					edit_submode = (char_u *)" File name completion (^F/^N/^P)";
-					break;
-				case Ctrl('K'):
-					ctrl_x_mode = CTRL_X_DICTIONARY;
-					edit_submode = (char_u *)" Dictionary completion (^K/^N/^P)";
-					break;
-				case Ctrl(']'):
-					ctrl_x_mode = CTRL_X_TAGS;
-					edit_submode = (char_u *)" Tag completion (^]/^N/^P)";
-					break;
-				case Ctrl('I'):
-					ctrl_x_mode = CTRL_X_PATH_PATTERNS;
-					edit_submode = (char_u *)" Path pattern completion (^N/^P)";
-					break;
-				case Ctrl('D'):
-					ctrl_x_mode = CTRL_X_PATH_DEFINES;
-					edit_submode = (char_u *)" Definition completion (^D/^N/^P)";
-					break;
-				default:
-					ctrl_x_mode = 0;
-					edit_submode = NULL;
-					break;
-			}
-			showmode();
-		}
-		else if (ctrl_x_mode)
-		{
-			/* We we're already in ctrl-x mode, do we stay in it? */
-			if (!is_ctrl_x_key(c))
-			{
-				if (ctrl_x_mode == CTRL_X_SCROLL)
-					ctrl_x_mode = 0;
-				else
-					ctrl_x_mode = CTRL_X_FINISHED;
-				edit_submode = NULL;
-			}
-			showmode();
-		}
-		if (started_completion || ctrl_x_mode == CTRL_X_FINISHED)
-		{
-			/* Show error message from attempted keyword completion (probably
-			 * 'Pattern not found') until another key is hit, then go back to
-			 * showing what mode we are in.
-			 */
-			showmode();
-			if ((ctrl_x_mode == 0 && c != Ctrl('N') && c != Ctrl('P')) ||
-												ctrl_x_mode == CTRL_X_FINISHED)
-			{
-				/* Get here when we have finished typing a sequence of ^N and
-				 * ^P or other completion characters in CTRL-X mode. Free up
-				 * memory that was used, and make sure we can redo the insert
-				 * -- webb.
-				 */
-				if (curr_match != NULL)
-				{
-					/*
-					 * If any of the original typed text has been changed,
-					 * eg when ignorecase is set, we must add back-spaces to
-					 * the redo buffer.  We add as few as necessary to delete
-					 * just the part of the original text that has changed
-					 * -- webb
-					 */
-					ptr = curr_match->str;
-					tmp_ptr = original_text;
-					while (*tmp_ptr && *tmp_ptr == *ptr)
-					{
-						++tmp_ptr;
-						++ptr;
-					}
-					for (temp = 0; tmp_ptr[temp]; ++temp)
-						AppendCharToRedobuff(K_BS);
-					if (*ptr)
-						AppendToRedobuff(ptr);
-				}
-				/* Break line if it's too long */
-				lnum = curwin->w_cursor.lnum;
-				insertchar(NUL, FALSE, -1);
-				if (lnum != curwin->w_cursor.lnum)
-					updateScreen(CURSUPD);
-				else
-					need_redraw = TRUE;
-
-				vim_free(complete_pat);
-				complete_pat = NULL;
-				vim_free(original_text);
-				original_text = NULL;
-				free_completions();
-				started_completion = FALSE;
-				ctrl_x_mode = 0;
-				p_sm = save_sm;
-				if (edit_submode != NULL)
-				{
-					edit_submode = NULL;
-					showmode();
-				}
-			}
-		}
-#endif /* INSERT_EXPAND */
-
-		if (c != Ctrl('D'))			/* remember to detect ^^D and 0^D */
-			lastc = c;
-
-#ifdef DIGRAPHS
-		c = do_digraph(c);
-#endif /* DIGRAPHS */
-
-		if (c == Ctrl('V') || c == Ctrl('Q'))
-		{
-			if (NextScreen != NULL)
-				screen_outchar('^', curwin->w_winpos + curwin->w_row,
-#ifdef RIGHTLEFT
-					curwin->w_p_rl ? (int)Columns - 1 - curwin->w_col :
-#endif
-															   curwin->w_col);
-			AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
-			cursupdate();
-
-			if (!add_to_showcmd(c, FALSE))
-				setcursor();
-
-			c = get_literal();
-			clear_showcmd();
-			insert_special(c, TRUE);
-			need_redraw = TRUE;
-#ifdef RIGHTLEFT
-			revinschars++;
-			revinslegal++;
-#endif
-			continue;
-		}
-
-#ifdef CINDENT
-		if (curbuf->b_p_cin
-# ifdef INSERT_EXPAND
-							&& !ctrl_x_mode
-# endif
-											   )
-		{
-			line_is_white = inindent(0);
-
-			/* 
-			 * A key name preceded by a bang means that this
-			 * key wasn't destined to be inserted.  Skip ahead
-			 * to the re-indenting if we find one.
-			 */
-			if (in_cinkeys(c, '!', line_is_white))
-				goto force_cindent;
-
-			/* 
-			 * A key name preceded by a star means that indenting
-			 * has to be done before inserting the key.
-			 */
-			if (can_cindent && in_cinkeys(c, '*', line_is_white))
-			{
-				stop_arrow();
-
-				/* re-indent the current line */
-				fixthisline(get_c_indent);
-
-				/* draw the changes on the screen later */
-				need_redraw = TRUE;
-			}
-		}
-#endif /* CINDENT */
-
-#ifdef RIGHTLEFT
-		if (curwin->w_p_rl)
-			switch (c)
-			{
-				case K_LEFT:	c = K_RIGHT; break;
-				case K_S_LEFT:	c = K_S_RIGHT; break;
-				case K_RIGHT:	c = K_LEFT; break;
-				case K_S_RIGHT: c = K_S_LEFT; break;
-			}
-#endif
-
-		switch (c)		/* handle character in insert mode */
-		{
-			  case K_INS:			/* toggle insert/replace mode */
-			    if (State == REPLACE)
-					State = INSERT;
-				else
-					State = REPLACE;
-				AppendCharToRedobuff(K_INS);
-				showmode();
-				break;
-
-#ifdef INSERT_EXPAND
-			  case Ctrl('X'):		/* Enter ctrl-x mode */
-				/* We're not sure which ctrl-x mode it will be yet */
-				ctrl_x_mode = CTRL_X_NOT_DEFINED_YET;
-				edit_submode = (char_u *)"^X mode (^E/^Y/^L/^]/^F/^I/^K/^D)";
-				showmode();
-				break;
-#endif /* INSERT_EXPAND */
-
-			  case Ctrl('O'):		/* execute one command */
-			    if (echeck_abbr(Ctrl('O') + ABBR_OFF))
-					break;
-			  	count = 0;
-				if (State == INSERT)
-					restart_edit = 'I';
-				else
-					restart_edit = 'R';
-				o_lnum = curwin->w_cursor.lnum;
-				o_eol = (gchar_cursor() == NUL);
-				goto doESCkey;
-
-			  /* Hitting the help key in insert mode is like <ESC> <Help> */
-			  case K_HELP:
-			  case K_F1:
-			  	stuffcharReadbuff(K_HELP);
-				/*FALLTHROUGH*/
-
-			  case ESC: 			/* an escape ends input mode */
-			    if (echeck_abbr(ESC + ABBR_OFF))
-					break;
-				/*FALLTHROUGH*/
-
-			  case Ctrl('C'):
+		    vim_beep();
+		break;
+	    }
 doESCkey:
-				temp = curwin->w_cursor.col;
-				if (!arrow_used)
-				{
-					/*
-					 * Don't append the ESC for "r<CR>".
-					 */
-					if (initstr != 'r')
-						AppendToRedobuff(ESC_STR);
+	    /*
+	     * This is the ONLY return from edit()!
+	     */
+	    if (ins_esc(&count, need_redraw, cmdchar))
+		return (c == Ctrl('O'));
+	    continue;
 
-					/*
-					 * Repeating insert may take a long time.  Check for
-					 * interrupt now and then.
-					 */
-					if (count)
-					{
-						line_breakcheck();
-						if (got_int)
-							count = 0;
-					}
+	    /*
+	     * Insert the previously inserted text.
+	     * For ^@ the trailing ESC will end the insert, unless there
+	     * is an error.
+	     */
+	case K_ZERO:
+	case NUL:
+	case Ctrl('A'):
+	    if (stuff_inserted(NUL, 1L, (c == Ctrl('A'))) == FAIL
+						   && c != Ctrl('A') && !p_im)
+		goto doESCkey;		/* quit insert mode */
+	    break;
 
-					if (--count > 0)		/* repeat what was typed */
-					{
-						(void)start_redo_ins();
-						continue;
-					}
-					stop_insert(&curwin->w_cursor);
-					if (dollar_vcol)
-					{
-						dollar_vcol = 0;
-						/* may have to redraw status line if this was the
-						 * first change, show "[+]" */
-						if (curwin->w_redr_status == TRUE)
-							must_redraw = NOT_VALID;
-						else
-							need_redraw = TRUE;
-					}
-				}
-				if (need_redraw)
-					updateline();
-
-				/* When an autoindent was removed, curswant stays after the
-				 * indent */
-				if (!restart_edit && (colnr_t)temp == curwin->w_cursor.col)
-					curwin->w_set_curswant = TRUE;
-
-				/*
-				 * The cursor should end up on the last inserted character.
-				 */
-				if (curwin->w_cursor.col != 0 &&
-						  (!restart_edit || gchar_cursor() == NUL)
-#ifdef RIGHTLEFT
-									  && !revins
-#endif
-												  )
-					--curwin->w_cursor.col;
-				if (State == REPLACE)
-					replace_flush();	/* free replace stack */
-				State = NORMAL;
-#ifdef USE_MOUSE
-				setmouse();
-#endif
-					/* inchar() may have deleted the "INSERT" message */
-					/* for CTRL-O we display -- INSERT COMMAND -- */
-				if (Recording || restart_edit)
-					showmode();
-				else if (p_smd)
-					MSG("");
-				old_indent = 0;
-
-				/*
-				 * This is the ONLY return from edit().
-				 */
-				return (c == Ctrl('O'));
-
-			  	/*
-				 * Insert the previously inserted text.
-				 * For ^@ the trailing ESC will end the insert, unless there
-				 * is an error.
-				 */
-			  case K_ZERO:
-			  case NUL:
-			  case Ctrl('A'):
-				if (stuff_inserted(NUL, 1L, (c == Ctrl('A'))) == FAIL &&
-															   c != Ctrl('A'))
-					goto doESCkey;			/* quit insert mode */
-				break;
-
-			  	/*
-				 * insert the contents of a register
-				 */
-			  case Ctrl('R'):
-				if (NextScreen != NULL)
-					screen_outchar('"', curwin->w_winpos + curwin->w_row,
-#ifdef RIGHTLEFT
-						curwin->w_p_rl ? (int)Columns - 1 - curwin->w_col :
-#endif
-															curwin->w_col);
-				if (!add_to_showcmd(c, FALSE))
-					setcursor();
-					/* don't map the register name. This also prevents the
-					 * mode message to be deleted when ESC is hit */
-				++no_mapping;
-#ifdef HAVE_LANGMAP
-				cc = vgetc();
-				LANGMAP_ADJUST(cc, TRUE);
-			  	if (insertbuf(cc) == FAIL)
-#else
-			  	if (insertbuf(vgetc()) == FAIL)
-#endif
-				{
-					beep_flush();
-					need_redraw = TRUE;		/* remove the '"' */
-				}
-				--no_mapping;
-				clear_showcmd();
-				break;
+	/*
+	 * insert the contents of a register
+	 */
+	case Ctrl('R'):
+	    need_redraw |= ins_reg();
+	    break;
 
 #ifdef RIGHTLEFT
-			  case Ctrl('B'):			/* toggle reverse insert mode */
-			  	p_ri = !p_ri;
-				revins = (State == INSERT && p_ri);
-				if (revins)
-					undisplay_dollar();
-				showmode();
-				break;
-
-			  case Ctrl('_'):		/* toggle language: khmap and revins */
-									/* Move to end of reverse inserted text */
-				if (revins && revinschars && revinsscol >= 0)
-					while (gchar_cursor() != NUL && revinschars--)
-						++curwin->w_cursor.col;
-				p_ri = !p_ri;
-				revins = (State == INSERT && p_ri);
-				if (revins)
-				{
-					revinsscol = curwin->w_cursor.col;
-					revinslegal++;
-					revinschars = 0;
-					undisplay_dollar();
-				}
-				else
-					revinsscol = -1;
-				p_hkmap = curwin->w_p_rl ^ p_ri;    /* be consistent! */
-				showmode();
-				break;
+	/*
+	 * toggle language: khmap and revins_on
+	 * Move to end of reverse inserted text.
+	 */
+	case Ctrl('_'):
+	    ins_ctrl_();
+	    break;
 #endif
 
-				/*
-				 * If the cursor is on an indent, ^T/^D insert/delete one
-				 * shiftwidth.  Otherwise ^T/^D behave like a "<<" or ">>".
-				 * Always round the indent to 'shiftwith', this is compatible
-				 * with vi.  But vi only supports ^T and ^D after an
-				 * autoindent, we support it everywhere.
-				 */
-			  case Ctrl('D'): 		/* make indent one shiftwidth smaller */
-#ifdef INSERT_EXPAND
-				if (ctrl_x_mode == CTRL_X_PATH_DEFINES)
-					goto docomplete;
-#endif /* INSERT_EXPAND */
-				/* FALLTHROUGH */
-			  case Ctrl('T'):		/* make indent one shiftwidth greater */
-				stop_arrow();
-				AppendCharToRedobuff(c);
+	/* Make indent one shiftwidth smaller. */
+	case Ctrl('D'):
+#if defined(INSERT_EXPAND) && defined(FIND_IN_PATH)
+	    if (ctrl_x_mode == CTRL_X_PATH_DEFINES)
+		goto docomplete;
+#endif
+	    /* FALLTHROUGH */
 
-				/*
-				 * 0^D and ^^D: remove all indent.
-				 */
-				if ((lastc == '0' || lastc == '^') && curwin->w_cursor.col)
-				{
-					--curwin->w_cursor.col;
-					(void)delchar(FALSE);			/* delete the '^' or '0' */
-					/*
-					 * In Replace mode, restore the character that '^' or '0'
-					 * replaced.
-					 */
-					if (State == REPLACE && (i = replace_pop()) >= 0)
-					{
-						State = INSERT;
-						ins_char(i);
-						--curwin->w_cursor.col;
-						State = REPLACE;
-					}
-					if (lastc == '^')
-						old_indent = get_indent();	/* remember curr. indent */
-					change_indent(INDENT_SET, 0, TRUE);
-				}
-				else
-					change_indent(c == Ctrl('D') ? INDENT_DEC : INDENT_INC,
-																	 0, TRUE);
+	/* Make indent one shiftwidth greater. */
+	case Ctrl('T'):
+	    ins_shift(c, lastc);
+	    need_redraw = TRUE;
+	    break;
 
-				did_ai = FALSE;
-				did_si = FALSE;
-				can_si = FALSE;
-				can_si_back = FALSE;
-#ifdef CINDENT
-				can_cindent = FALSE;		/* no cindenting after ^D or ^T */
-#endif
-		  		goto redraw;
+	/* delete character under the cursor */
+	case K_DEL:
+	    ins_del();
+	    need_redraw = TRUE;
+	    break;
 
-			  case K_DEL:
-				stop_arrow();
-			  	if (gchar_cursor() == NUL)		/* delete newline */
-				{
-					temp = curwin->w_cursor.col;
-					if (!p_bs ||				/* only if 'bs' set */
-						u_save((linenr_t)(curwin->w_cursor.lnum - 1),
-							(linenr_t)(curwin->w_cursor.lnum + 2)) == FAIL ||
-								do_join(FALSE, TRUE) == FAIL)
-						beep_flush();
-					else
-						curwin->w_cursor.col = temp;
-				}
-				else if (delchar(FALSE) == FAIL)/* delete char under cursor */
-					beep_flush();
-				did_ai = FALSE;
-				did_si = FALSE;
-				can_si = FALSE;
-				can_si_back = FALSE;
-				AppendCharToRedobuff(c);
-				goto redraw;
+	/* delete character before the cursor */
+	case K_BS:
+	case Ctrl('H'):
+	    did_backspace = ins_bs(c, BACKSPACE_CHAR, &inserted_space);
+	    need_redraw = TRUE;
+	    break;
 
-			  case K_BS:
-			  case Ctrl('H'):
-				mode = BACKSPACE_CHAR;
-dodel:
-				/* can't delete anything in an empty file */
-				/* can't backup past first character in buffer */
-				/* can't backup past starting point unless 'backspace' > 1 */
-				/* can backup to a previous line if 'backspace' == 0 */
-				if (bufempty() || (
-#ifdef RIGHTLEFT
-						!revins &&
-#endif
-						((curwin->w_cursor.lnum == 1 &&
-									curwin->w_cursor.col <= 0) ||
-						(p_bs < 2 && (arrow_used ||
-							(curwin->w_cursor.lnum == Insstart.lnum &&
-							curwin->w_cursor.col <= Insstart.col) ||
-							(curwin->w_cursor.col <= 0 && p_bs == 0))))))
-				{
-					beep_flush();
-					goto redraw;
-				}
+	/* delete word before the cursor */
+	case Ctrl('W'):
+	    did_backspace = ins_bs(c, BACKSPACE_WORD, &inserted_space);
+	    need_redraw = TRUE;
+	    break;
 
-				stop_arrow();
-#ifdef CINDENT
-				if (inindent(0))
-					can_cindent = FALSE;
-#endif
-#ifdef RIGHTLEFT
-				if (revins)			/* put cursor after last inserted char */
-					inc_cursor();
-#endif
-				if (curwin->w_cursor.col <= 0)		/* delete newline! */
-				{
-					lnum = Insstart.lnum;
-					if (curwin->w_cursor.lnum == Insstart.lnum
-#ifdef RIGHTLEFT
-									|| revins
-#endif
-												)
-					{
-						if (u_save((linenr_t)(curwin->w_cursor.lnum - 2),
-								(linenr_t)(curwin->w_cursor.lnum + 1)) == FAIL)
-							goto redraw;
-						--Insstart.lnum;
-						Insstart.col = 0;
-					}
-					/*
-					 * In replace mode:
-					 * cc < 0: NL was inserted, delete it
-					 * cc >= 0: NL was replaced, put original characters back
-					 */
-					cc = -1;
-					if (State == REPLACE)
-						cc = replace_pop();
-				/* in replace mode, in the line we started replacing, we
-														only move the cursor */
-					if (State != REPLACE || curwin->w_cursor.lnum > lnum)
-					{
-						temp = gchar_cursor();		/* remember current char */
-						--curwin->w_cursor.lnum;
-						(void)do_join(FALSE, curs_rows() == OK);
-						if (temp == NUL && gchar_cursor() != NUL)
-							++curwin->w_cursor.col;
-						/*
-						 * in REPLACE mode we have to put back the text that
-						 * was replace by the NL. On the replace stack is
-						 * first a NUL-terminated sequence of characters that
-						 * were deleted and then the character that NL
-						 * replaced.
-						 */
-						if (State == REPLACE)
-						{
-							/*
-							 * Do the next ins_char() in NORMAL state, to
-							 * prevent ins_char() from replacing characters and
-							 * avoiding showmatch().
-							 */
-							State = NORMAL;
-							/*
-							 * restore blanks deleted after cursor
-							 */
-							while (cc > 0)
-							{
-								temp = curwin->w_cursor.col;
-								ins_char(cc);
-								curwin->w_cursor.col = temp;
-								cc = replace_pop();
-							}
-							cc = replace_pop();
-							if (cc > 0)
-							{
-								ins_char(cc);
-								dec_cursor();
-							}
-							State = REPLACE;
-						}
-					}
-					else
-						dec_cursor();
-					did_ai = FALSE;
-				}
-				else
-				{
-#ifdef RIGHTLEFT
-					if (revins)			/* put cursor on last inserted char */
-						dec_cursor();
-#endif
-					mincol = 0;
-															/* keep indent */
-					if (mode == BACKSPACE_LINE && curbuf->b_p_ai
-#ifdef RIGHTLEFT
-							&& !revins
-#endif
-										)
-					{
-						temp = curwin->w_cursor.col;
-						beginline(TRUE);
-						if (curwin->w_cursor.col < (colnr_t)temp)
-							mincol = curwin->w_cursor.col;
-						curwin->w_cursor.col = temp;
-					}
-
-					/* delete upto starting point, start of line or previous
-					 * word */
-					do
-					{
-#ifdef RIGHTLEFT
-						if (!revins)	/* put cursor on char to be deleted */
-#endif
-							dec_cursor();
-
-								/* start of word? */
-						if (mode == BACKSPACE_WORD &&
-												!vim_isspace(gchar_cursor()))
-						{
-							mode = BACKSPACE_WORD_NOT_SPACE;
-							temp = iswordchar(gchar_cursor());
-						}
-								/* end of word? */
-						else if (mode == BACKSPACE_WORD_NOT_SPACE &&
-										  (vim_isspace(cc = gchar_cursor()) ||
-													  iswordchar(cc) != temp))
-						{
-#ifdef RIGHTLEFT
-							if (!revins)
-#endif
-								inc_cursor();
-#ifdef RIGHTLEFT
-							else if (State == REPLACE)
-								dec_cursor();
-#endif
-							break;
-						}
-						if (State == REPLACE)
-						{
-							/*
-							 * cc < 0: replace stack empty, just move cursor
-							 * cc == 0: character was inserted, delete it
-							 * cc > 0: character was replace, put original back
-							 */
-							cc = replace_pop();
-							if (cc > 0)
-								pchar_cursor(cc);
-							else if (cc == 0)
-								(void)delchar(FALSE);
-						}
-						else  /* State != REPLACE */
-						{
-							(void)delchar(FALSE);
-#ifdef RIGHTLEFT
-							if (revinschars)
-							{
-								revinschars--;
-								revinslegal++;
-							}
-							if (revins && gchar_cursor() == NUL)
-								break;
-#endif
-						}
-						/* Just a single backspace?: */
-						if (mode == BACKSPACE_CHAR)
-							break;
-					} while (
-#ifdef RIGHTLEFT
-							revins ||
-#endif
-							(curwin->w_cursor.col > mincol &&
-							(curwin->w_cursor.lnum != Insstart.lnum ||
-							curwin->w_cursor.col != Insstart.col)));
-					did_backspace = TRUE;
-				}
-				did_si = FALSE;
-				can_si = FALSE;
-				can_si_back = FALSE;
-				if (curwin->w_cursor.col <= 1)
-					did_ai = FALSE;
-				/*
-				 * It's a little strange to put backspaces into the redo
-				 * buffer, but it makes auto-indent a lot easier to deal
-				 * with.
-				 */
-				AppendCharToRedobuff(c);
-redraw:
-				need_redraw = TRUE;
-				break;
-
-			  case Ctrl('W'):		/* delete word before cursor */
-			  	mode = BACKSPACE_WORD;
-			  	goto dodel;
-
-			  case Ctrl('U'):		/* delete inserted text in current line */
-				mode = BACKSPACE_LINE;
-			  	goto dodel;
+	/* delete all inserted text in current line */
+	case Ctrl('U'):
+	    did_backspace = ins_bs(c, BACKSPACE_LINE, &inserted_space);
+	    need_redraw = TRUE;
+	    break;
 
 #ifdef USE_MOUSE
-			  case K_LEFTMOUSE:
-			  case K_LEFTDRAG:
-			  case K_LEFTRELEASE:
-			  case K_MIDDLEMOUSE:
-			  case K_MIDDLEDRAG:
-			  case K_MIDDLERELEASE:
-			  case K_RIGHTMOUSE:
-			  case K_RIGHTDRAG:
-			  case K_RIGHTRELEASE:
-#ifdef USE_GUI
-				/* When GUI is active, also move/paste when 'mouse' is empty */
-				if (!gui.in_use)
-#endif
-					if (!mouse_has(MOUSE_INSERT))
-						break;
+	case K_LEFTMOUSE:
+	case K_LEFTDRAG:
+	case K_LEFTRELEASE:
+	case K_MIDDLEMOUSE:
+	case K_MIDDLEDRAG:
+	case K_MIDDLERELEASE:
+	case K_RIGHTMOUSE:
+	case K_RIGHTDRAG:
+	case K_RIGHTRELEASE:
+	    ins_mouse(c);
+	    break;
 
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-				if (do_mouse(c, BACKWARD, 1L, FALSE))
-				{
-					start_arrow(&tpos);
-# ifdef CINDENT
-					can_cindent = TRUE;
-# endif
-				}
-
-				break;
-
-			  case K_IGNORE:
-				break;
+	case K_IGNORE:
+	    break;
 #endif
 
 #ifdef USE_GUI
-			  case K_SCROLLBAR:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-				if (gui_do_scroll())
-				{
-					start_arrow(&tpos);
-# ifdef CINDENT
-					can_cindent = TRUE;
-# endif
-				}
-				break;
+	case K_SCROLLBAR:
+	    ins_scroll();
+	    break;
 
-			  case K_HORIZ_SCROLLBAR:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-				if (gui_do_horiz_scroll())
-				{
-					start_arrow(&tpos);
-#ifdef CINDENT
-					can_cindent = TRUE;
-#endif
-				}
-				break;
+	case K_HORIZ_SCROLLBAR:
+	    ins_horscroll();
+	    break;
 #endif
 
-			  case K_LEFT:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-			  	if (oneleft() == OK)
-				{
-					start_arrow(&tpos);
-#ifdef RIGHTLEFT
-					/* If exit reversed string, position is fixed */
-					if (revinsscol != -1 &&
-									  (int)curwin->w_cursor.col >= revinsscol)
-						revinslegal++;
-					revinschars++;
+	case K_HOME:
+	case K_KHOME:
+	    ins_home();
+	    break;
+
+	case K_END:
+	case K_KEND:
+	    ins_end();
+	    break;
+
+	case K_LEFT:
+	    if (mod_mask & MOD_MASK_CTRL)
+		ins_s_left();
+	    else
+		ins_left();
+	    break;
+
+	case K_S_LEFT:
+	    ins_s_left();
+	    break;
+
+	case K_RIGHT:
+	    if (mod_mask & MOD_MASK_CTRL)
+		ins_s_right();
+	    else
+		ins_right();
+	    break;
+
+	case K_S_RIGHT:
+	    ins_s_right();
+	    break;
+
+	case K_UP:
+	    ins_up();
+	    break;
+
+	case K_S_UP:
+	case K_PAGEUP:
+	case K_KPAGEUP:
+	    ins_pageup();
+	    break;
+
+	case K_DOWN:
+	    ins_down();
+	    break;
+
+	case K_S_DOWN:
+	case K_PAGEDOWN:
+	case K_KPAGEDOWN:
+	    ins_pagedown();
+	    break;
+
+	    /* When <S-Tab> isn't mapped, use it like a normal TAB */
+	case K_S_TAB:
+	    c = TAB;
+	    /* FALLTHROUGH */
+
+	/* TAB or Complete patterns along path */
+	case TAB:
+#if defined(INSERT_EXPAND) && defined(FIND_IN_PATH)
+	    if (ctrl_x_mode == CTRL_X_PATH_PATTERNS)
+		goto docomplete;
 #endif
-				}
+	    inserted_space = FALSE;
+	    if (ins_tab())
+		goto normalchar;	/* insert TAB as a normal char */
+	    need_redraw = TRUE;
+	    break;
 
-				/*
-				 * if 'whichwrap' set for cursor in insert mode may go to
-				 * previous line
-				 */
-				else if (vim_strchr(p_ww, '[') != NULL &&
-													curwin->w_cursor.lnum > 1)
-				{
-					start_arrow(&tpos);
-					--(curwin->w_cursor.lnum);
-					coladvance(MAXCOL);
-					curwin->w_set_curswant = TRUE;	/* so we stay at the end */
-				}
-				else
-					beep_flush();
-				break;
+	case CR:
+	case NL:
+	    if (ins_eol(c) && !p_im)
+		goto doESCkey;	    /* out of memory */
+	    break;
 
-			  case K_HOME:
-			  case K_KHOME:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-				if ((mod_mask & MOD_MASK_CTRL))
-					curwin->w_cursor.lnum = 1;
-			  	curwin->w_cursor.col = 0;
-				curwin->w_curswant = 0;
-				start_arrow(&tpos);
-				break;
-
-			  case K_END:
-			  case K_KEND:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-				if ((mod_mask & MOD_MASK_CTRL))
-					curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-				coladvance(MAXCOL);
-				curwin->w_curswant = MAXCOL;
-				start_arrow(&tpos);
-				break;
-
-			  case K_S_LEFT:
-				undisplay_dollar();
-			  	if (curwin->w_cursor.lnum > 1 || curwin->w_cursor.col > 0)
-				{
-					start_arrow(&curwin->w_cursor);
-					(void)bck_word(1L, 0, FALSE);
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_RIGHT:
-				undisplay_dollar();
-				if (gchar_cursor() != NUL)
-				{
-					start_arrow(&curwin->w_cursor);
-					curwin->w_set_curswant = TRUE;
-					++curwin->w_cursor.col;
-#ifdef RIGHTLEFT
-					revinslegal++;
-					if (revinschars)
-						revinschars--;
-#endif
-				}
-					/* if 'whichwrap' set for cursor in insert mode may go
-					 * to next line */
-				else if (vim_strchr(p_ww, ']') != NULL &&
-						   curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
-				{
-					start_arrow(&curwin->w_cursor);
-					curwin->w_set_curswant = TRUE;
-					++curwin->w_cursor.lnum;
-					curwin->w_cursor.col = 0;
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_S_RIGHT:
-				undisplay_dollar();
-			  	if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count ||
-														gchar_cursor() != NUL)
-				{
-					start_arrow(&curwin->w_cursor);
-					(void)fwd_word(1L, 0, 0);
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_UP:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-			  	if (cursor_up(1L) == OK)
-				{
-					start_arrow(&tpos);
-#ifdef CINDENT
-					can_cindent = TRUE;
-#endif
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_S_UP:
-			  case K_PAGEUP:
-			  case K_KPAGEUP:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-			  	if (onepage(BACKWARD, 1L) == OK)
-				{
-					start_arrow(&tpos);
-#ifdef CINDENT
-					can_cindent = TRUE;
-#endif
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_DOWN:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-			  	if (cursor_down(1L) == OK)
-				{
-					start_arrow(&tpos);
-#ifdef CINDENT
-					can_cindent = TRUE;
-#endif
-				}
-				else
-					beep_flush();
-				break;
-
-			  case K_S_DOWN:
-			  case K_PAGEDOWN:
-			  case K_KPAGEDOWN:
-				undisplay_dollar();
-				tpos = curwin->w_cursor;
-			  	if (onepage(FORWARD, 1L) == OK)
-				{
-					start_arrow(&tpos);
-#ifdef CINDENT
-					can_cindent = TRUE;
-#endif
-				}
-				else
-					beep_flush();
-				break;
-
-			  case TAB:				/* TAB or Complete patterns along path */
-#ifdef INSERT_EXPAND
-				if (ctrl_x_mode == CTRL_X_PATH_PATTERNS)
-					goto docomplete;
-#endif /* INSERT_EXPAND */
-
-				if (Insstart_blank_vcol == MAXCOL &&
-									   curwin->w_cursor.lnum == Insstart.lnum)
-					Insstart_blank_vcol = curwin->w_virtcol;
-			    if (echeck_abbr(TAB + ABBR_OFF))
-					break;
-				i = inindent(0);
-#ifdef CINDENT
-			    if (i)
-					can_cindent = FALSE;
-#endif
-			  	if (!curbuf->b_p_et && !(p_sta && i))
-					goto normalchar;
-
-				stop_arrow();
-				did_ai = FALSE;
-				did_si = FALSE;
-				can_si = FALSE;
-				can_si_back = FALSE;
-				AppendToRedobuff((char_u *)"\t");
-
-				if (p_sta && i)					/* insert tab in indent */
-				{
-					if (State == REPLACE)		/* delete a char first */
-					{
-						i = gchar_cursor();
-						if (i)
-						{
-							replace_push(i);
-							delchar(FALSE);
-						}
-					}
-					change_indent(INDENT_INC, 0, p_sr);
-					goto redraw;
-				}
-
-				/*
-				 * p_et is set: expand a tab into spaces
-				 */
-				temp = (int)curbuf->b_p_ts;
-				temp -= curwin->w_virtcol % temp;
-
-				/*
-				 * insert the first space with ins_char(); it will delete one
-				 * char in replace mode. Insert the rest with ins_str(); it
-				 * will not delete any chars
-				 */
-				ins_char(' ');
-				while (--temp)
-				{
-					ins_str((char_u *)" ");
-					if (State == REPLACE)		/* no char replaced */
-						replace_push(NUL);
-				}
-				goto redraw;
-
-			  case CR:
-			  case NL:
-			    if (echeck_abbr(c + ABBR_OFF))
-					break;
-				stop_arrow();
-				if (State == REPLACE)
-					replace_push(NUL);
-#ifdef RIGHTLEFT
-				/* NL in reverse insert will allways start in the end of
-				 * current line. */
-				if (revins)
-					while (gchar_cursor() != NUL)
-						++curwin->w_cursor.col;
-#endif
-
-				AppendToRedobuff(NL_STR);
-				if (has_format_option(FO_RET_COMS))
-					fo_do_comments = TRUE;
-				i = Opencmd(FORWARD, TRUE, FALSE);
-				fo_do_comments = FALSE;
-#ifdef CINDENT
-				can_cindent = TRUE;
-#endif
-				if (!i)
-					goto doESCkey;		/* out of memory */
-				break;
-
-#ifdef DIGRAPHS
-			  case Ctrl('K'):
-#ifdef INSERT_EXPAND
-				if (ctrl_x_mode == CTRL_X_DICTIONARY)
-					goto docomplete;
-#endif
-				if (NextScreen != NULL)
-					screen_outchar('?', curwin->w_winpos + curwin->w_row,
-#ifdef RIGHTLEFT
-						curwin->w_p_rl ? (int)Columns - 1 - curwin->w_col :
-#endif
-															curwin->w_col);
-				if (!add_to_showcmd(c, FALSE))
-					setcursor();
-					/* don't map the digraph chars. This also prevents the
-					 * mode message to be deleted when ESC is hit */
-				++no_mapping;
-				++allow_keys;
-			  	c = vgetc();
-				--no_mapping;
-				--allow_keys;
-				if (IS_SPECIAL(c))		/* special key */
-				{
-					clear_showcmd();
-					insert_special(c, TRUE);
-					need_redraw = TRUE;
-					break;
-				}
-				if (c != ESC)
-				{
-					if (charsize(c) == 1 && NextScreen != NULL)
- 						screen_outchar(c, curwin->w_winpos + curwin->w_row,
-#ifdef RIGHTLEFT
-							curwin->w_p_rl ? (int)Columns - 1 - curwin->w_col :
-#endif
-																curwin->w_col);
-					if (!add_to_showcmd(c, FALSE))
-						setcursor();
-					++no_mapping;
-					++allow_keys;
-					cc = vgetc();
-					--no_mapping;
-					--allow_keys;
-					if (cc != ESC)
-					{
-						AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
-						c = getdigraph(c, cc, TRUE);
-						clear_showcmd();
-						goto normalchar;
-					}
-				}
-				clear_showcmd();
-				need_redraw = TRUE;
-				break;
-#else /* DIGRAPHS */
+#if defined(DIGRAPHS) || defined (INSERT_EXPAND)
+	case Ctrl('K'):
 # ifdef INSERT_EXPAND
-			  case Ctrl('K'):
-				if (ctrl_x_mode != CTRL_X_DICTIONARY)
-					goto normalchar;
-				goto docomplete;
-# endif /* INSERT_EXPAND */
-#endif /* DIGRAPHS */
-
-#ifdef INSERT_EXPAND
-			  case Ctrl(']'):			/* Tag name completion after ^X */
-				if (ctrl_x_mode != CTRL_X_TAGS)
-					goto normalchar;
-				goto docomplete;
-
-			  case Ctrl('F'):			/* File name completion after ^X */
-				if (ctrl_x_mode != CTRL_X_FILES)
-					goto normalchar;
-				goto docomplete;
-
-			  case Ctrl('L'):			/* Whole line completion after ^X */
-				if (ctrl_x_mode != CTRL_X_WHOLE_LINE)
-					goto normalchar;
-				/* FALLTHROUGH */
-
-			  case Ctrl('P'):			/* Do previous pattern completion */
-			  case Ctrl('N'):			/* Do next pattern completion */
-docomplete:
-				if (c == Ctrl('P') || c == Ctrl('L'))
-					complete_direction = BACKWARD;
-				else
-					complete_direction = FORWARD;
-				mesg = NULL;			/* No message by default */
-				if (!started_completion)
-				{
-					/* First time we hit ^N or ^P (in a row, I mean) */
-
-					/* Turn off 'sm' so we don't show matches with ^X^L */
-					save_sm = p_sm;
-					p_sm = FALSE;
-
-					if (ctrl_x_mode == 0)
-					{
-						edit_submode = (char_u *)" Keyword completion (^P/^N)";
-						showmode();
-					}
-					did_ai = FALSE;
-					did_si = FALSE;
-					can_si = FALSE;
-					can_si_back = FALSE;
-					stop_arrow();
-					done_dir = 0;
-					first_match_pos = curwin->w_cursor;
-					ptr = tmp_ptr = ml_get(first_match_pos.lnum);
-					complete_col = first_match_pos.col;
-					temp = (int)complete_col - 1;
-
-					/* Work out completion pattern and original text -- webb */
-					if (ctrl_x_mode == 0 || (ctrl_x_mode & CTRL_X_WANT_IDENT))
-					{
-						if (temp < 0 || !iswordchar(ptr[temp]))
-						{
-							/* Match any word of at least two chars */
-							complete_pat = strsave((char_u *)"\\<\\k\\k");
-							if (complete_pat == NULL)
-								break;
-							tmp_ptr += complete_col;
-							temp = 0;
-						}
-						else
-						{
-							while (temp >= 0 && iswordchar(ptr[temp]))
-								temp--;
-							tmp_ptr += ++temp;
-							if ((temp = (int)complete_col - temp) == 1)
-							{
-								/* Only match word with at least two
-								 * chars -- webb
-								 */
-								sprintf((char *)IObuff, "\\<%c\\k", *tmp_ptr);
-								complete_pat = strsave(IObuff);
-								if (complete_pat == NULL)
-									break;
-							}
-							else
-							{
-								complete_pat = alloc(temp + 3);
-								if (complete_pat == NULL)
-									break;
-								sprintf((char *)complete_pat, "\\<%.*s", temp,
-																	tmp_ptr);
-							}
-						}
-					}
-					else if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
-					{
-						tmp_ptr = skipwhite(ptr);
-						temp = (int)complete_col - (tmp_ptr - ptr);
-						complete_pat = strnsave(tmp_ptr, temp);
-						if (complete_pat == NULL)
-							break;
-					}
-					else if (ctrl_x_mode == CTRL_X_FILES)
-					{
-						while (temp >= 0 && isfilechar(ptr[temp]))
-							temp--;
-						tmp_ptr += ++temp;
-						temp = (int)complete_col - temp;
-						complete_pat = addstar(tmp_ptr, temp);
-						if (complete_pat == NULL)
-							break;
-					}
-					original_text = strnsave(tmp_ptr, temp);
-					if (original_text == NULL)
-					{
-						vim_free(complete_pat);
-						complete_pat = NULL;
-						break;
-					}
-
-					complete_col = tmp_ptr - ptr;
-					first_match_pos.col -= temp;
-
-					/* So that ^N can match word immediately after cursor */
-					if (ctrl_x_mode == 0)
-						dec(&first_match_pos);
-
-					last_match_pos = first_match_pos;
-
-					/* Get list of all completions now, if appropriate */
-					if (ctrl_x_mode == CTRL_X_PATH_PATTERNS ||
-						ctrl_x_mode == CTRL_X_PATH_DEFINES)
-					{
-						started_completion = TRUE;
-						find_pattern_in_path(complete_pat,
-								(int)STRLEN(complete_pat), FALSE, FALSE,
-							(ctrl_x_mode == CTRL_X_PATH_DEFINES) ? FIND_DEFINE
-							: FIND_ANY, 1L, ACTION_EXPAND,
-							(linenr_t)1, (linenr_t)MAXLNUM);
-
-						if (make_cyclic() > 1)
-						{
-							sprintf((char *)IObuff, "There are %d matches",
-								count_completions());
-							mesg = IObuff;
-						}
-					}
-					else if (ctrl_x_mode == CTRL_X_DICTIONARY)
-					{
-						started_completion = TRUE;
-						if (*p_dict == NUL)
-							mesg = (char_u *)"'dictionary' option is empty";
-						else
-						{
-							complete_dictionaries(complete_pat,
-														  complete_direction);
-							if (make_cyclic() > 1)
-							{
-								sprintf((char *)IObuff,
-									"There are %d matching words",
-									count_completions());
-								mesg = IObuff;
-							}
-						}
-					}
-					else if (ctrl_x_mode == CTRL_X_TAGS)
-					{
-						started_completion = TRUE;
-							/* set reg_ic according to p_ic, p_scs and pat */
-						set_reg_ic(complete_pat);
-						prog = vim_regcomp(complete_pat);
-						if (prog != NULL &&
-							find_tags(NULL, prog, &num_matches, &matches,
-									   FALSE, FALSE) == OK && num_matches > 0)
-						{
-							for (i = 0; i < num_matches; i++)
-								if (add_completion(matches[i], -1, NULL,
-														FORWARD) == RET_ERROR)
-									break;
-							FreeWild(num_matches, matches);
-							vim_free(prog);
-							if (make_cyclic() > 1)
-							{
-								sprintf((char *)IObuff,
-									"There are %d matching tags",
-									count_completions());
-								mesg = IObuff;
-							}
-						}
-						else
-						{
-							vim_free(prog);
-							vim_free(complete_pat);
-							complete_pat = NULL;
-						}
-					}
-					else if (ctrl_x_mode == CTRL_X_FILES)
-					{
-						started_completion = TRUE;
-						expand_interactively = TRUE;
-						if (ExpandWildCards(1, &complete_pat, &num_matches,
-												&matches, FALSE, FALSE) == OK)
-						{
-							/*
-							 * May change home directory back to "~".
-							 */
-							tilde_replace(complete_pat, num_matches, matches);
-							for (i = 0; i < num_matches; i++)
-								if (add_completion(matches[i], -1, NULL,
-														FORWARD) == RET_ERROR)
-									break;
-							FreeWild(num_matches, matches);
-							if (make_cyclic() > 1)
-							{
-								sprintf((char *)IObuff,
-									"There are %d matching file names",
-									count_completions());
-								mesg = IObuff;
-							}
-						}
-						else
-						{
-							vim_free(complete_pat);
-							complete_pat = NULL;
-						}
-						expand_interactively = FALSE;
-					}
-				}
-				/*
-				 * In insert mode: Delete the typed part.
-				 * In replace mode: Put the old characters back, if any.
-				 */
-				while (curwin->w_cursor.col > complete_col)
-				{
-					curwin->w_cursor.col--;
-					if (State == REPLACE)
-					{
-						if ((cc = replace_pop()) > 0)
-							pchar(curwin->w_cursor, cc);
-					}
-					else
-						delchar(FALSE);
-				}
-				complete_pos = NULL;
-				if (started_completion && curr_match == NULL &&
-										(p_ws || done_dir == BOTH_DIRECTIONS))
-				{
-					edit_submode_extra = e_patnotf;
-					edit_submode_highl = 'e';
-				}
-				else if (curr_match != NULL && complete_direction == FORWARD &&
-											curr_match->next != NULL)
-					curr_match = curr_match->next;
-				else if (curr_match != NULL && complete_direction == BACKWARD &&
-											curr_match->prev != NULL)
-					curr_match = curr_match->prev;
-				else
-				{
-					complete_pos = (complete_direction == FORWARD) ?
-										&last_match_pos : &first_match_pos;
-					/*
-					 * If 'infercase' is set, don't use 'smartcase' here
-					 */
-					save_p_scs = p_scs;
-					if (curbuf->b_p_inf)
-						p_scs = FALSE;
-					for (;;)
-					{
-						if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
-							temp = search_for_exact_line(complete_pos,
-									complete_direction, complete_pat);
-						else
-							temp = searchit(complete_pos, complete_direction,
-									complete_pat, 1L,
-									SEARCH_KEEP + SEARCH_NFMSG, RE_LAST);
-						if (temp == FAIL)
-						{
-							if (!p_ws && done_dir != -complete_direction)
-							{
-								/*
-								 * With nowrapscan, we haven't finished
-								 * looking in the other direction yet -- webb
-								 */
-								temp = OK;
-								done_dir = complete_direction;
-							}
-							else if (!p_ws)
-								done_dir = BOTH_DIRECTIONS;
-							break;
-						}
-						if (!started_completion)
-						{
-							started_completion = TRUE;
-							first_match_pos = *complete_pos;
-							last_match_pos = *complete_pos;
-						}
-						else if (first_match_pos.lnum == last_match_pos.lnum &&
-						  first_match_pos.col == last_match_pos.col)
-						{
-							/* We have found all the matches in this file */
-							temp = FAIL;
-							break;
-						}
-						ptr = ml_get_pos(complete_pos);
-						if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
-							temp = STRLEN(ptr);
-						else
-						{
-							tmp_ptr = ptr;
-							temp = 0;
-							while (*tmp_ptr != NUL && iswordchar(*tmp_ptr++))
-								temp++;
-						}
-						if (add_completion_and_infercase(ptr, temp, NULL,
-												  complete_direction) != FAIL)
-						{
-							temp = OK;
-							break;
-						}
-					}
-					p_scs = save_p_scs;
-				}
-				if (complete_pos != NULL && temp == FAIL)
-				{
-					int tot;
-
-					tot = count_completions();	/* Total num matches */
-					if (curr_match != NULL)
-						(void)make_cyclic();
-					if (tot > 1)
-					{
-						sprintf((char *)IObuff,
-							"All %d matches have now been found", tot);
-						mesg = IObuff;
-					}
-					else if (tot == 0)
-					{
-						edit_submode_extra = e_patnotf;
-						edit_submode_highl = 'e';
-					}
-				}
-
-				/* eat the ESC to avoid leaving insert mode */
-				if (got_int && !global_busy)
-				{
-					(void)vgetc();
-					got_int = FALSE;
-				}
-
-				/*
-				 * When using match from another file, show the file name.
-				 */
-				if (curr_match != NULL)
-					ptr = curr_match->str;
-				else			/* back to what has been typed */
-					ptr = original_text;
-
-				if (edit_submode_extra == NULL)
-				{
-					if (curr_match == NULL || curr_match->original)
-					{
-						edit_submode_extra = (char_u *)"Back at original";
-						edit_submode_highl = 'w';
-					}
-					else if (first_match != NULL &&
-							first_match->next != NULL &&
-							(first_match->next == first_match ||
-							 first_match->next->original))
-					{
-						edit_submode_extra = (char_u *)"(the only match)";
-						edit_submode_highl = NUL;
-					}
-				}
-
-				/*
-				 * Use ins_char() to insert the text, it is a bit slower than
-				 * ins_str(), but it takes care of replace mode.
-				 */
-				if (ptr != NULL)
-					while (*ptr)
-						ins_char(*ptr++);
-
-				started_completion = TRUE;
-				need_redraw = TRUE;
-
-				if (mesg != NULL)
-				{
-					if (dollar_vcol)
-						curs_columns(FALSE);
-					updateline();
-					need_redraw = FALSE;
-					(void)set_highlight('r');
-					msg_highlight = TRUE;
-					msg(mesg);
-					cursupdate();
-					setcursor();
-					flushbuf();
-					mch_delay(2000L, FALSE);
-				}
-				if (edit_submode_extra != NULL)
-				{
-					if (!p_smd)
-					{
-						if (edit_submode_highl)
-						{
-							set_highlight('r');		/* Highlight mode */
-							msg_highlight = TRUE;
-						}
-						msg(edit_submode_extra);
-					}
-					else
-						showmode();
-					edit_submode_extra = NULL;
-				}
-
-				/*
-				 * If there is a file name for the match, overwrite any
-				 * previous message, it's more interesting to know where the
-				 * match comes from, except when using the dictionary.
-				 * Truncate the file name to avoid a wait for return.
-				 */
-				if (curr_match != NULL && curr_match->fname != NULL &&
-							(ctrl_x_mode != CTRL_X_DICTIONARY || mesg == NULL))
-				{
-					STRCPY(IObuff, "match in file ");
-					i = (strsize(curr_match->fname) + 16) - sc_col;
-					if (i <= 0)
-						i = 0;
-					else
-						STRCAT(IObuff, "<");
-					STRCAT(IObuff, curr_match->fname + i);
-					msg(IObuff);
-					redraw_cmdline = FALSE;		/* don't overwrite! */
-				}
-
-				break;
-#endif /* INSERT_EXPAND */
-
-			  case Ctrl('Y'):				/* copy from previous line */
-#ifdef INSERT_EXPAND
-				if (ctrl_x_mode == CTRL_X_SCROLL)
-				{
-					scrolldown_clamp();
-					updateScreen(VALID);
-					break;
-				}
-#endif /* INSERT_EXPAND */
-				lnum = curwin->w_cursor.lnum - 1;
-				goto copychar;
-
-			  case Ctrl('E'):				/* copy from next line */
-#ifdef INSERT_EXPAND
-				if (ctrl_x_mode == CTRL_X_SCROLL)
-				{
-					scrollup_clamp();
-					updateScreen(VALID);
-					break;
-				}
-#endif /* INSERT_EXPAND */
-				lnum = curwin->w_cursor.lnum + 1;
-copychar:
-				if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
-				{
-					beep_flush();
-					break;
-				}
-
-				/* try to advance to the cursor column */
-				temp = 0;
-				ptr = ml_get(lnum);
-				while ((colnr_t)temp < curwin->w_virtcol && *ptr)
-					temp += lbr_chartabsize(ptr++, (colnr_t)temp);
-
-				if ((colnr_t)temp > curwin->w_virtcol)
-					--ptr;
-				if ((c = *ptr) == NUL)
-				{
-					beep_flush();
-					break;
-				}
-
-				/*FALLTHROUGH*/
-			  default:
-normalchar:
-				/*
-				 * do some very smart indenting when entering '{' or '}'
-				 */
-				if (((did_si || can_si_back) && c == '{') ||
-														 (can_si && c == '}'))
-				{
-					FPOS	*pos, old_pos;
-
-						/* for '}' set indent equal to indent of line
-						 * containing matching '{'
-						 */
-					if (c == '}' && (pos = findmatch('{')) != NULL)
-					{
-						old_pos = curwin->w_cursor;
-						/*
-						 * If the matching '{' has a ')' immediately before it
-						 * (ignoring white-space), then line up with the start
-						 * of the line containing the matching '(' if there is
-						 * one.  This handles the case where an
-						 * "if (..\n..) {" statement continues over multiple
-						 * lines -- webb
-						 */
-						ptr = ml_get(pos->lnum);
-						i = pos->col;
-						if (i > 0)			/* skip blanks before '{' */
-							while (--i > 0 && vim_iswhite(ptr[i]))
-								;
-						curwin->w_cursor.lnum = pos->lnum;
-						curwin->w_cursor.col = i;
-						if (ptr[i] == ')' && (pos = findmatch('(')) != NULL)
-							curwin->w_cursor = *pos;
-						i = get_indent();
-						curwin->w_cursor = old_pos;
-						set_indent(i, TRUE);
-					}
-					else if (curwin->w_cursor.col > 0)
-					{
-						/*
-						 * when inserting '{' after "O" reduce indent, but not
-						 * more than indent of previous line
-						 */
-						temp = TRUE;
-						if (c == '{' && can_si_back &&
-													curwin->w_cursor.lnum > 1)
-						{
-							old_pos = curwin->w_cursor;
-							i = get_indent();
-							while (curwin->w_cursor.lnum > 1)
-							{
-								ptr = skipwhite(
-										   ml_get(--(curwin->w_cursor.lnum)));
-								/* ignore empty lines and lines starting with
-								 * '#'.
-								 */
-								if (*ptr != '#' && *ptr != NUL)
-									break;
-							}
-							if (get_indent() >= i)
-								temp = FALSE;
-							curwin->w_cursor = old_pos;
-						}
-						if (temp)
-							shift_line(TRUE, FALSE, 1);
-					}
-				}
-					/* set indent of '#' always to 0 */
-				if (curwin->w_cursor.col > 0 && can_si && c == '#')
-				{
-								/* remember current indent for next line */
-					old_indent = get_indent();
-					set_indent(0, TRUE);
-				}
-
-				if (c == ' ')
-				{
-#ifdef CINDENT
-					if (inindent(0))
-						can_cindent = FALSE;
-#endif
-					if (Insstart_blank_vcol == MAXCOL &&
-									   curwin->w_cursor.lnum == Insstart.lnum)
-						Insstart_blank_vcol = curwin->w_virtcol;
-				}
-
-				if (iswordchar(c) || !echeck_abbr(c))
-				{
-					insert_special(c, FALSE);
-					need_redraw = TRUE;
-#ifdef RIGHTLEFT
-					revinslegal++;
-					revinschars++;
-#endif
-				}
-				break;
-		}	/* end of switch (c) */
-
-#ifdef CINDENT
-		if (curbuf->b_p_cin && can_cindent
-# ifdef INSERT_EXPAND
-											&& !ctrl_x_mode
-# endif
-															   )
+	    if (ctrl_x_mode == CTRL_X_DICTIONARY)
+	    {
+		if (*p_dict == NUL)
 		{
-force_cindent:
-			/*
-			 * Indent now if a key was typed that is in 'cinkeys'.
-			 */
-			if (in_cinkeys(c, ' ', line_is_white))
-			{
-				stop_arrow();
-
-				/* re-indent the current line */
-				fixthisline(get_c_indent);
-
-				/* draw the changes on the screen later */
-				need_redraw = TRUE;
-			}
+		    ctrl_x_mode = 0;
+		    msg_attr((char_u *)"'dictionary' option is empty",
+			     highlight_attr[HLF_E]);
+		    vim_beep();
+		    setcursor();
+		    out_flush();
+		    ui_delay(2000L, FALSE);
+		    break;
 		}
+		goto docomplete;
+	    }
+# endif
+# ifdef DIGRAPHS
+	    c = ins_digraph();
+	    if (c == NUL)
+	    {
+		need_redraw = TRUE;
+		break;
+	    }
+# endif
+	    goto normalchar;
+#endif /* DIGRAPHS || INSERT_EXPAND */
+
+#ifdef INSERT_EXPAND
+	case Ctrl(']'):		/* Tag name completion after ^X */
+	    if (ctrl_x_mode != CTRL_X_TAGS)
+		goto normalchar;
+	    goto docomplete;
+
+	case Ctrl('F'):		/* File name completion after ^X */
+	    if (ctrl_x_mode != CTRL_X_FILES)
+		goto normalchar;
+	    goto docomplete;
+#endif
+
+	case Ctrl('L'):		/* Whole line completion after ^X */
+#ifdef INSERT_EXPAND
+	    if (ctrl_x_mode != CTRL_X_WHOLE_LINE)
+#endif
+	    {
+		/* CTRL-L with 'insertmode' set: Leave Insert mode */
+		if (p_im)
+		{
+		    if (echeck_abbr(Ctrl('L') + ABBR_OFF))
+			break;
+		    goto doESCkey;
+		}
+		goto normalchar;
+	    }
+#ifdef INSERT_EXPAND
+	    /* FALLTHROUGH */
+
+	case Ctrl('P'):		/* Do previous pattern completion */
+	case Ctrl('N'):		/* Do next pattern completion */
+	    /* if 'complete' is empty then plain ^P is no longer special,
+	     * but it is under other ^X modes */
+	    if (    *curbuf->b_p_cpt == NUL && !ctrl_x_mode
+		    && !(continue_status & CONT_LOCAL))
+		goto normalchar;
+docomplete:
+	    i = ins_complete(c);
+	    if (i)
+		need_redraw |= i;
+	    else
+		continue_status = 0;
+	    break;
+#endif /* INSERT_EXPAND */
+
+	case Ctrl('Y'):		/* copy from previous line or scroll down */
+	case Ctrl('E'):		/* copy from next line	   or scroll up */
+#ifdef INSERT_EXPAND
+	    if (ctrl_x_mode == CTRL_X_SCROLL)
+	    {
+		if (c == Ctrl('Y'))
+		    scrolldown_clamp();
+		else
+		    scrollup_clamp();
+		update_screen(VALID);
+	    }
+	    else
+#endif
+	    {
+		c = ins_copychar(curwin->w_cursor.lnum
+						 + (c == Ctrl('Y') ? -1 : 1));
+		if (c != NUL)
+		{
+		    long	tw_save;
+
+		    /* The character must be taken literally, insert like it
+		     * was typed after a CTRL-V, and pretend 'textwidth'
+		     * wasn't set */
+		    AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+		    tw_save = curbuf->b_p_tw;
+		    curbuf->b_p_tw = -1;
+		    insert_special(c, TRUE, TRUE);
+		    curbuf->b_p_tw = tw_save;
+		    need_redraw = TRUE;
+#ifdef RIGHTLEFT
+		    revins_chars++;
+		    revins_legal++;
+#endif
+		    c = Ctrl('V');	/* pretend CTRL-V is last character */
+		}
+	    }
+	    break;
+
+	  default:
+#ifdef UNIX
+	    if (c == intr_char)		/* special interrupt char */
+		goto do_intr;
+#endif
+
+normalchar:
+#ifdef SMARTINDENT
+	    /*
+	     * Try to perform smart-indenting.
+	     */
+	    ins_try_si(c);
+#endif
+
+	    if (c == ' ')
+	    {
+		inserted_space = TRUE;
+#ifdef CINDENT
+		if (inindent(0))
+		    can_cindent = FALSE;
+#endif
+		if (Insstart_blank_vcol == MAXCOL
+			&& curwin->w_cursor.lnum == Insstart.lnum)
+		    Insstart_blank_vcol = get_nolist_virtcol();
+	    }
+
+	    if (vim_iswordc(c) || !echeck_abbr(c))
+	    {
+		insert_special(c, FALSE, FALSE);
+		need_redraw = TRUE;
+#ifdef RIGHTLEFT
+		revins_legal++;
+		revins_chars++;
+#endif
+	    }
+	    break;
+	}   /* end of switch (c) */
+
+#ifdef CINDENT
+	if (curbuf->b_p_cin && can_cindent
+# ifdef INSERT_EXPAND
+					    && !ctrl_x_mode
+# endif
+							       )
+	{
+force_cindent:
+	    /*
+	     * Indent now if a key was typed that is in 'cinkeys'.
+	     */
+	    if (in_cinkeys(c, ' ', line_is_white))
+	    {
+		stop_arrow();
+
+		/* re-indent the current line */
+		fixthisline(get_c_indent);
+
+		/* draw the changes on the screen later */
+		need_redraw = TRUE;
+	    }
+	}
 #endif /* CINDENT */
 
-	}	/* for (;;) */
+    }	/* for (;;) */
+    /* NOTREACHED */
+}
+
+/*
+ * Put a character directly onto the screen.  It's not stored in a buffer.
+ * Used while handling CTRL-K, CTRL-V, etc. in Insert mode.
+ */
+    static void
+edit_putchar(c, highlight)
+    int	    c;
+    int	    highlight;
+{
+    int	    attr;
+
+    if (NextScreen != NULL)
+    {
+	update_topline();	/* just in case w_topline isn't valid */
+	validate_cursor();
+	if (highlight)
+	    attr = highlight_attr[HLF_8];
+	else
+	    attr = 0;
+	screen_putchar(c, curwin->w_winpos + curwin->w_wrow,
+#ifdef RIGHTLEFT
+		    curwin->w_p_rl ? (int)Columns - 1 - curwin->w_wcol :
+#endif
+							 curwin->w_wcol, attr);
+    }
+}
+
+/*
+ * Called when p_dollar is set: display a '$' at the end of the changed text
+ * Only works when cursor is in the line that changes.
+ */
+    void
+display_dollar(col)
+    colnr_t	col;
+{
+    colnr_t save_col;
+
+    if (!redrawing())
+	return;
+
+    cursor_off();
+    save_col = curwin->w_cursor.col;
+    curwin->w_cursor.col = col;
+    curs_columns(FALSE);	    /* recompute w_wrow and w_wcol */
+    if (curwin->w_wcol < Columns)
+    {
+	edit_putchar('$', FALSE);
+	dollar_vcol = curwin->w_virtcol;
+    }
+    curwin->w_cursor.col = save_col;
+}
+
+/*
+ * Call this function before moving the cursor from the normal insert position
+ * in insert mode.
+ */
+    static void
+undisplay_dollar()
+{
+    if (dollar_vcol)
+    {
+	dollar_vcol = 0;
+	update_screenline();
+    }
 }
 
 /*
@@ -1969,165 +1046,170 @@ force_cindent:
  * type == INDENT_SET	set indent to "amount"
  * if round is TRUE, round the indent to 'shiftwidth' (only with _INC and _Dec).
  */
-	static void
-change_indent(type, amount, round)
-	int		type;
-	int		amount;
-	int		round;
+    static void
+change_indent(type, amount, round, replaced)
+    int	    type;
+    int	    amount;
+    int	    round;
+    int	    replaced;		/* replaced character, put on replace stack */
 {
-	int			vcol;
-	int			last_vcol;
-	int			insstart_less;			/* reduction for Insstart.col */
-	int			new_cursor_col;
-	int			i;
-	char_u		*ptr;
-	int			save_p_list;
-	int			start_col;
+    int		vcol;
+    int		last_vcol;
+    int		insstart_less;		/* reduction for Insstart.col */
+    int		new_cursor_col;
+    int		i;
+    char_u	*ptr;
+    int		save_p_list;
+    int		start_col;
+    colnr_t	vc;
 
-	/* for the following tricks we don't want list mode */
-	save_p_list = curwin->w_p_list;
-    if (save_p_list)
-    {
-        curwin->w_p_list = FALSE;
-        curs_columns(FALSE);			/* recompute w_virtcol */
-    }
-	vcol = curwin->w_virtcol;
+    /* for the following tricks we don't want list mode */
+    save_p_list = curwin->w_p_list;
+    curwin->w_p_list = FALSE;
+    getvcol(curwin, &curwin->w_cursor, NULL, &vc, NULL);
+    vcol = vc;
 
-	/*
-	 * For Replace mode we need to fix the replace stack later, which is only
-	 * possible when the cursor is in the indent.  Remember the number of
-	 * characters before the cursor if it's possible.
-	 */
-	start_col = curwin->w_cursor.col;
+    /*
+     * For Replace mode we need to fix the replace stack later, which is only
+     * possible when the cursor is in the indent.  Remember the number of
+     * characters before the cursor if it's possible.
+     */
+    start_col = curwin->w_cursor.col;
 
-	/* determine offset from first non-blank */
+    /* determine offset from first non-blank */
+    new_cursor_col = curwin->w_cursor.col;
+    beginline(BL_WHITE);
+    new_cursor_col -= curwin->w_cursor.col;
+
+    insstart_less = curwin->w_cursor.col;
+
+    /*
+     * If the cursor is in the indent, compute how many screen columns the
+     * cursor is to the left of the first non-blank.
+     */
+    if (new_cursor_col < 0)
+	vcol = get_indent() - vcol;
+
+    if (new_cursor_col > 0)	    /* can't fix replace stack */
+	start_col = -1;
+
+    /*
+     * Set the new indent.  The cursor will be put on the first non-blank.
+     */
+    if (type == INDENT_SET)
+	set_indent(amount, TRUE);
+    else
+	shift_line(type == INDENT_DEC, round, 1);
+    insstart_less -= curwin->w_cursor.col;
+
+    /*
+     * Try to put cursor on same character.
+     * If the cursor is at or after the first non-blank in the line,
+     * compute the cursor column relative to the column of the first
+     * non-blank character.
+     * If we are not in insert mode, leave the cursor on the first non-blank.
+     * If the cursor is before the first non-blank, position it relative
+     * to the first non-blank, counted in screen columns.
+     */
+    if (new_cursor_col >= 0)
+	new_cursor_col += curwin->w_cursor.col;
+    else if (!(State & INSERT))
 	new_cursor_col = curwin->w_cursor.col;
-	beginline(TRUE);
-	new_cursor_col -= curwin->w_cursor.col;
-
-	insstart_less = curwin->w_cursor.col;
+    else
+    {
+	/*
+	 * Compute the screen column where the cursor should be.
+	 */
+	vcol = get_indent() - vcol;
+	curwin->w_virtcol = (vcol < 0) ? 0 : vcol;
 
 	/*
-	 * If the cursor is in the indent, compute how many screen columns the
-	 * cursor is to the left of the first non-blank.
+	 * Advance the cursor until we reach the right screen column.
 	 */
-	if (new_cursor_col < 0)
-		vcol = get_indent() - vcol;
-
-	if (new_cursor_col > 0)			/* can't fix replace stack */
-		start_col = -1;
-
-	/*
-	 * Set the new indent.  The cursor will be put on the first non-blank.
-	 */
-	if (type == INDENT_SET)
-		set_indent(amount, TRUE);
-	else
-		shift_line(type == INDENT_DEC, round, 1);
-	insstart_less -= curwin->w_cursor.col;
-
-	/*
-	 * Try to put cursor on same character.
-	 * If the cursor is at or after the first non-blank in the line,
-	 * compute the cursor column relative to the column of the first
-	 * non-blank character.
-	 * If we are not in insert mode, leave the cursor on the first non-blank.
-	 * If the cursor is before the first non-blank, position it relative
-	 * to the first non-blank, counted in screen columns.
-	 */
-	if (new_cursor_col >= 0)
-		new_cursor_col += curwin->w_cursor.col;
-	else if (!(State & INSERT))
-		new_cursor_col = curwin->w_cursor.col;
-	else
+	vcol = last_vcol = 0;
+	new_cursor_col = -1;
+	ptr = ml_get_curline();
+	while (vcol <= (int)curwin->w_virtcol)
 	{
-		/*
-		 * Compute the screen column where the cursor should be.
-		 */
-		vcol = get_indent() - vcol;
-		curwin->w_virtcol = (vcol < 0) ? 0 : vcol;
-
-		/*
-		 * Advance the cursor until we reach the right screen column.
-		 */
-		vcol = last_vcol = 0;
-		new_cursor_col = -1;
-		ptr = ml_get_curline();
-		while (vcol <= (int)curwin->w_virtcol)
-		{
-			last_vcol = vcol;
-			++new_cursor_col;
-			vcol += lbr_chartabsize(ptr + new_cursor_col, (colnr_t)vcol);
-		}
-		vcol = last_vcol;
-
-		/*
-		 * May need to insert spaces to be able to position the cursor on
-		 * the right screen column.
-		 */
-		if (vcol != (int)curwin->w_virtcol)
-		{
-			curwin->w_cursor.col = new_cursor_col;
-			i = (int)curwin->w_virtcol - vcol;
-			ptr = alloc(i + 1);
-			if (ptr != NULL)
-			{
-				new_cursor_col += i;
-				ptr[i] = NUL;
-				while (--i >= 0)
-					ptr[i] = ' ';
-				ins_str(ptr);
-				vim_free(ptr);
-			}
-		}
-
-		/*
-		 * When changing the indent while the cursor is in it, reset
-		 * Insstart_col to 0.
-		 */
-		insstart_less = Insstart.col;
+	    last_vcol = vcol;
+	    ++new_cursor_col;
+	    vcol += lbr_chartabsize(ptr + new_cursor_col, (colnr_t)vcol);
 	}
-
-	curwin->w_p_list = save_p_list;
-
-	if (new_cursor_col <= 0)
-		curwin->w_cursor.col = 0;
-	else
-		curwin->w_cursor.col = new_cursor_col;
-	curwin->w_set_curswant = TRUE;
+	vcol = last_vcol;
 
 	/*
-	 * May have to adjust the start of the insert.
+	 * May need to insert spaces to be able to position the cursor on
+	 * the right screen column.
 	 */
-	if ((State & INSERT) && curwin->w_cursor.lnum == Insstart.lnum &&
-															Insstart.col != 0)
+	if (vcol != (int)curwin->w_virtcol)
 	{
-		if ((int)Insstart.col <= insstart_less)
-			Insstart.col = 0;
-		else
-			Insstart.col -= insstart_less;
+	    curwin->w_cursor.col = new_cursor_col;
+	    i = (int)curwin->w_virtcol - vcol;
+	    ptr = alloc(i + 1);
+	    if (ptr != NULL)
+	    {
+		new_cursor_col += i;
+		ptr[i] = NUL;
+		while (--i >= 0)
+		    ptr[i] = ' ';
+		ins_str(ptr);
+		vim_free(ptr);
+	    }
 	}
 
 	/*
-	 * May have to fix the replace stack, if it's possible.
-	 * If the number of characters before the cursor decreased, need to pop a
-	 * few characters from the replace stack.
-	 * If the number of characters before the cursor increased, need to push a
-	 * few NULs onto the replace stack.
+	 * When changing the indent while the cursor is in it, reset
+	 * Insstart_col to 0.
 	 */
-	if (State == REPLACE && start_col >= 0)
+	insstart_less = Insstart.col;
+    }
+
+    curwin->w_p_list = save_p_list;
+
+    if (new_cursor_col <= 0)
+	curwin->w_cursor.col = 0;
+    else
+	curwin->w_cursor.col = new_cursor_col;
+    curwin->w_set_curswant = TRUE;
+    changed_cline_bef_curs();
+
+    /*
+     * May have to adjust the start of the insert.
+     */
+    if ((State & INSERT) && curwin->w_cursor.lnum == Insstart.lnum &&
+							    Insstart.col != 0)
+    {
+	if ((int)Insstart.col <= insstart_less)
+	    Insstart.col = 0;
+	else
+	    Insstart.col -= insstart_less;
+    }
+
+    /*
+     * May have to fix the replace stack, if it's possible.
+     * If the number of characters before the cursor decreased, need to pop a
+     * few characters from the replace stack.
+     * If the number of characters before the cursor increased, need to push a
+     * few NULs onto the replace stack.
+     */
+    if (State == REPLACE && start_col >= 0)
+    {
+	while (start_col > (int)curwin->w_cursor.col)
 	{
-		while (start_col > (int)curwin->w_cursor.col)
-		{
-			(void)replace_pop();
-			--start_col;
-		}
-		while (start_col < (int)curwin->w_cursor.col)
-		{
-			replace_push(NUL);
-			++start_col;
-		}
+	    replace_join(0);	    /* remove a NUL from the replace stack */
+	    --start_col;
 	}
+	while (start_col < (int)curwin->w_cursor.col || replaced)
+	{
+	    replace_push(NUL);
+	    if (replaced)
+	    {
+		replace_push(replaced);
+		replaced = NUL;
+	    }
+	    ++start_col;
+	}
+    }
 }
 
 #ifdef INSERT_EXPAND
@@ -2135,54 +1217,56 @@ change_indent(type, amount, round)
  * Is the character 'c' a valid key to keep us in the current ctrl-x mode?
  * -- webb
  */
-	int
-is_ctrl_x_key(c)
-	int		c;
+    int
+vim_is_ctrl_x_key(c)
+    int	    c;
 {
-	switch (ctrl_x_mode)
-	{
-		case 0:				/* Not in any ctrl-x mode */
-			break;
-		case CTRL_X_NOT_DEFINED_YET:
-			if (c == Ctrl('X') || c == Ctrl('Y') || c == Ctrl('E') ||
-					c == Ctrl('L') || c == Ctrl('F') || c == Ctrl(']') ||
-					c == Ctrl('I') || c == Ctrl('D') || c == Ctrl('P') ||
-					c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_SCROLL:
-			if (c == Ctrl('Y') || c == Ctrl('E'))
-				return TRUE;
-			break;
-		case CTRL_X_WHOLE_LINE:
-			if (c == Ctrl('L') || c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_FILES:
-			if (c == Ctrl('F') || c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_DICTIONARY:
-			if (c == Ctrl('K') || c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_TAGS:
-			if (c == Ctrl(']') || c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_PATH_PATTERNS:
-			if (c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		case CTRL_X_PATH_DEFINES:
-			if (c == Ctrl('D') || c == Ctrl('P') || c == Ctrl('N'))
-				return TRUE;
-			break;
-		default:
-			emsg(e_internal);
-			break;
-	}
-	return FALSE;
+    switch (ctrl_x_mode)
+    {
+	case 0:		    /* Not in any ctrl-x mode */
+	    break;
+	case CTRL_X_NOT_DEFINED_YET:
+	    if (       c == Ctrl('X') || c == Ctrl('Y') || c == Ctrl('E')
+		    || c == Ctrl('L') || c == Ctrl('F') || c == Ctrl(']')
+		    || c == Ctrl('I') || c == Ctrl('D') || c == Ctrl('P')
+		    || c == Ctrl('N'))
+		return TRUE;
+	    break;
+	case CTRL_X_SCROLL:
+	    if (c == Ctrl('Y') || c == Ctrl('E'))
+		return TRUE;
+	    break;
+	case CTRL_X_WHOLE_LINE:
+	    if (c == Ctrl('L') || c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+	case CTRL_X_FILES:
+	    if (c == Ctrl('F') || c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+	case CTRL_X_DICTIONARY:
+	    if (c == Ctrl('K') || c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+	case CTRL_X_TAGS:
+	    if (c == Ctrl(']') || c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+#ifdef FIND_IN_PATH
+	case CTRL_X_PATH_PATTERNS:
+	    if (c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+	case CTRL_X_PATH_DEFINES:
+	    if (c == Ctrl('D') || c == Ctrl('P') || c == Ctrl('N'))
+		return TRUE;
+	    break;
+#endif
+	default:
+	    emsg(e_internal);
+	    break;
+    }
+    return FALSE;
 }
 
 /*
@@ -2191,69 +1275,67 @@ is_ctrl_x_key(c)
  * text is infered, ie this tries to work out what case you probably wanted
  * the rest of the word to be in -- webb
  */
-	int
-add_completion_and_infercase(str, len, fname, dir)
-	char_u	*str;
-	int		len;
-	char_u	*fname;
-	int		dir;
+    int
+add_completion_and_infercase(str, len, fname, dir, reuse)
+    char_u  *str;
+    int	    len;
+    char_u  *fname;
+    int	    dir;
+    int     reuse;
 {
-	int has_lower = FALSE;
-	int was_letter = FALSE;
-	int orig_len;
-	int idx;
+    int has_lower = FALSE;
+    int was_letter = FALSE;
+    int idx;
 
-	if (p_ic && curbuf->b_p_inf && len < IOSIZE)
+    if (p_ic && curbuf->b_p_inf && len < IOSIZE)
+    {
+	/* Infer case of completed part -- webb */
+	/* Use IObuff, str would change text in buffer! */
+	STRNCPY(IObuff, str, len);
+	IObuff[len] = NUL;
+
+	/* Rule 1: Were any chars converted to lower? */
+	for (idx = 0; idx < completion_length; ++idx)
 	{
-		/* Infer case of completed part -- webb */
-		orig_len = STRLEN(original_text);
-
-		/* Use IObuff, str would change text in buffer! */
-		STRNCPY(IObuff, str, len);
-		IObuff[len] = NUL;
-
-		/* Rule 1: Were any chars converted to lower? */
-		for (idx = 0; idx < orig_len; ++idx)
+	    if (islower(original_text[idx]))
+	    {
+		has_lower = TRUE;
+		if (isupper(IObuff[idx]))
 		{
-			if (islower(original_text[idx]))
-			{
-				has_lower = TRUE;
-				if (isupper(IObuff[idx]))
-				{
-					/* Rule 1 is satisfied */
-					for (idx = orig_len; idx < len; ++idx)
-						IObuff[idx] = TO_LOWER(IObuff[idx]);
-					break;
-				}
-			}
+		    /* Rule 1 is satisfied */
+		    for (idx = completion_length; idx < len; ++idx)
+			IObuff[idx] = TO_LOWER(IObuff[idx]);
+		    break;
 		}
-
-		/*
-		 * Rule 2: No lower case, 2nd consecutive letter converted to
-		 * upper case.
-		 */
-		if (!has_lower)
-		{
-			for (idx = 0; idx < orig_len; ++idx)
-			{
-				if (was_letter && isupper(original_text[idx]) &&
-					islower(IObuff[idx]))
-				{
-					/* Rule 2 is satisfied */
-					for (idx = orig_len; idx < len; ++idx)
-						IObuff[idx] = TO_UPPER(IObuff[idx]);
-					break;
-				}
-				was_letter = isalpha(original_text[idx]);
-			}
-		}
-
-		/* Copy the original case of the part we typed */
-		STRNCPY(IObuff, original_text, orig_len);
-
-		return add_completion(IObuff, len, fname, dir);
+	    }
 	}
-	return add_completion(str, len, fname, dir);
+
+	/*
+	 * Rule 2: No lower case, 2nd consecutive letter converted to
+	 * upper case.
+	 */
+	if (!has_lower)
+	{
+	    for (idx = 0; idx < completion_length; ++idx)
+	    {
+		if (was_letter && isupper(original_text[idx]) &&
+		    islower(IObuff[idx]))
+		{
+		    /* Rule 2 is satisfied */
+		    for (idx = completion_length; idx < len; ++idx)
+			IObuff[idx] = TO_UPPER(IObuff[idx]);
+		    break;
+		}
+		was_letter = isalpha(original_text[idx]);
+	    }
+	}
+
+	/* Copy the original case of the part we typed */
+	STRNCPY(IObuff, original_text, completion_length);
+
+	return add_completion(IObuff, len, fname, dir, reuse);
+    }
+    return add_completion(str, len, fname, dir, reuse);
 }
 
 /*
@@ -2262,254 +1344,1252 @@ add_completion_and_infercase(str, len, fname, dir)
  * FAIL, otherwise add it to the list and return OK.  If there is an error,
  * maybe because alloc returns NULL, then RET_ERROR is returned -- webb.
  */
-	static int
-add_completion(str, len, fname, dir)
-	char_u	*str;
-	int		len;
-	char_u	*fname;
-	int		dir;
+    static int
+add_completion(str, len, fname, dir, reuse)
+    char_u  *str;
+    int	    len;
+    char_u  *fname;
+    int	    dir;
+    int     reuse;
 {
-	struct Completion *match;
+    struct Completion *match;
 
-	mch_breakcheck();
-	if (got_int)
-		return RET_ERROR;
-	if (len < 0)
-		len = STRLEN(str);
+    ui_breakcheck();
+    if (got_int)
+	return RET_ERROR;
+    if (len < 0)
+	len = STRLEN(str);
 
-	/*
-	 * If the same match is already present, don't add it.
-	 */
-	if (first_match != NULL)
+    /*
+     * If the same match is already present, don't add it.
+     */
+    if (first_match != NULL)
+    {
+	match = first_match;
+	do
 	{
-		match = first_match;
-		do
-		{
-			if (STRNCMP(match->str, str, (size_t)len) == 0 &&
-													   match->str[len] == NUL)
-				return FAIL;
-			match = match->next;
-		} while (match != NULL && match != first_match);
-	}
+	    if (    !(match->original & ORIGINAL_TEXT)
+		    && STRNCMP(match->str, str, (size_t)len) == 0
+		    && match->str[len] == NUL)
+		return FAIL;
+	    match = match->next;
+	} while (match != NULL && match != first_match);
+    }
 
-	/*
-	 * Allocate a new match structure.
-	 * Copy the values to the new match structure.
-	 */
-	match = (struct Completion *)alloc((unsigned)sizeof(struct Completion));
-	if (match == NULL)
-		return RET_ERROR;
-	if ((match->str = strnsave(str, len)) == NULL)
-	{
-		vim_free(match);
-		return RET_ERROR;
-	}
-	if (fname != NULL)
-		match->fname = strsave(fname);		/* ignore errors */
-	else
-		match->fname = NULL;
-	match->original = FALSE;
+    /*
+     * Allocate a new match structure.
+     * Copy the values to the new match structure.
+     */
+    match = (struct Completion *)alloc((unsigned)sizeof(struct Completion));
+    if (match == NULL)
+	return RET_ERROR;
+    if (reuse & ORIGINAL_TEXT)
+	match->str = original_text;
+    else if ((match->str = vim_strnsave(str, len)) == NULL)
+    {
+	vim_free(match);
+	return RET_ERROR;
+    }
+    /* match-fname is:
+     * - curr_match->fname if it is a string equal to fname.
+     * - a copy of fname, FREE_FNAME is set to free later THE allocated mem.
+     * - NULL otherwise.	--Acevedo */
+    if (fname && curr_match && curr_match->fname
+	      && STRCMP(fname, curr_match->fname) == 0)
+	match->fname = curr_match->fname;
+    else if (fname && (match->fname = vim_strsave(fname)) != NULL)
+	reuse |= FREE_FNAME;
+    else
+	match->fname = NULL;
+    match->original = reuse;
 
-	/*
-	 * Link the new match structure in the list of matches.
-	 */
-	if (first_match == NULL)
-	{
-		first_match = curr_match = match;
-		curr_match->next = curr_match->prev = NULL;
-	}
-	else
-	{
-		if (dir == FORWARD)
-		{
-			match->next = NULL;
-			match->prev = curr_match;
-			curr_match->next = match;
-			curr_match = match;
-		}
-		else	/* BACKWARD */
-		{
-			match->prev = NULL;
-			match->next = curr_match;
-			curr_match->prev = match;
-			first_match = curr_match = match;
-		}
-	}
+    /*
+     * Link the new match structure in the list of matches.
+     */
+    if (first_match == NULL)
+	match->next = match->prev = NULL;
+    else if (dir == FORWARD)
+    {
+	match->next = curr_match->next;
+	match->prev = curr_match;
+    }
+    else	/* BACKWARD */
+    {
+	match->next = curr_match;
+	match->prev = curr_match->prev;
+    }
+    if (match->next)
+	match->next->prev = match;
+    if (match->prev)
+	match->prev->next = match;
+    else	/* if there's nothing before, it is the first match */
+	first_match = match;
+    curr_match = match;
 
-	return OK;
+    return OK;
 }
 
-/*
- * Make the completion list cyclic.  Add the original text at the end.
+/* Make the completion list cyclic.
  * Return the number of matches (excluding the original).
  */
-	static int
+    static int
 make_cyclic()
 {
-	struct Completion *match, *orig;
-	int		count = 0;
+    struct Completion *match;
+    int	    count = 0;
 
-	if (first_match != NULL)
+    if (first_match != NULL)
+    {
+	/*
+	 * Find the end of the list.
+	 */
+	match = first_match;
+	/* there's always an entry for the original_text, it doesn't count. */
+	while (match->next != NULL && match->next != first_match)
 	{
-		/*
-		 * Find the end of the list.
-		 */
-		match = first_match;
-		count = 1;
-		while (match->next != NULL)
-		{
-			match = match->next;
-			++count;
-		}
-
-		if (original_text != NULL)
-		{
-			/*
-			 * Allocate a new structure for the original text.
-			 * Copy the original text to the new structure.
-			 * Link it in the list at the end.
-			 */
-			orig = (struct Completion *)alloc((unsigned)sizeof(
-														  struct Completion));
-			if (orig != NULL)
-			{
-				if ((orig->str = strsave(original_text)) == NULL)
-					vim_free(orig);
-				else
-				{
-					orig->fname = NULL;
-					orig->original = TRUE;
-					orig->prev = match;
-					match->next = orig;
-					match = orig;
-					curr_match = orig;
-				}
-			}
-		}
-		match->next = first_match;
-		first_match->prev = match;
+	    match = match->next;
+	    ++count;
 	}
-	return count;
+	match->next = first_match;
+	first_match->prev = match;
+    }
+    return count;
 }
 
+#define DICT_FIRST	(1)	/* use just first element in "dict" */
+#define DICT_EXACT	(2)	/* "dict" is the exact name of a file */
 /*
  * Add any identifiers that match the given pattern to the list of
  * completions.
  */
-	static void
-complete_dictionaries(pat, dir)
-	char_u	*pat;
-	int		dir;
+    static void
+complete_dictionaries(dict, pat, dir, flags)
+    char_u  *dict;
+    char_u  *pat;
+    int	     dir;
+    int	     flags;
 {
-	struct Completion *save_curr_match = curr_match;
-	char_u	*dict = p_dict;
-	char_u	*ptr;
-	char_u	*buf;
-	char_u	*fname;
-	int		at_start;
-	FILE	*fp;
-	struct regexp *prog = NULL;
+    char_u	*ptr;
+    char_u	*buf;
+    int		at_start;
+    FILE	*fp;
+    vim_regexp	*prog;
+    int		add_r;
+    char_u	**files;
+    int		count;
+    int		i;
 
-	if ((buf = alloc(LSIZE)) == NULL)
-		return;
-	if (curr_match != NULL)
+    buf = alloc(LSIZE);
+    set_reg_ic(pat);	/* set reg_ic according to p_ic, p_scs and pat */
+    prog = vim_regcomp(pat, (int)p_magic);
+    expand_interactively = TRUE;
+    while (buf && prog && *dict != NUL && !got_int)
+    {
+	/* copy one dictionary file name into buf */
+	if (flags == DICT_EXACT)
 	{
-		while (curr_match->next != NULL)
-			curr_match = curr_match->next;
+	    count = 1;
+	    files = &dict;
 	}
-	if (*dict != NUL)
+	else
 	{
-		(void)set_highlight('r');
-		msg_highlight = TRUE;
-		MSG("Please wait, searching dictionaries");
-		set_reg_ic(pat);	/* set reg_ic according to p_ic, p_scs and pat */
-		reg_magic = p_magic;
-		prog = vim_regcomp(pat);
+	    copy_option_part(&dict, buf, LSIZE, ",");
+	    if (expand_wildcards(1, &buf, &count, &files, EW_FILE|EW_DIR) != OK)
+		count = 0;
 	}
-	while (*dict != NUL && prog != NULL && !got_int)
+
+	for (i = 0; i < count && !got_int; i++)
 	{
-								/* copy one dictionary file name into buf */
-		(void)copy_option_part(&dict, buf, LSIZE, ",");
+	    fp = fopen((char *)files[i], "r");	/* open dictionary file */
 
-		fp = fopen((char *)buf, "r");		/* open dictionary file */
-
-		if (fp != NULL)
+	    if (fp != NULL)
+	    {
+		/*
+		 * Read dictionary file line by line.
+		 * Check each line for a match.
+		 */
+		while (!got_int && !vim_fgets(buf, LSIZE, fp))
 		{
-			fname = strsave(buf);			/* keep name of file */
-			/*
-			 * Read dictionary file line by line.
-			 * Check each line for a match.
-			 */
-			while (!got_int && !vim_fgets(buf, LSIZE, fp))
-			{
-				ptr = buf;
-				at_start = TRUE;
-				while (vim_regexec(prog, ptr, at_start))
-				{
-					at_start = FALSE;
-					ptr = prog->startp[0];
-					while (iswordchar(*ptr))
-						++ptr;
-					if (add_completion_and_infercase(prog->startp[0],
-								 (int)(ptr - prog->startp[0]), fname, FORWARD)
-																 == RET_ERROR)
-						break;
-				}
-				line_breakcheck();
-			}
-			fclose(fp);
-			vim_free(fname);
+		    ptr = buf;
+		    at_start = TRUE;
+		    while (vim_regexec(prog, ptr, at_start))
+		    {
+			at_start = FALSE;
+			ptr = prog->startp[0];
+			while (vim_iswordc(*ptr))
+			    ++ptr;
+			add_r = add_completion_and_infercase(prog->startp[0],
+				(int)(ptr - prog->startp[0]), files[i], dir, 0);
+			if (add_r == OK)
+			    /* if dir was BACKWARD then honor it just once */
+			    dir = FORWARD;
+			else if (add_r == RET_ERROR)
+			    break;
+		    }
+		    line_breakcheck();
 		}
+		fclose(fp);
+	    }
 	}
-	vim_free(prog);
-	if (save_curr_match != NULL)
-		curr_match = save_curr_match;
-	else if (dir == BACKWARD)
-		curr_match = first_match;
-	vim_free(buf);
+	if (flags != DICT_EXACT && count > 0)
+	    FreeWild(count, files);
+	if (flags)
+	    break;
+    }
+    expand_interactively = FALSE;
+    vim_free(prog);
+    vim_free(buf);
 }
 
 /*
  * Free the list of completions
  */
-	static void
+    static void
 free_completions()
 {
-	struct Completion *match;
+    struct Completion *match;
 
-	if (first_match == NULL)
-		return;
-	curr_match = first_match;
-	do
-	{
-		match = curr_match;
-		curr_match = curr_match->next;
-		vim_free(match->str);
-		vim_free(match->fname);
-		vim_free(match);
-	} while (curr_match != NULL && curr_match != first_match);
-	first_match = curr_match = NULL;
+    if (first_match == NULL)
+	return;
+    curr_match = first_match;
+    do
+    {
+	match = curr_match;
+	curr_match = curr_match->next;
+	vim_free(match->str);
+	/* several entries may use the same fname, free it just once. */
+	if (match->original & FREE_FNAME)
+	    vim_free(match->fname);
+	vim_free(match);
+    } while (curr_match != NULL && curr_match != first_match);
+    first_match = curr_match = NULL;
+}
+
+    static void
+clear_insexp()
+{
+    continue_status = 0;
+    started_completion = FALSE;
+    complete_pat = NULL;
+    save_sm = -1;
 }
 
 /*
- * Return the number of items in the Completion list
+ * Prepare for insert-expand, or stop it.
  */
-	static int
-count_completions()
+    static int
+ins_expand_pre(c)
+    int	    c;
 {
-	struct Completion *match;
-	int num = 0;
+    char_u	*ptr;
+    char_u	*tmp_ptr;
+    int		temp;
+    linenr_t	lnum;
+    int		need_redraw = FALSE;
 
-	if (first_match == NULL)
-		return 0;
-	match = first_match;
-	do
+    if (ctrl_x_mode == CTRL_X_NOT_DEFINED_YET)
+    {
+	/*
+	 * We have just entered ctrl-x mode and aren't quite sure which
+	 * ctrl-x mode it will be yet.	Now we decide -- webb
+	 */
+	switch (c)
 	{
-		if (!match->original)		/* original string doesn't count */
-			num++;
-		match = match->next;
-	} while (match != NULL && match != first_match);
-	return num;
+	    case Ctrl('E'):
+	    case Ctrl('Y'):
+		ctrl_x_mode = CTRL_X_SCROLL;
+		if (State == INSERT)
+		    edit_submode = (char_u *)" (insert) Scroll (^E/^Y)";
+		else
+		    edit_submode = (char_u *)" (replace) Scroll (^E/^Y)";
+		showmode();
+		break;
+	    case Ctrl('L'):
+		ctrl_x_mode = CTRL_X_WHOLE_LINE;
+		break;
+	    case Ctrl('F'):
+		ctrl_x_mode = CTRL_X_FILES;
+		break;
+	    case Ctrl('K'):
+		ctrl_x_mode = CTRL_X_DICTIONARY;
+		break;
+	    case Ctrl(']'):
+		ctrl_x_mode = CTRL_X_TAGS;
+		break;
+#ifdef FIND_IN_PATH
+	    case Ctrl('I'):
+	    case K_S_TAB:
+		ctrl_x_mode = CTRL_X_PATH_PATTERNS;
+		break;
+	    case Ctrl('D'):
+		ctrl_x_mode = CTRL_X_PATH_DEFINES;
+		break;
+#endif
+	    case Ctrl('P'):
+	    case Ctrl('N'):
+		/* ^X^P means LOCAL expansion if nothing interrupted (eg we
+		 * just started ^X mode, or there were enough ^X's to cancel
+		 * the previous mode, say ^X^F^X^X^P or ^P^X^X^X^P, see below)
+		 * do normal expansion when interrupting a different mode (say
+		 * ^X^F^X^P or ^P^X^X^P, see below)
+		 * nothing changes if interrupting mode 0, (eg, the flag
+		 * doesn't change when going to ADDING mode  -- Acevedo */
+		if (!(continue_status & CONT_INTRPT))
+		    continue_status |= CONT_LOCAL;
+		else if (continue_mode)
+		    continue_status &=~CONT_LOCAL;
+		/* FALLTHROUGH */
+	    default:
+		/* if we have typed at least 2 ^X's... for modes != 0, we set
+		 * continue_status = 0 (eg, as if we had just started ^X mode)
+		 * for mode 0, we set continue_mode to an impossible value, in
+		 * both cases ^X^X can be used to restart the same mode
+		 * (avoiding ADDING mode).   Undocumented feature:
+		 * In a mode != 0 ^X^P and ^X^X^P start 'complete' and local
+		 * ^P expansions respectively.	In mode 0 an extra ^X is
+		 * needed since ^X^P goes to ADDING mode  -- Acevedo */
+		if (c == Ctrl('X'))
+		{
+		    if (continue_mode)
+			continue_status = 0;
+		    else
+			continue_mode = CTRL_X_NOT_DEFINED_YET;
+		}
+		ctrl_x_mode = 0;
+		edit_submode = NULL;
+		showmode();
+		break;
+	}
+    }
+    else if (ctrl_x_mode)
+    {
+	/* We we're already in ctrl-x mode, do we stay in it? */
+	if (!vim_is_ctrl_x_key(c))
+	{
+	    if (ctrl_x_mode == CTRL_X_SCROLL)
+		ctrl_x_mode = 0;
+	    else
+		ctrl_x_mode = CTRL_X_FINISHED;
+	    edit_submode = NULL;
+	}
+	showmode();
+    }
+    if (started_completion || ctrl_x_mode == CTRL_X_FINISHED)
+    {
+	/* Show error message from attempted keyword completion (probably
+	 * 'Pattern not found') until another key is hit, then go back to
+	 * showing what mode we are in.
+	 */
+	showmode();
+	if ((ctrl_x_mode == 0 && c != Ctrl('N') && c != Ctrl('P')) ||
+					    ctrl_x_mode == CTRL_X_FINISHED)
+	{
+	    /* Get here when we have finished typing a sequence of ^N and
+	     * ^P or other completion characters in CTRL-X mode. Free up
+	     * memory that was used, and make sure we can redo the insert
+	     * -- webb.
+	     */
+	    if (curr_match != NULL)
+	    {
+		/*
+		 * If any of the original typed text has been changed,
+		 * eg when ignorecase is set, we must add back-spaces to
+		 * the redo buffer.  We add as few as necessary to delete
+		 * just the part of the original text that has changed
+		 * -- webb
+		 */
+		ptr = curr_match->str;
+		tmp_ptr = original_text;
+		while (*tmp_ptr && *tmp_ptr == *ptr)
+		{
+		    ++tmp_ptr;
+		    ++ptr;
+		}
+		for (temp = 0; tmp_ptr[temp]; ++temp)
+		    AppendCharToRedobuff(K_BS);
+		while (*ptr)
+		{
+		    /* Put a string of normal characters in the redo buffer */
+		    tmp_ptr = ptr;
+		    while (*ptr >= ' ' && *ptr < DEL)
+			++ptr;
+		    /* Don't put '0' or '^' as last character, just in case a
+		     * CTRL-D is typed next */
+		    if (*ptr == NUL && (ptr[-1] == '0' || ptr[-1] == '^'))
+			--ptr;
+		    if (ptr > tmp_ptr)
+		    {
+			temp = *ptr;
+			*ptr = NUL;
+			AppendToRedobuff(tmp_ptr);
+			*ptr = temp;
+		    }
+		    if (*ptr)
+		    {
+			/* quote special chars with a CTRL-V */
+			AppendCharToRedobuff(Ctrl('V'));
+			AppendCharToRedobuff(*ptr);
+			/* CTRL-V '0' must be inserted as CTRL-V 048 */
+			if (*ptr++ == '0')
+			    AppendToRedobuff((char_u *)"48");
+		    }
+		}
+	    }
+	    /* Break line if it's too long */
+	    lnum = curwin->w_cursor.lnum;
+	    /* hmm, we better don't format the WHOLE_LINE just inserted */
+	    /* put the cursor on the last char, for correct 'tw' formatting */
+	    if (continue_mode != CTRL_X_WHOLE_LINE)
+	    {
+		curwin->w_cursor.col--;
+		insertchar(NUL, FALSE, -1, FALSE);
+		curwin->w_cursor.col++;
+	    }
+	    if (lnum != curwin->w_cursor.lnum)
+	    {
+		update_topline();
+		update_screen(NOT_VALID);
+	    }
+	    else
+		need_redraw = TRUE;
+
+	    vim_free(complete_pat);
+	    complete_pat = NULL;
+	    free_completions();
+	    started_completion = FALSE;
+	    ctrl_x_mode = 0;
+	    p_sm = save_sm;
+	    if (edit_submode != NULL)
+	    {
+		edit_submode = NULL;
+		showmode();
+	    }
+	}
+    }
+
+    /* reset continue_* if we left expansion-mode, if we stay they'll be
+     * (re)set properly in ins_complete */
+    if (!ctrl_x_mode && c != Ctrl('P') && c != Ctrl('N') && c != Ctrl('X'))
+	continue_status = continue_mode = 0;
+
+    return need_redraw;
+}
+
+/*
+ * Loops through the list of windows, loaded-buffers or non-loaded-buffers
+ * (depending on flag) starting from buf and looking for a non-scanned
+ * buffer (other than curbuf).	curbuf is special, if it is called with
+ * buf=curbuf then it has to be the first call for a given flag/expansion.
+ *
+ * Returns the buffer to scan, if any, otherwise returns curbuf -- Acevedo
+ */
+    static BUF*
+next_buf(buf, flag)
+    BUF		*buf;
+    int		flag;
+{
+    static WIN	*w;
+
+    if (flag == 'w')		/* just windows */
+    {
+	if (buf == curbuf)	/* first call for this flag/expansion */
+	    w = curwin;
+	while ((w = w->w_next ? w->w_next : firstwin) != curwin
+		&& w->w_buffer->b_scanned)
+	    ;
+	buf = w->w_buffer;
+    }
+    else	/* 'b' (just loaded buffers) or 'u' (just non-loaded buffers) */
+	while ((buf = buf->b_next ? buf->b_next : firstbuf) != curbuf
+		&& ((buf->b_ml.ml_mfp == NULL) != (flag == 'u')
+		    || buf->b_scanned))
+	    ;
+    return buf;
+}
+
+/*
+ * Get the next expansion(s) for the text starting at the initial curbuf
+ * position "ini" and in the direction dir.
+ * Return the total of matches or -1 if still unknown -- Acevedo
+ */
+    static int
+get_expansion(ini, dir)
+    FPOS	*ini;
+    int		dir;
+{
+    static FPOS		first_match_pos;
+    static FPOS		last_match_pos;
+    static char_u	*e_cpt = (char_u *)"";	/* curr. entry in 'complete' */
+    static int		done_info = 0;	/* Found all matches in this dir. */
+    static BUF		*ins_buf = NULL;
+
+    FPOS		*pos;
+    char_u		**matches;
+    int			save_p_scs;
+    int			save_p_ws;
+    int			i;
+    int			temp;
+    int			type = ctrl_x_mode;
+    char_u		*ptr;
+    char_u		*tmp_ptr;
+    char_u		*dict = NULL;
+    int			dict_f = 0;
+    struct Completion	*old_match;
+
+    if (!started_completion)
+    {
+	for (ins_buf = firstbuf; ins_buf; ins_buf = ins_buf->b_next)
+	    ins_buf->b_scanned = 0;
+	done_info = 0;
+	ins_buf = curbuf;
+	e_cpt = continue_status & CONT_LOCAL ? (char_u *)"." : curbuf->b_p_cpt;
+	last_match_pos = first_match_pos = *ini;
+    }
+
+    old_match = curr_match;		/* remember the last current match */
+    pos = (dir == FORWARD) ? &last_match_pos : &first_match_pos;
+    /* For ^N/^P loop over all the flags/windows/buffers in 'complete' */
+    for (;;)
+    {
+	temp = FAIL;
+	/* in mode 0 pick a new entry from e_cpt if started_completion is off,
+	 * or if done_info says this entry is done  -- Acevedo */
+	if (!ctrl_x_mode && (!started_completion || done_info == 6))
+	{
+	    done_info = 0;
+	    while (*e_cpt == ',' || *e_cpt == ' ')
+		e_cpt++;
+	    if (*e_cpt == '.' && !curbuf->b_scanned)
+	    {
+		ins_buf = curbuf;
+		first_match_pos = *ini;
+		/* So that ^N can match word immediately after cursor */
+		if (ctrl_x_mode == 0)
+		    dec(&first_match_pos);
+		last_match_pos = first_match_pos;
+		type = 0;
+	    }
+	    else if (vim_strchr((char_u *)"buw", *e_cpt) != NULL
+		    && (ins_buf = next_buf(ins_buf, *e_cpt)) != curbuf)
+	    {
+		if (*e_cpt != 'u')
+		{
+		    started_completion = TRUE;
+		    first_match_pos.col = last_match_pos.col = 0;
+		    first_match_pos.lnum = ins_buf->b_ml.ml_line_count + 1;
+		    last_match_pos.lnum = 0;
+		    type = 0;
+		}
+		else
+		{
+		    done_info = 6;
+		    if (ins_buf->b_fname == NULL)
+			continue;
+		    type = CTRL_X_DICTIONARY;
+		    dict = ins_buf->b_fname;
+		    dict_f = DICT_EXACT;
+		}
+		sprintf((char*) IObuff, "Scanning: %s", ins_buf->b_sfname);
+		msg_attr(IObuff, highlight_attr[HLF_R]);
+	    }
+	    else if (*e_cpt == NUL)
+		break;
+	    else
+	    {
+		if (*e_cpt == 'k')
+		{
+		    type = CTRL_X_DICTIONARY;
+		    if (*++e_cpt != ',' && *e_cpt != NUL)
+		    {
+			dict = e_cpt;
+			dict_f = DICT_FIRST;
+		    }
+		}
+#ifdef FIND_IN_PATH
+		else if (*e_cpt == 'i')
+		    type = CTRL_X_PATH_PATTERNS;
+#endif
+		else if (*e_cpt == ']' || *e_cpt == 't')
+		    type = CTRL_X_TAGS;
+		else
+		    type = -1;
+
+		/* in any case e_cpt is advanced to the next entry */
+		(void)copy_option_part(&e_cpt, IObuff, IOSIZE, ",");
+
+		done_info = 6;
+		if (type == -1)
+		    continue;
+	    }
+	}
+
+	switch (type)
+	{
+	case -1:
+	    break;
+#ifdef FIND_IN_PATH
+	case CTRL_X_PATH_PATTERNS:
+	case CTRL_X_PATH_DEFINES:
+	    find_pattern_in_path(complete_pat, dir,
+				 (int)STRLEN(complete_pat), FALSE, FALSE,
+				 (type == CTRL_X_PATH_DEFINES
+				  && !(continue_status & CONT_SOL))
+				 ? FIND_DEFINE : FIND_ANY, 1L, ACTION_EXPAND,
+				 (linenr_t)1, (linenr_t)MAXLNUM);
+	    break;
+#endif
+
+	case CTRL_X_DICTIONARY:
+	    complete_dictionaries(dict ? dict : p_dict, complete_pat, dir,
+				  dict ? dict_f : 0);
+	    dict = NULL;
+	    break;
+
+	case CTRL_X_TAGS:
+	    /* set reg_ic according to p_ic, p_scs and pat */
+	    set_reg_ic(complete_pat);
+	    if (find_tags(complete_pat, &temp, &matches,
+			      TAG_WILD | TAG_NAMES, MAXCOL) == OK && temp > 0)
+	    {
+		int	add_r = OK;
+		int	ldir = dir;
+
+		for (i = 0; i < temp && add_r != RET_ERROR; i++)
+		    if ((add_r = add_completion(matches[i], -1, NULL, ldir, 0))
+			    == OK)
+			/* if dir was BACKWARD then honor it just once */
+			ldir = FORWARD;
+		FreeWild(temp, matches);
+	    }
+	    break;
+
+	case CTRL_X_FILES:
+	    expand_interactively = TRUE;
+	    if (expand_wildcards(1, &complete_pat, &temp, &matches,
+							EW_FILE|EW_DIR) == OK)
+	    {
+		int	add_r = OK;
+		int	ldir = dir;
+
+		/* May change home directory back to "~". */
+		tilde_replace(complete_pat, temp, matches);
+		for (i = 0; i < temp && add_r != RET_ERROR; i++)
+		    if ((add_r = add_completion(matches[i], -1, NULL, ldir, 0))
+			    == OK)
+			/* if dir was BACKWARD then honor it just once */
+			ldir = FORWARD;
+		FreeWild(temp, matches);
+	    }
+	    expand_interactively = FALSE;
+	    break;
+
+	default:	/* normal ^P/^N and ^X^L */
+	    /*
+	     * If 'infercase' is set, don't use 'smartcase' here
+	     */
+	    save_p_scs = p_scs;
+	    if (ins_buf->b_p_inf)
+		p_scs = FALSE;
+	    /*	buffers other than curbuf are scanned from the beginning or the
+	     *	end but never from the middle, thus setting nowrapscan in this
+	     *	buffers is a good idea -- Acevedo */
+	    save_p_ws = p_ws;
+	    if (ins_buf != curbuf)
+		p_ws = FALSE;
+	    for (;;)
+	    {
+		int	reuse = 0;
+
+		/* ctrl_x_mode == CTRL_X_WHOLE_LINE || word-wise search that has
+		 * added a word that was at the beginning of the line */
+		if (	ctrl_x_mode == CTRL_X_WHOLE_LINE
+			|| (continue_status & CONT_SOL))
+		    temp = search_for_exact_line(ins_buf, pos,
+							   dir, complete_pat);
+		else
+		    temp = searchit(ins_buf, pos, dir, complete_pat, 1L,
+				    SEARCH_KEEP + SEARCH_NFMSG, RE_LAST);
+		if (!started_completion)
+		{
+		    /* set started_completion even on fail */
+		    started_completion = TRUE;
+		    first_match_pos = *pos;
+		    last_match_pos = *pos;
+		}
+		else if (first_match_pos.lnum == last_match_pos.lnum
+			 && first_match_pos.col == last_match_pos.col)
+		    temp = FAIL;
+		if (   temp == FAIL && ins_buf == curbuf
+		       && (done_info |= p_ws ? 6 : dir + 3) < 6)
+		    /* With nowrapscan, we haven't finished looking in the
+		     * other direction yet -- webb */
+		    temp = -OK;
+		if (temp != OK)
+		    break;
+
+		/* when ADDING, the text before the cursor matches, skip it */
+		if (	(continue_status & CONT_ADDING) && ins_buf == curbuf
+			&& ini->lnum == pos->lnum
+			&& ini->col  == pos->col)
+		    continue;
+		ptr = ml_get_buf(ins_buf, pos->lnum, FALSE) + pos->col;
+		if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
+		{
+		    if (continue_status & CONT_ADDING)
+		    {
+			if (pos->lnum >= ins_buf->b_ml.ml_line_count)
+			    continue;
+			ptr = ml_get_buf(ins_buf, pos->lnum + 1, FALSE);
+			if (!p_paste)
+			    ptr = skipwhite(ptr);
+		    }
+		    temp = STRLEN(ptr);
+		}
+		else
+		{
+		    tmp_ptr = ptr;
+		    if (continue_status & CONT_ADDING)
+		    {
+			tmp_ptr += completion_length;
+			if (vim_iswordc(*tmp_ptr))
+			    continue;
+			while (*tmp_ptr && !vim_iswordc(*tmp_ptr++))
+			    ;
+		    }
+		    while (vim_iswordc(*tmp_ptr))
+			tmp_ptr++;
+		    temp = tmp_ptr - ptr;
+		    if ((continue_status & CONT_ADDING)
+			&& temp == completion_length)
+		    {
+			if (pos->lnum < ins_buf->b_ml.ml_line_count)
+			{
+			    /* Try next line, if any. the new word will be "join"
+			     * as if the normal command "J" was used.  IOSIZE is
+			     * always greater than completion_length, so the next
+			     * STRNCPY always works -- Acevedo */
+			    STRNCPY(IObuff, ptr, temp);
+			    ptr = ml_get_buf(ins_buf, pos->lnum + 1, FALSE);
+			    tmp_ptr = ptr = skipwhite(ptr);
+			    while (*tmp_ptr && !vim_iswordc(*tmp_ptr++))
+				;
+			    while (vim_iswordc(*tmp_ptr))
+				tmp_ptr++;
+			    if (tmp_ptr > ptr)
+			    {
+				if (*ptr != ')' && IObuff[temp-1] != TAB)
+				{
+				    if (IObuff[temp-1] != ' ')
+					IObuff[temp++] = ' ';
+				    /* IObuf =~ "\k.* ", thus temp >= 2 */
+				    if (p_js
+					&& (IObuff[temp-2] == '.'
+					    || (vim_strchr(p_cpo, CPO_JOINSP)
+								       == NULL
+						&& (IObuff[temp-2] == '?'
+						    || IObuff[temp-2] == '!'))))
+					IObuff[temp++] = ' ';
+				}
+				/* copy as much as posible of the new word */
+				if (tmp_ptr - ptr >= IOSIZE - temp)
+				    tmp_ptr = ptr + IOSIZE - temp - 1;
+				STRNCPY(IObuff + temp, ptr, tmp_ptr - ptr);
+				temp += tmp_ptr - ptr;
+				reuse |= CONT_S_IPOS;
+			    }
+			    IObuff[temp] = NUL;
+			    ptr = IObuff;
+			}
+			if (temp == completion_length)
+			    continue;
+		    }
+		}
+		if (add_completion_and_infercase(ptr, temp, ins_buf == curbuf ?
+			NULL : ins_buf->b_sfname, dir, reuse) != FAIL)
+		{
+		    temp = OK;
+		    break;
+		}
+	    }
+	    p_scs = save_p_scs;
+	    p_ws = save_p_ws;
+	}
+	/* check if curr_match has changed, (e.g. other type of expansion
+	 * added somenthing) */
+	if (curr_match != old_match)
+	    temp = OK;
+	/* break the loop for specialized modes (use 'complete' just for the
+	 * generic ctrl_x_mode == 0) and when temp != FAIL */
+	if (ctrl_x_mode || temp)
+	    break;
+	if (type == 0 || type == CTRL_X_PATH_PATTERNS)
+	    ins_buf->b_scanned = TRUE;
+
+	started_completion = FALSE;
+    }
+    started_completion = TRUE;
+
+    i = -1;		/* total of matches, unknown */
+    if (temp == FAIL || (ctrl_x_mode != 0 && ctrl_x_mode != CTRL_X_WHOLE_LINE))
+	i = make_cyclic();
+    else if (temp == -OK && (curr_match->original & ORIGINAL_TEXT))
+    {
+	edit_submode_extra = (continue_status & CONT_ADDING)
+	    && completion_length > 1
+		? (dir == FORWARD ? e_hitend_f : e_hitend_b)
+		: (dir == FORWARD ? e_patnotf_f : e_patnotf_b);
+	edit_submode_highl = HLF_E;
+    }
+    /* If several matches were added (FORWARD) or the search failed and has
+     * just been made cyclic then we have to move curr_match to the next or
+     * previous entry (if any, when search failed with 'nows') -- Acevedo */
+    curr_match = dir == FORWARD ? old_match->next : old_match->prev;
+    if (curr_match == NULL)
+	curr_match = old_match;
+    return i;
+}
+
+    static int
+ins_complete(c)
+    int		    c;
+{
+    int		    complete_direction;
+    char_u	    *ptr;
+    char_u	    *tmp_ptr = NULL;		/* init for gcc */
+    static colnr_t  complete_col = 0;		/* init for gcc */
+    int		    temp = 0;
+    int		    i;
+    int		    cc;
+    static FPOS	    initial_pos;
+
+    if (c == Ctrl('P') || c == Ctrl('L'))
+	complete_direction = BACKWARD;
+    else
+	complete_direction = FORWARD;
+    if (!started_completion)
+    {
+	/* First time we hit ^N or ^P (in a row, I mean) */
+
+	/* Turn off 'sm' so we don't show matches with ^X^L */
+	save_sm = p_sm;
+	p_sm = FALSE;
+
+	did_ai = FALSE;
+#ifdef SMARTINDENT
+	did_si = FALSE;
+	can_si = FALSE;
+	can_si_back = FALSE;
+#endif
+	stop_arrow();
+	ptr = ml_get(curwin->w_cursor.lnum);
+	complete_col = curwin->w_cursor.col;
+
+	/* if this same ctrl_x_mode has been interrupted use the text from
+	 * initial_pos to the cursor as a pattern to add a new word instead of
+	 * expand the one before the cursor, in word-wise if "initial_pos" is
+	 * not in the same line as the cursor then fix it (the line has been
+	 * split because it was longer than 'tw').  if SOL is set then skip
+	 * the previous pattern, a word at the beginning of the line has been
+	 * inserted, we'll look for that  -- Acevedo. */
+	if ((continue_status & CONT_INTRPT) && continue_mode == ctrl_x_mode)
+	{	/* it is a continued search */
+	    continue_status &= ~CONT_INTRPT;	/* remove INTRPT */
+	    if (ctrl_x_mode == 0 || ctrl_x_mode == CTRL_X_PATH_PATTERNS
+					|| ctrl_x_mode == CTRL_X_PATH_DEFINES)
+	    {
+		if (initial_pos.lnum != curwin->w_cursor.lnum)
+		{
+		    /* line (probably) wrapped, set initial_pos to the first
+		     * non_blank in the line, if it is not a wordchar include
+		     * it to get a better pattern, but then we don't want the
+		     * "\\<" prefix, check it bellow */
+		    tmp_ptr = skipwhite(ptr);
+		    initial_pos.col = tmp_ptr - ptr;
+		    initial_pos.lnum = curwin->w_cursor.lnum;
+		    continue_status &= ~CONT_SOL;    /* clear SOL if present */
+		}
+		else
+		{
+		    /* S_IPOS was set when we inserted a word that was at the
+		     * beginning of the line, which means that we'll go to SOL
+		     * mode but first we need to redefine initial_pos */
+		    if (continue_status & CONT_S_IPOS)
+		    {
+			continue_status |= CONT_SOL;
+			initial_pos.col = skipwhite(ptr + completion_length +
+						    initial_pos.col) - ptr;
+		    }
+		    tmp_ptr = ptr + initial_pos.col;
+		}
+		temp = curwin->w_cursor.col - (tmp_ptr-ptr);
+		/* IObuf is used to add a "word from the next line" would we
+		 * have enough space?  just being paranoic */
+#define	MIN_SPACE 75
+		if (temp > (IOSIZE - MIN_SPACE))
+		{
+		    continue_status &= ~CONT_SOL;
+		    temp = (IOSIZE - MIN_SPACE);
+		    tmp_ptr = curwin->w_cursor.col - temp + ptr;
+		}
+		continue_status |= CONT_ADDING | CONT_N_ADDS;
+		if (temp < 1)
+		    continue_status &= CONT_LOCAL;
+	    }
+	    else if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
+		continue_status = CONT_ADDING | CONT_N_ADDS;
+	    else
+		continue_status = 0;
+	}
+	else
+	    continue_status &= CONT_LOCAL;
+
+	if (!(continue_status & CONT_ADDING))	/* normal expansion */
+	{
+	    continue_mode = ctrl_x_mode;
+	    if (ctrl_x_mode)	/* Remove LOCAL iff ctrl_x_mode != 0 */
+		continue_status = 0;
+	    continue_status |= CONT_N_ADDS;
+	    initial_pos = curwin->w_cursor;
+	    temp = (int)complete_col;
+	    tmp_ptr = ptr;
+	}
+
+	/* Work out completion pattern and original text -- webb */
+	if (ctrl_x_mode == 0 || (ctrl_x_mode & CTRL_X_WANT_IDENT))
+	{
+	    if (       (continue_status & CONT_SOL)
+		    || ctrl_x_mode == CTRL_X_PATH_DEFINES)
+	    {
+		if (!(continue_status & CONT_ADDING))
+		{
+		    while (--temp >= 0 && vim_isIDc(ptr[temp]))
+			;
+		    tmp_ptr += ++temp;
+		    temp = complete_col - temp;
+		}
+		complete_pat = vim_strnsave(tmp_ptr, temp);
+		if (complete_pat == NULL)
+		    return FALSE;
+		if (p_ic)
+		    for (i = 0; i < temp; i++)
+			complete_pat[i] = TO_LOWER(complete_pat[i]);
+	    }
+	    else if (continue_status & CONT_ADDING)
+	    {
+		char_u	    *prefix = (char_u *)"\\<";
+
+		/* we need 3 extra chars, 1 for the NUL and
+		 * 2 >= strlen(prefix)	-- Acevedo */
+		complete_pat = alloc(quote_meta(NULL, tmp_ptr, temp) + 3);
+		if (complete_pat == NULL)
+		    return FALSE;
+		if (!vim_iswordc(*tmp_ptr) ||
+			(tmp_ptr > ptr && vim_iswordc(*(tmp_ptr-1))))
+		    prefix = (char_u *)"";
+		STRCPY((char *)complete_pat, prefix);
+		(void)quote_meta(complete_pat + STRLEN(prefix), tmp_ptr, temp);
+	    }
+	    else if (--temp < 0 || !vim_iswordc(ptr[temp]))
+	    {
+		/* Match any word of at least two chars */
+		complete_pat = vim_strsave((char_u *)"\\<\\k\\k");
+		if (complete_pat == NULL)
+		    return FALSE;
+		tmp_ptr += complete_col;
+		temp = 0;
+	    }
+	    else
+	    {
+		while (--temp >= 0 && vim_iswordc(ptr[temp]))
+		    ;
+		tmp_ptr += ++temp;
+		if ((temp = (int)complete_col - temp) == 1)
+		{
+		    /* Only match word with at least two
+		     * chars -- webb
+		     * there's no need to call quote_meta,
+		     * alloc(7) is enough  -- Acevedo
+		     */
+		    complete_pat = alloc(7);
+		    if (complete_pat == NULL)
+			return FALSE;
+		    STRCPY((char *)complete_pat, "\\<");
+		    (void)quote_meta(complete_pat + 2, tmp_ptr, 1);
+		    STRCAT((char *)complete_pat, "\\k");
+		}
+		else
+		{
+		    complete_pat = alloc(quote_meta(NULL, tmp_ptr, temp) + 3);
+		    if (complete_pat == NULL)
+			return FALSE;
+		    STRCPY((char *)complete_pat, "\\<");
+		    (void)quote_meta(complete_pat + 2, tmp_ptr, temp);
+		}
+	    }
+	}
+	else if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
+	{
+	    tmp_ptr = skipwhite(ptr);
+	    temp = (int)complete_col - (tmp_ptr - ptr);
+	    complete_pat = vim_strnsave(tmp_ptr, temp);
+	    if (complete_pat == NULL)
+		return FALSE;
+	    if (p_ic)
+		for (i = 0; i < temp; i ++)
+		    complete_pat[i] = TO_LOWER(complete_pat[i]);
+	}
+	else if (ctrl_x_mode == CTRL_X_FILES)
+	{
+	    while (--temp >= 0 && vim_isfilec(ptr[temp]))
+		;
+	    tmp_ptr += ++temp;
+	    temp = (int)complete_col - temp;
+	    complete_pat = addstar(tmp_ptr, temp);
+	    if (complete_pat == NULL)
+		return FALSE;
+	}
+	complete_col = tmp_ptr - ptr;
+
+	if (continue_status & CONT_ADDING)
+	{
+	    if (continue_status & CONT_LOCAL)
+		edit_submode = (char_u *)ctrl_x_msgs[2];
+	    else
+		edit_submode = (char_u *)ctrl_x_msgs[ctrl_x_mode & 15];
+	    if (ctrl_x_mode == CTRL_X_WHOLE_LINE)
+	    {
+		/* Insert a new line, keep indentation but ignore 'comments' */
+		char_u *old = curbuf->b_p_com;
+
+		initial_pos.lnum = curwin->w_cursor.lnum;
+		initial_pos.col = complete_col;
+		curbuf->b_p_com = (char_u *)"";
+		ins_eol('\r');
+		curbuf->b_p_com = old;
+		tmp_ptr = (char_u *)"";
+		temp = 0;
+		complete_col = curwin->w_cursor.col;
+	    }
+	}
+	else
+	{
+	    /* msg. without the " Adding" part. */
+	    if (continue_status & CONT_LOCAL)
+		edit_submode = (char_u *)ctrl_x_msgs[2] + C_X_SKIP;
+	    else
+		edit_submode = (char_u *)ctrl_x_msgs[ctrl_x_mode & 15] + C_X_SKIP;
+	    initial_pos.col = complete_col;
+	}
+
+	completion_length = temp;
+	/* Always "add completion" for the "original text", it uses
+	 * "original_text" not a copy -- Acevedo */
+	if ((original_text = vim_strnsave(tmp_ptr, temp)) == NULL
+	    || add_completion(original_text, -1, NULL, 0, ORIGINAL_TEXT) != OK)
+	{
+	    vim_free(complete_pat);
+	    complete_pat = NULL;
+	    return FALSE;
+	}
+	/* showmode might reset the internal line pointers, so it must
+	 * be called before ptr = ml_get, or when this address is no
+	 * longer needed.  -- Acevedo.
+	 */
+	edit_submode_extra = (char_u *)"-- Searching...";
+	edit_submode_highl = HLF_COUNT;
+	showmode();
+	edit_submode_extra = NULL;
+	out_flush();
+    }
+
+    /*
+     * In insert mode: Delete the typed part.
+     * In replace mode: Put the old characters back, if any.
+     */
+    i = complete_col + (continue_status & CONT_ADDING ? completion_length : 0);
+    while ((int)curwin->w_cursor.col > i)
+    {
+	curwin->w_cursor.col--;
+	if (State == REPLACE)
+	{
+	    /*
+	     * First character popped from the replace stack replaces a
+	     * character that's already there.	Further popped characters need
+	     * to be inserted.
+	     */
+	    if ((cc = replace_pop()) > 0)
+	    {
+		pchar(curwin->w_cursor, cc);
+		replace_pop_ins();
+	    }
+	}
+	else
+	    (void)del_char(FALSE);
+    }
+    changed_cline_bef_curs();
+    if (complete_direction == FORWARD && curr_match->next != NULL)
+	curr_match = curr_match->next;
+    else if (complete_direction == BACKWARD && curr_match->prev != NULL)
+	curr_match = curr_match->prev;
+    else
+	temp = get_expansion(&initial_pos, complete_direction);
+
+    /* we found no match if the list has only the original_text-entry */
+    if (first_match == first_match->next)
+    {
+	edit_submode_extra = (continue_status & CONT_ADDING)
+			      && completion_length > 1 ? e_hitend : e_patnotf;
+	edit_submode_highl = HLF_E;
+	/* remove N_ADDS flag, so next ^X<> won't try to go to ADDING mode,
+	 * because we couldn't expand anything at first place, but if we used
+	 * ^P, ^N, ^X^I or ^X^D we might want to add-expand a single-char-word
+	 * (such as M in M'exico) if not tried already.  -- Acevedo */
+	if (	   completion_length > 1
+		|| (continue_status & CONT_ADDING)
+		|| (ctrl_x_mode != 0
+		    && ctrl_x_mode != CTRL_X_PATH_PATTERNS
+		    && ctrl_x_mode != CTRL_X_PATH_DEFINES))
+	    continue_status &= ~CONT_N_ADDS;
+    }
+
+    /* eat the ESC to avoid leaving insert mode */
+    if (got_int && !global_busy)
+    {
+	(void)vgetc();
+	got_int = FALSE;
+    }
+
+    if (curr_match->original & CONT_S_IPOS)
+	continue_status |= CONT_S_IPOS;
+    else
+	continue_status &= ~CONT_S_IPOS;
+
+    if (edit_submode_extra == NULL)
+    {
+	if (curr_match->original & ORIGINAL_TEXT)
+	{
+	    edit_submode_extra = (char_u *)"Back at original";
+	    edit_submode_highl = HLF_W;
+	}
+	else if (continue_status & CONT_S_IPOS)
+	{
+	    edit_submode_extra = (char_u *)"Word from other line";
+	    edit_submode_highl = HLF_COUNT;
+	}
+	else if (curr_match->next == curr_match->prev)
+	{
+	    edit_submode_extra = (char_u *)"The only match";
+	    edit_submode_highl = HLF_COUNT;
+	}
+    }
+
+    /*
+     * Use ins_char() to insert the text, it is a bit slower than
+     * ins_str(), but it takes care of replace mode.
+     */
+    ptr = curr_match->str + curwin->w_cursor.col - complete_col;
+    while (*ptr)
+	ins_char(*ptr++);
+
+    update_screenline();
+    if (temp > 1)
+    {
+	if (ctrl_x_mode == 0 || ctrl_x_mode == CTRL_X_WHOLE_LINE)
+	    ptr = (char_u *)"All %d matches have now been found";
+	else if (ctrl_x_mode == CTRL_X_FILES)
+	    ptr = (char_u *)"There are %d matching file names";
+	else if (ctrl_x_mode == CTRL_X_TAGS)
+	    ptr = (char_u *)"There are %d matching tags";
+	else
+	    ptr = (char_u *)"There are %d matches";
+	sprintf((char *)IObuff, (char *)ptr, temp);
+	if (dollar_vcol)
+	    curs_columns(FALSE);
+	msg_attr(IObuff, highlight_attr[HLF_R]);
+	if (!char_avail())
+	{
+	    setcursor();
+	    out_flush();
+	    ui_delay(1500L, FALSE);
+	}
+    }
+    showmode();
+    if (edit_submode_extra != NULL)
+    {
+	if (!p_smd)
+	    msg_attr(edit_submode_extra,
+		    edit_submode_highl < HLF_COUNT
+		    ? highlight_attr[edit_submode_highl] : 0);
+	if (!char_avail())
+	{
+	    setcursor();
+	    out_flush();
+	    ui_delay(1500L, FALSE);
+	}
+	edit_submode_extra = NULL;
+    }
+
+    /*
+     * Show the file name for the match (if any)
+     * Truncate the file name to avoid a wait for return.
+     */
+    if (curr_match->fname != NULL)
+    {
+	STRCPY(IObuff, "match in file ");
+	i = (vim_strsize(curr_match->fname) + 16) - sc_col;
+	if (i <= 0)
+	    i = 0;
+	else
+	    STRCAT(IObuff, "<");
+	STRCAT(IObuff, curr_match->fname + i);
+	msg(IObuff);
+	redraw_cmdline = FALSE;	    /* don't overwrite! */
+    }
+
+    return TRUE;
+}
+
+/*
+ * Looks in the first "len" chars. of "src" for search-metachars.
+ * If dest is not NULL the chars. are copied there quoting (with
+ * a backslash) the metachars, and dest would be NUL terminated.
+ * Returns the length (needed) of dest
+ */
+    static int
+quote_meta(dest, src, len)
+    char_u	*dest;
+    char_u	*src;
+    int		len;
+{
+    int	m;
+
+    for (m = len; --len >= 0; src++)
+    {
+	switch (*src)
+	{
+	    case '.':
+	    case '*':
+	    case '[':
+		if (ctrl_x_mode == CTRL_X_DICTIONARY)
+		    break;
+	    case '~':
+		if (!p_magic)	/* quote these only if magic is set */
+		    break;
+	    case '^':		/* currently it's not needed. */
+	    case '$':
+	    case '\\':
+		m++;
+		if (dest)
+		    *dest++ = '\\';
+		break;
+	}
+	if (dest)
+	    *dest++ = *src;
+    }
+    if (dest)
+	*dest = NUL;
+
+    return m;
 }
 #endif /* INSERT_EXPAND */
 
@@ -2518,101 +2598,108 @@ count_completions()
  * A one, two or three digit decimal number is interpreted as its byte value.
  * If one or two digits are entered, the next character is given to vungetc().
  */
-	int
+    int
 get_literal()
 {
-	int			 cc;
-	int			 nc;
-	int			 i;
+    int		 cc;
+    int		 nc;
+    int		 i;
 
-	if (got_int)
-		return Ctrl('C');
+    if (got_int)
+	return Ctrl('C');
 
 #ifdef USE_GUI
-	/*
-	 * In GUI there is no point inserting the internal code for a special key.
-	 * It is more useful to insert the string "<KEY>" instead.  This would
-	 * probably be useful in a text window too, but it would not be
-	 * vi-compatible (maybe there should be an option for it?) -- webb
-	 */
-	if (gui.in_use)
-		++allow_keys;
+    /*
+     * In GUI there is no point inserting the internal code for a special key.
+     * It is more useful to insert the string "<KEY>" instead.	This would
+     * probably be useful in a text window too, but it would not be
+     * vi-compatible (maybe there should be an option for it?) -- webb
+     */
+    if (gui.in_use)
+	++allow_keys;
 #endif
-	++no_mapping;			/* don't map the next key hits */
-	cc = 0;
-	for (i = 0; i < 3; ++i)
+#ifdef USE_GUI_WIN32
+    dont_scroll = TRUE;		/* disallow scrolling here */
+#endif
+    ++no_mapping;	    /* don't map the next key hits */
+    cc = 0;
+    for (i = 0; i < 3; ++i)
+    {
+	do
+	    nc = vgetc();
+	while (nc == K_IGNORE || nc == K_SCROLLBAR || nc == K_HORIZ_SCROLLBAR);
+#ifdef SHOWCMD
+	if (!(State & CMDLINE))
+	    add_to_showcmd(nc);
+#endif
+	if (!vim_isdigit(nc))
+	    break;
+	cc = cc * 10 + nc - '0';
+	if (cc > 255)
+	    cc = 255;		/* limit range to 0-255 */
+	nc = 0;
+    }
+    if (i == 0)	    /* no number entered */
+    {
+	if (nc == K_ZERO)   /* NUL is stored as NL */
 	{
-		do
-			nc = vgetc();
-		while (nc == K_IGNORE || nc == K_SCROLLBAR || nc == K_HORIZ_SCROLLBAR);
-		if (!(State & CMDLINE))
-			add_to_showcmd(nc, FALSE);
-		if (IS_SPECIAL(nc) || !isdigit(nc))
-			break;
-		cc = cc * 10 + nc - '0';
-		if (cc > 255)
-			cc = 255;			/* limit range to 0-255 */
-		nc = 0;
+	    cc = '\n';
+	    nc = 0;
 	}
-	if (i == 0)		/* no number entered */
+	else
 	{
-		if (nc == K_ZERO)	/* NUL is stored as NL */
-		{
-			cc = '\n';
-			nc = 0;
-		}
-		else
-		{
-			cc = nc;
-			nc = 0;
-		}
+	    cc = nc;
+	    nc = 0;
 	}
+    }
 
-	if (cc == 0)		/* NUL is stored as NL */
-		cc = '\n';
+    if (cc == 0)	/* NUL is stored as NL */
+	cc = '\n';
 
-	--no_mapping;
+    --no_mapping;
 #ifdef USE_GUI
-	if (gui.in_use)
-		--allow_keys;
+    if (gui.in_use)
+	--allow_keys;
 #endif
-	if (nc)
-		vungetc(nc);
-	got_int = FALSE;		/* CTRL-C typed after CTRL-V is not an interrupt */
-	return cc;
+    if (nc)
+	vungetc(nc);
+    got_int = FALSE;	    /* CTRL-C typed after CTRL-V is not an interrupt */
+    return cc;
 }
 
 /*
  * Insert character, taking care of special keys and mod_mask
  */
-	static void
-insert_special(c, allow_modmask)
-	int		c;
-	int		allow_modmask;
+    static void
+insert_special(c, allow_modmask, ctrlv)
+    int	    c;
+    int	    allow_modmask;
+    int	    ctrlv;	    /* c was typed after CTRL-V */
 {
-	char_u	*p;
-	int		len;
+    char_u  *p;
+    int	    len;
 
-	/*
-	 * Special function key, translate into "<Key>". Up to the last '>' is
-	 * inserted with ins_str(), so as not to replace characters in replace
-	 * mode.
-	 * Only use mod_mask for special keys, to avoid things like <S-Space>,
-	 * unless 'allow_modmask' is TRUE.
-	 */
-	if (IS_SPECIAL(c) || (mod_mask && allow_modmask))
+    /*
+     * Special function key, translate into "<Key>". Up to the last '>' is
+     * inserted with ins_str(), so as not to replace characters in replace
+     * mode.
+     * Only use mod_mask for special keys, to avoid things like <S-Space>,
+     * unless 'allow_modmask' is TRUE.
+     */
+    if (IS_SPECIAL(c) || (mod_mask && allow_modmask))
+    {
+	p = get_special_key_name(c, mod_mask);
+	len = STRLEN(p);
+	c = p[len - 1];
+	if (len > 2)
 	{
-		p = get_special_key_name(c, mod_mask);
-		len = STRLEN(p);
-		c = p[len - 1];
-		if (len > 2)
-		{
-			p[len - 1] = NUL;
-			ins_str(p);
-			AppendToRedobuff(p);
-		}
+	    p[len - 1] = NUL;
+	    ins_str(p);
+	    AppendToRedobuff(p);
+	    ctrlv = FALSE;
 	}
-	insertchar(c, FALSE, -1);
+    }
+    insertchar(c, FALSE, -1, ctrlv);
 }
 
 /*
@@ -2622,381 +2709,455 @@ insert_special(c, allow_modmask)
  * open up a new line. This routine tries to optimize insertions performed by
  * the "redo", "undo" or "put" commands, so it needs to know when it should
  * stop and defer processing to the "normal" mechanism.
+ * '0' and '^' are special, because they can be followed by CTRL-D.
  */
-#define ISSPECIAL(c)	((c) < ' ' || (c) >= DEL)
+#define ISSPECIAL(c)	((c) < ' ' || (c) >= DEL || (c) == '0' || (c) == '^')
 
-	void
-insertchar(c, force_formatting, second_indent)
-	unsigned	c;
-	int			force_formatting;		/* format line regardless of p_fo */
-	int			second_indent;			/* indent for second line if >= 0 */
+    void
+insertchar(c, force_formatting, second_indent, ctrlv)
+    unsigned	c;
+    int		force_formatting;	/* format line regardless of p_fo */
+    int		second_indent;		/* indent for second line if >= 0 */
+    int		ctrlv;			/* c typed just after CTRL-V */
 {
-	int			haveto_redraw = FALSE;
-	int			textwidth;
-	colnr_t		leader_len;
-	int			first_line = TRUE;
-	int			fo_ins_blank;
-	int			save_char = NUL;
+    int		haveto_redraw = FALSE;
+    int		textwidth;
+    colnr_t	leader_len;
+    int		first_line = TRUE;
+    int		fo_ins_blank;
+    int		save_char = NUL;
+    int		cc;
 
-	stop_arrow();
+    stop_arrow();
+
+    /*
+     * find out textwidth to be used:
+     *	if 'textwidth' option is set, use it
+     *	else if 'wrapmargin' option is set, use Columns - 'wrapmargin'
+     *	if invalid value, use 0.
+     *	Set default to window width (maximum 79) for "Q" command.
+     */
+    textwidth = curbuf->b_p_tw;
+    if (textwidth == 0 && curbuf->b_p_wm)
+	textwidth = Columns - curbuf->b_p_wm;
+    if (textwidth < 0)
+	textwidth = 0;
+    if (force_formatting && textwidth == 0)
+    {
+	textwidth = Columns - 1;
+	if (textwidth > 79)
+	    textwidth = 79;
+    }
+
+    fo_ins_blank = has_format_option(FO_INS_BLANK);
+
+    /*
+     * Try to break the line in two or more pieces when:
+     * - Always do this if we have been called to do formatting only.
+     * - Otherwise:
+     *	 - Don't do this if inserting a blank
+     *	 - Don't do this if an existing character is being replaced.
+     *	 - Do this if the cursor is not on the line where insert started
+     *	 or - 'formatoptions' doesn't have 'l' or the line was not too long
+     *	       before the insert.
+     *	    - 'formatoptions' doesn't have 'b' or a blank was inserted at or
+     *	      before 'textwidth'
+     */
+    if (textwidth
+	    && (force_formatting
+		|| (!vim_iswhite(c)
+		    && !(State == REPLACE && *ml_get_cursor() != NUL)
+		    && (curwin->w_cursor.lnum != Insstart.lnum
+			|| ((!has_format_option(FO_INS_LONG)
+				|| Insstart_textlen <= (colnr_t)textwidth)
+			    && (!fo_ins_blank
+				|| Insstart_blank_vcol <= (colnr_t)textwidth
+			    ))))))
+    {
+	/*
+	 * When 'ai' is off we don't want a space under the cursor to be
+	 * deleted.  Replace it with an 'x' temporarily.
+	 */
+	if (!curbuf->b_p_ai)
+	{
+	    cc = gchar_cursor();
+	    if (vim_iswhite(cc))
+	    {
+		save_char = cc;
+		pchar_cursor('x');
+	    }
+	}
 
 	/*
-	 * find out textwidth to be used:
-	 *	if 'textwidth' option is set, use it
-	 *	else if 'wrapmargin' option is set, use Columns - 'wrapmargin'
-	 *	if invalid value, use 0.
-	 *  Set default to window width (maximum 79) for "Q" command.
+	 * Repeat breaking lines, until the current line is not too long.
 	 */
-	textwidth = curbuf->b_p_tw;
-	if (textwidth == 0 && curbuf->b_p_wm)
-		textwidth = Columns - curbuf->b_p_wm;
-	if (textwidth < 0)
+	for (;;)
+	{
+	    int		startcol;		/* Cursor column at entry */
+	    int		wantcol;		/* column at textwidth border */
+	    int		foundcol;		/* column for start of spaces */
+	    int		end_foundcol = 0;	/* column for start of word */
+	    colnr_t	len;
+	    colnr_t	virtcol;
+
+	    virtcol = get_nolist_virtcol();
+	    if (virtcol < (colnr_t)textwidth)
+		break;
+
+	    if (!force_formatting && has_format_option(FO_WRAP_COMS))
+		fo_do_comments = TRUE;
+
+	    /* Don't break until after the comment leader */
+	    leader_len = get_leader_len(ml_get_curline(), NULL);
+	    if (!force_formatting && leader_len == 0 &&
+						  !has_format_option(FO_WRAP))
+
+	    {
 		textwidth = 0;
-	if (force_formatting && textwidth == 0)
-	{
-		textwidth = Columns - 1;
-		if (textwidth > 79)
-			textwidth = 79;
-	}
+		break;
+	    }
+	    if ((startcol = curwin->w_cursor.col) == 0)
+		break;
+					/* find column of textwidth border */
+	    coladvance((colnr_t)textwidth);
+	    wantcol = curwin->w_cursor.col;
 
-	fo_ins_blank = has_format_option(FO_INS_BLANK);
-
-	/*
-	 * Try to break the line in two or more pieces when:
-	 * - Always do this if we have been called to do formatting only.
-	 * - Otherwise:
-	 *   - Don't do this if inserting a blank
-	 *   - Don't do this if an existing character is being replaced.
-	 *   - Do this if the cursor is not on the line where insert started
-	 *   or - 'formatoptions' doesn't have 'l' or the line was not too long
-	 *         before the insert.
-	 *      - 'formatoptions' doesn't have 'b' or a blank was inserted at or
-	 *        before 'textwidth'
-	 */
-	if (force_formatting || (!vim_iswhite(c) &&
-							 !(State == REPLACE && *ml_get_cursor() != NUL) &&
-									(curwin->w_cursor.lnum != Insstart.lnum ||
-										  ((!has_format_option(FO_INS_LONG) ||
-									Insstart_textlen <= (colnr_t)textwidth) &&
-			  (!fo_ins_blank || Insstart_blank_vcol <= (colnr_t)textwidth)))))
-	{
-		/*
-		 * When 'ai' is off we don't want a space under the cursor to be
-		 * deleted.  Replace it with an 'x' temporarily.
-		 */
-		if (!curbuf->b_p_ai && vim_iswhite(gchar_cursor()))
+	    curwin->w_cursor.col = startcol - 1;
+	    foundcol = 0;
+	    /*
+	     * Find position to break at.
+	     * Stop at start of line.
+	     * Stop at first entered white when 'formatoptions' has 'v'
+	     */
+	    while (curwin->w_cursor.col > 0 &&
+			  ((!fo_ins_blank && !has_format_option(FO_INS_VI)) ||
+				 curwin->w_cursor.lnum != Insstart.lnum ||
+				     curwin->w_cursor.col >= Insstart.col))
+	    {
+		cc = gchar_cursor();
+		if (vim_iswhite(cc))
 		{
-			save_char = gchar_cursor();
-			pchar_cursor('x');
+		    /* remember position of blank just before text */
+		    end_foundcol = curwin->w_cursor.col;
+		    while (curwin->w_cursor.col > 0 && vim_iswhite(cc))
+		    {
+			--curwin->w_cursor.col;
+			cc = gchar_cursor();
+		    }
+		    if (curwin->w_cursor.col == 0 && vim_iswhite(cc))
+			break;		/* only spaces in front of text */
+		    /* Don't break until after the comment leader */
+		    if (curwin->w_cursor.col < leader_len)
+			break;
+		    foundcol = curwin->w_cursor.col + 1;
+		    if (curwin->w_cursor.col < (colnr_t)wantcol)
+			break;
 		}
-		while (textwidth && curwin->w_virtcol >= (colnr_t)textwidth)
-		{
-			int		startcol;			/* Cursor column at entry */
-			int		wantcol;			/* column at textwidth border */
-			int		foundcol;			/* column for start of spaces */
-			int		end_foundcol = 0;	/* column for start of word */
-			colnr_t	len;
+		--curwin->w_cursor.col;
+	    }
 
-			if (!force_formatting && has_format_option(FO_WRAP_COMS))
-				fo_do_comments = TRUE;
+	    if (foundcol == 0)		/* no spaces, cannot break line */
+	    {
+		curwin->w_cursor.col = startcol;
+		break;
+	    }
 
-			/* Don't break until after the comment leader */
-			leader_len = get_leader_len(ml_get_curline(), NULL);
-			if (!force_formatting && leader_len == 0 &&
-												  !has_format_option(FO_WRAP))
+	    /*
+	     * offset between cursor position and line break is used by
+	     * replace stack functions
+	     */
+	    replace_offset = startcol - end_foundcol - 1;
 
-			{
-				textwidth = 0;
-				break;
-			}
-			if ((startcol = curwin->w_cursor.col) == 0)
-				break;
-										/* find column of textwidth border */
-			coladvance((colnr_t)textwidth);
-			wantcol = curwin->w_cursor.col;
+	    /*
+	     * adjust startcol for spaces that will be deleted and
+	     * characters that will remain on top line
+	     */
+	    curwin->w_cursor.col = foundcol;
+	    while (cc = gchar_cursor(), vim_iswhite(cc))
+	    {
+		++curwin->w_cursor.col;
+		--startcol;
+	    }
+	    startcol -= foundcol;
+	    if (startcol < 0)
+		startcol = 0;
 
-			curwin->w_cursor.col = startcol - 1;
-			foundcol = 0;
-			/*
-			 * Find position to break at.
-			 * Stop at start of line.
-			 * Stop at first entered white when 'formatoptions' has 'v'
-			 */
-			while (curwin->w_cursor.col > 0 &&
-						  ((!fo_ins_blank && !has_format_option(FO_INS_VI)) ||
-								 curwin->w_cursor.lnum != Insstart.lnum ||
-									 curwin->w_cursor.col >= Insstart.col))
-			{
-				if (vim_iswhite(gchar_cursor()))
-				{
-						/* remember position of blank just before text */
-					end_foundcol = curwin->w_cursor.col;
-					while (curwin->w_cursor.col > 0 &&
-												  vim_iswhite(gchar_cursor()))
-						--curwin->w_cursor.col;
-					if (curwin->w_cursor.col == 0 &&
-												  vim_iswhite(gchar_cursor()))
-						break;			/* only spaces in front of text */
-					/* Don't break until after the comment leader */
-					if (curwin->w_cursor.col < leader_len)
-						break;
-					foundcol = curwin->w_cursor.col + 1;
-					if (curwin->w_cursor.col < (colnr_t)wantcol)
-						break;
-				}
-				--curwin->w_cursor.col;
-			}
+		/* put cursor after pos. to break line */
+	    curwin->w_cursor.col = foundcol;
 
-			if (foundcol == 0)			/* no spaces, cannot break line */
-			{
-				curwin->w_cursor.col = startcol;
-				break;
-			}
+	    /*
+	     * Split the line before just the margin.
+	     * Only insert/delete lines, but don't really redraw the window.
+	     */
+	    open_line(FORWARD, redrawing() ? -1 : 0, TRUE, old_indent);
+	    old_indent = 0;
 
-			/*
-			 * offset between cursor position and line break is used by
-			 * replace stack functions
-			 */
-			replace_offset = startcol - end_foundcol - 1;
+	    replace_offset = 0;
+	    if (second_indent >= 0 && first_line)
+		set_indent(second_indent, TRUE);
+	    first_line = FALSE;
 
-			/*
-			 * adjust startcol for spaces that will be deleted and
-			 * characters that will remain on top line
-			 */
-			curwin->w_cursor.col = foundcol;
-			while (vim_iswhite(gchar_cursor()))
-			{
-				++curwin->w_cursor.col;
-				--startcol;
-			}
-			startcol -= foundcol;
-			if (startcol < 0)
-				startcol = 0;
+	    /*
+	     * check if cursor is not past the NUL off the line, cindent may
+	     * have added or removed indent.
+	     */
+	    curwin->w_cursor.col += startcol;
+	    len = STRLEN(ml_get_curline());
+	    if (curwin->w_cursor.col > len)
+		curwin->w_cursor.col = len;
 
-				/* put cursor after pos. to break line */
-			curwin->w_cursor.col = foundcol;
-
-			Opencmd(FORWARD, FALSE, TRUE);
-
-			replace_offset = 0;
-			if (second_indent >= 0 && first_line)
-				set_indent(second_indent, TRUE);
-			first_line = FALSE;
-
-			/*
-			 * check if cursor is not past the NUL off the line, cindent may
-			 * have added or removed indent.
-			 */
-			curwin->w_cursor.col += startcol;
-			len = STRLEN(ml_get_curline());
-			if (curwin->w_cursor.col > len)
-				curwin->w_cursor.col = len;
-
-			curs_columns(FALSE);		/* update curwin->w_virtcol */
-			haveto_redraw = TRUE;
+	    haveto_redraw = TRUE;
 #ifdef CINDENT
-			can_cindent = TRUE;
+	    can_cindent = TRUE;
 #endif
-		}
-
-		if (save_char)					/* put back space after cursor */
-			pchar_cursor(save_char);
-
-		if (c == NUL)					/* formatting only */
-			return;
-		fo_do_comments = FALSE;
-		if (haveto_redraw)
-		{
-			/*
-			 * If the cursor ended up just below the screen we scroll up here
-			 * to avoid a redraw of the whole screen in the most common cases.
-			 */
- 			if (curwin->w_cursor.lnum == curwin->w_botline &&
-														!curwin->w_empty_rows)
-				win_del_lines(curwin, 0, 1, TRUE, TRUE);
-			updateScreen(CURSUPD);
-		}
 	}
-	if (c == NUL)			/* only formatting was wanted */
-		return;
 
-	did_ai = FALSE;
-	did_si = FALSE;
-	can_si = FALSE;
-	can_si_back = FALSE;
+	if (save_char)			/* put back space after cursor */
+	    pchar_cursor(save_char);
 
-	/*
-	 * If there's any pending input, grab up to INPUT_BUFLEN at once.
-	 * This speeds up normal text input considerably.
-	 * Don't do this when 'cindent' is set, because we might need to re-indent
-	 * at a ':', or any other character.
-	 */
+	if (c == NUL)			/* formatting only */
+	    return;
+	fo_do_comments = FALSE;
+	if (haveto_redraw)
+	{
+	    update_topline();
+	    update_screen(NOT_VALID);
+	}
+    }
+    if (c == NUL)	    /* only formatting was wanted */
+	return;
+
+    did_ai = FALSE;
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+
+    /*
+     * If there's any pending input, grab up to INPUT_BUFLEN at once.
+     * This speeds up normal text input considerably.
+     * Don't do this when 'cindent' is set, because we might need to re-indent
+     * at a ':', or any other character.
+     */
+#ifdef USE_GUI_WIN32
+    dont_scroll = FALSE;		/* allow scrolling here */
+#endif
 #define INPUT_BUFLEN 100
-	if (!ISSPECIAL(c) && vpeekc() != NUL && State != REPLACE
+    if (       !ISSPECIAL(c)
+	    && vpeekc() != NUL
+	    && State != REPLACE
 #ifdef CINDENT
-											&& !curbuf->b_p_cin
+	    && !curbuf->b_p_cin
 #endif
 #ifdef RIGHTLEFT
-											&& !p_ri
+	    && !p_ri
 #endif
-																		)
-	{
-		char_u			p[INPUT_BUFLEN + 1];
-		int 			i;
+	       )
+    {
+	char_u		p[INPUT_BUFLEN + 1];
+	int		i;
+	colnr_t		virtcol = 0;
 
-		p[0] = c;
-		i = 1;
-		while ((c = vpeekc()) != NUL && !ISSPECIAL(c) && i < INPUT_BUFLEN &&
-															(textwidth == 0 ||
-			(curwin->w_virtcol += charsize(p[i - 1])) < (colnr_t)textwidth) &&
-					!(!no_abbr && !iswordchar(c) && iswordchar(p[i - 1])))
-		{
+	p[0] = c;
+	i = 1;
+	if (textwidth)
+	    virtcol = get_nolist_virtcol();
+	while (	   (c = vpeekc()) != NUL
+		&& !ISSPECIAL(c)
+		&& i < INPUT_BUFLEN
+		&& (textwidth == 0
+		    || (virtcol += charsize(p[i - 1])) < (colnr_t)textwidth)
+		&& !(!no_abbr && !vim_iswordc(c) && vim_iswordc(p[i - 1])))
+	{
 #ifdef RIGHTLEFT
-			c = vgetc();
-			if (p_hkmap && KeyTyped)
-				c = hkmap(c);				/* Hebrew mode mapping */
-			p[i++] = c;
+	    c = vgetc();
+	    if (p_hkmap && KeyTyped)
+		c = hkmap(c);		    /* Hebrew mode mapping */
+#ifdef FKMAP
+	    if (p_fkmap && KeyTyped)
+		c = fkmap(c);		    /* Farsi mode mapping */
+#endif
+	    p[i++] = c;
 #else
- 			p[i++] = vgetc();
+	    p[i++] = vgetc();
 #endif
-		}
-			
+	}
+
 #ifdef DIGRAPHS
-		do_digraph(-1);					/* clear digraphs */
-		do_digraph(p[i-1]);				/* may be the start of a digraph */
+	do_digraph(-1);			/* clear digraphs */
+	do_digraph(p[i-1]);		/* may be the start of a digraph */
 #endif
-		p[i] = '\0';
-		ins_str(p);
-		AppendToRedobuff(p);
+	p[i] = NUL;
+	ins_str(p);
+	if (ctrlv)
+	{
+	    redo_literal(*p);
+	    i = 1;
 	}
 	else
-	{
-		ins_char(c);
-		AppendCharToRedobuff(c);
-	}
+	    i = 0;
+	if (p[i] != NUL)
+	    AppendToRedobuff(p + i);
+    }
+    else
+    {
+	ins_char(c);
+	if (ctrlv)
+	    redo_literal(c);
+	else
+	    AppendCharToRedobuff(c);
+    }
+}
+
+/*
+ * Put a character in the redo buffer, for when just after a CTRL-V.
+ */
+    static void
+redo_literal(c)
+    int	    c;
+{
+    char_u	buf[10];
+
+    /* Only digits need special treatment.  Translate them into a string of
+     * three digits. */
+    if (vim_isdigit(c))
+    {
+	sprintf((char *)buf, "%03d", c);
+	AppendToRedobuff(buf);
+    }
+    else
+	AppendCharToRedobuff(c);
 }
 
 /*
  * start_arrow() is called when an arrow key is used in insert mode.
  * It resembles hitting the <ESC> key.
  */
-	static void
+    static void
 start_arrow(end_insert_pos)
-	FPOS	*end_insert_pos;
+    FPOS    *end_insert_pos;
 {
-	if (!arrow_used)		/* something has been inserted */
-	{
-		AppendToRedobuff(ESC_STR);
-		arrow_used = TRUE;		/* this means we stopped the current insert */
-		stop_insert(end_insert_pos);
-	}
+    if (!arrow_used)	    /* something has been inserted */
+    {
+	AppendToRedobuff(ESC_STR);
+	arrow_used = TRUE;	/* this means we stopped the current insert */
+	stop_insert(end_insert_pos);
+    }
 }
 
 /*
  * stop_arrow() is called before a change is made in insert mode.
  * If an arrow key has been used, start a new insertion.
  */
-	static void
+    void
 stop_arrow()
 {
-	if (arrow_used)
-	{
-		(void)u_save_cursor();				/* errors are ignored! */
-		Insstart = curwin->w_cursor;	/* new insertion starts here */
-		Insstart_textlen = linetabsize(ml_get_curline());
-		ResetRedobuff();
-		AppendToRedobuff((char_u *)"1i");	/* pretend we start an insertion */
-		arrow_used = FALSE;
-	}
+    if (arrow_used)
+    {
+	(void)u_save_cursor();		    /* errors are ignored! */
+	Insstart = curwin->w_cursor;	/* new insertion starts here */
+	Insstart_textlen = linetabsize(ml_get_curline());
+	ResetRedobuff();
+	AppendToRedobuff((char_u *)"1i");   /* pretend we start an insertion */
+	arrow_used = FALSE;
+    }
 }
 
 /*
  * do a few things to stop inserting
  */
-	static void
+    static void
 stop_insert(end_insert_pos)
-	FPOS	*end_insert_pos;		/* where insert ended */
+    FPOS    *end_insert_pos;	/* where insert ended */
 {
-	stop_redo_ins();
+    int	    cc;
 
-	/*
-	 * save the inserted text for later redo with ^@
-	 */
-	vim_free(last_insert);
-	last_insert = get_inserted();
-	last_insert_skip = new_insert_skip;
+    stop_redo_ins();
+    replace_flush();		/* abandon replace stack */
 
-	/*
-	 * If we just did an auto-indent, remove the white space from the end of
-	 * the line, and put the cursor back.
-	 */
-	if (did_ai && !arrow_used)
-	{
-		if (gchar_cursor() == NUL && curwin->w_cursor.col > 0)
-			--curwin->w_cursor.col;
-		while (vim_iswhite(gchar_cursor()))
-			delchar(TRUE);
-		if (gchar_cursor() != NUL)
-			++curwin->w_cursor.col;		/* put cursor back on the NUL */
-		if (curwin->w_p_list)			/* the deletion is only seen in list
-										 * mode */
-			updateline();
-	}
-	did_ai = FALSE;
-	did_si = FALSE;
-	can_si = FALSE;
-	can_si_back = FALSE;
+    /*
+     * save the inserted text for later redo with ^@
+     */
+    vim_free(last_insert);
+    last_insert = get_inserted();
+    last_insert_skip = new_insert_skip;
 
-	/* set '[ and '] to the inserted text */
-	curbuf->b_op_start = Insstart;
-	curbuf->b_op_end = *end_insert_pos;
+    /*
+     * If we just did an auto-indent, remove the white space from the end of
+     * the line, and put the cursor back.
+     */
+    if (did_ai && !arrow_used)
+    {
+	if (gchar_cursor() == NUL && curwin->w_cursor.col > 0)
+	    --curwin->w_cursor.col;
+	while (cc = gchar_cursor(), vim_iswhite(cc))
+	    (void)del_char(TRUE);
+	if (cc != NUL)
+	    ++curwin->w_cursor.col;	/* put cursor back on the NUL */
+	/* the deletion is only seen in list mode and when 'hls' is set */
+	if (curwin->w_p_list || p_hls)
+	    update_screenline();
+    }
+    did_ai = FALSE;
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+
+    /* set '[ and '] to the inserted text */
+    curbuf->b_op_start = Insstart;
+    curbuf->b_op_end = *end_insert_pos;
 }
 
 /*
  * Set the last inserted text to a single character.
  * Used for the replace command.
  */
-	void
+    void
 set_last_insert(c)
-	int		c;
+    int	    c;
 {
-	vim_free(last_insert);
-	last_insert = alloc(4);
-	if (last_insert != NULL)
-	{
-		last_insert[0] = Ctrl('V');
-		last_insert[1] = c;
-		last_insert[2] = ESC;
-		last_insert[3] = NUL;
-			/* Use the CTRL-V only when not entering a digit */
-		last_insert_skip = isdigit(c) ? 1 : 0;
-	}
+    vim_free(last_insert);
+    last_insert = alloc(4);
+    if (last_insert != NULL)
+    {
+	last_insert[0] = Ctrl('V');
+	last_insert[1] = c;
+	last_insert[2] = ESC;
+	last_insert[3] = NUL;
+	    /* Use the CTRL-V only when not entering a digit */
+	last_insert_skip = isdigit(c) ? 1 : 0;
+    }
 }
 
 /*
  * move cursor to start of line
- * if flag == TRUE move to first non-white
- * if flag == MAYBE then move to first non-white if startofline is set,
- *		otherwise don't move at all.
+ * if flags & BL_WHITE	move to first non-white
+ * if flags & BL_SOL	move to first non-white if startofline is set,
+ *			    otherwise keep "curswant" column
+ * if flags & BL_FIX	don't leave the cursor on a NUL.
  */
-	void
-beginline(flag)
-	int			flag;
+    void
+beginline(flags)
+    int		flags;
 {
-	if (flag == MAYBE && !p_sol)
-		coladvance(curwin->w_curswant);
-	else
+    if ((flags & BL_SOL) && !p_sol)
+	coladvance(curwin->w_curswant);
+    else
+    {
+	curwin->w_cursor.col = 0;
+	if (flags & (BL_WHITE | BL_SOL))
 	{
-		curwin->w_cursor.col = 0;
-		if (flag)
-		{
-			register char_u *ptr;
+	    char_u  *ptr;
 
-			for (ptr = ml_get_curline(); vim_iswhite(*ptr); ++ptr)
-				++curwin->w_cursor.col;
-		}
-		curwin->w_set_curswant = TRUE;
+	    for (ptr = ml_get_curline(); vim_iswhite(*ptr)
+			       && !((flags & BL_FIX) && ptr[1] == NUL); ++ptr)
+		++curwin->w_cursor.col;
 	}
+	curwin->w_set_curswant = TRUE;
+    }
 }
 
 /*
@@ -3006,372 +3167,74 @@ beginline(flag)
  * Return OK when successful, FAIL when we hit a line of file boundary.
  */
 
-	int
+    int
 oneright()
 {
-	char_u *ptr;
+    char_u *ptr;
 
-	ptr = ml_get_cursor();
-	if (*ptr++ == NUL || *ptr == NUL)
-		return FAIL;
-	curwin->w_set_curswant = TRUE;
-	++curwin->w_cursor.col;
-	return OK;
+    ptr = ml_get_cursor();
+    if (*ptr++ == NUL || *ptr == NUL)
+	return FAIL;
+    curwin->w_set_curswant = TRUE;
+    ++curwin->w_cursor.col;
+    return OK;
 }
 
-	int
+    int
 oneleft()
 {
-	if (curwin->w_cursor.col == 0)
-		return FAIL;
-	curwin->w_set_curswant = TRUE;
-	--curwin->w_cursor.col;
-	return OK;
+    if (curwin->w_cursor.col == 0)
+	return FAIL;
+    curwin->w_set_curswant = TRUE;
+    --curwin->w_cursor.col;
+    return OK;
 }
 
-	int
-cursor_up(n)
-	long n;
+    int
+cursor_up(n, upd_topline)
+    long    n;
+    int	    upd_topline;	    /* When TRUE: update topline */
 {
-	if (n != 0 && curwin->w_cursor.lnum == 1)
-		return FAIL;
+    if (n != 0)
+    {
+	if (curwin->w_cursor.lnum <= 1)
+	    return FAIL;
 	if (n >= curwin->w_cursor.lnum)
-		curwin->w_cursor.lnum = 1;
+	    curwin->w_cursor.lnum = 1;
 	else
-		curwin->w_cursor.lnum -= n;
+	    curwin->w_cursor.lnum -= n;
+    }
 
-	/* try to advance to the column we want to be at */
-	coladvance(curwin->w_curswant);
+    /* try to advance to the column we want to be at */
+    coladvance(curwin->w_curswant);
 
-	if (op_type == NOP)
-		cursupdate();				/* make sure curwin->w_topline is valid */
+    if (upd_topline)
+	update_topline();	/* make sure curwin->w_topline is valid */
 
-	return OK;
+    return OK;
 }
 
-	int
-cursor_down(n)
-	long n;
+    int
+cursor_down(n, upd_topline)
+    long    n;
+    int	    upd_topline;	    /* When TRUE: update topline */
 {
-	if (n != 0 && curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
-		return FAIL;
+    if (n != 0)
+    {
+	if (curwin->w_cursor.lnum >= curbuf->b_ml.ml_line_count)
+	    return FAIL;
 	curwin->w_cursor.lnum += n;
 	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+    }
 
-	/* try to advance to the column we want to be at */
-	coladvance(curwin->w_curswant);
+    /* try to advance to the column we want to be at */
+    coladvance(curwin->w_curswant);
 
-	if (op_type == NOP)
-		cursupdate();				/* make sure curwin->w_topline is valid */
+    if (upd_topline)
+	update_topline();	/* make sure curwin->w_topline is valid */
 
-	return OK;
-}
-
-/*
- * screengo() --
- *
- * move 'dist' lines in direction 'dir', counting lines by *screen*
- * lines rather than lines in the file
- * 'dist' must be positive.
- *
- * return OK if able to move cursor, FAIL otherwise.
- */
-
-	int
-screengo(dir, dist)
-	int		dir;
-	long	dist;
-{
-	int		linelen = linetabsize(ml_get_curline());
-	int		retval = OK;
-	int		atend = FALSE;
-	int		n;
-
-	op_motion_type = MCHAR;
-	op_inclusive = FALSE;
-
-	/*
-	 * Instead of sticking at the last character of the line in the file we
-	 * try to stick in the last column of the screen
-	 */
-	if (curwin->w_curswant == MAXCOL)
-	{
-		atend = TRUE;
-		curwin->w_curswant = ((curwin->w_virtcol +
-					   (curwin->w_p_nu ? 8 : 0)) / Columns + 1) * Columns - 1;
-		if (curwin->w_p_nu && curwin->w_curswant > 8)
-			curwin->w_curswant -= 8;
-	}
-	else
-		while (curwin->w_curswant >= (colnr_t)(linelen + Columns))
-			curwin->w_curswant -= Columns;
-
-	while (dist--)
-	{
-		if (dir == BACKWARD)
-		{
-												/* move back within line */
-			if ((long)curwin->w_curswant >= Columns)
-				curwin->w_curswant -= Columns;
-			else								/* to previous line */
-			{
-				if (curwin->w_cursor.lnum == 1)
-				{
-					retval = FAIL;
-					break;
-				}
-				--curwin->w_cursor.lnum;
-				linelen = linetabsize(ml_get_curline());
-				n = ((linelen + (curwin->w_p_nu ? 8 : 0) - 1) / Columns)
-																	* Columns;
-				if (curwin->w_p_nu &&
-								 (long)curwin->w_curswant >= Columns - 8 && n)
-					n -= Columns;
-				curwin->w_curswant += n;
-			}
-		}
-		else /* dir == FORWARD */
-		{
-			n = ((linelen + (curwin->w_p_nu ? 8 : 0) - 1) / Columns) * Columns;
-			if (curwin->w_p_nu && n > 8)
-				n -= 8;
-												/* move forward within line */
-			if (curwin->w_curswant < (colnr_t)n)
-				curwin->w_curswant += Columns;
-			else								/* to next line */
-			{
-				if (curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
-				{
-					retval = FAIL;
-					break;
-				}
-				curwin->w_cursor.lnum++;
-				linelen = linetabsize(ml_get_curline());
-				curwin->w_curswant %= Columns;
-			}
-		}
-	}
-	coladvance(curwin->w_curswant);
-	if (atend)
-		curwin->w_curswant = MAXCOL;		/* stick in the last column */
-	if (op_type == NOP)
-		cursupdate();
-	return retval;
-}
-
-/*
- * move screen 'count' pages up or down and update screen
- *
- * return FAIL for failure, OK otherwise
- */
-	int
-onepage(dir, count)
-	int		dir;
-	long	count;
-{
-	linenr_t		lp;
-	long			n;
-	int				off;
-	int				retval = OK;
-
-	if (curbuf->b_ml.ml_line_count == 1)	/* nothing to do */
-	{
-		beep_flush();
-		return FAIL;
-	}
-
-	for ( ; count > 0; --count)
-	{
-		/*
-		 * It's an error to move a page up when the first line is already on
-		 * the screen.  It's an error to move a page down when the last line
-		 * is on the screen and the topline is 'scrolloff' lines from the
-		 * last line.
-		 */
-		if (dir == FORWARD
-				? ((curwin->w_topline >= curbuf->b_ml.ml_line_count - p_so) &&
-						curwin->w_botline > curbuf->b_ml.ml_line_count)
-				: (curwin->w_topline == 1))
-		{
-			beep_flush();
-			retval = FAIL;
-			break;
-		}
-		if (dir == FORWARD)
-		{
-										/* at end of file */
-			if (curwin->w_botline > curbuf->b_ml.ml_line_count)
-				curwin->w_topline = curbuf->b_ml.ml_line_count;
-			else
-			{
-				/*
-				 * When there are three or less lines on the screen, move them
-				 * all to above the screen.
-				 */
-				if (curwin->w_botline - curwin->w_topline <= 3)
-					off = 0;
-				/*
-				 * Make sure at least w_botline gets onto the screen, also
-				 * when 'scrolloff' is non-zero and with very long lines.
-				 */
-				else if (plines(curwin->w_botline) +
-						plines(curwin->w_botline - 1) +
-						plines(curwin->w_botline - 2) >= curwin->w_height - 2)
-					off = 0;
-				else
-					off = 2;
-				curwin->w_topline = curwin->w_botline - off;
-				curwin->w_cursor.lnum = curwin->w_topline;
-			}
-			comp_Botline(curwin);
-		}
-		else	/* dir == BACKWARDS */
-		{
-			lp = curwin->w_topline;
-			/*
-			 * If the first two lines on the screen are not too big, we keep
-			 * them on the screen.
-			 */
-			if ((n = plines(lp)) > curwin->w_height / 2)
-				--lp;
-			else if (lp < curbuf->b_ml.ml_line_count &&
-									n + plines(lp + 1) < curwin->w_height / 2)
-				++lp;
-			curwin->w_cursor.lnum = lp;
-			n = 0;
-			while (n <= curwin->w_height && lp >= 1)
-			{
-				n += plines(lp);
-				--lp;
-			}
-			if (n <= curwin->w_height)				/* at begin of file */
-			{
-				curwin->w_topline = 1;
-				comp_Botline(curwin);
-			}
-			else if (lp >= curwin->w_topline - 2)	/* very long lines */
-			{
-				--curwin->w_topline;
-				comp_Botline(curwin);
-				curwin->w_cursor.lnum = curwin->w_botline - 1;
-			}
-			else
-			{
-				curwin->w_topline = lp + 2;
-				comp_Botline(curwin);
-			}
-		}
-	}
-	cursor_correct();
-	beginline(MAYBE);
-	/*
-	 * Avoid the screen jumping up and down when 'scrolloff' is non-zero.
-	 */
-	if (dir == FORWARD && curwin->w_cursor.lnum < curwin->w_topline + p_so)
-		scroll_cursor_top(1, FALSE);
-	updateScreen(VALID);
-	return retval;
-}
-
-/* #define KEEP_SCREEN_LINE */
-
-	void
-halfpage(flag, Prenum)
-	int			flag;
-	linenr_t	Prenum;
-{
-	long		scrolled = 0;
-	int			i;
-	int			n;
-
-	if (Prenum)
-		curwin->w_p_scroll = (Prenum > curwin->w_height) ?
-												curwin->w_height : Prenum;
-	n = (curwin->w_p_scroll <= curwin->w_height) ?
-									curwin->w_p_scroll : curwin->w_height;
-
-	if (flag)		/* scroll down */
-	{
-		while (n > 0 && curwin->w_botline <= curbuf->b_ml.ml_line_count)
-		{
-			i = plines(curwin->w_topline);
-			n -= i;
-			if (n < 0 && scrolled)
-				break;
-			scrolled += i;
-			++curwin->w_topline;
-			comp_Botline(curwin);		/* compute curwin->w_botline */
-#ifndef KEEP_SCREEN_LINE
-			if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
-				++curwin->w_cursor.lnum;
-#endif
-		}
-#ifndef KEEP_SCREEN_LINE
-		/*
-		 * When hit bottom of the file: move cursor down.
-		 */
-		if (n > 0)
-		{
-			curwin->w_cursor.lnum += n;
-			if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-				curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-		}
-#else
-			/* try to put the cursor in the same screen line */
-		while ((curwin->w_cursor.lnum < curwin->w_topline || scrolled > 0)
-							 && curwin->w_cursor.lnum < curwin->w_botline - 1)
-		{
-			scrolled -= plines(curwin->w_cursor.lnum);
-			if (scrolled < 0 && curwin->w_cursor.lnum >= curwin->w_topline)
-				break;
-			++curwin->w_cursor.lnum;
-		}
-#endif
-	}
-	else			/* scroll up */
-	{
-		while (n > 0 && curwin->w_topline > 1)
-		{
-			i = plines(curwin->w_topline - 1);
-			n -= i;
-			if (n < 0 && scrolled)
-				break;
-			scrolled += i;
-			--curwin->w_topline;
-#ifndef KEEP_SCREEN_LINE
-			if (curwin->w_cursor.lnum > 1)
-				--curwin->w_cursor.lnum;
-#endif
-		}
-		comp_Botline(curwin);		/* compute curwin->w_botline */
-#ifndef KEEP_SCREEN_LINE
-		/*
-		 * When hit top of the file: move cursor up.
-		 */
-		if (n > 0)
-		{
-			if (curwin->w_cursor.lnum > (linenr_t)n)
-				curwin->w_cursor.lnum -= n;
-			else
-				curwin->w_cursor.lnum = 1;
-		}
-#else
-			/* try to put the cursor in the same screen line */
-		scrolled += n;		/* move cursor when topline is 1 */
-		while (curwin->w_cursor.lnum > curwin->w_topline &&
-				 (scrolled > 0 || curwin->w_cursor.lnum >= curwin->w_botline))
-		{
-			scrolled -= plines(curwin->w_cursor.lnum - 1);
-			if (scrolled < 0 && curwin->w_cursor.lnum < curwin->w_botline)
-				break;
-			--curwin->w_cursor.lnum;
-		}
-#endif
-	}
-	cursor_correct();
-	beginline(MAYBE);
-	updateScreen(VALID);
+    return OK;
 }
 
 /*
@@ -3379,43 +3242,92 @@ halfpage(flag, Prenum)
  * Last_insert actually is a copy of the redo buffer, so we
  * first have to remove the command.
  */
-	int
+    int
 stuff_inserted(c, count, no_esc)
-	int		c;
-	long	count;
-	int		no_esc;
+    int	    c;		/* Command character to be inserted */
+    long    count;	/* Repeat this many times */
+    int	    no_esc;	/* Don't add an ESC at the end */
 {
-	char_u		*esc_ptr = NULL;
-	char_u		*ptr;
+    char_u	*esc_ptr;
+    char_u	*ptr;
+    char_u	*last_ptr;
+    char_u	last = NUL;
 
-	ptr = get_last_insert();
-	if (ptr == NULL)
-	{
-		EMSG(e_noinstext);
-		return FAIL;
-	}
+    ptr = get_last_insert();
+    if (ptr == NULL)
+    {
+	EMSG(e_noinstext);
+	return FAIL;
+    }
 
-	if (c)
-		stuffcharReadbuff(c);
-	if (no_esc && (esc_ptr = (char_u *)vim_strrchr(ptr, 27)) != NULL)
-		*esc_ptr = NUL;		/* remove the ESC */
+    /* may want to stuff the command character, to start Insert mode */
+    if (c)
+	stuffcharReadbuff(c);
+    if ((esc_ptr = (char_u *)vim_strrchr(ptr, ESC)) != NULL)
+	*esc_ptr = NUL;	    /* remove the ESC */
 
-	do
-		stuffReadbuff(ptr);
-	while (--count > 0);
+    /* when the last char is either "0" or "^" it will be quoted if no ESC
+     * comes after it OR if it will inserted more than once and "ptr"
+     * starts with ^D.	-- Acevedo
+     */
+    last_ptr = (esc_ptr ? esc_ptr : ptr + STRLEN(ptr)) - 1;
+    if (last_ptr >= ptr && (*last_ptr == '0' || *last_ptr == '^')
+	    && (no_esc || (*ptr == Ctrl('D') && count > 1)))
+    {
+	last = *last_ptr;
+	*last_ptr = NUL;
+    }
 
-	if (esc_ptr != NULL)
-		*esc_ptr = 27;		/* put the ESC back */
+    do
+    {
+	stuffReadbuff(ptr);
+	/* a trailing "0" is inserted as "<C-V>048", "^" as "<C-V>^" */
+	if (last)
+	    stuffReadbuff((char_u *)(last == '0' ? "\026048" : "\026^"));
+    }
+    while (--count > 0);
 
-	return OK;
+    if (last)
+	*last_ptr = last;
+
+    if (esc_ptr != NULL)
+	*esc_ptr = ESC;	    /* put the ESC back */
+
+    /* may want to stuff a trailing ESC, to get out of Insert mode */
+    if (!no_esc)
+	stuffcharReadbuff(ESC);
+
+    return OK;
 }
 
-	char_u *
+    char_u *
 get_last_insert()
 {
-	if (last_insert == NULL)
-		return NULL;
-	return last_insert + last_insert_skip;
+    if (last_insert == NULL)
+	return NULL;
+    return last_insert + last_insert_skip;
+}
+
+/*
+ * Get last inserted string, and remove trailing <Esc>.
+ * Returns pointer to allocated memory (must be freed) or NULL.
+ */
+    char_u *
+get_last_insert_save()
+{
+    char_u	*s;
+    int		len;
+
+    if (last_insert == NULL)
+	return NULL;
+    s = vim_strsave(last_insert + last_insert_skip);
+    if (s != NULL)
+    {
+	len = STRLEN(s);
+	if (len > 0 && s[len - 1] == ESC)	/* remove trailing ESC */
+	    s[len - 1] = NUL;
+    }
+    return s;
 }
 
 /*
@@ -3424,90 +3336,173 @@ get_last_insert()
  * When an abbreviation is recognized it is removed from the text and
  * the replacement string is inserted in typebuf[], followed by "c".
  */
-	static int
+    static int
 echeck_abbr(c)
-	int c;
+    int c;
 {
-	if (p_paste || no_abbr)			/* no abbreviations or in paste mode */
-		return FALSE;
+    if (p_paste || no_abbr)	    /* no abbreviations or in paste mode */
+	return FALSE;
 
-	return check_abbr(c, ml_get_curline(), curwin->w_cursor.col,
-				curwin->w_cursor.lnum == Insstart.lnum ? Insstart.col : 0);
+    return check_abbr(c, ml_get_curline(), curwin->w_cursor.col,
+		curwin->w_cursor.lnum == Insstart.lnum ? Insstart.col : 0);
 }
 
 /*
  * replace-stack functions
  *
- * When replacing characters the replaced character is remembered
- * for each new character. This is used to re-insert the old text
- * when backspacing.
+ * When replacing characters, the replaced characters are remembered for each
+ * new character.  This is used to re-insert the old text when backspacing.
  *
- * replace_offset is normally 0, in which case replace_push will add a new
- * character at the end of the stack. If replace_offset is not 0, that many
+ * There is a NUL headed list of characters for each character that is
+ * currently in the file after the insertion point.  When BS is used, one NUL
+ * headed list is put back for the deleted character.
+ *
+ * For a newline, there are two NUL headed lists.  One contains the characters
+ * that the NL replaced.  The extra one stores the characters after the cursor
+ * that were deleted (always white space).
+ *
+ * Replace_offset is normally 0, in which case replace_push will add a new
+ * character at the end of the stack.  If replace_offset is not 0, that many
  * characters will be left on the stack above the newly inserted character.
  */
 
 char_u	*replace_stack = NULL;
-long	replace_stack_nr = 0;		/* next entry in replace stack */
-long	replace_stack_len = 0;		/* max. number of entries */
+long	replace_stack_nr = 0;	    /* next entry in replace stack */
+long	replace_stack_len = 0;	    /* max. number of entries */
 
-	void
+    void
 replace_push(c)
-	int		c;		/* character that is replaced (NUL is none) */
+    int	    c;	    /* character that is replaced (NUL is none) */
 {
-	char_u	*p;
+    char_u  *p;
 
-	if (replace_stack_nr < replace_offset)		/* nothing to do */
-		return;
-	if (replace_stack_len <= replace_stack_nr)
+    if (replace_stack_nr < replace_offset)	/* nothing to do */
+	return;
+    if (replace_stack_len <= replace_stack_nr)
+    {
+	replace_stack_len += 50;
+	p = lalloc(sizeof(char_u) * replace_stack_len, TRUE);
+	if (p == NULL)	    /* out of memory */
 	{
-		replace_stack_len += 50;
-		p = lalloc(sizeof(char_u) * replace_stack_len, TRUE);
-		if (p == NULL)		/* out of memory */
-		{
-			replace_stack_len -= 50;
-			return;
-		}
-		if (replace_stack != NULL)
-		{
-			vim_memmove(p, replace_stack,
-								 (size_t)(replace_stack_nr * sizeof(char_u)));
-			vim_free(replace_stack);
-		}
-		replace_stack = p;
+	    replace_stack_len -= 50;
+	    return;
 	}
-	p = replace_stack + replace_stack_nr - replace_offset;
-	if (replace_offset)
-		vim_memmove(p + 1, p, (size_t)(replace_offset * sizeof(char_u)));
-	*p = c;
-	++replace_stack_nr;
+	if (replace_stack != NULL)
+	{
+	    vim_memmove(p, replace_stack,
+				 (size_t)(replace_stack_nr * sizeof(char_u)));
+	    vim_free(replace_stack);
+	}
+	replace_stack = p;
+    }
+    p = replace_stack + replace_stack_nr - replace_offset;
+    if (replace_offset)
+	vim_memmove(p + 1, p, (size_t)(replace_offset * sizeof(char_u)));
+    *p = c;
+    ++replace_stack_nr;
 }
 
 /*
- * pop one item from the replace stack
- * return -1 if stack empty
- * return 0 if no character was replaced
- * return replaced character otherwise
+ * call replace_push(c) with replace_offset set to the first NUL.
  */
-	int
+    static void
+replace_push_off(c)
+    int	    c;
+{
+    char_u	*p;
+
+    p = replace_stack + replace_stack_nr;
+    for (replace_offset = 1; replace_offset < replace_stack_nr;
+							     ++replace_offset)
+	if (*--p == NUL)
+	    break;
+    replace_push(c);
+    replace_offset = 0;
+}
+
+/*
+ * Pop one item from the replace stack.
+ * return -1 if stack empty
+ * return replaced character or NUL otherwise
+ */
+    static int
 replace_pop()
 {
-	if (replace_stack_nr == 0)
-		return -1;
-	return (int)replace_stack[--replace_stack_nr];
+    if (replace_stack_nr == 0)
+	return -1;
+    return (int)replace_stack[--replace_stack_nr];
+}
+
+/*
+ * Join the top two items on the replace stack.  This removes to "off"'th NUL
+ * encountered.
+ */
+    static void
+replace_join(off)
+    int	    off;	/* offset for which NUL to remove */
+{
+    int	    i;
+
+    for (i = replace_stack_nr; --i >= 0; )
+	if (replace_stack[i] == NUL && off-- <= 0)
+	{
+	    --replace_stack_nr;
+	    vim_memmove(replace_stack + i, replace_stack + i + 1,
+					      (size_t)(replace_stack_nr - i));
+	    return;
+	}
+}
+
+/*
+ * Pop characters from the replace stack until a NUL is found, and insert them
+ * before the cursor.  Can only be used in REPLACE mode.
+ */
+    static void
+replace_pop_ins()
+{
+    int	    cc;
+
+    State = NORMAL;			/* don't want REPLACE here */
+    while ((cc = replace_pop()) > 0)
+    {
+	ins_char(cc);
+	dec_cursor();
+    }
+    State = REPLACE;
 }
 
 /*
  * make the replace stack empty
  * (called when exiting replace mode)
  */
-	void
+    static void
 replace_flush()
 {
-	vim_free(replace_stack);
-	replace_stack = NULL;
-	replace_stack_len = 0;
-	replace_stack_nr = 0;
+    vim_free(replace_stack);
+    replace_stack = NULL;
+    replace_stack_len = 0;
+    replace_stack_nr = 0;
+}
+
+/*
+ * Handle doing a BS for one character.
+ * cc < 0: replace stack empty, just move cursor
+ * cc == 0: character was inserted, delete it
+ * cc > 0: character was replace, put original back
+ */
+    static void
+replace_do_bs()
+{
+    int	    cc;
+
+    cc = replace_pop();
+    if (cc > 0)
+    {
+	pchar_cursor(cc);
+	replace_pop_ins();
+    }
+    else if (cc == 0)
+	(void)del_char(FALSE);
 }
 
 #if defined(LISPINDENT) || defined(CINDENT)
@@ -3518,159 +3513,173 @@ replace_flush()
  * "get_the_indent" should be get_c_indent or get_lisp_indent.
  */
 
-	void
+    void
 fixthisline(get_the_indent)
-	int (*get_the_indent) __ARGS((void));
+    int (*get_the_indent) __ARGS((void));
 {
-	change_indent(INDENT_SET, get_the_indent(), FALSE);
-	if (linewhite(curwin->w_cursor.lnum))
-		did_ai = TRUE;		/* delete the indent if the line stays empty */
+    change_indent(INDENT_SET, get_the_indent(), FALSE, 0);
+    if (linewhite(curwin->w_cursor.lnum))
+	did_ai = TRUE;	    /* delete the indent if the line stays empty */
 }
 #endif /* defined(LISPINDENT) || defined(CINDENT) */
 
 #ifdef CINDENT
 /*
  * return TRUE if 'cinkeys' contains the key "keytyped",
- * when == '*':		Only if key is preceded with '*'	(indent before insert)
- * when == '!':		Only if key is prededed with '!'	(don't insert)
- * when == ' ':		Only if key is not preceded with '*'(indent afterwards)
+ * when == '*':	    Only if key is preceded with '*'	(indent before insert)
+ * when == '!':	    Only if key is prededed with '!'	(don't insert)
+ * when == ' ':	    Only if key is not preceded with '*'(indent afterwards)
  *
  * If line_is_empty is TRUE accept keys with '0' before them.
  */
-	int
+    int
 in_cinkeys(keytyped, when, line_is_empty)
-	int			keytyped;
-	int			when;
-	int			line_is_empty;
+    int		keytyped;
+    int		when;
+    int		line_is_empty;
 {
-	char_u	*look;
-	int		try_match;
-	char_u	*p;
+    char_u  *look;
+    int	    try_match;
+    char_u  *p;
+    int	    i;
 
-	for (look = curbuf->b_p_cink; *look; )
+    for (look = curbuf->b_p_cink; *look; )
+    {
+	/*
+	 * Find out if we want to try a match with this key, depending on
+	 * 'when' and a '*' or '!' before the key.
+	 */
+	switch (when)
 	{
-		/*
-		 * Find out if we want to try a match with this key, depending on
-		 * 'when' and a '*' or '!' before the key.
-		 */
-		switch (when)
-		{
-			case '*': try_match = (*look == '*'); break;
-			case '!': try_match = (*look == '!'); break;
-			 default: try_match = (*look != '*'); break;
-		}
-		if (*look == '*' || *look == '!')
-			++look;
-
-		/*
-		 * If there is a '0', only accept a match if the line is empty.
-		 */
-		if (*look == '0')
-		{
-			if (!line_is_empty)
-				try_match = FALSE;
-			++look;
-		}
-
-		/*
-		 * does it look like a control character?
-		 */
-		if (*look == '^' && look[1] >= '@' && look[1] <= '_')
-		{
-			if (try_match && keytyped == Ctrl(look[1]))
-				return TRUE;
-			look += 2;
-		}
-		/*
-		 * 'o' means "o" command, open forward.
-		 * 'O' means "O" command, open backward.
-		 */
-		else if (*look == 'o')
-		{
-			if (try_match && keytyped == KEY_OPEN_FORW)
-				return TRUE;
-			++look;
-		}
-		else if (*look == 'O')
-		{
-			if (try_match && keytyped == KEY_OPEN_BACK)
-				return TRUE;
-			++look;
-		}
-
-		/*
-		 * 'e' means to check for "else" at start of line and just before the
-		 * cursor.
-		 */
-		else if (*look == 'e')
-		{
-			if (try_match && keytyped == 'e' && curwin->w_cursor.col >= 4)
-			{
-				p = ml_get_curline();
-				if (skipwhite(p) == p + curwin->w_cursor.col - 4 &&
-						STRNCMP(p + curwin->w_cursor.col - 4, "else", 4) == 0)
-					return TRUE;
-			}
-			++look;
-		}
-
-		/*
-		 * ':' only causes an indent if it is at the end of a label or case
-		 * statement.
-		 */
-		else if (*look == ':')
-		{
-			if (try_match && keytyped == ':')
-			{
-				p = ml_get_curline();
-				if (iscase(p) || islabel(30))
-					return TRUE;
-			}
-			++look;
-		}
-
-
-		/*
-		 * Is it a key in <>, maybe?
-		 */
-		else if (*look == '<')
-		{
-			if (try_match)
-			{
-				/*
-				 * make up some named keys <o>, <O>, <e>, <0>, <>>, <<>, <*>
-				 * and <!> so that people can re-indent on o, O, e, 0, <, >, *
-				 * and ! keys if they really really want to.
-				 */
-				if (vim_strchr((char_u *)"<>!*oOe0", look[1]) != NULL &&
-														  keytyped == look[1])
-					return TRUE;
-
-				if (keytyped == get_special_key_code(look + 1))
-					return TRUE;
-			}
-			while (*look && *look != '>')
-				look++;
-			while (*look == '>')
-				look++;
-		}
-
-		/*
-		 * ok, it's a boring generic character.
-		 */
-		else
-		{
-			if (try_match && *look == keytyped)
-				return TRUE;
-			++look;
-		}
-
-		/*
-		 * Skip over ", ".
-		 */
-		look = skip_to_option_part(look);
+	    case '*': try_match = (*look == '*'); break;
+	    case '!': try_match = (*look == '!'); break;
+	     default: try_match = (*look != '*'); break;
 	}
-	return FALSE;
+	if (*look == '*' || *look == '!')
+	    ++look;
+
+	/*
+	 * If there is a '0', only accept a match if the line is empty.
+	 */
+	if (*look == '0')
+	{
+	    if (!line_is_empty)
+		try_match = FALSE;
+	    ++look;
+	}
+
+	/*
+	 * does it look like a control character?
+	 */
+	if (*look == '^' && look[1] >= '@' && look[1] <= '_')
+	{
+	    if (try_match && keytyped == Ctrl(look[1]))
+		return TRUE;
+	    look += 2;
+	}
+	/*
+	 * 'o' means "o" command, open forward.
+	 * 'O' means "O" command, open backward.
+	 */
+	else if (*look == 'o')
+	{
+	    if (try_match && keytyped == KEY_OPEN_FORW)
+		return TRUE;
+	    ++look;
+	}
+	else if (*look == 'O')
+	{
+	    if (try_match && keytyped == KEY_OPEN_BACK)
+		return TRUE;
+	    ++look;
+	}
+
+	/*
+	 * 'e' means to check for "else" at start of line and just before the
+	 * cursor.
+	 */
+	else if (*look == 'e')
+	{
+	    if (try_match && keytyped == 'e' && curwin->w_cursor.col >= 4)
+	    {
+		p = ml_get_curline();
+		if (skipwhite(p) == p + curwin->w_cursor.col - 4 &&
+			STRNCMP(p + curwin->w_cursor.col - 4, "else", 4) == 0)
+		    return TRUE;
+	    }
+	    ++look;
+	}
+
+	/*
+	 * ':' only causes an indent if it is at the end of a label or case
+	 * statement, or when it was before typing the ':' (to fix
+	 * class::method for C++).
+	 */
+	else if (*look == ':')
+	{
+	    if (try_match && keytyped == ':')
+	    {
+		p = ml_get_curline();
+		if (cin_iscase(p) || cin_isscopedecl(p) || cin_islabel(30))
+		    return TRUE;
+		if (curwin->w_cursor.col > 2
+			&& p[curwin->w_cursor.col - 1] == ':'
+			&& p[curwin->w_cursor.col - 2] == ':')
+		{
+		    p[curwin->w_cursor.col - 1] = ' ';
+		    i = (cin_iscase(p) || cin_isscopedecl(p)
+							  || cin_islabel(30));
+		    p = ml_get_curline();
+		    p[curwin->w_cursor.col - 1] = ':';
+		    if (i)
+			return TRUE;
+		}
+	    }
+	    ++look;
+	}
+
+
+	/*
+	 * Is it a key in <>, maybe?
+	 */
+	else if (*look == '<')
+	{
+	    if (try_match)
+	    {
+		/*
+		 * make up some named keys <o>, <O>, <e>, <0>, <>>, <<>, <*>
+		 * and <!> so that people can re-indent on o, O, e, 0, <, >, *
+		 * and ! keys if they really really want to.
+		 */
+		if (vim_strchr((char_u *)"<>!*oOe0", look[1]) != NULL &&
+							  keytyped == look[1])
+		    return TRUE;
+
+		if (keytyped == get_special_key_code(look + 1))
+		    return TRUE;
+	    }
+	    while (*look && *look != '>')
+		look++;
+	    while (*look == '>')
+		look++;
+	}
+
+	/*
+	 * ok, it's a boring generic character.
+	 */
+	else
+	{
+	    if (try_match && *look == keytyped)
+		return TRUE;
+	    ++look;
+	}
+
+	/*
+	 * Skip over ", ".
+	 */
+	look = skip_to_option_part(look);
+    }
+    return FALSE;
 }
 #endif /* CINDENT */
 
@@ -3678,32 +3687,1284 @@ in_cinkeys(keytyped, when, line_is_empty)
 /*
  * Map Hebrew keyboard when in hkmap mode.
  */
-	int
+    int
 hkmap(c)
-	int c;
+    int c;
 {
-	switch(c)
+    if (p_hkmapp)   /* phonetic mapping, by Ilya Dogolazky */
+    {
+	enum {hALEF=0, BET, GIMEL, DALET, HEI, VAV, ZAIN, HET, TET, IUD,
+	    KAFsofit, hKAF, LAMED, MEMsofit, MEM, NUNsofit, NUN, SAMEH, AIN,
+	    PEIsofit, PEI, ZADIsofit, ZADI, KOF, RESH, hSHIN, TAV};
+	static unsigned char map[26] =
+	    {hALEF/*a*/, BET/*b*/, hKAF/*c*/, DALET/*d*/, -1/*e*/, PEIsofit/*f*/,
+	     GIMEL/*g*/, HEI/*h*/, IUD/*i*/, HET/*j*/, KOF/*k*/, LAMED/*l*/,
+	     MEM/*m*/, NUN/*n*/, SAMEH/*o*/, PEI/*p*/, -1/*q*/, RESH/*r*/,
+	     ZAIN/*s*/, TAV/*t*/, TET/*u*/, VAV/*v*/, hSHIN/*w*/, -1/*x*/,
+	     AIN/*y*/, ZADI/*z*/};
+
+	if (c == 'N' || c == 'M' || c == 'P' || c == 'C' || c == 'Z')
+	    return map[tolower(c) - 'a'] - 1 + p_aleph; /* '-1'='sofit' */
+	else if (c == 'x')
+	    return 'X';
+	else if (c == 'q')
+	    return '\''; /* {geresh}={'} */
+	else if (c == 246)
+	    return ' ';  /* \"o --> ' ' for a german keyboard */
+	else if (c == 228)
+	    return ' ';  /* \"a --> ' '      -- / --	       */
+	else if (c == 252)
+	    return ' ';  /* \"u --> ' '      -- / --	       */
+	else if ('a' <= c && c <= 'z')
+	    return map[c - 'a'] + p_aleph;
+	else
+	    return c;
+    }
+    else
+    {
+	switch (c)
 	{
-		case '`':	return ';';
-		case '/':	return '.';
-		case '\'':	return ',';
-		case 'q':	return '/';
-		case 'w':	return '\'';
+	    case '`':	return ';';
+	    case '/':	return '.';
+	    case '\'':	return ',';
+	    case 'q':	return '/';
+	    case 'w':	return '\'';
 
-		/* Hebrew letters - set offset from 'a' */
-		case ',':	c = '{'; break;
-		case '.':	c = 'v'; break;
-		case ';':	c = 't'; break;
-		default: {
-					static char str[] = "zqbcxlsjphmkwonu ydafe rig";
+			/* Hebrew letters - set offset from 'a' */
+	    case ',':	c = '{'; break;
+	    case '.':	c = 'v'; break;
+	    case ';':	c = 't'; break;
+	    default: {
+			 static char str[] = "zqbcxlsjphmkwonu ydafe rig";
 
-					if (c < 'a' || c > 'z')
-						return c;
-					c = str[c - 'a'];
-					break;
-				}
-		}
+			 if (c < 'a' || c > 'z')
+			     return c;
+			 c = str[c - 'a'];
+			 break;
+		     }
+	}
 
 	return c - 'a' + p_aleph;
+    }
 }
 #endif
+
+    static int
+ins_reg()
+{
+    int	    need_redraw = FALSE;
+    int	    cc;
+
+    /*
+     * If we are going to wait for a character, show a '"'.
+     */
+    if (redrawing() && !char_avail())
+    {
+	edit_putchar('"', TRUE);
+#ifdef SHOWCMD
+	add_to_showcmd_c(Ctrl('R'));
+#endif
+    }
+
+#ifdef USE_GUI_WIN32
+    dont_scroll = TRUE;		/* disallow scrolling here */
+#endif
+
+    /*
+     * don't map the register name. This also prevents the mode message to be
+     * deleted when ESC is hit
+     */
+    ++no_mapping;
+    cc = vgetc();
+    --no_mapping;
+#ifdef HAVE_LANGMAP
+    LANGMAP_ADJUST(cc, TRUE);
+#endif
+
+#ifdef WANT_EVAL
+    /*
+     * Don't call u_sync while getting the expression,
+     * evaluating it or giving an error message for it!
+     */
+    ++no_u_sync;
+    if (cc == '=')
+	cc = get_expr_register();
+    if (cc == NUL)
+	need_redraw = TRUE;	/* remove the '"' */
+    else
+    {
+#endif
+	if (insert_reg(cc) == FAIL)
+	{
+	    beep_flush();
+	    need_redraw = TRUE;	/* remove the '"' */
+	}
+#ifdef WANT_EVAL
+    }
+    --no_u_sync;
+#endif
+#ifdef SHOWCMD
+    clear_showcmd();
+#endif
+
+    /* If the inserted register is empty, we need to remove the '"' */
+    if (stuff_empty())
+	need_redraw = TRUE;
+
+    return need_redraw;
+}
+
+/*
+ * Handle ESC in insert mode.
+ * Returns TRUE when leaving insert mode, FALSE when going to repeat the
+ * insert.
+ */
+    static int
+ins_esc(count, need_redraw, cmdchar)
+    long	*count;
+    int		need_redraw;
+    int		cmdchar;
+{
+    int		 temp;
+    static int	 disabled_redraw = FALSE;
+
+    temp = curwin->w_cursor.col;
+    if (disabled_redraw)
+    {
+	--RedrawingDisabled;
+	disabled_redraw = FALSE;
+    }
+    if (!arrow_used)
+    {
+	/*
+	 * Don't append the ESC for "r<CR>".
+	 */
+	if (cmdchar != 'r')
+	    AppendToRedobuff(ESC_STR);
+
+	/*
+	 * Repeating insert may take a long time.  Check for
+	 * interrupt now and then.
+	 */
+	if (*count)
+	{
+	    line_breakcheck();
+	    if (got_int)
+		*count = 0;
+	}
+
+	if (--*count > 0)	/* repeat what was typed */
+	{
+	    (void)start_redo_ins();
+	    ++RedrawingDisabled;
+	    disabled_redraw = TRUE;
+	    return FALSE;	/* repeat the insert */
+	}
+	stop_insert(&curwin->w_cursor);
+	if (dollar_vcol)
+	{
+	    dollar_vcol = 0;
+	    /* may have to redraw status line if this was the
+	     * first change, show "[+]" */
+	    if (curwin->w_redr_status == TRUE)
+		redraw_later(NOT_VALID);
+	    else
+		need_redraw = TRUE;
+	}
+    }
+    if (need_redraw)
+	update_screenline();
+
+    /* When an autoindent was removed, curswant stays after the
+     * indent */
+    if (!restart_edit && (colnr_t)temp == curwin->w_cursor.col)
+	curwin->w_set_curswant = TRUE;
+
+    /*
+     * The cursor should end up on the last inserted character.
+     */
+    if (       curwin->w_cursor.col != 0
+	    && (!restart_edit
+		|| gchar_cursor() == NUL)
+#ifdef RIGHTLEFT
+	    && !revins_on
+#endif
+				      )
+	--curwin->w_cursor.col;
+
+    /* need to position cursor again (e.g. when on a TAB ) */
+    changed_cline_bef_curs();
+
+    State = NORMAL;
+#ifdef USE_MOUSE
+    setmouse();
+#endif
+#ifdef USE_GUI
+    if (gui.in_use)
+	gui_upd_cursor_shape();		/* may show different cursor shape */
+#endif
+    /*
+     * When recording or for CTRL-O, need to display the new mode.
+     * Otherwise remove the mode message.
+     */
+    if (Recording || restart_edit)
+	showmode();
+    else if (p_smd)
+	MSG("");
+
+    return TRUE;	    /* exit Insert mode */
+}
+
+#ifdef RIGHTLEFT
+    static void
+ins_ctrl_()
+{
+    if (revins_on && revins_chars && revins_scol >= 0)
+    {
+	while (gchar_cursor() != NUL && revins_chars--)
+	    ++curwin->w_cursor.col;
+    }
+    p_ri = !p_ri;
+    revins_on = (State == INSERT && p_ri);
+    if (revins_on)
+    {
+	revins_scol = curwin->w_cursor.col;
+	revins_legal++;
+	revins_chars = 0;
+	undisplay_dollar();
+    }
+    else
+	revins_scol = -1;
+#ifdef FKMAP
+    if (p_altkeymap)
+    {
+	/*
+	 * to be consistent also for redo command, using '.'
+	 * set arrow_used to true and stop it - causing to redo
+	 * characters entered in one mode (normal/reverse insert).
+	 */
+	arrow_used = TRUE;
+	stop_arrow();
+	p_fkmap = curwin->w_p_rl ^ p_ri;
+	if (p_fkmap && p_ri)
+	    State = INSERT;
+    }
+    else
+#endif
+	p_hkmap = curwin->w_p_rl ^ p_ri;    /* be consistent! */
+    showmode();
+}
+#endif
+
+/*
+ * If the cursor is on an indent, ^T/^D insert/delete one
+ * shiftwidth.	Otherwise ^T/^D behave like a "<<" or ">>".
+ * Always round the indent to 'shiftwith', this is compatible
+ * with vi.  But vi only supports ^T and ^D after an
+ * autoindent, we support it everywhere.
+ */
+    static void
+ins_shift(c, lastc)
+    int	    c;
+    int	    lastc;
+{
+    stop_arrow();
+    AppendCharToRedobuff(c);
+
+    /*
+     * 0^D and ^^D: remove all indent.
+     */
+    if ((lastc == '0' || lastc == '^') && curwin->w_cursor.col)
+    {
+	--curwin->w_cursor.col;
+	(void)del_char(FALSE);		/* delete the '^' or '0' */
+	/* In Replace mode, restore the characters that '^' or '0' replaced. */
+	if (State == REPLACE)
+	    replace_pop_ins();
+	if (lastc == '^')
+	    old_indent = get_indent();	/* remember curr. indent */
+	change_indent(INDENT_SET, 0, TRUE, 0);
+    }
+    else
+	change_indent(c == Ctrl('D') ? INDENT_DEC : INDENT_INC, 0, TRUE, 0);
+
+    did_ai = FALSE;
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+#ifdef CINDENT
+    can_cindent = FALSE;	/* no cindenting after ^D or ^T */
+#endif
+}
+
+    static void
+ins_del()
+{
+    int	    temp;
+
+    stop_arrow();
+    if (gchar_cursor() == NUL)	    /* delete newline */
+    {
+	temp = curwin->w_cursor.col;
+	if (!p_bs ||		    /* only if 'bs' set */
+	    u_save((linenr_t)(curwin->w_cursor.lnum - 1),
+		(linenr_t)(curwin->w_cursor.lnum + 2)) == FAIL ||
+		    do_join(FALSE, TRUE) == FAIL)
+	    beep_flush();
+	else
+	{
+	    curwin->w_cursor.col = temp;
+	    redraw_later(VALID_TO_CURSCHAR);
+	}
+    }
+    else if (del_char(FALSE) == FAIL)/* delete char under cursor */
+	beep_flush();
+    did_ai = FALSE;
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+    AppendCharToRedobuff(K_DEL);
+}
+
+/*
+ * Handle Backspace, delete-word and delete-line in Insert mode.
+ * Return TRUE when backspace was actually used.
+ */
+    static int
+ins_bs(c, mode, inserted_space_p)
+    int		c;
+    int		mode;
+    int		*inserted_space_p;
+{
+    linenr_t	lnum;
+    int		cc;
+    int		temp = 0;	    /* init for GCC */
+    colnr_t	mincol;
+    int		did_backspace = FALSE;
+    int		in_indent;
+
+    /*
+     * can't delete anything in an empty file
+     * can't backup past first character in buffer
+     * can't backup past starting point unless 'backspace' > 1
+     * can backup to a previous line if 'backspace' == 0
+     */
+    if (       bufempty()
+	    || (
+#ifdef RIGHTLEFT
+		!revins_on &&
+#endif
+		((curwin->w_cursor.lnum == 1 && curwin->w_cursor.col <= 0)
+		    || (p_bs < 2
+			&& (arrow_used
+			    || (curwin->w_cursor.lnum == Insstart.lnum
+				&& curwin->w_cursor.col <= Insstart.col)
+			    || (curwin->w_cursor.col <= 0 && p_bs == 0))))))
+    {
+	beep_flush();
+	return FALSE;
+    }
+
+    stop_arrow();
+    in_indent = inindent(0);
+#ifdef CINDENT
+    if (in_indent)
+	can_cindent = FALSE;
+#endif
+#ifdef RIGHTLEFT
+    if (revins_on)	    /* put cursor after last inserted char */
+	inc_cursor();
+#endif
+
+    /*
+     * delete newline!
+     */
+    if (curwin->w_cursor.col <= 0)
+    {
+	lnum = Insstart.lnum;
+	if (curwin->w_cursor.lnum == Insstart.lnum
+#ifdef RIGHTLEFT
+			|| revins_on
+#endif
+				    )
+	{
+	    if (u_save((linenr_t)(curwin->w_cursor.lnum - 2),
+			       (linenr_t)(curwin->w_cursor.lnum + 1)) == FAIL)
+		return FALSE;
+	    --Insstart.lnum;
+	    Insstart.col = 0;
+	}
+	/*
+	 * In replace mode:
+	 * cc < 0: NL was inserted, delete it
+	 * cc >= 0: NL was replaced, put original characters back
+	 */
+	cc = -1;
+	if (State == REPLACE)
+	    cc = replace_pop();	    /* returns -1 if NL was inserted */
+	/*
+	 * In replace mode, in the line we started replacing, we only move the
+	 * cursor.
+	 */
+	if (State != REPLACE || curwin->w_cursor.lnum > lnum)
+	{
+	    temp = gchar_cursor();	/* remember current char */
+	    --curwin->w_cursor.lnum;
+	    (void)do_join(FALSE, TRUE);
+	    redraw_later(VALID_TO_CURSCHAR);
+	    if (temp == NUL && gchar_cursor() != NUL)
+		++curwin->w_cursor.col;
+	    /*
+	     * In REPLACE mode we have to put back the text that was replace
+	     * by the NL. On the replace stack is first a NUL-terminated
+	     * sequence of characters that were deleted and then the
+	     * characters that NL replaced.
+	     */
+	    if (State == REPLACE)
+	    {
+		/*
+		 * Do the next ins_char() in NORMAL state, to
+		 * prevent ins_char() from replacing characters and
+		 * avoiding showmatch().
+		 */
+		State = NORMAL;
+		/*
+		 * restore characters (blanks) deleted after cursor
+		 */
+		while (cc > 0)
+		{
+		    temp = curwin->w_cursor.col;
+		    ins_char(cc);
+		    curwin->w_cursor.col = temp;
+		    cc = replace_pop();
+		}
+		/* restore the characters that NL replaced */
+		replace_pop_ins();	/* will set State back to REPLACE */
+	    }
+	}
+	else
+	    dec_cursor();
+	did_ai = FALSE;
+    }
+    else
+    {
+	/*
+	 * Delete character(s) before the cursor.
+	 */
+#ifdef RIGHTLEFT
+	if (revins_on)		/* put cursor on last inserted char */
+	    dec_cursor();
+#endif
+	mincol = 0;
+						/* keep indent */
+	if (mode == BACKSPACE_LINE && curbuf->b_p_ai
+#ifdef RIGHTLEFT
+		&& !revins_on
+#endif
+			    )
+	{
+	    temp = curwin->w_cursor.col;
+	    beginline(BL_WHITE);
+	    if (curwin->w_cursor.col < (colnr_t)temp)
+		mincol = curwin->w_cursor.col;
+	    curwin->w_cursor.col = temp;
+	}
+
+	/*
+	 * Handle deleting one 'shiftwidth' or 'softtabstop'.
+	 */
+	if (	   mode == BACKSPACE_CHAR
+		&& ((p_sta && in_indent)
+		    || (curbuf->b_p_sts
+			&& (*(ml_get_cursor() - 1) == TAB
+			    || (*(ml_get_cursor() - 1) == ' '
+				&& (!*inserted_space_p
+				    || arrow_used))))))
+	{
+	    int		ts;
+	    colnr_t	vcol;
+	    int		want_vcol;
+	    int		extra = 0;
+
+	    *inserted_space_p = FALSE;
+	    if (p_sta)
+		ts = curbuf->b_p_sw;
+	    else
+		ts = curbuf->b_p_sts;
+	    /* compute the virtual column where we want to be */
+	    getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
+	    want_vcol = ((vcol - 1) / ts) * ts;
+	    /* delete characters until we are at or before want_vcol */
+	    while ((int)vcol > want_vcol
+		    && (cc = *(ml_get_cursor() - 1), vim_iswhite(cc)))
+	    {
+		dec_cursor();
+		/* TODO: calling getvcol() each time is slow */
+		getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
+		if (State == REPLACE)
+		{
+		    /* don't delete characters before the insert point when in
+		     * Replace mode */
+		    if (curwin->w_cursor.lnum != Insstart.lnum
+			    || curwin->w_cursor.col >= Insstart.col)
+		    {
+			if ((int)vcol < want_vcol)
+			{
+			    (void)del_char(FALSE);
+			    extra = 2;	/* don't pop too much */
+			}
+			else
+			    replace_do_bs();
+		    }
+		}
+		else
+		    (void)del_char(FALSE);
+	    }
+	    /* insert extra spaces until we are at want_vcol */
+	    while ((int)vcol < want_vcol)
+	    {
+		ins_str((char_u *)" ");
+		if (State == REPLACE && extra <= 1)
+		{
+		    if (extra)
+			replace_push_off(NUL);
+		    else
+			replace_push(NUL);
+		}
+		getvcol(curwin, &curwin->w_cursor, &vcol, NULL, NULL);
+		if (extra == 2)
+		    extra = 1;
+	    }
+	}
+
+	/*
+	 * Delete upto starting point, start of line or previous word.
+	 */
+	else do
+	{
+#ifdef RIGHTLEFT
+	    if (!revins_on) /* put cursor on char to be deleted */
+#endif
+		dec_cursor();
+
+	    /* start of word? */
+	    if (mode == BACKSPACE_WORD && !vim_isspace(gchar_cursor()))
+	    {
+		mode = BACKSPACE_WORD_NOT_SPACE;
+		temp = vim_iswordc(gchar_cursor());
+	    }
+	    /* end of word? */
+	    else if (mode == BACKSPACE_WORD_NOT_SPACE
+		    && (vim_isspace(cc = gchar_cursor())
+			    || vim_iswordc(cc) != temp))
+	    {
+#ifdef RIGHTLEFT
+		if (!revins_on)
+#endif
+		    inc_cursor();
+#ifdef RIGHTLEFT
+		else if (State == REPLACE)
+		    dec_cursor();
+#endif
+		break;
+	    }
+	    if (State == REPLACE)
+		replace_do_bs();
+	    else  /* State != REPLACE */
+	    {
+		(void)del_char(FALSE);
+#ifdef RIGHTLEFT
+		if (revins_chars)
+		{
+		    revins_chars--;
+		    revins_legal++;
+		}
+		if (revins_on && gchar_cursor() == NUL)
+		    break;
+#endif
+	    }
+	    /* Just a single backspace?: */
+	    if (mode == BACKSPACE_CHAR)
+		break;
+	} while (
+#ifdef RIGHTLEFT
+		revins_on ||
+#endif
+		(curwin->w_cursor.col > mincol &&
+		(curwin->w_cursor.lnum != Insstart.lnum ||
+		curwin->w_cursor.col != Insstart.col)));
+	did_backspace = TRUE;
+    }
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+    if (curwin->w_cursor.col <= 1)
+	did_ai = FALSE;
+    /*
+     * It's a little strange to put backspaces into the redo
+     * buffer, but it makes auto-indent a lot easier to deal
+     * with.
+     */
+    AppendCharToRedobuff(c);
+
+    /* If deleted before the insertion point, adjust it */
+    if (curwin->w_cursor.lnum == Insstart.lnum
+				       && curwin->w_cursor.col < Insstart.col)
+	Insstart.col = curwin->w_cursor.col;
+
+    return did_backspace;
+}
+
+#ifdef USE_MOUSE
+    static void
+ins_mouse(c)
+    int	    c;
+{
+    FPOS	tpos;
+
+# ifdef USE_GUI
+    /* When GUI is active, also move/paste when 'mouse' is empty */
+    if (!gui.in_use)
+# endif
+	if (!mouse_has(MOUSE_INSERT))
+	    return;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (do_mouse(NULL, c, BACKWARD, 1L, FALSE))
+    {
+	start_arrow(&tpos);
+# ifdef CINDENT
+	can_cindent = TRUE;
+# endif
+    }
+}
+#endif
+
+#ifdef USE_GUI
+    void
+ins_scroll()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (gui_do_scroll())
+    {
+	start_arrow(&tpos);
+# ifdef CINDENT
+	can_cindent = TRUE;
+# endif
+    }
+}
+
+    void
+ins_horscroll()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (gui_do_horiz_scroll())
+    {
+	start_arrow(&tpos);
+#ifdef CINDENT
+	can_cindent = TRUE;
+#endif
+    }
+}
+#endif
+
+    static void
+ins_left()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (oneleft() == OK)
+    {
+	start_arrow(&tpos);
+#ifdef RIGHTLEFT
+	/* If exit reversed string, position is fixed */
+	if (revins_scol != -1 && (int)curwin->w_cursor.col >= revins_scol)
+	    revins_legal++;
+	revins_chars++;
+#endif
+    }
+
+    /*
+     * if 'whichwrap' set for cursor in insert mode may go to
+     * previous line
+     */
+    else if (vim_strchr(p_ww, '[') != NULL && curwin->w_cursor.lnum > 1)
+    {
+	start_arrow(&tpos);
+	--(curwin->w_cursor.lnum);
+	coladvance(MAXCOL);
+	curwin->w_set_curswant = TRUE;	/* so we stay at the end */
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_home()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if ((mod_mask & MOD_MASK_CTRL))
+	curwin->w_cursor.lnum = 1;
+    curwin->w_cursor.col = 0;
+    curwin->w_curswant = 0;
+    start_arrow(&tpos);
+}
+
+    static void
+ins_end()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if ((mod_mask & MOD_MASK_CTRL))
+	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
+    coladvance(MAXCOL);
+    curwin->w_curswant = MAXCOL;
+    start_arrow(&tpos);
+}
+
+    static void
+ins_s_left()
+{
+    undisplay_dollar();
+    if (curwin->w_cursor.lnum > 1 || curwin->w_cursor.col > 0)
+    {
+	start_arrow(&curwin->w_cursor);
+	(void)bck_word(1L, 0, FALSE);
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_right()
+{
+    undisplay_dollar();
+    if (gchar_cursor() != NUL)
+    {
+	start_arrow(&curwin->w_cursor);
+	curwin->w_set_curswant = TRUE;
+	++curwin->w_cursor.col;
+#ifdef RIGHTLEFT
+	revins_legal++;
+	if (revins_chars)
+	    revins_chars--;
+#endif
+    }
+    /* if 'whichwrap' set for cursor in insert mode, may move the
+     * cursor to the next line */
+    else if (vim_strchr(p_ww, ']') != NULL
+	    && curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count)
+    {
+	start_arrow(&curwin->w_cursor);
+	curwin->w_set_curswant = TRUE;
+	++curwin->w_cursor.lnum;
+	curwin->w_cursor.col = 0;
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_s_right()
+{
+    undisplay_dollar();
+    if (curwin->w_cursor.lnum < curbuf->b_ml.ml_line_count
+	    || gchar_cursor() != NUL)
+    {
+	start_arrow(&curwin->w_cursor);
+	(void)fwd_word(1L, 0, 0);
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_up()
+{
+    FPOS	tpos;
+    linenr_t	old_topline;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    old_topline = curwin->w_topline;
+    if (cursor_up(1L, TRUE) == OK)
+    {
+	if (old_topline != curwin->w_topline)
+	    update_screen(VALID);
+	start_arrow(&tpos);
+#ifdef CINDENT
+	can_cindent = TRUE;
+#endif
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_pageup()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (onepage(BACKWARD, 1L) == OK)
+    {
+	start_arrow(&tpos);
+#ifdef CINDENT
+	can_cindent = TRUE;
+#endif
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_down()
+{
+    FPOS	tpos;
+    linenr_t	old_topline = curwin->w_topline;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (cursor_down(1L, TRUE) == OK)
+    {
+	if (old_topline != curwin->w_topline)
+	    update_screen(VALID);
+	start_arrow(&tpos);
+#ifdef CINDENT
+	can_cindent = TRUE;
+#endif
+    }
+    else
+	beep_flush();
+}
+
+    static void
+ins_pagedown()
+{
+    FPOS	tpos;
+
+    undisplay_dollar();
+    tpos = curwin->w_cursor;
+    if (onepage(FORWARD, 1L) == OK)
+    {
+	start_arrow(&tpos);
+#ifdef CINDENT
+	can_cindent = TRUE;
+#endif
+    }
+    else
+	beep_flush();
+}
+
+/*
+ * Handle TAB in Insert or Replace mode.
+ * Return TRUE when the TAB needs to be inserted like a normal character.
+ */
+    static int
+ins_tab()
+{
+    int	    i;
+    int	    temp;
+
+    if (Insstart_blank_vcol == MAXCOL && curwin->w_cursor.lnum == Insstart.lnum)
+	Insstart_blank_vcol = get_nolist_virtcol();
+    if (echeck_abbr(TAB + ABBR_OFF))
+	return FALSE;
+
+    i = inindent(0);
+#ifdef CINDENT
+    if (i)
+	can_cindent = FALSE;
+#endif
+
+    /*
+     * When nothing special, insert TAB like a normal character
+     */
+    if (!curbuf->b_p_et && !(p_sta && i) && !curbuf->b_p_sts)
+	return TRUE;
+
+    stop_arrow();
+    did_ai = FALSE;
+#ifdef SMARTINDENT
+    did_si = FALSE;
+    can_si = FALSE;
+    can_si_back = FALSE;
+#endif
+    AppendToRedobuff((char_u *)"\t");
+
+    if (p_sta && i)		    /* insert tab in indent */
+    {
+	if (State == REPLACE)	    /* delete a char first */
+	{
+	    i = gchar_cursor();
+	    if (i)
+		del_char(FALSE);
+	}
+	change_indent(INDENT_INC, 0, TRUE, i);
+	return FALSE;
+    }
+
+    /*
+     * p_et or p_sts is set: expand a tab into spaces
+     */
+    if (curbuf->b_p_sts)
+	temp = (int)curbuf->b_p_sts;
+    else
+	temp = (int)curbuf->b_p_ts;
+    temp -= get_nolist_virtcol() % temp;
+
+    /*
+     * Insert the first space with ins_char().	It will delete one char in
+     * replace mode.  Insert the rest with ins_str(); it will not delete any
+     * chars.
+     */
+    ins_char(' ');
+    while (--temp)
+    {
+	ins_str((char_u *)" ");
+	if (State == REPLACE)	    /* no char replaced */
+	    replace_push(NUL);
+    }
+
+    /*
+     * For 'softtabstop': Replace a number of spaces by a TAB, if possible.
+     */
+    if (curbuf->b_p_sts && !curbuf->b_p_et)
+    {
+	char_u	    *ptr;
+	FPOS	    fpos;
+	colnr_t	    want_vcol, vcol, tab_vcol;
+	int	    did_change = FALSE;
+	int	    ts = curbuf->b_p_ts;
+
+	/* find first white before the cursor */
+	ptr = ml_get_cursor();
+	fpos = curwin->w_cursor;
+	while (fpos.col > 0 && vim_iswhite(ptr[-1]))
+	{
+	    --fpos.col;
+	    --ptr;
+	}
+
+	/* In Replace mode, don't change characters before the insert point. */
+	if (State == REPLACE && fpos.lnum == Insstart.lnum
+						   && fpos.col < Insstart.col)
+	{
+	    ptr += Insstart.col - fpos.col;
+	    fpos.col = Insstart.col;
+	}
+
+	/* compute virtual column numbers of first white and cursor */
+	getvcol(curwin, &fpos, &vcol, NULL, NULL);
+	getvcol(curwin, &curwin->w_cursor, &want_vcol, NULL, NULL);
+
+	/* use as many TABs as possible */
+	tab_vcol = (want_vcol / ts) * ts;
+	while (vcol < tab_vcol)
+	{
+	    if (*ptr != TAB)
+	    {
+		*ptr = TAB;
+		did_change = TRUE;
+	    }
+	    ++fpos.col;
+	    ++ptr;
+	    vcol = ((vcol + ts) / ts) * ts;
+	}
+
+	if (did_change)
+	{
+	    /* may need to delete a number of the following spaces */
+	    i = want_vcol - vcol;
+	    ptr += i;
+	    fpos.col += i;
+	    i = curwin->w_cursor.col - fpos.col;
+	    if (i > 0)
+	    {
+		vim_memmove(ptr, ptr + i, STRLEN(ptr + i) + 1);
+		/* correct replace stack. */
+		if (State == REPLACE)
+		    for (temp = i; --temp >= 0; )
+			replace_join(want_vcol - vcol);
+	    }
+	    curwin->w_cursor.col -= i;
+	}
+    }
+
+    return FALSE;
+}
+
+/*
+ * Handle CR or NL in insert mode.
+ * Return TRUE when out of memory.
+ */
+    static int
+ins_eol(c)
+    int		c;
+{
+    int	    i;
+
+    if (echeck_abbr(c + ABBR_OFF))
+	return FALSE;
+    stop_arrow();
+    /*
+     * Strange Vi behaviour: In Replace mode, typing a NL will not delete the
+     * character under the cursor.  Only push a NUL on the replace stack,
+     * nothing to put back when the NL is deleted.
+     */
+    if (State == REPLACE)
+	replace_push(NUL);
+#ifdef RIGHTLEFT
+# ifdef FKMAP
+    if (p_altkeymap && p_fkmap)
+	fkmap(NL);
+# endif
+    /* NL in reverse insert will allways start in the end of
+     * current line. */
+    if (revins_on)
+	while (gchar_cursor() != NUL)
+	    ++curwin->w_cursor.col;
+#endif
+
+    AppendToRedobuff(NL_STR);
+    if (has_format_option(FO_RET_COMS))
+	fo_do_comments = TRUE;
+    i = open_line(FORWARD, TRUE, FALSE, old_indent);
+    old_indent = 0;
+    fo_do_comments = FALSE;
+#ifdef CINDENT
+    can_cindent = TRUE;
+#endif
+
+    return (!i);
+}
+
+#ifdef DIGRAPHS
+/*
+ * Handle digraph in insert mode.
+ * Returns character still to be inserted, or NUL when nothing remaining to be
+ * done.
+ */
+    static int
+ins_digraph()
+{
+    int	    c;
+    int	    cc;
+
+    if (redrawing() && !char_avail())
+    {
+	edit_putchar('?', TRUE);
+#ifdef SHOWCMD
+	add_to_showcmd_c(Ctrl('K'));
+#endif
+    }
+
+#ifdef USE_GUI_WIN32
+    dont_scroll = TRUE;		/* disallow scrolling here */
+#endif
+
+    /* don't map the digraph chars. This also prevents the
+     * mode message to be deleted when ESC is hit */
+    ++no_mapping;
+    ++allow_keys;
+    c = vgetc();
+    --no_mapping;
+    --allow_keys;
+    if (IS_SPECIAL(c))	    /* special key */
+    {
+#ifdef SHOWCMD
+	clear_showcmd();
+#endif
+	insert_special(c, TRUE, FALSE);
+	return NUL;
+    }
+    if (c != ESC)
+    {
+	if (redrawing() && !char_avail())
+	{
+	    if (charsize(c) == 1)
+		edit_putchar(c, TRUE);
+#ifdef SHOWCMD
+	    add_to_showcmd_c(c);
+#endif
+	}
+	++no_mapping;
+	++allow_keys;
+	cc = vgetc();
+	--no_mapping;
+	--allow_keys;
+	if (cc != ESC)
+	{
+	    AppendToRedobuff((char_u *)"\026");	/* CTRL-V */
+	    c = getdigraph(c, cc, TRUE);
+#ifdef SHOWCMD
+	    clear_showcmd();
+#endif
+	    return c;
+	}
+    }
+#ifdef SHOWCMD
+    clear_showcmd();
+#endif
+    return NUL;
+}
+#endif
+
+/*
+ * Handle CTRL-E and CTRL-Y in Insert mode: copy char from other line.
+ * Returns the char to be inserted, or NUL if none found.
+ */
+    static int
+ins_copychar(lnum)
+    linenr_t	lnum;
+{
+    int	    c;
+    int	    temp;
+    char_u  *ptr;
+
+    if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count)
+    {
+	beep_flush();
+	return NUL;
+    }
+
+    /* try to advance to the cursor column */
+    temp = 0;
+    ptr = ml_get(lnum);
+    validate_virtcol();
+    while ((colnr_t)temp < curwin->w_virtcol && *ptr)
+	temp += lbr_chartabsize(ptr++, (colnr_t)temp);
+
+    if ((colnr_t)temp > curwin->w_virtcol)
+	--ptr;
+    if ((c = *ptr) == NUL)
+	beep_flush();
+    return c;
+}
+
+#ifdef SMARTINDENT
+/*
+ * Try to do some very smart auto-indenting.
+ * Used when inserting a "normal" character.
+ */
+    static void
+ins_try_si(c)
+    int	    c;
+{
+    FPOS	*pos, old_pos;
+    char_u	*ptr;
+    int		i;
+    int		temp;
+
+    /*
+     * do some very smart indenting when entering '{' or '}'
+     */
+    if (((did_si || can_si_back) && c == '{') || (can_si && c == '}'))
+    {
+	/*
+	 * for '}' set indent equal to indent of line containing matching '{'
+	 */
+	if (c == '}' && (pos = findmatch(NULL, '{')) != NULL)
+	{
+	    old_pos = curwin->w_cursor;
+	    /*
+	     * If the matching '{' has a ')' immediately before it (ignoring
+	     * white-space), then line up with the start of the line
+	     * containing the matching '(' if there is one.  This handles the
+	     * case where an "if (..\n..) {" statement continues over multiple
+	     * lines -- webb
+	     */
+	    ptr = ml_get(pos->lnum);
+	    i = pos->col;
+	    if (i > 0)		/* skip blanks before '{' */
+		while (--i > 0 && vim_iswhite(ptr[i]))
+		    ;
+	    curwin->w_cursor.lnum = pos->lnum;
+	    curwin->w_cursor.col = i;
+	    if (ptr[i] == ')' && (pos = findmatch(NULL, '(')) != NULL)
+		curwin->w_cursor = *pos;
+	    i = get_indent();
+	    curwin->w_cursor = old_pos;
+	    set_indent(i, TRUE);
+	}
+	else if (curwin->w_cursor.col > 0)
+	{
+	    /*
+	     * when inserting '{' after "O" reduce indent, but not
+	     * more than indent of previous line
+	     */
+	    temp = TRUE;
+	    if (c == '{' && can_si_back && curwin->w_cursor.lnum > 1)
+	    {
+		old_pos = curwin->w_cursor;
+		i = get_indent();
+		while (curwin->w_cursor.lnum > 1)
+		{
+		    ptr = skipwhite(ml_get(--(curwin->w_cursor.lnum)));
+		    /* ignore empty lines and lines starting with
+		     * '#'.
+		     */
+		    if (*ptr != '#' && *ptr != NUL)
+			break;
+		}
+		if (get_indent() >= i)
+		    temp = FALSE;
+		curwin->w_cursor = old_pos;
+	    }
+	    if (temp)
+		shift_line(TRUE, FALSE, 1);
+	}
+    }
+
+    /*
+     * set indent of '#' always to 0
+     */
+    if (curwin->w_cursor.col > 0 && can_si && c == '#')
+    {
+	/* remember current indent for next line */
+	old_indent = get_indent();
+	set_indent(0, TRUE);
+    }
+}
+#endif
+
+/*
+ * Get the value that w_virtcol would have when 'list' is off.
+ * Unless 'cpo' contains the 'L' flag.
+ */
+    static colnr_t
+get_nolist_virtcol()
+{
+    colnr_t	virtcol;
+
+    if (curwin->w_p_list && vim_strchr(p_cpo, CPO_LISTWM) == NULL)
+    {
+	curwin->w_p_list = FALSE;
+	getvcol(curwin, &curwin->w_cursor, NULL, &virtcol, NULL);
+	curwin->w_p_list = TRUE;
+	return virtcol;
+    }
+    validate_virtcol();
+    return curwin->w_virtcol;
+}

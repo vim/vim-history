@@ -1,0 +1,53 @@
+" Vim
+" An example for a vimrc file.
+"
+" To use it, copy it to
+"     for Unix and OS/2:  ~/.vimrc
+"             for Amiga:  s:.vimrc
+"  for MS-DOS and Win32:  $VIM\_vimrc
+
+set nocompatible	" Use Vim defaults (much better!)
+set bs=2		" allow backspacing over everything in insert mode
+set ai			" always set autoindenting on
+set tw=78		" always limit the width of text to 78
+set backup		" keep a backup file
+set viminfo='20,\"50	" read/write a .viminfo file, don't store more
+			" than 50 lines of registers
+
+" Don't use Ex mode, use Q for formatting
+map Q gq
+
+augroup cprog
+  " Remove all cprog autocommands
+  au!
+
+  " When starting to edit a file:
+  "   For *.c and *.h files set formatting of comments and set C-indenting on.
+  "   For other files switch it off.
+  "   Don't change the order, it's important that the line with * comes first.
+  autocmd BufRead *       set formatoptions=tcql nocindent comments&
+  autocmd BufRead *.c,*.h set formatoptions=croql cindent comments=sr:/*,mb:*,el:*/,://
+augroup END
+
+augroup gzip
+  " Remove all gzip autocommands
+  au!
+
+  " Enable editing of gzipped files
+  "	  read:	set binary mode before reading the file
+  "		uncompress text in buffer after reading
+  "	 write:	compress file after writing
+  "	append:	uncompress file, append, compress file
+  autocmd BufReadPre,FileReadPre	*.gz set bin
+  autocmd BufReadPost,FileReadPost	*.gz '[,']!gunzip
+  autocmd BufReadPost,FileReadPost	*.gz set nobin
+  autocmd BufReadPost,FileReadPost	*.gz execute ":doautocmd BufReadPost " . %:r
+
+  autocmd BufWritePost,FileWritePost	*.gz !mv <afile> <afile>:r
+  autocmd BufWritePost,FileWritePost	*.gz !gzip <afile>:r
+
+  autocmd FileAppendPre			*.gz !gunzip <afile>
+  autocmd FileAppendPre			*.gz !mv <afile>:r <afile>
+  autocmd FileAppendPost		*.gz !mv <afile> <afile>:r
+  autocmd FileAppendPost		*.gz !gzip <afile>:r
+augroup END

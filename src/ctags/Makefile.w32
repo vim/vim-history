@@ -1,13 +1,18 @@
 # The most simplistic Makefile for Win32 (NT and Windows 95)
 
+# Borland C library directory
+BCLIBDIR = c:\bc45\lib\32bit
+
+SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
+
 ctags: ctags.exe
 
-ctags.exe: ctags.c
+ctags.exe: $(SOURCES)
 # if using Microsoft Visual C++
-	cl ctags.c -DWIN32 /link setargv.obj
+	cl $(SOURCES) -DWIN32 /Za /Fectags.exe /link setargv.obj
 # if using Borland C++
-#	bcc32 -DWIN32 ctags.c c:\bc45\lib\32bit\wildargs.obj
+#	bcc32 -DWIN32 -A -w-pia -w-par -ectags $(SOURCES) $(BCLIBDIR)\wildargs.obj
 
 clean:
-	- del ctags.obj
+	- del *.obj
 	- del ctags.exe

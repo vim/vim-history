@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# M. Ghassab Shiran
+# Email: shiran@scn.de
+#
+# setup-io.farsi script for Linux.
+#
+# Execute this script during the startup or anytime as a superuser.
+#
+# Put any local setup commands in here.
+#
+INITTY=/dev/tty[1-7]
+PATH=/sbin:/etc:/bin:/usr/sbin:/usr/bin
+#
+# kbd - Set the the console font and keyboard
+# set numlock and set metabit mode on tty1 .. tty8
+#
+
+        for tty in $INITTY
+        do
+#            setleds -D +num < $tty > /dev/null
+             setmetamode metabit < $tty > /dev/null
+        done
+#
+# Latin/Farsi keyboard/console
+#
+
+       setfont far-a01.f16
+       mapscrn trivial
+       loadkeys us
+#      enable mapping
+       for tty in $INITTY
+       do
+               echo -n -e "\\033(K" >$tty
+       done
+
+#---
+

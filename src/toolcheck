@@ -7,16 +7,14 @@
 retval=0
 reply="`sh -version 2>&1 < /dev/null`"
 case "$reply" in
-	GNU*1.14.3*)	
+	GNU*1.14.3*)
 		echo "- sh is	'$reply'";
 		echo "  CAUTION: This shell has a buggy 'trap' command.";
 		echo "           The configure script may fail silently.";
 		retval=1;
 		;;
-	GNU*1.14.2*|GNU*1.14.4*|GNU*1.13.*)
-		echo "- sh is	'$reply' - good.";
-		;;
-	GNU*)	echo "- sh is	'$reply' - (buggy again shell?).";
+	GNU*)
+		echo "- sh is	'$reply' - probably OK.";
 		;;
 	*)	;;
 esac
@@ -29,9 +27,9 @@ case "$reply" in
 		retval=1;
 		;;
 	GNU\ sed\ version\ 2.05|GNU\ sed\ version\ 2.03\ kevin)
-		echo "- sed is	'$reply' - good."; 
+		echo "- sed is	'$reply' - good.";
 		;;
-	GNU*)	echo "- sed is	'$reply'."; 
+	GNU*)	echo "- sed is	'$reply'.";
 		;;
 	*)	;;
 esac

@@ -1,0 +1,1251 @@
+*change.txt*    For Vim version 5.0.  Last modification: 1998 Feb 14
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+This file is about commands that can be used to delete or change text.  In
+this context a change is deleting some text and replacing it with other text,
+with one command.  They can all be undone.  The non-Ex commands can be
+repeated with the "." command.
+
+1. Deleting text		|deleting|
+2. Delete and insert		|delete-insert|
+3. Simple changes		|simple-change|		*changing*
+4. Complex changes		|complex-change|
+5. Copying and moving text	|copy-move|
+6. Formatting text		|formatting|
+7. Indenting C programs		|C-indenting|
+
+For inserting text see |insert.txt|.
+
+==============================================================================
+1. Deleting text					*deleting*
+
+["x]<Del>	or					*<Del>* *x* *dl*
+["x]x			Delete [count] characters under and after the cursor
+			[into register x] (not linewise).  Does the same as
+			"dl".  See |:fixdel| if the <Del> key does not do what
+			you want.  See |'whichwrap'| for deleting the <EOL>
+			(join lines).  {Vi does not support <Del>}
+
+							*X* *dh*
+["x]X			Delete [count] characters before the cursor [into
+			register x] (not linewise).  Does the same as "dh".
+			Also see |'whichwrap'|.
+
+							*d*
+["x]d{motion}		Delete text that is moved over [into register x].
+			See below for exceptions.
+
+							*dd*
+["x]dd			Delete [count] lines [into register x] (linewise).
+
+							*D*
+["x]D			Delete the characters under the cursor until the end
+			of the line and [count]-1 more lines [into register
+			x]; synonym for d$ (not linewise).
+
+{Visual}["x]x	or					*v_x* *v_d*
+{Visual}["x]d		Delete the highlighted text [into register x] (see
+			the chapter on Visual mode |Visual-mode|).  {not in
+			Vi}
+
+{Visual}["x]X	or					*v_X* *v_D*
+{Visual}["x]D		Delete the highlighted lines [into register x] (see
+			the chapter on Visual mode |Visual-mode|).  In Visual
+			block mode "D" deletes the highlighted text, plus all
+			text until the end of the line.  {not in Vi}
+
+							*:d* *:delete*
+:[range]d[elete] [x]	Delete [range] lines (default: current line) [into
+			register x].
+
+:[range]d[elete] [x] {count}
+			Delete {count} lines, starting with [range]
+			(default: current line |cmdline-ranges|) [into
+			register x].
+
+These commands delete text.  They can be repeated with the "." command
+(except ":d") and undone.  Use Visual mode to delete blocks of text.  See
+|registers| for an explanation of registers.
+
+An exception for the d{motion} command: If the motion is not linewise, the
+start and end of the motion are not in the same line and before the start
+and after the end are only blanks, the delete becomes linewise.  This means
+that the blank line that would remain is also deleted.
+
+When trying to delete an empty region of text (e.g., "d0" in the first
+column), this is an error when the 'E' flag is present in 'cpoptions'.
+
+							*J*
+J			Join [count] lines, with a minimum of two lines.
+
+							*v_J*
+{Visual}J		Join the highlighted lines, with a minimum of two
+			lines.  {not in Vi}
+
+							*:j* *:join*
+:[range]j[oin][!]	Join [range] lines.  Same as "J", except when [!] is
+			given, then no spaces will be inserted or deleted.
+			When [range] is given and the start and end of the
+			range are equal, nothing happens.  Default is to join
+			two lines.
+
+:[range]j[oin][!] {count}
+			Join {count} lines, starting with [range] (default:
+			current line |cmdline-ranges|).  Same as "J", except
+			when [!] is given, then no spaces will be inserted
+			or deleted.
+
+These commands delete the <EOL> between lines.  This has the effect of
+joining them into one line.  They can be repeated (except ":j") and undone.
+
+One space is inserted in place of the <EOL>, unless there is trailing white
+space or the next line started with a ')'.  If the next line has leading white
+space it is deleted first.  If the 'joinspaces' option is on, two spaces are
+inserted after a '.', '!' and '?'.  If the 'j' flag is included in
+'cpoptions', this is only done after a '.'.
+
+
+==============================================================================
+2. Delete and insert					*delete-insert*
+
+							*R*
+R			Enter Replace mode: Each character you type replaces
+			an existing character, starting with the character
+			under the cursor.  Repeat the entered text [count]-1
+			times.
+
+							*c*
+["x]c{motion}		Delete {motion} text [into register x] and start
+			insert.  When the 'E' flag is present in 'cpoptions',
+			it is an error if there is no text to delete (e.g.,
+			with "cTx" when the cursor is just after an 'x').
+			Insert mode is not started then.  This is Vi
+			compatible.  Without the 'E' flag, the "c" command
+			always starts insert mode, also there is no text to
+			delete.
+
+							*cc*
+["x]cc			Delete [count] lines [into register x] and start
+			insert (linewise).  If 'autoindent' is on, preserve
+			the indent of the first line.
+
+							*C*
+["x]C			Delete from the cursor position to the end of the
+			line and [count]-1 more lines [into register x], and
+			start insert.  Synonym for c$ (not linewise).
+
+							*s*
+["x]s			Delete [count] characters [into register x] and start
+			insert (s stands for Substitute).  Synonym for "cl"
+			(not linewise).
+
+							*S*
+["x]S			Delete [count] lines [into register x] and start
+			insert.  Synonym for "cc" (linewise).
+
+{Visual}["x]c	or
+{Visual}["x]s	or					*v_c* *v_r* *v_s*
+{Visual}["x]r		Delete the highlighted text [into register x] and
+			start insert (see the chapter on Visual mode
+			|Visual-mode|).  {not in Vi}
+
+{Visual}["x]C	or
+{Visual}["x]S	or					*v_C* *v_R* *v_S*
+{Visual}["x]R		Delete the highlighted lines [into register x] and
+			start insert (see the chapter on Visual mode
+			|Visual-mode|).  {not in Vi}
+
+Notes:
+- You can end Insert and Replace mode with <Esc>.
+- See the section "Insert and Replace mode" |mode-ins-repl| for the other
+  special characters in these modes.
+- The effect of [count] takes place after Insert or Replace mode is exited.
+- When the 'cpoptions' option contains '$', and the change is within one line,
+  the text is not directly deleted, but a '$' is put at the last deleted
+  character.
+
+See |registers| for an explanation of registers.
+
+Replace mode is just like Insert mode, except that for every character you
+enter, one character is deleted.  If the end of a line is reached, further
+characters are appended (just like Insert mode).  In Replace mode the
+backspace key restores the original text (if there was any) (see section
+"Insert and Replace mode" |mode-ins-repl|).
+
+						*cw* *cW*
+Special case: "cw" and "cW" are treated like "ce" and "cE" if the cursor is
+on a non-blank.  This is because "cw" is interpreted as change-word, and a
+word does not include the following white space.  {Vi: "cw" when on a blank
+followed by other blanks changes only the first blank; this is probably a
+bug, because "dw" deletes all the blanks}
+
+							*:c* *:change*
+:{range}c[hange]	Replace lines of text with some different text.
+			Type a line containing only "." to stop replacing.
+			If the {range} is missing, the current line will
+			be replaced with the new text.
+
+==============================================================================
+3. Simple changes					*simple-change*
+
+							*r*
+r{char}			Replace the character under the cursor with {char}.
+			If {char} is a <CR> or <NL> the character will be
+			replaced with a line break.  Replacing with a real
+			<CR> can be done by using CTRL-V <CR>.  CTRL-V <NL>
+			will replace with a <Nul>.  {Vi: CTRL-V <CR> still
+			replaces with a line break, cannot replace something
+			with a <CR>}
+			If a [count] is given that many characters will be
+			replaced with [count] {char}s.  When {char} is a <CR>
+			or <NL> only one is inserted.  "5r<CR>" replaces five
+			characters with a single line break;
+			When replacing with a <CR> or <NL> autoindenting is
+			done.  This works just like deleting the characters
+			that are replaced and then doing "i<CR><Esc>".
+
+							*~*
+~			'notildeop' option: switch case of the character
+			under the cursor and move the cursor to the right.
+			If a [count] is given do that many characters {Vi:
+			no count}
+
+~{motion}		'tildeop' option: switch case of {motion} text.  {Vi:
+			tilde cannot be used as an operator}
+
+							*g~*
+g~{motion}		switch case of {motion} text.  {Not in Vi}
+
+							*v_~*
+{Visual}~		switch case of highlighted text (see the chapter on
+			Visual mode |Visual-mode|).  {not in Vi}
+
+							*v_U*
+{Visual}U		Make highlighted text uppercase (see the chapter on
+			Visual mode |Visual-mode|).  {not in Vi}
+
+							*gU*
+gU{motion}		Make {motion} text uppercase.  {not in Vi}
+
+							*v_u*
+{Visual}u		Make highlighted text lowercase (see the chapter on
+			Visual mode |Visual-mode|).  {not in Vi}
+
+							*gu*
+gu{motion}		Make {motion} text lowercase.  {not in Vi}
+
+							*CTRL-A*
+CTRL-A			Add [count] to the number at or after the cursor.
+			{not in Vi}
+
+							*CTRL-X*
+CTRL-X			Subtract [count] from the number at or after the
+			cursor.  {not in Vi}
+
+The CTRL-A and CTRL-X commands work for (signed) decimal numbers and
+unsigned octal and hexadecimal numbers.  This depends on the 'nrformats'
+option.
+- When 'nrformats' includes "hex", numbers starting with '0x' or '0X' are
+  assumed to be hexadecimal.  To decide whether the hexadecimal number should
+  be printed uppercase or not, the case of the rightmost letter in the number
+  is considered.  If there is no letter in the current number, the previously
+  detected case is used.
+- When 'nrformats' includes "octal", numbers starting with a '0' are
+  considered to be octal.  Other numbers are decimal and may be preceded with
+  a minus sign.
+If the cursor is on a number, that one will be used.  Otherwise the number
+right of the cursor will be used.
+
+For octal and hexadecimal numbers with leading zeros, the number of
+characters in the number remains equal (when possible).  When doing CTRL-A on
+"0077" it becomes "0100", CTRL-X on "0x0100" becomes "0x00ff".  Note that
+when there are no leading zeros this does not work, so CTRL-X on "0x100"
+results in "0xff".  Note that decimal numbers with leading zeros are
+impossible when 'nrformats' includes "octal", because they are recognized as
+octal numbers.
+
+The CTRL-A command is very useful in a macro.  Example: How to make a
+numbered list.
+
+1. Create the first entry.  The entry should start with a number.
+2. qa	     - start recording into buffer 'a'
+3. Y	     - yank the entry
+4. p	     - put a copy of the entry below the first one
+5. CTRL-A    - increment the number
+6. q	     - stop recording
+7. <count>@a - repeat the yank, put and increment <count> times
+
+							*<*
+<{motion}		Shift the {motion} lines one 'shiftwidth' leftwards.
+
+							*<<*
+<<			Shift [count] lines one 'shiftwidth' leftwards.
+
+							*v_<*
+{Visual}[count]<	Shift the highlighted lines [count] 'shiftwidth'
+			leftwards (see the chapter on Visual mode
+			|Visual-mode|).  {not in Vi}
+
+							*>*
+ >{motion}		Shift {motion} lines one 'shiftwidth' rightwards.
+
+							*>>*
+ >>			Shift [count] lines one 'shiftwidth' rightwards.
+
+							*v_>*
+{Visual}[count]>	Shift the highlighted lines [count] 'shiftwidth'
+			rightwards (see the chapter on Visual mode
+			|Visual-mode|).  {not in Vi}
+
+							*:<*
+:[range]<		Shift [range] lines one 'shiftwidth' left.  Repeat '<'
+			for shifting multiple 'shiftwidth's.
+
+:[range]< {count}	Shift {count} lines one 'shiftwidth' left, starting
+			with [range] (default current line |cmdline-ranges|).
+			Repeat '<' for shifting multiple 'shiftwidth's.
+
+:[range]le[ft] [indent]	left align lines in [range].  Sets the indent in the
+			lines to [indent] (default 0).  {not in Vi}
+
+							*:>*
+:[range]>		Shift {count} [range] lines one 'shiftwidth' right.
+			Repeat '>' for shifting multiple 'shiftwidth's.
+
+:[range]> {count}	Shift {count} lines one 'shiftwidth' right, starting
+			with [range] (default current line |cmdline-ranges|).
+			Repeat '>' for shifting multiple 'shiftwidth's.
+
+The ">" and "<" commands are handy for changing the indent within programs.
+The size of the white space which is inserted or deleted can be set with the
+'shiftwidth' option.  Normally the 'shiftwidth' option is 8, but you can set it
+to, say, 3 to make smaller indents.  The shift leftwards stops when there is no
+indent.  The shift right does not do anything with empty lines.
+
+If the 'shiftround' option is on, the indent is rounded to a multiple of
+'shiftwidth'.
+
+If the 'smartindent' option is on, or 'cindent' is on and 'cinkeys' contains
+'#', lines starting with '#' will not be shifted right (they are supposed to
+be C preprocessor lines that must stay in column 1).
+
+When the 'expandtab' option is off (this is the default) <Tab>s are used as
+much as possible to make the indent.  You can use ">><<" to replace an indent
+made out of spaces with the same indent made out of <Tab>s (and a few
+spaces if necessary).  If the 'expandtab' option is on, only spaces are
+used.  Then you can use ">><<" to replace <Tab>s in the indent by spaces (or
+use ":retab!").
+
+To move a line several 'shiftwidth's use the Visual mode or the ":"
+commands.  For example:
+>	Vjj4>		move three lines 4 indents to the right
+>	:<<<		move current line 3 indents to the left
+>	:>> 5		move 5 lines 2 indents to the right
+>	:5>>		move line 5 2 indents to the right
+
+==============================================================================
+4. Complex changes					*complex-change*
+
+							*!* *filter*
+!{motion}{filter}	Filter {motion} text through the external program
+			{filter}.
+
+							*!!*
+!!{filter}		Filter [count] lines through the external program
+			{filter}.
+
+							*v_!*
+{Visual}!{filter}	Filter the highlighted lines through the external
+			program {filter} (see the chapter on Visual mode
+			|Visual-mode|).  {not in Vi}
+
+:{range}![!]{filter} [!][arg]				*:range!*
+			Filter {range} lines through the external program
+			{filter}.  The optional bangs are replaced with the
+			latest given command.  The optional [arg] is
+			appended.  The output of the filter command is
+			temporaryly saved in a file and then read into the
+			buffer.  The 'shellredir' option is used to write the
+			output of the filter in the temporary file.
+
+							*=*
+={motion}		Filter {motion} lines through the external program
+			given with the 'equalprg' option.  When the 'equalprg'
+			option is empty (this is the default), use the
+			internal formatting function to set the indent of each
+			line |C-indenting|.
+
+							*==*
+==			Filter [count] lines through the external program
+			given with the 'equalprg' option.  When the 'equalprg'
+			option is empty (this is the default), use the
+			internal formatting function |C-indenting|.
+
+							*v_=*
+{Visual}=		Filter the highlighted lines through the external
+			program given with the 'equalprg' option.  When the
+			'equalprg' option is empty (this is the default),
+			use the internal formatting function |C-indenting|.
+			(see the chapter on Visual mode |Visual-mode|).  {not
+			in Vi}
+
+A filter is a program that accepts text at standard input, changes it in some
+way, and sends it to standard output.  The commands above can be used to send
+some text through a filter.  An example of a filter is "sort", which sorts
+lines alphabetically.  The "indent" program is used to pretty indent C programs
+(you need a version of indent that works like a filter, not all versions do
+that).  The shell, given with the 'shell' option, is used to execute the
+command (See also the 'shelltype' option).  The filter commands can be redone
+with ".".  There cannot be a comment (with '"') after the ":!" command.
+
+
+						*:s* *:substitute*
+:[range]s[ubstitute]/{pattern}/{string}/[c][e][g][p][r] [count]
+			For each line in [range] replace a match of {pattern}
+			with {string}.  See |:s_flags| for the flags.
+
+:[range]s[ubstitute] [c][e][g][r] [count]
+:[range]&[c][e][g][r] [count]			*:&*
+			Repeat last :substitute with same search pattern and
+			substitute string, but without the same flags.  Extra
+			flags may be added (see |:s_flags|).
+
+:[range]~[c][e][g][r] [count]			*:~*
+			Repeat last substitute with same substitute string
+			but with last used search pattern.  This is like
+			"&r".  See |:s_flags| for the flags.
+
+						*&*
+&			Synonym for ":s//~/" (repeat last substitute).
+
+							*:s_flags*
+The arguments that can be given to the substitute commands:
+[c]	Each substitute has to be confirmed.  The cursor is positioned on the
+	matching string.  You can type:				*:s_c*
+	    'y'	    to substitute this match
+	    'n'	    to skip this match
+	    <Esc>   to skip this match
+	    'a'	    to substitute this and all remaining matches {not in Vi}
+	    'q'	    to quit substituting {not in Vi}
+	    CTRL-E  to scroll the screen up {not in Vi}
+	    CTRL-Y  to scroll the screen down {not in Vi}.
+	If the 'edcompatible' option is on the [c] flag is remembered and
+	toggled each time it is used.  It is reset when a new search pattern
+	is given.
+[e]     When the search pattern fails, do not issue an error message and, in
+        particular, continue in maps as if no error occurred.  This is most
+	useful to avoid the "No match" error to break a mapping.  Some error
+	messages are not suppressed:
+		Regular expressions can't be delimited by letters
+		\ should be followed by /, ? or &
+		No previous substitute regular expression
+		Trailing characters
+		Interrupted
+[g]	All occurrences in the line are replaced.  Otherwise only the first
+	occurrence in the line is replaced.  If the 'edcompatible' option is
+	on this flag is remembered and toggled each time it is used.  It is
+	reset when a new search pattern is given.  If the 'gdefault' option
+	is on, this flag is default on, give the [g] to switch it off.
+[p]	Print the line containing the last substitute.
+[r]	When the search pattern is empty use the previously used search
+	pattern instead of the search pattern from the last substitute or
+	":global".  If the last command that did a search was a substitute or
+	":global" there is no effect.  If the last command was a search
+	command, like "/", the pattern from that command is used.
+
+
+[count] That many lines are are searched, starting with the last line number
+	in [range] (default current line |cmdline-ranges|).
+
+If the {pattern} for the substitute command is empty, the pattern from the
+last substitute or ":global" command is used.  With the [r] flag the pattern
+from the last substitute, ":global" or search command is used.
+
+For compatibility with Vi these two execptions are allowed:
+"\/{string}/" and "\?{string}?" do the same as "//{string}/r".
+"\&{string}&" does the same as "//{string}/".
+
+Instead of the '/' which surrounds the pattern and replacement string, you
+can use any other character, but not an alphanumeric character, '\', '"' or
+'|'.  This is useful if you want to include a '/' in the search pattern or
+replacement string.  Example:
+>	:s+/+//+
+
+For the definition of a pattern see |pattern|.
+
+Some characters in {string} have a special meaning:
+
+magic	nomagic	  action    ~
+  &	  \&	  replaced with the whole matched pattern
+ \&	   &	  replaced with &
+      \0	  replaced with the whole matched pattern
+      \1	  replaced with the matched pattern in the first pair of ()
+      \2	  replaced with the matched pattern in the second pair of ()
+      ..	  ..
+      \9	  replaced with the matched pattern in the ninth pair of ()
+  ~	  \~	  replaced with the {string} of the previous substitute
+ \~	   ~	  replaced with ~ 
+      \u	  next character made uppercase
+      \U	  following characters made uppercase
+      \l	  next character made lowercase
+      \L	  following characters made lowercase
+      \e	  end of /u, /U, /l and /L (NOTE: not <Esc>!)
+      \E	  end of /u, /U, /l and /L
+      <CR>	  split line in two at this point
+      \r	  idem
+  CTRL-V <CR>	  insert a carriage-return (CTRL-M)
+      \n	  <NL> (does NOT break the line)
+      \b	  <BS>
+      \t	  <Tab>
+
+Examples:
+>  :s/a\|b/xxx\0xxx/g	         modifies "a b"	     in "xxxaxxx xxxbxxx"
+>  :s/\([abc]\)\([efg]\)/\2\1/g  modifies "af fa bg" in "fa fa gb"
+>  :s/abcde/abc^Mde/	         modifies "abcde"    in "abc", "de" (two lines)
+>  :s/$/^V^M/		         modifies "abcde"    in "abcde^M"
+
+Note: To insert a ^M you have to type CTRL-V <CR>.  To insert a ^V you have
+to type CTRL-V CTRL-V.  So to insert the ^V^M in the last example you have to
+type CTRL-V CTRL-V CTRL-V <CR>.
+
+Because CTRL-V <CR> inserts a <CR>, it is impossible to insert a CTRL-V just
+in front of a line break.  You will have to split it up in two parts:
+>  :s/foo/^Vxxxx/
+>  :s/xxxx/^M/
+
+When using parentheses in combination with '|', like in \([ab]\)\|\([cd]\),
+either the first or second pattern in parentheses did not match, so either
+\1 or \2 is empty.  Example:
+>  :s/\([ab]\)\|\([cd]\)/\1x/g   modifies "a b c d"  in "ax bx x x"
+
+							*:ret* *:retab*
+:[range]ret[ab][!] [new_tabstop]
+			All sequences of white-space containing a tab are
+			replaced with new strings of white-space using the new
+			tabstop value given.  If no new tabstop size is
+			given, the current value of 'tabstop' is used.  With
+			!, strings of normal spaces will also be replaced with
+			tabs where appropriate.  With 'expandtab' on, all
+			tabs will be replaced with the appropriate number of
+			spaces.  This command sets 'tabstop' to the new
+			value given, and if performed on the whole file,
+			which is default, should not make any visible
+			change.  Careful: In a C program a <Tab> inside a
+			string will also be affected.  Use "\t" to avoid this
+			(that's a good habit anyway).
+			{not in Vi}
+			Not available when |+ex_extra| feature was disabled at
+			compile time.
+
+							*retab-example*
+Example for using autocommands and ":retab", to edit a file which is stored
+with tabstops at 8, but is edited with tabstop set at 4.  Warning: white space
+inside strings can change!  Also see 'softtabstop' option.
+
+>  auto BufReadPost	*.xx	retab! 4
+>  auto BufWritePre	*.xx	retab! 8
+>  auto BufWritePost	*.xx	retab! 4
+>  auto BufNewFile	*.xx 	set ts=4
+
+==============================================================================
+5. Copying and moving text				*copy-move*
+
+							*quote*
+"<a-zA-Z0-9.%#:-">	Use register <a-zA-Z0-9.%#:-"> for next delete, yank
+			or put (use uppercase character to append with
+			delete and yank) (<.%#:> only work with put).
+
+							*:reg* *:registers*
+:reg[isters]		Display the contents of all numbered and named
+			registers.  {not in Vi}
+
+:reg[isters] {arg}	Display the contents of the numbered and named
+			registers that are mentioned in {arg}.  For example:
+>				:dis 1a
+			to display registers '1' and 'a'.  Spaces are allowed
+			in {arg}.  {not in Vi}
+
+							*:di* *:display*
+:di[splay] [arg]	Same as :registers.  {not in Vi}
+
+							*y* *yank*
+["x]y{motion}		Yank {motion} text [into register x].  When no
+			characters are to be yanked (e.g., "y0" in column 1),
+			this is an error when the 'E' flag is included in
+			'cpoptions'.
+
+							*yy*
+["x]yy			Yank [count] lines [into register x] (linewise).
+
+							*Y*
+["x]Y			yank [count] lines [into register x] (synonym for
+			yy, linewise).  If you like "Y" to work from the
+			cursor to the end of line (which is more logical,
+			but not Vi-compatible) use ":map Y y$".
+
+							*v_y*
+{Visual}["x]y		Yank the highlighed text [into register x] (see the
+			chapter on Visual mode |Visual-mode|).  {not in Vi}
+
+							*v_Y*
+{Visual}["x]Y		Yank the highlighted lines [into register x] (see the
+			chapter on Visual mode |Visual-mode|).  {not in Vi}
+
+							*:y* *:yank*
+:[range]y[ank] [x]	Yank [range] lines [into register x].
+
+:[range]y[ank] [x] {count}
+			Yank {count} lines, starting with last line number
+			in [range] (default: current line |cmdline-ranges|),
+			[into register x].
+
+							*p* *put*
+["x]p			Put the text [from register x] after the cursor
+			[count] times.  {Vi: no count}
+
+["x]P		    or					*P* *<MiddleMouse>*
+["x]<MiddleMouse>	Put the text [from register x] before the cursor
+			[count] times.  Using the mouse only works when
+			'mouse' contains 'n' or 'a'.  {Vi: no count}
+
+							*:pu* *:put*
+:[line]pu[t] [x]	Put the text [from register x] after [line] (default
+			current line).
+			The register can also be '=', in which case it can be
+			followed by an expression.  The expression continues
+			until the end of the command.  The '|' and '"'
+			characters need to be escaped to avoid them being
+			interpreted as the end of the command.  Example:
+>  :put ='path' . \",/test\"
+			If the '=' is not followed by an expression, the
+			last expression is used.  You can see it with
+			":dis =".
+
+:[line]pu[t]! [x]	Put the text [from register x] before [line] (default
+			current line).
+
+["x]]p		    or					*]p* *]<MiddleMouse>*
+["x]]<MiddleMouse>  	Like "p", but adjust the indent to the current line.
+			Using the mouse only works when 'mouse' contains 'n'
+			or 'a'.  {not in Vi}
+
+["x][P		    or					*[P*
+["x]]P		    or					*]P*
+["x][p		    or					*[p* *[<MiddleMouse>*
+["x][<MiddleMouse>	Like "P", but adjust the indent to the current line.
+			Using the mouse only works when 'mouse' contains 'n'
+			or 'a'.  {not in Vi}
+
+These commands can be used to copy text from one place to another.  This is
+done by first getting the text into a register with a yank, delete or change
+command.  The register can then be inserted with a put command.  All registers
+are kept when changing files.  Thus you can also use this to move text from
+one file to another (the CTRL-^ command is a quick way to toggle between two
+files).
+
+				*linewise-register* *characterwise-register*
+The put commands can be repeated with "." (except for :put) and undone.  If
+the command that was used to get the text into the register was linewise, the
+text will be inserted below ("p") or above ("P") the line where the cursor
+is.  Otherwise the text will be inserted after ("p") or before ("P") the
+cursor.  With the ":put" command the text will always be inserted in the next
+line.  You can exchange two characters with the command sequence "xp".  You
+can exchange two lines with the command sequence "ddp".  You can exchange
+two words with the command sequence "deep" (start with the cursor in the
+blank space before the first word).  The "']" or "`]" command can be used
+after the put command to move the cursor to the end of the inserted text,
+"'[" or "`[" to move the cursor to the start.
+
+							*blockwise-register*
+If the command that was used to get the text into the register used
+blockwise Visual mode, the block of text will be inserted before ("P") or
+after ("p") the cursor column, in the current and next lines.  Vim will make
+the whole block of text start in the same column.  Thus the inserted text
+looks the same as when it was yanked or deleted.  Some <Tab> characters may
+be replaced with spaces to make this happen.  However, if the width of the
+block is not a multiple of a <Tab> width and the text after the inserted
+block contains <Tab>s, that text may be misaligned.
+
+Note that after a yank command, the cursor is left on the first yanked
+character that is closest to the start of the buffer.  This means that "yl"
+doesn't move the cursor, but "yh" moves the cursor one character left.
+Rationale:	In Vi the "y" command followed by a backwards motion would
+		sometimes not move the cursor to the first yanked character,
+		because redisplaying was skipped.  In Vim it always moves to
+		the first character, like specified by Posix.
+
+There are seven types of registers:			*registers*
+1. The unnamed register ""			*quote_quote* *quotequote*
+2. 10 numbered registers "0 to "9		*quote_number* *quote0*
+3. The small delete register "-			*quote_-* *quote-*
+4. 26 named registers "a to "z or "A to "Z	*quote_alpha* *quotea*
+5. four read-only registers ":, "., "% and "#
+6. the expression register "=			*quote_=* *quote=*
+7. The selection regiter "*
+
+1. Unnamed register
+This register is used to place all text deleted with the "d", "c", "s", "x"
+commands or copied with the yank "y" command, regardless of whether or not a
+specific register was used (e.g.  "xdd).  The contents of this register are
+used by any put command (p or P) which does not specify a register.
+Additionally it can be accessed by the name '"'.  This means you have to type
+two double quotes.  {Vi: register contents lost when changing files, no '"'}
+
+2. Numbered registers				*quote1* *quote2* *quote9*
+These are filled with yank and delete commands.  Numbered register 0 is filled
+with the last yank command, unless another register was specified with ["x].
+Numbered register 1 is filled with the text that was deleted by each delete or
+change command, unless another register was specified or the text is less than
+one line (text deleted with "x" or "dw" will be put in the small delete
+register).  The contents of register 1 are put in 2, 2 in 3, and so forth.
+The contents of register 9 are lost.  {Vi: numbered register contents are lost
+when changing files; register 0 does not exist}
+
+3. Small delete register
+This one is filled with delete commands that delete less than one line, except
+when a register was specified with ["x].
+
+4. Named registers
+These are only filled when you say so.  They are named 'a' to 'z' normally.
+If you use an uppercase letter, the same registers as with the lower case
+letter is used, but the text is appended to the previous register contents.
+With a lower case letter the previous contents are lost.
+
+5. Read-only registers
+These are '%', '#', ':' and '.'.  They can only be used with the commands "p",
+"P", ":put" and with CTRL-R.
+							*quote_.* *quote.*
+	".	Contains the last inserted text (the same as what is inserted
+		with the insert mode commands CTRL-A and CTRL-@).  Note: this
+		doesn't work with CTRL-R on the command line.  It works a bit
+		differently, like inserting the text instead of putting it
+		('textwidth' and other options affect what is inserted).
+							*quote_%* *quote%*
+	"%	Contains the name of the current file.
+							*quote_#* *quote#*
+	"#	Contains the name of the alternate file.
+							*quote_:* *quote:*
+	":	Contains the last command line.  It can be used with "@:",
+		this repeats the last command line.
+
+6. Expression register
+This is not really a register that stores text, but is a way to use an
+expression where a register can be used.  It is read-only, you cannot put text
+into the expression register.  After the '=', the cursor moves to the command
+line, where you can enter any expression (see |expression|).  All normal
+command line editing commands are available, including a special history for
+expressions.  When you end the command line by typing <CR>, the result of the
+expression is computed.  If you end it with <Esc>, the expression is
+abandoned.  If the entered command line is empty, the previous expression is
+used (like with the "/" command).
+
+7. Selection register
+This is used for storing and retrieving the selected text for the GUI.  See
+|quotestar|.
+
+If you use a put command without specifying a register, the register that
+was last written to is used (this is also the contents of the unnamed
+register).  If you are confused, use the ":dis" command to find out what will
+be put (all named and numbered registers are displayed; the unnamed register
+is labelled '"').
+
+The next three commands always work on whole lines.
+
+:[range]co[py] {address}				*:co* *:copy*
+			Copy the lines given by [range] to below the line
+			given by {address}.
+
+							*:t*
+:t			Synonym for copy.
+
+:[range]m[ove] {address}				*:m* *:move*
+			Move the lines given by [range] to below the line
+			given by {address}.
+
+==============================================================================
+6. Formatting text					*formatting*
+
+:[range]ce[nter] [width]				*:ce* *:center*
+			Center lines in [range] between [width] columns
+			(default 'textwidth' or 80 when 'textwidth' is 0).
+			{not in Vi}
+			Not available when |+ex_extra| feature was disabled at
+			compile time.
+
+:[range]ri[ght] [width]					*:ri* *:right*
+			right align lines in [range] at [width] columns
+			(default 'textwidth' or 80 when 'textwidth' is 0).
+			{not in Vi}
+			Not available when |+ex_extra| feature was disabled at
+			compile time.
+
+							*:le* *:left*
+:[range]le[ft] [indent]	left align lines in [range].  Sets the indent in the
+			lines to [indent] (default 0).  {not in Vi}
+			Not available when |+ex_extra| feature was disabled at
+			compile time.
+
+							*gq*
+gq{motion}		Format the lines that were moved over.  The length of
+			each line will be restricted to the width given with
+			the 'textwidth' option.  See below.  If the
+			'textwidth' option is 0, the width of the screen is
+			used (with a maximum of 79).  {not in Vi}
+			NOTE: The "Q" command was formerly used for this.  If
+			you still want to use "Q" for formatting, use this
+			mapping: ":nnoremap Q gq"
+
+							*v_gq*
+{Visual}gq		Format the highlighted text.  (see the chapter on
+			Visual mode |Visual-mode|).  {not in Vi}
+			NOTE: The "Q" command was formerly used for this.
+			If you still want to use "Q" for formatting the
+			highlighted text, use this mapping: ":vnoremap Q gq"
+
+Example: To format the current paragraph use
+>	gqap
+
+After the "gq" command the cursor is left in the line where the motion command
+would take the cursor.  This allows for the formatting to be repeated with
+".".  This works fine with "gqj" (format current and next line) and "gq}"
+(format until end of paragraph).  Note: When 'formatprg' is set, the cursor is
+left on the first formatted line (like when using a filter command).
+
+If the 'autoindent' option is on, the indent of the first line is used for
+the following lines.
+
+Empty lines are left unchanged (but lines with spaces or tabs are!).
+
+The 'formatprg' option can be set to the name of an external program, which
+will be used instead of the internal function.  The 'textwidth' and other
+options will not be used then.
+
+							*right-justify*
+There is no command in Vim to right justify text in Vim.  You can do it with
+an external command, like "par".  E.g.: "!}par" to format until the end of the
+paragraph.  Or set 'formatprg' to "par".
+
+							*format-comments*
+Comments can be formatted in a special way.  A comment is recognized by a
+specific string at the start of the line (ignoring white space).  Three types
+of comments can be used:
+
+- Repeating the comment string at the start of each line.  An example is the
+  type of comment used in shell scripts, starting with "#".
+- Only the first line has the comment string, following lines don't.  An
+  example is this list with dashes.
+- Three-piece comments, that have a start string, an end string and optional
+  lines in between.  The strings for the start, middle and end are different.
+  An example is the C-style comment:
+  	/*
+	 *  this is a C comment
+	 */
+
+The 'comments' option can be set to a comma separated list of parts.  Each
+part defines a type of comment that is recognized.  A part consists of:
+	{flags}:{string}
+
+{string} is the literal text that must appear.
+
+{flags}:
+  n	Nested comment.  Nesting with mixed parts is allowed.  If 'comments'
+	is "n:),n:>" a line starting with "> ) >" is accepted as comment.
+
+  b	Blank (<Space>, <Tab> or <EOL>) required after {string}.
+
+  f	First line has comment only, will not be repeated on next line, but
+	indent is kept (for bullet-lists).
+  s	Start of three-piece comment
+  m	Middle of a three-piece comment
+  e	End of a three-piece comment
+
+  l	Left adjust middle with start or end (default).  Only recognized when
+  	used together with 's' or 'e'.
+  r	Right adjust middle with start or end.  Only recognized when used
+  	together with 's' or 'e'.
+
+When neither 'f', 's', 'm' or 'e' is given, a repeated comment string is
+assumed.  It is possible to have an empty flags field.
+
+Blank space in the text before and after the {string} is also included.  The
+{string} in the 'comments' option should not include leading or trailing
+blanks (although it is allowed, in which case they are required).
+
+When one comment leader is part of another, put it after that one.  For
+example, to include both "-" and "->", use
+>	:set comments=f:->,f:-
+
+A three-piece comment must always be given as start-middle-end, with no other
+parts in between.  An example of a three-piece comment is
+>	sr:/*,mb:*,el:*/
+for C-comments.  To avoid recognizing "*ptr" the 'b' flag is included for the
+middle.  For three-piece comments the text after the start and middle is
+checked for the appearance of the end.  If it is found, the comment will not
+continue below.  The middle part must be present, because otherwise Vim can't
+recognize the middle lines.
+
+Examples:
+>  "b:*"	Includes lines starting with "*", but not if the "*" is
+>		followed by a non-blank.  This avoids a pointer dereference
+>		like "*str" to be recognized as a comment.
+>  "n:>"	Includes a line starting with ">", ">>", ">>>", etc.
+>  "fb:-"	Format a list that starts with "- ".
+
+By default, "b:#" is included.  This means that a line that starts with
+"#include" is not recognized as a comment line.  But a line that starts with
+"# define" is recognized.  In C code this is good, because somewhere after this
+a "#endif" is needed.
+
+							*fo-table*
+The 'formatoptions' option can be set to influence the way how comments are
+formatted.  It is a string option, that may contain any of these letters.  The
+default is "tcq".  Commas can be added for readability.
+
+letter	 meaning when present in 'formatoptions'    ~
+
+t	Do text autowrapping using textwidth
+c	Do comment autowrapping using textwidth, inserting the current
+	comment leader automatically.
+r	Automatically insert the current comment leader after hitting
+	<return> in insert mode.
+o	Automatically insert the current comment leader after hitting 'o' or
+	'O' in Normal mode.
+q	Allow formatting of comments with "gq".
+	Note that blank lines, or lines containing only the comment leader
+	will be left untouched.  A new paragraph starts after such a line, or
+	when the comment leader changes.
+2	When formatting text the indent of the second line of a paragraph is
+	used for the rest of the paragraph.  This allows for paragraphs with
+	a different indent for the first line.
+v	Vi-compatible auto wrapping in insert mode: Only break a line at a
+	blank that has been entered during the current insert command.  (Note:
+	this is not 100% Vi compatible, Vi has some "unexpected features" or
+	bugs in this area.  It uses the screen column instead of the line
+	column)
+b	Like 'v', but only auto wrap if a blank has been entered at or before
+	the wrap margin.  If the line was longer than 'textwidth' when the
+	insert started, or no blank was entered in the current insert before
+	reaching 'textwidth', there is no auto wrapping.
+l	Long lines are not broken in insert mode: When a line was longer than
+	'textwidth' when the insert command started it is not automatically
+	formatted.
+
+With 't' and 'c' you can decide when auto-wrapping is done:
+value	action	~
+""	no automatic formatting, "gq" can be used for manual formatting
+"t"	automatic formatting of text, not for comments
+"c"	automatic formatting for comments, not for text (good for C code)
+"tc"	automatic formatting for text and comments
+
+Note that when 'textwidth' is 0, no formatting is done anyway (but the comment
+leader is inserted).
+Note that when 'paste' is on, no formatting is done at all.
+Note that 'textwidth' can be non-zero even though auto-wrapping never occurs.
+This is good because it can be used for formatting only in this case (with
+"gq").
+
+If "/*", "*" and/or "*/" are in the 'comments' variable, then Vim has some
+built in stuff to treat these types of comments a bit more cleverly.
+Opening a new line before or after "/*" or "*/" (with 'r' or 'o' present in
+'formatoptions') gives the correct start of the line automatically.  The same
+happens with formatting and auto-wrapping. Opening a line after a line
+starting with "/*" or "*" and containing "*/", will cause no comment leader to
+be inserted, and the indent of the new line is taken from the line containing
+the start of the comment.
+E.g.:
+    /*
+     * Your typical comment.
+     */
+    The indent on this line is the same as the start of the above
+    comment.
+
+All this should be really cool, especially in conjunction with the new
+:autocmd command to prepare different settings for different types of file.
+
+Some examples:
+  for C code (only format comments):
+>	fo=croq
+  for Mail/news	(format all, don't start comment with "o" command):
+>	fo=tcrq
+
+==============================================================================
+7. Indenting C programs					*C-indenting*
+
+C programs can be automatically indented.  Only the indent is set, no other
+formatting is done.  To format comments see |format-comments|.
+
+Note that the |+smartindent| and |+cindent| features can be disabled at
+compile time.
+
+There are in fact three methods that can be used.
+'autoindent'	Just takes the indent from the previous line.
+'smartindent'	Is like 'autoindent' but also recognizes some C syntax to
+		increase/reduce the indent where appropriate.
+'cindent'	Works more cleverly than the other two and can be configured
+		to different indenting styles.
+The rest of this section is about the 'cindent' option.
+
+Note that the indenting done with 'cindent' does not work for 100%.  Vim is
+not a C compiler, not all syntax is recognized.
+
+Four options are used for C program indenting:
+'cindent'	When on automatic C program indenting is enabled.
+'cinkeys'	Keys that trigger reindenting in insert mode.
+'cinoptions'	For setting your preferred indent style.
+'cinwords'	Defines keywords that start an extra indent in the next line.
+
+If 'lisp' is not on and 'equalprg' is empty, the "=" operator indents using
+this algorithm rather than calling an external program.
+
+See |autocommand| for how to automatically set the 'cindent' option for C code
+files and reset it for others.
+
+							*'cinkeys'* *'cink'*
+The 'cinkeys' option can be set to a string that says when to do indenting.
+The default is "0{,0},:,0#,!^F,o,O,e".  This means that indenting is done
+when:
+	"0{"	typing '{' as the first character in a line
+	"0}"	typing '}' as the first character in a line
+	":"	typing ':' anywhere
+	"0#"	typing '#' as the first character in a line
+	"!^F"	typing CTRL-F, which is not inserted
+	"o"	typing a <CR> anywhere and for the "o" command (not in insert
+		mode!)
+	"O"	for the "O" command (not in insert mode!)
+	"e"	typing the second 'e' for an "else" at the start of a line
+
+Characters that can be prepended:
+'!'	When the key is preceded with a '!' the key will not be inserted but
+	will just cause the current line to be reindented.  This allows you to
+	set a command key for reindenting the current line.  By default CTRL-F
+	is used for this.  Careful with CTRL-I, you might think that it is a
+	nice command for Indenting, but it is the same as a <Tab>.
+'*'	When the key is preceded with a '*' the reindenting will be done
+	before inserting the key.  If you use "*<Return>" this means that the
+	current line will be reindented, before opening a new line.
+
+When the key is not preceded with a '!' or '*' the reindenting will be done
+after inserting the key.  So ';' will set the indentation of the line
+including the ';'.
+
+'0'	When a zero is used before the key (but after '!' or '*') it will only
+	trigger reindenting if the key is the first character typed in the
+	line.
+
+Special key names:
+<>	Angle brackets mean spelled-out names of keys.  For example: "<Up>",
+	"<Ins>".
+'^'	Letters preceded by a caret (^) are control characters.  For example:
+	"^F" is CTRL-F.
+'o'	Means to reindent a line for the "o" command and whenever a new
+	line is opened below the current one.  This includes hitting <Return>
+	in insert mode.
+'O'	Means to reindent a line for the "O" command.
+'e'	Means to reindent a line that starts with "else" when an 'e' is
+	inserted.
+
+If you really want to reindent when you type 'o', 'O', 'e', '0', '<', '>', '*'
+or '!', use "<o>", "<O>", "<e>", "<0>", "<<>", "<>>", "<*>" or "<!>",
+respectively, for those keys.
+
+For an emacs-style indent mode, where lines aren't indented every time you
+press Return but only if you press Tab, I suggest:
+	:set cinkeys=0{,0},:,0#,!<Tab>,!^F
+
+Note: When the indent of the current line was changed manually, cindenting
+won't be done for any key.  This is to avoid re-indenting after you changed
+the indent by typing <BS>, <Tab> or <Space> in the indent, or used CTRL-T or
+CTRL-D.
+
+How the indenting is done can be set with 'cinoptions'.  In the list below,
+"N" represents a number of your choice.  It can be negative.  When there is an
+'s' after the number, it is multiplied with 'shiftwidth'.  "1s" is
+'shiftwidth', "2s" is two times 'shiftwidth', etc.  A decimal point is allowed
+too: "-0.5s" is minus half a 'shiftwidth'.  The examples given below assume a
+'shiftwidth' of 4.
+
+	>N    Amount added for "normal" indent.  Used after a line that should
+	      increase the indent (lines starting with "if", an opening brace,
+	      etc.).  (default 'shiftwidth').
+
+	        cino=               cino=>2             cino=>2s
+		  if (cond)           if (cond)           if (cond)
+		  {                   {                   {
+		      foo;              foo;                      foo;
+		  }                   }                   }
+
+	eN    Add N to the prevailing indent inside a set of braces if the
+	      opening brace at the End of the line (more precise: is not the
+	      first character in a line).  This is useful if you want a
+	      different indent when the '{' is at the start of the line from
+	      when '{' is at the end of the line.  (default 0).
+
+	        cino=               cino=e2             cino=e-2
+	          if (cond) {         if (cond) {         if (cond) {
+	              foo;                  foo;            foo;
+	          }                   }                   }
+	          else                else                else
+	          {                   {                   {
+	              bar;                bar;                bar;
+	          }                   }                   }
+
+	nN    Add N to the prevailing indent for a statement after an "if",
+	      "while", etc., if it is Not inside a set of braces.  This is
+	      useful if you want a different indent when there is no '{'
+	      before the statement from when there is a '{' before it.
+	      (default 0).
+
+	        cino=               cino=n2             cino=n-2
+	          if (cond)           if (cond)           if (cond)
+	              foo;                  foo;            foo;
+	          else                else                else
+	          {                   {                   {
+	              bar;                bar;                bar;
+	          }                   }                   }
+
+	fN    The First opening brace of a function or other block is placed
+	      in column N.  Only for an opening brace that is not inside other
+	      braces and is at the start of the line.  What comes after the
+	      brace is put relative to this brace.  (default 0).
+
+	        cino=               cino=f.5s           cino=f1s
+		  func()              func()              func()
+		  {                     {                     {
+		      int foo;              int foo;              int foo;
+
+	{N    Opening braces are placed N characters from the prevailing
+	      indent.  Only for opening braces that are inside
+	      other braces.  (default 0).
+
+	        cino=               cino={.5s           cino={1s
+		  if (cond)           if (cond)           if (cond)
+		  {                     {                     {
+		      foo;                foo;                foo;
+
+	}N    Closing braces are placed N characters from the matching opening
+	      brace.  (default 0).
+
+	        cino=               cino={2,}-0.5s      cino=}2
+		  if (cond)           if (cond)           if (cond)
+		  {                     {                 {
+		      foo;                foo;                foo;
+		  }                   }                     }
+
+	^N    Add N to the prevailing indent inside a set of braces if the
+	      opening brace is in column 0.  This is used to have a different
+	      indent for whole of a function (some may like to set it to a
+	      negative number).  (default 0).
+
+		cino=               cino=^-2            cino=^-s
+		  func()              func()              func()
+		  {                   {                   {
+		      if (cond)         if (cond)         if (cond)
+		      {		        {                 {
+			  a = b;            a = b;            a = b;
+		      }		        }                 }
+		  }                   }                   }
+
+	:N    Case labels are placed N characters from the indent of the
+	      switch().  (default 'shiftwidth').
+
+	        cino=               cino=:0
+		  switch (x)          switch(x)
+		  {		      {
+		      case 1:         case 1:
+		          a = b;          a = b;
+		      default:	      default:
+		  }		      }
+
+	=N    Statements after a case label are placed N characters from the
+	      indent of the label.  (default 'shiftwidth').
+
+	        cino=               cino==10
+		   case 11:		case 11:  a = a + 1;
+		       a = a + 1;                 b = b + 1;
+
+	gN    C++ scope declarations are placed N characters from the indent
+	      of the block they are in.  (default 'shiftwidth').
+	      A scope declaration can be "public:", "protected:" or
+	      "private:".
+
+	        cino=               cino=g0
+		  {		      {
+		      public:         public:
+		          a = b;          a = b;
+		      private:	      private:
+		  }		      }
+
+	hN    Statements after a C++ scope declaration are placed N characters
+	      from the indent of the label.  (default 'shiftwidth').
+
+	        cino=               cino=h10
+		   public:		public:   a = a + 1;
+		       a = a + 1;                 b = b + 1;
+
+	pN    Parameter declarations for K&R-style function declarations will
+	      be indented N characters from the margin.  (default
+	      'shiftwidth').
+
+	        cino=               cino=p0             cino=p2s
+		  func(a, b)          func(a, b)          func(a, b)
+		      int a;          int a;                      int a;
+		      char b;         char b;                     char b;
+
+	tN    Type for a function declaration will be indented N characters
+	      from the margin.  (default 'shiftwidth').
+
+	        cino=               cino=t0             cino=t7
+		      int             int                        int
+		  func()              func()              func()
+
+	+N    Continuation lines (lines that spill onto two) are indented N
+	      additional characters.  (default 'shiftwidth').
+
+	        cino=                     cino=+10
+		  a = b + 9 *               a = b + 9 *
+		      c;                              c;
+
+	cN    Comment lines after the comment opener, when there is no other
+	      text to line up with, are indented N characters from the comment
+	      opener.  (default 3).  See also |format-comments|.
+
+	        cino=                     cino=c5
+		  /*                        /*
+		     text.                       text.
+		   */			     */
+
+	(N    When in unclosed parentheses, indent N characters from the line
+	      with the unclosed parentheses.  When N is 0 or the line starts
+	      with '(' line up with the unclosed parentheses.  (default
+	      'shiftwidth' * 2).
+
+	        cino=                     cino=(0
+		  if (c1 && (c2 ||          if (c1 && (c2 ||
+		      	  c3))                         c3))
+		      foo;                      foo;
+		  if (c1 &&		    if (c1 &&
+		          (c2 || c3)            (c2 || c3)
+		     }                         }
+
+	)N    Unclosed parentheses will be searched for at most N lines away.
+	      This is just to limit the time needed to search for parentheses.
+	      (default 20 lines).
+
+	*N    Unclosed comments will be searched for at most N lines away.
+	      This is just to limit the time needed to search for the start of
+	      a comment.  (default 30 lines).
+
+The defaults, spelled out in full, would be
+	cinoptions=>s,e0,n0,f0,{0,}0,^0,:s,=s,ps,ts,+s,(2s,)20,*30
+
+Lines are put in column 1 if:
+- It starts with '#' (preprocessor directives), if 'cinkeys' contains '#'.
+- It starts with a label (a keyword followed by ':', other than "case" and
+  "default").
+- Any combination of indentations causes the line to have less than 0
+  indentation.
+
+ vim:tw=78:ts=8:sw=8:

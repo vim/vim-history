@@ -1,0 +1,188 @@
+*message.txt*     For Vim version 5.0.  Last modification: 1998 Feb 18
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+This file contains an alphabetical list of messages and error messages that
+Vim produces.  You can use this if you don't understand what the message
+means.  It is not complete though.
+
+1. Error messages	|error-messages|
+2. Messages		|messages|
+
+==============================================================================
+1. Error messages					*error-messages*
+
+When an error message is displayed, but it is removed before you could read
+it, you can see it again with:
+>  echo errmsg
+
+
+>  Ambiguous mapping
+
+The first argument for a ":map" command starts with the same character(s) as
+an already existing mapping.  Note that keys like <F1> often start with "^[[".
+Check the output of ":set termcap" for that.  All variations of the ":map"
+command give the same message: ":cmap", ":imap", etc.
+
+
+>  Command not allowed from exrc/vimrc in current dir or tag search
+
+Some commands are not allowed for security reasons.  These commands mostly
+come from a .exrc or .vimrc file in the current directory, or from a tags
+file.  Also see 'secure'.
+
+
+>  File exists (use ! to override)
+
+You are protected from accidently overwriting a file.  When you want to write
+anyway, use the same command, but add a "!" just after the command.  Example:
+>	:w /tmp/test
+changes to:
+>	:w! /tmp/test
+
+
+>  GUI cannot be used: Not enabled at compile time
+
+You are running a version of Vim that doesn't include the GUI code.  Therefore
+"gvim" and ":gui" don't work.
+
+
+>  Mark has invalid line number
+
+You are using a mark that has a line number that doesn't exist.  This can
+happen when you have a mark in another file, and some other program has
+deleted lines from it.
+
+
+>  No alternate file
+
+The alternate file is not defined yet.  See |alternate-file|.
+
+
+>  No file name
+
+The current buffer has no name.  To write it, use ":w fname".  Or give the
+buffer a name with ":file fname".
+
+
+>  No previous substitute regular expression
+
+When using the '~' character in a pattern, it is replaced with the previously
+used pattern in a ":substitute" command.  This fails when no such command has
+been used yet.  See |/~|.
+
+
+>  No previous regular expression
+
+When using an empty search pattern, the previous search pattern is used.  But
+that is not possible if there was no previous search.
+
+
+>  No such mapping
+
+You have used an ":unmap" or ":unabbreviate" command with an argument which is
+not an existing mapping.  All variations of these commands give the same
+message: ":cunmap", ":iunabbrev", etc.
+
+
+>  No write since last change (use ! to override)
+
+You are trying to abandon a file that has changes.  Vim protects you from
+losing your work.  You can either write the changed file with ":w", or, if you
+are sure, abandon it anyway, and lose all the changes.  This can be done by
+adding a '!' character just after the command you used.  Example:
+>	:e other_file
+changes to:
+>	:e! other_file
+
+
+>  Only one file name allowed
+
+The ":edit" command only accepts one file name.  When you want to specify
+several files for editing use ":next" |:next|.
+
+
+>  Out of memory!
+
+Oh, oh.  You must have been doing something complicated, or some other program
+is consuming your memory.  Be careful!  Vim is not completely prepared for an
+out-of-memory situation.  First make sure that any changes are saved.  Then
+try to solve the memory shortage.  To stay on the safe side, exit Vim and
+start again.  Also see |msdos-limitations|.
+
+
+>  'readonly' option is set (use ! to override)
+
+You are trying to write a file that was marked as read-only.  To write the
+file anyway, either reset the 'readonly' option, or add a '!' character just
+after the command you used.  Example
+>	:w
+changes to:
+>	:w!
+
+
+>  Scripts nested too deep
+
+Scripts can be read with the "-s" command line argument and with the ":source"
+command.  The script can then again read another script.  This can continue
+for about 14 levels.  When more nesting is done, Vim assumes that there is a
+recursive loop somewhere and stops with this error message.
+
+
+>  Too many file names
+
+When expanding file names, more than one match was found.  Only one match is
+allowed.
+
+
+>  ml_get: invalid lnum:
+
+This is an internal Vim error.  Please try to find out how it can be
+reproduced, and submit a bug report |bugreport.vim|.
+
+==============================================================================
+2. Messages						*messages*
+
+This is an overview of various messages that Vim gives:
+
+							*hit-return*
+>  Press RETURN or enter command to continue
+This message is given when there is something on the screen for you to read,
+and the screen is about to be redrawn:
+- After executing an external command (e.g., ":!ls" and "=").
+- Something is displayed on the status line that is longer than the width of
+  the window, or runs into the 'showcmd' or 'ruler' output.
+
+Hit <CR> or <Space> to redraw the screen and continue, without that key being
+used otherwise.  Or hit ":" or any other Normal mode command character to
+start that command.  {Vi: only ":" commands are interpreted}
+
+To reduce the number of hit-return prompts:
+- Set 'cmdheight' to 2 or higher.
+- Add flags to 'shortmess'.
+- Reset 'showcmd' and/or 'ruler'.
+
+Also see 'mouse'.  It is highlighted with the |hl-Question| group.
+
+
+							*more-prompt*
+>  -- More --
+>  -- More -- (RET: line, SPACE: page, d: half page, q: quit)
+This message is given when the screen is filled with messages.  It is only
+give when the 'more' option is on.  It is highlighted with the |hl-MoreMsg|
+group.
+
+Type:
+     <CR> or <NL>		for one more line
+     <Space>			for the next page
+     'd'			for down half a page
+     'q', <Esc> or CTRL-C	to stop the listing
+     ':'	    		to stop the listing and enter a command line
+Any other key causes the meaning of the keys to be displayed.
+
+Note: The typed key is directly obtained from the terminal, it is not mapped
+and typeahead is ignored.
+
+ vim:ts=8:sw=8:tw=78:

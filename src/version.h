@@ -1,4 +1,4 @@
-/* vi:set ts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
@@ -7,25 +7,26 @@
  */
 
 /*
- * This file is currently only used for the Win32 version.
- * Should probably generate all of this from the Makefile or in a separate
- * little C program that reads a small file; e.g., version.dat: 
- *    major=3
- *    minor=29
- *    build=101
- *    patchlevel=0
- *    date=1996 May 23
+ * Define the version number, name, etc.
+ * Be careful, keep the numbers in sync!
+ * This could be produced by a program, but it doesn't change very often.
  */
 
+#define VIM_VERSION_MAJOR		 5
+#define VIM_VERSION_MAJOR_STR		"5"
+#define VIM_VERSION_MINOR		 0
+#define VIM_VERSION_MINOR_STR		"0"
+#define VIM_VERSION_BUILD		 25
+#define VIM_VERSION_BUILD_STR		"25"
+#define VIM_VERSION_PATCHLEVEL		 0
+#define VIM_VERSION_PATCHLEVEL_STR	"0"
 
-#define VIM_VERSION_MAJOR			   4
-#define VIM_VERSION_MAJOR_STR		  "4"
-
-#define VIM_VERSION_MINOR			   6
-#define VIM_VERSION_MINOR_STR		  "6"
-
-#define VIM_VERSION_BUILD			   4
-#define VIM_VERSION_BUILD_STR		  "4"
-
-#define VIM_VERSION_PATCHLEVEL		   0
-#define VIM_VERSION_PATCHLEVEL_STR	  "0"
+/*
+ * VIM_VERSION_SHORT is copied into the swap file (max. length is 6 chars).
+ * VIM_VERSION_MEDIUM is used for the startup-screen.
+ * VIM_VERSION_LONG is used for the ":version" command and "Vim -h".
+ */
+#define VIM_VERSION_SHORT	"5.0"
+#define VIM_VERSION_MEDIUM	"5.0"
+#define VIM_VERSION_LONG	"VIM - Vi IMproved 5.0 (1998 Feb 19)"
+#define VIM_VERSION_LONG_DATE	"VIM - Vi IMproved 5.0 (1998 Feb 19, compiled "

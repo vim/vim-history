@@ -36,8 +36,8 @@
 /* Define when __DATE__ " " __TIME__ can be used */
 #undef HAVE_DATE_TIME
 
-#undef UNIX		/* define always by current configure script */
-#undef SVR4		/* an elf-based system is SVR4. What is linux? */
+#undef UNIX	/* defined always when using configure */
+#undef SVR4	/* an elf-based system is SVR4. What is linux? */
 
 /* Defined to the size of an int */
 #undef SIZEOF_INT
@@ -89,8 +89,17 @@
 /* Define if tgetstr() has a second argument that is (char *) */
 #undef TGETSTR_CHAR_P
 
-/* Define if you have the sigset() function.  */
-#undef HAVE_SIGSET
+/* Define if you have the bcmp() function.  */
+#undef HAVE_BCMP
+
+/* Define if you have the fchdir() function. */
+#undef HAVE_FCHDIR
+
+/* Define if you have the fchown() function.  */
+#undef HAVE_FCHOWN
+
+/* Define if you have the fsync() function. */
+#undef HAVE_FSYNC
 
 /* Define if the getcwd() function should not be used.  */
 #undef BAD_GETCWD
@@ -98,35 +107,77 @@
 /* Define if you have the getcwd() function.  */
 #undef HAVE_GETCWD
 
+/* Define if you have the getpwnam() function. */
+#undef HAVE_GETPWNAM
+
+/* Define if you have the getpwuid() function. */
+#undef HAVE_GETPWUID
+
+/* Define if you have the gettimeofday() function. */
+#undef HAVE_GETTIMEOFDAY
+
 /* Define if you have the getwd() function.  */
 #undef HAVE_GETWD
 
-/* Define if you have the select() function.  */
-#undef HAVE_SELECT
+/* Define if you have the lstat() function. */
+#undef HAVE_LSTAT
 
-/* Define if you have the strcspn() function.  */
-#undef HAVE_STRCSPN
-
-/* Define if you have the strtol() function.  */
-#undef HAVE_STRTOL
-
-/* Define if you have the setsid() function.  */
-#undef HAVE_SETSID
-
-/* Define if you have the setpgid() function.  */
-#undef HAVE_SETPGID
-
-/* Define if you have the tgetent() function.  */
-#undef HAVE_TGETENT
+/* Define if you have the memcmp() function.  */
+#undef HAVE_MEMCMP
 
 /* Define if you have the memset() function.  */
 #undef HAVE_MEMSET
 
+/* Define if you have the opendir() function. */
+#undef HAVE_OPENDIR
+
+/* Define if you have the putenv() function. */
+#undef HAVE_PUTENV
+
+/* Define if you have the qsort() function. */
+#undef HAVE_QSORT
+
+/* Define if you have the select() function.  */
+#undef HAVE_SELECT
+
+/* Define if you have the setenv() function. */
+#undef HAVE_SETENV
+
+/* Define if you have the setpgid() function.  */
+#undef HAVE_SETPGID
+
+/* Define if you have the setsid() function.  */
+#undef HAVE_SETSID
+
+/* Define if you have the sigset() function.  */
+#undef HAVE_SIGSET
+
+/* Define if you have the strcasecmp() function.  */
+#undef HAVE_STRCASECMP
+
 /* Define if you have the strerror() function.  */
 #undef HAVE_STRERROR
 
-/* Define if you have the fchown() function.  */
-#undef HAVE_FCHOWN
+/* Define if you have the strftime() function.  */
+#undef HAVE_STRFTIME
+
+/* Define if you have the stricmp() function.  */
+#undef HAVE_STRICMP
+
+/* Define if you have the strncasecmp() function.  */
+#undef HAVE_STRNCASECMP
+
+/* Define if you have the strnicmp() function.  */
+#undef HAVE_STRNICMP
+
+/* Define if you have the strpbrk() function.  */
+#undef HAVE_STRPBRK
+
+/* Define if you have the strtol() function.  */
+#undef HAVE_STRTOL
+
+/* Define if you have the tgetent() function.  */
+#undef HAVE_TGETENT
 
 /* Define if you have st_blksize in struct stat. */
 #undef HAVE_ST_BLKSIZE
@@ -134,32 +185,11 @@
 /* Define if you have the rename() function. */
 #undef HAVE_RENAME
 
-/* Define if you have the fsync() function. */
-#undef HAVE_FSYNC
+/* Define if you have the utime() function. */
+#undef HAVE_UTIME
 
-/* Define if you have the fchdir() function. */
-#undef HAVE_FCHDIR
-
-/* Define if you have the lstat() function. */
-#undef HAVE_LSTAT
-
-/* Define if you have the setenv() function. */
-#undef HAVE_SETENV
-
-/* Define if you have the putenv() function. */
-#undef HAVE_PUTENV
-
-/* Define if you have the gettimeofday() function. */
-#undef HAVE_GETTIMEOFDAY
-
-/* Define if you have the getpwuid() function. */
-#undef HAVE_GETPWUID
-
-/* Define if you have the getpwnam() function. */
-#undef HAVE_GETPWNAM
-
-/* Define if you have the qsort() function. */
-#undef HAVE_QSORT
+/* Define if you do not have utime(), but do have the utimes() function. */
+#undef HAVE_UTIMES
 
 /* Define if you have the <dirent.h> header file.  */
 #undef HAVE_DIRENT_H
@@ -244,8 +274,23 @@
 /* Define if you have the <sys/statfs.h> header file. */
 #undef HAVE_SYS_STATFS_H
 
+/* Define if you have the <poll.h> header file. */
+#undef HAVE_POLL_H
+
 /* Define if you have the <sys/poll.h> header file. */
 #undef HAVE_SYS_POLL_H
 
 /* Define if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
+
+/* Define if you have the <utime.h> header file. */
+#undef HAVE_UTIME_H
+
+/* Define if you have the <sys/param.h> header file. */
+#undef HAVE_SYS_PARAM_H
+
+/* Define if you want to include the Perl interpreter. */
+#undef HAVE_PERL_INTERP
+
+/* Define if you want to include the Python interpreter. */
+#undef HAVE_PYTHON

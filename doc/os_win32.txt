@@ -1,0 +1,228 @@
+*os_win32.txt*  For Vim version 5.0.  Last modification: 1998 Feb 18
+
+
+		  VIM REFERENCE MANUAL    by George Reilly
+
+
+						*win32* *Win32*
+This file documents the idiosyncrasies of the Win32 version of Vim.
+
+The Win32 version of Vim works on both Windows NT and Windows 95.  There are
+both console and GUI versions. It will not run in the Win32s subsystem in
+Windows 3.1; use the 32-bit DOS version of Vim instead.  See |os_msdos.txt|.
+
+1. Known problems		|win32-problems|
+2. Term option			|win32-term|
+3. Restore screen contents	|win32-restore|
+4. Using the mouse		|win32-mouse|
+5. Win32 mini FAQ		|win32-faq|
+
+Additionally, there are a number of common Win32 and DOS items:
+File locations			|dos-locations|
+Using backslashes		|dos-backslash|
+Standard mappings		|dos-standard-mappings|
+Screen output and colors	|dos-colors|
+File formats			|dos-file-formats|
+:cd command			|dos-:cd|
+Interrupting			|dos-CTRL-Break|
+Temp files			|dos-temp-files|
+Shell option default		|dos-shell|
+
+Win32 GUI			|gui-w32|
+
+Credits:
+The Win32 version was written by George V. Reilly <gvr@halcyon.com>.
+The original Windows NT port was done by Roger Knobbe <RogerK@wonderware.com>.
+The GUI version was made by George V. Reilly and Robert Webb.
+
+For compiling see "src/INSTALL.pc".			*win32-compiling*
+
+==============================================================================
+1. Known problems				*windows95* *win32-problems*
+
+There are a few known problems with running in a console on Windows 95.
+Comments from somebody working at Microsoft: "Win95 console support has always
+been and will always be flaky".
+1.  Dead key support doesn't work.
+2.  Resizing the window with ":set columns=nn lines=nn" works, but executing
+    external commands MAY CAUSE THE SYSTEM TO HANG OR CRASH.
+3.  Screen updating is slow, unless you change 'columns' or 'lines' to a
+    non-DOS value.  But then the second problem applies!
+
+If this bothers you, use the 32 bit MS-DOS version or the Win32 GUI version.
+
+When doing file name completion, matches for the short file name will also be
+found.  But this will result in the corresponding long file name.  For
+example, if you have the long file name "this_is_a_test" with the short file
+name "this_i~1", the command ":e *1" will start editing "this_is_a_test".
+
+==============================================================================
+2. Term option						*win32-term*
+
+The only kind of terminal type that the Win32 version of Vim understands is
+"win32", which is built-in.  If you set 'term' to anything else, you will
+probably get very strange behaviour from Vim.  Therefore the default value of
+'term' is not obtained from the environment variable "TERM".
+
+==============================================================================
+3. Restore screen contents				*win32-restore*
+
+When 'restorescreen' is set (which is the default), Vim will restore the
+original contents of the console when exiting or when executing external
+commands.  If you don't want this, use ":set nors".	|'restorescreen'|
+
+==============================================================================
+4. Using the mouse					*win32-mouse*
+
+The Win32 version of Vim supports using the mouse.  If you have a two-button
+mouse, the middle button can be emulated by pressing both left and right
+buttons simultaneously.					|mouse-using|
+
+When the mouse doesn't work, try disabling the "Quick Edit Mode" feature of
+the console.
+
+==============================================================================
+5. Win32 mini FAQ					*win32-faq*
+
+Q. Why does the Win32 version of Vim update the screen so slowly on Windows 95?
+A. The support for Win32 console mode applications is very buggy in Win95.
+   For some unknown reason, the screen updates very slowly when Vim is run at
+   one of the standard resolutions (80x25, 80x43, or 80x50) and the 16-bit DOS
+   version updates the screen much more quickly than the Win32 version.
+   However, if the screen is set to some other resolution, such as by ":set
+   columns=100" or ":set lines=40", screen updating becomes about as fast as
+   it is with the 16-bit version.
+
+   WARNING: Changing 'columns' may make Windows 95 crash while updating the
+   window (complaints --> Microsoft).  Since this mostly works, this has not
+   been disabled, but be careful with changing 'columns'.
+
+   Changing the screen resolution makes updates faster, but it brings problems
+   with it of its own.  External commands (e.g., ":!dir") can cause Vim to
+   freeze when the screen is set to a non-standard resolution, particularly
+   when 'columns' is not equal to 80.  It is not possible for Vim to reliably
+   set the screen resolution back to the value it had upon startup before
+   running external commands, so if you change the number of 'lines' or
+   'columns', be very, very careful.  In fact, Vim will not allow you to
+   execute external commands when 'columns' is not equal to 80, because it is
+   so likely to freeze up afterwards.
+
+   None of the above applies on Windows NT.  Screen updates are fast, no
+   matter how many 'lines' or 'columns' the window is set to, and external
+   commands will not cause Vim to freeze.
+
+Q. So if the Win32 version updates the screen so slowly on Windows 95 and the
+   16-bit DOS version updates the screen quickly, why would I want to run the
+   Win32 version?
+A. Firstly, the Win32 version isn't that slow, especially when the screen is
+   set to some non-standard number of 'lines' or 'columns'.  Secondly, the
+   16-bit DOS version has some severe limitations: It can't do big changes and
+   it doesn't know about long file names.  The Win32 version doesn't have these
+   limitations and it's faster overall (the same is true for the 32-bit DJGPP
+   DOS version of Vim).  The Win32 version is smarter about handling the
+   screen, the mouse, and the keyboard than the DJGPP version is.
+
+Q. And what about the 16-bit DOS version versus the Win32 version on NT?
+A. There are no good reasons to run the 16-bit DOS version on NT.  The Win32
+   version updates the screen just as fast as the 16-bit version does when
+   running on NT.  All of the above disadvantages apply.  Finally, DOS
+   applications can take a long time to start up and will run more slowly.  On
+   non-Intel NT platforms, the DOS version is almost unusably slow, because it
+   runs on top of an 80x86 emulator.
+
+Q. How do I change the font?
+A. In the GUI version, you can use the 'guifont' option.
+   In the console version, you need to set the font of the console itself.
+   You cannot do this from within Vim.
+
+Q. Why can't I paste into Vim when running Windows 95?
+A. In the properties dialog box for the MS-DOS window, go to "MS-DOS
+   Prompt/Misc/Fast pasting" and make sure that it is NOT checked.  You should
+   also do ":set paste" in Vim to avoid unexpected effects.	|'paste'|
+
+Q. How do I type dead keys on Windows 95, in the console version?
+   (A dead key is an accent key, such as acute, grave, or umlaut, that doesn't
+   produce a character by itself, but when followed by another key, produces
+   an accented character, such as a-acute, e-grave, u-umlaut, n-tilde, and so
+   on.  Very useful for most European languages.  English-language keyboard
+   layouts don't use dead keys, as far as we know.)
+A. You don't.  The console mode input routines simply do not work correctly in
+   Windows 95, and I have not been able to work around them.  In the words
+   of a senior developer at Microsoft:
+	Win95 console support has always been and will always be flaky.
+
+	The flakiness is unavoidable because we are stuck between the world of
+	MS-DOS keyboard TSRs like KEYB (which wants to cook the data;
+	important for international) and the world of Win32.
+
+	So keys that don't "exist" in MS-DOS land (like dead keys) have a
+	very tenuous existence in Win32 console land.  Keys that act
+	differently between MS-DOS land and Win32 console land (like
+	capslock) will act flaky.
+
+	Don't even _mention_ the problems with multiple language keyboard
+ 	layouts...
+
+   You may be able to fashion some sort of workaround with the digraphs
+   mechanism.							|digraphs|
+
+   The best solution is to use the Win32 GUI version gvim.exe.  Alternatively,
+   you can try one of the DOS versions of Vim where dead keys reportedly do
+   work.
+
+Q. How do I type dead keys on Windows NT?
+A. Dead keys work on NT 3.51.  Just type them as you would in any other
+   application.
+   On NT 4.0, you need to make sure that the default locale (set in the
+   Keyboard part of the Control Panel) is the same as the currently active
+   locale.  Otherwise the NT code will get confused and crash!  This is a NT
+   4.0 problem, not really a Vim problem.
+
+Q. I'm using Vim to edit a symbolically linked file on a Unix NFS file server.
+   When I write the file, Vim does not "write through" the symlink.  Instead,
+   it deletes the symbolic link and creates a new file in its place.  Why?
+A. On Unix, Vim is prepared for links (symbolic or hard).  A backup copy of
+   the original file is made and then the original file is overwritten.  This
+   assures that all properties of the file remain the same.  On non-Unix
+   systems, the original file is renamed and a new file is written.  Only the
+   protection bits are set like the original file.  However, this doesn't work
+   properly when working on an NFS-mounted file system where links and other
+   things exist.  The only way to fix this in the current version is not
+   making a backup file, by ":set nobackup nowritebackup"     |'writebackup'|
+
+Q. How do I get to see the output of ":make" while it's running?
+A. Basically what you need is to put a tee program that will copy its input
+   (the output from make) to both stdout and to the errorfile.  You can find a
+   copy of tee (and a number of other GNU tools tools) at
+   ftp://ftp.cc.utexas.edu/microlib/nt/gnu  Alternatively, try the more recent
+   Cygnus version of the GNU tools at http://www.cygnus.com/misc/gnu-win32
+   You might also find useful stuff at Chris Szurgot's Virtual Unix site,
+   http://www.itribe.net/virtunix  And Microsoft has some Unix-style tools at
+   http://www.microsoft.com/ntserver/tools/Maintnce.htm
+   When you do get a copy of tee, you'll need to add
+>	set shellpipe=\|\ tee
+   to your _vimrc.
+
+Q. I'm storing files on a remote machine that works with VisionFS, and files
+   disappear!
+A. VisionFS can't handle certain dot (.) three letter extension file names.
+   SCO declares this behavior required for backwards compatibility with 16bit
+   DOS/Windows environments.  The two commands below demonstrate the behavior:
+
+>	echo Hello > file.bat~
+>	dir > file.bat
+
+   The result is that the "dir" command updates the "file.bat~" file, instead
+   of creating a new "file.bat" file. This same behavior is exhibited in VIM
+   when editing an existing file named "foo.bat" because the default behavior
+   of VIM is to create a temporary file with a '~' character appended to the
+   name.  When the file is written, it winds up being deleted.
+
+   Solution: Add this command to your _vimrc file:
+>	set backupext=.temporary
+
+Q. How do I change the blink rate of the cursor?
+A. You can't!  This is a limitation of the NT console.  NT 5.0 is reported to
+   be able to set the blink rate for all console windows at the same time.
+
+ vim:ts=8:sw=8:tw=78:fo=tcq2:

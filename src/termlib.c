@@ -1,61 +1,56 @@
-/* vi:set ts=4 sw=4:
-   The following software is (C) 1984 Peter da Silva,
-   the Mad Australian, in the public domain. It may
-   be re-distributed for any purpose with the inclusion
-   of this notice. */
+/* vi:set ts=8 sts=4 sw=4: */
+/*
+ * The following software is (C) 1984 Peter da Silva, the Mad Australian, in
+ * the public domain. It may be re-distributed for any purpose with the
+ * inclusion of this notice.
+ */
 
-/* modified by Bram Moolenaar for use with VIM - Vi Improved */
-/* a few bugs removed by Olaf 'Rhialto' Seibert */
+/* Modified by Bram Moolenaar for use with VIM - Vi Improved. */
+/* A few bugs removed by Olaf 'Rhialto' Seibert. */
 
 /* TERMLIB: Terminal independant database. */
 
 #include "vim.h"
-#include "proto.h"
-#include "proto/termlib.pro"
+#include "termlib.pro"
 
-#if !defined(AMIGA) && !defined(VMS)
+#if !defined(AMIGA) && !defined(VMS) && !defined(macintosh)
 # include <sgtty.h>
 #endif
 
-static int	getent __PARMS((char *, char *, FILE *, int));
-static int	nextent __PARMS((char *, FILE *, int));
-static int	_match __PARMS((char *, char *));
-static char	*_addfmt __PARMS((char *, char *, int));
-static char	*_find __PARMS((char *, char *));
+static int  getent __ARGS((char *, char *, FILE *, int));
+static int  nextent __ARGS((char *, FILE *, int));
+static int  _match __ARGS((char *, char *));
+static char *_addfmt __ARGS((char *, char *, int));
+static char *_find __ARGS((char *, char *));
 
 /*
  * Global variables for termlib
  */
 
-char	*tent;                /* Pointer to terminal entry, set by tgetent */
-char	PC = 0;               /* Pad character, default NULL */
+char	*tent;		      /* Pointer to terminal entry, set by tgetent */
+char	PC = 0;		      /* Pad character, default NULL */
 char	*UP = 0, *BC = 0;     /* Pointers to UP and BC strings from database */
-short	ospeed;               /* Baud rate (1-16, 1=300, 16=19200), as in stty */
+short	ospeed;		      /* Baud rate (1-16, 1=300, 16=19200), as in stty */
 
 /*
  * Module: tgetent
  *
  * Purpose: Get termcap entry for <term> into buffer at <tbuf>.
  *
- * Calling conventions: char tbuf[TBUFSZ+], term=canonical name for
- *			terminal.
+ * Calling conventions: char tbuf[TBUFSZ+], term=canonical name for terminal.
  *
  * Returned values: 1 = success, -1 = can't open file,
- *		    0 = can't find terminal.
+ *	    0 = can't find terminal.
  *
- * Notes
- *		Should probably supply static buffer.
- *
- *		Uses environment variables "TERM" and
- *	"TERMCAP". If TERM = term (that is, if the argument
- *	matches the environment) then it looks at TERMCAP.
- *		If TERMCAP begins with a slash, then it assumes
- *	this is the file to search rather than /etc/termcap.
- *		If TERMCAP does not begin with a slash, and it
- *	matches TERM, then this is used as the entry.
- *
- *		This could be simplified considerably for non-UNIX
- *	systems.
+ * Notes:
+ * - Should probably supply static buffer.
+ * - Uses environment variables "TERM" and "TERMCAP". If TERM = term (that is,
+ *   if the argument matches the environment) then it looks at TERMCAP.
+ * - If TERMCAP begins with a slash, then it assumes this is the file to
+ *   search rather than /etc/termcap.
+ * - If TERMCAP does not begin with a slash, and it matches TERM, then this is
+ *   used as the entry.
+ * - This could be simplified considerably for non-UNIX systems.
  */
 
 #ifdef AMIGA
@@ -65,150 +60,150 @@ short	ospeed;               /* Baud rate (1-16, 1=300, 16=19200), as in stty */
 #endif
 
 tgetent(tbuf, term)
-	char	*tbuf;               /* Buffer to hold termcap entry, TBUFSZ bytes max */
-	char	*term;               /* Name of terminal */
+    char    *tbuf;		/* Buffer to hold termcap entry, TBUFSZ bytes max */
+    char    *term;		/* Name of terminal */
 {
-	char    tcbuf[32];           /* Temp buffer to handle */
-	char	*tcptr = tcbuf;      /* extended entries */
-	char    *tcap = TERMCAPFILE; /* Default termcap file */
-	char    *tmp;
-	FILE    *termcap;
-	int		retval = 0;
-	int		len;
+    char    tcbuf[32];		/* Temp buffer to handle */
+    char    *tcptr = tcbuf;	/* extended entries */
+    char    *tcap = TERMCAPFILE; /* Default termcap file */
+    char    *tmp;
+    FILE    *termcap;
+    int	    retval = 0;
+    int	    len;
 
-	if ((tmp = (char *)vim_getenv((char_u *)"TERMCAP")) != NULL)
+    if ((tmp = (char *)vim_getenv((char_u *)"TERMCAP")) != NULL)
+    {
+	if (*tmp == '/')		/* TERMCAP = name of termcap file */
 	{
-		if (*tmp == '/')            /* TERMCAP = name of termcap file */
-		{
-			tcap = tmp ;
+	    tcap = tmp ;
 #if defined(AMIGA)
-			/* Convert /usr/share/lib/termcap to usr:share/lib/termcap */
-			tcap++;
-			tmp = strchr(tcap, '/');
-			if (tmp)
-				*tmp = ':';
+	    /* Convert /usr/share/lib/termcap to usr:share/lib/termcap */
+	    tcap++;
+	    tmp = strchr(tcap, '/');
+	    if (tmp)
+		*tmp = ':';
 #endif
-		}
-		else                    	/* TERMCAP = termcap entry itself */
-		{
-			int tlen = strlen(term);
-
-			while (*tmp && *tmp != ':') /* Check if TERM matches */
-			{
-				char *nexttmp;
-
-				while (*tmp == '|')
-					tmp++;
-				nexttmp  = _find(tmp, ":|");	/* Rhialto */
-				if (tmp+tlen == nexttmp && _match(tmp, term) == tlen)
-				{
-					strcpy(tbuf, tmp);
-					tent = tbuf;
-					return 1;
-				} 
-				else
-					tmp = nexttmp;
-			}
-		}
 	}
-	if (!(termcap = fopen(tcap, "r")))
+	else				/* TERMCAP = termcap entry itself */
 	{
-		strcpy(tbuf, tcap);
-		return -1;
-	}
+	    int tlen = strlen(term);
 
-	len = 0;
-	while (getent(tbuf + len, term, termcap, TBUFSZ - len))
-	{
-		tcptr = tcbuf;		/* Rhialto */
-		if ((term = tgetstr("tc", &tcptr)))         /* extended entry */
+	    while (*tmp && *tmp != ':')		/* Check if TERM matches */
+	    {
+		char *nexttmp;
+
+		while (*tmp == '|')
+		    tmp++;
+		nexttmp  = _find(tmp, ":|");	/* Rhialto */
+		if (tmp+tlen == nexttmp && _match(tmp, term) == tlen)
 		{
-			rewind(termcap);
-			len = strlen(tbuf);
+		    strcpy(tbuf, tmp);
+		    tent = tbuf;
+		    return 1;
 		}
 		else
-		{
-			retval = 1; 
-			tent = tbuf;		/* reset it back to the beginning */
-			break;
-		}
+		    tmp = nexttmp;
+	    }
 	}
-	fclose(termcap);
-	return retval;
+    }
+    if (!(termcap = fopen(tcap, "r")))
+    {
+	strcpy(tbuf, tcap);
+	return -1;
+    }
+
+    len = 0;
+    while (getent(tbuf + len, term, termcap, TBUFSZ - len))
+    {
+	tcptr = tcbuf;				/* Rhialto */
+	if ((term = tgetstr("tc", &tcptr)))	/* extended entry */
+	{
+	    rewind(termcap);
+	    len = strlen(tbuf);
+	}
+	else
+	{
+	    retval = 1;
+	    tent = tbuf;	/* reset it back to the beginning */
+	    break;
+	}
+    }
+    fclose(termcap);
+    return retval;
 }
 
-	static int
+    static int
 getent(tbuf, term, termcap, buflen)
-	char	*tbuf, *term;
-	FILE	*termcap;
-	int		buflen;
+    char    *tbuf, *term;
+    FILE    *termcap;
+    int	    buflen;
 {
-	char    *tptr;
-	int		tlen = strlen(term);
+    char    *tptr;
+    int	    tlen = strlen(term);
 
-	while (nextent(tbuf, termcap, buflen))   /* For each possible entry */
+    while (nextent(tbuf, termcap, buflen))	/* For each possible entry */
+    {
+	tptr = tbuf;
+	while (*tptr && *tptr != ':')		/* : terminates name field */
 	{
-		tptr = tbuf;
-		while (*tptr && *tptr != ':')    /* : terminates name field */
-		{
-			char    *nexttptr;
+	    char    *nexttptr;
 
-			while (*tptr == '|')             /* | seperates names */
-				tptr++;
-			nexttptr = _find(tptr, ":|");	 /* Rhialto */
-			if (tptr + tlen == nexttptr &&
-				_match(tptr, term) == tlen)             /* FOUND! */
-			{
-				tent = tbuf;
-				return 1;
-			} 
-			else                           /* Look for next name */
-				tptr = nexttptr;
-		}
+	    while (*tptr == '|')		/* | seperates names */
+		tptr++;
+	    nexttptr = _find(tptr, ":|");	/* Rhialto */
+	    if (tptr + tlen == nexttptr &&
+		_match(tptr, term) == tlen)	/* FOUND! */
+	    {
+		tent = tbuf;
+		return 1;
+	    }
+	    else				/* Look for next name */
+		tptr = nexttptr;
 	}
-	return 0;
+    }
+    return 0;
 }
 
-	static int
-nextent(tbuf, termcap, buflen)         /* Read 1 entry from TERMCAP file */
-	char    *tbuf;
-	FILE    *termcap;
-	int		buflen;
+    static int
+nextent(tbuf, termcap, buflen)		/* Read 1 entry from TERMCAP file */
+    char    *tbuf;
+    FILE    *termcap;
+    int	    buflen;
 {
-	char *lbuf = tbuf;           /* lbuf=line buffer */
-	                             /* read lines straight into buffer */
+    char *lbuf = tbuf;				/* lbuf=line buffer */
+				/* read lines straight into buffer */
 
-	while (lbuf < tbuf+buflen &&                        /* There's room and */
-	      fgets(lbuf, (int)(tbuf+buflen-lbuf), termcap))        /* another line */
+    while (lbuf < tbuf+buflen &&		/* There's room and */
+	  fgets(lbuf, (int)(tbuf+buflen-lbuf), termcap)) /* another line */
+    {
+	int llen = strlen(lbuf);
+
+	if (*lbuf == '#')			/* eat comments */
+	    continue;
+	if (lbuf[-1] == ':' &&			/* and whitespace */
+	    lbuf[0] == '\t' &&
+	    lbuf[1] == ':')
 	{
-		int llen = strlen(lbuf);
-
-		if (*lbuf == '#')                               /* eat comments */
-			continue;
-		if (lbuf[-1] == ':' &&                        /* and whitespace */
-			lbuf[0] == '\t' &&
-			lbuf[1] == ':')
-		{
-			strcpy(lbuf, lbuf+2);
-			llen -= 2;
-		}
-		if (lbuf[llen-2] == '\\')                  /* and continuations */
-			lbuf += llen-2;
-		else
-		{
-			lbuf[llen-1]=0;           /* no continuation, return */
-			return 1;
-		}
+	    strcpy(lbuf, lbuf+2);
+	    llen -= 2;
 	}
+	if (lbuf[llen-2] == '\\')		/* and continuations */
+	    lbuf += llen-2;
+	else
+	{
+	    lbuf[llen-1]=0;			/* no continuation, return */
+	    return 1;
+	}
+    }
 
-	return 0;                                    /* ran into end of file */
+    return 0;					/* ran into end of file */
 }
 
 /*
  * Module: tgetflag
  *
- * Purpose: returns flag true or false as to the existence of a given
- *	    entry. used with 'bs', 'am', etc...
+ * Purpose: returns flag true or false as to the existence of a given entry.
+ * used with 'bs', 'am', etc...
  *
  * Calling conventions: id is the 2 character capability id.
  *
@@ -216,11 +211,11 @@ nextent(tbuf, termcap, buflen)         /* Read 1 entry from TERMCAP file */
  */
 
 tgetflag(id)
-	char *id;
+    char *id;
 {
-	char	buf[256], *ptr = buf;
+    char    buf[256], *ptr = buf;
 
-	return tgetstr(id, &ptr) ? 1 : 0;
+    return tgetstr(id, &ptr) ? 1 : 0;
 }
 
 /*
@@ -234,15 +229,15 @@ tgetflag(id)
  */
 
 tgetnum(id)
-char *id;
+    char *id;
 {
-	char *ptr, buf[256];
-	ptr = buf;
+    char *ptr, buf[256];
+    ptr = buf;
 
-	if (tgetstr(id, &ptr))
-		return atoi(buf);
-	else
-		return 0;
+    if (tgetstr(id, &ptr))
+	return atoi(buf);
+    else
+	return 0;
 }
 
 /*
@@ -251,108 +246,108 @@ char *id;
  * Purpose: get terminal capability string from database.
  *
  * Calling conventions: id is the two character capability id.
- *			(*buf) points into a hold buffer for the
- *			id. the capability is copied into the buffer
- *			and (*buf) is advanced to point to the next
- *			free byte in the buffer.
+ *	    (*buf) points into a hold buffer for the
+ *	    id. the capability is copied into the buffer
+ *	    and (*buf) is advanced to point to the next
+ *	    free byte in the buffer.
  *
  * Returned values: 0 = no such entry, otherwise returns original
- *		    (*buf) (now a pointer to the string).
+ *	    (*buf) (now a pointer to the string).
  *
  * Notes
- *		It also decodes certain escape sequences in the buffer.
- *	they should be obvious from the code:
- *		\E = escape.
- *		\n, \r, \t, \f, \b match the 'c' escapes.
- *		^x matches control-x (^@...^_).
- *		\nnn matches nnn octal.
- *		\x, where x is anything else, matches x. I differ
- *	from the standard library here, in that I allow ^: to match
- *	:.
+ *	It also decodes certain escape sequences in the buffer.
+ *  they should be obvious from the code:
+ *	\E = escape.
+ *	\n, \r, \t, \f, \b match the 'c' escapes.
+ *	^x matches control-x (^@...^_).
+ *	\nnn matches nnn octal.
+ *	\x, where x is anything else, matches x. I differ
+ *  from the standard library here, in that I allow ^: to match
+ *  :.
  *
  */
 
-char *
+    char *
 tgetstr(id, buf)
-char    *id, **buf;
+    char	*id, **buf;
 {
-	int    len = strlen(id);
-	char *tmp=tent;
-	char *hold;
-	int		i;
+    int		len = strlen(id);
+    char	*tmp=tent;
+    char	*hold;
+    int		i;
 
-	do {
-		tmp = _find(tmp, ":");                     /* For each field */
-		while (*tmp == ':')                        /* skip empty fields */
-			tmp++;
-		if (!*tmp)
+    do {
+	tmp = _find(tmp, ":");			/* For each field */
+	while (*tmp == ':')			/* skip empty fields */
+	    tmp++;
+	if (!*tmp)
+	    break;
+
+	if (_match(id, tmp) == len) {
+	    tmp += len;				/* find '=' '@' or '#' */
+	    if (*tmp == '@')			/* :xx@: entry for tc */
+		return 0;			/* deleted entry */
+	    hold= *buf;
+	    while (*++tmp && *tmp != ':') {	/* not at end of field */
+		switch(*tmp) {
+		case '\\':			/* Expand escapes here */
+		    switch(*++tmp) {
+		    case 0:			/* ignore backslashes */
+			tmp--;			/* at end of entry */
+			break;			/* shouldn't happen */
+		    case 'e':
+		    case 'E':			/* ESC */
+			*(*buf)++ = '\033';
 			break;
-
-		if (_match(id, tmp) == len) {
-			tmp += len;                   /* find '=' '@' or '#' */
-			if (*tmp == '@')                  /* :xx@: entry for tc */
-				return 0;                   /* deleted entry */
-			hold= *buf;
-			while (*++tmp && *tmp != ':') {/* not at end of field */
-				switch(*tmp) {
-				case '\\':            /* Expand escapes here */
-					switch(*++tmp) {
-					case 0:        /* ignore backslashes */
-						tmp--;    /* at end of entry */
-						break;   /* shouldn't happen */
-					case 'e':
-					case 'E':                     /* ESC */
-						*(*buf)++ = '\033'; 
-						break;
-					case 'n':                      /* \n */
-						*(*buf)++ = '\n'; 
-						break;
-					case 'r':                      /* \r */
-						*(*buf)++ = '\r'; 
-						break;
-					case 't':                      /* \t */
-						*(*buf)++ = '\t'; 
-						break;
-					case 'b':                      /* \b */
-						*(*buf)++ = '\b'; 
-						break;
-					case 'f':                      /* \f */
-						*(*buf)++ = '\f'; 
-						break;
-					case '0':                    /* \nnn */
-					case '1': 
-					case '2': 
-					case '3': 
-					case '4':
-					case '5': 
-					case '6': 
-					case '7': 
-					case '8': 
-					case '9':
-						**buf = 0;
-							/* get up to three digits */
-						for (i = 0; i < 3 && isdigit(*tmp); ++i)
-							**buf = **buf * 8 + *tmp++ - '0';
-						(*buf)++;
-						tmp--;
-						break;
-					default:      /* \x, for all other x */
-						*(*buf)++= *tmp;
-					}
-					break;
-				case '^':              /* control characters */
-					*(*buf)++ = *++tmp - '@'; 
-					break;
-				default: 
-					*(*buf)++ = *tmp;
-				}
-			}
-			*(*buf)++ = 0;
-			return hold;
+		    case 'n':			/* \n */
+			*(*buf)++ = '\n';
+			break;
+		    case 'r':			/* \r */
+			*(*buf)++ = '\r';
+			break;
+		    case 't':			/* \t */
+			*(*buf)++ = '\t';
+			break;
+		    case 'b':			/* \b */
+			*(*buf)++ = '\b';
+			break;
+		    case 'f':			/* \f */
+			*(*buf)++ = '\f';
+			break;
+		    case '0':			/* \nnn */
+		    case '1':
+		    case '2':
+		    case '3':
+		    case '4':
+		    case '5':
+		    case '6':
+		    case '7':
+		    case '8':
+		    case '9':
+			**buf = 0;
+			    /* get up to three digits */
+			for (i = 0; i < 3 && isdigit(*tmp); ++i)
+			    **buf = **buf * 8 + *tmp++ - '0';
+			(*buf)++;
+			tmp--;
+			break;
+		    default:			/* \x, for all other x */
+			*(*buf)++= *tmp;
+		    }
+		    break;
+		case '^':			/* control characters */
+		    *(*buf)++ = *++tmp - '@';
+		    break;
+		default:
+		    *(*buf)++ = *tmp;
 		}
-	} while (*tmp);
+	    }
+	    *(*buf)++ = 0;
+	    return hold;
+	}
+    } while (*tmp);
 
-	return 0;
+    return 0;
 }
 
 /*
@@ -360,261 +355,212 @@ char    *id, **buf;
  *
  * Purpose: decode cm cursor motion string.
  *
- * Calling conventions: cm is cursor motion string.
- *			line, col, are the desired destination.
+ * Calling conventions: cm is cursor motion string.  line, col, are the
+ * desired destination.
  *
- * Returned values: a string pointing to the decoded string, or
- *		    "OOPS" if it cannot be decoded.
+ * Returned values: a string pointing to the decoded string, or "OOPS" if it
+ * cannot be decoded.
  *
  * Notes
- *		The accepted escapes are:
- *			%d	 as in printf, 0 origin.
- *			%2, %3	 like %02d, %03d in printf.
- *			%.	 like %c
- *			%+x	 adds <x> to value, then %.
- *			%>xy	 if value>x, adds y. No output.
- *			%i	 increments line& col, no output.
- *			%r	 reverses order of line&col. No output.
- *			%%	 prints as a single %.
- *			%n	 exclusive or row & col with 0140.
- *			%B	 BCD, no output.
- *			%D	 reverse coding (x-2*(x%16)), no output.
+ *	The accepted escapes are:
+ *	%d	 as in printf, 0 origin.
+ *	%2, %3   like %02d, %03d in printf.
+ *	%.	 like %c
+ *	%+x	 adds <x> to value, then %.
+ *	%>xy     if value>x, adds y. No output.
+ *	%i	 increments line& col, no output.
+ *	%r	 reverses order of line&col. No output.
+ *	%%	 prints as a single %.
+ *	%n	 exclusive or row & col with 0140.
+ *	%B	 BCD, no output.
+ *	%D	 reverse coding (x-2*(x%16)), no output.
  */
 
-char *
+    char *
 tgoto(cm, col, line)
-char	*cm;                                      /* cm string, from termcap */
-int	col,                                           /* column, x position */
-	line;                                            /* line, y position */
+    char	*cm;				/* cm string, from termcap */
+    int col,					/* column, x position */
+    line;					/* line, y position */
 {
-	char	gx, gy,                                           /*    x, y */
-		*ptr,                                     /* pointer in 'cm' */
-		reverse = 0,                                 /* reverse flag */
-		*bufp,                         /* pointer in returned string */
-		addup = 0,                                     /* add upline */
-		addbak = 0,                                    /* add backup */
-		c;
-	static char buffer[32];
+    char    gx, gy,				/* x, y */
+	*ptr,					/* pointer in 'cm' */
+	reverse = 0,				/* reverse flag */
+	*bufp,					/* pointer in returned string */
+	addup = 0,				/* add upline */
+	addbak = 0,				/* add backup */
+	c;
+    static char buffer[32];
 
-	if (!cm)
-		return "OOPS";                       /* Kludge, but standard */
+    if (!cm)
+	return "OOPS";				/* Kludge, but standard */
 
-	bufp = buffer;
-	ptr = cm;
+    bufp = buffer;
+    ptr = cm;
 
-	while (*ptr) {
-		if ((c = *ptr++) != '%') {                     /* normal char */
-			*bufp++ = c;
-		} else {                                         /* % escape */
-			switch(c = *ptr++) {
-			case 'd':                                 /* decimal */
-				bufp = _addfmt(bufp, "%d", line);
-				line = col;
-				break;
-			case '2':                         /* 2 digit decimal */
-				bufp = _addfmt(bufp, "%02d", line);
-				line = col;
-				break;
-			case '3':                         /* 3 digit decimal */
-				bufp = _addfmt(bufp, "%03d", line);
-				line = col;
-				break;
-			case '>':                      /* %>xy: if >x, add y */
-				gx = *ptr++;
-				gy = *ptr++;
-				if (col>gx) col += gy;
-				if (line>gx) line += gy;
-				break;
-			case '+':                              /* %+c: add c */
-				line += *ptr++;
-			case '.':                               /* print x/y */
-				if (line == '\t' ||                /* these are */
-				   line == '\n' ||             /* chars that */
-				   line == '\004' ||             /* UNIX hates */
-				   line == '\0') {
-					line++;         /* so go to next pos */
-					if (reverse == (line == col))
-						addup=1;      /* and mark UP */
-					else
-						addbak=1;           /* or BC */
-				}
-				*bufp++=line;
-				line = col;
-				break;
-			case 'r':                              /* r: reverse */
-				gx = line; 
-				line = col; 
-				col = gx;
-				reverse = 1;
-				break;
-			case 'i':             /* increment (1-origin screen) */
-				col++;
-				line++;
-				break;
-			case '%':                          /* %%=% literally */
-				*bufp++='%';
-				break;
-			case 'n':                       /* magic DM2500 code */
-				line ^= 0140;
-				col ^= 0140;
-				break;
-			case 'B':                            /* bcd encoding */
-				line = line/10<<4+line%10;
-				col = col/10<<4+col%10;
-				break;
-			case 'D':                   /* magic Delta Data code */
-				line = line-2*(line&15);
-				col = col-2*(col&15);
-				break;
-			default:                           /* Unknown escape */
-				return "OOPS";
-			}
+    while (*ptr) {
+	if ((c = *ptr++) != '%') {		/* normal char */
+	    *bufp++ = c;
+	} else {				/* % escape */
+	    switch(c = *ptr++) {
+	    case 'd':				/* decimal */
+		bufp = _addfmt(bufp, "%d", line);
+		line = col;
+		break;
+	    case '2':				/* 2 digit decimal */
+		bufp = _addfmt(bufp, "%02d", line);
+		line = col;
+		break;
+	    case '3':				/* 3 digit decimal */
+		bufp = _addfmt(bufp, "%03d", line);
+		line = col;
+		break;
+	    case '>':				/* %>xy: if >x, add y */
+		gx = *ptr++;
+		gy = *ptr++;
+		if (col>gx) col += gy;
+		if (line>gx) line += gy;
+		break;
+	    case '+':				/* %+c: add c */
+		line += *ptr++;
+	    case '.':				/* print x/y */
+		if (line == '\t' ||		/* these are */
+		   line == '\n' ||		/* chars that */
+		   line == '\004' ||		/* UNIX hates */
+		   line == '\0') {
+		    line++;			/* so go to next pos */
+		    if (reverse == (line == col))
+			addup=1;		/* and mark UP */
+		    else
+			addbak=1;		/* or BC */
 		}
+		*bufp++=line;
+		line = col;
+		break;
+	    case 'r':				/* r: reverse */
+		gx = line;
+		line = col;
+		col = gx;
+		reverse = 1;
+		break;
+	    case 'i':			/* increment (1-origin screen) */
+		col++;
+		line++;
+		break;
+	    case '%':				/* %%=% literally */
+		*bufp++='%';
+		break;
+	    case 'n':				/* magic DM2500 code */
+		line ^= 0140;
+		col ^= 0140;
+		break;
+	    case 'B':				/* bcd encoding */
+		line = line/10<<4+line%10;
+		col = col/10<<4+col%10;
+		break;
+	    case 'D':				/* magic Delta Data code */
+		line = line-2*(line&15);
+		col = col-2*(col&15);
+		break;
+	    default:				/* Unknown escape */
+		return "OOPS";
+	    }
+	}
+    }
+
+    if (addup)					/* add upline */
+	if (UP) {
+	    ptr=UP;
+	    while (isdigit(*ptr) || *ptr == '.')
+		ptr++;
+	    if (*ptr == '*')
+		ptr++;
+	    while (*ptr)
+		*bufp++ = *ptr++;
 	}
 
-	if (addup)                                              /* add upline */
-		if (UP) {
-			ptr=UP;
-			while (isdigit(*ptr) || *ptr == '.')
-				ptr++;
-			if (*ptr == '*')
-				ptr++;
-			while (*ptr)
-				*bufp++ = *ptr++;
-		}
+    if (addbak)					/* add backspace */
+	if (BC) {
+	    ptr=BC;
+	    while (isdigit(*ptr) || *ptr == '.')
+		ptr++;
+	    if (*ptr == '*')
+		ptr++;
+	    while (*ptr)
+		*bufp++ = *ptr++;
+	}
+	else
+	    *bufp++='\b';
 
-	if (addbak)                                          /* add backspace */
-		if (BC) {
-			ptr=BC;
-			while (isdigit(*ptr) || *ptr == '.')
-				ptr++;
-			if (*ptr == '*')
-				ptr++;
-			while (*ptr)
-				*bufp++ = *ptr++;
-		} 
-		else
-			*bufp++='\b';
+    *bufp = 0;
 
-	*bufp = 0;
-
-	return(buffer);
+    return(buffer);
 }
-
-/*
- * Module: tinit
- *
- * Purpose: simplified terminal initialisation.
- *
- * Calling conventions: name is name of terminal.
- *
- * Returned values: none.
- *
- * Notes
- *		tinit calls tgetent, then sets up the global
- *	variables PC, UP, BC, ospeed appropriately.
- *
- */
-
-#if 0		/* already included in term.c */
-
-char tbuf[TBUFSZ];                                /* Buffer for termcap entry */
-char junkbuf[TBUFSZ];                                  /* Big buffer for junk */
-char *junkptr;
-
-tinit(name)
-char *name;
-{
-#ifndef AMIGA
-	struct sgttyb sgbuf;
-#endif
-	char *ps;
-
-	junkptr = junkbuf;
-
-	tgetent(tbuf, name);
-
-	ps = tgetstr("pc", &junkptr);
-	if (ps) PC = *ps;
-	UP = tgetstr("up", &junkptr);
-	BC = tgetstr("bc", &junkptr);
-
-#ifdef AMIGA
-	ospeed=0;
-#else
-	gtty(1, &sgbuf);
-	ospeed=sgbuf.sg_ospeed;
-#endif
-	return 0;
-}
-#endif
 
 /*
  * Module: tputs
  *
  * Purpose: decode padding information
  *
- * Calling conventions: cp = string to be padded, affcnt = # of items
- *			affected (lines, characters, whatever),
- *			outc = routine to output 1 character.
+ * Calling conventions: cp = string to be padded, affcnt = # of items affected
+ *	(lines, characters, whatever), outc = routine to output 1 character.
  *
  * Returned values: none
  *
  * Notes
- *		cp has padding information ahead of it, in the form
- *	nnnTEXT or nnn*TEXT. nnn is the number of milliseconds to delay,
- *	and may be a decimal (nnn.mmm). If the asterisk is given, then
- *	the delay is multiplied by afcnt. The delay is produced by outputting
- *	a number of nulls (or other padding char) after printing the
- *	TEXT.
+ *	cp has padding information ahead of it, in the form
+ *  nnnTEXT or nnn*TEXT. nnn is the number of milliseconds to delay,
+ *  and may be a decimal (nnn.mmm). If the asterisk is given, then
+ *  the delay is multiplied by afcnt. The delay is produced by outputting
+ *  a number of nulls (or other padding char) after printing the
+ *  TEXT.
  *
  */
 
 long _bauds[16]={
-	0,	50,	75,	110,
-	134,	150,	200,	300,
-	600,	1200,	1800,	2400,
-	4800,	9600,	19200,	19200 };
+    0,	50, 75,	110,
+    134,    150,    200,    300,
+    600,    1200,   1800,   2400,
+    4800,   9600,   19200,  19200 };
 
 tputs(cp, affcnt, outc)
-char *cp;                                                 /* string to print */
-int affcnt;                                      /* Number of lines affected */
-void (*outc) __ARGS((unsigned int));                              /* routine to output 1 character */
+    char *cp;				/* string to print */
+    int affcnt;				/* Number of lines affected */
+    void (*outc) __ARGS((unsigned int));/* routine to output 1 character */
 {
-	long	frac,                    /* 10^(#digits after decimal point) */
-		counter,                                           /* digits */
-		atol __ARGS((const char *));
+    long    frac,			/* 10^(#digits after decimal point) */
+	counter,			/* digits */
+	atol __ARGS((const char *));
 
-	if (isdigit(*cp)) {
-		counter = 0;
-		frac = 1000;
-		while (isdigit(*cp))
-			counter = counter * 10L + (long)(*cp++ - '0');
-		if (*cp == '.')
-			while (isdigit(*++cp)) {
-				counter = counter * 10L + (long)(*cp++ - '0');
-				frac = frac * 10;
-			}
-		if (*cp!='*') {                 /* multiply by affected lines */
-			if (affcnt>1) affcnt = 1;
-		} 
-		else
-			cp++;
-
-        /* Calculate number of characters for padding counter/frac ms delay */
-		if (ospeed)
-			counter = (counter * _bauds[ospeed] * (long)affcnt) / frac;
-
-		while (*cp)                                  /* output string */
-			(*outc)(*cp++);
-		if (ospeed)
-			while (counter--)            /* followed by pad characters */
-				(*outc)(PC);
-	} 
+    if (isdigit(*cp)) {
+	counter = 0;
+	frac = 1000;
+	while (isdigit(*cp))
+	    counter = counter * 10L + (long)(*cp++ - '0');
+	if (*cp == '.')
+	    while (isdigit(*++cp)) {
+		counter = counter * 10L + (long)(*cp++ - '0');
+		frac = frac * 10;
+	    }
+	if (*cp!='*') {			/* multiply by affected lines */
+	    if (affcnt>1) affcnt = 1;
+	}
 	else
-		while (*cp)
-			(*outc)(*cp++);
-	return 0;
+	    cp++;
+
+	/* Calculate number of characters for padding counter/frac ms delay */
+	if (ospeed)
+	    counter = (counter * _bauds[ospeed] * (long)affcnt) / frac;
+
+	while (*cp)			/* output string */
+	    (*outc)(*cp++);
+	if (ospeed)
+	    while (counter--)		/* followed by pad characters */
+		(*outc)(PC);
+    }
+    else
+	while (*cp)
+	    (*outc)(*cp++);
+    return 0;
 }
 
 /*
@@ -623,43 +569,49 @@ void (*outc) __ARGS((unsigned int));                              /* routine to 
  * Purpose: Utility routines for TERMLIB functions.
  *
  */
-
-	static int
-_match(s1, s2)                 /* returns length of text common to s1 and s2 */
-char *s1, *s2;
+    static int
+_match(s1, s2)		/* returns length of text common to s1 and s2 */
+    char *s1, *s2;
 {
-	int i = 0;
+    int i = 0;
 
-	while (s1[i] && s1[i] == s2[i])
-		i++;
+    while (s1[i] && s1[i] == s2[i])
+	i++;
 
-	return i;
+    return i;
 }
 
-	static char *
-_find(s, set)   /* finds next c in s that's a member of set, returns pointer */
-char *s, *set;
+/*
+ * finds next c in s that's a member of set, returns pointer
+ */
+    static char *
+_find(s, set)
+    char *s, *set;
 {
-	for(; *s; s++) {
-		char    *ptr = set;
+    for(; *s; s++)
+    {
+	char	*ptr = set;
 
-		while (*ptr && *s != *ptr)
-			ptr++;
+	while (*ptr && *s != *ptr)
+	    ptr++;
 
-		if (*ptr)
-			return s;
-	}
+	if (*ptr)
+	    return s;
+    }
 
-	return s;
+    return s;
 }
 
-	static char *
-_addfmt(buf, fmt, val)             /* add val to buf according to format fmt */
-char *buf, *fmt;
-int val;
+/*
+ * add val to buf according to format fmt
+ */
+    static char *
+_addfmt(buf, fmt, val)
+    char *buf, *fmt;
+    int val;
 {
-	sprintf(buf, fmt, val);
-	while (*buf)
-		buf++;
-	return buf;
+    sprintf(buf, fmt, val);
+    while (*buf)
+	buf++;
+    return buf;
 }

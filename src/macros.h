@@ -1,6 +1,6 @@
-/* vi:set ts=4 sw=4:
+/* vi:set ts=8 sts=4 sw=4:
  *
- * VIM - Vi IMproved		by Bram Moolenaar
+ * VIM - Vi IMproved	by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -19,10 +19,10 @@
  * Position comparisons
  */
 #define lt(a, b) (((a).lnum != (b).lnum) \
-				   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
+		   ? ((a).lnum < (b).lnum) : ((a).col < (b).col))
 
 #define ltoreq(a, b) (((a).lnum != (b).lnum) \
-				   ? ((a).lnum < (b).lnum) : ((a).col <= (b).col))
+		   ? ((a).lnum < (b).lnum) : ((a).col <= (b).col))
 
 #define equal(a, b) (((a).lnum == (b).lnum) && ((a).col == (b).col))
 
@@ -39,16 +39,24 @@
 /*
  * On some systems toupper()/tolower() only work on lower/uppercase characters
  */
-#ifdef BROKEN_TOUPPER
-# define TO_UPPER(c)	(islower(c) ? toupper(c) : (c))
-# define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c))
+#ifdef WIN32
+#  define TO_UPPER(c)	toupper_tab[(c) & 255]
+#  define TO_LOWER(c)	tolower_tab[(c) & 255]
 #else
-# define TO_UPPER		toupper
-# define TO_LOWER		tolower
+# ifdef BROKEN_TOUPPER
+#  define TO_UPPER(c)	(islower(c) ? toupper(c) : (c))
+#  define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c))
+# else
+#  define TO_UPPER	toupper
+#  define TO_LOWER	tolower
+# endif
 #endif
 
+/* macro version of chartab(), only works with 0-255 values */
+#define CHARSIZE(c)	(chartab[c] & CHAR_MASK);
+
 #ifdef HAVE_LANGMAP
-/* 
+/*
  * Adjust chars in a language according to 'langmap' option.
  * NOTE that there is NO overhead if 'langmap' is not set; but even
  * when set we only have to do 2 ifs and an array lookup.
@@ -56,13 +64,13 @@
  * The do-while is just to ignore a ';' after the macro.
  */
 # define LANGMAP_ADJUST(c, condition) do { \
-		if (*p_langmap && (condition) && !KeyStuffed && (c) < 256) \
-			c = langmap_mapchar[c]; \
-	} while (0)
+	if (*p_langmap && (condition) && !KeyStuffed && (c) < 256) \
+	    c = langmap_mapchar[c]; \
+    } while (0)
 #endif
 
 /*
- * isbreak() is used very often if 'linebreak' is set, use a macro to make
+ * vim_isbreak() is used very often if 'linebreak' is set, use a macro to make
  * it work fast.
  */
-#define isbreak(c) (breakat_flags[(char_u)(c)])
+#define vim_isbreak(c) (breakat_flags[(char_u)(c)])

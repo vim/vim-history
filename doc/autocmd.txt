@@ -1,0 +1,561 @@
+*autocmd.txt*   For Vim version 5.0.  Last modification: 1998 Feb 17
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Automatic commands					*autocommand*
+
+1. Introduction			|autocmd-intro|
+2. Defining autocommands	|autocmd-define|
+3. Removing autocommands	|autocmd-remove|
+4. Listing autocommands		|autocmd-list|
+5. Events			|autocmd-events|
+6. Patterns			|autocmd-patterns|
+7. Groups			|autocmd-groups|
+8. Executing autocommands	|autocmd-execute|
+9. Using autocommands		|autocmd-use|
+
+{Vi does not have any of these commands}
+
+==============================================================================
+1. Introduction						*autocmd-intro*
+
+You can specify commands to be executed automatically for when reading or
+writing a file, when entering or leaving a buffer or window, and when exiting
+Vim.  For example, you can create an autocommand to set the 'cindent' option
+for files matching *.c.  You can also use autocommands to implement advanced
+features, such as editing compressed files (see |gzip-example|).  The usual
+place to put autocommands is in your .vimrc or .exrc file.
+
+WARNING: Using autocommands is very powerful, and may lead to unexpected side
+effects.  Be careful not to destroy your text.
+- It's a good idea to do some testing on an expendable copy of a file first.
+  For example: If you use autocommands to decompress a file when starting to
+  edit it, make sure that the autocommands for compressing when writing work
+  correctly.
+- Be prepared for an error halfway through (e.g., disk full).  Vim will mostly
+  be able to undo the changes to the buffer, but you may have to clean up the
+  changes to other files by hand (e.g., compress a file that has been
+  decompressed).
+- If the BufRead* events allow you to edit a compressed file, the FileRead*
+  events should do the same (this makes recovery possible in some rare cases).
+  It's a good idea to use the same autocommands for the File* and Buf* events
+  when possible.
+
+The |+autocmd| feature is only included if it has not been disabled at compile
+time.
+
+==============================================================================
+2. Defining autocommands				*autocmd-define*
+
+Note: The ":autocmd" command cannot be followed by another command, since any
+'|' is considered part of the command.
+
+							*:au* *:autocmd*
+:au[tocmd] [group] {event} {pat} [nested] {cmd}
+			Add {cmd} to the list of commands that Vim will
+			execute automatically on {event} for a file matching
+			{pat}.  Vim always adds the {cmd} after existing
+			autocommands, so that the autocommands execute in the
+			order in which they were given.  See |autocmd-nest|
+			for [nested].
+
+Note that special characters (e.g., "%", "<cword>") in the ":autocmd"
+arguments are not expanded when the autocommand is defined.  These will be
+expanded when the Event is recognized, and the {cmd} is executed.  The only
+exception is that "<sfile>" is expanded when the autocmd is defined.  Example:
+
+>	:au BufEnter *.html so <sfile>:h/html.vim
+
+Here Vim expands <sfile> to the name of the file containing this line.
+
+When your .vimrc file is sourced twice, the autocommands will appear twice.
+To avoid this, put this command in your .vimrc file, before defining
+autocommands:
+
+>	:autocmd!	" Remove ALL autocommands.
+
+If you don't want to remove all autocommands, you can instead use a variable
+to ensure that Vim includes the autocommands only once:
+
+>	:if !exists("autocommands_loaded")
+>	:  let autocommands_loaded = 1
+>	:  au ...
+>	:endif
+
+When the [group] argument is not given, Vim uses the current group (as defined
+with ":augroup"); otherwise, Vim uses the group defined with [group].  Note
+that [group] must have been defined before.  You cannot define a new group
+with ":au group ..."; use ":augroup" for that.
+
+While testing autocommands, you might find the 'verbose' option to be useful:
+>	:set verbose=9
+This setting makes Vim echo the autocommands as it executes them.
+
+==============================================================================
+3. Removing autocommands				*autocmd-remove*
+
+:au[tocmd]! [group] {event} {pat} [nested] {cmd}
+			Remove all autocommands associated with {event} and
+			{pat}, and add the command {cmd}.  See |autocmd-nest|
+			for [nested].
+
+:au[tocmd]! [group] {event} {pat}
+			Remove all autocommands associated with {event} and
+			{pat}.
+
+:au[tocmd]! [group] * {pat}
+			Remove all autocommands associated with {pat} for all
+			events.
+
+:au[tocmd]! [group] {event}
+			Remove ALL autocommands for {event}.
+
+:au[tocmd]! [group]	Remove ALL autocommands.
+
+When the [group] argument is not given, Vim uses the current group (as defined
+with ":augroup"); otherwise, Vim uses the group defined with [group].
+
+==============================================================================
+4. Listing autocommands					*autocmd-list*
+
+:au[tocmd] [group] {event} {pat}
+			Show the autocommands associated with {event} and
+			{pat}.
+
+:au[tocmd] [group] * {pat}
+			Show the autocommands associated with {pat} for all
+			events.
+
+:au[tocmd] [group] {event}
+			Show all autocommands for {event}.
+
+:au[tocmd] [group]	Show all autocommands.
+
+If you provide the [group] argument, Vim lists only the autocommands for
+[group]; otherwise, Vim lists the autocommands for ALL groups.  Note that this
+argument behavior differs from that for defining and removing autocommands.
+
+==============================================================================
+5. Events						*autocmd-events*
+
+					*autocommand-events* *{event}*
+Vim recognizes the following events.  Vim ignores the case of event names
+(e.g., you can use "BUFread" or "bufread" instead of "BufRead").
+
+							*BufNewFile*
+BufNewFile			When starting to edit a file that doesn't
+				exist.  Can be used to read in a skeleton
+				file.
+							*BufReadPre*
+BufReadPre			When starting to edit a new buffer, before
+				reading the file into the buffer.  Not used
+				if the file doesn't exist.
+						*BufRead* *BufReadPost*
+BufRead or BufReadPost		When starting to edit a new buffer, after
+				reading the file into the buffer, before
+				executing the modelines.  This does NOT work
+				for ":r file".  Not used when the file doesn't
+				exist.  Also used after succesfully recovering
+				a file.
+							*FileReadPre*
+FileReadPre			Before reading a file with a ":read" command.
+							*FileReadPost*
+FileReadPost			After reading a file with a ":read" command.
+				Note that Vim sets the '[ and '] marks to the
+				first and last line of the read.  This can be
+				used to operate on the lines just read.
+							*FilterReadPre*
+FilterReadPre			Before reading a file from a filter command.
+				Vim checks the pattern against the the name of
+				the current buffer, not the name of the
+				temporary file that is the output of the
+				filter command.
+							*FilterReadPost*
+FilterReadPost			After reading a file from a filter command.
+				Vim checks the pattern against the the name of
+				the current buffer as with FilterReadPre.
+							*StdinReadPre*
+StdinReadPre			Before reading from stdin into the buffer.
+				Only used when the "-" argument was used when
+				Vim was started |--|.
+							*StdinReadPost*
+StdinReadPost			After reading from the stdin into the buffer,
+				before executing the modelines.  Only used
+				when the "-" argument was used when Vim was
+				started |--|.
+						*BufWrite* *BufWritePre*
+BufWrite or BufWritePre		Before writing the whole buffer to a file.
+							*BufWritePost*
+BufWritePost			After writing the whole buffer to a file
+				(should undo the commands for BufWritePre).
+							*FileWritePre*
+FileWritePre			Before writing to a file, when not writing the
+				whole buffer.
+							*FileWritePost*
+FileWritePost			After writing to a file, when not writing the
+				whole buffer.
+							*FileAppendPre*
+FileAppendPre			Before appending to a file.
+							*FileAppendPost*
+FileAppendPost			After appending to a file.
+							*FilterWritePre*
+FilterWritePre			Before writing a file for a filter command.
+				Vim checks the pattern against the the name of
+				the current buffer, not the name of the
+				temporary file that is the output of the
+				filter command.
+							*FilterWritePost*
+FilterWritePost			After writing a file for a filter command.
+				Vim checks the pattern against the the name of
+				the current buffer as with FilterWritePre.
+							*FileChangedShell*
+FileChangedShell		After Vim runs a shell command and notices
+				that the modification time of the current file
+				has changed since editing started.  Run in
+				place of the 'has been changed' message.  See
+				|timestamp|.  Useful for reloading related
+				buffers which are affected by a single
+				command.
+							*BufEnter*
+BufEnter			After entering a buffer.  Useful for setting
+				options for a file type.  Also executed when
+				starting to edit a buffer, after the
+				BufReadPost autocommands.
+							*BufLeave*
+BufLeave			Before leaving to another buffer.  Also when
+				leaving or closing the current window and the
+				new current window is not for the same buffer.
+BufUnload						*BufUnload*
+				Before unloading a buffer.  This is when the
+				text in the buffer is going to be freed.  This
+				may be after a BufWritePost and before a
+				BufDelete.
+BufDelete						*BufDelete*
+				Before deleting a buffer from the buffer list.
+				The BufUnload may be called first (if the
+				buffer was loaded).
+							*WinEnter*
+WinEnter			After entering another window.  Not done for
+				the first window, when Vim has just started.
+				Useful for setting the window height.
+				If the window is for another buffer, Vim
+				executes the BufEnter autocommands after the
+				WinEnter autocommands.
+							*TermChanged*
+TermChanged			After the value of 'term' has changed.  Useful
+				for re-loading the syntax file to update the
+				colors, fonts and other terminal-dependent
+				settings.  Executed for all loaded buffers.
+							*WinLeave*
+WinLeave			Before leaving a window.  If the window to be
+				entered next is for a different buffer, Vim
+				executes the BufLeave autocommands before the
+				WinLeave autocommands.
+							*VimLeave*
+VimLeave			Before exiting Vim, just before writing the
+				.viminfo file.  There is no VimEnter event,
+				because you can use the .vimrc for that.
+
+							*User*
+User				Never executed automatically.  To be used for
+				autocommands that are only executed with
+				":doautocmd".  See |User-function| for how to
+				use this event to create functions.
+
+For READING FILES there are three possible pairs of events.  Vim uses only one
+pair at a time:
+BufNewFile			starting to edit a non-existent file
+BufReadPre	BufReadPost	starting to edit an existing file
+FilterReadPre	FilterReadPost	read the temp file with filter output
+FileReadPre	FileReadPost	any other file read
+
+Note that the autocommands for the *ReadPre events and all the Filter events
+are not allowed to change the current buffer (you will get an error message if
+this happens).  This is to prevent the file to be read into the wrong buffer.
+
+Note that the 'modified' flag is reset AFTER executing the BufReadPost
+and BufNewFile autocommands.  But when the 'modified' option was set by the
+autocommands, this doesn't happen.
+
+You can use the 'eventignore' option to ignore a number of events or all
+events.
+
+==============================================================================
+6. Patterns						*autocmd-patterns*
+
+The file pattern is tested for a match against the file name in one of two
+ways:
+1. When there is no '/' in the pattern, Vim checks for a match against only
+   the tail part of the file name (without its leading directory path).
+2. When there is a '/' in the pattern,  Vim checks for a match against the
+   both short file name (as you typed it) and the full file name (after
+   expanding it to a full path and resolving symbolic links).
+
+Examples:
+>	:autocmd BufRead /vim/src/*.c	set wrap
+>	:autocmd BufRead /tmp/*.c	set ts=5
+The first matches for all files that have a path that ends in "/vim/src/*.c".
+If you have a link from "/tmp/test.c" to "/home/nobody/vim/src/test.c", and
+you start editing "/tmp/test.c", the example autocommand will both match.
+
+Note:  Do not use a leading "/" to match the root directory; this can match
+any '/' in the file name.  To match the root directory, use "^/".
+
+Note that for all systems the '/' character is used for path separator (even
+MS-DOS and OS/2).  This was done because the backslash is difficult to use
+in a pattern and to make the autocommands portable accross different systems.
+
+Note that using ~ in a file name (for home directory) doesn't work.  Use a
+pattern that matches the full path name, for example "*home/user/.cshrc".
+
+==============================================================================
+7. Groups						*autocmd-groups*
+
+Autocommands can be put together in a group.  This is useful for removing or
+executing a group of autocommands.  For example, all the autocommands for
+syntax highlighting are put in the "highlight" group, to be able to execute
+":doautoall highlight BufRead" when the GUI starts.
+
+When no specific group is selected, Vim uses the default group.  The default
+group does not have a name.  You cannot execute the autocommands from the
+default group separately; you can execute them only by executing autocommands
+for all groups.
+
+Normally, when executing autocommands automatically, Vim uses the autocommands
+for all groups.  The group only matters when executing autocommands with
+":doautocmd" or ":doautoall", or when defining or deleting autocommands.
+
+The group name can contain any characters except white space.  The group name
+"end" is reserved (also in uppercase).
+
+							*:aug* *:augroup*
+:aug[roup] {name}		Define the autocmd group name for the
+				following ":autocmd" commands.  The name "end"
+				or "END" selects the default group.
+
+To enter autocommands for a specific group, use this method:
+1. Select the group with ":augroup {name}".
+2. Delete any old autocommands with ":au!".
+3. Define the autocommands.
+4. Go back to the default group with "augroup END".
+
+Example:
+>	:augroup uncompress
+>	:  au!
+>	:  au BufEnter *.gz	%!gunzip
+>	:augroup END
+
+This prevents having the autocommands defined twice (e.g., after sourcing the
+.vimrc file again).
+
+==============================================================================
+8. Executing autocommands				*autocmd-execute*
+
+Vim can also execute Autocommands non-automatically.  This is useful if you
+have changed autocommands, or when Vim has executed the wrong autocommands
+(e.g., the file pattern match was wrong).
+
+Note that the 'eventignore' option applies here too.  Events listed in this
+option will not cause any commands to be executed.
+
+							*:do* *:doautocmd*
+:do[autocmd] [group] {event} [fname]
+			Apply the autocommands matching [fname] (default:
+			current file name) for {event} to the current buffer.
+			You can use this when the current file name does not
+			match the right pattern, after changing settings, or
+			to execute autocommands for a certain event.
+			It's possible to use this inside an autocommand too,
+			so you can base the autocommands for one extension on
+			another extension.  Example:
+>				:au Bufenter *.cpp so ~/.vimrc_cpp
+>				:au Bufenter *.cpp doau BufEnter x.c
+			Be careful to avoid endless loops.  See |autocmd-nest|.
+
+			When the [group] argument is not given, Vim executes
+			the autocommands for all groups.  When the [group]
+			argument is included, Vim executes only the matching
+			autocommands for that group.  Note: if you use an
+			undefined group name, Vim gives you an error message.
+
+						*:doautoa* *:doautoall*
+:doautoa[ll] [group] {event} [fname]
+			Like ":doautocmd", but apply the autocommands to each
+			loaded buffer.  Careful: Don't use this for
+			autocommands that delete a buffer, change to another
+			buffer or change the contents of a buffer; the result
+			is unpredictable.  this command is intended for
+			autocommands that set options, change highlighting,
+			and things like that.
+
+==============================================================================
+9. Using autocommands					*autocmd-use*
+
+Before the *ReadPre event the '[ mark is set to the line just above where the
+new lines will be inserted.  Before the *ReadPost event the '[ mark is set to
+the first line that was just read, the '] mark to the last line.  Careful: '[
+and '] change when using commands that change the buffer.
+
+In commands which expect a file name, you can use "<afile>" for the file name
+that is being read |:<afile>| (you can also use "%" for the current file
+name).
+
+Examples for reading compressed files:
+> :autocmd! BufReadPre,FileReadPre   *.gz set bin
+> :autocmd  BufReadPost,FileReadPost *.gz '[,']!gunzip
+> :autocmd  BufReadPost,FileReadPost *.gz set nobin
+> :autocmd  BufReadPost,FileReadPost *.gz execute ":doautocmd BufReadPost " . %:r
+
+NOTE: These examples remove any existing autocommands for the same
+event/pattern combination because of the '!'.
+
+For WRITING FILES there are four possible pairs of events.  Vim uses only one
+pair at a time:
+BufWritePre	BufWritePost	writing the whole buffer
+FilterWritePre	FilterWritePost	writing to the temp file with filter input
+FileAppendPre	FileAppendPost	appending to a file
+FileWritePre	FileWritePost	any other file write
+
+Note that the *WritePost commands should undo any changes to the buffer that
+were caused by the *WritePre commands; otherwise, writing the file will have
+the side effect of changing the buffer.
+
+Before executing the autocommands, the buffer from which the lines are to be
+written temporarily becomes the current buffer.  Unless the autocommands
+change the current buffer or delete the previously current buffer, the
+previously current buffer is made the current buffer again.
+
+The *WritePre and *AppendPre autocommands must not delete the buffer from
+which the lines are to be written.
+
+Before executing the *WritePre and *AppendPre autocommands the '[ mark is set
+to the first line that will be written, the '] mark to the last line.
+Careful: '[ and '] change when using commands that change the buffer.
+
+In commands which expect a file name, you can use "<afile>" for the file name
+that is being written |:<afile>| (you can also use "%" for the current file
+name).
+
+							*gzip-example*
+Examples for writing compressed files:
+> :autocmd! BufWritePost,FileWritePost	*.gz !mv <afile> <afile>:r
+> :autocmd  BufWritePost,FileWritePost	*.gz !gzip <afile>:r
+>
+> :autocmd! FileAppendPre		*.gz !gunzip <afile>
+> :autocmd  FileAppendPre		*.gz !mv <afile>:r <afile>
+> :autocmd! FileAppendPost		*.gz !mv <afile> <afile>:r
+> :autocmd  FileAppendPost		*.gz !gzip <afile>:r
+
+("<afile>:r" is the file name without the extension, see |:_%:|)
+
+The commands executed for the BufNewFile, BufRead/BufReadPost, BufWritePost,
+FileAppendPost and VimLeave events do not set or reset the changed flag of the
+buffer.  When you decompress the buffer with the BufReadPost autocommands, you
+can still exit with ":q".  When you use ":undo" in BufWritePost to undo the
+changes made by BufWritePre commands, you can still do ":q" (this also makes
+"ZZ" work).  If you do want the buffer to be marked as modified, set the
+'modified' option.
+
+To execute Normal mode commands from an autocommand, use the ":normal"
+command.  Use with care!  If the Normal mode command is not finished, the user
+needs to type characters (e.g., after ":normal m" you need to type a mark
+name).
+
+If you want the buffer to be unmodified after changing it, reset the
+'modified' option.  This makes it possible to exit the buffer with ":q"
+instead of ":q!".
+
+							*autocmd-nest*
+By default, autocommands do not nest.  If you use ":e" or ":w" in an
+autocommand, Vim does not execute the BufRead and BufWrite autocommands for
+those commands.  If you do want this, use the "nested" flag for those commands
+in which you want nesting.  For example:
+>	:autocmd FileChangedShell *.c nested e!
+The nesting is limited to 10 levels to get out of recursive loops.
+
+It's possible to use the ":au" command in an autocommand.  This can be a
+self-modifying command!  This can be useful for an autocommand that should
+execute only once.
+
+There is currently no way to disable the autocommands.  If you want to write a
+file without executing the autocommands for that type of file, write it under
+another name and rename it with a shell command.
+
+Note: When reading a file (with ":read file" or with a filter command) and the
+last line in the file does not have an <EOL>, Vim remembers this.  At the next
+write (with ":write file" or with a filter command), if the same line is
+written again as the last line in a file AND 'binary' is set, Vim does not
+supply an <EOL>.  This makes a filter command on the just read lines write the
+same file as was read, and makes a write command on just filtered lines write
+the same file as was read from the filter.  For example, another way to write
+a compressed file:
+
+> :autocmd FileWritePre *.gz   set bin|'[,']!gzip
+> :autocmd FileWritePost *.gz  undo|set nobin
+
+							*autocommand-pattern*
+You can specify multiple patterns, separated by commas.  Here are some
+examples:
+
+> :autocmd BufRead   *		set tw=79 nocin ic infercase fo=2croq
+> :autocmd BufRead   .letter	set tw=72 fo=2tcrq
+> :autocmd BufEnter  .letter	set dict=/usr/lib/dict/words
+> :autocmd BufLeave  .letter	set dict=
+> :autocmd BufRead,BufNewFile   *.c,*.h	set tw=0 cin noic
+> :autocmd BufEnter  *.c,*.h	abbr FOR for(i = 0; i < 3; i++)^M{^M}^[O
+> :autocmd BufLeave  *.c,*.h	unabbr FOR
+
+For makefiles (makefile, Makefile, imakefile, makefile.unix, etc.):
+
+> :autocmd BufEnter  ?akefile*	set include=^s\=include
+> :autocmd BufLeave  ?akefile*	set include&
+
+To always start editing C files at the first function:
+
+> :autocmd BufRead   *.c,*.h	1;/^{
+
+Without the "1;" above, the search would start from wherever the file was
+entered, rather than from the start of the file.
+
+To read a skeleton file for new C files:
+
+> :autocmd BufNewFile  *.c	0r ~/.skeleton.c
+> :autocmd BufNewFile  *.h	0r ~/.skeleton.h
+
+To insert the current date and time in a *.html file when writing it:
+
+> :autocmd BufWritePre,FileWritePre *.html ks|1,20g/Last modification: /normal f:lD:read !date^MkJ's
+
+(to insert the ^M type CTRL-V CTRL-M)
+You need to have a line "Last modification: <date time>" in the first 20 lines
+of the file for this to work.  Vim replaces <date time> (and anything in the
+same line after it) with the current date and time.  Explanation:
+	ks		mark current position with mark 's'
+	1,20g/pattern/	find lines that contain the pattern
+	normal f:	find the ':'
+	lD		delete the old date and time
+	!date^M		read the current date and time into the next line
+	kJ		Join the date and time with the previous line
+	's		return the cursor to the old position
+
+When entering :autocmd on the command line, completion of events and command
+names may be done (with <Tab>, CTRL-D, etc.) where appropriate.
+
+Vim executes all matching autocommands in the order that you specify them.
+It is recommended that your first autocommand be used for all files by using
+"*" as the file pattern.  This means that you can define defaults you like
+here for any settings, and if there is another matching autocommand it will
+override these.  But if there is no other matching autocommand, then at least
+your default settings are recovered (if entering this file from another for
+which autocommands did match).  Note that "*" will also match files starting
+with ".", unlike Unix shells.
+
+Autocommands do not change the current search patterns.  Vim saves the current
+search patterns before executing autocommands then restores them after the
+autocommands finish.  This means that autocommands do not affect the strings
+highlighted with the 'hlsearch' option.  Within autocommands, you can still
+use search patterns normally, e.g., with the "n" command.
+
+ vim:tw=78:ts=8:sw=8:

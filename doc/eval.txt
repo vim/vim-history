@@ -1,0 +1,874 @@
+*eval.txt*      For Vim version 5.0.  Last modification: 1998 Feb 17
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Expression evaluation					*expression* *expr*
+
+Note: Expression evaluation can be disabled at compile time.  If this has been
+done, the features in this document are not available.  See |+eval|.
+
+1. Variables		|variables|
+2. Expression syntax	|expression-syntax|
+3. Internal variable	|internal-variables|
+4. Function calls	|functions|
+5. Commands		|expression-commands|
+
+{Vi does not have any of these commands}
+
+==============================================================================
+1. Variables						*variables*
+
+There are two types of variables:
+
+Number		a 32 bit signed number
+String		a NUL terminated string of 8-bit unsigned characters.
+
+These are converted automatically, depending on how they are used.
+
+Conversion from a Number to a String is by making the ASCII representation of
+the Number.  Examples:
+>	Number 123	-->	String "123"
+>	Number 0	-->	String "0"
+>	Number -1	-->	String "-1"
+
+Conversion from a String to a Number is done by converting the first digits
+to a number.  Hexadecimal "0xf9" and Octal "017" numbers are recognized.  If
+the String doesn't start with digits, the result is zero.  Examples:
+>	String "456"	-->	Number 456
+>	String "6bar"	-->	Number 6
+>	String "foo"	-->	Number 0
+>	String "0xf1"	-->	Number 241
+>	String "0100"	-->	Number 64
+
+For boolean operators Numbers are used.  Zero is FALSE, non-zero is TRUE.
+
+Note that in the command
+	:if "foo"
+"foo" is converted to 0, which means FALSE.  To test for a non-empty string,
+use strlen():
+	:if strlen("foo")
+
+==============================================================================
+2. Expression syntax					*expression-syntax*
+
+Expression syntax summary, from least to most significant:
+
+|expr1|	expr2 || expr2 ..	logical OR
+
+|expr2|	expr3 && expr3 ..	logical AND
+
+|expr3|	expr4 == expr4		equal
+	expr4 != expr4		not equal
+	expr4 >	 expr4		greater than
+	expr4 >= expr4		greater than or equal
+	expr4 <	 expr4		smaller than
+	expr4 <= expr4		smaller than or equal
+	expr4 =~ expr4		regexp matches
+	expr4 !~ expr4		regexp doesn't match
+
+|expr4|	expr5 +	 expr5 ..	number addition
+	expr5 -	 expr5 ..	number subtraction
+	expr5 .	 expr5 ..	string concatenation
+
+|expr5|	expr6 *	 expr6 ..	number multiplication
+	expr6 /	 expr6 ..	number division
+	expr6 %	 expr6 ..	number modulo
+
+|expr6|	! expr6			logical NOT
+	- expr6			unary minus
+
+|expr7|	expr8[expr1]		index in String
+
+|expr8|	number			number constant
+	"string"		string constant
+	'string'		literal string constant
+	&option			option value
+	(expr1)			nested expression
+	variable		internal variable
+	$VAR			environment variable
+	@r			contents of register 'r'
+	function(expr1, expr1)	function call
+
+".." indicates that the operations in this level can be concatenated.
+Example:
+>	&nu || &list && &shell == "csh"
+
+All expressions within one level are parsed from left to right.
+
+
+expr1 and expr2						*expr1* *expr2*
+---------------
+
+						*expr-barbar* *expr-&&*
+The "||" and "&&" operators take one argument on each side.  The arguments
+are (converted to) Numbers.  The result is:
+
+         input				 output		    ~
+    n1		n2		n1 || n2	n1 && n2    ~
+    zero	zero		zero		zero
+    zero	non-zero	non-zero	zero
+    non-zero	zero		non-zero	zero
+    non-zero	non-zero	non-zero	non-zero
+
+The operators can be concatenated, for example:
+
+>	&nu || &list && &shell == "csh"
+
+Note that "&&" takes precedence over "||", so this has the meaning of:
+
+>	&nu || (&list && &shell == "csh")
+
+All arguments are computed, there is no skipping if the value of an argument
+doesn't matter, because the result is already known.  This is different from
+C, although it only matters for errors (unknown variables), since there are no
+side effects from an expression.
+
+
+expr3							*expr3*
+-----
+	expr4 == expr4		equal			*expr-==*
+	expr4 != expr4		not equal		*expr-!=*
+	expr4 >	 expr4		greater than		*expr->*
+	expr4 >= expr4		greater than or equal	*expr->=*
+	expr4 <	 expr4		smaller than		*expr-<*
+	expr4 <= expr4		smaller than or equal	*expr-<=*
+	expr4 =~ expr4		regexp matches		*expr-=~*
+	expr4 !~ expr4		regexp doesn't match	*expr-!~*
+
+When comparing a String with a Number, the String is converted to a Number,
+and the comparison is done on Numbers.
+
+When comparing two Strings, this is done with strcmp().  This results in the
+mathematical difference, not necessarily the alphabetical difference in the
+local language.
+
+The "=~" and "!~" operators match the lefthand argument with the righthand
+argument, which is used as a pattern.  See |pattern| for what a pattern is.
+This matching is always done like 'magic' was set, no matter what the actual
+value of 'magic' is.  This makes scripts portable.  The value of 'ignorecase'
+does matter though.  To avoid backslashes in the regexp pattern to be doubled,
+use a single-quote string, see |literal-string|.
+
+
+expr4 and expr5						*expr4* *expr5*
+---------------
+	expr5 +	 expr5 ..	number addition		*expr-+*
+	expr5 -	 expr5 ..	number subtraction	*expr--*
+	expr5 .	 expr5 ..	string concatenation	*expr-.*
+
+	expr6 *	 expr6 ..	number multiplication	*expr-star*
+	expr6 /	 expr6 ..	number division		*expr-/*
+	expr6 %	 expr6 ..	number modulo		*expr-%*
+
+For all, except ".", Strings are converted to Numbers.
+
+Note the difference between "+" and ".":
+	"123" + "456" = 579
+	"123" . "456" = "123456"
+
+When the righthand side of '/' is zero, the result is 0xfffffff.
+When the righthand side of '%' is zero, the result is 0.
+
+
+expr6							*expr6*
+-----
+	! expr6			logical NOT		*expr-!*
+	- expr6			unary minus		*expr-unary--*
+
+For '!' non-zero becomes zero, zero becomes one.
+For '-' the sign of the number is changed.
+
+A String will be converted to a Number first.
+
+These two can be repeated and mixed.  Examples:
+    !-1	    == 0
+    !!8	    == 1
+    --9	    == 9
+
+
+expr7							*expr7*
+-----
+	expr8[expr1]		index in String		*expr-[]*
+
+This results in a String that contains the expr1'th single character from
+expr8.  expr8 is used as a String, expr1 as a Number.
+
+Note that index zero gives the first character.  This is like it works in C.
+Careful: column numbers start with one!  Example, to get the character under
+the cursor:
+>   c = getline(line("."))[col(".") - 1]
+
+If the length of the String is less than the index, the result is an empty
+String.
+
+							*expr8*
+number
+------
+	number			number constant		*expr-number*
+
+Decimal, Hexadecimal (starting with 0x or 0X), or Octal (starting with 0).
+
+
+string							*expr-string*
+------
+	"string"		string constant		*expr-quote*
+
+Note that double quotes are used.
+
+A string constant accepts these special characters:
+	\...	three-digit octal number (e.g., "\316")
+	\..	two-digit octal number (must be followed by non-digit)
+	\.	one-digit octal number (must be followed by non-digit)
+	\x..	two-character hex number (e.g., "\x1f")
+	\x.	one-character hex number (must be followed by non-hex)
+	\X..	same as \x..
+	\X.	same as \x.
+	\b	backspace <BS>
+	\e	escape <Esc>
+	\f	formfeed <FF>
+	\n	newline <NL>
+	\r	return <CR>
+	\t	tab <Tab>
+	\\	backslash
+	\"	double quote
+	\<xxx>	Special key named "xxx".  e.g. "\<C-W>" for CTRL-W.
+
+Note that "\000" and "\x00" force the end of the string.
+
+
+literal-string						*literal-string*
+---------------
+	'string'		literal string constant		*expr-'*
+
+Note that single quotes are used.
+
+This string is taken literally.  No backslashes are removed or have a special
+meaning.  A literal-string cannot contain a single quote.  Use a normal string
+for that.
+
+
+option							*expr-option*
+------
+	&option			option value
+
+Any option name can be used here.  See |options|.
+
+
+register						*expr-register*
+--------
+	@r			contents of register 'r'
+
+The result is the contents of the named register, as a single string.
+Newlines are inserted where required.  To get the contents of the unnamed
+register use @@.  The '=' register can not be used here.  See |registers| for
+an explanation of the available registers.
+
+
+nesting							*expr-nesting*
+-------
+	(expr1)			nested expression
+
+
+environment variable					*expr-env*
+--------------------
+	$VAR			environment variable
+
+The String value of any environment variable.  When it is not defined, the
+result is an empty string.
+
+
+internal variable					*expr-variable*
+-----------------
+	variable		internal variable
+See below |internal-variables|.
+
+
+function call						*expr-function*
+-------------
+	function(expr1, expr1)	function call
+See below |functions|.
+
+
+==============================================================================
+3. Internal variable					*internal-variables*
+
+An internal variable name can be made up of letters, digits and '_'.  But it
+cannot start with a digit.
+
+An internal variable is created with the ":let" command |:let|.
+An internal variable is destroyed with the ":unlet" command |:unlet|.
+Using a name that isn't an internal variable, or an internal variable that has
+been destroyed, results in an error.
+
+A variable name that is preceded with "b:" is local to the current buffer.
+A variable name that is preceded with "w:" is local to the current window.
+
+Predefined variables:
+						    *count-variable*
+count		The count given for the last Normal mode command.  Can be used
+		to get the count before a mapping.  Example:
+>	:map _x :<C-U>echo "the count is " . count<CR>
+		Note: The <C-U> is required to remove the line range that you
+		get when typing ':' after a count.  read-only.
+
+						    *errmsg-variable*
+errmsg		Last given error message.  It's allowed to set this variable.
+		Example:
+>	:let errmsg = ""
+>	:next
+>	:if (errmsg != "")
+>	:  ...
+
+						    *version-variable*
+version		Version number of Vim: Major version number times 100 plus
+		minor version number.  Version 5.0 is 500.  Version 5.1 (5.01)
+		is 501.  Read-only.
+
+==============================================================================
+4. Function calls						*functions*
+
+USAGE				RESULT	DESCRIPTION	~
+
+buffer_exists({expr})		Number	TRUE if a buffer {exp} exists
+char2nr({expr})			Number  ASCII value of first char in {expr}
+col({expr})			Number	column nr of cursor or mark
+delete({expr})			Number	delete file {expr}
+exists({var})			Number	TRUE if {var} exists
+expand({expr})			String	expand file wildcards in {expr}
+file_readable({file})		Number	TRUE if {file} is a readable file
+getline({lnum})			String	line {lnum} from current buffer
+has({feature})			Number	TRUE if feature {feature} supported
+highlight_exists({name})	Number	TRUE if highlight group {name} exists
+highlightID({name})		Number  syntax ID of highlight group {name}
+hostname()			String	name of the machine vim is running on
+isdirectory({directory})	Number	TRUE if {directory} is a directory
+last_buffer_nr()		Number	buffer number of last buffer
+line({expr})			Number	line nr of cursor, last line or mark
+match({expr}, {pat})		Number	position where {pat} matches in {expr}
+matchend({expr}, {pat})		Number	position where {pat} ends in {expr}
+nr2char({expr})			String	single char with ASCII value {expr}
+strftime({expr})		String	current time in specified format
+strlen({expr})			Number	length of the String {expr}
+strpart({src}, {start}, {len})	String	{len} characters of {src} at {start}
+synID({line}, {col}, {trans})	Number  syntax ID at {line} and {col}
+synIDattr({synID}, {what})	String  attribute {what} of syntax ID {synID}
+synIDtrans({synID})		Number  translated syntax ID of {synID}
+substitute({expr}, {pat},
+	    {sub}, {flags})	String	all {pat} in {expr} replaced with {sub}
+tempname()			String	name for a temporary file
+virtcol({expr})			Number	screen column of cursor or mark
+
+							*buffer_exists()*
+buffer_exists({var})
+		The result is a Number, which is non-zero if a buffer called
+		{var} exists.  If the {var} argument is a string it must match
+		a buffer name exactly.  If the {var} argument is a number
+		buffer numbers are used.  Use "buffer_exists(0)" to test for
+		the existence of an alternate file name.
+
+							*char2nr()*
+char2nr({expr})
+		Return ASCII value of the first char in {expr}.  Examples:
+		    char2nr(" ")    returns 32
+		    char2nr("ABC")  returns 65
+
+							*col()*
+col({expr})	The result is a Number, which is the column of the file
+		position given with {expr}.  The accepted positions are:
+		    .	    the cursor position
+		    'x	    position of mark x (if the mark is not set, 0 is
+			    returned)
+		Note that only marks in the current file can be used.
+		Examples:
+>  col(".")		    column of cursor
+>  col("'t")		    column of mark t
+>  col("'" . markname)	    column of mark markname
+		The first column is 1.  0 is returned for an error.
+
+							*delete()*
+delete({expr})	Deletes the file by the name {expr}.  The result is a Number,
+		which is 0 if the file was deleted succesfully, and non-zero
+		when the deletion failed.
+
+							*exists()*
+exists({expr})	The result is a Number, which is 1 if {var} is defined, zero
+		otherwise.  The {expr} argument is a string, which contains
+		one of these:
+
+			&option-name	  Vim option
+			$ENVNAME	  environment variable (could also be
+					  done by comparing with an empty
+					  string)
+			varname		  internal variable (see
+					  |internal-variables|).
+
+		Examples:
+>			exists("&shortname")
+>			exists("$HOSTNAME")
+>			exists("bufcount")
+		Note that the argument must be a string, not the name of the
+		variable itself!  This doesn't check for existence of the
+		"bufcount" variable, but gets the contents of "bufcount", and
+		checks if that exists:
+			exists(bufcount)
+
+							*expand()*
+expand({expr})	Expand the file wildcards in {expr}.  The result is a String.
+		If the expansion fails, the result is an empty string.
+		Example:
+>			:let &tags = expand("`find . -name tags -print`")
+
+		When the result of {expr} starts with '%', '#' or '<', the
+		expansion is done like for the |cmdline-special| variables
+		with their associated modifiers.  Here is a short overview:
+
+		%			current file name
+		#			alternate file name
+		#n			alternate file name n
+		<cfile>			file name under the cursor
+		<afile>			autocmd file name
+		<sfile>			sourced script file name
+		<cword>			word under the cursor
+		<cWORD>			WORD under the cursor
+	Modifiers:
+		:p			expand to full path
+		:h			head (last path component removed)
+		:t			tail (last path component only)
+		:r			root (one extension removed)
+		:e			extension only
+
+		Example:
+>			:let &tags = expand("%:p:h") . "/tags"
+
+		There cannot be white space between the variables and the
+		following modifier.
+
+		When using '%' or '#', and the current or alternate file name
+		is not defined, an empty string is used.  Using "%:p" in a
+		buffer with no name, results in the current directory, with a
+		'/' added.
+
+
+							*file_readable()*
+file_readable({file})
+		The result is a Number, which is TRUE when a file with the
+		name {file} exists, and can be read.  If {file} doesn't exist,
+		or is a directory, the result is FALSE.  {file} is any
+		expression, which is used as a String.
+
+							*getline()*
+getline({lnum}) The result is a String, which is line {lnum} from the current
+		buffer.  Example:
+>  getline(1)
+		When {lnum} is a String that doesn't start with a
+		digit, line() is called to translate the String into a Number.
+		To get the line under the cursor:
+>  getline(".")
+		When {lnum} is smaller than 1 or bigger than the number of
+		lines in the buffer, an empty string is returned.
+
+							*has()*
+has({feature})	The result is a Number, which is 1 if the feature {feature} is
+		supported, zero otherwise.  The {feature} argument is a
+		string.  See |feature-list| below.
+
+						      	*highlight_exists()*
+highlight_exists({name})
+		The result is a Number, which is non-zero if a highlight group
+		called {name} exists.  This is when the group has been
+		defined in some way.  Not necessarily when highlighting has
+		been defined for it, it may also have been used for a syntax
+		item.
+
+							*highlightID()*
+highlightID({name})
+		The result is a Number, which is the ID of the highlight group
+		with name {name}.  When the highlight group doesn't exist,
+		zero is returned.
+		This can be used to retrieve information about the highlight
+		group.  For example, to get the background color of the
+		"Comment" group:
+>	echo synIDattr(synIDtrans(highlightID("Comment")), "bg")
+
+						      	*hostname()*
+hostname()
+		The result is a String, which is the name of the machine on
+		which Vim is currently running. Machine names greater than
+		256 characters long are truncated.
+
+							*isdirectory()*
+isdirectory({directory})
+		The result is a Number, which is TRUE when a directory with
+		the name {directory} exists.  If {directory} doesn't exist, or
+		isn't a directory, the result is FALSE.  {directory} is any
+		expression, which is used as a String.
+
+							*last_buffer_nr()*
+last_buffer_nr()
+		The result is a Number, which is the highest buffer number
+		of existing buffers.  Note that not all buffers with a smaller
+		number necessarily exist, because ":bdel" may have removed
+		them.  Use buffer_exists() to test for the existence of a
+		buffer.
+							*line()*
+line({expr})	The result is a Number, which is the line number of the file
+		position given with {expr}.  The accepted positions are:
+		    .	    the cursor position
+		    $	    the last line in the current buffer
+		    'x	    position of mark x (if the mark is not set, 0 is
+			    returned)
+		Note that only marks in the current file can be used.
+		Examples:
+>  line(".")		line number of the cursor
+>  line("'t")		line number of mark t
+>  line("'" . marker)	line number of mark marker
+
+							*strftime()*
+strftime({format})
+		The result is a String, which is the current date and time, as
+		specified by the {format} string.  See the manual page of the
+		C function strftime() for the format.  The maximum length of
+		the result is 80 characters.  Examples:
+>		  :echo strftime("%c")		   Sun Apr 27 11:49:23 1997
+>		  :echo strftime("%Y %b %d %X")	   1997 Apr 27 11:53:25
+>		  :echo strftime("%y%m%d %T")      970427 11:53:55
+>		  :echo strftime("%H:%M")          11:55
+
+							*match()*
+match({expr}, {pat})
+		The result is a Number, which gives the index in {expr} where
+		{pat} matches.  If there is no match -1 is returned.  Example:
+>		  :echo match("testing", "ing")
+		results in "4".
+		See |pattern| for the patterns that are accepted.
+
+							*matchend()*
+matchend({expr}, {pat})
+		Same as match(), but return the index of first character after
+		the match.  Example:
+>		  :echo matchend("testing", "ing")
+		results in "7".
+
+							*nr2char()*
+nr2char({expr})
+		Return a string with a single chararacter, which has the ASCII
+		value {expr}.  Examples:
+		    nr2char(64)	    returns "@"
+		    nr2char(32)	    returns " "
+
+							*strlen()*
+strlen({expr})	The result is a Number, which is the length of the String
+		{expr}.
+
+							*strpart()*
+strpart({src}, {start}, {len})
+		The result is a String, which is part of {src},
+		starting from character {start}, with the length {len}.
+		When non-existing characters are included, this doesn't result
+		in an error, the characters are simply omitted.
+>	strpart("abcdefg", 3, 2)    == "de"
+>	strpart("abcdefg", -2, 4)   == "ab"
+>	strpart("abcdefg", 5, 4)    == "fg"
+		Note: To get the first character, {start} must be 0.  For
+		example, to get three characters under and after the cursor:
+>	strpart(getline(line(".")), col(".") - 1, 3)
+
+							*synID()*
+synID({line}, {col}, {trans})
+		The result is a Number, which is the syntax ID at the position
+		{line} and {col} in the current window.
+		The syntax ID can be used with |synIDattr()| and
+		|synIDtrans()| to obtain syntax information about text.
+		{col} is 1 for the leftmost column, {line} is 1 for the first
+		line.
+		When {trans} is non-zero, transparant items are reduced to the
+		item that they reveal.  This is useful when wanting to know
+		the effective color.  When {trans} is zero, the transparant
+		item is returned.  This is useful when wanting to know which
+		syntax item is effective (e.g. inside parens).
+		Warning: This function can be very slow.  Best speed is
+		obtained by going through the file in forward direction.
+
+		Example (echos the name of the syntax item under the cursor):
+>	:echo synIDattr(synID(line("."), col("."), 1), "name")
+
+							*synIDattr()*
+synIDattr({synID}, {what})
+		The result is a String, which is the {what} attribute of
+		syntax ID {synID}.  This can be used to obtain information
+		about a syntax item.
+		The attributes for the currently active highlighting are used
+		(GUI, cterm or term).
+		Use synIDtrans() to follow linked highlight groups.
+		{what}		result
+		"name"		the name of the syntax item
+		"fg"		foreground color (GUI: color name, cterm:
+				color number as a string, term: empty string)
+		"bg"		background color (like "fg")
+		"fg#"		like "fg", but name in "#RRGGBB" form
+		"bg#"		like "bg", but name in "#RRGGBB" form
+		"bold"		"1" if bold
+		"italic"	"1" if italic
+		"reverse"	"1" if reverse
+		"inverse"	"1" if inverse (= reverse)
+		"underline"	"1" if underlined
+
+		Example (echos the color of the syntax item under the cursor):
+>	:echo synIDattr(synIDtrans(synID(line("."), col("."), 1)), "fg")
+
+							*synIDtrans()*
+synIDtrans({synID})
+		The result is a Number, which is the translated syntax ID of
+		{synID}.  This is the syntax group ID of what is being used to
+		highlight the character.  Highlight links are followed.
+
+							*substitute()*
+substitute({expr}, {pat}, {sub}, {flags})
+		The result is a String, which is a copy of {expr}, in which
+		the first match of {pat} is replaced with {sub}.  This works
+		like the ":substitute" command (without any flags).
+		When {pat} does not match in {expr}, {expr} is returned
+		unmodified.
+		{flags} isn't implemented yet.
+		Example:
+>		  :let &path = substitute(&path, ",\\=[^,]*$", "", "")
+		This removes the last component of the 'path' option.
+>		  :echo substitute("testing", ".*", "\\U\\0", "")
+		results in "TESTING".
+
+							*tempname()*
+tempname()
+		The result is a String, which is the name of a unique file.
+		It can be used for a temporary file.
+
+							*virtcol()*
+virtcol({expr})
+		The result is a Number, which is the screen column of the file
+		position given with {expr}.  That is, the last screen position
+		occupied by the character at that position, when the screen
+		would be of unlimited width.  When there is a <Tab> at the
+		position, the returned Number will be the column at the end of
+		the <Tab>.  For example, for a <Tab> in column 1, with 'ts'
+		set to 8, it returns 8;
+		The accepted positions are:
+		    .	    the cursor position
+		    'x	    position of mark x (if the mark is not set, 0 is
+			    returned)
+		Note that only marks in the current file can be used.
+		Examples:
+>  virtcol(".")	    with text "foo^Lbar", with cursor on the "^L", returns 5
+>  virtcol("'t")    with text "    there", with 't at 'h', returns 6
+		The first column is 1.  0 is returned for an error.
+
+
+							*feature-list*
+There are two types of features:
+1.  Features that are only supported when they have been enabled when Vim
+    was compiled |+feature-list|.  Example:
+>		:if has("cindent")
+2.  Features that are only supported when certain conditions have been met.
+    Example:
+>		:if has("gui_running")
+
+all_builtin_terms	Compiled with all builtin terminals enabled.
+amiga			Amiga version of Vim.
+arp			Compiled with ARP support (Amiga).
+autocmd			Complied with autocommands support.
+beos			BeOS version of Vim.
+builtin_terms		Compiled with some builtin terminals.
+cindent			Compiled with 'cindent' support.
+compatible		Compiled to be very Vi compatible.
+debug			Compiled with "DEBUG" defined.
+digraphs		Compiled with support for digraphs.
+dos32			32 bits DOS (DJGPP) version of Vim.
+dos16			16 bits DOS version of Vim.
+emacs_tags		Compiled with support for Emacs tags.
+eval			Compiled with exression evaluation support.  Always
+			true, of course!
+ex_extra		Compiled with extra Ex commands |+ex_extra|.
+extra_search		Compiled with support for |'incsearch'| and
+			|'hlsearch'|
+farsi			Compiled with Farsi support |farsi|.
+file_in_path		Compiled with support for |gf| and |<cfile>|
+find_in_path		Compiled with support for include file searches
+			|+find_in_path|.
+fname_case		Case in file names matters (for Amiga, MS-DOS, and
+			Windows this is not present).
+fork			Compiled to use fork()/exec() instead of system().
+gui			Compiled with GUI enabled.
+gui_athena		Compiled with Athena GUI.
+gui_beos		Compiled with BeOs GUI.
+gui_mac			Compiled with Macintosh GUI.
+gui_motif		Compiled with Motif GUI.
+gui_win32		Compiled with MS Windows Win32 GUI.
+gui_running		Vim is running in the GUI, or it will start soon.
+insert_expand		Compiled with support for CTRL-X expansion commands in
+			Insert mode.
+langmap			Compiled with 'langmap' support.
+lispindent		Compiled with support for lisp indenting.
+mac			Macintosh version of Vim.
+mouse_dec		Compiled with support for Dec terminal mouse.
+mouse_netterm		Compiled with support for netterm mouse.
+mouse_xterm		Compiled with support for xterm mouse.
+ole			Compiled with OLE automation support for Win32.
+perl			Compiled with Perl interface.
+python			Compiled with Python interface.
+quickfix		Compiled with |quickfix| support.
+rightleft		Compiled with 'rightleft' support.
+showcmd			Compiled with 'showcmd' support.
+smartindent		Compiled with 'smartindent' support.
+sniff			Compiled with SniFF interface support.
+syntax			Compiled with syntax highlighting support.
+syntax_items		There are active syntax highlighting items for the
+			current buffer.
+system			Compiled to use system() instead of fork()/exec().
+tag_binary		Compiled with binary searching in tags files
+			|tag-binary-search|.
+tag_old_static		Compiled with support for old static tags
+			|tag-old-static|.
+tag_any_white		Compiled with support for any white characters in tags
+			files |tag-any-white|.
+terminfo		Compiled with terminfo instead of termcap.
+textobjects		Compiled with support for |text-objects|.
+tgetent			Compiled with tgetent support, able to use a termcap
+			or terminfo file.
+unix			Unix version of Vim.
+viminfo			Compiled with viminfo support.
+win32			Win32 version of Vim (Windows 95/NT)
+writebackup		Compiled with 'writebackup' default on.
+xterm_save		Compiled with support for saving and restoring the
+			xterm screen.
+x11			Compiled with X11 support.
+
+==============================================================================
+5. Commands						*expression-commands*
+
+:let {var-name} = {expr1}				*:let*
+			Set internal variable {var-name} to the result of the
+			expression {expr1}.  The variable will get the type
+			from the {expr}.  if {var-name} didn't exist yet, it
+			is created.
+
+:let ${env-name} = {expr1}			*:let-environment* *:let-$*
+			Set environment variable {env-name} to the result of
+			the expression {expr1}.  The type is always String.
+
+:let @{reg-name} = {expr1}			*:let-register* *:let-@*
+			Write the result of the expression {expr1} in register
+			{reg-name}.  {reg-name} must be a single letter, and
+			must be the name of a writable register (see
+			|registers|).  "@@" can be used for the unnamed
+			register.  If the result of {expr1} ends in a <CR> or
+			<NL>, the register will be linewise, otherwise it will
+			be set to characterwise.
+
+:let &{option-name} = {expr1}			*:let-option* *:let-star*
+			Set option {option-name} to the result of the
+			expression {expr1}.  The type of the option is always
+			used.
+
+							*:unlet* *:unl*
+:unl[et] {var-name}	Remove the internal variable {var-name}.
+
+:if {expr1}						*:if* *:endif* *:en*
+:en[dif]		Execute the commands until the next matching ":else"
+			or ":endif" if {expr1} evaluates to non-zero.
+
+			From Vim version 4.5 until 5.0, every Ex command in
+			between the ":if" and ":endif" is ignored.  These two
+			commands were just to allow for future expansions in a
+			backwards compatible way.  Nesting was allowed.  Note
+			that any ":else" or ":elseif" was ignored, the "else"
+			part was not executed either.
+
+			You can use this to remain compatible with older
+			versions:
+>				:if version >= 500
+>				:  version-5-specific-commands
+>				:endif
+
+							*:else* *:el*
+:else			Execute the commands until the next matching ":else"
+			or ":endif" if they previously were not being
+			executed.
+
+							*:elseif* *:elsei*
+:elsei[f] {expr1}	Short for ":else" ":if", with the addition that there
+			is no extra ":endif".
+
+:wh[ile] {expr1}			*:while* *:endwhile* *:wh* *:endw*
+:endw[hile]		Repeat the commands between ":while" and ":endwhile",
+			as long as {expr1} evaluates to non-zero.
+			When an error is detected from a command inside the
+			loop, execution continues after the "endwhile".
+
+		NOTE: The ":append" and ":insert" commands don't work properly
+		inside a ":while" loop.
+
+							*:continue* *:con*
+:con[tinue]		When used inside a ":while", jumps back to the
+			":while".
+
+							*:break* *:brea*
+:brea[k]		When used inside a ":while", skips to the command
+			after the matching ":endwhile".
+
+							*:ec* *:echo*
+:ec[ho] {expr1} ..	Echoes each {expr1}, with a space in between and a
+			terminating <EOL>.  Also see |:comment|.
+			Example:
+>		:echo "the value of 'shell' is" &shell
+
+							*:echon*
+:echon {expr1} ..	Echoes each {expr1}, without anything added.  Also see
+			|:comment|.
+			Example:
+>		:echon "the value of 'shell' is " &shell
+
+			Note the difference between using ":echo", which is a
+			Vim command, and ":!echo", which is an external shell
+			command:
+>		:!echo %		--> filename
+			The arguments of ":!" are expanded, see |:_%|.
+>		:!echo "%"		--> filename or "filename"
+			Like the previous example.  Whether you see the double
+			quotes or not depends on your 'shell'.
+>		:echo %			--> nothing
+			The '%' is an illegal character in an expression.
+>		:echo "%"		--> %
+			This just echoes the '%' character.
+>		:echo expand("%")	--> filename
+			This calls the expand() function to expand the '%'.
+
+							*:exe* *:execute*
+:exe[cute] {expr1} ..	Executes the string that results from the evaluation
+			of {expr1} as an Ex command.  Multiple arguments are
+			concatenated, with a space in between.  Examples:
+>		:execute "buffer " nextbuf
+>		:execute "normal " count . "w"
+
+			Execute can be used to append a next command to
+			commands that don't accept a '|'.  Example:
+>		:execute '!ls' | echo "theend"
+
+			Note: The executed string may be any command line, but
+			you cannot start or end a "while" or "if" command.
+			Thus this is illegal:
+>		:execute 'while i > 5'
+>		:execute 'echo "test" | break'
+
+			It is allowed to have a "while" or "if" command
+			completely in the executed string:
+>		:execute 'while i < 5 | echo i | let i = i + 1 | endwhile'
+
+
+							*:comment*
+			":execute", ":echo" and ":echon" cannot be followed by
+			a comment directly, because they see the '"' as the
+			start of a string.  But, you can use '|' followed by a
+			comment.  Example:
+>		:echo "foo" | "this is a comment
+
+ vim:tw=78:ts=8:sw=8:

@@ -1,0 +1,180 @@
+# $Id: Makefile.in,v 5.2 1998/02/26 05:32:07 darren Exp $
+#
+# Makefile for Exuberant Ctags
+#
+
+# These are the names of the installed programs, in case you wish to change
+# them.
+#
+CTAGS	= ctags
+ETAGS	= etags
+
+# This suffix will be added to all program names. This is especially for
+# installation on Win95/NT hosts using GNU-Win32
+#SUFFIX	= .exe
+
+# Set this to the path to your shell (must run Bourne shell commands).
+#
+SHELL = /bin/sh
+
+# GNU Autoconf variables. These are set by the "configure" script when it
+# runs.
+#
+exec_prefix = @exec_prefix@
+prefix	= @prefix@
+bindir	= @bindir@
+srcdir	= @srcdir@
+mandir	= @mandir@
+SLINK	= @LN_S@
+CC	= @CC@
+DEFS	= @DEFS@
+CFLAGS	= @CFLAGS@
+LDFLAGS	= @LDFLAGS@
+LIBOBJS	= @LIBOBJS@
+
+# If you cannot run the "configure" script to set the variables above, then
+# uncomment the defines below and customize them for your environment. If
+# your system does not support symbolic (soft) links, then remove the -s
+# from SLINK.
+#
+#srcdir	= .
+#bindir	= /usr/local/bin
+#mandir	= /usr/local/man
+#SLINK	= ln -s
+#CC	= cc
+#DEFS	= -DHAVE_CONFIG_H
+#CFLAGS	= -O
+#LDFLAGS=
+
+#
+#--- You should not need to modify anything below this line. ---#
+#
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+VPATH	= $(srcdir)
+
+INSTALL		= cp
+INSTALL_PROG	= $(INSTALL)
+INSTALL_DATA	= $(INSTALL)
+
+SRCS	= entry.c get.c main.c options.c parse.c read.c sort.c
+OBJS	= entry.o get.o main.o options.o parse.o read.o sort.o
+HDRS	= ctags.h config.h
+MANPAGE	= ctags.1
+
+CONFIG_GEN = config.h config.cache config.log config.status config.run
+GENERATED  = $(CONFIG_GEN) Makefile tags TAGS
+
+#
+# names for installed man pages
+#
+manext	= 1
+man1dir	= $(mandir)/man1
+CMAN	= $(CTAGS).$(manext)
+EMAN	= $(ETAGS).$(manext)
+
+#
+# destinations for installed files
+#
+CTAGS_EXEC	= $(CTAGS)$(SUFFIX)
+ETAGS_EXEC	= $(ETAGS)$(SUFFIX)
+DEST_CTAGS	= $(bindir)/$(CTAGS_EXEC)
+DEST_ETAGS	= $(bindir)/$(ETAGS_EXEC)
+DEST_CMAN	= $(man1dir)/$(CMAN)
+DEST_EMAN	= $(man1dir)/$(EMAN)
+
+#
+# primary rules
+#
+all: $(CTAGS_EXEC)
+
+$(CTAGS_EXEC): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBOBJS)
+
+$(OBJS): $(HDRS) config.h
+
+#
+# generic install rules
+#
+install: @install_targets@
+
+install-strip: install
+     
+install-ctags: install-cbin install-cman
+install-etags: install-ebin install-eman
+
+$(bindir) $(man1dir):
+	$(srcdir)/mkinstalldirs $@
+
+FORCE:
+
+#
+# install the executables
+#
+install-bin: install-cbin install-ebin
+install-cbin: $(DEST_CTAGS)
+install-ebin: $(DEST_ETAGS)
+     
+$(DEST_CTAGS): $(CTAGS_EXEC) $(bindir) FORCE
+	$(INSTALL_PROG) $(CTAGS_EXEC) $@  &&  chmod 755 $@
+	strip $(DEST_CTAGS)
+
+$(DEST_ETAGS): $(DEST_CTAGS)
+	- cd $(bindir) && $(SLINK) $(CTAGS_EXEC) $(ETAGS_EXEC)
+
+#
+# install the man pages
+#
+install-man: install-cman install-eman
+install-cman: $(DEST_CMAN)
+install-eman: $(DEST_EMAN)
+
+$(DEST_CMAN): $(man1dir) $(MANPAGE) FORCE
+	- $(INSTALL_DATA) $(MANPAGE) $@  &&  chmod 644 $@
+
+$(DEST_EMAN): $(DEST_CMAN)
+	- cd $(man1dir) && $(SLINK) $(CMAN) $(EMAN)
+
+#
+# rules for uninstalling
+#
+uninstall: uninstall-bin uninstall-man
+
+uninstall-bin:
+	- rm -f $(DEST_CTAGS) $(DEST_ETAGS)
+
+uninstall-man:
+	- rm -f $(DEST_CMAN) $(DEST_EMAN)
+
+uninstall-ctags:
+	- rm -f $(DEST_CTAGS) $(DEST_CMAN)
+
+uninstall-etags:
+	- rm -f $(DEST_ETAGS) $(DEST_EMAN)
+
+#
+# miscellaneous rules
+#
+tags: $(CTAGS_EXEC)
+	./$(CTAGS_EXEC) -p$(srcdir) $(SRCS) $(HDRS)
+
+TAGS: $(CTAGS_EXEC)
+	./$(CTAGS_EXEC) -e -p$(srcdir) $(SRCS) $(HDRS)
+
+clean:
+	@ rm -f $(OBJS) $(CTAGS_EXEC) tags TAGS
+
+mostlyclean: clean
+
+distclean: clean
+	@ rm -f $(GENERATED)
+
+#
+# implicit rules
+#
+.c.o:
+	$(CC) -I. -I$(srcdir) $(DEFS) $(CFLAGS) -c $<
+
+# vi:set tabstop=8:

@@ -1,0 +1,225 @@
+*quickfix.txt*  For Vim version 5.0.  Last modification: 1998 Jan 25
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+{Vi does not have any of these commands}
+
+The quickfix commands are not available when the |+quickfix| feature was
+disabled at compile time.
+
+
+Using the QuickFix mode					*quickfix*
+
+Vim has a special mode to speedup the edit-compile-edit cycle.  This is
+inspired by the quickfix option of the Manx's Aztec C compiler on the Amiga.
+The idea is to save the error messages from the compiler in a file and use
+Vim to jump to the errors one by one.  You can then examine each problem and
+fix it, without having to remember all the error messages.
+
+If you are using Manx's Aztec C compiler on the Amiga you should do the
+following:
+- Set the CCEDIT environment variable with the command
+	mset "CCEDIT=vim -q"
+- Compile with the -qf option.  If the compiler finds any errors, Vim is
+  started and the cursor is positioned on the first error.  The error message
+  will be displayed on the last line.  You can go to other errors with the
+  commands mentioned below.  You can fix the errors and write the file(s).
+- If you exit Vim normally the compiler will re-compile the same file.  If you
+  exit with the :cq command, the compiler will terminate.  Do this if you
+  cannot fix the error, or if another file needs to be compiled first.
+
+If you are using another compiler you should save the error messages in a
+file and start Vim with "vim -q filename".  An easy way to do this is with
+the ":make" command (see below).  The 'errorformat' option should be set to
+match the error messages from your compiler (see below).
+
+The following commands can be used if you are in QuickFix mode:
+
+							*:cc*
+:cc[!] [nr]		Display error [nr].  If [nr] is omitted, the same
+			error is displayed again.  Without [!] this doesn't
+			work when jumping to another buffer, the current buffer
+			has been changed, there is the only window for the
+			buffer and both 'hidden' and 'autowrite' are off.
+			When jumping to another buffer with [!] any changes to
+			the current buffer are lost, unless 'hidden' is set or
+			there is another window for this buffer.
+
+							*:cn* *:cnext*
+:[count]cn[ext][!]	Display the [count] next error in the list that
+			includes a file name.  If there are no file names at
+			all, go the the [count] next error.  See |:cc| for
+			[!].
+
+:[count]cN[ext][!]			*:cp* *:cprevious* *:cN* *:cNext*
+:[count]cp[revious][!]	Display the [count] previous error in the list that
+			includes a file name.  If there are no file names at
+			all, go the the [count] previous error.  See |:cc| for
+			[!].
+
+							*:crewind* *:cr*
+:crewind[!] [nr]	Display error [nr].  If [nr] is omitted, the FIRST
+			error is displayed.  See |:cc|.
+
+							*:clast* *:cla*
+:clast[!] [nr]		Display error [nr].  If [nr] is omitted, the LAST
+			error is displayed.  See |:cc|.
+
+							*:cq* *:cquit*
+:cq[uit]		Quit Vim with an error code, so that the compiler
+			will not compile the same file again.
+
+							*:cf* *:cfile*
+:cf[ile][!] [errorfile]	Read the error file and jump to the first error.
+			This is done automatically when Vim is started with
+			the -q option.  You can use this command when you
+			keep Vim running while compiling.  If you give the
+			name of the errorfile, the 'errorfile' option will
+			be set to [errorfile].  See |:cc| for [!].
+
+							*:cl* *:clist*
+:cl[ist]		List all errors that include a file name.
+
+:cl[ist]!		List all errors.
+
+							*:mak* *:make*
+:mak[e] [arguments]	1. If the 'autowrite' option is on, write any changed
+			   buffers
+			2. An errorfile name is made from 'makeef'.  If
+			   'makeef' doesn't contain "##", and a file with this
+			   name already exists, it is deleted.
+			3. The program given with the 'makeprg' option is
+			   started (default "make") with the optional
+			   [arguments] and the output is saved in the
+			   errorfile (for Unix it is also echoed on the
+			   screen).
+			4. The errorfile is then read and the first error is
+			   jumped to.
+			5. The errorfile is deleted.
+
+A template for the errorfile name can be set with the 'makeef' option.  If it
+includes "##", Vim will replace this with a number to make it a unique name.
+
+The format of the file from the Aztec compiler is:
+
+	filename>linenumber:columnnumber:errortype:errornumber:errormessage
+
+	filename	name of the file in which the error was detected
+	linenumber	line number where the error was detected
+	columnnumber	column number where the error was detected
+	errortype	type of the error, normally a single 'E' or 'W'
+	errornumber	number of the error (for lookup in the manual)
+	errormessage	description of the error
+
+							*errorformat*
+Another compiler is likely to use a different format.  You should set the
+'errorformat' option to a scanf-like string that describes the format.
+First, you need to know how scanf works.  Look in the documentation of your
+C compiler.  Vim will understand eight conversion characters.  Others are
+invalid.
+	%f		file name (finds a string)
+	%l		line number (finds a number)
+	%c		column number (finds a number)
+	%t		error type (finds a single character)
+	%n		error number (finds a number)
+	%m		error message (finds a string)
+	%*<conv>	any scanf non-assignable conversion
+	%%		the single '%' character
+
+Examples:
+%f>%l:%c:%t:%n:%m"			for the AztecC.Err file
+%f:%l:\ %t%*[^0123456789]%n:\ %m	for Manx/Aztec C error messages
+					(scanf() doesn't understand [0-9])
+%f\ %l\ %t%*[^0-9]%n:\ %m		for SAS C
+\"%f\"\\,%*[^0-9]%l:\ %m		for generic C compilers
+%f:%l:\ %m				for GCC
+%f(%l)\ :\ %*[^:]:\ %m			old SCO C compiler (pre-OS5)
+%f(%l)\ :\ %t%*[^0-9]%n:\ %m		idem, with error type and number
+%f:%l:\ %m,In\ file\ included\ from\ %f:%l:,\^I\^Ifrom\ %f:%l%m
+					for GCC, with some extras
+
+Note the backslash in front of a space and double quote.  It is required for
+the :set command.  There are two backslashes in front of a comma, one for the
+:set command and one to avoid recognizing the comma as a separator of error
+formats.
+
+The "%f" and "%m" conversions have to detect the end of the string.  They
+should be followed by a character that cannot be in the string.  Everything
+up to that character is included in the string.  Be careful: "%f%l" will
+include everything up to the first '%' in the file name.  If the "%f" or "%m"
+is at the end, everything up to the end of the line is included.
+
+To be able to detect output from several compilers, several format patterns
+may be put in 'errorformat', separated by commas (note: blanks after the comma
+are ignored).  The first pattern that has a complete match is used.  If no
+match is found, matching parts from the last one will be used, although the
+file name is removed and the error message is set to the whole message.  If
+there is a pattern that may match output from several compilers (but not in a
+right way), put it after one that is more restrictive.  To include a comma in
+a pattern precede it with a backslash (you have to type two in a set command).
+To include a backslash itself give two backslashes (you have to type four in a
+set command).
+
+If a line is detected that does not completely match the 'errorformat', the
+whole line is put in the error message and the entry is marked "not valid"
+These lines are skipped with the ":cn" and ":cp" commands (unless there is
+no valid line at all).  You can use ":cl!" to display all the error messages.
+
+If the error format does not contain a file name Vim cannot switch to the
+correct file.  You will have to do this by hand.
+
+If you have a compiler that produces error messages that do not fit in the
+format string, you could write a program that translates the error messages
+into this format.  You can use this program with the ":make" command by
+changing the 'makeprg' option.  For example:
+>  :set mp=make\ \\\|&\ error_filter
+The backslashes before the pipe character are required to avoid it to be
+recognized as a command separator.  The backslash before each space is
+required for the set command.
+
+						*:make_makeprg*
+The ":make" command executes the command given with the 'makeprg' option.
+This is done by passing the command to the shell given with the 'shell'
+option.  This works almost like typing
+
+	":!{makeprg} [arguments] {shellpipe} {errorfile}".
+
+{makeprg} is the string given with the 'makeprg' option.  Any command can be
+used, not just "make".  Characters '%' and '#' are expanded as usual on a
+command line.  You can use "#<" to insert the current file name without
+extension, for example:
+>  :set makeprg=make\ #<.o
+
+[arguments] is anything that is typed after ":make".
+{shellpipe} is the 'shellpipe' option.
+{errorfile} is the 'makeef' option, with ## replaced to make it unique.
+
+The 'shellpipe' option defaults to ">" for the Amiga, MS-DOS and Win32.  This
+means that the output of the compiler is saved in a file and not shown on the
+screen directly.  For Unix "| tee" is used.  The compiler output is shown on
+the screen and saved in a file the same time.  Depending on the shell used
+"|& tee" or "2>&1| tee" is the default, so stderr output will be included.
+
+If 'shellpipe' is empty, the {errorfile} part will be omitted.  This is useful
+for compilers that write to an errorfile themselves (Manx's Amiga C).
+
+There are some restrictions to the Quickfix mode on the Amiga.  The
+compiler only writes the first 25 errors to the errorfile (Manx's
+documentation does not say how to get more).  If you want to find the others,
+you will have to fix a few errors and exit the editor.  After recompiling,
+up to 25 remaining errors will be found.
+
+On the Amiga, if Vim was started from the compiler, the :sh and some :!
+commands will not work, because Vim is then running in the same process as the
+compiler and stdin (standard input) will not be interactive.
+
+If you insert or delete lines, mostly the correct error location is still
+found because hidden marks are used (Manx's Z editor does not do this).
+Sometimes, when the mark has been deleted for some reason, the message "line
+changed" is shown to warn you that the error location may not be correct.  If
+you quit Vim and start again the marks are lost and the error locations may
+not be correct anymore.
+
+ vim:tw=78:ts=8:sw=8:

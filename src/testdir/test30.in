@@ -1,0 +1,152 @@
+Test for a lot of variations of the 'fileformats' option
+
+STARTTEST
+:" first write three test files, one in each format
+:set fileformat=unix
+:set fileformats=
+:/^unix/;/eof/-1w! XXUnix
+:/^dos/;/eof/-1w! XXDos
+:set bin noeol
+:$w! XXMac
+:set nobin eol
+:bdel XXUnix XXDos XXMac
+:" create mixed format files
+:!cat XXUnix XXDos >XXUxDs
+:!cat XXUnix XXMac >XXUxMac
+:!cat XXDos XXMac >XXDosMac
+:!cat XXUnix XXDos XXMac >XXUxDsMc
+:"
+:" try reading and writing with 'fileformats' empty
+:set fileformat=unix
+:e! XXUnix
+:w! test.out
+:e! XXDos
+:w! XXtt
+:!cat XXtt >>test.out
+:e! XXMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUnix XXDos XXMac
+:set fileformat=dos
+:e! XXUnix
+:w! XXtt
+:!cat XXtt >>test.out
+:e! XXDos
+:w! XXtt
+:!cat XXtt >>test.out
+:e! XXMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUnix XXDos XXMac
+:set fileformat=mac
+:e! XXUnix
+:w! XXtt
+:!cat XXtt >>test.out
+:e! XXDos
+:w! XXtt
+:!cat XXtt >>test.out
+:e! XXMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUnix XXDos XXMac
+:"
+:" try reading and writing with 'fileformats' set to one format
+:set fileformats=unix
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:set fileformats=dos
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:set fileformats=mac
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:"
+:" try reading and writing with 'fileformats' set to two formats
+:set fileformats=unix,dos
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:e! XXUxMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxMac
+:e! XXDosMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXDosMac
+:set fileformats=unix,mac
+:e! XXUxDs
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDs
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:e! XXDosMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXDosMac
+:set fileformats=dos,mac
+:e! XXUxDs
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDs
+:e! XXUxMac
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxMac
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:"
+:" try reading and writing with 'fileformats' set to three formats
+:set fileformats=unix,dos,mac
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:set fileformats=mac,dos,unix
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:" try with 'binary' set
+:set fileformats=mac,unix,dos
+:set binary
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:set fileformats=mac
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:bdel XXUxDsMc
+:set fileformats=dos
+:e! XXUxDsMc
+:w! XXtt
+:!cat XXtt >>test.out
+:" add a newline at the end
+:!cat XXUnix >>test.out
+:!rm -f XXtt XXUnix XXDos XXMac XXUxDs XXUxMac XXDosMac XXUxDsMc
+:qa!
+ENDTEST
+
+unix
+unix
+eof
+
+dos
+dos
+eof
+
+macmac

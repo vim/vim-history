@@ -1,0 +1,150 @@
+*scroll.txt*    For Vim version 5.0.  Last modification: 1997 Apr 1
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Scrolling						*scrolling*
+
+These commands move the contents of the window.  If the cursor position is
+moved off of the window, the cursor is moved onto the window (with
+'scrolloff' screen lines around it).  A page is the number of lines in the
+window minus two.  The mnemonics for these commands may be a bit confusing.
+Remember that the commands refer to moving the window (the part of the buffer
+that you see) upwards or downwards in the buffer.  When the window moves
+upwards in the buffer, the text in the window moves downwards on your screen.
+
+1. Scrolling downwards		|scroll-down|
+2. Scrolling upwards		|scroll-up|
+3. Scrolling relative to cursor	|scroll-cursor|
+4. Scrolling horizontally	|scroll-horizontal|
+
+==============================================================================
+1. Scrolling downwards					*scroll-down*
+
+The following commands move the edit window (the part of the buffer that you
+see) downwards (this means that more lines downwards in the text buffer can be
+seen):
+
+							*CTRL-E*
+CTRL-E			Scroll window [count] lines downwards in the buffer.
+			Mnemonic: Extra lines.
+
+							*CTRL-D*
+CTRL-D			Scroll window Downwards in the buffer.  The number of
+			lines comes from the 'scroll' option (default: half a
+			screen).  If [count] given, first set 'scroll' option
+			to [count].  The cursor is moved the same number of
+			lines down in the file (if possible; when lines wrap
+			and when hitting the end of the file there may be a
+			difference).  When the cursor is on the last line of
+			the buffer nothing happens and a beep is produced.
+			See also 'startofline' option.
+			{difference from vi: Vim scrolls 'scroll' screen
+			lines, instead of file lines; makes a difference when
+			lines wrap}
+
+<S-Down>	or				*<S-Down>* *<kPageDown>*
+<PageDown>	or				*<PageDown>* *CTRL-F*
+CTRL-F			Scroll window [count] pages Forwards (downwards) in
+			the buffer.  See also 'startofline' option.
+
+==============================================================================
+2. Scrolling upwards					*scroll-up*
+
+The following commands move the edit window (the part of the buffer that you
+see) upwards (this means that more lines upwards in the text buffer can be
+seen):
+
+							*CTRL-Y*
+CTRL-Y			Scroll window [count] lines upwards in the buffer.
+
+							*CTRL-U*
+CTRL-U			Scroll window Upwards in the buffer.  The number of
+			lines comes from the 'scroll' option (default: half a
+			screen).  If [count] given, first set the 'scroll'
+			option to [count].  The cursor is moved the same
+			number of lines up in the file (if possible; when
+			lines wrap and when hitting the end of the file there
+			may be a difference).  When the cursor is on the first
+			line of the buffer nothing happens and a beep is
+			produced.  See also 'startofline' option.
+			{difference from vi: Vim scrolls 'scroll' screen
+			lines, instead of file lines; makes a difference when
+			lines wrap}
+
+<S-Up>		or					*<S-Up>* *<kPageUp>*
+<PageUp>	or					*<PageUp>* *CTRL-B*
+CTRL-B			Scroll window [count] pages Backwards (upwards) in the
+			buffer.  See also 'startofline' option.
+
+==============================================================================
+3. Scrolling relative to cursor				*scroll-cursor*
+
+The following commands reposition the edit window (the part of the buffer that
+you see) while keeping the cursor on the same line:
+
+							*z* *z<CR>*
+z<CR>			Redraw, line [count] at top of window (default
+			cursor line).  Put cursor at first non-blank in the
+			line.
+
+							*zt*
+zt			Like "z<CR>", but leave the cursor in the same
+			column.  {not in Vi}
+
+							*zN<CR>*
+z{height}<CR>		Redraw, make window {height} lines tall.  This is
+			useful to make the number of lines small when screen
+			updating is very slow.  Cannot make the height more
+			than the physical screen height.
+
+							*z.*
+z.			Redraw, line [count] at center of window (default
+			cursor line).  Put cursor at first non-blank in the
+			line.
+
+							*zz*
+zz			Like "z.", but leave the cursor in the same column.
+			Careful: If caps-lock is on, this commands becomes
+			"ZZ": write buffer and exit!  {not in Vi}
+
+							*z-*
+z-			Redraw, line [count] at bottom of window (default
+			cursor line).  Put cursor at first non-blank in the
+			line.
+
+							*zb*
+zb			Like "z-", but leave the cursor in the same column.
+			{not in Vi}
+
+==============================================================================
+4. Scrolling horizontally				*scroll-horizontal*
+
+For the following two commands the cursor follows the screen.  If the
+character that the cursor is on is moved off the screen, the cursor is moved
+to the closest character that is on the screen.  The value of 'sidescroll' is
+not used.
+
+z<Right>    or						*zl* *z<Right>*
+zl			Scroll the screen [count] characters to the left.
+			This only works when 'wrap' is off.  {not in Vi}
+
+z<Left>      or						*zh* *z<Left>*
+zh			Scroll the screen [count] characters to the right.
+			This only works when 'wrap' is off.  {not in Vi}
+
+For the following two commands the cursor is not moved in the text, only the
+text scrolls on the screen.
+
+							*zs*
+zs			Scroll the screen horizontally to position the cursor
+			at the start (left side) of the screen.  This only
+			works when 'wrap' is off.  {not in Vi}
+
+							*ze*
+ze			Scroll the screen horizontally to position the cursor
+			at the end (right side) of the screen.  This only
+			works when 'wrap' is off.  {not in Vi}
+
+ vim:tw=78:ts=8:sw=8:

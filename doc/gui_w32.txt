@@ -1,0 +1,163 @@
+*gui_w32.txt*   For Vim version 5.0.  Last modification: 1998 Feb 17
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Vim's Graphical User Interface				*gui-w32*
+
+1. Starting the GUI		|gui-w32-start|
+2. Vim as default editor	|vim-default-editor|
+3. Using the clipboard		|gui-clipboard|
+4. Shell Commands		|gui-shell-win32|
+5. Special colors		|win32-colors|
+6. Various			|gui-w32-various|
+
+Other relevant documentation:
+|gui.txt|	For generic items of the GUI.
+|os_win32.txt|  For Win32 specific items.
+
+{Vi does not have a Windows GUI}
+
+==============================================================================
+1. Starting the GUI					*gui-w32-start*
+
+The Win32 GUI version of Vim will always start the GUI, no matter how you
+start it or what it's called.
+
+The GUI will always run in the Windows subsystem.  Mostly shells automatically
+return with a command prompt after starting gvim.  If not, you should use the
+"start" command:
+>	start gvim [options] file ..
+
+Note: All fonts (bold, italic) must be of the same size!!!  If you don't do
+this, text will disappear or mess up the display.  Vim does not check the font
+sizes.  It's the size in screen pixels that must be the same.  Note that some
+fonts that have the same point size don't have the same pixel size!
+Additionally, the positioning of the fonts must be the same (ascent and
+descent).
+
+The Win32 GUI has an extra menu item:  "Window/Select Font".  It brings up the
+standard Windows font selector.
+
+Setting the menu height doesn't work for the Win32 GUI.
+
+==============================================================================
+2. Vim as default editor				*vim-default-editor*
+
+To set Vim as the default editor for a file type:
+1. Start a Windows Explorer
+2. Chose View/Options -> File Types
+3. Select the path to gvim for every file type that you want to use it for.
+   (you can also use three spaces in the file type field, for files without an
+   extension).
+
+							*send-to-menu*
+You can also install Vim in the "Send To" menu:
+1. Start a Windows Explorer
+2. Navigate to your sendto directory:
+   Windows 95: %windir%\sendto (e.g. "c:\windows\sendto")
+   Windows NT: %windir%\profiles\%user%\sendto (e.g.
+	       "c:\winnt\profiles\mattha\sendto").
+3. Right-click in the file pane and select New->Shortcut
+4. Follow the shortcut wizard, using the full path to VIM/GVIM.
+
+==============================================================================
+3. Using the clipboard					*gui-clipboard*
+
+Windows has a clipboard, where you can copy text to, and paste text from.  Vim
+supports this in several ways.
+
+The "* register reflects the contents of the clipboard.  |quotestar|
+
+The 'a' flag in 'guioptions' is not included by default.  This means that text
+is only put on the clipboard when an operation is performed on it.  Just
+Visually selecting text doesn't put it on the clipboard.  When the 'a' flag is
+included, the text is copied to the clipboard even when it is not operator
+upon.
+
+In Visual mode, the CTRL-X key can be used to delete the selected text.
+CTRL-C can be used to do the same, and copy the text to the clipboard.
+
+The standard Windows key CTRL-V already has a meaning in Vim.  To make it work
+the Windows way, you can use these mappings:
+>  :vmap ^V ""x"*p
+>  :nmap ^V "*p
+>  :nmap ^K ^V
+[the ^V is a real CTRL-V, you have to type CTRL-V twice]
+The CTRL-K key can then be used for the Vim meaning of CTRL-V.
+Unfortunately, CTRL-C cannot be mapped.
+
+NOTE: The cliboard support still has a number of bugs.  See $VIM/todo.
+
+==============================================================================
+4. Shell Commands					*gui-shell-win32*
+
+WARNING: Executing an external command happens in a separate window.  If you
+close this window with the "X" button, Vim may be killed too!
+
+Vim uses another window for external commands, to make it possible to run any
+command.  The external command gets its own environment for running, just like
+it was started from a DOS prompt.
+
+The window in which the commands are executed is always 25x80 characters, to
+be as DOS compatible as possible (this matters on Windows 95).  The default
+system font is used (and I don't know how to change it...).
+
+==============================================================================
+5. Special colors					*win32-colors*
+
+On Win32, the normal DOS colors can be used.  See |dos-colors|.
+
+Additionally the system configured colors can also be used.  These are known
+by the names Sys_XXX, where XXX is the appropriate system color name, from the
+following list (see the Win32 documentation for full descriptions).  Case is
+ignored.
+
+Sys_3DDKShadow		Sys_3DFace			Sys_BTNFace
+Sys_3DHilight		Sys_3DHighlight			Sys_BTNHilight
+Sys_BTNHighlight	Sys_3DLight			Sys_3DShadow
+Sys_BTNShadow		Sys_ActiveBorder		Sys_ActiveCaption
+Sys_AppWorkspace	Sys_Background			Sys_Desktop
+Sys_BTNText		Sys_CaptionText			Sys_GrayText
+Sys_Highlight		Sys_HighlightText		Sys_InactiveBorder
+Sys_InactiveCaption	Sys_InactiveCaptionText		Sys_InfoBK
+Sys_InfoText		Sys_Menu			Sys_MenuText
+Sys_ScrollBar		Sys_Window			Sys_WindowFrame
+Sys_WindowText
+
+Probably the most useful values are
+	Sys_Window          Normal window background
+	Sys_WindowText      Normal window text
+	Sys_Highlight       Highlighted background
+	Sys_HighlightText   Highlighted text
+
+These extra colors are also available:
+Gray, Grey, LightYellow, SeaGreen, Orange, Purple, SlateBlue, Violet,
+
+								*rgb.txt*
+Additionally, colors defined by a "rgb.txt" file can be used.  This file is
+well known from X11.  A few lines from it:
+
+>  255 218 185             peach puff
+>  205 133  63             peru
+>  255 181 197             pink
+
+This shows the layout of the file:  First the R, G and B value as a decimal
+number, followed by the name of the color.  The four fields are separated by
+spaces.
+
+You can get an rgb.txt file from any X11 distribution.  It is located in a
+directory like "/usr/X11R6/lib/X11/".  For Vim it must be located in the $VIM
+directory.  Thus the file can be found with "$VIM/rgb.txt".
+
+==============================================================================
+6. Various						*gui-w32-various*
+
+							*gui-w32-printing*
+The "File/Print" menu uses Notepad to print the current buffer.  This is a bit
+clumsy, but it's portable.  If you want something else, you can define your
+own print command.  For example, you could replace Notepad with Editpad
+(www.tornado.be/~johnfg).  See $VIM/menu.vim for how it works by default.
+
+ vim:tw=78:ts=8:sw=4

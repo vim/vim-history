@@ -1,4 +1,4 @@
-#On the amiga with manx C 5.0 we have to use mazeansi.c
+#On the amiga with manx C 5.0 we have to use maze.ansi.c
 
-maze: mazeansi.o
-	ln mazeansi.o -o maze -lc
+maze: maze.ansi.o
+	ln maze.ansi.o -o maze -lc

@@ -1,0 +1,445 @@
+*gui.txt*       For Vim version 5.0.  Last modification: 1998 Jan 28
+
+
+		  VIM REFERENCE MANUAL    by Bram Moolenaar
+
+
+Vim's Graphical User Interface				*gui* *GUI*
+
+1. Starting the GUI		|gui-start|
+2. Scrollbars			|gui-scrollbars|
+3. Mouse Control		|gui-mouse|
+4. Making GUI Selections	|gui-selections|
+5. Menus			|gui-menus|
+6. Extras			|gui-extras|
+7. Shell Commands		|gui-shell|
+
+Other GUI documentation:
+|gui_x11.txt|	For specific items of the X11 GUI.
+|gui_w32.txt|	For specific items of the Win32 GUI.
+
+{Vi does not have any of these commands}
+
+==============================================================================
+1. Starting the GUI					*gui-start*
+
+First you must make sure you actually have a version of Vim with the GUI code
+included.  You can check this with the ":version" command, it should include
+"+GUI_Motif", "+GUI_Athena" or "+GUI_win32".
+
+How to start the GUI depends on the system used.  Mostly you can can run the
+GUI version of Vim with:
+    gvim [options] [files...]
+
+The X11 version of Vim can run both in GUI and in non-GUI mode.  See
+|gui-x11-start|.
+
+					*gui-init* *gvimrc* *.gvimrc* *_gvimrc*
+When the GUI starts up initializations are carried out, in this order:
+- If the system menu file exists, it is sourced.  The name of this file is
+  normally "$VIM/menu.vim".  You can check this with ":version".  Also
+  see |$VIM|.
+- If the "-U {gvimrc}" command line option has been used when starting Vim,
+  the {gvimrc} file will be read for initializations.  The following
+  initializations are skipped.
+- For Unix, if the system gvimrc exists, it is sourced.  The name of this file
+  is normally "$VIM/gvimrc".  You can check this with ":version".  Also see
+  |$VIM|.
+- The following are tried, and only the first one that exists is used:
+  - If the GVIMINIT environment variable exists and is not empty, it is
+    executed as an Ex command.
+  - If the user gvimrc file exists, it is sourced.  The name of this file is
+    normally "$HOME/.gvimrc".  You can check this with ":version".
+  - For Win32, when $HOME is not set, "$VIM\_gvimrc" is used.
+  - When a "_gvimrc" file is not found, ".gvimrc" is tried too.  And vise
+    versa.
+- If the 'exrc' option is set (which is NOT the default) the file ./.gvimrc
+  is sourced, if it exists and isn't the same file as the system or user
+  gvimrc file.  If this file is not owned by you, some security restrictions
+  apply.
+
+NOTE: All but the first one are not carried out if Vim was started with
+"-u NONE" and no "-U" argument was given, or when started with "-U NONE".
+
+All this happens AFTER the normal Vim initializations, like reading your
+.vimrc file.  See |initialization|.
+
+You can use the gvimrc files to set up your own customised menus (see |:menu|)
+and initialise other things that you may want to set up differently from the
+terminal version.
+
+There are a number of options which only have meaning in the GUI version of
+Vim.  These are 'guicursor', 'guifont', 'guipty' and 'guioptions'.  They are
+documented in |options.txt| with all the other options.
+
+If using the Motif or Athena version of the GUI (not for the Win32 version), a
+number of X resources are available.  See |gui-resources|.
+
+Another way to set the colors for different occasions is with highlight
+groups.  The "Normal" group is used to set the background and foreground
+colors.  Example (which looks nice):
+
+>	:highlight Normal guibg=grey90
+
+The "guibg" and "guifg" settings ovverride the normal background and
+foreground settings.  The other settings for the Normal highlight group are
+not used.  Use the 'guifont' option to set the font.
+
+Also check out the 'guicursor' option, to set the colors for the cursor in
+various modes.
+
+==============================================================================
+2. Scrollbars						*gui-scrollbars*
+
+There are vertical scrollbars and a horizontal scrollbars.  You may
+configure which ones appear with the 'guioptions' option.
+
+The interface looks like this (with ":set guioptions=mlrb"):
+
+		       +------------------------------+
+		       | File  Edit              Help | <- Menu bar (m)
+		       +-+--------------------------+-+
+		       |^|                          |^|
+		       |#| Text area.               |#|
+		       | |                          | |
+		       |v|__________________________|v|
+ Normal status line -> |-+ File.c              5,2  +-|
+ between Vim windows   |^|""""""""""""""""""""""""""|^|
+		       | |                          | |
+		       | | Another file buffer.     | |
+		       | |                          | |
+		       |#|                          |#|
+ Left scrollbar (l) -> |#|                          |#| <- Right
+		       |#|                          |#|    scrollbar (r)
+		       | |                          | |
+		       |v|                          |v|
+		       +-+--------------------------+-+
+		       | |< ####                   >| | <- Bottom
+		       +-+--------------------------+-+    scrollbar (b)
+
+Any of the scrollbar or menu components may be turned off by not putting the
+appropriate letter in the 'guioptions' string.  The bottom scrollbar is
+only useful when 'nowrap' is set.
+
+
+Vertical Scrollbars					*gui-vert-scroll*
+
+Each Vim window has a scrollbar next to it which may be scrolled up and down
+to move through the text in that buffer.  The size of the scrollbar-thumb
+indicates the fraction of the buffer which can be seen in the window.
+When the scrollbar is dragged all the way down, the last line of the file
+will appear in the top of the window.
+
+
+Horizontal Scrollbars					*gui-horiz-scroll*
+
+The horizontal scrollbar (at the bottom of the Vim GUI) may be used to
+scroll text sideways when the 'wrap' option is turned off.  The
+scrollbar-thumb size is such that the text of the current cursor line may be
+scrolled as far as possible left and right.
+
+==============================================================================
+3. Mouse Control					*gui-mouse*
+
+The mouse only works if the appropriate flag in the 'mouse' option is set.
+When the GUI is switched on the 'mouse' option is set to "a", enabling it for
+all modes except for the |hit-return| prompt.  This can be changed in the
+"gvimrc" file.
+
+
+3.1 Moving Cursor with Mouse				*gui-mouse-move*
+
+Click the left mouse button where you want the cursor to go, and it does!
+This works in Normal mode (if 'mouse' contains 'n' or 'a'), Visual mode (if
+'mouse' contains 'v' or 'a') and Insert mode (if 'mouse' contains 'i' or
+'a'), if you click the mouse somewhere in a text buffer. You may use this
+with an operator such as 'd' to delete text from the current cursor position
+to the position you point to with the mouse.  That is, you hit 'd' and then
+click the mouse somewhere.  If you are on the ':' line (or '/' or '?'), then
+clicking the left or right mouse button will position the cursor on the ':'
+line (if 'mouse' contains 'c' or 'a').  In any situation the middle mouse
+button may be clicked to paste the current selection.
+
+
+3.2 Visual Selection with Mouse				*gui-mouse-select*
+
+The right mouse button may be clicked somewhere to extend the visual
+selection to the position pointed to with the mouse.  If already in Visual
+mode then the closest end will be extended, otherwise Visual mode is started
+and extends from the old cursor position to the new one.
+
+Double clicking may be done to make the selection word-wise, triple clicking
+makes it line-wise, and quadruple clicking makes it rectangular block-wise.
+
+In the X11 GUI, Visual selection, however it is invoked, makes Vim the owner
+of the windowing system's primary selection, so that the highlighted text may
+be pasted into other windows.  Similarly, selected text from other windows may
+be pasted into Vim in Normal mode, Insert mode, or on the ':' line by clicking
+the middle mouse button.
+
+In the Win32 GUI, Visually selected text is only copied to the clipboard when
+using a "y" command, or another operator when the '*' register is used.
+
+
+3.3 Other Text Selection with Mouse		*gui-mouse-xterm-like*
+
+When in Command-line mode, at the |hit-return| prompt or whenever the current
+mode is not in the 'mouse' option, a different kind of selection is used.
+It is more like what happens in an xterm.  Let's call this xterm-like
+selection.  Any text in the Vim window can be selected.  Select the text by
+pressing the left mouse button at the start, drag to the end and release.
+Right mouse button extends the selection.  Middle mouse button pasts the
+text.
+
+
+3.4 Using Mouse on Status Lines				*gui-mouse-status*
+
+Clicking the left or right mouse button on the status line below a Vim
+window makes that window the current window.  The mouse may then be dragged
+up and down to move the status line, thus resizing the windows above and
+below it.
+
+
+3.5 Various Mouse Clicks				*gui-mouse-various*
+
+    <S-LeftMouse>	Search forward for the word under the mouse click.
+    <S-RightMouse>	Search backward for the word under the mouse click.
+    <C-LeftMouse>	Jump to the tag name under the mouse click.
+    <C-RightMouse>	Jump back to position before the previous tag jump
+			(same as "CTRL-T")
+
+
+3.6 Mouse Mappings					*gui-mouse-mapping*
+
+The mouse events, complete with modifiers, may be mapped.  Eg:
+>   :map <S-LeftMouse>     <RightMouse>
+>   :map <S-LeftDrag>      <RightDrag>
+>   :map <S-LeftRelease>   <RightRelease>
+>   :map <2-S-LeftMouse>   <2-RightMouse>
+>   :map <2-S-LeftDrag>    <2-RightDrag>
+>   :map <2-S-LeftRelease> <2-RightRelease>
+>   :map <3-S-LeftMouse>   <3-RightMouse>
+>   :map <3-S-LeftDrag>    <3-RightDrag>
+>   :map <3-S-LeftRelease> <3-RightRelease>
+>   :map <4-S-LeftMouse>   <4-RightMouse>
+>   :map <4-S-LeftDrag>    <4-RightDrag>
+>   :map <4-S-LeftRelease> <4-RightRelease>
+These mappings make selection work the way it probably should in a Motif
+application, with shift-left mouse allowing for extending the visual area
+rather than the right mouse button.
+
+Mouse mapping with modifiers does not work for xterm-like selection.
+
+==============================================================================
+4. Making GUI Selections				*gui-selections*
+
+							*quotestar*
+You may make selections with the mouse (see |gui-mouse-select|), or by using
+Vim's Visual mode (see |v|).  If 'a' is present in 'guioptions', then
+whenever Visual mode is invoked, or when the cursor moves while in Visual
+mode, Vim becomes the owner of the windowing system's primary selection (on
+MS-Windows the |gui-clipboard| is used).
+
+There is a special register for storing this selection, it is the <"*>
+register.  Nothing is put in here unless the information about what text is
+selected is about to change (eg with a left mouse click somewhere), or when
+another application wants to paste the selected text.  Then the text is put
+in the <"*> register.  For example, to cut a line and make it the current
+selection/put it on the clipboard:
+>	"*dd
+
+Similarly, when you want to paste a selection from another application, e.g.,
+by clicking the middle mouse button, the selection is put in the <"*> register
+first, and then 'put' like any other register.  For example, to put the
+selection (contents of the clipboard):
+>	"*p
+
+Note that when pasting text from one Vim into another separate Vim, the type
+of selection (character, line, or block) will also be copied.
+
+==============================================================================
+5. Menus						*gui-menus*
+
+5.1 Using Menus						*gui-using-menus*
+
+The default menus are quite simple at the moment.  Power Vim users won't use
+them much.  But the power is in adding your own menus and menu items.  They
+are most useful for things that you can't remember what the key sequence
+was.
+
+Eventually I would like to expand the set of default menus to use pop up and
+other windows for confirmation, file selection etc.  Maybe have a dialogue
+box for browsing and choosing buffers, etc.
+
+Motif supports Tear-off menus.  These are sort of sticky menus or pop-up
+menus that are present all the time.  If the resizing does not work
+correctly, this may be caused by using something like "Vim*geometry" in de
+defaults.  Use "Vim.geometry" instead.
+
+							*menu.vim*
+The default menus are read from the file "$VIM/menu.vim".  See |$VIM| for
+where the path comes from.  You can set up your own menus.  Starting off with
+the default set is a good idea.  You can add more items, or, if you don't like
+the defaults at all, start with removing all menus |:unmenu-all|.
+
+
+5.2 Creating New Menus					*gui-creating-menus*
+
+				*:me*  *:menu*  *:noreme*  *:noremenu*
+				*:am*  *:amenu* *:an*      *:anoremenu*
+				*:nme* *:nmenu* *:nnoreme* *:nnoremenu*
+				*:ome* *:omenu* *:onoreme* *:onoremenu*
+				*:vme* *:vmenu* *:vnoreme* *:vnoremenu*
+				*:ime* *:imenu* *:inoreme* *:inoremenu*
+				*:cme* *:cmenu* *:cnoreme* *:cnoremenu*
+To create a new menu item, use the ":menu" commands.  They are exactly like
+the ":map" set of commands but the first argument is a menu item name, given
+as a path of menus and submenus with a '.' between them. eg:
+>   :menu File.Save  :w^M
+>   :inoremenu File.Save  ^O:w^M
+>   :menu Edit.Big\ Changes.Delete\ All\ Spaces  :%s/[ ^I]//g^M
+
+This last one will create a new item in the menu bar called "Edit", holding
+the mouse button down on this will pop up a menu containing the item
+"Big Changes", which is a sub-menu containing the item "Delete All Spaces",
+which when selected, performs the operation.
+
+The ":amenu" command can be used to define menu entries for all modes at once.
+To make the command work correctly, a character is automatically inserted for
+some modes:
+	mode		inserted	~
+	Normal		nothing
+	Visual		<Esc>
+	Insert		<C-O>
+	Cmdline		<C-C>
+	Op-pending	<Esc>
+
+Example:
+>   :amenu File.Exit	:qa!^M
+is equal to:
+>   :nmenu File.Exit	:qa!^M
+>   :vmenu File.Exit	^[:qa!^M
+>   :imenu File.Exit	^O:qa!^M
+>   :cmenu File.Exit	^C:qa!^M
+>   :omenu File.Exit	^[:qa!^M
+
+Careful: In Insert mode this only works for a SINGLE Normal mode command,
+because of the CTRL-O.  If you have two or more commands, you will need to use
+the ":imenu" command.  For inserting text in any mode, you can use the
+expression register:
+>   :amenu Insert.foobar   "='foobar'<CR>P
+
+Note that the '<' and 'k' flags in 'cpoptions' also apply here (when
+included they make the <> form and raw key codes not being recognized).
+
+Note that <Esc> in Cmdline mode executes the command, like in a mapping.  This
+is Vi compatible.  Use CTRL-C to quit Cmdline mode.
+
+							*menu-priority*
+You can give a priority to a menu.  Menus with a higher priority go more to
+the right.  The priority is given as a number before the ":menu" command.
+Example:
+>	:70menu Buffer.next :bn<CR>
+
+The default menus have these priorities:
+	File	10
+	Edit	20
+	Syntax	50
+	Help	9999
+
+When no priority is given, 500 is used.
+
+You can use a priority higher than 9999, to make it go after the Help menu,
+but that is non-standard and is discouraged.  The highest possible priority is
+about 32000.
+
+Currently, you can only give a priority for the location of the menu in the
+menu bar, not for the location of a menu item in a menu.
+
+
+5.3 Showing What Menus Are Mapped To			*gui-showing-menus*
+
+To see what an existing menu is mapped to, use just one argument after the
+menu commands (just like you would with the ":map" commands).  If the menu
+specified is a submenu, then all menus under that hierarchy will be shown.
+If no argument is given after :menu at all, then ALL menu items are shown
+for the appropriate mode (eg, Command-line mode for :cmenu).
+
+Note that hitting <Tab> while entering a menu name after a menu command may
+be used to complete the name of the menu item.
+
+
+5.4 Deleting Menus					*gui-delete-menus*
+
+						*:unme*  *:unmenu*
+						*:aun*   *:aunmenu*
+						*:nunme* *:nunmenu*
+						*:ounme* *:ounmenu*
+						*:vunme* *:vunmenu*
+						*:iunme* *:iunmenu*
+						*:cunme* *:cunmenu*
+To delete a menu item or a whole submenu, use the unmenu commands, which are
+analogous to the unmap commands.  Eg:
+    :unmenu! Edit.Paste
+
+This will remove the Paste item from the Edit menu for Insert and
+Command-line modes.
+
+Note that hitting <Tab> while entering a menu name after an umenu command
+may be used to complete the name of the menu item for the appropriate mode.
+
+To remove all menus use:			*:unmenu-all*
+>	:unmenu *	" remove all menus in Normal and visual mode
+>	:unmenu! *	" remove all menus in Insert and Command-line mode
+
+
+5.5 Examples for Menus
+
+Here is an example on how to add menu items with menu's!  You can add a menu
+item for the keyword under the cursor.  The register "z" is used.
+
+>  :nmenu Words.Add\ Var  	wb"zye:menu! Words.<C-R>z <C-R>z<CR>
+>  :nmenu Words.Remove\ Var  	wb"zye:unmenu! Words.<C-R>z<CR>
+>  :vmenu Words.Add\ Var	"zy:menu! Words.<C-R>z <C-R>z <CR>
+>  :vmenu Words.Remove\ Var  	"zy:unmenu! Words.<C-R>z<CR>
+>  :imenu Words.Add\ Var	<Esc>wb"zye:menu! Words.<C-R>z <C-R>z<CR>a
+>  :imenu Words.Remove\ Var  	<Esc>wb"zye:unmenu! Words.<C-R>z<CR>a
+
+(the rhs is in <> notation, you can copy/paste this text to try out the
+mappings, or put these lines in your gvimrc; "<C-R>" is CTRL-R, "<CR>" is
+the <CR> key.  |<>|)
+
+==============================================================================
+6. Extras						*gui-extras*
+
+This section describes other features which are related to the GUI.
+
+- With the GUI, there is no wait for one second after hitting escape, because
+  the key codes don't start with <Esc>.
+
+- Typing ^V followed by a special key in the GUI will insert "<Key>", since
+  the internal string used is meaningless.  Modifiers may also be held down to
+  get "<Modifiers-Key>".
+
+- In the GUI, the modifiers SHIFT, CTRL, and ALT (or META) may be used within
+  mappings of special keys and mouse events.  eg: :map <M-LeftDrag> <LeftDrag>
+
+- In the GUI, several normal keys may have modifiers in mappings etc, these
+  are <Space>, <Tab>, <NL>, <CR>, <Esc>.
+
+==============================================================================
+7. Shell Commands					*gui-shell*
+
+WARNING: Executing an external command from the GUI will not always work.
+"normal" commands like "ls", "grep" and "make" mostly work fine.  Commands
+that require an intelligent terminal like "less" and "ispell" won't work.
+Some may even hang and need to be killed from another terminal.  So be
+careful!
+
+For the X11 GUI the external commands are executed inside the gvim window.
+See |gui-pty|.
+
+For the Win32 GUI the external commands are executed in a separate window.
+See |gui-shell-win32|.
+
+ vim:tw=78:ts=8:sw=4

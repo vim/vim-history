@@ -1,2 +1,3 @@
 /* version.c */
-void do_version __PARMS((char_u *arg));
+int get_version __ARGS((void));
+void do_version __ARGS((char_u *arg));

@@ -1,25 +1,194 @@
-DOCS = vim_ami.txt vim_arch.txt vim_diff.txt vim_digr.txt vim_dos.txt \
-	vim_help.txt vim_idx.txt vim_mac.txt vim_w32.txt vim_ref.txt \
-	vim_tips.txt vim_unix.txt vim_win.txt vim_gui.txt vim_40.txt \
-	vim_kcc.txt vim_rlh.txt vim_menu.txt vim_os2.txt vim_mint.txt
+#
+# Makefile for the Vim documentation on Unix
+#
+# If you get "don't know how to make scratch", first run make in the source
+# directory.  Or remove the include below.
 
-all: vim_tags vim.man xxd.man ctags.man
+AWK = awk
 
-vim_tags: doctags $(DOCS)
-	./doctags $(DOCS) | sort >vim_tags
-	uniq -d -2 vim_tags
+# include the config.mk from the source directory.  It's only needed to set
+# AWK, used for "make html".  Comment this out if the include gives problems.
+include ../src/config.mk
+
+DOCS = \
+	autocmd.txt \
+	change.txt \
+	cmdline.txt \
+	digraph.txt \
+	editing.txt \
+	eval.txt \
+	farsi.txt \
+	gui.txt \
+	gui_w32.txt \
+	gui_x11.txt \
+	help.txt \
+	howto.txt \
+	index.txt \
+	insert.txt \
+	intro.txt \
+	map.txt \
+	message.txt \
+	motion.txt \
+	options.txt \
+	os_amiga.txt \
+	os_archi.txt \
+	os_beos.txt \
+	os_dos.txt \
+	os_mac.txt \
+	os_mint.txt \
+	os_msdos.txt \
+	os_os2.txt \
+	os_unix.txt \
+	os_win32.txt \
+	pattern.txt \
+	if_perl.txt \
+	if_python.txt \
+	if_ole.txt \
+	quickfix.txt \
+	recover.txt \
+	repeat.txt \
+	rightleft.txt \
+	scroll.txt \
+	starting.txt \
+	syntax.txt \
+	tagsearch.txt \
+	term.txt \
+	tips.txt \
+	uganda.txt \
+	undo.txt \
+	various.txt \
+	version4.txt \
+	version5.txt \
+	vi_diff.txt \
+	visual.txt \
+	windows.txt
+
+HTMLS = \
+	autocmd.html \
+	change.html \
+	cmdline.html \
+	digraph.html \
+	editing.html \
+	eval.html \
+	farsi.html \
+	gui.html \
+	gui_w32.html \
+	gui_x11.html \
+	help.html \
+	howto.html \
+	index.html \
+	insert.html \
+	intro.html \
+	map.html \
+	message.html \
+	motion.html \
+	options.html \
+	os_amiga.html \
+	os_archi.html \
+	os_beos.html \
+	os_dos.html \
+	os_mac.html \
+	os_mint.html \
+	os_msdos.html \
+	os_os2.html \
+	os_unix.html \
+	os_win32.html \
+	pattern.html \
+	if_perl.html \
+	if_python.html \
+	if_ole.html \
+	quickfix.html \
+	recover.html \
+	repeat.html \
+	rightleft.html \
+	scroll.html \
+	starting.html \
+	syntax.html \
+	tagsearch.html \
+	term.html \
+	tips.html \
+	uganda.html \
+	undo.html \
+	various.html \
+	version4.html \
+	version5.html \
+	vi_diff.html \
+	visual.html \
+	windows.html
+
+.SUFFIXES:
+.SUFFIXES: .c .o .txt .html
+
+all: tags vim.man xxd.man ctags.man
+
+tags: doctags $(DOCS)
+	./doctags $(DOCS) | sort >tags
+	uniq -d -2 tags
 
 doctags: doctags.c
-	cc doctags.c -o doctags
+	$(CC) doctags.c -o doctags
 
 vim.man: vim.1
 	nroff -man vim.1 | sed -e s/.//g > vim.man
 
-ctags.man: ctags.1
-	nroff -man ctags.1 | sed -e s/.//g > ctags.man
-
 xxd.man: xxd.1
 	nroff -man xxd.1 | sed -e s/.//g > xxd.man
 
+ctags.man: ctags.1
+	nroff -man ctags.1 | sed -e s/.//g > ctags.man
+
+ctags.1: ../src/ctags/ctags.1
+	cp ../src/ctags/ctags.1 ctags.1
+
+html: noerrors tags tags.ref $(HTMLS)
+	-more errors.log
+
+noerrors:
+	-rm -f errors.log
+
+.txt.html:
+	$(AWK) -f makehtml.awk $< >$@
+
+tags.ref: tags
+	$(AWK) -f maketags.awk tags >tags.html
+
 clean:
-	-rm doctags
+	-rm doctags *.html tags.ref
+
+# These files are in the extra archive, skip if not present
+
+farsi.txt:
+	touch farsi.txt
+
+gui_w32.txt:
+	touch gui_w32.txt
+
+if_ole.txt:
+	touch if_ole.txt
+
+os_amiga.txt:
+	touch os_amiga.txt
+
+os_archi.txt:
+	touch os_archi.txt
+
+os_beos.txt:
+	touch os_beos.txt
+
+os_dos.txt:
+	touch os_dos.txt
+
+os_mac.txt:
+	touch os_mac.txt
+
+os_mint.txt:
+	touch os_mint.txt
+
+os_msdos.txt:
+	touch os_msdos.txt
+
+os_os2.txt:
+	touch os_os2.txt
+
+os_win32.txt:
+	touch os_win32.txt

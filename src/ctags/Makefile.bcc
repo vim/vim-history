@@ -1,9 +1,11 @@
 # Simple makefile for Borland C++ 3.1
 # 4.0 can also be used, although the executable will be much bigger!
 
+SOURCES	= entry.c get.c main.c options.c parse.c read.c sort.c
+
 # Adjust the paths to your location of the borland C files
-BCCLOC  = e:\borlandc
-CC	=   $(BCCLOC)\bin\bcc
+BCCLOC  = c:\borlandc
+CC	= $(BCCLOC)\bin\bcc
 INC	= -I$(BCCLOC)\include
 LIB	= -L$(BCCLOC)\lib
 
@@ -19,7 +21,13 @@ EXTRA   =   $(BCCLOC)\lib\wildargs.obj
 #	add -v for source debugging
 OPTIMIZE= -1- -Ox
 
-CFLAGS	= -A -mc -w-pia -DMSDOS $(DEBUG) $(OPTIMIZE) $(INC) $(LIB)
+CFLAGS	= -A -mc -w-pia -w-par -DMSDOS $(DEBUG) $(OPTIMIZE) $(INC)
+LFLAGS	= $(LIB) $(EXTRA)
 
-ctags.exe: ctags.c
-	$(CC) $(CFLAGS) ctags.c $(EXTRA)
+ctags.exe: $(SOURCES) respfile
+	$(CC) -e$@ @respfile
+
+respfile: makefile.bcc
+	echo $(CFLAGS) > $@
+	echo $(LFLAGS) >> $@
+	echo $(SOURCES) >> $@

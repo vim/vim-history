@@ -80,7 +80,7 @@ main(int argc, char *argv[])
 	char	buf[BUFSIZ];
 	int	n;
 	extern int	optind;
-	
+
 	while ((opt = getopt(argc, argv, "a")) != EOF)
 	{
 		switch (opt)
@@ -91,16 +91,16 @@ main(int argc, char *argv[])
 					exit(2);
 		}
 	}
-	
+
 	numfiles = argc - optind;
-	
+
 	if (numfiles == 0)
 	{
 		fprintf(stderr, "doesn't make much sense using tee without any file name arguments...\n");
 		usage();
 		exit(2);
 	}
-	
+
 	maxfiles = sysconf(_SC_OPEN_MAX);	/* or fill in 10 or so */
 	if (maxfiles < 0)
 		maxfiles = 10;

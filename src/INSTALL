@@ -1,18 +1,19 @@
 INSTALL - Installation of Vim on different machines.
 
-This file contains instructions for compiling Vim. If you have an executable
-version of Vim, you don't need this.
+This file contains instructions for compiling Vim. If you already have an
+executable version of Vim, you don't need this.
 
 Contents:
 1. Generic
-2. Amiga
-3. MS-DOS
-4. Win32 (Windows NT and Windows 95)
-5. Archimedes
-6. Macintosh
-7. Unix
-8. OS/2 (with EMX 0.9b)
-9. Atari MiNT
+2. Unix
+3. Archimedes
+4. Macintosh
+5. OS/2 (with EMX 0.9b)
+6. Atari MiNT
+
+For BeBox see doc/os_bebox.txt.
+For Amiga see INSTALL.amiga
+For PC (MS-DOS, Windows NT, Windows 95) see INSTALL.pc
 
 
 1. Generic
@@ -23,90 +24,7 @@ this, then you will get the default behaviour as is documented, which should
 be fine for most people.
 
 
-2. Amiga
-========
-
-Summary:
-make -f makefile.manx		Manx C
-make -f makefile.sas		Lattice/SAS C
-make -f makefile.dice		DICE
-
-The Manx compiler is preferred, it was used to produce the Amiga executable
-and has been tested most. You should not get any errors or warnings.
-
-The SAS compiler can be used. Older versions (6.0 to 6.3) don't work with the
-optimizer switched on. This seems to be fixed with 6.5 or 6.56, but this has
-not been tested much.
-
-The DICE makefile works, but it has only been tested by one person.
-
-You will have to set the "VIM" environment variable to the location of the
-documentation files.
-
-
-3. MS-DOS
-=========
-
-Summary:
-ren makefile makefile.uni
-ren makefile.bcc makefile; make		Borland C++ and Turbo C++
-ren makefile.dos makefile; make		Turbo C
-make -f makefile.djg			DJGPP 2.0
-
-Warning: Be sure to use the right make.exe.  Microsoft C make doesn't work;
-Borland make only works with makefile.bcc and makefile.dos; DJGPP/GNU make
-must be used for makefile.djg.
-
-The Borland C++ compiler has been used to generate the MS-DOS executable; it
-should work without problems. You will probably have to change the paths for
-LIBPATH and INCLUDEPATH in the start of the makefile. If you don't have the
-spawno library, try to get it (e.g., from Simtel), or follow the instructions
-in the makefile to remove the use of spawno. You will get two warnings which
-can be ignored (one about _chmod and one about precompiled header files).
-
-The Turbo C makefile has not been tested much lately. It is included for those
-that don't have C++. You may need to make a few changes to get it to work.
-
-DJGPP needs to be installed properly to compile Vim; you need a lot of things
-before it works. When your setup is OK, Vim should compile with just one
-warning (about an argument to signal()).
-
-You will have to set the "VIM" environment variable to the location of the
-documentation files.
-
-
-4. Win32 (Windows NT and Windows 95)
-====================================
-
-Summary:
-nmake -f Makefile.w32		Win32 SDK or Microsoft Visual C++
-make -f Makefile.b32		Borland C++ 4.5
-
-These files have been supplied by George V. Reilly and Ben Singer; they should
-work.  Makefile.b32 has not been tested much; use Makefile.w32 if you can.
-
-You will have to set the "VIM" environment variable to the location of the
-documentation files.
-
-
-5. Archimedes
-=============
-
-make -f makefile.arch
-
-This probably doesn't work, since the include file archie.h is still missing.
-Nobody is currently working on this.
-
-
-6. Macintosh
-============
-
-Vim should work on the Macintosh, but I don't have a makefile for it.
-Work is being done to update the Macintosh port.  It's a lot of work; don't
-expect it soon.
-
-
-7. Unix
+2. Unix
 =======
 
 Summary:
@@ -114,9 +32,9 @@ Summary:
 2. make install		installation in /usr/local
 
 This will include the GUI and X11 libraries, if you have them.  If you want a
-version of Vim that is small and starts up quickly, see the Makefile for how to
-disable the GUI and X11.  If you don't have Motif and/or X11, these features
-will be disabled automatically.
+version of Vim that is small and starts up quickly, see the Makefile for how
+to disable the GUI and X11.  If you don't have Motif and/or X11, these
+features will be disabled automatically.
 
 See the start of Makefile for more detailed instructions about how to compile
 Vim.
@@ -128,16 +46,17 @@ If you are compiling Vim for several machines, for each machine:
   d.    points 1 and 2 above
 
 [don't use a path for machine_name, just a directory name, otherwise the links
-that "make shadow" create won't work]
+that "make shadow" creates won't work]
 
 GNU Autoconf and a few other tools have been used to make Vim work on many
-different Unix systems. The advantage of this is that Vim should compile
-on most sytems without any adjustments. The disadvantage is that when
+different Unix systems.  The advantage of this is that Vim should compile
+on most sytems without any adjustments.  The disadvantage is that when
 adjustments are required, it takes some time to understand what is happening.
 
 If configure finds all library files and then complains when linking that some
 of them can't be found, your linker doesn't return an error code for missing
-libraries.  Vim should be linked fine anyway; just ignore these errors.
+libraries.  Vim should be linked fine anyway, mostly you can just ignore these
+errors.
 
 On Linux, when using -g to compile (which is default for gcc), the executable
 will probably be statically linked.  If you don't want this, remove the -g
@@ -148,7 +67,24 @@ changes in the Makefile have no influence on configure.  This may be what you
 want, but maybe not!
 
 
-8. OS/2
+3. Archimedes
+=============
+
+make -f makefile.arch
+
+This probably doesn't work, since the include file os_archie.h is still
+missing.  Nobody is currently working on this.
+
+
+4. Macintosh
+============
+
+Vim should work on the Macintosh, but I don't have a makefile for it.
+Work is being done to update the Macintosh port.  It's a lot of work; don't
+expect it soon.
+
+
+5. OS/2
 =======
 
 Summary:
@@ -193,7 +129,7 @@ Prerequisites:
 Check vim_os2.txt for additional info on running Vim.
 
 
-9. Atari MiNT
+6. Atari MiNT
 =============
 
 
@@ -210,7 +146,7 @@ termcap names. If you don't have any, link with termlib.o.
 -----------------------------------------------------------------------------
 
 The rest of this file is based on the INSTALL file that comes with GNU
-autoconf 2.4. Not everything applies to Vim. Read Makefile too!
+autoconf 2.12. Not everything applies to Vim. Read Makefile too!
 
 
 Basic Installation
@@ -251,13 +187,20 @@ The simplest way to compile this package is:
 
   2. Type `make' to compile the package.
 
+  3. Optionally, type `make check' to run any self-tests that come with
+     the package.
+
   4. Type `make install' to install the programs and any data files and
      documentation.
 
   5. You can remove the program binaries and object files from the
      source code directory by typing `make clean'.  To also remove the
      files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.
+     a different kind of computer), type `make distclean'.  There is
+     also a `make maintainer-clean' target, but that is intended mainly
+     for the package's developers.  If you use it, you may have to get
+     all sorts of other programs in order to regenerate files that came
+     with the distribution.
 
 Compilers and Options
 =====================
@@ -271,10 +214,6 @@ this:
 
 Or on systems that have the `env' program, you can do it like this:
      env CPPFLAGS=-I/usr/local/include LDFLAGS=-s ./configure
-
-Or edit Makefile. There are examples lines with CC and CFLAGS that can be
-used by removing the '#' in column one. Some are for generic use, with
-debugger or optimizer. There are also lines for some specific systems.
 
 Compiling For Multiple Architectures
 ====================================
@@ -379,7 +318,9 @@ operates.
 `--quiet'
 `--silent'
 `-q'
-     Do not print messages saying which checks are being made.
+     Do not print messages saying which checks are being made.  To
+     suppress all normal output, redirect it to `/dev/null' (any error
+     messages will still be shown).
 
 `--srcdir=DIR'
      Look for the package's source code in directory DIR.  Usually
@@ -390,4 +331,3 @@ operates.
      script, and exit.
 
 `configure' also accepts some other, not widely useful, options.
-
