@@ -2181,6 +2181,21 @@ ExpandOne(str, orig, options, mode)
 			vim_free(cmd_files[i]);
 			cmd_files[i] = p;
 		    }
+
+		    /* If 'str' starts with "\~", replace "~" at start of
+		     * cmd_files[i] with "\~". */
+		    if (str[0] == '\\' && str[1] == '~'
+						    && cmd_files[i][0] == '~')
+		    {
+			p = alloc(STRLEN(cmd_files[i]) + 2);
+			if (p != NULL)
+			{
+			    p[0] = '\\';
+			    STRCPY(p + 1, cmd_files[i]);
+			    vim_free(cmd_files[i]);
+			    cmd_files[i] = p;
+			}
+		    }
 		}
 		expand_set_path = FALSE;
 	    }
