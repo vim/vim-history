@@ -3062,6 +3062,49 @@ reset_VIsual()
 }
 #endif /* FEAT_VISUAL */
 
+#if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+static int find_is_eval_item __ARGS((char_u *ptr, int *colp, int *nbp, int dir));
+
+/*
+ * Check for a balloon-eval special item to include when searching for an
+ * identifier.  When "dir" is BACKWARD "ptr[-1]" must be valid!
+ * Returns TRUE if the character at "*ptr" should be included.
+ * "dir" is FORWARD or BACKWARD, the direction of searching.
+ * "*colp" is in/decremented if "ptr[-dir]" should also be included.
+ * "bnp" points to a counter for square brackets.
+ */
+    static int
+find_is_eval_item(ptr, colp, bnp, dir)
+    char_u	*ptr;
+    int		*colp;
+    int		*bnp;
+    int		dir;
+{
+    /* Accept everything inside []. */
+    if ((*ptr == ']' && dir == BACKWARD) || (*ptr == '[' && dir == FORWARD))
+	++*bnp;
+    if (*bnp > 0)
+    {
+	if ((*ptr == '[' && dir == BACKWARD) || (*ptr == ']' && dir == FORWARD))
+	    --*bnp;
+	return TRUE;
+    }
+
+    /* skip over "s.var" */
+    if (*ptr == '.')
+	return TRUE;
+
+    /* two-character item: s->var */
+    if (ptr[dir == BACKWARD ? 0 : 1] == '>'
+	    && ptr[dir == BACKWARD ? -1 : 0] == '-')
+    {
+	*colp += dir;
+	return TRUE;
+    }
+    return FALSE;
+}
+#endif
+
 /*
  * Find the identifier under or to the right of the cursor.
  * "find_type" can have one of three values:
@@ -3111,6 +3154,9 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
     int		prev_class;
     int		prevcol;
 #endif
+#if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+    int		bn = 0;	    /* bracket nesting */
+#endif
 
     /*
      * if i == 0: try to find an identifier
@@ -3128,6 +3174,11 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 	{
 	    while (ptr[col] != NUL)
 	    {
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+		/* Stop at a ']' to evaluate "a[x]". */
+		if ((find_type & FIND_EVAL) && ptr[col] == ']')
+		    break;
+# endif
 		this_class = mb_get_class(ptr + col);
 		if (this_class != 0 && (i == 1 || this_class != 1))
 		    break;
@@ -3136,9 +3187,18 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 	}
 	else
 #endif
-	    while (ptr[col] != NUL && (i == 0
-			? !vim_iswordc(ptr[col]) : vim_iswhite(ptr[col])))
+	    while (ptr[col] != NUL
+		    && (i == 0 ? !vim_iswordc(ptr[col]) : vim_iswhite(ptr[col]))
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+		    && (!(find_type & FIND_EVAL) || ptr[col] != ']')
+# endif
+		    )
 		++col;
+
+#if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+	/* When starting on a ']' count it, so that we include the '['. */
+	bn = ptr[col] == ']';
+#endif
 
 	/*
 	 * 2. Back up to start of identifier/string.
@@ -3147,7 +3207,12 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 	if (has_mbyte)
 	{
 	    /* Remember class of character under cursor. */
-	    this_class = mb_get_class(ptr + col);
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+	    if ((find_type & FIND_EVAL) && ptr[col] == ']')
+		this_class = mb_get_class((char_u *)"a");
+	    else
+# endif
+		this_class = mb_get_class(ptr + col);
 	    while (col > 0)
 	    {
 		prevcol = col - 1 - (*mb_head_off)(ptr, ptr + col - 1);
@@ -3155,7 +3220,14 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 		if (this_class != prev_class
 			&& (i == 0
 			    || prev_class == 0
-			    || (find_type & FIND_IDENT)))
+			    || (find_type & FIND_IDENT))
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+			&& (!(find_type & FIND_EVAL)
+			    || prevcol == 0
+			    || !find_is_eval_item(ptr + prevcol, &prevcol,
+							       &bn, BACKWARD))
+# endif
+			)
 		    break;
 		col = prevcol;
 	    }
@@ -3170,10 +3242,19 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 	else
 #endif
 	{
-	    while (col > 0 && (i == 0 ? vim_iswordc(ptr[col - 1])
-			: (!vim_iswhite(ptr[col - 1])
-			    && (!(find_type & FIND_IDENT)
-				|| !vim_iswordc(ptr[col - 1])))))
+	    while (col > 0
+		    && ((i == 0
+			    ? vim_iswordc(ptr[col - 1])
+			    : (!vim_iswhite(ptr[col - 1])
+				&& (!(find_type & FIND_IDENT)
+				    || !vim_iswordc(ptr[col - 1]))))
+#if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+			|| ((find_type & FIND_EVAL)
+			    && col > 1
+			    && find_is_eval_item(ptr + col - 1, &col,
+							       &bn, BACKWARD))
+#endif
+			))
 		--col;
 
 	    /* If we don't want just any old string, or we've found an
@@ -3204,6 +3285,10 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
     /*
      * 3. Find the end if the identifier/string.
      */
+#if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+    bn = 0;
+    startcol -= col;
+#endif
     col = 0;
 #ifdef FEAT_MBYTE
     if (has_mbyte)
@@ -3211,15 +3296,27 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 	/* Search for point of changing multibyte character class. */
 	this_class = mb_get_class(ptr);
 	while (ptr[col] != NUL
-		&& i == 0 ? mb_get_class(ptr + col) == this_class
-			  : mb_get_class(ptr + col) != 0)
+		&& ((i == 0 ? mb_get_class(ptr + col) == this_class
+			    : mb_get_class(ptr + col) != 0)
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+		    || ((find_type & FIND_EVAL)
+			&& col <= startcol
+			&& find_is_eval_item(ptr + col, &col, &bn, FORWARD))
+# endif
+		))
 	    col += (*mb_ptr2len_check)(ptr + col);
     }
     else
 #endif
-	while (i == 0 ? vim_iswordc(*ptr) : (*ptr != NUL && !vim_iswhite(*ptr)))
+	while ((i == 0 ? vim_iswordc(ptr[col])
+		       : (ptr[col] != NUL && !vim_iswhite(ptr[col])))
+# if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
+		    || ((find_type & FIND_EVAL)
+			&& col <= startcol
+			&& find_is_eval_item(ptr + col, &col, &bn, FORWARD))
+# endif
+		)
 	{
-	    ++ptr;
 	    ++col;
 	}
 

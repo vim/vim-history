@@ -283,7 +283,7 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
 			/* Find the word under the cursor. */
 			++emsg_off;
 			len = find_ident_at_pos(wp, lnum, (colnr_T)col, &lbuf,
-						    FIND_IDENT + FIND_STRING);
+					FIND_IDENT + FIND_STRING + FIND_EVAL);
 			--emsg_off;
 			if (len == 0)
 			    return FAIL;
