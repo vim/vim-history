@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.1.  Last change: 2002 Oct 13
+*options.txt*   For Vim version 6.1.  Last change: 2003 Jan 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -947,6 +947,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	  delete	delete the buffer from the buffer list, also when
 			'hidden' is set or using |:hide|, like using
 			|:bdelete|
+	  wipe		wipe out the buffer from the buffer list, also when
+			'hidden' is set or using |:hide|, like using
+			|:bwipeout|
 
 	This option is used together with 'buftype' and 'swapfile' to specify
 	special kinds of buffers.   See |special-buffers|.

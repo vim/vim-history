@@ -2306,7 +2306,7 @@ static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 #endif
 #if defined(FEAT_QUICKFIX)
 static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", "help", NULL};
-static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", NULL};
+static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", "wipe", NULL};
 #endif
 static char *(p_bs_values[]) = {"indent", "eol", "start", NULL};
 #ifdef FEAT_FOLDING
