@@ -5235,8 +5235,11 @@ syn_cmd_sync(eap, syncing)
 	}
 	else if (STRCMP(key, "FROMSTART") == 0)
 	{
-	    curbuf->b_syn_sync_minlines = MAXLNUM;
-	    curbuf->b_syn_sync_maxlines = 0;
+	    if (!eap->skip)
+	    {
+		curbuf->b_syn_sync_minlines = MAXLNUM;
+		curbuf->b_syn_sync_maxlines = 0;
+	    }
 	}
 	else if (STRCMP(key, "LINECONT") == 0)
 	{
