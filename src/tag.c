@@ -75,7 +75,7 @@ static int parse_tag_line __ARGS((char_u *lbuf, struct tag_pointers *tagp));
 static int test_for_static __ARGS((struct tag_pointers *));
 static int parse_match __ARGS((char_u *lbuf, struct tag_pointers *tagp));
 static char_u *tag_full_fname __ARGS((struct tag_pointers *tagp));
-static char_u *expand_rel_name __ARGS((char_u *fname, char_u *tag_fname));
+static char_u *expand_tag_fname __ARGS((char_u *fname, char_u *tag_fname, int expand));
 #ifdef EMACS_TAGS
 static int test_for_current __ARGS((int, char_u *, char_u *, char_u *));
 #else
@@ -2167,7 +2167,7 @@ parse_match(lbuf, tagp)
 tag_full_fname(tagp)
     struct tag_pointers	*tagp;
 {
-    char_u	*relname;
+    char_u	*fullname;
     int		c;
 
 #ifdef EMACS_TAGS
@@ -2179,14 +2179,14 @@ tag_full_fname(tagp)
 	c = *tagp->fname_end;
 	*tagp->fname_end = NUL;
     }
-    relname = expand_rel_name(tagp->fname, tagp->tag_fname);
+    fullname = expand_tag_fname(tagp->fname, tagp->tag_fname, FALSE);
 
 #ifdef EMACS_TAGS
     if (!tagp->is_etag)
 #endif
 	*tagp->fname_end = c;
 
-    return relname;
+    return fullname;
 }
 
 /*
@@ -2207,7 +2207,6 @@ jumpto_tag(lbuf, forceit)
     char_u	*str;
     char_u	*pbuf;			/* search pattern buffer */
     char_u	*pbuf_end;
-    char_u	*expanded_fname = NULL;
     char_u	*tofree_fname = NULL;
     char_u	*fname;
     struct tag_pointers tagp;
@@ -2262,18 +2261,10 @@ jumpto_tag(lbuf, forceit)
     }
 
     /*
-     * expand file name (for environment variables)
+     * Expand file name, when needed (for environment variables).
+     * If 'tagrelative' option set, may change file name.
      */
-    expand_context = EXPAND_FILES;
-    expanded_fname = ExpandOne((char_u *)fname, NULL,
-			    WILD_LIST_NOTFOUND|WILD_SILENT, WILD_EXPAND_FREE);
-    if (expanded_fname != NULL)
-	fname = expanded_fname;
-
-    /*
-     * if 'tagrelative' option set, may change file name
-     */
-    fname = expand_rel_name(fname, tagp.tag_fname);
+    fname = expand_tag_fname(fname, tagp.tag_fname, TRUE);
     if (fname == NULL)
 	goto erret;
     tofree_fname = fname;	/* free() it later */
@@ -2515,43 +2506,59 @@ erret:
 	*tagp.fname_end = csave;
     vim_free(pbuf);
     vim_free(tofree_fname);
-    vim_free(expanded_fname);
     vim_free(full_fname);
 
     return retval;
 }
 
 /*
+ * If "expand" is TRUE, expand wildcards in fname.
  * If 'tagrelative' option set, change fname (name of file containing tag)
  * according to tag_fname (name of tag file containing fname).
  * Returns a pointer to allocated memory (or NULL when out of memory).
  */
     static char_u *
-expand_rel_name(fname, tag_fname)
+expand_tag_fname(fname, tag_fname, expand)
     char_u	*fname;
     char_u	*tag_fname;
+    int		expand;
 {
     char_u	*p;
     char_u	*retval;
+    char_u	*expanded_fname = NULL;
+
+    /*
+     * Expand file name (for environment variables) when needed.
+     */
+    if (expand && mch_has_wildcard(fname))
+    {
+	expand_context = EXPAND_FILES;
+	expanded_fname = ExpandOne((char_u *)fname, NULL,
+			    WILD_LIST_NOTFOUND|WILD_SILENT, WILD_EXPAND_FREE);
+	if (expanded_fname != NULL)
+	    fname = expanded_fname;
+    }
 
     if ((p_tr || curbuf->b_help)
 	    && !mch_isFullName(fname)
 	    && (p = gettail(tag_fname)) != tag_fname)
     {
 	retval = alloc(MAXPATHL);
-	if (retval == NULL)
-	    return NULL;
-
-	STRCPY(retval, tag_fname);
-	STRNCPY(retval + (p - tag_fname), fname, MAXPATHL - (p - tag_fname));
-	/*
-	 * Translate names like "src/a/../b/file.c" into "src/b/file.c".
-	 */
-	simplify_filename(retval);
+	if (retval != NULL)
+	{
+	    STRCPY(retval, tag_fname);
+	    STRNCPY(retval + (p - tag_fname), fname,
+						  MAXPATHL - (p - tag_fname));
+	    /*
+	     * Translate names like "src/a/../b/file.c" into "src/b/file.c".
+	     */
+	    simplify_filename(retval);
+	}
     }
     else
 	retval = vim_strsave(fname);
 
+    vim_free(expanded_fname);
     return retval;
 }
 
@@ -2662,7 +2669,7 @@ test_for_current(fname, fname_end, tag_fname)
 {
     int	    c;
     int	    retval = FALSE;
-    char_u  *relname;
+    char_u  *fullname;
 
     if (curbuf->b_ffname != NULL)	/* if the current buffer has a name */
     {
@@ -2675,11 +2682,11 @@ test_for_current(fname, fname_end, tag_fname)
 	    c = *fname_end;
 	    *fname_end = NUL;
 	}
-	relname = expand_rel_name(fname, tag_fname);
-	if (relname != NULL)
+	fullname = expand_tag_fname(fname, tag_fname, TRUE);
+	if (fullname != NULL)
 	{
-	    retval = (fullpathcmp(relname, curbuf->b_ffname, TRUE) & FPC_SAME);
-	    vim_free(relname);
+	    retval = (fullpathcmp(fullname, curbuf->b_ffname, TRUE) & FPC_SAME);
+	    vim_free(fullname);
 	}
 #ifdef EMACS_TAGS
 	if (!is_etag)
