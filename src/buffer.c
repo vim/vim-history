@@ -31,6 +31,7 @@ static char_u	*buflist_match __ARGS((vim_regexp *prog, BUF *buf));
 static char_u	*buflist_match_try __ARGS((vim_regexp *prog, char_u *name));
 static void	buflist_setfpos __ARGS((BUF *, linenr_t, colnr_t));
 #ifdef UNIX
+static BUF	*buflist_findname_stat __ARGS((char_u *ffname, struct stat *st));
 static int	otherfile_buf __ARGS((BUF *buf, char_u *ffname, struct stat *stp));
 static void	buf_setino __ARGS((BUF *buf));
 static int	buf_same_ino __ARGS((BUF *buf, struct stat *stp));
@@ -802,13 +803,27 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
     int		use_curbuf;
 {
     BUF		*buf;
+#ifdef UNIX
+    struct stat	st;
+#endif
 
     fname_expand(&ffname, &sfname);	/* will allocate ffname */
+
+#ifdef UNIX
+    if (sfname == NULL || mch_stat((char *)sfname, &st) < 0)
+	st.st_dev = (unsigned)-1;
+#endif
 
     /*
      * If file name already exists in the list, update the entry.
      */
-    if (ffname != NULL && (buf = buflist_findname(ffname)) != NULL)
+    if (ffname != NULL && (buf =
+#ifdef UNIX
+		buflist_findname_stat(ffname, &st)
+#else
+		buflist_findname(ffname)
+#endif
+		) != NULL)
     {
 	vim_free(ffname);
 	if (lnum != 0)
@@ -917,7 +932,13 @@ buflist_new(ffname, sfname, lnum, use_curbuf)
 
     buf->b_fname = buf->b_sfname;
 #ifdef UNIX
-    buf_setino(buf);
+    if (st.st_dev == (unsigned)-1)
+	buf->b_dev = -1;
+    else
+    {
+	buf->b_dev = st.st_dev;
+	buf->b_ino = st.st_ino;
+    }
 #endif
     buf->b_u_synced = TRUE;
     buf->b_flags = BF_CHECK_RO | BF_NEVERLOADED;
@@ -1093,18 +1114,30 @@ buflist_getfpos()
 buflist_findname(ffname)
     char_u	*ffname;
 {
-    BUF		*buf;
 #ifdef UNIX
     struct stat st;
 
     if (mch_stat((char *)ffname, &st) < 0)
 	st.st_dev = (unsigned)-1;
+    return buflist_findname_stat(ffname, &st);
+}
+
+/*
+ * Same as buflist_findname(), but pass the stat structure to avoid getting it
+ * twice for the same file.
+ */
+    static BUF *
+buflist_findname_stat(ffname, stp)
+    char_u	*ffname;
+    struct stat	*stp;
+{
 #endif
+    BUF		*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (!otherfile_buf(buf, ffname
 #ifdef UNIX
-		    , &st
+		    , stp
 #endif
 		    ))
 	    return buf;
@@ -1536,7 +1569,10 @@ setfname(ffname, sfname, message)
     char_u *ffname, *sfname;
     int	    message;
 {
-    BUF	    *buf;
+    BUF		*buf;
+#ifdef UNIX
+    struct stat st;
+#endif
 
     if (ffname == NULL || *ffname == NUL)
     {
@@ -1544,6 +1580,9 @@ setfname(ffname, sfname, message)
 	vim_free(curbuf->b_sfname);
 	curbuf->b_ffname = NULL;
 	curbuf->b_sfname = NULL;
+#ifdef UNIX
+	st.st_dev = (unsigned)-1;
+#endif
     }
     else
     {
@@ -1562,7 +1601,13 @@ setfname(ffname, sfname, message)
 	 * - if the buffer is loaded, fail
 	 * - if the buffer is not loaded, delete it from the list
 	 */
+#ifdef UNIX
+	if (mch_stat((char *)ffname, &st) < 0)
+	    st.st_dev = (unsigned)-1;
+	buf = buflist_findname_stat(ffname, &st);
+#else
 	buf = buflist_findname(ffname);
+#endif
 	if (buf != NULL && buf != curbuf)
 	{
 	    if (buf->b_ml.ml_mfp != NULL)	/* it's loaded, fail */
@@ -1588,7 +1633,13 @@ setfname(ffname, sfname, message)
     }
     curbuf->b_fname = curbuf->b_sfname;
 #ifdef UNIX
-    buf_setino(curbuf);
+    if (st.st_dev == (unsigned)-1)
+	curbuf->b_dev = -1;
+    else
+    {
+	curbuf->b_dev = st.st_dev;
+	curbuf->b_ino = st.st_ino;
+    }
 #endif
 
 #ifndef SHORT_FNAME
