@@ -2851,6 +2851,7 @@ im_set_active(active)
 		 * that destroy old IC (input context), and create new one.
 		 * When create new IC, its preedit state is usually off.
 		 */
+		xim_reset();
 		xim_set_focus(FALSE);
 		gdk_ic_destroy(xic);
 		xim_init();
@@ -3659,9 +3660,9 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 	int		len;
 #ifdef FEAT_MBYTE
 	char_u		*buf = NULL;
+	unsigned int	nfeedback = 0;
 #endif
 	char_u		*ptr;
-	unsigned int	nfeedback = 0;
 
 	src = text->string.multi_byte;
 	if (src != NULL && !text->encoding_is_wchar)
