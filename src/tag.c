@@ -1182,7 +1182,9 @@ find_tags(pat, num_matches, matchesp, flags, mincount, buf_ffname)
     {
 	/* When "@ab" is specified use only the "ab" language, otherwise
 	 * search all languages. */
-	if (patlen > 3 && pat[patlen - 3] == '@')
+	if (patlen > 3 && pat[patlen - 3] == '@'
+					     && ASCII_ISALPHA(pat[patlen - 2])
+					    && ASCII_ISALPHA(pat[patlen - 1]))
 	{
 	    saved_pat = vim_strnsave(pat, patlen - 3);
 	    if (saved_pat != NULL)
