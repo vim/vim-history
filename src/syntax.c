@@ -355,6 +355,7 @@ static void clear_syn_state __ARGS((synstate_t *p));
 static void clear_current_state __ARGS((void));
 
 static void limit_pos __ARGS((pos_t *pos, pos_t *limit));
+static void limit_pos_zero __ARGS((pos_t *pos, pos_t *limit));
 static void syn_add_end_off __ARGS((pos_t *result, regmmatch_t *regmatch, synpat_t *spp, int idx, int extra));
 static void syn_add_start_off __ARGS((pos_t *result, regmmatch_t *regmatch, synpat_t *spp, int idx, int extra));
 static char_u *syn_getline __ARGS((linenr_t lnum));
@@ -423,6 +424,7 @@ syntax_start(wp, lnum)
     synstate_t	*last_min_valid = NULL;
     synstate_t	*sp, *prev;
     linenr_t	parsed_lnum;
+    linenr_t	first_stored;
     int		dist;
 
     reg_syn = TRUE;	/* let vim_regexec() know we're using syntax */
@@ -497,7 +499,12 @@ syntax_start(wp, lnum)
      * re-synchronize.
      */
     if (INVALID_STATE(&current_state))
+    {
 	syn_sync(wp, lnum, last_valid);
+	first_stored = current_lnum + syn_buf->b_syn_sync_minlines;
+    }
+    else
+	first_stored = current_lnum;
 
     /*
      * Advance from the sync point or saved state until the current line.
@@ -511,39 +518,44 @@ syntax_start(wp, lnum)
 	(void)syn_finish_line(FALSE);
 	++current_lnum;
 
-	/* Check if the saved state entry is for the current line and is equal
-	 * to the current state.  If so, then validate all saved states that
-	 * depended on a change before the parsed line. */
-	if (prev == NULL)
-	    sp = syn_buf->b_sst_first;
-	else
-	    sp = prev->sst_next;
-	if (sp != NULL
-		&& sp->sst_lnum == current_lnum
-		&& syn_stack_equal(sp))
+	/* If we parsed at least "minlines" lines or started at a valid
+	 * state, the current state is considered valid. */
+	if (current_lnum >= first_stored)
 	{
-	    parsed_lnum = current_lnum;
-	    prev = sp;
-	    while (sp != NULL && sp->sst_change_lnum <= parsed_lnum)
+	    /* Check if the saved state entry is for the current line and is
+	     * equal to the current state.  If so, then validate all saved
+	     * states that depended on a change before the parsed line. */
+	    if (prev == NULL)
+		sp = syn_buf->b_sst_first;
+	    else
+		sp = prev->sst_next;
+	    if (sp != NULL
+		    && sp->sst_lnum == current_lnum
+		    && syn_stack_equal(sp))
 	    {
-		if (sp->sst_lnum <= lnum)
-		    /* valid state before desired line, use this one */
-		    prev = sp;
-		else if (sp->sst_change_lnum == 0)
-		    /* past saved states depending on change, break here. */
-		    break;
-		sp->sst_change_lnum = 0;
-		sp = sp->sst_next;
+		parsed_lnum = current_lnum;
+		prev = sp;
+		while (sp != NULL && sp->sst_change_lnum <= parsed_lnum)
+		{
+		    if (sp->sst_lnum <= lnum)
+			/* valid state before desired line, use this one */
+			prev = sp;
+		    else if (sp->sst_change_lnum == 0)
+			/* past saved states depending on change, break here. */
+			break;
+		    sp->sst_change_lnum = 0;
+		    sp = sp->sst_next;
+		}
+		load_current_state(prev);
 	    }
-	    load_current_state(prev);
+	    /* Store the state at this line when it's the first one, the line
+	     * where we start parsing, or some distance from the previously
+	     * saved state.  But only when parsed at least 'minlines'. */
+	    else if (prev == NULL
+			|| current_lnum == lnum
+			|| current_lnum >= prev->sst_lnum + dist)
+		prev = store_current_state(prev);
 	}
-	/* Store the state at this line when it's the first one, the line
-	 * where we start parsing, or some distance from the previously
-	 * saved state. */
-	else if (prev == NULL
-		|| current_lnum == lnum
-		|| current_lnum >= prev->sst_lnum + dist)
-	    prev = store_current_state(prev);
 
 	/* This can take a long time: break when CTRL-C pressed.  The current
 	 * state will be wrong then. */
@@ -1897,10 +1909,7 @@ syn_current_attr(syncing, displaying)
 			    if (hl_startpos.lnum == current_lnum
 					   && (int)hl_startpos.col < startcol)
 				hl_startpos.col = startcol;
-			    if (hl_endpos.lnum == 0)
-				hl_endpos = endpos;
-			    else
-				limit_pos(&hl_endpos, &endpos);
+			    limit_pos_zero(&hl_endpos, &endpos);
 
 			    next_match_idx = idx;
 			    next_match_col = startcol;
@@ -2259,9 +2268,9 @@ check_keepend()
 	sip = &CUR_STATE(i);
 	if (maxpos.lnum != 0)
 	{
-	    limit_pos(&sip->si_m_endpos, &maxpos);
-	    limit_pos(&sip->si_h_endpos, &maxpos);
-	    limit_pos(&sip->si_eoe_pos, &maxpos);
+	    limit_pos_zero(&sip->si_m_endpos, &maxpos);
+	    limit_pos_zero(&sip->si_h_endpos, &maxpos);
+	    limit_pos_zero(&sip->si_eoe_pos, &maxpos);
 	    sip->si_ends = TRUE;
 	}
 	if (sip->si_ends
@@ -2603,6 +2612,20 @@ limit_pos(pos, limit)
 	*pos = *limit;
     else if (pos->lnum == limit->lnum && pos->col > limit->col)
 	pos->col = limit->col;
+}
+
+/*
+ * Limit "pos" not to be after "limit", unless pos->lnum is zero.
+ */
+    static void
+limit_pos_zero(pos, limit)
+    pos_t	*pos;
+    pos_t	*limit;
+{
+    if (pos->lnum == 0)
+	*pos = *limit;
+    else
+	limit_pos(pos, limit);
 }
 
 /*
@@ -5942,9 +5965,7 @@ do_highlight(line, forceit, init)
 		color = color_numbers_16[i];
 		if (color >= 0)
 		{
-		    int		colors = atoi((char *)T_CCO);
-
-		    if (colors == 8)
+		    if (t_colors == 8)
 		    {
 			/* t_Co is 8: use the 8 colors table */
 			color = color_numbers_8[i];
@@ -5962,7 +5983,8 @@ do_highlight(line, forceit, init)
 			}
 			color &= 7;	/* truncate to 8 colors */
 		    }
-		    else if (colors == 16 || colors == 88 || colors == 256)
+		    else if (t_colors == 16 || t_colors == 88
+							   || t_colors == 256)
 		    {
 			/*
 			 * Guess: if the termcap entry ends in 'm', it is
@@ -5974,7 +5996,8 @@ do_highlight(line, forceit, init)
 			else
 			    p = T_CSF;
 			if (*p != NUL && *(p + STRLEN(p) - 1) == 'm')
-			    switch (colors) {
+			    switch (t_colors)
+			    {
 				case 16:
 				    color = color_numbers_8[i];
 				    break;
@@ -6008,7 +6031,7 @@ do_highlight(line, forceit, init)
 		    cterm_normal_bg_color = color + 1;
 		    must_redraw = CLEAR;
 		    term_bg_color(color);
-		    if (atoi((char *)T_CCO) < 16)
+		    if (t_colors < 16)
 			i = (color == 0 || color == 4);
 		    else
 			i = (color < 7 || color == 8);
@@ -7157,7 +7180,7 @@ syn_id2attr(hl_id)
 	attr = sgp->sg_gui_attr;
     else
 #endif
-	if (*T_CCO)
+	if (t_colors > 1)
 	    attr = sgp->sg_cterm_attr;
 	else
 	    attr = sgp->sg_term_attr;

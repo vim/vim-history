@@ -359,8 +359,12 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'noex'	options.txt	/*'noex'*
 'noexpandtab'	options.txt	/*'noexpandtab'*
 'noexrc'	options.txt	/*'noexrc'*
+'nofdc'	options.txt	/*'nofdc'*
+'nofen'	options.txt	/*'nofen'*
 'nofk'	options.txt	/*'nofk'*
 'nofkmap'	options.txt	/*'nofkmap'*
+'nofoldcolumn'	options.txt	/*'nofoldcolumn'*
+'nofoldenable'	options.txt	/*'nofoldenable'*
 'nogd'	options.txt	/*'nogd'*
 'nogdefault'	options.txt	/*'nogdefault'*
 'noguipty'	options.txt	/*'noguipty'*
@@ -939,6 +943,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 -U	starting.txt	/*-U*
 -V	starting.txt	/*-V*
 -W	starting.txt	/*-W*
+-X	starting.txt	/*-X*
 -Z	starting.txt	/*-Z*
 -b	starting.txt	/*-b*
 -background	gui_x11.txt	/*-background*
@@ -1121,6 +1126,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 40.5	usr_40.txt	/*40.5*
 40.6	usr_40.txt	/*40.6*
 40.7	usr_40.txt	/*40.7*
+40.8	usr_40.txt	/*40.8*
 43.1	usr_43.txt	/*43.1*
 43.2	usr_43.txt	/*43.2*
 43.3	usr_43.txt	/*43.3*
@@ -1494,6 +1500,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :map	map.txt	/*:map*
 :map!	map.txt	/*:map!*
 :map-<buffer>	map.txt	/*:map-<buffer>*
+:map-<script>	map.txt	/*:map-<script>*
+:map-<unique>	map.txt	/*:map-<unique>*
 :map-local	map.txt	/*:map-local*
 :map-special-keys	map.txt	/*:map-special-keys*
 :map-undo	map.txt	/*:map-undo*
@@ -1507,6 +1515,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :marks	motion.txt	/*:marks*
 :me	gui.txt	/*:me*
 :menu	gui.txt	/*:menu*
+:menu-<script>	gui.txt	/*:menu-<script>*
 :menu-disable	gui.txt	/*:menu-disable*
 :menu-enable	gui.txt	/*:menu-enable*
 :menut	multilang.txt	/*:menut*
@@ -1702,6 +1711,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :sbr	windows.txt	/*:sbr*
 :sbrewind	windows.txt	/*:sbrewind*
 :sbuffer	windows.txt	/*:sbuffer*
+:scrip	repeat.txt	/*:scrip*
+:scriptnames	repeat.txt	/*:scriptnames*
 :se	options.txt	/*:se*
 :search-args	tagsearch.txt	/*:search-args*
 :set	options.txt	/*:set*
@@ -2012,6 +2023,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <Nul>	intro.txt	/*<Nul>*
 <PageDown>	scroll.txt	/*<PageDown>*
 <PageUp>	scroll.txt	/*<PageUp>*
+<Plug>	map.txt	/*<Plug>*
 <Right>	motion.txt	/*<Right>*
 <RightDrag>	term.txt	/*<RightDrag>*
 <RightMouse>	visual.txt	/*<RightMouse>*
@@ -2045,6 +2057,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <S-xF2>	term.txt	/*<S-xF2>*
 <S-xF3>	term.txt	/*<S-xF3>*
 <S-xF4>	term.txt	/*<S-xF4>*
+<SID>	map.txt	/*<SID>*
+<SNR>	map.txt	/*<SNR>*
 <Space>	motion.txt	/*<Space>*
 <Tab>	motion.txt	/*<Tab>*
 <Undo>	undo.txt	/*<Undo>*
@@ -2539,6 +2553,7 @@ _vimrc	starting.txt	/*_vimrc*
 a	insert.txt	/*a*
 a(	motion.txt	/*a(*
 a)	motion.txt	/*a)*
+a:var	eval.txt	/*a:var*
 a<	motion.txt	/*a<*
 a>	motion.txt	/*a>*
 aB	motion.txt	/*aB*
@@ -2616,6 +2631,7 @@ a}	motion.txt	/*a}*
 b	motion.txt	/*b*
 b:changedtick-variable	eval.txt	/*b:changedtick-variable*
 b:current_syntax-variable	syntax.txt	/*b:current_syntax-variable*
+b:var	eval.txt	/*b:var*
 backslash	intro.txt	/*backslash*
 backspace	intro.txt	/*backspace*
 backspace-delete	version4.txt	/*backspace-delete*
@@ -2879,6 +2895,7 @@ did_filetype()	eval.txt	/*did_filetype()*
 digraph-table	digraph.txt	/*digraph-table*
 digraph.txt	digraph.txt	/*digraph.txt*
 digraphs	digraph.txt	/*digraphs*
+digraphs-changed	version6.txt	/*digraphs-changed*
 digraphs-default	digraph.txt	/*digraphs-default*
 digraphs-define	digraph.txt	/*digraphs-define*
 digraphs-use	digraph.txt	/*digraphs-use*
@@ -3068,6 +3085,7 @@ formfeed	intro.txt	/*formfeed*
 fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
 ftp	intro.txt	/*ftp*
+ftplugin-special	usr_40.txt	/*ftplugin-special*
 function-argument	eval.txt	/*function-argument*
 function-key	intro.txt	/*function-key*
 function-range-example	eval.txt	/*function-range-example*
@@ -3081,6 +3099,7 @@ g$	motion.txt	/*g$*
 g&	change.txt	/*g&*
 g0	motion.txt	/*g0*
 g8	various.txt	/*g8*
+g:var	eval.txt	/*g:var*
 g<Down>	motion.txt	/*g<Down>*
 g<End>	motion.txt	/*g<End>*
 g<Home>	motion.txt	/*g<Home>*
@@ -3464,6 +3483,7 @@ keypad-plus	intro.txt	/*keypad-plus*
 keypad-point	intro.txt	/*keypad-point*
 known-bugs	todo.txt	/*known-bugs*
 l	motion.txt	/*l*
+l:var	eval.txt	/*l:var*
 lace.vim	syntax.txt	/*lace.vim*
 lang-variable	eval.txt	/*lang-variable*
 last-pattern	pattern.txt	/*last-pattern*
@@ -3487,6 +3507,8 @@ literal-string	eval.txt	/*literal-string*
 lnum-variable	eval.txt	/*lnum-variable*
 load-plugins	starting.txt	/*load-plugins*
 load-vim-script	repeat.txt	/*load-vim-script*
+local-function	eval.txt	/*local-function*
+local-options	options.txt	/*local-options*
 local-variable	eval.txt	/*local-variable*
 locale	change.txt	/*locale*
 locale-multibyte	multibyte.txt	/*locale-multibyte*
@@ -3508,6 +3530,8 @@ mail-list	intro.txt	/*mail-list*
 mail-plugin	filetype.txt	/*mail-plugin*
 maillist	intro.txt	/*maillist*
 maillist-archive	intro.txt	/*maillist-archive*
+man-plugin	filetype.txt	/*man-plugin*
+map-<SID>	map.txt	/*map-<SID>*
 map-backtick	tips.txt	/*map-backtick*
 map-comments	map.txt	/*map-comments*
 map-examples	map.txt	/*map-examples*
@@ -3529,8 +3553,8 @@ map_space_in_rhs	map.txt	/*map_space_in_rhs*
 maparg()	eval.txt	/*maparg()*
 mapcheck()	eval.txt	/*mapcheck()*
 maple.vim	syntax.txt	/*maple.vim*
-mapleader	usr_40.txt	/*mapleader*
-maplocalleader	usr_43.txt	/*maplocalleader*
+mapleader	map.txt	/*mapleader*
+maplocalleader	map.txt	/*maplocalleader*
 mapping	map.txt	/*mapping*
 mark	motion.txt	/*mark*
 mark-motions	motion.txt	/*mark-motions*
@@ -3549,6 +3573,7 @@ meta	intro.txt	/*meta*
 minimal-features	os_msdos.txt	/*minimal-features*
 missing-commands	vi_diff.txt	/*missing-commands*
 missing-options	vi_diff.txt	/*missing-options*
+mode()	eval.txt	/*mode()*
 mode-Ex	intro.txt	/*mode-Ex*
 mode-cmdline	cmdline.txt	/*mode-cmdline*
 mode-ins-repl	insert.txt	/*mode-ins-repl*
@@ -3722,6 +3747,7 @@ php.vim	syntax.txt	/*php.vim*
 php3.vim	syntax.txt	/*php3.vim*
 phtml.vim	syntax.txt	/*phtml.vim*
 plugin-details	filetype.txt	/*plugin-details*
+plugin-special	usr_40.txt	/*plugin-special*
 popup-menu	gui.txt	/*popup-menu*
 popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
@@ -3844,8 +3870,10 @@ rview	starting.txt	/*rview*
 rvim	starting.txt	/*rvim*
 rxvt	syntax.txt	/*rxvt*
 s	change.txt	/*s*
+s:var	eval.txt	/*s:var*
 save-file	editing.txt	/*save-file*
 save-settings	options.txt	/*save-settings*
+script-local	map.txt	/*script-local*
 script-variable	eval.txt	/*script-variable*
 scriptout-changed	version4.txt	/*scriptout-changed*
 scroll-binding	scroll.txt	/*scroll-binding*
@@ -4253,6 +4281,7 @@ v:shell_error	eval.txt	/*v:shell_error*
 v:statusmsg	eval.txt	/*v:statusmsg*
 v:termresponse	eval.txt	/*v:termresponse*
 v:this_session	eval.txt	/*v:this_session*
+v:var	eval.txt	/*v:var*
 v:version	eval.txt	/*v:version*
 v:warningmsg	eval.txt	/*v:warningmsg*
 v_!	change.txt	/*v_!*
@@ -4414,6 +4443,7 @@ vreplace-mode	insert.txt	/*vreplace-mode*
 vt100-cursor-keys	term.txt	/*vt100-cursor-keys*
 vt100-function-keys	term.txt	/*vt100-function-keys*
 w	motion.txt	/*w*
+w:var	eval.txt	/*w:var*
 warningmsg-variable	eval.txt	/*warningmsg-variable*
 white-space	pattern.txt	/*white-space*
 whitespace	pattern.txt	/*whitespace*
@@ -4476,7 +4506,7 @@ workshop.txt	workshop.txt	/*workshop.txt*
 wrap-off	intro.txt	/*wrap-off*
 write-device	editing.txt	/*write-device*
 write-fail	editing.txt	/*write-fail*
-write-ftplugin	usr_40.txt	/*write-ftplugin*
+write-filetype-plugin	usr_40.txt	/*write-filetype-plugin*
 write-local-help	usr_40.txt	/*write-local-help*
 write-plugin	usr_40.txt	/*write-plugin*
 write-quit	editing.txt	/*write-quit*

@@ -625,6 +625,10 @@ struct file_buffer
     /* First abbreviation local to a buffer. */
     mapblock_t	*b_first_abbr;
 #endif
+#ifdef FEAT_USR_CMDS
+    /* User commands local to the buffer. */
+    garray_t	b_ucmds;
+#endif
     /*
      * start and end of an operator, also used for '[ and ']
      */
@@ -1277,7 +1281,7 @@ struct VimMenu
     void	(*cb)();	    /* Call-back routine */
 #endif
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
-    int		noremap[MENU_MODES]; /* A noremap flag for each mode */
+    int		noremap[MENU_MODES]; /* A REMAP_ flag for each mode */
     vimmenu_t	*children;	    /* Children of sub-menu */
     vimmenu_t	*parent;	    /* Parent of menu */
     vimmenu_t	*next;		    /* Next item in menu */

@@ -806,7 +806,7 @@ win_lbr_chartabsize(wp, s, col, head)
     {
 	numberextra = win_col_off(wp);
 	col += numberextra;
-	if (col >= W_WIDTH(wp))
+	if (col >= (colnr_t)W_WIDTH(wp))
 	{
 	    col -= W_WIDTH(wp);
 	    numberextra -= win_col_off2(wp);

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0i.  Last change: 2000 Oct 15
+*todo.txt*      For Vim version 6.0j.  Last change: 2000 Oct 22
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,52 +29,14 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Try writing the "how to write a plugin" docs, to find out a simple way to
-avoid mappings running into eachother (in usr_40.txt).  Also for filetype
-plugins.
-- Add some ":map" command that checks if the map already exists or is
-  ambiguous and gives a clear warning message.
-- Use <SID> for mappings local to a script?
-    :map \ScriptFunc xxx<SID>1yyy<SID>2zzz
-    :noremap <SID>1 something
-    :noremap <SID>2 foobar
-  The <SID> could be a special key code, starting with K_SPECIAL.
-- Avoid that mappings from outside a script are used inside a script.
-  Use ":noremap <script> lhs rhs" to only use mappings from a script?
-  Avoid that a mapping for CTRL-V (mswin.vim) causes trouble.
-- Local functions in a script: <SID>funcname().  Internally prepend a number
-  to the function name.  But how to use this in functions defined in a mapping
-  or function?  Not?
-- For a user function, remember in which script it was defined and allow using
-  s:var in it?  Disadvantage: script variables won't be automatically deleted.
-
-Setting 'term' or t_Co from 16 to 1 doesn't switch the attributes used (e.g.,
-for 'number').
-
-Multi-byte digraphs: ~/vim/patches/marinichev_digraphs.diff .
-But use a struct char/char/int to avoid wasting space.
-
-This works:
-    com! -nargs=1 GoWinB exe "echo ".bufwinnr(<q-args>)
-This doesn't: (Viart)
-    com! -complete=buffer -nargs=1 GoWinB exe "echo ".bufwinnr(<q-args>)
-
-When /usr/local/share/vim/vim60a isn't found, it uses /usr/local/share/vim
-instead of ../runtime. (Sekera)
-
-After some changes the syntax highlighting isn't updated for lines below the
-change.
-
-Syntax highlighting: Using doxygen syntax, second comment line is the wrong
-color after a change, it's right after CTRL-L.  Was OK in Vim 5.7. (Geddes)
+A regexp can run forever and crash when out of stack space.  Using
+mch_setjmp()/mch_endjmp() doesn't work, because signals can't be catched when
+out of stack space.
 
 Combination of Visual selection, ":" command and scrolling causes the display
 to be updated wrong. (Nam)
 
-A regexp can run forever and crash when out of stack space.  Protect it with
-setjump()/longjump()?
-
-Docs: usr_43.txt and filetype.txt have quite a bit of overlap.
+DJGPP: "vim main.c" doesn't show right syntax highlighting.  CTRL-L fixes it.
 
 
 Main items for 6.0:
@@ -90,7 +52,7 @@ C.  Multi-line regexp patterns
 	Works.
 D.  Vertical window split
 	Works.
-	Only a few improvements to do.
+	A few improvements to do.
 E.  Virtual edit
 	Works for some commands.  Still needs to be improved a lot.
 F.  Sun Visual workshop (debugger) interface
@@ -111,8 +73,11 @@ A. Folding:
     the nesting depth and the nr of lines).
 -   ":bdel" and ":buf main.c" don't create folds (foldmethod=syntax).
     (Stocker) ":edit" does.
+-   In 'foldcolumn': Show "+" for closed fold, "-" for open fold.  clicking on
+    it will toggle the open/close status.
 -   When opening the help window, don't use fold settings copied from the
     current buffer.
+-   Allow one-line manual folds.
 -   Fold problem: (Raul)
     1) create a new buffer with just 4 lines and set scrolloff=1
     2) fold lines 3 and 4
@@ -138,6 +103,9 @@ A. Folding:
     other marker isn't removed. (Sylvain Viart)
 -   'foldtext' should catch a fold that starts with an empty line.  Always
     show info about the fold (depth, nr of lines)
+-   "zo" should accept a count: number of folds to open.
+-   Add command to open enough folds to have the cursor line in an open fold.
+    "zv" "view".
 -   Docs for "zo", "zO", "zc" and "zC" in Visual mode.
     Make "zO" not close folds before the Visual are (except one?).
     Make "zo" and "zc" work properly (open/close only one level).
@@ -225,6 +193,11 @@ A. Folding:
 
 
 B. UTF-8 support:
+-   Displaying digraphs with ":dig" doesn't work properly.
+    Make vim_isprintc() work for characters, not bytes.  Fill chartab for it.
+    'isprint' specifies chars up to 255, chars above are always printable.
+    Also for transchar(), char2cells(), etc.
+    Check: ":digraphs" works correctly when 'charcode' is "utf-8".
 -   Big change: Support editing UTF-8 text while the terminal only supports
     Latin-1.  Show the chars up to 0xff correctly, others with 0xa4 (twice for
     wide characters).  Use 'displaycode' option?
@@ -240,11 +213,8 @@ B. UTF-8 support:
 -   prep_redo() should handle mbyte (at least for last arg
 -   set_last_insert() should handle mbyte.
 -   Visual-block delete doesn't work properly (Marinichev)
--   Displaying digraphs with ":dig" doesn't work properly.
--   Add digraphs from RFC1345.
-    Later: Also support CTRL-K <space> {mnemonic} <space>.
-    Support different sets of digraphs, depending on the character set?  At
-    least Latin-1/Unicode, Latin-2, MS-DOS, Windows?
+-   Add mnemonics from RFC1345 longer than two characters.
+    Support CTRL-K _{mnemonic}_
 -   out_char() doesn't handle mbyte, check callers.
 -   cls() should work for UTF-8 chars.  Use class table function from Markus
     Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
@@ -433,6 +403,9 @@ Messages:
 
 
 Various recent:
+8   Vi compatibility: ":e" ":cd" ":w" keeps the actual directory of the file,
+    while ":n *.c" :cd" ":n" doesn't.  Make this consistent, and add a flag in
+    'cpoptions'.
 8   Using "gf" in Visual mode should use the selected text as a file name.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
@@ -440,6 +413,9 @@ Various recent:
 9   Number output of ":function <name>", so that the line of an error message
     can be located?
 8   For a "/*" "**" "*/" comment the end isn't aligned properly.
+8   ":let @" = "val" should not have side effects for other registers (after
+    "ayy). (Raul Acevedo)
+    ""yy should probably not change the last used register from "ayy.
 9   Support ACLs on more systems.
 9   Win32: double clicking on "c:\tmp\{asdf}.txt" edits "c:\tmp{asdf}.txt".
     Don't remove backslash before {}?  Simlarly for "Edit with Vim". (Ott)
@@ -719,6 +695,8 @@ Vi incompatibility:
     the way the shell is started?
 6   After ":cd", meaning of file names for existing buffers changes.  Do we
     care?
+    Also: ":n *.c" ":cd .." ":n" uses the new current directory, but that's
+    not what most people expect.  Add a flag in 'cpoptions' for this?
 6   Vi compatibility (optional): make "ia<CR><ESC>10." do the same strange
     thing.  (only repeat insert for the first line).
 8   When "cm" termcap entry is missing, starting gvim shouldn't complain about
@@ -998,11 +976,6 @@ Win32 console:
 	and the file is not saved.
     Use FindFirstFile() to expand a file name and directory in the path to its
     long name.
-8   Add an option (command line?) not to switch console buffers.  Required for
-    telnetd (Ford).  Change termcap_mode_start() and termcap_mode_end().
-    Test with ataman telnet daemon or Anzio Lite.
-    Use 'conskey' and/or 'bioskey' options for this?
-    Alternative: Use BIOS screen output like in os_msdos.c.
 8   Also implement 'conskey' option for the Win32 console version?  Look at
     how Xvi does console I/O under Windows NT.
 7   Re-install the use of $TERM and support the use of different terminals,
@@ -1996,7 +1969,7 @@ Insert mode completion/expansion:
     comments.
 8   Add option to set different behavior for Insert mode completion:
     - ignore/match case
-    - 'iskeyword'
+    - different characters than 'iskeyword'
 8   Add a command to undo the completion, go back to the original text.
 8   Use the class information in the tags file to do context-sensitive
     completion.  After "foo." complete all member functions/variables of
@@ -2405,6 +2378,8 @@ Searching:
     line.
 7   Allow longer pairs in 'matchpairs'.  Use ~/vim/macros/matchit.vim as an
     example.
+8   Make it possible to use more than nine \( \) pairs.  Not necessarily
+    referenced by \10.
 8   Make it possible to define the character that "%" checks for in
     #if/#endif.  For nmake it's !if/!endif.
 -   For "%" command: set hierarchy for which things include other things that
@@ -2705,7 +2680,8 @@ Digraphs:
 -   Use digraph table to tell Vim about the collating sequence of special
     characters?
 -   Add command to remove (all) digraphs. (Brown)
-7   Make it possible to switch between DOS and Latin-1 digraphs for Win32 GUI.
+7   Support different sets of digraphs (depending on the character set?).  At
+    least Latin-1/Unicode, Latin-2, MS-DOS (esp. for Win32).
 
 
 Multibyte support:

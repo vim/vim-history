@@ -1,6 +1,6 @@
 " Menu Translations:	Japanese (for Windows)
 " Translated By: 	Taro Muraoka  <koron@tka.att.ne.jp>
-" Last Change:		08:44:52 31-Jul-2000.
+" Last Change:		11:15:35 16-Oct-2000.
 
 menutrans clear
 let did_menu_trans = 1
@@ -30,7 +30,7 @@ menutrans E&xit<Tab>:qa			終了(&X)<Tab>:qa
 menutrans &Edit				編集(&E)
 menutrans &Undo<Tab>u			取り消す(&U)<Tab>u
 menutrans &Redo<Tab>^R			もう一度やる(&R)<Tab>^R
-menutrans Repea&t<Tab>\.		繰り返す(&T)<Tab>\.
+menutrans Rep&eat<Tab>\.		繰り返す(&T)<Tab>\.
 menutrans Cu&t<Tab>"*x			切り取り(&T)<Tab>"*x
 menutrans &Copy<Tab>"*y			コピー(&C)<Tab>"*y
 menutrans &Paste<Tab>"*p		貼り付け(&P)<Tab>"*p
@@ -39,7 +39,7 @@ menutrans Put\ &After<Tab>]p		後に貼る(&A)<Tab>]p
 menutrans &Delete<Tab>x			消す(&D)<Tab>x
 menutrans &Select\ all<Tab>ggVG		全て選択(&S)<Tab>ggvG
 menutrans &Find\.\.\.			検索(&F)\.\.\.
-menutrans Find\ and\ R&eplace\.\.\.	置換(&E)\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.	置換(&E)\.\.\.
 menutrans Options\.\.\.			オプション(&O)\.\.\.
 
 " Programming menu
@@ -70,7 +70,7 @@ menutrans &Window			ウィンドウ(&W)
 menutrans &New<Tab>^Wn			新規作成(&N)<Tab>^Wn
 menutrans S&plit<Tab>^Ws		分割(&P)<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	裏バッファへ分割(&L)<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv	垂直分割(&P)<Tab>^Wv
 menutrans &Close<Tab>^Wc		閉じる(&C)<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	他を閉じる(&O)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			次へ(&X)<Tab>^Ww
@@ -141,7 +141,7 @@ menutrans Set\ 'filetype'\ too	'filetype'も設定
 menutrans &Off			無効化(&O)
 menutrans &Manual		手動設定(&M)
 menutrans A&utomatic		自動設定(&U)
-menutrans &on\ (this\ file)	オン(&O)\ (このファイル)
+menutrans o&n\ (this\ file)	オン(&O)\ (このファイル)
 menutrans o&ff\ (this\ file)	オフ(&F)\ (このファイル)
 menutrans Co&lor\ test		カラーテスト(&L)
 menutrans &Highlight\ test	ハイライトテスト(&H)

@@ -2,7 +2,7 @@
 :" information about the environment of a possible bug in Vim.
 :"
 :" Maintainer:	Bram Moolenaar <Bram@vim.org>
-:" Last change:	2000 Oct 07
+:" Last change:	2000 Oct 21
 :"
 :" To use inside Vim:
 :"	:so $VIMRUNTIME/bugreport.vim
@@ -23,14 +23,14 @@
 :redir >>bugreport.txt
 :version
 :if 1
-:  func BR_CheckDir(n)
+:  func <SID>CheckDir(n)
 :    if isdirectory(a:n)
 :      echo 'directory "' . a:n . '" exists'
 :    else
 :      echo 'directory "' . a:n . '" does NOT exist'
 :    endif
 :  endfun
-:  func BR_CheckFile(n)
+:  func <SID>CheckFile(n)
 :    if filereadable(a:n)
 :      echo '"' . a:n . '" is readable'
 :    else
@@ -39,16 +39,16 @@
 :  endfun
 :  echo "--- Directories and Files ---"
 :  echo '$VIM = "' . $VIM . '"'
-:  call BR_CheckDir($VIM)
+:  call <SID>CheckDir($VIM)
 :  echo '$VIMRUNTIME = "' . $VIMRUNTIME . '"'
-:  call BR_CheckDir($VIMRUNTIME)
-:  call BR_CheckFile(&helpfile)
-:  call BR_CheckFile(fnamemodify(&helpfile, ":h") . "/tags")
-:  call BR_CheckFile($VIMRUNTIME . "/menu.vim")
-:  call BR_CheckFile($VIMRUNTIME . "/filetype.vim")
-:  call BR_CheckFile($VIMRUNTIME . "/syntax/synload.vim")
-:  delfun BR_CheckDir
-:  delfun BR_CheckFile
+:  call <SID>CheckDir($VIMRUNTIME)
+:  call <SID>CheckFile(&helpfile)
+:  call <SID>CheckFile(fnamemodify(&helpfile, ":h") . "/tags")
+:  call <SID>CheckFile($VIMRUNTIME . "/menu.vim")
+:  call <SID>CheckFile($VIMRUNTIME . "/filetype.vim")
+:  call <SID>CheckFile($VIMRUNTIME . "/syntax/synload.vim")
+:  delfun <SID>CheckDir
+:  delfun <SID>CheckFile
 :endif
 :set all
 :set termcap

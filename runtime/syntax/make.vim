@@ -2,14 +2,10 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2000 Apr 24
+" Last Change:	2000 Sept 7
 
 " Remove any old syntax stuff hanging around
 syn clear
-
-" This file makes use of the highlighting "Function", which is not defined
-" in the normal syntax.vim file yet.
-
 
 " some directives
 syn match makePreCondit	"^\s*\(ifeq\>\|else\>\|endif\>\|define\>\|endef\>\|ifneq\>\|ifdef\>\|ifndef\>\)"
@@ -23,6 +19,15 @@ syn case ignore
 syn match makeInclude	"^!\s*include"
 syn match makePreCondit "!\s*\(cmdswitches\>\|error\>\|message\>\|include\>\|if\>\|ifdef\>\|ifndef\>\|else\>\|elseif\>\|else if\>\|else\s*ifdef\>\|else\s*ifndef\>\|endif\>\|undef\>\)"
 syn case match
+
+" identifiers
+syn region makeIdent	start="\$(" skip="\\)" end=")" contains=makeStatement,makeIdent
+syn region makeIdent	start="\${" skip="\\}" end="}" contains=makeStatement,makeIdent
+syn match makeIdent	"\$\$\w*"
+syn match makeIdent	"\$[^({]"
+syn match makeIdent     "^\s*\a\w*\s*[:+?!*]="me=e-2
+syn match makeIdent	"^\s*\a\w*\s*="me=e-1
+syn match makeIdent	"%"
 
 
 " make targets
@@ -38,8 +43,8 @@ syn match makeSpecTarget	"^\.LIBPATTERNS"
 syn match makeSpecTarget	"^\.NOTPARALLEL"
 syn match makeImplicit	        "^\.[A-Za-z0-9_./\t -]\+\s*:[^=]"me=e-2
 syn match makeImplicit	        "^\.[A-Za-z0-9_./\t -]\+\s*:$"me=e-1
-syn match makeTarget		"^\w[A-Za-z0-9_./\t -]*:[^=]"me=e-2
-syn match makeTarget		"^\w[A-Za-z0-9_./\t -]*:$"me=e-1
+syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:[^=]"me=e-2 contains=makeIdent
+syn match makeTarget		"^[A-Za-z0-9_./$()%-][A-Za-z0-9_./\t $()%-]*:$"me=e-1 contains=makeIdent
 
 " Statements / Functions (GNU make)
 syn match makeStatement contained "(subst"ms=s+1
@@ -72,14 +77,6 @@ syn match makeStatement contained "(words"ms=s+1
 syn match makeSpecial	"^\s*[@-]\+"
 syn match makeNextLine	"\\$"
 
-" identifiers
-syn region makeIdent	start="\$(" end=")" contains=makeStatement,makeIdent,makeSString,makeDString,makeBString
-syn region makeIdent	start="\${" end="}" contains=makeStatement,makeIdent,makeSString,makeDString,makeBString
-syn match makeIdent	"\$\$\w*"
-syn match makeIdent	"\$[^({]"
-syn match makeIdent     "^\s*\a\w*\s*[:+?!]="me=e-2
-syn match makeIdent	"^\s*\a\w*\s*="me=e-1
-syn match makeIdent	"%"
 
 " Errors
 syn match makeError     "^ \+\t"
@@ -87,14 +84,15 @@ syn match makeError     "^ \{8\}[^ ]"me=e-1
 syn region makeIgnore	start="\\$" end="^." end="^$" contains=ALLBUT,makeError
 
 " Comment
-syn match  makeComment	"#.*$"
+syn region  makeComment	start="#" end="[^\\]$"
+syn match   makeComment	"#$"
 
 " match escaped quotes and any other escaped character
 " except for $, as a backslash in front of a $ does
 " not make it a standard character, but instead it will
 " still act as the beginning of a variable
 " The escaped char is not highlightet currently
-syn match makeEscapedChar	"\\[^$]"
+syn match makeEscapedChar 	"\\[^$]"
 
 
 syn region  makeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIdent

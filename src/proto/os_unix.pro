@@ -4,6 +4,8 @@ int mch_inchar __ARGS((char_u *buf, int maxlen, long wtime));
 int mch_char_avail __ARGS((void));
 long_u mch_total_mem __ARGS((int special));
 void mch_delay __ARGS((long msec, int ignoreinput));
+int mch_setjmp __ARGS((void));
+void mch_endjmp __ARGS((void));
 void mch_suspend __ARGS((void));
 void mch_shellinit __ARGS((void));
 void reset_signals __ARGS((void));

@@ -28,8 +28,14 @@
 #define HAVE_LOCALE_H
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
-#define HAVE_ACL		/* Access Control List (actually security
-				   info) */
+#if !defined(__MINGW32__) && (!defined(__BORLANDC__) || __BORLANDC__ >= 0x550)
+/*
+ * Access Control List (actually security info).
+ * Mingw doesn't have the acl stuff.
+ * Borland only in version 5.5 and later.
+ */
+# define HAVE_ACL
+#endif
 #define USE_FNAME_CASE		/* adjust case of file names */
 #ifndef FEAT_CLIPBOARD
 # define FEAT_CLIPBOARD		/* include clipboard support */

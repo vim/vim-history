@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0i.  Last change: 2000 Oct 15
+*map.txt*       For Vim version 6.0j.  Last change: 2000 Oct 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,7 +8,8 @@ Key mapping and abbreviations.
 
 1. Key mapping			|key-mapping|
 2. Abbreviations		|abbreviations|
-3. User-defined commands	|user-commands|
+3. Local mappings and functions	|script-local|
+4. User-defined commands	|user-commands|
 
 ==============================================================================
 1. Key mapping				*key-mapping* *mapping* *macro*
@@ -104,6 +105,27 @@ Then you can map ",w" to something else in another buffer: >
 	:map <buffer>  ,w  /[#&!]<CR>
 The local buffer mappings are used before the global ones.
 
+							*:map-<script>*
+If the first argument to one of these commands is "<script>" and it is used to
+define a new mapping or abbreviation, the mapping will only remap mappings
+that were defined local to a script, starting with "<SID>".  This can be used
+to avoid that mappings from outside a script interfere (e.g., when CTRL-V is
+remapped in mswin.vim), but do use other mappings defined in the script.
+
+							*:map-<unique>*
+If the first argument to one of these commands is "<unique>" and it is used to
+define a new mapping or abbreviation, the command will fail if the mapping or
+abbreviation already exists.  Example: >
+	:map <unique> ,w  /[#&!]<CR>
+When defining a local mapping, there will also be a check if a global map
+already exists which is already defined ambiguous.
+Example of what will fail: >
+	:map ,w  /[#&!]<CR>
+	:map <buffer> <unique> ,w  /[.,;]<CR>
+
+"<buffer>", "<script>" and "<unique>" can be used in any order.  They must
+appear right after the command, before any other arguments.
+
 There are five sets of mappings
 - For Normal mode: When typing commands.
 - For Visual mode: When typing commands while the Visual area is highlighted.
@@ -156,6 +178,8 @@ When listing mappings the characters in the first two columns are:
 	 c		Command-line
 
 A "*" just before the {rhs} indicates that it is not remappable.
+A "&" just before the {rhs} indicates that only script-local mappings are
+remappable.
 
 Everything from the first non-blank after {lhs} up to the end of the line
 (or '|') is considered to be part of {rhs}.  This allows the {rhs} to end
@@ -197,7 +221,7 @@ example, to make sure that function key 8 does nothing at all: >
 	:map  <F8>  <Nop>
 	:map! <F8>  <Nop>
 <
-                                                       *<Leader>*
+					*<Leader>* *mapleader*
 To define a mapping which uses the "mapleader" variable, the special string
 "<Leader>" can be used.  It is replaced with the string value of "mapleader".
 If "mapleader" is not set or empty, a backslash is used instead.  Example: >
@@ -205,12 +229,28 @@ If "mapleader" is not set or empty, a backslash is used instead.  Example: >
 Works like: >
       :map \A  oanother line<Esc>
 <
-                                                       *<LocalLeader>*
+					*<LocalLeader>* *maplocalleader*
 Just like <Leader>, except that it uses "maplocalleader" instead of
 "mapleader".  <LocalLeader> is to be used for mappings which are local to a
 buffer.  Example: >
       :map <LocalLeader>q  \DoItNow
 <
+In a global plugin <Leader> should be used and in a filetype plugin
+<LocalLeader>.  "mapleader" and "maplocalleader" can be equal.  Although, if
+you make them different, there is a smaller chance of mappings from global
+plugins to clash with mappings for filetype plugins.  For example, you could
+keep "mapleader" at the default backslash, and set "maplocalleader" to an
+underscore.
+
+							*map-<SID>*
+In a script the special key name "<SID>" can be used to define a mapping
+that's local to the script.  See |<SID>| for details.
+
+							*<Plug>*
+The special key name "<Plug>" can be used for an internal mapping, which is
+not to be matched with any key sequence.  This is useful in plugins
+|write-plugin|.
+
 							*map-comments*
 It is not possible to put a comment after these commands, because the '"'
 character is considered to be part of the {lhs} or {rhs}.
@@ -586,7 +626,48 @@ Expands to: ^[
 [example given by Steve Kirkendall]
 
 ==============================================================================
-3. User-defined commands				*user-commands*
+3. Local mappings and functions				*script-local*
+
+When using several Vim script files, there is the danger that mappings and
+functions used in one script use the same name as in other scripts.  To avoid
+this, they can be made local to the script.
+
+								*<SID>*
+The string "<SID>" can be used in a mapping.  This requires that the '<' flag
+is not present in 'cpoptions'.
+								*<SNR>*
+When executing the map command, Vim will replace "<SID>" with the special key
+code <SNR>, followed by a number that's unique for the script, and an
+underscore.  Example: >
+	:map <SID>Add
+could define a mapping "<SNR>23_Add".
+
+When defining a function in a script, "<SID>" can be prepended to the name to
+make it local to the script.  The same translation is done as for mappings.
+This makes it possible to define a call to the function in mapping.
+
+When a local function is executed, it runs in the context of the script it was
+defined in.  This means that new functions and mappings it defines can also
+use "<SID>" and it will use the same unique number as when the function itself
+was defined.  Also, the "s:var" local script variables can be used.
+
+When executing an autocommand or a user command, it will run in the context of
+the script it was defined in.  This makes it possible that the command calls a
+local function or uses a local mapping.
+
+Otherwise, using "<SID>" outside of a script context is an error.
+
+The "<SNR>" will be shown when listing functions and mappings.  This is useful
+to find out what they are defined to.
+
+The |:scriptnames| command can be used to see which scripts have been sourced
+and what their <SNR> number is.
+
+This is all {not in Vi} and {not available when compiled without the +eval
+feature}.
+
+==============================================================================
+4. User-defined commands				*user-commands*
 
 It is possible to define your own ex commands. A user-defined command can act
 just like a built-in command (it can have a range or arguments, arguments can
@@ -624,6 +705,7 @@ scripts.
 			the characters in the first two columns are
 			    !	Command has the -bang attribute
 			    "	Command has the -register attribute
+			    b	Command is local to current buffer
 			(see below for details on attributes)
 
 :com[mand] {cmd}	List the user-defined commands that start with {cmd}
@@ -719,6 +801,7 @@ There are some special cases as well:
 		    A "|" inside the command argument is not allowed then.
 	-register   The first argument to the command can be an optional
 		    register name (like :del, :put, :yank).
+	-buffer	    The command will only be available in the current buffer.
 
 In the cases of the -count and -register attributes, if the optional argument
 is supplied, it is removed from the argument list and is available to the
@@ -813,4 +896,9 @@ errors and the "update" command to write modified buffers): >
 This will invoke: >
 	:call Allargs("%s/foo/bar/ge|update")
 <
+When defining an user command in a script, it will be able to call functions
+local to the script and use mappings local the the script.  When user invokes
+the user command, it will run in the context of the script it was defined in.
+This matters if |<SID>| is used in a command.
+
  vim:tw=78:

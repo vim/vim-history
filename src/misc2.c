@@ -1753,6 +1753,10 @@ static struct key_name_entry
     {K_MOUSEDOWN,	(char_u *)"MouseDown"},
     {K_MOUSEUP,		(char_u *)"MouseUp"},
     {K_ZERO,		(char_u *)"Nul"},
+#ifdef FEAT_EVAL
+    {K_SNR,		(char_u *)"SNR"},
+#endif
+    {K_PLUG,		(char_u *)"Plug"},
     {0,			NULL}
 };
 
@@ -3285,13 +3289,13 @@ vim_findnext()
     void *
 vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 	search_ctx)
-    char_u *path;
-    char_u *filename;
-    char_u *stopdirs;
-    int level;
-    int free_visited;
-    int need_dir;
-    void *search_ctx;
+    char_u	*path;
+    char_u	*filename;
+    char_u	*stopdirs;
+    int		level;
+    int		free_visited;
+    int		need_dir;
+    void	*search_ctx;
 {
 #ifdef FEAT_PATH_EXTRA
     char_u	*wc_part;
@@ -3527,7 +3531,6 @@ error_return:
      */
     vim_findfile_cleanup(ff_search_ctx);
     return NULL;
-
 }
 
 #if defined(FEAT_PATH_EXTRA) || defined(PROTO)
@@ -3709,7 +3712,7 @@ vim_findfile(void *search_ctx)
 
 	    /*
 	     * If no filearray till now expand wildcards
-	     * The function expand_wildcards() can handle an array of pathes
+	     * The function expand_wildcards() can handle an array of paths
 	     * and all possible expands are returned in one array. We use this
 	     * to handle the expansion of '**' into an empty string.
 	     */
@@ -3736,10 +3739,10 @@ vim_findfile(void *search_ctx)
 		add_pathsep(file_path);
 
 #ifdef FEAT_PATH_EXTRA
-		len = STRLEN(file_path);
 		rest_of_wildcards = ctx->ffs_wc_path;
 		if (*rest_of_wildcards != NUL)
 		{
+		    len = STRLEN(file_path);
 		    if (STRNCMP(rest_of_wildcards, "**", 2) == 0)
 		    {
 			char_u *p;
@@ -3960,8 +3963,8 @@ vim_findfile(void *search_ctx)
 	/* If we reached this, we didn't find anything downwards.
 	 * Let's check if we should do an upward search.
 	 */
-	if (ff_search_ctx->ffsc_start_dir &&
-		ff_search_ctx->ffsc_stopdirs_v != NULL && !got_int)
+	if (ff_search_ctx->ffsc_start_dir
+		&& ff_search_ctx->ffsc_stopdirs_v != NULL && !got_int)
 	{
 	    ff_stack_t  *sptr;
 

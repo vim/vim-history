@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
+*options.txt*   For Vim version 6.0j.  Last change: 2000 Oct 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -175,7 +175,7 @@ appended to the value of the environment variable.  Examples: >
    :set path=/usr/$INCLUDE,$HOME/include,.
 
 
-Handling of local options
+Handling of local options			*local-options*
 
 Some of the options only apply to a window or buffer.  Each window or buffer
 has its own copy of this option, thus can each have their own value.  This
@@ -508,6 +508,8 @@ temporarily made empty, to avoid the mappings to be misinterpreted.  This
 makes the file incompatible with Vi, but makes sure it can be used with
 different terminals.
 
+Only global mappings are stored, not mappings local to a buffer.
+
 A common method is to use a default ".vimrc" file, make some modifications
 with ":map" and ":set" commands and write the modified file.  First read the
 default ".vimrc" in with a command like ":source ~piet/.vimrc.Cprogs", change
@@ -748,12 +750,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	NOTE: This option is reset when 'compatible' is set.
 
 						*'backupcopy'* *'bkc'*
-'backupcopy' 'bkc'	string	(default: "auto")
+'backupcopy' 'bkc'	string	(Vi default for Unix: "yes", otherwise: "auto")
 			global
 			{not in Vi}
 	When writing a file and a backup is made, this option tells how it's
 	done:
-	"yes"	make a copy of the file and overwrite it
+	"yes"	make a copy of the file and overwrite the original one
 	"no"	rename the file and write a new one
 	"auto"	one of the previous, what works best
 
@@ -774,6 +776,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	is possible without side effects (the attributes can be passed on and
 	and the file is not a link) that is used.  When problems are expected,
 	a copy will be made.
+
+	One situation where "no" and "auto" will cause problems: A program
+	that opens a file, invokes Vim to edit that file, and then tests if
+	the open file was changed (through the file descriptor) will check the
+	backup file instead of the newly created file.  "crontab -e" is an
+	example.
 
 	When a copy is made, the original file is truncated and then filled
 	with the new text.  This means that protection bits, owner and
@@ -1200,6 +1208,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	option		+ set value	effect	~
 
 	'allowrevins'	  off		no CTRL-_ command
+	'backupcopy'	  Unix: "yes"	  backup file is a copy
+			  others: "auto"  copy or rename backup file
 	'backspace'	  ""		normal backspace
 	'backup'	  off		no backup file
 	'cindent'	  off		no C code indentation
@@ -1353,13 +1363,6 @@ A jump table for the options with a short description can be found at |X_op|.
 				('<' excluded in both cases)
 		C	Do not concatenate sourced lines that start with a
 			backslash.  See |line-continuation|.
-		<	Disable the recognition of special key codes in |<>|
-			form in mappings, abbreviations, and the "to" part of
-			menu commands.  For example, the command
-			":map X <Tab>" results in X being mapped to:
-				'<' included:   "<Tab>"  (5 characters)
-				'<' excluded:   "^I"     (^I is a real <Tab>)
-			Also see the 'k' flag below.
 		c	Searching continues at the end of any match at the
 			cursor position.  When not present searching continues
 			one character from the cursor position.  With 'c'
@@ -1456,17 +1459,15 @@ A jump table for the options with a short description can be found at |X_op|.
 			The default in Vim is to abandon the command-line,
 			because <Esc> normally aborts a command.  |c_<Esc>|
 		y	A yank command can be redone with ".".
+		!	When redoing a filter command, use the last used
+			external command, whatever it was.  Otherwise the last
+			used -filter- command is used.
 		$	When making a change to one line, don't redisplay the
 			line, but put a '$' at the end of the changed text.
 			The changed text will be overwritten when you type the
 			new text.  The line is redisplayed if you type any
 			command that moves the cursor from the insertion
 			point.
-		!	When redoing a filter command, use the last used
-			external command, whatever it was.  Otherwise the last
-			used -filter- command is used.
-		*	Use ":*" in the same way as ":@".  When not included,
-			":*" is an alias for ":'<,'>", select the Visual area.
 		%	Vi-compatible matching is done for the "%" command.
 			Does not recognize "#if", "#endif", etc.
 			Does not recognize "/*" and "*/".
@@ -1480,6 +1481,15 @@ A jump table for the options with a short description can be found at |X_op|.
 			everything inside quotes is ignored.  When matching a
 			paren inside quotes, it will find the matching one (if
 			there is one).  This works very well for C programs.
+		*	Use ":*" in the same way as ":@".  When not included,
+			":*" is an alias for ":'<,'>", select the Visual area.
+		<	Disable the recognition of special key codes in |<>|
+			form in mappings, abbreviations, and the "to" part of
+			menu commands.  For example, the command
+			":map X <Tab>" results in X being mapped to:
+				'<' included:   "<Tab>"  (5 characters)
+				'<' excluded:   "^I"     (^I is a real <Tab>)
+			Also see the 'k' flag below.
 
 						*'cscopeprg'* *'csprg'*
 'cscopeprg' 'csprg'	string	(default "cscope")
@@ -1941,7 +1951,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Normally you would set 'allowrevins' and use CTRL-_ in insert mode to
 	toggle this option |i_CTRL-_|.  See |farsi.txt|.
 
-						*'foldcolumn'* *'fdc'*
+/			*'foldcolumn'* *'fdc'* *'nofoldcolumn'* *'nofdc'*
 'foldcolumn' 'fdc'	boolean (default off)
 			local to window
 			{not in Vi}
@@ -1951,7 +1961,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	indicates folds and fold levels.
 	See |folding|.
 
-						*'foldenable'* *'fen'*
+			*'foldenable'* *'fen'* *'nofoldenable'* *'nofen'*
 'foldenable' 'fen'	boolean (default off)
 			local to window
 			{not in Vi}
@@ -4697,11 +4707,12 @@ A jump table for the options with a short description can be found at |X_op|.
 			feature}
 	When on, the title of the window will be set to the value of
 	'titlestring' (if it is not empty), or to:
-		filename +RO (path) - VIM
+		filename [+=x] (path) - VIM
 	Where:
 		filename	the name of the file being edited
 		+		indicates the file was modified
-		RO		indicates the file is read-only
+		=		indicates the file is read-only
+		=+		indicates the file is read-only and modified
 		(path)		is the path of the file being edited
 	Only works if the terminal supports setting window titles
 	(currently Amiga console, Win32 console, all GUI versions and
@@ -4712,6 +4723,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	be restored if possible.  The output of ":version" will include "+X11"
 	when HAVE_X11 was defined, otherwise it will be "-X11".  This also
 	works for the icon name |'icon'|.
+	But: When Vim was started with the |-X| argument, restoring the title
+	will not work (except in the GUI).
 	If the title cannot be restored, it is set to the value of 'titleold'.
 	You might want to restore the title outside of Vim then.
 	When using an xterm from a remote machine you can use this command:

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 15
+" Last change:	2000 Oct 21
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -74,11 +74,11 @@ au BufNewFile,BufRead *.asp
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
-au BufNewFile,BufRead *.asm,*.[sS],*.i,*.mac,*.lst	call FTCheck_asm()
+au BufNewFile,BufRead *.asm,*.[sS],*.i,*.mac,*.lst	call <SID>FTasm()
 
 " This function checks for the kind of assembly that is wanted by the user, or
 " can be detected from the first five lines of the file.
-fun! FTCheck_asm()
+fun! <SID>FTasm()
   " make sure b:asmsyntax exists
   if !exists("b:asmsyntax")
     let b:asmsyntax = ""
@@ -122,11 +122,11 @@ au BufNewFile,BufRead *.awk			setf awk
 au BufNewFile,BufRead *.mch,*.ref,*.imp		setf b
 
 " BASIC or Visual Basic
-au BufNewFile,BufRead *.bas			call FTCheck_VB("basic")
+au BufNewFile,BufRead *.bas			call <SID>FTVB("basic")
 
 " Check if one of the first five lines contains "VB_Name".  In that case it is
 " probably a Visual Basic file.  Otherwise it's assumed to be "alt" filetype.
-fun! FTCheck_VB(alt)
+fun! <SID>FTVB(alt)
   if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'VB_Name'
     setf vb
   else
@@ -176,11 +176,11 @@ au BufNewFile,BufRead *.con			setf cterm
 au BufNewFile,BufReadPost *..ch			setf ch
 
 " Changes for WEB and CWEB or CHILL
-au BufNewFile,BufRead *.ch			call FTCheck_change()
+au BufNewFile,BufRead *.ch			call <SID>FTchange()
 
 " This function checks if one of the first ten lines start with a '@'.  In
 " that case it is probably a change file, otherwise CHILL is assumed.
-fun! FTCheck_change()
+fun! <SID>FTchange()
   let lnum = 1
   while lnum <= 10
     if getline(lnum)[0] == '@'
@@ -471,11 +471,11 @@ au BufNewFile,BufRead *.ncf			setf ncf
 
 " Nroff/Troff (*.ms is checked below)
 au BufNewFile,BufRead *.me,*.mm,*.tr,*.nr	setf nroff
-au BufNewFile,BufRead *.[1-9]			call FTCheck_nroff()
+au BufNewFile,BufRead *.[1-9]			call <SID>FTnroff()
 
 " This function checks if one of the first five lines start with a dot.  In
 " that case it is probably an nroff file: 'filetype' is set and 1 is returned.
-fun! FTCheck_nroff()
+fun! <SID>FTnroff()
   if getline(1)[0] . getline(2)[0] . getline(3)[0] . getline(4)[0] . getline(5)[0] =~ '\.'
     setf nroff
     return 1
@@ -758,7 +758,7 @@ au BufNewFile,BufRead .viminfo,_viminfo		setf viminfo
 au BufRead,BufNewFile *.hw,*.module,*.pkg	setf virata
 
 " Visual Basic (also uses *.bas) or FORM
-au BufNewFile,BufRead *.frm			call FTCheck_VB("form")
+au BufNewFile,BufRead *.frm			call <SID>FTVB("form")
 
 " Vgrindefs file
 au BufNewFile,BufRead vgrindefs			setf vgrindefs
@@ -811,7 +811,7 @@ au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xres
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		setf xmath
 au BufNewFile,BufRead *.ms
-	\ if !FTCheck_nroff() | setf xmath | endif
+	\ if !<SID>FTnroff() | setf xmath | endif
 
 " vim: ts=8
 " XML

@@ -87,12 +87,16 @@ static mapblock_t	*first_abbr = NULL; /* first entry in abbrlist */
  * no_abbr_cnt is the number of characters in typebuf that should not be
  * considered for abbreviations.
  * Some parts of typebuf may not be mapped. These parts are remembered in
- * noremapbuf, which is the same length as typebuf and contains TRUE for the
- * characters that are not to be remapped. noremapbuf[typeoff] is the first
- * valid flag.
+ * noremapbuf, which is the same length as typebuf and contains RM_NONE for
+ * the characters that are not to be remapped. noremapbuf[typeoff] is the
+ * first valid flag.
  * (typebuf has been put in globals.h, because check_termcode() needs it).
  */
 static char_u	*noremapbuf = NULL;	  /* flags for typeahead characters */
+#define RM_YES		0	/* noremapbuf: remap */
+#define RM_NONE		1	/* noremapbuf: don't remap */
+#define RM_SCRIPT	2	/* noremapbuf: remap local script mappings */
+
 /* typebuf has three parts: room in front (for result of mappings), the middle
  * for typeahead and room for new characters (which needs to be 3 * MAXMAPLEN)
  * for the Amiga).
@@ -662,9 +666,11 @@ init_typebuf()
  * insert a string in position 'offset' in the typeahead buffer (for "@r"
  * and ":normal" command, vgetorpeek() and check_termcode())
  *
- * If noremap is 0, new string can be mapped again.
- * If noremap is -1, new string cannot be mapped again.
- * If noremap is >0, that many characters of the new string cannot be mapped.
+ * If noremap is REMAP_YES, new string can be mapped again.
+ * If noremap is REMAP_NONE, new string cannot be mapped again.
+ * If noremap is REMAP_SCRIPT, new string cannot be mapped again, except for
+ *			script-local mappings.
+ * If noremap is > 0, that many characters of the new string cannot be mapped.
  *
  * If nottyped is TRUE, the string does not return KeyTyped (don't use when
  * offset is non-zero!).
@@ -673,16 +679,18 @@ init_typebuf()
  */
     int
 ins_typebuf(str, noremap, offset, nottyped)
-    char_u  *str;
-    int	    noremap;
-    int	    offset;
-    int	    nottyped;
+    char_u	*str;
+    int		noremap;
+    int		offset;
+    int		nottyped;
 {
-    char_u  *s1, *s2;
-    int	    newlen;
-    int	    addlen;
-    int	    i;
-    int	    newoff;
+    char_u	*s1, *s2;
+    int		newlen;
+    int		addlen;
+    int		i;
+    int		newoff;
+    int		val;
+    int		nrm;
 
     init_typebuf();
 
@@ -744,19 +752,28 @@ ins_typebuf(str, noremap, offset, nottyped)
     }
     typelen += addlen;
 
+    /* If noremap == REMAP_SCRIPT: do remap script-local mappings. */
+    if (noremap == REMAP_SCRIPT)
+	val = RM_SCRIPT;
+    else
+	val = RM_NONE;
+
     /*
      * Adjust noremapbuf[] for the new characters:
-     * If noremap  < 0: all the new characters are flagged not remappable
-     * If noremap == 0: all the new characters are flagged mappable
-     * If noremap  > 0: 'noremap' characters are flagged not remappable, the
-     *			rest mappable
+     * If noremap == REMAP_NONE or REMAP_SCRIPT: new characters are
+     *			(sometimes) not remappable
+     * If noremap == REMAP_YES: all the new characters are mappable
+     * If noremap  > 0: "noremap" characters are not remappable, the rest
+     *			mappable
      */
-    if (noremap < 0)	    /* length not specified */
-	noremap = addlen;
+    if (noremap < 0)
+	nrm = addlen;
+    else
+	nrm = noremap;
     for (i = 0; i < addlen; ++i)
-	noremapbuf[typeoff + i + offset] = (noremap-- > 0);
+	noremapbuf[typeoff + i + offset] = (--nrm >= 0) ? val : RM_YES;
 
-		    /* this is only correct for offset == 0! */
+    /* this is only correct for offset == 0! */
     if (nottyped)			/* the inserted string is not typed */
 	typemaplen += addlen;
     if (no_abbr_cnt && offset == 0)	/* and not used for abbreviations */
@@ -1439,7 +1456,7 @@ vgetorpeek(advance)
 		    max_mlen = 0;
 		    if (!timedout && no_mapping == 0 && maphash_valid
 			    && (typemaplen == 0 ||
-				    (p_remap && noremapbuf[typeoff] == FALSE))
+				    (p_remap && noremapbuf[typeoff] != RM_NONE))
 			    && !(p_paste && (State & (INSERT + CMDLINE)))
 			    && !(State == HITRETURN && (typebuf[typeoff] == CR
 						  || typebuf[typeoff] == ' '))
@@ -1500,16 +1517,27 @@ vgetorpeek(advance)
 				 * - Partly match: mlen == typelen
 				 */
 				keylen = mp->m_keylen;
-				if (mlen == keylen ||
-					(mlen == typelen && typelen < keylen))
+				if (mlen == keylen
+				     || (mlen == typelen && typelen < keylen))
 				{
+				    /*
+				     * If only script-local mappings are
+				     * allowed, check if the mapping starts
+				     * with K_SNR.
+				     */
+				    s = noremapbuf + typeoff;
+				    if (*s == RM_SCRIPT
+					    && (mp->m_keys[0] != K_SPECIAL
+						|| mp->m_keys[1] != KS_EXTRA
+						|| mp->m_keys[2]
+							      != (int)KE_SNR))
+					continue;
 				    /*
 				     * If one of the typed keys cannot be
 				     * remapped, skip the entry.
 				     */
-				    s = noremapbuf + typeoff;
 				    for (n = mlen; --n >= 0; )
-					if (*s++)
+					if (*s++ == RM_NONE)
 					    break;
 				    if (n >= 0)
 					continue;
@@ -1580,7 +1608,8 @@ vgetorpeek(advance)
 			 */
 			if ((no_mapping == 0 || allow_keys != 0)
 				&& (typemaplen == 0
-				    || (p_remap && !noremapbuf[typeoff]))
+				    || (p_remap
+					    && noremapbuf[typeoff] == RM_YES))
 				&& !timedout)
 			{
 			    keylen = check_termcode(max_mlen + 1, NULL, 0);
@@ -1667,14 +1696,13 @@ vgetorpeek(advance)
 				    if (VIsual_active && VIsual_select)
 				    {
 					VIsual_select = FALSE;
-					(void)ins_typebuf(K_SELECT_STRING, -1,
-							  0, TRUE);
+					(void)ins_typebuf(K_SELECT_STRING,
+							  REMAP_NONE, 0, TRUE);
 				    }
 #endif
 
 				    ins_typebuf(current_menu->strings[idx],
-					current_menu->noremap[idx] ? -1 : 0,
-					0, TRUE);
+					 current_menu->noremap[idx], 0, TRUE);
 				}
 			    }
 #endif /* FEAT_GUI */
@@ -1721,7 +1749,8 @@ vgetorpeek(advance)
 			if (VIsual_active && VIsual_select)
 			{
 			    VIsual_select = FALSE;
-			    (void)ins_typebuf(K_SELECT_STRING, -1, 0, TRUE);
+			    (void)ins_typebuf(K_SELECT_STRING, REMAP_NONE,
+								     0, TRUE);
 			}
 #endif
 
@@ -1733,9 +1762,11 @@ vgetorpeek(advance)
 			 * part.
 			 */
 			if (ins_typebuf(mp->m_str,
-				mp->m_noremap ? -1
-					      : STRNCMP(mp->m_str, mp->m_keys,
-						      (size_t)keylen) ? 0 : 1,
+				mp->m_noremap != REMAP_YES
+					    ? mp->m_noremap
+					    : STRNCMP(mp->m_str, mp->m_keys,
+							       (size_t)keylen)
+							      ? REMAP_YES : 1,
 				0, TRUE) == FAIL)
 			{
 			    c = -1;
@@ -1909,7 +1940,7 @@ vgetorpeek(advance)
 		else
 		{	    /* allow mapping for just typed characters */
 		    while (typebuf[typeoff + typelen] != NUL)
-			noremapbuf[typeoff + typelen++] = FALSE;
+			noremapbuf[typeoff + typelen++] = RM_YES;
 		}
 	    }	    /* for (;;) */
 	}	/* if (!character from stuffbuf) */
@@ -2101,7 +2132,7 @@ inchar(buf, maxlen, wait_time)
  * noreabbr {lhs} {rhs}	    : same, but no remapping for {rhs}
  * unabbr {lhs}		    : remove abbreviation for {lhs}
  *
- * maptype == 1 for unmap command, 2 for noremap command.
+ * maptype: 0 for :map, 1 for :unmap, 2 for noremap.
  *
  * arg is pointer to any arguments. Note: arg cannot be a read-only string,
  * it will be modified.
@@ -2123,6 +2154,7 @@ inchar(buf, maxlen, wait_time)
  *	  2 for no match
  *	  3 for ambiguity
  *	  4 for out of mem
+ *	  5 for entry not unique
  */
     int
 do_map(maptype, arg, mode, abbrev, ambig)
@@ -2151,24 +2183,63 @@ do_map(maptype, arg, mode, abbrev, ambig)
     int		new_hash;
     mapblock_t	**p_abr;
     mapblock_t	**p_map;
+    int		unique = FALSE;
+    int		noremap;
 
-#ifdef FEAT_LOCALMAP
-    /*
-     * Check for "<buffer>": mapping local to buffer.
-     */
-    if (STRNCMP(arg, "<buffer>", 8) == 0)
-    {
-	keys = skipwhite(arg + 8);
-	p_map = curbuf->b_maphash;
-	p_abr = &curbuf->b_first_abbr;
-    }
+    keys = arg;
+    p_map = maphash;
+    p_abr = &first_abbr;
+
+    /* For ":noremap" don't remap, otherwise do remap. */
+    if (maptype == 2)
+	noremap = REMAP_NONE;
     else
-#endif
+	noremap = REMAP_YES;
+
+#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
+    /* Accept <buffer>, <script> and <unique> in any order. */
+    for (;;)
     {
-	keys = arg;
-	p_map = maphash;
-	p_abr = &first_abbr;
+#endif
+#ifdef FEAT_LOCALMAP
+	/*
+	 * Check for "<buffer>": mapping local to buffer.
+	 */
+	if (STRNCMP(keys, "<buffer>", 8) == 0)
+	{
+	    keys = skipwhite(keys + 8);
+	    p_map = curbuf->b_maphash;
+	    p_abr = &curbuf->b_first_abbr;
+	    continue;
+	}
+#endif
+
+#ifdef FEAT_EVAL
+	/*
+	 * Check for "<script>": remap script-local mappings only
+	 */
+	if (STRNCMP(keys, "<script>", 8) == 0)
+	{
+	    keys = skipwhite(keys + 8);
+	    noremap = REMAP_SCRIPT;
+	    continue;
+	}
+#endif
+	/*
+	 * Check for "<unique>": don't overwrite an existing mapping.
+	 */
+	if (STRNCMP(keys, "<unique>", 8) == 0)
+	{
+	    keys = skipwhite(keys + 8);
+	    unique = TRUE;
+#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
+	    continue;
+#endif
+	}
+#if defined(FEAT_LOCALMAP) || defined(FEAT_EVAL)
+	break;
     }
+#endif
 
     validate_maphash();
 
@@ -2271,6 +2342,61 @@ do_map(maptype, arg, mode, abbrev, ambig)
     if (!haskey || (maptype != 1 && !hasarg))
 	msg_start();
 
+#ifdef FEAT_LOCALMAP
+    /*
+     * Check if a new local mapping wasn't already defined globally.
+     */
+    if (unique && p_map == curbuf->b_maphash && haskey
+						    && maptype != 1 && hasarg)
+    {
+	/* need to loop over all global hash lists */
+	for (hash = 0; hash < 256 && !got_int; ++hash)
+	{
+	    if (abbrev)
+	    {
+		if (hash != 0)	/* there is only one abbreviation list */
+		    break;
+		mp = first_abbr;
+	    }
+	    else
+		mp = maphash[hash];
+	    for ( ; mp != NULL && !got_int; mp = mp->m_next)
+	    {
+		/* check entries with the same mode */
+		if ((mp->m_mode & mode) != 0)
+		{
+		    n = mp->m_keylen;
+		    if (STRNCMP(mp->m_keys, keys,
+					    (size_t)(n < len ? n : len)) == 0)
+		    {
+			if (n != len)	/* new entry is ambigious */
+			{
+			    if (!abbrev)	/* for abbrev's that's ok */
+			    {
+				if (ambig != NULL)
+				    *ambig = mp->m_keys;
+				retval = 3;
+				goto theend;
+			    }
+			}
+			else if (unique)
+			{
+			    if (abbrev)
+				EMSG2(_("global abbreviation already exists for %s"),
+					mp->m_keys);
+			    else
+				EMSG2(_("global mapping already exists for %s"),
+					mp->m_keys);
+			    retval = 5;
+			    goto theend;
+			}
+		    }
+		}
+	    }
+	}
+    }
+#endif
+
     /*
      * Find an entry in the maphash[] list that matches.
      * For :unmap we may loop two times: once to try to unmap an entry with a
@@ -2287,7 +2413,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	{
 	    if (abbrev)
 	    {
-		if (hash)	/* there is only one abbreviation list */
+		if (hash != 0)	/* there is only one abbreviation list */
 		    break;
 		mpp = p_abr;
 	    }
@@ -2318,7 +2444,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 			n = mp->m_keylen;
 			p = mp->m_keys;
 		    }
-		    if (!STRNCMP(p, keys, (size_t)(n < len ? n : len)))
+		    if (STRNCMP(p, keys, (size_t)(n < len ? n : len)) == 0)
 		    {
 			if (maptype == 1)	/* delete entry */
 			{
@@ -2351,6 +2477,16 @@ do_map(maptype, arg, mode, abbrev, ambig)
 			    retval = 3;
 			    goto theend;
 			}
+			else if (unique)
+			{
+			    if (abbrev)
+				EMSG2(_("abbreviation already exists for %s"),
+									   p);
+			    else
+				EMSG2(_("mapping already exists for %s"), p);
+			    retval = 5;
+			    goto theend;
+			}
 			else			/* new rhs for existing entry */
 			{
 			    mp->m_mode &= ~mode;	/* remove mode bits */
@@ -2364,7 +2500,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 				}
 				vim_free(mp->m_str);
 				mp->m_str = newstr;
-				mp->m_noremap = maptype;
+				mp->m_noremap = noremap;
 				mp->m_mode = mode;
 				did_it = TRUE;
 			    }
@@ -2442,7 +2578,7 @@ do_map(maptype, arg, mode, abbrev, ambig)
 	goto theend;
     }
     mp->m_keylen = STRLEN(mp->m_keys);
-    mp->m_noremap = maptype;
+    mp->m_noremap = noremap;
     mp->m_mode = mode;
 
     /* add the new entry in front of the abbrlist or maphash[] list */
@@ -2668,8 +2804,10 @@ showmap(mp)
 	msg_putchar(' ');		/* padd with blanks */
 	++len;
     } while (len < 12);
-    if (mp->m_noremap)
+    if (mp->m_noremap == REMAP_NONE)
 	msg_puts_attr((char_u *)"*", hl_attr(HLF_8));
+    else if (mp->m_noremap == REMAP_SCRIPT)
+	msg_puts_attr((char_u *)"&", hl_attr(HLF_8));
     else
 	msg_putchar(' ');
     /* Use FALSE below if we only want things like <Up> to show up as such on
@@ -2779,13 +2917,26 @@ set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
 	expand_isabbrev = isabbrev;
 	expand_context = EXPAND_MAPPINGS;
 #ifdef FEAT_LOCALMAP
-	if (STRNCMP(arg, "<buffer>", 8) == 0)
+	expand_buffer = FALSE;
+	for (;;)
 	{
-	    expand_buffer = TRUE;
-	    arg = skipwhite(arg + 8);
+	    if (STRNCMP(arg, "<buffer>", 8) == 0)
+	    {
+		expand_buffer = TRUE;
+		arg = skipwhite(arg + 8);
+		continue;
+	    }
+#endif
+	    if (STRNCMP(arg, "<unique>", 8) == 0)
+	    {
+		arg = skipwhite(arg + 8);
+#ifdef FEAT_LOCALMAP
+		continue;
+#endif
+	    }
+#ifdef FEAT_LOCALMAP
+	    break;
 	}
-	else
-	    expand_buffer = FALSE;
 #endif
 	expand_pattern = arg;
     }
@@ -2836,6 +2987,13 @@ ExpandMappings(prog, num_file, file)
 	    }
 	}
 #endif
+	if (vim_regexec(&regmatch, (char_u *)"<unique>", (colnr_t)0))
+	{
+	    if (round == 1)
+		++count;
+	    else
+		(*file)[count++] = vim_strsave((char_u *)"<unique>");
+	}
 	for (hash = 0; hash < 256; ++hash)
 	{
 	    if (expand_isabbrev)
@@ -3022,17 +3180,17 @@ check_abbr(c, ptr, col, mincol)
 		tb[j++] = c;
 		tb[j] = NUL;
 					    /* insert the last typed char */
-		(void)ins_typebuf(tb, TRUE, 0, TRUE);
+		(void)ins_typebuf(tb, 1, 0, TRUE);
 	    }
 					    /* insert the to string */
-	    (void)ins_typebuf(mp->m_str, mp->m_noremap ? -1 : 0, 0, TRUE);
+	    (void)ins_typebuf(mp->m_str, mp->m_noremap, 0, TRUE);
 					    /* no abbrev. for these chars */
 	    no_abbr_cnt += STRLEN(mp->m_str) + j + 1;
 
 	    tb[0] = Ctrl_H;
 	    tb[1] = NUL;
 	    while (len--)		    /* delete the from string */
-		(void)ins_typebuf(tb, TRUE, 0, TRUE);
+		(void)ins_typebuf(tb, 1, 0, TRUE);
 	    return TRUE;
 	}
     }
@@ -3144,7 +3302,7 @@ makemap(fd)
 		    }
 		    if (c1 && putc(c1, fd) < 0)
 			return FAIL;
-		    if (mp->m_noremap && fprintf(fd, "nore") < 0)
+		    if (mp->m_noremap != REMAP_NONE && fprintf(fd, "nore") < 0)
 			return FAIL;
 		    if (fprintf(fd, cmd) < 0)
 			return FAIL;

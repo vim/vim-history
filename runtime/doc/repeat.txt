@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0i.  Last change: 2000 Oct 07
+*repeat.txt*    For Vim version 6.0j.  Last change: 2000 Oct 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -143,6 +143,13 @@ q			Stops recording.  (Implementation note: The 'q' that
 			Only one file name can be given, spaces are considered
 			to be part of the name, except at the start and end.
 			{not in Vi}
+
+						*:scrip* *:scriptnames*
+:scrip[tnames]		List all sourced script names, in the order they were
+			first sourced.  The number is used for script ID
+			|<SID>|.
+			{not in Vi} {not available when compiled without the
+			|+eval| feature}
 
 							*:fini* *:finish*
 :fini[sh]		Stop sourcing a script.  Can only be used in a Vim

@@ -1,14 +1,12 @@
 " Vim filetype plugin file
 " Language:	Make
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Oct 15
+" Last Change:	2000 Oct 21
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
   finish
 endif
-
-" Don't load another plugin for this buffer
 let b:did_ftplugin = 1
 
 " Make sure a hard tab is used, required for most make programs

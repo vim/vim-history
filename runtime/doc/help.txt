@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
+*help.txt*	For Vim version 6.0j.  Last change: 2000 Oct 15
 
 			VIM - main help file
 									 k

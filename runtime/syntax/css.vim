@@ -2,7 +2,7 @@
 " Language:	Cascading Style Sheets
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/css.vim
-" Last Change:	1999 Jul 1
+" Last Change:	2000 Oct 20
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -60,7 +60,7 @@ syn keyword cssBoxProperties contained width height float clear
 syn keyword cssBoxAttr contained auto thin medium thick left right none both
 syn keyword cssBoxAttr contained none dotted dashed solid double groove ridge inset outset
 
-syn keyword cssClassificationProperties contained
+syn keyword cssClassificationProperties contained display
 syn match cssClassificationProperties contained "\<white-space\>"
 syn match cssClassificationProperties contained "\<list-\(item\|style\(-\(type\|image\|position\)\)\=\)\>"
 syn keyword cssClassificationAttr contained block inline none normal pre nowrap

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Makefile
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Sep 02
+" Last Change:	2000 Oct 22
 
 setlocal indentexpr=GetMakeIndent()
 
@@ -15,7 +15,7 @@ function GetMakeIndent()
     return 0
   endif
   let ind = indent(v:lnum - 1)
-  if getline(v:lnum - 1) =~ '^\S\+.*:'
+  if getline(v:lnum - 1) =~ '^[^ \t#].*:'
     let ind = ind + &sw
   endif
   return ind

@@ -175,7 +175,7 @@ static int	deadly_signal = 0;	    /* The signal we caught */
 
 static int curr_tmode = TMODE_COOK;	/* contains current terminal mode */
 
-#if defined(HAVE_SETJMP_H) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))
+#if defined(HAVE_SETJMP_H)
 # ifdef HAVE_SIGSETJMP
 static sigjmp_buf lc_jump_env;
 #  define SETJMP(x) sigsetjmp(x, 1)
@@ -188,7 +188,7 @@ static jmp_buf lc_jump_env;
 # ifdef FEAT_EVAL
 static int lc_signal;
 # endif
-static int lc_active = 0;
+static int lc_active = FALSE;
 #endif
 
 #ifdef SYS_SIGLIST_DECLARED
@@ -546,6 +546,42 @@ sig_alarm SIGDEFARG(sigarg)
 #endif
 
 /*
+ * A simplistic version of setjmp() that only allows one level of using.
+ * Don't call twice before calling mch_endjmp()!.
+ * Usage:
+ *	if (mch_setjmp() == FAIL)
+ *	    EMSG("crash!")
+ *	else
+ *	{
+ *	    do_the_work;
+ *	    mch_endjmp();
+ *	}
+ * Returns OK for normal return, FAIL when the protected code caused a
+ * problem and LONGJMP() was used.
+ */
+    int
+mch_setjmp()
+{
+#if defined(HAVE_SETJMP_H)
+# ifdef FEAT_EVAL
+    lc_signal = 0;
+# endif
+    lc_active = TRUE;
+    if (SETJMP(lc_jump_env) != 0)
+	return FAIL;
+#endif
+    return OK;
+}
+
+    void
+mch_endjmp()
+{
+#if defined(HAVE_SETJMP_H)
+    lc_active = FALSE;
+#endif
+}
+
+/*
  * This function handles deadly signals.
  * It tries to preserve any swap file and exit properly.
  * (partly from Elvis).
@@ -558,13 +594,18 @@ deathtrap SIGDEFARG(sigarg)
     int	    i;
 #endif
 
-#if defined(HAVE_SETJMP_H) && (defined(USE_DLOPEN) || defined(HAVE_SHL_LOAD))
+#if defined(HAVE_SETJMP_H)
+    /*
+     * Catch a crash in protected code.  Jump back to mch_setjmp().
+     */
     if (lc_active)
     {
 # ifdef FEAT_EVAL
 	lc_signal = sigarg;
 # endif
+	lc_active = FALSE;
 	LONGJMP(lc_jump_env, 1);
+	/* NOTREACHED */
     }
 #endif
 
@@ -915,6 +956,10 @@ get_x11_windis()
 	x11_display_from = XD_NONE;
     }
 #endif
+
+    /* When started with the "-X" argument, don't try connecting. */
+    if (x_no_connect)
+	return FAIL;
 
     /*
      * If WINDOWID not set, should try another method to find out
@@ -4113,11 +4158,15 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
     if (hinstLib != NULL)
     {
 # ifdef HAVE_SETJMP_H
-	lc_signal = 0;
-	lc_active = 1;
-	if (SETJMP(lc_jump_env) == 0)
-	{
+	/*
+	 * Catch a crash when calling the library function.  For example when
+	 * using a number where a string pointer is expected.
+	 */
+	if (mch_setjmp() == FAIL)
+	    success = FALSE;
+	else
 # endif
+	{
 	    retval_str = NULL;
 	    retval_int = 0;
 
@@ -4164,15 +4213,13 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 		    && retval_str != (char_u *)1
 		    && retval_str != (char_u *)-1)
 		*string_result = vim_strsave(retval_str);
-# ifdef HAVE_SETJMP_H
 	}
-	else
-	    success = FALSE;
 
-	lc_active = 0;
-	if (lc_signal)
-	{
+# ifdef HAVE_SETJMP_H
+	mch_endjmp();
 #  ifdef SIGHASARG
+	if (lc_signal != 0)
+	{
 	    int i;
 
 	    /* try to find the name of this signal */
@@ -4180,9 +4227,8 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 		if (lc_signal == signal_info[i].sig)
 		    break;
 	    EMSG2("got SIG%s in libcall()", signal_info[i].name);
-#  endif
-	    success = FALSE;
 	}
+#  endif
 # endif
 
 	/* Free the DLL module. */
@@ -4217,6 +4263,9 @@ setup_xterm_clip()
     int		z = 0;
     char	*strp = "";
     Widget	AppShell;
+
+    if (x_no_connect)
+	return;
 
     open_app_context();
     if (app_context != NULL && xterm_Shell == (Widget)0)

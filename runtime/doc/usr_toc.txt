@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
+*usr_toc.txt*	For Vim version 6.0j.  Last change: 2000 Oct 17
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -123,6 +123,7 @@ Make Vim work as you like it.
 		|40.5|	Functions
 		|40.6|	Autocommands
 		|40.7|	Writing a plugin
+		|40.8|	Writing a filetype plugin
 
 |usr_41.txt|  Make new commands
 		(mappings, user commands, :normal, |restore-position|)

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0i.  Last change: 2000 Aug 31
+*intro.txt*     For Vim version 6.0j.  Last change: 2000 Oct 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -776,7 +776,8 @@ screen	| window 1	| window 2	|
 	|command line			|
 	+-------------------------------+
 
-The command line is also used for messages.
+The command line is also used for messages.  It scrolls up the screen when
+there is not enough room in the command line.
 
 A difference is made between four types of lines:
 
@@ -798,7 +799,7 @@ A difference is made between four types of lines:
 			line gets longer it wraps and lines are scrolled to
 			make room.
 
-buffer lines	logical lines	window lines	screen lines
+buffer lines	logical lines	window lines	screen lines ~
 
 1. one		1. one		1. +-- folded   1.  +-- folded
 2. two		2. +-- folded   2. five         2.  five

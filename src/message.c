@@ -671,7 +671,7 @@ wait_return(redraw)
 	    c = safe_vgetc();
 	    if (!global_busy)
 		got_int = FALSE;
-	} while (c == Ctrl_C
+	} while (c == Ctrl_C || c == K_IGNORE
 #ifdef FEAT_GUI
 				|| c == K_VER_SCROLLBAR || c == K_HOR_SCROLLBAR
 #endif
@@ -948,6 +948,7 @@ msg_outtrans_len_attr(str, len, attr)
     int		retval = 0;
 #ifdef FEAT_MBYTE
     int		n;
+    int		c;
     char_u	buf[MB_MAXBYTES + 1];
 #endif
 
@@ -961,13 +962,22 @@ msg_outtrans_len_attr(str, len, attr)
     while (--len >= 0)
     {
 #ifdef FEAT_MBYTE
-	/* check multibyte */
+	/* check multibyte; print it directly if it's printable.  */
 	if (has_mbyte && (n = mb_ptr2len_check(str)) > 1)
 	{
 	    mch_memmove(buf, str, (size_t)n);
 	    buf[n] = NUL;
-	    msg_puts_attr(buf, attr);
-	    retval += mb_ptr2cells(str);
+	    c = mb_ptr2char(buf);
+	    if (vim_isprintc(c))
+	    {
+		msg_puts_attr(buf, attr);
+		retval += mb_ptr2cells(str);
+	    }
+	    else
+	    {
+		msg_puts_attr(transchar(c), attr);
+		retval += char2cells(c);
+	    }
 	    len -= n - 1;
 	    str += n;
 	    continue;

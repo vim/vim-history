@@ -14,7 +14,7 @@
 # with 'xxd'.
 #
 # Maintained by Ron Aaron <ron@mossbayeng.com>
-# updated 1999 Jun 08
+# updated 2000 Oct 16
 
 #>>>>> choose options:
 # set to '1' for a debug build
@@ -29,6 +29,9 @@ MIN=0
 CPU=i686
 # set to same choices as 'CPU', but will prevent running on 'lower' cpus:
 ARCH=i386
+# set to '1' to cross-compile from unix; 0=native Windows
+CROSS=0
+
 # uncomment 'PERL' if you want a perl-enabled version
 # Not working just yet.  I'm not sure that the ActiveState perl port can be made
 # to work if you aren't useing VisualC.  Shame...
@@ -41,7 +44,17 @@ PERLLIBS=$(PERLLIB)/core
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
 DEF_MIN=-DFEAT_SMALL
 DEFINES=-DWIN32 -DPC
+ifeq ($(CROSS),1)
+# cross-compiler:
+CC = i586-pc-mingw32msvc-gcc
+DEL = rm
+WINDRES = i586-pc-mingw32msvc-windres
+else
+# normal (Windows) compilation:
 CC = gcc
+DEL = del
+WINDRES = windres
+endif
 
 #>>>>> end of choices
 ###########################################################################
@@ -103,26 +116,26 @@ gvim.exe: $(OBJ) $(GUIOBJ)
 	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(LIB)
 
 exes:
-	@del *.o
+	@$(DEL) *.o
 	$(MAKE) -f Make_ming.mak gvim.exe
-	@del *.o
+	@$(DEL) *.o
 	$(MAKE) -f Make_ming.mak vim.exe
-	@del *.o
+	@$(DEL) *.o
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd && $(CC) $(CFLAGS) -o xxd.exe -s -DWIN32 xxd.c && cd ..
 
 clean:
-	-del *.o
-	-del *.exe
-	cd xxd && del *.exe && cd ..
+	-$(DEL) *.o
+	-$(DEL) *.exe
+	cd xxd && $(DEL) *.exe && cd ..
 
 ###########################################################################
 vimres.res: vim.rc
-	windres --define MING --define FEAT_GUI_W32 vim.rc vimres.res
+	$(WINDRES) --define MING --define FEAT_GUI_W32 vim.rc vimres.res
 
 vimres.o: vimres.res
-	windres vimres.res vimres.o
+	$(WINDRES) vimres.res vimres.o
 
 if_perl.c: if_perl.xs typemap
 	$(PERL) $(PERLLIB)\ExtUtils\xsubpp -prototypes -typemap $(PERLLIB)\ExtUtils\typemap if_perl.xs > $@

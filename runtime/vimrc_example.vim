@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Oct 15
+" Last change:	2000 Oct 21
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -61,17 +61,17 @@ if has("autocmd")
   " set binary mode before reading the file
   " use "gzip -d", gunzip isn't always available
   autocmd BufReadPre,FileReadPre	*.gz,*.bz2 set bin
-  autocmd BufReadPost,FileReadPost	*.gz call GZIP_read("gzip -d")
-  autocmd BufReadPost,FileReadPost	*.bz2 call GZIP_read("bzip2 -d")
-  autocmd BufWritePost,FileWritePost	*.gz call GZIP_write("gzip")
-  autocmd BufWritePost,FileWritePost	*.bz2 call GZIP_write("bzip2")
-  autocmd FileAppendPre			*.gz call GZIP_appre("gzip -d")
-  autocmd FileAppendPre			*.bz2 call GZIP_appre("bzip2 -d")
-  autocmd FileAppendPost		*.gz call GZIP_write("gzip")
-  autocmd FileAppendPost		*.bz2 call GZIP_write("bzip2")
+  autocmd BufReadPost,FileReadPost	*.gz call <SID>read("gzip -d")
+  autocmd BufReadPost,FileReadPost	*.bz2 call <SID>read("bzip2 -d")
+  autocmd BufWritePost,FileWritePost	*.gz call <SID>write("gzip")
+  autocmd BufWritePost,FileWritePost	*.bz2 call <SID>write("bzip2")
+  autocmd FileAppendPre			*.gz call <SID>appre("gzip -d")
+  autocmd FileAppendPre			*.bz2 call <SID>appre("bzip2 -d")
+  autocmd FileAppendPost		*.gz call <SID>write("gzip")
+  autocmd FileAppendPost		*.bz2 call <SID>write("bzip2")
 
   " After reading compressed file: Uncompress text in buffer with "cmd"
-  fun! GZIP_read(cmd)
+  fun! <SID>read(cmd)
     " set 'cmdheight' to two, to avoid the hit-return prompt
     let ch_save = &ch
     set ch=3
@@ -102,14 +102,14 @@ if has("autocmd")
   endfun
 
   " After writing compressed file: Compress written file with "cmd"
-  fun! GZIP_write(cmd)
+  fun! <SID>write(cmd)
     if rename(expand("<afile>"), expand("<afile>:r")) == 0
       call system(a:cmd . " " . expand("<afile>:r"))
     endif
   endfun
 
   " Before appending to compressed file: Uncompress file with "cmd"
-  fun! GZIP_appre(cmd)
+  fun! <SID>appre(cmd)
     call system(a:cmd . " " . expand("<afile>"))
     call rename(expand("<afile>:r"), expand("<afile>"))
   endfun

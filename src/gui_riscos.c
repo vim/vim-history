@@ -1927,8 +1927,8 @@ ro_dataload(block)
 	    swi(OS_Byte, 121, 0x80);	    /* Is Shift pressed? */
 	    if (r1 == 0xff)
 	    {
-		ins_typebuf(" ", -1, 0, TRUE);
-		ins_typebuf(path, -1, 0, TRUE);
+		ins_typebuf(" ", REMAP_NONE, 0, TRUE);
+		ins_typebuf(path, REMAP_NONE, 0, TRUE);
 		ro_return_early = TRUE;		    /* Return even though nothing was typed. */
 	    }
 	    else
@@ -1940,18 +1940,18 @@ ro_dataload(block)
 	    ro_return_early = TRUE;	    /* Return even though nothing was typed. */
 
 	    if (scrap)			    /* Remove <Wimp$Scrap>. Later. */
-		ins_typebuf(":!~remove <Wimp$Scrap>\r", -1, 0, TRUE);
+		ins_typebuf(":!~remove <Wimp$Scrap>\r", REMAP_NONE, 0, TRUE);
 
 	    /* Insert {:sp ,:confirm e }[+f\ <leaf> ]<file><CR> */
-	    ins_typebuf("\r", -1, 0, TRUE);
-	    ins_typebuf(path, -1, 0, TRUE);
-	    ins_typebuf(" ", -1, 0, TRUE);
+	    ins_typebuf("\r", REMAP_NONE, 0, TRUE);
+	    ins_typebuf(path, REMAP_NONE, 0, TRUE);
+	    ins_typebuf(" ", REMAP_NONE, 0, TRUE);
 
 	    if (scrap)
 	    {
 		/* Loading via !Scrap - change pathname to stored leafname */
-		ins_typebuf(leaf_name, -1, 0, TRUE);
-		ins_typebuf(" +f\\ ", -1, 0, TRUE);
+		ins_typebuf(leaf_name, REMAP_NONE, 0, TRUE);
+		ins_typebuf(" +f\\ ", REMAP_NONE, 0, TRUE);
 		leaf_ref = 0;
 		vim_free(leaf_name);
 		leaf_name = NULL;
@@ -1959,9 +1959,9 @@ ro_dataload(block)
 
 	    swi(OS_Byte, 121, 0x81);	    /* Is Ctrl pressed? */
 	    if (r1 == 0xff)
-		ins_typebuf(":sp", -1, 0, TRUE);	/* Yes - split window */
+		ins_typebuf(":sp", REMAP_NONE, 0, TRUE); /* Yes, split window */
 	    else
-		ins_typebuf(":confirm e", -1, 0, TRUE);
+		ins_typebuf(":confirm e", REMAP_NONE, 0, TRUE);
 	    break;
 
 	default:

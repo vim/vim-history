@@ -2495,9 +2495,9 @@ msgmore(n)
 {
     long pn;
 
-    if (global_busy ||	    /* no messages now, wait until global is finished */
-	    keep_msg ||	    /* there is a message already, skip this one */
-	    !messaging())   /* 'lazyredraw' set, don't do messages now */
+    if (global_busy	    /* no messages now, wait until global is finished */
+	    || keep_msg	    /* there is a message already, skip this one */
+	    || !messaging())  /* 'lazyredraw' set, don't do messages now */
 	return;
 
     if (n > 0)
@@ -2507,10 +2507,22 @@ msgmore(n)
 
     if (pn > p_report)
     {
-	sprintf((char *)msg_buf,
-		pn == 1 ? _("%ld %s line %s") : _("%ld %s lines %s"),
-		pn, n > 0 ? _("more") : _("fewer"),
-		got_int ? _("(Interrupted)") : "");
+	if (pn == 1)
+	{
+	    if (n > 0)
+		STRCPY(msg_buf, _("1 more line"));
+	    else
+		STRCPY(msg_buf, _("1 line less"));
+	}
+	else
+	{
+	    if (n > 0)
+		sprintf((char *)msg_buf, _("%ld more lines"), pn);
+	    else
+		sprintf((char *)msg_buf, _("%ld fewer lines"), pn);
+	}
+	if (got_int)
+	    STRCAT(msg_buf, _(" (Interrupted)"));
 	if (msg(msg_buf))
 	{
 	    keep_msg = msg_buf;
@@ -2584,6 +2596,29 @@ init_homedir()
 
     if (var != NULL && *var == NUL)	/* empty is same as not set */
 	var = NULL;
+
+#ifdef WIN32
+    /*
+     * Typically, $HOME is not defined on Windows, unless the user has
+     * specifically defined it for Vim's sake.  However, on Windows NT
+     * platforms, $HOMEDRIVE and $HOMEPATH are automatically defined for
+     * each user.  Try constructing $HOME from these.
+     */
+    if (var == NULL)
+    {
+        char_u *homedrive, *homepath;
+
+        homedrive = mch_getenv((char_u *)"HOMEDRIVE");
+        homepath = mch_getenv((char_u *)"HOMEPATH");
+        if (homedrive != NULL && homepath != NULL)
+        {
+            sprintf((char *)NameBuff, "%s%s", homedrive, homepath);
+            if (NameBuff[0] != NUL)
+                var = NameBuff;
+        }
+    }
+#endif
+
 #if defined(OS2) || defined(MSDOS) || defined(MSWIN)
     /*
      * Default home dir is C:/
@@ -2595,6 +2630,10 @@ init_homedir()
     if (var != NULL)
     {
 #ifdef UNIX
+	/*
+	 * Change to the directory and get the actual path.  This resolves
+	 * links.
+	 */
 	if (mch_dirname(NameBuff, MAXPATHL) == OK)
 	{
 	    if (!mch_chdir((char *)var) && mch_dirname(IObuff, IOSIZE) == OK)
@@ -6093,6 +6132,16 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	{
 	    char_u	*t = backslash_halve_save(p);
 
+#ifdef DJGPP
+	    /* DJGPP doesn't like a trailing slash or backslash. */
+	    int		len;
+
+	    len = STRLEN(t) - 1;
+	    if (len > 0
+		    && (t[len] == '/' || t[len] == '\\')
+		    && t[len - 1] != ':')
+		t[len] = NUL;
+#endif
 	    if ((flags & EW_NOTFOUND) || mch_getperm(t) >= 0)
 		addfile(&ga, t, flags);
 	    vim_free(t);

@@ -338,6 +338,9 @@ buf_freeall(buf, del_buf)
 #ifdef FEAT_SYN_HL
     syntax_clear(buf);		    /* reset syntax info */
 #endif
+#ifdef FEAT_USR_CMDS
+    uc_clear(&buf->b_ucmds);	    /* clear local user commands */
+#endif
 }
 
 /*
@@ -2181,7 +2184,7 @@ maketitle()
 	}
 	else
 	{
-	    /* format: "fname +RO (path) (1 of 2) - VIM" */
+	    /* format: "fname + (path) (1 of 2) - VIM" */
 
 	    if (curbuf->b_fname == NULL)
 		STRCPY(buf, _("[No file]"));
@@ -2193,14 +2196,15 @@ maketitle()
 		buf[IOSIZE - 100] = NUL; /* in case it was too long */
 	    }
 
-	    if (bufIsChanged(curbuf))
+	    if (curbuf->b_p_ro)
 	    {
-		STRCAT(buf, " +");
-		if (curbuf->b_p_ro)
-		    STRCAT(buf, "RO");
+		if (bufIsChanged(curbuf))
+		    STRCAT(buf, " =+");
+		else
+		    STRCAT(buf, " =");
 	    }
-	    else if (curbuf->b_p_ro)
-		STRCAT(buf, " RO");
+	    else if (bufIsChanged(curbuf))
+		STRCAT(buf, " +");
 
 	    if (curbuf->b_fname != NULL)
 	    {

@@ -976,7 +976,7 @@ reg(paren, flagp)
     else if (paren == REG_NOPAREN && peekchr() != NUL)
     {
 	if (curchr == Magic(')'))
-	    EMSG_RET_NULL(_(e_toomket))
+	    EMSG_RET_NULL(_("Unmatched \\)"))
 	else
 	    EMSG_RET_NULL(_(e_trailing))	/* "Can't happen". */
 	/* NOTREACHED */
@@ -2297,7 +2297,23 @@ vim_regexec_both(line, col)
 {
     regprog_t	*prog;
     char_u	*s;
-    long	retval;
+    long	retval = 0L;
+
+#if 0 /* this doesn't work, because when running out of stack space signals
+	 won't be catched... */
+#ifdef UNIX
+    /*
+     * Matching with a regexp may cause a very deep recursive call of
+     * regmatch().  Vim will crash when running out of stack space.  Catch
+     * this here if the system supports it.
+     */
+    if (mch_setjmp() == FAIL)
+    {
+	EMSG(_("Crash intercepted; regexp too complex?"));
+	goto theend;
+    }
+#endif
+#endif
 
     if (REG_MULTI)
     {
@@ -2317,12 +2333,12 @@ vim_regexec_both(line, col)
     if (prog == NULL || line == NULL)
     {
 	EMSG(_(e_null));
-	return 0L;
+	goto theend;
     }
 
     /* Check validity of program. */
     if (prog_magic_wrong())
-	return 0L;
+	goto theend;
 
     /* If pattern contains "\c" or "\C": overrule value of reg_ic */
     if (prog->regflags & RF_ICASE)
@@ -2348,7 +2364,7 @@ vim_regexec_both(line, col)
 		++s;
 	}
 	if (s == NULL)		/* Not present. */
-	    return 0L;
+	    goto theend;
     }
 
     regline = line;
@@ -2406,6 +2422,13 @@ vim_regexec_both(line, col)
 
     /* Didn't find a match. */
     vim_free(reg_tofree);
+
+theend:
+#if 0
+#ifdef UNIX
+    mch_endjmp();
+#endif
+#endif
     return retval;
 }
 

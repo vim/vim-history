@@ -701,10 +701,16 @@ main
 		break;
 
 #ifdef FEAT_CRYPT
-	    case 'x':	    /* "-x"  encrypted reading/writing of files */
+	    case 'x':		/* "-x"  encrypted reading/writing of files */
 		ask_for_key = TRUE;
 		break;
 #endif
+
+	    case 'X':		/* "-X"  don't connect to X server */
+#if (defined(UNIX) || defined(VMS)) && defined(FEAT_X11)
+		x_no_connect = TRUE;
+#endif
+		break;
 
 	    case 'Z':		/* "-Z"  restricted mode */
 		restricted = TRUE;
@@ -824,9 +830,9 @@ main
 		    if ((scriptout = mch_fopen(argv[0],
 				    c == 'w' ? APPENDBIN : WRITEBIN)) == NULL)
 		    {
-			mch_errmsg(_("cannot open \""));
+			mch_errmsg(_("Cannot open for script output: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\" for output\n"));
+			mch_errmsg(_("\"\n"));
 			mch_windexit(2);
 		    }
 		    break;

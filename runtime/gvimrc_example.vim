@@ -2,7 +2,7 @@
 " The commands in this are executed when the GUI is started.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Jul 15
+" Last change:	2000 Oct 21
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.gvimrc
@@ -29,8 +29,10 @@ if version >= 500
   " I like highlighting strings inside C comments
   let c_comment_strings=1
 
-  " Switch on syntax highlighting.
-  syntax on
+  " Switch on syntax highlighting if it wasn't on yet.
+  if !exists("syntax_on")
+    syntax on
+  endif
 
   " Switch on search pattern highlighting.
   set hlsearch

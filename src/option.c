@@ -309,9 +309,14 @@ static struct vimoption options[] =
     {"backup",	    "bk",   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_bk, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"backupcopy",  "bkc",  P_STRING|P_VI_DEF,
+    {"backupcopy",  "bkc",  P_STRING|P_VIM,
 			    (char_u *)&p_bkc, PV_NONE,
-			    {(char_u *)"auto", (char_u *)0L}},
+#ifdef UNIX
+			    {(char_u *)"yes", (char_u *)"auto"}
+#else
+			    {(char_u *)"auto", (char_u *)"auto"}
+#endif
+			    },
     {"backupdir",   "bdir", P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_bdir, PV_NONE,
 			    {(char_u *)DFLT_BDIR, (char_u *)0L}},
@@ -3989,10 +3994,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
     /* terminal options */
     else if (istermoption(&options[opt_idx]) && full_screen)
     {
-	/* ":set t_Co=0" does ":set t_Co=" */
+	/* ":set t_Co=0" and ":set t_Co=1" do ":set t_Co=" */
 	if (varp == &T_CCO)
 	{
-	    if (atoi((char *)T_CCO) == 0)
+	    t_colors = atoi((char *)T_CCO);
+	    if (t_colors <= 1)
 	    {
 		if (new_value_alloced)
 		    vim_free(T_CCO);

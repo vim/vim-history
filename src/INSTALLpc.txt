@@ -14,6 +14,7 @@ Contents:
 3. Windows NT with OpenNT
 4. Windows 3.1
 5. Using Mingw
+6. Cross compiling for Win32 from a Linux machine
 
 
 1. MS-DOS
@@ -205,3 +206,53 @@ If you are dismayed by how big the EXE is, I strongly recommend you get 'UPX'
 (also free!) and compress the file (typical compression is 50%). UPX can be
 found at 
 	http://upx.tsx.org/
+
+6. Cross compiling for Win32 from a Linux machine
+=================================================
+
+(written by Ron Aaron: <ron@mossbayeng.com> with help from 
+Martin Kahlert <martin.kahlert@infineon.com>)
+
+If you like, you can compile the 'mingw' Win32 version from the comfort of
+your Linux (or other unix) box.  To do this, you need to follow a few steps:
+
+	1) Install the mingw32 cross-compiler (if you have it, go to step 2)
+		1a) from 'ftp://ftp.nanotech.wisc.edu/pub/khan/gnu-win32/mingw32/snapshots/gcc-2.95.2-1',
+			get:
+				binutils-19990818-1-src.tar.gz
+				mingw-msvcrt-20000203.zip
+				gcc-2.95.2-1-x86-win32.diff.gz
+		1b) from 'http://gcc.gnu.org/' get:
+				gcc-2.95.2.tar.gz
+		1c) create a place to put the compiler source and binaries:
+			(assuming you are in the home directory)
+			mkdir gcc-bin
+			mkdir gcc-src
+		1d) unpack the sources:
+			cd gcc-src
+			tar xzf ../binutils-19990818-1-src.tar.gz
+			tar xzf ../gcc-2.95.2.tar.gz
+			unzip ../mingw-msvcrt-20000203
+		1e) build the different tools:
+			export PREFIX=~/gcc-bin/
+			cd gcc-2.95.2
+			zcat ../gcc-2.95.2-1-x86-win32.diff.gz | patch -p1 -E
+			cd ../binutils-19990818
+			./configure --target=i586-pc-mingw32msvc --prefix=$PREFIX
+			make
+			make install
+			cd ../gcc-2.95.2
+			./configure --target=i586-pc-mingw32msvc \
+				--with-libs=~/gcc-bin/i386-mingw32msvc/lib \
+				--with-headers=~/gcc-bin/i386-mingw32msvc/include \
+				--enable-languages=c++ \
+				--prefix=$PREFIX
+			make
+			make install
+		1f) Add $PREFIX/bin to your $PATH. 
+		
+	2) get the *unix* version of the vim sources
+	3) in 'Make_ming.mak', set 'CROSS' to '1' instead of '0'.
+	4) make -f Make_ming.mak gvim.exe
+
+Now you have created the Windows binary from your Linux box!  Have fun...

@@ -655,6 +655,9 @@ win_update(wp)
 				   updating.  0 when no mid area updating. */
     int		bot_start = 999;/* first row of the bot area that needs
 				   updating.  999 when no bot area updating */
+#ifdef FEAT_SEARCH_EXTRA
+    int		top_to_mod = FALSE;    /* redraw above mod_top */
+#endif
 
     int		row;		/* current window row to display */
     linenr_t	lnum;		/* current buffer lnum to display */
@@ -737,6 +740,17 @@ win_update(wp)
 		mod_top = buf->b_mod_top;
 	    if (mod_bot == 0 || mod_bot < buf->b_mod_bot)
 		mod_bot = buf->b_mod_bot;
+
+#ifdef FEAT_SEARCH_EXTRA
+	    /* When 'hlsearch' is on and using a multi-line search pattern, a
+	     * change in one line may make the Search highlighting in a
+	     * previous line invalid.  Simple solution: redraw all visible
+	     * lines above the change.
+	     */
+	    if (search_hl_rm.regprog != NULL
+		    && re_multiline(search_hl_rm.regprog))
+		top_to_mod = TRUE;
+#endif
 	}
 #ifdef FEAT_FOLDING
 	if (mod_top != 0 && hasAnyFolding(wp))
@@ -1202,6 +1216,9 @@ win_update(wp)
 	 */
 	if (row < top_end
 		|| (row >= mid_start && row < mid_end)
+#ifdef FEAT_SEARCH_EXTRA
+		|| top_to_mod
+#endif
 		|| (row >= bot_start)
 		|| idx >= wp->w_lines_valid
 		|| (mod_top != 0
@@ -1216,6 +1233,11 @@ win_update(wp)
 #endif
 				)))))
 	{
+#ifdef FEAT_SEARCH_EXTRA
+	    if (lnum == mod_top)
+		top_to_mod = FALSE;
+#endif
+
 	    /*
 	     * When at start of changed lines: May scroll following lines
 	     * up or down to minimize redrawing.
@@ -4590,7 +4612,9 @@ screen_puts(text, row, col, attr)
 		/* The bold trick makes a single row of pixels appear in the
 		 * next character.  When a bold character is removed, the next
 		 * character should be redrawn too.  This happens for our own
-		 * GUI and for some xterms. */
+		 * GUI and for some xterms.
+		 * Don't do this for the last drawn character, because the
+		 * next character may not be redrawn. */
 		if (
 # ifdef FEAT_GUI
 			gui.in_use
@@ -4608,9 +4632,11 @@ screen_puts(text, row, col, attr)
 		    n = ScreenAttrs[off];
 		    if (col + 1
 # ifdef FEAT_MBYTE
-			    + mbyte_cells - 1
+				+ mbyte_cells - 1
 # endif
-			    < screen_Columns && (n > HL_ALL || (n & HL_BOLD)))
+				< screen_Columns
+			    && (n > HL_ALL || (n & HL_BOLD))
+			    && text[1] != NUL)
 			ScreenLines[off + 1
 # ifdef FEAT_MBYTE
 			    + mbyte_cells - 1
@@ -4838,7 +4864,7 @@ screen_start_highlight(attr)
 	{
 	    if (attr > HL_ALL)				/* special HL attr. */
 	    {
-		if (*T_CCO != NUL)
+		if (t_colors > 1)
 		    aep = syn_cterm_attr2entry(attr);
 		else
 		    aep = syn_term_attr2entry(attr);
@@ -4864,7 +4890,7 @@ screen_start_highlight(attr)
 	     */
 	    if (aep != NULL)
 	    {
-		if (*T_CCO != NUL)
+		if (t_colors > 1)
 		{
 		    if (aep->ae_u.cterm.fg_color)
 			term_fg_color(aep->ae_u.cterm.fg_color - 1);
@@ -4907,7 +4933,7 @@ screen_stop_highlight()
 	    {
 		attrentry_t *aep;
 
-		if (*T_CCO != NUL)
+		if (t_colors > 1)
 		{
 		    /*
 		     * Assume that t_me restores the original colors!
@@ -4962,7 +4988,7 @@ screen_stop_highlight()
 	    if (do_ME || (screen_attr & (HL_BOLD | HL_INVERSE)))
 		out_str(T_ME);
 
-	    if (*T_CCO != NUL)
+	    if (t_colors > 1)
 	    {
 		/* set Normal cterm colors */
 		if (cterm_normal_fg_color)
@@ -4984,7 +5010,7 @@ screen_stop_highlight()
     void
 reset_cterm_colors()
 {
-    if (*T_CCO != NUL)
+    if (t_colors > 1)
     {
 	/* set Normal cterm colors */
 	if (cterm_normal_fg_color || cterm_normal_bg_color)
@@ -5108,7 +5134,7 @@ screen_fill(start_row, end_row, start_col, end_col, c1, c2, attr)
 #ifdef FEAT_GUI
 	    !gui.in_use &&
 #endif
-			    *T_CCO == NUL);
+			    t_colors <= 1);
     for (row = start_row; row < end_row; ++row)
     {
 	/*
@@ -7051,7 +7077,7 @@ validate_cursor_col()
 	col += off;
 
 	/* long line wrapping, adjust curwin->w_wrow */
-	if (curwin->w_p_wrap && col >= W_WIDTH(curwin)
+	if (curwin->w_p_wrap && col >= (colnr_t)W_WIDTH(curwin)
 #ifdef FEAT_VERTSPLIT
 		&& curwin->w_width != 0
 #endif

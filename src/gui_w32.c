@@ -3630,7 +3630,7 @@ RevOut( HDC s_hdc,
     }
 
     if (special)
-	for (ix = 0; ix < len; ++ix)
+	for (ix = 0; ix < (int)len; ++ix)
 	    ExtTextOut(s_hdc, col + TEXT_X(ix), row, foptions,
 					    pcliprect, text + ix, 1, padding);
     else

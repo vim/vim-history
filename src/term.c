@@ -1579,10 +1579,10 @@ set_termname(term)
 		 * Get number of colors.  If non-zero, store as string in
 		 * nr_colors[].
 		 */
-		i = tgetnum("Co");
-		if (i > 0)
+		t_colors = tgetnum("Co");
+		if (t_colors > 0)
 		{
-		    sprintf(nr_colors, "%d", i);
+		    sprintf(nr_colors, "%d", t_colors);
 		    T_CCO = (char_u *)nr_colors;
 		}
 
@@ -2563,7 +2563,7 @@ term_color(s, n)
     /* Special handling of 16 colors, because termcap can't handle it */
     /* Also accept "\e[3%dm" for TERMINFO, it is sometimes used */
     /* Also accept CSI instead of <Esc>[ */
-    if (n > 7 && atoi((char *)T_CCO) == 16
+    if (n > 7 && t_colors == 16
 	      && ((s[0] == ESC && s[1] == '[') || (s[0] == CSI && (i = 1) == 1))
 	      && s[i] != NUL
 	      && (STRCMP(s + i + 1, "%p1%dm") == 0
@@ -2704,7 +2704,10 @@ ttest(pairs)
 
 	/* if 'Sb' and 'AB' are not defined, reset "Co" */
 	if (*T_CSB == NUL && *T_CAB == NUL)
+	{
 	    T_CCO = empty_option;
+	    t_colors = 0;
+	}
 
 	/* Set 'weirdinvert' according to value of 't_xs' */
 	p_wiv = (*T_XS != NUL);
@@ -4317,11 +4320,11 @@ check_termcode(max_offset, buf, buflen)
 		del_typebuf(-extra, offset);
 	    else if (extra > 0)
 		/* insert the extra space we need */
-		ins_typebuf(string + slen, FALSE, offset, FALSE);
+		ins_typebuf(string + slen, REMAP_YES, offset, FALSE);
 
 	    /*
-	     * Careful: del_typebuf() and ins_typebuf() may have
-	     * reallocated typebuf[]
+	     * Careful: del_typebuf() and ins_typebuf() may have reallocated
+	     * typebuf[]!
 	     */
 	    mch_memmove(typebuf + typeoff + offset, string, (size_t)new_slen);
 	}
@@ -4339,6 +4342,7 @@ check_termcode(max_offset, buf, buflen)
 	}
 	return (len + extra + offset);
     }
+
     return 0;			    /* no match found */
 }
 
@@ -4419,6 +4423,29 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	 */
 	if (do_special && (do_lt || STRNCMP(src, "<lt>", 4) != 0))
 	{
+#ifdef FEAT_EVAL
+	    /*
+	     * Replace <SID> by K_SNR <script-nr> _.
+	     * (room: 5 * 6 = 30 bytes; needed: 3 + <nr> + 1 <= 14)
+	     */
+	    if (STRNICMP(src, "<SID>", 5) == 0)
+	    {
+		if (current_SID == 0)
+		    EMSG(_("Using <SID> not in a script context"));
+		else
+		{
+		    src += 5;
+		    result[dlen++] = K_SPECIAL;
+		    result[dlen++] = (int)KS_EXTRA;
+		    result[dlen++] = (int)KE_SNR;
+		    sprintf((char *)result + dlen, "%ld", current_SID);
+		    dlen += STRLEN(result + dlen);
+		    result[dlen++] = '_';
+		    continue;
+		}
+	    }
+#endif
+
 	    slen = trans_special(&src, result + dlen, TRUE);
 	    if (slen)
 	    {
@@ -4461,6 +4488,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	}
 
 #ifdef FEAT_EVAL
+	if (do_special)
 	{
 	    char_u	*p, *s, len;
 
@@ -4486,13 +4514,13 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	    }
 	    if (len != 0)
 	    {
-		if (p == NULL || *p == NUL || STRLEN(p) > 30)
+		/* Allow up to 8 * 6 characters for "mapleader". */
+		if (p == NULL || *p == NUL || STRLEN(p) > 8 * 6)
 		    s = (char_u *)"\\";
 		else
 		    s = p;
 		while (*s != NUL)
 		    result[dlen++] = *s++;
-		vim_free(p);
 		src += len;
 		continue;
 	    }
@@ -4597,6 +4625,10 @@ gather_termleader()
 	}
 
     need_gather = FALSE;
+
+    /* Set t_colors to the value of t_Co. */
+    if (T_CCO != NULL)
+	t_colors = atoi((char *)T_CCO);
 }
 
 /*

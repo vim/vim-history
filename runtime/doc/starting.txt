@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0i.  Last change: 2000 Oct 15
+*starting.txt*  For Vim version 6.0j.  Last change: 2000 Oct 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -344,6 +344,11 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		not needed when reading a file, because there is a check if
 		the file that is being read has been encrypted, and Vim asks
 		for a key automatically. |encryption|
+
+							*-X*
+-X		Do not try connecting to the X server to get the current
+		window title.  Only makes a difference on Unix or VMS, when
+		compiled with the |+X11| feature.  Otherwise it's ignored.
 
 							*-s*
 -s {scriptin}	The script file "scriptin" is read.  The characters in the
@@ -713,6 +718,8 @@ If Vim takes a long time to start up, there may be a few causes:
   of ":version" for "+GUI" and "+X11"), it may need to load shared libraries
   and connect to the X11 server.  Try compiling a version with GUI and X11
   disabled.  This also should make the executable smaller.
+  Use the |-X| command line argument to avoid connecting to the X server when
+  running in a terminal.
 - If you have "viminfo" enabled, the loading of the viminfo file may take a
   while.  You can find out if this is the problem by disabling viminfo for a
   moment (use the Vim argument "-i NONE", |-i|).  Try reducing the number of
