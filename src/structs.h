@@ -695,8 +695,9 @@ typedef struct
 {
     int		vc_type;	/* zero or one of the CONV_ values */
     int		vc_factor;	/* max. expansion factor */
-# ifdef FEAT_WINDOWS
-    int		vc_dbcs;	/* codepage to convert to (CONV_CODEPAGE) */
+# ifdef WIN3264
+    int		vc_cpfrom;	/* codepage to convert from (CONV_CODEPAGE) */
+    int		vc_cpto;	/* codepage to convert to (CONV_CODEPAGE) */
 # endif
 # ifdef USE_ICONV
     iconv_t	vc_fd;		/* for CONV_ICONV */
@@ -719,9 +720,8 @@ typedef struct
 #define CONV_TO_UTF8		1
 #define CONV_TO_LATIN1		2
 #define CONV_ICONV		3
-#ifdef FEAT_WINDOWS
-# define CONV_UCS2_TO_DBCS	4	/* ucs-2 -> dbcs */
-# define CONV_DBCS_TO_UCS2	5	/* current codepage -> ucs-2 */
+#ifdef WIN3264
+# define CONV_CODEPAGE		4	/* codepage -> codepage */
 #endif
 
 /*

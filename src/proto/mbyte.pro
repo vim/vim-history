@@ -55,6 +55,7 @@ int mb_fix_col __ARGS((int col, int row));
 char_u *enc_skip __ARGS((char_u *p));
 char_u *enc_canonize __ARGS((char_u *enc));
 char_u *enc_locale __ARGS((void));
+int encname2codepage __ARGS((char_u *name));
 void *my_iconv_open __ARGS((char_u *to, char_u *from));
 int iconv_enabled __ARGS((int verbose));
 void iconv_end __ARGS((void));
@@ -71,7 +72,7 @@ int xim_queue_key_press_event __ARGS((GdkEvent *ev));
 void xim_init __ARGS((void));
 int xim_get_status_area_height __ARGS((void));
 int im_get_status __ARGS((void));
-void convert_setup __ARGS((vimconv_T *vcp, char_u *from, char_u *to));
+int convert_setup __ARGS((vimconv_T *vcp, char_u *from, char_u *to));
 int convert_input __ARGS((char_u *ptr, int len, int maxlen));
 char_u *string_convert __ARGS((vimconv_T *vcp, char_u *ptr, int *lenp));
 /* vim: set ft=c : */

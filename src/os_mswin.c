@@ -114,21 +114,24 @@ extern char g_szOrigTitle[];
 # define COORD int
 # define SHORT int
 # define WORD int
-# define DWORD int
+typedef int DWORD;
 # define BOOL int
 # define WCHAR int
 typedef int UINT;
 typedef int CALLBACK;
 typedef int LRESULT;
-# define LPSTR int
+typedef int LPSTR;
 # define LPTSTR int
+typedef int LPWSTR;
+typedef int LPCWSTR;
 typedef int WPARAM;
 typedef int LPARAM;
+typedef int LPBOOL;
 # define KEY_EVENT_RECORD int
 # define MOUSE_EVENT_RECORD int
 # define WINAPI
 # define CONSOLE_CURSOR_INFO int
-# define LPCSTR char_u *
+typedef int LPCSTR;
 # define WINBASEAPI
 # define INPUT_RECORD int
 # define SECURITY_INFORMATION int
@@ -730,6 +733,104 @@ mch_libcall(
 }
 #endif
 
+#if defined(FEAT_MBYTE) || defined(PROTO)
+/*
+ * Convert an UTF-8 string to UCS-2.
+ * "instr[inlen]" is the input.  "inlen" is in bytes.
+ * When "outstr" is NULL only return the number of UCS-2 words produced.
+ * Otherwise "outstr" must be a buffer of sufficient size.
+ * Returns the number of UCS-2 words produced.
+ */
+    int
+utf8_to_ucs2(char_u *instr, int inlen, short_u *outstr)
+{
+    int		outlen = 0;
+    char_u	*p = instr;
+    int		todo = inlen;
+    int		l;
+
+    while (todo > 0)
+    {
+	/* Only convert if we have a complete sequence. */
+	l = utf_ptr2len_check_len(p, todo);
+	if (l > todo)
+	    break;
+
+	if (outstr != NULL)
+	    *outstr++ = utf_ptr2char(p);
+	++outlen;
+	p += l;
+	todo -= l;
+    }
+
+    return outlen;
+}
+
+/*
+ * Convert an UCS-2 string to UTF-8.
+ * The input is "instr[inlen]" with "inlen" in number of ucs-2 words.
+ * When "outstr" is NULL only return the required number of bytes.
+ * Otherwise "outstr" must be a buffer of sufficient size.
+ * Return the number of bytes produced.
+ */
+    int
+ucs2_to_utf8(short_u *instr, int inlen, char_u *outstr)
+{
+    int		outlen = 0;
+    int		todo = inlen;
+    short_u	*p = instr;
+    int		l;
+
+    while (todo > 0)
+    {
+	if (outstr != NULL)
+	{
+	    l = utf_char2bytes(*p, outstr);
+	    outstr += l;
+	}
+	else
+	    l = utf_char2len(*p);
+	++p;
+	outlen += l;
+	--todo;
+    }
+
+    return outlen;
+}
+
+/*
+ * Call MultiByteToWideChar() and allocate memory for the result.
+ * Returns the result in "*out[*outlen]".  "outlen" is in words.
+ */
+    void
+MultiByteToWideChar_alloc(UINT cp, DWORD flags,
+	LPCSTR in, int inlen,
+	LPWSTR *out, int *outlen)
+{
+    *outlen = MultiByteToWideChar(cp, flags, in, inlen, 0, 0);
+    *out = (LPWSTR)alloc(sizeof(WCHAR) * *outlen);
+    if (*out != NULL)
+	MultiByteToWideChar(cp, flags, in, inlen, *out, *outlen);
+}
+
+/*
+ * Call WideCharToMultiByte() and allocate memory for the result.
+ * Returns the result in "*out[*outlen]".
+ */
+    void
+WideCharToMultiByte_alloc(UINT cp, DWORD flags,
+	LPCWSTR in, int inlen,
+	LPSTR *out, int *outlen,
+	LPCSTR def, LPBOOL useddef)
+{
+    *outlen = WideCharToMultiByte(cp, flags, in, inlen, NULL, 0, def, useddef);
+    *out = alloc((unsigned)*outlen);
+    if (*out != NULL)
+	WideCharToMultiByte(cp, flags, in, inlen, *out, *outlen, def, useddef);
+}
+
+#endif /* FEAT_MBYTE */
+
 #ifdef FEAT_CLIPBOARD
 /*
  * Clipboard stuff, for cutting and pasting text to other windows.
@@ -798,101 +899,19 @@ crnl_to_nl(const char_u *str, int *size)
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
 /*
- * iconv-like utf-<->ucs2 interfaces.
- *
- * If outstr is NULL, return the required buffer length.
- *
- * Otherwise, convert from *instr to outstr, incrementing instr and
- * decrementing inlen.  Return the number of bytes converted.
- *
- * (We assume outstr has enough space; the caller needs to make sure
- * of this itself.)
- */
-
-/*
- * Convert an UTF-8 string to UCS-2 (see above for info).
- */
-    static int
-utf8_to_ucs2(char_u **instr, int *inlen, WCHAR *outstr)
-{
-    int total_length = 0;
-
-    if (outstr == NULL)
-    {
-	/* Return the required size. */
-	int need = 0, n;
-
-	for (n = 0; n < *inlen;
-			 n += utf_ptr2len_check_len((*instr) + n, *inlen - n))
-	    need++;
-	return need;
-    }
-
-    while (*inlen)
-    {
-	/* Do we have a complete sequence? */
-	int seq_len = utf_ptr2len_check_len(*instr, *inlen);
-
-	if (seq_len > *inlen)
-	    return total_length;
-
-        *outstr = utf_ptr2char(*instr);
-	(*instr) += seq_len;
-	(*inlen) -= seq_len;
-	outstr++;
-	total_length++;
-    }
-
-    return total_length;
-}
-
-/*
- * Convert an UCS-2 string to UTF-8 (see above for info).
- */
-    static int
-ucs2_to_utf8(WCHAR **instr, int *inlen, char_u *outstr)
-{
-    int total_length = 0;
-
-    if (outstr == NULL)
-    {
-	/* Return the required size. */
-	int need = 0, n;
-
-	for (n = 0; n < *inlen; ++n)
-	    need += utf_char2len((*instr)[n]);
-	return need;
-    }
-
-    while (*inlen)
-    {
-	int seq_len = utf_char2bytes(**instr, outstr);
-
-	(*instr)++;
-	(*inlen)--;
-	outstr += seq_len;
-	total_length += seq_len;
-    }
-
-    return total_length;
-}
-
-/*
- * Note: the following two functions are only guaranteed to work if iconv() is
- * available *or* p_enc is Unicode *or* p_enc is the ACP.  If encoding=cp932,
- * your system is in cp935, and iconv() isn't available, these return nothing.
- * (Lots of other things don't work in this case, anyway.)
+ * Note: the following two functions are only guaranteed to work when using
+ * valid MS-Windows codepages or when iconv() is available.
  */
 
 /*
  * Convert 'encoding' to UCS-2.
- * Input in "str" with length "*len".  When "len" is NULL, use strlen().
- * Output is returned as an allocated string.  "*len" is set to the length of
+ * Input in "str" with length "*lenp".  When "lenp" is NULL, use strlen().
+ * Output is returned as an allocated string.  "*lenp" is set to the length of
  * the result.
  * Returns NULL when out of memory.
  */
     static WCHAR *
-enc_to_ucs2(char_u *str, int *len)
+enc_to_ucs2(char_u *str, int *lenp)
 {
     vimconv_T	conv;
     WCHAR	*ret;
@@ -900,84 +919,83 @@ enc_to_ucs2(char_u *str, int *len)
     int		len_loc;
     int		length;
 
-    if (len == NULL)
+    if (lenp == NULL)
     {
 	len_loc = STRLEN(str) + 1;
-	len = &len_loc;
+	lenp = &len_loc;
     }
 
-    if (enc_dbcs)
+    if (enc_codepage != 0)
     {
-	/* We can do any CP###->WIDE in one pass, and we can do it
+	/* We can do any CP### -> UCS-2 in one pass, and we can do it
 	 * without iconv() (convert_* may need iconv). */
-	length = MultiByteToWideChar(enc_dbcs, 0, str, *len, NULL, 0);
-	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
-	if (ret != NULL)
-	    MultiByteToWideChar(enc_dbcs, 0, str, *len, ret, length);
+	MultiByteToWideChar_alloc(enc_codepage, 0, str, *lenp, &ret, &length);
     }
     else
     {
-	/* We might be called before we have p_enc set up. */
+	/* Use "latin1" by default, we might be called before we have p_enc
+	 * set up.  Convert to utf-8 first, works better with iconv().  Does
+	 * nothing if 'encoding' is "utf-8". */
 	conv.vc_type = CONV_NONE;
-	convert_setup(&conv, p_enc ? p_enc : (char_u *)"latin1",
-							   (char_u *)"utf-8");
+	if (convert_setup(&conv, p_enc ? p_enc : (char_u *)"latin1",
+						   (char_u *)"utf-8") == FAIL)
+	    return NULL;
 	if (conv.vc_type != CONV_NONE)
 	{
-	    str = allocbuf = string_convert(&conv, str, len);
+	    str = allocbuf = string_convert(&conv, str, lenp);
 	    if (str == NULL)
 		return NULL;
 	}
 	convert_setup(&conv, NULL, NULL);
 
-	length = utf8_to_ucs2((char_u **)&str, len, NULL);
+	length = utf8_to_ucs2(str, *lenp, NULL);
 	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
 	if (ret != NULL)
-	    utf8_to_ucs2((char_u **)&str, len, ret);
+	    utf8_to_ucs2(str, *lenp, (short_u *)ret);
 
 	vim_free(allocbuf);
     }
 
-    *len = length;
+    *lenp = length;
     return ret;
 }
 
 /*
  * Convert an UCS-2 string to 'encoding'.
- * Input in "str" with length (counted in wide characters) "*len".  When "len"
- * is NULL, use strlen().
- * Output is returned as an allocated string.  "*len" is set to the length of
+ * Input in "str" with length (counted in wide characters) "*lenp".  When
+ * "lenp" is NULL, use strlen().
+ * Output is returned as an allocated string.  "*lenp" is set to the length of
  * the result.
  * Returns NULL when out of memory.
  */
-    static char_u *
-ucs2_to_enc(WCHAR *str, int *len)
+    char_u *
+ucs2_to_enc(short_u *str, int *lenp)
 {
     vimconv_T	conv;
     char_u	*utf8_str = NULL, *enc_str = NULL;
     int		len_loc;
 
-    if (len == NULL)
+    if (lenp == NULL)
     {
 	len_loc = wcslen(str) + 1;
-	len = &len_loc;
+	lenp = &len_loc;
     }
 
-    if (enc_dbcs)
+    if (enc_codepage != 0)
     {
-	/* We can do any WIDE->CP### in one pass. */
-	int length = WideCharToMultiByte(enc_dbcs, 0, str, *len, NULL, 0, 0, 0);
+	/* We can do any UCS-2 -> CP### in one pass. */
+	int length;
 
-	utf8_str = alloc((unsigned)length);
-	if (utf8_str != NULL)
-	    WideCharToMultiByte(enc_dbcs, 0, str, *len, utf8_str, length, 0, 0);
-	*len = length;
-        return utf8_str;
+	WideCharToMultiByte_alloc(enc_codepage, 0, str, *lenp,
+						     &enc_str, &length, 0, 0);
+	*lenp = length;
+        return enc_str;
     }
 
-    utf8_str = alloc(ucs2_to_utf8(&str, len, NULL));
+    utf8_str = alloc(ucs2_to_utf8(str, *lenp, NULL));
     if (utf8_str != NULL)
     {
-	*len = ucs2_to_utf8(&str, len, utf8_str);
+	*lenp = ucs2_to_utf8(str, *lenp, utf8_str);
 
 	/* We might be called before we have p_enc set up. */
 	conv.vc_type = CONV_NONE;
@@ -990,7 +1008,7 @@ ucs2_to_enc(WCHAR *str, int *len)
 	}
 	else
 	{
-	    enc_str = string_convert(&conv, utf8_str, len);
+	    enc_str = string_convert(&conv, utf8_str, lenp);
 	    vim_free(utf8_str);
 	}
 
@@ -1075,13 +1093,13 @@ clip_mch_request_selection(VimClipboard *cbd)
 		    if (hMemWstr[str_size] == NUL)
 			break;
 	    }
-	    to_free = str = ucs2_to_enc(hMemWstr, &str_size);
+	    to_free = str = ucs2_to_enc((short_u *)hMemWstr, &str_size);
 	    GlobalUnlock(hMemW);
 	}
     }
     else
 #endif
-    /* Get the clipboard in the ANSI codepage. */
+    /* Get the clipboard in the Active codepage. */
     if (IsClipboardFormatAvailable(CF_TEXT))
     {
 	if ((hMem = GetClipboardData(CF_TEXT)) != NULL)
@@ -1106,16 +1124,14 @@ clip_mch_request_selection(VimClipboard *cbd)
 	    }
 
 #if defined(FEAT_MBYTE) && defined(WIN3264)
-	    /* The text is now in the active codepage.  Convert to 'encoding',
+	    /* The text is in the active codepage.  Convert to 'encoding',
 	     * going through UCS-2. */
-	    maxlen = MultiByteToWideChar(CP_ACP, 0, str, str_size, NULL, 0);
-	    to_free = alloc((unsigned)(maxlen * sizeof(WCHAR)));
+	    MultiByteToWideChar_alloc(GetACP(), 0, str, str_size,
+						   &(LPWSTR)to_free, &maxlen);
 	    if (to_free != NULL)
 	    {
-		MultiByteToWideChar(CP_ACP, 0, str, str_size,
-						    (WCHAR *)to_free, maxlen);
 		str_size = maxlen;
-		str = ucs2_to_enc((WCHAR *)to_free, &str_size);
+		str = ucs2_to_enc((short_u *)to_free, &str_size);
 		if (str != NULL)
 		{
 		    vim_free(to_free);
@@ -1191,9 +1207,9 @@ clip_mch_set_selection(VimClipboard *cbd)
 	{
 	    WCHAR *lpszMemW;
 
-	    /* Convert the text for CF_TEXT to ANSI codepage. Otherwise it's
-	     * p_enc, which has no relation to the ANSI codepage. */
-	    metadata.txtlen = WideCharToMultiByte(CP_ACP, 0, out, len,
+	    /* Convert the text for CF_TEXT to Active codepage. Otherwise it's
+	     * p_enc, which has no relation to the Active codepage. */
+	    metadata.txtlen = WideCharToMultiByte(GetACP(), 0, out, len,
 							       NULL, 0, 0, 0);
 	    vim_free(str);
 	    str = (char_u *)alloc((unsigned)metadata.txtlen);
@@ -1202,7 +1218,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 		vim_free(out);
 		return;		/* out of memory */
 	    }
-	    WideCharToMultiByte(CP_ACP, 0, out, len,
+	    WideCharToMultiByte(GetACP(), 0, out, len,
 						  str, metadata.txtlen, 0, 0);
 
 	    /* Allocate memory for the UCS-2 text, add one NUL word to
@@ -1249,8 +1265,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 
     /*
      * Open the clipboard, clear it and put our text on it.
-     * Always set our Vim format.  Either put Unicode or plain text on it.
-     * TODO: why not both?
+     * Always set our Vim format.  Put Unicode and plain text on it.
      *
      * Don't pass GetActiveWindow() as an argument to OpenClipboard()
      * because then we can't paste back into the same window for some

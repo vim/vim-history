@@ -129,7 +129,7 @@ static struct
 enc_canon_table[] =
 {
 #define IDX_LATIN_1	0
-    {"latin1",		ENC_8BIT + ENC_LATIN1,	0},
+    {"latin1",		ENC_8BIT + ENC_LATIN1,	1252},
 #define IDX_ISO_2	1
     {"iso-8859-2",	ENC_8BIT,		0},
 #define IDX_ISO_3	2
@@ -143,7 +143,7 @@ enc_canon_table[] =
 #define IDX_ISO_7	6
     {"iso-8859-7",	ENC_8BIT,		0},
 #define IDX_CP1255	7
-    {"cp1255",		ENC_8BIT,		0}, /* close to iso-8859-8 */
+    {"cp1255",		ENC_8BIT,		1255}, /* close to iso-8859-8 */
 #define IDX_ISO_8	8
     {"iso-8859-8",	ENC_8BIT,		0},
 #define IDX_ISO_9	9
@@ -453,13 +453,11 @@ codepage_invalid:
 	enc_utf8 = FALSE;
     }
     enc_dbcs = enc_dbcs_new;
-
-#ifdef FEAT_GUI_W32
-    /* Check for codepage which is not the current one. */
-    is_funky_dbcs = (enc_dbcs != 0 && ((int)GetACP() != enc_dbcs));
-#endif
-
     has_mbyte = (enc_dbcs != 0 || enc_utf8);
+
+#ifdef WIN3264
+    enc_codepage = encname2codepage(p_enc);
+#endif
 
     /*
      * Set the function pointers.
@@ -570,15 +568,6 @@ codepage_invalid:
     if (enc_utf8 && !option_was_set((char_u *)"fencs"))
 	set_string_option_direct((char_u *)"fencs", -1,
 				 (char_u *)"ucs-bom,utf-8,latin1", OPT_FREE);
-#ifdef FEAT_MBYTE_IME
-    ime_conv.vc_type = CONV_NONE;
-    ime_conv_cp.vc_type = CONV_NONE;
-    convert_setup(&ime_conv, (char_u *)"ucs-2", p_enc);
-    ime_conv_cp.vc_type = CONV_DBCS_TO_UCS2;
-    ime_conv_cp.vc_dbcs = GetACP();
-    ime_conv_cp.vc_factor = 2; /* we don't really know anything about the codepage */
-#endif
-
 #ifdef HAVE_BIND_TEXTDOMAIN_CODESET
     /* GNU gettext 0.10.37 supports this feature: set the codeset used for
      * translated messages independently from the current locale. */
@@ -2528,6 +2517,34 @@ enc_locale()
     return enc_canonize((char_u *)buf);
 }
 
+#if defined(WIN3264) || defined(PROTO)
+/*
+ * Convert an encoding name to an MS-Windows codepage.
+ * Returns zero if no codepage can be figured out.
+ */
+    int
+encname2codepage(name)
+    char_u	*name;
+{
+    int		cp;
+    char_u	*p = name;
+    int		idx;
+
+    if (STRNCMP(p, "8bit-", 5) == 0)
+	p += 5;
+    else if (STRNCMP(p_enc, "2byte-", 6) == 0)
+	p += 6;
+
+    if (p[0] == 'c' && p[1] == 'p')
+	cp = atoi(p + 2);
+    else if ((idx = enc_canon_search(p)) >= 0)
+	cp = enc_canon_table[idx].codepage;
+    if (IsValidCodePage(cp))
+	return cp;
+    return 0;
+}
+#endif
+
 # if defined(USE_ICONV) || defined(PROTO)
 
 static char_u *iconv_string __ARGS((iconv_t fd, char_u *str, int slen));
@@ -4081,8 +4098,9 @@ im_get_status()
  * vcp->vc_type must have been initialized to CONV_NONE.
  * Note: cannot be used for conversion from/to ucs-2 and ucs-4 (will use utf-8
  * instead).
+ * Return FAIL when conversion is not supported, OK otherwise.
  */
-    void
+    int
 convert_setup(vcp, from, to)
     vimconv_T	*vcp;
     char_u	*from;
@@ -4102,7 +4120,7 @@ convert_setup(vcp, from, to)
     /* No conversion when one of the names is empty or they are equal. */
     if (from == NULL || *from == NUL || to == NULL || *to == NUL
 						     || STRCMP(from, to) == 0)
-	return;
+	return OK;
 
     from_prop = enc_canon_props(from);
     to_prop = enc_canon_props(to);
@@ -4118,21 +4136,14 @@ convert_setup(vcp, from, to)
 	vcp->vc_type = CONV_TO_LATIN1;
     }
 #ifdef WIN32
-    /* Win32-specific UCS-2 <-> DBCS conversion, for the IME,
-     * so we don't need iconv ... */
-    else if ((from_prop & ENC_UNICODE)
-			   && (from_prop & ENC_2BYTE) && (to_prop & ENC_DBCS))
+    /* Win32-specific codepage <-> codepage conversion without iconv. */
+    else if (((from_prop & ENC_UNICODE) || encname2codepage(from) > 0)
+	    && ((to_prop & ENC_UNICODE) || encname2codepage(to) > 0))
     {
-	vcp->vc_type = CONV_UCS2_TO_DBCS;
+	vcp->vc_type = CONV_CODEPAGE;
 	vcp->vc_factor = 2;	/* up to twice as long */
-	vcp->vc_dbcs = atoi(to + 2);
-    }
-    else if ((from_prop & ENC_UNICODE)
-			&& (from_prop & ENC_2BYTE) && (to_prop & ENC_UNICODE))
-    {
-	vcp->vc_type = CONV_UCS2_TO_DBCS;
-	vcp->vc_factor = 2;	/* up to twice as long */
-	vcp->vc_dbcs = CP_UTF8;
+	vcp->vc_cpfrom = (from_prop & ENC_UNICODE) ? 0 : encname2codepage(from);
+	vcp->vc_cpto = (to_prop & ENC_UNICODE) ? 0 : encname2codepage(to);
     }
 #endif
 # ifdef USE_ICONV
@@ -4149,6 +4160,9 @@ convert_setup(vcp, from, to)
 	}
     }
 # endif
+    if (vcp->vc_type == CONV_NONE)
+	return FAIL;
+    return OK;
 }
 
 /*
@@ -4262,43 +4276,47 @@ string_convert(vcp, ptr, lenp)
 		*lenp = (int)STRLEN(retval);
 	    break;
 # endif
-# ifdef WIN32
-	/*
-	 * Note: Using these functions for UTF-8 (CP_UTF8) is NT-specific.
-	 * Don't put too much faith in its UTF-8 parsing; it's not
-	 * too good at handling invalid and overlong sequences.
-	 */
-	case CONV_UCS2_TO_DBCS:		/* UCS-2 -> DBCS or UTF8 */
+# ifdef WIN3264
+	case CONV_CODEPAGE:		/* codepage -> codepage */
 	{
-	    int retlen;
+	    int		retlen;
+	    int		tmp_len;
+	    short_u	*tmp;
 
-	    /* buffer size -> number of shorts */
-	    len /= sizeof(unsigned short);
-	    retlen = WideCharToMultiByte(vcp->vc_dbcs, 0,
-				(const unsigned short *)ptr, len, 0, 0, 0, 0);
+	    /* 1. codepage/UTF-8  ->  ucs-2. */
+	    if (vcp->vc_cpfrom == 0)
+		tmp_len = utf8_to_ucs2(ptr, len, NULL);
+	    else
+		tmp_len = MultiByteToWideChar(vcp->vc_cpfrom, 0,
+							      ptr, len, 0, 0);
+	    tmp = (short_u *)alloc(sizeof(short_u) * tmp_len);
+	    if (tmp == NULL)
+		break;
+	    if (vcp->vc_cpfrom == 0)
+		utf8_to_ucs2(ptr, len, tmp);
+	    else
+		MultiByteToWideChar(vcp->vc_cpfrom, 0, ptr, len, tmp, tmp_len);
+
+	    /* 2. ucs-2  ->  codepage/UTF-8. */
+	    if (vcp->vc_cpto == 0)
+		retlen = ucs2_to_utf8(tmp, tmp_len, NULL);
+	    else
+		retlen = WideCharToMultiByte(vcp->vc_cpto, 0,
+						    tmp, tmp_len, 0, 0, 0, 0);
 	    retval = alloc(retlen + 1);
-	    if (retval == NULL)
-		break;
-	    WideCharToMultiByte(vcp->vc_dbcs, 0,
-		     (const unsigned short *) ptr, len, retval, retlen, 0, 0);
-	    retval[retlen] = NUL;
-	    if (lenp != NULL)
-		*lenp = retlen;
+	    if (retval != NULL)
+	    {
+		if (vcp->vc_cpto == 0)
+		    ucs2_to_utf8(tmp, tmp_len, retval);
+		else
+		    WideCharToMultiByte(vcp->vc_cpto, 0,
+					  tmp, tmp_len, retval, retlen, 0, 0);
+		retval[retlen] = NUL;
+		if (lenp != NULL)
+		    *lenp = retlen;
+	    }
+	    vim_free(tmp);
 	    break;
-	}
-	case CONV_DBCS_TO_UCS2:		/* UTF-8 or DBCS -> UCS-2 */
-	{
-	    int retlen;
-
-	    retlen = MultiByteToWideChar(vcp->vc_dbcs, 0, ptr, len, 0, 0);
-	    retval = alloc(sizeof(unsigned short) * retlen);
-	    if (retval == NULL)
-		break;
-	    MultiByteToWideChar(GetACP(), 0, ptr, len,
-					   (unsigned short *) retval, retlen);
-	    if (lenp != NULL)
-		/* number of shorts -> buffer size */
-		*lenp = retlen * sizeof(unsigned short);
 	}
 # endif
     }
