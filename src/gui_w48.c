@@ -1628,8 +1628,11 @@ process_message(void)
 	}
 	if (special_keys[i].key_sym == 0)
 	{
-	    /* Some keys need C-S- where they should only need C- */
-	    if ((GetKeyState(VK_CONTROL) & 0x8000)
+	    /* Some keys need C-S- where they should only need C-.
+	     * Ignore 0xff, Windows XP sends it when NUMLOCK has changed since
+	     * system startup (Helmut Stiegler, 2003 Oct 3). */
+	    if (vk != 0xff
+		    && (GetKeyState(VK_CONTROL) & 0x8000)
 		    && !(GetKeyState(VK_SHIFT) & 0x8000)
 		    && !(GetKeyState(VK_MENU) & 0x8000))
 	    {
