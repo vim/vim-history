@@ -526,7 +526,8 @@ mch_delay(msec, ignoreinput)
 	/* Go to cooked mode without echo, to allow SIGINT interrupting us
 	 * here */
 	old_tmode = curr_tmode;
-	settmode(TMODE_SLEEP);
+	if (curr_tmode == TMODE_RAW)
+	    settmode(TMODE_SLEEP);
 
 	/*
 	 * Everybody sleeps in a different way...
