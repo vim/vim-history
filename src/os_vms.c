@@ -11,12 +11,6 @@
 
 #include	"vim.h"
 
-#define EFN		0			/* Event flag */
-#define NOTIM		0
-#define TIM_0		1
-#define TIM_1		2
-#define EXPL_ALLOC_INC 16
-
 typedef struct
 {
     char	class;
@@ -55,7 +49,6 @@ typedef struct
     int	nul;
 }	ITMLST2;
 
-char		ibuf[1];		/* Input buffer */
 static TT_MODE	orgmode;
 static short	iochan;			/* TTY I/O channel */
 static short	iosb[4];		/* IO status block */
@@ -66,81 +59,16 @@ int vms_match_free = 0;
 char_u **vms_fmatch = NULL;
 static char *Fspec_Rms;		       /* rms file spec, passed implicitly between routines */
 
+
+
 static TT_MODE	get_tty __ARGS((void));
 static void	set_tty __ARGS((int row, int col));
-static int	vms_wait __ARGS((unsigned int fun));
+
+#define EXPL_ALLOC_INC 64
 
 #define EQN(S1,S2,LN) (strncmp(S1,S2,LN) == 0)
 #define SKIP_FOLLOWING_SLASHES(Str) while (Str[1] == '/') ++Str
 
-/*
- * low level input funcion.
- *
- * Get a characters from the keyboard.
- * Return the number of characters that are available.
- * If wtime == 0 do not wait for characters.
- * If wtime == n wait a short time for characters.
- * If wtime == -1 wait forever for characters.
- */
-    int
-mch_inchar(char_u *buf, int maxlen, long wtime)
-{
-    int		c, res;
-
-#ifdef FEAT_GUI
-    if (gui.in_use)
-    {
-	if (!gui_wait_for_chars(wtime))
-	    return 0;
-	return read_from_input_buf(buf, (long)maxlen);
-    }
-#endif
-    /* first check to see if any characters read by
-     * mch_breakcheck(), mch_delay() or mch_char_avail()
-     */
-    if (!vim_is_input_buf_empty())
-	return read_from_input_buf(buf, (long)maxlen);
-
-    out_flush();
-    if (wtime == -1)
-	res = vms_wait(NOTIM);			/* without timeout */
-    else
-	res = vms_wait(wtime ? TIM_1 : TIM_0);	/* with timeout */
-    if (res != SS$_NORMAL)
-	return(0);
-    out_flush();
-    c = (ibuf[0] & 0xFF);			/* Allow multinational */
-    *buf = c;
-    return(1);
-}
-
-    static int
-vms_wait(unsigned int fun)
-{
-    int			ret, term[2] = { 0, 0 };
-
-    switch(fun)
-    {
-	case NOTIM:		/* wait forever for characters		*/
-	    ret = sys$qiow(EFN, iochan, IO$_READLBLK, iosb, 0, 0,
-			   ibuf, 1, 0, term, 0, 0);
-	    break;
-	case TIM_1:		/* wait a short time for characters	*/
-	    ret = sys$qiow(EFN, iochan, IO$_READLBLK | IO$M_TIMED, iosb, 0, 0,
-			   ibuf, 1, 1, term, 0, 0);
-	    break;
-	default:		/* do not wait for characters		*/
-	    ret = sys$qiow(EFN, iochan, IO$_READLBLK | IO$M_TIMED, iosb, 0, 0,
-			   ibuf, 1, 0, term, 0, 0);
-	    break;
-    }
-    if (ret != SS$_NORMAL)
-	return(ret);
-    if ((fun && (iosb[0] != SS$_TIMEOUT) && (iosb[0] != SS$_NORMAL)) ||
-	(!fun && (iosb[0] != SS$_NORMAL)))
-	return(iosb[0]);
-    return(iosb[1] + iosb[3]);
-}
 
 /*
  *	vul_desc	vult een descriptor met een string en de lengte
@@ -170,7 +98,7 @@ vul_item(ITEM *itm, short len, short cod, char *adr, int *ret)
     void
 mch_settmode(int tmode)
 {
-    long	mystatus;
+    int	status;
 
     if ( tmode == TMODE_RAW )
 	set_tty(0, 0);
@@ -182,9 +110,9 @@ mch_settmode(int tmode)
 	    default:	break;
 	}
 	out_flush();
-	mystatus = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
+	status = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
 					  &orgmode, sizeof(TT_MODE), 0,0,0,0);
-	if (mystatus!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
+	if (status!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
 	    return;
 	(void)sys$dassgn(iochan);
 	iochan = 0;
@@ -194,9 +122,9 @@ mch_settmode(int tmode)
     static void
 set_tty(int row, int col)
 {
-    long	    mystatus;
+    int	            status;
     TT_MODE	    newmode;		/* New TTY mode bits		*/
-    static short first_time = TRUE;
+    static short    first_time = TRUE;
 
     if (first_time)
     {
@@ -211,30 +139,27 @@ set_tty(int row, int col)
     newmode.x.basic		|= (TT$M_NOECHO | TT$M_HOSTSYNC);
     newmode.x.basic		&= ~TT$M_TTSYNC;
     newmode.extended		|= TT2$M_PASTHRU;
-    mystatus = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
+    status = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
 			  &newmode, sizeof(newmode), 0, 0, 0, 0);
-    if (mystatus!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
+    if (status!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
 	return;
 }
 
-    static TT_MODE
+static TT_MODE
 get_tty(void)
 {
-    long	mystatus;
+
+    static $DESCRIPTOR(odsc,"SYS$OUTPUT");   /* output descriptor */
+
+    int		status;
     TT_MODE	tt_mode;
-    DESC	odsc;
-    char	*cp1, *cp2 = "TT";
 
     if (!iochan)
-    {
-	while (cp1 = (char *)mch_getenv((char_u *)cp2))
-	    cp2 = cp1;
-	vul_desc(&odsc, cp2);
-	(void)sys$assign(&odsc, &iochan, 0, 0);
-    }
-    mystatus = sys$qiow(0, iochan, IO$_SENSEMODE, iosb, 0, 0,
+        status = sys$assign(&odsc,&iochan,0,0);
+
+    status = sys$qiow(0, iochan, IO$_SENSEMODE, iosb, 0, 0,
 		      &tt_mode, sizeof(tt_mode), 0, 0, 0, 0);
-    if (mystatus != SS$_NORMAL || (iosb[0] & 0xFFFF) != SS$_NORMAL)
+    if (status != SS$_NORMAL || (iosb[0] & 0xFFFF) != SS$_NORMAL)
     {
 	tt_mode.width		= 0;
 	tt_mode.type		= 0;
@@ -321,7 +246,7 @@ mch_setenv(char *var, char *value, int x)
 {
     int		res, dum;
     long	attrib = 0L;
-    char	acmode = PSL$C_SUPER;	/* SYSNAM privilege nodig	*/
+    char	acmode = PSL$C_SUPER;	/* needs SYSNAM privilege */
     DESC	tabnam, lognam;
     ITMLST1	itmlst;
 
@@ -338,7 +263,7 @@ mch_setenv(char *var, char *value, int x)
 vms_sys(char *cmd, char *out, char *inp)
 {
     DESC	cdsc, odsc, idsc;
-    long	status, substatus;
+    long	status;
 
     if (cmd)
 	vul_desc(&cdsc, cmd);
@@ -347,16 +272,68 @@ vms_sys(char *cmd, char *out, char *inp)
     if (inp)
 	vul_desc(&idsc, inp);
 
-    status = lib$spawn(
-	    cmd ? &cdsc : NULL,		/* command string */
-	    inp ? &idsc : NULL,		/* input file */
-	    out ? &odsc : NULL,		/* output file */
-	    0, 0, 0, &substatus, 0, 0, 0, 0, 0, 0);
-    if (status != SS$_NORMAL)
-	substatus = status;
-    if ((substatus&STS$M_SUCCESS) == 0)     /* Command failed.	    */
-	return(FALSE);
-    return(TRUE);
+    lib$spawn(cmd ? &cdsc : NULL,		/* command string */
+	      inp ? &idsc : NULL,		/* input file */
+	      out ? &odsc : NULL,		/* output file */
+	      0, 0, 0, &status, 0, 0, 0, 0, 0, 0);
+    return status;
+}
+
+/*
+ * Convert VMS system() or lib$spawn() return code to Unix-like exit value.
+ */
+    int
+vms_sys_status(int status)
+{
+    if (status != SS$_NORMAL && (status & STS$M_SUCCESS) == 0)
+	return status;		/* Command failed. */
+    return 0;
+}
+
+/*
+ * vms_read()
+ * function for low level char input
+ *
+ * Returns: input length
+ */
+
+    int
+vms_read(char *inbuf, size_t nbytes)
+{
+
+    static unsigned short add_esc, was_esc = 0;
+
+    char    ibuf[nbytes];
+    int     status, function, len;
+    TT_MODE tt_mode;
+
+    /* whatever happened earlier we need an iochan here */
+    if (!iochan)
+       tt_mode=get_tty();
+
+    function = ( IO$_READLBLK | IO$M_NOECHO | IO$M_TIMED ) ;
+    len=0;
+    add_esc=0;
+
+    while(1) {
+        memset(ibuf,0,sizeof(ibuf));
+        status = sys$qiow(0,iochan,function,&iosb,0,0,&ibuf,nbytes-1,0,0,0,0);
+        len=strlen( ibuf );
+        if ( was_esc ) {                   /* ESC interrupts the BLOCK QIO  */
+            add_esc=1;                     /* therefore we need to handle   */
+            was_esc=0;                     /* it on special way in order to */
+            inbuf[0]=27;                   /* read ESC sequences            */
+        }
+        if ( len>0 ){
+            if ( ibuf[len-1]==27 ){
+                was_esc=1;
+                len=len-1;
+            }
+            mch_memmove(inbuf+add_esc, ibuf, len);
+        }
+        if ((add_esc+len) > 0) break;
+    }
+    return add_esc+len;
 }
 
 /*
@@ -365,7 +342,6 @@ vms_sys(char *cmd, char *out, char *inp)
  *
  * Returns:  1 - continue finding matches
  *	     0 - stop trying to find any further mathces
- *
  */
 static int
 vms_wproc(char *name, int val)
@@ -668,7 +644,7 @@ vms_fixfilename(void *instring)
  * we need it in some special cases as:
  * creating swap file name and writing new file
  */
-    void *
+    void
 vms_remove_version(void * fname)
 {
     char_u	*cp;
@@ -686,6 +662,5 @@ vms_remove_version(void * fname)
 	    if ( *fp++ == '.' )
 		*cp = '\0';
     }
-
-    return fname;
+    return ;
 }

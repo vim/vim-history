@@ -58,7 +58,8 @@ ui_write(s, len)
 #endif
 }
 
-#if (defined(FEAT_GUI) && defined(UNIX)) || defined(MACOS_X_UNIX) || defined(PROTO)
+#if (defined(FEAT_GUI) && (defined(UNIX) || defined(VMS))) \
+	|| defined(MACOS_X_UNIX) || defined(PROTO)
 /*
  * When executing an external program, there may be some typed characters that
  * are not consumed by it.  Give them back to ui_inchar() and they are stored
@@ -113,7 +114,7 @@ ui_inchar(buf, maxlen, wtime)
 {
     int		retval = 0;
 
-#if defined(FEAT_GUI) && defined(UNIX)
+#if defined(FEAT_GUI) && (defined(UNIX) || defined(VMS))
     /*
      * Use the typeahead if there is any.
      */
@@ -141,11 +142,11 @@ ui_inchar(buf, maxlen, wtime)
     {
 	static int count = 0;
 
-#ifndef NO_CONSOLE
+# ifndef NO_CONSOLE
 	retval = mch_inchar(buf, maxlen, 10L);
 	if (retval > 0)
 	    return retval;
-#endif
+# endif
 	if (wtime == -1 && ++count == 1000)
 	    read_error_exit();
 	buf[0] = CR;
@@ -1656,9 +1657,6 @@ fill_input_buf(exit_on_error)
     int		try;
     static int	did_read_something = FALSE;
 #endif
-#ifdef VMS
-    extern char ibuf[];
-#endif
 
 #ifdef FEAT_GUI
     if (gui.in_use)
@@ -1696,26 +1694,23 @@ fill_input_buf(exit_on_error)
 	return;
     }
 #  endif
-#  ifdef VMS_OLD_STUFF
-    while (!vim_is_input_buf_full() && RealWaitForChar(0, 0L))
-    {
-	add_to_input_buf((char_u *)ibuf, 1);
-    }
-    if (inbufcount < 1 && !exit_on_error)
-	return;
-    len = inbufcount;
-    inbufcount = 0;
-#  else
 
     len = 0;	/* to avoid gcc warning */
     for (try = 0; try < 100; ++try)
     {
-	len = read(read_cmd_fd, (char *)inbuf + inbufcount,
-		(size_t)((INBUFLEN - inbufcount)
+#  ifdef VMS
+        len = vms_read(
+#  else
+	len = read(read_cmd_fd,
+#  endif
+	    (char *)inbuf + inbufcount, (size_t)((INBUFLEN - inbufcount)
 #  ifdef FEAT_MBYTE
 		/ input_conv.vc_factor
 #  endif
 		));
+#  if 0
+		)	/* avoid syntax highlight error */
+#  endif
 	if (len > 0 || got_int)
 	    break;
 	/*
@@ -1742,7 +1737,6 @@ fill_input_buf(exit_on_error)
 	if (!exit_on_error)
 	    return;
     }
-#  endif /* VMS */
 # endif
     if (len <= 0 && !got_int)
 	read_error_exit();

@@ -702,6 +702,9 @@ qf_get_fnum(directory, fname)
 	char_u	    *ptr;
 	int	    fnum;
 
+# ifdef VMS
+        vms_remove_version(fname);
+# endif
 	if (directory != NULL && !vim_isAbsName(fname)
 	    && (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
 	{
