@@ -3490,7 +3490,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    }
 	}
 
-	if (width - vim_strsize(s) > maxwidth)
+	if (width - vim_strsize(s) >= maxwidth)
 	{
 	    /* Truncation mark is beyond max length */
 #ifdef FEAT_MBYTE
