@@ -4774,7 +4774,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
     else if (varp == &p_imak)
     {
-	if (!im_xim_isvalid_imactivate())
+	if (gui.in_use && !im_xim_isvalid_imactivate())
 	    errmsg = e_invarg;
     }
 #endif
