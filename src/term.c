@@ -882,7 +882,7 @@ struct builtin_term builtin_termcaps[] =
     {K_KDIVIDE,		"\033Oo"},	/* keypad / */
     {K_KMULTIPLY,	"\033Oj"},	/* keypad * */
     {K_KENTER,		"\033OM"},	/* keypad Enter */
-    /* {K_DEL,		"\033[3~"}, not used */
+    {K_KDEL,		"\033[3~"},	/* keypad Del */
 
     {BT_EXTRA_KEYS,   ""},
     {TERMCAP2KEY('k', '0'),	"\033[10~"},	/* F0 */
@@ -1123,7 +1123,9 @@ struct builtin_term builtin_termcaps[] =
     {K_UNDO,		"[UNDO]"},
     {K_BS,		"[BS]"},
     {K_INS,		"[INS]"},
+    {K_KINS,		"[KINS]"},
     {K_DEL,		"[DEL]"},
+    {K_KDEL,		"[KDEL]"},
     {K_HOME,		"[HOME]"},
     {K_KHOME,		"[KHOME]"},
     {K_XHOME,		"[XHOME]"},
