@@ -1971,7 +1971,8 @@ dbcs_head_off(base, p)
     return (q == p) ? 0 : 1;
 }
 
-#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(FEAT_RIGHTLEFT) \
+	|| defined(PROTO)
 /*
  * Special version of dbcs_head_off() that works for ScreenLines[], where
  * single-width DBCS_JPNU characters are stored separately.
@@ -2276,7 +2277,6 @@ mb_unescape(pp)
     return NULL;
 }
 
-#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
 /*
  * Return TRUE if the character at "row"/"col" on the screen is the left side
  * of a double-width character.
@@ -2298,7 +2298,6 @@ mb_lefthalve(row, col)
 		&& ScreenLines[LineOffset[row] + col + 1] == 0);
     return FALSE;
 }
-#endif
 
 #if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(FEAT_RIGHTLEFT) \
 	|| defined(PROTO)
