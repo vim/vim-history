@@ -277,6 +277,10 @@ enc_alias_table[] =
     {NULL,		0}
 };
 
+#ifndef CP_UTF8
+# define CP_UTF8 65001	/* magic number from winnls.h */
+#endif
+
 /*
  * Find encoding "name" in the list of canonical encoding names.
  * Returns -1 if not found.
@@ -578,7 +582,8 @@ codepage_invalid:
     ime_conv_cp.vc_fd = (iconv_t)-1;
 # endif
     convert_setup(&ime_conv, "ucs-2", p_enc);
-    ime_conv_cp.vc_type = CONV_CODEPAGE;
+    ime_conv_cp.vc_type = CONV_DBCS_TO_UCS2;
+    ime_conv_cp.vc_dbcs = GetACP();
     ime_conv_cp.vc_factor = 2; /* we don't really know anything about the codepage */
 #endif
 
@@ -1191,8 +1196,8 @@ utfc_char2bytes(off, buf)
 }
 
 /*
- * Get the length of a UTF-8 byte sequence.  Ignores any following composing
- * characters.
+ * Get the length of a UTF-8 byte sequence, not including any following
+ * composing characters.
  * Returns 0 for "".
  * Returns 1 for an illegal byte sequence.
  */
@@ -1224,8 +1229,8 @@ utf_byte2len(b)
 }
 
 /*
- * Get the length of UTF-8 byte sequence "p[size]".  Ignores any following
- * composing characters.
+ * Get the length of UTF-8 byte sequence "p[size]".  Does not include any
+ * following composing characters.
  * Returns 1 for "".
  * Returns 1 for an illegal byte sequence.
  * Returns number > "size" for an incomplete byte sequence.
@@ -1345,7 +1350,7 @@ utf_char2len(c)
 }
 
 /*
- * Convert UTF-8 character "c" to string of bytes in "buf[]".
+ * Convert Unicode character "c" to UTF-8 string in "buf[]".
  * Returns the number of bytes.
  * This does not include composing characters.
  */
@@ -4045,25 +4050,21 @@ convert_setup(vcp, from, to)
 	vcp->vc_type = CONV_TO_LATIN1;
     }
 #ifdef WIN32
-    /* Win32-specific UTF-16 -> DBCS conversion, for the IME,
+    /* Win32-specific UCS-2 <-> DBCS conversion, for the IME,
      * so we don't need iconv ... */
     else if ((from_prop & ENC_UNICODE)
 			   && (from_prop & ENC_2BYTE) && (to_prop & ENC_DBCS))
     {
-	vcp->vc_type = CONV_DBCS;
+	vcp->vc_type = CONV_UCS2_TO_DBCS;
 	vcp->vc_factor = 2;	/* up to twice as long */
 	vcp->vc_dbcs = atoi(to + 2);
     }
     else if ((from_prop & ENC_UNICODE)
 			&& (from_prop & ENC_2BYTE) && (to_prop & ENC_UNICODE))
     {
-	vcp->vc_type = CONV_DBCS;
+	vcp->vc_type = CONV_UCS2_TO_DBCS;
 	vcp->vc_factor = 2;	/* up to twice as long */
-#ifdef CP_UTF8
 	vcp->vc_dbcs = CP_UTF8;
-#else
-	vcp->vc_dbcs = 65001;	/* magic number from winnls.h */
-#endif
     }
 #endif
 # ifdef USE_ICONV
@@ -4195,7 +4196,12 @@ string_convert(vcp, ptr, lenp)
 	    break;
 # endif
 # ifdef WIN32
-	case CONV_DBCS:		/* UTF-16 -> dbcs or UTF8 */
+	/*
+	 * Note: Using these functions for UTF-8 (CP_UTF8) is NT-specific.
+	 * Don't put too much faith in its UTF-8 parsing; it's not
+	 * too good at handling invalid and overlong sequences.
+	 */
+	case CONV_UCS2_TO_DBCS:		/* UCS-2 -> DBCS or UTF8 */
 	{
 	    int retlen;
 
@@ -4213,11 +4219,11 @@ string_convert(vcp, ptr, lenp)
 		*lenp = retlen;
 	    break;
 	}
-	case CONV_CODEPAGE:	/* current codepage -> ucs-2 */
+	case CONV_DBCS_TO_UCS2:		/* UTF-8 or DBCS -> UCS-2 */
 	{
 	    int retlen;
 
-	    retlen = MultiByteToWideChar(GetACP(), 0, ptr, len, 0, 0);
+	    retlen = MultiByteToWideChar(vcp->vc_dbcs, 0, ptr, len, 0, 0);
 	    retval = alloc(sizeof(unsigned short) * retlen);
 	    if (retval == NULL)
 		break;
