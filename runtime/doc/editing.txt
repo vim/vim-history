@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.2.  Last change: 2003 May 04
+*editing.txt*   For Vim version 6.2.  Last change: 2004 Mar 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -345,9 +345,11 @@ The [++opt] argument can be used to force the value of 'fileformat' or
 'fileencoding' to a value for one command.  The form is: >
 	++{optname}={value}
 
-Where {optname} is one of:				*++ff* *++enc*
-    ff  or  fileformat	    overrides 'fileformat'
-    enc  or  encoding	    overrides 'fileencoding'
+Where {optname} is one of:		*++ff* *++enc* *++bin* *++nobin*
+    ff     or  fileformat   overrides 'fileformat'
+    enc    or  encoding	    overrides 'fileencoding'
+    bin    or  binary	    sets 'binary'
+    nobin  or  nobinary	    resets 'binary'
 
 {value} cannot contain white space.  It can be any valid value for these
 options.  Examples: >
@@ -359,7 +361,7 @@ This writes the current buffer to "newfile" in latin1 format.
 
 Note that when reading, the 'fileformat' and 'fileencoding' options will be
 set to the used format.  When writing this doesn't happen, thus a next write
-will use the old value of the option.
+will use the old value of the option.  Same for the 'binary' option.
 
 There may be several ++opt arguments, separated by white space.  They must all
 appear before any |+cmd| argument.

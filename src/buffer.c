@@ -150,7 +150,7 @@ open_buffer(read_stdin, eap)
 	 */
 	curbuf->b_p_bin = TRUE;
 	retval = readfile(NULL, NULL, (linenr_T)0,
-		  (linenr_T)0, (linenr_T)MAXLNUM, eap, READ_NEW + READ_STDIN);
+		  (linenr_T)0, (linenr_T)MAXLNUM, NULL, READ_NEW + READ_STDIN);
 	curbuf->b_p_bin = save_bin;
 	if (retval == OK)
 	{
