@@ -107,13 +107,30 @@ gui_start()
      */
     if (gui.in_use && dofork)
     {
+	int	pipefd[2];	/* pipe between parent and child */
+	int	pipe_error;
+	char	dummy;
+
+	/* Setup a pipe between the child and the parent, so that the parent
+	 * knows when the child has done the setsid() call and is allowed to
+	 * exit. */
+	pipe_error = (pipe(pipefd) < 0);
 	pid = fork();
 	if (pid > 0)	    /* Parent */
 	{
 	    /* Give the child some time to do the setsid(), otherwise the
 	     * exit() may kill the child too (when starting gvim from inside a
 	     * gvim). */
-	    ui_delay(100L, TRUE);
+	    if (pipe_error)
+		ui_delay(300L, TRUE);
+	    else
+	    {
+		/* The read returns when the child closes the pipe (or when
+		 * the child dies for some reason). */
+		close(pipefd[1]);
+		(void)read(pipefd[0], &dummy, (size_t)1);
+		close(pipefd[0]);
+	    }
 
 	    /*
 	     * The parent must skip the normal exit() processing, the child
@@ -134,6 +151,11 @@ gui_start()
 	    (void)setpgid(0, 0);
 #  endif
 # endif
+	if (!pipe_error)
+	{
+	    close(pipefd[0]);
+	    close(pipefd[1]);
+	}
     }
 #else
 # if defined(__QNXNTO__)
