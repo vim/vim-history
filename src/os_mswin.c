@@ -1016,7 +1016,7 @@ crnl_to_nl(const char_u *str, int *size)
  * Convert "str" from 'encoding' to UCS-2.
  * Input in "str" with length "*lenp".  When "lenp" is NULL, use strlen().
  * Output is returned as an allocated string.  "*lenp" is set to the length of
- * the result.
+ * the result.  A trailing NUL is always added.
  * Returns NULL when out of memory.
  */
     short_u *
@@ -1058,10 +1058,12 @@ enc_to_ucs2(char_u *str, int *lenp)
 	convert_setup(&conv, NULL, NULL);
 
 	length = utf8_to_ucs2(str, *lenp, NULL, NULL);
-	ret = (WCHAR *)alloc((unsigned)((length == 0 ? 1 : length)
-							    * sizeof(WCHAR)));
+	ret = (WCHAR *)alloc((unsigned)((length + 1) * sizeof(WCHAR)));
 	if (ret != NULL)
+	{
 	    utf8_to_ucs2(str, *lenp, (short_u *)ret, NULL);
+	    ret[length] = 0;
+	}
 
 	vim_free(allocbuf);
     }
