@@ -10,12 +10,16 @@ if exists("current_compiler")
 endif
 let current_compiler = "splint"
 
+if exists(":CompilerSet") != 2		" older Vim always used :setlocal
+  command -nargs=* CompilerSet setlocal <args>
+endif
+
 let s:cpo_save = &cpo
 set cpo-=C
 
 " adapt this if you want to check more than one file at a time.
 " put command line options in .splintrc or ~/.splintrc
-setlocal makeprg=splint\ %
+CompilerSet makeprg=splint\ %
 
 " Note: when using the new array bounds checking flags:  Each warning
 " usually has several lines and several references to source code mostly
@@ -47,7 +51,7 @@ setlocal makeprg=splint\ %
 "  A memory write may write to an address beyond the allocated buffer. (Use
 "  -boundswrite to inhibit warning)
 
-setlocal errorformat=%OLCLint*m,
+CompilerSet errorformat=%OLCLint*m,
 	\%OSplint*m,
 	\%*[\ ]%f:%l:%c:\ %m,
 	\%*[\ ]%f:%l:\ %m,

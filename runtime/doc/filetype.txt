@@ -1,4 +1,4 @@
-*filetype.txt*  For Vim version 6.2.  Last change: 2003 Aug 14
+*filetype.txt*  For Vim version 6.3a.  Last change: 2004 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -168,20 +168,28 @@ A. If you want to overrule all default file type checks.
 <     Note that there is no "augroup" command, this has already been done
       when sourcing your file.  You could also use the pattern "*" and then
       check the contents of the file to recognize it.
-      Write this file as "mine.vim" in the "filetype" directory in your user
+      Write this file as "mine.vim" in the "ftdetect" directory in your user
       runtime directory.  For example, for Unix: >
 	:w ~/.vim/ftdetect/mine.vim
 
 <  3. To use the new filetype detection you must restart Vim.
 
-   The files in the "filetype" directory are used after all the default
-   checks, thus they can overrule a previously detected file type.  You can
-   also use that in your command.  For example, to use the file type
-   "mypascal" when "pascal" has been detected: >
-	au BufRead,BufNewFile *		if ft == 'pascal' | set ft=mypascal
+   The files in the "ftdetect" directory are used after all the default
+   checks, thus they can overrule a previously detected file type.
+
+B. If you want to detect your file after the default file type checks.
+
+   This works like A above, but instead of setting 'filetype' unconditionally
+   use ":setfiletype".  This will only set 'filetype' if no file type was
+   detected yet.  Example: >
+	au BufRead,BufNewFile *.txt		setfiletype text
+<
+   You can also use the already detected file type in your command.  For
+   example, to use the file type "mypascal" when "pascal" has been detected: >
+	au BufRead,BufNewFile *		if &ft == 'pascal' | set ft=mypascal
 								       | endif
 
-B. If your file type can be detected by the file name.
+C. If your file type can be detected by the file name.
    1. Create your user runtime directory.  You would normally use the first
       item of the 'runtimepath' option.  Example for Unix: >
 	:!mkdir ~/.vim
@@ -207,7 +215,7 @@ B. If your file type can be detected by the file name.
    ":setfiletype" command will make sure that no other autocommands will set
    'filetype' after this.
 							*new-filetype-scripts*
-C. If your filetype can only be detected by inspecting the contents of the
+D. If your filetype can only be detected by inspecting the contents of the
    file.
 
    1. Create your user runtime directory.  You would normally use the first
@@ -259,7 +267,7 @@ on; see your system's documentation for details.
 To use osfiletype checking in an autocommand you should put a list of types to
 match in angle brackets in place of a pattern, like this: >
 
-	:au BufRead *.html,<&faf;HTML>  so $VIMRUNTIME/syntax/html.vim
+	:au BufRead *.html,<&faf;HTML>  runtime! syntax/html.vim
 
 This will match:
 
@@ -410,7 +418,7 @@ g:changelog_username	The name and email address of the user.
 			the real name of the user up to the first separating
 			comma.  then it checks the $NAME environment variable
 			and finally runs `whoami` and `hostname` to build an
-			email adress.  The final form is >
+			email address.  The final form is >
 				Full Name  <user@host>
 <
 g:changelog_new_date_format

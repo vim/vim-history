@@ -174,7 +174,7 @@ MERK: Bokstavene vil komme til syne på den nederste linjen på skjermen
 
 ---> Noen skrev slutten på linjen en gang for mye. på linjen en gang for mye.
 
-  5. Gå til leksjon 2.3 for en innføring i hvordan kommandoer settes sammen.
+  5. Gå til leksjon 2.3 for å forstå hva som skjer.
 
 
 
@@ -210,9 +210,9 @@ MERK: For den eventyrlystne: Skriving av kun objektet i normalmodus uten en
 
 		 ** Trykk  dd  for å slette en hel linje. **
 
-  På grunn av at sletting av linjer er mye brukt, fant utviklerne som lagde Vi
-  ut at det vil være lettere å rett og slett trykke to «d»-er etter hverandre
-  for å slette en linje.
+  På grunn av at sletting av linjer er mye brukt, fant utviklerne av Vi ut at
+  det vil være lettere å rett og slett trykke to «d»-er etter hverandre for å
+  slette en linje.
 
   1. Flytt markøren til den andre linjen i verset nedenfor.
   2. Trykk  dd	for å slette linjen.
@@ -463,7 +463,7 @@ MERK: Dette er meget god hjelp til feilsøking i programmer som har ubalansert
 
 	** Skriv  :s/gammel/ny/g  for å erstatte «gammel» med «ny». **
 
-  1. Flytt markøren til linjen nedenfom som begynner med  --->	.
+  1. Flytt markøren til linjen nedenfor som begynner med  --->	.
 
   2. Skriv  :s/deen/den/ <ENTER>  . Legg merke til at denne kommandoen bare
      forandrer den første forekomsten av ordet på linjen.
@@ -515,8 +515,8 @@ MERK: Dette er meget god hjelp til feilsøking i programmer som har ubalansert
   2. Nå kan du skrive tegnet !	. Dette lar deg utføre en hvilken som helst
      ekstern kommando.
 
-  3. Som et eksempel, skriv  ls  etter utropstegnet og og trykk <ENTER>. Du
-     vil nå få en liste over filene i katalogen, akkurat som om du hadde kjørt
+  3. Som et eksempel, skriv  ls  etter utropstegnet og trykk <ENTER>. Du vil
+     nå få en liste over filene i katalogen, akkurat som om du hadde kjørt
      kommandoen direkte fra skallet. Eller bruk  :!dir	hvis «ls» ikke virker.
 
 ---> MERK: Det er mulig å kjøre alle mulige eksterne kommandoer på denne
@@ -601,10 +601,10 @@ MERK: Filen du henter vil bli plassert der markøren står.
 
   1.  :!KOMMANDO  utfører en ekstern kommandio.
 
-	Noen nyttige eksempler:
-	    UNIX       DOS
-	    !ls        !dir	  List filene i katalogen
-	    !rm FIL    !del FIL   Slett filen  FIL
+	Noen nyttige eksempler er:
+	    (MS-DOS)	(Unix)
+	     :!dir	 :!ls	    -- List filene i katalogen
+	     :!del FIL	 :!rm FIL   -- Slett filen  FIL
 
   2.  :w FILNAVN  skriver den filen du står i til disken med navnet FILNAVN .
 
@@ -709,7 +709,7 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
   5. Skriv søkekommandoen igjen, og se hva som skjer:
      /ignore <ENTER>
 
-  6. Hvis du vil slå av uthevingen på søketeksten, skriv  :set nohls
+  6. Hvis du vil slå av uthevingen på søketeksten, skriv  :nohlsearch
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			  OPPSUMMERING AV LEKSJON 6
 
@@ -777,7 +777,7 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
 
   Neste gang du starter Vim vil den bruke farger og utheving i henhold til
   syntaksen i filen. Ved å legge inn forskjellige valg i «vimrc»-filen, kan du
-  settet oppsettet i Vim til det du foretrekker.
+  forandre oppsettet i Vim til det du foretrekker.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Her slutter innføringen i Vim. Den var ment som en rask oversikt over
@@ -803,6 +803,7 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
   University. Email: bware@mines.colorado.edu .
 
   Modifisert for Vim av Bram Moolenaar.
-  Oversatt av Øyvind A. Holm -- sunny _AT_ sunbase.org -- 2003/05/19 00:42:44
+  Oversatt av Øyvind A. Holm -- sunny _AT_ sunbase.org -- 2003/08/13 05:22:21
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+vim: set ts=8 :

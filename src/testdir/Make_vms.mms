@@ -1,10 +1,10 @@
 #
 # Makefile to run all tests for Vim on VMS
 #
-# Authors:	Zoltan Arpadffy, <arpadffy@polarfox.com>
+# Authors:	Zoltan Arpadffy, <arpadffy@polarhome.com>
 #		Sandor Kopanyi,  <sandor.kopanyi@mailbox.hu>
 #
-# Last change:  2004 Mar 22
+# Last change:  2004 May 03
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
@@ -57,7 +57,7 @@ SCRIPT = test1.out  test2.out  test3.out  test4.out  test5.out  \
 	 test33.out test34.out test35.out test36.out test37.out \
 	 test38.out test39.out test40.out test41.out test42.out \
 	 test43.out test44.out test45.out test46.out \
-	 test48.out test49.out test51.out
+	 test48.out test51.out
 
 .IFDEF WANT_GUI
 SCRIPT_GUI = test16.out
@@ -65,7 +65,7 @@ GUI_OPTION = -g
 .ENDIF
 
 .IFDEF WANT_UNIX
-SCRIPT_UNIX = test10.out test12.out test25.out test27.out test30.out
+SCRIPT_UNIX = test10.out test12.out test25.out test27.out test30.out test49.out
 .ENDIF
 
 .IFDEF HAVE_GZIP

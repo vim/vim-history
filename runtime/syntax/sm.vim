@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	sendmail
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
-" Last Change:	Nov 18, 2002
-" Version:	2
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
+" Last Change:	Sep 02, 2003
+" Version:	3
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
@@ -14,7 +14,7 @@ elseif exists("b:current_syntax")
 endif
 
 " Comments
-syn match smComment	"^#.*$"
+syn match smComment	"^#.*$"	contains=@Spell
 
 " Definitions, Classes, Files, Options, Precedence, Trusted Users, Mailers
 syn match smDefine	"^[CDF]."

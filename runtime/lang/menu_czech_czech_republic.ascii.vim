@@ -1,6 +1,5 @@
 " Menu Translations:	Czech for systems without localization
-" Maintainer:		Jiri Brezina <brz@centrum.cz>
-" URL:			http://brz.d2.cz/vim
+" Maintainer:		Jiri Brezina <brzj@seznam.cz>
 " vim:set foldmethod=marker:
 " $Revision$
 " $Date$
@@ -11,8 +10,7 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
-" Note: there is no "scriptencoding" command here, all encodings should be
-" able to handle ascii characters without conversion.
+
 
 " {{{ File menu
 menutrans &File				&Soubor
@@ -108,7 +106,7 @@ menutrans Fold\ Met&hod			Metoda\ &skladani
 menutrans Create\ &Fold<Tab>zf		Vytvorit\ &fold<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		Vymazat\ fol&d<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	V&ymazat\ vsechny\ foldy<Tab>zD
-menutrans Fold\ column\ &width		Sloupec\ zob&razeni\ foldu
+menutrans Fold\ col&umn\ width		Sloupec\ zob&razeni\ foldu
 
 menutrans &Update			&Obnovit
 menutrans &Get\ Block			&Sejmout\ Blok
@@ -142,7 +140,7 @@ menutrans o&ff\ (this\ file)	vyp&nout\ (pro\ tento\ soubor)
 menutrans Co&lor\ test		Test\ &barev
 menutrans &Highlight\ test	&Test\ zvyraznovani
 menutrans &Convert\ to\ HTML	Prevest\ &do\ HTML
-menutrans &Show\ individual\ choices	&Zobrazit\ vyber\ moznosti
+menutrans &Show\ filetypes\ in\ menu	&Zobrazit\ vyber\ moznosti
 " }}}
 
 " {{{ Menu Buffers

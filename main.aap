@@ -18,5 +18,6 @@ fetch:
 	:execute ../main.aap {fetch = $AAPROOT/main.aap} fetch
 
 # All building is done in the source directory.
-:child src/main.aap
-
+# This can be skipped when only fetching files.
+@if _no.TARGETARG != "fetch":
+	:child src/main.aap

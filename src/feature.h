@@ -1138,7 +1138,7 @@
 /*
  * +balloon_eval	Allow balloon expression evaluation. Used with a
  *			debugger and for tooltips.
- *			Currently only for Athena and Motif.
+ *			Only for GUIs where it was implemented.
  */
 #if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
 	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32)) \

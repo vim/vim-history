@@ -43,6 +43,17 @@ comments at the start of the file.  You can also see this with the ":messages"
 command in Vim when the translation is being used.
 
 
+CREATING A NEW PO FILE
+
+We will use "xx.po" as an example here, replace "xx" with the name of your
+language.
+
+- Edit Makefile to add xx to LANGUAGES and xx.mo to MOFILES.
+- Copy the header of an existing file, e.g., de.po, to xx.po.  Do not copy any
+  of the translated messages, delete everything after the "msgstr".
+- The remaining work is like updating, see the next section.
+
+
 UPDATING A PO FILE
 
 If you are the maintainer of a .po file, this is how you update the file.  We

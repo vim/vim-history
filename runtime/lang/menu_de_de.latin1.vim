@@ -66,7 +66,7 @@ menutrans Insert\ mode					Einfüge-Modus
 menutrans Block\ and\ Insert				Block-\ und\ Einfüge-Modus
 menutrans Always					Immer
 menutrans Toggle\ Insert\ &Mode<Tab>:set\ im!		Einfüge-&Modus\ ein-\ und\ ausschalten<Tab>:set\ im!
-menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!		Vi-Kompatiblität\ ein-\ und\ ausschalten<Tab>:set\ cp!
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!		Vi-Kompatibilität\ ein-\ und\ ausschalten<Tab>:set\ cp!
 
 menutrans Search\ &Path\.\.\.				Such-&Pfad\.\.\.
 menutrans Ta&g\ Files\.\.\.				Ta&g-Dateien\.\.\.

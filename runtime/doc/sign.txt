@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.2.  Last change: 2004 Apr 29
+*sign.txt*      For Vim version 6.3a.  Last change: 2004 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -61,6 +61,9 @@ line 23 of the current file: >
 And here is the command to delete it again: >
 	:sign unplace 2
 
+Note that the ":sign" command cannot be followed by another command or a
+comment.  If you do need that, use the |:execute| command.
+
 
 DEFINING A SIGN.			*:sign-define* *E255* *E160* *E612*
 
@@ -115,9 +118,11 @@ PLACING SIGNS						*:sign-place* *E158*
 
 :sign place {id} line={lnum} name={name} file={fname}
 		Place sign defined as {name} at line {lnum} in file {fname}.
+							*:sign-fname*
 		The file {fname} must already be loaded in a buffer.  The
 		exact file name must be used, wildcards, $ENV and ~ are not
-		expanded.
+		expanded, white space must not be escaped.  Trailing white
+		space is ignored.
 
 		The sign is remembered under {id}, this can be used for
 		further manipulation.  {id} must be a number.
@@ -131,7 +136,7 @@ PLACING SIGNS						*:sign-place* *E158*
 
 :sign place {id} name={name} file={fname}
 		Change the placed sign {id} in file {fname} to use the defined
-		sign {name}.
+		sign {name}.  See remark above about {fname} |:sign-fname|.
 		This can be used to change the displayed sign without moving
 		it (e.g., when the debugger has stopped at a breakpoint).
 
@@ -143,6 +148,7 @@ REMOVING SIGNS						*:sign-unplace* *E159*
 
 :sign unplace {id} file={fname}
 		Remove the previously placed sign {id} from file {fname}.
+		See remark above about {fname} |:sign-fname|.
 
 :sign unplace {id} buffer={nr}
 		Same, but use buffer {nr}.
@@ -162,6 +168,7 @@ LISTING PLACED SIGNS
 
 :sign place file={fname}
 		List signs placed in file {fname}.
+		See remark above about {fname} |:sign-fname|.
 
 :sign place buffer={nr}
 		List signs placed in buffer {nr}.
@@ -174,6 +181,7 @@ JUMPING TO A SIGN					*:sign-jump* *E157*
 :sign jump {id} file={fname}
 		Open the file {fname} or jump to the window that contains
 		{fname} and position the cursor at sign {id}.
+		See remark above about {fname} |:sign-fname|.
 		If the file isn't displayed in window and the current file can
 		not be |abandon|ed this fails.
 

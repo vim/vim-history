@@ -28,6 +28,9 @@ vimm:		Shell script to start Vim on a DEC terminal with mouse
 
 vimspell.*:	Shell script for highlighting spelling mistakes.
 
+vim_vs_net.cmd: MS-Windows command file to use Vim with MS Visual Studio 7 and
+		later.
+
 xcmdsrv_client.c:  Example for a client program that communicates with a Vim
 		   server through the X-Windows interface.
 

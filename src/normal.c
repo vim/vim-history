@@ -27,7 +27,7 @@ static int	restart_VIsual_select = 0;
 
 static int
 # ifdef __BORLANDC__
-    _RTLENTRYF
+_RTLENTRYF
 # endif
 		nv_compare __ARGS((const void *s1, const void *s2));
 static int	find_command __ARGS((int cmdchar));
@@ -857,7 +857,7 @@ getcount:
 #ifdef FEAT_VISUAL
 			|| VIsual_active
 #endif
-			))))
+		       ))))
     {
 	int	*cp;
 	int	repl = FALSE;	/* get character for replace mode */
@@ -1148,7 +1148,7 @@ getcount:
 			    && old_pos.lnum == curwin->w_cursor.lnum
 			    && old_pos.col == curwin->w_cursor.col)
 #endif
-			)
+		       )
 		    && (clear_cmdline
 			|| redraw_cmdline)
 		    && (msg_didout || (msg_didany && msg_scroll))
@@ -6305,7 +6305,7 @@ nv_replace(cap)
 		colnr_T start = (colnr_T)(curwin->w_cursor.col - cap->count1);
 
 		netbeans_inserted(curbuf, curwin->w_cursor.lnum, start,
-			(int)cap->count1, &ptr[start], (int)cap->count1);
+			     (int)cap->count1, &ptr[start], (int)cap->count1);
 	    }
 #endif
 

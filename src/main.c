@@ -218,10 +218,10 @@ main
     {
 	int	mustfree = FALSE;
 
-#ifdef DYNAMIC_GETTEXT
+#  ifdef DYNAMIC_GETTEXT
 	/* Initialize the gettext library */
 	dyn_libintl_init(NULL);
-#endif
+#  endif
 	/* expand_env() doesn't work yet, because chartab[] is not initialized
 	 * yet, call vim_getenv() directly */
 	p = vim_getenv((char_u *)"VIMRUNTIME", &mustfree);

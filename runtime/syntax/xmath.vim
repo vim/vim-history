@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	xmath (a simulation tool)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
-" Last Change:	Nov 18, 2002
-" Version:	2
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
+" Last Change:	Sep 02, 2003
+" Version:	3
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
@@ -185,7 +185,7 @@ syn match   xmathNumber	"-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
 " xmath supports #...  (like Unix shells)
 "       and      #{ ... }# comment blocks
 syn keyword xmathTodo contained	TODO Todo DEBUG
-syn match   xmathComment	"#.*$"		contains=xmathString,xmathTodo
+syn match   xmathComment	"#.*$"		contains=xmathString,xmathTodo,@Spell
 syn region  xmathCommentBlock	start="#{" end="}#"	contains=xmathString,xmathTodo
 
 " synchronizing

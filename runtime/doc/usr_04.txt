@@ -1,4 +1,4 @@
-*usr_04.txt*	For Vim version 6.2.  Last change: 2002 Jul 18
+*usr_04.txt*	For Vim version 6.3a.  Last change: 2004 Jan 17
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -318,7 +318,7 @@ and execute the command "xp".  This works as follows: "x" deletes the
 character e and places it in a register.  "p" puts the text after the cursor,
 which is after the h.
 
-	teh     th     the~
+	teh     th     the ~
 	 x       p
 
 ==============================================================================
@@ -400,7 +400,7 @@ to do this: "daw".
 	this is some text. ~
 
 The "d" of "daw" is the delete operator.  "aw" is a text object.  Hint: "aw"
-stands for "A Word".  Thus "daw" is "Delete A Word".  To be precize, the white
+stands for "A Word".  Thus "daw" is "Delete A Word".  To be precise, the white
 space after the word is also deleted (the white space before the word at the
 end of the line).
 

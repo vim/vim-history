@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.2.  Last change: 2003 Aug 14
+*usr_41.txt*	For Vim version 6.3a.  Last change: 2004 May 06
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -409,8 +409,9 @@ pattern, like what's used for searching.  Example: >
 
 	:if str =~ " "
 	:  echo "str contains a space"
-	:elseif str !~ '\.$'
-	:  echo "str ends in a full stop"
+	:endif
+	:if str !~ '\.$'
+	:  echo "str does not end in a full stop"
 	:endif
 
 Notice the use of a single-quote string for the pattern.  This is useful,
@@ -514,7 +515,7 @@ A function can be called in an expression.  Example: >
 
 The getline() function obtains a line from the current file.  Its argument is
 a specification of the line number.  In this case "." is used, which means the
-line where the cursor.
+line where the cursor is.
    The substitute() function does something similar to the ":substitute"
 command.  The first argument is the string on which to perform the
 substitution.  The second argument is the pattern, the third the replacement
@@ -554,6 +555,7 @@ String manipulation:
 	strpart()		get part of a string
 	expand()		expand special keywords
 	type()			type of a variable
+	iconv()			convert text from one encoding to another
 
 Working with text in the current buffer:
 	byte2line()		get line number at a specific byte count
@@ -563,6 +565,7 @@ Working with text in the current buffer:
 	line()			line number of the cursor or mark
 	wincol()		window column number of the cursor
 	winline()		window line number of the cursor
+	cursor()		position the cursor at a line/column
 	getline()		get a line from the buffer
 	setline()		replace a line in the buffer
 	append()		append {string} below line {lnum}
@@ -582,6 +585,7 @@ System functions and manipulation of files:
 	fnamemodify()		modify a file name
 	executable()		check if an executable program exists
 	filereadable()		check if a file can be read
+	filewritable()		check if a file can be written to
 	isdirectory()		check if a directory exists
 	getcwd()		get the current working directory
 	getfsize()		get the size of a file
@@ -613,6 +617,7 @@ Buffers, windows and the argument list:
 
 Folding:
 	foldclosed()		check for a closed fold at a specific line
+	foldclosedend()		like foldclosed() but return the last line
 	foldlevel()		check for the fold level at a specific line
 	foldtext()		generate the line displayed for a closed fold
 
@@ -636,6 +641,8 @@ Interactive:
 	input()			get a line from the user
 	inputsecret()		get a line from the user without showing it
 	inputdialog()		get a line from the user in a dialog
+	inputresave		save and clear typeahead
+	inputrestore()		restore typeahead
 
 Vim server:
 	serverlist()		return the list of server names
@@ -664,6 +671,9 @@ Various:
 	winwidth()		get width of a specific window
 	libcall()		call a function in an external library
 	libcallnr()		idem, returning a number
+	getreg()		get contents of a register
+	getregtype()		get type of a register
+	setreg()		set contents and type of a register
 
 ==============================================================================
 *41.7*	Defining a function
@@ -801,7 +811,7 @@ so on.  The variable "a:0" contains the number of extra arguments.
 	:  echohl None
 	:  let index = 1
 	:  while index <= a:0
-	:    execute 'echon "  Arg " . index . " is " . a:' . index
+	:    echo "  Arg " . index . " is " . a:{index}
 	:    let index = index + 1
 	:  endwhile
 	:  echo ""
@@ -1424,7 +1434,8 @@ Here is a simple example for a plugin help file, called "typecorr.txt": >
 The first line is actually the only one for which the format matters.  It will
 be extracted from the help file to be put in the "LOCAL ADDITIONS:" section of
 help.txt |local-additions|.  The first "*" must be in the first column of the
-first line.
+first line.  After adding your help file do ":help" and check that the entries
+line up nicely.
 
 You can add more tags inside ** in your help file.  But be careful not to use
 existing help tags.  You would probably use the name of your plugin in most of
@@ -1441,7 +1452,7 @@ detection snippet in a separate file.  It is usually in the form of an
 autocommand that sets the filetype when the file name matches a pattern.
 Example: >
 
-	au BufNewFile,BufRead *.foo                     set filetype=foofoo
+	au BufNewFile,BufRead *.foo			set filetype=foofoo
 
 Write this single-line file as "ftdetect/foofoo.vim" in the first directory
 that appears in 'runtimepath'.  For Unix that would be
@@ -1612,7 +1623,7 @@ This construct make sure the function is only defined once: >
 	:endif
 <
 
-UNDO
+UNDO							*undo_ftplugin*
 
 When the user does ":setfiletype xyz" the effect of the previous filetype
 should be undone.  Set the b:undo_ftplugin variable to the commands that will
@@ -1622,7 +1633,7 @@ undo the settings in your filetype plugin.  Example: >
 		\ . "| unlet b:match_ignorecase b:match_words b:match_skip"
 
 Using ":setlocal" with "<" after the option name resets the option to its
-global value.  That is mostly be best way to reset the option value.
+global value.  That is mostly the best way to reset the option value.
 
 This does require removing the "C" flag from 'cpoptions' to allow line
 continuation, as mentioned above |use-cpo-save|.
@@ -1674,8 +1685,8 @@ compiler plugins: >
 
 Use |:next| to go to the next plugin file.
 
-The only special item about these files is a mechanism to allow a user to
-overrule or add to the default file.  The default files start with: >
+There are two special items about these files.  First is a mechanism to allow
+a user to overrule or add to the default file.  The default files start with: >
 
 	:if exists("current_compiler")
 	:  finish
@@ -1685,6 +1696,17 @@ overrule or add to the default file.  The default files start with: >
 When you write a compiler file and put it in your personal runtime directory
 (e.g., ~/.vim/compiler for Unix), you set the "current_compiler" variable to
 make the default file skip the settings.
+
+The second mechanism is to use ":set" for ":compiler!" and ":setlocal" for
+":compiler".  Vim defines the ":CompilerSet" user command for this.  However,
+older Vim versions don't, thus your plugin should define it then.  This is an
+example: >
+
+  if exists(":CompilerSet") != 2
+    command -nargs=* CompilerSet setlocal <args>
+  endif
+  CompilerSet errorformat&		" use the default 'errorformat'
+  CompilerSet makeprg=nmake
 
 When you write a compiler plugin for the Vim distribution or for a system-wide
 runtime directory, use the mechanism mentioned above.  When

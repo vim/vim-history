@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.2.  Last change: 2004 Jan 08
+*help.txt*	For Vim version 6.3a.  Last change: 2004 May 04
 
 			VIM - main help file
 									 k
@@ -10,7 +10,7 @@ Close this window:  Use ":q<Enter>".
 Jump to a subject:  Position the cursor on a tag between |bars| and hit CTRL-].
    With the mouse:  ":set mouse=a" to enable the mouse (in xterm or GUI).
 		    Double-click the left mouse button on a tag between |bars|.
-	jump back:  Type CTRL-T or CTRL-O (repeat to go further back).
+	Jump back:  Type CTRL-T or CTRL-O (repeat to go further back).
 
 Get specific help:  It is possible to go directly to whatever you want help
 		    on, by giving an argument to the ":help" command |:help|.
@@ -23,7 +23,7 @@ Get specific help:  It is possible to go directly to whatever you want help
 		      Command-line commands	  :	   :help :quit
 		      Command-line editing	  c_	   :help c_<Del>
 		      Vim command arguments	  -	   :help -r
-		      options			  '	   :help 'textwidth'
+		      Options			  '	   :help 'textwidth'
   Search for help:  Type ":help word", then hit CTRL-D to see matching
 		    help entries for "word".
 
@@ -137,6 +137,7 @@ Special issues ~
 |arabic.txt|	Arabic language support and editing
 |farsi.txt|	Farsi (Persian) editing
 |hebrew.txt|	Hebrew language support and editing
+|russian.txt|	Russian language support and editing
 |hangulin.txt|	Hangul (Korean) input mode
 |rileft.txt|	right-to-left editing mode
 
@@ -160,10 +161,10 @@ Interfaces ~
 |sign.txt|	debugging signs
 
 Versions ~
-|vi_diff.txt|	main differences between Vim and Vi
-|version4.txt|	differences between Vim version 3.0 and 4.x
-|version5.txt|	differences between Vim version 4.6 and 5.x
-|version6.txt|	differences between Vim version 5.7 and 6.x
+|vi_diff.txt|	Main differences between Vim and Vi
+|version4.txt|	Differences between Vim version 3.0 and 4.x
+|version5.txt|	Differences between Vim version 4.6 and 5.x
+|version6.txt|	Differences between Vim version 5.7 and 6.x
 						*sys-file-list*
 Remarks about specific systems ~
 |os_390.txt|	OS/390 Unix
@@ -179,8 +180,8 @@ Remarks about specific systems ~
 |os_unix.txt|	Unix
 |os_vms.txt|	VMS
 |os_win32.txt|	MS-Windows 95/98/NT
-
-Standard plugins	*standard-plugin-list* ~
+						*standard-plugin-list*
+Standard plugins ~
 |pi_netrw.txt|	Reading and writing files over a network
 |pi_gzip.txt|	Reading and writing compressed files
 |pi_expl.txt|	File explorer

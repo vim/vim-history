@@ -1,4 +1,4 @@
-*os_os2.txt*    For Vim version 6.2.  Last change: 2002 Oct 29
+*os_os2.txt*    For Vim version 6.3a.  Last change: 2004 Jan 09
 
 
 		  VIM REFERENCE MANUAL    by Paul Slootman
@@ -182,8 +182,8 @@ Vim for OS/2 has no direct access to the system clipboard.  To enable access
 anyway you need an additional tool which gives you access to the clipboard
 from within a vio application.  The freeware package clipbrd.zip by Stefan
 Gruendel can be used for this purpose.  You might download the package
-including precompiled binaries and all sources from: >
-	http://www.stellarcom.org/vim/index.html.
+including precompiled binaries and all sources from:
+	http://www.stellarcom.org/vim/index.html
 
 Installation of this package is straight forward: just put the two executables
 that come with this package into a directory within your PATH for Vim should

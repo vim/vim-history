@@ -1,4 +1,4 @@
-*usr_24.txt*	For Vim version 6.2.  Last change: 2002 Jul 30
+*usr_24.txt*	For Vim version 6.3a.  Last change: 2003 Aug 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -282,7 +282,7 @@ Now you need to type the same line, but with "s_prev" instead of "s_next".
 Start the new line, and press CTRL-Y 14 times, until you are at the "n" of
 "next":
 
-	b_array[i]->s_next = a_array[i]->s_next;~
+	b_array[i]->s_next = a_array[i]->s_next; ~
 	b_array[i]->s_ ~
 
 Now you type "prev":
@@ -292,7 +292,7 @@ Now you type "prev":
 
 Continue pressing CTRL-Y until the following "next":
 
-	b_array[i]->s_next = a_array[i]->s_next;~
+	b_array[i]->s_next = a_array[i]->s_next; ~
 	b_array[i]->s_prev = a_array[i]->s_ ~
 
 Now type "prev;" to finish it off.
@@ -437,7 +437,7 @@ abbreviation for "fresh", but that's very unlikely).
 	:abclear
 
 ":unabbreviate" and ":abclear" also come in the variants for Insert mode
-(":iunabbeviate and ":iabclear") and Command-line mode (":cunabbreviate" and
+(":iunabbreviate and ":iabclear") and Command-line mode (":cunabbreviate" and
 ":cabclear").
 
 

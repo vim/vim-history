@@ -12,6 +12,7 @@ VIMPROG = ../vim.exe
 # test12	can't unlink a swap file
 # test25	uses symbolic link
 # test27	can't edit file with "*" in file name
+# test52	only for Win32
 
 SCRIPTS = test1.out test3.out test4.out test5.out test6.out \
 		test7.out test8.out test9.out \
@@ -32,7 +33,7 @@ all:	/tmp $(SCRIPTS)
 $(SCRIPTS): $(VIMPROG)
 
 clean:
-	-rm -rf *.out Xdotest test.ok tiny.vim small.vim mbyte.vim
+	-rm -rf *.out Xdotest test.ok tiny.vim small.vim mbyte.vim viminfo
 
 # Make sure all .in and .out files are in DOS fileformat.
 .in.out:
@@ -43,7 +44,7 @@ clean:
 	$(VIMPROG) -u NONE -s todos.vim test.out
 	diff test.out $*.ok
 	rename test.out $*.out
-	-rm -rf X*
+	-rm -rf X* viminfo
 	-del test.ok
 
 # Create a directory for temp files

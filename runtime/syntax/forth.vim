@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:    FORTH
 " Maintainer:  Christian V. J. Brüssow <cvjb@cvjb.de>
-" Last Change: Fre 04 Apr 2003 17:15:27 CEST
+" Last Change: Son 22 Jun 2003 20:42:55 CEST
 " Filenames:   *.fs,*.ft
 " URL:	       http://www.cvjb.de/comp/vim/forth.vim
 
@@ -13,22 +13,26 @@
 
 " Many Thanks to...
 "
+" 2003-05-10:
+" Andrew Gaul <andrew at gaul.org> send me a patch for
+" forthOperators.
+"
 " 2003-04-03:
-" Ron Aaron <ronaaron@exchange.microsoft.com> made updates for an
+" Ron Aaron <ron at ronware.org> made updates for an
 " improved Win32Forth support.
 "
 " 2002-04-22:
-" Charles Shattuck <charley@forth.org> helped me to settle up with the
+" Charles Shattuck <charley at forth.org> helped me to settle up with the
 " binary and hex number highlighting.
 "
 " 2002-04-20:
-" Charles Shattuck <charley@forth.org> send me some code for correctly
+" Charles Shattuck <charley at forth.org> send me some code for correctly
 " highlighting char and [char] followed by an opening paren. He also added
 " some words for operators, conditionals, and definitions; and added the
 " highlighting for s" and c".
 "
 " 2000-03-28:
-" John Providenza <john@probo.com> made improvements for the
+" John Providenza <john at probo.com> made improvements for the
 " highlighting of strings, and added the code for highlighting hex numbers.
 "
 
@@ -71,7 +75,7 @@ syn keyword forthOperators F+ F- F* F/ FNEGATE FABS FMAX FMIN FLOOR FROUND
 syn keyword forthOperators F** FSQRT FEXP FEXPM1 FLN FLNP1 FLOG FALOG FSIN
 syn keyword forthOperators FCOS FSINCOS FTAN FASIN FACOS FATAN FATAN2 FSINH
 syn keyword forthOperators FCOSH FTANH FASINH FACOSH FATANH
-syn keyword forthOperators 0< 0<= 0<> 0= 0> 0>= <= <> = > >=
+syn keyword forthOperators 0< 0<= 0<> 0= 0> 0>= < <= <> = > >=
 syn keyword forthOperators ?NEGATE ?DNEGATE
 
 " stack manipulations

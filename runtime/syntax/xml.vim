@@ -3,9 +3,8 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
-" Last Change:	Sat, 24 May 2003 13:12:45 CEST
+" Last Change:	Tue, 27 Apr 2004 14:54:59 CEST
 " Filenames:	*.xml
-" URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
 
 " CREDITS:
@@ -19,8 +18,8 @@
 "   as <hirauchi@kiwi.ne.jp> pointed out according to reference [1]
 "
 "   2.3 Common Syntactic Constructs
-"   [4]    NameChar	::=    Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
-"   [5]    Name		::=    (Letter | '_' | ':') (NameChar)*
+"   [4]    NameChar    ::=    Letter | Digit | '.' | '-' | '_' | ':' | CombiningChar | Extender
+"   [5]    Name        ::=    (Letter | '_' | ':') (NameChar)*
 "
 " NOTE:
 "   1) empty tag delimiters "/>" inside attribute values (strings)
@@ -49,13 +48,13 @@ syn match xmlError "[<&]"
 " EXAMPLE:
 "
 " <tag foo.attribute = "value">
-"		       ^^^^^^^
+"                      ^^^^^^^
 syn region  xmlString contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xmlEntity display
 syn region  xmlString contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=xmlEntity display
 
 
 " punctuation (within attributes) e.g. <tag xml:foo.attribute ...>
-"					       ^   ^
+"                                              ^   ^
 " syn match   xmlAttribPunct +[-:._]+ contained display
 syn match   xmlAttribPunct +[:.]+ contained display
 
@@ -179,7 +178,7 @@ syn region   xmlRegion
 
 
 " &entities; compare with dtd
-syn match   xmlEntity		      "&[^; \t]*;" contains=xmlEntityPunct
+syn match   xmlEntity                 "&[^; \t]*;" contains=xmlEntityPunct
 syn match   xmlEntityPunct  contained "[&.;]"
 
 
@@ -192,7 +191,7 @@ syn region  xmlComment
     \ extend
     \ fold
 
-syn keyword xmlTodo	    contained TODO FIXME XXX display
+syn keyword xmlTodo         contained TODO FIXME XXX display
 syn match   xmlCommentError contained "[^><!]"
 syn region  xmlCommentPart
     \ start=+--+
@@ -215,8 +214,8 @@ syn region    xmlCdata
 " using the following line instead leads to corrupt folding at CDATA regions
 " syn match    xmlCdata      +<!\[CDATA\[\_.\{-}]]>+  contains=xmlCdataStart,xmlCdataEnd,@xmlCdataHook
 syn match    xmlCdataStart +<!\[CDATA\[+  contained contains=xmlCdataCdata
-syn keyword  xmlCdataCdata CDATA	  contained
-syn match    xmlCdataEnd   +]]>+	  contained
+syn keyword  xmlCdataCdata CDATA          contained
+syn match    xmlCdataEnd   +]]>+          contained
 
 
 " Processing instructions

@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.2.  Last change: 2002 Oct 29
+*usr_40.txt*	For Vim version 6.3a.  Last change: 2004 Feb 13
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -224,8 +224,11 @@ When using a space inside a mapping, use <Space> (seven characters): >
 
 This makes the spacebar move a blank-separated word forward.
 
-It is not possible to put a comment after a mapping, because the " character
-is considered to be part of the mapping.
+It is not possible to put a comment directly after a mapping, because the "
+character is considered to be part of the mapping.  You can use |", this
+starts a new, empty command with a comment.  Example: >
+
+	:map <Space> W|     " Use spacebar to move forward a word
 
 
 MAPPINGS AND ABBREVIATIONS
@@ -505,7 +508,7 @@ of the file ("/home/biep/readme.txt") and the relative path (e.g.,
 "biep/readme.txt").
 
 	Note:
-	When working on a system that uses a backslash as file separater, such
+	When working on a system that uses a backslash as file separator, such
 	as MS-Windows, you still use forward slashes in autocommands.  This
 	makes it easier to write the pattern, since a backslash has a special
 	meaning.  It also makes the autocommands portable.

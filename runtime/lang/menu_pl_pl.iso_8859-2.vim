@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:	06 Sep 2001
+" Last Change: 5 May  2004
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -13,13 +13,15 @@ scriptencoding iso-8859-2
 
 " Help menu
 menutrans &Help			Po&moc
-menutrans &Overview<Tab><F1>	&Spis\ Tre¶ci<Tab><F1>
+menutrans &Overview<Tab><F1>	&Spis\ tre¶ci<Tab><F1>
 menutrans &How-to\ links	&Odno¶niki\ JTZ
 menutrans &Credits		Po&dziêkowania
 menutrans &User\ Manual    Podrêcznik\ &u¿ytkownika
 menutrans Co&pying		&Kopiowanie
 menutrans &Version		&Wersja
 menutrans &About		o\ &Aplikacji
+menutrans &Sponsor/Register	&Sponsorowanie/Rejestracja
+menutrans O&rphans	K&ibaale\ Children\'s\ Center
 
 " File menu
 menutrans &File				&Plik
@@ -32,7 +34,7 @@ menutrans Save\ &As\.\.\.<Tab>:sav	Zapisz\ &jako\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	Podziel\ na\ diff-a\ miêdzy\.\.\.
 menutrans Split\ Patched\ &By\.\.\.	Podziel\ ³atane\ przez\.\.\.
 menutrans &Print			&Drukuj
-menutrans Sa&ve-Exit<Tab>:wqa		Zapisz\ i\ w&yjd¼<Tab>:wqa
+menutrans Sa&ve-Exit<Tab>:wqa		W&yj¶cie\ z\ zapisem<Tab>:wqa
 menutrans E&xit<Tab>:qa			&Wyj¶cie<Tab>:qa
 
 " Edit menu
@@ -45,7 +47,7 @@ menutrans &Copy<Tab>"+y			&Kopiuj<Tab>"+y
 menutrans &Paste<Tab>"+gP		&Wklej<Tab>"+gP
 menutrans Put\ &Before<Tab>[p		Wstaw\ p&rzed<Tab>[p
 menutrans Put\ &After<Tab>]p		Wstaw\ p&o<Tab>]p
-menutrans &Select\ all<Tab>ggVG		Z&aznacz\ ca³o¶æ<Tab>ggVG
+menutrans &Select\ All<Tab>ggVG		Z&aznacz\ ca³o¶æ<Tab>ggVG
 menutrans &Find\.\.\.			&Szukaj\.\.\.
 menutrans &Find<Tab>/			&Szukaj<Tab>/
 menutrans Find\ and\ Rep&lace\.\.\.	&Zamieñ\.\.\.
@@ -87,6 +89,7 @@ menutrans &Virtual\ Edit	Obróbka\ &wirtualna
 menutrans Never			Nigdy
 menutrans Block\ Selection	Zaznaczanie\ zakresu
 menutrans Insert\ mode		Tryb\ wprowadzania
+menutrans Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	Tryb\ zg&odno¶ci\ z\ Vi<Tab>:set cp!
 menutrans Block\ and\ Insert	Zakres\ i\ wprowadzanie
 menutrans Always		Zawsze
 

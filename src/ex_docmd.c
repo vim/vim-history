@@ -1545,7 +1545,7 @@ getline_cookie(getline, cookie)
  * Optimisation bug in VC++ version 6.0
  * TODO: check this is still present after each service pack
  */
-#pragma optimize( "g", off )
+# pragma optimize( "g", off )
 #endif
     static char_u *
 do_one_cmd(cmdlinep, sourcing,
@@ -2007,8 +2007,6 @@ do_one_cmd(cmdlinep, sourcing,
     if (!ni && !(ea.argt & BANG) && ea.forceit)	/* no <!> allowed */
     {
 	errormsg = (char_u *)_(e_nobang);
-	if (ea.cmdidx == CMD_help)
-	    errormsg = (char_u *)_("E478: Don't panic!");
 	goto doend;
     }
 
@@ -2545,7 +2543,7 @@ doend:
     return ea.nextcmd;
 }
 #if (_MSC_VER == 1200)
-#pragma optimize( "", on )
+# pragma optimize( "", on )
 #endif
 
 /*

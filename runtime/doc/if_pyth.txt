@@ -1,4 +1,4 @@
-*if_pyth.txt*   For Vim version 6.2.  Last change: 2003 Dec 29
+*if_pyth.txt*   For Vim version 6.3a.  Last change: 2004 Feb 28
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -51,7 +51,9 @@ Note: Python is very sensitive to the indenting.  Also make sure the "class"
 line and "EOF" do not have any indent.
 
 							*:pyfile* *:pyf*
-:[range]pyf[ile] {file}	Execute the Python script in {file}.  {not in Vi}
+:[range]pyf[ile] {file}
+			Execute the Python script in {file}.  The whole
+			argument is used as a single file name.  {not in Vi}
 
 Both of these commands do essentially the same thing - they execute a piece of
 Python code, with the "current range" |python-range| set to the given line
@@ -61,6 +63,12 @@ In the case of :python, the code to execute is in the command-line.
 In the case of :pyfile, the code to execute is the contents of the given file.
 
 Python commands cannot be used in the |sandbox|.
+
+To pass arguments you need to set sys.argv[] explicitly.  Example: >
+
+	:python import sys
+	:python sys.argv = ["foo", "bar"]
+	:pyfile myscript.py
 
 Here are some examples					*python-examples*  >
 
@@ -78,7 +86,9 @@ just like in the Python interpreter.)
 
 Python code gets all of its access to vim (with one exception - see
 |python-output| below) via the "vim" module. The vim module implements two
-methods, three constants, and one error object.
+methods, three constants, and one error object.  You need to import the vim
+module before using it: >
+	:python import vim
 
 Overview >
 	print "Hello"			# displays a message
@@ -99,8 +109,10 @@ Overview >
 	del b[n]			# deletes a line
 	del b[n:m]			# deletes a number of lines
 
-Methods
-	vim.command(str)				*python-command*
+
+Methods of the "vim" module
+
+vim.command(str)					*python-command*
 	Executes the vim (ex-mode) command str. Returns None.
 	Examples: >
 		vim.command("set tw=72")
@@ -111,8 +123,12 @@ Methods
 		# Note the use of single quotes to delimit a string containing
 		# double quotes
 		normal('"a2dd"aP')
-<
-	vim.eval(str)					*python-eval*
+<								*E659*
+	The ":python" command cannot be used recursively with Python 2.2 and
+	older.  This only works with Python 2.3 and later: >
+		:python vim.command("python print 'Hello again Python'")
+
+vim.eval(str)						*python-eval*
 	Evaluates the expression str using the vim internal expression
 	evaluator (see |expression|). Returns the expression result as a
 	string.
@@ -122,8 +138,9 @@ Methods
 						# string.atoi() to convert to
 						# a number.
 
-Error object
-	vim.error					*python-error*
+Error object of the "vim" module
+
+vim.error						*python-error*
 	Upon encountering a Vim error, Python raises an exception of type
 	vim.error.
 	Example: >
@@ -132,12 +149,13 @@ Error object
 		except vim.error:
 			# nothing in register a
 
-Constants
+Constants of the "vim" module
+
 	Note that these are not actually constants - you could reassign them.
 	But this is silly, as you would then lose access to the vim objects
 	to which the variables referred.
 
-	vim.buffers					*python-buffers*
+vim.buffers						*python-buffers*
 	A sequence object providing access to the list of vim buffers. The
 	object supports the following operations: >
 		b = vim.buffers[i]	# Indexing (read-only)
@@ -145,7 +163,7 @@ Constants
 		n = len(vim.buffers)	# Number of elements
 		for b in vim.buffers:	# Sequential access
 <
-	vim.windows					*python-windows*
+vim.windows						*python-windows*
 	A sequence object providing access to the list of vim windows. The
 	object supports the following operations: >
 		w = vim.windows[i]	# Indexing (read-only)
@@ -153,7 +171,7 @@ Constants
 		n = len(vim.windows)	# Number of elements
 		for w in vim.windows:	# Sequential access
 <
-	vim.current					*python-current*
+vim.current						*python-current*
 	An object providing access (via specific attributes) to various
 	"current" objects available in vim:
 		vim.current.line	The current line (RW)		String
@@ -165,6 +183,7 @@ Constants
 	:pyfile command specifies a range, this range of lines becomes the
 	"current range". A range is a bit like a buffer, but with all access
 	restricted to a subset of lines. See |python-range| for more details.
+
 
 Output from Python					*python-output*
 	Vim displays all Python code output in the Vim message area.  Normal
@@ -215,7 +234,7 @@ The buffer object methods are:
 			of the named mark (can also get the []"<> marks)
 	b.range(s,e)	Return a range object (see |python-range|) which
 			represents the part of the given buffer between line
-			numbers s and e (inclusive).
+			numbers s and e |inclusive|.
 
 Examples (assume b is the current buffer) >
 	print b.name		# write the buffer file name

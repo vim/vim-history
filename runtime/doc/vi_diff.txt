@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.2.  Last change: 2003 Mar 03
+*vi_diff.txt*   For Vim version 6.3a.  Last change: 2004 Mar 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -113,7 +113,7 @@ Vi compatibility.					|'compatible'|
 		vim -N
 	This is done automatically if you have a .vimrc file.  See |startup|.
 	The 'cpoptions' option can be used to set Vi compatibility on/off for
-	a number of specific items.			|'cpoptions'|
+	a number of specific items.
 
 Support for different systems.
 	Vim can be used on:
@@ -132,7 +132,7 @@ Support for different systems.
 	- IBM OS/390
 
 Multi level undo.					|undo|
-	'u' goes backward in time, 'ctrl-R' goes forward again.  Set option
+	'u' goes backward in time, 'CTRL-R' goes forward again.  Set option
 	'undolevels' to the number of changes to be remembered (default 1000).
 	Set 'undolevels' to 0 for a vi-compatible one level undo. Set it to
 	-1 for no undo at all.
@@ -143,9 +143,9 @@ Multi level undo.					|undo|
 Graphical User Interface (GUI)				|gui|
 	Included support for GUI: menu's, mouse, scrollbars, etc.  You can
 	define your own menus.  Better support for CTRL/SHIFT/ALT keys in
-	combination with special keys and mouse.  Currently for X11 (with
-	Motif and Athena interfaces), Win32 (Windows 95 and Windows NT), BeOS,
-	Amiga and Macintosh.
+	combination with special keys and mouse.  Supported for various
+	platforms, such as X11 (with Motif and Athena interfaces), GTK, Win32
+	(Windows 95 and later), BeOS, Amiga and Macintosh.
 
 Multiple windows and buffers.				|windows.txt|
 	Vim can split the screen into several windows, each editing a
@@ -176,10 +176,10 @@ Plugins							|add-plugin|
 	specifically for a filetype.
 
 Repeat a series of commands.				|q|
-	'q'{c} starts recording typed characters into named register {c}
+	"q{c}" starts recording typed characters into named register {c}
 	(append to the register if register name is uppercase).  A subsequent
-	'q' stops recording.  The register can then be executed with the
-	'@'{c} command.  This is very useful to repeat a complex action.
+	"q" stops recording.  The register can then be executed with the
+	"@{c}" command.  This is very useful to repeat a complex action.
 
 Flexible insert mode.					|ins-special-special|
 	The arrow keys can be used in insert mode to move around in the file.
@@ -187,15 +187,15 @@ Flexible insert mode.					|ins-special-special|
 	concerned.
 
 	CTRL-O can be used to execute a single command-mode command.  This is
-	almost the same as hitting <Esc>, typing the command and hitting 'a'.
+	almost the same as hitting <Esc>, typing the command and doing "a".
 
 Visual mode.						|Visual-mode|
 	Visual can be used to first highlight a piece of text and then give a
 	command to do something with it.  This is an (easy to use) alternative
 	to first giving the operator and then moving to the end of the text
-	to be operated upon.  'v' and 'V' are used to start Visual mode.  'v'
+	to be operated upon.  "v" and "V" are used to start Visual mode.  "v"
 	works on characters and 'V' on lines.  Move the cursor to extend the
-	Visual part.  It is shown highlighted on the screen.  By typing 'o'
+	Visual part.  It is shown highlighted on the screen.  By typing "o"
 	the other end of the Visual text can be moved.  The Visual text can
 	be affected by an operator:
 		d	delete
@@ -213,9 +213,9 @@ Visual mode.						|Visual-mode|
 
 Block operators.					|visual-block|
 	With Visual a rectangular block of text can be selected.  Start Visual
-	with CTRL-V.  The block can be deleted ('d'), yanked ('y') or its case
-	can be changed ('~', 'u' and 'U').  A deleted or yanked block can be
-	put into the text with the 'p' and 'P' commands.
+	with CTRL-V.  The block can be deleted ("d"), yanked ("y") or its case
+	can be changed ("~", "u" and "U").  A deleted or yanked block can be
+	put into the text with the "p" and "P" commands.
 
 Online help system.					|:help|
 	Help is displayed in a window.  The usual commands can be used to
@@ -265,7 +265,8 @@ Insert-mode completion					|ins-completion|
 	With CTRL-X another mode is entered, through which completion can be
 	done for:
 	|i_CTRL-X_CTRL-F|	file names
-	|i_CTRL-X_CTRL-K|	words from a dictionary
+	|i_CTRL-X_CTRL-K|	words from 'dictionary' files
+	|i_CTRL-X_CTRL-T|	words from 'thesaurus' files
 	|i_CTRL-X_CTRL-I|	words from included files
 	|i_CTRL-X_CTRL-L|	whole lines
 	|i_CTRL-X_CTRL-]|	words from the tags file
@@ -381,8 +382,8 @@ Editing binary files					|edit-binary|
 
 Multi-language support					|multi-lang|
 	Files in double-byte or multi-byte encodings can be edited.  There is
-	UTF-8 support to be able various languages at the same time, without
-	switching fonts. |UTF-8|
+	UTF-8 support to be able to edit various languages at the same time,
+	without switching fonts. |UTF-8|
 	Messages and menus are available in different languages.
 
 ==============================================================================
@@ -413,39 +414,42 @@ line of the screen.  They are removed when the command is finished.
 If the 'ruler' option is set, the current cursor position is shown in the
 last line of the screen.
 
-'U' still works after having moved off the last changed line and after 'u'.
+"U" still works after having moved off the last changed line and after "u".
 
 Characters with the 8th bit set are displayed.  The characters between '~' and
-0xa0 are displayed as "~?", "~@", "~A", etc., unless the "graphic' option is
-set.
+0xa0 are displayed as "~?", "~@", "~A", etc., unless they are included in the
+'isprint' option.
 
-'][' goes to the next ending of a C function ('}' in column 1).
-'[]' goes to the previous ending of a C function ('}' in column 1).
+"][" goes to the next ending of a C function ('}' in column 1).
+"[]" goes to the previous ending of a C function ('}' in column 1).
 
-']f', '[f' and 'gf' start editing the file whose name is under the cursor.
+"]f", "[f" and "gf" start editing the file whose name is under the cursor.
 CTRL-W f splits the window and starts editing the file whose name is under
 the cursor.
 
-'*' searches forward for the identifier under the cursor, '#' backward.
-'K' runs the program defined by the "keywordprg" option, with the identifier
+"*" searches forward for the identifier under the cursor, "#" backward.
+"K" runs the program defined by the 'keywordprg' option, with the identifier
 under the cursor as argument.
 
-'%' can be preceded with a count.  The cursor jumps to the line that
-percentage down in the file.  The normal '%' function to jump to the matching
+"%" can be preceded with a count.  The cursor jumps to the line that
+percentage down in the file.  The normal "%" function to jump to the matching
 brace skips braces inside quotes.
 
 With the CTRL-] command, the cursor may be in the middle of the identifier.
 
 The used tags are remembered.  Commands that can be used with the tag stack
-are CTRL-T, ':pop' and ':tag'.  ':tags' lists the tag stack.
+are CTRL-T, ":pop" and ":tag".  ":tags" lists the tag stack.
 
 The 'tags' option can be set to a list of tag file names.  Thus multiple
-tag files can be used.  For file names that start with '.', the '.' is
+tag files can be used.  For file names that start with "./", the "./" is
 replaced with the path of the current file.  This makes it possible to use a
 tags file in the same directory as the file being edited.
 
 Previously used file names are remembered in the alternate file name list.
 CTRL-^ accepts a count, which is an index in this list.
+":files" command shows the list of alternate file names.
+"#<N>" is replaced with the <N>th alternate file name in the list.
+"#<" is replaced with the current file name without extension.
 
 Search patterns have more features.  The <NL> character is seen as part of the
 search pattern and the substitute string of ":s".  Vi sees it as the end of
@@ -454,11 +458,11 @@ the command.
 Searches can put the cursor on the end of a match and may include a character
 offset.
 
-Count added to '~', ':next', ':Next', 'n' and 'N'.
+Count added to "~", ":next", ":Next", "n" and "N".
 
 The command ":next!" with 'autowrite' set does not write the file.  In vi the
 file was written, but this is considered to be a bug, because one does not
-expect it and the file is not written with ':rewind!'.
+expect it and the file is not written with ":rewind!".
 
 In Vi when entering a <CR> in replace mode deletes a character only when 'ai'
 is set (but does not show it until you hit <Esc>).  Vim always deletes a
@@ -469,22 +473,17 @@ Added :wnext command.  Same as ":write" followed by ":next".
 The ":w!" command always writes, also when the file is write protected.  In Vi
 you would have to do ":!chmod +w %" and ":set noro".
 
-When 'tildeop' has been set, '~' is an operator (must be followed by a
+When 'tildeop' has been set, "~" is an operator (must be followed by a
 movement command).
 
-With the 'J' (join) command you can reset the 'joinspaces' (js) option to
-have only one space after a period (Vi inserts two spaces).
+With the "J" (join) command you can reset the 'joinspaces' option to have only
+one space after a period (Vi inserts two spaces).
 
-'cw' can be used to change white space formed by several characters (Vi is
-confusing: 'cw' only changes one space, while 'dw' deletes all white space).
+"cw" can be used to change white space formed by several characters (Vi is
+confusing: "cw" only changes one space, while "dw" deletes all white space).
 
-'o' and 'O' accept a count for repeating the insert (Vi clears a part of
+"o" and "O" accept a count for repeating the insert (Vi clears a part of
 display).
-
-Previously used file names are remembered in the alternate file name list.
-":files" command shows the list of alternate file names.
-'#'<N> is replaced with the <N>th alternate file name in the list.
-"#<" is replaced with the current file name without extension.
 
 Flags after Ex commands not supported (no plans to include it).
 
@@ -496,10 +495,10 @@ After a ":cd" command the file names (in the argument list, opened files)
 still point to the same files.  In Vi ":cd" is not allowed in a changed file;
 otherwise the meaning of file names change.
 
-':source!' command reads Vi commands from a file.
+":source!" command reads Vi commands from a file.
 
-':mkexrc' command writes current modified options and mappings to a ".exrc"
-file.  ':mkvimrc' writes to a ".vimrc" file.
+":mkexrc" command writes current modified options and mappings to a ".exrc"
+file.  ":mkvimrc" writes to a ".vimrc" file.
 
 No check for "tail recursion" with mappings.  This allows things like
 ":map! foo ^]foo".
@@ -511,7 +510,7 @@ considered a vi bug.  Vim concatenates the counts (in the example it becomes
 
 The :put! command inserts the contents of a register above the current line.
 
-The 'p' and 'P' commands of vi cannot be repeated with '.' when the putted
+The "p" and "P" commands of vi cannot be repeated with "." when the putted
 text is less than a line.  In Vim they can always be repeated.
 
 ":noremap" command can be used to enter a mapping that will not be remapped.
@@ -530,14 +529,14 @@ The ':' register contains the last command-line.
 The '%' register contains the current file name.
 The '.' register contains the last inserted text.
 
-':dis' command shows the contents of the yank registers.
+":dis" command shows the contents of the yank registers.
 
 CTRL-O/CTRL-I can be used to jump to older/newer positions.  These are the
 same positions as used with the '' command, but may be in another file.  The
-':jumps' command lists the older positions.
+":jumps" command lists the older positions.
 
 If the 'shiftround' option is set, an indent is rounded to a multiple of
-'shiftwidth' with '>' and '<' commands.
+'shiftwidth' with ">" and "<" commands.
 
 The 'scrolljump' option can be set to the minimum number of lines to scroll
 when the cursor gets off the screen.  Use this when scrolling is slow.
@@ -547,7 +546,7 @@ above and below the cursor.  This gives some context to where you are
 editing.  When set to a large number the cursor line is always in the middle
 of the window.
 
-Uppercase marks can be used to jump between files.  The ':marks' command lists
+Uppercase marks can be used to jump between files.  The ":marks" command lists
 all currently set marks.  The commands "']" and "`]" jump to the end of the
 previous operator or end of the text inserted with the put command.  "'[" and
 "`[" do jump to the start.
@@ -581,7 +580,7 @@ the opposite direction.  CTRL-B toggles the 'revins' option.  In replace mode
 
 The backspace key can be used just like CTRL-D to remove auto-indents.
 
-You can backspace, ctrl-U and CTRL-W over line breaks if the 'backspace' (bs)
+You can backspace, CTRL-U and CTRL-W over line breaks if the 'backspace' (bs)
 option includes "eol".  You can backspace over the start of insert if the
 'backspace' option includes "start".
 
@@ -625,8 +624,8 @@ entered with "CTRL-K {char1} {char2}" or "{char1} BS {char2}" (only when
 When repeating an insert, e.g. "10atest <Esc>" vi would only handle wrapmargin
 for the first insert.  Vim does it for all.
 
-A count to the 'i' or 'a' command is used for all the text.  Vi uses the count
-only for one line.  "3iabc<NL>def<Esc>" would insert "abcabcacc<NL>def" in Vi
+A count to the "i" or "a" command is used for all the text.  Vi uses the count
+only for one line.  "3iabc<NL>def<Esc>" would insert "abcabcabc<NL>def" in Vi
 but "abc<NL>defabc<NL>defabc<NL>def" in Vim.
 
 
@@ -660,7 +659,7 @@ the CTRL-Z, ":stop" or ":suspend" command starts a new shell.
 
 If Vim is started on the Amiga without an interactive window for output, a
 window is opened (and :sh still works).  You can give a device to use for
-editing with the '-d' argument, e.g. "-d con:20/20/600/150".
+editing with the |-d| argument, e.g. "-d con:20/20/600/150".
 
 The 'columns' and 'lines' options are used to set or get the width and height
 of the display.
@@ -729,19 +728,31 @@ Only Vim is able to accept options in between and after the file names.
 
 --		Vim: End of options, only file names are following.
 
+--cmd {command}	Vim: execute {command} before sourcing vimrc files.
+
+--echo-wid	Vim: GTK+ echoes the Window ID on stdout
+
 --help		Vim: show help message and exit.
 
 --literal	Vim: take file names literally, don't expand wildcards.
+
+--nofork	Vim: same as |-f|
 
 --noplugin[s]	Vim: Skip loading plugins.
 
 --remote	Vim: edit the files in another Vim server
 
---remote-wait	Vim: edit the files in another Vim server and wait for it
-
 --remote-expr {expr}	Vim: evaluate {expr} in another Vim server
 
 --remote-send {keys}	Vim: send {keys} to a Vim server and exit
+
+--remote-silent {file}	Vim: edit the files in another Vim server if possible
+
+--remote-wait	Vim: edit the files in another Vim server and wait for it
+
+--remote-wait-silent	Vim: like --remote-wait, no complaits if not possible
+
+--role {role}	Vim: GTK+ 2: set role of main window
 
 --serverlist	Vim: Output a list of Vim servers and exit
 
@@ -755,6 +766,8 @@ Only Vim is able to accept options in between and after the file names.
 
 -a		Elvis: Load all specified file names into a window (use -o for
 		Vim).
+
+-A		Vim: Start in Arabic mode (when compiled with Arabic).
 
 -b {blksize}	Elvis: Use {blksize} blocksize for the session file.
 -b		Vim: set 'binary' mode.
@@ -780,8 +793,6 @@ Only Vim is able to accept options in between and after the file names.
 
 -f		Vim: Run GUI in foreground (Amiga: don't open new window).
 -f {session}	Elvis: Use {session} as the session file.
-
--A		Vim: Start in Arabic mode (when compiled with Arabic).
 
 -F		Vim: Start in Farsi mode (when compiled with Farsi).
 		Nvi: Fast start, don't read the entire file when editing
@@ -814,9 +825,13 @@ Only Vim is able to accept options in between and after the file names.
 
 -n		Vim: No swap file used.
 
--O[N]		Vim: Like -o, but use vertially split windows.
+-nb[args]	Vim: open a NetBeans interface connection
+
+-O[N]		Vim: Like -o, but use vertically split windows.
 
 -o[N]		Vim: Open [N] windows, or one for each file.
+
+-P {parent-title} Win32 Vim: open Vim inside a parent application window
 
 -q {name}	Vim: Use {name} for quickfix error file.
 -q{name}	Vim: Idem.

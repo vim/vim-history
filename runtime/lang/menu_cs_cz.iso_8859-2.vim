@@ -1,6 +1,5 @@
 " Menu Translations:	Czech for ISO-8859-2
-" Maintainer:		Jiri Brezina <brz@centrum.cz>
-" URL:			http://brz.d2.cz/vim
+" Maintainer:		Jiri Brezina <brzj@seznam.cz>
 " vim:set foldmethod=marker:
 " $Revision$
 " $Date$
@@ -11,7 +10,7 @@ if exists("did_menu_trans")
 endif
 let did_menu_trans = 1
 
-scriptencoding iso-8859-2
+scriptencoding ISO-8859-2
 
 " {{{ File menu
 menutrans &File				&Soubor
@@ -107,7 +106,7 @@ menutrans Fold\ Met&hod			Metoda\ &skládání
 menutrans Create\ &Fold<Tab>zf		Vytvoøit\ &fold<Tab>zf
 menutrans &Delete\ Fold<Tab>zd		Vymazat\ fol&d<Tab>zd
 menutrans Delete\ &All\ Folds<Tab>zD	V&ymazat\ v¹echny\ foldy<Tab>zD
-menutrans Fold\ column\ &width		Sloupec\ zob&razení\ foldù
+menutrans Fold\ col&umn\ width		Sloupec\ zob&razení\ foldù
 
 menutrans &Update			&Obnovit
 menutrans &Get\ Block			&Sejmout\ Blok
@@ -141,7 +140,7 @@ menutrans o&ff\ (this\ file)	vyp&nout\ (pro\ tento\ soubor)
 menutrans Co&lor\ test		Test\ &barev
 menutrans &Highlight\ test	&Test\ zvýrazòování
 menutrans &Convert\ to\ HTML	Pøevést\ &do\ HTML
-menutrans &Show\ individual\ choices	&Zobrazit\ výbìr\ mo¾ností
+menutrans &Show\ filetypes\ in\ menu	&Zobrazit\ výbìr\ mo¾ností
 " }}}
 
 " {{{ Menu Buffers

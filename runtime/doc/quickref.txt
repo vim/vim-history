@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.2.  Last change: 2003 May 11
+*quickref.txt*  For Vim version 6.3a.  Last change: 2004 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -164,8 +164,8 @@ N is used to indicate an optional count that can be given before the command.
     e[-num]	[num] characters to the left of the end of the match
     s[+num]	[num] characters to the right of the start of the match
     s[-num]	[num] characters to the left of the start of the match
-    b[+num]	[num] characters to the right of the start (begin) of the match
-    b[-num]	[num] characters to the left of the start (begin) of the match
+    b[+num]	[num] identical to s[+num] above (mnemonic: begin)
+    b[-num]	[num] identical to s[-num] above (mnemonic: begin)
     ;{search-command}	execute {search-command} next
 ------------------------------------------------------------------------------
 *Q_ma*		Marks and motions
@@ -588,7 +588,11 @@ Short explanation of each option:		*option-list*
 |'aleph'|	  |'al'|     ASCII code of the letter Aleph (Hebrew)
 |'allowrevins'|	  |'ari'|    allow CTRL-_ in Insert and Command-line mode
 |'altkeymap'|	  |'akm'|    for default second language (Farsi/Hebrew)
+|'ambiwidth'|	  |'ambw'|   what to do with Unicode chars of ambiguous width
+|'antialias'|	  |'anti'|   Mac OS X: use smooth, antialiased fonts
+|'autochdir'|	  |'acd'|    change directory to the file in the current window
 |'arabic'|	  |'arab'|   for Arabic as a default second language
+|'arabicshape'|   |'arshape'| do shaping for Arabic characters
 |'autoindent'|	  |'ai'|     take indent for new line from previous line
 |'autoread'|	  |'ar'|     autom. read file when changed outside of Vim
 |'autowrite'|	  |'aw'|     automatically write file if changed
@@ -610,6 +614,7 @@ Short explanation of each option:		*option-list*
 |'bufhidden'|	  |'bh'|     what to do when buffer is no longer in window
 |'buflisted'|	  |'bl'|     whether the buffer shows up in the buffer list
 |'buftype'|	  |'bt'|     special type of buffer
+|'casemap'|	  |'cmp'|    specifies how case of letters is changed
 |'cdpath'|	  |'cd'|     list of directories searched with ":cd"
 |'cedit'|		     key used to open the command-line window
 |'charconvert'|   |'ccv'|    expression for character encoding conversion
@@ -631,6 +636,7 @@ Short explanation of each option:		*option-list*
 |'cpoptions'|	  |'cpo'|    flags for Vi-compatible behavior
 |'cscopepathcomp'| |'cspc'|  how many components of the path to show
 |'cscopeprg'|	  |'csprg'|  command to execute cscope
+|'cscopequickfix'| |'csqf'|  use quickfix window for cscope results
 |'cscopetag'|	  |'cst'|    use cscope for tag commands
 |'cscopetagorder'| |'csto'|  determines ":cstag" search order
 |'cscopeverbose'| |'csverb'| give messages when adding a cscope database
@@ -644,8 +650,8 @@ Short explanation of each option:		*option-list*
 |'digraph'|	  |'dg'|     enable the entering of digraphs in Insert mode
 |'directory'|	  |'dir'|    list of directory names for the swap file
 |'display'|	  |'dy'|     list of flags for how to display text
-|'edcompatible'|  |'ed'|     toggle flags of ":substitute" command
 |'eadirection'|   |'ead'|    in which direction 'equalalways' works
+|'edcompatible'|  |'ed'|     toggle flags of ":substitute" command
 |'encoding'|	  |'enc'|    encoding used internally
 |'endofline'|	  |'eol'|    write <EOL> for last line in file
 |'equalalways'|   |'ea'|     windows are automatically made the same size
@@ -689,8 +695,9 @@ Short explanation of each option:		*option-list*
 |'guiheadroom'|	  |'ghr'|    GUI: pixels room for window decorations
 |'guioptions'|	  |'go'|     GUI: Which components and options are used
 |'guipty'|		     GUI: try to use a pseudo-tty for ":!" commands
-|'helpfile'|	  |'hf'|     name of this help file
+|'helpfile'|	  |'hf'|     full path name of the main help file
 |'helpheight'|	  |'hh'|     minimum height of a new help window
+|'helplang'|	  |'hlg'|    preferred help languages
 |'hidden'|	  |'hid'|    don't unload buffer when it is |abandon|ed
 |'highlight'|	  |'hl'|     sets highlighting mode for various occasions
 |'hlsearch'|	  |'hls'|    highlight matches with last search pattern
@@ -702,6 +709,7 @@ Short explanation of each option:		*option-list*
 |'ignorecase'|	  |'ic'|     ignore case in search patterns
 |'imactivatekey'| |'imak'|   key that activates the X input method
 |'imcmdline'|	  |'imc'|    use IM when starting to edit a command line
+|'imdisable'|	  |'imd'|    do not use the IM in any mode
 |'iminsert'|	  |'imi'|    use :lmap or IM in Insert mode
 |'imsearch'|	  |'ims'|    use :lmap or IM when typing a search pattern
 |'include'|	  |'inc'|    pattern to be used to find an include file
@@ -766,6 +774,8 @@ Short explanation of each option:		*option-list*
 |'previewheight'| |'pvh'|    height of the preview window
 |'previewwindow'| |'pvw'|    identifies the preview window
 |'printdevice'|   |'pdev'|   name of the printer to be used for :hardcopy
+|'printencoding'| |'penc'|   encoding to be used for printing
+|'printexpr'|     |'pexpr'|  expression used to print PostScript for :hardcopy
 |'printfont'|	  |'pfn'|    name of the font to be used for :hardcopy
 |'printheader'|   |'pheader'| format of the header used for :hardcopy
 |'printoptions'|  |'popt'|   controls the format of :hardcopy output
@@ -775,6 +785,7 @@ Short explanation of each option:		*option-list*
 |'restorescreen'| |'rs'|     Win32: restore screen when exiting
 |'revins'|	  |'ri'|     inserting characters will work backwards
 |'rightleft'|	  |'rl'|     window is right-to-left oriented
+|'rightleftcmd'|  |'rlc'|    commands for which editing works right-to-left
 |'ruler'|	  |'ru'|     show cursor line and column in the status line
 |'rulerformat'|	  |'ruf'|    custom format for the ruler
 |'runtimepath'|   |'rtp'|    list of directories used for runtime files
@@ -828,6 +839,7 @@ Short explanation of each option:		*option-list*
 |'tags'|	  |'tag'|    list of file names used by the tag command
 |'tagstack'|	  |'tgst'|   push tags onto the tag stack
 |'term'|		     name of the terminal
+|'termbidi'|	  |'tbidi'|  terminal takes care of bi-directionality
 |'termencoding'|  |'tenc'|   character encoding used by the terminal
 |'terse'|		     shorten some messages
 |'textauto'|	  |'ta'|     obsolete, use 'fileformats'
@@ -842,6 +854,7 @@ Short explanation of each option:		*option-list*
 |'titleold'|		     old title, restored when exiting
 |'titlestring'|		     string to use for the Vim window title
 |'toolbar'|	  |'tb'|     GUI: which items to show in the toolbar
+|'toolbariconsize'| |'tbis'| size of the toolbar icons (for GTK 2 only)
 |'ttimeout'|		     time out on mappings
 |'ttimeoutlen'|	  |'ttm'|    time out time for key codes in milliseconds
 |'ttybuiltin'|	  |'tbi'|    use built-in termcap before external termcap
@@ -868,6 +881,7 @@ Short explanation of each option:		*option-list*
 |'wildmode'|	  |'wim'|    mode for 'wildchar' command-line expansion
 |'winaltkeys'|	  |'wak'|    when the windows system handles ALT keys
 |'winheight'|	  |'wh'|     minimum number of lines for the current window
+|'winfixheight'|  |'wfh'|    keep window height when opening/closing windows
 |'winminheight'|  |'wmh'|    minimum number of lines for any window
 |'winminwidth'|   |'wmw'|    minimal number of columns for any window
 |'winwidth'|	  |'wiw'|    minimal number of columns for current window
@@ -1185,13 +1199,16 @@ Context-sensitive completion on the command-line:
 |CTRL-W_s|	CTRL-W s  or  :split	Split window into two parts
 |:split_f|	:split {file}		Split window and edit {file} in one of
 					   them
+|:vsplit|	:vsplit {file}		Same, but split vertically
+|:vertical|	:vertical {cmd}		Make {cmd} split vertically
+
 |:sfind|	:sf[ind] {file}		Split window, find {file} in 'path'
 					   and edit it.
 |CTRL-W_]|	CTRL-W ]		Split window and jump to tag under
 					   cursor
 |CTRL-W_f|	CTRL-W f		Split window and edit file name under
 					   the cursor
-|CTRL-W_CTRL-^| CTRL-W CTRL-^		Split window and edit alternate file
+|CTRL-W_^|	CTRL-W ^		Split window and edit alternate file
 |CTRL-W_n|	CTRL-W n  or  :new	Create new empty window
 |CTRL-W_q|	CTRL-W q  or  :q[uit]	Quit editing and close window
 |CTRL-W_c|	CTRL-W c  or  :cl[ose]	Make buffer hidden and close window
@@ -1277,7 +1294,6 @@ Context-sensitive completion on the command-line:
 					add toolbar item, giving {lhs}
 |:tmenu|	:tmenu {mpath} {text}	add tooltip to menu {mpath}
 |:unmenu|	:unmenu {mpath}		remove menu {mpath}
-
 ------------------------------------------------------------------------------
 *Q_fo*		Folding
 

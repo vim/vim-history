@@ -22,6 +22,8 @@ vim \- Vi IMproved, a programmers text editor
 .br
 .B gvim
 .B gview
+.B evim
+.B eview
 .br
 .B rvim
 .B rview
@@ -114,6 +116,11 @@ The GUI version.
 Starts a new window.
 Can also be done with the "-g" argument.
 .TP
+evim eview
+The GUI version in easy mode.
+Starts a new window.
+Can also be done with the "-y" argument.
+.TP
 rvim rview rgvim rgview
 Like the above, but with restrictions.  It will not be possible to start shell
 commands, or suspend
@@ -143,6 +150,13 @@ depends on the shell that is used).
 Example: Vim "+set si" main.c
 .br
 Note: You can use up to 10 "+" or "-c" commands.
+.TP
+-S {file}
+{file} will be sourced after the first file has been read.
+This is equivalent to -c "source {file}".
+{file} cannot start with '-'.
+If {file} is omitted "Session.vim" is used (only works when -S is the last
+argument).
 .TP
 --cmd {command}
 Like using "-c", but the command is executed just before
@@ -184,10 +198,19 @@ Only on the Amiga.
 Example:
 "\-d con:20/30/600/150".
 .TP
+-D
+Debugging.  Go to debugging mode when executing the first command from a
+script.
+.TP
 -e
 Start
 .B Vim
 in Ex mode, just like the executable was called "ex".
+.TP
+-E
+Start
+.B Vim
+in improved Ex mode, just like the executable was called "exim".
 .TP
 -f
 Foreground.  For the GUI version,
@@ -258,7 +281,13 @@ Sets the 'lisp' and 'showmatch' options on.
 .TP
 -m
 Modifying files is disabled.
-Resets the 'write' option, so that writing files is not possible.
+Resets the 'write' option.
+You can still modify the buffer, but writing a file is not possible.
+.TP
+-M
+Modifications not allowed.  The 'modifiable' and 'write' options will be unset,
+so that changes are not allowed and files can not be written.  Note that these
+options can be set to enable making modifications.
 .TP
 -N
 No-compatible mode.  Reset the 'compatible' option.
@@ -273,6 +302,9 @@ Recovery after a crash will be impossible.
 Handy if you want to edit a file on a very slow medium (e.g. floppy).
 Can also be done with ":set uc=0".
 Can be undone with ":set uc=200".
+.TP
+-nb
+Become an editor server for NetBeans.  See the docs for details.
 .TP
 -o[N]
 Open N windows stacked.
@@ -337,9 +369,10 @@ All the other GUI initializations are skipped.
 It can also be used to skip all GUI initializations by giving the name "NONE".
 See ":help gui-init" within vim for more details.
 .TP
--V
+-V[N]
 Verbose.  Give messages about which files are sourced and for reading and
-writing a viminfo file.
+writing a viminfo file.  The optional number N is the value for 'verbose'.
+Default is 10.
 .TP
 -v
 Start
@@ -365,6 +398,14 @@ Use encryption when writing files.   Will prompt for a crypt key.
 Don't connect to the X server.  Shortens startup time in a terminal, but the
 window title and clipboard will not be used.
 .TP
+-y
+Start
+.B Vim
+in easy mode, just like the executable was called "evim" or "eview".
+Makes
+.B Vim
+behave like a click-and-type editor.
+.TP
 -Z
 Restricted mode.  Works like the executable starts with "r".
 .TP
@@ -373,11 +414,18 @@ Denotes the end of the options.
 Arguments after this will be handled as a file name.
 This can be used to edit a filename that starts with a '-'.
 .TP
+--echo-wid
+GTK GUI only: Echo the Window ID on stdout
+.TP
 --help
 Give a help message and exit, just like "-h".
 .TP
---version
-Print version information and exit.
+--literal
+Take file name arguments literally, do not expand wildcards.  Not needed on
+Unix, the shell expand wildcards.
+.TP
+--noplugin
+Skip loading plugins.  Implied by -u NONE.
 .TP
 --remote
 Connect to a Vim server and make it edit the files given in the rest of the
@@ -409,8 +457,8 @@ Use {name} as the server name.  Used for the current Vim, unless used with a
 --socketid {id}
 GTK GUI only: Use the GtkPlug mechanism to run gvim in another window.
 .TP
---echo-wid
-GTK GUI only: Echo the Window ID on stdout
+--version
+Print version information and exit.
 .SH ON-LINE HELP
 Type ":help" in
 .B Vim

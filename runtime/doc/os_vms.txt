@@ -1,4 +1,4 @@
-*os_vms.txt*    For Vim version 6.2.  Last change: 2003 May 12
+*os_vms.txt*    For Vim version 6.3a.  Last change: 2004 May 3
 
 
 		  VIM REFERENCE MANUAL
@@ -42,10 +42,21 @@ You will need both the Unix and Extra archives to build vim.exe for VMS.
 For using Vim's full power you will need the runtime files as well.
 
 You can download precompiled executables from:
-	http://www.polarfox.com/vim/
-	ftp://ftp.polarfox.com/pub/vim/
+	http://www.polarhome.com/vim/
+	ftp://ftp.polarhome.com/pub/vim/
 
-Official mirror for polarfox.com can be found at polarhome com.
+To use the precompiled binary version, you need one of these archives:
+
+  vim-XX-exe-alpha-gui.zip      Alpha GUI/Motif executables
+  vim-XX-exe-alpha-gtk.zip      Alpha GUI/GTK executables
+  vim-XX-exe-alpha-term.zip     Alpha console executables
+  vim-XX-exe-vax-gui.zip        VAX GUI executables
+  vim-XX-exe-vax-term.zip       VAX console executables
+
+and of course
+  vim-XX-runtime.zip            runtime files
+
+The binary archives contain: vim.exe, ctags.exe, xxd.exe, mms_vim.exe files.
 
 ==============================================================================
 
@@ -78,7 +89,7 @@ change to subdirectory and build it separately.
 CTAGS is not part of Vim source distribution any more, however the OpenVMS
 specific source might contain CTAGS source files as it is described above.
 You can find more information about CTAGS on VMS at
-http://www.polarfox.com/ctags/
+http://www.polarhome.com/ctags/
 
 Advanced users may try some acrobatics in FEATURE.H file also.
 
@@ -86,7 +97,8 @@ It is possible to compile with +xfontset +xim options too, but then you have
 to set up GUI fonts etc. correctly. See. :help xim from Vim command prompt.
 
 You may want to use GUI with GTK icons, then you have to download and install
-GTK for OpenVMS or at least runtime shareable images - LIBGTK from polarfox.com
+GTK for OpenVMS or at least runtime shareable images - LIBGTK from
+polarhome.com
 
 For more advanced questions, please send your problem to Vim on VMS mailing
 list <vim-vms@polarhome.com>
@@ -546,7 +558,7 @@ format. To use vim on VMS in diff-mode, you need to:
     2 Tell vim to use the Unix-like diff for diff-mode.
 
 You can download GNU diff from the VIM-VMS website, it is one of the GNU
-tools in http://www.polarfox.com/vim/files/gnu_tools.zip. I suggest to
+tools in http://www.polarhome.com/vim/files/gnu_tools.zip. I suggest to
 unpack it in a separate directory "GNU" and create a logical GNU: that
 points to that directory. e.g: >
 
@@ -631,6 +643,11 @@ it with: >
 ==============================================================================
 
 9. VMS related changes					*vms-changes*
+
+Version 6.3 (2004 May 10)
+- Improved vms_read function
+- CTAGS v5.5.4 included
+- Documentation corrected and updated
 
 Version 6.2 (2003 May 7)
 - Corrected VMS system call results
@@ -750,8 +767,8 @@ Version 4.5 (1996 Dec 16)
 
 10. Authors						*vms-authors*
 
-OpenVMS documentation and executables are maintened by:
-Zoltan Arpadffy <arpadffy@polarfox.com>
+OpenVMS documentation and executables are maintained by:
+Zoltan Arpadffy <arpadffy@polarhome.com>
 
 This document uses parts and remarks from earlier authors and contributors
 of OS_VMS.TXT:

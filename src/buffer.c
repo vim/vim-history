@@ -1055,7 +1055,7 @@ do_buffer(action, start, dir, count, forceit)
 #ifdef FEAT_WINDOWS
 	    close_windows(buf);
 #endif
-	    if (buf != curbuf && buf_valid(buf) && buf->b_nwindows == 0)
+	    if (buf != curbuf && buf_valid(buf) && buf->b_nwindows <= 0)
 		close_buffer(NULL, buf, action);
 	    return OK;
 	}

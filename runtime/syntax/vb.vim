@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	Visual Basic
-" Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2003 May 11
+" Maintainer:	Tim Chase <vb.vim@tim.thechases.com>
+" Former Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
+"	(tried multiple times to contact, but email bounced)
+" Last Change:	2004 January 20
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
@@ -10,29 +12,30 @@
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
-  syntax clear
+	syntax clear
 elseif exists("b:current_syntax")
-  finish
+	finish
 endif
 
 " VB is case insensitive
 syn case ignore
 
-syn keyword vbStatement AppActivate Base Beep Call Case ChDir ChDrive Const
+syn keyword vbStatement AppActivate As Base Beep Call Case ChDir ChDrive Const
 syn keyword vbStatement Declare DefBool DefByte DefCur DefDate DefDbl DefDec
 syn keyword vbStatement DefInt DefLng DefObj DefSng DefStr Deftype DefVar
-syn keyword vbStatement DeleteSetting Dim Do Else End Enum Erase Event Exit
-syn keyword vbStatement Explicit FileCopy For ForEach Function Get GoSub GoTo
-syn keyword vbStatement If Implements Kill Let LineInput Lock LSet MkDir Name Next
-syn keyword vbStatement OnError On Option Private Property Public Put RaiseEvent
-syn keyword vbStatement Randomize ReDim Rem Reset Resume Return RmDir RSet
-syn keyword vbStatement SavePicture SaveSetting SendKeys SetAttr Static Sub Then
-syn keyword vbStatement Type Unlock Wend While Width With Write
+syn keyword vbStatement DeleteSetting Dim Do Else ElseIf End Enum Erase Event 
+syn keyword vbStatement Exit Explicit FileCopy For ForEach Function Get GoSub 
+syn keyword vbStatement GoTo If Implements Kill Let LineInput Lock Loop LSet
+syn keyword vbStatement MkDir Name Next OnError On Option Private Property
+syn keyword vbStatement Public Put RaiseEvent Randomize ReDim Reset Resume
+syn keyword vbStatement Return RmDir RSet SavePicture SaveSetting SendKeys Select
+syn keyword vbStatement SetAttr Static Sub Then Type Unlock Until Wend While
+syn keyword vbStatement Width With Write
 
 syn keyword vbFunction Abs Array Asc AscB AscW Atn Avg
 syn keyword vbFunction CBool CByte CCur CDate CDbl Cdec Choose Chr ChrB ChrW
 syn keyword vbFunction CInt CLng Command Cos Count CreateObject CSng CStr
-syn keyword vbFunction CurDir CVar CVDate CVErr Date DateAdd DateDiff DatePart
+syn keyword vbFunction CurDir CVar CVDate CVErr DateAdd DateDiff DatePart
 syn keyword vbFunction DateSerial DateValue Day DDB Dir DoEvents Environ EOF
 syn keyword vbFunction Error Exp FileAttr FileDateTime FileLen Fix Format
 syn keyword vbFunction FreeFile FV GetAllStrings GetAttr GetAutoServerSettings
@@ -88,7 +91,7 @@ syn keyword vbMethods RemoveItem Render RepairDatabase Reply ReplyAll Requery
 syn keyword vbMethods ResetCustom ResetCustomLabel ResolveName RestoreToolbar
 syn keyword vbMethods Resync Rollback RollbackTrans RowBookmark RowContaining
 syn keyword vbMethods RowTop Save SaveAs SaveFile SaveToFile SaveToolbar
-syn keyword vbMethods SaveToOle1File Scale ScaleX ScaleY Scroll Select SelectAll
+syn keyword vbMethods SaveToOle1File Scale ScaleX ScaleY Scroll SelectAll
 syn keyword vbMethods SelectPart SelPrint Send SendData Set SetAutoServerSettings
 syn keyword vbMethods SetData SetFocus SetOption SetSize SetText SetViewport Show
 syn keyword vbMethods ShowColor ShowFont ShowHelp ShowOpen ShowPrinter ShowSave
@@ -145,46 +148,59 @@ syn keyword vbEvents Unload UpClick Updated Validate ValidationError
 syn keyword vbEvents WillAssociate WillChangeData WillDissociate WillExecute
 syn keyword vbEvents WillUpdateRows WriteProperties
 
-syn keyword vbTodo contained	TODO
+syn keyword vbTypes Boolean Byte Currency Date Decimal Double Empty
+syn keyword vbTypes Integer Long Single String
+
+syn match vbOperator "[()+.,\-/*=&]"
+syn match vbOperator "[<>]=\="
+syn match vbOperator "<>"
+syn match vbOperator "\s\+_$"
+syn keyword vbOperator And Or Not Xor Mod Is Imp Eqv
+syn keyword vbConst True False Null Nothing
+
+syn keyword vbTodo contained TODO
 
 "integer number, or floating point number without a dot.
-syn match  vbNumber		"\<\d\+\>"
+syn match vbNumber "\<\d\+\>"
 "floating point number, with dot
-syn match  vbNumber		"\<\d\+\.\d*\>"
+syn match vbNumber "\<\d\+\.\d*\>"
 "floating point number, starting with a dot
-syn match  vbNumber		"\.\d\+\>"
+syn match vbNumber "\.\d\+\>"
 
 " String and Character contstants
-syn region  vbString		  start=+"+  end=+"+
-syn region  vbComment	start="REM" end="$" contains=vbTodo
-syn region  vbComment   start="'"   end="$" contains=vbTodo
-syn region  vbLineNumber	start="^\d" end="\s"
-syn match   vbTypeSpecifier  "[a-zA-Z0-9][\$%&!#]"ms=s+1
+syn region vbString start=+"+ end=+"+
+syn region vbComment start="\<REM\>" end="$" contains=vbTodo
+syn region vbComment start="'" end="$" contains=vbTodo
+syn region vbLineNumber	start="^\d" end="\s"
+syn match vbTypeSpecifier "[a-zA-Z0-9][\$%&!#]"ms=s+1
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_vb_syntax_inits")
-  if version < 508
-    let did_vb_syntax_inits = 1
-    command -nargs=+ HiLink hi link <args>
-  else
-    command -nargs=+ HiLink hi def link <args>
-  endif
+	if version < 508
+		let did_vb_syntax_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
+	endif
 
-  HiLink vbLineNumber		Comment
-  HiLink vbNumber		Number
-  HiLink vbError		Error
-  HiLink vbStatement		Statement
-  HiLink vbString		String
-  HiLink vbComment		Comment
-  HiLink vbTodo			Todo
-  HiLink vbFunction		Identifier
-  HiLink vbMethods		PreProc
-  HiLink vbEvents		Special
-  HiLink vbTypeSpecifier	Type
+	HiLink vbLineNumber	Comment
+	HiLink vbNumber		Number
+	HiLink vbConst		Constant
+	HiLink vbError		Error
+	HiLink vbStatement	Statement
+	HiLink vbString		String
+	HiLink vbComment	Comment
+	HiLink vbTodo		Todo
+	HiLink vbFunction	Identifier
+	HiLink vbMethods	PreProc
+	HiLink vbEvents		Special
+	HiLink vbTypeSpecifier	Type
+	HiLink vbTypes		Type
+	HiLink vbOperator	Operator
 
-  delcommand HiLink
+	delcommand HiLink
 endif
 
 let b:current_syntax = "vb"

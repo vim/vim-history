@@ -2,7 +2,7 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2003 May 04
+" Last Change:  2004 Apr 23
 
 " Please check :help java.vim for comments on some of the options available.
 
@@ -27,6 +27,7 @@ endif
 " some characters that cannot be in a java program (outside a string)
 syn match javaError "[\\@`]"
 syn match javaError "<<<\|\.\.\|=>\|<>\|||=\|&&=\|[^-]->\|\*\/"
+syn match javaOK "\.\.\."
 
 " use separate name so that it can be deleted in javacc.vim
 syn match   javaError2 "#\|=<"
@@ -35,7 +36,8 @@ JavaHiLink javaError2 javaError
 
 
 " keyword definitions
-syn keyword javaExternal	import native package
+syn keyword javaExternal	native package
+syn match javaExternal		"\<import\(\s\+static\>\)\?"
 syn keyword javaError		goto const
 syn keyword javaConditional	if else switch
 syn keyword javaRepeat		while for do
@@ -46,18 +48,19 @@ syn keyword javaOperator	new instanceof
 syn keyword javaType		boolean char byte short int long float double
 syn keyword javaType		void
 syn keyword javaStatement	return
-syn keyword javaStorageClass    static synchronized transient volatile final strictfp serializable
-syn keyword javaExceptions      throw try catch finally
+syn keyword javaStorageClass	static synchronized transient volatile final strictfp serializable
+syn keyword javaExceptions	throw try catch finally
 syn keyword javaAssert		assert
-syn keyword javaMethodDecl      synchronized throws
-syn keyword javaClassDecl       extends implements interface
+syn keyword javaMethodDecl	synchronized throws
+syn keyword javaClassDecl	extends implements interface
 " to differentiate the keyword class from MyClass.class we use a match here
 syn match   javaTypedef		"\.\s*\<class\>"ms=s+1
-syn match   javaClassDecl       "^class\>"
-syn match   javaClassDecl       "[^.]\s*\<class\>"ms=s+1
+syn keyword javaClassDecl	enum
+syn match   javaClassDecl	"^class\>"
+syn match   javaClassDecl	"[^.]\s*\<class\>"ms=s+1
 syn keyword javaBranch		break continue nextgroup=javaUserLabelRef skipwhite
-syn match   javaUserLabelRef    "\k\+" contained
-syn keyword javaScopeDecl       public protected private abstract
+syn match   javaUserLabelRef	"\k\+" contained
+syn keyword javaScopeDecl	public protected private abstract
 
 if exists("java_highlight_java_lang_ids") || exists("java_highlight_java_lang") || exists("java_highlight_all")
   " java.lang.*
@@ -121,7 +124,7 @@ syn match   javaUserLabel       "^\s*[_$a-zA-Z][_$a-zA-Z0-9_]*\s*:"he=e-1 contai
 syn keyword javaLabel		default
 
 if !exists("java_allow_cpp_keywords")
-  syn keyword javaError auto delete enum extern friend inline redeclared
+  syn keyword javaError auto delete extern friend inline redeclared
   syn keyword javaError register signed sizeof struct template typedef union
   syn keyword javaError unsigned operator
 endif
@@ -200,7 +203,7 @@ if exists("java_highlight_functions")
     " two things:
     "   1. class names are always capitalized (ie: Button)
     "   2. method names are never capitalized (except constructors, of course)
-    syn region javaFuncDef start=+^\s\+\(\(public\|protected\|private\|static\|abstract\|final\|native\|synchronized\)\s\+\)*\(\(void\|boolean\|char\|byte\|short\|int\|long\|float\|double\|\([A-Za-z_][A-Za-z0-9_$]*\.\)*[A-Z][A-Za-z0-9_$]*\)\(\[\]\)*\s\+[a-z][A-Za-z0-9_$]*\|[A-Z][A-Za-z0-9_$]*\)\s*(+ end=+)+ contains=javaScopeDecl,javaType,javaStorageClass,javaComment,javaLineComment,@javaClasses
+    syn region javaFuncDef start=+^\s\+\(\(public\|protected\|private\|static\|abstract\|final\|native\|synchronized\)\s\+\)*\(\(void\|boolean\|char\|byte\|short\|int\|long\|float\|double\|\([A-Za-z_][A-Za-z0-9_$]*\.\)*[A-Z][A-Za-z0-9_$]*\)\(<[^>]*>\)\=\(\[\]\)*\s\+[a-z][A-Za-z0-9_$]*\|[A-Z][A-Za-z0-9_$]*\)\s*([^0-9]+ end=+)+ contains=javaScopeDecl,javaType,javaStorageClass,javaComment,javaLineComment,@javaClasses
   endif
   syn match  javaBraces  "[{}]"
   syn cluster javaTop add=javaFuncDef,javaBraces
@@ -224,7 +227,7 @@ if exists("java_highlight_debug")
   syn region javaDebugParen  start=+(+ end=+)+ contained contains=javaDebug.*,javaDebugParen
 
   " to make this work you must define the highlighting for these groups
-  syn match javaDebug "System\.\(out\|err\)\.print\(ln\)*\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
+  syn match javaDebug "\<System\.\(out\|err\)\.print\(ln\)*\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
   syn match javaDebug "[A-Za-z][a-zA-Z0-9_]*\.printStackTrace\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
   syn match javaDebug "\<trace[SL]\=\s*("me=e-1 contains=javaDebug.* nextgroup=javaDebugParen
 

@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.2.  Last change: 2004 Apr 14
+*starting.txt*  For Vim version 6.3a.  Last change: 2004 May 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -258,15 +258,21 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-s-ex*
 -s		Silent or batch mode.  Only when Vim was started as "ex" or
-		when preceded with the "-e" argument.  Otherwise see |-s|.
+		when preceded with the "-e" argument.  Otherwise see |-s|,
+		which does take an argument while this use of "-s" doesn't.
 		To be used when Vim is used to execute Ex commands from a file
 		instead of a terminal.  Switches off most prompts and
-		informative messages.  But not warning and error messages, and
-		the output from commands that print text lines, like ":print"
-		and ":list".
+		informative messages.  Also warnings and error messages.
+		But ":print" output is displayed.  And when 'verbose' is
+		non-zero messages are printed (for debugging).
+		If Vim appears to be stuck try typing "qa!<Enter>".  You don't
+		get a prompt thus you can't see Vim is waiting for you to type
+		something.
 		Initializations are skipped (except the ones given with the
 		"-u" argument).
-
+		Example: >
+			vim -e -s  < thefilter  thefile
+<
 							*-b*
 -b		Binary mode.  File I/O will only recognize <NL> to separate
 		lines. The 'expandtab' option will be reset.  The 'textwidth'
@@ -295,7 +301,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Vim gives an error message and exits).  {not in Vi}
 
 							*-V* *verbose*
--V[n]		Verbose.  Sets the 'verbose' option to [n][ (default: 10).
+-V[N]		Verbose.  Sets the 'verbose' option to [N] (default: 10).
 		Messages will be given for each file that is ":source"d and
 		for reading or writing a viminfo file.  Can be used to find
 		out what is happening upon startup and exit.  {not in Vi}
@@ -680,7 +686,7 @@ accordingly.  Vim proceeds in this order:
 
 1. Set the 'shell' and 'term' option		*SHELL* *COMSPEC* *TERM*
 	The environment variable SHELL, if it exists, is used to set the
-	'shell' option.  On MS-DOS and Win32, the COMPSPEC variable is used
+	'shell' option.  On MS-DOS and Win32, the COMSPEC variable is used
 	if SHELL is not set.
 	The environment variable TERM, if it exists, is used to set the 'term'
 	option.
@@ -706,8 +712,9 @@ accordingly.  Vim proceeds in this order:
 		Amiga		    s:.vimrc or $VIM/.vimrc
 
 	If Vim was started with "-u filename", the file "filename" is used.
-	All following initializations until 5. are skipped.
-	"vim -u NONE" can be used to skip these initializations.  |-u|
+	All following initializations until 4. are skipped.
+	"vim -u NORC" can be used to skip these initializations without
+	reading a file.  "vim -u NONE" also skips loading plugins.  |-u|
 
 	If Vim was started in Ex mode with the "-s" argument, all following
 	initializations until 4. are skipped.  Only the "-u" option is
@@ -727,6 +734,7 @@ accordingly.  Vim proceeds in this order:
      c. Four places are searched for initializations.  The first that exists
 	is used, the others are ignored.
 	-  The environment variable VIMINIT (see also |compatible-default|) (*)
+	   The value of $VIMINIT is used as an Ex command line.
 	-  The user vimrc file(s):
 		    "$HOME/.vimrc"	(for Unix and OS/2) (*)
 		    "s:.vimrc"		(for Amiga) (*)
@@ -741,7 +749,8 @@ accordingly.  Vim proceeds in this order:
 		Note: For MS-DOS and Win32, "$HOME" is checked first.  If no
 		"_vimrc" or ".vimrc" is found there, "$VIM" is tried.
 		See |$VIM| for when $VIM is not set.
-	-  The environment variable EXINIT
+	-  The environment variable EXINIT.
+	   The value of $EXINIT is used as an Ex command line.
 	-  The user exrc file(s).  Same as for the user vimrc file, but with
 	   "vimrc" replaced by "exrc".  But without the (*)!
 
@@ -762,7 +771,7 @@ accordingly.  Vim proceeds in this order:
 
 4. Load the plugin scripts.					*load-plugins*
 	This does the same as the command: >
-		:runtime plugin/*.vim
+		:runtime! plugin/*.vim
 <	The result is that all directories in the 'runtimepath' option will be
 	searched for the "plugin" sub-directory and all files ending in ".vim"
 	will be sourced (in alphabetical order per directory).
@@ -916,7 +925,7 @@ If Vim takes a long time to start up, there may be a few causes:
 - If you have "viminfo" enabled, the loading of the viminfo file may take a
   while.  You can find out if this is the problem by disabling viminfo for a
   moment (use the Vim argument "-i NONE", |-i|).  Try reducing the number of
-  lines stored in a register with ":set viminfo='20\"50".  |viminfo-file|.
+  lines stored in a register with ":set viminfo='20,<50,s10".  |viminfo-file|.
 
 							*:intro*
 When Vim starts without a file name, an introductory message is displayed (for
@@ -1188,8 +1197,8 @@ The output of ":mkview" contains these items:
    made empty.
 3. Restore mappings, abbreviations and options local to the window if
    'viewoptions' contains "options" or "localoptions".  For the options it
-   restores only values that local to the current buffer and values local to
-   the window.
+   restores only values that are local to the current buffer and values local
+   to the window.
    When storing the view as part of a session and "options" is in
    'sessionoptions', global values for local options will be stored too.
 4. Restore folds when using manual folding and 'viewoptions' contains
@@ -1312,9 +1321,12 @@ using this command: >
 
 	vim -c "normal '0"
 
-In (c)sh, you could make an alias for it: >
+In a shell you could make an alias for it: >
 
 	alias lvim vim -c '"'normal "'"0'"'
+
+Use the "r" flag in 'viminfo' to specify for which files no marks should be
+remembered.
 
 
 VIMINFO FILE NAME					*viminfo-file-name*
@@ -1391,6 +1403,11 @@ most of the information will be restored).
 			a merge between old and new info.  When [!] is used,
 			the old information is not read first, only the
 			internal info is written.  If 'viminfo' is empty, marks
-			for up to 100 files will be written.  {not in Vi}
+			for up to 100 files will be written.
+			When you get error "E138: Can't write viminfo file"
+			check that no old temp files were left behind (e.g.
+			~/.viminf*) and that you can write in the directory of
+			the .viminfo file.
+			{not in Vi}
 
  vim:tw=78:ts=8:ft=help:norl:

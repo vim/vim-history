@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.2.  Last change: 2003 Apr 25
+*repeat.txt*    For Vim version 6.3a.  Last change: 2004 Apr 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -200,6 +200,9 @@ For writing a Vim script, see chapter 41 of the user manual |usr_41.txt|.
 
 			Don't use "ucs-2" or "ucs-4", scripts cannot be in
 			these encodings (they would contain NUL bytes).
+			When a sourced script starts with a BOM (Byte Order
+			Mark) in utf-8 format Vim will recognized it, no need
+			to use ":scriptencoding utf-8" then.
 
 			When compiled without the |+multi_byte| feature this
 			command is ignored.
@@ -443,7 +446,8 @@ Additionally, these commands can be used:
 			sourced or called it.
 
 About the additional commands in debug mode:
-- There is no command-line completion.
+- There is no command-line completion for them, you get the completion for the
+  normal Ex commands only.
 - You can shorten them, up to a single character: "c", "n", "s" and "f".
 - Hitting <CR> will repeat the previous one.  When doing another command, this
   is reset (because it's not clear what you want to repeat).

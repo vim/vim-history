@@ -1,8 +1,8 @@
 " Vim filetype plugin
 " Language:	    generic Changelog file
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2003-01-14
+" Maintainer:	    Nikolai Weibull <lone-star@home.se>
+" URL:		    http://www.pcppopper.org/vim/ftplugin/pcp/changelog/
+" Latest Revision:  2004-02-24
 " Variables:
 "   g:changelog_timeformat -
 "	description: the timeformat used in ChangeLog entries.
@@ -18,7 +18,6 @@
 "	switches to the ChangeLog buffer opened for the current directory, or
 "	opens it in a new buffer if it exists in the current directory.  Then
 "	it does the same as the local <Leader>o described above.
-"
 " Notes:
 "   run 'runtime ftplugin/changelog.vim' to enable the global mapping for
 "   changelog files.
@@ -36,6 +35,9 @@ if &filetype == "changelog"
     " Don't load another plugin for this buffer
     let b:did_ftplugin = 1
 
+    let cpo_save = &cpo
+    set cpo-=C
+
     " The format of the date-time field (should have been called dateformat)
     if !exists("g:changelog_timeformat")
 	let g:changelog_timeformat = "%Y-%m-%d"
@@ -44,62 +46,69 @@ if &filetype == "changelog"
     " Try to figure out a reasonable username of the form:
     " Full Name <user@host>
     if !exists("g:changelog_username")
-
-	" Get the users login name
-	let login = system('whoami')
-	if v:shell_error
-	    let login = 'unknown'
+	if exists("$EMAIL_ADDRESS")
+	    let g:changelog_username = $EMAIL_ADDRESS
+	elseif exists("$EMAIL")
+	    let g:changelog_username = $EMAIL
 	else
-	    let newline = stridx(login, "\n")
-	    if newline != -1
-		let login = strpart(login, 0, newline)
-	    endif
-	endif
-
-	" Try to full name from gecos field in /etc/passwd
-	if filereadable('/etc/passwd')
-	    let name = substitute(
-			\system('cat /etc/passwd | grep ^`whoami`'),
-			\'^\%([^:]*:\)\{4}\([^:]*\):.*$', '\1', '')
-	endif
-
-	" If there is no such file, or there was some other problem try others
-	if !filereadable('/etc/passwd') || v:shell_error
-	    " Maybe the environment has something of interest
-	    if exists("$NAME")
-		let name = $NAME
+	    " Get the users login name
+	    let login = system('whoami')
+	    if v:shell_error
+		let login = 'unknown'
 	    else
-		" No? well, use the login name and capitalize first character
-		let name = toupper(login[0]) . strpart(login, 1)
+		let newline = stridx(login, "\n")
+		if newline != -1
+		    let login = strpart(login, 0, newline)
+		endif
 	    endif
-	endif
 
-	" Only keep stuff before the first comma
-	let comma = stridx(name, ',')
-	if comma != -1
-	    let name = strpart(name, 0, comma)
-	endif
-
-	" And substitute & in the real name with the login of our user
-	let amp = stridx(name, '&')
-	if amp != -1
-	    let name = strpart(name, 0, amp) . toupper(login[0]) .
-			\strpart(login, 1) . strpart(name, amp + 1)
-	endif
-
-	" Get our hostname
-	let hostname = system("hostname")
-	if v:shell_error
-	    let hostname = 'unknownhost'
-	else
-	    let newline = stridx(hostname, "\n")
-	    if newline != -1
-		let hostname = strpart(hostname, 0, newline)
+	    " Try to full name from gecos field in /etc/passwd
+	    if filereadable('/etc/passwd')
+		let name = substitute(
+			    \system('cat /etc/passwd | grep ^`whoami`'),
+			    \'^\%([^:]*:\)\{4}\([^:]*\):.*$', '\1', '')
 	    endif
-	endif
 
-	" And finally set the username
-	let g:changelog_username = name.'  <'.login.'@'.hostname.'>'
+	    " If there is no such file, or there was some other problem try
+	    " others
+	    if !filereadable('/etc/passwd') || v:shell_error
+		" Maybe the environment has something of interest
+		if exists("$NAME")
+		    let name = $NAME
+		else
+		    " No? well, use the login name and capitalize first
+		    " character
+		    let name = toupper(login[0]) . strpart(login, 1)
+		endif
+	    endif
+
+	    " Only keep stuff before the first comma
+	    let comma = stridx(name, ',')
+	    if comma != -1
+		let name = strpart(name, 0, comma)
+	    endif
+
+	    " And substitute & in the real name with the login of our user
+	    let amp = stridx(name, '&')
+	    if amp != -1
+		let name = strpart(name, 0, amp) . toupper(login[0]) .
+			    \strpart(login, 1) . strpart(name, amp + 1)
+	    endif
+
+	    " Get our hostname
+	    let hostname = system("hostname")
+	    if v:shell_error
+		let hostname = 'unknownhost'
+	    else
+		let newline = stridx(hostname, "\n")
+		if newline != -1
+		    let hostname = strpart(hostname, 0, newline)
+		endif
+	    endif
+
+	    " And finally set the username
+	    let g:changelog_username = name.'  <'.login.'@'.hostname.'>'
+	endif
     endif
 
     " Format used for new date-entries
@@ -206,9 +215,17 @@ if &filetype == "changelog"
 	command! -nargs=0 NewChangelogEntry call s:new_changelog_entry()
     endif
 
+    let b:undo_ftplugin = "setl com< tw< fo< et< ai<"
+
+    if &textwidth == 0
+	setlocal textwidth=78
+    endif
     setlocal comments=
-    setlocal textwidth=78
     setlocal formatoptions+=t
+    setlocal noexpandtab
+    setlocal autoindent
+
+    let &cpo = cpo_save
 else
     " Add the Changelog opening mapping
     nmap <silent> <Leader>o   :call <SID>open_changelog()<CR>

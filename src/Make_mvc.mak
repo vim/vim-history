@@ -30,8 +30,8 @@
 #	Ruby interface:
 #	  RUBY=[Path to Ruby directory]
 #	  DYNAMIC_RUBY=yes (to load the Ruby DLL dynamically)
-#	  RUBY_VER=[Ruby version, eg 16, 17] (default is 16)
-#	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
+#	  RUBY_VER=[Ruby version, eg 16, 17] (default is 18)
+#	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.8)
 #	    You must set RUBY_VER_LONG when change RUBY_VER.
 #	Tcl interface:
 #	  TCL=[Path to Tcl directory]
@@ -534,10 +534,10 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 !ifdef RUBY
 #  Set default value
 !ifndef RUBY_VER
-RUBY_VER = 16
+RUBY_VER = 18
 !endif
 !ifndef RUBY_VER_LONG
-RUBY_VER_LONG = 1.6
+RUBY_VER_LONG = 1.8
 !endif
 
 !if $(RUBY_VER) >= 18

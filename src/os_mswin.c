@@ -235,7 +235,7 @@ mch_exit(int r)
     if (WSInitialized)
     {
 	WSInitialized = FALSE;
-        WSACleanup();
+	WSACleanup();
     }
 # endif
 #ifdef DYNAMIC_GETTEXT

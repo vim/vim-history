@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.2.  Last change: 2002 Jul 22
+*usr_12.txt*	For Vim version 6.3a.  Last change: 2004 May 01
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -188,7 +188,7 @@ Abbreviated: >
 
 The "^" regular expression matches the beginning of the line (even if the line
 is blank).  The |:move| command moves the matching line to after the mythical
-zeroeth line, so the current matching line becomes the first line of the file.
+zeroth line, so the current matching line becomes the first line of the file.
 As the |:global| command is not confused by the changing line numbering,
 |:global| proceeds to match all remaining lines of the file and puts each as
 the first.
@@ -246,7 +246,7 @@ A disadvantage is that you can't see the man page and the text you are working
 on at the same time.  There is a trick to make the man page appear in a Vim
 window.  First, load the man filetype plugin: >
 
-	:source $VIMRUNTIME/ftplugin/man.vim
+	:runtime! ftplugin/man.vim
 
 Put this command in your vimrc file if you intend to do this often.  Now you
 can use the ":Man" command to open a window on a man page: >

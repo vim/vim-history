@@ -2097,6 +2097,9 @@ clip_x11_request_selection(myShell, dpy, cbd)
 
 	    /* Do we need this?  Probably not. */
 	    XSync(dpy, False);
+
+	    /* Bernhard Walle solved a slow paste response in an X terminal by
+	     * adding: usleep(10000); here. */
 	}
 
 	/* this is where clip_x11_request_selection_cb() is actually called */

@@ -2035,7 +2035,7 @@ line_read_in:
 			*tagp.tagname_end = NUL;
 			len = (int)(tagp.tagname_end - tagp.tagname);
 			mfp = (struct match_found *)
-				 alloc(sizeof(struct match_found) + len
+				 alloc((int)sizeof(struct match_found) + len
 							     + 10 + ML_EXTRA);
 			if (mfp != NULL)
 			{
@@ -2074,8 +2074,8 @@ line_read_in:
 			    if (tagp.command + 2 < temp_end)
 			    {
 				len = (int)(temp_end - tagp.command - 2);
-				mfp = (struct match_found *)
-				      alloc(sizeof(struct match_found) + len);
+				mfp = (struct match_found *)alloc(
+					(int)sizeof(struct match_found) + len);
 				if (mfp != NULL)
 				{
 				    mfp->len = len + 1; /* include the NUL */
@@ -2091,8 +2091,8 @@ line_read_in:
 			else
 			{
 			    len = (int)(tagp.tagname_end - tagp.tagname);
-			    mfp = (struct match_found *)
-				      alloc(sizeof(struct match_found) + len);
+			    mfp = (struct match_found *)alloc(
+				       (int)sizeof(struct match_found) + len);
 			    if (mfp != NULL)
 			    {
 				mfp->len = len + 1; /* include the NUL */
@@ -2120,8 +2120,8 @@ line_read_in:
 			else
 			    ++len;
 #endif
-			mfp = (struct match_found *)
-				      alloc(sizeof(struct match_found) + len);
+			mfp = (struct match_found *)alloc(
+				       (int)sizeof(struct match_found) + len);
 			if (mfp != NULL)
 			{
 			    mfp->len = len;
@@ -2379,7 +2379,7 @@ get_tagfname(first, buf)
 	     * directories in 'runtimepath'.
 	     */
 	    ga_clear_strings(&tag_fnames);
-	    ga_init2(&tag_fnames, sizeof(char_u *), 10);
+	    ga_init2(&tag_fnames, (int)sizeof(char_u *), 10);
 	    do_in_runtimepath((char_u *)
 #ifdef FEAT_MULTI_LANG
 		    "doc/tags doc/tags-??"

@@ -3,7 +3,7 @@ int aborting __ARGS((void));
 void update_force_abort __ARGS((void));
 int should_abort __ARGS((int retcode));
 int aborted_in_try __ARGS((void));
-int cause_errthrow __ARGS((char_u *msg, int severe, int *ignore));
+int cause_errthrow __ARGS((char_u *mesg, int severe, int *ignore));
 void do_errthrow __ARGS((struct condstack *cstack, char_u *cmdname));
 int do_intthrow __ARGS((struct condstack *cstack));
 void discard_current_exception __ARGS((void));

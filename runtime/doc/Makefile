@@ -78,6 +78,7 @@ DOCS = \
 	remote.txt \
 	repeat.txt \
 	rileft.txt \
+	russian.txt \
 	scroll.txt \
 	sign.txt \
 	sponsor.txt \
@@ -195,6 +196,7 @@ HTMLS = \
 	remote.html \
 	repeat.html \
 	rileft.html \
+	russian.html \
 	scroll.html \
 	sign.html \
 	sponsor.html \
@@ -256,7 +258,7 @@ all: tags vim.man vimdiff.man vimtutor.man xxd.man
 # Use Vim to generate the tags file.  Can only be used when Vim has been
 # compiled and installed.  Supports multiple languages.
 vimtags: $(DOCS)
-	$(VIMEXE) -e -s -X -c "helptags ." -c quit
+	$(VIMEXE) -u NONE -esX -c "helptags ." -c quit
 
 # Use "doctags" to generate the tags file.  Only works for English!
 tags: doctags $(DOCS)
@@ -280,7 +282,7 @@ xxd.man: xxd.1
 
 uganda.nsis.txt: uganda.txt
 	sed -e 's/[ 	]*\*[-a-zA-Z0-9.]*\*//g' -e 's/vim:tw=78://' \
-		uganda.txt >uganda.nsis.txt
+		uganda.txt | uniq >uganda.nsis.txt
 
 # Awk version of .txt to .html conversion.
 html: noerrors tags tags.ref $(HTMLS)
@@ -314,6 +316,9 @@ farsi.txt:
 
 hebrew.txt:
 	touch hebrew.txt
+
+russian.txt:
+	touch russian.txt
 
 gui_w16.txt:
 	touch gui_w16.txt

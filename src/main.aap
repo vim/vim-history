@@ -12,8 +12,9 @@
 #
 
 # Skip the configure stuff when "link.sh" is executing this recipe recursively
-# to build pathdef.c.
-@if _no.TARGETARG != "pathdef" and has_build_target():
+# to build pathdef.c or not building something and auto/config.aap does exist.
+@if ((_no.TARGETARG != "pathdef" and has_build_target())
+@	or not os.path.exists("auto/config.aap")):
 
     #
     # A U T O C O N F
@@ -21,25 +22,19 @@
 
     # Run autoconf when configure.in has been changed since it was last run.
     # This is skipped when the signatures in "mysign" are up-to-date.  When
-    # there is no autoconf program or it is the wrong version (2.5x doesn't
-    # work) skip this (the signature is often the only thing that's outdated)
+    # there is no autoconf program skip this (the signature is often the only
+    # thing that's outdated)
     auto/configure {signfile = mysign} : configure.in
 	@if not program_path("autoconf"):
 	    :print Can't find autoconf, using existing configure script.
 	@else:
-	    av = `redir_system("autoconf --version", 0)`
-	    @if not re.search('version 2\\.1', av):
-		:print Sorry, your autoconf is not a usable version.
-			    Vim requires version 2.1x.
-		:print Using existing configure script.
-	    @else:
-		# Move configure aside, autoconf would overwrite it
-		:move {exist} configure configure.save
-		:sys autoconf
-		:cat configure | :eval re.sub('\\./config.log', 'auto/config.log', stdin) >! auto/configure
-		:chmod 755 auto/configure
-		:move configure.save configure
-		:del {force} auto/config.cache auto/config.status
+            # Move configure aside, autoconf would overwrite it
+            :move {exist} configure configure.save
+            :sys autoconf
+            :cat configure | :eval re.sub('\\./config.log', 'auto/config.log', stdin) >! auto/configure
+            :chmod 755 auto/configure
+            :move configure.save configure
+            :del {force} auto/config.cache auto/config.status
 
     # Change the configure script to produce config.aap instead of config.mk.
     auto/configure.aap : auto/configure
@@ -57,7 +52,9 @@
     config {virtual} auto/config.h auto/config.aap :
 			 auto/configure.aap configure.aap
 			 config.arg config.h.in config.aap.in
-	:sys ./configure.aap `file2string("config.arg")`
+	:sys CONFIG_STATUS=auto/config.status
+                ./configure.aap `file2string("config.arg")`
+                    --cache-file=auto/config.cache
 
     # Configure arguments: create an empty "config.arg" file when its missing
     config.arg:
@@ -293,6 +290,8 @@ $Target : version.c
 SRCPATH += auto
 
 # When building Vim always compile version.c to get the timestamp.
+:filetype
+    declare my_prog
 :attr {filetype = my_prog} $Target
 
 :program $Target : $Source
@@ -344,7 +343,7 @@ auto/if_perl.c: if_perl.xs
 auto/osdef.h: auto/config.h osdef.sh osdef1.h.in osdef2.h.in
 	:sys CC="$CC $CFLAGS" srcdir=$srcdir sh $srcdir/osdef.sh
 
-pathdef {virtual} : $BDIR/pathdef$OBJSUF
+pathdef {virtual} : $BDIR/auto/pathdef$OBJSUF
 
 auto/pathdef.c: auto/config.aap
 	:print Creating $target
@@ -355,7 +354,7 @@ auto/pathdef.c: auto/config.aap
 	:print >> $target char_u *default_vim_dir = (char_u *)"$VIMRCLOC";
 	:print >> $target char_u *default_vimruntime_dir = (char_u *)"$?VIMRUNTIMEDIR";
 	:print >> $target char_u *all_cflags = (char_u *)"$CC -c -I$srcdir $CFLAGS";
-	linkcmd = $CC $ALL_LIB_DIRS $LDFLAGS -o $VIMTARGET $LIBS
+	linkcmd = $CC $LDFLAGS -o $VIMTARGET $LIBS
 	link_sed = $BDIR/link.sed
 	@if os.path.exists(link_sed):
 	    # filter $linkcmd through $BDIR/link.sed
@@ -597,7 +596,21 @@ DEST_MAN = $DESTDIR$MANSUBDIR
 #
 # I N S T A L L
 #
-install: installvim installtools install-languages install-icons
+install:
+    @if not os.path.isdir(_no.DEST_BIN):
+        @try:
+            :mkdir $DEST_BIN
+        @except:
+        @   pass
+    @if os.access(_no.DEST_BIN, os.W_OK):
+        # Bin directory is writable, install directly.
+        :update installvim installtools install-languages install-icons
+    @else:
+        # Bin directory is not writable, need to become root.
+	:print The destination directory "$DEST_BIN" is not writable.
+	:print If this is the wrong directory, use PREFIX to specify another one.
+        :print Otherwise, type the root password to continue installing.
+        :asroot $AAP install
 
 installvim {virtual}: installvimbin installruntime installlinks \
 			installhelplinks installmacros installtutor
@@ -663,8 +676,16 @@ installruntime {virtual}{force}: $HELPSOURCE/vim.1 $DEST_MAN $DEST_VIM
 		>! $DEST_MAN/$(EVIMNAME).1
 	:chmod $MANMOD $DEST_MAN/$(EVIMNAME).1
 
-	:copy $HELPSOURCE/*.txt $HELPSOURCE/tags $DEST_HELP
-	:chmod $HELPMOD $DEST_HELP/*.txt $DEST_HELP/tags
+        :cd $HELPSOURCE
+        @try:
+            XTRA = `glob.glob("*.??x")` `glob.glob("tags-??")`
+        @except:
+            XTRA =       # It's OK if there are no matches.
+	:copy *.txt tags $XTRA $DEST_HELP
+        :cd -
+        :cd $DEST_HELP
+	:chmod $HELPMOD *.txt tags $XTRA
+        :cd -
 	:copy  $HELPSOURCE/*.pl $DEST_HELP
 	:chmod $SCRIPTMOD $DEST_HELP/*.pl
 # install the menu files
@@ -728,11 +749,13 @@ installruntime {virtual}{force}: $HELPSOURCE/vim.1 $DEST_MAN $DEST_VIM
 
 installmacros {virtual}{force}: $MACROSOURCE $DEST_VIM $DEST_RT $DEST_MACRO
 	:copy {recursive}{force} $MACROSOURCE/* $DEST_MACRO
-	# Delete any CVS directories.
+	# Delete any CVS and AAPDIR directories.
 	# Use the ":tree" command if possible.  It was added later, fall back
 	# to using "find" when it doesn't work.
 	@try:
 	   :tree $DEST_MACRO {dirname = CVS}
+	      :del {recursive} $name
+	   :tree $DEST_MACRO {dirname = AAPDIR}
 	      :del {recursive} $name
 	   :tree $DEST_MACRO {dirname = .*}
 	      :chmod $DIRMOD $name
@@ -768,9 +791,11 @@ installtools {virtual}{force}: $TOOLS $DEST_BIN $DEST_MAN \
 # install the runtime tools
 	@try:
 	@  if aap_has(":tree"):
-	      # New method: copy everything and delete CVS dirs
+	      # New method: copy everything and delete CVS and AAPDIR dirs
 	      :copy {recursive} $TOOLSSOURCE/* $DEST_TOOLS
 	      :tree $DEST_TOOLS {dirname = CVS}
+		 :delete {recursive} $name
+	      :tree $DEST_TOOLS {dirname = AAPDIR}
 		 :delete {recursive} $name
 	@except:
 	    # Old method: copy only specific files and directories.
@@ -978,7 +1003,7 @@ uninstall_runtime {virtual}{force}:
     :deldir {force} $DEST_HELP $DEST_COL $DEST_SYN $DEST_IND
     :del {force}{recursive} $DEST_FTP/*.vim $DEST_FTP/README.txt
     :del {force} $DEST_PLUG/*.vim $DEST_PLUG/README.txt
-    :deldir {force} $DEST_FTP $DEST_PLUG $DEST_RT $DEST_PRINT
+    :deldir {force} $DEST_FTP $DEST_PLUG $DEST_PRINT $DEST_RT
 #	This will fail when other Vim versions are installed, no worries.
     @try:
 	:deldir $DEST_VIM

@@ -1,31 +1,36 @@
-*quotes.txt*    For Vim version 6.2.  Last change: 2003 Feb 23
+*quotes.txt*    For Vim version 6.3a.  Last change: 2004 May 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
 
 
 							*quotes*
-Here are some nice quotes about VIM that I collected from news and mail.
+Here are some nice quotes about Vim that I collected from news and mail.
 
 
 vim (vim) noun - Ebullient vitality and energy.  [Latin, accusative of vis,
 strength]  (Dictionary)
 
-VIM is so much better than vi that a great many of my old vi :map's became
+Vim is so much better than vi that a great many of my old vi :map's became
 immediately obsolete! (Tony Nugent, Australia)
 
 Coming with a very GUI mindset from Windows, I always thought of people using
-Vi as some kind of outter space alien in human clothes.  Once I tried I really
-got addicted by its power and now I found my self typing Vim keypresses in the
+Vi as some kind of outer space alien in human clothes.  Once I tried I really
+got addicted by its power and now I found myself typing Vim keypresses in the
 oddest places! That's why I would like to see Vim embedded in every
 application which deals with text editing. (José Fonseca)
 
+I was a 12-year emacs user who switched to Vim about a year ago after finally
+giving up on the multiple incompatible versions, flaky contributed packages,
+disorganized keystrokes, etc.  And it was one of the best moves I ever made.
+(Joel Burton)
+
 Although all of the programs were used during the preparation of the new and
-revised material, most of the editing was done with VIM versions 4.5 and 5.0
+revised material, most of the editing was done with Vim versions 4.5 and 5.0
 under GNU-Linux (Redhat 4.2).  (Arnold Robbins, Israel, author of "Learning
 the Vi editor")
 
-Out of all the open software i've ever seen and used, and i've seen alot, Vim
+Out of all the open software i've ever seen and used, and i've seen a lot, Vim
 is the best, most useful and highest quality to work with, second only to the
 linux kernel itself. (Peter Jay Salzman)
 
@@ -36,16 +41,19 @@ staff uses Vim and we're all excited to have you aboard! (Tim Perdue)
 Vim is one of a select bunch of tools for which I have no substitute.  It is
 a brilliant piece of work! (Biju Chacko)
 
-I rarely think about VIM, in the same way that I guess a fish rarely thinks
+A previous girlfriend of mine switched to emacs.  Needless to say, the
+relationship went nowhere. (Geoffrey Mann)
+
+I rarely think about Vim, in the same way that I guess a fish rarely thinks
 about water.  It's the environment in which everything else happens.  I'm a
-fairly busy system administrator working on a lot of different platforms.  VIM
+fairly busy system administrator working on a lot of different platforms.  Vim
 is the only thing that's consistent across all my systems, and it's just about
 the only thing that doesn't break from time to time.  When a new system comes
-in the door without VIM, I install it right away.  Great to have a tool that's
+in the door without Vim, I install it right away.  Great to have a tool that's
 the same everywhere, that's completely reliable, so I can ignore it and think
 about other things. (Pete Schaeffer)
 
-Having recently succeeded in running vim via telnet through a Nokia
+Having recently succeeded in running Vim via telnet through a Nokia
 Communicator, I can now report that it works nicely on a Palm Pilot too.
 (Allan Kelly, Scotland)
 
@@ -71,6 +79,10 @@ Glendown, conclusion of an article on VIM in iX magazine 9/1998)
 I've recently acquired the O'Reilly book on VI (it also discusses VIM
 in-depth), and I'm amazed at just how powerful this application is. (Jeffrey
 Rankin)
+
+This guide was written using the Windows 9.x distribution of GVIM, which is
+quite possibly the greatest thing to come along since God created the naked
+girl. (Michael DiBernardo)
 
 Boy, I thought I knew almost everything about VIM, but every time I browse the
 online documentation, I hit upon a minor but cool aspect of a VIM feature that

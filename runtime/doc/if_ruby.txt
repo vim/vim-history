@@ -1,4 +1,4 @@
-*if_ruby.txt*   For Vim version 6.2.  Last change: 2001 Oct 25
+*if_ruby.txt*   For Vim version 6.3a.  Last change: 2004 Mar 14
 
 
 		  VIM REFERENCE MANUAL    by Shugo Maeda
@@ -17,9 +17,8 @@ The Ruby Interface to Vim				*ruby* *Ruby*
 
 The Ruby interface only works when Vim was compiled with the |+ruby| feature.
 
-For MS-Windows you might find a Ruby library here:
-
-	http://www.dm4lab.to/~usa/ruby_en.html
+The home page for ruby is http://www.ruby-lang.org/.  You can find links for
+downloading Ruby there.
 
 ==============================================================================
 1. Commands						*ruby-commands*

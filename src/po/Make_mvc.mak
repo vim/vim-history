@@ -6,11 +6,11 @@
 # Please read README_mvc.txt before using this file.
 #
 
-LANGUAGES =	af cs de en_GB es fr it ja ko no pl sk uk zh_TW \
+LANGUAGES =	af ca cs de en_GB es fr it ja ko no pl ru sk sv uk zh_TW \
 		zh_TW.UTF-8 zh_CN zh_CN.UTF-8
-MOFILES =	af.mo cs.mo de.mo en_GB.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo no.mo pl.mo sk.mo uk.mo zh_TW.mo zh_TW.UTF-8.mo \
-		zh_CN.mo zh_CN.UTF-8.mo
+MOFILES =	af.mo ca.mo cs.mo de.mo en_GB.mo es.mo fr.mo it.mo ja.mo \
+		ko.mo no.mo pl.mo ru.mo sk.mo sv.mo uk.mo \
+		zh_TW.mo zh_TW.UTF-8.mo zh_CN.mo zh_CN.UTF-8.mo
 
 PACKAGE = vim
 

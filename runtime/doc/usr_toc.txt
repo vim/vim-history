@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.2.  Last change: 2002 Mar 09
+*usr_toc.txt*	For Vim version 6.3a.  Last change: 2003 Aug 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -286,10 +286,11 @@ Make Vim work as you like it.
 		|41.5|	Executing an expression
 		|41.6|	Using functions
 		|41.7|	Defining a function
-		|41.8|	Various remarks
-		|41.9|	Writing a plugin
-		|41.10|	Writing a filetype plugin
-		|41.11|	Writing a compiler plugin
+		|41.8|	Exceptions
+		|41.9|	Various remarks
+		|41.10|	Writing a plugin
+		|41.11|	Writing a filetype plugin
+		|41.12|	Writing a compiler plugin
 
 |usr_42.txt|  Add new menus
 		|42.1|	Introduction

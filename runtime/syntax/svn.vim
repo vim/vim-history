@@ -14,9 +14,10 @@ elseif exists("b:current_syntax")
 endif
 
 syn region svnRegion	start="--This line, and those below, will be ignored--" end="\%$" contains=ALL
-syn match svnRemoved	"^D\s.*$" contained
-syn match svnAdded	"^A\s.*$" contained
-syn match svnModified	"^M\s.*$" contained
+syn match svnRemoved	"^D    .*$" contained
+syn match svnAdded	"^A[ M]   .*$" contained
+syn match svnModified	"^M[ M]   .*$" contained
+syn match svnProperty	"^_M   .*$" contained
 
 " Synchronization.
 syn sync clear
@@ -37,6 +38,7 @@ if version >= 508 || !exists("did_svn_syn_inits")
   HiLink svnRemoved	Constant
   HiLink svnAdded	Identifier
   HiLink svnModified	Special
+  HiLink svnProperty	Special
 
   delcommand HiLink
 endif

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	DCL (Digital Command Language - vms)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
-" Last Change:	Nov 18, 2002
-" Version:	2
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
+" Last Change:	Sep 02, 2003
+" Version:	3
 " URL:	http://www.erols.com/astronaut/vim/index.html#vimlinks_syntax
 
 " For version 5.x: Clear all syntax items
@@ -78,7 +78,7 @@ syn match   dclDirSep	"[[\].;]"
 syn region  dclString	start='"'	skip='""'	end='"'
 
 " $ stuff and comments
-syn cluster dclCommentGroup	contains=dclStart,dclTodo
+syn cluster dclCommentGroup	contains=dclStart,dclTodo,@Spell
 syn match   dclStart	"^\$"	skipwhite nextgroup=dclExe
 syn match   dclContinue	"-$"
 syn match   dclComment	"^\$!.*$"	contains=@dclCommentGroup

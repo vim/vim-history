@@ -1293,7 +1293,8 @@ getvcol(wp, pos, start, cursor, end)
 		&& !wp->w_p_list
 		&& !virtual_active()
 #ifdef FEAT_VISUAL
-		&& !(VIsual_active && *p_sel == 'e')
+		&& !(VIsual_active
+				   && (*p_sel == 'e' || ltoreq(*pos, VIsual)))
 #endif
 		)
 	    *cursor = vcol + incr - 1;	    /* cursor at end */

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:		bin using xxd
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <NdrOchipS@PcampbellAfamily.Mbiz>
 " Last Change:	Nov 18, 2002
 " Version:		6
 " Notes:		use :help xxd   to see how to invoke it

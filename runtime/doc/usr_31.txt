@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.2.  Last change: 2002 Jul 31
+*usr_31.txt*	For Vim version 6.3a.  Last change: 2003 Oct 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -144,7 +144,7 @@ up the Window menu.
 let go of the <Alt> key and press p.
 
 After the first selection of a menu with the <Alt> key, you can use the cursor
-keys to move through the menus.  <Left> selects a submenu and <Right> closes
+keys to move through the menus.  <Right> selects a submenu and <left> closes
 it.  <Esc> also closes a menu.  <Enter> selects a menu item.
 
 There is a conflict between using the <Alt> key to select menu items, and

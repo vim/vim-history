@@ -7955,7 +7955,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
      */
     autocmd_busy = TRUE;
     filechangeshell_busy = (event == EVENT_FILECHANGEDSHELL);
-    ++nesting;
+    ++nesting;		/* see matching decrement below */
 
     /* Remember that FileType was triggered.  Used for did_filetype(). */
     if (event == EVENT_FILETYPE)
@@ -8021,7 +8021,7 @@ apply_autocmds_group(event, fname, fname_io, force, group, buf, eap)
 #endif
     vim_free(fname);
     vim_free(sfname);
-    --nesting;
+    --nesting;		/* see matching increment above */
 
     /*
      * When stopping to execute autocommands, restore the search patterns and

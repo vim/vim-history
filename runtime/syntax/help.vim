@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Vim help file
 " Maintainer:	Bram Moolenaar (Bram@vim.org)
-" Last Change:	2004 Mar 19
+" Last Change:	2004 Apr 23
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -57,12 +57,12 @@ syn match helpSpecial		"\[num]"
 syn match helpSpecial		"\[+num]"
 syn match helpSpecial		"\[-num]"
 syn match helpSpecial		"\[+cmd]"
-syn match helpSpecial	    	"\[++opt]"
-syn match helpSpecial	    	"\[arg]"
-syn match helpSpecial	    	"\[arguments]"
-syn match helpSpecial	    	"\[ident]"
-syn match helpSpecial	    	"\[addr]"
-syn match helpSpecial	    	"\[group]"
+syn match helpSpecial		"\[++opt]"
+syn match helpSpecial		"\[arg]"
+syn match helpSpecial		"\[arguments]"
+syn match helpSpecial		"\[ident]"
+syn match helpSpecial		"\[addr]"
+syn match helpSpecial		"\[group]"
 syn match helpSpecial		"CTRL-."
 syn match helpSpecial		"CTRL-Break"
 syn match helpSpecial		"CTRL-PageUp"

@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.2.  Last change: 2004 Feb 15
+*netbeans.txt*  For Vim version 6.3a.  Last change: 2004 May 01
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -92,7 +92,7 @@ On MS-Windows
 The Win32 support is now in beta stage.
 
 To use XPM signs on Win32 (e.g. when using with NetBeans) you can compile
-XPM by yourself or use precompiled libraries from http://iamphet.nm.ru/xpm
+XPM by yourself or use precompiled libraries from http://iamphet.nm.ru/misc/
 (for MS Visual C++) or http://gnuwin32.sourceforge.net (for MinGW).
 
 ==============================================================================
@@ -207,7 +207,7 @@ differ in the way the information for the connection is specified:
 	-nb:{hostname}:{addr}:{password}	directly
 	-nb					from a file or environment
 
-								*E660*
+							*E660* *E668*
 For security reasons, the best method is to write the information in a file
 readable only by the user.  The name of the file can be passed with the
 "-nb={fname}" argument or, when "-nb" is used without a parameter, the

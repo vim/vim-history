@@ -228,7 +228,7 @@ workshop_load_file(
 	 */
 # ifdef FEAT_GUI_GTK
 	balloonEval = gui_mch_create_beval_area(gui.drawarea, NULL,
-						&bevalCB, NULL);
+							      &bevalCB, NULL);
 # else
 	balloonEval = gui_mch_create_beval_area(textArea, NULL, bevalCB, NULL);
 # endif

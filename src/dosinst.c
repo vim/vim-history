@@ -1377,9 +1377,6 @@ install_registry(void)
 
 	if (install_openwith)
 	{
-	    char	bufg[BUFSIZE];
-	    struct stat st;
-
 	    printf("Creating \"Open with ...\" list entry\n");
 
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe]\n\n");
@@ -1388,6 +1385,7 @@ install_registry(void)
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\Applications\\gvim.exe\\shell\\edit\\command]\n");
 	    fprintf(fd, "@=\"%sgvim.exe \\\"%%1\\\"\"\n\n", buf);
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\.htm\\OpenWithList\\gvim.exe]\n\n");
+	    fprintf(fd, "[HKEY_CLASSES_ROOT\\.vim\\OpenWithList\\gvim.exe]\n\n");
 	    fprintf(fd, "[HKEY_CLASSES_ROOT\\*\\OpenWithList\\gvim.exe]\n\n");
 	}
 

@@ -1,4 +1,4 @@
-*tagsrch.txt*   For Vim version 6.2.  Last change: 2004 Apr 28
+*tagsrch.txt*   For Vim version 6.3a.  Last change: 2004 Apr 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -478,6 +478,8 @@ ptags.py		For Python, in Python.  Found in your Python source
 			directory at Tools/scripts/ptags.py.
 ptags			For Perl, in Perl.  It can be found at
 			http://www.eleves.ens.fr:8080/home/nthiery/Tags/.
+gnatxref		For Ada.  See http://www.gnuada.org/.  gnatxref is
+			part of the gnat package.
 
 
 The lines in the tags file must have one of these three formats:
@@ -549,15 +551,15 @@ These are sorted to the first lines, only rare tags that start with "!" can
 sort to before them.  Vim recognizes two items.  The first one is the line
 that indicates if the file was sorted.  When this line is found, Vim uses
 binary searching for the tags file:
-	!_TAG_FILE_SORTED<Tab>1 ~
+	!_TAG_FILE_SORTED<Tab>1<Tab>{anything} ~
 
 A tag file may be case-fold sorted to avoid a linear search when 'ignorecase'
 is on.  See 'tagbsearch' for details.  The value '2' should be used then:
-	!_TAG_FILE_SORTED<Tab>2 ~
+	!_TAG_FILE_SORTED<Tab>2<Tab>{anything} ~
 
 The other tag that Vim recognizes, but only when compiled with the
 |+multi_byte| feature, is the encoding of the tags file:
-	!_TAG_FILE_ENCODING<Tab>utf-8 ~
+	!_TAG_FILE_ENCODING<Tab>utf-8<Tab>{anything} ~
 Here "utf-8" is the encoding used for the tags.  Vim will then convert the tag
 being searched for from 'encoding' to the encoding of the tags file.  And when
 listing tags the reverse happens.  When the conversion fails the unconverted

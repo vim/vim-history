@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.2.  Last change: 2004 Mar 30
+*motion.txt*    For Vim version 6.3a.  Last change: 2004 Apr 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -102,7 +102,13 @@ strokes and has limited redo functionality.  See the chapter on Visual mode
 |Visual-mode|.
 
 You can use a ":" command for a motion.  For example "d:call FindEnd()".
-But this can't be redone with ".".
+But this can't be redone with "." if the command is more than one line.
+This can be repeated: >
+	d:call search("f")<CR>
+This cannot be repeated: >
+	d:if 1<CR>
+	   call search("f")<CR>
+	endif<CR>
 
 
 FORCING A MOTION TO BE LINEWISE, CHARACTERWISE OR BLOCKWISE
@@ -135,7 +141,7 @@ V		When used after an operator, before the motion command: Force
 		characterwise.
 
 							*o_CTRL-V*
-CTRL-V		When used after an operator, before the motion commmand: Force
+CTRL-V		When used after an operator, before the motion command: Force
 		the operator to work blockwise.  This works like Visual block
 		mode selection, with the corners defined by the cursor
 		position before and after the motion.
@@ -177,7 +183,7 @@ l		or					*l*
 
 							*$* *<End>* *<kEnd>*
 $  or <End>		To the end of the line.  When a count is given also go
-			[count - 1] lines downward (inclusive).
+			[count - 1] lines downward |inclusive|.
 			In Visual mode the cursor goes to just after the last
 			character in the line.
 			When 'virtualedit' is active, "$" may move the cursor
@@ -186,7 +192,7 @@ $  or <End>		To the end of the line.  When a count is given also go
 
 							*g_*
 g_			To the last non-blank character of the line and
-			[count - 1] lines downward (inclusive). {not in Vi}
+			[count - 1] lines downward |inclusive|. {not in Vi}
 
 							*g0* *g<Home>*
 g0 or g<Home>		When lines wrap ('wrap' on): To the first character of
@@ -214,12 +220,14 @@ gm			Like "g0", but half a screenwidth to the right (or as
 							*g$* *g<End>*
 g$ or g<End>		When lines wrap ('wrap' on): To the last character of
 			the screen line and [count - 1] screen lines downward
-			(inclusive).  Differs from "$" when a line is wider
+			|inclusive|.  Differs from "$" when a line is wider
 			than the screen.
 			When lines don't wrap ('wrap' off): To the rightmost
 			character of the current line that is visible on the
 			screen.  Differs from "$" when the last character of
 			the line is not on the screen or when a count is used.
+			Additionally, vertical movements keep the column,
+			instead of going to the end of the line.
 			{not in Vi}
 
 							*bar*
@@ -228,7 +236,7 @@ g$ or g<End>		When lines wrap ('wrap' on): To the last character of
 
 							*f*
 f{char}			To [count]'th occurrence of {char} to the right.  The
-			cursor is placed on {char} (inclusive).
+			cursor is placed on {char} |inclusive|.
 			{char} can be entered as a digraph |digraph-arg|.
 			When 'encoding' is set to Unicode, composing
 			characters may be used, see |utf-8-char-arg|.
@@ -238,19 +246,19 @@ f{char}			To [count]'th occurrence of {char} to the right.  The
 
 							*F*
 F{char}			To the [count]'th occurrence of {char} to the left.
-			The cursor is placed on {char} (inclusive).
+			The cursor is placed on {char} |inclusive|.
 			{char} can be entered like with the |f| command.
 
 							*t*
 t{char}			Till before [count]'th occurrence of {char} to the
 			right.  The cursor is placed on the character left of
-			{char} (inclusive).
+			{char} |inclusive|.
 			{char} can be entered like with the |f| command.
 
 							*T*
 T{char}			Till after [count]'th occurrence of {char} to the
 			left.  The cursor is placed on the character right of
-			{char} (inclusive).
+			{char} |inclusive|.
 			{char} can be entered like with the |f| command.
 
 							*;*
@@ -270,13 +278,13 @@ commands move across line boundaries.
 
 k		or					*k*
 <Up>		or					*<Up>* *CTRL-P*
-CTRL-P			[count] lines upward (linewise).
+CTRL-P			[count] lines upward |linewise|.
 
 j		or					*j*
 <Down>		or					*<Down>*
 CTRL-J		or					*CTRL-J*
 <NL>		or					*<NL>* *CTRL-N*
-CTRL-N			[count] lines downward (linewise).
+CTRL-N			[count] lines downward |linewise|.
 
 gk		or					*gk* *g<Up>*
 g<Up>			[count] display lines upward.  |exclusive| motion.
@@ -290,29 +298,29 @@ g<Down>			[count] display lines downward.  |exclusive| motion.
 
 							*-*
 -  <minus>		[count] lines upward, on the first non-blank
-			character (linewise).
+			character |linewise|.
 
 +		or					*+*
 CTRL-M		or					*CTRL-M* *<CR>*
 <CR>			[count] lines downward, on the first non-blank
-			character (linewise).
+			character |linewise|.
 
 							*_*
 _  <underscore>		[count] - 1 lines downward, on the first non-blank
-			character (linewise).
+			character |linewise|.
 
 							*G*
 G			Goto line [count], default last line, on the first
-			non-blank character (linewise).  If 'startofline' not
+			non-blank character |linewise|.  If 'startofline' not
 			set, keep the same column.
 
 							*<C-End>*
 <C-End>			Goto line [count], default last line, on the last
-			character (inclusive). {not in Vi}
+			character |inclusive|. {not in Vi}
 
 <C-Home>	or					*gg* *<C-Home>*
 gg			Goto line [count], default first line, on the first
-			non-blank character (linewise).  If 'startofline' not
+			non-blank character |linewise|.  If 'startofline' not
 			set, keep the same column.
 
 :[range]		Set the cursor on the specified line number.  If
@@ -320,7 +328,7 @@ gg			Goto line [count], default first line, on the first
 
 							*N%*
 {count}%		Go to {count} percentage in the file, on the first
-			non-blank in the line (linewise).  To compute the new
+			non-blank in the line |linewise|.  To compute the new
 			line number this formula is used:
 			    ({count} * number-of-lines + 99) / 100
 			See also 'startofline' option.  {not in Vi}
@@ -351,10 +359,10 @@ w			[count] words forward.  |exclusive| motion.
 W			[count] WORDS forward.  |exclusive| motion.
 
 							*e*
-e			Forward to the end of word [count] (inclusive).
+e			Forward to the end of word [count] |inclusive|.
 
 							*E*
-E			Forward to the end of WORD [count] (inclusive).
+E			Forward to the end of WORD [count] |inclusive|.
 
 <S-Left>	or					*<S-Left>* *b*
 b			[count] words backward.  |exclusive| motion.
@@ -363,10 +371,10 @@ b			[count] words backward.  |exclusive| motion.
 B			[count] WORDS backward.  |exclusive| motion.
 
 							*ge*
-ge			Backward to the end of word [count] (inclusive).
+ge			Backward to the end of word [count] |inclusive|.
 
 							*gE*
-gE			Backward to the end of WORD [count] (inclusive).
+gE			Backward to the end of WORD [count] |inclusive|.
 
 These commands move over words or WORDS.
 							*word*
@@ -436,7 +444,7 @@ These commands move over three kinds of text objects.
 							*sentence*
 A sentence is defined as ending at a '.', '!' or '?' followed by either the
 end of a line, or by a space or tab.  Any number of closing ')', ']', '"'
-and ''' characters my appear after the '.', '!' or '?' before the spaces,
+and ''' characters may appear after the '.', '!' or '?' before the spaces,
 tabs or end of line.  A paragraph and section boundary is also a sentence
 boundary.
 If the 'J' flag is present in 'cpoptions', at least two spaces have to
@@ -634,8 +642,8 @@ movement commands are used.
 Note the difference between using a movement command and an object.  The
 movement command operates from here (cursor position) to where the movement
 takes us.  When using an object the whole object is operated upon, no matter
-where on the object the cursor is.  For example, compare "dw" and "da": "dw"
-deletes from the cursor position to the start of the next word, "da" deletes
+where on the object the cursor is.  For example, compare "dw" and "daw": "dw"
+deletes from the cursor position to the start of the next word, "daw" deletes
 the word under the cursor and the space after or before it.
 
 ==============================================================================
@@ -726,7 +734,8 @@ the .viminfo file.  See |viminfo-file-marks|.
 Numbered marks '0 to '9 are quite different.  They can not be set directly.
 They are only present when using a viminfo file |viminfo-file|.  Basically '0
 is the location of the cursor when you last exited Vim, '1 the last but one
-time, etc.  See |viminfo-file-marks|.
+time, etc.  Use the "r" flag in 'viminfo' to specify files for which no
+Numbered mark should be stored.  See |viminfo-file-marks|.
 
 
 							*'[* *`[*
@@ -759,7 +768,8 @@ was made yet in the current file.
 
 							*''* *``*
 ''  ``			To the position before latest jump, or where the last
-			"m'" or "m`" command was given.
+			"m'" or "m`" command was given.  Not set when the
+			|:keepjumps| command modifier was used.
 			Also see |restore-position|.
 
 							*'quote* *`quote*
@@ -775,7 +785,8 @@ was made yet in the current file.
 							*'^* *`^*
 '^  `^			To the position where the cursor was the last time
 			when Insert mode was stopped  This is used by the |gi|
-			command.  {not in Vi}
+			command.  Not set when the |:keepjumps| command
+			modifier was used.  {not in Vi}
 
 							*'.* *`.*
 '.  `.			To the position where the last change was made.  The
@@ -864,7 +875,7 @@ These commands are not marks themselves, but jump to a mark:
 			the same effect as using ":keepmarks".
 
 							*:keepj* *:keepjumps*
-:keepj[umps] {command}	
+:keepj[umps] {command}
 			Do not change the |''|, |'.| and |'^| marks, the
 			|jumplist| or the |changelist|.  Useful when making a
 			change or inserting text automatically and the user
@@ -1029,7 +1040,7 @@ remembered.
 				>   0     9    8 bla bla bla
 				    1    11   57 foo is a bar
 				    2    14   54 the latest changed line
-			
+
 			Now you can use "g," to go to line 11 and "2g," to go
 			to line 14.
 
@@ -1156,23 +1167,23 @@ the current line is included.  You can then use "%" to go to the matching line.
 
 
 						*H*
-H			To line [count] from top (Home) of screen (default:
-			first line on the screen) on the first non-blank
-			character (linewise).  See also 'startofline' option.
+H			To line [count] from top (Home) of window (default:
+			first line on the window) on the first non-blank
+			character |linewise|.  See also 'startofline' option.
 			Cursor is adjusted for 'scrolloff' option.
 
 						*M*
-M			To Middle line of screen, on the first non-blank
-			character (linewise).  See also 'startofline' option.
+M			To Middle line of window, on the first non-blank
+			character |linewise|.  See also 'startofline' option.
 
 						*L*
-L			To line [count] from bottom of screen (default: Last
-			line on the screen) on the first non-blank character
-			(linewise).  See also 'startofline' option.
+L			To line [count] from bottom of window (default: Last
+			line on the window) on the first non-blank character
+			|linewise|.  See also 'startofline' option.
 			Cursor is adjusted for 'scrolloff' option.
 
 <LeftMouse>		Moves to the position on the screen where the mouse
-			click is (inclusive).  See also |<LeftMouse>|.  If the
+			click is |inclusive|.  See also |<LeftMouse>|.  If the
 			position is in a status line, that window is made the
 			active window and the cursor is not moved.  {not in Vi}
 

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.2.  Last change: 2004 Mar 27
+*quickfix.txt*  For Vim version 6.3a.  Last change: 2004 Mar 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -407,7 +407,7 @@ following:
 - Compile with the -qf option.  If the compiler finds any errors, Vim is
   started and the cursor is positioned on the first error.  The error message
   will be displayed on the last line.  You can go to other errors with the
-  commands mentioned below.  You can fix the errors and write the file(s).
+  commands mentioned above.  You can fix the errors and write the file(s).
 - If you exit Vim normally the compiler will re-compile the same file.  If you
   exit with the :cq command, the compiler will terminate.  Do this if you
   cannot fix the error, or if another file needs to be compiled first.
@@ -445,11 +445,21 @@ Also see http://vim.sourceforge.net/tip_view.php?tip_id=280.
 TEX COMPILER						*compiler-tex*
 
 Included in the distribution compiler for TeX ($VIMRUNTIME/compiler/tex.vim)
-is intended to handle all flavors of TeX formats. If b:tex_flavor or
-g:tex_flavor (in this precedence) variable exists, it defines TeX flavor for
-:make (actually, this is the name of executed command), and if both variables
-do not exist, it defaults to "latex". For example, while editing chapter2.tex
-\input-ed from mypaper.tex written in AMS-TeX: >
+uses make command if possible. If the compiler finds a file named "Makefile"
+or "makefile" in the current directory, it supposes that you want to process
+your *TeX files with make, and the makefile does the right work. In this case
+compiler sets 'errorformat' for *TeX output and leaves 'makeprg' untouched. If
+neither "Makefile" nor "makefile" is found, the compiler will not use make.
+You can force the compiler to ignore makefiles by defining
+b:tex_ignore_makefile or g:tex_ignore_makefile variable (they are checked for
+existence only).
+
+If the compiler chose not to use make, it need to choose a right program for
+processing your input. If b:tex_flavor or g:tex_flavor (in this precedence)
+variable exists, it defines TeX flavor for :make (actually, this is the name
+of executed command), and if both variables do not exist, it defaults to
+"latex". For example, while editing chapter2.tex \input-ed from mypaper.tex
+written in AMS-TeX: >
 
 	:let b:tex_flavor = 'amstex'
 	:compiler tex
@@ -459,29 +469,16 @@ do not exist, it defaults to "latex". For example, while editing chapter2.tex
 Note that you must specify a name of the file to process as an argument (to
 process the right file when editing \input-ed or \include-ed file; portable
 solution for substituting % for no arguments is welcome). This is not in the
-semantics of make, but you may specify filename without extension ".tex" and
-mean this as "make filename.dvi or filename.pdf or
-filename.some_result_extension according to compiler".
+semantics of make, where you specify a target, not source, but you may specify
+filename without extension ".tex" and mean this as "make filename.dvi or
+filename.pdf or filename.some_result_extension according to compiler".
 
-Used variables:
-b:tex_ignore_makefile or g:tex_ignore_makefile
-  usually if a file 'Makefile' or 'makefile' exists in the current
-  directory, it is considered a sign that user wants to process his *TeX
-  files with make (e.g. he has a multifile book with a master file - in this
-  case :make should process master file regardless of which file is edited).
-  If this is not the case, you can set one of the variables above before
-  running :compiler tex.
-b:tex_flavor or g:tex_flavor
-  by default this compiler thinks that you use LaTeX (don't you? why!?) and
-  run it with "latex" command. If this assumption is invalid for you, set
-  b:tex_flavor or g:tex_flavor to the name of command you run.
-
-Note: latex command line syntax is set to usable both for MikTeX (suggestion
+Note: tex command line syntax is set to usable both for MikTeX (suggestion
 by Srinath Avadhanula) and teTeX (checked by Artem Chuprina). Suggestion
-from :help errorformat-LaTeX is too complex to keep it working for different
+from |errorformat-LaTeX| is too complex to keep it working for different
 shells and OSes and also does not allow to use other available TeX options,
 if any. If your TeX doesn't support "-interaction=nonstopmode", please
-report it with different means to express \nonstopmode from the command line
+report it with different means to express \nonstopmode from the command line.
 
 =============================================================================
 7. The error format					*error-file-format*
@@ -747,7 +744,7 @@ The format of the file from the Amiga Aztec compiler is:
 	errormessage	description of the error
 
 This can be matched with this 'errorformat' entry:
-	%f>%l:%c:%t:%n:%m"
+	%f>%l:%c:%t:%n:%m
 
 Some examples for C compilers that produce single-line error outputs:
 %f:%l:\ %t%*[^0123456789]%n:\ %m	for Manx/Aztec C error messages

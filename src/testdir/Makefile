@@ -13,7 +13,7 @@ SCRIPTS = test1.out test2.out test3.out test4.out test5.out test6.out \
 		test33.out test34.out test35.out test36.out test37.out \
 		test38.out test39.out test40.out test41.out test42.out \
 		test43.out test44.out test45.out test46.out test47.out \
-		test48.out test49.out test51.out
+		test48.out test49.out test51.out test52.out
 
 SCRIPTS_GUI = test16.out
 
@@ -32,17 +32,17 @@ gui:	nolog $(SCRIPTS) $(SCRIPTS_GUI)
 $(SCRIPTS) $(SCRIPTS_GUI): $(VIMPROG)
 
 clean:
-	-rm -rf *.out *.rej *.orig test.log tiny.vim small.vim mbyte.vim test.ok X*
+	-rm -rf *.out *.rej *.orig test.log tiny.vim small.vim mbyte.vim test.ok X* viminfo
 
 test1.out: test1.in
-	-rm -f $*.failed tiny.vim small.vim mbyte.vim test.ok X*
+	-rm -f $*.failed tiny.vim small.vim mbyte.vim test.ok X* viminfo
 	$(VIMPROG) -u unix.vim -U NONE --noplugin -s dotest.in $*.in
 	@/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
 		else echo; \
 		echo test1 FAILED - Something basic is wrong; \
 		echo; exit 1; fi"
-	-rm -rf X*
+	-rm -rf X* viminfo
 
 .in.out:
 	-rm -f $*.failed test.ok X*
@@ -52,7 +52,7 @@ test1.out: test1.in
 		then mv -f test.out $*.out; \
 		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \
 		fi"
-	-rm -rf X* test.ok
+	-rm -rf X* test.ok viminfo
 
 nolog:
 	-echo Test results: >test.log

@@ -103,13 +103,13 @@ if test "`(uname) 2>/dev/null`" = Darwin; then
 
   if test "$enable_darwin" = "yes"; then
     MACOSX=yes
-    OS_EXTRA_SCR="os_macosx.c"; 
+    OS_EXTRA_SCR="os_macosx.c";
     OS_EXTRA_OBJ="objects/os_macosx.o"
     CPPFLAGS="$CPPFLAGS -DMACOS_X_UNIX -I/Developer/Headers/FlatCarbon -no-cpp-precomp"
 
     dnl If Carbon is found, assume we don't want X11
     dnl unless it was specifically asked for (--with-x)
-    AC_CHECK_HEADER(Carbon/Carbon.h, CARBON=yes)         
+    AC_CHECK_HEADER(Carbon/Carbon.h, CARBON=yes)
     if test "x$CARBON" = "xyes"; then
       if test -z "$with_x"; then
 	with_x=no
@@ -362,7 +362,7 @@ if test "$enable_perlinterp" = "yes"; then
 	if test "X$perlldflags" != "X"; then
 	  LDFLAGS="$perlldflags $LDFLAGS"
 	fi
-        PERL_LIBS=$perllibs
+	PERL_LIBS=$perllibs
 	PERL_SRC="auto/if_perl.c if_perlsfio.c"
 	PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
 	PERL_PRO="if_perl.pro if_perlsfio.pro"
@@ -374,17 +374,17 @@ if test "$enable_perlinterp" = "yes"; then
     fi
   fi
 
-  if test "x$MACOSX" = "xyes"; then 
+  if test "x$MACOSX" = "xyes"; then
     dnl Mac OS X 10.2 or 10.3
     dir=/System/Library/Perl
     darwindir=$dir/darwin
-    if test -d $darwindir; then 
+    if test -d $darwindir; then
       PERL=/usr/bin/perl
     else
       dnl Mac OS X 10.3
       dir=/System/Library/Perl/5.8.1
       darwindir=$dir/darwin-thread-multi-2level
-      if test -d $darwindir; then 
+      if test -d $darwindir; then
 	PERL=/usr/bin/perl
       fi
     fi
@@ -509,7 +509,7 @@ eof
 	fi
 	PYTHON_SRC="if_python.c"
 	dnl For Mac OSX 10.2 config.o is included in the Python library.
-	if test "x$MACOSX" = "xyes"; then 
+	if test "x$MACOSX" = "xyes"; then
 	  PYTHON_OBJ="objects/if_python.o"
 	else
 	  PYTHON_OBJ="objects/if_python.o objects/py_config.o"
@@ -620,7 +620,7 @@ if test "$enable_tclinterp" = "yes"; then
 
       AC_MSG_CHECKING(for location of Tcl include)
       if test "x$MACOSX" != "xyes"; then
-        tclinc="$tclloc/include $tclloc/include/tcl $tclloc/include/tcl$tclver /usr/local/include"
+	tclinc="$tclloc/include $tclloc/include/tcl $tclloc/include/tcl$tclver /usr/local/include"
       else
 	dnl For Mac OS X 10.3, use the OS-provided framework location
 	tclinc="/System/Library/Frameworks/Tcl.framework/Headers"
@@ -1772,7 +1772,7 @@ fi
 
 
 dnl ---------------------------------------------------------------------------
-dnl end of GUI-checking 
+dnl end of GUI-checking
 dnl ---------------------------------------------------------------------------
 
 

@@ -1,8 +1,8 @@
 " Vim syntax file
-" Language:	    lftp Configuration file
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Language:	    lftp(1) configuration file
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/lftp/
+" Latest Revision:  2004-04-22
 
 if version < 600
     syntax clear
@@ -28,7 +28,7 @@ syn region  lftpComment		display oneline matchgroup=lftpComment start="#" end="$
 syn keyword lftpTodo		contained TODO FIXME
 
 " strings
-syn region  lftpString		contained display oneline start=+"+ skip=+\\"+ end=+"+
+syn region  lftpString		contained display start=+"+ skip=+\\$\|\\"+ end=+"+ end=+$+
 
 " numbers
 syn match   lftpNumber		contained display "\<\d\+\(\.\d\+\)\=\>"
@@ -42,36 +42,118 @@ syn match   lftpInterval	contained "\<\(\d\+\(\.\d\+\)\=[dhms]\)\+\>"
 
 " commands
 syn keyword lftpKeywords	alias anon at bookmark cache cat cd chmod close
-syn keyword lftpKeywords	command debug echo exit find get glob help jobs
-syn keyword lftpKeywords	kill lcd lpwd ls mget fg mirror more mput mrm
-syn keyword lftpKeywords	mv nlist open pget put pwd queue quote reget less
-syn keyword lftpKeywords	rels renlist repeat reput rm rmdir scache site
-syn keyword lftpKeywords	sleep source suspend user version wait zcat zmore
+syn keyword lftpKeywords	cls command debug du echo exit fg find get get1 
+syn keyword lftpKeywords	glob help history jobs kill lcd lftp lpwd ls
+syn keyword lftpKeywords	mget mirror mkdir module
+syn keyword lftpKeywords	more mput mrm mv nlist open pget put pwd queue
+syn keyword lftpKeywords	quote reget recls rels renlist repeat
+syn keyword lftpKeywords	reput rm rmdir scache site source suspend user
+syn keyword lftpKeywords	version wait zcat zmore
 
 " settings
-syn region  lftpSet		matchgroup=lftpKeywords start="set" end=";" end="$" contains=lftpString,lftpNumber,lftpBoolean,lftpInterval,lftpSettings
-
-" not quite right since options can be given like save-pa or bmk:save
-" but hopefully people type out the whole option when writing rc's
-syn match   lftpSettings	contained "\(\<bmk:\)\=\<save-passwords\>"
-syn match   lftpSettings	contained "\(\<cmd:\)\=\<\(at-exit\|csh-history\|default-protocol\|default-title\|fail-exit\|interactive\|long-running\|ls-default\)\>"
-syn match   lftpSettings	contained "\(\<cmd:\)\=\<\(move-background\|prompt\|remote-completion\|save-cwd-history\|\(set-\)\=term-status\|verbose\|verify-\(host\|path\)\)\>"
-syn match   lftpSettings	contained "\(\<dns:\)\=\<\(SRV-query\|cache-\(enable\|expire\|size\)\|fatal-timeout\|order\|use-fork\)\>"
-syn match   lftpSettings	contained "\(\<ftp:\)\=\<\(acct\|anon-\(pass\|user\)\|auto-sync-mode\|bind-data-socket\|fix-pasv-address\)\>"
-syn match   lftpSettings	contained "\(\<ftp:\)\=\<\(home\|list-options\|nop-interval\|passive-mode\|port-\(ipv4\|range\)\|proxy\)\>"
-syn match   lftpSettings	contained "\(\<ftp:\)\=\<\(rest-\(list\|stor\)\|retry-530\(-anonymous\)\=\|site-group\|skey-\(allow\|force\)\)\>"
-syn match   lftpSettings	contained "\(\<ftp:\)\=\<\(ssl-\(allow\|force\|protect-data\)\|stat-interval\|sync-mode\|fxp-passive-source\)\>"
-syn match   lftpSettings	contained "\(\<ftp:\)\=\<\(use-\(abor\|fxp\|site-idle\|stat\|quit\)\|verify-\(address\|port\)\|web-mode\)\>"
-syn match   lftpSettings	contained "\(\<hftp:\)\=\<\(cache\|proxy\|use-\(authorization\|head\|type\)\)\>"
-syn match   lftpSettings	contained "\(\<http:\)\=\<\(accept\(-charset\|-language\)\=\|cache\|cookie\|post-content-type\|proxy\)\>"
-syn match   lftpSettings	contained "\(\<http:\)\=\<\(put-\(method\|content-type\)\|referer\|set-cookies\|user-agent\)\>"
-syn match   lftpSettings	contained "\(\<https:\)\=\<proxy\>"
-syn match   lftpSettings	contained "\(\<mirror:\)\=\<\(loose-\)\=time-precision\>"
-syn match   lftpSettings	contained "\(\<module:\)\=\<path\>"
-syn match   lftpSettings	contained "\(\<net:\)\=\<\(connection-\(limit\|takeover\)\|idle\|limit-\(total-\)\=\(rate\|max\)\)\>"
-syn match   lftpSettings	contained "\(\<net:\)\=\<\(max-retries\|no-proxy\|persist-retries\|reconnect-interval-\(base\|max\|multiplier\)\)\>"
-syn match   lftpSettings	contained "\(\<net:\)\=\<\(socket-\(buffer\|maxseg\)\|timeout\)\>"
-syn match   lftpSettings	contained "\(\<xfer:\)\=\<\(clobber\|eta-\(period\|terse\)\|max-redirections\|rate-period\|make-backup\)\>"
+syn region  lftpSet		matchgroup=lftpKeywords start="set" end=";" end="$" contains=lftpString,lftpNumber,lftpBoolean,lftpInterval,lftpSettingsPrefix,lftpSettings
+syn match   lftpSettingsPrefix	contained '\<\%(bmk\|cache\|cmd\|color\|dns\):'
+syn match   lftpSettingsPrefix	contained '\<\%(file\|fish\|ftp\|hftp\):'
+syn match   lftpSettingsPrefix	contained '\<\%(http\|https\|mirror\|module\):'
+syn match   lftpSettingsPrefix	contained '\<\%(net\|sftp\|ssl\|xfer\):'
+" bmk:
+syn keyword lftpSettings	contained save-p[asswords]
+" cache:
+syn keyword lftpSettings	contained cache-em[pty-listings] en[able]
+syn keyword lftpSettings	contained exp[ire] siz[e]
+" cmd:
+syn keyword lftpSettings	contained at[-exit] cls-c[ompletion-default]
+syn keyword lftpSettings	contained cls-d[efault] cs[h-history]
+syn keyword lftpSettings	contained default-p[rotocol] default-t[itle]
+syn keyword lftpSettings	contained fai[l-exit] in[teractive]
+syn keyword lftpSettings	contained lo[ng-running] ls[-default]
+syn keyword lftpSettings	contained mo[ve-background] prom[pt]
+syn keyword lftpSettings	contained rem[ote-completion]
+syn keyword lftpSettings	contained save-c[wd-history] save-r[l-history]
+syn keyword lftpSettings	contained set-t[erm-status] statu[s-interval]
+syn keyword lftpSettings	contained te[rm-status] verb[ose] verify-h[ost]
+syn keyword lftpSettings	contained verify-path verify-path[-cached]
+" color:
+syn keyword lftpSettings	contained dir[-colors] use-c[olor]
+" dns:
+syn keyword lftpSettings	contained S[RV-query] cache-en[able]
+syn keyword lftpSettings	contained cache-ex[pire] cache-s[ize]
+syn keyword lftpSettings	contained fat[al-timeout] o[rder] use-fo[rk]
+" file:
+syn keyword lftpSettings	contained ch[arset]
+" fish:
+syn keyword lftpSettings	contained connect[-program] sh[ell]
+" ftp:
+syn keyword lftpSettings	contained acct anon-p[ass] anon-u[ser]
+syn keyword lftpSettings	contained au[to-sync-mode] b[ind-data-socket]
+syn keyword lftpSettings	contained ch[arset] cli[ent] dev[ice-prefix]
+syn keyword lftpSettings	contained fi[x-pasv-address] fxp-f[orce]
+syn keyword lftpSettings	contained fxp-p[assive-source] h[ome] la[ng]
+syn keyword lftpSettings	contained list-e[mpty-ok] list-o[ptions]
+syn keyword lftpSettings	contained nop[-interval] pas[sive-mode]
+syn keyword lftpSettings	contained port-i[pv4] port-r[ange] prox[y]
+syn keyword lftpSettings	contained rest-l[ist] rest-s[tor]
+syn keyword lftpSettings	contained retry-530 retry-530[-anonymous]
+syn keyword lftpSettings	contained sit[e-group] skey-a[llow]
+syn keyword lftpSettings	contained skey-f[orce] ssl-allow
+syn keyword lftpSettings	contained ssl-allow[-anonymous] ssl-au[th]
+syn keyword lftpSettings	contained ssl-f[orce] ssl-protect-d[ata]
+syn keyword lftpSettings	contained ssl-protect-l[ist] stat-[interval]
+syn keyword lftpSettings	contained sy[nc-mode] timez[one] use-a[bor]
+syn keyword lftpSettings	contained use-fe[at] use-fx[p] use-hf[tp]
+syn keyword lftpSettings	contained use-mdtm use-mdtm[-overloaded]
+syn keyword lftpSettings	contained use-ml[sd] use-p[ret] use-q[uit]
+syn keyword lftpSettings	contained use-site-c[hmod] use-site-i[dle]
+syn keyword lftpSettings	contained use-site-u[time] use-siz[e]
+syn keyword lftpSettings	contained use-st[at] use-te[lnet-iac]
+syn keyword lftpSettings	contained verify-a[ddress] verify-p[ort]
+syn keyword lftpSettings	contained w[eb-mode]
+" hftp:
+syn keyword lftpSettings	contained w[eb-mode] cache prox[y]
+syn keyword lftpSettings	contained use-au[thorization] use-he[ad]
+syn keyword lftpSettings	contained use-ty[pe]
+" http:
+syn keyword lftpSettings	contained accept accept-c[harset]
+syn keyword lftpSettings	contained accept-l[anguage] cache coo[kie]
+syn keyword lftpSettings	contained pos[t-content-type] prox[y]
+syn keyword lftpSettings	contained put-c[ontent-type] put-m[ethod]
+syn keyword lftpSettings	contained ref[erer] set-c[ookies] user[-agent]
+" https:
+syn keyword lftpSettings	contained prox[y]
+" mirror:
+syn keyword lftpSettings	contained exc[lude-regex] o[rder]
+syn keyword lftpSettings	contained parallel-d[irectories]
+syn keyword lftpSettings	contained parallel-t[ransfer-count]
+syn keyword lftpSettings	contained use-p[get-n]
+" module:
+syn keyword lftpSettings	contained pat[h]
+" net:
+syn keyword lftpSettings	contained connection-l[imit]
+syn keyword lftpSettings	contained connection-t[akeover]
+syn keyword lftpSettings	contained id[le] limit-m[ax] limit-r[ate]
+syn keyword lftpSettings	contained limit-total-m[ax] limit-total-r[ate]
+syn keyword lftpSettings	contained max-ret[ries] no-[proxy]
+syn keyword lftpSettings	contained pe[rsist-retries]
+syn keyword lftpSettings	contained reconnect-interval-b[ase]
+syn keyword lftpSettings	contained reconnect-interval-ma[x]
+syn keyword lftpSettings	contained reconnect-interval-mu[ltiplier]
+syn keyword lftpSettings	contained socket-bind-ipv4 socket-bind-ipv6
+syn keyword lftpSettings	contained socket-bu[ffer] socket-m[axseg]
+syn keyword lftpSettings	contained timeo[ut]
+" sftp:
+syn keyword lftpSettings	contained connect[-program]
+syn keyword lftpSettings	contained max-p[ackets-in-flight]
+syn keyword lftpSettings	contained prot[ocol-version] ser[ver-program]
+syn keyword lftpSettings	contained size-r[ead] size-w[rite]
+" ssl:
+syn keyword lftpSettings	contained ca-f[ile] ca-p[ath] ce[rt-file]
+syn keyword lftpSettings	contained crl-f[ile] crl-p[ath] k[ey-file]
+syn keyword lftpSettings	contained verify-c[ertificate]
+" xfer:
+syn keyword lftpSettings	contained clo[bber] dis[k-full-fatal]
+syn keyword lftpSettings	contained eta-p[eriod] eta-t[erse]
+syn keyword lftpSettings	contained mak[e-backup] max-red[irections]
+syn keyword lftpSettings	contained ra[te-period]
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -84,14 +166,15 @@ if version >= 508 || !exists("did_lftp_syn_inits")
 	command -nargs=+ HiLink hi def link <args>
     endif
 
-    HiLink lftpComment	    Comment
-    HiLink lftpTodo	    Todo
-    HiLink lftpString	    String
-    HiLink lftpNumber	    Number
-    HiLink lftpBoolean	    Number
-    HiLink lftpInterval	    Number
-    HiLink lftpKeywords	    Keyword
-    HiLink lftpSettings	    Type
+    HiLink lftpComment		Comment
+    HiLink lftpTodo		Todo
+    HiLink lftpString		String
+    HiLink lftpNumber		Number
+    HiLink lftpBoolean		Boolean
+    HiLink lftpInterval		Number
+    HiLink lftpKeywords		Keyword
+    HiLink lftpSettingsPrefix	PreProc
+    HiLink lftpSettings		Type
     delcommand HiLink
 endif
 

@@ -1,5 +1,5 @@
 # Makefile for Vim on Unix and Unix-like systems	vim:ts=8:sw=8:tw=78
-#							vim600:fdm=marker
+#
 # This Makefile is loosely based on the GNU Makefile conventions found in
 # standards.info.
 #
@@ -139,8 +139,8 @@
 #		make uninstall_runtime VIMRTDIR=/vim54
 #	If you want to delete all installed files, use:
 #		make uninstall
-#	Note that this will delete files have the same name for any version,
-#	thus you might need to do a "make install" soon after this.
+#	Note that this will delete files that have the same name for any
+#	version, thus you might need to do a "make install" soon after this.
 #	Be careful not to remove a version of Vim that is still being used!
 #	To find out which files and directories will be deleted, use:
 #		make -n uninstall
@@ -194,11 +194,13 @@
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
 #Solaris with -lthread					5.5  (W) K. Nagano
+#Solaris	      gcc				     (b) Riccardo
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
 #SUPER-UX 6.2 (NEC SX-4) cc	     +X11R6 Motif,Athena4.6b (P) Lennart Schultz
 #Unisys 6035	      cc	     +X11 Motif		5.3  (8) Glauber Ribeiro
 #ESIX V4.2	      cc	     +X11		6.0  (a) Reinhard Wobst
+#Mac OS X 10.[23]     gcc	     Carbon		6.2  (x) Bram Moolenaar
 # }}}
 
 # (*)  Remarks: {{{
@@ -244,6 +246,10 @@
 # (Y)  See line with c89 below
 # (Z)  See lines with cc or c89 below
 # (a)  See line with EXTRA_LIBS below.
+# (b)  When using gcc with the Solaris linker, make sure you don't use GNU
+#      strip, otherwise the binary may not run: "Cannot find ELF".
+# (x)  When you get warnings for precompiled header files, run
+#      "sudo fixPrecomps".  Also see CONF_OPT_DARWIN below.
 # }}}
 
 
@@ -387,9 +393,15 @@ CClink = $(CC)
 
 # MULTIBYTE - To edit multi-byte characters.
 # Uncomment this when you want to edit a multibyte language.
+# It's automatically enabled with big features or IME support.
 # Note: Compile on a machine where setlocale() actually works, otherwise the
 # configure tests may fail.
 #CONF_OPT_MULTIBYTE = --enable-multibyte
+
+# NLS - National Language Support
+# Uncomment this when you do not want to support translated messages, even
+# though configure can find support for it.
+#CONF_OPT_NLS = --disable-nls
 
 # XIM - X Input Method.  Special character input support for X11 (chinese,
 # japanese, special symbols, etc).  Also needed for dead-key support.
@@ -567,15 +579,40 @@ LINT_OPTIONS = -beprxzF
 #X_LIBS_DIR = -L/usr/openwin/lib -R/usr/openwin/lib
 #CFLAGS = -O
 
-### (8) Unisys 6035 (Glauber Ribeiro)
-#EXTRA_LIBS = -lnsl -lsocket -lgen
-
 ### (9) Solaris 2.x with cc (SunPro), using Athena.
 ###	Only required for compiling gui_at_sb.c.
 ###	Symptom: "identifier redeclared: vim_XawScrollbarSetThumb"
 ###	Use one of the lines (either Full ANSI or no ANSI at all)
 #CFLAGS = $(CFLAGS) -Xc
 #CFLAGS = $(CFLAGS) -Xs
+
+### Solaris 2.3 with X11 and specific cc
+#CC=/opt/SUNWspro/bin/cc -O -Xa -v -R/usr/openwin/lib
+
+### Solaris with /usr/ucb/cc (it is rejected by autoconf as "cc")
+#CC	    = /usr/ucb/cc
+#EXTRA_LIBS = -R/usr/ucblib
+
+### Solaris with Forte Developer and FEAT_SUN_WORKSHOP
+# The Xpm library is available from http://koala.ilog.fr/ftp/pub/xpm.
+#CC		= cc
+#XPM_DIR		= /usr/local/xpm/xpm-3.4k-solaris
+#XPM_LIB		= -L$(XPM_DIR)/lib -R$(XPM_DIR)/lib -lXpm
+#XPM_IPATH	= -I$(XPM_DIR)/include
+#EXTRA_LIBS	= $(XPM_LIB)
+#EXTRA_IPATHS	= $(XPM_IPATH)
+#EXTRA_DEFS	= -xCC -DHAVE_X11_XPM_H
+
+### Solaris with workshop compilers: Vim is unstable when compiled with
+# "-fast".  Use this instead. (Shea Martin)
+#CFLAGS = -x02 -xtarget=ultra
+
+### (R) for Solaris 2.5 (or 2.5.1) with gcc > 2.5.6 you might need this:
+#LDFLAGS = -lw -ldl -lXmu
+#GUI_LIB_LOC = -L/usr/local/lib
+
+### (8) Unisys 6035 (Glauber Ribeiro)
+#EXTRA_LIBS = -lnsl -lsocket -lgen
 
 ### When builtin functions cause problems with gcc (for Sun 4.1.x)
 #CFLAGS = -O2 -Wall -traditional -Wno-implicit
@@ -590,23 +627,6 @@ LINT_OPTIONS = -beprxzF
 
 ### SCO 3.2, with different library name for terminfo
 #EXTRA_LIBS = -ltinfo
-
-### Solaris 2.3 with X11 and specific cc
-#CC=/opt/SUNWspro/bin/cc -O -Xa -v -R/usr/openwin/lib
-
-### Solaris with /usr/ucb/cc (it is rejected by autoconf as "cc")
-#CC	    = /usr/ucb/cc
-#EXTRA_LIBS = -R/usr/ucblib
-
-### Solaris with Forte Developer and FEAT_SUN_WORKSHOP
-# The Xpm library is available from ftp://koala.inria.fr/pub/xpm.
-#CC		= cc
-#XPM_DIR		= /usr/local/xpm/xpm-3.4k-solaris
-#XPM_LIB		= -L$(XPM_DIR)/lib -R$(XPM_DIR)/lib -lXpm
-#XPM_IPATH	= -I$(XPM_DIR)/include
-#EXTRA_LIBS	= $(XPM_LIB)
-#EXTRA_IPATHS	= $(XPM_IPATH)
-#EXTRA_DEFS	= -xCC -DHAVE_X11_XPM_H
 
 ### UTS2 for Amdahl UTS 2.1.x
 #EXTRA_DEFS = -DUTS2
@@ -679,10 +699,6 @@ LINT_OPTIONS = -beprxzF
 #XROOT = /usr/necccs
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib/X11R6
 #EXTRA_LIBS = -lsocket -lgen
-
-### (R) for Solaris 2.5 (or 2.5.1) with gcc > 2.5.6 you might need this:
-#LDFLAGS = -lw -ldl -lXmu
-#GUI_LIB_LOC = -L/usr/local/lib
 
 ### Irix 4.0 & 5.2 (Silicon Graphics Machines, __sgi will be defined)
 # Not needed for Irix 5.3, Ives Aerts reported
@@ -829,7 +845,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim62
+VIMRTDIR = /vim63a
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1437,7 +1453,7 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
 		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) $(CONF_OPT_XSMP) \
 		$(CONF_OPT_DARWIN) $(CONF_OPT_PERL) $(CONF_OPT_PYTHON) \
-		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
+		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) $(CONF_OPT_NLS) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
 		$(CONF_OPT_SNIFF) $(CONF_OPT_FEAT) $(CONF_TERM_LIB) \
@@ -1447,7 +1463,7 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 # Use "make reconfig" to rerun configure without cached values.
 # When config.h changes, most things will be recompiled automatically.
 # Use "myself" to make "all" with a possibly changed auto/config.mk.
-reconfig: scratch config myself
+reconfig: scratch clean config myself
 
 # Run autoconf to produce auto/configure.
 # Note:
@@ -2570,24 +2586,7 @@ objects/gui.o: gui.c vim.h auto/config.h feature.h os_unix.h auto/osdef.h \
 objects/gui_gtk.o: gui_gtk.c gui_gtk_f.h vim.h auto/config.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h gui_beval.h proto/gui_beval.pro option.h ex_cmds.h \
- proto.h globals.h farsi.h arabic.h ../pixmaps/alert.xpm \
- ../pixmaps/error.xpm ../pixmaps/generic.xpm ../pixmaps/info.xpm \
- ../pixmaps/quest.xpm ../pixmaps/tb_new.xpm ../pixmaps/tb_open.xpm \
- ../pixmaps/tb_close.xpm ../pixmaps/tb_save.xpm \
- ../pixmaps/tb_print.xpm ../pixmaps/tb_cut.xpm ../pixmaps/tb_copy.xpm \
- ../pixmaps/tb_paste.xpm ../pixmaps/tb_find.xpm \
- ../pixmaps/tb_find_next.xpm ../pixmaps/tb_find_prev.xpm \
- ../pixmaps/tb_find_help.xpm ../pixmaps/tb_exit.xpm \
- ../pixmaps/tb_undo.xpm ../pixmaps/tb_redo.xpm ../pixmaps/tb_help.xpm \
- ../pixmaps/tb_macro.xpm ../pixmaps/tb_make.xpm \
- ../pixmaps/tb_save_all.xpm ../pixmaps/tb_jump.xpm \
- ../pixmaps/tb_ctags.xpm ../pixmaps/tb_load_session.xpm \
- ../pixmaps/tb_save_session.xpm ../pixmaps/tb_new_session.xpm \
- ../pixmaps/tb_blank.xpm ../pixmaps/tb_maximize.xpm \
- ../pixmaps/tb_split.xpm ../pixmaps/tb_minimize.xpm \
- ../pixmaps/tb_shell.xpm ../pixmaps/tb_replace.xpm \
- ../pixmaps/tb_vsplit.xpm ../pixmaps/tb_maxwidth.xpm \
- ../pixmaps/tb_minwidth.xpm ../pixmaps/stock_icons.h
+ proto.h globals.h farsi.h arabic.h ../pixmaps/stock_icons.h
 objects/gui_gtk_f.o: gui_gtk_f.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h gui_beval.h proto/gui_beval.pro option.h ex_cmds.h proto.h \

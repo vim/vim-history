@@ -39,7 +39,7 @@ $! - Error handling isn't great.  Come up with something better....
 $!
 $! E-mail addresses:
 $! Steve Wall		hitched97@velnet.com
-$! Zoltan Arpadffy      arpadffy@altavista.net
+$! Zoltan Arpadffy      arpadffy@polarhome.com
 $! John W. Hamill       jhamill3@ford.com
 $!
 $! Modification History:

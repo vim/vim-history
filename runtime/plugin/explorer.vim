@@ -1,7 +1,7 @@
 "=============================================================================
 " File: explorer.vim
 " Author: M A Aziz Ahmed (aziz@acorn-networks.com - doesn't work)
-" Last Change:	2004 Jan 16
+" Last Change:	2004 Mar 15
 " Version: 2.5 + changes
 " Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
@@ -121,18 +121,28 @@ if !exists("g:explFileHandler")
 		\ . escape(a:fn, '%#') . '"'
     endfunction
     let g:explFileHandler = "<SID>explFileHandlerWin32"
-  elseif has("unix") && executable("kfmclient")
-    " for KDE use kfmclient
-    function! s:explFileHandlerKDE(fn)
-      if &shellredir =~ "%s"
-	let redir = substitute(&shellredir, "%s", "/dev/null", "")
-      else
-	let redir = &shellredir . "/dev/null"
-      endif
-      " Need to escape % and # but not spaces.
-      exec "silent !kfmclient exec '" . escape(a:fn, '%#') . "'" . redir
-    endfunction
-    let g:explFileHandler = "<SID>explFileHandlerKDE"
+
+  elseif has("unix")
+    " for KDE use kfmclient, for GNUME use gnome-open
+    if executable("kfmclient")
+      let g:explFileHandlerCmd = "kfmclient exec"
+    elseif executable("gnome-open")
+      let g:explFileHandlerCmd = "gnome-open"
+    else
+      let g:explFileHandlerCmd = ""
+    endif
+    if g:explFileHandlerCmd != ""
+      function! s:explFileHandlerUnix(fn)
+	if &shellredir =~ "%s"
+	  let redir = substitute(&shellredir, "%s", "/dev/null", "")
+	else
+	  let redir = &shellredir . "/dev/null"
+	endif
+	" Need to escape % and # but not spaces.
+	exec "silent !" . g:explFileHandlerCmd . " '" . escape(a:fn, '%#') . "'" . redir
+      endfunction
+      let g:explFileHandler = "<SID>explFileHandlerUnix"
+    endif
   endif
 endif
 

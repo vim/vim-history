@@ -1,4 +1,4 @@
-README.txt for version 6.2 of Vim: Vi IMproved.
+README.txt for version 6.3a of Vim: Vi IMproved.
 
 
 WHAT IS VIM
@@ -124,5 +124,5 @@ Send any other comments, patches, pizza and suggestions to:
 
 	Bram Moolenaar		E-mail:	Bram@vim.org
 	Clematisstraat 30
-	5925 BE  Venlo		Tel: +31 77 3872340
-	The Netherlands		Fax/voice-mail: +31 84 8508509
+	5925 BE  Venlo		Tel: +31 77 387 2340
+	The Netherlands		Fax/voice-mail: +31 20 773 8272

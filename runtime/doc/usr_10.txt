@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.2.  Last change: 2003 May 04
+*usr_10.txt*	For Vim version 6.3a.  Last change: 2004 Mar 12
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -68,8 +68,8 @@ execute the following commands:
 
 Now that you have done the work once, you can repeat the change by typing the
 command "@a" three times.
-The "@a" command can be preceded by a count, which will cause the macro to be
-executed that number of times.  In this case you would type: >
+   The "@a" command can be preceded by a count, which will cause the macro to
+be executed that number of times.  In this case you would type: >
 
 	3@a
 
@@ -111,7 +111,7 @@ again, but perhaps you will make another mistake.  Instead, use this trick:
 
 Now you can execute the corrected commands with "@n".  (If your recorded
 commands include line breaks, adjust the last two items in the example to
-include all the lines).
+include all the lines.)
 
 
 APPENDING TO A REGISTER
@@ -142,7 +142,7 @@ Repeat this command for all lines.  The a register now contains all those
 lines, in the order you yanked them.
 
 ==============================================================================
-*10.2*	Substitution
+*10.2*	Substitution						*find-replace*
 
 The ":substitute" command enables you to perform string replacements on a
 whole range of lines.  The general form of this command is as follows: >
@@ -156,13 +156,13 @@ in all lines with the following command: >
 	:%substitute/Professor/Teacher/
 <
 	Note:
-	The :substitute command is almost never spelled out completely.  Most
-	of the time, people use the abbreviated version ":s".  From here on
-	the abbreviation will be used.
+	The ":substitute" command is almost never spelled out completely.
+	Most of the time, people use the abbreviated version ":s".  From here
+	on the abbreviation will be used.
 
 The "%" before the command specifies the command works on all lines.  Without
 a range, ":s" only works on the current line.  More about ranges in the next
-section.
+section |10.3|.
 
 By default, the ":substitute" command changes only the first occurrence on
 each line.  For example, the preceding command changes the line:
@@ -684,7 +684,7 @@ with any motion command, with text objects and in Visual mode.
 lowercase.  This can be shortened to "guu".  "gUgU" is shortened to "gUU" and
 "g~g~" to "g~~".  Example: >
 
-				g~~
+				g~~ 
 <	Some GIRLS have Fun    ---->   sOME girls HAVE fUN ~
 
 ==============================================================================
