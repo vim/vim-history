@@ -5763,24 +5763,19 @@ ins_start_select(c)
 		 * CTRL-O when beyond the end of the line. */
 		start_selection();
 
-		/* Execute the key in (insert) Select mode, unless it's
-		 * shift-left and beyond the end of the line (the CTRL-O
-		 * will move the cursor left already). */
+		/* Execute the key in (insert) Select mode. */
 		stuffcharReadbuff(Ctrl_O);
-		if (c != K_S_LEFT || gchar_cursor() != NUL)
+		if (mod_mask)
 		{
-		    if (mod_mask)
-		    {
-			char_u	    buf[4];
+		    char_u	    buf[4];
 
-			buf[0] = K_SPECIAL;
-			buf[1] = KS_MODIFIER;
-			buf[2] = mod_mask;
-			buf[3] = NUL;
-			stuffReadbuff(buf);
-		    }
-		    stuffcharReadbuff(c);
+		    buf[0] = K_SPECIAL;
+		    buf[1] = KS_MODIFIER;
+		    buf[2] = mod_mask;
+		    buf[3] = NUL;
+		    stuffReadbuff(buf);
 		}
+		stuffcharReadbuff(c);
 		return TRUE;
 	}
     return FALSE;
