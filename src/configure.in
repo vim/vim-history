@@ -1313,6 +1313,9 @@ int argc; char **argv;
   LDFLAGS=$ldflags_save
 fi
 
+dnl Link with xpg4, it is said to make Korean locale working
+AC_CHECK_LIB(xpg4, _xpg4_setrunelocale, [LIBS="$LIBS -lxpg4"],,)
+
 dnl Check how we can run ctags
 dnl -t for typedefs (many ctags have this)
 dnl -s for static functions (Elvis ctags only?)
