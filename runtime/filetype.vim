@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jan 02
+" Last change:	2001 Jan 19
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -183,11 +183,12 @@ au BufNewFile,BufRead *.css			setf css
 au BufNewFile,BufRead *.con			setf cterm
 
 " Changelog
-au BufNewFile,BufReadPost [cC]hange[lL]og	if getline(1) =~ '; urgency='
+au BufNewFile,BufRead changelog.Debian		setf debchangelog
+au BufNewFile,BufRead [cC]hange[lL]og		if getline(1) =~ '; urgency='
 	\| setf debchangelog | else | setf changelog | endif
 
 " CHILL
-au BufNewFile,BufReadPost *..ch			setf ch
+au BufNewFile,BufRead *..ch			setf ch
 
 " Changes for WEB and CWEB or CHILL
 au BufNewFile,BufRead *.ch			call <SID>FTchange()
@@ -207,7 +208,7 @@ fun! <SID>FTchange()
 endfun
 
 " Clean
-au BufNewFile,BufReadPost *.dcl,*.icl		setf clean
+au BufNewFile,BufRead *.dcl,*.icl		setf clean
 
 " Clipper
 au BufNewFile,BufRead *.prg			setf clipper
@@ -258,7 +259,7 @@ au BufNewFile,BufRead *.dylan			setf dylan
 au BufNewFile,BufRead *.def			setf def
 
 " Dracula
-au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe setf dracula
+au BufNewFile,BufRead *.drac,*.drc,*lvs,*lpe	setf dracula
 
 " DTD (Document Type Definition for XML)
 au BufNewFile,BufRead *.dtd			setf dtd
@@ -273,7 +274,7 @@ au BufNewFile,BufRead *.e,*.E			setf eiffel
 au BufNewFile,BufRead *.erl			setf erlang
 
 " Elm Filter Rules file
-au BufNewFile,BufReadPost filter-rules		setf elmfilt
+au BufNewFile,BufRead filter-rules		setf elmfilt
 
 " ESQL-C
 au BufNewFile,BufRead *.ec,*.EC			setf esqlc
@@ -298,12 +299,6 @@ au BufNewFile,BufRead *.fs,*.ft			setf forth
 
 " Fortran
 au BufNewFile,BufRead *.f,*.F,*.for,*.fpp,*.ftn,*.f77,*.f90,*.f95	setf fortran
-
-" Fvwm
-au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
-	\ let b:fvwm_version = 1 | setf fvwm
-au BufNewFile,BufRead *fvwm2rc*
-	\ let b:fvwm_version = 2 | setf fvwm
 
 " GDB command files
 au BufNewFile,BufRead .gdbinit			setf gdb
@@ -361,7 +356,7 @@ au BufNewFile,BufRead *.ini			setf dosini
 au BufNewFile,BufRead *.iss			setf iss
 
 " Jam
-au BufNewFile,BufRead *.jpl,*.jpr,Prl*.*,JAM*.*	setf jam
+au BufNewFile,BufRead *.jpl,*.jpr		setf jam
 
 " Java
 au BufNewFile,BufRead *.java,*.jav		setf java
@@ -699,7 +694,7 @@ fun! SetFileTypeSH(name)
 endfun
 
 " Z-Shell script
-au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*,zsh*,zlog*  setf zsh
+au BufNewFile,BufRead .zsh*,.zlog*,.zprofile,.zfbfmarks,.zcompdump*  setf zsh
 
 " Scheme
 au BufNewFile,BufRead *.scm			setf scheme
@@ -718,7 +713,7 @@ au BufNewFile,BufRead *.score			setf slrnsc
 au BufNewFile,BufRead *.st,*.cls		setf st
 
 " SMIL or XML
-au BufNewFile,BufReadPost *.smil
+au BufNewFile,BufRead *.smil
 	\ if getline(1) =~ '<?\s*xml.*?>' |
 	\   setf xml |
 	\ else |
@@ -740,7 +735,7 @@ au BufNewFile,BufRead *.smt,*.smith		setf smith
 au BufNewFile,BufRead *.sno			setf snobol4
 
 " SNMP MIB files
-au BufNewFile,BufReadPost *.mib			setf mib
+au BufNewFile,BufRead *.mib			setf mib
 
 " Spec (Linux RPM)
 au BufNewFile,BufRead *.spec			setf spec
@@ -800,7 +795,7 @@ au BufNewFile,BufRead *.v			setf verilog
 au BufNewFile,BufRead *.hdl,*.vhd,*.vhdl,*.vhdl_[0-9]*,*.vbe,*.vst  setf vhdl
 
 " Vim script
-au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc setf vim
+au BufNewFile,BufRead *.vim,.exrc,_exrc 	setf vim
 
 " Viminfo file
 au BufNewFile,BufRead .viminfo,_viminfo		setf viminfo
@@ -857,7 +852,7 @@ au BufEnter *.xpm2				setf xpm2
 au BufEnter *.xs				setf xs
 
 " X resources file
-au BufNewFile,BufRead .Xdefaults,.Xresources,Xresources*,*/app-defaults/*,*/Xresources/*,xdm-config setf xdefaults
+au BufNewFile,BufRead .Xdefaults,.Xresources,xdm-config setf xdefaults
 
 " Xmath
 au BufNewFile,BufRead *.msc,*.msf		setf xmath
@@ -896,7 +891,25 @@ augroup filetypedetect
 au BufNewFile,BufRead,StdinReadPost *
 	\ if !did_filetype() | runtime! scripts.vim | endif
 
-" Extra checks for when no filetype has been detected now
+
+" Extra checks for when no filetype has been detected now.  Mostly used for
+" patterns that end in "*".  E.g., "zsh*" matches "zsh.vim", but that's a Vim
+" script file.
+
+" Crontab
+au BufNewFile,BufRead crontab.*			setf crontab
+
+" Dracula
+au BufNewFile,BufRead drac.*			setf dracula
+
+" Fvwm
+au BufNewFile,BufRead *fvwmrc*,*fvwm95*.hook
+	\ let b:fvwm_version = 1 | setf fvwm
+au BufNewFile,BufRead *fvwm2rc*
+	\ let b:fvwm_version = 2 | setf fvwm
+
+" Jam
+au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam
 
 " Printcap and Termcap
 au BufNewFile,BufRead *printcap*
@@ -904,9 +917,14 @@ au BufNewFile,BufRead *printcap*
 au BufNewFile,BufRead *termcap*
 	\ if !did_filetype() | let b:ptcap_type = "term" | setf ptcap | endif
 
-" Crontab
-au BufNewFile,BufRead crontab.*
-	\ if !did_filetype()|setf crontab|endif
+" Vim script
+au BufNewFile,BufRead *vimrc*			setf vim
+
+" X resources file
+au BufNewFile,BufRead Xresources*,*/app-defaults/*,*/Xresources/* setf xdefaults
+
+" Z-Shell script
+au BufNewFile,BufRead zsh*,zlog*		setf zsh
 
 augroup END
 

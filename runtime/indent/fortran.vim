@@ -1,9 +1,15 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.32
-" Last Change:	2000 Dec 14
+" Last Change:	2001 Jan 15
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
+
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
 
 setlocal indentkeys+==~end,=~case,=~if,=~else,=~do,=~where,=~elsewhere,=~select
 

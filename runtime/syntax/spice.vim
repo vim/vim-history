@@ -6,8 +6,11 @@
 " This is based on sh.vim by Lennart Schultz
 " but greatly simplified
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " spice syntax is case INsensitive
 syn case ignore
 

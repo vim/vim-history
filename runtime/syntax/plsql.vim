@@ -4,8 +4,11 @@
 " Last Change: November 8, 2000
 "     Version: 6.0-1
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Todo.

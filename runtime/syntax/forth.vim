@@ -7,8 +7,10 @@
 " wordlist. If you use this language, please improve it, and send me
 " the patches.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Synchronization method
 syn sync ccomment maxlines=200

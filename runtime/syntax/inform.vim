@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Inform
 " Maintainer:	Stephen Thomas (stephent@insignia.com)
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful Inform keywords.  First, case insensitive stuff
 

@@ -8,6 +8,11 @@
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn match mgpLineSkip "\\$"
 
 " all the commands that are currently recognized

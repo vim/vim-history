@@ -3,8 +3,10 @@
 " Maintainer:  Matt Dunford (zoot@zotikos.com)
 " Last Change: Tue May 30 14:45:43 PDT 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " syn region cvsText  start="^[^C][^V][^S][^:]" end="$"
 syn region cvsLine  start="^CVS:" end="$" contains=cvsFile,cvsDir,cvsFiles

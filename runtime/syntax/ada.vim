@@ -1,15 +1,17 @@
 " Vim syntax file
 " Language:	Ada (95)
 " Maintainer:	David A. Wheeler <wheeler@ida.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Former Maintainer:	Simon Bradley <simon.bradley@pitechnology.com>
 "			(was <sib93@aber.ac.uk>)
 " This version fixes an error in String/Character handling from 1997-May-5.
 " The formal spec of Ada95 is available at "http://www.adahome.com/rm95/".
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Ada is entirely case-insensitive.
 syn case ignore

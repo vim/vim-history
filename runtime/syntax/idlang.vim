@@ -1,10 +1,12 @@
 " Interactive Data Language syntax file (IDL, too :-)
 " Maintainer:	Hermann.Rochholz@faidor.com
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Preliminary, because I do not use higher language elements of IDL until now.
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syntax case ignore
 

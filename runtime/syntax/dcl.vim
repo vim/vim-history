@@ -3,8 +3,10 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	September 19, 2000
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 set iskeyword=$,@,48-57,_
 

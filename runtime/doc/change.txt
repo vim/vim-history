@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.s.  Last change: 2001 Jan 04
+*change.txt*    For Vim version 6.0t.  Last change: 2001 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -500,14 +500,13 @@ not recognize a comment (starting with '"') after the ":!" command.
 :[range]~[&][c][e][g][r][i][I] [count]			*:~*
 			Repeat last substitute with same substitute string
 			but with last used search pattern.  This is like
-			"&r".  See |:s_flags| for the flags.
+			":&r".  See |:s_flags| for the flags.
 
 						*&*
 &			Synonym for ":s//~/" (repeat last substitute).  Note
 			that the flags are not remembered, thus it might
-			actually work differently.  To keep the flags use: >
-				:s&
-<
+			actually work differently.
+
 						*g&*
 g&			Synonym for ":%s//~/&" (repeat last substitute on all
 			lines with the same flags).

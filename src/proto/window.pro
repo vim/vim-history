@@ -12,7 +12,7 @@ void close_others __ARGS((int message, int forceit));
 void win_init __ARGS((win_t *wp));
 void win_alloc_first __ARGS((void));
 void win_goto __ARGS((win_t *wp));
-win_t *win_goto_nr __ARGS((int winnr));
+win_t *win_find_nr __ARGS((int winnr));
 void win_enter __ARGS((win_t *wp, int undo_sync));
 win_t *buf_jump_open_win __ARGS((buf_t *buf));
 int win_alloc_lines __ARGS((win_t *wp));

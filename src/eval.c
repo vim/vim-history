@@ -152,8 +152,8 @@ struct vimvar
     {"shell_error", sizeof("shell_error") - 1, NULL, VAR_NUMBER,
 							     VV_COMPAT+VV_RO},
     {"this_session", sizeof("this_session") - 1, NULL, VAR_STRING, VV_COMPAT},
-    {"version", sizeof("version") - 1, (char_u *)(VIM_VERSION_MAJOR * 100
-			   + VIM_VERSION_MINOR), VAR_NUMBER, VV_COMPAT+VV_RO},
+    {"version", sizeof("version") - 1, (char_u *)VIM_VERSION_100,
+						 VAR_NUMBER, VV_COMPAT+VV_RO},
     {"lnum", sizeof("lnum") - 1, NULL, VAR_NUMBER, VV_RO},
     {"termresponse", sizeof("termresponse") - 1, NULL, VAR_STRING, VV_RO},
     {"fname", sizeof("fname") - 1, NULL, VAR_STRING, VV_RO},
@@ -208,6 +208,8 @@ static void f_filereadable __ARGS((VAR argvars, VAR retvar));
 static void f_filewritable __ARGS((VAR argvars, VAR retvar));
 static void f_fnamemodify __ARGS((VAR argvars, VAR retvar));
 static void f_foldclosed __ARGS((VAR argvars, VAR retvar));
+static void f_foldclosedend __ARGS((VAR argvars, VAR retvar));
+static void foldclosed_both __ARGS((VAR argvars, VAR retvar, int end));
 static void f_foldlevel __ARGS((VAR argvars, VAR retvar));
 static void f_foldtext __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
@@ -255,8 +257,10 @@ static void f_setbufvar __ARGS((VAR argvars, VAR retvar));
 static void f_setwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_rename __ARGS((VAR argvars, VAR retvar));
 static void f_search __ARGS((VAR argvars, VAR retvar));
+static void f_searchpair __ARGS((VAR argvars, VAR retvar));
+static int get_search_arg __ARGS((VAR varp));
 static void f_setline __ARGS((VAR argvars, VAR retvar));
-static void f_some_match __ARGS((VAR argvars, VAR retvar, int start));
+static void find_some_match __ARGS((VAR argvars, VAR retvar, int start));
 static void f_strftime __ARGS((VAR argvars, VAR retvar));
 static void f_stridx __ARGS((VAR argvars, VAR retvar));
 static void f_strlen __ARGS((VAR argvars, VAR retvar));
@@ -2151,6 +2155,7 @@ static struct fst
     {"filewritable",	1, 1, f_filewritable},
     {"fnamemodify",	2, 2, f_fnamemodify},
     {"foldclosed",	1, 1, f_foldclosed},
+    {"foldclosedend",	1, 1, f_foldclosedend},
     {"foldlevel",	1, 1, f_foldlevel},
     {"foldtext",	0, 0, f_foldtext},
     {"getbufvar",	2, 2, f_getbufvar},
@@ -2196,6 +2201,7 @@ static struct fst
     {"prevnonblank",	1, 1, f_prevnonblank},
     {"rename",		2, 2, f_rename},
     {"search",		1, 2, f_search},
+    {"searchpair",	3, 5, f_searchpair},
     {"setbufvar",	3, 3, f_setbufvar},
     {"setline",		2, 2, f_setline},
     {"setwinvar",	3, 3, f_setwinvar},
@@ -2371,7 +2377,7 @@ get_func_var(name, len, retvar, arg, firstline, lastline, doesrange, evaluate)
 	i = 3;
 	if (eval_fname_sid(name))	/* "<SID>" or "s:" */
 	{
-	    if (current_SID == 0)
+	    if (current_SID <= 0)
 		error = ERROR_SCRIPT;
 	    else
 	    {
@@ -3200,16 +3206,42 @@ f_foldclosed(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    foldclosed_both(argvars, retvar, FALSE);
+}
+
+/*
+ * "foldclosedend()" function
+ */
+    static void
+f_foldclosedend(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    foldclosed_both(argvars, retvar, TRUE);
+}
+
+/*
+ * "foldclosed()" function
+ */
+    static void
+foldclosed_both(argvars, retvar, end)
+    VAR		argvars;
+    VAR		retvar;
+    int		end;
+{
 #ifdef FEAT_FOLDING
     linenr_t	lnum;
-    linenr_t	first;
+    linenr_t	first, last;
 
     lnum = get_var_lnum(argvars);
     if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
     {
-	if (hasFoldingWin(curwin, lnum, &first, NULL, FALSE, NULL))
+	if (hasFoldingWin(curwin, lnum, &first, &last, FALSE, NULL))
 	{
-	    retvar->var_val.var_number = (var_number_type)first;
+	    if (end)
+		retvar->var_val.var_number = (var_number_type)last;
+	    else
+		retvar->var_val.var_number = (var_number_type)first;
 	    return;
 	}
     }
@@ -3227,14 +3259,10 @@ f_foldlevel(argvars, retvar)
 {
 #ifdef FEAT_FOLDING
     linenr_t	lnum;
-    int		level;
 
     lnum = get_var_lnum(argvars);
     if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
-    {
-	hasFoldingWin(curwin, lnum, NULL, NULL, FALSE, &level);
-	retvar->var_val.var_number = level;
-    }
+	retvar->var_val.var_number = foldLevel(lnum);
     else
 #endif
 	retvar->var_val.var_number = 0;
@@ -4354,7 +4382,7 @@ f_match(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    f_some_match(argvars, retvar, 1);
+    find_some_match(argvars, retvar, 1);
 }
 
 /*
@@ -4365,7 +4393,7 @@ f_matchend(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    f_some_match(argvars, retvar, 0);
+    find_some_match(argvars, retvar, 0);
 }
 
 /*
@@ -4376,11 +4404,11 @@ f_matchstr(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    f_some_match(argvars, retvar, 2);
+    find_some_match(argvars, retvar, 2);
 }
 
     static void
-f_some_match(argvars, retvar, type)
+find_some_match(argvars, retvar, type)
     VAR		argvars;
     VAR		retvar;
     int		type;
@@ -4522,24 +4550,13 @@ f_search(argvars, retvar)
     char_u	*pat;
     pos_t	pos;
     int		save_p_ws = p_ws;
-    char_u	nbuf[NUMBUFLEN];
-    char_u	*flags;
-    int		dir = FORWARD;
+    int		dir;
 
     pat = get_var_string(&argvars[0]);
-    if (argvars[1].var_type != VAR_UNKNOWN)
-    {
-	flags = get_var_string_buf(&argvars[1], nbuf);
-	if (vim_strchr(flags, 'b'))
-	    dir = BACKWARD;
-	if (vim_strchr(flags, 'w'))
-	    p_ws = TRUE;
-	if (vim_strchr(flags, 'W'))
-	    p_ws = FALSE;
-    }
+    dir = get_search_arg(&argvars[1]);
 
     pos = curwin->w_cursor;
-    if (searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH) == OK)
+    if (searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH) != FAIL)
     {
 	retvar->var_val.var_number = 0;
 	curwin->w_cursor = pos;
@@ -4547,6 +4564,133 @@ f_search(argvars, retvar)
     else
 	retvar->var_val.var_number = 1;
     p_ws = save_p_ws;
+}
+
+/*
+ * "searchpair()" function
+ */
+    static void
+f_searchpair(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    char_u	*spat, *mpat, *epat;
+    char_u	*skip;
+    char_u	*pat;
+    pos_t	pos;
+    pos_t	firstpos;
+    pos_t	save_cursor;
+    int		save_p_ws = p_ws;
+    char_u	*save_cpo;
+    int		dir;
+    char_u	nbuf1[NUMBUFLEN];
+    char_u	nbuf2[NUMBUFLEN];
+    char_u	nbuf3[NUMBUFLEN];
+    int		n;
+    int		nest = 1;
+    int		err;
+
+    retvar->var_val.var_number = 1;	/* default: FAIL */
+
+    /* Get the three pattern arguments: start, middle, end. */
+    spat = get_var_string(&argvars[0]);
+    mpat = get_var_string_buf(&argvars[1], nbuf1);
+    epat = get_var_string_buf(&argvars[2], nbuf2);
+    pat = alloc((unsigned)(STRLEN(spat) + STRLEN(mpat) + STRLEN(epat) + 17));
+    if (pat == NULL)
+	return;
+    if (*mpat == NUL)
+	sprintf((char *)pat, "\\(%s\\)\\|\\(%s\\)", spat, epat);
+    else
+	sprintf((char *)pat, "\\(%s\\)\\|\\(%s\\)\\|\\(%s\\)",
+							    spat, mpat, epat);
+
+    /* Handle the optional fourth argument: flags */
+    dir = get_search_arg(&argvars[3]);
+
+    /* Optional fifth argument: skip expresion */
+    if (argvars[4].var_type == VAR_UNKNOWN)
+	skip = (char_u *)"";
+    else
+	skip = get_var_string_buf(&argvars[4], nbuf3);
+
+    /* Make 'cpoptions' empty, the 'l' flag should not be used here. */
+    save_cpo = p_cpo;
+    p_cpo = (char_u *)"";
+
+    save_cursor = curwin->w_cursor;
+    pos = curwin->w_cursor;
+    firstpos.lnum = 0;
+    for (;;)
+    {
+	n = searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH);
+	if (n == FAIL || (firstpos.lnum != 0 && equal(pos, firstpos)))
+	{
+	    /* didn't find it or found the first match again: FAIL */
+	    curwin->w_cursor = save_cursor;
+	    break;
+	}
+	if (firstpos.lnum == 0)
+	    firstpos = pos;
+
+	/* If the skip pattern matches, ignore this match. */
+	curwin->w_cursor = pos;
+	if (*skip != NUL && (eval_to_bool(skip, &err, NULL, FALSE) || err))
+	{
+	    if (err)
+	    {
+		/* Evaluating {skip} caused an error, break here. */
+		curwin->w_cursor = save_cursor;
+		retvar->var_val.var_number = -1;
+		break;
+	    }
+	    continue;
+	}
+
+	/* If there is no middle pat the end pat counts as 3, make that 4. */
+	if (*mpat == NUL && n == 3)
+	    ++n;
+
+	/* If the start/end pattern matches increase/decrease the nesting.
+	 * Depends on the direction. */
+	if ((dir == BACKWARD && n == 2) || (dir == FORWARD && n == 4))
+	    --nest;
+	else if ((dir == BACKWARD && n == 4) || (dir == FORWARD && n == 2))
+	    ++nest;
+
+	if (nest == 0 || (nest == 1 && n == 3))
+	{
+	    /* Found the match: return this position. */
+	    retvar->var_val.var_number = 0;
+	    curwin->w_cursor = pos;
+	    break;
+	}
+    }
+
+    vim_free(pat);
+    p_ws = save_p_ws;
+    p_cpo = save_cpo;
+}
+
+    static int
+get_search_arg(varp)
+    VAR		varp;
+{
+    int		dir = FORWARD;
+    char_u	*flags;
+    char_u	nbuf[NUMBUFLEN];
+
+    if (varp->var_type != VAR_UNKNOWN)
+    {
+	flags = get_var_string_buf(varp, nbuf);
+	if (vim_strchr(flags, 'b'))
+	    dir = BACKWARD;
+	if (vim_strchr(flags, 'w'))
+	    p_ws = TRUE;
+	if (vim_strchr(flags, 'W'))
+	    p_ws = FALSE;
+    }
+    return dir;
 }
 
 /*
@@ -6606,7 +6750,7 @@ trans_function_name(pp)
 	j = 3;
 	if (eval_fname_sid(*pp))	/* If it's "<SID>" */
 	{
-	    if (current_SID == 0)
+	    if (current_SID <= 0)
 	    {
 		EMSG(_("Using <SID> not in a script context"));
 		return NULL;

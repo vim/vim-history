@@ -1,15 +1,16 @@
 " Vim support file to switch on loading indent files for file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 10
+" Last Change:	2001 Jan 15
 
-if exists("did_load_indent")
+if exists("did_indent_on")
   finish
 endif
-let did_load_indent = 1
+let did_indent_on = 1
 
 augroup filetypeindent
   au FileType * if expand("<amatch>") != "" | 
-	\   runtime indent/<amatch>.vim |
+	\   if exists("b:did_indent") | unlet b:did_indent | endif |
+	\   runtime! indent/<amatch>.vim |
 	\ endif
 augroup END

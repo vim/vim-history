@@ -2,10 +2,12 @@
 " Language:	Windows Registry Export with regedit (*.reg)
 " Maintainer:	Dominique Stéphan (dstephan@my-deja.com)
 " URL: http://www.geocities.com/SiliconValley/Bit/1809/vim/syntax/registry.zip
-" Last change:	2000 Nov 04
+" Last change:	2001 Jan 15
 
-" clear any unwanted syntax defs
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " shut case off
 syn case ignore

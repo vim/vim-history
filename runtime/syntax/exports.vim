@@ -4,8 +4,10 @@
 " Last Change:	May 18, 1998
 " Notes:		This file includes both SysV and BSD 'isms
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Options: -word
 syn keyword exportsKeyOptions contained	alldirs	nohide	ro	wsync

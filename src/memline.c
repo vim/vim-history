@@ -1158,7 +1158,10 @@ theend:
 	ml_close(curbuf, TRUE);
 #ifdef FEAT_AUTOCMD
     else
+    {
 	apply_autocmds(EVENT_BUFREADPOST, NULL, curbuf->b_fname, FALSE, curbuf);
+	apply_autocmds(EVENT_BUFREADAFTER, NULL, curbuf->b_fname, FALSE, curbuf);
+    }
 #endif
     return;
 }
@@ -2507,7 +2510,7 @@ ml_delete_int(buf, lnum, message)
     {
 	if (message)
 	{
-	    keep_msg = no_lines_msg;
+	    keep_msg = (char_u *)_(no_lines_msg);
 	    keep_msg_attr = 0;
 	}
 	/* FEAT_BYTEOFF already handled in there, dont worry 'bout it below */
@@ -4277,7 +4280,7 @@ goto_byte(cnt)
 	curwin->w_cursor.col = (colnr_t)boff;
 	curwin->w_set_curswant = TRUE;
     }
-    adjust_cursor();
+    check_cursor();
 
 # ifdef FEAT_MBYTE
     /* prevent cursor from moving on the trail byte */

@@ -608,23 +608,24 @@ u_undoredo()
      * before starting the change (for the "o" command).
      * Otherwise the cursor should go to the first undone line.
      */
-    if (curbuf->b_u_curhead->uh_cursor.lnum + 1 == curwin->w_cursor.lnum &&
-						    curwin->w_cursor.lnum > 1)
+    if (curbuf->b_u_curhead->uh_cursor.lnum + 1 == curwin->w_cursor.lnum
+						 && curwin->w_cursor.lnum > 1)
 	--curwin->w_cursor.lnum;
     if (curbuf->b_u_curhead->uh_cursor.lnum == curwin->w_cursor.lnum)
 	curwin->w_cursor.col = curbuf->b_u_curhead->uh_cursor.col;
     else if (curwin->w_cursor.lnum <= curbuf->b_ml.ml_line_count)
 	beginline(BL_SOL | BL_FIX);
-    /* We still seem to need the case below because sometimes we get here with
-     * the current cursor line being one past the end (eg after adding lines
-     * at the end of the file, and then undoing it).  Is it fair enough that
-     * this happens? -- webb
-     */
     else
+    {
+	/* We get here with the current cursor line being past the end (eg
+	 * after adding lines at the end of the file, and then undoing it).
+	 * check_cursor() will move the cursor to the last line.  Move it to
+	 * the first column here. */
 	curwin->w_cursor.col = 0;
+    }
 
     /* Make sure the cursor is on an existing line and column. */
-    adjust_cursor();
+    check_cursor();
 }
 
 /*

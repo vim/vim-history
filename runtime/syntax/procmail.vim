@@ -2,10 +2,12 @@
 " Language:	Procmail definition file
 " Maintainer:	vacancy [posted by Sonia Heimann, but she didn't feel like
 "		maintaining this]
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match   procmailComment      "#.*$" contains=procmailTodo
 syn keyword   procmailTodo      contained Todo TBD

@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 14
+" Last Change:	2001 Jan 17
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -25,12 +25,13 @@ if exists("v:lang")
   " A language name must be at least two characters, don't accept "C"
   if strlen(s:lang) > 1
     let s:lang = substitute(s:lang, ".*", "\\L&", "")
-    exe "runtime lang/menu_" . s:lang . ".vim"
+    menutrans clear
+    exe "runtime! lang/menu_" . s:lang . ".vim"
     " If there is no exact match, try matching with a wildcard added.
     " (e.g. find menu_de_DE.ISO_8859-1.vim if s:lang == de_DE)
     if !exists("did_menu_trans")
       " try to get the first long file name which matches v:lang.
-      exe "runtime lang/menu_" . s:lang . "*.vim"
+      exe "runtime! lang/menu_" . s:lang . "*.vim"
     endif
   endif
 endif
@@ -255,6 +256,7 @@ func! <SID>BMShow(...)
   let buf = 1
   while buf <= bufnr('$')
     if bufexists(buf) && !isdirectory(bufname(buf))
+					    \ && !getbufvar(buf, "&bufsecret")
       let s:bmenu_count = s:bmenu_count + 1
     endif
     let buf = buf + 1
@@ -266,7 +268,8 @@ func! <SID>BMShow(...)
   " iterate through buffer list, adding each buffer to the menu:
   let buf = 1
   while buf <= bufnr('$')
-    if bufexists(buf)
+    if bufexists(buf) && !isdirectory(bufname(buf))
+					    \ && !getbufvar(buf, "&bufsecret")
       call <SID>BMFilename(bufname(buf), buf)
     endif
     let buf = buf + 1

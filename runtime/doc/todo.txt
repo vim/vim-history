@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.s.  Last change: 2001 Jan 14
+*todo.txt*      For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,46 +29,14 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Windows: Can getftime("dirname") return a valid number?
+When a buffer becomes secret, reset its option values?  Otherwise ":bdel x"
+":edit x" is not backwards compatible.
 
-Windows: Two buffers on the same file: (Waggoner)
-	:let c=getcwd()
-	:let n=fnamemodify(c,":p:t")
-	:exec("new " . c . "/../" . n . "/junk")
-	:exec("new ../" . n . "/junk")
-
-Windows: ":e c:/" changes the buffer name to "\".  Why? (Waggoner)
-
-Windows: fnamemodify("C:\vim\vim57",":p") doesn't add a slash,
-fnamemodify("vim57",":p") in "c:\vim" does.  Make this consistent: add a slash
-for the first one too.
-
-"Secret" or "Ignored" buffer?
-    Make a sub-list of the buffer list, which is displayed for
-    ":ls".  Other buffers still exist but are secret.  Some buffers (e.g.,
-    help files, explorer buffer) are also secret).  ":bnext" et al. skip
-    secret buffers.  Need to check in some places that a secret buffer isn't
-    used (can it have a loaded buffer?).
-    Add 'bufsecret' buffer-local option.
-    ":r file" would add "file" as a secret buffer.
-    ":bwipeout buffer" really deletes a buffer.
-    Add BufWipeOut event.
-    Add BufNewSecret event.
-
-one-line window with wrapping line: "l" moves cursor to status line every
-other time.
-
-":setglobal" doesn't show global options, but global values of local options.
-Is that right?  ":setlocal" does show global options.  This feels like it's
-the wrong way around.
-
-With a vertical split 'rl' doesn't work properly.  Left window messes up right
-window, no separator.
-
-In 'rl' window, starting with a comment, syntax highlighting starts wrong.
+Using a ":command" argument that contains < and > but not for a special
+argument, they are not skipped properly. (Ron Aaron)
 
 Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
-see the differece between a backtick and a quote. (Vince Negri)
+see the differece between a backtick and a single quote. (Vince Negri)
 
 Add expression expansion where backtick expansion is done: `=expr`. (Negri)
 
@@ -81,6 +49,7 @@ A.  Folding
 	Need to store and retrieve view automatically.
 B.  UTF-8 support
 	Mostly works.  Many small items still to be fixed.
+	Make regexp patterns multi-byte aware.
 C.  Multi-line regexp patterns
 	Works.
 D.  Vertical window split
@@ -91,7 +60,9 @@ E.  Virtual edit
 F.  Sun Visual workshop (debugger) interface
 	Code is included but not tested.
 G.  Edit command line with Vi commands
-	Nothing done yet.
+	Command-line window is working.
+	Make Insert mode in Command-line window work like Command-line mode.
+	Use a single-line Command-line window for the command line?
 H.  More automatic testing
 	Nothing done yet.
 I.  Multi-language support
@@ -102,34 +73,6 @@ J.  User Friendlier
 
 
 A. Folding:
--   'foldcolumn' not updated when doing "J" just above an open fold.
--   ":bdel" and ":buf main.c" don't create or delete folds
-    (foldmethod=syntax).  (Stocker) ":edit" does.
-    ":sbuffer file" has the same problem (Raul)
--   Fold problem: (Raul)
-    1) create a new buffer with just 4 lines and set scrolloff=1
-    2) fold lines 3 and 4
-    3) put the cursor on line 2
-    4) press zb
-    now the line 1 is out of sight
--   Fold lines 3-4 then 1-3: foldcolumn shows that it's wrong.
--   foldmethod=marker "dd" on two folds, then "u" removes folds above it.
-    Making one change (e.g., "x") will re-create them.
--   change foldlevel() function: return fold level of a line also when the
-    fold is closed.  Don't return negative number for first line.
-    Add a separate function foldstart() to find the start of a fold.
--   topline sometimes wrong after CTRL-F (Ian Phillipps):
-	foldexpr=getline(v:lnum)=~'^\s*$'&&getline(v:lnum+1)=~'\S'?'<1':1
--   In a small window, fold lines 2-5 out of 6.  Using "Gkkkk" makes displayed
-    fold start in the wrong line. (Acevedo)
--   Fold three lines, on the second line do "ddu", the start of the fold has
-    now moved.
--   When a search starts in a closed fold, don't match again inside the fold.
--   When appending to the last line of a fold and typing <CR> the new line
-    should be included in the fold.
--   Fold problem: When switching 'foldmarker' and then editing the same file
-    again while setting the foldmarker in a modeline, an old fold with the
-    other marker isn't removed. (Sylvain Viart)
 -   "zo" should accept a count: number of folds to open.
 -   Add command to open enough folds to have the cursor line in an open fold.
     "zv" "view".
@@ -160,18 +103,17 @@ A. Folding:
     opened with "zO".
     OR: always create new folds open.  Add a command to re-apply 'foldlevel'.
 -   When moving over a fold, always put the cursor on the first line.
-    It's done for cursor-up, are there other commands where this applies?
+    Are there still other commands where this applies?
 -   In Insert mode, not only show the line the cursor is in but the whole
     fold.
--   In Insert mode, only unfold the line/fold of the current window.  Not
-    other windows with the same buffer.
 -   When moving into a closed fold with <Up> or <Down> in Insert mode the line
     isn't displayed.
+-   In Insert mode, only unfold the line/fold of the current window.  Not
+    other windows with the same buffer.  Need to add some code for the cursor
+    being in a closed fold when jumping to another window.
 -   Add ":foldclose": close folds in a range of lines.
 -   When using syntax folding, a "transparent fold" region is always nested.
     How to avoid the nesting?
--   Use "vim{version}:" for modelines, only to be executed when the version is
-    >= {version}.  Also "vim>{version}", "vim<{version}", "vim={version}".
 -   Folding doesn't work together with 'scrollbind'.
 -   Add movement commands to the start/end of a fold: "[z" and "]z".
     (Marinichev)
@@ -187,23 +129,9 @@ A. Folding:
     Add option to apply 'foldlevel' when the cursor moves out of a fold.
 -   When 'foldmethod' is "marker", Use "zf" command to add markers?  Works
     like manually defining a fold region.  Need to define a template.
--   Disable making changes while cursor in folded line, except ones that work
-    on the whole fold?
 -   'foldstart': specifies initial folding state when entering a file:
 	- value of 'foldlevel'
 	- all folds closed, all open or from view
--   Store "view" in viminfo?  Or some other way to automatically restore the
-    last used view (and folding).
-    Keep two views of a file: normal and alternate.
--   Folding remembered:
-    1. In viminfo.  Store "view" in viminfo?
-    2. In separate file, one for each file (hidden)
-	2a. In same directory as the file, like backup and swapfile.  Doesn't
-	    work if directory isn't writable.
-        2b. In personal directory, file name munged to find it.  Doesn't work
-	    when absolute path changes (links, network mounts).
-    3. In one file per directory.
--   "zF" command: define a fold for a number of lines. Works like "3zfzf".
 -   'foldmethod' "textobject": fold on sections and paragraph text objects.
 -   Add commands to jump to start/end of fold.  Use "[|" and "]|"?
 -   Ex range which stands for folded lines and non-folded lines.
@@ -364,6 +292,8 @@ G. Edit command line with Vi commands:
 	- add a few command-line editing commands in edit().  Vim command
 	  completion?  Would also be useful for Vim script editing.
 	  Eventually the Elvis way would be a small step.
+	- Use non-Visual selection in the other windows, to be able to
+	  copy/paste text.
     The Elvis way: the cmdline is a one-line view on a buffer with the command
         line history.
 	See remarks from Steve (~/Mail/oldmail/kirkendall/in.00012).
@@ -415,23 +345,25 @@ I. Multi-language support:
 
 J. User Friendlier
 -   ":setlocal option<": reset local option to global value.
-9   Add a menu (or sub-men) with most often used options: 'wrap', 'textwidth',
-    etc.
+9   Add a menu (or sub-menu) with most often used options: 'wrap',
+    'textwidth', etc.
 -   Add a way to save local settings and mappings into a new plugin file.
     ":mkplugin <file>"?
 9   Add buffer-local menu.  Should offer a choice between removing the menu or
     disabling it.  Be careful that tear-offs don't disappear (keep one empty
     item?).
 9   Make Windows install program better:
-    Add an icon on the Desktop, if the user wants this.
-    Add Vim to the Start/Programs menu if the user wants this.
-    Detect the OLE version and register it.
-    Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
-    Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
-    can really be dropped-in.
--   Make Windows uninstall program better:
-    Delete the vim.bat and gvim.bat files.
-    Delete a whole tree of Vim files.
+    - Add an icon on the Desktop, if the user wants this.
+    - Add Vim to the Start/Programs menu if the user wants this.
+    - Detect the OLE version and register it.
+    - Allow adding a "edit with Vim" entry even when Vim already is in $PATH.
+    - Create $VIM/vimfiles/[plugin|ftplugin|doc] directories, so that plugins
+      can really be dropped-in.
+    - On Win2000 the check for a vim.exe or gvim.exe in $PATH doesn't work, it
+      always finds it in the current directory. (Briscoe)  Rename the vim.exe
+      in the current dir to avoid this.
+    - Delete the vim.bat and gvim.bat files.
+    - Delete a whole tree of Vim files.
 -   Add mappings local to a window: ":map <window> ..."?
 
 
@@ -447,7 +379,6 @@ Messages:
 
 
 Various recent:
-8   Using "gf" in Visual mode should use the selected text as a file name.
 9   This pattern in syntax/java.vim causes a recursive call of regmatch():
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
     A long line with a " in it can cause a crash when it runs out of stack
@@ -466,6 +397,8 @@ Various recent:
     (Timothy) Stays at "no entry".  Only visible with ":set nomousehide".
 9   Win32: when 'shell' is "zsh", ":!start notepad file" doesn't work. (Pavol
     Juhas).
+8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
+    disabled for now.  What is the right solution?
 9   'smartcase' also uses 'noignorecase' when using "\S" in a pattern.
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
@@ -621,6 +554,8 @@ Considered for release 6.0:
 ---------------------- bugs ---------------------------
 
 Vi incompatibility:
+8   Docs for ":s&" are not correct.  What is it supposed to do?  When exactly
+    are flags re-used?  What is a Vim extension?
 8   With undo/redo only marks in the changed lines should be changed.  Other
     marks should be kept.  Vi keeps each mark at the same text, even when it
     is deleted or restored. (Webb)
@@ -1092,9 +1027,6 @@ VMS:
     "-" character, if not present, use unsigned long.
 8   Make it possible to disable the special meaning of "#" in the first column
     for ">>".
-8   When doing ":qa", and there is a change in a buffer that is being edited
-    in another window, the current window will also be editing the buffer with
-    the change.  Should jump to the window with the changed buffer.
 8   Add suspending with CTRL-Z at the "more" prompt, and when executing a long
     script in do_cmdline().
 8   When using 'hidden', many swap files will be open.  When Vim runs into the
@@ -2374,13 +2306,12 @@ Searching:
     line.
 7   Allow longer pairs in 'matchpairs'.  Use ~/vim/macros/matchit.vim as an
     example.
-8   Make it possible to use more than nine \( \) pairs.  Not necessarily
-    referenced by \10.
 8   Make it possible to define the character that "%" checks for in
     #if/#endif.  For nmake it's !if/!endif.
 -   For "%" command: set hierarchy for which things include other things that
     should be ignored (like "*/" or "#endif" inside /* */).
     Also: use "%" to jump from start to end of syntax region and back.
+    Alternative: use matchit.vim
 8   "/:/e+1" gets stuck on a match at the end of the line.  Do we care?
 8   A pattern like "\([^a]\+\)\+" takes an awful long time.  Recognize that
     the recursive "\+" is meaningless and optimize for it.
@@ -2398,8 +2329,8 @@ Searching:
     specific highlight group.  Use "/./<Group>" to find the start of a group.
 -   Support Perl regexp.  Use PCRE (Perl Compatible RE) package. (Shade)
     Or translate pattern to a Vim one.
-    Switch on with an option for typed commands/mappings/functions?  Or use a
-    special code in the pattern, to avoid incompatibilities.
+    Don't switch on with an option for typed commands/mappings/functions, it's
+    too confusing.  Use "\@@" in the pattern, to avoid incompatibilities.
 7   Add POSIX regexp, like Nvi, with 'extended' option?  It's like very-magic.
 -   Remember flags for backreferenced items, so that "*" can be used after it.
     Check with "\(\S\)\1\{3}". (Hemmerling)
@@ -2422,11 +2353,6 @@ Searching:
 -   Add command to display the last used substitute pattern and last used
     pattern. (Margo)  Maybe make it accessible through a register (like "/
     for search string)?
-7   Should notice that "\(a\|ab\|abc\|abcd\)" doesn't work, automatically
-    change it to "\(abcd\|abc\|ab\|a\)"? (Campbell)
-7   Add something to match "a" or "ab" or "abc" or "abcd".  Could be
-    "a\@[bcd\]".
-7   Add grouping like \(\) without making a back-reference.  Could be \@(\).
 7   Use T-search algorithm, to speed up searching for strings without special
     characters.  See C't article, August 1997.
 -   Add 'fuzzycase' option, so that case doesn't matter, and '-' and '_' are

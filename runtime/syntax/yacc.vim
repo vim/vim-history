@@ -3,12 +3,14 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	December 15, 1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
 if version >= 600
-  runtime syntax/c.vim
+  runtime! syntax/c.vim
 else
   so <sfile>:p:h/c.vim
 endif

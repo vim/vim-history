@@ -43,8 +43,10 @@ endif
 
 " =============================================================================
 
-" clear any unwanted syntax definitions
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " switch case sensitivity off
 syn case ignore

@@ -6,8 +6,11 @@
 " URL:          http://www.tzi.de/~brederek/vim/
 " Copying:	You may distribute and use this file freely, in the same
 "		way as the vim editor itself.
-
-syn clear
+"
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " case is significant to FDR:
 syn case match

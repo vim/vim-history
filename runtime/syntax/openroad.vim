@@ -1,11 +1,12 @@
 " Vim syntax file
 " Language:	CA-OpenROAD
 " Maintainer:	Luis Moreno <lmoreno@retemail.es>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-"
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syntax keyword openroadKeyword	ABORT ALL ALTER AND ANY AS ASC AT AVG BEGIN
 syntax keyword openroadKeyword	BETWEEN BY BYREF CALL CALLFRAME CALLPROC CASE

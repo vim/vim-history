@@ -1,14 +1,16 @@
 " Vim syntax file
 " Language:	Visual Basic
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
 " Send comments, suggestions and requests to the maintainer.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " VB is case insensitive
 syn case ignore

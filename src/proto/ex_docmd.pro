@@ -23,6 +23,7 @@ int ends_excmd __ARGS((int c));
 char_u *find_nextcmd __ARGS((char_u *p));
 char_u *check_nextcmd __ARGS((char_u *p));
 int do_source __ARGS((char_u *fname, int check_other, int is_vimrc));
+char_u *get_scriptname __ARGS((scid_t id));
 char *fgets_cr __ARGS((char *s, int n, FILE *stream));
 char_u *getsourceline __ARGS((int c, void *cookie, int indent));
 char_u *get_command_name __ARGS((expand_t *xp, int idx));

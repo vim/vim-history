@@ -87,12 +87,19 @@ do_window(nchar, Prenum)
     else
 	Prenum1 = Prenum;
 
+#ifdef FEAT_CMDWIN
+# define CHECK_CMDWIN if (cmdwin_type != 0) { EMSG(_(e_cmdwin)); break; }
+#else
+# define CHECK_CMDWIN
+#endif
+
     switch (nchar)
     {
 /* split current window in two parts, horizontally */
     case 'S':
     case Ctrl_S:
     case 's':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -106,6 +113,7 @@ do_window(nchar, Prenum)
 /* split current window in two parts, vertically */
     case Ctrl_V:
     case 'v':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -119,6 +127,7 @@ do_window(nchar, Prenum)
 /* split current window and edit alternate file */
     case Ctrl_HAT:
     case '^':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -131,6 +140,7 @@ do_window(nchar, Prenum)
 /* open new window */
     case Ctrl_N:
     case 'n':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -161,6 +171,7 @@ do_window(nchar, Prenum)
 /* close preview window */
     case Ctrl_Z:
     case 'z':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -170,6 +181,7 @@ do_window(nchar, Prenum)
 /* close all but current window */
     case Ctrl_O:
     case 'o':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -181,6 +193,7 @@ do_window(nchar, Prenum)
     case 'w':
 /* cursor to previous window with wrap around */
     case 'W':
+		CHECK_CMDWIN
 		if (lastwin == firstwin)	/* just one window */
 		    beep_flush();
 		else
@@ -218,6 +231,7 @@ do_window(nchar, Prenum)
     case 'j':
     case K_DOWN:
     case Ctrl_J:
+		CHECK_CMDWIN
 #ifdef FEAT_VERTSPLIT
 		win_goto_ver(FALSE, Prenum1);
 #else
@@ -232,6 +246,7 @@ do_window(nchar, Prenum)
     case 'k':
     case K_UP:
     case Ctrl_K:
+		CHECK_CMDWIN
 #ifdef FEAT_VERTSPLIT
 		win_goto_ver(TRUE, Prenum1);
 #else
@@ -248,6 +263,7 @@ do_window(nchar, Prenum)
     case K_LEFT:
     case Ctrl_H:
     case K_BS:
+		CHECK_CMDWIN
 		win_goto_hor(TRUE, Prenum1);
 		break;
 
@@ -255,6 +271,7 @@ do_window(nchar, Prenum)
     case 'l':
     case K_RIGHT:
     case Ctrl_L:
+		CHECK_CMDWIN
 		win_goto_hor(FALSE, Prenum1);
 		break;
 #endif
@@ -283,12 +300,14 @@ do_window(nchar, Prenum)
 /* exchange current and next window */
     case 'x':
     case Ctrl_X:
+		CHECK_CMDWIN
 		win_exchange(Prenum);
 		break;
 
 /* rotate windows downwards */
     case Ctrl_R:
     case 'r':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -297,6 +316,7 @@ do_window(nchar, Prenum)
 
 /* rotate windows upwards */
     case 'R':
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -362,9 +382,10 @@ do_window(nchar, Prenum)
 		break;
 #endif
 
-/* jump to tag and split window if tag exists */
+/* jump to tag and split window if tag exists (in preview window) */
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     case '}':
+		CHECK_CMDWIN
 		if (Prenum)
 		    g_do_tagpreview = Prenum;
 		else
@@ -373,6 +394,7 @@ do_window(nchar, Prenum)
 #endif
     case ']':
     case Ctrl_RSB:
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -387,6 +409,7 @@ do_window(nchar, Prenum)
 /* edit file name under cursor in a new window */
     case 'f':
     case Ctrl_F:
+		CHECK_CMDWIN
 #ifdef FEAT_VISUAL
 		reset_VIsual_and_resel();	/* stop Visual mode */
 #endif
@@ -416,6 +439,7 @@ do_window(nchar, Prenum)
 		/* FALLTHROUGH */
     case 'd':			    /* Go to definition, using p_def */
     case Ctrl_D:
+		CHECK_CMDWIN
 		if ((len = find_ident_under_cursor(&ptr, FIND_IDENT)) == 0)
 		    break;
 		find_pattern_in_path(ptr, 0, len, TRUE,
@@ -428,6 +452,7 @@ do_window(nchar, Prenum)
 /* CTRL-W g  extended commands */
     case 'g':
     case Ctrl_G:
+		CHECK_CMDWIN
 #ifdef USE_ON_FLY_SCROLL
 		dont_scroll = TRUE;		/* disallow scrolling here */
 #endif
@@ -1616,11 +1641,11 @@ win_close(win, free_buf)
 	{
 	    other_buffer = TRUE;
 	    apply_autocmds(EVENT_BUFLEAVE, NULL, NULL, FALSE, curbuf);
-	    if (!win_valid(win))
+	    if (!win_valid(win) || firstwin == lastwin)
 		return;
 	}
 	apply_autocmds(EVENT_WINLEAVE, NULL, NULL, FALSE, curbuf);
-	if (!win_valid(win))
+	if (!win_valid(win) || firstwin == lastwin)
 	    return;
     }
 #endif
@@ -1628,7 +1653,7 @@ win_close(win, free_buf)
     /*
      * Close the link to the buffer.
      */
-    close_buffer(win, win->w_buffer, free_buf, FALSE);
+    close_buffer(win, win->w_buffer, free_buf ? DOBUF_UNLOAD : 0);
     /* Autocommands may have closed the window already, or closed the only
      * other window. */
     if (!win_valid(win) || firstwin == lastwin)
@@ -2228,7 +2253,7 @@ win_init(wp)
 win_alloc_first()
 {
     curwin = win_alloc(NULL);
-    curbuf = buflist_new(NULL, NULL, 1L, FALSE);
+    curbuf = buflist_new(NULL, NULL, 1L, FALSE, FALSE);
     if (curwin == NULL || curbuf == NULL)
 	mch_windexit(0);
     curwin->w_buffer = curbuf;
@@ -2263,6 +2288,13 @@ win_alloc_first()
 win_goto(wp)
     win_t	*wp;
 {
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+    {
+	beep_flush();
+	return;
+    }
+#endif
 #ifdef FEAT_VISUAL
     if (wp->w_buffer != curbuf)
 	reset_VIsual_and_resel();
@@ -2278,10 +2310,10 @@ win_goto(wp)
 
 #if defined(FEAT_PERL) || defined(PROTO)
 /*
- * Go to window nr "winnr" (counting top to bottom).
+ * Find window number "winnr" (counting top to bottom).
  */
     win_t *
-win_goto_nr(winnr)
+win_find_nr(winnr)
     int		winnr;
 {
     win_t	*wp;
@@ -2486,7 +2518,7 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
     }
     curwin = wp;
     curbuf = wp->w_buffer;
-    adjust_cursor();
+    check_cursor();
 #ifdef FEAT_VIRTUALEDIT
     if (!virtual_active())
 	curwin->w_coladd = 0;
@@ -4076,7 +4108,6 @@ vim_isAbsName(name)
 
 /*
  * Get absolute file name into buffer 'buf' of length 'len' bytes.
- * Adds a slash to an existing directory name.
  *
  * return FAIL for failure, OK otherwise
  */

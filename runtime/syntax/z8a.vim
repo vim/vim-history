@@ -1,10 +1,13 @@
 " Vim syntax file
 " Language:	Z80 assembler asz80
 " Maintainer:	Milan Pikula <www@fornax.elf.stuba.sk>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " Common Z80 Assembly instructions

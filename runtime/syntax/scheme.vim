@@ -9,9 +9,13 @@
 
 " Suggestions and bug reports are solicited by the author.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " Initializing:
 
-syn clear
 syn case ignore
 
 " Fascist highlighting: everything that doesn't fit the rules is an error...

@@ -11,8 +11,10 @@
 " I think some of these things should get different hilights -
 "  should MODIFY commands look different than TABLE?
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case match
 

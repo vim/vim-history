@@ -1,14 +1,16 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
 " Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
 " is large and somewhat repetative but seems to work.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Misc basic
 syn match	idlId		contained "[a-zA-Z][a-zA-Z0-9_]*"

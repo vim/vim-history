@@ -2,12 +2,15 @@
 " Config file:	printcap
 " Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int> (defunct)
 "		Modified by Bram
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 "define keywords
 se isk=@,46-57,_,-,#,=,192-255
-" Remove any old syntax stuff hanging around
-syn clear
 "first all the bad guys
 syn match pcapBad '^.\+$'              "define any line as bad
 syn match pcapBadword '\k\+' contained "define any sequence of keywords as bad

@@ -637,14 +637,16 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #ifdef FEAT_XIM
     if (xic)
     {
-#if X_HAVE_UTF8_STRING
+# if defined(X_HAVE_UTF8_STRING) && defined(FEAT_MBYTE)
+#  if X_HAVE_UTF8_STRING
 	/* XFree86 4.0.2 or newer: Be able to get UTF-8 characers even when
 	 * the locale isn't utf-8.  */
 	if (cc_utf8)
 	    len = Xutf8LookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
 	else
-#endif
+#  endif
+# endif
 	    len = XmbLookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
 	if (status == XBufferOverflow)
@@ -835,6 +837,9 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	gui_mch_mousehide(TRUE);
 
 theend:
+#ifdef VMS
+    {}	    /* compiler needs some statement */
+#endif
 #ifdef FEAT_XIM
     if (string_alloced)
 	XtFree((char *)string);

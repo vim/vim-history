@@ -1,7 +1,7 @@
 " DTML syntax file
 " Language:	        Zope's Dynamic Template Markup Language
 " Maintainer:	    Jean Jordaan <jean@mosaicsoftware.com> (njj)
-" Last change:	    2000 Dec 17
+" Last change:	    2001 Jan 15
 
 " These are used with Claudio Fleiner's html.vim in the standard distribution.
 "
@@ -9,11 +9,14 @@
 " hacked out of the Zope Quick Reference in case someone finds something
 " sensible to do with them. I certainly haven't.
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " First load the HTML syntax
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 syn case match
 

@@ -2,21 +2,24 @@
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2000 Dec 17
+" Last Change:  2001 Jan 15
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.
 " webmacro: http://www.webmacro.org
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'webmacro'
 endif
 
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 syn cluster htmlPreProc add=webmacroIf,webmacroUse,webmacroBraces,webmacroParse,webmacroInclude,webmacroSet,webmacroForeach,webmacroComment
 

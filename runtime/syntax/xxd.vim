@@ -5,8 +5,10 @@
 " Last Change:	March 19, 1999
 "  Notes: use :help xxd   to see how to invoke it
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match xxdAddress			"^[0-9a-f]\+:"		contains=xxdSep
 syn match xxdSep	contained	":"

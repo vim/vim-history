@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	4Dos batch file
 " Maintainer:	John Leo Spetz <jls11@po.cwru.edu>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 "//Issues to resolve:
 "//- Boolean operators surrounded by period are recognized but the
@@ -11,8 +11,10 @@
 "//- After unary operators like "defined" can assume token type.
 "//  Should there be more of these?
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

@@ -307,7 +307,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    curwin->w_cursor.lnum = saved_fmark.mark.lnum;
 		curwin->w_cursor.col = saved_fmark.mark.col;
 		curwin->w_set_curswant = TRUE;
-		adjust_cursor();
+		check_cursor();
 
 		/* remove the old list of matches */
 		FreeWild(num_matches, matches);
@@ -2577,7 +2577,7 @@ jumpto_tag(lbuf, forceit)
 
 	    /* A search command may have positioned the cursor beyond the end
 	     * of the line.  May need to correct that here. */
-	    adjust_cursor();
+	    check_cursor();
 	}
 	else
 	{

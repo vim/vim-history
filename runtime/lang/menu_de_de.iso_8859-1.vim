@@ -3,7 +3,10 @@
 " Originally By:	Marcin Dalecki <dalecki@cs.net.pl>
 " Last Change:	Sam, 25 Nov 2000 02:54:50 +0100
 
-menutrans clear
+" Quit when menu translations have already been done.
+if exists("did_menu_trans")
+  finish
+endif
 let did_menu_trans = 1
 
 " Help menu

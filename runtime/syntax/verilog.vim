@@ -3,8 +3,11 @@
 " Maintainer:	Mun Johl <mj@core.rose.hp.com>
 " Last Update:	Tue Feb  1 14:39:57 PST 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 set iskeyword=@,48-57,_,192-255,+,-,?
 
 

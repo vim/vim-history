@@ -1,8 +1,11 @@
 " Menu Translations:	Czech
 " Translated By: 	Jiøí Pavlovský <pavlovsk@ff.cuni.cz>
-" Last Change:		2000 Jul 26
+" Last Change:		2001 Jan 15
 
-menutrans clear
+" Quit when menu translations have already been done.
+if exists("did_menu_trans")
+  finish
+endif
 let did_menu_trans = 1
 
 " Help menu

@@ -11,8 +11,10 @@
 "   xrdb manual page
 "   xrdb source: ftp://ftp.x.org/pub/R6.4/xc/programs/xrdb/xrdb.c
 
-
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " turn case on
 syn case match

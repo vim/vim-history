@@ -1,4 +1,4 @@
-*usr_toc.txt*	For Vim version 6.s.  Last change: 2000 Oct 17
+*usr_toc.txt*	For Vim version 6.0t.  Last change: 2001 Jan 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -8,6 +8,46 @@
 NOTE: The construction of the User Manual has only just started.  Most of it
 is still empty.  Over time bits from the reference manual will be moved to the
 user manual and new text will be added.
+
+==============================================================================
+Overview ~
+
+Getting Started
+|usr_01.txt|  About the manuals
+|usr_02.txt|  The first steps in Vim
+|usr_03.txt|  Moving around
+|usr_04.txt|  Making local changes
+|usr_05.txt|  Making big changes
+|usr_06.txt|  Set your settings
+|usr_07.txt|  Using syntax highlighting
+|usr_08.txt|  Editing more than one file
+|usr_09.txt|  Splitting windows
+
+Editing Effictively
+|usr_20.txt|  Typing commands quickly
+|usr_21.txt|  Go away and come back
+|usr_22.txt|  Finding the file to edit
+|usr_23.txt|  Editing other files
+|usr_24.txt|  Inserting quickly
+|usr_25.txt|  Editing formatted text
+|usr_26.txt|  Repeating
+|usr_27.txt|  Search patterns
+|usr_28.txt|  Folding
+|usr_29.txt|  Editing programs
+|usr_30.txt|  Compiling programs
+|usr_31.txt|  Exploiting the GUI
+
+Tuning Vim
+|usr_40.txt|  Write a Vim script
+|usr_41.txt|  Make new commands
+|usr_42.txt|  Add new menus
+|usr_43.txt|  Using filetypes
+|usr_44.txt|  Your own syntax highlighted
+|usr_45.txt|  Select your language
+
+Making Vim Run
+|usr_90.txt|  Installing Vim
+|usr_91.txt|  Compiling Vim
 
 ==============================================================================
 Getting Started ~
@@ -94,11 +134,12 @@ Subjects that can be read independently.
 		|28.1|	What is folding?
 		|28.2|  Manual folding
 		|28.3|  Working with folds
-		|28.4|  Folding by indent
-		|28.5|  Folding with markers
-		|28.6|  Folding by syntax
-		|28.7|  Folding by expression
-		|28.8|  Which fold method to use?
+		|28.4|  Saving and restoring folds
+		|28.5|  Folding by indent
+		|28.6|  Folding with markers
+		|28.7|  Folding by syntax
+		|28.8|  Folding by expression
+		|28.9|  Which fold method to use?
 
 |usr_29.txt|  Editing programs
 		('cindent', 'patchmode', 'sts', "[I", "K", tag preview, :grep,

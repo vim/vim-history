@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	SQL, PL/SQL (Oracle 8i)
 " Maintainer:	Paul Moore <gustav@morpheus.demon.co.uk>
-" Last Change:	2001 Jan 06
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

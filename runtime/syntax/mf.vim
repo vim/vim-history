@@ -3,8 +3,10 @@
 " Maintainer:	Andreas Scherer <andreas.scherer@pobox.com>
 " Last Change:	April 26, 1998
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Metafont 'primitives' as defined in chapter 25 of 'The METAFONTbook'
 " Page 210: 'boolean expressions'

@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Essbase script
 " Maintainer:	Raul Segura Acevedo <raul@turing.iquimica.unam.mx>
-" Last change:	2001 Jan 02
+" Last change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-sy	clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " folds
 sy	region	EssFold	start="\<Fix" end="EndFix" transparent fold

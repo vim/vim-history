@@ -7,8 +7,10 @@
 "
 " Keywords TODO: format clock click anchor
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful keywords
 syn keyword tclStatement	proc global return lindex

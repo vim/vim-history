@@ -44,9 +44,10 @@ typedef enum
     PV_NONE = 0
     , PV_BOTH
     , PV_AI
+    , PV_BH
     , PV_BIN
     , PV_BOMB
-    , PV_BH
+    , PV_BST
     , PV_BT
     , PV_CIN
     , PV_CINK
@@ -63,6 +64,7 @@ typedef enum
     , PV_FDI
     , PV_FDL
     , PV_FDM
+    , PV_FDN
     , PV_FDT
     , PV_FF
     , PV_FMR
@@ -124,6 +126,7 @@ static int	p_bomb;
 static char_u	*p_bh;
 static char_u	*p_bt;
 #endif
+static int	p_bst;
 #ifdef FEAT_CINDENT
 static int	p_cin;
 static char_u	*p_cink;
@@ -221,6 +224,9 @@ struct vimoption
     idopt_t	indir;		/* global option: PV_NONE;
 				 * local option: indirect option index */
     char_u	*def_val[2];	/* default values for variable (vi and vim) */
+#ifdef FEAT_EVAL
+    scid_t	scriptID;	/* script in which the option was last set */
+#endif
 };
 
 #define VI_DEFAULT  0	    /* def_val[VI_DEFAULT] is Vi default value */
@@ -410,6 +416,10 @@ static struct vimoption options[] =
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
 #endif
+			    },
+    {"bufsecret",   "bst",  P_BOOL|P_VI_DEF,
+			    (char_u *)&p_bst, PV_BST,
+			    {(char_u *)0L, (char_u *)0L}
 			    },
     {"buftype",	    "bt",   P_STRING|P_ALLOCED|P_VI_DEF,
 #if defined(FEAT_QUICKFIX)
@@ -751,6 +761,9 @@ static struct vimoption options[] =
     {"foldmethod",  "fdm",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_FDM,
 			    {(char_u *)"manual", (char_u *)NULL}},
+    {"foldnestmax", "fdn",  P_NUM|P_VI_DEF|P_RWIN,
+			    (char_u *)VAR_WIN, PV_FDN,
+			    {(char_u *)20L, (char_u *)0L}},
     {"foldtext",    "fdt",  P_STRING|P_ALLOCED|P_VIM|P_VI_DEF|P_RWIN,
 			    (char_u *)VAR_WIN, PV_FDT,
 			    {(char_u *)"foldtext()", (char_u *)NULL}},
@@ -778,7 +791,7 @@ static struct vimoption options[] =
 			    },
     {"grepprg",	    "gp",   P_STRING|P_EXPAND|P_VI_DEF|P_MODEWARN,
 #ifdef FEAT_QUICKFIX
-			    (char_u *)&p_gp, PV_NONE,
+			    (char_u *)&p_gp, PV_BOTH,
 			    {
 # ifdef WIN32
 			    /* may be changed to "grep -n" in os_win32.c */
@@ -1812,6 +1825,24 @@ static struct vimoption options[] =
     {"verbose",	    "vbs",  P_NUM|P_VI_DEF,
 			    (char_u *)&p_verbose, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}},
+    {"viewdir",     "vdir", P_STRING|P_EXPAND|P_VI_DEF,
+#ifdef FEAT_SESSION
+			    (char_u *)&p_vdir, PV_NONE,
+			    {(char_u *)DFLT_VDIR, (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
+    {"viewoptions", "vop",  P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
+#ifdef FEAT_SESSION
+			    (char_u *)&p_vop, PV_NONE,
+			    {(char_u *)"folds,options,cursor", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)0L, (char_u *)0L}
+#endif
+			    },
     {"viminfo",	    "vi",   P_STRING|P_COMMA|P_NODUP,
 #ifdef FEAT_VIMINFO
 			    (char_u *)&p_viminfo, PV_NONE,
@@ -2078,7 +2109,7 @@ static void set_string_option __ARGS((int opt_idx, char_u *value, int local));
 static char_u *did_set_string_option __ARGS((int opt_idx, char_u **varp, int new_value_alloced, char_u *oldval, char_u *errbuf, int local));
 static char_u *set_chars_option __ARGS((char_u **varp));
 static char_u *set_bool_option __ARGS((int opt_idx, char_u *varp, int value, int local));
-static char_u *set_num_option __ARGS((int opt_idx, char_u *varp, long value, char_u *errbuf, int local));
+static char_u *set_num_option __ARGS((int opt_idx, char_u *varp, long value, char_u *errbuf, int opt_flags));
 static void check_redraw __ARGS((long_u flags));
 static int findoption __ARGS((char_u *));
 static int find_key_option __ARGS((char_u *));
@@ -2922,7 +2953,19 @@ do_set(arg, opt_flags)
 		    did_show = TRUE;	    /* remember that we did a line */
 		}
 		if (opt_idx >= 0)
+		{
 		    showoneopt(&options[opt_idx], opt_flags);
+#ifdef FEAT_EVAL
+		    if (p_verbose > 0)
+		    {
+			if (options[opt_idx].scriptID != 0)
+			{
+			    MSG_PUTS(_("\n\tLast set from "));
+			    MSG_PUTS(get_scriptname(options[opt_idx].scriptID));
+			}
+		    }
+#endif
+		}
 		else
 		{
 		    char_u	    *p;
@@ -3051,7 +3094,7 @@ do_set(arg, opt_flags)
 			if (removing)
 			    value = *(long *)varp - value;
 			errmsg = set_num_option(opt_idx, varp, value,
-							       errbuf, local);
+							   errbuf, opt_flags);
 		    }
 		    else if (opt_idx >= 0)		    /* string */
 		    {
@@ -3587,6 +3630,7 @@ didset_options()
 
 #ifdef FEAT_SESSION
     (void)opt_strings_flags(p_ssop, p_ssop_values, &ssop_flags, TRUE);
+    (void)opt_strings_flags(p_vop, p_ssop_values, &vop_flags, TRUE);
 #endif
 #ifdef FEAT_VIRTUALEDIT
     (void)opt_strings_flags(p_ve, p_ve_values, &ve_flags, TRUE);
@@ -3931,6 +3975,12 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
 	    (void)opt_strings_flags(oldval, p_ssop_values, &ssop_flags, TRUE);
 	    errmsg = e_invarg;
 	}
+    }
+    /* 'viewoptions' */
+    else if (varp == &(p_vop))
+    {
+	if (opt_strings_flags(p_vop, p_ssop_values, &vop_flags, TRUE) != OK)
+	    errmsg = e_invarg;
     }
 #endif
 
@@ -4657,6 +4707,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf, local)
     }
     else
     {
+#ifdef FEAT_EVAL
+	/* Remember where the option was set. */
+	options[opt_idx].scriptID = current_SID;
+#endif
 	/*
 	 * Free string options that are in allocated memory.
 	 */
@@ -4875,6 +4929,9 @@ set_bool_option(opt_idx, varp, value, local)
 #ifdef FEAT_FKMAP
     int		old_akm = p_altkeymap;	/* previous value if p_altkeymap*/
 #endif
+#ifdef FEAT_AUTOCMD
+    int		old_bst = curbuf->b_p_bst;
+#endif
 
 
 #ifdef FEAT_GUI
@@ -4891,6 +4948,10 @@ set_bool_option(opt_idx, varp, value, local)
 	return (char_u *)N_("Not allowed here");
 
     *(int *)varp = value;	    /* set the new value */
+#ifdef FEAT_EVAL
+    /* Remember where the option was set. */
+    options[opt_idx].scriptID = current_SID;
+#endif
 
     /* May set global value for local option. */
     if (!local && options[opt_idx].indir != PV_NONE)
@@ -4932,6 +4993,15 @@ set_bool_option(opt_idx, varp, value, local)
     {
 	set_options_bin(old_p_bin, curbuf->b_p_bin, !local);
     }
+
+#ifdef FEAT_AUTOCMD
+    /* when 'bufsecret' changes, trigger autocommands */
+    else if ((int *)varp == &curbuf->b_p_bst && old_bst != curbuf->b_p_bst)
+    {
+	apply_autocmds(curbuf->b_p_bst ? EVENT_BUFDELETE : EVENT_BUFCREATE,
+						    NULL, NULL, TRUE, curbuf);
+    }
+#endif
 
     /* when 'swf' is set, create swapfile, when reset remove swapfile */
     else if ((int *)varp == &curbuf->b_p_swf)
@@ -5151,27 +5221,28 @@ set_bool_option(opt_idx, varp, value, local)
  * Returns NULL for success, or an error message for an error.
  */
     static char_u *
-set_num_option(opt_idx, varp, value, errbuf, local)
+set_num_option(opt_idx, varp, value, errbuf, opt_flags)
     int		opt_idx;		/* index in options[] table */
     char_u	*varp;			/* pointer to the option variable */
     long	value;			/* new value */
     char_u	*errbuf;		/* buffer for error messages */
-    int		local;			/* TRUE for ":setlocal" */
+    int		opt_flags;		/* OPT_LOCAL, OPT_GLOBAL and
+					   OPT_MODELINE */
 {
     char_u	*errmsg = NULL;
+    long	old_value = *(long *)varp;
     long	old_Rows = Rows;	/* remember old Rows */
     long	old_Columns = Columns;	/* remember old Columns */
-    long	old_p_ch = p_ch;	/* remember old command line height */
-    long	old_p_uc = p_uc;	/* remember old 'updatecount' */
-#ifdef FEAT_TITLE
-    long	old_titlelen = p_titlelen; /* remember old 'titlelen' */
-#endif
 
 #ifdef FEAT_GUI
     need_mouse_correct = TRUE;
 #endif
 
     *(long *)varp = value;
+#ifdef FEAT_EVAL
+    /* Remember where the option was set. */
+    options[opt_idx].scriptID = current_SID;
+#endif
 
     if (curbuf->b_p_sw <= 0)
     {
@@ -5283,13 +5354,25 @@ set_num_option(opt_idx, varp, value, errbuf, local)
 #endif
 
 #ifdef FEAT_FOLDING
+    /* 'foldlevel' */
     else if ((long *)varp == &curwin->w_p_fdl)
     {
 	if (curwin->w_p_fdl < 0)
 	    curwin->w_p_fdl = 0;
-	newFoldLevel();
+	/* Only set the new foldlevel when it's different or when not set from
+	 * a modeline. */
+	if (!(opt_flags & OPT_MODELINE) || curwin->w_p_fdl != old_value)
+	    newFoldLevel();
     }
 
+    /* 'foldnestmax' */
+    else if ((long *)varp == &curwin->w_p_fdn)
+    {
+	if (foldmethodIsSyntax(curwin) || foldmethodIsIndent(curwin))
+	    foldUpdateAll(curwin);
+    }
+
+    /* 'foldcolumn' */
     else if ((long *)varp == &curwin->w_p_fdc)
     {
 	if (curwin->w_p_fdc < 0)
@@ -5304,12 +5387,51 @@ set_num_option(opt_idx, varp, value, errbuf, local)
 	}
     }
 
+    /* 'shiftwidth' */
     else if ((long *)varp == &curbuf->b_p_sw)
     {
 	if (foldmethodIsIndent(curwin))
 	    foldUpdateAll(curwin);
     }
 #endif
+
+#ifdef FEAT_TITLE
+    /* if 'titlelen' has changed, redraw the title */
+    else if ((long *)varp == &p_titlelen)
+    {
+	if (p_titlelen < 0)
+	{
+	    errmsg = e_positive;
+	    p_titlelen = 85;
+	}
+	if (starting != NO_SCREEN && old_value != p_titlelen)
+	    maketitle();
+    }
+#endif
+
+    /* if p_ch changed value, change the command line height */
+    else if ((long *)varp == &p_ch)
+    {
+	if (p_ch < 1)
+	{
+	    errmsg = e_positive;
+	    p_ch = 1;
+	}
+	if (p_ch != old_value)
+	    command_height(old_value);
+    }
+
+    /* when 'updatecount' changes from zero to non-zero, open swap files */
+    else if ((long *)varp == &p_uc)
+    {
+	if (p_uc < 0)
+	{
+	    errmsg = e_positive;
+	    p_uc = 100;
+	}
+	if (p_uc && !old_value)
+	    ml_open_files();
+    }
 
     /*
      * Check the bounds for numeric options here
@@ -5366,13 +5488,6 @@ set_num_option(opt_idx, varp, value, errbuf, local)
 	errmsg = e_positive;
 	p_tm = 0;
     }
-#ifdef FEAT_TITLE
-    if (p_titlelen < 0)
-    {
-	errmsg = e_positive;
-	p_titlelen = 85;
-    }
-#endif
     if ((curwin->w_p_scr <= 0
 		|| (curwin->w_p_scr > curwin->w_height
 		    && curwin->w_height > 0))
@@ -5411,16 +5526,6 @@ set_num_option(opt_idx, varp, value, errbuf, local)
 	errmsg = e_scroll;
 	p_so = 0;
     }
-    if (p_uc < 0)
-    {
-	errmsg = e_positive;
-	p_uc = 100;
-    }
-    if (p_ch < 1)
-    {
-	errmsg = e_positive;
-	p_ch = 1;
-    }
 #ifdef FEAT_CMDWIN
     if (p_cwh < 1)
     {
@@ -5439,22 +5544,8 @@ set_num_option(opt_idx, varp, value, errbuf, local)
 	p_ss = 0;
     }
 
-    /* when 'updatecount' changes from zero to non-zero, open swap files */
-    if (p_uc && !old_p_uc)
-	ml_open_files();
-
-    /* if p_ch changed value, change the command line height */
-    if (p_ch != old_p_ch)
-	command_height(old_p_ch);
-
-#ifdef FEAT_TITLE
-    /* if 'titlelen' has changed, redraw the title */
-    if (old_titlelen != p_titlelen && starting != NO_SCREEN)
-	maketitle();
-#endif
-
     /* May set global value for local option. */
-    if (!local && options[opt_idx].indir != PV_NONE)
+    if (!(opt_flags & OPT_LOCAL) && options[opt_idx].indir != PV_NONE)
     {
 	if (options[opt_idx].var == VAR_WIN)
 	    *((long *)GLOBAL_WO(varp)) = *(long *)varp;
@@ -5641,7 +5732,8 @@ set_option_value(name, number, string, local)
 	if (varp != NULL)	/* hidden option is not changed */
 	{
 	    if (options[opt_idx].flags & P_NUM)
-		(void)set_num_option(opt_idx, varp, number, NULL, local);
+		(void)set_num_option(opt_idx, varp, number, NULL,
+						       local ? OPT_LOCAL : 0);
 	    else
 		(void)set_bool_option(opt_idx, varp, (int)number, local);
 	}
@@ -6217,6 +6309,7 @@ get_varp(p)
 	case PV_FDI:	return (char_u *)&(curwin->w_p_fdi);
 	case PV_FDL:	return (char_u *)&(curwin->w_p_fdl);
 	case PV_FDM:	return (char_u *)&(curwin->w_p_fdm);
+	case PV_FDN:	return (char_u *)&(curwin->w_p_fdn);
 	case PV_FDT:	return (char_u *)&(curwin->w_p_fdt);
 	case PV_FMR:	return (char_u *)&(curwin->w_p_fmr);
 #endif
@@ -6245,6 +6338,7 @@ get_varp(p)
 	case PV_BH:	return (char_u *)&(curbuf->b_p_bh);
 	case PV_BT:	return (char_u *)&(curbuf->b_p_bt);
 #endif
+	case PV_BST:	return (char_u *)&(curbuf->b_p_bst);
 #ifdef FEAT_CINDENT
 	case PV_CIN:	return (char_u *)&(curbuf->b_p_cin);
 	case PV_CINK:	return (char_u *)&(curbuf->b_p_cink);
@@ -6386,6 +6480,7 @@ copy_winopt(from, to)
     to->wo_fdi = vim_strsave(from->wo_fdi);
     to->wo_fdl = from->wo_fdl;
     to->wo_fdm = vim_strsave(from->wo_fdm);
+    to->wo_fdn = from->wo_fdn;
     to->wo_fdt = vim_strsave(from->wo_fdt);
     to->wo_fmr = vim_strsave(from->wo_fmr);
 #endif
@@ -6784,6 +6879,9 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 		|| p == (char_u *)&p_rtp
 #ifdef FEAT_SEARCHPATH
 		|| p == (char_u *)&p_cdpath
+#endif
+#ifdef FEAT_SESSION
+		|| p == (char_u *)&p_vdir
 #endif
 		)
 	{

@@ -1105,13 +1105,13 @@ ro_buflist_add(old_name)
     int	    retval;
 
     if (old_name == NULL)
-	return buflist_add(NULL, FALSE);
+	return buflist_add(NULL, FALSE, TRUE);
 
     /* Copy the name so we can mess around with it. */
     fname = vim_strsave(old_name);
     if (fname == NULL)
 	/* Out of memory - can't modify name */
-	return buflist_add(old_name, FALSE);
+	return buflist_add(old_name, FALSE, TRUE);
 
     /* Change `dir/main.c' into `dir.c.main' */
     leaf = fname;
@@ -1139,7 +1139,7 @@ ro_buflist_add(old_name)
 		leaf - fname + old_name);
     }
 
-    retval = buflist_add(fname, FALSE);
+    retval = buflist_add(fname, FALSE, TRUE);
     free(fname);
     return retval;
 }

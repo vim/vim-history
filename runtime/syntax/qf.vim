@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Quickfix window
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 04
+" Last change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful C keywords
 syn match	qfFileName	"^[^|]*" nextgroup=qfSeparator

@@ -4,8 +4,10 @@
 " Some things based on c.vim by Bram Moolenaar and pascal.vim by Mario Eusebio
 " Last Change:	Sat Sep 09 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Exceptions for my "Very Own" (TM) user variables naming style.
 " If you don't like this, comment it

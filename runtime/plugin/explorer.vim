@@ -477,7 +477,8 @@ function! s:ShowDirectory()
   1,$d _
   " Prevent a report of our actions from showing up
   let oldRep=&report
-  set report=10000
+  let save_sc = &sc
+  set report=10000 nosc
 
   " Add the header
   call s:AddHeader()
@@ -525,7 +526,6 @@ function! s:ShowDirectory()
   let @f=save_f
 
   normal! zz
-  let &report=oldRep
 
   " Move to first directory in the listing
   0
@@ -537,6 +537,9 @@ function! s:ShowDirectory()
   " Move to first directory in the listing
   0
   /^"=/+1
+
+  let &report=oldRep
+  let &sc = save_sc
 
 endfunction
 
@@ -662,6 +665,9 @@ endfunction
 " Show the size and date for each file
 "
 function! s:AddFileInfo()
+  let save_sc = &sc
+  set nosc
+
   " Mark our starting point
   normal! mt
 
@@ -698,6 +704,8 @@ function! s:AddFileInfo()
 
   " return to start
   normal `t
+
+  let &sc = save_sc
 endfunction
 
 
@@ -942,6 +950,7 @@ function! s:FileNameCmp(line1, line2, direction)
     return -g:explSuffixesLast
   else
     return s:StrCmp(f1,f2,a:direction)
+  endif
 
 endfunction
 

@@ -595,9 +595,8 @@ typedef unsigned short u8char_t;
 #define DOBUF_GOTO	0	/* go to specified buffer */
 #define DOBUF_SPLIT	1	/* split window and go to specified buffer */
 #define DOBUF_UNLOAD	2	/* unload specified buffer(s) */
-#define DOBUF_DEL	3	/* delete specified buffer(s) */
-#define DOBUF_SWITCH	4	/* switch to open window containing buffer  */
-				/* or split current window and go to buffer */
+#define DOBUF_DEL	3	/* delete specified buffer(s) (make secret) */
+#define DOBUF_WIPE	4	/* delete specified buffer(s) really */
 
 /* Values for start argument for do_buffer() */
 #define DOBUF_CURRENT	0	/* "count" buffer from current buffer */
@@ -776,23 +775,30 @@ typedef unsigned short u8char_t;
 #define MIN_SWAP_PAGE_SIZE 1048
 #define MAX_SWAP_PAGE_SIZE 50000
 
+#define SID_MODELINE	-1	/* script ID when using a modeline */
+
 /*
  * Events for autocommands.
  */
 enum auto_event
 {
-    EVENT_BUFCREATE = 0,	/* just after creating a buffer */
-    EVENT_BUFDELETE,		/* just before deleting a buffer */
+    EVENT_BUFCREATE = 0,	/* just after creating a non-secret buffer */
+    EVENT_BUFSECRET,		/* just after creating any buffer */
+    EVENT_BUFDELETE,		/* just before deleting a buffer or after
+				   making it secret */
+    EVENT_BUFWIPEOUT,		/* just before really deleting a buffer */
     EVENT_BUFENTER,		/* after entering a buffer */
     EVENT_BUFFILEPOST,		/* after renaming a buffer */
     EVENT_BUFFILEPRE,		/* before renaming a buffer */
     EVENT_BUFLEAVE,		/* before leaving a buffer */
     EVENT_BUFNEWFILE,		/* when creating a buffer for a new file */
+    EVENT_BUFREADAFTER,		/* after reading a buffer and modelines */
     EVENT_BUFREADPOST,		/* after reading a buffer */
     EVENT_BUFREADPRE,		/* before reading a buffer */
     EVENT_BUFREADCMD,		/* read buffer using command */
     EVENT_BUFUNLOAD,		/* just before unloading a buffer */
     EVENT_BUFHIDDEN,		/* just after buffer becomes hidden */
+    EVENT_BUFWINLEAVE,		/* just after buffer removed from window */
     EVENT_BUFWRITEPOST,		/* after writing a buffer */
     EVENT_BUFWRITEPRE,		/* before writing a buffer */
     EVENT_BUFWRITECMD,		/* write buffer using command */

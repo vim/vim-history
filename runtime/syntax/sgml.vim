@@ -8,8 +8,11 @@
 " and the SGML syntax files by Sung-Hyun Nam <namsh@kldp.org>.
 " Please check :help sgml.vim for some comments and a description of the options
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " mark illegal characters

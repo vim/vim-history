@@ -669,11 +669,11 @@ qf_get_fnum(directory, fname)
 		    ptr = vim_strsave(fname);
 	    }
 	    /* Use concatenated directory name and file name */
-	    fnum = buflist_add(ptr, FALSE);
+	    fnum = buflist_add(ptr, FALSE, TRUE);
 	    vim_free(ptr);
 	    return fnum;
 	}
-	return buflist_add(fname, FALSE);
+	return buflist_add(fname, FALSE, TRUE);
 #endif
     }
 }
@@ -1061,7 +1061,7 @@ qf_jump(dir, errornr, forceit)
 	if (qf_ptr->qf_col > 0)
 	{
 	    curwin->w_cursor.col = qf_ptr->qf_col - 1;
-	    adjust_cursor();
+	    check_cursor();
 	}
 	else
 	    beginline(BL_WHITE | BL_FIX);
@@ -1457,9 +1457,9 @@ ex_cwindow(eap)
 	    set_option_value((char_u *)"bt", 0L, (char_u *)"quickfix", TRUE);
 	    set_option_value((char_u *)"bh", 0L, (char_u *)"delete", TRUE);
 	}
-	else
-	    (void)do_buffer(DOBUF_GOTO, DOBUF_FIRST, FORWARD, buf->b_fnum,
-			    FALSE);
+	else if (buf != curbuf)
+	    set_curbuf(buf, DOBUF_GOTO);
+
 	win_setheight(height);
     }
 
@@ -1590,6 +1590,8 @@ qf_fill_buffer()
 
 #ifdef FEAT_AUTOCMD
     apply_autocmds(EVENT_BUFREADPOST, (char_u *)"quickfix", NULL,
+							       FALSE, curbuf);
+    apply_autocmds(EVENT_BUFREADAFTER, (char_u *)"quickfix", NULL,
 							       FALSE, curbuf);
 #endif
 

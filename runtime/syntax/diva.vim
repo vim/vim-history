@@ -1,12 +1,17 @@
 " Vim syntax file
 " Language:		SKILL for Diva
 " Maintainer:	Toby Schaffer <jtschaff@eos.ncsu.edu>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Comments:		SKILL is a Lisp-like programming language for use in EDA
 "				tools from Cadence Design Systems. It allows you to have
 "				a programming environment within the Cadence environment
 "				that gives you access to the complete tool set and design
 "				database. These items are for Diva verification rules decks.
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Don't remove any old syntax stuff hanging around! We need stuff
 " from skill.vim.

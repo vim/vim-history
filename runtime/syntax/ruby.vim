@@ -1,14 +1,16 @@
 " Vim syntax file
 " Language:     Ruby
 " Maintainer:   Mirko Nasato
-" Last Change:  2000 Nov 04
+" Last Change:  2001 Jan 15
 " Location:     http://altern.org/mn/ruby/ruby.vim
 
 " See http://altern.org/mn/ruby/vim.html for documentation.
 " Thanks to perl.vim authors, and to Reimer Behrends. :-)
 
-" Let's begin
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Expression Substitution: and Backslash Notation
 syn match   rubyExprSubst  "\\\\\|\(\(\\M-\\C-\|\\c\|\\C-\|\\M-\)\w\)\|\(\\\o\{3}\|\\x\x\{2}\|\\[tnrfbaes]\)" contained

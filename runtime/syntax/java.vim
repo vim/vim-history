@@ -2,12 +2,14 @@
 " Language:     Java
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
 " URL:          http://www.fleiner.com/vim/syntax/java.vim
-" Last Change:  2000 Dec 20
+" Last Change:  2001 Jan 15
 
 " Please check :help java.vim for comments on some of the options available.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " some characters that cannot be in a java program (outside a string)
 syn match javaError "[\\@`]"
@@ -139,6 +141,7 @@ if !exists("java_ignore_javadoc") && main_syntax != 'jsp'
   syntax case ignore
   " syntax coloring for javadoc comments (HTML)
   syntax include @javaHtml <sfile>:p:h/html.vim
+  unlet b:current_syntax
   syn region  javaDocComment    start="/\*\*"  end="\*/" keepend contains=javaCommentTitle,@javaHtml,javaDocTags,javaTodo,@Spell
   syn region  javaCommentTitle  contained matchgroup=javaDocComment start="/\*\*"   matchgroup=javaCommentTitle keepend end="\.$" end="\.[ \t\r<&]"me=e-1 end="@"me=s-1,he=s-1 end="\*/"me=s-1,he=s-1 contains=@javaHtml,javaCommentStar,javaTodo,@Spell
 

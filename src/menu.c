@@ -1950,11 +1950,11 @@ ex_emenu(eap)
 	 */
 	VIsual_active = TRUE;
 	VIsual_reselect = TRUE;
-	adjust_cursor();
+	check_cursor();
 	VIsual = curwin->w_cursor;
 	curwin->w_cursor = tpos;
 
-	adjust_cursor();
+	check_cursor();
 
 	/* Adjust the cursor to make sure it is in the correct pos
 	 * for exclusive mode

@@ -1,4 +1,3 @@
-
 " Vim syntax file
 " Language:	AfLex (from Lex syntax file)
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
@@ -8,11 +7,14 @@
 " Comment:          Replaced sourcing c.vim file by ada.vim and rename lex*
 "		in aflex*
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the Ada syntax to start with
-runtime syntax/ada.vim
+runtime! syntax/ada.vim
+unlet b:current_syntax
 
 " --- AfLex stuff ---
 

@@ -1,7 +1,13 @@
 " Vim indent file
 " Language:	Makefile
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Oct 22
+" Last Change:	2001 Jan 15
+
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
 
 setlocal indentexpr=GetMakeIndent()
 

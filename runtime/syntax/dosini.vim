@@ -1,11 +1,13 @@
 " Vim syntax file
 " Language:	Configuration File (ini file) for MSDOS/MS Windows
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Version Info: @(#)dosini.vim	1.6	97/12/15 08:54:12
 
-" clear any unwanted syntax defs
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " shut case off
 syn case ignore

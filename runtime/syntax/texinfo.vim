@@ -2,15 +2,17 @@
 " Language:	Texinfo (macro package for TeX)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@altavista.net>
 " URL:		<->
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 "
 " the file follows the Texinfo manual structure; this file is based
 " on manual for Texinfo version 4.0, 28 September 1999
 " since @ can have special meanings, everything is 'match'-ed and 'region'-ed
 " (including @ in 'iskeyword' option has unexpected effects)
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'texinfo'

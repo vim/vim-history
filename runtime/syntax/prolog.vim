@@ -2,14 +2,16 @@
 " Language:    PROLOG
 " Maintainers: Ralph Becket <rwab1@cam.sri.co.uk>,
 "              Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change: 2000 Nov 04
+" Last Change: 2001 Jan 15
 
 " There are two sets of highlighting in here:
 " If the "prolog_highlighting_clean" variable exists, it is rather sparse.
 " Otherwise you get more highlighting.
 
-" Remove any old syntax stuff hanging around.
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Prolog is case sensitive.
 syn case match

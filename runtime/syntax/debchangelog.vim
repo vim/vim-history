@@ -2,10 +2,12 @@
 " Language:	Debian changelog files
 " Maintainer:	Wichert Akkerman <wakkerma@debian.org>
 " URL:		none
-" Last Change:	2000 Dec 25
+" Last Change:	2001 Jan 15
 
-" Remove old cruft
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Case doesn't matter for us
 syn case ignore

@@ -4,8 +4,10 @@
 "		Original author: Mario Eusebio
 " Last Change:	Tue Jul 28 17:44:06 1998
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword matlabStatement		return
 syn keyword matlabLabel			case switch

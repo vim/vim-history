@@ -6,8 +6,11 @@
 "               Since DMAP shares some traits with fortran, this syntax file
 "               is based on the fortran.vim syntax file.
 "----------------------------------------------------------------------
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " DMAP is not case dependent
 syn case ignore
 "

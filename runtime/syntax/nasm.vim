@@ -1,15 +1,18 @@
 " Vim syntax file
 " Language:	NASM - The Netwide Assembler (v0.98)
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " Vim URL:	http://www.vim.org/lang.html
 " NASM Home:	http://www.cryogen.com/Nasm/
 " Orig. Maint.:	C. Laurence Gonsalves	<clgonsal@kami.com>
 " Orig. URL:	http://www.cryogen.com/clgonsal/vim/syntax/nasm.vim
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " Setup Syntax:
-"  Clear old syntax settings
-syn clear
 "  Assembler syntax is case insensetive
 syn case ignore
 

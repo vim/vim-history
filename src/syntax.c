@@ -5557,6 +5557,8 @@ syn_get_foldlevel(wp, lnum)
 	    if (CUR_STATE(i).si_flags & HL_FOLD)
 		++level;
     }
+    if (level > wp->w_p_fdn)
+	level = wp->w_p_fdn;
     return level;
 }
 #endif

@@ -4,8 +4,10 @@
 " Based on:     KiXtart 95 Version 3.61, from Windows NT® 4.0 Resource Kit
 " Last change:	November 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

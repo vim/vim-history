@@ -1,12 +1,14 @@
 " Vim syntax file
 " Language:	jgraph (graph plotting utility)
 " Maintainer:	Jonas Munsin jmunsin@iki.fi
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 " this syntax file is not yet complete
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
-" Remove any old syntax stuff hanging around
-syn clear
 syn case match
 
 " comments

@@ -4455,7 +4455,7 @@ replace_termcodes(from, bufp, from_part, do_lt)
 	     */
 	    if (STRNICMP(src, "<SID>", 5) == 0)
 	    {
-		if (current_SID == 0)
+		if (current_SID <= 0)
 		    EMSG(_("Using <SID> not in a script context"));
 		else
 		{

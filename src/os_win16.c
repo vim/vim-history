@@ -73,6 +73,13 @@ FILE* fdDump = NULL;
 # define _cdecl
 #endif
 
+#ifdef __BORLANDC__
+/* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
+ * but it does in BC 5.02! */
+# if __BORLANDC__ < 0x502
+int _stricoll(char *a, char *b);
+# endif
+#endif
 
 /* cproto doesn't create a prototype for main() */
 int _cdecl
@@ -602,7 +609,7 @@ pstrcmp(
     const void *a,
     const void *b)
 {
-    return (_stricoll(* (char **)a, * (char **)b));
+    return (pathcmp(* (char **)a, * (char **)b));
 }
 
 

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.77
-" Last Change:	2000 Dec 14
+" Last Change:	2001 Jan 15
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
@@ -9,6 +9,11 @@
 "   Preben Guldberg, and some on suggestions by Andrej Panjkov,
 "   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile,
 "   and Walter Dieudonné.
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " let b:fortran_dialect = fortran_dialect if set correctly by user
 if exists("fortran_dialect")

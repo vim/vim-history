@@ -197,6 +197,7 @@ typedef void (*nv_func_t) __ARGS((cmdarg_t *cap));
 /*
  * This table contains one entry for every Normal or Visual mode command.
  * The order doesn't matter, init_normal_cmds() will create a sorted index.
+ * It is faster when all keys from zero to '~' are present.
  */
 struct nv_cmd
 {
@@ -237,7 +238,7 @@ struct nv_cmd
     {'V',	nv_error,	0,			0},
     {'v',	nv_error,	0,			0},
 #endif
-    {Ctrl_W,	nv_window,	NV_NCW,			0},
+    {Ctrl_W,	nv_window,	0,			0},
     {Ctrl_X,	nv_addsub,	0,			0},
     {Ctrl_Y,	nv_scroll_line,	0,			FALSE},
     {Ctrl_Z,	nv_suspend,	0,			0},
@@ -1367,7 +1368,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	    /* When operating linewise, include folded lines completely. */
 	    if (!VIsual_active && oap->motion_type == MLINE)
 	    {
-		hasFolding(curwin->w_cursor.lnum, &curwin->w_cursor.lnum, NULL);
+		foldAdjustCursor();
 		hasFolding(oap->start.lnum, NULL, &oap->start.lnum);
 	    }
 #endif
@@ -2129,10 +2130,6 @@ do_mouse(oap, c, dir, count, fix_indent)
 
     if (!is_click)
 	jump_flags |= MOUSE_FOCUS | MOUSE_DID_MOVE;
-#ifdef FEAT_CMDWIN
-    if (cmdwin_type != 0)
-	jump_flags |= MOUSE_FOCUS;
-#endif
 
     start_visual.lnum = 0;
 
@@ -3353,7 +3350,7 @@ nv_gd(oap, nchar)
 
     /* Search forward for the identifier, ignore comment lines. */
     while ((t = searchit(curbuf, &curwin->w_cursor, FORWARD, pat, 1L, 0,
-							       RE_LAST)) == OK
+							     RE_LAST)) != FAIL
 #ifdef FEAT_COMMENTS
 	    && get_leader_len(ml_get_curline(), NULL, FALSE)
 #endif
@@ -3673,9 +3670,9 @@ nv_zet(cap)
 dozet:
     if (
 #ifdef FEAT_FOLDING
-	    /* "zf" is always an operator, "zo", "zO", "zc" and "zC" only in
-	     * Visual mode. */
-	    cap->nchar != 'f'
+	    /* "zf" and "zF" are always an operator, "zo", "zO", "zc" and "zC"
+	     * only in Visual mode. */
+	    cap->nchar != 'f' && cap->nchar != 'F'
 	    && !(VIsual_active && vim_strchr((char_u *)"cCoO", cap->nchar))
 	    &&
 #endif
@@ -3814,7 +3811,9 @@ dozet:
 		break;
 
 #ifdef FEAT_FOLDING
+		/* "zF": create fold command */
 		/* "zf": create fold operator */
+    case 'F':
     case 'f':   if (!foldmethodIsManual(curwin))
 		{
 		    EMSG(_("Cannot create fold with current 'foldmethod'"));
@@ -3822,8 +3821,16 @@ dozet:
 		}
 		else
 		{
+		    cap->nchar = 'f';
 		    nv_operator(cap);
 		    curwin->w_p_fen = TRUE;
+
+		    /* "zF" is like "zfzf" */
+		    if (nchar == 'F' && cap->oap->op_type == OP_FOLD)
+		    {
+			nv_operator(cap);
+			finish_op = TRUE;
+		    }
 		}
 		break;
 
@@ -4791,7 +4798,7 @@ nv_search(cap)
 
     /* "/$" will put the cursor after the end of the line, may need to
      * correct that here */
-    adjust_cursor();
+    check_cursor();
 }
 
 /*
@@ -4815,7 +4822,7 @@ nv_next(cap)
 
     /* "/$" will put the cursor after the end of the line, may need to
      * correct that here */
-    adjust_cursor();
+    check_cursor();
 }
 
 /*
@@ -5615,7 +5622,7 @@ n_swapchar(cap)
 	}
     }
 
-    adjust_cursor();
+    check_cursor();
     curwin->w_set_curswant = TRUE;
     if (did_change)
     {
@@ -5650,7 +5657,7 @@ nv_cursormark(cap, flag, pos)
 	if (flag)
 	    beginline(BL_WHITE | BL_FIX);
 	else
-	    adjust_cursor();
+	    check_cursor();
     }
     cap->oap->motion_type = flag ? MLINE : MCHAR;
     cap->oap->inclusive = FALSE;		/* ignored if not MCHAR */
@@ -5766,7 +5773,7 @@ nv_gomark(cap)
 	    beginline(BL_WHITE | BL_FIX);
 	}
 	else
-	    adjust_cursor();
+	    check_cursor();
     }
     else
 	nv_cursormark(cap, cap->arg, pos);
@@ -5792,7 +5799,7 @@ nv_pcmark(cap)
 	if (pos == (pos_t *)-1)		/* jump to other file */
 	{
 	    curwin->w_set_curswant = TRUE;
-	    adjust_cursor();
+	    check_cursor();
 	}
 	else if (pos != NULL)		    /* can jump */
 	    nv_cursormark(cap, FALSE, pos);
@@ -6054,7 +6061,7 @@ nv_g_cmd(cap)
 	break;
 
     case '&':
-	stuffReadbuff((char_u *)":%s&\r");
+	stuffReadbuff((char_u *)":%s//~/&\r");
 	break;
 
 #ifdef FEAT_VISUAL
@@ -6107,14 +6114,14 @@ nv_g_cmd(cap)
 
 	    /* Set Visual to the start and w_cursor to the end of the Visual
 	     * area.  Make sure they are on an existing character. */
-	    adjust_cursor();
+	    check_cursor();
 	    VIsual = curwin->w_cursor;
 	    curwin->w_cursor = tpos;
 #ifdef FEAT_VIRTUALEDIT
 	    VIsual_coladd = curwin->w_coladd;
 	    curwin->w_coladd = coladd;
 #endif
-	    adjust_cursor();
+	    check_cursor();
 	    update_topline();
 	    /*
 	     * When called from normal "g" command: start Select mode when
@@ -7206,10 +7213,10 @@ nv_record(cap)
 	}
 	else
 #endif
-	/* (stop) recording into a named register */
-	/* command is ignored while executing a register */
+	    /* (stop) recording into a named register, unless executing a
+	     * register */
 	    if (!Exec_reg && do_record(cap->nchar) == FAIL)
-	    clearopbeep(cap->oap);
+		clearopbeep(cap->oap);
     }
 }
 

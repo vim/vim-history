@@ -72,7 +72,7 @@ void ex_rubydo(exarg_t *eap)
 #endif
 	}
     }
-    adjust_cursor();
+    check_cursor();
     update_curbuf(NOT_VALID);
 }
 
@@ -464,7 +464,7 @@ static VALUE window_set_cursor(VALUE self, VALUE pos)
     col = RARRAY(pos)->ptr[1];
     win->w_cursor.lnum = NUM2LONG(lnum);
     win->w_cursor.col = NUM2UINT(col);
-    adjust_cursor();		    /* put cursor on an existing line */
+    check_cursor();		    /* put cursor on an existing line */
     update_screen(NOT_VALID);
     return Qnil;
 }

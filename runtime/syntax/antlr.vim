@@ -1,17 +1,23 @@
 " Vim syntax file
 " Antlr:	ANTLR, Another Tool For Language Recognition <www.antlr.org>
 " Maintainer:	Mathieu Clabaut <mathieu.clabaut@free.fr>
-" Last change:	2000 Dec 17
+" Last change:	2001 Jan 15
 " Original:	Comes from JavaCC.vim
 
 
 " This syntac file is a first attempt. It is far from perfect...
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " Uses java.vim, and adds a few special things for JavaCC Parser files.
 " Those files usually have the extension  *.jj
 
 " source the java.vim file
-runtime syntax/java.vim
+runtime! syntax/java.vim
+unlet b:current_syntax
 
 "remove catching errors caused by wrong parenthesis (does not work in antlr
 "files) (first define them in case they have not been defined in java)

@@ -262,7 +262,7 @@
 * USER:[000000] and USER2:[000000], define USER_HOME as follows:
 */
 #ifndef USER_HOME
-# define USER_HOME    "/user,/user2"
+# define USER_HOME	"/user,/user2"
 #endif
 
 #ifndef DFLT_BDIR
@@ -271,6 +271,10 @@
 
 #ifndef DFLT_DIR
 # define DFLT_DIR	"./,sys$login:,tmp:"	/* default for 'directory' */
+#endif
+
+#ifndef DFLT_VDIR
+# define DFLT_VDIR	"sys$login:vimfiles/view"
 #endif
 
 #define TEMPNAME	"tmp:v?XXXXXX.txt"
@@ -283,10 +287,10 @@
 			       exists for a file */
 
 #ifndef DFLT_MAXMEM
-# define DFLT_MAXMEM	512	    /* use up to 512Kbyte for buffer */
+# define DFLT_MAXMEM	512	/* use up to 512Kbyte for buffer */
 #endif
 #ifndef DFLT_MAXMEMTOT
-# define DFLT_MAXMEMTOT	2048	    /* use up to 2048Kbyte for Vim */
+# define DFLT_MAXMEMTOT	2048	/* use up to 2048Kbyte for Vim */
 #endif
 
 #define BASENAMELEN	(MAXNAMLEN - 5)
@@ -304,7 +308,7 @@
 #  ifdef USEMEMCPY
 #   define mch_memmove(to, from, len) memcpy((char *)(to), (char *)(from), len)
 #  else
-#   define VIM_MEMMOVE	    /* found in misc2.c */
+#   define VIM_MEMMOVE		/* found in misc2.c */
 #  endif
 # endif
 #endif
@@ -315,4 +319,4 @@
 typedef struct dsc$descriptor   DESC;
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"tmp:vim##.err"	 /* user must assign tmp: */
-#define DFLT_RUNTIMEPATH	"sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"sys$login:vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,sys$login:vimfiles/after"

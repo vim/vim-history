@@ -1,13 +1,16 @@
 " Vim syntax file
 " Language:	ESQL-C
 " Maintainer:	Jonathan A. George <jageorge@tel.gte.com>
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C++ syntax to start with
-runtime syntax/cpp.vim
+runtime! syntax/cpp.vim
+unlet b:current_syntax
 
 " ESQL-C extentions
 

@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.s.  Last change: 2001 Jan 13
+*cmdline.txt*   For Vim version 6.0t.  Last change: 2001 Jan 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -694,7 +694,8 @@ name).  This is included for backwards compatibility with version 3.0, the
 	<cfile><	idem, without extension
 
 Note: Where a file name is expected wildcards expansion is done.  On Unix the
-shell is used for this.  Backticks also work, like in >
+shell is used for this, unless it can be done internally (for speed).
+Backticks also work, like in >
 	:n `echo *.c`
 (backtick expansion is not possible in |restricted-mode|)
 But expansion is only done if there are any wildcards before expanding the
@@ -707,6 +708,12 @@ Examples: (alternate file name is "?readme?")
 	:e #.*		:e {files matching "?readme?.*"}
 	:cd <cfile>	:cd {file name under cursor}
 	:cd <cfile>*	:cd {file name under cursor plus "*" and then expanded}
+
+When the expanded argument contains a "!" and it is used for a shell command
+(":!cmd", ":r !cmd" or ":w !cmd"), it is escaped with a backslash to avoid it
+being expanded into a previously used command.  When the 'shell' option
+contains "sh", this is done twice, to avoid the shell trying to expand the
+"!".
 
 							*filename-backslash*
 For filesystems that use a backslash as directory separator (MS-DOS, Windows,
@@ -783,6 +790,8 @@ CTRL-C		Continue in Command-line mode.  The command-line under the
 		thus the window will remain visible.
 :quit		Discard the command line and go back to Normal mode.
 		":exit", ":xit" and CTRL-\ CTRL-N also work.
+:qall		Quit Vim, unless there are changes in some buffer.
+:qall!		Quit Vim, discarding changes to any buffer.
 
 Once the command-line window is closed the old window sizes are restored.  The
 executed command applies to the window and buffer where the command-line was
@@ -821,6 +830,12 @@ If you don't want these mappings, disable them with: >
 	au CmdwinEnter [:>] iunmap <Tab>
 	au CmdwinEnter [:>] nunmap <Tab>
 You could put these lines in your vimrc file.
+
+While in the command-line window you cannot use the mouse to put the cursor in
+another window, or drag statuslines of other windows.  You can drag the
+statusline of the command-line window itself.  If you drag it all the way up,
+the statusline of the window above it will move, thus creating more room in
+the command-line window.
 
 
 AUTOCOMMANDS

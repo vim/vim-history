@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	po (gettext)
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Nov 22
+" Last Change:	2001 Jan 15
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match  poComment	"^#.*$"
 syn match  poSources	"^#:.*$"

@@ -4,11 +4,14 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	April 23, 1999
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-runtime syntax/c.vim
+runtime! syntax/c.vim
+unlet b:current_syntax
 
 syn keyword rpcProgram	program				skipnl skipwhite nextgroup=rpcProgName
 syn match   rpcProgName	contained	"\<\i\I*\>"	skipnl skipwhite nextgroup=rpcProgZone

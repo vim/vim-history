@@ -2,7 +2,7 @@ Test for Bufleave autocommand that deletes the buffer we are about to edit.
 
 STARTTEST
 :so small.vim
-:au BufLeave test9.in bdel yy
+:au BufLeave test9.in bwipe yy
 :e yy
 :/^start of/,$w! test.out      " Write contents of this file
 :qa!

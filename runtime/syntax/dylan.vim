@@ -7,8 +7,13 @@
 " This syntax file is based on the Haskell, Perl, Scheme, and C
 " syntax files.
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " Part 1:  Syntax definition
-syn clear
+
 syn case ignore
 
 set lisp

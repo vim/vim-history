@@ -7,7 +7,10 @@
 " I based this on the TeX and Scheme syntax files (but mostly scheme).  
 " See http://www.latte.org for info on the language.
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match latteError "[{}\\]"
 syn match latteOther "\\{"

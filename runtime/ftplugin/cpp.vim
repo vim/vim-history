@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C++
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Dec 23
+" Last Change:	2001 Jan 15
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -9,4 +9,4 @@ if exists("b:did_ftplugin")
 endif
 
 " Behaves just like C
-runtime! ftplugin/c/*.vim
+runtime! ftplugin/c.vim ftplugin/c_*.vim ftplugin/c/*.vim

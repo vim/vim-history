@@ -3,24 +3,28 @@
 " Maintainer:	Lutz Eymers <ixtab@polzin.com>
 " URL:		http://www-public.rz.uni-duesseldorf.de/~eymers/vim/syntax
 " Email:	Subject: send syntax_vim.tgz
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 "
 " Options	phtml_sql_query = 1 for SQL syntax highligthing inside strings
 "		phtml_minlines = x     to sync at least x lines backwards
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'phtml'
 endif
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 syn cluster htmlPreproc add=phtmlRegionInsideHtmlTags
 
 if exists( "phtml_sql_query")
   if phtml_sql_query == 1
     syn include @phtmlSql <sfile>:p:h/sql.vim
+    unlet b:current_syntax
   endif
 endif
 syn cluster phtmlSql remove=sqlString,sqlComment

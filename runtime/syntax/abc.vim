@@ -4,8 +4,10 @@
 " URL:		http://perun.hscs.wmin.ac.uk/vim/syntax/abc.vim
 " Last Change:	26th May 1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 
 " tags

@@ -1,10 +1,12 @@
 " Vim syntax file
 " Language:	Renderman shader language
 " Maintainer:	Dan Piponi <dan@tanelorn.demon.co.uk>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Reset
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful Renderman keywords including special
 " RenderMan control structures

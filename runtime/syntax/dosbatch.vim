@@ -5,8 +5,10 @@
 " Last Change:	14th May 1999
 " Web Page:	N/A
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " DOS bat files are case insensitive but case preserving!
 syn case ignore

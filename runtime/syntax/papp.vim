@@ -2,7 +2,7 @@
 "
 " Language:	papp
 " Maintainer:	Marc Lehmann <pcg@goof.com>
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 " Filenames:    *.papp *.pxml *.pxsl
 " URL:		http://papp.plan9.de/
 
@@ -14,16 +14,22 @@
 
 " pod is, btw, allowed everywhere, which is actually wrong :(
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " source is basically xml, with included html (this is common) and perl bits
-runtime syntax/xml.vim
+runtime! syntax/xml.vim
+unlet b:current_syntax
 
 if exists("papp_include_html")
    syn include @PAppHtml <sfile>:p:h/html.vim
+   unlet b:current_syntax
 endif
 
 syn include @PAppPerl <sfile>:p:h/perl.vim
+unlet b:current_syntax
 
 if v:version >= 600
    syn cluster xmlFoldCluster add=papp_perl,papp_xperl,papp_phtml,papp_pxml,papp_perlPOD

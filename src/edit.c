@@ -2298,9 +2298,14 @@ ins_compl_next_buf(buf, flag)
 	buf = curbuf;
 #endif
     }
-    else	/* 'b' (just loaded buffers) or 'u' (just non-loaded buffers) */
-	while ((buf = buf->b_next ? buf->b_next : firstbuf) != curbuf
-		&& ((buf->b_ml.ml_mfp == NULL) != (flag == 'u')
+    else
+	/* 'b' (just loaded buffers), 'u' (just non-loaded buffers) or 'S'
+	 * (secret buffers) */
+	while ((buf = buf->b_next != NULL ? buf->b_next : firstbuf) != curbuf
+		&& ((flag == 'S'
+			? !buf->b_p_bst
+			: (buf->b_p_bst || buf->b_ml.ml_mfp == NULL)
+							     != (flag == 'u'))
 		    || buf->b_scanned))
 	    ;
     return buf;
@@ -2371,10 +2376,11 @@ ins_compl_get_exp(ini, dir)
 		last_match_pos = first_match_pos;
 		type = 0;
 	    }
-	    else if (vim_strchr((char_u *)"buw", *e_cpt) != NULL
+	    else if (vim_strchr((char_u *)"buwS", *e_cpt) != NULL
 		 && (ins_buf = ins_compl_next_buf(ins_buf, *e_cpt)) != curbuf)
 	    {
-		if (*e_cpt != 'u')
+		/* Scan a buffer, but not the current one. */
+		if (ins_buf->b_ml.ml_mfp != NULL)   /* loaded buffer */
 		{
 		    started_completion = TRUE;
 		    first_match_pos.col = last_match_pos.col = 0;
@@ -2382,7 +2388,7 @@ ins_compl_get_exp(ini, dir)
 		    last_match_pos.lnum = 0;
 		    type = 0;
 		}
-		else
+		else	/* unloaded buffer, scan like dictionary */
 		{
 		    found_all = TRUE;
 		    if (ins_buf->b_fname == NULL)
@@ -2537,7 +2543,7 @@ ins_compl_get_exp(ini, dir)
 		else if (first_match_pos.lnum == last_match_pos.lnum
 			 && first_match_pos.col == last_match_pos.col)
 		    found_new_match = FAIL;
-		if (!found_new_match)
+		if (found_new_match == FAIL)
 		{
 		    if (ins_buf == curbuf)
 			found_all = TRUE;
@@ -2640,7 +2646,7 @@ ins_compl_get_exp(ini, dir)
 
 	/* break the loop for specialized modes (use 'complete' just for the
 	 * generic ctrl_x_mode == 0) or when we've found a new match */
-	if (ctrl_x_mode || found_new_match)
+	if (ctrl_x_mode || found_new_match != FAIL)
 	    break;
 
 	/* Mark a buffer scanned when it has been scanned completely */
@@ -2655,8 +2661,8 @@ ins_compl_get_exp(ini, dir)
 	found_new_match = FAIL;
 
     i = -1;		/* total of matches, unknown */
-    if (!found_new_match || (ctrl_x_mode != 0 &&
-			     ctrl_x_mode != CTRL_X_WHOLE_LINE))
+    if (found_new_match == FAIL
+	    || (ctrl_x_mode != 0 && ctrl_x_mode != CTRL_X_WHOLE_LINE))
 	i = ins_compl_make_cyclic();
 
     /* If several matches were added (FORWARD) or the search failed and has
@@ -4200,10 +4206,8 @@ cursor_up(n, upd_topline)
 	    if (hasAnyFolding(curwin))
 	{
 	    /*
-	     * The cursor could be inside a closed fold.
 	     * Count each sequence of folded lines as one logical line.
 	     */
-
 	    /* go to the the start of the current fold */
 	    (void)hasFolding(lnum, &lnum, NULL);
 
@@ -4247,6 +4251,10 @@ cursor_down(n, upd_topline)
     if (n > 0)
     {
 	lnum = curwin->w_cursor.lnum;
+#ifdef FEAT_FOLDING
+	/* Move to last line of fold, will fail if it's the end-of-file. */
+	(void)hasFolding(lnum, NULL, &lnum);
+#endif
 	if (lnum >= curbuf->b_ml.ml_line_count)
 	    return FAIL;
 	if (lnum + n >= curbuf->b_ml.ml_line_count)

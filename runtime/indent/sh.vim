@@ -1,7 +1,13 @@
 " Vim indent file
 " Language:	Shell script
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
-" Last Change:	2000 Nov 08
+" Last Change:	2001 Jan 15
+
+" Only load this indent file when no other was loaded.
+if exists("b:did_indent")
+  finish
+endif
+let b:did_indent = 1
 
 setlocal indentexpr=GetShIndent()
 setlocal indentkeys+==else,=elif,=esac,=fi,=done indentkeys-=0#

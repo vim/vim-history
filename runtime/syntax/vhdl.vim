@@ -7,8 +7,10 @@
 " VHSIC Hardware Description Language
 " Very High Scale Integrated Circuit
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " This is not VHDL. I use the C-Preprocessor cpp to generate different binaries
 " from one VHDL source file. Unfortunately there is no preprocessor for VHDL

@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.s.  Last change: 2001 Jan 09
+*usr_28.txt*	For Vim version 6.0t.  Last change: 2001 Jan 21
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -8,11 +8,12 @@
 |28.1|	What is folding?
 |28.2|  Manual folding
 |28.3|  Working with folds
-|28.4|  Folding by indent
-|28.5|  Folding with markers
-|28.6|  Folding by syntax
-|28.7|  Folding by expression
-|28.8|  Which fold method to use?
+|28.4|  Saving and restoring folds
+|28.5|  Folding by indent
+|28.6|  Folding with markers
+|28.7|  Folding by syntax
+|28.8|  Folding by expression
+|28.9|  Which fold method to use?
 
      Next chapter: |usr_27.txt|  Search patterns
  Previous chapter: |usr_29.txt|  Editing programs
@@ -136,7 +137,33 @@ the same buffer, one with folds and one without folds.  Or one with all folds
 closed and one with all folds open.
 
 ==============================================================================
-*28.4*  Folding by indent
+*28.4*  Saving and restoring folds
+
+When you abandon a file (starting to edit another one), the state of the folds
+is lost.  If you come back to the same file later, all manually opened and
+closed folds are back to their default.  When folds have been created
+manually, all folds are gone!  To save the folds use the |:mkview| command: >
+
+	:mkview
+
+This will store the settings and other things that influence the view on the
+file.  You can change what is stored with the 'viewoptions' option.
+When you come back to the same file later, you can load the view again: >
+
+	:loadview
+
+You can store up to ten views on one file.  For example, to save the current
+setup as the third view and load the second view: >
+
+	:mkview 3
+	:loadview 2
+
+Note that when you insert or delete lines the views might become invalid.
+Also check out the 'viewdir' option, which specifies where the views are
+stored.  You might want to delete old views now and then.
+
+==============================================================================
+*28.5*  Folding by indent
 
 Defining folds with |zf| is a lot of work.  If your text is structured by
 giving lower level items a larger indent, you can use the indent folding
@@ -189,7 +216,7 @@ would conflict with the relation between the indent and the fold level.
 More about folding by indent in the reference manual: |fold-indent|
 
 ==============================================================================
-*28.5*  Folding with markers
+*28.6*  Folding with markers
 
 Markers in the text are used to specify the start and end of a fold region.
 This gives precise control over which lines are included in a fold.  The
@@ -234,14 +261,14 @@ another starts you need to add an end marker.
 More about folding with markers in the reference manual: |fold-marker|
 
 ==============================================================================
-*28.6*  Folding by syntax
+*28.7*  Folding by syntax
 
 Syntax items that have the "fold" argument define a fold region.
 
 More about folding by syntax in the reference manual: |fold-syntax|
 
 ==============================================================================
-*28.7*  Folding by expression
+*28.8*  Folding by expression
 
 This is similar to folding by indent, but instead of using the indent of a
 line a user function is called to compute the fold level of a line.  You can
@@ -277,7 +304,7 @@ then edit.
 More about folding by expression in the reference manual: |fold-expr|
 
 ==============================================================================
-*28.8*  Which fold method to use?
+*28.9*  Which fold method to use?
 
 'foldmethod'	'foldlevel'	change text
 "manual"          nesting           no

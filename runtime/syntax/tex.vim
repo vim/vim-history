@@ -19,8 +19,10 @@
 "    equation blocks constructed that way may exhibit syncing problems.
 "    (there's no difference between begin/end patterns)
 
-" Removes any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " (La)TeX keywords only use the letters a-zA-Z
 " but _ is the only one that causes problems.

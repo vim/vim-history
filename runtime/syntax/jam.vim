@@ -3,8 +3,10 @@
 " Maintainer:	Ralf Lemke (ralflemk@t-online.de)
 " Last change:	09-10-2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful jam keywords syn keyword	jamStatement	break call dbms flush global include msg parms proc public receive return send unload vars
 syn keyword	jamConditional	if else

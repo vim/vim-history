@@ -267,13 +267,21 @@
 # endif
 #endif
 
+#ifndef DFLT_VDIR
+# ifdef OS2
+#  define DFLT_VDIR	"$VIM/vimfiles/view"
+# else
+#  define DFLT_VDIR	"$HOME/.vim/view"	/* default for 'viewdir' */
+# endif
+#endif
+
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		""
 
 #ifdef OS2
-# define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
+# define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/vimfiles/after"
 #else
-# define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME"
+# define DFLT_RUNTIMEPATH	"~/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,~/.vim/after"
 #endif
 
 #ifdef OS2

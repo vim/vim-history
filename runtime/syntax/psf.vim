@@ -4,8 +4,10 @@
 " Maintainer:	Rex Barzee <barzee@fc.hp.com>
 " Last change:	27 Nov 2000
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " PSF files are case sensitive
 syn case match

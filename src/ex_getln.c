@@ -1191,11 +1191,20 @@ cmdline_changed:
 		i = 0;
 	    else
 	    {
+		cursor_off();		/* so the user knows we're busy */
+		out_flush();
 		ccline.cmdbuff[ccline.cmdlen] = NUL;
 		++emsg_off;    /* So it doesn't beep if bad expr */
 		i = do_search(NULL, firstc, ccline.cmdbuff, count,
 				      SEARCH_KEEP + SEARCH_OPT + SEARCH_NOOF);
 		--emsg_off;
+		/* if interrupted while searching, behave like it failed */
+		if (got_int)
+		{
+		    (void)vpeekc();	/* remove <C-C> from input stream */
+		    got_int = FALSE;	/* don't abandon the command line */
+		    i = 0;
+		}
 	    }
 	    if (i)
 		highlight_match = TRUE;		/* highlight position */
@@ -2652,13 +2661,14 @@ addstar(fname, len, context)
 
 	    /*
 	     * Don't add a star to ~, ~user, $var or `cmd`.
-	     * ~ would be at the start of the tail.
+	     * ~ would be at the start of the file name, but not the tail.
 	     * $ could be anywhere in the tail.
 	     * ` could be anywhere in the file name.
 	     */
 	    tail = gettail(retval);
-	    if (*tail != '~' && vim_strchr(tail, '$') == NULL
-					   && vim_strchr(retval, '`') == NULL)
+	    if ((*retval != '~' || tail != retval)
+		    && vim_strchr(tail, '$') == NULL
+		    && vim_strchr(retval, '`') == NULL)
 	    {
 #ifdef MSDOS
 		/*
@@ -4018,7 +4028,18 @@ ex_window()
     {
 	/* Set the new command line from the cmdline buffer. */
 	vim_free(ccline.cmdbuff);
-	ccline.cmdbuff = vim_strsave(ml_get_curline());
+	if (cmdwin_result == K_XF1)		/* :qa! typed */
+	{
+	    ccline.cmdbuff = vim_strsave((char_u *)"qa!");
+	    cmdwin_result = CR;
+	}
+	else if (cmdwin_result == K_XF2)	/* :qa typed */
+	{
+	    ccline.cmdbuff = vim_strsave((char_u *)"qa");
+	    cmdwin_result = CR;
+	}
+	else
+	    ccline.cmdbuff = vim_strsave(ml_get_curline());
 	if (ccline.cmdbuff == NULL)
 	    cmdwin_result = ESC;
 	else
@@ -4026,6 +4047,8 @@ ex_window()
 	    ccline.cmdlen = STRLEN(ccline.cmdbuff);
 	    ccline.cmdbufflen = ccline.cmdlen + 1;
 	    ccline.cmdpos = curwin->w_cursor.col;
+	    if (ccline.cmdpos > ccline.cmdlen)
+		ccline.cmdpos = ccline.cmdlen;
 	    if (cmdwin_result == K_IGNORE)
 	    {
 		set_cmdspos_cursor();
@@ -4043,7 +4066,7 @@ ex_window()
 	bp = curbuf;
 	win_goto(old_curwin);
 	win_close(wp, TRUE);
-	close_buffer(NULL, bp, TRUE, TRUE);
+	close_buffer(NULL, bp, DOBUF_WIPE);
 
 	/* Restore window sizes. */
 	win_size_restore(&winsizes);

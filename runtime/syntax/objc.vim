@@ -1,10 +1,16 @@
 " Vim syntax file
 " Language:	Objective C
 " Maintainer:	Valentino Kyriakides <1kyriaki@informatik.uni-hamburg.de>
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
+
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-runtime syntax/c.vim
+runtime! syntax/c.vim
+unlet b:current_syntax
 
 " Objective C extentions follow below
 "

@@ -2,16 +2,19 @@
 " Language:	Microsoft VBScript Web Content (ASP)
 " Maintainer:	Devin Weaver <ktohg@tritarget.com>
 " URL:		http://www.tritarget.com/vim/syntax
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("main_syntax")
   let main_syntax = 'aspvbs'
 endif
 
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 syn cluster htmlPreProc add=AspVBScriptInsideHtmlTags
 

@@ -7,10 +7,14 @@
 "              'let html_wrong_comments=1' in your _vimrc file.
 "     Version: 6.0-1
 
-syntax clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Use all the stuff from the original html syntax file.
-runtime syntax/html.vim
+runtime! syntax/html.vim
+unlet b:current_syntax
 
 " Tag names.
 syn keyword cfTagName contained cfabort cfapplet cfapplication cfassociate

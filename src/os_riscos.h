@@ -48,6 +48,10 @@
 # define DFLT_DIR	"<Wimp$ScrapDir>.,."	/* default for 'directory' */
 #endif
 
+#ifndef DFLT_VDIR
+# define DFLT_VDIR	"Choices:vimfiles/view"	/* default for 'viewdir' */
+#endif
+
 #ifndef TERMCAPFILE
 # define TERMCAPFILE	"Vim:TermCap"
 #endif
@@ -123,7 +127,7 @@
 
 #define DFLT_ERRORFILE		"errors/vim"
 #define DFLT_MAKEEF		"<Wimp$ScrapDir>.vim##/err"
-#define DFLT_RUNTIMEPATH	"Choices:vimfiles,$VIMRUNTIME"
+#define DFLT_RUNTIMEPATH	"Choices:vimfiles,$VIMRUNTIME,Choices:vimfiles/after"
 
 /*
  * RISC PCs have plenty of memory, use large buffers

@@ -2,11 +2,14 @@
 " Language:     PPWizard (preprocessor by Dennis Bareis)
 " Maintainer:   Stefan Schwarzer <s.schwarzer@ndh.net>
 " URL:          http://www.ndh.net/home/sschwarzer/download/ppwiz.vim
-" Last Change:  2000 Dec 10
+" Last Change:  2001 Jan 15
 " Filename:     ppwiz.vim
 
-" Remove old syntax stuff
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 if !exists("ppwiz_highlight_defs")

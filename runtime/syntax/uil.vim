@@ -1,9 +1,12 @@
 " Vim syntax file
 " Language:	Motif UIL (User Interface Language)
 " Maintainer:	Thomas Koehler <jean-luc@picard.franken.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " A bunch of useful keywords
 syn keyword uilType	arguments	callbacks	color

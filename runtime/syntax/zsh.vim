@@ -2,10 +2,12 @@
 " Language:	Z shell (zsh)
 " Maintainer:	Felix von Leitner <leitner@math.fu-berlin.de>
 " Heavily based on sh.vim by Lennart Schultz
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn region	zshSinglequote	start=+'+ skip=+\\'+ end=+'+
 " A bunch of useful zsh keywords

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Virata Configuration Script
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2000 Dec 10
+" Last Change:	2001 Jan 15
 " Vim URL:	http://www.vim.org/lang.html
 " Virata URL:	http://www.virata.com/
 
@@ -11,9 +11,12 @@
 "                        2) The word "Virata" in the first 5 lines
 
 
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " Setup Syntax:
-"  Clear old syntax settings
-syn clear
 "  Virata syntax is case insensetive (mostly)
 syn case ignore
 

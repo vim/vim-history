@@ -1514,10 +1514,6 @@ mch_FullName(
 #ifdef __BORLANDC__		/* Only Borland C++ has this */
     if (_fullpath((char *)buf, (char *)fname, len - 1) == NULL)
 	return FAIL;
-
-    /* Append a backslash after a directory name, unless it's already there */
-    if (mch_isdir(buf))
-	add_pathsep(buf);
     return OK;
 #else			/* almost the same as mch_FullName() in os_unix.c */
     {
@@ -2053,7 +2049,7 @@ static int _cdecl pstrcmp();  /* BCC does not like the types */
 pstrcmp(a, b)
     char_u **a, **b;
 {
-    return (stricmp((char *)*a, (char *)*b));
+    return (pathcmp((char *)*a, (char *)*b));
 }
 
     int

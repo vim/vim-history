@@ -169,6 +169,18 @@ static int myisxdigit(c) int c; { return isxdigit(c); }
  *                   |       |                ^       ^
  *                   |       +----------------+       |
  *                   +--------------------------------+
+ *
+ *                                                    +---------+
+ *                                                    |         V
+ * \z[abc]	BRANCH BRANCH  a  BRANCH  b  BRANCH  c  BRANCH  NOTHING --> END
+ *                   |      |          |          |     ^                   ^
+ *                   |      |          |          +-----+                   |
+ *                   |      |          +----------------+                   |
+ *                   |      +---------------------------+                   |
+ *                   +------------------------------------------------------+
+ *
+ * They all start with a BRANCH for "\|" alternaties, even when there is only
+ * one alternative.
  */
 
 /*
@@ -246,16 +258,23 @@ static int myisxdigit(c) int c; { return isxdigit(c); }
 #define BACKREF		100 /* -109 node Match same string again \1-\9 */
 
 #ifdef FEAT_SYN_HL
-# define ZOPEN		110 /* -119 no	 mark this point in input as start of
+# define ZOPEN		110 /* -119 no	 Mark this point in input as start of
 				 *	 \z( subexpr. */
 # define ZCLOSE		120 /* -129 no	 Analogous to ZOPEN. */
-# define ZREF		130 /* -139 node Match external submatch \z\1-\z\9 */
+# define ZREF		130 /* -139 node Match external submatch \z1-\z9 */
 #endif
 
 #define BRACE_COMPLEX	140 /* -149  node Match nodes between m & n times */
-#define MULTIBYTECODE	200
 
-#define Magic(x)    ((x) | ('\\' << 8))
+#define NOPEN		150	/* no	Mark this point in input as start of
+					\%( subexpr. */
+#define NCLOSE		151	/* no   Analogous to NOPEN. */
+
+#define MULTIBYTECODE	200	/* no	Match a single multi-byte character */
+#define RE_BOF		201	/* no	Match "" at beginning of file. */
+#define RE_EOF		202	/* no	Match "" at end of file. */
+
+#define Magic(x)  ((x) | ('\\' << 8))
 
 /*
  * The first byte of the regexp internal "program" is actually this magic
@@ -621,17 +640,19 @@ static int	brace_count[10]; /* Current counts for complex brace repeats */
 static int	had_eol;	/* TRUE when EOL found by vim_regcomp() */
 #endif
 static int	reg_magic;	/* p_magic passed to vim_regexec() */
+static int	one_exactly = FALSE;	/* only do one char for EXACTLY */
 
 /*
  * META contains all characters that may be magic, except '^' and '$'.
  */
 
-static char_u META[] = ".[()|&=+*@<>_aAcCdDfFhHiIkKlLmMnoOpPsSuUwWxXz~123456789{";
+static char_u META[] = "%&()*+.123456789<=>@ACDFHIKLMOPSUWX[_acdfhiklmnopsuwxz{|~";
 
 /* arguments for reg() */
 #define REG_NOPAREN	0	/* toplevel reg() */
 #define REG_PAREN	1	/* \(\) */
 #define REG_ZPAREN	2	/* \z(\) */
+#define REG_NPAREN	3	/* \%(\) */
 
 /*
  * Forward declarations for vim_regcomp()'s friends.
@@ -660,6 +681,7 @@ static void	regtail __ARGS((char_u *, char_u *));
 static void	regoptail __ARGS((char_u *, char_u *));
 #ifdef FEAT_MBYTE
 static int	re_ismultibytecode __ARGS((int c));
+static char_u	*mbyte_exactly __ARGS((int *flagp));
 
 /*
  * Is chr multi-byte? If no then return 0 else return leadbyte
@@ -674,6 +696,40 @@ re_ismultibytecode(c)
 	return 0;
     lead = ((unsigned)c >> 8) & 0xff;
     return MB_BYTE2LEN(lead) > 1 ? lead : 0;
+}
+
+/*
+ * Check for a multi-byte character and emit it when there is one.
+ * Returns NULL if nothing emitted, or pointer to emitted code.
+ */
+    static char_u *
+mbyte_exactly(flagp)
+    int		*flagp;
+{
+    int		len;
+    char_u	*ret;
+    int		chr;
+
+    if (cc_utf8 && (len = utf_byte2len(peekchr())) > 1)
+    {
+	ret = regnode(MULTIBYTECODE);
+	while (len--)
+	    regc(getchr());
+	*flagp |= HASWIDTH;	/* SIMPLE? */
+	return ret;
+    }
+
+    chr = re_ismultibytecode(peekchr());
+    if (chr)
+    {
+	ret = regnode(MULTIBYTECODE);
+	regc(chr);
+	regc(peekchr() & 0xff);
+	skipchr();
+	*flagp |= HASWIDTH;	/* SIMPLE? */
+	return ret;
+    }
+    return NULL;
 }
 #endif
 
@@ -894,7 +950,7 @@ vim_regcomp_had_eol()
  */
     static char_u *
 reg(paren, flagp)
-    int		paren;		/* REG_NOPAREN, REG_PAREN or REG_ZPAREN */
+    int		paren;	/* REG_NOPAREN, REG_PAREN, REG_NPAREN or REG_ZPAREN */
     int		*flagp;
 {
     char_u	*ret;
@@ -905,11 +961,10 @@ reg(paren, flagp)
 
     *flagp = HASWIDTH;		/* Tentatively. */
 
-    /* Make an MOPEN node, if parenthesized. */
 #ifdef FEAT_SYN_HL
-    /* Or maybe a ZOPEN node... */
     if (paren == REG_ZPAREN)
     {
+	/* Make a ZOPEN node. */
 	if (regnzpar >= NSUBEXP)
 	    EMSG_RET_NULL(_("Too many \\z("));
 	parno = regnzpar;
@@ -920,11 +975,17 @@ reg(paren, flagp)
 #endif
 	if (paren == REG_PAREN)
     {
+	/* Make a MOPEN node. */
 	if (regnpar >= NSUBEXP)
 	    EMSG_RET_NULL(_("Too many \\("));
 	parno = regnpar;
 	++regnpar;
 	ret = regnode(MOPEN + parno);
+    }
+    else if (paren == REG_NPAREN)
+    {
+	/* Make a NOPEN node. */
+	ret = regnode(NOPEN);
     }
     else
 	ret = NULL;
@@ -960,7 +1021,8 @@ reg(paren, flagp)
 #ifdef FEAT_SYN_HL
 	    paren == REG_ZPAREN ? ZCLOSE + parno :
 #endif
-	    paren == REG_PAREN ? MCLOSE + parno : END);
+	    paren == REG_PAREN ? MCLOSE + parno :
+	    paren == REG_NPAREN ? NCLOSE : END);
     regtail(ret, ender);
 
     /* Hook the tails of the branches to the closing node. */
@@ -975,6 +1037,9 @@ reg(paren, flagp)
 	    EMSG_RET_NULL(_("Unmatched \\z("))
 	else
 #endif
+	    if (paren == REG_NPAREN)
+	    EMSG_RET_NULL(_("Unmatched \\%("))
+	else
 	    EMSG_RET_NULL(_("Unmatched \\("))
     }
     else if (paren == REG_NOPAREN && peekchr() != NUL)
@@ -1230,7 +1295,7 @@ regpiece(flagp)
  *
  * Optimization:  gobbles an entire sequence of ordinary characters so that
  * it can turn them into a single node, which is smaller to store and
- * faster to run.
+ * faster to run.  Don't do this when one_exactly is set.
  */
     static char_u *
 regatom(flagp)
@@ -1449,7 +1514,90 @@ regatom(flagp)
 		case 'e': ret = regnode(MCLOSE + 0);
 			  break;
 
-		default:  EMSG_RET_NULL(_("unattached \\z"));
+		default:  EMSG_RET_NULL(_("Invalid character after \\z"));
+	    }
+	}
+	break;
+
+      case Magic('%'):
+	{
+	    c = getchr();
+	    switch (c)
+	    {
+		/* not-numbered () */
+		case '(':
+		case Magic('('):
+		    ret = reg(REG_NPAREN, &flags);
+		    if (ret == NULL)
+			return NULL;
+		    *flagp |= flags & (HASWIDTH | SPSTART | HASNL);
+		    break;
+
+		/* Catch \%^ and \%$ regardless of where they appear in the
+		 * pattern -- regardless of whether or not it makes sense. */
+		case '^':
+		case Magic('^'):
+		    ret = regnode(RE_BOF);
+		    break;
+
+		case '$':
+		case Magic('$'):
+		    ret = regnode(RE_EOF);
+		    break;
+
+		/* \%[abc]: Emit as a list of branches, all ending at the last
+		 * branch which matches nothing. */
+		case '[':
+		case Magic('['):
+			  {
+			      char_u	*lastbranch;
+			      char_u	*lastnode = NULL;
+			      char_u	*br;
+
+			      ret = NULL;
+			      while ((c = getchr()) != ']')
+			      {
+				  if (c == NUL)
+				      EMSG_RET_NULL(_("Missing ] after \\%["));
+				  br = regnode(BRANCH);
+				  if (ret == NULL)
+				      ret = br;
+				  else
+				      regtail(lastnode, br);
+
+				  ungetchr();
+				  one_exactly = TRUE;
+				  lastnode = regatom(flagp);
+				  one_exactly = FALSE;
+				  if (lastnode == NULL)
+				      return NULL;
+			      }
+			      if (ret == NULL)
+				  EMSG_RET_NULL(_("Empty \\%[]"));
+			      lastbranch = regnode(BRANCH);
+			      br = regnode(NOTHING);
+			      if (ret != JUST_CALC_SIZE)
+			      {
+				  regtail(lastnode, br);
+				  regtail(lastbranch, br);
+				  /* connect all branches to the NOTHING
+				   * branch at the end */
+				  for (br = ret; br != lastnode; )
+				  {
+				      if (OP(br) == BRANCH)
+				      {
+					  regtail(br, lastbranch);
+					  br = OPERAND(br);
+				      }
+				      else
+					  br = regnext(br);
+				  }
+			      }
+			      *flagp &= ~HASWIDTH;
+			      break;
+			  }
+
+		default:  EMSG_RET_NULL(_("Invalid character after \\%"));
 	    }
 	}
 	break;
@@ -1635,30 +1783,16 @@ collection:
 
       default:
 	{
-	    int		    len;
-	    int		    chr;
+	    int		len;
+	    int		chr;
 
 	    ungetchr();
 #ifdef FEAT_MBYTE
-	    if (cc_utf8 && (len = utf_byte2len(peekchr())) > 1)
-	    {
-		ret = regnode(MULTIBYTECODE);
-		while (len--)
-		    regc(getchr());
-		*flagp |= HASWIDTH;	/* SIMPLE? */
+	    /* Each multi-byte character is handled as a separate atom, to be
+	     * able to use a multi after it. */
+	    ret = mbyte_exactly(flagp);
+	    if (ret != NULL)
 		break;
-	    }
-
-	    chr = re_ismultibytecode(peekchr());
-	    if (chr)
-	    {
-		ret = regnode(MULTIBYTECODE);
-		regc(chr);
-		regc(peekchr() & 0xff);
-		skipchr();
-		*flagp |= HASWIDTH;	/* SIMPLE? */
-		break;
-	    }
 #endif
 
 	    len = 0;
@@ -1667,7 +1801,8 @@ collection:
 	     * Always take at least one character, for '[' without matching
 	     * ']'.
 	     */
-	    while ((chr = peekchr()) != NUL && (chr < Magic(0) || len == 0))
+	    while ((chr = peekchr()) != NUL
+		    && ((chr < Magic(0) && !one_exactly) || len == 0))
 	    {
 		regc(chr);
 		skipchr();
@@ -1683,7 +1818,7 @@ collection:
 	     */
 	    if (len > 1 && re_ismult(chr))
 	    {
-		unregc();	    /* Back off of *+!={ operand */
+		unregc();	    /* Back off of *+!={ operand  (})*/
 		ungetchr();	    /* and put it back for next time */
 		--len;
 	    }
@@ -1828,12 +1963,12 @@ reginsert_limits(op, minval, maxval, opnd)
  */
     static void
 regtail(p, val)
-    char_u	   *p;
-    char_u	   *val;
+    char_u	*p;
+    char_u	*val;
 {
-    char_u  *scan;
-    char_u  *temp;
-    int	    offset;
+    char_u	*scan;
+    char_u	*temp;
+    int		offset;
 
     if (p == JUST_CALC_SIZE)
 	return;
@@ -1857,12 +1992,12 @@ regtail(p, val)
 }
 
 /*
- * regoptail - regtail on operand of first argument; nop if operandless
+ * regoptail - regtail on item after a BRANCH; nop if none
  */
     static void
 regoptail(p, val)
-    char_u	   *p;
-    char_u	   *val;
+    char_u	*p;
+    char_u	*val;
 {
     /* When op is neither BRANCH nor BRACE_COMPLEX0-9, it is "operandless" */
     if (p == NULL || p == JUST_CALC_SIZE
@@ -2341,7 +2476,10 @@ vim_regexec_both(line, col)
     if (SETJMP(lc_jump_env) != 0)
     {
 	mch_didjmp();
-	EMSG(_("Crash intercepted; regexp too complex?"));
+#ifdef SIGHASARG
+	if (lc_signal != SIGINT)
+#endif
+	    EMSG(_("Crash intercepted; regexp too complex?"));
 	retval = 0L;
 	goto theend;
     }
@@ -2641,7 +2779,6 @@ regmatch(scan)
 {
     char_u	*next;		/* Next node. */
     int		op;
-    static int	break_count = 0;
 
 #ifdef HAVE_GETRLIMIT
     /* Check if we are running out of stack space.  Could be caused by
@@ -2654,10 +2791,8 @@ regmatch(scan)
 #endif
 
     /* Some patterns my cause a long time to match, even though they are not
-     * illegal.  E.g., "\([a-z]\+\)\+Q".  Allow breaking them with CTRL-C.
-     * But don't check too often, that could be slow. */
-    if ((++break_count & 0xfff) == 0)
-	ui_breakcheck();
+     * illegal.  E.g., "\([a-z]\+\)\+Q".  Allow breaking them with CTRL-C. */
+    fast_breakcheck();
 
 #ifdef DEBUG
     if (scan != NULL && regnarrate)
@@ -2713,6 +2848,20 @@ regmatch(scan)
 
 	  case EOL:
 	    if (*reginput != NUL)
+		return FALSE;
+	    break;
+
+	  case RE_BOF:
+	    /* Passing -1 to the getline() function provided for the search
+	     * should always return NULL if the current line is the first
+	     * line of the file. */
+	    if (reglnum != 0 || reginput != regline
+			|| (REG_MULTI && myreg_getline((linenr_t)-1) != NULL))
+		return FALSE;
+	    break;
+
+	  case RE_EOF:
+	    if (reglnum != reg_maxline || *reginput != NUL)
 		return FALSE;
 	    break;
 
@@ -3027,6 +3176,13 @@ regmatch(scan)
 	    }
 	    /* break; Not Reached */
 
+	  case NOPEN:	    /* \%( */
+	  case NCLOSE:	    /* \) after \%( */
+		if (regmatch(next))
+		    return TRUE;
+		return FALSE;
+		/* break; Not Reached */
+
 #ifdef FEAT_SYN_HL
 	  case ZOPEN + 1:
 	  case ZOPEN + 2:
@@ -3081,7 +3237,7 @@ regmatch(scan)
 	    /* break; Not Reached */
 
 #ifdef FEAT_SYN_HL
-	  case ZCLOSE + 1:
+	  case ZCLOSE + 1:  /* \) after \z( */
 	  case ZCLOSE + 2:
 	  case ZCLOSE + 3:
 	  case ZCLOSE + 4:
@@ -3206,6 +3362,8 @@ regmatch(scan)
 				reg_nextline();
 				++clnum;
 				ccol = 0;
+				if (got_int)
+				    return FALSE;
 			    }
 
 			    /* found a match!  Note that regline may now point
@@ -3409,6 +3567,8 @@ regmatch(scan)
 		 * maxval!).
 		 */
 		count = regrepeat(OPERAND(scan), maxval);
+		if (got_int)
+		    return FALSE;
 		if (minval <= maxval)
 		{
 		    /* Range is the normal way around, use longest match */
@@ -3431,6 +3591,9 @@ regmatch(scan)
 			    --reglnum;
 			    regline = myreg_getline(reglnum);
 			    reginput = regline + STRLEN(regline);
+			    fast_breakcheck();
+			    if (got_int)
+				return FALSE;
 			}
 			else
 			    --reginput;
@@ -3458,6 +3621,8 @@ regmatch(scan)
 					 || regrepeat(OPERAND(scan), 1L) == 0)
 			    break;
 			++count;
+			if (got_int)
+			    return FALSE;
 		    }
 		}
 		return FALSE;
@@ -3634,6 +3799,8 @@ regrepeat(p, maxcount)
 	    ++count;		/* count the line-break */
 	    reg_nextline();
 	    scan = reginput;
+	    if (got_int)
+		break;
 	}
 	break;
 
@@ -3653,6 +3820,8 @@ regrepeat(p, maxcount)
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 	    else
 		break;
@@ -3676,6 +3845,8 @@ regrepeat(p, maxcount)
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 	    else
 		break;
@@ -3699,6 +3870,8 @@ regrepeat(p, maxcount)
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 	    else
 		break;
@@ -3720,6 +3893,8 @@ regrepeat(p, maxcount)
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 	    else if (ptr2cells(scan) == 1 && (testval || !isdigit(*scan)))
 		++scan;
@@ -3741,6 +3916,8 @@ do_class:
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 	    else if ((class_tab[*scan] & mask) == testval)
 		++scan;
@@ -3860,6 +4037,8 @@ do_class:
 		    break;
 		reg_nextline();
 		scan = reginput;
+		if (got_int)
+		    break;
 	    }
 #ifdef FEAT_MBYTE
 	    else if (cc_dbcs && mb_ptr2len_check(scan) > 1)
@@ -3885,6 +4064,8 @@ do_class:
 	    count++;
 	    reg_nextline();
 	    scan = reginput;
+	    if (got_int)
+		break;
 	}
 	break;
 
@@ -4011,6 +4192,7 @@ reg_nextline()
 {
     regline = myreg_getline(++reglnum);
     reginput = regline;
+    fast_breakcheck();
 }
 
 /*
@@ -4180,6 +4362,12 @@ regprop(op)
 	break;
       case EOL:
 	p = "EOL";
+	break;
+      case RE_BOF:
+	p = "BOF";
+	break;
+      case RE_EOF:
+	p = "EOF";
 	break;
       case BOW:
 	p = "BOW";
@@ -4417,6 +4605,12 @@ regprop(op)
       case BACKREF + 9:
 	sprintf(buf + STRLEN(buf), "BACKREF%d", OP(op) - BACKREF);
 	p = NULL;
+	break;
+      case NOPEN:
+	p = "NOPEN";
+	break;
+      case NCLOSE:
+	p = "NCLOSE";
 	break;
 #ifdef FEAT_SYN_HL
       case ZOPEN + 1:

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.s.  Last change: 2000 Dec 20
+*windows.txt*   For Vim version 6.0t.  Last change: 2001 Jan 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -592,7 +592,8 @@ can also get to them with the buffer list commands, like ":bnext".
 				:bnext
 				:{cmd}
 				etc.
-<			When the current file can't be |abandon|ed and the [!]
+<			Secret buffers are skipped.
+			When the current file can't be |abandon|ed and the [!]
 			is not present, the command fails.
 			When an error is detected on one buffer, further
 			buffers will not be visited.
@@ -769,23 +770,34 @@ get an error message and Vim will make that buffer the current buffer.  You
 can then decide to write this buffer (":wq") or quit without writing (":q!").
 Be careful: there may be more hidden, modified buffers!
 
-:files						*:files*
-:buffers					*:buffers* *:ls*
-:ls		Show all buffers.  Example: >
+A buffer can also be secret.  This means it exists, but is often skipped when
+using the list of buffers.   Most buffer list commands will ignore secret
+buffers.  |secret-buffer|
+
+
+:files[!]					*:files*
+:buffers[!]					*:buffers* *:ls*
+:ls[!]		Show all buffers.  Example: >
 
 			1 #h  "/test/text"		line 1
-			2  -  "asdf"			line 0
+			2s -  "asdf"			line 0
 			3 % + "version.c"		line 1
 <
+		Only when the [!] is included will secret buffers be listed.
+
 		Each buffer has a unique number.  That number will not change,
 		so you can always go to a specific buffer with ":buffer N" or
 		"N CTRL-^", where N is the buffer number.
 
-		'-' indicates a buffer that is not loaded.  'h' indicates a
-		hidden buffer: It is loaded, but currently not displayed in a
-		window.  '%' indicates the buffer in the current window.  '#'
-		indicates the alternate buffer for ":e #" or CTRL-^.  '+'
-		indicates a modified buffer.
+		Indicators:
+		s     a secret buffer (only displayed when [!] is used)
+			|secret-buffer|
+		 %    the buffer in the current window
+		 #    the alternate buffer for ":e #" or CTRL-^
+		  -   a buffer that is not loaded
+		  h   a hidden buffer: It is loaded, but currently not
+			  displayed in a window |hidden-buffer|
+		   +  a modified buffer
 
 						*:bad* *:badd*
 :bad[d]	[+lnum] {fname}
@@ -794,25 +806,17 @@ Be careful: there may be more hidden, modified buffers!
 		line when the buffer is first entered. Note that other
 		commands after the + will be ignored.
 
-:[N]bd[elete]					*:bd* *:bdel* *:bdelete*
-:bd[elete] [N]
+:[N]bd[elete][!]				*:bd* *:bdel* *:bdelete*
+:bd[elete][!] [N]
 		Unload buffer [N] (default: current buffer) and delete it from
-		the buffer list.  If the buffer was changed, this fails.  The
-		file remains unaffected.  Any windows for this buffer are
+		the buffer list.  If the buffer was changed, this fails,
+		unless when [!] is specified, in which case changes are lost.
+		The file remains unaffected.  Any windows for this buffer are
 		closed.  If buffer [N] is the current buffer, another buffer
 		will be displayed instead.  This is the most recent entry in
 		the jump list that points into a loaded buffer.
-
-:[N]bdelete!
-:bdelete! [N]
-		Unload buffer [N] (default: current buffer) and delete it from
-		the buffer list.  If the buffer was changed the changes are
-		lost.  The file remains unaffected.  Any windows for this
-		buffer are closed.  If buffer [N] is the current buffer,
-		another buffer will be displayed instead.  This is the most
-		recent entry in the jump list that points into a loaded
-		buffer.
-
+		Actually, the buffer isn't completely deleted, it is made a
+		secret buffer by setting the 'bufsecret' option.
 
 :bdelete[!] {bufname}
 		Like ":bdelete[!] [N]", but buffer given by name.  Note that a
@@ -820,34 +824,34 @@ Be careful: there may be more hidden, modified buffers!
 		name; use the buffer number instead.  Insert a backslash
 		before a space in a buffer name.
 
-:N,Mbdelete[!]	do ":bdelete[!]" for all buffers in the range N to M
-		(inclusive).
-
 :bdelete[!] N1 N2 ...
-		do ":bdelete[!]" for buffer N1, N2, etc.  The arguments can be
+		Do ":bdelete[!]" for buffer N1, N2, etc.  The arguments can be
 		buffer numbers or buffer names (but not buffer names that are
 		a number).  Insert a backslash before a space in a buffer
 		name.
 
-:[N]bun[load]					*:bun* *:bunload*
-:bun[load] [N]
+:N,Mbdelete[!]	Do ":bdelete[!]" for all buffers in the range N to M
+		(inclusive).
+
+:[N]bw[ipeout][!]				*:bw* *:bwipe* *:bwipeout*
+:bw[ipeout][!] {bufname}
+:N,Mbw[ipeout][!]
+:bw[ipeout][!] N1 N2 ...
+		Like ":bdelete", but really delete the buffer.  All marks in
+		this buffer become invalid, option settings are lost, etc.
+		Don't use this unless you know what you are doing.
+
+:[N]bun[load][!]					*:bun* *:bunload*
+:bun[load][!] [N]
 		Unload buffer [N] (default: current buffer).  The memory
 		allocated for this buffer will be freed.  The buffer remains
-		in the buffer list.  If the buffer was changed, this fails.
+		in the buffer list.
+		If the buffer was changed, this fails, unless when [!] is
+		specified, in which case the changes are lost.
 		Any windows for this buffer are closed.  If buffer [N] is the
 		current buffer, another buffer will be displayed instead.
 		This is the most recent entry in the jump list that points
 		into a loaded buffer.
-
-:[N]bunload!
-:bunload! [N]
-		Unload buffer [N] (default: current buffer).  The memory
-		allocated for this buffer will be freed.  The buffer remains
-		in the buffer list.  If the buffer was changed, the changes
-		are lost.  Any windows for this buffer are closed.  If buffer
-		[N] is the current buffer, another buffer will be displayed
-		instead.  This is the most recent entry in the jump list that
-		points into a loaded buffer.
 
 :bunload[!] {bufname}
 		Like ":bunload[!] [N]", but buffer given by name.  Note that a
@@ -855,11 +859,11 @@ Be careful: there may be more hidden, modified buffers!
 		name; use the buffer number instead.  Insert a backslash
 		before a space in a buffer name.
 
-:N,Mbunload[!]	do ":bunload[!]" for all buffers in the range N to M
+:N,Mbunload[!]	Do ":bunload[!]" for all buffers in the range N to M
 		(inclusive).
 
 :bunload[!] N1 N2 ...
-		do ":bunload[!]" for buffer N1, N2, etc.  The arguments can be
+		Do ":bunload[!]" for buffer N1, N2, etc.  The arguments can be
 		buffer numbers or buffer names (but not buffer names that are
 		a number).  Insert a backslash before a space in a buffer
 		name.
@@ -867,26 +871,31 @@ Be careful: there may be more hidden, modified buffers!
 :[N]b[uffer][!] [N]					*:b* *:bu* *:buffer*
 		Edit buffer [N] from the buffer list.  If [N] is not given,
 		the current buffer remains being edited.  See |:buffer-!| for
-		[!].
+		[!].  This will also edit a secret buffer, without resetting
+		the 'secret' flag.
 
 :[N]b[uffer][!] {filename}
 		Edit buffer for {filename} from the buffer list.  See
-		|:buffer-!| for [!].
+		|:buffer-!| for [!].  This will also edit a secret buffer,
+		without resetting the 'secret' flag.
 
 :[N]sb[uffer] [N]					*:sb* *:sbuffer*
 		Split window and edit buffer [N] from the buffer list.  If [N]
 		is not given, the current buffer is edited.  Respects the
-		"useopen" setting of 'switchbuf' when splitting.
+		"useopen" setting of 'switchbuf' when splitting.  This will
+		also edit a secret buffer, without resetting the 'secret'
+		flag.
 
 :[N]sb[uffer] {filename}
 		Split window and edit buffer for {filename} from the buffer
-		list.
+		list.  This will also edit a secret buffer, without resetting
+		the 'secret' flag.
 
 							*:bn* *:bnext*
 :[N]bn[ext][!] [N]
 		Go to [N]th next buffer in buffer list.  [N] defaults to one.
-		Wraps around the end of the buffer list.  See |:buffer-!| for
-		[!].
+		Wraps around the end of the buffer list.  Skips secret
+		buffers.  See |:buffer-!| for [!].
 		If you are in a help buffer, this takes you to the next help
 		buffer (if there is one). Similarly, if you are in a normal
 		(non-help) buffer, this takes you to the next normal buffer.
@@ -897,51 +906,60 @@ Be careful: there may be more hidden, modified buffers!
 							*:sbn* *:sbnext*
 :[N]sbn[ext] [N]
 		Split window and go to [N]th next buffer in buffer list.
-		Wraps around the end of the buffer list. Uses 'switchbuf'
+		Wraps around the end of the buffer list.  Skips secret
+		buffers.  Uses 'switchbuf'
 
 :[N]bN[ext][!] [N]			*:bN* *:bNext* *:bp* *:bprevious*
 :[N]bp[revious][!] [N]
 		Go to [N]th previous buffer in buffer list.  [N] defaults to
-		one.  Wraps around the start of the buffer list.  See
-		|:buffer-!| for [!] and 'switchbuf'.
+		one.  Wraps around the start of the buffer list.  Skips secret
+		buffers.  See |:buffer-!| for [!] and 'switchbuf'.
 
 :[N]sbN[ext] [N]			*:sbN* *:sbNext* *:sbp* *:sbprevious*
 :[N]sbp[revious] [N]
 		Split window and go to [N]th previous buffer in buffer list.
-		Wraps around the start of the buffer list. Uses 'switchbuf'.
+		Wraps around the start of the buffer list.  Skips secret
+		buffers.  Uses 'switchbuf'.
 
 							*:br* *:brewind*
-:br[ewind][!]	Go to first buffer in buffer list.  See |:buffer-!| for [!].
+:br[ewind][!]	Go to first buffer in buffer list that is not secret (unless
+		there are only secret buffers).  See |:buffer-!| for [!].
 
 							*:bf* *:bfirst*
 :bf[irst	Same as ":brewind".
 
 							*:sbr* *:sbrewind*
-:sbr[ewind]	Split window and go to first buffer in buffer list.
-		Respects 'switchbuf' option.
+:sbr[ewind]	Split window and go to first buffer in buffer list that is not
+		secret (unless there are only secret buffers).  Respects
+		'switchbuf' option.
 
 							*:sbf* *:sbfirst*
 :sbf[irst]	Same as ":sbrewind".
 
 							*:bl* *:blast*
-:bl[ast][!]	Go to last buffer in buffer list.  See |:buffer-!| for [!].
+:bl[ast][!]	Go to last buffer in buffer list that is not secret (unless
+		there are only secret buffers).  See |:buffer-!| for [!].
 
 							*:sbl* *:sblast*
-:sbl[ast]	Split window and go to last buffer in buffer list.
-		Respects 'switchbuf' option.
+:sbl[ast]	Split window and go to last buffer in buffer list that is not
+		secret (unless there are only secret buffers).  Respects
+		'switchbuf' option.
 
 :[N]bm[odified][!] [N]					*:bm* *:bmodified*
 		Go to [N]th next modified buffer in buffer list.
+		Note: this command also finds secret buffers.
 
 :[N]sbm[odified] [N]					*:sbm* *:sbmodified*
 		Split window and go to [N]th next modified buffer in buffer
 		list.  Respects 'switchbuf' option.
+		Note: this command also finds secret buffers.
 
 :[N]unh[ide] [N]			*:unh* *:unhide* *:sun* *:sunhide*
 :[N]sun[hide] [N]
 		Rearrange the screen to open one window for each loaded buffer
 		in the buffer list.  When a count is given, this is the
 		maximum number of windows to open.
+		Does not open a window for a secret buffer.
 
 :[N]ba[ll] [N]					*:ba* *:ball* *:sba* *:sball*
 :[N]sba[ll] [N]	Rearrange the screen to open one window for each buffer in
@@ -949,6 +967,7 @@ Be careful: there may be more hidden, modified buffers!
 		number of windows to open.  Buf/Win Enter/Leave autocommands
 		are not executed for the new windows here, that's only done
 		when they are really entered.
+		Does not open a window for a secret buffer.
 
 Note: All the commands above that start editing another buffer, keep the
 'readonly' flag as it was.  This differs from the ":edit" command, which sets
@@ -963,6 +982,7 @@ purposes.  A few options can be set to change the behavior of a buffer:
 			in a window.
 	'buftype'	what kind of a buffer this is
 	'swapfile'	whether the buffer will have a swap file
+	'bufsecret'	buffer doesn't show up in the buffer list
 
 A few useful kinds of a buffer:
 
@@ -972,7 +992,8 @@ quickfix	Used to contain the error list.  See |:cwindow|.  This command
 
 help		Contains a help file.  Will only be created with the |:help|
 		command.  The flag that indicates a help buffer is internal
-		and can't be changed.
+		and can't be changed.  The 'bufsecret' option will also be set
+		for a help buffer.
 
 directory	Displays directory contents.  Used by the |file-explorer|
 		plugin.  The buffer is created with these settings: >
@@ -990,5 +1011,12 @@ scratch		Contains text that can be discarded at any time.  It is kept
 			:set noswapfile
 <		The buffer name can be used to identify the buffer.
 
+						*secret-buffer* *James-Bond*
+secret		The buffer is not used for normal editing, but to show a help
+		file, remember a file name, option settings or marks.  The
+		":bdelete" command will also set this option, thus it doesn't
+		completely delete the buffer.  Settings: >
+			:set bufsecret
+<
 
  vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":

@@ -3,8 +3,10 @@
 " Maintainer:	stephan@a2f-services.fr
 " Last Change:	08/19/1999
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn case ignore
 

@@ -13,8 +13,10 @@
 
 " TODO: render underline, italic, bold
 
-" clear any unwanted syntax defs
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " case on (all controls must be lower case)
 syn case match

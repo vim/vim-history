@@ -3,8 +3,10 @@
 " Maintainer:	Preben "Peppe" Guldberg (c928400@student.dtu.dk)
 " Last Change:	Thu Apr  2 14:02:43 1998
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn match slrnscComment		"%.*$"
 syn match slrnscSectionCom	".].*"lc=2

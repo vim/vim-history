@@ -2,14 +2,17 @@
 " Language:	ecd (Embedix Component Description) files
 " Maintainer:	John Beppu <beppu@lineo.com>
 " URL:		none
-" Last Change:	2000 Dec 10
+" Last Change:	2001 Jan 15
 
 " An ECD file contains meta-data for packages in the Embedix Linux distro.
 " This syntax file is derived from apachestyle.vim 
 "   by Christian Hammers <ch@westend.com>
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 syn case ignore
 
 " specials

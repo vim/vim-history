@@ -4,8 +4,10 @@
 " URL:		http://aquila.rezel.enst.fr/thomas/vim/kscript.vim
 " CVS:		$Id$
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword	kscriptPreCondit	import from
 

@@ -1,13 +1,16 @@
 " Vim syntax file
 " Language:	XS (Perl extension interface language)
 " Maintainer:	Michael W. Dodge <sarge@pobox.com>
-" Last Change:	2000 Dec 17
+" Last Change:	2001 Jan 15
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Read the C syntax to start with
-runtime syntax/c.vim
+runtime! syntax/c.vim
+unlet b:current_syntax
 
 " XS extentions
 " TODO: Figure out how to look for trailing '='.

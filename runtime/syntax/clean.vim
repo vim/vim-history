@@ -4,7 +4,10 @@
 " Co-Author:	Arthur van Leeuwen <arthurvl@sci.kun.nl>
 " Last Change:	Fri Sep 29 11:35:34 CEST 2000
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Some Clean-keywords
 syn keyword cleanConditional if case

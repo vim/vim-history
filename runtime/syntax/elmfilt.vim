@@ -3,8 +3,10 @@
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	November 11, 1998
 
-" remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 syn keyword	elmfiltAction	delete execute executec forward forwardc leave save savecopy
 syn match	elmfiltArg	"[^\\]%[&0-9]"lc=1	contained

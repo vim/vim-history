@@ -8,8 +8,10 @@
 " SNNS http://www-ra.informatik.uni-tuebingen.de/SNNS/
 " is a simulator for neural networks.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " the accepted fields in the header
 syn match	snnsresNoHeader	"No\. of patterns\s*:\s*" contained

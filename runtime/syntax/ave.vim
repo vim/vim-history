@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	avenue
 " Maintainer:	Jan-Oliver Wagner <Jan-Oliver.Wagner@usf.Uni-Osnabrueck.DE>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Jan 15
 
 " Avenue is the ArcView built-in language. ArcView is
 " a desktop GIS by ESRI. Though it is a built-in language
@@ -10,8 +10,10 @@
 " I use some technologies to automatically load avenue scripts
 " into ArcView.
 
-" Remove any old syntax stuff hanging around
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 " Avenue is entirely case-insensitive.
 syn case ignore

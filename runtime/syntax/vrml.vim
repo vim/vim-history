@@ -3,9 +3,13 @@
 " Modified from: VRML 1.0C by David Brown <dbrown@cgs.c4.gmeds.com>
 " Maintainer:	 Gregory Seidman <gseidman@acm.org>
 " URL:		 http://zing.ncsl.nist.gov/~gseidman/vim/syntax/vrml.vim
-" Last Change:	 2000 Nov 04
+" Last Change:	 2001 Jan 15
 
-" syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
+
 " keyword definitions
 
 syn keyword VRMLFields         ambientIntensity appearance attenuation

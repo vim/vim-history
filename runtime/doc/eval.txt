@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.s.  Last change: 2001 Jan 14
+*eval.txt*      For Vim version 6.0t.  Last change: 2001 Jan 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -726,6 +726,8 @@ nr2char( {expr})		String	single char with ASCII value {expr}
 prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
 rename({from}, {to})		Number  rename (move) file from {from} to {to}
 search( {pattern} [, {flags}])	Number  search for {pattern}
+searchpair( {start}, {middle}, {end} [, {flags} [, {skip}]])
+				Number  search for other end of start/end pair
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -831,7 +833,7 @@ bufnr({expr})	The result is the number of a buffer, as it is displayed by
 	:let last_buffer = bufnr("$")
 <		The result is a Number, which is the highest buffer number
 		of existing buffers.  Note that not all buffers with a smaller
-		number necessarily exist, because ":bdel" may have removed
+		number necessarily exist, because ":bwipeout" may have removed
 		them.  Use bufexists() to test for the existence of a buffer.
 							*buffer_number()*
 		Obsolete name: buffer_number().
@@ -1121,15 +1123,20 @@ fnamemodify({fname}, {mods})				*fnamemodify()*
 			/home/mool/vim/vim/src/
 
 foldclosed({lnum})					*foldclosed()*
-		The result is the linenumber of the fold which contains the
-		line {lnum} in a closed fold.  If the line {lnum} is not in
-		a closed fold, -1 is returned.
+		The result is a Number.  If the line {lnum} is in a closed
+		fold, the result is the number of the first line in that fold.
+		If the line {lnum} is not in a closed fold, -1 is returned.
+
+foldclosedend({lnum})					*foldclosedend()*
+		The result is a Number.  If the line {lnum} is in a closed
+		fold, the result is the number of the last line in that fold.
+		If the line {lnum} is not in a closed fold, -1 is returned.
 
 foldlevel({lnum})					*foldlevel()*
 		The result is a Number, which is the foldlevel of line {lnum}
-		in the current buffer.  If line {lnum} starts a new fold, the
-		foldlevel is returned as negative number, e.g. if {lnum}
-		starts a fold with level 3, |foldlevel()| returns -3.
+		in the current buffer.  For nested folds the deepest level is
+		returned.  If there is no fold at line {lnum}, zero is
+		returned.  It doesn't matter if the folds are open or closed.
 
 							*foldtext()*
 foldtext()	Returns a String, to be displayed for a closed fold.  This is
@@ -1663,6 +1670,59 @@ search({pattern} [, {flags}])				*search()*
 		    :  let n = n + 1
 		    :endwhile
 <
+							*searchpair()*
+searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
+		Search for the match of a nested start-end pair.  This can be
+		used to find the "endif" that matches an "if", while other
+		if/endif pairs in between are ignored.
+		The search starts at the cursor.  If a match is found, the
+		cursor is positioned at it and zero is returned.  If no match
+		is found 1 is returned and the cursor doesn't move.  No error
+		message is given.
+
+		{start}, {middle} and {end} are patterns, see |pattern|.  They
+		must not contain \( \) pairs.  Use of \%( \) is allowed.  When
+		{middle} is not empty, it is found when searching from either
+		direction, but only when not in a nested start-end pair.  A
+		typical use is: >
+			searchpair("if", "else", "endif")
+<		By leaving {middle} empty the "else" is skipped.
+
+		{flags} are used like with |search()|.
+
+		When a match for {start}, {middle} or {end} is found, the
+		{skip} expression is evaluated with the cursor positioned on
+		the start of the match.  It should return non-zero if this
+		match is to be skipped.  E.g., because it is inside a comment
+		or a string.
+		When {skip} is omitted or empty, every match is accepted.
+		When evaluating {skip} causes an error the search is aborted
+		and -1 returned.
+
+		The value of 'ignorecase' is used.  'magic' is ignored, the
+		patterns are used like it's on.
+
+		Example, to find the "endif" command in a Vim script: >
+
+	:echo searchpair('\<if\>', '\<el\%[seif]\>', '\<en\%[dif]\>', 'W',
+			\ 'getline(".") =~ "^\\s*\""')
+
+<		The cursor must be at or after the "if" for which a match is
+		to be found.  Note that single-quote strings are used to avoid
+		having to double the backslashes.  The skip expression only
+		catches comments at the start of a line, not after a command.
+		Another example, to search for the matching "{" of a "}": >
+
+	:echo searchpair('{', '', '}', 'bW')
+
+<		This works when the cursor is at or before the "}" for which a
+		match is to be found.  To reject matches that syntax
+		highlighting recognized as strings: >
+
+	:echo searchpair('{', '', '}', 'bW',
+	     \ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string"')
+
+
 setbufvar({expr}, {varname}, {val})			*setbufvar()*
 		Set option or local variable {varname} in buffer {expr} to
 		{val}.

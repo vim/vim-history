@@ -26,7 +26,10 @@
 " TODO:
 "   - improve synchronizing.
 
-syn clear
+" Quit when a syntax file was already loaded
+if exists("b:current_syntax")
+  finish
+endif
 
 if !exists("dtd_ignore_case")
     " I prefer having the case takes into consideration.
