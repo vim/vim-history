@@ -1824,6 +1824,8 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     char	*globalcntx = "GLOBAL";
     char	*cntxformat = " <<%s>>";
     char	*context;
+    char	*cstag_msg = _("Cscope tag: %s");
+    char	*csfmt_str = "%4d %6s  ";
 
     assert (num_matches > 0);
 
@@ -1833,7 +1835,14 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     strcpy(tbuf, matches[0]);
     ptag = strtok(tbuf, "\t");
 
-    (void)smsg_attr(hl_attr(HLF_T), (char_u *)_("Cscope tag: %s"), ptag);
+    newsize = strlen(cstag_msg) + strlen(ptag);
+    buf = (char *)alloc(newsize);
+    if (buf != NULL)
+    {
+	bufsize = newsize;
+	(void)sprintf(buf, cstag_msg, ptag);
+	MSG_PUTS_ATTR(buf, hl_attr(HLF_T));
+    }
 
     vim_free(tbuf);
 
@@ -1921,7 +1930,22 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 
 	    lno[strlen(lno)-2] = '\0';  /* ignore ;" at the end */
 
-	    (void)smsg_attr(hl_attr(HLF_CM), (char_u *)"%4d %6s  ", num, lno);
+	    /* hopefully 'num' (num of matches) will be less than 10^16 */
+	    newsize = strlen(csfmt_str) + 16 + strlen(lno);
+	    if (bufsize < newsize)
+	    {
+		buf = (char *)vim_realloc(buf, newsize);
+		if (buf == NULL)
+		    bufsize = 0;
+		else
+		    bufsize = newsize;
+	    }
+	    if (buf != NULL)
+	    {
+		/* csfmt_str = "%4d %6s  "; */
+		(void)sprintf(buf, csfmt_str, num, lno);
+		MSG_PUTS_ATTR(buf, hl_attr(HLF_CM));
+	    }
 	    MSG_PUTS_LONG_ATTR(cs_pathcomponents(fname), hl_attr(HLF_CM));
 
 	    /* compute the required space for the context */
