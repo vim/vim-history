@@ -2842,6 +2842,7 @@ foldlevelExpr(flp)
     int		n;
     int		c;
     linenr_T	lnum = flp->lnum + flp->off;
+    int		save_keytyped;
 
     win = curwin;
     curwin = flp->wp;
@@ -2854,7 +2855,12 @@ foldlevelExpr(flp)
     if (lnum <= 1)
 	flp->lvl = 0;
 
+    /* KeyTyped may be reset to 0 when calling a function which invokes
+     * do_cmdline().  To make 'foldopen' work correctly restore KeyTyped. */
+    save_keytyped = KeyTyped;
     n = eval_foldexpr(flp->wp->w_p_fde, &c);
+    KeyTyped = save_keytyped;
+
     switch (c)
     {
 	/* "a1", "a2", .. : add to the fold level */
