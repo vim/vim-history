@@ -1018,6 +1018,8 @@ struct file_buffer
     int		b_syn_ic;		/* ignore case for :syn cmds */
     garray_T	b_syn_patterns;		/* table for syntax patterns */
     garray_T	b_syn_clusters;		/* table for syntax clusters */
+    int		b_syn_containedin;	/* TRUE when there is an item with a
+					   "containedin" argument */
     int		b_syn_sync_flags;	/* flags about how to sync */
     short	b_syn_sync_id;		/* group to sync on */
     long	b_syn_sync_minlines;	/* minimal sync lines offset */

@@ -1633,9 +1633,13 @@ do_pending_operator(cap, old_col, gui_yank)
 				&& vim_strchr(p_cpo, CPO_EMPTYREGION) != NULL);
 
 #ifdef FEAT_VISUAL
-	/* Force a redraw when operating on an empty Visual region or when
-	 * 'modifiable is off. */
-	if (oap->is_VIsual && (oap->empty || !curbuf->b_p_ma))
+	/* Force a redraw when operating on an empty Visual region, when
+	 * 'modifiable is off or creating a fold. */
+	if (oap->is_VIsual && (oap->empty || !curbuf->b_p_ma
+# ifdef FEAT_FOLDING
+		    || oap->op_type == OP_FOLD
+# endif
+		    ))
 	    redraw_curbuf_later(INVERTED);
 #endif
 
