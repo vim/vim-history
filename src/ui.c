@@ -1708,7 +1708,8 @@ fill_input_buf(exit_on_error)
 # endif
     if (len <= 0 && !got_int)
 	read_error_exit();
-    did_read_something = TRUE;
+    if (len > 0)
+	did_read_something = TRUE;
     if (got_int)
     {
 	inbuf[inbufcount] = 3;

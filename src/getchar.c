@@ -2577,6 +2577,8 @@ inchar(buf, maxlen, wait_time)
 	/*
 	 * If we got an interrupt, skip all previously typed characters and
 	 * return TRUE if quit reading script file.
+	 * Stop reading typeahead when a single CTRL-C was read,
+	 * fill_input_buf() returns this when not able to read from stdin.
 	 * Don't use buf[] here, closescript() may have freed typebuf.tb_buf[]
 	 * and buf may be pointing inside typebuf.tb_buf[].
 	 */
@@ -2585,8 +2587,12 @@ inchar(buf, maxlen, wait_time)
 #define DUM_LEN MAXMAPLEN * 3 + 3
 	    char_u	dum[DUM_LEN + 1];
 
-	    while (ui_inchar(dum, DUM_LEN, 0L) != 0)
-		;
+	    for (;;)
+	    {
+		len = ui_inchar(dum, DUM_LEN, 0L);
+		if (len == 0 || (len == 1 && dum[0] == 3))
+		    break;
+	    }
 	    return retesc;
 	}
 
