@@ -148,7 +148,6 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
 {
     win_T	*wp;
     int		row, col;
-    int		i;
     char_u	*lbuf;
     linenr_T	lnum;
 
@@ -431,8 +430,11 @@ drawBalloon(beval)
 	    XmFontList fl;
 
 	    fl = gui_motif_fontset2fontlist(&gui.tooltip_fontset);
-	    XmStringExtent(fl, s, &w, &h);
-	    XmFontListFree(fl);
+	    if (fl != NULL)
+	    {
+		XmStringExtent(fl, s, &w, &h);
+		XmFontListFree(fl);
+	    }
 	}
 	w += gui.border_offset << 1;
 	h += gui.border_offset << 1;
