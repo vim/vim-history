@@ -3496,9 +3496,9 @@ do_set(arg, opt_flags)
 			}
 			else if (nextchar == '<')	/* set to global val */
 			{
-			    newval = *(char_u **)get_varp_scope(
-					     &(options[opt_idx]), OPT_GLOBAL);
-			    new_value_alloced = FALSE;
+			    newval = vim_strsave(*(char_u **)get_varp_scope(
+					     &(options[opt_idx]), OPT_GLOBAL));
+			    new_value_alloced = TRUE;
 			}
 			else
 			{
