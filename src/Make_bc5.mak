@@ -54,8 +54,8 @@
 # ICONV		no or yes: set to yes for dynamic iconv support (yes)
 # OLE		no or yes: set to yes to make OLE gvim (no)
 # OSTYPE	DOS16 or WIN32 (WIN32)
-# DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
-# CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
+# DEBUG		no or yes: set to yes if you wish a DEBUGging build (no)
+# CODEGUARD	no or yes: set to yes if you want to use CODEGUARD (no)
 # CPUNR		1 through 6: select -CPU argument to compile with (3)
 #               3 for 386, 4 for 486, 5 for pentium, 6 for pentium pro.
 # USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
@@ -113,10 +113,16 @@ OSTYPE = WIN32
 !endif
 #
 ### DEBUG: Uncomment to make an executable for debugging
-#DEBUG = -v
+# DEBUG = yes
+!if ("$(DEBUG)"=="yes")
+DEBUG_FLAG = -v
+!endif
 #
 ### CODEGUARD: Uncomment to use the CODEGUARD stuff (BC 5.0 or later):
-#CODEGUARD = -vG
+# CODEGUARD = yes
+!if ("$(CODEGUARD)"=="yes")
+CODEGUARD_FLAG = -vG
+!endif
 #
 ### CPUNR: set your target processor (3 to 6)
 !if ("$(CPUNR)"=="")
@@ -172,6 +178,11 @@ FEATURES = BIG
 ### POSTSCRIPT: uncomment this line if you want PostScript printing
 #POSTSCRIPT = yes
 #
+# If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
+# default, use these lines.
+#VIMRCLOC = somewhere
+#VIMRUNTIMEDIR = somewhere
+
 ### Set the default $(WINVER) to make it work with Bcc 5.5.
 !ifndef WINVER
 WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
@@ -200,7 +211,7 @@ WINVER = -DWINVER=0x0400 -D_WIN32_WINNT=0x0400
 #
 # Optimizations: change as desired (RECOMMENDATION: Don't change!):
 #
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 OPT = -Od -N
 !else
 !if ($(OPTIMIZE)==SPACE)
@@ -211,7 +222,7 @@ OPT = -O2 -f- -d -Oca -O
 !if ("$(FASTCALL)"=="yes")
 OPT = $(OPT) -pr
 !endif
-!ifndef CODEGUARD
+!if ("$(CODEGUARD)"!="yes")
 OPT = $(OPT) -vi-
 !endif
 !endif
@@ -223,7 +234,7 @@ OPT = $(OPT) -vi-
 # shouldn't have to change:
 LIB = $(BOR)\lib
 INCLUDE = $(BOR)\include;.;proto
-DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC $(WINVER)
+DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC $(WINVER) -DHAVE_PATHDEF
 #
 !ifdef PERL
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PERL
@@ -293,7 +304,7 @@ TCL_LIB_FLAG =
 CPUARG = -$(CPUNR)
 ALIGNARG = -a$(ALIGN)
 #
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 DEFINES=$(DEFINES) -DDEBUG
 !endif
 #
@@ -310,7 +321,7 @@ MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
 
 !if ("$(GUI)"=="yes")
 DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 TARGET = gvimd.exe
 !else
 TARGET = gvim.exe
@@ -325,7 +336,7 @@ STARTUPOBJ = c0w32.obj
 LINK2 = -aa
 RESFILE = vim.res
 !else
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 TARGET = vimd.exe
 !else
 # for now, anyway: VIMDLL is only for the GUI version
@@ -349,7 +360,7 @@ RESFILE = vim.res
 DEFINES = $(DEFINES) -D_RTLDLL
 !endif
 
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 OBJDIR	= $(OSTYPE)\objdbg
 !else
 !if ("$(GUI)"=="yes")
@@ -375,7 +386,7 @@ BRC =
 LINK	= $(BOR)\BIN\TLink
 !endif
 CC   = $(BOR)\BIN\Bcc
-LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG) $(LINK2)
+LFLAGS	= -Tde -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 LFLAGSDLL  =
 CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -H- -P- $(HEADERS)
 !else
@@ -384,12 +395,12 @@ BRC = $(BOR)\BIN\brc32
 LINK	= $(BOR)\BIN\ILink32
 !endif
 CC   = $(BOR)\BIN\Bcc32
-LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG) $(LINK2)
-LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG) $(LINK2)
+LFLAGS	= -OS -r -Tpe -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
+LFLAGSDLL  = -Tpd -c -m -L$(LIB) $(DEBUG_FLAG) $(LINK2)
 CFLAGS = -w- -w-aus -w-par -I$(INCLUDE) -P- -d -x- -RT- -k- -Oi $(HEADERS) -f-
 !endif
 
-CC1 = -c
+CC1 = -q -c
 CC2 = -o
 CCARG = +$(OBJDIR)\bcc.cfg
 
@@ -440,6 +451,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\normal.obj \
 	$(OBJDIR)\ops.obj \
 	$(OBJDIR)\option.obj \
+	$(OBJDIR)\pathdef.obj \
 	$(OBJDIR)\quickfix.obj \
 	$(OBJDIR)\regexp.obj \
 	$(OBJDIR)\screen.obj \
@@ -479,7 +491,7 @@ vimobj = $(vimobj) \
 
 !if ("$(VIMDLL)"=="yes")
 vimdllobj = $(vimobj)
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 DLLTARGET = vim32d.dll
 !else
 DLLTARGET = vim32.dll
@@ -524,10 +536,10 @@ MSG = $(MSG) MBYTE
 !if ("$(ICONV)"=="yes")
 MSG = $(MSG) ICONV
 !endif
-!ifdef DEBUG
+!if ("$(DEBUG)"=="yes")
 MSG = $(MSG) DEBUG
 !endif
-!ifdef CODEGUARD
+!if ("$(CODEGUARD)"=="yes")
 MSG = $(MSG) CODEGUARD
 !endif
 !ifdef PERL
@@ -572,7 +584,8 @@ TARGETS = $(TARGETS) $(TARGET)
 all: vim vimrun.exe install.exe xxd uninstal.exe
 
 vim: $(OSTYPE) $(OBJDIR) $(OBJDIR)\bcc.cfg $(TARGETS)
-	@del $(OBJDIR)\version.obj
+	@if exist $(OBJDIR)\version.obj del $(OBJDIR)\version.obj
+	@if exist auto\pathdef.c del auto\pathdef.c
 
 $(OSTYPE):
 	-@md $(OSTYPE)
@@ -622,7 +635,7 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 	c0d32.obj +
 	$(vimdllobj)
 	$<,$*
-!ifdef CODEGUARD
+!if ("$(CODEGUARD)"=="yes")
 	cg32.lib+
 !endif
 !if ("$(OLE)"=="yes")
@@ -668,7 +681,7 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !endif
 	$<,$*
 !if ($(OSTYPE)==WIN32)
-!ifdef CODEGUARD
+!if ("$(CODEGUARD)"=="yes")
 	cg32.lib+
 !endif
 !if ("$(OLE)"=="yes")
@@ -788,7 +801,6 @@ $(OBJDIR)\os_w32dll.obj: os_w32dll.c
 $(OBJDIR)\if_ole.obj: if_ole.cpp
 
 $(OBJDIR)\os_w32exe.obj: os_w32exe.c
-	$(CC) $(CCARG) $(CC1) -I$(INCLUDE) -WE $(CC2)$@ os_w32exe.c
 
 $(OBJDIR)\if_perl.obj: if_perl.c perl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_perl.c
@@ -810,6 +822,19 @@ $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
 	vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
     $(BRC) $(DEFINES) -fo$(OBJDIR)\vim.res -i $(BOR)\include -w32 -r vim.rc
 
+$(OBJDIR)\pathdef.obj:	auto\pathdef.c
+
+auto\pathdef.c::
+	@echo creating auto/pathdef.c
+	@echo "/* pathdef.c */" > auto\pathdef.c
+	@echo "#include \"vim.h\" " >> auto\pathdef.c
+	@echo "char_u *default_vim_dir = (char_u *)\"$(VIMRCLOC:\=\\)\" "; >> auto\pathdef.c
+	@echo "char_u *default_vimruntime_dir = (char_u *)\"$(VIMRUNTIMEDIR:\=\\)\" "; >> auto\pathdef.c
+	@echo "char_u *all_cflags = (char_u *)\"$(CC:\=\\\\) $(CFLAGS:\=\\\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:"=\\") $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)\" "; >> auto\pathdef.c
+	@echo "char_u *all_lflags = (char_u *)\"$(LINK:\=\\\\) $(LFLAGS:\=\\\\)\" "; >> auto\pathdef.c
+	@echo "char_u *compiled_user = (char_u *)\"$(USERNAME)\" "; >> auto\pathdef.c
+	@echo "char_u *compiled_sys = (char_u *)\"$(USERDOMAIN)\" "; >> auto\pathdef.c
+
 perl.lib: $(PERL)\lib\CORE\perl$(PERL_VER).lib
 	coff2omf $(PERL)\lib\CORE\perl$(PERL_VER).lib $@
 
@@ -828,10 +853,10 @@ tcl.lib: $(TCL_LIB)
 
 !if ("$(DYNAMIC_TCL)" == "yes")
 tclstub$(TCL_VER)-bor.lib:
-	-@IF NOT EXIST $@ ECHO You must download tclstub83-bor.lib separately and\
+	-@IF NOT EXIST $@ ECHO You must download tclstub$(TCL_VER)-bor.lib separately and\
 	place it in the src directory in order to compile a dynamic TCL-enabled\
-	(g)vim with the Borland compiler.  You can get the tclstub83-bor.lib file\
-	at http://mywebpage.netscape.com/sharppeople/vim/tclstub83-bor.lib
+	(g)vim with the Borland compiler.  You can get the tclstub$(TCL_VER)-bor.lib file\
+	at http://mywebpage.netscape.com/sharppeople/vim/tclstub$(TCL_VER)-bor.lib
 !endif
 
 # vimrun.exe:
@@ -851,9 +876,9 @@ $(OBJDIR)\bcc.cfg: Make_bc5.mak $(OBJDIR)
 	$(MBDEFINES)
 	$(INTERP_DEFINES)
 	$(EXETYPE)
-	$(DEBUG)
+	$(DEBUG_FLAG)
 	$(OPT)
-	$(CODEGUARD)
+	$(CODEGUARD_FLAG)
 	$(CPUARG)
 	$(ALIGNARG)
 | $@

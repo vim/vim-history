@@ -50,6 +50,7 @@
 #	  INTL=[yes or no]  (default is yes)
 #	See http://sourceforge.net/projects/gettext/
 #       PostScript printing: POSTSCRIPT=yes
+#       Feature Set: FEATURES=[TINY, SMALL, NORMAL, BIG, or HUGE]
 #
 # You can combine any of these interfaces
 #
@@ -477,6 +478,14 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\
 !if "$(POSTSCRIPT)" == "yes"
 CFLAGS = $(CFLAGS) -DMSWINPS
 !endif # POSTSCRIPT
+
+#
+# FEATURES: TINY, SMALL, NORMAL, BIG or HUGE
+#
+!if "$(FEATURES)"==""
+FEATURES = BIG
+!endif
+CFLAGS = $(CFLAGS) -DFEAT_$(FEATURES)
 
 #
 # End extra featuare include
