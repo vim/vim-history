@@ -209,11 +209,11 @@ extern void freeKeywordTable()
 	    while (entry != NULL)
 	    {
 		hashEntry *next = entry->next;
-		free(entry);
+		eFree(entry);
 		entry = next;
 	    }
 	}
-	free(HashTable);
+	eFree(HashTable);
     }
 }
 

@@ -38,7 +38,6 @@
 #define parentDecl(st)		((st)->parent == NULL ? \
 				DECL_NONE : (st)->parent->declaration)
 #define isType(token,t)		(boolean)((token)->type == (t))
-#define isMemberDecl(st)	(boolean)((st)->member.isMember)
 #define insideEnumBody(st)	(boolean)((st)->parent == NULL ? FALSE : \
 				    ((st)->parent->declaration == DECL_ENUM))
 #define isExternCDecl(st,c)	(boolean)((c) == STRING_SYMBOL  && \
@@ -96,18 +95,19 @@ typedef struct sKeywordDesc {
 /*  Used for reporting the type of object parsed by nextToken().
  */
 typedef enum eTokenType {
-    TOK_NONE,		/* none */
-    TOK_ARGS,		/* a parenthetical pair and its contents */
-    TOK_BRACE_CLOSE,
-    TOK_BRACE_OPEN,
-    TOK_COMMA,		/* the comma character */
-    TOK_KEYWORD,
-    TOK_NAME,		/* an unknown name */
-    TOK_PACKAGE,	/* a Java package name */
-    TOK_PAREN_NAME,	/* a single name in parentheses */
-    TOK_SEMICOLON,	/* the semicolon character */
-    TOK_SPEC,		/* a storage class specifier, qualifier, type, etc. */
-    TOK_COUNT
+    TOKEN_NONE,		/* none */
+    TOKEN_ARGS,		/* a parenthetical pair and its contents */
+    TOKEN_BRACE_CLOSE,
+    TOKEN_BRACE_OPEN,
+    TOKEN_COMMA,		/* the comma character */
+    TOKEN_DOUBLE_COLON,	/* double colon indicates nested-name-specifier */
+    TOKEN_KEYWORD,
+    TOKEN_NAME,		/* an unknown name */
+    TOKEN_PACKAGE,	/* a Java package name */
+    TOKEN_PAREN_NAME,	/* a single name in parentheses */
+    TOKEN_SEMICOLON,	/* the semicolon character */
+    TOKEN_SPEC,		/* a storage class specifier, qualifier, type, etc. */
+    TOKEN_COUNT
 } tokenType;
 
 /*  This describes the scoping of the current statement.
@@ -148,8 +148,6 @@ typedef enum eVisibilityType {
 /*  Information about the parent class of a member (if any).
  */
 typedef struct sMemberInfo {
-    boolean	isMember;	/* is declared entity a member? */
-    boolean	immediate;	/* immediate class name preceding declaration?*/
     accessType	access;		/* access of current statement */
     accessType	accessDefault;	/* access default for current statement */
 } memberInfo;
@@ -166,15 +164,16 @@ typedef struct sTokenInfo {
  */
 typedef struct sStatementInfo {
     tagScope	scope;
-    declType	declaration;	/* specifier associated with TOK_SPEC */
+    declType	declaration;	/* specifier associated with TOKEN_SPEC */
     boolean	gotName;	/* was a name parsed yet? */
     boolean	haveQualifyingName;  /* do we have a name we are considering? */
     boolean	gotParenName;	/* was a name inside parentheses parsed yet? */
     boolean	gotArgs;	/* was a list of parameters parsed yet? */
     boolean	isPointer;	/* is 'name' a pointer? */
     unsigned int tokenIndex;	/* currently active token */
-    tokenInfo *	token[(int)NumTokens];
-    tokenInfo *	context;	/* information on name of current context */
+    tokenInfo*	token[(int)NumTokens];
+    tokenInfo*	context;	/* accumulated scope of current statement */
+    tokenInfo*	blockName;	/* name of current block */
     memberInfo	member;		/* information regarding parent class/struct */
     struct sStatementInfo *parent;  /* statement we are nested within */
 } statementInfo;
@@ -286,6 +285,9 @@ static tokenInfo *prevToken __ARGS((const statementInfo *const st, unsigned int 
 static void setToken __ARGS((statementInfo *const st, const tokenType type));
 static tokenInfo *newToken __ARGS((void));
 static void deleteToken __ARGS((tokenInfo *const token));
+static boolean isContextualKeyword __ARGS((const tokenInfo *const token));
+static boolean isContextualStatement __ARGS((const statementInfo *const st));
+static boolean isMember __ARGS((const statementInfo *const st));
 static void reinitStatement __ARGS((statementInfo *const st, const boolean comma));
 static void initMemberInfo __ARGS((statementInfo *const st));
 static void initStatement __ARGS((statementInfo *const st, statementInfo *const parent));
@@ -294,6 +296,7 @@ static int tagLetter __ARGS((const tagType type));
 static boolean includeTag __ARGS((const tagType type, const boolean isFileScope));
 static const char *accessString __ARGS((const accessType access));
 static tagType declToTagType __ARGS((const declType declaration));
+static const char* accessField __ARGS((const statementInfo *const st));
 static int addOtherFields __ARGS((const tagType type, const statementInfo *const st, vString *const scope, const char *(*otherFields)[2]));
 static void findScopeHierarchy __ARGS((vString *const string, const statementInfo *const st));
 static void makeExtraTagEntry __ARGS((tagEntryInfo *const e, vString *const scope));
@@ -303,13 +306,14 @@ static void qualifyEnumeratorTag __ARGS((const statementInfo *const st, const to
 static void qualifyFunctionTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
 static void qualifyFunctionDeclTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
 static void qualifyCompoundTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
-static void qualifyBlockTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
+static void qualifyBlockTag __ARGS((statementInfo *const st, const tokenInfo *const nameToken));
 static void qualifyVariableTag __ARGS((const statementInfo *const st, const tokenInfo *const nameToken));
 static int skipToCharacter __ARGS((const int target));
 static int skipToNonWhite __ARGS((void));
 static void skipToFormattedBraceMatch __ARGS((void));
 static void skipToMatch __ARGS((const char *const pair));
 static void skipParens __ARGS((void));
+static void skipBraces __ARGS((void));
 static keywordId analyzeKeyword __ARGS((const char *const name));
 static void analyzeIdentifier __ARGS((tokenInfo *const token));
 static void readIdentifier __ARGS((tokenInfo *const token, const int firstChar));
@@ -330,16 +334,16 @@ static void analyzePostParens __ARGS((statementInfo *const st, parenInfo *const 
 static int parseParens __ARGS((statementInfo *const st, parenInfo *const info));
 static void initParenInfo __ARGS((parenInfo *const info));
 static void analyzeParens __ARGS((statementInfo *const st));
-static void addContext __ARGS((statementInfo *const st));
+static void addContext __ARGS((statementInfo *const st, const tokenInfo* const token));
 static void processColon __ARGS((statementInfo *const st));
 static int skipInitializer __ARGS((const boolean enumInitializer));
 static void processInitializer __ARGS((statementInfo *const st));
 static void parseIdentifier __ARGS((statementInfo *const st, const int c));
+static void parseGeneralToken __ARGS((statementInfo *const st, const int c));
 static void nextToken __ARGS((statementInfo *const st));
 static statementInfo *newStatement __ARGS((statementInfo *const parent));
 static void deleteStatement __ARGS((void));
 static void deleteAllStatements __ARGS((void));
-static boolean isContextCandidate __ARGS((const statementInfo *const st));
 static boolean isStatementEnd __ARGS((const statementInfo *const st));
 static void checkStatementEnd __ARGS((statementInfo *const st));
 static void nest __ARGS((statementInfo *const st, const unsigned int nestLevel));
@@ -359,7 +363,7 @@ static void init __ARGS((void));
 static void initToken( token )
     tokenInfo *const token;
 {
-    token->type		= TOK_NONE;
+    token->type		= TOKEN_NONE;
     token->keyword	= KEYWORD_NONE;
     token->lineNumber	= getFileLine();
     token->filePosition	= getFilePosition();
@@ -384,7 +388,7 @@ static void retardToken( st )
 	st->tokenIndex = (unsigned int)NumTokens - 1;
     else
 	--st->tokenIndex;
-    setToken(st, TOK_NONE);
+    setToken(st, TOKEN_NONE);
 }
 
 static tokenInfo *prevToken( st, n )
@@ -427,7 +431,7 @@ static void deleteToken( token )
     if (token != NULL)
     {
 	vStringDelete(token->name);
-	free(token);
+	eFree(token);
     }
 }
 
@@ -444,11 +448,11 @@ static const char *tokenString( type )
     const tokenType type;
 {
     static const char *const names[] = {
-	"none", "args", "}", "{", "comma", "keyword", "name",
+	"none", "args", "}", "{", "comma", "double colon", "keyword", "name",
 	"package", "paren-name", "semicolon", "specifier"
     };
-    Assert(sizeof(names)/sizeof(names[0]) == TOK_COUNT);
-    Assert((int)type < TOK_COUNT);
+    Assert(sizeof(names)/sizeof(names[0]) == TOKEN_COUNT);
+    Assert((int)type < TOKEN_COUNT);
     return names[(int)type];
 }
 
@@ -502,14 +506,17 @@ extern void pt __ARGS((tokenInfo *const token));
 extern void pt( token )
     tokenInfo *const token;
 {
-    if (isType(token, TOK_KEYWORD))
-	printf("type: %-10s   keyword: %-13s   line: %lu\n",
+    if (isType(token, TOKEN_NAME))
+	printf("type: %-12s: %-13s   line: %lu\n",
+	       tokenString(token->type), vStringValue(token->name),
+	       token->lineNumber);
+    else if (isType(token, TOKEN_KEYWORD))
+	printf("type: %-12s: %-13s   line: %lu\n",
 	       tokenString(token->type), keywordString(token->keyword),
 	       token->lineNumber);
     else
-	printf("type: %-10s   name   : %-13s   line: %lu\n",
-	       tokenString(token->type), vStringValue(token->name),
-	       token->lineNumber);
+	printf("type: %-12s                  line: %lu\n",
+	       tokenString(token->type), token->lineNumber);
 }
 
 extern void ps __ARGS((statementInfo *const st));
@@ -522,9 +529,7 @@ extern void ps( st )
 	   scopeString(st->scope), declString(st->declaration),
 	   boolString(st->gotName), boolString(st->gotParenName));
     printf("haveQualifyingName: %s\n", boolString(st->haveQualifyingName));
-    printf("member: %s   access: %s   default: %s\n", st->member.isMember ?
-	   (st->member.immediate ? "immediate" : "yes") : "no",
-	   accessString(st->member.access),
+    printf("access: %s   default: %s\n", accessString(st->member.access),
 	   accessString(st->member.accessDefault));
     printf("token  : ");
     pt(activeToken(st));
@@ -543,6 +548,61 @@ extern void ps( st )
 *-	Statement management
 ----------------------------------------------------------------------------*/
 
+static boolean isContextualKeyword( token )
+    const tokenInfo *const token;
+{
+    boolean result;
+    switch (token->keyword)
+    {
+	case KEYWORD_CLASS:
+	case KEYWORD_ENUM:
+	case KEYWORD_INTERFACE:
+	case KEYWORD_NAMESPACE:
+	case KEYWORD_STRUCT:
+	case KEYWORD_UNION:
+	    result = TRUE;
+	    break;
+
+	default:
+	    result = FALSE;
+	    break;
+    }
+    return result;
+}
+
+static boolean isContextualStatement( st )
+    const statementInfo *const st;
+{
+    boolean result = FALSE;
+    if (st != NULL) switch (st->declaration)
+    {
+	case DECL_CLASS:
+	case DECL_ENUM:
+	case DECL_INTERFACE:
+	case DECL_NAMESPACE:
+	case DECL_STRUCT:
+	case DECL_UNION:
+	    result = TRUE;
+	    break;
+
+	default:
+	    result = FALSE;
+	    break;
+    }
+    return result;
+}
+
+static boolean isMember( st )
+    const statementInfo *const st;
+{
+    boolean result;
+    if (isType(st->context, TOKEN_NAME))
+	result = TRUE;
+    else
+	result = isContextualStatement(st->parent);
+    return result;
+}
+
 static void reinitStatement( st, partial )
     statementInfo *const st;
     const boolean partial;
@@ -551,8 +611,8 @@ static void reinitStatement( st, partial )
 
     if (! partial)
     {
-	st->scope	= SCOPE_GLOBAL;
-	if (st->member.isMember)
+	st->scope = SCOPE_GLOBAL;
+	if (isContextualStatement(st->parent))
 	    st->declaration = DECL_BASE;
 	else
 	    st->declaration = DECL_NONE;
@@ -568,51 +628,40 @@ static void reinitStatement( st, partial )
 	initToken(st->token[i]);
 
     initToken(st->context);
+    initToken(st->blockName);
 
     /*  Init member info.
      */
     if (! partial)
 	st->member.access = st->member.accessDefault;
-    if (st->member.immediate)
-    {
-	st->member.isMember  = FALSE;
-	st->member.immediate = FALSE;
-    }
 }
 
 static void initMemberInfo( st )
     statementInfo *const st;
 {
-    const statementInfo *const parent = st->parent;
     accessType accessDefault = ACCESS_UNDEFINED;
-    boolean isMember = FALSE;
 
-    if (parent != NULL) switch (parent->declaration)
+    if (st->parent != NULL) switch (st->parent->declaration)
     {
 	case DECL_ENUM:
 	case DECL_NAMESPACE:
 	case DECL_UNION:
-	    isMember = TRUE;
 	    accessDefault = ACCESS_UNDEFINED;
 	    break;
 
 	case DECL_CLASS:
-	    isMember = TRUE;
 	    accessDefault = ACCESS_PRIVATE;
 	    break;
 
 	case DECL_INTERFACE:
 	case DECL_STRUCT:
-	    isMember = TRUE;
 	    accessDefault = ACCESS_PUBLIC;
 	    break;
 
 	default: break;
     }
-    st->member.isMember	     = isMember;
     st->member.accessDefault = accessDefault;
     st->member.access	     = accessDefault;
-    st->member.immediate     = FALSE;
 }
 
 static void initStatement( st, parent )
@@ -668,7 +717,7 @@ static boolean includeTag( type, isFileScope )
 	include = FALSE;
     else if (isLanguage(LANG_JAVA))
     {
-	const struct sJavaInclude *const inc = &Option.include.java;
+	const struct sJavaInclude *const inc = &Option.include.javaTypes;
 
 	switch (type)
 	{
@@ -683,7 +732,7 @@ static boolean includeTag( type, isFileScope )
     }
     else
     {
-	const struct sCInclude *const inc = &Option.include.c;
+	const struct sCInclude *const inc = &Option.include.cTypes;
 
 	switch (type)
 	{
@@ -736,6 +785,17 @@ static tagType declToTagType( declaration )
     return type;
 }
 
+static const char* accessField( st )
+    const statementInfo *const st;
+{
+    const char* result = NULL;
+    if (isLanguage(LANG_CPP)  &&  st->scope == SCOPE_FRIEND)
+	result = "friend";
+    else if (st->member.access != ACCESS_UNDEFINED)
+	result = accessString(st->member.access);
+    return result;
+}
+
 static int addOtherFields( type, st, scope, otherFields )
     const tagType type;
     const statementInfo *const st;
@@ -747,7 +807,7 @@ static int addOtherFields( type, st, scope, otherFields )
     /*  For selected tag types, append an extension flag designating the
      *  parent object in which the tag is defined.
      */
-    if (isMemberDecl(st)) switch (type)
+    if (isMember(st)) switch (type)
     {
 	default: break;
 
@@ -762,13 +822,10 @@ static int addOtherFields( type, st, scope, otherFields )
 	case TAG_STRUCT:
 	case TAG_TYPEDEF:
 	case TAG_UNION:
-	case TAG_VARIABLE:
 	    if (! (type == TAG_ENUMERATOR  &&  vStringLength(scope) == 0))
 	    {
-		if (st->member.immediate)
-		{
+		if (isType(st->context, TOKEN_NAME))
 		    otherFields[0][numFields] = tagName(TAG_CLASS);
-		}
 		else
 		{
 		    Assert(st->parent != NULL);
@@ -778,21 +835,20 @@ static int addOtherFields( type, st, scope, otherFields )
 		otherFields[1][numFields] = vStringValue(scope);
 		++numFields;
 	    }
-	    if ((isLanguage(LANG_CPP) && Option.include.c.access) ||
-		(isLanguage(LANG_JAVA) && Option.include.java.access))
+	    if ((isLanguage(LANG_CPP) && Option.include.cTypes.access) ||
+		(isLanguage(LANG_JAVA) && Option.include.javaTypes.access))
 	    {
-		otherFields[0][numFields] = "access";
-		if (isLanguage(LANG_CPP)  &&  st->scope == SCOPE_FRIEND)
+		if (accessField(st) != NULL)
 		{
-		    otherFields[1][numFields] = "friend";
-		    ++numFields;
-		}
-		else if (st->member.access != ACCESS_UNDEFINED)
-		{
-		    otherFields[1][numFields] = accessString(st->member.access);
+		    otherFields[0][numFields] = "access";
+		    otherFields[1][numFields] = accessField(st);
 		    ++numFields;
 		}
 	    }
+	    break;
+
+	case TAG_VARIABLE:
+	    Assert("Shouldn't happen" == NULL);
 	    break;
     }
     return numFields;
@@ -802,40 +858,48 @@ static void findScopeHierarchy( string, st )
     vString *const string;
     const statementInfo *const st;
 {
-    const statementInfo *s = st;
-    vString *temp = vStringNew();
-    boolean first = TRUE;
-    unsigned depth = 0;
+    const char* const anon = "<anonymous>";
+    boolean nonAnonPresent = FALSE;
 
     vStringClear(string);
-    while (s->member.isMember  &&  s->parent != NULL)
+    if (isType(st->context, TOKEN_NAME))
     {
-	vString *const name = s->parent->context->name;
-
-	vStringCopy(temp, string);
-	if (vStringLength(name) > 0)
-	    vStringCopy(string, name);
-	else
-	    vStringCopyS(string, "<anonymous>");
-	if (first)
-	    first = FALSE;
-	else
-	{
-	    if (isLanguage(LANG_C)  ||  isLanguage(LANG_CPP))
-		vStringCatS(string, "::");
-	    else if (isLanguage(LANG_JAVA))
-		vStringCatS(string, ".");
-	}
-	vStringCat(string, temp);
-	s = s->parent;
-	++depth;
+	vStringCopy(string, st->context->name);
+	nonAnonPresent = TRUE;
     }
-    vStringDelete(temp);
+    if (st->parent != NULL)
+    {
+	vString *temp = vStringNew();
+	const statementInfo *s;
+	unsigned depth = 0;
 
-    /*  We don't specify "<unnamed>" by itself.
-     */
-    if (depth == 1  &&  vStringLength(st->parent->context->name) == 0)
-	vStringClear(string);
+	for (s = st->parent  ;  s != NULL  ;  s = s->parent, ++depth)
+	{
+	    if (isContextualStatement(s))
+	    {
+		vStringCopy(temp, string);
+		if (isType(s->blockName, TOKEN_NAME))
+		{
+		    vStringCopy(string, s->blockName->name);
+		    nonAnonPresent = TRUE;
+		}
+		else
+		    vStringCopyS(string, anon);
+		if (vStringLength(temp) > 0)
+		{
+		    if (isLanguage(LANG_C)  ||  isLanguage(LANG_CPP))
+			vStringCatS(string, "::");
+		    else if (isLanguage(LANG_JAVA))
+			vStringCatS(string, ".");
+		}
+		vStringCat(string, temp);
+	    }
+	}
+	vStringDelete(temp);
+
+	if (! nonAnonPresent)
+	    vStringClear(string);
+    }
 }
 
 static void makeExtraTagEntry( e, scope )
@@ -843,8 +907,8 @@ static void makeExtraTagEntry( e, scope )
     vString *const scope;
 {
     if (scope != NULL  &&
-	((isLanguage(LANG_CPP)   &&  Option.include.c.classPrefix)  ||
-	 (isLanguage(LANG_JAVA)  &&  Option.include.java.classPrefix)))
+	((isLanguage(LANG_CPP)   &&  Option.include.cTypes.classPrefix)  ||
+	 (isLanguage(LANG_JAVA)  &&  Option.include.javaTypes.classPrefix)))
     {
 	vString *const scopedName = vStringNew();
 
@@ -870,21 +934,13 @@ static void makeTag( token, st, isFileScope, type )
      */
     isFileScope = (boolean)(isFileScope && ! isHeaderFile());
 
-    if (isType(token, TOK_NAME)  &&  vStringLength(token->name) > 0  &&
+    if (isType(token, TOKEN_NAME)  &&  vStringLength(token->name) > 0  &&
 	includeTag(type, isFileScope))
     {
 	const char *otherFields[2][MaxFields];
-	vString *scope = NULL;
+	vString *scope = vStringNew();
 	tagEntryInfo e;
 
-	if (st->member.isMember)
-	{
-	    scope = vStringNew();
-	    if (st->member.immediate)
-		vStringCopy(scope, st->context->name);
-	    else
-		findScopeHierarchy(scope, st);
-	}
 	initTagEntry(&e, vStringValue(token->name));
 
 	e.lineNumber	= token->lineNumber;
@@ -893,7 +949,12 @@ static void makeTag( token, st, isFileScope, type )
 	e.kindName	= tagName(type);
 	e.kind		= tagLetter(type);
 
+#if 1
+	findScopeHierarchy(scope, st);
 	e.otherFields.count = addOtherFields(type, st, scope, otherFields);
+#else
+	e.otherFields.count = addOtherFields(type, st, st->context->name, otherFields);
+#endif
 	e.otherFields.label = otherFields[0];
 	e.otherFields.value = otherFields[1];
 
@@ -906,8 +967,7 @@ static void makeTag( token, st, isFileScope, type )
 static boolean isValidTypeSpecifier( declaration )
     const declType declaration;
 {
-    boolean isValid = FALSE;
-
+    boolean result;
     switch (declaration)
     {
 	case DECL_BASE:
@@ -915,18 +975,21 @@ static boolean isValidTypeSpecifier( declaration )
 	case DECL_ENUM:
 	case DECL_STRUCT:
 	case DECL_UNION:
-	    isValid = TRUE; break;
+	    result = TRUE;
+	    break;
 
-	default: break;
+	default:
+	    result = FALSE;
+	    break;
     }
-    return isValid;
+    return result;
 }
 
 static void qualifyEnumeratorTag( st, nameToken )
     const statementInfo *const st;
     const tokenInfo *const nameToken;
 {
-    if (isType(nameToken, TOK_NAME))
+    if (isType(nameToken, TOKEN_NAME))
 	makeTag(nameToken, st, TRUE, TAG_ENUMERATOR);
 }
 
@@ -934,18 +997,24 @@ static void qualifyFunctionTag( st, nameToken )
     const statementInfo *const st;
     const tokenInfo *const nameToken;
 {
-    const tagType type = isLanguage(LANG_JAVA) ? TAG_METHOD : TAG_FUNCTION;
-    const boolean isFileScope = (boolean)(st->member.access == ACCESS_PRIVATE ||
-			    (!isMemberDecl(st)  &&  st->scope == SCOPE_STATIC));
+    if (isType(nameToken, TOKEN_NAME))
+    {
+	const tagType type = isLanguage(LANG_JAVA) ? TAG_METHOD : TAG_FUNCTION;
+	const boolean isFileScope =
+			(boolean)(st->member.access == ACCESS_PRIVATE ||
+			(!isMember(st)  &&  st->scope == SCOPE_STATIC));
 
-    makeTag(nameToken, st, isFileScope, type);
+	makeTag(nameToken, st, isFileScope, type);
+    }
 }
 
 static void qualifyFunctionDeclTag( st, nameToken )
     const statementInfo *const st;
     const tokenInfo *const nameToken;
 {
-    if (isLanguage(LANG_JAVA))
+    if (! isType(nameToken, TOKEN_NAME))
+	;
+    else if (isLanguage(LANG_JAVA))
 	qualifyFunctionTag(st, nameToken);
     else if (st->scope == SCOPE_TYPEDEF)
 	makeTag(nameToken, st, TRUE, TAG_TYPEDEF);
@@ -957,14 +1026,17 @@ static void qualifyCompoundTag( st, nameToken )
     const statementInfo *const st;
     const tokenInfo *const nameToken;
 {
-    const tagType type = declToTagType(st->declaration);
+    if (isType(nameToken, TOKEN_NAME))
+    {
+	const tagType type = declToTagType(st->declaration);
 
-    if (type != TAG_UNDEFINED)
-	makeTag(nameToken, st, (boolean)(! isLanguage(LANG_JAVA)), type);
+	if (type != TAG_UNDEFINED)
+	    makeTag(nameToken, st, (boolean)(! isLanguage(LANG_JAVA)), type);
+    }
 }
 
 static void qualifyBlockTag( st, nameToken )
-    const statementInfo *const st;
+    statementInfo *const st;
     const tokenInfo *const nameToken;
 {
     switch (st->declaration)
@@ -994,7 +1066,9 @@ static void qualifyVariableTag( st, nameToken )
      *	form "struct tag;" as a variable definition. In such a case, the
      *	token preceding the name will be a keyword.
      */
-    if (st->declaration == DECL_IGNORE)
+    if (! isType(nameToken, TOKEN_NAME))
+	;
+    else if (st->declaration == DECL_IGNORE)
 	;
     else if (st->scope == SCOPE_TYPEDEF)
 	makeTag(nameToken, st, TRUE, TAG_TYPEDEF);
@@ -1002,7 +1076,7 @@ static void qualifyVariableTag( st, nameToken )
 	makeTag(nameToken, st, FALSE, TAG_PACKAGE);
     else if (isValidTypeSpecifier(st->declaration))
     {
-	if (isMemberDecl(st))
+	if (isMember(st))
 	{
 	    if (isLanguage(LANG_JAVA))
 		makeTag(nameToken, st,
@@ -1130,10 +1204,16 @@ static void skipParens()
 	cppUngetc(c);
 }
 
-/*  Analyzes the identifier contained in a statement described by the
- *  statement structure and adjusts the structure according the significance
- *  of the identifier.
- */
+static void skipBraces()
+{
+    const int c = skipToNonWhite();
+
+    if (c == '{')
+	skipToMatch("{}");
+    else
+	cppUngetc(c);
+}
+
 static keywordId analyzeKeyword( name )
     const char *const name;
 {
@@ -1141,10 +1221,6 @@ static keywordId analyzeKeyword( name )
     return id;
 }
 
-/*  Analyzes the identifier contained in a statement described by the
- *  statement structure and adjusts the structure according the significance
- *  of the identifier.
- */
 static void analyzeIdentifier( token )
     tokenInfo *const token;
 {
@@ -1161,9 +1237,9 @@ static void analyzeIdentifier( token )
 	    token->keyword = analyzeKeyword(vStringValue(token->name));
 
 	if (token->keyword == KEYWORD_NONE)
-	    token->type = TOK_NAME;
+	    token->type = TOKEN_NAME;
 	else
-	    token->type = TOK_KEYWORD;
+	    token->type = TOKEN_KEYWORD;
     }
     else
     {
@@ -1227,7 +1303,7 @@ static void readOperator( st )
 
     /*  When we arrive here, we have the keyword "operator" in 'name'.
      */
-    if (isType(prev, TOK_KEYWORD) && (prev->keyword == KEYWORD_ENUM ||
+    if (isType(prev, TOKEN_KEYWORD) && (prev->keyword == KEYWORD_ENUM ||
 	 prev->keyword == KEYWORD_STRUCT || prev->keyword == KEYWORD_UNION))
 	;	/* ignore "operator" keyword if preceded by these keywords */
     else if (c == '(')
@@ -1283,7 +1359,7 @@ static void readOperator( st )
 
     cppUngetc(c);
 
-    token->type	= TOK_NAME;
+    token->type	= TOKEN_NAME;
     token->keyword = KEYWORD_NONE;
     processName(st);
 }
@@ -1303,7 +1379,7 @@ static void setAccess( st, access )
     statementInfo *const st;
     const accessType access;
 {
-    if (isMemberDecl(st))
+    if (isMember(st))
     {
 	if (isLanguage(LANG_CPP))
 	{
@@ -1342,15 +1418,15 @@ static void readPackage( token )
 {
     const int c = skipToNonWhite();
 
-    Assert(isType(token, TOK_KEYWORD));
+    Assert(isType(token, TOKEN_KEYWORD));
     readPackageName(token, c);
-    token->type = TOK_PACKAGE;
+    token->type = TOKEN_PACKAGE;
 }
 
 static void processName( st )
     statementInfo *const st;
 {
-    Assert(isType(activeToken(st), TOK_NAME));
+    Assert(isType(activeToken(st), TOKEN_NAME));
     if (st->gotName  &&  st->declaration == DECL_NONE)
 	st->declaration = DECL_BASE;
     st->gotName = TRUE;
@@ -1367,7 +1443,7 @@ static void processToken( token, st )
 
 	case KEYWORD_NONE:	processName(st);			break;
 	case KEYWORD_ATTRIBUTE:	skipParens(); initToken(token);		break;
-	case KEYWORD_CATCH:	skipParens();				break;
+	case KEYWORD_CATCH:	skipParens(); skipBraces();		break;
 	case KEYWORD_CHAR:	st->declaration = DECL_BASE;		break;
 	case KEYWORD_CLASS:	st->declaration = DECL_CLASS;		break;
 	case KEYWORD_CONST:	st->declaration = DECL_BASE;		break;
@@ -1472,7 +1548,7 @@ static void skipMacro( st )
 {
     tokenInfo *const prev2 = prevToken(st, 2);
 
-    if (isType(prev2, TOK_NAME))
+    if (isType(prev2, TOKEN_NAME))
 	retardToken(st);
     skipToMatch("()");
 }
@@ -1558,7 +1634,7 @@ static boolean skipPostArgumentStuff( st, info )
 		    break;
 
 		default:
-		    if (isType(token, TOK_NONE))
+		    if (isType(token, TOKEN_NONE))
 			;
 		    else if (info->isKnrParamList  &&  info->parameterCount > 0)
 			++elementCount;
@@ -1588,7 +1664,7 @@ static boolean skipPostArgumentStuff( st, info )
     if (restart)
 	restartStatement(st);
     else
-	setToken(st, TOK_NONE);
+	setToken(st, TOKEN_NONE);
 
     return (boolean)(c != EOF);
 }
@@ -1616,7 +1692,7 @@ static void skipJavaThrows(st)
 	}
     }
     cppUngetc(c);
-    setToken(st, TOK_NONE);
+    setToken(st, TOKEN_NONE);
 }
 
 static void analyzePostParens( st, info )
@@ -1721,7 +1797,7 @@ static int parseParens( st, info )
 		    skipMacro(st);
 		    depth = 0;
 		}
-		else if (isType(token, TOK_PAREN_NAME))
+		else if (isType(token, TOKEN_PAREN_NAME))
 		{
 		    c = skipToNonWhite();
 		    if (c == '*')	/* check for function pointer */
@@ -1748,9 +1824,9 @@ static int parseParens( st, info )
 		    if (++identifierCount > 1)
 			info->isKnrParamList = FALSE;
 		    readIdentifier(token, c);
-		    if (isType(token, TOK_NAME)  &&  info->isNameCandidate)
-			token->type = TOK_PAREN_NAME;
-		    else if (isType(token, TOK_KEYWORD))
+		    if (isType(token, TOKEN_NAME)  &&  info->isNameCandidate)
+			token->type = TOKEN_PAREN_NAME;
+		    else if (isType(token, TOKEN_KEYWORD))
 		    {
 			info->isKnrParamList = FALSE;
 			info->isNameCandidate = FALSE;
@@ -1798,7 +1874,7 @@ static void analyzeParens( st )
 {
     tokenInfo *const prev = prevToken(st, 1);
 
-    if (! isType(prev, TOK_NONE))    /* in case of ignored enclosing macros */
+    if (! isType(prev, TOKEN_NONE))    /* in case of ignored enclosing macros */
     {
 	tokenInfo *const token = activeToken(st);
 	parenInfo info;
@@ -1810,12 +1886,12 @@ static void analyzeParens( st )
 	cppUngetc(c);
 	if (info.invalidContents)
 	    reinitStatement(st, FALSE);
-	else if (info.isNameCandidate  &&  isType(token, TOK_PAREN_NAME)  &&
+	else if (info.isNameCandidate  &&  isType(token, TOKEN_PAREN_NAME)  &&
 		 ! st->gotParenName  &&
 		 (! st->haveQualifyingName  ||  isOneOf(c, "(=")  ||
 		  (st->declaration == DECL_NONE  &&  isOneOf(c, ",;"))))
 	{
-	    token->type = TOK_NAME;
+	    token->type = TOKEN_NAME;
 	    processName(st);
 	    st->gotParenName = TRUE;
 	    if (! (c == '('  &&  info.nestedArgs))
@@ -1824,12 +1900,12 @@ static void analyzeParens( st )
 	else if (! st->gotArgs  &&  info.isParamList)
 	{
 	    st->gotArgs = TRUE;
-	    setToken(st, TOK_ARGS);
+	    setToken(st, TOKEN_ARGS);
 	    advanceToken(st);
 	    analyzePostParens(st, &info);
 	}
 	else
-	    setToken(st, TOK_NONE);
+	    setToken(st, TOKEN_NONE);
     }
 }
 
@@ -1837,19 +1913,26 @@ static void analyzeParens( st )
 *-	Token parsing functions
 ----------------------------------------------------------------------------*/
 
-static void addContext( st )
+static void addContext( st, token )
     statementInfo *const st;
+    const tokenInfo *const token;
 {
-    tokenInfo *const nameToken = prevToken(st, 1);
-
-    if (vStringLength(st->context->name) > 0)
-	vStringCatS(st->context->name, "::");
-    vStringCat(st->context->name, nameToken->name);
-    st->haveQualifyingName = FALSE;
-    st->member.isMember    = TRUE;
-    st->member.immediate   = TRUE;
+    if (isType(token, TOKEN_NAME))
+    {
+	if (vStringLength(st->context->name) > 0)
+	{
+	    if (isLanguage(LANG_C)  ||  isLanguage(LANG_CPP))
+		vStringCatS(st->context->name, "::");
+	    else if (isLanguage(LANG_JAVA))
+		vStringCatS(st->context->name, ".");
+	}
+	vStringCat(st->context->name, token->name);
+	st->context->type = TOKEN_NAME;
+    }
+#if 0
     if (st->declaration == DECL_NONE)
 	st->declaration = DECL_BASE;
+#endif
 }
 
 static void processColon( st )
@@ -1858,22 +1941,21 @@ static void processColon( st )
     const int c = skipToNonWhite();
     const boolean doubleColon = (boolean)(c == ':');
 
-    if (! doubleColon)
+    if (doubleColon)
+    {
+	setToken(st, TOKEN_DOUBLE_COLON);
+	st->haveQualifyingName = FALSE;
+    }
+    else
     {
 	cppUngetc(c);
-	if (isLanguage(LANG_CPP)  &&  st->declaration == DECL_CLASS)
+	if (isLanguage(LANG_CPP)  && (
+	    st->declaration == DECL_CLASS  ||  st->declaration == DECL_STRUCT))
 	{
 	    const int d = skipToCharacter('{');
 	    cppUngetc(d);
 	}
     }
-
-    /*  If we are not inside of a class (or other composite object, then
-     *  this is either a method or static member definition. Otherwise it
-     *  is a qualified type declaration.
-     */
-    else if (st->parent == NULL)
-	addContext(st);
 }
 
 /*  Skips over any initializing value which may follow an '=' character in a
@@ -1924,13 +2006,13 @@ static void processInitializer( st )
     const int c = skipInitializer(inEnumBody);
 
     if (c == ';')
-	setToken(st, TOK_SEMICOLON);
+	setToken(st, TOKEN_SEMICOLON);
     else if (c == ',')
-	setToken(st, TOK_COMMA);
+	setToken(st, TOKEN_COMMA);
     else if ('}'  &&  inEnumBody)
     {
 	cppUngetc(c);
-	setToken(st, TOK_COMMA);
+	setToken(st, TOKEN_COMMA);
     }
     if (st->scope == SCOPE_EXTERN)
 	st->scope = SCOPE_GLOBAL;
@@ -1943,8 +2025,41 @@ static void parseIdentifier( st, c )
     tokenInfo *const token = activeToken(st);
 
     readIdentifier(token, c);
-    if (! isType(token, TOK_NONE))
+    if (! isType(token, TOKEN_NONE))
 	processToken(token, st);
+}
+
+static void parseGeneralToken( st, c )
+    statementInfo *const st;
+    const int c;
+{
+    const tokenInfo *const prev = prevToken(st, 1);
+
+    if (isident1(c))
+    {
+	parseIdentifier(st, c);
+	if (isType(st->context, TOKEN_NAME) &&
+	    isType(activeToken(st), TOKEN_NAME) && isType(prev, TOKEN_NAME))
+	{
+	    initToken(st->context);
+	}
+    }
+    else if (isExternCDecl(st, c))
+    {
+	st->declaration = DECL_NOMANGLE;
+	st->scope = SCOPE_GLOBAL;
+    }
+    if (isLanguage(LANG_JAVA)  &&
+	(st->declaration == DECL_CLASS  ||  st->declaration == DECL_INTERFACE))
+    {
+	if (prev->keyword == KEYWORD_CLASS ||
+	    prev->keyword == KEYWORD_INTERFACE)
+	{
+	    if (isType(activeToken(st), TOKEN_NAME))
+		copyToken(st->blockName, activeToken(st));
+	    qualifyBlockTag(st, activeToken(st));
+	}
+    }
 }
 
 /*  Reads characters from the pre-processor and assembles tokens, setting
@@ -1961,28 +2076,20 @@ static void nextToken( st )
 
 	switch (c)
 	{
-	    case EOF:   longjmp(Exception, (int)ExceptionEOF);		break;
-	    case '(':   analyzeParens(st);  token = activeToken(st);	break;
-	    case '*':   st->haveQualifyingName = FALSE;			break;
-	    case ',':   setToken(st, TOK_COMMA);			break;
-	    case ':':   processColon(st);				break;
-	    case ';':   setToken(st, TOK_SEMICOLON);			break;
-	    case '<':   skipToMatch("<>");				break;
-	    case '=':   processInitializer(st);				break;
-	    case '[':   skipToMatch("[]");				break;
-	    case '{':   setToken(st, TOK_BRACE_OPEN);			break;
-	    case '}':   setToken(st, TOK_BRACE_CLOSE);			break;
-
-	    default:
-		if (isident1(c))
-		    parseIdentifier(st, c);
-		else if (isExternCDecl(st, c))
-		{
-		    st->declaration = DECL_NOMANGLE;
-		    st->scope = SCOPE_GLOBAL;
-		}
+	    case EOF: longjmp(Exception, (int)ExceptionEOF);		break;
+	    case '(': analyzeParens(st);  token = activeToken(st);	break;
+	    case '*': st->haveQualifyingName = FALSE;			break;
+	    case ',': setToken(st, TOKEN_COMMA);			break;
+	    case ':': processColon(st);					break;
+	    case ';': setToken(st, TOKEN_SEMICOLON);			break;
+	    case '<': skipToMatch("<>");				break;
+	    case '=': processInitializer(st);				break;
+	    case '[': skipToMatch("[]");				break;
+	    case '{': setToken(st, TOKEN_BRACE_OPEN);			break;
+	    case '}': setToken(st, TOKEN_BRACE_CLOSE);			break;
+	    default:  parseGeneralToken(st, c);				break;
 	}
-    } while (isType(token, TOK_NONE));
+    } while (isType(token, TOKEN_NONE));
 }
 
 /*----------------------------------------------------------------------------
@@ -2000,7 +2107,9 @@ static statementInfo *newStatement( parent )
     for (i = 0  ;  i < (unsigned int)NumTokens  ;  ++i)
 	st->token[i] = newToken();
 
-    st->context  = newToken();
+    st->context = newToken();
+    st->blockName = newToken();
+
     initStatement(st, parent);
     CurrentStatement = st;
 
@@ -2016,8 +2125,9 @@ static void deleteStatement()
     for (i = 0  ;  i < (unsigned int)NumTokens  ;  ++i)
 	deleteToken(st->token[i]);
 
+    deleteToken(st->blockName);
     deleteToken(st->context);
-    free(st);
+    eFree(st);
     CurrentStatement = parent;
 }
 
@@ -2027,38 +2137,15 @@ static void deleteAllStatements()
 	deleteStatement();
 }
 
-static boolean isContextCandidate( st )
-    const statementInfo *const st;
-{
-    const tokenInfo *const prev = prevToken(st, 1);
-    boolean isCandidate = FALSE;
-
-    if (isType(prev, TOK_KEYWORD)) switch (prev->keyword)
-    {
-	case KEYWORD_CLASS:
-	case KEYWORD_ENUM:
-	case KEYWORD_INTERFACE:
-	case KEYWORD_NAMESPACE:
-	case KEYWORD_STRUCT:
-	case KEYWORD_UNION:
-	    isCandidate = TRUE;
-	    break;
-
-	default:
-	    break;
-    }
-    return isCandidate;
-}
-
 static boolean isStatementEnd( st )
     const statementInfo *const st;
 {
     const tokenInfo *const token = activeToken(st);
     boolean isEnd;
 
-    if (isType(token, TOK_SEMICOLON))
+    if (isType(token, TOKEN_SEMICOLON))
 	isEnd = TRUE;
-    else if (isType(token, TOK_BRACE_CLOSE)  &&
+    else if (isType(token, TOKEN_BRACE_CLOSE)  &&
 	     (st->declaration == DECL_FUNCTION  ||
 	      st->declaration == DECL_NAMESPACE ||
 	      st->declaration == DECL_NOMANGLE))
@@ -2074,7 +2161,7 @@ static void checkStatementEnd( st )
 {
     const tokenInfo *const token = activeToken(st);
 
-    if (isType(token, TOK_COMMA))
+    if (isType(token, TOKEN_COMMA))
 	reinitStatement(st, TRUE);
     else if (isStatementEnd(st))
     {
@@ -2089,7 +2176,7 @@ static void checkStatementEnd( st )
     }
 }
 
-static void nest ( st, nestLevel )
+static void nest( st, nestLevel )
     statementInfo *const st;
     const unsigned int nestLevel;
 {
@@ -2110,7 +2197,7 @@ static void nest ( st, nestLevel )
 	    break;
     }
     advanceToken(st);
-    setToken(st, TOK_BRACE_CLOSE);
+    setToken(st, TOKEN_BRACE_CLOSE);
 }
 
 static void tagCheck( st )
@@ -2122,37 +2209,46 @@ static void tagCheck( st )
 
     switch (token->type)
     {
-	case TOK_NAME:
+	case TOKEN_NAME:
 	    if (insideEnumBody(st))
 		qualifyEnumeratorTag(st, token);
 	    break;
 
-	case TOK_PACKAGE:
+	case TOKEN_PACKAGE:
 	    if (st->haveQualifyingName)
 		makeTag(token, st, FALSE, TAG_PACKAGE);
 	    break;
 
-	case TOK_BRACE_OPEN:
-	    if (isType(prev, TOK_ARGS))
+	case TOKEN_BRACE_OPEN:
+	    if (isType(prev, TOKEN_ARGS))
 	    {
 		if (st->haveQualifyingName)
 		{
 		    st->declaration = DECL_FUNCTION;
+		    if (isType (prev, TOKEN_NAME))
+			copyToken(st->blockName, prev2);
 		    qualifyBlockTag(st, prev2);
-		    copyToken(st->context, prev2);
 		}
 	    }
-	    else
-		qualifyBlockTag(st, st->context);
+	    else if (! isLanguage(LANG_JAVA) && isContextualStatement(st))
+	    {
+		if (isType (prev, TOKEN_NAME))
+		    copyToken(st->blockName, prev);
+		qualifyBlockTag(st, prev);
+	    }
 	    break;
 
-	case TOK_SEMICOLON:
-	case TOK_COMMA:
+	case TOKEN_SEMICOLON:
+	case TOKEN_COMMA:
 	    if (insideEnumBody(st))
 		;
-	    else if (isType(prev, TOK_NAME))
+	    else if (isType(prev, TOKEN_NAME))
+	    {
+		if (isContextualKeyword(prev2))
+		    st->scope = SCOPE_EXTERN;
 		qualifyVariableTag(st, prev);
-	    else if (isType(prev, TOK_ARGS)  &&  isType(prev2, TOK_NAME))
+	    }
+	    else if (isType(prev, TOKEN_ARGS)  &&  isType(prev2, TOKEN_NAME))
 	    {
 		if (st->isPointer)
 		    qualifyVariableTag(st, prev2);
@@ -2181,7 +2277,7 @@ static void createTags( nestLevel, parent )
 
 	nextToken(st);
 	token = activeToken(st);
-	if (isType(token, TOK_BRACE_CLOSE))
+	if (isType(token, TOKEN_BRACE_CLOSE))
 	{
 	    if (nestLevel > 0)
 		break;
@@ -2193,19 +2289,16 @@ static void createTags( nestLevel, parent )
 		longjmp(Exception, (int)ExceptionBraceFormattingError);
 	    }
 	}
+	else if (isType(token, TOKEN_DOUBLE_COLON))
+	{
+	    addContext(st, prevToken(st, 1));
+	    advanceToken(st);
+	}
 	else
 	{
-	    if (isType(token, TOK_NAME) && isContextCandidate(st))
-	    {
-		copyToken(st->context, token);
-		st->haveQualifyingName = FALSE;
-	    }
-	    else
-		tagCheck(st);
-
-	    if (isType(token, TOK_BRACE_OPEN))
+	    tagCheck(st);
+	    if (isType(token, TOKEN_BRACE_OPEN))
 		nest(st, nestLevel + 1);
-
 	    checkStatementEnd(st);
 	}
     }

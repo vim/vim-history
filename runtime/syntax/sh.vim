@@ -1,16 +1,15 @@
 " Vim syntax file
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
-" Maintainer:		Dr. Charles E. Campbell, Jr. <charles.campbell@gsfc.nasa.gov>
+" Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	May 26, 1999
-" Version: 1.08
+" Last Change:	November 12, 1999
+" Version: 1.09
 "
 " Using the following VIM variables:
-" is_kornshell               if defined enhance with kornshell syntax
-" is_bash                    if defined enhance with bash syntax
+" is_kornshell               if defined, enhance with kornshell syntax
+" is_bash                    if defined, enhance with bash syntax
 "
-" This is a complete redesign including many ideas from
-" Éric Brunet (eric.brunet@ens.fr)
+" This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -38,7 +37,7 @@ endif
 syn match     shTestError "]"
 
 " Options interceptor
-syn match   shOption  "[\-+][a-zA-Z0-9]\+\>"
+syn match   shOption  "\s[\-+][a-zA-Z0-9]\+\>"ms=s+1
 
 " error clusters:
 "================
@@ -57,16 +56,16 @@ syn cluster shDblQuoteList	contains=shCommandSub,shDeref,shSpecial,shSpecialShel
 
 " clusters: contains=ALLBUT,@... clusters
 "=========================================
-syn cluster shCaseList	contains=shFunction,shCase,shCaseBar,shDerefOp,shDerefText,@shErrorCaseList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shColonList	contains=shCase,shCaseBar,shDerefOp,shDerefText,shFunction,shTestOpr,@shErrorColonList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shCommandSubList1	contains=shCase,shCaseBar,shCommandSub,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shCommandSubList2	contains=shCase,shCaseBar,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shLoopList	contains=shFunction,@shErrorLoopList,shCase,shInEsac,shCaseBar,shDerefOp,shDerefText,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shExprList1	contains=shCase,shCaseBar,shDerefOp,shDerefText,shFunction,shIdentifier,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shExprList2	contains=shCase,shCaseBar,shDerefOp,shDerefText,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shSubShList	contains=shCase,shCaseBar,shDerefOp,shDerefText,shParenError,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shDerefError,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shTestList	contains=shCase,shCaseBar,shDTestError,shDerefError,shDerefOp,shDerefText,shFunction,shIdentifier,shTestError,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
-syn cluster shFunctionList	contains=shCase,shCaseBar,@shErrorFuncList,shDerefOp,shDerefText,shFunction,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern
+syn cluster shCaseList	contains=shFunction,shCase,shCaseBar,shDerefOp,shDerefText,@shErrorCaseList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shColonList	contains=shCase,shCaseBar,shDerefOp,shDerefText,shFunction,shTestOpr,@shErrorColonList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shCommandSubList1	contains=shCase,shCaseBar,shCommandSub,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shCommandSubList2	contains=shCase,shCaseBar,shDerefOp,shDerefText,shEcho,shFunction,shTestOpr,@shErrorList,shDerefVar,shDerefOpError,shStringSpecial,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shLoopList	contains=shFunction,@shErrorLoopList,shCase,shInEsac,shCaseBar,shDerefOp,shDerefText,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shExprList1	contains=shCase,shCaseBar,shDerefOp,shDerefText,shFunction,shIdentifier,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shExprList2	contains=shCase,shCaseBar,shDerefOp,shDerefText,@shErrorNoneList,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shSubShList	contains=shCase,shCaseBar,shDerefOp,shDerefText,shParenError,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shDerefError,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shTestList	contains=shCase,shCaseBar,shDTestError,shDerefError,shDerefOp,shDerefText,shFunction,shIdentifier,shTestError,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
+syn cluster shFunctionList	contains=shCase,shCaseBar,@shErrorFuncList,shDerefOp,shDerefText,shFunction,shDerefVar,shDerefOpError,shStringSpecial,shSkipInitWS,shIdWhiteSpace,shDerefTextError,shPattern,shSetIdentifier
 
 " Tests
 "======
@@ -95,7 +94,7 @@ syn region shSubSh transparent matchgroup=shOperator start="(" end=")"		contains
 "=====
 syn match   shOperator	"[!&;|]"
 syn match   shOperator	"!\=="	skipwhite nextgroup=shPattern
-syn match   shPattern	"\<\S*\>"	contained
+syn match   shPattern	"\<\S*\>"	contained contains=shSinglequote,shDoublequote
 syn match   shWrapLineOperator "\\$"
 syn region  shCommandSub   start="`" skip="\\`" end="`" contains=ALLBUT,@shCommandSubList1
 if exists("is_kornshell") || exists("is_bash")
@@ -172,8 +171,9 @@ syn region shHereDoc matchgroup=shRedir start="<<-\=\s*\**EOF\**" matchgroup=shR
 
 " Identifiers
 "============
-syn match  shIdentifier "\<[a-zA-Z_][a-zA-Z0-9_]*\>="me=e-1
-syn match  shIdWhiteSpace contained	"\s"
+syn match  shIdentifier "\<[a-zA-Z_][a-zA-Z0-9_]*\>="me=e-1	nextgroup=shSetIdentifier
+syn match  shIdWhiteSpace  contained	"\s"
+syn match  shSetIdentifier contained	"=" nextgroup=shDeref,shString,shPattern
 if exists("is_bash")
  syn region shIdentifier matchgroup=shStatement start="\<\(declare\|typeset\|local\|export\|set\|unset\)\>[^/]"me=e-1 matchgroup=shOperator end="$\|[;&|]" matchgroup=NONE end="#\|="me=e-1 contains=@shIdList
 elseif exists("is_kornshell")

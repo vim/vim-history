@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 5.5.  Last change: 1999 Oct 20
+*syntax.txt*    For Vim version 5.6a.  Last change: 1999 Dec 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -474,6 +474,30 @@ To disable it again, use this:
 >  unlet cobol_legacy_code
 
 
+DTD							*dtd.vim*
+
+The DTD syntax highlighting is case sensitive by default. To disable
+case-sensitive highlighting, add the following line to your startup file:
+
+>  let dtd_ignore_case=1
+>
+The DTD syntax file will highlight unknown tags as errors. If
+this is annoying, it can be turned off by setting:
+
+>  let dtd_no_tag_errors=1
+>
+before sourcing the dtd.vim syntax file.
+Parameter entity names are highlighted in the definition using the
+'Type' highlighting group and 'Comment' for punctuation and '%'.
+Parameter entity instances are highlighted using the 'Constant'
+highlighting group and the 'Type' highlighting group for the
+delimiters % and ;. This can be turned off by setting:
+>
+>  let dtd_no_param_entities=1
+
+The DTD syntax file is also included by xml.vim to highlight included dtd's.
+>
+
 EIFFEL							*eiffel.vim*
 
 While Eiffel is not case-sensitive, its style guidelines are, and the
@@ -519,10 +543,23 @@ to your startup file.
 
 FVWM CONFIGURATION FILES				*fvwm.vim*
 
-To make Vim highlight all valid color names, let "rgb_file" contain the
-full path of the color database (rgb.txt).  E.g.,
+In order for VIM to recognize Fvwm configuration files that do not match the
+patterns *fvwmrc* or *fvwm2rc*, you must put additional patterns appropriate
+to your system in your "myfiletypes.vim" file.  For example, to make VIM
+identify all files in /etc/X11/fvwm2/ as Fvwm2 configuration files, add the
+following:
+
+>  au! BufNewFile,BufRead /etc/X11/fvwm2/*
+>	\ let use_fvwm_2 = 1 | let use_fvwm_1 = 0 | set ft=fvwm
+
+If you'd like Vim to highlight all valid color names, tell it where to find
+the color database (rgb.txt) on your system.  Do this by setting "rgb_file" to
+it's location.  Assuming your color database is located in /usr/X11/lib/X11/,
+you should add the line
 
 >  let rgb_file = "/usr/X11/lib/X11/rgb.txt"
+
+to your .vimrc file.
 
 
 HTML							*html.vim*
@@ -1202,9 +1239,19 @@ DEFINING REGIONS	*:syn-region* *:syn-start* *:syn-skip* *:syn-end*
 	using a matchgroup.
 
 	It is not possible to have a contained match in a start or end pattern
-	that is highlighted with "matchgroup".
+	that is highlighted with "matchgroup".  This can be used to avoid that
+	a contained item matches in the start or end pattern.
 	When using "transparent", it does not apply to a start or end pattern
 	that is highlighted with "matchgroup".
+
+	Here is an example, which highlights three levels of parentheses in
+	different colors:
+>  sy region par1 matchgroup=par1 start=/(/ end=/)/ contains=par2
+>  sy region par2 matchgroup=par2 start=/(/ end=/)/ contains=par3 contained
+>  sy region par3 matchgroup=par3 start=/(/ end=/)/ contains=par1 contained
+>  hi par1 ctermfg=red guifg=red
+>  hi par2 ctermfg=blue guifg=blue
+>  hi par3 ctermfg=darkgreen guifg=darkgreen
 
 ==============================================================================
 6. :syntax arguments					*:syn-arguments*
@@ -1318,6 +1365,11 @@ command defines a new group, this is not matched.  Be careful: When putting
 syntax commands in a file you can't rely on groups NOT being defined, because
 the file may have been sourced before, and "syn clear" doesn't remove the
 group names.
+
+The contained groups will also match in the start and end patterns of a
+region.  If this is not wanted, the "matchgroup" argument can be used
+|:syn-matchgroup|.  The "rs=" and "re=" offsets can be used to change the
+region where contained items do match.
 
 
 nextgroup={groupname},..				*:syn-nextgroup*
@@ -1440,7 +1492,7 @@ region item skip    -    yes  -    -    -    -    -
 region item end     -    yes  -    yes  -    yes  -
 
 Offsets can be concatenated, with a ',' in between.  Example:
->  syn match String  /".*"/hs=s+1,he=e-1
+>  syn match String  /"[^"]*"/hs=s+1,he=e-1
 
     some "string" text
 	  ^^^^^^		highlighted
@@ -2208,6 +2260,15 @@ newer version of xterm, but not everybody is it using yet.]
 To get these right away, reload the .Xdefaults file to the X Option database
 Manager (you only need to do this when you just changed the .Xdefaults file):
 >  xrdb -merge ~/.Xdefaults
+
+							*xterm-blink*
+To make the cursor blink in an xterm, see tools/blink.c.  Or use Thomas
+Dickey's xterm above patchlevel 107 (see above for where to get it), with
+these resources:
+	XTerm*cursorBlink:	on
+	XTerm*cursorOnTime:	400
+	XTerm*cursorOffTime:	250
+	XTerm*cursorColor:	White
 
 							*hpterm-color*
 These settings work (more or less) for a hpterm, which only supports 8

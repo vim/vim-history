@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
+*cmdline.txt*   For Vim version 5.6a.  Last change: 1999 Oct 21
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -544,7 +544,7 @@ it, no matter how many backslashes.
 			       *:<sfile>* *<sfile>* *:<afile>* *<afile>*
 			       *:<abuf>* *<abuf>* *:<amatch>* *<amatch>*
 Note: the next four are typed literally, these are not special keys!
-	<cword>    is replaced with the word under the cursor
+	<cword>    is replaced with the word under the cursor (like |star|)
 	<cWORD>    is replaced with the WORD under the cursor (see |WORD|)
 	<cfile>    is replaced with the path name under the cursor
 	<afile>    when executing autocommands, is replaced with the file name

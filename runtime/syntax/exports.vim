@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	exports
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last change:	May 18, 1998
 " Notes: This file includes both SysV and BSD 'isms
 

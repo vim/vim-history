@@ -1,4 +1,5 @@
 /* vi:set ts=8 sts=4 sw=4:
+ *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.

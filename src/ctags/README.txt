@@ -61,14 +61,13 @@ What makes this ctags desirable?
 
 5.  Supports output of Emacs-style TAGS files ("etags").
 
-6.  Supports UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, and VMS.
-    Some pre-compiled binaries are available on the web site.
+6.  Supports UNIX, MSDOS, Windows 95/NT, OS/2, QNX, Amiga, QDOS, VMS, and
+    Cray. Some pre-compiled binaries are available on the web site.
 
 
 You can find Exuberant Ctags at the following locations:
 
     http://darren.hiebert.com/ctags/index.html   (Official web site)
-    ftp://ftp.revnet.com/pub/ctags/
     ftp://sunsite.unc.edu/pub/Linux/devel/lang/c/
 
 

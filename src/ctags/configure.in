@@ -13,7 +13,7 @@ AC_CONFIG_HEADER(config.h)
 
 dnl Report system info
 dnl ------------------
-echo 'Exuberant Ctags, version 3.3.2'
+echo 'Exuberant Ctags, version 3.3.3'
 uname -mrsv 2>/dev/null
 
 dnl Define convenience macros

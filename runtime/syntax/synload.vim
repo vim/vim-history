@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Sep 19
+" Last change:	1999 Dec 03
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -92,6 +92,8 @@ SynAu abc
 SynAu ada
 SynAu ahdl
 SynAu amiga
+SynAu aml
+SynAu apachestyle
 SynAu asm
 SynAu asmh8300
 SynAu asn
@@ -112,6 +114,9 @@ SynAu cpp
 SynAu csh
 SynAu css
 SynAu cterm
+SynAu ctrlh
+SynAu cupl
+SynAu cuplsim
 SynAu cweb
 SynAu dcl
 SynAu def
@@ -143,6 +148,7 @@ SynAu idl
 SynAu idlang
 SynAu inform
 SynAu ishd
+SynAu ist
 SynAu java
 SynAu javacc
 SynAu javascript
@@ -202,6 +208,7 @@ SynAu python
 SynAu radiance
 SynAu rc
 SynAu rebol
+SynAu remind
 SynAu rexx
 SynAu rpcgen
 SynAu sas
@@ -225,8 +232,10 @@ SynAu spec
 SynAu spice
 SynAu spup
 SynAu sql
+SynAu sqr
 SynAu squid
 SynAu st
+SynAu tads
 SynAu tags
 SynAu tcl
 SynAu tex
@@ -247,6 +256,7 @@ SynAu xdefaults
 SynAu xmath
 SynAu xml
 SynAu xpm
+SynAu xpm2
 SynAu xs
 SynAu xxd
 SynAu yacc

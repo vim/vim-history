@@ -396,7 +396,7 @@ static void makeDefineTag( name )
 {
     const boolean isFileScope = (boolean)(! isHeaderFile());
 
-    if (Option.include.c.defines  &&
+    if (Option.include.cTypes.defines  &&
 	(! isFileScope  ||  Option.include.fileScope))
     {
 	tagEntryInfo e;

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 08
+*options.txt*   For Vim version 5.6a.  Last change: 1999 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -67,7 +67,7 @@ achieve special effects.  These options come in three forms:
 			backslashes in {value}.
 
 :se[t] {option}+={value}				*:set+=*
-			Add the {value} to a number option, or concatenate the
+			Add the {value} to a number option, or append the
 			{value} to a string option.  When the option is a
 			comma separated list, a comma is added, unless the
 			value was empty.  There is no check for doubled
@@ -77,10 +77,10 @@ achieve special effects.  These options come in three forms:
 			Also see |:set-args| above.
 
 :se[t] {option}^={value}				*:set^=*
-			Multiply the {value} to a number option, or
-			prepend the {value} to a string option.  When the
-			option is a comma separated list, a comma is added,
-			unless the value was empty.
+			Multiply the {value} to a number option, or prepend
+			the {value} to a string option.  When the option is a
+			comma separated list, a comma is added, unless the
+			value was empty.
 			Also see |:set-args| above.
 
 :se[t] {option}-={value}				*:set-=*
@@ -804,6 +804,10 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	Number of columns of the screen.  Normally this is set by the terminal
 	initialization and does not have to be set by hand.
+	When Vim is running in the GUI or in a resizable window, setting this
+	option may cause the window size to be changed.
+	When you set this option and Vim is unable to change the physical
+	number of columns of the display, the display may be messed up.
 
 						*'comments'* *'com'*
 'comments' 'com'	string	(default
@@ -1606,7 +1610,7 @@ A jump table for the options with a short description can be found at |X_op|.
 			blinks when Vim is waiting for input, not while
 			executing a command.
 			To make the cursor blink in an xterm, see
-			tools/blink.c.
+			|xterm-blink|.
 		{group-name}
 			a highlight group name, that sets the color and font
 			for the cursor
@@ -1638,19 +1642,23 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 			{only available when compiled with GUI enabled}
-	This is a list of fonts which should be tried when starting the GUI
-	version of vim.  The fonts are separated with commas.  Spaces after a
-	comma are ignored.  To include a comma in a font name precede it with
-	a backslash.  Setting an option requires an extra backslash before a
-	space and a backslash.  See also |option-backslash|.  For example:
+	This is a list of fonts which will be used for the GUI version of Vim.
+	In its simplest form the value is just one font name.  When
+	the font cannot be found you will get an error message.  To try other
+	font names a list can be specified, font names separated with commas.
+	The first valid font is used.
+	Spaces after a comma are ignored.  To include a comma in a font name
+	precede it with a backslash.  Setting an option requires an extra
+	backslash before a space and a backslash.  See also
+	|option-backslash|.  For example:
 >	    :set guifont=Screen15,\ 7x13,font\\,with\\,commas
-	will make vim try to use the font "Screen15" first, and if it fails
-	it will try to use "7x13" and then "font,with,commas" instead.
+	will make vim try to use the font "Screen15" first, and if it fails it
+	will try to use "7x13" and then "font,with,commas" instead.
 	Note that the fonts must be mono-spaced (all characters have the same
 	width).
 	To preview a font on X11, you might be able to use the "xfontsel"
 	program.  The "xlsfonts" program gives a list of all available fonts.
-	Win32 and GTK only:
+	For Win32 and GTK only:
 >	    :set guifont=*
 	will bring up a font requester, where you can pick the font you want.
 	If none of the fonts can be loaded, vim will keep the current setting.
@@ -1945,7 +1953,7 @@ A jump table for the options with a short description can be found at |X_op|.
 'ignorecase' 'ic'	boolean	(default off)
 			global
 	Ignore case in search patterns.  Also used when searching in the tags
-	file.
+	file.  Also see 'smartcase'.
 
 						*'include'* *'inc'*
 'include' 'inc'		string	(default "^#\s*include")
@@ -2210,7 +2218,7 @@ A jump table for the options with a short description can be found at |X_op|.
 		1: only if there are at least two windows
 		2: always
 	The screen looks nicer with a status line if you have several
-	windows, but it takes another screen line.
+	windows, but it takes another screen line. |status-line|
 
 			*'lazyredraw'* *'lz'* *'nolazyredraw'* *'nolz'*
 'lazyredraw' 'lz'	boolean	(default off)
@@ -2238,9 +2246,11 @@ A jump table for the options with a short description can be found at |X_op|.
 'lines'			number	(default 24 or terminal height)
 			global
 	Number of lines in the display.  Normally you don't need to set this.
-	That is done automatically by the terminal initialization code.  When
-	you do set this, and Vim is unable to change the physical number of
-	lines on the display, redisplaying may be wrong.
+	That is done automatically by the terminal initialization code.
+	When Vim is running in the GUI or in a resizable window, setting this
+	option may cause the window size to be changed.
+	When you set this option and Vim is unable to change the physical
+	number of lines of the display, the display may be messed up.
 
 						*'lisp'* *'nolisp'*
 'lisp'			boolean	(default off)
@@ -2377,7 +2387,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not in Vi}
 	Maximum amount of memory (in Kbyte) to use for one buffer.  When this
 	limit is reached allocating extra memory for a buffer will cause
-	other memory to be freed.  See also 'maxmemtot'.
+	other memory to be freed.  Maximum value 2000000.  Use this to work
+	without a limit.  Also see 'maxmemtot'.
 
 						*'maxmemtot'* *'mmt'*
 'maxmemtot' 'mmt'	number	(default 2048, or half the amount of memory
@@ -2385,7 +2396,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	Maximum amount of memory (in Kbyte) to use for all buffers together.
-	See also 'maxmem'.
+	Maximum value 2000000.  Use this to work without a limit.  Also see
+	'maxmem'.
 
 				   *'modeline'* *'ml'* *'nomodeline'* *'noml'*
 'modeline' 'ml'		boolean	(Vim default: on, Vi default: off)
@@ -2658,7 +2670,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	- Environment variables are expanded |:set_env|.
 	- Use wildcards to specify directories more freely, e.g.,
 		:set path=/usr/include/*
-	  means all subdirectories below /usr/include (but not /usr/include
+	  means all subdirectories in /usr/include (but not /usr/include
 	  itself).
 	- Use '**' if you want the whole subtree to be searched:
 		:set path=/home/user_x/src/**
@@ -2966,7 +2978,14 @@ A jump table for the options with a short description can be found at |X_op|.
 	"-f" is not inside the quotes, because it is not part of the command
 	name.  And Vim automagically recognizes the backslashes that are path
 	separators.
-	This option cannot be set from a |modeline|.
+	Under MS-Windows, when the executable ends in ".com" it must be
+	included.  Thus setting the shell to "command.com" or "4dos.com"
+	works, but "command" and "4dos" do not work for all commands (e.g.,
+	filtering).
+	For unknown reasons, when using "4dos.com" the current directory is
+	changed to "C:\".  To avoid this set 'shell' like this:
+>		:set shell=command.com\ /c\ 4dos
+	The 'shell' option cannot be set from a |modeline|.
 
 						*'shellcmdflag'* *'shcf'*
 'shellcmdflag' 'shcf'	string	(default: "-c", MS-DOS and Win32, when 'shell'
@@ -3321,6 +3340,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+statusline|
 			feature}
 	When nonempty, this option determines the content of the status line.
+	Also see |status-line|.
+
 	The option consists of printf style '%' items interspersed with
 	normal text.  Each status line item is of the form:
 	  %-0{minwid}.{maxwid}{item}
@@ -3378,7 +3399,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	      Empty if the argument file count is zero or one.
 	{ NF  Evaluate expression between '{' and '}' and substitute result.
 	( -   Start of item group.  Can be used for setting the width and
-	      alignment of a section.
+	      alignment of a section.  Must be followed by %) somewhere.
 	) -   End of item group.  No width fields allowed.
 	< -   Where to truncate line if too long.  Default is at the start.
 	      No width fields allowed.
@@ -3416,16 +3437,19 @@ A jump table for the options with a short description can be found at |X_op|.
 	Otherwise the result is taken as flag text and applied to the rules
 	described above.
 
-	Watch out for errors in expressions.  They may render vim unusable !
+	Watch out for errors in expressions.  They may render Vim unusable !
 	If you are stuck, hold down ':' or 'Q' to get a prompt, then quit and
 	edit your .vimrc or whatever with "vim -u NONE" to get it right.
 
-	Example: Display byte count and byte value, modified flag in red.
+	Examples:
+	Display byte count and byte value, modified flag in red.
 >	  set statusline=%<%f%=\ [%1*%M%*%n%R%H]\ %-19(%3l,%02c%03V%)%O'%02b'
 >	  hi User1 term=inverse,bold cterm=inverse,bold ctermfg=red
-	Example: Emulate standard status line with 'ruler' set
+	Emulate standard status line with 'ruler' set
 >	  set statusline=%<%f%h%m%r%=%l,%c%V\ %P
-	Example: Display a ,GZ flag if a compressed file is loaded
+	Idem, but add ascii value of char under the cursor (like "ga")
+>	  set statusline=%<%f%h%m%r%=%b\ 0x%B\ \ %l,%c%V\ %P
+	Display a ,GZ flag if a compressed file is loaded
 >	  set statusline=...%r%{VarExists('b:gzflag','\ [GZ]')}%h...
 	  In the |:autocmd|'s:   |let b:gzflag = 1   And: |unlet b:gzflag
 >	  function VarExists(var, val)
@@ -3793,6 +3817,13 @@ A jump table for the options with a short description can be found at |X_op|.
 >   set title titlestring=%<%F%=%l/%L-%P titlelen=70
 	The value of 'titlelen' is used to align items in the middle or right
 	of the available space.
+	Some people prefer to have the file name first:
+>   set titlestring=%t%(\ %M%)%(\ (%{expand(\"%:~:.:h\")})%)%(\ %a%)
+	Note the use of "%{ }" and an expression to get the path of the file,
+	without the file name.  The "%( %)" constructs are used to add a
+	separating space only when needed.
+	NOTE: Use of special characters in 'titlestring' may cause the display
+	to be garbled (e.g., when it contains a CR or NL character).
 	{not available when compiled without the |+statusline| feature}
 
 				*'toolbar'* *'tb'*
@@ -4136,10 +4167,12 @@ A jump table for the options with a short description can be found at |X_op|.
 	the possible matches are shown just above the command line, with the
 	first match highlighted (overwriting the status line, if there is
 	one).  Keys that show the previous/next match, such as <Tab> or
-	CTRL-P/N, cause the highlight to move to the appropriate match.  If
-	there are more matches than can fit in the line, a ">" is shown on the
-	right and/or a "<" is shown on the left.  The status line scrolls as
-	needed.
+	CTRL-P/CTRL-N, cause the highlight to move to the appropriate match.
+	When 'wildmode' is used, "wildmenu" mode is used where "full" is
+	specified.  "longest" and "list" do not start "wildmenu" mode.
+	If there are more matches than can fit in the line, a ">" is shown on
+	the right and/or a "<" is shown on the left.  The status line scrolls
+	as needed.
 	The "wildmenu" mode is abandoned when a key is hit that is not used
 	for selecting a completion.
 	While the "wildmenu" is active the following keys have special
@@ -4174,6 +4207,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			again.
 	"longest"	Complete till longest common string.  If this doesn't
 			result in a longer string, use the next part.
+	"longest:full"	Like "longest", but also start 'wildmenu' if it is
+			enabled.
 	"list"		When more than one match, list all matches.
 	"list:full"	When more than one match, list all matches and
 			complete first match.

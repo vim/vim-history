@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
+*editing.txt*   For Vim version 5.6a.  Last change: 1999 Dec 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -209,7 +209,8 @@ unmodified.
 
 							*:edit_f*
 :e[dit] [+cmd] {file}	Edit {file}.  This fails when changes have been made
-			to the current buffer.  Also see |+cmd|.
+			to the current buffer, unless 'hidden' is set.  Also
+			see |+cmd|.
 
 							*:edit!_f*
 :e[dit]! [+cmd] {file}	Edit {file} always.  Discard any changes to the
@@ -799,6 +800,11 @@ your shoulder.
 
 Since the value of the 'key' option is supposed to be a secret, its value can
 never be viewed.  You should not set this option in a vimrc file.
+
+An encrypted file can be recognized by the "file" command, if you add this
+line to "/etc/magic", "/usr/share/misc/magic" or whereever your system has the
+"magic" file:
+>     0	string	VimCrypt~	Vim encrypted file
 
 Notes:
 - Text you copy or delete goes to the numbered registers.  The registers can

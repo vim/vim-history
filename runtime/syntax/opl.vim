@@ -12,304 +12,49 @@ syn clear
 syn case ignore
 
 " A bunch of useful OPL keywords
-syn keyword OPLStatement proc
-syn keyword OPLStatement endp
-syn keyword OPLStatement abs
-syn keyword OPLStatement acos
-syn keyword OPLStatement addr
-syn keyword OPLStatement adjustalloc
-syn keyword OPLStatement alert
-syn keyword OPLStatement alloc
-syn keyword OPLStatement app
-syn keyword OPLStatement append
-syn keyword OPLStatement appendsprite
-syn keyword OPLStatement asc
-syn keyword OPLStatement asin
-syn keyword OPLStatement at
-syn keyword OPLStatement atan
-syn keyword OPLStatement back
-syn keyword OPLStatement beep
-syn keyword OPLStatement begintrans
-syn keyword OPLStatement bookmark
-syn keyword OPLStatement break
-syn keyword OPLStatement busy
-syn keyword OPLStatement byref
-syn keyword OPLStatement cache
-syn keyword OPLStatement cachehdr
-syn keyword OPLStatement cacherec
-syn keyword OPLStatement cachetidy
-syn keyword OPLStatement call
-syn keyword OPLStatement cancel
-syn keyword OPLStatement caption
-syn keyword OPLStatement changesprite
-syn keyword OPLStatement chr$
-syn keyword OPLStatement clearflags
-syn keyword OPLStatement close
-syn keyword OPLStatement closesprite
-syn keyword OPLStatement cls
-syn keyword OPLStatement cmd$
-syn keyword OPLStatement committrans
-syn keyword OPLStatement compact
-syn keyword OPLStatement compress
-syn keyword OPLStatement const
-syn keyword OPLStatement continue
-syn keyword OPLStatement copy
-syn keyword OPLStatement cos
-syn keyword OPLStatement count
-syn keyword OPLStatement create
-syn keyword OPLStatement createsprite
-syn keyword OPLStatement cursor
-syn keyword OPLStatement datetosecs
-syn keyword OPLStatement datim$
-syn keyword OPLStatement day
-syn keyword OPLStatement dayname$
-syn keyword OPLStatement days
-syn keyword OPLStatement daystodate
-syn keyword OPLStatement dbuttons
-syn keyword OPLStatement dcheckbox
-syn keyword OPLStatement dchoice
-syn keyword OPLStatement ddate
-syn keyword OPLStatement declare
-syn keyword OPLStatement dedit
-syn keyword OPLStatement deditmulti
-syn keyword OPLStatement defaultwin
-syn keyword OPLStatement deg
-syn keyword OPLStatement delete
-syn keyword OPLStatement dfile
-syn keyword OPLStatement dfloat
-syn keyword OPLStatement dialog
-syn keyword OPLStatement diaminit
-syn keyword OPLStatement diampos
-syn keyword OPLStatement dinit
-syn keyword OPLStatement dir$
-syn keyword OPLStatement dlong
-syn keyword OPLStatement do
-syn keyword OPLStatement dow
-syn keyword OPLStatement dposition
-syn keyword OPLStatement drawsprite
-syn keyword OPLStatement dtext
-syn keyword OPLStatement dtime
-syn keyword OPLStatement dxinput
-syn keyword OPLStatement edit
-syn keyword OPLStatement else
-syn keyword OPLStatement elseif
-syn keyword OPLStatement enda
-syn keyword OPLStatement endif
-syn keyword OPLStatement endv
-syn keyword OPLStatement endwh
-syn keyword OPLStatement entersend
-syn keyword OPLStatement entersend0
-syn keyword OPLStatement eof
-syn keyword OPLStatement erase
-syn keyword OPLStatement err
-syn keyword OPLStatement err$
-syn keyword OPLStatement errx$
-syn keyword OPLStatement escape
-syn keyword OPLStatement eval
-syn keyword OPLStatement exist
-syn keyword OPLStatement exp
-syn keyword OPLStatement ext
-syn keyword OPLStatement external
-syn keyword OPLStatement find
-syn keyword OPLStatement findfield
-syn keyword OPLStatement findlib
-syn keyword OPLStatement first
-syn keyword OPLStatement fix$
-syn keyword OPLStatement flags
-syn keyword OPLStatement flt
-syn keyword OPLStatement font
-syn keyword OPLStatement freealloc
-syn keyword OPLStatement gat
-syn keyword OPLStatement gborder
-syn keyword OPLStatement gbox
-syn keyword OPLStatement gbutton
-syn keyword OPLStatement gcircle
-syn keyword OPLStatement gclock
-syn keyword OPLStatement gclose
-syn keyword OPLStatement gcls
-syn keyword OPLStatement gcolor
-syn keyword OPLStatement gcopy
-syn keyword OPLStatement gcreate
-syn keyword OPLStatement gcreatebit
-syn keyword OPLStatement gdrawobject
-syn keyword OPLStatement gellipse
-syn keyword OPLStatement gen$
-syn keyword OPLStatement get
-syn keyword OPLStatement get$
-syn keyword OPLStatement getcmd$
-syn keyword OPLStatement getdoc$
-syn keyword OPLStatement getevent
-syn keyword OPLStatement getevent32
-syn keyword OPLStatement geteventa32
-syn keyword OPLStatement geteventc
-syn keyword OPLStatement getlibh
-syn keyword OPLStatement gfill
-syn keyword OPLStatement gfont
-syn keyword OPLStatement ggmode
-syn keyword OPLStatement ggrey
-syn keyword OPLStatement gheight
-syn keyword OPLStatement gidentity
-syn keyword OPLStatement ginfo
-syn keyword OPLStatement ginfo32
-syn keyword OPLStatement ginvert
-syn keyword OPLStatement giprint
-syn keyword OPLStatement glineby
-syn keyword OPLStatement glineto
-syn keyword OPLStatement gloadbit
-syn keyword OPLStatement gloadfont
-syn keyword OPLStatement global
-syn keyword OPLStatement gmove
-syn keyword OPLStatement gorder
-syn keyword OPLStatement goriginx
-syn keyword OPLStatement goriginy
-syn keyword OPLStatement goto
-syn keyword OPLStatement gotomark
-syn keyword OPLStatement gpatt
-syn keyword OPLStatement gpeekline
-syn keyword OPLStatement gpoly
-syn keyword OPLStatement gprint
-syn keyword OPLStatement gprintb
-syn keyword OPLStatement gprintclip
-syn keyword OPLStatement grank
-syn keyword OPLStatement gsavebit
-syn keyword OPLStatement gscroll
-syn keyword OPLStatement gsetpenwidth
-syn keyword OPLStatement gsetwin
-syn keyword OPLStatement gstyle
-syn keyword OPLStatement gtmode
-syn keyword OPLStatement gtwidth
-syn keyword OPLStatement gunloadfont
-syn keyword OPLStatement gupdate
-syn keyword OPLStatement guse
-syn keyword OPLStatement gvisible
-syn keyword OPLStatement gwidth
-syn keyword OPLStatement gx
-syn keyword OPLStatement gxborder
-syn keyword OPLStatement gxprint
-syn keyword OPLStatement gy
-syn keyword OPLStatement hex$
-syn keyword OPLStatement hour
-syn keyword OPLStatement iabs
-syn keyword OPLStatement icon
-syn keyword OPLStatement if
-syn keyword OPLStatement include
-syn keyword OPLStatement input
-syn keyword OPLStatement insert
-syn keyword OPLStatement int
-syn keyword OPLStatement intf
-syn keyword OPLStatement intrans
-syn keyword OPLStatement key
-syn keyword OPLStatement key$
-syn keyword OPLStatement keya
-syn keyword OPLStatement keyc
-syn keyword OPLStatement killmark
-syn keyword OPLStatement kmod
-syn keyword OPLStatement last
-syn keyword OPLStatement lclose
-syn keyword OPLStatement left$
-syn keyword OPLStatement len
-syn keyword OPLStatement lenalloc
-syn keyword OPLStatement linklib
-syn keyword OPLStatement ln
-syn keyword OPLStatement loadlib
-syn keyword OPLStatement loadm
-syn keyword OPLStatement loc
-syn keyword OPLStatement local
-syn keyword OPLStatement lock
-syn keyword OPLStatement log
-syn keyword OPLStatement lopen
-syn keyword OPLStatement lower$
-syn keyword OPLStatement lprint
-syn keyword OPLStatement max
-syn keyword OPLStatement mcard
-syn keyword OPLStatement mcasc
-syn keyword OPLStatement mean
-syn keyword OPLStatement menu
-syn keyword OPLStatement mid$
-syn keyword OPLStatement min
-syn keyword OPLStatement minit
-syn keyword OPLStatement minute
-syn keyword OPLStatement mkdir
-syn keyword OPLStatement modify
-syn keyword OPLStatement month
-syn keyword OPLStatement month$
-syn keyword OPLStatement mpopup
-syn keyword OPLStatement newobj
-syn keyword OPLStatement newobjh
-syn keyword OPLStatement next
-syn keyword OPLStatement notes
-syn keyword OPLStatement num$
-syn keyword OPLStatement odbinfo
-syn keyword OPLStatement off
-syn keyword OPLStatement onerr
-syn keyword OPLStatement open
-syn keyword OPLStatement openr
-syn keyword OPLStatement opx
-syn keyword OPLStatement os
-syn keyword OPLStatement parse$
-syn keyword OPLStatement path
-syn keyword OPLStatement pause
-syn keyword OPLStatement peek
-syn keyword OPLStatement pi
-syn keyword OPLStatement pointerfilter
-syn keyword OPLStatement poke
-syn keyword OPLStatement pos
-syn keyword OPLStatement position
-syn keyword OPLStatement possprite
-syn keyword OPLStatement print
-syn keyword OPLStatement put
-syn keyword OPLStatement rad
-syn keyword OPLStatement raise
-syn keyword OPLStatement randomize
-syn keyword OPLStatement realloc
-syn keyword OPLStatement recsize
+syn keyword OPLStatement proc endp abs acos addr adjustalloc alert alloc app
+syn keyword OPLStatement append appendsprite asc asin at atan back beep
+syn keyword OPLStatement begintrans bookmark break busy byref cache
+syn keyword OPLStatement cachehdr cacherec cachetidy call cancel caption
+syn keyword OPLStatement changesprite chr$ clearflags close closesprite cls
+syn keyword OPLStatement cmd$ committrans compact compress const continue
+syn keyword OPLStatement copy cos count create createsprite cursor
+syn keyword OPLStatement datetosecs datim$ day dayname$ days daystodate
+syn keyword OPLStatement dbuttons dcheckbox dchoice ddate declare dedit
+syn keyword OPLStatement deditmulti defaultwin deg delete dfile dfloat
+syn keyword OPLStatement dialog diaminit diampos dinit dir$ dlong do dow
+syn keyword OPLStatement dposition drawsprite dtext dtime dxinput edit else
+syn keyword OPLStatement elseif enda endif endv endwh entersend entersend0
+syn keyword OPLStatement eof erase err err$ errx$ escape eval exist exp ext
+syn keyword OPLStatement external find findfield findlib first fix$ flags
+syn keyword OPLStatement flt font freealloc gat gborder gbox gbutton
+syn keyword OPLStatement gcircle gclock gclose gcls gcolor gcopy gcreate
+syn keyword OPLStatement gcreatebit gdrawobject gellipse gen$ get get$
+syn keyword OPLStatement getcmd$ getdoc$ getevent getevent32 geteventa32
+syn keyword OPLStatement geteventc getlibh gfill gfont ggmode ggrey gheight
+syn keyword OPLStatement gidentity ginfo ginfo32 ginvert giprint glineby
+syn keyword OPLStatement glineto gloadbit gloadfont global gmove gorder
+syn keyword OPLStatement goriginx goriginy goto gotomark gpatt gpeekline
+syn keyword OPLStatement gpoly gprint gprintb gprintclip grank gsavebit
+syn keyword OPLStatement gscroll gsetpenwidth gsetwin gstyle gtmode gtwidth
+syn keyword OPLStatement gunloadfont gupdate guse gvisible gwidth gx
+syn keyword OPLStatement gxborder gxprint gy hex$ hour iabs icon if include
+syn keyword OPLStatement input insert int intf intrans key key$ keya keyc
+syn keyword OPLStatement killmark kmod last lclose left$ len lenalloc
+syn keyword OPLStatement linklib ln loadlib loadm loc local lock log lopen
+syn keyword OPLStatement lower$ lprint max mcard mcasc mean menu mid$ min
+syn keyword OPLStatement minit minute mkdir modify month month$ mpopup
+syn keyword OPLStatement newobj newobjh next notes num$ odbinfo off onerr
+syn keyword OPLStatement open openr opx os parse$ path pause peek pi
+syn keyword OPLStatement pointerfilter poke pos position possprite print
+syn keyword OPLStatement put rad raise randomize realloc recsize rename
+syn keyword OPLStatement rept$ return right$ rmdir rnd rollback sci$ screen
+syn keyword OPLStatement screeninfo second secstodate send setdoc setflags
+syn keyword OPLStatement setname setpath sin space sqr statuswin
+syn keyword OPLStatement statwininfo std stop style sum tan testevent trap
+syn keyword OPLStatement type uadd unloadlib unloadm until update upper$
+syn keyword OPLStatement use usr usr$ usub val var vector week while year
 " syn keyword OPLStatement rem
-syn keyword OPLStatement rename
-syn keyword OPLStatement rept$
-syn keyword OPLStatement return
-syn keyword OPLStatement right$
-syn keyword OPLStatement rmdir
-syn keyword OPLStatement rnd
-syn keyword OPLStatement rollback
-syn keyword OPLStatement sci$
-syn keyword OPLStatement screen
-syn keyword OPLStatement screeninfo
-syn keyword OPLStatement second
-syn keyword OPLStatement secstodate
-syn keyword OPLStatement send
-syn keyword OPLStatement setdoc
-syn keyword OPLStatement setflags
-syn keyword OPLStatement setname
-syn keyword OPLStatement setpath
-syn keyword OPLStatement sin
-syn keyword OPLStatement space
-syn keyword OPLStatement sqr
-syn keyword OPLStatement statuswin
-syn keyword OPLStatement statwininfo
-syn keyword OPLStatement std
-syn keyword OPLStatement stop
-syn keyword OPLStatement style
-syn keyword OPLStatement sum
-syn keyword OPLStatement tan
-syn keyword OPLStatement testevent
-syn keyword OPLStatement trap
-syn keyword OPLStatement type
-syn keyword OPLStatement uadd
-syn keyword OPLStatement unloadlib
-syn keyword OPLStatement unloadm
-syn keyword OPLStatement until
-syn keyword OPLStatement update
-syn keyword OPLStatement upper$
-syn keyword OPLStatement use
-syn keyword OPLStatement usr
-syn keyword OPLStatement usr$
-syn keyword OPLStatement usub
-syn keyword OPLStatement val
-syn keyword OPLStatement var
-syn keyword OPLStatement vector
-syn keyword OPLStatement week
-syn keyword OPLStatement while
-syn keyword OPLStatement year
 
 
 syn match  OPLNumber		"\<\d\+\>"

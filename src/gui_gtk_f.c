@@ -1,4 +1,5 @@
 /* vi:set ts=8 sts=4 sw=4:
+ *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
@@ -379,10 +380,31 @@ gtk_form_unrealize(GtkWidget * widget)
 static void
 gtk_form_draw(GtkWidget * widget, GdkRectangle * area)
 {
+    GtkForm		*form;
+    GList		*children;
+    GtkFormChild	*child;
+    GdkRectangle	child_area;
+
     g_return_if_fail(widget != NULL);
     g_return_if_fail(GTK_IS_FORM(widget));
 
-    (void)GTK_FORM(widget);
+    if (GTK_WIDGET_DRAWABLE (widget))
+    {
+	form = GTK_FORM(widget);
+
+	children = form->children;
+
+	while (children)
+	{
+	    child = children->data;
+
+	    if (GTK_WIDGET_DRAWABLE(child->widget)
+		    && gtk_widget_intersect (child->widget, area, &child_area))
+		gtk_widget_draw(child->widget, &child_area);
+
+	    children = children->next;
+	}
+    }
 }
 
 static void

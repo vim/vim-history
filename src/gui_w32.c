@@ -4904,14 +4904,14 @@ gui_mch_dialog(
     /* Let the dialog_callback() function know which button to make default */
     dialog_default_button = dfltbutton + 1;	/* Back to 1-based for this */
 
-    /*show the dialog box modally and get a return value*/
+    /* show the dialog box modally and get a return value */
     nchar = DialogBoxIndirect(
 	    s_hinst,
 	    (LPDLGTEMPLATE)pdlgtemplate,
 	    s_hwnd,
 	    (DLGPROC)dialog_callback);
 
-    LocalFree (LocalHandle (pdlgtemplate));
+    LocalFree(LocalHandle(pdlgtemplate));
     vim_free(tbuffer);
     vim_free(buttonWidths);
     vim_free(buttonPositions);
@@ -5407,7 +5407,7 @@ gui_mch_tearoff(
      */
     (void)SetActiveWindow(s_hwnd);
 
-    /* make sure the right buttons are enabled*/
+    /* make sure the right buttons are enabled */
     force_menu_update = TRUE;
 }
 #endif

@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
+*gui_x11.txt*   For Vim version 5.6a.  Last change: 1999 Dec 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -51,12 +51,8 @@ When using "gvim -f" and then ":gui", Vim will run in the foreground.  The
 If you want the GUI to run in the foreground always, include the 'f'
 flag in 'guioptions'.  |-f|.
 
-Note that if you are using GTK+ for the GUI interface, vim will not fork to
-the background.  This is to work around a problem in the GTK+ implementation.
-This will probably changed again later!
-
 ==============================================================================
-2. GUI Resources					*gui-resources*
+2. GUI Resources			*gui-resources* *.Xdefaults*
 
 If using the Motif or Athena version of the GUI (not for the GTK+ or Win32
 version), a number of X resources are available.  You should use Vim's class

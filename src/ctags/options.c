@@ -14,9 +14,6 @@
 ============================================================================*/
 #include "general.h"
 
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>	    /* to declare malloc(), realloc() */
-#endif
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>	/* to declare toupper() */
@@ -117,9 +114,9 @@ static const char *const EiffelExtensions[] = {
     "e", NULL
 };
 static const char *const FortranExtensions[] = {
-    "f", "for", "ftn", "f77", "f90",
+    "f", "for", "ftn", "f77", "f90", "f95",
 #ifndef CASE_INSENSITIVE_OS
-    "F", "FOR", "FTN", "F77", "F90",
+    "F", "FOR", "FTN", "F77", "F90", "F95",
 #endif
     NULL
 };
@@ -510,7 +507,7 @@ static void freeString( pString )
 {
     if (*pString != NULL)
     {
-	free(*pString);
+	eFree(*pString);
 	*pString = NULL;
     }
 }
@@ -629,7 +626,7 @@ static void addExtensionList( slist, elist, clear )
 	stringListPrint(slist);
 	putchar ('\n');
     }
-    free(extensionList);
+    eFree(extensionList);
 }
 
 static const char *findExtension( fileName )
@@ -850,7 +847,7 @@ static void processLangMapOption( option, parameter )
 	else
 	    map = NULL;
     }
-    free(maps);
+    eFree(maps);
 }
 
 static void installHeaderListDefaults()
@@ -901,7 +898,7 @@ static void processCTypesOption( option, parameter )
     const char *const parameter;
 {
     const boolean longOption = (boolean)(strcmp(option, "i") != 0);
-    struct sCInclude* const inc = &Option.include.c;
+    struct sCInclude* const inc = &Option.include.cTypes;
     boolean defaultClear = longOption;
     const char* p = parameter;
     boolean mode = TRUE;
@@ -983,7 +980,7 @@ static void processEiffelTypesOption( option, parameter )
     const char *const option;
     const char *const parameter;
 {
-    struct sEiffelInclude *const inc = &Option.include.eiffel;
+    struct sEiffelInclude *const inc = &Option.include.eiffelTypes;
     const char *p = parameter;
     boolean mode = TRUE;
     int c;
@@ -1015,7 +1012,7 @@ static void processFortranTypesOption( option, parameter )
     const char *const option;
     const char *const parameter;
 {
-    struct sFortranInclude *const inc = &Option.include.fortran;
+    struct sFortranInclude *const inc = &Option.include.fortranTypes;
     const char *p = parameter;
     boolean mode = TRUE;
     int c;
@@ -1062,7 +1059,7 @@ static void processJavaTypesOption( option, parameter )
     const char *const option;
     const char *const parameter;
 {
-    struct sJavaInclude *const inc = &Option.include.java;
+    struct sJavaInclude *const inc = &Option.include.javaTypes;
     const char *p = parameter;
     boolean mode = TRUE;
     int c;
@@ -1174,7 +1171,7 @@ static void readIgnoreList( list )
 	saveIgnoreToken(entry);
 	token = strtok(NULL, IGNORE_SEPARATORS);
     }
-    free(newList);
+    eFree(newList);
 }
 
 static void readIgnoreListFromFile( fileName )
@@ -1698,7 +1695,10 @@ static void parseShortOption( args )
     else if (*args->shortOptions == '\0')
     {
 	argForth(args->args);
-	args->parameter = argItem(args->args);
+	if (argOff(args->args))
+	    args->parameter = NULL;
+	else
+	    args->parameter = argItem(args->args);
 	args->shortOptions = NULL;
     }
     else
@@ -1792,13 +1792,23 @@ extern cookedArgs* cArgNewFromFile( fp )
     return result;
 }
 
+extern cookedArgs* cArgNewFromLineFile( fp )
+    FILE* const fp;
+{
+    cookedArgs* const result = (cookedArgs*)eMalloc(sizeof(cookedArgs));
+    memset(result, 0, sizeof(cookedArgs));
+    result->args = argNewFromLineFile(fp);
+    cArgRead(result);
+    return result;
+}
+
 extern void cArgDelete( current )
     cookedArgs* const current;
 {
     Assert(current != NULL);
     argDelete(current->args);
     memset(current, 0, sizeof(cookedArgs));
-    free(current);
+    eFree(current);
 }
 
 extern boolean cArgOff( current )

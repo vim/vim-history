@@ -522,7 +522,7 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 	VimCmdStart = VimCmd + 2;
 
 	// Update the current file in Vim if it has been modified
-	sprintf (VimCmdStart, ":up\n", (char*) FileName);
+	sprintf (VimCmdStart, ":up\n");
 	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
 		goto OleError;
 

@@ -81,6 +81,7 @@
 #    define HAVE_DIR_H
 #    define HAVE_DIRENT_H
 #    define HAVE__FINDFIRST
+#    define NEED_PROTO_FGETPOS
 #    define ffblk _finddata_t
 #    define FA_DIREC _A_SUBDIR
 #    define ff_name name

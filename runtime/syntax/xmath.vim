@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	xmath (a simulation tool)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change:	May 14, 1999
 
 " Remove any old syntax stuff hanging around

@@ -453,7 +453,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 		    command == DOBUF_UNLOAD ? "unloaded" : "deleted");
 	    errormsg = IObuff;
 	}
-	else
+	else /* should 'report' be used here? */
 	    smsg((char_u *)"%d buffer%s %s", deleted,
 		    plural((long)deleted),
 		    command == DOBUF_UNLOAD ? "unloaded" : "deleted");
@@ -2440,7 +2440,7 @@ do_buffer_all(count, all)
 #ifdef AUTOCMD
     --autocmd_no_enter;
 #endif
-    win_enter(firstwin, FALSE);		    /* back to first window */
+    win_enter(firstwin, FALSE);		/* back to first window */
 #ifdef AUTOCMD
     --autocmd_no_leave;
 #endif

@@ -38,6 +38,8 @@
 
 /*
  * On some systems toupper()/tolower() only work on lower/uppercase characters
+ * Careful: Only call TO_UPPER() and TO_LOWER() with a character in the range
+ * 0 - 255.  toupper()/tolower() on some systems can't handle others.
  */
 #ifdef MSWIN
 #  define TO_UPPER(c)	toupper_tab[(c) & 255]

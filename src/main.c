@@ -1365,12 +1365,12 @@ main
 #ifdef AUTOCMD
     --autocmd_no_enter;
 #endif
-    win_enter(firstwin, FALSE);		    /* back to first window */
+    win_enter(firstwin, FALSE);		/* back to first window */
 #ifdef AUTOCMD
     --autocmd_no_leave;
 #endif
     if (window_count > 1)
-	win_equal(curwin, FALSE);	    /* adjust heights */
+	win_equal(curwin, FALSE);	/* adjust heights */
 
     /*
      * If there are more file names in the argument list than windows,

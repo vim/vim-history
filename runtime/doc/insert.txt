@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
+*insert.txt*    For Vim version 5.6a.  Last change: 1999 Oct 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -771,17 +771,18 @@ too long when appending characters a line break is automatically inserted.
 9. Ex insert commands					*inserting-ex*
 
 							*:a* *:append*
-:{range}a[ppend]	insert several lines of text below the specified
-			line.  if the {range} is missing, the text will be
+:{range}a[ppend]	Insert several lines of text below the specified
+			line.  If the {range} is missing, the text will be
 			inserted after the current line.
 
 							*:i* *:insert*
-:{range}i[nsert]	insert several lines of text above the specified
-			line.  if the {range} is missing, the text will be
+:{range}i[nsert]	Insert several lines of text above the specified
+			line.  If the {range} is missing, the text will be
 			inserted before the current line.
 
 These two commands will keep on asking for lines, until you type a line
-containing only a ".".
+containing only a ".".  Watch out for lines starting with a backslash, see
+|line-continuation|.
 
 							*:start* *:startinsert*
 :star[tinsert][!]	Start Insert mode just after executing this command.

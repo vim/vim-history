@@ -1,4 +1,4 @@
-*term.txt*      For Vim version 5.5.  Last change: 1999 Sep 09
+*term.txt*      For Vim version 5.6a.  Last change: 1999 Oct 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -201,7 +201,7 @@ Cursor positioning and clear screen.
 The options 't_da', 't_db', 't_ms', 't_xs' represent flags in the termcap.
 When the termcap flag is present, the option will be set to "y".  But any
 non-empty string means that the flag is set.  An empty string means that the
-flag is set.  't_CS' works like this too, but it isn't a termcap flag.
+flag is not set.  't_CS' works like this too, but it isn't a termcap flag.
 
 OUTPUT CODES
 	option	meaning	~

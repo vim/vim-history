@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 5.5.  Last change: 1999 Sep 15
+*change.txt*    For Vim version 5.6a.  Last change: 1999 Nov 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -84,20 +84,22 @@ is an error when 'cpoptions' includes the 'E' flag.
 
 							*J*
 J			Join [count] lines, with a minimum of two lines.
-			Insert up to two spaces (see below).
+			Remove the indent and insert up to two spaces (see
+			below).
 
 							*v_J*
 {Visual}J		Join the highlighted lines, with a minimum of two
-			lines.  Insert up to two spaces (see below).  {not in
-			Vi}
+			lines.  Remove the indent and insert up to two spaces
+			(see below).  {not in Vi}
 
 							*gJ*
 gJ			Join [count] lines, with a minimum of two lines.
-			Don't insert any spaces.  {not in Vi}
+			Don't insert or remove any spaces.  {not in Vi}
 
 							*v_gJ*
 {Visual}gJ		Join the highlighted lines, with a minimum of two
-			lines.  Don't insert any spaces.  {not in Vi}
+			lines.  Don't insert or remove any spaces.  {not in
+			Vi}
 
 							*:j* *:join*
 :[range]j[oin][!]	Join [range] lines.  Same as "J", except with [!]
@@ -118,9 +120,10 @@ undo them.
 
 These commands, except "gJ", insert one space in place of the <EOL> unless
 there is trailing white space or the next line starts with a ')'.  These
-commands delete any leading white space on the next line.  If the 'joinspaces'
-option is on, these commands insert two spaces after a '.', '!' or '?' (but if
-'cpoptions' includes the 'j' flag, they insert two spaces only after a '.').
+commands, except "gJ", delete any leading white space on the next line.  If
+the 'joinspaces' option is on, these commands insert two spaces after a '.',
+'!' or '?' (but if 'cpoptions' includes the 'j' flag, they insert two spaces
+only after a '.').
 
 
 ==============================================================================
@@ -868,6 +871,7 @@ nothing is returned.  {not in Vi}
 Contains the most recent search-pattern.  This is used for "n" and 'hlsearch'.
 {not in Vi}
 
+							*@/*
 You can write to a register with a ":let" command |:let-@|.  Example:
 >	:let @/ = "the"
 
@@ -1227,6 +1231,7 @@ respectively, for those keys.
 For an emacs-style indent mode where lines aren't indented every time you
 press Return but only if you press Tab, I suggest:
 	:set cinkeys=0{,0},:,0#,!<Tab>,!^F
+You might also want to switch off 'autoindent' then.
 
 Note: If you change the current line's indentation manually, Vim ignores the
 cindent settings for that line.  This prevents vim from reindenting after you
@@ -1398,10 +1403,10 @@ assume a 'shiftwidth' of 4.
 
 		cino=			  cino=(0
 		  if (c1 && (c2 ||	    if (c1 && (c2 ||
-			      c3)		       c3))
+			      c3))		       c3))
 		      foo;			foo;
 		  if (c1 &&		    if (c1 &&
-			  (c2 || c3)		(c2 || c3)
+			  (c2 || c3))		(c2 || c3))
 		     {			       {
 
 	uN    Same as (N, but for one level deeper.  (default 'shiftwidth').

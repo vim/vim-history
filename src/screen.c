@@ -6207,8 +6207,8 @@ retnomove:
 	    end_visual_mode();
 	    update_curbuf(NOT_VALID);	/* delete the inversion */
 	}
-	win_enter(wp, TRUE);	    /* can make wp invalid! */
-	if (on_status_line)	    /* In (or below) status line */
+	win_enter(wp, TRUE);		/* can make wp invalid! */
+	if (on_status_line)		/* In (or below) status line */
 	{
 	    /* Don't use start_arrow() if we're in the same window */
 	    if (curwin == old_curwin)

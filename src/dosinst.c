@@ -475,8 +475,8 @@ main(int argc, char **argv)
     char	*(def_choices[]) =
     {
 	"\nChoose the default way to run Vim:",
-	"normal Vim setup",
-	"with syntax highlighting and other features",
+	"conventional Vim setup",
+	"with syntax highlighting and other features switched on",
 	"Vi compatible",
     };
     char	*(select_choices[]) =
@@ -518,18 +518,6 @@ main(int argc, char **argv)
 
     printf("This program sets up the installation of Vim %s\n\n",
 	    VIM_VERSION_MEDIUM);
-
-    /*
-     * If $VIMRUNTIME is set, there is nothing we can do.
-     */
-    p = getenv("VIMRUNTIME");
-    if (p != NULL)
-    {
-	printf("$VIMRUNTIME is set to \"%s\".\n", p);
-	printf("This program is not able to handle an upgrade.\n");
-	printf("Please manually adjust the setting of $VIMRUNTIME or remove it.\n");
-	exit(1);
-    }
 
     /* Find out the full path of our executable. */
     if (my_fullpath(vimdir, argv[0], BUFSIZE) == NULL)
@@ -574,6 +562,28 @@ main(int argc, char **argv)
 	    *(vimrc + vimdirend - 1) = NUL;
 	    printf("\"%s\"\n", vimrc);
 	    printf("Please manually adjust the setting of $VIM.\n");
+	    exit(1);
+	}
+    }
+
+    /*
+     * Check if $VIMRUNTIME is set, and it is pointing to our directory.
+     */
+    p = getenv("VIMRUNTIME");
+    if (p != NULL)
+    {
+	for (i = 0; p[i] || vimdir[i]; ++i)
+	{
+	    if (toupper(p[i]) == toupper(vimdir[i]))
+		continue;
+	    if ((p[i] == '/' || p[i] == '\\')
+		    && (vimdir[i] == '/' || vimdir[i] == '\\'))
+		continue;
+
+	    printf("$VIMRUNTIME is set to \"%s\".\n", p);
+	    printf("This is different from where this version of Vim is:\n");
+	    printf("\"%s\"\n", vimdir);
+	    printf("Please manually adjust the setting of $VIMRUNTIME or remove it.\n");
 	    exit(1);
 	}
     }
@@ -648,6 +658,7 @@ main(int argc, char **argv)
 	printf("\nYou have chosen:\n");
 	printf("[%d] %s\n", def, def_choices[def]);
 	printf("[%d] %s\n", select, select_choices[select]);
+	printf("(You can adjust your _vimrc file afterwards)\n");
 	printf("\nDo you want to %swrite the file \"%s\"? (Y/N) ",
 		found_vimrc ? "over" : "", vimrc);
 	if (!confirm())

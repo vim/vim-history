@@ -1,4 +1,4 @@
-*undo.txt*      For Vim version 5.5.  Last change: 1999 Sep 17
+*undo.txt*      For Vim version 5.6a.  Last change: 1999 Oct 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,6 +39,9 @@ The "U" command is treated by undo/redo just like any other command.  Thus a
 mixing "U", "u" and 'CTRL-R' you will notice that the "U" command will
 restore the situation of a line to before the previous "U" command.  This may
 be confusing.  Try it out to get used to it.
+The "U" command will always mark the buffer as changed.  When "U" changes the
+buffer back to how it was without changes, it is still considered changed.
+Use "u" to undo changes until the buffer becomes unchanged.
 
 ==============================================================================
 2. Two ways of undo					*undo-two-ways*
@@ -72,6 +75,9 @@ Rationale:  Nvi uses the "." command instead of CTRL-R.  Unfortunately, this
 The number of changes that are remembered is set with the 'undolevels' option.
 If it is zero, the Vi-compatible way is always used.  If it is negative no
 undo is possible.  Use this if you are running out of memory.
+
+Marks for the buffer ('a to 'z) are also saved and restored, together with the
+text.  {Vi does this a little bit different}
 
 When all changes have been undone, the buffer is not considered to be changed.
 It is then possible to exit Vim with ":q" instead of ":q!".  {this is not in

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Oct 19
+" Last change:	1999 Dec 02
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -161,8 +161,8 @@ syn region	cPreCondit	start="^\s*#\s*\(if\|ifdef\|ifndef\|elif\)\>" skip="\\$" e
 syn match	cPreCondit	"^\s*#\s*\(else\|endif\)\>"
 if !exists("c_no_if0")
   syn region	cCppOut		start="^\s*#\s*if\s\+0\>" end=".\|$" contains=cCppOut2
-  syn region	cCppOut2	contained start="0" end="^\s*#\s*\(endif\>\|else\>\|elif\>\)" contains=cSpaceError,cCppSkip
-  syn region	cCppSkip	contained start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*#\s*endif\>" contains=cSpaceError,cCppSkip
+  syn region	cCppOut2	contained start="0" end="^\s*#\s*\(endif\>\|else\>\|elif\>\)" contains=cSpaceError,cCppSkip,@cCommentGroup
+  syn region	cCppSkip	contained start="^\s*#\s*\(if\>\|ifdef\>\|ifndef\>\)" skip="\\$" end="^\s*#\s*endif\>" contains=cSpaceError,cCppSkip,@cCommentGroup
 endif
 syn region	cIncluded	contained start=+"+ skip=+\\\\\|\\"+ end=+"+
 syn match	cIncluded	contained "<[^>]*>"

@@ -1,12 +1,17 @@
 " Vim syntax file
 " Language:	Diff (context or unified)
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Jun 28
+" Last change:	1999 Dec 10
 
 " Remove any old syntax stuff hanging around
 syn clear
 
-syn match diffOnly	"^Only in.*"
+syn match diffOnly	"^Only in .*"
+syn match diffIdentical	"^Files .* and .* are identical$"
+syn match diffDiffer	"^Files .* and .* differ$"
+syn match diffBDiffer	"^Binary files .* and .* differ$"
+syn match diffIsA	"^File .* is a .* while file .* is a .*"
+syn match diffNoEOL	"^No newline at end of file .*"
 
 syn match diffRemoved	"^-.*"
 syn match diffRemoved	"^<.*"
@@ -35,6 +40,11 @@ if !exists("did_diff_syntax_inits")
   hi link diffNewFile	diffFile
   hi link diffFile	Type
   hi link diffOnly	Constant
+  hi link diffIdentical	Constant
+  hi link diffDiffer	Constant
+  hi link diffBDiffer	Constant
+  hi link diffIsA	Constant
+  hi link diffNoEOL	Constant
   hi link diffRemoved	Special
   hi link diffChanged	PreProc
   hi link diffAdded	Identifier

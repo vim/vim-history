@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language   : sendmail
-" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Maintainer : Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last Change: June 29, 1999
 
 " Remove any old syntax stuff hanging around

@@ -1,4 +1,4 @@
-.TH CTAGS 1 "Version 3.3.2" "Darren Hiebert"
+.TH CTAGS 1 "Version 3.3.3" "Darren Hiebert"
 
 
 .SH NAME
@@ -152,7 +152,7 @@ mapped to source file languages according to the following default mapping
 *.e
 .TP 9
 .B Fortran
-*.f *.for *.ftn *.f77 *.f90 *.F *.FOR *.FTN *.F77 *.F90
+*.f *.for *.ftn *.f77 *.f90 *.f95 *.F *.FOR *.FTN *.F77 *.F90 *.F95
 .TP 9
 .B Java
 *.java
@@ -352,8 +352,12 @@ to be incorrectly parsed. Correct behavior can be restored by specifying
 Read from \fIfile\fP a list of file names for which tags should be generated.
 If \fIfile\fP is specified as "-", then file names are read from standard
 input. File names read using this option are processed following file names
-appearing on the command line. If this option is specified more than once,
-only the last will apply.
+appearing on the command line. Options all also accepted in this input. If
+this option is specified more than once, only the last will apply. \fBNote:\fP
+\fIfile\fP is read in line-oriented mode, where a new line is the only
+delimiter and spaces are considered significant, in order that file names
+containing spaces may be supplied; this can affect how options are parsed if
+included in the input.
 
 .TP 5
 .B \-n
@@ -372,8 +376,8 @@ Equivalent to \fB-f\fP \fItagfile\fP.
 Use \fIpath\fP as the default directory for each supplied source file (whether
 supplied on the command line or in a file specified with the \fB-L\fP option),
 unless the source file is already specified as an absolute path. The supplied
-\fIpath\fP is merely prepended to the each non-absolute source file name,
-adding any necessary path separator.
+\fIpath\fP is merely prepended to the each non-absolute source file name
+(adding any necessary path separator) before attempting to open it.
 
 .TP 5
 .B \-R
@@ -614,6 +618,30 @@ Indicates whether tags should be generated for source file names. This option
 is disabled by default.
 
 .TP 5
+\fB--filter\fP=\fIyes\fP|\fIno\fP
+Causes \fBctags\fP to behave as a filter, reading source file names from
+standard input and printing their tags to standard output on a file-by-file
+basis. If \fB--sorted\fP is enabled, tags are sorted only within the source
+file in which they are defined. File names are read from standard output in
+line-oriented input mode (see note for \fB-L\fP option) and only after file
+names listed on the command line or from any file supplied using the \fB-L\fP
+option. When this option is enabled, the options \fB-f\fP, \fB-o\fP,
+and \fB--totals\fP are ignored. This option is quite estoteric and is disabled
+by default. This option must appear before the first file name.
+
+.TP 5
+\fB--filter-terminator\fP=\fIstring\fP
+Specifies a string to print to standard output following the tags for each
+file name parsed when the \fB--filter\fP option is enabled. This may permit an
+application reading the output of ctags to determine when the output for each
+file is finished. Note that if the file name read is a directory and
+\fB--recurse\fP is enabled, this string will be printed only one once at the
+end of all tags found for by descending the directory. This string will always
+be separated from the last tag line for the file by its terminating newline.
+This option is quite esoteric and is empty by default. This option must appear
+before the first file name.
+
+.TP 5
 \fB--format\fP=\fIlevel\fP
 Change the format of the output tag file. Currently the only valid values for
 \fIlevel\fP are \fI1\fP or \fI2\fP. Level 1 specifies the original tag file
@@ -797,29 +825,6 @@ Indicates whether symbolic links (if suppported) should be followed. When
 disabled, symbolic links are ignored. This option is on by default.
 
 .TP 5
-\fB--filter\fP=\fIyes\fP|\fIno\fP
-Causes \fBctags\fP to behave as a filter, reading source file names from
-standard input and printing their tags to standard output on a file-by-file
-basis. If \fB--sorted\fP is enabled, tags are sorted only within the source
-file in which they are defined. Files are read from standard output only after
-files listed on the command line or from any file supplied using the \fB-L\fP
-option. When this option is enabled, the options \fB-f\fP, \fB-o\fP,
-and\fB--totals\fP are ignored. This option is quite estoteric and is disabled
-by default. This option must appear before the first file name.
-
-.TP 5
-\fB--filter-terminator\fP=\fIstring\fP
-Specifies a string to print to standard output following the tags for each
-file name parsed when the \fB--filter\fP option is enabled. This may permit an
-application reading the output of ctags to determine when the output for each
-file is finished. Note that if the file name read is a directory and
-\fB--recurse\fP is enabled, this string will be printed only one once at the
-end of all tags found for by descending the directory. This string will always
-be separated from the last tag line for the file by its terminating newline.
-This option is quite esoteric and is empty by default. This option must appear
-before the first file name.
-
-.TP 5
 \fB--recurse\fP=\fIyes\fP|\fIno\fP
 Recurse into directories encountered in the list of supplied files. If the
 list of supplied files is empty and no file list is specified with the
@@ -1001,6 +1006,11 @@ These key value pairs appear in the general form "\fIkey\fP:\fIvalue\fP".
 The possible keys and the meaning of their values are as follows:
 
 .TP 12
+.I access
+Indicates the visibility of this class member, where \fIvalue\fP is specific
+to the language.
+
+.TP 12
 .I class
 Indicates that this tag is a member of the class whose name is given by
 \fIvalue\fP.
@@ -1032,21 +1042,6 @@ Indicates that this tag is a member of the interface whose name is given by
 .I namespace
 Indicates that this tag is a member of the namespace whose name is given by
 \fIvalue\fP.
-
-.TP 12
-.I private
-Indicates the visibility of this class member is private.
-This key has no corresponding value.
-
-.TP 12
-.I protected
-Indicates the visibility of this class member is protected.
-This key has no corresponding value.
-
-.TP 12
-.I public
-Indicates the visibility of this class member is public.
-This key has no corresponding value.
 
 .TP 12
 .I struct

@@ -4,6 +4,9 @@
 " Credits:	Stephan Hegel <ea273@fen.baynet.de>
 " $Id$
 
+" VHSIC Hardware Description Language
+" Very High Scale Integrated Circuit
+
 " Remove any old syntax stuff hanging around
 syn clear
 
@@ -44,7 +47,7 @@ syn keyword vhdlType bit bit_vector
 syn keyword vhdlType character boolean integer real time
 syn keyword vhdlType string severity_level
 " Predifined standard ieee VHDL types
-syn keyword vhdlType natural signed unsigned
+syn keyword vhdlType positive natural signed unsigned
 syn keyword vhdlType line text
 syn keyword vhdlType std_logic std_logic_vector
 syn keyword vhdlType std_ulogic std_ulogic_vector
@@ -52,6 +55,8 @@ syn keyword vhdlType std_ulogic std_ulogic_vector
 syn keyword vhdlType qsim_state qsim_state_vector
 syn keyword vhdlType qsim_12state qsim_12state_vector
 syn keyword vhdlType qsim_strength
+" Predefined non standard VHDL types for Alliance VLSI CAD
+syn keyword vhdlType mux_bit mux_vector reg_bit reg_vector wor_bit wor_vector
 
 " array attributes
 syn match vhdlAttribute "\'high"
@@ -108,7 +113,7 @@ syn case ignore
 syn match  vhdlVector "B\"[01_]\+\""
 syn match  vhdlVector "O\"[0-7_]\+\""
 syn match  vhdlVector "X\"[0-9a-f_]\+\""
-syn match  vhdlCharacter "\'[&><=:+\-*\/().,;\'$#|~!%@?\^\[\]{}\\a-z0-9 ]\'"
+syn match  vhdlCharacter "'.'"
 syn region vhdlString start=+"+  end=+"+
 
 " floating numbers

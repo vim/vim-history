@@ -778,7 +778,7 @@ do_search(oap, dirc, str, count, options)
 		    if (spats[0].off.off > 0 || spats[0].off.line)
 			*p++ = '+';
 		    if (spats[0].off.off != 0 || spats[0].off.line)
-			sprintf(p, "%ld", spats[0].off.off);
+			sprintf((char *)p, "%ld", spats[0].off.off);
 		}
 
 		msg_start();

@@ -1,4 +1,4 @@
-*os_msdos.txt*  For Vim version 5.5.  Last change: 1999 Sep 14
+*os_msdos.txt*  For Vim version 5.6a.  Last change: 1999 Sep 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

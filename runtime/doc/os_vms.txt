@@ -1,4 +1,4 @@
-*os_vms.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
+*os_vms.txt*   For Vim version 5.6a.  Last change: 1999 Dec 06
 
 
 		  VIM REFERENCE MANUAL
@@ -142,6 +142,9 @@ and so on.
 
 ==============================================================================
 3. Extra remarks						*VMS-SK*
+
+If you are using a terminal emulator (as most people are) setting the
+'fastterm' option can make screen updating smoother.
 
 Some remarks and changes from Sandor Kopanyi:
 

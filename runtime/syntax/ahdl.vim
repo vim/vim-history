@@ -1,7 +1,7 @@
 " Vim syn file
 " Language:	Altera AHDL
 " Maintainer:	John Cook <john.cook@kla-tencor.com>
-" Last change:	1999 Jun 14
+" Last change:	1999 Sep 28
 
 " Remove any old syn stuff hanging around
 syn clear
@@ -37,13 +37,13 @@ syn keyword ahdlMegafunction lpm_rom lpm_dff lpm_tff clklock pll ntsc
 syn keyword ahdlTodo contained TODO
 
 " String contstants
-syn region  ahdlString start=+"+  skip=+\\"+  end=+"+
+syn region ahdlString start=+"+  skip=+\\"+  end=+"+
 
 " valid integer number formats (decimal, binary, octal, hex)
-syn match   ahdlNumber '\<\d\+\>'
-syn match   ahdlNumber '\<b"\(0\|1\|x\)\+"'
-syn match   ahdlNumber '\<\(o\|q\)"\o\+"'
-syn match   ahdlNumber '\<\(h\|x\)"\x\+"'
+syn match ahdlNumber '\<\d\+\>'
+syn match ahdlNumber '\<b"\(0\|1\|x\)\+"'
+syn match ahdlNumber '\<\(o\|q\)"\o\+"'
+syn match ahdlNumber '\<\(h\|x\)"\x\+"'
 
 " operators
 syn match   ahdlOperator "[!&#$+\-<>=?:\^]"
@@ -52,8 +52,8 @@ syn keyword ahdlOperator mod div log2 used ceil floor
 
 " one line and multi-line comments
 " (define these after ahdlOperator so -- overrides -)
-syn match   ahdlComment "--.*" contains=ahdlNumber,ahdlTodo
-syn region  ahdlComment start="%" end="%" contains=ahdlNumber,ahdlTodo
+syn match  ahdlComment "--.*" contains=ahdlNumber,ahdlTodo
+syn region ahdlComment start="%" end="%" contains=ahdlNumber,ahdlTodo
 
 " other special characters
 syn match   ahdlSpecialChar "[\[\]().,;]"
@@ -63,16 +63,16 @@ syn sync minlines=1
 if !exists("did_ahdl_syn_inits")
   let did_ahdl_syn_inits = 1
   " The default methods for highlighting. Can be overridden later
-  hi link ahdlNumber       ahdlString
+  hi link ahdlNumber	   ahdlString
   hi link ahdlMegafunction ahdlIdentifier
   hi link ahdlSpecialChar  SpecialChar
-  hi link ahdlKeyword      Statement
-  hi link ahdlString       String
-  hi link ahdlComment      Comment
+  hi link ahdlKeyword	   Statement
+  hi link ahdlString	   String
+  hi link ahdlComment	   Comment
   hi link ahdlIdentifier   Identifier
-  hi link ahdlOperator     Operator
-  hi link ahdlTodo         Todo
+  hi link ahdlOperator	   Operator
+  hi link ahdlTodo	   Todo
 endif
 
 let b:current_syntax = "ahdl"
-"end-o-file
+" vim:ts=8

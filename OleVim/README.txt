@@ -1,4 +1,4 @@
-		    SendToVim & OpenWithVim, version 1.1
+			  SendToVim & OpenWithVim
 
 * Description
 
@@ -33,11 +33,16 @@ ask vim about its working directory
 tell vim to change its working directory to current directory and display it
   SendToVim +cd :pwd
 
+Note that these commands are sent to vim regardless of the mode vim is in.
+If you want to make sure, that vim is in the right mode, send <c-\><c-n> at
+first, to set vim in normal mode.
+
   OpenWithVim opens a given file with vim for viewing/editing. Using the
 option +<line> you can tell vim to jump to line number <line> of the
 specified file.  When opening a file using OpenWithVim, vim always changes
 its working directory to the current directory at first unless an absolute
-path was specified.
+path was specified.  Note that OpenWithVim always sends <c-\><c-n> at first,
+to ensure the proper loading of the file.
 
 Examples:
 edit MyFile with vim:
@@ -69,18 +74,26 @@ Using OpenWithVim with explorer:
   => double clicking a file with that extension will be open with Vim
 
 * Requires
-
+ 
   GVim 5.3 with OLE support
 
 * Author
 
-  Christian Schaller (sca@isogmbh.de)
+  Christian Schaller (Christian.Schaller@mchp.siemens.de)
 
 * TODO
 
   How can I cange the program icon?
 
 * Changes:
+
+13.XII.99:
+  Additionally, the keys <c-\><c-n> are sent by OpenWithVim to ensure, that
+  the specified file is loaded and avoid scrambling an already open file in
+  insert mode.  Note that only OpenWithVim sends that sequence.  For
+  SendToVim you have to send them explicitly, to enable more complex
+  commands (not only normal mode commands) sent to vim.
+11.V.99:
   OpenWithVim without parameter starts empty Vim (no message box with help,
   use OpenWithVim -h instead).  Due to an OLE problem, Vim isn't resized, if
   minimized, so you can add -r<char> to use :simalt ~<char> for restoring

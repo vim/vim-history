@@ -2271,6 +2271,13 @@ get_cursor_idx()
  * Based on zip/crypt sources.
  */
 
+/*
+ * NOTE FOR USA: It is unclear if exporting this code from the USA is allowed.
+ * If you do not want to take any risk, remove this bit of the code (from
+ * #ifdef CRYPTV to the matching #endif) and disable the crypt feature.
+ * This code was originally created in Europe and India.
+ */
+
 /* from zip.h */
 
 typedef unsigned short ush;	/* unsigned 16-bit value */

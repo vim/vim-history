@@ -1,3 +1,15 @@
+To run the maze macros with Vim:
+
+	vim -u maze_mac maze_5.78
+	press "g"
+
+The "-u maze.mac" loads the maze macros and skips loading your .vimrc, which
+may contain settings and mappings that get in the way.
+The maze program doesn't work on x86 systems, probably a byte order problem.
+
+
+The original README:
+
 To prove that you can do anything in vi, I wrote a couple of macros that
 allows vi to solve mazes. It will solve any maze produced by maze.c
 that was posted to the net recently.

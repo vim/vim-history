@@ -3,10 +3,10 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Sep 19
+" Last change:	1999 Dec 18
 
-" Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
-" not be recognized.  See ":help 'cpoptions'".
+" Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
+" <CR> would not be recognized.  See ":help 'cpoptions'".
 let menu_cpo_save = &cpo
 let &cpo = ""
 
@@ -53,7 +53,7 @@ amenu 10.380 &File.E&xit<Tab>:qa		:confirm qa<CR>
 
 " Edit menu
 amenu 20.310 &Edit.&Undo<Tab>u			u
-amenu 20.320 &Edit.&Redo<Tab>Ctrl+R		<C-R>
+amenu 20.320 &Edit.&Redo<Tab>^R			<C-R>
 amenu 20.330 &Edit.Repea&t<Tab>\.		.
 amenu 20.335 &Edit.-SEP1-			:
 vmenu 20.340 &Edit.Cu&t<Tab>"*x			"*x
@@ -86,19 +86,19 @@ amenu 20.425 &Edit.-SEP3-			:
 amenu 20.430 &Edit.Options\.\.\.		:options<CR>
 
 " Programming menu
-amenu 40.300 &Tools.&Jump\ to\ this\ tag	g<C-]>
-vunmenu &Tools.&Jump\ to\ this\ tag
-vmenu &Tools.&Jump\ to\ this\ tag	g<C-]>
-amenu 40.310 &Tools.Jump\ &back			<C-T>
+amenu 40.300 &Tools.&Jump\ to\ this\ tag<Tab>g^] g<C-]>
+vunmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]
+vmenu &Tools.&Jump\ to\ this\ tag<Tab>g^]	g<C-]>
+amenu 40.310 &Tools.Jump\ &back<Tab>^T		<C-T>
 amenu 40.320 &Tools.Build\ &Tags\ File		:!ctags -R .<CR>
 amenu 40.330 &Tools.-SEP1-			:
-amenu 40.340 &Tools.&Make			:make<CR>
-amenu 40.350 &Tools.&List\ Errors		:cl<CR>
-amenu 40.360 &Tools.L&ist\ Messages		:cl!<CR>
-amenu 40.370 &Tools.&Next\ Error		:cn<CR>
-amenu 40.380 &Tools.&Previous\ Error		:cp<CR>
-amenu 40.390 &Tools.&Older\ List		:colder<CR>
-amenu 40.400 &Tools.N&ewer\ List		:cnewer<CR>
+amenu 40.340 &Tools.&Make<Tab>:make		:make<CR>
+amenu 40.350 &Tools.&List\ Errors<Tab>:cl	:cl<CR>
+amenu 40.360 &Tools.L&ist\ Messages<Tab>:cl!	:cl!<CR>
+amenu 40.370 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
+amenu 40.380 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
+amenu 40.390 &Tools.&Older\ List<Tab>:cold	:colder<CR>
+amenu 40.400 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
 
 
 " Can't delete a menu in Athena version
@@ -263,23 +263,23 @@ endif
 endif " !exists("no_buffers_menu")
 
 " Window menu
-amenu 70.300 &Window.&New		<C-W>n
-amenu 70.310 &Window.S&plit		<C-W>s
-amenu 70.320 &Window.Sp&lit\ To\ #	<C-W><C-^>
-amenu 70.325 &Window.-SEP1-		:
-amenu 70.330 &Window.&Close		:confirm close<CR>
-amenu 70.340 &Window.Close\ &Other(s)	:confirm only<CR>
-amenu 70.345 &Window.-SEP2-		:
-amenu 70.350 &Window.Ne&xt		<C-W>w
-amenu 70.360 &Window.P&revious		<C-W>W
-amenu 70.365 &Window.-SEP3-		:
-amenu 70.370 &Window.&Equal\ Height	<C-W>=
-amenu 70.380 &Window.&Max\ Height	<C-W>_
-amenu 70.390 &Window.M&in\ Height	<C-W>1_
-amenu 70.400 &Window.Rotate\ &Up	<C-W>R
-amenu 70.410 &Window.Rotate\ &Down	<C-W>r
+amenu 70.300 &Window.&New<Tab>^Wn		<C-W>n
+amenu 70.310 &Window.S&plit<Tab>^Ws		<C-W>s
+amenu 70.320 &Window.Sp&lit\ To\ #<Tab>^W^^	<C-W><C-^>
+amenu 70.325 &Window.-SEP1-			:
+amenu 70.330 &Window.&Close<Tab>^Wc		:confirm close<CR>
+amenu 70.340 &Window.Close\ &Other(s)<Tab>^Wo	:confirm only<CR>
+amenu 70.345 &Window.-SEP2-			:
+amenu 70.350 &Window.Ne&xt<Tab>^Ww		<C-W>w
+amenu 70.360 &Window.P&revious<Tab>^WW		<C-W>W
+amenu 70.365 &Window.-SEP3-			:
+amenu 70.370 &Window.&Equal\ Height<Tab>^W=	<C-W>=
+amenu 70.380 &Window.&Max\ Height<Tab>^W_	<C-W>_
+amenu 70.390 &Window.M&in\ Height<Tab>^W1_	<C-W>1_
+amenu 70.400 &Window.Rotate\ &Up<Tab>^WR	<C-W>R
+amenu 70.410 &Window.Rotate\ &Down<Tab>^Wr	<C-W>r
 if has("win32") || has("gui_gtk")
-  amenu 70.420 &Window.-SEP4-		:
+  amenu 70.420 &Window.-SEP4-			:
   amenu 70.430 &Window.Select\ &Font\.\.\.	:set guifont=*<CR>
 endif
 
@@ -422,13 +422,24 @@ let did_install_syntax_menu = 1
 " Define the SetSyn function, used for the Syntax menu entries.
 " Set 'filetype' and also 'syntax' if it is manually selected.
 fun! SetSyn(name)
+  if a:name == "fvwm1"
+    let use_fvwm_1 = 1
+    let use_fvwm_2 = 0
+    let name = "fvwm"
+  else if a:name == "fvwm2"
+    let use_fvwm_2 = 1
+    let use_fvwm_1 = 0
+    let name = "fvwm"
+  else
+    let name = a:name
+  endif
   if !exists("g:syntax_menu_synonly")
-    exe "set ft=" . a:name
+    exe "set ft=" . name
     if exists("g:syntax_manual")
-      exe "set syn=" . a:name
+      exe "set syn=" . name
     endif
   else
-    exe "set syn=" . a:name
+    exe "set syn=" . name
   endif
 endfun
 
@@ -470,176 +481,191 @@ fun SynMenu(arg)
   let g:current_menu_item = g:current_menu_item + 10
 endfun
 
-SynMenu &ABCD.ABC:abc
-SynMenu &ABCD.Ada:ada
-SynMenu &ABCD.Active\ Server\ Pages:aspvbs
-SynMenu &ABCD.AHDL:ahdl
-SynMenu &ABCD.Amiga\ DOS:amiga
-SynMenu &ABCD.Applix\ ELF:elf
-SynMenu &ABCD.Assembly\ (GNU):asm
-SynMenu &ABCD.Assembly\ (H8300):asmh8300
-SynMenu &ABCD.Assembly\ (Microsoft):masm
-SynMenu &ABCD.Assembly\ (Netwide):nasm
-SynMenu &ABCD.ASN\.1:asn
-SynMenu &ABCD.Atlas:atlas
-SynMenu &ABCD.Avenue:ave
-SynMenu &ABCD.Awk:awk
-SynMenu &ABCD.BASIC:basic
-SynMenu &ABCD.BibFile:bib
-SynMenu &ABCD.C:c
-SynMenu &ABCD.C++:cpp
-SynMenu &ABCD.Cascading\ Style\ Sheets:css
-SynMenu &ABCD.Century\ Term:cterm
-SynMenu &ABCD.Change:change
-SynMenu &ABCD.Clean:clean
-SynMenu &ABCD.Clipper:clipper
-SynMenu &ABCD.Configure\ script:config
-SynMenu &ABCD.Csh\ shell\ script:csh
-SynMenu &ABCD.Cobol:cobol
-SynMenu &ABCD.CWEB:cweb
-SynMenu &ABCD.Diff:diff
-SynMenu &ABCD.Digital\ Command\ Lang:dcl
-SynMenu &ABCD.Diva\ (with\ SKILL):diva
-SynMenu &ABCD.Dracula:dracula
-SynMenu &ABCD.DTD:dtd
+SynMenu AB.ABC:abc
+SynMenu AB.ABEL:abel
+SynMenu AB.Ada:ada
+SynMenu AB.Active\ Server\ Pages:aspvbs
+SynMenu AB.AHDL:ahdl
+SynMenu AB.Amiga\ DOS:amiga
+SynMenu AB.Arc\ Macro\ Language:aml
+SynMenu AB.Apache-style\ config:apachestyle
+SynMenu AB.Applix\ ELF:elf
+SynMenu AB.Assembly\ (GNU):asm
+SynMenu AB.Assembly\ (H8300):asmh8300
+SynMenu AB.Assembly\ (Microsoft):masm
+SynMenu AB.Assembly\ (Netwide):nasm
+SynMenu AB.ASN\.1:asn
+SynMenu AB.Atlas:atlas
+SynMenu AB.Avenue:ave
+SynMenu AB.Awk:awk
+SynMenu AB.BASIC:basic
+SynMenu AB.BibFile:bib
 
-SynMenu &EFGHIJ.Eiffel:eiffel
-SynMenu &EFGHIJ.Elm\ Filter:elmfilt
-SynMenu &EFGHIJ.ESQL-C:esqlc
-SynMenu &EFGHIJ.Expect:expect
-SynMenu &EFGHIJ.Exports:exports
-SynMenu &EFGHIJ.Focus\ Executable:focexec
-SynMenu &EFGHIJ.Focus\ Master:master
-SynMenu &EFGHIJ.Forth:forth
-SynMenu &EFGHIJ.Fortran:fortran
-SynMenu &EFGHIJ.Fvwm\ configuration:fvwm
-SynMenu &EFGHIJ.GDB\ command\ file:gdb
-SynMenu &EFGHIJ.GDMO:gdmo
-SynMenu &EFGHIJ.GP:gp
-SynMenu &EFGHIJ.GNUplot:gnuplot
-SynMenu &EFGHIJ.Haskell:haskell
-SynMenu &EFGHIJ.Haskell-literal:lhaskell
-SynMenu &EFGHIJ.HTML:html
-SynMenu &EFGHIJ.HTML\ with\ M4:htmlm4
-SynMenu &EFGHIJ.IDL:idl
-SynMenu &EFGHIJ.Interactive\ Data\ Lang:idlang
-SynMenu &EFGHIJ.Inform:inform
-SynMenu &EFGHIJ.InstallShield\ Rules:ishd
-SynMenu &EFGHIJ.Java:java
-SynMenu &EFGHIJ.JavaCC:javacc
-SynMenu &EFGHIJ.JavaScript:javascript
-SynMenu &EFGHIJ.Jgraph:jgraph
+SynMenu CD.C:c
+SynMenu CD.C++:cpp
+SynMenu CD.Cascading\ Style\ Sheets:css
+SynMenu CD.Century\ Term:cterm
+SynMenu CD.Change:change
+SynMenu CD.Clean:clean
+SynMenu CD.Clipper:clipper
+SynMenu CD.Configure\ script:config
+SynMenu CD.Csh\ shell\ script:csh
+SynMenu CD.Ctrl-H:ctrlh
+SynMenu CD.Cobol:cobol
+SynMenu CD.CUPL:cupl
+SynMenu CD.CUPL\ simulation:cuplsim
+SynMenu CD.CWEB:cweb
+SynMenu CD.Diff:diff
+SynMenu CD.Digital\ Command\ Lang:dcl
+SynMenu CD.Diva\ (with\ SKILL):diva
+SynMenu CD.Dracula:dracula
+SynMenu CD.DTD:dtd
 
-SynMenu &KLM.Kimwitu:kwt
-SynMenu &KLM.Lace:lace
-SynMenu &KLM.Lex:lex
-SynMenu &KLM.Lilo:lilo
-SynMenu &KLM.Lisp:lisp
-SynMenu &KLM.Lite:lite
-SynMenu &KLM.LOTOS:lotos
-SynMenu &KLM.Lout:lout
-SynMenu &KLM.Lua:lua
-SynMenu &KLM.Lynx\ Style:lss
-SynMenu &KLM.M4:m4
-SynMenu &KLM.Mail:mail
-SynMenu &KLM.Makefile:make
-SynMenu &KLM.Man\ page:man
-SynMenu &KLM.Maple:maple
-SynMenu &KLM.Matlab:matlab
-SynMenu &KLM.Metafont:mf
-SynMenu &KLM.MetaPost:mp
-SynMenu &KLM.MS\ Module\ Definition:def
-SynMenu &KLM.Model:model
-SynMenu &KLM.Modsim\ III:modsim3
-SynMenu &KLM.Modula\ 2:modula2
-SynMenu &KLM.Modula\ 3:modula3
-SynMenu &KLM.Msql:msql
-SynMenu &KLM.MS-DOS\ \.bat\ file:dosbatch
-SynMenu &KLM.4DOS\ \.bat\ file:btm
-SynMenu &KLM.MS-DOS\ \.ini\ file:dosini
-SynMenu &KLM.MS\ Resource\ file:rc
-SynMenu &KLM.Muttrc:muttrc
+SynMenu EFGH.Eiffel:eiffel
+SynMenu EFGH.Elm\ Filter:elmfilt
+SynMenu EFGH.ESQL-C:esqlc
+SynMenu EFGH.Expect:expect
+SynMenu EFGH.Exports:exports
+SynMenu EFGH.Focus\ Executable:focexec
+SynMenu EFGH.Focus\ Master:master
+SynMenu EFGH.Forth:forth
+SynMenu EFGH.Fortran:fortran
+SynMenu EFGH.Fvwm\ configuration:fvwm1
+SynMenu EFGH.Fvwm2\ configuration:fvwm2
+SynMenu EFGH.GDB\ command\ file:gdb
+SynMenu EFGH.GDMO:gdmo
+SynMenu EFGH.GP:gp
+SynMenu EFGH.GNUplot:gnuplot
+SynMenu EFGH.Haskell:haskell
+SynMenu EFGH.Haskell-literal:lhaskell
+SynMenu EFGH.HTML:html
+SynMenu EFGH.HTML\ with\ M4:htmlm4
 
-SynMenu &NOPQ.Novell\ batch:ncf
-SynMenu &NOPQ.Nroff:nroff
-SynMenu &NOPQ.Objective\ C:objc
-SynMenu &NOPQ.OCAML:ocaml
-SynMenu &NOPQ.Open\ Psion\ Lang:opl
-SynMenu &NOPQ.Pascal:pascal
-SynMenu &NOPQ.PCCTS:pccts
-SynMenu &NOPQ.Perl:perl
-SynMenu &NOPQ.Perl\ POD:pod
-SynMenu &NOPQ.Perl\ XS:xs
-SynMenu &NOPQ.PHP\ 3:php3
-SynMenu &NOPQ.Phtml:phtml
-SynMenu &NOPQ.Pike:pike
-SynMenu &NOPQ.Pine\ RC:pine
-SynMenu &NOPQ.PL/SQL:plsql
-SynMenu &NOPQ.PO\ (GNU\ gettext):po
-SynMenu &NOPQ.PostScript:postscr
-SynMenu &NOPQ.Povray:pov
-SynMenu &NOPQ.Printcap:pcap
-SynMenu &NOPQ.Procmail:procmail
-SynMenu &NOPQ.Prolog:prolog
-SynMenu &NOPQ.Purify\ log:purifylog
-SynMenu &NOPQ.Python:python
+SynMenu IJKL.IDL:idl
+SynMenu IJKL.Interactive\ Data\ Lang:idlang
+SynMenu IJKL.Inform:inform
+SynMenu IJKL.InstallShield\ Rules:ishd
+SynMenu IJKL.Java:java
+SynMenu IJKL.JavaCC:javacc
+SynMenu IJKL.JavaScript:javascript
+SynMenu IJKL.Java\ Server\ Pages:jsp
+SynMenu IJKL.Jgraph:jgraph
+SynMenu IJKL.Kimwitu:kwt
+SynMenu IJKL.Lace:lace
+SynMenu IJKL.Lex:lex
+SynMenu IJKL.Lilo:lilo
+SynMenu IJKL.Lisp:lisp
+SynMenu IJKL.Lite:lite
+SynMenu IJKL.LOTOS:lotos
+SynMenu IJKL.Lout:lout
+SynMenu IJKL.Lua:lua
+SynMenu IJKL.Lynx\ Style:lss
 
-SynMenu &RS.Radiance:radiance
-SynMenu &RS.Rebol:rebol
-SynMenu &RS.Renderman\ Shader\ Lang:sl
-SynMenu &RS.Rexx:rexx
-SynMenu &RS.Rpcgen:rpcgen
-SynMenu &RS.S-lang:slang
-SynMenu &RS.SAS:sas
-SynMenu &RS.Sather:sather
-SynMenu &RS.Scheme:scheme
-SynMenu &RS.SDL:sdl
-SynMenu &RS.Sed:sed
-SynMenu &RS.Sendmail\.cf:sm
-SynMenu &RS.SGML\ DTD:sgml
-SynMenu &RS.SGML\ linuxdoc:sgmllnx
-SynMenu &RS.Sh\ shell\ script:sh
-SynMenu &RS.SiCAD:sicad
-SynMenu &RS.Simula:simula
-SynMenu &RS.SKILL:skill
-SynMenu &RS.SLRN\ rc:slrnrc
-SynMenu &RS.SLRN\ score:slrnsc
-SynMenu &RS.SmallTalk:st
-SynMenu &RS.SMIL:smil
-SynMenu &RS.SNMP\ MIB:mib
-SynMenu &RS.SPEC\ (Linux\ RPM):spec
-SynMenu &RS.Spice:spice
-SynMenu &RS.Speedup:spup
-SynMenu &RS.Squid:squid
-SynMenu &RS.SQL:sql
+SynMenu MNO.M4:m4
+SynMenu MNO.Mail:mail
+SynMenu MNO.Makefile:make
+SynMenu MNO.MakeIndex:ist
+SynMenu MNO.Man\ page:man
+SynMenu MNO.Maple:maple
+SynMenu MNO.Matlab:matlab
+SynMenu MNO.Metafont:mf
+SynMenu MNO.MetaPost:mp
+SynMenu MNO.MS\ Module\ Definition:def
+SynMenu MNO.Model:model
+SynMenu MNO.Modsim\ III:modsim3
+SynMenu MNO.Modula\ 2:modula2
+SynMenu MNO.Modula\ 3:modula3
+SynMenu MNO.Msql:msql
+SynMenu MNO.MS-DOS\ \.bat\ file:dosbatch
+SynMenu MNO.4DOS\ \.bat\ file:btm
+SynMenu MNO.MS-DOS\ \.ini\ file:dosini
+SynMenu MNO.MS\ Resource\ file:rc
+SynMenu MNO.Muttrc:muttrc
+SynMenu MNO.Novell\ batch:ncf
+SynMenu MNO.Nroff:nroff
+SynMenu MNO.Objective\ C:objc
+SynMenu MNO.OCAML:ocaml
+SynMenu MNO.Open\ Psion\ Lang:opl
 
-SynMenu &TU.Tags:tags
-SynMenu &TU.Tcl/Tk:tcl
-SynMenu &TU.Telix\ Salt:tsalt
-SynMenu &TU.Termcap:ptcap
-SynMenu &TU.TeX:tex
-SynMenu &TU.TF\ mud\ client:tf
-SynMenu &TU.UIT/UIL:uil
+SynMenu PQR.Pascal:pascal
+SynMenu PQR.PCCTS:pccts
+SynMenu PQR.Perl:perl
+SynMenu PQR.Perl\ POD:pod
+SynMenu PQR.Perl\ XS:xs
+SynMenu PQR.PHP\ 3:php3
+SynMenu PQR.Phtml:phtml
+SynMenu PQR.Pike:pike
+SynMenu PQR.Pine\ RC:pine
+SynMenu PQR.PL/SQL:plsql
+SynMenu PQR.PO\ (GNU\ gettext):po
+SynMenu PQR.PostScript:postscr
+SynMenu PQR.Povray:pov
+SynMenu PQR.Printcap:pcap
+SynMenu PQR.Procmail:procmail
+SynMenu PQR.Prolog:prolog
+SynMenu PQR.Purify\ log:purifylog
+SynMenu PQR.Python:python
+SynMenu PQR.Radiance:radiance
+SynMenu PQR.Rebol:rebol
+SynMenu PQR.Remind:remind
+SynMenu PQR.Renderman\ Shader\ Lang:sl
+SynMenu PQR.Rexx:rexx
+SynMenu PQR.Rpcgen:rpcgen
 
-SynMenu &VWXYZ.Verilog\ HDL:verilog
-SynMenu &VWXYZ.Vgrindefs:vgrindefs
-SynMenu &VWXYZ.VHDL:vhdl
-SynMenu &VWXYZ.Vim\ help\ file:help
-SynMenu &VWXYZ.Vim\ script:vim
-SynMenu &VWXYZ.Viminfo\ file:viminfo
-SynMenu &VWXYZ.Visual\ Basic:vb
-SynMenu &VWXYZ.VRML:vrml
-SynMenu &VWXYZ.WEB:web
-SynMenu &VWXYZ.Whitespace\ (add):whitespace
-SynMenu &VWXYZ.WinBatch/Webbatch:winbatch
-SynMenu &VWXYZ.X\ Pixmap:xpm
-SynMenu &VWXYZ.X\ resources:xdefaults
-SynMenu &VWXYZ.Xmath:xmath
-SynMenu &VWXYZ.XML:xml
-SynMenu &VWXYZ.XXD\ hex\ dump:xxd
-SynMenu &VWXYZ.Yacc:yacc
-SynMenu &VWXYZ.Z-80\ assembler:z8a
-SynMenu &VWXYZ.Zsh\ shell\ script:zsh
+SynMenu S.S-lang:slang
+SynMenu S.SAS:sas
+SynMenu S.Sather:sather
+SynMenu S.Scheme:scheme
+SynMenu S.SDL:sdl
+SynMenu S.Sed:sed
+SynMenu S.Sendmail\.cf:sm
+SynMenu S.SGML\ DTD:sgml
+SynMenu S.SGML\ linuxdoc:sgmllnx
+SynMenu S.Sh\ shell\ script:sh
+SynMenu S.SiCAD:sicad
+SynMenu S.Simula:simula
+SynMenu S.SKILL:skill
+SynMenu S.SLRN\ rc:slrnrc
+SynMenu S.SLRN\ score:slrnsc
+SynMenu S.SmallTalk:st
+SynMenu S.SMIL:smil
+SynMenu S.SNMP\ MIB:mib
+SynMenu S.SPEC\ (Linux\ RPM):spec
+SynMenu S.Spice:spice
+SynMenu S.Speedup:spup
+SynMenu S.Squid:squid
+SynMenu S.SQL:sql
+SynMenu S.SQR:sqr
+
+SynMenu TUV.Tads:tads
+SynMenu TUV.Tags:tags
+SynMenu TUV.Tcl/Tk:tcl
+SynMenu TUV.Telix\ Salt:tsalt
+SynMenu TUV.Termcap:ptcap
+SynMenu TUV.TeX:tex
+SynMenu TUV.TF\ mud\ client:tf
+SynMenu TUV.UIT/UIL:uil
+SynMenu TUV.Verilog\ HDL:verilog
+SynMenu TUV.Vgrindefs:vgrindefs
+SynMenu TUV.VHDL:vhdl
+SynMenu TUV.Vim\ help\ file:help
+SynMenu TUV.Vim\ script:vim
+SynMenu TUV.Viminfo\ file:viminfo
+SynMenu TUV.Visual\ Basic:vb
+SynMenu TUV.VRML:vrml
+
+SynMenu WXYZ.WEB:web
+SynMenu WXYZ.Whitespace\ (add):whitespace
+SynMenu WXYZ.WinBatch/Webbatch:winbatch
+SynMenu WXYZ.X\ Pixmap:xpm
+SynMenu WXYZ.X\ Pixmap\ (2):xpm2
+SynMenu WXYZ.X\ resources:xdefaults
+SynMenu WXYZ.Xmath:xmath
+SynMenu WXYZ.XML:xml
+SynMenu WXYZ.XXD\ hex\ dump:xxd
+SynMenu WXYZ.Yacc:yacc
+SynMenu WXYZ.Z-80\ assembler:z8a
+SynMenu WXYZ.Zsh\ shell\ script:zsh
 
 unlet current_menu_name
 unlet current_menu_nr
@@ -648,17 +674,17 @@ unlet current_menu_char
 delcommand SynMenu
 delfun SynMenu
 
-am 50.75 &Syntax.-SEP1-				:
+am 50.95 &Syntax.-SEP1-				:
 
-am 50.80 &Syntax.Set\ 'syntax'\ only		:let syntax_menu_synonly=1<CR>
-am 50.81 &Syntax.Set\ 'filetype'\ too		:if exists("syntax_menu_synonly")<Bar>unlet syntax_menu_synonly<Bar>endif<CR>
+am 50.100 &Syntax.Set\ 'syntax'\ only		:let syntax_menu_synonly=1<CR>
+am 50.101 &Syntax.Set\ 'filetype'\ too		:if exists("syntax_menu_synonly")<Bar>unlet syntax_menu_synonly<Bar>endif<CR>
 
-am 50.90 &Syntax.&Off			:syn off<CR>
-am 50.92 &Syntax.&Manual		:syn manual<CR>
-am 50.94 &Syntax.A&utomatic		:syn on<CR>
+am 50.110 &Syntax.&Off			:syn off<CR>
+am 50.112 &Syntax.&Manual		:syn manual<CR>
+am 50.114 &Syntax.A&utomatic		:syn on<CR>
 
-am 50.96 &Syntax.&on\ (this\ file)	:if !exists("syntax_on")<Bar>syn manual<Bar>endif<Bar>set syn=ON<CR>
-am 50.98 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
+am 50.116 &Syntax.&on\ (this\ file)	:if !exists("syntax_on")<Bar>syn manual<Bar>endif<Bar>set syn=ON<CR>
+am 50.118 &Syntax.o&ff\ (this\ file)	:syn clear<CR>
 
 am 50.700 &Syntax.-SEP3-		:
 am 50.710 &Syntax.Co&lor\ test		:sp $VIMRUNTIME/syntax/colortest.vim<Bar>so %<CR>

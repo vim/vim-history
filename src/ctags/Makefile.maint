@@ -36,7 +36,7 @@ ERRFILE	= errors
 REDIR	= 2>&1 | tee $(ERRFILE)
 
 RPM_ROOT= $(HOME)/Develop
-CTAGS_DOSDIR = /mnt/dos/ctags
+CTAGS_DOSDIR = win32
 WEB_ARCHIVE_DIR = $(HOME)/public_html/archives
 DEP_DIR	= .deps
 
@@ -45,7 +45,6 @@ DEFS	= -I. -DHAVE_CONFIG_H
 CFLAGS	= $(DEFS)
 OPT		= -O3
 DCFLAGS	= $(CFLAGS) -DDEBUG -DINTERNAL_SORT
-DLFLAGS	= -lefence
 LD		= gcc
 
 AUTO_GEN	= configure config.h.in
@@ -63,7 +62,7 @@ ctags dctags ctags.prof ctags.cov:
 	$(MAKE) config.h
 	$(MAKE) $(MAKECMDGOALS)
 else
-all: ctags dctags tags syntax.vim
+all: dctags ctags tags syntax.vim
 
 include $(DSOURCES:%.c=$(DEP_DIR)/%.d)
 
@@ -72,11 +71,15 @@ include $(DSOURCES:%.c=$(DEP_DIR)/%.d)
 #
 ctags: $(SOURCES:.c=.o)
 	@ echo "-- Linking $@"
-	@ $(LD) $(LFLAGS) $^ -o $@
+	@ $(LD) -o $@ $(LFLAGS) $^
 
 dctags: $(SOURCES:.c=.od) debug.od
 	@ echo "-- Building $@"
-	@ $(LD) $(LFLAGS) $^ -o $@
+	$(LD) -o $@ $(LFLAGS) $^ -lefence
+
+mctags: $(SOURCES:.c=.om) debug.om safe_malloc.om
+	@ echo "-- Building $@"
+	$(LD) -o $@ $(LFLAGS) $^
 
 ctags.prof: $(SOURCES) $(HEADERS) Makefile
 	$(CC) -pg $(CFLAGS) $(WARNINGS) $(SOURCES) -o $@
@@ -119,7 +122,7 @@ gcovclean:
 	rm -f $(COV_GEN)
 
 clean: depclean profclean gcovclean
-	rm -f *.[oi] ctags dctags ctags*.exe ctags.man \
+	rm -f *.[oi] *.o[dm] ctags dctags ctags*.exe ctags.man \
 	      ctags.prof ctags.cov *.bb *.bbg tags TAGS syntax.vim $(ERRFILE)
 
 distclean: clean
@@ -251,7 +254,7 @@ cleanrelease-%:
 	rm -f $(RPM_ROOT)/SRPMS/ctags-$*-1.src.rpm
 	rm -f $(RPM_ROOT)/SPECS/ctags-$*.spec
 
-release-%: cvs-tag-% ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-% ctags32-%
+release-%: cvs-tag-% ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-%
 	@ echo "---------- Copying files to web archive"
 	cp -p ctags-$*.tar.* $(WEB_ARCHIVE_DIR)
 	cp -p $(RPM_ROOT)/RPMS/i386/ctags-$*-1.i386.rpm $(WEB_ARCHIVE_DIR)
@@ -265,7 +268,7 @@ release-%: cvs-tag-% ctags-%.tar.gz ctags-%.tar.Z vim-ctags-%.tar.gz dos-% rpm-%
 #
 $(DEP_DIR)/%.d: %.c Makefile.maint
 	@ if [ ! -d $(DEP_DIR) ] ;then mkdir -p $(DEP_DIR) ;fi
-	@ $(CC) -M $(DCFLAGS) $< | sed 's/\($*\.o\)\([ :]\)/\1 $*.od $(@F)\2/g' > $@
+	@ $(CC) -M $(DCFLAGS) $< | sed 's/\($*\.o\)\([ :]\)/\1 $*.od $*.om $(@F)\2/g' > $@
 
 
 %.inc: %.c Makefile
@@ -281,6 +284,10 @@ $(DEP_DIR)/%.d: %.c Makefile.maint
 %.od : %.c $(DEP_DIR)/%.d
 	@ echo "-- Compiling (debug) $<"
 	@ $(CC) -g $(DCFLAGS) $(WARNINGS) -o $*.od -c $<  $(REDIR)
+
+%.om : %.c $(DEP_DIR)/%.d
+	@ echo "-- Compiling (safe alloc) $<"
+	@ $(CC) -g -DTRAP_MEMORY_CALLS $(DCFLAGS) $(WARNINGS) -o $*.om -c $<  $(REDIR)
 
 %.i : %.c $(DEP_DIR)/%.d FORCE
 	$(CC) $(DCFLAGS) $(WARNINGS) -Wuninitialized -O -E $< > $@ $(REDIR)

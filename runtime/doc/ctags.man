@@ -61,7 +61,7 @@ DESCRIPTION
 
 
 
-Darren Hiebert             Version 3.3                          1
+Darren Hiebert            Version 3.3.3                         1
 
 
 
@@ -114,8 +114,8 @@ SOURCE FILES
            C++      *.C *.c++ *.cc *.cpp *.cxx *.h *.H *.hh *.hpp
                     *.hxx *.h++
            Eiffel   *.e
-           Fortran  *.f *.for *.ftn *.f77 *.f90 *.F  *.FOR  *.FTN
-                    *.F77 *.F90
+           Fortran  *.f *.for *.ftn *.f77 *.f90 *.f95  *.F  *.FOR
+                    *.FTN *.F77 *.F90 *.F95
            Java     *.java
 
 
@@ -127,7 +127,7 @@ SOURCE FILES
 
 
 
-Darren Hiebert             Version 3.3                          2
+Darren Hiebert            Version 3.3.3                         2
 
 
 
@@ -193,7 +193,7 @@ OPTIONS
 
 
 
-Darren Hiebert             Version 3.3                          3
+Darren Hiebert            Version 3.3.3                         3
 
 
 
@@ -259,7 +259,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.3                          4
+Darren Hiebert            Version 3.3.3                         4
 
 
 
@@ -325,7 +325,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.3                          5
+Darren Hiebert            Version 3.3.3                         5
 
 
 
@@ -360,9 +360,14 @@ CTAGS(1)                                                 CTAGS(1)
             should be generated.  If file is  specified  as  "-",
             then  file  names  are read from standard input. File
             names read using this option are processed  following
-            file  names  appearing  on  the command line. If this
-            option is specified more than  once,  only  the  last
-            will apply.
+            file names appearing on the command line. Options all
+            also accepted in this input. If this option is speci-
+            fied  more than once, only the last will apply. Note:
+            file is read in line-oriented mode, where a new  line
+            is  the only delimiter and spaces are considered sig-
+            nificant, in order that file names containing  spaces
+            may  be  supplied;  this  can  affect how options are
+            parsed if included in the input.
 
 
        -n   Equivalent to --excmd=number.
@@ -376,28 +381,26 @@ CTAGS(1)                                                 CTAGS(1)
 
 
        -p path
-            Use  path  as the default directory for each supplied
-            source file (whether supplied on the command line  or
-            in  a  file specified with the -L option), unless the
+            Use path as the default directory for  each  supplied
+            source  file (whether supplied on the command line or
+            in a file specified with the -L option),  unless  the
             source file is already specified as an absolute path.
-            The  supplied  path  is  merely prepended to the each
-            non-absolute source file name, adding  any  necessary
-            path separator.
-
-
-       -R   Equivalent to --recurse.
+            The supplied path is merely  prepended  to  the  each
+            non-absolute  source  file name (adding any necessary
+            path separator) before attempting to open it.
 
 
 
-
-
-Darren Hiebert             Version 3.3                          6
+Darren Hiebert            Version 3.3.3                         6
 
 
 
 
 
 CTAGS(1)                                                 CTAGS(1)
+
+
+       -R   Equivalent to --recurse.
 
 
        -u   Equivalent to --sort=no (i.e. "unsorted").
@@ -406,44 +409,44 @@ CTAGS(1)                                                 CTAGS(1)
        -V   Equivalent to --verbose.
 
 
-       -x   Print   a  tabular,  human-readable  cross  reference
-            (xref) file to standard output instead of  generating
-            a  tag  file. The information contained in the output
-            includes: the tag name; the kind  of  tag;  the  line
-            number,  file name, and source line (with extra white
-            space condensed) of the file which defines  the  tag.
-            No  tag file is written and all options affecting tag
+       -x   Print  a  tabular,  human-readable  cross   reference
+            (xref)  file to standard output instead of generating
+            a tag file. The information contained in  the  output
+            includes:  the  tag  name;  the kind of tag; the line
+            number, file name, and source line (with extra  white
+            space  condensed)  of the file which defines the tag.
+            No tag file is written and all options affecting  tag
             file output will be ignored. Example applications for
-            this  feature  are  generating a listing of all func-
-            tions located in a source file (e.g.  ctags  -x  --c-
+            this feature are generating a listing  of  all  func-
+            tions  located  in  a source file (e.g. ctags -x --c-
             types=f file), or generating a list of all externally
-            visible global variables located  in  a  source  file
-            (e.g.  ctags  -x  --c-types=v  --file-scope=no file).
+            visible  global  variables  located  in a source file
+            (e.g. ctags  -x  --c-types=v  --file-scope=no  file).
             This option must appear before the first file name.
 
 
        --append=yes|no
-            Indicates whether tags generated from  the  specified
-            files  should be appended to those already present in
-            the tag file or should replace them. This  option  is
-            off  by  default.  This option must appear before the
+            Indicates  whether  tags generated from the specified
+            files should be appended to those already present  in
+            the  tag  file or should replace them. This option is
+            off by default. This option must  appear  before  the
             first file name.  [Ignored with -e]
 
 
        --c-types=types
-            Specifies a list  of  C/C++  language  tag  types  to
+            Specifies  a  list  of  C/C++  language  tag types to
             include in the output file.  The parameter types is a
-            group of one-letter flags designating types  of  tags
-            (listed  below) to either include or exclude from the
-            output. Each letter or group of letters may  be  pre-
-            ceded  by either '+' to add it to the default set, or
-            '-' to exclude it. In the absence  of  any  preceding
-            '+'  or  '-' sign, only those types explicitly listed
-            in types will be included in the output  (i.e.  over-
-            riding  the  default). For example, to exclude macros
-            but  include  prototypes,  use   --c-types=-d+p;   to
-            include  only  tags  for  functions, use --c-types=f.
-            Tags for the following language constructs  are  sup-
+            group  of  one-letter flags designating types of tags
+            (listed below) to either include or exclude from  the
+            output.  Each  letter or group of letters may be pre-
+            ceded by either '+' to add it to the default set,  or
+            '-'  to  exclude  it. In the absence of any preceding
+            '+' or '-' sign, only those types  explicitly  listed
+            in  types  will be included in the output (i.e. over-
+            riding the default). For example, to  exclude  macros
+            but   include   prototypes,  use  --c-types=-d+p;  to
+            include only tags  for  functions,  use  --c-types=f.
+            Tags  for  the following language constructs are sup-
             ported  (types  are  enabled  by  default  except  as
             noted):
 
@@ -451,13 +454,10 @@ CTAGS(1)                                                 CTAGS(1)
                c   classes
                d   macro definitions (and #undef names)
                e   enumerators
-               f   function definitions
-               g   enumeration names
-               m   class, struct, or union members
 
 
 
-Darren Hiebert             Version 3.3                          7
+Darren Hiebert            Version 3.3.3                         7
 
 
 
@@ -466,6 +466,9 @@ Darren Hiebert             Version 3.3                          7
 CTAGS(1)                                                 CTAGS(1)
 
 
+               f   function definitions
+               g   enumeration names
+               m   class, struct, or union members
                n   namespaces
                p   function prototypes and declarations [off]
                s   structure names
@@ -475,29 +478,29 @@ CTAGS(1)                                                 CTAGS(1)
                x   extern and forward variable declarations [off]
 
 
-            In  addition  to  the above flags, the following one-
+            In addition to the above flags,  the  following  one-
             letter modifiers are accepted:
 
 
-               A   Record the access of each member into the  tag
-                   file.  This  information  is recorded using an
+               A   Record  the access of each member into the tag
+                   file. This information is  recorded  using  an
                    extension flag labeled "access".
-               C   Include an extra,  class-qualified  tag  entry
+               C   Include  an  extra,  class-qualified tag entry
                    for each class member in the form "class::mem-
                    ber".  This  allows  locating  class-qualified
-                   tags  (e.g.  ":tag  class::member"  in vi(1)).
+                   tags (e.g.  ":tag  class::member"  in  vi(1)).
                    This is disabled by default because this could
-                   potentially  more  than double the size of the
+                   potentially more than double the size  of  the
                    tag file.
 
 
 
 
        --eiffel-types=types
-            Specifies a list of Eiffel language tag types  to  be
-            included  in the output.  See --c-types for the defi-
+            Specifies  a  list of Eiffel language tag types to be
+            included in the output.  See --c-types for the  defi-
             nition of the format of types. Tags for the following
-            Eiffel  language  constructs are supported (types are
+            Eiffel language constructs are supported  (types  are
             enabled by default except as noted):
 
 
@@ -506,24 +509,21 @@ CTAGS(1)                                                 CTAGS(1)
                l   local entities [off]
 
 
-            In addition to the above flags,  the  following  one-
+            In  addition  to  the above flags, the following one-
             letter modifiers are accepted:
 
 
-               C   Include  an  extra,  class-qualified tag entry
-                   for each class member in the form  "class.mem-
+               C   Include an extra,  class-qualified  tag  entry
+                   for  each class member in the form "class.mem-
                    ber".  This  allows  locating  class-qualified
                    tags (e.g. ":tag class.member" in vi(1)). This
-                   is  disabled  by  default  because  this could
-                   potentially more than double the size  of  the
+                   is disabled  by  default  because  this  could
+                   potentially  more  than double the size of the
                    tag file.
 
 
 
-
-
-
-Darren Hiebert             Version 3.3                          8
+Darren Hiebert            Version 3.3.3                         8
 
 
 
@@ -533,9 +533,9 @@ CTAGS(1)                                                 CTAGS(1)
 
 
        --etags-include=file
-            Include  a  reference  to  file in the tag file. This
-            option may be specified as  many  times  as  desired.
-            This  supports  Emacs'  capability  to use a tag file
+            Include a reference to file in  the  tag  file.  This
+            option  may  be  specified  as many times as desired.
+            This supports Emacs' capability to  use  a  tag  file
             which "includes" other tag files. [Used only with -e]
 
 
@@ -544,52 +544,52 @@ CTAGS(1)                                                 CTAGS(1)
             in the source file.  [Ignored with -e]
 
 
-            The valid values for type (either the entire word  or
+            The  valid values for type (either the entire word or
             the first letter is accepted) are:
 
-            number   Use  only  line  numbers in the tag file for
+            number   Use only line numbers in the  tag  file  for
                      locating tags. This has four advantages:
-                     1.  Significantly reduces the  size  of  the
+                     1.  Significantly  reduces  the  size of the
                          resulting tag file.
                      2.  Eliminates failures to find tags because
-                         the line defining the tag  has  changed,
-                         causing  the pattern match to fail (note
+                         the  line  defining the tag has changed,
+                         causing the pattern match to fail  (note
                          that some editors, such as vim, are able
                          to recover in many such instances).
-                     3.  Eliminates  finding  identical matching,
-                         but incorrect, source lines  (see  BUGS,
+                     3.  Eliminates finding  identical  matching,
+                         but  incorrect,  source lines (see BUGS,
                          below).
                      4.  Retains separate entries in the tag file
-                         for lines which are  identical  in  con-
+                         for  lines  which  are identical in con-
                          tent. In pattern mode, duplicate entries
-                         are dropped because the search  patterns
-                         they  generate are identical, making the
+                         are  dropped because the search patterns
+                         they generate are identical, making  the
                          duplicate entries useless.
 
-                     However, this  option  has  one  significant
-                     drawback:  changes  to  the source files can
-                     cause the line numbers recorded in  the  tag
+                     However,  this  option  has  one significant
+                     drawback: changes to the  source  files  can
+                     cause  the  line numbers recorded in the tag
                      file to no longer correspond to the lines in
-                     the source file, causing jumps to some  tags
+                     the  source file, causing jumps to some tags
                      to miss the target definition by one or more
-                     lines. Basically, this option is  best  used
-                     when  the source code to which it is applied
-                     is not subject  to  change.  Selecting  this
-                     option  type causes the following options to
+                     lines.  Basically,  this option is best used
+                     when the source code to which it is  applied
+                     is  not  subject  to  change. Selecting this
+                     option type causes the following options  to
                      be ignored: -BF.
 
 
             pattern  Use  only  search  patterns  for  all  tags,
-                     rather  than  the  line numbers usually used
-                     for macro definitions. This has  the  advan-
-                     tage  of  not referencing obsolete line num-
-                     bers when lines have been added  or  removed
+                     rather than the line  numbers  usually  used
+                     for  macro  definitions. This has the advan-
+                     tage of not referencing obsolete  line  num-
+                     bers  when  lines have been added or removed
                      since the tag file was generated.
 
 
 
 
-Darren Hiebert             Version 3.3                          9
+Darren Hiebert            Version 3.3.3                         9
 
 
 
@@ -598,29 +598,70 @@ Darren Hiebert             Version 3.3                          9
 CTAGS(1)                                                 CTAGS(1)
 
 
-            mixed    In  this  mode,  patterns are generally used
-                     with a few exceptions. For C,  line  numbers
+            mixed    In this mode, patterns  are  generally  used
+                     with  a  few exceptions. For C, line numbers
                      are used for macro definition tags. This was
                      the default format generated by the original
-                     ctags  and  is,  therefore,  retained as the
-                     default for this option. For  Fortran,  line
-                     numbers  are  used for common blocks because
-                     their corresponding source lines are  gener-
+                     ctags and is,  therefore,  retained  as  the
+                     default  for  this option. For Fortran, line
+                     numbers are used for common  blocks  because
+                     their  corresponding source lines are gener-
                      ally identical, making pattern searches use-
                      less for finding all matches.
 
 
        --file-scope=yes|no
-            Indicates whether tags scoped only for a single  file
-            (i.e.  tags  which cannot be seen outside of the file
-            in which they are defined,  such  as  "static"  tags)
-            should  be  included  in  the output. See also the -h
+            Indicates  whether tags scoped only for a single file
+            (i.e. tags which cannot be seen outside of  the  file
+            in  which  they  are  defined, such as "static" tags)
+            should be included in the output.  See  also  the  -h
             option. This option is enabled by default.
 
 
        --file-tags=yes|no
             Indicates whether tags should be generated for source
             file names. This option is disabled by default.
+
+
+       --filter=yes|no
+            Causes ctags to behave as a  filter,  reading  source
+            file  names  from  standard  input and printing their
+            tags to standard output on a file-by-file  basis.  If
+            --sorted  is enabled, tags are sorted only within the
+            source file in which they are defined. File names are
+            read from standard output in line-oriented input mode
+            (see note for -L option) and only  after  file  names
+            listed  on the command line or from any file supplied
+            using the -L option. When this option is enabled, the
+            options -f, -o, and --totals are ignored. This option
+            is quite estoteric and is disabled by  default.  This
+            option must appear before the first file name.
+
+
+       --filter-terminator=string
+            Specifies  a  string to print to standard output fol-
+            lowing the tags for each file name  parsed  when  the
+            --filter option is enabled. This may permit an appli-
+            cation reading the output of ctags to determine  when
+            the  output  for  each file is finished. Note that if
+            the file name read is a directory  and  --recurse  is
+            enabled, this string will be printed only one once at
+            the end of all  tags  found  for  by  descending  the
+            directory.  This string will always be separated from
+            the last tag line for the  file  by  its  terminating
+            newline.   This option is quite esoteric and is empty
+            by default. This option must appear before the  first
+            file name.
+
+
+
+Darren Hiebert            Version 3.3.3                        10
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
 
 
        --format=level
@@ -652,18 +693,6 @@ CTAGS(1)                                                 CTAGS(1)
                n   namelists
                p   programs
                s   subroutines
-
-
-
-Darren Hiebert             Version 3.3                         10
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
                t   derived types
 
 
@@ -688,10 +717,22 @@ CTAGS(1)                                                 CTAGS(1)
 
        --java-types=types
             Specifies  a  list  of  Java language tag types to be
-            included in the output.  See --c-types for the  defi-
-            nition of the format of types. Tags for the following
-            Java  language  constructs  are  supported  (all  are
-            enabled by default):
+            included  in  the  output.   See  --c-types  for  the
+
+
+
+Darren Hiebert            Version 3.3.3                        11
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
+            definition  of the format of types. Tags for the fol-
+            lowing Java language constructs  are  supported  (all
+            are enabled by default):
 
 
                c   classes
@@ -719,17 +760,6 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-
-
-Darren Hiebert             Version 3.3                         11
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
        --kind-long=yes|no
             Specifies whether the identifier for the kind of  the
             tag  listed  in  extension flags of the tag file is a
@@ -754,6 +784,18 @@ CTAGS(1)                                                 CTAGS(1)
             Changes  the  mapping  between  file  extensions  and
             source  languages  (see  SOURCE  FILES,  above). Each
             comma-separated map consists of the  source  language
+
+
+
+Darren Hiebert            Version 3.3.3                        12
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
+
+
             name,  a colon, and a list of extensions separated by
             periods.  If the first character in a map is  a  plus
             sign,  then  the  extensions  in  that  map  will  be
@@ -784,18 +826,6 @@ CTAGS(1)                                                 CTAGS(1)
             entries marked with the file names and  line  numbers
             of  their  locations original source file(s), instead
             of their actual locations in the preprocessor output.
-
-
-
-Darren Hiebert             Version 3.3                         12
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
-
-
             The  actual  file names placed into the tag file will
             have the same leading path components as the  prepro-
             cessor  output  file,  since  it  is assumed that the
@@ -816,36 +846,6 @@ CTAGS(1)                                                 CTAGS(1)
             ignored. This option is on by default.
 
 
-       --filter=yes|no
-            Causes ctags to behave as a  filter,  reading  source
-            file  names  from  standard  input and printing their
-            tags to standard output on a file-by-file  basis.  If
-            --sorted  is enabled, tags are sorted only within the
-            source file in which they are defined. Files are read
-            from  standard  output only after files listed on the
-            command line or from any file supplied using  the  -L
-            option.  When this option is enabled, the options -f,
-            -o, and--totals are ignored.  This  option  is  quite
-            estoteric  and  is  disabled  by default. This option
-            must appear before the first file name.
-
-
-       --filter-terminator=string
-            Specifies a string to print to standard  output  fol-
-            lowing  the  tags  for each file name parsed when the
-            --filter option is enabled. This may permit an appli-
-            cation  reading the output of ctags to determine when
-            the output for each file is finished.  Note  that  if
-            the  file  name  read is a directory and --recurse is
-            enabled, this string will be printed only one once at
-            the  end  of  all  tags  found  for by descending the
-            directory. This string will always be separated  from
-            the  last  tag  line  for the file by its terminating
-            newline.  This option is quite esoteric and is  empty
-            by  default. This option must appear before the first
-            file name.
-
-
        --recurse=yes|no
             Recurse into directories encountered in the  list  of
             supplied  files.  If  the  list  of supplied files is
@@ -853,7 +853,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.3                         13
+Darren Hiebert            Version 3.3.3                        13
 
 
 
@@ -919,7 +919,7 @@ OPERATIONAL DETAILS
 
 
 
-Darren Hiebert             Version 3.3                         14
+Darren Hiebert            Version 3.3.3                        14
 
 
 
@@ -985,7 +985,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.3                         15
+Darren Hiebert            Version 3.3.3                        15
 
 
 
@@ -1051,7 +1051,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
 
-Darren Hiebert             Version 3.3                         16
+Darren Hiebert            Version 3.3.3                        16
 
 
 
@@ -1078,46 +1078,46 @@ EXTENSION FLAGS
        and the meaning of their values are as follows:
 
 
-       class       Indicates that this tag is  a  member  of  the
+       access      Indicates the visibility of this class member,
+                   where value is specific to the language.
+
+
+       class       Indicates  that  this  tag  is a member of the
                    class whose name is given by value.
 
 
-       enum        Indicates  that  this  tag  is a member of the
+       enum        Indicates that this tag is  a  member  of  the
                    enumeration whose name is given by value.
 
 
-       file        Indicates that  the  tag  has  a  file-limited
-                   scope  (i.e. is static to the file).  This key
+       file        Indicates  that  the  tag  has  a file-limited
+                   scope (i.e. is static to the file).  This  key
                    has no corresponding value.
 
 
-       kind        Indicates the type of the tag.  Its  value  is
-                   either  one  of  the  corresponding one-letter
-                   flags    described    under    the     various
-                   --<lang>-types  options above, or a full name,
-                   depending upon the value  of  the  --kind-long
-                   option.  Alternatively,  this key may be omit-
+       kind        Indicates  the  type  of the tag. Its value is
+                   either one  of  the  corresponding  one-letter
+                   flags     described    under    the    various
+                   --<lang>-types options above, or a full  name,
+                   depending  upon  the  value of the --kind-long
+                   option. Alternatively, this key may  be  omit-
                    ted, with only its value present (i.e. a field
                    without a ':' defaults to the kind key).
 
 
-       interface   Indicates  that  this  tag  is a member of the
+       interface   Indicates that this tag is  a  member  of  the
                    interface whose name is given by value.
 
 
-       namespace   Indicates that this tag is  a  member  of  the
+       namespace   Indicates  that  this  tag  is a member of the
                    namespace whose name is given by value.
 
 
-       private     Indicates  the visibility of this class member
-                   is private.  This  key  has  no  corresponding
-                   value.
+       struct      Indicates that this tag is  a  member  of  the
 
 
 
-
-
-Darren Hiebert             Version 3.3                         17
+Darren Hiebert            Version 3.3.3                        17
 
 
 
@@ -1126,48 +1126,37 @@ Darren Hiebert             Version 3.3                         17
 CTAGS(1)                                                 CTAGS(1)
 
 
-       protected   Indicates  the visibility of this class member
-                   is protected.  This key has  no  corresponding
-                   value.
-
-
-       public      Indicates  the visibility of this class member
-                   is public.   This  key  has  no  corresponding
-                   value.
-
-
-       struct      Indicates  that  this  tag  is a member of the
                    structure whose name is given by value.
 
 
-       union       Indicates that this tag is  a  member  of  the
+       union       Indicates  that  this  tag  is a member of the
                    union whose name is given by value.
 
 
 
 ENVIRONMENT VARIABLES
-       CTAGS   If  this  enviroment  variable  exists, it will be
+       CTAGS   If this enviroment variable  exists,  it  will  be
                expected to contain a set of default options which
-               are  read  when ctags starts, after the configura-
-               tion files listed in FILES, below, are  read,  but
-               before  any command line options are read. Options
-               appearing  on  the  command  line  will   override
-               options  specified in this file. Only options will
+               are read when ctags starts, after  the  configura-
+               tion  files  listed in FILES, below, are read, but
+               before any command line options are read.  Options
+               appearing   on  the  command  line  will  override
+               options specified in this file. Only options  will
                be read from this file.
 
 
-       ETAGS   Similar to the CTAGS variable  above,  this  vari-
+       ETAGS   Similar  to  the  CTAGS variable above, this vari-
                able, if found, will be read when etags starts. If
-               this variable is not found, etags will try to  use
+               this  variable is not found, etags will try to use
                CTAGS instead.
 
 
 HOW TO USE WITH VI
-       Vi  will, by default, expect a tag file by the name "tags"
-       in the current directory. Once the tag file is built,  the
+       Vi will, by default, expect a tag file by the name  "tags"
+       in  the current directory. Once the tag file is built, the
        following commands exercise the tag indexing feature:
 
-       vi -t tag   Start  vi  and position the cursor at the file
+       vi -t tag   Start vi and position the cursor at  the  file
                    and line where "tag" is defined.
 
        Control-]   Find the tag under the cursor.
@@ -1179,11 +1168,22 @@ HOW TO USE WITH VI
 
 
 
+HOW TO USE WITH GNU EMACS
+       Emacs will, by default, expect a  tag  file  by  the  name
+       "TAGS"  in  the  current  directory.  Once the tag file is
+       built, the following commands exercise  the  tag  indexing
+       feature:
+
+       Meta-x visit-tags-table
+                   Visit a TAGS file.
+
+       Meta-.      Find  a definition for a tag.  The default tag
+                   is the identifier under the cursor.  There  is
+                   name completion in the minibuffer; typing "foo
 
 
 
-
-Darren Hiebert             Version 3.3                         18
+Darren Hiebert            Version 3.3.3                        18
 
 
 
@@ -1192,28 +1192,16 @@ Darren Hiebert             Version 3.3                         18
 CTAGS(1)                                                 CTAGS(1)
 
 
-HOW TO USE WITH GNU EMACS
-       Emacs  will,  by  default,  expect  a tag file by the name
-       "TAGS" in the current directory.  Once  the  tag  file  is
-       built,  the  following  commands exercise the tag indexing
-       feature:
-
-       Meta-x visit-tags-table
-                   Visit a TAGS file.
-
-       Meta-.      Find a definition for a tag.  The default  tag
-                   is  the identifier under the cursor.  There is
-                   name completion in the minibuffer; typing "foo
-                   TAB"  completes  the  identifier starting with
-                   `foo' (`foobar', for  example)  or  lists  the
+                   TAB" completes the  identifier  starting  with
+                   `foo'  (`foobar',  for  example)  or lists the
                    alternatives.
 
-       Meta-,      Find  the  next definition for the tag.  Exact
-                   matches are found first, followed  by  fuzzier
+       Meta-,      Find the next definition for the  tag.   Exact
+                   matches  are  found first, followed by fuzzier
                    matches.
 
 
-       For  more  commands,  see the Tags topic in the Emacs info
+       For more commands, see the Tags topic in  the  Emacs  info
        tree.
 
 
@@ -1222,34 +1210,46 @@ BUGS (CAVEATS)
        Ctags has as many options as ls(1).
 
 
-       White space is treated as a separator for file  names  and
-       options  read  from  list  files,  specified  using the -L
-       option, and in filter mode (specified using  the  --filter
+       White  space  is treated as a separator for file names and
+       options read from  list  files,  specified  using  the  -L
+       option,  and  in filter mode (specified using the --filter
        option). Therefore, it is not currently possible to supply
-       file names or  other  options  containing  embedded  white
+       file  names  or  other  options  containing embedded white
        space (spaces, etc.) through these options.
 
 
-       Because  ctags  is  neither a preprocessor nor a compiler,
-       use of preprocessor macros  can  fool  ctags  into  either
-       missing  tags or improperly generating inappropriate tags.
-       Although ctags has been designed to handle certain  common
-       cases,  this is the single biggest cause of reported prob-
-       lems. In particular, the use  of  preprocessor  constructs
-       which  alter  the  textual syntax of C can fool ctags. You
+       Because ctags is neither a preprocessor  nor  a  compiler,
+       use  of  preprocessor  macros  can  fool ctags into either
+       missing tags or improperly generating inappropriate  tags.
+       Although  ctags has been designed to handle certain common
+       cases, this is the single biggest cause of reported  prob-
+       lems.  In  particular,  the use of preprocessor constructs
+       which alter the textual syntax of C can  fool  ctags.  You
        can work around many such problems by using the -I option.
 
 
-       Legacy  C  source code which uses C++ reserved keywords as
-       variable or parameter names  (e.g.  "class",  etc.)  in  a
-       header  file  may  fail to have correct tags generated for
-       the objects using them. In order to properly  handle  such
+       Legacy C source code which uses C++ reserved  keywords  as
+       variable  or  parameter  names  (e.g.  "class", etc.) in a
+       header file may fail to have correct  tags  generated  for
+       the  objects  using them. In order to properly handle such
        code, use the --lang option.
 
 
+       Note that when ctags generates uses patterns for  locating
+       tags  (see  the  --excmd  option), it is entirely possible
+       that the wrong line may be found by your editor  if  there
+       exists  another source line which is identical to the line
+       containing the tag.  The  following  example  demonstrates
+       this condition:
 
 
-Darren Hiebert             Version 3.3                         19
+              int variable;
+
+              /* ... */
+
+
+
+Darren Hiebert            Version 3.3.3                        19
 
 
 
@@ -1258,17 +1258,6 @@ Darren Hiebert             Version 3.3                         19
 CTAGS(1)                                                 CTAGS(1)
 
 
-       Note  that when ctags generates uses patterns for locating
-       tags (see the --excmd option),  it  is  entirely  possible
-       that  the  wrong line may be found by your editor if there
-       exists another source line which is identical to the  line
-       containing  the  tag.  The  following example demonstrates
-       this condition:
-
-
-              int variable;
-
-              /* ... */
               void foo(variable)
               int variable;
               {
@@ -1276,10 +1265,10 @@ CTAGS(1)                                                 CTAGS(1)
               }
 
 
-       Depending upon which editor you use and where in the  code
-       you  happen  to be, it is possible that the search pattern
+       Depending  upon which editor you use and where in the code
+       you happen to be, it is possible that the  search  pattern
        may locate the local parameter declaration in foo() before
-       it  finds the actual global variable definition, since the
+       it finds the actual global variable definition, since  the
        lines (and therefore their search patterns are identical).
        This can be avoided by use of the --excmd=n option.
 
@@ -1290,38 +1279,27 @@ FILES
        /usr/local/etc/ctags.conf
        $HOME/.ctags
        .ctags
-                 If  any of these configuration files exist, each
-                 will be expected to contain  a  set  of  default
-                 options  which are read in the order listed when
-                 ctags starts, but before  the  CTAGS  enviroment
+                 If any of these configuration files exist,  each
+                 will  be  expected  to  contain a set of default
+                 options which are read in the order listed  when
+                 ctags  starts,  but  before the CTAGS enviroment
                  variable is read or any command line options are
-                 read. This makes it possible  to  set  up  site-
-                 wide,  personal or project-level defaults. It is
-                 possible to compile ctags to read an  additional
-                 configuration     file     immediately    before
-                 $HOME/.ctags, which will  be  indicated  if  the
-                 output  produced  by  the --version option lists
-                 the "custom-conf" feature. Options appearing  in
-                 the  CTAGS enviroment variable or on the command
-                 line will override options  specified  in  these
-                 files.  Only  options  will  be  read from these
+                 read.  This  makes  it  possible to set up site-
+                 wide, personal or project-level defaults. It  is
+                 possible  to compile ctags to read an additional
+                 configuration    file     immediately     before
+                 $HOME/.ctags,  which  will  be  indicated if the
+                 output produced by the  --version  option  lists
+                 the  "custom-conf" feature. Options appearing in
+                 the CTAGS enviroment variable or on the  command
+                 line  will  override  options specified in these
+                 files. Only options  will  be  read  from  these
                  files.
 
 
        tags      The default tag file created by ctags.
 
        TAGS      The default tag file created by etags.
-
-
-
-
-Darren Hiebert             Version 3.3                         20
-
-
-
-
-
-CTAGS(1)                                                 CTAGS(1)
 
 
 SEE ALSO
@@ -1331,9 +1309,19 @@ SEE ALSO
            http://darren.hiebert.com/ctags/index.html
 
 
-       Also ex(1), vi(1), elvis, or, better yet, vim,  the  offi-
+       Also  ex(1),  vi(1), elvis, or, better yet, vim, the offi-
        cial editor of ctags. For more information on vim, see the
        VIM Pages web site at:
+
+
+
+Darren Hiebert            Version 3.3.3                        20
+
+
+
+
+
+CTAGS(1)                                                 CTAGS(1)
 
 
            http://www.vim.org/
@@ -1347,12 +1335,12 @@ AUTHOR
 
 
 MOTIVATION
-       "Think ye at all times of rendering some service to  every
+       "Think  ye at all times of rendering some service to every
        member of the human race."
 
 
-       "All  effort  and exertion put forth by man from the full-
-       ness of his heart is worship, if it  is  prompted  by  the
+       "All effort and exertion put forth by man from  the  full-
+       ness  of  his  heart  is worship, if it is prompted by the
        highest motives and the will to do service to humanity."
 
 
@@ -1361,19 +1349,19 @@ MOTIVATION
 
 
 CREDITS
-       This  version  of  ctags  was  originally derived from and
-       inspired by the ctags program by Steve  Kirkendall  <kirk-
+       This version of ctags  was  originally  derived  from  and
+       inspired  by  the ctags program by Steve Kirkendall <kirk-
        enda@cs.pdx.edu>  that  comes  with  the  Elvis  vi  clone
        (though virtually none of the original code remains).
 
 
-       Credit is also  due  Bram  Moolenaar  <Bram@vim.org>,  the
-       author  of  vim,  who  has devoted so much of his time and
-       energy both to developing the editor as a service to  oth-
+       Credit  is  also  due  Bram  Moolenaar <Bram@vim.org>, the
+       author of vim, who has devoted so much  of  his  time  and
+       energy  both to developing the editor as a service to oth-
        ers, and to helping the orphans of Uganda.
 
 
-       The  section  entitled  "HOW  TO  USE  WITH GNU EMACS" was
+       The section entitled "HOW  TO  USE  WITH  GNU  EMACS"  was
        shamelessly stolen from the man page for GNU etags.
 
 
@@ -1381,6 +1369,18 @@ CREDITS
 
 
 
-Darren Hiebert             Version 3.3                         21
+
+
+
+
+
+
+
+
+
+
+
+
+Darren Hiebert            Version 3.3.3                        21
 
 
