@@ -529,10 +529,6 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 /* return values for functions */
 #if !(defined(OK) && (OK == 1))
 /* OK already defined to 1 in MacOS X curses, skip this */
-/* OK defined to 0 in MacOS X 10.2 curses!  redefine it */
-# if defined(OK) && defined(MACOS_X_UNIX)
-#  undef OK
-# endif
 # define OK			1
 #endif
 #define FAIL			0

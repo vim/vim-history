@@ -490,10 +490,7 @@ fname_case(name, len)
      */
 #ifdef USE_UNIXFILENAME
     OSStatus	status;
-    OSErr	error;
     FSRef	refFile;
-    FSRef	refParent;
-    FSSpec	specFile;
     UInt32	pathSize = STRLEN(name) + 1;
     char_u	*path;
     Boolean	isDirectory;
@@ -502,17 +499,17 @@ fname_case(name, len)
     if (path == NULL)
 	return;
 
-    status=FSPathMakeRef ( (UInt8 *) name, &refFile, &isDirectory);
+    status = FSPathMakeRef((UInt8 *)name, &refFile, &isDirectory);
     if (status)
 	return;
 
-    status=FSRefMakePath (&refFile, (UInt8 *) path, pathSize);
+    status = FSRefMakePath(&refFile, (UInt8 *)path, pathSize);
     if (status)
 	return;
 
     /* Paranoid: Update the name if only the casing differ.*/
     if (STRICMP(name, path) == 0)
-	STRCPY (name, path);
+	STRCPY(name, path);
 #endif
 }
 static char_u	*oldtitle = (char_u *) "gVim";
@@ -1150,7 +1147,6 @@ mch_exit(r)
     exit(r);
 }
 
-static int curr_tmode = TMODE_COOK;     /* contains current terminal mode */
 
     void
 mch_settmode(tmode)

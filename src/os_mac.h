@@ -71,6 +71,8 @@
 # include <curses.h>
 # undef reg
 # undef ospeed
+/* OK defined to 0 in MacOS X 10.2 curses!  Remove it, we define it to be 1. */
+# undef OK
 #endif
 #include <signal.h>
 #include <errno.h>
@@ -375,6 +377,10 @@
 # define HAVE_SETENV
 # define HAVE_RENAME
 # define mch_chdir(s) chdir(s)
+#endif
+
+#ifdef MACOS_X
+# define HAVE_PUTENV
 #endif
 
 /* A Mac constant causing big problem to syntax highlighting */
