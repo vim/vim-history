@@ -1363,6 +1363,16 @@ gui_set_shellsize(mustset, fit_to_display)
 
     gui_mch_set_shellsize(width, height, min_width, min_height,
 						     base_width, base_height);
+    if (fit_to_display)
+    {
+	int	    x, y;
+
+	/* Some window managers put the Vim window left of/above the screen. */
+	gui_mch_update();
+	if (gui_mch_get_winpos(&x, &y) == OK && (x < 0 || y < 0))
+	    gui_mch_set_winpos(x < 0 ? 0 : x, y < 0 ? 0 : y);
+    }
+
     gui_position_components(width);
     gui_update_scrollbars(TRUE);
     gui_reset_scroll_region();
