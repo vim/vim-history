@@ -627,7 +627,7 @@ add_msg_hist(s, len, attr)
 {
     struct msg_hist *p;
 
-    if (msg_hist_off)
+    if (msg_hist_off || msg_silent != 0)
 	return;
 
     /* Don't let the message history get too big */
