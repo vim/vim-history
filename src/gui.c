@@ -3156,7 +3156,11 @@ gui_init_which_components(oldval)
 #ifdef FEAT_MENU
 	if (gui.menu_is_active != prev_menu_is_active)
 	{
+	    /* We don't want a resize event change "Rows" here, save and
+	     * restore it.  Resizing is handled below. */
+	    i = Rows;
 	    gui_mch_enable_menu(gui.menu_is_active);
+	    Rows = i;
 	    prev_menu_is_active = gui.menu_is_active;
 	    need_set_size = TRUE;
 	    if (gui.menu_is_active)
@@ -3192,8 +3196,9 @@ gui_init_which_components(oldval)
 	}
 #endif
 	if (need_set_size)
-	    /* Adjust the size of the window to avoid that part of our window
-	     * is off-screen and a scrollbar can't be used, for example. */
+	    /* Adjust the size of the window to make the text area keep the
+	     * same size and to avoid that part of our window is off-screen
+	     * and a scrollbar can't be used, for example. */
 	    gui_set_shellsize(FALSE, fix_size);
     }
 }
