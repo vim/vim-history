@@ -47,6 +47,17 @@
 #endif
 
 /*
+ * The toupper() in Bcc 5.5 doesn't work, use our own implementation.
+ */
+    static int
+mytoupper(int c)
+{
+    if (c >= 'a' && c <= 'z')
+	return c - 'a' + 'A';
+    return c;
+}
+
+/*
  * Return TRUE if the user types a 'y' or 'Y', FALSE otherwise.
  * Eats white space first.
  */
@@ -55,7 +66,7 @@ confirm(void)
 {
     char	answer[10];
 
-    return (scanf(" %c", answer) == 1 && toupper(answer[0]) == 'Y');
+    return (scanf(" %c", answer) == 1 && mytoupper(answer[0]) == 'Y');
 }
 
 /*
@@ -145,7 +156,7 @@ mch_chdir(char *path)
 	return 0;
     if (path[1] == ':')		    /* has a drive name */
     {
-	if (change_drive(tolower(path[0]) - 'a' + 1))
+	if (change_drive(mytoupper(path[0]) - 'A' + 1))
 	    return -1;		    /* invalid drive name */
 	path += 2;
     }
@@ -274,6 +285,7 @@ PlatformId(void)
     }
 }
 
+# ifndef __BORLANDC__
     char *
 searchpath(char *name)
 {
@@ -303,6 +315,7 @@ searchpath(char *name)
     }
     return NULL;
 }
+# endif
 #endif
 
 /*
@@ -551,7 +564,7 @@ main(int argc, char **argv)
     {
 	for (i = 0; i < vimdirend - 1; ++i)
 	{
-	    if (toupper(p[i]) == toupper(vimdir[i]))
+	    if (mytoupper(p[i]) == mytoupper(vimdir[i]))
 		continue;
 	    if ((p[i] == '/' || p[i] == '\\')
 		    && (vimdir[i] == '/' || vimdir[i] == '\\'))
@@ -575,7 +588,7 @@ main(int argc, char **argv)
     {
 	for (i = 0; p[i] || vimdir[i]; ++i)
 	{
-	    if (toupper(p[i]) == toupper(vimdir[i]))
+	    if (mytoupper(p[i]) == mytoupper(vimdir[i]))
 		continue;
 	    if ((p[i] == '/' || p[i] == '\\')
 		    && (vimdir[i] == '/' || vimdir[i] == '\\'))
