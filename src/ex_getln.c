@@ -531,6 +531,7 @@ getcmdline(firstc, count, indent)
 	    }
 	    else		    /* typed p_wc first time */
 	    {
+		wim_index = 0;
 		j = ccline.cmdpos;
 		/* if 'wildmode' first contains "longest", get longest
 		 * common part */
