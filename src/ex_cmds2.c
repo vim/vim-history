@@ -1756,28 +1756,73 @@ alist_add_list(count, files, after)
 
 #ifdef FEAT_EVAL
 /*
- * ":compiler {name}"
+ * ":compiler[!] {name}"
  */
     void
 ex_compiler(eap)
     exarg_T	*eap;
 {
     char_u	*buf;
+    char_u	*old_cur_comp = NULL;
+    char_u	*p;
 
     if (*eap->arg == NUL)
     {
 	/* List all compiler scripts. */
 	do_cmdline_cmd((char_u *)"echo globpath(&rtp, 'compiler/*.vim')");
+					/* ) keep the indenter happy... */
     }
     else
     {
 	buf = alloc((unsigned)(STRLEN(eap->arg) + 14));
 	if (buf != NULL)
 	{
+	    if (eap->forceit)
+	    {
+		/* ":compiler! {name}" sets global options */
+		do_cmdline_cmd((char_u *)
+				   "command -nargs=* CompilerSet set <args>");
+	    }
+	    else
+	    {
+		/* ":compiler! {name}" sets local options.
+		 * To remain backwards compatible "current_compiler" is always
+		 * used.  A user's compiler plugin may set it, the distributed
+		 * plugin will then skip the settings.  Afterwards set
+		 * "b:current_compiler" and restore "current_compiler". */
+		old_cur_comp = get_var_value((char_u *)"current_compiler");
+		if (old_cur_comp != NULL)
+		    old_cur_comp = vim_strsave(old_cur_comp);
+		do_cmdline_cmd((char_u *)
+			      "command -nargs=* CompilerSet setlocal <args>");
+	    }
 	    do_unlet((char_u *)"current_compiler");
+	    do_unlet((char_u *)"b:current_compiler");
+
 	    sprintf((char *)buf, "compiler/%s.vim", eap->arg);
-	    (void)cmd_runtime(buf, TRUE);
+	    if (cmd_runtime(buf, TRUE) == FAIL)
+		EMSG2(_("E666: compiler not supported: %s"), eap->arg);
 	    vim_free(buf);
+
+	    do_cmdline_cmd((char_u *)":delcommand CompilerSet");
+
+	    /* Set "b:current_compiler" from "current_compiler". */
+	    p = get_var_value((char_u *)"current_compiler");
+	    if (p != NULL)
+		set_internal_string_var((char_u *)"b:current_compiler", p);
+
+	    /* Restore "current_compiler" for ":compiler {name}". */
+	    if (!eap->forceit)
+	    {
+		if (old_cur_comp != NULL)
+		{
+		    set_internal_string_var((char_u *)"current_compiler",
+								old_cur_comp);
+		    vim_free(old_cur_comp);
+		}
+		else
+		    do_unlet((char_u *)"current_compiler");
+	    }
 	}
     }
 }
