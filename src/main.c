@@ -1452,6 +1452,11 @@ main
     mch_set_winsize_now();	    /* Allow winsize changes from now on */
 #endif
 
+    /* If ":startinsert" command used, stuff a dummy command to be able to
+     * call normal_cmd(), which will then start Insert mode. */
+    if (restart_edit)
+	stuffReadbuff((char_u *)"\034\016");
+
     /*
      * main command loop
      */
