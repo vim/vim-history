@@ -3051,6 +3051,7 @@ gui_init_which_components(oldval)
 #endif
     win_T	*wp;
     int		need_set_size;
+    int		fix_size;
 
 #ifdef FEAT_MENU
     if (oldval != NULL && gui.in_use)
@@ -3125,6 +3126,7 @@ gui_init_which_components(oldval)
     if (gui.in_use)
     {
 	need_set_size = FALSE;
+	fix_size = FALSE;
 	for (i = 0; i < 3; i++)
 	{
 	    if (gui.which_scrollbars[i] != prev_which_scrollbars[i])
@@ -3140,6 +3142,8 @@ gui_init_which_components(oldval)
 		    }
 		}
 		need_set_size = TRUE;
+		if (gui.which_scrollbars[i])
+		    fix_size = TRUE;
 	    }
 	    prev_which_scrollbars[i] = gui.which_scrollbars[i];
 	}
@@ -3150,6 +3154,8 @@ gui_init_which_components(oldval)
 	    gui_mch_enable_menu(gui.menu_is_active);
 	    prev_menu_is_active = gui.menu_is_active;
 	    need_set_size = TRUE;
+	    if (gui.menu_is_active)
+		fix_size = TRUE;
 	}
 #endif
 
@@ -3159,6 +3165,8 @@ gui_init_which_components(oldval)
 	    gui_mch_show_toolbar(using_toolbar);
 	    prev_toolbar = using_toolbar;
 	    need_set_size = TRUE;
+	    if (using_toolbar)
+		fix_size = TRUE;
 	}
 #endif
 #ifdef FEAT_FOOTER
@@ -3167,6 +3175,8 @@ gui_init_which_components(oldval)
 	    gui_mch_enable_footer(using_footer);
 	    prev_footer = using_footer;
 	    need_set_size = TRUE;
+	    if (using_footer)
+		fix_size = TRUE;
 	}
 #endif
 #if defined(FEAT_MENU) && !defined(WIN16) && !(defined(WIN3264) && !defined(FEAT_TEAROFF))
@@ -3177,7 +3187,9 @@ gui_init_which_components(oldval)
 	}
 #endif
 	if (need_set_size)
-	    gui_set_shellsize(FALSE, FALSE);
+	    /* Adjust the size of the window to avoid that part of our window
+	     * is off-screen and a scrollbar can't be used, for example. */
+	    gui_set_shellsize(FALSE, fix_size);
     }
 }
 
