@@ -293,6 +293,10 @@ update_topline()
 		 * window lines below the cursor.  If not, need to scroll. */
 		n = curwin->w_empty_rows;
 		loff.lnum = curwin->w_cursor.lnum;
+#ifdef FEAT_FOLDING
+		/* In a fold go to its last line. */
+		(void)hasFolding(loff.lnum, NULL, &loff.lnum);
+#endif
 #ifdef FEAT_DIFF
 		loff.fill = 0;
 		n += curwin->w_filler_rows;
