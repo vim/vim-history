@@ -1,6 +1,6 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 May 24
+" Last Change:	2003 May 26
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1
@@ -3576,13 +3576,14 @@ Xcheck 1157763329
 
 
 "-------------------------------------------------------------------------------
-" Test 43:  Empty or missing :catch patterns				    {{{1
+" Test 43:  Missing or empty :catch patterns				    {{{1
 "
-"	    An empty or missing :catch pattern means the same as /.*/, that is,
+"	    A missing or empty :catch pattern means the same as /.*/, that is,
 "	    catches everything.  To catch only empty exceptions, /^$/ must be
-"	    used.  A :catch with empty or /.*/ argument also works when followed
-"	    by another command separated by a bar on the same line.  :catch
-"	    patterns can also be specified between ||.
+"	    used.  A :catch with missing, empty, or /.*/ argument also works
+"	    when followed by another command separated by a bar on the same
+"	    line.  :catch patterns cannot be specified between ||.  But other
+"	    pattern separators can be used instead of //.
 "-------------------------------------------------------------------------------
 
 XpathINIT
@@ -3649,26 +3650,60 @@ try
     try | Xpath 524288 | throw "y" | catch // | Xpath 1048576 | endtry
 						" X: 524288 + 1048576
 
-    try | Xpath 2097152 | throw "try and endtry" | catch | endtry
-	" Here begins a catch clause catching / endtry/
-						" X: 2097152
-	Xpath 4194304				" X: 4194304
-    " endtry
+    while 1
+	try
+	    let caught = 0
+	    let v:errmsg = ""
+	    " Extra try level:  if ":catch" without arguments below raises
+	    " a syntax error because it misinterprets the "Xpath" as a pattern,
+	    " let it be caught by the ":catch /.*/" below.
+	    try
+		try | Xpath 2097152 | throw "z" | catch | Xpath 4194304 | :
+		endtry				" X: 2097152 + 4194304
+	    endtry
+	catch /.*/
+	    let caught = 1
+	    Xout v:exception "in" v:throwpoint
+	finally
+	    if $VIMNOERRTHROW && v:errmsg != ""
+		Xout v:errmsg
+	    endif
+	    if caught || $VIMNOERRTHROW && v:errmsg != ""
+		Xpath 8388608				" X: 0
+	    endif
+	    break		" discard error for $VIMNOERRTHROW
+	endtry
+    endwhile
 
+    let cologne = 4711
     try
-	Xpath 8388608				" X: 8388608
-	throw "bars"
-    catch +bars+
-	Xpath 16777216				" X: 16777216
+	try
+	    Xpath 16777216			" X: 16777216
+	    throw "throw cologne"
+	" Next lines catches all and throws 4711:
+	catch |throw cologne|
+	    Xpath 33554432			" X: 0
+	endtry
+    catch /4711/
+	Xpath 67108864				" X: 67108864
     endtry
 
-    Xpath 33554432				" X: 33554432
+    try
+	Xpath 134217728				" X: 134217728
+	throw "plus"
+    catch +plus+
+	Xpath 268435456				" X: 268435456
+    endtry
+
+    Xpath 536870912				" X: 536870912
 catch /.*/
-    Xpath 67108864				" X: 0
+    Xpath 1073741824				" X: 0
     Xout v:exception "in" v:throwpoint
 endtry
 
-Xcheck 67071487
+unlet! caught cologne
+
+Xcheck 1031761407
 
 
 "-------------------------------------------------------------------------------
