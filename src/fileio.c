@@ -5708,7 +5708,7 @@ buf_check_timestamp(buf, focus)
 	exarg_T		ea;
 	pos_T		old_cursor;
 	linenr_T	old_topline;
-	int		old_ro = curbuf->b_p_ro;
+	int		old_ro = buf->b_p_ro;
 	buf_T		*savebuf;
 	int		saved = OK;
 #ifdef FEAT_AUTOCMD
