@@ -951,7 +951,8 @@ do_buffer(action, start, dir, count, forceit)
 	 * then before the current buffer.
 	 * Finally use any buffer.
 	 */
-	buf = NULL;
+	buf = NULL;	/* selected buffer */
+	bp = NULL;	/* used when no loaded buffer found */
 #ifdef FEAT_AUTOCMD
 	if (au_new_curbuf != NULL && buf_valid(au_new_curbuf))
 	    buf = au_new_curbuf;
@@ -972,12 +973,19 @@ do_buffer(action, start, dir, count, forceit)
 	    while (jumpidx != curwin->w_jumplistidx)
 	    {
 		buf = buflist_findnr(curwin->w_jumplist[jumpidx].fmark.fnum);
-		if (buf == curbuf
-			|| (buf != NULL
-			    && (buf->b_ml.ml_mfp == NULL || !buf->b_p_bl)))
-		    buf = NULL;	/* Must be open, listed and not current */
-		/* found a valid buffer: stop searching */
 		if (buf != NULL)
+		{
+		    if (buf == curbuf || !buf->b_p_bl)
+			buf = NULL;	/* skip current and unlisted bufs */
+		    else if (buf->b_ml.ml_mfp == NULL)
+		    {
+			/* skip unloaded buf, but may keep it for later */
+			if (bp == NULL)
+			    bp = buf;
+			buf = NULL;
+		    }
+		}
+		if (buf != NULL)   /* found a valid buffer: stop searching */
 		    break;
 		/* advance to older entry in jump list */
 		if (!jumpidx && curwin->w_jumplistidx == curwin->w_jumplistlen)
@@ -1005,16 +1013,21 @@ do_buffer(action, start, dir, count, forceit)
 		    continue;
 		}
 		/* in non-help buffer, try to skip help buffers, and vv */
-		if (buf->b_ml.ml_mfp != NULL
-			&& buf->b_help == curbuf->b_help
-			&& buf->b_p_bl)
-		    break;
+		if (buf->b_help == curbuf->b_help && buf->b_p_bl)
+		{
+		    if (buf->b_ml.ml_mfp != NULL)   /* found loaded buffer */
+			break;
+		    if (bp == NULL)	/* remember unloaded buf for later */
+			bp = buf;
+		}
 		if (forward)
 		    buf = buf->b_next;
 		else
 		    buf = buf->b_prev;
 	    }
 	}
+	if (buf == NULL)	/* No loaded buffer, use unloaded one */
+	    buf = bp;
 	if (buf == NULL)	/* No loaded buffer, find listed one */
 	{
 	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
