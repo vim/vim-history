@@ -5862,13 +5862,14 @@ nv_at(cap)
 	    return;
     }
 #endif
-    while (cap->count1--)
+    while (cap->count1-- && !got_int)
     {
 	if (do_execreg(cap->nchar, FALSE, FALSE) == FAIL)
 	{
 	    clearopbeep(cap->oap);
 	    break;
 	}
+	line_breakcheck();
     }
 }
 
