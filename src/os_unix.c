@@ -110,7 +110,6 @@ int	    got_x_error = FALSE;
 
 # ifdef WANT_TITLE
 static int  get_x11_windis __ARGS((void));
-static int  test_x11_window __ARGS((Display *dpy));
 static void set_x11_title __ARGS((char_u *));
 static void set_x11_icon __ARGS((char_u *));
 # endif
@@ -759,11 +758,14 @@ mch_input_isatty()
     return FALSE;
 }
 
-#ifdef WANT_TITLE
-
-#if defined(HAVE_X11) && defined(WANT_X11)
-
-static int get_x11_thing __ARGS((int get_title, int test_only));
+#if defined(HAVE_X11) && defined(WANT_X11) \
+	&& (defined(WANT_TITLE) || defined(XTERM_CLIP))
+/*
+ * A few functions shared by X11 title and clipboard code.
+ */
+static int x_error_handler __ARGS((Display *dpy, XErrorEvent *error_event));
+static int x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
+static int test_x11_window __ARGS((Display *dpy));
 
 /*
  * X Error handler, otherwise X just exits!  (very rude) -- webb
@@ -796,6 +798,37 @@ x_error_check(dpy, error_event)
     got_x_error = TRUE;
     return 0;
 }
+
+/*
+ * Test if "dpy" and x11_window are valid by getting the window title.
+ * I don't actually want it yet, so there may be a simpler call to use, but
+ * this will cause the error handler x_error_check() to be called if anything
+ * is wrong, such as the window pointer being invalid (as can happen when the
+ * user changes his DISPLAY, but not his WINDOWID) -- webb
+ */
+    static int
+test_x11_window(dpy)
+    Display	*dpy;
+{
+    int			(*old_handler)();
+    XTextProperty	text_prop;
+
+    old_handler = XSetErrorHandler(x_error_check);
+    got_x_error = FALSE;
+    if (XGetWMName(dpy, x11_window, &text_prop))
+	XFree((void *)text_prop.value);
+    XSync(dpy, False);
+    (void)XSetErrorHandler(old_handler);
+
+    return (got_x_error ? FAIL : OK);
+}
+#endif
+
+#ifdef WANT_TITLE
+
+#if defined(HAVE_X11) && defined(WANT_X11)
+
+static int get_x11_thing __ARGS((int get_title, int test_only));
 
 /*
  * try to get x11 window and display
@@ -926,30 +959,6 @@ get_x11_windis()
     if (x11_window == 0 || x11_display == NULL)
 	return (result = FAIL);
     return (result = OK);
-}
-
-/*
- * Test if "dpy" and x11_window are valid by getting the window title.
- * I don't actually want it yet, so there may be a simpler call to use, but
- * this will cause the error handler x_error_check() to be called if anything
- * is wrong, such as the window pointer being invalid (as can happen when the
- * user changes his DISPLAY, but not his WINDOWID) -- webb
- */
-    static int
-test_x11_window(dpy)
-    Display	*dpy;
-{
-    int			(*old_handler)();
-    XTextProperty	text_prop;
-
-    old_handler = XSetErrorHandler(x_error_check);
-    got_x_error = FALSE;
-    if (XGetWMName(dpy, x11_window, &text_prop))
-	XFree((void *)text_prop.value);
-    XSync(dpy, False);
-    (void)XSetErrorHandler(old_handler);
-
-    return (got_x_error ? FAIL : OK);
 }
 
 /*
