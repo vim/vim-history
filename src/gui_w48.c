@@ -1585,21 +1585,22 @@ process_message(void)
 		    && !(GetKeyState(VK_SHIFT) & 0x8000)
 		    && !(GetKeyState(VK_MENU) & 0x8000))
 	    {
-		if (vk == '6')
+		/* CTRL-6 is '^'; Japanese keyboard maps '^' to vk == 0xDE */
+		if (vk == '6' || MapVirtualKey(vk, 2) == (UINT)'^')
 		{
 		    string[0] = Ctrl_HAT;
 		    add_to_input_buf(string, 1);
 		}
-		/* vk == 0xDB AZERTY for CTRL-'-', but CTRL-[ for * QWERTY! */
+		/* vk == 0xBD AZERTY for CTRL-'-', but CTRL-[ for * QWERTY! */
 		else if (vk == 0xBD)	/* QWERTY for CTRL-'-' */
 		{
 		    string[0] = Ctrl__;
 		    add_to_input_buf(string, 1);
 		}
-		/* Japanese keyboard map '^' to vk == 0xDE */
-		else if (MapVirtualKey(vk, 2) == (UINT)'^')
+		/* CTRL-2 is '@'; Japanese keyboard maps '@' to vk == 0xC0 */
+		else if (vk == '2' || MapVirtualKey(vk, 2) == (UINT)'@')
 		{
-		    string[0] = Ctrl_HAT;
+		    string[0] = Ctrl_AT;
 		    add_to_input_buf(string, 1);
 		}
 		else
