@@ -3047,6 +3047,12 @@ f_char2nr(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	retvar->var_val.var_number =
+				  (*mb_ptr2char)(get_var_string(&argvars[0]));
+    else
+#endif
     retvar->var_val.var_number = get_var_string(&argvars[0])[0];
 }
 
@@ -5126,11 +5132,19 @@ f_nr2char(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-    char_u	buf[2];
+    char_u	buf[NUMBUFLEN];
 
-    buf[0] = (char_u)get_var_number(&argvars[0]);
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+	buf[(*mb_char2bytes)((int)get_var_number(&argvars[0]), buf)] = NUL;
+    else
+#endif
+    {
+	buf[0] = (char_u)get_var_number(&argvars[0]);
+	buf[1] = NUL;
+    }
     retvar->var_type = VAR_STRING;
-    retvar->var_val.var_string = vim_strnsave(buf, 1);
+    retvar->var_val.var_string = vim_strsave(buf);
 }
 
 /*

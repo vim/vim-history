@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0.  Last change: 2002 Feb 18
+*eval.txt*      For Vim version 6.0.  Last change: 2002 Feb 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -969,10 +969,13 @@ byte2line({byte})					*byte2line()*
 		feature}
 
 char2nr({expr})						*char2nr()*
-		Return ASCII value of the first char in {expr}.  Examples: >
+		Return number value of the first char in {expr}.  Examples: >
 			char2nr(" ")		returns 32
 			char2nr("ABC")		returns 65
-<
+<		The current 'encoding' is used.  Example for "utf-8": >
+			char2nr("á")		returns 225
+			char2nr("á"[0])		returns 195
+
 cindent({lnum})						*cindent()*
 		Get the amount of indent for line {lnum} according the C
 		indenting rules, as with 'cindent'.
@@ -1874,11 +1877,13 @@ nextnonblank({lnum})					*nextnonblank()*
 		See also |prevnonblank()|.
 
 nr2char({expr})						*nr2char()*
-		Return a string with a single character, which has the ASCII
+		Return a string with a single character, which has the number
 		value {expr}.  Examples: >
 			nr2char(64)		returns "@"
 			nr2char(32)		returns " "
-<
+<		The current 'encoding' is used.  Example for "utf-8": >
+			nr2char(300)		returns I with bow character
+
 prevnonblank({lnum})					*prevnonblank()*
 		Return the line number of the first line at or above {lnum}
 		that is not blank.  Example: >
