@@ -5764,7 +5764,8 @@ nv_replace(cap)
     /* Break tabs, etc. */
     if (virtual_active())
     {
-	u_save_cursor();
+	if (u_save_cursor() == FAIL)
+	    return;
 	if (gchar_cursor() == NUL)
 	{
 	    /* Add extra space and put the cursor on the first one. */
