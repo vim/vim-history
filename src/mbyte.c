@@ -3728,7 +3728,7 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     {
 	event_queue = key_press_event_queue;
 	processing_queued_event = TRUE;
-	while (event_queue != NULL)
+	while (event_queue != NULL && processing_queued_event)
 	{
 	    GdkEvent *ev = event_queue->data;
 
@@ -3790,8 +3790,10 @@ xim_reset(void)
     int
 xim_queue_key_press_event(GdkEvent *ev)
 {
-    if (preedit_buf_len <= 0 || processing_queued_event)
+    if (preedit_buf_len <= 0)
 	return FALSE;
+    if (processing_queued_event)
+	processing_queued_event = FALSE;
 
     key_press_event_queue = g_slist_append(key_press_event_queue,
 					   gdk_event_copy(ev));
