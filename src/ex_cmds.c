@@ -2142,6 +2142,17 @@ do_write(eap)
 
     if (eap->cmdidx == CMD_saveas && alt_buf != NULL)
     {
+#ifdef FEAT_AUTOCMD
+	buf_T	*was_curbuf = curbuf;
+
+	apply_autocmds(EVENT_BUFFILEPRE, NULL, NULL, FALSE, curbuf);
+	if (curbuf != was_curbuf)
+	{
+	    /* buffer changed, don't change name now */
+	    retval = FAIL;
+	    goto theend;
+	}
+#endif
 	/* Exchange the file names for the current and the alternate buffer.
 	 * This makes it look like we are now editing the buffer under the new
 	 * name.  Must be done before buf_write(), because if there is no file
@@ -2157,10 +2168,17 @@ do_write(eap)
 	curbuf->b_sfname = fname;
 	buf_name_changed();
 #ifdef FEAT_AUTOCMD
+	apply_autocmds(EVENT_BUFFILEPOST, NULL, NULL, FALSE, curbuf);
 	if (!alt_buf->b_p_bl)
 	{
 	    alt_buf->b_p_bl = TRUE;
-	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, curbuf);
+	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, alt_buf);
+	}
+	if (curbuf != was_curbuf)
+	{
+	    /* buffer changed, don't write the file */
+	    retval = FAIL;
+	    goto theend;
 	}
 #endif
     }
