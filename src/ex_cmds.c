@@ -5275,6 +5275,11 @@ helptags_one(dir, ext, tagfname)
     char_u	*s;
     int		i;
     char_u	*fname;
+# ifdef FEAT_MBYTE
+    int		utf8 = MAYBE;
+    int		this_utf8;
+    int		firstline;
+# endif
 
     /*
      * Find all *.txt files.
@@ -5342,8 +5347,29 @@ helptags_one(dir, ext, tagfname)
 	}
 	fname = gettail(files[fi]);
 
+# ifdef FEAT_MBYTE
+	firstline = TRUE;
+# endif
 	while (!vim_fgets(IObuff, IOSIZE, fd) && !got_int)
 	{
+# ifdef FEAT_MBYTE
+	    if (firstline)
+	    {
+		/* Detect utf-8 file by a non-ASCII char in the first line. */
+		this_utf8 = FALSE;
+		for (s = IObuff; *s != NUL; ++s)
+		    if (*s >= 0x80)
+			this_utf8 = TRUE;
+		if (utf8 == MAYBE)
+		    utf8 = this_utf8;
+		else if (utf8 != this_utf8)
+		{
+		    EMSG2(_("E670: Mix of help file encodings within a language: %s"), files[fi]);
+		    got_int = TRUE;
+		}
+		firstline = FALSE;
+	    }
+# endif
 	    p1 = vim_strchr(IObuff, '*');	/* find first '*' */
 	    while (p1 != NULL)
 	    {
@@ -5426,6 +5452,11 @@ helptags_one(dir, ext, tagfname)
 		++p2;
 	    }
 	}
+
+# ifdef FEAT_MBYTE
+	if (utf8 == TRUE)
+	    fprintf(fd_tags, "!_TAG_FILE_ENCODING\tutf-8\t//\n");
+# endif
 
 	/*
 	 * Write the tags into the file.
