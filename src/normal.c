@@ -3468,7 +3468,7 @@ clear_showcmd()
 	return;
 
 #ifdef FEAT_VISUAL
-    if (VIsual_active)
+    if (VIsual_active && !char_avail())
     {
 	int		i = lt(VIsual, curwin->w_cursor);
 	long		lines;
@@ -3614,6 +3614,10 @@ del_from_showcmd(len)
 	display_showcmd();
 }
 
+/*
+ * push_showcmd() and pop_showcmd() are used when waiting for the user to type
+ * something and there is a partial mapping.
+ */
     void
 push_showcmd()
 {
@@ -7666,7 +7670,7 @@ nv_pipe(cap)
     else
 	curwin->w_curswant = 0;
     /* keep curswant at the column where we wanted to go, not where
-       we ended; differs is line is too short */
+       we ended; differs if line is too short */
     curwin->w_set_curswant = FALSE;
 }
 

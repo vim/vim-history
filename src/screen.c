@@ -8046,9 +8046,11 @@ showmode()
 
     /* If the last window has no status line, the ruler is after the mode
      * message and must be redrawn */
+    if (redrawing()
 # ifdef FEAT_WINDOWS
-    if (lastwin->w_status_height == 0)
+	    && lastwin->w_status_height == 0
 # endif
+       )
 	win_redr_ruler(lastwin, TRUE);
 #endif
     redraw_cmdline = FALSE;
