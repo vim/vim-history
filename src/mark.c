@@ -923,6 +923,10 @@ mark_adjust(line1, line2, amount, amount_after)
     /* previous pcmark */
     one_adjust(&(curwin->w_prev_pcmark.lnum));
 
+    /* saved cursor for formatting */
+    if (saved_cursor.lnum != 0)
+	one_adjust_nodel(&(saved_cursor.lnum));
+
     /*
      * Adjust items in all windows related to the current buffer.
      */
@@ -1008,6 +1012,106 @@ mark_adjust(line1, line2, amount, amount_after)
     /* adjust diffs */
     diff_mark_adjust(line1, line2, amount, amount_after);
 #endif
+}
+
+/* This code is used often, needs to be fast. */
+#define col_adjust(pp) \
+    { \
+	posp = pp; \
+	if (posp->lnum == lnum && posp->col >= mincol) \
+	{ \
+	    posp->lnum += lnum_amount; \
+	    if (col_amount < 0 && posp->col <= (colnr_T)-col_amount) \
+		posp->col = 0; \
+	    else \
+		posp->col += col_amount; \
+	} \
+    }
+
+/*
+ * Adjust marks in line "lnum" at column "mincol" and further: add
+ * "lnum_amount" to the line number and add "col_amount" to the column
+ * position.
+ */
+    void
+mark_col_adjust(lnum, mincol, lnum_amount, col_amount)
+    linenr_T	lnum;
+    colnr_T	mincol;
+    long	lnum_amount;
+    long	col_amount;
+{
+    int		i;
+    int		fnum = curbuf->b_fnum;
+    win_T	*win;
+    pos_T	*posp;
+
+    if ((col_amount == 0L && lnum_amount == 0L) || cmdmod.lockmarks)
+	return; /* nothing to do */
+
+    /* named marks, lower case and upper case */
+    for (i = 0; i < NMARKS; i++)
+    {
+	col_adjust(&(curbuf->b_namedm[i]));
+	if (namedfm[i].fmark.fnum == fnum)
+	    col_adjust(&(namedfm[i].fmark.mark));
+    }
+    for (i = NMARKS; i < NMARKS + EXTRA_MARKS; i++)
+    {
+	if (namedfm[i].fmark.fnum == fnum)
+	    col_adjust(&(namedfm[i].fmark.mark));
+    }
+
+    /* last Insert position */
+    col_adjust(&(curbuf->b_last_insert));
+
+    /* last change position */
+    col_adjust(&(curbuf->b_last_change));
+
+#ifdef FEAT_JUMPLIST
+    /* list of change positions */
+    for (i = 0; i < curbuf->b_changelistlen; ++i)
+	col_adjust(&(curbuf->b_changelist[i]));
+#endif
+
+#ifdef FEAT_VISUAL
+    /* Visual area */
+    col_adjust(&(curbuf->b_visual_start));
+    col_adjust(&(curbuf->b_visual_end));
+#endif
+
+    /* previous context mark */
+    col_adjust(&(curwin->w_pcmark));
+
+    /* previous pcmark */
+    col_adjust(&(curwin->w_prev_pcmark));
+
+    /* saved cursor for formatting */
+    col_adjust(&saved_cursor);
+
+    /*
+     * Adjust items in all windows related to the current buffer.
+     */
+    FOR_ALL_WINDOWS(win)
+    {
+#ifdef FEAT_JUMPLIST
+	/* marks in the jumplist */
+	for (i = 0; i < win->w_jumplistlen; ++i)
+	    if (win->w_jumplist[i].fmark.fnum == fnum)
+		col_adjust(&(win->w_jumplist[i].fmark.mark));
+#endif
+
+	if (win->w_buffer == curbuf)
+	{
+	    /* marks in the tag stack */
+	    for (i = 0; i < win->w_tagstacklen; i++)
+		if (win->w_tagstack[i].fmark.fnum == fnum)
+		    col_adjust(&(win->w_tagstack[i].fmark.mark));
+
+	    /* cursor position for other windows with the same buffer */
+	    if (win != curwin)
+		col_adjust(&win->w_cursor);
+	}
+    }
 }
 
 #ifdef FEAT_JUMPLIST

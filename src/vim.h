@@ -848,6 +848,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define OPENLINE_DELSPACES  1	/* delete spaces after cursor */
 #define OPENLINE_DO_COM	    2	/* format comments */
 #define OPENLINE_KEEPTRAIL  4	/* keep trailing spaces */
+#define OPENLINE_MARKFIX    8	/* fix mark positions */
 
 /*
  * There are four history tables:
@@ -1118,6 +1119,7 @@ enum hlf_value
 #define OP_FOLDCLOSEREC	23	/* "zC" close folds recursively */
 #define OP_FOLDDEL	24	/* "zd" delete folds */
 #define OP_FOLDDELREC	25	/* "zD" delete folds recursively */
+#define OP_FORMAT2	26	/* "gw" format operator, keeps cursor pos */
 
 /*
  * Motion types, used for operators and for yank/delete registers.

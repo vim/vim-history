@@ -1792,7 +1792,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		    oap->is_VIsual ? (int)cap->count1 :
 #endif
 		    1);
-	    auto_format(FALSE);
+	    auto_format(FALSE, TRUE);
 	    break;
 
 	case OP_JOIN_NS:
@@ -1805,7 +1805,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	    else
 	    {
 		do_do_join(oap->line_count, oap->op_type == OP_JOIN);
-		auto_format(FALSE);
+		auto_format(FALSE, TRUE);
 	    }
 	    break;
 
@@ -1820,7 +1820,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		(void)op_delete(oap);
 		if (oap->motion_type == MLINE && has_format_option(FO_AUTO))
 		    u_save_cursor();	    /* cursor line wasn't saved yet */
-		auto_format(FALSE);
+		auto_format(FALSE, TRUE);
 	    }
 	    break;
 
@@ -1912,7 +1912,11 @@ do_pending_operator(cap, old_col, gui_yank)
 	    if (*p_fp != NUL)
 		op_colon(oap);		/* use external command */
 	    else
-		op_format(oap);		/* use internal function */
+		op_format(oap, FALSE);	/* use internal function */
+	    break;
+
+	case OP_FORMAT2:
+	    op_format(oap, TRUE);	/* use internal function */
 	    break;
 
 	case OP_INSERT:
@@ -1935,7 +1939,7 @@ do_pending_operator(cap, old_col, gui_yank)
 
 		/* TODO: when inserting in several lines, should format all
 		 * the lines. */
-		auto_format(FALSE);
+		auto_format(FALSE, TRUE);
 
 		if (restart_edit == 0)
 		    restart_edit = restart_edit_save;
@@ -7278,12 +7282,14 @@ nv_g_cmd(cap)
     /*
      *	 Two-character operators:
      *	 "gq"	    Format text
+     *	 "gw"	    Format text and keep cursor position
      *	 "g~"	    Toggle the case of the text.
      *	 "gu"	    Change text to lower case.
      *	 "gU"	    Change text to upper case.
      *   "g?"	    rot13 encoding
      */
     case 'q':
+    case 'w':
     case '~':
     case 'u':
     case 'U':
@@ -8298,7 +8304,7 @@ nv_put(cap)
 	if (reg2 != NULL)
 	    put_register(regname, reg2);
 #endif
-	auto_format(FALSE);
+	auto_format(FALSE, TRUE);
     }
 }
 

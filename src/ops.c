@@ -163,6 +163,7 @@ static char opchars[][3] =
     {'z', 'C', TRUE},	/* OP_FOLDCLOSEREC */
     {'z', 'd', TRUE},	/* OP_FOLDDEL */
     {'z', 'D', TRUE},	/* OP_FOLDDELREC */
+    {'g', 'w', TRUE},	/* OP_FORMAT2 */
 };
 
 /*
@@ -3845,7 +3846,7 @@ do_join(insert_space)
     int		insert_space;
 {
     char_u	*curr;
-    char_u	*next;
+    char_u	*next, *next_start;
     char_u	*newp;
     int		endcurr1, endcurr2;
     int		currsize;	/* size of the current line */
@@ -3883,7 +3884,7 @@ do_join(insert_space)
 	}
     }
 
-    next = ml_get((linenr_T)(curwin->w_cursor.lnum + 1));
+    next = next_start = ml_get((linenr_T)(curwin->w_cursor.lnum + 1));
     spaces = 0;
     if (insert_space)
     {
@@ -3939,8 +3940,14 @@ do_join(insert_space)
      * Delete the following line. To do this we move the cursor there
      * briefly, and then move it back. After del_lines() the cursor may
      * have moved up (last line deleted), so the current lnum is kept in t.
+     *
+     * Move marks from the deleted line to the joined line, adjusting the
+     * column.  This is not Vi compatible, but Vi deletes the marks, thus that
+     * should not really be a problem.
      */
     t = curwin->w_cursor.lnum;
+    mark_col_adjust(t + 1, (colnr_T)0, (linenr_T)-1,
+			     (long)(currsize + spaces - (next - next_start)));
     ++curwin->w_cursor.lnum;
     del_lines(1L, FALSE);
     curwin->w_cursor.lnum = t;
@@ -4039,8 +4046,9 @@ same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)
  * implementation of the format operator 'gq'
  */
     void
-op_format(oap)
+op_format(oap, keep_cursor)
     oparg_T	*oap;
+    int		keep_cursor;		/* keep cursor on same text char */
 {
     long	old_line_count = curbuf->b_ml.ml_line_count;
 
@@ -4057,6 +4065,9 @@ op_format(oap)
     /* Set '[ mark at the start of the formatted area */
     curbuf->b_op_start = oap->start;
 
+    if (keep_cursor)
+	saved_cursor = curwin->w_cursor;
+
     format_lines(oap->line_count);
 
     /*
@@ -4072,6 +4083,12 @@ op_format(oap)
 
     /* put '] mark on the end of the formatted area */
     curbuf->b_op_end = curwin->w_cursor;
+
+    if (keep_cursor)
+    {
+	curwin->w_cursor = saved_cursor;
+	saved_cursor.lnum = 0;
+    }
 
 #ifdef FEAT_VISUAL
     if (oap->is_VIsual)
@@ -4301,6 +4318,9 @@ format_lines(line_count)
 			break;
 #ifdef FEAT_COMMENTS
 		(void)del_bytes((long)next_leader_len, FALSE);
+		if (next_leader_len > 0)
+		    mark_col_adjust(curwin->w_cursor.lnum, (colnr_T)0, 0L,
+						      (long)-next_leader_len);
 #endif
 		curwin->w_cursor.lnum--;
 		if (do_join(TRUE) == FAIL)
@@ -4385,6 +4405,62 @@ fmt_check_par(lnum)
     return (*skipwhite(ml_get(lnum)) == NUL || startPS(lnum, NUL, FALSE));
 }
 #endif
+
+/*
+ * Return TRUE when a paragraph starts in line "lnum".  Return FALSE when the
+ * previous line is in the same paragraph.  Used for auto-formatting.
+ */
+    int
+paragraph_start(lnum)
+    linenr_T	lnum;
+{
+    char_u	*p;
+#ifdef FEAT_COMMENTS
+    int		leader_len = 0;		/* leader len of current line */
+    char_u	*leader_flags = NULL;	/* flags for leader of current line */
+    int		next_leader_len;	/* leader len of next line */
+    char_u	*next_leader_flags;	/* flags for leader of next line */
+    int		do_comments;		/* format comments */
+#endif
+
+    if (lnum <= 1)
+	return TRUE;		/* start of the file */
+
+    p = ml_get(lnum - 1);
+    if (*p == NUL)
+	return TRUE;		/* after empty line */
+
+#ifdef FEAT_COMMENTS
+    do_comments = has_format_option(FO_Q_COMS);
+#endif
+    if (fmt_check_par(lnum - 1
+#ifdef FEAT_COMMENTS
+				, &leader_len, &leader_flags, do_comments
+#endif
+		))
+	return TRUE;		/* after non-paragraph line */
+
+    if (fmt_check_par(lnum
+#ifdef FEAT_COMMENTS
+			   , &next_leader_len, &next_leader_flags, do_comments
+#endif
+		))
+	return TRUE;		/* "lnum" is not a paragraph line */
+
+    if (has_format_option(FO_WHITE_PAR) && !ends_in_white(lnum - 1))
+	return TRUE;		/* missing trailing space in previous line. */
+
+    if (has_format_option(FO_Q_NUMBER) && (get_number_indent(lnum) > 0))
+	return TRUE;		/* numbered item starts in "lnum". */
+
+#ifdef FEAT_COMMENTS
+    if (!same_leader(leader_len, leader_flags,
+					  next_leader_len, next_leader_flags))
+	return TRUE;		/* change of comment leader. */
+#endif
+
+    return FALSE;
+}
 
 #ifdef FEAT_VISUAL
 /*
