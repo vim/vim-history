@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 04
+*options.txt*   For Vim version 5.5.  Last change: 1999 Dec 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -340,9 +340,14 @@ will give an error message for the trailing "*/".  This line is OK:
 
 If an error is detected the rest of the line is skipped.
 
-If you want to include a ':' in a set command precede it with a '\'.  No other
-commands than "set" are supported, for security reasons (somebody might create
-a Trojan horse text file with modelines).
+If you want to include a ':' in a set command precede it with a '\'.  The
+backslash in front of the ':' will be removed.  Example:
+>  /* vi:set dir=c\:\tmp: */
+This sets the 'dir' option to "c:\tmp".  Only a single backslash before the
+':' is removed.  Thus to include "\:" you have to specify "\\:".
+
+No other commands than "set" are supported, for security reasons (somebody
+might create a Trojan horse text file with modelines).
 
 ==============================================================================
 3. Saving settings					*save-settings*
