@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Mar 03
+" Last Change:	2002 Mar 04
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -51,6 +51,7 @@ endfun
 SynMenu AB.Abaqus:abaqus
 SynMenu AB.ABC\ music\ notation:abc
 SynMenu AB.ABEL:abel
+SynMenu AB.AceDB\ model:acedb
 SynMenu AB.Ada:ada
 SynMenu AB.AfLex:aflex
 SynMenu AB.Altera\ AHDL:ahdl
@@ -85,8 +86,8 @@ SynMenu AB.BASIC:basic
 SynMenu AB.BC\ calculator:bc
 SynMenu AB.BDF\ font:bdf
 SynMenu AB.BibTeX:bib
-SynMenu AB.BIND\ config:named
-SynMenu AB.BIND\ zone:bindzone
+SynMenu AB.BIND.BIND\ config:named
+SynMenu AB.BIND.BIND\ zone:bindzone
 SynMenu AB.Blank:blank
 
 SynMenu CD.C:c
@@ -103,9 +104,9 @@ SynMenu CD.Clean:clean
 SynMenu CD.Clever:cl
 SynMenu CD.Clipper:clipper
 SynMenu CD.Cold\ Fusion:cf
-SynMenu CD.Config\ file\ (CFG):cfg
-SynMenu CD.Configure\.in:config
-SynMenu CD.Csh\ shell\ script:csh
+SynMenu CD.Config.Cfg\ Config\ file:cfg
+SynMenu CD.Config.Generic Config\ file:conf
+SynMenu CD.Config.Configure\.in:config
 SynMenu CD.Ctrl-H:ctrlh
 SynMenu CD.Cobol:cobol
 SynMenu CD.CSP:csp
@@ -117,6 +118,7 @@ SynMenu CD.Debian.Debian\ Control:debcontrol
 SynMenu CD.Diff:diff
 SynMenu CD.Digital\ Command\ Lang:dcl
 SynMenu CD.DNS/BIND\ zone:dns
+SynMenu CD.DocBook:docbk
 SynMenu CD.Dot:dot
 SynMenu CD.Dracula:dracula
 SynMenu CD.DSSSL:dsl
@@ -131,6 +133,7 @@ SynMenu EFG.Elm\ filter\ rules:elmfilt
 SynMenu EFG.Embedix\ Component\ Description:ecd
 SynMenu EFG.ERicsson\ LANGuage:erlang
 SynMenu EFG.ESQL-C:esqlc
+SynMenu EFG.Essbase\ script:csc
 SynMenu EFG.Eterm\ config:eterm
 SynMenu EFG.Expect:expect
 SynMenu EFG.Exports:exports
@@ -148,6 +151,7 @@ SynMenu EFG.Gedcom:gedcom
 SynMenu EFG.GP:gp
 SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
+SynMenu EFG.Groff:groff
 SynMenu EFG.GTKrc:gtkrc
 
 SynMenu HIJK.Haskell.Haskell:haskell
@@ -185,6 +189,7 @@ SynMenu L-Ma.LamdaProlog:lprolog
 SynMenu L-Ma.Latte:latte
 SynMenu L-Ma.Lex:lex
 SynMenu L-Ma.LFTP\ config:lftp
+SynMenu L-Ma.LifeLines\ script:lifelines
 SynMenu L-Ma.Lilo:lilo
 SynMenu L-Ma.Lisp:lisp
 SynMenu L-Ma.Lite:lite
@@ -214,7 +219,7 @@ SynMenu Me-NO.Modula\ 2:modula2
 SynMenu Me-NO.Modula\ 3:modula3
 SynMenu Me-NO.MOO:moo
 SynMenu Me-NO.MS-DOS/Windows.4DOS\ \.bat\ file:btm
-SynMenu Me-NO.MS-DOS/Windows.\.bat\ file:dosbatch
+SynMenu Me-NO.MS-DOS/Windows.\.bat\/\.cmd\ file:dosbatch
 SynMenu Me-NO.MS-DOS/Windows.\.ini\ file:dosini
 SynMenu Me-NO.MS-DOS/Windows.Module\ Definition:def
 SynMenu Me-NO.MS-DOS/Windows.Registry:registry
@@ -253,7 +258,7 @@ SynMenu PQ.PO\ (GNU\ gettext):po
 SynMenu PQ.Postfix\ main\ config:pfmain
 SynMenu PQ.PostScript:postscr
 SynMenu PQ.PostScript\ Printer\ Description:ppd
-SynMenu PQ.Povray\ Screen\ descr:pov
+SynMenu PQ.Povray\ scene\ descr:pov
 SynMenu PQ.Povray\ configuration:povini
 SynMenu PQ.Printcap:pcap
 SynMenu PQ.Procmail:procmail
@@ -292,7 +297,9 @@ SynMenu R-Sg.SGML.SGML\ DTD:sgml
 SynMenu R-Sg.SGML.SGML\ Declaration:sgmldecl
 SynMenu R-Sg.SGML.SGML-linuxdoc:sgmllnx
 
-SynMenu Sh-S.Shell\ script\ (sh,\ ksh):sh
+SynMenu Sh-S.Shell\ script.sh\ and\ ksh:sh
+SynMenu Sh-S.Shell\ script.csh:csh
+SynMenu Sh-S.Shell\ script.zsh:zsh
 SynMenu Sh-S.SiCAD:sicad
 SynMenu Sh-S.Simula:simula
 SynMenu Sh-S.Sinda.Sinda\ compare:sindacmp
@@ -379,7 +386,6 @@ SynMenu WXYZ.Xslt:xslt
 SynMenu WXYZ.XXD\ hex\ dump:xxd
 SynMenu WXYZ.XFree86\ Config:xf86conf
 SynMenu WXYZ.Yacc:yacc
-SynMenu WXYZ.Zsh\ shell\ script:zsh
 
 call append(s:lnum, "")
 
