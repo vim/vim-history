@@ -379,7 +379,7 @@ OBJ += $(OUTDIR)/if_cscope.o
 endif
 ifeq ($(NETBEANS),yes)
 OBJ += $(OUTDIR)/netbeans.o $(OUTDIR)/gui_beval.o
-LIB += -lws2_32
+LIB += -lwsock32
 endif
 ifdef XPM
 OBJ += $(OUTDIR)/xpm_w32.o

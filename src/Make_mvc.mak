@@ -199,7 +199,7 @@ NBDEBUG_DEFS	= -DNBDEBUG
 NBDEBUG_INCL	= nbdebug.h
 NBDEBUG_SRC	= nbdebug.c
 !endif
-NETBEANS_LIB   = Ws2_32.lib
+NETBEANS_LIB   = WSock32.lib
 !endif
 
 !ifdef XPM
