@@ -2,7 +2,6 @@
 void netbeans_Xt_connect __ARGS((void *context));
 void netbeans_gtk_connect __ARGS((void));
 void netbeans_end __ARGS((void));
-void netbeans_setRunDir __ARGS((char *argv0));
 void netbeans_startup_done __ARGS((void));
 void netbeans_frame_moved __ARGS((int new_x, int new_y));
 void netbeans_file_opened __ARGS((char *filename));
