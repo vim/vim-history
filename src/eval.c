@@ -694,7 +694,7 @@ call_vim_function(func, argc, argv, safe)
     {
 	/* Recognize a number argument, the others must be strings. */
 	vim_str2nr(argv[i], NULL, &len, TRUE, TRUE, &n, NULL);
-	if (len == (int)STRLEN(argv[i]))
+	if (len != 0 && len == (int)STRLEN(argv[i]))
 	{
 	    argvars[i].var_type = VAR_NUMBER;
 	    argvars[i].var_val.var_number = n;
