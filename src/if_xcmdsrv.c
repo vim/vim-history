@@ -538,7 +538,11 @@ WindowValid(dpy, w)
 
     for (i = 0; i < numProp; i++)
 	if (plist[i] == vimProperty)
+	{
+	    XFree(plist);
 	    return TRUE;
+	}
+    XFree(plist);
     return FALSE;
 }
 
