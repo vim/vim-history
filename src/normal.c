@@ -3300,7 +3300,7 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 			    : mb_get_class(ptr + col) != 0)
 # if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
 		    || ((find_type & FIND_EVAL)
-			&& col <= startcol
+			&& col <= (int)startcol
 			&& find_is_eval_item(ptr + col, &col, &bn, FORWARD))
 # endif
 		))
@@ -3312,7 +3312,7 @@ find_ident_at_pos(wp, lnum, startcol, string, find_type)
 		       : (ptr[col] != NUL && !vim_iswhite(ptr[col])))
 # if defined(FEAT_NETBEANS_INTG) && defined(FEAT_BEVAL)
 		    || ((find_type & FIND_EVAL)
-			&& col <= startcol
+			&& col <= (int)startcol
 			&& find_is_eval_item(ptr + col, &col, &bn, FORWARD))
 # endif
 		)
