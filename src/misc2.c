@@ -1472,9 +1472,12 @@ name_to_mod_mask(c)
 {
     int	    i;
 
-    for (i = 0; mod_mask_table[i].mod_mask; i++)
-	if (TO_LOWER(c) == TO_LOWER(mod_mask_table[i].name))
-	    return mod_mask_table[i].mod_mask;
+    if (c <= 255)	/* avoid TO_LOWER() with number > 255 */
+    {
+	for (i = 0; mod_mask_table[i].mod_mask; i++)
+	    if (TO_LOWER(c) == TO_LOWER(mod_mask_table[i].name))
+		return mod_mask_table[i].mod_mask;
+    }
     return 0x0;
 }
 

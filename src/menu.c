@@ -1348,9 +1348,11 @@ gui_is_menu_shortcut(key)
 {
     VimMenu	*menu;
 
-    key = TO_LOWER(key);
+    if (key < 256)
+	key = TO_LOWER(key);
     for (menu = root_menu; menu != NULL; menu = menu->next)
-	if (TO_LOWER(menu->mnemonic) == key)
+	if (menu->mnemonic == key
+		|| (menu->mnemonic < 256 && TO_LOWER(menu->mnemonic) == key))
 	    return TRUE;
     return FALSE;
 }
