@@ -8,7 +8,7 @@
 
 /*
  * Tcl extensions by Ingo Wilken <Ingo.Wilken@informatik.uni-oldenburg.de>
- * Last modification: Fri Mar 27 22:41:25 CET 1998
+ * Last modification: Wed May 10 21:28:44 CEST 2000
  * Requires Tcl 8.0 or higher.
  *
  *	Variables:
@@ -70,15 +70,14 @@ TODO:
 #include <errno.h>
 #include <string.h>
 
-static struct
-{
+typedef struct {
 	Tcl_Interp *interp;
-	unsigned int refcount;
-	unsigned do_exit:1;
-	unsigned valid:1;
-	int range_start, range_end, lbase;
+	int range_start, range_end;
+	int lbase;
 	char *curbuf, *curwin;
-} tcl = {(Tcl_Interp *)NULL, 0, 0, 0};
+} tcl_info;
+
+static tcl_info tclinfo = { NULL, 0, 0, 0, NULL, NULL };
 
 #define VAR_RANGE1		"::vim::range(start)"
 #define VAR_RANGE2		"::vim::range(begin)"
@@ -90,10 +89,10 @@ static struct
 #define VAR_CURLNUM		"lnum"
 #define VARNAME_SIZE	64
 
-#define row2tcl(x)	((x) - (tcl.lbase==0))
-#define row2vim(x)	((x) + (tcl.lbase==0))
-#define col2tcl(x)	((x) + (tcl.lbase!=0))
-#define col2vim(x)	((x) - (tcl.lbase!=0))
+#define row2tcl(x)	((x) - (tclinfo.lbase==0))
+#define row2vim(x)	((x) + (tclinfo.lbase==0))
+#define col2tcl(x)	((x) + (tclinfo.lbase!=0))
+#define col2vim(x)	((x) - (tclinfo.lbase!=0))
 
 
 #define VIMOUT	((ClientData)1)
@@ -122,6 +121,7 @@ static WIN *tclfindwin _ANSI_ARGS_ ((BUF *buf));
 static int tcldoexcommand _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
 static int tclsetoption _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
 static int tclvimexpr _ANSI_ARGS_ ((Tcl_Interp *interp, int objc, Tcl_Obj *CONST objv[], int objn));
+static void tcldelthisinterp _ANSI_ARGS_ ((void));
 
 static int vimerror _ANSI_ARGS_((Tcl_Interp *interp));
 static void tclmsg _ANSI_ARGS_((char *text));
@@ -135,10 +135,16 @@ static struct ref refsdeleted;	/* dummy object for deleted ref list */
  ****************************************************************************/
 
 /*
- *	"exit" - replaces Tcl's standard "exit" command.
- *	Unfortunately, this is one of Tcl's design flaws - "exit" should have
- *	been implemented as returning TCL_EXIT to the application.
+ * Replace standard "exit" and "catch" commands.
+ *
+ * This is a design flaw in Tcl -  the standard "exit" command just calls
+ * exit() and kills the application.  It should return TCL_EXIT to the
+ * app, which then decides if it wants to terminate or not.  In our case,
+ * we just delete the Tcl interpreter (and create a new one with the next
+ * :tcl command).
  */
+#define TCL_EXIT	5
+
 /* ARGSUSED */
 	static int
 exitcmd(dummy, interp, objc, objv)
@@ -148,20 +154,55 @@ exitcmd(dummy, interp, objc, objv)
 	Tcl_Obj *CONST objv[];
 {
 	int value = 0;
-	char buf[32];
 
 	switch (objc)
 	{
 		case 2:
 			if (Tcl_GetIntFromObj(interp, objv[1], &value) != TCL_OK)
 				break;
+			/* FALLTHROUGH */
 		case 1:
-			sprintf(buf, "exit code %d", value);
-			Tcl_SetResult(interp, buf, TCL_VOLATILE);
-			tcl.do_exit = 1;
-			break;
+			Tcl_SetObjResult(interp, Tcl_NewIntObj(value));
+			return TCL_EXIT;
 		default:
 			Tcl_WrongNumArgs(interp, 1, objv, "?returnCode?");
+	}
+	return TCL_ERROR;
+}
+
+	static int
+catchcmd(dummy, interp, objc, objv)
+	ClientData	dummy;
+	Tcl_Interp	*interp;
+	int			objc;
+	Tcl_Obj		*CONST objv[];
+{
+	char	*varname = NULL;
+	int		result;
+
+	switch (objc)
+	{
+		case 3:
+			varname = Tcl_GetStringFromObj(objv[2], NULL);
+			/* fallthrough */
+		case 2:
+			Tcl_ResetResult(interp);
+			Tcl_AllowExceptions(interp);
+			result = Tcl_EvalObj(interp, objv[1]);
+			if (result == TCL_EXIT)
+				return result;
+			if (varname)
+			{
+				if (Tcl_SetVar(interp, varname, Tcl_GetStringResult(interp), 0) == NULL)
+				{
+					Tcl_SetResult(interp, "couldn't save command result in variable", TCL_STATIC);
+					return TCL_ERROR;
+				}
+			}
+			Tcl_SetObjResult(interp, Tcl_NewIntObj(result));
+			return TCL_OK;
+		default:
+			Tcl_WrongNumArgs(interp, 1, objv, "command ?varName?");
 	}
 	return TCL_ERROR;
 }
@@ -1069,7 +1110,7 @@ tcldoexcommand(interp, objc, objv, objn)
 	Tcl_Obj *CONST objv[];
 	int objn;
 {
-	int save1, save2, save3;
+	tcl_info saveinfo;
 	int err, flag, nobjs;
 	char *arg;
 
@@ -1095,9 +1136,10 @@ tcldoexcommand(interp, objc, objv, objn)
 		++objn;
 	}
 
-	save1 = tcl.range_start;
-	save2 = tcl.range_end;
-	save3 = tcl.lbase;
+	memcpy(&saveinfo, &tclinfo, sizeof(tcl_info));
+	tclinfo.interp = NULL;
+	tclinfo.curwin = NULL;
+	tclinfo.curbuf = NULL;
 
 	arg = Tcl_GetStringFromObj(objv[objn], NULL);
 	if (flag)
@@ -1107,9 +1149,10 @@ tcldoexcommand(interp, objc, objv, objn)
 		--emsg_off;
 	err = vimerror(interp);
 
-	tcl.range_start = save1;
-	tcl.range_end = save2;
-	tcl.lbase = save3;
+	/* If the ex command created a new Tcl interpreter, remove it */
+	if (tclinfo.interp)
+		tcldelthisinterp();	
+	memcpy(&tclinfo, &saveinfo, sizeof(tcl_info));
 	tclupdatevars();
 
 	return err;
@@ -1319,8 +1362,13 @@ tclgetref(interp, refstartP, prefix, vimobj, proc)
 				return NULL;
 			}
 #endif
+			ref->interp = NULL;
+			ref->next = (struct ref *)(*refstartP);
+			(*refstartP) = (void *)ref;
 		}
-		sprintf(name, "::vim::%s_%lx", prefix, (long)vimobj);
+
+		/* This might break on some exotic systems... */
+		sprintf(name, "::vim::%s_%lx", prefix, (unsigned long)vimobj);
 		cmd = Tcl_CreateObjCommand(interp, name, proc,
 			(ClientData)ref, (Tcl_CmdDeleteProc *)delref);
 		if (!cmd)
@@ -1330,8 +1378,6 @@ tclgetref(interp, refstartP, prefix, vimobj, proc)
 		ref->cmd = cmd;
 		ref->delcmd = NULL;
 		ref->vimobj = vimobj;
-		ref->next = (struct ref *)(*refstartP);
-		(*refstartP) = (void *)ref;
 	}
 	return name;
 }
@@ -1378,7 +1424,8 @@ tclsetdelcmd(interp, reflist, vimobj, delcmd)
 		reflist = reflist->next;
 	}
 	/* This should never happen.  Famous last word? */
-	Tcl_SetResult(interp, "TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org", TCL_STATIC);
+	EMSG("TCL FATAL ERROR: reflist corrupt!? Please report this to vim-dev@vim.org");
+	Tcl_SetResult(interp, "cannot register callback command: buffer/window reference not found", TCL_STATIC);
 	return TCL_ERROR;
 }
 
@@ -1508,121 +1555,123 @@ tclupdatevars()
 	char *name;
 
 	strcpy(varname, VAR_RANGE1);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 	strcpy(varname, VAR_RANGE2);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 	strcpy(varname, VAR_RANGE3);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 
 	strcpy(varname, VAR_LBASE);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 
-	name = tclgetbuffer(tcl.interp, curbuf);
-	strcpy(tcl.curbuf, name);
+	name = tclgetbuffer(tclinfo.interp, curbuf);
+	strcpy(tclinfo.curbuf, name);
 	strcpy(varname, VAR_CURBUF);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 
-	name = tclgetwindow(tcl.interp, curwin);
-	strcpy(tcl.curwin, name);
+	name = tclgetwindow(tclinfo.interp, curwin);
+	strcpy(tclinfo.curwin, name);
 	strcpy(varname, VAR_CURWIN);
-	Tcl_UpdateLinkedVar(tcl.interp, varname);
+	Tcl_UpdateLinkedVar(tclinfo.interp, varname);
 }
 
 
-static void
+	static int
 tclinit(eap)
 	EXARG *eap;
 {
-	char varname[VARNAME_SIZE];	/* must be writeable memory */
+	char varname[VARNAME_SIZE];	/* Tcl_LinkVar requires writeable varname */
 	char *name;
 
-	if (!tcl.valid)
+	if (!tclinfo.interp)
 	{
-		static Tcl_ChannelType ct1, ct2;
-		Tcl_Channel ch1, ch2;
-
-		tcl.interp = Tcl_CreateInterp();
-		if (Tcl_Init(tcl.interp) == TCL_ERROR)
-			return;
-		tcl.do_exit = 0;
-#if 0
-		/* VIM sure is interactive */
-		Tcl_SetVar(tcl.interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
-#endif
+		Tcl_Interp *interp;
+		static Tcl_Channel ch1, ch2;
 
 		/* replace stdout and stderr */
-		ct1 = channel_type;
-		ch1 = Tcl_CreateChannel(&ct1, "vimout", VIMOUT, TCL_WRITABLE);
-		Tcl_RegisterChannel(tcl.interp, ch1);
+		ch1 = Tcl_CreateChannel(&channel_type, "vimout", VIMOUT, TCL_WRITABLE);
+		ch2 = Tcl_CreateChannel(&channel_type, "vimerr", VIMERR, TCL_WRITABLE);
 		Tcl_SetStdChannel(ch1, TCL_STDOUT);
-		Tcl_SetChannelOption(tcl.interp, ch1, "-buffering", "line");
-		ct2 = channel_type;
-		ch2 = Tcl_CreateChannel(&ct2, "vimerr", VIMERR, TCL_WRITABLE);
-		Tcl_RegisterChannel(tcl.interp, ch2);
 		Tcl_SetStdChannel(ch2, TCL_STDERR);
-		Tcl_SetChannelOption(tcl.interp, ch2, "-buffering", "line");
+
+		interp = Tcl_CreateInterp();
+		Tcl_Preserve(interp);
+		if (Tcl_Init(interp) == TCL_ERROR)
+		{
+			Tcl_Release(interp);
+			Tcl_DeleteInterp(interp);
+			return FAIL;
+		}
+#if 0
+		/* VIM sure is interactive */
+		Tcl_SetVar(interp, "tcl_interactive", "1", TCL_GLOBAL_ONLY);
+#endif
+
+		Tcl_SetChannelOption(interp, ch1, "-buffering", "line");
+		Tcl_SetChannelOption(interp, ch2, "-buffering", "line");
 
 		/* replace some standard Tcl commands */
-		Tcl_DeleteCommand(tcl.interp, "exit");
-		Tcl_CreateObjCommand(tcl.interp, "exit", exitcmd,
+		Tcl_DeleteCommand(interp, "exit");
+		Tcl_CreateObjCommand(interp, "exit", exitcmd,
+			(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+		Tcl_DeleteCommand(interp, "catch");
+		Tcl_CreateObjCommand(interp, "catch", catchcmd,
 			(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 		/* new commands, in ::vim namespace */
-		Tcl_CreateObjCommand(tcl.interp, "::vim::buffer", buffercmd,
+		Tcl_CreateObjCommand(interp, "::vim::buffer", buffercmd,
 			(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-		Tcl_CreateObjCommand(tcl.interp, "::vim::window", windowcmd,
+		Tcl_CreateObjCommand(interp, "::vim::window", windowcmd,
 		   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-		Tcl_CreateObjCommand(tcl.interp, "::vim::command", commandcmd,
+		Tcl_CreateObjCommand(interp, "::vim::command", commandcmd,
 		   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-		Tcl_CreateObjCommand(tcl.interp, "::vim::beep", beepcmd,
+		Tcl_CreateObjCommand(interp, "::vim::beep", beepcmd,
 		   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-		Tcl_CreateObjCommand(tcl.interp, "::vim::option", optioncmd,
+		Tcl_CreateObjCommand(interp, "::vim::option", optioncmd,
 		   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-		Tcl_CreateObjCommand(tcl.interp, "::vim::expr", exprcmd,
+		Tcl_CreateObjCommand(interp, "::vim::expr", exprcmd,
 		   (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
 		/* "lbase" variable */
-		tcl.lbase = 1;
+		tclinfo.lbase = 1;
 		strcpy(varname, VAR_LBASE);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.lbase, TCL_LINK_INT);
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.lbase, TCL_LINK_INT);
 
 		/* "range" variable */
-		tcl.range_start = eap->line1;
+		tclinfo.range_start = eap->line1;
 		strcpy(varname, VAR_RANGE1);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.range_start, TCL_LINK_INT|TCL_LINK_READ_ONLY);
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.range_start, TCL_LINK_INT|TCL_LINK_READ_ONLY);
 		strcpy(varname, VAR_RANGE2);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.range_start, TCL_LINK_INT|TCL_LINK_READ_ONLY);
-		tcl.range_end   = eap->line2;
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.range_start, TCL_LINK_INT|TCL_LINK_READ_ONLY);
+		tclinfo.range_end   = eap->line2;
 		strcpy(varname, VAR_RANGE3);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.range_end, TCL_LINK_INT|TCL_LINK_READ_ONLY);
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.range_end, TCL_LINK_INT|TCL_LINK_READ_ONLY);
 
 		/* "current" variable */
-		tcl.curbuf = Tcl_Alloc(VARNAME_SIZE);
-		tcl.curwin = Tcl_Alloc(VARNAME_SIZE);
-		name = tclgetbuffer(tcl.interp, curbuf);
-		strcpy(tcl.curbuf, name);
+		tclinfo.curbuf = Tcl_Alloc(VARNAME_SIZE);
+		tclinfo.curwin = Tcl_Alloc(VARNAME_SIZE);
+		name = tclgetbuffer(interp, curbuf);
+		strcpy(tclinfo.curbuf, name);
 		strcpy(varname, VAR_CURBUF);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.curbuf, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
-		name = tclgetwindow(tcl.interp, curwin);
-		strcpy(tcl.curwin, name);
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.curbuf, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
+		name = tclgetwindow(interp, curwin);
+		strcpy(tclinfo.curwin, name);
 		strcpy(varname, VAR_CURWIN);
-		Tcl_LinkVar(tcl.interp, varname, (char *)&tcl.curwin, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
+		Tcl_LinkVar(interp, varname, (char *)&tclinfo.curwin, TCL_LINK_STRING|TCL_LINK_READ_ONLY);
 
-		tcl.valid = 1;
+		tclinfo.interp = interp;
 	}
 	else
 	{
 		/* Interpreter already exists, just update variables */
-		tcl.range_start = row2tcl(eap->line1);
-		tcl.range_end = row2tcl(eap->line2);
+		tclinfo.range_start = row2tcl(eap->line1);
+		tclinfo.range_end = row2tcl(eap->line2);
 		tclupdatevars();
 	}
-
-	Tcl_Preserve(tcl.interp); /* protect interpreter from deletion */
-	++tcl.refcount;
+	return OK;
 }
 
-static void
+	static void
 tclerrmsg(text)
 	char *text;
 {
@@ -1654,34 +1703,78 @@ tclmsg(text)
 		MSG(text);
 }
 
+
+static void
+tcldelthisinterp()
+{
+	if (!Tcl_InterpDeleted(tclinfo.interp))
+		Tcl_DeleteInterp(tclinfo.interp);
+	Tcl_Release(tclinfo.interp);
+	/* The interpreter is now gets deleted.  All registered commands (esp.
+	 * window and buffer commands) are deleted, triggering their deletion
+	 * callback, which deletes all refs pointing to this interpreter.
+	 * We could garbage-collect the unused ref structs in all windows and
+	 * buffers, but unless the user creates hundreds of sub-interpreters
+	 * all refering to lots of windows and buffers, this is hardly worth
+	 * the effort.  Unused refs are recycled by other interpreters, and
+	 * all refs are free'd when the window/buffer gets closed by vim.
+	 */
+
+	tclinfo.interp = NULL;
+	Tcl_Free(tclinfo.curbuf);
+	Tcl_Free(tclinfo.curwin);
+	tclinfo.curbuf = tclinfo.curwin = NULL;
+}
+
 static int
 tclexit(error)
 	int error;
 {
-	int newerr;
-	char *result;
+	int newerr = OK;
 
-	result = Tcl_GetStringResult(tcl.interp);
-	if (error == TCL_OK)
+	if (error == TCL_EXIT )
 	{
-		tclmsg(result);
-		newerr = OK;
+		int retval;
+		char buf[32];
+		Tcl_Obj *robj;
+
+		robj = Tcl_GetObjResult(tclinfo.interp);
+		if( Tcl_GetIntFromObj(tclinfo.interp, robj, &retval) != TCL_OK )
+		{
+			EMSG("TCL ERROR: exit code is not int!? Please report this to vim-dev@vim.org");
+			newerr = FAIL;
+		}
+		else
+		{
+			sprintf(buf, "exit code %d", retval);
+			tclerrmsg(buf);
+			if (retval == 0 )
+			{
+				did_emsg = 0;
+				newerr = OK;
+			}
+			else
+				newerr = FAIL;
+		}
+
+		tcldelthisinterp();
 	}
 	else
 	{
-		tclerrmsg(result);
-		newerr = FAIL;
+		char *result;
+
+		result = Tcl_GetStringResult(tclinfo.interp);
+		if (error == TCL_OK)
+		{
+			tclmsg(result);
+			newerr = OK;
+		}
+		else
+		{
+			tclerrmsg(result);
+			newerr = FAIL;
+		}
 	}
-	if (--tcl.refcount == 0  &&  tcl.do_exit)
-	{
-		if (!Tcl_InterpDeleted(tcl.interp))
-			Tcl_DeleteInterp(tcl.interp);
-		Tcl_Free(tcl.curbuf);
-		Tcl_Free(tcl.curwin);
-		tcl.valid = 0;
-		/* TODO: should call Tcl_UnlinkVar */
-	}
-	Tcl_Release(tcl.interp);
 
 	return newerr;
 }
@@ -1693,9 +1786,14 @@ do_tcl(eap)
 	char *script = (char *)eap->arg;
 	int err;
 
-	tclinit(eap);
-	err = Tcl_Eval(tcl.interp, script);
-	return tclexit(err);
+	err = tclinit(eap);
+	if (err == OK)
+	{
+		Tcl_AllowExceptions(tclinfo.interp);
+		err = Tcl_Eval(tclinfo.interp, script);
+		err = tclexit(err);
+	}
+	return err;
 }
 
 int
@@ -1705,9 +1803,14 @@ do_tclfile(eap)
 	char *file = (char *)eap->arg;
 	int err;
 
-	tclinit(eap);
-	err = Tcl_EvalFile(tcl.interp, file);
-	return tclexit(err);
+	err = tclinit(eap);
+	if (err == OK)
+	{
+		Tcl_AllowExceptions(tclinfo.interp);
+		err = Tcl_EvalFile(tclinfo.interp, file);
+		err = tclexit(err);
+	}
+	return err;
 }
 
 int
@@ -1725,14 +1828,16 @@ do_tcldo(eap)
 	strcpy(var_lnum, VAR_CURLNUM);
 	strcpy(var_line, VAR_CURLINE);
 
-	tclinit(eap);
+	err = tclinit(eap);
+	if (err != OK)
+		return err;
 
 	lnum = row2tcl(rs);
-	Tcl_LinkVar(tcl.interp, var_lnum, (char *)&lnum, TCL_LINK_INT|TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(tclinfo.interp, var_lnum, (char *)&lnum, TCL_LINK_INT|TCL_LINK_READ_ONLY);
 	err = TCL_OK;
 	if (u_save((linenr_t)(rs-1), (linenr_t)(re+1)) != OK)
 	{
-		Tcl_SetResult(tcl.interp, "cannot save undo information", TCL_STATIC);
+		Tcl_SetResult(tclinfo.interp, "cannot save undo information", TCL_STATIC);
 		err = TCL_ERROR;
 	}
 	while (err == TCL_OK  &&  rs <= re)
@@ -1740,20 +1845,21 @@ do_tcldo(eap)
 		line = (char *)ml_get_buf(curbuf, (linenr_t)rs, FALSE);
 		if (!line)
 		{
-			Tcl_SetResult(tcl.interp, "cannot get line", TCL_STATIC);
+			Tcl_SetResult(tclinfo.interp, "cannot get line", TCL_STATIC);
 			err = TCL_ERROR;
 			break;
 		}
-		Tcl_SetVar(tcl.interp, var_line, line, 0);
-		err = Tcl_Eval(tcl.interp, script);
+		Tcl_SetVar(tclinfo.interp, var_line, line, 0);
+		Tcl_AllowExceptions(tclinfo.interp);
+		err = Tcl_Eval(tclinfo.interp, script);
 		if (err != TCL_OK)
 			break;
-		line = Tcl_GetVar(tcl.interp, var_line, 0);
+		line = Tcl_GetVar(tclinfo.interp, var_line, 0);
 		if (line)
 		{
 			if (ml_replace((linenr_t)rs, (char_u *)line, TRUE) != OK)
 			{
-				Tcl_SetResult(tcl.interp, "cannot replace line", TCL_STATIC);
+				Tcl_SetResult(tclinfo.interp, "cannot replace line", TCL_STATIC);
 				err = TCL_ERROR;
 				break;
 			}
@@ -1764,17 +1870,18 @@ do_tcldo(eap)
 		}
 		++rs;
 		++lnum;
-		Tcl_UpdateLinkedVar(tcl.interp, var_lnum);
+		Tcl_UpdateLinkedVar(tclinfo.interp, var_lnum);
 	}
 	update_curbuf(NOT_VALID);
 
-	Tcl_UnsetVar(tcl.interp, var_line, 0);
-	Tcl_UnlinkVar(tcl.interp, var_lnum);
+	Tcl_UnsetVar(tclinfo.interp, var_line, 0);
+	Tcl_UnlinkVar(tclinfo.interp, var_lnum);
 	if (err == TCL_OK)
-		Tcl_ResetResult(tcl.interp);
+		Tcl_ResetResult(tclinfo.interp);
 
 	return tclexit(err);
 }
+
 
 static void
 tcldelallrefs(ref)

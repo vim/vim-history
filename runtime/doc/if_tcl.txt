@@ -1,4 +1,4 @@
-*if_tcl.txt*    For Vim version 5.6.  Last change: 1999 Sep 16
+*if_tcl.txt*    For Vim version 5.6.  Last change: 2000 Jun 04
 
 
 		  VIM REFERENCE MANUAL    by Ingo Wilken
@@ -11,7 +11,7 @@ The Tcl Interface to Vim				*tcl* *Tcl* *TCL*
 3. Tcl variables			|tcl-variables|
 4. Tcl window commands			|tcl-window-cmds|
 5. Tcl buffer commands			|tcl-buffer-cmds|
-6. Output from Tcl			|tcl-output|
+6. Miscellaneous; Output from Tcl	|tcl-misc| |tcl-output|
 7. Known bugs & problems		|tcl-bugs|
 8. Examples				|tcl-examples|
 
@@ -19,8 +19,7 @@ The Tcl Interface to Vim				*tcl* *Tcl* *TCL*
 
 The Tcl interface only works when Vim was compiled with the |+tcl| feature.
 
-WARNING: This is a BETA release!  Things might be different in the final
-version.  There are probably still some bugs.  Please send bug reports,
+WARNING: There are probably still some bugs.  Please send bug reports,
 comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 
 ==============================================================================
@@ -40,7 +39,9 @@ comments, ideas etc to <Ingo.Wilken@informatik.uni-oldenburg.de>
 			See |tcl-var-line| and |tcl-var-lnum|.  {not in Vi}
 
 							*:tclfile* *:tclf*
-:tclf[ile] {file}	Execute the Tcl script in {file}. {not in Vi}
+:tclf[ile] {file}	Execute the Tcl script in {file}.  This is the same as
+			":tcl source {file}", but allows file name completion.
+			{not in Vi}
 
 
 Note that Tcl objects (like variables) persist from one command to the next,
@@ -391,7 +392,14 @@ Options:
 >		if { [$buf option modified] } { $buf command "w" }
 
 ==============================================================================
-6. Output from Tcl					*tcl-output*
+6. Miscellaneous; Output from Tcl		*tcl-misc* *tcl-output*
+
+The standard Tcl commands "exit" and "catch" are replaced by custom versions.
+"exit" terminates the current Tcl script and returns to vim, which deletes the
+Tcl interpreter.  Another call to ":tcl" then creates a new Tcl interpreter.
+"exit" does NOT terminate vim!  "catch" works as before, except that it does
+not prevent script termination from "exit".  An exit code != 0 causes the ex
+command that invoked the Tcl script to return an error.
 
 Two new I/O streams are available in Tcl, "vimout" and "vimerr".  All output
 directed to them is displayed in the vim message area, as information messages
@@ -402,20 +410,16 @@ used to display messages in vim.
 ==============================================================================
 7. Known bugs & problems				*tcl-bugs*
 
-The standard "exit" command is replaced by a version that tells vim to delete
-the Tcl interpreter when the current command or script is completed, and
-returns an error.  Another call to ":tcl", ":tcldo" or ":tclfile" then creates
-a new Tcl interpreter.  Unfortunately, there's a side effect:  "exit" no
-longer is a sure way to terminate the script.  The error from "exit" can be
-caught (using "catch"), and script processing continues from this point.  This
-is a design flaw in Tcl, and cannot be fixed without massive hacking.
-
-Calling ":tcl", ":tcldo" or ":tclfile" from inside Tcl (via "::vim::command")
-may have unexpected side effects.  The command is executed in the master
-interpreter - making "::vim::command" available in a safe child interpreter
-therefore makes the child unsafe.  Global variables "line" or "lnum" are
-destroyed when ":tcldo" is called.  (The final version should probably catch
-attemts to execute ":tcl" etc from within Tcl, and just return an error.)
+Calling one of the Tcl ex commands from inside Tcl (via "::vim::command") may
+have unexpected side effects.  The command creates a new interpreter, which
+has the same abilities as the standard interpreter - making "::vim::command"
+available in a safe child interpreter therefore makes the child unsafe.  (It
+would be trivial to block nested :tcl* calls or ensure that such calls from a
+safe interpreter create only new safe interpreters, but quite pointless -
+depending on vim's configuration, "::vim::command" may execute arbitrary code
+in any number of other scripting languages.)  A call to "exit" within this new
+interpreter does not affect the old interpreter; it only terminates the new
+interpreter, then script processing continues normally in the old interpreter.
 
 Input from stdin is currently not supported.
 
