@@ -1992,11 +1992,11 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 # ifdef FEAT_RIGHTLEFT
 	    if (wp->w_p_rl)
 		/* the line number isn't reversed */
-		copy_text_attr(off + W_WIDTH(wp) - len - col, "  ", len,
-							     hl_attr(HLF_FL));
+		copy_text_attr(off + W_WIDTH(wp) - len - col,
+					(char_u *)"  ", len, hl_attr(HLF_FL));
 	    else
 # endif
-		copy_text_attr(off + col, "  ", len, hl_attr(HLF_FL));
+		copy_text_attr(off + col, (char_u *)"  ", len, hl_attr(HLF_FL));
 	    col += len;
 	}
     }
