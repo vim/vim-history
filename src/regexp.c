@@ -2671,6 +2671,7 @@ static unsigned	reg_tofreelen;
  * reg_buf		<invalid>		buffer in which to search
  * reg_firstlnum	<invalid>		first line in which to search
  * reg_maxline		0			last line nr
+ * reg_line_lbr		FALSE or TRUE		FALSE
  */
 static regmatch_T	*reg_match;
 static regmmatch_T	*reg_mmatch;
@@ -2682,6 +2683,7 @@ static win_T		*reg_win;
 static buf_T		*reg_buf;
 static linenr_T		reg_firstlnum;
 static linenr_T		reg_maxline;
+static int		reg_line_lbr;	    /* "\n" in string is line break */
 
 /*
  * Get pointer to the line "lnum", which is relative to "reg_firstlnum".
@@ -2725,6 +2727,7 @@ vim_regexec(rmp, line, col)
     reg_match = rmp;
     reg_mmatch = NULL;
     reg_maxline = 0;
+    reg_line_lbr = FALSE;
     reg_win = NULL;
     ireg_ic = rmp->rm_ic;
 #ifdef FEAT_MBYTE
@@ -2732,6 +2735,29 @@ vim_regexec(rmp, line, col)
 #endif
     return (vim_regexec_both(line, col) != 0);
 }
+
+#if defined(FEAT_MODIFY_FNAME) || defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Like vim_regexec(), but consider a "\n" in "line" to be a line break.
+ */
+    int
+vim_regexec_nl(rmp, line, col)
+    regmatch_T	*rmp;
+    char_u	*line;	/* string to match against */
+    colnr_T	col;	/* column to start looking for match */
+{
+    reg_match = rmp;
+    reg_mmatch = NULL;
+    reg_maxline = 0;
+    reg_line_lbr = TRUE;
+    reg_win = NULL;
+    ireg_ic = rmp->rm_ic;
+#ifdef FEAT_MBYTE
+    ireg_icombine = FALSE;
+#endif
+    return (vim_regexec_both(line, col) != 0);
+}
+#endif
 
 /*
  * Match a regexp against multiple lines.
@@ -2758,6 +2784,7 @@ vim_regexec_multi(rmp, win, buf, lnum, col)
     reg_win = win;
     reg_firstlnum = lnum;
     reg_maxline = reg_buf->b_ml.ml_line_count - lnum;
+    reg_line_lbr = FALSE;
     ireg_ic = rmp->rmm_ic;
 #ifdef FEAT_MBYTE
     ireg_icombine = FALSE;
@@ -3229,6 +3256,10 @@ regmatch(scan)
 	if (WITH_NL(op) && *reginput == NUL && reglnum < reg_maxline)
 	{
 	    reg_nextline();
+	}
+	else if (reg_line_lbr && WITH_NL(op) && *reginput == '\n')
+	{
+	    ADVANCE_REGINPUT();
 	}
 	else
 	{
@@ -4201,9 +4232,13 @@ regmatch(scan)
 	    break;
 
 	  case NEWL:
-	    if (c != NUL || reglnum == reg_maxline)
+	    if ((c != NUL || reglnum == reg_maxline)
+					      && (c != '\n' || !reg_line_lbr))
 		return FALSE;
-	    reg_nextline();
+	    if (reg_line_lbr)
+		ADVANCE_REGINPUT();
+	    else
+		reg_nextline();
 	    break;
 
 	  case END:
@@ -4299,6 +4334,8 @@ regrepeat(p, maxcount)
 		if (got_int)
 		    break;
 	    }
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
+		++scan;
 	    else
 		break;
 	    ++count;
@@ -4326,6 +4363,8 @@ regrepeat(p, maxcount)
 		if (got_int)
 		    break;
 	    }
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
+		++scan;
 	    else
 		break;
 	    ++count;
@@ -4353,6 +4392,8 @@ regrepeat(p, maxcount)
 		if (got_int)
 		    break;
 	    }
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
+		++scan;
 	    else
 		break;
 	    ++count;
@@ -4380,6 +4421,8 @@ regrepeat(p, maxcount)
 	    {
 		ADVANCE_P(scan);
 	    }
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
+		++scan;
 	    else
 		break;
 	    ++count;
@@ -4413,6 +4456,8 @@ do_class:
 	    }
 #endif
 	    else if ((class_tab[*scan] & mask) == testval)
+		++scan;
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
 		++scan;
 	    else
 		break;
@@ -4565,6 +4610,8 @@ do_class:
 		if (got_int)
 		    break;
 	    }
+	    else if (reg_line_lbr && *scan == '\n' && WITH_NL(OP(p)))
+		++scan;
 #ifdef FEAT_MBYTE
 	    else if (has_mbyte && (len = (*mb_ptr2len_check)(scan)) > 1)
 	    {
@@ -4584,10 +4631,15 @@ do_class:
 	break;
 
       case NEWL:
-	while (count < maxcount && *scan == NUL && reglnum < reg_maxline)
+	while (count < maxcount
+		&& ((*scan == NUL && reglnum < reg_maxline)
+		    || (*scan == '\n' && reg_line_lbr)))
 	{
 	    count++;
-	    reg_nextline();
+	    if (reg_line_lbr)
+		ADVANCE_REGINPUT();
+	    else
+		reg_nextline();
 	    scan = reginput;
 	    if (got_int)
 		break;
