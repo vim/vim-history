@@ -274,7 +274,6 @@ buf_init_chartab(buf, global)
     return OK;
 }
 
-#if defined(FEAT_STL_OPT) || defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * Translate any special characters in buf[bufsize] in-place.
  * If there is not enough room, not all characters will be translated.
@@ -294,13 +293,24 @@ trans_characters(buf, bufsize)
     while (*buf != 0)
     {
 #ifdef FEAT_MBYTE
+	char    bstr[7];
+
 	/* Assume a multi-byte character doesn't need translation. */
 	if (has_mbyte && (trs_len = (*mb_ptr2len_check)(buf)) > 1)
 	    len -= trs_len;
 	else
 #endif
 	{
-	    trs = transchar(*buf);
+#ifdef FEAT_MBYTE
+	    /* catch illegal UTF-8 byte */
+	    if (enc_utf8 && *buf >= 0x80)
+	    {
+		transchar_nonprint(bstr, *buf);
+		trs = bstr;
+	    }
+	    else
+#endif
+		trs = transchar(*buf);
 	    trs_len = (int)STRLEN(trs);
 	    if (trs_len > 1)
 	    {
@@ -315,7 +325,6 @@ trans_characters(buf, bufsize)
 	buf += trs_len;
     }
 }
-#endif
 
 #if defined(FEAT_EVAL) || defined(FEAT_TITLE) || defined(PROTO)
 /*

@@ -2490,6 +2490,9 @@ fileinfo(fullname, shorthelp, dont_truncate)
 	    name = curbuf->b_ffname;
 	home_replace(shorthelp ? curbuf : NULL, name, p,
 					  (int)(IOSIZE - (p - buffer)), TRUE);
+	/* the file name may contain unprintable characters, esp. when using
+	 * multi-byte chars */
+	trans_characters(buffer, IOSIZE);
     }
 
     sprintf((char *)buffer + STRLEN(buffer),
