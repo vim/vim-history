@@ -1561,6 +1561,7 @@ getcmdline_prompt(firstc, prompt, attr)
 {
     char_u		*s;
     struct cmdline_info	save_ccline;
+    int			msg_col_save = msg_col;
 
     save_ccline = ccline;
     ccline.cmdbuff = NULL;
@@ -1568,6 +1569,8 @@ getcmdline_prompt(firstc, prompt, attr)
     ccline.cmdattr = attr;
     s = getcmdline(firstc, 1L, 0);
     ccline = save_ccline;
+    /* Restore msg_col, the prompt from input() may have changed it. */
+    msg_col = msg_col_save;
 
     return s;
 }
