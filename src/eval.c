@@ -4737,6 +4737,7 @@ do_function(eap, getline, cookie)
     int		flags = 0;
     struct ufunc *fp;
     int		indent;
+    int		nesting;
 
     /*
      * ":function" without argument: list functions.
@@ -4881,6 +4882,7 @@ do_function(eap, getline, cookie)
 	cmdline_row = msg_row;
     }
     indent = 2;
+    nesting = 0;
     for (;;)
     {
 	msg_scroll = TRUE;
@@ -4891,11 +4893,14 @@ do_function(eap, getline, cookie)
 	    theline = getline(':', cookie, indent);
 	lines_left = Rows - 1;
 	if (theline == NULL)
+	{
+	    EMSG("Missing :endfunction");
 	    goto erret;
+	}
 
 	for (p = theline; vim_iswhite(*p) || *p == ':'; ++p)
 	    ;
-	if (STRNCMP(p, "endf", 4) == 0)
+	if (STRNCMP(p, "endf", 4) == 0 && nesting-- == 0)
 	{
 	    vim_free(theline);
 	    break;
@@ -4904,6 +4909,21 @@ do_function(eap, getline, cookie)
 	    indent -= 2;
 	else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
 	    indent += 2;
+	/* Check for defining a function inside this function. */
+	if (STRNCMP(p, "fu", 2) == 0)
+	{
+	    p = skipwhite(skiptowhite(p));
+	    if (isupper(*p))
+	    {
+		while (isalpha(*p) || isdigit(*p) || *p == '_')
+		    ++p;
+		if (*skipwhite(p) == '(')
+		{
+		    ++nesting;
+		    indent += 2;
+		}
+	    }
+	}
 	if (ga_grow(&newlines, 1) == FAIL)
 	    goto erret;
 	((char_u **)(newlines.ga_data))[newlines.ga_len] = theline;
