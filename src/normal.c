@@ -3497,8 +3497,8 @@ check_scrollbind(topline_diff, leftcol_diff)
 		{
 		    curwin->w_scbind_pos += topline_diff;
 		    topline = curwin->w_scbind_pos;
-		    if (topline > curbuf->b_ml.ml_line_count - p_so)
-			topline = curbuf->b_ml.ml_line_count - p_so;
+		    if (topline > curbuf->b_ml.ml_line_count)
+			topline = curbuf->b_ml.ml_line_count;
 		    if (topline < 1)
 			topline = 1;
 
