@@ -41,7 +41,12 @@
 #include <perl.h>
 #include <XSUB.h>
 
-#ifdef USE_SFIO
+#if defined(USE_SFIO) || defined(PROTO)
+
+#ifndef USE_SFIO	/* just generating prototypes */
+# define Sfio_t int
+# define Sfdisc_t int
+#endif
 
 #define NIL(type)	((type)0)
 

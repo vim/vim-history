@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0l.  Last change: 2000 Nov 04
+*editing.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -141,12 +141,8 @@ whether the buffer was changed use the "CTRL-G" command.  The message includes
 the string "[Modified]" if the buffer has been changed.
 
 If you want to automatically save the changes without asking, switch on the
-'autowrite' option.  Note that ":e file" will fail if there are changes in the
-current buffer, also when the 'autowrite' option is on.  This is illogical,
-because with other commands (e.g., ":next") the current buffer would be
-written and abandoned, but this behavior is compatible with Vi.  If you
-encounter this problem, you can use CTRL-^ to jump to the file, because the
-alternate file name is set to the argument of the ":e" command.
+'autowriteall' option.  'autowrite' is the associated Vi-compatible option
+that does not work for all commands.
 
 If you want to keep the changed buffer without saving it, switch on the
 'hidden' option.  See |hidden-buffer|.
@@ -203,47 +199,59 @@ unmodified.
 :e[dit] [++opt] [+cmd]	Edit the current file.  This is useful to re-edit the
 			current file, when it has been changed outside of Vim.
 			This fails when changes have been made to the current
-			buffer.  Also see |++opt| and |+cmd|. {Vi: no ++opt}
+			buffer and 'autowriteall' isn't set or the file can't
+			be written.
+			Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
 
 							*:edit!*
 :e[dit]! [++opt] [+cmd]
 			Edit the current file always.  Discard any changes to
 			the current buffer.  This is useful if you want to
-			start all over again.  Also see |++opt| and |+cmd|.
+			start all over again.
+			Also see |++opt| and |+cmd|.
 			{Vi: no ++opt}
 
 							*:edit_f*
 :e[dit] [++opt] [+cmd] {file}
-			Edit {file}.  This fails when changes have been made
-			to the current buffer, unless 'hidden' is set.  Also
-			see |++opt| and |+cmd|. {Vi: no ++opt}
+			Edit {file}.
+			This fails when changes have been made to the current
+			buffer, unless 'hidden' is set or 'autowriteall' is
+			set and the file can be written.
+			Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
 
 							*:edit!_f*
 :e[dit]! [++opt] [+cmd] {file}
 			Edit {file} always.  Discard any changes to the
-			current buffer.  Also see |++opt| and |+cmd|. {Vi: no
-			++opt}
+			current buffer.
+			Also see |++opt| and |+cmd|.
+			{Vi: no ++opt}
 
 :e[dit] [++opt] [+cmd] #[count]
 			Edit the [count]th alternate file name (as shown by
 			:files).  This command does the same as
 			[count] CTRL-^.  But ":e #" doesn't work if the
 			alternate buffer doesn't have a file name, while
-			CTRL-^ still works then.  Also see |++opt| and |+cmd|.
+			CTRL-^ still works then.
+			Also see |++opt| and |+cmd|.
 			{Vi: no ++opt}
 
 							*:ene* *:enew*
 :ene[w]			Edit a new, unnamed buffer.  This fails when changes
 			have been made to the current buffer, unless 'hidden'
-			is set.
+			is set or 'autowriteall' is set and the file can be
+			written.
 			If 'fileformats' is not empty, the first format given
 			will be used for the new buffer.  If 'fileformats' is
 			empty, the 'fileformat' of the current buffer is used.
+			{not in Vi}
 
 							*:ene!* *:enew!*
 :ene[w]!		Edit a new, unnamed buffer.  Discard any changes to
 			the current buffer.
 			Set 'fileformat' like |:enew|.
+			{not in Vi}
 
 							*:fin* *:find*
 :fin[d][!] [++opt] [+cmd] {file}
@@ -270,10 +278,10 @@ unmodified.
 							*CTRL-^*
 [count]CTRL-^		Edit [count]th alternate file (equivalent to ":e
 			#[count]").  Without count this gets you to the
-			previously edited file.  This is a quick way to
-			toggle between two (or more) files.  If the
-			'autowrite' option is on and the buffer was
-			changed, write it.
+			previously edited file.  This is a quick way to toggle
+			between two (or more) files.
+			If the 'autowrite' or 'autowriteall' option is on and
+			the buffer was changed, write it.
 
 [count]]f						*]f* *[f*
 [count][f		Same as "gf".  Deprecated.
@@ -872,6 +880,10 @@ option is on the backup file may be renamed.
    off	     on		backup current file, deleted afterwards (default)
    on	     off	delete old backup, backup current file
    on	     on		delete old backup, backup current file
+
+When the 'backupskip' pattern matches with the name of the file which is
+written, no backup file is made.  The values of 'backup' and 'writebackup' are
+ignored then.
 
 When the 'backup' option is on, an old backup file (with the same name as the
 new backup file) will be deleted.  If 'backup' is not set, but 'writebackup' is

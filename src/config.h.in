@@ -83,6 +83,9 @@
 /* Define to `long' if <sys/types.h> doesn't define.  */
 #undef ino_t
 
+/* Define to `struct sigaltstack' if <signal.h> doesn't define.  */
+#undef stack_t
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #undef TIME_WITH_SYS_TIME
 

@@ -32,7 +32,7 @@ OPTIONS
        followed  by  a parameter.  Spaces between a single option
        letter and its  parameter  are  optional.   Parameters  to
        options  can be specified in decimal, hexadecimal or octal
-       notation.  Thus-c8, -c 8, -c  010  and  -cols  8  are  all
+       notation.  Thus -c8, -c 8, -c 010  and  -cols  8  are  all
        equivalent.
 
 

@@ -48,6 +48,7 @@ static int win_minheight __ARGS((win_t *wp));
 static void win_goto_ver __ARGS((int up, long count));
 static void win_goto_hor __ARGS((int left, long count));
 #endif
+static void frame_add_height __ARGS((frame_t *frp, int n));
 static void last_status_rec __ARGS((frame_t *fr, int statusline));
 
 static win_t	*prevwin = NULL;	/* previous window */
@@ -1812,7 +1813,7 @@ frame_new_width(topfrp, width, leftfirst)
 	for (frp = topfrp; frp->fr_parent != NULL; frp = frp->fr_parent)
 	    if (frp->fr_parent->fr_layout == FR_ROW && frp->fr_next != NULL)
 		break;
-	if (frp == NULL)
+	if (frp->fr_parent == NULL)
 	    wp->w_vsep_width = 0;
 	win_new_width(wp, width - wp->w_vsep_width);
     }
@@ -3530,7 +3531,7 @@ win_comp_scroll(wp)
  */
     void
 command_height(old_p_ch)
-    long    old_p_ch;
+    long	old_p_ch;
 {
 #ifdef FEAT_WINDOWS
     int		h;
@@ -3562,7 +3563,7 @@ command_height(old_p_ch)
 		if (h > p_ch - old_p_ch)
 		    h = p_ch - old_p_ch;
 		old_p_ch += h;
-		frame_new_height(frp, frp->fr_height - h, FALSE);
+		frame_add_height(frp, -h);
 		frp = frp->fr_prev;
 	    }
 
@@ -3582,7 +3583,7 @@ command_height(old_p_ch)
 	    msg_row = cmdline_row;
 	redraw_cmdline = TRUE;
     }
-    frame_new_height(frp, (int)(frp->fr_height + old_p_ch - p_ch), FALSE);
+    frame_add_height(frp, (int)(old_p_ch - p_ch));
 #else
     win_setheight((int)(firstwin->w_height + old_p_ch - p_ch));
     cmdline_row = Rows - p_ch;
@@ -3590,6 +3591,25 @@ command_height(old_p_ch)
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
+/*
+ * Resize frame "frp" to be "n" lines higher (negative for less high).
+ * Also resize the frames it is contained in.
+ */
+    static void
+frame_add_height(frp, n)
+    frame_t	*frp;
+    int		n;
+{
+    frame_new_height(frp, frp->fr_height + n, FALSE);
+    for (;;)
+    {
+	frp = frp->fr_parent;
+	if (frp == NULL)
+	    break;
+	frp->fr_height += n;
+    }
+}
+
 /*
  * Add or remove a status line for the bottom window(s), according to the
  * value of 'laststatus'.

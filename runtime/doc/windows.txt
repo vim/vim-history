@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0l.  Last change: 2000 Oct 29
+*windows.txt*   For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -411,6 +411,8 @@ The minimal height and width of a window is set with 'winminheight' and
 							*:qa* *:qall*
 :qa[ll]		Exit Vim, unless there are some buffers which have been
 		changed.  (Use ":bmod" to go to the next modified buffer).
+		When 'autowriteall' is set all changed buffers will be
+		written, like |:wqall|.
 
 :conf[irm] qa[ll]
 		Exit Vim.  Bring up a prompt when some buffers have been

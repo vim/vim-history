@@ -2481,7 +2481,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	/*
 	 * A double click selects a word or a block.
 	 */
-	if (mod_mask & MOD_MASK_2CLICK)
+	if (is_click && (mod_mask & MOD_MASK_2CLICK))
 	{
 	    pos_t	*pos;
 
@@ -2491,8 +2491,10 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    end_visual = curwin->w_cursor;
 	    while (vim_iswhite(gchar_pos(&end_visual)))
 		inc(&end_visual);
-	    oap->motion_type = MCHAR;
-	    if (VIsual_mode == 'v'
+	    if (oap != NULL)
+		oap->motion_type = MCHAR;
+	    if (oap != NULL
+		    && VIsual_mode == 'v'
 		    && !vim_isIDc(gchar_pos(&end_visual))
 		    && equal(curwin->w_cursor, VIsual)
 		    && (pos = findmatch(oap, NUL)) != NULL)
@@ -2500,6 +2502,8 @@ do_mouse(oap, c, dir, count, fix_indent)
 		curwin->w_cursor = *pos;
 		if (oap->motion_type == MLINE)
 		    VIsual_mode = 'V';
+		else if (*p_sel == 'e')
+		    ++curwin->w_cursor.col;
 	    }
 	    else if (lt(curwin->w_cursor, orig_cursor))
 	    {
@@ -3331,12 +3335,12 @@ nv_screengo(oap, dir, dist)
     if (curwin->w_width != 0)
     {
 #endif
-    /*
-     * Instead of sticking at the last character of the buffer line we
-     * try to stick in the last column of the screen.
-     */
-    if (curwin->w_curswant == MAXCOL)
-    {
+      /*
+       * Instead of sticking at the last character of the buffer line we
+       * try to stick in the last column of the screen.
+       */
+      if (curwin->w_curswant == MAXCOL)
+      {
 	atend = TRUE;
 	validate_virtcol();
 	if (width1 <= 0)
@@ -3348,9 +3352,9 @@ nv_screengo(oap, dir, dist)
 		curwin->w_curswant += ((curwin->w_virtcol
 			     - curwin->w_curswant - 1) / width2 + 1) * width2;
 	}
-    }
-    else
-    {
+      }
+      else
+      {
 	if (linelen > width1)
 	    n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
 	else
@@ -3358,10 +3362,10 @@ nv_screengo(oap, dir, dist)
 	if (curwin->w_curswant > (colnr_t)n + 1)
 	    curwin->w_curswant -= ((curwin->w_curswant - n) / width2 + 1)
 								     * width2;
-    }
+      }
 
-    while (dist--)
-    {
+      while (dist--)
+      {
 	if (dir == BACKWARD)
 	{
 	    if ((long)curwin->w_curswant >= width2)
@@ -3403,11 +3407,31 @@ nv_screengo(oap, dir, dist)
 		curwin->w_curswant %= width2;
 	    }
 	}
-    }
+      }
 #ifdef FEAT_VERTSPLIT
     }
 #endif
+
     coladvance(curwin->w_curswant);
+
+#if defined(FEAT_LINEBREAK) || defined(FEAT_MBYTE)
+    if (curwin->w_cursor.col > 0 && curwin->w_p_wrap)
+    {
+	/*
+	 * Check for landing on a character that got split at the end of the
+	 * last line.  We want to advance a screenline, not end up in the same
+	 * screenline or move two screenlines.
+	 */
+	validate_virtcol();
+	if (curwin->w_virtcol > curwin->w_curswant
+		&& (curwin->w_curswant < (colnr_t)width1
+		    ? (curwin->w_curswant > (colnr_t)width1 / 2)
+		    : ((curwin->w_curswant - width1) % width2
+						      > (colnr_t)width2 / 2)))
+	    --curwin->w_cursor.col;
+    }
+#endif
+
     if (atend)
 	curwin->w_curswant = MAXCOL;	    /* stick in the last column */
 
@@ -4093,7 +4117,7 @@ nv_ident(cap)
 	g_cmd = FALSE;
     }
 
-    if (cmdchar == '£')	/* the pound sign, '#' for English keyboards */
+    if (cmdchar == 0xA3)	/* the pound sign, '#' for English keyboards */
 	cmdchar = '#';
 
     /*
@@ -4519,11 +4543,19 @@ nv_up(cap)
 nv_down(cap)
     cmdarg_t	*cap;
 {
-    cap->oap->motion_type = MLINE;
-    if (cursor_down(cap->count1, cap->oap->op_type == OP_NOP) == FAIL)
-	clearopbeep(cap->oap);
-    else if (cap->arg)
-	beginline(BL_WHITE | BL_FIX);
+#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
+    /* In a quickfix window a <CR> jumps to the error under the cursor. */
+    if (bt_quickfix(curbuf))
+	stuffReadbuff((char_u *)":.cc\n");
+    else
+#endif
+    {
+	cap->oap->motion_type = MLINE;
+	if (cursor_down(cap->count1, cap->oap->op_type == OP_NOP) == FAIL)
+	    clearopbeep(cap->oap);
+	else if (cap->arg)
+	    beginline(BL_WHITE | BL_FIX);
+    }
 }
 
 #ifdef FEAT_SEARCHPATH
@@ -5617,12 +5649,6 @@ nv_pcmark(cap)
 {
     pos_t	*pos;
 
-#if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
-    /* In a quickfix window a <Tab> jumps to the error under the cursor. */
-    if (bt_quickfix(curbuf))
-	stuffReadbuff((char_u *)":.cc\n");
-    else
-#endif
     if (!checkclearopq(cap->oap))
     {
 	pos = movemark((int)cap->count1);
@@ -6136,6 +6162,19 @@ nv_g_cmd(cap)
 			i += ((curwin->w_virtcol - width1) / width2 + 1)
 								     * width2;
 		    coladvance((colnr_t)i);
+#if defined(FEAT_LINEBREAK) || defined(FEAT_MBYTE)
+		    if (curwin->w_cursor.col > 0 && curwin->w_p_wrap)
+		    {
+			/*
+			 * Check for landing on a character that got split at
+			 * the end of the line.  We do not want to advance to
+			 * the next screen line.
+			 */
+			validate_virtcol();
+			if (curwin->w_virtcol > (colnr_t)i)
+			    --curwin->w_cursor.col;
+		    }
+#endif
 		}
 		else if (nv_screengo(oap, FORWARD, cap->count1 - 1) == FAIL)
 		    clearopbeep(oap);
@@ -6154,7 +6193,7 @@ nv_g_cmd(cap)
      */
     case '*':
     case '#':
-    case '£':
+    case 0xA3:		/* pound sign */
     case Ctrl_RSB:		/* :tag or :tselect for current identifier */
     case ']':			/* :tselect for current identifier */
 	nv_ident(cap);

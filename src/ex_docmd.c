@@ -2002,7 +2002,8 @@ ex_bunload(eap)
  * probably won't change that much -- webb.
  */
     char_u *
-set_one_cmd_context(buff)
+set_one_cmd_context(xp, buff)
+    expand_t	*xp;
     char_u	*buff;	    /* buffer for command string */
 {
     char_u		*p;
@@ -2017,22 +2018,22 @@ set_one_cmd_context(buff)
     int			forceit = FALSE;
     int			usefilter = FALSE;  /* filter instead of file name */
 
-    expand_pattern = buff;
-    expand_context = EXPAND_COMMANDS;	/* Default until we get past command */
-    expand_set_path = FALSE;
+    xp->xp_pattern = buff;
+    xp->xp_context = EXPAND_COMMANDS;	/* Default until we get past command */
+    xp->xp_set_path = FALSE;
 
 /*
  * 2. skip comment lines and leading space, colons or bars
  */
     for (cmd = buff; vim_strchr((char_u *)" \t:|", *cmd) != NULL; cmd++)
 	;
-    expand_pattern = cmd;
+    xp->xp_pattern = cmd;
 
     if (*cmd == NUL)
 	return NULL;
     if (*cmd == '"')	    /* ignore comment lines */
     {
-	expand_context = EXPAND_NOTHING;
+	xp->xp_context = EXPAND_NOTHING;
 	return NULL;
     }
 
@@ -2049,7 +2050,7 @@ set_one_cmd_context(buff)
 	if (*cmd == '\'')
 	{
 	    if (*++cmd == NUL)
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 	}
 	else if (*cmd == '/' || *cmd == '?')
 	{
@@ -2058,7 +2059,7 @@ set_one_cmd_context(buff)
 		if (*cmd++ == '\\' && *cmd != NUL)
 		    ++cmd;
 	    if (*cmd == NUL)
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 	}
 	if (*cmd != NUL)
 	    ++cmd;
@@ -2069,12 +2070,12 @@ set_one_cmd_context(buff)
  */
 
     cmd = skipwhite(cmd);
-    expand_pattern = cmd;
+    xp->xp_pattern = cmd;
     if (*cmd == NUL)
 	return NULL;
     if (*cmd == '"')
     {
-	expand_context = EXPAND_NOTHING;
+	xp->xp_context = EXPAND_NOTHING;
 	return NULL;
     }
 
@@ -2104,7 +2105,7 @@ set_one_cmd_context(buff)
 
 	if (i == 0)
 	{
-	    expand_context = EXPAND_UNSUCCESSFUL;
+	    xp->xp_context = EXPAND_UNSUCCESSFUL;
 	    return NULL;
 	}
 	for (cmdidx = (cmdidx_t)0; (int)cmdidx < (int)CMD_SIZE;
@@ -2162,7 +2163,7 @@ set_one_cmd_context(buff)
 			if (k == i && found)
 			{
 			    /* Ambiguous abbreviation */
-			    expand_context = EXPAND_UNSUCCESSFUL;
+			    xp->xp_context = EXPAND_UNSUCCESSFUL;
 			    return NULL;
 			}
 			if (!found)
@@ -2209,11 +2210,11 @@ set_one_cmd_context(buff)
     if (cmdidx == CMD_SIZE)
     {
 	/* Not still touching the command and it was an illegal one */
-	expand_context = EXPAND_UNSUCCESSFUL;
+	xp->xp_context = EXPAND_UNSUCCESSFUL;
 	return NULL;
     }
 
-    expand_context = EXPAND_NOTHING; /* Default now that we're past command */
+    xp->xp_context = EXPAND_NOTHING; /* Default now that we're past command */
 
     if (*p == '!')		    /* forced commands */
     {
@@ -2317,7 +2318,7 @@ set_one_cmd_context(buff)
 	p--;
     if (*p == ' ' || *p == TAB)
 	p++;
-    expand_pattern = p;
+    xp->xp_pattern = p;
 
     if (argt & XFILE)
     {
@@ -2328,8 +2329,8 @@ set_one_cmd_context(buff)
 	 * Allow spaces within back-quotes to count as part of the argument
 	 * being expanded.
 	 */
-	expand_pattern = skipwhite(arg);
-	for (p = expand_pattern; *p; ++p)
+	xp->xp_pattern = skipwhite(arg);
+	for (p = xp->xp_pattern; *p; ++p)
 	{
 	    if (*p == '\\' && p[1])
 		++p;
@@ -2343,14 +2344,14 @@ set_one_cmd_context(buff)
 		if (in_quote)
 		    bow = p;
 		else
-		    expand_pattern = p;
+		    xp->xp_pattern = p;
 		--p;
 	    }
 	    else if (*p == '`')
 	    {
 		if (!in_quote)
 		{
-		    expand_pattern = p;
+		    xp->xp_pattern = p;
 		    bow = p + 1;
 		}
 		in_quote = !in_quote;
@@ -2362,19 +2363,19 @@ set_one_cmd_context(buff)
 	 * expand from there.
 	 */
 	if (bow != NULL && in_quote)
-	    expand_pattern = bow;
-	expand_context = EXPAND_FILES;
+	    xp->xp_pattern = bow;
+	xp->xp_context = EXPAND_FILES;
 
 	/* Check for environment variable */
-	if (*expand_pattern == '$')
+	if (*xp->xp_pattern == '$')
 	{
-	    for (p = expand_pattern + 1; *p != NUL; ++p)
+	    for (p = xp->xp_pattern + 1; *p != NUL; ++p)
 		if (!vim_isIDc(*p))
 		    break;
 	    if (*p == NUL)
 	    {
-		expand_context = EXPAND_ENV_VARS;
-		++expand_pattern;
+		xp->xp_context = EXPAND_ENV_VARS;
+		++xp->xp_pattern;
 	    }
 	}
     }
@@ -2386,12 +2387,12 @@ set_one_cmd_context(buff)
     {
 	case CMD_cd:
 	case CMD_chdir:
-	    if (expand_context == EXPAND_FILES)
-		expand_context = EXPAND_DIRECTORIES;
+	    if (xp->xp_context == EXPAND_FILES)
+		xp->xp_context = EXPAND_DIRECTORIES;
 	    break;
 	case CMD_help:
-	    expand_context = EXPAND_HELP;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_HELP;
+	    xp->xp_pattern = arg;
 	    break;
 #ifdef FEAT_BROWSE
 	case CMD_browse:
@@ -2418,8 +2419,8 @@ set_one_cmd_context(buff)
 		    if (p == NULL)
 		    {
 			/* No "=", so complete attribute names */
-			expand_context = EXPAND_USER_CMD_FLAGS;
-			expand_pattern = arg;
+			xp->xp_context = EXPAND_USER_CMD_FLAGS;
+			xp->xp_pattern = arg;
 			return NULL;
 		    }
 
@@ -2428,14 +2429,14 @@ set_one_cmd_context(buff)
 		     */
 		    if (STRNICMP(arg, "complete", p - arg) == 0)
 		    {
-			expand_context = EXPAND_USER_COMPLETE;
-			expand_pattern = p + 1;
+			xp->xp_context = EXPAND_USER_COMPLETE;
+			xp->xp_pattern = p + 1;
 			return NULL;
 		    }
 		    else if (STRNICMP(arg, "nargs", p - arg) == 0)
 		    {
-			expand_context = EXPAND_USER_NARGS;
-			expand_pattern = p + 1;
+			xp->xp_context = EXPAND_USER_NARGS;
+			xp->xp_pattern = p + 1;
 			return NULL;
 		    }
 		    return NULL;
@@ -2447,8 +2448,8 @@ set_one_cmd_context(buff)
 	    p = skiptowhite(arg);
 	    if (*p == NUL)
 	    {
-		expand_context = EXPAND_USER_COMMANDS;
-		expand_pattern = arg;
+		xp->xp_context = EXPAND_USER_COMMANDS;
+		xp->xp_pattern = arg;
 		break;
 	    }
 
@@ -2456,8 +2457,8 @@ set_one_cmd_context(buff)
 	    return skipwhite(p);
 
 	case CMD_delcommand:
-	    expand_context = EXPAND_USER_COMMANDS;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_USER_COMMANDS;
+	    xp->xp_pattern = arg;
 	    break;
 # endif
 
@@ -2518,7 +2519,7 @@ set_one_cmd_context(buff)
 
 		    /* Check for trailing illegal characters */
 		    if (*arg && vim_strchr((char_u *)"|\"\n", *arg) == NULL)
-			expand_context = EXPAND_NOTHING;
+			xp->xp_context = EXPAND_NOTHING;
 		    else
 			return arg;
 		}
@@ -2526,19 +2527,19 @@ set_one_cmd_context(buff)
 	    break;
 #ifdef FEAT_AUTOCMD
 	case CMD_autocmd:
-	    return set_context_in_autocmd(arg, FALSE);
+	    return set_context_in_autocmd(xp, arg, FALSE);
 
 	case CMD_doautocmd:
-	    return set_context_in_autocmd(arg, TRUE);
+	    return set_context_in_autocmd(xp, arg, TRUE);
 #endif
 	case CMD_set:
-	    set_context_in_set_cmd(arg, OPT_LOCAL);
+	    set_context_in_set_cmd(xp, arg, OPT_LOCAL);
 	    break;
 	case CMD_setglobal:
-	    set_context_in_set_cmd(arg, OPT_GLOBAL);
+	    set_context_in_set_cmd(xp, arg, OPT_GLOBAL);
 	    break;
 	case CMD_setlocal:
-	    set_context_in_set_cmd(arg, 0);
+	    set_context_in_set_cmd(xp, arg, 0);
 	    break;
 	case CMD_tag:
 	case CMD_stag:
@@ -2549,16 +2550,16 @@ set_one_cmd_context(buff)
 	case CMD_tjump:
 	case CMD_stjump:
 	case CMD_ptjump:
-	    expand_context = EXPAND_TAGS;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_TAGS;
+	    xp->xp_pattern = arg;
 	    break;
 	case CMD_augroup:
-	    expand_context = EXPAND_AUGROUP;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_AUGROUP;
+	    xp->xp_pattern = arg;
 	    break;
 #ifdef FEAT_SYN_HL
 	case CMD_syntax:
-	    set_context_in_syntax_cmd(arg);
+	    set_context_in_syntax_cmd(xp, arg);
 	    break;
 #endif
 #ifdef FEAT_EVAL
@@ -2571,39 +2572,39 @@ set_one_cmd_context(buff)
 	case CMD_execute:
 	case CMD_call:
 	case CMD_return:
-	    set_context_for_expression(arg, cmdidx);
+	    set_context_for_expression(xp, arg, cmdidx);
 	    break;
 
 	case CMD_unlet:
-	    while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
-		arg = expand_pattern + 1;
-	    expand_context = EXPAND_USER_VARS;
-	    expand_pattern = arg;
+	    while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
+		arg = xp->xp_pattern + 1;
+	    xp->xp_context = EXPAND_USER_VARS;
+	    xp->xp_pattern = arg;
 	    break;
 
 	case CMD_function:
 	case CMD_delfunction:
-	    expand_context = EXPAND_USER_FUNC;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_USER_FUNC;
+	    xp->xp_pattern = arg;
 	    break;
 
 	case CMD_echohl:
-	    expand_context = EXPAND_HIGHLIGHT;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_HIGHLIGHT;
+	    xp->xp_pattern = arg;
 	    break;
 #endif
 	case CMD_highlight:
-	    set_context_in_highlight_cmd(arg);
+	    set_context_in_highlight_cmd(xp, arg);
 	    break;
 	case CMD_bdelete:
 	case CMD_bunload:
-	    while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
-		arg = expand_pattern + 1;
+	    while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
+		arg = xp->xp_pattern + 1;
 	    /*FALLTHROUGH*/
 	case CMD_buffer:
 	case CMD_sbuffer:
-	    expand_context = EXPAND_BUFFERS;
-	    expand_pattern = arg;
+	    xp->xp_context = EXPAND_BUFFERS;
+	    xp->xp_pattern = arg;
 	    break;
 #ifdef FEAT_USR_CMDS
 	case CMD_USER:
@@ -2613,14 +2614,14 @@ set_one_cmd_context(buff)
 	    {
 # ifdef FEAT_MENU
 		if (compl == EXPAND_MENUS)
-		    return set_context_in_menu_cmd(cmd, arg, forceit);
+		    return set_context_in_menu_cmd(xp, cmd, arg, forceit);
 # endif
 		if (compl == EXPAND_COMMANDS)
 		    return arg;
-		while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
-		    arg = expand_pattern + 1;
-		expand_context = compl;
-		expand_pattern = arg;
+		while ((xp->xp_pattern = vim_strchr(arg, ' ')) != NULL)
+		    arg = xp->xp_pattern + 1;
+		xp->xp_context = compl;
+		xp->xp_pattern = arg;
 	    }
 	    break;
 #endif
@@ -2630,22 +2631,26 @@ set_one_cmd_context(buff)
 	case CMD_omap:	    case CMD_onoremap:
 	case CMD_imap:	    case CMD_inoremap:
 	case CMD_cmap:	    case CMD_cnoremap:
-	    return set_context_in_map_cmd(cmd, arg, forceit, FALSE, FALSE, cmdidx);
+	    return set_context_in_map_cmd(xp, cmd, arg, forceit,
+							FALSE, FALSE, cmdidx);
 	case CMD_unmap:
 	case CMD_nunmap:
 	case CMD_vunmap:
 	case CMD_ounmap:
 	case CMD_iunmap:
 	case CMD_cunmap:
-	    return set_context_in_map_cmd(cmd, arg, forceit, FALSE, TRUE, cmdidx);
+	    return set_context_in_map_cmd(xp, cmd, arg, forceit,
+							 FALSE, TRUE, cmdidx);
 	case CMD_abbreviate:	case CMD_noreabbrev:
 	case CMD_cabbrev:	case CMD_cnoreabbrev:
 	case CMD_iabbrev:	case CMD_inoreabbrev:
-	    return set_context_in_map_cmd(cmd, arg, forceit, TRUE, FALSE, cmdidx);
+	    return set_context_in_map_cmd(xp, cmd, arg, forceit,
+							 TRUE, FALSE, cmdidx);
 	case CMD_unabbreviate:
 	case CMD_cunabbrev:
 	case CMD_iunabbrev:
-	    return set_context_in_map_cmd(cmd, arg, forceit, TRUE, TRUE, cmdidx);
+	    return set_context_in_map_cmd(xp, cmd, arg, forceit,
+							  TRUE, TRUE, cmdidx);
 #ifdef FEAT_MENU
 	case CMD_menu:	    case CMD_noremenu:	    case CMD_unmenu:
 	case CMD_amenu:	    case CMD_anoremenu:	    case CMD_aunmenu:
@@ -2656,7 +2661,7 @@ set_one_cmd_context(buff)
 	case CMD_cmenu:	    case CMD_cnoremenu:	    case CMD_cunmenu:
 	case CMD_tmenu:				    case CMD_tunmenu:
 	case CMD_popup:	    case CMD_tearoff:	    case CMD_emenu:
-	    return set_context_in_menu_cmd(cmd, arg, forceit);
+	    return set_context_in_menu_cmd(xp, cmd, arg, forceit);
 #endif
 
 #endif /* FEAT_CMDL_COMPL */
@@ -3044,8 +3049,10 @@ expand_filename(eap, cmdlinep, errormsgp)
 		}
 		else /* n == 2 */
 		{
-		    expand_context = EXPAND_FILES;
-		    if ((p = ExpandOne(eap->arg, NULL,
+		    expand_t	xpc;
+
+		    xpc.xp_context = EXPAND_FILES;
+		    if ((p = ExpandOne(&xpc, eap->arg, NULL,
 					    WILD_LIST_NOTFOUND|WILD_ADD_SLASH,
 						   WILD_EXPAND_FREE)) == NULL)
 			return FAIL;
@@ -3187,7 +3194,7 @@ autowrite(buf, forceit)
     buf_t	*buf;
     int		forceit;
 {
-    if (!p_aw || !p_write
+    if (!(p_aw || p_awa) || !p_write
 #ifdef FEAT_QUICKFIX
 	/* never autowrite a "nofile" or "scratch" buffer */
 	|| bt_nofile(buf) || bt_scratch(buf)
@@ -3205,7 +3212,7 @@ autowrite_all()
 {
     buf_t	*buf;
 
-    if (!p_aw || !p_write)
+    if (!(p_aw || p_awa) || !p_write)
 	return;
     for (buf = firstbuf; buf; buf = buf->b_next)
 	if (bufIsChanged(buf) && !buf->b_p_ro)
@@ -3413,7 +3420,7 @@ check_changed_any(hidden)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	if (p_confirm || cmdmod.confirm)
 	{
-	    if (check_changed(buf, FALSE, TRUE, FALSE, TRUE))
+	    if (check_changed(buf, p_awa, TRUE, FALSE, TRUE))
 		break;	    /* didn't save - still changes */
 	}
 	else
@@ -4493,8 +4500,10 @@ source_finished(cookie)
 /*
  * Function given to ExpandGeneric() to obtain the list of command names.
  */
+/*ARGSUSED*/
     char_u *
-get_command_name(idx)
+get_command_name(xp, idx)
+    expand_t	*xp;
     int		idx;
 {
     if (idx >= (int)CMD_SIZE)
@@ -5408,14 +5417,16 @@ do_ucmd(eap)
 get_user_command_name(idx)
     int		idx;
 {
-    return get_user_commands(idx - (int)CMD_SIZE);
+    return get_user_commands(NULL, idx - (int)CMD_SIZE);
 }
 
 /*
  * Function given to ExpandGeneric() to obtain the list of user command names.
  */
+/*ARGSUSED*/
     char_u *
-get_user_commands(idx)
+get_user_commands(xp, idx)
+    expand_t	*xp;
     int		idx;
 {
     if (idx < curbuf->b_ucmds.ga_len)
@@ -5430,8 +5441,10 @@ get_user_commands(idx)
  * Function given to ExpandGeneric() to obtain the list of user command
  * attributes.
  */
+/*ARGSUSED*/
     char_u *
-get_user_cmd_flags(idx)
+get_user_cmd_flags(xp, idx)
+    expand_t	*xp;
     int		idx;
 {
     static char *user_cmd_flags[] =
@@ -5446,8 +5459,10 @@ get_user_cmd_flags(idx)
 /*
  * Function given to ExpandGeneric() to obtain the list of values for -nargs.
  */
+/*ARGSUSED*/
     char_u *
-get_user_cmd_nargs(idx)
+get_user_cmd_nargs(xp, idx)
+    expand_t	*xp;
     int		idx;
 {
     static char *user_cmd_nargs[] = {"0", "1", "*", "?", "+"};
@@ -5460,8 +5475,10 @@ get_user_cmd_nargs(idx)
 /*
  * Function given to ExpandGeneric() to obtain the list of values for -complete.
  */
+/*ARGSUSED*/
     char_u *
-get_user_cmd_complete(idx)
+get_user_cmd_complete(xp, idx)
+    expand_t	*xp;
     int		idx;
 {
     return (char_u *)command_complete[idx].name;
@@ -5501,7 +5518,8 @@ ex_quit(eap)
      */
     if (check_more(FALSE, eap->forceit) == OK && only_one_window())
 	exiting = TRUE;
-    if ((!P_HID(curbuf) && check_changed(curbuf, FALSE, FALSE, eap->forceit, FALSE))
+    if ((!P_HID(curbuf)
+		&& check_changed(curbuf, p_awa, FALSE, eap->forceit, FALSE))
 	    || check_more(TRUE, eap->forceit) == FAIL
 	    || (only_one_window() && check_changed_any(eap->forceit)))
     {
@@ -6063,7 +6081,7 @@ ex_preserve(eap)
 ex_recover(eap)
     exarg_t	*eap;
 {
-    if (!check_changed(curbuf, FALSE, TRUE, eap->forceit, FALSE)
+    if (!check_changed(curbuf, p_awa, TRUE, eap->forceit, FALSE)
 		&& (*eap->arg == NUL || setfname(eap->arg, NULL, TRUE) == OK))
 	ml_recover();
 }

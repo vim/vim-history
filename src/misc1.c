@@ -2755,9 +2755,11 @@ expand_env(src, dst, dstlen)
 		if (var == NULL)
 #  endif
 		{
-		    expand_context = EXPAND_FILES;
-		    var = ExpandOne(dst, NULL, WILD_ADD_SLASH|WILD_SILENT,
-							    WILD_EXPAND_FREE);
+		    expand_t	xpc;
+
+		    xpc.xp_context = EXPAND_FILES;
+		    var = ExpandOne(&xpc, dst, NULL,
+				WILD_ADD_SLASH|WILD_SILENT, WILD_EXPAND_FREE);
 		    mustfree = TRUE;
 		}
 
@@ -3101,9 +3103,11 @@ vim_setenv(name, val)
 /*
  * Function given to ExpandGeneric() to obtain an environment variable name.
  */
+/*ARGSUSED*/
     char_u *
-get_env_name(idx)
-    int idx;
+get_env_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
 # ifdef AMIGA
     /*

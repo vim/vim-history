@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0l.  Last change: 2000 Oct 29
+*various.txt*   For Vim version 6.0m.  Last change: 2000 Nov 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -321,9 +321,10 @@ N  *+X11*		Unix only: can restore window title |X11|
 
 						*:sil* *:silent*
 :sil[ent][!] {command}	Execute {command} silently.  Normal messages will not
-			be given.  When [!] is added, error messages will also
-			be skipped, and commands will not be aborted when an
-			error is detected.
+			be given.
+			When [!] is added, error messages will also be
+			skipped, and commands will not be aborted when an
+			error is detected.  |v:errmsg| is still set
 			Redirection, started with |:redir|, will continue as
 			usual.  This will allow redirecting the output of a
 			command without seeing it on the screen.  Example: >
@@ -332,7 +333,10 @@ N  *+X11*		Unix only: can restore window title |X11|
 			    :redir END
 <			":silent!" is useful to execute a command that may
 			fail, but the failure is to be ignored.  Example: >
-			    :silent /^begin
+			    :let v:errmsg = ""
+			    :silent! /^begin
+			    :if v:errmsg != ""
+			    : ... pattern was not found
 <			":silent" will also avoid the hit-enter prompt.  When
 			using this for an external command, this may cause the
 			screen to be messed up.  Use |CTRL-L| to clean it up

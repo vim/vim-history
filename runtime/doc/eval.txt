@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0l.  Last change: 2000 Oct 29
+*eval.txt*      For Vim version 6.0m.  Last change: 2000 Nov 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -534,10 +534,10 @@ v:count1	Just like "v:count", but defaults to one when no count is
 					*v:errmsg* *errmsg-variable*
 v:errmsg	Last given error message.  It's allowed to set this variable.
 		Example: >
-	:let errmsg = ""
-	:next
-	:if (errmsg != "")
-	:  ...
+	:let v:errmsg = ""
+	:silent! next
+	:if v:errmsg != ""
+	:  ... handle error
 <		"errmsg" also works, for backwards compatibility.
 
 					*v:warningmsg* *warningmsg-variable*
@@ -688,13 +688,14 @@ matchend( {expr}, {pat}[, {start})
 matchstr( {expr}, {pat}[, {start}])
 				String	match of {pat} in {expr}
 mode()				String  current editing mode
+nextnonblank( {lnum})		Number	line nr of non-blank line >= {lnum}
 nr2char( {expr})		String	single char with ASCII value {expr}
+prevnonblank( {lnum})		Number	line nr of non-blank line <= {lnum}
 rename({from}, {to})		Number  rename (move) file from {from} to {to}
 search( {pattern}[, {wrap})	Number  search for {pattern}
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
-skipblank( {lnum})		Number	line nr of non-blank <= {lnum}
 strftime( {format}[, {time}])	String	time in specified format
 stridx( {haystack}, {needle})	Number	first index of {needle} in {haystack}
 strlen( {expr})			Number	length of the String {expr}
@@ -1516,6 +1517,15 @@ mode()		Return a string that indicates the current mode:
 		This is useful in the 'statusline' option.  In most other
 		places it always returns "c".
 
+							*nextnonblank()*
+nextnonblank({lnum})
+		Return the line number of the first line at or below {lnum}
+		that is not blank.  Example: >
+			if getline(nextnonblank(1)) =~ "Java"
+<		When {lnum} is invalid or there is no non-blank line at or
+		below it, zero is returned.
+		See also |prevnonblank()|.
+
 							*nr2char()*
 nr2char({expr})
 		Return a string with a single character, which has the ASCII
@@ -1523,6 +1533,14 @@ nr2char({expr})
 			nr2char(64)		returns "@"
 			nr2char(32)		returns " "
 <
+							*prevnonblank()*
+prevnonblank({lnum})
+		Return the line number of the first line at or above {lnum}
+		that is not blank.  Example: >
+			let ind = indent(prevnonblank(v:lnum - 1))
+<		When {lnum} is invalid or there is no non-blank line at or
+		above it, zero is returned.
+
 rename({from}, {to})					*rename()*
 		Rename the file by the name {from} to the name {to}.  This
 		should also work to move files across file systems.  The
@@ -1587,14 +1605,6 @@ setwinvar({nr}, {varname}, {val})
 			:call setwinvar(1, "&list", 0)
 			:call setwinvar(2, "myvar", "foobar")
 <
-							*skipblank()*
-skipblank({lnum})
-		Return the line number of the first line at or above {lnum}
-		that is not blank.  Example: >
-			let ind = indent(skipblank(v:lnum - 1))
-<		When {lnum} is invalid or there is no non-blank line at or
-		above it, zero is returned.
-
 							*strftime()*
 strftime({format} [, {time}])
 		The result is a String, which is a formatted date and time, as

@@ -1,13 +1,13 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.74
-" Last Change:	2000 Nov 04
+" Version:	0.75
+" Last Change:	2000 Nov 12
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
 "  Some items based on the fortran syntax file by Mario Eusebio and
 "   Preben Guldberg, and some on suggestions by Andrej Panjkov,
-"   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile, 
+"   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile,
 "   and Walter Dieudonné.
 
 " let b:fortran_dialect = fortran_dialect if set correctly by user
@@ -46,7 +46,11 @@ if b:fortran_dialect == "unknown"
       let b:fortran_dialect = "f77"
     endif
   elseif b:extfname ==? "for" || b:extfname ==? "fpp"
-    let b:fortran_dialect = "f77"
+    if getline(1)." ".getline(2)." ".getline(3) =~ '\<fortran_dialect\s*=\s*f90\>'
+      let b:fortran_dialect = "f90"
+    else
+      let b:fortran_dialect = "f77"
+    endif
   else
 "Unrecognized extension
     echohl WarningMsg | echo "Unknown extension. Setting fortran_dialect=f90" | echohl None
@@ -55,28 +59,34 @@ if b:fortran_dialect == "unknown"
   unlet b:extfname
 endif
 
-"Choose between fixed and free source form
-" elf and F require free source form
-if b:fortran_dialect == "elf" || b:fortran_dialect == "F"
-  let b:fortran_fixed_source = 0
-" f77 requires fixed source form
-elseif b:fortran_dialect == "f77"
-  let b:fortran_fixed_source = 1
-" f90 and f95 allow both fixed and free source form
-" assume fixed source form unless signs of free source form
-" are detected in the first five columns of the first five lines
-else
-  let b:fortran_fixed_source = 1
-  let b:ln=1
-  while b:ln < 5
-    let b:test = strpart(getline(b:ln),0,5)
-    if b:test[0] !~ '[Cc*]' && b:test !~ '^\s*!' && b:test =~ '[^ 0-9\t]'
-      let b:fortran_fixed_source = 0
-      break
-    endif
-    let b:ln = b:ln + 1
-  endwhile
-  unlet b:ln b:test
+" Choose between fixed and free source form
+" if this hasn't been done yet
+if !exists("b:fortran_fixed_source")
+  if b:fortran_dialect == "elf" || b:fortran_dialect == "F"
+    " elf and F require free source form
+    let b:fortran_fixed_source = 0
+  elseif b:fortran_dialect == "f77"
+    " f77 requires fixed source form
+    let b:fortran_fixed_source = 1
+  else
+  " f90 and f95 allow both fixed and free source form
+  " assume fixed source form unless signs of free source form
+  " are detected in the first five columns of the first 25 lines
+    let b:fortran_fixed_source = 1
+    let b:ln=1
+    " Detection becomes more accurate and time-consuming if more lines
+    " are checked. Increase the limit below if you keep lots of comments at
+    " the very top of each file and you have a fast computer
+    while b:ln < 25
+      let b:test = strpart(getline(b:ln),0,5)
+      if b:test[0] !~ '[Cc*]' && b:test !~ '^\s*!' && b:test =~ '[^ 0-9\t]'
+	let b:fortran_fixed_source = 0
+	break
+      endif
+      let b:ln = b:ln + 1
+    endwhile
+    unlet b:ln b:test
+  endif
 endif
 
 syn clear
@@ -118,9 +128,12 @@ syn match fortranBoolean	"\.\(true\|false\)\."
 syn keyword fortranReadWrite	backspace close inquire open rewind endfile
 syn keyword fortranReadWrite	read write print
 
-"if you want to allow tabs, comment the next line and uncomment the line after 
-syn match fortranTab		"\t"
-"syn match fortranTab		"\t"  transparent
+"If tabs are allowed then the left margin checks do not work
+if exists("b:fortran_have_tabs")
+  syn match fortranTab		"\t"  transparent
+else
+  syn match fortranTab		"\t"
+endif
 
 syn keyword fortranI_O		unit file iostat access blank err fmt form
 syn keyword fortranI_O		recl status exist opened number named name
@@ -132,8 +145,8 @@ syn keyword fortran77Intrinsic	cos sin tan sinh cosh tanh exp log log10
 syn keyword fortran77Intrinsic	sign sqrt int cmplx nint min max conjg
 syn keyword fortran77Intrinsic	char ichar index
 syn match fortran77Intrinsic	"\<len\>\s*[(,]"me=s+3
-syn match fortran77Intrinsic	"\<real\>"
-syn match fortranType		"^\s*real\>"
+syn match fortran77Intrinsic	"\<real\s*("me=e-1
+syn match fortranType		"\<real\>\s\+[^(]"me=e-1
 
 if b:fortran_dialect == "f77"
   syn match fortranNumber	"\<\d\+\>"
@@ -142,8 +155,8 @@ if b:fortran_dialect == "f77"
 else
   syn match fortranNumber	"\<\d\+\(_\a\w*\)\=\>"
   syn keyword fortranObsolete	assign pause
-  syn match fortranIntrinsic	"\<logical\>"
-  syn match fortranType		"^\s*logical\>"
+  syn match fortranIntrinsic	"\<logical\s*("me=e-1
+  syn match fortranType		"\<logical\s\+[^(]"me=e-1
 
   syn keyword fortranType	type none
 
@@ -262,7 +275,7 @@ else
     syn keyword fortranType		inout
   endif
   syn match   fortranConditional	"end\s*if"
-  syn match   fortranI_O		"end\s*="
+  syn match   fortranI_O        	"end\s*="
   syn match   fortranConditional	"else\s*if"
 endif
 
@@ -310,7 +323,7 @@ if (b:fortran_fixed_source == 1)
 "Flag items beyond column 72
   syn match fortSerialNumber	        "^.\{73,}$"lc=72 excludenl
 
-"Flag left margin errors -- does not do anything if you allow tabs 
+"Flag left margin errors -- does not do anything if you allow tabs
   syn match fortranLabelError		"^[^\t]\{-,4}[^0-9 \t]" contains=fortranTab
   syn match fortranLabelError	"^\d\{5}\S"
   syn match fortranLabelError	"^ \d\{4}\S"
@@ -388,7 +401,7 @@ hi def link fortSerialNumber		Todo
 hi def link fortranTab			Error
 
 "For future versions
-"hi def link fortranExtended		Special
+"hi link fortranExtended		Special
 
 let b:current_syntax = "fortran"
 

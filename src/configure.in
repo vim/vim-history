@@ -1240,6 +1240,28 @@ AC_TYPE_UID_T
 AC_HEADER_TIME
 AC_CHECK_TYPE(ino_t, long)
 
+AC_MSG_CHECKING(for stack_t)
+if eval "test \"`echo '$''{'ac_cv_type_stack_t'+set}'`\" = set"; then
+  AC_MSG_RESULT([(cached) $ac_cv_type_stack_t])
+else
+  AC_EGREP_CPP(stack_t,
+  [
+#include "confdefs.h"
+#include <sys/types.h>
+#if STDC_HEADERS
+#include <stdlib.h>
+#include <stddef.h>
+#endif
+#include <signal.h>
+	  ], ac_cv_type_stack_t=yes, ac_cv_type_stack_t=no)
+	  AC_MSG_RESULT($ac_cv_type_stack_t)
+fi
+if test $ac_cv_type_stack_t = no; then
+  cat >> confdefs.h <<\EOF
+#define stack_t struct sigaltstack
+EOF
+fi
+
 olibs="$LIBS"
 AC_MSG_CHECKING(--with-tlib argument)
 AC_ARG_WITH(tlib, [  --with-tlib=library     terminal library to be used ],)

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0l.  Last change: 2000 Nov 05
+*todo.txt*      For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,34 +29,9 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Win32: Compiling the Python interface with MSVC doesn't work.
-
-"gk" doesn't work when there is a broken double-width multi-byte character.
-
-Enable "viminfo" by default?
-
-Message deleted now: (Campbell)
-    :set ch=2
-    :inorea Beta Beta<Esc>ma:echo "double Beta(double z,double w)"<CR>`aa
-
-Check how performance of loading the wordlist can be imrpoved (adding a lot of
-abbreviations).
-
-Select Visual block with three clicks (VIsual linewise), a single click
-doesn't remove the highlighting, only the first line.
-
-Selecting Visual block, end partly on a Tab, "sfred<Esc>" doesn't work
-properly (Zellner)
-
-For 'backupcopy': add possibility to switch to "copy" when file name matches
-"\<tmp\>" or "/crontab/".
-
 Dos 16 bit: "make test" doesn't work: stack overflow.
 
-Doing c%() with $ in 'cpo' doesn't display the ) because of a showmatch.
-(Sievert)
-
-Compile distributed executable with dynamic Perl/Python loading?
+Win32: Compiling the Python interface with MSVC doesn't work.
 
 
 Main items for 6.0:
@@ -67,7 +42,6 @@ A.  Folding
 	Need to store and retrieve fold state in the "view" of a file.
 B.  UTF-8 support
 	Mostly works.  Many small items still to be fixed.
-	Need to add automatic charcode detection when reading a file.
 C.  Multi-line regexp patterns
 	Works.
 D.  Vertical window split
@@ -340,6 +314,9 @@ E. Virtual edit:
 	line to start changing rather than inserting spaces up to the current
 	point and then changing.
 	And when the cursor is in a TAB somewhere, it also doesn't work right.
+
+-   With 've' set to "block", deleting a block ending in a tab deletes text
+    right of the tab (~/Mail/oldmail/zellner/in.00943 first problem)
 
 -   In Visual-block mode "x" doesn't delete part of a tab correctly.
     Deleting a whole tab also doesn't work properly (deletes to much).
@@ -1535,8 +1512,7 @@ Built-in script language:
 
 
 Code cleanup:
-8   expand_context and expand_pattern should not be global.  Pass them to
-    ExpandOne() and lower.
+8   Put command line history in a feature, disabled for "tiny" version.
 
 
 Performance:
@@ -1552,6 +1528,8 @@ Performance:
     this be improved?
 8   Set default for 'ttyscroll' to half a screen height?  Should speed up
     MS-DOS version. (Negri)
+7   Check how performance of loading the wordlist can be imrpoved (adding a
+    lot of abbreviations).
 7   DOS console: Add t_DL support, to make scrolling faster.
 7   Compile Ex commands to byte codes.  Store byte codes in a vim script file
     at the end, after "compiled:.  Make it look like a single comment line
@@ -2405,6 +2383,9 @@ Searching:
     for search string)?
 7   Should notice that "\(a\|ab\|abc\|abcd\)" doesn't work, automatically
     change it to "\(abcd\|abc\|ab\|a\)"? (Campbell)
+7   Add something to match "a" or "ab" or "abc" or "abcd".  Could be
+    "a\@[bcd\]".
+7   Add grouping like \(\) without making a back-reference.  Could be \@(\).
 7   Use T-search algorithm, to speed up searching for strings without special
     characters.  See C't article, August 1997.
 -   Add 'fuzzycase' option, so that case doesn't matter, and '-' and '_' are
@@ -2743,13 +2724,16 @@ Argument list:
     And/or: Add the possibility to use more than one argument list: ":arglist
     2".
     Would require commands to switch to another argument list too.
+    Simpler: just have one global arglist and one local to each window.
+7   Add a symbol like % or # that stands for the whole argument list.  Useful
+    for ":grep".
 6   Add command to add or remove files from the argument list.  Useful when
     doing commands for all files in the argument list.
     ":argadd <file> .." and ":argdel <file> .."?
 6   Add command to put all filenames from the tag files in the argument list.
     When given an argument, only use the files where that argument matches
     (like `grep -l ident`) and jump to the first match.
-6   Add command to form an args list from all the buffers.
+6   Add command to form an args list from all the buffers?
 7   Allow multiple arguments for ":edit", add them to the argument list.
 
 

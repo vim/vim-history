@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0l.  Last change: 2000 Oct 16
+*quickfix.txt*  For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -148,7 +148,7 @@ the mouse).
 
 In the quickfix window, each line is one error.  The line number is equal to
 the error number.  You can use ":.cc" to jump to the error under the cursor.
-Hitting the <Tab> key or double-clicking the mouse on a line has the same
+Hitting the <CR> key or double-clicking the mouse on a line has the same
 effect.  The file containing the error is opened in the window above the
 quickfix window.  If there already is a window for that file, it is used
 instead.  If the buffer in the used window has changed, and the error is in
@@ -526,6 +526,10 @@ lists.  They set one of the existing error lists as the current one.
 
 When adding a new error list, it becomes the current list.
 
+When ":colder" has been used and ":make" or ":grep" is used to add a new error
+list, one newer list is overwritten.  This is especially useful if you are
+browsing with ":grep" |grep|.  If you want to keep the more recent error
+lists, use ":cnewer 99" first.
 
 						*:make_makeprg*
 The ":make" command executes the command given with the 'makeprg' option.

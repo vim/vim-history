@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0l.  Last change: 2000 Nov 02
+*map.txt*       For Vim version 6.0m.  Last change: 2000 Nov 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -228,9 +228,13 @@ example, to make sure that function key 8 does nothing at all: >
 To define a mapping which uses the "mapleader" variable, the special string
 "<Leader>" can be used.  It is replaced with the string value of "mapleader".
 If "mapleader" is not set or empty, a backslash is used instead.  Example: >
-      :map <Leader>A  oanother line<Esc>
+	:map <Leader>A  oanother line<Esc>
 Works like: >
-      :map \A  oanother line<Esc>
+	:map \A  oanother line<Esc>
+But after: >
+	:let mapleader = ","
+It works like: >
+	:map ,A  oanother line<Esc>
 <
 					*<LocalLeader>* *maplocalleader*
 Just like <Leader>, except that it uses "maplocalleader" instead of
@@ -635,10 +639,9 @@ When using several Vim script files, there is the danger that mappings and
 functions used in one script use the same name as in other scripts.  To avoid
 this, they can be made local to the script.
 
-								*<SID>*
+								*<SID>* *<SNR>*
 The string "<SID>" can be used in a mapping.  This requires that the '<' flag
 is not present in 'cpoptions'.
-								*<SNR>*
 When executing the map command, Vim will replace "<SID>" with the special key
 code <SNR>, followed by a number that's unique for the script, and an
 underscore.  Example: >

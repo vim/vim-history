@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0l.  Last change: 2000 Nov 05
+*version6.txt*  For Vim version 6.0m.  Last change: 2000 Nov 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -17,7 +17,7 @@ See |version5.txt| for differences between Vim 4.0 and Vim 5.0.
 
 INCOMPATIBLE CHANGES			|incompatible-6|
 Cursor position in Visual mode		|curpos-visual|
-CR in substitute command		|substitute-CR|
+substitute command			|substitute-CR|
 'include' option local			|include-local|
 global option values used		|new-global-values|
 'fileencoding' obsolete			|fileencoding-obsolete|
@@ -70,8 +70,8 @@ same Visual area.  This can be used to set the start of the Visual area in one
 window and the end in another.
 
 
-CR in substitute command			*substitute-CR*
-------------------------
+substitute command				*substitute-CR*
+------------------
 
 The substitute string has been made Vi compatible.  Previously a CTRL-V had a
 special meaning and could be used to prevent a <CR> to insert a line break.
@@ -80,6 +80,9 @@ backslash is used to prevent a <CR> to cause a line break.  Since the number
 of backslashes is halved, it is still possible to insert a line break at the
 end of the line.  This now works just like Vi, but it's not compatible with
 Vim versions before 6.0.
+
+When a ":s" command doesn't make any substitutions, it doesn't set the '[ and
+'] marks.
 
 
 'include' option local				*include-local*
@@ -209,6 +212,14 @@ Thus it's now the hit-enter prompt instead of the hit-return prompt.
 
 The help items for syntax files are now tagged with "-syntax" instead of
 ".vim", because the indent and filetype plugins use "-indent" and "-plugin".
+
+The default for the 'viminfo' option is now '50,"50,h when 'compatible' isn't
+set.  Most people will want to use it, including beginners, but it required
+setting the option, which isn't that easy.
+
+After using ":colder" the newer error lists are overwritten.  This makes it
+possible to use ":grep" to browse in a tree-like way.  Must use ":cnewer 99"
+to get the old behavior.
 
 ==============================================================================
 NEW FEATURES
@@ -545,6 +556,12 @@ make a backup file.  Useful on Unix to speed up writing an ordinary file.
 Useful on other systems to preserve file attributes and when editing a file on
 a Unix filesystem.
 
+Added the 'autowriteall' option.  Works like 'autowrite' but for more
+commands.
+
+Added the 'backupskip' option: A pattern to skip making a backup file when it
+matches.  The default is "^/tmp", this makes "crontab -e" work.
+
 Added support for Access Control Lists (ACL) for FreeBSD and Win32.  The ACL
 is copied from the original file to the new file (or the backup if it's
 copied).
@@ -608,10 +625,11 @@ indent()	gets the indent of a line (Ron Aaron)
 libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
 libcallnr()	for Win32 and Unix
 mode()		Return a string that indicates the current mode.
+nextnonblank()	Skip blank lines forwards.
+prevnonblank()	Skip blank lines backwards.  Useful to for indent scripts.
 search()	Search for a pattern.
 setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
 setwinvar()	sets an option or variable local to a window (Ron Aaron)
-skipblank()	Skip blank lines.  Useful to for indent scripts.
 stridx()	Search for first occurrence of one string in another.
 strridx()	Search for last occurrence of one string in another.
 tolower()	Convert string to all-lower case.
@@ -825,6 +843,8 @@ Internal changes:
 - Support for editing Unicode and UTF-8 files.
 - Assigned a negative value to special keys, to avoid them being mixed up with
   Unicode characters.
+- Global variables expand_context and expand_pattern were not supposed to be
+  global.  Pass them to ExpandOne() and all functions called by it.
 
 Support for xterm with 88 or 256 colors.  The right color numbers will be used
 for the name used in a ":highlight" command. (Steve Wall)
@@ -867,6 +887,8 @@ highlighting for the group was already defined.
 All syntax files now use ":hi default ..." to allow the user to specify colors
 in his vimrc file.  Also, the "if did_xxx_syntax_inits" is not needed anymore.
 This greatly simplifies using non-default colors for a specific language.
+
+Also set "v:errmsg" when using ":silent! cmd".
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1025,5 +1047,10 @@ When the shell returns with an error when trying to expand wildcards, do
 include the pattern when the "EW_NOTFOUND" flag was set.
 When expanding wildcards with the shell fails, give a clear error message
 instead of just "1 returned".
+
+Selecting a Visual block, with the start partly on a Tab, deleting it leaves
+the cursor too far to the left.  Causes "s" to work in the wrong position.
+
+Pound sign in normal.c caused trouble on some compilers.  Use 0xA3 instead.
 
  vim:tw=78:

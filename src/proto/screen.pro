@@ -10,7 +10,7 @@ void update_debug_sign __ARGS((buf_t *buf, int lnum));
 void updateWindow __ARGS((win_t *wp));
 void status_redraw_all __ARGS((void));
 void redraw_statuslines __ARGS((void));
-void win_redr_status_matches __ARGS((int num_matches, char_u **matches, int match));
+void win_redr_status_matches __ARGS((expand_t *xp, int num_matches, char_u **matches, int match));
 void win_redr_status __ARGS((win_t *wp));
 int build_stl_str __ARGS((win_t *wp, char_u *out, char_u *fmt, int fillchar, int maxlen));
 void screen_putchar __ARGS((int c, int row, int col, int attr));

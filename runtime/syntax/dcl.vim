@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	DCL (Digital Command Language - vms)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	April 2, 1999
+" Last Change:	September 19, 2000
 
 " Removes any old syntax stuff hanging around
 syn clear
@@ -67,9 +67,10 @@ syn match   dclDirSep	"[[\].;]"
 syn region  dclString	start='"'	skip='""'	end='"'
 
 " $ stuff and comments
+syn cluster dclCommentGroup	contains=dclStart,dclTodo
 syn match   dclStart	"^\$"	skipwhite nextgroup=dclExe
 syn match   dclContinue	"-$"
-syn match   dclComment	"^\$!.*$"	contains=dclStart,dclTodo
+syn match   dclComment	"^\$!.*$"	contains=@dclCommentGroup
 syn match   dclExe	"\I\i*"	contained
 syn match   dclTodo	"DEBUG\|TODO"	contained
 

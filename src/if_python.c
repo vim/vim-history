@@ -50,6 +50,11 @@
 #define eval_input	258
 
 #if defined(DYNAMIC_PYTHON) || defined(PROTO)
+
+#ifndef DYNAMIC_PYTHON
+# define HINSTANCE int		/* for generating prototypes */
+#endif
+
 /*
  * Wrapper defines
  */
@@ -139,10 +144,6 @@ static PyObject*(*dll__PyObject_New)(PyTypeObject *, PyObject *);
 static PyObject*(*dll__PyObject_Init)(PyTypeObject *, PyObject *);
 #endif
 static PyObject* dll__Py_NoneStruct;
-
-#ifndef DYNAMIC_PYTHON
-# define HINSTANCE int		/* for generating prototypes */
-#endif
 
 static HINSTANCE hinstPython = 0; /* Instance of python.dll */
 
@@ -336,7 +337,7 @@ Python_Init(void)
 #ifdef DYNAMIC_PYTHON
 	if (!python_enabled())
 	{
-	    emsg("Sorry, this command is disable, because of missing python.");
+	    emsg("Sorry, this command is disabled, the Python library could not be loaded.");
 	    goto fail;
 	}
 #endif

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2000 Nov 04
+" Last Change:	2000-09-20
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -235,12 +235,19 @@ syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr(+  end=+)[imosx]*+ 
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr{+  end=+}[imosx]*+ contains=@perlInterpMatch
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr/+  end=+/[imosx]*+ contains=@perlInterpSlash
 
-" Constructs such as print <<EOF [...] EOF
+" Constructs such as print <<EOF [...] EOF, 'here' documents
 "
-syn region perlUntilEOF		start=+<<\s*EOF+hs=s+2 start=+<<\s*"EOF"+hs=s+2 end="^EOF$" contains=@perlInterpDQ
-syn region perlUntilEOF		start=+<<\s*""+hs=s+2 end="^$" contains=@perlInterpDQ,perlNotEmptyLine
-syn region perlUntilEOF		start=+<<\s*'EOF'+hs=s+2 end="^EOF$" contains=@perlInterpSQ
-syn region perlUntilEOF		start=+<<\s*''+hs=s+2 end="^$" contains=@perlInterpSQ,perlNotEmptyLine
+syn match perlStringStartEnd	"<<EOF"
+syn match perlStringStartEnd	"<<\s*\(["']\)\(EOF\)\=\1"
+syn match perlUntilEOFstart	"<<EOF.*" nextgroup=perlUntilEOFDQ skipnl transparent
+syn match perlUntilEOFstart	"<<\s*\"EOF\".*" nextgroup=perlUntilEOFDQ skipnl transparent
+syn match perlUntilEOFstart	"<<\s*'EOF'.*" nextgroup=perlUntilEOFSQ skipnl transparent
+syn match perlUntilEOFstart	"<<\s*\"\".*" nextgroup=perlUntilEmptyDQ skipnl transparent
+syn match perlUntilEOFstart	"<<\s*''.*" nextgroup=perlUntilEmptySQ skipnl transparent
+syn region perlUntilEOFDQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpDQ contained
+syn region perlUntilEOFSQ	matchgroup=perlStringStartEnd start=++ end="^EOF$" contains=@perlInterpSQ contained
+syn region perlUntilEmptySQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpDQ,perlNotEmptyLine contained
+syn region perlUntilEmptyDQ	matchgroup=perlStringStartEnd start=++ end="^$" contains=@perlInterpSQ,perlNotEmptyLine contained
 
 " Class declarations
 "
@@ -308,7 +315,11 @@ hi def link perlVarSimpleMemberName	perlString
 hi def link perlVarNotInMatches		perlIdentifier
 hi def link perlVarSlash		perlIdentifier
 hi def link perlQQ			perlString
-hi def link perlUntilEOF		perlString
+hi def link perlUntilEOFDQ		perlString
+hi def link perlUntilEOFSQ		perlString
+hi def link perlUntilEmptyDQ		perlString
+hi def link perlUntilEmptySQ		perlString
+hi def link perlUntilEOF		perlString		
 hi def link perlStringUnexpanded	perlString
 hi def link perlSubstitution		perlString
 hi def link perlTranslation		perlString
@@ -361,7 +372,7 @@ hi def link perlDATA			perlComment
 
 hi def link perlBrackets		Error
 
-  " Possible errors
+" Possible errors
 hi def link perlNotEmptyLine		Error
 hi def link perlElseIfError		Error
 

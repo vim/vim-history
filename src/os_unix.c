@@ -555,7 +555,7 @@ mch_stackcheck(p)
 #endif
 
 # ifdef HAVE_SIGALTSTACK
-static struct sigaltstack sigstk;	/* for sigaltstack() */
+static stack_t sigstk;			/* for sigaltstack() */
 # else
 static struct sigstack sigstk;		/* for sigstack() */
 # endif

@@ -401,7 +401,7 @@ typedef unsigned short u8char_t;
 #define BF_WRITE_MASK	(BF_NOTEDITED + BF_NEW + BF_READERR)
 
 /*
- * values for command line completion
+ * values for xp_context when doing command line completion
  */
 #define CONTEXT_UNKNOWN		(-2)
 #define EXPAND_UNSUCCESSFUL	(-1)

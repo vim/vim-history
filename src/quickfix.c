@@ -173,6 +173,14 @@ qf_init(efile, errorformat)
     }
 
     /*
+     * If the current entry is not the last entry, delete entries below the
+     * current entry.  This makes it possible to browse in a tree-like way
+     * with ":grep'.
+     */
+    while (qf_listcount > qf_curlist + 1)
+	qf_free(--qf_listcount);
+
+    /*
      * When the stack is full, remove to oldest entry
      * Otherwise, add a new entry.
      */

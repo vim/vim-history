@@ -2,7 +2,7 @@
 " Language:	Makefile
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/make.vim
-" Last Change:	2000 Nov 04
+" Last Change:	2000 Nov 12
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -12,7 +12,7 @@ syn match makePreCondit	"^\s*\(ifeq\>\|else\>\|endif\>\|define\>\|endef\>\|ifneq
 syn match makeInclude	"^\s*include"
 syn match makeStatement	"^\s*vpath"
 syn match makeOverride	"^\s*override"
-hi def link makeOverride makeStatement
+hi link makeOverride makeStatement
 
 " Microsoft Makefile specials
 syn case ignore
@@ -92,7 +92,7 @@ syn match   makeComment	"#$"
 " not make it a standard character, but instead it will
 " still act as the beginning of a variable
 " The escaped char is not highlightet currently
-syn match makeEscapedChar	"\\[^$]"
+syn match makeEscapedChar 	"\\[^$]"
 
 
 syn region  makeDString start=+"+  skip=+\\"+  end=+"+  contains=makeIdent

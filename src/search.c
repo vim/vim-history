@@ -1897,9 +1897,11 @@ showmatch()
 			       && vcol < curwin->w_leftcol + W_WIDTH(curwin)))
 	{
 	    mpos = *lpos;    /* save the pos, update_screen() may change it */
-	    update_screen(VALID);	/* show the new char first */
 	    save_cursor = curwin->w_cursor;
 	    save_so = p_so;
+	    ++curwin->w_virtcol;	/* for when 'cpo' contains '$': do
+					   redraw the ')' */
+	    update_screen(VALID);	/* show the new char first */
 
 #ifdef CURSOR_SHAPE
 	    save_state = State;

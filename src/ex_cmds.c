@@ -2120,7 +2120,7 @@ do_wqall(eap)
 #endif
 	    if (buf->b_ffname == NULL)
 	    {
-		EMSG2(_("No file name for buffer %d"), buf->b_fnum);
+		EMSGN(_("No file name for buffer %ld"), (long)buf->b_fnum);
 		++error;
 	    }
 	    else if (check_readonly(&eap->forceit, buf)
@@ -2389,7 +2389,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
     if (  ((!other_file && !(flags & ECMD_OLDBUF))
 	    || (curbuf->b_nwindows == 1
 		&& !(flags & (ECMD_HIDE | ECMD_ADDBUF))))
-	&& check_changed(curbuf, FALSE, !other_file,
+	&& check_changed(curbuf, p_awa, !other_file,
 					(flags & ECMD_FORCEIT), FALSE))
     {
 	if (fnum == 0 && other_file && ffname != NULL)
@@ -3056,7 +3056,7 @@ do_sub(eap)
     exarg_t	*eap;
 {
     linenr_t	lnum;
-    long	i;
+    long	i = 0;
     regmmatch_t regmatch;
     static int	do_all = FALSE;		/* do multiple substitutions per line */
     static int	do_ask = FALSE;		/* ask for confirmation */
@@ -3454,7 +3454,7 @@ do_sub(eap)
 			    break;
 			}
 			else if (i == 'n')
-			    goto skip;
+			    break;
 			else if (i == 'y')
 			    break;
 			else if (i == 'a')
@@ -3472,7 +3472,8 @@ do_sub(eap)
 #ifdef FEAT_MOUSE
 		    setmouse();
 #endif
-
+		    if (i == 'n')
+			goto skip;
 		    if (got_quit)
 			break;
 		}
@@ -3704,9 +3705,6 @@ skip:
 
 	line_breakcheck();
     }
-    curbuf->b_op_start.lnum = eap->line1;
-    curbuf->b_op_end.lnum = line2;
-    curbuf->b_op_start.col = curbuf->b_op_end.col = 0;
 
     if (first_line != 0)
     {
@@ -3721,6 +3719,11 @@ outofmem:
     vim_free(sub_firstline); /* may have to free allocated copy of the line */
     if (sub_nsubs)
     {
+	/* Set the '[ and '] marks. */
+	curbuf->b_op_start.lnum = eap->line1;
+	curbuf->b_op_end.lnum = line2;
+	curbuf->b_op_start.col = curbuf->b_op_end.col = 0;
+
 	if (!global_busy)
 	{
 	    beginline(BL_WHITE | BL_FIX);

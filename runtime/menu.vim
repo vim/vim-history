@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 05
+" Last Change:	2000 Nov 12
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -657,6 +657,7 @@ SynMenu EFGH.Eiffel:eiffel
 SynMenu EFGH.Elm\ Filter:elmfilt
 SynMenu EFGH.ERicsson\ LANGuage:erlang
 SynMenu EFGH.ESQL-C:esqlc
+SynMenu PQR.Product\ Spec\ File:psf
 SynMenu EFGH.Expect:expect
 SynMenu EFGH.Exports:exports
 SynMenu EFGH.Focus\ Executable:focexec
@@ -824,6 +825,7 @@ SynMenu TUV.Viminfo\ file:viminfo
 SynMenu TUV.Virata:virata
 SynMenu TUV.Visual\ Basic:vb
 SynMenu TUV.VRML:vrml
+SynMenu TUV.VSE\ JCL:vsejcl
 
 SynMenu WXYZ.WEB:web
 SynMenu WXYZ.Webmacro:webmacro

@@ -5394,15 +5394,16 @@ static enum
  * Handle command line completion for :syntax command.
  */
     void
-set_context_in_syntax_cmd(arg)
-    char_u *arg;
+set_context_in_syntax_cmd(xp, arg)
+    expand_t	*xp;
+    char_u	*arg;
 {
     char_u	*p;
 
     /* Default: expand subcommands */
-    expand_context = EXPAND_SYNTAX;
+    xp->xp_context = EXPAND_SYNTAX;
     expand_what = EXP_SUBCMD;
-    expand_pattern = arg;
+    xp->xp_pattern = arg;
     include_link = FALSE;
     include_default = FALSE;
 
@@ -5412,18 +5413,18 @@ set_context_in_syntax_cmd(arg)
 	p = skiptowhite(arg);
 	if (*p != NUL)		    /* past first word */
 	{
-	    expand_pattern = skipwhite(p);
-	    if (*skiptowhite(expand_pattern) != NUL)
-		expand_context = EXPAND_NOTHING;
+	    xp->xp_pattern = skipwhite(p);
+	    if (*skiptowhite(xp->xp_pattern) != NUL)
+		xp->xp_context = EXPAND_NOTHING;
 	    else if (STRNICMP(arg, "case", p - arg) == 0)
 		expand_what = EXP_CASE;
 	    else if (  STRNICMP(arg, "keyword", p - arg) == 0
 		    || STRNICMP(arg, "region", p - arg) == 0
 		    || STRNICMP(arg, "match", p - arg) == 0
 		    || STRNICMP(arg, "list", p - arg) == 0)
-		expand_context = EXPAND_HIGHLIGHT;
+		xp->xp_context = EXPAND_HIGHLIGHT;
 	    else
-		expand_context = EXPAND_NOTHING;
+		xp->xp_context = EXPAND_NOTHING;
 	}
     }
 }
@@ -5434,9 +5435,11 @@ static char *(case_args[]) = {"match", "ignore", NULL};
  * Function given to ExpandGeneric() to obtain the list syntax names for
  * expansion.
  */
+/*ARGSUSED*/
     char_u *
-get_syntax_name(idx)
-    int	    idx;
+get_syntax_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     if (expand_what == EXP_SUBCMD)
 	return (char_u *)subcommands[idx].name;
@@ -6307,7 +6310,7 @@ do_highlight(line, forceit, init)
 }
 
 /*
- * Return if highlight group "idx" has any settings.
+ * Return TRUE if highlight group "idx" has any settings.
  * When "check_link" is TRUE also check for an existing link.
  */
     static int
@@ -7562,14 +7565,15 @@ static void highlight_list_two __ARGS((int cnt, int attr));
  * Handle command line completion for :highlight command.
  */
     void
-set_context_in_highlight_cmd(arg)
-    char_u *arg;
+set_context_in_highlight_cmd(xp, arg)
+    expand_t	*xp;
+    char_u	*arg;
 {
     char_u	*p;
 
     /* Default: expand group names */
-    expand_context = EXPAND_HIGHLIGHT;
-    expand_pattern = arg;
+    xp->xp_context = EXPAND_HIGHLIGHT;
+    xp->xp_pattern = arg;
     include_link = TRUE;
     include_default = TRUE;
 
@@ -7583,7 +7587,7 @@ set_context_in_highlight_cmd(arg)
 	    if (STRNCMP("default", arg, p - arg) == 0)
 	    {
 		arg = skipwhite(p);
-		expand_pattern = arg;
+		xp->xp_pattern = arg;
 		p = skiptowhite(arg);
 	    }
 	    if (*p != NUL)			/* past group name */
@@ -7594,16 +7598,16 @@ set_context_in_highlight_cmd(arg)
 		if (STRNCMP("link", arg, p - arg) == 0
 			|| STRNCMP("clear", arg, p - arg) == 0)
 		{
-		    expand_pattern = skipwhite(p);
-		    p = skiptowhite(expand_pattern);
+		    xp->xp_pattern = skipwhite(p);
+		    p = skiptowhite(xp->xp_pattern);
 		    if (*p != NUL)		/* past first group name */
 		    {
-			expand_pattern = skipwhite(p);
-			p = skiptowhite(expand_pattern);
+			xp->xp_pattern = skipwhite(p);
+			p = skiptowhite(xp->xp_pattern);
 		    }
 		}
 		if (*p != NUL)			/* past group name(s) */
-		    expand_context = EXPAND_NOTHING;
+		    xp->xp_context = EXPAND_NOTHING;
 	    }
 	}
     }
@@ -7642,9 +7646,11 @@ highlight_list_two(cnt, attr)
  * Function given to ExpandGeneric() to obtain the list of group names.
  * Also used for synIDattr() function.
  */
+/*ARGSUSED*/
     char_u *
-get_highlight_name(idx)
-    int	    idx;
+get_highlight_name(xp, idx)
+    expand_t	*xp;
+    int		idx;
 {
     if (idx == highlight_ga.ga_len
 #ifdef FEAT_CMDL_COMPL

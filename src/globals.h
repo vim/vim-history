@@ -104,13 +104,6 @@ EXTERN int	screen_cleared INIT(= FALSE);	/* screen has been cleared */
  */
 EXTERN colnr_t	dollar_vcol INIT(= 0);
 
-/*
- * used for completion on the command line
- */
-EXTERN int	expand_context INIT(= CONTEXT_UNKNOWN);
-EXTERN char_u	*expand_pattern INIT(= NULL);
-EXTERN int	expand_set_path INIT(= FALSE);	/* ":set path=/dir/<Tab>" */
-
 #ifdef FEAT_INS_EXPAND
 /*
  * used for Insert mode completion

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 05
+" Last change:	2000 Nov 12
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -257,6 +257,9 @@ au BufNewFile,BufReadPost filter-rules		setf elmfilt
 
 " ESQL-C
 au BufNewFile,BufRead *.ec,*.EC			setf esqlc
+
+" Essbase script
+au BufNewFile,BufRead *.csc			setf csc
 
 " Expect
 au BufNewFile,BufRead *.exp			setf expect
@@ -561,6 +564,13 @@ au BufNewFile,BufRead *.g			setf pccts
 " Procmail
 au BufNewFile,BufRead .procmail,.procmailrc	setf procmail
 
+" Software Distributor Product Specification File (POSIX 1387.2-1995)
+au BufNewFile,BufRead *.psf			setf psf
+au BufNewFile,BufRead INDEX,INFO
+	\ if getline(1) =~ '^\s*\(distribution\|installed_software\|root\|bundle\|product\)\s*$' |
+	\   setf psf |
+	\ endif
+
 " Prolog
 au BufNewFile,BufRead *.pdb			setf prolog
 
@@ -621,6 +631,9 @@ au BufNewFile,BufRead sendmail.cf		setf sm
 au BufNewFile,BufRead *.sgm,*.sgml
 	\ if getline(1).getline(2).getline(3).getline(4).getline(5) =~? 'linuxdoc' |
 	\   setf sgmllnx |
+	\ elseif getline(1) =~ '<!DOCTYPE.*DocBook' || getline(2) =~ '<!DOCTYPE.*DocBook' |
+	\   let b:docbk_type="sgml" |
+	\   setf docbk |
 	\ else |
 	\   setf sgml |
 	\ endif
@@ -813,9 +826,15 @@ au BufNewFile,BufRead *.msc,*.msf		setf xmath
 au BufNewFile,BufRead *.ms
 	\ if !<SID>FTnroff() | setf xmath | endif
 
-" vim: ts=8
 " XML
-au BufNewFile,BufRead *.xml,*.xsl		setf xml
+au BufNewFile,BufRead *.xsl			setf xml
+au BufNewFile,BufRead *.xml
+	\ if getline(1) =~ '<!DOCTYPE.*DocBook' || getline(2) =~ '<!DOCTYPE.*DocBook' |
+	\   let b:docbk_type="xml" |
+	\   setf docbk |
+	\ else |
+	\   setf xml |
+	\ endif
 
 " Yacc
 au BufNewFile,BufRead *.y			setf yacc

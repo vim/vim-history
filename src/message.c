@@ -344,6 +344,11 @@ emsg(s)
     if (emsg_off)		/* no error messages at the moment */
 	return TRUE;
 
+#ifdef FEAT_EVAL
+    /* set "v:errmsg", also when using ":silent! cmd" */
+    set_vim_var_string(VV_ERRMSG, s, -1);
+#endif
+
     /*
      * When using ":silent! cmd" ignore error messsages.
      * But do write it to the redirection file.
@@ -365,10 +370,6 @@ emsg(s)
     else
 	flush_buffers(FALSE);	/* flush internal buffers */
     did_emsg = TRUE;		/* flag for DoOneCmd() */
-
-#ifdef FEAT_EVAL
-    set_vim_var_string(VV_ERRMSG, s, -1);
-#endif
 
 #ifdef VIMBUDDY
     if (sourcing_name == NULL)
@@ -456,8 +457,8 @@ emsg2(s, a1)
 
     int
 emsgn(s, n)
-    char_u *s;
-    long    n;
+    char_u	*s;
+    long	n;
 {
     if (emsg_off)		/* no error messages at the moment */
 	return TRUE;
