@@ -2773,6 +2773,8 @@ encname2codepage(name)
 	cp = atoi(p + 2);
     else if ((idx = enc_canon_search(p)) >= 0)
 	cp = enc_canon_table[idx].codepage;
+    else
+	return 0;
     if (IsValidCodePage(cp))
 	return cp;
     return 0;
