@@ -176,7 +176,7 @@ typedef struct syn_pattern
 /* These don't fit in a short, thus can't be used for syntax items, only for
  * si_flags and bs_flags. */
 #define HL_MATCHCONT	0x8000	/* match continued from previous line */
-#define HL_TRANS_CONT	0x10000 /* transparent item without contains arg */
+#define HL_TRANS_CONT	0x10000L /* transparent item without contains arg */
 
 #define SYN_ITEMS(buf)	((synpat_T *)((buf)->b_syn_patterns.ga_data))
 

@@ -2595,7 +2595,7 @@ mch_set_mouse_shape(int shape)
 # ifdef WIN32
 	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
 # else
-	SetClassWord(s_textArea, GCW_HCURSOR, LoadCursor(NULL, idc));
+	SetClassWord(s_textArea, GCW_HCURSOR, (WORD)LoadCursor(NULL, idc));
 # endif
 #endif
 	if (!p_mh)
