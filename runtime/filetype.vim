@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Feb 24
+" Last change:	2002 Feb 26
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -778,7 +778,7 @@ fun! FTCheck_inc()
   if exists("g:filetype_inc")
     exe "setf " . g:filetype_inc
   else
-    lines = getline(1).getline(2).getline(3)
+    let lines = getline(1).getline(2).getline(3)
     if lines =~? "perlscript"
       setf aspperl
     elseif lines =~ "<%"
