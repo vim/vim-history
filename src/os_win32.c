@@ -4035,29 +4035,88 @@ default_shell()
     return psz;
 }
 
+#ifdef HAVE_ACL
+/*
+ * Code to support ACLs on Windows based on hints and tips from Corinna
+ * Vinschen.
+ */
+
+/*
+ * do_acl_check() provides an initial check to see if the file system the file
+ * lives on supports ACLs at all.  This is primarily for handlng network drives
+ * - one of Win9x/ME, NT/2K/XP, or Samba.
+ * If the network drive is invalid Check #1 fails.
+ * Win9X/ME and some Samba do not support ACLs at all and fail Check #2.
+ * Samba does not provide full ACL support - we detect them as case preserving
+ * but no supporting unicode file names, Check #3.
+ * NT/2K/XP support ACLs.
+ * Remark: NT 4 SP 4 (and other versions) has a broken
+ * GetEffectiveRightsFromAcl() (Vince Negri)
+ */
+    static int
+do_acl_check(char* n)
+{
+    DWORD   max_comp_len;
+    DWORD   file_sys_flags;
+    static char* file_root = NULL;
+    static int file_root_len = 0;
+    int     new_file_root_len;
+    char*   file_root_end;
+
+    /* Extract file root path */
+    file_root_end = vim_strrchr(n, '\\');
+    new_file_root_len = file_root_end - n + 1;
+    if (new_file_root_len > file_root_len)
+    {
+        vim_free(file_root);
+        file_root = (char*)alloc(new_file_root_len + 1);
+        file_root_len = new_file_root_len;
+    }
+    STRNCPY(file_root, n, new_file_root_len);
+    file_root[new_file_root_len] = '\0';
+
+    /* Check #1 - can we get volume information in the first place? */
+    if (!GetVolumeInformation(file_root, NULL, 0, NULL, &max_comp_len,
+                                                      &file_sys_flags, NULL, 0))
+        return FALSE;
+
+    /* Check #2 - does the file system support ACLs at all? */
+    if (!(file_sys_flags&FS_PERSISTENT_ACLS))
+        return FALSE;
+
+    /* Check #3 - does it look like a Samba file system?  Current guess is that
+     * they are the only ones that are case sensitive/preserving but do not
+     * support Unicode file names. */
+    if ((file_sys_flags&
+             (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE|FS_UNICODE_STORED_ON_DISK))
+                                    == (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE))
+        return FALSE;
+
+    /* The file system supports ACLs - do the check */
+    return TRUE;
+}
+
 /* NB: Not SACL_SECURITY_INFORMATION since we don't have enough privilege */
 #define MCH_ACCESS_SEC  (OWNER_SECURITY_INFORMATION \
 			 |GROUP_SECURITY_INFORMATION \
 			 |DACL_SECURITY_INFORMATION)
 
 /*
- * mch_access() extends access() to support ACLs under Windows NT/2K/XP(?)
+ * acl_check() implements ACL support under Windows NT/2K/XP(?)
  * Does not support ACLs on NT 3.1/5 since the key function
  * GetEffectiveRightsFromAcl() does not exist and implementing its
  * functionality is a pain.
- * Written by Mike Williams.
- * Returns 0 if file "n" has access rights according to "p", -1 otherwise.
+ * Returns TRUE if file "n" has access rights according to "p" FALSE otherwise.
  */
-    int
-mch_access(char *n, int p)
+    static int
+acl_check(char* n, int p)
 {
+    DWORD                       error;
     BOOL			aclpresent;
     BOOL			aclDefault;
     HANDLE			hToken;
     DWORD			bytes;
-#ifdef HAVE_ACL
     TRUSTEE			t;
-#endif
     ACCESS_MASK			am;
     ACCESS_MASK			cm;
     PACL			pacl;
@@ -4066,49 +4125,48 @@ mch_access(char *n, int p)
     static DWORD		tu_bytes = 0;
     static TOKEN_USER*		ptu = NULL;
 
-#ifdef HAVE_ACL
-    /* Only check ACLs if on WinNT 4.0 or later - GetEffectiveRightsFromAcl()
-     * does not exist on NT before 4.0 */
-    if (!mch_windows95()
-	    && advapi_lib != NULL
+    if (advapi_lib != NULL
 	    && pGetEffectiveRightsFromAcl != NULL)
     {
 	/* Get file ACL info */
 	if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
 	{
-	    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return -1;
+            error = GetLastError();
+            if (error == ERROR_NOT_SUPPORTED)
+                return TRUE; /* Should be filtered by do_acl_check() but ... */
+	    if (error != ERROR_INSUFFICIENT_BUFFER)
+		return FALSE;
 	    vim_free(psd);
 	    psd = (SECURITY_DESCRIPTOR *)alloc(bytes);
 	    if (psd == NULL)
 	    {
 		sd_bytes = 0;
-		return -1;
+		return FALSE;
 	    }
 	    sd_bytes = bytes;
 	    if (!pGetFileSecurity(n, MCH_ACCESS_SEC, psd, sd_bytes, &bytes))
-		return -1;
+		return FALSE;
 	}
 	if (!pGetSecurityDescriptorDacl(psd, &aclpresent, &pacl, &aclDefault))
-	    return -1;
+	    return FALSE;
 
 	/* Get user security info */
 	if (!pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
-	    return -1;
+	    return FALSE;
 	if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
 	{
 	    if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return -1;
+		return FALSE;
 	    vim_free(ptu);
 	    ptu = (TOKEN_USER *)alloc(bytes);
 	    if (ptu == NULL)
 	    {
 		tu_bytes = 0;
-		return -1;
+		return FALSE;
 	    }
 	    tu_bytes = bytes;
 	    if (!pGetTokenInformation(hToken, TokenUser, ptu, tu_bytes, &bytes))
-		return -1;
+		return FALSE;
 	}
 
 	/* Lets see what user can do based on ACL */
@@ -4118,7 +4176,7 @@ mch_access(char *n, int p)
 	t.TrusteeType = TRUSTEE_IS_USER;
 	t.ptstrName = ptu->User.Sid;
 	if (pGetEffectiveRightsFromAcl(pacl, &t, &am) != ERROR_SUCCESS)
-	    return -1;
+	    return FALSE;
 
 	cm = 0;
 	cm |= (p & W_OK) ? FILE_WRITE_DATA : 0;
@@ -4126,8 +4184,24 @@ mch_access(char *n, int p)
 
 	/* Check access mask against modes requested */
 	if ((am & cm) != cm)
-	    return -1;
+	    return FALSE;
     }
+    return TRUE;
+}
+#endif /* HAVE_ACL */
+
+/*
+ * mch_access() extends access() to support ACLs under Windows NT/2K/XP(?)
+ * Returns 0 if file "n" has access rights according to "p", -1 otherwise.
+ */
+    int
+mch_access(char *n, int p)
+{
+#ifdef HAVE_ACL
+    /* Only do ACL check if not on Win 9x/ME - GetEffectiveRightsFromAcl()
+     * does not exist on NT before 4.0 */
+    if (!mch_windows95() && do_acl_check(n) && !acl_check(n, p))
+        return -1;
 #endif /* HAVE_ACL */
     return access(n, p);
 }
