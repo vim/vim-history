@@ -44,6 +44,9 @@
  */
 #include "gui_w48.c"
 
+#ifdef FEAT_XPM_W32
+# include "xpm_w32.h"
+#endif
 
 #ifdef __MINGW32__
 /*
@@ -170,6 +173,20 @@
 #endif
 
 
+#ifdef FEAT_BEVAL
+# define ID_BEVAL_TOOLTIP   200
+# define BEVAL_TEXT_LEN	    MAXPATHL
+
+static void make_tooltip __ARGS((BalloonEval *beval, char *text, POINT pt));
+static void delete_tooltip __ARGS((BalloonEval *beval));
+static VOID CALLBACK BevalTimerProc __ARGS((HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime));
+void TrackUserActivity __ARGS((UINT uMsg));
+
+static BalloonEval  *cur_beval = NULL;
+static UINT	    BevalTimerId = 0;
+static DWORD	    LastActivity = 0;
+#endif
+
 /* Local variables: */
 
 #ifdef FEAT_MENU
@@ -181,7 +198,6 @@ static UINT	s_menu_id = 100;
  */
 # define USE_SYSMENU_FONT
 #endif
-
 
 #define VIM_NAME	"vim"
 #define VIM_CLASS	"Vim"
@@ -287,7 +303,9 @@ typedef BOOL (WINAPI *TGetMonitorInfo)(_HMONITOR, _MONITORINFO *);
 static TMonitorFromWindow   pMonitorFromWindow = NULL;
 static TGetMonitorInfo	    pGetMonitorInfo = NULL;
 static HANDLE		    user32_lib = NULL;
-
+#ifdef FEAT_NETBEANS_INTG
+int WSInitialized = FALSE; /* WinSock is initialized */
+#endif
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
  * less fancy GUI APIs.
@@ -512,6 +530,28 @@ _OnWindowPosChanging(
 }
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    static void
+_OnWindowPosChanged(
+    HWND hwnd,
+    const LPWINDOWPOS lpwpos)
+{
+    static int x = 0, y = 0, cx = 0, cy = 0;
+
+    if (WSInitialized && (lpwpos->x != x || lpwpos->y != y
+				     || lpwpos->cx != cx || lpwpos->cy != cy))
+    {
+	x = lpwpos->x;
+	y = lpwpos->y;
+	cx = lpwpos->cx;
+	cy = lpwpos->cy;
+        netbeans_frame_moved(x, y);
+    }
+    /* Allow to send WM_SIZE and WM_MOVE */
+    FORWARD_WM_WINDOWPOSCHANGED(hwnd, lpwpos, DefWindowProc);
+}
+#endif
+
     static int
 _DuringSizing(
     HWND hwnd,
@@ -588,6 +628,9 @@ _WndProc(
 	HANDLE_MSG(hwnd, WM_VSCROLL,	_OnScroll);
 	// HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGING,	_OnWindowPosChanging);
 	HANDLE_MSG(hwnd, WM_ACTIVATEAPP, _OnActivateApp);
+#ifdef FEAT_NETBEANS_INTG
+	HANDLE_MSG(hwnd, WM_WINDOWPOSCHANGED, _OnWindowPosChanged);
+#endif
 
     case WM_QUERYENDSESSION:	/* System wants to go down. */
 	gui_shell_closed();	/* Will exit when no changed buffers. */
@@ -838,6 +881,34 @@ gui_mch_prepare(int *argc, char **argv)
     }
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    {
+	/* stolen from gui_x11.x */
+	int arg;
+
+	for (arg = 1; arg < *argc; arg++)
+	    if (strncmp("-nb", argv[arg], 3) == 0)
+	    {
+		usingNetbeans++;
+		netbeansArg = argv[arg];
+		mch_memmove(&argv[arg], &argv[arg + 1],
+					    (--*argc - arg) * sizeof(char *));
+		break;	/* enough? */
+	    }
+
+	if (usingNetbeans)
+	{
+	    WSADATA wsaData;
+	    int wsaerr;
+
+	    /* Init WinSock */
+	    wsaerr = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	    if (wsaerr == 0)
+		WSInitialized = TRUE;
+	}
+    }
+#endif
+
     /* get the OS version info */
     os_version.dwOSVersionInfoSize = sizeof(os_version);
     GetVersionEx(&os_version); /* this call works on Win32s, Win95 and WinNT */
@@ -1033,6 +1104,10 @@ gui_mch_init(void)
     s_findrep_struct.lpstrReplaceWith[0] = NUL;
     s_findrep_struct.wFindWhatLen = MSWIN_FR_BUFSIZE;
     s_findrep_struct.wReplaceWithLen = MSWIN_FR_BUFSIZE;
+#endif
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	netbeans_w32_connect();
 #endif
 
     return OK;
@@ -3359,10 +3434,18 @@ dyn_imm_unload(void)
 #endif
 
 #if defined(FEAT_SIGN_ICONS) || defined(PROTO)
+
+# ifdef FEAT_XPM_W32
+#  define IMAGE_XPM   100
+# endif
+
 typedef struct _signicon_t
 {
     HANDLE	hImage;
     UINT	uType;
+#ifdef FEAT_XPM_W32
+    HANDLE	hShape;	/* Mask bitmap handle */
+#endif
 } signicon_t;
 
     void
@@ -3399,6 +3482,25 @@ gui_mch_drawsign(row, col, typenr)
 	case IMAGE_CURSOR:
 	    DrawIconEx(s_hdc, x, y, (HICON)sign->hImage, w, h, 0, NULL, DI_NORMAL);
 	    break;
+#ifdef FEAT_XPM_W32
+	case IMAGE_XPM:
+	    {
+		HDC hdcMem;
+		HBITMAP hbmpOld;
+
+		hdcMem = CreateCompatibleDC(s_hdc);
+		hbmpOld = (HBITMAP)SelectObject(hdcMem, sign->hShape);
+		/* Make hole */
+		BitBlt(s_hdc, x, y, w, h, hdcMem, 0, 0, SRCAND);
+
+		SelectObject(hdcMem, sign->hImage);
+		/* Paint sign */
+		BitBlt(s_hdc, x, y, w, h, hdcMem, 0, 0, SRCPAINT);
+		SelectObject(hdcMem, hbmpOld);
+		DeleteDC(hdcMem);
+	    }
+	    break;
+#endif
     }
 }
 
@@ -3417,6 +3519,12 @@ close_signicon_image(signicon_t *sign)
 	    case IMAGE_ICON:
 		DestroyIcon((HICON)sign->hImage);
 		break;
+#ifdef FEAT_XPM_W32
+	    case IMAGE_XPM:
+		DeleteObject((HBITMAP)sign->hImage);
+		DeleteObject((HBITMAP)sign->hShape);
+		break;
+#endif
 	}
 }
 
@@ -3452,6 +3560,13 @@ gui_mch_register_sign(signfile)
 	    sign.hImage = (HANDLE)LoadImage(NULL, signfile, sign.uType,
 		    gui.char_width * 2, gui.char_height,
 		    LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+#ifdef FEAT_XPM_W32
+	if (!STRICMP(ext, ".xpm"))
+	{
+	    sign.uType = IMAGE_XPM;
+	    LoadXpmImage(signfile, (HBITMAP *)&sign.hImage, (HBITMAP *)&sign.hShape);
+	}
+#endif
     }
 
     psign = NULL;
@@ -3479,4 +3594,271 @@ gui_mch_destroy_sign(sign)
 	vim_free(sign);
     }
 }
+
+#if defined(FEAT_BEVAL) || defined(PROTO)
+
+/* BALLOON-EVAL IMPLEMENTATION FOR WINDOWS.
+ *  Added by Sergey Khorev
+ *
+ * The only reused thing is gui_beval.h and gui_mch_get_beval_info()
+ * from gui_beval.c (note it uses x and y of the BalloonEval struct
+ * to get current mouse position).
+ *
+ * Trying to use as more Windows services as possible, and as less
+ * IE version as possible :)).
+ *
+ * 1) Don't create ToolTip in gui_mch_create_beval_area, only initialize
+ * BalloonEval struct.
+ * 2) Enable/Disable simply create/kill BalloonEval Timer
+ * 3) When there was enough inactivity, timer procedure posts
+ * async request to debugger
+ * 4) gui_mch_post_balloon (invoked from netbeans.c) creates tooltip control
+ * and performs some actions to show it ASAP
+ * 5) WM_NOTOFY:TTN_POP destroys created tooltip
+ */
+
+    static void
+make_tooltip(beval, text, pt)
+    BalloonEval *beval;
+    char *text;
+    POINT pt;
+{
+    TOOLINFO	ti;
+
+    beval->balloon = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS,
+	    NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+	    beval->target, NULL, s_hinst, NULL);
+
+    SetWindowPos(beval->balloon, HWND_TOPMOST, 0, 0, 0, 0,
+	    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+    ti.cbSize = sizeof(TOOLINFO);
+    ti.uFlags = TTF_SUBCLASS;
+    ti.hwnd = beval->target;
+    ti.hinst = 0; /* Don't use string resources */
+    ti.uId = ID_BEVAL_TOOLTIP;
+    ti.lpszText = text;
+
+    /* Limit ballooneval bounding rect to CursorPos neighbourhood */
+    ti.rect.left = pt.x - 3;
+    ti.rect.top = pt.y - 3;
+    ti.rect.right = pt.x + 3;
+    ti.rect.bottom = pt.y + 3;
+
+    SendMessage(beval->balloon, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    /* Make tooltip appear sooner */
+    SendMessage(beval->balloon, TTM_SETDELAYTIME, TTDT_INITIAL, 10);
+    /*
+     * HACK: force tooltip to appear, because it'll not appear until
+     * first mouse move. D*mn M$
+     */
+    mouse_event(MOUSEEVENTF_MOVE, 1, 1, 0, 0);
+    mouse_event(MOUSEEVENTF_MOVE, -1, -1, 0, 0);
+}
+
+    static void
+delete_tooltip(beval)
+    BalloonEval	*beval;
+{
+    DestroyWindow(beval->balloon);
+}
+
+    static VOID CALLBACK
+BevalTimerProc(hwnd, uMsg, idEvent, dwTime)
+    HWND    hwnd;
+    UINT    uMsg;
+    UINT    idEvent;
+    DWORD   dwTime;
+{
+    POINT	pt;
+    RECT	rect;
+
+    if (cur_beval == NULL || cur_beval->showState == ShS_SHOWING || !p_beval)
+	return;
+
+    GetCursorPos(&pt);
+    if (WindowFromPoint(pt) != s_textArea)
+	return;
+
+    ScreenToClient(s_textArea, &pt);
+    GetClientRect(s_textArea, &rect);
+    if (!PtInRect(&rect, pt))
+	return;
+
+    if (LastActivity > 0
+	    && (dwTime - LastActivity) >= (DWORD)p_bdlay
+	    && (cur_beval->showState != ShS_PENDING
+		|| abs(cur_beval->x - pt.x) > 3
+		|| abs(cur_beval->y - pt.y) > 3))
+    {
+	/* Pointer resting in one place long enough, it's time to show
+	 * the tooltip. */
+	cur_beval->showState = ShS_PENDING;
+	cur_beval->x = pt.x;
+	cur_beval->y = pt.y;
+
+	TRACE0("BevalTimerProc: sending request");
+
+	if (cur_beval->msgCB != NULL)
+	    (*cur_beval->msgCB)(cur_beval, 0);
+    }
+}
+
+    void
+gui_mch_disable_beval_area(beval)
+    BalloonEval	*beval;
+{
+    TRACE0("gui_mch_disable_beval_area {{{");
+    KillTimer(s_textArea, BevalTimerId);
+    TRACE0("gui_mch_disable_beval_area }}}");
+}
+
+    void
+gui_mch_enable_beval_area(beval)
+    BalloonEval	*beval;
+{
+    TRACE0("gui_mch_enable_beval_area |||");
+    if (beval == NULL)
+	return;
+    TRACE0("gui_mch_enable_beval_area {{{");
+    BevalTimerId = SetTimer(s_textArea, 0, p_bdlay / 2, (TIMERPROC)BevalTimerProc);
+    TRACE0("gui_mch_enable_beval_area }}}");
+}
+
+    void
+gui_mch_post_balloon(beval, mesg)
+    BalloonEval	*beval;
+    char_u	*mesg;
+{
+    POINT   pt;
+    TRACE0("gui_mch_post_balloon {{{");
+    if (beval->showState == ShS_SHOWING)
+	return;
+    GetCursorPos(&pt);
+    ScreenToClient(s_textArea, &pt);
+
+    if (abs(beval->x - pt.x) < 3 && abs(beval->y - pt.y) < 3)
+	/* cursor is still here */
+    {
+	gui_mch_disable_beval_area(cur_beval);
+	beval->showState = ShS_SHOWING;
+	make_tooltip(beval, mesg, pt);
+    }
+    TRACE0("gui_mch_post_balloon }}}");
+}
+
+    BalloonEval *
+gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
+    void	*target;	/* ignored, always use s_textArea */
+    char_u	*mesg;
+    void	(*mesgCB)__ARGS((BalloonEval *, int));
+    void	*clientData;
+{
+    /* partially stolen from gui_beval.c */
+    BalloonEval	*beval;
+
+    if (mesg != NULL && mesgCB != NULL)
+    {
+	EMSG(_("E232: Cannot create BalloonEval with both message and callback"));
+	return NULL;
+    }
+
+    beval = (BalloonEval *)alloc(sizeof(BalloonEval));
+    if (beval != NULL)
+    {
+	beval->target = s_textArea;
+	beval->balloon = NULL;
+
+	beval->showState = ShS_NEUTRAL;
+	beval->x = 0;
+	beval->y = 0;
+	beval->msg = mesg;
+	beval->msgCB = mesgCB;
+	beval->clientData = clientData;
+
+	InitCommonControls();
+
+	cur_beval = beval;
+
+	if (p_beval)
+	    gui_mch_enable_beval_area(beval);
+
+    }
+    return beval;
+}
+
+    void
+Handle_WM_Notify(hwnd, pnmh)
+    HWND hwnd;
+    LPNMHDR pnmh;
+{
+    if (pnmh->idFrom != ID_BEVAL_TOOLTIP) /* it is not our tooltip */
+	return;
+
+    if (cur_beval != NULL)
+    {
+	if (pnmh->code == TTN_SHOW)
+	{
+	    TRACE0("TTN_SHOW {{{");
+	    TRACE0("TTN_SHOW }}}");
+	}
+	else if (pnmh->code == TTN_POP) /* Before tooltip disappear */
+	{
+	    TRACE0("TTN_POP {{{");
+	    delete_tooltip(cur_beval);
+	    gui_mch_enable_beval_area(cur_beval);
+	    TRACE0("TTN_POP }}}");
+
+	    cur_beval->showState = ShS_NEUTRAL;
+	}
+    }
+}
+
+void TrackUserActivity (uMsg)
+    UINT    uMsg;
+{
+    if ((uMsg >= WM_MOUSEFIRST && uMsg <= WM_MOUSELAST) ||
+	    (uMsg >= WM_KEYFIRST && uMsg <= WM_KEYLAST))
+    {
+	LastActivity = GetTickCount();
+    }
+}
+
+    void
+gui_mch_destroy_beval_area(beval)
+    BalloonEval	*beval;
+{
+    vim_free(beval);
+}
+#endif /* FEAT_BEVAL */
+
+#if defined(FEAT_NETBEANS_INTG) || defined(PROTO)
+/*
+ * We have multiple signs to draw at the same location. Draw the
+ * multi-sign indicator (down-arrow) instead. This is the Win32 version.
+ */
+    void
+netbeans_draw_multisign_indicator(int row)
+{
+    int i;
+    int y;
+    int x;
+
+    x = 0;
+    y = TEXT_Y(row);
+
+    for (i = 0; i < gui.char_height - 3; i++)
+	SetPixel(s_hdc, x+2, y++, gui.currFgColor);
+
+    SetPixel(s_hdc, x+0, y, gui.currFgColor);
+    SetPixel(s_hdc, x+2, y, gui.currFgColor);
+    SetPixel(s_hdc, x+4, y++, gui.currFgColor);
+    SetPixel(s_hdc, x+1, y, gui.currFgColor);
+    SetPixel(s_hdc, x+2, y, gui.currFgColor);
+    SetPixel(s_hdc, x+3, y++, gui.currFgColor);
+    SetPixel(s_hdc, x+2, y, gui.currFgColor);
+}
+#endif
+
 #endif

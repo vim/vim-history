@@ -38,8 +38,9 @@ void		 nbdb(char *, ...);
 void		 nbtrace(char *, ...);
 
 static int	 lookup(char *);
+#ifndef FEAT_GUI_W32
 static int	 errorHandler(Display *, XErrorEvent *);
-
+#endif
 
 /*
  * nbdebug_wait	-   This function can be used to delay or stop execution of vim.
@@ -83,11 +84,11 @@ nbdebug_log_init(
 	char		*cp;		/* nb_dlevel pointer */
 
 	if (log_var && (file = getenv(log_var)) != NULL) {
-		char buf[BUFSIZ];
+		time_t now;
 
-		sprintf(buf, "date > %s", file);
-		system(buf);
-		nb_debug = fopen(file, "a");
+		nb_debug = fopen(file, "w");
+		time(&now);
+		fprintf(nb_debug, "%s", asctime(localtime(&now)));
 		if (level_var && (cp = getenv(level_var)) != NULL) {
 			nb_dlevel = strtoul(cp, NULL, 0);
 		} else {
@@ -142,10 +143,16 @@ lookup(
 	char		 buf[BUFSIZ];
 
 	expand_env((char_u *) file, (char_u *) buf, BUFSIZ);
-	return (access(buf, F_OK) == 0);
+	return
+#ifndef FEAT_GUI_W32
+		(access(buf, F_OK) == 0);
+#else
+		(access(buf, 0) == 0);
+#endif
 
 }    /* end lookup */
 
+#ifndef FEAT_GUI_W32
 static int
 errorHandler(
 	Display		*dpy,
@@ -169,7 +176,7 @@ errorHandler(
 
 	return 0;
 }
-
+#endif
 
 
 #endif /* NBDEBUG */

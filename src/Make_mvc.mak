@@ -12,7 +12,7 @@
 #	nmake -f Make_mvc.mak
 # This will build the console version of vim with no additional interfaces.
 # To add interfaces, define any of the following:
-#	GUI interface: GUI=yes
+#	GUI interface: GUI=yes (default is no)
 #	OLE interface: OLE=yes (usually with GUI=yes)
 #	Multibyte support: MBYTE=yes
 #	IME support: IME=yes	(requires GUI=yes)
@@ -39,14 +39,13 @@
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
 #	    You must set TCL_VER_LONG when you set TCL_VER.
-#	Cscope support: CSCOPE=yes
 #	Debug version: DEBUG=yes
 #	Mapfile: MAP=[no, yes or lines] (default is yes)
 #	  no:    Don't write a mapfile.
 #	  yes:   Write a normal mapfile.
 #	  lines: Write a mapfile with line numbers (only for VC6 and later)
 #	SNiFF+ interface: SNIFF=yes
-#	Cscope interface: CSCOPE=yes
+#	Cscope support: CSCOPE=yes
 #	Iconv library support (always dynamically loaded):
 #	  ICONV=[yes or no]  (default is yes)
 #	Intl library support (always dynamically loaded):
@@ -57,6 +56,8 @@
 #       Version Support: WINVER=[0x400, 0x500] (default is 0x400)
 #       Processor Version: CPUNR=[i386, i486, i586, i686] (default is i386)
 #       Optimization: OPTIMIZE=[SPACE, SPEED, MAXSPEED] (default is MAXSPEED)
+#       Netbeans Support: NETBEANS=[yes or no] (default is yes if GUI is yes)
+#       XPM Image Support: XPM=[path to XPM directory]
 #
 # You can combine any of these interfaces
 #
@@ -173,11 +174,41 @@ SNIFF_DEFS  = -DFEAT_SNIFF
 MULTITHREADED = yes
 !endif
 
+!ifndef CSCOPE
+CSCOPE = yes
+!endif
+
 !if "$(CSCOPE)" == "yes"
 # CSCOPE - Include support for Cscope
 CSCOPE_INCL  = if_cscope.h
 CSCOPE_OBJ   = $(OBJDIR)/if_cscope.obj
 CSCOPE_DEFS  = -DFEAT_CSCOPE
+!endif
+
+!ifndef NETBEANS
+NETBEANS = $(GUI)
+!endif
+
+!if "$(NETBEANS)" == "yes"
+# NETBEANS - Include support for Netbeans integration
+NETBEANS_PRO	= proto/netbeans.pro
+NETBEANS_OBJ	= $(OBJDIR)/netbeans.obj $(OBJDIR)/gui_beval.obj
+NETBEANS_DEFS	= -DFEAT_NETBEANS_INTG
+!if "$(DEBUG)" == "yes"
+NBDEBUG_DEFS	= -DNBDEBUG
+NBDEBUG_INCL	= nbdebug.h
+NBDEBUG_SRC	= nbdebug.c
+!endif
+NETBEANS_LIB   = Ws2_32.lib
+!endif
+
+!ifdef XPM
+# XPM - Include support for XPM signs
+# you can get xpm.lib from http://iamphet.nm.ru/xpm or create it yourself
+XPM_OBJ   = $(OBJDIR)/xpm_w32.obj
+XPM_DEFS  = -DFEAT_XPM_W32
+XPM_LIB   = $(XPM)\lib\libXpm.lib
+XPM_INC	  = -I $(XPM)\include
 !endif
 
 !if defined(USE_MSVCRT)
@@ -208,8 +239,9 @@ WINVER = 0x400
 #VIMRUNTIMEDIR = somewhere
 
 CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
-		$(SNIFF_DEFS) $(CSCOPE_DEFS) $(DEFINES) \
-		-DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
+		$(SNIFF_DEFS) $(CSCOPE_DEFS) $(NETBEANS_DEFS) \
+		$(NBDEBUG_DEFS) $(XPM_DEFS) \
+		$(DEFINES) -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 
 #>>>>> end of choices
 ###########################################################################
@@ -285,7 +317,8 @@ LIBC = $(LIBC) msvcrtd.lib
 !endif # DEBUG
 
 INCL =	vim.h os_win32.h ascii.h feature.h globals.h keymap.h macros.h \
-	proto.h option.h structs.h term.h $(SNIFF_INCL) $(CSCOPE_INCL)
+	proto.h option.h structs.h term.h $(SNIFF_INCL) $(CSCOPE_INCL) \
+	$(NBDEBUG_INCL)
 
 OBJ = \
 	$(OUTDIR)\buffer.obj \
@@ -568,14 +601,16 @@ conflags = $(conflags) /map /mapinfo:lines
 
 LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
-		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) $(LINK_PDB)
+		$(PERL_LIB) $(PYTHON_LIB) $(RUBY_LIB) $(TCL_LIB) \
+		$(NETBEANS_LIB) $(XPM_LIB) $(LINK_PDB)
 
 all:	$(VIM) vimrun.exe install.exe uninstal.exe xxd/xxd.exe GvimExt/gvimext.dll
 
-$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) version.c version.h
+$(VIM): $(OUTDIR) $(OBJ) $(GUI_OBJ) $(OLE_OBJ) $(OLE_IDL) $(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) $(NETBEANS_OBJ) $(XPM_OBJ) version.c version.h
 	$(CC) $(CFLAGS)  version.c /Fo$(OUTDIR)/version.obj $(PDB)
 	$(link) $(LINKARGS1) -out:$*.exe $(OBJ) $(GUI_OBJ) $(OLE_OBJ) \
-		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(CSCOPE_OBJ) \
+		$(PERL_OBJ) $(PYTHON_OBJ) $(RUBY_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) \
+		$(CSCOPE_OBJ) $(NETBEANS_OBJ) $(XPM_OBJ) \
 		$(OUTDIR)\version.obj $(LINKARGS2)
 
 $(VIM).exe: $(VIM)
@@ -695,6 +730,8 @@ $(OUTDIR)/gui.obj:	$(OUTDIR) gui.c  $(INCL) $(GUI_INCL)
 
 $(OUTDIR)/gui_w32.obj:	$(OUTDIR) gui_w32.c gui_w48.c $(INCL) $(GUI_INCL)
 
+$(OUTDIR)/if_cscope.obj: $(OUTDIR) if_cscope.c  $(INCL)
+
 if_perl.c : if_perl.xs typemap
 	$(PERL_EXE) $(XSUBPP) -prototypes -typemap $(XSUBPP_TYPEMAP) -typemap typemap if_perl.xs > if_perl.c
 
@@ -738,6 +775,8 @@ $(OUTDIR)/move.obj:	$(OUTDIR) move.c  $(INCL)
 
 $(OUTDIR)/mbyte.obj: $(OUTDIR) mbyte.c  $(INCL)
 
+$(OUTDIR)/netbeans.obj: $(OUTDIR) netbeans.c $(NBDEBUG_SRC) $(INCL)
+
 $(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL)
 
 $(OUTDIR)/option.obj:	$(OUTDIR) option.c  $(INCL)
@@ -772,6 +811,9 @@ $(OUTDIR)/ui.obj:	$(OUTDIR) ui.c  $(INCL)
 $(OUTDIR)/undo.obj:	$(OUTDIR) undo.c  $(INCL)
 
 $(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
+
+$(OUTDIR)/xpm_w32.obj: $(OUTDIR) xpm_w32.c
+	$(CC) $(CFLAGS) $(XPM_INC) xpm_w32.c /Fo$(OUTDIR)/xpm_w32.obj $(PDB)
 
 $(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h tools.bmp tearoff.bmp vim.ico vim_error.ico vim_alert.ico vim_info.ico vim_quest.ico
 	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
@@ -839,6 +881,7 @@ proto.h: \
 	proto/term.pro \
 	proto/ui.pro \
 	proto/undo.pro \
-	proto/window.pro
+	proto/window.pro \
+	$(NETBEANS_PRO)
 
 # vim: set noet sw=8 ts=8 sts=0 wm=0 tw=0:

@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 Jun 22
+# Last updated by Dan Sharp.  Last Change: 2003 Sep 12
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -35,6 +35,9 @@
 # WINVER	Lowest Win32 version to support.  (0x400)
 # CSCOPE	no or yes: to include cscope interface support (yes)
 # OPTIMIZE	SPACE, SPEED, or MAXSPEED: set optimization level (MAXSPEED)
+# NETBEANS	no or yes: to include netbeans interface support (yes when GUI
+#		is yes)
+# XPM		define to path to XPM dir to get XPM image support (not defined) 
 #>>>>> choose options:
 ifndef GUI
 GUI=yes
@@ -74,6 +77,12 @@ endif
 
 ifndef CSCOPE
 CSCOPE = yes
+endif
+
+ifndef NETBEANS
+ifeq ($(GUI),yes)
+NETBEANS = yes
+endif
 endif
 
 ifndef OPTIMIZE
@@ -266,6 +275,27 @@ EXTRA_OBJS += $(OUTDIR)/if_cscope.o
 endif
 
 ##############################
+ifeq (yes, $(NETBEANS))
+DEFINES += -DFEAT_NETBEANS_INTG
+EXTRA_OBJS += $(OUTDIR)/netbeans.o $(OUTDIR)/gui_beval.o
+EXTRA_LIBS += -lws2_32
+
+ifeq (yes, $(DEBUG))
+DEFINES += -DNBDEBUG
+NBDEBUG_DEP = nbdebug.h nbdebug.c
+endif
+
+endif
+
+##############################
+ifdef XPM
+DEFINES += -DFEAT_XPM_W32
+INCLUDES += -I$(XPM)/include
+EXTRA_OBJS += $(OUTDIR)/xpm_w32.o
+EXTRA_LIBS += -L$(XPM)/lib -lXpm
+endif
+
+##############################
 ifeq (yes, $(OLE))
 DEFINES += -DFEAT_OLE
 EXTRA_OBJS += $(OUTDIR)/if_ole.o
@@ -417,6 +447,9 @@ endif
 
 $(OUTDIR)/if_ruby.o:	if_ruby.c $(INCL)
 	$(CC) -c $(CFLAGS) -U_WIN32 if_ruby.c -o $(OUTDIR)/if_ruby.o
+
+$(OUTDIR)/netbeans.o:	netbeans.c $(INCL) $(NBDEBUG_DEP)
+	$(CC) -c $(CFLAGS) netbeans.c -o $(OUTDIR)/netbeans.o
 
 $(OUTDIR)/vimrc.o:	vim.rc version.h gui_w32_rc.h
 	$(RC) $(RCFLAGS) vim.rc -o $(OUTDIR)/vimrc.o

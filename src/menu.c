@@ -764,7 +764,8 @@ add_menu_path(menu_path, menuarg, pri_tab, call_data
 		menu->silent[i] = menuarg->silent[0];
 	    }
 	}
-#if defined(FEAT_TOOLBAR) && (defined(FEAT_BEVAL) || defined(FEAT_GUI_GTK))
+#if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) \
+	&& (defined(FEAT_BEVAL) || defined(FEAT_GUI_GTK))
 	/* Need to update the menu tip. */
 	if (modes & MENU_TIP_MODE)
 	    gui_mch_menu_set_tip(menu);
@@ -942,7 +943,8 @@ remove_menu(menup, name, modes, silent)
 	if (modes & MENU_TIP_MODE)
 	{
 	    free_menu_string(menu, MENU_INDEX_TIP);
-#if defined(FEAT_TOOLBAR) && (defined(FEAT_BEVAL) || defined(FEAT_GUI_GTK))
+#if defined(FEAT_TOOLBAR) && !defined(FEAT_GUI_W32) \
+	    && (defined(FEAT_BEVAL) || defined(FEAT_GUI_GTK))
 	    /* Need to update the menu tip. */
 	    if (gui.in_use)
 		gui_mch_menu_set_tip(menu);

@@ -52,8 +52,11 @@ POSTSCRIPT=no
 OLE=no
 # Set the default $(WINVER) to make it work with pre-Win2k
 WINVER = 0x0400
-#set to yes to enable Cscope support
+# Set to yes to enable Cscope support
 CSCOPE=yes
+# Set to yes to enable Netbeans support
+NETBEANS=$(GUI)
+
 
 # If the user doesn't want gettext, undefine it.
 ifeq (no, $(GETTEXT))
@@ -270,6 +273,19 @@ ifeq ($(CSCOPE),yes)
 DEFINES += -DFEAT_CSCOPE
 endif
 
+ifeq ($(NETBEANS),yes)
+DEFINES += -DFEAT_NETBEANS_INTG
+ifeq ($(DEBUG), yes)
+DEFINES += -DNBDEBUG
+NBDEBUG_INCL = nbdebug.h
+NBDEBUG_SRC = nbdebug.c
+endif
+endif
+
+ifdef XPM
+CFLAGS += -DFEAT_XPM_W32 -I $(XPM)/include
+endif
+
 ifeq ($(DEBUG),yes)
 CFLAGS += -g -fstack-check
 DEBUG_SUFFIX=d
@@ -347,6 +363,15 @@ OBJ += $(OUTDIR)/if_tcl.o
 endif
 ifeq ($(CSCOPE),yes)
 OBJ += $(OUTDIR)/if_cscope.o
+endif
+ifeq ($(NETBEANS),yes)
+OBJ += $(OUTDIR)/netbeans.o $(OUTDIR)/gui_beval.o
+LIB += -lws2_32
+endif
+ifdef XPM
+OBJ += $(OUTDIR)/xpm_w32.o
+# You'll need libXpm.a from http://gnuwin32.sf.net
+LIB += -L $(XPM)/lib -lXpm
 endif
 
 
@@ -487,6 +512,9 @@ $(OUTDIR)/if_ruby.o: if_ruby.c $(INCL)
 if_perl.c: if_perl.xs typemap
 	perl $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap \
 	     $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
+
+$(OUTDIR)/netbeans.o:	netbeans.c $(INCL) $(NBDEBUG_INCL) $(NBDEBUG_SRC)
+	$(CC) -c $(CFLAGS) netbeans.c -o $(OUTDIR)/netbeans.o
 
 pathdef.c: $(INCL)
 ifneq (sh.exe, $(SHELL))

@@ -625,11 +625,20 @@ static char *(features[]) =
 #else
 	"-xterm_save",
 #endif
+#ifdef WIN3264
+# ifdef FEAT_XPM_W32
+	"+xpm_w32",
+# else
+	"-xpm_w32",
+# endif
+#endif
 	NULL
 };
 
 static int included_patches[] =
 {   /* Add new patch number below this line */
+/**/
+    107,
 /**/
     106,
 /**/
