@@ -3318,7 +3318,7 @@ typedef struct ff_visited
 
 /*
  * We might have to manage several visited lists during a search.
- * This is expecially needed for * the tags option. If tags is set to:
+ * This is expecially needed for the tags option. If tags is set to:
  *      "./++/tags,./++/TAGS,++/tags"  (replace + with *)
  * So we have to do 3 searches:
  *   1) search from the current files directory downward for the file "tags"
@@ -3351,7 +3351,9 @@ typedef struct ff_visited_list_hdr
  * The search context:
  *   ffsc_stack_ptr:	the stack for the dirs to search
  *   ffsc_visited_list: the currently active visited list
+ *   ffsc_dir_visited_list: the currently active visited list for search dirs
  *   ffsc_visited_lists_list: the list of all visited lists
+ *   ffsc_dir_visited_lists_list: the list of all visited lists for search dirs
  *   ffsc_file_to_search:     the file to search for
  *   ffsc_start_dir:	the starting directory, if search path was relative
  *   ffsc_fix_path:	the fix part of the given path (without wildcards)
@@ -3365,7 +3367,9 @@ typedef struct ff_search_ctx_T
 {
      ff_stack_T			*ffsc_stack_ptr;
      ff_visited_list_hdr_T	*ffsc_visited_list;
+     ff_visited_list_hdr_T	*ffsc_dir_visited_list;
      ff_visited_list_hdr_T	*ffsc_visited_lists_list;
+     ff_visited_list_hdr_T	*ffsc_dir_visited_lists_list;
      char_u			*ffsc_file_to_search;
      char_u			*ffsc_start_dir;
      char_u			*ffsc_fix_path;
@@ -3387,8 +3391,9 @@ static int ff_check_visited __ARGS((ff_visited_T **, char_u *, char_u *));
 #else
 static int ff_check_visited __ARGS((ff_visited_T **, char_u *));
 #endif
+static void vim_findfile_free_visited_list __ARGS((ff_visited_list_hdr_T **list_headp));
 static void ff_free_visited_list __ARGS((ff_visited_T *vl));
-static ff_visited_list_hdr_T* ff_get_visited_list __ARGS((char_u *));
+static ff_visited_list_hdr_T* ff_get_visited_list __ARGS((char_u *, ff_visited_list_hdr_T **list_headp));
 #ifdef FEAT_PATH_EXTRA
 static int ff_wc_equal __ARGS((char_u *s1, char_u *s2));
 #endif
@@ -3541,8 +3546,13 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 	 * filename. If no list for the current filename exists, creates a new
 	 * one.
 	 */
-	ff_search_ctx->ffsc_visited_list = ff_get_visited_list(filename);
+	ff_search_ctx->ffsc_visited_list = ff_get_visited_list(filename,
+				     &ff_search_ctx->ffsc_visited_lists_list);
 	if (ff_search_ctx->ffsc_visited_list == NULL)
+	    goto error_return;
+	ff_search_ctx->ffsc_dir_visited_list = ff_get_visited_list(filename,
+				 &ff_search_ctx->ffsc_dir_visited_lists_list);
+	if (ff_search_ctx->ffsc_dir_visited_list == NULL)
 	    goto error_return;
     }
 
@@ -3915,7 +3925,7 @@ vim_findfile(search_ctx)
 	     * first time (hence ctx->ff_filearray == NULL)
 	     */
 	    if (ctx->ffs_filearray == NULL
-		    && ff_check_visited(&ff_search_ctx->ffsc_visited_list
+		    && ff_check_visited(&ff_search_ctx->ffsc_dir_visited_list
 							  ->ffvl_visited_list,
 			ctx->ffs_fix_path
 #ifdef FEAT_PATH_EXTRA
@@ -4282,24 +4292,31 @@ vim_findfile(search_ctx)
 vim_findfile_free_visited(search_ctx)
     void	*search_ctx;
 {
-    ff_visited_list_hdr_T *vp;
-
-    if (NULL == search_ctx)
+    if (search_ctx == NULL)
 	return;
 
-    ff_search_ctx = (ff_search_ctx_T*)search_ctx;
+    ff_search_ctx = (ff_search_ctx_T *)search_ctx;
 
-    while (NULL != ff_search_ctx->ffsc_visited_lists_list)
+    vim_findfile_free_visited_list(&ff_search_ctx->ffsc_visited_lists_list);
+    vim_findfile_free_visited_list(&ff_search_ctx->ffsc_dir_visited_lists_list);
+}
+
+    static void
+vim_findfile_free_visited_list(list_headp)
+    ff_visited_list_hdr_T	**list_headp;
+{
+    ff_visited_list_hdr_T *vp;
+
+    while (*list_headp != NULL)
     {
-	vp = ff_search_ctx->ffsc_visited_lists_list->ffvl_next;
-	ff_free_visited_list(
-		ff_search_ctx->ffsc_visited_lists_list->ffvl_visited_list);
+	vp = (*list_headp)->ffvl_next;
+	ff_free_visited_list((*list_headp)->ffvl_visited_list);
 
-	vim_free(ff_search_ctx->ffsc_visited_lists_list->ffvl_filename);
-	vim_free(ff_search_ctx->ffsc_visited_lists_list);
-	ff_search_ctx->ffsc_visited_lists_list = vp;
+	vim_free((*list_headp)->ffvl_filename);
+	vim_free(*list_headp);
+	*list_headp = vp;
     }
-    ff_search_ctx->ffsc_visited_lists_list = NULL;
+    *list_headp = NULL;
 }
 
     static void
@@ -4322,15 +4339,16 @@ ff_free_visited_list(vl)
  * allocates a new one.
  */
     static ff_visited_list_hdr_T*
-ff_get_visited_list(filename)
-    char_u	*filename;
+ff_get_visited_list(filename, list_headp)
+    char_u			*filename;
+    ff_visited_list_hdr_T	**list_headp;
 {
     ff_visited_list_hdr_T  *retptr = NULL;
 
     /* check if a visited list for the given filename exists */
-    if (ff_search_ctx->ffsc_visited_lists_list!= NULL)
+    if (*list_headp != NULL)
     {
-	retptr = ff_search_ctx->ffsc_visited_lists_list;
+	retptr = *list_headp;
 	while (retptr != NULL)
 	{
 	    if (fnamecmp(filename, retptr->ffvl_filename) == 0)
@@ -4380,8 +4398,8 @@ ff_get_visited_list(filename)
 	vim_free(retptr);
 	return NULL;
     }
-    retptr->ffvl_next = ff_search_ctx->ffsc_visited_lists_list;
-    ff_search_ctx->ffsc_visited_lists_list = retptr;
+    retptr->ffvl_next = *list_headp;
+    *list_headp = retptr;
 
     return retptr;
 }
