@@ -2652,6 +2652,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			 "A"		 -			yes
 			 "aA"		yes			yes
 
+	  'c'	Use console dialogs instead of popup dialogs for simple
+		choices.
 	  'f'	Foreground: Don't use fork() to detach the GUI from the shell
 		where it was started.  Use this for programs that wait for the
 		editor to finish (e.g., an e-mail program).  Alternatively you
