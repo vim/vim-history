@@ -7,7 +7,7 @@ STARTTEST
 :so small.vim
 :se nocp nomore
 :so test49.vim
-GGGGGGGGG"rp:.-,$wq! test.out
+GGGGGGGGGG"rp:.-,$wq! test.out
 ENDTEST
 
 Results of test49.vim:

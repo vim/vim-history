@@ -2366,7 +2366,7 @@ ex_loadkeymap(eap)
     int		i;
     char_u	*save_cpo = p_cpo;
 
-    if (eap->getline != getsourceline)
+    if (!getline_equal(eap->getline, eap->cookie, getsourceline))
     {
 	EMSG(_("E105: Using :loadkeymap not in a sourced file"));
 	return;
@@ -2388,7 +2388,7 @@ ex_loadkeymap(eap)
      */
     for (;;)
     {
-	line = getsourceline(0, eap->cookie, 0);
+	line = eap->getline(0, eap->cookie, 0);
 	if (line == NULL)
 	    break;
 

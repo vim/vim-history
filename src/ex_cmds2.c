@@ -208,7 +208,7 @@ do_debug(cmd)
 	    n = debug_break_level;
 	    debug_break_level = -1;
 	    (void)do_cmdline(cmdline, getexline, NULL,
-			     DOCMD_VERBOSE|DOCMD_EXCRESET);
+						DOCMD_VERBOSE|DOCMD_EXCRESET);
 	    debug_break_level = n;
 
 	    vim_free(cmdline);
@@ -724,17 +724,17 @@ check_changed(buf, checkaw, mult_win, forceit, allbuf)
 # endif
 					))
 			++count;
-#ifdef FEAT_AUTOCMD
+# ifdef FEAT_AUTOCMD
 	    if (!buf_valid(buf))
 		/* Autocommand deleted buffer, oops!  It's not changed now. */
 		return FALSE;
-#endif
+# endif
 	    dialog_changed(buf, count > 1);
-#ifdef FEAT_AUTOCMD
+# ifdef FEAT_AUTOCMD
 	    if (!buf_valid(buf))
 		/* Autocommand deleted buffer, oops!  It's not changed now. */
 		return FALSE;
-#endif
+# endif
 	    return bufIsChanged(buf);
 	}
 #endif
@@ -2678,7 +2678,7 @@ ex_scriptencoding(eap)
     struct source_cookie	*sp;
     char_u			*name;
 
-    if (eap->getline != getsourceline)
+    if (!getline_equal(eap->getline, eap->cookie, getsourceline))
     {
 	EMSG(_("E167: :scriptencoding used outside of a sourced file"));
 	return;
@@ -2694,7 +2694,7 @@ ex_scriptencoding(eap)
 	name = eap->arg;
 
     /* Setup for conversion from the specified encoding to 'encoding'. */
-    sp = (struct source_cookie *)eap->cookie;
+    sp = (struct source_cookie *)getline_cookie(eap->getline, eap->cookie);
     convert_setup(&sp->conv, name, p_enc);
 
     if (name != eap->arg)
@@ -2710,7 +2710,7 @@ ex_scriptencoding(eap)
 ex_finish(eap)
     exarg_T	*eap;
 {
-    if (eap->getline == getsourceline)
+    if (getline_equal(eap->getline, eap->cookie, getsourceline))
 	do_finish(eap, FALSE);
     else
 	EMSG(_("E168: :finish used outside of a sourced file"));
@@ -2729,7 +2729,8 @@ do_finish(eap, reanimate)
     int		idx;
 
     if (reanimate)
-	((struct source_cookie *)eap->cookie)->finished = FALSE;
+	((struct source_cookie *)getline_cookie(eap->getline,
+					      eap->cookie))->finished = FALSE;
 
     /*
      * Cleanup (and inactivate) conditionals, but stop when a try conditional
@@ -2744,19 +2745,24 @@ do_finish(eap, reanimate)
 	report_make_pending(CSTP_FINISH, NULL);
     }
     else
-	((struct source_cookie *)eap->cookie)->finished = TRUE;
+	((struct source_cookie *)getline_cookie(eap->getline,
+					       eap->cookie))->finished = TRUE;
 }
 
 
 /*
  * Return TRUE when a sourced file had the ":finish" command: Don't give error
  * message for missing ":endif".
+ * Return FALSE when not sourcing a file.
  */
     int
-source_finished(cookie)
+source_finished(getline, cookie)
+    char_u	*(*getline) __ARGS((int, void *, int));
     void	*cookie;
 {
-    return ((struct source_cookie *)cookie)->finished == TRUE;
+    return (getline_equal(getline, cookie, getsourceline)
+	    && ((struct source_cookie *)getline_cookie(
+						 getline, cookie))->finished);
 }
 #endif
 
