@@ -3005,8 +3005,8 @@ foldlevelMarker(flp)
 		{
 		    flp->lvl = n;
 		    flp->lvl_next = n;
-		    if (n < start_lvl)
-			flp->start = 0;
+		    if (n <= start_lvl)
+			flp->start = 1;
 		    else
 			flp->start = n - start_lvl;
 		}
