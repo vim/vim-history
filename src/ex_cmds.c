@@ -4627,6 +4627,8 @@ ex_help(eap)
 	else
 #endif
 	    EMSG2(_("E149: Sorry, no help for %s"), arg);
+	if (n != FAIL)
+	    FreeWild(num_matches, matches);
 	return;
     }
 
@@ -5777,7 +5779,7 @@ ex_sign(eap)
 	    else if (STRNCMP(arg, "buffer=", 7) == 0)
 	    {
 		arg += 7;
-		buf = buflist_findnr(getdigits(&arg));
+		buf = buflist_findnr((int)getdigits(&arg));
 		if (*skipwhite(arg) != NUL)
 		    EMSG(_(e_trailing));
 		break;

@@ -6574,6 +6574,7 @@ screenalloc(clear)
 #endif
     vim_free(ScreenAttrs);
     vim_free(LineOffset);
+    vim_free(LineWraps);
     ScreenLines = new_ScreenLines;
 #ifdef FEAT_MBYTE
     ScreenLinesUC = new_ScreenLinesUC;
