@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0aw.  Last change: 2001 Sep 11
+*usr_41.txt*	For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -723,7 +723,7 @@ The complete function definition is as follows: >
 	:  return smaller
 	:endfunction
 
-A user defined function is called in exactly the same way a a builtin
+A user defined function is called in exactly the same way as a builtin
 function.  Only the name is different.  The Min function can be used like
 this: >
 

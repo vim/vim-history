@@ -26,7 +26,7 @@ menutrans &File				文件(&F)
 menutrans &Open\.\.\.<Tab>:e		打开(&O)\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	分割窗口并打开(&L)<Tab>:sp
 menutrans &New<Tab>:enew		新建(&N)<Tab>:enew
-menutrans &Close<Tab>:q			关闭(&C)<Tab>:q
+menutrans &Close<Tab>:close		关闭(&C)<Tab>:close
 menutrans &Save<Tab>:w			保存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	另存为(&A)\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	分割比较(&Diff)\.\.\.

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.33
-" Last Change:	2001 Sep 14
+" Last Change:	2001 Sep 17
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -73,8 +73,7 @@ function FortranGetIndent(lnum)
 
   "Add a shiftwidth to statements following if, else, case,
   "where and elsewhere statements
-  if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>' ||
-   \ prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
+  if prevstat =~? '^\s*\(\d\+\s\)\=\s*\(else\|case\|where\|elsewhere\)\>' || prevstat =~? '^\s*\(\d\+\s\)\=\s*\(\a\w*\s*:\)\=\s*if\>'
      let ind = ind + &sw
     " Remove unwanted indent after logical and arithmetic ifs
     if prevstat =~? '\<if\>' && prevstat !~? '\<then\>'

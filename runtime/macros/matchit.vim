@@ -35,7 +35,7 @@ let loaded_matchit = 1
 let s:last_mps = ""
 let s:last_words = ""
 
-let s:save_cpo= &cpo
+let s:save_cpo = &cpo
 set cpo&vim
 
 nnoremap <silent> %  :<C-U>call <SID>Match_wrapper('',1,'n') <CR>
@@ -747,17 +747,8 @@ fun! s:ParseSkip(str)
 endfun
 
 aug Matchit
-  au!
-  " Ada:  thanks to Neil Bird.
   let s:notend = '\%(\<end\s\+\)\@<!'
-  au FileType ada if !exists("b:match_words") |
-    \ let b:match_words=
-  \ s:notend . '\<if\>:\<elsif\>:\<else\>:\<end\>\s\+\<if\>,' .
-  \ s:notend . '\<case\>:\<when\>:\<end\>\s\+\<case\>,' .
-  \ '\%(\<while\>.*\|\<for\>.*\|'.s:notend.'\)\<loop\>:\<end\>\s\+\<loop\>,' .
-  \ '\%(\<do\>\|\<begin\>\):\<exception\>:\<end\>\s*\%($\|[;A-Z]\),' .
-  \ s:notend . '\<record\>:\<end\>\s\+\<record\>'
-  \ | endif
+  au!
   " ASP:  Active Server Pages (with Visual Basic Script)
   " thanks to Gontran BAERTS
   au FileType aspvbs if !exists("b:match_words") |
@@ -815,21 +806,6 @@ aug Matchit
       \ '<\@<=[ou]l[^>]*\%(>\|$\):<\@<=li>:<\@<=/[ou]l>,' .
       \ '<\@<=\([^/][^ \t>]*\)[^>]*\%(>\|$\):<\@<=/\1>'
       \ | endif
-  " LaTeX:
-  au FileType tex if !exists("b:match_words") |
-    \ let b:match_ignorecase = 0
-    \ | let b:match_skip = 'r:\\\@<!\%(\\\\\)*%'
-    \ | let b:match_words = '(:),\[:],{:},\\(:\\),\\\[:\\],' .
-    \ '\\begin\s*\({\a\+\*\=}\):\\end\s*\1'
-    \ | endif
-  " Lua version 4.0+:  thanks to Max Ischenko
-  au FileType lua if !exists("b:match_words") |
-    \ let b:match_ignorecase = 0 | let b:match_words =
-    \ '\<\%(do\|function\|if\)\>:' .
-    \ '\<\%(return\|else\|elseif\)\>:' .
-    \ '\<end\>,' .
-    \ '\<repeat\>:\<until\>'
-    \ | endif
   " Pascal:
   au FileType pascal if !exists("b:match_words") |
     \ let b:match_words='\<begin\>:\<end\>'
@@ -850,7 +826,6 @@ aug Matchit
     \ '^%package:^%preun:^%postun:^%changelog'
     \ | endif
   " Tcsh:  see Csh
-  " TeX:  see LaTeX; I do not think plain TeX needs this.
   " Verilog:  thanks to Mark Collett
   au FileType verilog if !exists("b:match_words") |
     \ let b:match_ignorecase = 0
@@ -861,17 +836,6 @@ aug Matchit
       \ '\<function\>:\<endfunction\>,'.
       \ '`ifdef\>:`else\>:`endif\>'
       \ | endif
-  " Vim:
-  au FileType vim if !exists("b:match_words") |
-    \ let b:match_ignorecase=0 |
-  \ let b:match_strings_like_comments = 1 |
-  \ let b:match_words=
-  \ '\<fun\%[ction]\>:\<retu\%[rn]\>:\<endf\%[unction]\>,' .
-  \ '\<while\>:\<break\>:\<con\%[tinue]\>:\<endw\%[hile]\>,' .
-  \ '\<if\>:\<el\%[seif]\>:\<en\%[dif]\>,' .
-  \ '\<aug\%[roup]\s\+\%(END\>\)\@!\S:\<aug\%[roup]\s\+END\>,' .
-  \ '(:)'
-  \ | endif
   " XML:  thanks to Johannes Zellner and Akbar Ibrahim
   " - case sensitive
   " - don't match empty tags <fred/>
@@ -891,6 +855,6 @@ aug Matchit
 
 aug END
 
-let &cpo= s:save_cpo
+let &cpo = s:save_cpo
 
 " vim:sts=2:sw=2:

@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 09
+" Last Change:	2001 Sep 17
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -20,6 +20,8 @@ setlocal com=sO:\"\ -,mO:\"\ \ ,eO:\"\",:\"
 
 " Format comments to be up to 78 characters long
 setlocal tw=78
+
+set cpo-=C
 
 " Let the matchit plugin know what items can be matched.
 if exists("loaded_matchit")

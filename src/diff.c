@@ -578,6 +578,13 @@ ex_diffupdate(eap)
     if (idx_orig == DB_COUNT)
 	return;
 
+    /* Only need to do something when there is another buffer. */
+    for (idx_new = idx_orig + 1; idx_new < DB_COUNT; ++idx_new)
+	if (diffbuf[idx_new] != NULL)
+	    break;
+    if (idx_new == DB_COUNT)
+	return;
+
     /* We need three temp file names. */
     tmp_orig = vim_tempname('o');
     tmp_new = vim_tempname('n');

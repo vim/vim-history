@@ -998,6 +998,18 @@ gui_mch_new_colors(void)
 }
 
 /*
+ * Set the colors to their default values.
+ */
+    void
+gui_mch_def_colors()
+{
+    gui.norm_pixel = GetSysColor(COLOR_WINDOWTEXT);
+    gui.back_pixel = GetSysColor(COLOR_WINDOW);
+    gui.def_norm_pixel = gui.norm_pixel;
+    gui.def_back_pixel = gui.back_pixel;
+}
+
+/*
  * Open the GUI window which was created by a call to gui_mch_init().
  */
     int
@@ -2704,8 +2716,7 @@ gui_mch_browse(
 {
     OPENFILENAME	fileStruct;
     char_u		fileBuf[MAXPATHL], *p;
-    char_u		dirbuf[MAXPATHL + 1];
-    int			i;
+    char_u		dirBuf[MAXPATHL];
 
     if (dflt == NULL)
 	fileBuf[0] = '\0';
@@ -2730,15 +2741,18 @@ gui_mch_browse(
     if (initdir != NULL && *initdir != NUL)
     {
 	/* Must have backslashes here, no matter what 'shellslash' says */
-	for (i = 0; i < MAXPATHL && initdir[i] != NUL; ++i)
+	STRNCPY(dirBuf, initdir, MAXPATHL - 1);
+	dirBuf[MAXPATHL - 1] = NUL;
+	for (p = dirBuf; *p != NUL; ++p)
 	{
-	    if (initdir[i] == '/')
-		dirbuf[i] = '\\';
-	    else
-		dirbuf[i] = initdir[i];
+	    if (*p == '/')
+		*p = '\\';
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		p += (*mb_ptr2len_check)(p) - 1;
+#endif
 	}
-	dirbuf[i] = NUL;
-	fileStruct.lpstrInitialDir = dirbuf;
+	fileStruct.lpstrInitialDir = dirBuf;
     }
 
     /*

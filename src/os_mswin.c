@@ -56,6 +56,8 @@
 # include <dlgs.h>
 # ifdef WIN3264
 #  include <winspool.h>
+# else
+#  include <print.h>
 # endif
 # include <commdlg.h>
 #endif
@@ -934,6 +936,51 @@ Trace(
 
 #endif //_DEBUG
 
+#ifdef HAVE_GETCONSOLEHWND
+# if defined(FEAT_TITLE) && defined(WIN3264)
+extern HWND g_hWnd;	/* This is in os_win32.c. */
+# endif
+
+/*
+ * Showing the printer dialog is tricky since we have no GUI
+ * window to parent it. The following routines are needed to
+ * get the window parenting and Z-order to work properly.
+ */
+    static void
+GetConsoleHwnd(void)
+{
+# define MY_BUFSIZE 1024 // Buffer size for console window titles.
+
+    char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated WindowTitle.
+    char pszOldWindowTitle[MY_BUFSIZE]; // Contains original WindowTitle.
+
+    /* Skip if it's already set. */
+    if (s_hwnd != 0)
+	return;
+
+# if defined(FEAT_TITLE) && defined(WIN3264)
+    /* Window handle may have been found by init code (Windows NT only) */
+    if (g_hWnd != 0)
+    {
+	s_hwnd = g_hWnd;
+	return;
+    }
+# endif
+
+    GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
+
+    wsprintf(pszNewWindowTitle, "%s/%d/%d",
+	    pszOldWindowTitle,
+	    GetTickCount(),
+	    GetCurrentProcessId());
+    SetConsoleTitle(pszNewWindowTitle);
+    Sleep(40);
+    s_hwnd = FindWindow(NULL, pszNewWindowTitle);
+
+    SetConsoleTitle(pszOldWindowTitle);
+}
+#endif
+
 #if (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) || defined(PROTO)
 
 # ifdef WIN16
@@ -992,6 +1039,9 @@ PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		prt_name = NULL;
 	    }
 	    EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
+#ifndef FEAT_GUI
+	    BringWindowToTop(s_hwnd);
+#endif
 	    return TRUE;
 
 	case WM_COMMAND:
@@ -1021,51 +1071,6 @@ AbortProc(HDC hdcPrn, int iCode)
 }
 
 #ifndef FEAT_GUI
-
-# if defined(FEAT_TITLE) && defined(WIN3264)
-extern HWND g_hWnd;	/* This is in os_win32.c. */
-# endif
-
-# if defined(HAVE_GETCONSOLEHWND) || defined(PROTO)
-/*
- * Showing the printer dialog is tricky since we have no GUI
- * window to parent it. The following routines are needed to
- * get the window parenting and Z-order to work properly.
- */
-    static void
-GetConsoleHwnd(void)
-{
-# define MY_BUFSIZE 1024 // Buffer size for console window titles.
-
-    char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated WindowTitle.
-    char pszOldWindowTitle[MY_BUFSIZE]; // Contains original WindowTitle.
-
-    /* Skip if it's already set. */
-    if (s_hwnd != 0)
-	return;
-
-# if defined(FEAT_TITLE) && defined(WIN3264)
-    /* Window handle may have been found by init code (Windows NT only) */
-    if (g_hWnd != 0)
-    {
-	s_hwnd = g_hWnd;
-	return;
-    }
-# endif
-
-    GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
-
-    wsprintf(pszNewWindowTitle, "%s/%d/%d",
-	    pszOldWindowTitle,
-	    GetTickCount(),
-	    GetCurrentProcessId());
-    SetConsoleTitle(pszNewWindowTitle);
-    Sleep(40);
-    s_hwnd = FindWindow(NULL, pszNewWindowTitle);
-
-    SetConsoleTitle(pszOldWindowTitle);
-}
-# endif
 
     static UINT CALLBACK
 PrintHookProc(
@@ -1275,9 +1280,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     int			pifBold;
     int			pifUnderline;
 
-#ifdef WIN3264
     DEVMODE		*mem;
-#endif
     DEVNAMES		*devname;
     int			i;
 
@@ -1289,17 +1292,21 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 #endif
     prt_dlg.hwndOwner = s_hwnd;
     prt_dlg.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
-    prt_dlg.hDevMode = stored_dm;
-    prt_dlg.hDevNames = stored_devn;
-    prt_dlg.lCustData = stored_nCopies; /* work around bug in print dialog */
+    if (!forceit)
+    {
+	prt_dlg.hDevMode = stored_dm;
+	prt_dlg.hDevNames = stored_devn;
+	prt_dlg.lCustData = stored_nCopies; // work around bug in print dialog
 #ifndef FEAT_GUI
-    /*
-     * Use hook to prevent console window being sent to back
-     */
-    prt_dlg.lpfnPrintHook = PrintHookProc;
-    prt_dlg.Flags |= PD_ENABLEPRINTHOOK;
+	/*
+	 * Use hook to prevent console window being sent to back
+	 */
+	prt_dlg.lpfnPrintHook = PrintHookProc;
+	prt_dlg.Flags |= PD_ENABLEPRINTHOOK;
 #endif
-    prt_dlg.Flags |= stored_nFlags;
+	prt_dlg.Flags |= stored_nFlags;
+    }
+
     /*
      * If bang present, return default printer setup with no dialog
      * never show dialog if we are running over telnet
@@ -1359,19 +1366,19 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
      * passed back correctly. It must be retrieved from the
      * hDevMode struct.
      */
-#ifdef WIN3264
     mem = (DEVMODE *)GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
+#ifdef WIN3264
 	if (mem->dmCopies != 1)
 	    stored_nCopies = mem->dmCopies;
+#endif
 	if ((mem->dmFields & DM_DUPLEX) && (mem->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
 	if ((mem->dmFields & DM_COLOR) && (mem->dmColor & DMCOLOR_COLOR))
 	    psettings->has_color = TRUE;
     }
     GlobalUnlock(prt_dlg.hDevMode);
-#endif
 
     devname = (DEVNAMES *)GlobalLock(prt_dlg.hDevNames);
     if (devname != 0)

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 14
+" Last Change:	2001 Sep 17
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -24,6 +24,8 @@ setlocal comments=sO:*\ -,mO:*\ \ ,exO:*/,s1:/*,mb:*,ex:*/,://
 if has("vms")
   setlocal iskeyword+=$
 endif
+
+set cpo-=C
 
 " Win32 can filter files in the browse dialog
 if has("gui_win32") && !exists("b:browsefilter")

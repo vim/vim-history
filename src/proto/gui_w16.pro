@@ -3,6 +3,7 @@ void gui_mch_set_blinking __ARGS((long wait, long on, long off));
 void gui_mch_stop_blink __ARGS((void));
 void gui_mch_start_blink __ARGS((void));
 void gui_mch_new_colors __ARGS((void));
+void gui_mch_def_colors __ARGS((void));
 int gui_mch_open __ARGS((void));
 int gui_mch_get_winpos __ARGS((int *x, int *y));
 void gui_mch_set_winpos __ARGS((int x, int y));

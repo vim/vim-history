@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 15
+*remote.txt*    For Vim version 6.0ax.  Last change: 2001 Sep 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -92,12 +92,13 @@ the description in |eval.txt| or use CTRL-] on the function name to jump to
 the full explanation.
 
     synopsis				     explanation ~
-    remote_expr(server, string, idvar)       send expression
-    remote_send(server, string, idvar)       send key sequence
+    remote_expr( server, string, idvar)      send expression
+    remote_send( server, string, idvar)      send key sequence
     serverlist()			     get a list of available servers
-    remote_peek(serverid, retvar)	     check for reply string
-    remote_read(serverid)		     read reply string
-    server2client(serverid, string)	     send reply string
+    remote_peek( serverid, retvar)	     check for reply string
+    remote_read( serverid)		     read reply string
+    server2client( serverid, string)	     send reply string
+    remote_foreground( server)		     bring server to the front
 
 See also the explanation of |CTRL-\_CTRL-N|.  Very useful as a leading key
 sequence.

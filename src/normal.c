@@ -5436,7 +5436,8 @@ nv_brackets(cap)
 	    curwin->w_cursor = *pos;
 	    curwin->w_set_curswant = TRUE;
 #ifdef FEAT_FOLDING
-	    if ((fdo_flags & FDO_BLOCK) && KeyTyped && cap->oap->op_type == OP_NOP)
+	    if ((fdo_flags & FDO_BLOCK) && KeyTyped
+					       && cap->oap->op_type == OP_NOP)
 		foldOpenCursor();
 #endif
 	}
@@ -6230,8 +6231,9 @@ nv_gomark(cap)
 	nv_cursormark(cap, cap->arg, pos);
 
 #ifdef FEAT_VIRTUALEDIT
-    if (virtual_active())
-	getmark_coladd(c, (cap->oap->op_type == OP_NOP));
+    /* May need to clear the coladd that a mark includes. */
+    if (!virtual_active())
+	curwin->w_cursor.coladd = 0;
 #endif
 #ifdef FEAT_FOLDING
     if (cap->oap->op_type == OP_NOP
@@ -6442,7 +6444,7 @@ n_start_visual_mode(c)
     /* Corner case: the 0 position in a tab may change when going into
      * virtualedit.  Recalculate curwin->w_cursor to avoid bad hilighting.
      */
-    if (c == Ctrl_V && ve_flags & VE_BLOCK && gchar_cursor() == TAB)
+    if (c == Ctrl_V && (ve_flags & VE_BLOCK) && gchar_cursor() == TAB)
 	coladvance(curwin->w_virtcol);
 #endif
     VIsual = curwin->w_cursor;
@@ -6854,7 +6856,13 @@ nv_g_cmd(cap)
 	    check_cursor_lnum();
 	    i = (int)STRLEN(ml_get_curline());
 	    if (curwin->w_cursor.col > (colnr_T)i)
+	    {
+#ifdef FEAT_VIRTUALEDIT
+		if (virtual_active())
+		    curwin->w_cursor.coladd += curwin->w_cursor.col - i;
+#endif
 		curwin->w_cursor.col = i;
+	    }
 	}
 	cap->cmdchar = 'i';
 	nv_edit(cap);
@@ -7546,13 +7554,6 @@ nv_edit(cap)
 		    /* Pretent Insert mode here to allow the cursor on the
 		     * character past the end of the line */
 		    State = INSERT;
-#ifdef FEAT_VIRTUALEDIT
-		    /* If past the end of the line in virtualedit move,
-		     * just move forward one. */
-		    if (virtual_active() && gchar_cursor() == NUL)
-			curwin->w_cursor.coladd++;
-		    else
-#endif
 		    coladvance((colnr_T)MAXCOL);
 		    State = save_State;
 		}
@@ -7566,12 +7567,18 @@ nv_edit(cap)
 		break;
 
 	    case 'a':	/* "a"ppend is like "i"nsert on the next character. */
+#ifdef FEAT_VIRTUALEDIT
+		/* increment coladd when in virtual space, increment the
+		 * column otherwise, also to append after an unprintable char */
+		if (virtual_active()
+			&& (curwin->w_cursor.coladd > 0
+			    || *ml_get_cursor() == NUL
+			    || *ml_get_cursor() == TAB))
+		    curwin->w_cursor.coladd++;
+		else
+#endif
 		if (*ml_get_cursor() != NUL)
 		    inc_cursor();
-#ifdef FEAT_VIRTUALEDIT
-		else if (virtual_active())
-		    curwin->w_cursor.coladd++;
-#endif
 		break;
 	}
 

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0aw.  Last change: 2001 Sep 16
+*version6.txt*  For Vim version 6.0ax.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2003,6 +2003,8 @@ Timestamps:
 - When checking for a file being changed outside of Vim, also check if the
   file permissions changed.  When the file contents didn't change but the
   permissions did, give a warning.
+- Avoid checking too often, otherwise the dialog keeps popping up for a log
+  file that steadily grows.
 
 Mapping <M-A> when 'encoding' is "latin1" and then setting 'encoding' to
 "utf-8" causes the first byte of a multi-byte to be mapped.  Can cause very
@@ -3396,5 +3398,18 @@ ruler over the message.
 
 XIM still didn't work correctly on some systems, especially SGI/IRIX.  Added
 the 'imdisable' option, which is set by default for that system.
+
+Patch 6.0aw.008
+Problem:    When the first character of a file name is over 127, the Buffers
+	    menu entry would get a negative priority and cause problems.
+Solution:   Reduce the multiplier for the first character when computing
+	    the hash value for a Buffers menu entry.
+Files:	    runtime/menu.vim
+
+Patch 6.0aw.010
+Problem:    Win32: ":browse edit dir/dir" didn't work. (Vikas)
+Solution:   Change slashes to backslashes in the directory passed to the file
+	    browser.
+Files:	    src/gui_w48.c
 
  vim:tw=78:ts=8:ft=help:norl:

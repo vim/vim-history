@@ -1,4 +1,4 @@
-*indent.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 12
+*indent.txt*    For Vim version 6.0ax.  Last change: 2001 Sep 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

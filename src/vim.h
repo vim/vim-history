@@ -1190,8 +1190,8 @@ enum hlf_value
 #endif
 
 #ifdef FEAT_MBYTE
-# define MB_STRICMP(d, s)	((enc_utf8 || enc_dbcs == DBCS_CHT) ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)MAXCOL) : STRICMP((d), (s)))
-# define MB_STRNICMP(d, s, n)	((enc_utf8 || enc_dbcs == DBCS_CHT) ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)(n)) : STRNICMP((d), (s), (n)))
+# define MB_STRICMP(d, s)	(has_mbyte ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)MAXCOL) : STRICMP((d), (s)))
+# define MB_STRNICMP(d, s, n)	(has_mbyte ? mb_strnicmp((char_u *)(d), (char_u *)(s), (int)(n)) : STRNICMP((d), (s), (n)))
 #else
 # define MB_STRICMP(d, s)	STRICMP((d), (s))
 # define MB_STRNICMP(d, s, n)	STRNICMP((d), (s), (n))

@@ -19,6 +19,8 @@ if exists("*GetShIndent")
     finish
 endif
 
+set cpo-=C
+
 function GetShIndent()
     " Find a non-blank line above the current line.
     let lnum = prevnonblank(v:lnum - 1)

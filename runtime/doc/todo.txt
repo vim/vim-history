@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 16
+*todo.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -28,6 +28,14 @@ See |develop.txt| for development plans.
 
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
+
+Win32: On Windows 98 ":make -f file" doesn't work when 'shell' is
+"command.com" and 'makeprg' is "nmake".  Environment isn't passed on?
+Workaround: Always use vimrun.exe with the -s flag.
+
+Unverified:
+- Win32: vertical split and then :only has one highlighted char (Aeoo)
+- Dos32: Pressing CTRL-C often crashes Vim. (Ken Liao)
 
 9   "./vim -c "call remote_foreground('gvim')" sometimes hangs.  Race
     condition?  CTRL-C breaks out of it.
@@ -109,7 +117,8 @@ GTK+ GUI known bugs:
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
 9   When logging out from KDE, vim is not told to save its files.  Catching
-    the WM_SAVE_YOURSELF event doesn't work.
+    the WM_SAVE_YOURSELF event doesn't work.  See patch from Neil Bird that
+    uses gdk_add_client_message_filter().
 9   When selecting a font from the font selector with an embedded space it
     cannot be found. (Tsirkin)
 8   When a font is not fixed width, the message "not fixed-width" disappears
@@ -133,6 +142,11 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+7   Win32: When clicking on the gvim title bar produces a file-changed dialog,
+    after clicking on a button in that dialog the gvim window follows the
+    mouse.  The button-up event is lost.  Only with MS-Windows 98?
+9   The print dialog uses a font which doesn't display multi-byte messages.
+    Include patch from Vipin Aravind?
 7   Win32: When mouse is hidden and in the toolbar, moving it won't make it
     appear. (Sami Salonen)
 8   Windows NT: writing to aux.* makes Vim hang. (Acevedo)
@@ -200,6 +214,9 @@ Win32 GUI known bugs:
 
 
 Athena and Motif:
+8   X11: A menu that contains an umlaut is truncated at that character.
+    Happens when the locale is "C", which uses ASCII instead of IS0-8859-1.
+    Is there a way to use latin1 by default?  Gnome_init() seems to do this.
 8   Perhaps use fontsets for everything?
 6   When starting in English and switching the language to Japanese, setting
     the locale with ":lang", 'guifontset' and "hi menu font=", deleting all
@@ -349,6 +366,10 @@ MSDOS, OS/2 and Win32:
 8   OS/2: Add clipboard support?  See example clipbrd.exe from Alexander
     Wagner.
 8   OS/2: Add Extended Attributes support and define HAVE_ACL.
+8   Editing a file with braces doesn't work, e.g., "C:\TEMP\(1).txt".  Mostly
+    a problem when dropping the file on a Vim shortcut or starting with the
+    "Edit with Vim" menu.  Escape the () in main() when the file is a full
+    path? (Yasuhiro Matsumoto)
 8   Win32 console: <M-Up> and <M-Down> don't work. (Geddes)  We don't have
     special keys for these.  Should use modifier + key.
 8   Win32 console: caps-lock makes non-alpha keys work like with shift.
@@ -437,17 +458,30 @@ VMS:
 
 
 "Small" problems:
+7   The message in bt_dontwrite_msg() could be clearer.
+8   Unix: When libcall() fails there is no clear error message.  Johannes
+    Zellner has a patch for this.
+8   The CursorIM highlighting only sets the background color.  Patch from
+    Muraoka Taro adds the foreground color.
+8   The script ID that is stored with an option and displayed with ":verbose
+    set" isn't reset when the option is set internally.  For example when
+    'foldlevel' is set from 'foldlevelstart'.
+8   In the fileformat dialog, "Cancel" isn't translated.  Add a global
+    variable for this. (Eduardo Fernandez)
 9   When editing a file with 'readonly' set, there is no check for an existing
     swap file.  Then using ":write" (without making any changes) doesn't give
     a warning either.  Should check for an existing swap file without creating
     one.
+7   On MS-DOS or MS-Windows, when editing the same file over a network, the
+    drive letter is different, thus an existing swap file doesn't generate a
+    warning.  Use some flag to indicate the swap file is in the same directory
+    as the original file?
 7   When 'showbreak' is set, the amount of space a Tab occupies changes.
     Should work like 'showbreak' is inserted without changing the Tabs.
 7   When there is a "help.txt" window in a session file, restoring that
     session will not get the "LOCAL ADDITIONS" back.
 8   ":hardcopy":
     - Need to handle unprintable characters.
-    - ml_get error? (Xiangjiang Ma)
     - Win32: On a B&W printer syntax highlighting isn't visible.  Perform
       dithering to make grey text?
 8   In Visual block mode with 'lbr' set, a change command doesn't insert the
@@ -1114,7 +1148,7 @@ Performance:
     with an argument that can be messed with.
     Generic solution: Make a struct that contains a pointer and a flag that
     indicates if the pointer should be freed when replaced.
-7   Check that that the file size is not more than "sizeof(long)".
+7   Check that the file size is not more than "sizeof(long)".
 -   Further improve finding mappings in maphash[] in vgetorpeek()
 8   Dragging the status line doesn't scroll but redraw.
 8   Syntax highlighting is slow when deleting lines.  Try in
@@ -2332,6 +2366,13 @@ Registers:
 
 
 Various improvements:
+8   Add "--remote-fail": When contacting the server fails, exit Vim.
+    Add "--remote-self": When contacting the server fails, do it in this Vim.
+    Overrules the defaulf of "--remote-send" to fail and "--remote" to do it
+    in this Vim.
+8   No address range can be used before the command modifiers.  This makes
+    them difficult to use in a menu for Visual mode.  Accept the range and
+    have it apply to the following command.
 8   Add the possibility to set 'fileformats' to force a format and strip other
     CR characters.  For example, for "dos" files remove CR characters at the
     end of the line, so that a file with mixed line endings is cleaned up.
@@ -2567,6 +2608,8 @@ Various improvements:
 -   Support URL links for ^X^F in Insert mode, like for "gf".
 -   Add 'wwwpath', used like 'path' for when "gf" used on an URL?
 -   Support %name% expansion for "gf" on Windows.
+-   Make "gf" work on "file://c:/path/name".  "file:/c:/" and "file:///c:/"
+    should also work?
 -   When finding an URL or file name, and it doesn't exist, try removing a
     trailing '.'.
 -   Add ":path" command modifier.  Should work for every command that takes a

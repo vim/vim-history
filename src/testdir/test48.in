@@ -30,7 +30,7 @@ $4lC<-- should be 3 ' '
 $4la<-- should be 4 ' '
 :"
 :"   Make sure 'A' works
-$4lA<-- should be 4 ' '
+$4lA<-- should be 0 ' '
 :"
 :"   Make sure 'D' works
 $4lDi<-- 'D' should be intact

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Debian Changelog
 " Maintainer:	Michael Piefel <piefel@informatik.hu-berlin.de>
-" Last Change:	14 February 2001
+" Last Change:	18 August 2001
 
 if exists("g:did_changelog_ftplugin")
   finish
@@ -36,14 +36,13 @@ function <SID>Email()
     endif
 endfunction
 
-" Returns date in RFC822 format. 822-date is in dpkg-dev, so Debian
-" developers should have it.
+" Returns date in RFC822 format.
 function <SID>Date()
-    if executable("822-date")
-	return substitute(system("822-date"), "\n", "", "")
-    else
-	return "Dow, dd Mon yyyy hh:mm:ss"
-    endif
+    let savelang = v:lc_time
+    execute "language time C"
+    let dateandtime = strftime("%a, %d %b %Y %X %z")
+    execute "language time " . savelang
+    return dateandtime
 endfunction
 
 function <SID>WarnIfNotUnfinalised()
@@ -157,8 +156,7 @@ function <SID>MakeMenu()
     amenu Changelog.Set\ Distribution.frozen\ unstable	:call Distribution("frozen unstable")<CR>
     amenu Changelog.Set\ Distribution.stable\ unstable	:call Distribution("stable unstable")<CR>
     amenu Changelog.Set\ Distribution.stable\ frozen	:call Distribution("stable frozen")<CR>
-    amenu Changelog.Set\ Distribution.stable\ frozen\ unstable
-	\ :call Distribution("stable frozen unstable")<CR>
+    amenu Changelog.Set\ Distribution.stable\ frozen\ unstable	:call Distribution("stable frozen unstable")<CR>
 
     amenu Changelog.Set\ &Urgency.&low			:call Urgency("low")<CR>
     amenu Changelog.Set\ Urgency.&medium		:call Urgency("medium")<CR>
@@ -179,8 +177,7 @@ function <SID>MakeMenu()
 endfunction
 
 augroup changelogMenu
-au BufEnter * if &filetype == "debchangelog" |
-    \ call <SID>MakeMenu() | setlocal tw=78 | set comments=f:* | endif
+au BufEnter * if &filetype == "debchangelog" | call <SID>MakeMenu() | setlocal tw=78 | set comments=f:* | endif
 au BufLeave * if &filetype == "debchangelog" | aunmenu Changelog | endif
 augroup END
 

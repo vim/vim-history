@@ -221,21 +221,6 @@ movemark(count)
 }
 #endif
 
-#if defined(FEAT_VIRTUALEDIT) || defined(PROTO)
-static pos_T *getmark2 __ARGS((int c, int changefile, int fcoladd));
-
-/*
- * Call getmark() and set curwin->w_cursor.coladd.
- */
-    pos_T *
-getmark_coladd(c, changefile)
-    int		c;
-    int		changefile;		/* allowed to edit another file */
-{
-    return getmark2(c, changefile, TRUE);
-}
-#endif
-
 /*
  * Find mark "c".
  * Returns:
@@ -249,18 +234,6 @@ getmark(c, changefile)
     int		c;
     int		changefile;		/* allowed to edit another file */
 {
-#ifdef FEAT_VIRTUALEDIT
-    return getmark2(c, changefile, FALSE);
-}
-
-    static pos_T *
-getmark2(c, changefile, fcoladd)
-    int		c;
-    int		changefile;		/* allowed to edit another file */
-    int		fcoladd;		/* advance column?? */
-{
-    int			coladd = 0;
-#endif
     pos_T		*posp;
 #ifdef FEAT_VISUAL
     pos_T		*startp, *endp;
@@ -305,9 +278,6 @@ getmark2(c, changefile, fcoladd)
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
-#ifdef FEAT_VIRTUALEDIT
-	curwin->w_cursor.coladd = 0;
-#endif
     }
     else if (c == '(' || c == ')')	/* to previous/next sentence */
     {
@@ -320,9 +290,6 @@ getmark2(c, changefile, fcoladd)
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
-#ifdef FEAT_VIRTUALEDIT
-	curwin->w_cursor.coladd = 0;
-#endif
     }
 #ifdef FEAT_VISUAL
     else if (c == '<' || c == '>')	/* start/end of visual area */
@@ -332,16 +299,10 @@ getmark2(c, changefile, fcoladd)
 	if ((c == '<') == lt(*startp, *endp))
 	{
 	    posp = startp;
-#ifdef FEAT_VIRTUALEDIT
-	    coladd = curbuf->b_visual_start.coladd;
-#endif
 	}
 	else
 	{
 	    posp = endp;
-#ifdef FEAT_VIRTUALEDIT
-	    coladd = curbuf->b_visual_end.coladd;
-#endif
 	}
 	/*
 	 * For Visual line mode, set mark at begin or end of line
@@ -360,9 +321,6 @@ getmark2(c, changefile, fcoladd)
     else if (ASCII_ISLOWER(c))		/* normal named mark */
     {
 	posp = &(curbuf->b_namedm[c - 'a']);
-#ifdef FEAT_VIRTUALEDIT
-	coladd = curbuf->b_namedm[c - 'a'].coladd;
-#endif
     }
     else if (ASCII_ISUPPER(c) || vim_isdigit(c))	/* named file mark */
     {
@@ -371,9 +329,6 @@ getmark2(c, changefile, fcoladd)
 	else
 	    c -= 'A';
 	posp = &(namedfm[c].fmark.mark);
-#ifdef FEAT_VIRTUALEDIT
-	coladd = namedfm[c].fmark.mark.coladd;
-#endif
 
 	if (namedfm[c].fmark.fnum == 0)
 	    fname2fnum(&namedfm[c]);
@@ -390,10 +345,6 @@ getmark2(c, changefile, fcoladd)
 		{
 		    /* Set the lnum now, autocommands could have changed it */
 		    curwin->w_cursor = namedfm[c].fmark.mark;
-#ifdef FEAT_VIRTUALEDIT
-		    if (!fcoladd)
-			curwin->w_cursor.coladd = 0;
-#endif
 		    return (pos_T *)-1;
 		}
 		pos_copy.lnum = -1;	/* can't get file */
@@ -403,13 +354,6 @@ getmark2(c, changefile, fcoladd)
 					   current buffer */
 	}
     }
-
-#ifdef FEAT_VIRTUALEDIT
-    if (fcoladd)
-	curwin->w_cursor.coladd = coladd;
-    else
-	curwin->w_cursor.coladd = 0;
-#endif
 
     return posp;
 }

@@ -187,7 +187,7 @@ menut Fold\ column\ &width		Larg&hezza\ piegature\ in\ colonne
 " Names for buffer menu.
 menut &Buffers		&Buffer
 menut &Refresh\ menu	&Rinfresca\ menu
-menut &Delete		&Cancella
+menut &Delete		&Elimina
 menut &Alternate		&Alternato
 menut &Next			&Successivo
 menut &Previous		&Precedente
@@ -222,20 +222,20 @@ menut Select\ Fo&nt\.\.\.		Scegli\ &Font\.\.\.
 " The popup menu
 menut &Undo			&Annulla
 menut Cu&t			&Taglia
-menut &Copy			C&opia
-menut &Paste		I&ncolla
-menut &Delete		C&ancella
+menut &Copy			&Copia
+menut &Paste		&Incolla
+menut &Delete		&Elimina
 menut Select\ Blockwise	Seleziona\ in\ blocco
 menut Select\ &Word		Seleziona\ &Parola
 menut Select\ &Line		Seleziona\ &Linea
 menut Select\ &Block	Seleziona\ &Blocco
-menut Select\ &All		Seleziona\ &Tutto
+menut Select\ &All		Seleziona\ T&utto
 
 " The GUI toolbar (for MS-Windows and GTK)
 if has("toolbar")
 menut Open		Apri
 menut Save		Salva
-menut SaveAll	SalvaTutto
+menut SaveAll	Salva Tutto
 menut Print		Stampa
 menut Undo		Annulla
 menut Redo		Rifai
@@ -243,18 +243,18 @@ menut Cut		Taglia
 menut Copy		Copia
 menut Paste		Incolla
 menut Find		Cerca
-menut FindNext	CercaSuccessivo
-menut FindPrev	CercaPrecedente
+menut FindNext	Cerca Successivo
+menut FindPrev	Cerca Precedente
 menut Replace	Rimpiazza
-menut LoadSesn	CaricaSessione
-menut SaveSesn	SalvaSessione
-menut RunScript	EseguiScript
+menut LoadSesn	Carica Sessione
+menut SaveSesn	Salva Sessione
+menut RunScript	Esegui Script
 menut Make		Make
 "menutrans Shell		Shell
-menut RunCtags	EseguiCtags
+menut RunCtags	Esegui Ctags
 menut TagJump	VaiATag
 menut Help		Aiuto
-menut FindHelp	CercaInAiuto
+menut FindHelp	Cerca in Aiuto
 endif
 " The GUI toolbar
 if has("toolbar")
@@ -272,18 +272,18 @@ if has("toolbar")
     tmenu ToolBar.Copy		Copia
     tmenu ToolBar.Paste		Incolla
     tmenu ToolBar.Find		Cerca
-    tmenu ToolBar.FindNext	CercaSuccessivo
-    tmenu ToolBar.FindPrev	CercaPrecedente
+    tmenu ToolBar.FindNext	Cerca Successivo
+    tmenu ToolBar.FindPrev	Cerca Precedente
     tmenu ToolBar.Replace	Rimpiazza
-    tmenu ToolBar.LoadSesn	CaricaSessione
-    tmenu ToolBar.SaveSesn	SalvaSessione
-    tmenu ToolBar.RunScript	EseguiScript
+    tmenu ToolBar.LoadSesn	Carica Sessione
+    tmenu ToolBar.SaveSesn	Salva Sessione
+    tmenu ToolBar.RunScript	Esegui Script
     tmenu ToolBar.Make		Make
     tmenu ToolBar.Shell		Shell
-    tmenu ToolBar.RunCtags	EseguiCtags
-    tmenu ToolBar.TagJump	VaiATag
+    tmenu ToolBar.RunCtags	Esegui Ctags
+    tmenu ToolBar.TagJump	Vai a Tag
     tmenu ToolBar.Help		Aiuto
-    tmenu ToolBar.FindHelp	CercaInAiuto
+    tmenu ToolBar.FindHelp	Cerca in Aiuto
   endfun
 endif
 

@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 11
+*message.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -143,9 +143,9 @@ matching file names could be found, but that the pattern was illegal.
   Cannot open "{filename}" for writing
   Can't open file for writing
 
-For some reason the file you are writing to cannot be be created or
-overwritten.  The reason could be that you do not have permission to write in
-the directory or the file name is not valid.
+For some reason the file you are writing to cannot be created or overwritten.
+The reason could be that you do not have permission to write in the directory
+or the file name is not valid.
 
 							*E166*  >
   Can't open linked file for writing
@@ -335,7 +335,7 @@ The current buffer has no name.  To write it, use ":w fname".  Or give the
 buffer a name with ":file fname".
 
 							*E141*  >
-  No file name name for buffer {number}
+  No file name for buffer {number}
 
 One of the buffers that was changed does not have a file name.  Therefore it
 cannot be written.  You need to give the buffer a file name: >

@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0aw.  Last change: 2001 Sep 03
+*gui.txt*       For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -28,7 +28,7 @@ included.  You can check this with the ":version" command, it should include
 "+GUI_Athena", "+GUI_BeOS", "+GUI_GTK", "+GUI_Motif" or "MS-Windows ... bit
 GUI version".
 
-How to start the GUI depends on the system used.  Mostly you can can run the
+How to start the GUI depends on the system used.  Mostly you can run the
 GUI version of Vim with:
     gvim [options] [files...]
 

@@ -5611,8 +5611,11 @@ ins_esc(count, cmdchar)
     /*
      * The cursor should end up on the last inserted character.
      */
-    if (       curwin->w_cursor.col != 0
-	    && (restart_edit == NUL
+    if ((curwin->w_cursor.col != 0
+#ifdef FEAT_VIRTUALEDIT
+		|| curwin->w_cursor.coladd > 0
+#endif
+	) && (restart_edit == NUL
 		|| (gchar_cursor() == NUL
 #ifdef FEAT_VISUAL
 		    && !VIsual_active
@@ -5622,7 +5625,14 @@ ins_esc(count, cmdchar)
 	    && !revins_on
 #endif
 				      )
-	--curwin->w_cursor.col;
+    {
+#ifdef FEAT_VIRTUALEDIT
+	if (curwin->w_cursor.coladd > 0 || ve_flags == VE_ALL)
+	    oneleft();
+	else
+#endif
+	    --curwin->w_cursor.col;
+    }
 
     State = NORMAL;
     /* need to position cursor again (e.g. when on a TAB ) */

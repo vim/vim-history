@@ -1,7 +1,7 @@
 " Vim Ada plugin file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2001 Sep 02
+" Last Change:	2001 September 18
 " Version:	$Id$
 
 " Perform Ada specific completion & tagging.
@@ -20,6 +20,10 @@ endif
 
 " Don't load another plugin for this buffer
 let b:did_ftplugin = 1
+
+" Temporarily set cpoptions to ensure the script loads OK
+let s:cpoptions = &cpoptions
+set cpo-=C
 
 
 " Make local tag mappings for this buffer (if not already set)
@@ -104,11 +108,11 @@ function! AdaWord(...)
       " Have to include previous line from file
       let linenr = linenr - 1
       if linenr < 1  ||  !search_prev_lines
-	" Start of file or matching in a comment
-	let linenr = 1
-	let newcol = 0
-	let ourmatch = match( line, s:AdaWordRegex )
-	break
+        " Start of file or matching in a comment
+        let linenr = 1
+        let newcol = 0
+        let ourmatch = match( line, s:AdaWordRegex )
+        break
       endif
       " Get previous line, and prepend it to our search string
       let newline = substitute( getline(linenr), s:AdaComment, '', '' )
@@ -193,5 +197,9 @@ function! s:AdaCompletionEnd()
   set iskeyword-=46
   return ''
 endfunction
+
+" Reset cpoptions
+let &cpoptions = s:cpoptions
+unlet s:cpoptions
 
 " vim: sts=2 sw=2 :

@@ -19,6 +19,9 @@ fun! <SID>VbSearch(pattern, flags)
     endwhile
 endfun
 
+let s:cpo_save = &cpo
+set cpo&vim
+
 " NOTE the double escaping \\|
 nnoremap <silent> [[ :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'bW')<cr>
 nnoremap <silent> ]] :call <SID>VbSearch('^\s*\(private\s\+\)\=\(function\\|sub\)', 'W')<cr>
@@ -36,3 +39,6 @@ if exists("loaded_matchit")
     \ '\%(^\s*\)\@<=\%(\<private\>\s\+\)\=\<function\>\s\+\([^ \t(]\+\):\%(^\s*\)\@<=\<\1\>\s*=:\%(^\s*\)\@<=\<end\>\s\+\<function\>,' .
     \ '\%(^\s*\)\@<=\%(\<private\>\s\+\)\=\<sub\>\s\+:\%(^\s*\)\@<=\<end\>\s\+\<sub\>'
 endif
+
+let &cpo = s:cpo_save
+unlet s:cpo_save

@@ -1,4 +1,4 @@
-*editing.txt*   For Vim version 6.0aw.  Last change: 2001 Sep 03
+*editing.txt*   For Vim version 6.0ax.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -233,8 +233,7 @@ If you want to keep the changed buffer without saving it, switch on the
 
 							*:ex*
 :ex [++opt] [+cmd] [file]
-			Same as |:edit|, but also switch to "Ex" mode.  See
-			|Ex-mode|.
+			Same as |:edit|.
 
 							*:vi* *:visual*
 :vi[sual][!] [++opt] [+cmd] [file]

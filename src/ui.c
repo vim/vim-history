@@ -2734,6 +2734,11 @@ ui_focus_change(in_focus)
 	}
 # endif
     }
+#ifdef FEAT_TITLE
+    /* File may have been changed from 'readonly' to 'noreadonly' */
+    if (need_maketitle)
+	maketitle();
+#endif
 }
 #endif
 
@@ -2745,10 +2750,14 @@ ui_focus_change(in_focus)
 im_save_status(psave)
     long *psave;
 {
-    /* Do save when IM is on, or IM is off and saved status is on. */
-    if (vgetc_im_active)
-	*psave = B_IMODE_IM;
-    else if (*psave == B_IMODE_IM)
-	*psave = B_IMODE_NONE;
+    /* Don't save when 'imdisable' is set, IM is always disabled then. */
+    if (!p_imdisable)
+    {
+	/* Do save when IM is on, or IM is off and saved status is on. */
+	if (vgetc_im_active)
+	    *psave = B_IMODE_IM;
+	else if (*psave == B_IMODE_IM)
+	    *psave = B_IMODE_NONE;
+    }
 }
 #endif

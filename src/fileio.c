@@ -4899,9 +4899,13 @@ check_timestamps(focus)
     int		n;
 
     /* Avoid doing a check twice.  The OK/Reload dialog can cause a focus
-     * event and we would keep on checking if the file is steadily growing. */
+     * event and we would keep on checking if the file is steadily growing.
+     * Do check again after typing something. */
     if (focus && did_check_timestamps)
+    {
+	need_check_timestamps = TRUE;
 	return FALSE;
+    }
 
     if (!stuff_empty() || global_busy || !typebuf_typed()
 #ifdef FEAT_AUTOCMD
@@ -4983,7 +4987,13 @@ buf_check_timestamp(buf, focus)
     if (       !(buf->b_flags & BF_NOTEDITED)
 	    && buf->b_mtime != 0
 	    && ((stat_res = mch_stat((char *)buf->b_ffname, &st)) < 0
-		|| time_differs((long)st.st_mtime, buf->b_mtime)))
+		|| time_differs((long)st.st_mtime, buf->b_mtime)
+#ifdef HAVE_ST_MODE
+		|| (int)st.st_mode != buf->b_orig_mode
+#else
+		|| mch_getperm(buf->b_ffname) != buf->b_orig_mode
+#endif
+		))
     {
 	retval = 1;
 

@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 6.0aw.  Last change: 2001 Sep 03
+*scroll.txt*    For Vim version 6.0ax.  Last change: 2001 Sep 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -68,6 +68,8 @@ seen):
 
 							*CTRL-Y*
 CTRL-Y			Scroll window [count] lines upwards in the buffer.
+			Note: When using the MS-Windows key bindings CTRL-Y is
+			remapped to redo.
 
 							*CTRL-U*
 CTRL-U			Scroll window Upwards in the buffer.  The number of

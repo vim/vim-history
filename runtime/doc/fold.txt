@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0aw.  Last change: 2001 Sep 09
+*fold.txt*      For Vim version 6.0ax.  Last change: 2001 Sep 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -444,7 +444,7 @@ FOLDLEVEL						*fold-foldlevel*
 When 'foldlevel' is 0, all folds are closed.
 When 'foldlevel' is positive, some folds closed.
 When 'foldlevel' is very high, all folds are open.
-'foldlevel' is applied when it it changed.  After that manually folds can be
+'foldlevel' is applied when it is changed.  After that manually folds can be
 opened and closed.
 When increased, folds above the new level are opened.  No manually opened
 folds will be closed.

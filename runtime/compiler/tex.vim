@@ -18,7 +18,11 @@ endif
 
 " Values for makeprg and errorformat are taken from vim help, see
 " :help errorformat-LaTeX
-let &makeprg=current_compiler.' \\nonstopmode \\input\{$*\}'
+if &shell =~ 'sh'
+	let &makeprg=current_compiler.' \\nonstopmode \\input\{$*\}'
+else
+	let &makeprg=current_compiler.' \nonstopmode \input{$*}'
+endif
 setlocal errorformat=%E!\ LaTeX\ %trror:\ %m,
 	\%E!\ %m,
 	\%+WLaTeX\ %.%#Warning:\ %.%#line\ %l%.%#,
