@@ -329,6 +329,12 @@ edit(cmdchar, startln, count)
     else
 	State = INSERT;
 
+    /*
+     * Need to recompute the cursor position, it might move when the cursor is
+     * on a TAB or special character.
+     */
+    curs_columns(TRUE);
+
     if (curbuf->b_p_iminsert == B_IMODE_LMAP)
 	State |= LANGMAP;
 #ifdef USE_IM_CONTROL
@@ -338,12 +344,6 @@ edit(cmdchar, startln, count)
 #if defined(FEAT_MBYTE) && defined(MACOS)
     KeyScript(previous_script);
 #endif
-
-    /*
-     * Need to recompute the cursor position, it might move when the cursor is
-     * on a TAB or special character.
-     */
-    curs_columns(TRUE);
 
 #ifdef FEAT_MOUSE
     setmouse();

@@ -4062,9 +4062,15 @@ screen_line(row, coloff, endcol, clear_width
 	    }
 	    /* When writing a single-width character over a double-width
 	     * character and at the end of the redrawn text, need to clear out
-	     * the right halve of the old character. */
-	    if (has_mbyte && char_cells == 1 && col + 1 == endcol
-		    && (*mb_off2cells)(off_to) > 1)
+	     * the right halve of the old character.
+	     * Also required when writing the right halve of a double-width
+	     * char over the left halve of an existing one. */
+	    if (has_mbyte && col + char_cells == endcol
+		    && ((char_cells == 1
+			    && (*mb_off2cells)(off_to) > 1)
+			|| (char_cells == 2
+			    && (*mb_off2cells)(off_to) == 1
+			    && (*mb_off2cells)(off_to + 1) > 1)))
 		clear_next = TRUE;
 #endif
 
@@ -4355,7 +4361,7 @@ wm_gettail(s)
 }
 
 /*
- * Get the lenght of an item as it will be shown in that status line.
+ * Get the lenght of an item as it will be shown in the status line.
  */
     static int
 status_match_len(xp, s)
@@ -5106,9 +5112,13 @@ screen_puts(text, row, col, attr)
 #ifdef FEAT_MBYTE
 		/* When at the end of the text and overwriting a two-cell
 		 * character with a one-cell character, need to clear the next
-		 * cell. */
-		if (has_mbyte && mbyte_cells == 1 && ptr[mbyte_blen] == NUL
-			&& (*mb_off2cells)(off) > 1)
+		 * cell.  Also when overwriting the left halve of a two-cell
+		 * char with the right halve of a two-cell char. */
+		if (has_mbyte && ptr[mbyte_blen] == NUL
+			&& ((mbyte_cells == 1 && (*mb_off2cells)(off) > 1)
+			    || (mbyte_cells == 2
+				&& (*mb_off2cells)(off) == 1
+				&& (*mb_off2cells)(off + 1) > 1)))
 		    clear_next_cell = TRUE;
 #endif
 		ScreenLines[off] = *ptr;
