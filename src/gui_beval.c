@@ -46,17 +46,17 @@ static void createBalloonEvalWindow __ARGS((BalloonEval *));
 
 /*
  * Create a balloon-evaluation area for a Widget.
- * There can be either a "msg" for a fixed string or "msgCB" to generate a
+ * There can be either a "mesg" for a fixed string or "mesgCB" to generate a
  * message by calling this callback function.
- * When "msg" is not NULL it must remain valid for as long as the balloon is
+ * When "mesg" is not NULL it must remain valid for as long as the balloon is
  * used.  It is not freed here.
  * Returns a pointer to the resulting object (NULL when out of memory).
  */
     BalloonEval *
-gui_mch_create_beval_area(target, msg, msgCB, clientData)
+gui_mch_create_beval_area(target, mesg, mesgCB, clientData)
     Widget	target;
-    char_u	*msg;
-    void	(*msgCB)__ARGS((BalloonEval *, int));
+    char_u	*mesg;
+    void	(*mesgCB)__ARGS((BalloonEval *, int));
     XtPointer	clientData;
 {
     char	*display_name;	    /* get from gui.dpy */
@@ -64,7 +64,7 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
     char	*p;
     BalloonEval	*beval;
 
-    if (msg != NULL && msgCB != NULL)
+    if (mesg != NULL && mesgCB != NULL)
     {
 	EMSG(_("E232: Cannot create BalloonEval with both message and callback"));
 	return NULL;
@@ -80,8 +80,8 @@ gui_mch_create_beval_area(target, msg, msgCB, clientData)
 	beval->showState = ShS_NEUTRAL;
 	beval->x = 0;
 	beval->y = 0;
-	beval->msg = msg;
-	beval->msgCB = msgCB;
+	beval->msg = mesg;
+	beval->msgCB = mesgCB;
 	beval->clientData = clientData;
 
 	/*
@@ -140,12 +140,12 @@ gui_mch_disable_beval_area(beval)
 
 #if defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
     Boolean
-gui_mch_get_beval_info(beval, filename, line, text, index)
+gui_mch_get_beval_info(beval, filename, line, text, idx)
     BalloonEval	*beval;
     char_u     **filename;
     int		*line;
     char_u     **text;
-    int		*index;
+    int		*idx;
 {
     win_T	*wp;
     int		row, col;
@@ -191,7 +191,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 		*filename = wp->w_buffer->b_ffname;
 		*line = row;
 		*text = lbuf;
-		*index = col;
+		*idx = col;
 		beval->ts = wp->w_buffer->b_p_ts;
 		return True;
 	    }
@@ -202,15 +202,15 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 }
 
 /*
- * Show a balloon with "msg".
+ * Show a balloon with "mesg".
  */
     void
-gui_mch_post_balloon(beval, msg)
+gui_mch_post_balloon(beval, mesg)
     BalloonEval	*beval;
-    char_u	*msg;
+    char_u	*mesg;
 {
-    beval->msg = msg;
-    if (msg != NULL)
+    beval->msg = mesg;
+    if (mesg != NULL)
 	drawBalloon(beval);
     else
 	undrawBalloon(beval);

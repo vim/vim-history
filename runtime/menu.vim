@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jun 12
+" Last Change:	2001 Jun 26
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -389,7 +389,9 @@ amenu 40.390 &Tools.&Next\ Error<Tab>:cn	:cn<CR>
 amenu 40.400 &Tools.&Previous\ Error<Tab>:cp	:cp<CR>
 amenu 40.410 &Tools.&Older\ List<Tab>:cold	:colder<CR>
 amenu 40.420 &Tools.N&ewer\ List<Tab>:cnew	:cnewer<CR>
-amenu 40.430 &Tools.Error\ &Window<Tab>:cwin	:cwin<CR>
+amenu 40.430.50 &Tools.Error\ &Window.&Update<Tab>:cwin	:cwin<CR>
+amenu 40.430.60 &Tools.Error\ &Window.&Open<Tab>:copen	:copen<CR>
+amenu 40.430.70 &Tools.Error\ &Window.&Close<Tab>:cclose	:cclose<CR>
 amenu 40.520 &Tools.-SEP3-                      :
 if has("vms")
   amenu 40.530 &Tools.&Convert\ to\ HEX<Tab>:%!mc\ vim:xxd
@@ -414,6 +416,27 @@ else
 	\ :doautocmd filetypedetect BufReadPost<CR>
 	\ :let &mod = b:mod<CR>
 endif
+
+" Setup the Tools.Compiler submenu
+let s:n = globpath(&runtimepath, "compiler/*.vim")
+let s:idx = 100
+while strlen(s:n) > 0
+  let s:i = stridx(s:n, "\n")
+  if s:i < 0
+    let s:name = s:n
+    let s:n = ""
+  else
+    let s:name = strpart(s:n, 0, s:i)
+    let s:n = strpart(s:n, s:i + 1, 19999)
+  endif
+  let s:name = substitute(s:name, '.*[/\\:]\([^/\\:]*\)\.vim', '\1', '')
+  exe "amenu 30.440." . s:idx . ' &Tools.&Set\ Compiler.' . s:name . " :compiler " . s:name . "<CR>"
+  unlet s:name
+  unlet s:i
+  let s:idx = s:idx + 10
+endwhile
+unlet s:n
+unlet s:idx
 
 if !exists("no_buffers_menu")
 
@@ -1106,22 +1129,23 @@ am 50.100.190 &Syntax.TUV.TeX :cal SetSyn("tex")<CR>
 am 50.100.200 &Syntax.TUV.TeX\ configuration :cal SetSyn("texmf")<CR>
 am 50.100.210 &Syntax.TUV.Texinfo :cal SetSyn("texinfo")<CR>
 am 50.100.220 &Syntax.TUV.TF\ mud\ client :cal SetSyn("tf")<CR>
-am 50.100.230 &Syntax.TUV.Trasys\ input :cal SetSyn("trasys")<CR>
-am 50.100.240 &Syntax.TUV.TSS.Command\ Line :cal SetSyn("tsscl")<CR>
-am 50.100.250 &Syntax.TUV.TSS.Geometry :cal SetSyn("tssgm")<CR>
-am 50.100.260 &Syntax.TUV.TSS.Optics :cal SetSyn("tssop")<CR>
-am 50.100.280 &Syntax.TUV.UIT/UIL :cal SetSyn("uil")<CR>
-am 50.100.290 &Syntax.TUV.UnrealScript :cal SetSyn("uc")<CR>
-am 50.100.310 &Syntax.TUV.Verilog\ HDL :cal SetSyn("verilog")<CR>
-am 50.100.320 &Syntax.TUV.Vgrindefs :cal SetSyn("vgrindefs")<CR>
-am 50.100.330 &Syntax.TUV.VHDL :cal SetSyn("vhdl")<CR>
-am 50.100.340 &Syntax.TUV.Vim.Vim\ help\ file :cal SetSyn("help")<CR>
-am 50.100.350 &Syntax.TUV.Vim.Vim\ script :cal SetSyn("vim")<CR>
-am 50.100.360 &Syntax.TUV.Vim.Viminfo\ file :cal SetSyn("viminfo")<CR>
-am 50.100.370 &Syntax.TUV.Virata :cal SetSyn("virata")<CR>
-am 50.100.380 &Syntax.TUV.Visual\ Basic :cal SetSyn("vb")<CR>
-am 50.100.390 &Syntax.TUV.VRML :cal SetSyn("vrml")<CR>
-am 50.100.400 &Syntax.TUV.VSE\ JCL :cal SetSyn("vsejcl")<CR>
+am 50.100.230 &Syntax.TUV.Tidy\ configuration :cal SetSyn("tidy")<CR>
+am 50.100.240 &Syntax.TUV.Trasys\ input :cal SetSyn("trasys")<CR>
+am 50.100.250 &Syntax.TUV.TSS.Command\ Line :cal SetSyn("tsscl")<CR>
+am 50.100.260 &Syntax.TUV.TSS.Geometry :cal SetSyn("tssgm")<CR>
+am 50.100.270 &Syntax.TUV.TSS.Optics :cal SetSyn("tssop")<CR>
+am 50.100.290 &Syntax.TUV.UIT/UIL :cal SetSyn("uil")<CR>
+am 50.100.300 &Syntax.TUV.UnrealScript :cal SetSyn("uc")<CR>
+am 50.100.320 &Syntax.TUV.Verilog\ HDL :cal SetSyn("verilog")<CR>
+am 50.100.330 &Syntax.TUV.Vgrindefs :cal SetSyn("vgrindefs")<CR>
+am 50.100.340 &Syntax.TUV.VHDL :cal SetSyn("vhdl")<CR>
+am 50.100.350 &Syntax.TUV.Vim.Vim\ help\ file :cal SetSyn("help")<CR>
+am 50.100.360 &Syntax.TUV.Vim.Vim\ script :cal SetSyn("vim")<CR>
+am 50.100.370 &Syntax.TUV.Vim.Viminfo\ file :cal SetSyn("viminfo")<CR>
+am 50.100.380 &Syntax.TUV.Virata :cal SetSyn("virata")<CR>
+am 50.100.390 &Syntax.TUV.Visual\ Basic :cal SetSyn("vb")<CR>
+am 50.100.400 &Syntax.TUV.VRML :cal SetSyn("vrml")<CR>
+am 50.100.410 &Syntax.TUV.VSE\ JCL :cal SetSyn("vsejcl")<CR>
 am 50.110.100 &Syntax.WXYZ.WEB :cal SetSyn("web")<CR>
 am 50.110.110 &Syntax.WXYZ.Webmacro :cal SetSyn("webmacro")<CR>
 am 50.110.120 &Syntax.WXYZ.Website\ MetaLanguage :cal SetSyn("wml")<CR>

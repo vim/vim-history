@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_08.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -16,6 +16,7 @@ side by side.  All this is possible with split windows.
 |08.5|	Moving windows
 |08.6|	Commands for all windows
 |08.7|	Viewing differences with vimdiff
+|08.8|	Various
 
      Next chapter: |usr_09.txt|  Using the GUI
  Previous chapter: |usr_07.txt|  Editing more than one file
@@ -74,7 +75,8 @@ one of them, this command will be useful: >
 	:only
 
 This closes all windows, except for the current one.  If any of the other
-windows has changes, you will get an error message.
+windows has changes, you will get an error message and that window won't be
+closed.
 
 ==============================================================================
 *08.2*	Split a window on another file
@@ -125,7 +127,7 @@ To decrease it: >
 	CTRL-W -
 
 Both of these commands take a count and increase or decrease the window size
-by that many lines.
+by that many lines.  Thus "4 CTRL-W +" make the window four lines higher.
 
 To set the window height to a specified number of lines: >
 
@@ -135,6 +137,25 @@ That's: a number {height}, CTRL-W and then an underscore (the - key with Shift
 on English-US keyboards).
    To make a window as high as it can be, use the CTRL-W _ command without a
 count.
+
+
+USING THE MOUSE
+
+In Vim you can do many things very quickly from the keyboard.  Unfortunately,
+the window resizing commands require quite a bit of typing.  In this case,
+using the mouse is faster.  Position the mouse pointer on a status line.  Now
+press the left mouse button and drag.  The status line will move, thus making
+the window on on side higher and the other smaller.
+
+
+OPTIONS
+
+The 'winheight' option can be set to a minimal desired height of a window.
+'winminheight' to a hard minimum height.
+   Likewise, there is 'winwidth' for the minimal desired width and
+'winminwidth' for the hard minimum width.
+   The 'equalalways' option, when set, makes Vim equalize the windows sizes
+when a window is closed or opened.
 
 ==============================================================================
 *08.4*	Vertical splits
@@ -182,6 +203,9 @@ between them:
 	CTRL-W j	move to the window below
 	CTRL-W k	move to the window above
 	CTRL-W l	move to the window on the right
+
+	CTRL-W t	move to the TOP window
+	CTRL-W b	move to the BOTTOM window
 
 You will notice the same letters as used for moving the cursor.  And the
 cursor keys can also be used, if you like.
@@ -283,6 +307,32 @@ This writes all modified files and quits Vim.
 
 Be careful, there is no way to undo this command!
 
+
+OPENING A WINDOW FOR ALL ARGUMENTS
+
+To make Vim open a window for each file, start it with the "-o" argument: >
+
+	vim -o one.txt two.txt three.txt
+
+This results in:
+
+	+-------------------------------+
+	|file one.txt		   	|
+	|~				|
+	|one.txt========================|
+	|file two.txt   		|
+	|~				|
+	|two.txt========================|
+	|file three.txt			|
+	|~				|
+	|three.txt======================|
+	|				|
+	+-------------------------------+
+
+The "-O" argument is used to get vertically split windows.
+   When vim is already running, the ":all" command opens a window for each
+file in the argument list.  ":vertical all" does it with vertical splits.
+
 ==============================================================================
 *08.7*	Viewing differences with vimdiff
 
@@ -375,6 +425,9 @@ SCROLL BINDING
 When the files have more changes, you can scroll in the usual way.  Vim will
 try to keep both the windows start at the same position, so you can easily see
 the differences side by side.
+   When you don't want this for a moment, use this command: >
+
+   	:set noscrollbind
 
 
 REMOVING CHANGES
@@ -403,6 +456,37 @@ The change will now be removed by getting the text from the other window.
 Since there are no changes left now, Vim puts all text in a closed fold.
 
 For details about diff mode, see |vimdiff|.
+
+==============================================================================
+*08.8*	Various
+
+The 'statusline' option can be used to specify when the last window has a
+statusline:
+
+	0	never
+	1	only when there are split windows (the default)
+	2	always
+
+Many commands that edit another file have a variant that splits the window.
+For Command-line commands this is done by prepending an "s".  For example:
+":tag" jumps to a tag, ":stag" splits the window and jumps to a
+tag.
+   For Normal mode commands a CTRL-W is prepended.  CTRL-^ jumps to the
+alternate file, CTRL-W CTRL-^ splits the window and edits the alternate file.
+
+The 'splitbelow' option can be set to make a new window appear below the
+current window.  The 'splitright' option can be set to make a vertically split
+window appear right of the current window.
+
+When splitting a window you can prepend a modifier command to tell where the
+window is to appear:
+
+	:leftabove {cmd}	left or above the current window
+	:aboveleft {cmd}	idem
+	:rightbelow {cmd}	right or below the current window
+	:belowright {cmd}	idem
+	:topleft {cmd}		at the top or left of the Vim window
+	:botright {cmd}		at the bottom or right of the Vim window
 
 ==============================================================================
 

@@ -1,4 +1,4 @@
-*usr_03.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_03.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -30,13 +30,13 @@ Table of contents: |usr_toc.txt|
 
 To move the cursor forward one word, use the "w" command.  Like most Vim
 commands, you can use a numeric prefix to move past multiple words.  For
-example, "4w" moves four words.  This figure shows how it works:
+example, "3w" moves three words.  This figure shows how it works:
 
 	This is a line with example text ~
 	  --->-->->----------------->
 	   w  w  w    3w
 
-Note that "w" moves to the start of the next word if it already is at the
+Notice that "w" moves to the start of the next word if it already is at the
 start of a word.
    The "b" command moves backward to the start of the previous word:
 
@@ -45,13 +45,31 @@ start of a word.
 	   b   b b    2b      b
 
 There is also the "e" command that moves to the next end of a word and "ge",
-which moves to the previous end of a word.
+which moves to the previous end of a word:
+
+	This is a line with example text ~
+	   <-   <--- ----->   ---->
+	   ge    ge     e       e
 
 If you are at the last word of a line, the "w" command will take you to the
 first word in the next line.  Thus you can use this to move through a
-paragraph.  "b" does the same in the other direction.
+paragraph, much faster then using "l".  "b" does the same in the other
+direction.
 
-(To change what Vim considers to be a word, see the 'iskeyword' option.)
+A word ends at a non-word character, such as a ".", "-" or ")".  To change
+what Vim considers to be a word, see the 'iskeyword' option.
+   It is also possible to move by white space separated WORDs.  This is not a
+word in the normal sense, that's why the uppercase is used.  The commands for
+moving by WORDs are also uppercase, as this figure shows:
+
+	       ge      b	  w			        e
+	       <-     <-         --->                          --->
+	This is-a line, with special/separated/words (and some more). ~
+	   <----- <-----         -------------------->         ----->
+	     gE      B                   W                       E
+
+With this mix of lowercase and uppercase commands, you can quickly move
+forward and backward through a paragraph.
 
 ==============================================================================
 *03.2*	Moving to the start or end of a line
@@ -147,7 +165,7 @@ one.  Thus if the cursor is at the start of the line of the previous example,
 "%" will search forward and find the first "(".  Then it moves to its match:
 
 		if (a = (b * c) / d) ~
-		------------------->
+		---+--------------->
 			  %
 
 ==============================================================================
@@ -182,6 +200,24 @@ more typing.
 
 Another way to move to a line is using the "%" command with a count.  For
 example "50%" moves you to halfway the file.  "90%" goes to near the end.
+
+The previous assumes that you want to move to a line in the file, no matter if
+it's currently visible or not.  What if you want to move to one of the lines
+you can see?  This figure shows the three commands you can use:
+
+			+---------------------------+
+		H -->	| text sample text          |
+			| sample text               |
+			| text sample text          |
+			| sample text               |
+		M -->	| text sample text          |
+			| sample text               |
+			| text sample text          |
+			| sample text               |
+		L -->	| text sample text          |
+			+---------------------------+
+
+Hints: "H" stands for Home, "M" for Middle and "L" for Last.
 
 ==============================================================================
 *03.6*	Telling where you are
@@ -260,7 +296,23 @@ To scroll forward by a whole screen (except for two lines) use CTRL-F.  The
 other way is backward, CTRL-B is the command to use.  Fortunately CTRL-F is
 Forward and CTRL-B is Backward, that's easy to remember.
 
-(There are a few more scrolling commands, see |Q_sc|.)
+A common issue is that after moving down many lines with "j" your cursor is at
+the bottom of the screen.  You would like to see the context of the line with
+the cursor.  That's done with the "zz" command.
+
+	+------------------+		 +------------------+
+	| some text	   |		 | some text	    |
+	| some text	   |		 | some text	    |
+	| some text	   |		 | some text	    |
+	| some text	   |   zz  -->	 | line with cursor |
+	| some text	   |		 | some text	    |
+	| some text	   |		 | some text	    |
+	| line with cursor |		 | some text	    |
+	+------------------+		 +------------------+
+
+The "zt" command puts the cursor line at the top, "zb" at the bottom.  There
+are a few more scrolling commands, see |Q_sc|.  To always keep a few lines of
+context around the cursor, use the 'scrolloff' option.
 
 ==============================================================================
 *03.8*	Simple searches
@@ -289,16 +341,19 @@ And then type "n" several times.  You will move to each #include in the text.
 You can also use a count if you know which match you want.  Thus "3n" finds
 the third match.  Using a count with "/" doesn't work.
 
-The "N" command does the same thing in the other direction.
+The "?" command works like "/" but searches backwards: >
 
-The "?" command works like "/" but searches backwards.  If you then use "N" it
-goes in the other direction, thus forward (like using "/").
+	?word
+
+The "N" command repeats the last search the opposite direction.  Thus using
+"N" after a "/" command search backwards, using "N" after "?" searches
+forward.
 
 
 IGNORING CASE
 
 Normally you have to type exactly what you want to find.  If you don't care
-about upper or lower case in a word, set the 'ignorecase' option: >
+about upper or lowercase in a word, set the 'ignorecase' option: >
 
 	:set ignorecase
 
@@ -332,7 +387,7 @@ The commands starting with ":" also have a history.  That allows you to recall
 a previous command and execute it again.  These two histories are separate.
 
 
-SEARCHING FOR THE SAME WORD
+SEARCHING FOR A WORD IN THE TEXT
 
 Suppose you see the word "TheLongFunctionName" in the text and you want to
 find the next occurrence of it.  You could type "/TheLongFunctionName", but
@@ -358,7 +413,8 @@ word "the" only: >
 	/\<the\>
 
 This does not match "there" or "northe".  Notice that the "*" and "#" commands
-use these start-of-word and end-of-word markers to only find whole words.
+use these start-of-word and end-of-word markers to only find whole words (you
+can use "g*" and "g#" match partial words).
 
 
 HIGHLIGHTING MATCHES

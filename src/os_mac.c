@@ -15,6 +15,18 @@
 
 #include "vim.h"
 
+/* When compiled under MacOS X (including CARBON version)
+ * we use the Unix File path style */
+#if defined (__APPLE_CC__) && defined(TARGET_API_MAC_OSX)
+# define USE_UNIXFILENAME
+#else
+# undef USE_UNIXFILENAME
+#endif
+
+#ifdef USE_UNIXFILENAME
+# include <dirent.h>
+#endif
+
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
 
 #include "StandardFile.h"
@@ -33,6 +45,7 @@ stat(
      */
     return 0;
 }
+#endif
 
 /*
  * change the current working directory
@@ -40,11 +53,14 @@ stat(
     int
 mch_chdir(char *p_name)
 {
+#if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
     /* TODO */
     return FAIL;
+#else
+    return chdir(p_name);
+#endif
 }
 
-#endif
 
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
@@ -289,6 +305,159 @@ mac_expandpath(
     return gap->ga_len - start_len;
 }
 
+
+#ifdef USE_UNIXFILENAME
+    static int
+pstrcmp(a, b)
+    const void *a, *b;
+{
+    return (pathcmp(*(char **)a, *(char **)b));
+}
+
+    static int
+unix_expandpath(gap, path, wildoff, flags)
+    garray_T	*gap;
+    char_u	*path;
+    int		wildoff;
+    int		flags;		/* EW_* flags */
+{
+    char_u	*buf;
+    char_u	*path_end;
+    char_u	*p, *s, *e;
+    int		start_len, c;
+    char_u	*pat;
+    DIR		*dirp;
+    regmatch_T	regmatch;
+    struct dirent *dp;
+    int		starts_with_dot;
+    int		matches;
+    int		len;
+
+    start_len = gap->ga_len;
+    buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
+    if (buf == NULL)
+	return 0;
+
+/*
+ * Find the first part in the path name that contains a wildcard.
+ * Copy it into buf, including the preceding characters.
+ */
+    p = buf;
+    s = buf;
+    e = NULL;
+    path_end = path;
+    while (*path_end)
+    {
+	/* May ignore a wildcard that has a backslash before it */
+	if (path_end >= path + wildoff && rem_backslash(path_end))
+	    *p++ = *path_end++;
+	else if (*path_end == '/')
+	{
+	    if (e != NULL)
+		break;
+	    else
+		s = p + 1;
+	}
+	else if (vim_strchr((char_u *)"*?[{~$", *path_end) != NULL)
+	    e = p;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    len = (*mb_ptr2len_check)(path_end);
+	    STRNCPY(p, path_end, len);
+	    p += len;
+	    path_end += len;
+	}
+	else
+#endif
+	    *p++ = *path_end++;
+    }
+    e = p;
+    *e = NUL;
+
+    /* now we have one wildcard component between s and e */
+    /* Remove backslashes between "wildoff" and the start of the wildcard
+     * component. */
+    for (p = buf + wildoff; p < s; ++p)
+	if (rem_backslash(p))
+	{
+	    STRCPY(p, p + 1);
+	    --e;
+	    --s;
+	}
+
+    /* convert the file pattern to a regexp pattern */
+    starts_with_dot = (*s == '.');
+    pat = file_pat_to_reg_pat(s, e, NULL, FALSE);
+    if (pat == NULL)
+    {
+	vim_free(buf);
+	return 0;
+    }
+
+    /* compile the regexp into a program */
+    regmatch.rm_ic = FALSE;		/* Don't ever ignore case */
+    regmatch.regprog = vim_regcomp(pat, TRUE);
+    vim_free(pat);
+
+    if (regmatch.regprog == NULL)
+    {
+	vim_free(buf);
+	return 0;
+    }
+
+    /* open the directory for scanning */
+    c = *s;
+    *s = NUL;
+    dirp = opendir(*buf == NUL ? "." : (char *)buf);
+    *s = c;
+
+    /* Find all matching entries */
+    if (dirp != NULL)
+    {
+	for (;;)
+	{
+	    dp = readdir(dirp);
+	    if (dp == NULL)
+		break;
+	    if ((dp->d_name[0] != '.' || starts_with_dot)
+		    && vim_regexec(&regmatch, (char_u *)dp->d_name, (colnr_T)0))
+	    {
+		STRCPY(s, dp->d_name);
+		len = STRLEN(buf);
+		STRCPY(buf + len, path_end);
+		if (mch_has_wildcard(path_end))	/* handle more wildcards */
+		{
+		    /* need to expand another component of the path */
+		    /* remove backslashes for the remaining components only */
+		    (void)unix_expandpath(gap, buf, len + 1, flags);
+		}
+		else
+		{
+		    /* no more wildcards, check if there is a match */
+		    /* remove backslashes for the remaining components only */
+		    if (*path_end)
+			backslash_halve(buf + len + 1);
+		    if (mch_getperm(buf) >= 0)	/* add existing file */
+			addfile(gap, buf, flags);
+		}
+	    }
+	}
+
+	closedir(dirp);
+    }
+
+    vim_free(buf);
+    vim_free(regmatch.regprog);
+
+    matches = gap->ga_len - start_len;
+    if (matches)
+	qsort(((char_u **)gap->ga_data) + start_len, matches,
+						   sizeof(char_u *), pstrcmp);
+    return matches;
+}
+#endif
+
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by expand_wildcards().
@@ -300,7 +469,9 @@ mch_expandpath(
     char_u	*path,
     int		flags)		/* EW_* flags */
 {
-
+#ifdef USE_UNIXFILENAME
+    return unix_expandpath(gap, path, 0, flags);
+#else
     char_u first = *path;
     short  scan_volume;
 
@@ -309,6 +480,7 @@ mch_expandpath(
     scan_volume = (first != *path);
 
     return mac_expandpath(gap, path, flags, 0, scan_volume);
+#endif
 }
 
     void
@@ -524,7 +696,7 @@ mch_get_host_name(s, len)
     char_u	*s;
     int		len;
 {
-#if defined(__MRC__) || defined(__SC__)
+#if defined(__MRC__) || defined(__SC__) || defined(__APPLE_CC__)
     s[0] = '\0'; /* TODO: use Gestalt information */
 #else
     struct utsname vutsname;
@@ -561,10 +733,34 @@ mch_dirname(buf, len)
 	    STRCPY(buf, strerror(errno));
 	    return FAIL;
 	}
+# ifndef USE_UNIXFILENAME
     else if (*buf != NUL && buf[STRLEN(buf) - 1] == ':')
 	buf[STRLEN(buf) - 1] = NUL;	/* remove trailing ':' */
+# endif
     return OK;
 #endif
+}
+
+    void
+slash_to_colon(p)
+    char_u	*p;
+{
+    for ( ; *p; ++p)
+	if (*p == '/')
+	    *p = ':';
+}
+
+    char_u *
+slash_to_colon_save (p)
+    char_u  *p;
+{
+    char_u	*res;
+
+    res = vim_strsave(p);
+    if (res == NULL)
+	return p;
+    slash_to_colon(res);
+    return res;
 }
 
     void
@@ -574,7 +770,7 @@ slash_n_colon_adjust (buf)
     /*
      * TODO: Make it faster
      */
-
+#ifndef USE_UNIXFILENAME
     char_u  temp[MAXPATHL];
     char_u  *first_colon = vim_strchr(buf, ':');
     char_u  *first_slash = vim_strchr(buf, '/');
@@ -674,7 +870,7 @@ slash_n_colon_adjust (buf)
     }
 
     STRCAT (buf, filling);
-
+#endif
 }
 
 /*
@@ -730,9 +926,14 @@ mch_FullName(fname, buf, len, force)
 	    retval = FAIL;
 	    *newdir = NUL;
 	}
-	l = STRLEN(buf);
+	l = STRLEN(buf); 
+#ifdef USE_UNIXFILENAME
+	if (l > 0 && buf[l - 1] != '/' && *fname != NUL)
+	    STRCAT(buf, "/");
+#else
 	if (l > 0 && buf[l - 1] != ':' && *fname != NUL)
 	    STRCAT(buf, ":");
+#endif
 	if (p != NULL)
 	    mch_chdir((char *)olddir);
 	STRCAT(buf, fname);
@@ -754,6 +955,9 @@ mch_FullName(fname, buf, len, force)
 mch_isFullName(fname)
 	char_u		*fname;
 {
+#ifdef USE_UNIXFILENAME
+    return (fname[0] == '/');
+#else
     /*
      * TODO: Make sure fname is always of mac still
      *       i.e: passed throught slash_n_colon_adjust
@@ -776,6 +980,7 @@ mch_isFullName(fname)
 	if ((first_colon == NULL) && (first_slash == NULL))
 	  return FALSE;
 	return TRUE;
+#endif
 }
 
 /*
@@ -785,6 +990,7 @@ mch_isFullName(fname)
 slash_adjust(p)
     char_u  *p;
 {
+#ifndef USE_UNIXFILENAME
     /*
      * TODO: keep escaped '/'
      */
@@ -800,6 +1006,7 @@ slash_adjust(p)
 #endif
 	    ++p;
     }
+#endif
 }
 
 /*
@@ -987,58 +1194,149 @@ mch_has_wildcard(p)
  * Convert a FSSpec to a fuill path
  */
 
-void GetFullPathFromFSSpec (char_u *fname, FSSpec file)
+char_u *FullPathFromFSSpec_save (FSSpec file)
 {
     /*
      * TODO: Add protection for 256 char max.
+     *       Get rid of fname as we now allocate
      */
     CInfoPBRec  theCPB;
     Str255      directoryName;
+    char_u      temporary[255];
+ /* char        filename[255]; */
+    char_u       fname[256];
+    char_u	*temporaryPtr = temporary;
+    char_u      *filenamePtr = fname;
     OSErr       error;
     int		folder = 1;
+    char        *p;
+    SInt16	dfltVol_vRefNum;
+    SInt32      dfltVol_dirID;
 
-    *fname = 0;
-
-    theCPB.dirInfo.ioNamePtr = directoryName;
-    theCPB.dirInfo.ioDrParID = file.parID;
-
-    if ((TRUE) /*&& (file.parID != fsRtDirID)*/ && (file.parID != fsRtParID))
-    do
-    {
-	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
-	theCPB.dirInfo.ioFDirIndex = -1;
-	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
-
-	error = PBGetCatInfo (&theCPB,false);
-
-	directoryName[directoryName[0] + 1] = 0;
-	STRCAT(&directoryName[1], ":");
-	STRCAT(&directoryName[1], fname);
-	STRCPY(fname, &directoryName[1]);
-    }
-    while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
-
-    STRNCAT(fname, &file.name[1], file.name[0]);
-    STRCAT (fname, ":");
-    STRCPY(&directoryName[1], fname);
-    directoryName[0] = STRLEN(&directoryName[1]);
-
-    /*
-     * Find back if the original file
-     * is a folder or a file
-     */
-    theCPB.dirInfo.ioNamePtr = directoryName;
-    theCPB.dirInfo.ioVRefNum = fsRtDirID;
-    theCPB.dirInfo.ioFDirIndex = 0;  /* Scan for NamePtr in VRefNum */
-    theCPB.dirInfo.ioDrDirID = 0;
-
-    error = PBGetCatInfo (&theCPB, false);
+    /* Get the default volume */
+    /* TODO: Verify if default always root in MacOS X */
+    error=HGetVol ( NULL, &dfltVol_vRefNum, &dfltVol_dirID );
 
     if (error)
-	fname[directoryName[0]-1] = 0;
-    if ((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0)
-        fname[directoryName[0]-1] = 0;
+      return NULL;
 
+    /* Start filling fname with file.name  */
+    STRNCPY(filenamePtr, &file.name[1], file.name[0]);
+    filenamePtr[file.name[0]] = 0; /* NULL terminate the string */
+
+    /* Get the info about the file specified in FSSpec */
+    theCPB.dirInfo.ioFDirIndex = 0;
+    theCPB.dirInfo.ioNamePtr   = file.name;
+    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+  /*theCPB.hFileInfo.ioDirID   = 0;*/
+    theCPB.dirInfo.ioDrDirID   = file.parID;
+     
+    /* As ioFDirIndex = 0, get the info of ioNamePtr,
+       which is relative to ioVrefNum, ioDirID */
+    error = PBGetCatInfo (&theCPB, false);
+
+    /* If we are called for a new file we expect fnfErr */
+    if ((error) && (error != fnfErr))
+      return NULL;
+
+    /* Check if it's a file or folder       */
+    /* default to file if file don't exist  */
+    if (((theCPB.hFileInfo.ioFlAttrib & ioDirMask) == 0) || (error))
+      folder = 0; /* It's not a folder */
+    else
+      folder = 1;
+
+    /* Set ioNamePtr, it's the same area which is always reused. */
+    theCPB.dirInfo.ioNamePtr = directoryName;
+    
+    /* Trick for first entry, set ioDrParID to the first value
+     * we want for ioDrDirID*/
+    theCPB.dirInfo.ioDrParID = file.parID;
+    theCPB.dirInfo.ioDrDirID = file.parID;
+
+    if ((TRUE) && (file.parID != fsRtDirID /*fsRtParID*/ ))
+    do
+    {
+	theCPB.dirInfo.ioFDirIndex = -1;
+     /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
+	theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+     /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
+	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+
+        /* As ioFDirIndex = -1, get the info of ioDrDirID, */
+        /*  *ioNamePtr[0 TO 31] will be updated            */
+	error = PBGetCatInfo (&theCPB,false);
+
+        if (error)
+          return NULL;
+
+        /* Put the new directoryName in front of the current fname */
+        STRCPY(temporaryPtr, filenamePtr);
+        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, ":");
+        STRCAT(filenamePtr, temporaryPtr);
+    }
+#if 1 /* def USE_UNIXFILENAME */
+    while ((theCPB.dirInfo.ioDrParID != fsRtDirID) /* && */
+         /*  (theCPB.dirInfo.ioDrDirID != fsRtDirID)*/);
+#else
+    while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
+#endif
+
+    /* Get the information about the volume on which the file reside */
+    theCPB.dirInfo.ioFDirIndex = -1;
+ /* theCPB.dirInfo.ioNamePtr   = directoryName; Already done above. */
+    theCPB.dirInfo.ioVRefNum   = file.vRefNum;
+ /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
+    theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
+
+    /* As ioFDirIndex = -1, get the info of ioDrDirID, */
+    /*  *ioNamePtr[0 TO 31] will be updated            */
+    error = PBGetCatInfo (&theCPB,false);
+
+    if (error)
+      return NULL;
+
+    /* For MacOS Classic always add the volume name          */
+    /* For MacOS X add the volume name preceded by "Volumes" */
+    /*  when we are not refering to the boot volume          */
+#ifdef USE_UNIXFILENAME
+    if (file.vRefNum != dfltVol_vRefNum)
+#endif
+    {
+        /* Add the volume name */
+        STRCPY(temporaryPtr, filenamePtr);
+        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, ":");
+        STRCAT(filenamePtr, temporaryPtr);
+        
+#ifdef USE_UNIXFILENAME
+        STRCPY(temporaryPtr, filenamePtr);
+        filenamePtr[0] = 0; /* NULL terminate the string */
+        STRCAT(filenamePtr, "Volumes:");
+        STRCAT(filenamePtr, temporaryPtr);
+#endif
+    }
+
+    /* Append final path separator if it's a folder */
+    if (folder)
+        STRCAT (fname, ":");
+        
+    /* As we use Unix File Name for MacOS X convert it */
+#ifdef USE_UNIXFILENAME
+    /* Need to insert leading / */
+    /* TODO: get the above code to use directly the / */
+    STRCPY(&temporaryPtr[1], filenamePtr);
+    temporaryPtr[0] = '/';
+    STRCPY(filenamePtr, temporaryPtr);
+    for (p = fname; *p; p++)
+      if (*p == ':')
+        *p = '/';
+#endif
+
+    return (vim_strsave (fname));
 }
 
 /*

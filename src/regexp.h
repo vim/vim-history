@@ -61,8 +61,8 @@ typedef struct
 typedef struct
 {
     regprog_T		*regprog;
-    pos_T		startpos[NSUBEXP];
-    pos_T		endpos[NSUBEXP];
+    lpos_T		startpos[NSUBEXP];
+    lpos_T		endpos[NSUBEXP];
     int			rmm_ic;
 } regmmatch_T;
 

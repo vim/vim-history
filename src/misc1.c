@@ -293,6 +293,7 @@ open_line(dir, del_spaces, old_indent)
 #if defined(FEAT_LISP) || defined(FEAT_CINDENT)
     int		vreplace_mode;
 #endif
+    int		did_append;		/* appended a new line */
 
     /*
      * make a copy of the current line so we can mess with it
@@ -952,7 +953,10 @@ open_line(dir, del_spaces, old_indent)
 	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_T)0, FALSE)
 								      == FAIL)
 	    goto theend;
-	appended_lines_mark(curwin->w_cursor.lnum, 1L);
+	/* Postpone calling changed_lines(), because it would mess up folding
+	 * with markers. */
+	mark_adjust(curwin->w_cursor.lnum + 1, (linenr_T)MAXLNUM, 1L, 0L);
+	did_append = TRUE;
     }
     else
     {
@@ -971,6 +975,7 @@ open_line(dir, del_spaces, old_indent)
 	ml_replace(curwin->w_cursor.lnum, p_extra, TRUE);
 	changed_bytes(curwin->w_cursor.lnum, 0);
 	curwin->w_cursor.lnum--;
+	did_append = FALSE;
     }
 
     if (newindent
@@ -1027,7 +1032,14 @@ open_line(dir, del_spaces, old_indent)
 		truncate_spaces(saved_line);
 	    ml_replace(curwin->w_cursor.lnum, saved_line, FALSE);
 	    saved_line = NULL;
-	    changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
+	    if (did_append)
+	    {
+		changed_lines(curwin->w_cursor.lnum, curwin->w_cursor.col,
+					       curwin->w_cursor.lnum + 1, 1L);
+		did_append = FALSE;
+	    }
+	    else
+		changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
 	}
 
 	/*
@@ -1036,6 +1048,8 @@ open_line(dir, del_spaces, old_indent)
 	 */
 	curwin->w_cursor.lnum = old_cursor.lnum + 1;
     }
+    if (did_append)
+	changed_lines(curwin->w_cursor.lnum, 0, curwin->w_cursor.lnum, 1L);
 
     curwin->w_cursor.col = newcol;
 #ifdef FEAT_VIRTUALEDIT
@@ -1543,8 +1557,7 @@ ins_char_bytes(buf, newlen)
     /* Break tabs if needed. */
     if (virtual_active())
     {
-	char_u *p = ml_get_cursor();
-
+	p = ml_get_cursor();
 	if (*p == NUL || (*p == TAB && (chartabsize(p, curwin->w_cursor.col) > 1)))
 	    coladvance_force(getviscol());
     }
@@ -2556,6 +2569,7 @@ get_keystroke()
 	    n = TO_SPECIAL(buf[1], buf[2]);
 	    if (buf[1] == KS_MODIFIER
 		    || n == K_IGNORE
+		    || n == K_SILENT
 #ifdef FEAT_MOUSE
 		    || n == K_LEFTMOUSE
 		    || n == K_LEFTMOUSE_NM
@@ -3101,6 +3115,11 @@ vim_getenv(name, mustfree)
 		pend = remove_tail(p, pend, (char_u *)"doc");
 
 #ifdef USE_EXE_NAME
+# ifdef TARGET_API_MAC_OSX /* && defined (__APPLE_CC__) ? */
+            /* remove "build/..." from exe_name, if present */
+            if (p == exe_name)
+		pend = remove_tail(p, pend, (char_u *)"build/vim.app/Contents/MacOS");
+# endif
 	    /* remove "src/" from exe_name, if present */
 	    if (p == exe_name)
 		pend = remove_tail(p, pend, (char_u *)"src");
@@ -3114,8 +3133,12 @@ vim_getenv(name, mustfree)
 	    }
 
 	    /* remove trailing path separator */
+#ifndef macintosh
+	    /* With MacOS path (with  colons) the final colon is required */
+            /* to avoid confusin between absoulute and relative path */
 	    if (pend > p && vim_ispathsep(*(pend - 1)))
 		--pend;
+#endif
 
 	    /* check that the result is a directory name */
 	    p = vim_strnsave(p, (int)(pend - p));
@@ -6658,6 +6681,9 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	{
 	    char_u	*t = backslash_halve_save(p);
 
+#ifdef macintosh
+	    slash_to_colon(t);
+#endif
 	    /* When EW_NOTFOUND is used, always add files and dirs.  Makes
 	     * "vim c:/" work. */
 	    if (flags & EW_NOTFOUND)

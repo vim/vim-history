@@ -17,11 +17,11 @@ export TUTORCOPY
 # Vim could be called "vim" or "vi".  Also check for "vim6", for people who
 # have Vim 5.x installed as "vim" and Vim 6.0 as "vim6".
 testvim=`which vim6`
-if test -e "$testvim"; then
+if test -f "$testvim"; then
 	VIM=vim6
 else
 	testvim=`which vim`
-	if test -e "$testvim"; then
+	if test -f "$testvim"; then
 		VIM=vim
 	else
 		VIM=vi

@@ -102,6 +102,7 @@ coladvance(wcol)
     colnr_T	wcol;
 {
     int rc = getvpos(&curwin->w_cursor, wcol);
+
     if (wcol == MAXCOL)
 	curwin->w_valid &= ~VALID_VIRTCOL;
     else
@@ -718,7 +719,6 @@ alloc_check(size)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
-	msg_silent = 0;
 	EMSG(_("E340: Line is becoming too long"));
 	return NULL;
     }
@@ -763,7 +763,6 @@ lalloc(size, message)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
-	msg_silent = 0;
 	EMSGN(_("E341: Internal error: lalloc(%ld, )"), size);
 	return NULL;
     }
@@ -872,7 +871,6 @@ do_outofmem_msg(size)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
-	msg_silent = 0;
 	EMSG2(_("E342: Out of memory!  (allocating %lu bytes)"), size);
 	did_outofmem_msg = TRUE;
     }
@@ -3543,7 +3541,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
     wc_part = vim_strchr(path, '*');
     if (wc_part != NULL)
     {
-	int	level;
+	int	llevel;
 	int	len;
 	char_u	*errpt;
 
@@ -3569,10 +3567,10 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 		ff_expand_buffer[len++] = *wc_part++;
 		ff_expand_buffer[len++] = *wc_part++;
 
-		level = strtol((char *)wc_part, (char **)&errpt, 10);
-		if (errpt != wc_part && level > 0 && level < 255)
-		    ff_expand_buffer[len++] = level;
-		else if (errpt != wc_part && level == 0)
+		llevel = strtol((char *)wc_part, (char **)&errpt, 10);
+		if (errpt != wc_part && llevel > 0 && llevel < 255)
+		    ff_expand_buffer[len++] = llevel;
+		else if (errpt != wc_part && llevel == 0)
 		    /* restrict is 0 -> remove already added '**' */
 		    len -= 2;
 		else
@@ -3855,8 +3853,6 @@ vim_findfile(void *search_ctx)
 		    len = (int)STRLEN(file_path);
 		    if (STRNCMP(rest_of_wildcards, "**", 2) == 0)
 		    {
-			char_u *p;
-
 			/* pointer to the restrict byte
 			 * The restrict byte is not a character!
 			 */

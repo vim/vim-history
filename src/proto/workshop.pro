@@ -14,7 +14,7 @@ void workshop_save_files __ARGS((void));
 void workshop_quit __ARGS((void));
 void workshop_minimize __ARGS((void));
 void workshop_maximize __ARGS((void));
-void workshop_add_mark_type __ARGS((int index, char *colorspec, char *sign));
+void workshop_add_mark_type __ARGS((int idx, char *colorspec, char *sign));
 void workshop_set_mark __ARGS((char *filename, int lineno, int markId, int idx));
 void workshop_change_mark_type __ARGS((char *filename, int markId, int idx));
 void workshop_goto_mark __ARGS((char *filename, int markId, char *message));

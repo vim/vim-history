@@ -6,6 +6,12 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+/* Before Including the MacOS specific files,
+ * lets set the OPAQUE_TOOLBOX_STRUCTS to 0 so we
+ * can access the internal structures.
+ * (Until fully Carbon compliant)
+ */
+/* #define OPAQUE_TOOLBOX_STRUCTS 0 */
 /*
  * Macintosh machine-dependent things.
  */
@@ -22,30 +28,40 @@
 #include <Script.h>
 #endif
 
-#if defined(__MWERKS__)  /* Only for metrowerks Compilers */
-#include <unistd.h>
-#include <utsname.h>
+#if defined(__MWERKS__)/* Only for metrowerks and MacOSX Compilers */
+# include <unistd.h>
+# include <utsname.h>
+#endif
+#if defined(__APPLE_CC__)
+# include <unistd.h>
+# include <sys/stat.h>
+# include <curses.h>
+  /* Remove some BACKWARD compatibilty stuff */
+# undef reg
+# undef ospeed
 #endif
 #include <signal.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
-#ifdef powerc
-# pragma options align=power
-#endif
-struct stat
-{
+# ifdef powerc
+#  pragma options align=power
+# endif
+  struct stat
+  {
     UInt32 st_mtime;
     UInt32 st_mode;
     UInt32 st_size;
-};
-#ifdef powerc
-# pragma options align=reset
-#endif
+  };
+# ifdef powerc
+#  pragma options align=reset
+# endif
 #else
-#include <stat.h>
-#include <unix.h>
+# if !defined (__APPLE_CC__)
+#  include <stat.h>
+#  include <unix.h>
+# endif
 #endif
 
 #if 0	    /* this doesn't work, because realloc() isn't redefined */
@@ -66,14 +82,21 @@ struct stat
 # undef FEAT_PYTHON
 #endif
 #define FEAT_BROWSE
-#define GUI_DIALOGUE
+#define FEAT_GUI_DIALOG
 #define HAVE_DROP_FILE
 #define FEAT_RIGHTLEFT
 #define DONT_ADD_PATHSEP_TO_DIR
 #define USE_EXE_NAME		    /* to find  $VIM */
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
-#define COLON_AS_PATHSEP
+
+/* On MacOS X use the / not the : */
+#ifdef TARGET_API_MAC_OSX
+# undef COLON_AS_PATHSEP
+#else
+# define COLON_AS_PATHSEP
+#endif
+
 /* #define USE_FNAME_CASE	     adjust case of file names */
 #define BINARY_FILE_IO
 #define EOL_DEFAULT EOL_MAC
@@ -97,7 +120,7 @@ struct stat
 				       quite fast */
 #define HAVE_STRFTIME
 
-#ifndef __POWERPC__
+#if !defined (__POWERPC__) &&  !defined(__ppc__)
 # if !defined(__fourbyteints__) || !__option(enumsalwaysint)
    ERROR: you must compile the projecct with 4-byte ints and enums always int
 # endif
@@ -109,35 +132,67 @@ struct stat
  */
 
 #ifndef SYS_VIMRC_FILE
-# define SYS_VIMRC_FILE "$VIM:vimrc"
+# ifdef COLON_AS_PATHSEP
+#  define SYS_VIMRC_FILE "$VIM:vimrc"
+# else
+#  define SYS_VIMRC_FILE "$VIM/vimrc"
+# endif
 #endif
 #ifndef SYS_GVIMRC_FILE
-# define SYS_GVIMRC_FILE "$VIM:gvimrc"
+# ifdef COLON_AS_PATHSEP
+#  define SYS_GVIMRC_FILE "$VIM:gvimrc"
+# else
+#  define SYS_GVIMRC_FILE "$VIM/gvimrc"
+# endif
 #endif
 #ifndef SYS_MENU_FILE
-# define SYS_MENU_FILE	"$VIMRUNTIME:menu.vim"
+# ifdef COLON_AS_PATHSEP
+#  define SYS_MENU_FILE	"$VIMRUNTIME:menu.vim"
+# else
+#  define SYS_MENU_FILE	"$VIMRUNTIME/menu.vim"
+# endif
 #endif
 #ifndef SYS_OPTWIN_FILE
-# define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
+# ifdef COLON_AS_PATHSEP
+#  define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
+# else
+#  define SYS_OPTWIN_FILE "$VIMRUNTIME/optwin.vim"
+# endif
 #endif
 #ifndef EVIM_FILE
-# define EVIM_FILE	"$VIMRUNTIME:evim.vim"
+# ifdef COLON_AS_PATHSEP
+#  define EVIM_FILE	"$VIMRUNTIME:evim.vim"
+# else
+#  define EVIM_FILE	"$VIMRUNTIME/evim.vim"
+# endif
 #endif
 
 #ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE
-#  define USR_GVIMRC_FILE "$VIM:.gvimrc"
+#  ifdef COLON_AS_PATHSEP
+#   define USR_GVIMRC_FILE "$VIM:.gvimrc"
+#  else
+#   define USR_GVIMRC_FILE "$VIM/.gvimrc"
+#  endif
 # endif
 # ifndef GVIMRC_FILE
 #  define GVIMRC_FILE	"_gvimrc"
 # endif
 #endif
 #ifndef USR_VIMRC_FILE
-# define USR_VIMRC_FILE	"$VIM:.vimrc"
+# ifdef COLON_AS_PATHSEP
+#  define USR_VIMRC_FILE	"$VIM:.vimrc"
+# else
+#  define USR_VIMRC_FILE	"$VIM/.vimrc"
+# endif
 #endif
 
 #ifndef USR_EXRC_FILE
-# define USR_EXRC_FILE	"$VIM:.exrc"
+# ifdef COLON_AS_PATHSEP
+#  define USR_EXRC_FILE	"$VIM:.exrc"
+# else
+#  define USR_EXRC_FILE	"$VIM/.exrc"
+# endif
 #endif
 
 #ifndef VIMRC_FILE
@@ -149,7 +204,11 @@ struct stat
 #endif
 
 #ifndef DFLT_HELPFILE
-# define DFLT_HELPFILE	"$VIMRUNTIME:doc:help.txt"
+# ifdef COLON_AS_PATHSEP
+#  define DFLT_HELPFILE	"$VIMRUNTIME:doc:help.txt"
+# else
+#  define DFLT_HELPFILE	"$VIMRUNTIME/doc/help.txt"
+# endif
 #endif
 
 #ifndef FILETYPE_FILE
@@ -172,12 +231,20 @@ struct stat
 #endif
 
 #ifndef SYNTAX_FNAME
-# define SYNTAX_FNAME	"$VIMRUNTIME:syntax:%s.vim"
+# ifdef COLON_AS_PATHSEP
+#  define SYNTAX_FNAME	"$VIMRUNTIME:syntax:%s.vim"
+# else
+#  define SYNTAX_FNAME	"$VIMRUNTIME/syntax/%s.vim"
+# endif
 #endif
 
 #ifdef FEAT_VIMINFO
 # ifndef VIMINFO_FILE
-#  define VIMINFO_FILE	"$VIM:viminfo"
+#  ifdef COLON_AS_PATHSEP
+#   define VIMINFO_FILE	"$VIM:viminfo"
+#  else
+#   define VIMINFO_FILE	"$VIM/viminfo"
+#  endif
 # endif
 #endif /* FEAT_VIMINFO */
 
@@ -190,12 +257,20 @@ struct stat
 #endif
 
 #ifndef DFLT_VDIR
-# define DFLT_VDIR	"$VIM:vimfiles:view"	/* default for 'viewdir' */
+# ifdef COLON_AS_PATHSEP
+#  define DFLT_VDIR	"$VIM:vimfiles:view"	/* default for 'viewdir' */
+# else
+#  define DFLT_VDIR	"$VIM/vimfiles/view"	/* default for 'viewdir' */
+# endif
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
 #define DFLT_MAKEEF		"vim##.err"
-#define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
+#ifdef COLON_AS_PATHSEP
+# define DFLT_RUNTIMEPATH	"$VIM:vimfiles,$VIMRUNTIME,$VIM:vimfiles:after"
+#else
+# define DFLT_RUNTIMEPATH	"$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after"
+#endif
 
 /*
  * Macintosh has plenty of memory, use large buffers
@@ -221,10 +296,20 @@ struct stat
 #if defined(__MRC__) || defined(__SC__)
 # define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
 # define mch_setenv(name, val, x) setenv((name), (val))
+#elif defined(__APPLE_CC__)
+# define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
+# define mch_setenv(name, val, x) setenv((name), (val))
 #else
  /* vim_getenv() is in pty.c */
 # define USE_VIMPTY_GETENV
-# define mch_chdir(s) chdir(s)
 # define mch_getenv(x) vimpty_getenv(x)
 # define mch_setenv(name, val, x) setenv(name, val, x)
+#endif
+
+#ifdef __APPLE_CC__
+/* Assuming compiling for MacOS X */
+/* Trying to take advantage of the prebinding */
+# define HAVE_TGETENT
+# define OSPEED_EXTERN
+# define UP_BC_PC_EXTERN
 #endif

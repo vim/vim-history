@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0al.  Last change: 2001 Jun 03
+*repeat.txt*    For Vim version 6.0am.  Last change: 2001 Jun 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -323,6 +323,9 @@ NOTE: The debugging mode is far from perfect.  Debugging will have side
 effects on how Vim works.  You cannot use it to debug everything.  For
 example, the display is messed up by the debugging messages.
 {Vi does not have a debug mode}
+
+An alternative to debug mode is setting the 'verbose' option.  With a bigger
+number it will give more verbose messages about what Vim is doing.
 
 
 STARTING DEBUG MODE						*debug-mode*

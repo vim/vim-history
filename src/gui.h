@@ -50,7 +50,9 @@
 # include <Fonts.h>
 # include <Events.h>
 # include <Menus.h>
-# include <Windows.h>
+# if !(defined (TARGET_API_MAC_CARBON) && (TARGET_API_MAC_CARBON))
+#   include <Windows.h>
+# endif
 # include <Controls.h>
 /*# include <TextEdit.h>*/
 # include <Dialogs.h>
@@ -204,7 +206,7 @@ typedef struct GuiScrollbar
 #if FEAT_GUI_BEOS
     VimScrollBar *id;		/* Pointer to real scroll bar */
 #endif
-#ifdef macintosh
+#if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
     ControlHandle id;		/* A handle to the scrollbar */
 #endif
 #ifdef RISCOS

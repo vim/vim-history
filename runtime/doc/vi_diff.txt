@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0al.  Last change: 2001 May 12
+*vi_diff.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -176,7 +176,7 @@ Plugins							|add-plugin|
 
 Repeat a series of commands.				|q|
 	'q'{c} starts recording typed characters into named register {c}
-	(append to the register if register name is upper case).  A subsequent
+	(append to the register if register name is uppercase).  A subsequent
 	'q' stops recording.  The register can then be executed with the
 	'@'{c} command.  This is very useful to repeat a complex action.
 
@@ -756,6 +756,8 @@ Only Vim is able to accept options in between and after the file names.
 -e		Elvis, Nvi, Vim: Start in Ex mode, as if the executable is
 		called "ex".
 
+-E		Vim: Start in improved Ex mode |gQ|, like "exim".
+
 -f		Vim: Run GUI in foreground (Amiga: don't open new window).
 -f {session}	Elvis: Use {session} as the session file.
 
@@ -780,7 +782,11 @@ Only Vim is able to accept options in between and after the file names.
 
 -l		Nvi, Vi, Vim: Set 'lisp' and 'showmatch' options.
 
--m		Vim: Modifications not allowed, reset 'write' option.
+-m		Vim: Modifications not allowed to be written, resets 'write'
+		option.
+
+-M		Vim: Modifications not allowed, resets 'modifiable' and the
+		'write' option.
 
 -N		Vim: No-compatible mode.
 

@@ -1992,7 +1992,11 @@ get_tagfname(first, buf)
 	if (*np == NUL || copy_option_part(&np, buf, MAXPATHL, ",") == 0)
 	    return FAIL;
 	add_pathsep(buf);
+#ifndef COLON_AS_PATHSEP
 	STRCAT(buf, "doc/tags");
+#else
+	STRCAT(buf, "doc:tags");
+#endif
     }
     else
     {

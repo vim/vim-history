@@ -10,10 +10,15 @@
  * if_xcmdsrv.c: Functions for passing commands through an X11 display.
  *
  */
+
 #include "vim.h"
-#if defined(FEAT_X11) && defined(FEAT_XCLIPBOARD) && defined(FEAT_XCMDSRV)
-#include <X11/Intrinsic.h>
-#include <X11/Xatom.h>
+
+#if defined(FEAT_XCMDSRV) || defined(PROTO)
+
+# ifdef FEAT_X11
+#  include <X11/Intrinsic.h>
+#  include <X11/Xatom.h>
+# endif
 
 /*
  * This file provides procedures that implement the command server functionality
@@ -206,13 +211,11 @@ DoRegisterName(dpy, name)
      * the registry property.  It's important to lock the server
      * here to prevent conflicting changes to the registry property.
      */
-
     XGrabServer(dpy);
     w = LookupName(dpy, name, 0, NULL);
     if (w != (Window) 0)
     {
 	Status		status;
-	XErrorHandler	old_handler;
 	int		dummyInt;
 	unsigned int	dummyUns;
 	Window		dummyWin;
@@ -224,7 +227,6 @@ DoRegisterName(dpy, name)
 	 * could happen if an application dies without cleaning up the
 	 * registry).
 	 */
-
 	old_handler = XSetErrorHandler(x_error_check);
 	status = XGetGeometry(dpy, w, &dummyWin, &dummyInt, &dummyInt,
 		              &dummyUns, &dummyUns, &dummyUns, &dummyUns);
@@ -336,7 +338,6 @@ serverSendToVim(dpy, name, cmd)
      *
      * Delete any lingering names from dead editors.
      */
-
     old_handler = XSetErrorHandler(x_error_check);
     while (TRUE)
     {
@@ -371,7 +372,6 @@ serverSendToVim(dpy, name, cmd)
      * Send the command to target interpreter by appending it to the
      * comm window in the communication window.
      */
-
     length = STRLEN(name) + STRLEN(cmd) + 10;
     if (length <= STATIC_SPACE)
 	property = staticSpace;
@@ -403,7 +403,6 @@ serverSendToVim(dpy, name, cmd)
  *
  *	The result is a newline separated list. Caller must free list.
  */
-
     char_u *
 serverGetVimNames(dpy)
     Display	*dpy;
@@ -429,7 +428,6 @@ serverGetVimNames(dpy)
     /*
      * Read the registry property.
      */
-
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
 	                        (long)MAX_PROP_WORDS, False,
@@ -446,7 +444,6 @@ serverGetVimNames(dpy)
     /*
      * If the property is improperly formed, then delete it.
      */
-
     if ((result != Success) || (actualFormat != 8)
 	    || (actualType != XA_STRING))
     {
@@ -461,7 +458,6 @@ serverGetVimNames(dpy)
     /*
      * Scan all of the names out of the property.
      */
-
     old_handler = XSetErrorHandler(x_error_check);
     ga_init2(&ga, 1, 100);
     for (p = regProp; (p-regProp) < numItems; p++)
@@ -568,7 +564,6 @@ LookupName(dpy, name, delete, loose)
     /*
      * Read the registry property.
      */
-
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
 	                        (long)MAX_PROP_WORDS, False,
@@ -582,7 +577,6 @@ LookupName(dpy, name, delete, loose)
     /*
      * If the property is improperly formed, then delete it.
      */
-
     if ((result != Success) || (actualFormat != 8) || (actualType != XA_STRING))
     {
 	if (regProp != NULL)
@@ -594,7 +588,6 @@ LookupName(dpy, name, delete, loose)
     /*
      * Scan the property for the desired name.
      */
-
     returnValue = None;
     entry = NULL;	/* Not needed, but eliminates compiler warning. */
     for (p = regProp; (p - regProp) < numItems; )
@@ -637,7 +630,6 @@ LookupName(dpy, name, delete, loose)
      * remainder of the registry property to overlay the deleted
      * info, then rewrite the property).
      */
-
     if ((delete) && (returnValue != None))
     {
 	int count;
@@ -667,23 +659,22 @@ LookupName(dpy, name, delete, loose)
  * 2. We get that id for our commWindow but only want to send, not register.
  * 3. The window will mistakenly be regarded valid because of own commWindow
  */
-
     static void
 DeleteAnyLingerer(dpy, win)
     Display *dpy;	/* Display whose registry to check. */
-    Window  win;          /* Windoe to remove */
+    Window  win;	/* Window to remove */
 {
     char_u	    *regProp, *entry = NULL;
     register char_u *p;
     int		    result, actualFormat;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
-    Window	    curwin;
+    Window	    wwin;
 
     /* Read the registry property.  */
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-	                        (long)MAX_PROP_WORDS, False,
+				(long)MAX_PROP_WORDS, False,
 				XA_STRING, &actualType,
 				&actualFormat, &numItems, &bytesAfter,
 				&regProp);
@@ -705,8 +696,8 @@ DeleteAnyLingerer(dpy, win)
     {
 	if ((*p != 0))
 	{
-	    sscanf((char *)p, "%x", (uint*) &curwin);
-	    if (curwin == win)
+	    sscanf((char *)p, "%x", (uint *)&wwin);
+	    if (wwin == win)
 	    {
 		int lastHalf;
 
@@ -750,7 +741,6 @@ DeleteAnyLingerer(dpy, win)
  *	None.
  *
  */
-
     void
 serverEventProc(dpy, eventPtr)
     Display	   *dpy;
@@ -764,14 +754,11 @@ serverEventProc(dpy, eventPtr)
 
     if ((eventPtr->xproperty.atom != commProperty)
 	    || (eventPtr->xproperty.state != PropertyNewValue))
-    {
 	return;
-    }
 
     /*
      * Read the comm property and delete it.
      */
-
     propInfo = NULL;
     result = XGetWindowProperty(dpy, commWindow, commProperty, 0L,
 				(long)MAX_PROP_WORDS, True,
@@ -783,14 +770,11 @@ serverEventProc(dpy, eventPtr)
      * If the property doesn't exist or is improperly formed
      * then ignore it.
      */
-
     if ((result != Success) || (actualType != XA_STRING)
 	    || (actualFormat != 8))
     {
 	if (propInfo != NULL)
-	{
 	    XFree(propInfo);
-	}
 	return;
     }
 
@@ -799,7 +783,6 @@ serverEventProc(dpy, eventPtr)
      * one time;  each iteration through the outer loop handles a
      * single command or result.
      */
-
     for (p = propInfo; (p - propInfo) < numItems; )
     {
 	/*
@@ -808,7 +791,6 @@ serverEventProc(dpy, eventPtr)
 	 * is, we'll be able to tell that a new command/result is
 	 * starting.
 	 */
-
 	if (*p == 0)
 	{
 	    p++;
@@ -828,7 +810,6 @@ serverEventProc(dpy, eventPtr)
 	     * the end of the property or something that doesn't look
 	     * like an option.
 	     */
-
 	    p += 2;
 	    name = NULL;
 	    resWindow = None;
@@ -867,7 +848,6 @@ serverEventProc(dpy, eventPtr)
 	     * Initialize the result property, so that we're ready at any
 	     * time if we need to return an error.
 	     */
-
 	    if (resWindow != None)
 	    {
 		ga_init2(&reply, 1, 100);
@@ -902,7 +882,6 @@ serverEventProc(dpy, eventPtr)
 	     * Even if we get an 'r'(eply) we will throw it away as we
 	     * never specify (and thus expect) one
 	     */
-
 	    while (*p != 0)
 		p++;
 	    p++;
@@ -921,7 +900,6 @@ serverEventProc(dpy, eventPtr)
  *  Return:
  *	0 on OK - -1 on error
  */
-
     static int
 AppendPropCarefully(dpy, window, property, value, length)
     Display *dpy;		/* Display on which to operate. */
@@ -991,4 +969,189 @@ IsSerialName(str)
 
     return TRUE;
 }
-#endif
+
+static int check_connection __ARGS((void));
+
+    static int
+check_connection()
+{
+    if (X_DISPLAY == NULL)
+    {
+	EMSG(_("E240: No connection to X server"));
+	return FAIL;
+    }
+    return OK;
+}
+
+/*
+ * Implements ":serversend {server} {string}"
+ */
+    void
+ex_serversend(eap)
+    exarg_T	*eap;
+{
+    char_u	*p;
+    char_u	*s;
+
+    if (check_connection() == FAIL)
+	return;
+    p = skiptowhite(eap->arg);
+    if ((s = vim_strnsave(eap->arg, p - eap->arg)) == NULL)
+	return;
+    p = skipwhite(p);
+
+    if (serverSendToVim(X_DISPLAY, s, p) < 0)
+	EMSG2(_("E241: Unable to send to %s"), s);
+    vim_free(s);
+}
+
+/*
+ * Implements ":serverlist"
+ */
+/*ARGSUSED*/
+    void
+ex_serverlist(eap)
+    exarg_T	*eap;
+{
+    char_u	*p, *cur, *next;
+
+    if (check_connection() == FAIL)
+	return;
+    p = serverGetVimNames(X_DISPLAY);
+    if (p == NULL)
+	MSG(_("No servers found for this display"));
+    else
+    {
+	next = cur = p;
+	while (*next)
+	{
+	    cur = next;
+	    if ((next = vim_strchr(cur, '\n')) == NULL)
+		next = cur + STRLEN(cur);
+	    if (next > cur)
+	    {
+		msg_putchar('\n');
+		if (serverName != NULL
+			&& STRNCMP(serverName, cur, next - cur) == 0
+			&& (next - cur) == STRLEN(serverName))
+		    msg_outtrans((char_u *)"> ");
+		else
+		    msg_outtrans((char_u *)"  ");
+		msg_outtrans_len(cur, next - cur);
+	    }
+	    if (*next == '\n')
+		next++;
+	    out_flush();
+	}
+	vim_free(p);
+    }
+}
+
+static char_u *build_drop_cmd __ARGS((int filec, char **filev));
+
+    void
+cmdsrv_main(argc, argv, cmdTarget)
+    int		argc;
+    char	**argv;
+    char_u	*cmdTarget;
+{
+    char_u	*res, *s;
+    int		i;
+    char_u	*serverStr;
+    int		didone = FALSE;
+
+    setup_term_clip();
+    if (xterm_dpy != NULL)
+    {
+	for (i = 1; i < argc; i++)
+	{
+	    if (STRCMP(argv[i], "--") == 0)
+		break;
+	    else if (STRICMP(argv[i], "--remote") == 0
+		     || STRICMP(argv[i], "--serversend") == 0)
+	    {
+		if (i == argc - 1)
+		    mainerr_arg_missing((char_u *)argv[i]);
+		if (argv[i][2] == 'r')
+		{
+		    serverStr = build_drop_cmd(argc - i - 1, argv + i + 1);
+		    argc = i;
+		}
+		else
+		{
+		    serverStr = (char_u *)argv[i + 1];
+		    i++;
+		}
+		s = cmdTarget != NULL ? cmdTarget : gettail((char_u *)argv[0]);
+		if (serverSendToVim(xterm_dpy, s, serverStr) < 0)
+		{
+		    MSG_ATTR(_("Send failed. Trying to execute locally"),
+							      hl_attr(HLF_W));
+		    break;      /* Break out to let vim start normally.  */
+		}
+	    }
+	    else if (STRICMP(argv[i], "--serverlist") == 0)
+	    {
+		res = serverGetVimNames(xterm_dpy);
+		if (res != NULL && *res)
+		    mch_msg((char *)res);
+		vim_free(res);
+	    }
+	    else
+		continue;
+	    didone = TRUE;
+	}
+
+	if (didone)
+	    exit(0);     /* Mission accomplished - get out */
+    }
+}
+
+    static char_u *
+build_drop_cmd(filec, filev)
+    int		filec;
+    char	**filev;
+{
+    garray_T	ga;
+    int		i;
+    char_u	*inicmd = NULL;
+    char_u	*p;
+    char_u	cwd[MAXPATHL];
+
+    if (filec > 0 && filev[0][0] == '+')
+    {
+	inicmd = (char_u *)filev[0] + 1;
+	filev++;
+	filec--;
+    }
+    if (filec <= 0 || mch_dirname(cwd, MAXPATHL) != OK)
+	return NULL;
+    if ((p = vim_strsave_escaped(cwd, PATH_ESC_CHARS)) == NULL)
+	return NULL;
+    ga_init2(&ga, 1, 100);
+    ga_concat(&ga, (char_u *)"<C-\\><C-N>:cd ");
+    ga_concat(&ga, p);
+    ga_concat(&ga, (char_u *)"<CR>:drop ");
+    for (i = 0; i < filec; i++)
+    {
+	vim_free(p);
+	p = vim_strsave_escaped((char_u *)filev[i], PATH_ESC_CHARS);
+	if (p == NULL)
+	{
+	    vim_free(ga.ga_data);
+	    return NULL;
+	}
+	ga_concat(&ga, p);
+	ga_concat(&ga, (char_u *)" ");
+    }
+    ga_concat(&ga, (char_u *)"<CR>:cd -");
+    if (inicmd != NULL)
+    {
+	ga_concat(&ga, (char_u *)"<CR>:");
+	ga_concat(&ga, inicmd);
+    }
+    ga_concat(&ga, (char_u *)"<CR>:<Esc>"); /* Execute & clear command line */
+    return ga.ga_data;
+}
+
+#endif	/* FEAT_XCMDSRV */

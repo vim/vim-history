@@ -123,6 +123,8 @@ EXTERN_C void boot_DynaLoader __ARGS((pTHX_ CV*));
 # define Perl_call_pv dll_Perl_call_pv
 # define Perl_eval_sv dll_Perl_eval_sv
 # define Perl_get_sv dll_Perl_get_sv
+# define Perl_eval_pv dll_Perl_eval_pv
+# define Perl_call_method dll_Perl_call_method
 # define Perl_pop_scope dll_Perl_pop_scope
 # define Perl_push_scope dll_Perl_push_scope
 # define Perl_save_int dll_Perl_save_int
@@ -191,6 +193,8 @@ static I32 (*Perl_call_argv)(pTHX_ const char*, I32, char**);
 static I32 (*Perl_call_pv)(pTHX_ const char*, I32);
 static I32 (*Perl_eval_sv)(pTHX_ SV*, I32);
 static SV* (*Perl_get_sv)(pTHX_ const char*, I32);
+static SV* (*Perl_eval_pv)(pTHX_ const char*, I32);
+static SV* (*Perl_call_method)(pTHX_ const char*, I32);
 static void (*Perl_pop_scope)(pTHX);
 static void (*Perl_push_scope)(pTHX);
 static void (*Perl_save_int)(pTHX_ int*);
@@ -256,6 +260,8 @@ static struct {
     {"Perl_call_pv", (PERL_PROC*)&Perl_call_pv},
     {"Perl_eval_sv", (PERL_PROC*)&Perl_eval_sv},
     {"Perl_get_sv", (PERL_PROC*)&Perl_get_sv},
+    {"Perl_eval_pv", (PERL_PROC*)&Perl_eval_pv},
+    {"Perl_call_method", (PERL_PROC*)&Perl_call_method},
     {"Perl_pop_scope", (PERL_PROC*)&Perl_pop_scope},
     {"Perl_push_scope", (PERL_PROC*)&Perl_push_scope},
     {"Perl_save_int", (PERL_PROC*)&Perl_save_int},
@@ -523,8 +529,6 @@ VIM_init()
      */
     (void)perl_eval_pv( "if ( eval( 'require Safe' ) ) { $VIM::safe = Safe->new(); $VIM::safe->share_from( 'VIM', ['Msg'] ); }", G_DISCARD | G_VOID );
 
-    FREETMPS;
-    LEAVE;
 }
 
 #ifdef DYNAMIC_PERL
@@ -573,7 +577,7 @@ ex_perl(eap)
     if (sandbox)
     {
 	if ((safe = perl_get_sv( "VIM::safe", FALSE )) == NULL || !SvTRUE(safe))
-	    EMSG(_("E123: Perl evaluation forbidden in sandbox without the Safe module"));
+	    EMSG(_("E299: Perl evaluation forbidden in sandbox without the Safe module"));
 	else
 	{
 	    PUSHMARK(SP);

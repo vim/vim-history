@@ -154,7 +154,11 @@ WINDRES = i586-pc-mingw32msvc-windres
 else
 # normal (Windows) compilation:
 CC = gcc
+ifneq (sh.exe, $(SHELL))
+DEL = rm
+else
 DEL = del
+endif
 WINDRES = windres
 endif
 
@@ -301,7 +305,11 @@ clean:
 	-$(DEL) *.o
 	-$(DEL) *.res
 	-$(DEL) *.exe
+ifneq (sh.exe, $(SHELL))
+	-$(DEL) xxd/*.exe
+else
 	-$(DEL) xxd\*.exe
+endif
 	-$(DEL) dyn-ming.h
 
 ###########################################################################

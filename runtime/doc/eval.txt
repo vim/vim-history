@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0al.  Last change: 2001 Jun 19
+*eval.txt*      For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -817,8 +817,8 @@ synIDattr( {synID}, {what} [, {mode}])
 synIDtrans( {synID})		Number	translated syntax ID of {synID}
 system( {expr})			String	output of shell command {expr}
 tempname()			String	name for a temporary file
-tolower( {expr})		String	the String {expr} switched to lower case
-toupper( {expr})		String	the String {expr} switched to upper case
+tolower( {expr})		String	the String {expr} switched to lowercase
+toupper( {expr})		String	the String {expr} switched to uppercase
 type( {name})			Number	type of variable {name}
 virtcol( {expr})		Number	screen column of cursor or mark
 visualmode()			String	last visual mode used
@@ -1452,7 +1452,7 @@ histdel({history} [, {item}])				*histdel()*
 		If the parameter {item} is given as String, this is seen
 		as regular expression.  All entries matching that expression
 		will be removed from the history (if there are any).
-		Upper/lower case must match, unless "\c" is used |/\c|"
+		Upper/lowercase must match, unless "\c" is used |/\c|"
 		If {item} is a Number, it will be interpreted as index, see
 		|:history-indexing|.  The respective entry will be removed
 		if it exists.
@@ -2137,13 +2137,13 @@ tempname()					*tempname()* *temp-file-name*
 		When Vim exits the directory and all files in it are deleted.
 
 tolower({expr})						*tolower()*
-		The result is a copy of the String given, with all lower case
-		characters turned into upper case (just like applying |gu| to
+		The result is a copy of the String given, with all lowercase
+		characters turned into uppercase (just like applying |gu| to
 		the string).
 
 toupper({expr})						*toupper()*
-		The result is a copy of the String given, with all upper case
-		characters turned into lower case (just like applying |gU| to
+		The result is a copy of the String given, with all uppercase
+		characters turned into lowercase (just like applying |gU| to
 		the string).
 
 type({expr})						*type()*

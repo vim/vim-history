@@ -423,7 +423,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
     char_u	*ptr;
     colnr_T	matchcol;
     colnr_T	startcol;
-    pos_T	endpos;
+    lpos_T	endpos;
     int		loop;
     pos_T	start_pos;
     int		at_first_line;
@@ -946,7 +946,7 @@ do_search(oap, dirc, str, count, options)
 	    str = p;			    /* put str after search command */
 	}
 
-	if ((options & SEARCH_ECHO) && messaging())
+	if ((options & SEARCH_ECHO) && messaging() && cmd_silent == 0)
 	{
 	    char_u	*msgbuf;
 	    char_u	*trunc;
@@ -1738,7 +1738,8 @@ findmatchlimit(oap, initc, flags, maxtravel)
 		{
 		    if (count > 0)
 			pos = match_pos;
-		    else if (pos.col > 1 && linep[pos.col - 2] == '/')
+		    else if (pos.col > 1 && linep[pos.col - 2] == '/'
+					       && (int)pos.col <= comment_col)
 			pos.col -= 2;
 		    else if (ignore_cend)
 			continue;

@@ -1,4 +1,4 @@
-*usr_31.txt*	For Vim version 6.0al.  Last change: 2001 Jun 15
+*usr_31.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -13,6 +13,7 @@ between alternatives.  Use keyboard shortcuts to access menu items quickly.
 |31.2|	Confirmation
 |31.3|	Menu shortcuts
 |31.4|	Vim window position and size
+|31.5|	Various
 
      Next chapter: |usr_40.txt|  Make new commands
  Previous chapter: |usr_30.txt|  Compiling programs
@@ -192,6 +193,71 @@ To change the size set the 'lines' and/or 'columns' options to a new value: >
 
 Obtaining the size works in a terminal just like in the GUI.  Setting the size
 is not possible in most terminals.
+
+You can start the X-Windows version of gvim with an argument to specify the
+size and position of the window: >
+
+	gvim -geometry {width}x{height}+{x_offset}+{y_offset}
+
+{width} and {height} are in characters, {x_offset} and {y_offset} are in
+pixels.  Example: >
+
+	gvim -geometry 80x25+100+300
+
+==============================================================================
+*31.5*	Various
+
+You can use gvim to edit an e-mail message.  In your e-mail program you must
+select gvim to be the editor for messages.  When you have tried that, you will
+see that it doesn't work: The mail program thinks that editing is finished,
+while gvim is still running!
+   What happens is that gvim disconnects from the shell it was started in.
+That is find when you start gvim in a terminal, so that you can do other work
+in that terminal.  But when you really want to wait for gvim to finish, you
+must prevent it from disconnecting.  The "-f" argument does this: >
+
+	gvim -f file.txt
+
+The "-f" stands for foreground.  Now Vim will block the shell it was started
+in until you exit the program.
+
+
+DELAYED START OF THE GUI
+
+On Unix it's possible to first start Vim in a terminal.  That's useful if you
+do various tasks in the same shell.  If you are editing a file and decide you
+want to use the GUI after all, you can start it with: >
+
+	:gui
+
+Vim will open the GUI window and no longer use the terminal.  You can continue
+using the terminal for something else.  The "-f" argument is used here to run
+the GUI in the foreground.  You can also use ":gui -f".
+
+
+THE GVIM STARTUP FILE
+
+When gvim starts, it reads the gvimrc file.  That's similar to the vimrc file
+used when starting Vim.  The gvimrc file can be used for settings and commands
+that are only to be used when the GUI is going to be started.  For example,
+you can set the 'lines' variable to set a different window size: >
+
+	:set lines=55
+
+You don't want to do this in a terminal, since it's size is fixed (except for
+an xterm that supports resizing).
+   The gvimrc file is searched for in the same locations as the vimrc file.
+Normally it's name is "~/.gvimrc" for Unix and "$VIM/_gvimrc" for MS-Windows.
+   If for some reason you don't want to use the normal gvimrc file, you can
+specify another one with the "-U" argument: >
+
+	gvim -U thisrc ...
+
+That allows starting gvim for different kinds of editing.  You could set
+another font size, for example. 
+   To completely skip reading a gvimrc file: >
+
+   	gvim -U NONE ...
 
 ==============================================================================
 

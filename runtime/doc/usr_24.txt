@@ -1,4 +1,4 @@
-*usr_24.txt*	For Vim version 6.0al.  Last change: 2001 Jun 05
+*usr_24.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -11,14 +11,15 @@ typed words.  Abbreviate long words to short ones.  Type characters that
 aren't on your keyboard.
 
 |24.1|	Making corrections
-|24.2|	Completion
-|24.3|	Repeating an insert
-|24.4|	Copying from another line
-|24.5|	Inserting a register
-|24.6|	Abbreviations
-|24.7|	Entering special characters
-|24.8|	Digraphs
-|24.9|	Normal mode commands
+|24.2|	Showing matches
+|24.3|	Completion
+|24.4|	Repeating an insert
+|24.5|	Copying from another line
+|24.6|	Inserting a register
+|24.7|	Abbreviations
+|24.8|	Entering special characters
+|24.9|	Digraphs
+|24.10|	Normal mode commands
 
      Next chapter: |usr_25.txt|  Editing formatted text
  Previous chapter: |usr_23.txt|  Editing other files
@@ -93,7 +94,30 @@ leave Insert mode.  The extra typing doesn't matter then.
 There are a few more, see |ins-special-special|.
 
 ==============================================================================
-*24.2*	Completion
+*24.2*	Showing matches
+
+When you type a ) it would be nice to see with which ( it matches.  To make
+Vim do that use this command: >
+
+	:set showmatch
+
+When you now type a text like "(example)", as soon as you type the ) Vim will
+briefly move the cursor to the matching (, keep it there for half a second,
+and move back to where you were typing.
+   In case there is not matching (, Vim will beep.  Then you know that you
+might have forgotten the ( somewhere, or typed a ) too many.
+   The match will also be shown for [] and {} pairs.  You don't have to wait
+with typing the next character, as soon as Vim sees it the cursor will move
+back and inserting continues as before.
+   You can change the time Vim waits with the 'matchtime' option.  For
+example, to make Vim wait one and a half second: >
+
+	:set matchtime=15
+
+The time is specified in tenths of a second.
+
+==============================================================================
+*24.3*	Completion
 
 Vim can automatically complete words on insertion.  You type the first part of
 a word, press CTRL-P , and Vim guesses the rest.
@@ -209,7 +233,7 @@ The results depend on what is found in your file syste, of course.  The
 matches are sorted alphabetically.
 
 ==============================================================================
-*24.3*	Repeating an insert
+*24.4*	Repeating an insert
 
 If you press CTRL-A, the editor inserts the text you typed the last time you
 were in insert mode.
@@ -246,7 +270,7 @@ The CTRL-@ command does a CTRL-A and then exits Insert mode.  That's a quick
 way of doing exactly the same insertion again.
 
 ==============================================================================
-*24.4*	Copying from another line
+*24.5*	Copying from another line
 
 The CTRL-Y command inserts the character above the cursor.  This is useful
 when you are duplicating a previous line.  For example, you have this line of
@@ -277,7 +301,7 @@ The CTRL-E command acts like CTRL-Y except it inserts the character below the
 cursor.
 
 ==============================================================================
-*24.5*	Inserting a register
+*24.6*	Inserting a register
 
 The command CTRL-R {register} inserts the contents of the register.  This is
 useful to avoid having to type a long word.  For example, you need to type
@@ -310,7 +334,7 @@ not want this to happen (you really want the <BS> to be inserted in the text),
 use the command CTRL-R CTRL-R {register}.
 
 ==============================================================================
-*24.6*	Abbreviations
+*24.7*	Abbreviations
 
 An abbreviation is a short word that takes the place of a long one.  For
 example, "ad" stands for "advertisement".  Vim enables you to type an
@@ -393,8 +417,48 @@ when typing a command like: >
 
 	:edit ad
 
+
+DELETING ABBREVIATIONS
+
+To get rid of an abbreviation, use the ":unabbreviate" command.  Suppose you
+have the following abbreviation: >
+
+	:abbreviate @f fresh
+
+You can remove it with this command: >
+
+	:unabbreviate @f
+
+While you type this, you will notice that @f is expanded to "fresh".  Don't
+worry about this, Vim understands it anyway (except when you have an
+abbreviations for "fresh", but that's very unlikely).
+   To remove all the abbreviations: >
+
+   	:abclear
+
+":unabbreviate" and ":abclear" also come in the variants for Insert mode
+("iunabbeviate and ":iabclear") and Command-line mode (":cunabbreviate" and
+"cabclear").
+
+
+REMAPPING ABBREVIATIONS
+
+There is one thing to watch out for when defining an abbreviation: The
+resulting string should not be mapped.  For example: >
+
+	:abbreviate @a adder
+	:imap dd disk-door
+
+When you now type @a, you will get "adisk-doorer".  That's not what you want.
+To avoid this, use the ":noreabbrev" command.  It does the same as
+":abbreviate", but avoids that the resulting string is used for mappings: >
+
+	:noreabbrev @a adder
+
+Fortunately, it's unlikely that the result of an abbreviation is mapped.
+
 ==============================================================================
-*24.7*	Entering special characters
+*24.8*	Entering special characters
 
 The CTRL-V command is used to insert the next character literally.  In other
 words, any special meaning the character has, it will be ignored.  For
@@ -438,12 +502,15 @@ a 16 bit and a 32 bit number: >
 	CTRL-V U12345678
 
 ==============================================================================
-*24.8*	Digraphs
+*24.9*	Digraphs
 
 Some characters are not on the keyboard.  For example, the copyright character
 (©).  To type these characters in Vim, you use digraphs, where two characters
-represent one.  To enter a ©, for example, you press three keys: CTRL-K Co.
-   To find out what digraphs are available, use the following command: >
+represent one.  To enter a ©, for example, you press three keys: >
+
+	CTRL-K Co
+
+To find out what digraphs are available, use the following command: >
 
 	:digraphs
 
@@ -481,7 +548,7 @@ More information about digraphs here: |digraphs|
 here: 'keymap'.
 
 ==============================================================================
-*24.9*	Normal mode commands
+*24.10*	Normal mode commands
 
 Insert mode offers a limited number of commands.  In Normal mode you have many
 more.  When you want to use one, you would leave Insert mode with <Esc>,

@@ -16,8 +16,8 @@
  *
  * "enc_dbcs"	    When non-zero it tells the type of double byte character
  *		    encoding (Chinese, Korean, Japanese, etc.).
- *		    The cell width on the display is always equal to the
- *		    number of bytes.
+ *		    The cell width on the display is equal to the number of
+ *		    bytes.  (exception: DBCS_JPNU with first byte 0x8e)
  *		    Recognizing the first or second byte is difficult, it
  *		    requires checking a byte sequence from the start.
  * "enc_utf8"	    When TRUE use Unicode characters in UTF-8 encoding.
@@ -2380,7 +2380,7 @@ enc_default()
 
 # if defined(USE_ICONV) || defined(PROTO)
 
-static char_u *iconv_string __ARGS((iconv_t fd, char_u *str, int strlen));
+static char_u *iconv_string __ARGS((iconv_t fd, char_u *str, int slen));
 
 /*
  * Call iconv_open() with a check if iconv() works properly (there are broken
@@ -2437,14 +2437,14 @@ my_iconv_open(to, from)
 }
 
 /*
- * Convert the string "str[strlen]" with iconv().
+ * Convert the string "str[slen]" with iconv().
  * Returns the converted string in allocated memory.  NULL for an error.
  */
     static char_u *
-iconv_string(fd, str, strlen)
+iconv_string(fd, str, slen)
     iconv_t	fd;
     char_u	*str;
-    int		strlen;
+    int		slen;
 {
     const char	*from;
     size_t	fromlen;
@@ -2457,7 +2457,7 @@ iconv_string(fd, str, strlen)
     int		l;
 
     from = (char *)str;
-    fromlen = strlen;
+    fromlen = slen;
     for (;;)
     {
 	if (len == 0 || ICONV_ERRNO == E2BIG)
@@ -2575,13 +2575,13 @@ iconv_end()
 static int	xim_is_active = FALSE;  /* XIM should be active in the current
 					   mode */
 static int	xim_has_focus = FALSE;	/* XIM is really being used for Vim */
-static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 #ifdef FEAT_GUI_X11
 static XIMStyle	input_style;
 static int	status_area_enabled = TRUE;
 #endif
 
 #ifdef FEAT_GUI_GTK
+static int	xim_preediting INIT(= FALSE);	/* XIM in showmode() */
 static int	xim_input_style;
 static gboolean	use_status_area = 0;
 #endif
@@ -3608,7 +3608,11 @@ xim_get_status_area_height(void)
     int
 im_get_status()
 {
-    return xim_preediting;
+#ifdef FEAT_GUI_GTK
+    if (xim_input_style & (int)GDK_IM_PREEDIT_CALLBACKS)
+	return xim_preediting;
+#endif
+    return xim_has_focus;
 }
 
 #endif /* FEAT_XIM */

@@ -1056,6 +1056,13 @@ static struct vimoption
 			    {(char_u *)B_IMODE_NONE, (char_u *)0L}
 #endif
 			    },
+    {"imcmdline",   "imc",  P_BOOL|P_VI_DEF,
+#ifdef USE_IM_CONTROL
+			    (char_u *)&p_imcmdline, PV_NONE,
+#else
+			    (char_u *)NULL, PV_NONE,
+#endif
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"include",	    "inc",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
 			    (char_u *)&p_inc, PV_INC,
@@ -7343,6 +7350,20 @@ buf_copy_options(buf, flags)
     check_buf_options(buf);	    /* make sure we don't have NULLs */
     if (did_isk)
 	(void)buf_init_chartab(buf, FALSE);
+}
+
+/*
+ * Reset the 'modifiable' option and its default value.
+ */
+    void
+reset_modifiable()
+{
+    int		opt_idx;
+
+    curbuf->b_p_ma = FALSE;
+    p_ma = FALSE;
+    opt_idx = findoption((char_u *)"ma");
+    options[opt_idx].def_val[VI_DEFAULT] = FALSE;
 }
 
 /*

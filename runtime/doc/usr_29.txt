@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.0al.  Last change: 2001 Jun 11
+*usr_29.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -62,7 +62,7 @@ CTRL-].  Now you are at the definition of "write_char".
 	|}	    |			      |
 	+-----------|-------------------------+
 		    |
-	     CTRL-T |
+	     CTRL-] |
 		    |	 +----------------------------+
 		    +--> |void write_line(char *s)    |
 			 |{			      |
@@ -71,7 +71,7 @@ CTRL-].  Now you are at the definition of "write_char".
 			 |}	  |		      |
 			 +--------|-------------------+
 				  |
-			   CTRL-T |
+			   CTRL-] |
 				  |    +------------------------------------+
 				  +--> |void write_char(char c)		    |
 				       |{				    |
@@ -314,6 +314,9 @@ prototype for popen():
 
 	FILE	*popen __P((const char *, const char *)); ~
 
+You can specify the height of the preview window, when it is opened, with the
+'previewheight' option.
+
 ==============================================================================
 *29.3*	Moving through a program
 
@@ -387,13 +390,31 @@ Additionally, "[]" moves backward to the end of a function and "][" moves
 forward to the end of a function.  The end of a function is defined by a "}"
 in the first column.
 
+				int func1(void)
+				{
+					return 1;
+		  +---------->  }
+                  |         
+	      []  |             int func2(void)
+		  |        +->  {
+		  |    [[  |    	if (flag)
+	start     +--      +--  		return flag;
+		  |    ][  |    	return 2;
+		  |        +->  }
+              ]]  |         
+	          |             int func3(void)
+		  +---------->  {
+					return 3;
+				}
+
+Don't forget you can also use "%" to move between matching (), {} and [].
+That also works when they are many lines apart.
+
 
 MOVING IN BRACES
 
 The "[(" and "])" commands work similar to "[{" and "]}", except that they
 work on () pairs instead of {} pairs.
-
-Don't forget you can also use "%" to move between matching (), {} and [].
 >
 				  [(
 <		    <--------------------------------
@@ -495,6 +516,14 @@ This will find files in the directories:
 	etc.
 
 There are even more possibilities.  Check out the 'path' option for info.
+   If you want to see which included files are actually found, use this
+command: >
+
+	:checkpath!
+
+You will get a (very long) list of included files, the files they include, and
+so on.  To shorten the list a bit, Vim shows "(Already listed)" for files that
+were found before and doesn't list the included files in there again.
 
 
 JUMPING TO A MATCH

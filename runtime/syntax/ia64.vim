@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:     IA-64 (Itanium) assembly language
-" Maintainer:   Parth Malwankar <parth.malwankar@usa.net>
+" Maintainer:   Parth Malwankar <parth.malwankar@techie.com>
 " URL:          http://www.geocities.com/pmalwankar (Home Page with link to my Vim page)
 "               http://www.geocities.com/pmalwankar/vim.htm (for VIM)
-" File Version: 0.5
-" Last Change:  2001 May 10
+" File Version: 0.6
+" Last Change:  2001 June 30
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -31,12 +31,14 @@ syn sync minlines=5
 " This is needed as both IA-64 as well as IA-32 instructions are supported
 source <sfile>:p:h/masm.vim
 
-syn region  ia64Comment start="//" end="$" contains=ia64Todo
+syn region ia64Comment start="//" end="$" contains=ia64Todo
+syn region ia64Comment start="/\*" end="\*/" contains=ia64Todo
+
 syn match ia64Identifier        "[a-zA-Z_$][a-zA-Z0-9_$]*"
-syn match ia64Directive         "\.[a-z][a-z]\+"
-syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=:\>"he=e-1
-syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=::\>"he=e-2
-syn match ia64Label             "[a-zA-Z_$][a-zA-Z0-9_$]*\s\=#\>"he=e-1
+syn match ia64Directive         "\.[a-zA-Z_$][a-zA-Z_$.]\+"
+syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=:\>"he=e-1
+syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=::\>"he=e-2
+syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=#\>"he=e-1
 syn region ia64string           start=+L\="+ skip=+\\\\\|\\"+ end=+"+
 syn match ia64Octal             "0[0-7_]*\>"
 syn match ia64Binary            "0[bB][01_]*\>"
@@ -258,12 +260,12 @@ syn match ia64registers "\(@rev\|@mix\|@shuf\|@alt\|@brcst\)\>"
 "floating point classes
 syn match ia64registers "\(@nat\|@qnan\|@snan\|@pos\|@neg\|@zero\|@unorm\|@norm\|@inf\)\>"
 "link relocation operators
-syn match ia64registers "\(@\(\(gp\|sec\|seg\|image\)rel\)\|ltoff\|fptr\|ptloff\|ltv\|section\)\>"
+syn match ia64registers "\(@\(\(\(gp\|sec\|seg\|image\)rel\)\|ltoff\|fptr\|ptloff\|ltv\|section\)\)\>"
 
 "Data allocation syntax
-syn match ia64data "data[1248]\>"
-syn match ia64data "real\([48]\|1[06]\)\>"
-syn match ia64data "stringz\=\>"
+syn match ia64data "data[1248]\(\(\(\.ua\)\=\(\.msb\|\.lsb\)\=\)\|\(\(\.msb\|\.lsb\)\=\(\.ua\)\=\)\)\=\>"
+syn match ia64data "real\([48]\|1[06]\)\(\(\(\.ua\)\=\(\.msb\|\.lsb\)\=\)\|\(\(\.msb\|\.lsb\)\=\(\.ua\)\=\)\)\=\>"
+syn match ia64data "stringz\=\(\(\(\.ua\)\=\(\.msb\|\.lsb\)\=\)\|\(\(\.msb\|\.lsb\)\=\(\.ua\)\=\)\)\=\>"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

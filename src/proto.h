@@ -54,7 +54,7 @@
 # ifdef __BEOS__
 #  include "os_beos.pro"
 # endif
-# ifdef macintosh
+# if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
 #  include "os_mac.pro"
 # endif
 # ifdef RISCOS

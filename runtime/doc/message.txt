@@ -1,4 +1,4 @@
-*message.txt*   For Vim version 6.0al.  Last change: 2001 Jun 03
+*message.txt*   For Vim version 6.0am.  Last change: 2001 Jun 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -451,6 +451,15 @@ Scripts can be read with the "-s" command-line argument and with the ":source"
 command.  The script can then again read another script.  This can continue
 for about 14 levels.  When more nesting is done, Vim assumes that there is a
 recursive loop somewhere and stops with this error message.
+
+							*E300*  >
+  Swap file already exists (symlink attack?)
+
+This message appears when Vim is trying to open a swap file and finds it
+already exists or finds a symbolic link in its place.  This shouldn't happen,
+because Vim already checked that the file doesn't exist.  Either someone else
+opened the same file at exactly the same moment (very unlikely) or someone is
+attempting a symlink attack (could happen when editing a file in /tmp).
 
 							*E432*  >
   Tags file not sorted: {file name}

@@ -1,7 +1,7 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 May 26
+" Last change:	2001 Jun 29
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
@@ -24,6 +24,7 @@ else
 endif
 set history=50		" keep 50 lines of command line history
 set ruler		" show the cursor position all the time
+set showcmd		" display incomplete commands
 set incsearch		" do incremental searching
 
 " For Win32 GUI: remove 't' flag from 'guioptions': no tearoff menu entries

@@ -3367,6 +3367,7 @@ f_filewritable(argvars, retvar)
 #endif
 
     p = get_var_string(&argvars[0]);
+#ifndef macintosh /* TODO: get either mch_writable or mch_access */
 #ifdef WIN3264
     if (mch_writable(p))
 #else
@@ -3379,6 +3380,7 @@ f_filewritable(argvars, retvar)
 # endif
 	    mch_access((char *)p, W_OK) == 0
        )
+#endif
 #endif
     {
 	++retval;

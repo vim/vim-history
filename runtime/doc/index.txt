@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0al.  Last change: 2001 Jun 16
+*index.txt*     For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -211,7 +211,7 @@ tag		char	      note action in Normal mode	~
 				   command
 |!!|		!!{filter}	2  filter N lines through the {filter} command
 |quote|		"{a-zA-Z0-9.%#:-"}  use buffer {a-zA-Z0-9.%#:-"} for next
-				   delete, yank or put (upper case to append)
+				   delete, yank or put (uppercase to append)
 				   ({.%#:} only work with put)
 |#|		#		1  search backward for the Nth occurrence of
 				   the ident under the cursor
@@ -373,7 +373,7 @@ tag		char	      note action in Normal mode	~
 |p|		["x]p		2  put the text [from register x] after the
 				   cursor N times
 |q|		q{0-9a-zA-Z"}	   record typed characters into named register
-				   {0-9a-zA-Z"} (upper case to append)
+				   {0-9a-zA-Z"} (uppercase to append)
 |q|		q		   (while recording) stops recording
 |q:|		q:		   edit : command-line in command-line window
 |q/|		q/		   edit / command-line in command-line window
@@ -1024,6 +1024,7 @@ The commands are sorted on the non-optional part of their name.
 |:cabclear|	:cabc[lear]	clear all abbreviations for Command-line mode
 |:call|		:cal[l]		call a function
 |:cc|		:cc		go to specific error
+|:cclose|	:ccl[ose]	close quickfix window
 |:cd|		:cd		change directory
 |:center|	:ce[nter]	format lines at the center
 |:cfile|	:cf[ile]	read the file with error messages
@@ -1051,6 +1052,7 @@ The commands are sorted on the non-optional part of their name.
 |:compiler|	:comp[iler]	do settings for a specific compiler
 |:continue|	:con[tinue]	go back to :while
 |:confirm|	:conf[irm]	prompt user when confirmation required
+|:copen|	:cope[n]	open quickfix window
 |:cprevious|	:cp[revious]	go to previous error
 |:cquit|	:cq[uit]	quit Vim with an error code
 |:crewind|	:cr[ewind]	go to the specified error, default first one
@@ -1059,7 +1061,7 @@ The commands are sorted on the non-optional part of their name.
 |:cunmap|	:cu[nmap]	like ":unmap" but for Command-line mode
 |:cunabbrev|	:cuna[bbrev]	like ":unabbrev" but for Command-line mode
 |:cunmenu|	:cunme[nu]	remove menu for Command-line mode
-|:cwindow|	:cw[indow]	open quickfix window
+|:cwindow|	:cw[indow]	open or close quickfix window
 |:delete|	:d[elete]	delete lines
 |:debug|	:deb[ug]	run a command in debugging mode
 |:delcommand|	:delc[ommand]	delete user-defined command

@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 6.0al.  Last change: 2001 Apr 15
+*develop.txt*   For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -189,6 +189,8 @@ memset()	vim_memset()	Uniform for all systems
 
 NAMES							*style-names*
 
+Function names can not be more than 31 characters long (because of VMS).
+
 Because of the requirement that Vim runs on as many systems as possible, we
 need to avoid using names that are already defined by the system.  This is a
 list of names that are known to cause trouble.  The name is given as a regexp
@@ -231,7 +233,7 @@ VARIOUS							*style-various*
 
 Typedef'ed names should end in "_t": >
     typdef int some_t;
-Define'ed names should be upper case: >
+Define'ed names should be uppercase: >
     #define SOME_THING
 Features always start with "FEAT_": >
     #define FEAT_FOO

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0al.  Last change: 2001 Jun 24
+*options.txt*   For Vim version 6.0am.  Last change: 2001 Jun 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1047,8 +1047,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	When you set this option, it fires the |EncodingChanged| autocommand
 	event so that you can set up fonts if necessary.
 
-	When the option is set, the value is converted to lower case.  Thus
-	you can set it with upper case values too.  Underscores are translated
+	When the option is set, the value is converted to lowercase.  Thus
+	you can set it with uppercase values too.  Underscores are translated
 	to '-' signs.
 	When the encoding is recognized, it is changed to the standard name.
 	For example "Latin-1" becomes "latin1", "ISO_88592" becomes
@@ -1165,7 +1165,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	'smartindent' or 'cindent' is set.  For 'cindent' this is only done at
 	an appropriate place (inside {}).
 	Note that 'ignorecase' isn't used for 'cinwords'.  If case doesn't
-	matter, include the keyword both the upper case and lower case:
+	matter, include the keyword both the uppercase and lowercase:
 	"if,If,IF".
 
 						*'clipboard'* *'cb'*
@@ -1978,8 +1978,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	To read a file in a certain encoding it won't work by setting
 	'fileencoding', use the |++enc| argument.
 	Prepending "8bit-" and "2byte-" has no meaning here, they are ignored.
-	When the option is set, the value is converted to lower case.  Thus
-	you can set it with upper case values too.  '_' characters are
+	When the option is set, the value is converted to lowercase.  Thus
+	you can set it with uppercase values too.  '_' characters are
 	replaced with '-'.  If a name is recognized from the list for
 	'encoding', it is replaced by the standard name.  For example
 	"ISO8859-2" becomes "iso-8859-2".
@@ -2866,6 +2866,18 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Can be overruled by using "\c" or "\C" in the pattern, see
 	|/ignorecase|.
 
+				*'imcmdline'* *'imc'* *'noimcmdline'* *'noimc'*
+'imcmdline' 'imc'	boolean (default off)
+			global
+			{not in Vi}
+			{only available when compiled with the |+xim|
+			|+multi_byte_ime| or |global-ime| feature}
+	When set the Input Method is always on when starting to edit a command
+	line, unless entering a search pattern (see 'imsearch' for that).
+	Setting this option is useful when your input method allows entering
+	English characters directly, e.g., when it's used to type accented
+	characters with dead keys.
+
 						*'iminsert'* *'imi'*
 'iminsert' 'imi'	number (default 0, 2 when an input method is supported)
 			local to buffer
@@ -2986,9 +2998,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	When doing keyword completion in insert mode |ins-completion|, and
 	'ignorecase' is also on, the case of the match is adjusted.  If the
 	typed text contains a lowercase letter where the match has an upper
-	case letter, the completed part is made lower case.  If the typed text
-	has no lower case letters and the match has a lower case letter where
-	the typed text has an upper case letter, and there is a letter before
+	case letter, the completed part is made lowercase.  If the typed text
+	has no lowercase letters and the match has a lowercase letter where
+	the typed text has an uppercase letter, and there is a letter before
 	it, the completed part is made uppercase.
 
 			*'insertmode'* *'im'* *'noinsertmode'* *'noim'*
@@ -3522,14 +3534,15 @@ A jump table for the options with a short description can be found at |Q_op|.
 	NOTE: 'modeline' is set to the Vi default value when 'compatible' is
 	set and to the Vim default value when 'compatible' is reset.
 
-				 *'modifiable'* *'ma'* *'nomodifiable'* *'noma'*
+				*'modifiable'* *'ma'* *'nomodifiable'* *'noma'*
 'modifiable' 'ma'	boolean	(default on)
 			local to buffer
 			{not in Vi}		*E21*
 	When off the buffer contents cannot be changed.  The 'fileformat' and
 	'fileencoding' options also can't be changed.
+	Can be reset with the |-M| command line argument.
 
-				 *'modified'* *'mod'* *'nomodified'* *'nomod'*
+				*'modified'* *'mod'* *'nomodified'* *'nomod'*
 'modified' 'mod'	boolean	(default off)
 			local to buffer
 			{not in Vi}
@@ -4982,10 +4995,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	   useopen	If included, jump to the first open window that
 			contains the specified buffer (if there is one).
 			Otherwise: Do not examine other windows.
-			This setting is checked in |quickfix| mode when
-			jumping to errors (":cc", ":cn", "cp", etc.).  It
-			is also used in all buffer related split commands,
-			for example ":sbuffer", ":sbnext", or ":sbrewind".
+			This setting is checked with |quickfix| commands, when
+			jumping to errors (":cc", ":cn", "cp", etc.).  It is
+			also used in all buffer related split commands, for
+			example ":sbuffer", ":sbnext", or ":sbrewind".
 	   split	If included, split the current window before loading
 			a buffer. Otherwise: do not split, use current window.
 			Supported in |quickfix| commands that display errors.
@@ -5995,9 +6008,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 	Allows writing files.  When not set, writing a file is not allowed.
 	Can be used for a view-only mode, where modifications to the text are
-	still allowed.  Can be reset with the |-m| command line argument.
-	Filtering text is still possible, even though this requires writing a
-	temporary file.
+	still allowed.  Can be reset with the |-m| or |-M| command line
+	argument.  Filtering text is still possible, even though this requires
+	writing a temporary file.
 
 				   *'writeany'* *'wa'* *'nowriteany'* *'nowa'*
 'writeany' 'wa'		boolean	(default off)

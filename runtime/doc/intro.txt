@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0al.  Last change: 2001 Jun 14
+*intro.txt*     For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -145,7 +145,9 @@ Additional maillists:
 
 
 Bug reports:				*bugs* *bug-reports* *bugreport.vim*
-	Bram Moolenaar <Bram@vim.org>
+
+Send bug reports to: Vim bugs <bugs@vim.org>
+This is not a maillist but the message is redirected to the Vim maintainer.
 Please be brief; all the time that is spend on answering mail is subtracted
 from the time that is spent on improving Vim!  Always give a reproducible
 example and try to find out which settings or other things influence the
@@ -328,8 +330,8 @@ and <> are part of what you type, the context should make this clear.
 		See |registers|.  The x is a single character between 'a' and
 		'z' or 'A' and 'Z' or '"', and in some cases (with the put
 		command) between '0' and '9', '%', '#', ':' or '.'. The
-		uppercase and lower case letter designate the same register,
-		but the lower case letter is used to overwrite the previous
+		uppercase and lowercase letter designate the same register,
+		but the lowercase letter is used to overwrite the previous
 		register contents, while the uppercase letter is used to
 		append to the previous register contents. Without the ""x" or
 		with """" the stored text is put into the unnamed register.

@@ -6,8 +6,12 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
-#include "SysTypes.r"
-#include "Types.r"
+#if 1 /* 1 for Carbon, 0 for non-Carbon */
+# include <Carbon/Carbon.r>
+#else
+# include <SysTypes.r>
+# include <Types.r>
+#endif
 #include "version.h"
 
 /* Used as application version */

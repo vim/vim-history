@@ -1,4 +1,4 @@
-*usr_12.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_12.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -10,13 +10,14 @@ chapter a number of useful combinations will be presented.  This uses the
 commands introduced in the previous chapters and a few more.
 
 |12.1|	Replace a word
-|12.2|	Sort a list
-|12.3|	Count words
-|12.4|	Find a man page
-|12.5|	Trim blanks
-|12.6|	Find where a word is used
+|12.2|	Change "Last, First" to "First Last"
+|12.3|	Sort a list
+|12.4|	Count words
+|12.5|	Find a man page
+|12.6|	Trim blanks
+|12.7|	Find where a word is used
 
-     Next chapter: |usr_20.txt|  Typing commands quickly
+     Next chapter: |usr_20.txt|  Typing command-line commands quickly
  Previous chapter: |usr_11.txt|  Recovering from a crash
 Table of contents: |usr_toc.txt|
 
@@ -86,7 +87,48 @@ the "e" flag to the substitute command: >
 The "e" flag tells ":substitute" that not finding a match is not an error.
 
 ==============================================================================
-*12.2*	Sort a list
+*12.2*	Change "Last, First" to "First Last"
+
+You have a list of names in this form:
+
+	Doe, John ~
+	Smith, Peter ~
+
+You want to change that to:
+
+	John Doe ~
+	Peter Smith ~
+
+This can be done with just one command: >
+
+	:%s/\([^,]*\), \(.*\)/\2 \1/
+
+Let's break this down in parts.  Obviously it starts with a substitute
+command.  The "%" is the line range, which stands for the whole file.  Thus
+the substitution is done in every line in the file.
+   The arguments for the substitute command are "/from/to/".  The slashes
+separate the "from" pattern and the "to" string.  This is what the "from"
+pattern contains:
+							\([^,]*\), \(.*\) ~
+                                                
+	The first part between \( \) matches "Last"	\(     \)
+	    match anything but a comma			  [^,]
+	    any number of times				      *
+	matches ", " literally					 ,
+	The second part between \( \) matches "First"		   \(  \)
+	    any character					     .
+	    any number of times					      *
+
+In the "to" part we have "\2" and "\1".  These are called backreferences.  The
+refer to the text matched by the \( \) parts in the pattern.  "\2" refers to
+the text matched by the first "\( \)", which is the "First" name.  "\1" refers
+to the first \( \), which is the "Last" name.
+   You can use up to nine backreferences in the "to" part of a substitute
+command.  "\0" stands for the whole matched pattern.  There are a few more
+special items in a substitute command, see |sub-replace-special|.
+
+==============================================================================
+*12.3*	Sort a list
 
 In a Makefile you often have a list of files.  For example:
 
@@ -132,7 +174,7 @@ keep the backslash in the last line, if you make sure an empty line comes
 after it.  That way you don't have this problem again.
 
 ==============================================================================
-*12.3*	Count words
+*12.4*	Count words
 
 Sometimes you have to write a text with a maximum number of words.  Vim can
 count the words for you.
@@ -145,7 +187,7 @@ Do not type a space after the g, this is just used here to make the command
 easy to read.
    The output looks like this:
 
-	Col 1 of 0; Line 141 of 157; Word 748 of 774; Char 4489 of 4976 ~
+	Col 1 of 0; Line 141 of 157; Word 748 of 774; Byte 4489 of 4976 ~
 
 You can see on which word you are (748), and the total number of words in the
 file (774).
@@ -156,12 +198,12 @@ use your brain to compute the difference in the word position.  That's a good
 exercise, but there is an easier way.  With Visual mode, select the text you
 want to count words in.  Then type g CTRL-G.  The result:
 
-	Selected 5 of 293 Lines; 70 of 1884 Words; 359 of 10928 Chars ~
+	Selected 5 of 293 Lines; 70 of 1884 Words; 359 of 10928 Bytes ~
  
 For other ways to count words, lines and other items, see |count-items|.
 
 ==============================================================================
-*12.4*	Find a man page
+*12.5*	Find a man page
 
 While editing a shell script or C program, you are using a command or function
 that you want to find the man page for (this is on Unix).  Let's first use a
@@ -211,7 +253,7 @@ Move the cursor to somewhere on "strstr" and type "\K".  A window will open
 to display the man page for strstr().
 
 ==============================================================================
-*12.5*	Trim blanks
+*12.6*	Trim blanks
 
 Some people find spaces and tabs at the end of a line useless, wasteful, and
 ugly.  To remove whitespace at the end of every line, execute the following
@@ -232,14 +274,14 @@ Therefore, you can best do this manually.  Use this search command: >
 
 	/ 	
 
-You cannot see it, but there is a space before a tab in this command.  This
+You cannot see it, but there is a space before a tab in this command.  Thus
 it's "/<Space><Tab>".   Now use "x" to delete the space and check that the
 amount of white space doesn't change.  You might have to insert a Tab if it
 does change.  Type "n" to find the next match.  Repeat this until no more
 matches can be found.
 
 ==============================================================================
-*12.6*	Find where a word is used
+*12.7*	Find where a word is used
 
 If you are a UNIX user, you can use a combination of Vim and the grep command
 to edit all the files that contain a given word.  This is extremely useful if
@@ -285,6 +327,6 @@ matches and where they are.
 
 ==============================================================================
 
-Next chapter: |usr_20.txt|  Typing commands quickly
+Next chapter: |usr_20.txt|  Typing command-line commands quickly
 
 Copyright: see |manual-copyright|  vim:tw=78:

@@ -146,7 +146,7 @@ void workshop_maximize();
  * color, and a given left-margin sign (where sign is a filename to an
  * .xpm file)
  */
-void workshop_add_mark_type(int index, char *colorspec, char *sign);
+void workshop_add_mark_type(int idx, char *colorspec, char *sign);
 
 
 /* Get mark line number */

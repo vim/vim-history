@@ -1363,7 +1363,7 @@ struct builtin_term builtin_termcaps[] =
 # define DEFAULT_TERM	(char_u *)"beos-ansi"
 #endif
 
-#ifdef macintosh
+#if defined(macintosh) || defined(TARGET_API_MAC_CARBON)
 # define DEFAULT_TERM	(char_u *)"mac-ansi"
 #endif
 

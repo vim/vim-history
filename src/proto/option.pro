@@ -33,6 +33,7 @@ void check_win_options __ARGS((win_T *win));
 void check_winopt __ARGS((winopt_T *wop));
 void clear_winopt __ARGS((winopt_T *wop));
 void buf_copy_options __ARGS((buf_T *buf, int flags));
+void reset_modifiable __ARGS((void));
 void set_iminsert_global __ARGS((void));
 void set_imsearch_global __ARGS((void));
 void set_context_in_set_cmd __ARGS((expand_T *xp, char_u *arg, int opt_flags));

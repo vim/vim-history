@@ -19,13 +19,9 @@
 #define MENUDEPTH   10		/* maximum depth of menus */
 
 #ifdef FEAT_GUI_W32
-static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int, char_u *, int, int));
+static int add_menu_path __ARGS((char_u *, vimmenu_T *, int *, char_u *, int));
 #else
-# ifdef FEAT_GUI
-static int add_menu_path __ARGS((char_u *, int, int *, void (*)(), char_u *, int, int, char_u *, int));
-# else
-static int add_menu_path __ARGS((char_u *, int, int *, char_u *, int));
-# endif
+static int add_menu_path __ARGS((char_u *, vimmenu_T *, int *, char_u *));
 #endif
 static int menu_nable_recurse __ARGS((vimmenu_T *menu, char_u *name, int modes, int enable));
 static int remove_menu __ARGS((vimmenu_T **, char_u *, int, int silent));
@@ -55,8 +51,10 @@ static int menu_is_hidden __ARGS((char_u *name));
 static int menu_is_tearoff __ARGS((char_u *name));
 #endif
 
-#ifdef FEAT_MULTI_LANG
+#if defined(FEAT_MULTI_LANG) || defined(FEAT_TOOLBAR)
 static char_u *menu_skip_part __ARGS((char_u *p));
+#endif
+#ifdef FEAT_MULTI_LANG
 static char_u *menutrans_lookup __ARGS((char_u *name, int len));
 #endif
 
@@ -92,6 +90,7 @@ ex_menu(eap)
     int		modes;
     char_u	*map_to;
     int		noremap;
+    int		silent = FALSE;
     int		unmenu;
     char_u	*map_buf;
     char_u	*arg;
@@ -110,28 +109,37 @@ ex_menu(eap)
     char_u	*tofree = NULL;
     char_u	*new_cmd;
 #endif
-#ifdef FEAT_GUI
+#ifdef FEAT_TOOLBAR
     char_u	*icon = NULL;
 #endif
-#ifdef FEAT_TOOLBAR
-    int		iconidx;
-    int		icon_builtin;
-#endif
+    vimmenu_T	menuarg;
 
     modes = get_menu_cmd_modes(eap->cmd, eap->forceit, &noremap, &unmenu);
     arg = eap->arg;
 
-    if (STRNCMP(arg, "<script>", 8) == 0)
+    for (;;)
     {
-	noremap = REMAP_SCRIPT;
-	arg = skipwhite(arg + 8);
+	if (STRNCMP(arg, "<script>", 8) == 0)
+	{
+	    noremap = REMAP_SCRIPT;
+	    arg = skipwhite(arg + 8);
+	    continue;
+	}
+	if (STRNCMP(arg, "<silent>", 8) == 0)
+	{
+	    silent = TRUE;
+	    arg = skipwhite(arg + 8);
+	    continue;
+	}
+	break;
     }
+
 
     /* Locate an optional "icon=filename" argument. */
     if (STRNCMP(arg, "icon=", 5) == 0)
     {
 	arg += 5;
-#ifdef FEAT_GUI
+#ifdef FEAT_TOOLBAR
 	icon = arg;
 #endif
 	while (*arg != NUL && *arg != ' ')
@@ -208,8 +216,8 @@ ex_menu(eap)
     /*
      * Need to get the toolbar icon index before doing the translation.
      */
-    iconidx = -1;
-    icon_builtin = FALSE;
+    menuarg.iconidx = -1;
+    menuarg.icon_builtin = FALSE;
     if (menu_is_toolbar(arg))
     {
 	menu_path = menu_skip_part(arg);
@@ -220,11 +228,11 @@ ex_menu(eap)
 	    {
 		if (skipdigits(menu_path + 7) == p)
 		{
-		    iconidx = atoi((char *)menu_path + 7);
-		    if (iconidx >= TOOLBAR_NAME_COUNT)
-			iconidx = -1;
+		    menuarg.iconidx = atoi((char *)menu_path + 7);
+		    if (menuarg.iconidx >= TOOLBAR_NAME_COUNT)
+			menuarg.iconidx = -1;
 		    else
-			icon_builtin = TRUE;
+			menuarg.icon_builtin = TRUE;
 		}
 	    }
 	    else
@@ -233,7 +241,7 @@ ex_menu(eap)
 		    if (STRNCMP(toolbar_names[i], menu_path, p - menu_path)
 									 == 0)
 		    {
-			iconidx = i;
+			menuarg.iconidx = i;
 			break;
 		    }
 	    }
@@ -358,16 +366,13 @@ ex_menu(eap)
 	 * Replace special key codes.
 	 */
 	map_to = replace_termcodes(map_to, &map_buf, FALSE, TRUE);
-	add_menu_path(menu_path, modes, pri_tab,
-#ifdef FEAT_GUI
-		gui_menu_cb,
-# ifdef FEAT_TOOLBAR
-		icon, iconidx, icon_builtin,
-# else
-		NULL, -1, FALSE,
-# endif
+	menuarg.modes = modes;
+#ifdef FEAT_TOOLBAR
+	menuarg.iconfile = icon;
 #endif
-		map_to, noremap
+	menuarg.noremap[0] = noremap;
+	menuarg.silent[0] = silent;
+	add_menu_path(menu_path, &menuarg, pri_tab, map_to
 #ifdef FEAT_GUI_W32
 		, TRUE
 #endif
@@ -385,11 +390,13 @@ ex_menu(eap)
 		    if (p != NULL)
 		    {
 			/* Include all modes, to make ":amenu" work */
-			add_menu_path(p, modes, pri_tab,
-#ifdef FEAT_GUI
-				gui_menu_cb, NULL, -1, FALSE,
+			menuarg.modes = modes;
+#ifdef FEAT_TOOLBAR
+			menuarg.iconfile = NULL;
+			menuarg.iconidx = -1;
+			menuarg.icon_builtin = FALSE;
 #endif
-				map_to, noremap
+			add_menu_path(p, &menuarg, pri_tab, map_to
 #ifdef FEAT_GUI_W32
 				, TRUE
 #endif
@@ -425,31 +432,22 @@ theend:
  * Add the menu with the given name to the menu hierarchy
  */
     static int
-add_menu_path(menu_path, modes, pri_tab,
-#ifdef FEAT_GUI
-	call_back, icon, iconidx, icon_builtin,
-#endif
-	call_data, noremap
+add_menu_path(menu_path, menuarg, pri_tab, call_data
 #ifdef FEAT_GUI_W32
 	, addtearoff
 #endif
 	)
     char_u	*menu_path;
-    int		modes;
+    vimmenu_T	*menuarg;	/* passes modes, iconfile, iconidx,
+				   icon_builtin, silent[0], noremap[0] */
     int		*pri_tab;
-#ifdef FEAT_GUI
-    void	(*call_back)();
-    char_u	*icon;		/* name of icon file or NULL */
-    int		iconidx;	/* index of icon or -1 */
-    int		icon_builtin;	/* name is BuiltIn */
-#endif
     char_u	*call_data;
-    int		noremap;
 #ifdef FEAT_GUI_W32
     int		addtearoff;	/* may add tearoff item */
 #endif
 {
     char_u	*path_name;
+    int		modes = menuarg->modes;
     vimmenu_T	**menup;
     vimmenu_T	*menu = NULL;
     vimmenu_T	*parent;
@@ -575,11 +573,11 @@ add_menu_path(menu_path, modes, pri_tab,
 
 	    old_modes = 0;
 
-#ifdef FEAT_GUI
-	    menu->iconidx = iconidx;
-	    menu->icon_builtin = icon_builtin;
-	    if (*next_name == NUL && icon != NULL)
-		menu->iconfile = vim_strsave(icon);
+#ifdef FEAT_TOOLBAR
+	    menu->iconidx = menuarg->iconidx;
+	    menu->icon_builtin = menuarg->icon_builtin;
+	    if (*next_name == NUL && menuarg->iconfile != NULL)
+		menu->iconfile = vim_strsave(menuarg->iconfile);
 #endif
 	}
 	else
@@ -690,7 +688,7 @@ add_menu_path(menu_path, modes, pri_tab,
     if (menu != NULL && modes)
     {
 #ifdef FEAT_GUI
-	menu->cb = call_back;
+	menu->cb = gui_menu_cb;
 #endif
 	p = (call_data == NULL) ? NULL : vim_strsave(call_data);
 
@@ -735,7 +733,8 @@ add_menu_path(menu_path, modes, pri_tab,
 		}
 		else
 		    menu->strings[i] = p;
-		menu->noremap[i] = noremap;
+		menu->noremap[i] = menuarg->noremap[0];
+		menu->silent[i] = menuarg->silent[0];
 	    }
 	}
 #if defined(FEAT_TOOLBAR) && defined(FEAT_BEVAL)
@@ -962,7 +961,7 @@ free_menu(menup)
     vim_free(menu->name);
     vim_free(menu->dname);
     vim_free(menu->actext);
-#ifdef FEAT_GUI
+#ifdef FEAT_TOOLBAR
     vim_free(menu->iconfile);
 #endif
     for (i = 0; i < MENU_MODES; i++)
@@ -1102,6 +1101,10 @@ show_menus_recursive(menu, modes, depth)
 		    msg_putchar('*');
 		else if (menu->noremap[bit] == REMAP_SCRIPT)
 		    msg_putchar('&');
+		else
+		    msg_putchar(' ');
+		if (menu->silent[bit])
+		    msg_putchar('s');
 		else
 		    msg_putchar(' ');
 		if ((menu->modes & menu->enabled & (1 << bit)) == 0)
@@ -1930,6 +1933,7 @@ gui_add_tearoff(tearpath, pri_tab, pri_idx)
 {
     char_u	*tbuf;
     int		t;
+    vimmenu_T	menuarg;
 
     tbuf = alloc(5 + (unsigned int)STRLEN(tearpath));
     if (tbuf != NULL)
@@ -1947,12 +1951,20 @@ gui_add_tearoff(tearpath, pri_tab, pri_idx)
 	t = pri_tab[pri_idx + 1];
 	pri_tab[pri_idx + 1] = 1;
 
-	add_menu_path(tearpath, MENU_ALL_MODES, pri_tab,
-		gui_menu_cb, NULL, -1, FALSE, tbuf, TRUE, FALSE);
+#ifdef FEAT_TOOLBAR
+	menuarg.iconfile = NULL;
+	menuarg.iconidx = -1;
+	menuarg.icon_builtin = FALSE;
+#endif
+	menuarg.noremap[0] = REMAP_NONE;
+	menuarg.silent[0] = TRUE;
 
-	add_menu_path(tearpath, MENU_TIP_MODE, pri_tab,
-		gui_menu_cb, NULL, -1, FALSE,
-		(char_u *)_("Tear off this menu"), TRUE, FALSE);
+	menuarg.modes = MENU_ALL_MODES;
+	add_menu_path(tearpath, &menuarg, pri_tab, tbuf, FALSE);
+
+	menuarg.modes = MENU_TIP_MODE;
+	add_menu_path(tearpath, &menuarg, pri_tab,
+		(char_u *)_("Tear off this menu"), FALSE);
 
 	pri_tab[pri_idx + 1] = t;
 	vim_free(tbuf);
@@ -2104,7 +2116,12 @@ ex_emenu(eap)
     }
 
     if (idx != MENU_INDEX_INVALID && menu->strings[idx] != NULL)
+    {
+	if (menu->silent[idx])
+	    start_silent_cmd();
+
 	ins_typebuf(menu->strings[idx], menu->noremap[idx], 0, TRUE);
+    }
     else
 	EMSG2(_("E335: Menu not defined for %s mode"), mode);
 }
@@ -2249,7 +2266,7 @@ ex_menutranslate(eap)
 #endif
 }
 
-#ifdef FEAT_MULTI_LANG
+#if defined(FEAT_MULTI_LANG) || defined(FEAT_TOOLBAR)
 /*
  * Find the character just after one part of a menu name.
  */
@@ -2265,7 +2282,9 @@ menu_skip_part(p)
     }
     return p;
 }
+#endif
 
+#ifdef FEAT_MULTI_LANG
 /*
  * Lookup part of a menu name in the translations.
  * Return a pointer to the translation or NULL if not found.

@@ -42,7 +42,7 @@
 #endif
 
 /* Is there any system that doesn't have access()? */
-#if 1
+#ifndef macintosh /* Not available on MacOS 9 */
 # define USE_MCH_ACCESS
 #endif
 
@@ -140,6 +140,8 @@ filemess(buf, name, s, attr)
 {
     int		msg_scroll_save;
 
+    if (msg_silent)
+	return;
     msg_add_fname(buf, name);	    /* put file name in IObuff with quotes */
     /* If it's extremely long, truncate it. */
     if (STRLEN(IObuff) > IOSIZE - 80)
@@ -6726,7 +6728,7 @@ auto_next_pat(apc, stop_at_last)
     AutoPat	*ap;
     AutoCmd	*cp;
     char_u	*name;
-    char	*msg;
+    char	*s;
 
     vim_free(sourcing_name);
     sourcing_name = NULL;
@@ -6744,12 +6746,12 @@ auto_next_pat(apc, stop_at_last)
 							      ap->allow_dirs))
 	    {
 		name = event_nr2name(apc->event);
-		msg = _("%s Auto commands for \"%s\"");
-		sourcing_name = alloc((unsigned)(STRLEN(msg)
+		s = _("%s Auto commands for \"%s\"");
+		sourcing_name = alloc((unsigned)(STRLEN(s)
 					    + STRLEN(name) + ap->patlen + 1));
 		if (sourcing_name != NULL)
 		{
-		    sprintf((char *)sourcing_name, msg,
+		    sprintf((char *)sourcing_name, s,
 					       (char *)name, (char *)ap->pat);
 		    if (p_verbose >= 8)
 			smsg((char_u *)_("Executing %s"), sourcing_name);

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0al.  Last change: 2001 Jun 24
+*version6.txt*  For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -36,13 +36,13 @@ Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
 Diff mode				|new-diff-mode|
 evim: click-and-type			|new-evim|
+User manual				|new-user-manual|
 Flexible indenting			|new-indent-flex|
 Extended search patterns		|new-searchpat|
 UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
 Filetype plugins			|new-filetype-plugins|
-User manual				|new-user-manual|
 Window for command-line editing		|new-cmdwin|
 Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
@@ -473,6 +473,19 @@ In the GUI a CTRL-C only interrupts when busy with something, not when waiting
 for a character.  Allows using CTRL-C to copy text to the clipboard.
 
 
+User manual						*new-user-manual*
+-----------
+
+The user manual has been added.  It is organised around editing tasks.  It
+reads like a book, from start to end.  It should allow beginners to start
+learning Vim.  It helps everybody to learn using the most useful Vim features.
+It is much easier to read than the reference manual, but omits details.  See
+|user-manual|.
+
+The user manual includes parts of the Vim book by Steve Oualline |frombook|.
+It is published under the OPL |manual-copyright|.
+
+
 Flexible indenting					*new-indent-flex*
 ------------------
 
@@ -596,7 +609,7 @@ Many new items for Multi-byte support:
   each multibyte character, not only at a space.
 - Patterns should now work properly with all kinds of multi-byte characters.
 - Made ":syntax keyword" work with multi-byte characters.
-- Added support for Unicode upper/lower case flipping and comparing. (based on
+- Added support for Unicode upper/lowercase flipping and comparing. (based on
   patch by Raphael Finkel)
 
 Allow defining digraphs for multi-byte characters.
@@ -609,6 +622,8 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
 - Added the ":lmap" command and friends: Define mappings that are used when
   typing characters in the language of the text.  Also for "r", "t", etc.  In
   Insert and Command-line mode CTRL-^ switches the use of the mappings on/off.
+  CTRL-^ also toggles the use of an input method when no language mappings are
+  present.  Allows switching the IM back on halfway typing.
 - "<char-123>" argument to ":map", allows to specify the decimal, octal or
   hexadecimal value of a character.
 - Implemented the 'keymap' option: Load a keymap file.  Uses ":lnoremap" to
@@ -619,6 +634,9 @@ Added Language mapping and 'keymap' to be able to type multi-byte characters:
   active.  Show this text in the default statusline too.
 - Added the 'iminsert' and 'imsearch' options: Specify use of langmap mappings
   and Input Method with an option. (Muraoka Taro)
+  Added 'imcmdline' option: When set the input method is always enabled when
+  starting to edit a command line.  Useful for a XIM that uses dead keys to
+  type accented characters.
 - When typing a mapping that's not finished yet, display the last character
   under the cursor in Insert mode and Command-line mode.  Looks good for dead
   characters.
@@ -754,17 +772,6 @@ The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
 
 
-User manual						*new-user-manual*
------------
-
-The documentation has been split into a reference section and a User manual.
-This can be read like a book, from start to end, to learn the most useful Vim
-features.  It is much easier to read than the reference manual, but omits
-details.
-
-Parts of the Vim book by Steve Oualline have been used |frombook|.
-
-
 Window for command-line editing				*new-cmdwin*
 -------------------------------
 
@@ -898,8 +905,11 @@ Reilly)
 Quickfix extended					*quickfix-6*
 -----------------
 
-- ":cwindow": open window to show list of quickfix errors.  Can be used to
+- ":copen" opens a window to show list of quickfix errors.  Can be used to
   scroll through the errors, and quickly jump to each of them.
+- ":cclose" closes the quickfix window.
+- ":cwindow" takes care that there is a quickfix window only when there are
+  recognized errors. (Dan Sharp)
 - Quickfix also knows "info", next to "warning" and "error" types. "%I" can be
   used for the start of a multi-line informational message. (Tony Leneis)
 - The "%p" argument can be used in 'errorformat' to get the column number from
@@ -943,6 +953,9 @@ computer (mostly didn't work anyway, because the full path was required).
 Adjusted test2 for this.
 
 Allow using a URL in 'path'.  Makes ":find index.html" work.
+
+GTK: Allow dropping a http:// and ftp:// URL on Vim.  The netrw plugin takes
+care of downloading the file. (MiKael Berthe)
 
 
 Writing files						*new-file-writing*
@@ -1090,6 +1103,8 @@ Ex commands: ~
 		RISCOS: Removed that "!~cmd" didn't output anything, and
 		didn't wait for <Enter> afterwards.  Can use ":silent !cmd"
 		now.
+:menu <silent>  Add a menu that won't echo Ex commands.
+:map <silent>   Add a mapping that won't echo Ex commands.
 
 :checktime	Check for changed buffers.
 
@@ -1206,8 +1221,8 @@ setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
 setwinvar()	sets an option or variable local to a window (Ron Aaron)
 stridx()	Search for first occurrence of one string in another.
 strridx()	Search for last occurrence of one string in another.
-tolower()	Convert string to all-lower case.
-toupper()	Convert string to all-upper case.
+tolower()	Convert string to all-lowercase.
+toupper()	Convert string to all-uppercase.
 type()		Check the type of an expression.
 wincol()	window column of the cursor
 winwidth()	Width of a window. (Johannes Zellner)
@@ -1245,6 +1260,8 @@ New Syntax files: ~
 	Debian Control and Debian Changelog syntax files. (Wichert Akkerman)
 	catalog.vim (Johannes Zellner)
 	DSSSL syntax (Johannes Zellner)
+	tidy (Doug Kearns)
+
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
 Win32: When editing a file that is a shortcut (*.lnk file), edit the file it
@@ -1271,6 +1288,9 @@ way to start Vim with a session file.
 
 Added "--cmd {command}" Vim argument to execute a command before a vimrc file
 is loaded. (Vince Negri)
+
+Added the "-M" Vim argument: reset 'modifiable' and 'write', thus disallow
+making changes and writing files.
 
 Added runtime/delmenu.vim.  Source this to remove all menus and prepare for
 loading new menus.  Useful when changing 'langmenu'.
@@ -1302,8 +1322,6 @@ between line numbers from 'number' option.
 
 When there is a format error in a tags file, the byte position is reported so
 that the error can be located.
-
-On the Macintosh, allow a tags file to have CR, CR-LF or LF line separator.
 
 "gf" works in Visual mode: Use the selected text as the file name. (Chase
 Tingley)
@@ -1587,6 +1605,15 @@ VMS:
 - Set 'makeprg' and 'grepprg' to meaningful defaults. (Zoltan Arpadffy)
 - Use the X-clipboard feature and the X command server. (Zoltan Arpadffy)
 
+Macintosh: (Dany St-Amant)
+- Allow a tags file to have CR, CR-LF or LF line separator.
+- Carbonized (while keeping non Carbon code)
+  (Some work "stolen" from Ammon Skidmore)
+- Improved the menu item index handling (should be faster)
+- Runtime command now handle / in file name (MacOS 9 version)
+- Added winpos support.
+- Also accept tags files in DOS format. (Axel Kielhorn)
+
 Options:
 - When using set += or ^= , check for strings used twice.  Duplicates are
   removed.  (Vince Negri)
@@ -1707,6 +1734,13 @@ ATTENTION prompt, use the same ".swp" swapfile, to avoid creating a ".swo"
 file which won't always be found.
 When giving the ATTENTION message and the date of the file is newer than the
 date of swap file, give a warning about this.
+Made the info for an existing swap file a bit shorter, so that it still fits
+on a 24 line screen.
+It was possible to make a symlink with the name of a swap file, linking to a
+file that doesn't exist.  Vim would then silently use another file (if open
+with O_EXCL refuses a symlink).  Now check for a symlink to exist.  Also do
+another check for an existing swap file just before creating it to catch a
+symlink attack.
 
 The g CTRL-G command also works in Visual mode and counts the number of words.
 (Chase Tingley)
@@ -1988,8 +2022,6 @@ Win32: ":%!sort|uniq" didn't work, because the input file name touches the
 
 OS/2: Expanding wildcards included non-existing files.  Caused ":runtime" to
 fail, which caused syntax highlighting to fail.
-
-Mac: Also accept tags files in DOS format. (Axel Kielhorn)
 
 Pasting a register containing CTRL-R on the command line could cause an
 endless loop that can't be interrupted.  Now it can be stopped with CTRL-C.
@@ -2313,8 +2345,10 @@ MS-DOS and Windows: ":n *.vim" also matched files ending in "~".
 Moved mch_expandpath() from os_win16.c and os_msdos.c to misc1.c, they are
 equal.
 
-Mac: In Vi-compatible mode didn't read files with CR line separators. (Dany
-St-Amant)
+Macintosh: (Dany St-Amant)
+- In Vi-compatible mode didn't read files with CR line separators.
+- Fixed a bug in the handling of Activate/Deactivate Event
+- Fixed a bug in gui_mch_dialog (using wrong pointer)
 
 Multibyte GDK XIM: While composing a multibyte-word, if user presses a
 mouse button, then the word is removed.  It should remain and composing end.
@@ -2599,6 +2633,7 @@ The error message for not being able to load the shared library wasn't
 translated.  (Muraoka Taro)
 
 A few fixes for the Mac port. (Axel Kielhorn)
+Mac: Vim was eating 80% of the CPU time. (Dany St-Amant)
 
 Unix: When catching a deadly signal and we keep getting one use _exit() to
 exit in a quick and dirty way.
@@ -2751,5 +2786,13 @@ the following lines, like it's the start of a comment.
 
 GTK: When adding a toolbar item while gvim is already running, it wasn't
 possible to use the tooltip.  Now it works by adding the tooltip first.
+
+The output of "g CTRL-G" mentioned "Char" but it's actually bytes.
+
+Searching for the end of a oneline region didn't work correctly when there is
+an offset for the highlighting.
+
+Syntax highlighting: When synchronizing on C-comments, //*/ was seen as the
+start of a comment.
 
  vim:tw=78:

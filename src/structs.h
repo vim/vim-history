@@ -678,6 +678,7 @@ struct mapblock
     char_u	*m_str;		/* mapped to */
     int		m_mode;		/* valid mode */
     int		m_noremap;	/* if non-zero no re-mapping for m_str */
+    char	m_silent;	/* <silent> used, don't echo commands */
     scid_T	m_script_ID;	/* ID of script where map was defined,
 				   used for s: variables and functions */
 };
@@ -727,7 +728,7 @@ struct file_buffer
     int		b_dev;		/* device number (-1 if not set) */
     ino_t	b_ino;		/* inode number */
 #endif
-#ifdef macintosh
+#if defined (macintosh) || defined (TARGET_API_MAC_CARBON)
     FSSpec	b_FSSpec;	/* MacOS File Identification */
 #endif
 #ifdef VMS
@@ -1512,12 +1513,15 @@ struct VimMenu
     int		priority;	    /* Menu order priority */
 #ifdef FEAT_GUI
     void	(*cb)();	    /* Call-back routine */
+#endif
+#ifdef FEAT_TOOLBAR
     char_u	*iconfile;	    /* name of file for icon or NULL */
     int		iconidx;	    /* icon index (-1 if not set) */
     int		icon_builtin;	    /* icon names is BuiltIn{nr} */
 #endif
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
     int		noremap[MENU_MODES]; /* A REMAP_ flag for each mode */
+    char	silent[MENU_MODES]; /* A silent flag for each mode */
     vimmenu_T	*children;	    /* Children of sub-menu */
     vimmenu_T	*parent;	    /* Parent of menu */
     vimmenu_T	*next;		    /* Next item in menu */
@@ -1556,9 +1560,9 @@ struct VimMenu
     BMenuItem	*id;		    /* Id of menu item */
     BMenu	*submenu_id;	    /* If this is submenu, add children here */
 #endif
-#ifdef macintosh
-    MenuHandle	id;
-    short	index;		    /* the item index within the father menu */
+#if defined (macintosh) || defined(TARGET_API_MAC_CARBON)
+/*  MenuHandle	id; */
+/*  short	index;	*/	    /* the item index within the father menu */
     short	menu_id;	    /* the menu id to which this item belong */
     short	submenu_id;	    /* the menu id of the children (could be
 				       get throught some tricks) */

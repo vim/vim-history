@@ -1,4 +1,4 @@
-*usr_23.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_23.txt*	For Vim version 6.0am.  Last change: 2001 Jun 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -262,11 +262,34 @@ Many characters in the file will be unprintable.  To see them in Hex format: >
 	:set display=uhex
 
 Otherwise, the "ga" command can be used to see the value of the character
-under the cursor.
-   There might not be many line breaks in the file.  To get some overview
-switch the 'wrap' option off: >
+under the cursor.  The output, when the cursor is on an <Esc>, looks like
+this:
+
+	<^[>  27,  Hex 1b,  Octal 033 ~
+
+There might not be many line breaks in the file.  To get some overview switch
+the 'wrap' option off: >
 
 	:set nowrap
+
+
+BYTE POSITION
+
+To see on which byte you are in the file use this command: >
+
+	g CTRL-G
+
+The output is verbose:
+
+    Col 9-16 of 9-16; Line 277 of 330; Word 1806 of 2058; Byte 10580 of 12206 ~
+
+The last two numbers are the byte position in the file and the total number of
+bytes.  This takes into account how 'fileformat' changes the number of bytes
+that a line break uses.
+    To move to a specific byte in the file, use the "go" command.  For
+example, to move to byte 2345: >
+
+	2345go
 
 
 USING XXD

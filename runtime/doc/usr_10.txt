@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_10.txt*	For Vim version 6.0am.  Last change: 2001 Jun 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -17,7 +17,8 @@ an external program to do really complicated things.
 |10.5|  Visual block mode
 |10.6|  Reading and writing part of a file
 |10.7|  Formatting text
-|10.8|  Using an external program
+|10.8|  Changing case
+|10.9|  Using an external program
 
      Next chapter: |usr_11.txt|  Recovering from a crash
  Previous chapter: |usr_09.txt|  Parts of the GUI
@@ -115,7 +116,7 @@ include all the lines).
 
 APPENDING TO A REGISTER
 
-So far we have used a lower case letter for the register name.  To append to a
+So far we have used a lowercase letter for the register name.  To append to a
 register, use an uppercase letter.
    Suppose you have recorded a command to change a word to register c.  It
 works properly, but you would like to add a search for the next word to
@@ -124,8 +125,8 @@ change.  This can be done with: >
 	qC/word<Enter>q
 
 You start with "qC", which records to the c register and appends.  Thus
-writing to an upper case register name means to append to the register with
-the same letter, but lower case.
+writing to an uppercase register name means to append to the register with
+the same letter, but lowercase.
 
 This works both with recording and with yank and delete commands.  For
 example, you want to collect a sequence of lines into the a register.  Yank
@@ -325,6 +326,17 @@ Visual areay started.  And you can mix the marks with other items: >
 This addresses the lines from the end of the Visual area to the end of the
 file.
 
+
+A NUMBER OF LINES
+
+When you know how many lines you want to change, you can type the number and
+then ":".  For example, when you type "5:", you will get: >
+
+	:.,.+4
+
+Now you can type the command you want to use.  It will use the range "."
+(current line) until ".+4" (four lines down).  Thus it spans five lines.
+
 ==============================================================================
 *10.4*  The global command
 
@@ -340,7 +352,7 @@ matched text with other text, the command {command} is executed.
 	Note:
 	The command executed for ":global" must be one that starts with a
 	colon.  Normal mode commands can not be used directly.  The |:normal|
-	can do this for you.
+	command can do this for you.
 
 Suppose you want to change "foobar" to "barfoo", but only in C++ style
 comments.  These comments start with "//".  Use this command: >
@@ -367,6 +379,12 @@ complicated patterns later, you can use them here.
 
 With CTRL-V you can start selection of a rectangular area of text.  There are
 a few commands that do something special with the text block.
+
+There is something special about using the "$" command in Visual block mode.
+When the last motion command used was "$", all lines in the Visual selection
+will extend until the end of the line, also when the line with the cursor is
+shorter.  This remains effective until you use a motion command that moves the
+cursor horizontally.  Thus using "j" keeps it, "h" stops it.
 
 
 INSERTING TEXT
@@ -467,8 +485,8 @@ block really matters.
 Other commands that change the characters in the block:
 
 	~	swap case	(a -> A and A -> a)
-	U	make upper case (a -> A and A -> A)
-	u	make lower case (a -> a and A -> a)
+	U	make uppercase  (a -> A and A -> A)
+	u	make lowercase  (a -> a and A -> a)
 
 
 FILLING WITH A CHARACTER
@@ -544,10 +562,10 @@ The file named "patch" will be inserted, with this result:
 
 	Hi John, ~
 	Here is the diff that fixes the bug: ~
-	2c2
-	<	for (i = 0; i <= length; ++i)
-	---
-	>	for (i = 0; i < length; ++i)
+	2c2 ~
+	<	for (i = 0; i <= length; ++i) ~
+	--- ~
+	>	for (i = 0; i < length; ++i) ~
 	Bye, Pierre. ~
 
 The ":read" command accepts a range.  The file will be put below the last line
@@ -645,7 +663,32 @@ the second line.  Now you can use "." to repeat the command.  Keep doing this
 until you are at the end of the text you want to format.
 
 ==============================================================================
-*10.8*  Using an external program
+*10.8*	Changing case
+
+You have text with section headers in lowercase.  You want to make the word
+"section" all uppercase.  Do this with the "gU" operator.  Start with the
+cursor in the first column: >
+
+			     gUw
+<	section header	    ---->      SECTION header
+
+The "gu" operator does exactly the opposite: >
+
+			     guw
+<	SECTION header	    ---->      section header
+
+You can also use "g~" to swap case.  All these are operators, thus they work
+with any motion command, with text objects and in Visual mode.
+   To make an operator work on lines you double it.  The delete operator is
+"d", thus to delete a line you use "dd".  Similarly, "gugu" makes a whole line
+lowercase.  This can be shortened to "guu".  "gUgU" is shortened to "gUU" and
+"g~g~" to "g~~".  Example: >
+
+				g~~
+<	Some GIRLS have Fun    ---->   sOME girls HAVE fUN ~
+
+==============================================================================
+*10.9*  Using an external program
 
 Vim has a very powerful set of commands, it can do anything.  But there may
 still be something that an external command can do better or faster.
@@ -689,6 +732,31 @@ of the program replaces these lines.
 The "!!" command filters the current line through a filter.  In Unix the "date"
 command prints the current time and date.  "!!date<Enter>" replace the current
 line with the output of "date".  This is useful to add a timestamp to a file.
+
+
+WHEN IT DOESN'T WORK
+
+Starting a shell, sending it text and capturing the output requires that Vim
+knows how the shell works exactly.  When you have problems with filtering,
+check the values of these options:
+
+	'shell'		specifies the program that Vim uses to execute
+			external programs.
+	'shellcmdflag'	argument to pass a command to the shell
+   	'shellquote'	quote to be used around the command
+	'shellxquote'	quote to be used around the command and redirection
+	'shelltype'	kind of shell (only for the Amiga)
+	'shellslash'	use forward slashes in the command (only for
+			MS-Windows and alikes)
+	'shellredir'	string used to write the command output into a file
+
+On Unix this is hardly ever a problem, because there are two kinds of shells:
+"sh" like and "csh" like.  Vim checks the 'shell' option and sets related
+options automatically, depending on whether it sees "csh" somewhere in
+'shell'.
+   On MS-Windows, however, there are many different shells and you might have
+to tune the options to make filtering work.  Check the help for the options
+for more information.
 
 
 READING COMMAND OUTPUT

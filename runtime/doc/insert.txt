@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0al.  Last change: 2001 Jun 14
+*insert.txt*    For Vim version 6.0am.  Last change: 2001 Jun 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -206,15 +206,22 @@ CTRL-_		Switch between languages, as follows:
 		Only if compiled with the |+rightleft| feature (which is not
 		the default).
 						*i_CTRL-^*
-CTRL-^		Toggle the use of language |:lmap| mappings.  If 'iminsert'
-		is 1 (langmap mappings used) it becomes 0 (no langmap mappings
-		used).  If 'iminsert' has another value it becomes 1, thus
-		langmap mappings are enabled.
-		When switched on, the value of the "b:keymap_name" variable,
-		the 'keymap' option or "<lang>" appears in the status line.
-		These mappings are normally used to type characters that are
-		different from what the keyboard produces.  The 'keymap'
-		option can be used to install a whole number of them.
+CTRL-^		Toggle the use of typing language characters.
+		When language |:lmap| mappings are defined:
+		- If 'iminsert' is 1 (langmap mappings used) it becomes 0 (no
+		  langmap mappings used).
+		- If 'iminsert' has another value it becomes 1, thus langmap
+		  mappings are enabled.
+		When no language mappings are defined:
+		- If 'iminsert' is 2 (Input Method used) it becomes 0 (no
+		  Input Method used).
+		- If 'iminsert' has another value it becomes 2, thus the Input
+		  Method is enabled.
+		When set to 1, the value of the "b:keymap_name" variable, the
+		'keymap' option or "<lang>" appears in the status line.
+		The language mappings are normally used to type characters
+		that are different from what the keyboard produces.  The
+		'keymap' option can be used to install a whole number of them.
 		{not in Vi}
 
 						*i_CTRL-]*
@@ -256,7 +263,7 @@ first char	mode	     max nr of chars   max value ~
 o or O		octal		   3		255
 x or X		hexadecimal	   2		ff	 (255)
 u		hexadecimal	   4		ffff	 (65535)
-U		hexadecimal	   8		ffffffff (2147483647)
+U		hexadecimal	   8		7fffffff (2147483647)
 
 Normally you would type the maximum number of characters.  Thus to enter a
 space (value 32) you would type <C-V>032.  You can omit the leading zero, in

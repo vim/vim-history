@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0al.  Last change: 2001 Jun 24
+*todo.txt*      For Vim version 6.0am.  Last change: 2001 Jul 01
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,20 +29,12 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
+Win32: merge Make_ovc.mak and Make_gvc.mak into Make_ivc.mak.  Should make it
+a lot shorter, but keep it working for VC 4.0 to VC 7, and with nmake.
+(Walter Briscoe)
+
 Win32: search for "expression" in doc/eval.txt.  When wrapping around all the
-text gets red? (Chan)  I can't reproduce it.
-
-"--remote": add a simple way to make the caller wait.  "--remote-wait"?
-Make "--remote" work with OLE?
-
-Problem with searchpair() when using \v: (Sekera)
-    :echo searchpair('\v^\s*<case>', '', '\v^\s*<esac>','nbW')
-
-Win32: Try out new Make_ivc.mak.  Should make it a lot shorter, but keep it
-working for VC 4.0 to VC 7, and with nmake.
-
-MS install program: include patch? (Jon Merz)  No, first make sure it still
-works with DJGPP.
+text gets red? (Chan)  I can't reproduce it.  Fixed in 6.0al?
 
 Add Cscope patch. (Jason Duell)  Wait for comments from Andy Kahn.
 
@@ -60,7 +52,7 @@ C.  Multi-line regexp patterns
 D.  Vertical window split
 	Works.
 E.  Virtual edit
-	Works for most commands.  Still needs to be improved.
+	Works.
 F.  Sun Visual workshop (debugger) interface
 	Works.
 G.  Edit command line with Vi commands
@@ -70,24 +62,11 @@ H.  More automatic testing
 I.  Multi-language support
 	Works.
 J.  User Friendlier
-	Write user manual.
+	The user manual has been written.
 	Enhance Windows install program.
 
 
-E. Virtual edit:
--   Need to test various commands.
--   Add more documentation.
--   Use lpos_T instead of pos_T for positions that do not have a coladd?
--   coladvance2() can be a bit slow.  Check with profiling.
--   Add a mode where the cursor is only allowed to go one character after the
-    end of the line?
--   Allow specifying it separately for Tabs and beyond end-of-line?
-
-
 J. User Friendlier
-9   Extend the User Manual.
-    Use portions of the Reference Manual.
-    Use portions of the Vim book.
 9   Printing:
     -	Add "page width" to wrap long lines.
     -	Unix: make conversion to PostScript work better.
@@ -100,6 +79,7 @@ J. User Friendlier
     - create entry in start/programs menu (also for uninstall)
     - create .bat files in the windows directory
     - detect and handle an existing Vim version
+    - install the vimtutor.bat script, so that it's easy to execute.
 9   Windows install with install.exe:
     Check new dosinst.c features (Jon Merz)
     -  also evim.bat, vimdiff.bat, gvimdiff.bat, view.bat, gview.bat
@@ -107,58 +87,19 @@ J. User Friendlier
        One item: install batch files in {path}
 		 overwrite batch files in {path}
 		 do not install batch files
-    -  also shortcut to evim, gvimdiff and gview
+    -  also "shortcut" to evim, gvimdiff and gview
 9   Make Windows uninstall program better:
     - Delete the vim.bat and gvim.bat files.
     - Delete the whole tree of Vim files.
-8   make vimtutor.bat for DOS/MS-Windows and vimtutor script for Amiga.
+8   make a vimtutor script for Amiga and other systems.
 
 
 Various recent:
-9   ":cwindow!" always open quickfix window, ":cwindow" only opens it if there
-    are recognized errors.  ":cclose" to close quickfix window?
-    Or use a new command: ":cwincheck", opens the cwindow when there are
-    recognized errors, closes it when there are none.
-    Option to let ":make" open a quickfix window?
-8   For ":silent !cmd":
-    ":silent write" still writes a message.
-    ":silent s//" still writes a message.
-    Highlight test should be silent.  ":silent highlight" doesn't produce the
-    same redirected text.  Make it do the same.
-    How to use ":silent" for a search command?  ":silent /pat" uses ":/pat".
-	:silent exe "normal /path\<CR>"
-    Run the external command silently, don't give the hit-enter prompt.
-    Remove how it's done for Risc OS with ":!~cmd", see do_shell().
-    Don't redraw the screen, make a note in the docs that CTRL-L should be
-    used if the command has any output.
-    -> pass SHELL_FILTER to call_shell?
-    -> ":silent!" also stops error messages.
-    -> ":silent menu" creates menu that doesn't echo its command.
-    -> ":silent /pattern" doesn't complain when it's not found
-    -> ":silent :s/pat//" doesn't complain when it's not found and doesn't
-		report number of substitutions.
-    -> ":silent map": add flag to mapping, increment "silence" when executing
-       it, append a command to decrement "silence"; reset silence when
-       aborting a mapping).
-       Or use ":map <silent>"?
-    -> ":silent unmap" shouldn't complain about a non-existing mapping.
-    -> ":silent 1,$d" says "no lines in buffer".
-    -> ":silent put" says "16 more lines".
-    Still do the messages for ":redir"?
-    -> ":silent redir": Remember the last message, print it if waiting for a
-       key (otherwise the hit-enter prompt could be missed).
-    -> Win32 GUI: Make ":silent !ls" work, avoid "hit any key to continue" in
-       DOS console used to execute external commands.  Pass a flag to
-       vimrun.exe.
-    Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
+9   Virtual edit: blockwise selection, "$" then yank, includes an extra space.
 -   xterm sends <Esc>O5F for <C-End>.  Similarly for other Control-keys, e.g.,
     <C-Left> and <C-Right>.
 -   Problem with cscope jumping to the wrong position? (Medley)
     Selecting item 5 jumps to item 4. (Andrej Borsenkow)
-8   When running in a console and $DISPLAY is set a connection to the X server
-    is made (unless 'clipboard' tells not to).  Quitting the X server then
-    kills Vim.  How to detect a broken connection to the X server when running
-    in a console?  Catching WM_SAVE_YOURSELF doesn't seem to work.
 8   When changing 'guicursor' and the value is invalid, some of the effects
     will still take place.  Should first check for errors and only make the
     new value effective when it's OK.
@@ -170,14 +111,11 @@ Various recent:
 9   With blockwise Visual mode, "A" works different than "I" when there are
     short lines.  Make them work the same way.
 8   GUI: Make inputdialog() work for Photon, Amiga, Mac, RiscOS.
-
-
-Considered for release 6.0:
--   update $VIMRUNTIME/optwin for new options.
--   Update the overview of options in quickref.txt.
+-   Do profiling to check performance bottlenecks.
+    check coladvance2() with/without 'virtualedit'.
+9   Check if parts of the Reference Manual can be replaced with a link to the
+    user manual.
 8   Use configure to set absolute paths in tools scripts when installing.
-8   Add a command to jump to a certain kind of tag.  Allow the user to specify
-    values for the optional fields.  E.g., ":tag size type=m".
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
 8   How to create the gvim.exe that is distributed?  Make_gvc.mak is standard,
@@ -190,6 +128,8 @@ Considered for release 6.0:
     using it with KDE.
 -   For files found with 'include': handle "*" in included name, for Java.
     (Jason)
+-   update $VIMRUNTIME/optwin for new options.
+-   Update the overview of options in quickref.txt.
 
 ---------------------- bugs ---------------------------
 
@@ -606,7 +546,12 @@ Amiga:
 
 Macintosh:
 8   Define vim_mkdir() for Macintosh.
+8   Define mch_writable() for Macintosh.
 9   Explorer.vim isn't working properly.
+8   Carbon version under MacOS X is slower than Classic version.
+9   Vim cannot be renamed to something else (or it won't be able to find the
+    $VINRUTIME)
+8   $HOME is supported under MacOS X, but ~ is not.
 9   When DiskLock is running, using a swap file causes a crash.  Appears to be
     a problem with writing a file that starts with a dot. (Giacalone)
 9   On G3 Mac, OS version 8, control strip causes characters messed up when
@@ -760,6 +705,10 @@ VMS:
     that contain a '$' after all have been found.
 8   When "cm" termcap entry is missing, starting gvim shouldn't complain about
     it. (Lohner)  Try out with "vt100" entry (cm replaced with cX).
+8   When running in a console and $DISPLAY is set a connection to the X server
+    is made (unless 'clipboard' tells not to).  Quitting the X server then
+    kills Vim.  How to detect a broken connection to the X server when running
+    in a console?  Catching WM_SAVE_YOURSELF doesn't seem to work.
 
 
 I can't reproduce these (if you can, let me know how!):
@@ -1415,6 +1364,8 @@ Shared libraries:
 
 
 Tags:
+8   Add a command to jump to a certain kind of tag.  Allow the user to specify
+    values for the optional fields.  E.g., ":tag size type=m".
 8   Add a function that returns the line in the tags file for a matching tag.
     Can be used to extract more info (class name, inheritance, etc.) (Rico
     Hendriks)
@@ -1773,6 +1724,8 @@ Insert mode:
     ":map <F2> 5aabc<Esc>" works only once from Insert mode.
 7   Make ":startinsert" command work directly for functions and scripts?
     Also make it possible to append (it's difficult at end of line).
+7   Use 'matchpairs' for 'showmatch': When inserting a character check if it
+    appears in the rhs of 'matchpairs'.
 -   In Insert mode (and command line editing?): Allow undo of the last typed
     character.	This is useful for CTRL-U, CTRL-W, delete and backspace, and
     also for characters that wrap to the next line.
@@ -1894,6 +1847,12 @@ Java:
     regexp is used.
 8   Make the 'comments' option with "/* * */" lines only repeat the "*" line
     when there is a "/*" before it?  Or include this in 'cindent'?
+
+
+Virtual edit:
+7   Add a mode where the cursor is only allowed to go one character after the
+    end of the line?
+7   Allow specifying it separately for Tabs and beyond end-of-line?
 
 
 Text objects:
@@ -2494,7 +2453,7 @@ Various improvements:
 7   Add "g|" command: move to N'th column from the left margin (after wrapping
     and applying 'leftcol').  Works as "|" like what "g0" is to "0".
 7   Add patch from Wall for this one ( ~/Mail/oldmail/wall/in.00019 ):
-    'flipcase' variable: upper/lower case pairs.
+    'flipcase' variable: upper/lowercase pairs.
     Insert comma's between pairs and allow a range, make it look like
     'isfname'.  E.g. ":set flipcase=a-zA-Z,xX,23-33:143-153".  The colon to
     separate the from and to part is optional.
@@ -2886,8 +2845,6 @@ Far future and "big" extensions:
     to where the cursor is.
 -   Make it easy to setup Vim for groups of users: novice vi users, novice
     Vim users, C programmers, xterm users, GUI users,...
--   Add a mode to only view text.  Like Less, but with syntax highlighting
-    etc.
 -   Change layout of blocks in swap file: Text at the start, with '\n' in
     between lines (just load the file without changes, except for Mac).
     Indexes for lines are from the end of the block backwards.  It's the

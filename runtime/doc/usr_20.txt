@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.0al.  Last change: 2001 Jun 03
+*usr_20.txt*	For Vim version 6.0am.  Last change: 2001 Jun 29
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -263,6 +263,9 @@ will get ":edit info".
 
 The 'wildmode' option can be used to change the way completion works.
 The 'wildmenu' option can be used to get a menu-like list of matches.
+Use the 'suffixes' option to specify files that are less important and appear
+at the end of the list of files.
+The 'wildignore' option specifies files that are not listed at all.
 
 More about all of this here: |cmdline-completion|
 

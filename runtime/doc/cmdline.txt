@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0al.  Last change: 2001 Jun 11
+*cmdline.txt*   For Vim version 6.0am.  Last change: 2001 Jun 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -519,7 +519,7 @@ Line numbers may be specified with:			*:range* *E14*
 	.		the current line			  *:.*
 	$		the last line in the file		  *:$*
 	%		equal to 1,$ (the entire file)		  *:%*
-	't		position of mark t (lower case)		  *:'*
+	't		position of mark t (lowercase)		  *:'*
 	/{pattern}[/]	the next line where {pattern} matches	  *:/*
 	?{pattern}[?]	the previous line where {pattern} matches *:?*
 	\/		the next line where the previously used search

@@ -1199,6 +1199,10 @@ mf_do_open(mfp, fname, flags)
     char_u	*fname;
     int		flags;		/* flags for open() */
 {
+#ifdef HAVE_LSTAT
+    struct stat sb;
+#endif
+
     mfp->mf_fname = fname;
 
     /*
@@ -1213,6 +1217,19 @@ mf_do_open(mfp, fname, flags)
      * full pathname always.  Careful: This frees fname!
      */
     mf_fullname(mfp);
+#endif
+
+#ifdef HAVE_LSTAT
+    /*
+     * Extra security check: When creating a swap file it really shouldn't
+     * exist yet.  If there is a symbolic link, this is most likely an attack.
+     */
+    if ((flags & O_CREAT) && mch_lstat((char *)mfp->mf_fname, &sb) >= 0)
+    {
+	mfp->mf_fd = -1;
+	EMSG(_("E300: Swap file already exists (symlink attack?)"));
+    }
+    else
 #endif
 
     /*

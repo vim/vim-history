@@ -2,7 +2,7 @@
 void init_normal_cmds __ARGS((void));
 void normal_cmd __ARGS((oparg_T *oap, int toplevel));
 void do_pending_operator __ARGS((cmdarg_T *cap, int old_col, int gui_yank));
-int do_mouse __ARGS((oparg_T *oap, int c, int dir, long count, int fix_indent));
+int do_mouse __ARGS((oparg_T *oap, int c, int dir, long count, int fixindent));
 void check_visual_highlight __ARGS((void));
 void end_visual_mode __ARGS((void));
 void reset_VIsual_and_resel __ARGS((void));
