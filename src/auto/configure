@@ -7666,19 +7666,19 @@ else
 fi
 
   echo $ac_n "checking for NLS""... $ac_c" 1>&6
-echo "configure:7429: checking for NLS" >&5
-  if test -d po; then
+echo "configure:7673: checking for NLS" >&5
+  if test -f po/Makefile; then
     have_gettext="no"
     if test -n "$MSGFMT"; then
       cat > conftest.$ac_ext <<EOF
-#line 7434 "configure"
+#line 7678 "configure"
 #include "confdefs.h"
 #include <libintl.h>
 int main() {
 gettext("Test");
 ; return 0; }
 EOF
-if { (eval echo configure:7441: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:7685: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""gettext() works" 1>&6; have_gettext="yes"
 else
