@@ -3767,7 +3767,7 @@ gui_do_scroll()
 	updateWindow(wp);   /* update window, status line, and cmdline */
     }
 
-    return (wp == curwin && !equal(curwin->w_cursor, old_cursor));
+    return (wp == curwin && !equalpos(curwin->w_cursor, old_cursor));
 }
 
 

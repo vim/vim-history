@@ -3423,7 +3423,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    }
 	    if (num == NL)
 		num = 0;
-	    else if (num == CR && get_fileformat(wp->w_buffer) == EOL_MAC)
+	    else if (num == CAR && get_fileformat(wp->w_buffer) == EOL_MAC)
 		num = NL;
 	    break;
 

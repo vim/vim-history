@@ -4000,7 +4000,7 @@ do_sub(eap)
 		{
 		    if (p1[0] == '\\' && p1[1] != NUL)  /* remove backslash */
 			mch_memmove(p1, p1 + 1, STRLEN(p1));
-		    else if (*p1 == CR)
+		    else if (*p1 == CAR)
 		    {
 			if (u_inssub(lnum) == OK)   /* prepare for undo */
 			{

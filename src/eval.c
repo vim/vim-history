@@ -2516,7 +2516,7 @@ get_string_var(arg, retvar, evaluate)
 		case 'e': name[i++] = ESC; break;
 		case 'f': name[i++] = FF; break;
 		case 'n': name[i++] = NL; break;
-		case 'r': name[i++] = CR; break;
+		case 'r': name[i++] = CAR; break;
 		case 't': name[i++] = TAB; break;
 
 		case 'X': /* hex: "\x1", "\x12" */
@@ -6124,7 +6124,7 @@ f_searchpair(argvars, retvar)
     {
 	n = searchit(curwin, curbuf, &pos, dir, pat, 1L,
 						      SEARCH_KEEP, RE_SEARCH);
-	if (n == FAIL || (firstpos.lnum != 0 && equal(pos, firstpos)))
+	if (n == FAIL || (firstpos.lnum != 0 && equalpos(pos, firstpos)))
 	    /* didn't find it or found the first match again: FAIL */
 	    break;
 
@@ -7072,7 +7072,7 @@ f_system(argvars, retvar)
 
 	for (s = p; *s; ++s)
 	{
-	    if (*s == CR)
+	    if (*s == CAR)
 		*s = NL;
 	}
     }
@@ -7086,7 +7086,7 @@ f_system(argvars, retvar)
 	d = p;
 	for (s = p; *s; ++s)
 	{
-	    if (s[0] == CR && s[1] == NL)
+	    if (s[0] == CAR && s[1] == NL)
 		++s;
 	    *d++ = *s;
 	}

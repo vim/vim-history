@@ -149,7 +149,7 @@ ui_inchar(buf, maxlen, wtime)
 # endif
 	if (wtime == -1 && ++count == 1000)
 	    read_error_exit();
-	buf[0] = CR;
+	buf[0] = CAR;
 	return 1;
     }
 #endif
@@ -413,8 +413,9 @@ clip_update_selection()
 	    start = curwin->w_cursor;
 	    end = VIsual;
 	}
-	if (!equal(clip_star.start, start) || !equal(clip_star.end, end)
-					    || clip_star.vmode != VIsual_mode)
+	if (!equalpos(clip_star.start, start)
+		|| !equalpos(clip_star.end, end)
+		|| clip_star.vmode != VIsual_mode)
 	{
 	    clip_clear_selection();
 	    clip_star.start = start;

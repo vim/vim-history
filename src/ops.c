@@ -1478,7 +1478,7 @@ cmdline_paste_str(s, literally)
 	    else
 #endif
 		c = *s++;
-	    if (cv == Ctrl_V || c == ESC || c == Ctrl_C || c == CR || c == NL
+	    if (cv == Ctrl_V || c == ESC || c == Ctrl_C || c == CAR || c == NL
 #ifdef UNIX
 		    || c == intr_char
 #endif

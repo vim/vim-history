@@ -1485,7 +1485,7 @@ vgetc()
 		case K_KMINUS:		c = '-'; break;
 		case K_KDIVIDE:		c = '/'; break;
 		case K_KMULTIPLY:	c = '*'; break;
-		case K_KENTER:		c = CR; break;
+		case K_KENTER:		c = CAR; break;
 		case K_KPOINT:		c = '.'; break;
 		case K_K0:		c = '0'; break;
 		case K_K1:		c = '1'; break;
@@ -1810,7 +1810,7 @@ vgetorpeek(advance)
 				    && typebuf.tb_noremap[typebuf.tb_off]
 								  != RM_NONE))
 			    && !(p_paste && (State & (INSERT + CMDLINE)))
-			    && !(State == HITRETURN && (c1 == CR || c1 == ' '))
+			    && !(State == HITRETURN && (c1 == CAR || c1 == ' '))
 			    && State != ASKMORE
 			    && State != CONFIRM
 #ifdef FEAT_INS_EXPAND

@@ -1596,7 +1596,7 @@ rewind_retry:
 			if (*p == NL)
 			{
 			    if (!try_unix
-				    || (try_dos && p > ptr && p[-1] == CR))
+				    || (try_dos && p > ptr && p[-1] == CAR))
 				fileformat = EOL_DOS;
 			    else
 				fileformat = EOL_UNIX;
@@ -1610,7 +1610,7 @@ rewind_retry:
 			/* Need to reset the counters when retrying fenc. */
 			try_mac = 1;
 			try_unix = 1;
-			for (; p >= ptr && *p != CR; p--)
+			for (; p >= ptr && *p != CAR; p--)
 			    ;
 			if (p >= ptr)
 			{
@@ -1618,7 +1618,7 @@ rewind_retry:
 			    {
 				if (*p == NL)
 				    try_unix++;
-				else if (*p == CR)
+				else if (*p == CAR)
 				    try_mac++;
 			    }
 			    if (try_mac > try_unix)
@@ -1651,12 +1651,12 @@ rewind_retry:
 	    while (++ptr, --size >= 0)
 	    {
 		/* catch most common case first */
-		if ((c = *ptr) != NUL && c != CR && c != NL)
+		if ((c = *ptr) != NUL && c != CAR && c != NL)
 		    continue;
 		if (c == NUL)
 		    *ptr = NL;	/* NULs are replaced by newlines! */
 		else if (c == NL)
-		    *ptr = CR;	/* NLs are replaced by CRs! */
+		    *ptr = CAR;	/* NLs are replaced by CRs! */
 		else
 		{
 		    if (skip_count == 0)
@@ -1699,7 +1699,7 @@ rewind_retry:
 			len = (colnr_T)(ptr - line_start + 1);
 			if (fileformat == EOL_DOS)
 			{
-			    if (ptr[-1] == CR)	/* remove CR */
+			    if (ptr[-1] == CAR)	/* remove CR */
 			    {
 				ptr[-1] = NUL;
 				--len;
@@ -3569,7 +3569,7 @@ restore_backup:
 	{
 	    if (c == NL)
 		*s = NUL;		/* replace newlines with NULs */
-	    else if (c == CR && fileformat == EOL_MAC)
+	    else if (c == CAR && fileformat == EOL_MAC)
 		*s = NL;		/* Mac: replace CRs with NLs */
 	    else
 		*s = c;
@@ -3600,7 +3600,7 @@ restore_backup:
 	    *s++ = NL;
 	else
 	{
-	    *s++ = CR;			/* EOL_MAC or EOL_DOS: write CR */
+	    *s++ = CAR;			/* EOL_MAC or EOL_DOS: write CR */
 	    if (fileformat == EOL_DOS)	/* write CR-NL */
 	    {
 		if (++len == bufsize)

@@ -1136,7 +1136,7 @@ workshop_get_positions(
     *curCol = curwin->w_cursor.col;
 
     if (curbuf->b_visual_mode == 'v' &&
-	    equal(curwin->w_cursor, curbuf->b_visual_end))
+	    equalpos(curwin->w_cursor, curbuf->b_visual_end))
     {
 	*selStartLine = curbuf->b_visual_start.lnum;
 	*selStartCol = curbuf->b_visual_start.col;

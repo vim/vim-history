@@ -28,7 +28,7 @@
 #define NL		'\012'
 #define NL_STR		(char_u *)"\012"
 #define FF		'\014'
-#define CR		'\015'
+#define CAR		'\015'	/* CR is used by Mac OS X */
 #define ESC		'\033'
 #define ESC_STR		(char_u *)"\033"
 #define ESC_STR_nc	"\033"
@@ -112,7 +112,7 @@
 #define NL		'\x15'
 #define NL_STR		(char_u *)"\x15"
 #define FF		'\x0C'
-#define CR		'\x0D'
+#define CAR		'\x0D'
 #define ESC		'\x27'
 #define ESC_STR		(char_u *)"\x27"
 #define ESC_STR_nc	"\x27"

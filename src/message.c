@@ -786,18 +786,18 @@ wait_return(redraw)
 	return;
     }
 
-    redir_off = TRUE;		    /* don't redirect this message */
+    redir_off = TRUE;		/* don't redirect this message */
     oldState = State;
     if (quit_more)
     {
-	c = CR;			    /* just pretend CR was hit */
+	c = CAR;		/* just pretend CR was hit */
 	quit_more = FALSE;
 	got_int = FALSE;
     }
     else if (exmode_active)
     {
-	MSG_PUTS(" ");	  /* make sure the cursor is on the right line */
-	c = CR;			    /* no need for a return in ex mode */
+	MSG_PUTS(" ");		/* make sure the cursor is on the right line */
+	c = CAR;		/* no need for a return in ex mode */
 	got_int = FALSE;
     }
     else
@@ -1858,7 +1858,7 @@ msg_puts_attr_len(str, maxlen, attr)
 			more_back = 1;
 			lines_left = 1;
 			break;
-		    case CR:		/* one extra line */
+		    case CAR:		/* one extra line */
 		    case NL:
 		    case 'j':
 		    case K_DOWN:
@@ -2575,7 +2575,7 @@ do_dialog(type, title, message, buttons, dfltbutton, textfield)
 	    c = get_keystroke();
 	    switch (c)
 	    {
-	    case CR:		/* User accepts default option */
+	    case CAR:		/* User accepts default option */
 	    case NL:
 		retval = dfltbutton;
 		break;

@@ -227,7 +227,7 @@ static const struct nv_cmd
     {NL,	nv_down,	0,			FALSE},
     {Ctrl_K,	nv_error,	0,			0},
     {Ctrl_L,	nv_clear,	0,			0},
-    {CR,	nv_down,	0,			TRUE},
+    {CAR,	nv_down,	0,			TRUE},
     {Ctrl_N,	nv_down,	NV_STS,			FALSE},
     {Ctrl_O,	nv_ctrlo,	0,			0},
     {Ctrl_P,	nv_up,		NV_STS,			FALSE},
@@ -630,7 +630,7 @@ normal_cmd(oap, toplevel)
      */
     if (VIsual_active
 	    && VIsual_select
-	    && (vim_isprintc(c) || c == NL || c == CR || c == K_KENTER))
+	    && (vim_isprintc(c) || c == NL || c == CAR || c == K_KENTER))
     {
 # ifdef FEAT_MBYTE
 	char_u	    buf[MB_MAXBYTES + 1];
@@ -1671,7 +1671,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		    && (!oap->inclusive
 			|| (oap->op_type == OP_YANK
 			    && gchar_pos(&oap->end) == NUL))
-		    && equal(oap->start, oap->end)
+		    && equalpos(oap->start, oap->end)
 #ifdef FEAT_VIRTUALEDIT
 		    && !(virtual_op && oap->start.coladd != oap->end.coladd)
 #endif
@@ -2743,7 +2743,7 @@ do_mouse(oap, c, dir, count, fixindent)
 		if (oap != NULL
 			&& VIsual_mode == 'v'
 			&& !vim_iswordc(gchar_pos(&end_visual))
-			&& equal(curwin->w_cursor, VIsual)
+			&& equalpos(curwin->w_cursor, VIsual)
 			&& (pos = findmatch(oap, NUL)) != NULL)
 		{
 		    curwin->w_cursor = *pos;
@@ -4119,7 +4119,7 @@ nv_zet(cap)
 		n /= 10;
 	    else if (vim_isdigit(nchar))
 		n = n * 10 + (nchar - '0');
-	    else if (nchar == CR)
+	    else if (nchar == CAR)
 	    {
 #ifdef FEAT_GUI
 		need_mouse_correct = TRUE;
@@ -4189,7 +4189,7 @@ dozet:
 		}
 		/* FALLTHROUGH */
     case NL:
-    case CR:
+    case CAR:
     case K_KENTER:
 		beginline(BL_WHITE | BL_FIX);
 		/* FALLTHROUGH */
@@ -5234,7 +5234,7 @@ nv_down(cap)
 #ifdef FEAT_CMDWIN
 	/* In the cmdline window a <CR> executes the command. */
 	if (cmdwin_type != 0 && cap->cmdchar == '\r')
-	    cmdwin_result = CR;
+	    cmdwin_result = CAR;
 	else
 #endif
 	{
@@ -7612,7 +7612,7 @@ unadjust_for_sel()
 {
     pos_T	*pp;
 
-    if (*p_sel == 'e' && !equal(VIsual, curwin->w_cursor))
+    if (*p_sel == 'e' && !equalpos(VIsual, curwin->w_cursor))
     {
 	if (lt(VIsual, curwin->w_cursor))
 	    pp = &curwin->w_cursor;

@@ -393,7 +393,7 @@ backslash_trans(c)
 {
     switch (c)
     {
-	case 'r':   return CR;
+	case 'r':   return CAR;
 	case 't':   return TAB;
 	case 'e':   return ESC;
 	case 'b':   return BS;
@@ -5711,7 +5711,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 		    /* Change NL to CR, so that it becomes a line break.
 		     * Skip over a backslashed character. */
 		    if (*s == NL)
-			*s = CR;
+			*s = CAR;
 		    else if (*s == '\\' && s[1] != NUL)
 			++s;
 #ifdef FEAT_MBYTE
@@ -5773,7 +5773,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 		/* Check for abbreviations -- webb */
 		switch (*src)
 		{
-		    case 'r':	c = CR;		++src;	break;
+		    case 'r':	c = CAR;	++src;	break;
 		    case 'n':	c = NL;		++src;	break;
 		    case 't':	c = TAB;	++src;	break;
 		 /* Oh no!  \e already has meaning in subst pat :-( */
@@ -5854,7 +5854,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 			    if (reg_mmatch->endpos[no].lnum == clnum)
 				break;
 			    if (copy)
-				*dst = CR;
+				*dst = CAR;
 			    ++dst;
 			    s = reg_getline(++clnum);
 			    if (reg_mmatch->endpos[no].lnum == clnum)
@@ -5873,7 +5873,7 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 		    }
 		    else
 		    {
-			if (backslash && (*s == CR || *s == '\\'))
+			if (backslash && (*s == CAR || *s == '\\'))
 			{
 			    /*
 			     * Insert a backslash in front of a CR, otherwise
