@@ -229,6 +229,8 @@ static VAR find_var __ARGS((char_u *name, int writing));
 static struct growarray *find_var_ga __ARGS((char_u *name, char_u **varname));
 static void var_free_one __ARGS((VAR v));
 static void list_one_var __ARGS((VAR v, char_u *prefix));
+static void list_vim_var __ARGS((int i));
+static void list_one_var_a __ARGS((char_u *prefix, char_u *name, int type, char_u *string));
 static void set_var __ARGS((char_u *name, VAR varp));
 static char_u *find_option_end __ARGS((char_u *p));
 static void list_func_head __ARGS((struct ufunc *fp));
@@ -353,6 +355,9 @@ do_let(eap)
 		for (i = 0; i < curwin->w_vars.ga_len; ++i)
 		    if (WVAR_ENTRY(i).var_name != NULL)
 			list_one_var(&WVAR_ENTRY(i), (char_u *)"w:");
+		for (i = 0; i < VV_LEN; ++i)
+		    if (vimvars[i].type == VAR_NUMBER || vimvars[i].val != NULL)
+			list_vim_var(i);
 	    }
 	}
 	else
@@ -373,28 +378,35 @@ do_let(eap)
 		{
 		    c1 = *p;
 		    *p = NUL;
-		    varp = find_var(arg, FALSE);
-		    if (varp == NULL)
-			EMSG2("Unknown variable: \"%s\"", arg);
+		    i = find_vim_var(arg, (int)(p - arg));
+		    if (i >= 0)
+			list_vim_var(i);
 		    else
 		    {
-			name = vim_strchr(arg, ':');
-			if (name != NULL)
-			{
-			    /* "a:" vars have no name stored, use whole arg */
-			    if (arg[0] == 'a' && arg[1] == ':')
-				c2 = NUL;
-			    else
-			    {
-				c2 = *++name;
-				*name = NUL;
-			    }
-			    list_one_var(varp, arg);
-			    if (c2 != NUL)
-				*name = c2;
-			}
+			varp = find_var(arg, FALSE);
+			if (varp == NULL)
+			    EMSG2("Unknown variable: \"%s\"", arg);
 			else
-			    list_one_var(varp, (char_u *)"");
+			{
+			    name = vim_strchr(arg, ':');
+			    if (name != NULL)
+			    {
+				/* "a:" vars have no name stored, use whole
+				 * arg */
+				if (arg[0] == 'a' && arg[1] == ':')
+				    c2 = NUL;
+				else
+				{
+				    c2 = *++name;
+				    *name = NUL;
+				}
+				list_one_var(varp, arg);
+				if (c2 != NUL)
+				    *name = c2;
+			    }
+			    else
+				list_one_var(varp, (char_u *)"");
+			}
 		    }
 		    *p = c1;
 		}
@@ -4465,19 +4477,51 @@ var_free_one(v)
  */
     static void
 list_one_var(v, prefix)
-    VAR	    v;
-    char_u  *prefix;
+    VAR		v;
+    char_u	*prefix;
 {
-    msg(prefix);
-    if (v->var_name != NULL)	/* "a:" vars don't have a name stored */
-	msg_puts(v->var_name);
+    list_one_var_a(prefix, v->var_name, v->var_type, get_var_string(v));
+}
+
+/*
+ * List the value of one "v:" variable.
+ */
+    static void
+list_vim_var(i)
+    int		i;	/* index in vimvars[] */
+{
+    char_u	*p;
+    char_u	numbuf[NUMBUFLEN];
+
+    if (vimvars[i].type == VAR_NUMBER)
+    {
+	p = numbuf;
+	sprintf((char *)p, "%ld", (long)vimvars[i].val);
+    }
+    else if (vimvars[i].val == NULL)
+	p = (char_u *)"";
+    else
+	p = vimvars[i].val;
+    list_one_var_a((char_u *)"v:", vimvars[i].name, vimvars[i].type, p);
+}
+
+    static void
+list_one_var_a(prefix, name, type, string)
+    char_u	*prefix;
+    char_u	*name;
+    int		type;
+    char_u	*string;
+{
+    msg_attr(prefix, 0);    /* don't use msg(), it overwrites "v:statusmsg" */
+    if (name != NULL)	/* "a:" vars don't have a name stored */
+	msg_puts(name);
     msg_putchar(' ');
     msg_advance(22);
-    if (v->var_type == VAR_NUMBER)
+    if (type == VAR_NUMBER)
 	msg_putchar('#');
     else
 	msg_putchar(' ');
-    msg_outtrans(get_var_string(v));
+    msg_outtrans(string);
 }
 
 /*
