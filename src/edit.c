@@ -491,6 +491,15 @@ edit(cmdchar, startln, count)
 	if (!arrow_used)
 	    curwin->w_set_curswant = TRUE;
 
+	/* If there is no typeahead may check for timestamps (e.g., for when a
+	 * menu invoked a shell command). */
+	if (stuff_empty())
+	{
+	    did_check_timestamps = FALSE;
+	    if (need_check_timestamps)
+		check_timestamps(FALSE);
+	}
+
 	/*
 	 * When emsg() was called msg_scroll will have been set.
 	 */
