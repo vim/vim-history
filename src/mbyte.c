@@ -1491,11 +1491,13 @@ utf_iscomposing(c)
 utf_printable(c)
     int		c;
 {
-    /* sorted list of non-overlapping intervals */
+    /* Sorted list of non-overlapping intervals.
+     * 0xd800-0xdfff is reserved for UTF-16, actually illegal. */
     static struct interval nonprint[] =
     {
 	{0x070f, 0x070f}, {0x180b, 0x180e}, {0x200b, 0x200f}, {0x202a, 0x202e},
-	{0x206a, 0x206f}, {0xfeff, 0xfeff}, {0xfff9, 0xfffb}
+	{0x206a, 0x206f}, {0xd800, 0xdfff}, {0xfeff, 0xfeff}, {0xfff9, 0xfffb},
+	{0xfffe, 0xffff}
     };
 
     return !intable(nonprint, sizeof(nonprint) / sizeof(struct interval), c);
