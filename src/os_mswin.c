@@ -2528,7 +2528,7 @@ getVimServerName(HWND hwnd, char *name, int namelen)
 enumWindowsGetServer(HWND hwnd, LPARAM lparam)
 {
     struct	server_id *id = (struct server_id *)lparam;
-    char	server[25];
+    char	server[MAX_PATH];
 
     /* Get the title of the window */
     if (getVimServerName(hwnd, server, sizeof(server)) == 0)
@@ -2549,7 +2549,7 @@ enumWindowsGetServer(HWND hwnd, LPARAM lparam)
 enumWindowsGetNames(HWND hwnd, LPARAM lparam)
 {
     garray_T	*ga = (garray_T *)lparam;
-    char	server[25];
+    char	server[MAX_PATH];
 
     /* Get the title of the window */
     if (getVimServerName(hwnd, server, sizeof(server)) == 0)
