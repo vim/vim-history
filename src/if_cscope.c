@@ -754,11 +754,11 @@ err_closing:
 	err_save = dup(STDERR_FILENO);
 #endif
 	if (dup2(to_cs[0], STDIN_FILENO) == -1)
-	    perror("cs_create_connection 1");
+	    PERROR("cs_create_connection 1");
 	if (dup2(from_cs[1], STDOUT_FILENO) == -1)
-	    perror("cs_create_connection 2");
+	    PERROR("cs_create_connection 2");
 	if (dup2(from_cs[1], STDERR_FILENO) == -1)
-	    perror("cs_create_connection 3");
+	    PERROR("cs_create_connection 3");
 
 	/* close unused */
 #if defined(UNIX)
@@ -839,7 +839,7 @@ err_closing:
 
 #if defined(UNIX)
 	if (execl("/bin/sh", "sh", "-c", cmd, NULL) == -1)
-	    perror(_("cs_create_connection exec failed"));
+	    PERROR(_("cs_create_connection exec failed"));
 
 	exit(127);
 	/* NOTREACHED */
@@ -889,7 +889,7 @@ err_closing:
 # endif
 	if (ph == -1)
 	{
-	    perror(_("cs_create_connection exec failed"));
+	    PERROR(_("cs_create_connection exec failed"));
 	    (void)EMSG(_("E623: Could not spawn cscope process"));
 	    goto err_closing;
 	}
@@ -903,9 +903,9 @@ err_closing:
 	 * reopen as streams.
 	 */
 	if ((csinfo[i].to_fp = fdopen(to_cs[1], "w")) == NULL)
-	    perror(_("cs_create_connection: fdopen for to_fp failed"));
+	    PERROR(_("cs_create_connection: fdopen for to_fp failed"));
 	if ((csinfo[i].fr_fp = fdopen(from_cs[0], "r")) == NULL)
-	    perror(_("cs_create_connection: fdopen for fr_fp failed"));
+	    PERROR(_("cs_create_connection: fdopen for fr_fp failed"));
 
 #if defined(UNIX)
 	/* close unused */
@@ -1974,54 +1974,80 @@ cs_read_prompt(i)
     int		ch;
     char	*buf = NULL; /* buffer for possible error message from cscope */
     int		bufpos = 0;
-    static char	*cs_emsg = N_("E609: Cscope error: %s");
-		/* maximum allowed len for Cscope error message */
-    int		maxlen = IOSIZE - strlen(_(cs_emsg));
+    char	*cs_emsg;
+    int		maxlen;
+    static char *eprompt = "Press the RETURN key to continue:";
+    int		epromptlen = strlen(eprompt);
+    int		n;
+
+    cs_emsg = _("E609: Cscope error: %s");
+    /* compute maximum allowed len for Cscope error message */
+    maxlen = (int)(IOSIZE - strlen(cs_emsg));
 
     for (;;)
     {
 	while ((ch = getc(csinfo[i].fr_fp)) != EOF && ch != CSCOPE_PROMPT[0])
-	    /* if verbose, have space and char is printable */
-	    if (p_csverbose && bufpos < maxlen - 1 && vim_isprintc(ch))
+	    /* if there is room and char is printable */
+	    if (bufpos < maxlen - 1 && vim_isprintc(ch))
 	    {
 		if (buf == NULL) /* lazy buffer allocation */
 		    buf = (char *)alloc(maxlen);
-
-		if (buf != NULL) /* append character to a string */
+		if (buf != NULL)
 		{
+		    /* append character to the message */
 		    buf[bufpos++] = ch;
 		    buf[bufpos] = NUL;
+		    if (bufpos >= epromptlen
+			    && strcmp(&buf[bufpos - epromptlen], eprompt) == 0)
+		    {
+			/* remove eprompt from buf */
+			buf[bufpos - epromptlen] = NUL;
+
+			/* print message to user */
+			(void)EMSG2(cs_emsg, buf);
+
+			/* send RETURN to cscope */
+			(void)putc('\n', csinfo[i].to_fp);
+			(void)fflush(csinfo[i].to_fp);
+
+			/* clear buf */
+			bufpos = 0;
+			buf[bufpos] = NUL;
+		    }
 		}
 	    }
 
-	if (ch == EOF)
+	for (n = 0; n < (int)strlen(CSCOPE_PROMPT); ++n)
 	{
-	    perror("cs_read_prompt EOF(1)");
-	    if (buf != NULL && buf[0] != NUL)
-		(void)EMSG2(_(cs_emsg), buf);
-	    else if (p_csverbose)
-		cs_reading_emsg(i); /* don't have additional information */
-	    cs_release_csp(i, TRUE);
-	    vim_free(buf);
-	    return CSCOPE_FAILURE;
+	    if (n > 0)
+		ch = getc(csinfo[i].fr_fp);
+	    if (ch == EOF)
+	    {
+		PERROR("cs_read_prompt EOF");
+		if (buf != NULL && buf[0] != NUL)
+		    (void)EMSG2(cs_emsg, buf);
+		else if (p_csverbose)
+		    cs_reading_emsg(i); /* don't have additional information */
+		cs_release_csp(i, TRUE);
+		vim_free(buf);
+		return CSCOPE_FAILURE;
+	    }
+
+	    if (ch != CSCOPE_PROMPT[n])
+	    {
+		ch = EOF;
+		break;
+	    }
 	}
 
-	ch = getc(csinfo[i].fr_fp);
 	if (ch == EOF)
-	    perror("cs_read_prompt EOF(2)");
-	if (ch != CSCOPE_PROMPT[1])
-	    continue;
-
-	ch = getc(csinfo[i].fr_fp);
-	if (ch == EOF)
-	    perror("cs_read_prompt EOF(3)");
-	if (ch != CSCOPE_PROMPT[2])
-	    continue;
-	break;
+	    continue;	    /* didn't find the prompt */
+	break;		    /* did find the prompt */
     }
+
     vim_free(buf);
     return CSCOPE_SUCCESS;
-} /* cs_read_prompt */
+}
 
 
 /*

@@ -648,7 +648,7 @@ void	workshop_connect(XtAppContext context)
 	port = atoi(address);
 
 	if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		perror(NOCATGETS("workshop_connect"));
+		PERROR(NOCATGETS("workshop_connect"));
 		return;
 	}
 
@@ -658,14 +658,14 @@ void	workshop_connect(XtAppContext context)
 	server.sin_family = AF_INET;
 	server.sin_port = port;
 	if ((host = gethostbyname(NOCATGETS("localhost"))) == NULL) {
-		perror(NOCATGETS("gethostbyname"));
+		PERROR(NOCATGETS("gethostbyname"));
 		sd = -1;
 		return;
 	}
 	memcpy((char *)&server.sin_addr, host->h_addr, host->h_length);
 #else
 	if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-		perror(NOCATGETS("workshop_connect"));
+		PERROR(NOCATGETS("workshop_connect"));
 		return;
 	}
 
@@ -678,23 +678,23 @@ void	workshop_connect(XtAppContext context)
 			close(sd);
 #ifdef INET_SOCKETS
 			if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-				perror(NOCATGETS("workshop_connect"));
+				PERROR(NOCATGETS("workshop_connect"));
 				return;
 			}
 #else
 			if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-				perror(NOCATGETS("workshop_connect"));
+				PERROR(NOCATGETS("workshop_connect"));
 				return;
 			}
 #endif
 			if (connect(sd, (struct sockaddr *)&server,
 						sizeof(server))) {
-				perror(NOCATGETS("workshop_connect"));
+				PERROR(NOCATGETS("workshop_connect"));
 				return;
 			}
 
 		} else {
-			perror(NOCATGETS("workshop_connect"));
+			PERROR(NOCATGETS("workshop_connect"));
 			return;
 		}
 	}

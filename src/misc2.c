@@ -896,7 +896,7 @@ do_outofmem_msg(size)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
-	EMSG2(_("E342: Out of memory!  (allocating %lu bytes)"), size);
+	EMSGN(_("E342: Out of memory!  (allocating %lu bytes)"), size);
 	did_outofmem_msg = TRUE;
     }
 }
