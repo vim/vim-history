@@ -1687,14 +1687,15 @@ ex_listdo(eap)
 		    break;
 	    }
 
-#ifdef FEAT_SCROLLBIND
-	    if (eap->cmdidx == CMD_windo && curwin->w_p_scb)
+	    if (eap->cmdidx == CMD_windo)
 	    {
+		validate_cursor();	/* cursor may have moved */
+#ifdef FEAT_SCROLLBIND
 		/* required when 'scrollbind' has been set */
-		validate_cursor();	/* may need to update w_leftcol */
-		do_check_scrollbind(TRUE);
-	    }
+		if (curwin->w_p_scb)
+		    do_check_scrollbind(TRUE);
 #endif
+	    }
 	}
 	listcmd_busy = FALSE;
     }
