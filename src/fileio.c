@@ -5258,6 +5258,11 @@ buf_check_timestamp(buf, focus)
 	    }
 	    vim_free(ea.cmd);
 
+#ifdef FEAT_DIFF
+	    /* Invalidate diff info if necessary. */
+	    diff_invalidate();
+#endif
+
 	    /* Restore the topline and cursor position and check it (lines may
 	     * have been removed). */
 	    if (old_topline > curbuf->b_ml.ml_line_count)
