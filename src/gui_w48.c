@@ -2534,6 +2534,13 @@ gui_mch_init_font(char_u *font_name, int fontset)
     }
 
 #ifndef MSWIN16_FASTTEXT
+    gui_mch_free_font(gui.ital_font);
+    gui.ital_font = NOFONT;
+    gui_mch_free_font(gui.bold_font);
+    gui.bold_font = NOFONT;
+    gui_mch_free_font(gui.boldital_font);
+    gui.boldital_font = NOFONT;
+
     if (!lf.lfItalic)
     {
 	lf.lfItalic = TRUE;
