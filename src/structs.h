@@ -338,6 +338,26 @@ struct nr_trans
 };
 
 /*
+ * structure used to store one block of the stuff/redo/recording buffers
+ */
+struct buffblock
+{
+    struct buffblock	*b_next;	/* pointer to next buffblock */
+    char_u		b_str[1];	/* contents (actually longer) */
+};
+
+/*
+ * header used for the stuff buffer and the redo buffer
+ */
+struct buffheader
+{
+    struct buffblock	bh_first;	/* first (dummy) block of list */
+    struct buffblock	*bh_curr;	/* buffblock for appending */
+    int			bh_index;	/* index for reading */
+    int			bh_space;	/* space in bh_curr for appending */
+};
+
+/*
  * used for completion on the command line
  */
 typedef struct expand
