@@ -500,7 +500,15 @@ display_errors()
 	    {
 		/* Truncate a very long message, it will go off-screen. */
 		if (STRLEN(p) > 2000)
-		    STRCPY(p + 2000 - 14, _("...(truncated)"));
+		{
+		    char_u	*s = p + 2000 - 14;
+
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			s -= (*mb_head_off)(p, s);
+#endif
+		    STRCPY(s, _("...(truncated)"));
+		}
 #ifdef WIN3264
 		MessageBox(NULL, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
 #else
