@@ -1118,8 +1118,7 @@ getcount:
 	    && !oap->op_type
 	    && (idx < 0 || !(nv_cmds[idx].cmd_flags & NV_KEEPREG)))
     {
-	oap->regname = 0;
-	oap->motion_force = NUL;
+	clearop(oap);
 #ifdef FEAT_EVAL
 	set_reg_var('"');
 #endif
@@ -2000,7 +1999,6 @@ do_pending_operator(cap, old_col, gui_yank)
 		    && (oap->op_type == OP_LSHIFT || oap->op_type == OP_RSHIFT
 						|| oap->op_type == OP_DELETE))
 		coladvance(curwin->w_curswant = old_col);
-	    oap->op_type = OP_NOP;
 	}
 	else
 	{
@@ -2009,8 +2007,7 @@ do_pending_operator(cap, old_col, gui_yank)
 #ifdef FEAT_VISUAL
 	oap->block_mode = FALSE;
 #endif
-	oap->regname = 0;
-	oap->motion_force = NUL;
+	clearop(oap);
     }
 }
 
