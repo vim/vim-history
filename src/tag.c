@@ -81,9 +81,9 @@ static int parse_match __ARGS((char_u *lbuf, tagptrs_T *tagp));
 static char_u *tag_full_fname __ARGS((tagptrs_T *tagp));
 static char_u *expand_tag_fname __ARGS((char_u *fname, char_u *tag_fname, int expand));
 #ifdef FEAT_EMACS_TAGS
-static int test_for_current __ARGS((int, char_u *, char_u *, char_u *));
+static int test_for_current __ARGS((int, char_u *, char_u *, char_u *, char_u *));
 #else
-static int test_for_current __ARGS((char_u *, char_u *, char_u *));
+static int test_for_current __ARGS((char_u *, char_u *, char_u *, char_u *));
 #endif
 static int find_extra __ARGS((char_u **pp));
 
@@ -138,6 +138,7 @@ do_tag(tag, type, count, forceit, verbose)
     int		tagstackidx = curwin->w_tagstackidx;
     int		tagstacklen = curwin->w_tagstacklen;
     int		cur_match = 0;
+    int		cur_fnum = curbuf->b_fnum;
     int		oldtagstackidx = tagstackidx;
     int		prevtagstackidx = tagstackidx;
     int		prev_num_matches;
@@ -163,6 +164,8 @@ do_tag(tag, type, count, forceit, verbose)
     int		attr;
     int		use_tagstack;
     int		skip_msg = FALSE;
+    char_u	*buf_ffname = curbuf->b_ffname;	    /* name to use for
+						       priority computation */
 
     /* remember the matches for the last used tag */
     static int		num_matches = 0;
@@ -213,6 +216,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    /* Jumping to same tag: keep the current match, so that
 		     * the CursorHold autocommand example works. */
 		    cur_match = ptag_entry.cur_match;
+		    cur_fnum = ptag_entry.cur_fnum;
 		}
 		else
 		{
@@ -336,7 +340,10 @@ do_tag(tag, type, count, forceit, verbose)
 	    {
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 		if (g_do_tagpreview)
+		{
 		    cur_match = ptag_entry.cur_match;
+		    cur_fnum = ptag_entry.cur_fnum;
+		}
 		else
 #endif
 		{
@@ -360,6 +367,7 @@ do_tag(tag, type, count, forceit, verbose)
 			goto end_do_tag;
 		    }
 		    cur_match = tagstack[tagstackidx].cur_match;
+		    cur_fnum = tagstack[tagstackidx].cur_fnum;
 		}
 		new_tag = TRUE;
 	    }
@@ -370,13 +378,17 @@ do_tag(tag, type, count, forceit, verbose)
 
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 		if (g_do_tagpreview)
+		{
 		    cur_match = ptag_entry.cur_match;
+		    cur_fnum = ptag_entry.cur_fnum;
+		}
 		else
 #endif
 		{
 		    if (--tagstackidx < 0)
 			tagstackidx = 0;
 		    cur_match = tagstack[tagstackidx].cur_match;
+		    cur_fnum = tagstack[tagstackidx].cur_fnum;
 		}
 		switch (type)
 		{
@@ -397,6 +409,7 @@ do_tag(tag, type, count, forceit, verbose)
 		    EMSG(_("E425: Cannot go before first matching tag"));
 		    skip_msg = TRUE;
 		    cur_match = 0;
+		    cur_fnum = curbuf->b_fnum;
 		}
 	    }
 	}
@@ -405,7 +418,10 @@ do_tag(tag, type, count, forceit, verbose)
 	if (g_do_tagpreview)
 	{
 	    if (type != DT_SELECT && type != DT_JUMP)
+	    {
 		ptag_entry.cur_match = cur_match;
+		ptag_entry.cur_fnum = cur_fnum;
+	    }
 	}
 	else
 #endif
@@ -425,8 +441,22 @@ do_tag(tag, type, count, forceit, verbose)
 	     * tagstackidx now. */
 	    curwin->w_tagstackidx = tagstackidx;
 	    if (type != DT_SELECT && type != DT_JUMP)
+	    {
 		curwin->w_tagstack[tagstackidx].cur_match = cur_match;
+		curwin->w_tagstack[tagstackidx].cur_fnum = cur_fnum;
+	    }
 	}
+    }
+
+    /* When not using the current buffer get the name of buffer "cur_fnum".
+     * Makes sure that the tag order doesn't change when using a remembered
+     * position for "cur_match". */
+    if (cur_fnum != curbuf->b_fnum)
+    {
+	buf_T *buf = buflist_findnr(cur_fnum);
+
+	if (buf != NULL)
+	    buf_ffname = buf->b_ffname;
     }
 
     /*
@@ -476,7 +506,7 @@ do_tag(tag, type, count, forceit, verbose)
 	    if (verbose)
 		flags |= TAG_VERBOSE;
 	    if (find_tags(name, &new_num_matches, &new_matches, flags,
-							max_num_matches) == OK
+					    max_num_matches, buf_ffname) == OK
 		    && new_num_matches < max_num_matches)
 		max_num_matches = MAXCOL; /* If less than max_num_matches
 					     found: all matches found. */
@@ -758,11 +788,15 @@ do_tag(tag, type, count, forceit, verbose)
 	    if (use_tagstack)
 	    {
 		tagstack[tagstackidx].cur_match = cur_match;
+		tagstack[tagstackidx].cur_fnum = cur_fnum;
 		++tagstackidx;
 	    }
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 	    else if (g_do_tagpreview)
+	    {
 		ptag_entry.cur_match = cur_match;
+		ptag_entry.cur_fnum = cur_fnum;
+	    }
 #endif
 
 	    /*
@@ -993,13 +1027,14 @@ tag_strnicmp(s1, s2, len)
  * TAG_KEEP_LANG  keep language
  */
     int
-find_tags(pat, num_matches, matchesp, flags, mincount)
+find_tags(pat, num_matches, matchesp, flags, mincount, buf_ffname)
     char_u	*pat;			/* pattern to search for */
     int		*num_matches;		/* return: number of matches found */
     char_u	***matchesp;		/* return: array of matches found */
     int		flags;
     int		mincount;		/*  MAXCOL: find all matches
 					     other: minimal number of matches */
+    char_u	*buf_ffname;		/* name of buffer for priority */
 {
     FILE       *fp;
     char_u     *lbuf;			/* line buffer */
@@ -1842,7 +1877,8 @@ line_read_in:
 #ifdef FEAT_EMACS_TAGS
 			    is_etag,
 #endif
-				     tagp.fname, tagp.fname_end, tag_fname);
+				     tagp.fname, tagp.fname_end, tag_fname,
+				     buf_ffname);
 #ifdef FEAT_EMACS_TAGS
 		    is_static = FALSE;
 		    if (!is_etag)	/* emacs tags are never static */
@@ -3244,27 +3280,28 @@ simplify_filename(filename)
 }
 
 /*
- * Check if we have a tag for the current file.
+ * Check if we have a tag for the buffer with name "buf_ffname".
  * This is a bit slow, because of the full path compare in fullpathcmp().
  * Return TRUE if tag for file "fname" if tag file "tag_fname" is for current
  * file.
  */
     static int
 #ifdef FEAT_EMACS_TAGS
-test_for_current(is_etag, fname, fname_end, tag_fname)
+test_for_current(is_etag, fname, fname_end, tag_fname, buf_ffname)
     int	    is_etag;
 #else
-test_for_current(fname, fname_end, tag_fname)
+test_for_current(fname, fname_end, tag_fname, buf_ffname)
 #endif
     char_u  *fname;
     char_u  *fname_end;
     char_u  *tag_fname;
+    char_u  *buf_ffname;
 {
     int	    c;
     int	    retval = FALSE;
     char_u  *fullname;
 
-    if (curbuf->b_ffname != NULL)	/* if the current buffer has a name */
+    if (buf_ffname != NULL)	/* if the buffer has a name */
     {
 #ifdef FEAT_EMACS_TAGS
 	if (is_etag)
@@ -3278,7 +3315,7 @@ test_for_current(fname, fname_end, tag_fname)
 	fullname = expand_tag_fname(fname, tag_fname, TRUE);
 	if (fullname != NULL)
 	{
-	    retval = (fullpathcmp(fullname, curbuf->b_ffname, TRUE) & FPC_SAME);
+	    retval = (fullpathcmp(fullname, buf_ffname, TRUE) & FPC_SAME);
 	    vim_free(fullname);
 	}
 #ifdef FEAT_EMACS_TAGS
@@ -3350,10 +3387,12 @@ expand_tags(tagnames, pat, num_file, file)
 	tagnmflag = 0;
     if (pat[0] == '/')
 	ret = find_tags(pat + 1, num_file, file,
-			    TAG_REGEXP | tagnmflag | TAG_VERBOSE, TAG_MANY);
+		TAG_REGEXP | tagnmflag | TAG_VERBOSE,
+		TAG_MANY, curbuf->b_ffname);
     else
 	ret = find_tags(pat, num_file, file,
-		 TAG_REGEXP | tagnmflag | TAG_VERBOSE | TAG_NOIC, TAG_MANY);
+		TAG_REGEXP | tagnmflag | TAG_VERBOSE | TAG_NOIC,
+		TAG_MANY, curbuf->b_ffname);
     if (ret == OK && !tagnames)
     {
 	 /* Reorganize the tags for display and matching as strings of:
