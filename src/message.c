@@ -1162,10 +1162,11 @@ msg_make(arg)
  * the character/string -- webb
  */
     int
-msg_outtrans_special(str, from)
-    char_u	*str;
+msg_outtrans_special(strstart, from)
+    char_u	*strstart;
     int		from;	/* TRUE for lhs of a mapping */
 {
+    char_u	*str = strstart;
     int		retval = 0;
     char_u	*string;
     int		attr;
@@ -1174,7 +1175,14 @@ msg_outtrans_special(str, from)
     attr = hl_attr(HLF_8);
     while (*str != NUL)
     {
-	string = str2special(&str, from);
+	/* Leading and trailing spaces need to be displayed in <> form. */
+	if ((str == strstart || str[1] == NUL) && *str == ' ')
+	{
+	    string = (char_u *)"<Space>";
+	    ++str;
+	}
+	else
+	    string = str2special(&str, from);
 	len = vim_strsize(string);
 	/* Highlight special keys */
 	msg_puts_attr(string, len > 1

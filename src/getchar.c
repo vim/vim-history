@@ -4051,11 +4051,12 @@ makemap(fd, buf)
  * return FAIL for failure, OK otherwise
  */
     int
-put_escstr(fd, str, what)
+put_escstr(fd, strstart, what)
     FILE	*fd;
-    char_u	*str;
+    char_u	*strstart;
     int		what;
 {
+    char_u	*str = strstart;
     int		c;
     int		modifiers;
 
@@ -4136,6 +4137,8 @@ put_escstr(fd, str, what)
 	 * prevent them from misinterpreted in DoOneCmd().
 	 * A space, Tab and '"' has to be escaped with a backslash to
 	 * prevent it to be misinterpreted in do_set().
+	 * A space has to be escaped with a CTRL-V when it's at the start of a
+	 * ":map" rhs.
 	 * A '<' has to be escaped with a CTRL-V to prevent it being
 	 * interpreted as the start of a special key name.
 	 * A space in the lhs of a :map needs a CTRL-V.
@@ -4145,8 +4148,10 @@ put_escstr(fd, str, what)
 	    if (putc('\\', fd) < 0)
 		return FAIL;
 	}
-	else if (c < ' ' || c > '~' || c == '|' || (what != 2 && c == '<')
-						   || (what == 0 && c == ' '))
+	else if (c < ' ' || c > '~' || c == '|'
+		|| (what == 0 && c == ' ')
+		|| (what == 1 && str == strstart && c == ' ')
+		|| (what != 2 && c == '<'))
 	{
 	    if (putc(Ctrl_V, fd) < 0)
 		return FAIL;
