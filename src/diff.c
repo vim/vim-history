@@ -964,7 +964,7 @@ diff_win_options(wp, addbuf)
 # endif
 #ifdef FEAT_SCROLLBIND
     if (vim_strchr(p_sbo, 'h') == NULL)
-	do_cmdline_cmd("set sbo+=hor");
+	do_cmdline_cmd((char_u *)"set sbo+=hor");
 #endif
 
     if (addbuf)
