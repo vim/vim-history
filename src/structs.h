@@ -119,6 +119,7 @@ typedef struct taggy
     char_u	*tagname;	/* tag name */
     fmark_T	fmark;		/* cursor position BEFORE ":tag" */
     int		cur_match;	/* match number */
+    int		cur_fnum;	/* buffer number used for cur_match */
 } taggy_T;
 
 /*
@@ -1506,7 +1507,7 @@ struct window
     winopt_T	w_onebuf_opt;
     winopt_T	w_allbuf_opt;
 
-    /* transfor a pointer to a "onebuf" option to a "allbuf" option */
+    /* transform a pointer to a "onebuf" option into a "allbuf" option */
 #define GLOBAL_WO(p)	((char *)p + sizeof(winopt_T))
 
 #ifdef FEAT_SCROLLBIND

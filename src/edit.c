@@ -2765,7 +2765,7 @@ ins_compl_get_exp(ini, dir)
 	    if (find_tags(complete_pat, &num_matches, &matches,
 		    TAG_REGEXP | TAG_NAMES | TAG_NOIC |
 		    TAG_INS_COMP | (ctrl_x_mode ? TAG_VERBOSE : 0),
-		    TAG_MANY) == OK && num_matches > 0)
+		    TAG_MANY, curbuf->b_ffname) == OK && num_matches > 0)
 	    {
 		ins_compl_add_matches(num_matches, matches, dir);
 	    }
