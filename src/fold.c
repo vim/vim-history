@@ -2795,7 +2795,7 @@ foldRemove(gap, top, bot)
 	{
 	    /* Found an entry below top. */
 	    fold_changed = TRUE;
-	    if (fp->fd_top + fp->fd_len > bot)
+	    if (fp->fd_top + fp->fd_len - 1 > bot)
 	    {
 		/* 5: Make fold that includes bot start below bot. */
 		foldMarkAdjustRecurse(&fp->fd_nested,
