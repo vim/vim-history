@@ -2737,8 +2737,9 @@ addsigntype(
 	    if (*glyphFile == NUL)
 		/* no glyph, line highlighting only */
 		coloncmd(":sign define %d linehl=NB_%s", i + 1, typeName);
-	    else if (STRLEN(glyphFile) <= 2)
-		/* two-character glyph name, use as text glyph with texthl */
+	    else if (vim_strsize(glyphFile) <= 2)
+		/* one- or two-character glyph name, use as text glyph with
+		 * texthl */
 		coloncmd(":sign define %d text=%s texthl=NB_%s", i + 1,
 							 glyphFile, typeName);
 	    else
