@@ -1419,7 +1419,8 @@ win_totop(size, flags)
 
     /* Split a window on the right side and put the window there. */
     (void)win_split_ins(size, flags, curwin, dir);
-    win_setheight(height);
+    if (!(flags & WSP_VERT))
+	win_setheight(height);
 
 #if defined(FEAT_GUI) && defined(FEAT_VERTSPLIT)
     /* When 'guioptions' includes 'L' or 'R' may have to remove or add
