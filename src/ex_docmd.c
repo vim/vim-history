@@ -5848,8 +5848,6 @@ do_argfile(eap, argn)
 {
     int		other;
     char_u	*p;
-    char_u	*ffname;
-    BUF		*buf;
 
     if (argn < 0 || argn >= arg_file_count)
     {
@@ -5894,23 +5892,9 @@ do_argfile(eap, argn)
 	if (argn == arg_file_count - 1)
 	    arg_had_last = TRUE;
 
-	/*
-	 * If no line number given, use the last known line number.
-	 */
-	if (eap->do_ecmd_lnum == 0)
-	{
-	    ffname = fix_fname(arg_files[curwin->w_arg_idx]);
-	    if (ffname != NULL)
-	    {
-		buf = buflist_findname(ffname);
-		if (buf != NULL)
-		    eap->do_ecmd_lnum = buflist_findlnum(buf);
-		vim_free(ffname);
-	    }
-	}
-
+	/* Edit the file; always use the last known line number. */
 	(void)do_ecmd(0, arg_files[curwin->w_arg_idx],
-		      NULL, eap->do_ecmd_cmd, eap->do_ecmd_lnum,
+		      NULL, eap->do_ecmd_cmd, ECMD_LAST,
 		      (p_hid ? ECMD_HIDE : 0) +
 					   (eap->forceit ? ECMD_FORCEIT : 0));
     }
@@ -7534,7 +7518,7 @@ eval_vars(src, usedlen, lnump, errormsg, srcstart)
 		    return NULL;
 		}
 		if (lnump != NULL)
-		    *lnump = buflist_findlnum(buf);
+		    *lnump = ECMD_LAST;
 		if (buf->b_fname == NULL)
 		{
 		    result = (char_u *)"";
@@ -7652,7 +7636,6 @@ expand_sfile(arg)
     char_u	*repl;
     int		srclen;
     char_u	*p;
-    linenr_t	dummy;
 
     result = vim_strsave(arg);
     if (result == NULL)
@@ -7665,7 +7648,7 @@ expand_sfile(arg)
 	else
 	{
 	    /* replace "<sfile>" with the sourced file name, and do ":" stuff */
-	    repl = eval_vars(p, &srclen, &dummy, &errormsg, result);
+	    repl = eval_vars(p, &srclen, NULL, &errormsg, result);
 	    if (errormsg != NULL)
 	    {
 		if (*errormsg)

@@ -30,7 +30,6 @@
 static char_u	*buflist_match __ARGS((vim_regexp *prog, BUF *buf));
 static char_u	*buflist_match_try __ARGS((vim_regexp *prog, char_u *name));
 static void	buflist_setfpos __ARGS((BUF *, linenr_t, colnr_t));
-static FPOS	*buflist_findfpos __ARGS((BUF *buf));
 #ifdef UNIX
 static int	otherfile_buf __ARGS((BUF *buf, char_u *ffname, struct stat *stp));
 static void	buf_setino __ARGS((BUF *buf));
@@ -1423,7 +1422,7 @@ buflist_setfpos(buf, lnum, col)
  * find the position (lnum and col) for the buffer 'buf' for the current window
  * returns a pointer to no_position if no position is found
  */
-    static FPOS *
+    FPOS *
 buflist_findfpos(buf)
     BUF		*buf;
 {
