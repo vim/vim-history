@@ -125,7 +125,7 @@ struct vimvar
     {"statusmsg", sizeof("statusmsg") - 1, NULL, VAR_STRING, 0},
     {"shell_error", sizeof("shell_error") - 1, NULL, VAR_NUMBER,
 							     VV_COMPAT+VV_RO},
-    {"this_session", sizeof("this_session") - 1, NULL, VAR_STRING, 0},
+    {"this_session", sizeof("this_session") - 1, NULL, VAR_STRING, VV_COMPAT},
     {"version", sizeof("version") - 1, (char_u *)(VIM_VERSION_MAJOR * 100
 			   + VIM_VERSION_MINOR), VAR_NUMBER, VV_COMPAT+VV_RO},
 };
