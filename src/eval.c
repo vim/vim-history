@@ -318,7 +318,7 @@ static win_T *find_win_by_nr __ARGS((VAR vp));
 static pos_T *var2fpos __ARGS((VAR varp, int lnum));
 static int get_env_len __ARGS((char_u **arg));
 static int get_id_len __ARGS((char_u **arg));
-static int get_func_len __ARGS((char_u **arg, char_u **alias));
+static int get_func_len __ARGS((char_u **arg, char_u **alias, int evaluate));
 static char_u *find_name_end __ARGS((char_u *arg, char_u **expr_start, char_u **expr_end));
 static int eval_isnamec __ARGS((int c));
 static int find_vim_var __ARGS((char_u *name, int len));
@@ -1006,7 +1006,7 @@ ex_call(eap)
     int		failed = FALSE;
 
     name = arg;
-    len = get_func_len(&arg, &alias);
+    len = get_func_len(&arg, &alias, !eap->skip);
     if (len == 0)
 	goto end;
     if (alias != NULL)
@@ -1995,7 +1995,7 @@ eval7(arg, retvar, evaluate)
      * Must be a variable or function name then.
      */
     default:	s = *arg;
-		len = get_func_len(arg, &alias);
+		len = get_func_len(arg, &alias, evaluate);
 		if (alias != NULL)
 		    s = alias;
 
@@ -6832,9 +6832,10 @@ get_id_len(arg)
  * expanded name in an allocated string via 'alias' - caller must free.
  */
     static int
-get_func_len(arg, alias)
+get_func_len(arg, alias, evaluate)
     char_u	**arg;
     char_u	**alias;
+    int		evaluate;
 {
     int		len;
 #ifdef FEAT_MAGIC_BRACES
@@ -6868,6 +6869,13 @@ get_func_len(arg, alias)
     if (expr_start != NULL)
     {
 	char_u	*temp_string;
+
+	if (!evaluate)
+	{
+	    len += (int)(p - *arg);
+	    *arg = skipwhite(p);
+	    return len;
+	}
 
 	/*
 	 * Include any <SID> etc in the expanded string:
@@ -7810,6 +7818,9 @@ ex_function(eap)
     char_u	*theline;
     int		j;
     int		c;
+#ifdef FEAT_MAGIC_BRACES
+    int		saved_did_emsg;
+#endif
     char_u	*name = NULL;
     char_u	*p;
     char_u	*arg;
@@ -7840,6 +7851,12 @@ ex_function(eap)
     name = trans_function_name(&p, eap->skip, FALSE);
     if (name == NULL && !eap->skip)
 	return;
+#ifdef FEAT_MAGIC_BRACES
+    /* An error in a function call during evaluation of an expression in magic
+     * braces should not cause the function not to be defined. */
+    saved_did_emsg = did_emsg;
+    did_emsg = FALSE;
+#endif
 
     /*
      * ":function func" with only function name: list function.
@@ -8103,6 +8120,9 @@ ex_function(eap)
     fp->flags = flags;
     fp->calls = 0;
     fp->script_ID = current_SID;
+#ifdef FEAT_MAGIC_BRACES
+    did_emsg |= saved_did_emsg;
+#endif
     return;
 
 erret:
@@ -8110,6 +8130,9 @@ erret:
     ga_clear_strings(&newlines);
 erret_name:
     vim_free(name);
+#ifdef FEAT_MAGIC_BRACES
+    did_emsg |= saved_did_emsg;
+#endif
 }
 
 /*
