@@ -402,7 +402,7 @@ static struct vimoption
     {"backup",	    "bk",   P_BOOL|P_VI_DEF|P_VIM,
 			    (char_u *)&p_bk, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"backupcopy",  "bkc",  P_STRING|P_VIM,
+    {"backupcopy",  "bkc",  P_STRING|P_VIM|P_COMMA|P_NODUP,
 			    (char_u *)&p_bkc, PV_NONE,
 #ifdef UNIX
 			    {(char_u *)"yes", (char_u *)"auto"}
@@ -2391,7 +2391,6 @@ static struct vimoption
 static char *(p_ambw_values[]) = {"single", "double", NULL};
 #endif
 static char *(p_bg_values[]) = {"light", "dark", NULL};
-static char *(p_bkc_values[]) = {"yes", "auto", "no", NULL};
 static char *(p_nf_values[]) = {"octal", "hex", "alpha", NULL};
 static char *(p_ff_values[]) = {FF_UNIX, FF_DOS, FF_MAC, NULL};
 #ifdef FEAT_WAK
@@ -4295,6 +4294,7 @@ didset_options()
     (void)init_chartab();
 
     (void)opt_strings_flags(p_cmp, p_cmp_values, &cmp_flags, TRUE);
+    (void)opt_strings_flags(p_bkc, p_bkc_values, &bkc_flags, TRUE);
 #ifdef FEAT_SESSION
     (void)opt_strings_flags(p_ssop, p_ssop_values, &ssop_flags, TRUE);
     (void)opt_strings_flags(p_vop, p_ssop_values, &vop_flags, TRUE);
@@ -4624,8 +4624,16 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'backupcopy' */
     else if (varp == &p_bkc)
     {
-	if (check_opt_strings(p_bkc, p_bkc_values, FALSE) != OK)
+	if (opt_strings_flags(p_bkc, p_bkc_values, &bkc_flags, TRUE) != OK)
 	    errmsg = e_invarg;
+	if (((bkc_flags & BKC_AUTO) != 0)
+		+ ((bkc_flags & BKC_YES) != 0)
+		+ ((bkc_flags & BKC_NO) != 0) != 1)
+	{
+	    /* Must have exactly one of "auto", "yes"  and "no". */
+	    (void)opt_strings_flags(oldval, p_bkc_values, &bkc_flags, TRUE);
+	    errmsg = e_invarg;
+	}
     }
 
     /* 'backupext' and 'patchmode' */
