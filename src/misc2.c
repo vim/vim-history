@@ -1593,6 +1593,8 @@ ga_concat(gap, s)
 #if defined(FEAT_EVAL) || defined(FEAT_CMDL_COMPL) || defined(FEAT_PYTHON) \
 	|| defined(FEAT_RUBY) || defined(FEAT_TCL) || defined(FEAT_PERL) \
 	|| defined(FEAT_CLIENTSERVER) \
+	|| defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MOTIF) \
+	|| defined(MSWIN_FIND_REPLACE) \
 	|| (defined(FEAT_PRINTER) && defined(FEAT_POSTSCRIPT)) || defined(PROTO)
 /*
  * Append one byte to a growarray which contains bytes.
