@@ -408,8 +408,7 @@ close_buffer(win, buf, action)
     if (!buf_valid(buf))
 	return;
 # ifdef FEAT_EVAL
-    /* Autocommands may abort script processing. */
-    if (aborting())
+    if (aborting())	    /* autocmds may abort script processing */
 	return;
 # endif
 
@@ -564,6 +563,7 @@ buf_freeall(buf, del_buf, wipe_buf)
 #ifdef FEAT_SYN_HL
     syntax_clear(buf);		    /* reset syntax info */
 #endif
+    buf->b_flags &= ~BF_READERR;    /* a read error is no longer relevant */
 }
 
 /*
@@ -666,9 +666,23 @@ goto_buffer(eap, start, dir, count)
 		&& (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
     if (swap_exists_action == SEA_QUIT && *eap->cmd == 's')
     {
+#  if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	cleanup_T   cs;
+
+	/* Reset the error/interrupt/exception state here so that
+	 * aborting() returns FALSE when closing a window. */
+	enter_cleanup(&cs);
+#  endif
+
 	/* Quitting means closing the split window, nothing else. */
 	win_close(curwin, TRUE);
 	swap_exists_action = SEA_NONE;
+
+#  if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* Restore the error/interrupt/exception state if not discarded by a
+	 * new aborting error, interrupt, or uncaught exception. */
+	leave_cleanup(&cs);
+#  endif
     }
     else
 	handle_swap_exists(old_curbuf);
@@ -685,28 +699,55 @@ goto_buffer(eap, start, dir, count)
 handle_swap_exists(old_curbuf)
     buf_T	*old_curbuf;
 {
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+    cleanup_T	cs;
+# endif
+
     if (swap_exists_action == SEA_QUIT)
     {
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* Reset the error/interrupt/exception state here so that
+	 * aborting() returns FALSE when closing a buffer. */
+	enter_cleanup(&cs);
+# endif
+
 	/* User selected Quit at ATTENTION prompt.  Go back to previous
 	 * buffer.  If that buffer is gone or the same as the current one,
 	 * open a new, empty buffer. */
 	swap_exists_action = SEA_NONE;	/* don't want it again */
 	close_buffer(curwin, curbuf, DOBUF_UNLOAD);
 	if (!buf_valid(old_curbuf) || old_curbuf == curbuf)
-	    old_curbuf = buflist_new(NULL, NULL, 1L,
-					 BLN_CURBUF | BLN_LISTED | BLN_FORCE);
+	    old_curbuf = buflist_new(NULL, NULL, 1L, BLN_CURBUF | BLN_LISTED);
 	if (old_curbuf != NULL)
 	    enter_buffer(old_curbuf);
 	/* If "old_curbuf" is NULL we are in big trouble here... */
+
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* Restore the error/interrupt/exception state if not discarded by a
+	 * new aborting error, interrupt, or uncaught exception. */
+	leave_cleanup(&cs);
+# endif
     }
     else if (swap_exists_action == SEA_RECOVER)
     {
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* Reset the error/interrupt/exception state here so that
+	 * aborting() returns FALSE when closing a buffer. */
+	enter_cleanup(&cs);
+# endif
+
 	/* User selected Recover at ATTENTION prompt. */
 	msg_scroll = TRUE;
 	ml_recover();
 	MSG_PUTS("\n");	/* don't overwrite the last message */
 	cmdline_row = msg_row;
 	do_modelines();
+
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+	/* Restore the error/interrupt/exception state if not discarded by a
+	 * new aborting error, interrupt, or uncaught exception. */
+	leave_cleanup(&cs);
+# endif
     }
     swap_exists_action = SEA_NONE;
 }
@@ -1380,7 +1421,6 @@ enter_buffer(buf)
  * If (flags & BLN_CURBUF) is TRUE, may use current buffer.
  * If (flags & BLN_LISTED) is TRUE, add new buffer to buffer list.
  * If (flags & BLN_DUMMY) is TRUE, don't count it as a real buffer.
- * If (flags & BLN_FORCE) is TRUE, don't abort on an error.
  * This is the ONLY way to create a new buffer.
  */
 static int  top_file_num = 1;		/* highest file number */
@@ -1455,8 +1495,7 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (buf == curbuf)
 	    apply_autocmds(EVENT_BUFWIPEOUT, NULL, NULL, FALSE, curbuf);
 # ifdef FEAT_EVAL
-	/* autocmds may abort script processing */
-	if (!(flags & BLN_FORCE) && aborting())
+	if (aborting())		/* autocmds may abort script processing */
 	    return NULL;
 # endif
 #endif
@@ -1509,8 +1548,7 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (buf != curbuf)	 /* autocommands deleted the buffer! */
 	    return NULL;
 #if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
-	/* autocmds may abort script processing */
-	if (!(flags & BLN_FORCE) && aborting())
+	if (aborting())		/* autocmds may abort script processing */
 	    return NULL;
 #endif
 	/* buf->b_nwindows = 0; why was this here? */
@@ -1586,8 +1624,7 @@ buflist_new(ffname, sfname, lnum, flags)
 	if (flags & BLN_LISTED)
 	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, buf);
 # ifdef FEAT_EVAL
-	/* autocmds may abort script processing */
-	if (!(flags & BLN_FORCE) && aborting())
+	if (aborting())		/* autocmds may abort script processing */
 	    return NULL;
 # endif
     }
@@ -4217,13 +4254,7 @@ ex_buffer_all(eap)
 #endif
 	    set_curbuf(buf, DOBUF_GOTO);
 #ifdef FEAT_AUTOCMD
-# ifdef FEAT_EVAL
-	    /* Autocommands deleted the buffer or aborted script
-	     * processing!!! */
-	    if (!buf_valid(buf) || aborting())
-# else
 	    if (!buf_valid(buf))	/* autocommands deleted the buffer!!! */
-# endif
 	    {
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 		swap_exists_action = SEA_NONE;
@@ -4234,10 +4265,25 @@ ex_buffer_all(eap)
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 	    if (swap_exists_action == SEA_QUIT)
 	    {
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+		cleanup_T   cs;
+
+		/* Reset the error/interrupt/exception state here so that
+		 * aborting() returns FALSE when closing a window. */
+		enter_cleanup(&cs);
+# endif
+
 		/* User selected Quit at ATTENTION prompt; close this window. */
 		win_close(curwin, TRUE);
 		--open_wins;
 		swap_exists_action = SEA_NONE;
+
+# if defined(FEAT_AUTOCMD) && defined(FEAT_EVAL)
+		/* Restore the error/interrupt/exception state if not
+		 * discarded by a new aborting error, interrupt, or uncaught
+		 * exception. */
+		leave_cleanup(&cs);
+# endif
 	    }
 	    else
 		handle_swap_exists(NULL);
@@ -4250,6 +4296,11 @@ ex_buffer_all(eap)
 	    (void)vgetc();	/* only break the file loading, not the rest */
 	    break;
 	}
+#ifdef FEAT_EVAL
+	/* Autocommands deleted the buffer or aborted script processing!!! */
+	if (aborting())
+	    break;
+#endif
     }
 #ifdef FEAT_AUTOCMD
     --autocmd_no_enter;
