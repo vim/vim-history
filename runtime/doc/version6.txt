@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0aa.  Last change: 2001 Apr 04
+*version6.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 16
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -35,6 +35,7 @@ NEW FEATURES
 Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
 Diff mode				|new-diff-mode|
+evim: click-and-type			|new-evim|
 Flexible indenting			|new-indent-flex|
 Extended search patterns		|new-searchpat|
 UTF-8 support				|new-utf-8|
@@ -311,6 +312,16 @@ Motif and Athena now use the system default colors for the menu and scrollbar.
 Used to be grey.  It's still possible to set the colors with ":highlight"
 commands and resources.
 
+Formatting text with "gq" breaks a paragraph at a non-empty blank line.
+Previously the line would be removed, which wasn't very useful.
+
+":normal" does no longer hang when the argument ends in half a command.
+Previously Vim would wait for more characters to be typed, without updating
+the screen.  Now it pretends an <Esc> was typed.
+
+Bitmaps for the toolbar are no longer searched for in "$VIM/bitmaps" bit in
+the "bitmaps" directories in 'runtimepath.
+
 ==============================================================================
 NEW FEATURES
 
@@ -399,7 +410,7 @@ the ruler, use up to half the width for the ruler.  Useful for narrow windows.
 Diff mode						*new-diff-mode*
 ---------
 
-Added diff mode |diff.txt|
+Added diff mode |diff-mode|
 - Added the vimdiff command to start diff mode on a few files.
 - Added the vimdiff manpage.
 - Added the ":diffsplit" command to start diff mode with the current file and
@@ -411,10 +422,27 @@ Added diff mode |diff.txt|
 - The 'diffopt' option changes how diffs are displayed.
 - The 'diffexpr' option can be set how a diff is to be created.
 - The 'patchexpr' option can be set how patch is applied to a file.
-- Added the "diff" folding method.
+- Added the "diff" folding method.  When opening a window for diff-mode, set
+  'foldlevel' to zero and 'foldenable' on, to close the folds.
 - Added the DiffAdd, DiffChange, DiffDelete and DiffText highlight groups to
   specify the highlighting for differences.  The defaults are ugly...
 - Unix: make a vimdiff symbolic link for "make install".
+- Added ":diffget" and "diffput" to remove differences.
+
+
+evim: click-and-type					*new-evim*
+--------------------
+
+eVim stands for "Easy Vim".  This is a separate program, but can also be
+started as "vim -y".
+
+This starts Vim with 'insertmode' set to allow click-and-type editing.  This
+is only for people who can't stand two modes.
+
+eView does the same but in readonly mode.
+
+In the GUI a CTRL-C only interrupts when busy with something, not when waiting
+for a character.  Allows using CTRL-C to copy text to the clipboard.
 
 
 Flexible indenting					*new-indent-flex*
@@ -589,9 +617,8 @@ Multi-language support					*new-multi-lang*
 - Added ":language" command to set the language (locale) for messages and
   character type.
 - Added ":menutrans" to be able to translate menu paths.
-- Added German and Polish menu translations (Marcin Dalecki), Italian menu
-  translations (Antonio Colombo).
-- Added Hungarian menus. (Zoltan Arpadffy)
+- Added menu translations for various languages.
+- Added message translations for various languages.
 - removed "broken locale" (Marcin Dalecki).
 - don't user color names in icons, use RGB values.  The names could be
   translated.
@@ -606,6 +633,8 @@ Multi-language support					*new-multi-lang*
   Italian translations are included. (Eduardo Fernandez)
 - When available, call bind_textdomain_codeset() to have gettext() translate
   messages to 'encoding'.  This requires GNU gettext 0.10.36.
+- Added gettext support for Win32.  This means messages will be translated
+  when the locale is set and libintl.dll can be found.  (Muraoka Taro)
 
 
 Plugin support					*new-plugins*
@@ -639,6 +668,9 @@ the value.
 
 The new |:scriptnames| command displays a list of all scripts that have been
 sourced.
+
+GUI: For Athena, Motif and GTK look for a toolbar bitmap in the "bitmaps"
+directories in 'runtimepath'.  Allows adding your own bitmaps.
 
 
 Filetype plugins				*new-filetype-plugins*
@@ -897,6 +929,8 @@ Various new items					*new-items-6*
 -----------------
 
 Interface to Ruby. (Shugo Maeda)
+Support dynamic loading of the Ruby interface on MS-Windows. (Muraoka Taro)
+Support this for Mingw too. (Benoit Cerrina)
 
 Normal mode commands: ~
 
@@ -910,6 +944,8 @@ Normal mode commands: ~
 
 Options: ~
 
+'autoread'	When detected that a file changed outside of Vim,
+		automatically read a buffer again when it's not changed.
 'debug'		When set to "msg" it will print error messages that would
 		otherwise be omitted.  Useful for debugging 'indentexpr' and
 		'foldexpr'.
@@ -927,6 +963,10 @@ Use "vim{version}:" for modelines, only to be executed when the version is
 
 Ex commands: ~
 
+:sav[eas][!] {file}
+		Works like ":w file" and ":e #", but without loading the file
+		again and avoiding other side effects. |:saveas|
+
 :silent[!] {cmd}
 		Execute a command silently.  Also don't use a delay that would
 		come after the message.  And don't do 'showmatch'.
@@ -939,6 +979,9 @@ Ex commands: ~
 :echomsg {expr}
 :echoerr {expr} Like ":echo" but store the message in the history. (Mark
 		Waggoner)
+
+:grepadd	Works just like ":grep" but adds to the current error list
+		instead of defining a new list. |:grepadd|
 
 :finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
 		script. |:finish|
@@ -994,6 +1037,8 @@ last insert position or changed text.
 
 New functions: ~
 buflisted()	Checks if the buffer exists and has 'buflisted' set.
+eventhandler()	Returns 1 when inside an event handler and interactive
+		commands can't be used.
 executable()	Checks if a program or batch script can be executed.
 filewritable()	Checks if a file can be written. (Ron Aaron)
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
@@ -1084,6 +1129,9 @@ way to start Vim with a session file.
 Added runtime/delmenu.vim.  Source this to remove all menus and prepare for
 loading new menus.  Useful when changing 'langmenu'.
 
+Perl script to filter Perl error messages to quickfix usable format. (Joerg
+Ziefle)
+
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
@@ -1162,6 +1210,10 @@ Performance:
   when it becomes empty.
 - GUI: Use a vertical scroll region, to make scrolling in a vertically split
   window faster.  No need to redraw the whole window.
+- When scrolling isn't possible with terminal codes (e.g., for a vertically
+  split window) redraw from ScreenLines[].  That should be faster than going
+  through the lines with win_line(), especially when using syntax
+  highlighting.
 
 Robustness:
 - Unix: Check for running out of stack space when executing a regexp.  Avoids
@@ -1170,6 +1222,7 @@ Robustness:
 - Unix: Added check for running out of stack space when matching a regexp.
   Now it aborts with an error message.  Needs to be checked on many different
   systems.
+- Disallow ":source <dirname>".  On unix it's possible to read a directory.
 
 Security:
 - When reading from or writing to a temporary file, check that it isn't a
@@ -1213,6 +1266,15 @@ Syntax highlighting:
 - Added a "containedin" argument to syntax items.  Allows adding a contained
   item to an existing item (e.g., to highlight a name in a comment).
 
+Modeless selection:
+- When in the command-line window, use modeless selection in the other
+  windows.  Makes it possible to copy visible text to the command-line window.
+- Support modeless selection on the cmdline in a terminal.  Previously it was
+  only possible for the GUI.
+- Make double-right-click in modeless selection select a whole word.  Single
+  right click doesn't use the word selection started by a double-left-click.
+  Makes it work like in Visual mode.
+
 Win32 console version:
 - Includes the user and system name in the ":version" message, when available.
   It generates a pathdef.c file for this.  (Jon Miner)
@@ -1244,10 +1306,12 @@ GUI:
 - Win32 and X11: Added 'mouseshape' option: Adjust the mouse pointer shape to
   the current mode. (Vince Negri)
 - 'linespace' option: Insert a pixel line between lines. (Nam)
-- Allow non-Visual selection (without moving the cursor) by keeping CTRL and
+- Allow modeless selection (without moving the cursor) by keeping CTRL and
   SHIFT pressed. (Ivan Wellesz)
 - Motif: added toolbar. (Gordon Prieur)  Also added tooltips.
-- Athena: added toolbar. (David Harrison -- based on Gordon Prieur's work)
+- Athena: added toolbar and tooltips. (David Harrison -- based on Gordon
+  Prieur's work)
+- Support menu separator lines for Athena.  (David Harrison)
 - Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
   Khodush)
 - When no --enable-xim argument is given, automatically enable it when a X GUI
@@ -1264,6 +1328,9 @@ X11:
   suspending copy the selection to cut buffer 0.  Should allow copy/paste with
   more applications in a X11-standard way.  (Neil Bird)
 - Use the X clipboard in any terminal, not just in an xterm.
+  Added "exclude:" in 'clipboard': Specify a pattern to match against terminal
+  names for which no connection should be made to the X server.  The default
+  currently work for FreeBSD and Linux consoles.
 - Added a few messages for when 'verbose' is non-zero to show what happens
   when trying to connect to the X server.  Should help when trying to find out
   why startup is slow.
@@ -1332,8 +1399,6 @@ Options:
 - When using set += or ^= , check for strings used twice.  Duplicates are
   removed.  (Vince Negri)
 - When setting an option that is a list of flags, remove duplicate flags.
-- 'autoread' option: When detected that a file changed outside of Vim,
-  automatically read a buffer again when it's not changed.
 - If possible, use getrlimit() to set 'maxmemtot' and 'maxmem'. (Pina)
 - Added "alpha" to 'nrformats': increment or decrement an alphabetic character
   with CTRL-A and CTRL-X.
@@ -1479,6 +1544,23 @@ When typing CTRL-D in Insert mode, just after an autoindent, then hitting CR
 kept the remaining white space.  Now made it work like BS: delete the
 autoindent to avoid a blank non-empty line results.
 
+Added a GetHwnd() call to the OLE interface.  (Vince Negri)
+
+Made ":normal" work in an event handler.  Useful when dropping a file on Vim
+and for CursorHold autocommands.
+
+For the MS-Windows version, don't change to the directory of the file when a
+slash is used instead of a backslash.  Explorer should always use a backslash,
+the user can use a slash when typing the command.
+
+When a buffer was changed outside of Vim and regaining focus, give a dialog to
+allow the user to reload the file.  Now also for other GUIs than MS-Windows.
+And also used in the console, when compiled with dialog support.
+
+Mapping <M-A> when 'encoding' is "latin1" and then setting 'encoding' to
+"utf-8" causes the first byte of a multi-byte to be mapped.  Can cause very
+hard to find problems.  Disallow mapping part of a multi-byte character.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -1535,6 +1617,12 @@ Moved common code from gui_w16.c and gui_w32.c to gui_w48.c (Vince Negri)
 
 The jumplist is now a separate feature.  It is disabled for the "small"
 version (16 bit MS-DOS).
+
+Renamed all types ending in _t to end in _T.  Avoids potential problems with
+system types.
+
+Added a configure check for X11 header files that implicitly define the return
+type to int. (Steve Wall)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -2048,7 +2136,7 @@ Multi-byte:
 - When a multibyte character contained a 0x80 byte, it didn't work (was using
   a CSI byte instead). (Muraoka Taro)
 - Wordwise selection with the mouse didn't work.
-- Yanking a non-Visual selection of multi-byte characters didn't work.
+- Yanking a modeless selection of multi-byte characters didn't work.
 - When 'selection' is "exclusive", selecting a word that ends in a multi-byte
   character used wrong highlighting for the following character.
 
@@ -2165,5 +2253,43 @@ cause problems.  For example, ":X" (X being such a character).
 When a pattern matches the end of the line, the last character in the line was
 highlighted for 'hlsearch'.  That looks wrong for "/\%3c".  Now highlight the
 character just after the line.
+
+Motif: If a dialog was closed by clicking on the "X" of the window frame Vim
+would no longer respond.
+
+When using CTRL-X or CTRL-A on a number with many leading zeros, Vim would
+crash. (Matsumoto)
+
+When 'insertmode' is set, the mapping in mswin.vim for CTRL-V didn't work in
+Select mode.  Insert mode wasn't restarted after overwriting the text.
+Now allow nesting Insert mode with insert and change commands.  CTRL-O
+cwfoo<Esc> now also works.
+
+Clicking with the right mouse button in another window started Visual mode,
+but used the start position of the current window.  Caused ml_get errors when
+the line number was invalid.  Now stay in the same window.
+
+When 'selection' is "exclusive", "gv" sometimes selected one character less.
+
+When 'comments' contains more than one start/middle/end triplet, the optional
+flags could be mixed up.  Also didn't align the end with the middle part.
+
+Double-right-click in Visual mode didn't update the shown mode.
+
+When the Normal group has a font name, it was never used when starting up.
+Now use it when 'guifont' and 'guifontset' are empty.
+Setting a font name to a highlight group before the GUI was started didn't
+work.
+
+"make test" didn't use the name of the generated Vim executable.
+
+'cindent' problem: Aligned with an "else" inside a do-while loop for a line
+below that loop. (Meikel Brandmeyer)
+
+Win32 GUI: mouseshape didn't return to normal after a ":set" command.
+It stayed at "no entry".  Was only visible with ":set nomousehide".
+
+When 'list' is set, 'hlsearch' didn't highlight a match at the end of the
+line.  Now highlight the '$'.
 
  vim:tw=78:

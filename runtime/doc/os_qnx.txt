@@ -1,4 +1,4 @@
-*os_qnx.txt*  For Vim version 6.0aa.  Last change: 2001 Apr 04
+*os_qnx.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 04
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid

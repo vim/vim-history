@@ -806,7 +806,8 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
 	}
     }
 
-    if (len == 1 && (string[0] == Ctrl_C || string[0] == intr_char))
+    if (len == 1 && ((string[0] == Ctrl_C && ctrl_c_interrupts)
+						   || string[0] == intr_char))
     {
 	trash_input_buf();
 	got_int = TRUE;
@@ -2248,7 +2249,7 @@ gui_mch_show_toolbar(int showit)
     static void
 font_sel_ok(GtkWidget *wgt, gpointer cbdata)
 {
-    gui_t *vw = (gui_t *)cbdata;
+    gui_T *vw = (gui_T *)cbdata;
     GtkFontSelectionDialog *fs = (GtkFontSelectionDialog *)vw->fontdlg;
 
     if (vw->fontname)
@@ -2265,7 +2266,7 @@ font_sel_ok(GtkWidget *wgt, gpointer cbdata)
     static void
 font_sel_cancel(GtkWidget *wgt, gpointer cbdata)
 {
-    gui_t *vw = (gui_t *)cbdata;
+    gui_T *vw = (gui_T *)cbdata;
 
     gtk_widget_hide(vw->fontdlg);
     if (gtk_main_level() > 0)
@@ -2276,7 +2277,7 @@ font_sel_cancel(GtkWidget *wgt, gpointer cbdata)
     static void
 font_sel_destroy(GtkWidget *wgt, gpointer cbdata)
 {
-    gui_t *vw = (gui_t *)cbdata;
+    gui_T *vw = (gui_T *)cbdata;
 
     vw->fontdlg = NULL;
     if (gtk_main_level() > 0)
@@ -2648,7 +2649,7 @@ gui_mch_free_fontset(GuiFontset fontset)
  * Programmer's Guide.
  * Return -1 for error.
  */
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(char_u * name)
 {
     int i;
@@ -2668,7 +2669,7 @@ gui_mch_get_color(char_u * name)
     };
 
     if (!gui.in_use)		/* can't do this when GUI not running */
-	return (guicolor_t)(-1);
+	return (guicolor_T)(-1);
 
     while (name != NULL)
     {
@@ -2711,7 +2712,7 @@ gui_mch_get_color(char_u * name)
 	    colormap = gtk_widget_get_colormap(gui.drawarea);
 	    gdk_color_alloc(colormap, &color);
 
-	    return (guicolor_t) color.pixel;
+	    return (guicolor_T) color.pixel;
 	}
 	/* add a few builtin names and try again */
 	for (i = 0;; ++i)
@@ -2730,14 +2731,14 @@ gui_mch_get_color(char_u * name)
 	}
     }
 
-    return (guicolor_t)(-1);
+    return (guicolor_T)(-1);
 }
 
 /*
  * Set the current text foreground color.
  */
     void
-gui_mch_set_fg_color(guicolor_t color)
+gui_mch_set_fg_color(guicolor_T color)
 {
     gui.fgcolor->pixel = (Pixel) color;
 }
@@ -2746,7 +2747,7 @@ gui_mch_set_fg_color(guicolor_t color)
  * Set the current text background color.
  */
     void
-gui_mch_set_bg_color(guicolor_t color)
+gui_mch_set_bg_color(guicolor_T color)
 {
     gui.bgcolor->pixel = (Pixel) color;
 }
@@ -3013,7 +3014,7 @@ gui_mch_iconify()
  * Draw a cursor without focus.
  */
     void
-gui_mch_draw_hollow_cursor(guicolor_t color)
+gui_mch_draw_hollow_cursor(guicolor_T color)
 {
     int		i = 1;
 
@@ -3040,7 +3041,7 @@ gui_mch_draw_hollow_cursor(guicolor_t color)
  * color "color".
  */
     void
-gui_mch_draw_part_cursor(int w, int h, guicolor_t color)
+gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 {
     if (gui.drawarea->window == NULL)
 	return;
@@ -3439,7 +3440,7 @@ clip_mch_set_selection(cbd)
  * Make a menu item appear either active or not active (grey or not grey).
  */
     void
-gui_mch_menu_grey(vimmenu_t *menu, int grey)
+gui_mch_menu_grey(vimmenu_T *menu, int grey)
 {
     if (menu->id == 0)
 	return;
@@ -3457,7 +3458,7 @@ gui_mch_menu_grey(vimmenu_t *menu, int grey)
  * Make menu item hidden or not hidden.
  */
     void
-gui_mch_menu_hidden(vimmenu_t *menu, int hidden)
+gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
 {
     if (menu->id == 0)
 	return;
@@ -3495,7 +3496,7 @@ gui_mch_draw_menubar()
  * Scrollbar stuff.
  */
     void
-gui_mch_enable_scrollbar(scrollbar_t *sb, int flag)
+gui_mch_enable_scrollbar(scrollbar_T *sb, int flag)
 {
     if (sb->id == 0)
 	return;
@@ -3511,7 +3512,7 @@ gui_mch_enable_scrollbar(scrollbar_t *sb, int flag)
  * Return the lightness of a pixel.  White is 255.
  */
     int
-gui_mch_get_lightness(guicolor_t pixel)
+gui_mch_get_lightness(guicolor_T pixel)
 {
     GdkVisual *visual;
     GdkColormap *cmap;
@@ -3538,7 +3539,7 @@ gui_mch_get_lightness(guicolor_t pixel)
  * without resorting to native X11 functions.
  */
     char_u *
-gui_mch_get_rgb(guicolor_t pixel)
+gui_mch_get_rgb(guicolor_T pixel)
 {
     GdkVisual		*visual;
     GdkColormap		*cmap;

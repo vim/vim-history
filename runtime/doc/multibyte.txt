@@ -1,4 +1,4 @@
-*multibyte.txt* For Vim version 6.0aa.  Last change: 2001 Apr 03
+*multibyte.txt* For Vim version 6.0ab.  Last change: 2001 Apr 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -245,7 +245,7 @@ will show you the list of it.
 In 'guifontset' option and ~/.Xdefaults, you specify the
 |base_font_name_list|, which is a list of |XLFD| font names that Xlib uses to
 load the fonts needed for the |locale|.  The base font names is a
-comma-separated list.
+list of names, separated by commas.
 
 For example, when you use the ja_JP.eucJP |locale|, which require JIS X 0201
 and JIS X 0208 |CCS|es.  You could supply a |base_font_name_list| that
@@ -471,9 +471,9 @@ Multibyte output uses |xfontset| feature.
 <
 	or >
 
-	Vim.font: k14,r14
-	Vim.fontSet: k14,r14
-	Vim.fontList: k14
+	Vim*font: k14,r14
+	Vim*fontSet: k14,r14
+	Vim*fontList: k14,r14
 <
     The GTK+ version of GUI Vim does not use .Xdefaults, use ~/.gtkrc instead.
     The default mostly works OK.  But for the menus you might have to change
@@ -949,5 +949,25 @@ depends on the system used, no detailed list can be given.
  Unicode   Unicode	works very well (leaving 'termencoding' empty works
 			the same way, because all Unicode is handled
 			internally as UTF-8)
+
+
+WINDOWS MESSAGE TRANSLATIONS				*win32-gettext*
+
+Get the libintl.dll file if you don't have it yet:
+	http://ixeris.bios.ics.saitama-u.ac.jp/~koron/software/gettext/gettext-0.10.35-w32.tar.bz2
+
+This also contains tools xgettext, msgformat and others.
+
+libintl.dll should be placed in same directory with (g)vim.exe, or some
+place where PATH environement value describe.  Message file (vim.mo)
+have to  be placed $VIMRUNTIME/lang/*/LC_MESSAGES as like as UNIX.
+Method of generate message file is same with UNIX.  Ex: >
+   cd vim60aa
+   mkdir runtime\lang\ja\LC_MESSAGES
+   msgfmt -o runtime\lang\ja\LC_MESSAGES\vim.mo src\po\ja.po
+And set LANG environment on vim. >
+  :let $LANG = 'ja'
+
+(text by Muraoka Taro)
 
  vim:tw=78:

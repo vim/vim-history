@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 6.0aa.  Last change: 2001 Mar 26
+*index.txt*     For Vim version 6.0ab.  Last change: 2001 Apr 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -16,6 +16,7 @@ to look for deleting something, use: "/delete".
    2.2. Window commands			|CTRL-W|
    2.3. Square bracket commands		|[|
    2.4. Commands starting with 'g'	|g|
+   2.5. Commands starting with 'z'	|z|
 3. Visual mode				|visual-index|
 4. Command-line editing			|ex-edit-index|
 5. EX commands				|ex-cmd-index|
@@ -389,32 +390,7 @@ tag		char	      note action in Normal mode	~
 				   cursor [into buffer x]
 |y|		["x]y{motion}	   yank Nmove text [into buffer x]
 |yy|		["x]yy		   yank N lines [into buffer x]
-|z<CR>|		z<CR>		   redraw, cursor line to top of window,
-				   cursor on first non-blank
-|zN<CR>|	z{height}<CR>	   redraw, make window {height} lines high
-|z+|		z+		   cursor on line N (default line below
-				   window), otherwise like "z<CR>"
-|z-|		z-		   redraw, cursor line at bottom of window,
-				   cursor on first non-blank
-|z.|		z.		   redraw, cursor line to center of window,
-				   cursor on first non-blank
-|z^|		z^		   cursor on line N (default line above
-				   window), otherwise like "z-"
-|zb|		zb		   redraw, cursor line at bottom of window
-|ze|		ze		   when 'wrap' off scroll horizontally to
-				   position the cursor at the end (right side)
-				   of the screen
-|zh|		zh		   when 'wrap' off scroll screen N characters
-				   to the right
-|zl|		zl		   when 'wrap' off scroll screen N characters
-				   to the left
-|zs|		zs		   when 'wrap' off scroll horizontally to
-				   position the cursor at the start (left
-				   side) of the screen
-|zt|		zt		   redraw, cursor line at top of window
-|zz|		zz		   redraw, cursor line at center of window
-|z<Left>|	z<Left>		   same as "zh"
-|z<Right>|	z<Right>	   same as "zl"
+|z|		z{char}		   commands starting with 'z', see below
 |{|		{		1  cursor N paragraphs backward
 |bar|		|		1  cursor to column N
 |}|		}		1  cursor N paragraphs forward
@@ -623,6 +599,7 @@ tag		char	      note action in Normal mode	~
 |[p|		[p		2  like "P", but adjust indent to current line
 |[m|		[m		1  cursor N times back to start of member
 				   function
+|[z|		[z		1  move to start of open fold
 |[{|		[{		1  cursor N times back to unmatched '{'
 |[<MiddleMouse> [<MiddleMouse>	2  same as "[p"
 
@@ -660,6 +637,7 @@ tag		char	      note action in Normal mode	~
 |]p|		]p		2  like "p", but adjust indent to current line
 |]m|		]m		1  cursor N times forward to end of member
 				   function
+|]z|		]z		1  move to end of open fold
 |]}|		]}		1  cursor N times forward to unmatched '}'
 |]<MiddleMouse> ]<MiddleMouse>	2  same as "]p"
 
@@ -744,6 +722,62 @@ tag		char	      note action in Normal mode	~
 		g<MiddleMouse>	   same as <C-MiddleMouse>
 |g<RightMouse>|	g<RightMouse>	   same as <C-RightMouse>
 |g<Up>|		g<Up>		1  same as "gk"
+
+==============================================================================
+2.5 Commands starting with 'z'						*z*
+
+tag		char	      note action in Normal mode	~
+------------------------------------------------------------------------------
+|z<CR>|		z<CR>		   redraw, cursor line to top of window,
+				   cursor on first non-blank
+|zN<CR>|	z{height}<CR>	   redraw, make window {height} lines high
+|z+|		z+		   cursor on line N (default line below
+				   window), otherwise like "z<CR>"
+|z-|		z-		   redraw, cursor line at bottom of window,
+				   cursor on first non-blank
+|z.|		z.		   redraw, cursor line to center of window,
+				   cursor on first non-blank
+|zA|		zA		   open a closed fold or close an open fold
+				   recursively
+|zC|		zC		   close folds recursively
+|zD|		zD		   delete folds recursively
+|zE|		zE		   eliminate all folds
+|zF|		zF	   	   create a fold for N lines
+|zM|		zM		   set 'foldlevel' to zero
+|zN|		zN		   set 'foldenable'
+|zO|		zO		   open folds recursively
+|zR|		zR		   set 'foldlevel' to the deepest fold
+|zX|		zX		   re-apply 'foldlevel'
+|z^|		z^		   cursor on line N (default line above
+				   window), otherwise like "z-"
+|za|		za		   open a closed fold, close an open fold
+|zb|		zb		   redraw, cursor line at bottom of window
+|zc|		zc		   close a fold
+|zd|		zd		   delete a fold
+|ze|		ze		   when 'wrap' off scroll horizontally to
+				   position the cursor at the end (right side)
+				   of the screen
+|zf|		zf{motion}	   create a fold for Nmove text
+|zh|		zh		   when 'wrap' off scroll screen N characters
+				   to the right
+|zi|		zi		   toggle 'foldenable'
+|zj|		zj		1  move to the start of the next fold
+|zk|		zk		1  move to the end of the previous fold
+|zl|		zl		   when 'wrap' off scroll screen N characters
+				   to the left
+|zm|		zm		   subtract one from 'foldlevel'
+|zn|		zn		   reset 'foldenable'
+|zo|		zo		   open fold
+|zr|		zr		   add one to 'foldlevel'
+|zs|		zs		   when 'wrap' off scroll horizontally to
+				   position the cursor at the start (left
+				   side) of the screen
+|zt|		zt		   redraw, cursor line at top of window
+|zv|		zv		   open enough folds to view the cursor line
+|zx|		zx		   re-apply 'foldlevel' and do "zv"
+|zz|		zz		   redraw, cursor line at center of window
+|z<Left>|	z<Left>		   same as "zh"
+|z<Right>|	z<Right>	   same as "zl"
 
 ==============================================================================
 3. Visual mode						*visual-index*
@@ -854,7 +888,8 @@ file names, tags, commands etc. as appropriate.
 |c_CTRL-D|	CTRL-D		list completions that match the pattern in
 				front of the cursor
 |c_CTRL-E|	CTRL-E		cursor to end of command-line
-		CTRL-F		not used
+|'cedit'|	CTRL-F		default value for 'cedit': opens the
+				command-line window; otherwise not used
 		CTRL-G		not used
 |c_<BS>|	<BS>		delete the character in front of the cursor
 |c_digraph|	{char1} <BS> {char2}
@@ -1023,10 +1058,15 @@ The commands are sorted on the non-optional part of their name.
 |:cunmenu|	:cunme[nu]	remove menu for Command-line mode
 |:cwindow|	:cw[indow]	open quickfix window
 |:delete|	:d[elete]	delete lines
+|:debug|	:deb[ug]	run a command in debugging mode
 |:delcommand|	:delc[ommand]	delete user-defined command
 |:delfunction|	:delf[unction]	delete a user function
 |:display|	:di[splay]	display registers
 |:diffupdate|	:dif[fupdate]	update 'diff' buffers
+|:diffget|	:diffg[et]	remove differences in current buffer
+|:diffpatch|	:diffp[atch]	apply a patch and show differences
+|:diffput|	:diffpu[t]	remove differences in other buffer
+|:diffsplit|	:diffs[plit]	show differences with another file
 |:digraphs|	:dig[raphs]	show or enter digraphs
 |:djump|	:dj[ump]	jump to #define
 |:dlist|	:dl[ist]	list #defines
@@ -1059,6 +1099,8 @@ The commands are sorted on the non-optional part of their name.
 |:fixdel|	:fix[del]	set key code of <Del>
 |:fold|		:fo[ld]		create a fold
 |:foldclose|	:foldc[lose]	close folds
+|:folddoopen|	:foldd[oopen]	execute command on lines not in a closed fold
+|:folddoclosed|	:folddoc[losed]	execute command on lines in a closed fold
 |:foldopen|	:foldo[pen]	open folds
 |:function|	:fu[nction]	define a user function
 |:global|	:g[lobal]	execute commands for matching lines
@@ -1187,6 +1229,7 @@ The commands are sorted on the non-optional part of their name.
 |:sargument|	:sa[rgument]	split window and go to specific file in
 				argument list
 |:sall|		:sal[l]		open a window for each file in argument list
+|:saveas|	:sav[eas]	save file under another name.
 |:sbuffer|	:sb[uffer]	split window and go to specific file in the
 				buffer list
 |:sbNext|	:sbN[ext]	split window and go to previous file in the

@@ -1064,6 +1064,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -w_nr	starting.txt	/*-w_nr*
 -x	starting.txt	/*-x*
 -xrm	gui_x11.txt	/*-xrm*
+-y	starting.txt	/*-y*
 .	repeat.txt	/*.*
 .Xdefaults	gui_x11.txt	/*.Xdefaults*
 .exrc	starting.txt	/*.exrc*
@@ -1263,10 +1264,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :@	repeat.txt	/*:@*
 :@:	repeat.txt	/*:@:*
 :@@	repeat.txt	/*:@@*
+:Explore	pi_expl.txt	/*:Explore*
 :N	editing.txt	/*:N*
 :Next	editing.txt	/*:Next*
 :P	various.txt	/*:P*
 :Print	various.txt	/*:Print*
+:Sexplore	pi_expl.txt	/*:Sexplore*
 :X	editing.txt	/*:X*
 :\bar	cmdline.txt	/*:\\bar*
 :_!	cmdline.txt	/*:_!*
@@ -1449,8 +1452,12 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :delf	eval.txt	/*:delf*
 :delfunction	eval.txt	/*:delfunction*
 :di	change.txt	/*:di*
+:diffg	diff.txt	/*:diffg*
+:diffget	diff.txt	/*:diffget*
 :diffp	diff.txt	/*:diffp*
 :diffpatch	diff.txt	/*:diffpatch*
+:diffpu	diff.txt	/*:diffpu*
+:diffput	diff.txt	/*:diffput*
 :diffs	diff.txt	/*:diffs*
 :diffsplit	diff.txt	/*:diffsplit*
 :diffu	diff.txt	/*:diffu*
@@ -1546,6 +1553,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :goto	motion.txt	/*:goto*
 :gr	quickfix.txt	/*:gr*
 :grep	quickfix.txt	/*:grep*
+:grepa	quickfix.txt	/*:grepa*
+:grepadd	quickfix.txt	/*:grepadd*
 :gu	gui_x11.txt	/*:gu*
 :gui	gui_x11.txt	/*:gui*
 :gv	gui_x11.txt	/*:gv*
@@ -1848,6 +1857,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :sal	windows.txt	/*:sal*
 :sall	windows.txt	/*:sall*
 :sargument	windows.txt	/*:sargument*
+:sav	editing.txt	/*:sav*
+:saveas	editing.txt	/*:saveas*
 :sb	windows.txt	/*:sb*
 :sbN	windows.txt	/*:sbN*
 :sbNext	windows.txt	/*:sbNext*
@@ -3029,6 +3040,7 @@ console-menus	gui.txt	/*console-menus*
 control	intro.txt	/*control*
 conversion-server	multibyte.txt	/*conversion-server*
 convert-to-HTML	syntax.txt	/*convert-to-HTML*
+copy-diffs	diff.txt	/*copy-diffs*
 copy-move	change.txt	/*copy-move*
 copying	uganda.txt	/*copying*
 copyright	uganda.txt	/*copyright*
@@ -3133,6 +3145,7 @@ dib	motion.txt	/*dib*
 did_filetype()	eval.txt	/*did_filetype()*
 diff	diff.txt	/*diff*
 diff-diffexpr	diff.txt	/*diff-diffexpr*
+diff-mode	diff.txt	/*diff-mode*
 diff-options	diff.txt	/*diff-options*
 diff-patchexpr	diff.txt	/*diff-patchexpr*
 diff.txt	diff.txt	/*diff.txt*
@@ -3196,6 +3209,7 @@ error-messages	message.txt	/*error-messages*
 errorformat	quickfix.txt	/*errorformat*
 errorformat-Jikes	quickfix.txt	/*errorformat-Jikes*
 errorformat-LaTeX	quickfix.txt	/*errorformat-LaTeX*
+errorformat-Perl	quickfix.txt	/*errorformat-Perl*
 errorformat-ant	quickfix.txt	/*errorformat-ant*
 errorformat-changed	version4.txt	/*errorformat-changed*
 errorformat-jade	quickfix.txt	/*errorformat-jade*
@@ -3207,6 +3221,10 @@ escape-bar	version4.txt	/*escape-bar*
 eval-examples	eval.txt	/*eval-examples*
 eval-sandbox	eval.txt	/*eval-sandbox*
 eval.txt	eval.txt	/*eval.txt*
+eventhandler()	eval.txt	/*eventhandler()*
+eview	starting.txt	/*eview*
+evim	starting.txt	/*evim*
+evim.vim	starting.txt	/*evim.vim*
 ex	starting.txt	/*ex*
 ex-cmd-index	index.txt	/*ex-cmd-index*
 ex-edit-index	index.txt	/*ex-edit-index*
@@ -3618,6 +3636,8 @@ hpterm-color	syntax.txt	/*hpterm-color*
 html-editing	tips.txt	/*html-editing*
 html-syntax	syntax.txt	/*html-syntax*
 html.vim	syntax.txt	/*html.vim*
+htmlos-syntax	syntax.txt	/*htmlos-syntax*
+htmlos.vim	syntax.txt	/*htmlos.vim*
 http	pi_netrw.txt	/*http*
 i	insert.txt	/*i*
 i(	motion.txt	/*i(*
@@ -3721,6 +3741,8 @@ i_^_CTRL-D	insert.txt	/*i_^_CTRL-D*
 i_backspacing	insert.txt	/*i_backspacing*
 i_digraph	digraph.txt	/*i_digraph*
 i_esc	intro.txt	/*i_esc*
+ia64-syntax	syntax.txt	/*ia64-syntax*
+ia64.vim	syntax.txt	/*ia64.vim*
 ib	motion.txt	/*ib*
 iccf	uganda.txt	/*iccf*
 icon-changed	version4.txt	/*icon-changed*
@@ -3770,6 +3792,7 @@ inserting	insert.txt	/*inserting*
 inserting-ex	insert.txt	/*inserting-ex*
 inserting-file	insert.txt	/*inserting-file*
 install-registry	gui_w32.txt	/*install-registry*
+intel-itanium	syntax.txt	/*intel-itanium*
 intellimouse-wheel-problems	gui_w32.txt	/*intellimouse-wheel-problems*
 interfaces-5.2	version5.txt	/*interfaces-5.2*
 internal-variables	eval.txt	/*internal-variables*
@@ -3874,6 +3897,7 @@ map-examples	map.txt	/*map-examples*
 map-keys-fails	map.txt	/*map-keys-fails*
 map-listing	map.txt	/*map-listing*
 map-modes	map.txt	/*map-modes*
+map-multibyte	map.txt	/*map-multibyte*
 map-overview	map.txt	/*map-overview*
 map-self-destroy	tips.txt	/*map-self-destroy*
 map-typing	map.txt	/*map-typing*
@@ -3905,6 +3929,7 @@ mbyte-snippets	multibyte.txt	/*mbyte-snippets*
 menu-changes-5.4	version5.txt	/*menu-changes-5.4*
 menu-examples	gui.txt	/*menu-examples*
 menu-priority	gui.txt	/*menu-priority*
+menu-separator	gui.txt	/*menu-separator*
 menu.vim	gui.txt	/*menu.vim*
 menus	gui.txt	/*menus*
 message-history	message.txt	/*message-history*
@@ -3920,6 +3945,7 @@ mode-cmdline	cmdline.txt	/*mode-cmdline*
 mode-ins-repl	insert.txt	/*mode-ins-repl*
 mode-replace	insert.txt	/*mode-replace*
 mode-switching	intro.txt	/*mode-switching*
+modeless-selection	gui.txt	/*modeless-selection*
 modeline	options.txt	/*modeline*
 modeline-local	options.txt	/*modeline-local*
 modeline-version	options.txt	/*modeline-version*
@@ -3996,6 +4022,7 @@ new-debug-itf	version6.txt	/*new-debug-itf*
 new-debug-mode	version6.txt	/*new-debug-mode*
 new-diff-mode	version6.txt	/*new-diff-mode*
 new-encryption	version5.txt	/*new-encryption*
+new-evim	version6.txt	/*new-evim*
 new-ex-commands-5.2	version5.txt	/*new-ex-commands-5.2*
 new-file-writing	version6.txt	/*new-file-writing*
 new-filetype	filetype.txt	/*new-filetype*
@@ -4049,6 +4076,7 @@ object-select	motion.txt	/*object-select*
 objects	index.txt	/*objects*
 ole-activation	if_ole.txt	/*ole-activation*
 ole-eval	if_ole.txt	/*ole-eval*
+ole-gethwnd	if_ole.txt	/*ole-gethwnd*
 ole-interface	if_ole.txt	/*ole-interface*
 ole-methods	if_ole.txt	/*ole-methods*
 ole-normal	if_ole.txt	/*ole-normal*
@@ -4917,13 +4945,16 @@ win32	os_win32.txt	/*win32*
 win32-!start	gui_w32.txt	/*win32-!start*
 win32-colors	gui_w32.txt	/*win32-colors*
 win32-compiling	os_win32.txt	/*win32-compiling*
+win32-curdir	os_win32.txt	/*win32-curdir*
 win32-faq	os_win32.txt	/*win32-faq*
+win32-gettext	multibyte.txt	/*win32-gettext*
 win32-gui	gui_w32.txt	/*win32-gui*
 win32-hidden-menus	gui.txt	/*win32-hidden-menus*
 win32-mouse	os_win32.txt	/*win32-mouse*
 win32-popup-menu	gui_w32.txt	/*win32-popup-menu*
 win32-problems	os_win32.txt	/*win32-problems*
 win32-restore	os_win32.txt	/*win32-restore*
+win32-startup	os_win32.txt	/*win32-startup*
 win32-term	os_win32.txt	/*win32-term*
 win32-vimrun	gui_w32.txt	/*win32-vimrun*
 win32-win3.1	os_win32.txt	/*win32-win3.1*
@@ -5001,7 +5032,7 @@ ye-option-gone	version4.txt	/*ye-option-gone*
 year-2000	intro.txt	/*year-2000*
 your-runtime-dir	usr_43.txt	/*your-runtime-dir*
 yy	change.txt	/*yy*
-z	scroll.txt	/*z*
+z	index.txt	/*z*
 z+	scroll.txt	/*z+*
 z-	scroll.txt	/*z-*
 z.	scroll.txt	/*z.*

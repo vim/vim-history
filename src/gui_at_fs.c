@@ -2542,7 +2542,7 @@ vim_SelFile(toplevel, prompt, init_path, show_entry, x, y, fg, bg)
     char	*init_path;
     int		(*show_entry)();
     int		x, y;
-    guicolor_t	fg, bg;
+    guicolor_T	fg, bg;
 {
     static int	firstTime = 1;
     XEvent	event;

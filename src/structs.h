@@ -15,8 +15,8 @@
  * valid in include files.  Has been fixed in version 6.58.
  */
 #if defined(SASC) && SASC < 658
-typedef long		linenr_t;
-typedef unsigned	colnr_t;
+typedef long		linenr_T;
+typedef unsigned	colnr_T;
 typedef unsigned short	short_u;
 #endif
 
@@ -25,12 +25,12 @@ typedef unsigned short	short_u;
  */
 typedef struct
 {
-    linenr_t	lnum;	/* line number */
-    colnr_t	col;	/* column number */
+    linenr_T	lnum;	/* line number */
+    colnr_T	col;	/* column number */
 #ifdef FEAT_VIRTUALEDIT
-    colnr_t	coladd;
+    colnr_T	coladd;
 #endif
-} pos_t;
+} pos_T;
 
 /*
  * Structure used for growing arrays.
@@ -44,21 +44,21 @@ typedef struct growarray
     int	    ga_itemsize;	    /* sizeof one item */
     int	    ga_growsize;	    /* number of items to grow each time */
     void    *ga_data;		    /* pointer to the first item */
-} garray_t;
+} garray_T;
 
 /*
- * This is here because regexp.h needs pos_t and below regprog_t is used.
+ * This is here because regexp.h needs pos_T and below regprog_T is used.
  */
 #include "regexp.h"
 
-typedef struct window	win_t;
-typedef struct wininfo	wininfo_t;
-typedef struct frame	frame_t;
-typedef int		scid_t;		/* script ID */
+typedef struct window	win_T;
+typedef struct wininfo	wininfo_T;
+typedef struct frame	frame_T;
+typedef int		scid_T;		/* script ID */
 
 /*
- * This is here because gui.h needs the pos_t and win_t, and win_t needs gui.h
- * for scrollbar_t.
+ * This is here because gui.h needs the pos_T and win_T, and win_T needs gui.h
+ * for scrollbar_T.
  */
 #ifdef FEAT_GUI
 # include "gui.h"
@@ -66,7 +66,7 @@ typedef int		scid_t;		/* script ID */
 # ifdef FEAT_XCLIPBOARD
 #  include <X11/Intrinsic.h>
 # endif
-# define guicolor_t int		/* avoid error in prototypes */
+# define guicolor_T int		/* avoid error in prototypes */
 #endif
 
 /*
@@ -83,16 +83,16 @@ typedef int		scid_t;		/* script ID */
 
 typedef struct filemark
 {
-    pos_t	mark;		/* cursor position */
+    pos_T	mark;		/* cursor position */
     int		fnum;		/* file number */
-} fmark_t;
+} fmark_T;
 
 /* Xtended file mark: also has a file name */
 typedef struct xfilemark
 {
-    fmark_t	fmark;
+    fmark_T	fmark;
     char_u	*fname;		/* file name, used when fnum == 0 */
-} xfmark_t;
+} xfmark_T;
 
 /*
  * The taggy struct is used to store the information about a :tag command.
@@ -100,14 +100,14 @@ typedef struct xfilemark
 typedef struct taggy
 {
     char_u	*tagname;	/* tag name */
-    fmark_t	fmark;		/* cursor position BEFORE ":tag" */
+    fmark_T	fmark;		/* cursor position BEFORE ":tag" */
     int		cur_match;	/* match number */
-} taggy_t;
+} taggy_T;
 
 /*
  * Structure that contains all options that are local to a window.
  * Used twice in a window: for the current buffer and for all buffers.
- * Also used in wininfo_t.
+ * Also used in wininfo_T.
  */
 typedef struct
 {
@@ -161,7 +161,7 @@ typedef struct
 #endif
     int		wo_wrap;
 #define w_p_wrap w_onebuf_opt.wo_wrap	/* 'wrap' */
-} winopt_t;
+} winopt_T;
 
 /*
  * Window info stored with a buffer.
@@ -175,15 +175,15 @@ typedef struct
  */
 struct wininfo
 {
-    wininfo_t	*wi_next;	/* next entry or NULL for last entry */
-    wininfo_t	*wi_prev;	/* previous entry or NULL for first entry */
-    win_t	*wi_win;	/* pointer to window that did set wi_lnum */
-    pos_t	wi_fpos;	/* last cursor position in the file */
+    wininfo_T	*wi_next;	/* next entry or NULL for last entry */
+    wininfo_T	*wi_prev;	/* previous entry or NULL for first entry */
+    win_T	*wi_win;	/* pointer to window that did set wi_lnum */
+    pos_T	wi_fpos;	/* last cursor position in the file */
     int		wi_optset;	/* TRUE when wi_opt has useful values */
-    winopt_t	wi_opt;		/* local window options */
+    winopt_T	wi_opt;		/* local window options */
 #ifdef FEAT_FOLDING
     int		wi_fold_manual;	/* copy of w_fold_manual */
-    garray_t	wi_folds;	/* clone of w_folds */
+    garray_T	wi_folds;	/* clone of w_folds */
 #endif
 };
 
@@ -198,32 +198,32 @@ typedef struct foldinfo
     int		fi_lnum;	/* line number where fold starts */
     int		fi_low_level;	/* lowest fold level that starts in the same
 				   line */
-} foldinfo_t;
+} foldinfo_T;
 
 /*
  * stuctures used for undo
  */
 
-typedef struct u_entry u_entry_t;
-typedef struct u_header u_header_t;
+typedef struct u_entry u_entry_T;
+typedef struct u_header u_header_T;
 struct u_entry
 {
-    u_entry_t	*ue_next;	/* pointer to next entry in list */
-    linenr_t	ue_top;		/* number of line above undo block */
-    linenr_t	ue_bot;		/* number of line below undo block */
-    linenr_t	ue_lcount;	/* linecount when u_save called */
+    u_entry_T	*ue_next;	/* pointer to next entry in list */
+    linenr_T	ue_top;		/* number of line above undo block */
+    linenr_T	ue_bot;		/* number of line below undo block */
+    linenr_T	ue_lcount;	/* linecount when u_save called */
     char_u	**ue_array;	/* array of lines in undo block */
     long	ue_size;	/* number of lines in ue_array */
 };
 
 struct u_header
 {
-    u_header_t	*uh_next;	/* pointer to next header in list */
-    u_header_t	*uh_prev;	/* pointer to previous header in list */
-    u_entry_t	*uh_entry;	/* pointer to first entry */
-    pos_t	uh_cursor;	/* cursor position before saving */
+    u_header_T	*uh_next;	/* pointer to next header in list */
+    u_header_T	*uh_prev;	/* pointer to previous header in list */
+    u_entry_T	*uh_entry;	/* pointer to first entry */
+    pos_T	uh_cursor;	/* cursor position before saving */
     int		uh_flags;	/* see below */
-    pos_t	uh_namedm[NMARKS];	/* marks before undo/after redo */
+    pos_T	uh_namedm[NMARKS];	/* marks before undo/after redo */
 };
 
 /* values for uh_flags */
@@ -242,7 +242,7 @@ struct u_header
 
 #define ALIGN_MASK (ALIGN_SIZE - 1)
 
-typedef struct m_info minfo_t;
+typedef struct m_info minfo_T;
 
 /*
  * stucture used to link chunks in one of the free chunk lists.
@@ -254,27 +254,27 @@ struct m_info
 #else
     short_u	m_size;		/* size of the chunk (including m_info) */
 #endif
-    minfo_t	*m_next;	/* pointer to next free chunk in the list */
+    minfo_T	*m_next;	/* pointer to next free chunk in the list */
 };
 
 /*
  * structure used to link blocks in the list of allocated blocks.
  */
-typedef struct m_block mblock_t;
+typedef struct m_block mblock_T;
 struct m_block
 {
-    mblock_t	*mb_next;	/* pointer to next allocated block */
+    mblock_T	*mb_next;	/* pointer to next allocated block */
     size_t	mb_size;	/* total size of all chunks in this block */
-    minfo_t	mb_info;	/* head of free chuck list for this block */
+    minfo_T	mb_info;	/* head of free chuck list for this block */
 };
 
 /*
  * things used in memfile.c
  */
 
-typedef struct block_hdr    bhdr_t;
-typedef struct memfile	    memfile_t;
-typedef long		    blocknr_t;
+typedef struct block_hdr    bhdr_T;
+typedef struct memfile	    memfile_T;
+typedef long		    blocknr_T;
 
 /*
  * for each (previously) used block in the memfile there is one block header.
@@ -293,11 +293,11 @@ typedef long		    blocknr_t;
 
 struct block_hdr
 {
-    bhdr_t	*bh_next;	    /* next block_hdr in free or used list */
-    bhdr_t	*bh_prev;	    /* previous block_hdr in used list */
-    bhdr_t	*bh_hash_next;	    /* next block_hdr in hash list */
-    bhdr_t	*bh_hash_prev;	    /* previous block_hdr in hash list */
-    blocknr_t	bh_bnum;		/* block number */
+    bhdr_T	*bh_next;	    /* next block_hdr in free or used list */
+    bhdr_T	*bh_prev;	    /* previous block_hdr in used list */
+    bhdr_T	*bh_hash_next;	    /* next block_hdr in hash list */
+    bhdr_T	*bh_hash_prev;	    /* previous block_hdr in hash list */
+    blocknr_T	bh_bnum;		/* block number */
     char_u	*bh_data;	    /* pointer to memory (for used block) */
     int		bh_page_count;	    /* number of pages in this block */
 
@@ -318,8 +318,8 @@ struct nr_trans
 {
     NR_TRANS	*nt_next;		/* next nr_trans in hash list */
     NR_TRANS	*nt_prev;		/* previous nr_trans in hash list */
-    blocknr_t	nt_old_bnum;		/* old, negative, number */
-    blocknr_t	nt_new_bnum;		/* new, positive, number */
+    blocknr_T	nt_old_bnum;		/* old, negative, number */
+    blocknr_T	nt_new_bnum;		/* new, positive, number */
 };
 
 /*
@@ -330,7 +330,7 @@ typedef struct expand
     int		xp_context;		/* type of expansion */
     char_u	*xp_pattern;		/* start of item to expand */
     int		xp_set_path;		/* ":set path=/dir/<Tab>" */
-} expand_t;
+} expand_T;
 
 /*
  * Command modifiers ":vertical", ":browse", ":confirm" and ":hide" set a flag.
@@ -349,7 +349,7 @@ typedef struct
 # if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
     int		confirm;		/* TRUE to invoke yes/no dialog */
 # endif
-} cmdmod_t;
+} cmdmod_T;
 
 /*
  * Simplistic hashing scheme to quickly locate the blocks in the used list.
@@ -363,17 +363,17 @@ struct memfile
     char_u	*mf_fname;		/* name of the file */
     char_u	*mf_ffname;		/* idem, full path */
     int		mf_fd;			/* file descriptor */
-    bhdr_t	*mf_free_first;		/* first block_hdr in free list */
-    bhdr_t	*mf_used_first;		/* mru block_hdr in used list */
-    bhdr_t	*mf_used_last;		/* lru block_hdr in used list */
+    bhdr_T	*mf_free_first;		/* first block_hdr in free list */
+    bhdr_T	*mf_used_first;		/* mru block_hdr in used list */
+    bhdr_T	*mf_used_last;		/* lru block_hdr in used list */
     unsigned	mf_used_count;		/* number of pages in used list */
     unsigned	mf_used_count_max;	/* maximum number of pages in memory */
-    bhdr_t	*mf_hash[MEMHASHSIZE];	/* array of hash lists */
+    bhdr_T	*mf_hash[MEMHASHSIZE];	/* array of hash lists */
     NR_TRANS	*mf_trans[MEMHASHSIZE];	/* array of trans lists */
-    blocknr_t	mf_blocknr_max;		/* highest positive block number + 1*/
-    blocknr_t	mf_blocknr_min;		/* lowest negative block number - 1 */
-    blocknr_t	mf_neg_count;		/* number of negative blocks numbers */
-    blocknr_t	mf_infile_count;	/* number of pages in the file */
+    blocknr_T	mf_blocknr_max;		/* highest positive block number + 1*/
+    blocknr_T	mf_blocknr_min;		/* lowest negative block number - 1 */
+    blocknr_T	mf_neg_count;		/* number of negative blocks numbers */
+    blocknr_T	mf_infile_count;	/* number of pages in the file */
     unsigned	mf_page_size;		/* number of bytes in a page */
     int		mf_dirty;		/* TRUE if there are dirty blocks */
 };
@@ -388,18 +388,18 @@ struct memfile
  */
 typedef struct info_pointer
 {
-    blocknr_t	ip_bnum;	/* block number */
-    linenr_t	ip_low;		/* lowest lnum in this block */
-    linenr_t	ip_high;	/* highest lnum in this block */
+    blocknr_T	ip_bnum;	/* block number */
+    linenr_T	ip_low;		/* lowest lnum in this block */
+    linenr_T	ip_high;	/* highest lnum in this block */
     int		ip_index;	/* index for block with current lnum */
-} infoptr_t;	/* block/index pair */
+} infoptr_T;	/* block/index pair */
 
 #ifdef FEAT_BYTEOFF
 typedef struct ml_chunksize
 {
     int		mlcs_numlines;
     long	mlcs_totalsize;
-} chunksize_t;
+} chunksize_T;
 
  /* Flags when calling ml_updatechunk() */
 
@@ -413,9 +413,9 @@ typedef struct ml_chunksize
  */
 typedef struct memline
 {
-    linenr_t	ml_line_count;	/* number of lines in the buffer */
+    linenr_T	ml_line_count;	/* number of lines in the buffer */
 
-    memfile_t	*ml_mfp;	/* pointer to associated memfile */
+    memfile_T	*ml_mfp;	/* pointer to associated memfile */
 
 #define ML_EMPTY	1	/* empty buffer */
 #define ML_LINE_DIRTY	2	/* cached line was changed and allocated */
@@ -423,33 +423,33 @@ typedef struct memline
 #define ML_LOCKED_POS	8	/* ml_locked needs positive block number */
     int		ml_flags;
 
-    infoptr_t	*ml_stack;	/* stack of pointer blocks (array of IPTRs) */
+    infoptr_T	*ml_stack;	/* stack of pointer blocks (array of IPTRs) */
     int		ml_stack_top;	/* current top if ml_stack */
     int		ml_stack_size;	/* total number of entries in ml_stack */
 
-    linenr_t	ml_line_lnum;	/* line number of cached line, 0 if not valid */
+    linenr_T	ml_line_lnum;	/* line number of cached line, 0 if not valid */
     char_u	*ml_line_ptr;	/* pointer to cached line */
 
-    bhdr_t	*ml_locked;	/* block used by last ml_get */
-    linenr_t	ml_locked_low;	/* first line in ml_locked */
-    linenr_t	ml_locked_high;	/* last line in ml_locked */
+    bhdr_T	*ml_locked;	/* block used by last ml_get */
+    linenr_T	ml_locked_low;	/* first line in ml_locked */
+    linenr_T	ml_locked_high;	/* last line in ml_locked */
     int		ml_locked_lineadd;  /* number of lines inserted in ml_locked */
 #ifdef FEAT_BYTEOFF
-    chunksize_t *ml_chunksize;
+    chunksize_T *ml_chunksize;
     int		ml_numchunks;
     int		ml_usedchunks;
 #endif
-} memline_t;
+} memline_T;
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
-typedef struct signlist signlist_t;
+typedef struct signlist signlist_T;
 
 struct signlist
 {
     int		id;		/* unique identifier for each sign */
-    linenr_t	lineno;		/* line number which has this sign */
+    linenr_T	lineno;		/* line number which has this sign */
     int		type;		/* type of sign (index into signtab) */
-    signlist_t *next;		/* next signlist entry */
+    signlist_T *next;		/* next signlist entry */
 };
 #endif
 
@@ -459,9 +459,9 @@ struct signlist
  */
 typedef struct arglist
 {
-    garray_t	al_ga;		/* growarray with the array of file names */
+    garray_T	al_ga;		/* growarray with the array of file names */
     int		al_refcount;	/* number of windows using this arglist */
-} alist_t;
+} alist_T;
 
 /*
  * For each argument remember the file name as it was given, and the buffer
@@ -472,17 +472,17 @@ typedef struct argentry
 {
     char_u	*ae_fname;	/* file name as specified */
     int		ae_fnum;	/* buffer number with expanded file name */
-} aentry_t;
+} aentry_T;
 
 #ifdef FEAT_WINDOWS
 # define ALIST(win) (win)->w_alist
 #else
 # define ALIST(win) (&global_alist)
 #endif
-#define GARGLIST	((aentry_t *)global_alist.al_ga.ga_data)
-#define ARGLIST		((aentry_t *)ALIST(curwin)->al_ga.ga_data)
-#define WARGLIST(wp)	((aentry_t *)ALIST(wp)->al_ga.ga_data)
-#define AARGLIST(al)	((aentry_t *)((al)->al_ga.ga_data))
+#define GARGLIST	((aentry_T *)global_alist.al_ga.ga_data)
+#define ARGLIST		((aentry_T *)ALIST(curwin)->al_ga.ga_data)
+#define WARGLIST(wp)	((aentry_T *)ALIST(wp)->al_ga.ga_data)
+#define AARGLIST(al)	((aentry_T *)((al)->al_ga.ga_data))
 #define GARGCOUNT	(global_alist.al_ga.ga_len)
 #define ARGCOUNT	(ALIST(curwin)->al_ga.ga_len)
 #define WARGCOUNT(wp)	(ALIST(wp)->al_ga.ga_len)
@@ -522,11 +522,11 @@ struct sp_syn
 /*
  * Each keyword has one keyentry, which is linked in a hash list.
  */
-typedef struct keyentry keyentry_t;
+typedef struct keyentry keyentry_T;
 
 struct keyentry
 {
-    keyentry_t	*next;		/* next keyword in the hash list */
+    keyentry_T	*next;		/* next keyword in the hash list */
     struct sp_syn k_syn;	/* struct passed to in_id_list() */
     short	*next_list;	/* ID list for next match (if non-zero) */
     short	flags;		/* see syntax.c */
@@ -540,30 +540,30 @@ typedef struct buf_state
 {
     int		    bs_idx;	 /* index of pattern */
     int		    bs_flags;	 /* flags for pattern */
-    reg_extmatch_t *bs_extmatch; /* external matches from start pattern */
-} bufstate_t;
+    reg_extmatch_T *bs_extmatch; /* external matches from start pattern */
+} bufstate_T;
 
 /*
  * syn_state contains the syntax state stack for the start of one line.
  * Used by b_sst_array[].
  */
-typedef struct syn_state synstate_t;
+typedef struct syn_state synstate_T;
 
 struct syn_state
 {
-    synstate_t	*sst_next;	/* next entry in used or free list */
-    linenr_t	sst_lnum;	/* line number for this state */
+    synstate_T	*sst_next;	/* next entry in used or free list */
+    linenr_T	sst_lnum;	/* line number for this state */
     union
     {
-	bufstate_t	sst_stack[SST_FIX_STATES]; /* short state stack */
-	garray_t	sst_ga;	/* growarray for long state stack */
+	bufstate_T	sst_stack[SST_FIX_STATES]; /* short state stack */
+	garray_T	sst_ga;	/* growarray for long state stack */
     } sst_union;
     int		sst_next_flags;	/* flags for sst_next_list */
     short	*sst_next_list;	/* "nextgroup" list in this state
 				 * (this is a copy, don't free it! */
     short	sst_stacksize;	/* number of states on the stack */
-    disptick_t	sst_tick;	/* tick when last displayed */
-    linenr_t	sst_change_lnum;/* when non-zero, change in this line
+    disptick_T	sst_tick;	/* tick when last displayed */
+    linenr_T	sst_change_lnum;/* when non-zero, change in this line
 				 * may have made the state invalid */
 };
 #endif /* FEAT_SYN_HL */
@@ -589,8 +589,8 @@ typedef struct attr_entry
 # ifdef FEAT_GUI
 	struct
 	{
-	    guicolor_t	    fg_color;	/* foreground color handle */
-	    guicolor_t	    bg_color;	/* background color handle */
+	    guicolor_T	    fg_color;	/* foreground color handle */
+	    guicolor_T	    bg_color;	/* background color handle */
 	    GuiFont	    font;	/* font handle */
 #  ifdef FEAT_XFONTSET
 	    GuiFontset	    fontset;	/* fontset handle */
@@ -601,7 +601,7 @@ typedef struct attr_entry
 	} gui;
 # endif
     } ae_u;
-} attrentry_t;
+} attrentry_T;
 
 #ifdef USE_ICONV
 # ifdef HAVE_ICONV_H
@@ -613,6 +613,20 @@ typedef void *iconv_t;
 #endif
 
 /*
+ * Used for the typeahead buffer: typebuf.
+ */
+typedef struct
+{
+    char_u	*tb_buf;	/* buffer for typed characters */
+    char_u	*tb_noremap;	/* mapping flags for characters in tb_buf[] */
+    int		tb_buflen;	/* size of tb_buf[] */
+    int		tb_off;		/* current position in tb_buf[] */
+    int		tb_len;		/* number of valid chars in tb_buf[] */
+    int		tb_maplen;	/* nr of mapped characters in tb_buf[] */
+    int		tb_no_abbr_cnt; /* nr of chars without abbrev. in tb_buf[] */
+} typebuf_T;
+
+/*
  * Used for conversion of terminal I/O and script files.
  */
 typedef struct
@@ -622,7 +636,7 @@ typedef struct
 # ifdef USE_ICONV
     iconv_t	vc_fd;			/* for CONV_ICONV */
 # endif
-} vimconv_t;
+} vimconv_T;
 
 /*
  * Structure used for reading from the viminfo file.
@@ -632,9 +646,9 @@ typedef struct
     char_u	*vir_line;	/* text of the current line */
     FILE	*vir_fd;	/* file descriptor */
 #ifdef FEAT_MBYTE
-    vimconv_t	vir_conv;	/* encoding conversion */
+    vimconv_T	vir_conv;	/* encoding conversion */
 #endif
-} vir_t;
+} vir_T;
 
 #define CONV_NONE	0
 #define CONV_TO_UTF8	1
@@ -644,16 +658,16 @@ typedef struct
 /*
  * Structure used for mappings and abbreviations.
  */
-typedef struct mapblock mapblock_t;
+typedef struct mapblock mapblock_T;
 struct mapblock
 {
-    mapblock_t	*m_next;	/* next mapblock in list */
+    mapblock_T	*m_next;	/* next mapblock in list */
     char_u	*m_keys;	/* mapped from */
     int		m_keylen;	/* strlen(m_keys) */
     char_u	*m_str;		/* mapped to */
     int		m_mode;		/* valid mode */
     int		m_noremap;	/* if non-zero no re-mapping for m_str */
-    scid_t	m_script_ID;	/* ID of script where map was defined,
+    scid_T	m_script_ID;	/* ID of script where map was defined,
 				   used for s: variables and functions */
 };
 
@@ -674,15 +688,15 @@ struct stl_hlrec
  * A buffer is new if the associated file has never been loaded yet.
  */
 
-typedef struct file_buffer buf_t;
+typedef struct file_buffer buf_T;
 
 struct file_buffer
 {
-    memline_t	b_ml;		/* associated memline (also contains line
+    memline_T	b_ml;		/* associated memline (also contains line
 				   count) */
 
-    buf_t	*b_next;	/* links in list of buffers */
-    buf_t	*b_prev;
+    buf_T	*b_next;	/* links in list of buffers */
+    buf_T	*b_prev;
 
     int		b_nwindows;	/* nr of windows open on this buffer */
 
@@ -721,30 +735,30 @@ struct file_buffer
      */
     int		b_mod_set;	/* TRUE when there are changes since the last
 				   time the display was updated */
-    linenr_t	b_mod_top;	/* topmost lnum that was changed */
-    linenr_t	b_mod_bot;	/* lnum below last changed line, AFTER the
+    linenr_T	b_mod_top;	/* topmost lnum that was changed */
+    linenr_T	b_mod_bot;	/* lnum below last changed line, AFTER the
 				   change */
     long	b_mod_xlines;	/* number of extra buffer lines inserted;
 				   negative when lines were deleted */
 
-    wininfo_t	*b_wininfo;	/* list of last used info for each window */
+    wininfo_T	*b_wininfo;	/* list of last used info for each window */
 
     long	b_mtime;	/* last change time of original file */
     long	b_mtime_read;	/* last change time when reading */
 
-    pos_t	b_namedm[NMARKS]; /* current named marks (mark.c) */
+    pos_T	b_namedm[NMARKS]; /* current named marks (mark.c) */
 
 #ifdef FEAT_VISUAL
     /* These variables are set when VIsual_active becomes FALSE */
-    pos_t	b_visual_start;	/* start pos of last VIsual */
-    pos_t	b_visual_end;	/* end position of last VIsual */
+    pos_T	b_visual_start;	/* start pos of last VIsual */
+    pos_T	b_visual_end;	/* end position of last VIsual */
     int		b_visual_mode;	/* VIsual_mode of last VIsual */
 #endif
 
-    pos_t	b_last_cursor;	/* cursor position when last unloading this
+    pos_T	b_last_cursor;	/* cursor position when last unloading this
 				   buffer */
-    pos_t	b_last_insert;	/* where Insert mode was left */
-    pos_t	b_last_change;	/* position of last change: '. mark */
+    pos_T	b_last_insert;	/* where Insert mode was left */
+    pos_T	b_last_change;	/* position of last change: '. mark */
 
     /*
      * Character table, only used in charset.c for 'iskeyword'
@@ -754,20 +768,20 @@ struct file_buffer
 
 #ifdef FEAT_LOCALMAP
     /* Table used for mappings local to a buffer. */
-    mapblock_t	*(b_maphash[256]);
+    mapblock_T	*(b_maphash[256]);
 
     /* First abbreviation local to a buffer. */
-    mapblock_t	*b_first_abbr;
+    mapblock_T	*b_first_abbr;
 #endif
 #ifdef FEAT_USR_CMDS
     /* User commands local to the buffer. */
-    garray_t	b_ucmds;
+    garray_T	b_ucmds;
 #endif
     /*
      * start and end of an operator, also used for '[ and ']
      */
-    pos_t	b_op_start;
-    pos_t	b_op_end;
+    pos_T	b_op_start;
+    pos_T	b_op_end;
 
 #ifdef FEAT_VIMINFO
     int		b_marks_read;	/* Have we read viminfo marks yet? */
@@ -776,9 +790,9 @@ struct file_buffer
     /*
      * The following only used in undo.c.
      */
-    u_header_t	*b_u_oldhead;	/* pointer to oldest header */
-    u_header_t	*b_u_newhead;	/* pointer to newest header */
-    u_header_t	*b_u_curhead;	/* pointer to current header */
+    u_header_T	*b_u_oldhead;	/* pointer to oldest header */
+    u_header_T	*b_u_newhead;	/* pointer to newest header */
+    u_header_T	*b_u_curhead;	/* pointer to current header */
     int		b_u_numhead;	/* current number of headers */
     int		b_u_synced;	/* entry lists are synced */
 
@@ -786,16 +800,16 @@ struct file_buffer
      * variables for "U" command in undo.c
      */
     char_u	*b_u_line_ptr;	/* saved line for "U" command */
-    linenr_t	b_u_line_lnum;	/* line number of line in u_line */
-    colnr_t	b_u_line_colnr;	/* optional column number */
+    linenr_T	b_u_line_lnum;	/* line number of line in u_line */
+    colnr_T	b_u_line_colnr;	/* optional column number */
 
     /*
      * The following only used in undo.c
      */
-    mblock_t	b_block_head;	/* head of allocated memory block list */
-    minfo_t	*b_m_search;	/* pointer to chunk before previously
+    mblock_T	b_block_head;	/* head of allocated memory block list */
+    minfo_T	*b_m_search;	/* pointer to chunk before previously
 				   allocated/freed chunk */
-    mblock_t	*b_mb_current;	/* block where m_search points in */
+    mblock_T	*b_mb_current;	/* block where m_search points in */
 #ifdef FEAT_INS_EXPAND
     int		b_scanned;	/* ^N/^P have scanned this buffer */
 #endif
@@ -808,7 +822,7 @@ struct file_buffer
     short	b_kmap_state;	/* using "lmap" mappings */
 # define KEYMAP_INIT	1	/* 'keymap' was set, call keymap_init() */
 # define KEYMAP_LOADED	2	/* 'keymap' mappings have been loaded */
-    garray_t	b_kmap_ga;	/* the keymap table */
+    garray_T	b_kmap_ga;	/* the keymap table */
 #endif
 
     /*
@@ -936,7 +950,7 @@ struct file_buffer
 #endif
 
 #ifdef FEAT_EVAL
-    garray_t	b_vars;		/* internal variables, local to buffer */
+    garray_T	b_vars;		/* internal variables, local to buffer */
 #endif
 
     /* When a buffer is created, it starts without a swap file.  b_may_swap is
@@ -969,17 +983,17 @@ struct file_buffer
 #endif
 
 #ifdef FEAT_SYN_HL
-    keyentry_t	**b_keywtab;		/* syntax keywords hash table */
-    keyentry_t	**b_keywtab_ic;		/* idem, ignore case */
+    keyentry_T	**b_keywtab;		/* syntax keywords hash table */
+    keyentry_T	**b_keywtab_ic;		/* idem, ignore case */
     int		b_syn_ic;		/* ignore case for :syn cmds */
-    garray_t	b_syn_patterns;		/* table for syntax patterns */
-    garray_t	b_syn_clusters;		/* table for syntax clusters */
+    garray_T	b_syn_patterns;		/* table for syntax patterns */
+    garray_T	b_syn_clusters;		/* table for syntax clusters */
     int		b_syn_sync_flags;	/* flags about how to sync */
     short	b_syn_sync_id;		/* group to sync on */
     long	b_syn_sync_minlines;	/* minimal sync lines offset */
     long	b_syn_sync_maxlines;	/* maximal sync lines offset */
     char_u	*b_syn_linecont_pat;	/* line continuation pattern */
-    regprog_t	*b_syn_linecont_prog;	/* line continuation program */
+    regprog_T	*b_syn_linecont_prog;	/* line continuation program */
     int		b_syn_linecont_ic;	/* ignore-case flag for above */
     int		b_syn_topgrp;		/* for ":syntax include" */
 # ifdef FEAT_FOLDING
@@ -992,7 +1006,7 @@ struct file_buffer
  * too often.
  * b_sst_array[] is allocated to hold the state for all displayed lines, and
  * states for 1 out of about 20 other lines.
- * b_sst_array		pointer to an array of synstate_t
+ * b_sst_array		pointer to an array of synstate_T
  * b_sst_len		number of entries in b_sst_array[]
  * b_sst_first		pointer to first used entry in b_sst_array[] or NULL
  * b_sst_firstfree	pointer to first free entry in b_sst_array[] or NULL
@@ -1000,17 +1014,17 @@ struct file_buffer
  * b_sst_check_lnum	entries after this lnum need to be checked for
  *			validity (MAXLNUM means no check needed)
  */
-    synstate_t	*b_sst_array;
+    synstate_T	*b_sst_array;
     int		b_sst_len;
-    synstate_t	*b_sst_first;
-    synstate_t	*b_sst_firstfree;
+    synstate_T	*b_sst_first;
+    synstate_T	*b_sst_firstfree;
     int		b_sst_freecount;
-    linenr_t	b_sst_check_lnum;
+    linenr_T	b_sst_check_lnum;
     short_u	b_sst_lasttick;	/* last display tick */
 #endif /* FEAT_SYN_HL */
 
 #ifdef FEAT_SIGNS
-    signlist_t	*b_signlist;	/* list of signs to draw */
+    signlist_T	*b_signlist;	/* list of signs to draw */
 #endif
 
 };
@@ -1029,14 +1043,14 @@ struct file_buffer
  */
 typedef struct w_line
 {
-    linenr_t	wl_lnum;	/* buffer line number for logical line */
+    linenr_T	wl_lnum;	/* buffer line number for logical line */
     short_u	wl_size;	/* height in screen lines */
     char	wl_valid;	/* TRUE values are valid for text in buffer */
 #ifdef FEAT_FOLDING
     char	wl_folded;	/* TRUE when this is a range of folded lines */
-    linenr_t	wl_lastlnum;	/* last buffer line number for logical line */
+    linenr_T	wl_lastlnum;	/* last buffer line number for logical line */
 #endif
-} wline_t;
+} wline_T;
 
 /*
  * Windows are kept in a tree of frames.  Each frame has a column (FR_COL)
@@ -1049,14 +1063,14 @@ struct frame
     int		fr_width;
 #endif
     int		fr_height;
-    frame_t	*fr_parent;	/* containing frame or NULL */
-    frame_t	*fr_next;	/* frame right or below in same parent, NULL
+    frame_T	*fr_parent;	/* containing frame or NULL */
+    frame_T	*fr_next;	/* frame right or below in same parent, NULL
 				   for first */
-    frame_t	*fr_prev;	/* frame left or above in same parent, NULL
+    frame_T	*fr_prev;	/* frame left or above in same parent, NULL
 				   for last */
     /* fr_child and fr_win are mutually exclusive */
-    frame_t	*fr_child;	/* first contained frame */
-    win_t	*fr_win;	/* window that fills this frame */
+    frame_T	*fr_child;	/* first contained frame */
+    win_T	*fr_win;	/* window that fills this frame */
 };
 
 #define FR_LEAF	0	/* frame is a leaf */
@@ -1070,19 +1084,19 @@ struct frame
  */
 struct window
 {
-    buf_t	*w_buffer;	    /* buffer we are a window into (used
+    buf_T	*w_buffer;	    /* buffer we are a window into (used
 				       often, keep it the first item!) */
 
 #ifdef FEAT_WINDOWS
-    win_t	*w_prev;	    /* link to previous window */
-    win_t	*w_next;	    /* link to next window */
+    win_T	*w_prev;	    /* link to previous window */
+    win_T	*w_next;	    /* link to next window */
 #endif
 
-    frame_t	*w_frame;	    /* frame containing this window */
+    frame_T	*w_frame;	    /* frame containing this window */
 
-    pos_t	w_cursor;	    /* cursor position in buffer */
+    pos_T	w_cursor;	    /* cursor position in buffer */
 
-    colnr_t	w_curswant;	    /* The column we'd like to be at.  This is
+    colnr_T	w_curswant;	    /* The column we'd like to be at.  This is
 				       used to try to stay in the same column
 				       for up/down cursor motions. */
 
@@ -1095,26 +1109,26 @@ struct window
      * the next six are used to update the visual part
      */
     char	w_old_visual_mode;  /* last known VIsual_mode */
-    linenr_t	w_old_cursor_lnum;  /* last known end of visual part */
-    colnr_t	w_old_cursor_fcol;  /* first column for block visual part */
-    colnr_t	w_old_cursor_lcol;  /* last column for block visual part */
-    linenr_t	w_old_visual_lnum;  /* last known start of visual part */
-    colnr_t	w_old_curswant;	    /* last known value of Curswant */
+    linenr_T	w_old_cursor_lnum;  /* last known end of visual part */
+    colnr_T	w_old_cursor_fcol;  /* first column for block visual part */
+    colnr_T	w_old_cursor_lcol;  /* last column for block visual part */
+    linenr_T	w_old_visual_lnum;  /* last known start of visual part */
+    colnr_T	w_old_curswant;	    /* last known value of Curswant */
 #endif
 
     /*
      * The next three specify the offsets for displaying the buffer:
      */
-    linenr_t	w_topline;	    /* buffer line number of the line at the
+    linenr_T	w_topline;	    /* buffer line number of the line at the
 				       top of the window */
 #ifdef FEAT_DIFF
     int		w_topfill;	    /* number of filler lines above w_topline */
     int		w_old_topfill;	    /* w_topfill at last redraw */
 #endif
-    colnr_t	w_leftcol;	    /* window column number of the left most
+    colnr_T	w_leftcol;	    /* window column number of the left most
 				       character in the window; used when
 				       'wrap' is off */
-    colnr_t	w_skipcol;	    /* starting column when a single line
+    colnr_T	w_skipcol;	    /* starting column when a single line
 				       doesn't fit in the window */
 
     /*
@@ -1148,9 +1162,9 @@ struct window
      * valid or need to be recomputed.	See screen.c for values.
      */
     int		w_valid;
-    pos_t	w_valid_cursor;	    /* last known position of w_cursor, used
+    pos_T	w_valid_cursor;	    /* last known position of w_cursor, used
 				       to adjust w_valid */
-    colnr_t	w_valid_leftcol;    /* last known w_leftcol */
+    colnr_T	w_valid_leftcol;    /* last known w_leftcol */
 
     /*
      * w_cline_height is the number of physical lines taken by the buffer line
@@ -1163,7 +1177,7 @@ struct window
 
     int		w_cline_row;	    /* starting row of the cursor line */
 
-    colnr_t	w_virtcol;	    /* column number of the cursor in the
+    colnr_T	w_virtcol;	    /* column number of the cursor in the
 				       buffer line, as opposed to the column
 				       number we're at on the screen.  This
 				       makes a difference on lines which span
@@ -1177,7 +1191,7 @@ struct window
      */
     int		w_wrow, w_wcol;	    /* cursor position in window */
 
-    linenr_t	w_botline;	    /* number of the line below the bottom of
+    linenr_T	w_botline;	    /* number of the line below the bottom of
 				       the screen */
     int		w_empty_rows;	    /* number of ~ rows in window */
 #ifdef FEAT_DIFF
@@ -1196,10 +1210,10 @@ struct window
      * This is used for efficient redrawing.
      */
     int		w_lines_valid;	    /* number of valid entries */
-    wline_t	*w_lines;
+    wline_T	*w_lines;
 
 #ifdef FEAT_FOLDING
-    garray_t	w_folds;	    /* array of nested folds */
+    garray_T	w_folds;	    /* array of nested folds */
     char	w_fold_manual;	    /* when TRUE: some folds are opened/closed
 				       manually */
     char	w_foldinvalid;	    /* when TRUE: folding needs to be
@@ -1213,17 +1227,17 @@ struct window
     int		w_redr_type;	    /* type of redraw to be performed on win */
     int		w_upd_rows;	    /* number of window lines to update when
 				       w_redr_type is REDRAW_TOP */
-    linenr_t	w_redraw_top;	    /* when != 0: first line needing redraw */
-    linenr_t	w_redraw_bot;	    /* when != 0: last line needing redraw */
+    linenr_T	w_redraw_top;	    /* when != 0: first line needing redraw */
+    linenr_T	w_redraw_bot;	    /* when != 0: last line needing redraw */
 #ifdef FEAT_WINDOWS
     int		w_redr_status;	    /* if TRUE status line must be redrawn */
 #endif
 
 #ifdef FEAT_CMDL_INFO
     /* remember what is shown in the ruler for this window (if 'ruler' set) */
-    pos_t	w_ru_cursor;	    /* cursor position shown in ruler */
-    colnr_t	w_ru_virtcol;	    /* virtcol shown in ruler */
-    linenr_t	w_ru_topline;	    /* topline shown in ruler */
+    pos_T	w_ru_cursor;	    /* cursor position shown in ruler */
+    colnr_T	w_ru_virtcol;	    /* virtcol shown in ruler */
+    linenr_T	w_ru_topline;	    /* topline shown in ruler */
 # ifdef FEAT_DIFF
     int		w_ru_topfill;	    /* topfill shown in ruler */
 # endif
@@ -1233,7 +1247,7 @@ struct window
     int		w_alt_fnum;	    /* alternate file (for # and CTRL-^) */
 
 #ifdef FEAT_WINDOWS
-    alist_t	*w_alist;	    /* pointer to arglist for this window */
+    alist_T	*w_alist;	    /* pointer to arglist for this window */
 #endif
     int		w_arg_idx;	    /* current index in argument list (can be
 				       out of range!) */
@@ -1248,18 +1262,18 @@ struct window
      * There are two values: w_onebuf_opt is local to the buffer currently in
      * this window, w_allbuf_opt is for all buffers in this window.
      */
-    winopt_t	w_onebuf_opt;
-    winopt_t	w_allbuf_opt;
+    winopt_T	w_onebuf_opt;
+    winopt_T	w_allbuf_opt;
 
     /* transfor a pointer to a "onebuf" option to a "allbuf" option */
-#define GLOBAL_WO(p)	((char *)p + sizeof(winopt_t))
+#define GLOBAL_WO(p)	((char *)p + sizeof(winopt_T))
 
 #ifdef FEAT_SCROLLBIND
     long	w_scbind_pos;
 #endif
 
 #ifdef FEAT_EVAL
-    garray_t	w_vars;		/* internal variables, local to window */
+    garray_T	w_vars;		/* internal variables, local to window */
 #endif
 
 #if defined(FEAT_RIGHTLEFT) && defined(FEAT_FKMAP)
@@ -1271,20 +1285,20 @@ struct window
      * a new line after setting the w_pcmark.  If not, then we revert to
      * using the previous w_pcmark.
      */
-    pos_t	w_pcmark;	/* previous context mark */
-    pos_t	w_prev_pcmark;	/* previous w_pcmark */
+    pos_T	w_pcmark;	/* previous context mark */
+    pos_T	w_prev_pcmark;	/* previous w_pcmark */
 
 #ifdef FEAT_JUMPLIST
     /*
      * the jumplist contains old cursor positions
      */
-    xfmark_t	w_jumplist[JUMPLISTSIZE];
+    xfmark_T	w_jumplist[JUMPLISTSIZE];
     int		w_jumplistlen;		/* number of active entries */
     int		w_jumplistidx;		/* current position */
 #endif
 
 #ifdef FEAT_SEARCH_EXTRA
-    regmmatch_t	w_match;	/* regexp program for ":match" */
+    regmmatch_T	w_match;	/* regexp program for ":match" */
     int		w_match_id;	/* highlight ID for ":match" */
 #endif
 
@@ -1294,7 +1308,7 @@ struct window
      * entry 1: newer
      * entry 2: newest
      */
-    taggy_t	w_tagstack[TAGSTACKSIZE];	/* the tag stack */
+    taggy_T	w_tagstack[TAGSTACKSIZE];	/* the tag stack */
     int		w_tagstackidx;		/* idx just below activ entry */
     int		w_tagstacklen;		/* number of tags on stack */
 
@@ -1308,7 +1322,7 @@ struct window
     int		w_prev_fraction_row;
 
 #ifdef FEAT_GUI
-    scrollbar_t	w_scrollbars[2];	/* vert. Scrollbars for this window */
+    scrollbar_T	w_scrollbars[2];	/* vert. Scrollbars for this window */
 #endif
 
 #ifdef FEAT_PERL
@@ -1342,8 +1356,8 @@ typedef struct oparg
 				   valid when motion_type is MCHAR */
     int		end_adjusted;	/* backuped b_op_end one char (only used by
 				   do_format()) */
-    pos_t	start;		/* start of the operator */
-    pos_t	end;		/* end of the operator */
+    pos_T	start;		/* start of the operator */
+    pos_T	end;		/* end of the operator */
 
     long	line_count;	/* number of lines from op_start to op_end
 				   (inclusive) */
@@ -1353,16 +1367,16 @@ typedef struct oparg
     int		is_VIsual;	/* operator on Visual area */
 #endif
     int		block_mode;	/* current operator is Visual block mode */
-    colnr_t	start_vcol;	/* start col for block mode operator */
-    colnr_t	end_vcol;	/* end col for block mode operator */
-} oparg_t;
+    colnr_T	start_vcol;	/* start col for block mode operator */
+    colnr_T	end_vcol;	/* end col for block mode operator */
+} oparg_T;
 
 /*
  * Arguments for Normal mode commands.
  */
 typedef struct cmdarg
 {
-    oparg_t	*oap;		/* Operator arguments */
+    oparg_T	*oap;		/* Operator arguments */
     int		prechar;	/* prefix character (optional, always 'g') */
     int		cmdchar;	/* command character */
     int		nchar;		/* next command character (optional) */
@@ -1377,7 +1391,7 @@ typedef struct cmdarg
     int		arg;		/* extra argument from nv_cmds[] */
     int		retval;		/* return: CA_* values */
     char_u	*searchbuf;	/* return: pointer to search pattern or NULL */
-} cmdarg_t;
+} cmdarg_T;
 
 /* values for retval: */
 #define CA_COMMAND_BUSY	    1	/* skip restarting edit() once */
@@ -1428,12 +1442,12 @@ typedef struct cursor_entry
     int		id_lm;		/* highlight group ID for :lmap mode */
     char	*name;		/* mode name (fixed) */
     char	used_for;	/* SHAPE_MOUSE and/or SHAPE_CURSOR */
-} cursorentry_t;
+} cursorentry_T;
 #endif /* CURSOR_SHAPE */
 
 #ifdef FEAT_MENU
 
-/* Indices into vimmenu_t->strings[] and vimmenu_t->noremap[] for each mode */
+/* Indices into vimmenu_T->strings[] and vimmenu_T->noremap[] for each mode */
 #define MENU_INDEX_INVALID	-1
 #define MENU_INDEX_NORMAL	0
 #define MENU_INDEX_VISUAL	1
@@ -1456,7 +1470,7 @@ typedef struct cursor_entry
 /* Start a menu name with this to not include it on the main menu bar */
 #define MNU_HIDDEN_CHAR		']'
 
-typedef struct VimMenu vimmenu_t;
+typedef struct VimMenu vimmenu_T;
 
 struct VimMenu
 {
@@ -1472,9 +1486,9 @@ struct VimMenu
 #endif
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
     int		noremap[MENU_MODES]; /* A REMAP_ flag for each mode */
-    vimmenu_t	*children;	    /* Children of sub-menu */
-    vimmenu_t	*parent;	    /* Parent of menu */
-    vimmenu_t	*next;		    /* Next item in menu */
+    vimmenu_T	*children;	    /* Children of sub-menu */
+    vimmenu_T	*parent;	    /* Parent of menu */
+    vimmenu_T	*next;		    /* Next item in menu */
 #ifdef FEAT_GUI_X11
     Widget	id;		    /* Manage this to enable item */
     Widget	submenu_id;	    /* If this is submenu, add children here */
@@ -1487,9 +1501,9 @@ struct VimMenu
 #endif
 #ifdef FEAT_GUI_MOTIF
     int		sensitive;	    /* turn button on/off */
-# ifdef FEAT_BEVAL
+#endif
+#if defined(FEAT_BEVAL) && (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
     BalloonEval *tip;		    /* tooltip for this menu item */
-# endif
 #endif
 #ifdef FEAT_GUI_W16
     UINT	id;		    /* Id of menu item */
@@ -1536,7 +1550,7 @@ struct VimMenu
 };
 #else
 /* For generating prototypes when FEAT_MENU isn't defined. */
-typedef int vimmenu_t;
+typedef int vimmenu_T;
 
 #endif /* FEAT_MENU */
 
@@ -1546,13 +1560,13 @@ typedef int vimmenu_t;
  */
 typedef struct
 {
-    buf_t	*save_buf;	/* saved curbuf */
-    buf_t	*new_curbuf;	/* buffer to be used */
-    win_t	*save_curwin;	/* saved curwin, NULL if it didn't change */
-    win_t	*new_curwin;	/* new curwin if save_curwin != NULL */
-    pos_t	save_cursor;	/* saved cursor pos of save_curwin */
-    linenr_t	save_topline;	/* saved topline of save_curwin */
+    buf_T	*save_buf;	/* saved curbuf */
+    buf_T	*new_curbuf;	/* buffer to be used */
+    win_T	*save_curwin;	/* saved curwin, NULL if it didn't change */
+    win_T	*new_curwin;	/* new curwin if save_curwin != NULL */
+    pos_T	save_cursor;	/* saved cursor pos of save_curwin */
+    linenr_T	save_topline;	/* saved topline of save_curwin */
 #ifdef FEAT_DIFF
     int		save_topfill;	/* saved topfill of save_curwin */
 #endif
-} aco_save_t;
+} aco_save_T;

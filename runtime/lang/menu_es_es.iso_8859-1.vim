@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Apr 01
+" Last Change:	2001 Apr 07
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -43,10 +43,29 @@ menutrans &Copy<Tab>"+y			&Copiar<Tab>"+y
 menutrans &Paste<Tab>"+p		&Pegar<Tab>"+p
 menutrans Put\ &Before<Tab>[p		Poner\ &antes<Tab>[p
 menutrans Put\ &After<Tab>]p		Poner\ &después<Tab>]p
+if has("win32") || has("win16")
+  menutrans &Delete<Tab>x		S&uprimir<Tab>x
+endif
 menutrans &Select\ all<Tab>ggVG		&Seleccionar\ todo<Tab>ggVG
 menutrans &Find\.\.\.			&Buscar\.\.\.
-menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&emplazar\.\.\.
-menutrans Options\.\.\.			Opciones\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&eemplazar\.\.\.
+menutrans Settings\ &Window		&Ventana\ de\ opciones
+menutrans Se&ttings			&Opciones
+
+" Build boolean options
+menutrans Toggle\ Line\ Numbering<TAB>:set\ number!	Activar/Desactivar\ numeración\ de\ líneas<TAB>:set\ number!
+menutrans Toggle\ Line\ Wrap<TAB>:set\ wrap!	Activar/Desactivar\ doblado\ de\ líneas<TAB>:set\ wrap!	
+menutrans Toggle\ hlsearch<TAB>:set\ hlsearch!	Activar/Desactivar\ búsqueda\ realzada<TAB>:set\ hlsearch!	
+menutrans Toggle\ expandtab<TAB>:set\ expandtab!	Activar/Desactivar\ expansión\ de\ tabs<TAB>:set\ expandtab!	
+
+" Build GUI options
+menutrans Toggle\ Toolbar		Activar/Desactivar\ barra\ de\ herramientas
+menutrans Toggle\ Bottom\ Scrollbar	Activar/Desactivar\ barra\ de\ desplazamiento\ inferior
+menutrans Toggle\ Left\ Scrollbar	Activar/Desactivar\ barra\ de\ desplazamiento\ izquierda
+menutrans Toggle\ Right\ Scrolbar	Activar/Desactivar\ barra\ de\ desplazamiento\ derecha
+" Build variable options
+menutrans Text\ Width\.\.\. 		Anchura\ del\ texto\.\.\. 
+menutrans Shiftwidth	 		Anchura\ del\ sangrado
 
 " Programming menu
 menutrans &Tools			&Herramientas
@@ -77,30 +96,16 @@ menutrans &New<Tab>^Wn			&Nueva<Tab>^Wn
 menutrans S&plit<Tab>^Ws		&Dividir<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividir\ a\ #<Tab>^W^^
 menutrans Split\ &Vertically<Tab>^Wv    Dividir\ &verticalmente<Tab>^Wv
+menutrans Split\ File\ E&xplorer	&Abrir\ Explorador\ de\ ficheros
 menutrans &Close<Tab>^Wc		&Cerrar<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)<Tab>^Wo
-menutrans Ne&xt<Tab>^Ww			&Siguiente<Tab>^Ww
-menutrans P&revious<Tab>^WW		&Previa<Tab>^WW
-menutrans &Equal\ Height<Tab>^W=	&Misma\ altura<Tab>^W=
-menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_
-menutrans M&in\ Height<Tab>^W1_		Altura\ mí&nima<Tab>^W1_
-menutrans Max\ Width<Tab>^W\|		Anchura\ máxima<Tab>^W\|
-menutrans Min\ Width<Tab>^W1\|		Anchura\ mínima<Tab>^W1\|
-menutrans Rotate\ &Up<Tab>^WR		&Rotar\ hacia\ arriba<Tab>^WR
-menutrans Rotate\ &Down<Tab>^Wr		Rotar\ hacia\ a&bajo<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Seleccionar\ &fuente\.\.\.
-
-
-" Window menu
-menutrans &Window			&Ventana
-menutrans &New<Tab>^Wn			&Nueva<Tab>^Wn
-menutrans S&plit<Tab>^Ws		&Dividir<Tab>^Ws
-menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividir\ a\ #<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv    Dividir\ &verticalmente<Tab>^Wv
-menutrans &Close<Tab>^Wc		&Cerrar<Tab>^Wc
-menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)<Tab>^Wo
-menutrans Ne&xt<Tab>^Ww			&Siguiente<Tab>^Ww
-menutrans P&revious<Tab>^WW		&Previa<Tab>^WW
+menutrans Move\ &To			Mov&er\ a
+menutrans &Top<Tab>^WK			&Arriba<Tab>^WK		
+menutrans &Bottom<Tab>^WJ		A&bajo<Tab>^WJ		
+menutrans &Left\ side<Tab>^WH		Lado\ &izquierdo<Tab>^WH		
+menutrans &Right\ side<Tab>^WL		Lado\ &derecho<Tab>^WL		
+" menutrans Ne&xt<Tab>^Ww			&Siguiente<Tab>^Ww
+" menutrans P&revious<Tab>^WW		&Previa<Tab>^WW
 menutrans &Equal\ Height<Tab>^W=	&Misma\ altura<Tab>^W=
 menutrans &Max\ Height<Tab>^W_		Altura\ &máxima<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Altura\ mí&nima<Tab>^W1_
@@ -140,7 +145,7 @@ if has("win32") || has("gui_gtk")
     tmenu ToolBar.Find		Buscar...
     tmenu ToolBar.FindNext	Buscar siguiente 
     tmenu ToolBar.FindPrev	Buscar precedente
-    tmenu ToolBar.Replace	Buscar y remplazar
+    tmenu ToolBar.Replace	Buscar y reemplazar
     tmenu ToolBar.LoadSesn	Cargar sesión
     tmenu ToolBar.SaveSesn	Guardar sesión
     tmenu ToolBar.RunScript	Ejecutar un «script»

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 6.0aa.  Last change: 2001 Mar 23
+*quickfix.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -104,7 +104,7 @@ The following commands can be used if you are in QuickFix mode:
 			List all errors.
 
 							*:mak* *:make*
-:mak[e] [arguments]	1. If the 'autowrite' option is on, write any changed
+:mak[e][!] [arguments]	1. If the 'autowrite' option is on, write any changed
 			   buffers
 			2. An errorfile name is made from 'makeef'.  If
 			   'makeef' doesn't contain "##", and a file with this
@@ -114,19 +114,31 @@ The following commands can be used if you are in QuickFix mode:
 			   [arguments] and the output is saved in the
 			   errorfile (for Unix it is also echoed on the
 			   screen).
-			4. The errorfile is then read and the first error is
-			   jumped to.
-			5. The errorfile is deleted.
+			4. The errorfile is read
+			5. If [!] is not given the first error is jumped to.
+			6. The errorfile is deleted.
 			This command does not accept a comment, any "
 			characters are considered part of the arguments.
 
 							    *:gr* *:grep*
-:gr[ep] [arguments]	Just like ":make", but use 'grepprg' instead of
+:gr[ep][!] [arguments]	Just like ":make", but use 'grepprg' instead of
 			'makeprg' and 'grepformat' instead of 'errorformat'.
 			See |grep|.
 			[Unix trivia: The name for the Unix "grep" command
 			comes from ":g/re/p", where "re" stands for Regular
 			Expression.]
+			                                *:grepa* *:grepadd*
+:grepa[dd][!] [arguments]
+			Just like ":grep", but instead of making a new list of
+                        errors the matches are appended to the current list.
+			Example: >
+				:grep nothing %
+			        :bufdo grepadd! something %
+<                       The first command makes a new error list which is
+			empty.  The second command executes "grepadd" for each
+			listed buffer.  Note the use of ! to avoid that
+			":grepadd" jumps to the first error, which is not
+			allowed with |:bufdo|.
 
 							*quickfix-window*
 							*:cw* *:cwindow*
@@ -540,6 +552,11 @@ This contains even more useful information about possible error causes.
 However, to properly parse such a complex file, an external filter should
 be used.  See the description further above how to make such a filter known
 by Vim.
+
+						*errorformat-Perl*
+In $VIMRUNTIME/tools you can find the efm_perl.pl script, which filters Perl
+error messages into a format that quickfix mode will understand.  See the
+start of the file about how to use it.
 
 
 						*quickfix-error-lists*

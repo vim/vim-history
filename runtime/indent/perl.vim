@@ -2,7 +2,7 @@
 " Language:	Perl
 " Author:	Rafael Garcia-Suarez <rgarciasuarez@free.fr>
 " URL:		http://rgarciasuarez.free.fr/vim/indent/perl.vim
-" Last Change:	2001 Mar 02
+" Last Change:	2001 Apr 09
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -11,7 +11,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetPerlIndent()
-setlocal indentkeys+=0=,0),=EO
+setlocal indentkeys+=0=,0),=EO,=or,=and
 
 " Only define the function once.
 if exists("*GetPerlIndent")
@@ -56,6 +56,14 @@ function GetPerlIndent()
     let ind = ind + &sw
   endif
   if cline =~ '^\s*[)}]'
+    let ind = ind - &sw
+  endif
+  " Indent lines that begin with 'or' or 'and'
+  if cline =~ '^\s*\(or\|and\)\>'
+    if line !~ '^\s*\(or\|and\)\>'
+      let ind = ind + &sw
+    endif
+  elseif line =~ '^\s*\(or\|and\)\>'
     let ind = ind - &sw
   endif
 

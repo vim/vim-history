@@ -15,64 +15,65 @@
 
 static int path_is_url __ARGS((char_u *p));
 #if defined(FEAT_WINDOWS) || defined(PROTO)
-static int win_split_ins __ARGS((int size, int flags, win_t *newwin, int dir));
+static int win_split_ins __ARGS((int size, int flags, win_T *newwin, int dir));
 static int win_comp_pos __ARGS((void));
-static void frame_comp_pos __ARGS((frame_t *topfrp, int *row, int *col));
-static void frame_setheight __ARGS((frame_t *curfrp, int height));
+static void frame_comp_pos __ARGS((frame_T *topfrp, int *row, int *col));
+static void frame_setheight __ARGS((frame_T *curfrp, int height));
 #ifdef FEAT_VERTSPLIT
-static void frame_setwidth __ARGS((frame_t *curfrp, int width));
+static void frame_setwidth __ARGS((frame_T *curfrp, int width));
 #endif
 static void win_exchange __ARGS((long));
 static void win_rotate __ARGS((int, int));
 static void win_totop __ARGS((int size, int flags));
-static void win_equal_rec __ARGS((win_t *next_curwin, frame_t *topfr, int dir, int col, int row, int width, int height));
-static win_t *winframe_remove __ARGS((win_t *win, int *dirp));
-static frame_t *win_altframe __ARGS((win_t *win));
-static win_t *frame2win __ARGS((frame_t *frp));
-static void frame_new_height __ARGS((frame_t *topfrp, int height, int topfirst));
+static void win_equal_rec __ARGS((win_T *next_curwin, frame_T *topfr, int dir, int col, int row, int width, int height));
+static win_T *winframe_remove __ARGS((win_T *win, int *dirp));
+static frame_T *win_altframe __ARGS((win_T *win));
+static win_T *frame2win __ARGS((frame_T *frp));
+static int frame_has_win __ARGS((frame_T *frp, win_T *wp));
+static void frame_new_height __ARGS((frame_T *topfrp, int height, int topfirst));
 #ifdef FEAT_VERTSPLIT
-static void frame_add_statusline __ARGS((frame_t *frp));
-static void frame_new_width __ARGS((frame_t *topfrp, int width, int leftfirst));
-static void frame_add_vsep __ARGS((frame_t *frp));
-static int frame_minwidth __ARGS((frame_t *topfrp, win_t *next_curwin));
-static void frame_fix_width __ARGS((win_t *wp));
+static void frame_add_statusline __ARGS((frame_T *frp));
+static void frame_new_width __ARGS((frame_T *topfrp, int width, int leftfirst));
+static void frame_add_vsep __ARGS((frame_T *frp));
+static int frame_minwidth __ARGS((frame_T *topfrp, win_T *next_curwin));
+static void frame_fix_width __ARGS((win_T *wp));
 #endif
-static void frame_fix_height __ARGS((win_t *wp));
-static int frame_minheight __ARGS((frame_t *topfrp, win_t *next_curwin));
-static void win_enter_ext __ARGS((win_t *wp, int undo_sync, int no_curwin));
-static void win_free __ARGS((win_t *wp));
-static void win_append __ARGS((win_t *, win_t *));
-static void win_remove __ARGS((win_t *));
-static void frame_append __ARGS((frame_t *after, frame_t *frp));
-static void frame_insert __ARGS((frame_t *before, frame_t *frp));
-static void frame_remove __ARGS((frame_t *frp));
+static void frame_fix_height __ARGS((win_T *wp));
+static int frame_minheight __ARGS((frame_T *topfrp, win_T *next_curwin));
+static void win_enter_ext __ARGS((win_T *wp, int undo_sync, int no_curwin));
+static void win_free __ARGS((win_T *wp));
+static void win_append __ARGS((win_T *, win_T *));
+static void win_remove __ARGS((win_T *));
+static void frame_append __ARGS((frame_T *after, frame_T *frp));
+static void frame_insert __ARGS((frame_T *before, frame_T *frp));
+static void frame_remove __ARGS((frame_T *frp));
 #ifdef FEAT_VERTSPLIT
-static void win_new_width __ARGS((win_t *wp, int width));
-static int win_minheight __ARGS((win_t *wp));
+static void win_new_width __ARGS((win_T *wp, int width));
+static int win_minheight __ARGS((win_T *wp));
 static void win_goto_ver __ARGS((int up, long count));
 static void win_goto_hor __ARGS((int left, long count));
 #endif
-static void frame_add_height __ARGS((frame_t *frp, int n));
-static void last_status_rec __ARGS((frame_t *fr, int statusline));
+static void frame_add_height __ARGS((frame_T *frp, int n));
+static void last_status_rec __ARGS((frame_T *fr, int statusline));
 
 static void make_snapshot __ARGS((void));
-static void make_snapshot_rec __ARGS((frame_t *fr, frame_t **frp));
+static void make_snapshot_rec __ARGS((frame_T *fr, frame_T **frp));
 static void clear_snapshot __ARGS((void));
-static void clear_snapshot_rec __ARGS((frame_t *fr));
+static void clear_snapshot_rec __ARGS((frame_T *fr));
 static void restore_snapshot __ARGS((void));
-static int check_snapshot_rec __ARGS((frame_t *sn, frame_t *fr));
-static win_t *restore_snapshot_rec __ARGS((frame_t *sn, frame_t *fr));
+static int check_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
+static win_T *restore_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 
-static win_t	*prevwin = NULL;	/* previous window */
+static win_T	*prevwin = NULL;	/* previous window */
 #endif /* FEAT_WINDOWS */
-static void win_setheight_win __ARGS((int height, win_t *win));
-static win_t *win_alloc __ARGS((win_t *after));
-static void win_new_height __ARGS((win_t *, int));
+static void win_setheight_win __ARGS((int height, win_T *win));
+static win_T *win_alloc __ARGS((win_T *after));
+static void win_new_height __ARGS((win_T *, int));
 
 #define URL_SLASH	1		/* path_is_url() has found "://" */
 #define URL_BACKSLASH	2		/* path_is_url() has found ":\\" */
 
-#define NOWIN		(win_t *)-1	/* non-exisiting window */
+#define NOWIN		(win_T *)-1	/* non-exisiting window */
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
@@ -84,7 +85,7 @@ do_window(nchar, Prenum)
     long	Prenum;
 {
     long	Prenum1;
-    win_t	*wp;
+    win_T	*wp;
     int		xchar;
 #if defined(FEAT_SEARCHPATH) || defined(FEAT_FIND_ID)
     char_u	*ptr;
@@ -482,7 +483,7 @@ do_window(nchar, Prenum)
 		    break;
 		find_pattern_in_path(ptr, 0, len, TRUE,
 			Prenum == 0 ? TRUE : FALSE, type,
-			Prenum1, ACTION_SPLIT, (linenr_t)1, (linenr_t)MAXLNUM);
+			Prenum1, ACTION_SPLIT, (linenr_T)1, (linenr_T)MAXLNUM);
 		curwin->w_set_curswant = TRUE;
 		break;
 #endif
@@ -588,11 +589,11 @@ win_split(size, flags)
 win_split_ins(size, flags, newwin, dir)
     int		size;
     int		flags;
-    win_t	*newwin;
+    win_T	*newwin;
     int		dir;
 {
-    win_t	*wp = newwin;
-    win_t	*oldwin;
+    win_T	*wp = newwin;
+    win_T	*oldwin;
     int		new_size = size;
     int		i;
     int		need_status = 0;
@@ -601,7 +602,7 @@ win_split_ins(size, flags, newwin, dir)
     int		available;
     int		oldwin_height = 0;
     int		layout;
-    frame_t	*frp, *curfrp;
+    frame_T	*frp, *curfrp;
     int		before;
 
     if (flags & WSP_TOP)
@@ -714,7 +715,9 @@ win_split_ins(size, flags, newwin, dir)
 	if (bt_quickfix(oldwin->w_buffer) || oldwin->w_p_pvw)
 	{
 	    win_setheight_win(oldwin->w_height + new_size, oldwin);
-	    oldwin_height += new_size;
+	    oldwin_height = oldwin->w_height;
+	    if (need_status)
+		oldwin_height -= STATUS_HEIGHT;
 	}
 #endif
     }
@@ -828,7 +831,7 @@ win_split_ins(size, flags, newwin, dir)
     if (curfrp->fr_parent == NULL || curfrp->fr_parent->fr_layout != layout)
     {
 	/* Need to create a new frame in the tree to make a branch. */
-	frp = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
+	frp = (frame_T *)alloc_clear((unsigned)sizeof(frame_T));
 	*frp = *curfrp;
 	curfrp->fr_layout = layout;
 	frp->fr_parent = curfrp;
@@ -847,7 +850,7 @@ win_split_ins(size, flags, newwin, dir)
     if (newwin == NULL)
     {
 	/* Create a frame for the new window. */
-	frp = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
+	frp = (frame_T *)alloc_clear((unsigned)sizeof(frame_T));
 	frp->fr_layout = FR_LEAF;
 	frp->fr_win = wp;
 	wp->w_frame = frp;
@@ -1034,11 +1037,11 @@ win_split_ins(size, flags, newwin, dir)
  */
     static int
 win_minheight(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     int		minheight = p_wmh;
     int		n;
-    win_t	*wp1, *wp2;
+    win_T	*wp1, *wp2;
 
     wp1 = wp;
     for (;;)
@@ -1069,9 +1072,9 @@ win_minheight(wp)
  */
     int
 win_valid(win)
-    win_t	*win;
+    win_T	*win;
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (win == NULL)
 	return FALSE;
@@ -1087,7 +1090,7 @@ win_valid(win)
     int
 win_count()
 {
-    win_t	*wp;
+    win_T	*wp;
     int		count = 0;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
@@ -1185,10 +1188,10 @@ make_windows(count, vertical)
 win_exchange(Prenum)
     long	Prenum;
 {
-    frame_t	*frp;
-    frame_t	*frp2;
-    win_t	*wp;
-    win_t	*wp2;
+    frame_T	*frp;
+    frame_T	*frp2;
+    win_T	*wp;
+    win_T	*wp2;
     int		temp;
 
     if (lastwin == firstwin)	    /* just one window */
@@ -1272,9 +1275,9 @@ win_rotate(upwards, count)
     int		upwards;
     int		count;
 {
-    win_t	*wp1;
-    win_t	*wp2;
-    frame_t	*frp;
+    win_T	*wp1;
+    win_T	*wp2;
+    frame_T	*frp;
     int		n;
 
     if (firstwin == lastwin)		/* nothing to do */
@@ -1384,7 +1387,7 @@ win_totop(size, flags)
  */
     void
 win_move_after(win1, win2)
-    win_t	*win1, *win2;
+    win_T	*win1, *win2;
 {
     int		height;
 
@@ -1426,7 +1429,7 @@ win_move_after(win1, win2)
  */
     void
 win_equal(next_curwin, dir)
-    win_t	*next_curwin;	/* pointer to current window to be or NULL */
+    win_T	*next_curwin;	/* pointer to current window to be or NULL */
     int		dir;		/* 'v' for vertically, 'h' for horizontally,
 				   'b' for both, 0 for using p_ead */
 {
@@ -1448,8 +1451,8 @@ win_equal(next_curwin, dir)
  */
     static void
 win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
-    win_t	*next_curwin;	/* pointer to current window to be or NULL */
-    frame_t	*topfr;		/* frame to set size off */
+    win_T	*next_curwin;	/* pointer to current window to be or NULL */
+    frame_T	*topfr;		/* frame to set size off */
     int		dir;		/* 'v', 'h' or 'b', see win_equal() */
     int		col;		/* horizontal position for frame */
     int		row;		/* vertical position for frame */
@@ -1459,7 +1462,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
     int		n, m;
     int		extra_sep = 0;
     int		wincount, totwincount = 0;
-    frame_t	*fr;
+    frame_T	*fr;
     int		next_curwin_size = 0;
     int		room = 0;
     int		new_size;
@@ -1467,6 +1470,8 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
     int		quickfix_height = 0;
     int		preview_height = 0;
 #endif
+    int		has_next_curwin = 0;
+    int		hnc;
 
     if (topfr->fr_layout == FR_LEAF)
     {
@@ -1581,6 +1586,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 	    else
 		extra_sep = 0;
 	    totwincount = (n + extra_sep) / (p_wmh + 1);
+	    has_next_curwin = frame_has_win(topfr, next_curwin);
 
 	    /*
 	     * Compute height for "next_curwin" window and room available for
@@ -1634,7 +1640,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		if (next_curwin_size == -1)
 #endif
 		{
-		    if (n == m)		/* doesn't contain curwin */
+		    if (!has_next_curwin)
 			next_curwin_size = 0;
 		    else if (totwincount > 1
 			    && (room + (totwincount - 2))
@@ -1649,7 +1655,7 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		}
 	    }
 
-	    if (n != m)
+	    if (has_next_curwin)
 		--totwincount;		/* don't count curwin */
 	}
 
@@ -1681,14 +1687,18 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
 		wincount = (n + (fr->fr_next == NULL ? extra_sep : 0))
 								/ (p_wmh + 1);
 		m = frame_minheight(fr, next_curwin);
-		if (n != m)	    /* don't count next_curwin */
+		if (has_next_curwin)
+		    hnc = frame_has_win(fr, next_curwin);
+		else
+		    hnc = FALSE;
+		if (hnc)	    /* don't count next_curwin */
 		    --wincount;
 		if (totwincount == 0)
 		    new_size = room;
 		else
 		    new_size = (wincount * room + ((unsigned)totwincount >> 1))
 								/ totwincount;
-		if (n != m)	    /* add next_curwin size */
+		if (hnc)	    /* add next_curwin size */
 		{
 		    next_curwin_size -= p_wh - (m - n);
 		    new_size += next_curwin_size;
@@ -1711,9 +1721,9 @@ win_equal_rec(next_curwin, topfr, dir, col, row, width, height)
  */
     void
 close_windows(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    win_t	*win;
+    win_T	*win;
 
     ++RedrawingDisabled;
     for (win = firstwin; win != NULL && lastwin != firstwin; )
@@ -1737,15 +1747,15 @@ close_windows(buf)
  */
     void
 win_close(win, free_buf)
-    win_t	*win;
+    win_T	*win;
     int		free_buf;
 {
-    win_t	*wp;
+    win_T	*wp;
 #ifdef FEAT_AUTOCMD
     int		other_buffer = FALSE;
 #endif
     int		close_curwin = FALSE;
-    frame_t	*frp;
+    frame_T	*frp;
     int		dir;
     int		help_window = FALSE;
 
@@ -1876,14 +1886,14 @@ win_close(win, free_buf)
  * Returns a pointer to the window that got the freed up space.
  */
 /*ARGSUSED*/
-    static win_t *
+    static win_T *
 winframe_remove(win, dirp)
-    win_t	*win;
+    win_T	*win;
     int		*dirp;		/* set to 'v' or 'h' for direction if 'ea' */
 {
-    frame_t	*frp, *frp2;
-    frame_t	*frp_close = win->w_frame;
-    win_t	*wp;
+    frame_T	*frp, *frp2;
+    frame_T	*frp_close = win->w_frame;
+    win_T	*wp;
 
     /*
      * Remove the window from its frame.
@@ -1963,11 +1973,11 @@ winframe_remove(win, dirp)
  * This makes opening a window and closing it immediately keep the same window
  * layout.
  */
-    static frame_t *
+    static frame_T *
 win_altframe(win)
-    win_t	*win;
+    win_T	*win;
 {
-    frame_t	*frp;
+    frame_T	*frp;
     int		b;
 
     frp = win->w_frame;
@@ -1985,13 +1995,32 @@ win_altframe(win)
 /*
  * Find the left-upper window in frame "frp".
  */
-    static win_t *
+    static win_T *
 frame2win(frp)
-    frame_t	*frp;
+    frame_T	*frp;
 {
     while (frp->fr_win == NULL)
 	frp = frp->fr_child;
     return frp->fr_win;
+}
+
+/*
+ * Return TRUE if frame "frp" contains window "wp".
+ */
+    static int
+frame_has_win(frp, wp)
+    frame_T	*frp;
+    win_T	*wp;
+{
+    frame_T	*p;
+
+    if (frp->fr_layout == FR_LEAF)
+	return frp->fr_win == wp;
+
+    for (p = frp->fr_child; p != NULL; p = p->fr_next)
+	if (frame_has_win(p, wp))
+	    return TRUE;
+    return FALSE;
 }
 
 /*
@@ -2000,11 +2029,11 @@ frame2win(frp)
  */
     static void
 frame_new_height(topfrp, height, topfirst)
-    frame_t	*topfrp;
+    frame_T	*topfrp;
     int		height;
     int		topfirst;	/* resize topmost contained frame first */
 {
-    frame_t	*frp;
+    frame_T	*frp;
     int		extra_lines;
     int		h;
 
@@ -2073,9 +2102,9 @@ frame_new_height(topfrp, height, topfirst)
  */
     static void
 frame_add_statusline(frp)
-    frame_t	*frp;
+    frame_T	*frp;
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (frp->fr_layout == FR_LEAF)
     {
@@ -2108,14 +2137,14 @@ frame_add_statusline(frp)
  */
     static void
 frame_new_width(topfrp, width, leftfirst)
-    frame_t	*topfrp;
+    frame_T	*topfrp;
     int		width;
     int		leftfirst;	/* resize leftmost contained frame first */
 {
-    frame_t	*frp;
+    frame_T	*frp;
     int		extra_cols;
     int		w;
-    win_t	*wp;
+    win_T	*wp;
 
     if (topfrp->fr_layout == FR_LEAF)
     {
@@ -2184,9 +2213,9 @@ frame_new_width(topfrp, width, leftfirst)
  */
     static void
 frame_add_vsep(frp)
-    frame_t	*frp;
+    frame_T	*frp;
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (frp->fr_layout == FR_LEAF)
     {
@@ -2219,7 +2248,7 @@ frame_add_vsep(frp)
  */
     static void
 frame_fix_width(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     wp->w_frame->fr_width = wp->w_width + wp->w_vsep_width;
 }
@@ -2230,7 +2259,7 @@ frame_fix_width(wp)
  */
     static void
 frame_fix_height(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     wp->w_frame->fr_height = wp->w_height + wp->w_status_height;
 }
@@ -2244,10 +2273,10 @@ frame_fix_height(wp)
  */
     static int
 frame_minheight(topfrp, next_curwin)
-    frame_t	*topfrp;
-    win_t	*next_curwin;
+    frame_T	*topfrp;
+    win_T	*next_curwin;
 {
-    frame_t	*frp;
+    frame_T	*frp;
     int		m;
 #ifdef FEAT_VERTSPLIT
     int		n;
@@ -2299,10 +2328,10 @@ frame_minheight(topfrp, next_curwin)
  */
     static int
 frame_minwidth(topfrp, next_curwin)
-    frame_t	*topfrp;
-    win_t	*next_curwin;	/* use p_wh and p_wiw for next_curwin */
+    frame_T	*topfrp;
+    win_T	*next_curwin;	/* use p_wh and p_wiw for next_curwin */
 {
-    frame_t	*frp;
+    frame_T	*frp;
     int		m, n;
 
     if (topfrp->fr_win != NULL)
@@ -2354,8 +2383,8 @@ close_others(message, forceit)
     int		message;
     int		forceit;	    /* always hide all other windows */
 {
-    win_t	*wp;
-    win_t	*nextwp;
+    win_T	*wp;
+    win_T	*nextwp;
 
     if (lastwin == firstwin)
     {
@@ -2406,7 +2435,7 @@ close_others(message, forceit)
  */
     void
 win_init(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     redraw_win_later(wp, NOT_VALID);
     wp->w_lines_valid = 0;
@@ -2451,7 +2480,7 @@ win_alloc_first()
 #endif
     win_init(curwin);		/* init current window */
 
-    topframe = (frame_t *)alloc_clear((unsigned)sizeof(frame_t));
+    topframe = (frame_T *)alloc_clear((unsigned)sizeof(frame_T));
     if (topframe == NULL)
 	mch_windexit(0);
     topframe->fr_layout = FR_LEAF;
@@ -2474,7 +2503,7 @@ win_alloc_first()
  */
     void
 win_goto(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
 #ifdef FEAT_CMDWIN
     if (cmdwin_type != 0)
@@ -2500,11 +2529,11 @@ win_goto(wp)
 /*
  * Find window number "winnr" (counting top to bottom).
  */
-    win_t *
+    win_T *
 win_find_nr(winnr)
     int		winnr;
 {
-    win_t	*wp;
+    win_T	*wp;
 
 # ifdef FEAT_WINDOWS
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
@@ -2526,9 +2555,9 @@ win_goto_ver(up, count)
     int		up;		/* TRUE to go to win above */
     long	count;
 {
-    frame_t	*fr;
-    frame_t	*nfr;
-    frame_t	*foundfr;
+    frame_T	*fr;
+    frame_T	*nfr;
+    frame_T	*foundfr;
 
     foundfr = curwin->w_frame;
     while (count--)
@@ -2589,9 +2618,9 @@ win_goto_hor(left, count)
     int		left;		/* TRUE to go to left win */
     long	count;
 {
-    frame_t	*fr;
-    frame_t	*nfr;
-    frame_t	*foundfr;
+    frame_T	*fr;
+    frame_T	*nfr;
+    frame_T	*foundfr;
 
     foundfr = curwin->w_frame;
     while (count--)
@@ -2650,7 +2679,7 @@ end:
  */
     void
 win_enter(wp, undo_sync)
-    win_t	*wp;
+    win_T	*wp;
     int		undo_sync;
 {
     win_enter_ext(wp, undo_sync, FALSE);
@@ -2663,7 +2692,7 @@ win_enter(wp, undo_sync)
  */
     static void
 win_enter_ext(wp, undo_sync, curwin_invalid)
-    win_t	*wp;
+    win_T	*wp;
     int		undo_sync;
     int		curwin_invalid;
 {
@@ -2773,12 +2802,12 @@ win_enter_ext(wp, undo_sync, curwin_invalid)
  * TODO: Alternatively jump to last open window? Dependent from 'splitbelow'?
  * Returns pointer to window if it exists, otherwise NULL.
  */
-    win_t *
+    win_T *
 buf_jump_open_win(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
 #ifdef FEAT_WINDOWS
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp; wp = wp->w_next)
 	if (wp->w_buffer == buf)
@@ -2797,16 +2826,16 @@ buf_jump_open_win(buf)
  * allocate a window structure and link it in the window list
  */
 /*ARGSUSED*/
-    static win_t *
+    static win_T *
 win_alloc(after)
-    win_t	*after;
+    win_T	*after;
 {
-    win_t	*newwin;
+    win_T	*newwin;
 
     /*
      * allocate window structure and linesizes arrays
      */
-    newwin = (win_t *)alloc_clear((unsigned)sizeof(win_t));
+    newwin = (win_T *)alloc_clear((unsigned)sizeof(win_T));
     if (newwin != NULL && win_alloc_lines(newwin) == FAIL)
     {
 	vim_free(newwin);
@@ -2867,7 +2896,7 @@ win_alloc(after)
  */
     static void
 win_free(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     int		i;
 
@@ -2926,9 +2955,9 @@ win_free(wp)
  */
     static void
 win_append(after, wp)
-    win_t	*after, *wp;
+    win_T	*after, *wp;
 {
-    win_t	*before;
+    win_T	*before;
 
     if (after == NULL)	    /* after NULL is in front of the first */
 	before = firstwin;
@@ -2952,7 +2981,7 @@ win_append(after, wp)
  */
     static void
 win_remove(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     if (wp->w_prev != NULL)
 	wp->w_prev->w_next = wp->w_next;
@@ -2969,7 +2998,7 @@ win_remove(wp)
  */
     static void
 frame_append(after, frp)
-    frame_t	*after, *frp;
+    frame_T	*after, *frp;
 {
     frp->fr_next = after->fr_next;
     after->fr_next = frp;
@@ -2983,7 +3012,7 @@ frame_append(after, frp)
  */
     static void
 frame_insert(before, frp)
-    frame_t	*before, *frp;
+    frame_T	*before, *frp;
 {
     frp->fr_next = before;
     frp->fr_prev = before->fr_prev;
@@ -2999,7 +3028,7 @@ frame_insert(before, frp)
  */
     static void
 frame_remove(frp)
-    frame_t	*frp;
+    frame_T	*frp;
 {
     if (frp->fr_prev != NULL)
 	frp->fr_prev->fr_next = frp->fr_next;
@@ -3017,10 +3046,10 @@ frame_remove(frp)
  */
     int
 win_alloc_lines(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     wp->w_lines_valid = 0;
-    wp->w_lines = (wline_t *)alloc((unsigned)(Rows * sizeof(wline_t)));
+    wp->w_lines = (wline_T *)alloc((unsigned)(Rows * sizeof(wline_T)));
     if (wp->w_lines == NULL)
 	return FAIL;
     return OK;
@@ -3031,7 +3060,7 @@ win_alloc_lines(wp)
  */
     void
 win_free_lsize(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     vim_free(wp->w_lines);
     wp->w_lines = NULL;
@@ -3084,10 +3113,10 @@ shell_new_columns()
  */
     void
 win_size_save(gap)
-    garray_t	*gap;
+    garray_T	*gap;
 
 {
-    win_t	*wp;
+    win_T	*wp;
 
     ga_init2(gap, (int)sizeof(int), 1);
     if (ga_grow(gap, win_count() * 2) == OK)
@@ -3105,9 +3134,9 @@ win_size_save(gap)
  */
     void
 win_size_restore(gap)
-    garray_t	*gap;
+    garray_T	*gap;
 {
-    win_t	*wp;
+    win_T	*wp;
     int		i;
 
     if (win_count() * 2 == gap->ga_len)
@@ -3148,12 +3177,12 @@ win_comp_pos()
  */
     static void
 frame_comp_pos(topfrp, row, col)
-    frame_t	*topfrp;
+    frame_T	*topfrp;
     int		*row;
     int		*col;
 {
-    win_t	*wp;
-    frame_t	*frp;
+    win_T	*wp;
+    frame_T	*frp;
 #ifdef FEAT_VERTSPLIT
     int		startcol;
     int		startrow;
@@ -3228,7 +3257,7 @@ win_setheight(height)
     static void
 win_setheight_win(height, win)
     int		height;
-    win_t	*win;
+    win_T	*win;
 {
     int		row;
 
@@ -3274,14 +3303,14 @@ win_setheight_win(height, win)
  */
     static void
 frame_setheight(curfrp, height)
-    frame_t	*curfrp;
+    frame_T	*curfrp;
     int		height;
 {
     int		room;		/* total number of lines available */
     int		take;		/* number of lines taken from other windows */
     int		room_cmdline;	/* lines available from cmdline */
     int		run;
-    frame_t	*frp;
+    frame_T	*frp;
     int		h;
 #ifdef FEAT_QUICKFIX
     int		room_reserved;
@@ -3482,13 +3511,13 @@ win_setwidth(width)
  */
     static void
 frame_setwidth(curfrp, width)
-    frame_t	*curfrp;
+    frame_T	*curfrp;
     int		width;
 {
     int		room;		/* total number of lines available */
     int		take;		/* number of lines taken from other windows */
     int		run;
-    frame_t	*frp;
+    frame_T	*frp;
     int		w;
 
     /* If the width already is the desired value, nothing to do. */
@@ -3595,7 +3624,7 @@ win_setminheight()
 {
     int		room;
     int		first = TRUE;
-    win_t	*wp;
+    win_T	*wp;
 
     /* loop until there is a 'winminheight' that is possible */
     while (p_wmh > 0)
@@ -3624,8 +3653,8 @@ win_setminheight()
 win_drag_status_line(offset)
     int		offset;
 {
-    frame_t	*curfr;
-    frame_t	*fr;
+    frame_T	*curfr;
+    frame_T	*fr;
     int		room;
     int		row;
     int		up;	/* if TRUE, drag status line up, otherwise down */
@@ -3751,8 +3780,8 @@ win_drag_status_line(offset)
 win_drag_vsep_line(offset)
     int		offset;
 {
-    frame_t	*curfr;
-    frame_t	*fr;
+    frame_T	*curfr;
+    frame_T	*fr;
     int		room;
     int		left;	/* if TRUE, drag separator line left, otherwise right */
     int		n;
@@ -3857,12 +3886,17 @@ win_drag_vsep_line(offset)
  */
     static void
 win_new_height(wp, height)
-    win_t	*wp;
+    win_T	*wp;
     int		height;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		sline, line_size;
 #define FRACTION_MULT	16384L
+
+    /* Don't want a negative height.  Happens when splitting a tiny window.
+     * Will equalize heights soon to fix it. */
+    if (height < 0)
+	height = 0;
 
     if (wp->w_wrow != wp->w_prev_fraction_row && wp->w_height > 0)
 	wp->w_fraction = ((long)wp->w_wrow * FRACTION_MULT
@@ -3951,7 +3985,7 @@ win_new_height(wp, height)
  */
     static void
 win_new_width(wp, width)
-    win_t	*wp;
+    win_T	*wp;
     int		width;
 {
     wp->w_width = width;
@@ -3970,7 +4004,7 @@ win_new_width(wp, width)
 
     void
 win_comp_scroll(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     wp->w_p_scr = ((unsigned)wp->w_height >> 1);
     if (wp->w_p_scr == 0)
@@ -3986,7 +4020,7 @@ command_height(old_p_ch)
 {
 #ifdef FEAT_WINDOWS
     int		h;
-    frame_t	*frp;
+    frame_T	*frp;
 
     /* Find bottom frame with width of screen. */
     frp = lastwin->w_frame;
@@ -4048,7 +4082,7 @@ command_height(old_p_ch)
  */
     static void
 frame_add_height(frp, n)
-    frame_t	*frp;
+    frame_T	*frp;
     int		n;
 {
     frame_new_height(frp, frp->fr_height + n, FALSE);
@@ -4076,11 +4110,11 @@ last_status(morewin)
 
     static void
 last_status_rec(fr, statusline)
-    frame_t	*fr;
+    frame_T	*fr;
     int		statusline;
 {
-    frame_t	*fp;
-    win_t	*wp;
+    frame_T	*fp;
+    win_T	*wp;
 
     if (fr->fr_layout == FR_LEAF)
     {
@@ -4402,7 +4436,7 @@ vim_FullName(fname, buf, len, force)
 min_rows()
 {
 #ifdef FEAT_WINDOWS
-    win_t	*wp;
+    win_T	*wp;
 #endif
     int		total;
 
@@ -4428,7 +4462,7 @@ only_one_window()
 {
 #ifdef FEAT_WINDOWS
     int		count = 0;
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (!(wp->w_buffer->b_help
@@ -4453,7 +4487,7 @@ only_one_window()
 check_lnums(do_curwin)
     int		do_curwin;
 {
-    win_t	*wp;
+    win_T	*wp;
 
 #ifdef FEAT_WINDOWS
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
@@ -4484,7 +4518,7 @@ check_lnums(do_curwin)
  * fr_child
  * fr_win (only valid for the old curwin, NULL otherwise)
  */
-static frame_t *snapshot = NULL;
+static frame_T *snapshot = NULL;
 
 /*
  * Create a snapshot of the current frame sizes.
@@ -4498,10 +4532,10 @@ make_snapshot()
 
     static void
 make_snapshot_rec(fr, frp)
-    frame_t	*fr;
-    frame_t	**frp;
+    frame_T	*fr;
+    frame_T	**frp;
 {
-    *frp = (frame_t *)alloc_clear(sizeof(frame_t));
+    *frp = (frame_T *)alloc_clear((unsigned)sizeof(frame_T));
     if (*frp == NULL)
 	return;
     (*frp)->fr_layout = fr->fr_layout;
@@ -4529,7 +4563,7 @@ clear_snapshot()
 
     static void
 clear_snapshot_rec(fr)
-    frame_t	*fr;
+    frame_T	*fr;
 {
     if (fr != NULL)
     {
@@ -4547,7 +4581,7 @@ clear_snapshot_rec(fr)
     static void
 restore_snapshot()
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (snapshot != NULL
 # ifdef FEAT_VERTSPLIT
@@ -4571,8 +4605,8 @@ restore_snapshot()
  */
     static int
 check_snapshot_rec(sn, fr)
-    frame_t	*sn;
-    frame_t	*fr;
+    frame_T	*sn;
+    frame_T	*fr;
 {
     if (sn->fr_layout != fr->fr_layout
 	    || (sn->fr_next == NULL) != (fr->fr_next == NULL)
@@ -4590,13 +4624,13 @@ check_snapshot_rec(sn, fr)
  * following frames and children.
  * Returns a pointer to the old current window, or NULL.
  */
-    static win_t *
+    static win_T *
 restore_snapshot_rec(sn, fr)
-    frame_t	*sn;
-    frame_t	*fr;
+    frame_T	*sn;
+    frame_T	*fr;
 {
-    win_t	*wp = NULL;
-    win_t	*wp2;
+    win_T	*wp = NULL;
+    win_T	*wp2;
 
     fr->fr_height = sn->fr_height;
 # ifdef FEAT_VERTSPLIT

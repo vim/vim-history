@@ -12,6 +12,7 @@
 
 extern "C" {
 #include "vim.h"
+extern HWND s_hwnd;
 }
 
 #include "if_ole.h"	// Interface definitions
@@ -81,6 +82,7 @@ public:
     STDMETHOD(SendKeys)(BSTR keys);
     STDMETHOD(Eval)(BSTR expr, BSTR *result);
     STDMETHOD(SetForeground)(void);
+    STDMETHOD(GetHwnd)(UINT* result);
 
 private:
     // Constructor is private - create using CVim::Create()
@@ -235,6 +237,13 @@ CVim::Invoke(
     return typeinfo->Invoke(static_cast<IDispatch*>(this),
 			    member, flags, dispparams,
 			    result, excepinfo, argerr);
+}
+
+STDMETHODIMP
+CVim::GetHwnd(UINT* result)
+{
+    *result = (UINT) s_hwnd;
+    return S_OK;
 }
 
 STDMETHODIMP

@@ -31,6 +31,7 @@ static void mainerr __ARGS((int, char_u *));
 static void main_msg __ARGS((char *s));
 static void usage __ARGS((void));
 static int get_number_arg __ARGS((char_u *p, int *idx, int def));
+static void main_start_gui __ARGS((void));
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 static void check_swap_exists_action __ARGS((void));
 #endif
@@ -106,10 +107,14 @@ main
 #define EDIT_QF	    4	    /* start in quickfix mode */
     int		edit_type = EDIT_NONE;  /* type of editing to do */
 #ifdef FEAT_DIFF
-    int		diffmode = FALSE;	/* start with 'diff' set */
+    int		diff_mode = FALSE;	/* start with 'diff' set */
 #endif
+    int		evim_mode = FALSE;	/* started as "evim" */
     int		stdout_isatty;		/* is stdout a terminal? */
     int		input_isatty;		/* is active input a terminal? */
+#ifdef MSWIN
+    int		full_path = FALSE;
+#endif
 
     /*
      * Do any system-specific initialisations.  These can NOT use IObuff or
@@ -247,6 +252,7 @@ main
 
     /*
      * If the executable name starts with "r" we disable shell commands.
+     * If the next character is "e" we run in Easy mode.
      * If the next character is "g" we run the GUI version.
      * If the next characters are "view" we start in readonly mode.
      * If the next characters are "diff" or "vimdiff" we start in diff mode.
@@ -261,15 +267,20 @@ main
 	++initstr;
     }
 
-    if (TO_LOWER(initstr[0]) == 'g')
+    if (TO_LOWER(initstr[0]) == 'e')
     {
 #ifdef FEAT_GUI
 	gui.starting = TRUE;
+#endif
+	evim_mode = TRUE;
 	++initstr;
-#else
-	mch_errmsg(_(e_nogvim));
-	mch_errmsg("\n");
-	mch_windexit(2);
+    }
+
+    if (TO_LOWER(initstr[0]) == 'g')
+    {
+	main_start_gui();
+#ifdef FEAT_GUI
+	++initstr;
 #endif
     }
 
@@ -287,7 +298,7 @@ main
     if (STRICMP(initstr, "diff") == 0)
     {
 #ifdef FEAT_DIFF
-	diffmode = TRUE;
+	diff_mode = TRUE;
 #else
 	mch_errmsg(_("This Vim was not compiled with the diff feature."));
 	mch_errmsg("\n");
@@ -410,13 +421,7 @@ main
 		break;
 
 	    case 'g':		/* "-g" start GUI */
-#ifdef FEAT_GUI
-		gui.starting = TRUE;	/* start GUI a bit later */
-#else
-		mch_errmsg(_(e_nogvim));
-		mch_errmsg("\n");
-		mch_windexit(2);
-#endif
+		main_start_gui();
 		break;
 
 	    case 'F':		/* "-F" start in Farsi mode: rl + fkmap set */
@@ -450,6 +455,13 @@ main
 
 	    case 'm':		/* "-m"  no writing of files */
 		p_write = FALSE;
+		break;
+
+	    case 'y':		/* "-y"  easy mode */
+#ifdef FEAT_GUI
+		gui.starting = TRUE;	/* start GUI a bit later */
+#endif
+		evim_mode = TRUE;
 		break;
 
 	    case 'N':		/* "-N"  Nocompatible */
@@ -529,7 +541,7 @@ main
 #endif
 #ifdef FEAT_DIFF
 	    case 'd':		/* "-d"		'diff' */
-		diffmode = TRUE;
+		diff_mode = TRUE;
 		break;
 #endif
 	    case 'V':		/* "-V{N}"	Verbose level */
@@ -714,6 +726,13 @@ scripterror:
 		mainerr(ME_TOO_MANY_ARGS, (char_u *)argv[0]);
 	    edit_type = EDIT_FILE;
 
+#ifdef MSWIN
+	    /* Remember if the argument was a full path before changing
+	     * slashes to backslashes. */
+	    if (argv[0][0] != NUL && argv[0][1] == ':' && argv[0][2] == '\\')
+		full_path = TRUE;
+#endif
+
 	    /* Add the file to the global argument list. */
 	    if (ga_grow(&global_alist.al_ga, 1) == FAIL
 		    || (p = vim_strsave((char_u *)argv[0])) == NULL)
@@ -771,22 +790,20 @@ scripterror:
     if (GARGCOUNT > 1)
 	printf(_("%d files to edit\n"), GARGCOUNT);
 #ifdef MSWIN
-    else if (GARGCOUNT == 1)
+    else if (GARGCOUNT == 1 && full_path)
     {
 	/*
 	 * If there is one filename, fully qualified, we have very probably
 	 * been invoked from explorer, so change to the file's directory.
+	 * Hint: to avoid this when typing a command use a forward slash.
+	 * If the cd fails, it doesn't matter.
 	 */
-	if (fname[0] != NUL && fname[1] == ':' && fname[2] == '\\')
-	{
-	    /* If the cd fails, it doesn't matter.. */
-	    (void)vim_chdirfile(fname);
-	}
+	(void)vim_chdirfile(fname);
     }
 #endif
 
 #ifdef FEAT_DIFF
-    if (diffmode)
+    if (diff_mode)
     {
 	if (window_count == -1)
 	    window_count = 0;		/* open up to 3 files in a window */
@@ -864,7 +881,7 @@ scripterror:
 #ifdef FEAT_DIFF
     /* Set the 'diff' option now, so that it can be checked for in a .vimrc
      * file.  There is no buffer yet though. */
-    if (diffmode)
+    if (diff_mode)
 	diff_win_options(firstwin, FALSE);
 #endif
 
@@ -897,6 +914,13 @@ scripterror:
 #ifdef FEAT_MOUSESHAPE
     parse_shape_opt(SHAPE_MOUSE);  /* set mouse shapes from 'mouseshape' */
 #endif
+
+    /*
+     * For "evim" source evim.vim first of all, so that the user can overrule
+     * any things he doesn't like.
+     */
+    if (evim_mode)
+	(void)do_source((char_u *)EVIM_FILE, FALSE, FALSE);
 
     /*
      * If -u option given, use only the initializations from that file and
@@ -1120,7 +1144,7 @@ scripterror:
     {
 	if (use_ef != NULL)
 	    set_string_option_direct((char_u *)"ef", -1, use_ef, OPT_FREE);
-	if (qf_init(p_ef, p_efm) < 0)
+	if (qf_init(p_ef, p_efm, TRUE) < 0)
 	{
 	    out_char('\n');
 	    mch_windexit(3);
@@ -1386,9 +1410,9 @@ scripterror:
 #endif /* FEAT_WINDOWS */
 
 #ifdef FEAT_DIFF
-    if (diffmode)
+    if (diff_mode)
     {
-	win_t	*wp;
+	win_T	*wp;
 
 	/* set options in each window for "vimdiff". */
 	for (wp = firstwin; wp != NULL; wp = wp->w_next)
@@ -1453,7 +1477,7 @@ scripterror:
     if (curwin->w_p_diff && curwin->w_p_scb)
     {
 	update_topline();
-	check_scrollbind((linenr_t)0, 0L);
+	check_scrollbind((linenr_T)0, 0L);
     }
 #endif
 
@@ -1484,7 +1508,7 @@ scripterror:
 main_loop(cmdwin)
     int		cmdwin;	/* TRUE when working in the command-line window */
 {
-    oparg_t	oa;	/* operator arguments */
+    oparg_T	oa;	/* operator arguments */
 
     clear_oparg(&oa);
     while (!cmdwin
@@ -1614,8 +1638,8 @@ getout(exitval)
     int		exitval;
 {
 #ifdef FEAT_AUTOCMD
-    buf_t	*buf;
-    win_t	*wp;
+    buf_T	*buf;
+    win_T	*wp;
 #endif
 
     exiting = TRUE;
@@ -1677,6 +1701,9 @@ getout(exitval)
 	windgoto((int)Rows - 1, 0);
 #endif
 
+#ifdef FEAT_RUBY
+    ruby_end();
+#endif
 #ifdef FEAT_PYTHON
     python_end();
 #endif
@@ -1709,6 +1736,21 @@ get_number_arg(p, idx, def)
 }
 
 /*
+ * Setup to start using the GUI.  Exit with an error when not available.
+ */
+    static void
+main_start_gui()
+{
+#ifdef FEAT_GUI
+    gui.starting = TRUE;	/* start GUI a bit later */
+#else
+    mch_errmsg(_(e_nogvim));
+    mch_errmsg("\n");
+    mch_windexit(2);
+#endif
+}
+
+/*
  * Get an evironment variable, and execute it as Ex commands.
  * Returns FAIL if the environment variable was not executed, OK otherwise.
  */
@@ -1719,7 +1761,7 @@ process_env(env, is_viminit)
 {
     char_u	*initstr;
     char_u	*save_sourcing_name;
-    linenr_t	save_sourcing_lnum;
+    linenr_T	save_sourcing_lnum;
 
     if ((initstr = mch_getenv(env)) != NULL && *initstr != NUL)
     {
@@ -1821,6 +1863,7 @@ usage()
     main_msg(_("-e\t\t\tEx mode (like \"ex\")"));
     main_msg(_("-s\t\t\tSilent (batch) mode (only for \"ex\")"));
     main_msg(_("-d\t\t\tDiff mode (like \"vimdiff\")"));
+    main_msg(_("-y\t\t\tEasy mode (like \"evim\", modeless)"));
     main_msg(_("-R\t\t\tReadonly mode (like \"view\")"));
     main_msg(_("-Z\t\t\tRestricted mode (like \"rvim\")"));
     main_msg(_("-m\t\t\tModifications (writing files) not allowed"));
@@ -1853,10 +1896,11 @@ usage()
 #endif
     main_msg(_("--noplugin\t\tDon't load plugin scripts"));
     main_msg(_("-o[N]\t\tOpen N windows (default: one for each file)"));
+    main_msg(_("-O[N]\t\tlike -o but split vertically"));
     main_msg(_("+\t\t\tStart at end of file"));
     main_msg(_("+<lnum>\t\tStart at line <lnum>"));
     main_msg(_("-c <command>\t\tExecute <command> after loading the first file"));
-    main_msg(_("-S <session>\tExecute commands in file <session> after loading the first file"));
+    main_msg(_("-S <session>\t\tSource file <session> after loading the first file"));
     main_msg(_("-s <scriptin>\tRead Normal mode commands from file <scriptin>"));
     main_msg(_("-w <scriptout>\tAppend all typed commands to file <scriptout>"));
     main_msg(_("-W <scriptout>\tWrite all typed commands to file <scriptout>"));

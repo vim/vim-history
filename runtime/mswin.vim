@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Mar 26
+" Last change:	2001 Apr 10
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -19,15 +19,15 @@ set backspace=2 whichwrap+=<,>,[,]
 vnoremap <BS> d
 
 " CTRL-X and SHIFT-Del are Cut
-vnoremap <C-X> "*x
-vnoremap <S-Del> "*x
+vnoremap <C-X> "+x
+vnoremap <S-Del> "+x
 
 " CTRL-C and CTRL-Insert are Copy
-vnoremap <C-C> "*y
-vnoremap <C-Insert> "*y
+vnoremap <C-C> "+y
+vnoremap <C-Insert> "+y
 
 " CTRL-V and SHIFT-Insert are Paste
-nnoremap <SID>Paste "=@*.'xy'<CR>gPFx"_2x:echo<CR>
+nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
 map <C-V>				<SID>Paste
 map <S-Insert>				<SID>Paste
 if has("gui")
@@ -44,8 +44,8 @@ if has("gui")
   imenu        ToolBar.Paste		x<Esc><SID>Paste"_s
 endif
 
-cmap <C-V>      <C-R>*
-cmap <S-Insert> <C-R>*
+cmap <C-V>      <C-R>+
+cmap <S-Insert> <C-R>+
 
 vmap <C-V>				"-cx<Esc><SID>Paste"_x
 vmap <S-Insert>				"-cx<Esc><SID>Paste"_x
@@ -58,8 +58,11 @@ endif
 " Use CTRL-Q to do what CTRL-V used to do
 noremap <C-Q> <C-V>
 
-" For CTRL-V to work autoselect must be off
-set guioptions-=a
+" For CTRL-V to work autoselect must be off.
+" On Unix we have two selections, autoselect can be used.
+if !has("unix")
+  set guioptions-=a
+endif
 
 " CTRL-Z is Undo
 noremap <C-Z> u

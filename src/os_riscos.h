@@ -78,6 +78,9 @@
 #ifndef VIEW_FILE
 # define VIEW_FILE	"/View.vim"
 #endif
+#ifndef USR_VIMRC_FILE
+# define USR_VIMRC_FILE	"Vim:Evim"
+#endif
 #ifndef SESSION_FILE
 # define SESSION_FILE	"/Session.vim"
 #endif

@@ -73,9 +73,9 @@ typedef struct pointer_entry	PTR_EN;	    /* block/line-count pair */
  */
 struct pointer_entry
 {
-    blocknr_t	pe_bnum;	/* block number */
-    linenr_t	pe_line_count;	/* number of lines in this branch */
-    linenr_t	pe_old_lnum;	/* lnum for this block (for recovery) */
+    blocknr_T	pe_bnum;	/* block number */
+    linenr_T	pe_line_count;	/* number of lines in this branch */
+    linenr_T	pe_old_lnum;	/* lnum for this block (for recovery) */
     int		pe_page_count;	/* number of pages in block pe_bnum */
 };
 
@@ -104,7 +104,7 @@ struct data_block
     unsigned	db_free;	/* free space available */
     unsigned	db_txt_start;	/* byte where text starts */
     unsigned	db_txt_end;	/* byte just after data block */
-    linenr_t	db_line_count;	/* number of lines in this block */
+    linenr_T	db_line_count;	/* number of lines in this block */
     unsigned	db_index[1];	/* index for start of line (actually bigger)
 				 * followed by empty space upto db_txt_start
 				 * followed by the text in the lines until
@@ -176,7 +176,7 @@ struct block0
  * (always used for the current buffer only, no buffer change possible while
  * executing a global command).
  */
-static linenr_t	lowest_marked = 0;
+static linenr_T	lowest_marked = 0;
 
 /*
  * arguments for ml_find_line()
@@ -187,19 +187,19 @@ static linenr_t	lowest_marked = 0;
 #define ML_FLUSH	0x02	    /* flush locked block */
 #define ML_SIMPLE(x)	(x & 0x10)  /* DEL, INS or FIND */
 
-static void set_b0_fname __ARGS((ZERO_BL *, buf_t *buf));
+static void set_b0_fname __ARGS((ZERO_BL *, buf_T *buf));
 static void swapfile_info __ARGS((char_u *));
 static int recov_file_names __ARGS((char_u **, char_u *, int prepend_dot));
-static int ml_append_int __ARGS((buf_t *, linenr_t, char_u *, colnr_t, int, int));
-static int ml_delete_int __ARGS((buf_t *, linenr_t, int));
-static char_u *findswapname __ARGS((buf_t *, char_u **, char_u *));
-static void ml_flush_line __ARGS((buf_t *));
-static bhdr_t *ml_new_data __ARGS((memfile_t *, int, int));
-static bhdr_t *ml_new_ptr __ARGS((memfile_t *));
-static bhdr_t *ml_find_line __ARGS((buf_t *, linenr_t, int));
-static int ml_add_stack __ARGS((buf_t *));
-static char_u *makeswapname __ARGS((buf_t *, char_u *));
-static void ml_lineadd __ARGS((buf_t *, int));
+static int ml_append_int __ARGS((buf_T *, linenr_T, char_u *, colnr_T, int, int));
+static int ml_delete_int __ARGS((buf_T *, linenr_T, int));
+static char_u *findswapname __ARGS((buf_T *, char_u **, char_u *));
+static void ml_flush_line __ARGS((buf_T *));
+static bhdr_T *ml_new_data __ARGS((memfile_T *, int, int));
+static bhdr_T *ml_new_ptr __ARGS((memfile_T *));
+static bhdr_T *ml_find_line __ARGS((buf_T *, linenr_T, int));
+static int ml_add_stack __ARGS((buf_T *));
+static char_u *makeswapname __ARGS((buf_T *, char_u *));
+static void ml_lineadd __ARGS((buf_T *, int));
 static int b0_magic_wrong __ARGS((ZERO_BL *));
 #ifdef CHECK_INODE
 static int fnamecmp_ino __ARGS((char_u *, char_u *, long));
@@ -210,7 +210,7 @@ static long char_to_long __ARGS((char_u *));
 static char_u *make_percent_swname __ARGS((char_u *dir, char_u *name));
 #endif
 #ifdef FEAT_BYTEOFF
-static void ml_updatechunk __ARGS((buf_t *buf, long line, int len, int updtype));
+static void ml_updatechunk __ARGS((buf_T *buf, long line, int len, int updtype));
 #endif
 
 /*
@@ -221,8 +221,8 @@ static void ml_updatechunk __ARGS((buf_t *buf, long line, int len, int updtype))
     int
 ml_open()
 {
-    memfile_t	*mfp;
-    bhdr_t	*hp = NULL;
+    memfile_T	*mfp;
+    bhdr_T	*hp = NULL;
     ZERO_BL	*b0p;
     PTR_BL	*pp;
     DATA_BL	*dp;
@@ -361,7 +361,7 @@ error:
 ml_setname()
 {
     int		success = FALSE;
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     char_u	*fname;
     char_u	*dirp;
 #if defined(MSDOS) || defined(MSWIN)
@@ -456,7 +456,7 @@ ml_setname()
     void
 ml_open_files()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (!buf->b_p_ro || buf->b_changed)
@@ -470,9 +470,9 @@ ml_open_files()
  */
     void
 ml_open_file(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     char_u	*fname;
     char_u	*dirp;
 
@@ -541,7 +541,7 @@ check_need_swap(newfile)
  */
     void
 ml_close(buf, del_file)
-    buf_t	*buf;
+    buf_T	*buf;
     int		del_file;
 {
     if (buf->b_ml.ml_mfp == NULL)		/* not open */
@@ -570,7 +570,7 @@ ml_close(buf, del_file)
 ml_close_all(del_file)
     int		del_file;
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	ml_close(buf, del_file);
@@ -586,7 +586,7 @@ ml_close_all(del_file)
     void
 ml_close_notmod()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
 	if (!bufIsChanged(buf))
@@ -599,15 +599,15 @@ ml_close_notmod()
  */
     void
 ml_timestamp(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    memfile_t	*mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp;
+    bhdr_T	*hp;
     ZERO_BL	*b0p;
 
     mfp = buf->b_ml.ml_mfp;
 
-    if (mfp == NULL || (hp = mf_get(mfp, (blocknr_t)0, 1)) == NULL)
+    if (mfp == NULL || (hp = mf_get(mfp, (blocknr_T)0, 1)) == NULL)
 	return;
     b0p = (ZERO_BL *)(hp->bh_data);
     if (b0p->b0_id[0] != BLOCK0_ID0 || b0p->b0_id[1] != BLOCK0_ID1)
@@ -625,7 +625,7 @@ ml_timestamp(buf)
     static void
 set_b0_fname(b0p, buf)
     ZERO_BL	*b0p;
-    buf_t	*buf;
+    buf_T	*buf;
 {
     struct stat	st;
 
@@ -690,25 +690,25 @@ set_b0_fname(b0p, buf)
     void
 ml_recover()
 {
-    buf_t	*buf = NULL;
-    memfile_t	*mfp = NULL;
+    buf_T	*buf = NULL;
+    memfile_T	*mfp = NULL;
     char_u	*fname;
-    bhdr_t	*hp = NULL;
+    bhdr_T	*hp = NULL;
     ZERO_BL	*b0p;
     PTR_BL	*pp;
     DATA_BL	*dp;
-    infoptr_t	*ip;
-    blocknr_t	bnum;
+    infoptr_T	*ip;
+    blocknr_T	bnum;
     int		page_count;
     struct stat	org_stat, swp_stat;
     int		len;
     int		directly;
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	*p;
     int		i;
     long	error;
     int		cannot_open;
-    linenr_t	line_count;
+    linenr_T	line_count;
     int		has_error;
     int		idx;
     int		top;
@@ -777,7 +777,7 @@ ml_recover()
 /*
  * allocate a buffer structure (only the memline in it is really used)
  */
-    buf = (buf_t *)alloc((unsigned)sizeof(buf_t));
+    buf = (buf_T *)alloc((unsigned)sizeof(buf_T));
     if (buf == NULL)
     {
 	vim_free(fname);
@@ -822,7 +822,7 @@ ml_recover()
 /*
  * try to read block 0
  */
-    if ((hp = mf_get(mfp, (blocknr_t)0, 1)) == NULL)
+    if ((hp = mf_get(mfp, (blocknr_T)0, 1)) == NULL)
     {
 	msg_start();
 	MSG_PUTS_ATTR(_("Unable to read block 0 from "), attr | MSG_HIST);
@@ -878,7 +878,7 @@ ml_recover()
 	if ((size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	    mfp->mf_blocknr_max = 0;	    /* no file or empty file */
 	else
-	    mfp->mf_blocknr_max = (blocknr_t)(size / mfp->mf_page_size);
+	    mfp->mf_blocknr_max = (blocknr_T)(size / mfp->mf_page_size);
 	mfp->mf_infile_count = mfp->mf_blocknr_max;
     }
 
@@ -935,7 +935,7 @@ ml_recover()
      * contents of the current buffer.
      */
     while (!(curbuf->b_ml.ml_flags & ML_EMPTY))
-	ml_delete((linenr_t)1, FALSE);
+	ml_delete((linenr_T)1, FALSE);
 
     bnum = 1;		/* start with block 1 */
     page_count = 1;	/* which is 1 page */
@@ -961,7 +961,7 @@ ml_recover()
 	/*
 	 * get block
 	 */
-	if ((hp = mf_get(mfp, (blocknr_t)bnum, page_count)) == NULL)
+	if ((hp = mf_get(mfp, (blocknr_T)bnum, page_count)) == NULL)
 	{
 	    if (bnum == 1)
 	    {
@@ -970,7 +970,7 @@ ml_recover()
 	    }
 	    ++error;
 	    ml_append(lnum++, (char_u *)_("???MANY LINES MISSING"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 	}
 	else		/* there is a block */
 	{
@@ -986,14 +986,14 @@ ml_recover()
 		    {
 			++error;
 			ml_append(lnum++, (char_u *)_("???LINE COUNT WRONG"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 		    }
 		}
 
 		if (pp->pb_count == 0)
 		{
 		    ml_append(lnum++, (char_u *)_("???EMPTY BLOCK"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 		    ++error;
 		}
 		else if (idx < (int)pp->pb_count)	/* go a block deeper */
@@ -1019,7 +1019,7 @@ ml_recover()
 			{
 			    ++error;
 			    ml_append(lnum++, (char_u *)_("???LINES MISSING"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 			}
 			++idx;	    /* get same block again for next index */
 			continue;
@@ -1056,7 +1056,7 @@ ml_recover()
 		    }
 		    ++error;
 		    ml_append(lnum++, (char_u *)_("???BLOCK MISSING"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 		}
 		else
 		{
@@ -1072,7 +1072,7 @@ ml_recover()
 		    if (page_count * mfp->mf_page_size != dp->db_txt_end)
 		    {
 			ml_append(lnum++, (char_u *)_("??? from here until ???END lines may be messed up"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 			++error;
 			has_error = TRUE;
 			dp->db_txt_end = page_count * mfp->mf_page_size;
@@ -1088,7 +1088,7 @@ ml_recover()
 		    if (line_count != dp->db_line_count)
 		    {
 			ml_append(lnum++, (char_u *)_("??? from here until ???END lines may have been inserted/deleted"),
-							    (colnr_t)0, TRUE);
+							    (colnr_T)0, TRUE);
 			++error;
 			has_error = TRUE;
 		    }
@@ -1104,10 +1104,10 @@ ml_recover()
 			}
 			else
 			    p = (char_u *)dp + txt_start;
-			ml_append(lnum++, p, (colnr_t)0, TRUE);
+			ml_append(lnum++, p, (colnr_T)0, TRUE);
 		    }
 		    if (has_error)
-			ml_append(lnum++, (char_u *)_("???END"), (colnr_t)0, TRUE);
+			ml_append(lnum++, (char_u *)_("???END"), (colnr_T)0, TRUE);
 		}
 	    }
 	}
@@ -1686,7 +1686,7 @@ ml_sync_all(check_file, check_char)
     int	    check_file;
     int	    check_char;
 {
-    buf_t		*buf;
+    buf_T		*buf;
     struct stat		st;
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
@@ -1696,7 +1696,7 @@ ml_sync_all(check_file, check_char)
 
 	ml_flush_line(buf);		    /* flush buffered line */
 					    /* flush locked block */
-	(void)ml_find_line(buf, (linenr_t)0, ML_FLUSH);
+	(void)ml_find_line(buf, (linenr_T)0, ML_FLUSH);
 	if (bufIsChanged(buf) && check_file && mf_need_trans(buf->b_ml.ml_mfp)
 						     && buf->b_ffname != NULL)
 	{
@@ -1733,12 +1733,12 @@ ml_sync_all(check_file, check_char)
  */
     void
 ml_preserve(buf, message)
-    buf_t	*buf;
+    buf_T	*buf;
     int		message;
 {
-    bhdr_t	*hp;
-    linenr_t	lnum;
-    memfile_t	*mfp = buf->b_ml.ml_mfp;
+    bhdr_T	*hp;
+    linenr_T	lnum;
+    memfile_T	*mfp = buf->b_ml.ml_mfp;
     int		status;
 
     if (mfp == NULL || mfp->mf_fname == NULL)
@@ -1749,7 +1749,7 @@ ml_preserve(buf, message)
     }
 
     ml_flush_line(buf);				    /* flush buffered line */
-    (void)ml_find_line(buf, (linenr_t)0, ML_FLUSH); /* flush locked block */
+    (void)ml_find_line(buf, (linenr_T)0, ML_FLUSH); /* flush locked block */
     status = mf_sync(mfp, MFS_ALL | MFS_FLUSH);
 
     /* stack is invalid after mf_sync(.., MFS_ALL) */
@@ -1781,7 +1781,7 @@ ml_preserve(buf, message)
 	    CHECK(buf->b_ml.ml_locked_low != lnum, "low != lnum");
 	    lnum = buf->b_ml.ml_locked_high + 1;
 	}
-	(void)ml_find_line(buf, (linenr_t)0, ML_FLUSH);	/* flush locked block */
+	(void)ml_find_line(buf, (linenr_T)0, ML_FLUSH);	/* flush locked block */
 	/* sync the updated pointer blocks */
 	if (mf_sync(mfp, MFS_ALL | MFS_FLUSH) == FAIL)
 	    status = FAIL;
@@ -1805,7 +1805,7 @@ theend:
  */
     char_u  *
 ml_get(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     return ml_get_buf(curbuf, lnum, FALSE);
 }
@@ -1815,7 +1815,7 @@ ml_get(lnum)
  */
     char_u *
 ml_get_pos(pos)
-    pos_t	*pos;
+    pos_T	*pos;
 {
     return (ml_get_buf(curbuf, pos->lnum, FALSE) + pos->col);
 }
@@ -1847,11 +1847,11 @@ ml_get_cursor()
  */
     char_u  *
 ml_get_buf(buf, lnum, will_change)
-    buf_t	*buf;
-    linenr_t	lnum;
+    buf_T	*buf;
+    linenr_T	lnum;
     int		will_change;		/* line will be changed */
 {
-    bhdr_t    *hp;
+    bhdr_T    *hp;
     DATA_BL *dp;
     char_u  *ptr;
 
@@ -1916,15 +1916,15 @@ ml_line_alloced()
  *   newfile: TRUE when starting to edit a new file, meaning that pe_old_lnum
  *		will be set for recovery
  * Check: The caller of this function should probably also call
- * appended_lines(), unless update_screen(NOT_VALID) is used.
+ * appended_lines().
  *
  * return FAIL for failure, OK otherwise
  */
     int
 ml_append(lnum, line, len, newfile)
-    linenr_t	lnum;		/* append after this line (can be 0) */
+    linenr_T	lnum;		/* append after this line (can be 0) */
     char_u	*line;		/* text of the new line */
-    colnr_t	len;		/* length of new line, including NUL, or 0 */
+    colnr_T	len;		/* length of new line, including NUL, or 0 */
     int		newfile;	/* flag, see above */
 {
     /* When starting up, we might still need to create the memfile */
@@ -1938,10 +1938,10 @@ ml_append(lnum, line, len, newfile)
 
     static int
 ml_append_int(buf, lnum, line, len, newfile, mark)
-    buf_t	*buf;
-    linenr_t	lnum;		/* append after this line (can be 0) */
+    buf_T	*buf;
+    linenr_T	lnum;		/* append after this line (can be 0) */
     char_u	*line;		/* text of the new line */
-    colnr_t	len;		/* length of line, including NUL, or 0 */
+    colnr_T	len;		/* length of line, including NUL, or 0 */
     int		newfile;	/* flag, see above */
     int		mark;		/* mark the new line */
 {
@@ -1953,11 +1953,11 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
     int		page_size;
     int		page_count;
     int		db_idx;		/* index for lnum in data block */
-    bhdr_t	*hp;
-    memfile_t	*mfp;
+    bhdr_T	*hp;
+    memfile_T	*mfp;
     DATA_BL	*dp;
     PTR_BL	*pp;
-    infoptr_t	*ip;
+    infoptr_T	*ip;
 
 					/* lnum out of range */
     if (lnum > buf->b_ml.ml_line_count || buf->b_ml.ml_mfp == NULL)
@@ -1978,7 +1978,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
  * This also fills the stack with the blocks from the root to the data block
  * This also releases any locked block.
  */
-    if ((hp = ml_find_line(buf, lnum == 0 ? (linenr_t)1 : lnum,
+    if ((hp = ml_find_line(buf, lnum == 0 ? (linenr_T)1 : lnum,
 							  ML_INSERT)) == NULL)
 	return FAIL;
 
@@ -2083,9 +2083,9 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
  */
 	long	    line_count_left, line_count_right;
 	int	    page_count_left, page_count_right;
-	bhdr_t	    *hp_left;
-	bhdr_t	    *hp_right;
-	bhdr_t	    *hp_new;
+	bhdr_T	    *hp_left;
+	bhdr_T	    *hp_right;
+	bhdr_T	    *hp_new;
 	int	    lines_moved;
 	int	    data_moved = 0;	    /* init to shut up gcc */
 	int	    total_moved = 0;	    /* init to shut up gcc */
@@ -2093,8 +2093,8 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 	int	    stack_idx;
 	int	    in_left;
 	int	    lineadd;
-	blocknr_t   bnum_left, bnum_right;
-	linenr_t    lnum_left, lnum_right;
+	blocknr_T   bnum_left, bnum_right;
+	linenr_T    lnum_left, lnum_right;
 	int	    pb_idx;
 	PTR_BL	    *pp_new;
 
@@ -2256,7 +2256,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
 	 */
 	lineadd = buf->b_ml.ml_locked_lineadd;
 	buf->b_ml.ml_locked_lineadd = 0;
-	ml_find_line(buf, (linenr_t)0, ML_FLUSH);   /* flush data block */
+	ml_find_line(buf, (linenr_T)0, ML_FLUSH);   /* flush data block */
 
 	/*
 	 * update pointer blocks for the new data block
@@ -2438,7 +2438,7 @@ ml_append_int(buf, lnum, line, len, newfile, mark)
  */
     int
 ml_replace(lnum, line, copy)
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	*line;
     int		copy;
 {
@@ -2472,7 +2472,7 @@ ml_replace(lnum, line, copy)
  */
     int
 ml_delete(lnum, message)
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		message;
 {
     ml_flush_line(curbuf);
@@ -2481,15 +2481,15 @@ ml_delete(lnum, message)
 
     static int
 ml_delete_int(buf, lnum, message)
-    buf_t	*buf;
-    linenr_t	lnum;
+    buf_T	*buf;
+    linenr_T	lnum;
     int		message;
 {
-    bhdr_t	*hp;
-    memfile_t	*mfp;
+    bhdr_T	*hp;
+    memfile_T	*mfp;
     DATA_BL	*dp;
     PTR_BL	*pp;
-    infoptr_t	*ip;
+    infoptr_T	*ip;
     int		count;	    /* number of entries in block */
     int		idx;
     int		stack_idx;
@@ -2515,7 +2515,7 @@ ml_delete_int(buf, lnum, message)
 	    keep_msg_attr = 0;
 	}
 	/* FEAT_BYTEOFF already handled in there, dont worry 'bout it below */
-	i = ml_replace((linenr_t)1, (char_u *)"", TRUE);
+	i = ml_replace((linenr_T)1, (char_u *)"", TRUE);
 	buf->b_ml.ml_flags |= ML_EMPTY;
 
 	return i;
@@ -2636,9 +2636,9 @@ ml_delete_int(buf, lnum, message)
  */
     void
 ml_setmarked(lnum)
-    linenr_t lnum;
+    linenr_T lnum;
 {
-    bhdr_t    *hp;
+    bhdr_T    *hp;
     DATA_BL *dp;
 				    /* invalid line number */
     if (lnum < 1 || lnum > curbuf->b_ml.ml_line_count
@@ -2664,16 +2664,16 @@ ml_setmarked(lnum)
 /*
  * find the first line with its B_MARKED flag set
  */
-    linenr_t
+    linenr_T
 ml_firstmarked()
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		i;
 
     if (curbuf->b_ml.ml_mfp == NULL)
-	return (linenr_t) 0;
+	return (linenr_T) 0;
 
     /*
      * The search starts with lowest_marked line. This is the last line where
@@ -2687,7 +2687,7 @@ ml_firstmarked()
 	 * block This also releases any locked block.
 	 */
 	if ((hp = ml_find_line(curbuf, lnum, ML_FIND)) == NULL)
-	    return (linenr_t)0;		    /* give error message? */
+	    return (linenr_T)0;		    /* give error message? */
 
 	dp = (DATA_BL *)(hp->bh_data);
 
@@ -2702,7 +2702,7 @@ ml_firstmarked()
 	    }
     }
 
-    return (linenr_t) 0;
+    return (linenr_T) 0;
 }
 
 #if 0  /* not used */
@@ -2711,9 +2711,9 @@ ml_firstmarked()
  */
     int
 ml_has_mark(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
 
     if (curbuf->b_ml.ml_mfp == NULL
@@ -2731,9 +2731,9 @@ ml_has_mark(lnum)
     void
 ml_clearmarked()
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		i;
 
     if (curbuf->b_ml.ml_mfp == NULL)	    /* nothing to do */
@@ -2772,14 +2772,14 @@ ml_clearmarked()
  */
     static void
 ml_flush_line(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	*new_line;
     char_u	*old_line;
-    colnr_t	new_len;
+    colnr_T	new_len;
     int		old_len;
     int		extra;
     int		idx;
@@ -2867,13 +2867,13 @@ ml_flush_line(buf)
 /*
  * create a new, empty, data block
  */
-    static bhdr_t *
+    static bhdr_T *
 ml_new_data(mfp, negative, page_count)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
     int		negative;
     int		page_count;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
 
     if ((hp = mf_new(mfp, negative, page_count)) == NULL)
@@ -2891,11 +2891,11 @@ ml_new_data(mfp, negative, page_count)
 /*
  * create a new, empty, pointer block
  */
-    static bhdr_t *
+    static bhdr_T *
 ml_new_ptr(mfp)
-    memfile_t	*mfp;
+    memfile_T	*mfp;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     PTR_BL	*pp;
 
     if ((hp = mf_new(mfp, FALSE, 1)) == NULL)
@@ -2924,21 +2924,21 @@ ml_new_ptr(mfp)
  *
  * return: NULL for failure, pointer to block header otherwise
  */
-    static bhdr_t *
+    static bhdr_T *
 ml_find_line(buf, lnum, action)
-    buf_t	*buf;
-    linenr_t	lnum;
+    buf_T	*buf;
+    linenr_T	lnum;
     int		action;
 {
     DATA_BL	*dp;
     PTR_BL	*pp;
-    infoptr_t	*ip;
-    bhdr_t	*hp;
-    memfile_t	*mfp;
-    linenr_t	t;
-    blocknr_t	bnum, bnum2;
+    infoptr_T	*ip;
+    bhdr_T	*hp;
+    memfile_T	*mfp;
+    linenr_T	t;
+    blocknr_T	bnum, bnum2;
     int		dirty;
-    linenr_t	low, high;
+    linenr_T	low, high;
     int		top;
     int		page_count;
     int		idx;
@@ -3128,10 +3128,10 @@ error_noblock:
  */
     static int
 ml_add_stack(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     int		top;
-    infoptr_t	*newstack;
+    infoptr_T	*newstack;
 
     top = buf->b_ml.ml_stack_top;
 
@@ -3140,11 +3140,11 @@ ml_add_stack(buf)
     {
 	CHECK(top > 0, _("Stack size increases"));	/* more than 5 levels??? */
 
-	newstack = (infoptr_t *)alloc((unsigned)sizeof(infoptr_t) *
+	newstack = (infoptr_T *)alloc((unsigned)sizeof(infoptr_T) *
 					(buf->b_ml.ml_stack_size + STACK_INCR));
 	if (newstack == NULL)
 	    return -1;
-	mch_memmove(newstack, buf->b_ml.ml_stack, (size_t)top * sizeof(infoptr_t));
+	mch_memmove(newstack, buf->b_ml.ml_stack, (size_t)top * sizeof(infoptr_T));
 	vim_free(buf->b_ml.ml_stack);
 	buf->b_ml.ml_stack = newstack;
 	buf->b_ml.ml_stack_size += STACK_INCR;
@@ -3166,14 +3166,14 @@ ml_add_stack(buf)
  */
     static void
 ml_lineadd(buf, count)
-    buf_t	*buf;
+    buf_T	*buf;
     int		count;
 {
     int		idx;
-    infoptr_t	*ip;
+    infoptr_T	*ip;
     PTR_BL	*pp;
-    memfile_t	*mfp = buf->b_ml.ml_mfp;
-    bhdr_t	*hp;
+    memfile_T	*mfp = buf->b_ml.ml_mfp;
+    bhdr_T	*hp;
 
     for (idx = buf->b_ml.ml_stack_top - 1; idx >= 0; --idx)
     {
@@ -3198,7 +3198,7 @@ ml_lineadd(buf, count)
  */
     static char_u *
 makeswapname(buf, dir_name)
-    buf_t	*buf;
+    buf_T	*buf;
     char_u	*dir_name;
 {
     char_u	*r, *s;
@@ -3311,7 +3311,7 @@ get_file_in_dir(fname, dname)
  */
     static char_u *
 findswapname(buf, dirp, old_fname)
-    buf_t	*buf;
+    buf_T	*buf;
     char_u	**dirp;		/* pointer to list of directories */
     char_u	*old_fname;	/* don't give warning for this file name */
 {
@@ -3872,10 +3872,10 @@ char_to_long(s)
 
     void
 ml_setdirty(buf, flag)
-    buf_t	*buf;
+    buf_T	*buf;
     int		flag;
 {
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     ZERO_BL	*b0p;
 
     if (!buf->b_ml.ml_mfp)
@@ -3907,30 +3907,30 @@ ml_setdirty(buf, flag)
  */
     static void
 ml_updatechunk(buf, line, len, updtype)
-    buf_t	*buf;
-    linenr_t	line;
+    buf_T	*buf;
+    linenr_T	line;
     int		len;
     int		updtype;
 {
-    static buf_t	*ml_upd_lastbuf = NULL;
-    static linenr_t	ml_upd_lastline;
-    static linenr_t	ml_upd_lastcurline;
+    static buf_T	*ml_upd_lastbuf = NULL;
+    static linenr_T	ml_upd_lastline;
+    static linenr_T	ml_upd_lastcurline;
     static int		ml_upd_lastcurix;
 
-    linenr_t		curline = ml_upd_lastcurline;
+    linenr_T		curline = ml_upd_lastcurline;
     int			curix = ml_upd_lastcurix;
     long		size;
-    chunksize_t		*curchnk;
+    chunksize_T		*curchnk;
     int			rest;
-    bhdr_t		*hp;
+    bhdr_T		*hp;
     DATA_BL		*dp;
 
     if (buf->b_ml.ml_usedchunks == -1 || !len)
 	return;
     if (buf->b_ml.ml_chunksize == NULL)
     {
-	buf->b_ml.ml_chunksize = (chunksize_t *)
-				  alloc((unsigned)sizeof(chunksize_t) * 100);
+	buf->b_ml.ml_chunksize = (chunksize_T *)
+				  alloc((unsigned)sizeof(chunksize_T) * 100);
 	if (buf->b_ml.ml_chunksize == NULL)
 	{
 	    buf->b_ml.ml_usedchunks = -1;
@@ -3989,9 +3989,9 @@ ml_updatechunk(buf, line, len, updtype)
 	if (buf->b_ml.ml_usedchunks + 1 >= buf->b_ml.ml_numchunks)
 	{
 	    buf->b_ml.ml_numchunks = buf->b_ml.ml_numchunks * 3 / 2;
-	    buf->b_ml.ml_chunksize = (chunksize_t *)
+	    buf->b_ml.ml_chunksize = (chunksize_T *)
 		vim_realloc(buf->b_ml.ml_chunksize,
-			    sizeof(chunksize_t) * buf->b_ml.ml_numchunks);
+			    sizeof(chunksize_T) * buf->b_ml.ml_numchunks);
 	    if (buf->b_ml.ml_chunksize == NULL)
 	    {
 		/* Hmmmm, Give up on offset for this buffer */
@@ -4010,7 +4010,7 @@ ml_updatechunk(buf, line, len, updtype)
 	    mch_memmove(buf->b_ml.ml_chunksize + curix + 1,
 			buf->b_ml.ml_chunksize + curix,
 			(buf->b_ml.ml_usedchunks - curix) *
-			sizeof(chunksize_t));
+			sizeof(chunksize_T));
 	    /* Compute length of first half of lines in the splitted chunk */
 	    size = 0;
 	    linecnt = 0;
@@ -4109,7 +4109,7 @@ ml_updatechunk(buf, line, len, updtype)
 	{
 	    buf->b_ml.ml_usedchunks--;
 	    mch_memmove(buf->b_ml.ml_chunksize, buf->b_ml.ml_chunksize + 1,
-			buf->b_ml.ml_usedchunks * sizeof(chunksize_t));
+			buf->b_ml.ml_usedchunks * sizeof(chunksize_T));
 	    return;
 	}
 	else if (curix == 0 || (curchnk->mlcs_numlines > 10
@@ -4128,7 +4128,7 @@ ml_updatechunk(buf, line, len, updtype)
 	    mch_memmove(buf->b_ml.ml_chunksize + curix,
 			buf->b_ml.ml_chunksize + curix + 1,
 			(buf->b_ml.ml_usedchunks - curix) *
-			sizeof(chunksize_t));
+			sizeof(chunksize_T));
 	}
 	return;
     }
@@ -4146,14 +4146,14 @@ ml_updatechunk(buf, line, len, updtype)
  */
     long
 ml_find_line_or_offset(buf, line, offp)
-    buf_t	*buf;
-    linenr_t	line;
+    buf_T	*buf;
+    linenr_T	line;
     long	*offp;
 {
-    linenr_t	curline;
+    linenr_T	curline;
     int		curix;
     long	size;
-    bhdr_t	*hp;
+    bhdr_T	*hp;
     DATA_BL	*dp;
     int		count;		/* number of entries in block */
     int		idx;
@@ -4259,23 +4259,23 @@ goto_byte(cnt)
     long	cnt;
 {
     long	boff = cnt;
-    linenr_t	lnum;
+    linenr_T	lnum;
 
     ml_flush_line(curbuf);	/* cached line may be dirty */
     setpcmark();
     if (boff)
 	--boff;
-    lnum = ml_find_line_or_offset(curbuf, (linenr_t)0, &boff);
+    lnum = ml_find_line_or_offset(curbuf, (linenr_T)0, &boff);
     if (lnum < 1)	/* past the end */
     {
 	curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 	curwin->w_curswant = MAXCOL;
-	coladvance((colnr_t)MAXCOL);
+	coladvance((colnr_T)MAXCOL);
     }
     else
     {
 	curwin->w_cursor.lnum = lnum;
-	curwin->w_cursor.col = (colnr_t)boff;
+	curwin->w_cursor.col = (colnr_T)boff;
 	curwin->w_set_curswant = TRUE;
     }
     check_cursor();

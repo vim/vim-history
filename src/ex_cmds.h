@@ -57,7 +57,7 @@
 #define FILE1	(FILES | NOSPC)	/* 1 file allowed, defaults to current file */
 
 #ifndef DO_DECLARE_EXCMD
-typedef struct exarg exarg_t;
+typedef struct exarg exarg_T;
 #endif
 
 /*
@@ -74,12 +74,12 @@ typedef struct exarg exarg_t;
 #ifdef DO_DECLARE_EXCMD
 # define EX(a, b, c, d)  {(char_u *)b, c, d}
 
-typedef void (*ex_func_t) __ARGS((exarg_t *eap));
+typedef void (*ex_func_T) __ARGS((exarg_T *eap));
 
 static struct cmdname
 {
     char_u	*cmd_name;	/* name of the command */
-    ex_func_t   cmd_func;	/* function for this command */
+    ex_func_T   cmd_func;	/* function for this command */
     long_u	cmd_argt;	/* flags declared above */
 }
 # if defined(FEAT_GUI_W16)
@@ -261,8 +261,12 @@ EX(CMD_display,		"display",	ex_display,
 			EXTRA|NOTRLCOM|TRLBAR|SBOXOK|CMDWIN),
 EX(CMD_diffupdate,	"diffupdate",	ex_diffupdate,
 			TRLBAR),
+EX(CMD_diffget,		"diffget",	ex_diffgetput,
+			RANGE|EXTRA|TRLBAR),
 EX(CMD_diffpatch,	"diffpatch",	ex_diffpatch,
-			EXTRA|FILE1|TRLBAR),
+			EXTRA|NEEDARG|FILE1|TRLBAR),
+EX(CMD_diffput,		"diffput",	ex_diffgetput,
+			RANGE|EXTRA|TRLBAR),
 EX(CMD_diffsplit,	"diffsplit",	ex_diffsplit,
 			EXTRA|FILE1|TRLBAR),
 EX(CMD_digraphs,	"digraphs",	ex_digraphs,
@@ -344,7 +348,9 @@ EX(CMD_global,		"global",	ex_global,
 EX(CMD_goto,		"goto",		ex_goto,
 			RANGE|NOTADR|COUNT|TRLBAR|SBOXOK|CMDWIN),
 EX(CMD_grep,		"grep",		ex_make,
-			NEEDARG|EXTRA|NOTRLCOM|TRLBAR|XFILE),
+			BANG|NEEDARG|EXTRA|NOTRLCOM|TRLBAR|XFILE),
+EX(CMD_grepadd,		"grepadd",	ex_make,
+			BANG|NEEDARG|EXTRA|NOTRLCOM|TRLBAR|XFILE),
 EX(CMD_gui,		"gui",		ex_gui,
 			BANG|FILES|EDITCMD|ARGOPT|TRLBAR|CMDWIN),
 EX(CMD_gvim,		"gvim",		ex_gui,
@@ -436,7 +442,7 @@ EX(CMD_move,		"move",		ex_copymove,
 EX(CMD_mark,		"mark",		ex_mark,
 			RANGE|WORD1|TRLBAR|SBOXOK|CMDWIN),
 EX(CMD_make,		"make",		ex_make,
-			EXTRA|NOTRLCOM|TRLBAR|XFILE),
+			BANG|EXTRA|NOTRLCOM|TRLBAR|XFILE),
 EX(CMD_map,		"map",		ex_map,
 			BANG|EXTRA|TRLBAR|NOTRLCOM|USECTRLV|CMDWIN),
 EX(CMD_mapclear,	"mapclear",	ex_mapclear,
@@ -607,6 +613,8 @@ EX(CMD_sargument,	"sargument",	ex_argument,
 			BANG|RANGE|NOTADR|COUNT|EXTRA|EDITCMD|ARGOPT|TRLBAR),
 EX(CMD_sall,		"sall",		ex_all,
 			RANGE|NOTADR|COUNT|TRLBAR),
+EX(CMD_saveas,		"saveas",	ex_write,
+			BANG|DFLALL|FILE1|ARGOPT|CMDWIN|TRLBAR),
 EX(CMD_sbuffer,		"sbuffer",	ex_buffer,
 			BANG|RANGE|NOTADR|BUFNAME|BUFUNL|COUNT|EXTRA|TRLBAR),
 EX(CMD_sbNext,		"sbNext",	ex_bprevious,
@@ -852,7 +860,7 @@ EX(CMD_tilde,		"~",		do_sub,
 #define USER_CMDIDX(idx) ((int)(idx) < 0)
 
 #ifndef DO_DECLARE_EXCMD
-typedef enum CMD_index cmdidx_t;
+typedef enum CMD_index cmdidx_T;
 
 /*
  * Arguments used for Ex commands.
@@ -863,15 +871,15 @@ struct exarg
     char_u	*nextcmd;	/* next command (NULL if none) */
     char_u	*cmd;		/* the name of the command (except for :make) */
     char_u	**cmdlinep;	/* pointer to pointer of allocated cmdline */
-    cmdidx_t	cmdidx;		/* the index for the command */
+    cmdidx_T	cmdidx;		/* the index for the command */
     long	argt;		/* flags for the command */
     int		skip;		/* don't execute the command, only parse it */
     int		forceit;	/* TRUE if ! present */
     int		addr_count;	/* the number of addresses given */
-    linenr_t	line1;		/* the first line number */
-    linenr_t	line2;		/* the second line number or count */
+    linenr_T	line1;		/* the first line number */
+    linenr_T	line2;		/* the second line number or count */
     char_u	*do_ecmd_cmd;	/* +command arg to be used in edited file */
-    linenr_t	do_ecmd_lnum;	/* the line number in an edited file */
+    linenr_T	do_ecmd_lnum;	/* the line number in an edited file */
     int		append;		/* TRUE with ":w >>file" command */
     int		usefilter;	/* TRUE with ":w !command" and ":r!command" */
     int		amount;		/* number of '>' or '<' for shift command */

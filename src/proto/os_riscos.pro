@@ -33,7 +33,7 @@ void mch_set_shellsize __ARGS((void));
 void mch_new_shellsize __ARGS((void));
 int mch_call_shell __ARGS((char_u *cmd, int options));
 void mch_breakcheck __ARGS((void));
-int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
+int mch_expandpath __ARGS((garray_T *gap, char_u *path, int flags));
 int mch_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_remove __ARGS((char_u *file));

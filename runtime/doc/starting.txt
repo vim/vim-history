@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0aa.  Last change: 2001 Mar 29
+*starting.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -97,6 +97,8 @@ rvim	vim -Z	    Like "vim", but in restricted mode (see |-Z|)   *rvim*
 rview	vim -RZ	    Like "view", but in restricted mode.	    *rview*
 rgvim	vim -gZ	    Like "gvim", but in restricted mode.	    *rgvim*
 rgview	vim -RgZ    Like "gview", but in restricted mode.	    *rgview*
+evim    vim -y      Easy Vim: set 'insertmode' (see |-y|)	    *evim*
+eview   vim -yR     Like "evim" in read-only mode		    *eview*
 
 Additional characters may follow, they are ignored.  For example, you can have
 "gvim-5" to start the GUI.  You must have an executable by that name then, of
@@ -269,6 +271,14 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		use this to get 'nocompatible', when there is no .vimrc file.
 		Also see |compatible-default|.  {not in Vi}
 
+							*-y*
+-y		Easy mode.  Implied for |evim| and |eview|.  Starts with
+		'insertmode' set and behaves like a click-and-type editor.
+		This sources the script $VIMRUNTIME/evim.vim.  Mappings are
+		set up to work like most click-and-type editors.  The GUI is
+		started when available.
+		{not in Vi}
+
 							*-n*
 -n		No swap file will be used.  Recovery after a crash will be
 		impossible.  Handy if you want to view or edit a file on a
@@ -376,11 +386,13 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 
 							*-X*
 -X		Do not try connecting to the X server to get the current
-		window title.  This avoids a long startup time when running
-		Vim in a terminal emulator and the connection to the X server
-		is slow.
+		window title and copy/paste using the X clipboard.  This
+		avoids a long startup time when running Vim in a terminal
+		emulator and the connection to the X server is slow.
 		Only makes a difference on Unix or VMS, when compiled with the
 		|+X11| feature.  Otherwise it's ignored.
+		To disable the connection only for specific terminals, see the
+		'clipboard' option.
 
 							*-s*
 -s {scriptin}	The script file "scriptin" is read.  The characters in the
@@ -552,8 +564,11 @@ accordingly.  Vim proceeds in this order:
 	If Vim was started in Ex mode with the "-s" argument, all following
 	initializations until 4. are skipped.  Only the "-u" option is
 	interpreted.
+							*evim.vim*
+     a. If vim was started as |evim| or |eview| or with the |-y| argument, the
+        script $VIMRUNTIME/evim.vim will be loaded.
      							*system-vimrc*
-     a. For Unix, MS-DOS, MS-Windows, OS/2, VMS, Macintosh, RISC-OS and Amiga
+     b. For Unix, MS-DOS, MS-Windows, OS/2, VMS, Macintosh, RISC-OS and Amiga
 	the system vimrc file is read for initializations.  The path of this
 	file is shown with the ":version" command.  Mostly it's "$VIM/vimrc".
 	Note that this file is ALWAYS read in 'compatible' mode, since the
@@ -561,7 +576,7 @@ accordingly.  Vim proceeds in this order:
 	nocp" command if you like.
 
 			  *VIMINIT* *.vimrc* *_vimrc* *EXINIT* *.exrc* *_exrc*
-     b. Four places are searched for initializations.  The first that exists
+     c. Four places are searched for initializations.  The first that exists
 	is used, the others are ignored.
 	-  The environment variable VIMINIT (see also |compatible-default|) (*)
 	-  The user vimrc file(s):
@@ -582,7 +597,7 @@ accordingly.  Vim proceeds in this order:
 	-  The user exrc file(s).  Same as for the user vimrc file, but with
 	   "vimrc" replaced by "exrc".  But without the (*)!
 
-     c. If the 'exrc' option is on (which is not the default), the current
+     d. If the 'exrc' option is on (which is not the default), the current
 	directory is searched for four files.  The first that exists is used,
 	the others are ignored.
 	-  The file ".vimrc" (for Unix, Amiga and OS/2) (*)

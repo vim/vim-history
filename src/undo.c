@@ -47,19 +47,19 @@
 
 #include "vim.h"
 
-static u_entry_t *u_get_headentry __ARGS((void));
+static u_entry_T *u_get_headentry __ARGS((void));
 static void u_getbot __ARGS((void));
-static int u_savecommon __ARGS((linenr_t, linenr_t, linenr_t));
+static int u_savecommon __ARGS((linenr_T, linenr_T, linenr_T));
 static void u_doit __ARGS((int count));
 static void u_undoredo __ARGS((void));
 static void u_undo_end __ARGS((void));
 static void u_freelist __ARGS((struct u_header *));
-static void u_freeentry __ARGS((u_entry_t *, long));
+static void u_freeentry __ARGS((u_entry_T *, long));
 
 static char_u *u_blockalloc __ARGS((long_u));
 static void u_free_line __ARGS((char_u *, int keep));
 static char_u *u_alloc_line __ARGS((unsigned));
-static char_u *u_save_line __ARGS((linenr_t));
+static char_u *u_save_line __ARGS((linenr_T));
 
 static long	u_newcount, u_oldcount;
 
@@ -75,8 +75,8 @@ static int	undo_undoes = FALSE;
     int
 u_save_cursor()
 {
-    return (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
-				      (linenr_t)(curwin->w_cursor.lnum + 1)));
+    return (u_save((linenr_T)(curwin->w_cursor.lnum - 1),
+				      (linenr_T)(curwin->w_cursor.lnum + 1)));
 }
 
 /*
@@ -86,7 +86,7 @@ u_save_cursor()
  */
     int
 u_save(top, bot)
-    linenr_t top, bot;
+    linenr_T top, bot;
 {
     if (undo_off)
 	return OK;
@@ -96,9 +96,9 @@ u_save(top, bot)
 	return FALSE;	/* rely on caller to do error messages */
 
     if (top + 2 == bot)
-	u_saveline((linenr_t)(top + 1));
+	u_saveline((linenr_T)(top + 1));
 
-    return (u_savecommon(top, bot, (linenr_t)0));
+    return (u_savecommon(top, bot, (linenr_T)0));
 }
 
 /*
@@ -107,7 +107,7 @@ u_save(top, bot)
  */
     int
 u_savesub(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     if (undo_off)
 	return OK;
@@ -121,7 +121,7 @@ u_savesub(lnum)
  */
     int
 u_inssub(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     if (undo_off)
 	return OK;
@@ -136,7 +136,7 @@ u_inssub(lnum)
  */
     int
 u_savedel(lnum, nlines)
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	nlines;
 {
     if (undo_off)
@@ -148,13 +148,13 @@ u_savedel(lnum, nlines)
 
     static int
 u_savecommon(top, bot, newbot)
-    linenr_t	top, bot;
-    linenr_t	newbot;
+    linenr_T	top, bot;
+    linenr_T	newbot;
 {
-    linenr_t		lnum;
+    linenr_T		lnum;
     long		i;
     struct u_header	*uhp;
-    u_entry_t		*uep;
+    u_entry_T		*uep;
     long		size;
 
     /*
@@ -231,7 +231,7 @@ u_savecommon(top, bot, newbot)
 		       ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
 
 	/* save named marks for undo */
-	mch_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(pos_t) * NMARKS);
+	mch_memmove(uhp->uh_namedm, curbuf->b_namedm, sizeof(pos_T) * NMARKS);
 	curbuf->b_u_newhead = uhp;
 	if (curbuf->b_u_oldhead == NULL)
 	    curbuf->b_u_oldhead = uhp;
@@ -267,7 +267,17 @@ u_savecommon(top, bot, newbot)
 
 		/* If it's the same line we can skip saving it again. */
 		if (uep->ue_size == 1 && uep->ue_top == top)
+		{
+		    /* The line count might change. */
+		    uep->ue_lcount = 0;
+		    if (newbot != 0)
+			uep->ue_bot = newbot;
+		    else if (bot > curbuf->b_ml.ml_line_count)
+			uep->ue_bot = 0;
+		    else
+			uep->ue_lcount = curbuf->b_ml.ml_line_count;
 		    return OK;
+		}
 		uep = uep->ue_next;
 	    }
 	}
@@ -288,7 +298,7 @@ u_savecommon(top, bot, newbot)
     /*
      * add lines in front of entry list
      */
-    uep = (u_entry_t *)u_alloc_line((unsigned)sizeof(u_entry_t));
+    uep = (u_entry_T *)u_alloc_line((unsigned)sizeof(u_entry_T));
     if (uep == NULL)
 	goto nomem;
 
@@ -451,17 +461,17 @@ u_doit(count)
 u_undoredo()
 {
     char_u	**newarray = NULL;
-    linenr_t	oldsize;
-    linenr_t	newsize;
-    linenr_t	top, bot;
-    linenr_t	lnum;
-    linenr_t	newlnum = MAXLNUM;
+    linenr_T	oldsize;
+    linenr_T	newsize;
+    linenr_T	top, bot;
+    linenr_T	lnum;
+    linenr_T	newlnum = MAXLNUM;
     long	i;
-    u_entry_t	*uep, *nuep;
-    u_entry_t	*newlist = NULL;
+    u_entry_T	*uep, *nuep;
+    u_entry_T	*newlist = NULL;
     int		old_flags;
     int		new_flags;
-    pos_t	namedm[NMARKS];
+    pos_T	namedm[NMARKS];
     int		empty_buffer;		    /* buffer became empty */
 
     old_flags = curbuf->b_u_curhead->uh_flags;
@@ -472,7 +482,7 @@ u_undoredo()
     /*
      * save marks before undo/redo
      */
-    mch_memmove(namedm, curbuf->b_namedm, sizeof(pos_t) * NMARKS);
+    mch_memmove(namedm, curbuf->b_namedm, sizeof(pos_T) * NMARKS);
     curbuf->b_op_start.lnum = curbuf->b_ml.ml_line_count;
     curbuf->b_op_start.col = 0;
     curbuf->b_op_end.lnum = 0;
@@ -544,9 +554,9 @@ u_undoredo()
 		 * should get rid of, by replacing it with the new line
 		 */
 		if (empty_buffer && lnum == 0)
-		    ml_replace((linenr_t)1, uep->ue_array[i], TRUE);
+		    ml_replace((linenr_T)1, uep->ue_array[i], TRUE);
 		else
-		    ml_append(lnum, uep->ue_array[i], (colnr_t)0, FALSE);
+		    ml_append(lnum, uep->ue_array[i], (colnr_T)0, FALSE);
 		u_free_line(uep->ue_array[i], FALSE);
 	    }
 	    u_free_line((char_u *)uep->ue_array, FALSE);
@@ -555,7 +565,7 @@ u_undoredo()
 	/* adjust marks */
 	if (oldsize != newsize)
 	{
-	    mark_adjust(top + 1, top + oldsize, (linenr_t)MAXLNUM,
+	    mark_adjust(top + 1, top + oldsize, (long)MAXLNUM,
 					       (long)newsize - (long)oldsize);
 	    if (curbuf->b_op_start.lnum > top + oldsize)
 		curbuf->b_op_start.lnum += newsize - oldsize;
@@ -668,7 +678,7 @@ u_sync()
  */
     void
 u_unchanged(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     struct u_header	*uh;
 
@@ -681,7 +691,7 @@ u_unchanged(buf)
  * Get pointer to last added entry.
  * If it's not valid, give an error message and return NULL.
  */
-    static u_entry_t *
+    static u_entry_T *
 u_get_headentry()
 {
     if (curbuf->b_u_newhead == NULL || curbuf->b_u_newhead->uh_entry == NULL)
@@ -699,7 +709,7 @@ u_get_headentry()
     static void
 u_getbot()
 {
-    u_entry_t	*uep;
+    u_entry_T	*uep;
 
     uep = u_get_headentry();
     if (uep == NULL)
@@ -735,7 +745,7 @@ u_getbot()
 u_freelist(uhp)
     struct u_header *uhp;
 {
-    u_entry_t	*uep, *nuep;
+    u_entry_T	*uep, *nuep;
 
     for (uep = uhp->uh_entry; uep != NULL; uep = nuep)
     {
@@ -765,7 +775,7 @@ u_freelist(uhp)
  */
     static void
 u_freeentry(uep, n)
-    u_entry_t	*uep;
+    u_entry_T	*uep;
     long	    n;
 {
     while (n)
@@ -778,7 +788,7 @@ u_freeentry(uep, n)
  */
     void
 u_clearall(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     buf->b_u_newhead = buf->b_u_oldhead = buf->b_u_curhead = NULL;
     buf->b_u_synced = TRUE;
@@ -792,7 +802,7 @@ u_clearall(buf)
  */
     void
 u_saveline(lnum)
-    linenr_t lnum;
+    linenr_T lnum;
 {
     if (lnum == curbuf->b_u_line_lnum)	    /* line is already saved */
 	return;
@@ -831,7 +841,7 @@ u_clearline()
     void
 u_undoline()
 {
-    colnr_t t;
+    colnr_T t;
     char_u  *oldp;
 
     if (undo_off)
@@ -845,7 +855,7 @@ u_undoline()
     }
 	/* first save the line for the 'u' command */
     if (u_savecommon(curbuf->b_u_line_lnum - 1,
-				curbuf->b_u_line_lnum + 1, (linenr_t)0) == FAIL)
+				curbuf->b_u_line_lnum + 1, (linenr_T)0) == FAIL)
 	return;
     oldp = u_save_line(curbuf->b_u_line_lnum);
     if (oldp == NULL)
@@ -940,10 +950,10 @@ u_undoline()
 u_blockalloc(size)
     long_u	size;
 {
-    mblock_t	*p;
-    mblock_t	*mp, *next;
+    mblock_T	*p;
+    mblock_T	*mp, *next;
 
-    p = (mblock_t *)lalloc(size + sizeof(mblock_t), FALSE);
+    p = (mblock_T *)lalloc(size + sizeof(mblock_T), FALSE);
     if (p != NULL)
     {
 	 /* Insert the block into the allocated block list, keeping it
@@ -969,9 +979,9 @@ u_blockalloc(size)
  */
     void
 u_blockfree(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    mblock_t	*p, *np;
+    mblock_T	*p, *np;
 
     for (p = buf->b_block_head.mb_next; p != NULL; p = np)
     {
@@ -992,32 +1002,32 @@ u_free_line(ptr, keep)
     char_u	*ptr;
     int		keep;	/* don't free the block when it's empty */
 {
-    minfo_t	*next;
-    minfo_t	*prev, *curr;
-    minfo_t	*mp;
-    mblock_t	*nextb;
-    mblock_t	*prevb;
+    minfo_T	*next;
+    minfo_T	*prev, *curr;
+    minfo_T	*mp;
+    mblock_T	*nextb;
+    mblock_T	*prevb;
 
     if (ptr == NULL || ptr == IObuff)
 	return;	/* illegal address can happen in out-of-memory situations */
 
-    mp = (minfo_t *)(ptr - M_OFFSET);
+    mp = (minfo_T *)(ptr - M_OFFSET);
 
     /* find block where chunk could be a part off */
     /* if we change curbuf->b_mb_current, curbuf->b_m_search is set to NULL */
-    if (curbuf->b_mb_current == NULL || mp < (minfo_t *)curbuf->b_mb_current)
+    if (curbuf->b_mb_current == NULL || mp < (minfo_T *)curbuf->b_mb_current)
     {
 	curbuf->b_mb_current = curbuf->b_block_head.mb_next;
 	curbuf->b_m_search = NULL;
     }
     if ((nextb = curbuf->b_mb_current->mb_next) != NULL
-						     && (minfo_t *)nextb < mp)
+						     && (minfo_T *)nextb < mp)
     {
 	curbuf->b_mb_current = nextb;
 	curbuf->b_m_search = NULL;
     }
     while ((nextb = curbuf->b_mb_current->mb_next) != NULL
-						     && (minfo_t *)nextb < mp)
+						     && (minfo_T *)nextb < mp)
 	curbuf->b_mb_current = nextb;
 
     curr = NULL;
@@ -1116,18 +1126,18 @@ u_free_line(ptr, keep)
 u_alloc_line(size)
     unsigned	size;
 {
-    minfo_t	*mp, *mprev, *mp2;
-    mblock_t	*mbp;
+    minfo_T	*mp, *mprev, *mp2;
+    mblock_T	*mbp;
     int		size_align;
 
     /*
      * Add room for size field and trailing NUL byte.
-     * Adjust for minimal size (must be able to store minfo_t
+     * Adjust for minimal size (must be able to store minfo_T
      * plus a trailing NUL, so the chunk can be released again)
      */
     size += M_OFFSET + 1;
-    if (size < sizeof(minfo_t) + 1)
-	size = sizeof(minfo_t) + 1;
+    if (size < sizeof(minfo_T) + 1)
+	size = sizeof(minfo_T) + 1;
 
     /*
      * round size up for alignment
@@ -1172,7 +1182,7 @@ u_alloc_line(size)
 		int	n = (size_align > (MEMBLOCKSIZE / 4)
 						 ? size_align : MEMBLOCKSIZE);
 
-		mp = (minfo_t *)u_blockalloc((long_u)n);
+		mp = (minfo_T *)u_blockalloc((long_u)n);
 		if (mp == NULL)
 		    return (NULL);
 		mp->m_size = n;
@@ -1187,9 +1197,9 @@ u_alloc_line(size)
     }
 
     /* if the chunk we found is large enough, split it up in two */
-    if ((long)mp->m_size - size_align >= (long)(sizeof(minfo_t) + 1))
+    if ((long)mp->m_size - size_align >= (long)(sizeof(minfo_T) + 1))
     {
-	mp2 = (minfo_t *)((char_u *)mp + size_align);
+	mp2 = (minfo_T *)((char_u *)mp + size_align);
 	mp2->m_size = mp->m_size - size_align;
 	mp2->m_next = mp->m_next;
 	mprev->m_next = mp2;
@@ -1202,7 +1212,7 @@ u_alloc_line(size)
     curbuf->b_m_search = mprev;
     curbuf->b_mb_current = mbp;
 
-    mp = (minfo_t *)((char_u *)mp + M_OFFSET);
+    mp = (minfo_T *)((char_u *)mp + M_OFFSET);
     *(char_u *)mp = NUL;		    /* set the first byte to NUL */
 
     return ((char_u *)mp);
@@ -1214,7 +1224,7 @@ u_alloc_line(size)
  */
     static char_u *
 u_save_line(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     char_u	*src;
     char_u	*dst;
@@ -1234,7 +1244,7 @@ u_save_line(lnum)
  */
     int
 bufIsChanged(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     return
 #ifdef FEAT_QUICKFIX

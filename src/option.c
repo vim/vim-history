@@ -41,7 +41,7 @@
  * PV_BOTH is added: global option which also has a local value.
  */
 #define PV_BOTH 0x1000
-#define OPT_BOTH(x) (idopt_t)(PV_BOTH + (int)(x))
+#define OPT_BOTH(x) (idopt_T)(PV_BOTH + (int)(x))
 
 typedef enum
 {
@@ -119,7 +119,7 @@ typedef enum
     , PV_TX
     , PV_WM
     , PV_WRAP
-} idopt_t;
+} idopt_T;
 
 /*
  * Options local to a window have a value local to a buffer and global to all
@@ -238,11 +238,11 @@ struct vimoption
     char_u	*var;		/* global option: pointer to variable;
 				 * window-local option: VAR_WIN;
 				 * buffer-local option: global value */
-    idopt_t	indir;		/* global option: PV_NONE;
+    idopt_T	indir;		/* global option: PV_NONE;
 				 * local option: indirect option index */
     char_u	*def_val[2];	/* default values for variable (vi and vim) */
 #ifdef FEAT_EVAL
-    scid_t	scriptID;	/* script in which the option was last set */
+    scid_T	scriptID;	/* script in which the option was last set */
 #endif
 };
 
@@ -447,7 +447,7 @@ static struct vimoption options[] =
 			    {(char_u *)0L, (char_u *)0L}
 #endif
 			    },
-    {"cdpath",	    "cd",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP|P_SECURE,
+    {"cdpath",	    "cd",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_SEARCHPATH
 			    (char_u *)&p_cdpath, PV_NONE,
 			    {(char_u *)",,", (char_u *)0L}
@@ -511,7 +511,8 @@ static struct vimoption options[] =
 #ifdef FEAT_CLIPBOARD
 			    (char_u *)&p_cb, PV_NONE,
 # ifdef FEAT_XCLIPBOARD
-			    {(char_u *)"autoselect", (char_u *)0L}},
+			    {(char_u *)"autoselect,exclude:cons\\|linux",
+							       (char_u *)0L}},
 # else
 			    {(char_u *)"", (char_u *)0L}},
 # endif
@@ -1074,7 +1075,9 @@ static struct vimoption options[] =
 			    (char_u *)&p_isf, PV_NONE,
 			    {
 #ifdef BACKSLASH_IN_FILENAME
-			    (char_u *)"@,48-57,/,\\,.,-,_,+,,,#,$,%,:,@-@,!,~",
+				/* Excluded are: & and ^ are special in cmd.exe
+				 * ( and ) are used in text separating fnames */
+			    (char_u *)"@,48-57,/,\\,.,-,_,+,,,#,$,%,{,},[,],:,@-@,!,~,=",
 #else
 # ifdef AMIGA
 			    (char_u *)"@,48-57,/,.,-,_,+,,,$,:",
@@ -1083,9 +1086,9 @@ static struct vimoption options[] =
 			    (char_u *)"@,48-57,/,.,-,_,+,,,#,$,%,<,>,[,],:,;,~",
 #  else /* UNIX et al. */
 #   ifdef EBCDIC
-			    (char_u *)"@,240-249,/,.,-,_,+,,,#,$,%,~",
+			    (char_u *)"@,240-249,/,.,-,_,+,,,#,$,%,~,=",
 #   else
-			    (char_u *)"@,48-57,/,.,-,_,+,,,#,$,%,~",
+			    (char_u *)"@,48-57,/,.,-,_,+,,,#,$,%,~,=",
 #   endif
 #  endif
 # endif
@@ -1426,7 +1429,7 @@ static struct vimoption options[] =
     {"patchmode",   "pm",   P_STRING|P_VI_DEF,
 			    (char_u *)&p_pm, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
-    {"path",	    "pa",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP|P_SECURE,
+    {"path",	    "pa",   P_STRING|P_EXPAND|P_VI_DEF|P_COMMA|P_NODUP,
 			    (char_u *)&p_path, OPT_BOTH(PV_PATH),
 			    {
 #if defined AMIGA || defined MSDOS || defined MSWIN
@@ -2175,9 +2178,6 @@ static char *(p_debug_values[]) = {"msg", NULL};
 #ifdef FEAT_VERTSPLIT
 static char *(p_ead_values[]) = {"both", "ver", "hor", NULL};
 #endif
-#ifdef FEAT_CLIPBOARD
-static char *(p_cb_values[]) = {"unnamed", "autoselect", NULL};
-#endif
 #if defined(FEAT_QUICKFIX)
 static char *(p_buftype_values[]) = {"nofile", "nowrite", "quickfix", NULL};
 static char *(p_bufhidden_values[]) = {"hide", "unload", "delete", NULL};
@@ -2511,7 +2511,7 @@ set_options_default(opt_flags)
 {
     int		i;
 #ifdef FEAT_WINDOWS
-    win_t	*wp;
+    win_T	*wp;
 #endif
 
     for (i = 0; !istermoption(&options[i]); i++)
@@ -3786,7 +3786,7 @@ check_options()
  */
     void
 check_buf_options(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
 #if defined(FEAT_QUICKFIX)
     check_string_option(&buf->b_p_bh);
@@ -4640,8 +4640,46 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'clipboard' */
     else if (varp == &p_cb)
     {
-	if (check_opt_strings(p_cb, p_cb_values, TRUE) != OK)
-	    errmsg = e_invarg;
+	int		new_unnamed = FALSE;
+	int		new_autoselect = FALSE;
+	regprog_T	*new_exclude_prog = NULL;
+
+	for (p = p_cb; *p != NUL; )
+	{
+	    if (STRNCMP(p, "unnamed", 7) == 0 && (p[7] == ',' || p[7] == NUL))
+	    {
+		new_unnamed = TRUE;
+		p += 7;
+	    }
+	    else if (STRNCMP(p, "autoselect", 10) == 0
+					    && (p[10] == ',' || p[10] == NUL))
+	    {
+		new_autoselect = TRUE;
+		p += 10;
+	    }
+	    else if (STRNCMP(p, "exclude:", 8) == 0)
+	    {
+		p += 8;
+		new_exclude_prog = vim_regcomp(p, TRUE);
+		if (new_exclude_prog == NULL)
+		    errmsg = e_invarg;
+		break;
+	    }
+	    else
+	    {
+		errmsg = e_invarg;
+		break;
+	    }
+	    if (*p == ',')
+		++p;
+	}
+	if (errmsg == NULL)
+	{
+	    clip_unnamed = new_unnamed;
+	    clip_autoselect = new_autoselect;
+	    vim_free(clip_exclude_prog);
+	    clip_exclude_prog = new_exclude_prog;
+	}
     }
 #endif
 
@@ -5274,7 +5312,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     {
 	if (curwin->w_p_pvw)
 	{
-	    win_t	*win;
+	    win_T	*win;
 
 	    for (win = firstwin; win != NULL; win = win->w_next)
 		if (win->w_p_pvw && win != curwin)
@@ -5402,7 +5440,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
     /* 'diff' */
     else if ((int *)varp == &curwin->w_p_diff)
     {
-	win_t	*wp;
+	win_T	*wp;
 
 	if (!curwin->w_p_diff)
 	{
@@ -6793,8 +6831,8 @@ get_equalprg()
  */
     void
 win_copy_options(wp_from, wp_to)
-    win_t	*wp_from;
-    win_t	*wp_to;
+    win_T	*wp_from;
+    win_T	*wp_to;
 {
     copy_winopt(&wp_from->w_onebuf_opt, &wp_to->w_onebuf_opt);
     copy_winopt(&wp_from->w_allbuf_opt, &wp_to->w_allbuf_opt);
@@ -6808,15 +6846,15 @@ win_copy_options(wp_from, wp_to)
 #endif
 
 /*
- * Copy the options from one winopt_t to another.
+ * Copy the options from one winopt_T to another.
  * Doesn't free the old option values in "to", use clear_winopt() for that.
  * The 'scroll' option is not copied, because it depends on the window height.
  * The 'previewwindow' option is reset, there can be only one preview window.
  */
     void
 copy_winopt(from, to)
-    winopt_t	*from;
-    winopt_t	*to;
+    winopt_T	*from;
+    winopt_T	*to;
 {
     to->wo_list = from->wo_list;
     to->wo_nu = from->wo_nu;
@@ -6853,19 +6891,19 @@ copy_winopt(from, to)
  */
     void
 check_win_options(win)
-    win_t	*win;
+    win_T	*win;
 {
     check_winopt(&win->w_onebuf_opt);
     check_winopt(&win->w_allbuf_opt);
 }
 
 /*
- * Check for NULL pointers in a winopt_t and replace them with empty_option.
+ * Check for NULL pointers in a winopt_T and replace them with empty_option.
  */
 /*ARGSUSED*/
     void
 check_winopt(wop)
-    winopt_t	*wop;
+    winopt_T	*wop;
 {
 #ifdef FEAT_FOLDING
     check_string_option(&wop->wo_fde);
@@ -6877,12 +6915,12 @@ check_winopt(wop)
 }
 
 /*
- * Free the allocated memory inside a winopt_t.
+ * Free the allocated memory inside a winopt_T.
  */
 /*ARGSUSED*/
     void
 clear_winopt(wop)
-    winopt_t	*wop;
+    winopt_T	*wop;
 {
 #ifdef FEAT_FOLDING
     clear_string_option(&wop->wo_fde);
@@ -6904,7 +6942,7 @@ clear_winopt(wop)
  */
     void
 buf_copy_options(buf, flags)
-    buf_t	*buf;
+    buf_T	*buf;
     int		flags;
 {
     int		should_copy = TRUE;
@@ -6944,7 +6982,11 @@ buf_copy_options(buf, flags)
 
 	if (should_copy || (flags & BCO_ALWAYS))
 	{
-	    dont_do_help = (flags & BCO_NOHELP) && buf->b_help;
+	    /* Don't copy the options specific to a help buffer when
+	     * BCO_NOHELP is given or the options were initialized already
+	     * (jumping back to a help file with CTRL-T or CTRL-O) */
+	    dont_do_help = ((flags & BCO_NOHELP) && buf->b_help)
+						       || buf->b_p_initialized;
 	    if (dont_do_help)		/* don't free b_p_isk */
 	    {
 		save_p_isk = buf->b_p_isk;
@@ -7108,7 +7150,7 @@ static int expand_option_flags = 0;
 
     void
 set_context_in_set_cmd(xp, arg, opt_flags)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*arg;
     int		opt_flags;	/* OPT_GLOBAL and/or OPT_LOCAL */
 {
@@ -7282,8 +7324,8 @@ set_context_in_set_cmd(xp, arg, opt_flags)
 
     int
 ExpandSettings(xp, regmatch, num_file, file)
-    expand_t	*xp;
-    regmatch_t	*regmatch;
+    expand_T	*xp;
+    regmatch_T	*regmatch;
     int		*num_file;
     char_u	***file;
 {
@@ -7309,7 +7351,7 @@ ExpandSettings(xp, regmatch, num_file, file)
 	if (xp->xp_context != EXPAND_BOOL_SETTINGS)
 	{
 	    for (match = 0; match < sizeof(names) / sizeof(char *); ++match)
-		if (vim_regexec(regmatch, (char_u *)names[match], (colnr_t)0))
+		if (vim_regexec(regmatch, (char_u *)names[match], (colnr_T)0))
 		{
 		    if (loop == 0)
 			num_normal++;
@@ -7329,10 +7371,10 @@ ExpandSettings(xp, regmatch, num_file, file)
 	    if (is_term_opt && num_normal > 0)
 		continue;
 	    match = FALSE;
-	    if (vim_regexec(regmatch, str, (colnr_t)0)
+	    if (vim_regexec(regmatch, str, (colnr_T)0)
 		    || (options[opt_idx].shortname != NULL
 			&& vim_regexec(regmatch,
-			   (char_u *)options[opt_idx].shortname, (colnr_t)0)))
+			   (char_u *)options[opt_idx].shortname, (colnr_T)0)))
 		match = TRUE;
 	    else if (is_term_opt)
 	    {
@@ -7343,7 +7385,7 @@ ExpandSettings(xp, regmatch, num_file, file)
 		name_buf[4] = str[3];
 		name_buf[5] = '>';
 		name_buf[6] = NUL;
-		if (vim_regexec(regmatch, name_buf, (colnr_t)0))
+		if (vim_regexec(regmatch, name_buf, (colnr_T)0))
 		{
 		    match = TRUE;
 		    str = name_buf;
@@ -7379,7 +7421,7 @@ ExpandSettings(xp, regmatch, num_file, file)
 		name_buf[4] = NUL;
 
 		match = FALSE;
-		if (vim_regexec(regmatch, name_buf, (colnr_t)0))
+		if (vim_regexec(regmatch, name_buf, (colnr_T)0))
 		    match = TRUE;
 		else
 		{
@@ -7391,7 +7433,7 @@ ExpandSettings(xp, regmatch, num_file, file)
 		    name_buf[5] = '>';
 		    name_buf[6] = NUL;
 
-		    if (vim_regexec(regmatch, name_buf, (colnr_t)0))
+		    if (vim_regexec(regmatch, name_buf, (colnr_T)0))
 			match = TRUE;
 		}
 		if (match)
@@ -7413,7 +7455,7 @@ ExpandSettings(xp, regmatch, num_file, file)
 		STRCPY(name_buf + 1, str);
 		STRCAT(name_buf, ">");
 
-		if (vim_regexec(regmatch, name_buf, (colnr_t)0))
+		if (vim_regexec(regmatch, name_buf, (colnr_T)0))
 		{
 		    if (loop == 0)
 			num_term++;
@@ -7726,7 +7768,7 @@ paste_option_changed()
     static int	save_ri = 0;
     static int	save_hkmap = 0;
 #endif
-    buf_t	*buf;
+    buf_T	*buf;
 
     if (p_paste)
     {
@@ -8065,7 +8107,7 @@ can_bs(what)
  */
     void
 save_file_ff(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     buf->b_start_ffc = *buf->b_p_ff;
 #ifdef FEAT_MBYTE
@@ -8080,7 +8122,7 @@ save_file_ff(buf)
  */
     int
 file_ff_differs(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
     if (buf->b_start_ffc != *buf->b_p_ff)
 	return TRUE;

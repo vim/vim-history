@@ -41,7 +41,7 @@
 
 /* Default resource values */
 #define DFLT_FONT		"7x13"
-#if 0
+#ifdef FEAT_GUI_ATHENA
 # define DFLT_MENU_BG_COLOR	"gray77"
 # define DFLT_MENU_FG_COLOR	"black"
 # define DFLT_SCROLL_BG_COLOR	"gray60"
@@ -91,8 +91,8 @@ static int fontset_height __ARGS((XFontSet fs));
 static int fontset_ascent __ARGS((XFontSet fs));
 #endif
 
-static guicolor_t	prev_fg_color = (guicolor_t)-1;
-static guicolor_t	prev_bg_color = (guicolor_t)-1;
+static guicolor_T	prev_fg_color = (guicolor_T)-1;
+static guicolor_T	prev_bg_color = (guicolor_T)-1;
 
 #if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
 static XButtonPressedEvent last_mouse_event;
@@ -230,6 +230,8 @@ static struct specialkey
 #define XtCMenuHeight		"MenuHeight"
 #define XtNmenuFont		"menuFont"
 #define XtCMenuFont		"MenuFont"
+#define XtNmenuFontSet		"menuFontSet"
+#define XtCMenuFontSet		"MenuFontSet"
 
 
 /* Resources for setting the foreground and background colors of menus */
@@ -254,7 +256,7 @@ static XtResource vim_resources[] =
 	XtCForeground,
 	XtRPixel,
 	sizeof(Pixel),
-	XtOffsetOf(gui_t, def_norm_pixel),
+	XtOffsetOf(gui_T, def_norm_pixel),
 	XtRString,
 	XtDefaultForeground
     },
@@ -263,7 +265,7 @@ static XtResource vim_resources[] =
 	XtCBackground,
 	XtRPixel,
 	sizeof(Pixel),
-	XtOffsetOf(gui_t, def_back_pixel),
+	XtOffsetOf(gui_T, def_back_pixel),
 	XtRString,
 	XtDefaultBackground
     },
@@ -272,7 +274,7 @@ static XtResource vim_resources[] =
 	XtCFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_t, dflt_font),
+	XtOffsetOf(gui_T, dflt_font),
 	XtRImmediate,
 	XtDefaultFont
     },
@@ -281,7 +283,7 @@ static XtResource vim_resources[] =
 	XtCBoldFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_t, dflt_bold_fn),
+	XtOffsetOf(gui_T, dflt_bold_fn),
 	XtRImmediate,
 	""
     },
@@ -290,7 +292,7 @@ static XtResource vim_resources[] =
 	XtCItalicFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_t, dflt_ital_fn),
+	XtOffsetOf(gui_T, dflt_ital_fn),
 	XtRImmediate,
 	""
     },
@@ -299,7 +301,7 @@ static XtResource vim_resources[] =
 	XtCBoldItalicFont,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_t, dflt_boldital_fn),
+	XtOffsetOf(gui_T, dflt_boldital_fn),
 	XtRImmediate,
 	""
     },
@@ -308,7 +310,7 @@ static XtResource vim_resources[] =
 	XtCGeometry,
 	XtRString,
 	sizeof(String *),
-	XtOffsetOf(gui_t, geom),
+	XtOffsetOf(gui_T, geom),
 	XtRImmediate,
 	""
     },
@@ -317,27 +319,27 @@ static XtResource vim_resources[] =
 	XtCReverseVideo,
 	XtRBool,
 	sizeof(Bool),
-	XtOffsetOf(gui_t, rev_video),
+	XtOffsetOf(gui_T, rev_video),
 	XtRImmediate,
-	(XtPointer) False
+	(XtPointer)False
     },
     {
 	XtNborderWidth,
 	XtCBorderWidth,
 	XtRInt,
 	sizeof(int),
-	XtOffsetOf(gui_t, border_width),
+	XtOffsetOf(gui_T, border_width),
 	XtRImmediate,
-	(XtPointer) 2
+	(XtPointer)2
     },
     {
 	XtNscrollbarWidth,
 	XtCScrollbarWidth,
 	XtRInt,
 	sizeof(int),
-	XtOffsetOf(gui_t, scrollbar_width),
+	XtOffsetOf(gui_T, scrollbar_width),
 	XtRImmediate,
-	(XtPointer) SB_DEFAULT_WIDTH
+	(XtPointer)SB_DEFAULT_WIDTH
     },
 #ifdef FEAT_MENU
     {
@@ -345,26 +347,37 @@ static XtResource vim_resources[] =
 	XtCMenuHeight,
 	XtRInt,
 	sizeof(int),
-	XtOffsetOf(gui_t, menu_height),
+	XtOffsetOf(gui_T, menu_height),
 	XtRImmediate,
-	(XtPointer) MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
+	(XtPointer)MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
     },
     {
 	XtNmenuFont,
 	XtCMenuFont,
 	XtRFontStruct,
 	sizeof(XFontStruct *),
-	XtOffsetOf(gui_t, menu_font),
+	XtOffsetOf(gui_T, menu_font),
 	XtRImmediate,
 	(XtPointer)NOFONT
     },
+#ifdef EXPERIMENTAL
+    {
+	XtNmenuFontSet,
+	XtCMenuFontSet,
+	XtRFontSet,
+	sizeof(XFontSet *),
+	XtOffsetOf(gui_T, menu_fontset),
+	XtRImmediate,
+	(XtPointer)NOFONTSET
+    },
+#endif
 #endif
     {
 	XtNmenuForeground,
 	XtCMenuForeground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_t, menu_fg_color),
+	XtOffsetOf(gui_T, menu_fg_color),
 	XtRString,
 	DFLT_MENU_FG_COLOR
     },
@@ -373,7 +386,7 @@ static XtResource vim_resources[] =
 	XtCMenuBackground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_t, menu_bg_color),
+	XtOffsetOf(gui_T, menu_bg_color),
 	XtRString,
 	DFLT_MENU_BG_COLOR
     },
@@ -382,7 +395,7 @@ static XtResource vim_resources[] =
 	XtCScrollForeground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_t, scroll_fg_color),
+	XtOffsetOf(gui_T, scroll_fg_color),
 	XtRString,
 	DFLT_SCROLL_FG_COLOR
     },
@@ -391,7 +404,7 @@ static XtResource vim_resources[] =
 	XtCScrollBackground,
 	XtRString,
 	sizeof(char *),
-	XtOffsetOf(gui_t, scroll_bg_color),
+	XtOffsetOf(gui_T, scroll_bg_color),
 	XtRString,
 	DFLT_SCROLL_BG_COLOR
     },
@@ -401,7 +414,7 @@ static XtResource vim_resources[] =
 	"PreeditType",
 	XtRString,
 	sizeof(char*),
-	XtOffsetOf(gui_t, preedit_type),
+	XtOffsetOf(gui_T, preedit_type),
 	XtRString,
 	(XtPointer)"OverTheSpot,OffTheSpot,Root"
     },
@@ -410,7 +423,7 @@ static XtResource vim_resources[] =
 	"InputMethod",
 	XtRString,
 	sizeof(char*),
-	XtOffsetOf(gui_t, input_method),
+	XtOffsetOf(gui_T, input_method),
 	XtRString,
 	NULL
     },
@@ -419,39 +432,41 @@ static XtResource vim_resources[] =
 	"OpenIM",
 	XtRBoolean,
 	sizeof(Boolean),
-	XtOffsetOf(gui_t, open_im),
+	XtOffsetOf(gui_T, open_im),
 	XtRImmediate,
 	(XtPointer)TRUE
     },
 #endif /* FEAT_XIM */
 #ifdef FEAT_BEVAL
     {
-	XmNballoonEvalForeground,
+	XtNballoonEvalForeground,
 	XtCForeground,
 	XtRPixel,
 	sizeof(Pixel),
-	XtOffsetOf(gui_t, balloonEval_fg_pixel),
+	XtOffsetOf(gui_T, balloonEval_fg_pixel),
 	XtRString,
 	"#000000000000"
     },
     {
-	XmNballoonEvalBackground,
+	XtNballoonEvalBackground,
 	XtCBackground,
 	XtRPixel,
 	sizeof(Pixel),
-	XtOffsetOf(gui_t, balloonEval_bg_pixel),
+	XtOffsetOf(gui_T, balloonEval_bg_pixel),
 	XtRString,
 	"#ffffffff9191"
     },
+#ifdef FEAT_GUI_MOTIF
     {
 	XmNballoonEvalFontList,
 	XmCFontList,
 	XmRFontList,
 	sizeof(XmFontList),
-	XtOffsetOf(gui_t, balloonEval_fontList),
+	XtOffsetOf(gui_T, balloonEval_fontList),
 	XtRString,
 	"fixed"
     },
+#endif
 #endif /* FEAT_BEVAL */
 };
 
@@ -902,7 +917,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	}
     }
 
-    if (len == 1 && (string[0] == Ctrl_C
+    if (len == 1 && ((string[0] == Ctrl_C && ctrl_c_interrupts)
 #ifdef UNIX
 	    || (intr_char != 0 && string[0] == intr_char)
 #endif
@@ -1917,7 +1932,7 @@ fontset_ascent(fs)
  * Return the Pixel value (color) for the given color name.
  * Return -1 for error.
  */
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(reqname)
     char_u *reqname;
 {
@@ -1942,7 +1957,7 @@ gui_mch_get_color(reqname)
 
     /* can't do this when GUI not running */
     if (!gui.in_use || *reqname == NUL)
-	return (guicolor_t)-1;
+	return (guicolor_T)-1;
 
     colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
 
@@ -1952,7 +1967,7 @@ gui_mch_get_color(reqname)
 	if (XParseColor(gui.dpy, colormap, (char *)name, &color) != 0
 		&& (XAllocColor(gui.dpy, colormap, &color) != 0
 		    || find_closest_color(colormap, &color) == OK))
-	    return (guicolor_t)color.pixel;
+	    return (guicolor_T)color.pixel;
 
 	/* check for a few builtin names */
 	for (i = 0; ; ++i)
@@ -1971,7 +1986,7 @@ gui_mch_get_color(reqname)
     }
     EMSG2(_("Cannot allocate color %s"), reqname);
 
-    return (guicolor_t)-1;
+    return (guicolor_T)-1;
 }
 
 /*
@@ -2049,7 +2064,7 @@ find_closest_color(colormap, colorPtr)
 
     void
 gui_mch_set_fg_color(color)
-    guicolor_t	color;
+    guicolor_T	color;
 {
     if (color != prev_fg_color)
     {
@@ -2063,7 +2078,7 @@ gui_mch_set_fg_color(color)
  */
     void
 gui_mch_set_bg_color(color)
-    guicolor_t	color;
+    guicolor_T	color;
 {
     if (color != prev_bg_color)
     {
@@ -2301,7 +2316,7 @@ gui_mch_iconify()
  */
     void
 gui_mch_draw_hollow_cursor(color)
-    guicolor_t color;
+    guicolor_T color;
 {
     int		w = 1;
 
@@ -2322,7 +2337,7 @@ gui_mch_draw_hollow_cursor(color)
 gui_mch_draw_part_cursor(w, h, color)
     int		w;
     int		h;
-    guicolor_t	color;
+    guicolor_T	color;
 {
     gui_mch_set_fg_color(color);
 
@@ -2610,7 +2625,7 @@ clip_mch_set_selection(cbd)
  */
     void
 gui_mch_menu_grey(menu, grey)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		grey;
 {
     if (menu->id != (Widget)0)
@@ -2632,7 +2647,7 @@ gui_mch_menu_grey(menu, grey)
  */
     void
 gui_mch_menu_hidden(menu, hidden)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		hidden;
 {
     if (menu->id != (Widget)0)
@@ -2659,7 +2674,7 @@ gui_x11_menu_cb(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    gui_menu_cb((vimmenu_t *)client_data);
+    gui_menu_cb((vimmenu_T *)client_data);
 }
 
 #endif /* FEAT_MENU */
@@ -2799,7 +2814,7 @@ gui_x11_blink_cb(timed_out, interval_id)
  */
     int
 gui_mch_get_lightness(pixel)
-    guicolor_t	pixel;
+    guicolor_T	pixel;
 {
     XColor	xc;
     Colormap	colormap;
@@ -2818,7 +2833,7 @@ gui_mch_get_lightness(pixel)
  */
     char_u *
 gui_mch_get_rgb(pixel)
-    guicolor_t	pixel;
+    guicolor_T	pixel;
 {
     XColor	xc;
     Colormap	colormap;
@@ -3235,8 +3250,8 @@ filePredicate(cp)
 static void createXpmImages __ARGS((char_u *path, char **xpm, Pixmap *sen, Pixmap *insen));
 
     void
-get_pixmap(menuname, sen, insen)
-    char_u	*menuname;
+get_pixmap(name, sen, insen)
+    char_u	*name;
     Pixmap	*sen;
     Pixmap	*insen;
 {
@@ -3251,11 +3266,11 @@ get_pixmap(menuname, sen, insen)
 
     buf[0] = NUL;			/* start with NULL path */
     num_pixmaps = (sizeof(built_in_pixmaps) / sizeof(built_in_pixmaps[0])) - 1;
-    if (STRNCMP(menuname, "BuiltIn", (size_t)7) == 0)
+    if (STRNCMP(name, "BuiltIn", (size_t)7) == 0)
     {
-	if (isdigit((int)menuname[7]) && isdigit((int)menuname[8]))
+	if (isdigit((int)name[7]) && isdigit((int)name[8]))
 	{
-	    builtin_num = atoi((char *)menuname + 7);
+	    builtin_num = atoi((char *)name + 7);
 	    if (builtin_num >= 0 && builtin_num < num_pixmaps)
 		xpm = built_in_pixmaps[builtin_num].xpm;
 	    else
@@ -3264,48 +3279,51 @@ get_pixmap(menuname, sen, insen)
     }
     else
     {
-	for (i = 0; i < num_pixmaps; i++)
+	if (gui_find_bitmap(name, buf, "xpm") == FAIL)
 	{
-	    if (STRCMP(menuname, built_in_pixmaps[i].name) == 0)
+	    for (i = 0; i < num_pixmaps; i++)
 	    {
-		xpm = built_in_pixmaps[i].xpm;
-		break;
-	    }
-	}
-#ifdef FEAT_SUN_WORKSHOP
-	if (xpm == NULL)
-	{
-	    char_u	*path;		/* path with %L resolved to locale */
-
-	    for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
-	    {
-		if (STRCMP(menuname, sunws_pixmaps[i]) == 0)
+		if (STRCMP(name, built_in_pixmaps[i].name) == 0)
 		{
-		    path = (char_u *)XtResolvePathname(gui.dpy, NULL,
-			    NULL, ".xpm", sunws_pixmaps[i + 1],
-			    NULL, 0, filePredicate);
-		    if (path == NULL)	/* neither LANG nor LC_ALL is set */
-		    {
-			char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
-
-			while ((p = strstr(p, "%L")) != NULL)
-			{
-			    *p++ = 'C';
-			    strcpy(p, &p[1]);
-			}
-			path = (char_u *)locbuf;
-			expand_env(path, buf, MAXPATHL);
-		    }
-		    else
-		    {
-			expand_env(path, buf, MAXPATHL);
-			XtFree(path);
-		    }
+		    xpm = built_in_pixmaps[i].xpm;
 		    break;
 		}
 	    }
-	}
+#ifdef FEAT_SUN_WORKSHOP
+	    if (xpm == NULL)
+	    {
+		char_u	*path;		/* path with %L resolved to locale */
+
+		for (i = 0; sunws_pixmaps[i] != NULL; i += 2)
+		{
+		    if (STRCMP(name, sunws_pixmaps[i]) == 0)
+		    {
+			path = (char_u *)XtResolvePathname(gui.dpy, NULL,
+				NULL, ".xpm", sunws_pixmaps[i + 1],
+				NULL, 0, filePredicate);
+			if (path == NULL)  /* neither LANG nor LC_ALL is set */
+			{
+			    char *p = strcpy(locbuf, sunws_pixmaps[i + 1]);
+
+			    while ((p = strstr(p, "%L")) != NULL)
+			    {
+				*p++ = 'C';
+				strcpy(p, &p[1]);
+			    }
+			    path = (char_u *)locbuf;
+			    expand_env(path, buf, MAXPATHL);
+			}
+			else
+			{
+			    expand_env(path, buf, MAXPATHL);
+			    XtFree(path);
+			}
+			break;
+		    }
+		}
+	    }
 #endif
+	}
     }
 
     if (xpm != NULL || buf[0] != NUL)

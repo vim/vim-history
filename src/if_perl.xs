@@ -447,8 +447,8 @@ new ## TNAME ## rv(rv, ptr)					\
     return sv_bless(rv, gv_stashpv("VI" #TNAME, TRUE));		\
 }
 
-newANYrv(win_t, WIN)
-newANYrv(buf_t, BUF)
+newANYrv(win_T, WIN)
+newANYrv(buf_T, BUF)
 
 /*
  * perl_win_free
@@ -456,7 +456,7 @@ newANYrv(buf_t, BUF)
  */
     void
 perl_win_free(wp)
-    win_t *wp;
+    win_T *wp;
 {
     if (wp->perl_private)
 	sv_setiv((SV *)wp->perl_private, 0);
@@ -465,7 +465,7 @@ perl_win_free(wp)
 
     void
 perl_buf_free(bp)
-    buf_t *bp;
+    buf_T *bp;
 {
     if (bp->perl_private)
 	sv_setiv((SV *)bp->perl_private, 0);
@@ -530,7 +530,7 @@ static char *e_noperl = N_("Sorry, this command is disabled: the Perl library co
  */
     void
 ex_perl(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char	*err;
     STRLEN	length;
@@ -572,7 +572,7 @@ ex_perl(eap)
 
     static int
 replace_line(line, end)
-    linenr_t	*line, *end;
+    linenr_T	*line, *end;
 {
     char *str;
 
@@ -597,12 +597,12 @@ replace_line(line, end)
  */
     void
 ex_perldo(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     STRLEN	length;
     SV		*sv;
     char	*str;
-    linenr_t	i;
+    linenr_T	i;
 
     if (bufempty())
 	return;
@@ -698,8 +698,8 @@ xs_init(pTHX)
     newXS("VIM::bootstrap", boot_VIM, file);
 }
 
-typedef win_t *	VIWIN;
-typedef buf_t *	VIBUF;
+typedef win_T *	VIWIN;
+typedef buf_T *	VIBUF;
 
 MODULE = VIM	    PACKAGE = VIM
 
@@ -766,7 +766,7 @@ void
 Buffers(...)
 
     PREINIT:
-    buf_t *vimbuf;
+    buf_T *vimbuf;
     int i, b;
 
     PPCODE:
@@ -800,7 +800,7 @@ Buffers(...)
 
 		pat = (char_u *)SvPV(sv, len);
 		++emsg_off;
-		b = buflist_findpat(pat, pat+len, FALSE);
+		b = buflist_findpat(pat, pat+len, FALSE, FALSE);
 		--emsg_off;
 	    }
 
@@ -817,7 +817,7 @@ void
 Windows(...)
 
     PREINIT:
-    win_t   *vimwin;
+    win_T   *vimwin;
     int	    i, w;
 
     PPCODE:
@@ -869,7 +869,7 @@ SetHeight(win, height)
     int height;
 
     PREINIT:
-    win_t *savewin;
+    win_T *savewin;
 
     PPCODE:
     if (!win_valid(win))
@@ -977,7 +977,7 @@ Set(vimbuf, ...)
     int i;
     long lnum;
     char *line;
-    buf_t *savebuf;
+    buf_T *savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -1008,7 +1008,7 @@ Delete(vimbuf, ...)
 
     PREINIT:
     long i, lnum = 0, count = 0;
-    buf_t *savebuf;
+    buf_T *savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -1057,7 +1057,7 @@ Append(vimbuf, ...)
     int		i;
     long	lnum;
     char	*line;
-    buf_t	*savebuf;
+    buf_T	*savebuf;
     PPCODE:
     if (buf_valid(vimbuf))
     {
@@ -1074,7 +1074,7 @@ Append(vimbuf, ...)
 		curbuf = vimbuf;
 		if (u_inssub(lnum + 1) == OK)
 		{
-		    ml_append(lnum, (char_u *)line, (colnr_t)0, FALSE);
+		    ml_append(lnum, (char_u *)line, (colnr_T)0, FALSE);
 		    appended_lines_mark(lnum, 1L);
 		}
 		curbuf = savebuf;

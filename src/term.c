@@ -1938,7 +1938,7 @@ set_termname(term)
 
 #ifdef FEAT_AUTOCMD
 	{
-	    buf_t	*old_curbuf;
+	    buf_T	*old_curbuf;
 
 	    /*
 	     * Execute the TermChanged autocommands for each buffer that is
@@ -3262,11 +3262,11 @@ scroll_start()
     }
 }
 
-/*
- * enable cursor, unless in Visual mode.
- */
 static int cursor_is_off = FALSE;
 
+/*
+ * Enable the cursor.
+ */
     void
 cursor_on()
 {
@@ -3277,6 +3277,9 @@ cursor_on()
     }
 }
 
+/*
+ * Disable the cursor.
+ */
     void
 cursor_off()
 {
@@ -3296,7 +3299,7 @@ cursor_off()
  */
     void
 scroll_region_set(wp, off)
-    win_t	*wp;
+    win_T	*wp;
     int		off;
 {
     OUT_STR(tgoto((char *)T_CS, W_WINROW(wp) + wp->w_height - 1,
@@ -3533,7 +3536,7 @@ switch_to_8bit()
 #endif
 
 #ifdef CHECK_DOUBLE_CLICK
-static linenr_t orig_topline = 0;
+static linenr_T orig_topline = 0;
 # ifdef FEAT_DIFF
 static int orig_topfill = 0;
 # endif
@@ -3550,7 +3553,7 @@ static int orig_topfill = 0;
  */
     void
 set_mouse_topline(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     orig_topline = wp->w_topline;
 # ifdef FEAT_DIFF
@@ -3560,13 +3563,15 @@ set_mouse_topline(wp)
 #endif
 
 /*
- * Check if typebuf[] contains a terminal key code.
- * Check from typebuf[typeoff] to typebuf[typeoff + max_offset].
+ * Check if typebuf.tb_buf[] contains a terminal key code.
+ * Check from typebuf.tb_buf[typebuf.tb_off] to typebuf.tb_buf[typebuf.tb_off
+ * + max_offset].
  * Return 0 for no match, -1 for partial match, > 0 for full match.
  * With a match, the match is removed, the replacement code is inserted in
- * typebuf[] and the number of characters in typebuf[] is returned.
- * When "buf" is not NULL, it is used instead of typebuf[]. "buflen" is then
- * the length of the string in buf[].
+ * typebuf.tb_buf[] and the number of characters in typebuf.tb_buf[] is
+ * returned.
+ * When "buf" is not NULL, it is used instead of typebuf.tb_buf[]. "buflen" is
+ * then the length of the string in buf[].
  */
     int
 check_termcode(max_offset, buf, buflen)
@@ -3622,9 +3627,10 @@ check_termcode(max_offset, buf, buflen)
 	gather_termleader();
 
     /*
-     * Check at several positions in typebuf[], to catch something like
+     * Check at several positions in typebuf.tb_buf[], to catch something like
      * "x<Up>" that can be mapped. Stop at max_offset, because characters
-     * after that cannot be used for mapping, and with @r commands typebuf[]
+     * after that cannot be used for mapping, and with @r commands
+     * typebuf.tb_buf[]
      * can become very long.
      * This is used often, KEEP IT FAST!
      */
@@ -3632,10 +3638,10 @@ check_termcode(max_offset, buf, buflen)
     {
 	if (buf == NULL)
 	{
-	    if (offset >= typelen)
+	    if (offset >= typebuf.tb_len)
 		break;
-	    tp = typebuf + typeoff + offset;
-	    len = typelen - offset;	/* length of the input */
+	    tp = typebuf.tb_buf + typebuf.tb_off + offset;
+	    len = typebuf.tb_len - offset;	/* length of the input */
 	}
 	else
 	{
@@ -3697,7 +3703,8 @@ check_termcode(max_offset, buf, buflen)
 	    for (idx = 0; idx < tc_len; ++idx)
 	    {
 		/*
-		 * Ignore the entry if we are not at the start of typebuf[]
+		 * Ignore the entry if we are not at the start of
+		 * typebuf.tb_buf[]
 		 * and there are not enough characters to make a match.
 		 * But only when the 'K' flag is in 'cpoptions'.
 		 */
@@ -4400,7 +4407,7 @@ check_termcode(max_offset, buf, buflen)
 	 * If using the GUI, then we get menu and scrollbar events.
 	 *
 	 * A menu event is encoded as K_SPECIAL, KS_MENU, KE_FILLER followed by
-	 * four bytes which are to be taken as a pointer to the vimmenu_t
+	 * four bytes which are to be taken as a pointer to the vimmenu_T
 	 * structure.
 	 *
 	 * A scrollbar event is K_SPECIAL, KS_VER_SCROLLBAR, KE_FILLER followed
@@ -4416,7 +4423,7 @@ check_termcode(max_offset, buf, buflen)
 	    num_bytes = get_long_from_buf(tp + slen, &val);
 	    if (num_bytes == -1)
 		return -1;
-	    current_menu = (vimmenu_t *)val;
+	    current_menu = (vimmenu_T *)val;
 	    slen += num_bytes;
 	}
 	else if (key_name[0] == (int)KS_VER_SCROLLBAR)
@@ -4486,9 +4493,10 @@ check_termcode(max_offset, buf, buflen)
 
 	    /*
 	     * Careful: del_typebuf() and ins_typebuf() may have reallocated
-	     * typebuf[]!
+	     * typebuf.tb_buf[]!
 	     */
-	    mch_memmove(typebuf + typeoff + offset, string, (size_t)new_slen);
+	    mch_memmove(typebuf.tb_buf + typebuf.tb_off + offset, string,
+							    (size_t)new_slen);
 	}
 	else
 	{
@@ -5094,7 +5102,7 @@ translate_mapping(str, expmap)
     char_u	*str;
     int		expmap;  /* TRUE when expanding mappings on command-line */
 {
-    garray_t	ga;
+    garray_T	ga;
     int		c;
     int		modifiers;
     int		cpo_bslash;

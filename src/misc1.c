@@ -37,7 +37,7 @@ get_indent()
  */
     int
 get_indent_lnum(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     return get_indent_str(ml_get(lnum), (int)curbuf->b_p_ts);
 }
@@ -49,8 +49,8 @@ get_indent_lnum(lnum)
  */
     int
 get_indent_buf(buf, lnum)
-    buf_t	*buf;
-    linenr_t	lnum;
+    buf_T	*buf;
+    linenr_T	lnum;
 {
     return get_indent_str(ml_get_buf(buf, lnum, FALSE), (int)buf->b_p_ts);
 }
@@ -179,12 +179,12 @@ set_indent(size, flags)
  */
     int
 get_number_indent(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     char_u	*line;
     char_u	*p;
-    colnr_t	col;
-    pos_t	pos;
+    colnr_T	col;
+    pos_T	pos;
 
     if (lnum > curbuf->b_ml.ml_line_count)
 	return -1;
@@ -263,7 +263,7 @@ open_line(dir, del_spaces, old_indent)
     char_u	*saved_line;		/* copy of the original line */
     char_u	*next_line = NULL;	/* copy of the next line */
     char_u	*p_extra = NULL;	/* what goes to next line */
-    pos_t	old_cursor;		/* old cursor position */
+    pos_T	old_cursor;		/* old cursor position */
     int		newcol = 0;		/* new cursor column */
     int		newindent = 0;		/* auto-indent of the new line */
     int		n;
@@ -279,7 +279,7 @@ open_line(dir, del_spaces, old_indent)
     char_u	*p;
     int		saved_char = NUL;	/* init for GCC */
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_COMMENTS)
-    pos_t	*pos;
+    pos_T	*pos;
 #endif
 #ifdef FEAT_SMARTINDENT
     int		do_si = (!p_paste && curbuf->b_p_si
@@ -642,7 +642,7 @@ open_line(dir, del_spaces, old_indent)
 		/*
 		 * Doing "o" on a start of comment inserts the middle leader.
 		 */
-		if (lead_len)
+		if (lead_len > 0)
 		{
 		    if (current_flag == COM_START)
 		    {
@@ -940,7 +940,7 @@ open_line(dir, del_spaces, old_indent)
 	--curwin->w_cursor.lnum;
     if (!(State & VREPLACE_FLAG) || old_cursor.lnum >= orig_line_count)
     {
-	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_t)0, FALSE)
+	if (ml_append(curwin->w_cursor.lnum, p_extra, (colnr_T)0, FALSE)
 								      == FAIL)
 	    goto theend;
 	appended_lines_mark(curwin->w_cursor.lnum, 1L);
@@ -1248,15 +1248,15 @@ get_leader_len(line, flags, backward)
  */
     int
 plines(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     return plines_win(curwin, lnum, TRUE);
 }
 
     int
 plines_win(wp, lnum, winheight)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
     int		winheight;	/* when TRUE limit to window height */
 {
 #if defined(FEAT_DIFF) || defined(PROTO)
@@ -1267,15 +1267,15 @@ plines_win(wp, lnum, winheight)
 
     int
 plines_nofill(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     return plines_win_nofill(curwin, lnum, TRUE);
 }
 
     int
 plines_win_nofill(wp, lnum, winheight)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
     int		winheight;	/* when TRUE limit to window height */
 {
 #endif
@@ -1308,8 +1308,8 @@ plines_win_nofill(wp, lnum, winheight)
  */
     int
 plines_win_nofold(wp, lnum)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
 {
     char_u	*s;
     long	col;
@@ -1318,7 +1318,7 @@ plines_win_nofold(wp, lnum)
     s = ml_get_buf(wp->w_buffer, lnum, FALSE);
     if (*s == NUL)		/* empty line */
 	return 1;
-    col = win_linetabsize(wp, s, (colnr_t)MAXCOL);
+    col = win_linetabsize(wp, s, (colnr_T)MAXCOL);
 
     /*
      * If list mode is on, then the '$' at the end of the line may take up one
@@ -1346,8 +1346,8 @@ plines_win_nofold(wp, lnum)
  */
     int
 plines_win_col(wp, lnum, column)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
     long	column;
 {
     long	col;
@@ -1374,7 +1374,7 @@ plines_win_col(wp, lnum, column)
     col = 0;
     while (*s != NUL && --column >= 0)
     {
-	col += win_lbr_chartabsize(wp, s, (colnr_t)col, NULL);
+	col += win_lbr_chartabsize(wp, s, (colnr_T)col, NULL);
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	    s += (*mb_ptr2len_check)(s);
@@ -1391,7 +1391,7 @@ plines_win_col(wp, lnum, column)
      * 'ts') -- webb.
      */
     if (*s == TAB && (State & NORMAL) && (!wp->w_p_list || lcs_tab1))
-	col += win_lbr_chartabsize(wp, s, (colnr_t)col, NULL) - 1;
+	col += win_lbr_chartabsize(wp, s, (colnr_T)col, NULL) - 1;
 
     /*
      * Add column offset for 'number', 'foldcolumn', etc.
@@ -1410,8 +1410,8 @@ plines_win_col(wp, lnum, column)
 
     int
 plines_m_win(wp, first, last)
-    win_t	*wp;
-    linenr_t	first, last;
+    win_T	*wp;
+    linenr_T	first, last;
 {
     int		count = 0;
 
@@ -1526,8 +1526,8 @@ ins_char_bytes(buf, newlen)
     char_u	*oldp;
     int		linelen;	/* length of old line including NUL */
     int		extra;		/* number of extra bytes (can be negative) */
-    colnr_t	col;
-    linenr_t	lnum = curwin->w_cursor.lnum;
+    colnr_T	col;
+    linenr_T	lnum = curwin->w_cursor.lnum;
     int		vcol;
     int		new_vcol = 0;   /* init for GCC */
     int		i;
@@ -1737,8 +1737,8 @@ ins_str(s)
     char_u	*oldp, *newp;
     int		newlen = STRLEN(s);
     int		oldlen;
-    colnr_t	col;
-    linenr_t	lnum = curwin->w_cursor.lnum;
+    colnr_T	col;
+    linenr_T	lnum = curwin->w_cursor.lnum;
 
 #ifdef FEAT_VIRTUALEDIT
     if (virtual_active() && curwin->w_cursor.coladd)
@@ -1803,9 +1803,9 @@ del_chars(count, fixpos)
     int		fixpos;
 {
     char_u	*oldp, *newp;
-    colnr_t	oldlen;
-    linenr_t	lnum = curwin->w_cursor.lnum;
-    colnr_t	col = curwin->w_cursor.col;
+    colnr_T	oldlen;
+    linenr_T	lnum = curwin->w_cursor.lnum;
+    colnr_T	col = curwin->w_cursor.col;
     int		was_alloced;
     long	movelen;
 #ifdef FEAT_MBYTE
@@ -1859,15 +1859,16 @@ del_chars(count, fixpos)
     {
 	/*
 	 * If we just took off the last character of a non-blank line, and
-	 * fixpos is TRUE, we don't want to end up positioned at the NUL.
+	 * fixpos is TRUE, we don't want to end up positioned at the NUL,
+	 * unless we are in virtual mode.
 	 */
+#ifdef FEAT_VIRTUALEDIT
+	if (col > 0 && fixpos && !virtual_active())
+#else
 	if (col > 0 && fixpos)
+#endif
 	{
 	    --curwin->w_cursor.col;
-#ifdef FEAT_VIRTUALEDIT
-	    if (virtual_active())	/* But keep the cursor where it is. */
-		++curwin->w_cursor.coladd;
-#endif
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 		curwin->w_cursor.col -=
@@ -1913,8 +1914,8 @@ truncate_line(fixpos)
     int		fixpos;	    /* if TRUE fix the cursor position when done */
 {
     char_u	*newp;
-    linenr_t	lnum = curwin->w_cursor.lnum;
-    colnr_t	col = curwin->w_cursor.col;
+    linenr_T	lnum = curwin->w_cursor.lnum;
+    colnr_T	col = curwin->w_cursor.col;
 
     if (col == 0)
 	newp = vim_strsave((char_u *)"");
@@ -1977,7 +1978,7 @@ del_lines(nlines, undo)
 
     int
 gchar_pos(pos)
-    pos_t *pos;
+    pos_T *pos;
 {
     char_u	*ptr = ml_get_pos(pos);
 
@@ -2016,7 +2017,7 @@ pchar_cursor(c)
  */
     void
 goto_endofbuf(pos)
-    pos_t    *pos;
+    pos_T    *pos;
 {
     char_u  *p;
 
@@ -2039,7 +2040,7 @@ inindent(extra)
     int	    extra;
 {
     char_u	*ptr;
-    colnr_t	col;
+    colnr_T	col;
 
     for (col = 0, ptr = ml_get_curline(); vim_iswhite(*ptr); ++col)
 	++ptr;
@@ -2112,8 +2113,8 @@ changed()
     ++global_changedtick;
 }
 
-static void changedOneline __ARGS((linenr_t lnum));
-static void changed_common __ARGS((linenr_t lnum, colnr_t col, linenr_t lnume, long xtra));
+static void changedOneline __ARGS((linenr_T lnum));
+static void changed_common __ARGS((linenr_T lnum, colnr_T col, linenr_T lnume, long xtra));
 
 /*
  * Changed bytes within a single line for the current buffer.
@@ -2123,8 +2124,8 @@ static void changed_common __ARGS((linenr_t lnum, colnr_t col, linenr_t lnume, l
  */
     void
 changed_bytes(lnum, col)
-    linenr_t	lnum;
-    colnr_t	col;
+    linenr_T	lnum;
+    colnr_T	col;
 {
     changedOneline(lnum);
     changed_common(lnum, col, lnum + 1, 0L);
@@ -2132,7 +2133,7 @@ changed_bytes(lnum, col)
 
     static void
 changedOneline(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     if (curbuf->b_mod_set)
     {
@@ -2159,7 +2160,7 @@ changedOneline(lnum)
  */
     void
 appended_lines(lnum, count)
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	count;
 {
     changed_lines(lnum + 1, 0, lnum + 1, count);
@@ -2170,10 +2171,10 @@ appended_lines(lnum, count)
  */
     void
 appended_lines_mark(lnum, count)
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	count;
 {
-    mark_adjust(lnum + 1, (linenr_t)MAXLNUM, count, 0L);
+    mark_adjust(lnum + 1, (linenr_T)MAXLNUM, count, 0L);
     changed_lines(lnum + 1, 0, lnum + 1, count);
 }
 
@@ -2184,7 +2185,7 @@ appended_lines_mark(lnum, count)
  */
     void
 deleted_lines(lnum, count)
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	count;
 {
     changed_lines(lnum, 0, lnum + count, -count);
@@ -2195,10 +2196,10 @@ deleted_lines(lnum, count)
  */
     void
 deleted_lines_mark(lnum, count)
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	count;
 {
-    mark_adjust(lnum, (linenr_t)(lnum + count - 1), (long)MAXLNUM, -count);
+    mark_adjust(lnum, (linenr_T)(lnum + count - 1), (long)MAXLNUM, -count);
     changed_lines(lnum, 0, lnum + count, -count);
 }
 
@@ -2215,9 +2216,9 @@ deleted_lines_mark(lnum, count)
  */
     void
 changed_lines(lnum, col, lnume, xtra)
-    linenr_t	lnum;	    /* first line with change */
-    colnr_t	col;	    /* column in first line with change */
-    linenr_t	lnume;	    /* line below last changed line */
+    linenr_T	lnum;	    /* first line with change */
+    colnr_T	col;	    /* column in first line with change */
+    linenr_T	lnume;	    /* line below last changed line */
     long	xtra;	    /* number of extra lines (negative when deleting) */
 {
     if (curbuf->b_mod_set)
@@ -2250,12 +2251,12 @@ changed_lines(lnum, col, lnume, xtra)
 
     static void
 changed_common(lnum, col, lnume, xtra)
-    linenr_t	lnum;
-    colnr_t	col;
-    linenr_t	lnume;
+    linenr_T	lnum;
+    colnr_T	col;
+    linenr_T	lnume;
     long	xtra;
 {
-    win_t	*wp;
+    win_T	*wp;
     int		i;
 
     /* mark the buffer as modified */
@@ -2265,11 +2266,8 @@ changed_common(lnum, col, lnume, xtra)
     curbuf->b_last_change.lnum = lnum;
     curbuf->b_last_change.col = col;
 
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
+    {
 	if (wp->w_buffer == curbuf)
 	{
 	    /* Mark this window to be redrawn later. */
@@ -2345,6 +2343,7 @@ changed_common(lnum, col, lnume, xtra)
 #endif
 		}
 	}
+    }
 
     /* Call update_screen() later, which checks out what needs to be redrawn,
      * since it notices b_mod_set and then uses b_mod_*. */
@@ -2357,7 +2356,7 @@ changed_common(lnum, col, lnume, xtra)
  */
     void
 unchanged(buf, ff)
-    buf_t	*buf;
+    buf_T	*buf;
     int		ff;	/* also reset 'fileformat' */
 {
     if (buf->b_changed || (ff && file_ff_differs(buf)))
@@ -2384,9 +2383,9 @@ unchanged(buf, ff)
  */
     void
 check_status(buf)
-    buf_t	*buf;
+    buf_T	*buf;
 {
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp != NULL; wp = wp->w_next)
 	if (wp->w_buffer == buf && wp->w_status_height)
@@ -2921,7 +2920,7 @@ expand_env(src, dst, dstlen)
 		if (var == NULL)
 #  endif
 		{
-		    expand_t	xpc;
+		    expand_T	xpc;
 
 		    xpc.xp_context = EXPAND_FILES;
 		    var = ExpandOne(&xpc, dst, NULL,
@@ -3276,7 +3275,7 @@ vim_setenv(name, val)
 /*ARGSUSED*/
     char_u *
 get_env_name(xp, idx)
-    expand_t	*xp;
+    expand_T	*xp;
     int		idx;
 {
 # if defined(AMIGA) || defined(__MRC__) || defined(__SC__)
@@ -3316,7 +3315,7 @@ get_env_name(xp, idx)
  */
     void
 home_replace(buf, src, dst, dstlen, one)
-    buf_t	*buf;	/* when not NULL, check for help files */
+    buf_T	*buf;	/* when not NULL, check for help files */
     char_u	*src;	/* input file name */
     char_u	*dst;	/* where to put the result */
     int		dstlen;	/* maximum length of the result */
@@ -3419,7 +3418,7 @@ home_replace(buf, src, dst, dstlen, one)
  */
     char_u  *
 home_replace_save(buf, src)
-    buf_t	*buf;	/* when not NULL, check for help files */
+    buf_T	*buf;	/* when not NULL, check for help files */
     char_u	*src;	/* input file name */
 {
     char_u	*dst;
@@ -3738,11 +3737,11 @@ static char_u	*skip_string __ARGS((char_u *p));
  * Find the start of a comment, not knowing if we are in a comment right now.
  * Search starts at w_cursor.lnum and goes backwards.
  */
-    pos_t *
+    pos_T *
 find_start_comment(ind_maxcomment)	    /* XXX */
     int		ind_maxcomment;
 {
-    pos_t	*pos;
+    pos_T	*pos;
     char_u	*line;
     char_u	*p;
 
@@ -3840,8 +3839,8 @@ static int	cin_nocode __ARGS((char_u *));
 static int	cin_islabel_skip __ARGS((char_u **));
 static int	cin_isdefault __ARGS((char_u *));
 static char_u	*after_label __ARGS((char_u *l));
-static int	get_indent_nolabel __ARGS((linenr_t lnum));
-static int	skip_label __ARGS((linenr_t, char_u **pp, int ind_maxcomment));
+static int	get_indent_nolabel __ARGS((linenr_T lnum));
+static int	skip_label __ARGS((linenr_T, char_u **pp, int ind_maxcomment));
 static int	cin_ispreproc __ARGS((char_u *));
 static int	cin_iscomment __ARGS((char_u *));
 static int	cin_isterminated __ARGS((char_u *, int));
@@ -3849,12 +3848,12 @@ static int	cin_isfuncdecl __ARGS((char_u *));
 static int	cin_isif __ARGS((char_u *));
 static int	cin_iselse __ARGS((char_u *));
 static int	cin_isdo __ARGS((char_u *));
-static int	cin_iswhileofdo __ARGS((char_u *, linenr_t, int));
-static int	cin_skip2pos __ARGS((pos_t *trypos));
-static pos_t	*find_start_brace __ARGS((int));
-static pos_t	*find_match_paren __ARGS((int, int));
+static int	cin_iswhileofdo __ARGS((char_u *, linenr_T, int));
+static int	cin_skip2pos __ARGS((pos_T *trypos));
+static pos_T	*find_start_brace __ARGS((int));
+static pos_T	*find_match_paren __ARGS((int, int));
 static int	find_last_paren __ARGS((char_u *l));
-static int	find_match __ARGS((int lookfor, linenr_t ourscope, int ind_maxparen, int ind_maxcomment));
+static int	find_match __ARGS((int lookfor, linenr_T ourscope, int ind_maxparen, int ind_maxcomment));
 
 /*
  * Skip over white space and C comments within the line.
@@ -3943,8 +3942,8 @@ cin_islabel(ind_maxcomment)		/* XXX */
 	 * Only accept a label if the previous line is terminated or is a case
 	 * label.
 	 */
-	pos_t	cursor_save;
-	pos_t	*trypos;
+	pos_T	cursor_save;
+	pos_T	*trypos;
 	char_u	*line;
 
 	cursor_save = curwin->w_cursor;
@@ -4083,11 +4082,11 @@ after_label(l)
  */
     static int
 get_indent_nolabel(lnum)		/* XXX */
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
     char_u	*l;
-    pos_t	fp;
-    colnr_t	col;
+    pos_T	fp;
+    colnr_T	col;
     char_u	*p;
 
     l = ml_get(lnum);
@@ -4109,13 +4108,13 @@ get_indent_nolabel(lnum)		/* XXX */
  */
     static int
 skip_label(lnum, pp, ind_maxcomment)
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	**pp;
     int		ind_maxcomment;
 {
     char_u	*l;
     int		amount;
-    pos_t	cursor_save;
+    pos_T	cursor_save;
 
     cursor_save = curwin->w_cursor;
     curwin->w_cursor.lnum = lnum;
@@ -4253,11 +4252,11 @@ cin_isdo(p)
     static int
 cin_iswhileofdo(p, lnum, ind_maxparen)	    /* XXX */
     char_u	*p;
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		ind_maxparen;
 {
-    pos_t	cursor_save;
-    pos_t	*trypos;
+    pos_T	cursor_save;
+    pos_T	*trypos;
     int		retval = FALSE;
 
     p = cin_skipcomment(p);
@@ -4288,13 +4287,13 @@ cin_iswhileofdo(p, lnum, ind_maxparen)	    /* XXX */
  */
     static int
 cin_skip2pos(trypos)
-    pos_t	*trypos;
+    pos_T	*trypos;
 {
     char_u	*line;
     char_u	*p;
 
     p = line = ml_get(trypos->lnum);
-    while (*p && (colnr_t)(p - line) < trypos->col)
+    while (*p && (colnr_T)(p - line) < trypos->col)
     {
 	if (cin_iscomment(p))
 	    p = cin_skipcomment(p);
@@ -4316,24 +4315,24 @@ cin_skip2pos(trypos)
 /* {	    */
 /* }	    */
 
-    static pos_t *
+    static pos_T *
 find_start_brace(ind_maxcomment)	    /* XXX */
     int		ind_maxcomment;
 {
-    pos_t	cursor_save;
-    pos_t	*trypos;
-    pos_t	*pos;
-    static pos_t	pos_copy;
+    pos_T	cursor_save;
+    pos_T	*trypos;
+    pos_T	*pos;
+    static pos_T	pos_copy;
 
     cursor_save = curwin->w_cursor;
     while ((trypos = findmatchlimit(NULL, '{', FM_BLOCKSTOP, 0)) != NULL)
     {
-	pos_copy = *trypos;	/* copy pos_t, next findmatch will change it */
+	pos_copy = *trypos;	/* copy pos_T, next findmatch will change it */
 	trypos = &pos_copy;
 	curwin->w_cursor = *trypos;
 	pos = NULL;
 	/* ignore the { if it's in a // comment */
-	if ((colnr_t)cin_skip2pos(trypos) == trypos->col
+	if ((colnr_T)cin_skip2pos(trypos) == trypos->col
 		&& (pos = find_start_comment(ind_maxcomment)) == NULL) /* XXX */
 	    break;
 	if (pos != NULL)
@@ -4347,20 +4346,20 @@ find_start_brace(ind_maxcomment)	    /* XXX */
  * Find the matching '(', failing if it is in a comment.
  * Return NULL of no match found.
  */
-    static pos_t *
+    static pos_T *
 find_match_paren(ind_maxparen, ind_maxcomment)	    /* XXX */
     int		ind_maxparen;
     int		ind_maxcomment;
 {
-    pos_t	cursor_save;
-    pos_t	*trypos;
-    static pos_t	pos_copy;
+    pos_T	cursor_save;
+    pos_T	*trypos;
+    static pos_T	pos_copy;
 
     cursor_save = curwin->w_cursor;
     if ((trypos = findmatchlimit(NULL, '(', 0, ind_maxparen)) != NULL)
     {
 	/* check if the ( is in a // comment */
-	if ((colnr_t)cin_skip2pos(trypos) > trypos->col)
+	if ((colnr_T)cin_skip2pos(trypos) > trypos->col)
 	    trypos = NULL;
 	else
 	{
@@ -4512,22 +4511,22 @@ get_c_indent()
      */
     int	ind_java = 0;
 
-    pos_t	cur_curpos;
+    pos_T	cur_curpos;
     int		amount;
     int		scope_amount;
     int		cur_amount;
-    colnr_t	col;
+    colnr_T	col;
     char_u	*theline;
     char_u	*linecopy;
-    pos_t	*trypos;
-    pos_t	*tryposBrace = NULL;
-    pos_t	our_paren_pos;
+    pos_T	*trypos;
+    pos_T	*tryposBrace = NULL;
+    pos_T	our_paren_pos;
     char_u	*start;
     int		start_brace;
 #define BRACE_IN_COL0		1	    /* '{' is in comumn 0 */
 #define BRACE_AT_START		2	    /* '{' is at start of line */
 #define BRACE_AT_END		3	    /* '{' is at end of line */
-    linenr_t	ourscope;
+    linenr_T	ourscope;
     char_u	*l;
     char_u	*look;
     int		lookfor;
@@ -4539,7 +4538,7 @@ get_c_indent()
 #define LOOKFOR_UNTERM		6
 #define LOOKFOR_SCOPEDECL	7
     int		whilelevel;
-    linenr_t	lnum;
+    linenr_T	lnum;
     char_u	*options;
     int		fraction = 0;	    /* init for GCC */
     int		divider;
@@ -4611,7 +4610,7 @@ get_c_indent()
     cur_curpos = curwin->w_cursor;
 
     /* get the current contents of the line.
-     * This is required, because onle the most recent line obtained with
+     * This is required, because only the most recent line obtained with
      * ml_get is valid! */
 
     linecopy = vim_strsave(ml_get(cur_curpos.lnum));
@@ -4650,111 +4649,93 @@ get_c_indent()
 
     /*
      * If we're inside a comment and not looking at the start of the
-     * comment...
+     * comment, try using the 'comments' option.
      */
     else if (!cin_iscomment(theline)
 	    && (trypos = find_start_comment(ind_maxcomment)) != NULL) /* XXX */
     {
-	int	lead_len = 2;
+	int	lead_start_len = 2;
 	char_u	lead_middle[COM_MAX_LEN];	/* middle-comment string */
 	char_u	lead_end[COM_MAX_LEN];		/* end-comment string */
 	char_u	*p;
-	int	c = 0;
-	int	off = 0;
+	int	start_align = 0;
+	int	start_off = 0;
+	int	done = FALSE;
 
 	/* find how indented the line beginning the comment is */
 	getvcol(curwin, trypos, &col, NULL, NULL);
 	amount = col;
 
-	STRCPY(lead_middle, "*");
-	STRCPY(lead_end, "*/");
 	p = curbuf->b_p_com;
-	while (*p)
+	while (*p != NUL)
 	{
-	    int	tc = 0;
-	    int	toff = 0;
+	    int	align = 0;
+	    int	off = 0;
+	    int what = 0;
 
-	    while (*p && *p != ':')
+	    while (*p != NUL && *p != ':')
 	    {
-		if (*p == COM_START)
-		{
-		    while (*p && p[-1] != ':')
-		    {
-			if (*p == COM_LEFT || *p == COM_RIGHT)
-			    tc = *p++;
-			else if (isdigit(*p) || *p == '-')
-			    toff = getdigits(&p);
-			else
-			    ++p;
-		    }
-		    lead_len = 0;
-		    while (*p && *p != ',')
-		    {
-			++p;
-			++lead_len;
-		    }
-		    if (tc)
-			c = tc;
-		    if (toff)
-			off = toff;
-		    break;
-		}
-		if (*p == COM_END)
-		{
-		    while (*p && p[-1] != ':')
-		    {
-			if (*p == COM_LEFT || *p == COM_RIGHT)
-			    tc = *p++;
-			else if (isdigit(*p) || *p == '-')
-			    toff = getdigits(&p);
-			else
-			    ++p;
-		    }
-		    if (tc)
-			c = tc;
-		    if (toff)
-			off = toff;
-		    (void)copy_option_part(&p, lead_end, COM_MAX_LEN, ",");
-		    break;
-		}
-
-		if (*p == COM_MIDDLE)
-		{
-		    while (*p && p[-1] != ':')
-			++p;
-		    (void)copy_option_part(&p, lead_middle, COM_MAX_LEN, ",");
-		    break;
-		}
-
-		if (*p == COM_LEFT || *p == COM_RIGHT)
-		    tc = *++p;
+		if (*p == COM_START || *p == COM_END || *p == COM_MIDDLE)
+		    what = *p++;
+		else if (*p == COM_LEFT || *p == COM_RIGHT)
+		    align = *p++;
 		else if (isdigit(*p) || *p == '-')
-		    toff = getdigits(&p);
+		    off = getdigits(&p);
 		else
 		    ++p;
 	    }
+
 	    if (*p == ':')
 		++p;
-	    while (*p && p[-1] != ',')
-		++p;
-	}
+	    (void)copy_option_part(&p, lead_end, COM_MAX_LEN, ",");
+	    if (what == COM_START)
+	    {
+		lead_start_len = STRLEN(lead_end);
+		start_off = off;
+		start_align = align;
+	    }
+	    else if (what == COM_MIDDLE)
+	    {
+		STRCPY(lead_middle, lead_end);
+	    }
+	    else if (what == COM_END)
+	    {
+		/* If our line starts with the middle comment string, line it
+		 * up with the comment opener per the 'comments' option. */
+		if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) == 0
+			&& STRNCMP(theline, lead_end, STRLEN(lead_end)) != 0)
+		{
+		    if (start_off != 0)
+			amount += start_off;
+		    else if (start_align == COM_RIGHT)
+			amount += lead_start_len - STRLEN(lead_middle);
+		    done = TRUE;
+		    break;
+		}
 
-	/* If our line starts with the middle comment string, line it up
-	 * with the comment opener per the 'comments' option.
-	 */
-	if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) == 0
-		&& STRNCMP(theline, lead_end, STRLEN(lead_end)) != 0)
-	{
-	    if (off != 0)
-		amount += off;
-	    else if (c == COM_RIGHT)
-		amount += lead_len - STRLEN(lead_middle);
+		/* If our line starts with the end comment string, line it up
+		 * with the middle comment */
+		if (STRNCMP(theline, lead_middle, STRLEN(lead_middle)) != 0
+			&& STRNCMP(theline, lead_end, STRLEN(lead_end)) == 0)
+		{
+		    amount = get_indent_lnum(curwin->w_cursor.lnum - 1);
+								     /* XXX */
+		    if (off != 0)
+			amount += off;
+		    else if (align == COM_RIGHT)
+			amount += lead_start_len - STRLEN(lead_middle);
+		    done = TRUE;
+		    break;
+		}
+	    }
 	}
 
 	/* If our line starts with an asterisk, line up with the
 	 * asterisk in the comment opener; otherwise, line up
 	 * with the first character of the comment text.
 	 */
+	if (done)
+	    ;
 	else if (theline[0] == '*')
 	{
 	    amount += 1;
@@ -4780,11 +4761,11 @@ get_c_indent()
 	    {
 		start = ml_get(trypos->lnum);
 		look = start + trypos->col + 2;	    /* skip / and * */
-		if (*look)			    /* if something after it */
+		if (*look != NUL)		    /* if something after it */
 		    trypos->col = skipwhite(look) - start;
 		getvcol(curwin, trypos, &col, NULL, NULL);
 		amount = col;
-		if (!*look)
+		if (*look == NUL)
 		    amount += ind_in_comment;
 	    }
 	}
@@ -5354,8 +5335,10 @@ get_c_indent()
 			 * When searching for a terminated line, don't use the
 			 * one between the "if" and the "else".
 			 * Need to use the scope of this "else".  XXX
+			 * If whilelevel != 0 continue looking for a "do {".
 			 */
 			if (cin_iselse(l)
+				&& whilelevel == 0
 				&& ((trypos = find_start_brace(ind_maxcomment))
 								    == NULL
 				    || find_match(LOOKFOR_IF, trypos->lnum,
@@ -5670,12 +5653,12 @@ theend:
     static int
 find_match(lookfor, ourscope, ind_maxparen, ind_maxcomment)
     int		lookfor;
-    linenr_t	ourscope;
+    linenr_T	ourscope;
     int		ind_maxparen;
     int		ind_maxcomment;
 {
     char_u	*look;
-    pos_t	*theirscope;
+    pos_T	*theirscope;
     char_u	*mightbeif;
     int		elselevel;
     int		whilelevel;
@@ -5791,7 +5774,7 @@ find_match(lookfor, ourscope, ind_maxparen, ind_maxcomment)
 get_expr_indent()
 {
     int		indent;
-    pos_t	pos = curwin->w_cursor;
+    pos_T	pos = curwin->w_cursor;
 
     set_vim_var_nr(VV_LNUM, curwin->w_cursor.lnum);
     ++sandbox;
@@ -5867,11 +5850,11 @@ lisp_match(p)
     int
 get_lisp_indent()
 {
-    pos_t	*pos, realpos;
+    pos_T	*pos, realpos;
     int		amount;
     char_u	*that;
-    colnr_t	col;
-    colnr_t	firsttry;
+    colnr_T	col;
+    colnr_T	firsttry;
     int		parencount, quotecount;
     int		vi_lisp;
 
@@ -5939,7 +5922,7 @@ get_lisp_indent()
 		amount = 0;
 		while (*that && col)
 		{
-		    amount += lbr_chartabsize_adv(&that, (colnr_t)amount);
+		    amount += lbr_chartabsize_adv(&that, (colnr_T)amount);
 		    col--;
 		}
 
@@ -5961,7 +5944,7 @@ get_lisp_indent()
 
 		    while (vim_iswhite(*that))
 		    {
-			amount += lbr_chartabsize(that, (colnr_t)amount);
+			amount += lbr_chartabsize(that, (colnr_T)amount);
 			++that;
 		    }
 
@@ -5998,14 +5981,14 @@ get_lisp_indent()
                                     --parencount;
                                 if (*that == '\\' && *(that+1) != NUL)
                                     amount += lbr_chartabsize_adv(&that,
-							     (colnr_t)amount);
+							     (colnr_T)amount);
                                 amount += lbr_chartabsize_adv(&that,
-							     (colnr_t)amount);
+							     (colnr_T)amount);
                             }
 			}
                         while (vim_iswhite(*that))
                         {
-                            amount += lbr_chartabsize(that, (colnr_t)amount);
+                            amount += lbr_chartabsize(that, (colnr_T)amount);
                             that++;
                         }
                         if (!*that || *that == ';')
@@ -6058,7 +6041,7 @@ prepare_to_exit()
     void
 preserve_exit()
 {
-    buf_t	*buf;
+    buf_T	*buf;
 
     prepare_to_exit();
 
@@ -6250,7 +6233,7 @@ match_suffix(fname)
 
 # ifdef VIM_BACKTICK
 static int vim_backtick __ARGS((char_u *p));
-static int expand_backtick __ARGS((garray_t *gap, char_u *pat, int flags));
+static int expand_backtick __ARGS((garray_T *gap, char_u *pat, int flags));
 # endif
 
 # if defined(MSDOS) || defined(FEAT_GUI_W16)
@@ -6295,7 +6278,7 @@ namelowcpy(
  */
     static int
 dos_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     char_u	*wildc,
     int		flags)		/* EW_* flags */
@@ -6412,7 +6395,7 @@ dos_expandpath(
 
     int
 mch_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     int		flags)		/* EW_* flags */
 {
@@ -6440,7 +6423,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
     int		flags;		/* EW_* flags */
 {
     int			i;
-    garray_t		ga;
+    garray_T		ga;
     char_u		*p;
     static int		recursive = FALSE;
     int			add_pat;
@@ -6571,7 +6554,7 @@ vim_backtick(p)
  */
     static int
 expand_backtick(gap, pat, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*pat;
     int		flags;	/* EW_* flags */
 {
@@ -6631,7 +6614,7 @@ expand_backtick(gap, pat, flags)
  */
     void
 addfile(gap, f, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*f;	/* filename */
     int		flags;
 {

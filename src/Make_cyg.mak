@@ -14,10 +14,12 @@ INCLUDES = -I/usr/lib/include/mingw
 CC = gcc
 RC = windres
 EXE = vim.exe
+OUTDIR = obj
 
 #>>>>> uncomment this block to build a GUI version
+#OUTDIR = gobj
 #DEFINES = $(DEFINES) -DFEAT_GUI_W32
-#GUI_OBJ = obj/gui.o obj/gui_w32.o obj/os_w32exe.o obj/vimrc.o
+#GUI_OBJ = $(OUTDIR)/gui.o $(OUTDIR)/gui_w32.o $(OUTDIR)/os_w32exe.o $(OUTDIR)/vimrc.o
 #GUI_LIBS = -lcomctl32 -lcomdlg32
 #EXE = gvim.exe
 
@@ -29,50 +31,50 @@ CFLAGS = -O2 -D_MAX_PATH=256 -DWIN32 -DPC -Iproto $(DEFINES) $(INCLUDES)
 RCFLAGS = -D_MAX_PATH=256 -DWIN32 -DPC -O coff $(DEFINES) $(INCLUDES)
 
 OBJ = \
-	obj/buffer.o \
-	obj/charset.o \
-	obj/diff.o \
-	obj/digraph.o \
-	obj/edit.o \
-	obj/eval.o \
-	obj/ex_cmds.o \
-	obj/ex_cmds2.o \
-	obj/ex_docmd.o \
-	obj/ex_getln.o \
-	obj/fileio.o \
-	obj/fold.o \
-	obj/getchar.o \
-	obj/main.o \
-	obj/mark.o \
-	obj/memfile.o \
-	obj/memline.o \
-	obj/menu.o \
-	obj/message.o \
-	obj/misc1.o \
-	obj/misc2.o \
-	obj/move.o \
-	obj/mbyte.o \
-	obj/normal.o \
-	obj/ops.o \
-	obj/option.o \
-	obj/os_win32.o \
-	obj/os_mswin.o \
-	obj/quickfix.o \
-	obj/regexp.o \
-	obj/screen.o \
-	obj/search.o \
-	obj/syntax.o \
-	obj/tag.o \
-	obj/term.o \
-	obj/ui.o \
-	obj/undo.o \
-	obj/window.o \
+	$(OUTDIR)/buffer.o \
+	$(OUTDIR)/charset.o \
+	$(OUTDIR)/diff.o \
+	$(OUTDIR)/digraph.o \
+	$(OUTDIR)/edit.o \
+	$(OUTDIR)/eval.o \
+	$(OUTDIR)/ex_cmds.o \
+	$(OUTDIR)/ex_cmds2.o \
+	$(OUTDIR)/ex_docmd.o \
+	$(OUTDIR)/ex_getln.o \
+	$(OUTDIR)/fileio.o \
+	$(OUTDIR)/fold.o \
+	$(OUTDIR)/getchar.o \
+	$(OUTDIR)/main.o \
+	$(OUTDIR)/mark.o \
+	$(OUTDIR)/memfile.o \
+	$(OUTDIR)/memline.o \
+	$(OUTDIR)/menu.o \
+	$(OUTDIR)/message.o \
+	$(OUTDIR)/misc1.o \
+	$(OUTDIR)/misc2.o \
+	$(OUTDIR)/move.o \
+	$(OUTDIR)/mbyte.o \
+	$(OUTDIR)/normal.o \
+	$(OUTDIR)/ops.o \
+	$(OUTDIR)/option.o \
+	$(OUTDIR)/os_win32.o \
+	$(OUTDIR)/os_mswin.o \
+	$(OUTDIR)/quickfix.o \
+	$(OUTDIR)/regexp.o \
+	$(OUTDIR)/screen.o \
+	$(OUTDIR)/search.o \
+	$(OUTDIR)/syntax.o \
+	$(OUTDIR)/tag.o \
+	$(OUTDIR)/term.o \
+	$(OUTDIR)/ui.o \
+	$(OUTDIR)/undo.o \
+	$(OUTDIR)/window.o \
 	$(GUI_OBJ) \
 	$(TERMLIB)
 
 all: $(EXE) xxd/xxd.exe vimrun.exe install.exe uninstall.exe
 
-$(EXE): obj $(OBJ) version.c version.h
+$(EXE): $(OUTDIR) $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o $(EXE) version.c $(OBJ) -lkernel32 -luser32 -lgdi32 -ladvapi32 $(GUI_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
@@ -89,14 +91,14 @@ install.exe: dosinst.c
 uninstall.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstall.exe uninstal.c  -lkernel32 -luser32 -lgdi32 -ladvapi32
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
 tags:
 	command /c ctags *.c $(INCL)
 
 clean:
-	-del obj\*.o
+	-del $(OUTDIR)\*.o
 	-del *.o
 	-del *.exe
 	-del *.~
@@ -104,128 +106,128 @@ clean:
 
 ###########################################################################
 
-obj/buffer.o:	buffer.c $(INCL)
-	$(CC) -c $(CFLAGS) buffer.c -o obj/buffer.o
+$(OUTDIR)/buffer.o:	buffer.c $(INCL)
+	$(CC) -c $(CFLAGS) buffer.c -o $(OUTDIR)/buffer.o
 
-obj/charset.o:	charset.c $(INCL)
-	$(CC) -c $(CFLAGS) charset.c -o obj/charset.o
+$(OUTDIR)/charset.o:	charset.c $(INCL)
+	$(CC) -c $(CFLAGS) charset.c -o $(OUTDIR)/charset.o
 
-obj/diff.o:	diff.c $(INCL)
-	$(CC) -c $(CFLAGS) diff.c -o obj/diff.o
+$(OUTDIR)/diff.o:	diff.c $(INCL)
+	$(CC) -c $(CFLAGS) diff.c -o $(OUTDIR)/diff.o
 
-obj/digraph.o:	digraph.c $(INCL)
-	$(CC) -c $(CFLAGS) digraph.c -o obj/digraph.o
+$(OUTDIR)/digraph.o:	digraph.c $(INCL)
+	$(CC) -c $(CFLAGS) digraph.c -o $(OUTDIR)/digraph.o
 
-obj/edit.o:	edit.c $(INCL)
-	$(CC) -c $(CFLAGS) edit.c -o obj/edit.o
+$(OUTDIR)/edit.o:	edit.c $(INCL)
+	$(CC) -c $(CFLAGS) edit.c -o $(OUTDIR)/edit.o
 
-obj/eval.o:	eval.c $(INCL)
-	$(CC) -c $(CFLAGS) eval.c -o obj/eval.o
+$(OUTDIR)/eval.o:	eval.c $(INCL)
+	$(CC) -c $(CFLAGS) eval.c -o $(OUTDIR)/eval.o
 
-obj/ex_cmds.o:	ex_cmds.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_cmds.c -o obj/ex_cmds.o
+$(OUTDIR)/ex_cmds.o:	ex_cmds.c $(INCL)
+	$(CC) -c $(CFLAGS) ex_cmds.c -o $(OUTDIR)/ex_cmds.o
 
-obj/ex_cmds2.o:	ex_cmds2.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_cmds2.c -o obj/ex_cmds2.o
+$(OUTDIR)/ex_cmds2.o:	ex_cmds2.c $(INCL)
+	$(CC) -c $(CFLAGS) ex_cmds2.c -o $(OUTDIR)/ex_cmds2.o
 
-obj/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
-	$(CC) -c $(CFLAGS) ex_docmd.c -o obj/ex_docmd.o
+$(OUTDIR)/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
+	$(CC) -c $(CFLAGS) ex_docmd.c -o $(OUTDIR)/ex_docmd.o
 
-obj/ex_getln.o:	ex_getln.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_getln.c -o obj/ex_getln.o
+$(OUTDIR)/ex_getln.o:	ex_getln.c $(INCL)
+	$(CC) -c $(CFLAGS) ex_getln.c -o $(OUTDIR)/ex_getln.o
 
-obj/fileio.o:	fileio.c $(INCL)
-	$(CC) -c $(CFLAGS) fileio.c -o obj/fileio.o
+$(OUTDIR)/fileio.o:	fileio.c $(INCL)
+	$(CC) -c $(CFLAGS) fileio.c -o $(OUTDIR)/fileio.o
 
-obj/fold.o:	fold.c $(INCL)
-	$(CC) -c $(CFLAGS) fold.c -o obj/fold.o
+$(OUTDIR)/fold.o:	fold.c $(INCL)
+	$(CC) -c $(CFLAGS) fold.c -o $(OUTDIR)/fold.o
 
-obj/getchar.o:	getchar.c $(INCL)
-	$(CC) -c $(CFLAGS) getchar.c -o obj/getchar.o
+$(OUTDIR)/getchar.o:	getchar.c $(INCL)
+	$(CC) -c $(CFLAGS) getchar.c -o $(OUTDIR)/getchar.o
 
-obj/gui.o:	gui.c $(INCL)
-	$(CC) -c $(CFLAGS) gui.c -o obj/gui.o
+$(OUTDIR)/gui.o:	gui.c $(INCL)
+	$(CC) -c $(CFLAGS) gui.c -o $(OUTDIR)/gui.o
 
-obj/gui_w32.o:	gui_w32.c $(INCL)
-	$(CC) -c $(CFLAGS) gui_w32.c -o obj/gui_w32.o
+$(OUTDIR)/gui_w32.o:	gui_w32.c $(INCL)
+	$(CC) -c $(CFLAGS) gui_w32.c -o $(OUTDIR)/gui_w32.o
 
-obj/main.o:	main.c $(INCL)
-	$(CC) -c $(CFLAGS) main.c -o obj/main.o
+$(OUTDIR)/main.o:	main.c $(INCL)
+	$(CC) -c $(CFLAGS) main.c -o $(OUTDIR)/main.o
 
-obj/mark.o:	mark.c $(INCL)
-	$(CC) -c $(CFLAGS) mark.c -o obj/mark.o
+$(OUTDIR)/mark.o:	mark.c $(INCL)
+	$(CC) -c $(CFLAGS) mark.c -o $(OUTDIR)/mark.o
 
-obj/memfile.o:	memfile.c $(INCL)
-	$(CC) -c $(CFLAGS) memfile.c -o obj/memfile.o
+$(OUTDIR)/memfile.o:	memfile.c $(INCL)
+	$(CC) -c $(CFLAGS) memfile.c -o $(OUTDIR)/memfile.o
 
-obj/memline.o:	memline.c $(INCL)
-	$(CC) -c $(CFLAGS) memline.c -o obj/memline.o
+$(OUTDIR)/memline.o:	memline.c $(INCL)
+	$(CC) -c $(CFLAGS) memline.c -o $(OUTDIR)/memline.o
 
-obj/menu.o:	menu.c $(INCL)
-	$(CC) -c $(CFLAGS) menu.c -o obj/menu.o
+$(OUTDIR)/menu.o:	menu.c $(INCL)
+	$(CC) -c $(CFLAGS) menu.c -o $(OUTDIR)/menu.o
 
-obj/message.o:	message.c $(INCL)
-	$(CC) -c $(CFLAGS) message.c -o obj/message.o
+$(OUTDIR)/message.o:	message.c $(INCL)
+	$(CC) -c $(CFLAGS) message.c -o $(OUTDIR)/message.o
 
-obj/misc1.o:	misc1.c $(INCL)
-	$(CC) -c $(CFLAGS) misc1.c -o obj/misc1.o
+$(OUTDIR)/misc1.o:	misc1.c $(INCL)
+	$(CC) -c $(CFLAGS) misc1.c -o $(OUTDIR)/misc1.o
 
-obj/misc2.o:	misc2.c $(INCL)
-	$(CC) -c $(CFLAGS) misc2.c -o obj/misc2.o
+$(OUTDIR)/misc2.o:	misc2.c $(INCL)
+	$(CC) -c $(CFLAGS) misc2.c -o $(OUTDIR)/misc2.o
 
-obj/move.o:	move.c $(INCL)
-	$(CC) -c $(CFLAGS) move.c -o obj/move.o
+$(OUTDIR)/move.o:	move.c $(INCL)
+	$(CC) -c $(CFLAGS) move.c -o $(OUTDIR)/move.o
 
-obj/mbyte.o: mbyte.c $(INCL)
-	$(CC) -c $(CFLAGS) mbyte.c -o obj/mbyte.o
+$(OUTDIR)/mbyte.o: mbyte.c $(INCL)
+	$(CC) -c $(CFLAGS) mbyte.c -o $(OUTDIR)/mbyte.o
 
-obj/normal.o:	normal.c $(INCL)
-	$(CC) -c $(CFLAGS) normal.c -o obj/normal.o
+$(OUTDIR)/normal.o:	normal.c $(INCL)
+	$(CC) -c $(CFLAGS) normal.c -o $(OUTDIR)/normal.o
 
-obj/ops.o:	ops.c $(INCL)
-	$(CC) -c $(CFLAGS) ops.c -o obj/ops.o
+$(OUTDIR)/ops.o:	ops.c $(INCL)
+	$(CC) -c $(CFLAGS) ops.c -o $(OUTDIR)/ops.o
 
-obj/option.o:	option.c $(INCL)
-	$(CC) -c $(CFLAGS) option.c -o obj/option.o
+$(OUTDIR)/option.o:	option.c $(INCL)
+	$(CC) -c $(CFLAGS) option.c -o $(OUTDIR)/option.o
 
-obj/os_win32.o:	os_win32.c $(INCL)
-	$(CC) -c $(CFLAGS) os_win32.c -o obj/os_win32.o
+$(OUTDIR)/os_win32.o:	os_win32.c $(INCL)
+	$(CC) -c $(CFLAGS) os_win32.c -o $(OUTDIR)/os_win32.o
 
-obj/os_w32exe.o: os_w32exe.c $(INCL)
-	$(CC) -c $(CFLAGS) os_w32exe.c -o obj/os_w32exe.o
+$(OUTDIR)/os_w32exe.o: os_w32exe.c $(INCL)
+	$(CC) -c $(CFLAGS) os_w32exe.c -o $(OUTDIR)/os_w32exe.o
 
-obj/os_mswin.o:	os_mswin.c $(INCL)
-	$(CC) -c $(CFLAGS) os_mswin.c -o obj/os_mswin.o
+$(OUTDIR)/os_mswin.o:	os_mswin.c $(INCL)
+	$(CC) -c $(CFLAGS) os_mswin.c -o $(OUTDIR)/os_mswin.o
 
-obj/quickfix.o:	quickfix.c $(INCL)
-	$(CC) -c $(CFLAGS) quickfix.c -o obj/quickfix.o
+$(OUTDIR)/quickfix.o:	quickfix.c $(INCL)
+	$(CC) -c $(CFLAGS) quickfix.c -o $(OUTDIR)/quickfix.o
 
-obj/regexp.o:	regexp.c $(INCL)
-	$(CC) -c $(CFLAGS) regexp.c -o obj/regexp.o
+$(OUTDIR)/regexp.o:	regexp.c $(INCL)
+	$(CC) -c $(CFLAGS) regexp.c -o $(OUTDIR)/regexp.o
 
-obj/screen.o:	screen.c $(INCL)
-	$(CC) -c $(CFLAGS) screen.c -o obj/screen.o
+$(OUTDIR)/screen.o:	screen.c $(INCL)
+	$(CC) -c $(CFLAGS) screen.c -o $(OUTDIR)/screen.o
 
-obj/search.o:	search.c $(INCL)
-	$(CC) -c $(CFLAGS) search.c -o obj/search.o
+$(OUTDIR)/search.o:	search.c $(INCL)
+	$(CC) -c $(CFLAGS) search.c -o $(OUTDIR)/search.o
 
-obj/syntax.o:	syntax.c $(INCL)
-	$(CC) -c $(CFLAGS) syntax.c -o obj/syntax.o
+$(OUTDIR)/syntax.o:	syntax.c $(INCL)
+	$(CC) -c $(CFLAGS) syntax.c -o $(OUTDIR)/syntax.o
 
-obj/tag.o:	tag.c $(INCL)
-	$(CC) -c $(CFLAGS) tag.c -o obj/tag.o
+$(OUTDIR)/tag.o:	tag.c $(INCL)
+	$(CC) -c $(CFLAGS) tag.c -o $(OUTDIR)/tag.o
 
-obj/term.o:	term.c $(INCL)
-	$(CC) -c $(CFLAGS) term.c -o obj/term.o
+$(OUTDIR)/term.o:	term.c $(INCL)
+	$(CC) -c $(CFLAGS) term.c -o $(OUTDIR)/term.o
 
-obj/ui.o:	ui.c $(INCL)
-	$(CC) -c $(CFLAGS) ui.c -o obj/ui.o
+$(OUTDIR)/ui.o:	ui.c $(INCL)
+	$(CC) -c $(CFLAGS) ui.c -o $(OUTDIR)/ui.o
 
-obj/undo.o:	undo.c $(INCL)
-	$(CC) -c $(CFLAGS) undo.c -o obj/undo.o
+$(OUTDIR)/undo.o:	undo.c $(INCL)
+	$(CC) -c $(CFLAGS) undo.c -o $(OUTDIR)/undo.o
 
-obj/vimrc.o:	vim.rc $(INCL)
-	$(RC) $(RCFLAGS) vim.rc -o obj/vimrc.o
+$(OUTDIR)/vimrc.o:	vim.rc $(INCL)
+	$(RC) $(RCFLAGS) vim.rc -o $(OUTDIR)/vimrc.o
 
-obj/window.o:	window.c $(INCL)
-	$(CC) -c $(CFLAGS) window.c -o obj/window.o
+$(OUTDIR)/window.o:	window.c $(INCL)
+	$(CC) -c $(CFLAGS) window.c -o $(OUTDIR)/window.o

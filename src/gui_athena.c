@@ -15,6 +15,7 @@
 #include <X11/Xaw/SimpleMenu.h>
 #include <X11/Xaw/MenuButton.h>
 #include <X11/Xaw/SmeBSB.h>
+#include <X11/Xaw/SmeLine.h>
 #include <X11/Xaw/Box.h>
 #include <X11/Xaw/Dialog.h>
 
@@ -72,7 +73,7 @@ gui_athena_scroll_cb_jump(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    scrollbar_t *sb, *sb_info;
+    scrollbar_T *sb, *sb_info;
     long	value;
 
     sb = gui_find_scrollbar((long)client_data);
@@ -108,7 +109,7 @@ gui_athena_scroll_cb_scroll(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    scrollbar_t *sb, *sb_info;
+    scrollbar_T *sb, *sb_info;
     long	value;
     int		data = (int)(long)call_data;
     int		page;
@@ -333,7 +334,7 @@ gui_x11_set_back_color()
 static char_u *make_pull_name __ARGS((char_u * name));
 static void gui_athena_reorder_menus	__ARGS((void));
 static Widget get_popup_entry __ARGS((Widget w));
-static void gui_mch_submenu_change __ARGS((vimmenu_t *mp, int colors));
+static void gui_mch_submenu_change __ARGS((vimmenu_T *mp, int colors));
 static void gui_athena_menu_font __ARGS((Widget id));
 
     void
@@ -399,12 +400,12 @@ gui_mch_set_menu_pos(x, y, w, h)
 /* ARGSUSED */
     void
 gui_mch_add_menu(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
     char_u	*pullright_name;
     Dimension	height, space, border;
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     if (parent == NULL)
     {
@@ -481,21 +482,47 @@ gui_mch_add_menu(menu, idx)
 
     static void
 gui_athena_menu_font(id)
-    Widget  id;
+    Widget	id;
 {
-    if (gui.menu_font != NOFONT)
+    int		managed = FALSE;
+
+#ifdef EXPERIMENTAL
+# ifdef FEAT_XFONTSET
+    if (gui.menu_fontset != NOFONTSET)
     {
 	if (XtIsManaged(id))
 	{
 	    XtUnmanageChild(id);
-	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
+	    XtVaSetValues(id, XtNfontSet, gui.menu_fontset, NULL);
 	    /* We should force the widget to recalculate it's
 	     * geometry now.
 	     */
 	    XtManageChild(id);
 	}
 	else
+	    XtVaSetValues(id, XtNfontSet, gui.menu_fontset, NULL);
+    }
+    else
+# endif
+#endif
+    if (gui.menu_font != NOFONT)
+    {
+	if (XtIsManaged(id))
+	{
+	    XtUnmanageChild(id);
+	    managed = TRUE;
+	}
+
+#ifdef FEAT_XFONTSET
+	if (gui.fontset != NOFONTSET)
+	    XtVaSetValues(id, XtNfontSet, gui.menu_font, NULL);
+	else
+#endif
 	    XtVaSetValues(id, XtNfont, gui.menu_font, NULL);
+
+	/* Force the widget to recalculate it's geometry now. */
+	if (managed)
+	    XtManageChild(id);
     }
 }
 
@@ -506,12 +533,13 @@ gui_mch_new_menu_font()
     if (menuBar == (Widget)0)
 	return;
     gui_mch_submenu_change(root_menu, FALSE);
+
     {
 	/* Iterate through the menubar menu items and get the height of
 	 * each one.  The menu bar height is set to the maximum of all
 	 * the heights.
 	 */
-	vimmenu_t *mp;
+	vimmenu_T *mp;
 	int max_height = INT_MAX;
 
 	for (mp = root_menu; mp != NULL; mp = mp->next)
@@ -570,7 +598,7 @@ gui_mch_new_menu_font()
 
     static void
 gui_mch_submenu_change(mp, colors)
-    vimmenu_t	*mp;
+    vimmenu_T	*mp;
     int		colors;		/* TRUE for colors, FALSE for font */
 {
     while (mp != NULL)
@@ -624,10 +652,10 @@ make_pull_name(name)
 /* ARGSUSED */
     void
 gui_mch_add_menu_item(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
 # ifdef FEAT_TOOLBAR
     if (menu_is_toolbar(parent->name))
@@ -674,9 +702,18 @@ gui_mch_add_menu_item(menu, idx)
 			type, toolBar, args, n);
 	    XtAddCallback(menu->id,
 		    XtNcallback, gui_x11_menu_cb, menu);
+#ifdef FEAT_BEVAL
+	    if (menu->strings[MENU_INDEX_TIP] && menu->tip == NULL)
+		menu->tip = gui_mch_create_beval_area(
+				    menu->id,
+				    menu->strings[MENU_INDEX_TIP],
+				    NULL,
+				    NULL);
+#endif
 	}
 	else
 	    XtSetValues(menu->id, args, n);
+	gui_athena_menu_colors(menu->id);
 
 	menu->parent = parent;
 	menu->submenu_id = NULL;
@@ -688,22 +725,32 @@ gui_mch_add_menu_item(menu, idx)
     } /* toolbar menu item */
 # endif
 
-    /* Don't add menu separator */
+    /* Add menu separator */
     if (menu_is_separator(menu->name))
-	return;
-
-    if (parent != NULL && parent->submenu_id != (Widget)0)
     {
 	menu->submenu_id = (Widget)0;
 	menu->id = XtVaCreateManagedWidget((char *)menu->dname,
-		smeBSBObjectClass, parent->submenu_id,
+		smeLineObjectClass, parent->submenu_id,
 		NULL);
 	if (menu->id == (Widget)0)
 	    return;
 	gui_athena_menu_colors(menu->id);
-	gui_athena_menu_font(menu->id);
-	XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
-		(XtPointer)menu);
+    }
+    else
+    {
+	if (parent != NULL && parent->submenu_id != (Widget)0)
+	{
+	    menu->submenu_id = (Widget)0;
+	    menu->id = XtVaCreateManagedWidget((char *)menu->dname,
+		    smeBSBObjectClass, parent->submenu_id,
+		    NULL);
+	    if (menu->id == (Widget)0)
+		return;
+	    gui_athena_menu_colors(menu->id);
+	    gui_athena_menu_font(menu->id);
+	    XtAddCallback(menu->id, XtNcallback, gui_x11_menu_cb,
+		    (XtPointer)menu);
+	}
     }
 }
 
@@ -841,7 +888,7 @@ static struct deadwid *first_deadwid = NULL;
  */
     void
 gui_mch_destroy_menu(menu)
-    vimmenu_t *menu;
+    vimmenu_T *menu;
 {
     if (menu->submenu_id != (Widget)0)
     {
@@ -905,7 +952,7 @@ gui_athena_reorder_menus()
     Widget	swap_widget;
     int		num_children;
     int		to, from;
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     struct deadwid *p;
 
     XtVaGetValues(menuBar,
@@ -1045,7 +1092,7 @@ get_popup_entry(w)
 /* ARGSUSED */
     void
 gui_mch_show_popupmenu(menu)
-    vimmenu_t *menu;
+    vimmenu_T *menu;
 {
     int		rootx, rooty, winx, winy;
     Window	root, child;
@@ -1083,7 +1130,7 @@ gui_mch_show_popupmenu(menu)
 
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     long	val;
     long	size;
     long	max;
@@ -1111,7 +1158,7 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		x;
     int		y;
     int		w;
@@ -1132,7 +1179,7 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 
     void
 gui_mch_enable_scrollbar(sb, flag)
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     int		flag;
 {
     if (sb->id != (Widget)0)
@@ -1146,7 +1193,7 @@ gui_mch_enable_scrollbar(sb, flag)
 
     void
 gui_mch_create_scrollbar(sb, orient)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		orient;	/* SBAR_VERT or SBAR_HORIZ */
 {
     sb->id = XtVaCreateWidget("scrollBar",
@@ -1176,7 +1223,7 @@ gui_mch_create_scrollbar(sb, orient)
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(sb)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 {
     if (sb->id != (Widget)0)
 	XtDestroyWidget(sb->id);
@@ -1185,7 +1232,7 @@ gui_mch_destroy_scrollbar(sb)
 
     void
 gui_mch_set_scrollbar_colors(sb)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 {
     if (sb->id != (Widget)0)
 	XtVaSetValues(sb->id,

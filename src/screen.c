@@ -100,38 +100,38 @@ static int	screen_cur_row, screen_cur_col;	/* last known cursor position */
  */
 typedef struct
 {
-    regmmatch_t	rm;	/* points to the regexp program; contains last found
+    regmmatch_T	rm;	/* points to the regexp program; contains last found
 			   match (may continue in next line) */
-    buf_t	*buf;	/* the buffer to search for a match */
-    linenr_t	lnum;	/* the line to search for a match */
+    buf_T	*buf;	/* the buffer to search for a match */
+    linenr_T	lnum;	/* the line to search for a match */
     int		attr;	/* attributes to be used for a match */
     int		attr_cur; /* attributes currently active in win_line() */
-    linenr_t	first_lnum;	/* first lnum to search for multi-line pat */
+    linenr_T	first_lnum;	/* first lnum to search for multi-line pat */
     char_u	*startp; /* in win_line() points to char where HL starts */
     char_u	*endp;	 /* in win_line() points to char where HL ends */
-} match_t;
+} match_T;
 
-static match_t search_hl;	/* used for 'hlsearch' highlight matching */
-static match_t match_hl;	/* used for ":match" highlight matching */
+static match_T search_hl;	/* used for 'hlsearch' highlight matching */
+static match_T match_hl;	/* used for ":match" highlight matching */
 #endif
 
 #ifdef FEAT_FOLDING
-static foldinfo_t win_foldinfo;	/* info for 'foldcolumn' */
+static foldinfo_T win_foldinfo;	/* info for 'foldcolumn' */
 #endif
 
 /*
  * Buffer for one screen line (characters and attributes).
  */
-static schar_t	*current_ScreenLine;
+static schar_T	*current_ScreenLine;
 
-static void win_update __ARGS((win_t *wp));
-static void win_draw_end __ARGS((win_t *wp, int c, int row));
+static void win_update __ARGS((win_T *wp));
+static void win_draw_end __ARGS((win_T *wp, int c, int row));
 #ifdef FEAT_FOLDING
-static void fold_line __ARGS((win_t *wp, long fold_count, foldinfo_t *foldinfo, linenr_t lnum, int row));
-static void fill_foldcolumn __ARGS((char_u *p, win_t *wp, int closed, linenr_t lnum));
+static void fold_line __ARGS((win_T *wp, long fold_count, foldinfo_T *foldinfo, linenr_T lnum, int row));
+static void fill_foldcolumn __ARGS((char_u *p, win_T *wp, int closed, linenr_T lnum));
 static void copy_text_attr __ARGS((int off, char_u *buf, int len, int attr));
 #endif
-static int win_line __ARGS((win_t *, linenr_t, int, int));
+static int win_line __ARGS((win_T *, linenr_T, int, int));
 static int char_needs_redraw __ARGS((int off_from, int off_to, int len));
 #ifdef FEAT_RIGHTLEFT
 static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width, int rlflag));
@@ -141,16 +141,16 @@ static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width
 # define SCREEN_LINE(r, o, e, c, rl)    screen_line((r), (o), (e), (c))
 #endif
 #if defined(FEAT_WILDMENU) && defined(FEAT_VERTSPLIT)
-static void win_redraw_last_status __ARGS((frame_t *frp));
+static void win_redraw_last_status __ARGS((frame_T *frp));
 #endif
 #ifdef FEAT_VERTSPLIT
-static void draw_vsep_win __ARGS((win_t *wp, int row));
+static void draw_vsep_win __ARGS((win_T *wp, int row));
 #endif
 #ifdef FEAT_SEARCH_EXTRA
 static void start_search_hl __ARGS((void));
 static void end_search_hl __ARGS((void));
-static void prepare_search_hl __ARGS((win_t *wp, linenr_t lnum));
-static void next_search_hl __ARGS((win_t *win, match_t *shl, linenr_t lnum, colnr_t mincol));
+static void prepare_search_hl __ARGS((win_T *wp, linenr_T lnum));
+static void next_search_hl __ARGS((win_T *win, match_T *shl, linenr_T lnum, colnr_T mincol));
 #endif
 static void screen_start_highlight __ARGS((int attr));
 static void screen_char __ARGS((unsigned off, int row, int col));
@@ -161,11 +161,12 @@ static void screenclear2 __ARGS((void));
 static void lineclear __ARGS((unsigned off, int width));
 static void lineinvalid __ARGS((unsigned off, int width));
 #ifdef FEAT_VERTSPLIT
-static void linecopy __ARGS((int to, int from, win_t *wp));
+static void linecopy __ARGS((int to, int from, win_T *wp));
+static void redraw_block __ARGS((int row, int end, win_T *wp));
 #endif
-static int win_do_lines __ARGS((win_t *wp, int row, int line_count, int mayclear, int del));
-static void win_rest_invalid __ARGS((win_t *wp));
-static int screen_ins_lines __ARGS((int, int, int, int, win_t *wp));
+static int win_do_lines __ARGS((win_T *wp, int row, int line_count, int mayclear, int del));
+static void win_rest_invalid __ARGS((win_T *wp));
+static int screen_ins_lines __ARGS((int, int, int, int, win_T *wp));
 static void msg_pos_mode __ARGS((void));
 #if defined(FEAT_WINDOWS) || defined(FEAT_WILDMENU) || defined(FEAT_STL_OPT)
 static int fillchar_status __ARGS((int *attr, int is_curwin));
@@ -174,10 +175,15 @@ static int fillchar_status __ARGS((int *attr, int is_curwin));
 static int fillchar_vsep __ARGS((int *attr));
 #endif
 #ifdef FEAT_STL_OPT
-static void win_redr_custom __ARGS((win_t *wp, int Ruler));
+static void win_redr_custom __ARGS((win_T *wp, int Ruler));
 #endif
 #ifdef FEAT_CMDL_INFO
-static void win_redr_ruler __ARGS((win_t *wp, int always));
+static void win_redr_ruler __ARGS((win_T *wp, int always));
+#endif
+
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_VERTSPLIT)
+/* Ugly global: overrule attribute used by screen_char() */
+static int screen_char_attr = 0;
 #endif
 
 /*
@@ -194,7 +200,7 @@ redraw_later(type)
 
     void
 redraw_win_later(wp, type)
-    win_t	*wp;
+    win_T	*wp;
     int		type;
 {
     if (wp->w_redr_type < type)
@@ -225,14 +231,12 @@ redraw_later_clear()
 redraw_all_later(type)
     int		type;
 {
-    win_t	*wp;
+    win_T	*wp;
 
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
+    {
 	redraw_win_later(wp, type);
+    }
 }
 
 /*
@@ -247,18 +251,16 @@ redraw_curbuf_later(type)
 
     void
 redraw_buf_later(buf, type)
-    buf_t	*buf;
+    buf_T	*buf;
     int		type;
 {
-    win_t	*wp;
+    win_T	*wp;
 
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
+    {
 	if (wp->w_buffer == buf)
 	    redraw_win_later(wp, type);
+    }
 }
 
 /*
@@ -272,7 +274,7 @@ redraw_buf_later(buf, type)
 /*ARGSUSED*/
     void
 redrawWinline(lnum, invalid)
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		invalid;	/* window line height is invalid now */
 {
 #ifdef FEAT_FOLDING
@@ -317,7 +319,7 @@ update_curbuf(type)
 update_screen(type)
     int		type;
 {
-    win_t	*wp;
+    win_T	*wp;
     static int	did_intro = FALSE;
 #if defined(FEAT_SEARCH_EXTRA) || defined(FEAT_CLIPBOARD)
     int		did_one;
@@ -367,11 +369,7 @@ update_screen(type)
 	    check_for_delay(FALSE);
 	    if (screen_ins_lines(0, 0, msg_scrolled, (int)Rows, NULL) == FAIL)
 		type = CLEAR;
-#ifndef FEAT_WINDOWS
-	    wp = curwin;
-#else
-	    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+	    FOR_ALL_WINDOWS(wp)
 	    {
 		if (W_WINROW(wp) < msg_scrolled)
 		{
@@ -444,15 +442,12 @@ update_screen(type)
      * Correct stored syntax highlighting info for changes in each displayed
      * buffer.  Each buffer must only be done once.
      */
-# ifndef FEAT_WINDOWS
-    wp = curwin;
-# else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-# endif
+    FOR_ALL_WINDOWS(wp)
+    {
 	if (wp->w_buffer->b_mod_set)
 	{
 # ifdef FEAT_WINDOWS
-	    win_t	*wwp;
+	    win_T	*wwp;
 
 	    /* Check if we already did this buffer. */
 	    for (wwp = firstwin; wwp != wp; wwp = wwp->w_next)
@@ -466,6 +461,7 @@ update_screen(type)
 		    syntax_present(wp->w_buffer))
 		syn_stack_apply_changes(wp->w_buffer);
 	}
+    }
 #endif
 
     /*
@@ -484,11 +480,7 @@ update_screen(type)
 #ifdef FEAT_SEARCH_EXTRA
     search_hl.rm.regprog = NULL;
 #endif
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
     {
 	if (wp->w_redr_type != 0)
 	{
@@ -555,6 +547,7 @@ update_screen(type)
      * done. */
     if (gui.in_use)
     {
+	out_flush();	/* required before updating the cursor */
 	gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
@@ -564,12 +557,12 @@ update_screen(type)
 #if defined(FEAT_SIGNS) || defined(PROTO)
     static int
 lnum2row(wp, lnum)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
 {
     int		row = 0;
     int		j;
-    linenr_t	i;
+    linenr_T	i;
 
     for (i = wp->w_topline, j = 0;
 			      i < wp->w_botline && j < wp->w_lines_valid; i++)
@@ -586,10 +579,10 @@ lnum2row(wp, lnum)
 
     void
 update_debug_sign(buf, lnum)
-    buf_t	*buf;
-    linenr_t	lnum;
+    buf_T	*buf;
+    linenr_T	lnum;
 {
-    win_t	*wp;
+    win_T	*wp;
     int		row;
 
 #ifdef FEAT_FOLDING
@@ -604,11 +597,7 @@ update_debug_sign(buf, lnum)
 #endif
     if (buf != NULL && lnum > 0)
     {					/* update/delete a specific mark */
-#ifndef FEAT_WINDOWS
-	wp = curwin;
-#else
-	for (wp = firstwin; wp; wp = wp->w_next)
-#endif
+	FOR_ALL_WINDOWS(wp)
 	{
 	    if (wp->w_buffer == buf && lnum < wp->w_botline)
 	    {
@@ -636,6 +625,7 @@ update_debug_sign(buf, lnum)
      * done. */
     if (gui.in_use)
     {
+	out_flush();	/* required before updating the cursor */
 	gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
@@ -651,7 +641,7 @@ update_debug_sign(buf, lnum)
  */
     void
 updateWindow(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     cursor_off();
     updating_screen = TRUE;
@@ -694,6 +684,7 @@ updateWindow(wp)
      * done. */
     if (gui.in_use)
     {
+	out_flush();	/* required before updating the cursor */
 	gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
@@ -729,9 +720,9 @@ updateWindow(wp)
  */
     static void
 win_update(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
-    buf_t	*buf = wp->w_buffer;
+    buf_T	*buf = wp->w_buffer;
     int		type;
     int		top_end = 0;	/* Below last row of the top area that needs
 				   updating.  0 when no top area updating. */
@@ -746,7 +737,7 @@ win_update(wp)
 #endif
 
     int		row;		/* current window row to display */
-    linenr_t	lnum;		/* current buffer lnum to display */
+    linenr_T	lnum;		/* current buffer lnum to display */
     int		idx;		/* current index in w_lines[] */
     int		srow;		/* starting row of the current line */
 
@@ -766,10 +757,10 @@ win_update(wp)
 #define DID_LINE 2	/* updated a normal line */
 #define DID_FOLD 3	/* updated a folded line */
     int		did_update = DID_NONE;
-    linenr_t	syntax_last_parsed = 0;		/* last parsed text line */
+    linenr_T	syntax_last_parsed = 0;		/* last parsed text line */
 #endif
-    linenr_t	mod_top = 0;
-    linenr_t	mod_bot = 0;
+    linenr_T	mod_top = 0;
+    linenr_T	mod_bot = 0;
 #if defined(FEAT_SYN_HL) || defined(FEAT_SEARCH_EXTRA)
     int		save_got_int;
 #endif
@@ -855,7 +846,7 @@ win_update(wp)
 #ifdef FEAT_FOLDING
 	if (mod_top != 0 && hasAnyFolding(wp))
 	{
-	    linenr_t	lnumt, lnumb;
+	    linenr_T	lnumt, lnumb;
 
 	    /*
 	     * A change in a line can cause lines above it to become folded or
@@ -945,17 +936,8 @@ win_update(wp)
      * 2: wp->w_topline is below wp->w_lines[0].wl_lnum: may scroll up
      * 3: wp->w_topline is wp->w_lines[0].wl_lnum: find first entry in
      *    w_lines[] that needs updating.
-     * Also don't do this when the window is part of a vertical split and
-     * w_topline needs updating (can't scroll the text), unless t_CV is set.
      */
-    if ((type == VALID || type == INVERTED || type == INVERTED_ALL)
-#ifdef FEAT_VERTSPLIT
-	    && (W_WIDTH(wp) == Columns
-		|| *T_CSV != NUL
-		|| (wp->w_topline == wp->w_lines[0].wl_lnum
-		    && wp->w_lines[0].wl_valid))
-#endif
-       )
+    if ((type == VALID || type == INVERTED || type == INVERTED_ALL))
     {
 	if (buf->b_mod_set && wp->w_topline == mod_top)
 	{
@@ -978,7 +960,7 @@ win_update(wp)
 #ifdef FEAT_FOLDING
 	    if (hasAnyFolding(wp))
 	    {
-		linenr_t ln;
+		linenr_T ln;
 
 		/* count the number of lines we are off, counting a sequence
 		 * of folded lines as one */
@@ -1154,7 +1136,7 @@ win_update(wp)
     if ((VIsual_active && buf == curwin->w_buffer)
 	    || (wp->w_old_cursor_lnum != 0 && type != NOT_VALID))
     {
-	linenr_t    from, to;
+	linenr_T    from, to;
 
 	if (VIsual_active)
 	{
@@ -1224,7 +1206,7 @@ win_update(wp)
 	     */
 	    if (VIsual_mode == Ctrl_V)
 	    {
-		colnr_t	fromc, toc;
+		colnr_T	fromc, toc;
 
 		getvcols(wp, &VIsual, &curwin->w_cursor, &fromc, &toc);
 		++toc;
@@ -1418,7 +1400,7 @@ win_update(wp)
 		int		old_rows = 0;
 		int		new_rows = 0;
 		int		xtra_rows;
-		linenr_t	l;
+		linenr_T	l;
 
 		/* Count the old number of window rows, using w_lines[], which
 		 * should still contain the sizes for the lines as they are
@@ -1783,7 +1765,7 @@ win_update(wp)
  */
     static void
 win_draw_end(wp, c, row)
-    win_t	*wp;
+    win_T	*wp;
     int		c;
     int		row;
 {
@@ -1860,21 +1842,21 @@ win_draw_end(wp, c, row)
  */
     static void
 fold_line(wp, fold_count, foldinfo, lnum, row)
-    win_t	*wp;
+    win_T	*wp;
     long	fold_count;
-    foldinfo_t	*foldinfo;
-    linenr_t	lnum;
+    foldinfo_T	*foldinfo;
+    linenr_T	lnum;
     int		row;
 {
     char_u	buf[51];
     char_u	dashes[51];
-    pos_t	*top, *bot;
-    linenr_t	lnume = lnum + fold_count - 1;
+    pos_T	*top, *bot;
+    linenr_T	lnume = lnum + fold_count - 1;
     int		len;
     char_u	*p;
     char_u	*text = NULL;
     int		fdc;
-    win_t	*save_curwin;
+    win_T	*save_curwin;
     int		level;
     int		col;
     int		txtcol;
@@ -2153,9 +2135,9 @@ fold_line(wp, fold_count, foldinfo, lnum, row)
 	    if (VIsual_mode == Ctrl_V)
 	    {
 		/* Visual block mode: highlight the chars part of the block */
-		if (wp->w_old_cursor_fcol + txtcol < (colnr_t)W_WIDTH(wp))
+		if (wp->w_old_cursor_fcol + txtcol < (colnr_T)W_WIDTH(wp))
 		{
-		    if (wp->w_old_cursor_lcol + txtcol < (colnr_t)W_WIDTH(wp))
+		    if (wp->w_old_cursor_lcol + txtcol < (colnr_T)W_WIDTH(wp))
 			len = wp->w_old_cursor_lcol;
 		    else
 			len = W_WIDTH(wp) - txtcol;
@@ -2203,7 +2185,7 @@ copy_text_attr(off, buf, len, attr)
     mch_memmove(ScreenLines + off, buf, (size_t)len);
 # ifdef FEAT_MBYTE
     if (enc_utf8)
-	vim_memset(ScreenLinesUC + off, 0, sizeof(u8char_t) * (size_t)len);
+	vim_memset(ScreenLinesUC + off, 0, sizeof(u8char_T) * (size_t)len);
 # endif
     vim_memset(ScreenAttrs + off, attr, (size_t)len);
 }
@@ -2214,9 +2196,9 @@ copy_text_attr(off, buf, len, attr)
     static void
 fill_foldcolumn(p, wp, closed, lnum)
     char_u	*p;
-    win_t	*wp;
+    win_T	*wp;
     int		closed;		/* TRUE of FALSE */
-    linenr_t	lnum;		/* current line number */
+    linenr_T	lnum;		/* current line number */
 {
     int		i = 0;
     int		level;
@@ -2263,8 +2245,8 @@ fill_foldcolumn(p, wp, closed, lnum)
  */
     static int
 win_line(wp, lnum, startrow, endrow)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
     int		startrow;
     int		endrow;
 {
@@ -2285,6 +2267,7 @@ win_line(wp, lnum, startrow, endrow)
     int		extra_attr = 0;		/* attributes when n_extra != 0 */
     static char_u *at_end_str = (char_u *)""; /* used for p_extra when
 					   displaying lcs_eol at end-of-line */
+    int		lcs_eol_one = lcs_eol;	/* lcs_eol until it's been used */
 
     /* saved "extra" items for when draw_state becomes WL_LINE (again) */
     int		saved_n_extra = 0;
@@ -2300,9 +2283,9 @@ win_line(wp, lnum, startrow, endrow)
     int		fromcol, tocol;		/* start/end of inverting */
     int		noinvcur = FALSE;	/* don't invert the cursor */
 #ifdef FEAT_VISUAL
-    pos_t	*top, *bot;
+    pos_T	*top, *bot;
 #endif
-    pos_t	pos;
+    pos_T	pos;
     long	v;
 
     int		char_attr = 0;		/* attributes for next character */
@@ -2331,7 +2314,7 @@ win_line(wp, lnum, startrow, endrow)
     int		change_start = MAXCOL;	/* first col of changed area */
     int		change_end = -1;	/* last col of changed area */
 #endif
-    colnr_t	trailcol = MAXCOL;	/* start of trailing spaces */
+    colnr_T	trailcol = MAXCOL;	/* start of trailing spaces */
 #ifdef FEAT_LINEBREAK
     int		need_showbreak = FALSE;
 #endif
@@ -2343,7 +2326,7 @@ win_line(wp, lnum, startrow, endrow)
     int		line_attr = 0;		/* atrribute for the whole line */
 #endif
 #ifdef FEAT_SEARCH_EXTRA
-    match_t	*shl;			/* points to search_hl or match_hl */
+    match_T	*shl;			/* points to search_hl or match_hl */
 #endif
 
     /* draw_state: items that are drawn in sequence: */
@@ -2433,7 +2416,7 @@ win_line(wp, lnum, startrow, endrow)
 		if (VIsual_mode == 'V')	/* linewise */
 		    fromcol = 0;
 		else
-		    getvvcol(wp, top, (colnr_t *)&fromcol, NULL, NULL);
+		    getvvcol(wp, top, (colnr_T *)&fromcol, NULL, NULL);
 	    }
 	    if (VIsual_mode != 'V' && lnum == bot->lnum)
 	    {
@@ -2456,7 +2439,7 @@ win_line(wp, lnum, startrow, endrow)
 			}
 #endif
 		    }
-		    getvvcol(wp, &pos, NULL, NULL, (colnr_t *)&tocol);
+		    getvvcol(wp, &pos, NULL, NULL, (colnr_T *)&tocol);
 		    ++tocol;
 		}
 	    }
@@ -2496,14 +2479,14 @@ win_line(wp, lnum, startrow, endrow)
     {
 	if (lnum == curwin->w_cursor.lnum)
 	    getvcol(curwin, &(curwin->w_cursor),
-					     (colnr_t *)&fromcol, NULL, NULL);
+					     (colnr_T *)&fromcol, NULL, NULL);
 	else
 	    fromcol = 0;
 	if (lnum == curwin->w_cursor.lnum + search_match_lines)
 	{
 	    pos.lnum = lnum;
 	    pos.col = search_match_endcol;
-	    getvcol(curwin, &pos, (colnr_t *)&tocol, NULL, NULL);
+	    getvcol(curwin, &pos, (colnr_T *)&tocol, NULL, NULL);
 	}
 	else
 	    tocol = MAXCOL;
@@ -2544,7 +2527,7 @@ win_line(wp, lnum, startrow, endrow)
 # endif
 # if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
     /* Highlight the current line in the quickfix window. */
-    if (bt_quickfix(wp->w_buffer) && wp->w_cursor.lnum == lnum)
+    if (bt_quickfix(wp->w_buffer) && qf_current_entry() == lnum)
 	line_attr = hl_attr(HLF_L);
 # endif
     if (line_attr != 0)
@@ -2558,7 +2541,7 @@ win_line(wp, lnum, startrow, endrow)
     if (wp->w_p_list && lcs_trail)
     {
 	trailcol = STRLEN(ptr);
-	while (trailcol > (colnr_t)0 && vim_iswhite(ptr[trailcol - 1]))
+	while (trailcol > (colnr_T)0 && vim_iswhite(ptr[trailcol - 1]))
 	    --trailcol;
 	trailcol += ptr - line;
 	extra_check = TRUE;
@@ -2579,7 +2562,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 	while (vcol < v && *ptr != NUL)
 	{
-	    c = win_lbr_chartabsize(wp, ptr, (colnr_t)vcol, NULL);
+	    c = win_lbr_chartabsize(wp, ptr, (colnr_T)vcol, NULL);
 	    vcol += c;
 #ifdef FEAT_MBYTE
 	    prev_ptr = ptr;
@@ -2632,7 +2615,7 @@ win_line(wp, lnum, startrow, endrow)
 	if (shl->rm.regprog != NULL)
 	{
 	    v = ptr - line;
-	    next_search_hl(wp, shl, lnum, (colnr_t)v);
+	    next_search_hl(wp, shl, lnum, (colnr_T)v);
 
 	    /* Need to get the line again, a multi-line regexp may have made it
 	     * invalid. */
@@ -2872,13 +2855,13 @@ win_line(wp, lnum, startrow, endrow)
 	    /* handle Visual or match highlighting in this line */
 	    if (((vcol == fromcol
 			    && !(noinvcur
-				&& (colnr_t)vcol == wp->w_virtcol
+				&& (colnr_T)vcol == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
 							 + wp->w_cursor.coladd
 #endif
 				))
 			|| (noinvcur
-			    && (colnr_t)vcol_prev == wp->w_virtcol
+			    && (colnr_T)vcol_prev == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
 							 + wp->w_cursor.coladd
 #endif
@@ -2888,7 +2871,7 @@ win_line(wp, lnum, startrow, endrow)
 	    else if (area_attr
 		    && (vcol == tocol
 			|| (noinvcur
-			    && (colnr_t)vcol == wp->w_virtcol
+			    && (colnr_T)vcol == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
 							 + wp->w_cursor.coladd
 #endif
@@ -2903,7 +2886,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 
 #ifdef FEAT_SEARCH_EXTRA
-	    if (!n_extra && *ptr != NUL)
+	    if (!n_extra)
 	    {
 		/*
 		 * Check for start/end of search pattern match.
@@ -2929,7 +2912,7 @@ win_line(wp, lnum, startrow, endrow)
 			    shl->attr_cur = 0;
 
 			    v = ptr - line;
-			    next_search_hl(wp, shl, lnum, (colnr_t)v);
+			    next_search_hl(wp, shl, lnum, (colnr_T)v);
 
 			    /* Need to get the line again, a multi-line regexp
 			     * may have made it invalid. */
@@ -3197,7 +3180,7 @@ win_line(wp, lnum, startrow, endrow)
 		if (has_syntax)
 		{
 		    v = ptr - line;
-		    syntax_attr = get_syntax_attr((colnr_t)v - 1);
+		    syntax_attr = get_syntax_attr((colnr_T)v - 1);
 
 		    /* Need to get the line again, a multi-line regexp may
 		     * have made it invalid. */
@@ -3219,7 +3202,7 @@ win_line(wp, lnum, startrow, endrow)
 # ifdef FEAT_MBYTE
 				has_mbyte ? mb_l :
 # endif
-				1), (colnr_t)vcol, NULL) - 1;
+				1), (colnr_T)vcol, NULL) - 1;
 		    c_extra = ' ';
 		    if (vim_iswhite(c))
 			c = ' ';
@@ -3273,14 +3256,26 @@ win_line(wp, lnum, startrow, endrow)
 		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
 		}
-		else if (c == NUL && wp->w_p_list && lcs_eol != NUL)
+		else if (c == NUL && wp->w_p_list && lcs_eol_one != NUL)
 		{
-		    p_extra = at_end_str;
-		    n_extra = 1;
-		    c_extra = NUL;
+#ifdef FEAT_DIFF
+		    /* For a diff line the highlighting continues after the
+		     * "$". */
+		    if (diff_attr == 0)
+#endif
+		    {
+			p_extra = at_end_str;
+			n_extra = 1;
+			c_extra = NUL;
+		    }
 		    c = lcs_eol;
+		    lcs_eol_one = NUL;
 		    --ptr;	    /* put it back at the NUL */
-		    char_attr = hl_attr(HLF_AT);
+		    if (area_attr == 0 && search_attr == 0)
+		    {
+			extra_attr = hl_attr(HLF_AT);
+			n_attr = 1;
+		    }
 #ifdef FEAT_MBYTE
 		    mb_utf8 = FALSE;	/* don't draw as UTF-8 */
 #endif
@@ -3361,7 +3356,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 	}
 
-	if (n_attr)
+	if (n_attr > 0)
 	    char_attr = extra_attr;
 
 	/*
@@ -3747,6 +3742,10 @@ screen_line(row, coloff, endcol, clear_width
 # define CHAR_CELLS 1
 #endif
 
+# ifdef FEAT_CLIPBOARD
+    clip_may_clear_selection(row, row);
+# endif
+
     off_from = current_ScreenLine - ScreenLines;
     off_to = LineOffset[row] + coloff;
 
@@ -4021,7 +4020,7 @@ screen_line(row, coloff, endcol, clear_width
     void
 status_redraw_all()
 {
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp; wp = wp->w_next)
 	if (wp->w_status_height)
@@ -4037,7 +4036,7 @@ status_redraw_all()
     void
 status_redraw_curbuf()
 {
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp; wp = wp->w_next)
 	if (wp->w_status_height != 0 && wp->w_buffer == curbuf)
@@ -4053,7 +4052,7 @@ status_redraw_curbuf()
     void
 redraw_statuslines()
 {
-    win_t	*wp;
+    win_T	*wp;
 
     for (wp = firstwin; wp; wp = wp->w_next)
 	if (wp->w_redr_status)
@@ -4067,7 +4066,7 @@ redraw_statuslines()
  */
     static void
 win_redraw_last_status(frp)
-    frame_t	*frp;
+    frame_T	*frp;
 {
     if (frp->fr_layout == FR_LEAF)
 	frp->fr_win->w_redr_status = TRUE;
@@ -4092,7 +4091,7 @@ win_redraw_last_status(frp)
  */
     static void
 draw_vsep_win(wp, row)
-    win_t	*wp;
+    win_T	*wp;
     int		row;
 {
     int		hl;
@@ -4115,7 +4114,7 @@ draw_vsep_win(wp, row)
  * but ignore trailing "/".
  */
 static char_u *wm_gettail __ARGS((char_u *s));
-static int status_match_len __ARGS((expand_t *xp, char_u *s));
+static int status_match_len __ARGS((expand_T *xp, char_u *s));
 
     static char_u *
 wm_gettail(s)
@@ -4149,7 +4148,7 @@ wm_gettail(s)
  */
     static int
 status_match_len(xp, s)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*s;
 {
     int	len = 0;
@@ -4196,7 +4195,7 @@ status_match_len(xp, s)
  */
     void
 win_redr_status_matches(xp, num_matches, matches, match)
-    expand_t	*xp;
+    expand_T	*xp;
     int		num_matches;
     char_u	**matches;	/* list of matches */
     int		match;
@@ -4420,7 +4419,7 @@ win_redr_status_matches(xp, num_matches, matches, match)
  */
     void
 win_redr_status(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
     int		row;
     char_u	*p;
@@ -4545,8 +4544,8 @@ win_redr_status(wp)
 
 	if (get_keymap_str(wp, NameBuff, MAXPATHL)
 		&& (int)(this_ru_col - len) > (int)(STRLEN(NameBuff) + 1))
-	    screen_puts(NameBuff, row,
-		    this_ru_col - STRLEN(NameBuff) - 1 + W_WINCOL(wp), attr);
+	    screen_puts(NameBuff, row, (int)(this_ru_col - STRLEN(NameBuff)
+						   - 1 + W_WINCOL(wp)), attr);
 
 #ifdef FEAT_CMDL_INFO
 	win_redr_ruler(wp, TRUE);
@@ -4577,9 +4576,9 @@ win_redr_status(wp)
  */
     int
 stl_connected(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
-    frame_t	*fr;
+    frame_T	*fr;
 
     fr = wp->w_frame;
     while (fr->fr_parent != NULL)
@@ -4608,7 +4607,7 @@ stl_connected(wp)
  */
     int
 get_keymap_str(wp, buf, len)
-    win_t	*wp;
+    win_T	*wp;
     char_u	*buf;	    /* buffer for the result */
     int		len;	    /* length of buffer */
 {
@@ -4619,8 +4618,8 @@ get_keymap_str(wp, buf, len)
 
     {
 #ifdef FEAT_EVAL
-	buf_t	*old_curbuf = curbuf;
-	win_t	*old_curwin = curwin;
+	buf_T	*old_curbuf = curbuf;
+	win_T	*old_curwin = curwin;
 	char_u	*s;
 
 	curbuf = wp->w_buffer;
@@ -4659,7 +4658,7 @@ get_keymap_str(wp, buf, len)
  */
     static void
 win_redr_custom(wp, Ruler)
-    win_t	*wp;
+    win_T	*wp;
     int		Ruler;
 {
     int		attr;
@@ -4977,10 +4976,10 @@ end_search_hl()
  */
     static void
 prepare_search_hl(wp, lnum)
-    win_t	*wp;
-    linenr_t	lnum;
+    win_T	*wp;
+    linenr_T	lnum;
 {
-    match_t	*shl;		/* points to search_hl or match_hl */
+    match_T	*shl;		/* points to search_hl or match_hl */
     int		n;
 
     /*
@@ -5010,7 +5009,7 @@ prepare_search_hl(wp, lnum)
 	    n = 0;
 	    while (shl->first_lnum < lnum)
 	    {
-		next_search_hl(wp, shl, shl->first_lnum, (colnr_t)n);
+		next_search_hl(wp, shl, shl->first_lnum, (colnr_T)n);
 		if (shl->lnum != 0)
 		{
 		    shl->first_lnum = shl->lnum
@@ -5041,13 +5040,13 @@ prepare_search_hl(wp, lnum)
  */
     static void
 next_search_hl(win, shl, lnum, mincol)
-    win_t	*win;
-    match_t	*shl;		/* points to search_hl or match_hl */
-    linenr_t	lnum;
-    colnr_t	mincol;		/* minimal column for a match */
+    win_T	*win;
+    match_T	*shl;		/* points to search_hl or match_hl */
+    linenr_T	lnum;
+    colnr_T	mincol;		/* minimal column for a match */
 {
-    linenr_t	l;
-    colnr_t	matchcol;
+    linenr_T	l;
+    colnr_T	matchcol;
     long	nmatched;
 
     if (shl->lnum != 0)
@@ -5115,7 +5114,7 @@ next_search_hl(win, shl, lnum, mincol)
 screen_start_highlight(attr)
       int	attr;
 {
-    attrentry_t *aep = NULL;
+    attrentry_T *aep = NULL;
 
     screen_attr = attr;
     if (full_screen
@@ -5205,7 +5204,7 @@ screen_stop_highlight()
 	{
 	    if (screen_attr > HL_ALL)			/* special HL attr. */
 	    {
-		attrentry_t *aep;
+		attrentry_T *aep;
 
 		if (t_colors > 1)
 		{
@@ -5315,14 +5314,19 @@ screen_char(off, row, col)
      * Don't to it!  Mark the character invalid (update it when scrolled up) */
     if (row == screen_Rows - 1 && col == screen_Columns - 1)
     {
-	ScreenAttrs[off] = (sattr_t)-1;
+	ScreenAttrs[off] = (sattr_T)-1;
 	return;
     }
 
     /*
      * Stop highlighting first, so it's easier to move the cursor.
      */
-    attr = ScreenAttrs[off];
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_VERTSPLIT)
+    if (screen_char_attr != 0)
+	attr = screen_char_attr;
+    else
+#endif
+	attr = ScreenAttrs[off];
     if (screen_attr != attr)
 	screen_stop_highlight();
 
@@ -5382,6 +5386,81 @@ screen_char_2(off, row, col)
     screen_char(off, row, col);
     out_char(ScreenLines[off + 1]);
     ++screen_cur_col;
+}
+#endif
+
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_VERTSPLIT) || defined(PROTO)
+/*
+ * Draw a rectangle of the screen, inverted when "invert" is TRUE.
+ * This uses the contents of ScreenLines[] and doesn't change it.
+ */
+    void
+screen_draw_rectangle(row, col, height, width, invert)
+    int		row;
+    int		col;
+    int		height;
+    int		width;
+    int		invert;
+{
+    int		r, c;
+    int		off;
+
+    if (invert)
+	screen_char_attr = HL_INVERSE;
+    for (r = row; r < row + height; ++r)
+    {
+	off = LineOffset[r];
+	for (c = col; c < col + width; ++c)
+	{
+#ifdef FEAT_MBYTE
+	    if (enc_dbcs != 0 && dbcs_off2cells(off + c) > 1)
+	    {
+		screen_char_2(off + c, r, c);
+		++c;
+	    }
+	    else
+#endif
+	    {
+		screen_char(off + c, r, c);
+#ifdef FEAT_MBYTE
+		if (utf_off2cells(off + c) > 1)
+		    ++c;
+#endif
+	    }
+	}
+    }
+    screen_char_attr = 0;
+}
+#endif
+
+#ifdef FEAT_VERTSPLIT
+/*
+ * Redraw the characters for a vertically split window.
+ */
+    static void
+redraw_block(row, end, wp)
+    int		row;
+    int		end;
+    win_T	*wp;
+{
+    int		col;
+    int		width;
+
+# ifdef FEAT_CLIPBOARD
+    clip_may_clear_selection(row, end - 1);
+# endif
+
+    if (wp == NULL)
+    {
+	col = 0;
+	width = Columns;
+    }
+    else
+    {
+	col = wp->w_wincol;
+	width = wp->w_width;
+    }
+    screen_draw_rectangle(row, col, end - row, width, FALSE);
 }
 #endif
 
@@ -5588,17 +5667,17 @@ screenalloc(clear)
 #ifdef FEAT_GUI
     int		    old_Rows;
 #endif
-    win_t	    *wp;
+    win_T	    *wp;
     int		    outofmem = FALSE;
     int		    len;
-    schar_t	    *new_ScreenLines;
+    schar_T	    *new_ScreenLines;
 #ifdef FEAT_MBYTE
-    u8char_t	    *new_ScreenLinesUC = NULL;
-    u8char_t	    *new_ScreenLinesC1 = NULL;
-    u8char_t	    *new_ScreenLinesC2 = NULL;
-    schar_t	    *new_ScreenLines2 = NULL;
+    u8char_T	    *new_ScreenLinesUC = NULL;
+    u8char_T	    *new_ScreenLinesC1 = NULL;
+    u8char_T	    *new_ScreenLinesC2 = NULL;
+    schar_T	    *new_ScreenLines2 = NULL;
 #endif
-    sattr_t	    *new_ScreenAttrs;
+    sattr_T	    *new_ScreenAttrs;
     unsigned	    *new_LineOffset;
     static int	    entered = FALSE;		/* avoid recursiveness */
 
@@ -5653,33 +5732,37 @@ screenalloc(clear)
 	win_free_lsize(curwin);
 #endif
 
-    new_ScreenLines = (schar_t *)lalloc((long_u)(
-			      (Rows + 1) * Columns * sizeof(schar_t)), FALSE);
+    new_ScreenLines = (schar_T *)lalloc((long_u)(
+			      (Rows + 1) * Columns * sizeof(schar_T)), FALSE);
 #ifdef FEAT_MBYTE
     if (enc_utf8)
     {
-	new_ScreenLinesUC = (u8char_t *)lalloc((long_u)(
-			     (Rows + 1) * Columns * sizeof(u8char_t)), FALSE);
-	new_ScreenLinesC1 = (u8char_t *)lalloc((long_u)(
-			     (Rows + 1) * Columns * sizeof(u8char_t)), FALSE);
-	new_ScreenLinesC2 = (u8char_t *)lalloc((long_u)(
-			     (Rows + 1) * Columns * sizeof(u8char_t)), FALSE);
+	new_ScreenLinesUC = (u8char_T *)lalloc((long_u)(
+			     (Rows + 1) * Columns * sizeof(u8char_T)), FALSE);
+	new_ScreenLinesC1 = (u8char_T *)lalloc((long_u)(
+			     (Rows + 1) * Columns * sizeof(u8char_T)), FALSE);
+	new_ScreenLinesC2 = (u8char_T *)lalloc((long_u)(
+			     (Rows + 1) * Columns * sizeof(u8char_T)), FALSE);
     }
     if (enc_dbcs == DBCS_JPNU)
-	new_ScreenLines2 = (schar_t *)lalloc((long_u)(
-			     (Rows + 1) * Columns * sizeof(schar_t)), FALSE);
+	new_ScreenLines2 = (schar_T *)lalloc((long_u)(
+			     (Rows + 1) * Columns * sizeof(schar_T)), FALSE);
 #endif
-    new_ScreenAttrs = (sattr_t *)lalloc((long_u)(
-			      (Rows + 1) * Columns * sizeof(sattr_t)), FALSE);
+    new_ScreenAttrs = (sattr_T *)lalloc((long_u)(
+			      (Rows + 1) * Columns * sizeof(sattr_T)), FALSE);
     new_LineOffset = (unsigned *)lalloc((long_u)(
 					 Rows * sizeof(unsigned)), FALSE);
 
-    for (wp = firstwin; wp; wp = W_NEXT(wp))
+    FOR_ALL_WINDOWS(wp)
+    {
 	if (win_alloc_lines(wp) == FAIL)
 	{
 	    outofmem = TRUE;
+#ifdef FEAT_WINDOWS
 	    break;
+#endif
 	}
+    }
 
     if (new_ScreenLines == NULL
 #ifdef FEAT_MBYTE
@@ -5724,23 +5807,23 @@ screenalloc(clear)
 	    if (!clear)
 	    {
 		(void)vim_memset(new_ScreenLines + new_row * Columns,
-				      ' ', (size_t)Columns * sizeof(schar_t));
+				      ' ', (size_t)Columns * sizeof(schar_T));
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
 		    (void)vim_memset(new_ScreenLinesUC + new_row * Columns,
-				       0, (size_t)Columns * sizeof(u8char_t));
+				       0, (size_t)Columns * sizeof(u8char_T));
 		    (void)vim_memset(new_ScreenLinesC1 + new_row * Columns,
-				       0, (size_t)Columns * sizeof(u8char_t));
+				       0, (size_t)Columns * sizeof(u8char_T));
 		    (void)vim_memset(new_ScreenLinesC2 + new_row * Columns,
-				       0, (size_t)Columns * sizeof(u8char_t));
+				       0, (size_t)Columns * sizeof(u8char_T));
 		}
 		if (enc_dbcs == DBCS_JPNU)
 		    (void)vim_memset(new_ScreenLines2 + new_row * Columns,
-				       0, (size_t)Columns * sizeof(schar_t));
+				       0, (size_t)Columns * sizeof(schar_T));
 #endif
 		(void)vim_memset(new_ScreenAttrs + new_row * Columns,
-					0, (size_t)Columns * sizeof(sattr_t));
+					0, (size_t)Columns * sizeof(sattr_T));
 		old_row = new_row + (screen_Rows - Rows);
 		if (old_row >= 0)
 		{
@@ -5750,28 +5833,28 @@ screenalloc(clear)
 			len = Columns;
 		    mch_memmove(new_ScreenLines + new_LineOffset[new_row],
 			    ScreenLines + LineOffset[old_row],
-			    (size_t)len * sizeof(schar_t));
+			    (size_t)len * sizeof(schar_T));
 #ifdef FEAT_MBYTE
 		    if (enc_utf8 && ScreenLinesUC != NULL)
 		    {
 			mch_memmove(new_ScreenLinesUC + new_LineOffset[new_row],
 				ScreenLinesUC + LineOffset[old_row],
-				(size_t)len * sizeof(u8char_t));
+				(size_t)len * sizeof(u8char_T));
 			mch_memmove(new_ScreenLinesC1 + new_LineOffset[new_row],
 				ScreenLinesC1 + LineOffset[old_row],
-				(size_t)len * sizeof(u8char_t));
+				(size_t)len * sizeof(u8char_T));
 			mch_memmove(new_ScreenLinesC2 + new_LineOffset[new_row],
 				ScreenLinesC2 + LineOffset[old_row],
-				(size_t)len * sizeof(u8char_t));
+				(size_t)len * sizeof(u8char_T));
 		    }
 		    if (enc_dbcs == DBCS_JPNU && ScreenLines2 != NULL)
 			mch_memmove(new_ScreenLines2 + new_LineOffset[new_row],
 				ScreenLines2 + LineOffset[old_row],
-				(size_t)len * sizeof(schar_t));
+				(size_t)len * sizeof(schar_T));
 #endif
 		    mch_memmove(new_ScreenAttrs + new_LineOffset[new_row],
 			    ScreenAttrs + LineOffset[old_row],
-			    (size_t)len * sizeof(sattr_t));
+			    (size_t)len * sizeof(sattr_T));
 		}
 	    }
 	}
@@ -5854,6 +5937,11 @@ screenclear2()
 
     screen_stop_highlight();	/* don't want highlighting here */
 
+#ifdef FEAT_CLIPBOARD
+    /* disable selection without redrawing it */
+    clip_scroll_selection(9999);
+#endif
+
     /* blank out ScreenLines */
     for (i = 0; i < Rows; ++i)
 	lineclear(LineOffset[i], (int)Columns);
@@ -5894,13 +5982,13 @@ lineclear(off, width)
     unsigned	off;
     int		width;
 {
-    (void)vim_memset(ScreenLines + off, ' ', (size_t)width * sizeof(schar_t));
+    (void)vim_memset(ScreenLines + off, ' ', (size_t)width * sizeof(schar_T));
 #ifdef FEAT_MBYTE
     if (enc_utf8)
 	(void)vim_memset(ScreenLinesUC + off, 0,
-					  (size_t)width * sizeof(u8char_t));
+					  (size_t)width * sizeof(u8char_T));
 #endif
-    (void)vim_memset(ScreenAttrs + off, 0, (size_t)width * sizeof(sattr_t));
+    (void)vim_memset(ScreenAttrs + off, 0, (size_t)width * sizeof(sattr_T));
 }
 
 /*
@@ -5912,7 +6000,7 @@ lineinvalid(off, width)
     unsigned	off;
     int		width;
 {
-    (void)vim_memset(ScreenAttrs + off, -1, (size_t)width * sizeof(sattr_t));
+    (void)vim_memset(ScreenAttrs + off, -1, (size_t)width * sizeof(sattr_T));
 }
 
 #ifdef FEAT_VERTSPLIT
@@ -5923,29 +6011,29 @@ lineinvalid(off, width)
 linecopy(to, from, wp)
     int		to;
     int		from;
-    win_t	*wp;
+    win_T	*wp;
 {
     unsigned	off_to = LineOffset[to] + wp->w_wincol;
     unsigned	off_from = LineOffset[from] + wp->w_wincol;
 
     mch_memmove(ScreenLines + off_to, ScreenLines + off_from,
-	    wp->w_width * sizeof(schar_t));
+	    wp->w_width * sizeof(schar_T));
 # ifdef FEAT_MBYTE
     if (enc_utf8)
     {
 	mch_memmove(ScreenLinesUC + off_to, ScreenLinesUC + off_from,
-		wp->w_width * sizeof(u8char_t));
+		wp->w_width * sizeof(u8char_T));
 	mch_memmove(ScreenLinesC1 + off_to, ScreenLinesC1 + off_from,
-		wp->w_width * sizeof(u8char_t));
+		wp->w_width * sizeof(u8char_T));
 	mch_memmove(ScreenLinesC2 + off_to, ScreenLinesC2 + off_from,
-		wp->w_width * sizeof(u8char_t));
+		wp->w_width * sizeof(u8char_T));
     }
     if (enc_dbcs == DBCS_JPNU)
 	mch_memmove(ScreenLines2 + off_to, ScreenLines2 + off_from,
-		wp->w_width * sizeof(schar_t));
+		wp->w_width * sizeof(schar_T));
 # endif
     mch_memmove(ScreenAttrs + off_to, ScreenAttrs + off_from,
-	    wp->w_width * sizeof(sattr_t));
+	    wp->w_width * sizeof(sattr_T));
 }
 #endif
 
@@ -6255,10 +6343,6 @@ setcursor()
 		curwin->w_p_rl ? ((int)W_WIDTH(curwin) - 1 - curwin->w_wcol) :
 #endif
 							    curwin->w_wcol));
-#ifdef FEAT_GUI
-	if (gui.in_use)
-	    gui_update_cursor(FALSE, FALSE);
-#endif
     }
 }
 
@@ -6272,7 +6356,7 @@ setcursor()
  */
     int
 win_ins_lines(wp, row, line_count, invalid, mayclear)
-    win_t	*wp;
+    win_T	*wp;
     int		row;
     int		line_count;
     int		invalid;
@@ -6357,7 +6441,7 @@ win_ins_lines(wp, row, line_count, invalid, mayclear)
  */
     int
 win_del_lines(wp, row, line_count, invalid, mayclear)
-    win_t	*wp;
+    win_T	*wp;
     int		row;
     int		line_count;
     int		invalid;
@@ -6410,7 +6494,7 @@ win_del_lines(wp, row, line_count, invalid, mayclear)
  */
     static int
 win_do_lines(wp, row, line_count, mayclear, del)
-    win_t	*wp;
+    win_T	*wp;
     int		row;
     int		line_count;
     int		mayclear;
@@ -6422,7 +6506,11 @@ win_do_lines(wp, row, line_count, mayclear, del)
 	return FAIL;
 
     /* only a few lines left: redraw is faster */
-    if (mayclear && Rows - line_count < 5)
+    if (mayclear && Rows - line_count < 5
+#ifdef FEAT_VERTSPLIT
+	    && wp->w_width == Columns
+#endif
+	    )
     {
 	screenclear();	    /* will set wp->w_lines_valid to 0 */
 	return FAIL;
@@ -6439,13 +6527,6 @@ win_do_lines(wp, row, line_count, mayclear, del)
 	return OK;
     }
 
-#ifdef FEAT_VERTSPLIT
-    /* Can't use scrolling for vertically split window, unless 't_CV' is
-     * defined. */
-    if (W_WIDTH(wp) != Columns && *T_CSV == NUL)
-	return FAIL;
-#endif
-
     /*
      * when scrolling, the message on the command line should be cleared,
      * otherwise it will stay there forever.
@@ -6453,28 +6534,36 @@ win_do_lines(wp, row, line_count, mayclear, del)
     clear_cmdline = TRUE;
 
     /*
-     * if the terminal can set a scroll region, use that
+     * If the terminal can set a scroll region, use that.
+     * Always do this in a vertically split window.  This will redraw from
+     * ScreenLines[] when t_CV isn't defined.  That's faster than using
+     * win_line().
      */
-    if (scroll_region)
+    if (scroll_region
+#ifdef FEAT_VERTSPLIT
+	    || W_WIDTH(wp) != Columns
+#endif
+	    )
     {
-	scroll_region_set(wp, row);
+#ifdef FEAT_VERTSPLIT
+	if (scroll_region)
+#endif
+	    scroll_region_set(wp, row);
 	if (del)
 	    retval = screen_del_lines(W_WINROW(wp) + row, 0, line_count,
 					       wp->w_height - row, FALSE, wp);
 	else
 	    retval = screen_ins_lines(W_WINROW(wp) + row, 0, line_count,
 						      wp->w_height - row, wp);
-	scroll_region_reset();
+#ifdef FEAT_VERTSPLIT
+	if (scroll_region)
+#endif
+	    scroll_region_reset();
 	return retval;
     }
 
 #ifdef FEAT_WINDOWS
     if (wp->w_next != NULL && p_tf) /* don't delete/insert on fast terminal */
-	return FAIL;
-#endif
-#ifdef FEAT_VERTSPLIT
-    /* Can't use other kind of scrolling for vertically split window. */
-    if (W_WIDTH(wp) != Columns)
 	return FAIL;
 #endif
 
@@ -6486,7 +6575,7 @@ win_do_lines(wp, row, line_count, mayclear, del)
  */
     static void
 win_rest_invalid(wp)
-    win_t	*wp;
+    win_T	*wp;
 {
 #ifdef FEAT_WINDOWS
     while (wp != NULL)
@@ -6524,6 +6613,7 @@ win_rest_invalid(wp)
 #define USE_T_SR    6
 #define USE_NL	    7
 #define USE_T_CD    8
+#define USE_REDRAW  9
 
 /*
  * insert lines on the screen and update ScreenLines[]
@@ -6539,7 +6629,7 @@ screen_ins_lines(off, row, line_count, end, wp)
     int		row;
     int		line_count;
     int		end;
-    win_t	*wp;	    /* NULL or window to use width from */
+    win_T	*wp;	    /* NULL or window to use width from */
 {
     int		i;
     int		j;
@@ -6561,6 +6651,8 @@ screen_ins_lines(off, row, line_count, end, wp)
 
     /*
      * There are seven ways to insert lines:
+     * 0. When in a vertically split window and t_CV isn't set, redraw the
+     *    characters from ScreenLines[].
      * 1. Use T_CD (clear to end of display) if it exists and the result of
      *	  the insert is just empty lines
      * 2. Use T_CAL (insert multiple lines) if it exists and T_AL is not
@@ -6576,12 +6668,18 @@ screen_ins_lines(off, row, line_count, end, wp)
      *	  just empty lines.
      * 7. Use T_SR (scroll reverse) if it exists and inserting at row 0 and
      *	  the 'da' flag is not set or we have clear line capability.
+     * 8. redraw the characters from ScreenLines[].
      *
      * Careful: In a hpterm scroll reverse doesn't work as expected, it moves
      * the scrollbar for the window. It does have insert line, use that if it
      * exists.
      */
     result_empty = (row + line_count >= end);
+#ifdef FEAT_VERTSPLIT
+    if (wp != NULL && wp->w_width != Columns && *T_CSV == NUL)
+	type = USE_REDRAW;
+    else
+#endif
     if (can_clear(T_CD) && result_empty)
 	type = USE_T_CD;
     else if (*T_CAL != NUL && (line_count > 1 || *T_AL == NUL))
@@ -6614,6 +6712,19 @@ screen_ins_lines(off, row, line_count, end, wp)
      */
     if (*T_DB)
 	screen_del_lines(off, end - line_count, line_count, end, FALSE, wp);
+
+#ifdef FEAT_CLIPBOARD
+    /* Remove a modeless selection when inserting lines halfway the screen
+     * or not the full width of the screen. */
+    if (off + row > 0
+# ifdef FEAT_VERTSPLIT
+	    || (wp != NULL && wp->w_width != Columns)
+# endif
+       )
+	clip_clear_selection();
+    else
+	clip_scroll_selection(-line_count);
+#endif
 
 #ifdef FEAT_GUI_BEOS
     vim_lock_screen();
@@ -6670,7 +6781,14 @@ screen_ins_lines(off, row, line_count, end, wp)
 
     screen_stop_highlight();
     windgoto(cursor_row, 0);
-    if (type == USE_T_CAL)
+
+#ifdef FEAT_VERTSPLIT
+    /* redraw the characters */
+    if (type == USE_REDRAW)
+	redraw_block(row, end, wp);
+    else
+#endif
+	if (type == USE_T_CAL)
     {
 	term_append_lines(line_count);
 	screen_start();		/* don't know where cursor is now */
@@ -6729,7 +6847,7 @@ screen_del_lines(off, row, line_count, end, force, wp)
     int		line_count;
     int		end;
     int		force;		/* even when line_count > p_ttyscroll */
-    win_t	*wp;		/* NULL or window to use width from */
+    win_T	*wp;		/* NULL or window to use width from */
 {
     int		j;
     int		i;
@@ -6763,14 +6881,22 @@ screen_del_lines(off, row, line_count, end, force, wp)
     can_delete = (*T_DB == NUL || can_clear(T_CE));
 
     /*
-     * There are four ways to delete lines:
+     * There are six ways to delete lines:
+     * 0. When in a vertically split window and t_CV isn't set, redraw the
+     *    characters from ScreenLines[].
      * 1. Use T_CD if it exists and the result is empty.
      * 2. Use newlines if row == 0 and count == 1 or T_CDL does not exist.
      * 3. Use T_CDL (delete multiple lines) if it exists and line_count > 1 or
      *	  none of the other ways work.
      * 4. Use T_CE (erase line) if the result is empty.
      * 5. Use T_DL (delete line) if it exists.
+     * 6. redraw the characters from ScreenLines[].
      */
+#ifdef FEAT_VERTSPLIT
+    if (wp != NULL && wp->w_width != Columns && *T_CSV == NUL)
+	type = USE_REDRAW;
+    else
+#endif
     if (can_clear(T_CD) && result_empty)
 	type = USE_T_CD;
 #if defined(__BEOS__) && defined(BEOS_DR8)
@@ -6809,6 +6935,19 @@ screen_del_lines(off, row, line_count, end, force, wp)
 	type = USE_T_CDL;
     else
 	return FAIL;
+
+#ifdef FEAT_CLIPBOARD
+    /* Remove a modeless selection when deleting lines halfway the screen or
+     * not the full width of the screen. */
+    if (off + row > 0
+# ifdef FEAT_VERTSPLIT
+	    || (wp != NULL && wp->w_width != Columns)
+# endif
+       )
+	clip_clear_selection();
+    else
+	clip_scroll_selection(line_count);
+#endif
 
 #ifdef FEAT_GUI_BEOS
     vim_lock_screen();
@@ -6872,8 +7011,13 @@ screen_del_lines(off, row, line_count, end, force, wp)
 
     screen_stop_highlight();
 
-    /* delete the lines */
-    if (type == USE_T_CD)
+#ifdef FEAT_VERTSPLIT
+    /* redraw the characters */
+    if (type == USE_REDRAW)
+	redraw_block(row, end, wp);
+    else
+#endif
+	if (type == USE_T_CD)	/* delete the lines */
     {
 	windgoto(cursor_row, 0);
 	out_str(T_CD);
@@ -7230,7 +7374,7 @@ showruler(always)
 #ifdef FEAT_CMDL_INFO
     static void
 win_redr_ruler(wp, always)
-    win_t	*wp;
+    win_T	*wp;
     int		always;
 {
     char_u	buffer[70];
@@ -7238,7 +7382,7 @@ win_redr_ruler(wp, always)
     int		fillchar;
     int		attr;
     int		empty_line = FALSE;
-    colnr_t	virtcol;
+    colnr_T	virtcol;
     int		i;
     int		o;
 #ifdef FEAT_VERTSPLIT

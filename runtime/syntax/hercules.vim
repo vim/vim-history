@@ -4,8 +4,8 @@
 " Extensions:   *.vc,*.ev,*.rs,*.sum,*.errsum
 " Last change:  03/01/2001
 " Comment:      Hercules physical IC design verification software ensures
-" 		that an IC's physical design matches its logical design and
-" 		satisfies manufacturing rules.
+"		that an IC's physical design matches its logical design and
+"		satisfies manufacturing rules.
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")

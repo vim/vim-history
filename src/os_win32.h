@@ -18,16 +18,22 @@
 #define NO_COOKED_INPUT		/* mch_inchar() doesn't return whole lines */
 #define SYNC_DUP_CLOSE		/* sync() a file with dup() and close() */
 #define USE_TERM_CONSOLE
-#define HAVE_STRING_H
+#ifndef HAVE_STRING_H
+# define HAVE_STRING_H
+#endif
 #define HAVE_STRCSPN
 #ifndef __GNUC__
 #define HAVE_STRICMP
 #define HAVE_STRNICMP
 #endif
-#define HAVE_STRFTIME		/* guessed */
+#ifndef HAVE_STRFTIME
+# define HAVE_STRFTIME		/* guessed */
+#endif
 #define HAVE_MEMSET
-#define HAVE_LOCALE_H
-#define HAVE_FCNTL_H
+#define HAVE_LOCALE_H 1
+#ifndef HAVE_FCNTL_H
+# define HAVE_FCNTL_H
+#endif
 #define HAVE_QSORT
 
 #if !defined(__MINGW32__) \

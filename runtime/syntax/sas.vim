@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	SAS
 " Maintainer:	Phil Hanna <pehanna@yahoo.com>
-" Last Change:	18 May 1999 (modified 2000 Jul 10 by Bram)
+" Last Change:	22 February 2001
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -25,7 +25,7 @@ syn match   sasStep        "^\s*PROC\s"
 syn keyword sasConditional    DO ELSE END IF THEN UNTIL WHILE
 
 syn keyword sasStatement      ABORT ARRAY ATTRIB BY CALL CARDS CARDS4 CATNAME
-syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE
+syn keyword sasStatement      CONTINUE DATALINES DATALINES4 DELETE DISPLAY
 syn keyword sasStatement      DM DROP ENDSAS ERROR FILE FILENAME FOOTNOTE
 syn keyword sasStatement      FORMAT GOTO INFILE INFORMAT INPUT KEEP
 syn keyword sasStatement      LABEL LEAVE LENGTH LIBNAME LINK LIST LOSTCARD
@@ -33,22 +33,69 @@ syn keyword sasStatement      MERGE MISSING MODIFY OPTIONS OUTPUT PAGE
 syn keyword sasStatement      PUT REDIRECT REMOVE RENAME REPLACE RETAIN
 syn keyword sasStatement      RETURN SELECT SET SKIP STARTSAS STOP TITLE
 syn keyword sasStatement      UPDATE WAITSAS WHERE WINDOW X
-syn match sasStatement      "DISPLAY"
 
 syn match   sasStatement      "FOOTNOTE\d"
 syn match   sasStatement      "TITLE\d"
 
-syn match   sasMacro      "\%do"
-syn match   sasMacro      "\%else"
-syn match   sasMacro      "\%end"
-syn match   sasMacro      "\%if"
-syn match   sasMacro      "\%let"
-syn match   sasMacro      "\%macro"
-syn match   sasMacro      "\%mend"
-syn match   sasMacro      "\%put"
-syn match   sasMacro      "\%then"
-syn match   sasMacro      "\%to"
-syn match   sasMacro      "\%while"
+syn match   sasMacro      "\%BQUOTE"
+syn match   sasMacro      "\%NRBQUOTE"
+syn match   sasMacro      "\%CMPRES"
+syn match   sasMacro      "\%QCMPRES"
+syn match   sasMacro      "\%COMPSTOR"
+syn match   sasMacro      "\%DATATYP"
+syn match   sasMacro      "\%DISPLAY"
+syn match   sasMacro      "\%DO"
+syn match   sasMacro      "\%ELSE"
+syn match   sasMacro      "\%END"
+syn match   sasMacro      "\%EVAL"
+syn match   sasMacro      "\%GLOBAL"
+syn match   sasMacro      "\%GOTO"
+syn match   sasMacro      "\%IF"
+syn match   sasMacro      "\%INDEX"
+syn match   sasMacro      "\%INPUT"
+syn match   sasMacro      "\%KEYDEF"
+syn match   sasMacro      "\%LABEL"
+syn match   sasMacro      "\%LEFT"
+syn match   sasMacro      "\%LENGTH"
+syn match   sasMacro      "\%LET"
+syn match   sasMacro      "\%LOCAL"
+syn match   sasMacro      "\%LOWCASE"
+syn match   sasMacro      "\%MACRO"
+syn match   sasMacro      "\%MEND"
+syn match   sasMacro      "\%NRBQUOTE"
+syn match   sasMacro      "\%NRQUOTE"
+syn match   sasMacro      "\%NRSTR"
+syn match   sasMacro      "\%PUT"
+syn match   sasMacro      "\%QCMPRES"
+syn match   sasMacro      "\%QLEFT"
+syn match   sasMacro      "\%QLOWCASE"
+syn match   sasMacro      "\%QSCAN"
+syn match   sasMacro      "\%QSUBSTR"
+syn match   sasMacro      "\%QSYSFUNC"
+syn match   sasMacro      "\%QTRIM"
+syn match   sasMacro      "\%QUOTE"
+syn match   sasMacro      "\%QUPCASE"
+syn match   sasMacro      "\%SCAN"
+syn match   sasMacro      "\%STR"
+syn match   sasMacro      "\%SUBSTR"
+syn match   sasMacro      "\%SUPERQ"
+syn match   sasMacro      "\%SYSCALL"
+syn match   sasMacro      "\%SYSEVALF"
+syn match   sasMacro      "\%SYSEXEC"
+syn match   sasMacro      "\%SYSFUNC"
+syn match   sasMacro      "\%SYSGET"
+syn match   sasMacro      "\%SYSLPUT"
+syn match   sasMacro      "\%SYSPROD"
+syn match   sasMacro      "\%SYSRC"
+syn match   sasMacro      "\%SYSRPUT"
+syn match   sasMacro      "\%THEN"
+syn match   sasMacro      "\%TRIM"
+syn match   sasMacro      "\%UNQUOTE"
+syn match   sasMacro      "\%UNTIL"
+syn match   sasMacro      "\%UPCASE"
+syn match   sasMacro      "\%VERIFY"
+syn match   sasMacro      "\%WHILE"
+syn match   sasMacro      "\%WINDOW"
 
 " SAS Functions
 
@@ -99,15 +146,14 @@ syn keyword sasFunction ZIPSTATE
 
 " End of SAS Functions
 
-" The default highlighting.
-hi def link sasComment            Comment
-hi def link sasConditional        Statement
-hi def link sasStep               Statement
-hi def link sasFunction           Function
-hi def link sasMacro              PreProc
-hi def link sasNumber             Number
-hi def link sasStatement          Statement
-hi def link sasString             String
+hi def link sasComment		Comment
+hi def link sasConditional	Statement
+hi def link sasStep		Statement
+hi def link sasFunction		Function
+hi def link sasMacro		PreProc
+hi def link sasNumber		Number
+hi def link sasStatement	Statement
+hi def link sasString		String
 
 let b:current_syntax = "sas"
 

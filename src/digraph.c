@@ -16,23 +16,23 @@
 #if defined(FEAT_DIGRAPHS) || defined(PROTO)
 
 #ifdef FEAT_MBYTE
-typedef int result_t;
+typedef int result_T;
 #else
-typedef char_u result_t;
+typedef char_u result_T;
 #endif
 
 typedef struct digraph
 {
     char_u	char1;
     char_u	char2;
-    result_t	result;
-} digr_t;
+    result_T	result;
+} digr_T;
 
 static int getexactdigraph __ARGS((int, int, int));
-static void printdigraph __ARGS((digr_t *));
+static void printdigraph __ARGS((digr_T *));
 
 /* digraphs added by the user */
-static garray_t	user_digraphs = {0, 0, sizeof(digr_t), 10, NULL};
+static garray_T	user_digraphs = {0, 0, sizeof(digr_T), 10, NULL};
 
 /*
  * Note: Characters marked with XX are not included literally, because some
@@ -42,7 +42,7 @@ static garray_t	user_digraphs = {0, 0, sizeof(digr_t), 10, NULL};
 	/*
 	 * MSDOS digraphs.
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'C', ',', 128},	/* ~@ XX */
 	{'u', '"', 129},	/* Å */
 	{'e', '\'', 130},	/* Ç */
@@ -111,7 +111,7 @@ digr_t	digraphdefault[] =
 	/*
 	 * ATARI digraphs
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'C', ',', 128},	/* ~@ XX */
 	{'u', '"', 129},	/* Å */
 	{'e', '\'', 130},	/* Ç */
@@ -178,7 +178,7 @@ digr_t	digraphdefault[] =
 	/*
 	 * different HPUX digraphs
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'A', '`', 161},	/* ° */
 	{'A', '^', 162},	/* ¢ */
 	{'E', '`', 163},	/* £ */
@@ -285,7 +285,7 @@ digr_t	digraphdefault[] =
 	 * EBCDIC - ISO digraphs
 	 * TODO: EBCDIC Table is Code-Page 1047
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'a', '^',    66},	/* ‚ */
 	{'a', '"',    67},	/* ‰ */
 	{'a', '`',    68},	/* ‡ */
@@ -395,7 +395,7 @@ digr_t	digraphdefault[] =
 	/*
 	 * Macintosh digraphs
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'a', 't', 64},		/* @ */
 	{'A', '"', 128},	/* ~@ XX */
 	{'A', 'o', 129},	/* ≈ */
@@ -526,7 +526,7 @@ digr_t	digraphdefault[] =
 	/*
 	 * digraphs compatible with Vim 5.x
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {{'~', '!', 161},	/* ° */
 	{'c', '|', 162},	/* ¢ */
 	{'$', '$', 163},	/* £ */
@@ -635,7 +635,7 @@ digr_t	digraphdefault[] =
 	 * digraphs for Unicode from RFC1345
 	 * (also work for ISO-8859-1 aka latin1)
 	 */
-digr_t	digraphdefault[] =
+digr_T	digraphdefault[] =
        {
 	{'N', 'U', 0x0a},	/* LF for NUL */
 	{'S', 'H', 0x01},
@@ -2070,7 +2070,7 @@ getexactdigraph(char1, char2, meta)
 {
     int		i;
     int		retval = 0;
-    digr_t	*dp;
+    digr_T	*dp;
 
     if (IS_SPECIAL(char1) || IS_SPECIAL(char2))
 	return char2;
@@ -2078,7 +2078,7 @@ getexactdigraph(char1, char2, meta)
     /*
      * Search user digraphs first.
      */
-    dp = (digr_t *)user_digraphs.ga_data;
+    dp = (digr_T *)user_digraphs.ga_data;
     for (i = 0; i < user_digraphs.ga_len; ++i)
     {
 	if (dp->char1 == (unsigned)char1 && dp->char2 == (unsigned)char2)
@@ -2149,7 +2149,7 @@ putdigraph(str)
 {
     int		char1, char2, n;
     int		i;
-    digr_t	*dp;
+    digr_T	*dp;
 
     while (*str)
     {
@@ -2170,7 +2170,7 @@ putdigraph(str)
 	n = getdigits(&str);
 
 	/* If the digraph already exists, replace the result. */
-	dp = (digr_t *)user_digraphs.ga_data;
+	dp = (digr_T *)user_digraphs.ga_data;
 	for (i = 0; i < user_digraphs.ga_len; ++i)
 	{
 	    if (dp->char1 == (unsigned)char1 && dp->char2 == (unsigned)char2)
@@ -2186,7 +2186,7 @@ putdigraph(str)
 	{
 	    if (ga_grow(&user_digraphs, 1) == OK)
 	    {
-		dp = (digr_t *)user_digraphs.ga_data + user_digraphs.ga_len;
+		dp = (digr_T *)user_digraphs.ga_data + user_digraphs.ga_len;
 		dp->char1 = char1;
 		dp->char2 = char2;
 		dp->result = n;
@@ -2201,7 +2201,7 @@ putdigraph(str)
 listdigraphs()
 {
     int		i;
-    digr_t	*dp;
+    digr_T	*dp;
 
     msg_putchar('\n');
 
@@ -2218,7 +2218,7 @@ listdigraphs()
 	ui_breakcheck();
     }
 
-    dp = (digr_t *)user_digraphs.ga_data;
+    dp = (digr_T *)user_digraphs.ga_data;
     for (i = 0; i < user_digraphs.ga_len && !got_int; ++i)
     {
 	printdigraph(dp);
@@ -2231,7 +2231,7 @@ listdigraphs()
 
     static void
 printdigraph(dp)
-    digr_t	*dp;
+    digr_T	*dp;
 {
     char_u	buf[30];
     char_u	*p;
@@ -2287,7 +2287,7 @@ typedef struct
 {
     char_u	*from;
     char_u	*to;
-} kmap_t;
+} kmap_T;
 
 #define KMAP_MAXLEN 20	    /* maximum length of "from" or "to" */
 
@@ -2345,12 +2345,12 @@ keymap_init()
  */
     void
 ex_loadkeymap(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     char_u	*line;
     char_u	*p;
     char_u	*s;
-    kmap_t	*kp;
+    kmap_T	*kp;
 #define KMAP_LLEN   200	    /* max length of "to" and "from" together */
     char_u	buf[KMAP_LLEN + 11];
     int		i;
@@ -2368,7 +2368,7 @@ ex_loadkeymap(eap)
     keymap_unload();
 
     curbuf->b_kmap_state = 0;
-    ga_init2(&curbuf->b_kmap_ga, sizeof(kmap_t), 20);
+    ga_init2(&curbuf->b_kmap_ga, sizeof(kmap_T), 20);
 
     /* Set 'cpoptions' to "C" to avoid line continuation. */
     p_cpo = (char_u *)"C";
@@ -2385,7 +2385,7 @@ ex_loadkeymap(eap)
 	p = skipwhite(line);
 	if (*p != '"' && *p != NUL && ga_grow(&curbuf->b_kmap_ga, 1) == OK)
 	{
-	    kp = (kmap_t *)curbuf->b_kmap_ga.ga_data + curbuf->b_kmap_ga.ga_len;
+	    kp = (kmap_T *)curbuf->b_kmap_ga.ga_data + curbuf->b_kmap_ga.ga_len;
 	    s = skiptowhite(p);
 	    kp->from = vim_strnsave(p, (int)(s - p));
 	    p = skipwhite(s);
@@ -2413,8 +2413,8 @@ ex_loadkeymap(eap)
     for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
     {
 	sprintf((char *)buf, "<buffer> %s %s",
-				((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from,
-				 ((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].to);
+				((kmap_T *)curbuf->b_kmap_ga.ga_data)[i].from,
+				 ((kmap_T *)curbuf->b_kmap_ga.ga_data)[i].to);
 	(void)do_map(2, buf, LANGMAP, FALSE);
     }
 
@@ -2446,7 +2446,7 @@ keymap_unload()
     for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
     {
 	sprintf((char *)buf, "<buffer> %s",
-		((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from);
+		((kmap_T *)curbuf->b_kmap_ga.ga_data)[i].from);
 	(void)do_map(1, buf, LANGMAP, FALSE);
     }
 

@@ -146,13 +146,6 @@
 #endif
 
 /*
- * +diff		Displaying diffs in a nice way.  Requires +windows.
- */
-#if defined(FEAT_NORMAL) && defined(FEAT_WINDOWS)
-# define FEAT_DIFF
-#endif
-
-/*
  * +digraphs		Digraphs.
  *			In insert mode and on the command line you will be
  *			able to use digraphs. The CTRL-K command will work.
@@ -382,6 +375,14 @@
  */
 #ifdef FEAT_NORMAL
 # define FEAT_AUTOCMD
+#endif
+
+/*
+ * +diff		Displaying diffs in a nice way.
+ *			Requires +windows and +autocmd.
+ */
+#if defined(FEAT_NORMAL) && defined(FEAT_WINDOWS) && defined(FEAT_AUTOCMD)
+# define FEAT_DIFF
 #endif
 
 /*
@@ -758,6 +759,11 @@
 /* #define USR_VIMRC_FILE3	"$VIM/.vimrc" */
 
 /*
+ * EVIM_FILE		Name of the evim.vim script file
+ */
+/* #define EVIM_FILE		"$VIMRUNTIME/evim.vim" */
+
+/*
  * USR_EXRC_FILE	Name of the user .exrc file.
  * USR_EXRC_FILE2	Name of the alternate user .exrc file.
  */
@@ -983,14 +989,12 @@
 #endif
 
 /*
- * The following only works fo Motif, currently.
- */
-#if defined(FEAT_GUI_MOTIF)
-/*
  * +balloon_eval	Allow balloon expression evaluation. Used with a
- *			debugger.
+ *			debugger and for tooltips.
+ *			Currently only for Athena and Motif.
  */
-#if defined(FEAT_TOOLBAR) || defined(FEAT_SUN_WORKSHOP)
+#if (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA)) \
+	&& (defined(FEAT_TOOLBAR) || defined(FEAT_SUN_WORKSHOP))
 # define FEAT_BEVAL
 #endif
 
@@ -1000,9 +1004,9 @@
  * These features could be used with other integrations with debuggers so I've
  * used separate feature defines.
  */
-#if !defined(FEAT_MENU)
-# define FEAT_MENU
-#endif
+# if !defined(FEAT_MENU)
+#  define FEAT_MENU
+# endif
 
 /*
  *			Use an alternative method of X input for a secondary
@@ -1017,6 +1021,3 @@
 # define FEAT_FOOTER
 
 #endif
-
-#endif
-

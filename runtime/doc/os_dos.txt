@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0aa.  Last change: 2001 Mar 23
+*os_dos.txt*    For Vim version 6.0ab.  Last change: 2001 Mar 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

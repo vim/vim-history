@@ -1,4 +1,4 @@
-*os_win32.txt*  For Vim version 6.0aa.  Last change: 2000 Jul 07
+*os_win32.txt*  For Vim version 6.0ab.  Last change: 2001 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by George Reilly
@@ -13,7 +13,7 @@ subsystem in Windows 3.1[1].  You can also use the 32-bit DOS version of Vim
 instead.  See |os_msdos.txt|.
 
 1. Known problems		|win32-problems|
-2. Term option			|win32-term|
+2. Startup			|win32-startup|
 3. Restore screen contents	|win32-restore|
 4. Using the mouse		|win32-mouse|
 5. Running under Windows 3.1	|win32-win3.1|
@@ -43,7 +43,7 @@ For compiling see "src/INSTALL.pc".			*win32-compiling*
 1. Known problems				*windows95* *win32-problems*
 
 There are a few known problems with running in a console on Windows 95.  As
-far as we know, this is the same in Windows 98.
+far as we know, this is the same in Windows 98 and Windows ME.
 
 Comments from somebody working at Microsoft: "Win95 console support has always
 been and will always be flaky".
@@ -61,7 +61,26 @@ example, if you have the long file name "this_is_a_test" with the short file
 name "this_i~1", the command ":e *1" will start editing "this_is_a_test".
 
 ==============================================================================
-2. Term option						*win32-term*
+2. Startup						*win32-startup*
+
+Current directory					*win32-curdir*
+
+If Vim is started with a single file name argument, and it has a full path
+(starts with "x:\"), Vim assumes it was started from the file explorer and
+will set the current directory to where that file is.  To avoid this when
+typing a command to start Vim, use a forward slash instead of a backslash.
+Example: >
+
+	vim c:\text\files\foo.txt
+
+Will change to the "C:\text\files" directory. >
+
+	vim c:/text\files\foo.txt
+
+Will use the current directory.
+
+
+Term option						*win32-term*
 
 The only kind of terminal type that the Win32 version of Vim understands is
 "win32", which is built-in.  If you set 'term' to anything else, you will

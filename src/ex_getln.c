@@ -44,9 +44,9 @@ typedef struct hist_entry
 {
     int		hisnum;		/* identifying number */
     char_u	*hisstr;	/* actual entry */
-} histentry_t;
+} histentry_T;
 
-static histentry_t *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL, NULL};
+static histentry_T *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL, NULL};
 static int	hisidx[HIST_COUNT] = {-1, -1, -1, -1, -1};  /* lastused entry */
 static int	hisnum[HIST_COUNT] = {0, 0, 0, 0, 0};
 		    /* identifying (unique) number of newest history entry */
@@ -81,10 +81,10 @@ static void	redrawcmdprompt __ARGS((void));
 static void	redrawcmd __ARGS((void));
 static void	cursorcmd __ARGS((void));
 static int	ccheck_abbr __ARGS((int));
-static int	nextwild __ARGS((expand_t *xp, int type, int options));
-static int	showmatches __ARGS((expand_t *xp, int wildmenu));
-static void	set_expand_context __ARGS((expand_t *xp));
-static int	ExpandFromContext __ARGS((expand_t *xp, char_u *, int *, char_u ***, int));
+static int	nextwild __ARGS((expand_T *xp, int type, int options));
+static int	showmatches __ARGS((expand_T *xp, int wildmenu));
+static void	set_expand_context __ARGS((expand_T *xp));
+static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, int));
 
 #ifdef FEAT_CMDWIN
 static int	ex_window __ARGS((void));
@@ -127,14 +127,14 @@ getcmdline(firstc, count, indent)
     int		histype;		/* history type to be used */
 #endif
 #ifdef FEAT_SEARCH_EXTRA
-    pos_t	old_cursor;
-    colnr_t	old_curswant;
-    colnr_t	old_leftcol;
-    linenr_t	old_topline;
+    pos_T	old_cursor;
+    colnr_T	old_curswant;
+    colnr_T	old_leftcol;
+    linenr_T	old_topline;
 # ifdef FEAT_DIFF
     int		old_topfill;
 # endif
-    linenr_t	old_botline;
+    linenr_T	old_botline;
     int		did_incsearch = FALSE;
     int		incsearch_postponed = FALSE;
 #endif
@@ -152,7 +152,7 @@ getcmdline(firstc, count, indent)
 #ifdef FEAT_EVAL
     int		break_ctrl_c = FALSE;
 #endif
-    expand_t	xpc;
+    expand_T	xpc;
 
 #ifdef FEAT_SNIFF
     want_sniff_request = 0;
@@ -877,26 +877,25 @@ getcmdline(firstc, count, indent)
 		    ccline.cmdspos += i;
 #ifdef FEAT_MBYTE
 		    if (has_mbyte)
-		    {
 			ccline.cmdpos += (*mb_ptr2len_check)(ccline.cmdbuff
 							     + ccline.cmdpos);
-			if (ccline.cmdpos > ccline.cmdlen)
-			    ccline.cmdpos = ccline.cmdlen;
-		    }
 		    else
 #endif
 			++ccline.cmdpos;
 		}
 		while ((c == K_S_RIGHT || (mod_mask & MOD_MASK_CTRL))
-			&& ccline.cmdbuff[ccline.cmdpos] != ' ')
-		    ;
+			&& ccline.cmdbuff[ccline.cmdpos] != ' ');
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    set_cmdspos_cursor();
+#endif
 		goto cmdline_not_changed;
 
 	case K_LEFT:
 	case K_S_LEFT:
 		do
 		{
-		    if (ccline.cmdpos <= 0)
+		    if (ccline.cmdpos == 0)
 			break;
 		    --ccline.cmdpos;
 #ifdef FEAT_MBYTE
@@ -908,6 +907,10 @@ getcmdline(firstc, count, indent)
 		}
 		while ((c == K_S_LEFT || (mod_mask & MOD_MASK_CTRL))
 			&& ccline.cmdbuff[ccline.cmdpos - 1] != ' ');
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    set_cmdspos_cursor();
+#endif
 		goto cmdline_not_changed;
 
 	case K_IGNORE:
@@ -938,6 +941,8 @@ getcmdline(firstc, count, indent)
 	case K_LEFTRELEASE:
 	case K_RIGHTDRAG:
 	case K_RIGHTRELEASE:
+		/* Ignore drag and release events when the button-down wasn't
+		 * seen before. */
 		if (ignore_drag_release)
 		    goto cmdline_not_changed;
 		/* FALLTHROUGH */
@@ -953,6 +958,28 @@ getcmdline(firstc, count, indent)
 # endif
 		    if (!mouse_has(MOUSE_COMMAND))
 			goto cmdline_not_changed;   /* Ignore mouse */
+# ifdef FEAT_CLIPBOARD
+		if (mouse_row < cmdline_row && clip_star.available)
+		{
+		    int	    button, is_click, is_drag;
+
+		    /*
+		     * Handle modeless selection.
+		     */
+		    button = get_mouse_button(KEY2TERMCAP1(c),
+							 &is_click, &is_drag);
+		    if (mouse_model_popup() && button == MOUSE_LEFT
+					       && (mod_mask & MOD_MASK_SHIFT))
+		    {
+			/* Translate shift-left to right button. */
+			button = MOUSE_RIGHT;
+			mod_mask &= ~MOD_MASK_SHIFT;
+		    }
+		    clip_modeless(button, is_click, is_drag);
+		    goto cmdline_not_changed;
+		}
+# endif
+
 		set_cmdspos();
 		for (ccline.cmdpos = 0; ccline.cmdpos < ccline.cmdlen;
 							      ++ccline.cmdpos)
@@ -961,6 +988,17 @@ getcmdline(firstc, count, indent)
 		    if (mouse_row <= cmdline_row + ccline.cmdspos / Columns
 				  && mouse_col < ccline.cmdspos % Columns + i)
 			break;
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+		    {
+			/* Count ">" for double-wide char that doesn't fit. */
+			if ((*mb_ptr2cells)(ccline.cmdbuff + ccline.cmdpos) > 1
+				    && ccline.cmdspos % Columns + i > Columns)
+			    ccline.cmdspos++;
+			ccline.cmdpos += (*mb_ptr2len_check)(ccline.cmdbuff
+							 + ccline.cmdpos) - 1;
+		    }
+#endif
 		    ccline.cmdspos += i;
 		}
 		goto cmdline_not_changed;
@@ -1434,9 +1472,7 @@ set_cmdspos()
     static void
 set_cmdspos_cursor()
 {
-    int		i;
-    int		m;
-    int		c;
+    int		i, m, c;
 
     set_cmdspos();
     if (KeyTyped)
@@ -1447,10 +1483,10 @@ set_cmdspos_cursor()
     {
 	c = cmdline_charsize(i);
 #ifdef FEAT_MBYTE
-	/* multibyte wrap */
+	/* Count ">" for double-wide char that doesn't fit. */
 	if (has_mbyte
 		&& (*mb_ptr2cells)(ccline.cmdbuff + i) > 1
-		&& ccline.cmdspos % Columns + c == Columns)
+		&& ccline.cmdspos % Columns + c > Columns)
 	    ccline.cmdspos++;
 #endif
 	/* If the cmdline doesn't fit, put cursor on last visible char. */
@@ -1495,7 +1531,7 @@ getexmodeline(c, dummy, indent)
     void	*dummy;		/* cookie not used */
     int		indent;		/* indent for inside conditionals */
 {
-    garray_t		line_ga;
+    garray_T		line_ga;
     int			len;
     int			off = 0;
     char_u		*p;
@@ -1913,17 +1949,12 @@ put_on_cmdline(str, len, redraw)
 		m = MAXCOL;
 	    for (i = 0; i < len; ++i)
 	    {
-#if defined(FEAT_CRYPT) || defined(FEAT_EVAL)
-		if (cmdline_star)
-		    c = 1;
-		else
-#endif
-		    c = ptr2cells(ccline.cmdbuff + ccline.cmdpos);
+		c = cmdline_charsize(ccline.cmdpos);
 #ifdef FEAT_MBYTE
-		/* multibyte wrap */
+		/* count ">" for a double-wide char that doesn't fit. */
 		if (has_mbyte
 			&& (*mb_ptr2cells)(ccline.cmdbuff + ccline.cmdpos) > 1
-			&& ccline.cmdspos % Columns + c == Columns)
+			&& ccline.cmdspos % Columns + c > Columns)
 		    ccline.cmdspos++;
 #endif
 		/* Stop cursor at the end of the screen */
@@ -2095,7 +2126,7 @@ ccheck_abbr(c)
  */
     static int
 nextwild(xp, type, options)
-    expand_t	*xp;
+    expand_T	*xp;
     int		type;
     int		options;	/* extra options for ExpandOne() */
 {
@@ -2227,7 +2258,7 @@ nextwild(xp, type, options)
  */
     char_u *
 ExpandOne(xp, str, orig, options, mode)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*str;
     char_u	*orig;	    /* allocated copy of original of expanded string */
     int		options;
@@ -2437,7 +2468,7 @@ ExpandOne(xp, str, orig, options, mode)
 
     void
 ExpandEscape(xp, str, cmd_numfiles, cmd_files, options)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*str;
     int		cmd_numfiles;
     char_u	**cmd_files;
@@ -2569,7 +2600,7 @@ tilde_replace(orig_pat, num_files, files)
 /*ARGSUSED*/
     static int
 showmatches(xp, wildmenu)
-    expand_t	*xp;
+    expand_T	*xp;
     int		wildmenu;
 {
     int		num_files;
@@ -2872,7 +2903,7 @@ addstar(fname, len, context)
  */
     static void
 set_expand_context(xp)
-    expand_t	*xp;
+    expand_T	*xp;
 {
     /* only expansion for ':' and '>' commands */
     if (ccline.cmdfirstc != ':'
@@ -2889,7 +2920,7 @@ set_expand_context(xp)
 
     void
 set_cmd_context(xp, str, len, col)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*str;	    /* start of command line */
     int		len;	    /* length of command line (excl. NUL) */
     int		col;	    /* position of cursor */
@@ -2923,7 +2954,7 @@ set_cmd_context(xp, str, len, col)
  */
     int
 expand_cmdline(xp, str, col, matchcount, matches)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*str;		/* start of command line */
     int		col;		/* position of cursor */
     int		*matchcount;	/* return: nr of matches */
@@ -2965,14 +2996,14 @@ expand_cmdline(xp, str, col, matchcount, matches)
  */
     static int
 ExpandFromContext(xp, pat, num_file, file, options)
-    expand_t	*xp;
+    expand_T	*xp;
     char_u	*pat;
     int		*num_file;
     char_u	***file;
     int		options;
 {
 #ifdef FEAT_CMDL_COMPL
-    regmatch_t	regmatch;
+    regmatch_T	regmatch;
 #endif
     int		ret;
     int		flags;
@@ -3056,7 +3087,7 @@ ExpandFromContext(xp, pat, num_file, file, options)
 	static struct expgen
 	{
 	    int		context;
-	    char_u	*((*func)__ARGS((expand_t *, int)));
+	    char_u	*((*func)__ARGS((expand_T *, int)));
 	    int		ic;
 	} tab[] =
 	{
@@ -3122,11 +3153,11 @@ ExpandFromContext(xp, pat, num_file, file, options)
  */
     int
 ExpandGeneric(xp, regmatch, num_file, file, func)
-    expand_t	*xp;
-    regmatch_t	*regmatch;
+    expand_T	*xp;
+    regmatch_T	*regmatch;
     int		*num_file;
     char_u	***file;
-    char_u	*((*func)__ARGS((expand_t *, int)));
+    char_u	*((*func)__ARGS((expand_T *, int)));
 					  /* returns a string from the list */
 {
     int		i;
@@ -3148,7 +3179,7 @@ ExpandGeneric(xp, regmatch, num_file, file, func)
 	    if (*str == NUL)	    /* skip empty strings */
 		continue;
 
-	    if (vim_regexec(regmatch, str, (colnr_t)0))
+	    if (vim_regexec(regmatch, str, (colnr_T)0))
 	    {
 		if (loop)
 		{
@@ -3233,7 +3264,7 @@ static char *(history_names[]) =
 init_history()
 {
     int		newlen;	    /* new length of history table */
-    histentry_t	*temp;
+    histentry_T	*temp;
     int		i;
     int		j;
     int		type;
@@ -3248,8 +3279,8 @@ init_history()
 	{
 	    if (newlen)
 	    {
-		temp = (histentry_t *)lalloc(
-				(long_u)(newlen * sizeof(histentry_t)), TRUE);
+		temp = (histentry_T *)lalloc(
+				(long_u)(newlen * sizeof(histentry_T)), TRUE);
 		if (temp == NULL)   /* out of memory! */
 		{
 		    if (type == 0)  /* first one: just keep the old length */
@@ -3400,7 +3431,7 @@ add_to_history(histype, new_entry, in_map)
     char_u	*new_entry;
     int		in_map;		/* consider maptick when inside a mapping */
 {
-    histentry_t	*hisptr;
+    histentry_T	*hisptr;
 
     if (hislen == 0)		/* no history */
 	return;
@@ -3467,7 +3498,7 @@ calc_hist_idx(histype, num)
     int		num;
 {
     int		i;
-    histentry_t	*hist;
+    histentry_T	*hist;
 
     if (hislen == 0 || histype < 0 || histype >= HIST_COUNT
 		    || (i = hisidx[histype]) < 0 || num == 0)
@@ -3519,7 +3550,7 @@ clr_history(histype)
     int		histype;
 {
     int		i;
-    histentry_t	*hisptr;
+    histentry_T	*hisptr;
 
     if (hislen != 0 && histype >= 0 && histype < HIST_COUNT)
     {
@@ -3546,8 +3577,8 @@ del_history_entry(histype, str)
     int		histype;
     char_u	*str;
 {
-    regmatch_t	regmatch;
-    histentry_t	*hisptr;
+    regmatch_T	regmatch;
+    histentry_T	*hisptr;
     int		idx;
     int		i;
     int		last;
@@ -3568,7 +3599,7 @@ del_history_entry(histype, str)
 	    hisptr = &history[histype][i];
 	    if (hisptr->hisstr == NULL)
 		break;
-	    if (vim_regexec(&regmatch, hisptr->hisstr, (colnr_t)0))
+	    if (vim_regexec(&regmatch, hisptr->hisstr, (colnr_T)0))
 	    {
 		found = TRUE;
 		vim_free(hisptr->hisstr);
@@ -3718,9 +3749,9 @@ get_list_range(str, num1, num2)
  */
     void
 ex_history(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
-    histentry_t	*hist;
+    histentry_T	*hist;
     int		histype1 = HIST_CMD;
     int		histype2 = HIST_CMD;
     int		hisidx1 = 1;
@@ -3883,7 +3914,7 @@ prepare_viminfo_history(asklen)
  */
     int
 read_viminfo_history(virp)
-    vir_t	*virp;
+    vir_T	*virp;
 {
     int		type;
     char_u	*val;
@@ -4039,14 +4070,14 @@ cmd_gchar(offset)
 ex_window()
 {
     struct cmdline_info	save_ccline;
-    buf_t		*old_curbuf = curbuf;
-    win_t		*old_curwin = curwin;
-    buf_t		*bp;
-    win_t		*wp;
+    buf_T		*old_curbuf = curbuf;
+    win_T		*old_curwin = curwin;
+    buf_T		*bp;
+    win_T		*wp;
     int			i;
-    linenr_t		lnum;
+    linenr_T		lnum;
     int			histtype;
-    garray_t		winsizes;
+    garray_T		winsizes;
     char_u		typestr[2];
     int			save_restart_edit = restart_edit;
     int			save_State = State;
@@ -4115,7 +4146,7 @@ ex_window()
 		    i = 0;
 		if (history[histtype][i].hisstr != NULL)
 		    ml_append(lnum++, history[histtype][i].hisstr,
-							   (colnr_t)0, FALSE);
+							   (colnr_T)0, FALSE);
 	    }
 	    while (i != hisidx[histtype]);
 	}

@@ -19,8 +19,8 @@
  * The Visual area is remembered for reselection.
  */
 static int	resel_VIsual_mode = NUL;	/* 'v', 'V', or Ctrl-V */
-static linenr_t	resel_VIsual_line_count;	/* number of lines */
-static colnr_t	resel_VIsual_col;		/* nr of cols or end col */
+static linenr_T	resel_VIsual_line_count;	/* number of lines */
+static colnr_T	resel_VIsual_col;		/* nr of cols or end col */
 
 static int	restart_VIsual_select = 0;
 #endif
@@ -31,20 +31,20 @@ static int
 # endif
 		nv_compare __ARGS((const void *s1, const void *s2));
 static int	find_command __ARGS((int cmdchar));
-static void	op_colon __ARGS((oparg_t *oap));
+static void	op_colon __ARGS((oparg_T *oap));
 #if defined(FEAT_MOUSE) && defined(FEAT_VISUAL)
-static void	find_start_of_word __ARGS((pos_t *));
-static void	find_end_of_word __ARGS((pos_t *));
+static void	find_start_of_word __ARGS((pos_T *));
+static void	find_end_of_word __ARGS((pos_T *));
 static int	get_mouse_class __ARGS((char_u *p));
 #endif
-static void	prep_redo_cmd __ARGS((cmdarg_t *cap));
+static void	prep_redo_cmd __ARGS((cmdarg_T *cap));
 static void	prep_redo __ARGS((int regname, long, int, int, int, int, int));
-static int	checkclearop __ARGS((oparg_t *oap));
-static int	checkclearopq __ARGS((oparg_t *oap));
-static void	clearop __ARGS((oparg_t *oap));
-static void	clearopbeep __ARGS((oparg_t *oap));
+static int	checkclearop __ARGS((oparg_T *oap));
+static int	checkclearopq __ARGS((oparg_T *oap));
+static void	clearop __ARGS((oparg_T *oap));
+static void	clearopbeep __ARGS((oparg_T *oap));
 #ifdef FEAT_VISUAL
-static void	unshift_special __ARGS((cmdarg_t *cap));
+static void	unshift_special __ARGS((cmdarg_T *cap));
 #endif
 #ifdef FEAT_CMDL_INFO
 static void	del_from_showcmd __ARGS((int));
@@ -55,123 +55,123 @@ static void	del_from_showcmd __ARGS((int));
  * n_*(): functions called to handle Normal mode commands.
  * v_*(): functions called to handle Visual mode commands.
  */
-static void	nv_ignore __ARGS((cmdarg_t *cap));
-static void	nv_error __ARGS((cmdarg_t *cap));
-static void	nv_help __ARGS((cmdarg_t *cap));
-static void	nv_addsub __ARGS((cmdarg_t *cap));
-static void	nv_page __ARGS((cmdarg_t *cap));
-static void	nv_gd __ARGS((oparg_t *oap, int nchar));
-static int	nv_screengo __ARGS((oparg_t *oap, int dir, long dist));
+static void	nv_ignore __ARGS((cmdarg_T *cap));
+static void	nv_error __ARGS((cmdarg_T *cap));
+static void	nv_help __ARGS((cmdarg_T *cap));
+static void	nv_addsub __ARGS((cmdarg_T *cap));
+static void	nv_page __ARGS((cmdarg_T *cap));
+static void	nv_gd __ARGS((oparg_T *oap, int nchar));
+static int	nv_screengo __ARGS((oparg_T *oap, int dir, long dist));
 #ifdef FEAT_MOUSE
-static void	nv_mousescroll __ARGS((cmdarg_t *cap));
-static void	nv_mouse __ARGS((cmdarg_t *cap));
+static void	nv_mousescroll __ARGS((cmdarg_T *cap));
+static void	nv_mouse __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_scroll_line __ARGS((cmdarg_t *cap));
-static void	nv_zet __ARGS((cmdarg_t *cap));
+static void	nv_scroll_line __ARGS((cmdarg_T *cap));
+static void	nv_zet __ARGS((cmdarg_T *cap));
 #ifdef FEAT_GUI
-static void	nv_ver_scrollbar __ARGS((cmdarg_t *cap));
-static void	nv_hor_scrollbar __ARGS((cmdarg_t *cap));
+static void	nv_ver_scrollbar __ARGS((cmdarg_T *cap));
+static void	nv_hor_scrollbar __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_exmode __ARGS((cmdarg_t *cap));
-static void	nv_colon __ARGS((cmdarg_t *cap));
-static void	nv_ctrlg __ARGS((cmdarg_t *cap));
-static void	nv_ctrlh __ARGS((cmdarg_t *cap));
-static void	nv_clear __ARGS((cmdarg_t *cap));
-static void	nv_ctrlo __ARGS((cmdarg_t *cap));
-static void	nv_hat __ARGS((cmdarg_t *cap));
-static void	nv_Zet __ARGS((cmdarg_t *cap));
-static void	nv_ident __ARGS((cmdarg_t *cap));
+static void	nv_exmode __ARGS((cmdarg_T *cap));
+static void	nv_colon __ARGS((cmdarg_T *cap));
+static void	nv_ctrlg __ARGS((cmdarg_T *cap));
+static void	nv_ctrlh __ARGS((cmdarg_T *cap));
+static void	nv_clear __ARGS((cmdarg_T *cap));
+static void	nv_ctrlo __ARGS((cmdarg_T *cap));
+static void	nv_hat __ARGS((cmdarg_T *cap));
+static void	nv_Zet __ARGS((cmdarg_T *cap));
+static void	nv_ident __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
-static int	get_visual_text __ARGS((cmdarg_t *cap, char_u **pp, int *lenp));
+static int	get_visual_text __ARGS((cmdarg_T *cap, char_u **pp, int *lenp));
 #endif
-static void	nv_tagpop __ARGS((cmdarg_t *cap));
-static void	nv_scroll __ARGS((cmdarg_t *cap));
-static void	nv_kright __ARGS((cmdarg_t *cap));
-static void	nv_right __ARGS((cmdarg_t *cap));
-static void	nv_kleft __ARGS((cmdarg_t *cap));
-static void	nv_left __ARGS((cmdarg_t *cap));
-static void	nv_up __ARGS((cmdarg_t *cap));
-static void	nv_down __ARGS((cmdarg_t *cap));
+static void	nv_tagpop __ARGS((cmdarg_T *cap));
+static void	nv_scroll __ARGS((cmdarg_T *cap));
+static void	nv_kright __ARGS((cmdarg_T *cap));
+static void	nv_right __ARGS((cmdarg_T *cap));
+static void	nv_kleft __ARGS((cmdarg_T *cap));
+static void	nv_left __ARGS((cmdarg_T *cap));
+static void	nv_up __ARGS((cmdarg_T *cap));
+static void	nv_down __ARGS((cmdarg_T *cap));
 #ifdef FEAT_SEARCHPATH
-static void	nv_gotofile __ARGS((cmdarg_t *cap));
+static void	nv_gotofile __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_end __ARGS((cmdarg_t *cap));
-static void	nv_dollar __ARGS((cmdarg_t *cap));
-static void	nv_search __ARGS((cmdarg_t *cap));
-static void	nv_next __ARGS((cmdarg_t *cap));
-static void	normal_search __ARGS((cmdarg_t *cap, int dir, char_u *pat, int opt));
-static void	nv_csearch __ARGS((cmdarg_t *cap));
-static void	nv_brackets __ARGS((cmdarg_t *cap));
-static void	nv_percent __ARGS((cmdarg_t *cap));
-static void	nv_brace __ARGS((cmdarg_t *cap));
-static void	nv_mark __ARGS((cmdarg_t *cap));
-static void	nv_findpar __ARGS((cmdarg_t *cap));
-static void	nv_undo __ARGS((cmdarg_t *cap));
-static void	nv_kundo __ARGS((cmdarg_t *cap));
-static void	nv_Replace __ARGS((cmdarg_t *cap));
-static void	nv_VReplace __ARGS((cmdarg_t *cap));
-static void	nv_vreplace __ARGS((cmdarg_t *cap));
+static void	nv_end __ARGS((cmdarg_T *cap));
+static void	nv_dollar __ARGS((cmdarg_T *cap));
+static void	nv_search __ARGS((cmdarg_T *cap));
+static void	nv_next __ARGS((cmdarg_T *cap));
+static void	normal_search __ARGS((cmdarg_T *cap, int dir, char_u *pat, int opt));
+static void	nv_csearch __ARGS((cmdarg_T *cap));
+static void	nv_brackets __ARGS((cmdarg_T *cap));
+static void	nv_percent __ARGS((cmdarg_T *cap));
+static void	nv_brace __ARGS((cmdarg_T *cap));
+static void	nv_mark __ARGS((cmdarg_T *cap));
+static void	nv_findpar __ARGS((cmdarg_T *cap));
+static void	nv_undo __ARGS((cmdarg_T *cap));
+static void	nv_kundo __ARGS((cmdarg_T *cap));
+static void	nv_Replace __ARGS((cmdarg_T *cap));
+static void	nv_VReplace __ARGS((cmdarg_T *cap));
+static void	nv_vreplace __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
 static void	v_swap_corners __ARGS((int cmdchar));
 #endif
-static void	nv_replace __ARGS((cmdarg_t *cap));
-static void	n_swapchar __ARGS((cmdarg_t *cap));
-static void	nv_cursormark __ARGS((cmdarg_t *cap, int flag, pos_t *pos));
+static void	nv_replace __ARGS((cmdarg_T *cap));
+static void	n_swapchar __ARGS((cmdarg_T *cap));
+static void	nv_cursormark __ARGS((cmdarg_T *cap, int flag, pos_T *pos));
 #ifdef FEAT_VISUAL
-static void	v_visop __ARGS((cmdarg_t *cap));
+static void	v_visop __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_subst __ARGS((cmdarg_t *cap));
-static void	nv_abbrev __ARGS((cmdarg_t *cap));
-static void	nv_optrans __ARGS((cmdarg_t *cap));
-static void	nv_gomark __ARGS((cmdarg_t *cap));
-static void	nv_pcmark __ARGS((cmdarg_t *cap));
-static void	nv_regname __ARGS((cmdarg_t *cap));
+static void	nv_subst __ARGS((cmdarg_T *cap));
+static void	nv_abbrev __ARGS((cmdarg_T *cap));
+static void	nv_optrans __ARGS((cmdarg_T *cap));
+static void	nv_gomark __ARGS((cmdarg_T *cap));
+static void	nv_pcmark __ARGS((cmdarg_T *cap));
+static void	nv_regname __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
-static void	nv_visual __ARGS((cmdarg_t *cap));
+static void	nv_visual __ARGS((cmdarg_T *cap));
 static void	n_start_visual_mode __ARGS((int c));
 #endif
-static void	nv_window __ARGS((cmdarg_t *cap));
-static void	nv_suspend __ARGS((cmdarg_t *cap));
-static void	nv_g_cmd __ARGS((cmdarg_t *cap));
-static void	n_opencmd __ARGS((cmdarg_t *cap));
-static void	nv_dot __ARGS((cmdarg_t *cap));
-static void	nv_redo __ARGS((cmdarg_t *cap));
-static void	nv_Undo __ARGS((cmdarg_t *cap));
-static void	nv_tilde __ARGS((cmdarg_t *cap));
-static void	nv_operator __ARGS((cmdarg_t *cap));
-static void	nv_lineop __ARGS((cmdarg_t *cap));
-static void	nv_home __ARGS((cmdarg_t *cap));
-static void	nv_pipe __ARGS((cmdarg_t *cap));
-static void	nv_bck_word __ARGS((cmdarg_t *cap));
-static void	nv_wordcmd __ARGS((cmdarg_t *cap));
-static void	nv_beginline __ARGS((cmdarg_t *cap));
+static void	nv_window __ARGS((cmdarg_T *cap));
+static void	nv_suspend __ARGS((cmdarg_T *cap));
+static void	nv_g_cmd __ARGS((cmdarg_T *cap));
+static void	n_opencmd __ARGS((cmdarg_T *cap));
+static void	nv_dot __ARGS((cmdarg_T *cap));
+static void	nv_redo __ARGS((cmdarg_T *cap));
+static void	nv_Undo __ARGS((cmdarg_T *cap));
+static void	nv_tilde __ARGS((cmdarg_T *cap));
+static void	nv_operator __ARGS((cmdarg_T *cap));
+static void	nv_lineop __ARGS((cmdarg_T *cap));
+static void	nv_home __ARGS((cmdarg_T *cap));
+static void	nv_pipe __ARGS((cmdarg_T *cap));
+static void	nv_bck_word __ARGS((cmdarg_T *cap));
+static void	nv_wordcmd __ARGS((cmdarg_T *cap));
+static void	nv_beginline __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
-static void	adjust_for_sel __ARGS((cmdarg_t *cap));
+static void	adjust_for_sel __ARGS((cmdarg_T *cap));
 static void	unadjust_for_sel __ARGS((void));
-static void	nv_select __ARGS((cmdarg_t *cap));
+static void	nv_select __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_goto __ARGS((cmdarg_t *cap));
-static void	nv_normal __ARGS((cmdarg_t *cap));
-static void	nv_esc __ARGS((cmdarg_t *oap));
-static void	nv_edit __ARGS((cmdarg_t *cap));
+static void	nv_goto __ARGS((cmdarg_T *cap));
+static void	nv_normal __ARGS((cmdarg_T *cap));
+static void	nv_esc __ARGS((cmdarg_T *oap));
+static void	nv_edit __ARGS((cmdarg_T *cap));
 #ifdef FEAT_TEXTOBJ
-static void	nv_object __ARGS((cmdarg_t *cap));
+static void	nv_object __ARGS((cmdarg_T *cap));
 #endif
-static void	nv_record __ARGS((cmdarg_t *cap));
-static void	nv_at __ARGS((cmdarg_t *cap));
-static void	nv_halfpage __ARGS((cmdarg_t *cap));
-static void	nv_join __ARGS((cmdarg_t *cap));
-static void	nv_put __ARGS((cmdarg_t *cap));
-static void	nv_open __ARGS((cmdarg_t *cap));
+static void	nv_record __ARGS((cmdarg_T *cap));
+static void	nv_at __ARGS((cmdarg_T *cap));
+static void	nv_halfpage __ARGS((cmdarg_T *cap));
+static void	nv_join __ARGS((cmdarg_T *cap));
+static void	nv_put __ARGS((cmdarg_T *cap));
+static void	nv_open __ARGS((cmdarg_T *cap));
 #ifdef FEAT_SNIFF
-static void	nv_sniff __ARGS((cmdarg_t *cap));
+static void	nv_sniff __ARGS((cmdarg_T *cap));
 #endif
 
 /*
  * Function to be called for a Normal or Visual mode command.
- * The argument is a cmdarg_t.
+ * The argument is a cmdarg_T.
  */
-typedef void (*nv_func_t) __ARGS((cmdarg_t *cap));
+typedef void (*nv_func_T) __ARGS((cmdarg_T *cap));
 
 /* Values for cmd_flags. */
 #define NV_NCH	    0x01	  /* may need to get a second char */
@@ -204,7 +204,7 @@ typedef void (*nv_func_t) __ARGS((cmdarg_t *cap));
 struct nv_cmd
 {
     int		cmd_char;	/* (first) command character */
-    nv_func_t   cmd_func;	/* function for this command */
+    nv_func_T   cmd_func;	/* function for this command */
     short_u	cmd_flags;	/* NV_ flags */
     short	cmd_arg;	/* value for ca.arg */
 } nv_cmds[] =
@@ -520,11 +520,11 @@ find_command(cmdchar)
 /*ARGSUSED*/
     void
 normal_cmd(oap, toplevel)
-    oparg_t	*oap;
+    oparg_T	*oap;
     int		toplevel;		/* TRUE when called from main() */
 {
     static long	opcount = 0;		/* ca.opcount saved here */
-    cmdarg_t	ca;			/* command arguments */
+    cmdarg_T	ca;			/* command arguments */
     int		c;
     int		ctrl_w = FALSE;		/* got CTRL-W command */
     int		old_col = curwin->w_curswant;
@@ -532,7 +532,7 @@ normal_cmd(oap, toplevel)
     int		need_flushbuf;		/* need to call out_flush() */
 #endif
 #ifdef FEAT_VISUAL
-    pos_t	old_pos;		/* cursor position before command */
+    pos_T	old_pos;		/* cursor position before command */
     int		mapped_len;
 #endif
     static int	old_mapped_len = 0;
@@ -595,7 +595,7 @@ normal_cmd(oap, toplevel)
      * of the mapping.  This is used below to not return to Insert mode for as
      * long as the mapping is being executed.
      */
-    if (!restart_edit)
+    if (restart_edit == 0)
 	old_mapped_len = 0;
     else if (old_mapped_len
 #ifdef FEAT_VISUAL
@@ -993,7 +993,7 @@ getcount:
     if (ca.nchar == ESC)
     {
 	clearop(oap);
-	if (p_im && !restart_edit)
+	if (p_im && restart_edit == 0)
 	    restart_edit = 'a';
 	goto normal_end;
     }
@@ -1060,7 +1060,7 @@ getcount:
      * Don't redraw the screen, it would remove the message.
      */
     if (       ((p_smd
-		    && (restart_edit
+		    && (restart_edit != 0
 #ifdef FEAT_VISUAL
 			|| (VIsual_active
 			    && old_pos.lnum == curwin->w_cursor.lnum
@@ -1072,7 +1072,7 @@ getcount:
 		    && msg_didany
 		    && !msg_nowait
 		    && KeyTyped)
-		|| (restart_edit
+		|| (restart_edit != 0
 #ifdef FEAT_VISUAL
 		    && !VIsual_active
 #endif
@@ -1088,7 +1088,7 @@ getcount:
 	int	save_State = State;
 
 	/* Draw the cursor with the right shape here */
-	if (restart_edit)
+	if (restart_edit != 0)
 	    State = INSERT;
 
 	/* If need to redraw, and there is a "keep_msg", redraw before the
@@ -1155,7 +1155,7 @@ normal_end:
      */
     if (       oap->op_type == OP_NOP
 #ifdef FEAT_VISUAL
-	    && ((restart_edit && !VIsual_active && old_mapped_len == 0)
+	    && ((restart_edit != 0 && !VIsual_active && old_mapped_len == 0)
 		|| restart_VIsual_select == 1)
 #endif
 	    && !(ca.retval & CA_COMMAND_BUSY)
@@ -1170,7 +1170,7 @@ normal_end:
 	    restart_VIsual_select = 0;
 	}
 #endif
-	if (restart_edit
+	if (restart_edit != 0
 #ifdef FEAT_VISUAL
 		&& !VIsual_active
 #endif
@@ -1197,19 +1197,20 @@ normal_end:
  */
     void
 do_pending_operator(cap, old_col, gui_yank)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
     int		old_col;
     int		gui_yank;
 {
-    oparg_t	*oap = cap->oap;
-    pos_t	old_cursor;
+    oparg_T	*oap = cap->oap;
+    pos_T	old_cursor;
     int		empty_region_error;
+    int		restart_edit_save;
 
 #ifdef FEAT_VISUAL
     /* The visual area is remembered for redo */
     static int	    redo_VIsual_mode = NUL; /* 'v', 'V', or Ctrl-V */
-    static linenr_t redo_VIsual_line_count; /* number of lines */
-    static colnr_t  redo_VIsual_col;	    /* number of cols or end column */
+    static linenr_T redo_VIsual_line_count; /* number of lines */
+    static colnr_T  redo_VIsual_col;	    /* number of cols or end column */
     static long	    redo_VIsual_count;	    /* count for Visual operator */
 #endif
 
@@ -1271,7 +1272,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	* is identical with the text position. */
 	if (ve_flags == VE_ALL
 		&& !VIsual_active
-		&& curwin->w_cursor.coladd
+		&& curwin->w_cursor.coladd > 0
 		&& oap->motion_type != MLINE
 		&& (   oap->op_type == OP_JOIN_NS
 		    || oap->op_type == OP_CHANGE
@@ -1334,7 +1335,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	    if (redo_VIsual_col == MAXCOL)
 	    {
 		curwin->w_curswant = MAXCOL;
-		coladvance((colnr_t)MAXCOL);
+		coladvance((colnr_T)MAXCOL);
 	    }
 	    cap->count0 = redo_VIsual_count;
 	    if (redo_VIsual_count != 0)
@@ -1344,6 +1345,11 @@ do_pending_operator(cap, old_col, gui_yank)
 	}
 	else if (VIsual_active)
 	{
+	    /* Save the current VIsual area for '< and '> marks, and "gv" */
+	    curbuf->b_visual_start = VIsual;
+	    curbuf->b_visual_end = curwin->w_cursor;
+	    curbuf->b_visual_mode = VIsual_mode;
+
 	    /* In Select mode, a linewise selection is operated upon like a
 	     * characterwise selection. */
 	    if (VIsual_select && VIsual_mode == 'V')
@@ -1365,11 +1371,6 @@ do_pending_operator(cap, old_col, gui_yank)
 	     * charwise selections. */
 	    else if (VIsual_mode == 'v')
 		unadjust_for_sel();
-
-	    /* Save the current VIsual area for '< and '> marks, and "gv" */
-	    curbuf->b_visual_start = VIsual;
-	    curbuf->b_visual_end = curwin->w_cursor;
-	    curbuf->b_visual_mode = VIsual_mode;
 
 	    oap->start = VIsual;
 	    if (VIsual_mode == 'V')
@@ -1412,15 +1413,6 @@ do_pending_operator(cap, old_col, gui_yank)
 #endif
 	    oap->end = oap->start;
 	    oap->start = curwin->w_cursor;
-
-#ifdef FEAT_VIRTUALEDIT
-	    {
-		/* swap the two coladds */
-		colnr_t tmp = curbuf->b_visual_start.coladd;
-		curbuf->b_visual_start.coladd = curbuf->b_visual_end.coladd;
-		curbuf->b_visual_end.coladd = tmp;
-	    }
-#endif
 	}
 
 	oap->line_count = oap->end.lnum - oap->start.lnum + 1;
@@ -1430,7 +1422,7 @@ do_pending_operator(cap, old_col, gui_yank)
 	{
 	    if (VIsual_mode == Ctrl_V)	/* block mode */
 	    {
-		colnr_t	    start, end;
+		colnr_T	    start, end;
 
 		oap->block_mode = TRUE;
 
@@ -1444,11 +1436,18 @@ do_pending_operator(cap, old_col, gui_yank)
 		    {
 			/* Add "coladd" to the virtual columns.  But watch out
 			 * for a double-wide character! */
-			oap->start_vcol += curbuf->b_visual_start.coladd;
+			if (lt(oap->start, curwin->w_cursor))
+			{
+			    oap->start_vcol += curbuf->b_visual_start.coladd;
+			    start += curbuf->b_visual_end.coladd;
+			}
+			else
+			{
+			    oap->start_vcol += curbuf->b_visual_end.coladd;
+			    start += curbuf->b_visual_start.coladd;
+			}
 			if (oap->end_vcol < oap->start_vcol)
 			    oap->end_vcol = oap->start_vcol;
-
-			start += curbuf->b_visual_end.coladd;
 			if (end < start)
 			    end = start;
 		    }
@@ -1729,11 +1728,14 @@ do_pending_operator(cap, old_col, gui_yank)
 		vim_beep();
 	    else
 	    {
-		/* This is a new edit command, not a restart.  We don't edit
-		 * recursively. */
+		/* This is a new edit command, not a restart.  Need to
+		 * remember it to make 'insertmode' work with mappings for
+		 * Visual mode. */
+		restart_edit_save = restart_edit;
 		restart_edit = 0;
 		if (op_change(oap))	/* will call edit() */
 		    cap->retval |= CA_COMMAND_BUSY;
+		restart_edit = restart_edit_save;
 	    }
 	    break;
 
@@ -1803,11 +1805,14 @@ do_pending_operator(cap, old_col, gui_yank)
 #ifdef FEAT_VISUALEXTRA
 	    else
 	    {
-		/* This is a new edit command, not a restart.  We don't edit
-		 * recursively. */
+		/* This is a new edit command, not a restart.  Need to
+		 * remember it to make 'insertmode' work with mappings for
+		 * Visual mode. */
+		restart_edit_save = restart_edit;
 		restart_edit = 0;
 		op_insert(oap, cap->count1);/* handles insert & append
 					     * will call edit() */
+		restart_edit = restart_edit_save;
 	    }
 #endif
 	    break;
@@ -1881,7 +1886,7 @@ do_pending_operator(cap, old_col, gui_yank)
  */
     static void
 op_colon(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     stuffcharReadbuff(':');
 #ifdef FEAT_VISUAL
@@ -1942,6 +1947,7 @@ op_colon(oap)
 #if defined(FEAT_MOUSE) || defined(PROTO)
 /*
  * Do the appropriate action for the current mouse click in the current mode.
+ * Not used for Command-line mode.
  *
  * Normal Mode:
  * event	 modi-	position      visual	   change   action
@@ -1977,7 +1983,7 @@ op_colon(oap)
  */
     int
 do_mouse(oap, c, dir, count, fix_indent)
-    oparg_t	*oap;		/* operator argument, can be NULL */
+    oparg_T	*oap;		/* operator argument, can be NULL */
     int		c;		/* K_LEFTMOUSE, etc */
     int		dir;		/* Direction to 'put' if necessary */
     long	count;
@@ -1990,7 +1996,7 @@ do_mouse(oap, c, dir, count, fix_indent)
     int		is_click;	/* If FALSE it's a drag or release event */
     int		is_drag;	/* If TRUE it's a drag event */
     int		jump_flags = 0;	/* flags for jump_to_mouse() */
-    pos_t	start_visual;
+    pos_T	start_visual;
     int		moved;		/* Has cursor moved? */
     int		in_status_line;	/* mouse in status line */
 #ifdef FEAT_VERTSPLIT
@@ -1998,15 +2004,16 @@ do_mouse(oap, c, dir, count, fix_indent)
 #endif
     int		c1, c2;
 #if defined(FEAT_FOLDING)
-    pos_t	save_cursor = curwin->w_cursor;
-    win_t	*save_curwin = curwin;
+    pos_T	save_cursor = curwin->w_cursor;
+    win_T	*save_curwin = curwin;
 #endif
 #ifdef FEAT_VISUAL
-    static pos_t	orig_cursor;
-    colnr_t		leftcol, rightcol;
-    pos_t		end_visual;
-    int			diff;
-    int			VIsual_was_active = VIsual_active;
+    static pos_T orig_cursor;
+    colnr_T	leftcol, rightcol;
+    pos_T	end_visual;
+    int		diff;
+    int		old_active = VIsual_active;
+    int		old_mode = VIsual_mode;
 #endif
     int		regname;
 
@@ -2037,7 +2044,6 @@ do_mouse(oap, c, dir, count, fix_indent)
 	}
 
     which_button = get_mouse_button(KEY2TERMCAP1(c), &is_click, &is_drag);
-
 #ifdef FEAT_MOUSESHAPE
     /* May have stopped dragging the status or separator line. */
     if (!is_drag && (drag_status_line
@@ -2187,6 +2193,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	    return FALSE;
     }
 
+    /* When dragging or button-up stay in the same window. */
     if (!is_click)
 	jump_flags |= MOUSE_FOCUS | MOUSE_DID_MOVE;
 
@@ -2227,7 +2234,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 #ifdef FEAT_VISUAL
 		    if (VIsual_active)
 		    {
-			pos_t    m_pos;
+			pos_T    m_pos;
 
 			/*
 			 * set MOUSE_MAY_STOP_VIS if we are outside the
@@ -2290,7 +2297,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	if (which_button == MOUSE_LEFT && (mod_mask & MOD_MASK_SHIFT))
 	{
 	    which_button = MOUSE_RIGHT;
-	    mod_mask &= ~ MOD_MASK_SHIFT;
+	    mod_mask &= ~MOD_MASK_SHIFT;
 	}
     }
 
@@ -2329,7 +2336,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 		    end_visual = curwin->w_cursor;
 		}
 	    }
-	    jump_flags |= MOUSE_MAY_VIS;
+	    jump_flags |= MOUSE_MAY_VIS | MOUSE_FOCUS;
 	}
     }
 #endif
@@ -2372,6 +2379,14 @@ do_mouse(oap, c, dir, count, fix_indent)
     }
 #endif
 
+#if defined(FEAT_CLIPBOARD) && defined(FEAT_CMDWIN)
+    if ((jump_flags & IN_OTHER_WIN) && !VIsual_active && clip_star.available)
+    {
+	clip_modeless(which_button, is_click, is_drag);
+	return FALSE;
+    }
+#endif
+
 #ifdef FEAT_VISUAL
     /* Set global flag that we are extending the Visual area with mouse
      * dragging; temporarily mimimize 'scrolloff'. */
@@ -2385,7 +2400,7 @@ do_mouse(oap, c, dir, count, fix_indent)
     }
 
     /* When dragging the mouse above the window, scroll down. */
-    if (is_drag && mouse_row < 0)
+    if (is_drag && mouse_row < 0 && !in_status_line)
     {
 	scroll_redraw(FALSE, 1L);
 	mouse_row = 0;
@@ -2594,8 +2609,6 @@ do_mouse(oap, c, dir, count, fix_indent)
 		/* start Select mode if 'selectmode' contains "mouse" */
 		may_start_select('o');
 		setmouse();
-		if (p_smd)
-		    redraw_cmdline = TRUE;  /* show visual mode later */
 	    }
 	    if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK)
 		VIsual_mode = 'v';
@@ -2614,7 +2627,7 @@ do_mouse(oap, c, dir, count, fix_indent)
 	 */
 	if ((mod_mask & MOD_MASK_MULTI_CLICK) == MOD_MASK_2CLICK)
 	{
-	    pos_t	*pos = NULL;
+	    pos_T	*pos = NULL;
 
 	    if (is_click)
 	    {
@@ -2660,8 +2673,12 @@ do_mouse(oap, c, dir, count, fix_indent)
 	if (is_click)
 	    redraw_curbuf_later(INVERTED);	/* update the inversion */
     }
-    else if (VIsual_active && VIsual_was_active != VIsual_active)
+    else if (VIsual_active && !old_active)
 	VIsual_mode = 'v';
+
+    /* If Visual mode changed show it later. */
+    if (p_smd && (VIsual_active != old_active || VIsual_mode != old_mode))
+	redraw_cmdline = TRUE;
 #endif
 
     return moved;
@@ -2673,7 +2690,7 @@ do_mouse(oap, c, dir, count, fix_indent)
  */
     static void
 find_start_of_word(pos)
-    pos_t	*pos;
+    pos_T	*pos;
 {
     char_u	*line;
     int		cclass;
@@ -2700,7 +2717,7 @@ find_start_of_word(pos)
  */
     static void
 find_end_of_word(pos)
-    pos_t	*pos;
+    pos_T	*pos;
 {
     char_u	*line;
     int		cclass;
@@ -3013,7 +3030,7 @@ find_ident_under_cursor(string, find_type)
  */
     static void
 prep_redo_cmd(cap)
-    cmdarg_t  *cap;
+    cmdarg_T  *cap;
 {
     prep_redo(cap->oap->regname, cap->count0,
 				     NUL, cap->cmdchar, NUL, NUL, cap->nchar);
@@ -3061,7 +3078,7 @@ prep_redo(regname, num, cmd1, cmd2, cmd3, cmd4, cmd5)
  */
     static int
 checkclearop(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     if (oap->op_type == OP_NOP)
 	return FALSE;
@@ -3076,7 +3093,7 @@ checkclearop(oap)
  */
     static int
 checkclearopq(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     if (oap->op_type == OP_NOP
 #ifdef FEAT_VISUAL
@@ -3090,7 +3107,7 @@ checkclearopq(oap)
 
     static void
 clearop(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     oap->op_type = OP_NOP;
     oap->regname = 0;
@@ -3099,7 +3116,7 @@ clearop(oap)
 
     static void
 clearopbeep(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     clearop(oap);
     beep_flush();
@@ -3111,7 +3128,7 @@ clearopbeep(oap)
  */
     static void
 unshift_special(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     switch (cap->cmdchar)
     {
@@ -3152,7 +3169,7 @@ clear_showcmd()
     {
 	int	i = lt(VIsual, curwin->w_cursor);
 	long	lines;
-	colnr_t	leftcol, rightcol;
+	colnr_T	leftcol, rightcol;
 
 	/* Show the size of the Visual area. */
 	if (i)
@@ -3330,13 +3347,13 @@ display_showcmd()
 do_check_scrollbind(check)
     int		check;
 {
-    static win_t	*old_curwin = NULL;
-    static linenr_t	old_topline = 0;
+    static win_T	*old_curwin = NULL;
+    static linenr_T	old_topline = 0;
 #ifdef FEAT_DIFF
     static int		old_topfill = 0;
 #endif
-    static buf_t	*old_buf = NULL;
-    static colnr_t	old_leftcol = 0;
+    static buf_T	*old_buf = NULL;
+    static colnr_T	old_leftcol = 0;
 
     if (check && curwin->w_p_scb)
     {
@@ -3399,18 +3416,18 @@ do_check_scrollbind(check)
  */
     void
 check_scrollbind(topline_diff, leftcol_diff)
-    linenr_t	topline_diff;
+    linenr_T	topline_diff;
     long	leftcol_diff;
 {
     int		want_ver;
     int		want_hor;
-    win_t	*old_curwin = curwin;
-    buf_t	*old_curbuf = curbuf;
+    win_T	*old_curwin = curwin;
+    buf_T	*old_curbuf = curbuf;
 #ifdef FEAT_VISUAL
     int		old_VIsual_select = VIsual_select;
     int		old_VIsual_active = VIsual_active;
 #endif
-    colnr_t	tgt_leftcol = curwin->w_leftcol;
+    colnr_T	tgt_leftcol = curwin->w_leftcol;
     long	topline;
     long	y;
 
@@ -3500,7 +3517,7 @@ check_scrollbind(topline_diff, leftcol_diff)
 /*ARGSUSED */
     static void
 nv_ignore(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 }
 
@@ -3509,7 +3526,7 @@ nv_ignore(cap)
  */
     static void
 nv_error(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     clearopbeep(cap->oap);
 }
@@ -3519,7 +3536,7 @@ nv_error(cap)
  */
     static void
 nv_help(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
 	ex_help(NULL);
@@ -3530,7 +3547,7 @@ nv_help(cap)
  */
     static void
 nv_addsub(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap)
 	    && do_addsub((int)cap->cmdchar, cap->count1) == OK)
@@ -3542,7 +3559,7 @@ nv_addsub(cap)
  */
     static void
 nv_page(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearop(cap->oap))
 	(void)onepage(cap->arg, cap->count1);
@@ -3553,12 +3570,12 @@ nv_page(cap)
  */
     static void
 nv_gd(oap, nchar)
-    oparg_t   *oap;
+    oparg_T   *oap;
     int	    nchar;
 {
     int		len;
     char_u	*pat;
-    pos_t	old_pos;
+    pos_T	old_pos;
     int		t;
     int		save_p_ws;
     int		save_p_scs;
@@ -3636,7 +3653,7 @@ nv_gd(oap, nchar)
  */
     static int
 nv_screengo(oap, dir, dist)
-    oparg_t	*oap;
+    oparg_T	*oap;
     int		dir;
     long	dist;
 {
@@ -3685,7 +3702,7 @@ nv_screengo(oap, dir, dist)
 	    n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
 	else
 	    n = width1;
-	if (curwin->w_curswant > (colnr_t)n + 1)
+	if (curwin->w_curswant > (colnr_T)n + 1)
 	    curwin->w_curswant -= ((curwin->w_curswant - n) / width2 + 1)
 								     * width2;
       }
@@ -3725,7 +3742,7 @@ nv_screengo(oap, dir, dist)
 		n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
 	    else
 		n = width1;
-	    if (curwin->w_curswant + width2 < (colnr_t)n)
+	    if (curwin->w_curswant + width2 < (colnr_T)n)
 		/* move forward within line */
 		curwin->w_curswant += width2;
 	    else
@@ -3762,10 +3779,10 @@ nv_screengo(oap, dir, dist)
 	 */
 	validate_virtcol();
 	if (curwin->w_virtcol > curwin->w_curswant
-		&& (curwin->w_curswant < (colnr_t)width1
-		    ? (curwin->w_curswant > (colnr_t)width1 / 2)
+		&& (curwin->w_curswant < (colnr_T)width1
+		    ? (curwin->w_curswant > (colnr_T)width1 / 2)
 		    : ((curwin->w_curswant - width1) % width2
-						      > (colnr_t)width2 / 2)))
+						      > (colnr_T)width2 / 2)))
 	    --curwin->w_cursor.col;
     }
 #endif
@@ -3784,7 +3801,7 @@ nv_screengo(oap, dir, dist)
  */
     static void
 nv_mousescroll(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (mod_mask & (MOD_MASK_SHIFT | MOD_MASK_CTRL))
     {
@@ -3803,7 +3820,7 @@ nv_mousescroll(cap)
  */
     static void
 nv_mouse(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     (void)do_mouse(cap->oap, cap->cmdchar, BACKWARD, cap->count1, 0);
 }
@@ -3815,7 +3832,7 @@ nv_mouse(cap)
  */
     static void
 nv_scroll_line(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearop(cap->oap))
 	scroll_redraw(cap->arg, cap->count1);
@@ -3829,11 +3846,11 @@ scroll_redraw(up, count)
     int		up;
     long	count;
 {
-    linenr_t	prev_topline = curwin->w_topline;
+    linenr_T	prev_topline = curwin->w_topline;
 #ifdef FEAT_DIFF
     int		prev_topfill = curwin->w_topfill;
 #endif
-    linenr_t	prev_lnum = curwin->w_cursor.lnum;
+    linenr_T	prev_lnum = curwin->w_cursor.lnum;
 
     if (up)
 	scrollup(count, TRUE);
@@ -3885,10 +3902,10 @@ scroll_redraw(up, count)
  */
     static void
 nv_zet(cap)
-    cmdarg_t  *cap;
+    cmdarg_T  *cap;
 {
     long	n;
-    colnr_t	col;
+    colnr_T	col;
     int		nchar = cap->nchar;
 #ifdef FEAT_FOLDING
     long	old_fdl = curwin->w_p_fdl;
@@ -4037,10 +4054,10 @@ dozet:
     case K_LEFT:
 		if (!curwin->w_p_wrap)
 		{
-		    if ((colnr_t)cap->count1 > curwin->w_leftcol)
+		    if ((colnr_T)cap->count1 > curwin->w_leftcol)
 			curwin->w_leftcol = 0;
 		    else
-			curwin->w_leftcol -= (colnr_t)cap->count1;
+			curwin->w_leftcol -= (colnr_T)cap->count1;
 		    leftcol_changed();
 		}
 		break;
@@ -4055,7 +4072,7 @@ dozet:
 		if (!curwin->w_p_wrap)
 		{
 		    /* scroll the window left */
-		    curwin->w_leftcol += (colnr_t)cap->count1;
+		    curwin->w_leftcol += (colnr_T)cap->count1;
 		    leftcol_changed();
 		}
 		break;
@@ -4147,7 +4164,7 @@ dozet:
 		    changed_window_setting();
 		}
 		else if (foldmethodIsMarker(curwin))
-		    deleteFold((linenr_t)1, curbuf->b_ml.ml_line_count,
+		    deleteFold((linenr_T)1, curbuf->b_ml.ml_line_count,
 								 TRUE, FALSE);
 		else
 		    EMSG(_("Cannot erase folds with current 'foldmethod'"));
@@ -4279,7 +4296,7 @@ dozet:
  */
     static void
 nv_ver_scrollbar(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->oap->op_type != OP_NOP)
 	clearopbeep(cap->oap);
@@ -4293,7 +4310,7 @@ nv_ver_scrollbar(cap)
  */
     static void
 nv_hor_scrollbar(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->oap->op_type != OP_NOP)
 	clearopbeep(cap->oap);
@@ -4308,7 +4325,7 @@ nv_hor_scrollbar(cap)
  */
     static void
 nv_exmode(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     /*
      * Ignore 'Q' in Visual mode, just give a beep.
@@ -4327,7 +4344,7 @@ nv_exmode(cap)
  */
     static void
 nv_colon(cap)
-    cmdarg_t  *cap;
+    cmdarg_T  *cap;
 {
     int	    old_p_im;
 
@@ -4374,7 +4391,7 @@ nv_colon(cap)
  */
     static void
 nv_ctrlg(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)	/* toggle Selection/Visual mode */
@@ -4394,7 +4411,7 @@ nv_ctrlg(cap)
  */
     static void
 nv_ctrlh(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active && VIsual_select)
@@ -4412,7 +4429,7 @@ nv_ctrlh(cap)
  */
     static void
 nv_clear(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearop(cap->oap))
     {
@@ -4438,7 +4455,7 @@ nv_clear(cap)
  */
     static void
 nv_ctrlo(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active && VIsual_select)
@@ -4460,10 +4477,10 @@ nv_ctrlo(cap)
  */
     static void
 nv_hat(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
-	(void)buflist_getfile((int)cap->count0, (linenr_t)0,
+	(void)buflist_getfile((int)cap->count0, (linenr_T)0,
 						GETF_SETMARK|GETF_ALT, FALSE);
 }
 
@@ -4472,7 +4489,7 @@ nv_hat(cap)
  */
     static void
 nv_Zet(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
     if (!checkclearopq(cap->oap))
     {
@@ -4501,7 +4518,7 @@ nv_Zet(cap)
  */
     static void
 nv_ident(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     char_u	*ptr = NULL;
     char_u	*buf;
@@ -4679,7 +4696,7 @@ nv_ident(cap)
  */
     static int
 get_visual_text(cap, pp, lenp)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
     char_u	**pp;	    /* return: start of selected text */
     int		*lenp;	    /* return: length of selected text */
 {
@@ -4715,7 +4732,7 @@ get_visual_text(cap, pp, lenp)
  */
     static void
 nv_tagpop(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
 	do_tag((char_u *)"", DT_POP, (int)cap->count1, FALSE, TRUE);
@@ -4726,12 +4743,12 @@ nv_tagpop(cap)
  */
     static void
 nv_scroll(cap)
-    cmdarg_t  *cap;
+    cmdarg_T  *cap;
 {
     int		used = 0;
     long	n;
 #ifdef FEAT_FOLDING
-    linenr_t	lnum;
+    linenr_T	lnum;
 #endif
     int		half;
 
@@ -4797,7 +4814,7 @@ nv_scroll(cap)
  */
     static void
 nv_kright(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (mod_mask & MOD_MASK_CTRL)
     {
@@ -4813,7 +4830,7 @@ nv_kright(cap)
  */
     static void
 nv_right(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     long	n;
 #ifdef FEAT_VISUAL
@@ -4921,7 +4938,7 @@ nv_right(cap)
  */
     static void
 nv_kleft(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (mod_mask & MOD_MASK_CTRL)
     {
@@ -4939,7 +4956,7 @@ nv_kleft(cap)
  */
     static void
 nv_left(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     long	n;
 
@@ -4963,7 +4980,7 @@ nv_left(cap)
 		    && curwin->w_cursor.lnum > 1)
 	    {
 		--(curwin->w_cursor.lnum);
-		coladvance((colnr_t)MAXCOL);
+		coladvance((colnr_T)MAXCOL);
 		curwin->w_set_curswant = TRUE;
 
 		/* When the NL before the first char has to be deleted we
@@ -4998,7 +5015,7 @@ nv_left(cap)
  */
     static void
 nv_up(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MLINE;
     if (cursor_up(cap->count1, cap->oap->op_type == OP_NOP) == FAIL)
@@ -5013,7 +5030,7 @@ nv_up(cap)
  */
     static void
 nv_down(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
     /* In a quickfix window a <CR> jumps to the error under the cursor. */
@@ -5044,7 +5061,7 @@ nv_down(cap)
  */
     static void
 nv_gotofile(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     char_u	*ptr;
 
@@ -5094,7 +5111,7 @@ nv_gotofile(cap)
  */
     static void
 nv_end(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (mod_mask & MOD_MASK_CTRL)	/* CTRL-END = goto last line */
     {
@@ -5110,7 +5127,7 @@ nv_end(cap)
  */
     static void
 nv_dollar(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = TRUE;
@@ -5130,9 +5147,9 @@ nv_dollar(cap)
  */
     static void
 nv_search(cap)
-    cmdarg_t	    *cap;
+    cmdarg_T	    *cap;
 {
-    oparg_t	*oap = cap->oap;
+    oparg_T	*oap = cap->oap;
 
     if (cap->cmdchar == '?' && cap->oap->op_type == OP_ROT13)
     {
@@ -5160,7 +5177,7 @@ nv_search(cap)
  */
     static void
 nv_next(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     normal_search(cap, 0, NULL, SEARCH_MARK | cap->arg);
 }
@@ -5171,7 +5188,7 @@ nv_next(cap)
  */
     static void
 normal_search(cap, dir, pat, opt)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
     int		dir;
     char_u	*pat;
     int		opt;		/* extra flags for do_search() */
@@ -5212,7 +5229,7 @@ normal_search(cap, dir, pat, opt)
  */
     static void
 nv_csearch(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     int		type;
 
@@ -5250,12 +5267,12 @@ nv_csearch(cap)
  */
     static void
 nv_brackets(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    pos_t	new_pos;
-    pos_t	prev_pos;
-    pos_t	*pos = NULL;	    /* init for GCC */
-    pos_t	old_pos;	    /* cursor position before command */
+    pos_T	new_pos;
+    pos_T	prev_pos;
+    pos_T	*pos = NULL;	    /* init for GCC */
+    pos_T	old_pos;	    /* cursor position before command */
     int		flag;
     long	n;
     int		findc;
@@ -5308,8 +5325,8 @@ nv_brackets(cap)
 		cap->count1,
 		isupper(cap->nchar) ? ACTION_SHOW_ALL :
 			    islower(cap->nchar) ? ACTION_SHOW : ACTION_GOTO,
-		cap->cmdchar == ']' ? curwin->w_cursor.lnum : (linenr_t)1,
-		(linenr_t)MAXLNUM);
+		cap->cmdchar == ']' ? curwin->w_cursor.lnum : (linenr_T)1,
+		(linenr_T)MAXLNUM);
 	    curwin->w_set_curswant = TRUE;
 	}
     }
@@ -5543,11 +5560,11 @@ nv_brackets(cap)
  */
     static void
 nv_percent(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    pos_t	*pos;
+    pos_T	*pos;
 #ifdef FEAT_FOLDING
-    linenr_t	lnum = curwin->w_cursor.lnum;
+    linenr_T	lnum = curwin->w_cursor.lnum;
 #endif
 
     cap->oap->inclusive = TRUE;
@@ -5598,7 +5615,7 @@ nv_percent(cap)
  */
     static void
 nv_brace(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
     if (cap->cmdchar == ')')
@@ -5626,7 +5643,7 @@ nv_brace(cap)
  */
     static void
 nv_mark(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearop(cap->oap))
     {
@@ -5641,7 +5658,7 @@ nv_mark(cap)
  */
     static void
 nv_findpar(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
@@ -5665,7 +5682,7 @@ nv_findpar(cap)
  */
     static void
 nv_undo(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->oap->op_type == OP_LOWER
 #ifdef FEAT_VISUAL
@@ -5687,7 +5704,7 @@ nv_undo(cap)
  */
     static void
 nv_kundo(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
     {
@@ -5701,7 +5718,7 @@ nv_kundo(cap)
  */
     static void
 nv_replace(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     char_u	*ptr;
     int		had_ctrl_v;
@@ -5844,7 +5861,7 @@ nv_replace(cap)
 
 	    /* mark the buffer as changed and prepare for displaying */
 	    changed_bytes(curwin->w_cursor.lnum,
-			       (colnr_t)(curwin->w_cursor.col - cap->count1));
+			       (colnr_T)(curwin->w_cursor.col - cap->count1));
 	}
 	--curwin->w_cursor.col;	    /* cursor on the last replaced char */
 #ifdef FEAT_MBYTE
@@ -5868,8 +5885,8 @@ nv_replace(cap)
 v_swap_corners(cmdchar)
     int		cmdchar;
 {
-    pos_t	old_cursor;
-    colnr_t	left, right;
+    pos_T	old_cursor;
+    colnr_T	left, right;
 
     if (cmdchar == 'O' && VIsual_mode == Ctrl_V)
     {
@@ -5914,7 +5931,7 @@ v_swap_corners(cmdchar)
  */
     static void
 nv_Replace(cap)
-    cmdarg_t	    *cap;
+    cmdarg_T	    *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)		/* "R" is replace lines */
@@ -5949,7 +5966,7 @@ nv_Replace(cap)
  */
     static void
 nv_VReplace(cap)
-    cmdarg_t	    *cap;
+    cmdarg_T	    *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)
@@ -5978,7 +5995,7 @@ nv_VReplace(cap)
  */
     static void
 nv_vreplace(cap)
-    cmdarg_t	    *cap;
+    cmdarg_T	    *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)
@@ -6011,10 +6028,10 @@ nv_vreplace(cap)
  */
     static void
 n_swapchar(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     long	n;
-    pos_t	startpos;
+    pos_T	startpos;
     int		did_change = 0;
 
     if (checkclearopq(cap->oap))
@@ -6073,9 +6090,9 @@ n_swapchar(cap)
  */
     static void
 nv_cursormark(cap, flag, pos)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
     int		flag;
-    pos_t	*pos;
+    pos_T	*pos;
 {
     if (check_mark(pos) == FAIL)
 	clearop(cap->oap);
@@ -6103,7 +6120,7 @@ nv_cursormark(cap, flag, pos)
  */
     static void
 v_visop(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     static char_u trans[] = "YyDdCcxdXdAAIIrr";
 
@@ -6126,7 +6143,7 @@ v_visop(cap)
  */
     static void
 nv_subst(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)	/* "vs" and "vS" are the same as "vc" */
@@ -6146,7 +6163,7 @@ nv_subst(cap)
  */
     static void
 nv_abbrev(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->cmdchar == K_DEL || cap->cmdchar == K_KDEL)
 	cap->cmdchar = 'x';		/* DEL key behaves like 'x' */
@@ -6165,7 +6182,7 @@ nv_abbrev(cap)
  */
     static void
 nv_optrans(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     static char_u *(ar[8]) = {(char_u *)"dl", (char_u *)"dh",
 			      (char_u *)"d$", (char_u *)"c$",
@@ -6188,12 +6205,12 @@ nv_optrans(cap)
  */
     static void
 nv_gomark(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    pos_t	*pos;
+    pos_T	*pos;
     int		c;
 #ifdef FEAT_FOLDING
-    linenr_t	lnum = curwin->w_cursor.lnum;
+    linenr_T	lnum = curwin->w_cursor.lnum;
     int		old_KeyTyped = KeyTyped;    /* getting file may reset it */
 #endif
 
@@ -6202,7 +6219,7 @@ nv_gomark(cap)
     else
 	c = cap->nchar;
     pos = getmark(c, (cap->oap->op_type == OP_NOP));
-    if (pos == (pos_t *)-1)	    /* jumped to other file */
+    if (pos == (pos_T *)-1)	    /* jumped to other file */
     {
 	if (cap->arg)
 	{
@@ -6221,7 +6238,7 @@ nv_gomark(cap)
 #endif
 #ifdef FEAT_FOLDING
     if (cap->oap->op_type == OP_NOP
-	    && (pos == (pos_t *)-1 || lnum != curwin->w_cursor.lnum)
+	    && (pos == (pos_T *)-1 || lnum != curwin->w_cursor.lnum)
 	    && (fdo_flags & FDO_MARK)
 	    && old_KeyTyped)
 	foldOpenCursor();
@@ -6233,19 +6250,19 @@ nv_gomark(cap)
  */
     static void
 nv_pcmark(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #ifdef FEAT_JUMPLIST
-    pos_t	*pos;
+    pos_T	*pos;
 # ifdef FEAT_FOLDING
-    linenr_t	lnum = curwin->w_cursor.lnum;
+    linenr_T	lnum = curwin->w_cursor.lnum;
     int		old_KeyTyped = KeyTyped;    /* getting file may reset it */
 # endif
 
     if (!checkclearopq(cap->oap))
     {
 	pos = movemark((int)cap->count1);
-	if (pos == (pos_t *)-1)		/* jump to other file */
+	if (pos == (pos_T *)-1)		/* jump to other file */
 	{
 	    curwin->w_set_curswant = TRUE;
 	    check_cursor();
@@ -6256,7 +6273,7 @@ nv_pcmark(cap)
 	    clearopbeep(cap->oap);
 # ifdef FEAT_FOLDING
 	if (cap->oap->op_type == OP_NOP
-		&& (pos == (pos_t *)-1 || lnum != curwin->w_cursor.lnum)
+		&& (pos == (pos_T *)-1 || lnum != curwin->w_cursor.lnum)
 		&& (fdo_flags & FDO_MARK)
 		&& old_KeyTyped)
 	    foldOpenCursor();
@@ -6272,7 +6289,7 @@ nv_pcmark(cap)
  */
     static void
 nv_regname(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (checkclearop(cap->oap))
 	return;
@@ -6297,7 +6314,7 @@ nv_regname(cap)
  */
     static void
 nv_visual(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     /* 'v', 'V' and CTRL-V can be used while an operator is pending to make it
      * characterwise, linewise, or blockwise. */
@@ -6368,7 +6385,7 @@ nv_visual(cap)
 	    if (resel_VIsual_col == MAXCOL)
 	    {
 		curwin->w_curswant = MAXCOL;
-		coladvance((colnr_t)MAXCOL);
+		coladvance((colnr_T)MAXCOL);
 	    }
 	    else if (VIsual_mode == Ctrl_V)
 	    {
@@ -6456,7 +6473,7 @@ n_start_visual_mode(c)
  */
     static void
 nv_window(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #ifdef FEAT_WINDOWS
     if (!checkclearop(cap->oap))
@@ -6471,7 +6488,7 @@ nv_window(cap)
  */
     static void
 nv_suspend(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     clearop(cap->oap);
 #ifdef FEAT_VISUAL
@@ -6486,11 +6503,11 @@ nv_suspend(cap)
  */
     static void
 nv_g_cmd(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    oparg_t	*oap = cap->oap;
+    oparg_T	*oap = cap->oap;
 #ifdef FEAT_VISUAL
-    pos_t	tpos;
+    pos_T	tpos;
 #endif
 #ifdef FEAT_VIRTUALEDIT
     int		coladd;
@@ -6695,7 +6712,7 @@ nv_g_cmd(cap)
 
 	    validate_virtcol();
 	    i = 0;
-	    if (curwin->w_virtcol >= (colnr_t)width1 && width2 > 0)
+	    if (curwin->w_virtcol >= (colnr_T)width1 && width2 > 0)
 		i = (curwin->w_virtcol - width1) / width2 * width2 + width1;
 	}
 	else
@@ -6706,7 +6723,7 @@ nv_g_cmd(cap)
 	    i += (W_WIDTH(curwin) - curwin_col_off()
 		    + ((curwin->w_p_wrap && i > 0)
 			? curwin_col_off2() : 0)) / 2;
-	coladvance((colnr_t)i);
+	coladvance((colnr_T)i);
 	if (flag)
 	{
 	    do
@@ -6757,10 +6774,10 @@ nv_g_cmd(cap)
 
 		    validate_virtcol();
 		    i = width1 - 1;
-		    if (curwin->w_virtcol >= (colnr_t)width1)
+		    if (curwin->w_virtcol >= (colnr_T)width1)
 			i += ((curwin->w_virtcol - width1) / width2 + 1)
 								     * width2;
-		    coladvance((colnr_t)i);
+		    coladvance((colnr_T)i);
 #if defined(FEAT_LINEBREAK) || defined(FEAT_MBYTE)
 		    if (curwin->w_cursor.col > 0 && curwin->w_p_wrap)
 		    {
@@ -6770,7 +6787,7 @@ nv_g_cmd(cap)
 			 * the next screen line.
 			 */
 			validate_virtcol();
-			if (curwin->w_virtcol > (colnr_t)i)
+			if (curwin->w_virtcol > (colnr_T)i)
 			    --curwin->w_cursor.col;
 		    }
 #endif
@@ -6781,7 +6798,7 @@ nv_g_cmd(cap)
 	    else
 	    {
 		i = curwin->w_leftcol + W_WIDTH(curwin) - col_off - 1;
-		coladvance((colnr_t)i);
+		coladvance((colnr_T)i);
 		curwin->w_set_curswant = TRUE;
 	    }
 	}
@@ -6826,7 +6843,7 @@ nv_g_cmd(cap)
 	    curwin->w_cursor = curbuf->b_last_insert;
 	    check_cursor_lnum();
 	    i = STRLEN(ml_get_curline());
-	    if (curwin->w_cursor.col > (colnr_t)i)
+	    if (curwin->w_cursor.col > (colnr_T)i)
 		curwin->w_cursor.col = i;
 	}
 	cap->cmdchar = 'i';
@@ -6989,7 +7006,7 @@ nv_g_cmd(cap)
  */
     static void
 n_opencmd(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
     {
@@ -7007,9 +7024,9 @@ n_opencmd(cap)
 	    (void)hasFolding(curwin->w_cursor.lnum,
 						NULL, &curwin->w_cursor.lnum);
 #endif
-	if (u_save((linenr_t)(curwin->w_cursor.lnum -
+	if (u_save((linenr_T)(curwin->w_cursor.lnum -
 					       (cap->cmdchar == 'O' ? 1 : 0)),
-		   (linenr_t)(curwin->w_cursor.lnum +
+		   (linenr_T)(curwin->w_cursor.lnum +
 					       (cap->cmdchar == 'o' ? 1 : 0))
 		       ) == OK
 		&& open_line(cap->cmdchar == 'O' ? BACKWARD : FORWARD,
@@ -7032,7 +7049,7 @@ n_opencmd(cap)
  */
     static void
 nv_dot(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
     {
@@ -7051,7 +7068,7 @@ nv_dot(cap)
  */
     static void
 nv_redo(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!checkclearopq(cap->oap))
     {
@@ -7065,7 +7082,7 @@ nv_redo(cap)
  */
     static void
 nv_Undo(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     /* In Visual mode and typing "gUU" triggers an operator */
     if (cap->oap->op_type == OP_UPPER
@@ -7092,7 +7109,7 @@ nv_Undo(cap)
  */
     static void
 nv_tilde(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (!p_to
 #ifdef FEAT_VISUAL
@@ -7109,7 +7126,7 @@ nv_tilde(cap)
  */
     static void
 nv_operator(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     int	    op_type;
 
@@ -7135,7 +7152,7 @@ nv_operator(cap)
  */
     static void
 nv_lineop(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MLINE;
     if (cursor_down(cap->count1 - 1L, cap->oap->op_type == OP_NOP) == FAIL)
@@ -7153,7 +7170,7 @@ nv_lineop(cap)
  */
     static void
 nv_home(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (mod_mask & MOD_MASK_CTRL)	    /* CTRL-HOME = goto line 1 */
     {
@@ -7172,15 +7189,15 @@ nv_home(cap)
  */
     static void
 nv_pipe(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
     beginline(0);
     if (cap->count0 > 0)
     {
-	coladvance((colnr_t)(cap->count0 - 1));
-	curwin->w_curswant = (colnr_t)(cap->count0 - 1);
+	coladvance((colnr_T)(cap->count0 - 1));
+	curwin->w_curswant = (colnr_T)(cap->count0 - 1);
     }
     else
 	curwin->w_curswant = 0;
@@ -7195,7 +7212,7 @@ nv_pipe(cap)
  */
     static void
 nv_bck_word(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
@@ -7214,7 +7231,7 @@ nv_bck_word(cap)
  */
     static void
 nv_wordcmd(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     int		n;
     int		word_end;
@@ -7306,7 +7323,7 @@ nv_wordcmd(cap)
  */
     static void
 nv_beginline(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     cap->oap->motion_type = MCHAR;
     cap->oap->inclusive = FALSE;
@@ -7323,7 +7340,7 @@ nv_beginline(cap)
  */
     static void
 adjust_for_sel(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (VIsual_active && cap->oap->inclusive && *p_sel == 'e'
 						     && gchar_cursor() != NUL)
@@ -7345,7 +7362,7 @@ adjust_for_sel(cap)
     static void
 unadjust_for_sel()
 {
-    pos_t	*pp;
+    pos_T	*pp;
 
     if (*p_sel == 'e' && !equal(VIsual, curwin->w_cursor))
     {
@@ -7368,9 +7385,9 @@ unadjust_for_sel()
  */
     static void
 nv_select(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    pos_t	*pp;
+    pos_T	*pp;
 
     if (VIsual_active)
 	VIsual_select = TRUE;
@@ -7407,9 +7424,9 @@ nv_select(cap)
  */
     static void
 nv_goto(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
-    linenr_t	lnum;
+    linenr_T	lnum;
 
     if (cap->arg)
 	lnum = curbuf->b_ml.ml_line_count;
@@ -7434,7 +7451,7 @@ nv_goto(cap)
  */
     static void
 nv_normal(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (safe_vgetc() == Ctrl_N)
     {
@@ -7461,7 +7478,7 @@ nv_normal(cap)
  */
     static void
 nv_esc(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->arg)		/* TRUE for CTRL-C */
     {
@@ -7501,7 +7518,7 @@ nv_esc(cap)
  */
     static void
 nv_edit(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
     /* <Insert> is equal to "i" */
     if (cap->cmdchar == K_INS || cap->cmdchar == K_KINS)
@@ -7542,7 +7559,7 @@ nv_edit(cap)
 		    /* Pretent Insert mode here to allow the cursor on the
 		     * character past the end of the line */
 		    State = INSERT;
-		    coladvance_force((colnr_t)MAXCOL);
+		    coladvance_force((colnr_T)MAXCOL);
 		    State = save_State;
 		}
 		else
@@ -7587,7 +7604,7 @@ nv_edit(cap)
  */
     static void
 nv_object(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     int		flag;
     int		include;
@@ -7658,7 +7675,7 @@ nv_object(cap)
  */
     static void
 nv_record(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (cap->oap->op_type == OP_FORMAT)
     {
@@ -7689,7 +7706,7 @@ nv_record(cap)
  */
     static void
 nv_at(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if (checkclearop(cap->oap))
 	return;
@@ -7716,7 +7733,7 @@ nv_at(cap)
  */
     static void
 nv_halfpage(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     if ((cap->cmdchar == Ctrl_U && curwin->w_cursor.lnum == 1)
 	    || (cap->cmdchar == Ctrl_D
@@ -7731,7 +7748,7 @@ nv_halfpage(cap)
  */
     static void
 nv_join(cap)
-    cmdarg_t *cap;
+    cmdarg_T *cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)	/* join the visual lines */
@@ -7759,11 +7776,11 @@ nv_join(cap)
  */
     static void
 nv_put(cap)
-    cmdarg_t  *cap;
+    cmdarg_T  *cap;
 {
 #ifdef FEAT_VISUAL
-    pos_t	curpos;
-    colnr_t	left, right;
+    pos_T	curpos;
+    colnr_T	left, right;
 #endif
     int		dir;
 
@@ -7820,7 +7837,7 @@ nv_put(cap)
  */
     static void
 nv_open(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)  /* switch start and end of visual */
@@ -7834,7 +7851,7 @@ nv_open(cap)
 /*ARGSUSED*/
     static void
 nv_sniff(cap)
-    cmdarg_t	*cap;
+    cmdarg_T	*cap;
 {
     ProcessSniffRequests();
 }

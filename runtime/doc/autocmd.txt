@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 12
+*autocmd.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -74,7 +74,7 @@ When your .vimrc file is sourced twice, the autocommands will appear twice.
 To avoid this, put this command in your .vimrc file, before defining
 autocommands:
  >
-	:autocmd!	" Remove ALL autocommands.
+	:autocmd!	" Remove ALL autocommands for the current group.
 
 If you don't want to remove all autocommands, you can instead use a variable
 to ensure that Vim includes the autocommands only once:
@@ -94,7 +94,7 @@ While testing autocommands, you might find the 'verbose' option to be useful: >
 This setting makes Vim echo the autocommands as it executes them.
 
 When defining an autocommand in a script, it will be able to call functions
-local to the script and use mappings local the the script.  When the event is
+local to the script and use mappings local to the script.  When the event is
 triggered and the command executed, it will run in the context of the script
 it was defined in.  This matters if |<SID>| is used in a command.
 
@@ -295,8 +295,8 @@ CursorHold			When the user doesn't press a key for the time
 				fire every 'updatetime' ms if you leave Vim to
 				make some coffee. :)  See |CursorHold-example|
 				for previewing tags.
-				Note: Interactive commands and ":normal"
-				cannot be used for this event.
+				Note: Interactive commands cannot be used for
+				this event.
 				Note: In the future there will probably be
 				another option to set the time.
 				Hint: to force an update of the status lines

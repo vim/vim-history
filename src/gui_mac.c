@@ -60,7 +60,7 @@ static short dragRectControl;
 #ifdef USE_CTRLCLICKMENU
 static short clickIsPopup;
 #endif
-garray_t error_ga = {0, 0, 0, 0, NULL};
+garray_T error_ga = {0, 0, 0, 0, NULL};
 
 ControlActionUPP gScrollAction;
 ControlActionUPP gScrollDrag;
@@ -176,7 +176,7 @@ static struct
 };
 
 
-short gui_mac_get_menu_item_index (vimmenu_t *menu, vimmenu_t *parent);
+short gui_mac_get_menu_item_index (vimmenu_T *menu, vimmenu_T *parent);
 GuiFont gui_mac_find_font (char_u *font_name);
 #ifdef USE_AEVENT
 OSErr HandleUnusedParms (AppleEvent *theAEvent);
@@ -189,7 +189,7 @@ pascal OSErr Handle_KAHL_MOD_AE (AppleEvent *theAEvent, AppleEvent *theReply, lo
 pascal OSErr Handle_KAHL_GTTX_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
 pascal OSErr Handle_unknown_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon);
 pascal OSErr FindProcessBySignature ( const OSType targetType, const OSType targetCreator, ProcessSerialNumberPtr psnPtr );
-void Send_KAHL_MOD_AE (buf_t *buf);
+void Send_KAHL_MOD_AE (buf_T *buf);
 OSErr   InstallAEHandlers (void);
 #endif
 
@@ -201,15 +201,15 @@ QDGlobals qd;
 #endif
     short
 gui_mac_get_menu_item_index (pMenu, pElderMenu)
-    vimmenu_t *pMenu;
-    vimmenu_t *pElderMenu;
+    vimmenu_T *pMenu;
+    vimmenu_T *pElderMenu;
 {
     /* pMenu is the one we inquiries */
     /* pElderMenu the menu where we start looking for */
 
     short	itemIndex = -1;
     short	index;
-    vimmenu_t	*pChildren = pElderMenu->children;;
+    vimmenu_T	*pChildren = pElderMenu->children;;
 
     while ((pElderMenu != NULL) && (itemIndex == -1))
     {
@@ -243,14 +243,14 @@ gui_mac_get_menu_item_index (pMenu, pElderMenu)
     return itemIndex;
 }
 
-    static vimmenu_t *
+    static vimmenu_T *
 gui_mac_get_vim_menu (menuID, itemIndex, pMenu)
     short	menuID;
     short	itemIndex;
-    vimmenu_t	*pMenu;
+    vimmenu_T	*pMenu;
 {
     short	index;
-    vimmenu_t	*pChildMenu;
+    vimmenu_T	*pChildMenu;
 
     /* pMenu is the first menu of the level (no next point to it) */
     /* TODO: Help menu would be tricky */
@@ -405,7 +405,7 @@ gui_mac_handle_menu(menuChoice)
 {
     short	menu = HiWord(menuChoice);
     short	item = LoWord(menuChoice);
-    vimmenu_t	*theVimMenu = root_menu;
+    vimmenu_T	*theVimMenu = root_menu;
     MenuHandle	appleMenu;
     Str255	itemName;
 
@@ -436,7 +436,7 @@ gui_mac_drag_thumb (theControl)
     ControlHandle   theControl;
 {
     /* TODO: have live support */
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		value, dragging;
 
     sb = gui_find_scrollbar((long) GetControlReference (theControl));
@@ -452,7 +452,7 @@ gui_mac_drag_thumb (theControl)
 gui_mac_scroll_action (ControlHandle theControl, short partCode)
 {
     /* TODO: have live support */
-    scrollbar_t *sb, *sb_info;
+    scrollbar_T *sb, *sb_info;
     long	data;
     long	value;
     int		page;
@@ -505,7 +505,7 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
 
 /*  if (sb_info->wp != NULL)
     {
-	win_t	*wp;
+	win_T	*wp;
 	int	sb_num;
 
 	sb_num = 0;
@@ -1016,7 +1016,7 @@ hex_digit(c)
  * pretty much taken from example code in the Silicon Graphics OSF/Motif
  * Programmer's Guide.
  */
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(name)
     char_u *name;
 {
@@ -1024,12 +1024,12 @@ gui_mch_get_color(name)
      *	     Add support for the new named colr of MacOS 8\
      */
     RGBColor	MacColor;
-    guicolor_t	color = 0;
+    guicolor_T	color = 0;
 
     typedef struct guicolor_tTable
     {
 	char	    *name;
-	guicolor_t  color;
+	guicolor_T  color;
     } guicolor_tTable;
 
     /*
@@ -1081,7 +1081,7 @@ gui_mch_get_color(name)
 	g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
 	b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
 	if (r < 0 || g < 0 || b < 0)
-	    return (guicolor_t) -1;
+	    return (guicolor_T) -1;
 	return RGB(r, g, b);
     }
     else
@@ -1109,12 +1109,12 @@ gui_mch_get_color(name)
 
 	fname = expand_env_save((char_u *)"$VIMRUNTIME:rgb.txt");
 	if (fname == NULL)
-	    return (guicolor_t)-1;
+	    return (guicolor_T)-1;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return (guicolor_t)-1;
+	    return (guicolor_T)-1;
 
 	while (!feof(fd))
 	{
@@ -1139,7 +1139,7 @@ gui_mch_get_color(name)
 	    if (STRICMP(color, name) == 0)
 	    {
 		fclose(fd);
-		return (guicolor_t) RGB(r,g,b);
+		return (guicolor_T) RGB(r,g,b);
 	    }
 	}
 	fclose(fd);
@@ -1153,7 +1153,7 @@ gui_mch_get_color(name)
  */
     void
 gui_mch_set_fg_color(color)
-    guicolor_t	color;
+    guicolor_T	color;
 {
     RGBColor TheColor;
 
@@ -1169,7 +1169,7 @@ gui_mch_set_fg_color(color)
  */
     void
 gui_mch_set_bg_color(color)
-    guicolor_t	color;
+    guicolor_T	color;
 {
     RGBColor TheColor;
 
@@ -1299,7 +1299,7 @@ gui_mch_iconify()
  */
     void
 gui_mch_draw_hollow_cursor(color)
-    guicolor_t	color;
+    guicolor_T	color;
 {
     Rect rc;
 
@@ -1325,7 +1325,7 @@ gui_mch_draw_hollow_cursor(color)
 gui_mch_draw_part_cursor(w, h, color)
     int		w;
     int		h;
-    guicolor_t	color;
+    guicolor_T	color;
 {
     Rect rc;
 
@@ -1356,7 +1356,7 @@ gui_mac_do_key(EventRecord *theEvent)
     num = 1;
 
     if (theEvent->modifiers & controlKey)
-	if (string[0] == Ctrl_C)
+	if (string[0] == Ctrl_C && ctrl_c_interrupts)
 	    got_int = TRUE;
     if (theEvent->modifiers & cmdKey)
 	if (string[0] == '.')
@@ -2086,7 +2086,7 @@ gui_mch_set_menu_pos(x, y, w, h)
  */
     void
 gui_mch_add_menu(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
     /*
@@ -2097,7 +2097,7 @@ gui_mch_add_menu(menu, idx)
     char_u	*name;
     long	len;
     short	index;
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     if (/* !menu_is_menubar(menu->name)
 	    || */ (parent != NULL && parent->submenu_id == 0))
@@ -2178,12 +2178,12 @@ gui_mch_add_menu(menu, idx)
  */
     void
 gui_mch_add_menu_item(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
     char_u	*name;
     long	len;
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
     if (parent->submenu_id == 0)
 	return;
@@ -2232,11 +2232,11 @@ gui_mch_toggle_tearoffs(enable)
  */
     void
 gui_mch_destroy_menu(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     short	index = gui_mac_get_menu_item_index (menu, root_menu);
 /*
-    vimmenu_t	*brother;
+    vimmenu_T	*brother;
     index = menu->index;
 */
     if (index > 0)
@@ -2282,7 +2282,7 @@ gui_mch_destroy_menu(menu)
  */
     void
 gui_mch_menu_grey(menu, grey)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		grey;
 {
     /* TODO: Check if menu really exists */
@@ -2311,7 +2311,7 @@ gui_mch_menu_grey(menu, grey)
  */
     void
 gui_mch_menu_hidden(menu, hidden)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		hidden;
 {
     /* TODO: Check if menu really exists */
@@ -2351,7 +2351,7 @@ gui_mch_draw_menubar()
 
     void
 gui_mch_enable_scrollbar(sb, flag)
-    scrollbar_t	*sb;
+    scrollbar_T	*sb;
     int		flag;
 {
     if (flag)
@@ -2362,7 +2362,7 @@ gui_mch_enable_scrollbar(sb, flag)
 
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     long	val;
     long	size;
     long	max;
@@ -2374,7 +2374,7 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		x;
     int		y;
     int		w;
@@ -2405,7 +2405,7 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 
     void
 gui_mch_create_scrollbar(sb, orient)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		orient;	/* SBAR_VERT or SBAR_HORIZ */
 {
     Rect bounds;
@@ -2429,7 +2429,7 @@ gui_mch_create_scrollbar(sb, orient)
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(sb)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 {
     gui_mch_set_bg_color(gui.back_pixel);
     DisposeControl (sb->id);
@@ -2494,7 +2494,7 @@ gui_mch_start_blink()
  */
     int
 gui_mch_get_lightness(pixel)
-    guicolor_t	pixel;
+    guicolor_T	pixel;
 {
     return (Red(pixel)*3 + Green(pixel)*6 + Blue(pixel)) / 10;
 }
@@ -2505,7 +2505,7 @@ gui_mch_get_lightness(pixel)
  */
     char_u *
 gui_mch_get_rgb(pixel)
-    guicolor_t	pixel;
+    guicolor_T	pixel;
 {
     static char_u retval[10];
 
@@ -3017,7 +3017,7 @@ struct WindowSearch /* for handling class 'KAHL', event 'SRCH', keyDirectObject 
 pascal OSErr Handle_KAHL_SRCH_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon)
 {
     OSErr	error = noErr;
-    buf_t	*buf;
+    buf_T	*buf;
     int		foundFile = false;
     DescType	typeCode;
     WindowSearch SearchData;
@@ -3113,7 +3113,7 @@ pascal OSErr Handle_KAHL_MOD_AE (AppleEvent *theAEvent, AppleEvent *theReply, lo
     AEDescList	replyList;
     long	numFiles;
     ModificationInfo theFile;
-    buf_t	*buf;
+    buf_T	*buf;
 
     theFile.saved = 0;
 
@@ -3245,7 +3245,7 @@ struct CW_GetText /* for handling class 'KAHL', event 'GTTX', keyDirectObject ty
 pascal OSErr Handle_KAHL_GTTX_AE (AppleEvent *theAEvent, AppleEvent *theReply, long refCon)
 {
     OSErr	error = noErr;
-    buf_t	*buf;
+    buf_T	*buf;
     int		foundFile = false;
     DescType	typeCode;
     CW_GetText	GetTextData;
@@ -3281,7 +3281,7 @@ pascal OSErr Handle_KAHL_GTTX_AE (AppleEvent *theAEvent, AppleEvent *theReply, l
         for (lineno = 0; lineno <= buf->b_ml.ml_line_count; lineno++)
 	{
             /* Must use the right buffer */
-            line = ml_get_buf(buf, (linenr_t) lineno, FALSE);
+            line = ml_get_buf(buf, (linenr_T) lineno, FALSE);
 	    linesize = STRLEN(line) + 1;
 	    lineStart = BufferSize;
 	    BufferSize += linesize;
@@ -3490,7 +3490,7 @@ pascal	OSErr	FindProcessBySignature( const OSType targetType,
     return anErr;
 }//end FindProcessBySignature
 
-void Send_KAHL_MOD_AE (buf_t *buf)
+void Send_KAHL_MOD_AE (buf_T *buf)
 {
     OSErr   anErr = noErr;
     AEDesc  targetAppDesc = { typeNull, nil };
@@ -3679,7 +3679,7 @@ gui_mch_setmouse(x, y)
 
     void
 gui_mch_show_popupmenu(menu)
-    vimmenu_t *menu;
+    vimmenu_T *menu;
 {
 #ifdef USE_CTRLCLICKMENU
 /*
@@ -3719,7 +3719,7 @@ gui_mch_show_popupmenu(menu)
 #endif
 }
 
-void mch_post_buffer_write (buf_t *buf)
+void mch_post_buffer_write (buf_T *buf)
 {
 #ifdef USE_SIOUX
     printf ("Writing Buf...\n");

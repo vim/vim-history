@@ -149,6 +149,11 @@ WinMain(
 
     argv[argc] = (char *) NULL;    /* NULL-terminated list */
 
+#ifdef DYNAMIC_GETTEXT
+    /* Initialize gettext library */
+    dyn_libintl_init(NULL);
+#endif
+
 #ifdef VIMDLL
 	// LoadLibrary - get name of dll to load in here:
 	p = strrchr(prog, '\\');
@@ -206,6 +211,9 @@ errout:
 #endif
 	free(argv);
 	free(pszNewCmdLine);
+#ifdef DYNAMIC_GETTEXT
+	dyn_libintl_end();
+#endif
 
 	return 0;
 }

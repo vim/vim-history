@@ -48,9 +48,9 @@
 static struct yankreg
 {
     char_u	**y_array;	/* pointer to array of line pointers */
-    linenr_t	y_size;		/* number of lines in y_array */
+    linenr_T	y_size;		/* number of lines in y_array */
     char_u	y_type;		/* MLINE, MCHAR or MBLOCK */
-    colnr_t	y_width;	/* only set if y_type == MBLOCK */
+    colnr_T	y_width;	/* only set if y_type == MBLOCK */
 } y_regs[NUM_REGISTERS];
 
 static struct yankreg	*y_current;	    /* ptr to current yankreg */
@@ -67,9 +67,9 @@ struct block_def
     int		endspaces;	/* 'extra' cols of first char */
     int		textlen;	/* chars in block */
     char_u	*textstart;	/* pointer to 1st char in block */
-    colnr_t	textcol;	/* cols of chars (at least part.) in block */
-    colnr_t	start_vcol;	/* start col of 1st char wholly inside block */
-    colnr_t	end_vcol;	/* start col of 1st char wholly after block */
+    colnr_T	textcol;	/* cols of chars (at least part.) in block */
+    colnr_T	start_vcol;	/* start col of 1st char wholly inside block */
+    colnr_T	end_vcol;	/* start col of 1st char wholly after block */
 #ifdef FEAT_VISUALEXTRA
     int		is_short;	/* TRUE if line is too short to fit in block */
     int		is_MAX;		/* TRUE if curswant==MAXCOL when starting */
@@ -77,14 +77,14 @@ struct block_def
     int		is_oneChar;	/* TRUE if block within one character */
     int		pre_whitesp;	/* screen cols of ws before block */
     int		pre_whitesp_c;	/* chars of ws before block */
-    colnr_t	end_char_vcols;	/* number of vcols of post-block char */
+    colnr_T	end_char_vcols;	/* number of vcols of post-block char */
 #endif
-    colnr_t	start_char_vcols; /* number of vcols of pre-block char */
+    colnr_T	start_char_vcols; /* number of vcols of pre-block char */
 };
 
 #ifdef FEAT_VISUALEXTRA
-static void shift_block __ARGS((oparg_t *oap, int amount));
-static void block_insert __ARGS((oparg_t *oap, char_u *s, int b_insert, struct block_def*bdp));
+static void shift_block __ARGS((oparg_T *oap, int amount));
+static void block_insert __ARGS((oparg_T *oap, char_u *s, int b_insert, struct block_def*bdp));
 #endif
 #ifdef FEAT_EVAL
 static char_u	*get_expr_line __ARGS((void));
@@ -96,19 +96,19 @@ static void	stuffescaped __ARGS((char_u *arg, int literally));
 static int	get_spec_reg __ARGS((int regname, char_u **argp, int *allocated, int errmsg));
 static void	cmdline_paste_str __ARGS((char_u *s, int literally));
 #ifdef FEAT_MBYTE
-static void	mb_adjust_opend __ARGS((oparg_t *oap));
+static void	mb_adjust_opend __ARGS((oparg_T *oap));
 #endif
 static void	free_yank __ARGS((long));
 static void	free_yank_all __ARGS((void));
-static void	block_prep __ARGS((oparg_t *oap, struct block_def *, linenr_t, int));
+static void	block_prep __ARGS((oparg_T *oap, struct block_def *, linenr_T, int));
 #if defined(FEAT_CLIPBOARD) || defined(FEAT_EVAL)
 static void	str_to_reg __ARGS((struct yankreg *y_ptr, int type, char_u *str, long len));
 #endif
 #ifdef FEAT_COMMENTS
 static int	same_leader __ARGS((int, char_u *, int, char_u *));
-static int	fmt_check_par __ARGS((linenr_t, int *, char_u **));
+static int	fmt_check_par __ARGS((linenr_T, int *, char_u **));
 #else
-static int	fmt_check_par __ARGS((linenr_t));
+static int	fmt_check_par __ARGS((linenr_T));
 #endif
 
 /*
@@ -205,7 +205,7 @@ get_extra_op_char(optype)
  */
     void
 op_shift(oap, curs_top, amount)
-    oparg_t	    *oap;
+    oparg_T	    *oap;
     int		    curs_top;
     int		    amount;
 {
@@ -214,8 +214,8 @@ op_shift(oap, curs_top, amount)
     int		    block_col = 0;
     char_u	    *s;
 
-    if (u_save((linenr_t)(oap->start.lnum - 1),
-				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return;
 
     if (oap->block_mode)
@@ -350,7 +350,7 @@ shift_line(left, round, amount)
  */
     static void
 shift_block(oap, amount)
-    oparg_t	*oap;
+    oparg_T	*oap;
     int		amount;
 {
     int			left = (oap->op_type == OP_LSHIFT);
@@ -363,7 +363,7 @@ shift_block(oap, amount)
     struct block_def	bd;
     int			internal = 0;
     int			incr;
-    colnr_t		vcol, col = 0, ws_vcol;
+    colnr_T		vcol, col = 0, ws_vcol;
     int			i = 0, j = 0;
     int			len;
 
@@ -402,7 +402,7 @@ shift_block(oap, amount)
 	}
 	for ( ; vim_iswhite(*bd.textstart); )
 	{
-	    incr = lbr_chartabsize_adv(&bd.textstart, (colnr_t)(bd.start_vcol));
+	    incr = lbr_chartabsize_adv(&bd.textstart, (colnr_T)(bd.start_vcol));
 	    total += incr;
 	    bd.start_vcol += incr;
 	}
@@ -434,7 +434,7 @@ shift_block(oap, amount)
 	for (midp = oldp + bd.textcol;
 	      vcol < (oap->start_vcol + total) && vim_iswhite(*midp); )
 	{
-	    incr = lbr_chartabsize_adv(&midp, (colnr_t)vcol);
+	    incr = lbr_chartabsize_adv(&midp, (colnr_T)vcol);
 	    vcol += incr;
 	}
 	/* internal is the block-internal ws replacing a split TAB */
@@ -451,7 +451,7 @@ shift_block(oap, amount)
 	    if (!curbuf->b_p_et)
 	    {
 		for (ptr = oldp, col = 0; ptr < oldp+bd.textcol; )
-		    col += lbr_chartabsize_adv(&ptr, (colnr_t)col);
+		    col += lbr_chartabsize_adv(&ptr, (colnr_T)col);
 
 		/* col+1 now equals the start col of the first char of the
 		 * block (may be < oap.start_vcol if we're splitting a TAB) */
@@ -493,7 +493,7 @@ shift_block(oap, amount)
     }
     /* replace the line */
     ml_replace(curwin->w_cursor.lnum, newp, FALSE);
-    changed_bytes(curwin->w_cursor.lnum, (colnr_t)bd.textcol);
+    changed_bytes(curwin->w_cursor.lnum, (colnr_T)bd.textcol);
     State = oldstate;
     curwin->w_cursor.col = oldcol;
 #ifdef FEAT_RIGHTLEFT
@@ -506,7 +506,7 @@ shift_block(oap, amount)
 /* Insert string s (b_insert ? before : after) block :AKelly */
     static void
 block_insert(oap, s, b_insert, bdp)
-    oparg_t		*oap;
+    oparg_T		*oap;
     char_u		*s;
     int			b_insert;
     struct block_def	*bdp;
@@ -514,10 +514,10 @@ block_insert(oap, s, b_insert, bdp)
     int		p_ts;
     int		count = 0;	/* extra spaces to replace a cut TAB */
     int		spaces = 0;	/* non-zero if cutting a TAB */
-    colnr_t	offset;		/* pointer along new line */
+    colnr_T	offset;		/* pointer along new line */
     unsigned	s_len;		/* STRLEN(s) */
     char_u	*newp, *oldp;	/* new, old lines */
-    linenr_t	lnum;		/* loop var */
+    linenr_T	lnum;		/* loop var */
     int		oldstate = State;
 
     State = INSERT;		/* don't want REPLACE for State */
@@ -611,14 +611,14 @@ block_insert(oap, s, b_insert, bdp)
  */
     void
 op_reindent(oap, how)
-    oparg_t	*oap;
+    oparg_T	*oap;
     int		(*how) __ARGS((void));
 {
     long	i;
     char_u	*l;
     int		count;
-    linenr_t	first_changed = 0;
-    linenr_t	last_changed = 0;
+    linenr_T	first_changed = 0;
+    linenr_T	last_changed = 0;
 
     for (i = oap->line_count; --i >= 0 && !got_int; )
     {
@@ -1361,13 +1361,13 @@ cmdline_paste_str(s, literally)
  */
     int
 op_delete(oap)
-    oparg_t   *oap;
+    oparg_T   *oap;
 {
     int			n;
-    linenr_t		lnum;
+    linenr_T		lnum;
     char_u		*ptr;
     char_u		*newp, *oldp;
-    linenr_t		old_lcount = curbuf->b_ml.ml_line_count;
+    linenr_T		old_lcount = curbuf->b_ml.ml_line_count;
     int			did_yank = FALSE;
     struct block_def	bd;
 
@@ -1380,7 +1380,7 @@ op_delete(oap)
 
 #ifdef FEAT_CLIPBOARD
     /* If no reg. specified, and "unnamed" is in 'clipboard', use '*' reg. */
-    if (oap->regname == 0 && vim_strchr(p_cb, 'd') != NULL)
+    if (oap->regname == 0 && clip_unnamed)
 	oap->regname = '*';
     if (!clip_star.available && oap->regname == '*')
 	oap->regname = 0;
@@ -1495,8 +1495,8 @@ op_delete(oap)
  */
     if (oap->block_mode)
     {
-	if (u_save((linenr_t)(oap->start.lnum - 1),
-			       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+	if (u_save((linenr_T)(oap->start.lnum - 1),
+			       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	    return FAIL;
 
 	for (lnum = curwin->w_cursor.lnum; lnum <= oap->end.lnum; ++lnum)
@@ -1602,7 +1602,7 @@ op_delete(oap)
 	    if (oap->start.col == oap->end.col
 		    && oap->end.coladd < oap->start.coladd)
 	    {
-		colnr_t tmp = oap->start.coladd;
+		colnr_T tmp = oap->start.coladd;
 		oap->start.coladd = oap->end.coladd;
 		oap->end.coladd = tmp;
 
@@ -1691,7 +1691,7 @@ op_delete(oap)
  */
     static void
 mb_adjust_opend(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     char_u	*p;
 
@@ -1709,7 +1709,7 @@ mb_adjust_opend(oap)
  */
     int
 op_replace(oap, c)
-    oparg_t   *oap;
+    oparg_T   *oap;
     int		c;
 {
     int			n;
@@ -1724,8 +1724,8 @@ op_replace(oap, c)
 	mb_adjust_opend(oap);
 #endif
 
-    if (u_save((linenr_t)(oap->start.lnum - 1),
-				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return FAIL;
 
     /*
@@ -1761,7 +1761,7 @@ op_replace(oap, c)
 	    copy_spaces(newp + bd.textcol, (size_t)bd.startspaces);
 	    /* insert replacement chars CHECK FOR ALLOCATED SPACE */
 	    {
-		colnr_t len = oap->end_vcol - oap->start_vcol + 1;
+		colnr_T len = oap->end_vcol - oap->start_vcol + 1;
 
 		if (bd.is_short)
 		    len -= (oap->end_vcol - bd.end_vcol) + 1;
@@ -1837,14 +1837,14 @@ op_replace(oap, c)
  */
     void
 op_tilde(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
-    pos_t		pos;
+    pos_T		pos;
     struct block_def	bd;
     int			did_change = 0;
 
-    if (u_save((linenr_t)(oap->start.lnum - 1),
-				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return;
 
     pos = oap->start;
@@ -1918,7 +1918,7 @@ op_tilde(oap)
     int
 swapchar(op_type, pos)
     int	    op_type;
-    pos_t    *pos;
+    pos_T    *pos;
 {
     int	    c;
     int	    nc;
@@ -1934,14 +1934,14 @@ swapchar(op_type, pos)
 	return FALSE;
 
     nc = c;
-    if (ASCII_ISLOWER(c))
+    if (islower(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'a');
 	else if (op_type != OP_LOWER)
 	    nc = TO_UPPER(c);
     }
-    else if (ASCII_ISUPPER(c))
+    else if (isupper(c))
     {
 	if (op_type == OP_ROT13)
 	    nc = ROT13(c, 'A');
@@ -1962,7 +1962,7 @@ swapchar(op_type, pos)
  */
     void
 op_insert(oap, count1)
-    oparg_t	*oap;
+    oparg_T	*oap;
     long	count1;
 {
     long		ins_len, pre_textlen = 0;
@@ -1970,8 +1970,8 @@ op_insert(oap, count1)
     struct block_def	bd;
     int			i;
 
-    if (u_save((linenr_t)(oap->start.lnum - 1),
-	       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+	       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return;
 
     /* edit() changes this - record it for OP_APPEND */
@@ -2022,7 +2022,7 @@ op_insert(oap, count1)
 	}
     }
 
-    edit(NUL, FALSE, (linenr_t)count1);
+    edit(NUL, FALSE, (linenr_T)count1);
 
     /* if user has moved off this line, we don't know what to do, so do
      * nothing */
@@ -2091,13 +2091,13 @@ op_insert(oap, count1)
  */
     int
 op_change(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
-    colnr_t		l;
+    colnr_T		l;
     int			retval;
 #ifdef FEAT_VISUALEXTRA
     long		offset;
-    linenr_t		linenr;
+    linenr_T		linenr;
     long		ins_len, pre_textlen = 0;
     char_u		*firstline;
     char_u		*ins_text, *newp, *oldp;
@@ -2151,7 +2151,7 @@ op_change(oap)
 	fix_indent();
 #endif
 
-    retval = edit(NUL, FALSE, (linenr_t)1);
+    retval = edit(NUL, FALSE, (linenr_T)1);
 
 #ifdef FEAT_VISUALEXTRA
     /*
@@ -2278,7 +2278,7 @@ free_yank_all()
  */
     int
 op_yank(oap, deleting, mess)
-    oparg_t   *oap;
+    oparg_T   *oap;
     int	    deleting;
     int	    mess;
 {
@@ -2286,12 +2286,12 @@ op_yank(oap, deleting, mess)
     struct yankreg	*curr;		/* copy of y_current */
     struct yankreg	newreg;		/* new yank register when appending */
     char_u		**new_ptr;
-    linenr_t		lnum;		/* current line number */
+    linenr_T		lnum;		/* current line number */
     long		j;
     long		len;
     int			yanktype = oap->motion_type;
     long		yanklines = oap->line_count;
-    linenr_t		yankendlnum = oap->end.lnum;
+    linenr_T		yankendlnum = oap->end.lnum;
     char_u		*p;
     char_u		*pnew;
     struct block_def	bd;
@@ -2508,8 +2508,7 @@ success:
      */
     if (clip_star.available
 	    && (curr == &(y_regs[STAR_REGISTER])
-		|| (!deleting && oap->regname == 0
-					   && vim_strchr(p_cb, 'd') != NULL)))
+		|| (!deleting && oap->regname == 0 && clip_unnamed)))
     {
 	if (curr != &(y_regs[STAR_REGISTER]))
 	{
@@ -2572,25 +2571,25 @@ do_put(regname, dir, count, flags)
     int		yanklen;
     int		oldlen;
     int		totlen = 0;		/* init for gcc */
-    linenr_t	lnum;
-    colnr_t	col;
+    linenr_T	lnum;
+    colnr_T	col;
     long	i;			/* index in y_array[] */
     int		y_type;
     long	y_size;
     long	y_width = 0;
     char_u	**y_array = NULL;
     long	nr_lines = 0;
-    colnr_t	vcol;
+    colnr_T	vcol;
     int		delcount;
     int		incr = 0;
     long	j;
-    pos_t	new_cursor;
+    pos_T	new_cursor;
     int		indent;
     int		orig_indent = 0;	/* init for gcc */
     int		indent_diff = 0;	/* init for gcc */
     int		first_indent = TRUE;
     int		lendiff = 0;
-    pos_t	old_pos;
+    pos_T	old_pos;
     struct block_def bd;
     char_u	*insert_string = NULL;
     int		allocated = FALSE;
@@ -2601,7 +2600,7 @@ do_put(regname, dir, count, flags)
 
 #ifdef FEAT_CLIPBOARD
     /* If no register specified, and "unnamed" in 'clipboard', use + register */
-    if (regname == 0 && vim_strchr(p_cb, 'd') != NULL)
+    if (regname == 0 && clip_unnamed)
 	regname = '*';
     if (regname == '*')
     {
@@ -2799,7 +2798,7 @@ do_put(regname, dir, count, flags)
     if (y_type == MBLOCK)
     {
 	char	c = gchar_cursor();
-	colnr_t	endcol2 = 0;
+	colnr_T	endcol2 = 0;
 
 	if (dir == FORWARD && c != NUL)
 	{
@@ -2858,7 +2857,7 @@ do_put(regname, dir, count, flags)
 	    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 	    {
 		if (ml_append(curbuf->b_ml.ml_line_count, (char_u *)"",
-						   (colnr_t)1, FALSE) == FAIL)
+						   (colnr_T)1, FALSE) == FAIL)
 		    break;
 		++nr_lines;
 	    }
@@ -2868,7 +2867,7 @@ do_put(regname, dir, count, flags)
 	    for (ptr = oldp; vcol < col && *ptr; )
 	    {
 		/* Count a tab for what it's worth (if list mode not on) */
-		incr = lbr_chartabsize_adv(&ptr, (colnr_t)vcol);
+		incr = lbr_chartabsize_adv(&ptr, (colnr_T)vcol);
 		vcol += incr;
 	    }
 	    bd.textcol = ptr - oldp;
@@ -3008,7 +3007,7 @@ do_put(regname, dir, count, flags)
 		mch_memmove(ptr, oldp + col, STRLEN(oldp + col) + 1);
 		ml_replace(lnum, newp, FALSE);
 		/* Put cursor on last putted char. */
-		curwin->w_cursor.col += (colnr_t)(totlen - 1);
+		curwin->w_cursor.col += (colnr_T)(totlen - 1);
 	    }
 	    curbuf->b_op_end = curwin->w_cursor;
 	    /* For "CTRL-O p" in Insert mode, put cursor after last char */
@@ -3040,7 +3039,7 @@ do_put(regname, dir, count, flags)
 		    STRCPY(newp, y_array[y_size - 1]);
 		    STRCAT(newp, ptr);
 		    /* insert second line */
-		    ml_append(lnum, newp, (colnr_t)0, FALSE);
+		    ml_append(lnum, newp, (colnr_T)0, FALSE);
 		    vim_free(newp);
 
 		    oldp = ml_get(lnum);
@@ -3060,7 +3059,7 @@ do_put(regname, dir, count, flags)
 		while (i < y_size)
 		{
 		    if ((y_type != MCHAR || i < y_size - 1)
-			    && ml_append(lnum, y_array[i], (colnr_t)0, FALSE)
+			    && ml_append(lnum, y_array[i], (colnr_T)0, FALSE)
 								      == FAIL)
 			    goto error;
 		    lnum++;
@@ -3114,7 +3113,7 @@ error:
 		}
 	    }
 	    mark_adjust(curbuf->b_op_start.lnum + (y_type == MCHAR),
-					     (linenr_t)MAXLNUM, nr_lines, 0L);
+					     (linenr_T)MAXLNUM, nr_lines, 0L);
 
 	    /* note changed text for displaying and folding */
 	    if (y_type == MCHAR)
@@ -3242,7 +3241,7 @@ get_register_name(num)
  */
     void
 ex_display(eap)
-    exarg_t	*eap;
+    exarg_T	*eap;
 {
     int			i, n;
     long		j;
@@ -3336,7 +3335,7 @@ ex_display(eap)
     if (arg == NULL || vim_strchr(arg, '%') != NULL)
     {
 	char_u	    *fname;
-	linenr_t    dummy;
+	linenr_T    dummy;
 
 	if (buflist_name_nr(0, &fname, &dummy) != FAIL)
 	{
@@ -3406,8 +3405,8 @@ do_do_join(count, insert_space)
     long    count;
     int	    insert_space;
 {
-    if (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
-		    (linenr_t)(curwin->w_cursor.lnum + count)) == FAIL)
+    if (u_save((linenr_T)(curwin->w_cursor.lnum - 1),
+		    (linenr_T)(curwin->w_cursor.lnum + count)) == FAIL)
 	return;
 
     while (--count > 0)
@@ -3447,7 +3446,7 @@ do_join(insert_space)
     int		currsize;	/* size of the current line */
     int		nextsize;	/* size of the next line */
     int		spaces;		/* number of spaces to insert */
-    linenr_t	t;
+    linenr_T	t;
 
     if (curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
 	return FAIL;		/* can't join on last line */
@@ -3462,7 +3461,7 @@ do_join(insert_space)
 	    endcurr2 = *(curr + currsize - 2);
     }
 
-    next = ml_get((linenr_t)(curwin->w_cursor.lnum + 1));
+    next = ml_get((linenr_T)(curwin->w_cursor.lnum + 1));
     spaces = 0;
     if (insert_space)
     {
@@ -3609,7 +3608,7 @@ same_leader(leader1_len, leader1_flags, leader2_len, leader2_flags)
  */
     void
 op_format(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
     long	old_line_count = curbuf->b_ml.ml_line_count;
     int		is_not_par;		/* current line not part of parag. */
@@ -3634,8 +3633,8 @@ op_format(oap)
     int		force_format = FALSE;
     int		max_len;
 
-    if (u_save((linenr_t)(oap->start.lnum - 1),
-				       (linenr_t)(oap->end.lnum + 1)) == FAIL)
+    if (u_save((linenr_T)(oap->start.lnum - 1),
+				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return;
 
 #ifdef FEAT_VISUAL
@@ -3766,7 +3765,7 @@ op_format(oap)
 		    (void)set_indent(get_indent(), SIN_CHANGED);
 
 		/* put cursor on last non-space */
-		coladvance((colnr_t)MAXCOL);
+		coladvance((colnr_T)MAXCOL);
 		while (curwin->w_cursor.col && vim_isspace(gchar_cursor()))
 		    dec_cursor();
 
@@ -3842,7 +3841,7 @@ op_format(oap)
 #ifdef FEAT_COMMENTS
     static int
 fmt_check_par(lnum, leader_len, leader_flags)
-    linenr_t	lnum;
+    linenr_T	lnum;
     int		*leader_len;
     char_u	**leader_flags;
 {
@@ -3862,16 +3861,16 @@ fmt_check_par(lnum, leader_len, leader_flags)
 	    ++flags;
     }
 
-    return (ptr[*leader_len] == NUL
+    return (*skipwhite(ptr + *leader_len) == NUL
 	    || (*leader_len > 0 && *flags == COM_END)
 	    || startPS(lnum, NUL, FALSE));
 }
 #else
     static int
 fmt_check_par(lnum)
-    linenr_t	lnum;
+    linenr_T	lnum;
 {
-    return (*ml_get(lnum) == NUL || startPS(lnum, NUL, FALSE));
+    return (*skipwhite(ml_get(lnum)) == NUL || startPS(lnum, NUL, FALSE));
 }
 #endif
 
@@ -3889,9 +3888,9 @@ fmt_check_par(lnum)
  */
     static void
 block_prep(oap, bdp, lnum, is_del)
-    oparg_t		*oap;
+    oparg_T		*oap;
     struct block_def	*bdp;
-    linenr_t		lnum;
+    linenr_T		lnum;
     int			is_del;
 {
     int		incr = 0;
@@ -3919,7 +3918,7 @@ block_prep(oap, bdp, lnum, is_del)
     while (bdp->start_vcol < oap->start_vcol && *pstart)
     {
 	/* Count a tab for what it's worth (if list mode not on) */
-	incr = lbr_chartabsize(pstart, (colnr_t)bdp->start_vcol);
+	incr = lbr_chartabsize(pstart, (colnr_T)bdp->start_vcol);
 	bdp->start_vcol += incr;
 #ifdef FEAT_VISUALEXTRA
 	if (vim_iswhite(*pstart))
@@ -3992,7 +3991,7 @@ block_prep(oap, bdp, lnum, is_del)
 	    {
 		/* Count a tab for what it's worth (if list mode not on) */
 		prev_pend = pend;
-		incr = lbr_chartabsize_adv(&pend, (colnr_t)bdp->end_vcol);
+		incr = lbr_chartabsize_adv(&pend, (colnr_T)bdp->end_vcol);
 		bdp->end_vcol += incr;
 	    }
 	    if (bdp->end_vcol <= oap->end_vcol
@@ -4064,10 +4063,10 @@ reverse_line(s)
     int
 do_addsub(command, Prenum1)
     int		command;
-    linenr_t	Prenum1;
+    linenr_T	Prenum1;
 {
     int		col;
-    char_u	buf1[NUMBUFLEN];
+    char_u	*buf1;
     char_u	buf2[NUMBUFLEN];
     int		hex;		/* 'X' or 'x': hex; '0': octal */
     static int	hexupper = FALSE;	/* 0xABC */
@@ -4271,7 +4270,12 @@ do_addsub(command, Prenum1)
 
 	/*
 	 * Prepare the leading characters in buf1[].
+	 * When there are many leading zeros it could be very long.  Allocate
+	 * a bit too much.
 	 */
+	buf1 = alloc((unsigned)length + NUMBUFLEN);
+	if (buf1 == NULL)
+	    return FAIL;
 	ptr = buf1;
 	if (negative)
 	{
@@ -4311,6 +4315,7 @@ do_addsub(command, Prenum1)
 	*ptr = NUL;
 	STRCAT(buf1, buf2);
 	ins_str(buf1);		/* insert the new number */
+	vim_free(buf1);
     }
     --curwin->w_cursor.col;
     curwin->w_set_curswant = TRUE;
@@ -4324,7 +4329,7 @@ do_addsub(command, Prenum1)
 #ifdef FEAT_VIMINFO
     int
 read_viminfo_register(virp, force)
-    vir_t	*virp;
+    vir_T	*virp;
     int		force;
 {
     int		eof;
@@ -4564,15 +4569,15 @@ clip_get_selection(cbd)
     VimClipboard	*cbd;
 {
     struct yankreg *old_y_previous, *old_y_current;
-    pos_t	old_cursor;
+    pos_T	old_cursor;
 #ifdef FEAT_VISUAL
-    pos_t	old_visual;
+    pos_T	old_visual;
     int		old_visual_mode;
 #endif
-    colnr_t	old_curswant;
+    colnr_T	old_curswant;
     int		old_set_curswant;
-    oparg_t	oa;
-    cmdarg_t	ca;
+    oparg_T	oa;
+    cmdarg_T	ca;
 
     if (cbd->owned)
     {
@@ -4976,9 +4981,9 @@ str_to_reg(y_ptr, type, str, len)
 
     void
 clear_oparg(oap)
-    oparg_t	*oap;
+    oparg_T	*oap;
 {
-    vim_memset(oap, 0, sizeof(oparg_t));
+    vim_memset(oap, 0, sizeof(oparg_T));
 }
 
 static long	line_count_info __ARGS((char_u *line, long *wc, long limit, int eol_size));
@@ -5042,7 +5047,7 @@ cursor_pos_info()
     char_u	*p;
     char_u	buf1[20];
     char_u	buf2[20];
-    linenr_t	lnum;
+    linenr_T	lnum;
     long	char_count = 0;
     long	char_count_cursor = 0;
     int		eol_size;
@@ -5051,8 +5056,8 @@ cursor_pos_info()
     long	word_count_cursor = 0;
 #ifdef FEAT_VISUAL
     long	line_count_selected = 0;
-    pos_t	min_pos, max_pos;
-    oparg_t	oparg;
+    pos_T	min_pos, max_pos;
+    oparg_T	oparg;
     struct block_def	bd;
 #endif
 
@@ -5127,13 +5132,13 @@ cursor_pos_info()
 			break;
 		    case 'V':
 			char_count_cursor += line_count_info(ml_get(lnum),
-				&word_count_cursor, MAXCOL, eol_size);
+				&word_count_cursor, (long)MAXCOL, eol_size);
 			break;
 		    case 'v':
 			{
-			    colnr_t start_col = (lnum == min_pos.lnum)
+			    colnr_T start_col = (lnum == min_pos.lnum)
 							   ? min_pos.col : 0;
-			    colnr_t end_col = (lnum == max_pos.lnum)
+			    colnr_T end_col = (lnum == max_pos.lnum)
 				      ? max_pos.col - start_col + 1 : MAXCOL;
 
 			    char_count_cursor +=
@@ -5156,8 +5161,8 @@ cursor_pos_info()
 		}
 	    }
 	    /* Add to the running totals */
-	    char_count += line_count_info(ml_get(lnum), &word_count, MAXCOL,
-								    eol_size);
+	    char_count += line_count_info(ml_get(lnum), &word_count,
+						      (long)MAXCOL, eol_size);
 	}
 
 	/* Correction for when last line doesn't have an EOL. */

@@ -1,4 +1,4 @@
-*vi_diff.txt*   For Vim version 6.0aa.  Last change: 2001 Mar 29
+*vi_diff.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -828,6 +828,8 @@ Only Vim is able to accept options in between and after the file names.
 -x		Vi, Vim: Ask for encryption key.  See |encryption|.
 
 -X		Vim: Don't connect to the X server.
+
+-y		Vim: Start in easy mode, like |evim|.
 
 -Z		Vim: restricted mode
 

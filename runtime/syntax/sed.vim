@@ -1,7 +1,10 @@
 " Vim syntax file
 " Language:	sed
-" Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last Change:	2001 Jan 15
+" Maintainer:	Haakon Riiser <haakon@riiser.net>
+" Last Change:	2001 Apr 16
+"
+" Special thanks go to Preben "Peppe" Guldberg for a lot of help, and, in
+" particular, his clever way of matching the substitute command.
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -10,13 +13,15 @@ endif
 
 syn match sedError	"\S"
 
+syn match sedWhitespace "\s\+" contained
 syn match sedSemicolon	";"
 syn match sedAddress	"[[:digit:]$]"
 syn match sedAddress	"\d\+\~\d\+"
-syn region sedAddress	matchgroup=Special start="/\(\\/\)\=" skip="[^\\]\(\\\\\)*\\/" end="/I\=" contains=sedTab,sedRegexpMeta
+syn region sedAddress   matchgroup=Special start="[{,;]\s*/\(\\/\)\="lc=1 skip="[^\\]\(\\\\\)*\\/" end="/I\=" contains=sedTab,sedRegexpMeta
+syn region sedAddress   matchgroup=Special start="^\s*/\(\\/\)\=" skip="[^\\]\(\\\\\)*\\/" end="/I\=" contains=sedTab,sedRegexpMeta
 syn match sedComment	"^\s*#.*$"
-syn match sedFunction	"[dDgGhHlnNpPqx=]\($\|;\)" contains=sedSemicolon
-syn match sedLabel	"^\s*:.*$"
+syn match sedFunction	"[dDgGhHlnNpPqx=]\s*\($\|;\)" contains=sedSemicolon,sedWhitespace
+syn match sedLabel	":[^;]*"
 syn match sedLineCont	"^\(\\\\\)*\\$" contained
 syn match sedLineCont	"[^\\]\(\\\\\)*\\$"ms=e contained
 syn match sedSpecial	"[{},!]"
@@ -27,12 +32,12 @@ endif
 " Append/Change/Insert
 syn region sedACI	matchgroup=sedFunction start="[aci]\\$" matchgroup=NONE end="^.*$" contains=sedLineCont,sedTab
 
-syn region sedBranch	matchgroup=sedFunction start="[bt]" end="$"
-syn region sedRW	matchgroup=sedFunction start="[rw]" end="$"
+syn region sedBranch	matchgroup=sedFunction start="[bt]" matchgroup=sedSemicolon end=";\|$" contains=sedWhitespace
+syn region sedRW	matchgroup=sedFunction start="[rw]" matchgroup=sedSemicolon end=";\|$" contains=sedWhitespace
 
 " Substitution/transform with various delimiters
-syn region sedFlagwrite	    matchgroup=sedFlag start="w" end="$" contained
-syn match sedFlag	    "[[:digit:]gpI]*\(;\|$\|w\)" contains=sedFlagwrite,sedSemicolon contained
+syn region sedFlagwrite	    matchgroup=sedFlag start="w" matchgroup=sedSemicolon end=";\|$" contains=sedWhitespace contained
+syn match sedFlag	    "[[:digit:]gpI]*w\=" contains=sedFlagwrite contained
 syn match sedRegexpMeta	    "[.*^$]" contained
 syn match sedRegexpMeta	    "\\." contains=sedTab contained
 syn match sedRegexpMeta	    "\[.\{-}\]" contains=sedTab contained
@@ -44,7 +49,7 @@ syn match sedReplaceMeta    "&\|\\\($\|.\)" contains=sedTab contained
 " @ is used as delimiter and treated on its own below
 let __at = char2nr("@")
 let __sed_i = char2nr(" ")
-if(has("ebcdic"))
+if has("ebcdic")
     let __sed_last = 255
 else
     let __sed_last = 126
@@ -69,7 +74,6 @@ syn region sedReplacement64 matchgroup=Special start=+@\(\\\\\|\\@\)*+ skip=+[^\
 " (y) does not allow any flags.  To save memory, I ignore this problem.
 syn match sedST	"[sy]" nextgroup=sedRegexp\d\+
 
-" The default highlighting.
 hi def link sedAddress		Macro
 hi def link sedACI		NONE
 hi def link sedBranch		Label
@@ -88,14 +92,15 @@ hi def link sedRW		Constant
 hi def link sedSemicolon	Special
 hi def link sedST		Function
 hi def link sedSpecial		Special
+hi def link sedWhitespace	NONE
 if exists("highlight_sedtabs")
-  hi def link sedTab		Todo
+    hi def link sedTab		Todo
 endif
 let __sed_i = 32
 while __sed_i <= 126
-  exe "hi def link sedRegexp".__sed_i		"Macro"
-  exe "hi def link sedReplacement".__sed_i	"NONE"
-  let __sed_i = __sed_i + 1
+    exe "hi def link sedRegexp".__sed_i		"Macro"
+    exe "hi def link sedReplacement".__sed_i	"NONE"
+    let __sed_i = __sed_i + 1
 endwhile
 
 unlet __sed_i __sed_delimiter __sed_metacharacters

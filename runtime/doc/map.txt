@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 6.0aa.  Last change: 2001 Mar 17
+*map.txt*       For Vim version 6.0ab.  Last change: 2001 Apr 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -196,6 +196,18 @@ separately.  The state for Insert mode is also used when typing a character as
 an argument to command like "f" or "t".
 When adding a ":lmap" mapping the use of these mappings in Insert mode and for
 Search patterns will be switched on.
+
+							*map-multibyte*
+It is possible to map multibyte characters, but only the whole character.  You
+cannot map the first byte only.  This was done to prevent problems in this
+scenario: >
+	:set encoding=latin1
+	:imap <M-C> foo
+	:set encoding=utf-8
+The mapping for <M-C> is defined with the latin1 encoding, resulting in a 0xc3
+byte.  If you type the character á (0xea <M-a>) in UTF-8 encoding this is the
+two bytes 0xc3 0xa1.  You don't want the 0xc3 byte to be mapped then,
+otherwise it would be impossible to type the á character.
 
 							*map-listing*
 When listing mappings the characters in the first two columns are:

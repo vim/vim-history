@@ -52,7 +52,7 @@ char_u *mch_getenv __ARGS((char_u *lognam));
 int mch_setenv __ARGS((char *var, char *value, int x));
 long mch_getperm __ARGS((char_u *name));
 int mch_input_isatty __ARGS((void));
-int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
+int mch_expandpath __ARGS((garray_T *gap, char_u *path, int flags));
 void *vms_fixfilename __ARGS((void *instring));
 void *vms_remove_version __ARGS((void *fname));
 /* vim: set ft=c : */

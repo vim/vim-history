@@ -1,9 +1,9 @@
 "=============================================================================
-" File : explorer.vim
-" Author : M A Aziz Ahmed (aziz@123india.com)
-" Additions by Mark Waggoner (waggoner@aracnet.com)
-" Last update : Wed Jan 11 2001
-" Version : 2.3
+" File: explorer.vim
+" Author: M A Aziz Ahmed (aziz@123india.com)
+" Last Change: 2001 Apr 12
+" Version: 2.3
+" Additions by Mark Waggoner (waggoner@aracnet.com) et al.
 "-----------------------------------------------------------------------------
 " This file implements a file explorer. Latest version available at:
 " http://www.freespeech.org/aziz/vim/
@@ -158,18 +158,22 @@ let s:separator='"---------------------------------------------------'
 " Create commands
 
 if !exists(':Explore')
-  command Explore :call s:StartExplorer(0)
+  command -n=? -complete=dir Explore :call s:StartExplorer(0, '<a>')
 endif
 if !exists(':Sexplore')
-  command Sexplore :call s:StartExplorer(1)
+  command -n=? -complete=dir Sexplore :call s:StartExplorer(1, '<a>')
 endif
 
 "---
 " Start the explorer using the preferences from the global variables
 "
-function! s:StartExplorer(split)
+function! s:StartExplorer(split, start_dir)
   let startcmd = "edit"
-  let fname = expand("%:p:h")
+  if a:start_dir != ""
+    let fname=a:start_dir
+  else
+    let fname = expand("%:p:h")
+  endif
   if fname == ""
     let fname = getcwd()
   endif

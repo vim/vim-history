@@ -130,7 +130,7 @@ static WORD		s_dlgfntwidth;		/* width of the dialog font */
 static HMENU		s_menuBar = NULL;
 #endif
 #ifdef FEAT_TEAROFF
-static void rebuild_tearoff(vimmenu_t *menu);
+static void rebuild_tearoff(vimmenu_T *menu);
 static HBITMAP	s_htearbitmap;	    /* bitmap used to indicate tearoff */
 #endif
 
@@ -146,7 +146,7 @@ static FINDREPLACE	s_findrep_struct;
 #endif
 
 static HINSTANCE	s_hinst = NULL;
-static HWND		s_hwnd = NULL;
+HWND			s_hwnd = NULL;
 static HDC		s_hdc = NULL;
 static HBRUSH	s_brush = NULL;
 
@@ -511,7 +511,7 @@ _OnChar(
     char_u	string[40];
 
     string[0] = ch;
-    if (string[0] == Ctrl_C && !mapped_ctrl_c)
+    if (string[0] == Ctrl_C && ctrl_c_interrupts)
     {
 	trash_input_buf();
 	got_int = TRUE;
@@ -773,14 +773,14 @@ _OnMouseMoveOrRelease(
 }
 #ifdef FEAT_MENU
 /*
- * Find the vimmenu_t with the given id
+ * Find the vimmenu_T with the given id
  */
-    static vimmenu_t *
+    static vimmenu_T *
 gui_mswin_find_menu(
-    vimmenu_t	*pMenu,
+    vimmenu_T	*pMenu,
     int		id)
 {
-    vimmenu_t	*pChildMenu;
+    vimmenu_T	*pChildMenu;
 
     while (pMenu)
     {
@@ -807,7 +807,7 @@ _OnMenu(
     HWND	hwndCtl,
     UINT	codeNotify)
 {
-    vimmenu_t	*pMenu;
+    vimmenu_T	*pMenu;
 
     pMenu = gui_mswin_find_menu(root_menu, id);
     if (pMenu)
@@ -1102,7 +1102,7 @@ gui_mch_set_text_area_pos(int x, int y, int w, int h)
 
     void
 gui_mch_enable_scrollbar(
-    scrollbar_t     *sb,
+    scrollbar_T     *sb,
     int		    flag)
 {
     ShowScrollBar(sb->id, SB_CTL, flag);
@@ -1114,7 +1114,7 @@ gui_mch_enable_scrollbar(
 
     void
 gui_mch_set_scrollbar_pos(
-    scrollbar_t *sb,
+    scrollbar_T *sb,
     int		x,
     int		y,
     int		w,
@@ -1125,7 +1125,7 @@ gui_mch_set_scrollbar_pos(
 
     void
 gui_mch_create_scrollbar(
-    scrollbar_t *sb,
+    scrollbar_T *sb,
     int		orient)	/* SBAR_VERT or SBAR_HORIZ */
 {
     sb->id = CreateWindow(
@@ -1140,18 +1140,14 @@ gui_mch_create_scrollbar(
 /*
  * Find the scrollbar with the given hwnd.
  */
-	 static scrollbar_t *
+	 static scrollbar_T *
 gui_mswin_find_scrollbar(HWND hwnd)
 {
-    win_t	*wp;
+    win_T	*wp;
 
     if (gui.bottom_sbar.id == hwnd)
 	return &gui.bottom_sbar;
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
+    FOR_ALL_WINDOWS(wp)
     {
 	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
 	    return &wp->w_scrollbars[SBAR_LEFT];
@@ -1514,7 +1510,7 @@ hex_digit(int c)
  * Return the Pixel value (color) for the given color name.
  * Return -1 for error.
  */
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(char_u *name)
 {
     typedef struct guicolor_tTable
@@ -1614,7 +1610,7 @@ gui_mch_get_color(char_u *name)
 	g = hex_digit(name[3]) * 16 + hex_digit(name[4]);
 	b = hex_digit(name[5]) * 16 + hex_digit(name[6]);
 	if (r < 0 || g < 0 || b < 0)
-	    return (guicolor_t)-1;
+	    return (guicolor_T)-1;
 	return RGB(r, g, b);
     }
     else
@@ -1643,12 +1639,12 @@ gui_mch_get_color(char_u *name)
 
 	fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
 	if (fname == NULL)
-	    return (guicolor_t)-1;
+	    return (guicolor_T)-1;
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return (guicolor_t)-1;
+	    return (guicolor_T)-1;
 
 	while (!feof(fd))
 	{
@@ -1673,14 +1669,14 @@ gui_mch_get_color(char_u *name)
 	    if (STRICMP(color, name) == 0)
 	    {
 		fclose(fd);
-		return (guicolor_t) RGB(r, g, b);
+		return (guicolor_T) RGB(r, g, b);
 	    }
 	}
 
 	fclose(fd);
     }
 
-    return (guicolor_t)-1;
+    return (guicolor_T)-1;
 }
 /*
  * Return OK if the key with the termcap name "name" is supported.
@@ -1736,7 +1732,7 @@ gui_mch_iconify(void)
  * Draw a cursor without focus.
  */
     void
-gui_mch_draw_hollow_cursor(guicolor_t color)
+gui_mch_draw_hollow_cursor(guicolor_T color)
 {
     HBRUSH  hbr;
     RECT    rc;
@@ -1764,7 +1760,7 @@ gui_mch_draw_hollow_cursor(guicolor_t color)
 gui_mch_draw_part_cursor(
     int		w,
     int		h,
-    guicolor_t	color)
+    guicolor_T	color)
 {
     HBRUSH	hbr;
     RECT	rc;
@@ -2154,7 +2150,7 @@ gui_mch_set_menu_pos(
  */
     void
 gui_mch_menu_hidden(
-    vimmenu_t	*menu,
+    vimmenu_T	*menu,
     int		hidden)
 {
     /*
@@ -2199,7 +2195,7 @@ SaveInst(HINSTANCE hInst)
  */
     int
 gui_mch_get_lightness(pixel)
-    guicolor_t	pixel;
+    guicolor_T	pixel;
 {
     return (GetRValue(pixel)*3 + GetGValue(pixel)*6 + GetBValue(pixel)) / 10;
 }
@@ -2210,7 +2206,7 @@ gui_mch_get_lightness(pixel)
  */
     char_u *
 gui_mch_get_rgb(
-    guicolor_t	pixel)
+    guicolor_T	pixel)
 {
     static char_u retval[10];
 
@@ -2356,7 +2352,7 @@ static const char_u *BuiltInBitmaps[] =
 #endif /* FEAT_TOOLBAR */
 
     void
-gui_simulate_alt_key(exarg_t *eap)
+gui_simulate_alt_key(exarg_T *eap)
 {
     char_u *keys = eap->arg;
 
@@ -2396,7 +2392,7 @@ initialise_findrep(char_u *initial_string)
 #endif
 
     void
-gui_mch_find_dialog(exarg_t *eap)
+gui_mch_find_dialog(exarg_T *eap)
 {
 #ifdef MSWIN_FIND_REPLACE
     if (s_findrep_msg != 0)
@@ -2411,7 +2407,7 @@ gui_mch_find_dialog(exarg_t *eap)
 	}
 
 	(void)SetWindowText(s_findrep_hwnd,
-			 (LPCSTR) "Find string (use '\\\\' to find  a '\\')");
+		       (LPCSTR)_("Find string (use '\\\\' to find  a '\\')"));
 	(void)SetFocus(s_findrep_hwnd);
 
 	s_findrep_is_find = TRUE;
@@ -2421,7 +2417,7 @@ gui_mch_find_dialog(exarg_t *eap)
 
 
     void
-gui_mch_replace_dialog(exarg_t *eap)
+gui_mch_replace_dialog(exarg_T *eap)
 {
 #ifdef MSWIN_FIND_REPLACE
     if (s_findrep_msg != 0)
@@ -2436,7 +2432,7 @@ gui_mch_replace_dialog(exarg_t *eap)
 	}
 
 	(void)SetWindowText(s_findrep_hwnd,
-		      (LPCSTR) "Find & Replace (use '\\\\' to find  a '\\')");
+		    (LPCSTR)_("Find & Replace (use '\\\\' to find  a '\\')"));
 	(void)SetFocus(s_findrep_hwnd);
 
 	s_findrep_is_find = FALSE;
@@ -2459,7 +2455,7 @@ gui_mch_mousehide(int hide)
 }
 
     static void
-gui_mch_show_popupmenu_at(vimmenu_t *menu, int x, int y)
+gui_mch_show_popupmenu_at(vimmenu_T *menu, int x, int y)
 {
     (void)TrackPopupMenu(
 	(HMENU)menu->submenu_id,
@@ -2588,20 +2584,12 @@ _OnActivateApp(
     BOOL fActivate,
     DWORD dwThreadId)
 {
-    /* When activated: Check if any file was modified outside of Vim. */
-    if (fActivate)
-	check_timestamps(TRUE);
-
-#ifdef FEAT_AUTOCMD
-    /* In any case, fire the appropriate autocommand */
-    apply_autocmds(fActivate ? EVENT_FOCUSGAINED : EVENT_FOCUSLOST,
-						   NULL, NULL, FALSE, curbuf);
-#endif
-     return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
+    gui_focus_change((int)fActivate);
+    return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
 }
 
     static BOOL
-_OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
+_OnCreate(HWND hwnd, LPCREATESTRUCT lpcs)
 {
 #ifdef FEAT_MBYTE
     /* get system fixed font size*/
@@ -2631,7 +2619,7 @@ _OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
+gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
     DestroyWindow(sb->id);
 }
@@ -2981,7 +2969,14 @@ mch_set_mouse_shape(int shape)
 	SetClassWord(s_textArea, GCW_HCURSOR, LoadCursor(NULL, idc));
 #endif
 	if (!p_mh)
+	{
+	    POINT mp;
+
+	    /* Set the position to make it redrawn with the new shape. */
+	    (void)GetCursorPos((LPPOINT)&mp);
+	    (void)SetCursorPos(mp.x, mp.y);
 	    ShowCursor(TRUE);
+	}
     }
 }
 #endif

@@ -5,7 +5,10 @@ blink.c:	C program to make the cursor blink in an xterm.
 ccfilter*:	C program to filter the output of a few compilers to a common
 		QuickFix format.
 
-efm_filter.*:	Perl script to filter error messages to QuickFix format.
+efm_filter.*:	Perl script to filter compiler messages to QuickFix format.
+
+efm_perl.pl:	Perl script to filter error messages from the Perl interpreter
+		for use with Vim quickfix mode.
 
 gvimdiff:	Shell script for side-by-side comparing files with
 		highlighting.  Requires sdiff, gvim and a wide screen.

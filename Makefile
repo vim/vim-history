@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0aa
+MINOR = 0ab
 
 # CHECKLIST for creating a new version:
 #
@@ -575,6 +575,7 @@ RT_ALL =	\
 		runtime/menu.vim \
 		runtime/delmenu.vim \
 		runtime/mswin.vim \
+		runtime/evim.vim \
 		runtime/optwin.vim \
 		runtime/plugin/*.vim \
 		runtime/plugin/README.txt \

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0aa.  Last change: 2001 Mar 30
+*eval.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -718,6 +718,7 @@ cscope_connection( [{num} , {dbpath} [, {prepend}]])
 delete( {fname})		Number	delete file {fname}
 did_filetype()			Number	TRUE if FileType autocommand event used
 escape( {string}, {chars})	String	escape {chars} in {string} with '\'
+eventhandler( )			Number  TRUE if inside an event handler
 executable( {expr})		Number	1 if executable {expr} exists
 exists( {var})			Number	TRUE if {var} exists
 expand( {expr})			String	expand special keywords in {expr}
@@ -1045,6 +1046,11 @@ escape({string}, {chars})				*escape()*
 <		results in: >
 			c:\\program\ files\\vim
 <
+eventhandler()						*eventhandler()*
+		Returns 1 when inside an event handler.  This means
+		interactive commands cannot be used.  Otherwise zero is
+		returned.
+
 executable({expr})					*executable()*
 		This function checks if an executable with the name {expr}
 		exists.  {expr} must be the name of the program without any
@@ -1847,6 +1853,8 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 		to be found.  Note that single-quote strings are used to avoid
 		having to double the backslashes.  The skip expression only
 		catches comments at the start of a line, not after a command.
+		Also, a word "en" or "if" halfway a line is considered a
+		match.
 		Another example, to search for the matching "{" of a "}": >
 
 	:echo searchpair('{', '', '}', 'bW')

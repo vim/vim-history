@@ -28,7 +28,7 @@
 }
 
 
-static int	    cs_add __ARGS((exarg_t *eap));
+static int	    cs_add __ARGS((exarg_T *eap));
 static int	    cs_add_common __ARGS((char *, char *, char *));
 static int	    cs_check_for_connections __ARGS((void));
 static int	    cs_check_for_tags __ARGS((void));
@@ -36,16 +36,16 @@ static int	    cs_cnt_connections __ARGS((void));
 static int	    cs_cnt_matches __ARGS((int idx));
 static char *	    cs_create_cmd __ARGS((char *csoption, char *pattern));
 static int	    cs_create_connection __ARGS((int i));
-static int	    cs_find __ARGS((exarg_t *eap));
+static int	    cs_find __ARGS((exarg_T *eap));
 static int	    cs_find_common __ARGS((char *opt, char *pat, int, int ));
-static int	    cs_help __ARGS((exarg_t *eap));
+static int	    cs_help __ARGS((exarg_T *eap));
 static void	    cs_init __ARGS((void));
 static void	    clear_csinfo __ARGS((int i));
 static int	    cs_insert_filelist __ARGS((char *, char *, char *,
 			struct stat *));
-static int	    cs_kill __ARGS((exarg_t *eap));
+static int	    cs_kill __ARGS((exarg_T *eap));
 static void	    cs_kill_execute __ARGS((int, char *, char *));
-static cscmd_t *    cs_lookup_cmd __ARGS((exarg_t *eap));
+static cscmd_T *    cs_lookup_cmd __ARGS((exarg_T *eap));
 static char *	    cs_make_vim_style_matches __ARGS((char *, char *,
 			char *, char *));
 static char *	    cs_manage_matches __ARGS((char **, char **, int, mcmd_e));
@@ -55,13 +55,13 @@ static char *	    cs_pathcomponents __ARGS((char *path));
 static void	    cs_print_tags_priv __ARGS((char **, char **, int));
 static int	    cs_read_prompt __ARGS((int ));
 static void	    cs_release_csp __ARGS((int, int freefnpp));
-static int	    cs_reset __ARGS((exarg_t *eap));
+static int	    cs_reset __ARGS((exarg_T *eap));
 static char *	    cs_resolve_file __ARGS((int, char *));
-static int	    cs_show __ARGS((exarg_t *eap));
+static int	    cs_show __ARGS((exarg_T *eap));
 
 
-static csinfo_t	    csinfo[CSCOPE_MAX_CONNECTIONS];
-static cscmd_t	    cs_cmds[] =
+static csinfo_T	    csinfo[CSCOPE_MAX_CONNECTIONS];
+static cscmd_T	    cs_cmds[] =
 {
     { "add",	cs_add,
 		N_("Add a new database"),     "add file|dir [pre-path] [flags]" },
@@ -92,9 +92,9 @@ static cscmd_t	    cs_cmds[] =
  */
     void
 do_cscope(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
-    cscmd_t *cmdp;
+    cscmd_T *cmdp;
 
     cs_init();
     if ((cmdp = cs_lookup_cmd(eap)) == NULL)
@@ -113,7 +113,7 @@ do_cscope(eap)
  */
     void
 do_cstag(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     int ret = FALSE;
 
@@ -334,7 +334,7 @@ cs_connection(num, dbpath, ppath)
 /* ARGSUSED */
     static int
 cs_add(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char *fname, *ppath, *flags = NULL;
 
@@ -775,7 +775,7 @@ err:
  */
     static int
 cs_find(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char *opt, *pat;
 
@@ -891,10 +891,10 @@ cs_find_common(opt, pat, forceit, verbose)
 /* ARGSUSED */
     static int
 cs_help(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char buf[MAXPATHL];
-    cscmd_t *cmdp = cs_cmds;
+    cscmd_T *cmdp = cs_cmds;
 
     (void)MSG_PUTS(_("cscope commands:\n"));
     while (cmdp->name != NULL)
@@ -922,7 +922,7 @@ cs_help(eap)
 cs_init()
 {
     short i;
-    static bool_t init_already = FALSE;
+    static int init_already = FALSE;
 
     if (init_already)
 	return;
@@ -1025,11 +1025,11 @@ cs_insert_filelist(fname, ppath, flags, sb)
  *
  * find cscope command in command table
  */
-    static cscmd_t *
+    static cscmd_T *
 cs_lookup_cmd(exp)
-    exarg_t *exp;
+    exarg_T *exp;
 {
-    cscmd_t *cmdp;
+    cscmd_T *cmdp;
     char *stok;
     size_t len;
 
@@ -1057,7 +1057,7 @@ cs_lookup_cmd(exp)
 /* ARGSUSED */
     static int
 cs_kill(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char *stok, *printbuf = NULL;
     short i;
@@ -1437,10 +1437,10 @@ cs_print_tags_priv(matches, cntxts, num_matches)
     char **cntxts;
     int num_matches;
 {
-    char buf[1024]; /* hope that 1024 is enough, else we need to malloc */
-    char *fname, *lno, *extra, *tbuf;
-    int i, j, idx, num;
-    bool_t *in_cur_file;
+    char	buf[1024]; /* hope that 1024 is enough, else we need malloc */
+    char	*fname, *lno, *extra, *tbuf;
+    int		i, j, idx, num;
+    char_u	*in_cur_file;
 
     assert (num_matches > 0);
 
@@ -1466,7 +1466,7 @@ cs_print_tags_priv(matches, cntxts, num_matches)
      * print all tags in the current file before any other tags.  this idea
      * was suggested by Jeffrey George <jgeorge@texas.net>
      */
-    in_cur_file = (bool_t *)alloc_clear(num_matches * sizeof(bool_t));
+    in_cur_file = alloc_clear(num_matches);
     if (in_cur_file != NULL)
     {
 	if (curbuf->b_fname != NULL)
@@ -1506,9 +1506,9 @@ cs_print_tags_priv(matches, cntxts, num_matches)
 	{
 	    if (in_cur_file)
 	    {
-		if (((j == 2) && (in_cur_file[i] == TRUE)) ||
-		    ((j == 1) && (in_cur_file[i] == FALSE)))
-			idx = i;
+		if (((j == 2) && (in_cur_file[i] == TRUE))
+			|| ((j == 1) && (in_cur_file[i] == FALSE)))
+		    idx = i;
 		else
 		    continue;
 	    }
@@ -1667,7 +1667,7 @@ cs_release_csp(i, freefnpp)
 /* ARGSUSED */
     static int
 cs_reset(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char	**dblist = NULL, **pplist = NULL, **fllist = NULL;
     int	i;
@@ -1776,7 +1776,7 @@ cs_resolve_file(i, name)
 /* ARGSUSED */
     static int
 cs_show(eap)
-    exarg_t *eap;
+    exarg_T *eap;
 {
     char buf[MAXPATHL*2];
     short i;

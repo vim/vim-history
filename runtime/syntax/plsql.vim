@@ -2,8 +2,8 @@
 "    Language: Oracle Procedureal SQL (PL/SQL)
 "  Maintainer: Jeff Lanzarotta (frizbeefanatic@yahoo.com)
 "         URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
-" Last Change: March 6, 2001
-"     Version: 6.0-5
+" Last Change: April 4, 2001
+"     Version: 6.0-6
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
@@ -126,12 +126,7 @@ syn match plsqlParenError	")"
 syn sync minlines=10 maxlines=100
 
 " The default highlighting.
-" These are general categories that should maybe become standard.
-hi def link Attribute Macro
-hi def link Query Function
-hi def link Event Function
-
-hi def link plsqlAttribute Attribute
+hi def link plsqlAttribute Macro
 hi def link plsqlBooleanLiteral Boolean
 hi def link plsqlCharLiteral Character
 hi def link plsqlComment Comment
@@ -149,11 +144,11 @@ hi def link plsqlPseudo PreProc
 hi def link plsqlKeyword Keyword
 hi def link plsqlRepeat Repeat
 hi def link plsqlStorage StorageClass
-hi def link plsqlSQLKeyword Query
+hi def link plsqlSQLKeyword Statement
 hi def link plsqlStringError Error
 hi def link plsqlStringLiteral String
 hi def link plsqlSymbol Normal
-hi def link plsqlTrigger Event
+hi def link plsqlTrigger Function
 hi def link plsqlTypeAttribute StorageClass
 hi def link plsqlTodo Todo
 

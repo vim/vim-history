@@ -10,15 +10,22 @@
 
 #include "vim.h"
 
-#if defined(FEAT_BEVAL) || defined(PROTO)
+#if defined(FEAT_BEVAL) || defined(PROTO) && \
+    (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
 
 #include <X11/keysym.h>
+#ifdef FEAT_GUI_MOTIF
 #include <Xm/PushB.h>
 #include <Xm/Separator.h>
 #include <Xm/List.h>
 #include <Xm/Label.h>
 #include <Xm/AtomMgr.h>
 #include <Xm/Protocols.h>
+#else
+    /* Assume Athena */
+#include <X11/Shell.h>
+#include <X11/Xaw/Label.h>
+#endif
 
 #include "gui_beval.h"
 
@@ -35,9 +42,6 @@ static void drawBalloon __ARGS((BalloonEval *));
 static void undrawBalloon __ARGS((BalloonEval *beval));
 static void createBalloonEvalWindow __ARGS((BalloonEval *));
 
-
-#define EVAL_OFFSET_X 10 /* displacement of beval topleft corner from pointer */
-#define EVAL_OFFSET_Y 5
 
 
 /*
@@ -143,7 +147,7 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
     char_u     **text;
     int		*index;
 {
-    win_t	*wp;
+    win_T	*wp;
     int		row, col;
     int		row_off;
     int		i;
@@ -180,8 +184,8 @@ gui_mch_get_beval_info(beval, filename, line, text, index)
 	row += wp->w_topline - 1;
 	if (col > 0)
 	{
-	    lbuf = ml_get_buf(wp->w_buffer, (linenr_t)row, FALSE);
-	    win_linetabsize(wp, lbuf, (colnr_t)MAXCOL);
+	    lbuf = ml_get_buf(wp->w_buffer, (linenr_T)row, FALSE);
+	    win_linetabsize(wp, lbuf, (colnr_T)MAXCOL);
 	    if (i >= col)		/* don't send if past end of line */
 	    {
 		*filename = wp->w_buffer->b_ffname;
@@ -373,8 +377,16 @@ pointerEvent(beval, event)
 	    break;
 
 	case LeaveNotify:
+		/* Ignore LeaveNotify events that are not "normal".
+		 * Apparently we also get it when somebody else grabs focus.
+		 * Happens for me every two seconds (some clipboard tool?) */
+		if (event->xcrossing.mode == NotifyNormal)
+		    cancelBalloon(beval);
+		break;
+
 	case ButtonPress:
 		cancelBalloon(beval);
+		break;
 
 	default:
 	    break;
@@ -423,16 +435,19 @@ requestBalloon(beval)
 drawBalloon(beval)
     BalloonEval	*beval;
 {
+#ifdef FEAT_GUI_MOTIF
     XmString s;
-    Position tx;
-    Position ty;
     Dimension	w;
     Dimension	h;
+#endif
+    Position tx;
+    Position ty;
 
     if (beval->msg != NULL)
     {
 	/* Show the Balloon */
 
+#if defined(FEAT_GUI_MOTIF)
 	s = XmStringCreateLocalized((char *)beval->msg);
 	XmStringExtent(gui.balloonEval_fontList, s, &w, &h);
 	w += gui.border_offset << 1;
@@ -441,10 +456,16 @@ drawBalloon(beval)
 		XmNlabelString, s,
 		NULL);
 	XmStringFree(s);
+#elif defined(FEAT_GUI_ATHENA)
+	XtVaSetValues(beval->balloonLabel,
+		XtNlabel, beval->msg,
+		NULL);
+#endif
 
 	/* Compute position of the balloon area */
 	tx = beval->x_root + EVAL_OFFSET_X;
 	ty = beval->y_root + EVAL_OFFSET_Y;
+#ifdef FEAT_GUI_MOTIF
 	if ((tx + w) > beval->screen_width)
 	    tx = beval->screen_width - w;
 	if ((ty + h) > beval->screen_height)
@@ -455,6 +476,12 @@ drawBalloon(beval)
 		XmNwidth, w,
 		XmNheight, h,
 		NULL);
+#elif defined(FEAT_GUI_ATHENA)
+	XtVaSetValues(beval->balloonShell,
+		XtNx, tx,
+		XtNy, ty,
+		NULL);
+#endif
 
 	XtPopup(beval->balloonShell, XtGrabNone);
 
@@ -495,19 +522,26 @@ cancelBalloon(beval)
 createBalloonEvalWindow(beval)
     BalloonEval	*beval;
 {
-    Arg		args[32];
+    Arg		args[12];
     int		n;
 
+    n = 0;
     beval->balloonShell = XtAppCreateShell("balloonEval", "BalloonEval",
 		    overrideShellWidgetClass, gui.dpy, NULL, 0);
 
-    n = 0;
+#ifdef FEAT_GUI_MOTIF
     XtSetArg(args[n], XmNforeground, gui.balloonEval_fg_pixel); n++;
     XtSetArg(args[n], XmNbackground, gui.balloonEval_bg_pixel); n++;
     XtSetArg(args[n], XmNfontList, gui.balloonEval_fontList); n++;
     XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
     beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 		    xmLabelWidgetClass, beval->balloonShell, args, n);
+#elif FEAT_GUI_ATHENA
+    XtSetArg(args[n], XtNforeground, gui.balloonEval_fg_pixel); n++;
+    XtSetArg(args[n], XtNbackground, gui.balloonEval_bg_pixel); n++;
+    beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
+		    labelWidgetClass, beval->balloonShell, args, n);
+#endif
 }
 
 #endif /* FEAT_BEVAL */

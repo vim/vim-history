@@ -247,7 +247,7 @@ refreshBorder(void)
 }
 
     static void
-drawBox(enum DrawBoxMode mode, unsigned short col, unsigned short row, guicolor_t color)
+drawBox(enum DrawBoxMode mode, unsigned short col, unsigned short row, guicolor_T color)
 {
     /*
        SetDrMd(gui.window->RPort, COMPLEMENT);
@@ -579,11 +579,11 @@ charEventHandler(int wtime)
  * add primary menu
  */
     void
-gui_mch_add_menu_item(vimmenu_t *menu, int idx)
+gui_mch_add_menu_item(vimmenu_T *menu, int idx)
 {
     union myMenuItemUnion *menuItemUnion = NULL;
     struct IntuiText *menutext = NULL;
-    vimmenu_t *parent;
+    vimmenu_T *parent;
 
     assert(menu != NULL);
     assert(menu->parent != NULL);
@@ -681,7 +681,7 @@ getMenu(struct RastPort *rast, int left, STRPTR name)
  * add  1st level submenu item
  */
     void
-gui_mch_add_menu(vimmenu_t *menu, int idx)
+gui_mch_add_menu(vimmenu_T *menu, int idx)
 {
     struct Menu	*newMenu;
     int		pos = 0;
@@ -867,33 +867,33 @@ gui_mch_set_text_area_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_enable_scrollbar(scrollbar_t *sb, int flag)
+gui_mch_enable_scrollbar(scrollbar_T *sb, int flag)
 {
     /* done by default */
     /* TODO: disable scrollbar when it's too small */
 }
 
     void
-gui_mch_set_scrollbar_thumb(scrollbar_t *sb, long val, long size, long max)
+gui_mch_set_scrollbar_thumb(scrollbar_T *sb, long val, long size, long max)
 {
 }
 
     void
-gui_mch_set_scrollbar_pos(scrollbar_t *sb, int x, int y, int w, int h)
+gui_mch_set_scrollbar_pos(scrollbar_T *sb, int x, int y, int w, int h)
 {
     D("gui_mch_set_scrollbar_pos");
     /*NewModifyProp(&propGadget, gui.window, NULL, MAXPOT, MAXPOT/sb->max*y, MAXPOT, MAXBODY/sb->max/sb->size, 1);*/
 }
 
     void
-gui_mch_create_scrollbar(scrollbar_t *sb, int orient)
+gui_mch_create_scrollbar(scrollbar_T *sb, int orient)
 {
     /* this is done by default */
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
+gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
     /* this is done by default */
 }
@@ -941,7 +941,7 @@ gui_mch_free_font(GuiFont font)
 
 #define RGB(a, b, c) ((a && 0xff) * 0x10000 + (b * 0xff) * 0x100 + (c & 0xff))
 
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(char_u *name)
 {
     typedef struct guicolor_tTable
@@ -989,7 +989,7 @@ gui_mch_get_color(char_u *name)
 	{NULL, NULL},
     };
 
-    guicolor_t color = (guicolor_t)-1;
+    guicolor_T color = (guicolor_T)-1;
 
     int i;
 
@@ -1015,7 +1015,7 @@ gui_mch_get_color(char_u *name)
 }
 
     void
-gui_mch_set_colors(guicolor_t fg, guicolor_t bg)
+gui_mch_set_colors(guicolor_T fg, guicolor_T bg)
 {
     if (fg == 0)
     {
@@ -1025,7 +1025,7 @@ gui_mch_set_colors(guicolor_t fg, guicolor_t bg)
 }
 
     void
-gui_mch_set_fg_color(guicolor_t color)
+gui_mch_set_fg_color(guicolor_T color)
 {
     if (color == 0)
     {
@@ -1038,7 +1038,7 @@ gui_mch_set_fg_color(guicolor_t color)
 }
 
     void
-gui_mch_set_bg_color(guicolor_t color)
+gui_mch_set_bg_color(guicolor_T color)
 {
     SetBPen(gui.window->RPort, color);
 }
@@ -1133,13 +1133,13 @@ gui_mch_start_blink(void)
 }
 
     void
-gui_mch_draw_hollow_cursor(guicolor_t color)
+gui_mch_draw_hollow_cursor(guicolor_T color)
 {
     drawBox(DB_NotFilled, gui.col, gui.row, color);
 }
 
     void
-gui_mch_draw_part_cursor( int col, int row, guicolor_t color)
+gui_mch_draw_part_cursor( int col, int row, guicolor_T color)
 {
     D("gui_mch_part_cursor");
     drawBox(DB_Filled, col, row, color);
@@ -1231,20 +1231,20 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
     D("gui_mch_destroy_menu");
     ClearMenuStrip(gui.window);
 }
 
     void
-gui_mch_menu_grey(vimmenu_t *menu, int grey)
+gui_mch_menu_grey(vimmenu_T *menu, int grey)
 {
     D("gui_mch_menu_grey");
 }
 
     void
-gui_mch_menu_hidden(vimmenu_t *menu, int hidden)
+gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
 {
     D("gui_mch_menu_hidden");
     ClearMenuStrip(gui.window);
@@ -1314,7 +1314,7 @@ gui_mch_setmouse(x, y)
 }
 
     void
-gui_mch_show_popupmenu(vimmenu_t *menu)
+gui_mch_show_popupmenu(vimmenu_T *menu)
 {
     /* TODO */
 }
@@ -1337,7 +1337,7 @@ clip_mch_set_selection(VimClipboard *cbd)
 }
 
     int
-gui_mch_get_lightness(guicolor_t pixel)
+gui_mch_get_lightness(guicolor_T pixel)
 {
     unsigned long  color=0;
     unsigned long  rc = 255;
@@ -1352,7 +1352,7 @@ gui_mch_get_lightness(guicolor_t pixel)
 
 #if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
     char_u *
-gui_mch_get_rgb(guicolor_t pixel)
+gui_mch_get_rgb(guicolor_T pixel)
 {
     static char_u retval[10];
     unsigned long  color;

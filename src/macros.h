@@ -48,7 +48,7 @@
 /*
  * bufempty() - return TRUE if the current buffer is empty
  */
-#define bufempty() (curbuf->b_ml.ml_line_count == 1 && *ml_get((linenr_t)1) == NUL)
+#define bufempty() (curbuf->b_ml.ml_line_count == 1 && *ml_get((linenr_T)1) == NUL)
 
 /*
  * On some systems toupper()/tolower() only work on lower/uppercase characters

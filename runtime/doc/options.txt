@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0aa.  Last change: 2001 Apr 03
+*options.txt*   For Vim version 6.0ab.  Last change: 2001 Apr 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -971,7 +971,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	a modified version of the following command in your vimrc file to
 	override it: >
 	  :let &cdpath = ',' . substitute(substitute($CDPATH, '[, ]', '\\\0', 'g'), ':', ',', 'g')
-<	This option cannot be set from a |modeline|, for security reasons.
+<	This option cannot be set from a |modeline|, for security reasons
+	(parts of 'cdpath' can be passed to the shell to expand file names).
 
 						*'cedit'*
 'cedit'			string	(Vi default: "", Vim default: CTRL-F)
@@ -987,8 +988,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:set cedit=<C-Y>
 		:set cedit=<Esc>
 <	|Nvi| also has this option, but it only uses the first character.
-	NOTE: This option is set to the Vi default value when 'compatible' is
-	set and to the Vim default value when 'compatible' is reset.
 
 					*'encoding'* *'enc'*
 'encoding' 'enc'	string (default: "latin1" or value from $LANG)
@@ -1140,8 +1139,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	"if,If,IF".
 
 						*'clipboard'* *'cb'*
-'clipboard' 'cb'	string	(default "autoselect" for X-windows,
-								 "" otherwise)
+'clipboard' 'cb'	string	(default "autoselect,exclude:cons\|linux"
+						  for X-windows, "" otherwise)
 			global
 			{not in Vi}
 			{only in GUI versions or when the |+xterm_clipboard|
@@ -1167,6 +1166,26 @@ A jump table for the options with a short description can be found at |Q_op|.
 			details.  When the GUI is active, the 'a' flag in
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
+	
+	exclude:{pattern}
+			Defines a pattern that is matched against the name of
+			the terminal 'term'.  If there is a match, no
+			connection will be made to the X server.  This is
+			useful in this situation:
+			- Running Vim in a console.
+			- $DISPLAY is set to start applications on another
+			  display.
+			- The X server might be terminated while Vim in the
+			  console is still running, killing Vim.
+			To never connect to the X server use: >
+				exclude:.*
+<			This has the same effect as using the |-X| argument.
+			Note that the window title won't be restored as a side
+			effect.
+			The value of 'magic' is ignored, {pattern} is
+			interpreted as if 'magic' was on.
+			The rest of the option value will be used for
+			{patttern}, this must be the last entry.
 
 						*'cmdheight'* *'ch'*
 'cmdheight' 'ch'	number	(default 1)
@@ -1671,9 +1690,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{not available when compiled without the |+diff|
 			feature}
-	Option settings for diff mode.  It can consist of these two items.
-	Both are optional.  When both are present they must be separated by a
-	comma.
+	Option settings for diff mode.  It can consist of the following items.
+	All are optional.  Items must be separated by a comma.
 
 		filler		Show filler lines, to keep the text
 				synchronized with a window that has inserted
@@ -1685,6 +1703,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 				and a fold that contains unchanged lines.
 				When omitted a context of six lines is used.
 				See |fold-diff|.
+
+		icase		Ignore changes in case of text.  "a" and "A"
+				are considered the same.  Adds the "-i" flag
+				to the "diff" command if 'diffexpr' is empty.
+
+		iwhite		Ignore changes in amount of white space.  Adds
+				the "-b" flag to the "diff" command if
+				'diffexpr' is empty.  Check the documentation
+				of the "diff" command for what this does
+				exactly.  It should ignore adding trailing
+				white space, but not leading white space.
 
 	Examples: >
 
@@ -2183,7 +2212,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Useful to always start editing with all folds closed (value zero),
 	some folds closed (one) or no folds closed (99).
 	This is done before reading any modeline, thus a setting in a modeline
-	overrules this option.
+	overrules this option.  Starting to edit a file for |diff-mode| also
+	ignores this option and closes all folds.
 	It is also done before BufReadPre autocommands, to allow an autocmd to
 	overrule the 'foldlevel' value for specific files.
 	When the value is negative, it is not used.
@@ -2482,6 +2512,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Setting this option also means that all font names will be handled as
 	a fontset name.  Also the ones used for the "font" argument of the
 	|:highlight| command.
+	The fonts must match with the current locale.  If fonts for the
+	character sets that the current locale uses are not included, setting
+	'guifontset' will fail.
 	Note the difference between 'guifont' and 'guifontset': In 'guifont'
 	the comma-separated names are alternative names, one of which will be
 	used.  In 'guifontset' the whole string is one fontset name,
@@ -2892,7 +2925,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			global
 			{not in Vi}
 	Makes Vim work in a way that Insert mode is the default mode.  Useful
-	if you want to use Vim as a modeless editor.
+	if you want to use Vim as a modeless editor.  Used for |evim|.
 	These Insert mode commands will be useful:
 	- Use the cursor keys to move around.
 	- Use CTRL-O to execute one Normal mode command |i_CTRL-O|).  When
@@ -3466,10 +3499,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Note: When enabling the mouse in a terminal, copy/paste will use the
 	"* register if there is access to an X-server.  The xterm handling of
 	the mouse buttons can still be used by keeping the shift key pressed.
-	This setting is suggested to allow normal xterm selection in
-	Command-line mode: >
-		:set mouse=nvi
-<	Also see the 'clipboard' option.
+	Also see the 'clipboard' option.
 
 			*'mousefocus'* *'mousef'* *'nomousefocus'* *'nomousef'*
 'mousefocus' 'mousef'	boolean	(default off)
@@ -3801,7 +3831,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 		:let &path = &path . "," . substitute($INCL, ';', ',', 'g')
 <	Replace the ';' with a ':' or whatever separator is used.  Note that
 	this doesn't work when $INCL contains a comma or white space.
-	This option cannot be set from a |modeline|, for security reasons.
 
 				    *'previewheight'* *'pvh'*
 'previewheight' 'pvh'	number (default 12)

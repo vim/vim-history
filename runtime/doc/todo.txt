@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0aa.  Last change: 2001 Apr 04
+*todo.txt*      For Vim version 6.0ab.  Last change: 2001 Apr 16
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,16 +29,13 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Motif: The dialog that appears for an existing swap file can be closed.  Vim
-then no longer responds.
+modeless selection without auto-copy: how to get the text?
 
-In diff mode, dragging the scrollbar causes lots of flicker.
+Add a GUI dialog that allows entering one value.  Use it for the menu that
+sets 'textwidth'.
 
-Add a menu for Folding.
-
-Add a ":saveas" command?  Would do ":w file" and ":e #".
-
-The call to bind_textdomain_codeset() doesn't work yet.
+Athena: using a fontset for menus doesn't work.  Check code for menu_fontset
+marked with EXPERIMENTAL.  Perhaps use fontsets for everything?
 
 
 Main items for 6.0:
@@ -55,9 +52,7 @@ E.  Virtual edit
 F.  Sun Visual workshop (debugger) interface
 	Code is included but not tested.
 G.  Edit command line with Vi commands
-	Command-line window is working.
-	Make Insert mode in Command-line window work like Command-line mode.
-	Use a single-line Command-line window for the command line?
+	The command-line window works.
 H.  More automatic testing
 	Nothing done yet.
 I.  Multi-language support
@@ -70,34 +65,26 @@ J.  User Friendlier
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
--   "x" on a control character doesn't do anything.
+-   Add a mode where the cursor is only allowed to go one character after the
+    end of the line.
 -   Allow specifying it separately for Tabs and beyond end-of-line?
--   Using "A" in Insert mode, then <Right><BS> deletes the last char of the
-    line, even though the cursor doesn't touch it.  (Mary Ellen Foster)
-    Check other <BS> situations in Insert mode.
--   Using "C" then then <CR> moves the last remaining character to the next
-    line.  (Mary Ellen Foster)
--   Insert "keyword keyw", ESC, C CTRL-N, shows "keyword ykeyword".  Repeating
-    CTRL-N fixes it. (Mary Ellen Foster)
--   Wrapped line, "D" near the end, cursor is positioned wrong. (ME Foster)
+-   "x" on a control character doesn't do anything.
+-   With cursor in virtual space, pressing "i" makes cursor jump back.
 -   When doing Visual selection and including space after the end-of-line it
     is not highlighted.  It's also not included in the operation.  Should this
     be changed to include the space after the end-of-line?
 -   Bugs: (Mark Waggoner)
-    See patches in ~/Mail/oldmail/waggoner/in.00132.
     9.	Using "C" in virtual space moves back to the end of the current
-	line to start changing rather than inserting spaces up to the current
-	point and then changing.
+	line to start changing rather than just starting Insert mode at the
+	cursor position.
 	And when the cursor is in a TAB somewhere, it also doesn't work right.
 -   Leaving Insert mode when 'virtualedit' is "insert" should move the cursor
     to a valid character.
 -   In Visual-block mode highlighting part of a tab is wrong.
 -   Add more documentation.
--   Use vpos_t instead of fpos_t for positions that can have a coladd?
+-   Use vpos_T instead of fpos_T for positions that can have a coladd?
 -   coladvance2() can be a bit slow.
 -   Should not insert spaces for yank or filter.
--   When past the end of a line that ends in a single character "b" skips that
-    word.
 
 
 F. Sun Visual Workshop patch from Gordon Prieur:
@@ -117,60 +104,28 @@ F. Sun Visual Workshop patch from Gordon Prieur:
 -   Add code to handle folding.
 
 
-G. Edit command line with Vi commands:
-    For the command-line window:
-	- add a few command-line editing commands in edit().  Vim command
-	  completion?  Would also be useful for Vim script editing.
-	  Eventually the Elvis way would be a small step.
-	- Use non-Visual selection in the other windows, to be able to
-	  copy/paste text.
-    The Elvis way: the cmdline is a one-line view on a buffer with the command
-        line history.
-	See remarks from Steve (~/Mail/oldmail/kirkendall/in.00012).
-	> solve conflicts between Insert mode and Command-line mode commands.
-	  make it work like Korn shell and tcsh.
-	> where to show insert/normal mode message?  Change highlighting of
-	  character in first column?
-	> use CTRL-O to execute one normal mode command
-	> How to switch to normal mode for more commands?  <Esc> should cancel
-	  the command.  CTRL-T?
-	> Set "curwin" and "curbuf" to the command line window and buffer.
-	> curwin->w_topline is always equal to curwin->w_cursor.lnum.
-	> Use edit() for normal cmdline editing?  Would have to integrate
-	  getcmdline() into edit().
-	> never set 'number', no folding, etc.  no status line
-	> When executing the line, do like "U" and append the executed line at
-	  the bottom.
-	> Differences between Insert mode and Command-line-insert Mode:
-	    - <CR> doesn't start a new line
-	    - completion with 'wildchar'
-	    - use cmdline abbreviations
-	> Differences between Normal mode and Command-line-normal Mode:
-	    - <CR> executes the line
-	    - no CTRL-W commands
-	    - no ":" commands?
-	    - Visual mode only within one line.
-	    - "j" and "k" move in the history.
-	> sync undo after entering a command line?
-	> allow "/" and "= to recursively call getcmdline(), overwrite the
-	  cmdline.
-	> use NV_NOCL flag for commands that are not allowed in Command-line
-	  Mode.
-
-
 H. More automatic testing:
 -   Check all commands for:
     - handling folds (moving vertically, updating folds)
     - vertical splits (displaying with w_wincol, updating w_width and other
       windows)
     - use of multi-byte characters.
+    - Make test for multi-line regexp and ":s".
 
 
 I. Multi-language support:
 -   Should handle aliases for different locale settings.  "de" is "de_DE" is
     "de_DE.ISO8859-1".  Perhaps use some code from gettext()?
--   Changing 'encoding' for gettext() doesn't work yet.  See end of mb_init().
--   Cmdline completion of ":langugage" for "messages" and "lctype".
+-   Cmdline completion of ":language" for "messages" and "lctype".
+-   The call to bind_textdomain_codeset() doesn't work yet.  Requires new
+    version of gettext library.
+-   Make an archive with the .mo files for Windows, unzipping them in the
+    right directory.
+-   Add generating the .mo files for Windows in a Makefile.
+8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
+    disabled for now.  What is the right solution?
+-   Improve multibyte.txt using patch
+    ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz.
 
 
 J. User Friendlier
@@ -207,7 +162,9 @@ J. User Friendlier
 -   Add mappings local to a window: ":map <window> ..."?
 8   Add better control for protecting the user for editing a file twice, file
     changed outside of Vim, file protection changed outside of Vim, etc.
-8   When file changed outside of Vim, offer a choice to load the file again.
+9   Add a way to load a color scheme.  Add a menu entry for it.  Also set good
+    colors for diff mode.
+
 
 Messages:
 -   In the message history, add a help tag for each message and number the
@@ -222,18 +179,9 @@ Messages:
 
 
 Various recent:
-8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
-    comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
-    NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
-    doesn't work properly.
 -   In ":ptag" preview window highlight the tag.  Use the new regexp items.
 9   Crash when creating XIC without a fontset. (Diamond)  Don't include the
     XNFontSet then?  Check if gui.normal_font is a fontset?
--   Motif GUI: draws in right border of window, scrolling leaves pixels
-    behind.  Scroll two more pixels?  Or make window two pixels wider?
-8   Motif GUI: The tooltips disappear after one or two seconds.  Why don't
-    they stay?  For GTK they also disappear, but re-appear after a second
-    (making them blink).  Is there an event that interferes?
 8   Syntax error: Can't reproduce it now.  Looked like an "O" command caused a
     line to be redrawn that was moved down (since a line was inserted), found
     a start-of-comment error on "/*", thus it was using a cached state that
@@ -251,33 +199,11 @@ Various recent:
 	syn match   javaStringError      +"\([^"\\]\|\\.\)*$+
     A long line with a " in it can cause a crash when it runs out of stack
     space (on non-Unix systems).  How can we catch this?
-8   'cindent' problem: (FooLman)
-		int x;	    <- extra indent, ";" ignored.
-	    void func()
-	    {
-8   'cindent' problem: (Wright)
-	{
-		do {
-			if (foo) {
-			} else
-				;
-		} while (foo);
-			foo();	// wrong
-	}
 8   Implement ":tearoff" for other systems than Win32 GUI.
 8   ":let @" = "val" should not have side effects for other registers (after
     "ayy). (Raul Acevedo)
     ""yy should probably not change the last used register from "ayy.
 9   Support ACLs on more systems.
-9   Win32: double clicking on "c:\tmp\{asdf}.txt" edits "c:\tmp{asdf}.txt".
-    Don't remove backslash before {}?  Simlarly for "Edit with Vim". (Ott)
-    See list with success/failure for different names and situations.
-9   Win32: mouseshape doesn't return to normal after a ":set" command.
-    (Timothy) Stays at "no entry".  Only visible with ":set nomousehide".
-9   Win32: when 'shell' is "zsh", ":!start notepad file" doesn't work. (Pavol
-    Juhas).
-8   Windows NT/2000: LCTranslateMessage() doesn't work properly.  It's
-    disabled for now.  What is the right solution?
 -   GUI: Implement ":popup" for other systems than Windows.
 -   GUI: <C--> cannot be mapped.  Should be possible to recognize this as a
     normal "-" with the Ctrl modifier.
@@ -285,7 +211,6 @@ Various recent:
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
 8   Add "display" argument to many items in syntax files, to speed up parsing.
-    How to avoid that a "display" keyword no longer works?  Also for "fold".
 8   Make ":syntax include" to search 'runtimepath' for the included syntax
     file if the argument is relative.
 -   update $VIMRUNTIME/optwin for new options.
@@ -293,41 +218,33 @@ Various recent:
     try to simplify it. (Lohner)
 -   Make it possible to set 'browsedir' to a directory name, which is always
     used.
--   When checking if a file exists on Unix, uses lstat(), otherwise a symlink
+-   When checking if a file exists on Unix, use lstat(), otherwise a symlink
     will not be found.  Go throught the code to check for this.
 -   Check all use of islower()/isupper() for negative value (special key).
--   Use s:name local variable in :source'ed file.
 -   Include pty check for Lynx: ~/vim/patches/hahn.pty .
--   In an xterm, look ahead for mouse drag events, merge them and use the last
-    coordinates.
 -   Remove "\" shown in complete/wildmenu.
     Bug: <C-O>:emenu in Insert mode inserts the command.
 -   When accidentally hitting Shift-R instead of Ctrl-R, further Ctrl-R is not
     possible, also when typing <Esc> immediately. (Grahn)
--   Include flipcase patch: ~/vim/patches/wall.flipcase2
--   "/$" in 'list' mode should put the highlighting on the "$" character, also
-    for empty lines.
+-   Include flipcase patch: ~/vim/patches/wall.flipcase2 ?  Make it work for
+    multi-byte characters.
 8   Use $install_prefix? (Cabric)
--   Where 'suffixesadd' is used, also try removing a trailing "." or "," from
-    the file name.
 8   Test if it possible for a skip pattern to include "\n", so that it can
     skip over newlines for a "oneline" region.
--   multi-line regexp:
-    Make test for multi-line regexp and ":s".
-    Check use of multi-line regexp in syntax highlighting.
+-   Check use of multi-line regexp in syntax highlighting.
 -   When starting GUI with invalid $DISPLAY, the hit-enter prompt is always in
     line 2, while the "cannot open display" is somewhere else.
 -   When swap file message sees that date of file is newer as date of swap
     file, add message "more recent than swap file".
 -   "ls -1 * | xargs vim" works a bit but not well.  Should use stderr for all
     term I/O.
--   Check libcall() and libcallnr() for Win32.  No crash when function returns
-    1 or -1?
 9   ":cwindow!" always open quickfix window, ":cwindow" only open it if there
     are recognized errors.  ":cclose" to close quickfix window?
 8   For ":silent !cmd":
     ":silent write" still writes a message.
     ":silent s//" still writes a message.
+    Highlight test should be silent.  ":silent highlight" doesn't produce the
+    same redirected text.  Make it do the same.
     How to use ":silent" for a search command?  ":silent /pat" uses ":/pat".
 	:silent exe "normal /path\<CR>"
     Run the external command silently, don't give the hit-enter prompt.
@@ -348,6 +265,9 @@ Various recent:
     Still do the messages for ":redir"?
     -> ":silent redir": Remember the last message, print it if waiting for a
        key (otherwise the hit-enter prompt could be missed).
+    -> Win32 GUI: Make ":silent !ls" work, avoid "hit any key to continue" in
+       DOS console used to execute external commands.  Pass a flag to
+       vimrun.exe.
     Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
 -   Make syntax keyword table configurable.  Set number of bits used with
     ":syn clear [hashbits]", so that we don't need to reallocate the table.
@@ -366,28 +286,29 @@ Various recent:
     Selecting item 5 jumps to item 4. (Andrej Borsenkow)
 -   ":abbr b byte", append "b " to an existing word still expands to "byte".
     This is Vi compatible, but can we avoid it anyway?
+-   Add a watchpoint in the debug mode: An expression that breaks execution
+    when evauating to non-zero.
+8   When running in a console and $DISPLAY is set a connection to the X server
+    is made (unless 'clipboard' tells not to).  Quitting the X server then
+    kills Vim.  How to detect a broken connection to the X server when running
+    in a console?  Catching WM_SAVE_YOURSELF doesn't seem to work.
 
 
 Considered for release 6.0:
-8   Add a function that returns the line in the tags file for a matching tag.
-    Can be used to extract more info (class name, inheritance, etc.) (Rico
-    Hendriks)
-    Add a command to jump to a certain kind of tag.  Allow the user to specify
+8   Use configure to set absolute paths in tools scripts when installing.
+8   Add a command to jump to a certain kind of tag.  Allow the user to specify
     values for the optional fields.  E.g., ":tag size type=m".
 8   Add file locking.  Lock a file when starting to edit it with flock() or
     fcntl().  This patch has advisory file locking while reading/writing the
     file: ~/vim/patches/kahn_file_locking .
 -   When $CFLAGS is set, don't change it in configure. (Griffis)
     Give a warning that CFLAGS from the environment is being used.
-8   Use configure to set absolute paths in tools scripts when installing.
 8   Windows (and others): When using the scrollbar to scroll, don't move the
     cursor position.  When moving the cursor scroll to the cursor position.
 9   It is possible to create the same swap file twice, when there is latency
     in the system (and 'directory' is ~/tmp). (Soulier)
     Create the swap file as soon as its name is chosen, when mf_fname is set.
     Delete it before changing mf_fname/mf_ffname.
-8   Win32 GUI: Make ":silent !ls" work, avoid "hit any key to continue" in DOS
-    console used to execute external commands.  Pass a flag to vimrun.exe.
 8   Add command like ":normal" that accepts <Key> notation like ":map".
 8   Make clipboard work for Dos32 version. (Negri)
 8   ">>" with 'softtabstop' set should work like 'tabstop' is set to
@@ -398,8 +319,6 @@ Considered for release 6.0:
     highlighted differently.
 -   For files found with 'include': handle "*" in included name, for Java.
     (Jason)
--   Improve multibyte.txt using patch
-    ~/ftp/vim/unreleased/patches/vim-5.6-dalecki-4.gz.
 
 ---------------------- bugs ---------------------------
 
@@ -508,6 +427,12 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
+-   Check libcall() and libcallnr() for Win32.  No crash when function returns
+    1 or -1?
+8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
+    comes available. (Poucet)  It works OK on Win 98 but doesn't work on Win
+    NT 4.0.  Leaves a grey area where the scrollbar was.  ":set go+=r" also
+    doesn't work properly.
 9   Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
     the short filename instead and does the path compare work?
 8   When ativating window with mouse click, don't move cursor to mouse click.
@@ -594,6 +519,8 @@ Athena GUI:
 
 
 Motif GUI:
+8   Motif GUI: draws in right border of window, scrolling leaves pixels
+    behind.  Scroll two more pixels?  Or make window two pixels wider?
 9   When starting GUI with ":gui" while 'writedel' is non-zero, escape
     sequences are split up.  Motif version crashes.
 8   When changing the color of the toolbar with ":hi toolbar", the pixmaps are
@@ -630,7 +557,7 @@ GUI:
 8   When fontset support is enabled, setting 'guifont' to a single font
     doesn't work.
 8   Menu priority for sub-menus for: Athena, Amiga, Mac, VMS, BeOS.
-8   Add menu separators for Athena, Amiga, Mac, RISCOS.
+8   Add menu separators for Amiga, Mac, RISCOS.
 8   Add way to specify the file filter for the browse dialog.  At least for
     browse().
 8   Add dialog for search/replace to other GUIs?  Tk has something for this,
@@ -723,6 +650,8 @@ MSDOS, OS/2 and Win32:
 8   OS/2: Add Extended Attributes support and define HAVE_ACL.
 8   Win32 console: <M-Up> and <M-Down> don't work. (Geddes)  We don't have
     special keys for these.  Should use modifier + key.
+8   Win32 console: caps-lock makes non-alpha keys work like with shift.
+    Should work like in the GUI version.
 8   Environment variables in DOS are not case sensitive.  Make a define for
     STRCMP_ENV(), and use it when comparing environment var names.
 8   Setting 'shellslash' has no immediate effect.  Change all file names when
@@ -1558,6 +1487,9 @@ Shared libraries:
 
 
 Tags:
+8   Add a function that returns the line in the tags file for a matching tag.
+    Can be used to extract more info (class name, inheritance, etc.) (Rico
+    Hendriks)
 7   Count before CTRL-]: jump to N'th match
 8   Scope arguments for ":tag", e.g.: ":tag class:cPage open", like Elvis.
 8   When output of ":tselect" is long, getting the more-prompt, should be able
@@ -1819,6 +1751,44 @@ Insert mode completion/expansion:
     When 'isexpand' or 'istagword' are empty, use 'iskeyword'.
 
 
+Command line editing:
+7   Add commands (keys) to delete from the cursor to the end of the command
+    line.
+-   Add flags to 'whichwrap' for command line editing (cursor right at end of
+    lines wraps to start of line).
+-   Make editing the command line work like Insert mode in a single-line view
+    on a buffer that contains the command line history.  But this has many
+    disadvantages, only implement it when these can be solved.  Elvis has run
+    into these, see remarks from Steve (~/Mail/oldmail/kirkendall/in.00012).
+    - Going back in history and editing a line there would change the history.
+      Would still need to keep a copy of the history elsewhere.  Like the
+      cmdwin does now already.
+    - Use CTRL-O to execute one Normal mode command.  How to switch to normal
+      mode for more commands?  <Esc> should cancel the command line.  CTRL-T?
+    - To allow "/" and "= need to recursively call getcmdline(), overwrite the
+      cmdline.  But then we are editing a command-line again.  How to avoid
+      that the user gets confused by the stack of command lines?
+    - Use edit() for normal cmdline editing?  Would have to integrate
+      getcmdline() into edit().  Need to solve conflicts between Insert mode
+      and Command-line mode commands.  Make it work like Korn shell and tcsh.
+      Problems:
+	- Insert: completion with 'wildchar'
+	- Insert: use cmdline abbreviations
+	- Insert: CTRL-D deletes indent instead of listing matches
+	- Normal: no CTRL-W commands
+	- Normal: no ":" commands?
+	- Normal: allow Visual mode only within one line.
+    - where to show insert/normal mode message?  Change highlighting of
+      character in first column?
+    - Implementation ideas:
+      - Set "curwin" and "curbuf" to the command line window and buffer.
+      - curwin->w_topline is always equal to curwin->w_cursor.lnum.
+      - never set 'number', no folding, etc.  No status line.
+      - sync undo after entering a command line?
+      - use NV_NOCL flag for commands that are not allowed in Command-line
+	Mode.
+
+
 Command line completion:
 8   Change expand_interactively into a flag that is passed as an argument.
 8   When completing command names, either sort them on the long name, or list
@@ -1856,13 +1826,6 @@ Command line history:
     so that it can be repeated. (Demirel)
 
 
-Command-line editing:
-7   Add commands (keys) to delete from the cursor to the end of the command
-    line.
--   Add flags to 'whichwrap' for command line editing (cursor right at end of
-    lines wraps to start of line).
-
-
 Insert mode:
 9   When 'autoindent' is set, hitting <CR> twice, while there is text after
     the cursor, doesn't delete the autoindent in the resulting blank line.
@@ -1892,6 +1855,10 @@ Insert mode:
 
 
 'cindent', 'smartindent':
+8   'cindent' problem: (FooLman)
+		int x;	    <- extra indent, ";" ignored.
+	    void func()
+	    {
 9   closing } not recognized?  (Francois-Xavier Menard)
     (char *tab[] = {"aaa",
 	NULL};
@@ -2652,7 +2619,7 @@ Various improvements:
 7   Add a history of recently accessed buffer.	Maybe make "2 CTRL-^" jump to
     the 2nd previously visited buffer, "3 CTRL-^" to the third, etc.  Or use
     "3 g CTRL-^" for this?
-5   Add an option to set the width of the 'number' column.  Eight positions is
+7   Add an option to set the width of the 'number' column.  Eight positions is
     often more than needed.  Or adjust the width to the length of the file?
 -   Add code to disable the CAPS key when going from Insert to Normal mode.
 -   Set date/protection/etc. of the patchfile the same as the original file.

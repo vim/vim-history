@@ -118,6 +118,9 @@ struct stat
 #ifndef SYS_OPTWIN_FILE
 # define SYS_OPTWIN_FILE "$VIMRUNTIME:optwin.vim"
 #endif
+#ifndef EVIM_FILE
+# define EVIM_FILE	"$VIMRUNTIME:evim.vim"
+#endif
 
 #ifdef FEAT_GUI
 # ifndef USR_GVIMRC_FILE

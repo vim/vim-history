@@ -87,6 +87,39 @@ PYTHONINC=-I $(PYTHON)/win32inc
 endif
 endif
 
+
+#	Ruby interface:
+#	  RUBY=[Path to Ruby directory]
+#	  DYNAMIC_RUBY=yes (to load the Ruby DLL dynamically)
+#	  RUBY_VER=[Ruby version, eg 16, 17] (default is 16)
+#	  RUBY_VER_LONG=[Ruby version, eg 1.6, 1.7] (default is 1.6)
+#	    You must set RUBY_VER_LONG when change RUBY_VER.
+RUBY=c:/ruby
+DYNAMIC_RUBY=yes
+#
+# Support Ruby interface
+#
+ifdef RUBY
+#  Set default value
+ifndef RUBY_VER
+RUBY_VER = 16
+endif
+ifndef RUBY_VER_LONG
+RUBY_VER_LONG = 1.6
+endif
+ifndef RUBY_PLATFORM
+RUBY_PLATFORM = i586-mswin32
+endif
+RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
+
+#RUBY_OBJ = $(OUTDIR)\if_ruby.obj
+RUBYINC =-I $(RUBY)/lib/ruby/$(RUBY_VER_LONG)/$(RUBY_PLATFORM)
+ifndef DYNAMIC_RUBY
+RUBYLIB = -L$(RUBY)/lib -l$(RUBY_INSTALL_NAME)
+endif
+
+endif # RUBY
+
 # See feature.h for a list of options.
 # Any other defines can be included here.
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
@@ -117,6 +150,13 @@ ifdef PERL
 CFLAGS += -I$(PERLLIBS) -DFEAT_PERL -L$(PERLLIBS)
 ifdef DYNAMIC_PERL
 CFLAGS += -DDYNAMIC_PERL
+endif
+endif
+
+ifdef RUBY
+CFLAGS += -DFEAT_RUBY $(RUBYINC)
+ifdef DYNAMIC_RUBY 
+CFLAGS += -DDYNAMIC_RUBY -DDYNAMIC_RUBY_DLL=\"$(RUBY_INSTALL_NAME).dll\"
 endif
 endif
 
@@ -161,6 +201,10 @@ endif
 ifdef PYTHON
 SRC += if_python.c
 endif
+ifdef RUBY
+SRC += if_ruby.c
+endif
+
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
@@ -213,7 +257,7 @@ vim.exe: $(OBJ)
 
 gvim.exe: DEFINES+=$(DEF_GUI)
 gvim.exe: $(OBJ) $(GUIOBJ)
-	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(GUI_LIB) $(PYTHONLIB)
+	$(CC) $(DEF_GUI) $(CFLAGS) -o $@ $^ -mwindows $(GUI_LIB) $(PYTHONLIB) $(RUBYLIB)
 
 exes:
 	@$(DEL) *.o
@@ -237,6 +281,8 @@ vimres.res: vim.rc
 vimres.o: vimres.res
 	$(WINDRES) vimres.res vimres.o
 
+if_ruby.c: dyn-ming.h
+
 if_python.c: dyn-ming.h
 
 if_perl.c: dyn-ming.h if_perl.xs typemap
@@ -246,13 +292,21 @@ dyn-ming.h:
 ifeq ($(CROSS),1)
 	@echo \/\* created by make \*\/ > dyn-ming.h
 else
-	@echo /* created by make */ > dyn-ming.h
+	@echo "/* created by make */" > dyn-ming.h
 endif
 ifdef DYNAMIC_PERL
 ifeq ($(CROSS),1)
 	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
 else
 	@echo #define DYNAMIC_PERL_DLL "$(DYNAMIC_PERL)" >> dyn-ming.h
+endif
+endif
+
+ifdef DYNAMIC_RUBY
+ifeq ($(CROSS),1)
+	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY)\" >> dyn-ming.h
+else
+	@echo #define DYNAMIC_RUBY_DLL "$(DYNAMIC_RUBY)" >> dyn-ming.h
 endif
 endif
 

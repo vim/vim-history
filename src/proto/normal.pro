@@ -1,8 +1,8 @@
 /* normal.c */
 void init_normal_cmds __ARGS((void));
-void normal_cmd __ARGS((oparg_t *oap, int toplevel));
-void do_pending_operator __ARGS((cmdarg_t *cap, int old_col, int gui_yank));
-int do_mouse __ARGS((oparg_t *oap, int c, int dir, long count, int fix_indent));
+void normal_cmd __ARGS((oparg_T *oap, int toplevel));
+void do_pending_operator __ARGS((cmdarg_T *cap, int old_col, int gui_yank));
+int do_mouse __ARGS((oparg_T *oap, int c, int dir, long count, int fix_indent));
 void check_visual_highlight __ARGS((void));
 void end_visual_mode __ARGS((void));
 void reset_VIsual_and_resel __ARGS((void));
@@ -14,7 +14,7 @@ void add_to_showcmd_c __ARGS((int c));
 void push_showcmd __ARGS((void));
 void pop_showcmd __ARGS((void));
 void do_check_scrollbind __ARGS((int check));
-void check_scrollbind __ARGS((linenr_t topline_diff, long leftcol_diff));
+void check_scrollbind __ARGS((linenr_T topline_diff, long leftcol_diff));
 void scroll_redraw __ARGS((int up, long count));
 void start_selection __ARGS((void));
 void may_start_select __ARGS((int c));

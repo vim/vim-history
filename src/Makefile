@@ -748,8 +748,14 @@ RGVIMNAME	= r$(GVIMNAME)
 RGVIMTARGET	= $(RGVIMNAME)$(SUFFIX)
 RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
-VIMDIFFTARGET	= vimdiff
-GVIMDIFFTARGET	= gvimdiff
+VIMDIFFNAME	= vimdiff
+GVIMDIFFNAME	= g$(VIMDIFFNAME)
+VIMDIFFTARGET	= $(VIMDIFFNAME)$(SUFFIX)
+GVIMDIFFTARGET	= $(GVIMDIFFNAME)$(SUFFIX)
+EVIMNAME	= e$(VIMNAME)
+EVIMTARGET	= $(EVIMNAME)$(SUFFIX)
+EVIEWNAME	= e$(VIEWNAME)
+EVIEWTARGET	= $(EVIEWNAME)$(SUFFIX)
 
 ### Names of the tools that are also made  {{{1
 TOOLS = xxd/xxd$(SUFFIX)
@@ -786,7 +792,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60aa
+VIMRTDIR = /vim60ab
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -859,6 +865,10 @@ SCRIPTENDLOC = $(SCRIPTLOC)
 #SCRIPTENDLOC = /etc
 TUTORENDLOC = $(TUTORSUBLOC)
 #TUTORENDLOC = /usr/lib/vim/tutor
+
+### Name of the evim file target.
+EVIM_FILE	= $(SCRIPTLOC)/evim.vim
+MSWIN_FILE	= $(SCRIPTLOC)/mswin.vim
 
 ### Name of the menu file target.
 SYS_MENU_FILE	= $(SCRIPTLOC)/menu.vim
@@ -979,7 +989,7 @@ LINKIT = @echo >/dev/null
 #GUI_MAN_TARGETS= $(NONE_MAN_TARGETS)
 #GUI_TESTTARGET = $(NONE_TESTTARGET)
 
-### GTK GUI interface.
+### GTK GUI
 GTK_SRC		= gui.c gui_gtk.c gui_gtk_x11.c pty.c gui_gtk_f.c
 GTK_OBJ		= objects/gui.o objects/gui_gtk.o objects/gui_gtk_x11.o \
 			objects/pty.o objects/gui_gtk_f.o
@@ -988,17 +998,11 @@ GTK_IPATH	= $(GUI_INC_LOC)
 GTK_LIBS_DIR	= $(GUI_LIB_LOC)
 GTK_LIBS1	=
 GTK_LIBS2	= $(GTK_LIBNAME)
-GTK_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET)
-GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1
+GTK_TARGETS	= installglinks
+GTK_MAN_TARGETS = installghelplinks
 GTK_TESTTARGET = gui
 
-### Motif GUI interface.
+### Motif GUI
 MOTIF_SRC	= gui.c gui_motif.c gui_x11.c pty.c gui_beval.c
 MOTIF_OBJ	= objects/gui.o objects/gui_motif.o objects/gui_x11.o \
 			objects/pty.o objects/gui_beval.o
@@ -1007,17 +1011,11 @@ MOTIF_IPATH	= $(GUI_INC_LOC)
 MOTIF_LIBS_DIR	= $(GUI_LIB_LOC)
 MOTIF_LIBS1	=
 MOTIF_LIBS2	= $(MOTIF_LIBNAME) -lXt
-MOTIF_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET)
-MOTIF_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1
+MOTIF_TARGETS	= installglinks
+MOTIF_MAN_TARGETS = installghelplinks
 MOTIF_TESTTARGET = gui
 
-### Athena Widget GUI interface.
+### Athena GUI
 ### Use Xaw3d to make the menus look a little bit nicer
 #XAW_LIB = -lXaw3d
 XAW_LIB = -lXaw
@@ -1030,23 +1028,19 @@ XAW_LIB = -lXaw
 #ATHENA_DEFS	= -DFEAT_GUI_ATHENA $(NARROW_PROTO) \
 #		    -Dvim_scrollbarWidgetClass=scrollbarWidgetClass \
 #		    -Dvim_XawScrollbarSetThumb=XawScrollbarSetThumb
-ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_at_sb.c gui_at_fs.c
+ATHENA_SRC	= gui.c gui_athena.c gui_x11.c pty.c gui_beval.c \
+			gui_at_sb.c gui_at_fs.c
 ATHENA_OBJ	= objects/gui.o objects/gui_athena.o objects/gui_x11.o \
-			objects/pty.o objects/gui_at_sb.o objects/gui_at_fs.o
+			objects/pty.o objects/gui_beval.o \
+			objects/gui_at_sb.o objects/gui_at_fs.o
 ATHENA_DEFS	= -DFEAT_GUI_ATHENA $(NARROW_PROTO)
 
 ATHENA_IPATH	= $(GUI_INC_LOC)
 ATHENA_LIBS_DIR = $(GUI_LIB_LOC)
 ATHENA_LIBS1	= $(XAW_LIB)
 ATHENA_LIBS2	= -lXt
-ATHENA_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET)
-ATHENA_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1
+ATHENA_TARGETS	=  installglinks
+ATHENA_MAN_TARGETS = installghelplinks
 ATHENA_TESTTARGET = gui
 
 ### (J)  Sun OpenWindows 3.2 (SunOS 4.1.x) or earlier that produce these ld
@@ -1060,7 +1054,7 @@ ATHENA_TESTTARGET = gui
 # too:
 #EXTRA_LIBS = /usr/openwin/lib/libXmu.sa -lm
 
-### BeOS GUI interface.
+### BeOS GUI
 BEOSGUI_SRC	= gui.c gui_beos.cc pty.c
 BEOSGUI_OBJ	= objects/gui.o objects/gui_beos.o  objects/pty.o
 BEOSGUI_DEFS	= -DFEAT_GUI_BEOS
@@ -1068,17 +1062,11 @@ BEOSGUI_IPATH	=
 BEOSGUI_LIBS_DIR =
 BEOSGUI_LIBS1	= -lbe -lroot
 BEOSGUI_LIBS2	=
-BEOSGUI_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET)
-BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1
+BEOSGUI_TARGETS	= installglinks
+BEOSGUI_MAN_TARGETS = installghelplinks
 BEOSGUI_TESTTARGET = gui
 
-# PHOTON GUI interface
+# PHOTON GUI
 PHOTONGUI_SRC	= gui.c gui_photon.c pty.c
 PHOTONGUI_OBJ	= objects/gui.o objects/gui_photon.o objects/pty.o
 PHOTONGUI_DEFS	= -DFEAT_GUI_PHOTON
@@ -1086,17 +1074,11 @@ PHOTONGUI_IPATH	=
 PHOTONGUI_LIBS_DIR =
 PHOTONGUI_LIBS1	= -lph -lphexlib
 PHOTONGUI_LIBS2	=
-PHOTONGUI_TARGETS	= $(BINDIR)/$(GVIMTARGET) \
-			$(BINDIR)/$(GVIEWTARGET) \
-			$(BINDIR)/$(RGVIMTARGET) \
-			$(BINDIR)/$(RGVIEWTARGET)
-PHOTONGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
-			$(MANSUBDIR)/$(GVIEWNAME).1 \
-			$(MANSUBDIR)/$(RGVIMNAME).1 \
-			$(MANSUBDIR)/$(RGVIEWNAME).1
+PHOTONGUI_TARGETS = installglinks
+PHOTONGUI_MAN_TARGETS = installghelplinks
 PHOTONGUI_TESTTARGET = gui
 
-# GUI files used for making Vim
+# All GUI files
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
 ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro gui_photon.pro
 
@@ -1491,7 +1473,7 @@ types.vim: $(TAGS_SRC) $(TAGS_INCL)
 # If everything is allright, the final message will be "ALL DONE".
 #
 test check:
-	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET)
+	cd testdir; $(MAKE) -f Makefile $(GUI_TESTTARGET) VIMPROG=../$(VIMTARGET)
 
 testclean:
 	-rm -f testdir/*.out testdir/test.log
@@ -1544,8 +1526,12 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 		-e s+$(VIMLOC)/tutor+$(TUTORENDLOC)+ \
 		$(HELPSOURCE)/vimtutor.1 > $(MANSUBDIR)/$(VIMNAME)tutor.1
 	chmod $(MANMOD) $(MANSUBDIR)/$(VIMNAME)tutor.1
-	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(MANSUBDIR)
-	chmod $(MANMOD) $(MANSUBDIR)/vimdiff.1
+	$(INSTALL_DATA)  $(HELPSOURCE)/vimdiff.1 $(MANSUBDIR)/$(VIMDIFFNAME).1
+	chmod $(MANMOD) $(MANSUBDIR)/$(VIMDIFFNAME).1
+	@echo generating $(MANSUBDIR)/$(EVIMNAME).1
+	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
+		$(HELPSOURCE)/evim.1 > $(MANSUBDIR)/$(EVIMNAME).1
+	chmod $(MANMOD) $(MANSUBDIR)/$(EVIMNAME).1
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
 	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
@@ -1553,6 +1539,11 @@ installruntime: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
 # install the menu file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_MENU_FILE)
+# install the evim file
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/mswin.vim $(MSWIN_FILE)
+	chmod $(VIMSCRIPTMOD) $(MSWIN_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/evim.vim $(EVIM_FILE)
+	chmod $(VIMSCRIPTMOD) $(EVIM_FILE)
 # install the bugreport file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/bugreport.vim $(SYS_BUGR_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_BUGR_FILE)
@@ -1650,7 +1641,18 @@ $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
 
 # create links from various names to vim.  This is only done when the links
 # (or executables with the same name) don't exist yet.
-installlinks: $(GUI_TARGETS) $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET) $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
+installlinks: $(GUI_TARGETS) \
+			$(BINDIR)/$(EXTARGET) \
+			$(BINDIR)/$(VIEWTARGET) \
+			$(BINDIR)/$(RVIMTARGET) \
+			$(BINDIR)/$(RVIEWTARGET)
+
+installglinks: $(BINDIR)/$(GVIMTARGET) \
+			$(BINDIR)/$(GVIEWTARGET) \
+			$(BINDIR)/$(RGVIMTARGET) \
+			$(BINDIR)/$(RGVIEWTARGET) \
+			$(BINDIR)/$(EVIMTARGET) \
+			$(BINDIR)/$(EVIEWTARGET)
 
 installvimdiff: $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
 
@@ -1684,9 +1686,26 @@ $(BINDIR)/$(VIMDIFFTARGET):
 $(BINDIR)/$(GVIMDIFFTARGET):
 	cd $(BINDIR); ln -s $(VIMTARGET) $(GVIMDIFFTARGET)
 
+$(BINDIR)/$(EVIMTARGET):
+	cd $(BINDIR); ln -s $(VIMTARGET) $(EVIMTARGET)
+
+$(BINDIR)/$(EVIEWTARGET):
+	cd $(BINDIR); ln -s $(VIMTARGET) $(EVIEWTARGET)
+
 # create links for the manual pages with various names to vim.	This is only
 # done when the links (or manpages with the same name) don't exist yet.
-installhelplinks: $(GUI_MAN_TARGETS) $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1 $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
+installhelplinks: $(GUI_MAN_TARGETS) \
+			$(MANSUBDIR)/$(EXNAME).1 \
+			$(MANSUBDIR)/$(VIEWNAME).1 \
+			$(MANSUBDIR)/$(RVIMNAME).1 \
+			$(MANSUBDIR)/$(RVIEWNAME).1
+
+installghelplinks: $(MANSUBDIR)/$(GVIMNAME).1 \
+			$(MANSUBDIR)/$(GVIEWNAME).1 \
+			$(MANSUBDIR)/$(RGVIMNAME).1 \
+			$(MANSUBDIR)/$(RGVIEWNAME).1 \
+			$(MANSUBDIR)/$(GVIMDIFFNAME).1 \
+			$(MANSUBDIR)/$(EVIEWNAME).1
 
 $(MANSUBDIR)/$(EXNAME).1:
 	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(EXNAME).1
@@ -1712,6 +1731,12 @@ $(MANSUBDIR)/$(RGVIMNAME).1:
 $(MANSUBDIR)/$(RGVIEWNAME).1:
 	cd $(MANSUBDIR); ln -s $(VIMNAME).1 $(RGVIEWNAME).1
 
+$(MANSUBDIR)/$(GVIMDIFFNAME).1:
+	cd $(MANSUBDIR); ln -s $(VIMDIFFNAME).1 $(GVIMDIFFNAME).1
+
+$(MANSUBDIR)/$(EVIEWNAME).1:
+	cd $(MANSUBDIR); ln -s $(EVIMNAME).1 $(EVIEWNAME).1
+
 uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(VIMTARGET)
 	-rm -f $(MANSUBDIR)/$(VIMNAME).1 $(MANSUBDIR)/$(VIMNAME)tutor.1
@@ -1722,10 +1747,13 @@ uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(RVIMTARGET) $(BINDIR)/$(RVIEWTARGET)
 	-rm -f $(BINDIR)/$(RGVIMTARGET) $(BINDIR)/$(RGVIEWTARGET)
 	-rm -f $(BINDIR)/$(VIMDIFFTARGET) $(BINDIR)/$(GVIMDIFFTARGET)
+	-rm -f $(BINDIR)/$(EVIMTARGET) $(BINDIR)/$(EVIEWTARGET)
 	-rm -f $(MANSUBDIR)/$(EXNAME).1 $(MANSUBDIR)/$(VIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(GVIMNAME).1 $(MANSUBDIR)/$(GVIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(RVIMNAME).1 $(MANSUBDIR)/$(RVIEWNAME).1
 	-rm -f $(MANSUBDIR)/$(RGVIMNAME).1 $(MANSUBDIR)/$(RGVIEWNAME).1
+	-rm -f $(MANSUBDIR)/$(VIMDIFFNAME).1 $(MANSUBDIR)/$(GVIMDIFFNAME).1
+	-rm -f $(MANSUBDIR)/$(EVIMNAME).1 $(MANSUBDIR)/$(EVIEWNAME).1
 
 # Note: the "rmdir" will fail if any files were added after "make install"
 uninstall_runtime:
@@ -2281,8 +2309,7 @@ objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h os_unixx.h
 objects/gui_beval.o: gui_beval.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
- gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_beval.h \
- proto/gui_beval.pro
+ gui.h option.h ex_cmds.h proto.h globals.h farsi.h
 objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h option.h ex_cmds.h proto.h globals.h farsi.h version.h \

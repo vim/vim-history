@@ -10,11 +10,11 @@
 #include "vim.h"
 
 #ifdef FEAT_LINEBREAK
-static int win_chartabsize __ARGS((win_t *wp, char_u *p, colnr_t col));
+static int win_chartabsize __ARGS((win_T *wp, char_u *p, colnr_T col));
 #endif
 
 #ifdef FEAT_MBYTE
-static int win_nolbr_chartabsize __ARGS((win_t *wp, char_u *s, colnr_t col, int *headp));
+static int win_nolbr_chartabsize __ARGS((win_T *wp, char_u *s, colnr_T col, int *headp));
 #endif
 
 static int nr2hex __ARGS((int c));
@@ -61,7 +61,7 @@ init_chartab()
 
     int
 buf_init_chartab(buf, global)
-    buf_t	*buf;
+    buf_T	*buf;
     int		global;		/* FALSE: only set buf->b_chartab[] */
 {
     int		c;
@@ -128,7 +128,7 @@ buf_init_chartab(buf, global)
     /*
      * Init word char flags all to FALSE
      */
-    vim_memset(buf->b_chartab, 0, 32);
+    vim_memset(buf->b_chartab, 0, (size_t)32);
 #ifdef FEAT_MBYTE
     for (c = 0; c < 256; ++c)
     {
@@ -385,7 +385,7 @@ str_tolower(p)
 transchar(c)
     int		c;
 {
-    static char_u	buf[5];
+    static char_u	buf[7];
     int			i;
 
     i = 0;
@@ -505,6 +505,8 @@ transchar_hex(buf, c)
 
 /*
  * Convert the lower 4 bits of byte "c" to its hex character.
+ * Lower case letters are used to avoid the confusion of <F1> being 0xf1 or
+ * function key 1.
  */
     static int
 nr2hex(c)
@@ -512,7 +514,7 @@ nr2hex(c)
 {
     if ((c & 0xf) <= 9)
 	return (c & 0xf) + '0';
-    return (c & 0xf) - 10 + 'A';
+    return (c & 0xf) - 10 + 'a';
 }
 
 /*
@@ -626,7 +628,7 @@ vim_strsize(s)
     int
 chartabsize(p, col)
     char_u	*p;
-    colnr_t	col;
+    colnr_T	col;
 {
     RET_WIN_BUF_CHARTABSIZE(curwin, curbuf, p, col)
 }
@@ -634,9 +636,9 @@ chartabsize(p, col)
 #ifdef FEAT_LINEBREAK
     static int
 win_chartabsize(wp, p, col)
-    win_t	*wp;
+    win_T	*wp;
     char_u	*p;
-    colnr_t	col;
+    colnr_T	col;
 {
     RET_WIN_BUF_CHARTABSIZE(wp, wp->w_buffer, p, col)
 }
@@ -650,7 +652,7 @@ win_chartabsize(wp, p, col)
 linetabsize(s)
     char_u	*s;
 {
-    colnr_t	col = 0;
+    colnr_T	col = 0;
 
     while (*s != NUL)
 	col += lbr_chartabsize_adv(&s, col);
@@ -662,11 +664,11 @@ linetabsize(s)
  */
     int
 win_linetabsize(wp, p, len)
-    win_t	*wp;
+    win_T	*wp;
     char_u	*p;
-    colnr_t	len;
+    colnr_T	len;
 {
-    colnr_t	col = 0;
+    colnr_T	col = 0;
     char_u	*s;
 
     for (s = p; *s != NUL && s < p + len; )
@@ -732,7 +734,7 @@ vim_iswordp(p)
     int
 vim_iswordc_buf(p, buf)
     char_u	*p;
-    buf_t	*buf;
+    buf_T	*buf;
 {
 # ifdef FEAT_MBYTE
     if (has_mbyte && MB_BYTE2LEN(*p) > 1)
@@ -785,7 +787,7 @@ vim_isprintc_strict(c)
     int
 lbr_chartabsize(s, col)
     unsigned char	*s;
-    colnr_t		col;
+    colnr_T		col;
 {
 #ifdef FEAT_LINEBREAK
     if (!curwin->w_p_lbr && *p_sbr == NUL)
@@ -808,7 +810,7 @@ lbr_chartabsize(s, col)
     int
 lbr_chartabsize_adv(s, col)
     char_u	**s;
-    colnr_t	col;
+    colnr_T	col;
 {
     int		retval;
 
@@ -832,16 +834,16 @@ lbr_chartabsize_adv(s, col)
 /*ARGSUSED*/
     int
 win_lbr_chartabsize(wp, s, col, headp)
-    win_t		*wp;
+    win_T		*wp;
     unsigned char	*s;
-    colnr_t		col;
+    colnr_T		col;
     int			*headp;
 {
 #ifdef FEAT_LINEBREAK
     int		c;
     int		size;
-    colnr_t	col2;
-    colnr_t	colmax;
+    colnr_T	col2;
+    colnr_T	colmax;
     int		added;
     int		numberextra;
     char_u	*ps;
@@ -925,14 +927,14 @@ win_lbr_chartabsize(wp, s, col, headp)
     {
 	numberextra = win_col_off(wp);
 	col += numberextra;
-	if (col >= (colnr_t)W_WIDTH(wp))
+	if (col >= (colnr_T)W_WIDTH(wp))
 	{
 	    col -= W_WIDTH(wp);
 	    numberextra = W_WIDTH(wp) - (numberextra - win_col_off2(wp));
 	    if (numberextra > 0)
 		col = col % numberextra;
 	}
-	if (col == 0 || col + size > (colnr_t)W_WIDTH(wp))
+	if (col == 0 || col + size > (colnr_T)W_WIDTH(wp))
 	{
 	    added = STRLEN(p_sbr);
 	    size += added;
@@ -954,9 +956,9 @@ win_lbr_chartabsize(wp, s, col, headp)
  */
     static int
 win_nolbr_chartabsize(wp, s, col, headp)
-    win_t	*wp;
+    win_T	*wp;
     char_u	*s;
-    colnr_t	col;
+    colnr_T	col;
     int		*headp;
 {
     int		n;
@@ -984,11 +986,11 @@ win_nolbr_chartabsize(wp, s, col, headp)
  */
     int
 in_win_border(wp, vcol)
-    win_t	*wp;
-    colnr_t	vcol;
+    win_T	*wp;
+    colnr_T	vcol;
 {
-    colnr_t	width1;		/* width of first line (after line number) */
-    colnr_t	width2;		/* width of further lines */
+    colnr_T	width1;		/* width of first line (after line number) */
+    colnr_T	width2;		/* width of further lines */
 
 #ifdef FEAT_VERTSPLIT
     if (wp->w_width == 0)	/* there is no border */
@@ -1014,13 +1016,13 @@ in_win_border(wp, vcol)
  */
     void
 getvcol(wp, pos, start, cursor, end)
-    win_t	*wp;
-    pos_t	*pos;
-    colnr_t	*start;
-    colnr_t	*cursor;
-    colnr_t	*end;
+    win_T	*wp;
+    pos_T	*pos;
+    colnr_T	*start;
+    colnr_T	*cursor;
+    colnr_T	*end;
 {
-    colnr_t	vcol;
+    colnr_T	vcol;
     char_u	*ptr;		/* points to current char */
     char_u	*posptr;	/* points to char at pos->col */
     int		incr;
@@ -1150,12 +1152,12 @@ getvcol(wp, pos, start, cursor, end)
 /*
  * Get virtual cursor column in the current window, pretending 'list' is off.
  */
-    colnr_t
+    colnr_T
 getvcol_nolist(posp)
-    pos_t	*posp;
+    pos_T	*posp;
 {
     int		list_save = curwin->w_p_list;
-    colnr_t	vcol;
+    colnr_T	vcol;
 
     curwin->w_p_list = FALSE;
     getvcol(curwin, posp, NULL, &vcol, NULL);
@@ -1169,13 +1171,13 @@ getvcol_nolist(posp)
  */
     void
 getvvcol(wp, pos, start, cursor, end)
-    win_t	*wp;
-    pos_t	*pos;
-    colnr_t	*start;
-    colnr_t	*cursor;
-    colnr_t	*end;
+    win_T	*wp;
+    pos_T	*pos;
+    colnr_T	*start;
+    colnr_T	*cursor;
+    colnr_T	*end;
 {
-    colnr_t	col;
+    colnr_T	col;
 
     if (virtual_active())
     {
@@ -1202,11 +1204,11 @@ getvvcol(wp, pos, start, cursor, end)
  */
     void
 getvcols(wp, pos1, pos2, left, right)
-    win_t	*wp;
-    pos_t	*pos1, *pos2;
-    colnr_t	*left, *right;
+    win_T	*wp;
+    pos_T	*pos1, *pos2;
+    colnr_T	*left, *right;
 {
-    colnr_t	from1, from2, to1, to2;
+    colnr_T	from1, from2, to1, to2;
 
     if (ltp(pos1, pos2))
     {

@@ -223,7 +223,7 @@ static PtWidget_t * gui_ph_show_tooltip( PtWidget_t *window,
                              PgColor_t text_color )
 {
     PtArg_t arg;
-    vimmenu_t *menu;
+    vimmenu_T *menu;
     char_u  *tooltip;
 
     PtSetArg( &arg, Pt_ARG_POINTER, &menu, 0 );
@@ -370,12 +370,12 @@ gui_ph_handle_window_cb( PtWidget_t *widget, void *data, PtCallbackInfo_t *info 
 
 	    if( we->event_state == Ph_WM_EVSTATE_FOCUS )
 	    {
-		gui_focus_change( TRUE );
+		gui_focus_change(TRUE);
 		gui_mch_start_blink();
 	    }
 	    else
 	    {
-		gui_focus_change( FALSE );
+		gui_focus_change(FALSE);
 		gui_mch_stop_blink();
 	    }
 	    break;
@@ -405,12 +405,12 @@ gui_ph_handle_window_cb( PtWidget_t *widget, void *data, PtCallbackInfo_t *info 
 gui_ph_handle_scrollbar( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 {
     PtScrollbarCallback_t *scroll;
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int	    value, dragging = FALSE;
 
     scroll = info->cbdata;
 
-    sb = (scrollbar_t *) data;
+    sb = (scrollbar_T *) data;
     if( sb != NULL )
     {
 	value = scroll->position;
@@ -425,9 +425,9 @@ gui_ph_handle_scrollbar( PtWidget_t *widget, void *data, PtCallbackInfo_t *info 
 		break;
 	}
 
-	gui_drag_scrollbar( sb, value, dragging );
+	gui_drag_scrollbar(sb, value, dragging);
     }
-    return( Pt_CONTINUE );
+    return Pt_CONTINUE;
 }
 
     static int
@@ -595,7 +595,8 @@ gui_ph_handle_keyboard( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 	    string[ len++ ] = ch;
 	}
 
-	if( len == 1 && ( ch == Ctrl_C || ch == intr_char ) )
+	if (len == 1 && ((ch == Ctrl_C && ctrl_c_interrupts)
+							  || ch == intr_char))
 	{
 	    trash_input_buf();
 	    got_int = TRUE;
@@ -776,7 +777,7 @@ gui_ph_handle_pulldown_menu(
 {
     if( data != NULL )
     {
-	vimmenu_t *menu = (vimmenu_t *) data;
+	vimmenu_T *menu = (vimmenu_T *) data;
 
 	PtPositionMenu( menu->submenu_id, NULL );
 	PtRealizeWidget( menu->submenu_id );
@@ -791,7 +792,7 @@ gui_ph_handle_menu( PtWidget_t *widget, void *data, PtCallbackInfo_t *info )
 {
     if( data != NULL )
     {
-	vimmenu_t *menu = (vimmenu_t *) data;
+	vimmenu_T *menu = (vimmenu_T *) data;
 	gui_menu_cb( menu );
     }
     return( Pt_CONTINUE );
@@ -813,7 +814,7 @@ gui_ph_handle_menu_unrealized(
 #define DRAW_END    gui_ph_draw_end()
 
 /* TODO: Set a clipping rect? */
-    void
+    static void
 gui_ph_draw_start( void )
 {
     PgSetRegion( PtWidgetRid( PtFindDisjoint( gui.vimTextArea ) ) );
@@ -824,7 +825,7 @@ gui_ph_draw_start( void )
     PgSetTranslation( &gui_ph_raw_offset, Pg_RELATIVE );
 }
 
-    void
+    static void
 gui_ph_draw_end( void )
 {
     gui_ph_raw_offset.x = -gui_ph_raw_offset.x;
@@ -833,11 +834,11 @@ gui_ph_draw_end( void )
 }
 
 #ifdef USE_PANEL_GROUP
-    static vimmenu_t *
+    static vimmenu_T *
 gui_ph_find_buffer_item( char_u *name )
 {
-    vimmenu_t *top_level = root_menu;
-    vimmenu_t *items = NULL;
+    vimmenu_T *top_level = root_menu;
+    vimmenu_T *items = NULL;
 
     while( top_level != NULL &&
 	    ( strcmp( top_level->dname, "Buffers" ) != 0 ) )
@@ -887,7 +888,7 @@ gui_ph_handle_pg_change(
 	void *data,
 	PtCallbackInfo_t *info )
 {
-    vimmenu_t *menu;
+    vimmenu_T *menu;
     PtPanelGroupCallback_t *panel;
 
     if( info->event != NULL )
@@ -927,7 +928,7 @@ gui_ph_get_panelgroup_margins( short *top, short *bottom, short *left, short *ri
 
 /* Used for the tabs for PtPanelGroup */
     static int
-gui_ph_is_buffer_item( vimmenu_t *menu, vimmenu_t *parent )
+gui_ph_is_buffer_item( vimmenu_T *menu, vimmenu_T *parent )
 {
     char *mark;
 
@@ -1017,11 +1018,11 @@ gui_ph_handle_buffer_remove(
 	void *data,
 	PtCallbackInfo_t *info )
 {
-    vimmenu_t *menu;
+    vimmenu_T *menu;
 
     if( data != NULL )
     {
-	menu = (vimmenu_t *) data;
+	menu = (vimmenu_T *) data;
 	gui_ph_pg_remove_buffer( menu->dname );
     }
 
@@ -1589,7 +1590,7 @@ gui_mch_settitle(char_u *title,	char_u *icon)
 /* Scrollbar */
 
     void
-gui_mch_set_scrollbar_thumb(scrollbar_t *sb, int val, int size, int max)
+gui_mch_set_scrollbar_thumb(scrollbar_T *sb, int val, int size, int max)
 {
     int	    n = 0;
     PtArg_t args[3];
@@ -1601,19 +1602,15 @@ gui_mch_set_scrollbar_thumb(scrollbar_t *sb, int val, int size, int max)
 }
 
     void
-gui_mch_set_scrollbar_pos(scrollbar_t *sb, int x, int y, int w, int h)
+gui_mch_set_scrollbar_pos(scrollbar_T *sb, int x, int y, int w, int h)
 {
     PhArea_t area = {{ x, y }, { w, h }};
 
     PtSetResource( sb->id, Pt_ARG_AREA, &area, 0 );
-
-    if( ! PtWidgetIsRealized( sb->id ) )
-	PtRealizeWidget( sb->id );
-
 }
 
     void
-gui_mch_create_scrollbar(scrollbar_t *sb, int orient)
+gui_mch_create_scrollbar(scrollbar_T *sb, int orient)
 {
     int	    n = 0;
     int	    anchor_flags = 0;
@@ -1658,16 +1655,16 @@ gui_mch_create_scrollbar(scrollbar_t *sb, int orient)
 }
 
     void
-gui_mch_enable_scrollbar(scrollbar_t *sb, int flag)
+gui_mch_enable_scrollbar(scrollbar_T *sb, int flag)
 {
     if( flag != 0 )
-	; /*PtRealizeWidget( sb->id );*/
+	PtRealizeWidget( sb->id );
     else
 	PtUnrealizeWidget( sb->id );
 }
 
     void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
+gui_mch_destroy_scrollbar(scrollbar_T *sb)
 {
     PtDestroyWidget( sb->id );
 }
@@ -1732,7 +1729,7 @@ gui_mch_setmouse(int x, int y)
  */
     char_u *
 gui_mch_get_rgb(
-	guicolor_t    pixel)
+	guicolor_T    pixel)
 {
     static char_u retval[10];
 
@@ -1743,7 +1740,7 @@ gui_mch_get_rgb(
 #endif
 
     int
-gui_mch_get_lightness(guicolor_t pixel)
+gui_mch_get_lightness(guicolor_T pixel)
 {
     return( (int) PgGreyValue( pixel ) );
 }
@@ -1795,7 +1792,7 @@ hex_digit(int c)
  * This is the gui_w32.c version (i think..)
  */
 
-    guicolor_t
+    guicolor_T
 gui_mch_get_color(char_u *name)
 {
     int i;
@@ -1805,7 +1802,7 @@ gui_mch_get_color(char_u *name)
     typedef struct GuiColourTable
     {
 	char	    *name;
-	guicolor_t     colour;
+	guicolor_T     colour;
     } GuiColourTable;
 
     static GuiColourTable table[] =
@@ -1850,7 +1847,7 @@ gui_mch_get_color(char_u *name)
 	g = hex_digit( name[3] ) * 16 + hex_digit( name[4] );
 	b = hex_digit( name[5] ) * 16 + hex_digit( name[6] );
 	if( r < 0 || g < 0 || b < 0 )
-	    return( (guicolor_t) -1 );
+	    return( (guicolor_T) -1 );
 	return( RGB( r, g, b ) );
     }
 
@@ -1871,12 +1868,12 @@ gui_mch_get_color(char_u *name)
 
 	fname = expand_env_save((char_u *)"$VIMRUNTIME/rgb.txt");
 	if (fname == NULL)
-	    return( (guicolor_t) -1 );
+	    return( (guicolor_T) -1 );
 
 	fd = fopen((char *)fname, "rt");
 	vim_free(fname);
 	if (fd == NULL)
-	    return( (guicolor_t) -1 );
+	    return( (guicolor_T) -1 );
 
 	while (!feof(fd))
 	{
@@ -1901,7 +1898,7 @@ gui_mch_get_color(char_u *name)
 	    if (STRICMP(color, name) == 0)
 	    {
 		fclose(fd);
-		return( (guicolor_t) RGB(r,g,b) );
+		return( (guicolor_T) RGB(r,g,b) );
 	    }
 	}
 
@@ -1909,17 +1906,17 @@ gui_mch_get_color(char_u *name)
     }
 
 
-    return( (guicolor_t) -1 );
+    return( (guicolor_T) -1 );
 }
 
     void
-gui_mch_set_fg_color(guicolor_t color)
+gui_mch_set_fg_color(guicolor_T color)
 {
     PgSetTextColor( color );
 }
 
     void
-gui_mch_set_bg_color(guicolor_t color)
+gui_mch_set_bg_color(guicolor_T color)
 {
     PgSetFillColor( color );
 }
@@ -1982,15 +1979,13 @@ gui_mch_clear_all()
     void
 gui_mch_delete_lines(int row, int num_lines)
 {
-    int	    top;
     PhRect_t    rect;
     PhPoint_t   delta;
 
-    rect.ul.x = FILL_X( 0 );
-    top = row + num_lines;
-    rect.ul.y = FILL_Y( top );
+    rect.ul.x = FILL_X( gui.scroll_region_left );
+    rect.ul.y = FILL_Y( row + num_lines );
 
-    rect.lr.x = FILL_X( Columns ) - 1;
+    rect.lr.x = FILL_X( gui.scroll_region_right + 1 ) - 1;
     rect.lr.y = FILL_Y( gui.scroll_region_bot + 1) - 1;
 
     PtWidgetOffset( gui.vimTextArea, &gui_ph_raw_offset );
@@ -2004,23 +1999,24 @@ gui_mch_delete_lines(int row, int num_lines)
 
     PhBlit( PtWidgetRid( PtFindDisjoint( gui.vimTextArea ) ), &rect, &delta );
 
-    gui_clear_block(gui.scroll_region_bot - num_lines + 1, 0,
-	gui.scroll_region_bot, Columns - 1);
+    gui_clear_block(
+	gui.scroll_region_bot - num_lines + 1,
+	gui.scroll_region_left,
+	gui.scroll_region_bot,
+	gui.scroll_region_right );
 }
 
     void
 gui_mch_insert_lines(int row, int num_lines)
 {
-    int	    bottom;
     PhRect_t    rect;
     PhPoint_t   delta;
 
-    rect.ul.x = FILL_X( 0 );
+    rect.ul.x = FILL_X( gui.scroll_region_left );
     rect.ul.y = FILL_Y( row );
 
-    rect.lr.x = FILL_X( Columns ) - 1;
-    bottom = gui.scroll_region_bot - num_lines + 1;
-    rect.lr.y = FILL_Y( bottom ) - 1;
+    rect.lr.x = FILL_X( gui.scroll_region_right + 1 ) - 1;
+    rect.lr.y = FILL_Y( gui.scroll_region_bot - num_lines + 1 ) - 1;
 
     PtWidgetOffset( gui.vimTextArea, &gui_ph_raw_offset );
     PhTranslatePoint( &gui_ph_raw_offset, PtWidgetPos( gui.vimTextArea, NULL ) );
@@ -2033,7 +2029,8 @@ gui_mch_insert_lines(int row, int num_lines)
 
     PhBlit( PtWidgetRid( PtFindDisjoint( gui.vimTextArea ) ) , &rect, &delta );
 
-    gui_clear_block( row, 0, row + num_lines - 1, Columns -1 );
+    gui_clear_block( row, gui.scroll_region_left, 
+	    row + num_lines - 1, gui.scroll_region_right );
 }
 
     void
@@ -2120,7 +2117,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 /* Cursor */
 
     void
-gui_mch_draw_hollow_cursor(guicolor_t color)
+gui_mch_draw_hollow_cursor(guicolor_T color)
 {
     PhRect_t r;
 
@@ -2138,7 +2135,7 @@ gui_mch_draw_hollow_cursor(guicolor_t color)
 }
 
     void
-gui_mch_draw_part_cursor(int w, int h, guicolor_t color)
+gui_mch_draw_part_cursor(int w, int h, guicolor_T color)
 {
     PhRect_t r;
 
@@ -2257,11 +2254,11 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
 /* Change the position of a menu button in the parent */
-    void
+    static void
 gui_ph_position_menu( PtWidget_t *widget, int priority )
 {
     PtWidget_t	*traverse;
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 
     traverse = PtWidgetChildBack( PtWidgetParent( widget ) );
 
@@ -2287,9 +2284,9 @@ gui_ph_position_menu( PtWidget_t *widget, int priority )
 
 /* the index is ignored because it's not useful for our purposes */
     void
-gui_mch_add_menu(vimmenu_t *menu, int index)
+gui_mch_add_menu(vimmenu_T *menu, int index)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
     int	    n;
     PtArg_t args[5];
 
@@ -2361,9 +2358,9 @@ gui_mch_add_menu(vimmenu_t *menu, int index)
 }
 
     void
-gui_mch_add_menu_item(vimmenu_t *menu, int index)
+gui_mch_add_menu_item(vimmenu_T *menu, int index)
 {
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
     int	    n;
     PtArg_t args[5];
 
@@ -2430,7 +2427,7 @@ gui_mch_add_menu_item(vimmenu_t *menu, int index)
 }
 
     void
-gui_mch_destroy_menu(vimmenu_t *menu)
+gui_mch_destroy_menu(vimmenu_T *menu)
 {
     if( menu->submenu_id != NULL )
 	PtDestroyWidget( menu->submenu_id );
@@ -2442,7 +2439,7 @@ gui_mch_destroy_menu(vimmenu_t *menu)
 }
 
     void
-gui_mch_menu_grey(vimmenu_t *menu, int grey)
+gui_mch_menu_grey(vimmenu_T *menu, int grey)
 {
     long    flags, mask, fields;
 
@@ -2469,7 +2466,7 @@ gui_mch_menu_grey(vimmenu_t *menu, int grey)
 }
 
     void
-gui_mch_menu_hidden(vimmenu_t *menu, int hidden)
+gui_mch_menu_hidden(vimmenu_T *menu, int hidden)
 {
     /* TODO: [un]realize the widget? */
 }
@@ -2484,7 +2481,7 @@ gui_mch_draw_menubar(void)
 }
 
     void
-gui_mch_show_popupmenu(vimmenu_t *menu)
+gui_mch_show_popupmenu(vimmenu_T *menu)
 {
     PtSetResource( menu->submenu_id, Pt_ARG_POS, &abs_mouse, 0 );
     PtRealizeWidget( menu->submenu_id );

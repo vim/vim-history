@@ -53,7 +53,7 @@ mch_chdir(char *p_name)
  */
     int
 mac_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     int		flags,		/* EW_* flags */
     short	start_at,
@@ -79,7 +79,7 @@ mac_expandpath(
     char_u	*p, *s, *e, dany;
     int		start_len, c;
     char_u	*pat;
-    regmatch_t	regmatch;
+    regmatch_T	regmatch;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
@@ -209,7 +209,7 @@ mac_expandpath(
 	{
 	    STRNCPY (cfilename, &dirname[1], dirname[0]);
 	    cfilename[dirname[0]] = 0;
-	    if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
+	    if (vim_regexec(&regmatch, cfilename, (colnr_T)0))
 	    {
 		if (s[-1] != ':')
 		{
@@ -259,7 +259,7 @@ mac_expandpath(
 	    {
 		STRNCPY (cfilename, &dirname[1], dirname[0]);
 		cfilename[dirname[0]] = 0;
-		if (vim_regexec(&regmatch, cfilename, (colnr_t)0))
+		if (vim_regexec(&regmatch, cfilename, (colnr_T)0))
 		{
 		    STRCPY(s, cfilename);
 		    STRCAT(buf, path);
@@ -296,7 +296,7 @@ mac_expandpath(
  */
     int
 mch_expandpath(
-    garray_t	*gap,
+    garray_T	*gap,
     char_u	*path,
     int		flags)		/* EW_* flags */
 {
@@ -339,7 +339,7 @@ mch_breakcheck()
     EventRecord theEvent;
 
     if (EventAvail (keyDownMask, &theEvent))
-	if ((theEvent.message & charCodeMask) == Ctrl_C)
+	if ((theEvent.message & charCodeMask) == Ctrl_C && ctrl_c_interrupts)
 	    got_int = TRUE;
 #if 0
     short	i = 0;

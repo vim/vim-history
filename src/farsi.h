@@ -199,7 +199,7 @@ void conv_to_pstd __ARGS((void));
 char_u *lrswap __ARGS((char_u *ibuf));
 char_u *lrFswap __ARGS((char_u *cmdbuf, int len));
 char_u *lrF_sub __ARGS((char_u *ibuf));
-void farsi_fkey __ARGS((cmdarg_t *cap));
+void farsi_fkey __ARGS((cmdarg_T *cap));
 
 /* special Farsi text messages */
 

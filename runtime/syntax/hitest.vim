@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	none; used to see highlighting
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last Change:	2000 Nov 04
+" Last Change:	2001 Apr 07
 " Version:	5.4n.1
 
 " To see your current highlight settings, do

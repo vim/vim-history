@@ -89,7 +89,7 @@ scroll_cb(w, client_data, call_data)
     Widget	w;
     XtPointer	client_data, call_data;
 {
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     long	value;
     int		dragging;
 
@@ -98,17 +98,7 @@ scroll_cb(w, client_data, call_data)
     value = ((XmScrollBarCallbackStruct *)call_data)->value;
     dragging = (((XmScrollBarCallbackStruct *)call_data)->reason ==
 							      (int)XmCR_DRAG);
-    /*
-     * :NOTE: 1998-11-18 09:26:01 EST eralston
-     * pretend we're not dragging whenever scrollbind is active in
-     * the current window, so that the other scrollbind windows
-     * get their scrollbars updated also.
-     */
-    gui_drag_scrollbar(sb, value, dragging
-#ifdef FEAT_SCROLLBIND
-		    && (!sb->wp || !sb->wp->w_p_scb || (sb->wp != curwin))
-#endif
-		    );
+    gui_drag_scrollbar(sb, value, dragging);
 }
 
 
@@ -340,8 +330,10 @@ gui_motif_create_fontlist(font)
     XmFontListEntry font_list_entry;
 
     font_list_entry = XmFontListEntryCreate(STRING_TAG,
-	    gui.fontset == NOFONTSET ? XmFONT_IS_FONT : XmFONT_IS_FONTSET,
-							     (XtPointer)font);
+# ifdef FEAT_XFONTSET
+	    gui.fontset != NOFONTSET ? XmFONT_IS_FONTSET :
+# endif
+	    XmFONT_IS_FONT, (XtPointer)font);
     font_list = XmFontListAppendEntry(NULL, font_list_entry);
     XmFontListEntryFree(&font_list_entry);
 #endif
@@ -352,12 +344,12 @@ gui_motif_create_fontlist(font)
  * Menu stuff.
  */
 
-static void gui_motif_add_actext __ARGS((vimmenu_t *menu));
+static void gui_motif_add_actext __ARGS((vimmenu_T *menu));
 #if (XmVersion >= 1002)
 static void toggle_tearoff __ARGS((Widget wid));
-static void gui_mch_recurse_tearoffs __ARGS((vimmenu_t *menu));
+static void gui_mch_recurse_tearoffs __ARGS((vimmenu_T *menu));
 #endif
-static void gui_mch_submenu_change __ARGS((vimmenu_t *mp, int colors));
+static void gui_mch_submenu_change __ARGS((vimmenu_T *mp, int colors));
 
 static void do_set_mnemonics __ARGS((int enable));
 static int menu_enabled = TRUE;
@@ -447,7 +439,7 @@ gui_motif_set_mnemonics(enable)
 do_set_mnemonics(enable)
     int		enable;
 {
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 
     for (menu = root_menu; menu != NULL; menu = menu->next)
 	if (menu->id != (Widget)0)
@@ -458,12 +450,12 @@ do_set_mnemonics(enable)
 
     void
 gui_mch_add_menu(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
     XmString	label;
     Widget	shell;
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
 #ifdef MOTIF_POPUP
     if (menu_is_popup(menu->name))
@@ -568,7 +560,7 @@ gui_mch_add_menu(menu, idx)
  */
     static void
 gui_motif_add_actext(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     XmString	label;
 
@@ -616,7 +608,7 @@ toggle_tearoff(wid)
 
     static void
 gui_mch_recurse_tearoffs(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     while (menu != NULL)
     {
@@ -651,7 +643,7 @@ gui_mch_compute_menu_height(id)
 {
     Dimension	y, maxy;
     Dimension	margin, shadow;
-    vimmenu_t	*mp;
+    vimmenu_T	*mp;
     static Dimension	height = 21;	/* normal height of a menu item */
 
     /* Don't update the menu height when it was set at a fixed value */
@@ -722,11 +714,11 @@ gui_mch_compute_menu_height(id)
 
     void
 gui_mch_add_menu_item(menu, idx)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
     int		idx;
 {
     XmString	label;
-    vimmenu_t	*parent = menu->parent;
+    vimmenu_T	*parent = menu->parent;
 
 # ifdef EBCDIC
     menu->mnemonic = 0;
@@ -888,7 +880,7 @@ gui_mch_add_menu_item(menu, idx)
  */
     void
 gui_motif_update_mousemodel(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     int		idx = 0;
 
@@ -972,7 +964,7 @@ gui_mch_new_menu_font()
 
     static void
 gui_mch_submenu_change(mp, colors)
-    vimmenu_t	*mp;
+    vimmenu_T	*mp;
     int		colors;		/* TRUE for colors, FALSE for font */
 {
     while (mp != NULL)
@@ -1010,7 +1002,7 @@ gui_mch_submenu_change(mp, colors)
  */
     void
 gui_mch_destroy_menu(menu)
-    vimmenu_t	*menu;
+    vimmenu_T	*menu;
 {
     Widget	parent;
     int		num_children;
@@ -1070,7 +1062,7 @@ gui_mch_destroy_menu(menu)
 /* ARGSUSED */
     void
 gui_mch_show_popupmenu(menu)
-    vimmenu_t *menu;
+    vimmenu_T *menu;
 {
 #ifdef MOTIF_POPUP
     XmMenuPosition(menu->submenu_id, gui_x11_get_last_mouse_event());
@@ -1087,7 +1079,7 @@ gui_mch_show_popupmenu(menu)
 
     void
 gui_mch_set_scrollbar_thumb(sb, val, size, max)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     long	val;
     long	size;
     long	max;
@@ -1103,7 +1095,7 @@ gui_mch_set_scrollbar_thumb(sb, val, size, max)
 
     void
 gui_mch_set_scrollbar_pos(sb, x, y, w, h)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		x;
     int		y;
     int		w;
@@ -1136,7 +1128,7 @@ gui_mch_set_scrollbar_pos(sb, x, y, w, h)
 
     void
 gui_mch_enable_scrollbar(sb, flag)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		flag;
 {
     Arg		args[16];
@@ -1193,7 +1185,7 @@ gui_mch_enable_scrollbar(sb, flag)
 
     void
 gui_mch_create_scrollbar(sb, orient)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
     int		orient;	/* SBAR_VERT or SBAR_HORIZ */
 {
     Arg		args[16];
@@ -1244,7 +1236,7 @@ gui_mch_create_scrollbar(sb, orient)
 #if defined(FEAT_WINDOWS) || defined(PROTO)
     void
 gui_mch_destroy_scrollbar(sb)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 {
     if (sb->id != (Widget)0)
 	XtDestroyWidget(sb->id);
@@ -1253,7 +1245,7 @@ gui_mch_destroy_scrollbar(sb)
 
     void
 gui_mch_set_scrollbar_colors(sb)
-    scrollbar_t *sb;
+    scrollbar_T *sb;
 {
     if (sb->id != (Widget)0)
     {
@@ -1308,7 +1300,7 @@ typedef struct dialog_callback_arg
 {
     char *  args;   /* not used right now */
     int	    id;
-} dcbarg_t;
+} dcbarg_T;
 
 static Widget dialog_wgt;
 static char *browse_fname = NULL;
@@ -1472,7 +1464,6 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
     char_u		*buts;
     char_u		*p, *next;
     XtAppContext	app;
-    XEvent		event;
     XmString		label;
     int			butcount;
     static Widget	dialogbb = NULL;
@@ -1598,11 +1589,11 @@ gui_mch_dialog(type, title, message, buttons, dfltbutton)
 
     dialogStatus = -1;
 
+    /* Loop until a button is pressed or the dialog is killed somehow. */
     while (1)
     {
-	XtAppNextEvent(app, &event);
-	XtDispatchEvent(&event);
-	if (dialogStatus >= 0)
+	XtAppProcessEvent(app, (XtInputMask)XtIMAll);
+	if (dialogStatus >= 0 || !XtIsManaged(dialogbb))
 	    break;
     }
 
@@ -1810,7 +1801,7 @@ toolbarbutton_enter_cb(w, client_data, event, cont)
     XEvent	*event;
     Boolean	*cont;
 {
-    vimmenu_t	*menu = (vimmenu_t *) client_data;
+    vimmenu_T	*menu = (vimmenu_T *) client_data;
 
     if (menu->strings[MENU_INDEX_TIP] != NULL)
     {

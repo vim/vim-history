@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-5
+" Version:     6.0-6
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: January 31, 2001
+" Last Change: March 27, 2001
 "
 " Notes:
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
@@ -75,13 +75,14 @@ syn region texSectionName	matchgroup=Delimiter start="{" end="}" contained
 
 " \documentclass, \documentstyle, \usepackage
 syn match  texDocType	"\\documentclass\>\|\\documentstyle\>\|\\usepackage\>"	nextgroup=texSectionName,texDocTypeArgs
-syn region texDocTypeArgs matchgroup=Delimiter start="\[" end="]" contained	nextgroup=texSectionName
+syn region texDocTypeArgs	matchgroup=Delimiter start="\[" end="]"		contained	nextgroup=texSectionName
 
 " TeX input
 syn match texInput	"\\input\s\+[a-zA-Z/.0-9_]\+"hs=s+7		contains=texStatement
 syn match texInputFile	"\\include\(graphics\|list\)\=\(\[.\{-}\]\)\=\s*{.\{-}}"	contains=texStatement,texInputCurlies
-syn match texInputFile	"\\\(epsfig\|input\|usepackage\)\s*{.\{-}}"		contains=texStatement,texInputCurlies
+syn match texInputFile	"\\\(epsfig\|input\|usepackage\)\s*\(\[.*\]\)\={.\{-}}"	contains=texStatement,texInputCurlies,texInputFileOpt
 syn match texInputCurlies	"[{}]"				contained
+syn region texInputFileOpt	matchgroup=Delimiter start="\[" end="\]"		contained
 
 " Type Styles (LaTeX 2.09)
 syn match texTypeStyle	"\\rm\>"
@@ -311,6 +312,7 @@ hi def link texDefCmd	texDef
 hi def link texDefName	texDef
 hi def link texDocType	texCmdName
 hi def link texDocTypeArgs	texCmdArgs
+hi def link texInputFileOpt	texCmdArgs
 hi def link texInputCurlies	texDelimiter
 hi def link texLigature	texSpecialChar
 hi def link texMathDelimBad	texError
@@ -356,6 +358,7 @@ hi def link texDef	Statement
 hi def link texDelimiter	Delimiter
 hi def link texError	Error
 hi def link texInput	Special
+hi def link texInputFile	Special
 hi def link texLength	Number
 hi def link texMath	Special
 hi def link texMathDelim	Statement

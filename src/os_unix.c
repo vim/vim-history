@@ -158,7 +158,7 @@ static int  have_dollars __ARGS((int, char_u **));
 
 #ifndef NO_EXPANDPATH
 static int	pstrcmp __ARGS((const void *, const void *));
-static int	unix_expandpath __ARGS((garray_t *gap, char_u *path, int wildoff, int flags));
+static int	unix_expandpath __ARGS((garray_T *gap, char_u *path, int wildoff, int flags));
 #endif
 
 #ifndef __EMX__
@@ -1005,6 +1005,7 @@ xopen_message(tvp)
  */
 static int x_error_handler __ARGS((Display *dpy, XErrorEvent *error_event));
 static int x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
+static int x_connect_to_server __ARGS((void));
 static int test_x11_window __ARGS((Display *dpy));
 
 static int	got_x_error = FALSE;
@@ -1039,6 +1040,28 @@ x_error_check(dpy, error_event)
 {
     got_x_error = TRUE;
     return 0;
+}
+
+/*
+ * Return TRUE when connection to the X server is desired.
+ */
+    static int
+x_connect_to_server()
+{
+    regmatch_T	regmatch;
+
+    if (x_no_connect)
+	return FALSE;
+
+    /* Check for a match with "exclude:" from 'clipboard'. */
+    if (clip_exclude_prog != NULL)
+    {
+	regmatch.rm_ic = FALSE;		/* Don't ignore case */
+	regmatch.regprog = clip_exclude_prog;
+	if (vim_regexec(&regmatch, T_NAME, (colnr_T)0))
+	    return FALSE;
+    }
+    return TRUE;
 }
 
 /*
@@ -1133,7 +1156,7 @@ get_x11_windis()
 #endif
 
     /* When started with the "-X" argument, don't try connecting. */
-    if (x_no_connect)
+    if (!x_connect_to_server())
 	return FAIL;
 
     /*
@@ -1929,11 +1952,11 @@ mch_setperm(name, perm)
  * Return a pointer to the ACL of file "fname" in allocated memory.
  * Return NULL if the ACL is not available for whatever reason.
  */
-    vim_acl_t
+    vim_acl_T
 mch_get_acl(fname)
     char_u	*fname;
 {
-    return (vim_acl_t)acl_get_file((char *)fname, ACL_TYPE_DEFAULT);
+    return (vim_acl_T)acl_get_file((char *)fname, ACL_TYPE_DEFAULT);
 }
 
 /*
@@ -1942,7 +1965,7 @@ mch_get_acl(fname)
     void
 mch_set_acl(fname, acl)
     char_u	*fname;
-    vim_acl_t	acl;
+    vim_acl_T	acl;
 {
     if (acl != NULL)
 	acl_set_file((char *)fname, ACL_TYPE_DEFAULT, (acl_t)acl);
@@ -1950,7 +1973,7 @@ mch_set_acl(fname, acl)
 
     void
 mch_free_acl(acl)
-    vim_acl_t	acl;
+    vim_acl_T	acl;
 {
     if (acl != NULL)
 	acl_free((acl_t)acl);
@@ -3603,7 +3626,7 @@ pstrcmp(a, b)
  */
     int
 mch_expandpath(gap, path, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*path;
     int		flags;		/* EW_* flags */
 {
@@ -3612,7 +3635,7 @@ mch_expandpath(gap, path, flags)
 
     static int
 unix_expandpath(gap, path, wildoff, flags)
-    garray_t	*gap;
+    garray_T	*gap;
     char_u	*path;
     int		wildoff;
     int		flags;		/* EW_* flags */
@@ -3623,7 +3646,7 @@ unix_expandpath(gap, path, wildoff, flags)
     int		start_len, c;
     char_u	*pat;
     DIR		*dirp;
-    regmatch_t	regmatch;
+    regmatch_T	regmatch;
     struct dirent *dp;
     int		starts_with_dot;
     int		matches;
@@ -3717,7 +3740,7 @@ unix_expandpath(gap, path, wildoff, flags)
 	    if (dp == NULL)
 		break;
 	    if ((dp->d_name[0] != '.' || starts_with_dot)
-		    && vim_regexec(&regmatch, (char_u *)dp->d_name, (colnr_t)0))
+		    && vim_regexec(&regmatch, (char_u *)dp->d_name, (colnr_T)0))
 	    {
 		STRCPY(s, dp->d_name);
 		len = STRLEN(buf);
@@ -4639,8 +4662,8 @@ mch_libcall(libname, funcname, argstring, argint, string_result, number_result)
 #endif
 
 #if (defined(FEAT_X11) && defined(FEAT_XCLIPBOARD)) || defined(PROTO)
-static int	    xterm_trace = -1;	/* default: disabled */
-static int	    xterm_button;
+static int	xterm_trace = -1;	/* default: disabled */
+static int	xterm_button;
 
 /*
  * Setup a dummy window for X selections in a terminal.
@@ -4652,7 +4675,7 @@ setup_term_clip()
     char	*strp = "";
     Widget	AppShell;
 
-    if (x_no_connect)
+    if (!x_connect_to_server())
 	return;
 
     open_app_context();
@@ -4907,262 +4930,89 @@ clip_xterm_set_selection(cbd)
 /* Translate character to its CTRL- value */
 char CtrlTable[] =
 {
-/* \x00 */ 0,
-/* \x01 */ 0,
-/* \x02 */ 0,
-/* \x03 */ 0,
-/* \x04 */ 0,
-/* \x05 */ 0,
-/* \x06 */ 0,
-/* \x07 */ 0,
-/* \x08 */ 0,
-/* \x09 */ 0,
-/* \x0A */ 0,
-/* \x0B */ 0,
-/* \x0C */ 0,
-/* \x0D */ 0,
-/* \x0E */ 0,
-/* \x0F */ 0,
-/* \x10 */ 0,
-/* \x11 */ 0,
-/* \x12 */ 0,
-/* \x13 */ 0,
-/* \x14 */ 0,
-/* \x15 */ 0,
-/* \x16 */ 0,
-/* \x17 */ 0,
-/* \x18 */ 0,
-/* \x19 */ 0,
-/* \x1A */ 0,
-/* \x1B */ 0,
-/* \x1C */ 0,
-/* \x1D */ 0,
-/* \x1E */ 0,
-/* \x1F */ 0,
-/* \x20 */ 0,
-/* \x21 */ 0,
-/* \x22 */ 0,
-/* \x23 */ 0,
-/* \x24 */ 0,
-/* \x25 */ 0,
-/* \x26 */ 0,
-/* \x27 */ 0,
-/* \x28 */ 0,
-/* \x29 */ 0,
-/* \x2A */ 0,
-/* \x2B */ 0,
-/* \x2C */ 0,
-/* \x2D */ 0,
-/* \x2E */ 0,
-/* \x2F */ 0,
-/* \x30 */ 0,
-/* \x31 */ 0,
-/* \x32 */ 0,
-/* \x33 */ 0,
-/* \x34 */ 0,
-/* \x35 */ 0,
-/* \x36 */ 0,
-/* \x37 */ 0,
-/* \x38 */ 0,
-/* \x39 */ 0,
-/* \x3A */ 0,
-/* \x3B */ 0,
-/* \x3C */ 0,
-/* \x3D */ 0,
-/* \x3E */ 0,
-/* \x3F */ 0,
-/*      */ 0,
-/* \x41 */ 0,
-/* \x42 */ 0,
-/* \x43 */ 0,
-/* \x44 */ 0,
-/* \x45 */ 0,
-/* \x46 */ 0,
-/* \x47 */ 0,
-/* \x48 */ 0,
-/* \x49 */ 0,
-/* \x4A */ 0,
-/* .    */ 0,
-/* <    */ 0,
-/* (    */ 0,
-/* +    */ 0,
-/* |    */ 0,
-/* &    */ 0,
-/* \x51 */ 0,
-/* \x52 */ 0,
-/* \x53 */ 0,
-/* \x54 */ 0,
-/* \x55 */ 0,
-/* \x56 */ 0,
-/* \x57 */ 0,
-/* \x58 */ 0,
-/* \x59 */ 0,
-/* !    */ 0,
-/* $    */ 0,
-/* *    */ 0,
-/* )    */ 0,
-/* ;    */ 0,
-/* ^    */ 0x1E,
-/* -    */ 0x1F,
-/* /    */ 0,
-/* \x62 */ 0,
-/* \x63 */ 0,
-/* \x64 */ 0,
-/* \x65 */ 0,
-/* \x66 */ 0,
-/* \x67 */ 0,
-/* \x68 */ 0,
-/* \x69 */ 0,
-/* \x6A */ 0,
-/* ,    */ 0,
-/* %    */ 0,
-/* _    */ 0x1F,
-/* >    */ 0,
-/* ?    */ 0,
-/* \x70 */ 0,
-/* \x71 */ 0,
-/* \x72 */ 0,
-/* \x73 */ 0,
-/* \x74 */ 0,
-/* \x75 */ 0,
-/* \x76 */ 0,
-/* \x77 */ 0,
-/* \x78 */ 0,
-/* `    */ 0,
-/* :    */ 0,
-/* #    */ 0,
-/* @    */ 0,
-/* '    */ 0,
-/* =    */ 0,
-/* "    */ 0,
-/* \x80 */ 0,
-/* a    */ 0x01,
-/* b    */ 0x02,
-/* c    */ 0x03,
-/* d    */ 0x37,
-/* e    */ 0x2D,
-/* f    */ 0x2E,
-/* g    */ 0x2F,
-/* h    */ 0x16,
-/* i    */ 0x05,
-/* \x8A */ 0,
-/* \x8B */ 0,
-/* \x8C */ 0,
-/* \x8D */ 0,
-/* \x8E */ 0,
-/* \x8F */ 0,
-/* \x90 */ 0,
-/* j    */ 0x15,
-/* k    */ 0x0B,
-/* l    */ 0x0C,
-/* m    */ 0x0D,
-/* n    */ 0x0E,
-/* o    */ 0x0F,
-/* p    */ 0x10,
-/* q    */ 0x11,
-/* r    */ 0x12,
-/* \x9A */ 0,
-/* \x9B */ 0,
-/* \x9C */ 0,
-/* \x9D */ 0,
-/* \x9E */ 0,
-/* \x9F */ 0,
-/* \xA0 */ 0,
-/* ~    */ 0,
-/* s    */ 0x13,
-/* t    */ 0x3C,
-/* u    */ 0x3D,
-/* v    */ 0x32,
-/* w    */ 0x26,
-/* x    */ 0x18,
-/* y    */ 0x19,
-/* z    */ 0x3F,
-/* \xAA */ 0,
-/* \xAB */ 0,
-/* \xAC */ 0,
-/* [    */ 0x27,
-/* \xAE */ 0,
-/* \xAF */ 0,
-/* \xB0 */ 0,
-/* \xB1 */ 0,
-/* \xB2 */ 0,
-/* \xB3 */ 0,
-/* \xB4 */ 0,
-/* \xB5 */ 0,
-/* \xB6 */ 0,
-/* \xB7 */ 0,
-/* \xB8 */ 0,
-/* \xB9 */ 0,
-/* \xBA */ 0,
-/* \xBB */ 0,
-/* \xBC */ 0,
-/* ]    */ 0x1D,
-/* \xBE */ 0,
-/* \xBF */ 0,
-/* {    */ 0,
-/* A    */ 0x01,
-/* B    */ 0x02,
-/* C    */ 0x03,
-/* D    */ 0x37,
-/* E    */ 0x2D,
-/* F    */ 0x2E,
-/* G    */ 0x2F,
-/* H    */ 0x16,
-/* I    */ 0x05,
-/* \xCA */ 0,
-/* \xCB */ 0,
-/* \xCC */ 0,
-/* \xCD */ 0,
-/* \xCE */ 0,
-/* \xCF */ 0,
-/* }    */ 0,
-/* J    */ 0x15,
-/* K    */ 0x0B,
-/* L    */ 0x0C,
-/* M    */ 0x0D,
-/* N    */ 0x0E,
-/* O    */ 0x0F,
-/* P    */ 0x10,
-/* Q    */ 0x11,
-/* R    */ 0x12,
-/* \xDA */ 0,
-/* \xDB */ 0,
-/* \xDC */ 0,
-/* \xDD */ 0,
-/* \xDE */ 0,
-/* \xDF */ 0,
-/* \    */ 0x1C,
-/* \xE1 */ 0,
-/* S    */ 0x13,
-/* T    */ 0x3C,
-/* U    */ 0x3D,
-/* V    */ 0x32,
-/* W    */ 0x26,
-/* X    */ 0x18,
-/* Y    */ 0x19,
-/* Z    */ 0x3F,
-/* \xEA */ 0,
-/* \xEB */ 0,
-/* \xEC */ 0,
-/* \xED */ 0,
-/* \xEE */ 0,
-/* \xEF */ 0,
-/* 0    */ 0,
-/* 1    */ 0,
-/* 2    */ 0,
-/* 3    */ 0,
-/* 4    */ 0,
-/* 5    */ 0,
-/* 6    */ 0,
-/* 7    */ 0,
-/* 8    */ 0,
-/* 9    */ 0,
-/* \xFA */ 0,
-/* \xFB */ 0,
-/* \xFC */ 0,
-/* \xFD */ 0,
-/* \xFE */ 0,
-/* \xFF */ 0,
+/* 00 - 5E */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* ^ */ 0x1E,
+/* - */ 0x1F,
+/* 61 - 6C */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* _ */ 0x1F,
+/* 6E - 80 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* a */ 0x01,
+/* b */ 0x02,
+/* c */ 0x03,
+/* d */ 0x37,
+/* e */ 0x2D,
+/* f */ 0x2E,
+/* g */ 0x2F,
+/* h */ 0x16,
+/* i */ 0x05,
+/* 8A - 90 */
+	0, 0, 0, 0, 0, 0, 0,
+/* j */ 0x15,
+/* k */ 0x0B,
+/* l */ 0x0C,
+/* m */ 0x0D,
+/* n */ 0x0E,
+/* o */ 0x0F,
+/* p */ 0x10,
+/* q */ 0x11,
+/* r */ 0x12,
+/* 9A - A1 */
+	0, 0, 0, 0, 0, 0, 0, 0,
+/* s */ 0x13,
+/* t */ 0x3C,
+/* u */ 0x3D,
+/* v */ 0x32,
+/* w */ 0x26,
+/* x */ 0x18,
+/* y */ 0x19,
+/* z */ 0x3F,
+/* AA - AC */
+	0, 0, 0,
+/* [ */ 0x27,
+/* AE - BC */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+/* ] */ 0x1D,
+/* BE - C0 */ 0, 0, 0,
+/* A */ 0x01,
+/* B */ 0x02,
+/* C */ 0x03,
+/* D */ 0x37,
+/* E */ 0x2D,
+/* F */ 0x2E,
+/* G */ 0x2F,
+/* H */ 0x16,
+/* I */ 0x05,
+/* CA - D0 */ 0, 0, 0, 0, 0, 0, 0,
+/* J */ 0x15,
+/* K */ 0x0B,
+/* L */ 0x0C,
+/* M */ 0x0D,
+/* N */ 0x0E,
+/* O */ 0x0F,
+/* P */ 0x10,
+/* Q */ 0x11,
+/* R */ 0x12,
+/* DA - DF */ 0, 0, 0, 0, 0, 0,
+/* \ */ 0x1C,
+/* E1 */ 0,
+/* S */ 0x13,
+/* T */ 0x3C,
+/* U */ 0x3D,
+/* V */ 0x32,
+/* W */ 0x26,
+/* X */ 0x18,
+/* Y */ 0x19,
+/* Z */ 0x3F,
+/* EA - FF*/ 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 char MetaCharTable[]=

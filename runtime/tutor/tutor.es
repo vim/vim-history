@@ -19,21 +19,21 @@
      olvidarán los mandatos.
 
      Ahora, asegúrese de que la tecla de bloqueo de mayúsculas no está
-     activada y pulse la tecla  j  lo suficiente para mover el cursor
+     activada y pulse la tecla	j  lo suficiente para mover el cursor
      de forma que la Lección 1.1 ocupe completamente la pantalla.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lección 1.1: MOVIMIENTOS DEL CURSOR  
+		     Lección 1.1: MOVIMIENTOS DEL CURSOR  
 
  ** Para mover el cursor, pulse las teclas h,j,k,l de la forma que se indica. **
       ^
       k       Indicación: La tecla h está a la izquierda y mueve a la izquierda.
- < h     l >              La tecla l está a la derecha y mueve a la derecha.
-      j                   La tecla j parece una flecha que apunta hacia abajo. 
+ < h	 l >		  La tecla l está a la derecha y mueve a la derecha.
+      j			  La tecla j parece una flecha que apunta hacia abajo. 
       v
 
   1. Mueva el cursor por la pantalla hasta que se sienta cómodo con ello.
 
-  2. Mantenga pulsada la tecla  j  hasta que se repita «automágicamente».
+  2. Mantenga pulsada la tecla	j  hasta que se repita «automágicamente».
 ---> Ahora ya sabe como llegar a la lección siguiente.
 
   3. Utilizando la tecla abajo, vaya a la Lección 1.2.
@@ -45,22 +45,22 @@ Nota: Las teclas de movimiento del cursor también funcionan. Pero usando
       hjkl podrá moverse mucho más rápido una vez que se acostumbre a ello.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lección 1.2: ENTRANDO Y SALIENDO DE VIM
+		    Lección 1.2: ENTRANDO Y SALIENDO DE VIM
 
   ¡¡ NOTA: Antes de ejecutar alguno de los pasos siguientes lea primero
-           la lección entera!!
+	   la lección entera!!
 
   1. Pulse la tecla <ESC> (para asegurarse de que está en modo Normal).
 
-  2. Escriba:                   :q! <INTRO>
+  2. Escriba:			:q! <INTRO>
 
 ---> Esto provoca la salida del editor SIN guardar ningún cambio que se haya
      hecho. Si quiere guardar los cambios y salir escriba:
-                                :wq <INTRO>  
+				:wq <INTRO>  
 
   3. Cuando vea el símbolo del sistema, escriba el mandato que le trajo a este
      tutor. Éste puede haber sido:   vimtutor <INTRO>
-     Normalmente se usaría:          vim tutor <INTRO>
+     Normalmente se usaría:	     vim tutor <INTRO>
 
 ---> 'vim' significa entrar al editor, 'tutor' es el fichero a editar.
 
@@ -68,7 +68,7 @@ Nota: Las teclas de movimiento del cursor también funcionan. Pero usando
      pasos 1 a 3 para salir y volver a entrar al editor. Después mueva el
      cursor hasta la Lección 1.3.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                   Lección 1.3: EDICIÓN DE TEXTO - BORRADO
+		   Lección 1.3: EDICIÓN DE TEXTO - BORRADO
 
 ** Estando en modo Normal pulse  x  para borrar el carácter sobre el cursor. **j
 
@@ -78,7 +78,7 @@ Nota: Las teclas de movimiento del cursor también funcionan. Pero usando
   2. Para corregir los errores, mueva el cursor hasta que esté bajo el
      carácter que va aser borrado.
 
-  3. Pulse la tecla  x  para borrar el carácter sobrante.
+  3. Pulse la tecla  x	para borrar el carácter sobrante.
 
   4. Repita los pasos 2 a 4 hasta que la frase sea la correcta.
 
@@ -91,7 +91,7 @@ NOTA: A medida que vaya avanzando en este tutor no intente memorizar,
       aprenda practicando.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                   Lección 1.4: EDICIÓN DE TEXTO - INSERCIÓN
+		   Lección 1.4: EDICIÓN DE TEXTO - INSERCIÓN
 
       ** Estando en modo Normal pulse  i  para insertar texto. **
 
@@ -114,11 +114,11 @@ NOTA: A medida que vaya avanzando en este tutor no intente memorizar,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            RESUMEN DE LA LECCIÓN 1
+			    RESUMEN DE LA LECCIÓN 1
 
 
   1. El cursor se mueve utilizamdo las teclas de las flechas o las teclas hjkl.
-         h (izquierda)     j (abajo)      k (arriba)      l (derecha)          
+	 h (izquierda)	   j (abajo)	  k (arriba)	  l (derecha)	       
 
   2. Para acceder a Vim (desde el símbolo del sistema %) escriba:
      vin FILENAME <INTRO>
@@ -129,7 +129,7 @@ NOTA: A medida que vaya avanzando en este tutor no intente memorizar,
   4. Para borrar un carácter sobre el cursor en modo Normal pulse:  x
 
   5. Para insertar texto en la posición del cursor estando en modo Normal:
-          pulse   i   escriba el texto   pulse <ESC>
+	  pulse   i   escriba el texto	 pulse <ESC>
 
 NOTA: Pulsando <ESC> se vuelve al modo Normal o cancela un mandato no deseado
       o incompleto.
@@ -137,7 +137,7 @@ NOTA: Pulsando <ESC> se vuelve al modo Normal o cancela un mandato no deseado
 Ahora continúe con la Lección 2.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lección 2.1:  MANDATOS PARA BORRAR
+		     Lección 2.1:  MANDATOS PARA BORRAR
 
 
        ** Escriba dw para borrar hasta el final de una palabra **
@@ -153,17 +153,17 @@ Ahora continúe con la Lección 2.
 
 
   NOTA: Las letras   dw   aparecerán en la última línea de la pantalla cuando
-        las escriba. Si escribe algo equivocado pulse <ESC> y comience de nuevo.
+	las escriba. Si escribe algo equivocado pulse <ESC> y comience de nuevo.
 
 
 ---> Hay algunas palabras pásalo bien que no pertenecen papel a esta frase.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lección 2.2: MÁS MANDATOS PARA BORRAR
+		    Lección 2.2: MÁS MANDATOS PARA BORRAR
 
 
-          ** Escriba  d$  para borrar hasta el final de la línea. **
+	  ** Escriba  d$  para borrar hasta el final de la línea. **
 
 
   1. Pulse  <ESC>  para asegurarse de que está en el modo Normal.
@@ -183,12 +183,12 @@ Ahora continúe con la Lección 2.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    Lección 2.3: SOBRE MANDATOS Y OBJETOS
+		    Lección 2.3: SOBRE MANDATOS Y OBJETOS
 
 
-  El formato del mandato de borrar   d   es como sigue:
+  El formato del mandato de borrar   d	 es como sigue:
 
-         [número]   d   objeto      O        d   [número]   objeto
+	 [número]   d	objeto	    O	     d	 [número]   objeto
   donde:
    número - es cuántas veces se ha de ejecutar el mandato (opcional, defecto=1).
    d - es el mandato para borrar.
@@ -205,18 +205,18 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               Lección 2.4: UNA EXCEPCIÓN AL 'MANDATO-OBJETO'
+	       Lección 2.4: UNA EXCEPCIÓN AL 'MANDATO-OBJETO'
 
-           ** Escriba   dd   para borrar una línea entera. **
+	   ** Escriba	dd   para borrar una línea entera. **
 
   Debido a la frecuencia con que se borran líneas enteras, los diseñadores
   de Vim decidieron que sería más fácil el escribir simplemente dos des en
-  una fila para borrar  una línea.
+  una fila para borrar	una línea.
 
   1. Mueva el cursor a la segunda línea de la lista de abajo.
   2. Escriba  dd  para borrar la línea.
   3. Muévase ahora a la cuarta línea.
-  4. Escriba   2dd   (recuerde  número-mandato-objeto) para borrar las dos
+  4. Escriba   2dd   (recuerde	número-mandato-objeto) para borrar las dos
      líneas.
 
       1) Las rosas son rojas, 
@@ -228,11 +228,11 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
       7) Y así eres tu.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       Lección 2.5: EL MANDATO DESHACER
+		       Lección 2.5: EL MANDATO DESHACER
 
 
-   ** Pulse  u  para deshacer los últimos mandatos,
-             U  para deshacer una línea entera.       **
+   ** Pulse  u	para deshacer los últimos mandatos,
+	     U	para deshacer una línea entera.       **
 
   1. Mueva el cursor a la línea de abajo señalada con ---> y sitúelo bajo el
      primer error.
@@ -250,30 +250,30 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   8. Estos mandatos son muy útiles. Ahora pase al resumen de la Lección 2.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            RESUMEN DE LA LECCIÓN 2
+			    RESUMEN DE LA LECCIÓN 2
 
-  1. Para borrar desde el cursor hasta el final de una palabra pulse:   dw
+  1. Para borrar desde el cursor hasta el final de una palabra pulse:	dw
 
-  2. Para borrar desde el cursor hasta el final de una línea pulse:     d$
+  2. Para borrar desde el cursor hasta el final de una línea pulse:	d$
 
   3. Para borrar una línea enter pulse:    dd
 
   4. El formato de un mandato en modo Normal es:
 
-       [número]   mandato   objeto   O   mandato   [número]   objeto
+       [número]   mandato   objeto   O	 mandato   [número]   objeto
      donde:
        número - es cuántas veces se ha de ejecutar el mandato
        mandato - es lo que hay que hacer, por ejemplo, d para borrar
        objeto - es sobre lo que el mandato va a operar, por ejemplo
-                w (palabra), $ (hasta el final de la línea), etc.
+		w (palabra), $ (hasta el final de la línea), etc.
 
-  5. Para deshacer acciones previas pulse:               u (u minúscula)
+  5. Para deshacer acciones previas pulse:		 u (u minúscula)
      Para deshacer todos los cambios de una línea pulse: U (U mayúscula)
-     Para deshacer lo deshecho pulse:                    CTRL-R
+     Para deshacer lo deshecho pulse:			 CTRL-R
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lección 3.1: EL MANDATO «PUT» (poner)
+			 Lección 3.1: EL MANDATO «PUT» (poner)
 
   ** Pulse p para poner lo último que ha borrado después del cursor. **
 
@@ -284,7 +284,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   3. Mueva el cursor a la línea que debe quedar por debajo de la
      línea a mover.
 
-  4. Estando en mod Normal, pulse   p   para restituir la línea borrada.
+  4. Estando en mod Normal, pulse   p	para restituir la línea borrada.
 
   5. Repita los pasos 2 a 4 para poner todas las líneas en el orden correcto.
 
@@ -294,7 +294,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
      a) Las rosas son rojas,
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                       Lección 3.2: EL MANDATO «REPLACE» (remplazar)
+		       Lección 3.2: EL MANDATO «REPLACE» (remplazar)
  
 
   ** Pulse  r  y un carácter para sustituir el carácter sobre el cursor. **
@@ -304,7 +304,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
   2. Mueva el cursor para situarlo bajo el primer error.
 
-  3. Pulse   r   y el carácter que debe sustituir al erróneo.
+  3. Pulse   r	 y el carácter que debe sustituir al erróneo.
 
   4. Repita los pasos 2 y 3 hasta que la primera línea esté corregida.
 
@@ -317,7 +317,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 3.3: EL MANDATO «CHANGE» (cambiar)
+			Lección 3.3: EL MANDATO «CHANGE» (cambiar)
 
 
      ** Para cambiar parte de una palabra o toda ella escriba  cw . **
@@ -339,13 +339,13 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                      Lección 3.4: MÁS CAMBIOS USANDO c
+		      Lección 3.4: MÁS CAMBIOS USANDO c
 
    ** El mandato change se utiliza con los mismos objetos que delete. **
 
   1. El mandato change funciona de la misma forma que delete. El formato es:
 
-       [número]   c   objeto       O        c   [número]   objeto
+       [número]   c   objeto	   O	    c	[número]   objeto
 
   2. Los objetos son tambiém los mismos, tales como  w (palabra), $ (fin de
      la línea), etc.
@@ -361,30 +361,30 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
 ---> El final de esta línea necesita ser corregido usando el mandato  c$.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            RESUMEN DE LA LECCIÓN 3
+			    RESUMEN DE LA LECCIÓN 3
 
 
   1. Para sustituir texto que ha sido borrado, pulse  p . Esto Pone el texto
      borrado DESPUÉS del cursor (si lo que se ha borrado es una línea se
      situará sobre la línea que está sobre el cursor).
 
-  2. Para sustituir el carácter bajo el cursor, pulse   r   y luego el 
+  2. Para sustituir el carácter bajo el cursor, pulse	r   y luego el 
      carácter que sustituirá al original.
 
   3. El mandato change le permite cambiar el objeto especificado desde la
-     posición del cursor hasta el final del objeto; e.g. Pulse  cw  para
+     posición del cursor hasta el final del objeto; e.g. Pulse	cw  para
      cambiar desde el cursor hasta el final de la palabra, c$  para cambiar
      hasta el final de la línea.
 
   4. El formato para change es:
 
-         [número]   c   objeto        O         c   [número]   objeto
+	 [número]   c	objeto	      O		c   [número]   objeto
 
   Pase ahora a la lección siguiente.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               Lección 4.1: SITUACIÓN EN EL FICHERO Y SU ESTADO
+	       Lección 4.1: SITUACIÓN EN EL FICHERO Y SU ESTADO
 
 
  ** Pulse CTRL-g para mostrar su situación en el fichero y su estado.
@@ -406,7 +406,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   4. Si se siente confiado en poder hacer esto ejecute los pasos 1 a 3.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 4.2: EL MANDATO «SEARCH» (buscar)
+			Lección 4.2: EL MANDATO «SEARCH» (buscar)
 
      ** Escriba  /  seguido de una frase para buscar la frase. **
 
@@ -428,7 +428,7 @@ NOTE: Para los aventureros, pulsando sólo el objeto estando en modo Normal
   «errroor» no es la forma de deletrear error; errroor es un error.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               Lección 4.3: BÚSQUEDA PARA COMPROBAR PARÉNTESIS
+	       Lección 4.3: BÚSQUEDA PARA COMPROBAR PARÉNTESIS
 
    ** Pulse %  para encontrar el paréntesis correspondiente a ),] o } . **
 
@@ -450,10 +450,10 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
       paréntesis, corchetes o llaves disparejos.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  Lección 4.4: UNA FORMA DE CAMBIAR ERRORES
+		  Lección 4.4: UNA FORMA DE CAMBIAR ERRORES
 
 
-    ** Escriba  :s/viejo/nuevo/g para sustituir 'viejo' por 'nuevo'. **
+    ** Escriba	:s/viejo/nuevo/g para sustituir 'viejo' por 'nuevo'. **
 
 
   1. Mueva el cursor a la línea de abajo señalada con --->.
@@ -473,7 +473,7 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                            RESUMEN DE LA LECCIÓN 4
+			    RESUMEN DE LA LECCIÓN 4
 
 
   1. Ctrl-g  muestra la posición del cursor en el fichero y su estado.
@@ -488,15 +488,15 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
   3. Pulsando  %  cuando el cursor esta sobre (,), [,], { o } localiza
      la pareja correspondiente.
   
-  4. Para cambiar viejo por nuevo en una línea pulse          :s/viejo/nuevo
+  4. Para cambiar viejo por nuevo en una línea pulse	      :s/viejo/nuevo
      Para cambiar todos los viejo por nuevo en una línea pulse :s/viejo/nuevo/g
      Para cambiar frases entre dos números de líneas pulse  :#,#s/viejo/nuevo/g
      Para cambiar viejo por nuevo en todo el fichero pulse  :%s/viejo/nuevo/g
-     Para pedir confirmación en cada caso añada  'c'        :%s/viejo/nuevo/gc
+     Para pedir confirmación en cada caso añada  'c'	    :%s/viejo/nuevo/gc
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                Lección 5.1: CÓMO EJECUTAR UN MANDATO EXTERNO
+		Lección 5.1: CÓMO EJECUTAR UN MANDATO EXTERNO
 
 
   ** Escriba  :!  seguido de un mandato externo para ejecutar ese mandato. **
@@ -508,9 +508,9 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
   2. Ahora escriba el carácter ! (signo de admiración). Esto le permitirá
      ejecutar cualquier mandato del sistema.
 
-  3. Como ejemplo escriba   ls   después del ! y luego pulse <INTRO>. Esto
+  3. Como ejemplo escriba   ls	 después del ! y luego pulse <INTRO>. Esto
      le mostrará una lista de su directorio, igual que si estuviera en el
-     símbolo del sistema. Si  ls  no funciona utilice   !:dir   .
+     símbolo del sistema. Si  ls  no funciona utilice	!:dir	.
 
 --->Nota: De esta manera es posible ejecutar cualquier mandato externo.
 
@@ -518,14 +518,14 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lección 5.2: MÁS SOBRE GUARDAR FICHEROS
+		     Lección 5.2: MÁS SOBRE GUARDAR FICHEROS
 
 
      ** Para guardar los cambios hechos en un fichero,
-        escriba  :w NOMBRE_DE_FICHERO. **
+	escriba  :w NOMBRE_DE_FICHERO. **
 
 
-  1. Escriba  :!dir  o  :!ls  para ver una lista de su directorio.
+  1. Escriba  :!dir  o	:!ls  para ver una lista de su directorio.
      Ya sabe que debe pulsar <INTRO> después de ello.
 
   2. Elija un nombre de fichero que todavía no exista, como TEST.
@@ -533,14 +533,14 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
   3. Ahora escriba   :w TEST  (donde TEST es el nombre de fichero elegido).
 
   4. Esta acción guarda todo el fichero  (Vim Tutor)  bajo el nombre TEST.
-     Para comprobarlo escriba   :!dir   de nuevo y vea su directorio.
+     Para comprobarlo escriba	:!dir	de nuevo y vea su directorio.
 
 ---> Tenga en cuenta que si sale de Vim y  entra de nuevo con el nombre de
      fichero TEST, el fichero sería una copia exacta del tutor cuando lo
      ha guardado.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-               Lección 5.3: UN MANDATO DE ESCRITURA SELECTIVO
+	       Lección 5.3: UN MANDATO DE ESCRITURA SELECTIVO
 
    ** Para guardar parte del fuchero escriba   :#,# NOMBRE_DEL_FICHERO **
 
@@ -558,11 +558,11 @@ Nota: ¡Esto es muy útil en la detección de errores en un programa con
      donde #,# son los números que usted ha recordado (primera línea,
      última línea) y TEST es su nombre de dichero.
 
-  5. De nuevo, vea que el fichero esta ahí con  :!dir  pero NO lo borre.
+  5. De nuevo, vea que el fichero esta ahí con	:!dir  pero NO lo borre.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                Lección 5.4: RECUPERANDO Y MEZCLANDO FICHEROS
+		Lección 5.4: RECUPERANDO Y MEZCLANDO FICHEROS
 
  ** Para insertar el contenido de un fichero escriba :r NOMBRE_DEL_FICHERO **
 
@@ -584,14 +584,14 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
      versión del fichero.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                           RESUMEN DE LA LECCIÓN 5
+			   RESUMEN DE LA LECCIÓN 5
 
 
   1.  :!mandato  ejecuta un mandato externo.
 
       Algunos ejemplos útiles son:
-          :!dir - muestra el contenido de un directorio.
-          :!delete NOMBRE_DE_FICHERO  -  borra el fichero NOMBRE_DE FICHERO.
+	  :!dir - muestra el contenido de un directorio.
+	  :!delete NOMBRE_DE_FICHERO  -  borra el fichero NOMBRE_DE FICHERO.
 
   2.  :#,# NOMBRE_DE _FICHERO  guarda desde las líneas # hasta la # en el
      fichero NOMBRE_DE_FICHERO.
@@ -606,11 +606,11 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lección 6.1: EL MANDATO «OPEN» (abrir)
+			 Lección 6.1: EL MANDATO «OPEN» (abrir)
 
 
-         ** Pulse  o  para abrir una línea debajo del cursor
-            y situarle en modo Insert **
+	 ** Pulse  o  para abrir una línea debajo del cursor
+	    y situarle en modo Insert **
 
 
   1. Mueva el cursor a la línea de abajo señalada con --->.
@@ -628,9 +628,9 @@ NOTA: El fichero recuperado se sitúa a partir de la posición del cursor.
 Abra una línea sobre ésta pulsando Mayu-O cuando el curso está en esta línea.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                        Lección 6.2: EL MANDATO «APPEND» (añadir)
+			Lección 6.2: EL MANDATO «APPEND» (añadir)
 
-         ** Pulse  a  para insertar texto DESPUÉS del cursor. **
+	 ** Pulse  a  para insertar texto DESPUÉS del cursor. **
 
 
   1. Mueva el cursor al final de la primera línea de abajo señalada con --->
@@ -650,7 +650,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
 ---> Esta línea le permitirá praticar el añadido de texto al final de una línea.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                     Lección 6.3: OTRA VERSIÓN DE «REPLACE» (remplazar)
+		     Lección 6.3: OTRA VERSIÓN DE «REPLACE» (remplazar)
 
     ** Pulse una  R  mayúscula para sustituir más de un carácter. **
 
@@ -672,7 +672,7 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
 
  
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                         Lección 6.4: FIJAR OPCIONES
+			 Lección 6.4: FIJAR OPCIONES
 
  ** Fijar una opción de forma que una búsqueda o sustitución ignore la caja **
   (Para el concepto de caja de una letra, véase la nota al final del fichero)
@@ -695,14 +695,14 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
      /ignore
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                           RESUMEN DE LA LECCIÓN 6
+			   RESUMEN DE LA LECCIÓN 6
 
 
   1. Pulsando  o  abre una línea por DEBAJO del cursor y sitúa el cursor en
      la línea abierta en modo Insert.
      Pulsando una O mayúscula se abre una línea SOBRE la que está el cursor.
 
-  2. Pulse una  a  para insertar texto DESPUÉS del carácter sobre el cursor.
+  2. Pulse una	a  para insertar texto DESPUÉS del carácter sobre el cursor.
      Pulsando una  A  mayúscula añade automáticamente texto al final de la
      línea.
 
@@ -718,18 +718,18 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                  Lección 7: MANDATOS PARA LA AYUDA EN LÍNEA
+		  Lección 7: MANDATOS PARA LA AYUDA EN LÍNEA
 
-                 ** Utilice el sistema de ayuda en línea **
+		 ** Utilice el sistema de ayuda en línea **
 
 
   Vim dispone de un sistema de ayuda en línea. Para activarlo, pruebe una
   de estas tres formas:
-        - pulse la tecla <AYUDA> (si dispone de ella)
-        - pulse la tecla <F1> (si dispone de ella)
-        - escriba   :help <INTRO>
+	- pulse la tecla <AYUDA> (si dispone de ella)
+	- pulse la tecla <F1> (si dispone de ella)
+	- escriba   :help <INTRO>
 
-  Escriba   :q <INTRO>   para cerrar la ventana de ayuda.
+  Escriba   :q <INTRO>	 para cerrar la ventana de ayuda.
 
   Puede encontrar ayuda en casi cualquier tema añadiendo un argumento al
   mandato «:help» mandato. Pruebe éstos:
@@ -747,8 +747,8 @@ Nota: ¡Esto evita el pulsar  i , el último carácter, el texto a insertar,
   mandatos.
 
   Para lecturas y estudios posteriores se recomienda el libro:
-        Learning the Vi Editor - por Linda Lamb
-        Editorial: O'Reilly & Associates Inc.
+	Learning the Vi Editor - por Linda Lamb
+	Editorial: O'Reilly & Associates Inc.
   Es un buen libro para llegar a saber casi todo lo que desee hacer con Vi.
   La sexta edición incluye también información sobre Vim.
 

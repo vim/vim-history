@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0aa.  Last change: 2001 Mar 16
+*gui.txt*       For Vim version 6.0ab.  Last change: 2001 Apr 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -296,9 +296,10 @@ See |gui-selections| on how the selection is used.
 
 
 3.3 Other Text Selection with Mouse		*gui-mouse-modeless*
-
+						*modeless-selection*
 A different kind of selection is used when:
 - in Command-line mode
+- in the Command-line window and pointing in another window
 - at the |hit-enter| prompt
 - whenever the current mode is not in the 'mouse' option
 - when holding the CTRL and SHIFT keys in the GUI
@@ -309,6 +310,7 @@ button at the start, drag to the end and release.  To extend the selection,
 use the right mouse button when 'mousemodel' is "extend", or the left mouse
 button with the shift key pressed when 'mousemodel' is "popup".
 The middle mouse button pastes the text.
+The selection is removed when the selected text is scrolled or changed. 
 
 
 3.4 Using Mouse on Status Lines				*gui-mouse-status*
@@ -566,12 +568,27 @@ menus can be different.  This is different from menu-bar menus, which have
 the same order for all modes.
 NOTE: sub-menu priorities currently don't work for all versions of the GUI.
 
+							*menu-separator*
+Menu items can be separated by a special item that inserts some space between
+items.  Depending on the system this is displayed as a line or a dotted line.
+These items must start with a '-' and end in a '-'.  The part in between is
+used to give it a unique name.  Priorities can be used as with normal items.
+Example: >
+	:menu Example.item1  	:do something
+	:menu Example.-Sep-	:
+	:menu Example.item2	:do something different
+Note that the separator also requires a rhs.  It doesn't matter what it is,
+because the item will never be selected.  Use a single colon to keep it
+simple.
+
 							*gui-toolbar*
-Currently, the toolbar is only available in the Win32 and GTK+ (X11) GUI. It
-should turn up in other GUIs in due course. Sample toolbar definitions are
-given in menu.vim.  The display of the toolbar is controlled by the
-'guioptions' letter 'T'. You can thus have menu & toolbar together, or either
-on its own, or neither.
+The toolbar is currently available in the Win32, Athena, Motif and GTK+ (X11)
+GUI.  It should turn up in other GUIs in due course.  The default toolbar
+is setup in menu.vim.
+The display of the toolbar is controlled by the 'guioptions' letter 'T'. You
+can thus have menu & toolbar together, or either on its own, or neither.
+The appearance is controlled by the 'toolbar' option.  You can chose between
+an image, text or both.
 
 The toolbar is defined as a special menu called ToolBar, which only has one
 level. Vim interprets the items in this menu as follows:
@@ -579,16 +596,15 @@ level. Vim interprets the items in this menu as follows:
     the built-in bitmaps available in Vim. Currently there are 31 numbered
     from 0 to 30 which cover most common editing operations |builtin-tools|.
 2)  An item with another name is first searched for in the directory
-    $VIM/bitmaps.  If found, the bitmap file is used as the toolbar button
-    image. Note that the exact filename is OS-specific: For example, under
-    Win32 the command >
+    "bitmaps" in 'runtimepath'.  If found, the bitmap file is used as the
+    toolbar button image.  Note that the exact filename is OS-specific: For
+    example, under Win32 the command >
 	:amenu ToolBar.Hello :echo "hello"<CR>
-<   would search for the file 'hello.bmp'. Under GTK+/X11 it is 'Hello.xpm'.
-    Loading a custom bitmap is only supported on W95, NT4, and GTK+. The
-    bitmap is scaled to fit the button in Win32, but not GTK+.  For GTK+, the
-    size of the default pixmaps used is 20 by 20 pixels.
-3)  If the bitmap is not found in $VIM/bitmaps, Vim checks for a match against
-    its list of built-in names. Each built-in button image has a name.
+<   would find the file 'hello.bmp'.  Under GTK+/X11 it is 'Hello.xpm'.
+    For MS-Windows the bitmap is scaled to fit the button.
+    For others the size of the default pixmaps used is 20 by 20 pixels.
+3)  If the bitmap is still not found, Vim checks for a match against its list
+    of built-in names.  Each built-in button image has a name.
     So the command >
 	:amenu ToolBar.Open :e
 <   will show the built in "open a file" button image if no open.bmp exists.
