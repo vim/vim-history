@@ -1,5 +1,5 @@
 This directory contains files to automatically compute the indent for a
-language.
+type of file.
 
 If you want to add your own indent file for your personal use, read the docs
 at ":help indent-expression"
@@ -20,7 +20,7 @@ Rules for making an indent file:
 
 You should use this check for "b:did_indent":
 
-	" Only load this indent file when no other was loaded.
+	" Only load this indent file when no other was loaded yet.
 	if exists("b:did_indent")
 	  finish
 	endif

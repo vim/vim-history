@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0w.  Last change: 2001 Feb 24
+*version6.txt*  For Vim version 6.0x.  Last change: 2001 Mar 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -111,6 +111,12 @@ has not been used before.  Also, when editing another buffer in a window, the
 local window options are reset to their global values.  The ":set" command
 sets both the local and global values, this is still compatible.  But a
 modeline only sets the local value, this is not backwards compatible.
+
+":let &opt = val" now sets the local and global values, like ":set".  New
+commands have been added to set the global or local value:
+	:let &opt = val		like ":set"
+	:let &g:opt = val	like ":setglobal"
+	:let &l:opt = val	like ":setlocal"
 
 
 'fileencoding' changed				*fileencoding-changed*
@@ -289,6 +295,11 @@ it shouldn't hurt for some existing buffers to remain present.
 When the argument list is empty ":argdel *" caused an error message.
 
 No longer put the search pattern from a tag jump in the history.
+
+Use "SpecialKey" highlighting for unprintable characters instead of "NonText".
+The idea is that unprintable text or any text that's displayed differently
+from the characters in the file is using "SpecialKey", and "NonText" is used
+for text that doesn't really exist in the file.
 
 ==============================================================================
 NEW FEATURES
@@ -471,6 +482,13 @@ Many new items for Multi-byte support:
 - Made "\<" and "\>" in regexp work for UTF-8. (Muraoka Taro)
 - Support double-byte single-width characters for euc-jp: Characters starting
   with 0x8E.  Added ScreenLines2[] to store the second byte.
+- The "xfontset" feature isn't required for "xim".  These are now two
+  independent features.
+- XIM: enable XIM when typing a language character (Insert mode, Search
+  pattern, "f" or "r" command).  Disable XIM when typing a Normal mode
+  command.
+- Added 'm' flag to 'formatoptions': When wrapping words, allow splitting at
+  each multibyte character, not only at a space.
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -520,6 +538,7 @@ Multi-language support					*new-multi-lang*
   translation.
 - --disable-nls argument for configure: Disable use of gettext(). (Sung-Hyun
   Nam)
+- Added NLS support for Win32 with the MingW compiler. (Eduardo Fernandez)
 
 
 Plugin support					*new-plugins*
@@ -713,6 +732,9 @@ Search Path						*new-search-path*
   "**" for 'tags' option. (Ralf Schandl)
 - Added 'includeexpr', can be used to modify file name found by 'include'
   option.
+- Also use 'includeexpr' for "gf" and "<cfile>" when the file can't be found
+  without modification.  Useful for doing "gf" on the name after an include or
+  import statement.
 - 'cdpath' option: Locations to find a ":cd" argument. (Raf)
 - Added 'suffixesadd', suffixes to be added to a file name when searching for
   a file for the "gf", "[I", etc. commands.
@@ -930,6 +952,10 @@ toupper()	Convert string to all-upper case.
 type()		Check the type of an expression.
 winwidth()	Width of a window. (Johannes Zellner)
 
+Added expansion of curly braces in variable and function names.  This can be
+used for variable names that include the value of the an option.  Or a
+primitive form of arrays. (Vince Negri)
+
 
 New autocommand events: ~
 BufWinEnter	Triggered when a buffer is displayed in a window, after using
@@ -1124,7 +1150,7 @@ GUI:
 - 'linespace' option: Insert a pixel line between lines. (Nam)
 - Allow non-Visual selection (without moving the cursor) by keeping CTRL and
   SHIFT pressed. (Ivan Wellesz)
-- Motif: added toolbar. (Gordon Prieur)
+- Motif: added toolbar. (Gordon Prieur)  Also added tooltips.
 - Win32: Added "c" flag to 'guifont' to be able to specify the charset. (Artem
   Khodush)
 - When no --enable-xim argument is given, automatically enable it when a X GUI
@@ -1307,6 +1333,19 @@ Show unprintable characters with NonText highlighting, also in the command
 line.
 
 Added a number of Lisp names after which the indent isn't increased that much.
+
+Added a default 'errorformat' value for VMS. (Jim Bush)
+
+When asked to display the value of a hidden option, tell it's not supported.
+
+GTK GUI: When dropping a file on Vim, remove extra slashes from the start of
+the path.  Also shorten the file name if possible.
+
+Let "%p" in 'errorformat' (column of error indicated by a row of characters)
+also accept a line of dots.
+
+The "p" command can now be used in Visual mode.  It overwrites the selected
+text with the contents of a register.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -1834,5 +1873,69 @@ a (multibyte) character.  For example, the "r" command could not be repeated.
 The DOS/Windows install program didn't always work from a directory with a
 long filename, because $VIM and the executable name would not have the same
 path.
+
+Multi-byte:
+- Using an any-but character range [^x] in a regexp didn't work for UTF-8.
+  (Muraoka Taro)
+- When backspacing over inserted characters in Replace mode multi-byte
+  characters were not handled correctly. (Muraoka Taro)
+- Search commands "#" and "*" didn't work with multibyte characters. (Muraoka
+  Taro)
+- Word completion in Insert mode didn't work with multibyte characters.
+  (Muraoka Taro)
+- Athena/Motif GUI: when 'linespace' is non-zero the cursor would be drawn too
+  wide (number of bytes instead of cell width).
+- When changing 'encoding' to "euc-jp" and inserting a character Vim would
+  crash.
+- For euc-jp characters positioning the cursor would sometimes be wrong.
+  Also, with two characters with 0x8e leading byte only the first one would be
+  displayed.
+- When using DYNAMIC_ICONV on Win32 conversion might fail because of using the
+  wrong error number. (Muraoka Taro)
+- Using Alt-x in the GUI while 'encoding' was set to "utf-8" didn't produce
+  the right character.
+- When using Visual block selection and only the left halve of a double-wide
+  character is selected, the highlighting continued to the end of the line.
+- Visual-block delete didn't work properly when deleting the right halve of a
+  double-wide character.
+- Overstrike mode for the cmdline replaced only the first byte of a multibyte
+  character.
+- The cursor in Replace mode (also in the cmdline) was to small on a
+  double-wide character.
+- When a multibyte character contained a 0x80 byte, it didn't work (was using
+  a CSI byte instead). (Muraoka Taro)
+- Wordwise selection with the mouse didn't work.
+- Yanking a non-Visual selection of multi-byte characters didn't work.
+- When 'selection' is "exclusive", selecting a word that ends in a multi-byte
+  character used wrong highlighting for the following character.
+
+Win32 with Make_mvc.mak: Didn't compile for debugging. (Craig Barkhouse)
+
+Win32 GUI: When "vimrun.exe" is used to execute an external command, don't
+give a message box with the return value, it was already printed by vimrun.
+Also avoid printing the return value of the shell when ":silent!" is used.
+
+Win32: selecting a lot of text and using the "find/replace" dialog caused a
+crash.
+
+X11 GUI: When typing a character with the 8th bit set and the Meta/Alt
+modifier, the modifier was removed without changing the character.
+
+Truncating a message to make it fit on the command line, using "..." for the
+middle, didn't always compute the space correctly.
+
+Could not imap <C-@>.  Now it works like <Nul>.
+
+VMS: Fixed a few things for VAXC.  os_vms_fix.com had some strange CTRL-M
+characters. (Zoltan Arpadffy and John W. Hamill)
+
+The gzip plugin used a ":normal" command, this doesn't work when dropping a
+compressed file on Vim.
+
+In very rare situations a binary search for a tag would fail, because an
+uninitialzed value happens to be half the size of the tag file. (Narendran)
+
+When using BufEnter and BufLeave autocommands to enable/disable a menu, it
+wasn't updated right away.
 
  vim:tw=78:

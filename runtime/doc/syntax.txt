@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0w.  Last change: 2001 Feb 18
+*syntax.txt*    For Vim version 6.0x.  Last change: 2001 Mar 09
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -44,7 +44,7 @@ disabled at compile time.
 ==============================================================================
 1. Quick start						*:syn-qstart*
 
-							*:syn-on*
+							*:syn-on* *:syntax-on*
 Syntax highlighting is switched on with this command: >
 	:syntax on
 What this command actually does, is executing the command >
@@ -57,7 +57,7 @@ are in the "/usr/vim/vim50/syntax" directory, set $VIMRUNTIME to
 "/usr/vim/vim50".  You must do this in the shell, before starting Vim.
 
 
-							*:hi-normal*
+					*:hi-normal* *:highlight-normal*
 If you are running in the GUI, you can get white text on a black background
 with: >
    :highlight Normal guibg=Black guifg=White
@@ -253,7 +253,7 @@ What ":syntax on" does:
     |
     +-	Clear out any old syntax by sourcing $VIMRUNTIME/syntax/nosyntax.vim
     |
-    +-	Source $VIMRUNTIME/syntax/synload.vim
+    +-	Source $VIMRUNTIME/syntax/synload.vim from 'runtimepath'
     |	|
     |	+-  Set up standard highlighting groups
     |	|
@@ -360,6 +360,12 @@ Unix shell: >
 
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim*
 Assembly	*asm-syntax* *asmh8300-syntax* *nasm-syntax* *masm-syntax*
+
+Files matching "*.i" could be Progress or Assembly  If the automatic detection
+doesn't work for you, or you don't edit Progress at all, use this in your
+startup vimrc: >
+   :let filetype_i = "asm"
+Replace "asm" with the type of assembly you use.
 
 There are many types of assembly languages that all use the same file name
 extensions.  Therefore you will have to select the type yourself, or add a
@@ -505,6 +511,14 @@ To disable these again, use this: >
 	:unlet cynlib_cyntax_for_cc
 	:unlet cynlib_cyntax_for_cpp
 <
+
+CWEB						*cweb.vim* *cweb-syntax*
+
+Files matching "*.w" could be Progress or cweb.  If the automatic detection
+doesn't work for you, or you don't edit Progress at all, use this in your
+startup vimrc: >
+   :let filetype_w = "cweb"
+
 
 DTD						*dtd.vim* *dtd-syntax*
 
@@ -1260,6 +1274,31 @@ internal variable to a larger number:
 
 (The default is 20 lines.)
 
+
+PROGRESS				*progress.vim* *progress-syntax*
+
+Files matching "*.w" could be Progress or cweb.  If the automatic detection
+doesn't work for you, or you don't edit cweb at all, use this in your
+startup vimrc: >
+   :let filetype_w = "progress"
+The same happens for "*.i", which could be assembly, and "*.p", which could be
+Pascal.  Use this if you don't use assembly and Pascal: >
+   :let filetype_i = "progress"
+   :let filetype_p = "progress"
+
+The number of reserved words in Progress is so large that a number of the
+less-used words have been disabled in this syntax file, but they can
+be enabled if you add this line to your .vimrc: >
+
+  let progress_full_syntax=1
+
+If this is defined, vim will recognize many words of the less-used syntax,
+but beware that there is a performance hit for using this.
+
+To disable it again, use this: >
+  unlet progress_full_syntax
+
+
 PYTHON						*python.vim* *python-syntax*
 
 There are four options to control Python syntax highlighting.
@@ -1380,14 +1419,30 @@ vimrc file: >
 
 SH						*sh.vim* *sh-syntax*
 
-This covers the "normal" Unix sh, bash and the korn shell.  If you're working
-on a system where bash is called sh, you will benefit to define the vim
-variable 'bash_is_sh' in your '.vimrc' file: >
-	:let bash_is_sh = 1
-If some buffers use bash for sh, use the buffer-local variable: >
-	:let b:is_bash = 1
-You can force using the korn shell by sett a buffer-local variable: >
-	:let b:is_kornshell = 1
+This covers the "normal" Unix (Borne) sh, bash and the korn shell.
+
+Vim attempts to determine which shell type is in use by specifying that
+various filenames are of specific types:
+
+    ksh : .kshrc* *.ksh 
+	bash: .bashrc* bashrc bash.bashrc .bash_profile* *.bash
+
+If neither of these cases pertain, then the first line of the file is examined
+(ex. /bin/sh  /bin/ksh  /bin/bash).  If the first line specifies a shelltype,
+then that shelltype is used.  However some files (ex. .profile) are known to
+be shell files but the type is not apparent.  One may specify buffer specific
+variables prior to sourcing the <sh.vim> syntax file (b:is_kornshell,
+b:is_bash, or b:is_sh) so that the associated shell type will be used.  One
+may also specify a global default by instantiating one of the following
+three variables:
+
+    ksh : is_kornshell
+	bash: is_bash
+	sh  : is_sh
+
+One may also specify that what looks like the "sh" shell is actually
+to be interpreted as a bash shell by setting 'bash_is_sh'.  It is
+best to set any of these global variables in your '.vimrc' file.
 
 To choose between the two ways to treat single-quotes inside a pair of
 double-quotes, I have introduced a Vim variable "highlight_balanced_quotes".
@@ -1396,10 +1451,10 @@ inside double quotes, and are not highlighted.  If you prefer balanced single
 quotes as I do you just make the statement in your .vimrc file: >
 	:let highlight_balanced_quotes = 1
 
-Similar I have introduced another vim variable "highlight_function_name" to be
+Similarly I have introduced another vim variable "highlight_function_name" to be
 used to enable/disable highlighting of the function-name in function
-declaration.  Default is not to highlight the function name.  If you want to
-highlight functions names, include this in your .vimrc file: >
+declarations.  The default is not to highlight the function name.  If you want to
+highlight function names, include this in your .vimrc file: >
 	:let highlight_function_name = 1
 
 If you notice highlighting errors while scrolling backwards, which are fixed
@@ -2746,25 +2801,37 @@ CursorIM	like Cursor, but used when in IME mode |CursorIM|
 Directory	directory names (and other special names in listings)
 							*hl-ErrorMsg*
 ErrorMsg	error messages on the command line
-							*hl-FillColumn*
-FillColumn	column separating vertically split windows
+							*hl-VertSplit*
+VertSplit	the column separating vertically split windows
 							*hl-Folded*
 Folded		line used for closed folds
 							*hl-FoldColumn*
 FoldColumn	'foldcolumn'
 							*hl-IncSearch*
 IncSearch	'incsearch' highlighting
+							*hl-LineNr*
+LineNr		line number for ":number" and ":#" commands, and when 'number'
+		option is set.
 							*hl-ModeMsg*
 ModeMsg		'showmode' message (e.g., "-- INSERT --")
 							*hl-MoreMsg*
 MoreMsg		|more-prompt|
 							*hl-NonText*
 NonText		'~' and '@' at the end of the window, characters from
-		'showbreak' and the translation of unprintable characters
+		'showbreak' and other characters that do not really exist in
+		the text (e.g., ">" displayed when a double-wide character
+		doesn't fit at the end of the line).
+							*hl-Normal*
+Normal		normal text
 							*hl-Question*
 Question	|hit-enter| prompt and yes/no questions
+							*hl-Search*
+Search		last search pattern highlighting (see 'hlsearch')
 							*hl-SpecialKey*
-SpecialKey	Meta and special keys listed with ":map"
+SpecialKey	Meta and special keys listed with ":map", also for text used
+		to show unprintable characters in the text, 'listchars'.
+		Generally: text that is displayed differently from what it
+		really is.
 							*hl-StatusLine*
 StatusLine	status line of current window
 							*hl-StatusLineNC*
@@ -2782,13 +2849,6 @@ VisualNOS	Visual mode selection when vim is "Not Owning the Selection".
 WarningMsg	warning messages
 							*hl-WildMenu*
 WildMenu	current match in 'wildmenu' completion
-							*hl-LineNr*
-LineNr		line number for ":number" and ":#" commands, and when 'number'
-		option is set.
-							*hl-Normal*
-Normal		normal text
-							*hl-Search*
-Search		last search pattern highlighting (see 'hlsearch')
 
 							*hl-User1..9*
 The 'statusline' syntax allows the use of 9 different highlights in the
@@ -2800,7 +2860,7 @@ scrollbars.  They don't have defaults.  This doesn't work for the Win32 GUI.
     Scrollbar						    *hl-Scrollbar*
 
 ==============================================================================
-13. Linking groups					*:highlight-link*
+13. Linking groups				*:hi-link* *:highlight-link*
 
 When you want to use the same highlighting for several syntax groups, you
 can do this more easily by linking the groups into one common highlight
@@ -2824,7 +2884,7 @@ Notes:
   sourced file, you don't get an error message.  This can be used to skip
   links for groups that already have settings.
 
-							*:highlight-default*
+					*:hi-default* *:highlight-default*
 The [default] argument is used for setting the default highlighting for a
 group.  If highlighting has already been specified for the group the command
 will be ignored.  Also when there is an existing link.

@@ -1708,7 +1708,9 @@ mch_call_shell(char_u *cmd, int options)
     }
     else
 	x = system((char *)p_sh);
-    if (x == 127)
+    if (emsg_silent)
+	;
+    else if (x == 127)
 	OUT_STR(_("\nCannot execute shell sh\n"));
     else if (x && !(options & SHELL_SILENT))
     {

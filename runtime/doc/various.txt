@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0w.  Last change: 2001 Feb 18
+*various.txt*   For Vim version 6.0x.  Last change: 2001 Feb 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -474,10 +474,18 @@ Jump to specific subjects by using tags.  This can be done in two ways:
 - Use the "CTRL-]" command while standing on the name of a command or option.
   This only works when the tag is a keyword.  "<C-Leftmouse>" and
   "g<LeftMouse>" work just like "CTRL-]".
-- use the ":ta {subject}" command.  This works with all characters.
+- use the ":ta {subject}" command.  This also works with non-keyword
+  characters.
 
 Use CTRL-T or CTRL-O to jump back.
 Use ":q" to close the help window.
+
+If there are several matches for an item you are looking for, this is how you
+can jump to each one of them:
+1. open a help window
+2. Use the ":tag" command with a slash prepended to the tag.  E.g.: >
+	:tag /min
+3. Use ":tnext" to jump to the next matching tag.
 
 It is possible to add help files for plugins and other items.  You don't need
 to change the distributed help files for that.  See |add-local-help|

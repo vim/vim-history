@@ -15,6 +15,7 @@ void status_redraw_curbuf __ARGS((void));
 void redraw_statuslines __ARGS((void));
 void win_redr_status_matches __ARGS((expand_t *xp, int num_matches, char_u **matches, int match));
 void win_redr_status __ARGS((win_t *wp));
+int stl_connected __ARGS((win_t *wp));
 int get_keymap_str __ARGS((win_t *wp, char_u *buf, int len));
 void screen_putchar __ARGS((int c, int row, int col, int attr));
 int screen_getchar __ARGS((int row, int col, int *attrp));

@@ -25,9 +25,6 @@
  */
 #include "gui_w48.c"
 
-#ifndef GET_X_LPARAM
-# define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
-#endif
 
 #ifdef __MINGW32__
 /*
@@ -38,10 +35,10 @@
 #  define _cdecl
 # endif
 # ifndef IsMinimized
-#  define     IsMinimized(hwnd)        IsIconic(hwnd)
+#  define     IsMinimized(hwnd)		IsIconic(hwnd)
 # endif
 # ifndef IsMaximized
-#  define     IsMaximized(hwnd)        IsZoomed(hwnd)
+#  define     IsMaximized(hwnd)		IsZoomed(hwnd)
 # endif
 # ifndef SelectFont
 #  define     SelectFont(hdc, hfont)  ((HFONT)SelectObject((hdc), (HGDIOBJ)(HFONT)(hfont)))
@@ -160,8 +157,6 @@
 #endif
 
 #ifdef FEAT_MBYTE
-static int sysfixed_width = 0;
-static int sysfixed_height = 0;
 # ifdef FEAT_MBYTE_IME
 static LOGFONT norm_logfont;
 static LRESULT _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData);
@@ -251,6 +246,7 @@ gui_is_win32s(void)
     return (os_version.dwPlatformId == VER_PLATFORM_WIN32s);
 }
 
+#ifdef FEAT_MENU
 /*
  * Figure out how high the menu bar is at the moment.
  */
@@ -258,7 +254,6 @@ gui_is_win32s(void)
 gui_w32_get_menu_height(
     int	    fix_window)	    /* If TRUE, resize window if menu height changed */
 {
-#ifdef FEAT_MENU
     static int	old_menu_height = -1;
 
     RECT    rc1, rc2;
@@ -321,43 +316,9 @@ gui_w32_get_menu_height(
 
     old_menu_height = menu_height;
     return menu_height;
-#else
-    return 0;
-#endif
 }
+#endif /*FEAT_MENU*/
 
-
-/*
- * Get this message when the user clicks on the cross in the top right corner
- * of a Windows95 window.
- */
-    static void
-_OnClose(
-    HWND hwnd)
-{
-    gui_shell_closed();
-}
-
-/*
- * Get a message when the user switches back to vim
- */
-    static void
-_OnActivateApp(
-    HWND hwnd,
-    BOOL fActivate,
-    DWORD dwThreadId)
-{
-    /* When activated: Check if any file was modified outside of Vim. */
-    if (fActivate)
-	check_timestamps(TRUE);
-
-#ifdef FEAT_AUTOCMD
-    /* In any case, fire the appropriate autocommand */
-    apply_autocmds(fActivate ? EVENT_FOCUSGAINED : EVENT_FOCUSLOST,
-						   NULL, NULL, FALSE, curbuf);
-#endif
-    (void)DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
-}
 
 /*
  * Get a message when the window is being destroyed.
@@ -381,6 +342,7 @@ _OnEndSession(void)
     ml_close_all(FALSE);	    /* close all memfiles, without deleting */
     getout(1);			    /* exit Vim properly */
 }
+
 
     static void
 _OnDropFiles(
@@ -406,7 +368,6 @@ _OnDropFiles(
     for (i = 0; i < cFiles; ++i)
     {
 	DragQueryFile(hDrop, i, szFile, _MAX_PATH);
-	/* TRACE("  dropped %2u: '%s'\n", i, szFile); */
 
 	mch_dirname(IObuff, IOSIZE);
 	fname = shorten_fname(szFile, IObuff);
@@ -532,6 +493,7 @@ _OnSetFocus(
     HWND hwndOldFocus)
 {
     gui_focus_change(TRUE);
+    (void)DefWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
 }
 
     static void
@@ -540,31 +502,9 @@ _OnKillFocus(
     HWND hwndNewFocus)
 {
     gui_focus_change(FALSE);
+    (void)DefWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
 }
 
-/*
- * Find the scrollbar with the given hwnd.
- */
-    static scrollbar_t *
-gui_w32_find_scrollbar(HWND hwnd)
-{
-    win_t	*wp;
-
-    if (gui.bottom_sbar.id == hwnd)
-	return &gui.bottom_sbar;
-#ifndef FEAT_WINDOWS
-    wp = curwin;
-#else
-    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#endif
-    {
-	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
-	    return &wp->w_scrollbars[SBAR_LEFT];
-	if (wp->w_scrollbars[SBAR_RIGHT].id == hwnd)
-	    return &wp->w_scrollbars[SBAR_RIGHT];
-    }
-    return NULL;
-}
 
     static int
 _OnScroll(
@@ -577,8 +517,9 @@ _OnScroll(
     long	val;
     int		dragging = FALSE;
     SCROLLINFO	si;
+    static UINT	prev_code = 0;   /* code of previous call */
 
-    sb = gui_w32_find_scrollbar(hwndCtl);
+    sb = gui_mswin_find_scrollbar(hwndCtl);
     if (sb == NULL)
 	return 0;
 
@@ -627,20 +568,24 @@ _OnScroll(
 	    val = sb_info->max;
 	    break;
 	case SB_ENDSCROLL:
-	    /*
-	     * "pos" only gives us 16-bit data.  In case of large file, use
-	     * GetScrollPos() which returns 32-bit.  Unfortunately it is not
-	     * valid while the scrollbar is being dragged.
-	     */
-	    val = GetScrollPos(hwndCtl, SB_CTL);
-	    if (sb->scroll_shift > 0)
-		val <<= sb->scroll_shift;
+	    if (prev_code == SB_THUMBTRACK)
+	    {
+		/*
+		 * "pos" only gives us 16-bit data.  In case of large file,
+		 * use GetScrollPos() which returns 32-bit.  Unfortunately it
+		 * is not valid while the scrollbar is being dragged.
+		 */
+		val = GetScrollPos(hwndCtl, SB_CTL);
+		if (sb->scroll_shift > 0)
+		    val <<= sb->scroll_shift;
+	    }
 	    break;
 
 	default:
 	    /* TRACE("Unknown scrollbar event %d\n", code); */
 	    return 0;
     }
+    prev_code = code;
 
     si.cbSize = sizeof(si);
     si.fMask = SIF_POS;
@@ -897,34 +842,6 @@ _DuringSizing(
     return TRUE;
 }
 
-    static BOOL
-_OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
-{
-#ifdef FEAT_MBYTE
-    /* get system fixed font size*/
-    static const char ach[] = {'W', 'f', 'g', 'M'};
-
-    HDC	    hdc = GetWindowDC(hwnd);
-    HFONT   hfntOld = SelectFont(hdc, GetStockObject(SYSTEM_FIXED_FONT));
-    SIZE    siz;
-
-    GetTextExtentPoint(hdc, ach, sizeof(ach), &siz);
-
-    sysfixed_width = siz.cx / sizeof(ach);
-    /*
-     * Make characters one pixel higher (by default), so that italic and bold
-     * fonts don't draw off the bottom of their character space.  Also means
-     * that we can underline an underscore for normal text.
-     */
-    sysfixed_height = siz.cy + p_linespace;
-
-    SelectFont(hdc, hfntOld);
-
-    ReleaseDC(hwnd, hdc);
-#endif
-
-    return 0;
-}
 
 
     static LRESULT CALLBACK
@@ -990,10 +907,12 @@ _WndProc(
 		|| p_wak[0] == 'n'
 		|| (p_wak[0] == 'm' && !gui_is_menu_shortcut((int)wParam))
 		)
-	    return HANDLE_WM_SYSCHAR((hwnd), (wParam), (lParam), (_OnSysChar));
-	else
 #endif
+	    return HANDLE_WM_SYSCHAR((hwnd), (wParam), (lParam), (_OnSysChar));
+#ifdef FEAT_MENU
+	else
 	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+#endif
 
     case WM_SYSKEYUP:
 #ifdef FEAT_MENU
@@ -1108,7 +1027,8 @@ _WndProc(
 	    break;
 	}
 #ifdef MSWIN_FIND_REPLACE
-	else if (uMsg == s_findrep_msg && s_findrep_msg != 0)
+	else
+	if (uMsg == s_findrep_msg && s_findrep_msg != 0)
 	{
 	    _OnFindRepl();
 	}
@@ -1233,6 +1153,8 @@ gui_mch_init(void)
     gui.border_width = 0;
 
     s_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+
+    if (GetClassInfo(s_hinst, szVimWndClass, &wndclass) == 0) {
     wndclass.style = 0;
     wndclass.lpfnWndProc = _WndProc;
     wndclass.cbClsExtra = 0;
@@ -1250,9 +1172,10 @@ gui_mch_init(void)
 #endif
 		RegisterClass(&wndclass)) == 0)
 	return FAIL;
+    }
 
     s_hwnd = CreateWindow(
-	szVimWndClass, "Vim W32 GUI",
+	szVimWndClass, "Vim MSWindows GUI",
 	WS_OVERLAPPEDWINDOW,
 	CW_USEDEFAULT, CW_USEDEFAULT,
 	100,				/* Any value will do */
@@ -1268,6 +1191,7 @@ gui_mch_init(void)
 #endif
 
     /* Create the text area window */
+    if (GetClassInfo(s_hinst, szTextAreaClass, &wndclass) == 0) {
     wndclass.style = CS_OWNDC;
     wndclass.lpfnWndProc = _TextAreaWndProc;
     wndclass.cbClsExtra = 0;
@@ -1281,7 +1205,7 @@ gui_mch_init(void)
 
     if (RegisterClass(&wndclass) == 0)
 	return FAIL;
-
+	}
     s_textArea = CreateWindowEx(
 	WS_EX_CLIENTEDGE,
 	szTextAreaClass, "Vim text area",
@@ -1354,12 +1278,12 @@ gui_mch_init(void)
 
     /* Initialise the struct */
     s_findrep_struct.lStructSize = sizeof(s_findrep_struct);
-    s_findrep_struct.lpstrFindWhat = alloc(256);
+    s_findrep_struct.lpstrFindWhat = alloc(MSWIN_FR_BUFSIZE);
     s_findrep_struct.lpstrFindWhat[0] = NUL;
-    s_findrep_struct.lpstrReplaceWith = alloc(256);
+    s_findrep_struct.lpstrReplaceWith = alloc(MSWIN_FR_BUFSIZE);
     s_findrep_struct.lpstrReplaceWith[0] = NUL;
-    s_findrep_struct.wFindWhatLen = 256;
-    s_findrep_struct.wReplaceWithLen = 256;
+    s_findrep_struct.wFindWhatLen = MSWIN_FR_BUFSIZE;
+    s_findrep_struct.wReplaceWithLen = MSWIN_FR_BUFSIZE;
 #endif
 
     return OK;
@@ -1466,7 +1390,6 @@ gui_mch_get_screen_dimensions(int *screen_w, int *screen_h)
 	      - gui_w32_get_menu_height(FALSE);
 }
 
-
     void
 gui_mch_set_scrollbar_thumb(
     scrollbar_t *sb,
@@ -1495,112 +1418,6 @@ gui_mch_set_scrollbar_thumb(
     info.nMax = max;
     info.nPage = size;
     SetScrollInfo(sb->id, SB_CTL, &info, TRUE);
-}
-
-#if defined(FEAT_WINDOWS) || defined(PROTO)
-    void
-gui_mch_destroy_scrollbar(scrollbar_t *sb)
-{
-    DestroyWindow(sb->id);
-}
-#endif
-
-/*
- * Initialise vim to use the font with the given name.	Return FAIL if the font
- * could not be loaded, OK otherwise.
- */
-    int
-gui_mch_init_font(char_u *font_name, int fontset)
-{
-    LOGFONT	lf;
-    GuiFont	font = NOFONT;
-    char	*p;
-
-    /* Load the font */
-    if (get_logfont(&lf, font_name))
-	font = get_font_handle(&lf);
-    if (font == NOFONT)
-	return FAIL;
-    if (font_name == NULL)
-	font_name = lf.lfFaceName;
-#if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME)
-    norm_logfont = lf;
-#endif
-#ifdef FEAT_MBYTE_IME
-    {
-	HIMC    hImc;
-
-	/* Initialize font for IME */
-	if ((hImc = ImmGetContext(s_hwnd)))
-	{
-	    ImmSetCompositionFont(hImc, &norm_logfont);
-	    ImmReleaseContext(s_hwnd, hImc);
-	}
-    }
-#endif
-    gui_mch_free_font(gui.norm_font);
-    gui.norm_font = font;
-    current_font_height = lf.lfHeight;
-    GetFontSize(font);
-    hl_set_font_name(lf.lfFaceName);
-    if (STRCMP(font_name, "*") == 0)
-    {
-	struct charset_pair *cp;
-
-	/* Try to find a charset we recognize. */
-	for (cp = charset_pairs; cp->name != NULL; ++cp)
-	    if (lf.lfCharSet == cp->charset)
-		break;
-
-	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
-		    + (cp->name == NULL ? 0 : strlen(cp->name) + 2)));
-	if (p != NULL)
-	{
-	    /* make a normal font string out of the lf thing:*/
-	    sprintf(p, "%s:h%d", lf.lfFaceName, pixels_to_points(
-			 lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight, TRUE));
-	    vim_free(p_guifont);
-	    p_guifont = p;
-	    while (*p)
-	    {
-		if (*p == ' ')
-		    *p = '_';
-		++p;
-	    }
-	    if (lf.lfItalic)
-		strcat(p, ":i");
-	    if (lf.lfWeight >= FW_BOLD)
-		strcat(p, ":b");
-	    if (lf.lfUnderline)
-		strcat(p, ":u");
-	    if (lf.lfStrikeOut)
-		strcat(p, ":s");
-	    if (cp->name != NULL)
-	    {
-		strcat(p, ":c");
-		strcat(p, cp->name);
-	    }
-	}
-    }
-
-    if (!lf.lfItalic)
-    {
-	lf.lfItalic = TRUE;
-	gui.ital_font = get_font_handle(&lf);
-	lf.lfItalic = FALSE;
-    }
-    if (lf.lfWeight < FW_BOLD)
-    {
-	lf.lfWeight = FW_BOLD;
-	gui.bold_font = get_font_handle(&lf);
-	if (!lf.lfItalic)
-	{
-	    lf.lfItalic = TRUE;
-	    gui.boldital_font = get_font_handle(&lf);
-	}
-    }
-
-    return OK;
 }
 
 
@@ -2369,92 +2186,6 @@ gui_mch_flash(int msec)
 }
 
 
-#if defined(FEAT_OLE) || defined(PROTO)
-/*
- * Make the GUI window come to the foreground.
- */
-    void
-gui_mch_set_foreground(void)
-{
-    if (IsIconic(s_hwnd))
-	 SendMessage(s_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
-    SetForegroundWindow(s_hwnd);
-}
-#endif
-
-/*
- * Set the window title
- */
-    void
-gui_mch_settitle(
-    char_u  *title,
-    char_u  *icon)
-{
-    SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : (char *)title));
-}
-
-
-
-#if 0	    /* DISABLED - has been reported not to work */
-#ifdef FEAT_MBYTE
-/*
- * locale-aware TranslateMessage replacement
- *
- * lpMsg should be WM_KEYDOWN message (not checked)
- */
-    static BOOL
-LCTranslateMessage(CONST MSG *lpMsg)
-{
-    MSG		charMsg;
-    BYTE	lpKeyState[256];	/* keyboard state array */
-    WCHAR	pwszBuff[4];		/* translated key buffer.  usually
-					   doesn't hold more than 2 chars */
-    int		i, ccount;
-    int		len;
-    char_u	string[MB_MAXBYTES];
-
-    /* This only works on NT. */
-    if (os_version.dwPlatformId != VER_PLATFORM_WIN32_NT)
-	return TranslateMessage(lpMsg);
-
-    GetKeyboardState(lpKeyState);
-
-    /*
-     * If Ctrl or Left Alt key is depressed, call base processing.
-     * NB: Right Alt key is used in some keyboard layouts
-     * (it also sets the Ctrl key flag), so it is disregarded here.
-     */
-    if (!(lpKeyState[VK_RMENU] & 128)
-	&& ((lpKeyState[VK_CONTROL] & 128) || (lpKeyState[VK_MENU] & 128)))
-	return TranslateMessage(lpMsg);
-
-    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF,
-						  lpKeyState, pwszBuff, 4, 0);
-    switch (ccount)
-    {
-	case -1:	/* dead key */
-	    charMsg.hwnd = lpMsg->hwnd;
-	    charMsg.lParam = lpMsg->lParam;
-	    charMsg.message = WM_DEADCHAR;
-	    charMsg.wParam = pwszBuff[0];
-	    DispatchMessage(&charMsg);
-	    break;
-
-	case 0:		/* key does not have translation in current keymap */
-	    return TranslateMessage(lpMsg);
-
-	default:	/* one or more unicode chars returned */
-	    for (i = 0; i < ccount; i++)
-	    {
-		len = (*mb_char2bytes)(pwszBuff[i], string);
-		add_to_input_buf(string, len);
-	    }
-	    break;
-    }
-    return TRUE;
-}
-#endif
-#endif
 
 
 
@@ -2775,9 +2506,9 @@ rebuild_tearoff(vimmenu_t *menu)
     HWND thwnd = menu->tearoff_handle;
 
     GetWindowText(thwnd, tbuf, 127);
-    if (GetWindowRect(thwnd, &trect) &&
-	GetWindowRect(s_hwnd, &rct) &&
-	GetClientRect(s_hwnd, &roct))
+    if (GetWindowRect(thwnd, &trect)
+	    && GetWindowRect(s_hwnd, &rct)
+	    && GetClientRect(s_hwnd, &roct))
     {
 	x = trect.left - rct.left;
 	y = (trect.top -  rct.bottom  + roct.bottom);
@@ -2983,6 +2714,7 @@ dialog_callback(
 	    EndDialog(hwnd, button - IDCANCEL);
 	return TRUE;
     }
+
     if ((message == WM_SYSCOMMAND) && (wParam == SC_CLOSE))
     {
 	EndDialog(hwnd, 0);
@@ -3922,7 +3654,7 @@ gui_mch_tearoff(
 
 /* This not defined in older SDKs */
 # ifndef TBSTYLE_FLAT
-#  define TBSTYLE_FLAT            0x0800
+#  define TBSTYLE_FLAT		0x0800
 # endif
 
 /*
@@ -4061,4 +3793,77 @@ mch_set_mouse_shape(int shape)
 	    ShowCursor(TRUE);
     }
 }
+#endif
+#if defined(FEAT_OLE) || defined(PROTO)
+/*
+ * Make the GUI window come to the foreground.
+ */
+    void
+gui_mch_set_foreground(void)
+{
+    if (IsIconic(s_hwnd))
+	 SendMessage(s_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+    SetForegroundWindow(s_hwnd);
+}
+#endif
+
+#if 0	    /* DISABLED - has been reported not to work */
+#ifdef FEAT_MBYTE
+/*
+ * locale-aware TranslateMessage replacement
+ *
+ * lpMsg should be WM_KEYDOWN message (not checked)
+ */
+    static BOOL
+LCTranslateMessage(CONST MSG *lpMsg)
+{
+    MSG		charMsg;
+    BYTE	lpKeyState[256];	/* keyboard state array */
+    WCHAR	pwszBuff[4];		/* translated key buffer.  usually
+					   doesn't hold more than 2 chars */
+    int		i, ccount;
+    int		len;
+    char_u	string[MB_MAXBYTES];
+
+    /* This only works on NT. */
+    if (os_version.dwPlatformId != VER_PLATFORM_WIN32_NT)
+	return TranslateMessage(lpMsg);
+
+    GetKeyboardState(lpKeyState);
+
+    /*
+     * If Ctrl or Left Alt key is depressed, call base processing.
+     * NB: Right Alt key is used in some keyboard layouts
+     * (it also sets the Ctrl key flag), so it is disregarded here.
+     */
+    if (!(lpKeyState[VK_RMENU] & 128)
+	&& ((lpKeyState[VK_CONTROL] & 128) || (lpKeyState[VK_MENU] & 128)))
+	return TranslateMessage(lpMsg);
+
+    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF,
+						  lpKeyState, pwszBuff, 4, 0);
+    switch (ccount)
+    {
+	case -1:	/* dead key */
+	    charMsg.hwnd = lpMsg->hwnd;
+	    charMsg.lParam = lpMsg->lParam;
+	    charMsg.message = WM_DEADCHAR;
+	    charMsg.wParam = pwszBuff[0];
+	    DispatchMessage(&charMsg);
+	    break;
+
+	case 0:		/* key does not have translation in current keymap */
+	    return TranslateMessage(lpMsg);
+
+	default:	/* one or more unicode chars returned */
+	    for (i = 0; i < ccount; i++)
+	    {
+		len = (*mb_char2bytes)(pwszBuff[i], string);
+		add_to_input_buf(string, len);
+	    }
+	    break;
+    }
+    return TRUE;
+}
+#endif
 #endif

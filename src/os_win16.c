@@ -577,7 +577,7 @@ mch_call_shell(
 
     settmode(TMODE_RAW);	    /* set to raw mode */
 
-    if (x && !(options & SHELL_SILENT))
+    if (x && !(options & SHELL_SILENT) && !emsg_silent)
     {
 	smsg(_("shell returned %d"), x);
 	msg_putchar('\n');

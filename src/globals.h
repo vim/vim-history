@@ -146,7 +146,7 @@ EXTERN int	rc_did_emsg INIT(= FALSE);  /* vim_regcomp() called emsg() */
 EXTERN int	no_wait_return INIT(= 0);   /* don't wait for return for now */
 EXTERN int	need_wait_return INIT(= 0); /* need to wait for return later */
 #ifdef FEAT_TITLE
-EXTERN int	need_maketitle INIT(= FALSE); /* call maketitle() soon */
+EXTERN int	need_maketitle INIT(= TRUE); /* call maketitle() soon */
 #endif
 
 EXTERN int	quit_more INIT(= FALSE);    /* 'q' hit at "--more--" msg */
@@ -558,7 +558,7 @@ EXTERN size_t (*iconv) (iconv_t cd, const char **inbuf, size_t *inbytesleft, cha
 EXTERN iconv_t (*iconv_open) (const char *tocode, const char *fromcode);
 EXTERN int (*iconv_close) (iconv_t cd);
 EXTERN int (*iconvctl) (iconv_t cd, int request, void *argument);
-EXTERN int *iconv_errno INIT(= 0);
+EXTERN int* (*iconv_errno) (void);
 # endif
 
 #endif /* FEAT_MBYTE */

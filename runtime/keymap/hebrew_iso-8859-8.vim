@@ -1,37 +1,41 @@
 " Vim Keymap file for hebrew
-" Maintainer (hopefully): Ron Aaron <ron@mossbayeng.com>
-" Last Change: Mon 12 Feb 2001 11:07:34
+" Maintainer  : Ron Aaron <ron@mossbayeng.com>
+" Last Updated: Wed 28 Feb 2001 21:28:51
+" This is the standard Israeli keyboard layout
+
+" Use this short name in the status line.
+let b:keymap_name = "heb"
 
 loadkeymap
-a	<char-249>	" ù 
-b	<char-240>	" ð
-c	<char-225>	" á
-d	<char-226>	" â
-e	<char-247>	" ÷ 
-f	<char-235>	" ë
-g	<char-242>	" ò
-h	<char-233>	" é
-i	<char-239>	" ï
-j	<char-231>	" ç
-k	<char-236>	" ì
-l	<char-234>	" ê
-m	<char-246>	" ö
-n	<char-238>	" î
-o	<char-237>	" í
-p	<char-244>	" ô
-q	/		" /
-r	<char-248>	" ø
-s	<char-227>	" ã
-t	<char-224>	" à
-u	<char-229>	" å
-v	<char-228>	" ä
-w	'		" '
-x	<char-241>	" ñ
-y	<char-232>	" è
-z	<char-230>	" æ
-,	<char-250>	" ú
-.	<char-245>	" õ
-;	<char-243>	" ó
-'	,		" ,
-/	.		" .
-`	;		" ;
+a	<char-249>	" ù - shin
+b	<char-240>	" ð - nun
+c	<char-225>	" á - bet
+d	<char-226>	" â - gimel
+e	<char-247>	" ÷ - qof
+f	<char-235>	" ë - kaf
+g	<char-242>	" ò - ayin
+h	<char-233>	" é - yod
+i	<char-239>	" ï - final nun
+j	<char-231>	" ç - het
+k	<char-236>	" ì - lamed
+l	<char-234>	" ê - final kaf
+m	<char-246>	" ö - tsadi
+n	<char-238>	" î - mem
+o	<char-237>	" í - final mem
+p	<char-244>	" ô - pe
+q	/		" / - slash
+r	<char-248>	" ø - resh
+s	<char-227>	" ã - dalet
+t	<char-224>	" à - alef
+u	<char-229>	" å - vav
+v	<char-228>	" ä - he
+w	'		" ' - single-quote
+x	<char-241>	" ñ - samekh
+y	<char-232>	" è - tet
+z	<char-230>	" æ - zayin
+,	<char-250>	" ú - tav
+.	<char-245>	" õ - final tsadi
+;	<char-243>	" ó - final pe
+'	,		" , - comma
+/	.		" . - period
+`	;		" ; - semicolon

@@ -4216,8 +4216,8 @@ make_bom(buf, name)
  */
     char_u *
 shorten_fname(full_path, dir_name)
-    char_u  *full_path;
-    char_u  *dir_name;
+    char_u	*full_path;
+    char_u	*dir_name;
 {
     int		    len;
     char_u	    *p;
@@ -4954,9 +4954,9 @@ vim_tempname(extra_char)
     int		i;
     long	nr;
     long	off;
-#ifndef EEXIST
+# ifndef EEXIST
     struct stat	st;
-#endif
+# endif
 
     /*
      * This will create a directory for private use by this instance of Vim.
@@ -5004,7 +5004,7 @@ vim_tempname(extra_char)
 		    if (mch_stat((char *)itmp, &st) >= 0)
 			continue;
 # endif
-		    if (mch_mkdir(itmp, 0700) == 0)
+		    if (vim_mkdir(itmp, 0700) == 0)
 		    {
 			/* Directory was created, use this name. */
 # ifdef __EMX__
@@ -5045,7 +5045,7 @@ vim_tempname(extra_char)
 #else /* TEMPDIRNAMES */
 
 # ifdef WIN32
-    char	szTempFile[_MAX_PATH+1];
+    char	szTempFile[_MAX_PATH + 1];
     char	buf4[4];
     char_u	*retval;
     char_u	*p;
@@ -5061,10 +5061,10 @@ vim_tempname(extra_char)
     (void)DeleteFile(itmp);
 
     /* Backslashes in a temp file name cause problems when filtering with
-     * "sh".  NOTE: This ignores 'shellslash' because forward slashes
-     * always work here. */
+     * "sh".  NOTE: This also checks 'shellcmdflag' to help those people who
+     * didn't set 'shellslash'. */
     retval = vim_strsave(itmp);
-    if (*p_shcf == '-')
+    if (*p_shcf == '-' || p_ssl)
 	for (p = retval; *p; ++p)
 	    if (*p == '\\')
 		*p = '/';

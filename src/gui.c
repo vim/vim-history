@@ -438,7 +438,7 @@ gui_init()
      * works after the shell has been opened, thus it is further down. */
     gui_set_shellsize(TRUE);
 #endif
-#ifdef FEAT_GUI_MOTIF
+#if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
     /* Need to set the size of the menubar after all the menus have been
      * created. */
     gui_mch_compute_menu_height((Widget)0);
@@ -888,8 +888,8 @@ gui_update_cursor(force, clear_selection)
 		cur_height = (gui.char_height * shape_table[idx].percentage
 								  + 99) / 100;
 		cur_width = gui.char_width;
-#ifdef FEAT_HANGULIN
-		if (ScreenLines[LineOffset[gui.row] + gui.col] & 0x80)
+#ifdef FEAT_MBYTE
+		if ((*mb_off2cells)(LineOffset[gui.row] + gui.col) > 1)
 		    cur_width += gui.char_width;
 #endif
 	    }
@@ -1842,6 +1842,19 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
 #endif
     {
 	gui_mch_draw_string(gui.row, col, s, len, draw_flags);
+#ifdef FEAT_MBYTE
+	if (enc_dbcs == DBCS_JPNU)
+	{
+	    int		clen = 0;
+	    int		i;
+
+	    /* Get the length in display cells, this can be different from the
+	     * number of bytes for "euc-jp". */
+	    for (i = 0; i < len; i += (*mb_ptr2len_check)(s + i))
+		clen += (*mb_ptr2cells)(s + i);
+	    len = clen;
+	}
+#endif
     }
 
 #ifdef FEAT_SIGNS
@@ -1977,18 +1990,29 @@ gui_redraw_block(row1, col1, row2, col2, flags)
     for (gui.row = row1; gui.row <= row2; gui.row++)
     {
 #ifdef FEAT_MBYTE
+	/* When only half of a double-wide character is in the block, include
+	 * the other half. */
 	col1 = orig_col1;
 	col2 = orig_col2;
+	off = LineOffset[gui.row];
 	if (enc_dbcs != 0)
 	{
-	    col1 -= (*mb_head_off)(ScreenLines + LineOffset[gui.row],
-				    ScreenLines + LineOffset[gui.row] + col1);
-	    col2 += mb_tail_off(ScreenLines + LineOffset[gui.row],
-				    ScreenLines + LineOffset[gui.row] + col2);
+	    if (col1 > 0)
+	    {
+		/* For euc-jp an 0x8e byte in the previous cell always means
+		 * we have a lead byte in the current cell. */
+		if (enc_dbcs != DBCS_JPNU || ScreenLines[off + col1 - 1]
+								      != 0x8e)
+		    col1 -= (*mb_head_off)(ScreenLines + off,
+						    ScreenLines + off + col1);
+	    }
+	    if (enc_dbcs != DBCS_JPNU || ScreenLines[off + col2] != 0x8e)
+		col2 += mb_tail_off(ScreenLines + off,
+						    ScreenLines + off + col2);
 	}
 	else if (enc_utf8)
 	{
-	    if (ScreenLines[LineOffset[gui.row] + col1] == 0)
+	    if (ScreenLines[off + col1] == 0)
 		--col1;
 	}
 #endif
@@ -2013,6 +2037,7 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 #ifdef FEAT_MBYTE
 	    if (enc_utf8 && ScreenLinesUC[off] != 0)
 	    {
+		/* output multi-byte character separately */
 		gui_screenchar(off, flags, (guicolor_t)0, (guicolor_t)0, back);
 		++off;
 		--len;
@@ -2022,40 +2047,41 @@ gui_redraw_block(row1, col1, row2, col2, flags)
 		    --len;
 		}
 	    }
+	    else if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+	    {
+		/* output double-byte, single-width character separately */
+		gui_screenchar(off, flags, (guicolor_t)0, (guicolor_t)0, back);
+		++off;
+		--len;
+	    }
 	    else
-
 #endif
 	    {
 		for (idx = 0; len > 0 && ScreenAttrs[off + idx] == first_attr;
 									idx++)
 		{
 #ifdef FEAT_MBYTE
+		    /* Stop at a multi-byte Unicode character. */
 		    if (enc_utf8 && ScreenLinesUC[off + idx] != 0)
 			break;
-		    if (enc_dbcs == DBCS_JPNU && ScreenLines[off + idx] == 0x8e)
-			break;
+		    if (enc_dbcs == DBCS_JPNU)
+		    {
+			/* Stop at a double-byte single-width char. */
+			if (ScreenLines[off + idx] == 0x8e)
+			    break;
+			if (len > 1 && (*mb_ptr2len_check)(ScreenLines
+							    + off + idx) == 2)
+			{
+			    ++idx;  /* skip second byte of double-byte char */
+			    --len;
+			}
+		    }
 #endif
 		    --len;
 		}
 		gui_outstr_nowrap(ScreenLines + off, idx, flags,
 					  (guicolor_t)0, (guicolor_t)0, back);
 		off += idx;
-#ifdef FEAT_MBYTE
-		if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
-		{
-		    char_u buf[2];
-
-		    /* output double-byte, single-width character separately */
-		    buf[0] = ScreenLines[off];
-		    buf[1] = ScreenLines2[off];
-		    if (idx > 0)
-			back = 0;
-		    gui_outstr_nowrap(buf, 2, flags,
-					  (guicolor_t)0, (guicolor_t)0, back);
-		    ++off;
-		    --len;
-		}
-#endif
 	    }
 	    back = 0;
 	}
@@ -2868,12 +2894,16 @@ gui_drag_scrollbar(sb, value, still_dragging)
 	}
 	else if (State & CMDLINE)
 	{
-	    if (!msg_scrolled)
+	    if (msg_scrolled == 0)
 	    {
 		gui_do_scroll();
 		redrawcmdline();
 	    }
 	}
+# ifdef FEAT_FOLDING
+	/* Value may have been changed for closed fold. */
+	sb->value = sb->wp->w_topline - 1;
+# endif
 #else
 	bytes[0] = CSI;
 	bytes[1] = KS_VER_SCROLLBAR;
@@ -3211,7 +3241,8 @@ gui_do_scroll()
     else
 	scrollup(nlines, gui.dragged_wp == NULL);
     /* Reset dragged_wp after using it.  "dragged_sb" will have been reset for
-     * the mouse-up event already. */
+     * the mouse-up event already, but we still want it to be have like when
+     * dragging.  But not the next click in an arrow. */
     if (gui.dragged_sb == SBAR_NONE)
 	gui.dragged_wp = NULL;
 
@@ -3420,6 +3451,10 @@ gui_focus_change(in_focus)
     out_flush();		/* make sure output has been written */
     gui_update_cursor(TRUE, FALSE);
 
+#ifdef FEAT_XIM
+    xim_set_focus(in_focus);
+#endif
+
 #ifdef FEAT_AUTOCMD
     /*
      * Fire the focus gained/lost autocommand.
@@ -3532,7 +3567,7 @@ gui_mouse_correct()
 	if (wp != curwin && wp != NULL)	/* If in other than current window */
 	{
 	    validate_cline_row();
-	    gui_mch_setmouse((int)Columns * gui.char_width - 3,
+	    gui_mch_setmouse((int)W_ENDCOL(curwin) * gui.char_width - 3,
 			 (W_WINROW(curwin) + curwin->w_wrow) * gui.char_height
 						     + (gui.char_height) / 2);
 	}

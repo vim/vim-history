@@ -97,9 +97,10 @@ static Widget	xterm_Shell = (Widget)0;
 static void xterm_update __ARGS((void));
 # endif
 
+# if defined(FEAT_XCLIPBOARD) || defined(FEAT_TITLE)
 Window	    x11_window = 0;
+# endif
 Display	    *x11_display = NULL;
-int	    got_x_error = FALSE;
 
 # ifdef FEAT_TITLE
 static int  get_x11_windis __ARGS((void));
@@ -973,6 +974,8 @@ mch_input_isatty()
 static int x_error_handler __ARGS((Display *dpy, XErrorEvent *error_event));
 static int x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
 static int test_x11_window __ARGS((Display *dpy));
+
+static int	got_x_error = FALSE;
 
 /*
  * X Error handler, otherwise X just exits!  (very rude) -- webb
@@ -2537,7 +2540,8 @@ mch_call_shell(cmd, options)
 	x = system("");	/* this starts an interactive shell in emx */
     else
 	x = system((char *)cmd);
-    if (x == -1) /* system() returns -1 when error occurs in starting shell */
+    /* system() returns -1 when error occurs in starting shell */
+    if (x == -1 && !emsg_silent)
     {
 	MSG_PUTS(_("\nCannot execute shell "));
 	msg_outtrans(p_sh);
@@ -2563,10 +2567,10 @@ mch_call_shell(cmd, options)
 	    vim_free(newcmd);
 	}
     }
-    if (x == 127)
-    {
+    if (emsg_silent)
+	;
+    else if (x == 127)
 	MSG_PUTS(_("\nCannot execute shell sh\n"));
-    }
 #endif	/* __EMX__ */
     else if (x && !(options & SHELL_SILENT))
     {
@@ -3099,7 +3103,7 @@ finished:
 	    if (WIFEXITED(status))
 	    {
 		retval = WEXITSTATUS(status);
-		if (retval)
+		if (retval && !emsg_silent)
 		{
 		    if (retval == EXEC_FAILED)
 		    {

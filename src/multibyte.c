@@ -138,67 +138,64 @@ enc_canon_table[] =
     {"iso-8859-6",	ENC_8BIT,		0},
 #define IDX_ISO_7	6
     {"iso-8859-7",	ENC_8BIT,		0},
-#ifdef WIN32
-# define IDX_CP1255	7
-    {"cp1255",		ENC_8BIT,		0},
-#else
-# define IDX_ISO_8	7
+#define IDX_CP1255	7
+    {"cp1255",		ENC_8BIT,		0}, /* close to iso-8859-8 */
+#define IDX_ISO_8	8
     {"iso-8859-8",	ENC_8BIT,		0},
-#endif
-#define IDX_ISO_9	8
+#define IDX_ISO_9	9
     {"iso-8859-9",	ENC_8BIT,		0},
-#define IDX_ISO_10	9
+#define IDX_ISO_10	10
     {"iso-8859-10",	ENC_8BIT,		0},
-#define IDX_ISO_11	10
+#define IDX_ISO_11	11
     {"iso-8859-11",	ENC_8BIT,		0},
-#define IDX_ISO_13	11
+#define IDX_ISO_13	12
     {"iso-8859-13",	ENC_8BIT,		0},
-#define IDX_ISO_14	12
+#define IDX_ISO_14	13
     {"iso-8859-14",	ENC_8BIT,		0},
-#define IDX_ISO_15	13
+#define IDX_ISO_15	14
     {"iso-8859-15",	ENC_8BIT,		0},
-#define IDX_UTF8	14
+#define IDX_UTF8	15
     {"utf-8",		ENC_UNICODE,		0},
-#define IDX_UCS2	15
+#define IDX_UCS2	16
     {"ucs-2",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2BYTE, 0},
-#define IDX_UCS2LE	16
+#define IDX_UCS2LE	17
     {"ucs-2le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_2BYTE, 0},
-#define IDX_UTF16	17
+#define IDX_UTF16	18
     {"utf-16",		ENC_UNICODE + ENC_ENDIAN_B + ENC_2WORD, 0},
-#define IDX_UTF16LE	18
+#define IDX_UTF16LE	19
     {"utf-16le",	ENC_UNICODE + ENC_ENDIAN_L + ENC_2WORD, 0},
-#define IDX_UCS4	19
+#define IDX_UCS4	20
     {"ucs-4",		ENC_UNICODE + ENC_ENDIAN_B + ENC_4BYTE, 0},
-#define IDX_UCS4LE	20
+#define IDX_UCS4LE	21
     {"ucs-4le",		ENC_UNICODE + ENC_ENDIAN_L + ENC_4BYTE, 0},
-#define IDX_DEBUG	21
+#define IDX_DEBUG	22
     {"debug",		ENC_DBCS,		DBCS_DEBUG},
 #ifdef WIN32
-# define IDX_CP932	22
-    {"cp932",		ENC_DBCS,		DBCS_JPN},
-# define IDX_CP949	23
-    {"cp949",		ENC_DBCS,		DBCS_KOR},
-# define IDX_CP936	24
-    {"cp936",		ENC_DBCS,		DBCS_CHS},
-# define IDX_CP950	25
-    {"cp950",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	26
-#else
-# define IDX_EUC_JP	22
-    {"euc-jp",		ENC_DBCS,		DBCS_JPNU},
 # define IDX_CP932	23
     {"cp932",		ENC_DBCS,		DBCS_JPN},
-# define IDX_EUC_KR	24
-    {"euc-kr",		ENC_DBCS,		DBCS_KORU},
-# define IDX_CP949	25
+# define IDX_CP949	24
     {"cp949",		ENC_DBCS,		DBCS_KOR},
-# define IDX_EUC_CN	26
+# define IDX_CP936	25
+    {"cp936",		ENC_DBCS,		DBCS_CHS},
+# define IDX_CP950	26
+    {"cp950",		ENC_DBCS,		DBCS_CHT},
+#define IDX_COUNT	27
+#else
+# define IDX_EUC_JP	23
+    {"euc-jp",		ENC_DBCS,		DBCS_JPNU},
+# define IDX_CP932	24
+    {"cp932",		ENC_DBCS,		DBCS_JPN},
+# define IDX_EUC_KR	25
+    {"euc-kr",		ENC_DBCS,		DBCS_KORU},
+# define IDX_CP949	26
+    {"cp949",		ENC_DBCS,		DBCS_KOR},
+# define IDX_EUC_CN	27
     {"euc-cn",		ENC_DBCS,		DBCS_CHSU},
-# define IDX_EUC_TW	27
+# define IDX_EUC_TW	28
     {"euc-tw",		ENC_DBCS,		DBCS_CHTU},
-# define IDX_BIG5	28
+# define IDX_BIG5	29
     {"big5",		ENC_DBCS,		DBCS_CHT},
-#define IDX_COUNT	29
+#define IDX_COUNT	30
 #endif
 };
 
@@ -219,10 +216,8 @@ enc_alias_table[] =
     {"greek",		IDX_ISO_7},
 #ifdef WIN32
     {"hebrew",		IDX_CP1255},
-    {"iso-8859-8",	IDX_CP1255},
 #else
     {"hebrew",		IDX_ISO_8},
-    {"cp1255",		IDX_ISO_8},
 #endif
     {"latin5",		IDX_ISO_9},
     {"turkish",		IDX_ISO_9}, /* ? */
@@ -628,24 +623,37 @@ bomb_size()
 }
 
 /*
- * Get class of pointer.
+ * Get class of pointer:
+ * 0 for blank or NUL
+ * 1 for punctuation
+ * 2 for an (ASCII) word character
+ * >2 for other word characters
  */
     int
 mb_get_class(p)
     char_u	*p;
 {
-    int this_class = 0;
-
-    if (enc_dbcs != 0 && p[0] != NUL && p[1] != NUL && MB_BYTE2LEN(p[0]) > 1)
-	this_class = mb_class(p[0], p[1]);
-    return this_class;
+    if (MB_BYTE2LEN(p[0]) == 1)
+    {
+	if (p[0] == NUL || vim_iswhite(p[0]))
+	    return 0;
+	if (vim_iswordc(p[0]))
+	    return 2;
+	return 1;
+    }
+    if (enc_dbcs != 0 && p[0] != NUL && p[1] != NUL)
+	return dbcs_class(p[0], p[1]);
+    if (enc_utf8)
+	return utf_class(utf_ptr2char(p));
+    return 0;
 }
 
 /*
- * Get class of a multibyte character.
+ * Get class of a double-byte character.  This always returns 3 or bigger.
+ * TODO: Should return 1 for punctuation.
  */
     int
-mb_class(lead, trail)
+dbcs_class(lead, trail)
     unsigned	lead;
     unsigned	trail;
 {
@@ -1367,7 +1375,7 @@ utf_iscomposing(c)
 
     /* first quick check for Latin1 etc. characters */
     if (c < combining[0].first)
-	return 0;
+	return FALSE;
 
     /* binary search in table */
     while (max >= min)
@@ -1377,11 +1385,87 @@ utf_iscomposing(c)
 	    min = mid + 1;
 	else if (combining[mid].first > c)
 	    max = mid - 1;
-	else if (combining[mid].first <= c && combining[mid].last >= c)
+	else
 	    return TRUE;
     }
 
     return FALSE;
+}
+
+/*
+ * Get class of a Unicode character.
+ * 0: white space
+ * 1: punctuation
+ * 2 or bigger: some class of word character.
+ */
+    int
+utf_class(c)
+    int		c;
+{
+    /* sorted list of non-overlapping intervals */
+    static struct interval
+    {
+	unsigned short first;
+	unsigned short last;
+	unsigned short class;
+    } classes[] =
+    {
+	{0x037e, 0x037e, 1},		/* Greek question mark */
+	{0x0387, 0x0387, 1},		/* Greek ano teleia */
+	{0x055a, 0x055f, 1},		/* Armenian punctuation */
+	{0x0589, 0x0589, 1},		/* Armenian full stop */
+	{0x0700, 0x070d, 1},		/* Syriac punctuation */
+	{0x104a, 0x104f, 1},		/* Myanmar punctuation */
+	{0x10fb, 0x10fb, 1},		/* Georgian punctuation */
+	{0x1361, 0x1368, 1},		/* Ethiopic punctuation */
+	{0x166d, 0x166e, 1},		/* Canadian Syl. punctuation */
+	{0x17d4, 0x17dc, 1},		/* Khmer punctuation */
+	{0x1800, 0x180a, 1},		/* Mongolian punctuation */
+	{0x2000, 0x200a, 0},		/* spaces */
+	{0x200b, 0x27ff, 1},		/* punctuation and symbols */
+	{0x2070, 0x207f, 0x2070},	/* superscript */
+	{0x2080, 0x208f, 0x2080},	/* subscript */
+	{0x3000, 0x3000, 0},		/* ideographic space */
+	{0x3001, 0x3020, 1},		/* ideographic punctuation */
+	{0x3040, 0x309f, 0x3040},	/* Hiragana */
+	{0x30a0, 0x30ff, 0x30a0},	/* Katakana */
+	{0x3300, 0x9fff, 0x4e00},	/* CJK Ideographs */
+	{0xac00, 0xd7a3, 0xac00},	/* Hangul Syllables */
+	{0xf900, 0xfaff, 0x4e00},	/* CJK Ideographs */
+	{0xfe30, 0xfe6b, 1},		/* punctuation forms */
+	{0xff00, 0xff0f, 1},		/* half/fullwidth ASCII */
+	{0xff1a, 0xff20, 1},		/* half/fullwidth ASCII */
+	{0xff3b, 0xff40, 1},		/* half/fullwidth ASCII */
+	{0xff5b, 0xff64, 1},		/* half/fullwidth ASCII */
+    };
+    int min = 0;
+    int max = sizeof(classes) / sizeof(struct interval) - 1;
+    int mid;
+
+    /* First quick check for Latin1 characters, use 'iskeyword'. */
+    if (c < 0x100)
+    {
+	if (c == ' ' || c == '\t' || c == NUL)
+	    return 0;	    /* blank */
+	if (vim_iswordc(c))
+	    return 2;	    /* word character */
+	return 1;	    /* punctuation */
+    }
+
+    /* binary search in table */
+    while (max >= min)
+    {
+	mid = (min + max) / 2;
+	if (classes[mid].last < c)
+	    min = mid + 1;
+	else if (classes[mid].first > c)
+	    max = mid - 1;
+	else
+	    return (int)classes[mid].class;
+    }
+
+    /* most other characters are "word" characters */
+    return 2;
 }
 
 /*
@@ -1591,6 +1675,19 @@ mb_adjustpos(lp)
 	p = ml_get(lp->lnum);
 	lp->col -= (*mb_head_off)(p, p + lp->col);
     }
+}
+
+/*
+ * Return a pointer to the character before "*p", if there is one.
+ */
+    char_u *
+mb_prevptr(line, p)
+    char_u *line;	/* start of the string */
+    char_u *p;
+{
+    if (p > line)
+	p = p - (*mb_head_off)(line, p - 1) - 1;
+    return p;
 }
 
 /*
@@ -2034,15 +2131,8 @@ xim_set_focus(int focus)
 
     if (focus)
     {
-	/* In Normal mode, only connect to IM if user uses over-the-spot. */
-	if (!xim_has_focus
-		&& (!(State & NORMAL)
-#ifdef FEAT_GUI_GTK
-		    || (xim_input_style & GDK_IM_PREEDIT_POSITION)
-#else
-		    || (input_style & XIMPreeditPosition)
-#endif
-		   ))
+	/* In Normal mode, do not connect to IM. */
+	if (!xim_has_focus && !(State & NORMAL))
 	{
 	    xim_has_focus = 1;
 #ifdef FEAT_GUI_GTK
@@ -2446,20 +2536,6 @@ xim_real_init(x11_window, x11_display)
     input_style = 0;
     status_area_enabled = FALSE;
 
-#ifdef FEAT_XFONTSET
-    if (*p_guifontset == NUL)
-    {
-	/* This message is annoying when Vim was compiled with XIM support but
-	 * it's not being used.
-	 * EMSG(_("XIM requires guifontset setting"));
-	 */
-	return FALSE;
-    }
-#else
-    EMSG(_("XIM requires VIM compiled with +xfontset feature."));
-    return FALSE;
-#endif
-
     if (xic != NULL)
 	return FALSE;
 
@@ -2493,7 +2569,7 @@ xim_real_init(x11_window, x11_display)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
     /* This is supposed to be useful to obtain characters through
-     * XmbLookupString() without using a XIM. */
+     * XmbLookupString() without really using a XIM. */
     if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL
 								 && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
@@ -2586,12 +2662,20 @@ xim_real_init(x11_window, x11_display)
 			    XNSpotLocation, &over_spot,
 			    XNForeground, (Pixel)gui.def_norm_pixel,
 			    XNBackground, (Pixel)gui.def_back_pixel,
-			    XNFontSet, (XFontSet)gui.fontset,
+			    XNFontSet,
+#ifdef FEAT_XFONTSET
+			    gui.fontset != NOFONTSET ? (XFontSet)gui.fontset :
+#endif
+						      (XFontSet)gui.norm_font,
 			    NULL);
     status_list = XVaCreateNestedList(0,
 			    XNForeground, (Pixel)gui.def_norm_pixel,
 			    XNBackground, (Pixel)gui.def_back_pixel,
-			    XNFontSet, (XFontSet)gui.fontset,
+			    XNFontSet,
+#ifdef FEAT_XFONTSET
+			    gui.fontset != NOFONTSET ? (XFontSet)gui.fontset :
+#endif
+						      (XFontSet)gui.norm_font,
 			    NULL);
     xic = XCreateIC(xim,
 		    XNInputStyle, input_style,
@@ -2629,11 +2713,13 @@ xim_real_init(x11_window, x11_display)
 void
 xim_decide_input_style()
 {
+    /* GDK_IM_STATUS_CALLBACKS was disabled, enabled it to allow Japanese
+     * OverTheSpot. */
     GdkIMStyle supported_style = GDK_IM_PREEDIT_NONE |
 				 GDK_IM_PREEDIT_NOTHING |
 				 GDK_IM_PREEDIT_POSITION |
 				 GDK_IM_PREEDIT_CALLBACKS |
-				 /* GDK_IM_STATUS_CALLBACKS | */
+				 GDK_IM_STATUS_CALLBACKS |
 				 GDK_IM_STATUS_AREA |
 				 GDK_IM_STATUS_NONE |
 				 GDK_IM_STATUS_NOTHING;
@@ -2874,7 +2960,9 @@ xim_init(void)
     }
     if ((xic_attr = gdk_ic_attr_new()) != NULL)
     {
+#ifdef FEAT_XFONTSET
 	gint width, height;
+#endif
 	GdkEventMask mask;
 	GdkColormap *colormap;
 	GdkICAttr *attr = xic_attr;
@@ -2963,14 +3051,12 @@ xim_init(void)
     int
 xim_get_status_area_height(void)
 {
-#if defined(FEAT_XFONTSET)
-# ifdef FEAT_GUI_GTK
+#ifdef FEAT_GUI_GTK
     if (xim_input_style & GDK_IM_STATUS_AREA)
 	return gui.char_height;
-# else
+#else
     if (status_area_enabled)
 	return gui.char_height;
-# endif
 #endif
     return 0;
 }
@@ -3223,6 +3309,7 @@ ex_loadkeymap(eap)
     kmap_t	*kp;
     char_u	buf[2 * KMAP_MAXLEN + 11];
     int		i;
+    char_u	*save_cpo = p_cpo;
 
     if (eap->getline != getsourceline)
     {
@@ -3237,6 +3324,9 @@ ex_loadkeymap(eap)
 
     curbuf->b_kmap_state = 0;
     ga_init2(&curbuf->b_kmap_ga, sizeof(kmap_t), 20);
+
+    /* Set 'cpoptions' to "C" to avoid line continuation. */
+    p_cpo = (char_u *)"C";
 
     /*
      * Get each line of the sourced file, break at the end.
@@ -3283,6 +3373,8 @@ ex_loadkeymap(eap)
 	(void)do_map(2, buf, LANGMAP, FALSE, NULL);
     }
 
+    p_cpo = save_cpo;
+
     curbuf->b_kmap_state |= KEYMAP_LOADED;
 #ifdef FEAT_WINDOWS
     status_redraw_curbuf();
@@ -3297,9 +3389,13 @@ keymap_unload()
 {
     char_u	buf[KMAP_MAXLEN + 10];
     int		i;
+    char_u	*save_cpo = p_cpo;
 
     if (!(curbuf->b_kmap_state & KEYMAP_LOADED))
 	return;
+
+    /* Set 'cpoptions' to "C" to avoid line continuation. */
+    p_cpo = (char_u *)"C";
 
     /* clear the ":lmap"s */
     for (i = 0; i < curbuf->b_kmap_ga.ga_len; ++i)
@@ -3308,6 +3404,8 @@ keymap_unload()
 		((kmap_t *)curbuf->b_kmap_ga.ga_data)[i].from);
 	(void)do_map(1, buf, LANGMAP, FALSE, NULL);
     }
+
+    p_cpo = save_cpo;
 
     ga_clear(&curbuf->b_kmap_ga);
     curbuf->b_kmap_state &= ~KEYMAP_LOADED;

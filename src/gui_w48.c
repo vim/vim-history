@@ -44,6 +44,7 @@
 
 #ifdef FEAT_SMALL
 # define MSWIN_FIND_REPLACE	/* include code for find/replace dialog */
+# define MSWIN_FR_BUFSIZE 256
 #endif
 #ifdef FEAT_MENU
 # define MENUHINTS		/* show menu hints in command line */
@@ -111,6 +112,10 @@ typedef int LOGFONT[];
 # define MSG		int
 #endif
 
+#ifndef GET_X_LPARAM
+# define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#endif
+
 static void _OnPaint( HWND hwnd);
 static void clear_rect(RECT *rcp);
 
@@ -150,7 +155,7 @@ static int		s_need_activate = FALSE;
 #endif
 
 #ifdef GLOBAL_IME
-# define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c d)
+# define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
 # define MyTranslateMessage(x) global_ime_TranslateMessage(x)
 #else
 // # ifdef FEAT_MBYTE
@@ -160,6 +165,10 @@ static int		s_need_activate = FALSE;
 // # endif
 #endif
 
+#ifdef FEAT_MBYTE
+static int sysfixed_width = 0;
+static int sysfixed_height = 0;
+#endif
 
 struct charset_pair
 {
@@ -189,7 +198,9 @@ charset_pairs[] =
     {"RUSSIAN",		RUSSIAN_CHARSET},
     {"THAI",		THAI_CHARSET},
     {"TURKISH",		TURKISH_CHARSET},
+# if !defined(_MSC_VER) || (_MSC_VER > 1010)
     {"VIETNAMESE",	VIETNAMESE_CHARSET},
+# endif
 #endif
     {NULL,		0}
 };
@@ -802,7 +813,7 @@ fr_setreplcmd(char_u *cmd)
     static void
 _OnFindRepl(void)
 {
-    char_u cmd[600]; //XXX kludge
+    char_u cmd[MSWIN_FR_BUFSIZE * 2 + 100]; //XXX kludge
 
     /* Add a char before the command if needed */
     if (State & INSERT)
@@ -816,18 +827,14 @@ _OnFindRepl(void)
     if (s_findrep_struct.Flags & FR_DIALOGTERM)
     {
 	if (State == CONFIRM)
-	{
 	    add_to_input_buf("q", 1);
-	}
 	return;
     }
 
     if (s_findrep_struct.Flags & FR_FINDNEXT)
     {
 	if (State == CONFIRM)
-	{
 	    STRCAT(cmd, "n");
-	}
 	else
 	{
 	    /* Set 'ignorecase' just for this search command. */
@@ -1043,6 +1050,10 @@ gui_mch_enable_scrollbar(
     int		    flag)
 {
     ShowScrollBar(sb->id, SB_CTL, flag);
+
+    /* TODO: When the window is maximized, the size of the window stays the
+     * same, thus the size of the text area changes.  On Win98 it's OK, on Win
+     * NT 4.0 it's not... */
 }
 
     void
@@ -1068,6 +1079,30 @@ gui_mch_create_scrollbar(
 	10,				/* Any value will do for now */
 	s_hwnd, NULL,
 	s_hinst, NULL);
+}
+
+/*
+ * Find the scrollbar with the given hwnd.
+ */
+	 static scrollbar_t *
+gui_mswin_find_scrollbar(HWND hwnd)
+{
+    win_t	*wp;
+
+    if (gui.bottom_sbar.id == hwnd)
+	return &gui.bottom_sbar;
+#ifndef FEAT_WINDOWS
+    wp = curwin;
+#else
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+#endif
+    {
+	if (wp->w_scrollbars[SBAR_LEFT].id == hwnd)
+	    return &wp->w_scrollbars[SBAR_LEFT];
+	if (wp->w_scrollbars[SBAR_RIGHT].id == hwnd)
+	    return &wp->w_scrollbars[SBAR_RIGHT];
+    }
+    return NULL;
 }
 
 /*
@@ -1855,7 +1890,7 @@ process_message(void)
 		/* vk == 0xDB AZERTY for CTRL-'-', but CTRL-[ for * QWERTY! */
 		else if (vk == 0xBD)	/* QWERTY for CTRL-'-' */
 		{
-		    string[0] = Ctrl_HAT;
+		    string[0] = Ctrl__;
 		    add_to_input_buf(string, 1);
 		}
 		/* Japanese keyboard map '^' to vk == 0xDE */
@@ -2295,7 +2330,9 @@ initialise_findrep(char_u *initial_string)
 	s_findrep_struct.Flags |= FR_MATCHCASE;
     if (initial_string != NULL && *initial_string != NUL)
     {
-	STRCPY(s_findrep_struct.lpstrFindWhat, initial_string);
+	STRNCPY(s_findrep_struct.lpstrFindWhat, initial_string,
+					       s_findrep_struct.wFindWhatLen);
+	s_findrep_struct.lpstrFindWhat[s_findrep_struct.wFindWhatLen - 1] = NUL;
 	s_findrep_struct.lpstrReplaceWith[0] = NUL;
     }
 }
@@ -2317,7 +2354,7 @@ gui_mch_find_dialog(exarg_t *eap)
 	}
 
 	(void)SetWindowText(s_findrep_hwnd,
-			    (LPCSTR) "Find string (use '\\\\' to find  a '\\')");
+			 (LPCSTR) "Find string (use '\\\\' to find  a '\\')");
 	(void)SetFocus(s_findrep_hwnd);
 
 	s_findrep_is_find = TRUE;
@@ -2342,7 +2379,7 @@ gui_mch_replace_dialog(exarg_t *eap)
 	}
 
 	(void)SetWindowText(s_findrep_hwnd,
-			    (LPCSTR) "Find & Replace (use '\\\\' to find  a '\\')");
+		      (LPCSTR) "Find & Replace (use '\\\\' to find  a '\\')");
 	(void)SetFocus(s_findrep_hwnd);
 
 	s_findrep_is_find = FALSE;
@@ -2379,3 +2416,185 @@ gui_mch_show_popupmenu_at(vimmenu_t *menu, int x, int y)
      * We deal with this in normal.c.
      */
 }
+
+/*
+ * Get this message when the user clicks on the cross in the top right corner
+ * of a Windows95 window.
+ */
+    static void
+_OnClose(
+    HWND hwnd)
+{
+    gui_shell_closed();
+}
+
+/*
+ * Get a message when the user switches back to vim
+ */
+    static LRESULT
+_OnActivateApp(
+    HWND hwnd,
+    BOOL fActivate,
+    DWORD dwThreadId)
+{
+    /* When activated: Check if any file was modified outside of Vim. */
+    if (fActivate)
+	check_timestamps(TRUE);
+
+#ifdef FEAT_AUTOCMD
+    /* In any case, fire the appropriate autocommand */
+    apply_autocmds(fActivate ? EVENT_FOCUSGAINED : EVENT_FOCUSLOST,
+						   NULL, NULL, FALSE, curbuf);
+#endif
+     return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
+}
+
+    static BOOL
+_OnCreate (HWND hwnd, LPCREATESTRUCT lpcs)
+{
+#ifdef FEAT_MBYTE
+    /* get system fixed font size*/
+    static const char ach[] = {'W', 'f', 'g', 'M'};
+
+    HDC	    hdc = GetWindowDC(hwnd);
+    HFONT   hfntOld = SelectFont(hdc, GetStockObject(SYSTEM_FIXED_FONT));
+    SIZE    siz;
+
+    GetTextExtentPoint(hdc, ach, sizeof(ach), &siz);
+
+    sysfixed_width = siz.cx / sizeof(ach);
+    /*
+     * Make characters one pixel higher (by default), so that italic and bold
+     * fonts don't draw off the bottom of their character space.  Also means
+     * that we can underline an underscore for normal text.
+     */
+    sysfixed_height = siz.cy + p_linespace;
+
+    SelectFont(hdc, hfntOld);
+
+    ReleaseDC(hwnd, hdc);
+#endif
+
+    return 0;
+}
+
+#if defined(FEAT_WINDOWS) || defined(PROTO)
+    void
+gui_mch_destroy_scrollbar(scrollbar_t *sb)
+{
+    DestroyWindow(sb->id);
+}
+#endif
+
+/*
+ * Initialise vim to use the font with the given name.	Return FAIL if the font
+ * could not be loaded, OK otherwise.
+ */
+    int
+gui_mch_init_font(char_u *font_name, int fontset)
+{
+    LOGFONT	lf;
+    GuiFont	font = NOFONT;
+    char	*p;
+
+    /* Load the font */
+    if (get_logfont(&lf, font_name))
+	font = get_font_handle(&lf);
+    if (font == NOFONT)
+	return FAIL;
+    if (font_name == NULL)
+	font_name = lf.lfFaceName;
+#if defined(FEAT_MBYTE_IME) || defined(GLOBAL_IME)
+    norm_logfont = lf;
+#endif
+#ifdef FEAT_MBYTE_IME
+    {
+	HIMC    hImc;
+
+	/* Initialize font for IME */
+	if ((hImc = ImmGetContext(s_hwnd)))
+	{
+	    ImmSetCompositionFont(hImc, &norm_logfont);
+	    ImmReleaseContext(s_hwnd, hImc);
+	}
+    }
+#endif
+    gui_mch_free_font(gui.norm_font);
+    gui.norm_font = font;
+    current_font_height = lf.lfHeight;
+    GetFontSize(font);
+    hl_set_font_name(lf.lfFaceName);
+    if (STRCMP(font_name, "*") == 0)
+    {
+	struct charset_pair *cp;
+
+	/* Try to find a charset we recognize. */
+	for (cp = charset_pairs; cp->name != NULL; ++cp)
+	    if (lf.lfCharSet == cp->charset)
+		break;
+
+	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
+		    + (cp->name == NULL ? 0 : strlen(cp->name) + 2)));
+	if (p != NULL)
+	{
+	    /* make a normal font string out of the lf thing:*/
+	    sprintf(p, "%s:h%d", lf.lfFaceName, pixels_to_points(
+			 lf.lfHeight < 0 ? -lf.lfHeight : lf.lfHeight, TRUE));
+	    vim_free(p_guifont);
+	    p_guifont = p;
+	    while (*p)
+	    {
+		if (*p == ' ')
+		    *p = '_';
+		++p;
+	    }
+#ifndef MSWIN16_FASTTEXT
+	    if (lf.lfItalic)
+		strcat(p, ":i");
+	    if (lf.lfWeight >= FW_BOLD)
+		strcat(p, ":b");
+#endif
+	    if (lf.lfUnderline)
+		strcat(p, ":u");
+	    if (lf.lfStrikeOut)
+		strcat(p, ":s");
+	    if (cp->name != NULL)
+	    {
+		strcat(p, ":c");
+		strcat(p, cp->name);
+	    }
+	}
+    }
+#ifndef MSWIN16_FASTTEXT
+    if (!lf.lfItalic)
+    {
+	lf.lfItalic = TRUE;
+	gui.ital_font = get_font_handle(&lf);
+	lf.lfItalic = FALSE;
+    }
+    if (lf.lfWeight < FW_BOLD)
+    {
+	lf.lfWeight = FW_BOLD;
+	gui.bold_font = get_font_handle(&lf);
+	if (!lf.lfItalic)
+	{
+	    lf.lfItalic = TRUE;
+	    gui.boldital_font = get_font_handle(&lf);
+	}
+    }
+#endif
+
+    return OK;
+}
+
+/*
+ * Set the window title
+ */
+    void
+gui_mch_settitle(
+    char_u  *title,
+    char_u  *icon)
+{
+    SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : (char *)title));
+}
+

@@ -191,13 +191,18 @@
 #endif
 #undef	HAVE_SGTTY_H
 #undef	HAVE_SYS_IOCTL_H
+#ifdef VAXC
+#undef  HAVE_SYS_TIME_H
+#undef  HAVE_LOCALE_H
+#else
 #define	HAVE_SYS_TIME_H		1
+#define HAVE_LOCALE_H           1
+#endif
 #undef	HAVE_TERMIO_H
 #undef	HAVE_STROPTS_H
 #define	HAVE_ERRNO_H		1
 #undef	HAVE_STRINGS_H
 #undef	HAVE_SYS_SYSTEMINFO_H
-#define	HAVE_LOCALE_H		1
 #undef	HAVE_SYS_STREAM_H
 #undef	HAVE_SYS_PTEM_H
 #undef	HAVE_TERMIOS_H

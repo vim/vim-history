@@ -359,6 +359,7 @@ shift_block(oap, amount)
     int			incr;
     colnr_t		vcol, col = 0, ws_vcol;
     int			i = 0, j = 0;
+    int			len;
 
 #ifdef FEAT_RIGHTLEFT
     int			old_p_ri = p_ri;
@@ -386,7 +387,13 @@ shift_block(oap, amount)
 	total += bd.pre_whitesp; /* all virtual WS upto & incl a split TAB */
 	ws_vcol = bd.start_vcol - bd.pre_whitesp;
 	if (bd.startspaces)
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+		bd.textstart += (*mb_ptr2len_check)(bd.textstart);
+#endif
 	    ++bd.textstart;
+	}
 	for ( ; vim_iswhite(*bd.textstart); )
 	{
 	    incr = lbr_chartabsize_adv(&bd.textstart, (colnr_t)(bd.start_vcol));
@@ -403,18 +410,16 @@ shift_block(oap, amount)
 	    j = total;
 	/* if we're splitting a TAB, allow for it */
 	bd.textcol -= bd.pre_whitesp_c - (bd.startspaces != 0);
-	newp = alloc_check(bd.textcol + i + j
-				       + (unsigned)STRLEN(bd.textstart) + 1);
+	len = STRLEN(bd.textstart) + 1;
+	newp = alloc_check((unsigned)(bd.textcol + i + j + len));
 	if (newp == NULL)
 	    return;
-	vim_memset(newp, NUL, (size_t)(bd.textcol + i + j
-						 + STRLEN(bd.textstart) + 1));
+	vim_memset(newp, NUL, (size_t)(bd.textcol + i + j + len));
 	mch_memmove(newp, oldp, (size_t)bd.textcol);
 	copy_chars(newp + bd.textcol, (size_t)i, TAB);
 	copy_spaces(newp + bd.textcol + i, (size_t)j);
 	/* the end */
-	mch_memmove(newp + bd.textcol + i + j,
-			      bd.textstart, (size_t)STRLEN(bd.textstart) + 1);
+	mch_memmove(newp + bd.textcol + i + j, bd.textstart, (size_t)len);
     }
     else /* left */
     {
@@ -1106,7 +1111,7 @@ insert_reg(regname, literally)
 
 /*
  * Stuff a string into the typeahead buffer, such that edit() will insert it
- * literally.
+ * literally ("literally" TRUE) or interpret is as typed characters.
  */
     static void
 stuffescaped(arg, literally)
@@ -1118,9 +1123,11 @@ stuffescaped(arg, literally)
 
     while (*arg != NUL)
     {
-	/* stuff a sequence of normal ASCII characters, that's fast */
+	/* Stuff a sequence of normal ASCII characters, that's fast.  Also
+	 * stuff K_SPECIAL to get the effect of a special key when  */
 	start = arg;
-	while (*arg >= ' ' && *arg < DEL)	/* TODO: EBCDIC */
+	while ((*arg >= ' ' && *arg < DEL)	/* TODO: EBCDIC */
+		|| (*arg == K_SPECIAL && !literally))
 	    ++arg;
 	if (arg > start)
 	    stuffReadbuffLen(start, (long)(arg - start));
@@ -1630,7 +1637,7 @@ op_delete(oap)
 	(void)del_chars((long)(oap->end.col + 1 - !oap->inclusive),
 							 restart_edit == NUL);
 	curwin->w_cursor = oap->start;	/* restore curwin->w_cursor */
-	
+
 	(void)do_join(FALSE);
     }
 
@@ -2095,7 +2102,11 @@ op_change(oap)
     else if (op_delete(oap) == FAIL)
 	return FALSE;
 
-    if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum))
+    if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum)
+#ifdef FEAT_VIRTUALEDIT
+	    && !virtual_active()
+#endif
+	    )
 	inc_cursor();
 
 #ifdef FEAT_VISUALEXTRA
@@ -3840,11 +3851,12 @@ block_prep(oap, bdp, lnum, is_del)
     char_u	*pend;
     char_u	*pstart;
     char_u	*line;
+    char_u	*prev_pstart;
+    char_u	*prev_pend;
 
     bdp->startspaces = 0;
     bdp->endspaces = 0;
     bdp->textlen = 0;
-    bdp->textcol = 0;
     bdp->start_vcol = 0;
     bdp->end_vcol = 0;
 #ifdef FEAT_VISUALEXTRA
@@ -3853,8 +3865,10 @@ block_prep(oap, bdp, lnum, is_del)
     bdp->pre_whitesp = 0;
     bdp->pre_whitesp_c = 0;
 #endif
+
     line = ml_get(lnum);
     pstart = line;
+    prev_pstart = line;
     while (bdp->start_vcol < oap->start_vcol && *pstart)
     {
 	/* Count a tab for what it's worth (if list mode not on) */
@@ -3872,6 +3886,7 @@ block_prep(oap, bdp, lnum, is_del)
 	    bdp->pre_whitesp_c = 0;
 	}
 #endif
+	prev_pstart = pstart;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	    pstart += (*mb_ptr2len_check)(pstart);
@@ -3879,7 +3894,6 @@ block_prep(oap, bdp, lnum, is_del)
 #endif
 	    ++pstart;
     }
-    bdp->textcol = pstart - line;
     bdp->start_char_vcols = incr;
     if (bdp->start_vcol < oap->start_vcol)	/* line too short */
     {
@@ -3926,9 +3940,11 @@ block_prep(oap, bdp, lnum, is_del)
 	}
 	else
 	{
-	    while (bdp->end_vcol <= oap->end_vcol && *pend)
+	    prev_pend = pend;
+	    while (bdp->end_vcol <= oap->end_vcol && *pend != NUL)
 	    {
 		/* Count a tab for what it's worth (if list mode not on) */
+		prev_pend = pend;
 		incr = lbr_chartabsize_adv(&pend, (colnr_t)bdp->end_vcol);
 		bdp->end_vcol += incr;
 	    }
@@ -3953,19 +3969,17 @@ block_prep(oap, bdp, lnum, is_del)
 	    {
 		bdp->endspaces = bdp->end_vcol - oap->end_vcol - 1;
 		if (!is_del && pend != pstart && bdp->endspaces)
-		    --pend;
+		    pend = prev_pend;
 	    }
 	}
 #ifdef FEAT_VISUALEXTRA
 	bdp->end_char_vcols = incr;
 #endif
 	if (is_del && bdp->startspaces)
-	{
-	    --pstart;
-	    --bdp->textcol;
-	}
+	    pstart = prev_pstart;
 	bdp->textlen = (int)(pend - pstart);
     }
+    bdp->textcol = pstart - line;
     bdp->textstart = pstart;
 }
 
@@ -4825,4 +4839,239 @@ clear_oparg(oap)
     oparg_t	*oap;
 {
     vim_memset(oap, 0, sizeof(oparg_t));
+}
+
+static long	line_count_info __ARGS((char_u *line, long *wc, long limit, int eol_size));
+
+/*
+ *  Count the number of characters and "words" in a line.
+ *
+ *  "Words" are counted by looking for boundaries between non-space and
+ *  space characters.  (it seems to produce results that match 'wc'.)
+ *
+ *  Return value is character count; word count for the line is ADDED
+ *  to "*wc".
+ *
+ *  The function will only examine the first "limit" characters in the
+ *  line, stopping if it encounters an end-of-line (NUL byte).  In that
+ *  case, eol_size will be added to the character count to account for
+ *  the size of the EOL character.
+ */
+    static long
+line_count_info(line, wc, limit, eol_size)
+    char_u	*line;
+    long	*wc;
+    long	limit;
+    int		eol_size;
+{
+    long	i, words = 0;
+    int		is_word = 0;
+
+    for (i = 0; line[i] && i < limit; i++)
+    {
+	if (is_word)
+	{
+	    if (vim_isspace(line[i]))
+	    {
+		words++;
+		is_word = 0;
+	    }
+	}
+	else if (!vim_isspace(line[i]))
+	    is_word = 1;
+    }
+
+    if (is_word)
+	words++;
+    *wc += words;
+
+    /* Add eol_size if the end of line was reached before hitting limit. */
+    if (!line[i] && i < limit)
+	i += eol_size;
+    return i;
+}
+
+/*
+ * Give some info about the position of the cursor (for "g CTRL-G").
+ * In Visual mode, give some info about the selected region.  (In this case,
+ * the *_count_cursor variables store running totals for the selection.)
+ */
+    void
+cursor_pos_info()
+{
+    char_u	*p;
+    char_u	buf1[20];
+    char_u	buf2[20];
+    linenr_t	lnum;
+    long	char_count = 0;
+    long	char_count_cursor = 0;
+    int		eol_size;
+    long	last_check = 100000L;
+    long	word_count = 0;
+    long	word_count_cursor = 0;
+#ifdef FEAT_VISUAL
+    long	line_count_selected = 0;
+    pos_t	min_pos, max_pos;
+    oparg_t	oparg;
+    struct block_def	bd;
+#endif
+
+    /*
+     * Compute the length of the file in characters.
+     */
+    if (curbuf->b_ml.ml_flags & ML_EMPTY)
+    {
+	MSG(_(no_lines_msg));
+    }
+    else
+    {
+	if (get_fileformat(curbuf) == EOL_DOS)
+	    eol_size = 2;
+	else
+	    eol_size = 1;
+
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    if (lt(VIsual, curwin->w_cursor))
+	    {
+		min_pos = VIsual;
+		max_pos = curwin->w_cursor;
+	    }
+	    else
+	    {
+		min_pos = curwin->w_cursor;
+		max_pos = VIsual;
+	    }
+	    if (VIsual_mode == Ctrl_V)
+	    {
+		oparg.is_VIsual = 1;
+		oparg.block_mode = 1;
+		oparg.op_type = OP_NOP;
+		getvcols(curwin, &min_pos, &max_pos,
+			&oparg.start_vcol, &oparg.end_vcol);
+		/* Swap the start, end vcol if needed */
+		if (oparg.end_vcol < oparg.start_vcol)
+		{
+		    oparg.end_vcol += oparg.start_vcol;
+		    oparg.start_vcol = oparg.end_vcol - oparg.start_vcol;
+		    oparg.end_vcol -= oparg.start_vcol;
+		}
+	    }
+	    line_count_selected = max_pos.lnum - min_pos.lnum + 1;
+	}
+#endif
+
+	for (lnum = 1; lnum <= curbuf->b_ml.ml_line_count; ++lnum)
+	{
+	    /* Check for a CTRL-C every 100000 characters. */
+	    if (char_count > last_check)
+	    {
+		ui_breakcheck();
+		if (got_int)
+		    return;
+		last_check = char_count + 100000L;
+	    }
+
+#ifdef FEAT_VISUAL
+	    /* Do extra processing for VIsual mode. */
+	    if (VIsual_active
+		    && lnum >= min_pos.lnum && lnum <= max_pos.lnum)
+	    {
+		switch (VIsual_mode)
+		{
+		    case Ctrl_V:
+			block_prep(&oparg, &bd, lnum, 0);
+			char_count_cursor += line_count_info(bd.textstart,
+				&word_count_cursor, (long)bd.textlen, eol_size);
+			break;
+		    case 'V':
+			char_count_cursor += line_count_info(ml_get(lnum),
+				&word_count_cursor, MAXCOL, eol_size);
+			break;
+		    case 'v':
+			{
+			    colnr_t start_col = (lnum == min_pos.lnum)
+							   ? min_pos.col : 0;
+			    colnr_t end_col = (lnum == max_pos.lnum)
+				      ? max_pos.col - start_col + 1 : MAXCOL;
+
+			    char_count_cursor +=
+				line_count_info(ml_get(lnum) + start_col,
+				 &word_count_cursor, (long)end_col, eol_size);
+			}
+			break;
+		}
+	    }
+	    else
+#endif
+	    {
+		/* In non-visual mode, check for the line the cursor is on */
+		if (lnum == curwin->w_cursor.lnum)
+		{
+		    word_count_cursor += word_count;
+		    char_count_cursor = char_count +
+			line_count_info(ml_get(lnum), &word_count_cursor,
+				  (long)(curwin->w_cursor.col + 1), eol_size);
+		}
+	    }
+	    /* Add to the running totals */
+	    char_count += line_count_info(ml_get(lnum), &word_count, MAXCOL,
+								    eol_size);
+	}
+
+	/* Correction for when last line doesn't have an EOL. */
+	if (!curbuf->b_p_eol && curbuf->b_p_bin)
+	    char_count -= eol_size;
+
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    if (VIsual_mode == Ctrl_V)
+	    {
+		getvcols(curwin, &min_pos, &max_pos, &min_pos.col,
+			&max_pos.col);
+		sprintf((char *)buf1, _("%ld Cols; "),
+			(long)(oparg.end_vcol - oparg.start_vcol + 1));
+	    }
+	    else
+		buf1[0] = NUL;
+
+	    sprintf((char *)IObuff,
+	    _("Selected %s%ld of %ld Lines; %ld of %ld Words; %ld of %ld Chars"),
+			buf1, line_count_selected,
+			(long)curbuf->b_ml.ml_line_count,
+			word_count_cursor, word_count,
+			char_count_cursor, char_count);
+	}
+	else
+#endif
+	{
+	    p = ml_get_curline();
+	    validate_virtcol();
+	    col_print(buf1, (int)curwin->w_cursor.col + 1,
+		    (int)curwin->w_virtcol + 1);
+	    col_print(buf2, (int)STRLEN(p), linetabsize(p));
+
+	    sprintf((char *)IObuff,
+		_("Col %s of %s; Line %ld of %ld; Word %ld of %ld; Char %ld of %ld"),
+		    (char *)buf1, (char *)buf2,
+		    (long)curwin->w_cursor.lnum,
+		    (long)curbuf->b_ml.ml_line_count,
+		    word_count_cursor, word_count,
+		    char_count_cursor, char_count);
+	}
+
+#ifdef FEAT_MBYTE
+	char_count = bomb_size();
+	if (char_count > 0)
+	    sprintf((char *)IObuff + STRLEN(IObuff), _("(+%ld for BOM)"),
+								  char_count);
+#endif
+	/* Don't shorten this message, the user asked for it. */
+	p = p_shm;
+	p_shm = (char_u *)"";
+	msg(IObuff);
+	p_shm = p;
+    }
 }

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Feb 07
+" Last change:	2001 Mar 09
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -96,7 +96,7 @@ au BufNewFile,BufRead *.asp
 
 " Assembly (all kinds)
 " *.lst is not pure assembly, it has two extra columns (address, byte codes)
-au BufNewFile,BufRead *.asm,*.[sS],*.i,*.mac,*.lst	call <SID>FTasm()
+au BufNewFile,BufRead *.asm,*.[sS],*.mac,*.lst	call <SID>FTasm()
 
 " This function checks for the kind of assembly that is wanted by the user, or
 " can be detected from the first five lines of the file.
@@ -241,8 +241,31 @@ endfun
 " Clean
 au BufNewFile,BufRead *.dcl,*.icl		setf clean
 
-" Clever (also: *.ent)
-au BufNewFile,BufRead *.eni			setf clever
+" Clever
+au BufNewFile,BufRead *.eni			setf cl
+
+" Clever or SGML
+au BufNewFile,BufRead *.ent			call <SID>FTent()
+
+fun! <SID>FTent()
+  " This function checks for valid cl syntax in the first five lines.
+  " Look for either an opening comment, '#', or a block start, '{".
+  " If not found, assume SGML.
+  let lnum = 1
+  while lnum < 6
+    let line = getline(lnum)
+    if line =~ '^\s*[#{]'
+      setf cl
+      return
+    elseif line !~ '^\s*$'
+      " Not a blank line, not a comment, and not a block start,
+      " so doesn't look like valid cl code.
+      break
+    endif
+    let lnum = lnum + 1
+  endw
+  setf sgml
+endfun
 
 " Clipper
 au BufNewFile,BufRead *.prg			setf clipper
@@ -255,6 +278,9 @@ au BufNewFile,BufRead *.cfm,*.cfi		setf cf
 
 " Configure scripts
 au BufNewFile,BufRead configure.in		setf config
+
+" Configure files
+au BufNewFile,BufRead *.cfg			setf cfg
 
 " Communicating Sequential Processes
 au BufNewFile,BufRead *.csp,*.fdr		setf csp
@@ -355,6 +381,9 @@ au BufNewFile,BufRead *.gsp			setf gsp
 " Haskell
 au BufNewFile,BufRead *.hs			setf haskell
 au BufNewFile,BufRead *.lhs			setf lhaskell
+
+" Hercules
+au BufNewFile,BufRead *.vc,*.ev,*.rs,*.sum,*.errsum	setf hercules
 
 " HEX (Intel)
 au BufNewFile,BufRead *.hex,*.h32		setf hex
@@ -579,7 +608,7 @@ au BufNewFile,BufRead *.ora			setf ora
 au BufNewFile,BufRead *.papp,*.pxml,*.pxsl	setf papp
 
 " Pascal
-au BufNewFile,BufRead *.p,*.pas			setf pascal
+au BufNewFile,BufRead *.pas			setf pascal
 
 " Delphi project file
 au BufNewFile,BufRead *.dpr			setf pascal
@@ -649,6 +678,74 @@ au BufNewFile,BufRead *.it,*.ih			setf ppwiz
 
 " Procmail
 au BufNewFile,BufRead .procmail,.procmailrc	setf procmail
+
+" Progress or CWEB
+au BufNewFile,BufRead *.w			call <SID>FTprogress_cweb()
+
+function! <SID>FTprogress_cweb()
+  if exists("g:filetype_w")
+    exe "setf " . g:filetype_w
+    return
+  endif
+  if getline(1) =~ '&ANALYZE' || getline(3) =~ '&GLOBAL-DEFINE'
+    setf progress
+  else
+    setf cweb
+  endif
+endfun
+
+" Progress or assembly
+au BufNewFile,BufRead *.i			call <SID>FTprogress_asm()
+
+function! <SID>FTprogress_asm()
+  if exists("g:filetype_i")
+    exe "setf " . g:filetype_i
+    return
+  endif
+  " This function checks for an assembly comment the first ten lines.
+  " If not found, assume Progress.
+  let lnum = 1
+  while lnum <= 10
+    let line = getline(lnum)
+    if line =~ '^\s*;'
+      call FTCheck_asm()
+      return
+    elseif line !~ '^\s*$'
+      " Not an empty line: Doesn't look like valid assembly code.
+      break
+    endif
+    let lnum = lnum + 1
+  endw
+  setf progress
+endfun
+
+" Progress or Pascal
+au BufNewFile,BufRead *.p			call <SID>FTprogress_pascal()
+
+function! <SID>FTprogress_pascal()
+  if exists("g:filetype_p")
+    exe "setf " . g:filetype_p
+    return
+  endif
+  " This function checks for valid Pascal syntax in the first ten lines.
+  " Look for either an opening comment or a program start.
+  " If not found, assume Progress.
+  let lnum = 1
+  while lnum <= 10
+    let line = getline(lnum)
+    if line =~ '^\s*\(program\|procedure\|function\|const\|type\|var\)\>'
+    	\ || line =~ '^\s*{'
+      setf pascal
+      return
+    elseif line !~ '^\s*$'
+      " Not an empty line: Doesn't look like valid Pascal code.
+      break
+    endif
+    let lnum = lnum + 1
+  endw
+  setf progress
+endfun
+
 
 " Software Distributor Product Specification File (POSIX 1387.2-1995)
 au BufNewFile,BufRead *.psf			setf psf
@@ -723,7 +820,6 @@ au BufNewFile,BufRead *.sgm,*.sgml
 	\ else |
 	\   setf sgml |
 	\ endif
-au BufNewFile,BufRead *.ent			setf sgml
 
 " SGMLDECL
 au BufNewFile,BufRead *.decl,*.dcl,*.dec
@@ -746,10 +842,24 @@ fun! SetFileTypeSH(name)
     if exists("b:is_bash")
       unlet b:is_bash
     endif
+    if exists("b:is_sh")
+      unlet b:is_bash
+    endif
   elseif exists("g:bash_is_sh") || a:name =~ '\<bash\>' || a:name =~ '\<bash2\>'
     let b:is_bash = 1
     if exists("b:is_kornshell")
       unlet b:is_kornshell
+    endif
+    if exists("b:is_sh")
+      unlet b:is_sh
+    endif
+  elseif a:name =~ '\<sh\>'
+	let b:is_sh = 1
+    if exists("b:is_kornshell")
+      unlet b:is_kornshell
+    endif
+    if exists("b:is_bash")
+      unlet b:is_bash
     endif
   endif
   setf sh
@@ -897,9 +1007,6 @@ au BufNewFile,BufRead *.wbt			setf winbatch
 
 " CVS commit file
 au BufNewFile,BufRead cvs\d\+			setf cvs
-
-" CWEB
-au BufNewFile,BufRead *.w			setf cweb
 
 " WEB (*.web is also used for Winbatch: Guess, based on expecting "%" comment
 " lines in a WEB file).

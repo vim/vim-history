@@ -147,7 +147,7 @@ static void next_search_hl __ARGS((linenr_t lnum, colnr_t mincol));
 static void screen_start_highlight __ARGS((int attr));
 static void screen_char __ARGS((unsigned off, int row, int col));
 #ifdef FEAT_MBYTE
-static void screen_char_n __ARGS((unsigned off, int n, int row, int col));
+static void screen_char_2 __ARGS((unsigned off, int row, int col));
 #endif
 static void screenclear2 __ARGS((void));
 static void lineclear __ARGS((unsigned off));
@@ -934,10 +934,14 @@ win_update(wp)
 			     * first one that scrolled down. */
 			    top_end = i;
 
+			    /* Move the entries that were scrolled, disable
+			     * the entries for the lines to be redrawn. */
 			    if ((wp->w_lines_valid += j) > wp->w_height)
 				wp->w_lines_valid = wp->w_height;
 			    for (idx = wp->w_lines_valid; idx - j >= 0; idx--)
 				wp->w_lines[idx] = wp->w_lines[idx - j];
+			    while (idx >= 0)
+				wp->w_lines[idx--].wl_valid = FALSE;
 			}
 		    }
 		    else
@@ -1169,18 +1173,22 @@ win_update(wp)
 
 	/*
 	 * Find the minimal part to be updated.
-	 * (TODO: assumes all w_lines[] entries are valid, is that right?)
+	 * Watch out for scrolling that made entries in w_lines[] invalid.
+	 * E.g., CTRL-U makes the first half of w_lines[] invalid and sets
+	 * top_end; need to redraw from top_end to the "to" line.
 	 */
 	if (mid_start > 0)
 	{
 	    lnum = wp->w_topline;
 	    idx = 0;
-	    mid_start = 0;
+	    mid_start = top_end;
 	    while (lnum < from && idx < wp->w_lines_valid)	/* find start */
 	    {
-		mid_start += wp->w_lines[idx++].wl_size;
+		if (wp->w_lines[idx].wl_valid)
+		    mid_start += wp->w_lines[idx].wl_size;
+		++idx;
 #ifdef FEAT_FOLDING
-		if (idx < wp->w_lines_valid)
+		if (idx < wp->w_lines_valid && wp->w_lines[idx].wl_valid)
 		    lnum = wp->w_lines[idx].wl_lnum;
 		else
 #endif
@@ -1190,13 +1198,16 @@ win_update(wp)
 	    mid_end = wp->w_height;
 	    for ( ; idx < wp->w_lines_valid; ++idx)		/* find end */
 	    {
-		if (wp->w_lines[idx].wl_lnum >= to + 1)
+		if (wp->w_lines[idx].wl_valid)
 		{
-		    /* Only update up to first row of this line */
-		    mid_end = srow;
-		    break;
+		    if (wp->w_lines[idx].wl_lnum >= to + 1)
+		    {
+			/* Only update up to first row of this line */
+			mid_end = srow;
+			break;
+		    }
+		    srow += wp->w_lines[idx].wl_size;
 		}
-		srow += wp->w_lines[idx].wl_size;
 	    }
 	}
     }
@@ -1645,6 +1656,9 @@ win_update(wp)
 	    wp->w_botline = lnum;
     }
 
+    /* Reset the type of redrawing required, the window has been updated. */
+    wp->w_redr_type = 0;
+
     if (dollar_vcol == 0)
     {
 	/*
@@ -1665,7 +1679,7 @@ win_update(wp)
 	    recursive = TRUE;
 	    curwin->w_valid &= ~VALID_TOPLINE;
 	    update_topline();	/* may invalidate w_botline again */
-	    if (must_redraw)
+	    if (must_redraw != 0)
 	    {
 		/* Don't update for changes in buffer again. */
 		i = curbuf->b_mod_set;
@@ -1683,8 +1697,6 @@ win_update(wp)
     if (!got_int)
 	got_int = save_got_int;
 #endif
-
-    wp->w_redr_type = 0;
 }
 
 /*
@@ -1748,8 +1760,8 @@ win_draw_end(wp, c, row)
 	    int	    nn = n + wp->w_p_fdc;
 
 	    /* draw the fold column at the left */
-	    if (nn > wp->w_width)
-		nn = wp->w_width;
+	    if (nn > W_WIDTH(wp))
+		nn = W_WIDTH(wp);
 	    screen_fill(W_WINROW(wp) + row, W_WINROW(wp) + wp->w_height,
 		    W_WINCOL(wp) + n, (int)W_WINCOL(wp) + nn,
 		    ' ', ' ', hl_attr(HLF_FC));
@@ -2115,6 +2127,8 @@ win_line(wp, lnum, startrow, endrow)
     char_u	*p_extra = NULL;	/* string of extra chars */
     int		c_extra = NUL;		/* extra chars, all the same */
     int		extra_attr = 0;		/* attributes when n_extra != 0 */
+    static char_u *at_end_str = (char_u *)""; /* used for p_extra when
+					   displaying lcs_eol at end-of-line */
 
     /* saved "extra" items for when draw_state becomes WL_LINE (again) */
     int		saved_n_extra = 0;
@@ -2164,7 +2178,10 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 #ifdef FEAT_SIGNS
     int_u	type;			/* sign type (if signs are used) */
-    int		debug_attr = 0;		/* debugger atrribute override */
+#endif
+#if defined(FEAT_SIGNS) || (defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS))
+# define LINE_ATTR
+    int		line_attr = 0;		/* atrribute for the whole line */
 #endif
 
     /* draw_state: items that are drawn in sequence: */
@@ -2267,7 +2284,16 @@ win_line(wp, lnum, startrow, endrow)
 		{
 		    pos = *bot;
 		    if (*p_sel == 'e')
+		    {
 			--pos.col;
+#ifdef FEAT_MBYTE
+			if (has_mbyte)
+			{
+			    line = ml_get_buf(wp->w_buffer, lnum, FALSE);
+			    pos.col -= (*mb_head_off)(line, line + pos.col);
+			}
+#endif
+		    }
 		    getvcol(wp, &pos, NULL, NULL, (colnr_t *)&tocol);
 		    ++tocol;
 		}
@@ -2325,13 +2351,20 @@ win_line(wp, lnum, startrow, endrow)
 	attr = hl_attr(HLF_I);
     }
 
-#ifdef FEAT_SIGNS
+#ifdef LINE_ATTR
+# ifdef FEAT_SIGNS
+    /* Draw a sign at the start of the line and/or highlight the line. */
     type = buf_getsigntype(wp->w_buffer, lnum);
     if (type != 0)
-    {
+	line_attr = get_debug_highlight(type);
+# endif
+# if defined(FEAT_QUICKFIX) && defined(FEAT_WINDOWS)
+    /* Highlight the current line in the quickfix window. */
+    if (bt_quickfix(wp->w_buffer) && wp->w_cursor.lnum == lnum)
+	line_attr = hl_attr(HLF_L);
+# endif
+    if (line_attr != 0)
 	area_highlighting = TRUE;
-	debug_attr = get_debug_highlight(type);
-    }
 #endif
 
     line = ml_get_buf(wp->w_buffer, lnum, FALSE);
@@ -2603,13 +2636,13 @@ win_line(wp, lnum, startrow, endrow)
 			    && !(noinvcur
 				&& (colnr_t)vcol == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-								+ wp->w_cursor.coladd
+							 + wp->w_cursor.coladd
 #endif
 				))
 			|| (noinvcur
 			    && (colnr_t)vcol_prev == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-								+ wp->w_cursor.coladd
+							 + wp->w_cursor.coladd
 #endif
 			    && vcol >= fromcol))
 		    && vcol < tocol)
@@ -2619,14 +2652,14 @@ win_line(wp, lnum, startrow, endrow)
 			|| (noinvcur
 			    && (colnr_t)vcol == wp->w_virtcol
 #ifdef FEAT_VIRTUALEDIT
-								+ wp->w_cursor.coladd
+							 + wp->w_cursor.coladd
 #endif
 			    )))
-#ifdef FEAT_SIGNS
-		area_attr = debug_attr;		/* stop highlighting */
-	    else if (debug_attr && ((fromcol == -10 && tocol == MAXCOL)
+#ifdef LINE_ATTR
+		area_attr = line_attr;		/* stop highlighting */
+	    else if (line_attr && ((fromcol == -10 && tocol == MAXCOL)
 					 || (vcol < fromcol || vcol > tocol)))
-		area_attr = debug_attr;
+		area_attr = line_attr;
 #else
 		area_attr = 0;			/* stop highlighting */
 #endif
@@ -2823,7 +2856,7 @@ win_line(wp, lnum, startrow, endrow)
 			if (!area_attr && !search_attr)
 			{
 			    n_attr = n_extra + 1;
-			    extra_attr = hl_attr(HLF_AT);
+			    extra_attr = hl_attr(HLF_8);
 			    saved_attr2 = char_attr; /* save current attr */
 			}
 		    }
@@ -2907,7 +2940,7 @@ win_line(wp, lnum, startrow, endrow)
 		    if (!area_attr && !search_attr)
 		    {
 			n_attr = 1;
-			extra_attr = hl_attr(HLF_AT);
+			extra_attr = hl_attr(HLF_8);
 			saved_attr2 = char_attr; /* save current attr */
 		    }
 		}
@@ -2935,7 +2968,7 @@ win_line(wp, lnum, startrow, endrow)
 			if (!area_attr && !search_attr)
 			{
 			    n_attr = n_extra + 1;
-			    extra_attr = hl_attr(HLF_AT);
+			    extra_attr = hl_attr(HLF_8);
 			    saved_attr2 = char_attr; /* save current attr */
 			}
 		    }
@@ -2950,7 +2983,7 @@ win_line(wp, lnum, startrow, endrow)
 		}
 		else if (c == NUL && wp->w_p_list && lcs_eol != NUL)
 		{
-		    p_extra = (char_u *)"";
+		    p_extra = at_end_str;
 		    n_extra = 1;
 		    c_extra = NUL;
 		    c = lcs_eol;
@@ -2969,7 +3002,7 @@ win_line(wp, lnum, startrow, endrow)
 		    if (!area_attr && !search_attr)
 		    {
 			n_attr = n_extra + 1;
-			extra_attr = hl_attr(HLF_AT);
+			extra_attr = hl_attr(HLF_8);
 			saved_attr2 = char_attr; /* save current attr */
 		    }
 #ifdef FEAT_MBYTE
@@ -3095,7 +3128,7 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 		    col == W_WIDTH(wp) - 1)
 		&& (*ptr != NUL
-		    || (wp->w_p_list && lcs_eol != NUL)
+		    || (wp->w_p_list && lcs_eol != NUL && p_extra != at_end_str)
 		    || (n_extra && (c_extra != NUL || *p_extra != NUL))))
 	{
 	    c = lcs_ext;
@@ -3159,6 +3192,10 @@ win_line(wp, lnum, startrow, endrow)
 		    /* DBCS: Put second byte in the second screen char. */
 		    ScreenLines[off] = mb_c & 0xff;
 		++vcol;
+		/* When "tocol" is halfway a character, set it to the end of
+		 * the character, otherwise highlighting won't stop. */
+		if (tocol == vcol)
+		    ++tocol;
 	    }
 #endif
 #ifdef FEAT_RIGHTLEFT
@@ -3178,7 +3215,7 @@ win_line(wp, lnum, startrow, endrow)
 	    --n_skip;
 
 	/* Only advance the "vcol" when after the 'number' column. */
-	if (draw_state > WL_SBR)
+	if (draw_state >= WL_SBR)
 	    ++vcol;
 
 	/* restore attributes after last 'listchars' or 'number' char */
@@ -3195,8 +3232,8 @@ win_line(wp, lnum, startrow, endrow)
 #endif
 				    (col >= W_WIDTH(wp))
 		&& (*ptr != NUL
-			|| (wp->w_p_list && lcs_eol != NUL)
-			|| (n_extra && (c_extra != NUL || *p_extra != NUL)))
+		    || (wp->w_p_list && lcs_eol != NUL && p_extra != at_end_str)
+		    || (n_extra != 0 && (c_extra != NUL || *p_extra != NUL)))
 		)
 	{
 	    SCREEN_LINE(screen_row, W_WINCOL(wp), col, (int)W_WIDTH(wp),
@@ -3399,14 +3436,7 @@ screen_line(row, coloff, endcol, clear_width
     {
 #ifdef FEAT_MBYTE
 	if (has_mbyte && (col + 1 < endcol))
-	{
-	    if (enc_utf8)
-		/* UTF-8: next cell has a 0 character if it's double width */
-		char_cells = (ScreenLines[off_from + 1] == 0 ? 2 : 1);
-	    else
-		/* DBCS: bytelen == nr of cells */
-		char_cells = MB_BYTE2LEN(ScreenLines[off_from]);
-	}
+	    char_cells = (*mb_off2cells)(off_from);
 	else
 	    char_cells = 1;
 #endif
@@ -3475,13 +3505,13 @@ screen_line(row, coloff, endcol, clear_width
 #ifdef FEAT_MBYTE
 	    if (enc_dbcs != 0)
 	    {
-		/* Check if overwriting a double-byte with a single-byt or
-		 * ther other way around requires another character to be
+		/* Check if overwriting a double-byte with a single-byte or
+		 * the other way around requires another character to be
 		 * redrawn.  For UTF-8 this isn't needed, because comparing
 		 * ScreenLinesUC[] is sufficient. */
 		if (char_cells == 1
 			&& col + 1 < endcol
-			&& MB_BYTE2LEN(ScreenLines[off_to]) > 1)
+			&& (*mb_off2cells)(off_to) > 1)
 		{
 		    /* Writing a single-cell character over a double-cell
 		     * character: need to redraw the next cell. */
@@ -3490,8 +3520,8 @@ screen_line(row, coloff, endcol, clear_width
 		}
 		else if (char_cells == 2
 			&& col + 2 < endcol
-			&& MB_BYTE2LEN(ScreenLines[off_to]) == 1
-			&& MB_BYTE2LEN(ScreenLines[off_to + 1]) > 1)
+			&& (*mb_off2cells)(off_to) == 1
+			&& (*mb_off2cells)(off_to + 1) > 1)
 		{
 		    /* Writing the second half of a double-cell character over
 		     * a double-cell character: need to redraw the second
@@ -3541,11 +3571,11 @@ screen_line(row, coloff, endcol, clear_width
 #endif
 	    ScreenAttrs[off_to] = ScreenAttrs[off_from];
 #ifdef FEAT_MBYTE
-	    if (enc_dbcs && char_cells == 2)
+	    if (enc_dbcs != 0 && char_cells == 2)
 	    {
 		/* just a hack: It makes two bytes of DBCS have same attr */
 		ScreenAttrs[off_to + 1] = ScreenAttrs[off_from];
-		screen_char_n(off_to, 2, row, col + coloff);
+		screen_char_2(off_to, row, col + coloff);
 	    }
 	    else
 #endif
@@ -4160,31 +4190,7 @@ win_redr_status(wp)
      */
     if (wp->w_vsep_width != 0)
     {
-	int		connected = FALSE;
-	frame_t	*fr;
-
-	/* Find out if the status line is connected to the status line of
-	 * the window right of it. */
-	fr = wp->w_frame;
-	while (fr->fr_parent != NULL)
-	{
-	    if (fr->fr_parent->fr_layout == FR_COL)
-	    {
-		if (fr->fr_next != NULL)
-		    break;
-	    }
-	    else
-	    {
-		if (fr->fr_next != NULL)
-		{
-		    connected = TRUE;
-		    break;
-		}
-	    }
-	    fr = fr->fr_parent;
-	}
-
-	if (connected)
+	if (stl_connected(wp))
 	    fillchar = fillchar_status(&attr, wp == curwin);
 	else
 	    fillchar = fillchar_vsep(&attr);
@@ -4193,7 +4199,39 @@ win_redr_status(wp)
     }
 #endif
 }
-#endif
+
+# ifdef FEAT_VERTSPLIT
+/*
+ * Return TRUE if the status line of window "wp" is connected to the status
+ * line of the window right of it.  If not, then it's a vertical separator.
+ * Only call if (wp->w_vsep_width != 0).
+ */
+    int
+stl_connected(wp)
+    win_t	*wp;
+{
+    frame_t	*fr;
+
+    fr = wp->w_frame;
+    while (fr->fr_parent != NULL)
+    {
+	if (fr->fr_parent->fr_layout == FR_COL)
+	{
+	    if (fr->fr_next != NULL)
+		break;
+	}
+	else
+	{
+	    if (fr->fr_next != NULL)
+		return TRUE;
+	}
+	fr = fr->fr_parent;
+    }
+    return FALSE;
+}
+# endif
+
+#endif /* FEAT_WINDOWS */
 
 #if defined(FEAT_WINDOWS) || defined(FEAT_STL_OPT) || defined(PROTO)
 /*
@@ -4507,7 +4545,7 @@ screen_puts(text, row, col, attr)
 		{
 		    ScreenLines[off + 1] = text[1];
 		    ScreenAttrs[off + 1] = attr;
-		    screen_char_n(off, 2, row, col);
+		    screen_char_2(off, row, col);
 		}
 		else if (enc_dbcs == DBCS_JPNU && *text == 0x8e)
 		{
@@ -4846,7 +4884,8 @@ reset_cterm_colors()
 }
 
 /*
- * put character ScreenLines["off"] on the screen at position 'row' and 'col'
+ * Put character ScreenLines["off"] on the screen at position "row" and "col",
+ * using the attributes from ScreenAttrs["off"].
  */
     static void
 screen_char(off, row, col)
@@ -4894,28 +4933,29 @@ screen_char(off, row, col)
     }
     else
 #endif
+    {
 	out_char(ScreenLines[off]);
-    screen_cur_col++;
-
 #ifdef FEAT_MBYTE
-    /* double-byte character in single-width cell */
-    if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
-	out_char(ScreenLines2[off]);
+	/* double-byte character in single-width cell */
+	if (enc_dbcs == DBCS_JPNU && ScreenLines[off] == 0x8e)
+	    out_char(ScreenLines2[off]);
 #endif
+    }
+
+    screen_cur_col++;
 }
 
 #ifdef FEAT_MBYTE
 
 /*
- * Used for enc_dbcs only: Put "n" characters of ScreenLines["off"] on the
- * screen at position 'row' and 'col'.
- * The attributes of the first character is used for all.  This is required to
+ * Used for enc_dbcs only: Put one double-wide character at ScreenLines["off"]
+ * on the screen at position 'row' and 'col'.
+ * The attributes of the first byte is used for all.  This is required to
  * output the two bytes of a double-byte character with nothing in between.
  */
     static void
-screen_char_n(off, n, row, col)
+screen_char_2(off, row, col)
     unsigned	off;
-    int		n;
     int		row;
     int		col;
 {
@@ -4923,15 +4963,14 @@ screen_char_n(off, n, row, col)
      * Outputting the last character on the screen may scrollup the screen.
      * Don't to it!  At the same time check for illegal values, just in case.
      */
-    if (off + n >= (unsigned)(screen_Rows * screen_Columns))
+    if (off + 2 >= (unsigned)(screen_Rows * screen_Columns))
 	return;
 
-    /* Output the first byte normally, then write the rest directly. */
+    /* Output the first byte normally (positions the cursor), then write the
+     * second byte directly. */
     screen_char(off, row, col);
-
-    screen_cur_col += n - 1;
-    while (--n > 0)
-	out_char(ScreenLines[++off]);
+    out_char(ScreenLines[off + 1]);
+    ++screen_cur_col;
 }
 #endif
 
@@ -5161,6 +5200,7 @@ screenalloc(clear)
 		&& Columns == screen_Columns
 #ifdef FEAT_MBYTE
 		&& enc_utf8 == (ScreenLinesUC != NULL)
+		&& (enc_dbcs == DBCS_JPNU) == (ScreenLines2 != NULL)
 #endif
 		)
 	    || Rows == 0
@@ -5499,6 +5539,11 @@ screen_down()
 	++screen_cur_row;
 }
 
+/*
+ * Move the cursor to position "row","col" in the screen.
+ * This tries to find the most efficient way to move, minimizing the number of
+ * characters sent to the terminal.
+ */
     void
 windgoto(row, col)
     int	    row;
@@ -5633,7 +5678,7 @@ windgoto(row, col)
 		p = ScreenAttrs + LineOffset[row] + wouldbe_col;
 		while (i && *p++ == attr)
 		    --i;
-		if (i)
+		if (i != 0)
 		{
 		    /*
 		     * Try if it works when highlighting is stopped here.
@@ -5644,10 +5689,10 @@ windgoto(row, col)
 			while (i && *p++ == 0)
 			    --i;
 		    }
-		    if (i)
+		    if (i != 0)
 			cost = 999;	/* different attributes, don't do it */
 		}
-#if defined(FEAT_MOUSE) && defined(FEAT_MBYTE)
+#ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
 		    /* Don't use an UTF-8 char for positioning, it's slow. */
@@ -5655,7 +5700,7 @@ windgoto(row, col)
 		    p = ScreenLines + LineOffset[row] + wouldbe_col;
 		    while (i && MB_BYTE2LEN(*p++) == 1)
 			--i;
-		    if (i)
+		    if (i != 0)
 			cost = 999;
 		}
 #endif
@@ -5705,7 +5750,7 @@ windgoto(row, col)
 		     */
 		    if (T_ND[0] != NUL && T_ND[1] == NUL)
 		    {
-			while (i--)
+			while (i-- > 0)
 			    out_char(*T_ND);
 		    }
 		    else
@@ -5713,11 +5758,16 @@ windgoto(row, col)
 			int	off;
 
 			off = LineOffset[row] + screen_cur_col;
-			while (i--)
+			while (i-- > 0)
 			{
 			    if (ScreenAttrs[off] != screen_attr)
 				screen_stop_highlight();
 			    out_char(ScreenLines[off]);
+#ifdef FEAT_MBYTE
+			    if (enc_dbcs == DBCS_JPNU
+						  && ScreenLines[off] == 0x8e)
+				out_char(ScreenLines2[off]);
+#endif
 			    ++off;
 			}
 		    }

@@ -342,6 +342,7 @@ main
      * Setup to use the current locale (for ctype() and many other things).
      */
     setlocale(LC_ALL, "");
+
 # ifdef FEAT_GETTEXT
     {
 	int	mustfree = FALSE;

@@ -24,7 +24,8 @@
 #  include "os_unixx.h"
 #endif
 
-int sniffemacs_pid;
+static int sniffemacs_pid;
+
 int fd_from_sniff;
 int sniff_connected = 0;
 int sniff_request_waiting = 0;
@@ -96,16 +97,16 @@ static char *init_cmds[]= {
     "autocmd VimLeave * sniff disconnect",
     "augroup END",
 
-    "let sniff_connected = 1",
+    "let g:sniff_connected = 1",
 
-    "if ! exists('sniff_mappings_sourced')|"
-	"if ! exists('sniff_mappings')|"
-	    "let sniff_mappings='$SNIFF_DIR/config/sniff.vim'|"
+    "if ! exists('g:sniff_mappings_sourced')|"
+	"if ! exists('g:sniff_mappings')|"
+	    "let g:sniff_mappings='$SNIFF_DIR/config/sniff.vim'|"
 	"endif|"
-	"let sniff_mappings=expand(sniff_mappings)|"
-	"if file_readable(sniff_mappings)|"
-	    "execute 'source' sniff_mappings|"
-	    "let sniff_mappings_sourced=1|"
+	"let g:sniff_mappings=expand(g:sniff_mappings)|"
+	"if file_readable(g:sniff_mappings)|"
+	    "execute 'source' g:sniff_mappings|"
+	    "let g:sniff_mappings_sourced=1|"
 	"endif|"
     "endif",
 
@@ -142,7 +143,8 @@ HANDLE sniffemacs_handle;
 HANDLE handle_to_sniff;
 HANDLE handle_from_sniff;
 
-struct sniffBufNode {
+struct sniffBufNode
+{
     struct sniffBufNode *next;
     int    bufLen;
     char   buf[READTHREADMAX];
@@ -178,18 +180,21 @@ ExecuteDetachedProgram(char *szBinary, char *szCmdLine,
     HINSTANCE hResult;
 
     hResult = FindExecutable(szBinary, ".", szPath);
-    if((int)hResult <= 32) {
+    if ((int)hResult <= 32)
+    {
 	/* can't find the exe file */
 	return NULL;
     }
 
     ZeroMemory(pStartupInfo, sizeof(*pStartupInfo));
     pStartupInfo->dwFlags= STARTF_USESHOWWINDOW;
-    if(hStdInput) {
+    if (hStdInput)
+    {
 	pStartupInfo->hStdInput = hStdInput;
 	pStartupInfo->dwFlags |=  STARTF_USESTDHANDLES;
     }
-    if(hStdOutput) {
+    if (hStdOutput)
+    {
 	pStartupInfo->hStdOutput = hStdOutput;
 	pStartupInfo->dwFlags |=  STARTF_USESTDHANDLES;
     }
@@ -209,12 +214,13 @@ ExecuteDetachedProgram(char *szBinary, char *szCmdLine,
 	pProcessInformation /* process information: NULL crashes */
     );
     nError= GetLastError();
-    if ( bResult ) {
+    if (bResult)
+    {
 	CloseHandle(pProcessInformation->hThread);
 	return(pProcessInformation->hProcess);
-    } else {
-	return(NULL);
     }
+    else
+	return(NULL);
 }
 
 /*
@@ -229,9 +235,9 @@ writeToBuffer(char *msg, int len)
     int bnSize;
 
     bnSize = sizeof(struct sniffBufNode) - READTHREADMAX + len + 1;
-    if(bnSize < 128) bnSize = 128; /* minimum length to avoid fragmentation */
+    if (bnSize < 128) bnSize = 128; /* minimum length to avoid fragmentation */
     bn = (struct sniffBufNode *)malloc(bnSize);
-    if(!bn)
+    if (!bn)
 	return FALSE;
 
     memcpy(bn->buf, msg, len);
@@ -242,19 +248,22 @@ writeToBuffer(char *msg, int len)
     dwWaitResult = WaitForSingleObject(
 	hBufferMutex,   /* handle of mutex */
 	1000L);   /* one-second time-out interval */
-    if(dwWaitResult == WAIT_OBJECT_0)
+    if (dwWaitResult == WAIT_OBJECT_0)
     {
 	/* The thread got mutex ownership. */
-	if(sniffBufEnd) {
+	if (sniffBufEnd)
+	{
 	    sniffBufEnd->next = bn;
 	    sniffBufEnd = bn;
 	}
-	else {
+	else
+	{
 	    assert(sniffBufStart == NULL);
 	    sniffBufStart = sniffBufEnd = bn;
 	}
 	/* Release ownership of the mutex object. */
-	if (! ReleaseMutex(hBufferMutex)) {
+	if (! ReleaseMutex(hBufferMutex))
+	{
 	    /* Deal with error. */
 	}
 	return TRUE;
@@ -279,28 +288,33 @@ ReadFromBuffer(char *buf, int maxlen)
     dwWaitResult = WaitForSingleObject(
 	hBufferMutex,   /* handle of mutex */
 	1000L);		/* one-second time-out interval */
-    if(dwWaitResult == WAIT_OBJECT_0)
+    if (dwWaitResult == WAIT_OBJECT_0)
     {
-	if(!sniffBufStart) {
+	if (!sniffBufStart)
+	{
 	    /* all pending Requests Processed */
 	    sniff_request_processed = 1;
 	    theLen = 0;
 	}
-	else {
+	else
+	{
 	    bn = sniffBufStart;
 	    theLen = bn->bufLen;
-	    if(theLen >= maxlen) {
+	    if (theLen >= maxlen)
+	    {
 		/* notify the user of buffer overflow? */
 		theLen = maxlen-1;
 	    }
 	    memcpy(buf, bn->buf, theLen);
 	    buf[theLen] = '\0';
-	    if (! (sniffBufStart = bn->next)) {
+	    if (! (sniffBufStart = bn->next))
+	    {
 		sniffBufEnd = NULL;
 	    }
 	    free(bn);
 	}
-	if (! ReleaseMutex(hBufferMutex)) {
+	if (! ReleaseMutex(hBufferMutex))
+	{
 	    /* Deal with error. */
 	}
 	return theLen;
@@ -314,15 +328,16 @@ ReadFromBuffer(char *buf, int maxlen)
     void __cdecl
 SniffEmacsReadThread(void *dummy)
 {
-    static char ReadThreadBuffer[READTHREADMAX];
-    int  ReadThreadLen=0;
-    int  result;
-    int  msgLen=0;
-    char *msgStart, *msgCur;
+    static char	ReadThreadBuffer[READTHREADMAX];
+    int		ReadThreadLen=0;
+    int		result;
+    int		msgLen=0;
+    char	*msgStart, *msgCur;
 
     /* Read from the pipe to SniffEmacs */
-    while(sniff_connected) {
-	if (! ReadFile(handle_from_sniff,
+    while (sniff_connected)
+    {
+	if (!ReadFile(handle_from_sniff,
 		ReadThreadBuffer + ReadThreadLen,    /* acknowledge rest in buffer */
 		READTHREADMAX - ReadThreadLen,
 		&result,
@@ -332,23 +347,26 @@ SniffEmacsReadThread(void *dummy)
 	    result = -1;
 	}
 
-	if(result == 0) continue;
-	if(result < 0) {
+	if (result == 0)
+	    continue;
+	if (result < 0)
+	{
 	    /* probably sniffemacs died... log the Error? */
 	    sniff_disconnect(1);
 	}
 
 	ReadThreadLen += result-1;   /* total length of valid chars */
-	for(msgCur=msgStart=ReadThreadBuffer; ReadThreadLen > 0; msgCur++, ReadThreadLen--)
+	for (msgCur=msgStart=ReadThreadBuffer; ReadThreadLen > 0;
+						    msgCur++, ReadThreadLen--)
 	{
-	    switch(*msgCur) {
+	    switch (*msgCur)
+	    {
 		case '\0':
 		case '\r':
 		case '\n':
 		    msgLen = msgCur-msgStart; /* don't add the CR/LF chars */
-		    if(msgLen > 0) {
+		    if (msgLen > 0)
 			writeToBuffer(msgStart, msgLen);
-		    }
 		    msgStart = msgCur + 1; /* over-read single CR/LF chars */
 		    break;
 	    }
@@ -360,7 +378,8 @@ SniffEmacsReadThread(void *dummy)
 	if (ReadThreadLen > 0)
 	    vim_memmove(ReadThreadBuffer, msgStart, ReadThreadLen);
 
-	if(sniff_request_processed) {
+	if (sniff_request_processed)
+	{
 	    /* notify others that new data has arrived */
 	    sniff_request_processed = 0;
 	    sniff_request_waiting = 1;
@@ -401,24 +420,20 @@ ProcessSniffRequests()
 #else
 	len = get_request(fd_from_sniff, buf, sizeof(buf));
 #endif
-	if (len<0)
+	if (len < 0)
 	{
 	    vi_error_msg(_("Sniff: Error during read. Disconnected"));
 	    sniff_disconnect(1);
 	    break;
 	}
-	else if (len>0)
-	{
+	else if (len > 0)
 	    HandleSniffRequest( buf );
-	}
 	else
 	    break;
     }
 
-    if (sniff_will_disconnect)	/* Now the last msg   */
-    {				/* has been processed */
+    if (sniff_will_disconnect)	/* Now the last msg has been processed */
 	sniff_disconnect(1);
-    }
 }
 
 
@@ -430,12 +445,12 @@ ProcessSniffRequests()
 ex_sniff(eap)
     exarg_t	*eap;
 {
-    char_u *arg = eap->arg;
-    char *symbol = NULL;
-    char *cmd = NULL;
-    int  len_cmd = 0;
-    int  i;
-    int  print_cmds = FALSE;
+    char_u	*arg = eap->arg;
+    char	*symbol = NULL;
+    char	*cmd = NULL;
+    int		len_cmd = 0;
+    int		i;
+    int		print_cmds = FALSE;
 
     if (ends_excmd(*arg))
     {				/* no request: print available commands */
@@ -456,7 +471,7 @@ ex_sniff(eap)
 	    symbol = NULL;
     }
 
-    for(i=0; sniff_cmds[i].longname; i++)
+    for (i = 0; sniff_cmds[i].longname; i++)
     {
 	if (print_cmds)
 	{
@@ -478,13 +493,9 @@ ex_sniff(eap)
 	return;
     }
     if (sniff_cmds[i].longname)
-    {
 	SendRequest(&sniff_cmds[i], symbol);
-    }
     else
-    {
 	EMSG2(_("Unknown SNiFF+ request: %s"), cmd);
-    }
     vim_free(cmd);
 }
 
@@ -499,7 +510,8 @@ sniff_connect()
     else
     {
 	int i;
-	for(i=0; init_cmds[i]; i++)
+
+	for (i = 0; init_cmds[i]; i++)
 	    vi_exec_cmd(init_cmds[i]);
     }
 }
@@ -519,7 +531,7 @@ sniff_disconnect(immediately)
 	vi_exec_cmd("augroup sniff");
 	vi_exec_cmd("au!");
 	vi_exec_cmd("augroup END");
-	vi_exec_cmd("unlet sniff_connected");
+	vi_exec_cmd("unlet g:sniff_connected");
 	sniff_connected = 0;
 	want_sniff_request = 0;
 	sniff_will_disconnect = 0;
@@ -567,15 +579,16 @@ ConnectToSniffEmacs()
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
 
-    if(! CreatePipe(&ToSniffEmacs[0], &ToSniffEmacs[1], &sa, 512))
+    if (! CreatePipe(&ToSniffEmacs[0], &ToSniffEmacs[1], &sa, 512))
 	return 1;
-    if(! CreatePipe(&FromSniffEmacs[0], &FromSniffEmacs[1], &sa, 512))
+    if (! CreatePipe(&FromSniffEmacs[0], &FromSniffEmacs[1], &sa, 512))
 	return 1;
 
     sniffemacs_handle = ExecuteDetachedProgram(SniffEmacs[0], SniffEmacs[0],
 	ToSniffEmacs[0], FromSniffEmacs[1]);
 
-    if(sniffemacs_handle) {
+    if (sniffemacs_handle)
+    {
 	handle_to_sniff  = ToSniffEmacs[1];
 	handle_from_sniff = FromSniffEmacs[0];
 	sniff_connected = 1;
@@ -583,13 +596,15 @@ ConnectToSniffEmacs()
 	    NULL,			/* no security attributes */
 	    FALSE,			/* initially not owned */
 	    "SniffReadBufferMutex");    /* name of mutex */
-	if (hBufferMutex == NULL) {
+	if (hBufferMutex == NULL)
+	{
 	    /* Check for error. */
 	}
 	_beginthread(SniffEmacsReadThread, 0, NULL);
 	return 0;
     }
-    else {
+    else
+    {
 	/* error in spawn() */
 	return 1;
     }
@@ -642,9 +657,7 @@ ConnectToSniffEmacs()
 	return 0;
     }
     else   /* error in fork() */
-    {
 	return 1;
-    }
 #endif		/* UNIX Version of the Code */
 }
 
@@ -746,9 +759,7 @@ HandleSniffRequest(buffer)
 		}
 	    }
 	    else if (writable && !buf->b_changed)
-	    {
 		vi_exec_cmd("e");
-	    }
 	    break;
 
 	case 'h' :  /* highlight info */
@@ -790,39 +801,41 @@ HandleSniffRequest(buffer)
  */
     static int
 get_request(fd, buf, maxlen)
-    int  fd;
-    char *buf;
-    int  maxlen;
+    int		fd;
+    char	*buf;
+    int		maxlen;
 {
-    static char inbuf[1024];
-    static int pos=0, bytes=0;
-    register int len;
+    static char	inbuf[1024];
+    static int	pos = 0, bytes = 0;
+    int		len;
 #ifdef HAVE_SELECT
     struct timeval tval;
-    fd_set rfds;
+    fd_set	rfds;
+
     FD_ZERO(&rfds);
     FD_SET(fd, &rfds);
     tval.tv_sec  = 0;
     tval.tv_usec = 0;
 #else
     struct pollfd fds;
+
     fds.fd = fd;
     fds.events = POLLIN;
 #endif
 
-    for(len=0; len<maxlen; len++)
+    for (len = 0; len < maxlen; len++)
     {
-	if (pos>=bytes)	    /* end of buffer reached? */
+	if (pos >= bytes)	    /* end of buffer reached? */
 	{
 #ifdef HAVE_SELECT
-	    if (select(fd+1, &rfds, NULL, NULL, &tval)>0)
+	    if (select(fd + 1, &rfds, NULL, NULL, &tval) > 0)
 #else
-		if (poll(&fds, 1, 0)>0)
+		if (poll(&fds, 1, 0) > 0)
 #endif
 		{
 		    pos = 0;
 		    bytes = read(fd, inbuf, sizeof(inbuf));
-		    if (bytes<=0)
+		    if (bytes <= 0)
 			return bytes;
 		}
 		else
@@ -846,10 +859,10 @@ SendRequest(command, symbol)
     struct sn_cmd *command;
     char *symbol;
 {
-    int  cmd_type = command->cmd_type;
+    int		cmd_type = command->cmd_type;
     static char cmdstr[256];
     static char msgtxt[256];
-    char *buffer_name = NULL;
+    char	*buffer_name = NULL;
 
     if (cmd_type == RQ_CONNECT)
     {
@@ -916,7 +929,8 @@ WriteToSniff(str)
 {
     int bytes;
 #ifdef WIN32
-    if (! WriteFile(handle_to_sniff, str, strlen(str), &bytes, NULL)) {
+    if (! WriteFile(handle_to_sniff, str, strlen(str), &bytes, NULL))
+    {
 	DWORD err=GetLastError();
 	bytes = -1;
     }
@@ -936,7 +950,7 @@ WriteToSniff(str)
 vi_msg(str)
     char *str;
 {
-    if (str && *str)
+    if (str != NULL && *str != NUL)
 	MSG((char_u *)str);
 }
 
@@ -944,7 +958,7 @@ vi_msg(str)
 vi_error_msg(str)
     char *str;
 {
-    if (str && *str)
+    if (str != NULL && *str != NUL)
 	EMSG((char_u *)str);
 }
 
@@ -974,16 +988,16 @@ vi_find_buffer(fname)
     static char *
 vi_symbol_under_cursor()
 {
-    int    len;
-    char   *symbolp;
-    char   *p;
+    int		len;
+    char	*symbolp;
+    char	*p;
     static char sniff_symbol[256];
 
     len = find_ident_under_cursor((char_u **)&symbolp, FIND_IDENT);
     /* [normal.c] */
     if (len <= 0)
 	return NULL;
-    for(p=sniff_symbol; len; len--)
+    for (p=sniff_symbol; len; len--)
 	*p++ = *symbolp++;
     *p = '\0';
     return sniff_symbol;

@@ -180,11 +180,11 @@ static void SFenterList __ARGS((Widget w, int n, XEnterWindowEvent *event));
 static void SFleaveList __ARGS((Widget w, int n, XEvent *event));
 static void SFmotionList __ARGS((Widget w, int n, XMotionEvent *event));
 static void SFvFloatSliderMovedCallback __ARGS((Widget w, XtPointer n, XtPointer fnew));
-static void SFvSliderMovedCallback __ARGS((Widget w, int n, int new));
+static void SFvSliderMovedCallback __ARGS((Widget w, int n, int nw));
 static void SFvAreaSelectedCallback __ARGS((Widget w, XtPointer n, XtPointer pnew));
-static void SFhSliderMovedCallback __ARGS((Widget w, XtPointer n, XtPointer new));
+static void SFhSliderMovedCallback __ARGS((Widget w, XtPointer n, XtPointer nw));
 static void SFhAreaSelectedCallback __ARGS((Widget w, XtPointer n, XtPointer pnew));
-static void SFpathSliderMovedCallback __ARGS((Widget w, XtPointer client_data, XtPointer new));
+static void SFpathSliderMovedCallback __ARGS((Widget w, XtPointer client_data, XtPointer nw));
 static void SFpathAreaSelectedCallback __ARGS((Widget w, XtPointer client_data, XtPointer pnew));
 static Boolean SFworkProc __ARGS((void));
 static int SFcompareEntries __ARGS((const void *p, const void *q));
@@ -251,8 +251,8 @@ static void SFfree __ARGS((int i));
 SFfree(i)
     int	i;
 {
-    register SFDir	*dir;
-    register int	j;
+    SFDir	*dir;
+    int		j;
 
     dir = &(SFdirs[i]);
 
@@ -375,19 +375,19 @@ SFexpand(str)
     XtFree(growing);
 }
 
-static int SFfindFile __ARGS((SFDir *dir, register char *str));
+static int SFfindFile __ARGS((SFDir *dir, char *str));
 
     static int
 SFfindFile(dir, str)
-    SFDir		*dir;
-    register char	*str;
+    SFDir	*dir;
+    char	*str;
 {
-    register int	i, last, max;
-    register char	*name, save;
-    SFEntry		*entries;
-    int			len;
-    int			begin, end;
-    int			result;
+    int		i, last, max;
+    char	*name, save;
+    SFEntry	*entries;
+    int		len;
+    int		begin, end;
+    int		result;
 
     len = strlen(str);
 
@@ -939,7 +939,7 @@ SFcheckFiles(dir)
 {
     int		from, to;
     int		result;
-    char	old, new;
+    char	oldc, newc;
     int		i;
     char	*str;
     int		last;
@@ -956,14 +956,14 @@ SFcheckFiles(dir)
     {
 	str = dir->entries[i].real;
 	last = strlen(str) - 1;
-	old = str[last];
+	oldc = str[last];
 	str[last] = 0;
 	if (mch_stat(str, &statBuf))
-	    new = ' ';
+	    newc = ' ';
 	else
-	    new = SFstatChar(&statBuf);
-	str[last] = new;
-	if (new != old)
+	    newc = SFstatChar(&statBuf);
+	str[last] = newc;
+	if (newc != oldc)
 	    result = 1;
     }
 
@@ -1243,10 +1243,10 @@ SFdeleteEntry(dir, entry)
     SFDir	*dir;
     SFEntry	*entry;
 {
-    register SFEntry	*e;
-    register SFEntry	*end;
-    int			n;
-    int			idx;
+    SFEntry	*e;
+    SFEntry	*end;
+    int		n;
+    int		idx;
 
     idx = entry - dir->entries;
 
@@ -1360,14 +1360,14 @@ SFstatAndCheck(dir, entry)
 
     static void
 SFdrawStrings(w, dir, from, to)
-    register Window	w;
-    register SFDir	*dir;
-    register int	from;
-    register int	to;
+    Window	w;
+    SFDir	*dir;
+    int		from;
+    int		to;
 {
-    register int	i;
-    register SFEntry	*entry;
-    int			x;
+    int		i;
+    SFEntry	*entry;
+    int		x;
 
     x = SFtextX - dir->hOrigin * SFcharWidth;
 
@@ -1495,7 +1495,7 @@ SFdrawLists(doScroll)
 
     static void
 SFinvertEntry(n)
-    register int	n;
+    int		n;
 {
     XFillRectangle(
 	    SFdisplay,
@@ -1584,11 +1584,11 @@ SFscrollTimer(p, id)
 
     static int
 SFnewInvertEntry(n, event)
-    register int		n;
-    register XMotionEvent	*event;
+    int			n;
+    XMotionEvent	*event;
 {
-    register int	x, y;
-    register int	new;
+    int			x, y;
+    int			nw;
     static int		SFscrollTimerAdded = 0;
 
     x = event->x;
@@ -1599,7 +1599,7 @@ SFnewInvertEntry(n, event)
 
     if ((x >= 0) && (x <= SFupperX) && (y >= SFlowerY) && (y <= SFupperY))
     {
-	register SFDir *dir = &(SFdirs[SFdirPtr + n]);
+	SFDir *dir = &(SFdirs[SFdirPtr + n]);
 
 	if (SFscrollTimerAdded)
 	{
@@ -1607,10 +1607,10 @@ SFnewInvertEntry(n, event)
 	    XtRemoveTimeOut(SFscrollTimerId);
 	}
 
-	new = (y - SFlowerY) / SFentryHeight;
-	if (dir->vOrigin + new >= dir->nEntries)
+	nw = (y - SFlowerY) / SFentryHeight;
+	if (dir->vOrigin + nw >= dir->nEntries)
 	    return -1;
-	return new;
+	return nw;
     }
     else
     {
@@ -1632,11 +1632,11 @@ SFnewInvertEntry(n, event)
 /* ARGSUSED */
     static void
 SFenterList(w, n, event)
-    Widget				w;
-    register int			n;
-    register XEnterWindowEvent		*event;
+    Widget		w;
+    int			n;
+    XEnterWindowEvent	*event;
 {
-    register int	new;
+    int			nw;
 
     /* sanity */
     if (SFcurrentInvert[n] != -1)
@@ -1645,10 +1645,10 @@ SFenterList(w, n, event)
 	SFcurrentInvert[n] = -1;
     }
 
-    new = SFnewInvertEntry(n, (XMotionEvent *) event);
-    if (new != -1)
+    nw = SFnewInvertEntry(n, (XMotionEvent *) event);
+    if (nw != -1)
     {
-	SFcurrentInvert[n] = new;
+	SFcurrentInvert[n] = nw;
 	SFinvertEntry(n);
     }
 }
@@ -1656,9 +1656,9 @@ SFenterList(w, n, event)
 /* ARGSUSED */
     static void
 SFleaveList(w, n, event)
-    Widget		w;
-    register int	n;
-    XEvent		*event;
+    Widget	w;
+    int		n;
+    XEvent	*event;
 {
     if (SFcurrentInvert[n] != -1)
     {
@@ -1670,20 +1670,20 @@ SFleaveList(w, n, event)
 /* ARGSUSED */
     static void
 SFmotionList(w, n, event)
-    Widget			w;
-    register int		n;
-    register XMotionEvent	*event;
+    Widget		w;
+    int			n;
+    XMotionEvent	*event;
 {
-    register int	new;
+    int		nw;
 
-    new = SFnewInvertEntry(n, event);
+    nw = SFnewInvertEntry(n, event);
 
-    if (new != SFcurrentInvert[n])
+    if (nw != SFcurrentInvert[n])
     {
 	if (SFcurrentInvert[n] != -1)
 	    SFinvertEntry(n);
-	SFcurrentInvert[n] = new;
-	if (new != -1)
+	SFcurrentInvert[n] = nw;
+	if (nw != -1)
 	    SFinvertEntry(n);
     }
 }
@@ -1691,40 +1691,40 @@ SFmotionList(w, n, event)
 /* ARGSUSED */
     static void
 SFvFloatSliderMovedCallback(w, n, fnew)
-    Widget		w;
+    Widget	w;
     XtPointer	n;
     XtPointer	fnew;
 {
-    int	new;
+    int		nw;
 
-    new = (*(float *)fnew) * SFdirs[SFdirPtr + (int)(long)n].nEntries;
-    SFvSliderMovedCallback(w, (int)(long)n, new);
+    nw = (*(float *)fnew) * SFdirs[SFdirPtr + (int)(long)n].nEntries;
+    SFvSliderMovedCallback(w, (int)(long)n, nw);
 }
 
 /* ARGSUSED */
     static void
-SFvSliderMovedCallback(w, n, new)
+SFvSliderMovedCallback(w, n, nw)
     Widget	w;
-    int	n;
-    int	new;
+    int		n;
+    int		nw;
 {
     int		old;
-    register Window	win;
-    SFDir		*dir;
+    Window	win;
+    SFDir	*dir;
 
     dir = &(SFdirs[SFdirPtr + n]);
 
     old = dir->vOrigin;
-    dir->vOrigin = new;
+    dir->vOrigin = nw;
 
-    if (old == new)
+    if (old == nw)
 	return;
 
     win = XtWindow(selFileLists[n]);
 
-    if (ABS(new - old) < SFlistSize)
+    if (ABS(nw - old) < SFlistSize)
     {
-	if (new > old)
+	if (nw > old)
 	{
 	    XCopyArea(
 		    SFdisplay,
@@ -1732,21 +1732,21 @@ SFvSliderMovedCallback(w, n, new)
 		    win,
 		    SFscrollGC,
 		    SFlineToTextH,
-		    SFlowerY + (new - old) * SFentryHeight,
+		    SFlowerY + (nw - old) * SFentryHeight,
 		    SFentryWidth + SFlineToTextH,
-		    (SFlistSize - (new - old)) * SFentryHeight,
+		    (SFlistSize - (nw - old)) * SFentryHeight,
 		    SFlineToTextH,
 		    SFlowerY);
 	    XClearArea(
 		    SFdisplay,
 		    win,
 		    SFlineToTextH,
-		    SFlowerY + (SFlistSize - (new - old)) *
+		    SFlowerY + (SFlistSize - (nw - old)) *
 		    SFentryHeight,
 		    SFentryWidth + SFlineToTextH,
-		    (new - old) * SFentryHeight,
+		    (nw - old) * SFentryHeight,
 		    False);
-	    SFdrawStrings(win, dir, SFlistSize - (new - old),
+	    SFdrawStrings(win, dir, SFlistSize - (nw - old),
 		    SFlistSize - 1);
 	}
 	else
@@ -1759,18 +1759,18 @@ SFvSliderMovedCallback(w, n, new)
 		    SFlineToTextH,
 		    SFlowerY,
 		    SFentryWidth + SFlineToTextH,
-		    (SFlistSize - (old - new)) * SFentryHeight,
+		    (SFlistSize - (old - nw)) * SFentryHeight,
 		    SFlineToTextH,
-		    SFlowerY + (old - new) * SFentryHeight);
+		    SFlowerY + (old - nw) * SFentryHeight);
 	    XClearArea(
 		    SFdisplay,
 		    win,
 		    SFlineToTextH,
 		    SFlowerY,
 		    SFentryWidth + SFlineToTextH,
-		    (old - new) * SFentryHeight,
+		    (old - nw) * SFentryHeight,
 		    False);
-	    SFdrawStrings(win, dir, 0, old - new);
+	    SFdrawStrings(win, dir, 0, old - nw);
 	}
     }
     else
@@ -1795,23 +1795,23 @@ SFvAreaSelectedCallback(w, n, pnew)
     XtPointer	pnew;
 {
     SFDir	*dir;
-    int	new;
+    int		nw;
 
     dir = &(SFdirs[SFdirPtr + (int)(long)n]);
 
-    new = dir->vOrigin + (int)(long)pnew;
+    nw = dir->vOrigin + (int)(long)pnew;
 
-    if (new > dir->nEntries - SFlistSize)
-	new = dir->nEntries - SFlistSize;
+    if (nw > dir->nEntries - SFlistSize)
+	nw = dir->nEntries - SFlistSize;
 
-    if (new < 0)
-	new = 0;
+    if (nw < 0)
+	nw = 0;
 
     if (dir->nEntries)
     {
 	float	f;
 
-	f = ((double) new) / dir->nEntries;
+	f = ((double) nw) / dir->nEntries;
 
 	vim_XawScrollbarSetThumb(
 		w,
@@ -1821,22 +1821,22 @@ SFvAreaSelectedCallback(w, n, pnew)
 		(double)dir->nEntries);
     }
 
-    SFvSliderMovedCallback(w, (int)(long)n, new);
+    SFvSliderMovedCallback(w, (int)(long)n, nw);
 }
 
 /* ARGSUSED */
     static void
-SFhSliderMovedCallback(w, n, new)
+SFhSliderMovedCallback(w, n, nw)
     Widget	w;
     XtPointer	n;
-    XtPointer	new;
+    XtPointer	nw;
 {
     SFDir	*dir;
     int	save;
 
     dir = &(SFdirs[SFdirPtr + (int)(long)n]);
     save = dir->hOrigin;
-    dir->hOrigin = (*(float *)new) * dir->nChars;
+    dir->hOrigin = (*(float *)nw) * dir->nChars;
     if (dir->hOrigin == save)
 	return;
 
@@ -1851,23 +1851,23 @@ SFhAreaSelectedCallback(w, n, pnew)
     XtPointer	pnew;
 {
     SFDir	*dir;
-    int	new;
+    int		nw;
 
     dir = &(SFdirs[SFdirPtr + (int)(long)n]);
 
-    new = dir->hOrigin + (int)(long)pnew;
+    nw = dir->hOrigin + (int)(long)pnew;
 
-    if (new > dir->nChars - SFcharsPerEntry)
-	new = dir->nChars - SFcharsPerEntry;
+    if (nw > dir->nChars - SFcharsPerEntry)
+	nw = dir->nChars - SFcharsPerEntry;
 
-    if (new < 0)
-	new = 0;
+    if (nw < 0)
+	nw = 0;
 
     if (dir->nChars)
     {
 	float	f;
 
-	f = ((double) new) / dir->nChars;
+	f = ((double) nw) / dir->nChars;
 
 	vim_XawScrollbarSetThumb(
 		w,
@@ -1882,10 +1882,10 @@ SFhAreaSelectedCallback(w, n, pnew)
 
 /* ARGSUSED */
     static void
-SFpathSliderMovedCallback(w, client_data, new)
+SFpathSliderMovedCallback(w, client_data, nw)
     Widget		w;
     XtPointer	client_data;
-    XtPointer	new;
+    XtPointer	nw;
 {
     SFDir		*dir;
     int			n;
@@ -1893,7 +1893,7 @@ SFpathSliderMovedCallback(w, client_data, new)
     int			SFdirPtrSave;
 
     SFdirPtrSave = SFdirPtr;
-    SFdirPtr = (*(float *)new) * SFdirEnd;
+    SFdirPtr = (*(float *)nw) * SFdirEnd;
     if (SFdirPtr == SFdirPtrSave)
 	return;
 
@@ -1924,18 +1924,18 @@ SFpathAreaSelectedCallback(w, client_data, pnew)
     XtPointer	client_data;
     XtPointer	pnew;
 {
-    int	new;
+    int		nw;
     float	f;
 
-    new = SFdirPtr + (int)(long)pnew;
+    nw = SFdirPtr + (int)(long)pnew;
 
-    if (new > SFdirEnd - 3)
-	new = SFdirEnd - 3;
+    if (nw > SFdirEnd - 3)
+	nw = SFdirEnd - 3;
 
-    if (new < 0)
-	new = 0;
+    if (nw < 0)
+	nw = 0;
 
-    f = ((double) new) / SFdirEnd;
+    f = ((double) nw) / SFdirEnd;
 
     vim_XawScrollbarSetThumb(
 	    w,
@@ -1949,8 +1949,8 @@ SFpathAreaSelectedCallback(w, client_data, pnew)
     static Boolean
 SFworkProc()
 {
-    register SFDir	*dir;
-    register SFEntry	*entry;
+    SFDir	*dir;
+    SFEntry	*entry;
 
     for (dir = &(SFdirs[SFdirEnd - 1]); dir >= SFdirs; dir--)
     {

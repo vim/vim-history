@@ -157,24 +157,27 @@ gui_x11_create_widgets()
 	NULL);
 
 #ifdef FEAT_MENU
-    menuBar = XtVaCreateManagedWidget("menuBar",
-	xmRowColumnWidgetClass, vimForm,
-	XmNrowColumnType, XmMENU_BAR,
-#ifndef FEAT_CDE_COLORS
-	XmNforeground, gui.menu_fg_pixel,
-	XmNbackground, gui.menu_bg_pixel,
-#endif
-#if (XmVersion >= 1002)
-	XmNtearOffModel, tearoff_val,
-#endif
-	XmNleftAttachment, XmATTACH_FORM,
-	XmNtopAttachment, XmATTACH_FORM,
-	XmNrightAttachment, XmATTACH_FORM,
-#ifndef FEAT_TOOLBAR
-	/* XmNbottomAttachment, XmATTACH_OPPOSITE_FORM, */
-	XmNrightOffset, 0,	/* Always stick to rigth hand side */
-#endif
-	NULL);
+    {
+	Arg al[7]; /* Make sure there is enough room for arguments! */
+	int ac = 0;
+
+# ifndef FEAT_CDE_COLORS
+	XtSetArg(al[ac], XmNforeground, gui.menu_fg_pixel); ac++;
+	XtSetArg(al[ac], XmNbackground, gui.menu_bg_pixel); ac++;
+# endif
+# if (XmVersion >= 1002)
+	XtSetArg(al[ac], XmNtearOffModel, tearoff_val); ac++;
+# endif
+	XtSetArg(al[ac], XmNleftAttachment,  XmATTACH_FORM); ac++;
+	XtSetArg(al[ac], XmNtopAttachment,   XmATTACH_FORM); ac++;
+	XtSetArg(al[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
+# ifndef FEAT_TOOLBAR
+	/* Always stick to right hand side. */
+	XtSetArg(al[ac], XmNrightOffset, 0); ac++;
+# endif
+	menuBar = XmCreateMenuBar(vimForm, "menuBar", al, ac);
+	XtManageChild(menuBar);
+    }
 #endif
 
 #ifdef FEAT_TOOLBAR
@@ -540,6 +543,7 @@ gui_mch_add_menu(menu, idx)
 	gui_mch_compute_menu_height(menu->id);
 }
 
+
 /*
  * Add mnemonic and accelerator text to a menu button.
  */
@@ -795,6 +799,14 @@ gui_mch_add_menu_item(menu, idx)
 			toolbarbutton_enter_cb, menu);
 		XtAddEventHandler(menu->id, LeaveWindowMask, False,
 			toolbarbutton_leave_cb, menu);
+#ifdef FEAT_BEVAL
+		if (menu->strings[MENU_INDEX_TIP] && menu->tip == NULL)
+		    menu->tip = gui_mch_create_beval_area(
+					menu->id,
+					menu->strings[MENU_INDEX_TIP],
+					NULL,
+					NULL);
+#endif
 	    }
 	}
 	else
@@ -1008,6 +1020,13 @@ gui_mch_destroy_menu(menu)
 #ifdef FEAT_TOOLBAR
 	else if (parent == toolBar)
 	{
+# ifdef FEAT_BEVAL
+	    if (menu->tip != NULL)
+	    {
+		gui_mch_destroy_beval_area(menu->tip);
+		menu->tip = NULL;
+	    }
+# endif
 	    /* When removing last toolbar item, don't display the toolbar. */
 	    XtVaGetValues(toolBar, XmNnumChildren, &num_children, NULL);
 	    if (num_children == 0)
@@ -1275,7 +1294,6 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     char_u	*initdir;	/* initial directory, NULL for current dir */
     char_u	*filter;	/* not used (file name filter) */
 {
-    XmString	dirstring;
     char_u	dirbuf[MAXPATHL];
 
     dialog_wgt = XmCreateFileSelectionDialog(vimShell, (char *)title, NULL, 0);
@@ -1287,14 +1305,22 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
 	mch_dirname(dirbuf, MAXPATHL);
 	initdir = dirbuf;
     }
+    if (filter == NULL)
+	filter = (char_u *)"";	/* An empty pattern matches all files */
 
-    dirstring = XmStringCreate((char *)initdir, STRING_TAG);
-
-    /* How do we set the default file name to "dflt"? */
     XtVaSetValues(dialog_wgt,
-	XmNdirectory,		dirstring,
+	XtVaTypedArg,
+	    XmNdirectory,   XmRString,	(char *)initdir, STRLEN(initdir) + 1,
+	XtVaTypedArg,
+	    XmNdirSpec,	    XmRString,  (char *)dflt,	STRLEN(dflt) + 1,
+	XtVaTypedArg,
+	    XmNpattern,	    XmRString,  (char *)filter,	STRLEN(filter) + 1,
+	XtVaTypedArg,
+	    XmNdialogTitle, XmRString,  (char *)title,	STRLEN(title) + 1,
 /*
  These can cause a crash after ":hi Menu guifg=red".  Why?
+ This doesn't cause a crash under IRIX (Motif 1.2) or Linux (RedHat Motif 2.1).
+ (David Harrison)
 	XmNforeground,		gui.menu_fg_pixel,
 	XmNbackground,		gui.menu_bg_pixel,
  */
@@ -1327,7 +1353,6 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     } while (XtIsManaged(dialog_wgt));
 
     XtDestroyWidget(dialog_wgt);
-    XmStringFree(dirstring);
 
     if (browse_fname == NULL)
 	return NULL;

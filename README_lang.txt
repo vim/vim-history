@@ -1,4 +1,4 @@
-README_lang.txt for version 6.0w of Vim: Vi IMproved.
+README_lang.txt for version 6.0x of Vim: Vi IMproved.
 
 This file contains files for different languages:
 - Translated messages.

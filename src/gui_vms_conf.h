@@ -179,7 +179,7 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #ifdef        VAXC
-#undef HAVE_FCNTL_H
+#undef  HAVE_FCNTL_H
 #else
 #define HAVE_FCNTL_H 1
 #endif
@@ -191,7 +191,11 @@
 #define HAVE_SYS_IOCTL_H 1
 
 /* Define if you have the <sys/time.h> header file.  */
+#ifdef        VAXC
+#undef  HAVE_SYS_TIME_H
+#else
 #define HAVE_SYS_TIME_H 1
+#endif
 
 /* Define if you have the <termio.h> header file.  */
 /* #define HAVE_TERMIO_H 1 */
@@ -212,7 +216,11 @@
 /* #undef HAVE_SYS_SYSTEMINFO_H */
 
 /* Define if you have the <locale.h> header file. */
+#ifdef        VAXC
+#undef  HAVE_LOCALE_H
+#else
 #define HAVE_LOCALE_H 1
+#endif
 
 /* Define if you have the <sys/stream.h> header file. */
 /* #undef HAVE_SYS_STREAM_H */

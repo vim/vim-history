@@ -117,40 +117,24 @@ SNIFF_DEFS  = -DFEAT_SNIFF
 MULTITHREADED = yes
 !endif
 
-!ifdef MULTITHREADED
+!if defined(USE_MSVCRT)
+CVARS = $(cvarsdll)
+!elseif defined(MULTITHREADED)
 CVARS = $(cvarsmt)
-! ifndef USE_MSVCRT
-CON_LIB = $(conlibsmt)
-! else
-CON_LIB = $(conlibsdll)
-! endif
 !else
-!ifdef NODEBUG
 CVARS = $(cvars)
-! ifndef USE_MSVCRT
-CON_LIB = $(conlibs)
-! else
-CON_LIB = $(conlibsdll)
-! endif
-!else
-CVARS= $(cvarsd)
-! ifndef USE_MSVCRT
-CON_LIB = $(conlibsd)
-! else
-CON_LIB = $(conlibsdlld)
-! endif
-!endif
 !endif
 
+# need advapi32.lib for GetUserName()
 # need shell32.lib for ExtractIcon()
-CON_LIB = $(CON_LIB) shell32.lib
+CON_LIB = advapi32.lib shell32.lib
 
 # If you have a fixed directory for $VIM or $VIMRUNTIME, other than the normal
 # default, use these lines.
 #VIMRCLOC = somewhere
 #VIMRUNTIMEDIR = somewhere
 
-CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF \
+CFLAGS = -c /W3 /nologo $(CVARS) -I. -Iproto -DHAVE_PATHDEF -DWIN32 \
 		$(SNIFF_DEFS) $(DEFINES)
 
 #>>>>> end of choices
@@ -262,7 +246,7 @@ OBJ = $(OBJ) $(OUTDIR)\dimm_i.obj $(OUTDIR)\glbl_ime.obj
 
 !if "$(GUI)" == "yes"
 SUBSYSTEM = windows
-CFLAGS = $(CFLAGS) -DFEAT_GUI_W32 -DWIN32
+CFLAGS = $(CFLAGS) -DFEAT_GUI_W32
 RCFLAGS = $(RCFLAGS) -DFEAT_GUI_W32
 VIM = g$(VIM)
 GUI_INCL = \
@@ -377,7 +361,7 @@ XSUBPP_TYPEMAP = $(PERL)\lib\ExtUtils\typemap
 
 conflags = /nologo /subsystem:$(SUBSYSTEM) /incremental:no
 
-LINKARGS1 = $(linkdebug) $(conflags)
+LINKARGS1 = $(linkdebug) $(conflags) /nodefaultlib:libc
 LINKARGS2 = $(CON_LIB) $(GUI_LIB) $(LIBC) $(OLE_LIB)  user32.lib $(SNIFF_LIB) \
 		$(PERL_LIB) $(PYTHON_LIB) $(TCL_LIB) $(LINK_PDB)
 

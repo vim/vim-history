@@ -378,8 +378,7 @@ CClink = $(CC)
 # SNIFF - Include support for SNiFF+.
 #CONF_OPT_SNIFF = --enable-sniff
 
-# MULTIBYTE - To edit multi-byte characters.  Well, actually only two-byte
-# characters at the moment.
+# MULTIBYTE - To edit multi-byte characters.
 # Uncomment this when you want to edit a multibyte language.
 # Note: Compile on a machine where setlocale() actually works, otherwise the
 # configure tests may fail.
@@ -787,7 +786,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60w
+VIMRTDIR = /vim60x
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1000,9 +999,9 @@ GTK_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 GTK_TESTTARGET = gui
 
 ### Motif GUI interface.
-MOTIF_SRC	= gui.c gui_motif.c gui_x11.c pty.c
+MOTIF_SRC	= gui.c gui_motif.c gui_x11.c pty.c gui_beval.c
 MOTIF_OBJ	= objects/gui.o objects/gui_motif.o objects/gui_x11.o \
-			objects/pty.o
+			objects/pty.o objects/gui_beval.o
 MOTIF_DEFS	= -DFEAT_GUI_MOTIF $(NARROW_PROTO)
 MOTIF_IPATH	= -I$(GUI_INC_LOC)
 MOTIF_LIBS_DIR	= -L$(GUI_LIB_LOC)
@@ -2234,7 +2233,7 @@ objects/if_ruby.o: if_ruby.c vim.h auto/config.h feature.h os_unix.h \
 objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h os_unixx.h
-objects/gui_beval.o: gui_beval.c auto/config.h feature.h vim.h os_unix.h \
+objects/gui_beval.o: gui_beval.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h option.h ex_cmds.h proto.h globals.h farsi.h gui_beval.h \
  proto/gui_beval.pro

@@ -571,20 +571,18 @@ unrecognised_message(
 //    x.xpm   : largest icon
 //    x1.xpm  : smaller icon
 //    x2.xpm  : smallest icon
-void adjust_sign_name(char *filename)
+	void
+adjust_sign_name(char *filename)
 {
 	char *s;
 	static int fontSize = -1;
 
-	if (fontSize == -1) {
+	if (fontSize == -1)
 		fontSize = workshop_get_font_height();
-	}
-	if (fontSize == 0) {
+	if (fontSize == 0)
 		return;
-	}
-	if (filename[0] == '-') {
+	if (filename[0] == '-')
 		return;
-	}
 
 	// This is ugly: later we should instead pass the fontheight over
 	// to eserve on startup and let eserve just send the right filenames
@@ -593,13 +591,12 @@ void adjust_sign_name(char *filename)
 	// I know that the filename will end with 1.xpm (see
 	// GuiEditor.cc`LispPrintSign if you wonder why)
 	s = filename+strlen(filename)-5;
-	if (fontSize <= 11) {
+	if (fontSize <= 11)
 		strcpy(s, "2.xpm");
-	} else if (fontSize <= 15) {
+	else if (fontSize <= 15)
 		strcpy(s, "1.xpm");
-	} else {
+	else
 		strcpy(s, ".xpm");
-	}
 }
 
 /* Were we invoked by WorkShop? This function can be used early during startup

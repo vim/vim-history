@@ -2493,7 +2493,7 @@ end:
 #endif
 
 /*
- * Make window wp the current window.
+ * Make window "wp" the current window.
  */
     void
 win_enter(wp, undo_sync)
@@ -4045,8 +4045,25 @@ file_name_in_line(line, col, options, count)
     return find_file_name_in_path(ptr, len, options, count);
 }
 
+# if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
+static char_u *eval_includeexpr __ARGS((char_u *ptr, int len));
+
+    static char_u *
+eval_includeexpr(ptr, len)
+    char_u	*ptr;
+    int		len;
+{
+    char_u	*res;
+
+    set_vim_var_string(VV_FNAME, ptr, len);
+    res = eval_to_string_safe(curbuf->b_p_inex, NULL);
+    set_vim_var_string(VV_FNAME, NULL, 0);
+    return res;
+}
+#endif
+
 /*
- * Return the name of the file ptr[len].
+ * Return the name of the file ptr[len] in 'path'.
  * Otherwise like file_name_at_cursor().
  */
     char_u *
@@ -4057,17 +4074,13 @@ find_file_name_in_path(ptr, len, options, count)
     long	count;
 {
     char_u	*file_name;
-    int		first;
+    int		c;
 # if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
     char_u	*tofree = NULL;
 
     if ((options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
     {
-	set_vim_var_string(VV_FNAME, ptr, len);
-
-	tofree = eval_to_string_safe(curbuf->b_p_inex, NULL);
-
-	set_vim_var_string(VV_FNAME, NULL, 0);
+	tofree = eval_includeexpr(ptr, len);
 	if (tofree != NULL)
 	{
 	    ptr = tofree;
@@ -4078,14 +4091,40 @@ find_file_name_in_path(ptr, len, options, count)
 
     if (options & FNAME_EXP)
     {
+	file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS, TRUE);
+
+# if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
+	/*
+	 * If the file could not be found in a normal way, try applying
+	 * 'includeexpr' (unless done already).
+	 */
+	if (file_name == NULL
+		&& !(options & FNAME_INCL) && *curbuf->b_p_inex != NUL)
+	{
+	    tofree = eval_includeexpr(ptr, len);
+	    if (tofree != NULL)
+	    {
+		ptr = tofree;
+		len = STRLEN(ptr);
+		file_name = find_file_in_path(ptr, len, options & ~FNAME_MESS,
+									TRUE);
+	    }
+	}
+# endif
+	if (file_name == NULL && (options & FNAME_MESS))
+	{
+	    c = ptr[len];
+	    ptr[len] = NUL;
+	    EMSG2(_("Can't find file \"%s\" in path"), ptr);
+	    ptr[len] = c;
+	}
+
 	/* Repeat finding the file "count" times.  This matters when it
 	 * appears several times in the path. */
-	for (first = TRUE; ; first = FALSE)
+	while (file_name != NULL && --count > 0)
 	{
-	    file_name = find_file_in_path(ptr, len, options, first);
-	    if (file_name == NULL || --count <= 0)
-		break;
 	    vim_free(file_name);
+	    file_name = find_file_in_path(ptr, len, options, FALSE);
 	}
     }
     else
@@ -4096,7 +4135,6 @@ find_file_name_in_path(ptr, len, options, count)
 # endif
 
     return file_name;
-
 }
 #endif /* FEAT_SEARCHPATH */
 

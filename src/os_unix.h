@@ -81,7 +81,7 @@
 
 /* always use unlink() to remove files */
 #ifndef PROTO
-# define mch_mkdir(x, y) mkdir((char *)(x), y)
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
 # define mch_rmdir(x) rmdir((char *)(x))
 # define mch_remove(x) unlink((char *)(x))
 #endif

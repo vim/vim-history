@@ -600,15 +600,27 @@ init_class_tab()
     done = TRUE;
 }
 
-#define ri_digit(c)	(class_tab[c] & RI_DIGIT)
-#define ri_hex(c)	(class_tab[c] & RI_HEX)
-#define ri_octal(c)	(class_tab[c] & RI_OCTAL)
-#define ri_word(c)	(class_tab[c] & RI_WORD)
-#define ri_head(c)	(class_tab[c] & RI_HEAD)
-#define ri_alpha(c)	(class_tab[c] & RI_ALPHA)
-#define ri_lower(c)	(class_tab[c] & RI_LOWER)
-#define ri_upper(c)	(class_tab[c] & RI_UPPER)
-#define ri_white(c)	(class_tab[c] & RI_WHITE)
+#ifdef FEAT_MBYTE
+# define ri_digit(c)	(c < 0x100 && (class_tab[c] & RI_DIGIT))
+# define ri_hex(c)	(c < 0x100 && (class_tab[c] & RI_HEX))
+# define ri_octal(c)	(c < 0x100 && (class_tab[c] & RI_OCTAL))
+# define ri_word(c)	(c < 0x100 && (class_tab[c] & RI_WORD))
+# define ri_head(c)	(c < 0x100 && (class_tab[c] & RI_HEAD))
+# define ri_alpha(c)	(c < 0x100 && (class_tab[c] & RI_ALPHA))
+# define ri_lower(c)	(c < 0x100 && (class_tab[c] & RI_LOWER))
+# define ri_upper(c)	(c < 0x100 && (class_tab[c] & RI_UPPER))
+# define ri_white(c)	(c < 0x100 && (class_tab[c] & RI_WHITE))
+#else
+# define ri_digit(c)	(class_tab[c] & RI_DIGIT)
+# define ri_hex(c)	(class_tab[c] & RI_HEX)
+# define ri_octal(c)	(class_tab[c] & RI_OCTAL)
+# define ri_word(c)	(class_tab[c] & RI_WORD)
+# define ri_head(c)	(class_tab[c] & RI_HEAD)
+# define ri_alpha(c)	(class_tab[c] & RI_ALPHA)
+# define ri_lower(c)	(class_tab[c] & RI_LOWER)
+# define ri_upper(c)	(class_tab[c] & RI_UPPER)
+# define ri_white(c)	(class_tab[c] & RI_WHITE)
+#endif
 
 /* flags for regflags */
 #define RF_ICASE    1	/* ignore case */
@@ -2779,7 +2791,7 @@ reg_prev_class()
 	if (regline <= reginput - prev_off)
 	    return mb_get_class(reginput - prev_off);
     }
-    return 0;
+    return -1;
 }
 
 #else
@@ -2816,6 +2828,7 @@ regmatch(scan)
 {
     char_u	*next;		/* Next node. */
     int		op;
+    int		c;
 
 #ifdef HAVE_GETRLIMIT
     /* Check if we are running out of stack space.  Could be caused by
@@ -2876,6 +2889,12 @@ regmatch(scan)
 	{
 	  if (WITH_NL(op))
 	    op -= ADD_NL;
+#ifdef FEAT_MBYTE
+	  if (has_mbyte)
+	      c = (*mb_ptr2char)(reginput);
+	  else
+#endif
+	      c = *reginput;
 	  switch (op)
 	  {
 	  case BOL:
@@ -2884,7 +2903,7 @@ regmatch(scan)
 	    break;
 
 	  case EOL:
-	    if (*reginput != NUL)
+	    if (c != NUL)
 		return FALSE;
 	    break;
 
@@ -2898,17 +2917,17 @@ regmatch(scan)
 	    break;
 
 	  case RE_EOF:
-	    if (reglnum != reg_maxline || *reginput != NUL)
+	    if (reglnum != reg_maxline || c != NUL)
 		return FALSE;
 	    break;
 
 	  case BOW:	/* \<word; reginput points to w */
-	    if (reginput[0] == NUL)	/* Can't match at end of line */
+	    if (c == NUL)	/* Can't match at end of line */
 		return FALSE;
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
 	    {
-		int this_class, prev_class = 0;
+		int this_class, prev_class;
 
 		/* Get class of current and previous char (if it exists). */
                 this_class = mb_get_class(reginput);
@@ -2916,19 +2935,17 @@ regmatch(scan)
 
 		if (this_class != prev_class)
 		{
-		    if (this_class == 0 && !vim_iswordc(reginput[0]))
+		    if (this_class <= 1)
 			return FALSE;
-		    break; /* Wow! Matched with BOW! */
+		    break; /* Matched with BOW! */
 		}
-		else if (this_class != 0) /* this_class and prev_class != 0 */
+		else
 		    return FALSE;
-		/* If this_class and prev_class == 0 then it means there are
-		 * no mbyte chars, use original logic */
 	    }
 #endif
 	    if (reginput > regline && vim_iswordc(reginput[-1]))
 		return FALSE;
-	    if (!vim_iswordc(reginput[0]))
+	    if (!vim_iswordc(c))
 		return FALSE;
 	    break;
 
@@ -2946,60 +2963,58 @@ regmatch(scan)
 
 		if (this_class != prev_class)
 		{
-		    if (prev_class == 0 && !vim_iswordc(reginput[-1]))
+		    if (prev_class == 0 || prev_class == 1)
 			return FALSE;
 		    break; /* Matched with EOW */
 		}
-		else if (this_class != 0) /* this_class and prev_class != 0 */
+		else
 		    return FALSE;
-		/* If this_class and prev_class == 0 then it means there are
-		 * no mbyte chars, use original logic */
 	    }
 #endif
 	    if (!vim_iswordc(reginput[-1]))
 		return FALSE;
-	    if (reginput[0] && vim_iswordc(reginput[0]))
+	    if (reginput[0] != NUL && vim_iswordc(c))
 		return FALSE;
 	    break;
 
 	  case ANY:
-	    if (*reginput == NUL)
+	    if (c == NUL)
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case IDENT:
-	    if (!vim_isIDc(*reginput))
+	    if (!vim_isIDc(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case SIDENT:
-	    if (isdigit(*reginput) || !vim_isIDc(*reginput))
+	    if (isdigit(*reginput) || !vim_isIDc(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case KWORD:
-	    if (!vim_iswordc(*reginput))
+	    if (!vim_iswordp(reginput))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case SKWORD:
-	    if (isdigit(*reginput) || !vim_iswordc(*reginput))
+	    if (isdigit(*reginput) || !vim_iswordp(reginput))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case FNAME:
-	    if (!vim_isfilec(*reginput))
+	    if (!vim_isfilec(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case SFNAME:
-	    if (isdigit(*reginput) || !vim_isfilec(*reginput))
+	    if (isdigit(*reginput) || !vim_isfilec(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -3017,109 +3032,125 @@ regmatch(scan)
 	    break;
 
 	  case WHITE:
-	    if (!vim_iswhite(*reginput))
+	    if (!vim_iswhite(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NWHITE:
-	    if (*reginput == NUL || vim_iswhite(*reginput))
+	    if (c == NUL || vim_iswhite(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case DIGIT:
-	    if (!ri_digit(*reginput))
+	    if (!ri_digit(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NDIGIT:
-	    if (*reginput == NUL || ri_digit(*reginput))
+	    if (c == NUL || ri_digit(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case HEX:
-	    if (!ri_hex(*reginput))
+	    if (!ri_hex(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NHEX:
-	    if (*reginput == NUL || ri_hex(*reginput))
+	    if (c == NUL || ri_hex(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case OCTAL:
-	    if (!ri_octal(*reginput))
+	    if (!ri_octal(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NOCTAL:
-	    if (*reginput == NUL || ri_octal(*reginput))
+	    if (c == NUL || ri_octal(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case WORD:
-	    if (!ri_word(*reginput))
+#ifdef FEAT_MBYTE
+	    if (c > 0x100)
+	    {
+		if (mb_get_class(reginput) <= 1)
+		    return FALSE;
+	    }
+	    else
+#endif
+		if (!ri_word(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NWORD:
-	    if (*reginput == NUL || ri_word(*reginput))
+#ifdef FEAT_MBYTE
+	    if (c > 0x100)
+	    {
+		if (mb_get_class(reginput) >= 2)
+		    return FALSE;
+	    }
+	    else
+#endif
+		if (c == NUL || ri_word(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case HEAD:
-	    if (!ri_head(*reginput))
+	    if (!ri_head(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NHEAD:
-	    if (*reginput == NUL || ri_head(*reginput))
+	    if (c == NUL || ri_head(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case ALPHA:
-	    if (!ri_alpha(*reginput))
+	    if (!ri_alpha(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NALPHA:
-	    if (*reginput == NUL || ri_alpha(*reginput))
+	    if (c == NUL || ri_alpha(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case LOWER:
-	    if (!ri_lower(*reginput))
+	    if (!ri_lower(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NLOWER:
-	    if (*reginput == NUL || ri_lower(*reginput))
+	    if (c == NUL || ri_lower(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case UPPER:
-	    if (!ri_upper(*reginput))
+	    if (!ri_upper(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
 
 	  case NUPPER:
-	    if (*reginput == NUL || ri_upper(*reginput))
+	    if (c == NUL || ri_upper(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -3131,11 +3162,11 @@ regmatch(scan)
 
 		opnd = OPERAND(scan);
 		/* Inline the first character, for speed. */
-		if (*opnd != *reginput
+		if (*opnd != c
 			&& (!ireg_ic || TO_LOWER(*opnd) != TO_LOWER(*reginput)))
 		    return FALSE;
 		len = STRLEN(opnd);
-		if (len > 1 && cstrncmp(opnd, reginput, len) != 0)
+		if (len > 1 && cstrncmp(opnd + 1, reginput + 1, len - 1) != 0)
 		    return FALSE;
 		reginput += len;
 	    }
@@ -3143,54 +3174,30 @@ regmatch(scan)
 
 	  case ANYOF:
 	  case ANYBUT:
-	    if (*reginput == NUL)
+	    if (c == NUL)
 		return FALSE;
-#ifdef FEAT_MBYTE
-	    if (enc_utf8 && (*mb_ptr2len_check)(reginput) > 1)
-	    {
-		if ((vim_strchr(OPERAND(scan), utf_ptr2char(reginput))
-						    == NULL) == (op == ANYOF))
-		    return FALSE;
-		reginput += (*mb_ptr2len_check)(reginput) - 1;
-	    }
-	    else if (enc_dbcs && (*mb_ptr2len_check)(reginput) > 1)
-	    {
-		if ((cstrchr(OPERAND(scan), *reginput << 8 | reginput[1])
-						    == NULL) == (op == ANYOF))
-		    return FALSE;
-		reginput++;
-	    }
-	    else
-#endif
-		if ((cstrchr(OPERAND(scan), *reginput)
-						    == NULL) == (op == ANYOF))
-		    return FALSE;
-	    reginput++;
+	    if ((cstrchr(OPERAND(scan), c) == NULL) == (op == ANYOF))
+		return FALSE;
+	    ADVANCE_REGINPUT();
 	    break;
 
 #ifdef FEAT_MBYTE
 	  case MULTIBYTECODE:
+	    if (has_mbyte)
 	    {
+		int	    i, len;
 		char_u	    *opnd;
-		int	    len;
 
 		opnd = OPERAND(scan);
-
-		if (enc_utf8 && (len = utf_byte2len(*opnd)) > 1)
-		{
-		    int	    i;
-
-		    for (i = 0; i < len; i++)
-			if (opnd[i] != reginput[i])
-			    return FALSE;
-		    reginput += len;
-		    break;
-		}
-
-		if (*opnd != *reginput || opnd[1] != reginput[1])
+		if ((len = (*mb_ptr2len_check)(opnd)) < 2)
 		    return FALSE;
-		reginput += 2;
+		for (i = 0; i < len; ++i)
+		    if (opnd[i] != reginput[i])
+			return FALSE;
+		reginput += len;
 	    }
+	    else
+		return FALSE;
 	    break;
 #endif
 
@@ -3783,7 +3790,7 @@ regmatch(scan)
 	    }
 
 	  case NEWL:
-	    if (*reginput != NUL || reglnum == reg_maxline)
+	    if (c != NUL || reglnum == reg_maxline)
 		return FALSE;
 	    reg_nextline();
 	    break;
@@ -3887,8 +3894,15 @@ regrepeat(p, maxcount)
       case SKWORD + ADD_NL:
 	while (count < maxcount)
 	{
-	    if (vim_iswordc(*scan) && (testval || !isdigit(*scan)))
-		++scan;
+	    if (vim_iswordp(scan) && (testval || !isdigit(*scan)))
+	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    scan += (*mb_ptr2len_check)(scan);
+		else
+#endif
+		    ++scan;
+	    }
 	    else if (*scan == NUL)
 	    {
 		if (!WITH_NL(OP(p)) || reglnum == reg_maxline)
@@ -3913,7 +3927,14 @@ regrepeat(p, maxcount)
 	while (count < maxcount)
 	{
 	    if (vim_isfilec(*scan) && (testval || !isdigit(*scan)))
-		++scan;
+	    {
+#ifdef FEAT_MBYTE
+		if (has_mbyte)
+		    scan += (*mb_ptr2len_check)(scan);
+		else
+#endif
+		    ++scan;
+	    }
 	    else if (*scan == NUL)
 	    {
 		if (!WITH_NL(OP(p)) || reglnum == reg_maxline)
@@ -4081,6 +4102,9 @@ do_class:
       case ANYBUT + ADD_NL:
 	while (count < maxcount)
 	{
+#ifdef FEAT_MBYTE
+	    int len;
+#endif
 	    if (*scan == NUL)
 	    {
 		if (!WITH_NL(OP(p)) || reglnum == reg_maxline)
@@ -4091,11 +4115,11 @@ do_class:
 		    break;
 	    }
 #ifdef FEAT_MBYTE
-	    else if (enc_dbcs && (*mb_ptr2len_check)(scan) > 1)
+	    else if (has_mbyte && (len = (*mb_ptr2len_check)(scan)) > 1)
 	    {
-		if ((cstrchr(opnd, *scan << 8 | scan[1]) == NULL) == testval)
+		if ((cstrchr(opnd, (*mb_ptr2char)(scan)) == NULL) == testval)
 		    break;
-		scan += 2;
+		scan += len;
 	    }
 #endif
 	    else
@@ -5104,6 +5128,10 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 	}
 	if (no < 0)	      /* Ordinary character. */
 	{
+#ifdef FEAT_MBYTE
+	    int len;
+#endif
+
 	    if (c == '\\' && *src != NUL)
 	    {
 		/* Check for abbreviations -- webb */
@@ -5127,25 +5155,30 @@ vim_regsub_both(source, dest, copy, magic, backslash)
 				c = *src++;
 		}
 	    }
-	    if (copy)
-	    {
-#ifdef FEAT_MBYTE
-		int	l;
 
-		if (enc_dbcs != 0 && (l = (*mb_ptr2len_check)(src - 1)) > 1)
-		{
-		    mch_memmove(dst, src - 1, l);
-		    dst += l - 1;
-		    src += l - 1;
-		}
-		else
-#endif
-		    if (func == (fptr)NULL)	/* just copy */
-		    *dst = c;
-		else				/* change case */
-		    func = (fptr)(func(dst, c));
-			    /* Turbo C complains without the typecast */
+	    /* Write to buffer, if copy is set. */
+#ifdef FEAT_MBYTE
+	    if (has_mbyte && (len = (*mb_ptr2len_check)(src - 1)) > 0)
+	    {
+		if (copy)
+		    mch_memmove(dst, src - 1, len);
+		dst += len - 1;
+		src += len - 1;
 	    }
+	    else
+	    {
+#endif
+		if (copy)
+		{
+		    if (func == (fptr)NULL)	/* just copy */
+			*dst = c;
+		    else			/* change case */
+			func = (fptr)(func(dst, c));
+		    /* Turbo C complains without the typecast */
+		}
+#ifdef FEAT_MBYTE
+	    }
+#endif
 	    dst++;
 	}
 	else

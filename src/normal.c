@@ -35,7 +35,7 @@ static void	op_colon __ARGS((oparg_t *oap));
 #if defined(FEAT_MOUSE) && defined(FEAT_VISUAL)
 static void	find_start_of_word __ARGS((pos_t *));
 static void	find_end_of_word __ARGS((pos_t *));
-static int	get_mouse_class __ARGS((int));
+static int	get_mouse_class __ARGS((char_u *p));
 #endif
 static void	prep_redo_cmd __ARGS((cmdarg_t *cap));
 static void	prep_redo __ARGS((int regname, long, int, int, int, int, int));
@@ -112,7 +112,7 @@ static void	nv_Replace __ARGS((cmdarg_t *cap));
 static void	nv_VReplace __ARGS((cmdarg_t *cap));
 static void	nv_vreplace __ARGS((cmdarg_t *cap));
 #ifdef FEAT_VISUAL
-static void	v_swap_corners __ARGS((cmdarg_t *cap));
+static void	v_swap_corners __ARGS((int cmdchar));
 #endif
 static void	nv_replace __ARGS((cmdarg_t *cap));
 static void	n_swapchar __ARGS((cmdarg_t *cap));
@@ -879,6 +879,10 @@ getcount:
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
 		ImeSetOriginMode();
 #endif
+#ifdef FEAT_XIM
+		/* Enable XIM to allow typing language character directly */
+		xim_set_focus(TRUE);
+#endif
 	    }
 	    *cp = safe_vgetc();
 	    if (State == LANGMAP)
@@ -888,6 +892,11 @@ getcount:
 		State = NORMAL_BUSY;
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
 		ImeSetEnglishMode();
+#endif
+#ifdef FEAT_XIM
+		/* Disable XIM to allow typing English directly for Normal
+		 * mode commands. */
+		xim_set_focus(FALSE);
 #endif
 	    }
 #ifdef CURSOR_SHAPE
@@ -1800,14 +1809,15 @@ do_pending_operator(cap, old_col, gui_yank)
 		    oap->op_type == OP_FOLDOPEN
 					    || oap->op_type == OP_FOLDOPENREC,
 		    oap->op_type == OP_FOLDOPENREC
-					  || oap->op_type == OP_FOLDCLOSEREC);
+					  || oap->op_type == OP_FOLDCLOSEREC,
+					  oap->is_VIsual);
 	    break;
 
 	case OP_FOLDDEL:
 	case OP_FOLDDELREC:
 	    VIsual_reselect = FALSE;	/* don't reselect now */
 	    deleteFold(oap->start.lnum, oap->end.lnum,
-					       oap->op_type == OP_FOLDDELREC);
+			       oap->op_type == OP_FOLDDELREC, oap->is_VIsual);
 	    break;
 #endif
 	default:
@@ -2569,39 +2579,48 @@ do_mouse(oap, c, dir, count, fix_indent)
 	/*
 	 * A double click selects a word or a block.
 	 */
-	if (is_click && (mod_mask & MOD_MASK_2CLICK))
+	if (mod_mask & MOD_MASK_2CLICK)
 	{
-	    pos_t	*pos;
+	    pos_t	*pos = NULL;
 
-	    /* If the character under the cursor (skipping white space) is not
-	     * a word character, try finding a match and select a (), {}, [],
-	     * #if/#endif, etc. block. */
-	    end_visual = curwin->w_cursor;
-	    while (vim_iswhite(gchar_pos(&end_visual)))
-		inc(&end_visual);
-	    if (oap != NULL)
-		oap->motion_type = MCHAR;
-	    if (oap != NULL
-		    && VIsual_mode == 'v'
-		    && !vim_isIDc(gchar_pos(&end_visual))
-		    && equal(curwin->w_cursor, VIsual)
-		    && (pos = findmatch(oap, NUL)) != NULL)
+	    if (is_click)
 	    {
-		curwin->w_cursor = *pos;
-		if (oap->motion_type == MLINE)
-		    VIsual_mode = 'V';
-		else if (*p_sel == 'e')
-		    ++curwin->w_cursor.col;
+		/* If the character under the cursor (skipping white space) is
+		 * not a word character, try finding a match and select a (),
+		 * {}, [], #if/#endif, etc. block. */
+		end_visual = curwin->w_cursor;
+		while (vim_iswhite(gchar_pos(&end_visual)))
+		    inc(&end_visual);
+		if (oap != NULL)
+		    oap->motion_type = MCHAR;
+		if (oap != NULL
+			&& VIsual_mode == 'v'
+			&& !vim_isIDc(gchar_pos(&end_visual))
+			&& equal(curwin->w_cursor, VIsual)
+			&& (pos = findmatch(oap, NUL)) != NULL)
+		{
+		    curwin->w_cursor = *pos;
+		    if (oap->motion_type == MLINE)
+			VIsual_mode = 'V';
+		    else if (*p_sel == 'e')
+			++curwin->w_cursor.col;
+		}
 	    }
-	    else if (lt(curwin->w_cursor, orig_cursor))
+
+	    if (pos == NULL)
 	    {
-		find_start_of_word(&curwin->w_cursor);
-		find_end_of_word(&VIsual);
-	    }
-	    else
-	    {
-		find_start_of_word(&VIsual);
-		find_end_of_word(&curwin->w_cursor);
+		/* When not found a match or when dragging: extend to include
+		 * a word. */
+		if (lt(curwin->w_cursor, orig_cursor))
+		{
+		    find_start_of_word(&curwin->w_cursor);
+		    find_end_of_word(&VIsual);
+		}
+		else
+		{
+		    find_start_of_word(&VIsual);
+		    find_end_of_word(&curwin->w_cursor);
+		}
 	    }
 	    curwin->w_set_curswant = TRUE;
 	}
@@ -2616,49 +2635,94 @@ do_mouse(oap, c, dir, count, fix_indent)
 }
 
 #ifdef FEAT_VISUAL
+/*
+ * Move "pos" back to the start of the word it's in.
+ */
     static void
 find_start_of_word(pos)
-    pos_t    *pos;
+    pos_t	*pos;
 {
-    char_u  *ptr;
-    int	    cclass;
+    char_u	*line;
+    int		cclass;
+    int		col;
 
-    ptr = ml_get(pos->lnum);
-    cclass = get_mouse_class(ptr[pos->col]);
+    line = ml_get(pos->lnum);
+    cclass = get_mouse_class(line + pos->col);
 
-    /* Can't test pos->col >= 0 because pos->col is unsigned */
-    while (pos->col > 0 && get_mouse_class(ptr[pos->col]) == cclass)
-	pos->col--;
-    if (pos->col != 0 || get_mouse_class(ptr[0]) != cclass)
-	pos->col++;
+    while (pos->col > 0)
+    {
+	col = pos->col - 1;
+#ifdef FEAT_MBYTE
+	col -= (*mb_head_off)(line, line + col);
+#endif
+	if (get_mouse_class(line + col) != cclass)
+	    break;
+	pos->col = col;
+    }
 }
 
+/*
+ * Move "pos" forward to the end of the word it's in.
+ * When 'selection' is "exclusive", the position is just after the word.
+ */
     static void
 find_end_of_word(pos)
-    pos_t    *pos;
+    pos_t	*pos;
 {
-    char_u  *ptr;
-    int	    cclass;
+    char_u	*line;
+    int		cclass;
+    int		col;
 
-    ptr = ml_get(pos->lnum);
-    if (*p_sel == 'e' && pos->col)
-	pos->col--;
-    cclass = get_mouse_class(ptr[pos->col]);
-    while (ptr[pos->col] && get_mouse_class(ptr[pos->col]) == cclass)
-	pos->col++;
-    if (*p_sel != 'e' && pos->col)
-	pos->col--;
+    line = ml_get(pos->lnum);
+    if (*p_sel == 'e' && pos->col > 0)
+    {
+	--pos->col;
+#ifdef FEAT_MBYTE
+	pos->col -= (*mb_head_off)(line, line + pos->col);
+#endif
+    }
+    cclass = get_mouse_class(line + pos->col);
+    while (line[pos->col] != NUL)
+    {
+#ifdef FEAT_MBYTE
+	col = pos->col + (*mb_ptr2len_check)(line + pos->col);
+#else
+	col = pos->col + 1;
+#endif
+	if (get_mouse_class(line + col) != cclass)
+	{
+	    if (*p_sel == 'e')
+		pos->col = col;
+	    break;
+	}
+	pos->col = col;
+    }
 }
 
+/*
+ * Get class of a character for selection: same class means same word.
+ * 0: blank
+ * 1: punctuation groups
+ * 2: normal word character
+ * >2: multi-byte word character.
+ */
     static int
-get_mouse_class(c)
-    int	    c;
+get_mouse_class(p)
+    char_u	*p;
 {
+    int		c;
+
+#ifdef FEAT_MBYTE
+    if (has_mbyte && MB_BYTE2LEN(p[0]) > 1)
+	return mb_get_class(p);
+#endif
+
+    c = *p;
     if (c == ' ' || c == '\t')
-	return ' ';
+	return 0;
 
     if (vim_isIDc(c))
-	return 'a';
+	return 1;
 
     /*
      * There are a few special cases where we want certain combinations of
@@ -2667,7 +2731,7 @@ get_mouse_class(c)
      * character is in it's own class.
      */
     if (c != NUL && vim_strchr((char_u *)"-+*/%<>&|^!=", c) != NULL)
-	return '=';
+	return 2;
     return c;
 }
 #endif /* FEAT_VISUAL */
@@ -2764,60 +2828,119 @@ reset_VIsual()
 #endif /* FEAT_VISUAL */
 
 /*
- * Find the identifier under or to the right of the cursor.  If none is
- * found and find_type has FIND_STRING, then find any non-white string.  The
- * length of the string is returned, or zero if no string is found.  If a
- * string is found, a pointer to the string is put in *string, but note that
- * the caller must use the length returned as this string may not be NUL
- * terminated.
+ * Find the identifier under or to the right of the cursor.
+ * "find_type" can have one of three values:
+ * FIND_IDENT:   find an identifier (keyword)
+ * FIND_STRING:  find any non-white string
+ * FIND_IDENT + FIND_STRING: find any non-white string, identifier preferred.
+ *
+ * There are three steps:
+ * 1. Search forward for the start of an identifier/string.  Doesn't move if
+ *    already on one.
+ * 2. Search backward for the start of this identifier/string.
+ *    This doesn't match the real Vi but I like it a little better and it
+ *    shouldn't bother anyone.
+ * 3. Search forward to the end of this identifier/string.
+ *    When FIND_IDENT isn't defined, we backup until a blank.
+ *
+ * Returns the length of the string, or zero if no string is found.
+ * If a string is found, a pointer to the string is put in "*string".  This
+ * string is not always NUL terminated.
  */
     int
 find_ident_under_cursor(string, find_type)
-    char_u  **string;
-    int	    find_type;
+    char_u	**string;
+    int		find_type;
 {
-    char_u  *ptr;
-    int	    col = 0;	    /* init to shut up GCC */
-    int	    i;
+    char_u	*ptr;
+    int		col = 0;	    /* init to shut up GCC */
+    int		i;
+#ifdef FEAT_MBYTE
+    int		this_class = 0;
+    int		prev_class;
+    int		prevcol;
+#endif
 
     /*
      * if i == 0: try to find an identifier
-     * if i == 1: try to find any string
+     * if i == 1: try to find any non-white string
      */
     ptr = ml_get_curline();
     for (i = (find_type & FIND_IDENT) ? 0 : 1;	i < 2; ++i)
     {
 	/*
-	 * skip to start of identifier/string
+	 * 1. skip to start of identifier/string
 	 */
 	col = curwin->w_cursor.col;
-	while (ptr[col] != NUL &&
-		    (i == 0 ? !vim_iswordc(ptr[col]) : vim_iswhite(ptr[col])))
-	    ++col;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    while (ptr[col] != NUL)
+	    {
+		this_class = mb_get_class(ptr + col);
+		if (this_class != 0 && (i == 1 || this_class != 1))
+		    break;
+		col += (*mb_ptr2len_check)(ptr + col);
+	    }
+	}
+	else
+#endif
+	    while (ptr[col] != NUL && (i == 0
+			? !vim_iswordc(ptr[col]) : vim_iswhite(ptr[col])))
+		++col;
 
 	/*
-	 * Back up to start of identifier/string. This doesn't match the
-	 * real vi but I like it a little better and it shouldn't bother
-	 * anyone.
-	 * When FIND_IDENT isn't defined, we backup until a blank.
+	 * 2. Back up to start of identifier/string.
 	 */
-	while (col > 0 && (i == 0 ? vim_iswordc(ptr[col - 1]) :
-		    (!vim_iswhite(ptr[col - 1]) &&
-		   (!(find_type & FIND_IDENT) || !vim_iswordc(ptr[col - 1])))))
-	    --col;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    /* Remember class of character under cursor. */
+	    this_class = mb_get_class(ptr + col);
+	    while (col > 0)
+	    {
+		prevcol = col - 1 - (*mb_head_off)(ptr, ptr + col - 1);
+		prev_class = mb_get_class(ptr + prevcol);
+		if (this_class != prev_class
+			&& (i == 0
+			    || prev_class == 0
+			    || (find_type & FIND_IDENT)))
+		    break;
+		col = prevcol;
+	    }
 
-	/*
-	 * if we don't want just any old string, or we've found an identifier,
-	 * stop searching.
-	 */
-	if (!(find_type & FIND_STRING) || vim_iswordc(ptr[col]))
-	    break;
+	    /* If we don't want just any old string, or we've found an
+	     * identifier, stop searching. */
+	    if (this_class > 2)
+		this_class = 2;
+	    if (!(find_type & FIND_STRING) || this_class == 2)
+		break;
+	}
+	else
+#endif
+	{
+	    while (col > 0 && (i == 0 ? vim_iswordc(ptr[col - 1])
+			: (!vim_iswhite(ptr[col - 1])
+			    && (!(find_type & FIND_IDENT)
+				|| !vim_iswordc(ptr[col - 1])))))
+		--col;
+
+	    /* If we don't want just any old string, or we've found an
+	     * identifier, stop searching. */
+	    if (!(find_type & FIND_STRING) || vim_iswordc(ptr[col]))
+		break;
+	}
     }
-    /*
-     * didn't find an identifier or string
-     */
-    if (ptr[col] == NUL || (!vim_iswordc(ptr[col]) && i == 0))
+
+    if (ptr[col] == NUL || (i == 0 &&
+#ifdef FEAT_MBYTE
+		has_mbyte ? this_class != 1 :
+#endif
+		!vim_iswordc(ptr[col])))
     {
+	/*
+	 * didn't find an identifier or string
+	 */
 	if (find_type & FIND_STRING)
 	    EMSG(_("No string under cursor"));
 	else
@@ -2826,12 +2949,29 @@ find_ident_under_cursor(string, find_type)
     }
     ptr += col;
     *string = ptr;
+
+    /*
+     * 3. Find the end if the identifier/string.
+     */
     col = 0;
-    while (i == 0 ? vim_iswordc(*ptr) : (*ptr != NUL && !vim_iswhite(*ptr)))
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
     {
-	++ptr;
-	++col;
+	/* Search for point of changing multibyte character class. */
+	this_class = mb_get_class(ptr);
+	while (ptr[col] != NUL
+		&& i == 0 ? mb_get_class(ptr + col) == this_class
+			  : mb_get_class(ptr + col) != 0)
+	    col += (*mb_ptr2len_check)(ptr + col);
     }
+    else
+#endif
+	while (i == 0 ? vim_iswordc(*ptr) : (*ptr != NUL && !vim_iswhite(*ptr)))
+	{
+	    ++ptr;
+	    ++col;
+	}
+
     return col;
 }
 
@@ -3369,8 +3509,7 @@ nv_gd(oap, nchar)
 	clearopbeep(oap);
 	return;
     }
-    sprintf((char *)pat, vim_iswordc(*ptr) ? "\\<%.*s\\>" :
-	    "%.*s", len, ptr);
+    sprintf((char *)pat, vim_iswordp(ptr) ? "\\<%.*s\\>" : "%.*s", len, ptr);
     old_pos = curwin->w_cursor;
     save_p_ws = p_ws;
     save_p_scs = p_scs;
@@ -3851,6 +3990,11 @@ dozet:
 		/* "zs" - scroll screen, cursor at the start */
     case 's':	if (!curwin->w_p_wrap)
 		{
+#ifdef FEAT_FOLDING
+		    if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
+			col = 0;	/* like the cursor is in col 0 */
+		    else
+#endif
 		    getvcol(curwin, &curwin->w_cursor, &col, NULL, NULL);
 		    if (curwin->w_leftcol != col)
 		    {
@@ -3863,6 +4007,11 @@ dozet:
 		/* "ze" - scroll screen, cursor at the end */
     case 'e':	if (!curwin->w_p_wrap)
 		{
+#ifdef FEAT_FOLDING
+		    if (hasFolding(curwin->w_cursor.lnum, NULL, NULL))
+			col = 0;	/* like the cursor is in col 0 */
+		    else
+#endif
 		    getvcol(curwin, &curwin->w_cursor, NULL, NULL, &col);
 		    n = W_WIDTH(curwin) - curwin_col_off();
 		    if ((long)col < n)
@@ -3912,7 +4061,7 @@ dozet:
 			nv_operator(cap);
 		    else
 			deleteFold(curwin->w_cursor.lnum,
-					 curwin->w_cursor.lnum, nchar == 'D');
+				  curwin->w_cursor.lnum, nchar == 'D', FALSE);
 		}
 		else
 		    EMSG(_("Cannot delete fold with current 'foldmethod'"));
@@ -3925,7 +4074,8 @@ dozet:
 		    changed_window_setting();
 		}
 		else if (foldmethodIsMarker(curwin))
-		    deleteFold((linenr_t)1, curbuf->b_ml.ml_line_count, TRUE);
+		    deleteFold((linenr_t)1, curbuf->b_ml.ml_line_count,
+								 TRUE, FALSE);
 		else
 		    EMSG(_("Cannot erase folds with current 'foldmethod'"));
 		break;
@@ -4345,7 +4495,7 @@ nv_ident(cap)
 	    setpcmark();
 	    curwin->w_cursor.col = ptr - ml_get_curline();
 
-	    if (!g_cmd && vim_iswordc(*ptr))
+	    if (!g_cmd && vim_iswordp(ptr))
 		STRCPY(buf, "\\<");
 	    no_smartcase = TRUE;	/* don't use 'smartcase' now */
 	    break;
@@ -4410,6 +4560,18 @@ nv_ident(cap)
 	/* put a backslash before \ and some others */
 	if (vim_strchr(aux_ptr, *ptr) != NULL)
 	    *p++ = '\\';
+#ifdef FEAT_MBYTE
+	/* When current byte is a part of multibyte character, copy all bytes
+	 * of that character. */
+	if (has_mbyte)
+	{
+	    int i;
+	    int len = (*mb_ptr2len_check)(ptr) - 1;
+
+	    for (i = 0; i < len && n >= 1; ++i, --n)
+		*p++ = *ptr++;
+	}
+#endif
 	*p++ = *ptr++;
     }
     *p = NUL;
@@ -4419,7 +4581,11 @@ nv_ident(cap)
      */
     if (cmdchar == '*' || cmdchar == '#')
     {
-	if (!g_cmd && vim_iswordc(ptr[-1]))
+	if (!g_cmd && (
+#ifdef FEAT_MBYTE
+		has_mbyte ? vim_iswordp(mb_prevptr(NULL, ptr)) :
+#endif
+		vim_iswordc(ptr[-1])))
 	    STRCAT(buf, "\\>");
 #ifdef FEAT_CMDHIST
 	/* put pattern in search history */
@@ -4890,9 +5056,18 @@ nv_search(cap)
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
     ImeSetOriginMode();
 #endif
+#ifdef FEAT_XIM
+    /* Enable XIM to allow typing language characters directly. */
+    xim_set_focus(TRUE);
+#endif
     cap->searchbuf = getcmdline(cap->cmdchar, cap->count1, 0);
 #if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
     ImeSetEnglishMode();
+#endif
+#ifdef FEAT_XIM
+    /* Disable XIM to allow typing English directly for Normal
+     * mode commands. */
+    xim_set_focus(FALSE);
 #endif
     if (cap->searchbuf == NULL)
     {
@@ -5608,13 +5783,13 @@ nv_replace(cap)
  * 'O': same, but in block mode exchange left and right corners.
  */
     static void
-v_swap_corners(cap)
-    cmdarg_t	*cap;
+v_swap_corners(cmdchar)
+    int		cmdchar;
 {
     pos_t	old_cursor;
     colnr_t	left, right;
 
-    if (cap->cmdchar == 'O' && VIsual_mode == Ctrl_V)
+    if (cmdchar == 'O' && VIsual_mode == Ctrl_V)
     {
 	old_cursor = curwin->w_cursor;
 	getvcols(curwin, &old_cursor, &VIsual, &left, &right);
@@ -7500,20 +7675,57 @@ nv_join(cap)
 nv_put(cap)
     cmdarg_t  *cap;
 {
-    if (cap->oap->op_type != OP_NOP
 #ifdef FEAT_VISUAL
-	    || VIsual_active
+    pos_t	curpos;
+    colnr_t	left, right;
 #endif
-	    )
+    int		dir;
+
+    if (cap->oap->op_type != OP_NOP)
 	clearopbeep(cap->oap);
     else
     {
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    /* Putting in Visual mode: The put text replaces the selected
+	     * text.  First put the register at the end of the Visual
+	     * selection, then delete the selected text. */
+	    curpos = curwin->w_cursor;
+	    if (VIsual_mode == Ctrl_V)
+	    {
+		getvcols(curwin, &curwin->w_cursor, &VIsual, &left, &right);
+		if (lt(VIsual, curwin->w_cursor))
+		    curwin->w_cursor = VIsual;
+		coladvance(right);
+	    }
+	    else if (lt(curwin->w_cursor, VIsual))
+		curwin->w_cursor = VIsual;
+	    if (VIsual_mode == 'v' && *p_sel == 'e')
+		dir = BACKWARD;
+	    else
+		dir = FORWARD;
+	}
+	else
+#endif
+	    dir = (cap->cmdchar == 'P'
+		    || (cap->cmdchar == 'g' && cap->nchar == 'P'))
+							 ? BACKWARD : FORWARD;
 	prep_redo_cmd(cap);
-	do_put(cap->oap->regname,
-		(cap->cmdchar == 'P'
-		 || (cap->cmdchar == 'g' && cap->nchar == 'P'))
-							 ? BACKWARD : FORWARD,
-		cap->count1, cap->cmdchar == 'g' ? PUT_CURSEND : 0);
+	do_put(cap->oap->regname, dir,
+			  cap->count1, cap->cmdchar == 'g' ? PUT_CURSEND : 0);
+
+#ifdef FEAT_VISUAL
+	if (VIsual_active)
+	{
+	    /* Now delete the selected text. */
+	    cap->cmdchar = 'd';
+	    cap->nchar = NUL;
+	    cap->oap->regname = NUL;
+	    curwin->w_cursor = curpos;
+	    nv_operator(cap);
+	}
+#endif
     }
 }
 
@@ -7526,7 +7738,7 @@ nv_open(cap)
 {
 #ifdef FEAT_VISUAL
     if (VIsual_active)  /* switch start and end of visual */
-	v_swap_corners(cap);
+	v_swap_corners(cap->cmdchar);
     else
 #endif
 	n_opencmd(cap);

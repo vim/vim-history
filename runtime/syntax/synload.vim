@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Mar 01
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -14,61 +14,62 @@ endif
 " let others know that syntax has been switched on
 let syntax_on = 1
 
-" The default methods for highlighting.  Can be overridden later.
+" The default methods for highlighting.  Using "def" to avoid overruling
+" highlighting that the user has already set.  Can also be overridden later.
 " Many terminals can only use six different colors (plus black and white).
 " Therefore the number of colors used is kept low. It doesn't look nice with
 " too many colors anyway.
-" Careful with "cterm=bold", it may change the color to bright.
+" Careful with "cterm=bold", it changes the color to bright for some terminals.
 
 " There are two sets of defaults: for a dark and a light background.
 if &background == "dark"
-  hi Comment	term=bold ctermfg=Cyan guifg=#80a0ff
-  hi Constant	term=underline ctermfg=Magenta guifg=#ffa0a0
-  hi Special	term=bold ctermfg=LightRed guifg=Orange
-  hi Identifier term=underline cterm=bold ctermfg=Cyan guifg=#40ffff
-  hi Statement	term=bold ctermfg=Yellow guifg=#ffff60 gui=bold
-  hi PreProc	term=underline ctermfg=LightBlue guifg=#ff80ff
-  hi Type	term=underline ctermfg=LightGreen guifg=#60ff60 gui=bold
-  hi Ignore	ctermfg=black guifg=bg
+  hi def Comment	term=bold ctermfg=Cyan guifg=#80a0ff
+  hi def Constant	term=underline ctermfg=Magenta guifg=#ffa0a0
+  hi def Special	term=bold ctermfg=LightRed guifg=Orange
+  hi def Identifier 	term=underline cterm=bold ctermfg=Cyan guifg=#40ffff
+  hi def Statement	term=bold ctermfg=Yellow guifg=#ffff60 gui=bold
+  hi def PreProc	term=underline ctermfg=LightBlue guifg=#ff80ff
+  hi def Type		term=underline ctermfg=LightGreen guifg=#60ff60 gui=bold
+  hi def Ignore		ctermfg=black guifg=bg
 else
-  hi Comment	term=bold ctermfg=DarkBlue guifg=Blue
-  hi Constant	term=underline ctermfg=DarkRed guifg=Magenta
-  hi Special	term=bold ctermfg=DarkMagenta guifg=SlateBlue
-  hi Identifier term=underline ctermfg=DarkCyan guifg=DarkCyan
-  hi Statement	term=bold ctermfg=Brown gui=bold guifg=Brown
-  hi PreProc	term=underline ctermfg=DarkMagenta guifg=Purple
-  hi Type	term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
-  hi Ignore	ctermfg=white guifg=bg
+  hi def Comment	term=bold ctermfg=DarkBlue guifg=Blue
+  hi def Constant	term=underline ctermfg=DarkRed guifg=Magenta
+  hi def Special	term=bold ctermfg=DarkMagenta guifg=SlateBlue
+  hi def Identifier	term=underline ctermfg=DarkCyan guifg=DarkCyan
+  hi def Statement	term=bold ctermfg=Brown gui=bold guifg=Brown
+  hi def PreProc	term=underline ctermfg=DarkMagenta guifg=Purple
+  hi def Type		term=underline ctermfg=DarkGreen guifg=SeaGreen gui=bold
+  hi def Ignore		ctermfg=white guifg=bg
 endif
-hi Error term=reverse ctermbg=Red ctermfg=White guibg=Red guifg=White
-hi Todo	 term=standout ctermbg=Yellow ctermfg=Black guifg=Blue guibg=Yellow
+hi def Error 		term=reverse ctermbg=Red ctermfg=White guibg=Red guifg=White
+hi def Todo	 	term=standout ctermbg=Yellow ctermfg=Black guifg=Blue guibg=Yellow
 
 " Common groups that link to default highlighting.
 " You can specify other highlighting easily.
-hi link String		Constant
-hi link Character	Constant
-hi link Number		Constant
-hi link Boolean		Constant
-hi link Float		Number
-hi link Function	Identifier
-hi link Conditional	Statement
-hi link Repeat		Statement
-hi link Label		Statement
-hi link Operator	Statement
-hi link Keyword		Statement
-hi link Exception	Statement
-hi link Include		PreProc
-hi link Define		PreProc
-hi link Macro		PreProc
-hi link PreCondit	PreProc
-hi link StorageClass	Type
-hi link Structure	Type
-hi link Typedef		Type
-hi link Tag		Special
-hi link SpecialChar	Special
-hi link Delimiter	Special
-hi link SpecialComment	Special
-hi link Debug		Special
+hi def link String		Constant
+hi def link Character		Constant
+hi def link Number		Constant
+hi def link Boolean		Constant
+hi def link Float		Number
+hi def link Function		Identifier
+hi def link Conditional		Statement
+hi def link Repeat		Statement
+hi def link Label		Statement
+hi def link Operator		Statement
+hi def link Keyword		Statement
+hi def link Exception		Statement
+hi def link Include		PreProc
+hi def link Define		PreProc
+hi def link Macro		PreProc
+hi def link PreCondit		PreProc
+hi def link StorageClass	Type
+hi def link Structure		Type
+hi def link Typedef		Type
+hi def link Tag			Special
+hi def link SpecialChar		Special
+hi def link Delimiter		Special
+hi def link SpecialComment	Special
+hi def link Debug		Special
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
 let s:cpo_save = &cpo

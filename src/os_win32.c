@@ -179,7 +179,7 @@ static void standout(void);
 static void standend(void);
 static void visual_bell(void);
 static void cursor_visible(BOOL fVisible);
-static BOOL write_chars(LPCSTR pchBuf, DWORD cchToWrite, DWORD* pcchWritten);
+static BOOL write_chars(LPCSTR pchBuf, DWORD cchToWrite);
 static char_u tgetch(void);
 static void create_conin(void);
 static int s_cursor_visible = TRUE;
@@ -924,7 +924,6 @@ WaitForChar(long msec)
     DWORD	    cRecords;
     char_u	    ch, ch2;
 
-
     if (msec > 0)
 	dwEndTime = GetTickCount() + msec;
 
@@ -1120,6 +1119,8 @@ mch_inchar(
     }
     else    /* time == -1, wait forever */
     {
+	mch_set_winsize_now();	/* Allow winsize changes from now on */
+
 #ifdef FEAT_AUTOCMD
 	/* If there is no character available within 2 seconds (default),
 	 * write the autoscript file to disk */
@@ -1534,6 +1535,13 @@ RestoreConsoleBuffer(
     if (cb == NULL || !cb->IsValid)
 	return FALSE;
 
+    /*
+     * Before restoring the buffer contents, clear the current buffer, and
+     * restore the cursor position and window information.  Doing this now
+     * prevents old buffer contents from "flashing" onto the screen.
+     */
+    ClearConsoleBuffer(cb->Info.wAttributes);
+
     FitConsoleWindow(cb->Info.dwSize, TRUE);
     if (!SetConsoleScreenBufferSize(g_hConOut, cb->Info.dwSize))
 	return FALSE;
@@ -1548,12 +1556,6 @@ RestoreConsoleBuffer(
 	return TRUE;
     }
 
-    /*
-     * Before restoring the buffer contents, clear the current buffer, and
-     * restore the cursor position and window information.  Doing this now
-     * prevents old buffer contents from "flashing" onto the screen.
-     */
-    ClearConsoleBuffer(cb->Info.wAttributes);
     if (!SetConsoleCursorPosition(g_hConOut, cb->Info.dwCursorPosition))
 	return FALSE;
     if (!SetConsoleWindowInfo(g_hConOut, TRUE, &cb->Info.srWindow))
@@ -2460,7 +2462,7 @@ mch_set_shellsize()
     COORD coordScreen;
 
     /* Don't change window size while still starting up */
-    if (suppress_winsize)
+    if (suppress_winsize != 0)
     {
 	suppress_winsize = 2;
 	return;
@@ -2761,7 +2763,12 @@ mch_call_shell(
 
     settmode(TMODE_RAW);	    /* set to raw mode */
 
-    if (x && !(options & SHELL_SILENT))
+    /* Print the return value, unless "vimrun" was used. */
+    if (x != 0 && !(options & SHELL_SILENT) && !emsg_silent
+#if defined(FEAT_GUI_W32)
+		&& ((options & SHELL_DOOUT) || s_dont_use_vimrun)
+#endif
+	    )
     {
 	smsg(_("shell returned %d"), x);
 	msg_putchar('\n');
@@ -3399,22 +3406,26 @@ cursor_visible(
 
 /*
  * write `cchToWrite' characters in `pchBuf' to the screen
+ * Returns the number of characters actually written (at least one).
  */
     static BOOL
 write_chars(
     LPCSTR pchBuf,
-    DWORD  cchToWrite,
-    DWORD* pcchWritten)
+    DWORD  cchToWrite)
 {
-    BOOL f;
     COORD coord = g_coord;
+    DWORD written;
 
     FillConsoleOutputAttribute(g_hConOut, g_attrCurrent, cchToWrite,
-			       coord, pcchWritten);
-    f = WriteConsoleOutputCharacter(g_hConOut, pchBuf, cchToWrite,
-				    coord, pcchWritten);
+				coord, &written);
+    /* When writing fails or didn't write a single character, pretend one
+     * character was written, otherwise we get stuck. */
+    if (WriteConsoleOutputCharacter(g_hConOut, pchBuf, cchToWrite,
+				coord, &written) == 0
+	    || written == 0)
+	written = 1;
 
-    g_coord.X += (SHORT) *pcchWritten;
+    g_coord.X += (SHORT) written;
 
     while (g_coord.X > g_srScrollRegion.Right)
     {
@@ -3425,7 +3436,7 @@ write_chars(
 
     gotoxy(g_coord.X + 1, g_coord.Y + 1);
 
-    return f;
+    return written;
 }
 
 
@@ -3451,33 +3462,30 @@ mch_write(
     {
 	/* optimization: use one single write_chars for runs of text,
 	 * rather than once per character  It ain't curses, but it helps. */
-
 	DWORD  prefix = strcspn(s, "\n\r\b\a\033");
 
 	if (p_wd)
 	{
 	    WaitForChar(p_wd);
-	    if (prefix)
+	    if (prefix != 0)
 		prefix = 1;
 	}
 
-	if (prefix)
+	if (prefix != 0)
 	{
 	    DWORD nWritten;
 
-	    if (write_chars(s, prefix, &nWritten))
-	    {
+	    nWritten = write_chars(s, prefix);
 #ifdef MCH_WRITE_DUMP
-		if (fdDump)
-		{
-		    fputc('>', fdDump);
-		    fwrite(s, sizeof(char_u), nWritten, fdDump);
-		    fputs("<\n", fdDump);
-		}
-#endif
-		len -= (nWritten - 1);
-		s += nWritten;
+	    if (fdDump)
+	    {
+		fputc('>', fdDump);
+		fwrite(s, sizeof(char_u), nWritten, fdDump);
+		fputs("<\n", fdDump);
 	    }
+#endif
+	    len -= (nWritten - 1);
+	    s += nWritten;
 	}
 	else if (s[0] == '\n')
 	{
@@ -3695,20 +3703,18 @@ mch_write(
 	    /* Write a single character */
 	    DWORD nWritten;
 
-	    if (write_chars(s, 1, &nWritten))
-	    {
+	    nWritten = write_chars(s, 1);
 #ifdef MCH_WRITE_DUMP
-		if (fdDump)
-		{
-		    fputc('>', fdDump);
-		    fwrite(s, sizeof(char_u), nWritten, fdDump);
-		    fputs("<\n", fdDump);
-		}
+	    if (fdDump)
+	    {
+		fputc('>', fdDump);
+		fwrite(s, sizeof(char_u), nWritten, fdDump);
+		fputs("<\n", fdDump);
+	    }
 #endif
 
-		len -= (nWritten - 1);
-		s += nWritten;
-	    }
+	    len -= (nWritten - 1);
+	    s += nWritten;
 	}
     }
 
@@ -4136,5 +4142,3 @@ clip_mch_set_selection()
 }
 
 #endif /* FEAT_CLIPBOARD */
-
-

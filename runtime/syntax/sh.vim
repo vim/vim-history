@@ -2,18 +2,32 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	September 19, 2000
-" Version: 1.19
+" Last Change:	March 2, 2001
+" Version: 20
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
 " b:is_bash                    if defined, enhance with bash syntax
+"   is_kornshell               if neither b:is_kornshell or b:is_bash is
+"                                 defined, then if is_kornshell is set
+"                                 b:is_kornshell is default
+"   is_bash                    if none of the previous three variables are
+"                                 defined, then if is_bash is set b:is_bash is default
 "
 " This file includes many ideas from Éric Brunet (eric.brunet@ens.fr)
 
 " Quit when a syntax file was already loaded
 if exists("b:current_syntax")
   finish
+endif
+
+" figure out whether I'm bash or kornshell by default
+if !exists("b:is_kornshell") && !exists("b:is_bash") && !exists("b:is_sh")
+  if exists("is_kornshell")
+    let b:is_kornshell= 1
+  elseif exists("is_bash")
+    let b:is_bash= 1
+  endif
 endif
 
 " sh syntax is case sensitive

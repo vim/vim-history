@@ -238,7 +238,7 @@ int workshop_get_positions(void *frame,
  * sign size. (Use XmStringExtent on character "A" to get the height.)
  */
 
-int workshop_get_font_height();
+int workshop_get_font_height(void);
 
 /* The following function requests that you register the given
  * hotkey as a keyboard accelerator for all frames. Whenever the

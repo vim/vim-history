@@ -153,7 +153,7 @@ msg_strtrunc(s)
 							    && !exmode_active)
     {
 	len = vim_strsize(s);
-	room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 2;
+	room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 1;
 	if (len > room)
 	{
 #ifdef FEAT_MBYTE
@@ -161,6 +161,9 @@ msg_strtrunc(s)
 		/* may have up to 18 bytes per cell (6 per char, up to two
 		 * composing chars) */
 		buf = alloc((room + 2) * 18);
+	    else if (enc_dbcs == DBCS_JPNU)
+		/* may have up to 2 bytes per cell for euc-jp */
+		buf = alloc((room + 2) * 2);
 	    else
 #endif
 		buf = alloc(room + 2);
@@ -198,28 +201,33 @@ msg_strtrunc(s)
 		    /* For DBCS going backwards in a string is slow, but
 		     * computing the cell width isn't too slow: go forward
 		     * until the rest fits. */
-		    while (len + vim_strsize(s + i) >= room)
-			++i;
+		    n = vim_strsize(s + i);
+		    while (len + n > room)
+		    {
+			n -= ptr2cells(s + i);
+			i += (*mb_ptr2len_check)(s + i);
+		    }
 		}
 		else if (enc_utf8)
 		{
 		    /* For UTF-8 we can go backwards easily. */
-		    for (i = STRLEN(s) - 1; len < room; --i)
+		    i = STRLEN(s);
+		    for (;;)
 		    {
-			i -= (*mb_head_off)(s, s + i);
-			n = ptr2cells(s + i);
-			if (len + n >= room)
+			half = i - (*mb_head_off)(s, s + i - 1) - 1;
+			n = ptr2cells(s + half);
+			if (len + n > room)
 			    break;
 			len += n;
+			i = half;
 		    }
 		}
 		else
 #endif
 		{
-		    for (i = STRLEN(s) - 1; len < room; --i)
-			len += ptr2cells(s + i);
-		    if (len > room)
-			++i;
+		    for (i = STRLEN(s); len + (n = ptr2cells(s + i - 1)) <= room;
+									  --i)
+			len += n;
 		}
 		STRCAT(buf, s + i);
 	    }
@@ -1009,7 +1017,7 @@ msg_outtrans_len_attr(str, len, attr)
 	    }
 	    else
 	    {
-		msg_puts_attr(transchar(c), attr == 0 ? hl_attr(HLF_AT) : attr);
+		msg_puts_attr(transchar(c), attr == 0 ? hl_attr(HLF_8) : attr);
 		retval += char2cells(c);
 	    }
 	    len -= n - 1;
@@ -1020,7 +1028,7 @@ msg_outtrans_len_attr(str, len, attr)
 	{
 	    s = transchar(*str);
 	    if (attr == 0 && s[1] != NUL)
-		msg_puts_attr(s, hl_attr(HLF_AT));	/* unprintable char */
+		msg_puts_attr(s, hl_attr(HLF_8));	/* unprintable char */
 	    else
 		msg_puts_attr(s, attr);
 	    retval += ptr2cells(str);
@@ -1130,7 +1138,7 @@ str2special(sp, from)
 # ifdef FEAT_GUI
 	    else if (gui.in_use && str[n] == CSI
 		    && str[n + 1] == KS_EXTRA
-		    && str[n + 2] == KE_CSI)
+		    && str[n + 2] == (int)KE_CSI)
 	    {
 		buf[m++] = CSI;
 		n += 2;
@@ -1267,7 +1275,7 @@ msg_prt_line(s)
 		{
 		    c = lcs_tab1;
 		    c_extra = lcs_tab2;
-		    attr = hl_attr(HLF_AT);
+		    attr = hl_attr(HLF_8);
 		}
 	    }
 	    else if (c == NUL && curwin->w_p_list && lcs_eol)
@@ -1289,7 +1297,7 @@ msg_prt_line(s)
 	    else if (c == ' ' && trail != NULL && s > trail)
 	    {
 		c = lcs_trail;
-		attr = hl_attr(HLF_AT);
+		attr = hl_attr(HLF_8);
 	    }
 	}
 
@@ -1393,7 +1401,7 @@ msg_puts_long_len_attr(longstr, len, attr)
     {
 	slen = (room - 3) / 2;
 	msg_outtrans_len_attr(longstr, slen, attr);
-	msg_puts_attr((char_u *)"...", hl_attr(HLF_AT));
+	msg_puts_attr((char_u *)"...", hl_attr(HLF_8));
     }
     msg_outtrans_len_attr(longstr + len - slen, slen, attr);
 }
@@ -1781,12 +1789,7 @@ msg_check_screen()
     void
 msg_clr_eos()
 {
-    if (!msg_check_screen()
-#ifdef WIN32
-	    || !termcap_active
-#endif
-	    || (swapping_screen() && !termcap_active)
-						)
+    if (msg_use_printf())
     {
 	if (full_screen)	/* only when termcap codes are valid */
 	{

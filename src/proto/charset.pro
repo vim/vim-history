@@ -15,6 +15,7 @@ int linetabsize __ARGS((char_u *s));
 int win_linetabsize __ARGS((win_t *wp, char_u *s));
 int vim_isIDc __ARGS((int c));
 int vim_iswordc __ARGS((int c));
+int vim_iswordp __ARGS((char_u *p));
 int vim_iswordc_buf __ARGS((int c, buf_t *buf));
 int vim_isfilec __ARGS((int c));
 int vim_isprintc __ARGS((int c));

@@ -380,6 +380,8 @@ static struct vimoption options[] =
     {"balloondelay","bdlay",P_NUM|P_VI_DEF,
 			    (char_u *)&p_bdlay, PV_NONE,
 			    {(char_u *)600L, (char_u *)0L}},
+#endif
+#ifdef FEAT_SUN_WORKSHOP
     {"ballooneval", "beval",P_BOOL|P_VI_DEF|P_NO_MKRC,
 			    (char_u *)&p_beval, PV_NONE,
 			    {(char_u*)FALSE, (char_u *)0L}},
@@ -942,7 +944,7 @@ static struct vimoption options[] =
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"highlight",   "hl",   P_STRING|P_VI_DEF|P_RCLR|P_COMMA|P_NODUP,
 			    (char_u *)&p_hl, PV_NONE,
-			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,c:FillColumn,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn",
+			    {(char_u *)"8:SpecialKey,@:NonText,d:Directory,e:ErrorMsg,i:IncSearch,l:Search,m:MoreMsg,M:ModeMsg,n:LineNr,r:Question,s:StatusLine,S:StatusLineNC,c:VertSplit,t:Title,v:Visual,V:VisualNOS,w:WarningMsg,W:WildMenu,f:Folded,F:FoldColumn",
 				(char_u *)0L}},
     {"history",	    "hi",   P_NUM|P_VIM,
 			    (char_u *)&p_hi, PV_NONE,
@@ -1184,7 +1186,7 @@ static struct vimoption options[] =
 			    (char_u *)24L,
 #endif
 					    (char_u *)0L}},
-    {"linespace",   "lsp",  P_NUM|P_NODEFAULT|P_VIM|P_RCLR,
+    {"linespace",   "lsp",  P_NUM|P_VIM|P_RCLR,
 #ifdef FEAT_GUI
 			    (char_u *)&p_linespace, PV_NONE,
 #else
@@ -1505,7 +1507,7 @@ static struct vimoption options[] =
 			    (char_u *)&p_sh, PV_NONE,
 			    {
 #ifdef VMS
-			    (char_u *)"",
+			    (char_u *)"-",
 #else
 # if defined(MSDOS)
 			    (char_u *)"command",
@@ -2869,42 +2871,6 @@ do_set(arg, opt_flags)
 		    key = find_key_option(arg);
 	    }
 
-	    if (opt_idx == -1 && key == 0)	/* found a mismatch: skip */
-	    {
-		errmsg = (char_u *)N_("Unknown option");
-		goto skip;
-	    }
-
-	    if (opt_idx >= 0)
-	    {
-		if (options[opt_idx].var == NULL)   /* hidden option: skip */
-		    goto skip;
-
-		flags = options[opt_idx].flags;
-		varp = get_varp_scope(&(options[opt_idx]), opt_flags);
-	    }
-	    else
-	    {
-		flags = P_STRING;
-		if (key < 0)
-		{
-		    key_name[0] = KEY2TERMCAP0(key);
-		    key_name[1] = KEY2TERMCAP1(key);
-		}
-		else
-		{
-		    key_name[0] = KS_KEY;
-		    key_name[1] = (key & 0xff);
-		}
-	    }
-
-	    /* Disallow changing some options from modelines */
-	    if ((opt_flags & OPT_MODELINE) && (flags & P_SECURE))
-	    {
-		errmsg = (char_u *)_("Not allowed in a modeline");
-		goto skip;
-	    }
-
 	    /* remember character after option name */
 	    afterchar = arg[len];
 
@@ -2933,8 +2899,52 @@ do_set(arg, opt_flags)
 		    ++len;
 		}
 	    }
-
 	    nextchar = arg[len];
+
+	    if (opt_idx == -1 && key == 0)	/* found a mismatch: skip */
+	    {
+		errmsg = (char_u *)N_("Unknown option");
+		goto skip;
+	    }
+
+	    if (opt_idx >= 0)
+	    {
+		if (options[opt_idx].var == NULL)   /* hidden option: skip */
+		{
+		    /* Only give an error message when requesting the value of
+		     * a hidden option, ignore setting it. */
+		    if (vim_strchr((char_u *)"=:!&", nextchar) == NULL
+			    && (!(options[opt_idx].flags & P_BOOL)
+				|| nextchar == '?'))
+			errmsg = (char_u *)N_("Option not supported");
+		    goto skip;
+		}
+
+		flags = options[opt_idx].flags;
+		varp = get_varp_scope(&(options[opt_idx]), opt_flags);
+	    }
+	    else
+	    {
+		flags = P_STRING;
+		if (key < 0)
+		{
+		    key_name[0] = KEY2TERMCAP0(key);
+		    key_name[1] = KEY2TERMCAP1(key);
+		}
+		else
+		{
+		    key_name[0] = KS_KEY;
+		    key_name[1] = (key & 0xff);
+		}
+	    }
+
+	    /* Disallow changing some options from modelines */
+	    if ((opt_flags & OPT_MODELINE) && (flags & P_SECURE))
+	    {
+		errmsg = (char_u *)_("Not allowed in a modeline");
+		goto skip;
+	    }
+
 	    if (vim_strchr((char_u *)"?=:!&", nextchar) != NULL)
 	    {
 		arg += len;
@@ -4151,14 +4161,23 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		errmsg = mb_init();
 	}
 
-	/* When 'termencoding' is not empty and 'encoding' changes or when
-	 * 'termencoding' changes, need to setup for keyboard input and
-	 * display output conversion. */
-	if (errmsg == NULL
-		&& ((varp == &p_enc && *p_tenc != NUL) || varp == &p_tenc))
+	if (errmsg == NULL)
 	{
-	    convert_setup(&input_conv, p_tenc, p_enc);
-	    convert_setup(&output_conv, p_enc, p_tenc);
+#ifdef FEAT_KEYMAP
+	    /* When 'keymap' is used and 'encoding' changes, reload the keymap
+	     * (with another encoding). */
+	    if (varp == &p_enc && *curbuf->b_p_keymap != NUL)
+		(void)keymap_init();
+#endif
+
+	    /* When 'termencoding' is not empty and 'encoding' changes or when
+	     * 'termencoding' changes, need to setup for keyboard input and
+	     * display output conversion. */
+	    if (((varp == &p_enc && *p_tenc != NUL) || varp == &p_tenc))
+	    {
+		convert_setup(&input_conv, p_tenc, p_enc);
+		convert_setup(&output_conv, p_enc, p_tenc);
+	    }
 	}
     }
 #endif
@@ -5287,6 +5306,16 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	    T_XS = empty_option;
 	p_wiv = (*T_XS != NUL);
     }
+
+#ifdef FEAT_SUN_WORKSHOP
+    else if ((int *)varp == &p_beval)
+    {
+	if (p_beval == TRUE)
+	    gui_mch_enable_beval_area(balloonEval);
+	else
+	    gui_mch_disable_beval_area(balloonEval);
+    }
+#endif
 
 #ifdef FEAT_FKMAP
     else if ((int *)varp == &p_altkeymap)

@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2001 Feb 11
+" Last Change:	2001 Mar 04
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -37,7 +37,7 @@ menutrans E&xit<Tab>:qa			&Salir<Tab>:qa
 menutrans &Edit				&Editar
 menutrans &Undo<Tab>u			&Deshacer<Tab>u
 menutrans &Redo<Tab>^R			&Rehacer<Tab>^R
-menutrans Repea&t<Tab>\.                Repe&tir<Tab>\.
+menutrans Rep&eat<Tab>\.                Repe&tir<Tab>\.
 menutrans Cu&t<Tab>"*x			Cor&tar<Tab>"*x
 menutrans &Copy<Tab>"*y			&Copiar<Tab>"*y
 menutrans &Paste<Tab>"*p		&Pegar<Tab>"*p
@@ -45,7 +45,7 @@ menutrans Put\ &Before<Tab>[p		Poner\ &antes<Tab>[p
 menutrans Put\ &After<Tab>]p		Poner\ &después<Tab>]p
 menutrans &Select\ all<Tab>ggVG		&Seleccionar\ todo<Tab>ggVG
 menutrans &Find\.\.\.			&Buscar\.\.\.
-menutrans Find\ and\ R&eplace\.\.\.     Buscar\ y\ R&emplazar\.\.\.
+menutrans Find\ and\ Rep&lace\.\.\.     Buscar\ y\ R&emplazar\.\.\.
 menutrans Options\.\.\.			Opciones\.\.\.
 
 " Programming menu
@@ -76,7 +76,7 @@ menutrans &Window			&Ventana
 menutrans &New<Tab>^Wn			&Nueva<Tab>^Wn
 menutrans S&plit<Tab>^Ws		&Dividir<Tab>^Ws
 menutrans Sp&lit\ To\ #<Tab>^W^^	D&ividir\ a\ #<Tab>^W^^
-menutrans S&plit\ Vertically<Tab>^Wv    Dividir\ &verticalmente<Tab>^Wv
+menutrans Split\ &Vertically<Tab>^Wv    Dividir\ &verticalmente<Tab>^Wv
 menutrans &Close<Tab>^Wc		&Cerrar<Tab>^Wc
 menutrans Close\ &Other(s)<Tab>^Wo	Cerrar\ &otra(s)<Tab>^Wo
 menutrans Ne&xt<Tab>^Ww			&Siguiente<Tab>^Ww
@@ -160,7 +160,7 @@ menutrans Set\ 'filetype'\ too	Activar\ también\ «tipo\ de\ fichero»
 menutrans &Off			&Desactivar
 menutrans &Manual		&Manual
 menutrans A&utomatic		A&utomática
-menutrans &on\ (this\ file)	&Activar\ (en\ este\ fichero)
+menutrans o&n\ (this\ file)	&Activar\ (en\ este\ fichero)
 menutrans o&ff\ (this\ file)	D&esactivar (en\ este\ fichero)
 menutrans Co&lor\ test		&Prueba\ del\ color
 menutrans &Highlight\ test	Prueba\ del\ &realzado

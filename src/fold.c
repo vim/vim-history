@@ -45,6 +45,7 @@ typedef struct
 /* static functions {{{2 */
 static int checkCloseRec __ARGS((garray_t *gap, linenr_t lnum, int level));
 static int foldFind __ARGS((garray_t *gap, linenr_t lnum, fold_t **fpp));
+static int foldLevelWin __ARGS((win_t *wp, linenr_t lnum));
 static void checkupdate __ARGS((win_t *wp));
 static void setFoldRepeat __ARGS((linenr_t lnum, long count, int open));
 static linenr_t setManualFold __ARGS((linenr_t lnum, int opening, int recurse, int *donep));
@@ -241,11 +242,6 @@ hasFoldingWin(win, lnum, firstp, lastp, cache, levelp)
 foldLevel(lnum)
     linenr_t	lnum;
 {
-    linenr_t	lnum_rel = lnum;
-    fold_t	*fp;
-    int		level =  0;
-    garray_t	*gap;
-
     /* While updating the folds lines between invalid_top and invalid_bot have
      * an undefined fold level.  Otherwise update the folds first. */
     if (invalid_top == (linenr_t)0)
@@ -257,19 +253,7 @@ foldLevel(lnum)
     if (!hasAnyFolding(curwin))
 	return 0;
 
-    /* Recursively search for a fold that contains "lnum". */
-    gap = &curwin->w_folds;
-    for (;;)
-    {
-	if (!foldFind(gap, lnum_rel, &fp))
-	    break;
-	/* Check nested folds.  Line number is relative to containing fold. */
-	gap = &fp->fd_nested;
-	lnum_rel -= fp->fd_top;
-	++level;
-    }
-
-    return level;
+    return foldLevelWin(curwin, lnum);
 }
 
 /* lineFolded()	{{{2 */
@@ -395,11 +379,12 @@ closeFoldRecurse(lnum)
  * Used for "zo", "zO", "zc" and "zC" in Visual mode.
  */
     void
-opFoldRange(first, last, opening, recurse)
+opFoldRange(first, last, opening, recurse, had_visual)
     linenr_t	first;
     linenr_t	last;
     int		opening;	/* TRUE to open, FALSE to close */
     int		recurse;	/* TRUE to do it recursively */
+    int		had_visual;	/* TRUE when Visual selection used */
 {
     int		done = DONE_NOTHING;	/* avoid error messages */
     linenr_t	lnum;
@@ -419,7 +404,14 @@ opFoldRange(first, last, opening, recurse)
 	    (void)hasFolding(lnum, NULL, &lnum_next);
     }
     if (done == DONE_NOTHING)
+    {
 	EMSG(_(e_nofold));
+#ifdef FEAT_VISUAL
+	/* Force a redraw to remove the Visual highlighting. */
+	if (had_visual)
+	    redraw_curbuf_later(INVERTED);
+#endif
+    }
 }
 
 /* openFold() {{{2 */
@@ -666,10 +658,11 @@ foldCreate(start, end)
  * When "recursive" is TRUE delete recursively.
  */
     void
-deleteFold(start, end, recursive)
+deleteFold(start, end, recursive, had_visual)
     linenr_t	start;
     linenr_t	end;
     int		recursive;
+    int		had_visual;	/* TRUE when Visual selection used */
 {
     garray_t	*gap;
     fold_t	*fp;
@@ -739,7 +732,14 @@ deleteFold(start, end, recursive)
 	}
     }
     if (!did_one)
+    {
 	EMSG(_(e_nofold));
+#ifdef FEAT_VISUAL
+	/* Force a redraw to remove the Visual highlighting. */
+	if (had_visual)
+	    redraw_curbuf_later(INVERTED);
+#endif
+    }
     if (last_lnum > 0)
 	changed_lines(first_lnum, (colnr_t)0, last_lnum, 0L);
 }
@@ -1106,6 +1106,35 @@ foldFind(gap, lnum, fpp)
     return FALSE;
 }
 
+/* foldLevelWin() {{{2 */
+/*
+ * Return fold level at line number "lnum" in window "wp".
+ */
+    static int
+foldLevelWin(wp, lnum)
+    win_t	*wp;
+    linenr_t	lnum;
+{
+    fold_t	*fp;
+    linenr_t	lnum_rel = lnum;
+    int		level =  0;
+    garray_t	*gap;
+
+    /* Recursively search for a fold that contains "lnum". */
+    gap = &wp->w_folds;
+    for (;;)
+    {
+	if (!foldFind(gap, lnum_rel, &fp))
+	    break;
+	/* Check nested folds.  Line number is relative to containing fold. */
+	gap = &fp->fd_nested;
+	lnum_rel -= fp->fd_top;
+	++level;
+    }
+
+    return level;
+}
+
 /* checkupdate() {{{2 */
 /*
  * Check if the folds in window "wp" are invalid and update them if needed.
@@ -1173,6 +1202,7 @@ setManualFold(lnum, opening, recurse, donep)
     garray_t	*gap;
     linenr_t	next = MAXLNUM;
     linenr_t	off = 0;
+    int		done = 0;
 
     checkupdate(curwin);
 
@@ -1213,9 +1243,11 @@ setManualFold(lnum, opening, recurse, donep)
 	/* Simple case: Close recursively means closing the topmost fold. */
 	if (!opening && recurse)
 	{
-	    if (fp->fd_flags != FD_CLOSED && donep != NULL)
-		*donep |= DONE_ACTION;
-	    fp->fd_flags = FD_CLOSED;
+	    if (fp->fd_flags != FD_CLOSED)
+	    {
+		done |= DONE_ACTION;
+		fp->fd_flags = FD_CLOSED;
+	    }
 	    break;
 	}
 
@@ -1225,8 +1257,7 @@ setManualFold(lnum, opening, recurse, donep)
 	    if (opening)
 	    {
 		fp->fd_flags = FD_OPEN;
-		if (donep != NULL)
-		    *donep |= DONE_ACTION;
+		done |= DONE_ACTION;
 		if (recurse)
 		    foldOpenNested(fp);
 	    }
@@ -1246,16 +1277,18 @@ setManualFold(lnum, opening, recurse, donep)
 	if (!opening && found != NULL)
 	{
 	    found->fd_flags = FD_CLOSED;
-	    if (donep != NULL)
-		*donep |= DONE_ACTION;
+	    done |= DONE_ACTION;
 	}
 	curwin->w_fold_manual = TRUE;
-	changed_window_setting();
-	if (donep != NULL)
-	    *donep |= DONE_FOLD;
+	if (done & DONE_ACTION)
+	    changed_window_setting();
+	done |= DONE_FOLD;
     }
     else if (donep == NULL)
 	EMSG(_(e_nofold));
+
+    if (donep != NULL)
+	*donep |= done;
 
     return next;
 }
@@ -1843,13 +1876,11 @@ foldUpdateIEMS(wp, top, bot)
     linenr_t	top;
     linenr_t	bot;
 {
-    linenr_t	lnum;
     linenr_t	start;
     linenr_t	end;
     fline_t	fline;
     void	(*getlevel)__ARGS((fline_t *));
     int		level;
-    garray_t	*gap;
     fold_t	*fp;
 
     /* Avoid problems when being called recursively. */
@@ -1895,24 +1926,14 @@ foldUpdateIEMS(wp, top, bot)
 	 * no marker at the top. */
 	if (top > 1)
 	{
-	    /*
-	     * Recursively search to get the fold level at top - 1.
-	     */
-	    gap = &wp->w_folds;
-	    lnum = top - 1;
-	    level = 0;
-	    for (;;)
-	    {
-		if (!foldFind(gap, lnum, &fp))
-		    break;
-		gap = &fp->fd_nested;
-		lnum -= fp->fd_top;	/* lnum is relative to start of fold */
-		++level;
-	    }
+	    /* Get the fold level at top - 1. */
+	    level = foldLevelWin(wp, top - 1);
+
 	    /* The fold may end just above the top, check for that. */
 	    fline.lnum = top - 1;
 	    fline.lvl = level;
 	    getlevel(&fline);
+
 	    /* If a fold started here, we already had the level, if it stops
 	     * here, we need to use lvl_next. */
 	    if (fline.lvl > level)
@@ -1960,6 +1981,10 @@ foldUpdateIEMS(wp, top, bot)
 	end = start;
     while (!got_int)
     {
+	/* Always stop at the end of the file ("end" can be past the end of
+	 * the file). */
+	if (fline.lnum > wp->w_buffer->b_ml.ml_line_count)
+	    break;
 	if (fline.lnum > end)
 	{
 	    /* For "marker", "expr"  and "syntax"  methods: If a change caused
@@ -1976,6 +2001,12 @@ foldUpdateIEMS(wp, top, bot)
 			&& foldFind(&wp->w_folds, fline.lnum, &fp)
 			&& fp->fd_top < fline.lnum))
 		end = fp->fd_top + fp->fd_len - 1;
+	    else if (getlevel == foldlevelSyntax
+		    && foldLevelWin(wp, fline.lnum) != fline.lvl)
+		/* For "syntax" method: Compare the foldlevel that the syntax
+		 * tells us to the foldlevel from the existing folds.  If they
+		 * don't match continue updating folds. */
+		end = fline.lnum;
 	    else
 		break;
 	}

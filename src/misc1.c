@@ -229,8 +229,8 @@ cin_is_cinword(line)
 	for (cinw = curbuf->b_p_cinw; *cinw; )
 	{
 	    len = copy_option_part(&cinw, cinw_buf, cinw_len, ",");
-	    if (STRNCMP(line, cinw_buf, len) == 0 &&
-		     (!vim_iswordc(line[len]) || !vim_iswordc(line[len - 1])))
+	    if (STRNCMP(line, cinw_buf, len) == 0
+		    && (!vim_iswordc(line[len]) || !vim_iswordc(line[len - 1])))
 	    {
 		retval = TRUE;
 		break;
@@ -1009,13 +1009,6 @@ open_line(dir, del_spaces, old_indent)
 	}
 
 	/*
-	 * Get the cursor to the start of the line, so that 'curwin->w_wrow'
-	 * gets set to the right physical line number for the stuff that
-	 * follows...
-	 */
-	curwin->w_cursor.col = 0;
-
-	/*
 	 * Put the cursor on the new line.  Careful: the scrollup() above may
 	 * have moved w_cursor, we must use old_cursor.
 	 */
@@ -1023,6 +1016,9 @@ open_line(dir, del_spaces, old_indent)
     }
 
     curwin->w_cursor.col = newcol;
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_cursor.coladd = 0;
+#endif
 
 #if defined(FEAT_LISP) || defined(FEAT_CINDENT)
     /*
@@ -1098,6 +1094,9 @@ open_line(dir, del_spaces, old_indent)
 
 	/* Insert new stuff into line again */
 	curwin->w_cursor.col = 0;
+#ifdef FEAT_VIRTUALEDIT
+	curwin->w_cursor.coladd = 0;
+#endif
 	vr_virtcol = MAXCOL;
 	ins_bytes(p_extra);	/* will call changed_bytes() */
 	next_line = NULL;
@@ -1593,6 +1592,10 @@ ins_char_bytes(buf, newlen)
 	i = col;
 	while (oldp[i] != NUL)
 	{
+#ifdef FEAT_MBYTE
+	    int byte_length, j;
+#endif
+
 	    size = chartabsize(oldp + i, vcol);
 	    vcol += size;
 	    if (vcol > new_vcol)
@@ -1605,9 +1608,21 @@ ins_char_bytes(buf, newlen)
 		    vr_virtoffset = 1;
 		break;
 	    }
+#ifdef FEAT_MBYTE
+	    /* Push (multibyte) character to replace stack (last byte first) */
+	    byte_length = (*mb_ptr2len_check)(oldp + i);
+	    for (j = byte_length - 1; j >= 0; --j)
+		replace_push(oldp[i + j]);
+	    i += byte_length;
+	    extra -= byte_length;
+#else
 	    replace_push(oldp[i++]);
 	    extra--;	/* Goes negative when replacing more than one char */
+#endif
 	}
+#ifdef FEAT_MBYTE
+	oldlen = i - col;
+#endif
 	curwin->w_p_list = old_list;
     }
 

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0w.  Last change: 2001 Feb 24
+*todo.txt*      For Vim version 6.0x.  Last change: 2001 Mar 11
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -28,15 +28,6 @@ See |develop.txt| for development plans.
 
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
-
-Define mch_mkdir for Amiga and a few other systems.
-For Win32 a header file should be included for _mkdir().
-
-Win32 GUI: When editing closed folds, dragging the scrollbar and then clicking
-on a scrollbar arrow causes a jump.
-
-Backtick expansion in expressions and ":let"?  Or use {}, because it's hard to
-see the difference between a backtick and a single quote. (Vince Negri)
 
 The source archive is over the 1.4M floppy limit.  How to avoid this?
 
@@ -72,16 +63,8 @@ J.  User Friendlier
 
 B. UTF-8 support:
     See ASCII graphics in multibyte.c.
--   Visual-block delete doesn't work properly (Marinichev)
--   Overstrike mode for the cmdline replaces only first byte of multibyte.
--   out_char() doesn't handle mbyte, check callers.
--   cls() should work for UTF-8 chars.  Use class table function from Markus
-    Kuhn: ~/info/utf8-classtab or charclass.c from xterm patch.  With
-    modification from Markus.
--   When wrapping words, allow splitting at each multibyte character, not only
-    at a space (with an option). (Nishioka)
--   Handle mbyte in clip_yank_non_visual_selection().
--   Check MBYTE code in regexp.c to add UTF-8 support.  Make "/\w" work.
+-   Check use of mb_head_off(): can mb_prevptr() be used?
+-   Check MBYTE code in regexp.c to add UTF-8 support.
 -   Substitute doesn't work well on multibyte characters:
     ":s/\(.\)/\1\1/g" replaces each byte instead of each multi-byte.
     Requires regexp code that sees a multibyte character as one char.
@@ -103,6 +86,7 @@ B. UTF-8 support:
     For Motif: See message from Harrison.
 
 Later:
+-   When is a multi-byte character a keyword character and when punctuation?
 -   Find some way to automatically select the right GUI font or fontset,
     depending on the default value of 'encoding'.
     For Windows, the charset_pairs[] table could be used.  But how do we know
@@ -113,6 +97,10 @@ Later:
     Support CTRL-K _{mnemonic}_
 -   Do we need the reverse of 'keymap', like 'langmap' but with files and
     multi-byte characters?
+-   When breaking a line, take properties of multi-byte characters into
+    account.  The "linebreak" program from Bruno Haible can do it:
+    ftp://ftp.ilog.fr/pub/Users/haible/gnu/linebreak-0.1.tar.gz
+    But it's very complicated...
 
 
 D. Vertical window split:
@@ -561,8 +549,10 @@ GTK+ GUI known bugs:
 
 
 Win32 GUI known bugs:
-9   dosinst.c: don't use autoexec.bat for Windows NT, use registry.
-    Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
+8   Win32 GUI: With maximized window, ":set go-=r" doesn't use the space that
+    comes available. (Poucet)  Looks like it works OK on Win 98 but doesn't
+    work on Win NT 4.0.
+9   Check dosinst.c with Vim in "Program Files" (long filename).  Does it use
     the short filename instead and does the path compare work?
 8   When ativating window with mouse click, don't move cursor to mouse click.
     Catch WM_MOUSEACTIVATE. (Luevelsmeyer)
@@ -833,6 +823,7 @@ Amiga:
 
 
 Macintosh:
+8   Define vim_mkdir() for Macintosh.
 9   Explorer.vim isn't working properly.
 9   When DiskLock is running, using a swap file causes a crash.  Appears to be
     a problem with writing a file that starts with a dot. (Giacalone)
@@ -1050,6 +1041,8 @@ Problems that will (probably) not be solved:
 -   X windows: When $DISPLAY points to a X server where there is no access
     permission, trying to connect to the X server causes an error message.
     XtOpenDisplay() prints this directly, there is no way to avoid it.
+-   X windows: Setting 'guifontset' to an illegal value sometimes crashes Vim.
+    This is caused by a fault in a X library function, can't be solved in Vim.
 -   Win32: All files created on the day of switching from winter to summer
     time cause "changed since editing started" messages.  It goes away when
     the file is written again the next day, or the timezone is adjusted.
@@ -1131,6 +1124,8 @@ Documentation:
 Help:
 -   First try using the ":help" argument literally, before using it as a
     pattern.  And then match it as part of a tag.
+-   When a help item has multiple matches make it possible to use ":tn" to go
+    to the other matches.
 -   Use GNU Texinfo for the help files somehow?  Use Info format files?
     At least the other way around: Use Vim to view (and edit) .info files.
 -   Default mapping for help files: <Tab> to position cursor on next |:tag|.
@@ -2095,8 +2090,6 @@ Visual mode:
 9   With blockwise Visual mode, "A" works different than "I" when there are
     short lines.  Make them work the same way.  Also make it possible to add
     the text to short lines too, with padding where needed.
-8   "p" should replace the Visual area with the contents of a register (swap
-    register contents with Visual text).
 8   What is "R" supposed to do in Visual mode?
 8   Make Visual mode local to the buffer.  Allow changing to another buffer.
     When starting a new Visual selection, remove the Visual selection in any

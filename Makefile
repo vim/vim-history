@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0w
+MINOR = 0x
 
 # CHECKLIST for creating a new version:
 #
@@ -83,7 +83,7 @@ MINOR = 0w
 #   missing include files, fix problems for syntax errors).
 # - With these features: "make depend" (works best with gcc).
 # - "make lint" and check the output (ignore GTK warnings).
-# - Enable the efence library and run "make test".
+# - Enable the efence library in "src/Makefile" and run "make test".
 # - Add remarks for changes to runtime/doc/version6.txt.
 # - In runtime/doc run "make" and "make html" to check for errors.
 # - Check if src/Makefile and src/feature.h don't contain any personal
@@ -708,8 +708,10 @@ EXTRA =		\
 LANGUAGE = \
 		README_lang.txt \
 		src/po/README.txt \
+		src/po/README_mingw.txt \
 		src/po/cleanup.vim \
 		src/po/Makefile \
+		src/po/Make_ming.mak \
 		src/po/*.po \
 		runtime/lang/README.txt \
 		runtime/lang/menu_*.vim \

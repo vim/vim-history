@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0w.  Last change: 2001 Jan 26
+*usr_28.txt*	For Vim version 6.0x.  Last change: 2001 Feb 28
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -79,7 +79,7 @@ You could go to each fold and type "zo".  To do this faster, use this command: >
 	zr
 This will R-educe the folding.  The opposite is: >
 	zm
-This folds M-ore.  You can repate "zr" and "zm" to open and close nested folds
+This folds M-ore.  You can repeat "zr" and "zm" to open and close nested folds
 of several levels.
 
 If you have nested several levels deep, you can open all of them with: >

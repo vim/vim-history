@@ -497,9 +497,9 @@ AC_ARG_ENABLE(workshop,
 AC_MSG_RESULT($enable_workshop)
 if test "$enable_workshop" = "yes"; then
   AC_DEFINE(FEAT_SUN_WORKSHOP)
-  WORKSHOP_SRC="gui_beval.c workshop.c integration.c"
+  WORKSHOP_SRC="workshop.c integration.c"
   AC_SUBST(WORKSHOP_SRC)
-  WORKSHOP_OBJ="objects/gui_beval.o objects/workshop.o objects/integration.o"
+  WORKSHOP_OBJ="objects/workshop.o objects/integration.o"
   AC_SUBST(WORKSHOP_OBJ)
 fi
 

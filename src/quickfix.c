@@ -26,7 +26,7 @@ static void	qf_free __ARGS((int idx));
 static char_u	*qf_types __ARGS((int, int));
 static int	qf_get_fnum __ARGS((char_u *, char_u *));
 static char_u	*qf_push_dir __ARGS((char_u *, struct dir_stack_t **));
-static char_u	*qf_pop_dir __ARGS((/*char_u *, */struct dir_stack_t **));
+static char_u	*qf_pop_dir __ARGS((struct dir_stack_t **));
 static char_u	*qf_guess_filepath __ARGS((char_u *));
 static void	qf_fmt_text __ARGS((char_u *text, char_u *buf, int bufsize));
 static void	qf_clean_dir_stack __ARGS((struct dir_stack_t **));
@@ -152,7 +152,7 @@ qf_init(efile, errorformat)
 			{'t', "."},
 			{'m', ".\\+"},
 			{'r', ".*"},
-			{'p', "[- ]*"}
+			{'p', "[- .]*"}
 		    };
 
     if (efile == NULL)
@@ -498,7 +498,7 @@ restofline:
 			goto error1;
 		}
 		else if (idx == 'X')			/* leave directory */
-		    directory = qf_pop_dir(/* namebuf, */&dir_stack);
+		    directory = qf_pop_dir(&dir_stack);
 	    }
 	    namebuf[0] = NUL;		/* no match found, remove file name */
 	    lnum = 0;			/* don't jump to this line */
@@ -553,7 +553,7 @@ restofline:
 		    if (*namebuf && idx == 'P')
 			qf_push_dir(currfile = namebuf, &file_stack);
 		    else if (idx == 'Q')
-			currfile = qf_pop_dir(/*namebuf, */&file_stack);
+			currfile = qf_pop_dir(&file_stack);
 		    *namebuf = NUL;
 		    if (tail && *tail)
 		    {
@@ -772,15 +772,13 @@ qf_push_dir(dirbuf, stackptr)
  * stack is empty
  */
     static char_u *
-qf_pop_dir(/*dirbuf, */stackptr)
-    /*char_u		*dirbuf;*/
+qf_pop_dir(stackptr)
     struct dir_stack_t	**stackptr;
 {
     struct dir_stack_t  *ds_ptr;
 
     /* TODO: Should we check if dirbuf is the directory on top of the stack?
-     * What to do if it isn't?
-     */
+     * What to do if it isn't? */
 
     /* pop top element and free it */
     if (*stackptr != NULL)
@@ -900,6 +898,7 @@ qf_jump(dir, errornr, forceit)
     linenr_t	    old_lnum;
 #ifdef FEAT_WINDOWS
     int		    opened_window = FALSE;
+    win_t	    *win;
 #endif
     int		    print_message = TRUE;
     int		    len;
@@ -989,12 +988,49 @@ qf_jump(dir, errornr, forceit)
 
 #ifdef FEAT_WINDOWS
     /*
+     * Put the cursor on the current error in the quickfix window, so that
+     * it's viewable.
+     */
+    for (win = firstwin; win != NULL; win = win->w_next)
+	if (bt_quickfix(win->w_buffer))
+	    break;
+    if (win != NULL
+	    && qf_index <= win->w_buffer->b_ml.ml_line_count
+	    && win->w_cursor.lnum != qf_index)
+    {
+	win_t	*old_curwin = curwin;
+
+	curwin = win;
+	curbuf = win->w_buffer;
+	if (qf_index > curwin->w_cursor.lnum)
+	{
+	    curwin->w_redraw_top = curwin->w_cursor.lnum;
+	    curwin->w_redraw_bot = qf_index;
+	}
+	else
+	{
+	    curwin->w_redraw_top = qf_index;
+	    curwin->w_redraw_bot = curwin->w_cursor.lnum;
+	}
+	curwin->w_cursor.lnum = qf_index;
+	curwin->w_cursor.col = 0;
+	update_topline();		/* scroll to show the line */
+	redraw_later(VALID);
+	curwin->w_redr_status = TRUE;	/* update ruler */
+	curwin = old_curwin;
+	curbuf = curwin->w_buffer;
+
+	/* No need to print the error message if it's visible in the error
+	 * window */
+	print_message = FALSE;
+    }
+
+    /*
      * If currently in the quickfix window, find another window to show the
      * file in.
      */
     if (bt_quickfix(curbuf))
     {
-	win_t	*win;
 	int	save_p_sb;
 
 	/*
@@ -1003,11 +1039,6 @@ qf_jump(dir, errornr, forceit)
 	 */
 	if (qf_ptr->qf_fnum == 0)
 	    goto theend;
-
-	/* No need to print the error message if it's visible in the error
-	 * window */
-	if (qf_index >= curwin->w_topline && qf_index < curwin->w_botline)
-	    print_message = FALSE;
 
 	/*
 	 * If there is only one window, create a new one above the quickfix
@@ -1493,6 +1524,12 @@ ex_cwindow(eap)
      * Fill the buffer with the quickfix list.
      */
     qf_fill_buffer();
+
+    curwin->w_cursor.lnum = qf_lists[qf_curlist].qf_index;
+    curwin->w_cursor.col = 0;
+    check_cursor();
+    update_topline();		/* scroll to show the line */
+    redraw_later(VALID);
 }
 
 /*

@@ -40,11 +40,12 @@ $!
 $! E-mail addresses:
 $! Steve Wall           steve_wall@usa.net
 $! Zoltan Arpadffy      arpadffy@altavista.net
+$! John W. Hamill       jhamill3@ford.com
 $!
 $! Modification History:
 $! 13Jul00 SWall        Initial Version
 $! 14Jul00 ZArpadffy    Display usage
-$
+$! 06Mar01 JHamill      Ctrl-M problem fix
 $!
 $! If no parameters, or "-h" for a parameter, print usage and exit
 $
@@ -119,7 +120,7 @@ $
 $! Strip the version number.
 $
 $ file = f$parse(file,,,"DEVICE") + f$parse(file,,,"DIRECTORY") + -
-	f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
+        f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
 $
 $! f$search() returns the same filename over and over if there are no
 $! wildcards in it.
@@ -171,7 +172,7 @@ $
 $! Get a temporary filename from the subroutine parameter.
 $
 $ tmp = f$parse(file,,,"DEVICE") + f$parse(file,,,"DIRECTORY") + -
-	"tmp_" + f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
+        "tmp_" + f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
 $ on control_y then goto aborted
 $ open /read input 'file'
 $ open /write output 'tmp'
@@ -210,7 +211,7 @@ $
 $ spaces = ""
 $spaceloop:
 $ if (f$extract(0,1,line) .nes. spc) .and. (f$extract(0,1,line) .nes. tab) -
-	then goto endspaceloop
+        then goto endspaceloop
 $ spaces = spaces + f$extract(0,1,line)
 $ line = f$extract(1,f$length(line)-1,line)
 $ goto spaceloop
@@ -271,5 +272,5 @@ $! End of filter subroutine.
 $
 $endfunc:
 $ return
-$ 
+$
 $! EOF
