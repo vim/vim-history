@@ -1103,15 +1103,42 @@ adjustment_value_changed(GtkAdjustment *adjustment, gpointer data)
      * working in later GTK versions.
      *
      * FIXME: Well, it doesn't work in GTK2. :)
-     * OK, I experimented with GTK_WIDGET_HAS_GRAB() and it seemed to work
-     * to some extent.	But simply setting dragging = TRUE all the time
-     * seems to work better :/	We also need to #define USE_ON_FLY_SCROLL
-     * for GTK+ 2, thus things do work substantially different.
+     * HACK: Get the mouse pointer position, if it appears to be on an arrow
+     * button set "dragging" to FALSE.  This assumes square buttons!
      */
     if (sb != NULL)
     {
 #ifdef HAVE_GTK2
 	dragging = TRUE;
+
+	if (sb->wp != NULL)
+	{
+	    int			x;
+	    int			y;
+	    GdkModifierType	state;
+	    int			width;
+	    int			height;
+
+	    /* vertical scrollbar: need to set "dragging" properly in case
+	     * there are closed folds. */
+	    gdk_window_get_pointer(sb->id->window, &x, &y, &state);
+	    gdk_window_get_size(sb->id->window, &width, &height);
+	    if (x >= 0 && x < width && y >= 0 && y < height)
+	    {
+		if (y < width)
+		{
+		    /* up arrow: move one (closed fold) line up */
+		    dragging = FALSE;
+		    value = sb->wp->w_topline - 2;
+		}
+		else if (y > height - width)
+		{
+		    /* down arrow: move one (closed fold) line down */
+		    dragging = FALSE;
+		    value = sb->wp->w_topline;
+		}
+	    }
+	}
 #else
 	dragging = (GTK_RANGE(sb->id)->scroll_type == GTK_SCROLL_NONE);
 #endif
