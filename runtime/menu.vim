@@ -435,7 +435,7 @@ func! s:XxdConv()
     %!mc vim:xxd
   else
     call s:XxdFind()
-    exe "%!" . g:xxdprogram
+    exe '%!"' . g:xxdprogram . '"'
   endif
   set ft=xxd
   let &mod = mod
@@ -447,7 +447,7 @@ func! s:XxdBack()
     %!mc vim:xxd -r
   else
     call s:XxdFind()
-    exe "%!" . g:xxdprogram . " -r"
+    exe '%!"' . g:xxdprogram . '" -r'
   endif
   set ft=
   doautocmd filetypedetect BufReadPost
