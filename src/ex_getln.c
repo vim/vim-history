@@ -3090,6 +3090,8 @@ get_histtype(name)
     return -1;
 }
 
+static int	last_maptick = -1;	/* last seen maptick */
+
 /*
  * Add the given string to the given history.  If the string is already in the
  * history then it is moved to the front.  "histype" may be HIST_CMD,
@@ -3101,7 +3103,6 @@ add_to_history(histype, new_entry, in_map)
     char_u	*new_entry;
     int		in_map;		/* consider maptick when inside a mapping */
 {
-    static int		last_maptick = -1;	/* last seen maptick */
     struct hist_entry	*hisptr;
 
     if (hislen == 0)		/* no history */
@@ -3307,9 +3308,15 @@ del_history_idx(histype, idx)
     i = calc_hist_idx(histype, idx);
     if (i < 0)
 	return FALSE;
-
     idx = hisidx[histype];
     vim_free(history[histype][i].hisstr);
+
+    /* When deleting the last added search string in a mapping, reset
+     * last_maptick, so that the last added search string isn't deleted again.
+     */
+    if (histype == HIST_SEARCH && maptick == last_maptick && i == idx)
+	last_maptick = -1;
+
     while (i != idx)
     {
 	j = (i + 1) % hislen;

@@ -881,6 +881,10 @@ gotchars(s, len)
 	}
     }
     may_sync_undo();
+
+    /* Since characters have been typed, consider the following to be in
+     * another mapping.  Search string will be kept in history. */
+    ++maptick;
 }
 
 /*
@@ -1500,7 +1504,6 @@ vgetorpeek(advance)
 				    else
 				    {
 					KeyTyped = TRUE;
-					++maptick;
 					/* write char to script file(s) */
 					gotchars(typebuf + typeoff, 1);
 				    }
