@@ -4032,3 +4032,109 @@ mch_access(char *n, int p)
     CloseHandle(hFile);
     return 0;
 }
+
+/*
+ * SUB STREAM:
+ *
+ * NTFS can have sub streams for each file.  Normal contents of file is
+ * stored in main stream, and external contents (author information and
+ * title and so on) can be stored in sub stream.  After Windows 2000, user
+ * can access and store those informations in sub streams via explorer's
+ * property menuitem in right click menu.  Those informations in sub streams
+ * were lost when copy only main streams.  So we have to copy sub streams.
+ *
+ * http://msdn.microsoft.com/library/en-us/dnw2k/html/ntfs5.asp
+ */
+
+    static char *
+get_infostream_name(char *name, char *substream)
+{
+    int len;
+    char *newname;
+
+    len = strlen(name) + strlen(substream) + 2;
+    newname = malloc(len);
+    strcpy(newname, name);
+    strcat(newname, ":");
+    strcat(newname, substream);
+    return newname;
+}
+
+    static int
+copy_substream(char *from, char *to, char *substream)
+{
+    int	    retval = 0;
+    HANDLE  hFrom, hTo;
+    char    *from_info, *to_info;
+
+    from_info	= get_infostream_name(from, substream);
+    to_info	= get_infostream_name(to, substream);
+    hFrom = CreateFile(from_info, GENERIC_READ, 0, NULL, OPEN_EXISTING,
+	    FILE_ATTRIBUTE_NORMAL, NULL);
+    hTo = CreateFile(to_info, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
+	    FILE_ATTRIBUTE_NORMAL, NULL);
+
+    if (hFrom != INVALID_HANDLE_VALUE && hTo != INVALID_HANDLE_VALUE)
+    {
+	/* Just copy information */
+	DWORD dwCopy, dwSize, dwRead = 0, dwWrite = 0;
+	char buf[4096];
+
+	retval = 1;
+	dwCopy = GetFileSize(hFrom, NULL);
+	while (dwCopy > 0)
+	{
+	    dwSize = dwCopy > sizeof(buf) ? sizeof(buf) : dwCopy;
+	    if (!ReadFile(hFrom, buf, dwSize, &dwRead, NULL)
+		    || dwRead != dwSize
+		    || !WriteFile(hTo, buf, dwSize, &dwWrite, NULL)
+		    || dwWrite != dwSize)
+	    {
+		retval = 0;
+		break;
+	    }
+	    dwCopy -= dwSize;
+	}
+    }
+    else if (hFrom == INVALID_HANDLE_VALUE && hTo != INVALID_HANDLE_VALUE)
+    {
+	/* No source information, delete destination */
+	CloseHandle(hTo);
+	hTo = INVALID_HANDLE_VALUE;
+	retval = DeleteFile(to_info);
+	retval = 1;
+    }
+    else if (hFrom == INVALID_HANDLE_VALUE && hTo == INVALID_HANDLE_VALUE)
+    {
+	retval = 1;
+    }
+
+    if (hFrom != INVALID_HANDLE_VALUE)
+	CloseHandle(hFrom);
+    if (hTo != INVALID_HANDLE_VALUE)
+	CloseHandle(hTo);
+    free(from_info);
+    free(to_info);
+
+    return 1;
+}
+
+    static int
+copy_infostreams(char_u *from, char_u *to)
+{
+    if (!copy_substream(from, to, "\05SummaryInformation"))
+	goto FAILTOCOPY;
+    if (!copy_substream(from, to, "\05DocumentSummaryInformation"))
+	goto FAILTOCOPY;
+    if (!copy_substream(from, to, "\05SebiesnrMkudrfcoIaamtykdDa"))
+	goto FAILTOCOPY;
+    return 1;
+FAILTOCOPY:
+    return 0;
+}
+
+    int
+mch_copy_file_attribute(char_u *from, char_u *to)
+{
+    return copy_infostreams(from, to);
+}
