@@ -2873,7 +2873,7 @@ prt_header(psettings, pagenum, lnum)
     }
     else
 #endif
-	sprintf((char *)tbuf, "Page %d", pagenum);
+	sprintf((char *)tbuf, _("Page %d"), pagenum);
 
     prt_set_fg(COLOR_BLACK);
     prt_set_bg(COLOR_WHITE);
@@ -4471,8 +4471,8 @@ mch_print_end_page()
 
 /*ARGSUSED*/
     int
-mch_print_begin_page(msg)
-    char_u	*msg;
+mch_print_begin_page(str)
+    char_u	*str;
 {
     int		page_num[2];
 
