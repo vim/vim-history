@@ -1,4 +1,4 @@
-*tagsrch.txt*   For Vim version 6.1.  Last change: 2001 Sep 17
+*tagsrch.txt*   For Vim version 6.1.  Last change: 2003 Mar 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -14,7 +14,6 @@ See section |29.1| of the user manual for an introduction.
 4. Tags details			|tag-details|
 5. Tags file format		|tags-file-format|
 6. Include file searches	|include-search|
-7. 'Grep' and 'Lid'		|grep|
 
 ==============================================================================
 1. Jump to a tag					*tag-commands*
@@ -790,87 +789,5 @@ Common arguments for the commands above:
 	:isearch /string/ | echo "the last one"
 <     For a ":djump", ":dsplit", ":dlist" and ":dsearch" command the pattern
       is used as a literal string, not as a search pattern.
-
-==============================================================================
-7. 'Grep' and 'Lid'					*grep* *lid*
-
-Vim can interface with "grep" and grep-like programs (such as the GNU
-id-utils) in a similar way to its compiler integration. (see |:make| for more
-information on that.)
-
-
-7.1 Setting up grep
-
-If you have a standard "grep" program installed, the :grep command may work
-well with the defaults. The syntax is very similar to the standard command: >
-
-	:grep foo *.c
-
-Will search all files with the .c extension for the substring "foo". The
-arguments to :grep are passed straight to the "grep" program, so you can use
-whatever options your "grep" supports.
-
-By default, :grep invokes grep with the -n option (show file and line
-numbers). You can change this with the 'grepprg' option. You will need to set
-'grepprg' if:
-
-a)	You are using a program that isn't called "grep"
-b)	You have to call grep with a full path
-c)	You want to pass other options automatically (e.g. case insensitive
-	search.)
-
-Once "grep" has executed, Vim parses the results using the 'grepformat'
-option.  This option works in the same way as the 'errorformat' option - see
-that for details.  You may need to change 'grepformat' from the default if
-your grep outputs in a non-standard format, or you are using some other
-program with a special format.
-
-Once the results are parsed, Vim loads the first file containing a match and
-jumps to the appropriate line, in the same way that it jumps to a compiler
-error in |quickfix| mode.  You can then use the |:cnext|, |:clist|, etc.
-commands to see the other matches.
-
-
-7.2 Using :grep with id-utils
-
-You can set up :grep to work with the GNU id-utils like this: >
-
-	:set grepprg=lid\ -Rgrep\ -s
-	:set grepformat=%f:%l:%m
-
-then >
-	:grep (regexp)
-
-works just as you'd expect.
-(provided you remembered to mkid first :)
-
-
-7.3 Browsing source code with :grep
-
-Using the stack of error lists that Vim keeps, you can browse your files to
-look for functions and the functions they call.  For example, suppose that you
-have to add an argument to the read_file() function.  You enter this command: >
-
-	:grep read_file *.c
-
-You use ":cn" to go along the list of matches and add the argument.  At one
-place you have to get the new argument from a higher level function msg(), and
-need to change that one too.  Thus you use: >
-
-	:grep msg *.c
-
-While changing the msg() functions, you find another function that needs to
-get the argument from a higher level.  You can again use ":grep" to find these
-functions.  Once you are finished with one function, you can use >
-
-	:colder
-
-to go back to the previous one.
-
-This works like browsing a tree: ":grep" goes one level deeper, creating a
-list of branches.  ":colder" goes back to the previous level.  You can mix
-this use of ":grep" and "colder" to browse all the locations in a tree-like
-way.  If you do this consistently, you will find all locations without the
-need to write down a "todo" list.
 
  vim:tw=78:ts=8:ft=help:norl:
