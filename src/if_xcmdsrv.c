@@ -552,6 +552,11 @@ ServerWait(dpy, w, endCond, endData, localLoop, seconds)
 	    lastChk = now;
 	    if (!WindowValid(dpy, w))
 		break;
+	    /*
+	     * Sometimes the PropertyChange event doesn't come.
+	     * This can be seen in eg: vim -c 'echo remote_expr("gvim", "3+2")'
+	     */
+	    serverEventProc(dpy, NULL);
 	}
 	if (localLoop)
 	{
@@ -1086,9 +1091,12 @@ serverEventProc(dpy, eventPtr)
     long_u	numItems, bytesAfter;
     Atom	actualType;
 
-    if (eventPtr->xproperty.atom != commProperty
-	    || eventPtr->xproperty.state != PropertyNewValue)
-	return;
+    if (eventPtr != NULL)
+    {
+	if (eventPtr->xproperty.atom != commProperty
+		|| eventPtr->xproperty.state != PropertyNewValue)
+	    return;
+    }
 
     /*
      * Read the comm property and delete it.

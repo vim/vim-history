@@ -5724,6 +5724,7 @@ f_remote_foreground(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
+    retvar->var_val.var_number = 0;
 #ifdef FEAT_CLIENTSERVER
 # ifdef WIN32
     /* On Win32 it's done in this application. */
@@ -5732,6 +5733,7 @@ f_remote_foreground(argvars, retvar)
     /* Send a foreground() expression to the server. */
     argvars[1].var_type = VAR_STRING;
     argvars[1].var_val.var_string = vim_strsave((char_u *)"foreground()");
+    argvars[2].var_type = VAR_UNKNOWN;
     remote_common(argvars, retvar, TRUE);
     vim_free(argvars[1].var_val.var_string);
 # endif
