@@ -5,7 +5,7 @@ test49.failed, try to add one ore more "G"s at the line before ENDTEST.
 
 STARTTEST
 :so small.vim
-:se nocp nomore
+:se nocp nomore viminfo+=nviminfo
 :so test49.vim
 GGGGGGGGGG"rp:.-,$wq! test.out
 ENDTEST
