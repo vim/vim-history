@@ -4855,7 +4855,7 @@ fix_help_buffer()
 	for (lnum = 1; lnum < curbuf->b_ml.ml_line_count; ++lnum)
 	{
 	    line = ml_get_buf(curbuf, lnum, FALSE);
-	    if (STRNCMP(line, "LOCAL ADDITIONS", 15) == 0)
+	    if (strstr((char *)line, "*local-additions*") != NULL)
 	    {
 		/* Go through all directories in 'runtimepath', skipping
 		 * $VIMRUNTIME. */
