@@ -186,6 +186,7 @@ do_tag(tag, type, count, forceit, verbose)
     if ((!p_tgst && *tag != NUL))
     {
 	use_tagstack = FALSE;
+	new_tag = TRUE;
     }
     else
     {
