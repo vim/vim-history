@@ -348,7 +348,7 @@ static int syn_stack_equal __ARGS((synstate_T *sp));
 static void validate_current_state __ARGS((void));
 static int syn_finish_line __ARGS((int syncing));
 static int syn_current_attr __ARGS((int syncing, int displaying));
-static int did_match_already __ARGS((int idx));
+static int did_match_already __ARGS((int idx, garray_T *gap));
 static stateitem_T *push_next_match __ARGS((stateitem_T *cur_si));
 static void check_state_ends __ARGS((void));
 static void update_si_attr __ARGS((int idx));
@@ -1730,8 +1730,11 @@ syn_current_attr(syncing, displaying)
     reg_extmatch_T *cur_extmatch = NULL;
     char_u	*line;		/* current line.  NOTE: becomes invalid after
 				   looking for a pattern match! */
+
+    /* variables for zero-width matches that have a "nextgroup" argument */
     int		keep_next_list;
     int		zero_width_next_list = FALSE;
+    garray_T	zero_width_next_ga;
 
     /*
      * No character, no attributes!  Past end of line?
@@ -1774,6 +1777,10 @@ syn_current_attr(syncing, displaying)
     do_keywords = !syncing
 		    && (syn_buf->b_keywtab != NULL
 			    || syn_buf->b_keywtab_ic != NULL);
+
+    /* Init the list of zero-width matches with a nextlist.  This is used to
+     * avoid matching the same item in the same position twice. */
+    ga_init2(&zero_width_next_ga, sizeof(int), 10);
 
     /*
      * Repeat matching keywords and patterns, to find contained items at the
@@ -1951,7 +1958,7 @@ syn_current_attr(syncing, displaying)
 			     * before, skip it.  Must retry in the next
 			     * column, because it may match from there.
 			     */
-			    if (did_match_already(idx))
+			    if (did_match_already(idx, &zero_width_next_ga))
 			    {
 				try_next_column = TRUE;
 				continue;
@@ -2070,6 +2077,16 @@ syn_current_attr(syncing, displaying)
 			current_next_flags = lspp->sp_flags;
 			keep_next_list = TRUE;
 			zero_width_next_list = TRUE;
+
+			/* Add the index to a list, so that we can check
+			 * later that we don't match it again (and cause an
+			 * endless loop). */
+			if (ga_grow(&zero_width_next_ga, 1) == OK)
+			{
+			    ((int *)(zero_width_next_ga.ga_data))
+				[zero_width_next_ga.ga_len++] = next_match_idx;
+			    --zero_width_next_ga.ga_room;
+			}
 			next_match_idx = -1;
 		    }
 		    else
@@ -2172,6 +2189,9 @@ syn_current_attr(syncing, displaying)
 	    && !(current_next_flags & (HL_SKIPNL | HL_SKIPEMPTY)))
 	current_next_list = NULL;
 
+    if (zero_width_next_ga.ga_len > 0)
+	ga_clear(&zero_width_next_ga);
+
     /* No longer need external matches.  But keep next_match_extmatch. */
     unref_extmatch(re_extmatch_out);
     re_extmatch_out = NULL;
@@ -2185,18 +2205,24 @@ syn_current_attr(syncing, displaying)
  * Check if we already matched pattern "idx" at the current column.
  */
     static int
-did_match_already(idx)
-    int	    idx;
+did_match_already(idx, gap)
+    int		idx;
+    garray_T	*gap;
 {
     int		i;
 
     for (i = current_state.ga_len; --i >= 0; )
-    {
 	if (CUR_STATE(i).si_m_startcol == (int)current_col
 		&& CUR_STATE(i).si_m_lnum == (int)current_lnum
 		&& CUR_STATE(i).si_idx == idx)
 	    return TRUE;
-    }
+
+    /* Zero-width matches with a nextgroup argument are not put on the syntax
+     * stack, and can only be matched once anyway. */
+    for (i = gap->ga_len; --i >= 0; )
+	if (((int *)(gap->ga_data))[i] == idx)
+	    return TRUE;
+
     return FALSE;
 }
 
