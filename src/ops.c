@@ -105,6 +105,7 @@ static int	yank_copy_line __ARGS((struct block_def *bd, long y_idx));
 #ifdef FEAT_CLIPBOARD
 static void	copy_yank_reg __ARGS((struct yankreg *reg));
 #endif
+static void	dis_msg __ARGS((char_u *p, int skip_esc));
 #ifdef FEAT_VISUAL
 static void	block_prep __ARGS((oparg_T *oap, struct block_def *, linenr_T, int));
 #endif
@@ -3635,7 +3636,7 @@ ex_display(eap)
 
     /* Highlight title */
     MSG_PUTS_TITLE(_("\n--- Registers ---"));
-    for (i = -1; i < NUM_REGISTERS; ++i)
+    for (i = -1; i < NUM_REGISTERS && !got_int; ++i)
     {
 	if (i == -1)
 	{
@@ -3676,13 +3677,14 @@ ex_display(eap)
 		MSG_PUTS_ATTR("^J", attr);
 	    out_flush();		    /* show one line at a time */
 	}
+	ui_breakcheck();
     }
 
     /*
      * display last inserted text
      */
     if ((p = get_last_insert()) != NULL
-	    && (arg == NULL || vim_strchr(arg, '.') != NULL))
+		 && (arg == NULL || vim_strchr(arg, '.') != NULL) && !got_int)
     {
 	MSG_PUTS("\n\".   ");
 	dis_msg(p, TRUE);
@@ -3691,7 +3693,8 @@ ex_display(eap)
     /*
      * display last command line
      */
-    if (last_cmdline != NULL && (arg == NULL || vim_strchr(arg, ':') != NULL))
+    if (last_cmdline != NULL && (arg == NULL || vim_strchr(arg, ':') != NULL)
+								  && !got_int)
     {
 	MSG_PUTS("\n\":   ");
 	dis_msg(last_cmdline, FALSE);
@@ -3701,7 +3704,7 @@ ex_display(eap)
      * display current file name
      */
     if (curbuf->b_fname != NULL
-	    && (arg == NULL || vim_strchr(arg, '%') != NULL))
+	    && (arg == NULL || vim_strchr(arg, '%') != NULL) && !got_int)
     {
 	MSG_PUTS("\n\"%   ");
 	dis_msg(curbuf->b_fname, FALSE);
@@ -3710,7 +3713,7 @@ ex_display(eap)
     /*
      * display alternate file name
      */
-    if (arg == NULL || vim_strchr(arg, '%') != NULL)
+    if ((arg == NULL || vim_strchr(arg, '%') != NULL) && !got_int)
     {
 	char_u	    *fname;
 	linenr_T    dummy;
@@ -3726,7 +3729,7 @@ ex_display(eap)
      * display last search pattern
      */
     if (last_search_pat() != NULL
-			     && (arg == NULL || vim_strchr(arg, '/') != NULL))
+		 && (arg == NULL || vim_strchr(arg, '/') != NULL) && !got_int)
     {
 	MSG_PUTS("\n\"/   ");
 	dis_msg(last_search_pat(), FALSE);
@@ -3736,7 +3739,8 @@ ex_display(eap)
     /*
      * display last used expression
      */
-    if (expr_line != NULL && (arg == NULL || vim_strchr(arg, '=') != NULL))
+    if (expr_line != NULL && (arg == NULL || vim_strchr(arg, '=') != NULL)
+								  && !got_int)
     {
 	MSG_PUTS("\n\"=   ");
 	dis_msg(expr_line, FALSE);
@@ -3748,7 +3752,7 @@ ex_display(eap)
  * display a string for do_dis()
  * truncate at end of screen line
  */
-    void
+    static void
 dis_msg(p, skip_esc)
     char_u	*p;
     int		skip_esc;	    /* if TRUE, ignore trailing ESC */
@@ -3773,6 +3777,7 @@ dis_msg(p, skip_esc)
 #endif
 	    msg_outtrans_len(p++, 1);
     }
+    ui_breakcheck();
 }
 
 /*
