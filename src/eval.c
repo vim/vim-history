@@ -373,6 +373,7 @@ static void f_wincol __ARGS((VAR argvars, VAR retvar));
 static void f_winheight __ARGS((VAR argvars, VAR retvar));
 static void f_winline __ARGS((VAR argvars, VAR retvar));
 static void f_winnr __ARGS((VAR argvars, VAR retvar));
+static void f_winrestcmd __ARGS((VAR argvars, VAR retvar));
 static void f_winwidth __ARGS((VAR argvars, VAR retvar));
 static win_T *find_win_by_nr __ARGS((VAR vp));
 static pos_T *var2fpos __ARGS((VAR varp, int lnum));
@@ -2869,6 +2870,7 @@ static struct fst
     {"winheight",	1, 1, f_winheight},
     {"winline",		0, 0, f_winline},
     {"winnr",		0, 0, f_winnr},
+    {"winrestcmd",	0, 0, f_winrestcmd},
     {"winwidth",	1, 1, f_winwidth},
 };
 
@@ -7418,6 +7420,40 @@ f_winnr(argvars, retvar)
 	++nr;
 #endif
     retvar->var_val.var_number = nr;
+}
+
+/*
+ * "winrestcmd()" function
+ */
+/* ARGSUSED */
+    static void
+f_winrestcmd(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_WINDOWS
+    win_T	*wp;
+    int		winnr = 1;
+    garray_T	ga;
+    char_u	buf[50];
+
+    ga_init2(&ga, (int)sizeof(char), 70);
+    for (wp = firstwin; wp != NULL; wp = wp->w_next)
+    {
+	sprintf((char *)buf, "%dresize %d|", winnr, wp->w_height);
+	ga_concat(&ga, buf);
+# ifdef FEAT_VERTSPLIT
+	sprintf((char *)buf, "vert %dresize %d|", winnr, wp->w_width);
+	ga_concat(&ga, buf);
+# endif
+	++winnr;
+    }
+
+    retvar->var_val.var_string = ga.ga_data;
+#else
+    retvar->var_val.var_string = NULL;
+#endif
+    retvar->var_type = VAR_STRING;
 }
 
 /*

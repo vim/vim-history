@@ -66,7 +66,6 @@ static int check_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 static win_T *restore_snapshot_rec __ARGS((frame_T *sn, frame_T *fr));
 
 #endif /* FEAT_WINDOWS */
-static void win_setheight_win __ARGS((int height, win_T *win));
 static win_T *win_alloc __ARGS((win_T *after));
 static void win_new_height __ARGS((win_T *, int));
 
@@ -2875,7 +2874,7 @@ win_enter(wp, undo_sync)
     /* Change directories when the acd option is set on and after
      * switching windows. */
     if (p_acd && curbuf->b_ffname != NULL
-	    && vim_chdirfile(curbuf->b_ffname) == OK)
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
 	shorten_fnames(TRUE);
 #endif
 }
@@ -3454,14 +3453,6 @@ frame_comp_pos(topfrp, row, col)
 win_setheight(height)
     int		height;
 {
-    /* Always keep current window at least one line high, even when
-     * 'winminheight' is zero. */
-#ifdef FEAT_WINDOWS
-    if (height < p_wmh)
-	height = p_wmh;
-#endif
-    if (height == 0)
-	height = 1;
     win_setheight_win(height, curwin);
 }
 
@@ -3469,12 +3460,24 @@ win_setheight(height)
  * Set the window height of window "win" and take care of repositioning other
  * windows to fit around it.
  */
-    static void
+    void
 win_setheight_win(height, win)
     int		height;
     win_T	*win;
 {
     int		row;
+
+    if (win == curwin)
+    {
+	/* Always keep current window at least one line high, even when
+	 * 'winminheight' is zero. */
+#ifdef FEAT_WINDOWS
+	if (height < p_wmh)
+	    height = p_wmh;
+#endif
+	if (height == 0)
+	    height = 1;
+    }
 
 #ifdef FEAT_WINDOWS
     frame_setheight(win->w_frame, height + win->w_status_height);
@@ -3700,14 +3703,25 @@ frame_setheight(curfrp, height)
 win_setwidth(width)
     int		width;
 {
+    win_setwidth_win(width, curwin);
+}
+
+    void
+win_setwidth_win(width, wp)
+    int		width;
+    win_T	*wp;
+{
     /* Always keep current window at least one column wide, even when
      * 'winminwidth' is zero. */
-    if (width < p_wmw)
-	width = p_wmw;
-    if (width == 0)
-	width = 1;
+    if (wp == curwin)
+    {
+	if (width < p_wmw)
+	    width = p_wmw;
+	if (width == 0)
+	    width = 1;
+    }
 
-    frame_setwidth(curwin->w_frame, width + curwin->w_vsep_width);
+    frame_setwidth(wp->w_frame, width + wp->w_vsep_width);
 
     /* recompute the window positions */
     (void)win_comp_pos();
