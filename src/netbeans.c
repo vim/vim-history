@@ -70,6 +70,7 @@ static pos_T *get_off_or_lnum __ARGS((buf_T *buf, char_u **argp));
 static long get_buf_size __ARGS((buf_T *));
 
 static void netbeans_connect __ARGS((void));
+static void getConnInfo __ARGS((char *file, char **host, char **port, char **password));
 
 static void nb_init_graphics __ARGS((void));
 static void coloncmd __ARGS((char *cmd, ...));
@@ -220,6 +221,10 @@ netbeans_disconnect(void)
 }
 #endif /* FEAT_GUI_W32 */
 
+#define NB_DEF_HOST "localhost"
+#define NB_DEF_ADDR "3219"
+#define NB_DEF_PASS "changeme"
+
     static void
 netbeans_connect(void)
 {
@@ -235,37 +240,75 @@ netbeans_connect(void)
     struct sockaddr_un	server;
 #endif
     char	buf[32];
-    char *	hostname;
-    char *	address;
-    char *	password;
+    char	*hostname = NULL;
+    char	*address = NULL;
+    char	*password = NULL;
+    char	*fname;
+    char	*arg = NULL;
 
-    /* netbeansArg is -nb or -nb:<host>:<addr>:<password> */
-    if (netbeansArg[3] == ':')
-	netbeansArg += 4;
+    if (netbeansArg[3] == '=')
+	/* "-nb=fname": Read info from specified file. */
+	getConnInfo(netbeansArg + 4, &hostname, &address, &password);
     else
-	netbeansArg = NULL;
+    {
+	if (netbeansArg[3] == ':')
+	    /* "-nb:<host>:<addr>:<password>": get info from argument */
+	    arg = netbeansArg + 4;
+	if (arg == NULL && (fname = getenv("__NETBEANS_CONINFO")) != NULL)
+	    /* "-nb": get info from file specified in environment */
+	    getConnInfo(fname, &hostname, &address, &password);
+	else
+	{
+	    if (arg != NULL)
+	    {
+		/* "-nb:<host>:<addr>:<password>": get info from argument */
+		hostname = arg;
+		address = strchr(hostname, ':');
+		if (address != NULL)
+		{
+		    *address++ = '\0';
+		    password = strchr(address, ':');
+		    if (password != NULL)
+			*password++ = '\0';
+		}
+	    }
 
-    hostname = netbeansArg;
-    if (hostname == NULL || *hostname == '\0')
-	hostname = getenv("__NETBEANS_HOST");
-    if (hostname == NULL || *hostname == '\0')
-	hostname = "localhost"; /* default */
+	    /* Get the missing values from the environment. */
+	    if (hostname == NULL || *hostname == '\0')
+		hostname = getenv("__NETBEANS_HOST");
+	    if (address == NULL)
+		address = getenv("__NETBEANS_SOCKET");
+	    if (password == NULL)
+		password = getenv("__NETBEANS_VIM_PASSWORD");
 
-    address = strchr(hostname, ':');
-    if (address != NULL)
-	*address++ = '\0';
-    else
-	address = getenv("__NETBEANS_SOCKET");
+	    /* Move values to allocated memory. */
+	    if (hostname != NULL)
+		hostname = (char *)vim_strsave((char_u *)hostname);
+	    if (address != NULL)
+		address = (char *)vim_strsave((char_u *)address);
+	    if (password != NULL)
+		password = (char *)vim_strsave((char_u *)password);
+	}
+    }
+
+    /* Use the default when a value is missing. */
+    if (hostname == NULL || *hostname == '\0')
+    {
+	vim_free(hostname);
+	hostname = (char *)vim_strsave((char_u *)NB_DEF_HOST);
+    }
     if (address == NULL || *address == '\0')
-	address = "3219";  /* default */
-
-    password = strchr(address, ':');
-    if (password != NULL)
-	*password++ = '\0';
-    else
-	password = getenv("__NETBEANS_VIM_PASSWORD");
+    {
+	vim_free(address);
+	address = (char *)vim_strsave((char_u *)NB_DEF_ADDR);
+    }
     if (password == NULL || *password == '\0')
-	password = "changeme"; /* default */
+    {
+	vim_free(password);
+	password = (char *)vim_strsave((char_u *)NB_DEF_PASS);
+    }
+    if (hostname == NULL || address == NULL || password == NULL)
+	goto theend;	    /* out of memory */
 
 #ifdef INET_SOCKETS
     port = atoi(address);
@@ -273,7 +316,7 @@ netbeans_connect(void)
     if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
 	PERROR("socket() in netbeans_connect()");
-	return;
+	goto theend;
     }
 
     /* Get the server internet address and put into addr structure */
@@ -287,18 +330,18 @@ netbeans_connect(void)
 	{
 	    /* DEBUG: input file */
 	    sd = open(hostname, O_RDONLY);
-	    return;
+	    goto theend;
 	}
 	PERROR("gethostbyname() in netbeans_connect()");
 	sd = -1;
-	return;
+	goto theend;
     }
     memcpy((char *)&server.sin_addr, host->h_addr, host->h_length);
 #else
     if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
 	PERROR("socket()");
-	return;
+	goto theend;
     }
 
     server.sun_family = AF_UNIX;
@@ -315,13 +358,13 @@ netbeans_connect(void)
 	    if ((sd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	    {
 		PERROR("socket()#2 in netbeans_connect()");
-		return;
+		goto theend;
 	    }
 #else
 	    if ((sd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
 	    {
 		PERROR("socket()#2 in netbeans_connect()");
-		return;
+		goto theend;
 	    }
 #endif
 	    if (connect(sd, (struct sockaddr *)&server, sizeof(server)))
@@ -368,7 +411,53 @@ netbeans_connect(void)
 
     haveConnection = TRUE;
 
+theend:
+    vim_free(hostname);
+    vim_free(address);
+    vim_free(password);
     return;
+}
+
+/*
+ * Obtain the NetBeans hostname, port address and password from a file.
+ * Return the strings in allocated memory.
+ */
+    static void
+getConnInfo(char *file, char **host, char **port, char **auth)
+{
+    FILE *fp = mch_fopen(file, "r");
+    char_u buf[BUFSIZ];
+    char_u *lp;
+    char_u *nl;
+
+    if (fp == NULL)
+	PERROR("E660: Cannot open NetBeans connection info file");
+    else
+    {
+	/* Read the file. There should be one of each parameter */
+	while ((lp = (char_u *)fgets((char *)buf, BUFSIZ, fp)) != NULL)
+	{
+	    if ((nl = vim_strchr(lp, '\n')) != NULL)
+		*nl = 0;	    /* strip off the trailing newline */
+
+	    if (STRNCMP(lp, "host=", 5) == 0)
+	    {
+		vim_free(*host);
+		*host = (char *)vim_strsave(&buf[5]);
+	    }
+	    else if (STRNCMP(lp, "port=", 5) == 0)
+	    {
+		vim_free(*port);
+		*port = (char *)vim_strsave(&buf[5]);
+	    }
+	    else if (STRNCMP(lp, "auth=", 5) == 0)
+	    {
+		vim_free(*auth);
+		*auth = (char *)vim_strsave(&buf[5]);
+	    }
+	}
+	fclose(fp);
+    }
 }
 
 
