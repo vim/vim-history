@@ -2512,7 +2512,7 @@ set_init_1()
     /* 'printexpr' must be allocated to be able to evaluate it. */
     set_string_default("pexpr",
 # ifdef MSWIN
-	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)"
+	    (char_u *)"system('copy' . ' ' . v:fname_in . ' \"' . &printdevice . '\"') . delete(v:fname_in)"
 # else
 #  ifdef VMS
 	    (char_u *)"system('print/delete' . (&printdevice == '' ? '' : ' /queue=' . &printdevice) . ' ' . v:fname_in)"
