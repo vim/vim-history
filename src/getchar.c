@@ -1841,6 +1841,7 @@ vgetorpeek(advance)
 		    max_mlen = 0;
 		    c1 = typebuf.tb_buf[typebuf.tb_off];
 		    if (no_mapping == 0 && maphash_valid
+			    && (no_zero_mapping == 0 || c1 != '0')
 			    && (typebuf.tb_maplen == 0
 				|| (p_remap
 				    && typebuf.tb_noremap[typebuf.tb_off]

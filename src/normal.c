@@ -685,10 +685,12 @@ getcount:
 		++no_mapping;
 		++allow_keys;		/* no mapping for nchar, but keys */
 	    }
+	    ++no_zero_mapping;		/* don't map zero here */
 	    c = safe_vgetc();
 #ifdef FEAT_LANGMAP
 	    LANGMAP_ADJUST(c, TRUE);
 #endif
+	    --no_zero_mapping;
 	    if (ctrl_w)
 	    {
 		--no_mapping;
