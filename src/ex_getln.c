@@ -2455,8 +2455,11 @@ showmatches(wildmenu)
 		}
 		lastlen = msg_outtrans_attr(p, j ? attr : 0);
 	    }
-	    msg_clr_eos();
-	    msg_putchar('\n');
+	    if (msg_col > 0)	/* when not wrapped around */
+	    {
+		msg_clr_eos();
+		msg_putchar('\n');
+	    }
 	    out_flush();		    /* show one line at a time */
 	    if (got_int)
 	    {
