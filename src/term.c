@@ -1910,7 +1910,7 @@ set_termname(term)
 
 #ifdef USE_TERM_CONSOLE
     /* DEFAULT_TERM indicates that it is the machine console. */
-    if (STRCMP(term, DEFAULT_TERM))
+    if (STRCMP(term, DEFAULT_TERM) != 0)
 	term_console = FALSE;
     else
     {

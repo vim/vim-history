@@ -1917,7 +1917,7 @@ del_bytes(count, fixpos)
      */
     was_alloced = ml_line_alloced();	    /* check if oldp was allocated */
 #ifdef FEAT_NETBEANS_INTG
-    if (was_alloced)
+    if (was_alloced && usingNetbeans)
 	netbeans_removed(curbuf, lnum, col, count);
     /* else is handled by ml_replace() */
 #endif
@@ -7110,7 +7110,7 @@ get_cmd_output(cmd, flags)
     if (buffer == NULL)
 	goto done;
 #ifdef VMS
-    len = i;	/* why is this? */
+    len = i;	/* VMS doesn't give us what we asked for... */
 #endif
     if (i != len)
     {

@@ -367,7 +367,6 @@ SRC_DOS_UNIX =	\
 SRC_DOS =	\
 		GvimExt \
 		README_srcdos.txt \
-		src/INSTALLole.txt \
 		src/INSTALLpc.txt \
 		src/Make_bc3.mak \
 		src/Make_bc5.mak \
@@ -500,14 +499,15 @@ SRC_MAC =	\
 SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
+		src/gui_gtk_vms.h \
 		src/os_vms.c \
-		src/os_vms.opt \
 		src/os_vms_conf.h \
 		src/os_vms_mms.c \
 		src/proto/os_vms.pro \
 		src/testdir/Make_vms.mms \
 		src/testdir/vms.vim \
 		src/xxd/Make_vms.mms \
+		vimtutor.com \
 
 # source files for OS/2 (in the extra archive)
 SRC_OS2 =	\
@@ -784,7 +784,9 @@ LANG_GEN = \
 		runtime/lang/menu_*.vim \
 		runtime/keymap/README.txt \
 		runtime/keymap/*.vim \
+		runtime/tutor/README.*.txt \
 		runtime/tutor/tutor.?? \
+		runtime/tutor/tutor.gr.* \
 		runtime/tutor/tutor.ja.* \
 		runtime/tutor/tutor.pl.* \
 		runtime/tutor/tutor.zh.* \

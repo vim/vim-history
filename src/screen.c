@@ -562,19 +562,20 @@ update_debug_sign(buf, lnum)
     int		row;
     int		j;
 
-#ifdef FEAT_FOLDING
+# ifdef FEAT_FOLDING
     win_foldinfo.fi_level = 0;
-#endif
+# endif
     updating_screen = TRUE;
 
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     /* Remove the cursor before starting to do anything, because scrolling may
      * make it difficult to redraw the text under it. */
     if (gui.in_use)
 	gui_undraw_cursor();
-#endif
+# endif
     if (buf != NULL && lnum > 0)
-    {					/* update/delete a specific mark */
+    {
+	/* update/delete a specific mark */
 	FOR_ALL_WINDOWS(wp)
 	{
 	    if (wp->w_buffer == buf && lnum >= wp->w_topline
@@ -605,14 +606,14 @@ update_debug_sign(buf, lnum)
     else
     {
 	/* update all windows (signs deleted) */
-#ifdef FEAT_WINDOWS
+# ifdef FEAT_WINDOWS
 	for (wp = firstwin; wp; wp = wp->w_next)
 	    win_update(wp);
-#else
+# else
 	    win_update(curwin);
-#endif
+# endif
     }
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     /* Redraw the cursor and update the scrollbars when all screen updating is
      * done. */
     if (gui.in_use)
@@ -621,12 +622,12 @@ update_debug_sign(buf, lnum)
 	gui_update_cursor(FALSE, FALSE);
 	gui_update_scrollbars(FALSE);
     }
-#endif
+# endif
 
     updating_screen = FALSE;
-#ifdef FEAT_GUI
+# ifdef FEAT_GUI
     gui_may_resize_shell();
-#endif
+# endif
 }
 #endif
 
@@ -4715,9 +4716,9 @@ win_redr_status_matches(xp, num_matches, matches, match)
     row = cmdline_row - 1;
     if (row >= 0)
     {
-	if (!wild_menu_showing)
+	if (wild_menu_showing == 0)
 	{
-	    if (msg_scrolled && !wild_menu_showing)
+	    if (msg_scrolled > 0)
 	    {
 		/* Put the wildmenu just above the command line.  If there is
 		 * no room, scroll the screen one line up. */

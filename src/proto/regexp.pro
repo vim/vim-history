@@ -1,7 +1,7 @@
 /* regexp.c */
 int re_multiline __ARGS((regprog_T *prog));
 char_u *skip_regexp __ARGS((char_u *startp, int dirc, int magic, char_u **newp));
-regprog_T *vim_regcomp __ARGS((char_u *expr, int magic));
+regprog_T *vim_regcomp __ARGS((char_u *expr, int re_flags));
 int vim_regcomp_had_eol __ARGS((void));
 int vim_regexec __ARGS((regmatch_T *rmp, char_u *line, colnr_T col));
 long vim_regexec_multi __ARGS((regmmatch_T *rmp, win_T *win, buf_T *buf, linenr_T lnum, colnr_T col));

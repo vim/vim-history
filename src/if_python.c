@@ -36,6 +36,10 @@
 # undef _DEBUG
 #endif
 
+#ifdef HAVE_STDARG_H
+# undef HAVE_STDARG_H	/* Python's config.h defines it as well. */
+#endif
+
 #include <Python.h>
 #ifdef MACOS
 # include "macglue.h"

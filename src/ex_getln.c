@@ -354,7 +354,7 @@ getcmdline(firstc, count, indent)
 		xpc.xp_context = EXPAND_NOTHING;
 	    wim_index = 0;
 #ifdef FEAT_WILDMENU
-	    if (p_wmnu && wild_menu_showing)
+	    if (p_wmnu && wild_menu_showing != 0)
 	    {
 		int skt = KeyTyped;
 
@@ -3443,7 +3443,7 @@ ExpandRTDir(pat, num_file, file, dirname)
 #if defined(FEAT_CMDL_COMPL) || defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Expand "file" for all comma-separated directories in "path".
- * Returns an allocated strings with all matches concatenated, separated by
+ * Returns an allocated string with all matches concatenated, separated by
  * newlines.  Returns NULL for an error or no matches.
  */
     char_u *
@@ -4615,6 +4615,6 @@ script_get(eap, cmd)
 	vim_free(theline);
     }
 
-    return ga.ga_data;
+    return (char_u *)ga.ga_data;
 }
 #endif /* SCRIPTS */

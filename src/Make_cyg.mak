@@ -4,7 +4,7 @@
 # This compiles Vim as a Windows application.  If you want Vim to run as a
 # Cygwin application use the Makefile (just like on Unix).
 #
-# Last updated by Dan Sharp.  Last Change: 2003 Jan 19
+# Last updated by Dan Sharp.  Last Change: 2003 Mar 14
 #
 # GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
@@ -266,7 +266,7 @@ $(EXE): $(OUTDIR) $(OBJ)
 	$(CC) $(CFLAGS) -s -o $(EXE) $(OBJ) $(LIBS) -luuid -lole32 $(EXTRA_LIBS)
 
 xxd/xxd.exe: xxd/xxd.c
-	cd xxd ; $(MAKE) -f Make_cyg.mak ; cd ..
+	cd xxd ; $(MAKE) -f Make_cyg.mak USEDLL=$(USEDLL); cd ..
 
 vimrun.exe: vimrun.c
 	$(CC) $(CFLAGS) -s -o vimrun.exe vimrun.c  $(LIBS)
@@ -296,6 +296,7 @@ endif
 	-$(DEL) dyn-ming.h
 	-$(DEL) if_perl.c
 	-$(DEL) pathdef.c
+	cd xxd ; $(MAKE) -f Make_cyg.mak clean; cd ..
 
 ###########################################################################
 

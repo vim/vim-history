@@ -37,6 +37,8 @@
 #		--enable-cscope		for Cscope interface
 #	- Uncomment one of the lines with --with-features= to enable a set of
 #	  features (but not the interfaces just mentioned).
+#	- Uncomment the line with --disable-acl to disable ACL support even
+#	  though your system supports it.
 #	- Uncomment the line with --disable-gpm to disable gpm support
 #	  even though you have gpm libraries and includes
 #	- Uncomment one of the lines with CFLAGS and/or CC if you have
@@ -378,6 +380,10 @@ CClink = $(CC)
 # FONTSET - X fontset support for output of languages with many characters.
 # Uncomment this when you want to output a multibyte language.
 #CONF_OPT_OUTPUT = --enable-fontset
+
+# ACL - Uncomment this when you do not want to include ACL support, even
+# though your system does support it.  E.g., when it's buggy.
+#CONF_OPT_ACL = --disable-acl
 
 # gpm - For mouse support on Linux console via gpm
 # Uncomment this when you do not want to include gpm support, even
@@ -836,7 +842,7 @@ TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
 TUTORSUBLOC	= $(VIMRTLOC)$(TUTORSUBDIR)
 SCRIPTLOC	= $(VIMRTLOC)
 
-### Only set VIMRUNTIMEDIR when VIMRCLOC is set to a different location and
+### Only set VIMRUNTIMEDIR when VIMRTLOC is set to a different location and
 ### the runtime directory is not below it.
 #VIMRUNTIMEDIR = $(VIMRTLOC)
 
@@ -1553,6 +1559,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 	@sed -e s+/usr/local/lib/vim+$(SCRIPTLOC)+ \
 		$(HELPSOURCE)/evim.1 > $(DEST_MAN)/$(EVIMNAME).1
 	chmod $(MANMOD) $(DEST_MAN)/$(EVIMNAME).1
+	@echo generating help tags
+	-@cd $(HELPSOURCE); make tags
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(DEST_HELP)
 	cd $(DEST_HELP); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(DEST_HELP)

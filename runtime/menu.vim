@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Nov 17
+" Last Change:	2002 Dec 29
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -152,8 +152,8 @@ an 20.335 &Edit.-SEP1-				<Nop>
 vnoremenu 20.340 &Edit.Cu&t<Tab>"+x		"+x
 vnoremenu 20.350 &Edit.&Copy<Tab>"+y		"+y
 cnoremenu 20.350 &Edit.&Copy<Tab>"+y		<C-Y>
-nnoremenu 20.360 &Edit.&Paste<Tab>"+P		"+gP
-cnoremenu	 &Edit.&Paste<Tab>"+P		<C-R>+
+nnoremenu 20.360 &Edit.&Paste<Tab>"+gP		"+gP
+cnoremenu	 &Edit.&Paste<Tab>"+gP		<C-R>+
 if has("virtualedit")
   vnoremenu <script>	 &Edit.&Paste<Tab>"+P	"-c<Esc><SID>Paste
   inoremenu <script>	 &Edit.&Paste<Tab>"+P	<Esc><SID>Pastegi
@@ -400,14 +400,14 @@ if has("folding")
   an 40.340.240 &Tools.&Folding.Delete\ &All\ Folds<Tab>zD	zD
   " moving around in folds
   an 40.340.300 &Tools.&Folding.-SEP2-				<Nop>
-  an 40.340.310.10 &Tools.&Folding.Fold\ column\ &width.\ 0\ 	:set fdc=0<CR>
-  an 40.340.310.20 &Tools.&Folding.Fold\ column\ &width.\ 2\ 	:set fdc=2<CR>
-  an 40.340.310.30 &Tools.&Folding.Fold\ column\ &width.\ 3\ 	:set fdc=3<CR>
-  an 40.340.310.40 &Tools.&Folding.Fold\ column\ &width.\ 4\ 	:set fdc=4<CR>
-  an 40.340.310.50 &Tools.&Folding.Fold\ column\ &width.\ 5\ 	:set fdc=5<CR>
-  an 40.340.310.60 &Tools.&Folding.Fold\ column\ &width.\ 6\ 	:set fdc=6<CR>
-  an 40.340.310.70 &Tools.&Folding.Fold\ column\ &width.\ 7\ 	:set fdc=7<CR>
-  an 40.340.310.80 &Tools.&Folding.Fold\ column\ &width.\ 8\ 	:set fdc=8<CR>
+  an 40.340.310.10 &Tools.&Folding.Fold\ col&umn\ width.\ &0\ 	:set fdc=0<CR>
+  an 40.340.310.20 &Tools.&Folding.Fold\ col&umn\ width.\ &2\ 	:set fdc=2<CR>
+  an 40.340.310.30 &Tools.&Folding.Fold\ col&umn\ width.\ &3\ 	:set fdc=3<CR>
+  an 40.340.310.40 &Tools.&Folding.Fold\ col&umn\ width.\ &4\ 	:set fdc=4<CR>
+  an 40.340.310.50 &Tools.&Folding.Fold\ col&umn\ width.\ &5\ 	:set fdc=5<CR>
+  an 40.340.310.60 &Tools.&Folding.Fold\ col&umn\ width.\ &6\ 	:set fdc=6<CR>
+  an 40.340.310.70 &Tools.&Folding.Fold\ col&umn\ width.\ &7\ 	:set fdc=7<CR>
+  an 40.340.310.80 &Tools.&Folding.Fold\ col&umn\ width.\ &8\ 	:set fdc=8<CR>
 endif  " has folding
 
 if has("diff")
@@ -937,7 +937,7 @@ if (exists("did_load_filetypes") || exists("syntax_on"))
 if exists("do_syntax_sel_menu")
   runtime! synmenu.vim
 else
-  an 50.10 &Syntax.&Show\ individual\ choices	:let do_syntax_sel_menu = 1<Bar>runtime! synmenu.vim<Bar>aunmenu &Syntax.&Show\ individual\ choices<CR>
+  an 50.10 &Syntax.&Show\ filetypes\ in\ menu	:let do_syntax_sel_menu = 1<Bar>runtime! synmenu.vim<Bar>aunmenu &Syntax.&Show\ filetypes\ in\ menu<CR>
   an 50.195 &Syntax.-SEP1-		<Nop>
 endif
 

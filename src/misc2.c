@@ -91,7 +91,7 @@ coladvance_force(wcol)
 #endif
 
 /*
- * Try to advance the Cursor to the specified column.
+ * Try to advance the Cursor to the specified screen column.
  * If virtual editing: fine tune the cursor position.
  * Note that all virtual positions off the end of a line should share
  * a curwin->w_cursor.col value (n.b. this is equal to STRLEN(line)),
@@ -116,6 +116,10 @@ coladvance(wcol)
     return rc;
 }
 
+/*
+ * Return in "pos" the position of the cursor advanced to screen column "wcol".
+ * return OK if desired column is reached, FAIL if not
+ */
     int
 getvpos(pos, wcol)
     pos_T   *pos;
@@ -1115,13 +1119,13 @@ del_trailing_spaces(ptr)
 }
 
 /*
- * vim_strncpy()
- *
  * This is here because strncpy() does not guarantee successful results when
- * the to and from strings overlap.  It is only currently called from nextwild()
- * which copies part of the command line to another part of the command line.
- * This produced garbage when expanding files etc in the middle of the command
- * line (on my terminal, anyway) -- webb.
+ * the to and from strings overlap.  It is only currently called from
+ * nextwild() which copies part of the command line to another part of the
+ * command line.  This produced garbage when expanding files etc in the middle
+ * of the command line (on my terminal, anyway) -- webb.
+ * Note: strncpy() pads the remainder of the buffer with NUL bytes,
+ * vim_strncpy() doesn't do that.
  */
     void
 vim_strncpy(to, from, len)

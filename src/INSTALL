@@ -21,18 +21,11 @@ For Macintosh see INSTALLmac.txt
 1. Generic
 ==========
 
-The file "feature.h" can be edited to match your preferences. You can skip
-this, then you will get the default behaviour as is documented, which should
-be fine for most people.
+If you compile Vim without specifying anything, you will get the default
+behaviour as is documented, which should be fine for most people.
 
-If you need extra compiler and/or linker arguments, set $CFLAGS and/or $LIBS
-before starting configure.  Example:
-
-	env  CFLAGS=-I/usr/local/include  LIBS=-lm  make
-
-This is only needed for things that configure doesn't offer a specific argument
-for or figures out by itself.  First try running configure without extra
-arguments.
+For features that you can't enable/disable in another way, you can edit the
+file "feature.h" to match your preferences.
 
 
 2. Unix
@@ -50,14 +43,14 @@ features will be disabled automatically.
 See the start of Makefile for more detailed instructions about how to compile
 Vim.
 
-If you are compiling Vim for several machines, for each machine:
-  a.    make shadow
-  b.    mv shadow machine_name
-  c.    cd machine_name
-  d.    points 1 and 2 above
+If you need extra compiler and/or linker arguments, set $CFLAGS and/or $LIBS
+before starting configure.  Example:
 
-[don't use a path for machine_name, just a directory name, Otherwise the links
-that "make shadow" creates won't work]
+	env  CFLAGS=-I/usr/local/include  LIBS=-lm  make
+
+This is only needed for things that configure doesn't offer a specific argument
+for or figures out by itself.  First try running configure without extra
+arguments.
 
 GNU Autoconf and a few other tools have been used to make Vim work on many
 different Unix systems.  The advantage of this is that Vim should compile
@@ -81,6 +74,15 @@ to build Vim, without changing the Makefile or feature.h.  Example (using sh):
 One thing to watch out for: If the configure script itself changes, running
 "make" will execute it again, but without your arguments.  Do "make clean" and
 run configure again.
+
+If you are compiling Vim for several machines, for each machine:
+  a.    make shadow
+  b.    mv shadow machine_name
+  c.    cd machine_name
+  d.    make; make install
+
+[don't use a path for machine_name, just a directory name, Otherwise the links
+that "make shadow" creates won't work]
 
 
 Unix: COMPILING WITH/WITHOUT GUI
@@ -111,9 +113,9 @@ you'd specify --enable-gui=motif.  Once you specify what you want, the
 --enable-{gtk,motif,athena}-check options are ignored.
 
 For compiling with the GTK+ GUI, you need a recent version of glib and gtk+.
-Configure checks for at least version 1.1.16.  An older versions is not
-selected automatically.  If you want to use it anyway, run configure with
-"--disable-gtktest".
+Configure checks for at least version 1.1.16, but below 2.0.  An older versions
+is not selected automatically.  If you want to use it anyway, run configure
+with "--disable-gtktest".  GTK 2.0 doesn't work yet.
 GTK requires an ANSI C compiler.  If you fail to compile Vim with GTK+ (it
 is the preferred choice), try selecting another one in the Makefile.
 If you are sure you have GTK installed, but for some reason configure says you

@@ -2512,6 +2512,7 @@ gui_ph_toolbar_find_icon( vimmenu_T *menu )
     if( menu->icon_builtin == FALSE )
     {
 	if( menu->iconfile != NULL )
+	    /* TODO: use gui_find_iconfile() */
 	    icon = gui_ph_toolbar_load_icon( menu->iconfile );
 
 	/* TODO: Restrict loading to just .png? Search for any format? */
