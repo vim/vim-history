@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2003 Nov 02
+" Last Change: 2003 Nov 13
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -290,7 +290,7 @@ endif
 
 " Now, when we finally know which, we define the colors and styles
 if exists("html_use_css")
-  8
+  1;/<style type="text/+1
 endif
 
 " Find out the background and foreground color.
@@ -351,7 +351,9 @@ while s:idlist != ""
     endif
   else
     execute '%s+<span class="' . s:id_name . '">\([^<]*\)</span>+\1+g'
-    8
+    if exists("html_use_css")
+      1;/<style type="text/+1
+    endif
   endif
 endwhile
 
@@ -360,7 +362,7 @@ endwhile
 
 " The DTD
 if exists("html_use_css")
-  exe "normal! ggi<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n\e"
+  exe "normal! gg0i<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n\e"
 endif
 
 " Cleanup
