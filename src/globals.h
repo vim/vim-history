@@ -65,6 +65,8 @@ EXTERN int	clear_cmdline INIT(= FALSE);	/* cmdline must be cleared */
 #ifdef CRYPTV
 EXTERN int	cmdline_crypt INIT(= FALSE);	/* cmdline is crypted */
 #endif
+EXTERN int	exec_from_reg INIT(= FALSE);	/* executing register */
+
 EXTERN int	modified INIT(= FALSE);		/* buffer was modified since
 						    last redraw */
 EXTERN int	tag_modified INIT(= FALSE);	/* buffer was modified since
