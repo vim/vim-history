@@ -97,10 +97,11 @@
 
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
-static int dbcs_ptr2len_check __ARGS((char_u *p));
-static int dbcs_char2cells __ARGS((int c));
+static int enc_canon_search __ARGS((char_u *name));
 static int dbcs_char2len __ARGS((int c));
 static int dbcs_char2bytes __ARGS((int c, char_u *buf));
+static int dbcs_ptr2len_check __ARGS((char_u *p));
+static int dbcs_char2cells __ARGS((int c));
 static int dbcs_ptr2char __ARGS((char_u *p));
 static int enc_alias_search __ARGS((char_u *name));
 
