@@ -54,11 +54,12 @@ endif
 amenu 9999.10 &Help.&Overview<Tab><F1>		:help<CR>
 amenu 9999.20 &Help.&User\ Manual		:help usr_toc<CR>
 amenu 9999.30 &Help.&How-to\ links		:help how-to<CR>
-amenu 9999.40 &Help.&GUI			:help gui<CR>
+amenu <silent> 9999.40 &Help.&Find\.\.\.	:call <SID>Helpfind()<CR>
+amenu 9999.45 &Help.-sep1-			<nul>
 amenu 9999.50 &Help.&Credits			:help credits<CR>
-amenu 9999.60 &Help.Co&pying			:help uganda<CR>
-amenu <silent> 9999.70 &Help.&Find\.\.\.	:call <SID>Helpfind()<CR>
-amenu 9999.75 &Help.-sep-			<nul>
+amenu 9999.60 &Help.Co&pying			:help copying<CR>
+amenu 9999.70 &Help.O&rphans			:help iccf<CR>
+amenu 9999.75 &Help.-sep2-			<nul>
 amenu 9999.80 &Help.&Version			:version<CR>
 amenu 9999.90 &Help.&About			:intro<CR>
 
@@ -171,6 +172,7 @@ amenu 20.440.130.60 &Edit.&Global\ Settings.&Virtual\ Edit.Insert\ mode :set ve=
 amenu 20.440.130.70 &Edit.&Global\ Settings.&Virtual\ Edit.Block\ and\ Insert :set ve=block,insert<CR>
 amenu 20.440.130.80 &Edit.&Global\ Settings.&Virtual\ Edit.Always :set ve=all<CR>
 amenu 20.440.140 &Edit.&Global\ Settings.Toggle\ Insert\ &Mode<Tab>:set\ im!	:set im!<CR>
+amenu 20.440.145 &Edit.&Global\ Settings.Toggle\ Vi\ C&ompatible<Tab>:set\ cp!	:set cp!<CR>
 amenu <silent> 20.440.150 &Edit.&Global\ Settings.Search\ &Path\.\.\.  :call <SID>SearchP()<CR>
 amenu <silent> 20.440.160 &Edit.&Global\ Settings.Ta&g\ Files\.\.\.  :call <SID>TagFiles()<CR>
 "

@@ -607,6 +607,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    49,
+/**/
     48,
 /**/
     47,
@@ -1025,6 +1027,7 @@ intro_message(colon)
     int		i;
     int		row;
     int		blanklines;
+    char_u	*p;
     static char	*(lines[]) =
     {
 	N_("VIM - Vi IMproved"),
@@ -1045,6 +1048,28 @@ intro_message(colon)
 	N_("type  :set nocp<Enter>        for Vim defaults"),
 	N_("type  :help cp-default<Enter> for info on this"),
     };
+#ifdef FEAT_GUI
+    static char	*(gui_lines[]) =
+    {
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	N_("menu  Help->Orphans           for information    "),
+	NULL,
+	N_("Running modeless, typed text is inserted"),
+	N_("menu  Edit->Global Settings->Toggle Insert Mode  "),
+	N_("                              for two modes      "),
+	NULL,
+	NULL,
+	NULL,
+	N_("menu  Edit->Global Settings->Toggle Vi Compatible"),
+	N_("                              for Vim defaults   "),
+    };
+#endif
 
     /* blanklines = screen height - # message lines */
     blanklines = (int)Rows - ((sizeof(lines) / sizeof(char *)) - 1);
@@ -1069,14 +1094,19 @@ intro_message(colon)
     {
 	for (i = 0; i < (int)(sizeof(lines) / sizeof(char *)); ++i)
 	{
-	    if (lines[i] == NULL)
+	    p = lines[i];
+#ifdef FEAT_GUI
+	    if (p_im && gui.in_use && gui_lines[i] != NULL)
+		p = gui_lines[i];
+#endif
+	    if (p == NULL)
 	    {
 		if (!p_cp)
 		    break;
 		continue;
 	    }
-	    if (*lines[i] != NUL)
-		do_intro_line(row, (char_u *)_(lines[i]), i == 2, 0);
+	    if (*p != NUL)
+		do_intro_line(row, (char_u *)_(p), i == 2, 0);
 	    ++row;
 	}
 #if defined(WIN3264) && !defined(FEAT_GUI_W32)
