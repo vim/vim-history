@@ -1476,7 +1476,12 @@ RangeDestructor(PyObject *self)
     static PyObject *
 RangeGetattr(PyObject *self, char *name)
 {
-    return Py_FindMethod(RangeMethods, self, name);
+    if (strcmp(name, "start") == 0)
+	return Py_BuildValue("i",((RangeObject *)(self))->start - 1);
+    else if (strcmp(name, "end") == 0)
+	return Py_BuildValue("i",((RangeObject *)(self))->end - 1);
+    else
+	return Py_FindMethod(RangeMethods, self, name);
 }
 
     static PyObject *

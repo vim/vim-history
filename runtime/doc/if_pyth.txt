@@ -1,4 +1,4 @@
-*if_pyth.txt*   For Vim version 6.2.  Last change: 2002 Mar 11
+*if_pyth.txt*   For Vim version 6.2.  Last change: 2003 Dec 29
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -242,9 +242,20 @@ all operations are restricted to the lines within the range (this line range
 can, of course, change as a result of slice assignments, line deletions, or
 the range.append() method).
 
-Unlike buffers, ranges do not have a "name" attribute, nor do they have mark()
-or range() methods. They do have an append() method, however, which adds
-line(s) to the end of the range.
+The range object attributes are:
+	r.start		Index of first line into the buffer
+	r.end		Index of last line into the buffer
+
+The range object methods are:
+	r.append(str)	Append a line to the range
+	r.append(list)	Append a list of lines to the range
+			Note that the option of supplying a list of strings to
+			the append method differs from the equivalent method
+			for Python's built-in list objects.
+
+Example (assume r is the current range):
+	# Send all lines in a range to the default printer
+	vim.command("%d,%dhardcopy!" % (r.start+1,r.end+1))
 
 ==============================================================================
 5. Window objects					*python-window*
