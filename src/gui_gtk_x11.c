@@ -2076,9 +2076,6 @@ form_configure_event(GtkWidget * widget, GdkEventConfigure * event)
     gui_resize_shell(event->width, event->height);
     gtk_form_thaw(GTK_FORM(gui.formwin));
 
-    /* because of the freeze the form still needs to get the new size */
-    gtk_form_set_size(GTK_FORM(gui.formwin), event->width, event->height);
-
     return TRUE;
 }
 
@@ -2259,6 +2256,16 @@ gui_mch_set_winpos(int x, int y)
 gui_mch_set_shellsize(int width, int height,
 	int min_width, int min_height, int base_width, int base_height)
 {
+    /* Hack: When the form already is at the desired size, the window might
+     * have been resized with the mouse.  Force a resize by setting a
+     * different size first. */
+    if (GTK_FORM(gui.formwin)->width == width
+	    && GTK_FORM(gui.formwin)->height == height)
+    {
+	gtk_form_set_size(GTK_FORM(gui.formwin), width + 1, height + 1);
+	gui_mch_update();
+    }
+
     gtk_form_set_size(GTK_FORM(gui.formwin), width, height);
 
     /* give GTK+ a chance to put all widget's into place */
