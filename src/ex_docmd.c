@@ -7565,11 +7565,12 @@ ex_mkrc(eap)
 	if (eap->cmdidx != CMD_mkview)
 #endif
 	{
-	    /* Write setting 'compatible' first, because it has side effects */
+	    /* Write setting 'compatible' first, because it has side effects.
+	     * For that same reason only do it when needed. */
 	    if (p_cp)
-		(void)put_line(fd, "set compatible");
+		(void)put_line(fd, "if !&cp | set cp | endif");
 	    else
-		(void)put_line(fd, "set nocompatible");
+		(void)put_line(fd, "if &cp | set nocp | endif");
 	}
 
 #ifdef FEAT_SESSION
