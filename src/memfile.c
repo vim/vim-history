@@ -185,7 +185,8 @@ mf_open(fname, trunc_file)
 		      || (size = lseek(mfp->mf_fd, (off_t)0L, SEEK_END)) <= 0)
 	mfp->mf_blocknr_max = 0;	/* no file or empty file */
     else
-	mfp->mf_blocknr_max = (blocknr_t)(size / mfp->mf_page_size);
+	mfp->mf_blocknr_max = (blocknr_t)((size + mfp->mf_page_size - 1)
+							 / mfp->mf_page_size);
     mfp->mf_blocknr_min = -1;
     mfp->mf_neg_count = 0;
     mfp->mf_infile_count = mfp->mf_blocknr_max;
