@@ -4734,7 +4734,6 @@ win_redr_status(wp)
 	    {
 		int	clen = 0, i;
 
-		p[len] = NUL;
 		/* Count total number of display cells. */
 		for (i = 0; p[i] != NUL; i += (*mb_ptr2len_check)(p + i))
 		    clen += (*mb_ptr2cells)(p + i);
@@ -4747,8 +4746,8 @@ win_redr_status(wp)
 		{
 		    p = p + i - 1;
 		    *p = '<';
-		    len = len - i + 1;
 		}
+		len = clen;
 
 	    }
 	    else
@@ -7799,7 +7798,7 @@ win_redr_ruler(wp, always)
 	 */
 	i = (int)STRLEN(buffer);
 	get_rel_pos(wp, buffer + i + 1);
-	o = (int)STRLEN(buffer + i + 1);
+	o = vim_strsize(buffer + i + 1);
 #ifdef FEAT_WINDOWS
 	if (wp->w_status_height == 0)	/* can't use last char of screen */
 #endif
@@ -7820,6 +7819,22 @@ win_redr_ruler(wp, always)
 	    get_rel_pos(wp, buffer + i);
 	}
 	/* Truncate at window boundary. */
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	{
+	    o = 0;
+	    for (i = 0; buffer[i] != NUL; i += (*mb_ptr2len_check)(buffer + i))
+	    {
+		o += (*mb_ptr2cells)(buffer + i);
+		if (this_ru_col + o > WITH_WIDTH(width))
+		{
+		    buffer[i] = NUL;
+		    break;
+		}
+	    }
+	}
+	else
+#endif
 	if (this_ru_col + (int)STRLEN(buffer) > WITH_WIDTH(width))
 	    buffer[WITH_WIDTH(width) - this_ru_col] = NUL;
 
