@@ -1,9 +1,16 @@
 Tests Blockwise Visual when there are TABs before the text.
+First test for undo working properly when executing commands from a register.
+Also test this in an empty buffer.
 
 STARTTEST
 :so tiny.vim
-/start
-jjlld:.,$w! test.out
+G0"ay$k@au
+:new
+@auY:quit!
+GP
+/start here$
+jjlld
+:/here$/,$-1w! test.out
 :qa!
 ENDTEST
 
@@ -11,3 +18,5 @@ test text test tex start here
 		some text
 		test text
 test text
+
+OxjAykdd
