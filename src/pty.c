@@ -36,7 +36,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA
  */
 
-/* RCS_ID("$Id: pty.c,v 1.6 1994/05/31 12:32:44 mlschroe Exp $ FAU") */
+/* RCS_ID("$Id$ FAU") */
 
 #include "vim.h"
 
@@ -434,7 +434,7 @@ SetupSlavePTY(fd)
  *
  *  (history removed, not very interesting.  See the "screen" sources.)
  */
-/* RCS_ID("$Id: putenv.c,v 1.1.1.1 1993/06/16 23:51:15 jnweiger Exp $ FAU") */
+/* RCS_ID("$Id$ FAU") */
 
 #if !defined(HAVE_SETENV) && !defined(HAVE_PUTENV)
 

@@ -1,4 +1,4 @@
-/* $Id: acconfig.h,v 8.2 1999/09/11 17:54:22 darren Exp $   */
+/* $Id$   */
 
 /*  Package name.
  */

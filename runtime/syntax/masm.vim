@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	Microsoft Assembler (80x86)
 " Maintainer:	Rob Brady <robb@datatone.com>
-" Last Change:	$Date: 1999/08/24 05:18:26 $
+" Last Change:	$Date$
 " URL: http://www.datatone.com/~robb/vim/syntax/masm.vim
-" $Revision: 1.6 $
+" $Revision$
 
 " Remove any old syntax stuff hanging around
 syn clear

@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	Focus Executable
 " Maintainer:	Rob Brady <robb@datatone.com>
-" Last Change:	$Date: 1999/08/13 16:34:55 $
+" Last Change:	$Date$
 " URL: http://www.datatone.com/~robb/vim/syntax/focexec.vim
-" $Revision: 1.8 $
+" $Revision$
 
 " this is a very simple syntax file - I will be improving it
 " one thing is how to do computes

@@ -2,7 +2,7 @@
 " Language:	VHDL
 " Maintainer:	Czo <Olivier.Sirol@lip6.fr>
 " Credits:	Stephan Hegel <ea273@fen.baynet.de>
-" $Id: vhdl.vim,v 1.5 1999/06/28 15:08:41 czo Exp $
+" $Id$
 
 " Remove any old syntax stuff hanging around
 syn clear

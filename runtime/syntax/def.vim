@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	Microsoft Module-Definition (.def) File
 " Maintainer:	Rob Brady <robb@datatone.com>
-" Last change:	$Date: 1999/08/17 00:19:18 $
+" Last change:	$Date$
 " URL: http://www.datatone.com/~robb/vim/syntax/def.vim
-" $Revision: 1.3 $
+" $Revision$
 
 " Remove any old syntax stuff hanging around
 syn clear

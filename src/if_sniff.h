@@ -1,7 +1,7 @@
 /*
  * if_sniff.h Interface between Vim and SNiFF+
  *
- * $Id: if_sniff.h,v 1.4 1998/01/26 14:46:49 toni Exp $
+ * $Id$
  */
 
 #ifndef __if_sniff_h__

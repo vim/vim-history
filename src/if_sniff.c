@@ -2,7 +2,7 @@
  *
  * if_sniff.c Interface between Vim and SNiFF+
  *
- * $Id: if_sniff.c,v 1.4 1999/05/19 08:10:10 toni Exp $
+ * $Id$
  */
 
 #include "vim.h"

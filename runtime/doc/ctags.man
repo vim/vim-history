@@ -313,7 +313,7 @@ CTAGS(1)                                                 CTAGS(1)
 
 
                /* creates an RCS version string in module */
-               MODULE_VERSION("$Revision: 8.16 $")
+               MODULE_VERSION("$Revision$")
 
 
             In  the  above example the macro invocation looks too
