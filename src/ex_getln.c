@@ -38,24 +38,24 @@ static int	cmd_numfiles = -1;	/* number of files found by
 						    file name completion */
 static char_u	**cmd_files = NULL;	/* list of files */
 
-typedef struct hist_entry
+struct hist_entry
 {
     int		hisnum;		/* identifying number */
     char_u	*hisstr;	/* actual entry */
-} histentry_t;
+};
 
 /*static char_u	**(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL};*/
-static histentry_t *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL};
+static struct hist_entry *(history[HIST_COUNT]) = {NULL, NULL, NULL, NULL};
 static int	hisidx[HIST_COUNT] = {-1, -1, -1, -1};  /* last entered entry */
 static int	hisnum[HIST_COUNT] = {0, 0, 0, 0};
 		    /* identifying (unique) number of newest history entry */
 static int	hislen = 0;		/* actual length of history tables */
 
-#ifdef FEAT_RIGHTLEFT
+#ifdef RIGHTLEFT
 static int	cmd_hkmap = 0;	/* Hebrew mapping during command line */
 #endif
 
-#ifdef FEAT_FKMAP
+#ifdef FKMAP
 static int	cmd_fkmap = 0;	/* Farsi mapping during command line */
 #endif
 
@@ -63,7 +63,7 @@ static int	hist_char2type __ARGS((int c));
 static void	init_history __ARGS((void));
 
 static int	in_history __ARGS((int, char_u *, int));
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
 static int	calc_hist_idx __ARGS((int histype, int num));
 #endif
 static int	cmdline_charsize __ARGS((int idx));
@@ -72,7 +72,7 @@ static void	set_cmdspos_cursor __ARGS((void));
 static void	alloc_cmdbuff __ARGS((int len));
 static int	realloc_cmdbuff __ARGS((int len));
 static void	putcmdline __ARGS((int));
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 static void	cmdline_del __ARGS((int from));
 #endif
 static void	redrawcmdprompt __ARGS((void));
@@ -110,7 +110,7 @@ getcmdline(firstc, count, indent)
     int		indent;		/* indent for inside conditionals */
 {
     int		c;
-#ifdef FEAT_DIGRAPHS
+#ifdef DIGRAPHS
     int		cc;
 #endif
     int		i;
@@ -121,8 +121,8 @@ getcmdline(firstc, count, indent)
     int		gotesc = FALSE;		/* TRUE when <ESC> just typed */
     int		do_abbr;		/* when TRUE check for abbr. */
     int		histype;		/* history type to be used */
-#ifdef FEAT_SEARCH_EXTRA
-    pos_t	old_cursor;
+#ifdef EXTRA_SEARCH
+    FPOS	old_cursor;
     colnr_t	old_curswant;
     colnr_t	old_leftcol;
     linenr_t	old_topline;
@@ -136,33 +136,33 @@ getcmdline(firstc, count, indent)
     int		save_msg_scroll = msg_scroll;
     int		save_State = State;	/* remember State when called */
     int		some_key_typed = FALSE;	/* one of the keys was typed */
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
     /* mouse drag and release events are ignored, unless they are
      * preceded with a mouse down event */
     int		ignore_drag_release = TRUE;
 #endif
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
     int		break_ctrl_c = FALSE;
 #endif
 
-#ifdef FEAT_SNIFF
+#ifdef USE_SNIFF
     want_sniff_request = 0;
 #endif
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
     if (firstc == -1)
     {
 	firstc = NUL;
 	break_ctrl_c = TRUE;
     }
 #endif
-#ifdef FEAT_RIGHTLEFT
+#ifdef RIGHTLEFT
     /* start without Hebrew mapping for a command line */
     if (firstc == ':' || firstc == '=')
 	cmd_hkmap = 0;
 #endif
 
     ccline.overstrike = FALSE;		    /* always start in insert mode */
-#ifdef FEAT_SEARCH_EXTRA
+#ifdef EXTRA_SEARCH
     old_cursor = curwin->w_cursor;	    /* needs to be restored later */
     old_curswant = curwin->w_curswant;
     old_leftcol = curwin->w_leftcol;
@@ -196,7 +196,7 @@ getcmdline(firstc, count, indent)
     msg_scroll = FALSE;
 
     State = CMDLINE;
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
     setmouse();
 #endif
 
@@ -204,7 +204,7 @@ getcmdline(firstc, count, indent)
     hiscnt = hislen;		/* set hiscnt to impossible history value */
     histype = hist_char2type(firstc);
 
-#ifdef FEAT_DIGRAPHS
+#ifdef DIGRAPHS
     do_digraph(-1);		/* init digraph typahead */
 #endif
 
@@ -221,10 +221,10 @@ getcmdline(firstc, count, indent)
 	if (KeyTyped)
 	{
 	    some_key_typed = TRUE;
-#ifdef FEAT_RIGHTLEFT
+#ifdef RIGHTLEFT
 	    if (cmd_hkmap)
 		c = hkmap(c);
-# ifdef FEAT_FKMAP
+# ifdef FKMAP
 	    if (cmd_fkmap)
 		c = cmdl_fkmap(c);
 # endif
@@ -237,15 +237,15 @@ getcmdline(firstc, count, indent)
 	 * ":g/pat/normal /pat" (without the <CR>).
 	 * Don't ignore it for the input() function.
 	 */
-	if ((c == Ctrl_C
+	if ((c == Ctrl('C')
 #ifdef UNIX
 		|| c == intr_char
 #endif
 				)
-#if defined(FEAT_EVAL) || defined(FEAT_CRYPT)
+#if defined(WANT_EVAL) || defined(CRYPTV)
 		&& firstc != '@'
 #endif
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
 		&& !break_ctrl_c
 #endif
 		&& !global_busy)
@@ -258,7 +258,7 @@ getcmdline(firstc, count, indent)
 		&& c != K_PAGEDOWN && c != K_PAGEUP
 		&& c != K_KPAGEDOWN && c != K_KPAGEUP
 		&& c != K_LEFT && c != K_RIGHT
-		&& (cmd_numfiles > 0 || (c != Ctrl_P && c != Ctrl_N)))
+		&& (cmd_numfiles > 0 || (c != Ctrl('P') && c != Ctrl('N'))))
 	{
 	    vim_free(lookfor);
 	    lookfor = NULL;
@@ -268,16 +268,16 @@ getcmdline(firstc, count, indent)
 	 * <S-Tab> works like CTRL-P (unless 'wc' is <S-Tab>).
 	 */
 	if (c != p_wc && c == K_S_TAB && cmd_numfiles != -1)
-	    c = Ctrl_P;
+	    c = Ctrl('P');
 
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 	/* Special translations for 'wildmenu' */
 	if (did_wild_list && p_wmnu)
 	{
 	    if (c == K_LEFT)
-		c = Ctrl_P;
+		c = Ctrl('P');
 	    else if (c == K_RIGHT)
-		c = Ctrl_N;
+		c = Ctrl('N');
 	}
 	/* Hitting CR after "emenu Name.": complete submenu */
 	if (expand_context == EXPAND_MENUNAMES && p_wmnu
@@ -291,17 +291,17 @@ getcmdline(firstc, count, indent)
 	/* free expanded names when finished walking through matches */
 	if (cmd_numfiles != -1 && !(c == p_wc && KeyTyped)
 		&& c != p_wcm
-		&& c != Ctrl_N && c != Ctrl_P && c != Ctrl_A
-		&& c != Ctrl_L)
+		&& c != Ctrl('N') && c != Ctrl('P') && c != Ctrl('A')
+		&& c != Ctrl('L'))
 	{
 	    (void)ExpandOne(NULL, NULL, 0, WILD_FREE);
 	    did_wild_list = FALSE;
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 	    if (!p_wmnu || (c != K_UP && c != K_DOWN))
 #endif
 		expand_context = EXPAND_NOTHING;
 	    wim_index = 0;
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 	    if (p_wmnu && wild_menu_showing)
 	    {
 		int skt = KeyTyped;
@@ -316,7 +316,7 @@ getcmdline(firstc, count, indent)
 		{
 		    /* restore 'laststatus' if it was changed */
 		    p_ls = save_p_ls;
-		    last_status(FALSE);
+		    last_status();
 		    update_screen(VALID);	/* redraw the screen NOW */
 		    redrawcmd();
 		    save_p_ls = -1;
@@ -329,7 +329,7 @@ getcmdline(firstc, count, indent)
 #endif
 	}
 
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 	/* Special translations for 'wildmenu' */
 	if (expand_context == EXPAND_MENUNAMES && p_wmnu)
 	{
@@ -423,10 +423,6 @@ getcmdline(firstc, count, indent)
 		i = expand_pattern - ccline.cmdbuff;
 		while (--j > i)
 		{
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)
-			j -= mb_head_off(ccline.cmdbuff, ccline.cmdbuff + j);
-#endif
 		    if (vim_ispathsep(ccline.cmdbuff[j])
 #ifdef BACKSLASH_IN_FILENAME
 			    && vim_strchr(" *?[{`$%#", ccline.cmdbuff[j + 1])
@@ -475,17 +471,13 @@ getcmdline(firstc, count, indent)
 #endif
 
 	/* CTRL-\ CTRL-N goes to Normal mode */
-	if (c == Ctrl_BSL)
+	if (c == Ctrl('\\'))
 	{
-	    ++no_mapping;
-	    ++allow_keys;
 	    c = safe_vgetc();
-	    --no_mapping;
-	    --allow_keys;
-	    if (c != Ctrl_N)
+	    if (c != Ctrl('N'))
 	    {
 		vungetc(c);
-		c = Ctrl_BSL;
+		c = Ctrl('\\');
 	    }
 	    else
 	    {
@@ -495,7 +487,7 @@ getcmdline(firstc, count, indent)
 	    }
 	}
 
-#ifdef FEAT_DIGRAPHS
+#ifdef DIGRAPHS
 	c = do_digraph(c);
 #endif
 
@@ -554,7 +546,7 @@ getcmdline(firstc, count, indent)
 		    (void)vpeekc();	/* remove <C-C> from input stream */
 		    got_int = FALSE;	/* don't abandon the command line */
 		    (void)ExpandOne(NULL, NULL, 0, WILD_FREE);
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 		    expand_context = EXPAND_NOTHING;
 #endif
 		    goto cmdline_changed;
@@ -570,23 +562,23 @@ getcmdline(firstc, count, indent)
 		    if (wim_flags[0] == WIM_LONGEST && ccline.cmdpos == j)
 			wim_index = 1;
 		    if ((wim_flags[wim_index] & WIM_LIST)
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 			    || (p_wmnu && (wim_flags[wim_index] & WIM_FULL) != 0)
 #endif
 			    )
 		    {
 			if (!(wim_flags[0] & WIM_LONGEST))
 			{
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 			    int p_wmnu_save = p_wmnu;
 			    p_wmnu = 0;
 #endif
 			    nextwild(WILD_PREV, 0);	/* remove match */
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 			    p_wmnu = p_wmnu_save;
 #endif
 			}
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 			showmatches(p_wmnu && ((wim_flags[wim_index] & WIM_LIST) == 0));
 #else
 			showmatches(FALSE);
@@ -601,7 +593,7 @@ getcmdline(firstc, count, indent)
 		    else
 			vim_beep();
 		}
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 		else if (cmd_numfiles == -1)
 		    expand_context = EXPAND_NOTHING;
 #endif
@@ -635,11 +627,11 @@ getcmdline(firstc, count, indent)
 	switch (c)
 	{
 	case K_BS:
-	case Ctrl_H:
+	case Ctrl('H'):
 	case K_DEL:
 	case K_KDEL:
-	case Ctrl_W:
-#ifdef FEAT_FKMAP
+	case Ctrl('W'):
+#ifdef FKMAP
 		if (cmd_fkmap && c == K_BS)
 		    c = K_DEL;
 #endif
@@ -652,15 +644,15 @@ getcmdline(firstc, count, indent)
 		 */
 		if (c == K_DEL && ccline.cmdpos != ccline.cmdlen)
 		    ++ccline.cmdpos;
-#ifdef FEAT_MBYTE
-		if (has_mbyte && c == K_DEL)
-		    ccline.cmdpos += mb_off_next(ccline.cmdbuff,
-					      ccline.cmdbuff + ccline.cmdpos);
+#ifdef MULTI_BYTE
+		if (is_dbcs && c == K_DEL
+		    && mb_isbyte2(ccline.cmdbuff, ccline.cmdpos))
+		    ++ccline.cmdpos;
 #endif
 		if (ccline.cmdpos > 0)
 		{
 		    j = ccline.cmdpos;
-		    if (c == Ctrl_W)
+		    if (c == Ctrl('W'))
 		    {
 			while (ccline.cmdpos &&
 			       vim_isspace(ccline.cmdbuff[ccline.cmdpos - 1]))
@@ -674,10 +666,13 @@ getcmdline(firstc, count, indent)
 		    }
 		    else
 			--ccline.cmdpos;
-#ifdef FEAT_MBYTE
-		    if (c != Ctrl_W && has_mbyte)
-			ccline.cmdpos -= mb_head_off(ccline.cmdbuff,
-					      ccline.cmdbuff + ccline.cmdpos);
+#ifdef MULTI_BYTE
+		    if (c != Ctrl('W'))
+		    {
+			if (is_dbcs
+			    && mb_isbyte2(ccline.cmdbuff, ccline.cmdpos))
+			    --ccline.cmdpos;
+		    }
 #endif
 		    ccline.cmdlen -= j - ccline.cmdpos;
 		    i = ccline.cmdpos;
@@ -685,13 +680,9 @@ getcmdline(firstc, count, indent)
 			ccline.cmdbuff[i++] = ccline.cmdbuff[j++];
 		    redrawcmd();
 		}
-		else if (ccline.cmdlen == 0 && c != Ctrl_W
+		else if (ccline.cmdlen == 0 && c != Ctrl('W')
 				   && ccline.cmdprompt == NULL && indent == 0)
 		{
-		    /* In exmode it doesn't make sense to return. */
-		    if (exmode_active)
-			goto cmdline_not_changed;
-
 		    vim_free(ccline.cmdbuff);	/* no commandline to return */
 		    ccline.cmdbuff = NULL;
 		    msg_col = 0;
@@ -703,7 +694,7 @@ getcmdline(firstc, count, indent)
 
 	case K_INS:
 	case K_KINS:
-#ifdef FEAT_FKMAP
+#ifdef FKMAP
 		/* if Farsi mode set, we are in reverse insert mode -
 		   Do not change the mode */
 		if (cmd_fkmap)
@@ -717,37 +708,29 @@ getcmdline(firstc, count, indent)
 		goto cmdline_not_changed;
 
 /*	case '@':   only in very old vi */
-	case Ctrl_U:
-		/* delete all characters left of the cursor */
-		j = ccline.cmdpos;
-		ccline.cmdlen -= j;
-		i = ccline.cmdpos = 0;
-		while (i < ccline.cmdlen)
-		    ccline.cmdbuff[i++] = ccline.cmdbuff[j++];
+	case Ctrl('U'):
+		ccline.cmdpos = 0;
+		ccline.cmdlen = 0;
 		redrawcmd();
 		goto cmdline_changed;
 
 	case ESC:	/* get here if p_wc != ESC or when ESC typed twice */
-	case Ctrl_C:
-		/* In exmode it doesn't make sense to return. */
-		if (exmode_active)
-		    goto cmdline_not_changed;
-
+	case Ctrl('C'):
 		gotesc = TRUE;	    /* will free ccline.cmdbuff after putting
 				       it in history */
 		goto returncmd;	    /* back to cmd mode */
 
-	case Ctrl_R:		    /* insert register */
+	case Ctrl('R'):		    /* insert register */
 #ifdef USE_ON_FLY_SCROLL
 		dont_scroll = TRUE; /* disallow scrolling here */
 #endif
 		putcmdline('"');
 		++no_mapping;
 		i = c = safe_vgetc(); /* CTRL-R <char> */
-		if (c == Ctrl_R)
+		if (c == Ctrl('R'))
 		    c = safe_vgetc(); /* CTRL-R CTRL-R <char> */
 		--no_mapping;
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
 		/*
 		 * Insert the result of an expression.
 		 * Need to save the current command line, to be able to enter
@@ -773,11 +756,11 @@ getcmdline(firstc, count, indent)
 		}
 #endif
 		if (c != ESC)	    /* use ESC to cancel inserting register */
-		    cmdline_paste(c, i == Ctrl_R);
+		    cmdline_paste(c, i == Ctrl('R'));
 		redrawcmd();
 		goto cmdline_changed;
 
-	case Ctrl_D:
+	case Ctrl('D'):
 		if (showmatches(FALSE) == FAIL)
 		    break;	/* Use ^D as normal char instead */
 
@@ -794,17 +777,14 @@ getcmdline(firstc, count, indent)
 		    if (KeyTyped && ccline.cmdspos + i >= Columns * Rows)
 			break;
 		    ccline.cmdspos += i;
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)
+#ifdef MULTI_BYTE
+		    if (is_dbcs && mb_isbyte1(ccline.cmdbuff, ccline.cmdpos))
 		    {
-			ccline.cmdpos += mb_ptr2len_check(ccline.cmdbuff
-							     + ccline.cmdpos);
-			if (ccline.cmdpos > ccline.cmdlen)
-			    ccline.cmdpos = ccline.cmdlen;
-		    }
-		    else
-#endif
+			++ccline.cmdspos;
 			++ccline.cmdpos;
+		    }
+#endif
+		    ++ccline.cmdpos;
 		}
 		while ((c == K_S_RIGHT || (mod_mask & MOD_MASK_CTRL))
 			&& ccline.cmdbuff[ccline.cmdpos] != ' ')
@@ -818,10 +798,12 @@ getcmdline(firstc, count, indent)
 		    if (ccline.cmdpos <= 0)
 			break;
 		    --ccline.cmdpos;
-#ifdef FEAT_MBYTE
-		    if (has_mbyte)	/* move to first byte of char */
-			ccline.cmdpos -= mb_head_off(ccline.cmdbuff,
-					      ccline.cmdbuff + ccline.cmdpos);
+#ifdef MULTI_BYTE
+		    if (is_dbcs && mb_isbyte2(ccline.cmdbuff, ccline.cmdpos))
+		    {
+			--ccline.cmdpos;
+			--ccline.cmdspos;
+		    }
 #endif
 		    ccline.cmdspos -= cmdline_charsize(ccline.cmdpos);
 		}
@@ -829,22 +811,22 @@ getcmdline(firstc, count, indent)
 			&& ccline.cmdbuff[ccline.cmdpos - 1] != ' ');
 		goto cmdline_not_changed;
 
-#if defined(FEAT_MOUSE) || defined(FEAT_FKMAP)
+#if defined(USE_MOUSE) || defined(FKMAP)
 	case K_IGNORE:
 #endif
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
 	case K_MIDDLEDRAG:
 	case K_MIDDLERELEASE:
 		goto cmdline_not_changed;   /* Ignore mouse */
 
 	case K_MIDDLEMOUSE:
-# ifdef FEAT_GUI
+# ifdef USE_GUI
 		/* When GUI is active, also paste when 'mouse' is empty */
 		if (!gui.in_use)
 # endif
 		    if (!mouse_has(MOUSE_COMMAND))
 			goto cmdline_not_changed;   /* Ignore mouse */
-# ifdef FEAT_GUI
+# ifdef USE_GUI
 		if (gui.in_use)
 		    cmdline_paste('*', TRUE);
 		else
@@ -866,7 +848,7 @@ getcmdline(firstc, count, indent)
 		    ignore_drag_release = TRUE;
 		else
 		    ignore_drag_release = FALSE;
-# ifdef FEAT_GUI
+# ifdef USE_GUI
 		/* When GUI is active, also move when 'mouse' is empty */
 		if (!gui.in_use)
 # endif
@@ -889,14 +871,14 @@ getcmdline(firstc, count, indent)
 	case K_MOUSEUP:
 		goto cmdline_not_changed;
 
-#endif	/* FEAT_MOUSE */
+#endif	/* USE_MOUSE */
 
-#ifdef FEAT_GUI
+#ifdef USE_GUI
 	case K_LEFTMOUSE_NM:	/* mousefocus click, ignored */
 	case K_LEFTRELEASE_NM:
 		goto cmdline_not_changed;
 
-	case K_VER_SCROLLBAR:
+	case K_SCROLLBAR:
 		if (!msg_scrolled)
 		{
 		    gui_do_scroll();
@@ -904,7 +886,7 @@ getcmdline(firstc, count, indent)
 		}
 		goto cmdline_not_changed;
 
-	case K_HOR_SCROLLBAR:
+	case K_HORIZ_SCROLLBAR:
 		if (!msg_scrolled)
 		{
 		    gui_do_horiz_scroll();
@@ -915,7 +897,7 @@ getcmdline(firstc, count, indent)
 	case K_SELECT:	    /* end of Select mode mapping - ignore */
 		goto cmdline_not_changed;
 
-	case Ctrl_B:	    /* begin of command line */
+	case Ctrl('B'):	    /* begin of command line */
 	case K_HOME:
 	case K_KHOME:
 	case K_XHOME:
@@ -924,7 +906,7 @@ getcmdline(firstc, count, indent)
 		set_cmdspos();
 		goto cmdline_not_changed;
 
-	case Ctrl_E:	    /* end of command line */
+	case Ctrl('E'):	    /* end of command line */
 	case K_END:
 	case K_KEND:
 	case K_XEND:
@@ -934,21 +916,21 @@ getcmdline(firstc, count, indent)
 		set_cmdspos_cursor();
 		goto cmdline_not_changed;
 
-	case Ctrl_A:	    /* all matches */
+	case Ctrl('A'):	    /* all matches */
 		if (nextwild(WILD_ALL, 0) == FAIL)
 		    break;
 		goto cmdline_changed;
 
-	case Ctrl_L:	    /* longest common part */
+	case Ctrl('L'):	    /* longest common part */
 		if (nextwild(WILD_LONGEST, 0) == FAIL)
 		    break;
 		goto cmdline_changed;
 
-	case Ctrl_N:	    /* next match */
-	case Ctrl_P:	    /* previous match */
+	case Ctrl('N'):	    /* next match */
+	case Ctrl('P'):	    /* previous match */
 		if (cmd_numfiles > 0)
 		{
-		    if (nextwild((c == Ctrl_P) ? WILD_PREV : WILD_NEXT, 0)
+		    if (nextwild((c == Ctrl('P')) ? WILD_PREV : WILD_NEXT, 0)
 								      == FAIL)
 			break;
 		    goto cmdline_changed;
@@ -980,7 +962,7 @@ getcmdline(firstc, count, indent)
 		for (;;)
 		{
 		    /* one step backwards */
-		    if (c == K_UP || c == K_S_UP || c == Ctrl_P ||
+		    if (c == K_UP || c == K_S_UP || c == Ctrl('P') ||
 			    c == K_PAGEUP || c == K_KPAGEUP)
 		    {
 			if (hiscnt == hislen)	/* first time */
@@ -1043,9 +1025,9 @@ getcmdline(firstc, count, indent)
 		beep_flush();
 		goto cmdline_not_changed;
 
-	case Ctrl_V:
-	case Ctrl_Q:
-#ifdef FEAT_MOUSE
+	case Ctrl('V'):
+	case Ctrl('Q'):
+#ifdef USE_MOUSE
 		ignore_drag_release = TRUE;
 #endif
 		putcmdline('^');
@@ -1053,9 +1035,9 @@ getcmdline(firstc, count, indent)
 		do_abbr = FALSE;	    /* don't do abbreviation now */
 		break;
 
-#ifdef FEAT_DIGRAPHS
-	case Ctrl_K:
-#ifdef FEAT_MOUSE
+#ifdef DIGRAPHS
+	case Ctrl('K'):
+#ifdef USE_MOUSE
 		ignore_drag_release = TRUE;
 #endif
 		putcmdline('?');
@@ -1071,7 +1053,7 @@ getcmdline(firstc, count, indent)
 		{
 		    if (IS_SPECIAL(c))	    /* insert special key code */
 			break;
-		    if (char2cells(c) == 1)
+		    if (charsize(c) == 1)
 			putcmdline(c);
 		    ++no_mapping;
 		    ++allow_keys;
@@ -1086,13 +1068,13 @@ getcmdline(firstc, count, indent)
 		}
 		redrawcmd();
 		goto cmdline_not_changed;
-#endif /* FEAT_DIGRAPHS */
+#endif /* DIGRAPHS */
 
-#ifdef FEAT_RIGHTLEFT
-	case Ctrl__:	    /* CTRL-_: switch language mode */
+#ifdef RIGHTLEFT
+	case Ctrl('_'):	    /* CTRL-_: switch language mode */
 		if (!p_ari)
 		    break;
-#ifdef FEAT_FKMAP
+#ifdef FKMAP
 		if (p_altkeymap)
 		{
 		    cmd_fkmap = !cmd_fkmap;
@@ -1104,6 +1086,12 @@ getcmdline(firstc, count, indent)
 		    cmd_hkmap = !cmd_hkmap;
 		goto cmdline_not_changed;
 #endif
+
+	    /* keypad keys: When not mapped they produce a normal char */
+	case K_KPLUS:		c = '+'; break;
+	case K_KMINUS:		c = '-'; break;
+	case K_KDIVIDE:		c = '/'; break;
+	case K_KMULTIPLY:	c = '*'; break;
 
 	default:
 #ifdef UNIX
@@ -1134,22 +1122,25 @@ getcmdline(firstc, count, indent)
 	/*
 	 * put the character in the command line
 	 */
-	if (IS_SPECIAL(c) || mod_mask != 0)
+	if (IS_SPECIAL(c) || mod_mask != 0x0)
 	    put_on_cmdline(get_special_key_name(c, mod_mask), -1, TRUE);
 	else
 	{
-#ifdef FEAT_MBYTE
-	    if (has_mbyte)
+	    IObuff[0] = c;
+
+#ifdef MULTI_BYTE
+	    /* prevent from splitting a multi-byte character into two
+	       indivisual characters in command line. */
+	    if (is_dbcs && IsLeadByte(c))
 	    {
-		j = mb_char2bytes(c, IObuff);
-		put_on_cmdline(IObuff, j, TRUE);
+		IObuff[1] = safe_vgetc();
+		put_on_cmdline(IObuff, 2, TRUE);
 	    }
 	    else
-#endif
-	    {
-		IObuff[0] = c;
 		put_on_cmdline(IObuff, 1, TRUE);
-	    }
+#else
+	    put_on_cmdline(IObuff, 1, TRUE);
+#endif
 	}
 	goto cmdline_changed;
 
@@ -1162,16 +1153,13 @@ getcmdline(firstc, count, indent)
  * (Sorry for the goto's, I know it is ugly).
  */
 cmdline_not_changed:
-#ifdef FEAT_SEARCH_EXTRA
+#ifdef EXTRA_SEARCH
 	if (!incsearch_postponed)
 	    continue;
 #endif
 
 cmdline_changed:
-#ifdef FEAT_SEARCH_EXTRA
-	/*
-	 * 'incsearch' highlighting.
-	 */
+#ifdef EXTRA_SEARCH
 	if (p_is && (firstc == '/' || firstc == '?'))
 	{
 	    /* if there is a character waiting, search and redraw later */
@@ -1197,25 +1185,21 @@ cmdline_changed:
 	    if (i)
 		highlight_match = TRUE;		/* highlight position */
 	    else
-		highlight_match = FALSE;	/* remove highlight */
+		highlight_match = FALSE;	    /* don't highlight */
 
 	    /* first restore the old curwin values, so the screen is
 	     * positioned in the same way as the actual search command */
 	    curwin->w_leftcol = old_leftcol;
 	    curwin->w_topline = old_topline;
 	    curwin->w_botline = old_botline;
-	    changed_cline_bef_curs();
 	    update_topline();
 	    /*
 	     * First move cursor to end of match, then to start.  This moves
 	     * the whole match onto the screen when 'nowrap' is set.
 	     */
-	    i = curwin->w_cursor.col;
-	    curwin->w_cursor.lnum += search_match_lines;
-	    curwin->w_cursor.col = search_match_endcol;
+	    curwin->w_cursor.col += search_match_len;
 	    validate_cursor();
-	    curwin->w_cursor.lnum -= search_match_lines;
-	    curwin->w_cursor.col = i;
+	    curwin->w_cursor.col -= search_match_len;
 	    validate_cursor();
 
 	    update_screen(NOT_VALID);
@@ -1229,11 +1213,11 @@ cmdline_changed:
 
 returncmd:
 
-#ifdef FEAT_FKMAP
+#ifdef FKMAP
     cmd_fkmap = 0;
 #endif
 
-#ifdef FEAT_SEARCH_EXTRA
+#ifdef EXTRA_SEARCH
     if (did_incsearch)
     {
 	curwin->w_cursor = old_cursor;
@@ -1287,14 +1271,14 @@ returncmd:
 	need_wait_return = FALSE;
 
     State = save_State;
-#ifdef FEAT_MOUSE
+#ifdef USE_MOUSE
     setmouse();
 #endif
 
     return ccline.cmdbuff;
 }
 
-#if (defined(FEAT_CRYPT) || defined(FEAT_EVAL)) || defined(PROTO)
+#if (defined(CRYPTV) || defined(WANT_EVAL)) || defined(PROTO)
 /*
  * Get a command line with a prompt.
  * This is prepared to be called recursively from getcmdline() (e.g. by
@@ -1325,11 +1309,11 @@ getcmdline_prompt(firstc, prompt, attr)
 cmdline_charsize(idx)
     int		idx;
 {
-#ifdef FEAT_CRYPT
+#ifdef CRYPTV
     if (cmdline_crypt)	    /* showing '*', always 1 position */
 	return 1;
 #endif
-    return ptr2cells(ccline.cmdbuff + idx);
+    return charsize(ccline.cmdbuff[idx]);
 }
 
 /*
@@ -1362,14 +1346,18 @@ set_cmdspos_cursor()
 	m = MAXCOL;
     for (i = 0; i < ccline.cmdlen && i < ccline.cmdpos; ++i)
     {
-	c = cmdline_charsize(i);
-#ifdef FEAT_MBYTE
+#ifdef CRYPTV
+	if (cmdline_crypt)
+	    c = 1;
+	else
+#endif
+	    c = charsize(ccline.cmdbuff[i]);
+#ifdef MULTI_BYTE
 	/* multibyte wrap */
-	if (has_mbyte
-		&& mb_ptr2cells(ccline.cmdbuff + i) > 1
-		&& ccline.cmdspos % Columns + c == Columns)
+	if (is_dbcs && IsLeadByte(ccline.cmdbuff[i])
+				 && (ccline.cmdspos % Columns + c == Columns))
 	    ccline.cmdspos++;
- #endif
+#endif
 	/* If the cmdline doesn't fit, put cursor on last visible char. */
 	if ((ccline.cmdspos += c) >= m)
 	{
@@ -1377,10 +1365,6 @@ set_cmdspos_cursor()
 	    ccline.cmdspos -= c;
 	    break;
 	}
-#ifdef FEAT_MBYTE
-	if (has_mbyte)
-	    i += mb_ptr2len_check(ccline.cmdbuff + i) - 1;
-#endif
     }
 }
 
@@ -1412,17 +1396,21 @@ getexmodeline(c, dummy, indent)
     void	*dummy;		/* cookie not used */
     int		indent;		/* indent for inside conditionals */
 {
-    garray_t		line_ga;
+    struct growarray	line_ga;
     int			len;
     int			off = 0;
     char_u		*p;
     int			finished = FALSE;
-#if defined(FEAT_GUI) || defined(NO_COOKED_INPUT)
+#if defined(USE_GUI) || defined(NO_COOKED_INPUT)
     int			startcol = 0;
     int			c1;
     int			escaped = FALSE;	/* CTRL-V typed */
     int			vcol = 0;
 #endif
+
+    /* Switch cursor on now.  This avoids that it happens after the "\n", which
+     * confuses the system function that computes tabstops. */
+    cursor_on();
 
     /* always start in column 0; write a newline if necessary */
     compute_cmdrow();
@@ -1433,7 +1421,7 @@ getexmodeline(c, dummy, indent)
 	msg_putchar(':');
 	while (indent-- > 0)
 	    msg_putchar(' ');
-#if defined(FEAT_GUI) || defined(NO_COOKED_INPUT)
+#if defined(USE_GUI) || defined(NO_COOKED_INPUT)
 	startcol = msg_col;
 #endif
     }
@@ -1467,7 +1455,7 @@ getexmodeline(c, dummy, indent)
 	 * When using the GUI, and for systems that don't have cooked input,
 	 * handle line editing here.
 	 */
-#if defined(FEAT_GUI) || defined(NO_COOKED_INPUT)
+#if defined(USE_GUI) || defined(NO_COOKED_INPUT)
 # ifndef NO_COOKED_INPUT
 	if (gui.in_use)
 # endif
@@ -1485,7 +1473,7 @@ getexmodeline(c, dummy, indent)
 # ifndef NO_COOKED_INPUT
 		if ((c1 == K_SPECIAL || c1 == CSI) && len >= 2)
 # else
-#  ifdef FEAT_GUI
+#  ifdef USE_GUI
 		if ((c1 == K_SPECIAL || (c1 == CSI && gui.in_use)) && len >= 2)
 #  else
 		if (c1 == K_SPECIAL && len >= 2)
@@ -1521,7 +1509,7 @@ getexmodeline(c, dummy, indent)
 				if (*q == TAB)
 				    v += 8 - v % 8;
 				else
-				    v += ptr2cells(q);
+				    v += charsize(*q);
 				++q;
 			    }
 			    /* erase characters to position cursor */
@@ -1536,7 +1524,7 @@ getexmodeline(c, dummy, indent)
 			continue;
 		    }
 
-		    if (c1 == Ctrl_U)
+		    if (c1 == Ctrl('U'))
 		    {
 			msg_col = startcol;
 			msg_clr_eos();
@@ -1545,7 +1533,7 @@ getexmodeline(c, dummy, indent)
 			continue;
 		    }
 
-		    if (c1 == Ctrl_V)
+		    if (c1 == Ctrl('V'))
 		    {
 			escaped = TRUE;
 			continue;
@@ -1567,7 +1555,7 @@ getexmodeline(c, dummy, indent)
 		{
 		    msg_outtrans_len(
 			     ((char_u *)line_ga.ga_data) + line_ga.ga_len, 1);
-		    vcol += char2cells(c1);
+		    vcol += charsize(c1);
 		}
 		++line_ga.ga_len;
 		--line_ga.ga_room;
@@ -1733,7 +1721,7 @@ put_on_cmdline(str, len, redraw)
 	mch_memmove(ccline.cmdbuff + ccline.cmdpos, str, (size_t)len);
 	if (redraw)
 	{
-#ifdef FEAT_CRYPT
+#ifdef CRYPTV
 	    if (cmdline_crypt)		/* only write '*' characters */
 		for (i = ccline.cmdpos; i < ccline.cmdlen; ++i)
 		    msg_putchar('*');
@@ -1746,7 +1734,7 @@ put_on_cmdline(str, len, redraw)
 		msg_no_more = FALSE;
 	    }
 	}
-#ifdef FEAT_FKMAP
+#ifdef FKMAP
 	/*
 	 * If we are in Farsi command mode, the character input must be in
 	 * Insert mode. So do not advance the cmdpos.
@@ -1760,17 +1748,16 @@ put_on_cmdline(str, len, redraw)
 		m = MAXCOL;
 	    for (i = 0; i < len; ++i)
 	    {
-#ifdef FEAT_CRYPT
+#ifdef CRYPTV
 		if (cmdline_crypt)
 		    c = 1;
 		else
 #endif
-		    c = ptr2cells(str + i);
-#ifdef FEAT_MBYTE
+		    c = charsize(str[i]);
+#ifdef MULTI_BYTE
 		/* multibyte wrap */
-		if (has_mbyte
-			&& mb_ptr2cells(str + i) > 1
-			&& ccline.cmdspos % Columns + c == Columns)
+		if (is_dbcs && IsLeadByte(str[i])
+				   && ccline.cmdspos % Columns + c == Columns)
 		    ccline.cmdspos++;
 #endif
 		/* Stop cursor at the end of the screen */
@@ -1778,16 +1765,6 @@ put_on_cmdline(str, len, redraw)
 		    break;
 		++ccline.cmdpos;
 		ccline.cmdspos += c;
-#ifdef FEAT_MBYTE
-		if (has_mbyte)
-		{
-		    c = mb_ptr2len_check(str + i) - 1;
-		    if (i + c + 1 >= len)
-			c = len - i - 1;
-		    ccline.cmdpos += c;
-		    i += c;
-		}
-#endif
 	    }
 	}
     }
@@ -1796,7 +1773,7 @@ put_on_cmdline(str, len, redraw)
     return retval;
 }
 
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 /*
  * Delete characters on the command line, from "from" to the current
  * position.
@@ -1848,13 +1825,13 @@ redrawcmdprompt()
     static void
 redrawcmd()
 {
-#ifdef FEAT_CRYPT
+#ifdef CRYPTV
     int		i;
 #endif
 
     msg_start();
     redrawcmdprompt();
-#ifdef FEAT_CRYPT
+#ifdef CRYPTV
     if (cmdline_crypt)
     {
 	/* Show '*' for every character typed */
@@ -1890,8 +1867,8 @@ compute_cmdrow()
     if (exmode_active || msg_scrolled)
 	cmdline_row = Rows - 1;
     else
-	cmdline_row = W_WINROW(lastwin) + lastwin->w_height
-						   + W_STATUS_HEIGHT(lastwin);
+	cmdline_row = lastwin->w_winpos + lastwin->w_height +
+					lastwin->w_status_height;
 }
 
     static void
@@ -2119,7 +2096,7 @@ ExpandOne(str, orig, options, mode)
 		else
 		    findex = -1;
 	    }
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
 	    if (p_wmnu)
 		win_redr_status_matches(cmd_numfiles, cmd_files, findex);
 #endif
@@ -2161,13 +2138,13 @@ ExpandOne(str, orig, options, mode)
 	     * causing the pattern to be added, which has illegal characters.
 	     */
 	    if (!(options & WILD_SILENT) && (options & WILD_LIST_NOTFOUND))
-		EMSG2(_(e_nomatch2), str);
+		emsg2(e_nomatch2, str);
 #endif
 	}
 	else if (cmd_numfiles == 0)
 	{
 	    if (!(options & WILD_SILENT))
-		EMSG2(_(e_nomatch2), str);
+		emsg2(e_nomatch2, str);
 	}
 	else
 	{
@@ -2290,7 +2267,7 @@ ExpandOne(str, orig, options, mode)
 		     * (and possibly have to hit return to continue!).
 		     */
 		    if (!(options & WILD_SILENT))
-			EMSG(_(e_toomany));
+			emsg(e_toomany);
 		    else if (!(options & WILD_NO_BEEP))
 			beep_flush();
 		}
@@ -2446,7 +2423,7 @@ showmatches(wildmenu)
 	files_found = cmd_files;
     }
 
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
     if (!wildmenu)
     {
 #endif
@@ -2457,13 +2434,13 @@ showmatches(wildmenu)
 	cmdline_row = msg_row;
 	msg_didany = FALSE;		/* lines_left will be set again */
 	msg_start();			/* prepare for paging */
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
     }
 #endif
 
     if (got_int)
 	got_int = FALSE;	/* only int. the completion, not the cmd line */
-#ifdef FEAT_WILDMENU
+#ifdef WILDMENU
     else if (wildmenu)
 	win_redr_status_matches(num_files, files_found, 0);
 #endif
@@ -2501,10 +2478,10 @@ showmatches(wildmenu)
 
 	if (expand_context == EXPAND_TAGS_LISTFILES)
 	{
-	    MSG_PUTS_ATTR(_("tagname"), hl_attr(HLF_T));
+	    MSG_PUTS_ATTR("tagname", hl_attr(HLF_T));
 	    msg_clr_eos();
 	    msg_advance(maxlen - 3);
-	    MSG_PUTS_ATTR(_(" kind file\n"), hl_attr(HLF_T));
+	    MSG_PUTS_ATTR(" kind file\n", hl_attr(HLF_T));
 	}
 
 	/* list the files line by line */
@@ -2719,7 +2696,8 @@ addstar(fname, len, context)
  *  EXPAND_USER_FUNC	    Complete user defined function names, eg :delf F^I
  *  EXPAND_EXPRESSION	    Complete internal or user defined function/variable
  *			    names in expressions, eg :while s^I
- *  EXPAND_ENV_VARS	    Complete environment variable names
+ *
+ * -- webb.
  */
     static void
 set_expand_context()
@@ -2758,8 +2736,8 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     int	    files_only;
     int	    options;
 {
-#ifdef FEAT_CMDL_COMPL
-    regprog_t	*prog;
+#ifdef CMDLINE_COMPL
+    vim_regexp	*prog;
 #endif
     int		ret;
     int		flags = 0;
@@ -2815,7 +2793,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     if (expand_context == EXPAND_HELP)
 	return find_help_tags(pat, num_file, file);
 
-#ifndef FEAT_CMDL_COMPL
+#ifndef CMDLINE_COMPL
     return FAIL;
 #else
     if (expand_context == EXPAND_OLD_SETTING)
@@ -2838,7 +2816,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     else if (expand_context == EXPAND_SETTINGS ||
 				       expand_context == EXPAND_BOOL_SETTINGS)
 	ret = ExpandSettings(prog, num_file, file);
-#ifdef FEAT_USR_CMDS
+#ifdef USER_COMMANDS
     else if (expand_context == EXPAND_USER_COMMANDS)
 	ret = ExpandGeneric(prog, num_file, file, get_user_commands);
     else if (expand_context == EXPAND_USER_CMD_FLAGS)
@@ -2848,7 +2826,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
     else if (expand_context == EXPAND_USER_COMPLETE)
 	ret = ExpandGeneric(prog, num_file, file, get_user_cmd_complete);
 #endif
-#ifdef FEAT_EVAL
+#ifdef WANT_EVAL
     else if (expand_context == EXPAND_USER_VARS)
 	ret = ExpandGeneric(prog, num_file, file, get_user_var_name);
     else if (expand_context == EXPAND_FUNCTIONS)
@@ -2860,13 +2838,13 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 #endif
     else if (expand_context == EXPAND_MAPPINGS)
 	ret = ExpandMappings(prog, num_file, file);
-#ifdef FEAT_MENU
+#ifdef WANT_MENU
     else if (expand_context == EXPAND_MENUS)
 	ret = ExpandGeneric(prog, num_file, file, get_menu_name);
     else if (expand_context == EXPAND_MENUNAMES)
 	ret = ExpandGeneric(prog, num_file, file, get_menu_names);
 #endif
-#ifdef FEAT_SYN_HL
+#ifdef SYNTAX_HL
     else if (expand_context == EXPAND_SYNTAX)
     {
 	reg_ic = TRUE;
@@ -2878,7 +2856,7 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 	reg_ic = TRUE;
 	ret = ExpandGeneric(prog, num_file, file, get_highlight_name);
     }
-#ifdef FEAT_AUTOCMD
+#ifdef AUTOCMD
     else if (expand_context == EXPAND_EVENTS)
     {
 	reg_ic = TRUE;
@@ -2890,20 +2868,15 @@ ExpandFromContext(pat, num_file, file, files_only, options)
 	ret = ExpandGeneric(prog, num_file, file, get_augroup_name);
     }
 #endif
-    else if (expand_context == EXPAND_ENV_VARS)
-    {
-	reg_ic = TRUE;
-	ret = ExpandGeneric(prog, num_file, file, get_env_name);
-    }
     else
 	ret = FAIL;
 
     vim_free(prog);
     return ret;
-#endif /* FEAT_CMDL_COMPL */
+#endif /* CMDLINE_COMPL */
 }
 
-#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
+#if defined(CMDLINE_COMPL) || defined(PROTO)
 /*
  * Expand a list of names.
  *
@@ -2915,16 +2888,15 @@ ExpandFromContext(pat, num_file, file, files_only, options)
  */
     int
 ExpandGeneric(prog, num_file, file, func)
-    regprog_t	*prog;
+    vim_regexp	*prog;
     int		*num_file;
     char_u	***file;
     char_u	*((*func)__ARGS((int))); /* returns a string from the list */
 {
-    int		i;
-    int		count = 0;
-    int		loop;
-    char_u	*str;
-    regmatch_t	regmatch;
+    int i;
+    int count = 0;
+    int	loop;
+    char_u  *str;
 
     /* do this loop twice:
      * loop == 0: count the number of matching names
@@ -2940,14 +2912,13 @@ ExpandGeneric(prog, num_file, file, func)
 	    if (*str == NUL)	    /* skip empty strings */
 		continue;
 
-	    regmatch.regprog = prog;
-	    if (vim_regexec(&regmatch, str, (colnr_t)0))
+	    if (vim_regexec(prog, str, TRUE))
 	    {
 		if (loop)
 		{
 		    str = vim_strsave_escaped(str, (char_u *)" \t\\.");
 		    (*file)[count] = str;
-#ifdef FEAT_MENU
+#ifdef WANT_MENU
 		    if (func == get_menu_names && str != NULL)
 		    {
 			/* test for separator added by get_menu_names() */
@@ -3020,11 +2991,11 @@ static char *(history_names[]) =
     static void
 init_history()
 {
-    int		newlen;	    /* new length of history table */
-    histentry_t	*temp;
-    int		i;
-    int		j;
-    int		type;
+    int			newlen;	    /* new length of history table */
+    struct hist_entry	*temp;
+    int			i;
+    int			j;
+    int			type;
 
     /*
      * If size of history table changed, reallocate it
@@ -3036,8 +3007,8 @@ init_history()
 	{
 	    if (newlen)
 	    {
-		temp = (histentry_t *)lalloc(
-				(long_u)(newlen * sizeof(histentry_t)), TRUE);
+		temp = (struct hist_entry *)lalloc( (long_u)(newlen
+					* sizeof(struct hist_entry)), TRUE);
 		if (temp == NULL)   /* out of memory! */
 		{
 		    if (type == 0)  /* first one: just keep the old length */
@@ -3184,7 +3155,7 @@ add_to_history(histype, new_entry, in_map)
     char_u	*new_entry;
     int		in_map;		/* consider maptick when inside a mapping */
 {
-    histentry_t	*hisptr;
+    struct hist_entry	*hisptr;
 
     if (hislen == 0)		/* no history */
 	return;
@@ -3222,7 +3193,7 @@ add_to_history(histype, new_entry, in_map)
     }
 }
 
-#if defined(FEAT_EVAL) || defined(PROTO)
+#if defined(WANT_EVAL) || defined(PROTO)
 
 /*
  * Get identifier of newest history entry.
@@ -3247,11 +3218,11 @@ get_history_idx(histype)
  */
     static int
 calc_hist_idx(histype, num)
-    int		histype;
-    int		num;
+    int	    histype;
+    int	    num;
 {
-    int		i;
-    histentry_t	*hist;
+    int			i;
+    struct hist_entry	*hist;
 
     if (hislen == 0 || histype < 0 || histype >= HIST_COUNT
 		    || (i = hisidx[histype]) < 0 || num == 0)
@@ -3300,10 +3271,10 @@ get_history_entry(histype, idx)
  */
     int
 clr_history(histype)
-    int		histype;
+    int	    histype;
 {
-    int		i;
-    histentry_t	*hisptr;
+    int			i;
+    struct hist_entry	*hisptr;
 
     if (hislen != 0 && histype >= 0 && histype < HIST_COUNT)
     {
@@ -3330,20 +3301,15 @@ del_history_entry(histype, str)
     int		histype;
     char_u	*str;
 {
-    regmatch_t	regmatch;
-    histentry_t	*hisptr;
-    int		idx;
-    int		i;
-    int		last;
-    int		found = FALSE;
+    vim_regexp		*prog = NULL;
+    struct hist_entry	*hisptr;
+    int			idx;
+    int			i;
+    int			last;
+    int			found = FALSE;
 
-    regmatch.regprog = NULL;
-    if (hislen != 0
-	    && histype >= 0
-	    && histype < HIST_COUNT
-	    && *str != NUL
-	    && (idx = hisidx[histype]) >= 0
-	    && (regmatch.regprog = vim_regcomp(str, TRUE)) != NULL)
+    if (hislen != 0 && histype >= 0 && histype < HIST_COUNT && *str != NUL
+	&& (idx = hisidx[histype]) >= 0 && (prog = vim_regcomp(str, TRUE)))
     {
 	i = last = idx;
 	do
@@ -3351,7 +3317,7 @@ del_history_entry(histype, str)
 	    hisptr = &history[histype][i];
 	    if (hisptr->hisstr == NULL)
 		break;
-	    if (vim_regexec(&regmatch, hisptr->hisstr, (colnr_t)0))
+	    if (vim_regexec(prog, hisptr->hisstr, TRUE))
 	    {
 		found = TRUE;
 		vim_free(hisptr->hisstr);
@@ -3375,7 +3341,8 @@ del_history_entry(histype, str)
 	if (history[histype][idx].hisstr == NULL)
 	    hisidx[histype] = -1;
     }
-    vim_free(regmatch.regprog);
+    if (prog)
+	vim_free(prog);
     return found;
 }
 
@@ -3416,9 +3383,9 @@ del_history_idx(histype, idx)
     return TRUE;
 }
 
-#endif /* FEAT_EVAL */
+#endif /* WANT_EVAL */
 
-#if defined(FEAT_CRYPT) || defined(PROTO)
+#if defined(CRYPTV) || defined(PROTO)
 /*
  * Very specific function to remove the value in ":set key=val" from the
  * history.
@@ -3495,22 +3462,21 @@ get_list_range(str, num1, num2)
  * :history command - print a history
  */
     void
-ex_history(eap)
-    exarg_t	*eap;
+do_history(arg)
+    char_u  *arg;
 {
-    histentry_t	*hist;
-    int		histype1 = HIST_CMD;
-    int		histype2 = HIST_CMD;
-    int		hisidx1 = 1;
-    int		hisidx2 = -1;
-    int		idx;
-    int		i, j, k;
-    char_u	*end;
-    char_u	*arg = eap->arg;
+    struct hist_entry	*hist;
+    int			histype1 = HIST_CMD;
+    int			histype2 = HIST_CMD;
+    int			hisidx1 = 1;
+    int			hisidx2 = -1;
+    int			idx;
+    int			i, j, k;
+    char_u		*end;
 
     if (hislen == 0)
     {
-	MSG(_("'history' option is zero"));
+	MSG("'history' option is zero");
 	return;
     }
 
@@ -3532,7 +3498,7 @@ ex_history(eap)
 	    else
 	    {
 		*end = i;
-		EMSG(_(e_trailing));
+		emsg(e_trailing);
 		return;
 	    }
 	}
@@ -3544,7 +3510,7 @@ ex_history(eap)
 	end = arg;
     if (!get_list_range(&end, &hisidx1, &hisidx2) || *end != NUL)
     {
-	EMSG(_(e_trailing));
+	emsg(e_trailing);
 	return;
     }
 
@@ -3581,7 +3547,7 @@ ex_history(eap)
     }
 }
 
-#ifdef FEAT_VIMINFO
+#ifdef VIMINFO
 static char_u **viminfo_history[HIST_COUNT] = {NULL, NULL, NULL, NULL};
 static int	viminfo_hisidx[HIST_COUNT] = {0, 0, 0, 0};
 static int	viminfo_hislen[HIST_COUNT] = {0, 0, 0, 0};
@@ -3749,11 +3715,11 @@ write_viminfo_history(fp)
 	    continue;
 	if (num_saved < 0)  /* Use default */
 	    num_saved = hislen;
-	fprintf(fp, _("\n# %s History (newest to oldest):\n"),
-			    type == HIST_CMD ? _("Command Line") :
-			    type == HIST_SEARCH ? _("Search String") :
-			    type == HIST_EXPR ?  _("Expression") :
-					_("Input Line"));
+	fprintf(fp, "\n# %s History (newest to oldest):\n",
+			    type == HIST_CMD ? "Command Line" :
+			    type == HIST_SEARCH ? "Search String" :
+			    type == HIST_EXPR ?  "Expression" :
+					"Input Line");
 	if (num_saved > hislen)
 	    num_saved = hislen;
 	i = hisidx[type];
@@ -3770,9 +3736,9 @@ write_viminfo_history(fp)
 	    }
     }
 }
-#endif /* FEAT_VIMINFO */
+#endif /* VIMINFO */
 
-#if defined(FEAT_FKMAP) || defined(PROTO)
+#if defined(FKMAP) || defined(PROTO)
 /*
  * Write a character at the current cursor+offset position.
  * It is directly written into the command buffer block.
@@ -3783,7 +3749,7 @@ cmd_pchar(c, offset)
 {
     if (ccline.cmdpos + offset >= ccline.cmdlen || ccline.cmdpos + offset < 0)
     {
-	EMSG(_("cmd_pchar beyond the command length"));
+	EMSG("cmd_pchar beyond the command length");
 	return;
     }
     ccline.cmdbuff[ccline.cmdpos + offset] = (char_u)c;
@@ -3795,7 +3761,7 @@ cmd_gchar(offset)
 {
     if (ccline.cmdpos + offset >= ccline.cmdlen || ccline.cmdpos + offset < 0)
     {
-	/*  EMSG(_("cmd_gchar beyond the command length")); */
+	/*  EMSG("cmd_gchar beyond the command length"); */
 	return NUL;
     }
     return (int)ccline.cmdbuff[ccline.cmdpos + offset];
