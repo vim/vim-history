@@ -65,7 +65,7 @@ SCRIPT_GZIP = test11.out
 	-@ write sys$output "-----------------------------------------------"
 	-@ write sys$output "                "$*" "
 	-@ write sys$output "-----------------------------------------------"
-	-@ $(VIMPROG) $(GUI_OPTION) -u vms.vim -s dotest.in $*.in
+	-@ $(VIMPROG) $(GUI_OPTION) -u vms.vim --noplugins -s dotest.in $*.in
 	-@ differences test.out $*.ok;
 	-@ rename test.out $*.out
 	-@ if "''F$SEARCH("Xdotest.*")'" .NES. "" then delete/noconfirm/nolog Xdotest.*.*

@@ -427,7 +427,7 @@ foldCreate(start, end)
     fold_t	*fp;
     garray_t	*gap;
     garray_t	fold_ga;
-    int		i;
+    int		i, j;
     int		cont;
     int		use_level = FALSE;
     int		closed = FALSE;
@@ -492,21 +492,19 @@ foldCreate(start, end)
 	    mch_memmove(fold_ga.ga_data, fp, sizeof(fold_t) * cont);
 	    fold_ga.ga_len += cont;
 	    fold_ga.ga_room -= cont;
-	    gap->ga_len -= cont;
-	    gap->ga_room += cont;
 	    i += cont;
 
 	    /* Adjust line numbers in contained folds to be relative to the
 	     * new fold. */
-	    while (--cont >= 0)
-		((fold_t *)fold_ga.ga_data)[cont].fd_top -= start_rel;
+	    for (j = 0; j < cont; ++j)
+		((fold_t *)fold_ga.ga_data)[j].fd_top -= start_rel;
 	}
 	/* Move remaining entries to after the new fold. */
 	if (i < gap->ga_len)
 	    mch_memmove(fp + 1, (fold_t *)gap->ga_data + i,
 				     sizeof(fold_t) * (gap->ga_len - i));
-	++gap->ga_len;
-	--gap->ga_room;
+	gap->ga_len = gap->ga_len + 1 - cont;
+	gap->ga_room = gap->ga_room - 1 + cont;
 
 	/* insert new fold */
 	fp->fd_nested = fold_ga;

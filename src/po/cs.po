@@ -2,7 +2,6 @@
 #
 # FIRST AUTHOR Jiøí Pavlovský <pavlovsk@ff.cuni.cz>, 2000.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: vim-6.0g\n"

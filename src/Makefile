@@ -775,7 +775,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60o
+VIMRTDIR = /vim60p
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 INDSUBDIR = /indent
@@ -1287,7 +1287,7 @@ PRO_AUTO = \
 	$(TCL_PRO)
 
 PRO_MANUAL = os_amiga.pro os_msdos.pro os_win16.pro os_win32.pro \
-	os_beos.pro os_vms.pro os_riscos.pro $(PERL_PRO)
+	os_mswin.pro os_beos.pro os_vms.pro os_riscos.pro $(PERL_PRO)
 
 # Default target is making the executable and tools
 all: $(VIMTARGET) $(TOOLS) languages
@@ -1390,6 +1390,9 @@ os_win16.pro: os_win16.c
 
 os_win32.pro: os_win32.c
 	cproto $(PFLAGS) -DWIN32 -UHAVE_CONFIG_H os_win32.c > proto/os_win32.pro
+
+os_mswin.pro: os_mswin.c
+	cproto $(PFLAGS) -DWIN16 -DWIN32 -UHAVE_CONFIG_H os_mswin.c > proto/os_mswin.pro
 
 os_beos.pro: os_beos.c
 	cproto $(PFLAGS) -D__BEOS__ -UHAVE_CONFIG_H os_beos.c > proto/os_beos.pro

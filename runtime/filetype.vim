@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Nov 26
+" Last change:	2000 Dec 10
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -155,11 +155,21 @@ au BufNewFile,BufRead *.bl			setf blank
 " C
 au BufNewFile,BufRead *.c			setf c
 
+" Cyn++
+au BufNewFile,BufRead *.cyn			setf cynpp
+
+" Cynlib
+" .cc and .cpp files can be C++ or Cynlib.
+au BufNewFile,BufRead *.cc
+	\ if exists("cynlib_syntax_for_cc")|setf cynlib|else|setf cpp|endif
+au BufNewFile,BufRead *.cpp
+	\ if exists("cynlib_syntax_for_cpp")|setf cynlib|else|setf cpp|endif
+
 " C++
 if has("fname_case")
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.C,*.H,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
 else
-  au BufNewFile,BufRead *.cpp,*.cc,*.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
+  au BufNewFile,BufRead *.cxx,*.c++,*.hh,*.hxx,*.hpp,*.tcc,*.inl,named.conf setf cpp
 endif
 
 " .h files can be C or C++, set c_syntax_for_h if you want C
@@ -171,6 +181,9 @@ au BufNewFile,BufRead *.css			setf css
 
 " Century Term Command Scripts (*.cmd too)
 au BufNewFile,BufRead *.con			setf cterm
+
+" Changelog
+au BufNewFile,BufReadPost Change[lL]og		setf changelog
 
 " CHILL
 au BufNewFile,BufReadPost *..ch			setf ch
@@ -246,6 +259,9 @@ au BufNewFile,BufRead drac.*,*.drac,*.drc,*lvs,*lpe setf dracula
 " DTD (Document Type Definition for XML)
 au BufNewFile,BufRead *.dtd			setf dtd
 
+" Embedix Component Description
+au BufNewFile,BufRead *.ecd			setf ecd
+
 " Eiffel
 au BufNewFile,BufRead *.e,*.E			setf eiffel
 
@@ -300,6 +316,9 @@ au BufNewFile,BufRead *.gp			setf gp
 " Gnuplot scripts
 au BufNewFile,BufRead *.gpi			setf gnuplot
 
+" GNU Server Pages
+au BufNewFile,BufRead *.gsp			setf gsp
+
 " Haskell
 au BufNewFile,BufRead *.hs			setf haskell
 au BufNewFile,BufRead *.lhs			setf lhaskell
@@ -338,7 +357,7 @@ au BufNewFile,BufRead *.ini			setf dosini
 au BufNewFile,BufRead *.iss			setf iss
 
 " Jam
-au BufNewFile,BufRead *.jpl	    		setf jam
+au BufNewFile,BufRead *.jpl,*.jpr,Prl*.*,JAM*.*	setf jam
 
 " Java
 au BufNewFile,BufRead *.java,*.jav		setf java
@@ -360,6 +379,9 @@ au BufNewFile,BufRead *.clp			setf jess
 
 " Jgraph
 au BufNewFile,BufRead *.jgr			setf jgraph
+
+" Kixtart
+au BufNewFile,BufRead *.kix			setf kix
 
 " Kimwitu[++]
 au BufNewFile,BufRead *.k			setf kwt
@@ -566,6 +588,9 @@ au BufNewFile,BufRead *termcap
 " PCCTS / ANTRL
 "au BufNewFile,BufRead *.g			setf antrl
 au BufNewFile,BufRead *.g			setf pccts
+
+" PPWizard
+au BufNewFile,BufRead *.it,*.ih			setf ppwiz
 
 " Procmail
 au BufNewFile,BufRead .procmail,.procmailrc	setf procmail
@@ -874,6 +899,10 @@ au BufNewFile,BufRead *printcap*
 	\ if !did_filetype() | let b:ptcap_type = "print" | setf ptcap | endif
 au BufNewFile,BufRead *termcap*
 	\ if !did_filetype() | let b:ptcap_type = "term" | setf ptcap | endif
+
+" Crontab
+au BufNewFile,BufRead crontab.*
+	\ if !did_filetype()|setf crontab|endif
 
 augroup END
 

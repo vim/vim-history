@@ -16,10 +16,12 @@ command in Vim when the translation is being used.
 
 UPDATING A PO FILE
 
-If you are the maintainer of a po file, this is how you update the file:
+If you are the maintainer of a .po file, this is how you update the file.  We
+will use "xx.po" as an example here, replace "xx" with the name of your
+language.
 
 (1) Add new and changed messages from the Vim sources:
-	make xx.po
+	make xx
     This will extract all the strings from Vim and merge them in with the
     existing translations.  Requires the GNU gettext utilities.  Once you do
     this, you MUST do the next three steps!

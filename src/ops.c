@@ -158,6 +158,7 @@ get_op_type(char1, char2)
     return i;
 }
 
+#if defined(FEAT_VISUAL) || defined(PROTO)
 /*
  * Return TRUE if operator "op" always works on whole lines.
  */
@@ -167,6 +168,7 @@ op_on_lines(op)
 {
     return opchars[op][2];
 }
+#endif
 
 /*
  * Get first operator command character.
@@ -275,7 +277,10 @@ op_shift(oap, curs_top, amount)
      * Set "'[" and "']" marks.
      */
     curbuf->b_op_start = oap->start;
-    curbuf->b_op_end = oap->end;
+    curbuf->b_op_end.lnum = oap->end.lnum;
+    curbuf->b_op_end.col = STRLEN(ml_get(oap->end.lnum));
+    if (curbuf->b_op_end.col > 0)
+	--curbuf->b_op_end.col;
 }
 
 /*

@@ -26,6 +26,5 @@ void gui_mch_set_footer_pos __ARGS((int h));
 void gui_mch_enable_footer __ARGS((int showit));
 void gui_mch_set_footer __ARGS((char_u *msg));
 void gui_mch_show_toolbar __ARGS((int showit));
-Widget gui_mch_get_toolbar __ARGS((void));
 void gui_mch_reset_focus __ARGS((void));
 int gui_mch_compute_toolbar_height __ARGS((void));

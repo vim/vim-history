@@ -3507,6 +3507,7 @@ findswapname(buf, dirp, old_fname)
 	    if (fh != (BPTR)NULL)	/* can open file, OK */
 	    {
 		Close(fh);
+		mch_remove(fname);
 		break;
 	    }
 	    if (IoErr() != ERROR_OBJECT_IN_USE

@@ -40,6 +40,7 @@ main(void)
     const char	*p;
     int		retval;
     int		inquote = 0;
+    int		silent = 0;
 
 #ifdef __BORLANDC__
     p = _oscmd;
@@ -63,17 +64,36 @@ main(void)
 	++p;
     }
 
+    /*
+     * "-s" argument: don't wait for a key hit.
+     */
+    if (p[0] == '-' && p[1] == 's' && p[2] == ' ')
+    {
+	silent = 1;
+	p += 3;
+	while (*p == ' ')
+	    ++p;
+    }
+
     /* Print the command, including quotes and redirection. */
     puts(p);
+
+    /*
+     * Do it!
+     */
     retval = system(p);
+
     if (retval != 0)
 	printf("shell returned %d\n", retval);
 
-    puts("Hit any key to close this window...");
+    if (!silent)
+    {
+	puts("Hit any key to close this window...");
 
-    while (_kbhit())
+	while (_kbhit())
+	    (void)_getch();
 	(void)_getch();
-    (void)_getch();
+    }
 
     return retval;
 }

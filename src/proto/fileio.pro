@@ -25,6 +25,7 @@ int has_cursorhold __ARGS((void));
 char_u *get_augroup_name __ARGS((expand_t *xp, int idx));
 char_u *set_context_in_autocmd __ARGS((expand_t *xp, char_u *arg, int doautocmd));
 char_u *get_event_name __ARGS((expand_t *xp, int idx));
+int au_exists __ARGS((char_u *name, char_u *name_end, char_u *pattern));
 int match_file_pat __ARGS((char_u *pattern, char_u *fname, char_u *sfname, char_u *tail, int allow_dirs));
 char_u *file_pat_to_reg_pat __ARGS((char_u *pat, char_u *pat_end, char *allow_dirs, int no_bslash));
 int symlink_check __ARGS((char_u *fname));

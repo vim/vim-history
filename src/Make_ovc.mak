@@ -81,6 +81,7 @@ CLEAN :
 	-@erase "$(INTDIR)\option.obj"
 	-@erase "$(INTDIR)\os_w32exe.obj"
 	-@erase "$(INTDIR)\os_win32.obj"
+	-@erase "$(INTDIR)\os_mswin.obj"
 	-@erase "$(INTDIR)\quickfix.obj"
 	-@erase "$(INTDIR)\regexp.obj"
 	-@erase "$(INTDIR)\screen.obj"
@@ -156,6 +157,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\option.obj" \
 	"$(INTDIR)\os_w32exe.obj" \
 	"$(INTDIR)\os_win32.obj" \
+	"$(INTDIR)\os_mswin.obj" \
 	"$(INTDIR)\quickfix.obj" \
 	"$(INTDIR)\regexp.obj" \
 	"$(INTDIR)\screen.obj" \
@@ -246,6 +248,8 @@ CLEAN :
 	-@erase "$(INTDIR)\os_w32exe.sbr"
 	-@erase "$(INTDIR)\os_win32.obj"
 	-@erase "$(INTDIR)\os_win32.sbr"
+	-@erase "$(INTDIR)\os_mswin.obj"
+	-@erase "$(INTDIR)\os_mswin.sbr"
 	-@erase "$(INTDIR)\quickfix.obj"
 	-@erase "$(INTDIR)\quickfix.sbr"
 	-@erase "$(INTDIR)\regexp.obj"
@@ -323,6 +327,7 @@ BSC32_SBRS= \
 	"$(INTDIR)\option.sbr" \
 	"$(INTDIR)\os_w32exe.sbr" \
 	"$(INTDIR)\os_win32.sbr" \
+	"$(INTDIR)\os_mswin.sbr" \
 	"$(INTDIR)\quickfix.sbr" \
 	"$(INTDIR)\regexp.sbr" \
 	"$(INTDIR)\screen.sbr" \
@@ -376,6 +381,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\option.obj" \
 	"$(INTDIR)\os_w32exe.obj" \
 	"$(INTDIR)\os_win32.obj" \
+	"$(INTDIR)\os_mswin.obj" \
 	"$(INTDIR)\quickfix.obj" \
 	"$(INTDIR)\regexp.obj" \
 	"$(INTDIR)\screen.obj" \
@@ -438,6 +444,7 @@ CLEAN :
 	-@erase "$(INTDIR)\option.obj"
 	-@erase "$(INTDIR)\os_w32exe.obj"
 	-@erase "$(INTDIR)\os_win32.obj"
+	-@erase "$(INTDIR)\os_mswin.obj"
 	-@erase "$(INTDIR)\quickfix.obj"
 	-@erase "$(INTDIR)\regexp.obj"
 	-@erase "$(INTDIR)\screen.obj"
@@ -510,6 +517,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\option.obj" \
 	"$(INTDIR)\os_w32exe.obj" \
 	"$(INTDIR)\os_win32.obj" \
+	"$(INTDIR)\os_mswin.obj" \
 	"$(INTDIR)\quickfix.obj" \
 	"$(INTDIR)\regexp.obj" \
 	"$(INTDIR)\screen.obj" \
@@ -2570,6 +2578,85 @@ NODEP_CPP_OS_WI=\
 	
 
 "$(INTDIR)\os_win32.obj" : $(SOURCE) $(DEP_CPP_OS_WI) "$(INTDIR)"
+
+
+!ENDIF 
+
+# End Source File
+################################################################################
+# Begin Source File
+
+SOURCE=.\os_mswin.c
+
+!IF  "$(CFG)" == "Vim - Win32 Release"
+
+DEP_CPP_OS_MS=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OS_MS=\
+	
+
+"$(INTDIR)\os_mswin.obj" : $(SOURCE) $(DEP_CPP_OS_MS) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Debug"
+
+DEP_CPP_OS_MS=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OS_MS=\
+	
+
+"$(INTDIR)\os_mswin.obj" : $(SOURCE) $(DEP_CPP_OS_MS) "$(INTDIR)"
+
+"$(INTDIR)\os_mswin.sbr" : $(SOURCE) $(DEP_CPP_OS_MS) "$(INTDIR)"
+
+
+!ELSEIF  "$(CFG)" == "Vim - Win32 Release with Debug"
+
+DEP_CPP_OS_MS=\
+	".\ascii.h"\
+	".\feature.h"\
+	".\globals.h"\
+	".\gui.h"\
+	".\keymap.h"\
+	".\macros.h"\
+	".\option.h"\
+	".\os_win32.h"\
+	".\proto.h"\
+	".\regexp.h"\
+	".\structs.h"\
+	".\term.h"\
+	".\vim.h"\
+	
+NODEP_CPP_OS_MS=\
+	
+
+"$(INTDIR)\os_mswin.obj" : $(SOURCE) $(DEP_CPP_OS_MS) "$(INTDIR)"
 
 
 !ENDIF 

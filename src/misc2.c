@@ -1880,6 +1880,10 @@ get_special_key_name(c, modifiers)
     string[0] = '<';
     idx = 1;
 
+    /* Key that stands for a normal character. */
+    if (KEY2TERMCAP0(c) == KS_KEY)
+	c = KEY2TERMCAP1(c);
+
     /*
      * Translate shifted special keys into unshifted keys and set modifier.
      */
@@ -3360,9 +3364,8 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
     }
     else if (!mch_isFullName(path) && !path_with_url(path))
     {
-	if (OK == mch_dirname(ff_expand_buffer, MAXPATHL))
-	    ff_search_ctx->ffsc_start_dir =
-		vim_strsave(ff_expand_buffer);
+	if (mch_dirname(ff_expand_buffer, MAXPATHL) == OK)
+	    ff_search_ctx->ffsc_start_dir = vim_strsave(ff_expand_buffer);
 
 	if (ff_search_ctx->ffsc_start_dir == NULL)
 	    goto error_return;
@@ -4556,6 +4559,13 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
     char_u		save_char;
     char_u		*file_name = NULL;
     char_u		*buf = NULL;
+#ifdef AMIGA
+    struct Process	*proc = (struct Process *)FindTask(0L);
+    APTR		save_winptr = proc->pr_WindowPtr;
+
+    /* Avoid a requester here for a volume that doesn't exist. */
+    proc->pr_WindowPtr = (APTR)-1L;
+#endif
 
     if (first == TRUE)
     {
@@ -4568,29 +4578,34 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	vim_free(file_to_find);
 	file_to_find = vim_strsave(NameBuff);
 	if (file_to_find == NULL)	/* out of memory */
-	    return NULL;
+	{
+	    file_name = NULL;
+	    goto theend;
+	}
 #ifdef VMS
-	if (mch_isFullName(file_to_find))   
+	if (mch_isFullName(file_to_find))
 	    file_to_find = vms_fixfilename(file_to_find);
 #endif
     }
 
     if (mch_isFullName(file_to_find)
 	    || path_with_url(file_to_find)
-#if 0  /* Start of Exclusion (rks++ 29Jul00) */
-	    /*
-	     * This is if'd-out because it would ship around the 'cd ..'-bug
-	     * on Win32 as reported by Michael Geddes. Before we ship around
-	     * this, we should first understand why this happens.
-	     */
-	    /* for '..' and './'  we don't need the path option */
-	    || (file_to_find[0] == '.' && (file_to_find[1] == PATHSEP || file_to_find[1] == '.'))
-#endif /* End of Exclusion   (rks++ 29Jul00) */
+	    /* "..", "../path", "." and "./path": don't use the path_option */
+	    || (file_to_find[0] == '.'
+		&& (file_to_find[1] == NUL
+		    || vim_ispathsep(file_to_find[1])
+		    || (file_to_find[1] == '.'
+			&& (file_to_find[2] == NUL
+			    || vim_ispathsep(file_to_find[2])))))
 #if defined(MSWIN) || defined(MSDOS) || defined(OS2)
 	    /* handle "\tmp" as absolute path */
-	    || (file_to_find[0] == '\\' || file_to_find[0] == '/')
+	    || vim_ispathsep(file_to_find[0])
 	    /* handle "c:name" as absulute path */
 	    || (file_to_find[0] != NUL && file_to_find[1] == ':')
+#endif
+#ifdef AMIGA
+	    /* handle ":tmp" as absolute path */
+	    || file_to_find[0] == ':'
 #endif
        )
 	    {
@@ -4603,14 +4618,20 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	if (first == TRUE)
 	{
 	    if (path_with_url(NameBuff))
-		return vim_strsave(NameBuff);
+	    {
+		file_name = vim_strsave(NameBuff);
+		goto theend;
+	    }
 	    buf = curbuf->b_p_sua;
 	    len = STRLEN(NameBuff);
 	    for (;;)
 	    {
 		if (mch_getperm(NameBuff) >= 0
 			&& (!need_dir || mch_isdir(NameBuff)))
-		    return vim_strsave(NameBuff);
+		{
+		    file_name = vim_strsave(NameBuff);
+		    goto theend;
+		}
 		if (*buf == NUL)
 		    break;
 		copy_option_part(&buf, NameBuff + len, MAXPATHL - len, ",");
@@ -4698,6 +4719,10 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 	}
     }
 
+theend:
+#ifdef AMIGA
+    proc->pr_WindowPtr = save_winptr;
+#endif
     return file_name;
 }
 

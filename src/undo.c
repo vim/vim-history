@@ -168,6 +168,16 @@ u_savecommon(top, bot, newbot)
     }
 #endif
 
+#ifdef FEAT_AUTOCMD
+    /*
+     * Saving text for undo means we are going to make a change.  Give a
+     * warning for a read-only file before making the change, so that the
+     * FileChangedRO event can replace the buffer with a read-write version
+     * (e.g., obtained from a source control system).
+     */
+    change_warning(0);
+#endif
+
     size = bot - top - 1;
 
     /*

@@ -221,6 +221,8 @@ typedef int LOGFONT[];
 # define OSVERSIONINFO	int
 # define HBRUSH		int
 # define HIMC		int
+# undef MSG
+# define MSG		int
 #endif
 
 /* For the Intellimouse: */
@@ -243,7 +245,13 @@ static LOGFONT norm_logfont;
 
 #ifdef GLOBAL_IME
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c d)
-# define TranslateMessage(x) global_ime_TranslateMessage(x)
+# define MyTranslateMessage(x) global_ime_TranslateMessage(x)
+#else
+# ifdef FEAT_MBYTE
+#  define MyTranslateMessage(x) LCTranslateMessage(x)
+# else
+#  define MyTranslateMessage(x) TranslateMessage(x)
+# endif
 #endif
 
 /* Local variables: */
@@ -3995,6 +4003,49 @@ gui_mch_draw_part_cursor(
     DeleteBrush(hbr);
 }
 
+#ifdef FEAT_MBYTE
+/*
+ * locale-aware TranslateMessage replacement
+ *
+ * lpMsg should be WM_KEYDOWN message (not checked)
+ */
+    static BOOL
+LCTranslateMessage(CONST MSG *lpMsg)
+{
+    MSG		charMsg;
+    BYTE	lpKeyState[256];	/* keyboard state array */
+    WCHAR	pwszBuff[4];		/* translated key buffer.  usually
+					   doesn't hold more than 2 chars */
+    int		i, ccount;
+    int		len;
+    char_u	string[MB_MAXBYTES];
+
+    charMsg.hwnd = lpMsg->hwnd;
+    charMsg.lParam = lpMsg->lParam;
+    GetKeyboardState(lpKeyState);
+    ccount = ToUnicode(lpMsg->wParam, (lpMsg->lParam >> 16) & 0xFF, lpKeyState,
+			pwszBuff, 4, 0);
+    switch (ccount)
+    {
+	case -1:	/* dead key */
+	    charMsg.message = WM_DEADCHAR;
+	    charMsg.wParam = pwszBuff[0];
+	    DispatchMessage(&charMsg);
+	    break;
+	case 0:		/* key does not have translation in current keymap */
+	    return TranslateMessage(lpMsg);
+	default:	/* one or more unicode chars returned */
+	    for (i = 0; i < ccount; i++)
+	    {
+		len = mb_char2bytes(pwszBuff[i], string);
+		add_to_input_buf(string, len);
+	    }
+	    break;
+    }
+    return TRUE;
+}
+#endif
+
 /*
  * Process a single Windows message.
  * If one is not available we hang until one is.
@@ -4057,7 +4108,7 @@ process_message(void)
 		dm.message = msg.message;
 		dm.hwnd = msg.hwnd;
 		dm.wParam = VK_SPACE;
-		TranslateMessage(&dm);	    /* generate dead character */
+		MyTranslateMessage(&dm);	/* generate dead character */
 		if (vk != VK_SPACE) /* and send current character once more */
 		    PostMessage(msg.hwnd, msg.message, msg.wParam, msg.lParam);
 		return;
@@ -4159,10 +4210,10 @@ process_message(void)
 		    add_to_input_buf(string, 1);
 		}
 		else
-		    TranslateMessage(&msg);
+		    MyTranslateMessage(&msg);
 	    }
 	    else
-		TranslateMessage(&msg);
+		MyTranslateMessage(&msg);
 	}
     }
 #ifdef FEAT_MBYTE_IME

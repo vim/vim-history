@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0o.  Last change: 2000 Dec 03
+*cmdline.txt*   For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -693,8 +693,9 @@ name).  This is included for backwards compatibility with version 3.0, the
 	<cfile><	idem, without extension
 
 Note: Where a file name is expected wildcards expansion is done.  On Unix the
-shell is used for this.  Backticks also work, like in
+shell is used for this.  Backticks also work, like in >
 	:n `echo *.c`
+(backtick expansion is not possible in |restricted-mode|)
 But expansion is only done if there are any wildcards before expanding the
 '%', '#', etc..  This avoids expanding wildcards inside a file name.  If you
 want to expand the result of <cfile>, add a wildcard character to it.

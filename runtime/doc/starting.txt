@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0o.  Last change: 2000 Oct 31
+*starting.txt*  For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -186,7 +186,8 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 							*-Z* *restricted-mode*
 -Z		Restricted mode.  All commands that make use of an external
 		shell are disabled.  This includes suspending with CTRL-Z,
-		":sh", filtering, etc.
+		":sh", filtering, the system() function, backtick expansion,
+		etc.
 
 							*-g*
 -g		Start Vim in GUI mode.  See |gui|.

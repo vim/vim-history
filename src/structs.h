@@ -659,6 +659,8 @@ struct file_buffer
 
     pos_t	b_last_cursor;	/* cursor position when last unloading this
 				   buffer */
+    pos_t	b_last_insert;	/* where Insert mode was left */
+    pos_t	b_last_change;	/* position of last change: '. mark */
 
     /*
      * Character table, only used in charset.c for 'iskeyword'

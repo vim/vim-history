@@ -652,7 +652,6 @@ qf_get_fnum(directory, fname)
 {
     if (fname == NULL || *fname == NUL)		/* no file name */
 	return 0;
-    else
     {
 #ifdef RISCOS
 	/* Name is reported as `main.c', but file is `c.main' */
@@ -661,7 +660,7 @@ qf_get_fnum(directory, fname)
 	char_u	    *ptr;
 	int	    fnum;
 
-	if (directory && !mch_isFullName(fname)
+	if (directory != NULL && !mch_isFullName(fname)
 	    && (ptr = concat_fnames(directory, fname, TRUE)) != NULL)
 	{
 	    /*
@@ -684,8 +683,7 @@ qf_get_fnum(directory, fname)
 	    vim_free(ptr);
 	    return fnum;
 	}
-	else
-	    return buflist_add(fname);
+	return buflist_add(fname);
 #endif
     }
 }

@@ -1155,8 +1155,18 @@ gui_set_shellsize(fit_to_display)
 
     base_width = gui_get_base_width();
     base_height = gui_get_base_height();
-    width = Columns * gui.char_width + base_width;
-    height = Rows * gui.char_height + base_height;
+#ifdef USE_SUN_WORKSHOP
+    if (usingSunWorkShop && workshop_get_width_height(&width, &height))
+    {
+	Columns = (width - base_width + gui.char_width - 1) / gui.char_width;
+	Rows = (height - base_height + gui.char_height - 1) / gui.char_height;
+    }
+    else
+#endif
+    {
+	width = Columns * gui.char_width + base_width;
+	height = Rows * gui.char_height + base_height;
+    }
 
     if (fit_to_display)
     {

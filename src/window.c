@@ -3937,6 +3937,7 @@ only_one_window()
 #endif
 }
 
+#if defined(FEAT_WINDOWS) || defined(FEAT_AUTOCMD) || defined(PROTO)
 /*
  * Correct the cursor line number in other windows.  Used after changing the
  * current buffer, and before applying autocommands.
@@ -3962,3 +3963,4 @@ check_lnums(do_curwin)
 		wp->w_topline = curbuf->b_ml.ml_line_count;
 	}
 }
+#endif

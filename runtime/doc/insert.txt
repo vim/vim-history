@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0o.  Last change: 2000 Nov 21
+*insert.txt*    For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -806,6 +806,15 @@ I			Insert text before the first non-blank in the line
 
 							*gI*
 gI			Insert text in column 1 [count] times.  {not in Vi}
+
+							*gi*
+gi			Insert text in the same position as where Insert mode
+			was stopped last time in the current buffer.
+			This uses the |'^| mark.  It's different from "`^i"
+			when the mark is past the end of the line.
+			The position is corrected for inserted/deleted lines, 
+			but NOT for inserted/deleted characters.
+			{not in Vi}
 
 							*o*
 o			Begin a new line below the cursor and insert text,

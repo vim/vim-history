@@ -37,9 +37,9 @@ static garray_t	user_digraphs = {0, 0, sizeof(digr_t), 10, NULL};
  * Note: Characters marked with XX are not included literally, because some
  * compilers cannot handle them (Amiga SAS/C is the most picky one).
  */
-#if (defined(MSDOS) || defined(WIN32) || defined(OS2)) && !defined(FEAT_GUI_MSWIN)
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
 	/*
-	 * MSDOS digraphs, NOT used in Windows!
+	 * MSDOS digraphs.
 	 */
 digr_t	digraphdefault[] =
        {{'C', ',', 128},	/* ~@ XX */

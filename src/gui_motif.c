@@ -1111,7 +1111,7 @@ gui_mch_create_scrollbar(sb, orient)
 	    break;
     }
 
-    sb->id = XtCreateManagedWidget("scrollBar",
+    sb->id = XtCreateWidget("scrollBar",
 	    xmScrollBarWidgetClass, textAreaForm, args, n);
 
     if (sb->id != (Widget)0)
@@ -1754,7 +1754,7 @@ static Boolean filePredicate __ARGS((String cp));
 filePredicate(cp)
     String cp;
 {
-    return access(cp, R_OK) == 0;
+    return True;
 }
 #endif
 
@@ -1770,7 +1770,7 @@ get_pixmap(menuname, sen, insen)
     int		num_pixmaps;		/* entries in builtin pixmap table */
     char_u	buf[MAXPATHL];		/* buffer storing expanded pathname */
 #ifdef FEAT_SUN_WORKSHOP
-    char_u	locbuf[MAXPATHL];	/* generate locale pathname */
+    char	locbuf[MAXPATHL];	/* generate locale pathname */
 #endif
     char	**xpm = NULL;		/* xpm array */
     int		i;
@@ -1820,9 +1820,13 @@ get_pixmap(menuname, sen, insen)
 			    strcpy(p, &p[1]);
 			}
 			path = (char_u *)locbuf;
+			expand_env(path, buf, MAXPATHL);
 		    }
-		    expand_env(path, buf, MAXPATHL);
-		    XtFree(path);
+		    else
+		    {
+			expand_env(path, buf, MAXPATHL);
+			XtFree(path);
+		    }
 		    break;
 		}
 	    }

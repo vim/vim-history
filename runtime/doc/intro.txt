@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0o.  Last change: 2000 Dec 03
+*intro.txt*     For Vim version 6.0p.  Last change: 2000 Dec 03
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

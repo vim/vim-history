@@ -34,7 +34,7 @@ clean:
 
 test1.out: test1.in
 	-rm -f $*.failed tiny.vim small.vim mbyte.vim
-	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
+	$(VIMPROG) -u unix.vim -U NONE --noplugins -s dotest.in $*.in
 	@/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
 		else echo; \
@@ -45,7 +45,7 @@ test1.out: test1.in
 .in.out:
 	-rm -f $*.failed
 	cp -f $*.ok test.ok
-	$(VIMPROG) -u unix.vim -U NONE -s dotest.in $*.in
+	$(VIMPROG) -u unix.vim -U NONE --noplugins -s dotest.in $*.in
 	@/bin/sh -c "if diff test.out $*.ok; \
 		then mv -f test.out $*.out; \
 		else echo $* FAILED >>test.log; mv -f test.out $*.failed; \

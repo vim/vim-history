@@ -5,7 +5,6 @@
 #
 # FIRST AUTHOR DindinX <David.Odin@bigfoot.com>, 2000
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: Vim(Français)\n"

@@ -52,7 +52,7 @@ Gvim16 : BccW16.cfg $(Dep_Gvim16)
 
 Dep_gvim16dexe = \
    fold.obj\
-   ..\..\..\..\bc5\lib\ctl3dv2.lib\
+   D:\bc5\lib\ctl3dv2.lib\
    vimtbar.lib\
    vim16.def\
    vim16.res\
@@ -71,6 +71,7 @@ Dep_gvim16dexe = \
    ops.obj\
    option.obj\
    os_win16.obj\
+   os_mswin.obj\
    quickfix.obj\
    regexp.obj\
    screen.obj\
@@ -112,6 +113,7 @@ normal.obj+
 ops.obj+
 option.obj+
 os_win16.obj+
+os_mswin.obj+
 quickfix.obj+
 regexp.obj+
 screen.obj+
@@ -134,7 +136,7 @@ ex_getln.obj+
 fileio.obj
 $<
 
-..\..\..\..\bc5\lib\ctl3dv2.lib+
+D:\bc5\lib\ctl3dv2.lib+
 vimtbar.lib+
 D:\BC5\LIB\import.lib+
 D:\BC5\LIB\mathwl.lib+
@@ -225,6 +227,11 @@ option.obj :  option.c
 os_win16.obj :  os_win16.c
   $(BCC)   -P- -c @&&|
  $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ os_win16.c
+|
+
+os_mswin.obj :  os_mswin.c
+  $(BCC)   -P- -c @&&|
+ $(CompOptsAt_gvim16dexe) $(CompInheritOptsAt_gvim16dexe) -o$@ os_mswin.c
 |
 
 quickfix.obj :  quickfix.c

@@ -1403,6 +1403,7 @@ mch_expandpath(gap, pat, flags)
     if (Result == ERROR_BUFFER_OVERFLOW)
 	EMSG(_("ANCHOR_BUF_SIZE too small."));
     else if (matches == 0 && Result != ERROR_OBJECT_NOT_FOUND
+			  && Result != ERROR_DEVICE_NOT_MOUNTED
 			  && Result != ERROR_NO_MORE_ENTRIES)
 	EMSG(_("I/O ERROR"));
 

@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0o.  Last change: 2000 Dec 03
+*version6.txt*  For Vim version 6.0p.  Last change: 2000 Dec 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -360,7 +360,8 @@ characters are supported, they overprint the preceding character.
 Double-width characters are also supported.  See |UTF-8|.
 
 UCS-2 and UCS-4 encodings are supported too, they are converted to UTF-8
-internally.  Other encodings are converted with iconv() or an external
+internally.  There is also support for editing Unicode files in a Latin-1
+environment.  Other encodings are converted with iconv() or an external
 converter specified with 'charconvert'.
 
 Many new items for Multi-byte support:
@@ -377,6 +378,7 @@ Many new items for Multi-byte support:
   file if it starts with a BOM.  Especially useful on MS-Windows (NT and
   2000), which uses ucs-2le files with a BOM (e.g., when exporting the
   registry).
+- Win32: Typing multi-byte characters without IME. (Alexander Smishlajev)
 
 Allow defining digraphs for multi-byte characters.
 Added RFC1345 digraphs for Unicode.
@@ -611,6 +613,19 @@ Various new items					*new-items-6*
 
 Interface to Ruby. (Shugo Maeda)
 
+Normal mode commands: ~
+
+"gi"		Jump to the ^ mark and start Insert mode.  Also works when the
+		mark is just after the line. |gi|
+
+Options: ~
+
+'debug'		When set to "msg" it will print error messages that would
+		otherwise be omitted.  Useful for debugging 'indentexpr' and
+		'foldexpr'.
+
+Ex commands: ~
+
 :silent[!] {cmd}
 		Execute a command silently.
 		RISCOS: Removed that "!~cmd" didn't output anything, and
@@ -656,9 +671,16 @@ Interface to Ruby. (Shugo Maeda)
 
 g_		Go to last non-blank in line. (Steve Wall)
 
-New marks:
-'( and '): begin or end of current sentence.  Useful in Ex commands.
-'{ and '}: begin or end of current paragraph.  Useful in Ex commands.
+New marks: ~
+
+'( and ')	Begin or end of current sentence.  Useful in Ex commands.
+'{ and '}	Begin or end of current paragraph.  Useful in Ex commands.
+'.		Position of the last change in the current buffer.
+'^		Position where Insert mode was stopped.
+
+Store the ^ and . marks in the viminfo file.  Makes it possible to jump to the
+last insert position or changed text.
+
 
 New functions:
 foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
@@ -727,6 +749,10 @@ an expression.  The submatch() function can be used to access submatches.
 
 When dragging the status line or the vertical separator, mouse codes are
 skipped to avoid that the redrawing lags behind too much.
+
+Added the "++cc=" and "++ff=" arguments to file read/write commands to force
+using the given 'charcode' or 'fileformat'.  And the "v:cmdarg" variable, to
+be used for FileReadCmd autocommands that read/write the file themselves.
 
 Insert mode:
 "CTRL-G j" and "CTRL-G k" can be used to insert in another line in the same
@@ -798,15 +824,15 @@ Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
 
 Autocommands:
-FileReadCmd, BufReadCmd, FileWriteCmd, BufWriteCmd, FileAppendCmd: use
-autocommands instead of normal file read/write.  Use this in netrw.vim to be
-able to edit files on a remote system. (Charles Campbell)
-FuncUndefined: When a user function is not defined. (Ron Aaron)
+Added the FileReadCmd, BufReadCmd, FileWriteCmd, BufWriteCmd, FileAppendCmd:
+use autocommands instead of normal file read/write.  Use this in netrw.vim to
+be able to edit files on a remote system. (Charles Campbell) FuncUndefined:
+When a user function is not defined. (Ron Aaron)
 
 Added TermReponse autocommand event and v:termreponse internal variable.  Can
 be used to react to the version of the terminal.  (Ronald Schild)
 
-Added FileChangedRO event: Triggered when making the first change to a
+Added FileChangedRO event: Triggered before making the first change to a
 read-only file.  Can be used to check-out the file. (Scott Graham)
 
 GUI:
@@ -871,7 +897,8 @@ Cscope: (kahn)
 cscope_connection() function.
 ":cscope kill -1" kills all cscope connections.
 
-exists() can also be used to check for Ex commands.
+exists() can also be used to check for Ex commands and define autocommands.
+
 
 VMS:
 - Command line arguments are always uppercase.  Interpret a "-X" argument as
@@ -927,6 +954,9 @@ Jump list:
 - The jumplist is now stored in the viminfo file.  CTRL-O can be used to jump
   to positions from a previous edit session.
 - When doing ":split" copy the jumplist to the new window.
+
+Also set the '[ and '] marks for the "~" and "r" commands.  These marks are
+now always set when making a change with a Normal mode command.
 
 Python interface: Allow setting the width of a vertically split window. (John
 Cook)
@@ -991,6 +1021,9 @@ gettext().
 
 For the tiny version or when FEAT_WINDOWS is not defined: Firstwin and lastwin
 are equal to curwin and don't use w_next and w_prev.
+
+MS-Windows: Moved common functions from Win16 and Win32 to os_mswin.c.  Avoids
+having to change two files for one problem.  (Vince Negri)
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -1192,5 +1225,27 @@ work like Vi: display nothing.
 
 "99:<C-U>echo v:count" echoed "99" in Normal mode, but 0 in Visual mode.
 Don't set v:count when executing a stuffed command.
+
+Amiga: Got a requester for "home:" because it's in the default runtime path.
+Don't bring up a requester when searching for a file in 'path', sourcing the
+.vimrc file or using ":runtime".
+
+Win16 and Win32: Considered a file "\path\file" absolute.  Can cause the same
+file to appear as two different buffers.
+
+Win32: Renaming a file to an empty string crashed Vim.  Happened when using
+explorer.vim and hitting ESC at the rename prompt.
+
+Win32: strftime() crashed when called with a "-1" value for the time.
+
+Win32 with Borland compiler: mch_FullName() didn't work, caused tag file not
+to be found.
+
+Cscope sometimes jumped to the wrong tag. (David Bustos)
+
+OS/2: Could not find the tags file.  mch_expand_wildcards() added another
+slash to a directory name.
+
+When using ">>" the `] mark was not in the last column.
 
  vim:tw=78:

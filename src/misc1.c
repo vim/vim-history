@@ -2142,6 +2142,10 @@ changed_common(lnum, col, lnume, xtra)
     /* mark the buffer as modified */
     changed();
 
+    /* set the '. mark */
+    curbuf->b_last_change.lnum = lnum;
+    curbuf->b_last_change.col = col;
+
 #ifndef FEAT_WINDOWS
     wp = curwin;
 #else
@@ -2403,7 +2407,7 @@ get_keystroke()
 	if ((n = check_termcode(1, buf, len)) < 0)
 	    continue;
 	/* found a termcode: adjust length */
-	if (n)
+	if (n > 0)
 	    len = n;
 	if (len == 0)	    /* nothing typed yet */
 	    continue;
@@ -6306,6 +6310,9 @@ get_cmd_output(cmd, flags)
     int		len;
     int		i = 0;
     FILE	*fd;
+
+    if (check_restricted() || check_secure())
+	return NULL;
 
     /* get a name for the temp file */
     if ((tempname = vim_tempname('o')) == NULL)

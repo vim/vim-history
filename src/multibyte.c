@@ -841,7 +841,7 @@ utf_char2len(c)
 }
 
 /*
- * Convert an UTF-8 character to string of bytes.
+ * Convert UTF-8 character "c" to string of bytes in "buf[]".
  * Returns the number of bytes.
  * This does not include composing characters.
  */
@@ -1223,6 +1223,7 @@ mb_isbyte1(buf, x)
 	    && mb_head_off(buf, buf + x) == 0);
 }
 
+#if defined(FEAT_GUI) || defined(PROTO)
 /*
  * Return TRUE if the character at "row"/"col" on the screen if it is the left
  * side of a double-width character.
@@ -1244,6 +1245,7 @@ mb_lefthalve(row, col)
 		&& ScreenLines[LineOffset[row] + col + 1] == 0);
     return FALSE;
 }
+#endif
 
 #endif /* FEAT_MBYTE */
 

@@ -138,52 +138,6 @@ typedef WINBASEAPI BOOL (WINAPI *PFNGCKLN)(LPSTR);
 PFNGCKLN    s_pfnGetConsoleKeyboardLayoutName = NULL;
 #endif
 
-#if defined(__GNUC__) && !defined(PROTO)
-# ifndef __MINGW32__
-int _stricoll(char *a, char *b)
-{
-    // the ANSI-ish correct way is to use strxfrm():
-    char a_buff[512], b_buff[512];  // file names, so this is enough on Win32
-    strxfrm(a_buff, a, 512);
-    strxfrm(b_buff, b, 512);
-    return strcoll(a_buff, b_buff);
-}
-
-char * _fullpath(char *buf, char *fname, int len)
-{
-    LPTSTR toss;
-
-    return (char *)GetFullPathName(fname, len, buf, &toss);
-}
-# endif
-
-int _chdrive(int drive)
-{
-    char temp [3] = "-:";
-    temp[0] = drive + 'A' - 1;
-    return !SetCurrentDirectory(temp);
-}
-#else
-#ifdef __BORLANDC__
-/* being a more ANSI compliant compiler, BorlandC doesn't define _stricoll:
- * but it does in BC 5.02! */
-#if __BORLANDC__ < 0x502
-int _stricoll(char *a, char *b)
-{
-#if 1
-    // this is fast but not correct:
-    return stricmp(a,b);
-#else
-    // the ANSI-ish correct way is to use strxfrm():
-    char a_buff[512], b_buff[512];  // file names, so this is enough on Win32
-    strxfrm(a_buff, a, 512);
-    strxfrm(b_buff, b, 512);
-    return strcoll(a_buff, b_buff);
-#endif
-}
-#endif
-#endif
-#endif
 
 #ifndef FEAT_GUI_W32
 /* Win32 Console handles for input and output */
@@ -244,7 +198,6 @@ static char *vimrun_path = "vimrun ";
 static void mch_open_console(void);
 static void mch_close_console(int wait_key, DWORD ret);
 #endif
-garray_t error_ga = {0, 0, 0, 0, NULL};
 
 #ifndef FEAT_GUI_W32
 static int suppress_winsize = 1;	/* don't fiddle with console */
@@ -256,8 +209,7 @@ static int suppress_winsize = 1;	/* don't fiddle with console */
 # define VER_PLATFORM_WIN32_WINDOWS 1
 #endif
 
-static void PlatformId(void);
-static DWORD g_PlatformId;
+DWORD g_PlatformId;
 
 /*
  * These are needed to dynamically load the ADVAPI DLL, which is not
@@ -276,7 +228,7 @@ static PGNSECINFO pGetNamedSecurityInfo;
  * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
  * VER_PLATFORM_WIN32_WINDOWS (Win95).
  */
-    static void
+    void
 PlatformId(void)
 {
     static int done = FALSE;
@@ -1051,6 +1003,17 @@ WaitForChar(long msec)
     return FALSE;
 }
 
+#ifndef FEAT_GUI_MSWIN
+/*
+ * return non-zero if a character is available
+ */
+    int
+mch_char_avail()
+{
+    return WaitForChar(0L);
+}
+#endif
+
 /*
  * Create the console input.  Used when reading stdin doesn't work.
  */
@@ -1361,27 +1324,6 @@ mch_shellinit()
 #endif
 }
 
-/*
- * GUI version of mch_windexit().
- * Shut down and exit with status `r'
- * Careful: mch_windexit() may be called before mch_shellinit()!
- */
-    void
-mch_windexit(
-    int r)
-{
-    mch_display_error();
-
-    ml_close_all(TRUE);		/* remove all memfiles */
-
-# ifdef FEAT_OLE
-    UninitOLE();
-# endif
-
-    if (gui.in_use)
-	gui_exit(r);
-    exit(r);
-}
 
 #else /* FEAT_GUI_W32 */
 
@@ -1655,7 +1597,7 @@ typedef HWND (__stdcall *GETCONSOLEWINDOWPROC)(VOID);
 #else
 typedef WINBASEAPI HWND (WINAPI *GETCONSOLEWINDOWPROC)(VOID);
 #endif
-static char g_szOrigTitle[256] = { 0 };
+char g_szOrigTitle[256] = { 0 };
 static HWND g_hWnd = NULL;
 static HICON g_hOrigIconSmall = NULL;
 static HICON g_hOrigIcon = NULL;
@@ -1923,22 +1865,6 @@ mch_windexit(
 }
 #endif /* FEAT_GUI_W32 */
 
-/*
- * Init the tables for toupper() and tolower().
- */
-    void
-mch_init(void)
-{
-    int		i;
-
-    PlatformId();
-
-    /* Init the tables for toupper() and tolower() */
-    for (i = 0; i < 256; ++i)
-	toupper_tab[i] = tolower_tab[i] = i;
-    CharUpperBuff(toupper_tab, 256);
-    CharLowerBuff(tolower_tab, 256);
-}
 
 /*
  * Do we have an interactive window?
@@ -1961,21 +1887,6 @@ mch_check_win(
     if (isatty(1))
 	return OK;
     return FAIL;
-#endif
-}
-
-/*
- * Return TRUE if the input comes from a terminal, FALSE otherwise.
- */
-    int
-mch_input_isatty()
-{
-#ifdef FEAT_GUI_W32
-    return OK;	    /* GUI always has a tty */
-#else
-    if (isatty(read_cmd_fd))
-	return TRUE;
-    return FALSE;
 #endif
 }
 
@@ -2049,61 +1960,6 @@ fname_case(
 }
 
 
-#ifdef FEAT_TITLE
-/*
- * mch_settitle(): set titlebar of our window
- */
-    void
-mch_settitle(
-    char_u *title,
-    char_u *icon)
-{
-#ifdef FEAT_GUI_W32
-    gui_mch_settitle(title, icon);
-#else
-    if (title != NULL)
-	SetConsoleTitle(title);
-#endif
-}
-
-
-/*
- * Restore the window/icon title.
- * which is one of:
- *  1: Just restore title
- *  2: Just restore icon (which we don't have)
- *  3: Restore title and icon (which we don't have)
- */
-    void
-mch_restore_title(
-    int which)
-{
-#ifndef FEAT_GUI_W32
-    mch_settitle((which & 1) ? g_szOrigTitle : NULL, NULL);
-#endif
-}
-
-
-/*
- * Return TRUE if we can restore the title (we can)
- */
-    int
-mch_can_restore_title()
-{
-    return TRUE;
-}
-
-
-/*
- * Return TRUE if we can restore the icon title (we can't)
- */
-    int
-mch_can_restore_icon()
-{
-    return FALSE;
-}
-#endif /* FEAT_TITLE */
-
 
 /*
  * Insert user name in s[len].
@@ -2174,90 +2030,6 @@ mch_dirname(
      */
     return (GetCurrentDirectory(len, buf) != 0 ? OK : FAIL);
 }
-
-
-/*
- * Get absolute file name into buffer 'buf' of length 'len' bytes,
- * turning all '/'s into '\\'s and getting the correct case of each
- * component of the file name.  Append a backslash to a directory name.
- * When 'shellslash' set do it the other way around.
- * Return OK or FAIL.
- */
-    int
-mch_FullName(
-    char_u	*fname,
-    char_u	*buf,
-    int		len,
-    int		force)
-{
-    int		nResult = FAIL;
-
-    if (fname == NULL)		/* always fail */
-	return FAIL;
-
-#ifdef __BORLANDC__
-    if (*buf == NUL) /* Borland behaves badly here - make it consistent */
-	nResult = mch_dirname(buf, len);
-    else
-#endif
-	if (_fullpath(buf, fname, len - 1) == NULL)
-	STRNCPY(buf, fname, len);   /* failed, use the relative path name */
-    else
-	nResult = OK;
-
-    fname_case(buf);
-
-    /* Append backslash to directory names; after fname_case() because it
-     * removes the backslash again. */
-    if (nResult == OK && mch_isdir(buf) && buf[STRLEN(buf) - 1] != psepc)
-	STRCAT(buf, pseps);
-
-    return nResult;
-}
-
-
-/*
- * Return TRUE if "fname" does not depend on the current directory.
- */
-    int
-mch_isFullName(char_u *fname)
-{
-    char szName[_MAX_PATH + 1];
-
-    /* A name like "d:/foo" and "//server/share" is absolute */
-    if ((fname[0] && fname[1] == ':' && (fname[2] == '/' || fname[2] == '\\'))
-	    || (fname[0] == fname[1] && fname[0] == '/' || fname[0] == '\\'))
-	return TRUE;
-
-    /* A name that can't be made absolute probably isn't absolute. */
-    if (mch_FullName(fname, szName, _MAX_PATH, FALSE) == FAIL)
-	return FALSE;
-
-    return strcoll(fname, szName) == 0;
-}
-
-/*
- * Replace all slashes by backslashes.
- * This used to be the other way around, but MS-DOS sometimes has problems
- * with slashes (e.g. in a command name).  We can't have mixed slashes and
- * backslashes, because comparing file names will not work correctly.  The
- * commands that use a file name should try to avoid the need to type a
- * backslash twice.
- * When 'shellslash' set do it the other way around.
- */
-    void
-slash_adjust(p)
-    char_u  *p;
-{
-    if (p != NULL)
-	while (*p)
-	{
-	    if (*p == psepcN)
-		*p = psepc;
-	    ++p;
-	}
-}
-
 
 /*
  * get file permissions for `name'
@@ -2449,35 +2221,7 @@ mch_free_acl(acl)
 #endif
 }
 
-#ifdef FEAT_GUI_W32
-    void
-mch_settmode(int tmode)
-{
-    /* nothing to do */
-}
-
-    int
-mch_get_shellsize(void)
-{
-    /* never used */
-    return OK;
-}
-
-    void
-mch_set_shellsize(void)
-{
-    /* never used */
-}
-
-/*
- * Rows and/or Columns has changed.
- */
-    void
-mch_new_shellsize(void)
-{
-    /* never used */
-}
-#else
+#ifndef FEAT_GUI_W32
 
 /*
  * handler for ctrl-break, ctrl-c interrupts, and fatal events.
@@ -2739,14 +2483,6 @@ mch_set_winsize_now()
 #endif /* FEAT_GUI_W32 */
 
 
-/*
- * We have no job control, so fake it by starting a new shell.
- */
-    void
-mch_suspend()
-{
-    suspend_shell();
-}
 
 #if defined(FEAT_GUI_W32) || defined(PROTO)
 
@@ -2830,57 +2566,6 @@ mch_close_console(int wait_key, DWORD ret)
 }
 #endif
 
-#ifdef mch_errmsg
-# undef mch_errmsg
-# undef mch_display_error
-#endif
-
-/*
- * Record an error message for later display.
- */
-    void
-mch_errmsg(char *str)
-{
-    int		len = STRLEN(str) + 1;
-
-    if (error_ga.ga_growsize == 0)
-    {
-	error_ga.ga_growsize = 80;
-	error_ga.ga_itemsize = 1;
-    }
-    if (ga_grow(&error_ga, len) == OK)
-    {
-	mch_memmove((char_u *)error_ga.ga_data + error_ga.ga_len,
-							  (char_u *)str, len);
-	--len;			/* don't count the NUL at the end */
-	error_ga.ga_len += len;
-	error_ga.ga_room -= len;
-    }
-}
-
-/*
- * Display the saved error message(s).
- */
-    void
-mch_display_error()
-{
-    char *p;
-
-    if (error_ga.ga_data != NULL)
-    {
-	/* avoid putting up a message box with blanks only */
-	for (p = (char *)error_ga.ga_data; *p; ++p)
-	    if (!isspace(*p))
-	    {
-		/* Truncate a very long message, it will go off-screen. */
-		if (STRLEN(p) > 2000)
-		    STRCPY(p + 2000 - 14, "...(truncated)");
-		MessageBox(0, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
-		break;
-	    }
-	ga_clear(&error_ga);
-    }
-}
 
 /*
  * Specialised version of system() for Win32 GUI mode.
@@ -3158,19 +2843,14 @@ mch_call_shell(
 	    }
 	    else
 	    {
-		sprintf((char *)newcmd, "%s%s %s %s",
-#if defined(OLD_CONSOLE_STUFF) || !defined(FEAT_GUI_W32)
-			"",
-#else
-			/*
-			 * Do we need to use "vimrun"?
-			 */
-			((options & SHELL_DOOUT) || s_dont_use_vimrun) ?
-			    "" : vimrun_path,
+#if !defined(OLD_CONSOLE_STUFF) && defined(FEAT_GUI_W32)
+		if (!(options & SHELL_DOOUT) && !s_dont_use_vimrun)
+		    sprintf((char *)newcmd, "%s%s%s %s %s",
+			    vimrun_path, msg_silent ? "-s " : "",
+			    p_sh, p_shcf, cmd);
+		else
 #endif
-			p_sh,
-			p_shcf,
-			cmd);
+		    sprintf((char *)newcmd, "%s %s %s", p_sh, p_shcf, cmd);
 		x = mch_system((char *)newcmd, options);
 	    }
 	    vim_free(newcmd);
@@ -3205,21 +2885,6 @@ mch_call_shell(
     signal(SIGABRT, SIG_DFL);
 
     return x;
-}
-
-
-/*
- * Does `s' contain a wildcard?
- */
-    int
-mch_has_wildcard(
-    char_u *s)
-{
-#ifdef VIM_BACKTICK
-    return (vim_strpbrk(s, (char_u *)"?*$`~") != NULL);
-#else
-    return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
-#endif
 }
 
 
@@ -3380,28 +3045,6 @@ mch_expandpath(
     return win32_expandpath(gap, path, path, flags);
 }
 
-/*
- * The normal _chdir() does not change the default drive.  This one does.
- * Returning 0 implies success; -1 implies failure.
- */
-    int
-mch_chdir(char *path)
-{
-    if (path[0] == NUL)		/* just checking... */
-	return -1;
-
-    if (isalpha(path[0]) && path[1] == ':')	/* has a drive name */
-    {
-	if (_chdrive(TO_LOWER(path[0]) - 'a' + 1) != 0)
-	    return -1;		/* invalid drive name */
-	path += 2;
-    }
-
-    if (*path == NUL)		/* drive name only */
-	return 0;
-
-    return chdir(path);	       /* let the normal chdir() do the rest */
-}
 
 
 #ifndef FEAT_GUI_W32
@@ -3519,24 +3162,6 @@ termcap_mode_end(void)
 }
 #endif /* FEAT_GUI_W32 */
 
-/*
- * Switching off termcap mode is only allowed when Columns is 80, otherwise a
- * crash may result.  It's always allowed on NT or when running the GUI.
- */
-    int
-can_end_termcap_mode(
-    int give_msg)
-{
-#ifdef FEAT_GUI_W32
-    return TRUE;	/* GUI starts a new console anyway */
-#else
-    if (g_PlatformId == VER_PLATFORM_WIN32_NT || Columns == 80)
-	return TRUE;
-    if (give_msg)
-	msg(_("'columns' is not 80, cannot execute external commands"));
-    return FALSE;
-#endif
-}
 
 #ifdef FEAT_GUI_W32
     void
@@ -4259,32 +3884,6 @@ mch_avail_mem(
 }
 
 
-/*
- * return non-zero if a character is available
- */
-    int
-mch_char_avail()
-{
-#ifdef FEAT_GUI_W32
-    /* never used */
-    return TRUE;
-#else
-    return WaitForChar(0L);
-#endif
-}
-
-
-/*
- * set screen mode, always fails.
- */
-    int
-mch_screenmode(
-    char_u *arg)
-{
-    EMSG(_("Screen mode setting not supported"));
-    return FAIL;
-}
-
 #ifdef FEAT_EVAL
 /*
  * Call a DLL routine which takes either a string or int param
@@ -4398,11 +3997,12 @@ mch_rename(
     if (!mch_windows95())
 	return rename(pszOldFile, pszNewFile);
 
-    /* get base path of new file name */
-    if (GetFullPathName(pszNewFile, _MAX_PATH, szNewPath, &pszFilePart) == 0)
+    /* Get base path of new file name.  Undocumented feature: If pszNewFile is
+     * a directory, no error is returned and pszFilePart will be NULL. */
+    if (GetFullPathName(pszNewFile, _MAX_PATH, szNewPath, &pszFilePart) == 0
+	    || pszFilePart == NULL)
 	return -1;
-    else
-	*pszFilePart = NUL;
+    *pszFilePart = NUL;
 
     /* Get (and create) a unique temporary file name in directory of new file */
     if (GetTempFileName(szNewPath, "VIM", 0, szTempFile) == 0)
@@ -4570,28 +4170,6 @@ clip_mch_request_selection()
 }
 
 /*
- * Make vim the owner of the current selection.
- */
-    void
-clip_mch_lose_selection()
-{
-    /* Nothing needs to be done here */
-}
-
-/*
- * Make vim the owner of the current selection.  Return OK upon success.
- */
-    int
-clip_mch_own_selection()
-{
-    /*
-     * Never actually own the clipboard.  If another application sets the
-     * clipboard, we don't want to think that we still own it.
-     */
-    return FAIL;
-}
-
-/*
  * Send the current selection to the clipboard.
  */
     void
@@ -4661,39 +4239,3 @@ clip_mch_set_selection()
 #endif /* FEAT_CLIPBOARD */
 
 
-/*
- * Debugging helper: expose the MCH_WRITE_DUMP stuff to other modules
- */
-    void
-DumpPutS(
-    const char* psz)
-{
-# ifdef MCH_WRITE_DUMP
-    if (fdDump)
-    {
-	fputs(psz, fdDump);
-	if (psz[strlen(psz) - 1] != '\n')
-	    fputc('\n', fdDump);
-	fflush(fdDump);
-    }
-# endif
-}
-
-#ifdef _DEBUG
-
-void __cdecl
-Trace(
-    char *pszFormat,
-    ...)
-{
-    CHAR szBuff[2048];
-    va_list args;
-
-    va_start(args, pszFormat);
-    vsprintf(szBuff, pszFormat, args);
-    va_end(args);
-
-    OutputDebugString(szBuff);
-}
-
-#endif //_DEBUG

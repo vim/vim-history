@@ -155,6 +155,7 @@ struct vimvar
     {"charconvert_to", sizeof("charconvert_to") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_in", sizeof("charconvert_in") - 1, NULL, VAR_STRING, VV_RO},
     {"charconvert_out", sizeof("charconvert_out") - 1, NULL, VAR_STRING, VV_RO},
+    {"cmdarg", sizeof("cmdarg") - 1, NULL, VAR_STRING, VV_RO},
 };
 
 static int eval0 __ARGS((char_u *arg,  VAR retvar, char_u **nextcmd, int evaluate));
@@ -292,6 +293,7 @@ static char_u *trans_function_name __ARGS((char_u **pp));
 static int eval_fname_script __ARGS((char_u *p));
 static int eval_fname_sid __ARGS((char_u *p));
 static void list_func_head __ARGS((ufunc_t *fp));
+static void cat_func_name __ARGS((char_u *buf, ufunc_t *fp));
 static ufunc_t *find_func __ARGS((char_u *name));
 static void call_func __ARGS((ufunc_t *fp, int argcount, VAR argvars, VAR retvar, linenr_t firstline, linenr_t lastline));
 
@@ -338,7 +340,7 @@ eval_to_bool(arg, error, nextcmd, skip)
     int		retval = FALSE;
 
     if (skip)
-	++emsg_off;
+	++emsg_skip;
     if (eval0(arg, &retvar, nextcmd, !skip) == FAIL)
     {
 	*error = TRUE;
@@ -350,7 +352,7 @@ eval_to_bool(arg, error, nextcmd, skip)
 	clear_var(&retvar);
     }
     if (skip)
-	--emsg_off;
+	--emsg_skip;
 
     return retval;
 }
@@ -582,13 +584,13 @@ ex_let(eap)
     else
     {
 	if (eap->skip)
-	    ++emsg_off;
+	    ++emsg_skip;
 	i = eval0(expr + 1, &retvar, &eap->nextcmd, !eap->skip);
 	if (eap->skip)
 	{
 	    if (i != FAIL)
 		clear_var(&retvar);
-	    --emsg_off;
+	    --emsg_skip;
 	}
 	else if (i != FAIL)
 	{
@@ -815,7 +817,7 @@ ex_call(eap)
      * call, and the loop is broken.
      */
     if (eap->skip)
-	++emsg_off;
+	++emsg_skip;
     for (lnum = eap->line1; lnum <= eap->line2; ++lnum)
     {
 	if (!eap->skip && eap->line1 != eap->line2)
@@ -835,7 +837,7 @@ ex_call(eap)
 	    break;
     }
     if (eap->skip)
-	--emsg_off;
+	--emsg_skip;
 
     if (!failed)
     {
@@ -2995,6 +2997,17 @@ f_exists(argvars, retvar)
     {
 	n = cmd_exists(p + 1);
     }
+    else if (*p == '#')
+    {
+#ifdef FEAT_AUTOCMD
+	name = p + 1;
+	p = vim_strchr(name, '#');
+	if (p != NULL)
+	    n = au_exists(name, p, p + 1);
+	else
+	    n = au_exists(name, name + STRLEN(name), NULL);
+#endif
+    }
     else				/* internal variable */
     {
 	name = p;
@@ -4307,13 +4320,24 @@ f_search(argvars, retvar)
     char_u	*pat;
     pos_t	pos;
     int		save_p_ws = p_ws;
+    char_u	nbuf[NUMBUFLEN];
+    char_u	*flags;
+    int		dir = FORWARD;
 
     pat = get_var_string(&argvars[0]);
     if (argvars[1].var_type != VAR_UNKNOWN)
-	p_ws = get_var_lnum(&argvars[1]);
+    {
+	flags = get_var_string_buf(&argvars[1], nbuf);
+	if (vim_strchr(flags, 'b'))
+	    dir = BACKWARD;
+	if (vim_strchr(flags, 'w'))
+	    p_ws = TRUE;
+	if (vim_strchr(flags, 'W'))
+	    p_ws = FALSE;
+    }
 
     pos = curwin->w_cursor;
-    if (searchit(curbuf, &pos, FORWARD, pat, 1L, SEARCH_KEEP, RE_SEARCH) == OK)
+    if (searchit(curbuf, &pos, dir, pat, 1L, SEARCH_KEEP, RE_SEARCH) == OK)
     {
 	retvar->var_val.var_number = 0;
 	curwin->w_cursor = pos;
@@ -4531,7 +4555,11 @@ f_strftime(argvars, retvar)
     else
 	seconds = (time_t)get_var_number(&argvars[1]);
     curtime = localtime(&seconds);
-    (void)strftime((char *)result_buf, (size_t)80, (char *)p, curtime);
+    /* MSVC returns NULL for an invalid value of seconds. */
+    if (curtime == NULL)
+	STRCPY(result_buf, _("(Invalid)"));
+    else
+	(void)strftime((char *)result_buf, (size_t)80, (char *)p, curtime);
 
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = vim_strsave(result_buf);
@@ -5272,6 +5300,55 @@ set_vim_var_string(idx, val, len)
 	vimvars[idx].val = vim_strnsave(val, len);
 }
 
+#if defined(FEAT_AUTOCMD) || defined(PROTO)
+/*
+ * Set v:cmdarg.
+ * If "eap" != NULL, use "eap" to generate the value and return the old value.
+ * If "oldarg" != NULL, restore the value to "oldarg" and return NULL.
+ * Must always be called in pairs!
+ */
+    char_u *
+set_cmdarg(eap, oldarg)
+    exarg_t	*eap;
+    char_u	*oldarg;
+{
+    char_u	*oldval;
+    char_u	*newval;
+    unsigned	len;
+
+    oldval = vimvars[VV_CMDARG].val;
+    if (eap != NULL)
+    {
+	if (eap->force_ff != 0)
+	    len = STRLEN(eap->cmd + eap->force_ff) + 6;
+	else
+	    len = 0;
+# ifdef FEAT_MBYTE
+	if (eap->force_fcc != 0)
+	    len += STRLEN(eap->cmd + eap->force_fcc) + 6;
+# endif
+	newval = alloc(len + 1);
+	if (newval == NULL)
+	    return NULL;
+	if (eap->force_ff != 0)
+	    sprintf((char *)newval, " ++ff=%s", eap->cmd + eap->force_ff);
+	else
+	    *newval = NUL;
+# ifdef FEAT_MBYTE
+	if (eap->force_fcc != 0)
+	    sprintf((char *)newval + STRLEN(newval), " ++cc=%s",
+						   eap->cmd + eap->force_fcc);
+# endif
+	vimvars[VV_CMDARG].val = newval;
+	return oldval;
+    }
+
+    vim_free(oldval);
+    vimvars[VV_CMDARG].val = oldarg;
+    return NULL;
+}
+#endif
+
 /*
  * Get the value of internal variable "name".
  * Return OK or FAIL.
@@ -5809,7 +5886,7 @@ ex_echo(eap)
     int		atstart = TRUE;
 
     if (eap->skip)
-	++emsg_off;
+	++emsg_skip;
     else if (eap->cmdidx == CMD_echo)
 	msg_start();
     while (*arg != NUL && *arg != '|' && *arg != '\n' && !got_int)
@@ -5858,7 +5935,7 @@ ex_echo(eap)
     eap->nextcmd = check_nextcmd(arg);
 
     if (eap->skip)
-	--emsg_off;
+	--emsg_skip;
     else
     {
 	/* remove text that may still be there from the command */
@@ -5906,7 +5983,7 @@ ex_execute(eap)
     ga_init2(&ga, 1, 80);
 
     if (eap->skip)
-	++emsg_off;
+	++emsg_skip;
     while (*arg != NUL && *arg != '|' && *arg != '\n')
     {
 	p = arg;
@@ -5955,7 +6032,7 @@ ex_execute(eap)
     ga_clear(&ga);
 
     if (eap->skip)
-	--emsg_off;
+	--emsg_skip;
 
     eap->nextcmd = check_nextcmd(arg);
 }
@@ -6004,7 +6081,7 @@ ex_function(eap)
 
     p = eap->arg;
     name = trans_function_name(&p);
-    if (name == NULL)
+    if (name == NULL && !eap->skip)
 	return;
 
     /*
@@ -6042,8 +6119,12 @@ ex_function(eap)
     p = skipwhite(p);
     if (*p != '(')
     {
-	EMSG2(_("Missing '(': %s"), eap->arg);
-	goto erret_name;
+	if (!eap->skip)
+	{
+	    EMSG2(_("Missing '(': %s"), eap->arg);
+	    goto erret_name;
+	}
+	p = vim_strchr(p, '(');
     }
     p = skipwhite(p + 1);
 
@@ -6068,6 +6149,8 @@ ex_function(eap)
 		++p;
 	    if (arg == p || isdigit(*arg))
 	    {
+		if (eap->skip)
+		    break;
 		EMSG2(_("Illegal argument: %s"), arg);
 		goto erret;
 	    }
@@ -6090,6 +6173,8 @@ ex_function(eap)
 	p = skipwhite(p);
 	if (mustend && *p != ')')
 	{
+	    if (eap->skip)
+		break;
 	    EMSG2(_(e_invarg2), eap->arg);
 	    goto erret;
 	}
@@ -6114,7 +6199,7 @@ ex_function(eap)
 	    break;
     }
 
-    if (*p != NUL && *p != '"' && *p != '\n')
+    if (*p != NUL && *p != '"' && *p != '\n' && !eap->skip)
     {
 	EMSG(_(e_trailing));
 	goto erret;
@@ -6400,13 +6485,7 @@ get_user_func_name(xp, idx)
 	if (STRLEN(fp->name) + 4 >= IOSIZE)
 	    return fp->name;	/* prevents overflow */
 
-	if (fp->name[0] == K_SPECIAL)
-	{
-	    STRCPY(IObuff, "<SNR>");
-	    STRCAT(IObuff, fp->name + 3);
-	}
-	else
-	    STRCPY(IObuff, fp->name);
+	cat_func_name(IObuff, fp);
 	if (xp->xp_context != EXPAND_USER_FUNC)
 	    STRCAT(IObuff, "(");
 
@@ -6417,6 +6496,25 @@ get_user_func_name(xp, idx)
 }
 
 #endif /* FEAT_CMDL_COMPL */
+
+/*
+ * Copy the function name of "fp" to buffer "buf".
+ * "buf" must be able to hold the function name plus three bytes.
+ * Takes care of script-local function names.
+ */
+    static void
+cat_func_name(buf, fp)
+    char_u	*buf;
+    ufunc_t	*fp;
+{
+    if (fp->name[0] == K_SPECIAL)
+    {
+	STRCPY(buf, "<SNR>");
+	STRCAT(buf, fp->name + 3);
+    }
+    else
+	STRCPY(buf, fp->name);
+}
 
 /*
  * ":delfunction {name}"
@@ -6524,7 +6622,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
     save_sourcing_lnum = sourcing_lnum;
     sourcing_lnum = 1;
     sourcing_name = alloc((unsigned)((save_sourcing_name == NULL ? 0
-		: STRLEN(save_sourcing_name)) + STRLEN(fp->name) + 10));
+		: STRLEN(save_sourcing_name)) + STRLEN(fp->name) + 13));
     if (sourcing_name != NULL)
     {
 	if (save_sourcing_name != NULL
@@ -6532,7 +6630,7 @@ call_func(fp, argcount, argvars, retvar, firstline, lastline)
 	    sprintf((char *)sourcing_name, "%s->", save_sourcing_name);
 	else
 	    STRCPY(sourcing_name, "function ");
-	STRCAT(sourcing_name, fp->name);
+	cat_func_name(sourcing_name + STRLEN(sourcing_name), fp);
 
 	if (p_verbose >= 12)
 	{
@@ -6622,7 +6720,7 @@ ex_return(eap)
     }
 
     if (eap->skip)
-	++emsg_off;
+	++emsg_skip;
     else
 	current_funccal->linenr = -1;
 
@@ -6648,7 +6746,7 @@ ex_return(eap)
      * by get_func_line(). */
     if (eap->skip)
     {
-	--emsg_off;
+	--emsg_skip;
 	eap->nextcmd = check_nextcmd(arg);
     }
     else

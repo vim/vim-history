@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 26
+" Last Change:	2000 Dec 10
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -74,6 +74,7 @@ if has("win32")
       let &mod = mod_save
       exec "!notepad /p " . ttt
       exec "!del " . ttt
+      exec "bdel " . ttt
     endfun
   endif
 elseif has("unix")
@@ -93,6 +94,7 @@ elseif has("vms")
       exec a:range . "w! " . ttt
       let &mod = mod_save
       exec "!print/delete " . ttt
+      exec "bdel " . ttt
     endfun
   endif
 endif
@@ -612,6 +614,9 @@ SynMenu AB.Assembly.Assembly\ (GNU):asm
 SynMenu AB.Assembly.Assembly\ (H8300):asmh8300
 SynMenu AB.Assembly.Assembly\ (Microsoft):masm
 SynMenu AB.Assembly.Assembly\ (Netwide):nasm
+SynMenu AB.Assembly.PIC\ assembly:pic
+SynMenu AB.Assembly.Turbo\ assembly:tasm
+SynMenu AB.Assembly.Z-80\ assembly:z8a
 SynMenu AB.ASN\.1:asn
 SynMenu AB.Atlas:atlas
 SynMenu AB.Automake:automake
@@ -626,10 +631,14 @@ SynMenu AB.Blank:blank
 
 SynMenu CD.C:c
 SynMenu CD.C++:cpp
+SynMenu CD.Crontab:crontab
+SynMenu CD.Cyn++:cynpp
+SynMenu CD.Cynlib:cynlib
 SynMenu CD.Cascading\ Style\ Sheets:css
 SynMenu CD.Century\ Term:cterm
 SynMenu CD.CHILL:ch
 SynMenu CD.Change:change
+SynMenu CD.ChangeLog:changelog
 SynMenu CD.Clean:clean
 SynMenu CD.Clipper:clipper
 SynMenu CD.Cold\ Fusion:cf
@@ -654,6 +663,7 @@ SynMenu CD.Dylan.Dylan\ lid:dylanlid
 
 SynMenu EFG.Eiffel:eiffel
 SynMenu EFG.Elm\ Filter:elmfilt
+SynMenu EFG.Embedix\ Component\ Description:ecd
 SynMenu EFG.ERicsson\ LANGuage:erlang
 SynMenu EFG.ESQL-C:esqlc
 SynMenu EFG.Expect:expect
@@ -669,6 +679,7 @@ SynMenu EFG.GDB\ command\ file:gdb
 SynMenu EFG.GDMO:gdmo
 SynMenu EFG.Gedcom:gedcom
 SynMenu EFG.GP:gp
+SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
 
 SynMenu HIJK.Haskell:haskell
@@ -693,6 +704,7 @@ SynMenu HIJK.Jess:jess
 SynMenu HIJK.Jgraph:jgraph
 SynMenu HIJK.KDE\ script:kscript
 SynMenu HIJK.Kimwitu:kwt
+SynMenu HIJK.Kixtart:kix
 
 SynMenu L-Ma.Lace:lace
 SynMenu L-Ma.Lamda\ Prolog:lprolog
@@ -742,12 +754,12 @@ SynMenu Me-NO.Oracle\ config:ora
 SynMenu PQ.PApp:papp
 SynMenu PQ.Pascal:pascal
 SynMenu PQ.PCCTS:pccts
+SynMenu PQ.PPWizard:ppwiz
 SynMenu PQ.Perl.Perl:perl
 SynMenu PQ.Perl.Perl\ POD:pod
 SynMenu PQ.Perl.Perl\ XS:xs
 SynMenu PQ.PHP\ 3-4:php
 SynMenu PQ.Phtml:phtml
-SynMenu PQ.PIC\ assembly:pic
 SynMenu PQ.Pike:pike
 SynMenu PQ.Pine\ RC:pine
 SynMenu PQ.PL/SQL:plsql
@@ -818,7 +830,6 @@ SynMenu TUV.Termcap:ptcap
 SynMenu TUV.TeX:tex
 SynMenu TUV.Texinfo:texinfo
 SynMenu TUV.TF\ mud\ client:tf
-SynMenu TUV.Turbo\ assembly:tasm
 SynMenu TUV.UIT/UIL:uil
 SynMenu TUV.Verilog\ HDL:verilog
 SynMenu TUV.Vgrindefs:vgrindefs
@@ -845,7 +856,6 @@ SynMenu WXYZ.Xmath:xmath
 SynMenu WXYZ.XML:xml
 SynMenu WXYZ.XXD\ hex\ dump:xxd
 SynMenu WXYZ.Yacc:yacc
-SynMenu WXYZ.Z-80\ assembler:z8a
 SynMenu WXYZ.Zsh\ shell\ script:zsh
 
 unlet s:cur_menu_name

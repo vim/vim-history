@@ -2238,6 +2238,11 @@ maketitle()
 		buf[off++] = '(';
 		home_replace(curbuf, curbuf->b_ffname,
 					       buf + off, IOSIZE - off, TRUE);
+#ifdef BACKSLASH_IN_FILENAME
+		/* avoid "c:/name" to be reduced to "c" */
+		if (isalpha(buf[off]) && buf[off + 1] == ':')
+		    off += 2;
+#endif
 		/* remove the file name */
 		p = gettail(buf + off);
 		if (p == buf + off)
@@ -3126,7 +3131,7 @@ buf_addsign(buf, id, lineno, type)
     prev = NULL;
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
     {
-	if (lineno == sign->lineno || id == sign->id)
+	if (lineno == sign->lineno && id == sign->id)
 	{
 	    sign->type = type;
 	    return sign->lineno;
@@ -3171,7 +3176,7 @@ buf_getsigntype(buf, lnum)
     signlist_t	*sign;		/* a sign in a b_signlist */
 
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
-	if (sign->lineno == lnum)
+	if (sign->lineno == lnum && get_debug_highlight(sign->type) > 0)
 	    return sign->type;
 
     return 0;

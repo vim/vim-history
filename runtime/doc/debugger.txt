@@ -1,4 +1,4 @@
-*debugger.txt*  For Vim version 6.0o.  Last change: 2000 Jul 09
+*debugger.txt*  For Vim version 6.0p.  Last change: 2000 Jul 09
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur

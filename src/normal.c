@@ -1346,7 +1346,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		curbuf->b_visual_start_coladd = curbuf->b_visual_end_coladd;
 		curbuf->b_visual_end_coladd = tmp;
 	    }
-#endif 
+#endif
 	}
 
 	oap->line_count = oap->end.lnum - oap->start.lnum + 1;
@@ -1366,7 +1366,6 @@ do_pending_operator(cap, old_col, gui_yank)
 		{
 		    getvcol(curwin, &(oap->end), &start, NULL, &end);
 # ifdef FEAT_VIRTUALEDIT
-		    
 		    if (virtual_active())
 		    {
 			start += curbuf->b_visual_end_coladd;
@@ -5252,6 +5251,7 @@ nv_replace(cap)
 	prep_redo(cap->oap->regname, cap->count1,
 				       NUL, 'r', NUL, had_ctrl_v, cap->nchar);
 
+	curbuf->b_op_start = curwin->w_cursor;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
@@ -5297,6 +5297,7 @@ nv_replace(cap)
 	if (has_mbyte)
 	    mb_adjust_cursor();
 #endif
+	curbuf->b_op_end = curwin->w_cursor;
 	curwin->w_set_curswant = TRUE;
 	set_last_insert(cap->nchar);
     }
@@ -5507,8 +5508,14 @@ n_swapchar(cap)
     adjust_cursor();
     curwin->w_set_curswant = TRUE;
     if (did_change)
+    {
 	changed_lines(startpos.lnum, startpos.col, curwin->w_cursor.lnum + 1,
 									  0L);
+	curbuf->b_op_start = startpos;
+	curbuf->b_op_end = curwin->w_cursor;
+	if (curbuf->b_op_end.col > 0)
+	    --curbuf->b_op_end.col;
+    }
 }
 
 /*
@@ -5929,6 +5936,22 @@ nv_g_cmd(cap)
 
     case 'r':
 	nv_vreplace(cap);
+	break;
+
+    /*
+     * "gi": start Insert at the last position.
+     */
+    case 'i':
+	if (curbuf->b_last_insert.lnum != 0)
+	{
+	    curwin->w_cursor = curbuf->b_last_insert;
+	    check_cursor_lnum();
+	    i = STRLEN(ml_get_curline());
+	    if (curwin->w_cursor.col > i)
+		curwin->w_cursor.col = i;
+	}
+	cap->cmdchar = 'i';
+	nv_edit(cap);
 	break;
 
     case '&':

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:		Speedup, plant simulator from AspenTech
-" Maintainer:	Stefan.Schwarzer <Stefan.Schwarzer@tu-clausthal.de>
-" URL:			http://home.tu-clausthal.de/~svss/vim/spup.vim
-" Last Change:	2000 Nov 04
+" Maintainer:	Stefan.Schwarzer <s.schwarzer@ndh.net>
+" URL:			http://www.ndh.net/home/sschwarzer/download/spup.vim
+" Last Change:	2000 Dec 10
 " Filename:		spup.vim
 
 " Bugs
@@ -16,19 +16,23 @@
 "
 " If you encounter problems or have questions or suggestions, mail me
 
+syn clear
+
 " don't hightlight several keywords like subsections
 "let strict_subsections = 1
 
 " highlight types usually found in DECLARE section
-let highlight_types = 1
+if !exists("hightlight_types")
+    let highlight_types = 1
+endif
 
 " one line comment syntax (# comments)
 " 1. allow appended code after comment, do not complain
 " 2. show code beginnig with the second # as an error
 " 3. show whole lines with more than one # as an error
-let oneline_comments = 2
-
-syn clear
+if !exists("oneline_comments")
+    let oneline_comments = 2
+endif
 
 " Speedup SECTION regions
 syn case ignore
@@ -37,7 +41,7 @@ syn region spupConditions matchgroup=spupSection start="^CONDITIONS" end="^\*\*\
 syn region spupDeclare    matchgroup=spupSection start="^DECLARE"    end="^\*\*\*\*" contains=spupDeclareSubs,@spupOrdinary,spupTypes,spupCode
 syn region spupEstimation matchgroup=spupSection start="^ESTIMATION" end="^\*\*\*\*" contains=spupEstimationSubs,@spupOrdinary
 syn region spupExternal   matchgroup=spupSection start="^EXTERNAL"   end="^\*\*\*\*" contains=spupExternalSubs,@spupOrdinary
-syn region spupFlowsheet  matchgroup=spupSection start="^FLOWSHEET"  end="^\*\*\*\*" contains=spupFlowsheetSubs,@spupOrdinary,spupStreams
+syn region spupFlowsheet  matchgroup=spupSection start="^FLOWSHEET"  end="^\*\*\*\*" contains=spupFlowsheetSubs,@spupOrdinary,spupStreams,@spupTextproc
 syn region spupFunction   matchgroup=spupSection start="^FUNCTION"   end="^\*\*\*\*" contains=spupFunctionSubs,@spupOrdinary,spupHelp,spupCode,spupTypes
 syn region spupGlobal     matchgroup=spupSection start="^GLOBAL"     end="^\*\*\*\*" contains=spupGlobalSubs,@spupOrdinary
 syn region spupHomotopy   matchgroup=spupSection start="^HOMOTOPY"   end="^\*\*\*\*" contains=spupHomotopySubs,@spupOrdinary
@@ -74,7 +78,7 @@ if !exists( "strict_subsections" )
     syn keyword spupConditionsSubs STOP PRINT contained
     syn keyword spupDeclareSubs    UNIT SET COMPONENTS THERMO OPTIONS contained
     syn keyword spupEstimationSubs VARY MEASURE INITIAL contained
-    syn keyword spupFlowsheetSubs  TYPE FEED PRODUCT INPUT OUTPUT OF IS contained
+    syn keyword spupFlowsheetSubs  TYPE FEED PRODUCT INPUT OUTPUT CONNECTION OF IS contained
     syn keyword spupMacroSubs      CONNECTION STREAM SET INPUT OUTPUT OF IS FEED PRODUCT TYPE contained
     syn keyword spupModelSubs      AS ARRAY OF INPUT OUTPUT CONNECTION contained
     syn keyword spupOperationSubs  WITHIN contained
