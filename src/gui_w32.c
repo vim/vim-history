@@ -365,6 +365,7 @@ _OnScroll(
     int		nPos;
 #endif
     static UINT	prev_code = 0;   /* code of previous call */
+    int		dont_scroll_save = dont_scroll;
 
     sb = gui_mswin_find_scrollbar(hwndCtl);
     if (sb == NULL)
@@ -457,8 +458,15 @@ _OnScroll(
 
     /* Don't let us be interrupted here by another message. */
     s_busy_processing = TRUE;
+
+    /* When "allow_scrollbar" is FALSE still need to remember the new
+     * position, but don't actually scroll by setting "dont_scroll". */
+    dont_scroll = !allow_scrollbar;
+
     gui_drag_scrollbar(sb, val, dragging);
+
     s_busy_processing = FALSE;
+    dont_scroll = dont_scroll_save;
 
     return 0;
 }

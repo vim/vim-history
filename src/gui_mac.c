@@ -174,6 +174,13 @@ static Rect dragRect;
 static short dragRectEnbl;
 static short dragRectControl;
 
+/* This variable is set when waiting for an event, which is the only moment
+ * scrollbar dragging can be done directly.  It's not allowed while commands
+ * are executed, because it may move the cursor and that may cause unexpected
+ * problems (e.g., while ":s" is working).
+ */
+static int allow_scrollbar = FALSE;
+
 /* Last mouse click caused contextual menu, (to provide proper release) */
 #ifdef USE_CTRLCLICKMENU
 static short clickIsPopup;
@@ -1499,6 +1506,7 @@ gui_mac_drag_thumb (ControlHandle theControl, short partCode)
     scrollbar_T		*sb;
     int			value, dragging;
     ControlHandle	theControlToUse;
+    int			dont_scroll_save = dont_scroll;
 
     theControlToUse = dragged_sb;
 
@@ -1511,7 +1519,11 @@ gui_mac_drag_thumb (ControlHandle theControl, short partCode)
     value = GetControl32BitValue (theControlToUse);
     dragging = TRUE;
 
+    /* When "allow_scrollbar" is FALSE still need to remember the new
+     * position, but don't actually scroll by setting "dont_scroll". */
+    dont_scroll = !allow_scrollbar;
     gui_drag_scrollbar(sb, value, dragging);
+    dont_scroll = dont_scroll_save;
 }
 
     pascal
@@ -1524,6 +1536,7 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
     long	value;
     int		page;
     int		dragging = FALSE;
+    int		dont_scroll_save = dont_scroll;
 
     sb = gui_find_scrollbar((long) GetControlReference (theControl));
 
@@ -1565,7 +1578,11 @@ gui_mac_scroll_action (ControlHandle theControl, short partCode)
     else if (value < 0)
 	value = 0;*/
 
+    /* When "allow_scrollbar" is FALSE still need to remember the new
+     * position, but don't actually scroll by setting "dont_scroll". */
+    dont_scroll = !allow_scrollbar;
     gui_drag_scrollbar(sb, value, dragging);
+    dont_scroll = dont_scroll_save;
 
     out_flush();
     gui_mch_set_scrollbar_thumb(sb, value, sb_info->size, sb_info->max);
@@ -3468,6 +3485,8 @@ gui_mch_wait_for_chars(wtime)
 
     entryTick = TickCount();
 
+    allow_scrollbar = TRUE;
+
     do
     {
 /*	if (dragRectControl == kCreateEmpty)
@@ -3483,11 +3502,9 @@ gui_mch_wait_for_chars(wtime)
 	}
 	/*
 	 * Don't use gui_mch_update() because then we will spin-lock until a
-	 * char arrives, instead we use XtAppProcessEvent() to hang until an
+	 * char arrives, instead we use WaitNextEventWrp() to hang until an
 	 * event arrives.  No need to check for input_buf_full because we are
-	 * returning as soon as it contains a single char.  Note that
-	 * XtAppNextEvent() may not be used because it will not return after a
-	 * timer event has arrived -- webb
+	 * returning as soon as it contains a single char.
 	 */
 	/* TODO: reduce wtime accordinly???  */
 	if (wtime > -1)
@@ -3501,12 +3518,16 @@ gui_mch_wait_for_chars(wtime)
 #endif
 		gui_mac_handle_event (&event);
 	    if (!vim_is_input_buf_empty())
+	    {
+		allow_scrollbar = FALSE;
 		return OK;
+	    }
 	}
 	currentTick = TickCount();
     }
     while ((wtime == -1) || ((currentTick - entryTick) < 60*wtime/1000));
 
+    allow_scrollbar = FALSE;
     return FAIL;
 }
 

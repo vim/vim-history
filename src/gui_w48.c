@@ -166,6 +166,14 @@ static char_u		*s_textfield; /* Used by dialogs to pass back strings */
 
 static int		s_need_activate = FALSE;
 
+/* This variable is set when waiting for an event, which is the only moment
+ * scrollbar dragging can be done directly.  It's not allowed while commands
+ * are executed, because it may move the cursor and that may cause unexpected
+ * problems (e.g., while ":s" is working).
+ */
+static int allow_scrollbar = FALSE;
+
+
 #ifdef GLOBAL_IME
 # undef DefWindowProc
 # define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
@@ -1655,6 +1663,8 @@ gui_mch_wait_for_chars(int wtime)
 							 (TIMERPROC)_OnTimer);
     }
 
+    allow_scrollbar = TRUE;
+
     focus = gui.in_focus;
     while (!s_timed_out)
     {
@@ -1697,9 +1707,11 @@ gui_mch_wait_for_chars(int wtime)
 		    ;
 		s_wait_timer = 0;
 	    }
+	    allow_scrollbar = FALSE;
 	    return OK;
 	}
     }
+    allow_scrollbar = FALSE;
     return FAIL;
 }
 
