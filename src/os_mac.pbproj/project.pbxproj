@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 32;
+	objectVersion = 34;
 	objects = {
 		00EF808200C49A857F000001 = {
 			isa = PBXFileReference;
@@ -121,6 +121,7 @@
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				OPTIMIZATION_CFLAGS = "-O0";
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -373,7 +374,6 @@
 				HEADER_SEARCH_PATHS = "proto /Developer/Headers/FlatCarbon";
 				INSTALL_PATH = "$(HOME)/Applications";
 				LIBRARY_SEARCH_PATHS = "";
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "-DMACOS_X";
 				OTHER_LDFLAGS = "";
 				OTHER_REZFLAGS = "";
@@ -496,6 +496,7 @@
 				06B64A4B00BBD0257F000001,
 				F5D0FB2D00F8C2BF01000001,
 				F5E2C54000FACD0901000001,
+				F5CC3220018E3F6801891561,
 			);
 			isa = PBXSourcesBuildPhase;
 			name = Sources;
@@ -1445,6 +1446,12 @@
 //F52
 //F53
 //F54
+		F5CC3220018E3F6801891561 = {
+			fileRef = 273798E200B36B037F000001;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F5D0FB2B00F8C29A01000001 = {
 			children = (
 				F5D0FB2C00F8C2BF01000001,

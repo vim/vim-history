@@ -171,7 +171,7 @@ main
     qnx_init();		/* PhAttach() for clipboard, (and gui) */
 #endif
 
-#ifdef FEAT_GUI_MAC
+#ifdef MAC_OS_CLASSIC
     /* Macintosh needs this before any memory is allocated. */
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
     TIME_MSG("GUI prepared");
@@ -301,7 +301,7 @@ main
 #ifdef FEAT_SUN_WORKSHOP
     findYourself(argv[0]);
 #endif
-#if defined(FEAT_GUI) && !defined(FEAT_GUI_MAC)
+#if defined(FEAT_GUI) && !defined(MAC_OS_CLASSIC)
     gui_prepare(&argc, argv);	/* Prepare for possibly starting GUI sometime */
     TIME_MSG("GUI prepared");
 #endif
@@ -642,9 +642,6 @@ main
 		   -psn_0_10223617 is passed in when invoke from Finder
 		   or with the 'open' command */
 	    case 'p':
-		mch_errmsg("What does this mean: ");
-		mch_errmsg(argv[0]);
-		mch_errmsg("\n");
 		argv_idx = -1; /* bypass full -psn */
 		break;
 #endif

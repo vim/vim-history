@@ -29,35 +29,29 @@
 #include <OSUtils.h>
 #include <Files.h>
 #ifdef FEAT_MBYTE
-#include <Script.h>
+# include <Script.h>
 #endif
 
 /*
  * Unix interface
  */
-#if defined(__MWERKS__)/* Only for metrowerks and MacOSX Compilers */
+#if defined(__MWERKS__) /* for CodeWarrior */
 # include <unistd.h>
 # include <utsname.h>
-# include <stat.h>
 # include <unix.h>
 #endif
-#if defined(__APPLE_CC__)
+#if defined(__APPLE_CC__) /* for Project Builder and ... */
 # include <unistd.h>
-# include <sys/stat.h>
-# include <curses.h>
-  /* Remove some BACKWARD compatibilty stuff */
-# undef reg
-# undef ospeed
 #endif
-#include <signal.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#ifdef MACOS_X
-# include <dirent.h>
+/* Get stat.h or something similar. Comment: How come some OS get in in vim.h */
+#if defined(__MWERKS__)
+# include <stat.h>
+#endif
+#if defined(__APPLE_CC__)
+# include <sys/stat.h>
 #endif
 #if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
+/* There's no stat.h for MPW? */
 # ifdef powerc
 #  pragma options align=power
 # endif
@@ -71,18 +65,20 @@
 #  pragma options align=reset
 # endif
 #endif
-
-/*
- * Allow use of MacOS memory allocation subroutine
- */
-#if 0	    /* this doesn't work, because realloc() isn't redefined */
-/*
- * Use Macintosh subroutine to alloc the memory.
- * (malloc generate Ptr format hard to debug with ZoneRanger)
- */
-# define malloc(x) NewPtr(x)
-# define free(x)   DisposePtr((char *) x)
-# define realloc() something
+#if defined(__APPLE_CC__) /* && defined(HAVE_CURSE) */
+/* The curses.h from MacOS X provides by default some BACKWARD compatibilty
+ * definition which can cause us problem later on. So we undefine a few of them. */
+# include <curses.h>
+# undef reg
+# undef ospeed
+#endif
+#include <signal.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#ifdef MACOS_X
+# include <dirent.h>
 #endif
 
 /*
@@ -100,7 +96,7 @@
 #  error "You must compile with enums always int!"
 # endif
 # if defined(__MWERKS__) && !defined(__fourbyteints__)
-#  error "You must compile the projecct with 4-byte ints"
+#  error "You must compile the project with 4-byte ints"
 /* MPW ints are always 4 byte long */
 # endif
 #endif
@@ -134,7 +130,7 @@
 #define CASE_INSENSITIVE_FILENAME   /* ignore case when comparing file names */
 #define SPACE_IN_FILENAME
 #define BREAKCHECK_SKIP	   32	    /* call mch_breakcheck() each time, it's
-				       quite fast */
+				       quite fast. Did I forgot to update the comment */
 
 
 #undef  USE_FNAME_CASE	    /* So that :e os_Mac.c, :w, save back the file as os_mac.c */
@@ -323,6 +319,7 @@
 
 #define WILDCHAR_LIST "*?[{`$"
 
+/**************/
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_remove(x) unlink((char *)(x))
 #if defined(__MRC__) || defined(__SC__)
@@ -330,7 +327,8 @@
 # define mch_setenv(name, val, x) setenv((name), (val))
 #elif defined(__APPLE_CC__)
 # define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
-# define mch_setenv(name, val, x) setenv((name), (val))
+/*# define mch_setenv(name, val, x) setenv((name), (val)) */ /* Obsoleted by Dany on Oct 30, 2001 */
+# define mch_setenv(name, val, x) setenv(name, val, x)
 #else
  /* vim_getenv() is in pty.c */
 # define USE_VIMPTY_GETENV
@@ -357,15 +355,19 @@
 # define SIGPROTOARG	(int)
 # define SIGDEFARG(s)	(s) int s;
 # define SIGDUMMYARG	0
-# define USE_SYSTEM  /* Output ship do debugger :(, but ot compile */
+/*# define USE_SYSTEM */  /* Output ship do debugger :(, but ot compile */
+# define HAVE_SYS_WAIT_H 1 /* Attempt */
 # define HAVE_TERMIOS_H 1
 # define SYS_SELECT_WITH_SYS_TIME 1
 # define HAVE_SELECT 1
 # define HAVE_SYS_SELECT_H 1
 # undef  HAVE_AVAIL_MEM
+# define HAVE_PUTENV
+# define HAVE_SETENV
+# define HAVE_RENAME
 # define mch_chdir(s) chdir(s)
 #endif
 
-/* A Mac constat causing big problem to syntax highlighting */
+/* A Mac constant causing big problem to syntax highlighting */
 #define UNKNOWN_CREATOR '????'
 
