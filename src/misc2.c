@@ -2674,7 +2674,7 @@ illegal_slash(name)
 	return FALSE;	    /* no file name is not illegal */
     if (name[strlen(name) - 1] != '/')
 	return FALSE;	    /* no trailing slash */
-    if (mch_isdir(name))
+    if (mch_isdir((char_u *)name))
 	return FALSE;	    /* trailing slash for a directory */
     return TRUE;
 }
