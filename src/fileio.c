@@ -966,7 +966,7 @@ retry:
 #endif
 		keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	    keep_msg_attr = 0;
-	    if (read_stdin || restart_edit != 0)
+	    if ((read_stdin || restart_edit != 0) && keep_msg != NULL)
 	    {
 		/* When reading from stdin, the screen will be cleared next;
 		 * keep the message to repeat it later.
