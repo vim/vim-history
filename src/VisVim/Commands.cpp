@@ -512,18 +512,19 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 		goto OleError;
 
 	OLECHAR Buf[MAX_OLE_STR];
+	char FileNameTmp[MAX_OLE_STR];
 	char VimCmd[MAX_OLE_STR];
-	char* VimCmdStart;
-	char* s;
+	char *s, *p;
 
 	// Prepend CTRL-\ CTRL-N to exit insert mode
 	VimCmd[0] = 0x1c;
 	VimCmd[1] = 0x0e;
-	VimCmdStart = VimCmd + 2;
+	VimCmd[2] = 0;
 
 #ifdef SINGLE_WINDOW
-	// Update the current file in Vim if it has been modified
-	sprintf (VimCmdStart, ":up\n");
+	// Update the current file in Vim if it has been modified.
+	// Disabled, because it could write the file when you don't want to.
+	sprintf (VimCmd + 2, ":up\n");
 #endif
 	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
 		goto OleError;
@@ -532,12 +533,24 @@ static BOOL VimOpenFile (BSTR& FileName, long LineNr)
 	if (g_ChangeDir != CD_NONE)
 		VimChangeDir (VimOle, DispatchId, FileName);
 
-	// Make Vim open the file
-	sprintf (VimCmd, ":drop %S\n", (char*) FileName);
-	// Convert all \ to /
-	for (s = VimCmd; *s; ++s)
-		if (*s == '\\')
-			*s = '/';
+	// Make Vim open the file.
+	// In the filename convert all \ to /, put a \ before a space.
+	sprintf(VimCmd, ":drop ");
+	sprintf(FileNameTmp, "%S", (char *)FileName);
+	s = VimCmd + 6;
+	for (p = FileNameTmp; *p != '\0' && s < FileNameTmp + MAX_OLE_STR - 4;
+									  ++p)
+		if (*p == '\\')
+			*s++ = '/';
+		else
+		{
+			if (*p == ' ')
+				*s++ = '\\';
+			*s++ = *p;
+		}
+	*s++ = '\n';
+	*s = '\0';
+
 	if (! VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf)))
 		goto OleError;
 
@@ -638,19 +651,32 @@ static void VimChangeDir (COleAutomationControl& VimOle, DISPID DispatchId, BSTR
 	CString StrFileName = FileName;
 	char Drive[_MAX_DRIVE];
 	char Dir[_MAX_DIR];
+	char DirUnix[_MAX_DIR * 2];
+	char *s, *t;
+
 	_splitpath (StrFileName, Drive, Dir, NULL, NULL);
-	// Convert to unix path name format
-	for (char* s = Dir; *s; ++s)
+
+	// Convert to Unix path name format, escape spaces.
+	t = DirUnix;
+	for (s = Dir; *s; ++s)
 		if (*s == '\\')
-			*s = '/';
+			*t++ = '/';
+		else
+		{
+			if (*s == ' ')
+				*t++ = '\\';
+			*t++ = *s;
+		}
+	*t = '\0';
+
 
 	// Construct the cd command; append /.. if cd to parent
 	// directory and not in root directory
 	OLECHAR Buf[MAX_OLE_STR];
 	char VimCmd[MAX_OLE_STR];
 
-	sprintf (VimCmd, ":cd %s%s%s\n", Drive, Dir,
-		 g_ChangeDir == CD_SOURCE_PARENT && Dir[1] ? ".." : "");
+	sprintf (VimCmd, ":cd %s%s%s\n", Drive, DirUnix,
+		 g_ChangeDir == CD_SOURCE_PARENT && DirUnix[1] ? ".." : "");
 	VimOle.Method (DispatchId, "s", TO_OLE_STR_BUF (VimCmd, Buf));
 }
 

@@ -116,7 +116,7 @@ END
 
 IDD_ADDINMAIN DIALOG DISCARDABLE  0, 0, 178, 124
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Vim Add-In 1.3a"
+CAPTION "Vim Add-In 1.4"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "&Open file in DevStudio editor simultaneously",
