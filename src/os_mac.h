@@ -378,7 +378,7 @@
 #endif
 
 /* A Mac constant causing big problem to syntax highlighting */
-#define UNKNOWN_CREATOR '????'
+#define UNKNOWN_CREATOR '\?\?\?\?'
 
 /*
  * for debugging
