@@ -6061,7 +6061,7 @@ ins_esc(count, cmdchar)
     if (!arrow_used)
     {
 	/*
-	 * Don't append the ESC for "r<CR>".
+	 * Don't append the ESC for "r<CR>" and "grx".
 	 */
 	if (cmdchar != 'r' && cmdchar != 'v')
 	    AppendToRedobuff(ESC_STR);
@@ -6070,7 +6070,7 @@ ins_esc(count, cmdchar)
 	 * Repeating insert may take a long time.  Check for
 	 * interrupt now and then.
 	 */
-	if (*count)
+	if (*count > 0)
 	{
 	    line_breakcheck();
 	    if (got_int)
@@ -6080,6 +6080,8 @@ ins_esc(count, cmdchar)
 	if (--*count > 0)	/* repeat what was typed */
 	{
 	    (void)start_redo_ins();
+	    if (cmdchar == 'r' || cmdchar == 'v')
+		stuffReadbuff(ESC_STR);	/* no ESC in redo buffer */
 	    ++RedrawingDisabled;
 	    disabled_redraw = TRUE;
 	    return FALSE;	/* repeat the insert */
