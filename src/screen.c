@@ -8207,9 +8207,10 @@ win_redr_ruler(wp, always)
 #endif
 
     /*
-     * Check if the line is empty (will show "0-1").
+     * Check if not in Insert mode and the line is empty (will show "0-1").
      */
-    if (*ml_get_buf(wp->w_buffer, wp->w_cursor.lnum, FALSE) == NUL)
+    if (!(State & INSERT)
+		&& *ml_get_buf(wp->w_buffer, wp->w_cursor.lnum, FALSE) == NUL)
 	empty_line = TRUE;
 
     /*
@@ -8271,10 +8272,8 @@ win_redr_ruler(wp, always)
 		    ? 0L
 		    : (long)(wp->w_cursor.lnum));
 	col_print(buffer + STRLEN(buffer),
-		!(State & INSERT) && empty_line
-		    ? 0
-		    : (int)wp->w_cursor.col + 1,
-		(int)virtcol + 1);
+			empty_line ? 0 : (int)wp->w_cursor.col + 1,
+			(int)virtcol + 1);
 
 	/*
 	 * Add a "50%" if there is room for it.
