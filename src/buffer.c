@@ -2825,6 +2825,13 @@ maketitle()
     char_u	buf[IOSIZE];
     int		off;
 
+    if (!redrawing())
+    {
+	/* Postpone updating the title when 'lazyredraw' is set. */
+	need_maketitle = TRUE;
+	return;
+    }
+
     need_maketitle = FALSE;
     if (!p_title && !p_icon)
 	return;
