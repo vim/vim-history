@@ -4054,42 +4054,40 @@ default_shell()
  * GetEffectiveRightsFromAcl() (Vince Negri)
  */
     static int
-do_acl_check(char* n)
+do_acl_check(char *n)
 {
-    DWORD   max_comp_len;
-    DWORD   file_sys_flags;
-    static char* file_root = NULL;
-    static int file_root_len = 0;
-    int     new_file_root_len;
-    char*   file_root_end;
+    DWORD	max_comp_len;
+    DWORD	file_sys_flags;
+    static char *file_root = NULL;
+    static int	file_root_len = -1;
+    int		new_file_root_len;
 
     /* Extract file root path */
-    file_root_end = vim_strrchr(n, '\\');
-    new_file_root_len = file_root_end - n + 1;
+    new_file_root_len = gettail(n) - n;
     if (new_file_root_len > file_root_len)
     {
         vim_free(file_root);
-        file_root = (char*)alloc(new_file_root_len + 1);
+        file_root = (char *)alloc(new_file_root_len + 1);
         file_root_len = new_file_root_len;
     }
     STRNCPY(file_root, n, new_file_root_len);
-    file_root[new_file_root_len] = '\0';
+    file_root[new_file_root_len] = NUL;
 
     /* Check #1 - can we get volume information in the first place? */
     if (!GetVolumeInformation(file_root, NULL, 0, NULL, &max_comp_len,
-                                                      &file_sys_flags, NULL, 0))
+						    &file_sys_flags, NULL, 0))
         return FALSE;
 
     /* Check #2 - does the file system support ACLs at all? */
-    if (!(file_sys_flags&FS_PERSISTENT_ACLS))
+    if (!(file_sys_flags & FS_PERSISTENT_ACLS))
         return FALSE;
 
     /* Check #3 - does it look like a Samba file system?  Current guess is that
      * they are the only ones that are case sensitive/preserving but do not
      * support Unicode file names. */
-    if ((file_sys_flags&
-             (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE|FS_UNICODE_STORED_ON_DISK))
-                                    == (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE))
+    if ((file_sys_flags
+	 & (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE|FS_UNICODE_STORED_ON_DISK))
+				  == (FS_CASE_IS_PRESERVED|FS_CASE_SENSITIVE))
         return FALSE;
 
     /* The file system supports ACLs - do the check */
