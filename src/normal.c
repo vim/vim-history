@@ -6188,12 +6188,8 @@ nv_replace(cap)
 		 */
 		ptr = ml_get_buf(curbuf, curwin->w_cursor.lnum, TRUE);
 		ptr[curwin->w_cursor.col] = cap->nchar;
-		if (       p_sm
-			&& msg_silent == 0
-			&& (cap->nchar == ')'
-			    || cap->nchar == '}'
-			    || cap->nchar == ']'))
-		    showmatch();
+		if (p_sm && msg_silent == 0)
+		    showmatch(cap->nchar);
 		++curwin->w_cursor.col;
 	    }
 #ifdef FEAT_NETBEANS_INTG
