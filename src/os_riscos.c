@@ -15,6 +15,7 @@
  * Thomas Leonard <tal197@ecs.soton.ac.uk>
  */
 
+const char *__dynamic_da_name = "Vim heap"; /* Enable and name our dynamic area */
 int ro_line_mode = TRUE;  /* For Ex mode we much echo chars to the screen ourselves */
 int windowed;		/* Flag - are we running inside a text window? */
 int WinLeft, WinTop;	/* We might be started inside a text window */

@@ -3,7 +3,7 @@
 #
 
 GCC         = gcc -mthrowback
-CFLAGS     = -DRISCOS -DUSE_GUI
+CFLAGS     = -DRISCOS -DFEAT_GUI
 # Optimising on ex_docmd.c seems to cause segfaults on compilation. Needs investigation.
 CCEX_DOCMD = $(GCC) $(CFLAGS)
 CC         = $(GCC) $(CFLAGS) -O2
@@ -20,11 +20,16 @@ OBJS =  o.buffer o.charset o.digraph o.edit o.eval o.ex_cmds o.ex_cmds2 o.diff \
 	o.syntax o.tag o.term o.termlib o.ui o.undo o.version o.window  \
 	o.os_riscos o.swis o.gui o.gui_riscos
 
-all: $(OBJS)
+Vim: $(OBJS)
 	$(GCC) -o Vim $(OBJS)
 
 install: Vim
 	squeeze -v Vim @.!Vim.Vim
+
+clean:	
+	create o.!fake! 0
+	wipe o.* ~cf
+	remove Vim
 
 o.swis: s.swis
 	as $(ASMFLAGS) -o o.swis s.swis
@@ -73,10 +78,10 @@ o.getchar:	c.getchar
 	$(CC) -c c.getchar -o o.getchar
 
 o.gui:		c.gui
-	$(CC) -v -c c.gui -o o.gui
+	$(CC) -c c.gui -o o.gui
 
 o.gui_riscos:	c.gui_riscos
-	$(CC) -v -c c.gui_riscos -o o.gui_riscos
+	$(CC) -c c.gui_riscos -o o.gui_riscos
 
 o.main:		c.main
 	$(CC) -c c.main -o o.main
