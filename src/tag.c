@@ -2961,8 +2961,8 @@ expand_tags(tagnames, pat, num_file, file)
 	tagnmflag = TAG_NAMES;
     else
 	tagnmflag = 0;
-    if (pat[0] == '^' && pat[1] == '/')
-	ret = find_tags(pat + 2, num_file, file,
+    if (pat[0] == '/')
+	ret = find_tags(pat + 1, num_file, file,
 			    TAG_REGEXP | tagnmflag | TAG_VERBOSE, TAG_MANY);
     else
 	ret = find_tags(pat, num_file, file,
