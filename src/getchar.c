@@ -2789,7 +2789,7 @@ do_map(maptype, arg, mode, abbrev)
     else
 	noremap = REMAP_YES;
 
-    /* Accept <buffer>, <script> and <unique> in any order. */
+    /* Accept <buffer>, <silent>, <script> and <unique> in any order. */
     for (;;)
     {
 #ifdef FEAT_LOCALMAP
@@ -3621,8 +3621,10 @@ set_context_in_map_cmd(xp, cmd, arg, forceit, isabbrev, isunmap, cmdidx)
 	xp->xp_context = EXPAND_MAPPINGS;
 #ifdef FEAT_LOCALMAP
 	expand_buffer = FALSE;
+#endif
 	for (;;)
 	{
+#ifdef FEAT_LOCALMAP
 	    if (STRNCMP(arg, "<buffer>", 8) == 0)
 	    {
 		expand_buffer = TRUE;
@@ -3633,14 +3635,20 @@ set_context_in_map_cmd(xp, cmd, arg, forceit, isabbrev, isunmap, cmdidx)
 	    if (STRNCMP(arg, "<unique>", 8) == 0)
 	    {
 		arg = skipwhite(arg + 8);
-#ifdef FEAT_LOCALMAP
 		continue;
-#endif
 	    }
-#ifdef FEAT_LOCALMAP
+	    if (STRNCMP(arg, "<silent>", 8) == 0)
+	    {
+		arg = skipwhite(arg + 8);
+		continue;
+	    }
+	    if (STRNCMP(arg, "<script>", 8) == 0)
+	    {
+		arg = skipwhite(arg + 8);
+		continue;
+	    }
 	    break;
 	}
-#endif
 	xp->xp_pattern = arg;
     }
 
@@ -3663,6 +3671,7 @@ ExpandMappings(regmatch, num_file, file)
     int		count;
     int		round;
     char_u	*p;
+    int		i;
 
     validate_maphash();
 
@@ -3676,25 +3685,33 @@ ExpandMappings(regmatch, num_file, file)
     for (round = 1; round <= 2; ++round)
     {
 	count = 0;
-#ifdef FEAT_LOCALMAP
-	if (!expand_buffer)
+
+	for (i = 0; i < 4; ++i)
 	{
-	    if (vim_regexec(regmatch, (char_u *)"<buffer>", (colnr_T)0))
+	    if (i == 0)
+		p = (char_u *)"<silent>";
+	    else if (i == 1)
+		p = (char_u *)"<unique>";
+#ifdef FEAT_EVAL
+	    else if (i == 2)
+		p = (char_u *)"<script>";
+#endif
+#ifdef FEAT_LOCALMAP
+	    else if (i == 3 && !expand_buffer)
+		p = (char_u *)"<buffer>";
+#endif
+	    else
+		continue;
+
+	    if (vim_regexec(regmatch, p, (colnr_T)0))
 	    {
 		if (round == 1)
 		    ++count;
 		else
-		    (*file)[count++] = vim_strsave((char_u *)"<buffer>");
+		    (*file)[count++] = vim_strsave(p);
 	    }
 	}
-#endif
-	if (vim_regexec(regmatch, (char_u *)"<unique>", (colnr_T)0))
-	{
-	    if (round == 1)
-		++count;
-	    else
-		(*file)[count++] = vim_strsave((char_u *)"<unique>");
-	}
+
 	for (hash = 0; hash < 256; ++hash)
 	{
 	    if (expand_isabbrev)
@@ -4095,6 +4112,8 @@ makemap(fd, buf)
 		    if (fprintf(fd, cmd) < 0)
 			return FAIL;
 		    if (buf != NULL && fputs(" <buffer>", fd) < 0)
+			return FAIL;
+		    if (mp->m_silent && fputs(" <silent>", fd) < 0)
 			return FAIL;
 
 		    if (       putc(' ', fd) < 0
