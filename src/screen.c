@@ -3851,13 +3851,24 @@ win_line(wp, lnum, startrow, endrow)
 		     && W_WIDTH(wp) == Columns)
 	    {
 		/* First make sure we are at the end of the screen line, then
-		 * output an arbitrary character to let the terminal know
-		 * about the wrap. */
+		 * output the same character again to let the terminal know
+		 * about the wrap.  If the terminal doesn't auto-wrap, we
+		 * overwrite the character. */
 		if (screen_cur_col != W_WIDTH(wp))
 		    screen_char(LineOffset[screen_row - 1]
 						      + (unsigned)Columns - 1,
 					  screen_row - 1, (int)(Columns - 1));
-		out_char(' ');
+
+#ifdef FEAT_MBYTE
+		/* When there is a multi-byte character, just output a space
+		 * to keep it simple. */
+		if (has_mbyte && mb_off2cells(LineOffset[screen_row - 1]
+						+ (unsigned)Columns - 1) != 1)
+		    out_char(' ');
+		else
+#endif
+		    out_char(ScreenLines[LineOffset[screen_row - 1]
+							    + (Columns - 1)]);
 		/* force a redraw of the first char on the next line */
 		ScreenAttrs[LineOffset[screen_row]] = (sattr_T)-1;
 		screen_start();		/* don't know where cursor is now */
