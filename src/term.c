@@ -3132,7 +3132,6 @@ settmode(tmode)
     void
 starttermcap()
 {
-    screen_stop_highlight();
     if (full_screen && !termcap_active)
     {
 	out_str(T_TI);			/* start termcap mode */
