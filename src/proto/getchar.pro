@@ -1,4 +1,5 @@
 /* getchar.c */
+void free_buff __ARGS((struct buffheader *buf));
 char_u *get_recorded __ARGS((void));
 char_u *get_inserted __ARGS((void));
 int stuff_empty __ARGS((void));

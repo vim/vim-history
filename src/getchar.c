@@ -109,7 +109,6 @@ static char_u	noremapbuf_init[TYPELEN_INIT];	/* initial typebuf.tb_noremap */
 
 static int	last_recorded_len = 0;	/* number of last recorded chars */
 
-static void	free_buff __ARGS((struct buffheader *));
 static char_u	*get_buffcont __ARGS((struct buffheader *, int));
 static void	add_buff __ARGS((struct buffheader *, char_u *, long n));
 static void	add_num_buff __ARGS((struct buffheader *, long));
@@ -130,7 +129,7 @@ static void	showmap __ARGS((mapblock_T *mp, int local));
 /*
  * Free and clear a buffer.
  */
-    static void
+    void
 free_buff(buf)
     struct buffheader	*buf;
 {

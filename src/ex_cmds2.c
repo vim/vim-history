@@ -30,6 +30,10 @@ do_debug(cmd)
     int		save_State = State;
     int		save_did_emsg = did_emsg;
     int		save_cmd_silent = cmd_silent;
+    typebuf_T	saved_typebuf;
+    int		new_typebuf;
+    struct buffheader save_stuffbuff;
+    int		save_ex_normal_busy;
     int		n;
     char_u	*cmdline = NULL;
     char_u	*p;
@@ -85,7 +89,29 @@ do_debug(cmd)
 #ifdef FEAT_SNIFF
 	ProcessSniffRequests();
 #endif
+	/* Save the current typeahead buffer and replace it with an empty one.
+	 * This makes sure we get input from the user here and don't interfere
+	 * with the commands being executed.  Reset "ex_normal_busy" to avoid
+	 * the side effects of using ":normal". Save the stuff buffer and make
+	 * it empty. */
+	saved_typebuf = typebuf;
+	new_typebuf = (alloc_typebuf() == OK);
+	save_ex_normal_busy = ex_normal_busy;
+	ex_normal_busy = 0;
+	save_stuffbuff = stuffbuff;
+	stuffbuff.bh_first.b_next = NULL;
+
 	cmdline = getcmdline_prompt('>', NULL, 0);
+
+	if (new_typebuf)
+	{
+	    free_typebuf();
+	    typebuf = saved_typebuf;
+	}
+	ex_normal_busy = save_ex_normal_busy;
+	free_buff(&stuffbuff);
+	stuffbuff = save_stuffbuff;
+
 	cmdline_row = msg_row;
 	if (cmdline != NULL)
 	{
