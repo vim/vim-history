@@ -1,14 +1,17 @@
 " An example for a vimrc file.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Sep 09
+" Last change:	1999 Oct 27
 "
 " To use it, copy it to
 "     for Unix and OS/2:  ~/.vimrc
 "             for Amiga:  s:.vimrc
 "  for MS-DOS and Win32:  $VIM\_vimrc
 
-set nocompatible	" Use Vim defaults (much better!)
+" Use Vim settings, rather then Vi settings (much better!).
+" This must be first, because it changes other options as a side effect.
+set nocompatible
+
 set bs=2		" allow backspacing over everything in insert mode
 set ai			" always set autoindenting on
 set backup		" keep a backup file
@@ -69,12 +72,32 @@ if has("autocmd")
 
   " After reading compressed file: Uncompress text in buffer with "cmd"
   fun! GZIP_read(cmd)
+    " set 'cmdheight' to two, to avoid the hit-return prompt
     let ch_save = &ch
-    set ch=2
-    execute "'[,']!" . a:cmd
+    set ch=3
+    " when filtering the whole buffer, it will become empty
+    let empty = line("'[") == 1 && line("']") == line("$")
+    let tmp = tempname()
+    let tmpe = tmp . "." . expand("<afile>:e")
+    " write the just read lines to a temp file "'[,']w tmp.gz"
+    execute "'[,']w " . tmpe
+    " uncompress the temp file "!gunzip tmp.gz"
+    execute "!" . a:cmd . " " . tmpe
+    " delete the compressed lines
+    '[,']d
+    " read in the uncompressed lines "'[-1r tmp"
     set nobin
+    execute "'[-1r " . tmp
+    " if buffer became empty, delete trailing blank line
+    if empty
+      normal Gdd''
+    endif
+    " delete the temp file
+    call delete(tmp)
     let &ch = ch_save
-    execute ":doautocmd BufReadPost " . expand("%:r")
+    " When uncompressed the whole buffer, do autocommands
+    if empty
+      execute ":doautocmd BufReadPost " . expand("%:r")
   endfun
 
   " After writing compressed file: Compress written file with "cmd"
