@@ -760,23 +760,23 @@ BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
     // First do a bunch of check
     // No invisible window
-    if (!IsWindowVisible(hWnd)) return true;
+    if (!IsWindowVisible(hWnd)) return TRUE;
     // No child window ???
-    // if (GetParent(hWnd)) return true;
+    // if (GetParent(hWnd)) return TRUE;
     // Class name should be Vim, if failed to get class name, return
     if (GetClassName(hWnd, temp, sizeof(temp)) == 0)
-	return true;
+	return TRUE;
     // Compare class name to that of vim, if not, return
     if (_strnicmp(temp, "vim", sizeof("vim")) != 0)
-	return true;
+	return TRUE;
     // First check if the number of vim instance exceeds MAX_HWND
     CShellExt *cs = (CShellExt*) lParam;
-    if (cs->m_cntOfHWnd >= MAX_HWND) return true;
+    if (cs->m_cntOfHWnd >= MAX_HWND) return TRUE;
     // Now we get the vim window, put it into some kind of array
     cs->m_hWnd[cs->m_cntOfHWnd] = hWnd;
     cs->m_cntOfHWnd ++;
 
-    return true; // continue enumeration (otherwise this would be false)
+    return TRUE; // continue enumeration (otherwise this would be false)
 }
 
 #ifdef WIN32
