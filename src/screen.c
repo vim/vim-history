@@ -2864,7 +2864,7 @@ win_line(wp, lnum, startrow, endrow)
 		    int_u	icon_sign;
 # endif
 
-		    /* Draw two bytes with the sign value or blank. */
+		    /* Draw two cells with the sign value or blank. */
 		    c_extra = ' ';
 		    char_attr = 0;
 		    n_extra = 2;
@@ -2891,6 +2891,7 @@ win_line(wp, lnum, startrow, endrow)
 			{
 			    p_extra = sign_get_text(text_sign);
 			    c_extra = NUL;
+			    n_extra = STRLEN(p_extra);
 			    char_attr = sign_get_attr(text_sign, FALSE);
 			}
 		    }

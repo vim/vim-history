@@ -1,4 +1,4 @@
-*sign.txt*      For Vim version 6.1.  Last change: 2002 Feb 24
+*sign.txt*      For Vim version 6.1.  Last change: 2003 Mar 12
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -31,7 +31,7 @@ terminal emulator.
 Signs and highlights are not useful just for debuggers. Sun's Visual
 WorkShop uses signs and highlights to mark build errors and SourceBrowser
 hits. Additionally, the debugger supports 8 to 10 different signs and
-highlight colors. |workshop|
+highlight colors. |workshop|  Same for Netbeans |netbeans|.
 
 There are two steps in using signs:
 
@@ -49,6 +49,15 @@ disappears again.
 
 ==============================================================================
 2. Commands					*sign-commands* *:sig* *:sign*
+
+Here is an example that places a sign piet, displayed with the text ">>", in
+line 23 of the current file: >
+	:sign define piet text=>> texthl=Search
+	:exe ":sign place 2 line=23 name=piet file=" . expand("%:p")
+
+And here is the command to delete it again: >
+	:sign unplace 2
+
 
 DEFINING A SIGN.				*:sign-define* *E255* *E160*
 
@@ -72,8 +81,8 @@ DEFINING A SIGN.				*:sign-define* *E255* *E160*
 
 	text={text}						*E239*
 		Define the text that is displayed when there is no icon or the
-		GUI is not being used.  Thus currently must be two ASCII
-		characters.
+		GUI is not being used.  Only printable characters are allowed
+		and they must occupy one or two display cells.
 
 	texthl={group}
 		Highlighting group used for the text item.

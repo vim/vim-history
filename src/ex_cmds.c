@@ -5276,16 +5276,47 @@ ex_sign(eap)
 		    }
 		    else if (STRNCMP(arg, "text=", 5) == 0)
 		    {
+			char_u	*s;
+			int	cells;
+			int	len;
+
 			arg += 5;
-			/* Currently must have two printable characters. */
-			if (!vim_isprintc(arg[0]) || !vim_isprintc(arg[1])
-							     || p - arg != 2)
+#ifdef FEAT_MBYTE
+			/* Count cells and check for non-printable chars */
+			if (has_mbyte)
 			{
+			    cells = 0;
+			    for (s = arg; s < p; s += (*mb_ptr2len_check)(s))
+			    {
+				if (!vim_isprintc((*mb_ptr2char)(s)))
+				    break;
+				cells += (*mb_ptr2cells)(s);
+			    }
+			}
+			else
+#endif
+			{
+			    for (s = arg; s < p; ++s)
+				if (!vim_isprintc(*s))
+				    break;
+			    cells = s - arg;
+			}
+			/* Currently must be one or two display cells */
+			if (s != p || cells < 1 || cells > 2)
+			{
+			    *p = NUL;
 			    EMSG2(_("E239: Invalid sign text: %s"), arg);
 			    return;
 			}
+
 			vim_free(sp->sn_text);
-			sp->sn_text = vim_strnsave(arg, (int)(p - arg));
+			/* Allocate one byte more if we need to pad up
+			 * with a space. */
+			len = p - arg + ((cells == 1) ? 1 : 0);
+			sp->sn_text = vim_strnsave(arg, len);
+
+			if (sp->sn_text != NULL && cells == 1)
+			    STRCPY(sp->sn_text + len - 1, " ");
 		    }
 		    else if (STRNCMP(arg, "linehl=", 7) == 0)
 		    {
