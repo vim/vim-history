@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2003 Jan 21
+" Last Change:	2003 Feb 24
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -22,7 +22,7 @@ else
   endif
   if s:lang != ""
     " Remove "@euro" (ignoring case), it may be at the end
-    s:lang = substitute(s:lang, '\c@euro', '', '')
+    let s:lang = substitute(s:lang, '\c@euro', '', '')
     " On MS-Windows it may be German_Germany.1252.  How about other languages?
     if s:lang =~ "German"
       let s:ext = ".de"
