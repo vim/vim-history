@@ -2547,7 +2547,7 @@ exit_scroll()
     if (msg_use_printf())
     {
 	if (info_message)
-	    mch_msg("\r\n");
+	    mch_msg("\n");
 	else
 	    mch_errmsg("\r\n");
     }

@@ -1682,9 +1682,9 @@ msg_puts_attr_len(str, maxlen, attr)
 	    if (!silent_mode)
 	    {
 		p = &buf[0];
-		/* NL --> CR NL translation (for Unix) */
+		/* NL --> CR NL translation (for Unix, not for "--version") */
 		/* NL --> CR translation (for Mac) */
-		if (*s == '\n')
+		if (*s == '\n' && !info_message)
 		    *p++ = '\r';
 #if defined(USE_CR) && !defined(MACOS_X_UNIX)
 		else
