@@ -1,5 +1,5 @@
 /*****************************************************************************
-*   $Id: qdos.c,v 8.1 1999/03/04 04:16:38 darren Exp $
+*   $Id$
 *
 *   Copyright (c) 1999, Thierry Godefroy <godefroy@imaginet.fr>
 *

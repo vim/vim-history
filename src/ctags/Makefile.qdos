@@ -1,0 +1,55 @@
+# Makefile for ctags on QDOS/SMS systems and C68 v4.24f
+# Submitted by Thierry Godefroy <godefroy@imaginet.fr>
+
+# Directories:
+
+T = ram1_
+P = win5_C68_
+
+# Programs name:
+
+CC  = $(P)cc
+AS  = $(P)as68
+ASM = $(P)qmac
+LD  = $(P)ld
+
+# Programs flags:
+
+CCFLAGS  = -tmp$(T) -v -Y$(P) -I$C -O
+ASFLAGS  = -V
+ASMFLAGS = -nolist
+LDFLAGS  = -v -L$(P)lib_ -bufp200K\
+
+# Target name:
+
+EXEC = ctags
+
+# Additional libraries:
+
+LIBS =
+
+# Target dependencies:
+
+HEADERS	 = args.h ctags.h debug.h entry.h general.h get.h \
+ keyword.h main.h options.h parse.h read.h sort.h strlist.h vstring.h
+
+OBJECTS = args.o eiffel.o entry.o fortran.o get.o keyword.o main.o \
+ options.o parse.o read.o sort.o strlist.o vstring.o qdos.o
+
+$(EXEC) : $(OBJECTS)
+    $(LD) -o$(EXEC) $(LDFLAGS) $(OBJECTS) $(LIBS)
+
+$(OBJECTS): $(HEADERS)
+
+# Construction rules:
+
+_c_o :
+    $(CC) -c $(CCFLAGS) $<
+
+_s_o :
+    $(AS) $(ASFLAGS) $< $@
+
+_asm_rel :
+    $(ASM) $< $(ASMFLAGS)
+
+#end

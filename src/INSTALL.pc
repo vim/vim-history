@@ -1,0 +1,135 @@
+INSTALL - Installation of Vim on PC
+
+This file contains instructions for compiling Vim. If you already have an
+executable version of Vim, you don't need this.
+
+The file "feature.h" can be edited to match your preferences. You can skip
+this, then you will get the default behaviour as is documented, which should
+be fine for most people.
+
+
+Contents:
+1. MS-DOS
+2. Win32 (Windows NT and Windows 95)
+3. Windows NT with OpenNT
+
+
+1. MS-DOS
+=========
+
+Summary:
+ren makefile makefile.uni
+ren makefile.bcc makefile; make      16 bit, Borland C++ and Turbo C++
+ren makefile.dos makefile; make	     16 bit, Turbo C
+make -f makefile.djg		     32 bit, DJGPP 2.0
+make -f Makefile.bor		     32 bit, Borland C++ 5.0 (edit it to
+					     define DOS)
+
+Warning: Be sure to use the right make.exe.  Microsoft C make doesn't work;
+Borland make only works with makefile.bcc, makefile.bor and makefile.dos;
+DJGPP/GNU make must be used for makefile.djg.
+
+The Borland C++ compiler has been used to generate the MS-DOS executable; it
+should work without problems. You will probably have to change the paths for
+LIBPATH and INCLUDEPATH in the start of the makefile.  You will get two
+warnings which can be ignored (one about _chmod and one about precompiled
+header files).
+
+The "spawno" library by Ralf Brown was used in order to free memory when Vim
+starts a shell or other external command.  Only about 200 bytes are taken from
+conventional memory.  When recompiling get the spawno library from Simtel,
+directory "msdos/c".  It is called something like "spwno413.zip".  Or follow
+the instructions in the makefile to remove the library.
+
+The Turbo C makefile has not been tested much lately. It is included for those
+that don't have C++. You may need to make a few changes to get it to work.
+
+DJGPP needs to be installed properly to compile Vim; you need a lot of things
+before it works. When your setup is OK, Vim should compile with just one
+warning (about an argument to signal()).
+
+Makefile.bor is for those that have Borland C++ 5.0 or later.  At the top of
+the file, there are some variables you can change to make either a 32-bit
+Windows exe (GUI or console mode), or a 16-bit MS-DOS version.
+
+If you get all kinds of strange error messages when compiling, try adding <CR>
+characters at the end of each line.
+
+
+2. Win32 (Windows NT and Windows 95)
+====================================
+
+Summary:
+nmake -f Makefile.w32		console   Win32 SDK or Microsoft Visual C++
+nmake -f Makefile.w32 GUI=yes	GUI	  Microsoft Visual C++
+nmake -f Makefile.w32 OLE=yes	OLE	  Microsoft Visual C++
+nmake -f Makefile.w32 PERL=C:\Perl
+				Perl	  Microsoft Visual C++
+nmake -f Makefile.w32 PYTHON=C:\Python
+				Python	  Microsoft Visual C++
+			(combinations are possible with Makefile.w32)
+make  -f Makefile.bor		GUI	  Borland C++ 5.0
+make  -f Makefile.bor		console	  Borland C++ 5.0 (change the file)
+nmake -f Gvim_vc.mak		GUI	  Microsoft Visual C++ 4.x or 5.0
+nmake -f if_ole_vc.mak		OLE	  Microsoft Visual C++ 4.x or 5.0
+make  -f makefile.cyg		console   Cygnus gcc
+
+See the specific files for comments and options.
+
+These files have been supplied by George V. Reilly, Ben Singer, Ken Scott and
+Ron Aaron; they have been tested.  The Cygnus one doesn't fully work yet.
+With Cygnus gcc you can also use the Unix Makefile instead (you need to get
+the Unix archive then).
+
+You can also use the Visual C++ IDE: use File/Open workspace, select the
+Gvim_vc.mak file, then select Build/Build all.  This builds the GUI version
+by default.
+
+Vim for Win32 compiles with the Microsoft Visual C++ 2.0 compiler and later,
+and with the Borland C++ 4.5 32-bit compiler and later.  It compiles on
+Windows 95 and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The
+NT/i386 and the Windows 95 binaries are identical.  Use Makefile.w32 to
+compile with Visual C++ and Makefile.bor to compile with Borland C++.
+
+For compiling Gvim with IME support on far-east Windows, uncomment the
+MULTI_BYTE_IME define in the src/feature.h file before compiling.
+
+The Win32 console binary was compiled with Visual C++ version 5.0, using
+Makefile.w32 and makefile.bor (Borland C).  Other compilers should also work.
+If you get all kinds of strange error messages when compiling (you shouldn't
+with the Microsoft or Borland 32-bit compilers), try adding <CR> characters
+at the end of each line.
+
+You probably need to run "vcvars32" before using "nmake".
+
+For making the Win32s version, you need Microsoft Visual C++ 4.1 OR EARLIER.
+In version 4.2 support for Win32s was dropped!  Use this command:
+	nmake -f Makefile.w32 GUI=yes
+
+See the respective Makefiles for more comments.
+
+
+3. Windows NT with OpenNT
+=========================
+
+(contributed by Michael A. Benzinger)
+
+Building Vim on OpenNT 2.0 on Windows NT 4.0, with Softway's prerelease gcc:
+1. export CONFIG_SHELL=//D/OpenNT/bin/sh
+2. Make the following exports for modifying config.mk:
+	export CFLAGS=-O -Wshadow
+	export X_PRE_LIBS=-lXmu
+2. Run configure as follows:
+	configure --prefix=/vim --bindir=/bin/opennt --enable-gui=Motif
+   If you don't have OpenNTif (Motif support), use this:
+	configure --prefix=/vim --bindir=/bin/opennt --enable-gui=Athena
+3. Edit Makefile to perform the following since the makefile include syntax
+   differs from that of gmake:
+	#include config.mk
+	.include "config.mk"
+4. Change all install links to be "ln -f" and not "ln -s".
+5. Change to the 'ctags' directory and configure.
+6. Edit the Makefile and remove spurious spaces from lines 99 and 114.
+7. Change slink to "ln -f" from "ln -s".
+8. Return to the src directory.
+9. make

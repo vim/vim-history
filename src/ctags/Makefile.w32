@@ -1,0 +1,29 @@
+# The most simplistic Makefile for Win32 (Windows 95/NT)
+
+SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c main.c \
+	options.c parse.c read.c sort.c strlist.c vstring.c
+
+ctags: ctags.exe
+
+ctags.exe: $(SOURCES) respw32
+# if using Microsoft Visual C++
+	cl -DWIN32 /Fe$@ @respw32
+# if using Borland C++
+#	bcc32 -DWIN32 -O2 -w-par -w-pia -w-sus -e$@ @respw32
+
+# Debug version
+dctags.exe: $(SOURCES)
+# if using Microsoft Visual C++
+	cl -DWIN32 -DDEBUG /Fe$@ @respw32 debug.c
+# if using Borland C++
+#	bcc32 -DWIN32 -DDEBUG -w-par -w-pia -w-sus -e$@ @respw32 debug.c
+
+respw32:
+	echo $(SOURCES) > $@
+
+clean:
+	- del *.obj
+	- del ctags.exe
+	- del dctags.exe
+	- del respw32
+	- del tags

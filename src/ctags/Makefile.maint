@@ -1,5 +1,5 @@
 #*****************************************************************************
-#	$Id: Makefile.maint,v 8.11 1999/09/17 05:48:55 darren Exp $
+#	$Id$
 #
 #   Development makefile for Exuberant Ctags, used to build releases.
 #

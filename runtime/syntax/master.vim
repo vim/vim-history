@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:	Focus Master File
 " Maintainer:	Rob Brady <robb@datatone.com>
-" Last Change:	$Date: 1999/08/13 06:51:26 $
+" Last Change:	$Date$
 " URL: http://www.datatone.com/~robb/vim/syntax/master.vim
-" $Revision: 1.4 $
+" $Revision$
 
 " this is a very simple syntax file - I will be improving it
 " add entire DEFINE syntax

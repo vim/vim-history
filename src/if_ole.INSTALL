@@ -1,0 +1,52 @@
+This is a complete implementation of OLE Automation support for GVim.
+
+
+1. Files
+--------
+
+if_ole.cpp, if_ole.idl	source files
+proto/if_ole.pro	prototypes
+if_ole_vc.mak		makefile
+../doc/if_ole.txt	documentation
+
+
+2. Compiling from the command line
+----------------------------------
+
+Just one command should do it all:
+
+	nmake /f if_ole_vc.mak
+
+
+3. Updating the VC project manually
+-----------------------------------
+
+Start Visual Studio and load in the standard Vim makefile Gvim_vc.mak.  Make
+sure it's in dos fileformat, not in Unix.  I'm using Visual C++ 5.  The
+instructions may not match exactly for VC 4 (in fact, it may not be possible
+to build with VC4 - I'm not sure. Should be, though...)
+
+Add if_ole.cpp and if_ole.idl to the project.
+
+Add HAVE_OLE to the list of defines for the build process (I suppose this
+could go in feature.h, but the other interface code - Python and Perl - don't
+go in there).  Also add HAVE_OLE to the list of defines for the resources.
+
+Add a custom build step for if_ole.idl (right click on the file, and select
+Settings...)
+
+	Description: Generating OLE Interface
+	Command: midl /tlb vim.tlb /iid iid_ole.c
+		      /proxy nul /header if_ole.h $(InputPath)
+	Output files: iid_ole.c, if_ole.h, vim.tlb
+
+(the command is all on one line).
+
+Add libraries ole32.lib, oleaut32.lib, uuid.lib to the project
+settings, Link tab, Object/library modules.
+
+That's it (I think).  Build.
+
+Let me know if there are any problems.
+
+Paul Moore, gustav@morpheus.demon.co.uk

@@ -1,0 +1,258 @@
+#
+# Makefile for Borland C++ 2.0, 3.1 or 4.0 to compile a 16 bit version of Vim.
+# Can also be used for Turbo C++
+#
+# The compilation options are at the end of this file
+#
+
+.AUTODEPEND
+
+#		*Translator Definitions*
+#   use tcc for Turbo C++
+CC = bcc +VIM.CFG
+#CC = tcc +VIM.CFG
+TASM = TASM
+TLIB = tlib
+TLINK = tlink
+#
+# Adjust the paths for your environment
+# use the first two if you don't have the spawno library
+#	then also remove the SPAWNO define further down and the line
+#	with spawnl.lib
+#
+#LIBPATH = C:\BC4\LIB
+#INCLUDEPATH = C:\BC4\INCLUDE
+LIBPATH = E:\BC4\LIB;C:\CC\SPAWN
+INCLUDEPATH = E:\BC4\INCLUDE;C:\CC\SPAWN
+
+
+#		*Implicit Rules*
+#
+# use -v for debugging
+#
+.c.obj:
+  $(CC) -c {$< }
+#  $(CC) -c -v {$< }
+
+#		*List Macros*
+
+
+EXE_dependencies =  \
+ buffer.obj \
+ charset.obj \
+ digraph.obj \
+ edit.obj \
+ eval.obj \
+ ex_cmds.obj \
+ ex_docmd.obj \
+ ex_getln.obj \
+ fileio.obj \
+ getchar.obj \
+ main.obj \
+ mark.obj \
+ memfile.obj \
+ memline.obj \
+ menu.obj \
+ message.obj \
+ misc1.obj \
+ misc2.obj \
+ multbyte.obj \
+ os_msdos.obj \
+ normal.obj \
+ ops.obj \
+ option.obj \
+ quickfix.obj \
+ regexp.obj \
+ screen.obj \
+ search.obj \
+ syntax.obj \
+ tag.obj \
+ term.obj \
+ ui.obj \
+ undo.obj \
+ window.obj \
+ version.obj
+
+all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
+
+#		*Explicit Rules*
+#  add /v to TLINK for debugging
+vim.exe: vim.cfg $(EXE_dependencies)
+  $(CC) -c version.c
+  $(TLINK) /x/c/L$(LIBPATH) @&&|
+c0l.obj+
+buffer.obj+
+charset.obj+
+digraph.obj+
+edit.obj+
+eval.obj+
+ex_cmds.obj+
+ex_docmd.obj+
+ex_getln.obj+
+fileio.obj+
+getchar.obj+
+main.obj+
+mark.obj+
+memfile.obj+
+memline.obj+
+menu.obj+
+message.obj+
+misc1.obj+
+misc2.obj+
+multbyte.obj+
+os_msdos.obj+
+normal.obj+
+ops.obj+
+option.obj+
+quickfix.obj+
+regexp.obj+
+screen.obj+
+search.obj+
+syntax.obj+
+tag.obj+
+term.obj+
+ui.obj+
+undo.obj+
+window.obj+
+version.obj
+vim
+		# no map file
+fp87.lib+
+mathl.lib+
+spawnl.lib+
+cl.lib
+|
+
+install.exe: dosinst.c
+	$(CC) dosinst.c
+	-del install.exe
+	ren dosinst.exe install.exe
+
+ctags/ctags.exe: ctags/main.c
+	cd ctags
+	copy Makefile.bcc Makefile
+	$(MAKE)
+	cd ..
+
+xxd/xxd.exe: xxd/xxd.c
+	cd xxd
+	copy Makefile.bcc Makefile
+	$(MAKE)
+	cd ..
+
+
+# cleaning up: Delete all generated files
+clean:
+	-del *.obj
+	-del vim.exe
+	-del install.exe
+	-del ctags\*.obj
+	-del ctags\ctags.exe
+	-del ctags\respbcc
+	-del xxd\*.obj
+	-del xxd\xxd.exe
+	-del vim.cfg
+	-del testdir\*.out
+
+#		*Individual File Dependencies*
+buffer.obj: buffer.c
+
+charset.obj: charset.c
+
+digraph.obj: digraph.c
+
+edit.obj: edit.c
+
+eval.obj: eval.c
+
+ex_cmds.obj: ex_cmds.c ex_cmds.h
+
+ex_docmd.obj: ex_docmd.c ex_cmds.h
+
+ex_getln.obj: ex_getln.c
+
+fileio.obj: fileio.c
+
+getchar.obj: getchar.c
+
+main.obj: main.c globals.h option.h
+
+mark.obj: mark.c
+
+memfile.obj: memfile.c
+
+memline.obj: memline.c
+
+menu.obj: menu.c
+
+message.obj: message.c
+
+misc1.obj: misc1.c
+
+misc2.obj: misc2.c
+
+multbyte.obj: multbyte.c
+
+os_msdos.obj: os_msdos.c
+
+normal.obj: normal.c
+
+ops.obj: ops.c
+
+option.obj: option.c
+
+quickfix.obj: quickfix.c
+
+regexp.obj: regexp.c
+
+screen.obj: screen.c
+
+search.obj: search.c
+
+syntax.obj: syntax.c
+
+tag.obj: tag.c
+
+term.obj: term.c term.h
+
+ui.obj: ui.c
+
+undo.obj: undo.c
+
+window.obj: window.c
+
+version.obj: version.c version.h
+
+#		*Compiler Configuration File*
+# The following compile options can be changed for better machines.
+#	replace -1- with -2 to produce code for a 80286 or higher
+#	replace -1- with -3 to produce code for a 80386 or higher
+#	add -v for source debugging
+vim.cfg: Makefile
+  copy &&|
+-ml
+-1-
+-f-
+-C
+-N
+-O
+-Z
+-k-
+-d
+-h
+-vi-
+-H=VIM.SYM
+-w-par
+-weas
+-wpre
+-Iproto
+-I$(INCLUDEPATH)
+-L$(LIBPATH)
+-DPC;MSDOS;SPAWNO
+| vim.cfg
+
+test:
+	cd testdir
+	copy makefile.dos makefile
+	$(MAKE) small
+	cd ..

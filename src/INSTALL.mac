@@ -1,0 +1,15 @@
+INSTALL - Installation of Vim on Macintosh
+
+This file contains instructions for compiling Vim. If you already have an
+executable version of Vim, you don't need this.
+
+The file "feature.h" can be edited to match your preferences. You can skip
+this, then you will get the default behaviour as is documented, which should
+be fine for most people.
+
+The file os_mac.CW9.hqx is the CodeWarrior project file to be used.
+
+[TODO: add remarks on compiling]
+
+NOTE: Users of more recent CodeWarrior version may have to reset the library
+      path, and change the mch_delay in os_mac.c so the finalTick is unsigned.
