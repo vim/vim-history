@@ -3082,7 +3082,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    continue;
 	}
 	minwid = 0;
-	maxwid = 50;
+	maxwid = 9999;
 	zeropad = FALSE;
 	l = 1;
 	if (*s == '0')
