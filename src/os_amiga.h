@@ -17,7 +17,7 @@
 #define HAVE_AVAIL_MEM
 
 #ifndef HAVE_CONFIG_H
-# ifndef _DCC
+# ifdef AZTEC_C
 #  define HAVE_STAT_H
 # endif
 # define HAVE_STDLIB_H
@@ -44,6 +44,17 @@
 
 #endif /* HAVE_CONFIG_H */
 
+#include <exec/types.h>
+#include <libraries/dos.h>
+#include <libraries/dosextens.h>
+
+/* Currently, all Amiga compilers except AZTEC C have these... */
+#ifndef AZTEC_C
+# include <proto/exec.h>
+# include <proto/dos.h>
+# include <proto/intuition.h>
+#endif
+
 #define FNAME_ILLEGAL ";*?`#%" /* illegal characters in a file name */
 
 /*
@@ -55,6 +66,11 @@ typedef long off_t;
 
 #ifdef LATTICE
 # define USE_TMPNAM	/* use tmpnam() instead of mktemp() */
+#endif
+
+#ifdef __GNUC__
+# include <sys/stat.h>
+# include <unistd.h>
 #endif
 
 /*

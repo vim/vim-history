@@ -128,7 +128,11 @@
 #ifdef AMIGA
   /* Be conservative about sizeof(int). It could be 4 too. */
 # ifndef FEAT_GUI_GTK	/* avoid problems when generating prototypes */
-#  define SIZEOF_INT	2
+#  ifdef __GNUC__
+#   define SIZEOF_INT	4
+#  else
+#   define SIZEOF_INT	2
+#  endif
 # endif
 #endif
 #ifdef MACOS

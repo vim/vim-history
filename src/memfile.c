@@ -660,8 +660,14 @@ mf_sync(mfp, flags)
 		Flush(fp->ufbfh);
 	}
 # else
-#  ifdef _DCC
+#  if defined(_DCC) || defined(__GNUC__)
 	{
+#   ifdef __GNUC__
+	    /* Have function (in libnix at least),
+	     * but ain't got no prototype anywhere. */
+	    unsigned long fdtofh(int filedescriptor);
+#   endif
+
 	    BPTR fh = (BPTR)fdtofh(mfp->mf_fd);
 
 	    if (fh != 0)

@@ -25,10 +25,6 @@
 # include <fcntl.h>
 #endif
 
-#ifdef LATTICE
-# include <proto/dos.h>		/* for Lock() and UnLock() */
-#endif
-
 #ifdef __TANDEM
 # include <limits.h>		/* for SSIZE_MAX */
 #endif
