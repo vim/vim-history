@@ -488,27 +488,49 @@ char_to_string(int ch, char_u *string, int slen)
     WCHAR	wstring[2];
     char_u	*ws = NULL;;
 
-    /* "ch" is a UTF-16 character.  Convert it to a string of bytes.  When
-     * "enc_codepage" is non-zero use the standard Win32 function, otherwise
-     * use our own conversion function (e.g., for UTF-8). */
-    wstring[0] = ch;
-    if (enc_codepage > 0)
-	len = WideCharToMultiByte(enc_codepage, 0, wstring, 1, string, slen,
-								     0, NULL);
-    else
+    if (os_version.dwPlatformId != VER_PLATFORM_WIN32_NT)
     {
-	len = 1;
-	ws = ucs2_to_enc(wstring, &len);
-	if (ws == NULL)
-	    len = 0;
+	/* On Windows 95/98 we apparently get the character in the active
+	 * codepage, not in UCS-2.  If conversion is needed convert it to
+	 * UCS-2 first. */
+	if ((int)GetACP() == enc_codepage)
+	    len = 0;	    /* no conversion required */
 	else
 	{
-	    if (len > slen)	/* just in case */
-		len = slen;
-	    mch_memmove(string, ws, len);
-	    vim_free(ws);
+	    string[0] = ch;
+	    len = MultiByteToWideChar(GetACP(), 0, string, 1, wstring, 2);
 	}
     }
+    else
+    {
+	wstring[0] = ch;
+	len = 1;
+    }
+
+    if (len > 0)
+    {
+	/* "ch" is a UTF-16 character.  Convert it to a string of bytes.  When
+	 * "enc_codepage" is non-zero use the standard Win32 function,
+	 * otherwise use our own conversion function (e.g., for UTF-8). */
+	if (enc_codepage > 0)
+	    len = WideCharToMultiByte(enc_codepage, 0, wstring, len,
+						       string, slen, 0, NULL);
+	else
+	{
+	    len = 1;
+	    ws = ucs2_to_enc(wstring, &len);
+	    if (ws == NULL)
+		len = 0;
+	    else
+	    {
+		if (len > slen)	/* just in case */
+		    len = slen;
+		mch_memmove(string, ws, len);
+		vim_free(ws);
+	    }
+	}
+    }
+
     if (len == 0)
 #endif
     {
