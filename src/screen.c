@@ -4834,7 +4834,7 @@ win_redr_status(wp)
     /*
      * May need to draw the character below the vertical separator.
      */
-    if (wp->w_vsep_width != 0)
+    if (wp->w_vsep_width != 0 && wp->w_status_height != 0 && redrawing())
     {
 	if (stl_connected(wp))
 	    fillchar = fillchar_status(&attr, wp == curwin);
