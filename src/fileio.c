@@ -1532,7 +1532,8 @@ buf_write(buf, fname, sfname, start, end, append, forceit,
 	    {
 		/* remove old backup, if present */
 		mch_remove(backup);
-		bfd = mch_open((char *)backup, O_WRONLY|O_CREAT|O_EXTRA, 0666);
+		bfd = mch_open((char *)backup, O_WRONLY|O_CREAT|O_EXCL|O_EXTRA,
+									0666);
 		if (bfd < 0)
 		{
 		    vim_free(backup);
@@ -2147,7 +2148,8 @@ nobackup:
 	    int empty_fd;
 
 	    if (org == NULL
-		    || (empty_fd = mch_open(org, O_CREAT | O_EXTRA, 0666)) < 0)
+		    || (empty_fd = mch_open(org, O_CREAT | O_EXTRA | O_EXCL,
+								   0666)) < 0)
 	      EMSG("patchmode: can't touch empty original file");
 	    else
 	      close(empty_fd);
@@ -2820,7 +2822,7 @@ vim_rename(from, to)
     fd_in = mch_open((char *)from, O_RDONLY|O_EXTRA, 0);
     if (fd_in == -1)
 	return -1;
-    fd_out = mch_open((char *)to, O_CREAT|O_TRUNC|O_WRONLY|O_EXTRA, 0666);
+    fd_out = mch_open((char *)to, O_CREAT|O_EXCL|O_WRONLY|O_EXTRA, 0666);
     if (fd_out == -1)
     {
 	close(fd_in);
