@@ -1176,7 +1176,11 @@ install_vimrc(int idx)
 	fprintf(fd, "  let opt = ''\n");
 	fprintf(fd, "  if &diffopt =~ 'icase' | let opt = opt . '-i ' | endif\n");
 	fprintf(fd, "  if &diffopt =~ 'iwhite' | let opt = opt . '-b ' | endif\n");
-	fprintf(fd, "  silent execute '!%s\\diff -a ' . opt . v:fname_in . ' ' . v:fname_new . ' > ' . v:fname_out\n", installdir);
+	/* Use quotes here if the path includes a space. */
+	if (strchr(installdir, ' ') != NULL)
+	    fprintf(fd, "  silent execute '!\"%s\\diff\" -a ' . opt . '\"' . v:fname_in . '\" \"' . v:fname_new . '\" > \"' . v:fname_out . '\"'\n", installdir);
+	else
+	    fprintf(fd, "  silent execute '!%s\\diff -a ' . opt . '\"' . v:fname_in . '\" \"' . v:fname_new . '\" > \"' . v:fname_out . '\"'\n", installdir);
 	fprintf(fd, "endfunction\n");
 	fprintf(fd, "\n");
     }
