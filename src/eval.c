@@ -3020,6 +3020,9 @@ f_has(argvars, retvar)
 #ifdef SMARTINDENT
 	"smartindent",
 #endif
+#ifdef USE_SNIFF
+	"sniff",
+#endif
 #ifdef STATUSLINE
 	"statusline",
 #endif
