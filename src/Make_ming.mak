@@ -204,7 +204,7 @@ endif # RUBY
 # See feature.h for a list of options.
 # Any other defines can be included here.
 DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD
-DEFINES=-DWIN32 -DPC -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER) \
+DEFINES=-DWIN32 -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER) \
 	-DHAVE_PATHDEF -DFEAT_$(FEATURES)
 ifeq ($(CROSS),yes)
 # cross-compiler:
