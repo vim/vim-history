@@ -1235,7 +1235,10 @@ again:
     if (State == ASKMORE || State == CONFIRM)
 	gui.row = gui.num_rows;
 
-    if (gui.num_rows != screen_Rows || gui.num_cols != screen_Columns)
+    /* Only comparing Rows and Columns may be sufficient, but let's stay on
+     * the safe side. */
+    if (gui.num_rows != screen_Rows || gui.num_cols != screen_Columns
+	    || gui.num_rows != Rows || gui.num_cols != Columns)
 	shell_resized();
 
 #ifdef FEAT_GUI_BEOS
