@@ -5449,8 +5449,11 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'foldmarker' */
     else if (gvarp == &curwin->w_allbuf_opt.wo_fmr)
     {
-	if (vim_strchr(*varp, ',') == NULL)
+	p = vim_strchr(*varp, ',');
+	if (p == NULL)
 	    errmsg = (char_u *)N_("E536: comma required");
+	else if (p == *varp || p[1] == NUL)
+	    errmsg = e_invarg;
 	else if (foldmethodIsMarker(curwin))
 	    foldUpdateAll(curwin);
     }
