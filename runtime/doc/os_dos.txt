@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 5.5.  Last change: 1999 Sep 14
+*os_dos.txt*    For Vim version 5.5.  Last change: 1999 Dec 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -238,12 +238,21 @@ the CTRL-C until it tries to read a key.
 ==============================================================================
 8. Temp files						*dos-temp-files*
 
+Only for the 16 bit and 32 bit DOS version:
 Vim puts temporary files (for filtering) in the first of these directories
 that exists and in which Vim can create a file:
 	$TMP
 	$TEMP
 	C:\TMP
 	C:\TEMP
+	current directory
+
+For the Win32 version (both console and GUI):
+Vim uses standard Windows functions to obtain a temporary file name (for
+filtering).  The first of these directories that exists and in which Vim can
+create a file is used:
+	$TMP
+	$TEMP
 	current directory
 
 ==============================================================================

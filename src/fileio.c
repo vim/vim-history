@@ -20,6 +20,10 @@
 
 #include "vim.h"
 
+#ifdef WIN32
+# include <windows.h>	/* For DeleteFile(), GetTempPath(), etc. */
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -2982,9 +2986,7 @@ write_lnum_adjust(offset)
 vim_tempname(extra_char)
     int	    extra_char;	    /* character to use in the name instead of '?' */
 {
-#ifdef USE_GUI_WIN32
-# undef USE_TMPNAM
-# define TEMPNAMELEN 256
+#ifdef WIN32
     char	szTempFile[_MAX_PATH+1];
     char	buf4[4];
 #endif
@@ -2993,8 +2995,8 @@ vim_tempname(extra_char)
 #else
     char_u	itmp[TEMPNAMELEN];
 #endif
-#if defined(TEMPDIRNAMES) || (!defined(USE_GUI_WIN32) && !defined(USE_TMPNAM))
-    char_u	    *p;
+#if defined(TEMPDIRNAMES) || !defined(USE_TMPNAM)
+    char_u	*p;
 #endif
 
 #ifdef TEMPDIRNAMES
@@ -3017,7 +3019,7 @@ vim_tempname(extra_char)
 	    if (first_try)
 		first_dir = i;		/* start here next time */
 	    first_try = FALSE;
-#ifdef __EMX__
+# ifdef __EMX__
 	    /*
 	     * if $TMP contains a forward slash (perhaps because we're using
 	     * bash or tcsh, right Stefan?), don't add a backslash to the
@@ -3028,7 +3030,7 @@ vim_tempname(extra_char)
 	    if (vim_strchr(itmp, '/'))
 		STRCAT(itmp, "/");
 	    else
-#endif
+# endif
 		add_pathsep(itmp);
 	    STRCAT(itmp, TEMPNAME);
 	    if ((p = vim_strchr(itmp, '?')) != NULL)
@@ -3039,18 +3041,24 @@ vim_tempname(extra_char)
 	}
     }
     return NULL;
+
 #else /* !TEMPDIRNAMES */
 
-# ifdef USE_GUI_WIN32
+# ifdef WIN32
     STRCPY(itmp, "");
-    GetTempPath(_MAX_PATH, szTempFile);
+    if (GetTempPath(_MAX_PATH, szTempFile) == 0)
+	szTempFile[0] = NUL;	/* GetTempPath() failed, use current dir */
     strcpy(buf4, "VIM");
     buf4[2] = extra_char;   /* make it "VIa", "VIb", etc. */
     if (GetTempFileName(szTempFile, buf4, 0, itmp) == 0)
+	return NULL;
+    /* GetTempFileName() will create the file, we don't want that */
+    (void)DeleteFile(itmp);
 # else
 #  ifdef USE_TMPNAM
     /* tmpnam() will make its own name */
     if (*tmpnam((char *)itmp) == NUL)
+	return NULL;
 #  else
 #   ifdef VMS_TEMPNAM
     /* mktemp() is not working on VMS.  It seems to be
@@ -3067,23 +3075,19 @@ vim_tempname(extra_char)
 	free(p);
     }
     else
+	return NULL;
 #   else
     STRCPY(itmp, TEMPNAME);
     if ((p = vim_strchr(itmp, '?')) != NULL)
 	*p = extra_char;
     if (mktemp((char *)itmp) == NULL)
+	return NULL;
 #   endif
 #  endif
 # endif
-	return NULL;
 
-# ifdef USE_GUI_WIN32
-    /* GetTempFileName() will create the file, we don't want that */
-    (void)DeleteFile(itmp);
-# endif
 # ifdef WIN32
     {
-	char_u	*p;
 	char_u	*retval;
 
 	/* Backslashes in a temp file name cause problems when filtering with

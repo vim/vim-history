@@ -25,7 +25,6 @@
 #endif
 #define HAVE_STRFTIME		/* guessed */
 #define HAVE_MEMSET
-#define USE_TMPNAM		/* use tmpnam() instead of mktemp() */
 #define HAVE_LOCALE_H
 #define HAVE_FCNTL_H
 #define HAVE_QSORT
@@ -74,6 +73,8 @@
 #define MAXPATHL	1024
 
 #define BASENAMELEN	(_MAX_PATH - 5)	/* length of base of file name */
+
+#define TEMPNAMELEN	_MAX_PATH	/* length of temp file name path */
 
 #ifndef MAXMEM
 # define MAXMEM		(2*1024)    /* use up to 2 Mbyte for a buffer */
