@@ -83,7 +83,6 @@ void gui_mch_disable_beval_area __ARGS((BalloonEval *beval));
 void gui_mch_enable_beval_area __ARGS((BalloonEval *beval));
 void gui_mch_post_balloon __ARGS((BalloonEval *beval, char_u *mesg));
 BalloonEval *gui_mch_create_beval_area __ARGS((void *target, char_u *mesg, void (*mesgCB)(BalloonEval *, int), void *clientData));
-void Handle_WM_Notify __ARGS((HWND hwnd, LPNMHDR pnmh));
 void gui_mch_destroy_beval_area __ARGS((BalloonEval *beval));
 void netbeans_draw_multisign_indicator __ARGS((int row));
 /* vim: set ft=c : */
