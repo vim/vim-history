@@ -2430,9 +2430,15 @@ jumpto_tag(lbuf, forceit)
     tofree_fname = fname;	/* free() it later */
 
     /*
-     * check if file for tag exists before abandoning current file
+     * Check if the file with the tag exists before abandoning the current
+     * file.  Also accept a file name for which there is a matching BufReadCmd
+     * autocommand event (e.g., http://sys/file).
      */
-    if (mch_getperm(fname) < 0)
+    if (mch_getperm(fname) < 0
+#ifdef FEAT_AUTOCMD
+	    && !has_autocmd(EVENT_BUFREADCMD, fname)
+#endif
+       )
     {
 	retval = NOTAGFILE;
 	vim_free(nofile_fname);
