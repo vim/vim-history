@@ -26,6 +26,13 @@ if test -z "$CFLAGS"; then
   CFLAGS="-O"
   test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce -Wall"
 fi
+if test "$GCC" = yes; then
+  gccversion=`"$CC" --version`
+  if test "$gccversion" = "3.0.1" -o "$gccversion" = "3.0.2"; then
+    echo 'GCC 3.0.x has a bug in the optimizer, disabling "-O#"'
+    CFLAGS=`echo "$CFLAGS" | sed 's/-O[[23456789]]/-O/'`
+  fi
+fi
 
 dnl If configure thinks we are cross compiling, there is probably something
 dnl wrong with the CC or CFLAGS settings, give an understandable error message
