@@ -69,7 +69,6 @@ static XtInputId inputHandler;		/* Cookie for input */
 static gint inputHandler;		/* Cookie for input */
 #endif
 static int cmdno;			/* current command number for reply */
-static int needGraphicsInit = 1;
 static int haveConnection = FALSE;	/* socket is connected and
 					   initialization is done */
 static int oldFire = 1;
@@ -646,6 +645,15 @@ nb_parse_cmd(char_u *cmd)
 	/* NOTREACHED */
     }
 
+    if (STRCMP(cmd, "DETACH") == 0)
+    {
+	/* The IDE is breaking the connection. */
+	if (sd >= 0)
+	    close(sd);
+	netbeans_disconnect();
+	return;
+    }
+
     bufno = strtol((char *)cmd, (char **)&verb, 10);
 
     if (*verb != ':')
@@ -779,6 +787,22 @@ nb_get_buf(int bufno)
 }
 
 /*
+ * Return the number of buffers that are modified.
+ */
+    static int
+count_changed_buffers(void)
+{
+    buf_T	*bufp;
+    int		n;
+
+    n = 0;
+    for (bufp = firstbuf; bufp != NULL; bufp = bufp->b_next)
+	if (bufp->b_changed)
+	    ++n;
+    return n;
+}
+
+/*
  * End the netbeans session.
  */
     void
@@ -833,7 +857,7 @@ nb_send(char *buf, char *fun)
     static void
 nb_reply_nil(int cmdno)
 {
-    static char reply[32];
+    char reply[32];
 
     if (!haveConnection)
 	return;
@@ -868,12 +892,12 @@ nb_reply_text(int cmdno, char_u *result)
 
 
 /*
- * Send a response with an integer result code.
+ * Send a response with a number result code.
  */
     static void
-nb_reply_int(int cmdno, long result)
+nb_reply_nr(int cmdno, long result)
 {
-    static char reply[32];
+    char reply[32];
 
     if (!haveConnection)
 	return;
@@ -882,7 +906,7 @@ nb_reply_int(int cmdno, long result)
 
     nbdebug(("REPLY: %s", reply));
 
-    nb_send(reply, "nb_reply_int");
+    nb_send(reply, "nb_reply_nr");
 }
 
 
@@ -1011,7 +1035,41 @@ nb_do_cmd(
     if (func)
     {
 /* =====================================================================*/
-	if (streq((char *)cmd, "getLength"))
+	if (streq((char *)cmd, "getModified"))
+	{
+	    if (buf == NULL || buf->bufp == NULL)
+		/* Return the number of buffers that are modified. */
+		nb_reply_nr(cmdno, (long)count_changed_buffers());
+	    else
+		/* Return whether the buffer is modified. */
+		nb_reply_nr(cmdno, (long)buf->bufp->b_changed);
+/* =====================================================================*/
+	}
+	else if (streq((char *)cmd, "saveAndExit"))
+	{
+	    /* Note: this will exit Vim if successful. */
+	    coloncmd(":confirm qall");
+
+	    /* We didn't exit: return the number of changed buffers. */
+	    nb_reply_nr(cmdno, (long)count_changed_buffers());
+/* =====================================================================*/
+	}
+	else if (streq((char *)cmd, "getCursor"))
+	{
+	    char_u text[200];
+
+	    /* Note: nb_getbufno() may return -1.  This indicates the IDE
+	     * didn't assign a number to the current buffer in response to a
+	     * fileOpened event. */
+	    sprintf((char *)text, "%d %ld %d %ld",
+		    nb_getbufno(curbuf),
+		    (long)curwin->w_cursor.lnum,
+		    (int)curwin->w_cursor.col,
+		    pos2off(curbuf, &curwin->w_cursor));
+	    nb_reply_text(cmdno, text);
+/* =====================================================================*/
+	}
+	else if (streq((char *)cmd, "getLength"))
 	{
 	    long len = 0;
 
@@ -1031,7 +1089,7 @@ nb_do_cmd(
 		    len += STRLEN(buf->partial_line);
 		}
 	    }
-	    nb_reply_int(cmdno, len);
+	    nb_reply_nr(cmdno, len);
 /* =====================================================================*/
 	}
 	else if (streq((char *)cmd, "getText"))
@@ -1546,7 +1604,10 @@ nb_do_cmd(
 #endif
 	    pos = get_off_or_lnum(buf->bufp, &args);
 	    if (pos)
+	    {
 		curwin->w_cursor = *pos;
+		check_cursor();
+	    }
 	    else
 		nbdebug(("    BAD POSITION in setDot: %s\n", s));
 
@@ -1745,8 +1806,7 @@ nb_do_cmd(
 		return OK;
 	    }
 
-	    if (needGraphicsInit)
-		nb_init_graphics();
+	    nb_init_graphics();
 
 	    if (buf == NULL || buf->bufp == NULL)
 	    {
@@ -2029,45 +2089,15 @@ netbeans_setRunDir(char *argv0)
     static void
 nb_init_graphics(void)
 {
-/*     char *basedir = "../../pixmaps/netbeans"; */
-/*     char buf[MAXPATHLEN]; */
+    static int did_init = FALSE;
 
-/*     nbdebug(("looking for pixmaps in %s/%s\n", rundir, basedir)); */
+    if (!did_init)
+    {
+	coloncmd(":highlight NBGuarded guibg=Cyan guifg=Black");
+	coloncmd(":sign define %d linehl=NBGuarded", GUARDED);
 
-/*     sprintf(buf, "%s/%s", rundir, basedir); */
-
-/*     if (access(buf, R_OK) < 0) { */
-/*	basedir = "../pixmaps/netbeans"; */
-/*	sprintf(buf, "%s/%s", rundir, basedir); */
-/*	nbdebug(("looking for pixmaps in %s/%s\n", rundir, basedir)); */
-/*	if (access(buf, R_OK) < 0) { */
-/*	    fprintf(stderr, _("Cannot open pixmap directory.")); */
-/*	    return; */
-/*	} */
-/*     } */
-
-    coloncmd(":highlight NBGuarded guibg=Cyan guifg=Black");
-/*     coloncmd(":highlight NBBreakpoint guibg=Red guifg=White"); */
-/*     coloncmd(":highlight NBCurrent guibg=Blue guifg=White"); */
-/*     coloncmd(":highlight NBError guibg=Yellow guifg=Black"); */
-
-    coloncmd(":sign define %d linehl=NBGuarded",
-	     GUARDED);
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBBreakpoint text=XX", */
-/*	     BREAKPOINT, rundir, basedir, "enabled-breakpoint.xpm"); */
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBCurrent text=->", */
-/*	     CURRENT, rundir, basedir, "currentpc.xpm"); */
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBError text=!!", */
-/*	     ERROR, rundir, basedir, "error.xpm"); */
-
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBBreakpoint", */
-/*	     WASGUARDED+BREAKPOINT, rundir, basedir, "enabled-breakpoint.xpm"); */
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBCurrent", */
-/*	     WASGUARDED+CURRENT, rundir, basedir, "currentpc.xpm"); */
-/*     coloncmd(":sign define %d icon=%s/%s/%s linehl=NBError", */
-/*	     WASGUARDED+ERROR, rundir, basedir, "error.xpm"); */
-
-    needGraphicsInit = 0;
+	did_init = TRUE;
+    }
 }
 
 /*
@@ -2160,9 +2190,9 @@ netbeans_beval_cb(
     char	buf[MAXPATHLEN * 2 + 25];
     char_u	*p;
 
-    /* Don't do anything when 'ballooneval' is off or messages scrolled the
-     * windows up. */
-    if (!p_beval || msg_scrolled > 0)
+    /* Don't do anything when 'ballooneval' is off, messages scrolled the
+     * windows up or we have no connection. */
+    if (!p_beval || msg_scrolled > 0 || !haveConnection)
 	return;
 
     if (gui_mch_get_beval_info(beval, &filename, &line, &text, &col) == OK)

@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.1.  Last change: 2003 Mar 06
+*netbeans.txt*  For Vim version 6.1.  Last change: 2003 Mar 12
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -448,12 +448,30 @@ version		Not implemented.
 
 getDot		Not implemented.
 
+getCursor	Return the current buffer and cursor position.
+		The reply is:
+			seqno bufID lnum col off
+		seqno = sequence number of the function
+		bufID = buffer ID of the current buffer (if this is unknown -1
+			is used)
+		lnum  = line number of the cursor (first line is one)
+		col   = column number of the cursor (in bytes, zero based)
+		off   = offset of the cursor in the buffer (in bytes)
+		New in version 2.1.
+
 getLength	Return the length of the buffer in bytes.
 		Reply example for a buffer with 5000 bytes:
 			123 5000
 		TODO: explain use of partial line.
 
 getMark		Not implemented.
+
+getModified	When a buffer is specified: Return zero if the buffer does not
+		have changes, one if it does have changes.
+		When no buffer is specified (buffer number zero): Return the
+		number of buffers with changes.  When the result is zero it's
+		safe to tell Vim to exit.
+		New in version 2.1.
 
 getText		Return the contents of the buffer as a string.
 		Reply example for a buffer with two lines
@@ -476,6 +494,14 @@ remove off length
 			123		no problem
 			123 !message	failed
 		Note that the message in the reply is not quoted.
+
+saveAndExit	Perform the equivalent of closing Vim: ":confirm qall".
+		If there are no changed files or the user does not cancel the
+		operation Vim exits and no result is sent back.  The IDE can
+		consider closing the connection as a successful result.
+		If the user cancels the operation the number of modified
+		buffers that remains is returned and Vim does not exit.
+		New in version 2.1.
 
 
 10.5 Events						*nb-events*
@@ -592,6 +618,11 @@ AUTH password	editor -> IDE: First message that the editor sends to the IDE.
 DISCONNECT	IDE -> editor: break the connection.  The editor will exit.
 		The IDE must only send this message when there are no unsaved
 		changes!
+
+DETACH		IDE -> editor: break the connection without exiting the
+		editor.  Used when the IDE exits without bringing down the
+		editor as well.
+		New in version 2.1.
 
 REJECT		Not used.
 
