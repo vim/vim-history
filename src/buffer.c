@@ -3044,11 +3044,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 
 	    if (str != NULL && *str != 0)
 	    {
-		t = str;
-		if (*t == '-')
-		    t++;
-		t = skipdigits(t);
-		if (*t == 0)
+		if (*skipdigits(str) == NUL)
 		{
 		    num = atoi((char *) str);
 		    vim_free(str);
