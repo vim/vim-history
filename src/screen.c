@@ -6191,7 +6191,11 @@ screenclear2()
 {
     int	    i;
 
-    if (starting == NO_SCREEN || ScreenLines == NULL)
+    if (starting == NO_SCREEN || ScreenLines == NULL
+#ifdef FEAT_GUI
+	    || (gui.in_use && gui.starting)
+#endif
+	    )
 	return;
 
 #ifdef FEAT_GUI
