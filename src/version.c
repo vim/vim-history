@@ -421,6 +421,8 @@ static int included_patches[] =
 /**/
     80,
 /**/
+    79,
+/**/
     78,
 /**/
     77,
