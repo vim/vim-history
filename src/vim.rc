@@ -11,8 +11,12 @@
 
 #ifdef MING
 # include <windows.h>
-# define VS_FFI_FILEFLAGSMASK    0x0000003FL
-# define VOS__WINDOWS32          0x00000004L
+# ifndef VS_FFI_FILEFLAGSMASK
+#  define VS_FFI_FILEFLAGSMASK    0x0000003FL
+# endif
+# ifdef VOS__WINDOWS32
+#  define VOS__WINDOWS32          0x00000004L
+# endif
 #else
 # include <winver.h>
 #endif

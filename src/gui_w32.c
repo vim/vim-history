@@ -34,56 +34,113 @@
 
 #ifdef __MINGW32__
 
-#define _cdecl
+/*
+ * Add a lot of missing defines.
+ * They are not always missing, we need the #ifndef's.
+ */
+# ifndef _cdecl
+#  define _cdecl
+# endif
+# ifndef IsMinimized
+#  define     IsMinimized(hwnd)        IsIconic(hwnd)
+# endif
+# ifndef IsMaximized
+#  define     IsMaximized(hwnd)        IsZoomed(hwnd)
+# endif
+# ifndef SelectFont
+#  define     SelectFont(hdc, hfont)  ((HFONT)SelectObject((hdc), (HGDIOBJ)(HFONT)(hfont)))
+# endif
+# ifndef GetStockBrush
+#  define     GetStockBrush(i)     ((HBRUSH)GetStockObject(i))
+# endif
+# ifndef DeleteBrush
+#  define     DeleteBrush(hbr)     DeleteObject((HGDIOBJ)(HBRUSH)(hbr))
+# endif
 
-#define     IsMinimized(hwnd)        IsIconic(hwnd)
-#define     IsMaximized(hwnd)        IsZoomed(hwnd)
-#define     SelectFont(hdc, hfont)  ((HFONT)SelectObject((hdc), (HGDIOBJ)(HFONT)(hfont)))
-#define     GetStockBrush(i)     ((HBRUSH)GetStockObject(i))
-#define     DeleteBrush(hbr)     DeleteObject((HGDIOBJ)(HBRUSH)(hbr))
-
-#define HANDLE_WM_RBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
+# ifndef HANDLE_WM_RBUTTONDBLCLK
+#  define HANDLE_WM_RBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), TRUE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_MBUTTONUP(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_MBUTTONUP
+#  define HANDLE_WM_MBUTTONUP(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_MBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_MBUTTONDBLCLK
+#  define HANDLE_WM_MBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), TRUE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_LBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_LBUTTONDBLCLK
+#  define HANDLE_WM_LBUTTONDBLCLK(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), TRUE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_RBUTTONDOWN(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_RBUTTONDOWN
+#  define HANDLE_WM_RBUTTONDOWN(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), FALSE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_MOUSEMOVE(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_MOUSEMOVE
+#  define HANDLE_WM_MOUSEMOVE(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_RBUTTONUP(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_RBUTTONUP
+#  define HANDLE_WM_RBUTTONUP(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_MBUTTONDOWN(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_MBUTTONDOWN
+#  define HANDLE_WM_MBUTTONDOWN(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), FALSE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_LBUTTONUP(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_LBUTTONUP
+#  define HANDLE_WM_LBUTTONUP(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_LBUTTONDOWN(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_LBUTTONDOWN
+#  define HANDLE_WM_LBUTTONDOWN(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), FALSE, (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam), (UINT)(wParam)), 0L)
-#define HANDLE_WM_SYSCHAR(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_SYSCHAR
+#  define HANDLE_WM_SYSCHAR(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (TCHAR)(wParam), (int)(short)LOWORD(lParam)), 0L)
-#define HANDLE_WM_ACTIVATEAPP(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_ACTIVATEAPP
+#  define HANDLE_WM_ACTIVATEAPP(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (BOOL)(wParam), (DWORD)(lParam)), 0L)
-#define HANDLE_WM_WINDOWPOSCHANGING(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_WINDOWPOSCHANGING
+#  define HANDLE_WM_WINDOWPOSCHANGING(hwnd, wParam, lParam, fn) \
     (LRESULT)(DWORD)(BOOL)(fn)((hwnd), (LPWINDOWPOS)(lParam))
-#define HANDLE_WM_VSCROLL(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_VSCROLL
+#  define HANDLE_WM_VSCROLL(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HWND)(lParam), (UINT)(LOWORD(wParam)),  (int)(short)HIWORD(wParam)), 0L)
-#define HANDLE_WM_SETFOCUS(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_SETFOCUS
+#  define HANDLE_WM_SETFOCUS(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HWND)(wParam)), 0L)
-#define HANDLE_WM_KILLFOCUS(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_KILLFOCUS
+#  define HANDLE_WM_KILLFOCUS(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HWND)(wParam)), 0L)
-#define HANDLE_WM_HSCROLL(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_HSCROLL
+#  define HANDLE_WM_HSCROLL(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HWND)(lParam), (UINT)(LOWORD(wParam)), (int)(short)HIWORD(wParam)), 0L)
-#define HANDLE_WM_DROPFILES(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_DROPFILES
+#  define HANDLE_WM_DROPFILES(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (HDROP)(wParam)), 0L)
-#define HANDLE_WM_CHAR(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_CHAR
+#  define HANDLE_WM_CHAR(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (TCHAR)(wParam), (int)(short)LOWORD(lParam)), 0L)
-#define HANDLE_WM_SYSDEADCHAR(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_SYSDEADCHAR
+#  define HANDLE_WM_SYSDEADCHAR(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (TCHAR)(wParam), (int)(short)LOWORD(lParam)), 0L)
-#define HANDLE_WM_DEADCHAR(hwnd, wParam, lParam, fn) \
+# endif
+# ifndef HANDLE_WM_DEADCHAR
+#  define HANDLE_WM_DEADCHAR(hwnd, wParam, lParam, fn) \
     ((fn)((hwnd), (TCHAR)(wParam), (int)(short)LOWORD(lParam)), 0L)
+# endif
 #endif /* __MINGW32__ */
 
 #ifndef GET_X_LPARAM
@@ -337,7 +394,6 @@ static int get_toolbar_bitmap(char_u *name);
 
 #ifdef WIN32_FIND_REPLACE
 static void initialise_findrep(char_u *initial_string);
-static void find_rep_mode_adjust(char_u * buf);
 #endif
 
 #ifdef DEBUG
@@ -2808,39 +2864,39 @@ gui_mch_get_color(char_u *name)
 
     static SysColorTable sys_table[] =
     {
-	"SYS_3DDKSHADOW", COLOR_3DDKSHADOW,
-	"SYS_3DFACE", COLOR_3DFACE,
-	"SYS_BTNFACE", COLOR_BTNFACE,
-	"SYS_3DHILIGHT", COLOR_3DHILIGHT,
+	{"SYS_3DDKSHADOW", COLOR_3DDKSHADOW},
+	{"SYS_3DFACE", COLOR_3DFACE},
+	{"SYS_BTNFACE", COLOR_BTNFACE},
+	{"SYS_3DHILIGHT", COLOR_3DHILIGHT},
 #ifndef __MINGW32__
-	"SYS_3DHIGHLIGHT", COLOR_3DHIGHLIGHT,
+	{"SYS_3DHIGHLIGHT", COLOR_3DHIGHLIGHT},
 #endif
-	"SYS_BTNHILIGHT", COLOR_BTNHILIGHT,
-	"SYS_BTNHIGHLIGHT", COLOR_BTNHIGHLIGHT,
-	"SYS_3DLIGHT", COLOR_3DLIGHT,
-	"SYS_3DSHADOW", COLOR_3DSHADOW,
-	"SYS_BTNSHADOW", COLOR_BTNSHADOW,
-	"SYS_ACTIVEBORDER", COLOR_ACTIVEBORDER,
-	"SYS_ACTIVECAPTION", COLOR_ACTIVECAPTION,
-	"SYS_APPWORKSPACE", COLOR_APPWORKSPACE,
-	"SYS_BACKGROUND", COLOR_BACKGROUND,
-	"SYS_DESKTOP", COLOR_DESKTOP,
-	"SYS_BTNTEXT", COLOR_BTNTEXT,
-	"SYS_CAPTIONTEXT", COLOR_CAPTIONTEXT,
-	"SYS_GRAYTEXT", COLOR_GRAYTEXT,
-	"SYS_HIGHLIGHT", COLOR_HIGHLIGHT,
-	"SYS_HIGHLIGHTTEXT", COLOR_HIGHLIGHTTEXT,
-	"SYS_INACTIVEBORDER", COLOR_INACTIVEBORDER,
-	"SYS_INACTIVECAPTION", COLOR_INACTIVECAPTION,
-	"SYS_INACTIVECAPTIONTEXT", COLOR_INACTIVECAPTIONTEXT,
-	"SYS_INFOBK", COLOR_INFOBK,
-	"SYS_INFOTEXT", COLOR_INFOTEXT,
-	"SYS_MENU", COLOR_MENU,
-	"SYS_MENUTEXT", COLOR_MENUTEXT,
-	"SYS_SCROLLBAR", COLOR_SCROLLBAR,
-	"SYS_WINDOW", COLOR_WINDOW,
-	"SYS_WINDOWFRAME", COLOR_WINDOWFRAME,
-	"SYS_WINDOWTEXT", COLOR_WINDOWTEXT,
+	{"SYS_BTNHILIGHT", COLOR_BTNHILIGHT},
+	{"SYS_BTNHIGHLIGHT", COLOR_BTNHIGHLIGHT},
+	{"SYS_3DLIGHT", COLOR_3DLIGHT},
+	{"SYS_3DSHADOW", COLOR_3DSHADOW},
+	{"SYS_BTNSHADOW", COLOR_BTNSHADOW},
+	{"SYS_ACTIVEBORDER", COLOR_ACTIVEBORDER},
+	{"SYS_ACTIVECAPTION", COLOR_ACTIVECAPTION},
+	{"SYS_APPWORKSPACE", COLOR_APPWORKSPACE},
+	{"SYS_BACKGROUND", COLOR_BACKGROUND},
+	{"SYS_DESKTOP", COLOR_DESKTOP},
+	{"SYS_BTNTEXT", COLOR_BTNTEXT},
+	{"SYS_CAPTIONTEXT", COLOR_CAPTIONTEXT},
+	{"SYS_GRAYTEXT", COLOR_GRAYTEXT},
+	{"SYS_HIGHLIGHT", COLOR_HIGHLIGHT},
+	{"SYS_HIGHLIGHTTEXT", COLOR_HIGHLIGHTTEXT},
+	{"SYS_INACTIVEBORDER", COLOR_INACTIVEBORDER},
+	{"SYS_INACTIVECAPTION", COLOR_INACTIVECAPTION},
+	{"SYS_INACTIVECAPTIONTEXT", COLOR_INACTIVECAPTIONTEXT},
+	{"SYS_INFOBK", COLOR_INFOBK},
+	{"SYS_INFOTEXT", COLOR_INFOTEXT},
+	{"SYS_MENU", COLOR_MENU},
+	{"SYS_MENUTEXT", COLOR_MENUTEXT},
+	{"SYS_SCROLLBAR", COLOR_SCROLLBAR},
+	{"SYS_WINDOW", COLOR_WINDOW},
+	{"SYS_WINDOWFRAME", COLOR_WINDOWFRAME},
+	{"SYS_WINDOWTEXT", COLOR_WINDOWTEXT}
     };
 
     int		    r, g, b;
@@ -2940,11 +2996,11 @@ gui_mch_set_bg_color(GuiColor color)
     gui.currBgColor = color;
 }
 
-#if defined(MULTI_BYTE) || defined(PROTO)
-
+#if (defined(MULTI_BYTE) && defined(MULTI_BYTE_IME)) || defined(PROTO)
 /*
  * Multi-byte handling, by Sung-Hoon Baek
  */
+
     static void
 HanExtTextOut(HDC hdc,int X, int Y, UINT fuOption, const RECT *lprc,
 	LPCTSTR lpString, UINT cbCount, const int *lpDx, BOOL bOpaque)
@@ -2993,7 +3049,7 @@ HanExtTextOut(HDC hdc,int X, int Y, UINT fuOption, const RECT *lprc,
 	}
 	if (i > 0)
 	{
-	    int OldBkMode;
+	    int OldBkMode = 0;
 
 	    if (bOpaque)
 	    {
@@ -3011,8 +3067,6 @@ HanExtTextOut(HDC hdc,int X, int Y, UINT fuOption, const RECT *lprc,
     else
 	ExtTextOut(hdc,X,Y,fuOption,lprc,lpString,cbCount,lpDx);
 }
-
-# if defined(MULTI_BYTE_IME) || defined(PROTO)
 
 #include <ime.h>
 #include <imm.h>
@@ -3316,9 +3370,7 @@ IsDBCSTrailByte(char *base, char *p)
 }
 #  endif /* not used */
 
-# endif /* MULTI_BYTE_IME */
-
-#endif /* MULTI_BYTE */
+#endif /* MULTI_BYTE && MULTI_BYTE_IME */
 
 #define UNIBUFSIZE 2000		/* a big buffer */
 
@@ -3441,10 +3493,10 @@ gui_mch_draw_string(
 		unicodebuf = (WCHAR *)alloc(UNIBUFSIZE);
 	    if (unicodebuf != NULL)
 	    {
-		if (len = MultiByteToWideChar(is_dbcs,
+		if ((len = MultiByteToWideChar(is_dbcs,
 			    MB_PRECOMPOSED,
 			    (char *)s, len,
-			    (LPWSTR)unicodebuf, UNIBUFSIZE))
+			    (LPWSTR)unicodebuf, UNIBUFSIZE)))
 		    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row), 0, NULL,
 						       unicodebuf, len, NULL);
 	    }
@@ -3559,7 +3611,7 @@ gui_mch_settitle(
     char_u  *title,
     char_u  *icon)
 {
-    SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : title));
+    SetWindowText(s_hwnd, (LPCSTR)(title == NULL ? "VIM" : (char *)title));
 }
 
 /*
@@ -5204,8 +5256,8 @@ gui_mch_tearoff(
     HFONT	font, oldFont;
     int		col, spaceWidth, len;
     int		columnWidths[2];
-    char_u	*label, *text, *end, *acEnd;
-    int		padding0, padding1, padding2;
+    char_u	*label, *text, *end, *acEnd = NULL;
+    int		padding0, padding1, padding2 = 0;
     int		sepPadding=0;
 
     /*
@@ -5609,7 +5661,7 @@ get_toolbar_bitmap(char_u *name)
 	/*
 	 * reference by index
 	 */
-	i = strtol(name + 7, &dummy, 0);
+	i = strtol(name + 7, (char **)&dummy, 0);
 	return i;
     }
     /*

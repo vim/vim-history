@@ -14,17 +14,20 @@
 
 #include <windows.h>
 
-/* cproto doesn't create a prototype for main() */
 #ifdef __MINGW32__
-# define _cdecl
+# ifndef _cdecl
+#  define _cdecl
+# endif
 #endif
+
+/* cproto doesn't create a prototype for main() */
 int _cdecl
 #if defined(USE_GUI_WIN32)
 VimMain
 #else
- main
+    main
 #endif
-__ARGS((int argc, char **argv));
+	__ARGS((int argc, char **argv));
 int (_cdecl *pmain)(int, char **);
 
 #ifndef PROTO
