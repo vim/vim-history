@@ -3937,11 +3937,12 @@ do_sub(eap)
 		 * 4. If do_all is set, find next match.
 		 * Prevent endless loop with patterns that match empty
 		 * strings, e.g. :s/$/pat/g or :s/[a-z]* /(&)/g.
+		 * But ":s/\n/#/" is OK.
 		 */
 skip:
-		nmatch = -1;
-		lastone = (sub_firstline[matchcol] == NUL
+		lastone = ((sub_firstline[matchcol] == NUL && nmatch <= 1)
 			     || got_int || got_quit || !(do_all || do_again));
+		nmatch = -1;
 		if (lastone
 			|| do_ask
 			|| (nmatch = vim_regexec_multi(&regmatch, curwin,
