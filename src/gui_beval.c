@@ -10,8 +10,7 @@
 
 #include "vim.h"
 
-#if (defined(FEAT_BEVAL) && \
-    (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))) || defined(PROTO)
+#if defined(FEAT_BEVAL) || defined(PROTO)
 
 #include <X11/keysym.h>
 #ifdef FEAT_GUI_MOTIF
@@ -452,7 +451,7 @@ drawBalloon(beval)
 	{
 	    XmFontList fl;
 
-	    fl = gui_motif_fontset2fontlist(&gui.balloonEval_fontset);
+	    fl = gui_motif_fontset2fontlist(&gui.tooltip_fontset);
 	    XmStringExtent(fl, s, &w, &h);
 	    XmFontListFree(fl);
 	}
@@ -555,19 +554,19 @@ createBalloonEvalWindow(beval)
     {
 	XmFontList fl;
 
-	fl = gui_motif_fontset2fontlist(&gui.balloonEval_fontset);
-	XtSetArg(args[n], XmNforeground, gui.balloonEval_fg_pixel); n++;
-	XtSetArg(args[n], XmNbackground, gui.balloonEval_bg_pixel); n++;
+	fl = gui_motif_fontset2fontlist(&gui.tooltip_fontset);
+	XtSetArg(args[n], XmNforeground, gui.tooltip_fg_pixel); n++;
+	XtSetArg(args[n], XmNbackground, gui.tooltip_bg_pixel); n++;
 	XtSetArg(args[n], XmNfontList, fl); n++;
 	XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
 	beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 			xmLabelWidgetClass, beval->balloonShell, args, n);
     }
 #else /* FEAT_GUI_ATHENA */
-    XtSetArg(args[n], XtNforeground, gui.balloonEval_fg_pixel); n++;
-    XtSetArg(args[n], XtNbackground, gui.balloonEval_bg_pixel); n++;
+    XtSetArg(args[n], XtNforeground, gui.tooltip_fg_pixel); n++;
+    XtSetArg(args[n], XtNbackground, gui.tooltip_bg_pixel); n++;
     XtSetArg(args[n], XtNinternational, True); n++;
-    XtSetArg(args[n], XtNfontSet, gui.balloonEval_fontset); n++;
+    XtSetArg(args[n], XtNfontSet, gui.tooltip_fontset); n++;
     beval->balloonLabel = XtCreateManagedWidget("balloonLabel",
 		    labelWidgetClass, beval->balloonShell, args, n);
 #endif

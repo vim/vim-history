@@ -35,7 +35,7 @@ extern "C" {
  * 2. Functions you need to call when certain events happen in the editor;
  *    these are implemented by the integration library
  * 3. Utility functions provided by the integration library; these make
- *        task 1 a bit easier.
+ *	  task 1 a bit easier.
  */
 
 /*

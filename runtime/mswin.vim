@@ -1,7 +1,7 @@
 " Set options and add mapping such that Vim behaves a lot like MS-Windows
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jul 23
+" Last change:	2001 Aug 23
 
 " set the 'cpoptions' to its Vim default
 if 1	" only do this when compiled with expression evaluation
@@ -27,7 +27,7 @@ vnoremap <C-C> "+y
 vnoremap <C-Insert> "+y
 
 " CTRL-V and SHIFT-Insert are Paste
-nnoremap <SID>Paste "=@+.'xy'<CR>gPFx"_2x:echo<CR>
+nnoremap <silent> <SID>Paste "=@+.'xy'<CR>gPFx"_2x
 map <C-V>		<SID>Paste
 map <S-Insert>		<SID>Paste
 

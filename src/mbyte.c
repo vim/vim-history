@@ -76,11 +76,18 @@
  */
 
 #include "vim.h"
-#if defined(WIN3264) || defined(WIN32UNIX)
-# ifndef __MINGW32__
-#  include <winnls.h>
+
+#ifdef WIN32UNIX
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
 # endif
+# include <windows.h>
 #endif
+
+#if (defined(WIN3264) || defined(WIN32UNIX)) && !defined(__MINGW32__)
+# include <winnls.h>
+#endif
+
 #ifdef FEAT_GUI_X11
 # include <X11/Intrinsic.h>
 #endif
@@ -3248,9 +3255,9 @@ xim_real_init(x11_window, x11_display)
     if (xic != NULL)
 	return FALSE;
 
-    if (gui.input_method != NULL && *gui.input_method == NUL)
+    if (gui.rsrc_input_method != NULL && *gui.rsrc_input_method != NUL)
     {
-	strcpy(tmp, gui.input_method);
+	strcpy(tmp, gui.rsrc_input_method);
 	for (ns = s = tmp; ns != NULL && *s != NUL;)
 	{
 	    while (*s && isspace((unsigned char)*s))
@@ -3277,14 +3284,17 @@ xim_real_init(x11_window, x11_display)
     if (xim == NULL && (p = XSetLocaleModifiers("")) != NULL && *p != NUL)
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
 
-    /* This is supposed to be useful to obtain characters through
-     * XmbLookupString() without really using a XIM. */
-    if (xim == NULL && (p = XSetLocaleModifiers("@im=none")) != NULL
-								 && *p != NUL)
-	xim = XOpenIM(x11_display, NULL, NULL, NULL);
-
     if (xim == NULL)
+    {
+#ifndef __sgi
+	/* This is supposed to be useful to obtain characters through
+	 * XmbLookupString() without really using a XIM. For SGI/Irix machines
+	 * this apparently causes the first character after an "i" command to
+	 * be lost. */
+	(void)XSetLocaleModifiers("@im=none");
+#endif
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
+    }
 
     if (xim == NULL)
     {
@@ -3314,7 +3324,7 @@ xim_real_init(x11_window, x11_display)
     }
 
     found = False;
-    strcpy(tmp, gui.preedit_type);
+    strcpy(tmp, gui.rsrc_preedit_type_name);
     for (s = tmp; s && !found; )
     {
 	while (*s && isspace((unsigned char)*s))
@@ -3654,7 +3664,7 @@ xim_queue_key_press_event(GdkEvent *ev)
 	return FALSE;
 
     key_press_event_queue = g_slist_append(key_press_event_queue,
-                                           gdk_event_copy(ev));
+					   gdk_event_copy(ev));
     return TRUE;
 }
 

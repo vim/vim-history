@@ -838,6 +838,7 @@ do_filter(line1, line2, eap, cmd, do_in, do_out)
     }
     vim_free(cmd_buf);
 
+    did_check_timestamps = FALSE;
     need_check_timestamps = TRUE;
 
     if (do_out)
@@ -1012,6 +1013,7 @@ do_shell(cmd, flags)
 	windgoto(msg_row, msg_col);
     cursor_on();
     (void)call_shell(cmd, SHELL_COOKED | flags);
+    did_check_timestamps = FALSE;
     need_check_timestamps = TRUE;
 
     /*

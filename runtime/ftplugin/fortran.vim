@@ -1,7 +1,7 @@
 " Vim settings file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.3
-" Last Change:	2001 Jul 28
+" Version:	0.4
+" Last Change:	2001 Aug 24
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -19,9 +19,19 @@ if !exists("b:fortran_fixed_source")
   if exists("fortran_free_source")
     let b:fortran_fixed_source = 0
   else
+    " f90 and f95 allow both fixed and free source form
+    " assume fixed source form unless signs of free source form
+    " are detected in the first five columns of the first 25 lines
+    " Detection becomes more accurate and time-consuming if more lines
+    " are checked. Increase the limit below if you keep lots of comments at
+    " the very top of each file and you have a fast computer
+    let s:lmax = 25
+    if ( s:lmax > line("$") )
+      let s:lmax = line("$")
+    endif
     let b:fortran_fixed_source = 1
     let s:ln=1
-    while s:ln < 25
+    while s:ln <= s:lmax
       let s:test = strpart(getline(s:ln),0,5)
       if s:test[0] !~ '[Cc*#]' && s:test !~ '^\s*!' && s:test =~ '[^ 0-9\t]'
 	let b:fortran_fixed_source = 0
@@ -58,6 +68,8 @@ endif
 " Set 'formatoptions' to break comment and text lines but allow long lines
 setlocal fo+=tcql
 
+setlocal include=^#\\=\\s*include\\s\\+
+
 " Define patterns for the matchit plugin
 if !exists("b:match_words")
   let s:notend = '\%(\<end\s\+\)\@<!'
@@ -76,6 +88,12 @@ if !exists("b:match_words")
     \ s:notend . '\<function\>:\<end\s*function\>,'.
     \ s:notend . '\<module\>:\<end\s*module\>,'.
     \ s:notend . '\<program\>:\<end\s*program\>'
+endif
+
+" File filters for :browse e
+if has("gui_win32") && !exists("b:browsefilter")
+  let b:browsefilter = "Fortran Files (*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn)\t*.f;*.F;*.for;*.f77;*.f90;*.f95;*.fpp;*.ftn\n" .
+    \ "All Files (*.*)\t*.*\n"
 endif
 
 " vim:sw=2

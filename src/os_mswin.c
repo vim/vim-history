@@ -52,7 +52,7 @@
 # include <shellapi.h>
 #endif
 
-#ifdef FEAT_PRINTER
+#if defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)
 # include <dlgs.h>
 # ifdef WIN3264
 #  include <winspool.h>
@@ -65,7 +65,7 @@
 #  define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
 # endif
 # ifndef RIGHTMOST_BUTTON_PRESSED
-#  define RIGHTMOST_BUTTON_PRESSED        0x0002
+#  define RIGHTMOST_BUTTON_PRESSED	  0x0002
 # endif
 # ifndef FROM_LEFT_2ND_BUTTON_PRESSED
 #  define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
@@ -114,13 +114,13 @@ extern char g_szOrigTitle[];
 # define WORD int
 # define DWORD int
 # define BOOL int
-# define UINT int
-# define CALLBACK
-# define LRESULT int
+typedef int UINT;
+typedef int CALLBACK;
+typedef int LRESULT;
 # define LPSTR int
 # define LPTSTR int
-# define WPARAM int
-# define LPARAM int
+typedef int WPARAM;
+typedef int LPARAM;
 # define KEY_EVENT_RECORD int
 # define MOUSE_EVENT_RECORD int
 # define WINAPI
@@ -131,7 +131,7 @@ extern char g_szOrigTitle[];
 # define SECURITY_INFORMATION int
 # define PSECURITY_DESCRIPTOR int
 # define VOID void
-# define HWND int
+typedef int HWND;
 # define PSID int
 # define PACL int
 # define HICON int
@@ -143,6 +143,14 @@ typedef int HDC;
 typedef int LOGFONT;
 # define ENUMLOGFONT int
 # define NEWTEXTMETRIC int
+#endif
+
+#ifdef FEAT_GUI
+extern HWND s_hwnd;
+#else
+# if defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)
+static HWND s_hwnd = 0;	    /* console window handle, set by GetConsoleHwnd() */
+# endif
 #endif
 
 
@@ -487,7 +495,7 @@ display_errors()
 	    {
 		/* Truncate a very long message, it will go off-screen. */
 		if (STRLEN(p) > 2000)
-		    STRCPY(p + 2000 - 14, "...(truncated)");
+		    STRCPY(p + 2000 - 14, _("...(truncated)"));
 #ifdef WIN3264
 		MessageBox(NULL, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
 #else
@@ -515,7 +523,7 @@ mch_has_wildcard(char_u *p)
 #  else
 				    "?*$["
 #  endif
-                                                , *p) != NULL
+						, *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
     }
@@ -906,7 +914,8 @@ Trace(
 
 #endif //_DEBUG
 
-#ifdef FEAT_PRINTER
+#if (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) || defined(PROTO)
+
 # ifdef WIN16
 #  define TEXT(a) a
 # endif
@@ -926,6 +935,13 @@ static int		prt_top_margin;
 static char_u		szAppName[] = TEXT("VIM");
 static HWND		hDlgPrint;
 static int		*bUserAbort = NULL;
+static char_u		*prt_name = NULL;
+
+/* Defines which are also in vim.rc. */
+#define IDC_BOX1		400
+#define IDC_PRINTTEXT1		401
+#define IDC_PRINTTEXT2		402
+#define IDC_PROGRESS		403
 
 /*
  * Convert BGR to RGB for Windows GDI calls
@@ -949,6 +965,12 @@ PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
 	case WM_INITDIALOG:
 	    SetWindowText(hDlg, szAppName);
+	    if (prt_name != NULL)
+	    {
+		SetDlgItemText(hDlg, IDC_PRINTTEXT2, (LPSTR)prt_name);
+		vim_free(prt_name);
+		prt_name = NULL;
+	    }
 	    EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
 	    return TRUE;
 
@@ -979,20 +1001,37 @@ AbortProc(HDC hdcPrn, int iCode)
 }
 
 #ifndef FEAT_GUI
+
+# if defined(FEAT_TITLE) && defined(WIN3264)
+extern HWND g_hWnd;	/* This is in os_win32.c. */
+# endif
+
+# if (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) || defined(PROTO)
 /*
  * Showing the printer dialog is tricky since we have no GUI
  * window to parent it. The following routines are needed to
  * get the window parenting and Z-order to work properly.
  */
-
-    HWND
+    static void
 GetConsoleHwnd(void)
 {
-#define MY_BUFSIZE 1024 // Buffer size for console window titles.
+# define MY_BUFSIZE 1024 // Buffer size for console window titles.
 
     char pszNewWindowTitle[MY_BUFSIZE]; // Contains fabricated WindowTitle.
     char pszOldWindowTitle[MY_BUFSIZE]; // Contains original WindowTitle.
-    HANDLE hwndFound;
+
+    /* Skip if it's already set. */
+    if (s_hwnd != 0)
+	return;
+
+# if defined(FEAT_TITLE) && defined(WIN3264)
+    /* Window handle may have been found by init code (Windows NT only) */
+    if (g_hWnd != 0)
+    {
+	s_hwnd = g_hWnd;
+	return;
+    }
+# endif
 
     GetConsoleTitle(pszOldWindowTitle, MY_BUFSIZE);
 
@@ -1000,18 +1039,13 @@ GetConsoleHwnd(void)
 	    pszOldWindowTitle,
 	    GetTickCount(),
 	    GetCurrentProcessId());
-
     SetConsoleTitle(pszNewWindowTitle);
-
     Sleep(40);
-
-    hwndFound = FindWindow(NULL, pszNewWindowTitle);
+    s_hwnd = FindWindow(NULL, pszNewWindowTitle);
 
     SetConsoleTitle(pszOldWindowTitle);
-
-    return(hwndFound);
 }
-
+# endif
 
     static UINT CALLBACK
 PrintHookProc(
@@ -1088,10 +1122,6 @@ mch_print_cleanup(void)
     }
 }
 
-#ifdef FEAT_GUI
-extern HWND s_hwnd;
-#endif
-
     static int
 to_device_units(int idx, int dpi, int physsize, int offset, int def_number)
 {
@@ -1123,7 +1153,7 @@ to_device_units(int idx, int dpi, int physsize, int offset, int def_number)
 }
 
     static int
-mch_print_get_cpl(void)
+prt_get_cpl(void)
 {
     int		hr;
     int		phyw;
@@ -1167,7 +1197,7 @@ mch_print_get_cpl(void)
 }
 
     static int
-mch_print_get_lpp(void)
+prt_get_lpp(void)
 {
     int vr;
     int phyw;
@@ -1219,17 +1249,17 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 
 #ifdef WIN3264
     DEVMODE		*mem;
+    DEVNAMES		*devname;
 #endif
     int			i;
 
     bUserAbort = &(psettings->user_abort);
     memset(&prt_dlg, 0, sizeof(PRINTDLG));
     prt_dlg.lStructSize = sizeof(PRINTDLG);
-#ifdef FEAT_GUI
-    prt_dlg.hwndOwner = s_hwnd;
-#else
-    prt_dlg.hwndOwner = GetConsoleHwnd();
+#ifndef FEAT_GUI
+    GetConsoleHwnd();	    /* get value of s_hwnd */
 #endif
+    prt_dlg.hwndOwner = s_hwnd;
     prt_dlg.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
     prt_dlg.hDevMode = stored_dm;
     prt_dlg.hDevNames = stored_devn;
@@ -1270,16 +1300,12 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     }
     else if (PrintDlg(&prt_dlg) == 0)
 	goto init_fail_dlg;
-    hDlgPrint = CreateDialog(GetModuleHandle(NULL), TEXT("PrintDlgBox"),
-                               prt_dlg.hwndOwner, PrintDlgProc);
     if (prt_dlg.hDC == NULL)
     {
 	EMSG(_("E237: Printer selection failed"));
 	mch_print_cleanup();
 	return FALSE;
     }
-
-    SetAbortProc(prt_dlg.hDC, AbortProc);
 
     /*
      * keep the previous driver context
@@ -1296,7 +1322,6 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     psettings->has_color = (GetDeviceCaps(prt_dlg.hDC, BITSPIXEL) > 1
 				   || GetDeviceCaps(prt_dlg.hDC, PLANES) > 1
 				   || i > 2 || i == -1);
-#ifdef WIN3264
     /*
      * On some windows systems the nCopies parameter is not
      * passed back correctly. It must be retrieved from the
@@ -1305,15 +1330,30 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     mem = (DEVMODE *)GlobalLock(prt_dlg.hDevMode);
     if (mem != NULL)
     {
+#ifdef WIN3264
 	if (mem->dmCopies != 1)
 	    stored_nCopies = mem->dmCopies;
+#endif
 	if ((mem->dmFields & DM_DUPLEX) && (mem->dmDuplex & ~DMDUP_SIMPLEX))
 	    psettings->duplex = TRUE;
 	if ((mem->dmFields & DM_COLOR) && (mem->dmColor & DMCOLOR_COLOR))
 	    psettings->has_color = TRUE;
     }
     GlobalUnlock(prt_dlg.hDevMode);
-#endif
+
+    devname = (DEVNAMES *)GlobalLock(prt_dlg.hDevNames);
+    if (devname != 0)
+    {
+	char_u	*printer_name = (char_u *)devname + devname->wDeviceOffset;
+	char_u	*port_name = (char_u *)devname +devname->wOutputOffset;
+	char_u	*text = _("to %s on %s");
+
+	prt_name = alloc(STRLEN(printer_name) + STRLEN(port_name)
+							      + STRLEN(text));
+	if (prt_name != NULL)
+	    wsprintf(prt_name, text, printer_name, port_name);
+    }
+    GlobalUnlock(prt_dlg.hDevNames);
 
     /*
      * Initialise the font according to 'printfont'
@@ -1340,8 +1380,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     /*
      * Fill in the settings struct
      */
-    psettings->chars_per_line = mch_print_get_cpl();
-    psettings->lines_per_page = mch_print_get_lpp();
+    psettings->chars_per_line = prt_get_cpl();
+    psettings->lines_per_page = prt_get_lpp();
     psettings->n_collated_copies = (prt_dlg.Flags & PD_COLLATE)
 							? prt_dlg.nCopies : 1;
     psettings->n_uncollated_copies = (prt_dlg.Flags & PD_COLLATE)
@@ -1395,6 +1435,17 @@ mch_print_begin(prt_settings_T *psettings)
 {
     int			ret;
     static DOCINFO	di;
+    char		szBuffer[300];
+
+    hDlgPrint = CreateDialog(GetModuleHandle(NULL), TEXT("PrintDlgBox"),
+					     prt_dlg.hwndOwner, PrintDlgProc);
+#ifdef WIN16
+    Escape(prt_dlg.hDC, SETABORTPROC, 0, (LPSTR)AbortProc, NULL);
+#else
+    SetAbortProc(prt_dlg.hDC, AbortProc);
+#endif
+    wsprintf(szBuffer, _("Printing '%s'"), psettings->jobname);
+    SetDlgItemText(hDlgPrint, IDC_PRINTTEXT1, (LPSTR)szBuffer);
 
     memset(&di, 0, sizeof(DOCINFO));
     di.cbSize = sizeof(DOCINFO);
@@ -1422,15 +1473,17 @@ mch_print_end_page(void)
 }
 
     int
-mch_print_begin_page(void)
+mch_print_begin_page(char_u *msg)
 {
+    if (msg != NULL)
+	SetDlgItemText(hDlgPrint, IDC_PROGRESS, (LPSTR)msg);
     return (StartPage(prt_dlg.hDC) > 0);
 }
 
     int
 mch_print_blank_page(void)
 {
-    return (mch_print_begin_page() ? (mch_print_end_page()) : FALSE);
+    return (mch_print_begin_page(NULL) ? (mch_print_end_page()) : FALSE);
 }
 
 static int prt_pos_x = 0;
@@ -1503,7 +1556,7 @@ mch_print_set_fg(unsigned long fgcol)
     SetTextColor(prt_dlg.hDC, GetNearestColor(prt_dlg.hDC, swap_me(fgcol)));
 }
 
-#endif /*FEAT_PRINTER*/
+#endif /*FEAT_PRINTER && !FEAT_POSTSCRIPT*/
 
 #if defined(FEAT_SHORTCUT) || defined(PROTO)
 # include <shlobj.h>
@@ -1593,31 +1646,31 @@ shortcut_error:
  *
  * So we create a hidden window, and arrange to destroy it on exit.
  */
-HWND message_window = 0;
+HWND message_window = 0;	    /* window that's handling messsages */
 
 /* We also use a broadcast message to locate servers
  */
 static unsigned int vim_broadcast = 0;
 
 /* Communication is via WM_COPYDATA messages. The message type is send in
- * the dwData parameter. Types are defined here.
- */
+ * the dwData parameter. Types are defined here. */
 #define COPYDATA_KEYS	0
-#define COPYDATA_EXPR	1
-#define COPYDATA_REPLY	2
-#define COPYDATA_GETHWND 3
-#define COPYDATA_LIST	4
-#define BROADCAST_WAKEUP 5
+#define COPYDATA_REPLY	1
+#define COPYDATA_EXPR	10
+#define COPYDATA_RESULT	11
+#define COPYDATA_GETHWND 20
+#define COPYDATA_LIST	30
+#define BROADCAST_WAKEUP 40
 
-/* This is a structure containing a server HWND and its name
- */
+/* This is a structure containing a server HWND and its name. */
 struct server_id
 {
     HWND hwnd;
     char_u *name;
 };
 
-/* Clean up on exit. This destroys the hidden message window.
+/*
+ * Clean up on exit. This destroys the hidden message window.
  */
     static void
 CleanUpMessaging(void)
@@ -1629,9 +1682,10 @@ CleanUpMessaging(void)
     }
 }
 
-static int save_reply(char_u *id, char_u *reply);
+static int save_reply(HWND server, char_u *reply, int expr);
 
-/* The window procedure for the hidden message window.
+/*s
+ * The window procedure for the hidden message window.
  * It handles callback messages and notifications from servers.
  * In order to process these messages, it is necessary to run a
  * message loop. Code which may run before the main message loop
@@ -1675,27 +1729,32 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
 	/* This is a message from another Vim. The dwData member of the
 	 * COPYDATASTRUCT determines the type of message:
-	 *    0 = A key sequence. We are a server, and a client wants
-	 *        these keys adding to the input queue.
-	 *    1 = An expression. We are a server, and a client wants us
-	 *        to evaluate this expression.
-	 *    2 = A reply. We are a client, and a server has sent this
-	 *        message in response to a request. (serverreply_send)
-	 *    3 = A response to a VimBroadcast message.
-	 *        The broadcast requested a HWND for a server name.
-	 *        The window user data contains a pointer to a
-	 *        struct server_id with the requested name in it.
-	 *        The window procedure should fill in the HWND.
-	 *    4 = A response to a VimBroadcast message.
-	 *        The broadcast requested a list of server names.
-	 *        The window user data contains a pointer to a
-	 *        growarray. Each server name is added to the growarray,
-	 *        separated by newlines.
+	 *   COPYDATA_KEYS:
+	 *	A key sequence. We are a server, and a client wants these keys
+	 *	adding to the input queue.
+	 *   COPYDATA_REPLY:
+	 *	A reply. We are a client, and a server has sent this message
+	 *	in response to a request.  (server2client())
+	 *   COPYDATA_EXPR:
+	 *	An expression. We are a server, and a client wants us to
+	 *	evaluate this expression.
+	 *   COPYDATA_RESULT:
+	 *	A reply. We are a client, and a server has sent this message
+	 *	in response to a COPYDATA_EXPR.
+	 *   COPYDATA_GETHWND:
+	 *	A response to a VimBroadcast message.  The broadcast requested
+	 *	a HWND for a server name.  The window user data contains a
+	 *	pointer to a struct server_id with the requested name in it.
+	 *	The window procedure should fill in the HWND.
+	 *   COPYDATA_LIST:
+	 *	A response to a VimBroadcast message.  The broadcast requested
+	 *	a list of server names.  The window user data contains a
+	 *	pointer to a growarray. Each server name is added to the
+	 *	growarray, separated by newlines.
 	 */
 	COPYDATASTRUCT *data = (COPYDATASTRUCT*)lParam;
 	HWND sender = (HWND)wParam;
 	COPYDATASTRUCT reply;
-	char_u *cpo_save;
 	char_u *res;
 	char_u winstr[30];
 	garray_T *ga;
@@ -1704,55 +1763,61 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	switch (data->dwData)
 	{
 	case COPYDATA_KEYS:
-	    /* Set 'cpoptions' the way we want it.
-	     *    B set - backslashes are *not* treated specially
-	     *    k set - keycodes are *not* reverse-engineered
-	     *    < unset - <Key> sequenecs *are* interpreted
-	     *  last parameter of replace_termcodes() is TRUE so that
-	     *  the <lt> sequence is recognised - needed as backslash
-	     *  is not special...
-	     */
-	    cpo_save = p_cpo;
-	    p_cpo = (char_u *)"Bk";
-	    res = replace_termcodes((char_u *)(data->lpData), &res,
-								 FALSE, TRUE);
-	    p_cpo = cpo_save;
-#ifdef FEAT_GUI
-	    add_to_input_buf(res, STRLEN(res));
-#else
-	    ins_typebuf(res, REMAP_NONE, 0, TRUE, TRUE);
-#endif
-	    vim_free((char_u *)res);
-
 	    /* Remember who sent this, for <client> */
 	    clientWindow = sender;
 
+	    /* Add the received keys to the input buffer.  The loop waiting
+	     * for the user to do something should check the input buffer. */
+	    server_to_input_buf((char_u *)(data->lpData));
+
+# ifdef FEAT_GUI
+	    /* Wake up the main GUI loop. */
+	    if (s_hwnd != 0)
+		PostMessage(s_hwnd, WM_NULL, 0, 0);
+# endif
 	    return 1;
+
 	case COPYDATA_EXPR:
+	    /* Remember who sent this, for <client> */
+	    clientWindow = sender;
+
+	    ++emsg_skip;
 	    res = eval_to_string(data->lpData, NULL);
-	    reply.dwData = COPYDATA_REPLY;
+	    --emsg_skip;
+	    if (res == NULL)
+		res = vim_strsave((char_u *)"");
+	    reply.dwData = COPYDATA_RESULT;
 	    reply.lpData = res;
 	    reply.cbData = STRLEN(res) + 1;
 
-	    /* Remember who sent this, for <client> */
-	    clientWindow = sender;
-
 	    return SendMessage(sender, WM_COPYDATA, (WPARAM)message_window,
 			      (LPARAM)(&reply));
+	    /* TODO: vim_free(res)? */
+
 	case COPYDATA_REPLY:
-	    sprintf((char *)winstr, "0x%x", (unsigned int)sender);
-	    save_reply(winstr, data->lpData);
+	case COPYDATA_RESULT:
+	    if (data->lpData != NULL)
+	    {
+		save_reply(sender, data->lpData,
+					     data->dwData == COPYDATA_RESULT);
 #ifdef FEAT_AUTOCMD
-	    apply_autocmds(EVENT_REMOTEREPLY, winstr, data->lpData,
+		if (data->dwData == COPYDATA_REPLY)
+		{
+		    sprintf((char *)winstr, "0x%x", sender);
+		    apply_autocmds(EVENT_REMOTEREPLY, winstr, data->lpData,
 								TRUE, curbuf);
+		}
 #endif
+	    }
 	    return 1;
+
 	case COPYDATA_GETHWND:
 	    id = (struct server_id *)GetWindowLong(message_window,
 								GWL_USERDATA);
 	    if (STRICMP(id->name, data->lpData) == 0)
 		id->hwnd = sender;
 	    return 1;
+
 	case COPYDATA_LIST:
 	    ga = (garray_T *)GetWindowLong(message_window, GWL_USERDATA);
 	    ga_concat(ga, data->lpData);
@@ -1772,14 +1837,15 @@ Messaging_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-/* Initialise the message handling process. This involves creating a window
+/*
+ * Initialise the message handling process. This involves creating a window
  * to handle messages - the window will not be visible.
  */
-    int
+    void
 serverInitMessaging(void)
 {
     WNDCLASS wndclass;
-    HINSTANCE s_hinst = (HINSTANCE)GetModuleHandle(0);
+    HINSTANCE s_hinst;
 
     /* Clean up on exit */
     atexit(CleanUpMessaging);
@@ -1790,6 +1856,7 @@ serverInitMessaging(void)
     /* Register a window class - we only really care
      * about the window procedure
      */
+    s_hinst = (HINSTANCE)GetModuleHandle(0);
     wndclass.style = 0;
     wndclass.lpfnWndProc = Messaging_WndProc;
     wndclass.cbClsExtra = 0;
@@ -1803,15 +1870,12 @@ serverInitMessaging(void)
     RegisterClass(&wndclass);
 
     /* Create the message window. It will be hidden,
-     * so the details don't matter.
-     */
+     * so the details don't matter. */
     message_window = CreateWindow("VIM_MESSAGES", "Vim Message Window",
 			 WS_OVERLAPPEDWINDOW,
 			 CW_USEDEFAULT, CW_USEDEFAULT,
 			 100, 100, NULL, NULL,
 			 s_hinst, NULL);
-
-    return 1;
 }
 
     static HWND
@@ -1922,11 +1986,11 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
     char_u	 *cmd;			/* What to send. */
     char_u	 **result;		/* Result of eval'ed expression */
     void	 *ptarget;		/* HWND of server */
-    int		 asExpr;                /* Expression or keys? */
+    int		 asExpr;		/* Expression or keys? */
 {
-    HWND target = findServer(name);
+    HWND	target = findServer(name);
     COPYDATASTRUCT data;
-    char_u *retval = 0;
+    char_u	*retval = NULL;
 
     if (ptarget)
 	*(HWND *)ptarget = target;
@@ -1940,10 +2004,7 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
 	return -1;
 
     if (asExpr)
-    {
-	retval = (char_u *)GetWindowLong(message_window, GWL_USERDATA);
-	SetWindowLong(message_window, GWL_USERDATA, 0);
-    }
+	retval = serverGetReply(target, TRUE, TRUE, TRUE);
 
     if (result == NULL)
 	vim_free(retval);
@@ -1954,18 +2015,18 @@ serverSendToVim(name, cmd, result, ptarget, asExpr)
 }
 
 /* Replies from server need to be stored until the client picks them up via
- * serverreply_read(). So we maintain a list of server-id/reply pairs.
+ * remote_read(). So we maintain a list of server-id/reply pairs.
  * Note that there could be multiple replies from one server pending if the
  * client is slow picking them up.
  * We just store the replies in a simple list. When we remove an entry, we
  * move list entries down to fill the gap.
- * The server ID is simply the HWND, stored as a string (formatted in %x
- * format).
+ * The server ID is simply the HWND.
  */
 typedef struct
 {
-    char_u *id;
-    char_u *reply;
+    HWND	server;		/* server window */
+    char_u	*reply;		/* reply string */
+    int		expr_result;	/* TRUE for COPYDATA_RESULT */
 }
 reply_T;
 
@@ -1973,12 +2034,13 @@ static garray_T reply_list = {0, 0, sizeof(reply_T), 5, 0};
 
 #define REPLY_ITEM(i) ((reply_T *)(reply_list.ga_data) + (i))
 #define REPLY_COUNT (reply_list.ga_len)
+#define REPLY_ROOM (reply_list.ga_room)
 
 /* Flag which is used to wait for a reply */
 static int reply_received = 0;
 
     static int
-save_reply(char_u *id, char_u *reply)
+save_reply(HWND server, char_u *reply, int expr)
 {
     reply_T *rep;
 
@@ -1986,80 +2048,68 @@ save_reply(char_u *id, char_u *reply)
 	return FAIL;
 
     rep = REPLY_ITEM(REPLY_COUNT);
-    rep->id = vim_strsave(id);
+    rep->server = server;
     rep->reply = vim_strsave(reply);
-    if (rep->id == 0 || rep->reply == 0)
-    {
-	vim_free(rep->id);
-	vim_free(rep->reply);
+    rep->expr_result = expr;
+    if (rep->reply == NULL)
 	return FAIL;
-    }
 
     ++REPLY_COUNT;
+    --REPLY_ROOM;
     reply_received = 1;
     return OK;
 }
 
     char_u *
-serverGetReply(char_u *id, int remove, int wait)
+serverGetReply(HWND server, int expr, int remove, int wait)
 {
-    int i;
-    char_u *p;
-    char_u *reply;
-    reply_T *rep;
+    int		i;
+    char_u	*reply;
+    reply_T	*rep;
+    MSG		msg;
 
-    for (i = 0; i < REPLY_COUNT; ++i)
-    {
-	rep = REPLY_ITEM(i);
-	if (STRCMP(rep->id, id) == 0)
-	{
-	    size_t bytes;
-
-	    /* If we aren't going to remove the reply from the list,
-	     * just return the value we've found
-	     */
-	    if (!remove)
-		return rep->reply;
-
-	    /* Save the values we've found for later */
-	    p = rep->id;
-	    reply = rep->reply;
-
-	    /* Move the rest of the list down to fill the gap */
-	    bytes = (REPLY_COUNT - i - 1) * sizeof(reply_T);
-	    mch_memmove(rep, rep + 1, bytes);
-	    --REPLY_COUNT;
-
-	    /* Free the ID, which was allocated when it was stored. Return the
-	     * reply to the caller, who takes on responsibility for freeing
-	     * it.
-	     */
-	    vim_free(p);
-	    return reply;
-	}
-    }
-
-    /* If we got here, we didn't find a reply. Return immediately unless the
-     * "wait" parameter is set.
-     */
-    if (!wait)
-	return 0;
-
-    /* We need to wait for a reply. Enter a message loop until the
-     * "reply_received" flag gets set, then check if this is for us.
-     */
+    /* When waiting, loop until the message waiting for is received. */
     for (;;)
     {
-	MSG msg;
-	HWND server;
-	int n = 0;
-
-	/* The server's HWND is encoded in the 'id' parameter */
-	sscanf((char *)id, "%x", &n);
-	server = (HWND)n;
-
-	/* Nothing found so far... */
+	/* Reset this here, in case a message arrives while we are going
+	 * through the already received messages. */
 	reply_received = 0;
+
+	for (i = 0; i < REPLY_COUNT; ++i)
+	{
+	    rep = REPLY_ITEM(i);
+	    if (rep->server == server && rep->expr_result == expr)
+	    {
+		size_t bytes;
+
+		/* If we aren't going to remove the reply from the list,
+		 * just return the value we've found
+		 */
+		if (!remove)
+		    return rep->reply;
+
+		/* Save the values we've found for later */
+		reply = rep->reply;
+
+		/* Move the rest of the list down to fill the gap */
+		bytes = (REPLY_COUNT - i - 1) * sizeof(reply_T);
+		mch_memmove(rep, rep + 1, bytes);
+		--REPLY_COUNT;
+		++REPLY_ROOM;
+
+		/* Return the reply to the caller, who takes on responsibility
+		 * for freeing it. */
+		return reply;
+	    }
+	}
+
+	/* If we got here, we didn't find a reply. Return immediately if the
+	 * "wait" parameter isn't set.  */
+	if (!wait)
+	    break;
+
+	/* We need to wait for a reply. Enter a message loop until the
+	 * "reply_received" flag gets set. */
 
 	/* Loop until we receive a reply */
 	while (reply_received == 0)
@@ -2070,7 +2120,7 @@ serverGetReply(char_u *id, int remove, int wait)
 
 	    /* If the server has died, give up */
 	    if (!IsWindow(server))
-		return 0;
+		return NULL;
 
 	    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	    {
@@ -2078,29 +2128,16 @@ serverGetReply(char_u *id, int remove, int wait)
 		DispatchMessage(&msg);
 	    }
 	}
-
-	/* Check the one we just received */
-	rep = REPLY_ITEM(REPLY_COUNT - 1);
-	if (STRCMP(rep->id, id) == 0)
-	    break;
     }
 
-    /* We got a reply. Return it. */
-    reply = rep->reply;
-
-    if (remove)
-    {
-	vim_free(rep->id);
-	--REPLY_COUNT;
-    }
-
-    return reply;
+    return NULL;
 }
 
 #if !defined(FEAT_GUI) || defined(PROTO)
 /*
  * Process any messages in the Windows message queue. This is only required
  * for the console version, as the GUI version has a message loop anyway.
+ * Return TRUE if something was put in the input buffer.
  */
     void
 serverProcessPendingMessages(void)
@@ -2117,7 +2154,8 @@ serverProcessPendingMessages(void)
 
 #endif /* FEAT_CLIENTSERVER */
 
-#if defined(FEAT_GUI) || defined(FEAT_PRINTER) || defined(PROTO)
+#if defined(FEAT_GUI) || (defined(FEAT_PRINTER) && !defined(FEAT_POSTSCRIPT)) \
+	|| defined(PROTO)
 
 struct charset_pair
 {

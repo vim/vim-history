@@ -1,4 +1,4 @@
-*os_dos.txt*    For Vim version 6.0as.  Last change: 2001 Jul 24
+*os_dos.txt*    For Vim version 6.0at.  Last change: 2001 Aug 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -96,7 +96,7 @@ Shift-Del	cut Visual text (to clipboard)			*<S-Del>*
 These mappings accomplish this (Win32 and DJGPP versions of Vim):
 
 key		key code     Normal	Visual	    Insert ~
-Shift-Insert	<M-N><M-T>   "*P	"-d"*P      <C-R>*
+Shift-Insert	<M-N><M-T>   "*P	"-d"*P      <C-R><C-O>*
 CTRL-Insert	<M-N><M-U>		"*y
 Shift-Del	<M-N><M-W>		"*d
 CTRL-Del	<M-N><M-X>		"*d
@@ -104,7 +104,7 @@ CTRL-Del	<M-N><M-X>		"*d
 Or these mappings (non-Win32 version of Vim):
 
 key		key code     Normal	Visual	    Insert ~
-Shift-Insert	<M-N><M-T>   P		d"0P	    <C-O>P
+Shift-Insert	<M-N><M-T>   P		"-dP	    <C-R><C-O>"
 CTRL-Insert	<M-N><M-U>		y
 Shift-Del	<M-N><M-W>		d
 CTRL-Del	<M-N><M-X>		d

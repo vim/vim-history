@@ -1125,10 +1125,10 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     gui_mch_mousehide(FALSE);
 
 # ifdef FEAT_GUI_GNOME
-    /* If Gnome is available, use it for the simple button dialog. */
+    /* If Gnome is available, use it for the dialog. */
     if (gtk_socket_id == 0)
 	return gui_gnome_dialog(type, title, message, buttons, def_but,
-				textfield);
+								   textfield);
 # endif
 
     if (title == NULL)
@@ -1215,8 +1215,10 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 	dialog_textentry = gtk_entry_new();
 	gtk_widget_set_usize(dialog_textentry, 400, -2);
 	gtk_box_pack_start(GTK_BOX(vbox), dialog_textentry, TRUE, TRUE, 0);
-	gtk_entry_set_text(GTK_ENTRY(dialog_textentry), (const gchar *)textfield);
-	gtk_entry_select_region(GTK_ENTRY(dialog_textentry), 0, STRLEN(textfield));
+	gtk_entry_set_text(GTK_ENTRY(dialog_textentry),
+						    (const gchar *)textfield);
+	gtk_entry_select_region(GTK_ENTRY(dialog_textentry), 0,
+							   STRLEN(textfield));
 	gtk_entry_set_max_length(GTK_ENTRY(dialog_textentry), IOSIZE - 1);
 	gtk_entry_set_position(GTK_ENTRY(dialog_textentry), STRLEN(textfield));
 	gtk_widget_show(dialog_textentry);
@@ -1312,7 +1314,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 	GTK_WIDGET_SET_FLAGS(button[butcount], GTK_CAN_DEFAULT);
 
 	label = gtk_accel_label_new("");
-        gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), dialog);
+	gtk_accel_label_set_accel_widget(GTK_ACCEL_LABEL(label), dialog);
 
 # ifdef GTK_USE_ACCEL
 	accel_key = gtk_label_parse_uline(GTK_LABEL(label), (const gchar *)p);
@@ -1339,7 +1341,7 @@ gui_mch_dialog(	int	type,		/* type of dialog */
 			   (gpointer) &data[butcount]);
 
 	gtk_box_pack_start(GTK_BOX(sub_area), button[butcount],
-		           TRUE, FALSE, 0);
+			   TRUE, FALSE, 0);
 	p = next;
     }
 
@@ -1957,32 +1959,32 @@ gui_gtk_position_in_parent(
     if (where == VW_POS_MOUSE)
     {
 	/* position window at mouse pointer */
-        gtk_widget_get_pointer(parent, &xPm, &yPm);
+	gtk_widget_get_pointer(parent, &xPm, &yPm);
 	pos_x = xP + xPm - (c_size.width) / 2;
 	pos_y = yP + yPm - (c_size.height) / 2;
     }
     else
     {
 	/* set child x origin so it is in center of Vim window */
-        pos_x =  xP + ( wP - c_size.width )/2;
+	pos_x =  xP + (wP - c_size.width) / 2;
 
 	if (where == VW_POS_TOP_CENTER)
 	    pos_y = yP + 2;
-        else
+	else
 	    /* where == VW_POS_CENTER */
 	    pos_y = yP + (hP - c_size.height) / 2;
     }
 
     /* now, make sure the window will be inside the Vim window... */
     if (pos_x < xP)
-        pos_x = xP + 2;
+	pos_x = xP + 2;
     if (pos_y < yP)
-        pos_y = yP + 2;
+	pos_y = yP + 2;
     if ((pos_x + c_size.width) > (wP + xP))
-        pos_x = xP + wP - c_size.width - 2;
+	pos_x = xP + wP - c_size.width - 2;
     /* Assume 'guiheadroom' indicates the title bar height... */
     if ((pos_y + c_size.height + p_ghr / 2) > (hP + yP))
-        pos_y = yP + hP - c_size.height - 2 - p_ghr / 2;
+	pos_y = yP + hP - c_size.height - 2 - p_ghr / 2;
 
     gtk_widget_set_uposition(child, pos_x, pos_y);
 }

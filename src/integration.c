@@ -18,7 +18,7 @@
 -> consider using MakeSelectionVisible instead of gotoLine hacks
    to show the line properly
      -> consider using glue instead of our own message wrapping functions
-        (but can only use glue if we don't have to distribute source)
+	(but can only use glue if we don't have to distribute source)
 */
 
 #include "vim.h"
@@ -754,7 +754,7 @@ workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 	XpmAttributes   xpmAttributes;
 	XSetWindowAttributes attr;
 	Window		iconWindow;
-	int             depth;
+	int		depth;
 	int		screenNum;
 	Pixmap		pixmap;
 
@@ -763,9 +763,9 @@ workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 	 * This code snipped was adapted from Sun WorkShop's source base,
 	 * setIcon.cc.
 	 */
-        XtVaGetValues(shell, XmNbackground, &bgPixel, NULL);
+	XtVaGetValues(shell, XmNbackground, &bgPixel, NULL);
 	screenNum = XScreenNumberOfScreen(XtScreen(shell));
-        depth = DisplayPlanes(display, screenNum);
+	depth = DisplayPlanes(display, screenNum);
 	xpmAttributes.valuemask = XpmColorSymbols;
 	xpmAttributes.numsymbols = 1;
 	xpmAttributes.colorsymbols =
@@ -795,99 +795,99 @@ workshop_set_icon(Display *display, Widget shell, char **xpmdata,
 static Boolean
 isWindowMapped(Display *display, Window win)
 {
-        XWindowAttributes winAttrs;
-        XGetWindowAttributes(display,
-                             win,
-                             &winAttrs);
-        if (winAttrs.map_state == IsViewable) {
-                return(True);
-        } else {
-                return(False);
-        }
+	XWindowAttributes winAttrs;
+	XGetWindowAttributes(display,
+			     win,
+			     &winAttrs);
+	if (winAttrs.map_state == IsViewable) {
+		return(True);
+	} else {
+		return(False);
+	}
 }
 
 static Boolean
 isMapped(Widget widget)
 {
-        if (widget == NULL) {
-                return(False);
-        }
+	if (widget == NULL) {
+		return(False);
+	}
 
-        if (XtIsRealized(widget) == False) {
-                return(False);
-        }
+	if (XtIsRealized(widget) == False) {
+		return(False);
+	}
 
-        return(isWindowMapped(XtDisplay(widget), XtWindow(widget)));
+	return(isWindowMapped(XtDisplay(widget), XtWindow(widget)));
 }
 
 static Boolean
 widgetIsIconified(
-        Widget           w)
+	Widget		 w)
 {
-        Atom             wm_state;
-        Atom             act_type;              /* actual Atom type returned */
-        int              act_fmt;               /* actual format returned */
-        u_long           nitems_ret;            /* number of items returned */
-        u_long           bytes_after;           /* number of bytes remaining */
-        u_long          *property;              /* actual property returned */
+	Atom		 wm_state;
+	Atom		 act_type;		/* actual Atom type returned */
+	int		 act_fmt;		/* actual format returned */
+	u_long		 nitems_ret;		/* number of items returned */
+	u_long		 bytes_after;		/* number of bytes remaining */
+	u_long		*property;		/* actual property returned */
 
-        /*
-         * If a window is iconified its WM_STATE is set to IconicState. See
-         * ICCCM Version 2.0, section 4.1.3.1 for more details.
-         */
+	/*
+	 * If a window is iconified its WM_STATE is set to IconicState. See
+	 * ICCCM Version 2.0, section 4.1.3.1 for more details.
+	 */
 
-        wm_state = XmInternAtom(XtDisplay(w), NOCATGETS("WM_STATE"), False);
-        if (XtWindow(w) != 0) {                 /* only check if window exists! */
-                XGetWindowProperty(XtDisplay(w), XtWindow(w), wm_state, 0L, 2L,
-                    False, AnyPropertyType, &act_type, &act_fmt, &nitems_ret,
-                    &bytes_after, (u_char **) &property);
-                if (nitems_ret == 2 && property[0] == IconicState) {
-                        return True;
-                }
-        }
+	wm_state = XmInternAtom(XtDisplay(w), NOCATGETS("WM_STATE"), False);
+	if (XtWindow(w) != 0) {			/* only check if window exists! */
+		XGetWindowProperty(XtDisplay(w), XtWindow(w), wm_state, 0L, 2L,
+		    False, AnyPropertyType, &act_type, &act_fmt, &nitems_ret,
+		    &bytes_after, (u_char **) &property);
+		if (nitems_ret == 2 && property[0] == IconicState) {
+			return True;
+		}
+	}
 
-        return False;
+	return False;
 
 }    /* end widgetIsIconified */
 
 void
 workshop_minimize_shell(Widget shell)
 {
-        if (shell != NULL &&
-            XtIsObject(shell) &&
-            XtIsRealized(shell) == True) {
-                if (isMapped(shell) == True) {
-                        XIconifyWindow(XtDisplay(shell), XtWindow(shell),
-                               XScreenNumberOfScreen(XtScreen(shell)));
-                }
-                XtVaSetValues(shell,
-                              XmNiconic, True,
-                              NULL);
-        }
+	if (shell != NULL &&
+	    XtIsObject(shell) &&
+	    XtIsRealized(shell) == True) {
+		if (isMapped(shell) == True) {
+			XIconifyWindow(XtDisplay(shell), XtWindow(shell),
+			       XScreenNumberOfScreen(XtScreen(shell)));
+		}
+		XtVaSetValues(shell,
+			      XmNiconic, True,
+			      NULL);
+	}
 }
 
 void workshop_maximize_shell(Widget shell)
 {
-        if (shell != NULL &&
-            XtIsRealized(shell) == True &&
-            widgetIsIconified(shell) == True &&
-            isMapped(shell) == False) {
-                XtMapWidget(shell);
-                /* This used to be
-                     XtPopdown(shell);
-                     XtPopup(shell, XtGrabNone);
-                   However, I found that that would drop any transient
-                   windows that had been iconified with the window.
-                   According to the ICCCM, XtMapWidget should be used
-                   to bring a window from Iconic to Normal state.
-                   However, Rich Mauri did a lot of work on this during
-                   Bart, and found that XtPopDown,XtPopup was required
-                   to fix several bugs involving multiple CDE workspaces.
-                   I've tested it now and things seem to work fine but
-                   I'm leaving this note for history in case this needs
-                   to be revisited.
-                */
-        }
+	if (shell != NULL &&
+	    XtIsRealized(shell) == True &&
+	    widgetIsIconified(shell) == True &&
+	    isMapped(shell) == False) {
+		XtMapWidget(shell);
+		/* This used to be
+		     XtPopdown(shell);
+		     XtPopup(shell, XtGrabNone);
+		   However, I found that that would drop any transient
+		   windows that had been iconified with the window.
+		   According to the ICCCM, XtMapWidget should be used
+		   to bring a window from Iconic to Normal state.
+		   However, Rich Mauri did a lot of work on this during
+		   Bart, and found that XtPopDown,XtPopup was required
+		   to fix several bugs involving multiple CDE workspaces.
+		   I've tested it now and things seem to work fine but
+		   I'm leaving this note for history in case this needs
+		   to be revisited.
+		*/
+	}
 }
 
 /*

@@ -2,7 +2,7 @@
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  * VMS port			by Henk Elbers
- * VMS deport                   by Zoltan Arpadffy
+ * VMS deport			by Zoltan Arpadffy
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -11,10 +11,10 @@
 
 #include	"vim.h"
 
-#define EFN             0                       /* Event flag */
-#define NOTIM	        0
-#define TIM_0	        1
-#define TIM_1	        2
+#define EFN		0			/* Event flag */
+#define NOTIM		0
+#define TIM_0		1
+#define TIM_1		2
 #define EXPL_ALLOC_INC 16
 
 typedef struct
@@ -55,16 +55,16 @@ typedef struct
     int	nul;
 }	ITMLST2;
 
-char            ibuf[1];                /* Input buffer */
-static TT_MODE  orgmode;
-static short    iochan;                 /* TTY I/O channel */
-static short    iosb[4];                /* IO status block */
+char		ibuf[1];		/* Input buffer */
+static TT_MODE	orgmode;
+static short	iochan;			/* TTY I/O channel */
+static short	iosb[4];		/* IO status block */
 
 int vms_match_num = 0;
 int vms_match_alloced = 0;
 int vms_match_free = 0;
 char_u **vms_fmatch = NULL;
-static char *Fspec_Rms;                /* rms file spec, passed implicitly between routines */
+static char *Fspec_Rms;		       /* rms file spec, passed implicitly between routines */
 
 static TT_MODE	get_tty __ARGS((void));
 static void	set_tty __ARGS((int row, int col));
@@ -170,24 +170,24 @@ vul_item(ITEM *itm, short len, short cod, char *adr, int *ret)
     void
 mch_settmode(int tmode)
 {
-    long        mystatus;
+    long	mystatus;
 
     if ( tmode == TMODE_RAW )
 	set_tty(0, 0);
     else{
-        switch (orgmode.width)
-        {
+	switch (orgmode.width)
+	{
 	    case 132:	OUT_STR_NF((char_u *)"\033[?3h\033>");	break;
 	    case 80:	OUT_STR_NF((char_u *)"\033[?3l\033>");	break;
 	    default:	break;
-        }
-        out_flush();
-        mystatus = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
-			&orgmode, sizeof(TT_MODE), 0,0,0,0);
-        if (mystatus!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
+	}
+	out_flush();
+	mystatus = sys$qiow(0, iochan, IO$_SETMODE, iosb, 0, 0,
+					  &orgmode, sizeof(TT_MODE), 0,0,0,0);
+	if (mystatus!=SS$_NORMAL || (iosb[0]&0xFFFF)!=SS$_NORMAL)
 	    return;
-        (void)sys$dassgn(iochan);
-        iochan = 0;
+	(void)sys$dassgn(iochan);
+	iochan = 0;
     }
 }
 
@@ -205,7 +205,7 @@ set_tty(int row, int col)
     }
     newmode = get_tty();
     if (col)
-	newmode.width            = col;
+	newmode.width		 = col;
     if (row)
 	newmode.x.y.length       = row;
     newmode.x.basic		|= (TT$M_NOECHO | TT$M_HOSTSYNC);
@@ -227,10 +227,10 @@ get_tty(void)
 
     if (!iochan)
     {
-        while (cp1 = (char *)mch_getenv((char_u *)cp2))
+	while (cp1 = (char *)mch_getenv((char_u *)cp2))
 	    cp2 = cp1;
-        vul_desc(&odsc, cp2);
-        (void)sys$assign(&odsc, &iochan, 0, 0);
+	vul_desc(&odsc, cp2);
+	(void)sys$assign(&odsc, &iochan, 0, 0);
     }
     mystatus = sys$qiow(0, iochan, IO$_SENSEMODE, iosb, 0, 0,
 		      &tt_mode, sizeof(tt_mode), 0, 0, 0, 0);
@@ -641,7 +641,7 @@ vms_fixfilename(void *instring)
     }
 
 #ifdef DEBUG
-     char                *tmpbuf = NULL;
+     char		 *tmpbuf = NULL;
      tmpbuf = (char *)calloc(buflen, sizeof(char));
      strcpy(tmpbuf, instring);
 #endif

@@ -42,13 +42,14 @@ if test -f ./toolcheck; then
   sh ./toolcheck 1>&AC_FD_MSG
 fi
 
+OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
+
 dnl Check for BeOS, which needs an extra source file
 AC_MSG_CHECKING(for BeOS)
 case `uname` in
     BeOS)	OS_EXTRA_SRC=os_beos.c; OS_EXTRA_OBJ=objects/os_beos.o
 		BEOS=yes; AC_MSG_RESULT(yes);;
-    *)		OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
-		BEOS=no; AC_MSG_RESULT(no);;
+    *)		BEOS=no; AC_MSG_RESULT(no);;
 esac
 
 dnl If QNX is found, assume we don't want to use Xphoton
@@ -58,8 +59,7 @@ case `uname` in
     QNX)	OS_EXTRA_SRC=os_qnx.c; OS_EXTRA_OBJ=objects/os_qnx.o
 		test -z "$with_x" && with_x=no
 		QNX=yes; AC_MSG_RESULT(yes);;
-    *)		OS_EXTRA_SRC=""; OS_EXTRA_OBJ=""
-		QNX=no; AC_MSG_RESULT(no);;
+    *)		QNX=no; AC_MSG_RESULT(no);;
 esac
 
 AC_SUBST(OS_EXTRA_SRC)
@@ -149,16 +149,21 @@ AC_ARG_WITH(features, [  --with-features=TYPE    tiny, small, normal, big or hug
 	features="normal"; AC_MSG_RESULT(Defaulting to normal))
 
 dovimdiff=""
+dogvimdiff=""
 case "$features" in
   tiny)		AC_DEFINE(FEAT_TINY) ;;
   small)	AC_DEFINE(FEAT_SMALL) ;;
-  normal)	AC_DEFINE(FEAT_NORMAL) dovimdiff="installvimdiff" ;;
-  big)		AC_DEFINE(FEAT_BIG) dovimdiff="installvimdiff" ;;
-  huge)		AC_DEFINE(FEAT_HUGE) dovimdiff="installvimdiff" ;;
+  normal)	AC_DEFINE(FEAT_NORMAL) dovimdiff="installvimdiff";
+  			dogvimdiff="installgvimdiff" ;;
+  big)		AC_DEFINE(FEAT_BIG) dovimdiff="installvimdiff";
+  			dogvimdiff="installgvimdiff" ;;
+  huge)		AC_DEFINE(FEAT_HUGE) dovimdiff="installvimdiff";
+  			dogvimdiff="installgvimdiff" ;;
   *)		AC_MSG_RESULT([Sorry, $features is not supported]) ;;
 esac
 
 AC_SUBST(dovimdiff)
+AC_SUBST(dogvimdiff)
 
 AC_MSG_CHECKING(--with-compiledby argument)
 AC_ARG_WITH(compiledby, [  --with-compiledby=NAME  name to show in :version message],
@@ -489,7 +494,7 @@ if test "$enable_rubyinterp" = "yes"; then
 	LDFLAGS="$rubyldflags $LDFLAGS"
       fi
       RUBY_SRC="if_ruby.c"
-      RUBY_OBJ="if_ruby.o"
+      RUBY_OBJ="objects/if_ruby.o"
       RUBY_PRO="if_ruby.pro"
       AC_DEFINE(FEAT_RUBY)
     else

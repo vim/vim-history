@@ -82,42 +82,42 @@
  *
  * pattern	is coded like:
  *
- *                        +-----------------+
- *                        |                 V
+ *			  +-----------------+
+ *			  |		    V
  * <aa>\|<bb>	BRANCH <aa> BRANCH <bb> --> END
- *                   |      ^    |          ^
- *                   +------+    +----------+
+ *		     |	    ^	 |	    ^
+ *		     +------+	 +----------+
  *
  *
- *                     +------------------+
- *                     V                  |
+ *		       +------------------+
+ *		       V		  |
  * <aa>*	BRANCH BRANCH <aa> --> BACK BRANCH --> NOTHING --> END
- *                   |      |               ^                      ^
- *                   |      +---------------+                      |
- *                   +---------------------------------------------+
+ *		     |	    |		    ^			   ^
+ *		     |	    +---------------+			   |
+ *		     +---------------------------------------------+
  *
  *
- *                                      +-------------------------+
- *                                      V                         |
+ *					+-------------------------+
+ *					V			  |
  * <aa>\{}	BRANCH BRACE_LIMITS --> BRACE_COMPLEX <aa> --> BACK  END
- *                   |                              |                ^
- *                   |                              +----------------+
- *                   +-----------------------------------------------+
+ *		     |				    |		     ^
+ *		     |				    +----------------+
+ *		     +-----------------------------------------------+
  *
  *
  * <aa>\@!<bb>	BRANCH NOMATCH <aa> --> END  <bb> --> END
- *                   |       |                ^       ^
- *                   |       +----------------+       |
- *                   +--------------------------------+
+ *		     |	     |		      ^       ^
+ *		     |	     +----------------+       |
+ *		     +--------------------------------+
  *
- *                                                    +---------+
- *                                                    |         V
- * \z[abc]	BRANCH BRANCH  a  BRANCH  b  BRANCH  c  BRANCH  NOTHING --> END
- *                   |      |          |          |     ^                   ^
- *                   |      |          |          +-----+                   |
- *                   |      |          +----------------+                   |
- *                   |      +---------------------------+                   |
- *                   +------------------------------------------------------+
+ *						      +---------+
+ *						      |		V
+ * \z[abc]	BRANCH BRANCH  a  BRANCH  b  BRANCH  c	BRANCH	NOTHING --> END
+ *		     |	    |	       |	  |	^		    ^
+ *		     |	    |	       |	  +-----+		    |
+ *		     |	    |	       +----------------+		    |
+ *		     |	    +---------------------------+		    |
+ *		     +------------------------------------------------------+
  *
  * They all start with a BRANCH for "\|" alternaties, even when there is only
  * one alternative.
@@ -641,17 +641,17 @@ static char_u META[] = "%&()*+.123456789<=>?@ACDFHIKLMOPSUVWX[_acdfhiklmnopsuvwx
 static char_u META_flags[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-/*                 %  &     (  )  *  +        .    */
+/*		   %  &     (  )  *  +	      .    */
     0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0,
-/*     1  2  3  4  5  6  7  8  9        <  =  >  ? */
+/*     1  2  3	4  5  6  7  8  9	<  =  >  ? */
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1,
-/*  @  A     C  D     F     H  I     K  L  M     O */
+/*  @  A     C	D     F     H  I     K	L  M	 O */
     1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1,
-/*  P        S     U  V  W  X        [           _ */
+/*  P	     S	   U  V  W  X	     [		 _ */
     1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1,
-/*     a     c  d     f     h  i     k  l  m  n  o */
+/*     a     c	d     f     h  i     k	l  m  n  o */
     0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1,
-/*  p        s     u  v  w  x     z  {  |     ~    */
+/*  p	     s	   u  v  w  x	  z  {	|     ~    */
     1, 0, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1
 };
 #endif
@@ -3170,7 +3170,7 @@ regmatch(scan)
 		int this_class;
 
 		/* Get class of current and previous char (if it exists). */
-                this_class = mb_get_class(reginput);
+		this_class = mb_get_class(reginput);
 		if (this_class <= 1)
 		    return FALSE;	/* not on a word at all */
 		if (reg_prev_class() == this_class)
@@ -3194,7 +3194,7 @@ regmatch(scan)
 		int this_class, prev_class;
 
 		/* Get class of current and previous char (if it exists). */
-                this_class = mb_get_class(reginput);
+		this_class = mb_get_class(reginput);
 		prev_class = reg_prev_class();
 		if (this_class == prev_class)
 		    return FALSE;

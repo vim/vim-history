@@ -7,6 +7,7 @@ void gui_mch_uninit __ARGS((void));
 void gui_mch_new_colors __ARGS((void));
 int gui_mch_open __ARGS((void));
 void gui_init_tooltip_font __ARGS((void));
+void gui_init_menu_font __ARGS((void));
 void gui_mch_exit __ARGS((int rc));
 int gui_mch_get_winpos __ARGS((int *x, int *y));
 void gui_mch_set_winpos __ARGS((int x, int y));
@@ -53,9 +54,7 @@ void gui_x11_menu_cb __ARGS((Widget w, XtPointer client_data, XtPointer call_dat
 void gui_mch_set_blinking __ARGS((long waittime, long on, long off));
 void gui_mch_stop_blink __ARGS((void));
 void gui_mch_start_blink __ARGS((void));
-int gui_mch_get_lightness __ARGS((guicolor_T pixel));
-char_u *gui_mch_get_rgb __ARGS((guicolor_T pixel));
-unsigned long gui_mch_get_rgb_long __ARGS((guicolor_T pixel));
+long_u gui_mch_get_rgb __ARGS((guicolor_T pixel));
 void gui_x11_callbacks __ARGS((Widget textArea, Widget vimForm));
 int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));

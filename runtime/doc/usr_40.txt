@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0as.  Last change: 2001 Aug 07
+*usr_40.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -95,11 +95,11 @@ To see the currently defined mappings, use ":map" without arguments.  Or one
 of the variants that include the mode in which they work.  The output could
 look like this:
 
-	   _g            :call MyGrep(1)<CR> ~
-	v  <F2>          :s/^/> /<CR>:noh<CR>`` ~
-	n  <F2>          :.,$s/^/> /<CR>:noh<CR>`` ~
-	   <xHome>       <Home>
-	   <xEnd>        <End>
+	   _g		 :call MyGrep(1)<CR> ~
+	v  <F2>		 :s/^/> /<CR>:noh<CR>`` ~
+	n  <F2>		 :.,$s/^/> /<CR>:noh<CR>`` ~
+	   <xHome>	 <Home>
+	   <xEnd>	 <End>
 
 
 The first column of the list shows in which mode the mapping is effective.

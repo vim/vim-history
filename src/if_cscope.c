@@ -318,14 +318,14 @@ cs_connection(num, dbpath, ppath)
 	    break;
 	case 3:
 	    if (strstr(csinfo[i].fname, (char *)dbpath) &&
-	        ((!ppath && !csinfo[i].ppath) ||
+		((!ppath && !csinfo[i].ppath) ||
 		 (ppath && csinfo[i].ppath &&
 		  strstr(csinfo[i].ppath, (char *)ppath))))
 		return TRUE;
 	    break;
 	case 4:
 	    if ((strcmp(csinfo[i].fname, (char *)dbpath) == 0) &&
-	         ((!ppath && !csinfo[i].ppath) ||
+		 ((!ppath && !csinfo[i].ppath) ||
 		  (ppath && csinfo[i].ppath &&
 		   (strcmp(csinfo[i].ppath, (char *)ppath) == 0))))
 		return TRUE;

@@ -561,7 +561,7 @@ block_insert(oap, s, b_insert, bdp)
 		/* if $ used, just append to EOL (ie spaces==0)
 		 * else if cursor was on NUL, we need 1 less padding */
 		if (!bdp->is_MAX)
-		    spaces = !bdp->is_EOL + (oap->end_vcol - bdp->start_vcol);
+		    spaces = !bdp->is_EOL + (oap->end_vcol - bdp->end_vcol);
 		count = spaces;
 		offset = bdp->textcol + bdp->textlen;
 	    }
@@ -1526,7 +1526,9 @@ op_delete(oap)
 	 */
 	if (!did_yank)
 	{
-	    if (ask_yesno((char_u *)_("cannot yank; delete anyway"), TRUE) != 'y')
+	    msg_silent = 0;	/* must display the prompt */
+	    if (ask_yesno((char_u *)_("cannot yank; delete anyway"), TRUE)
+								       != 'y')
 	    {
 		EMSG(_(e_abort));
 		return FAIL;
@@ -2109,6 +2111,20 @@ op_insert(oap, count1)
 
     if (oap->block_mode)
     {
+#ifdef FEAT_VIRTUALEDIT
+	/* When 'virtualedit' is used, need to insert the extra spaces before
+	 * doing block_prep().  When only "block" is used, virtual edit is
+	 * already disabled, but still need it when calling
+	 * coladvance_force(). */
+	if (curwin->w_cursor.coladd > 0 && oap->op_type != OP_APPEND)
+	{
+	    int old_ve_flags = ve_flags;
+
+	    ve_flags = VE_ALL;
+	    coladvance_force(getviscol());
+	    ve_flags = old_ve_flags;
+	}
+#endif
 	/* Get the info about the block before entering the text */
 	block_prep(oap, &bd, oap->start.lnum, TRUE);
 	firstline = ml_get(oap->start.lnum) + bd.textcol;

@@ -65,30 +65,30 @@ remove_popup(void)
     HKEY	kh;
 
     if (RegDeleteKey(HKEY_CLASSES_ROOT, "CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}\\InProcServer32") != ERROR_SUCCESS)
-        ++fail;
+	++fail;
     if (RegDeleteKey(HKEY_CLASSES_ROOT, "CLSID\\{51EEE242-AD87-11d3-9C1E-0090278BBD99}") != ERROR_SUCCESS)
-        ++fail;
+	++fail;
     if (RegDeleteKey(HKEY_CLASSES_ROOT, "*\\shellex\\ContextMenuHandlers\\gvim") != ERROR_SUCCESS)
-        ++fail;
+	++fail;
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved", 0, KEY_ALL_ACCESS, &kh) != ERROR_SUCCESS)
-        ++fail;
+	++fail;
     else
     {
-        if (RegDeleteValue(kh, "{51EEE242-AD87-11d3-9C1E-0090278BBD99}") != ERROR_SUCCESS)
-            ++fail;
-        RegCloseKey(kh);
+	if (RegDeleteValue(kh, "{51EEE242-AD87-11d3-9C1E-0090278BBD99}") != ERROR_SUCCESS)
+	    ++fail;
+	RegCloseKey(kh);
     }
     if (RegDeleteKey(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim") != ERROR_SUCCESS)
-        ++fail;
+	++fail;
     if (RegDeleteKey(HKEY_LOCAL_MACHINE, "Software\\Vim") != ERROR_SUCCESS)
-        ++fail;
+	++fail;
 
     if (fail == 6)
-        printf("No Vim registry entries could be removed\n");
+	printf("No Vim registry entries could be removed\n");
     else if (fail)
-        printf("Some Vim registry entries could not be removed\n");
+	printf("Some Vim registry entries could not be removed\n");
     else
-        printf("The Vim registry entries have been removed\n");
+	printf("The Vim registry entries have been removed\n");
 }
 #endif
 
@@ -165,9 +165,9 @@ remove_if_exists(char *path, char *filename)
     fd = fopen(buf, "r");
     if (fd != NULL)
     {
-        fclose(fd);
-        printf("removing %s\n", buf);
-        remove(buf);
+	fclose(fd);
+	printf("removing %s\n", buf);
+	remove(buf);
     }
 }
 
@@ -267,7 +267,7 @@ delete_uninstall_key(void)
 	run_command(buf);
 #endif
 
-        remove("vim.inf");
+	remove("vim.inf");
     }
 #endif
 }
@@ -352,7 +352,7 @@ main(int argc, char *argv[])
     if (fd != NULL)
     {
 	fclose(fd);
-        printf("gvim.exe detected.  Attempting to unregister gvim with OLE\n");
+	printf("gvim.exe detected.  Attempting to unregister gvim with OLE\n");
 	system("gvim.exe -silent -unregister");
     }
 

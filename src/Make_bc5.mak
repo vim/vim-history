@@ -60,6 +60,7 @@
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
 # FASTCALL	no or yes: set to yes to use register-based function protocol (yes)
 # OPTIMIZE	SPEED or SPACE: type of optimization (SPEED)
+# POSTSCRIPT	no or yes: set to yes for PostScript printing
 #
 ### BOR: root of the BC installation
 !if ("$(BOR)"=="")
@@ -92,7 +93,7 @@ ICONV = yes
 #
 ### RUBY: uncomment this line if you want ruby support in vim
 # RUBY=c:\ruby
-# 
+#
 ### TCL: uncomment this line if you want tcl support in vim
 # TCL=c:\tcl
 #
@@ -153,6 +154,9 @@ FASTCALL = 1
 !if ("$(OPTIMIZE)"=="")
 OPTIMIZE = SPEED
 !endif
+#
+### POSTSCRIPT: uncomment this line if you want PostScript printing
+#POSTSCRIPT = yes
 #
 ### Set the default $(WINVER) to make it work with Bcc 5.5.
 !ifndef WINVER
@@ -271,7 +275,7 @@ TCL_LIB_FLAG =
 !if "$(DYNAMIC_TCL)" == "yes"
 INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
 TCL_LIB = tclstub$(TCL_VER)-bor.lib
-TCL_LIB_FLAG = 
+TCL_LIB_FLAG =
 !endif
 !endif
 #
@@ -296,7 +300,7 @@ MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
 !endif
 
 !if ("$(GUI)"=="yes")
-DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD 
+DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD
 !ifdef DEBUG
 TARGET = gvimd.exe
 !else
@@ -348,6 +352,10 @@ OBJDIR	= $(OSTYPE)\gobj
 !else
 OBJDIR	= $(OSTYPE)\obj
 !endif
+!endif
+
+!if ("$(POSTSCRIPT)"=="yes")
+DEFINES = $(DEFINES) -DMSWINPS
 !endif
 
 ##### BASE COMPILER/TOOLS RULES #####
@@ -785,7 +793,7 @@ $(OBJDIR)\if_python.obj: if_python.c python.lib
 
 $(OBJDIR)\if_ruby.obj: if_ruby.c ruby.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_ruby.c
-	
+
 $(OBJDIR)\if_tcl.obj: if_tcl.c tcl.lib
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ -pc if_tcl.c
 

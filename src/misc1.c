@@ -1559,13 +1559,8 @@ ins_char_bytes(buf, charlen)
 
 #ifdef FEAT_VIRTUALEDIT
     /* Break tabs if needed. */
-    if (virtual_active())
-    {
-	p = ml_get_cursor();
-	if (*p == NUL
-		|| (*p == TAB && (chartabsize(p, curwin->w_cursor.col) > 1)))
-	    coladvance_force(getviscol());
-    }
+    if (virtual_active() && curwin->w_cursor.coladd)
+	coladvance_force(getviscol());
 #endif
 
     col = curwin->w_cursor.col;
@@ -2598,6 +2593,11 @@ get_number(colon)
     int	n = 0;
     int	c;
 
+    /* When not printing messages, the user won't know what to type, return a
+     * zero (as if CR was hit). */
+    if (msg_silent != 0)
+	return 0;
+
 #ifdef USE_ON_FLY_SCROLL
     dont_scroll = TRUE;		/* disallow scrolling here */
 #endif
@@ -2757,16 +2757,16 @@ init_homedir()
      */
     if (var == NULL)
     {
-        char_u *homedrive, *homepath;
+	char_u *homedrive, *homepath;
 
-        homedrive = mch_getenv((char_u *)"HOMEDRIVE");
-        homepath = mch_getenv((char_u *)"HOMEPATH");
-        if (homedrive != NULL && homepath != NULL)
-        {
-            sprintf((char *)NameBuff, "%s%s", homedrive, homepath);
-            if (NameBuff[0] != NUL)
-                var = NameBuff;
-        }
+	homedrive = mch_getenv((char_u *)"HOMEDRIVE");
+	homepath = mch_getenv((char_u *)"HOMEPATH");
+	if (homedrive != NULL && homepath != NULL)
+	{
+	    sprintf((char *)NameBuff, "%s%s", homedrive, homepath);
+	    if (NameBuff[0] != NUL)
+		var = NameBuff;
+	}
     }
 #endif
 
@@ -3096,8 +3096,8 @@ vim_getenv(name, mustfree)
 
 #ifdef USE_EXE_NAME
 # ifdef MACOS_X
-            /* remove "build/..." from exe_name, if present */
-            if (p == exe_name)
+	    /* remove "build/..." from exe_name, if present */
+	    if (p == exe_name)
 	    {
 		pend = remove_tail(p, pend, (char_u *)"Contents/MacOS");
 		pend = remove_tail_with_ext(p, pend, (char_u *)".app");
@@ -3119,7 +3119,7 @@ vim_getenv(name, mustfree)
 	    /* remove trailing path separator */
 #ifndef MACOS_CLASSIC
 	    /* With MacOS path (with  colons) the final colon is required */
-            /* to avoid confusin between absoulute and relative path */
+	    /* to avoid confusion between absoulute and relative path */
 	    if (pend > p && vim_ispathsep(*(pend - 1)))
 		--pend;
 #endif
@@ -3858,7 +3858,7 @@ skip_string(p)
 }
 #endif /* FEAT_CINDENT || FEAT_SYN_HL */
 
-#ifdef FEAT_CINDENT
+#if defined(FEAT_CINDENT) || defined(PROTO)
 
 /*
  * Do C or expression indenting on the current line.
@@ -5027,7 +5027,7 @@ get_c_indent()
 		 * lines:
 		 *  func_long_name(		    if (x
 		 *	arg				    && yy
-		 *	)         ^ not here	       )    ^ not here
+		 *	)	  ^ not here	       )    ^ not here
 		 */
 		if (cur_amount < amount)
 		    amount = cur_amount;
@@ -5967,7 +5967,7 @@ get_expr_indent()
 
 #endif /* FEAT_CINDENT */
 
-#ifdef FEAT_LISP
+#if defined(FEAT_LISP) || defined(PROTO)
 
 static int lisp_match __ARGS((char_u *p));
 
@@ -6033,12 +6033,12 @@ get_lisp_indent()
 		continue;
 	    for (that = ml_get_curline(); *that != NUL; ++that)
 	    {
-                if (*that == ';')
-                {
-                    while (*(that + 1) != NUL)
+		if (*that == ';')
+		{
+		    while (*(that + 1) != NUL)
 			++that;
-                    continue;
-                }
+		    continue;
+		}
 		if (*that == '\\')
 		{
 		    if (*(that + 1) != NUL)
@@ -6052,9 +6052,9 @@ get_lisp_indent()
 			++that;
 		}
 		if (*that == '(')
-                    ++parencount;
+		    ++parencount;
 		else if (*that == ')')
-                    --parencount;
+		    --parencount;
 	    }
 	    if (parencount == 0)
 	    {
@@ -6087,7 +6087,7 @@ get_lisp_indent()
 		 * non-standard-lisp ones are Scheme special forms):
 		 *
 		 * (let ((a 1))    instead    (let ((a 1))
-		 *   (...))           of           (...))
+		 *   (...))	      of	   (...))
 		 */
 
 		if (!vi_lisp && *that == '(' && lisp_match(that + 1))
@@ -6106,12 +6106,12 @@ get_lisp_indent()
 
 		    if (*that && *that != ';') /* not a comment line */
 		    {
-                        /* test *that != '(' to accomodate first let/do
-                         * argument if it is more than one line */
+			/* test *that != '(' to accomodate first let/do
+			 * argument if it is more than one line */
 			if (!vi_lisp && *that != '(')
 			    firsttry++;
 
-                        parencount = 0;
+			parencount = 0;
 			quotecount = 0;
 
 			if (vi_lisp
@@ -6128,34 +6128,34 @@ get_lisp_indent()
 					    && !quotecount
 					    && !parencount
 					    && vi_lisp)))
-                            {
-                                if (*that == '"')
+			    {
+				if (*that == '"')
 				    quotecount = !quotecount;
-                                if (*that == '(' && !quotecount)
-                                    ++parencount;
-                                if (*that == ')' && !quotecount)
-                                    --parencount;
-                                if (*that == '\\' && *(that+1) != NUL)
-                                    amount += lbr_chartabsize_adv(&that,
+				if (*that == '(' && !quotecount)
+				    ++parencount;
+				if (*that == ')' && !quotecount)
+				    --parencount;
+				if (*that == '\\' && *(that+1) != NUL)
+				    amount += lbr_chartabsize_adv(&that,
 							     (colnr_T)amount);
-                                amount += lbr_chartabsize_adv(&that,
+				amount += lbr_chartabsize_adv(&that,
 							     (colnr_T)amount);
-                            }
+			    }
 			}
-                        while (vim_iswhite(*that))
-                        {
-                            amount += lbr_chartabsize(that, (colnr_T)amount);
-                            that++;
-                        }
-                        if (!*that || *that == ';')
-                            amount = firsttry;
-                    }
-                }
-            }
-        }
+			while (vim_iswhite(*that))
+			{
+			    amount += lbr_chartabsize(that, (colnr_T)amount);
+			    that++;
+			}
+			if (!*that || *that == ';')
+			    amount = firsttry;
+		    }
+		}
+	    }
+	}
     }
     else
-        amount = 0;	/* no matching '(' found, use zero indent */
+	amount = 0;	/* no matching '(' found, use zero indent */
 
     curwin->w_cursor = realpos;
 

@@ -89,27 +89,20 @@ A.2: Compiling with MPW.
 	ftp://ftp.apple.com/developer/Tool_Chest/Interfaces-Libraries/
 	ftp://ftp.apple.com/developer/Tool_Chest/Core_Mac_OS_Tools/
    For a Carbon version you will need a recent Carbon SDK as well.
+   (When you have an older version already installed you not be able to
+    compile a carbon version. Update "CreateMake" which is available at
+    Apple.
 
  1. Expand the resource file:
    - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
 
- 2. Create a new folder called "obj" in the vim folder. (At the same level
-    as the src folder.)
-
- 3. Double click on os_mac.mpw, the MPW will now open in the correct
-    folder and load the os_mac.mpw script. Move the cursor to the only
-    line in that file and hit enter (not return!). This will create a file
-    Vim.make.
-
-    For a carbon version use os_mac.carbon instead.
+ 3. Double click on os_make.make, the MPW will now open in the correct
+    folder and load the CreateVimMake script. Change to the Worksheet
+    window. Type "os_mac.build" and hit Enter (not Return). A dialog box
+    will appear. Select the target you want. (Vim-68k, Vim-ppc, Vim-carbon)
     
  4. Select "Build" from the menu (or type command-B). Type the program name
     into the dialog box.
-
- 5. Open vim with ResEdit and copy the contents of gui_mac.rsrc into vim.
-    
-    TODO: Debug the resulting program.
-
 
 A.3: Compiling with Project Builder.
 

@@ -205,6 +205,7 @@ static void f_bufnr __ARGS((VAR argvars, VAR retvar));
 static void f_bufwinnr __ARGS((VAR argvars, VAR retvar));
 static void f_byte2line __ARGS((VAR argvars, VAR retvar));
 static void f_char2nr __ARGS((VAR argvars, VAR retvar));
+static void f_cindent __ARGS((VAR argvars, VAR retvar));
 static void f_col __ARGS((VAR argvars, VAR retvar));
 static void f_confirm __ARGS((VAR argvars, VAR retvar));
 static void f_cscope_connection __ARGS((VAR argvars, VAR retvar));
@@ -257,6 +258,7 @@ static void f_libcallnr __ARGS((VAR argvars, VAR retvar));
 static void libcall_common __ARGS((VAR argvars, VAR retvar, int type));
 static void f_line __ARGS((VAR argvars, VAR retvar));
 static void f_line2byte __ARGS((VAR argvars, VAR retvar));
+static void f_lispindent __ARGS((VAR argvars, VAR retvar));
 static void f_localtime __ARGS((VAR argvars, VAR retvar));
 static void f_maparg __ARGS((VAR argvars, VAR retvar));
 static void f_mapcheck __ARGS((VAR argvars, VAR retvar));
@@ -983,7 +985,7 @@ ex_call(eap)
 	++emsg_skip;
     for (lnum = eap->line1; lnum <= eap->line2; ++lnum)
     {
-	if (!eap->skip && eap->line1 != eap->line2)
+	if (!eap->skip && eap->addr_count > 0)
 	{
 	    curwin->w_cursor.lnum = lnum;
 	    curwin->w_cursor.col = 0;
@@ -2313,6 +2315,7 @@ static struct fst
     {"bufwinnr",	1, 1, f_bufwinnr},
     {"byte2line",	1, 1, f_byte2line},
     {"char2nr",		1, 1, f_char2nr},
+    {"cindent",		1, 1, f_cindent},
     {"col",		1, 1, f_col},
     {"confirm",		2, 4, f_confirm},
     {"cscope_connection",0,3, f_cscope_connection},
@@ -2366,6 +2369,7 @@ static struct fst
     {"libcallnr",	3, 3, f_libcallnr},
     {"line",		1, 1, f_line},
     {"line2byte",	1, 1, f_line2byte},
+    {"lispindent",	1, 1, f_lispindent},
     {"localtime",	0, 0, f_localtime},
     {"maparg",		1, 2, f_maparg},
     {"mapcheck",	1, 2, f_mapcheck},
@@ -2381,7 +2385,7 @@ static struct fst
     {"remote_read",	1, 1, f_remote_read},
     {"remote_send",	2, 2, f_remote_send},
     {"rename",		2, 2, f_rename},
-    {"resolve",         1, 1, f_resolve},
+    {"resolve",		1, 1, f_resolve},
     {"search",		1, 2, f_search},
     {"searchpair",	3, 5, f_searchpair},
     {"server2client",	2, 2, f_server2client},
@@ -3013,6 +3017,30 @@ f_char2nr(argvars, retvar)
 }
 
 /*
+ * "cindent(lnum)" function
+ */
+    static void
+f_cindent(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_CINDENT
+    pos_T	pos = curwin->w_cursor;
+    linenr_T	lnum;
+
+    lnum = get_var_lnum(argvars);
+    if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
+    {
+	curwin->w_cursor.lnum = lnum;
+	retvar->var_val.var_number = get_c_indent();
+	curwin->w_cursor = pos;
+    }
+    else
+#endif
+	retvar->var_val.var_number = -1;
+}
+
+/*
  * "col(string)" function
  */
     static void
@@ -3569,7 +3597,8 @@ f_foreground(argvars, retvar)
     VAR		retvar;
 {
 #ifdef FEAT_GUI
-    gui_mch_set_foreground();
+    if (gui.in_use)
+	gui_mch_set_foreground();
 #endif
 }
 
@@ -4581,6 +4610,7 @@ f_input(argvars, retvar)
     char_u	*p = NULL;
     int		c;
     char_u	buf[NUMBUFLEN];
+    int		cmd_silent_save = cmd_silent;
 
     retvar->var_type = VAR_STRING;
 
@@ -4593,6 +4623,7 @@ f_input(argvars, retvar)
     }
 #endif
 
+    cmd_silent = FALSE;		/* Want to see the prompt. */
     if (prompt != NULL)
     {
 	/* Only the part of the message after the last NL is considered as
@@ -4624,6 +4655,7 @@ f_input(argvars, retvar)
     /* since the user typed this, no need to wait for return */
     need_wait_return = FALSE;
     msg_didout = FALSE;
+    cmd_silent = cmd_silent_save;
 }
 
 /*
@@ -4744,6 +4776,30 @@ f_line2byte(argvars, retvar)
     if (retvar->var_val.var_number >= 0)
 	++retvar->var_val.var_number;
 #endif
+}
+
+/*
+ * "lispindent(lnum)" function
+ */
+    static void
+f_lispindent(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+#ifdef FEAT_LISP
+    pos_T	pos = curwin->w_cursor;
+    linenr_T	lnum;
+
+    lnum = get_var_lnum(argvars);
+    if (lnum >= 1 && lnum <= curbuf->b_ml.ml_line_count)
+    {
+	curwin->w_cursor.lnum = lnum;
+	retvar->var_val.var_number = get_lisp_indent();
+	curwin->w_cursor = pos;
+    }
+    else
+#endif
+	retvar->var_val.var_number = -1;
 }
 
 /*
@@ -5484,8 +5540,16 @@ f_remote_peek(argvars, retvar)
     char_u	*s;
 
 # ifdef WIN32
-    s = serverGetReply(get_var_string(&argvars[0]), 0, 0);
-    retvar->var_val.var_number = (s != NULL);
+    int		n = 0;
+
+    sscanf(get_var_string(&argvars[0]), "%x", &n);
+    if (n == 0)
+	retvar->var_val.var_number = -1;
+    else
+    {
+	s = serverGetReply((HWND)n, FALSE, FALSE, FALSE);
+	retvar->var_val.var_number = (s != NULL);
+    }
 # else
     retvar->var_val.var_number = 0;
     if (!check_connection())
@@ -5516,7 +5580,12 @@ f_remote_read(argvars, retvar)
 
 #ifdef FEAT_CLIENTSERVER
 # ifdef WIN32
-    r = serverGetReply(get_var_string(&argvars[0]), 1, 0);
+    /* The server's HWND is encoded in the 'id' parameter */
+    int		n = 0;
+
+    sscanf(get_var_string(&argvars[0]), "%x", &n);
+    if (n != 0)
+	r = serverGetReply((HWND)n, FALSE, TRUE, TRUE);
     if (r == NULL)
 # else
     if (check_connection() == FAIL
@@ -5746,9 +5815,9 @@ f_strpart(argvars, retvar)
     p = get_var_string(&argvars[0]);
     n = get_var_number(&argvars[1]);
     if (argvars[2].var_type != VAR_UNKNOWN)
-        len = get_var_number(&argvars[2]);
+	len = get_var_number(&argvars[2]);
     else
-        len = (int)STRLEN(p) - n;
+	len = (int)STRLEN(p) - n;
 
     slen = (int)STRLEN(p);
     /*

@@ -278,7 +278,7 @@ getmark2(c, changefile, fcoladd)
 	;
     else
 #endif
-        if (c == '\'' || c == '`')	/* previous context mark */
+	if (c == '\'' || c == '`')	/* previous context mark */
     {
 	pos_copy = curwin->w_pcmark;	/* need to make a copy because */
 	posp = &pos_copy;		/*   w_pcmark may be changed soon */

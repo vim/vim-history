@@ -2,7 +2,6 @@
  *
  * VIM - Vi IMproved	by Bram Moolenaar
  *		 BeBox port Copyright 1997 by Olaf Seibert.
- *		 All Rights Reserved.
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
@@ -16,48 +15,6 @@
 #include <termios.h>
 #include <kernel/OS.h>
 #include "vim.h"
-
-    void
-check_for_bebox(void)
-{
-    static int checked = 0;
-
-    if (checked == 0) {
-	system_info si;
-
-	checked++;
-
-	get_system_info(&si);
-
-	if (si.platform_type != B_BEBOX_PLATFORM) {
-	    /*
-	     * For your personal use *ONLY*, you are allowed to remove
-	     * these nagware messages. However, you are not allowed to pass on
-	     * the resulting source or binaries. See doc/os_beos.txt.
-	     */
-
-	    char *m;
-
-	    if (si.platform_type == B_AT_CLONE_PLATFORM ||
-		    si.cpu_type == B_CPU_PPC_686 ||
-		    si.cpu_type == B_CPU_X86) {
-		char *list[] = {
-		    "WARNING: Intel \"architecture\" detected!",
-		    "PPC is much better!",
-		    "Waiter, there is a fly in my soup!",
-		    "\"Intel Inside\" is a governmental health warning."
-		};
-		m = list[real_time_clock() % 4];
-	    } else {
-		m = "This program works better on a real BeBox.";
-	    }
-	    msg((char_u *)m);
-	    /* put cursor back where it was (don't be TOO unfriendly) */
-	    setcursor();
-	    out_flush();
-	}
-    }
-}
 
 #if USE_THREAD_FOR_INPUT_WITH_TIMEOUT
 
@@ -186,8 +143,6 @@ beos_select(int nbits,
 	    /* 0 means "don't wait, which is impossible to do exactly. */
 	    if (tmo == 0)
 		tmo = 1.0;
-	} else {
-	    check_for_bebox();
 	}
 #if TRY_ABORT
 	release_sem(character_wanted);

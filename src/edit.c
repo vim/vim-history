@@ -1358,6 +1358,16 @@ display_dollar(col)
     cursor_off();
     save_col = curwin->w_cursor.col;
     curwin->w_cursor.col = col;
+#ifdef FEAT_MBYTE
+    if (has_mbyte)
+    {
+	char_u *p;
+
+	/* If on the last byte of a multi-byte move to the first byte. */
+	p = ml_get_curline();
+	curwin->w_cursor.col -= (*mb_head_off)(p, p + col);
+    }
+#endif
     curs_columns(FALSE);	    /* recompute w_wrow and w_wcol */
     if (curwin->w_wcol < W_WIDTH(curwin))
     {
@@ -1673,7 +1683,7 @@ vim_is_ctrl_x_key(c)
 {
     /* Always allow ^R - let it's results then be checked */
     if (c == Ctrl_R)
-        return TRUE;
+	return TRUE;
 
     switch (ctrl_x_mode)
     {
@@ -1991,7 +2001,7 @@ ins_compl_dictionaries(dict, pat, dir, flags, thesaurus)
 		 * Check each line for a match.
 		 */
 		while (!got_int && !completion_interrupted
-			        && !vim_fgets(buf, LSIZE, fp))
+				&& !vim_fgets(buf, LSIZE, fp))
 		{
 		    ptr = buf;
 		    while (vim_regexec(&regmatch, buf, (colnr_T)(ptr - buf)))
@@ -2152,7 +2162,7 @@ ins_compl_prep(c)
      * a ^X mode key - bar ^R, in which case we wait to see what it gives us.
      */
     if (c != Ctrl_R  &&  vim_is_ctrl_x_key(c))
-        edit_submode_extra = NULL;
+	edit_submode_extra = NULL;
 
     /* Ignore end of Select mode mapping */
     if (c == K_SELECT)
@@ -2185,9 +2195,9 @@ ins_compl_prep(c)
 	    case Ctrl_K:
 		ctrl_x_mode = CTRL_X_DICTIONARY;
 		break;
-            case Ctrl_R:
-                /* Simply allow ^R to happen without affecting ^X mode */
-                break;
+	    case Ctrl_R:
+		/* Simply allow ^R to happen without affecting ^X mode */
+		break;
 	    case Ctrl_T:
 		ctrl_x_mode = CTRL_X_THESAURUS;
 		break;
@@ -3345,16 +3355,16 @@ ins_complete(c)
 	     * a safety check. */
 	    if (curr_match->number != -1)
 	    {
-                /* Space for 10 text chars. + 2x10-digit no.s */
-                static char_u match_ref[31];
+		/* Space for 10 text chars. + 2x10-digit no.s */
+		static char_u match_ref[31];
 
 		if (completion_matches > 0)
 		    sprintf((char *)IObuff, _("match %d of %d"),
 				      curr_match->number, completion_matches);
 		else
 		    sprintf((char *)IObuff, _("match %d"), curr_match->number);
-                STRNCPY( match_ref, IObuff, 30 );
-                match_ref[30] = '\0';
+		STRNCPY(match_ref, IObuff, 30 );
+		match_ref[30] = '\0';
 		edit_submode_extra = match_ref;
 		edit_submode_highl = HLF_R;
 		if (dollar_vcol)

@@ -19,8 +19,8 @@
 
 /*
  * WARNING: Vim must be able to compile without Carbon
- *          As the desired minimum requirement are circa System 7
- *          (I want to run it on my Mac Classic) (Dany)
+ *	    As the desired minimum requirement are circa System 7
+ *	    (I want to run it on my Mac Classic) (Dany)
  */
 
 /*
@@ -364,7 +364,7 @@ char_u *C2Pascal_save_and_remove_backslash(char_u *Cstring)
 		c++;
 	    }
 	    *p = *c;
-            p++;
+	    p++;
 	    len++;
 	}
 	PascalString[0] = len;
@@ -488,7 +488,7 @@ char_u **new_fnames_from_AEDesc(AEDesc *theList, long *numFiles, OSErr *error)
 	}
 
 	/* Convert the FSSpec to a pathname */
-        fnames[fileCount - 1] = FullPathFromFSSpec_save (fileToOpen);
+	fnames[fileCount - 1] = FullPathFromFSSpec_save (fileToOpen);
     }
 
     return (fnames);
@@ -802,10 +802,10 @@ pascal OSErr Handle_KAHL_GTTX_AE (const AppleEvent *theAEvent, AppleEvent *theRe
     if (foundFile)
     {
 	BufferSize = 0; /* GetHandleSize (GetTextData.theText); */
-        for (lineno = 0; lineno <= buf->b_ml.ml_line_count; lineno++)
+	for (lineno = 0; lineno <= buf->b_ml.ml_line_count; lineno++)
 	{
-            /* Must use the right buffer */
-            line = ml_get_buf(buf, (linenr_T) lineno, FALSE);
+	    /* Must use the right buffer */
+	    line = ml_get_buf(buf, (linenr_T) lineno, FALSE);
 	    linesize = STRLEN(line) + 1;
 	    lineStart = BufferSize;
 	    BufferSize += linesize;
@@ -1630,8 +1630,8 @@ gui_mac_doInContentClick (theEvent, whichWindow)
 	dblClick = ((theEvent->when - lastMouseTick) < GetDblTime());
 
 	/* Send the mouse clicj to Vim */
-	gui_send_mouse_event
-         (vimMouseButton, thePoint.h, thePoint.v, dblClick, vimModifiers);
+	gui_send_mouse_event(vimMouseButton, thePoint.h,
+					  thePoint.v, dblClick, vimModifiers);
 
 	/* Create the rectangle around the cursor to detect
 	 * the mouse dragging
@@ -1639,7 +1639,7 @@ gui_mac_doInContentClick (theEvent, whichWindow)
 #ifdef USE_CTRLCLICKMENU
 #if 0
 	/* TODO: Do we need to this even for the contextual menu?
-         * It may be require for popup_setpos, but for popup?
+	 * It may be require for popup_setpos, but for popup?
 	 */
 	if (vimMouseButton == MOUSE_LEFT)
 #endif
@@ -1713,15 +1713,15 @@ gui_mac_doInGrowClick(where, whichWindow)
 	gui_resize_shell(newWidth, newHeight);
 
 	/*
-         * We need to call gui_set_shellsize as the size
-         * used by Vim may be smaller than the size selected
+	 * We need to call gui_set_shellsize as the size
+	 * used by Vim may be smaller than the size selected
 	 * by the user. This cause some overhead
 	 * TODO: add a check inside gui_resize_shell?
-         */
+	 */
 	gui_set_shellsize(TRUE, FALSE);
 
 	/*
-         * Origin of the code below is unknown.
+	 * Origin of the code below is unknown.
 	 * Functionality is unknown.
 	 * Time of commented out is unknown.
 	 */
@@ -1785,15 +1785,15 @@ gui_mac_doUpdateEvent(event)
 
     /* Let's update the window */
       BeginUpdate (whichWindow);
-        /* Redraw the biggest rectangle covering the area
-         * to be updated.
-         */
+	/* Redraw the biggest rectangle covering the area
+	 * to be updated.
+	 */
 #ifdef USE_CARBONIZED
-        GetPortVisibleRegion(GetWindowPort(whichWindow), updateRgn);
+	GetPortVisibleRegion(GetWindowPort(whichWindow), updateRgn);
 # if 0
-        /* Would be more appropriate to use the follwing but doesn't
-         * seem to work under MacOS X (Dany)
-         */
+	/* Would be more appropriate to use the follwing but doesn't
+	 * seem to work under MacOS X (Dany)
+	 */
 	GetWindowRegion(whichWindow, kWindowUpdateRgn, updateRgn);
 # endif
 #else
@@ -1802,11 +1802,11 @@ gui_mac_doUpdateEvent(event)
 	/* Use the HLock useless in Carbon? Is it harmful?*/
 	HLock ((Handle) updateRgn);
 #ifdef USE_CARBONIZED
-          updateRectPtr = GetRegionBounds ( updateRgn, &updateRect );
+	  updateRectPtr = GetRegionBounds ( updateRgn, &updateRect );
 # if 0
 	  /* Code from original Carbon Port (using GetWindowRegion.
-           * I believe the UpdateRgn is already in local (Dany)
-           */
+	   * I believe the UpdateRgn is already in local (Dany)
+	   */
 	  GlobalToLocal(&topLeft(updateRect)); /* preCarbon? */
 	  GlobalToLocal(&botRight(updateRect));
 # endif
@@ -1843,10 +1843,10 @@ gui_mac_doUpdateEvent(event)
 	  }
 	HUnlock ((Handle) updateRgn);
 #ifdef USE_CARBONIZED
-        DisposeRgn (updateRgn);
+	DisposeRgn (updateRgn);
 #endif
 
-        /* Update scrollbars */
+	/* Update scrollbars */
 	DrawControls (whichWindow);
 
 	/* Update the GrowBox */
@@ -2097,8 +2097,8 @@ gui_mac_doMouseMovedEvent (event)
 #ifdef USE_CTRLCLICKMENU
 	if (!clickIsPopup)
 #endif
-	    gui_send_mouse_event
-             (MOUSE_DRAG, thePoint.h, thePoint.v, FALSE, vimModifiers);
+	    gui_send_mouse_event(MOUSE_DRAG, thePoint.h,
+					     thePoint.v, FALSE, vimModifiers);
 
     /* Reset the region from which we move in and out */
     SetRect (&dragRect, FILL_X(X_2_COL(thePoint.h)),
@@ -2201,7 +2201,7 @@ gui_mac_handle_menu(menuChoice)
 	else
 	{
 #ifndef USE_CARBONIZED
-            /* Desk Accessory doesn't exist in Carbon */
+	    /* Desk Accessory doesn't exist in Carbon */
 	    appleMenu = GetMenuHandle (menu);
 	    GetMenuItemText (appleMenu, item, itemName);
 	    (void) OpenDeskAcc (itemName);
@@ -2267,7 +2267,7 @@ gui_mac_handle_event (event)
 	    break;
 
 	case (diskEvt):
-            /* We don't need special handling for disk insertion */
+	    /* We don't need special handling for disk insertion */
 	    break;
 
 	case (activateEvt):
@@ -2313,7 +2313,7 @@ gui_mac_find_font (font_name)
     short	font_id;
     short	size=9;
     GuiFont	font;
-#if 0 
+#if 0
     char_u      *fontNamePtr;
 #endif
 
@@ -2404,7 +2404,7 @@ gui_mch_prepare(argc, argv)
 #endif
 
 #ifndef USE_CARBONIZED
-    MaxApplZone();          /* What could replace thos */
+    MaxApplZone();	    /* What could replace thos */
     /* In Carbon, all shared library are automatically load in
      * there's no need to init them
      */
@@ -2421,7 +2421,7 @@ gui_mch_prepare(argc, argv)
     InitCursor();
 
 #ifdef USE_CARBONIZED
-                RegisterAppearanceClient();
+    RegisterAppearanceClient();
 #endif
 
 #ifdef USE_AEVENT
@@ -2483,7 +2483,6 @@ gui_mch_prepare(argc, argv)
     gui.char_ascent = 6;
     gui.num_rows = 24;
     gui.num_cols = 80;
-    gui.rev_video = FALSE;
     gui.in_focus = TRUE; /* For the moment -> syn. of front application */
 
 #if TARGET_API_MAC_CARBON
@@ -2655,10 +2654,10 @@ gui_mch_set_shellsize(
     if (gui.which_scrollbars[SBAR_LEFT])
     {
 #ifdef USE_CARBONIZED
-        VimPort = GetWindowPort ( gui.VimWindow );
-        GetPortBounds (VimPort, &VimBound);
-        VimBound.left = -gui.scrollbar_width; /* + 1;*/
-        SetPortBounds (VimPort, &VimBound);
+	VimPort = GetWindowPort ( gui.VimWindow );
+	GetPortBounds (VimPort, &VimBound);
+	VimBound.left = -gui.scrollbar_width; /* + 1;*/
+	SetPortBounds (VimPort, &VimBound);
     /*	GetWindowBounds(gui.VimWindow, kWindowGlobalPortRgn, &winPortRect); ??*/
 #else
 	gui.VimWindow->portRect.left = -gui.scrollbar_width; /* + 1;*/
@@ -2668,10 +2667,10 @@ gui_mch_set_shellsize(
     else
     {
 #ifdef USE_CARBONIZED
-        VimPort = GetWindowPort ( gui.VimWindow );
-        GetPortBounds (VimPort, &VimBound);
-        VimBound.left = 0;
-        SetPortBounds (VimPort, &VimBound);
+	VimPort = GetWindowPort ( gui.VimWindow );
+	GetPortBounds (VimPort, &VimBound);
+	VimBound.left = 0;
+	SetPortBounds (VimPort, &VimBound);
 #else
 	gui.VimWindow->portRect.left = 0;
 #endif;
@@ -2775,7 +2774,7 @@ gui_mch_get_font(name, giveErrorIfMissing)
 
     font = gui_mac_find_font(name);
 
-    if (font == NULL)
+    if (font == NOFONT)
     {
 	if (giveErrorIfMissing)
 	    EMSG2(_("E235: Unknown font: %s"), name);
@@ -3254,23 +3253,23 @@ gui_mch_wait_for_chars(wtime)
      */
     if (dragged_sb != NULL)
 	return FAIL;
-        /* TODO: Check if FAIL is the proper return code */
+	/* TODO: Check if FAIL is the proper return code */
 
     entryTick = TickCount();
 
     do
     {
-/*	    if (dragRectControl == kCreateEmpty)
-	    {
-		dragRgn = NULL;
-		dragRectControl = kNothing;
-	    }
-	    else*/ if (dragRectControl == kCreateRect)
-	    {
-		dragRgn = cursorRgn;
-		RectRgn (dragRgn, &dragRect);
-		dragRectControl = kNothing;
-	    }
+/*	if (dragRectControl == kCreateEmpty)
+	{
+	    dragRgn = NULL;
+	    dragRectControl = kNothing;
+	}
+	else*/ if (dragRectControl == kCreateRect)
+	{
+	    dragRgn = cursorRgn;
+	    RectRgn (dragRgn, &dragRect);
+	    dragRectControl = kNothing;
+	}
 	/*
 	 * Don't use gui_mch_update() because then we will spin-lock until a
 	 * char arrives, instead we use XtAppProcessEvent() to hang until an
@@ -3280,10 +3279,10 @@ gui_mch_wait_for_chars(wtime)
 	 * timer event has arrived -- webb
 	 */
 	/* TODO: reduce wtime accordinly???  */
-        if (wtime > -1)
-            sleeppyTick = 60*wtime/1000;
-        else
-            sleeppyTick = 32767;
+	if (wtime > -1)
+	    sleeppyTick = 60*wtime/1000;
+	else
+	    sleeppyTick = 32767;
 	if (WaitNextEventWrp (mask, &event, sleeppyTick, dragRgn))
 	{
 #ifdef USE_SIOUX
@@ -3433,7 +3432,7 @@ clip_mch_request_selection(cbd)
 
     Handle	textOfClip;
 #ifdef USE_CARBONIZED
-    Size        scrapSize;
+    Size	scrapSize;
     ScrapFlavorFlags	scrapFlags;
     ScrapRef    scrap = nil;
     OSStatus	error;
@@ -3470,14 +3469,14 @@ clip_mch_request_selection(cbd)
     {
 #ifdef USE_CARBONIZED
 	/* In CARBON we don't need a Handle, a pointer is good */
-        textOfClip = NewHandle (scrapSize);
+	textOfClip = NewHandle (scrapSize);
 	/* tempclip = (char *)lalloc(scrapSize+1, TRUE); */
 #else
 	textOfClip = NewHandle(0);
 #endif
 	HLock (textOfClip);
 #ifdef USE_CARBONIZED
-        error = GetScrapFlavorData (scrap, kScrapFlavorTypeText, &scrapSize, *textOfClip);
+	error = GetScrapFlavorData (scrap, kScrapFlavorTypeText, &scrapSize, *textOfClip);
 #else
 	scrapSize = GetScrap(textOfClip, 'TEXT', &scrapOffset);
 #endif
@@ -3557,9 +3556,9 @@ clip_mch_set_selection(cbd)
     if (type >= 0)
     {
 #ifdef USE_CARBONIZED
-        ClearCurrentScrap();
+	ClearCurrentScrap();
 #else
-        ZeroScrap();
+	ZeroScrap();
 #endif
 
 	textOfClip = NewHandle(scrapSize);
@@ -3567,8 +3566,8 @@ clip_mch_set_selection(cbd)
 
 	STRNCPY(*textOfClip, str, scrapSize);
 #ifdef USE_CARBONIZED
-        GetCurrentScrap (&scrap);
-        PutScrapFlavor(scrap, kScrapFlavorTypeText, kScrapFlavorMaskNone,
+	GetCurrentScrap (&scrap);
+	PutScrapFlavor(scrap, kScrapFlavorTypeText, kScrapFlavorMaskNone,
 			scrapSize, *textOfClip);
 #else
 	PutScrap(scrapSize, 'TEXT', *textOfClip);
@@ -3598,11 +3597,11 @@ gui_mch_set_text_area_pos(x, y, w, h)
 
     if (gui.which_scrollbars[SBAR_LEFT])
     {
-        VimBound.left = -gui.scrollbar_width + 1;
+	VimBound.left = -gui.scrollbar_width + 1;
     }
     else
     {
-        VimBound.left = 0;
+	VimBound.left = 0;
     }
 
 #ifdef USE_CARBONIZED
@@ -3699,9 +3698,9 @@ gui_mch_add_menu(menu, idx)
 #endif
     {
 	/* Carbon suggest use of
-         * OSStatus CreateNewMenu ( MenuID, MenuAttributes, MenuRef *);
+	 * OSStatus CreateNewMenu ( MenuID, MenuAttributes, MenuRef *);
 	 * OSStatus SetMenuTitle ( MenuRef, ConstStr255Param title );
-         */
+	 */
 	menu->submenu_id = next_avail_id;
 	menu->submenu_handle = NewMenu (menu->submenu_id, name);
 	next_avail_id++;
@@ -3711,9 +3710,9 @@ gui_mch_add_menu(menu, idx)
     {
 	/* Adding a menu to the menubar, or in the no mans land (for PopUp) */
 
-	/* TODO: Verify if we could only Insert Menu if really part of the menubar
-	 *       The Inserted menu are scanned or the Command-key combos
-         */
+	/* TODO: Verify if we could only Insert Menu if really part of the
+	 * menubar The Inserted menu are scanned or the Command-key combos
+	 */
 
 	/* Insert the menu unless it's the Help menu */
 #ifdef USE_HELPMENU
@@ -3731,9 +3730,9 @@ gui_mch_add_menu(menu, idx)
 
 	index = gui_mac_get_menu_item_index (menu);
 
-        /* Call InsertMenuItem followed by SetMenuItemText
+	/* Call InsertMenuItem followed by SetMenuItemText
 	 * to avoid special character recognition by InsertMenuItem
-         */
+	 */
 	InsertMenuItem(parent->submenu_handle, "\p ", idx); /* afterItem */
 	SetMenuItemText(parent->submenu_handle, idx+1, name);
 	SetItemCmd(parent->submenu_handle, idx+1, 0x1B);
@@ -4073,42 +4072,13 @@ gui_mch_start_blink()
 }
 
 /*
- * Return the lightness of a pixel.  White is 255.
- */
-    int
-gui_mch_get_lightness(pixel)
-    guicolor_T	pixel;
-{
-    return (Red(pixel)*3 + Green(pixel)*6 + Blue(pixel)) / 10;
-}
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as "#RRGGBB".
- */
-    char_u *
-gui_mch_get_rgb(pixel)
-    guicolor_T	pixel;
-{
-    static char_u retval[10];
-
-    sprintf((char *)retval, "#%02x%02x%02x",
-	Red(pixel), Green(pixel), Blue(pixel));
-    return retval;
-}
-#endif
-#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
-/*
  * Return the RGB value of a pixel as long.
  */
-    unsigned long
-gui_mch_get_rgb_long(
-    guicolor_T	pixel)
+    long_u
+gui_mch_get_rgb(guicolor_T pixel)
 {
     return (Red(pixel) << 16) + (Green(pixel) << 8) + Blue(pixel);
 }
-#endif
-
 
 
 
@@ -4169,14 +4139,14 @@ gui_mch_browse(
     if (saving)
     {
 	/* Change first parm AEDesc (typeFSS) *defaultLocation to match dflt */
-        NavPutFile (NULL, &reply, &navOptions, NULL, 'VIM!', 'TEXT', NULL);
+	NavPutFile (NULL, &reply, &navOptions, NULL, 'VIM!', 'TEXT', NULL);
 	if (!reply.validRecord)
 	    return NULL;
     }
     else
     {
 	/* Change first parm AEDesc (typeFSS) *defaultLocation to match dflt */
-        NavGetFile(NULL, &reply, &navOptions, NULL, NULL, NULL, NULL, NULL);
+	NavGetFile(NULL, &reply, &navOptions, NULL, NULL, NULL, NULL, NULL);
 	if (!reply.validRecord)
 	    return NULL;
     }
@@ -4430,7 +4400,7 @@ gui_mch_setmouse(x, y)
     /* From FAQ 3-11 */
 
     CursorDevicePtr myMouse;
-    Point           where;
+    Point	    where;
 
     if (   NGetTrapAddress (_CursorDeviceDispatch, ToolTrap)
 	!= NGetTrapAddress (_Unimplemented,   ToolTrap) )
@@ -4628,14 +4598,14 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     CInfoPBRec  theCPB;
     Str255      directoryName;
     char_u      temporary[255];
- /* char        filename[255]; */
+ /* char	filename[255]; */
     char_u       fname[256];
     char_u	*temporaryPtr = temporary;
     char_u      *filenamePtr = fname;
     OSErr       error;
     int		folder = 1;
 #ifdef USE_UNIXFILENAME
-    char        *p;
+    char	*p;
     SInt16	dfltVol_vRefNum;
     SInt32      dfltVol_dirID;
     FSRef	refFile;
@@ -4718,23 +4688,23 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
      /* theCPB.dirInfo.ioDirID     = irrevelant when ioFDirIndex = -1 */
 	theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
 
-        /* As ioFDirIndex = -1, get the info of ioDrDirID, */
-        /*  *ioNamePtr[0 TO 31] will be updated            */
+	/* As ioFDirIndex = -1, get the info of ioDrDirID, */
+	/*  *ioNamePtr[0 TO 31] will be updated		   */
 	error = PBGetCatInfo (&theCPB,false);
 
-        if (error)
-          return NULL;
+	if (error)
+	  return NULL;
 
-        /* Put the new directoryName in front of the current fname */
-        STRCPY(temporaryPtr, filenamePtr);
-        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
-        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, ":");
-        STRCAT(filenamePtr, temporaryPtr);
+	/* Put the new directoryName in front of the current fname */
+	STRCPY(temporaryPtr, filenamePtr);
+	STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+	filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+	STRCAT(filenamePtr, ":");
+	STRCAT(filenamePtr, temporaryPtr);
     }
 #if 1 /* def USE_UNIXFILENAME */
     while ((theCPB.dirInfo.ioDrParID != fsRtDirID) /* && */
-         /*  (theCPB.dirInfo.ioDrDirID != fsRtDirID)*/);
+	 /*  (theCPB.dirInfo.ioDrDirID != fsRtDirID)*/);
 #else
     while (theCPB.dirInfo.ioDrDirID != fsRtDirID);
 #endif
@@ -4747,37 +4717,37 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     theCPB.dirInfo.ioDrDirID   = theCPB.dirInfo.ioDrParID;
 
     /* As ioFDirIndex = -1, get the info of ioDrDirID, */
-    /*  *ioNamePtr[0 TO 31] will be updated            */
+    /*	*ioNamePtr[0 TO 31] will be updated	       */
     error = PBGetCatInfo (&theCPB,false);
 
     if (error)
       return NULL;
 
-    /* For MacOS Classic always add the volume name          */
+    /* For MacOS Classic always add the volume name	     */
     /* For MacOS X add the volume name preceded by "Volumes" */
-    /*  when we are not refering to the boot volume          */
+    /*	when we are not refering to the boot volume	     */
 #ifdef USE_UNIXFILENAME
     if (file.vRefNum != dfltVol_vRefNum)
 #endif
     {
-        /* Add the volume name */
-        STRCPY(temporaryPtr, filenamePtr);
-        STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
-        filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, ":");
-        STRCAT(filenamePtr, temporaryPtr);
+	/* Add the volume name */
+	STRCPY(temporaryPtr, filenamePtr);
+	STRNCPY(filenamePtr, &directoryName[1], directoryName[0]);
+	filenamePtr[directoryName[0]] = 0; /* NULL terminate the string */
+	STRCAT(filenamePtr, ":");
+	STRCAT(filenamePtr, temporaryPtr);
 
 #ifdef USE_UNIXFILENAME
-        STRCPY(temporaryPtr, filenamePtr);
-        filenamePtr[0] = 0; /* NULL terminate the string */
-        STRCAT(filenamePtr, "Volumes:");
-        STRCAT(filenamePtr, temporaryPtr);
+	STRCPY(temporaryPtr, filenamePtr);
+	filenamePtr[0] = 0; /* NULL terminate the string */
+	STRCAT(filenamePtr, "Volumes:");
+	STRCAT(filenamePtr, temporaryPtr);
 #endif
     }
 
     /* Append final path separator if it's a folder */
     if (folder)
-        STRCAT (fname, ":");
+	STRCAT (fname, ":");
 
     /* As we use Unix File Name for MacOS X convert it */
 #ifdef USE_UNIXFILENAME
@@ -4787,8 +4757,8 @@ char_u *FullPathFromFSSpec_save (FSSpec file)
     temporaryPtr[0] = '/';
     STRCPY(filenamePtr, temporaryPtr);
     for (p = fname; *p; p++)
-      if (*p == ':')
-        *p = '/';
+	if (*p == ':')
+	    *p = '/';
 #endif
 
     return (vim_strsave (fname));

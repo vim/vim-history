@@ -745,7 +745,15 @@ gui_mch_compute_menu_height(id)
      * height, which is what we just wanted to get!.
      */
     if (id != (Widget)0)
+    {
+#ifndef LESSTIF_VERSION
+	/* On some systems this avoids that the Help menu isn't right aligned.
+	 * On lesstif it causes the menu height to be computed wrong. */
+	if (!XtIsRealized(id))
+	    return;
+#endif
 	XtVaGetValues(id, XmNheight, &height, NULL);
+    }
 
     /* Find any menu Widget, to be able to call XtManageChild() */
     else
@@ -1133,11 +1141,10 @@ gui_mch_submenu_change(menu, colors)
 		    Arg args[2];
 
 		    args[0].name = XmNbackground;
-		    args[0].value = gui.balloonEval_bg_pixel;
+		    args[0].value = gui.tooltip_bg_pixel;
 		    args[1].name = XmNforeground;
-		    args[1].value = gui.balloonEval_fg_pixel;
-		    XtSetValues(mp->tip->balloonLabel,
-				&args[0], XtNumber(args));
+		    args[1].value = gui.tooltip_fg_pixel;
+		    XtSetValues(mp->tip->balloonLabel, &args[0], XtNumber(args));
 		}
 # endif
 #endif
@@ -1153,9 +1160,8 @@ gui_mch_submenu_change(menu, colors)
 
 		    args[0].name = XmNfontList;
 		    args[0].value = (XtArgVal)gui_motif_fontset2fontlist(
-						    &gui.balloonEval_fontset);
-		    XtSetValues(mp->tip->balloonLabel,
-				&args[0], XtNumber(args));
+						    &gui.tooltip_fontset);
+		    XtSetValues(mp->tip->balloonLabel, &args[0], XtNumber(args));
 		}
 #endif
 	    }
@@ -1269,10 +1275,10 @@ gui_mch_def_colors()
 	gui.scroll_fg_pixel = gui.scroll_def_fg_pixel;
 	gui.scroll_bg_pixel = gui.scroll_def_bg_pixel;
 #ifdef FEAT_BEVAL
-	gui.balloonEval_fg_pixel =
-	    gui_mch_get_color((char_u *)gui.tooltip_fg_color);
-	gui.balloonEval_bg_pixel =
-	    gui_mch_get_color((char_u *)gui.tooltip_bg_color);
+	gui.tooltip_fg_pixel =
+			gui_mch_get_color((char_u *)gui.rsrc_tooltip_fg_name);
+	gui.tooltip_bg_pixel =
+			gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
     }
 }
@@ -2293,10 +2299,10 @@ gui_mch_show_toolbar(int showit)
 		    if (menu_is_toolbar(toolbar->dname))
 			break;
 		/* Assumption: toolbar is NULL if there is no toolbar,
-		 *             otherwise it contains the toolbar menu structure.
+		 *	       otherwise it contains the toolbar menu structure.
 		 *
 		 * Assumption: "numChildren" == the number of items in the list
-		 *             of items beginning with toolbar->children.
+		 *	       of items beginning with toolbar->children.
 		 */
 		if (toolbar)
 		{

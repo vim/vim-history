@@ -1680,7 +1680,10 @@ msg_puts_attr(s, attr)
 			lines_left = 1;
 			break;
 		    case ':':		/* start new command line */
-			stuffcharReadbuff(':');
+			/* Since got_int is set all typeahead will be flushed,
+			 * but we want to keep this ':', remember that in a
+			 * special way. */
+			typeahead_noflush(':');
 			cmdline_row = Rows - 1;	  /* put ':' on this line */
 			skip_redraw = TRUE;	  /* skip redraw once */
 			need_wait_return = FALSE; /* don't wait in main() */
@@ -1805,7 +1808,7 @@ msg_puts_attr(s, attr)
 msg_use_printf()
 {
     return (!msg_check_screen()
-#ifdef WIN3264
+#if defined(WIN3264) && !defined(FEAT_GUI_MSWIN)
 	    || !termcap_active
 #endif
 	    || (swapping_screen() && !termcap_active)
@@ -2535,6 +2538,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
 	 * things to our files.  The Win32 dialog allows deleting or renaming
 	 * a file, check timestamps. */
 	need_check_timestamps = TRUE;
+	did_check_timestamps = FALSE;
     }
     else
 # endif

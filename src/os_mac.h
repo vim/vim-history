@@ -90,14 +90,18 @@
  */
 
 /* Got problem trying to use shared library in 68k */
-#if defined (__POWERPC__) && defined(FEAT_PYTHON)
+#if !defined(__POWERPC__) && defined(FEAT_PYTHON)
 # undef FEAT_PYTHON
 # warning Auto-disabling Python. Not yet supported in 68k.
 #endif
 
-#if !defined (__POWERPC__) &&  !defined(__ppc__)
-# if !defined(__fourbyteints__) || !__option(enumsalwaysint)
-   ERROR: you must compile the projecct with 4-byte ints and enums always int
+#if !defined(__POWERPC__) && !defined(__ppc__)
+# if !__option(enumsalwaysint)
+#  error "You must compile with enums always int!"
+# endif
+# if defined(__MWERKS__) && !defined(__fourbyteints__)
+#  error "You must compile the projecct with 4-byte ints"
+/* MPW ints are always 4 byte long */
 # endif
 #endif
 

@@ -2,6 +2,7 @@
 char_u *get_recorded __ARGS((void));
 char_u *get_inserted __ARGS((void));
 int stuff_empty __ARGS((void));
+void typeahead_noflush __ARGS((int c));
 void flush_buffers __ARGS((int typeahead));
 void ResetRedobuff __ARGS((void));
 void saveRedobuff __ARGS((void));

@@ -20,7 +20,9 @@ In special situations you might want to make changes by hand.
   menu option.
 - The registry key [HKEY_LOCAL_MACHINE\Software\Vim\Gvim] is used by the
   gvimext.dll.  The value "path" specifies the location of "gvim.exe".  If
-  gvim.exe is in the search path, the path can be omitted.
+  gvim.exe is in the search path, the path can be omitted.  The value "lang"
+  can be used to set the language, for example "de" for German.  If "lang" is
+  omitted, the language set for Windows will be used.
 
 
 UNINSTALLATION

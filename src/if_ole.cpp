@@ -337,7 +337,9 @@ CVim::Eval(BSTR expr, BSTR *result)
 	return E_INVALIDARG;
 
     /* Evaluate the expression */
+    ++emsg_skip;
     str = (char *)eval_to_string((char_u *)buffer, NULL);
+    --emsg_skip;
     vim_free(buffer);
     if (str == NULL)
 	return E_FAIL;

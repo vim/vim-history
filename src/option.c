@@ -2496,8 +2496,13 @@ set_init_1()
 
 #ifdef FEAT_POSTSCRIPT
     /* 'printexpr' must be allocated to be able to evaluate it. */
+#ifndef MSWIN
     set_string_default("pexpr",
 	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)");
+#else
+    set_string_default("pexpr",
+	    (char_u *)"system('copy' . ' ' . v:fname_in . ' ' . &printdevice) . delete(v:fname_in)");
+#endif
 #endif
 
     /*
@@ -2568,6 +2573,32 @@ set_init_1()
 #endif
 
 #ifdef FEAT_MBYTE
+# if defined(WIN3264) && defined(FEAT_GETTEXT)
+    /*
+     * If $LANG isn't set, try to get a good value for it.  This makes the
+     * right language be used automatically.  Don't do this for English.
+     */
+    if (mch_getenv("LANG") == NULL)
+    {
+	char	buf[20];
+
+	/* Could use LOCALE_SISO639LANGNAME, but it's not in Win95.
+	 * LOCALE_SABBREVLANGNAME gives us three letters, like "enu", we use
+	 * only the first two. */
+	n = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SABBREVLANGNAME,
+							     (LPTSTR)buf, 20);
+	if (n >= 2 && STRNICMP(buf, "en", 2) != 0)
+	{
+	    /* TODO: is this right? */
+	    if (STRNICMP(buf, "zht", 3) == 0)
+		STRCPY(buf, "zh_TW");
+	    else
+		buf[2] = NUL;		/* truncate to two-letter code */
+	    vim_setenv("LANG", buf);
+	}
+    }
+# endif
+
     /* enc_default() will try setting p_enc to a value depending on the
      * current locale */
     if (enc_default() == OK)
@@ -2882,7 +2913,7 @@ init_gui_options()
     /* Set the 'background' option according to the lightness of the
      * background color. */
     if (!option_was_set((char_u *)"bg")
-			       && gui_mch_get_lightness(gui.back_pixel) < 127)
+				   && gui_get_lightness(gui.back_pixel) < 127)
     {
 	set_option_value((char_u *)"bg", 0L, (char_u *)"dark", 0);
 	highlight_changed();
@@ -3379,8 +3410,7 @@ do_set(arg, opt_flags)
 				if (gui.in_use)
 				{
 				    /* guess the value of 'background' */
-				    if (gui_mch_get_lightness(gui.back_pixel)
-									< 127)
+				    if (gui_get_lightness(gui.back_pixel) < 127)
 					newval = (char_u *)"dark";
 				    else
 					newval = (char_u *)"light";
@@ -6225,7 +6255,7 @@ findoption(arg)
  *	     String option: 0, *stringval gets allocated string.
  * Hidden Number or Toggle option: -1.
  *	     hidden String option: -2.
- *	           unknown option: -3.
+ *		   unknown option: -3.
  */
     int
 get_option_value(name, numval, stringval, opt_flags)

@@ -620,7 +620,7 @@ function! s:MarkDirs()
     let fileLen=strlen(currLine)
     if (b:filterFormula!="") && (currLine =~ b:filterFormula)
       " Don't show the file if it is to be filtered.
-      d
+      d _
     endif
   endif
   if fileLen > b:maxFileLen

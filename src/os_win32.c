@@ -54,7 +54,7 @@
 #  define FROM_LEFT_1ST_BUTTON_PRESSED    0x0001
 # endif
 # ifndef RIGHTMOST_BUTTON_PRESSED
-#  define RIGHTMOST_BUTTON_PRESSED        0x0002
+#  define RIGHTMOST_BUTTON_PRESSED	  0x0002
 # endif
 # ifndef FROM_LEFT_2ND_BUTTON_PRESSED
 #  define FROM_LEFT_2ND_BUTTON_PRESSED    0x0004
@@ -157,6 +157,7 @@ static WORD  g_attrCurrent;
 
 static int g_fCBrkPressed = FALSE;  /* set by ctrl-break interrupt */
 static int g_fCtrlCPressed = FALSE; /* set when ctrl-C or ctrl-break detected */
+static int g_fForceExit = FALSE;    /* set when forcefully exiting */
 static char_u g_chPending = NUL;
 
 static void termcap_mode_start(void);
@@ -1008,55 +1009,74 @@ handle_focus_event(INPUT_RECORD ir)
     static int
 WaitForChar(long msec)
 {
-    DWORD	    dwNow, dwEndTime;
+    DWORD	    dwNow = 0, dwEndTime;
     INPUT_RECORD    ir;
     DWORD	    cRecords;
     char_u	    ch, ch2;
 
     if (msec > 0)
+	/* Wait until the specified time has elapsed. */
 	dwEndTime = GetTickCount() + msec;
+    else if (msec < 0)
+	/* Wait forever. */
+	dwEndTime = INFINITE;
 
     /* We need to loop until the end of the time period, because
      * we might get multiple unusable mouse events in that time.
      */
     for (;;)
     {
+#ifdef FEAT_CLIENTSERVER
+	serverProcessPendingMessages();
+#endif
 	if (g_chPending != NUL
 #ifdef FEAT_MOUSE
 		|| g_nMouseClick != -1
+#endif
+#ifdef FEAT_CLIENTSERVER
+		|| !vim_is_input_buf_empty()
 #endif
 	   )
 	    return TRUE;
 
 	if (msec > 0)
 	{
+	    /* If the specified wait time has passed, return. */
 	    dwNow = GetTickCount();
 	    if (dwNow >= dwEndTime)
 		break;
+	}
+	if (msec != 0)
+	{
+#ifdef FEAT_CLIENTSERVER
+	    /* Wait for either an event on the console input or a message in
+	     * the client-server window. */
+	    if (MsgWaitForMultipleObjects(1, &g_hConIn, FALSE,
+			  dwEndTime - dwNow, QS_SENDMESSAGE) != WAIT_OBJECT_0)
+#else
 	    if (WaitForSingleObject(g_hConIn, dwEndTime - dwNow)
 							     != WAIT_OBJECT_0)
-		continue;
+#endif
+		    continue;
 	}
 
 	cRecords = 0;
 	PeekConsoleInput(g_hConIn, &ir, 1, &cRecords);
 
 #ifdef FEAT_MBYTE_IME
-	if (State & CMDLINE)
+	if (State & CMDLINE && msg_row == Rows - 1)
 	{
-	    if (msg_row == Rows-1)
+	    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+	    if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
 	    {
-		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		if (GetConsoleScreenBufferInfo(g_hConOut, &csbi))
+		if (csbi.dwCursorPosition.Y != msg_row)
 		{
-		    if (csbi.dwCursorPosition.Y != msg_row)
-		    {
-			/* The screen is now messed up, must redraw the
-			 * command line and later all the windows. */
-			redraw_all_later(CLEAR);
-			cmdline_row -= (msg_row - csbi.dwCursorPosition.Y);
-			redrawcmd();
-		    }
+		    /* The screen is now messed up, must redraw the
+		     * command line and later all the windows. */
+		    redraw_all_later(CLEAR);
+		    cmdline_row -= (msg_row - csbi.dwCursorPosition.Y);
+		    redrawcmd();
 		}
 	    }
 	}
@@ -1099,6 +1119,11 @@ WaitForChar(long msec)
 	    break;
     }
 
+#ifdef FEAT_CLIENTSERVER
+    /* Something might have been received while we were waiting. */
+    if (!vim_is_input_buf_empty())
+	return TRUE;
+#endif
     return FALSE;
 }
 
@@ -1141,11 +1166,16 @@ tgetch(void)
 	return ch;
     }
 
-    for ( ; ; )
+    for (;;)
     {
 	INPUT_RECORD ir;
 	DWORD cRecords = 0;
 
+#ifdef FEAT_CLIENTSERVER
+	(void)WaitForChar(-1L);
+	if (!vim_is_input_buf_empty())
+	    return 0;
+#endif
 	if (ReadConsoleInput(g_hConIn, &ir, 1, &cRecords) == 0)
 	{
 	    if (did_create_conin)
@@ -1162,9 +1192,7 @@ tgetch(void)
 	else if (ir.EventType == FOCUS_EVENT)
 	    handle_focus_event(ir);
 	else if (ir.EventType == WINDOW_BUFFER_SIZE_EVENT)
-	{
 	    shell_resized();
-	}
 #ifdef FEAT_MOUSE
 	else if (ir.EventType == MOUSE_EVENT)
 	{
@@ -1199,16 +1227,10 @@ mch_inchar(
     static int	once_already = 0;
 #endif
 
-
-#ifdef FEAT_CLIENTSERVER
-    /* Pump windows messages here, in case a client is trying to talk to us */
-    serverProcessPendingMessages();
-#endif
-
 #ifdef FEAT_SNIFF
     if (want_sniff_request)
     {
-	if(sniff_request_waiting && maxlen-len >=3)
+	if (sniff_request_waiting && maxlen-len >= 3)
 	{
 	    /* return K_SNIFF */
 	    *buf++ = CSI;
@@ -1264,9 +1286,8 @@ mch_inchar(
 		once_already = 1;
 		return 0;
 	    }
-	    else
 #endif
-		updatescript(0);
+	    updatescript(0);
 	}
     }
 
@@ -1282,7 +1303,7 @@ mch_inchar(
 	fputc('[', fdDump);
 #endif
 
-    while ((len == 0 || WaitForChar(0)) && len < maxlen)
+    while ((len == 0 || WaitForChar(0L)) && len < maxlen)
     {
 #ifdef FEAT_MOUSE
 	if (g_nMouseClick != -1 && maxlen - len >= 5)
@@ -1292,7 +1313,6 @@ mch_inchar(
 		fprintf(fdDump, "{%02x @ %d, %d}",
 			g_nMouseClick, g_xMouse, g_yMouse);
 # endif
-
 	    len += 5;
 	    *buf++ = ESC + 128;
 	    *buf++ = 'M';
@@ -1306,6 +1326,14 @@ mch_inchar(
 #endif /* FEAT_MOUSE */
 	{
 	    c = tgetch();
+
+#ifdef FEAT_CLIENTSERVER
+	    if (!vim_is_input_buf_empty())
+	    {
+		len = read_from_input_buf(buf, (long)maxlen);
+		break;
+	    }
+#endif
 
 	    if (c == Ctrl_C)
 		g_fCBrkPressed = TRUE;
@@ -1718,7 +1746,7 @@ typedef HWND (__stdcall *GETCONSOLEWINDOWPROC)(VOID);
 typedef WINBASEAPI HWND (WINAPI *GETCONSOLEWINDOWPROC)(VOID);
 #endif
 char g_szOrigTitle[256] = { 0 };
-static HWND g_hWnd = NULL;
+HWND g_hWnd = NULL;	/* also used in os_mswin.c */
 static HICON g_hOrigIconSmall = NULL;
 static HICON g_hOrigIcon = NULL;
 static HICON g_hVimIcon = NULL;
@@ -1964,9 +1992,10 @@ mch_exit(int r)
 	mch_restore_title(3);
 	/*
 	 * Restore both the small and big icons of the console window to
-	 * what they were at startup.
+	 * what they were at startup.  Don't do this when the window is
+	 * closed, Vim would hang here.
 	 */
-	if (g_fCanChangeIcon)
+	if (g_fCanChangeIcon && !g_fForceExit)
 	    SetConsoleIcon(g_hWnd, g_hOrigIconSmall, g_hOrigIcon);
 #endif
 
@@ -2404,13 +2433,14 @@ handler_routine(
     case CTRL_LOGOFF_EVENT:
     case CTRL_SHUTDOWN_EVENT:
 	windgoto((int)Rows - 1, 0);
+	g_fForceExit = TRUE;
+
 	sprintf((char *)IObuff, _("Vim: Caught %s event\n"),
 		(dwCtrlType == CTRL_CLOSE_EVENT
 		     ? _("close")
 		     : dwCtrlType == CTRL_LOGOFF_EVENT
 			 ? _("logoff")
 			 : _("shutdown")));
-
 #ifdef DEBUG
 	OutputDebugString(IObuff);
 #endif
@@ -2713,15 +2743,10 @@ mch_system(char *cmd, int options)
 
 	    if (PeekMessage(&msg, (HWND)NULL, 0, 0, PM_REMOVE))
 	    {
-		if (msg.message == WM_PAINT
-			|| msg.message == WM_ERASEBKGND
-			|| msg.message == WM_NCPAINT)
-		{
-		    TranslateMessage(&msg);
-		    DispatchMessage(&msg);
-		}
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
 	    }
-	    if (WaitForSingleObject(pi.hProcess, 100) == WAIT_OBJECT_0)
+	    if (WaitForSingleObject(pi.hProcess, 100) != WAIT_TIMEOUT)
 		break;
 	}
 #else

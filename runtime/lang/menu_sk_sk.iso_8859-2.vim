@@ -1,6 +1,6 @@
 " Menu Translations:	Slovak
 " Translated By:	Martin Lacko <lacko@host.sk>
-" Last Change:		2001 Aug 2
+" Last Change:		2001 Aug 27
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -110,7 +110,7 @@ if has("toolbar")
   fun Do_toolbar_tmenu()
     tmenu ToolBar.Open		Otvori» súbor
     tmenu ToolBar.Save		Ulo¾i» súbor
-    tmenu ToolBar.SaveAll		Ulo¾i» v¹etky 
+    tmenu ToolBar.SaveAll		Ulo¾i» v¹etky
     tmenu ToolBar.Print		Tlaè
     tmenu ToolBar.Undo		Spä»
     tmenu ToolBar.Redo		Zru¹i» vrátenie

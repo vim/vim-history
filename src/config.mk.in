@@ -83,6 +83,7 @@ EXEEXT		= @EXEEXT@
 COMPILEDBY	= @compiledby@
 
 INSTALLVIMDIFF	= @dovimdiff@
+INSTALLGVIMDIFF	= @dogvimdiff@
 
 ### Line break character as octal number for "tr"
 NL		= @line_break@

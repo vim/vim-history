@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 04
+" Last change:	2001 Aug 24
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -64,6 +64,10 @@ elseif s:line1 =~ '^#!.*[/\\]gnuplot\>'
 " Makefiles
 elseif s:line1 =~ '^#!.*[/\\][^/\\]*make\>'
   set ft=make
+
+" Mason
+elseif s:line1 =~ '^<[%&].*>'
+  set ft=mason
 
 " Perl
 elseif s:line1 =~ '^#!.*[/\\][^/\\]*perl[^/\\]*\>'

@@ -440,6 +440,9 @@ FILES
                       Script to detect the type of a file by  its
                       contents.  See ":help 'filetype'".
 
+       /usr/local/lib/vim/procset.ps
+                      file used for PostScript printing.
+
        For recent info read the VIM home page:
        <URL:http://www.vim.org/>
 
@@ -451,9 +454,6 @@ AUTHOR
        from others.  See ":help credits" in Vim.
        Vim is based on Stevie, worked on by: Tim  Thompson,  Tony
        Andrews  and  G.R.  (Fred) Walter.  Although hardly any of
-       the original code remains.
-
-
 
 
 
@@ -466,6 +466,8 @@ AUTHOR
 VIM(1)                                                     VIM(1)
 
 
+       the original code remains.
+
 BUGS
        Probably.  See ":help todo" for a list of known  problems.
 
@@ -476,8 +478,6 @@ BUGS
        look  at  the  vi_diff.txt file (or type :help vi_diff.txt
        when in Vim).  Also have a look at  the  'compatible'  and
        'cpoptions' options.
-
-
 
 
 

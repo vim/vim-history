@@ -3360,8 +3360,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	/*
 	 * On VMS there is a problem: newlines get added when writing blocks
 	 * at a time. Fix it by writing a line at a time.
-         * This is much slower!
-         * Explanation: Vim can not handle, so far, variable record format.
+	 * This is much slower!
+	 * Explanation: Vim can not handle, so far, variable record format.
 	 * With $analize/rms filename you can get the rms file structure, and
 	 * if the Record format filed is variable, CR will be added after
 	 * every written buffer.  In other cases it works without this fix.
@@ -3846,6 +3846,7 @@ check_mtime(buf, st)
 	    && time_differs((long)st->st_mtime, buf->b_mtime_read))
     {
 	msg_scroll = TRUE;	    /* don't overwrite messages here */
+	msg_silent = 0;		    /* must give this prompt */
 	/* don't use emsg() here, don't want to flush the buffers */
 	MSG_ATTR(_("WARNING: The file has been changed since reading it!!!"),
 						       hl_attr(HLF_E));
@@ -4390,7 +4391,7 @@ shorten_fnames(force)
     {
 	if (buf->b_fname != NULL
 #ifdef FEAT_QUICKFIX
-	        && !bt_nofile(buf)
+		&& !bt_nofile(buf)
 #endif
 		&& !path_with_url(buf->b_fname)
 		&& (force
@@ -4845,6 +4846,11 @@ check_timestamps(focus)
     int		didit = 0;
     int		n;
 
+    /* Avoid doing a check twice.  The OK/Reload dialog can cause a focus
+     * event and we would keep on checking if the file is steadily growing. */
+    if (focus && did_check_timestamps)
+	return FALSE;
+
     if (!stuff_empty() || global_busy || !typebuf_typed()
 #ifdef FEAT_AUTOCMD
 			|| autocmd_busy
@@ -4854,6 +4860,7 @@ check_timestamps(focus)
     else
     {
 	++no_wait_return;
+	did_check_timestamps = TRUE;
 	already_warned = FALSE;
 	for (buf = firstbuf; buf != NULL; )
 	{
@@ -4863,9 +4870,9 @@ check_timestamps(focus)
 		n = buf_check_timestamp(buf, focus);
 		if (didit < n)
 		    didit = n;
-		if (n > 0)
+		if (n > 0 && !buf_valid(buf))
 		{
-		    /* Autocommands may have removed the buffer, start at the
+		    /* Autocommands have removed the buffer, start at the
 		     * first one again. */
 		    buf = firstbuf;
 		    continue;

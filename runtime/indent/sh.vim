@@ -1,6 +1,7 @@
 "  vim: set sw=4 sts=4:
 "  Maintainer	: Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on	: Tue, 24 Jul 2001 18:48:02 CEST
+"  URL		: http://www.pcppopper.org/
+"  Revised on	: Mon, 27 Aug 2001 16:32:59 +0200
 "  Language	: Shell Script
 
 " Only load this indent file when no other was loaded.
@@ -11,7 +12,7 @@ endif
 let b:did_indent = 1
 
 setlocal indentexpr=GetShIndent()
-setlocal indentkeys+==else,=elif,=esac,=fi,=fin,=done indentkeys-=:,0#
+setlocal indentkeys+==then,=do,=else,=elif,=esac,=fi,=fin,=fil,=done indentkeys-=:,0#
 
 " Only define the function once.
 if exists("*GetShIndent")
@@ -31,7 +32,7 @@ function GetShIndent()
     " Skip if the line also contains the closure for the above
     let ind = indent(lnum)
     let line = getline(lnum)
-    if line =~ '^\s*\(if\|else\|elif\|case\|while\|until\|for\)\>'
+    if line =~ '^\s*\(if\|then\|do\|else\|elif\|case\|while\|until\|for\)\>'
 		\ || line =~ '^\s*\<\h\w*\>\s*()\s*{'
 		\ || line =~ '^\s*{'
 	if line !~ '\(esac\|fi\|done\)\>\s*$' && line !~ '}\s*$'
@@ -39,11 +40,11 @@ function GetShIndent()
 	endif
     endif
 
-    " Subtract a 'shiftwidth' on a else, esac, fi, done
+    " Subtract a 'shiftwidth' on a then, do, else, esac, fi, done
     " Retain the indentation level if line matches fin (for find)
     let line = getline(v:lnum)
-    if (line =~ '^\s*\(else\|elif\|esac\|fi\|done\)\>' || line =~ '^\s*}')
-		\ && line !~ '^\s*fin\>'
+    if (line =~ '^\s*\(then\|do\|else\|elif\|esac\|fi\|done\)\>' || line =~ '^\s*}')
+		\ && line !~ '^\s*fi[ln]\>'
 	let ind = ind - &sw
     endif
 

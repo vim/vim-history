@@ -5677,3 +5677,36 @@ msgstr "ゼロカウント"
 #: globals.h:1058
 msgid "E81: Using <SID> not in a script context"
 msgstr "E81: スクリプト以外で<SID>が使われました"
+
+#: gvimext.cpp:461
+msgid "Edit with &multiple Vims"
+msgstr "複数の Vim で編集(&M)"
+
+#: gvimext.cpp:467
+msgid "Edit with single &Vim"
+msgstr "一つの Vim で編集(&V)"
+
+#: gvimext.cpp:479
+msgid "Edit with &Vim"
+msgstr "Vim で編集(&V)"
+
+#: gvimext.cpp:503
+msgid "Edit with existing Vim - &"
+msgstr "既存の Vim で編集 - &"
+
+#: gvimext.cpp:626
+msgid "Edits the selected file(s) with Vim"
+msgstr "選択されたファイルを Vim で編集"
+
+#: gvimext.cpp:794 gvimext.cpp:872
+msgid "Error creating process: Check if gvim is in your path!"
+msgstr "プロセス起動エラー : gvim にパスが通っているか確かめてください"
+
+#: gvimext.cpp:795 gvimext.cpp:809 gvimext.cpp:873
+msgid "gvimext.dll error"
+msgstr "gvimext.dll エラー"
+
+#: gvimext.cpp:808
+msgid "Path length too long!"
+msgstr "パスが長すぎます"
+

@@ -6090,6 +6090,48 @@ do_highlight(line, forceit, init)
 	line = linep;
 	if (ends_excmd(*line))
 	{
+#ifdef FEAT_GUI
+	    /* First, we do not destroy the old values, but allocate the new
+	     * ones and update the display. THEN we destroy the old values.
+	     * If we destroy the old values first, then the old values
+	     * (such as GuiFont's or GuiFontset's) will still be displayed but
+	     * invalid because they were free'd.
+	     */
+	    if (gui.in_use)
+	    {
+# ifdef FEAT_BEVAL
+		gui_init_tooltip_font();
+# endif
+# if defined(FEAT_MENU) && (defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_MOTIF))
+		gui_init_menu_font();
+# endif
+	    }
+# ifdef FEAT_GUI_X11
+	    gui_mch_def_colors();
+#  ifdef FEAT_MENU
+
+	    /* This only needs to be done when there is no Menu highlight
+	     * group defined by default, which IS currently the case.
+	     */
+	    gui_mch_new_menu_colors();
+#  endif
+	    if (gui.in_use)
+	    {
+		gui_new_scrollbar_colors();
+#  ifdef FEAT_BEVAL
+		gui_mch_new_tooltip_colors();
+#  endif
+#  ifdef FEAT_MENU
+		gui_mch_new_menu_font();
+#  endif
+	    }
+# endif
+
+	    /* Ok, we're done allocating the new default graphics items.
+	     * The screen should already be refreshed at this point.
+	     * It is now Ok to clear out the old data.
+	     */
+#endif
 #ifdef FEAT_EVAL
 	    do_unlet((char_u *)"colors_name");
 #endif
@@ -6103,25 +6145,7 @@ do_highlight(line, forceit, init)
 	    init_highlight(TRUE, TRUE);
 #ifdef FEAT_GUI
 	    if (gui.in_use)
-	    {
-# ifdef FEAT_BEVAL
-		gui_init_tooltip_font();
-# endif
 		highlight_gui_started();
-	    }
-#endif
-#ifdef FEAT_GUI_X11
-	    gui_mch_def_colors();
-# ifdef FEAT_MENU
-	    gui_mch_new_menu_colors();
-# endif
-	    if (gui.in_use)
-	    {
-		gui_new_scrollbar_colors();
-# ifdef FEAT_BEVAL
-		gui_mch_new_tooltip_colors();
-# endif
-	    }
 #endif
 	    highlight_changed();
 	    redraw_later_clear();
@@ -6562,7 +6586,7 @@ do_highlight(line, forceit, init)
 		    gui.scroll_fg_pixel = i - 1;
 #  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
-		    gui.balloonEval_fg_pixel = i - 1;
+		    gui.tooltip_fg_pixel = i - 1;
 #  endif
 		do_colors = TRUE;
 # endif
@@ -6595,7 +6619,7 @@ do_highlight(line, forceit, init)
 		    gui.scroll_bg_pixel = i - 1;
 #  ifdef FEAT_BEVAL
 		if (is_tooltip_group)
-		    gui.balloonEval_bg_pixel = i - 1;
+		    gui.tooltip_bg_pixel = i - 1;
 #  endif
 		do_colors = TRUE;
 # endif
@@ -6859,7 +6883,7 @@ set_normal_colors()
     }
 # ifdef FEAT_BEVAL
     if (set_group_colors((char_u *)"Tooltip",
-			 &gui.balloonEval_fg_pixel, &gui.balloonEval_bg_pixel,
+			 &gui.tooltip_fg_pixel, &gui.tooltip_bg_pixel,
 			 FALSE, FALSE, TRUE))
     {
 # ifdef FEAT_TOOLBAR
@@ -7090,7 +7114,7 @@ hl_do_font(idx, arg, do_normal, do_menu, do_tooltip)
 	     * creation, then a fontset is always used, othwise an
 	     * XFontStruct is used.
 	     */
-	    gui.balloonEval_fontset = (XFontSet)HL_TABLE()[idx].sg_fontset;
+	    gui.tooltip_fontset = (XFontSet)HL_TABLE()[idx].sg_fontset;
 	    gui_mch_new_tooltip_font();
 	}
 #    endif
@@ -7453,7 +7477,9 @@ highlight_color(id, what, modec)
 	/* return #RRGGBB form (only possible when GUI is running) */
 	if (gui.in_use && what[1] && what[2] == '#')
 	{
-	    guicolor_T	color;
+	    guicolor_T		color;
+	    long_u		rgb;
+	    static char_u	buf[10];
 
 	    if (fg)
 		color = HL_TABLE()[id - 1].sg_gui_fg;
@@ -7461,7 +7487,12 @@ highlight_color(id, what, modec)
 		color = HL_TABLE()[id - 1].sg_gui_bg;
 	    if (color == 0)
 		return NULL;
-	    return gui_mch_get_rgb(color - 1);
+	    rgb = gui_mch_get_rgb(color - 1);
+	    sprintf((char *)buf, "#%02x%02x%02x",
+				      (unsigned)(rgb >> 16),
+				      (unsigned)(rgb >> 8) & 255,
+				      (unsigned)rgb & 255);
+	    return buf;
 	}
 	if (fg)
 	    return (HL_TABLE()[id - 1].sg_gui_fg_name);
@@ -7482,11 +7513,12 @@ highlight_color(id, what, modec)
 }
 #endif
 
-#if (defined(FEAT_SYN_HL) && defined(FEAT_GUI) && defined(FEAT_PRINTER)) || defined(PROTO)
+#if (defined(FEAT_SYN_HL) && defined(FEAT_GUI) && defined(FEAT_PRINTER)) \
+	|| defined(PROTO)
 /*
- * Return color name of highlight group "id".
+ * Return color name of highlight group "id" as RGB value.
  */
-    unsigned long
+    long_u
 highlight_gui_color_rgb(id, fg)
     int		id;
     int		fg;	/* TRUE = fg, FALSE = bg */
@@ -7504,7 +7536,7 @@ highlight_gui_color_rgb(id, fg)
     if (color == 0)
 	return 0L;
 
-    return gui_mch_get_rgb_long(color - 1);
+    return gui_mch_get_rgb(color - 1);
 }
 #endif
 

@@ -1477,14 +1477,14 @@ foldMarkAdjustRecurse(gap, line1, line2, amount, amount_after)
     {
 	/*
 	 * Check for these situations:
-	 *        1  2  3
-	 *        1  2  3
-	 * line1     2  3  4  5
-	 *           2  3  4  5
-	 *           2  3  4  5
-	 * line2     2  3  4  5
-	 *              3     5  6
-	 *              3     5  6
+	 *	  1  2	3
+	 *	  1  2	3
+	 * line1     2	3  4  5
+	 *	     2	3  4  5
+	 *	     2	3  4  5
+	 * line2     2	3  4  5
+	 *		3     5  6
+	 *		3     5  6
 	 */
 
 	last = fp->fd_top + fp->fd_len - 1; /* last line of fold */
@@ -2192,10 +2192,12 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 
     /*
      * If using the marker method, the start line is not the start of a fold
-     * and the level is non-zero, we must use the previous fold.  But ignore a
-     * fold that starts at or below startlnum, it must be deleted.
+     * at the level we're dealing with and the level is non-zero, we must use
+     * the previous fold.  But ignore a fold that starts at or below
+     * startlnum, it must be deleted.
      */
-    if (getlevel == foldlevelMarker && flp->start == 0 && flp->lvl > 0)
+    if (getlevel == foldlevelMarker && flp->start <= flp->lvl - level
+							      && flp->lvl > 0)
     {
 	foldFind(gap, startlnum - 1, &fp);
 	if (fp >= ((fold_T *)gap->ga_data) + gap->ga_len
@@ -2635,10 +2637,10 @@ foldSplit(gap, i, top, bot)
  *      1  2  3
  *      1  2  3
  * top     2  3  4  5
- *         2  3  4  5
- * bot     2  3  4  5
- *            3     5  6
- *            3     5  6
+ *	   2  3  4  5
+ * bot	   2  3  4  5
+ *	      3     5  6
+ *	      3     5  6
  *
  * 1: not changed
  * 2: trunate to stop above "top"

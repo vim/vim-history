@@ -11,7 +11,7 @@ gvimext.dll:    gvimext.obj	\
   $(link) $(dlllflags) -base:0x1C000000 -out:$*.dll $** $(olelibsdll) shell32.lib gvimext.lib comctl32.lib gvimext.exp
 
 .cpp.obj:
-    $(cc) $(cflags) $(cvarsdll) $*.cpp
+    $(cc) $(cflags) -DFEAT_GETTEXT $(cvarsdll) $*.cpp
 
 gvimext.res: gvimext.rc
     $(rc) $(rcflags) $(rcvars)  gvimext.rc

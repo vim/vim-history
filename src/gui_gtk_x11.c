@@ -1048,7 +1048,7 @@ gui_mch_init_check(void)
 
 #ifdef FEAT_GUI_GNOME
     if (gtk_socket_id == 0)
-        using_gnome = 1;
+	using_gnome = 1;
 #endif
 
     if ((
@@ -1058,7 +1058,7 @@ gui_mch_init_check(void)
 	    || (!using_gnome &&
 #endif
 		!gtk_init_check(&gui_argc, &gui_argv)))
-        /* Don't use gtk_init(), it exits on failure. */
+	/* Don't use gtk_init(), it exits on failure. */
     {
 	gui.dying = TRUE;
 	EMSG(_("E233: cannot open display"));
@@ -1741,7 +1741,6 @@ gui_mch_init()
     GtkWidget *vbox;
 
     /* Initialize values */
-    gui.rev_video = FALSE;
     gui.border_width = 2;
     gui.scrollbar_width = SB_DEFAULT_WIDTH;
     gui.scrollbar_height = SB_DEFAULT_WIDTH;
@@ -1763,17 +1762,17 @@ gui_mch_init()
 
     if (gtk_socket_id != 0)
     {
-        /* Use GtkSocket from another app. */
-        gui.mainwin = gtk_plug_new(gtk_socket_id);
+	/* Use GtkSocket from another app. */
+	gui.mainwin = gtk_plug_new(gtk_socket_id);
     }
     else
     {
 #ifdef FEAT_GUI_GNOME
-        if (using_gnome)
-            gui.mainwin = gnome_app_new("vim", "vim");
-        else
+	if (using_gnome)
+	    gui.mainwin = gnome_app_new("vim", "vim");
+	else
 #endif
-            gui.mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	    gui.mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     }
     gtk_window_set_policy(GTK_WINDOW(gui.mainwin), TRUE, TRUE, TRUE);
     gtk_container_border_width(GTK_CONTAINER(gui.mainwin), 0);
@@ -1793,12 +1792,12 @@ gui_mch_init()
     vbox = gtk_vbox_new(FALSE, 0);
 #ifdef FEAT_GUI_GNOME
     if (using_gnome)
-        gnome_app_set_contents(GNOME_APP(gui.mainwin), vbox);
+	gnome_app_set_contents(GNOME_APP(gui.mainwin), vbox);
     else
 #endif
     {
-        gtk_container_add(GTK_CONTAINER(gui.mainwin), vbox);
-        gtk_widget_show(vbox);
+	gtk_container_add(GTK_CONTAINER(gui.mainwin), vbox);
+	gtk_widget_show(vbox);
     }
 
 #ifdef FEAT_MENU
@@ -1808,22 +1807,22 @@ gui_mch_init()
 # ifdef FEAT_GUI_GNOME
     if (using_gnome)
     {
-        gui.menubar_h = gnome_dock_item_new("VimMainMenu",
-                                            GNOME_DOCK_ITEM_BEH_EXCLUSIVE |
-                                            GNOME_DOCK_ITEM_BEH_NEVER_VERTICAL);
-        gtk_widget_show(gui.menubar_h);
-        gtk_container_add(GTK_CONTAINER(gui.menubar_h), gui.menubar);
-        gnome_dock_add_item(GNOME_DOCK(GNOME_APP(gui.mainwin)->dock),
-                            GNOME_DOCK_ITEM(gui.menubar_h),
-                            GNOME_DOCK_TOP, /* placement */
-                            1,  /* band_num */
-                            0,  /* band_position */
-                            0,  /* offset */
-                            TRUE);
+	gui.menubar_h = gnome_dock_item_new("VimMainMenu",
+					    GNOME_DOCK_ITEM_BEH_EXCLUSIVE |
+					    GNOME_DOCK_ITEM_BEH_NEVER_VERTICAL);
+	gtk_widget_show(gui.menubar_h);
+	gtk_container_add(GTK_CONTAINER(gui.menubar_h), gui.menubar);
+	gnome_dock_add_item(GNOME_DOCK(GNOME_APP(gui.mainwin)->dock),
+			    GNOME_DOCK_ITEM(gui.menubar_h),
+			    GNOME_DOCK_TOP, /* placement */
+			    1,	/* band_num */
+			    0,	/* band_position */
+			    0,	/* offset */
+			    TRUE);
     }
     else
 # endif	/* FEAT_GUI_GNOME */
-        gtk_box_pack_start(GTK_BOX(vbox), gui.menubar, FALSE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), gui.menubar, FALSE, TRUE, 0);
 #endif	/* FEAT_MENU */
 
 #ifdef FEAT_TOOLBAR
@@ -1895,15 +1894,6 @@ gui_mch_init()
     gtk_signal_connect(GTK_OBJECT(gui.drawarea), "realize",
 		       GTK_SIGNAL_FUNC(drawarea_realize_cb), NULL);
 
-    /* Check if reverse video needs to be applied (on Sun it's done by X) */
-    if (gui.rev_video && gui_mch_get_lightness(gui.back_pixel)
-	    > gui_mch_get_lightness(gui.norm_pixel))
-    {
-	gui.norm_pixel = gui.def_back_pixel;
-	gui.back_pixel = gui.def_norm_pixel;
-	gui.def_norm_pixel = gui.norm_pixel;
-	gui.def_back_pixel = gui.back_pixel;
-    }
     gui.visibility = GDK_VISIBILITY_UNOBSCURED;
     save_yourself_atom = gdk_atom_intern("WM_SAVE_YOURSELF", FALSE);
     reread_rcfiles_atom = gdk_atom_intern("_GTK_READ_RCFILES", FALSE);
@@ -2320,7 +2310,7 @@ gui_mch_show_toolbar(int showit)
 	    gtk_widget_show(gui.toolbar_h);
 	    update_window_manager_hints();
 	}
-        else
+	else
 # endif
 	if (!using_gnome && !GTK_WIDGET_VISIBLE(gui.toolbar))
 	{
@@ -3610,40 +3600,15 @@ gui_mch_enable_scrollbar(scrollbar_T *sb, int flag)
 
 
 /*
- * Return the lightness of a pixel.  White is 255.
+ * Return the RGB value of a pixel as long.
  */
-    int
-gui_mch_get_lightness(guicolor_T pixel)
-{
-    GdkVisual *visual;
-    GdkColormap *cmap;
-    GdkColorContext *cc;
-    GdkColor c;
-
-    visual = gtk_widget_get_visual(gui.mainwin);
-    cmap = gtk_widget_get_colormap(gui.mainwin);
-    cc = gdk_color_context_new(visual, cmap);
-
-    c.pixel = pixel;
-    gdk_color_context_query_color(cc, &c);
-
-    /* FIXME: this is crap in terms of actual accuracy */
-    return (int) (c.red * 3 + c.green * 6 + c.blue) / (10 * 256);
-}
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
-
-/*
- * Return the RGB value of a pixel as "#RRGGBB".
- */
-    char_u *
+    long_u
 gui_mch_get_rgb(guicolor_T pixel)
 {
     GdkVisual		*visual;
     GdkColormap		*cmap;
     GdkColorContext	*cc;
     GdkColor		c;
-    static char_u	retval[10];
 
     visual = gtk_widget_get_visual(gui.mainwin);
     cmap = gtk_widget_get_colormap(gui.mainwin);
@@ -3652,38 +3617,9 @@ gui_mch_get_rgb(guicolor_T pixel)
     c.pixel = pixel;
     gdk_color_context_query_color(cc, &c);
 
-    sprintf((char *)retval, "#%02x%02x%02x",
-	    (unsigned)c.red >> 8,
-	    (unsigned)c.green >> 8,
-	    (unsigned)c.blue >> 8);
-    return retval;
+    return ((c.red & 0xff00) << 8) + (c.green & 0xff00)
+						    + ((unsigned)c.blue >> 8);
 }
-#endif
-
-#if (defined(FEAT_SYN_HL) && defined(FEAT_PRINTER)) || defined(PROTO)
-/*
- * Return the RGB value of a pixel as long.
- */
-    unsigned long
-gui_mch_get_rgb_long(guicolor_T pixel)
-{
-    GdkVisual		*visual;
-    GdkColormap		*cmap;
-    GdkColorContext	*cc;
-    GdkColor		c;
-
-    visual = gtk_widget_get_visual(gui.mainwin);
-    cmap = gtk_widget_get_colormap(gui.mainwin);
-    cc = gdk_color_context_new(visual, cmap);
-
-    c.pixel = pixel;
-    gdk_color_context_query_color(cc, &c);
-
-    return ((c.red & 0xff00) << 8)
-	+ (c.green & 0xff00)
-	+ ((unsigned)c.blue >> 8);
-}
-#endif
 
 /*
  * Get current y mouse coordinate in text window.

@@ -1,6 +1,6 @@
 " Vim plugin for editing compressed files.
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Jun 29
+" Last Change: 2001 Aug 23
 
 " Exit quickly when:
 " - this plugin was already loaded
@@ -18,7 +18,7 @@ augroup gzip
   " Enable editing of gzipped files
   " set binary mode before reading the file
   " use "gzip -d", gunzip isn't always available
-  autocmd BufReadPre,FileReadPre	*.gz,*.bz2,*.Z set bin
+  autocmd BufReadPre,FileReadPre	*.gz,*.bz2,*.Z setlocal bin
   autocmd BufReadPost,FileReadPost	*.gz  call s:read("gzip -d")
   autocmd BufReadPost,FileReadPost	*.bz2 call s:read("bzip2 -d")
   autocmd BufReadPost,FileReadPost	*.Z   call s:read("uncompress")
@@ -59,7 +59,7 @@ fun s:read(cmd)
   set pm=
   " set 'modifiable'
   let ma_save = &ma
-  set ma
+  setlocal ma
   " when filtering the whole buffer, it will become empty
   let empty = line("'[") == 1 && line("']") == line("$")
   let tmp = tempname()
@@ -71,7 +71,7 @@ fun s:read(cmd)
   " delete the compressed lines
   '[,']d
   " read in the uncompressed lines "'[-1r tmp"
-  set nobin
+  setlocal nobin
   execute "silent '[-1r " . tmp
   " if buffer became empty, delete trailing blank line
   if empty
@@ -83,7 +83,7 @@ fun s:read(cmd)
   silent! exe "bwipe " . tmp
   silent! exe "bwipe " . tmpe
   let &pm = pm_save
-  let &ma = ma_save
+  let &l:ma = ma_save
   " When uncompressed the whole buffer, do autocommands
   if empty
     execute ":silent! doau BufReadPost " . expand("%:r")

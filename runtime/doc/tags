@@ -3097,6 +3097,9 @@ E451	os_msdos.txt	/*E451*
 E452	os_msdos.txt	/*E452*
 E453	os_msdos.txt	/*E453*
 E454	os_msdos.txt	/*E454*
+E455	various.txt	/*E455*
+E456	various.txt	/*E456*
+E457	various.txt	/*E457*
 E46	message.txt	/*E46*
 E47	message.txt	/*E47*
 E48	eval.txt	/*E48*
@@ -3392,6 +3395,7 @@ ZZ	editing.txt	/*ZZ*
 [_CTRL-D	tagsearch.txt	/*[_CTRL-D*
 [_CTRL-I	tagsearch.txt	/*[_CTRL-I*
 [`	motion.txt	/*[`*
+[c	diff.txt	/*[c*
 [count]	intro.txt	/*[count]*
 [d	tagsearch.txt	/*[d*
 [f	editing.txt	/*[f*
@@ -3422,6 +3426,7 @@ ZZ	editing.txt	/*ZZ*
 ]_CTRL-D	tagsearch.txt	/*]_CTRL-D*
 ]_CTRL-I	tagsearch.txt	/*]_CTRL-I*
 ]`	motion.txt	/*]`*
+]c	diff.txt	/*]c*
 ]d	tagsearch.txt	/*]d*
 ]f	editing.txt	/*]f*
 ]i	tagsearch.txt	/*]i*
@@ -3567,7 +3572,6 @@ beos-launch	os_beos.txt	/*beos-launch*
 beos-meta	os_beos.txt	/*beos-meta*
 beos-mouse	os_beos.txt	/*beos-mouse*
 beos-perl	os_beos.txt	/*beos-perl*
-beos-ppc	os_beos.txt	/*beos-ppc*
 beos-timeout	os_beos.txt	/*beos-timeout*
 beos-unicode	os_beos.txt	/*beos-unicode*
 beos-utf8	os_beos.txt	/*beos-utf8*
@@ -3615,6 +3619,7 @@ c_<C-Left>	cmdline.txt	/*c_<C-Left>*
 c_<C-R>	cmdline.txt	/*c_<C-R>*
 c_<C-R>_<C-A>	cmdline.txt	/*c_<C-R>_<C-A>*
 c_<C-R>_<C-F>	cmdline.txt	/*c_<C-R>_<C-F>*
+c_<C-R>_<C-O>	cmdline.txt	/*c_<C-R>_<C-O>*
 c_<C-R>_<C-P>	cmdline.txt	/*c_<C-R>_<C-P>*
 c_<C-R>_<C-R>	cmdline.txt	/*c_<C-R>_<C-R>*
 c_<C-R>_<C-W>	cmdline.txt	/*c_<C-R>_<C-W>*
@@ -3655,6 +3660,7 @@ c_CTRL-Q	cmdline.txt	/*c_CTRL-Q*
 c_CTRL-R	cmdline.txt	/*c_CTRL-R*
 c_CTRL-R_CTRL-A	cmdline.txt	/*c_CTRL-R_CTRL-A*
 c_CTRL-R_CTRL-F	cmdline.txt	/*c_CTRL-R_CTRL-F*
+c_CTRL-R_CTRL-O	cmdline.txt	/*c_CTRL-R_CTRL-O*
 c_CTRL-R_CTRL-P	cmdline.txt	/*c_CTRL-R_CTRL-P*
 c_CTRL-R_CTRL-R	cmdline.txt	/*c_CTRL-R_CTRL-R*
 c_CTRL-R_CTRL-W	cmdline.txt	/*c_CTRL-R_CTRL-W*
@@ -3689,6 +3695,7 @@ charconvert_from-variable	eval.txt	/*charconvert_from-variable*
 charconvert_to-variable	eval.txt	/*charconvert_to-variable*
 charset	multibyte.txt	/*charset*
 charset-conversion	multibyte.txt	/*charset-conversion*
+cindent()	eval.txt	/*cindent()*
 cinkeys-format	indent.txt	/*cinkeys-format*
 cinoptions-values	indent.txt	/*cinoptions-values*
 client-server	remote.txt	/*client-server*
@@ -4538,6 +4545,7 @@ java.vim	syntax.txt	/*java.vim*
 jtags	tagsearch.txt	/*jtags*
 jump-motions	motion.txt	/*jump-motions*
 jumplist	motion.txt	/*jumplist*
+jumpto-diffs	diff.txt	/*jumpto-diffs*
 k	motion.txt	/*k*
 kcc	uganda.txt	/*kcc*
 key-codes	intro.txt	/*key-codes*
@@ -4585,6 +4593,7 @@ linefeed	intro.txt	/*linefeed*
 linewise	motion.txt	/*linewise*
 linewise-register	change.txt	/*linewise-register*
 linewise-visual	visual.txt	/*linewise-visual*
+lispindent()	eval.txt	/*lispindent()*
 list-repeat	windows.txt	/*list-repeat*
 lite-syntax	syntax.txt	/*lite-syntax*
 lite.vim	syntax.txt	/*lite.vim*

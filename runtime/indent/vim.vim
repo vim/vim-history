@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Vim script
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 28
+" Last Change:	2001 Aug 27
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")

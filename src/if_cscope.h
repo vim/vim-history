@@ -62,9 +62,7 @@ typedef struct csi {
     ino_t	    st_ino;	/* inode number of cscope db */
 
     FILE *	    fr_fp;	/* from cscope: FILE. */
-    int		    fr_fd;	/* from cscope: file descriptor. */
     FILE *	    to_fp;	/* to cscope: FILE. */
-    int		    to_fd;	/* to cscope: file descriptor. */
 } csinfo_T;
 
 enum { Add, Find, Help, Kill, Reset, Show } csid_e;

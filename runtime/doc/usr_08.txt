@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.0as.  Last change: 2001 Aug 07
+*usr_08.txt*	For Vim version 6.0at.  Last change: 2001 Aug 25
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -428,6 +428,20 @@ the differences side by side.
    When you don't want this for a moment, use this command: >
 
 	:set noscrollbind
+
+
+JUMPING TO CHANGES
+
+When you have disabled folding in some way, it may be difficult to find the
+changes.  Use this command to jump forward to the next change: >
+
+	]c
+
+To go the other way use: >
+
+	[c
+
+Prepended a count to jump further away.
 
 
 REMOVING CHANGES

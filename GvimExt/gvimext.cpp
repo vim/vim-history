@@ -16,6 +16,12 @@
 
 #include "gvimext.h"
 
+#ifdef __BORLANDC__
+# include <dir.h>
+#else
+static char *searchpath(char *name);
+#endif
+
 // Always get an error while putting the following stuff to the
 // gvimext.h file as class protected variables, give up and
 // declare them as global stuff
@@ -30,18 +36,278 @@ HRESULT hres = 0;
 UINT cbFiles = 0;
 
 //
+// Get the name of the Gvim executable to use, with the path.
+// When "runtime" is non-zero, we were called to find the runtime directory.
+// Returns the path in name[MAX_PATH].  It's empty when it fails.
+//
+    static void
+getGvimName(char *name, int runtime)
+{
+    HKEY	keyhandle;
+    DWORD	hlen;
+
+    // Get the location of gvim from the registry.
+    name[0] = 0;
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim", 0,
+				       KEY_READ, &keyhandle) == ERROR_SUCCESS)
+    {
+	hlen = MAX_PATH;
+	if (RegQueryValueEx(keyhandle, "path", 0, NULL, (BYTE *)name, &hlen)
+							     != ERROR_SUCCESS)
+	    name[0] = 0;
+	else
+	    name[hlen] = 0;
+	RegCloseKey(keyhandle);
+    }
+
+    // Registry didn't work, use the search path.
+    if (name[0] == 0)
+	strcpy(name, searchpath("gvim.exe"));
+
+    if (!runtime)
+    {
+	// Only when looking for the executable, not the runtime dir, we can
+	// search for the batch file or a name without a path.
+	if (name[0] == 0)
+	    strcpy(name, searchpath("gvim.bat"));
+	if (name[0] == 0)
+	    strcpy(name, "gvim");	// finds gvim.bat or gvim.exe
+
+	// avoid that Vim tries to expand wildcards in the file names
+	strcat(name, " --literal");
+    }
+}
+
+//
+// Get the Vim runtime directory into buf[MAX_PATH].
+// The result is empty when it failed.
+// When it works, the path ends in a slash or backslash.
+//
+    static void
+getRuntimeDir(char *buf)
+{
+    int		idx;
+
+    getGvimName(buf, 1);
+    if (buf[0] != 0)
+    {
+	// remove "gvim.exe" from the end
+	for (idx = strlen(buf) - 1; idx >= 0; idx--)
+	    if (buf[idx] == '\\' || buf[idx] == '/')
+	    {
+		buf[idx + 1] = 0;
+		break;
+	    }
+    }
+}
+
+//
+// GETTEXT: translated messages and menu entries
+//
+#ifndef FEAT_GETTEXT
+# define _(x)  x
+#else
+# define _(x)  (*dyn_libintl_gettext)(x)
+# define VIMPACKAGE "vim"
+# ifndef GETTEXT_DLL
+#  define GETTEXT_DLL "libintl.dll"
+# endif
+
+// Dummy functions
+static char *null_libintl_gettext(const char *);
+static char *null_libintl_textdomain(const char *);
+static char *null_libintl_bindtextdomain(const char *, const char *);
+static int dyn_libintl_init(char *dir);
+static void dyn_libintl_end(void);
+
+static HINSTANCE hLibintlDLL = 0;
+static char *(*dyn_libintl_gettext)(const char *) = null_libintl_gettext;
+static char *(*dyn_libintl_textdomain)(const char *) = null_libintl_textdomain;
+static char *(*dyn_libintl_bindtextdomain)(const char *, const char *)
+						= null_libintl_bindtextdomain;
+
+//
+// Attempt to load libintl.dll.  If it doesn't work, use dummy functions.
+// "dir" is the directory where the libintl.dll might be.
+// Return 1 for success, 0 for failure.
+//
+    static int
+dyn_libintl_init(char *dir)
+{
+    int		i;
+    static struct
+    {
+	char	    *name;
+	FARPROC	    *ptr;
+    } libintl_entry[] =
+    {
+	{"gettext",		(FARPROC*)&dyn_libintl_gettext},
+	{"textdomain",		(FARPROC*)&dyn_libintl_textdomain},
+	{"bindtextdomain",	(FARPROC*)&dyn_libintl_bindtextdomain},
+	{NULL, NULL}
+    };
+
+    // No need to initialize twice.
+    if (hLibintlDLL)
+	return 1;
+
+    // Load gettext library, first try the Vim runtime directory, then search
+    // the path.
+    strcat(dir, GETTEXT_DLL);
+    hLibintlDLL = LoadLibrary(dir);
+    if (!hLibintlDLL)
+    {
+	hLibintlDLL = LoadLibrary(GETTEXT_DLL);
+	if (!hLibintlDLL)
+	    return 0;
+    }
+
+    // Get the addresses of the functions we need.
+    for (i = 0; libintl_entry[i].name != NULL
+					 && libintl_entry[i].ptr != NULL; ++i)
+    {
+	if (!(*libintl_entry[i].ptr = GetProcAddress(hLibintlDLL,
+						      libintl_entry[i].name)))
+	{
+	    dyn_libintl_end();
+	    return 0;
+	}
+    }
+    return 1;
+}
+
+    static void
+dyn_libintl_end(void)
+{
+    if (hLibintlDLL)
+	FreeLibrary(hLibintlDLL);
+    hLibintlDLL			= NULL;
+    dyn_libintl_gettext		= null_libintl_gettext;
+    dyn_libintl_textdomain	= null_libintl_textdomain;
+    dyn_libintl_bindtextdomain	= null_libintl_bindtextdomain;
+}
+
+    static char *
+null_libintl_gettext(const char *msgid)
+{
+    return (char *)msgid;
+}
+
+    static char *
+null_libintl_bindtextdomain(const char *domainname, const char *dirname)
+{
+    return NULL;
+}
+
+    static char *
+null_libintl_textdomain(const char* domainname)
+{
+    return NULL;
+}
+
+//
+// Setup for translating strings.
+//
+    static void
+dyn_gettext_load(void)
+{
+    char    szBuff[MAX_PATH];
+    char    szLang[MAX_PATH];
+    DWORD   len;
+    HKEY    keyhandle;
+    int	    gotlang = 0;
+
+    strcpy(szLang, "LANG=");
+
+    // First try getting the language from the registry, this can be
+    // used to overrule the system language.
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim", 0,
+				       KEY_READ, &keyhandle) == ERROR_SUCCESS)
+    {
+	len = MAX_PATH;
+	if (RegQueryValueEx(keyhandle, "lang", 0, NULL, (BYTE*)szBuff, &len)
+							     == ERROR_SUCCESS)
+	{
+	    szBuff[len] = 0;
+	    strcat(szLang, szBuff);
+	    gotlang = 1;
+	}
+	RegCloseKey(keyhandle);
+    }
+
+    if (!gotlang && getenv("LANG") == NULL)
+    {
+	// Get the language from the system.
+	// Could use LOCALE_SISO639LANGNAME, but it's not in Win95.
+	// LOCALE_SABBREVLANGNAME gives us three letters, like "enu", we use
+	// only the first two.
+	len = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SABBREVLANGNAME,
+						    (LPTSTR)szBuff, MAX_PATH);
+	if (len >= 2 && _strnicmp(szBuff, "en", 2) != 0)
+	{
+	    // TODO: is this right?
+	    if (_strnicmp(szBuff, "zht", 3) == 0)
+		strcpy(szBuff, "zh_TW");
+	    else
+		szBuff[2] = 0;	// truncate to two-letter code
+	    strcat(szLang, szBuff);
+	    gotlang = 1;
+	}
+    }
+    if (gotlang)
+	putenv(szLang);
+
+    // Try to locate the runtime files.  The path is used to find libintl.dll
+    // and the vim.mo files.
+    getRuntimeDir(szBuff);
+    if (szBuff[0] != 0)
+    {
+	len = strlen(szBuff);
+	if (dyn_libintl_init(szBuff))
+	{
+	    strcpy(szBuff + len, "lang");
+
+	    (*dyn_libintl_bindtextdomain)(VIMPACKAGE, szBuff);
+	    (*dyn_libintl_textdomain)(VIMPACKAGE);
+	}
+    }
+}
+
+    static void
+dyn_gettext_free(void)
+{
+    dyn_libintl_end();
+}
+#endif // FEAT_GETTEXT
+
+//
 // Global variables
 //
 UINT      g_cRefThisDll = 0;    // Reference count of this DLL.
 HINSTANCE g_hmodThisDll = NULL;	// Handle to this DLL itself.
 
+
+//---------------------------------------------------------------------------
+// DllMain
+//---------------------------------------------------------------------------
 extern "C" int APIENTRY
 DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
 {
-    if (dwReason == DLL_PROCESS_ATTACH)
+    switch (dwReason)
     {
+    case DLL_PROCESS_ATTACH:
 	// Extension DLL one-time initialization
 	g_hmodThisDll = hInstance;
+#ifdef FEAT_GETTEXT
+	dyn_gettext_load();
+#endif
+	break;
+
+    case DLL_PROCESS_DETACH:
+#ifdef FEAT_GETTEXT
+	dyn_gettext_free();
+#endif
+	break;
     }
 
     return 1;   // ok
@@ -289,13 +555,13 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		indexMenu++,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
-		"Edit with &multiple Vims");
+		_("Edit with &multiple Vims"));
 
 	InsertMenu(hMenu,
 		indexMenu++,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
-		"Edit with single &Vim");
+		_("Edit with single &Vim"));
 
 	// set flag
 	m_multiFiles = TRUE;
@@ -307,7 +573,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		indexMenu++,
 		MF_STRING|MF_BYPOSITION,
 		idCmd++,
-		"Edit with &Vim");
+		_("Edit with &Vim"));
 
 	// set flag
 	m_multiFiles = FALSE;
@@ -331,7 +597,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 	    *pos = 0;
 	}
 	// Now concatenate
-	strncpy(temp, "Edit with existing Vim - &", MAX_PATH - 1);
+	strncpy(temp, _("Edit with existing Vim - &"), MAX_PATH - 1);
 	strncat(temp, title, MAX_PATH - 1);
 	InsertMenu(hMenu,
 		indexMenu++,
@@ -455,7 +721,7 @@ STDMETHODIMP CShellExt::GetCommandString(UINT idCmd,
 					 UINT cchMax)
 {
     if (uFlags == GCS_HELPTEXT && cchMax > 35)
-	lstrcpy(pszName, "Edits the selected file(s) with Vim");
+	lstrcpy(pszName, _("Edits the selected file(s) with Vim"));
 
     return NOERROR;
 }
@@ -473,7 +739,7 @@ BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
     if (GetClassName(hWnd, temp, sizeof(temp)) == 0)
 	return true;
     // Compare class name to that of vim, if not, return
-    if (_strnicmp( temp, "vim", sizeof("vim")) != 0)
+    if (_strnicmp(temp, "vim", sizeof("vim")) != 0)
 	return true;
     // First check if the number of vim instance exceeds MAX_HWND
     CShellExt *cs = (CShellExt*) lParam;
@@ -486,7 +752,7 @@ BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
 }
 
 #ifdef WIN32
-/* This symbol is not defined in older versions of the SDK or Visual C++ */
+// This symbol is not defined in older versions of the SDK or Visual C++.
 
 #ifndef VER_PLATFORM_WIN32_WINDOWS
 # define VER_PLATFORM_WIN32_WINDOWS 1
@@ -494,10 +760,10 @@ BOOL CALLBACK CShellExt::EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
 static DWORD g_PlatformId;
 
-/*
- * Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
- * VER_PLATFORM_WIN32_WINDOWS (Win95).
- */
+//
+// Set g_PlatformId to VER_PLATFORM_WIN32_NT (NT) or
+// VER_PLATFORM_WIN32_WINDOWS (Win95).
+//
     static void
 PlatformId(void)
 {
@@ -522,8 +788,8 @@ searchpath(char *name)
     static char widename[2 * MAX_PATH];
     static char location[2 * MAX_PATH + 2];
 
-    /* There appears to be a bug in FindExecutableA() on Windows NT.
-     * Use FindExecutableW() instead... */
+    // There appears to be a bug in FindExecutableA() on Windows NT.
+    // Use FindExecutableW() instead...
     PlatformId();
     if (g_PlatformId == VER_PLATFORM_WIN32_NT)
     {
@@ -548,35 +814,6 @@ searchpath(char *name)
 # endif
 #endif
 
-static void
-getGvimName(char *name)
-{
-    HKEY keyhandle;
-    DWORD hlen;
-
-    /* Get the location of gvim from the registry. */
-    name[0] = 0;
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Vim\\Gvim", 0,
-				       KEY_READ, &keyhandle) == ERROR_SUCCESS)
-    {
-	hlen = MAX_PATH;
-	if (RegQueryValueEx(keyhandle, "path", 0, NULL, (BYTE *)name, &hlen)
-							     != ERROR_SUCCESS)
-	    name[0] = 0;
-	else
-	    name[hlen] = 0;
-	RegCloseKey(keyhandle);
-    }
-    if (name[0] == 0)
-	strcpy(name, searchpath("gvim.exe"));
-    if (name[0] == 0)
-	strcpy(name, searchpath("gvim.bat"));
-    if (name[0] == 0)
-	strcpy(name, "gvim");		/* finds gvim.bat or gvim.exe */
-
-    strcat(name, " --literal");		/* file names don't need expansion */
-}
-
 STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 				   LPCSTR pszWorkingDir,
 				   LPCSTR pszCmd,
@@ -594,7 +831,7 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 		m_szFileUserClickedOn,
 		sizeof(m_szFileUserClickedOn));
 
-	getGvimName(cmdStr);
+	getGvimName(cmdStr, 0);
 	strcat(cmdStr, " \"");
 
 	if ((strlen(cmdStr) + strlen(m_szFileUserClickedOn) + 2) < MAX_PATH)
@@ -621,7 +858,11 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 			&pi)		// Pointer to PROCESS_INFORMATION structure.
 	       )
 	    {
-		MessageBox(hParent, "Error creating process: Check if gvim is in your path!", "gvimext.dll error", MB_OK);
+		MessageBox(
+		    hParent,
+		    _("Error creating process: Check if gvim is in your path!"),
+		    _("gvimext.dll error"),
+		    MB_OK);
 	    }
             else
             {
@@ -631,7 +872,11 @@ STDMETHODIMP CShellExt::InvokeGvim(HWND hParent,
 	}
 	else
 	{
-	    MessageBox(hParent, "Path length too long!", "gvimext.dll error", MB_OK);
+	    MessageBox(
+		hParent,
+		_("Path length too long!"),
+		_("gvimext.dll error"),
+		MB_OK);
 	}
     }
 
@@ -653,7 +898,7 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 
     cmdlen = MAX_PATH;
     cmdStr = (char *)malloc(cmdlen);
-    getGvimName(cmdStr);
+    getGvimName(cmdStr, 0);
     for (i = 0; i < cbFiles; i++)
     {
 	DragQueryFile((HDROP)medium.hGlobal,
@@ -691,7 +936,11 @@ STDMETHODIMP CShellExt::InvokeSingleGvim(HWND hParent,
 		&pi)		// Pointer to PROCESS_INFORMATION structure.
        )
     {
-	MessageBox(hParent, "Error creating process: Check if gvim is in your path!", "gvimext.dll error", MB_OK);
+	MessageBox(
+	    hParent,
+	    _("Error creating process: Check if gvim is in your path!"),
+	    _("gvimext.dll error"),
+	    MB_OK);
     }
     else
     {

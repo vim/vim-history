@@ -262,7 +262,7 @@ DoRegisterName(dpy, name)
 	 */
 	old_handler = XSetErrorHandler(x_error_check);
 	status = XGetGeometry(dpy, w, &dummyWin, &dummyInt, &dummyInt,
-		              &dummyUns, &dummyUns, &dummyUns, &dummyUns);
+				  &dummyUns, &dummyUns, &dummyUns, &dummyUns);
 	(void)XSetErrorHandler(old_handler);
 	if (status != Success && w != commWindow)
 	{
@@ -272,7 +272,7 @@ DoRegisterName(dpy, name)
 	}
 	(void)LookupName(dpy, name, /*delete=*/TRUE, NULL);
     }
-    sprintf((char *)propInfo, "%x %.*s", (uint)commWindow,
+    sprintf((char *)propInfo, "%x %.*s", (int_u)commWindow,
 						       MAX_NAME_LENGTH, name);
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
@@ -318,7 +318,7 @@ serverChangeRegisteredWindow(dpy, newwin)
 	/* Reinsert name if we was already registered */
 	(void) LookupName(dpy, serverName, /*delete=*/TRUE, NULL);
 	sprintf((char *)propInfo, "%x %.*s",
-		(uint) newwin, MAX_NAME_LENGTH, serverName);
+		(int_u) newwin, MAX_NAME_LENGTH, serverName);
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty, XA_STRING, 8,
 			PropModeAppend, (char_u *) propInfo,
 			STRLEN(propInfo) + 1);
@@ -338,8 +338,8 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     char_u	*cmd;			/* What to send. */
     char_u	**result;		/* Result of eval'ed expression */
     Window	*server;		/* Actual ID of receiving app */
-    Bool	asExpr;                 /* Interpret as keystrokes or expr ? */
-    Bool	localLoop;              /* Throw away everything but result */
+    Bool	asExpr;			/* Interpret as keystrokes or expr ? */
+    Bool	localLoop;		/* Throw away everything but result */
 {
     Window	    w;
     char_u	    *property;
@@ -354,7 +354,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     if (result != NULL)
 	*result = NULL;
     if (name == NULL || *name == NUL)
-	name = (char_u *)"gvim";    /* use a default name */
+	name = (char_u *)"GVIM";    /* use a default name */
 
     if (commProperty == None && dpy != NULL)
     {
@@ -367,8 +367,11 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     {
 	if (asExpr)
 	{
-	    char_u *ret =  eval_to_string(cmd, NULL);
+	    char_u *ret;
 
+	    ++emsg_skip;
+	    ret = eval_to_string(cmd, NULL);
+	    --emsg_skip;
 	    if (result != NULL)
 		*result = ret;
 	    else
@@ -420,13 +423,13 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     property = (char_u *)alloc((unsigned) length + 30);
 
     sprintf((char *)property, "%c%c%c-n %s%c-s %s",
-	              0, asExpr ? 'c' : 'k', 0, name, 0, cmd);
+		      0, asExpr ? 'c' : 'k', 0, name, 0, cmd);
     if (name == loosename)
 	vim_free(loosename);
     /* Add a back reference to our comm window */
     serial++;
     sprintf((char *)property + length, "%c-r %x %d",
-						0, (uint)commWindow, serial);
+						0, (int_u)commWindow, serial);
     length += STRLEN(property + length + 1) + 1;
 
     res = AppendPropCarefully(dpy, w, commProperty, property, length + 1);
@@ -445,7 +448,6 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
      * complete (this is needed by SendEventProc and by
      * AppendErrorProc to pass back the command's results).
      */
-
     pending.serial = serial;
     pending.result = NULL;
     pending.nextPtr = pendingCommands;
@@ -457,24 +459,18 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
      * Unregister the information about the pending command
      * and return the result.
      */
-
     if (pendingCommands == &pending)
-    {
 	pendingCommands = pending.nextPtr;
-    }
     else
     {
 	PendingCommand *pcPtr;
 
-	for (pcPtr = pendingCommands; pcPtr != NULL;
-		pcPtr = pcPtr->nextPtr)
-	{
+	for (pcPtr = pendingCommands; pcPtr != NULL; pcPtr = pcPtr->nextPtr)
 	    if (pcPtr->nextPtr == &pending)
 	    {
 		pcPtr->nextPtr = pending.nextPtr;
 		break;
 	    }
-	}
     }
     if (result != NULL)
 	*result = pending.result;
@@ -523,9 +519,9 @@ ServerWait(dpy, w, endCond, endData, localLoop, seconds)
     int		localLoop;
     int		seconds;
 {
-    time_t          start;
-    time_t          now;
-    time_t          lastChk = 0;
+    time_t	    start;
+    time_t	    now;
+    time_t	    lastChk = 0;
     XEvent	    event;
     XPropertyEvent *e = (XPropertyEvent *)&event;
 #   define SEND_MSEC_POLL 50
@@ -597,7 +593,7 @@ serverGetVimNames(dpy)
     int		    result, actualFormat;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
-    uint	    w;
+    int_u	    w;
     garray_T	    ga;
 
     if (registryProperty == None)
@@ -612,7 +608,7 @@ serverGetVimNames(dpy)
      */
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-	                        (long)MAX_PROP_WORDS, False,
+				(long)MAX_PROP_WORDS, False,
 				XA_STRING, &actualType,
 				&actualFormat, &numItems, &bytesAfter,
 				&regProp);
@@ -640,7 +636,7 @@ serverGetVimNames(dpy)
      * Scan all of the names out of the property.
      */
     ga_init2(&ga, 1, 100);
-    for (p = regProp; (p-regProp) < numItems; p++)
+    for (p = regProp; (p - regProp) < numItems; p++)
     {
 	entry = p;
 	while (*p != 0 && !isspace(*p))
@@ -736,7 +732,7 @@ serverSendReply(name, str)
 {
     char_u	*property;
     int		length;
-    int         res;
+    int		res;
     Display	*dpy = X_DISPLAY;
     Window	win = serverStrToWin(name);
 
@@ -858,7 +854,7 @@ SendInit(dpy)
     {
 	commWindow =
 	    XCreateSimpleWindow(dpy, XDefaultRootWindow(dpy),
-		                getpid(), 0, 10, 10, 0,
+				getpid(), 0, 10, 10, 0,
 				WhitePixel(dpy, DefaultScreen(dpy)),
 				WhitePixel(dpy, DefaultScreen(dpy)));
 	XSelectInput(dpy, commWindow, PropertyChangeMask);
@@ -868,7 +864,7 @@ SendInit(dpy)
     }
 
     XSync(dpy, False);
-    (void) XSetErrorHandler(old_handler);
+    (void)XSetErrorHandler(old_handler);
 
     return got_x_error ? -1 : 0;
 }
@@ -899,14 +895,14 @@ LookupName(dpy, name, delete, loose)
     int		    result, actualFormat;
     unsigned long   numItems, bytesAfter;
     Atom	    actualType;
-    Window	    returnValue;
+    int_u	    returnValue;
 
     /*
      * Read the registry property.
      */
     regProp = NULL;
     result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-	                        (long)MAX_PROP_WORDS, False,
+				(long)MAX_PROP_WORDS, False,
 				XA_STRING, &actualType,
 				&actualFormat, &numItems, &bytesAfter,
 				&regProp);
@@ -928,16 +924,16 @@ LookupName(dpy, name, delete, loose)
     /*
      * Scan the property for the desired name.
      */
-    returnValue = None;
+    returnValue = (int_u)None;
     entry = NULL;	/* Not needed, but eliminates compiler warning. */
     for (p = regProp; (p - regProp) < numItems; )
     {
 	entry = p;
 	while (*p != 0 && !isspace(*p))
 	    p++;
-	if (*p != 0 && STRCMP(name, p + 1) == 0)
+	if (*p != 0 && STRICMP(name, p + 1) == 0)
 	{
-	    sscanf((char *)entry, "%x", (uint*) &returnValue);
+	    sscanf((char *)entry, "%x", &returnValue);
 	    break;
 	}
 	while (*p != 0)
@@ -945,7 +941,7 @@ LookupName(dpy, name, delete, loose)
 	p++;
     }
 
-    if (loose != NULL && returnValue == None && !IsSerialName(name))
+    if (loose != NULL && returnValue == (int_u)None && !IsSerialName(name))
     {
 	for (p = regProp; (p - regProp) < numItems; )
 	{
@@ -953,9 +949,9 @@ LookupName(dpy, name, delete, loose)
 	    while (*p != 0 && !isspace(*p))
 		p++;
 	    if (*p != 0 && IsSerialName(p + 1)
-		    && STRNCMP(name, p + 1, STRLEN(name)) == 0)
+		    && STRNICMP(name, p + 1, STRLEN(name)) == 0)
 	    {
-		sscanf((char *)entry, "%x", (uint*) &returnValue);
+		sscanf((char *)entry, "%x", &returnValue);
 		*loose = vim_strsave(p + 1);
 		break;
 	    }
@@ -970,24 +966,24 @@ LookupName(dpy, name, delete, loose)
      * remainder of the registry property to overlay the deleted
      * info, then rewrite the property).
      */
-    if (delete && returnValue != None)
+    if (delete && returnValue != (int_u)None)
     {
 	int count;
 
 	while (*p != 0)
 	    p++;
 	p++;
-	count = numItems - (p-regProp);
+	count = numItems - (p - regProp);
 	if (count > 0)
 	    memcpy(entry, p, count);
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty, XA_STRING,
-		        8, PropModeReplace, regProp,
-		        (int) (numItems - (p - entry)));
+			8, PropModeReplace, regProp,
+			(int)(numItems - (p - entry)));
 	XSync(dpy, False);
     }
 
     XFree(regProp);
-    return returnValue;
+    return (Window)returnValue;
 }
 
 /*
@@ -1036,7 +1032,7 @@ DeleteAnyLingerer(dpy, win)
     {
 	if (*p != 0)
 	{
-	    sscanf((char *)p, "%x", (uint *)&wwin);
+	    sscanf((char *)p, "%x", (int_u *)&wwin);
 	    if (wwin == win)
 	    {
 		int lastHalf;
@@ -1063,7 +1059,7 @@ DeleteAnyLingerer(dpy, win)
     {
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty,
 			XA_STRING, 8, PropModeReplace, regProp,
-			(int) (p - regProp));
+			(int)(p - regProp));
 	XSync(dpy, False);
     }
 
@@ -1134,7 +1130,7 @@ serverEventProc(dpy, eventPtr)
 	{
 	    Window	resWindow;
 	    char_u	*name, *script, *serial, *end, *res;
-	    Bool        asKeys = *p == 'k';
+	    Bool	asKeys = *p == 'k';
 	    garray_T	reply;
 
 	    /*
@@ -1204,14 +1200,18 @@ serverEventProc(dpy, eventPtr)
 		if (asKeys)
 		    server_to_input_buf(script);
 		else
+		{
+		    ++emsg_skip;
 		    res = eval_to_string(script, NULL);
+		    --emsg_skip;
+		}
 	    }
 	    if (resWindow != None)
 	    {
 		if (res != NULL)
 		    ga_concat(&reply, res);
 		ga_append(&reply, 0);
-		(void) AppendPropCarefully(dpy, resWindow, commProperty,
+		(void)AppendPropCarefully(dpy, resWindow, commProperty,
 					   reply.ga_data, reply.ga_len);
 	    }
 	    vim_free(res);
@@ -1223,13 +1223,10 @@ serverEventProc(dpy, eventPtr)
 	    PendingCommand *pcPtr;
 
 	    /*
-	     *----------------------------------------------------------
 	     * This is a reply to some command that we sent out.  Iterate
 	     * over all of its options.  Stop when we reach the end of the
 	     * property or something that doesn't look like an option.
-	     *----------------------------------------------------------
 	     */
-
 	    p += 2;
 	    gotSerial = 0;
 	    res = (char_u *)"";
@@ -1258,7 +1255,6 @@ serverEventProc(dpy, eventPtr)
 	     * Give the result information to anyone who's
 	     * waiting for it.
 	     */
-
 	    for (pcPtr = pendingCommands; pcPtr != NULL; pcPtr = pcPtr->nextPtr)
 	    {
 		if (serial != pcPtr->serial || pcPtr->result != NULL)
@@ -1279,11 +1275,11 @@ serverEventProc(dpy, eventPtr)
 	    char_u	*str;
 	    char_u	winstr[30];
 	    struct	ServerReply *r;
+
 	    /*
 	     * This is a (n)otification.  Sent with serverreply_send in VimL.
 	     * Execute any autocommand and save it for later retrieval
 	     */
-
 	    p += 2;
 	    gotWindow = 0;
 	    str = (char_u *)"";
@@ -1350,14 +1346,14 @@ AppendPropCarefully(dpy, window, property, value, length)
 				 * be modified. */
     Atom property;		/* Name of property. */
     char_u *value;		/* Characters  to append to property. */
-    int  length;                /* How much to append */
+    int  length;		/* How much to append */
 {
     XErrorHandler old_handler;
 
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
     XChangeProperty(dpy, window, property, XA_STRING, 8,
-	            PropModeAppend, value, length);
+		    PropModeAppend, value, length);
     XSync(dpy, False);
     (void) XSetErrorHandler(old_handler);
     return got_x_error ? -1 : 0;
@@ -1378,24 +1374,14 @@ x_error_check(dpy, error_event)
 }
 
 /*
- * Check if name looks like it had a 3 digit serial number appended
+ * Check if "str" looks like it had a serial number appended
  */
     static int
 IsSerialName(str)
     char_u	*str;
 {
-    if (STRLEN(str) < 5)
-	return FALSE;
-    str = str + STRLEN(str) - 4;
-    if (*str++ != '-')
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
-    if (!isdigit(*str++))
-	return FALSE;
+    int len = STRLEN(str);
 
-    return TRUE;
+    return (len > 1 && isdigit(str[len - 1]));
 }
 #endif	/* FEAT_CLIENTSERVER */

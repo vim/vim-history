@@ -107,10 +107,17 @@ END
 /*
  *  Printing Status Dialog (should only be used when FEAT_PRINTER is defined)
  */
-PRINTDLGBOX DIALOG DISCARDABLE  20, 20, 186, 63
+#define IDC_BOX1		400 
+#define IDC_PRINTTEXT1		401
+#define IDC_PRINTTEXT2		402
+#define IDC_PROGRESS		403
+PRINTDLGBOX DIALOG 115, 63, 210, 80
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif"
+FONT 8, "Helv"
 BEGIN
-    PUSHBUTTON      "Cancel",IDCANCEL,67,42,50,14
-    CTEXT           "Cancel Printing",-1,7,21,172,8
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 85, 60, 40, 14
+    CTEXT           "Printing",IDC_PRINTTEXT1,23,15,157,8
+    CTEXT           " ",IDC_PRINTTEXT2,23,25,157,8
+    CTEXT           "Initializing...",IDC_PROGRESS,24,38,157,8
+    GROUPBOX        "",IDC_BOX1,19,9,170,47
 END

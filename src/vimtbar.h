@@ -12,10 +12,10 @@
 //
 typedef struct tagTBBUTTON
 {
-    int  iBitmap;        // index into bitmap of this button's picture
-    int  idCommand;      // WM_COMMAND menu ID that this button sends
-    BYTE fsState;        // button's state
-    BYTE fsStyle;        // button's style
+    int  iBitmap;	 // index into bitmap of this button's picture
+    int  idCommand;	 // WM_COMMAND menu ID that this button sends
+    BYTE fsState;	 // button's state
+    BYTE fsStyle;	 // button's style
 } TBBUTTON;
 
 typedef TBBUTTON NEAR* PTBBUTTON;
@@ -26,19 +26,19 @@ typedef const TBBUTTON FAR* LPCTBBUTTON;
 //
 // Styles
 //
-#define TBSTYLE_BUTTON          0x00    // this entry is button
-#define TBSTYLE_SEP             0x01    // this entry is a separator
-#define TBSTYLE_CHECK           0x02    // this is a check button (it stays down)
-#define TBSTYLE_GROUP           0x04    // this is a check button (it stays down)
-#define TBSTYLE_CHECKGROUP      (TBSTYLE_GROUP | TBSTYLE_CHECK) // this group is a member of a group radio group
+#define TBSTYLE_BUTTON		0x00	// this entry is button
+#define TBSTYLE_SEP		0x01	// this entry is a separator
+#define TBSTYLE_CHECK		0x02	// this is a check button (it stays down)
+#define TBSTYLE_GROUP		0x04	// this is a check button (it stays down)
+#define TBSTYLE_CHECKGROUP	(TBSTYLE_GROUP | TBSTYLE_CHECK) // this group is a member of a group radio group
 
 //
 // States
 //
-#define TBSTATE_CHECKED         0x01    // radio button is checked
-#define TBSTATE_PRESSED         0x02    // button is being depressed (any style)
-#define TBSTATE_ENABLED         0x04    // button is enabled
-#define TBSTATE_HIDDEN          0x08    // button is hidden
+#define TBSTATE_CHECKED		0x01	// radio button is checked
+#define TBSTATE_PRESSED		0x02	// button is being depressed (any style)
+#define TBSTATE_ENABLED		0x04	// button is enabled
+#define TBSTATE_HIDDEN		0x08	// button is hidden
 #define TBSTATE_INDETERMINATE   0x10    // button is indeterminate
 #define TBSTATE_SELECTED	0x20	// mouse hovering over button (for coolbar look)
 
@@ -121,13 +121,13 @@ HWND WINAPI CreateToolbar(HWND hwnd, DWORD ws, WORD wID, int nBitmaps,
 // return: BOOL LOWORD, indeterminate if nonzero; HIWORD not used
 //
 
-#define TB_SETSTATE             (WM_USER + 17)
+#define TB_SETSTATE		(WM_USER + 17)
 // wParam: UINT, button ID
 // lParam: UINT LOWORD, state bits; HIWORD not used, 0
 // return: not used
 //
 
-#define TB_GETSTATE             (WM_USER + 18)
+#define TB_GETSTATE		(WM_USER + 18)
 // wParam: UINT, button ID
 // lParam: not used, 0
 // return: UINT LOWORD, state bits; HIWORD not used
@@ -136,11 +136,11 @@ HWND WINAPI CreateToolbar(HWND hwnd, DWORD ws, WORD wID, int nBitmaps,
 #define TB_ADDBITMAP		(WM_USER + 19)
 // wParam: UINT, number of button graphics in bitmap
 // lParam: one of:
-//         HINSTANCE LOWORD, module handle; UINT HIWORD, resource id
-//         HINSTANCE LOWORD, NULL; HBITMAP HIWORD, bitmap handle
+//	   HINSTANCE LOWORD, module handle; UINT HIWORD, resource id
+//	   HINSTANCE LOWORD, NULL; HBITMAP HIWORD, bitmap handle
 // return: one of:
-//         int LOWORD, index for first new button; HIWORD not used
-//         int LOWORD, -1 indicating error; HIWORD not used
+//	   int LOWORD, index for first new button; HIWORD not used
+//	   int LOWORD, -1 indicating error; HIWORD not used
 //
 
 #define TB_ADDBUTTONS		(WM_USER + 20)
@@ -177,7 +177,7 @@ HWND WINAPI CreateToolbar(HWND hwnd, DWORD ws, WORD wID, int nBitmaps,
 // wParam: UINT, command id
 // lParam: not used, 0
 // return: UINT LOWORD, index of button (-1 if command not found);
-//         HIWORD not used
+//	   HIWORD not used
 //
 
 

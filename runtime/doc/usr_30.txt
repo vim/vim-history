@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.0as.  Last change: 2001 Aug 07
+*usr_30.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -400,11 +400,11 @@ the cursor is on "printf":
 
 	original text		after ">i{"		after ">a{"
 
-	if (flag)               if (flag)               if (flag) ~
-	{                       {                           { ~
-	printf("yes");              printf("yes");          printf("yes"); ~
-	flag = 0;                   flag = 0;               flag = 0;  ~
-	}                       }                           } ~
+	if (flag)		if (flag)		if (flag) ~
+	{			{			    { ~
+	printf("yes");		    printf("yes");	    printf("yes"); ~
+	flag = 0;		    flag = 0;		    flag = 0;  ~
+	}			}			    } ~
 
 ==============================================================================
 *30.5*	Tabs and spaces
@@ -458,8 +458,8 @@ possible and spaces to fill the gap.
 	type			  result ~
 	<Tab>			  ....
 	<Tab><Tab>		  ------->
-	<Tab><Tab><Tab>           ------->....
-	<Tab><Tab><Tab><BS>       ------->
+	<Tab><Tab><Tab>		  ------->....
+	<Tab><Tab><Tab><BS>	  ------->
 	<Tab><Tab><Tab><BS><BS>   ....
 
 An alternative is to use the 'smarttab' option.  When it's set, Vim uses

@@ -1043,14 +1043,14 @@ mch_inchar(
 	    if (WaitForChar(p_ut) == 0)
 	{
 #ifdef FEAT_AUTOCMD
-            if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
-            {
-                apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
-                update_screen(VALID);
+	    if (has_cursorhold() && get_real_state() == NORMAL_BUSY)
+	    {
+		apply_autocmds(EVENT_CURSORHOLD, NULL, NULL, FALSE, curbuf);
+		update_screen(VALID);
 		once_already = 1;
-                return 0;
-            }
-            else
+		return 0;
+	    }
+	    else
 #endif
 		updatescript(0);
 	}
@@ -2131,7 +2131,7 @@ mch_has_wildcard(char_u *p)
 #  else
 				    "?*$["
 #  endif
-                                                , *p) != NULL
+						, *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
     }

@@ -236,10 +236,10 @@ BOOL (WINAPI *pImmGetConversionStatus)(HIMC, LPDWORD, LPDWORD);
 static void dyn_imm_load(void);
 #else
 # define pImmGetCompositionString ImmGetCompositionStringA
-# define pImmGetContext           ImmGetContext
-# define pImmReleaseContext       ImmReleaseContext
-# define pImmGetOpenStatus        ImmGetOpenStatus
-# define pImmSetOpenStatus        ImmSetOpenStatus
+# define pImmGetContext		  ImmGetContext
+# define pImmReleaseContext	  ImmReleaseContext
+# define pImmGetOpenStatus	  ImmGetOpenStatus
+# define pImmSetOpenStatus	  ImmSetOpenStatus
 # define pImmGetCompositionFont   ImmGetCompositionFontA
 # define pImmSetCompositionFont   ImmSetCompositionFontA
 # define pImmSetCompositionWindow ImmSetCompositionWindow
@@ -817,7 +817,7 @@ _WndProc(
 			idx = MENU_INDEX_TIP;
 			if (pMenu->strings[idx])
 			{
-			    lpttt->hinst = NULL;  /* string, not resource*/
+			    lpttt->hinst = NULL;  /* string, not resource */
 			    lpttt->lpszText = pMenu->strings[idx];
 			}
 		    }
@@ -836,21 +836,25 @@ _WndProc(
 		&& (State & CMDLINE) == 0)
 	{
 	    UINT	idButton;
-	    int		idx;
 	    vimmenu_T	*pMenu;
+	    static int	did_menu_tip = FALSE;
+
+	    if (did_menu_tip)
+	    {
+		msg_clr_cmdline();
+		setcursor();
+		out_flush();
+		did_menu_tip = FALSE;
+	    }
 
 	    idButton = (UINT)LOWORD(wParam);
 	    pMenu = gui_mswin_find_menu(root_menu, idButton);
-	    if (pMenu)
+	    if (pMenu != NULL && pMenu->strings[MENU_INDEX_TIP] != 0)
 	    {
-		idx = MENU_INDEX_TIP;
-		msg_clr_cmdline();
-		if (pMenu->strings[idx])
-		    msg(pMenu->strings[idx]);
-		else
-		    msg("");
+		msg(pMenu->strings[MENU_INDEX_TIP]);
 		setcursor();
 		out_flush();
+		did_menu_tip = TRUE;
 	    }
 	}
 	break;
@@ -2427,7 +2431,7 @@ gui_mch_dialog(
 
     /* allocate some memory for dialog template */
     /* TODO should compute this really*/
-    pdlgtemplate = p = (PWORD) LocalAlloc(LPTR, DLG_ALLOC_SIZE);
+    pdlgtemplate = p = (PWORD)LocalAlloc(LPTR, DLG_ALLOC_SIZE);
 
     if (p == NULL)
 	return -1;
@@ -2736,11 +2740,11 @@ gui_mch_dialog(
     if (textfield != NULL)
     {
 	dialog_default_button = DLG_NONBUTTON_CONTROL + 2;
-        s_textfield = textfield;
+	s_textfield = textfield;
     }
     else
     {
-        dialog_default_button = IDCANCEL + 1 + dfltbutton;
+	dialog_default_button = IDCANCEL + 1 + dfltbutton;
 	s_textfield = NULL;
     }
 
@@ -2894,6 +2898,7 @@ tearoff_callback(
 	{
 	    POINT   mp;
 	    RECT    rect;
+
 	    if (GetCursorPos(&mp) && GetWindowRect(hwnd, &rect));
 	    {
 		(void)TrackPopupMenu(
@@ -2912,7 +2917,7 @@ tearoff_callback(
 	}
 	else
 	    /* Pass on messages to the main Vim window */
-	    PostMessage (s_hwnd, WM_COMMAND, LOWORD(wParam), 0);
+	    PostMessage(s_hwnd, WM_COMMAND, LOWORD(wParam), 0);
 	/*
 	 * Give main window the focus back: this is so after
 	 * choosing a tearoff button you can start typing again
@@ -3142,8 +3147,8 @@ gui_mch_tearoff(
     lExtendedStyle = WS_EX_TOOLWINDOW|WS_EX_STATICEDGE;
     *p++ = LOWORD(lStyle);
     *p++ = HIWORD(lStyle);
-    *p++ = LOWORD (lExtendedStyle);
-    *p++ = HIWORD (lExtendedStyle);
+    *p++ = LOWORD(lExtendedStyle);
+    *p++ = HIWORD(lExtendedStyle);
     pnumitems = p;	/* save where the number of items must be stored */
     *p++ = 0;		// NumberOfItems(will change later)
     if (initX == 0xffffL)

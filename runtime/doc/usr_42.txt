@@ -1,4 +1,4 @@
-*usr_42.txt*	For Vim version 6.0as.  Last change: 2001 Aug 08
+*usr_42.txt*	For Vim version 6.0at.  Last change: 2001 Aug 27
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -70,10 +70,10 @@ position on the menu bar.  Lower numbered menus are positioned to the left,
 higher numbers to the right.
    These are the priorities used for the standard menus:
 
-	  10    20     40     50      60       70               9999
+	  10	20     40     50      60       70		9999
 
 	+------------------------------------------------------------+
-	| File  Edit  Tools  Syntax  Buffers  Window            Help |
+	| File	Edit  Tools  Syntax  Buffers  Window		Help |
 	+------------------------------------------------------------+
 
 Notice that the Help menu is given a very high number, to make it appear on
@@ -83,21 +83,21 @@ pull-down menu.  Lower numbers go on top, higher number on the bottom.  These
 are the priorities in the File menu:
 
 			+-----------------+
-	    10.310      |Open...          |
-	    10.320      |Split-Open...    |
-	    10.325      |New              |
-	    10.330      |Close            |
-	    10.335      |---------------- |
-	    10.340      |Save             |
-	    10.350      |Save As...       |
-	    10.400      |---------------- |
-	    10.410      |Split Diff with  |
-	    10.420      |Split Patched By |
-	    10.500      |---------------- |
-	    10.510      |Print            |
-	    10.600      |---------------- |
-	    10.610      |Save-Exit        |
-	    10.620      |Exit             |
+	    10.310	|Open...	  |
+	    10.320	|Split-Open...	  |
+	    10.325	|New		  |
+	    10.330	|Close		  |
+	    10.335	|---------------- |
+	    10.340	|Save		  |
+	    10.350	|Save As...	  |
+	    10.400	|---------------- |
+	    10.410	|Split Diff with  |
+	    10.420	|Split Patched By |
+	    10.500	|---------------- |
+	    10.510	|Print		  |
+	    10.600	|---------------- |
+	    10.610	|Save-Exit	  |
+	    10.620	|Exit		  |
 			+-----------------+
 
 Notice that there is room in between the numbers.  This is where you can

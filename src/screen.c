@@ -2547,8 +2547,9 @@ win_line(wp, lnum, startrow, endrow)
     {
 	if (filler_lines == -1)
 	{
-	    diff_find_change(wp, lnum, &change_start, &change_end);
-	    if (change_start == 0)
+	    if (diff_find_change(wp, lnum, &change_start, &change_end))
+		diff_attr = hl_attr(HLF_ADD);	/* added line */
+	    else if (change_start == 0)
 		diff_attr = hl_attr(HLF_TXD);	/* changed text */
 	    else
 		diff_attr = hl_attr(HLF_CHD);	/* changed line */
@@ -2896,6 +2897,10 @@ win_line(wp, lnum, startrow, endrow)
 		    n_extra = (int)STRLEN(p_sbr);
 		    char_attr = hl_attr(HLF_AT);
 		    need_showbreak = FALSE;
+		    /* Correct end of highlighted area for 'showbreak',
+		     * required when 'linebreak' is also set. */
+		    if (tocol == vcol)
+			tocol += n_extra;
 		}
 # endif
 	    }
@@ -3474,14 +3479,16 @@ win_line(wp, lnum, startrow, endrow)
 	{
 	    /* invert at least one char, used for Visual and empty line or
 	     * highlight match at end of line. If it's beyond the last
-	     * char on the screen, just overwrite that one (tricky!) */
-	    if ((area_attr != 0 && vcol == fromcol)
+	     * char on the screen, just overwrite that one (tricky!)  Not
+	     * needed when a '$' was displayed for 'list'. */
+	    if (lcs_eol == lcs_eol_one
+		    && ((area_attr != 0 && vcol == fromcol)
 #ifdef FEAT_SEARCH_EXTRA
-		    /* highlight 'hlsearch' match at end of line */
-		    || ptr - 1 == search_hl.startp
-		    || ptr - 1 == match_hl.startp
+			/* highlight 'hlsearch' match at end of line */
+			|| ptr - 1 == search_hl.startp
+			|| ptr - 1 == match_hl.startp
 #endif
-		    )
+		       ))
 	    {
 #ifdef FEAT_RIGHTLEFT
 		if (wp->w_p_rl)
@@ -3858,6 +3865,7 @@ screen_line(row, coloff, endcol, clear_width
 				;
     int		    redraw_next;	/* redraw_this for next character */
 #ifdef FEAT_MBYTE
+    int		    clear_next = FALSE;
     int		    char_cells;		/* 1: normal char */
 					/* 2: occupies two display cells */
 # define CHAR_CELLS char_cells
@@ -3998,6 +4006,12 @@ screen_line(row, coloff, endcol, clear_width
 		if (enc_dbcs == DBCS_JPNU)
 		    ScreenLines2[off_to] = ScreenLines2[off_from];
 	    }
+	    /* When writing a single-width character over a double-width
+	     * character and at the end of the redrawn text, need to clear out
+	     * the right halve of the old character. */
+	    if (has_mbyte && char_cells == 1 && col + 1 == endcol
+		    && (*mb_off2cells)(off_to) > 1)
+		clear_next = TRUE;
 #endif
 
 	    ScreenLines[off_to] = ScreenLines[off_from];
@@ -4068,6 +4082,11 @@ screen_line(row, coloff, endcol, clear_width
 	off_from += CHAR_CELLS;
 	col += CHAR_CELLS;
     }
+
+#ifdef FEAT_MBYTE
+    if (clear_next)
+	screen_puts((char_u *)" ", row, col, ScreenAttrs[off_to]);
+#endif
 
     if (clear_width > 0
 #ifdef FEAT_RIGHTLEFT
@@ -4931,43 +4950,45 @@ screen_puts(text, row, col, attr)
     int		attr;
 {
     unsigned	off;
+    char_u	*ptr = text;
 #ifdef FEAT_MBYTE
     int		mbyte_blen = 1;
     int		mbyte_cells = 1;
     int		u8c = 0;
     int		u8c_c1 = 0;
     int		u8c_c2 = 0;
+    int		clear_next_cell = FALSE;
 #endif
 
     if (ScreenLines != NULL && row < screen_Rows)	/* safety check */
     {
 	off = LineOffset[row] + col;
-	while (*text != NUL && col < screen_Columns)
+	while (*ptr != NUL && col < screen_Columns)
 	{
 #ifdef FEAT_MBYTE
 	    /* check if this is the first byte of a multibyte */
 	    if (has_mbyte)
 	    {
-		mbyte_blen = (*mb_ptr2len_check)(text);
-		if (enc_dbcs == DBCS_JPNU && *text == 0x8e)
+		mbyte_blen = (*mb_ptr2len_check)(ptr);
+		if (enc_dbcs == DBCS_JPNU && *ptr == 0x8e)
 		    mbyte_cells = 1;
 		else if (enc_dbcs != 0)
 		    mbyte_cells = mbyte_blen;
 		else	/* enc_utf8 */
 		{
-		    u8c = utfc_ptr2char(text, &u8c_c1, &u8c_c2);
+		    u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
 		    mbyte_cells = utf_char2cells(u8c);
 		}
 	    }
 #endif
 
-	    if (ScreenLines[off] != *text
+	    if (ScreenLines[off] != *ptr
 #ifdef FEAT_MBYTE
 		    || (mbyte_cells == 2
-			&& ScreenLines[off + 1] != (enc_dbcs ? text[1] : 0))
+			&& ScreenLines[off + 1] != (enc_dbcs ? ptr[1] : 0))
 		    || (enc_dbcs == DBCS_JPNU
-			&& *text == 0x8e
-			&& ScreenLines2[off] != text[1])
+			&& *ptr == 0x8e
+			&& ScreenLines2[off] != ptr[1])
 		    || (enc_utf8
 			&& mbyte_blen > 1
 			&& (ScreenLinesUC[off] != u8c
@@ -5003,22 +5024,30 @@ screen_puts(text, row, col, attr)
 # ifdef FEAT_MBYTE
 		    if (col + 1 + mbyte_cells - 1 < screen_Columns
 			    && (n > HL_ALL || (n & HL_BOLD))
-			    && text[mbyte_blen] != NUL)
+			    && ptr[mbyte_blen] != NUL)
 			ScreenLines[off + 1 + mbyte_cells - 1] = 0;
 # else
 		    if (col + 1 < screen_Columns
 			    && (n > HL_ALL || (n & HL_BOLD))
-			    && text[1] != NUL)
+			    && ptr[1] != NUL)
 			ScreenLines[off + 1] = 0;
 # endif
 		}
 #endif
-		ScreenLines[off] = *text;
+#ifdef FEAT_MBYTE
+		/* When at the end of the text and overwriting a two-cell
+		 * character with a one-cell character, need to clear the next
+		 * cell. */
+		if (has_mbyte && mbyte_cells == 1 && ptr[mbyte_blen] == NUL
+			&& (*mb_off2cells)(off) > 1)
+		    clear_next_cell = TRUE;
+#endif
+		ScreenLines[off] = *ptr;
 		ScreenAttrs[off] = attr;
 #ifdef FEAT_MBYTE
 		if (enc_utf8)
 		{
-		    if (*text < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
+		    if (*ptr < 0x80 && u8c_c1 == 0 && u8c_c2 == 0)
 			ScreenLinesUC[off] = 0;
 		    else
 		    {
@@ -5035,13 +5064,13 @@ screen_puts(text, row, col, attr)
 		}
 		else if (mbyte_cells == 2)
 		{
-		    ScreenLines[off + 1] = text[1];
+		    ScreenLines[off + 1] = ptr[1];
 		    ScreenAttrs[off + 1] = attr;
 		    screen_char_2(off, row, col);
 		}
-		else if (enc_dbcs == DBCS_JPNU && *text == 0x8e)
+		else if (enc_dbcs == DBCS_JPNU && *ptr == 0x8e)
 		{
-		    ScreenLines2[off] = text[1];
+		    ScreenLines2[off] = ptr[1];
 		    screen_char(off, row, col);
 		}
 		else
@@ -5053,14 +5082,19 @@ screen_puts(text, row, col, attr)
 	    {
 		off += mbyte_cells;
 		col += mbyte_cells;
-		text += mbyte_blen;
+		ptr += mbyte_blen;
+		if (clear_next_cell)
+		{
+		    ptr = (char_u *)" ";
+		    clear_next_cell = FALSE;
+		}
 	    }
 	    else
 #endif
 	    {
 		++off;
 		++col;
-		++text;
+		++ptr;
 	    }
 	}
     }

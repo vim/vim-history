@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0as.  Last change: 2001 Aug 17
+*gui_x11.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -92,12 +92,12 @@ Note that the colors can also be set with the ":highlight" command, using the
 	:highlight Normal guibg=grey90
 <
 							*font-sizes*
-Note: All fonts must be of the same size!!!  If you don't do this, text will
-disappear or mess up the display.  Vim does not check the font sizes.  It's
-the size in screen pixels that must be the same.  Note that some fonts that
-have the same point size don't have the same pixel size!  Additionally, the
-positioning of the fonts must be the same (ascent and descent).  You can check
-this with "xlsfonts -l {fontname}".
+Note: All fonts (except for the menu and tooltip) must be of the same size!!!
+If you don't do this, text will disappear or mess up the display.  Vim does
+not check the font sizes.  It's the size in screen pixels that must be the
+same.  Note that some fonts that have the same point size don't have the same
+pixel size!  Additionally, the positioning of the fonts must be the same
+(ascent and descent).  You can check this with "xlsfonts -l {fontname}".
 
 If any of these things are also set with Vim commands, eg with
 ":set guifont=Screen15", then this will override the X resources (currently
@@ -123,7 +123,7 @@ With Athena: >
 
 NOTE: A more portable, and indeed more correct, way to specify the menu font
 in either Motif or Athena is through the resource:
-	Vim.menuFont:        -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+	Vim.menuFont:	     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 
 Don't use "Vim*geometry" in the defaults.  This will break the menus.  Use
 "Vim.geometry" instead.

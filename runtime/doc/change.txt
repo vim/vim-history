@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0as.  Last change: 2001 Aug 19
+*change.txt*    For Vim version 6.0at.  Last change: 2001 Aug 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -194,7 +194,7 @@ gR			Enter Virtual replace mode: Each character you type
 {Visual}["x]S		Delete the highlighted lines [into register x] and
 			start insert (for {Visual} see |Visual-mode|).  {not
 			in Vi}
-							*v_R* 
+							*v_R*
 {Visual}["x]R		Currently just like {Visual}["x]S.  In a next version
 			it might work differently. {not in Vi}
 

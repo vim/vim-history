@@ -1763,7 +1763,7 @@ setDollarVim(
 	strcpy(buf, "VIM=");
 	strcat(buf, rundir);
 	strcat(buf, "/../contrib/contrib6/vim" VIM_VERSION_SHORT "/share/vim/"
-            VIM_VERSION_NODOT);
+		VIM_VERSION_NODOT);
 	putenv(strdup(buf));
 	return;
     }

@@ -205,22 +205,22 @@ static void gui_ph_get_panelgroup_margins( short*, short*, short*, short* );
 
 /* Set the text for the balloon */
 static PtWidget_t * gui_ph_show_tooltip( PtWidget_t *window,
-                             PtWidget_t *widget,
-                             int position,
-                             char *text,
-                             char *font,
-                             PgColor_t fill_color,
-                             PgColor_t text_color );
+			     PtWidget_t *widget,
+			     int position,
+			     char *text,
+			     char *font,
+			     PgColor_t fill_color,
+			     PgColor_t text_color );
 
 /****************************************************************************/
 
 static PtWidget_t * gui_ph_show_tooltip( PtWidget_t *window,
-                             PtWidget_t *widget,
-                             int position,
-                             char *text,
-                             char *font,
-                             PgColor_t fill_color,
-                             PgColor_t text_color )
+			     PtWidget_t *widget,
+			     int position,
+			     char *text,
+			     char *font,
+			     PgColor_t fill_color,
+			     PgColor_t text_color )
 {
     PtArg_t arg;
     vimmenu_T *menu;
@@ -1738,26 +1738,13 @@ gui_mch_setmouse(int x, int y)
 /****************************************************************************/
 /* Colours */
 
-#if (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) || defined(PROTO)
 /*
- * Return the RGB value of a pixel as "#RRGGBB".
+ * Return the RGB value of a pixel as a long.
  */
-    char_u *
-gui_mch_get_rgb(
-	guicolor_T    pixel)
+    long_u
+gui_mch_get_rgb(guicolor_T pixel)
 {
-    static char_u retval[10];
-
-    sprintf((char *)retval, "#%02x%02x%02x",
-	    PgRedValue(pixel), PgGreenValue(pixel), PgBlueValue(pixel));
-    return( retval );
-}
-#endif
-
-    int
-gui_mch_get_lightness(guicolor_T pixel)
-{
-    return( (int) PgGreyValue( pixel ) );
+    return PgRGB(PgRedValue(pixel), PgGreenValue(pixel), PgBlueValue(pixel));
 }
 
     void
@@ -1769,8 +1756,8 @@ gui_mch_new_colors(void)
      * If there isn't enough difference between the background colour and
      * the mouse pointer colour then change the mouse pointer colour
      */
-    color_diff = gui_mch_get_lightness( gui_ph_mouse_color ) -
-	gui_mch_get_lightness( gui.back_pixel );
+    color_diff = gui_get_lightness(gui_ph_mouse_color)
+					  - gui_get_lightness(gui.back_pixel);
 
     if( abs( color_diff ) < 64 )
     {
@@ -1852,7 +1839,7 @@ gui_mch_get_color(char_u *name)
 	{"Orange",	    RGB(0xFF, 0xA5, 0x00)},
 	{"Purple",	    RGB(0xA0, 0x20, 0xF0)},
 	{"SlateBlue",	    RGB(0x6A, 0x5A, 0xCD)},
-	{"Violet",          RGB(0xEE, 0x82, 0xEE)},
+	{"Violet",	    RGB(0xEE, 0x82, 0xEE)},
     };
 
     /* is name #rrggbb format? */
@@ -2082,7 +2069,7 @@ gui_mch_draw_string(int row, int col, char_u *s, int len, int flags)
 	int src_taken, dst_made;
 
 	/* Use a static buffer to avoid large amounts of de/allocations */
-        if( utf8_len < len )
+	if( utf8_len < len )
 	{
 	    utf8_buffer = realloc( utf8_buffer, len * MB_LEN_MAX );
 	    utf8_len = len;

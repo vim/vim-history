@@ -1601,11 +1601,11 @@ gui_mch_dialog(
     if (textfield != NULL)
     {
 	dialog_default_button = DLG_NONBUTTON_CONTROL + 2;
-        s_textfield = textfield;
+	s_textfield = textfield;
     }
     else
     {
-        dialog_default_button = IDCANCEL + 1 + dfltbutton;
+	dialog_default_button = IDCANCEL + 1 + dfltbutton;
 	s_textfield = NULL;
     }
 

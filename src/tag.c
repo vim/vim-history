@@ -701,6 +701,7 @@ do_tag(tag, type, count, forceit, verbose)
 	    {
 		/*
 		 * Ask to select a tag from the list.
+		 * When using ":silent" assume that <CR> was entered.
 		 */
 		MSG_PUTS(_("Enter nr of choice (<CR> to abort): "));
 		i = get_number(TRUE);
@@ -2280,25 +2281,26 @@ parse_match(lbuf, tagp)
 	if (find_extra(&p) == OK)
 	{
 	    tagp->command_end = p;
-	    p += 3;	/* skip ";\"\t" */
-	    while (ASCII_ISALPHA(*p))
-	    {
-		if (STRNCMP(p, "kind:", 5) == 0)
+	    p += 2;	/* skip ";\"" */
+	    if (*p++ == TAB)
+		while (ASCII_ISALPHA(*p))
 		{
-		    tagp->tagkind = p + 5;
-		    break;
+		    if (STRNCMP(p, "kind:", 5) == 0)
+		    {
+			tagp->tagkind = p + 5;
+			break;
+		    }
+		    pc = vim_strchr(p, ':');
+		    pt = vim_strchr(p, '\t');
+		    if (pc == NULL || (pt != NULL && pc > pt))
+		    {
+			tagp->tagkind = p;
+			break;
+		    }
+		    if (pt == NULL)
+			break;
+		    p = pt + 1;
 		}
-		pc = vim_strchr(p, ':');
-		pt = vim_strchr(p, '\t');
-		if (pc == NULL || (pt != NULL && pc > pt))
-		{
-		    tagp->tagkind = p;
-		    break;
-		}
-		if (pt == NULL)
-		    break;
-		p = pt + 1;
-	    }
 	}
 	if (tagp->tagkind != NULL)
 	{
@@ -2896,7 +2898,7 @@ test_for_current(fname, fname_end, tag_fname)
 
 /*
  * Find the end of the tagaddress.
- * Return OK if ";\"\t" is following, FAIL otherwise.
+ * Return OK if ";\"" is following, FAIL otherwise.
  */
     static int
 find_extra(pp)
@@ -2925,7 +2927,7 @@ find_extra(pp)
 	++str;	/* skip ';' */
     }
 
-    if (str != NULL && STRNCMP(str, ";\"\t", 3) == 0)
+    if (str != NULL && STRNCMP(str, ";\"", 2) == 0)
     {
 	*pp = str;
 	return OK;
