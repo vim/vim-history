@@ -1974,16 +1974,6 @@ winframe_remove(win, dirp)
     /* Remove this frame from the list of frames. */
     frame_remove(frp_close);
 
-    /* If rows/columns go to a window below/right its positions need to be
-     * updated. */
-    if (frp2 == frp_close->fr_next)
-    {
-	int row = win->w_winrow;
-	int col = W_WINCOL(win);
-
-	frame_comp_pos(frp2, &row, &col);
-    }
-
 #ifdef FEAT_VERTSPLIT
     if (frp_close->fr_parent->fr_layout == FR_COL)
     {
@@ -2009,6 +1999,16 @@ winframe_remove(win, dirp)
 	*dirp = 'h';
     }
 #endif
+
+    /* If rows/columns go to a window below/right its positions need to be
+     * updated.  Can only be done after the sizes have been updated. */
+    if (frp2 == frp_close->fr_next)
+    {
+	int row = win->w_winrow;
+	int col = W_WINCOL(win);
+
+	frame_comp_pos(frp2, &row, &col);
+    }
 
     if (frp2->fr_next == NULL && frp2->fr_prev == NULL)
     {
