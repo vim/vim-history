@@ -904,6 +904,9 @@ struct file_buffer
 				   file has been changed and not written out. */
     int		b_changedtick;	/* incremented for each change, also for undo */
 
+    int		b_saving;	/* Set to TRUE if we are in the middle of
+				   saving the buffer. */
+
     /*
      * Changes to a buffer require updating of the display.  To minimize the
      * work, remember changes made and update everything at once.
