@@ -509,6 +509,7 @@ shift_block(oap, amount)
 #ifdef FEAT_VISUALEXTRA
 /*
  * Insert string "s" (b_insert ? before : after) block :AKelly
+ * Caller must prepare for undo.
  */
     static void
 block_insert(oap, s, b_insert, bdp)
@@ -2098,10 +2099,6 @@ op_insert(oap, count1)
     struct block_def	bd;
     int			i;
 
-    if (u_save((linenr_T)(oap->start.lnum - 1),
-	       (linenr_T)(oap->end.lnum + 1)) == FAIL)
-	return;
-
     /* edit() changes this - record it for OP_APPEND */
     bd.is_MAX = (curwin->w_curswant == MAXCOL);
 
@@ -2121,6 +2118,8 @@ op_insert(oap, count1)
 	    int		old_ve_flags = ve_flags;
 
 	    ve_flags = VE_ALL;
+	    if (u_save_cursor() == FAIL)
+		return;
 	    coladvance_force(oap->op_type == OP_APPEND
 					   ? oap->end_vcol + 1 : getviscol());
 	    if (oap->op_type == OP_APPEND)
@@ -2153,6 +2152,8 @@ op_insert(oap, count1)
 	    {
 		/* First line was too short, make it longer and adjust the
 		 * values in "bd". */
+		if (u_save_cursor() == FAIL)
+		    return;
 		for (i = 0; i < bd.endspaces; ++i)
 		    ins_char(' ');
 		bd.textlen += bd.endspaces;
@@ -2175,7 +2176,6 @@ op_insert(oap, count1)
      * nothing */
     if (curwin->w_cursor.lnum != oap->start.lnum)
 	return;
-
 
     if (oap->block_mode)
     {
@@ -2212,19 +2212,17 @@ op_insert(oap, count1)
 	    if (ins_text != NULL)
 	    {
 		/* block handled here */
-		block_insert(oap, ins_text, (oap->op_type == OP_INSERT), &bd);
+		if (u_save(oap->start.lnum,
+					 (linenr_T)(oap->end.lnum + 1)) == OK)
+		    block_insert(oap, ins_text, (oap->op_type == OP_INSERT),
+									 &bd);
 
 		curwin->w_cursor.col = oap->start.col;
 		check_cursor();
+		vim_free(ins_text);
 	    }
-	    vim_free(ins_text);
 	}
     }
-
-#if defined(FEAT_LISP) || defined(FEAT_CINDENT)
-    if (oap->motion_type == MLINE)
-	fix_indent();
-#endif
 }
 #endif
 
