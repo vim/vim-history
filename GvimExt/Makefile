@@ -10,6 +10,8 @@ gvimext.dll:    gvimext.obj	\
   $(implib) -machine:$(CPU) -def:gvimext.def $** -out:gvimext.lib
   $(link) $(dlllflags) -base:0x1C000000 -out:$*.dll $** $(olelibsdll) shell32.lib gvimext.lib comctl32.lib gvimext.exp
 
+gvimext.obj: gvimext.h
+
 .cpp.obj:
     $(cc) $(cflags) -DFEAT_GETTEXT $(cvarsdll) $*.cpp
 
