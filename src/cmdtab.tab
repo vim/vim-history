@@ -1,0 +1,114 @@
+/* vi:ts=4
+ *
+ * VIM - Vi IMitation
+ *
+ * Code Contributions By:	Bram Moolenaar			mool@oce.nl
+ *							Tim Thompson			twitch!tjt
+ *							Tony Andrews			onecom!wldrdg!tony 
+ *							G. R. (Fred) Walter		watmath!watcgl!grwalter 
+ */
+
+/*
+ * |This file is read by makecmdtab to produce cmdtab.h.
+ *
+ * The bars are used to recognize file positions. Do not insert/delete them.|
+ */
+
+#define RANGE	0x01			/* allow a linespecs */
+#define BANG	0x02			/* allow a ! after the command name */
+#define EXTRA	0x04			/* allow extra args after command name */
+#define XFILE	0x08			/* expand wildcards in extra part */
+#define NOSPC	0x10			/* no spaces allowed in the extra part */
+#define	DFLALL	0x20			/* default file range is 1,$ */
+#define NODFL	0x40			/* do not default to the current file name */
+#define NEEDARG	0x80			/* argument required */
+#define TRLBAR	0x100			/* check for trailing vertical bar */
+#define REGSTR	0x200			/* allow "x for register designation */
+#define COUNT	0x400			/* allow count in argument */
+#define NOTRLCOM 0x800			/* no trailing comment allowed */
+#define FILES	(XFILE + EXTRA)	/* multiple extra files allowed */
+#define WORD1	(EXTRA + NOSPC)	/* one extra word allowed */
+#define FILE1	(FILES + NOSPC)	/* 1 file allowed, defaults to current file */
+#define NAMEDF	(FILE1 + NODFL)	/* 1 file allowed, defaults to "" */
+#define NAMEDFS	(FILES + NODFL)	/* multiple files allowed, default is "" */
+
+/*
+ * This array maps ex command names to command codes. The order in which
+ * command names are listed below is significant -- ambiguous abbreviations
+ * are always resolved to be the first possible match (e.g. "r" is taken
+ * to mean "read", not "rewind", because "read" comes before "rewind").
+ * Not supported commands are included to avoid ambiguities.
+ */
+static struct
+{
+	char	*cmd_name;	/* name of the command */
+	short	 cmd_argt;	/* command line arguments permitted/needed/used */
+} cmdnames[] =
+{
+|	{"append",		BANG+RANGE+TRLBAR},			/* not supported */
+	{"abbreviate",	EXTRA+TRLBAR+NOTRLCOM},		/* not supported */
+	{"args",		TRLBAR},
+	{"change",		BANG+RANGE+COUNT+TRLBAR},	/* not supported */
+	{"cd",			NAMEDF+TRLBAR},
+	{"cc",			TRLBAR+WORD1+BANG},
+	{"cf",			TRLBAR+FILE1+BANG},
+	{"cl",			TRLBAR},
+	{"cn",			TRLBAR+BANG},
+	{"cp",			TRLBAR+BANG},
+	{"cq",			TRLBAR+BANG},
+	{"copy",		RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"chdir",		NAMEDF+TRLBAR},
+	{"delete",		RANGE+REGSTR+COUNT+TRLBAR},
+	{"display",		TRLBAR},
+	{"edit",		BANG+FILE1+TRLBAR},
+	{"ex",			BANG+FILE1+TRLBAR},
+	{"file",		FILE1+TRLBAR},
+	{"files",		TRLBAR},
+	{"global",		RANGE+BANG+EXTRA+DFLALL},
+	{"help",		TRLBAR},
+	{"insert",		BANG+RANGE+TRLBAR},			/* not supported */
+	{"join",		RANGE+COUNT+TRLBAR},
+	{"k",			RANGE+WORD1+TRLBAR},		/* not supported */
+	{"list",		RANGE+COUNT+TRLBAR},		/* not supported */
+	{"move",		RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"map",			BANG+EXTRA+TRLBAR+NOTRLCOM},
+	{"mark",		RANGE+WORD1+TRLBAR},		/* not supported */
+	{"mkexrc",		BANG+FILE1+TRLBAR},
+	{"next",		BANG+NAMEDFS+TRLBAR},
+	{"number",		RANGE+COUNT+TRLBAR},		/* not supported */
+	{"Next",		BANG+TRLBAR},
+	{"print",		RANGE+COUNT+TRLBAR},
+	{"put",			RANGE+REGSTR+TRLBAR},
+	{"previous",	BANG+TRLBAR},
+	{"quit",		BANG+TRLBAR},
+	{"read",		NAMEDF+NEEDARG+TRLBAR},
+	{"rewind",		BANG+TRLBAR},
+	{"recover",		FILE1+TRLBAR},				/* not supported */
+	{"substitute",	RANGE+EXTRA},
+	{"set",			EXTRA+TRLBAR},
+	{"shell",		TRLBAR},
+	{"source",		NAMEDF+NEEDARG+TRLBAR},
+	{"stop",		TRLBAR},					/* not supported */
+	{"t",			RANGE+EXTRA+TRLBAR},		/* not supported */
+	{"tag",			BANG+WORD1+TRLBAR},
+	{"undo",		TRLBAR},
+	{"unabbreviate", EXTRA+TRLBAR},				/* not supported */
+	{"unmap",		BANG+EXTRA+TRLBAR},
+	{"vglobal",		RANGE+EXTRA+DFLALL},
+	{"version",		TRLBAR},
+	{"visual",		BANG+FILE1+TRLBAR},
+	{"write",		RANGE+BANG+FILE1+DFLALL+TRLBAR},
+	{"winsize",		EXTRA+NEEDARG+TRLBAR},
+	{"wq",			BANG+FILE1+DFLALL+TRLBAR},
+	{"xit",			BANG+FILE1+DFLALL+TRLBAR},
+	{"yank",		RANGE+REGSTR+COUNT+TRLBAR},
+	{"z",			RANGE+COUNT+TRLBAR},		/* not supported */
+	{"!",			RANGE+NAMEDFS},
+	{"<",			RANGE+COUNT+TRLBAR},
+	{">",			RANGE+COUNT+TRLBAR},
+	{"=",			RANGE+TRLBAR},
+	{"&",			RANGE+EXTRA},
+	{"~",			RANGE+TRLBAR}				/* not supported */
+|
+};
+|
