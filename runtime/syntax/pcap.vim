@@ -2,7 +2,7 @@
 " Config file:	printcap
 " Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int> (defunct)
 "		Modified by Bram
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -20,7 +20,7 @@ else
 endif
 
 "first all the bad guys
-syn match pcapBad '^.\+$'              "define any line as bad
+syn match pcapBad '^.\+$'	       "define any line as bad
 syn match pcapBadword '\k\+' contained "define any sequence of keywords as bad
 syn match pcapBadword ':' contained    "define any single : as bad
 syn match pcapBadword '\\' contained   "define any single \ as bad

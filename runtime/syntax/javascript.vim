@@ -2,7 +2,7 @@
 " Language:	JavaScript
 " Maintainer:	Claudio Fleiner <claudio@fleiner.com>
 " URL:		http://www.fleiner.com/vim/syntax/javascript.vim
-" Last Change:	2003 May 04
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -18,25 +18,25 @@ endif
 syn case ignore
 
 
-syn keyword javaScriptCommentTodo      TODO FIXME XXX TBD contained
-syn match   javaScriptLineComment      "\/\/.*$" contains=javaScriptCommentTodo
-syn match   javaScriptCommentSkip      "^[ \t]*\*\($\|[ \t]\+\)"
-syn region  javaScriptComment	       start="/\*"  end="\*/" contains=javaScriptCommentTodo
-syn match   javaScriptSpecial	       "\\\d\d\d\|\\."
-syn region  javaScriptStringD	       start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=javaScriptSpecial,@htmlPreproc
-syn region  javaScriptStringS	       start=+'+  skip=+\\\\\|\\'+  end=+'+  contains=javaScriptSpecial,@htmlPreproc
-syn match   javaScriptSpecialCharacter "'\\.'"
-syn match   javaScriptNumber	       "-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
-syn region  javaScriptRegexpString     start=+/+ skip=+\\\\\|\\/+ end=+/[gi]\?\s*$+ end=+/[gi]\?\s*[;,)]+me=e-1 contains=@htmlPreproc oneline
-syn keyword javaScriptConditional      if else
-syn keyword javaScriptRepeat	       while for
-syn keyword javaScriptBranch	       break continue switch case default
-syn keyword javaScriptOperator	       new in
-syn keyword javaScriptType	       this var const
-syn keyword javaScriptStatement        return with
-syn keyword javaScriptFunction	       function
-syn keyword javaScriptBoolean	       true false
-syn match   javaScriptBraces	       "[{}]"
+syn keyword javaScriptCommentTodo	TODO FIXME XXX TBD contained
+syn match   javaScriptLineComment	"\/\/.*$" contains=javaScriptCommentTodo
+syn match   javaScriptCommentSkip	"^[ \t]*\*\($\|[ \t]\+\)"
+syn region  javaScriptComment		start="/\*"  end="\*/" contains=javaScriptCommentTodo
+syn match   javaScriptSpecial		"\\\d\d\d\|\\."
+syn region  javaScriptStringD		start=+"+  skip=+\\\\\|\\"+  end=+"+  contains=javaScriptSpecial,@htmlPreproc
+syn region  javaScriptStringS		start=+'+  skip=+\\\\\|\\'+  end=+'+  contains=javaScriptSpecial,@htmlPreproc
+syn match   javaScriptSpecialCharacter	"'\\.'"
+syn match   javaScriptNumber		"-\=\<\d\+L\=\>\|0[xX][0-9a-fA-F]\+\>"
+syn region  javaScriptRegexpString	start=+/+ skip=+\\\\\|\\/+ end=+/[gi]\?\s*$+ end=+/[gi]\?\s*[;,)]+me=e-1 contains=@htmlPreproc oneline
+syn keyword javaScriptConditional	if else
+syn keyword javaScriptRepeat		while for
+syn keyword javaScriptBranch		break continue switch case default
+syn keyword javaScriptOperator		new in
+syn keyword javaScriptType		this var const
+syn keyword javaScriptStatement		return with
+syn keyword javaScriptFunction		function
+syn keyword javaScriptBoolean		true false
+syn match   javaScriptBraces		"[{}]"
 
 " catch errors caused by wrong parenthesis
 syn match   javaScriptInParen     contained "[{}]"

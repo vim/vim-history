@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:     PPWizard (preprocessor by Dennis Bareis)
 " Maintainer:   Stefan Schwarzer <s.schwarzer@ndh.net>
-" URL:          http://www.ndh.net/home/sschwarzer/download/ppwiz.vim
-" Last Change:  2001 Jun 05
+" URL:			http://www.ndh.net/home/sschwarzer/download/ppwiz.vim
+" Last Change:  2003 May 11
 " Filename:     ppwiz.vim
 
 " Remove old syntax stuff
@@ -67,10 +67,10 @@ syn cluster ppwizArgVal add=ppwizString,ppwizInteger
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_ppwiz_syn_inits")
     if version < 508
-        let did_ppwiz_syn_inits = 1
-        command -nargs=+ HiLink hi link <args>
-    else
-        command -nargs=+ HiLink hi def link <args>
+		let did_ppwiz_syn_inits = 1
+		command -nargs=+ HiLink hi link <args>
+	else
+		command -nargs=+ HiLink hi def link <args>
     endif
 
     HiLink ppwizSpecial  Special

@@ -1,8 +1,8 @@
 " Vim script language tests
 " Author:	Servatius Brandt <Servatius.Brandt@fujitsu-siemens.com>
-" Last Change:	2003 May 04
+" Last Change:	2003 May 09
 
-
+:set undolevels=-1		" speed things up a little
 
 "-------------------------------------------------------------------------------
 " Test environment							    {{{1

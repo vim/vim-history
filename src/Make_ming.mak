@@ -24,8 +24,8 @@
 #>>>>> choose options:
 # set to yes for a debug build
 DEBUG=no
-# set to 1 for size, 0 for speed
-OPTSIZE=0
+# set to SIZE for size, SPEED for speed, MAXSPEED for maximium optimization
+OPTIMIZE=MAXSPEED
 # set to yes to make gvim, no for vim
 GUI=yes
 # FEATURES=[TINY | SMALL  | NORMAL | BIG | HUGE]
@@ -188,8 +188,7 @@ endif # RUBY
 
 # See feature.h for a list of options.
 # Any other defines can be included here.
-DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD -DFEAT_BIG
-DEF_MIN=-DFEAT_SMALL
+DEF_GUI=-DFEAT_GUI_W32 -DFEAT_CLIPBOARD
 DEFINES=-DWIN32 -DPC -DWINVER=$(WINVER) -D_WIN32_WINNT=$(WINVER)
 ifeq ($(CROSS),yes)
 # cross-compiler:
@@ -210,7 +209,7 @@ endif
 #>>>>> end of choices
 ###########################################################################
 
-CFLAGS = -Iproto $(DEFINES) -pipe -malign-double -w
+CFLAGS = -Iproto $(DEFINES) -pipe -w
 CFLAGS += -march=$(ARCH) -mcpu=$(CPUNR) -Wall -DFEAT_$(FEATURES)
 
 ifdef GETTEXT
@@ -272,22 +271,22 @@ endif
 ifeq ($(DEBUG),yes)
 CFLAGS += -g -fstack-check
 else
-CFLAGS += -s
-CFLAGS += -fomit-frame-pointer -freg-struct-return
-CFLAGS += -malign-double -finline-functions
-ifeq ($(OPTSIZE),1)
+ifeq ($(OPTIMIZE), SIZE)
 CFLAGS += -Os
 else
+ifeq ($(OPTIMIZE), MAXSPEED)
 CFLAGS += -O3
+CFLAGS += -fomit-frame-pointer -freg-struct-return -malign-double
+else  # SPEED
+CFLAGS += -O2
 endif
 endif
+endif
+
 ifeq ($(GUI),yes)
 TARGET := gvim.exe
 else
 TARGET := vim.exe
-endif
-ifeq ($(MIN),yes)
-DEFINES += $(DEF_MIN)
 endif
 
 GUISRC =  vimres.c gui.c gui_w32.c

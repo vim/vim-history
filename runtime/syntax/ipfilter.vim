@@ -1,7 +1,7 @@
 " ipfilter syntax file
 " Language: ipfilter configuration file
 " Maintainer: Hendrik Scholz <hendrik@scholz.net>
-" Last Change: 2002 June 22
+" Last Change: 2003 May 11
 "
 " http://raisdorf.net/files/misc/ipfilter.vim
 "
@@ -32,12 +32,12 @@ syn region ipfActionMisc  start=/^skip/ end=/$/ contains=ipfQuick,ipfAny
 syn region ipfActionMisc  start=/^auth/ end=/$/ contains=ipfQuick,ipfAny
 syn region ipfActionMisc  start=/^call/ end=/$/ contains=ipfQuick,ipfAny
 
-hi def link ipfComment      Comment
-hi def link ipfActionBlock  String
-hi def link ipfActionPass   Type
-hi def link ipfActionMisc   Label
-"hi def link ipfQuick        Error
-hi def link ipfQuick        Special
-hi def link ipfAny          Todo
+hi def link ipfComment		Comment
+hi def link ipfActionBlock	String
+hi def link ipfActionPass	Type
+hi def link ipfActionMisc	Label
+"hi def link ipfQuick		Error
+hi def link ipfQuick		Special
+hi def link ipfAny		Todo
 
 

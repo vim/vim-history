@@ -1228,6 +1228,28 @@ gui_mch_init_check()
     return OK;
 }
 
+
+#ifdef USE_XSMP
+/*
+ * Handle XSMP processing, de-registering the attachment upon error
+ */
+static XtInputId _xsmp_xtinputid;
+
+static void local_xsmp_handle_requests __ARGS((XtPointer c, int *s, XtInputId *i));
+
+/*ARGSUSED*/
+    static void
+local_xsmp_handle_requests(c, s, i)
+    XtPointer	c;
+    int		*s;
+    XtInputId	*i;
+{
+    if (xsmp_handle_requests() == FAIL)
+	XtRemoveInput(_xsmp_xtinputid);
+}
+#endif
+
+
 /*
  * Initialise the X GUI.  Create all the windows, set up all the call-backs etc.
  * Returns OK for success, FAIL when the GUI can't be started.
@@ -1458,6 +1480,13 @@ gui_mch_init()
 #endif
 #ifdef FEAT_MENU
     gui_init_menu_font();
+#endif
+
+#ifdef USE_XSMP
+    /* Attach listener on ICE connection */
+    if (-1 != xsmp_icefd)
+	_xsmp_xtinputid = XtAppAddInput(app_context, xsmp_icefd,
+		(XtPointer)XtInputReadMask, local_xsmp_handle_requests, NULL);
 #endif
 
     return OK;

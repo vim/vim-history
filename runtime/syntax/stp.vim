@@ -1,7 +1,7 @@
 " Vim syntax file
 "    Language: Stored Procedures (STP)
 "  Maintainer: Jeff Lanzarotta (jefflanzarotta@yahoo.com)
-"         URL: http://lanzarotta.tripod.com/vim/syntax/stp.vim.zip
+"	  URL: http://lanzarotta.tripod.com/vim/syntax/stp.vim.zip
 " Last Change: March 05, 2002
 
 " For version 5.x, clear all syntax items.

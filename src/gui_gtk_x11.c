@@ -2311,6 +2311,31 @@ setup_save_yourself(void)
 
 #else /* !(FEAT_GUI_GNOME && FEAT_SESSION) */
 
+# ifdef USE_XSMP
+/*
+ * GTK tells us that XSMP needs attention
+ */
+/*ARGSUSED*/
+    static gboolean
+local_xsmp_handle_requests(source, condition, data)
+    GIOChannel		*source;
+    GIOCondition	condition;
+    gpointer		data;
+{
+    if (condition == G_IO_IN)
+    {
+	/* Do stuff; maybe close connection */
+	if (xsmp_handle_requests() == FAIL)
+	    g_io_channel_unref((GIOChannel *)data);
+	return TRUE;
+    }
+    /* Error */
+    g_io_channel_unref((GIOChannel *)data);
+    xsmp_close();
+    return TRUE;
+}
+# endif /* USE_XSMP */
+
 /*
  * Setup the WM_PROTOCOLS to indicate we want the WM_SAVE_YOURSELF event.
  * This is an ugly use of X functions.	GTK doesn't offer an alternative.
@@ -2321,37 +2346,56 @@ setup_save_yourself(void)
     Atom    *existing_atoms = NULL;
     int	    count = 0;
 
-    /* first get the existing value */
-    if (XGetWMProtocols(GDK_WINDOW_XDISPLAY(gui.mainwin->window),
-			GDK_WINDOW_XWINDOW(gui.mainwin->window),
-			&existing_atoms, &count))
+#ifdef USE_XSMP
+    if (xsmp_icefd != -1)
     {
-	Atom	*new_atoms;
-	Atom	save_yourself_xatom;
-	int	i;
+	/*
+	 * Use XSMP is preference to legacy WM_SAVE_YOURSELF;
+	 * set up GTK IO monitor
+	 */
+	GIOChannel *g_io = g_io_channel_unix_new(xsmp_icefd);
 
-	save_yourself_xatom = GET_X_ATOM(save_yourself_atom);
+	g_io_add_watch(g_io, G_IO_IN | G_IO_ERR | G_IO_HUP,
+				  local_xsmp_handle_requests, (gpointer)g_io);
+    }
+    else
+#endif
+    {
+	/* Fall back to old method */
 
-	/* check if WM_SAVE_YOURSELF isn't there yet */
-	for (i = 0; i < count; ++i)
-	    if (existing_atoms[i] == save_yourself_xatom)
-		break;
-
-	if (i == count)
+	/* first get the existing value */
+	if (XGetWMProtocols(GDK_WINDOW_XDISPLAY(gui.mainwin->window),
+		    GDK_WINDOW_XWINDOW(gui.mainwin->window),
+		    &existing_atoms, &count))
 	{
-	    /* allocate an Atoms array which is one item longer */
-	    new_atoms = (Atom *)alloc((unsigned)((count + 1) * sizeof(Atom)));
-	    if (new_atoms != NULL)
+	    Atom	*new_atoms;
+	    Atom	save_yourself_xatom;
+	    int	i;
+
+	    save_yourself_xatom = GET_X_ATOM(save_yourself_atom);
+
+	    /* check if WM_SAVE_YOURSELF isn't there yet */
+	    for (i = 0; i < count; ++i)
+		if (existing_atoms[i] == save_yourself_xatom)
+		    break;
+
+	    if (i == count)
 	    {
-		memcpy(new_atoms, existing_atoms, count * sizeof(Atom));
-		new_atoms[count] = save_yourself_xatom;
-		XSetWMProtocols(GDK_WINDOW_XDISPLAY(gui.mainwin->window),
-				GDK_WINDOW_XWINDOW(gui.mainwin->window),
-				new_atoms, count + 1);
-		vim_free(new_atoms);
+		/* allocate an Atoms array which is one item longer */
+		new_atoms = (Atom *)alloc((unsigned)((count + 1)
+							     * sizeof(Atom)));
+		if (new_atoms != NULL)
+		{
+		    memcpy(new_atoms, existing_atoms, count * sizeof(Atom));
+		    new_atoms[count] = save_yourself_xatom;
+		    XSetWMProtocols(GDK_WINDOW_XDISPLAY(gui.mainwin->window),
+			    GDK_WINDOW_XWINDOW(gui.mainwin->window),
+			    new_atoms, count + 1);
+		    vim_free(new_atoms);
+		}
 	    }
+	    XFree(existing_atoms);
 	}
-	XFree(existing_atoms);
     }
 }
 
@@ -2927,7 +2971,13 @@ gui_mch_init(void)
     {
 #ifdef FEAT_GUI_GNOME
 	if (using_gnome)
+	{
 	    gui.mainwin = gnome_app_new("Vim", NULL);
+# ifdef USE_XSMP
+	    /* Use the GNOME save-yourself functionality now. */
+	    xsmp_close();
+# endif
+	}
 	else
 #endif
 	    gui.mainwin = gtk_window_new(GTK_WINDOW_TOPLEVEL);

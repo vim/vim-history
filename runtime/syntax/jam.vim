@@ -24,7 +24,7 @@ syn keyword	jamRepeat	for while next step
 
 syn keyword	jamTodo		contained TODO FIXME XXX
 syn keyword	jamDBState1	alias binary catquery close close_all_connections column_names connection continue continue_bottom continue_down continue_top continue_up
-syn keyword	jamDBState2          cursor declare engine execute format occur onentry onerror onexit sql start store unique with
+syn keyword	jamDBState2	     cursor declare engine execute format occur onentry onerror onexit sql start store unique with
 syn keyword	jamSQLState1	all alter and any avg between by count create current data database delete distinct drop exists fetch from grant group
 syn keyword	jamSQLState2	having index insert into like load max min of open order revoke rollback runstats select set show stop sum synonym table to union update values view where bundle
 
@@ -150,7 +150,7 @@ if exists("jam_comment_strings")
   syntax region jamCommentString	contained start=+L\="+ skip=+\\\\\|\\"+ end=+"+ end=+\*/+me=s-1 contains=jamSpecial,jamCommentSkip
   syntax region jamComment2String	contained start=+L\="+ skip=+\\\\\|\\"+ end=+"+ end="$" contains=jamSpecial
   syntax region  jamCommentL	start="//" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamComment2String,jamCharacter,jamNumbersCom,jamSpaceError
-  syntax region  jamCommentL2             start="^#\|^\s\+\#" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamComment2String,jamCharacter,jamNumbersCom,jamSpaceError
+  syntax region  jamCommentL2		  start="^#\|^\s\+\#" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamComment2String,jamCharacter,jamNumbersCom,jamSpaceError
   syntax region jamComment	start="/\*" end="\*/" contains=@jamCommentGroup,jamCommentString,jamCharacter,jamNumbersCom,jamSpaceError
 else
   syn region	jamCommentL	start="//" skip="\\$" end="$" keepend contains=@jamCommentGroup,jamSpaceError
@@ -174,75 +174,75 @@ if version >= 508 || !exists("did_jam_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-    HiLink jamCommentL            jamComment
-    HiLink jamCommentL2           jamComment
-    HiLink jamOperator3Error      jamError
-    HiLink jamConditional	        Conditional
+    HiLink jamCommentL		jamComment
+    HiLink jamCommentL2		jamComment
+    HiLink jamOperator3Error	jamError
+    HiLink jamConditional	Conditional
     HiLink jamRepeat		Repeat
-    HiLink jamCharacter	        Character
-    HiLink jamSpecialCharacter    jamSpecial
+    HiLink jamCharacter		Character
+    HiLink jamSpecialCharacter	jamSpecial
     HiLink jamNumber		Number
-    HiLink jamParenError	        jamError
-    HiLink jamErrInParen	        jamError
+    HiLink jamParenError	jamError
+    HiLink jamErrInParen	jamError
     HiLink jamErrInBracket	jamError
     HiLink jamCommentError	jamError
-    HiLink jamSpaceError	        jamError
+    HiLink jamSpaceError	jamError
     HiLink jamSpecialError	jamError
-    HiLink jamOperator1	        jamOperator
-    HiLink jamOperator2	        jamOperator
-    HiLink jamOperator3	        jamOperator
-    HiLink jamOperator4	        jamOperator
-    HiLink jamOperator5	        jamOperator
-    HiLink jamOperator6	        jamOperator
-    HiLink jamOperator7	        jamOperator
-    HiLink jamOperator8	        jamOperator
-    HiLink jamOperator9	        jamOperator
-    HiLink jamOperator10	        jamOperator
-    HiLink jamOperator11                jamOperator
-    HiLink jamOperator12	        jamOperator
-    HiLink jamOperator13	        jamOperator
-    HiLink jamOperator14	        jamOperator
+    HiLink jamOperator1		jamOperator
+    HiLink jamOperator2		jamOperator
+    HiLink jamOperator3		jamOperator
+    HiLink jamOperator4		jamOperator
+    HiLink jamOperator5		jamOperator
+    HiLink jamOperator6		jamOperator
+    HiLink jamOperator7		jamOperator
+    HiLink jamOperator8		jamOperator
+    HiLink jamOperator9		jamOperator
+    HiLink jamOperator10	jamOperator
+    HiLink jamOperator11	jamOperator
+    HiLink jamOperator12	jamOperator
+    HiLink jamOperator13	jamOperator
+    HiLink jamOperator14	jamOperator
     HiLink jamError		Error
-    HiLink jamStatement	        Statement
-    HiLink jamPreCondit	        PreCondit
+    HiLink jamStatement		Statement
+    HiLink jamPreCondit		PreCondit
     HiLink jamCommentError	jamError
     HiLink jamCommentString	jamString
     HiLink jamComment2String	jamString
-    HiLink jamCommentSkip	        jamComment
+    HiLink jamCommentSkip	jamComment
     HiLink jamString		String
-    HiLink jamComment	        Comment
-    HiLink jamSpecial	        SpecialChar
+    HiLink jamComment		Comment
+    HiLink jamSpecial		SpecialChar
     HiLink jamTodo		Todo
-    HiLink jamCppSkip	        jamCppOut
-    HiLink jamCppOut2	        jamCppOut
+    HiLink jamCppSkip		jamCppOut
+    HiLink jamCppOut2		jamCppOut
     HiLink jamCppOut		Comment
-    HiLink jamDBState1	        Identifier
-    HiLink jamDBState2	        Identifier
-    HiLink jamSQLState1	        jamSQL
-    HiLink jamSQLState2	        jamSQL
-    HiLink jamLibFunc1	        jamLibFunc
-    HiLink jamLibFunc2	        jamLibFunc
-    HiLink jamLibFunc3	        jamLibFunc
-    HiLink jamLibFunc4	        jamLibFunc
-    HiLink jamLibFunc5	        jamLibFunc
-    HiLink jamLibFunc6	        jamLibFunc
-    HiLink jamLibFunc7	        jamLibFunc
-    HiLink jamLibFunc8	        jamLibFunc
-    HiLink jamLibFunc9	        jamLibFunc
-    HiLink jamVariable1	        jamVariablen
-    HiLink jamVariable2	        jamVariablen
-    HiLink jamVariable3	        jamVariablen
-    HiLink jamVariable4	        jamVariablen
-    HiLink jamVariable5	        jamVariablen
-    HiLink jamVariable6	        jamVariablen
-    HiLink jamVariable7	        jamVariablen
-    HiLink jamVariable8	        jamVariablen
-    HiLink jamVariable9	        jamVariablen
-    HiLink jamVariable10	        jamVariablen
-    HiLink jamVariablen	        Constant
-    HiLink jamSQL		        Type
-    HiLink jamLibFunc	        PreProc
-    HiLink jamOperator	        Special
+    HiLink jamDBState1		Identifier
+    HiLink jamDBState2		Identifier
+    HiLink jamSQLState1		jamSQL
+    HiLink jamSQLState2		jamSQL
+    HiLink jamLibFunc1		jamLibFunc
+    HiLink jamLibFunc2		jamLibFunc
+    HiLink jamLibFunc3		jamLibFunc
+    HiLink jamLibFunc4		jamLibFunc
+    HiLink jamLibFunc5		jamLibFunc
+    HiLink jamLibFunc6		jamLibFunc
+    HiLink jamLibFunc7		jamLibFunc
+    HiLink jamLibFunc8		jamLibFunc
+    HiLink jamLibFunc9		jamLibFunc
+    HiLink jamVariable1		jamVariablen
+    HiLink jamVariable2		jamVariablen
+    HiLink jamVariable3		jamVariablen
+    HiLink jamVariable4		jamVariablen
+    HiLink jamVariable5		jamVariablen
+    HiLink jamVariable6		jamVariablen
+    HiLink jamVariable7		jamVariablen
+    HiLink jamVariable8		jamVariablen
+    HiLink jamVariable9		jamVariablen
+    HiLink jamVariable10	jamVariablen
+    HiLink jamVariablen		Constant
+    HiLink jamSQL		Type
+    HiLink jamLibFunc		PreProc
+    HiLink jamOperator		Special
 
     delcommand HiLink
 endif

@@ -1,6 +1,6 @@
 " Language:     ampl (A Mathematical Programming Language)
 " Maintainer:   Krief David <david.krief@etu.enseeiht.fr> or <david_krief@hotmail.com>
-" Last Change:  2002 Mar 03
+" Last Change:  2003 May 11
 
 
 if version < 600
@@ -124,21 +124,21 @@ if version >= 508 || !exists("did_ampl_syntax_inits")
   endif
 
   " The default methods for highlighting. Can be overridden later.
-  HiLink amplEntityKeyword      Keyword
-  HiLink amplType               Type
-  HiLink amplStatement          Statement
-  HiLink amplOperators          Operator
-  HiLink amplBasicOperators     Operator
-  HiLink amplConditional        Conditional
-  HiLink amplRepeat             Repeat
-  HiLink amplStrings            String
-  HiLink amplNumerics           Number
-  HiLink amplSetFunction        Function
-  HiLink amplBuiltInFunction    Function
-  HiLink amplRandomGenerator    Function
-  HiLink amplComment            Comment
-  HiLink amplDotSuffix          Special
-  HiLink amplPiecewise          Special
+  HiLink amplEntityKeyword	Keyword
+  HiLink amplType		Type
+  HiLink amplStatement		Statement
+  HiLink amplOperators		Operator
+  HiLink amplBasicOperators	Operator
+  HiLink amplConditional	Conditional
+  HiLink amplRepeat		Repeat
+  HiLink amplStrings		String
+  HiLink amplNumerics		Number
+  HiLink amplSetFunction	Function
+  HiLink amplBuiltInFunction	Function
+  HiLink amplRandomGenerator	Function
+  HiLink amplComment		Comment
+  HiLink amplDotSuffix		Special
+  HiLink amplPiecewise		Special
 
   delcommand HiLink
 endif

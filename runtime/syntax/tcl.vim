@@ -209,8 +209,8 @@ if version >= 508 || !exists("did_tcl_syntax_inits")
   HiLink tclTodo		Todo
   " Below here are the commands and their options.
   HiLink tcltkCommandColor	Statement
-  HiLink tcltkWidgetColor      Structure
-  HiLink tclLineContinue       WarningMsg
+  HiLink tcltkWidgetColor	Structure
+  HiLink tclLineContinue	WarningMsg
   HiLink tcltkStringSwitch	Special
   HiLink tcltkArraySwitch	Special
   HiLink tcltkLsortSwitch	Special
@@ -221,7 +221,7 @@ if version >= 508 || !exists("did_tcl_syntax_inits")
   HiLink tcltkWidgetSwitch	Special
   HiLink tcltkPackConfColor	Identifier
   "HiLink tcltkLsort		Statement
-  HiLink tclVarRef             Identifier
+  HiLink tclVarRef		Identifier
 
   delcommand HiLink
 endif

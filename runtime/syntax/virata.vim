@@ -1,15 +1,15 @@
 " Vim syntax file
 " Language:	Virata AConfig Configuration Script
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2002-09-10
+" Last Change:	2003 May 11
 " Vim URL:	http://www.vim.org/lang.html
 " Virata URL:	http://www.globespanvirata.com/
 
 
 " Virata AConfig Configuration Script syntax
 "  Can be detected by: 1) Extension .hw, .sw, .pkg and .module
-"                      2) The file name pattern "mk.*\.cfg"
-"                      3) The string "Virata" in the first 5 lines
+"		       2) The file name pattern "mk.*\.cfg"
+"		       3) The string "Virata" in the first 5 lines
 
 
 " Setup Syntax:

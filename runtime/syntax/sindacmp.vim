@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint compare file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 10:18:41 Mountain Daylight Time
+" Last Change:  2003 May 11
 " Filenames:    *.cmp
-" URL:          http://www.naglenet.org/vim/syntax/sindacmp.vim
+" URL:		http://www.naglenet.org/vim/syntax/sindacmp.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -55,15 +55,15 @@ if version >= 508 || !exists("did_sindacmp_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink sindacmpTitle               Type
-  HiLink sindacmpUnit                PreProc
+  HiLink sindacmpTitle		     Type
+  HiLink sindacmpUnit		     PreProc
 
-  HiLink sindacmpLabel               Statement
+  HiLink sindacmpLabel		     Statement
 
-  HiLink sindacmpHeader              sindaHeader
+  HiLink sindacmpHeader		     sindaHeader
 
-  HiLink sindacmpInteger             Number
-  HiLink sindacmpFloat               Special
+  HiLink sindacmpInteger	     Number
+  HiLink sindacmpFloat		     Special
 
   delcommand HiLink
 endif

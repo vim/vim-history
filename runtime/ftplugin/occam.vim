@@ -31,9 +31,9 @@ setlocal textwidth=78
 " Win32 can filter files in the browse dialog
 if has("gui_win32") && !exists("b:browsefilter")
   let b:browsefilter = "All Occam Files (*.occ *.inc)\t*.occ;*.inc\n" .
-        \ "Occam Include Files (*.inc)\t*.inc\n" .
-        \ "Occam Source Files (*.occ)\t*.occ\n" .
-        \ "All Files (*.*)\t*.*\n"
+	\ "Occam Include Files (*.inc)\t*.inc\n" .
+	\ "Occam Source Files (*.occ)\t*.occ\n" .
+	\ "All Files (*.*)\t*.*\n"
 endif
 "}}}
 

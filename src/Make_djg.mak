@@ -71,141 +71,32 @@ install.exe: dosinst.c
 uninstal.exe: uninstal.c
 	$(CC) $(CFLAGS) -s -o uninstal.exe uninstal.c -lpc
 
+# This requires GNU make.
 xxd/xxd.exe: xxd/xxd.c
-	cd xxd
-	$(MAKE) -f Make_djg.mak
-	cd ..
+	$(MAKE) --directory=xxd -f Make_djg.mak
 
 obj:
 	mkdir obj
 
 tags:
-	command /c ctags *.c $(INCL)
+	command /c ctags *.c $(INCL) ex_cmds.h
 
 clean:
 	-del obj\*.o
+	-rmdir obj
 	-del vim.exe
 	-del install.exe
 	-del xxd\xxd.exe
 	-del testdir\*.out
 
+# This requires GNU make.
 test:
-	cd testdir
-	$(MAKE) -f Make_dos.mak
-	cd ..
+	$(MAKE) --directory=testdir -f Make_dos.mak
 
 ###########################################################################
 
-obj/buffer.o:	buffer.c $(INCL)
-	$(CC) -c $(CFLAGS) buffer.c -o obj/buffer.o
+obj/%.o: %.c obj $(INCL)
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-obj/charset.o:	charset.c $(INCL)
-	$(CC) -c $(CFLAGS) charset.c -o obj/charset.o
-
-obj/diff.o:	diff.c $(INCL)
-	$(CC) -c $(CFLAGS) diff.c -o obj/diff.o
-
-obj/digraph.o:	digraph.c $(INCL)
-	$(CC) -c $(CFLAGS) digraph.c -o obj/digraph.o
-
-obj/edit.o:	edit.c $(INCL)
-	$(CC) -c $(CFLAGS) edit.c -o obj/edit.o
-
-obj/eval.o:	eval.c $(INCL)
-	$(CC) -c $(CFLAGS) eval.c -o obj/eval.o
-
-obj/ex_cmds.o:	ex_cmds.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_cmds.c -o obj/ex_cmds.o
-
-obj/ex_cmds2.o:	ex_cmds2.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_cmds2.c -o obj/ex_cmds2.o
-
-obj/ex_docmd.o:	ex_docmd.c $(INCL) ex_cmds.h
-	$(CC) -c $(CFLAGS) ex_docmd.c -o obj/ex_docmd.o
-
-obj/ex_eval.o:	ex_eval.c $(INCL) ex_cmds.h
-	$(CC) -c $(CFLAGS) ex_eval.c -o obj/ex_eval.o
-
-obj/ex_getln.o:	ex_getln.c $(INCL)
-	$(CC) -c $(CFLAGS) ex_getln.c -o obj/ex_getln.o
-
-obj/fileio.o:	fileio.c $(INCL)
-	$(CC) -c $(CFLAGS) fileio.c -o obj/fileio.o
-
-obj/fold.o:	fold.c $(INCL)
-	$(CC) -c $(CFLAGS) fold.c -o obj/fold.o
-
-obj/getchar.o:	getchar.c $(INCL)
-	$(CC) -c $(CFLAGS) getchar.c -o obj/getchar.o
-
-obj/main.o:	main.c $(INCL)
-	$(CC) -c $(CFLAGS) main.c -o obj/main.o
-
-obj/mark.o:	mark.c $(INCL)
-	$(CC) -c $(CFLAGS) mark.c -o obj/mark.o
-
-obj/memfile.o:	memfile.c $(INCL)
-	$(CC) -c $(CFLAGS) memfile.c -o obj/memfile.o
-
-obj/memline.o:	memline.c $(INCL)
-	$(CC) -c $(CFLAGS) memline.c -o obj/memline.o
-
-obj/menu.o:	menu.c $(INCL)
-	$(CC) -c $(CFLAGS) menu.c -o obj/menu.o
-
-obj/message.o:	message.c $(INCL)
-	$(CC) -c $(CFLAGS) message.c -o obj/message.o
-
-obj/misc1.o:	misc1.c $(INCL)
-	$(CC) -c $(CFLAGS) misc1.c -o obj/misc1.o
-
-obj/misc2.o:	misc2.c $(INCL)
-	$(CC) -c $(CFLAGS) misc2.c -o obj/misc2.o
-
-obj/move.o:	move.c $(INCL)
-	$(CC) -c $(CFLAGS) move.c -o obj/move.o
-
-obj/mbyte.o: mbyte.c $(INCL)
-	$(CC) -c $(CFLAGS) mbyte.c -o obj/mbyte.o
-
-obj/normal.o:	normal.c $(INCL)
-	$(CC) -c $(CFLAGS) normal.c -o obj/normal.o
-
-obj/ops.o:	ops.c $(INCL)
-	$(CC) -c $(CFLAGS) ops.c -o obj/ops.o
-
-obj/option.o:	option.c $(INCL)
-	$(CC) -c $(CFLAGS) option.c -o obj/option.o
-
-obj/os_msdos.o:	os_msdos.c $(INCL)
-	$(CC) -c $(CFLAGS) os_msdos.c -o obj/os_msdos.o
-
-obj/quickfix.o:	quickfix.c $(INCL)
-	$(CC) -c $(CFLAGS) quickfix.c -o obj/quickfix.o
-
-obj/regexp.o:	regexp.c $(INCL)
-	$(CC) -c $(CFLAGS) regexp.c -o obj/regexp.o
-
-obj/screen.o:	screen.c $(INCL)
-	$(CC) -c $(CFLAGS) screen.c -o obj/screen.o
-
-obj/search.o:	search.c $(INCL)
-	$(CC) -c $(CFLAGS) search.c -o obj/search.o
-
-obj/syntax.o:	syntax.c $(INCL)
-	$(CC) -c $(CFLAGS) syntax.c -o obj/syntax.o
-
-obj/tag.o:	tag.c $(INCL)
-	$(CC) -c $(CFLAGS) tag.c -o obj/tag.o
-
-obj/term.o:	term.c $(INCL)
-	$(CC) -c $(CFLAGS) term.c -o obj/term.o
-
-obj/ui.o:	ui.c $(INCL)
-	$(CC) -c $(CFLAGS) ui.c -o obj/ui.o
-
-obj/undo.o:	undo.c $(INCL)
-	$(CC) -c $(CFLAGS) undo.c -o obj/undo.o
-
-obj/window.o:	window.c $(INCL)
-	$(CC) -c $(CFLAGS) window.c -o obj/window.o
+# Extra dependency (there are actually many more...)
+obj/ex_docmd.o:	ex_cmds.h

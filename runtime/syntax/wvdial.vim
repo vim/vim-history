@@ -5,7 +5,7 @@
 
 " Quit if syntax file is already loaded
 if exists("b:current_syntax")
-        finish
+	finish
 endif
 
 syn match   wvdialComment   "^;.*$"lc=1

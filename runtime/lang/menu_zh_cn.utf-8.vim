@@ -55,7 +55,7 @@ menutrans &Global\ Settings		全局设定(&G)
 " Build boolean options
 menutrans Toggle\ Pattern\ &Highlight<Tab>:set\ hls!	开/关增量查找模式<Tab>:set\ hls!
 menutrans Toggle\ &Ignore-case<Tab>:set\ ic!		开/关忽略大小写模式<Tab>:set\ ic!
-menutrans Toggle\ &Showmatch<Tab>:set\ sm!              开/关匹配显示<Tab>:set sm!
+menutrans Toggle\ &Showmatch<Tab>:set\ sm!		开/关匹配显示<Tab>:set sm!
 menutrans &Context\ lines			上下文行数(&C)
 
 menutrans &Virtual\ Edit			可视化编辑模式(&V)
@@ -97,8 +97,8 @@ menutrans Soft\ &Tabstop		伪Tab宽度(&T)
 menutrans Te&xt\ Width\.\.\.		页面宽度(&x)\.\.\.
 menutrans &File\ Format\.\.\.		文件格式(&F)\.\.\.
 
-menutrans C&olor\ Scheme                调色板(&o)
-menutrans Select\ Fo&nt\.\.\.           选择字体(&n)\.\.\.
+menutrans C&olor\ Scheme		调色板(&o)
+menutrans Select\ Fo&nt\.\.\.		选择字体(&n)\.\.\.
 
 
 " Programming menu

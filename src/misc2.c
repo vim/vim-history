@@ -2029,7 +2029,7 @@ get_special_key_name(c, modifiers)
     {
 	for (i = 0; modifier_keys_table[i] != 0; i += MOD_KEYS_ENTRY_SIZE)
 	    if (       KEY2TERMCAP0(c) == (int)modifier_keys_table[i + 1]
-		    && KEY2TERMCAP1(c) == (int)modifier_keys_table[i + 2])
+		    && (int)KEY2TERMCAP1(c) == (int)modifier_keys_table[i + 2])
 	    {
 		modifiers |= modifier_keys_table[i];
 		c = TERMCAP2KEY(modifier_keys_table[i + 3],
@@ -3691,7 +3691,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 
 		helper = walker;
 		ptr = vim_realloc(ff_search_ctx->ffsc_stopdirs_v,
-					       dircount+1 * sizeof(char_u *));
+					   (dircount + 1) * sizeof(char_u *));
 		if (ptr)
 		    ff_search_ctx->ffsc_stopdirs_v = ptr;
 		else

@@ -51,14 +51,14 @@ if version >= 508 || !exists("did_changelog_syntax_inits")
   HiLink changelogColon		Type
   HiLink changelogFiles		Comment
   if version >= 600
-    HiLink changelogFuncs		Comment
+    HiLink changelogFuncs	Comment
   endif
   HiLink changelogHeader	Statement
   HiLink changelogMail		Special
   HiLink changelogNumber	Number
   HiLink changelogMonth		Number
   HiLink changelogDay		Number
-  HiLink changelogError         Error
+  HiLink changelogError		Error
 
   delcommand HiLink
 endif

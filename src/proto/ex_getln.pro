@@ -10,7 +10,6 @@ void putcmdline __ARGS((int c, int shift));
 void unputcmdline __ARGS((void));
 int put_on_cmdline __ARGS((char_u *str, int len, int redraw));
 void redrawcmdline __ARGS((void));
-void redraw_msg __ARGS((char_u *msg_ptr, int msg_len));
 void redrawcmd __ARGS((void));
 void compute_cmdrow __ARGS((void));
 void gotocmdline __ARGS((int clr));

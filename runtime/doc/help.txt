@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.2c.  Last change: 2003 Apr 27
+*help.txt*	For Vim version 6.2d.  Last change: 2003 May 11
 
 			VIM - main help file
 									 k
@@ -135,8 +135,9 @@ Special issues ~
 |mlang.txt|	non-English language support
 |arabic.txt|	Arabic language support and editing
 |farsi.txt|	Farsi (Persian) editing
+|hebrew.txt|	Hebrew language support and editing
 |hangulin.txt|	Hangul (Korean) input mode
-|rileft.txt|	right-to-left editing (Hebrew)
+|rileft.txt|	right-to-left editing mode
 
 GUI ~
 |gui.txt|	Graphical User Interface (GUI)

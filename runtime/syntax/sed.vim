@@ -2,7 +2,7 @@
 " Language:	sed
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
 " URL:		http://folk.uio.no/hakonrk/vim/syntax/sed.vim
-" Last Change:	2001 May 15
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -103,7 +103,7 @@ if version >= 508 || !exists("did_sed_syntax_inits")
     HiLink sedSpecial		Special
     HiLink sedWhitespace	NONE
     if exists("highlight_sedtabs")
-        HiLink sedTab		Todo
+	HiLink sedTab		Todo
     endif
     let __sed_i = 32
     while __sed_i <= 126

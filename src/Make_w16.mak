@@ -103,6 +103,7 @@ ObjFiles = \
    $(INTDIR)\ops.obj\
    $(INTDIR)\option.obj\
    $(INTDIR)\os_win16.obj\
+   $(INTDIR)\os_msdos.obj\
    $(INTDIR)\os_mswin.obj\
    $(INTDIR)\quickfix.obj\
    $(INTDIR)\regexp.obj\

@@ -64,4 +64,7 @@ int clip_xterm_own_selection __ARGS((VimClipboard *cbd));
 void clip_xterm_lose_selection __ARGS((VimClipboard *cbd));
 void clip_xterm_request_selection __ARGS((VimClipboard *cbd));
 void clip_xterm_set_selection __ARGS((VimClipboard *cbd));
+int xsmp_handle_requests __ARGS((void));
+void xsmp_init __ARGS((void));
+void xsmp_close __ARGS((void));
 /* vim: set ft=c : */

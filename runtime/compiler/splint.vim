@@ -29,7 +29,7 @@ setlocal makeprg=splint\ %
 " sample warning (generic):
 "
 "foo.c:1006:12: Clauses exit with var referencing local storage in one
-"                      case, fresh storage in other case
+"		       case, fresh storage in other case
 "   foo.c:1003:2: Fresh storage var allocated
 "
 " sample warning (bounds checking):

@@ -28,6 +28,12 @@
 #	  want to disable using X11 libraries.	This speeds up starting Vim,
 #	  but the window title will not be set and the X11 selection can not
 #	  used.
+#	- Uncomment the line "CONF_OPT_XSMP = --without-xsmp" if you have the
+#	  X11 Session Management Protocol (XSMP) library (libSM) but do not
+#	  want to use it.
+#	  This can speedup Vim startup but Vim loses the ability to catch the
+#	  user logging out from session-managers like GNOME & KDE and work
+#	  could be lost.
 #	- Uncomment one or more of these lines to include an interface;
 #	  each makes Vim quite a bit bigger:
 #		--enable-perlinterp	for Perl interpreter
@@ -423,6 +429,20 @@ CClink = $(CC)
 #XROOT = /usr/openwin
 #CONF_OPT_X = --x-include=$(XROOT)/include --x-libraries=$(XROOT)/lib
 
+# X11 Session Management Protocol support
+# Vim will try to use XSMP to catch the user logging out if there are unsaved
+# files.  Uncomment this line to disable that (it prevents vim trying to open
+# communications with the session manager).
+#CONF_OPT_XSMP = --disable-xsmp
+
+# You may wish to include xsmp but use exclude xsmp-interact if the logout
+# XSMP functionality does not work well with your session-manager (at time of
+# writing, this would be early GNOME-1 gnome-session: it 'freezes' other
+# applications after Vim has cancelled a logout (until Vim quits).  This
+# *might* be the Vim code, but is more likely a bug in early GNOME-1.
+# This disables the dialog that asks you if you want to save files or not.
+#CONF_OPT_XSMP = --disable-xsmp-interact
+
 # COMPILER - Name of the compiler {{{1
 # The default from configure will mostly be fine, no need to change this, just
 # an example. If a compiler is defined here, configure will use it rather than
@@ -797,7 +817,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim62c
+VIMRTDIR = /vim62d
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -1378,7 +1398,7 @@ config auto/config.mk: auto/configure config.mk.in config.h.in
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
-		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
+		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) $(CONF_OPT_XSMP) \
 		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) \
 		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \

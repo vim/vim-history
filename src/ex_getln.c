@@ -1507,7 +1507,13 @@ cmdline_changed:
 #endif
 
 #ifdef FEAT_RIGHTLEFT
-	if (cmdmsg_rl)
+	if (cmdmsg_rl
+# ifdef FEAT_ARABIC
+		|| p_arshape
+# endif
+		)
+	    /* Always redraw the whole command line to fix shaping and
+	     * right-left typing.  Not efficient, but it works. */
 	    redrawcmd();
 #endif
     }
@@ -2109,6 +2115,83 @@ draw_cmdline(start, len)
 	    msg_putchar('*');
     else
 #endif
+#ifdef FEAT_ARABIC
+	if (p_arshape && !p_tbidi && enc_utf8 && len > 0)
+    {
+	static char_u	*buf;
+	static int	buflen = 0;
+	char_u		*p;
+	int		j;
+	int		newlen = 0;
+	int		mb_l;
+	int		pc, pc1;
+	int		prev_c = 0;
+	int		prev_c1 = 0;
+	int		u8c, u8c_c1, u8c_c2;
+	int		nc = 0;
+	int		dummy;
+
+	/*
+	 * Do arabic shaping into a temporary buffer.  This is very
+	 * inefficient!
+	 */
+	if (len * 2 > buflen)
+	{
+	    /* Re-allocate the buffer.  We keep it around to avoid a lot of
+	     * alloc()/free() calls. */
+	    vim_free(buf);
+	    buflen = len * 2;
+	    buf = alloc(buflen);
+	    if (buf == NULL)
+		return;	/* out of memory */
+	}
+
+	for (j = start; j < len; j += mb_l)
+	{
+	    p = ccline.cmdbuff + j;
+	    u8c = utfc_ptr2char(p, &u8c_c1, &u8c_c2);
+	    mb_l = (*mb_ptr2len_check)(p);
+	    if (ARABIC_CHAR(u8c))
+	    {
+		/* Do Arabic shaping. */
+		if (cmdmsg_rl)
+		{
+		    /* displaying from right to left */
+		    pc = prev_c;
+		    pc1 = prev_c1;
+		    prev_c1 = u8c_c1;
+		    nc = utf_ptr2char(p + mb_l);
+		}
+		else
+		{
+		    /* displaying from left to right */
+		    pc = utfc_ptr2char(p + mb_l, &pc1, &dummy);
+		    nc = prev_c;
+		}
+		prev_c = u8c;
+
+		u8c = arabic_shape(u8c, NULL, &u8c_c1, pc, pc1, nc);
+
+		newlen += (*mb_char2bytes)(u8c, buf + newlen);
+		if (u8c_c1 != 0)
+		{
+		    newlen += (*mb_char2bytes)(u8c_c1, buf + newlen);
+		    if (u8c_c2 != 0)
+			newlen += (*mb_char2bytes)(u8c_c2, buf + newlen);
+		}
+	    }
+	    else
+	    {
+		prev_c = u8c;
+		mch_memmove(buf + newlen, p, mb_l);
+		newlen += mb_l;
+	    }
+	}
+
+	msg_outtrans_len(buf, newlen);
+    }
+    else
+#endif
 	msg_outtrans_len(ccline.cmdbuff + start, len);
 }
 
@@ -2346,25 +2429,6 @@ redrawcmdline()
     redrawcmd();
     cursorcmd();
 }
-
-/*
- * This function is called when the command/message line is set to rightleft
- * for proper display during consecutive searches (ie. I do a search for
- * 'jk' and then simply do '/return' - the 'jk' ought to be shaped and
- * displayed properly).
- */
-#if defined(FEAT_ARABIC) || defined(PROTO)
-    void
-redraw_msg(msg_ptr, msg_len)
-    char_u	*msg_ptr;
-    int		msg_len;
-{
-    /* Re-populate the ccline for redisplay for the '/return' cases */
-    ccline.cmdbuff = msg_ptr;
-    ccline.cmdlen  = msg_len;
-    redrawcmd();
-}
-#endif
 
     static void
 redrawcmdprompt()

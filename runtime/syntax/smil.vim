@@ -2,7 +2,7 @@
 " Language:	SMIL (Synchronized Multimedia Integration Language)
 " Maintainer:	Herve Foucher <Herve.Foucher@helio.org>
 " URL:		http://www.helio.org/vim/syntax/smil.vim
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 
 " To learn more about SMIL, please refer to http://www.w3.org/AudioVideo/
 " and to http://www.helio.org/products/smil/tutorial/
@@ -37,8 +37,8 @@ syn keyword smilSpecial  contained fill meet slice scroll hidden
 syn region  smilString   contained start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=smilSpecial
 syn region  smilString   contained start=+'+ skip=+\\\\\|\\'+ end=+'+ contains=smilSpecial
 syn match   smilValue    contained "=[\t ]*[^'" \t>][^ \t>]*"hs=s+1
-syn region  smilEndTag             start=+</+    end=+>+              contains=smilTagN,smilTagError
-syn region  smilTag                start=+<[^/]+ end=+>+              contains=smilTagN,smilString,smilArg,smilValue,smilTagError,smilEvent,smilCssDefinition
+syn region  smilEndTag		   start=+</+	 end=+>+	      contains=smilTagN,smilTagError
+syn region  smilTag		   start=+<[^/]+ end=+>+	      contains=smilTagN,smilString,smilArg,smilValue,smilTagError,smilEvent,smilCssDefinition
 syn match   smilTagN     contained +<\s*[-a-zA-Z0-9]\++ms=s+1 contains=smilTagName,smilSpecialTagName
 syn match   smilTagN     contained +</\s*[-a-zA-Z0-9]\++ms=s+2 contains=smilTagName,smilSpecialTagName
 syn match   smilTagError contained "[^>]<"ms=s+1
@@ -103,13 +103,13 @@ syn keyword smilSpecial contained canSlip locked
 syn match smilSpecialChar "&[^;]*;"
 
 if exists("smil_wrong_comments")
-  syn region smilComment                start=+<!--+      end=+-->+
+  syn region smilComment		start=+<!--+	  end=+-->+
 else
-  syn region smilComment                start=+<!+        end=+>+   contains=smilCommentPart,smilCommentError
+  syn region smilComment		start=+<!+	  end=+>+   contains=smilCommentPart,smilCommentError
   syn match  smilCommentError contained "[^><!]"
-  syn region smilCommentPart  contained start=+--+        end=+--+
+  syn region smilCommentPart  contained start=+--+	  end=+--+
 endif
-syn region smilComment                start=+<!DOCTYPE+ keepend end=+>+
+syn region smilComment		      start=+<!DOCTYPE+ keepend end=+>+
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

@@ -1,8 +1,8 @@
 " WebMacro syntax file
 " Language:     WebMacro
 " Maintainer:   Claudio Fleiner <claudio@fleiner.com>
-" URL:          http://www.fleiner.com/vim/syntax/webmacro.vim
-" Last Change:  2003 Jan 04
+" URL:		http://www.fleiner.com/vim/syntax/webmacro.vim
+" Last Change:  2003 May 11
 
 " webmacro is a nice little language that you should
 " check out if you use java servlets.

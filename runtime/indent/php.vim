@@ -2,14 +2,14 @@
 " Language:	Php
 " Author:	Miles Lott <milos@groupwhere.org>
 " URL:		http://groupwhere.org/php.vim
-" Last Change:	2002 Dec 16
+" Last Change:	2003 May 11
 " Version:	0.3
 " Notes:  Close all switches with default:\nbreak; and it will look better.
-"         Also, open and close brackets should be alone on a line.
-"         This is my preference, and the only way this will look nice.
-"         Try an older version if you care less about the formatting of
-"         switch/case.  It is nearly perfect for anyone regardless of your
-"         stance on brackets.
+"		  Also, open and close brackets should be alone on a line.
+"		  This is my preference, and the only way this will look nice.
+"		  Try an older version if you care less about the formatting of
+"		  switch/case.	It is nearly perfect for anyone regardless of your
+"		  stance on brackets.
 "
 " Options	php_noindent_switch=1 -- do not try to indent switch/case statements (version 0.1 behavior)
 

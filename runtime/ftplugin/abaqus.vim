@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Abaqus finite element input file (www.hks.com)
 " Maintainer:	Carl Osterwisch <osterwischc@asme.org>
-" Last Change:	2002 Feb 24
+" Last Change:	2003 May 11
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -20,6 +20,6 @@ endif
 " Win32 can filter files in the browse dialog
 if has("gui_win32") && !exists("b:browsefilter")
     let b:browsefilter = "Abaqus Input Files (*.inp *.inc)\t*.inp;*.inc\n" .
-        \ "Abaqus Results (*.dat *.pre)\t*.dat;*.pre\n" .
+	\ "Abaqus Results (*.dat *.pre)\t*.dat;*.pre\n" .
 	\ "All Files (*.*)\t*.*\n"
 endif

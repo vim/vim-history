@@ -2119,10 +2119,7 @@ gui_mch_show_popupmenu_at(vimmenu_T *menu, int x, int y)
     static void
 _OnEndSession(void)
 {
-    ml_close_notmod();		    /* close all not-modified buffers */
-    ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
-    ml_close_all(FALSE);	    /* close all memfiles, without deleting */
-    getout(1);			    /* exit Vim properly */
+    getout_preserve_modified(1);
 }
 
 /*
@@ -2970,4 +2967,128 @@ _OnScroll(
     dont_scroll = dont_scroll_save;
 
     return 0;
+}
+
+/*
+ * Get command line arguments.
+ * Use "prog" as the name of the program and "cmdline" as the arguments.
+ * Copy the arguments to allocated memory.
+ * Return the number of arguments (including program name).
+ * Return pointers to the arguments in "argvp".
+ * Return pointer to buffer in "tofree".
+ * Returns zero when out of memory.
+ */
+    int
+get_cmd_args(char *prog, char *cmdline, char ***argvp, char **tofree)
+{
+    int		i;
+    char	*p;
+    char	*progp;
+    char	*pnew = NULL;
+    char	*newcmdline;
+    int		inquote;
+    int		argc;
+    char	**argv = NULL;
+    int		round;
+
+    /* Handle the program name.  Remove the ".exe" extension, and find the 1st
+     * non-space. */
+    p = strrchr(prog, '.');
+    if (p != NULL)
+	*p = NUL;
+    for (progp = prog; *progp == ' '; ++progp)
+	;
+
+    /* The command line is copied to allocated memory, so that we can change
+     * it.  Add the size of the string, the separating NUL and a terminating
+     * NUL. */
+    newcmdline = malloc(STRLEN(cmdline) + STRLEN(progp) + 2);
+    if (newcmdline == NULL)
+	return 0;
+
+    /*
+     * First round: count the number of arguments ("pnew" == NULL).
+     * Second round: produce the arguments.
+     */
+    for (round = 1; round <= 2; ++round)
+    {
+	/* First argument is the program name. */
+	if (pnew != NULL)
+	{
+	    argv[0] = pnew;
+	    strcpy(pnew, progp);
+	    pnew += strlen(pnew);
+	    *pnew++ = NUL;
+	}
+
+	/*
+	 * Isolate each argument and put it in argv[].
+	 */
+	p = cmdline;
+	argc = 1;
+	while (*p != NUL)
+	{
+	    inquote = FALSE;
+	    if (pnew != NULL)
+		argv[argc] = pnew;
+	    ++argc;
+	    while (*p != NUL && (inquote || (*p != ' ' && *p != '\t')))
+	    {
+		/* Backslashes are only special when followed by a double
+		 * quote. */
+		i = strspn(p, "\\");
+		if (p[i] == '"')
+		{
+		    /* Halve the number of backslashes. */
+		    if (i > 1 && pnew != NULL)
+		    {
+			memset(pnew, '\\', i / 2);
+			pnew += i / 2;
+		    }
+
+		    /* Even nr of backslashes toggles quoting, uneven copies
+		     * the double quote. */
+		    if ((i & 1) == 0)
+			inquote = !inquote;
+		    else if (pnew != NULL)
+			*pnew++ = '"';
+		    p += i + 1;
+		}
+		else if (i > 0)
+		{
+		    /* Copy span of backslashes unmodified. */
+		    if (pnew != NULL)
+		    {
+			memset(pnew, '\\', i);
+			pnew += i;
+		    }
+		    p += i;
+		}
+		else
+		{
+		    if (pnew != NULL)
+			*pnew++ = *p;
+		    ++p;
+		}
+	    }
+
+	    if (pnew != NUL)
+		*pnew++ = NUL;
+	    while (*p == ' ' || *p == '\t')
+		++p;		    /* advance until a non-space */
+	}
+
+	if (round == 1)
+	{
+	    argv = (char **)malloc((argc + 1) * sizeof(char *));
+	    if (argv == NULL )
+		return 0;		   /* malloc error */
+	    pnew = newcmdline;
+	}
+    }
+
+    argv[argc] = NULL;		/* NULL-terminated list */
+
+    *argvp = argv;
+    return argc;
 }

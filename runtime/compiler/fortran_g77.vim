@@ -16,15 +16,15 @@ set cpo-=C
 
 " sample multiline errors (besides gcc backend one-liners):
 " gev.f:14:
-"          parameter UPLO = 'Upper-triangle'
-"          ^
+"	   parameter UPLO = 'Upper-triangle'
+"	   ^
 " Unsupported VXT statement at (^)
 " gev.f:6:
-"          integer         desca( * ), descb( * )
-"                          1
+"	   integer	   desca( * ), descb( * )
+"			   1
 " gev.f:19: (continued):
-"          end subroutine
-"          2
+"	   end subroutine
+"	   2
 " Invalid declaration of or reference to symbol `desca' at (2) [initially seen at (1)]
 
 setlocal errorformat=

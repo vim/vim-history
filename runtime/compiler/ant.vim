@@ -17,8 +17,8 @@ setlocal makeprg=ant
 "     ant with jikes +E, which assumes  the following
 "     two property lines in your 'build.xml':
 "
-"         <property name = "build.compiler"       value = "jikes"/>
-"         <property name = "build.compiler.emacs" value = "true"/>
+"	  <property name = "build.compiler"	  value = "jikes"/>
+"	  <property name = "build.compiler.emacs" value = "true"/>
 "
 " second line:
 "     ant with javac

@@ -380,3 +380,18 @@
 /* A Mac constant causing big problem to syntax highlighting */
 #define UNKNOWN_CREATOR '????'
 
+/*
+ * for debugging
+ */
+#ifdef MACOS_X
+# ifdef _DEBUG
+#  define TRACE			Trace
+   void Trace(char *fmt, ...);
+# else /* !_DEBUG */
+#  define TRACE			1 ? (void)0 : printf
+# endif
+#endif
+
+#ifdef MACOS_CLASSIC
+#  define TRACE			1 ? (int)0 : printf
+#endif

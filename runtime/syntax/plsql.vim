@@ -5,9 +5,9 @@
 " URL: http://lanzarotta.tripod.com/vim/syntax/plsql.vim.zip
 " Last Change: September 18, 2002
 " History: Geoff Evans & Bill Pribyl (bill at plnet dot org)
-"               Added 9i keywords.
-"          Austin Ziegler (austin at halostatue dot ca)
-"               Added 8i+ features.
+"		Added 9i keywords.
+"	   Austin Ziegler (austin at halostatue dot ca)
+"		Added 8i+ features.
 "
 " For version 5.x, clear all syntax items.
 " For version 6.x, quit when a syntax file was already loaded.
@@ -233,41 +233,41 @@ if version >= 508 || !exists("did_plsql_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink plsqlAttribute       Macro
-  HiLink plsqlBlockError      Error
-  HiLink plsqlBooleanLiteral  Boolean
-  HiLink plsqlCharLiteral     Character
-  HiLink plsqlComment         Comment
-  HiLink plsqlCommentL        Comment
-  HiLink plsqlConditional     Conditional
-  HiLink plsqlError           Error
-  HiLink plsqlErrInBracket    Error
-  HiLink plsqlErrInBlock      Error
-  HiLink plsqlErrInParen      Error
-  HiLink plsqlException       Function
-  HiLink plsqlFloatLiteral    Float
-  HiLink plsqlFunction        Function
-  HiLink plsqlGarbage         Error
-  HiLink plsqlHostIdentifier  Label
-  HiLink plsqlIdentifier      Normal
-  HiLink plsqlIntLiteral      Number
-  HiLink plsqlOperator        Operator
-  HiLink plsqlParen           Normal
-  HiLink plsqlParenError      Error
-  HiLink plsqlSpaceError      Error
-  HiLink plsqlPseudo          PreProc
-  HiLink plsqlKeyword         Keyword
-  HiLink plsqlRepeat          Repeat
-  HiLink plsqlStorage         StorageClass
-  HiLink plsqlSQLKeyword      Function
-  HiLink plsqlStringError     Error
-  HiLink plsqlStringLiteral   String
-  HiLink plsqlCommentString   String
-  HiLink plsqlComment2String  String
-  HiLink plsqlSymbol          Normal
-  HiLink plsqlTrigger         Function
-  HiLink plsqlTypeAttribute   StorageClass
-  HiLink plsqlTodo            Todo
+  HiLink plsqlAttribute		Macro
+  HiLink plsqlBlockError	Error
+  HiLink plsqlBooleanLiteral	Boolean
+  HiLink plsqlCharLiteral	Character
+  HiLink plsqlComment		Comment
+  HiLink plsqlCommentL		Comment
+  HiLink plsqlConditional	Conditional
+  HiLink plsqlError		Error
+  HiLink plsqlErrInBracket	Error
+  HiLink plsqlErrInBlock	Error
+  HiLink plsqlErrInParen	Error
+  HiLink plsqlException		Function
+  HiLink plsqlFloatLiteral	Float
+  HiLink plsqlFunction		Function
+  HiLink plsqlGarbage		Error
+  HiLink plsqlHostIdentifier	Label
+  HiLink plsqlIdentifier	Normal
+  HiLink plsqlIntLiteral	Number
+  HiLink plsqlOperator		Operator
+  HiLink plsqlParen		Normal
+  HiLink plsqlParenError	Error
+  HiLink plsqlSpaceError	Error
+  HiLink plsqlPseudo		PreProc
+  HiLink plsqlKeyword		Keyword
+  HiLink plsqlRepeat		Repeat
+  HiLink plsqlStorage		StorageClass
+  HiLink plsqlSQLKeyword	Function
+  HiLink plsqlStringError	Error
+  HiLink plsqlStringLiteral	String
+  HiLink plsqlCommentString	String
+  HiLink plsqlComment2String	String
+  HiLink plsqlSymbol		Normal
+  HiLink plsqlTrigger		Function
+  HiLink plsqlTypeAttribute	StorageClass
+  HiLink plsqlTodo		Todo
 
   delcommand HiLink
 endif

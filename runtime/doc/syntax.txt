@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.2c.  Last change: 2003 May 04
+*syntax.txt*    For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -3830,7 +3830,7 @@ To get these right away, reload the .Xdefaults file to the X Option database
 Manager (you only need to do this when you just changed the .Xdefaults file): >
   xrdb -merge ~/.Xdefaults
 <
-							*xterm-blink*
+					*xterm-blink* *xterm-blinking-cursor*
 To make the cursor blink in an xterm, see tools/blink.c.  Or use Thomas
 Dickey's xterm above patchlevel 107 (see above for where to get it), with
 these resources:

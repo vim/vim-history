@@ -21,7 +21,7 @@ else
  set iskeyword=A-Z,a-z,_,&
 endif
 
-syn region      edifList        matchgroup=Delimiter start="(" end=")" contains=edifList,edifKeyword,edifString,edifNumber
+syn region	edifList	matchgroup=Delimiter start="(" end=")" contains=edifList,edifKeyword,edifString,edifNumber
 
 " Strings
 syn match       edifInStringError    /%/ contained
@@ -52,12 +52,12 @@ if version >= 508 || !exists("did_edif_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink edifInString   SpecialChar
-  HiLink edifKeyword    Keyword
-  HiLink edifNumber     Number
-  HiLink edifInStringError      edifError
-  HiLink edifError      Error
-  HiLink edifString     String
+  HiLink edifInString		SpecialChar
+  HiLink edifKeyword		Keyword
+  HiLink edifNumber		Number
+  HiLink edifInStringError	edifError
+  HiLink edifError		Error
+  HiLink edifString		String
   delcommand HiLink
 endif
 

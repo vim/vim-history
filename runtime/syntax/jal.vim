@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	JAL
 " Version: 0.1
-" Last Change:	2003/04/26 14:11:57
+" Last Change:	2003 May 11
 " Maintainer:  Mark Gross <mark@thegnar.org>
 " This is a syntax definition for the JAL language.
 " It is based on the Source Forge compiler source code.
@@ -192,7 +192,7 @@ endif
   HiLink jalException		Exception
   HiLink jalFloat		Float
   HiLink jalFunction		Function
-  HiLink jalPsudoVarsKey        Function
+  HiLink jalPsudoVarsKey	Function
   HiLink jalLabel		Label
   HiLink jalMatrixDelimiter	Identifier
   HiLink jalModifier		Type
@@ -220,25 +220,25 @@ endif
 
   HiLink jalShowTab		Error
 
-  HiLink picTodo               Todo
-  HiLink picComment            Comment
-  HiLink picDirective          Statement
-  HiLink picLabel              Label
-  HiLink picString             String
+  HiLink picTodo		Todo
+  HiLink picComment		Comment
+  HiLink picDirective		Statement
+  HiLink picLabel		Label
+  HiLink picString		String
 
-  HiLink picOpcode            Keyword
-  HiLink picRegister          Structure
-  HiLink picRegisterPart      Special
-  HiLink picPinDir            SPecial
-  HiLink picPortDir           SPecial
+  HiLink picOpcode		Keyword
+  HiLink picRegister		Structure
+  HiLink picRegisterPart	Special
+  HiLink picPinDir		SPecial
+  HiLink picPortDir		SPecial
 
-  HiLink picASCII              String
-  HiLink picBinary             Number
-  HiLink picDecimal            Number
-  HiLink picHexadecimal        Number
-  HiLink picOctal              Number
+  HiLink picASCII		String
+  HiLink picBinary		Number
+  HiLink picDecimal		Number
+  HiLink picHexadecimal		Number
+  HiLink picOctal		Number
 
-  HiLink picIdentifier         Identifier
+  HiLink picIdentifier		Identifier
 
   delcommand HiLink
 endif

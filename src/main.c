@@ -1166,6 +1166,22 @@ scripterror:
     mch_init();
     TIME_MSG("shell init");
 
+#ifdef USE_XSMP
+    /*
+     * For want of anywhere else to do it, try to connect to xsmp here.
+     * Fitting it in after gui_mch_init, but before gui_init (via termcapinit).
+     * Hijacking -X 'no X connection' to also disable XSMP connection as that
+     * has a similar delay upon failure.
+     * Only try if SESSION_MANAGER is set to something non-null.
+     */
+    if (!x_no_connect)
+    {
+	p = (char_u *)getenv("SESSION_MANAGER");
+	if (p != NULL && *p != NUL)
+	    xsmp_init();
+    }
+#endif
+
     /*
      * Print a warning if stdout is not a terminal.
      * When starting in Ex mode and commands come from a file, set Silent mode.
@@ -2109,6 +2125,24 @@ main_loop(cmdwin)
     }
 }
 
+
+#if defined(USE_XSMP) || defined(FEAT_GUI_MSWIN) || defined(PROTO)
+/*
+ * Exit, but leave behind swap files for modified buffers.
+ */
+    void
+getout_preserve_modified(exitval)
+    int		exitval;
+{
+    ml_close_notmod();		    /* close all not-modified buffers */
+    ml_sync_all(FALSE, FALSE);	    /* preserve all swap files */
+    ml_close_all(FALSE);	    /* close all memfiles, without deleting */
+    getout(exitval);		    /* exit Vim properly */
+}
+#endif
+
+
+/* Exit properly */
     void
 getout(exitval)
     int		exitval;

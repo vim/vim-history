@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.2c.  Last change: 2003 Apr 29
+*starting.txt*  For Vim version 6.2d.  Last change: 2003 May 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -446,6 +446,9 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		|+X11| feature.  Otherwise it's ignored.
 		To disable the connection only for specific terminals, see the
 		'clipboard' option.
+		When the X11 Session Management Protocol (XSMP) handler has
+		been built in, the -X option also disables that connection as
+		it, too, may have undesirable delays.
 		{not in Vi}
 
 							*-s*

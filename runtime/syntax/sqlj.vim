@@ -52,7 +52,7 @@ syn keyword sqljOperator	max min avg sum count hex
 syn keyword sqljStatement	alter analyze audit comment commit create
 syn keyword sqljStatement	delete drop explain grant insert lock noaudit
 syn keyword sqljStatement	rename revoke rollback savepoint select set
-syn keyword sqljStatement        truncate update begin work
+syn keyword sqljStatement	 truncate update begin work
 
 syn keyword sqljType		char character date long raw mlslabel number
 syn keyword sqljType		rowid varchar varchar2 float integer

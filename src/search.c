@@ -447,7 +447,7 @@ last_pat_prog(regmatch)
 
 /*
  * lowest level search function.
- * Search for 'count'th occurrence of 'str' in direction 'dir'.
+ * Search for 'count'th occurrence of pattern 'pat' in direction 'dir'.
  * Start at position 'pos' and return the found position in 'pos'.
  *
  * if (options & SEARCH_MSG) == 0 don't give any messages
@@ -465,13 +465,13 @@ last_pat_prog(regmatch)
  * subpattern plus one; one if there was none.
  */
     int
-searchit(win, buf, pos, dir, str, count, options, pat_use)
+searchit(win, buf, pos, dir, pat, count, options, pat_use)
     win_T	*win;		/* window to search in; can be NULL for a
 				   buffer without a window! */
     buf_T	*buf;
     pos_T	*pos;
     int		dir;
-    char_u	*str;
+    char_u	*pat;
     long	count;
     int		options;
     int		pat_use;
@@ -497,7 +497,7 @@ searchit(win, buf, pos, dir, str, count, options, pat_use)
 # define break_loop FALSE
 #endif
 
-    if (search_regcomp(str, RE_SEARCH, pat_use,
+    if (search_regcomp(pat, RE_SEARCH, pat_use,
 		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
     {
 	if ((options & SEARCH_MSG) && !rc_did_emsg)
@@ -866,9 +866,9 @@ first_submatch(rp)
 
 /*
  * Highest level string search function.
- * Search for the 'count'th occurence of string 'str' in direction 'dirc'
+ * Search for the 'count'th occurence of pattern 'pat' in direction 'dirc'
  *		  If 'dirc' is 0: use previous dir.
- *    If 'str' is NULL or empty : use previous string.
+ *    If 'pat' is NULL or empty : use previous string.
  *    If 'options & SEARCH_REV' : go in reverse of previous dir.
  *    If 'options & SEARCH_ECHO': echo the search command and handle options
  *    If 'options & SEARCH_MSG' : may give error message
@@ -886,10 +886,10 @@ first_submatch(rp)
  * return 0 for failure, 1 for found, 2 for found and line offset added
  */
     int
-do_search(oap, dirc, str, count, options)
+do_search(oap, dirc, pat, count, options)
     oparg_T	    *oap;	/* can be NULL */
     int		    dirc;	/* '/' or '?' */
-    char_u	   *str;
+    char_u	   *pat;
     long	    count;
     int		    options;
 {
@@ -972,10 +972,10 @@ do_search(oap, dirc, str, count, options)
      */
     for (;;)
     {
-	searchstr = str;
+	searchstr = pat;
 	dircp = NULL;
 					    /* use previous pattern */
-	if (str == NULL || *str == NUL || *str == dirc)
+	if (pat == NULL || *pat == NUL || *pat == dirc)
 	{
 	    if (spats[RE_SEARCH].pat == NULL)	    /* no previous pattern */
 	    {
@@ -987,19 +987,19 @@ do_search(oap, dirc, str, count, options)
 	    searchstr = (char_u *)"";
 	}
 
-	if (str != NULL && *str != NUL)	/* look for (new) offset */
+	if (pat != NULL && *pat != NUL)	/* look for (new) offset */
 	{
 	    /*
 	     * Find end of regular expression.
 	     * If there is a matching '/' or '?', toss it.
 	     */
 	    ps = strcopy;
-	    p = skip_regexp(str, dirc, (int)p_magic, &strcopy);
+	    p = skip_regexp(pat, dirc, (int)p_magic, &strcopy);
 	    if (strcopy != ps)
 	    {
-		/* made a copy of "str" to change "\?" to "?" */
-		searchcmdlen += STRLEN(str) - STRLEN(strcopy);
-		str = strcopy;
+		/* made a copy of "pat" to change "\?" to "?" */
+		searchcmdlen += STRLEN(pat) - STRLEN(strcopy);
+		pat = strcopy;
 		searchstr = strcopy;
 	    }
 	    if (*p == dirc)
@@ -1040,9 +1040,9 @@ do_search(oap, dirc, str, count, options)
 	    }
 
 	    /* compute length of search command for get_address() */
-	    searchcmdlen += (int)(p - str);
+	    searchcmdlen += (int)(p - pat);
 
-	    str = p;			    /* put str after search command */
+	    pat = p;			    /* put pat after search command */
 	}
 
 	if ((options & SEARCH_ECHO) && messaging() && !cmd_silent)
@@ -1057,10 +1057,6 @@ do_search(oap, dirc, str, count, options)
 	    msgbuf = alloc((unsigned)(STRLEN(p) + 40));
 	    if (msgbuf != NULL)
 	    {
-#ifdef FEAT_RIGHTLEFT
-		int	nwr_save = need_wait_return;
-#endif
-
 		msgbuf[0] = dirc;
 		STRCPY(msgbuf + 1, p);
 		if (spats[0].off.line || spats[0].off.end || spats[0].off.off)
@@ -1079,6 +1075,11 @@ do_search(oap, dirc, str, count, options)
 			*p = NUL;
 		}
 
+#ifdef FEAT_RIGHTLEFT
+		/* The search pattern could be shown on the right in rightleft
+		 * mode, but the 'ruler' and 'showcmd' area use it too, thus
+		 * it would be blanked out again very soon. */
+#endif
 		msg_start();
 		trunc = msg_strtrunc(msgbuf);
 		if (trunc != NULL)
@@ -1087,33 +1088,10 @@ do_search(oap, dirc, str, count, options)
 		    vim_free(trunc);
 		}
 		else
-		{
-#ifdef FEAT_RIGHTLEFT
-		    /* the search pattern when found should be shown
-		     * on right in rightleft mode - ugly hack I know */
-		    cmdmsg_rl = (curwin->w_p_rl && *curwin->w_p_rlc == 's'
-				   && (msgbuf[0] == '/' || msgbuf[0] == '?'));
-		    if (cmdmsg_rl)
-			msg_start();
-#endif
 		    msg_outtrans(msgbuf);
-#ifdef FEAT_RIGHTLEFT
-		    if (cmdmsg_rl)
-			redraw_msg(msgbuf + 1, STRLEN(msgbuf) - 1);
-#endif
-		}
 		msg_clr_eos();
 		msg_check();
 		vim_free(msgbuf);
-#ifdef FEAT_RIGHTLEFT
-		if (cmdmsg_rl)
-		{
-		    cmdmsg_rl = FALSE;
-		    msg_start();
-		    /* Don't let this message cause a hit-return prompt. */
-		    need_wait_return = nwr_save;
-		}
-#endif
 
 		gotocmdline(FALSE);
 		out_flush();
@@ -1162,7 +1140,7 @@ do_search(oap, dirc, str, count, options)
 		searchstr, count, spats[0].off.end + (options &
 		       (SEARCH_KEEP + SEARCH_PEEK + SEARCH_HIS
 			+ SEARCH_MSG + SEARCH_START
-			+ ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
+			+ ((pat != NULL && *pat == ';') ? 0 : SEARCH_NOOF))),
 		RE_LAST);
 
 	if (dircp != NULL)
@@ -1180,7 +1158,7 @@ do_search(oap, dirc, str, count, options)
 	/*
 	 * Add character and/or line offset
 	 */
-	if (!(options & SEARCH_NOOF) || *str == ';')
+	if (!(options & SEARCH_NOOF) || *pat == ';')
 	{
 	    if (spats[0].off.line)	/* Add the offset to the line number. */
 	    {
@@ -1225,17 +1203,17 @@ do_search(oap, dirc, str, count, options)
 	 * - When an error happens the cursor isn't moved at all.
 	 * Don't do this when called by get_address() (it handles ';' itself).
 	 */
-	if (!(options & SEARCH_OPT) || str == NULL || *str != ';')
+	if (!(options & SEARCH_OPT) || pat == NULL || *pat != ';')
 	    break;
 
-	dirc = *++str;
+	dirc = *++pat;
 	if (dirc != '?' && dirc != '/')
 	{
 	    retval = 0;
 	    EMSG(_("E386: Expected '?' or '/'  after ';'"));
 	    goto end_do_search;
 	}
-	++str;
+	++pat;
     }
 
     if (options & SEARCH_MARK)

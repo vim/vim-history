@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Visual Basic
 " Maintainer:	Robert M. Cortopassi <cortopar@mindspring.com>
-" Last Change:	2001 May 09
+" Last Change:	2003 May 11
 
 " This was thrown together after seeing numerous requests on the
 " VIM and VIM-DEV mailing lists.  It is by no means complete.
@@ -172,17 +172,17 @@ if version >= 508 || !exists("did_vb_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink vbLineNumber	        Comment
+  HiLink vbLineNumber		Comment
   HiLink vbNumber		Number
   HiLink vbError		Error
-  HiLink vbStatement	        Statement
+  HiLink vbStatement		Statement
   HiLink vbString		String
   HiLink vbComment		Comment
-  HiLink vbTodo		Todo
+  HiLink vbTodo			Todo
   HiLink vbFunction		Identifier
-  HiLink vbMethods             PreProc
-  HiLink vbEvents              Special
-  HiLink vbTypeSpecifier       Type
+  HiLink vbMethods		PreProc
+  HiLink vbEvents		Special
+  HiLink vbTypeSpecifier	Type
 
   delcommand HiLink
 endif

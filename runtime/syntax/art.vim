@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:      ART-IM and ART*Enterprise
 " Maintainer:    Dorai Sitaram <ds26@gte.com>
-" URL:           http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html
+" URL:		 http://www.ccs.neu.edu/~dorai/vimplugins/vimplugins.html
 " Last Change:   Nov 6, 2002
 
 if exists("b:current_syntax")

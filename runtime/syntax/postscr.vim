@@ -3,15 +3,15 @@
 " Maintainer:   Mike Williams <mrw@eandem.co.uk>
 " Filenames:    *.ps,*.eps
 " Last Change:  27th June 2002
-" URL:          http://www.eandem.co.uk/mrw/vim
+" URL:		http://www.eandem.co.uk/mrw/vim
 "
 " Options Flags:
-" postscr_level                 - language level to use for highligting (1, 2, or 3)
-" postscr_display               - include display PS operators
-" postscr_ghostscript           - include GS extensions
-" postscr_fonts                 - highlight standard font names (a lot for PS 3)
-" postscr_encodings             - highlight encoding names (there are a lot)
-" postscr_andornot_binary       - highlight and, or, and not as binary operators (not logical)
+" postscr_level			- language level to use for highligting (1, 2, or 3)
+" postscr_display		- include display PS operators
+" postscr_ghostscript		- include GS extensions
+" postscr_fonts			- highlight standard font names (a lot for PS 3)
+" postscr_encodings		- highlight encoding names (there are a lot)
+" postscr_andornot_binary	- highlight and, or, and not as binary operators (not logical)
 "
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -35,7 +35,7 @@ endif
 syn keyword postscrTodo contained  TODO
 
 " Comment
-syn match postscrComment        "%.*$" contains=postscrTodo
+syn match postscrComment	"%.*$" contains=postscrTodo
 " DSC comment start line (NB: defines DSC level, not PS level!)
 syn match  postscrDSCComment    "^%!PS-Adobe-\d\+\.\d\+\s*.*$"
 " DSC comment line (no check on possible comments - another language!)
@@ -44,7 +44,7 @@ syn match  postscrDSCComment    "^%%\u\+.*$" contains=@postscrString,@postscrNum
 syn match  postscrDSCComment    "^%%+ *.*$" contains=@postscrString,@postscrNumber
 
 " Names
-syn match postscrName           "\k\+"
+syn match postscrName		"\k\+"
 
 " Identifiers
 syn match postscrIdentifierError "/\{1,2}[[:space:]\[\]{}]"me=e-1
@@ -53,18 +53,18 @@ syn match postscrIdentifier     "/\{1,2}\k\+" contains=postscrConstant,postscrBo
 " Numbers
 syn case ignore
 " In file hex data - usually complete lines
-syn match postscrHex            "^[[:xdigit:]][[:xdigit:][:space:]]*$"
-"syn match postscrHex            "\<\x\{2,}\>"
+syn match postscrHex		"^[[:xdigit:]][[:xdigit:][:space:]]*$"
+"syn match postscrHex		 "\<\x\{2,}\>"
 " Integers
-syn match postscrInteger        "\<[+-]\=\d\+\>"
+syn match postscrInteger	"\<[+-]\=\d\+\>"
 " Radix
-syn match postscrRadix          "\d\+#\x\+\>"
+syn match postscrRadix		"\d\+#\x\+\>"
 " Reals - upper and lower case e is allowed
-syn match postscrFloat          "[+-]\=\d\+\.\>"
-syn match postscrFloat          "[+-]\=\d\+\.\d*\(e[+-]\=\d\+\)\=\>"
-syn match postscrFloat          "[+-]\=\.\d\+\(e[+-]\=\d\+\)\=\>"
-syn match postscrFloat          "[+-]\=\d\+e[+-]\=\d\+\>"
-syn cluster postscrNumber       contains=postscrInteger,postscrRadix,postscrFloat
+syn match postscrFloat		"[+-]\=\d\+\.\>"
+syn match postscrFloat		"[+-]\=\d\+\.\d*\(e[+-]\=\d\+\)\=\>"
+syn match postscrFloat		"[+-]\=\.\d\+\(e[+-]\=\d\+\)\=\>"
+syn match postscrFloat		"[+-]\=\d\+e[+-]\=\d\+\>"
+syn cluster postscrNumber	contains=postscrInteger,postscrRadix,postscrFloat
 syn case match
 
 " Escaped characters
@@ -739,40 +739,40 @@ if version >= 508 || !exists("did_postscr_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink postscrComment         Comment
+  HiLink postscrComment		Comment
 
-  HiLink postscrConstant        Constant
-  HiLink postscrString          String
-  HiLink postscrASCIIString     postscrString
-  HiLink postscrHexString       postscrString
-  HiLink postscrASCII85String   postscrString
-  HiLink postscrNumber          Number
-  HiLink postscrInteger         postscrNumber
-  HiLink postscrHex             postscrNumber
-  HiLink postscrRadix           postscrNumber
-  HiLink postscrFloat           Float
-  HiLink postscrBoolean         Boolean
+  HiLink postscrConstant	Constant
+  HiLink postscrString		String
+  HiLink postscrASCIIString	postscrString
+  HiLink postscrHexString	postscrString
+  HiLink postscrASCII85String	postscrString
+  HiLink postscrNumber		Number
+  HiLink postscrInteger		postscrNumber
+  HiLink postscrHex		postscrNumber
+  HiLink postscrRadix		postscrNumber
+  HiLink postscrFloat		Float
+  HiLink postscrBoolean		Boolean
 
-  HiLink postscrIdentifier      Identifier
-  HiLink postscrProcedure       Function
+  HiLink postscrIdentifier	Identifier
+  HiLink postscrProcedure	Function
 
-  HiLink postscrName            Statement
-  HiLink postscrConditional     Conditional
-  HiLink postscrRepeat          Repeat
-  HiLink postscrOperator        Operator
-  HiLink postscrMathOperator    postscrOperator
+  HiLink postscrName		Statement
+  HiLink postscrConditional	Conditional
+  HiLink postscrRepeat		Repeat
+  HiLink postscrOperator	Operator
+  HiLink postscrMathOperator	postscrOperator
   HiLink postscrLogicalOperator postscrOperator
-  HiLink postscrBinaryOperator  postscrOperator
+  HiLink postscrBinaryOperator	postscrOperator
 
-  HiLink postscrDSCComment      SpecialComment
-  HiLink postscrSpecialChar     SpecialChar
+  HiLink postscrDSCComment	SpecialComment
+  HiLink postscrSpecialChar	SpecialChar
 
-  HiLink postscrTodo            Todo
+  HiLink postscrTodo		Todo
 
-  HiLink postscrError           Error
+  HiLink postscrError		Error
   HiLink postscrSpecialCharError postscrError
   HiLink postscrASCII85CharError postscrError
-  HiLink postscrHexCharError    postscrError
+  HiLink postscrHexCharError	postscrError
   HiLink postscrIdentifierError postscrError
 
   delcommand HiLink

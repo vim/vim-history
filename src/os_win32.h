@@ -71,9 +71,7 @@
 #endif
 #define HAVE_AVAIL_MEM
 
-#if defined(__BORLANDC__) || defined(_MSC_VER)
-# define HAVE_PUTENV		/* at least Bcc 5.2 and MSC as it */
-#endif
+#define HAVE_PUTENV		/* at least Bcc 5.2 and MSC have it */
 
 #ifdef FEAT_GUI_W32
 # define NO_CONSOLE		/* don't included console-only code */
@@ -170,7 +168,7 @@ Trace(char *pszFormat, ...);
 
 #define mch_setenv(name, val, x) setenv(name, val, x)
 #define mch_getenv(x) (char_u *)getenv((char *)(x))
-#ifndef __BORLANDC__
+#ifdef __BORLANDC__
 # define vim_mkdir(x, y) mkdir(x)
 #else
 # define vim_mkdir(x, y) _mkdir(x)

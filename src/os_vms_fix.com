@@ -120,7 +120,7 @@ $
 $! Strip the version number.
 $
 $ file = f$parse(file,,,"DEVICE") + f$parse(file,,,"DIRECTORY") + -
-        f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
+         f$parse(file,,,"NAME") + f$parse(file,,,"TYPE")
 $
 $! f$search() returns the same filename over and over if there are no
 $! wildcards in it.

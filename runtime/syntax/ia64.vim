@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:     IA-64 (Itanium) assembly language
 " Maintainer:   Parth Malwankar <parth.malwankar@techie.com>
-" URL:          http://www.geocities.com/pmalwankar (Home Page with link to my Vim page)
-"               http://www.geocities.com/pmalwankar/vim.htm (for VIM)
+" URL:		http://www.geocities.com/pmalwankar (Home Page with link to my Vim page)
+"		http://www.geocities.com/pmalwankar/vim.htm (for VIM)
 " File Version: 0.6
-" Last Change:  2001 June 30
+" Last Change:  2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -34,17 +34,17 @@ source <sfile>:p:h/masm.vim
 syn region ia64Comment start="//" end="$" contains=ia64Todo
 syn region ia64Comment start="/\*" end="\*/" contains=ia64Todo
 
-syn match ia64Identifier        "[a-zA-Z_$][a-zA-Z0-9_$]*"
-syn match ia64Directive         "\.[a-zA-Z_$][a-zA-Z_$.]\+"
-syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=:\>"he=e-1
-syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=::\>"he=e-2
-syn match ia64Label             "[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=#\>"he=e-1
-syn region ia64string           start=+L\="+ skip=+\\\\\|\\"+ end=+"+
-syn match ia64Octal             "0[0-7_]*\>"
-syn match ia64Binary            "0[bB][01_]*\>"
-syn match ia64Hex               "0[xX][0-9a-fA-F_]*\>"
-syn match ia64Decimal           "[1-9_][0-9_]*\>"
-syn match ia64Float             "[0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*\)\=\>"
+syn match ia64Identifier	"[a-zA-Z_$][a-zA-Z0-9_$]*"
+syn match ia64Directive		"\.[a-zA-Z_$][a-zA-Z_$.]\+"
+syn match ia64Label		"[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=:\>"he=e-1
+syn match ia64Label		"[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=::\>"he=e-2
+syn match ia64Label		"[a-zA-Z_$.][a-zA-Z0-9_$.]*\s\=#\>"he=e-1
+syn region ia64string		start=+L\="+ skip=+\\\\\|\\"+ end=+"+
+syn match ia64Octal		"0[0-7_]*\>"
+syn match ia64Binary		"0[bB][01_]*\>"
+syn match ia64Hex		"0[xX][0-9a-fA-F_]*\>"
+syn match ia64Decimal		"[1-9_][0-9_]*\>"
+syn match ia64Float		"[0-9_]*\.[0-9_]*\([eE][+-]\=[0-9_]*\)\=\>"
 
 "simple instructions
 syn keyword ia64opcode add adds addl addp4 alloc and andcm cover epc
@@ -279,29 +279,29 @@ if version >= 508 || !exists("did_ia64_syn_inits")
 	endif
 
 	"put masm groups with our groups
-	HiLink masmOperator    ia64operator
-	HiLink masmDirective   ia64Directive
-	HiLink masmOpcode      ia64Opcode
-	HiLink masmIdentifier  ia64Identifier
-	HiLink masmFloat       ia64Float
+	HiLink masmOperator	ia64operator
+	HiLink masmDirective	ia64Directive
+	HiLink masmOpcode	ia64Opcode
+	HiLink masmIdentifier	ia64Identifier
+	HiLink masmFloat	ia64Float
 
 	"ia64 specific stuff
-	HiLink ia64Label       Define
-	HiLink ia64Comment     Comment
-	HiLink ia64Directive   Type
-	HiLink ia64opcode      Statement
-	HiLink ia64registers   Operator
-	HiLink ia64string      String
-	HiLink ia64Hex         Number
-	HiLink ia64Binary      Number
-	HiLink ia64Octal       Number
-	HiLink ia64Float       Float
-	HiLink ia64Decimal     Number
-	HiLink ia64Identifier  Identifier
-	HiLink ia64data        Type
-	HiLink ia64delimiter   Delimiter
-	HiLink ia64operator    Operator
-	HiLink ia64Todo        Todo
+	HiLink ia64Label	Define
+	HiLink ia64Comment	Comment
+	HiLink ia64Directive	Type
+	HiLink ia64opcode	Statement
+	HiLink ia64registers	Operator
+	HiLink ia64string	String
+	HiLink ia64Hex		Number
+	HiLink ia64Binary	Number
+	HiLink ia64Octal	Number
+	HiLink ia64Float	Float
+	HiLink ia64Decimal	Number
+	HiLink ia64Identifier	Identifier
+	HiLink ia64data		Type
+	HiLink ia64delimiter	Delimiter
+	HiLink ia64operator	Operator
+	HiLink ia64Todo		Todo
 
 	delcommand HiLink
 endif

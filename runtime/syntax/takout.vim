@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TAK2, TAK3, TAK2000 thermal modeling output file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 16:09:17 Mountain Daylight Time
+" Last Change:  2003 May 11
 " Filenames:    *.out
-" URL:          http://www.naglenet.org/vim/syntax/takout.vim
+" URL:		http://www.naglenet.org/vim/syntax/takout.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -47,11 +47,11 @@ syn keyword takoutNeg       OFF ENG
 
 
 " Define matches for TAK output
-syn match takoutTitle        "TAK III"
-syn match takoutTitle        "Release \d.\d\d"
-syn match takoutTitle        " K & K  Associates *Thermal Analysis Kit III *Serial Number \d\d-\d\d\d"
+syn match takoutTitle	     "TAK III"
+syn match takoutTitle	     "Release \d.\d\d"
+syn match takoutTitle	     " K & K  Associates *Thermal Analysis Kit III *Serial Number \d\d-\d\d\d"
 
-syn match takoutFile         ": \w*\.TAK"hs=s+2
+syn match takoutFile	     ": \w*\.TAK"hs=s+2
 
 syn match takoutInteger      "T\=[0-9]*\>"ms=s+1
 
@@ -63,10 +63,10 @@ syn match takoutHeaderDelim  "=\{5,}"
 syn match takoutHeaderDelim  "|\{5,}"
 syn match takoutHeaderDelim  "+\{5,}"
 
-syn match takoutLabel        "Input File:" contains=takoutFile
-syn match takoutLabel        "Begin Solution: Routine"
+syn match takoutLabel	     "Input File:" contains=takoutFile
+syn match takoutLabel	     "Begin Solution: Routine"
 
-syn match takoutError        "<<< Error >>>"
+syn match takoutError	     "<<< Error >>>"
 
 
 " Define the default highlighting
@@ -80,18 +80,18 @@ if version >= 508 || !exists("did_takout_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink takoutPos                 Statement
-  HiLink takoutNeg                 PreProc
-  HiLink takoutTitle               Type
-  HiLink takoutFile                takIncludeFile
-  HiLink takoutInteger             takInteger
+  HiLink takoutPos		   Statement
+  HiLink takoutNeg		   PreProc
+  HiLink takoutTitle		   Type
+  HiLink takoutFile		   takIncludeFile
+  HiLink takoutInteger		   takInteger
 
   HiLink takoutSectionDelim	    Delimiter
-  HiLink takoutSectionTitle        Exception
-  HiLink takoutHeaderDelim         SpecialComment
-  HiLink takoutLabel               Identifier
+  HiLink takoutSectionTitle	   Exception
+  HiLink takoutHeaderDelim	   SpecialComment
+  HiLink takoutLabel		   Identifier
 
-  HiLink takoutError               Error
+  HiLink takoutError		   Error
 
   delcommand HiLink
 endif

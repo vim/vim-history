@@ -1028,8 +1028,9 @@ extern cursorentry_T shape_table[SHAPE_IDX_COUNT];
 # define OPT_PRINT_PAPER	10
 # define OPT_PRINT_COLLATE	11
 # define OPT_PRINT_JOBSPLIT	12
+# define OPT_PRINT_FORMFEED	13
 
-# define OPT_PRINT_NUM_OPTIONS	13
+# define OPT_PRINT_NUM_OPTIONS	14
 
 EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
 # ifdef DO_INIT
@@ -1048,6 +1049,7 @@ EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
     {"paper",	FALSE, 0, NULL, 0, FALSE},
     {"collate",	FALSE, 0, NULL, 0, FALSE},
     {"jobsplit", FALSE, 0, NULL, 0, FALSE},
+    {"formfeed", FALSE, 0, NULL, 0, FALSE},
 }
 # endif
 ;
@@ -1281,7 +1283,7 @@ EXTERN char_u e_sandbox[]	INIT(=N_("E48: Not allowed in sandbox"));
 #endif
 EXTERN char_u e_secure[]	INIT(=N_("E523: Not allowed here"));
 #if defined(AMIGA) || defined(MACOS) || defined(MSWIN) || defined(RISCOS) \
-	|| defined(UNIX)
+	|| defined(UNIX) || defined(VMS)
 EXTERN char_u e_screenmode[]	INIT(=N_("E359: Screen mode setting not supported"));
 #endif
 EXTERN char_u e_scroll[]	INIT(=N_("E49: Invalid scroll size"));
@@ -1318,12 +1320,21 @@ EXTERN char_u e_guarded[]	INIT(=N_("E463: Region is guarded, cannot modify"));
 #ifdef MACOS_X_UNIX
 EXTERN short disallow_gui	INIT(= FALSE);
 #endif
+
+/*
+ * Comms. with the session manager (XSMP)
+ */
+#ifdef USE_XSMP
+EXTERN int xsmp_icefd INIT(= -1);   /* The actual connection */
+#endif
+
 /*
  * Optional Farsi support.  Include it here, so EXTERN and INIT are defined.
  */
 #ifdef FEAT_FKMAP
 # include "farsi.h"
 #endif
+
 /*
  * Optional Arabic support. Include it here, so EXTERN and INIT are defined.
  */

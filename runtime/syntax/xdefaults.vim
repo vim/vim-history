@@ -34,7 +34,7 @@ endif
 
 
 " syn region  xdefaultsLabel   start=+^[^:]\{-}:+he=e-1 skip=+\\+ end="$"
-syn match   xdefaultsLabel   +[^:]\{-}:+he=e-1                       contains=xdefaultsPunct,xdefaultsSpecial,xdefaultsLineEnd
+syn match   xdefaultsLabel   +[^:]\{-}:+he=e-1			     contains=xdefaultsPunct,xdefaultsSpecial,xdefaultsLineEnd
 syn region  xdefaultsValue   keepend start=+:+lc=1 skip=+\\+ end=+$+ contains=xdefaultsSpecial,xdefaultsLabel,xdefaultsLineEnd
 
 syn match   xdefaultsSpecial	contained +#override+
@@ -49,7 +49,7 @@ syn match   xdefaultsLineEnd	contained +\\n$+
 " COMMENTS
 
 " note, that the '!' must be at the very first position of the line
-syn match   xdefaultsComment "^!.*$"                     contains=xdefaultsTodo
+syn match   xdefaultsComment "^!.*$"			 contains=xdefaultsTodo
 
 " lines starting with a '#' mark and which are not preprocessor
 " lines are skipped.  This is not part of the xrdb documentation.

@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint output file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001-05-02 16:08:42 Mountain Daylight Time
+" Last Change:  2003 May 11
 " Filenames:    *.out
-" URL:          http://www.naglenet.org/vim/syntax/sindaout.vim
+" URL:		http://www.naglenet.org/vim/syntax/sindaout.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -47,7 +47,7 @@ syn keyword sindaoutNeg       OFF ENG
 
 
 " Define matches for sinda output
-syn match sindaoutFile         ": \w*\.TAK"hs=s+2
+syn match sindaoutFile	       ": \w*\.TAK"hs=s+2
 
 syn match sindaoutInteger      "T\=[0-9]*\>"ms=s+1
 
@@ -59,10 +59,10 @@ syn match sindaoutHeaderDelim  "=\{5,}"
 syn match sindaoutHeaderDelim  "|\{5,}"
 syn match sindaoutHeaderDelim  "+\{5,}"
 
-syn match sindaoutLabel        "Input File:" contains=sindaoutFile
-syn match sindaoutLabel        "Begin Solution: Routine"
+syn match sindaoutLabel		"Input File:" contains=sindaoutFile
+syn match sindaoutLabel		"Begin Solution: Routine"
 
-syn match sindaoutError        "<<< Error >>>"
+syn match sindaoutError		"<<< Error >>>"
 
 
 " Define the default highlighting
@@ -76,20 +76,20 @@ if version >= 508 || !exists("did_sindaout_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  hi sindaHeaderDelim  ctermfg=Black ctermbg=Green             guifg=Black guibg=Green
+  hi sindaHeaderDelim  ctermfg=Black ctermbg=Green	       guifg=Black guibg=Green
 
-  HiLink sindaoutPos                 Statement
-  HiLink sindaoutNeg                 PreProc
-  HiLink sindaoutTitle               Type
-  HiLink sindaoutFile                sindaIncludeFile
-  HiLink sindaoutInteger             sindaInteger
+  HiLink sindaoutPos		     Statement
+  HiLink sindaoutNeg		     PreProc
+  HiLink sindaoutTitle		     Type
+  HiLink sindaoutFile		     sindaIncludeFile
+  HiLink sindaoutInteger	     sindaInteger
 
   HiLink sindaoutSectionDelim	      Delimiter
-  HiLink sindaoutSectionTitle        Exception
-  HiLink sindaoutHeaderDelim         SpecialComment
-  HiLink sindaoutLabel               Identifier
+  HiLink sindaoutSectionTitle	     Exception
+  HiLink sindaoutHeaderDelim	     SpecialComment
+  HiLink sindaoutLabel		     Identifier
 
-  HiLink sindaoutError               Error
+  HiLink sindaoutError		     Error
 
   delcommand HiLink
 endif

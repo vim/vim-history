@@ -3,7 +3,7 @@
 " Maintainer:	Jason Rust <jrust@westmont.edu>
 " URL:		http://www.rustyparts.com/vim/syntax/htmlos.vim
 " Info:		http://www.rustyparts.com/scripts.php
-" Last Change:	2001 May 10
+" Last Change:	2003 May 11
 "
 
 " For version 5.x: Clear all syntax items
@@ -72,7 +72,7 @@ syn keyword	htmlosKeyword	name value step do rowname colname rownum	contained
 syn keyword	htmlosLabel	case matched /case switch	contained
 
 " Statement
-syn keyword	htmlosStatement        break exit return continue	contained
+syn keyword	htmlosStatement     break exit return continue	contained
 
 " Identifier
 syn match	htmlosIdentifier	"\h\w*[\.]*\w*"	contained

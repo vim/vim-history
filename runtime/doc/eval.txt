@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2c.  Last change: 2003 May 05
+*eval.txt*      For Vim version 6.2d.  Last change: 2003 May 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2592,7 +2592,7 @@ There are three types of features:
 
 all_builtin_terms	Compiled with all builtin terminals enabled.
 amiga			Amiga version of Vim.
-arabic			Compiled with Arabic support |arabic|.
+arabic			Compiled with Arabic support |Arabic|.
 arp			Compiled with ARP support (Amiga).
 autocmd			Compiled with autocommands support.
 balloon_eval		Compiled with |balloon-eval| support.
@@ -2737,6 +2737,8 @@ win95			Win32 version for MS-Windows 95/98/ME.
 writebackup		Compiled with 'writebackup' default on.
 xfontset		Compiled with X fontset support |xfontset|.
 xim			Compiled with X input method support |xim|.
+xsmp			Compiled with X session management support.
+xsmp_interact		Compiled with interactive X session management support.
 xterm_clipboard		Compiled with support for xterm clipboard.
 xterm_save		Compiled with support for saving and restoring the
 			xterm screen.

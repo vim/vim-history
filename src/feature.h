@@ -296,7 +296,7 @@
 #endif
 
 /*
- * +rightleft		Right-to-left typing and Hebrew support.
+ * +rightleft		Right-to-left editing/typing support.
  */
 #ifdef FEAT_BIG
 # define FEAT_RIGHTLEFT
@@ -317,9 +317,9 @@
 
 /*
  * +arabic		Arabic keymap and shaping support.
- *			Requires FEAT_RIGHTLEFT.
+ *			Requires FEAT_RIGHTLEFT and FEAT_MBYTE.
  */
-#if defined(FEAT_BIG) && !defined(WIN16)
+#if defined(FEAT_BIG) && !defined(WIN16) && SIZEOF_INT >= 4 && !defined(EBCDIC)
 # define FEAT_ARABIC
 #endif
 #ifdef FEAT_ARABIC
@@ -603,6 +603,21 @@
 #if defined(FEAT_MBYTE) && ((defined(HAVE_ICONV_H) && defined(HAVE_ICONV)) \
 		|| defined(DYNAMIC_ICONV))
 # define USE_ICONV
+#endif
+
+/*
+ * XSMP - X11 Session Management Protocol
+ * It may be preferred to disable this if the GUI supports it (e.g., GNOME/KDE)
+ * and implement save-yourself etc. through that, but it may also be cleaner to
+ * have all SM-aware vims do the same thing (libSM does not depend upon X11).
+ * If your GUI wants to support SM itself, change this ifdef.
+ * I'm assuming that any X11 implementation will cope with this for now.
+ */
+#if defined(HAVE_X11) && defined(WANT_X11) && defined(HAVE_X11_SM_SMLIB_H)
+# define USE_XSMP
+#endif
+#if defined(USE_XSMP_INTERACT) && !defined(USE_XSMP)
+# undef USE_XSMP_INTERACT
 #endif
 
 /*

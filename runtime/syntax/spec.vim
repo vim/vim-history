@@ -2,7 +2,7 @@
 " Purpose:     Vim syntax file
 " Language:    SPEC: Build/install scripts for Linux RPM packages
 " Maintainer:  Donovan Rebbechi elflord@pegasus.rutgers.edu
-" URL:         http://pegasus.rutgers.edu/~elflord/vim/syntax/spec.vim
+" URL:	       http://pegasus.rutgers.edu/~elflord/vim/syntax/spec.vim
 " Last Change: Tue Oct  3 17:35:15 BRST 2000 <aurelio@conectiva.com.br>
 
 " For version 5.x: Clear all syntax items
@@ -63,7 +63,7 @@ syn cluster specListedFiles contains=specListedFilesBin,specListedFilesLib,specL
 syn match   specConfigure  contained '\./configure'
 syn match   specTarCommand contained '\<tar\s\+[cxvpzIf]\{,5}\s*'
 syn keyword specCommandSpecial contained root
-syn keyword specCommand        contained make xmkmf mkdir chmod ln find sed rm strip moc echo grep ls rm mv mkdir install cp pwd cat tail then else elif cd gzip rmdir ln eval export touch
+syn keyword specCommand		contained make xmkmf mkdir chmod ln find sed rm strip moc echo grep ls rm mv mkdir install cp pwd cat tail then else elif cd gzip rmdir ln eval export touch
 syn cluster specCommands contains=specCommand,specTarCommand,specConfigure,specCommandSpecial
 
 "frequently used rpm env vars

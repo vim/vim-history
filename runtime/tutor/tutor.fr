@@ -606,7 +606,7 @@ NOTE:  Le fichier que vous récupérez est placé là où se trouve le curseur.
 	  :!del FICHIER       efface FICHIER.
       Les mêmes exemples, pour les systèmes Unix:
 	  :!ls		      affiche le contenu du dossier courant.
-	  :!rm FICHIER        efface FICHIER.
+	  :!rm FICHIER	      efface FICHIER.
 
   2.  :w FICHIER  enregistre le fichier Vim courant sur le disque avec pour
 		  nom FICHIER.

@@ -17,6 +17,8 @@
  * DJGPP changes by Gert van Antwerpen
  * Faster text screens by John Lange (jlange@zilker.net)
  * Windows clipboard functionality added by David Kotchan (dk)
+ *
+ * Some functions are also used for Win16 (MS-Windows 3.1).
  */
 
 #include <io.h>
@@ -26,6 +28,13 @@
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
+
+/*
+ * MS-DOS only code, not used for Win16.
+ */
+#ifndef WIN16
+
+
 #include <bios.h>
 #ifdef DJGPP
 # include <dpmi.h>
@@ -833,18 +842,6 @@ mch_delay(
 }
 
 /*
- * this version of remove is not scared by a readonly (backup) file
- *
- * returns -1 on error, 0 otherwise (just like remove())
- */
-    int
-mch_remove(char_u *name)
-{
-    (void)mch_setperm(name, 0);    /* default permissions */
-    return unlink((char *)name);
-}
-
-/*
  * mch_write(): write the output buffer to the screen
  */
     void
@@ -1494,60 +1491,12 @@ fname_case(char_u *name, int len)
 #endif
 
 /*
- * Insert user name in s[len].
- */
-    int
-mch_get_user_name(
-    char_u	*s,
-    int		len)
-{
-    *s = NUL;
-    return FAIL;
-}
-
-/*
- * Insert host name is s[len].
- */
-    void
-mch_get_host_name(
-    char_u	*s,
-    int		len)
-{
-#ifdef DJGPP
-    STRNCPY(s, "PC (32 bits Vim)", len);
-#else
-    STRNCPY(s, "PC (16 bits Vim)", len);
-#endif
-    s[len - 1] = NUL;	/* make sure it's terminated */
-}
-
-/*
  * return process ID
  */
     long
 mch_get_pid(void)
 {
     return (long)0;
-}
-
-/*
- * Get name of current directory into buffer 'buf' of length 'len' bytes.
- * Return OK for success, FAIL for failure.
- */
-    int
-mch_dirname(
-    char_u	*buf,
-    int		len)
-{
-#ifdef DJGPP
-    if (getcwd((char *)buf, len) == NULL)
-	return FAIL;
-    /* turn the '/'s returned by DJGPP into '\'s */
-    slash_adjust(buf);
-    return OK;
-#else
-    return (getcwd((char *)buf, len) != NULL ? OK : FAIL);
-#endif
 }
 
 /*
@@ -1596,6 +1545,17 @@ mch_FullName(
     return OK;
 #else			/* almost the same as mch_FullName() in os_unix.c */
     {
+# if 1
+	char_u	fullpath[MAXPATHL];
+
+	if (!_truename(fname, fullpath))
+	    return FAIL;
+	slash_adjust(fullpath);	    /* Only needed when 'shellslash' set */
+	STRNCPY(buf, fullpath, len);
+	buf[len - 1] = NUL;
+	return OK;
+
+# else  /* Old code, to be deleted... */
 	int	l;
 	char_u	olddir[MAXPATHL];
 	char_u	*p, *q;
@@ -1633,13 +1593,13 @@ mch_FullName(
 
 		c = *q;			/* truncate at start of fname */
 		*q = NUL;
-#ifdef DJGPP
+# ifdef DJGPP
 		STRCPY(buf, fname);
 		slash_adjust(buf);	/* needed when fname starts with \ */
 		if (mch_chdir(buf))	/* change to the directory */
-#else
+# else
 		if (mch_chdir(fname))	/* change to the directory */
-#endif
+# endif
 		    retval = FAIL;
 		else
 		{
@@ -1655,7 +1615,7 @@ mch_FullName(
 	    retval = FAIL;
 	    *buf = NUL;
 	}
-#ifdef USE_FNAME_CASE
+#  ifdef USE_FNAME_CASE
 	else
 	{
 	    char_u	*head;
@@ -1700,7 +1660,7 @@ mch_FullName(
 		head = tail;
 	    }
 	}
-#endif
+#  endif
 	if (p != NULL)
 	    mch_chdir(olddir);
 	/*
@@ -1714,6 +1674,7 @@ mch_FullName(
 	    strcat(buf, fname);
 	}
 	return retval;
+# endif
     }
 #endif
 }
@@ -1772,125 +1733,6 @@ mch_isFullName(char_u *fname)
 	|| (fname[0] == fname[1] && (fname[0] == '/' || fname[0] == '\\'));
 }
 
-#ifdef DJGPP
-    static int
-vim_chmod(char_u *name)
-{
-    char_u	*p;
-    int		f;
-    int		c = 0;
-
-    /* DJGPP can't handle a file name with a trailing slash, remove it.
-     * But don't remove it for "/" or "c:/". */
-    p = name + STRLEN(name);
-    if (p > name)
-	--p;
-    if (p > name && (*p == '\\' || *p == '/') && p[-1] != ':')
-    {
-	c = *p;				/* remove trailing (back)slash */
-	*p = NUL;
-    }
-    else
-	p = NULL;
-    f = _chmod((char *)name, 0, 0);
-    if (p != NULL)
-	*p = c;				/* put back (back)slash */
-    return f;
-}
-#else
-# define vim_chmod(name) _chmod((char *)name, 0, 0)
-#endif
-
-/*
- * get file permissions for 'name'
- * Returns -1 for error.
- * Returns FA_attributes defined in dos.h
- */
-    long
-mch_getperm(char_u *name)
-{
-    return (long)vim_chmod(name);	/* get file mode */
-}
-
-/*
- * set file permission for 'name' to 'perm'
- *
- * return FAIL for failure, OK otherwise
- */
-    int
-mch_setperm(
-    char_u	*name,
-    long	perm)
-{
-    perm |= FA_ARCH;	    /* file has changed, set archive bit */
-    return (_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
-}
-
-/*
- * Set hidden flag for "name".
- */
-    void
-mch_hide(char_u *name)
-{
-    /* DOS 6.2 share.exe causes "seek error on file write" errors when making
-     * the swap file hidden.  Thus don't do it. */
-}
-
-/*
- * return TRUE if "name" is a directory
- * return FALSE if "name" is not a directory
- * return FALSE for error
- *
- * beware of a trailing (back)slash
- */
-    int
-mch_isdir(char_u *name)
-{
-    int		f;
-
-    f = vim_chmod(name);
-    if (f == -1)
-	return FALSE;		    /* file does not exist at all */
-    if ((f & FA_DIREC) == 0)
-	return FALSE;		    /* not a directory */
-    return TRUE;
-}
-
-#if defined(FEAT_EVAL) || defined(PROTO)
-/*
- * Return 1 if "name" can be executed, 0 if not.
- * Return -1 if unknown.
- */
-    int
-mch_can_exe(name)
-    char_u	*name;
-{
-    return (searchpath(name) != NULL);
-}
-#endif
-
-/*
- * Check what "name" is:
- * NODE_NORMAL: file or directory (or doesn't exist)
- * NODE_WRITABLE: writable device, socket, fifo, etc.
- * NODE_OTHER: non-writable things
- */
-    int
-mch_nodetype(char_u *name)
-{
-    if (STRICMP(name, "AUX") == 0
-	    || STRICMP(name, "CON") == 0
-	    || STRICMP(name, "CLOCK$") == 0
-	    || STRICMP(name, "NUL") == 0
-	    || STRICMP(name, "PRN") == 0
-	    || ((STRNICMP(name, "COM", 3) == 0
-		    || STRNICMP(name, "LPT", 3) == 0)
-		&& isdigit(name[3])
-		&& name[4] == NUL))
-	return NODE_WRITABLE;
-    /* TODO: NODE_OTHER? */
-    return NODE_NORMAL;
-}
 
     void
 mch_early_init(void)
@@ -2315,31 +2157,6 @@ mch_rename(const char *OldFile, const char *NewFile)
     return retval;  /* success */
 }
 #endif
-
-/*
- * Special version of getenv(): Use uppercase name.
- */
-    char_u *
-mch_getenv(char_u *name)
-{
-    int		i;
-#define MAXENVLEN 50
-    char_u	var_copy[MAXENVLEN + 1];
-
-    /*
-     * Take a copy of the argument, and force it to upper case before passing
-     * to getenv().  On DOS systems, getenv() doesn't like lower-case argument
-     * (unlike Win32 et al.)  If the name is too long, just use it plain.
-     */
-    if (STRLEN(name) < MAXENVLEN)
-    {
-	for (i = 0; name[i] != NUL; ++i)
-	    var_copy[i] = toupper(name[i]);
-	var_copy[i] = NUL;
-	name = var_copy;
-    }
-    return (char_u *)getenv((char *)name);
-}
 
 #if defined(DJGPP) || defined(PROTO)
 /*
@@ -3053,3 +2870,234 @@ SetClipboardData(
 
 #endif	/* FEAT_CLIPBOARD */
 #endif /* DJGPP */
+
+/*
+ * End of MS-DOS only code
+ */
+#endif /* WIN16 */
+
+/* common MS-DOS and Win16 code follows */
+
+    static int
+vim_chmod(char_u *name)
+{
+    char_u	*p;
+    int		f;
+    int		c = 0;
+
+    /* chmod() can't handle a file name with a trailing slash, remove it.
+     * But don't remove it for "/" or "c:/". */
+    p = name + STRLEN(name);
+    if (p > name)
+	--p;
+    if (p > name && (*p == '\\' || *p == '/') && p[-1] != ':')
+    {
+	c = *p;				/* remove trailing (back)slash */
+	*p = NUL;
+    }
+    else
+	p = NULL;
+#if defined(__BORLANDC__) && (__BORLANDC__ >= 0x500)
+    /* this also sets the archive bit */
+    f = _rtl_chmod((char *)name, 0, 0);
+#else
+    f = _chmod((char *)name, 0, 0);
+#endif
+    if (p != NULL)
+	*p = c;				/* put back (back)slash */
+    return f;
+}
+
+/*
+ * get file permissions for 'name'
+ * Returns -1 for error.
+ * Returns FA_attributes defined in dos.h
+ */
+    long
+mch_getperm(char_u *name)
+{
+    return (long)vim_chmod(name);	/* get file mode */
+}
+
+/*
+ * set file permission for 'name' to 'perm'
+ *
+ * return FAIL for failure, OK otherwise
+ */
+    int
+mch_setperm(
+    char_u	*name,
+    long	perm)
+{
+    perm |= FA_ARCH;	    /* file has changed, set archive bit */
+#if defined(__BORLANDC__) && (__BORLANDC__ >= 0x500)
+    return (_rtl_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
+#else
+    return (_chmod((char *)name, 1, (int)perm) == -1 ? FAIL : OK);
+#endif
+}
+
+/*
+ * Set hidden flag for "name".
+ */
+    void
+mch_hide(char_u *name)
+{
+    /* DOS 6.2 share.exe causes "seek error on file write" errors when making
+     * the swap file hidden.  Thus don't do it. */
+}
+
+/*
+ * return TRUE if "name" is a directory
+ * return FALSE if "name" is not a directory
+ * return FALSE for error
+ *
+ * beware of a trailing (back)slash
+ */
+    int
+mch_isdir(char_u *name)
+{
+    int		f;
+
+    f = vim_chmod(name);
+    if (f == -1)
+	return FALSE;		    /* file does not exist at all */
+    if ((f & FA_DIREC) == 0)
+	return FALSE;		    /* not a directory */
+    return TRUE;
+}
+
+#if defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Return 1 if "name" can be executed, 0 if not.
+ * Return -1 if unknown.
+ */
+    int
+mch_can_exe(name)
+    char_u	*name;
+{
+    return (searchpath(name) != NULL);
+}
+#endif
+
+/*
+ * Check what "name" is:
+ * NODE_NORMAL: file or directory (or doesn't exist)
+ * NODE_WRITABLE: writable device, socket, fifo, etc.
+ * NODE_OTHER: non-writable things
+ */
+    int
+mch_nodetype(char_u *name)
+{
+    if (STRICMP(name, "AUX") == 0
+	    || STRICMP(name, "CON") == 0
+	    || STRICMP(name, "CLOCK$") == 0
+	    || STRICMP(name, "NUL") == 0
+	    || STRICMP(name, "PRN") == 0
+	    || ((STRNICMP(name, "COM", 3) == 0
+		    || STRNICMP(name, "LPT", 3) == 0)
+		&& isdigit(name[3])
+		&& name[4] == NUL))
+	return NODE_WRITABLE;
+    /* TODO: NODE_OTHER? */
+    return NODE_NORMAL;
+}
+
+/*
+ * Get name of current directory into buffer 'buf' of length 'len' bytes.
+ * Return OK for success, FAIL for failure.
+ */
+    int
+mch_dirname(
+    char_u	*buf,
+    int		len)
+{
+#ifdef DJGPP
+    if (getcwd((char *)buf, len) == NULL)
+	return FAIL;
+    /* turn the '/'s returned by DJGPP into '\'s */
+    slash_adjust(buf);
+    return OK;
+#else
+    return (getcwd((char *)buf, len) != NULL ? OK : FAIL);
+#endif
+}
+
+/*
+ * this version of remove is not scared by a readonly (backup) file
+ *
+ * returns -1 on error, 0 otherwise (just like remove())
+ */
+    int
+mch_remove(char_u *name)
+{
+    (void)mch_setperm(name, 0);    /* default permissions */
+    return unlink((char *)name);
+}
+
+/*
+ * Special version of getenv(): Use uppercase name.
+ */
+    char_u *
+mch_getenv(char_u *name)
+{
+    int		i;
+#define MAXENVLEN 50
+    char_u	var_copy[MAXENVLEN + 1];
+    char_u	*p;
+    char_u	*res;
+
+    /*
+     * Take a copy of the argument, and force it to upper case before passing
+     * to getenv().  On DOS systems, getenv() doesn't like lower-case argument
+     * (unlike Win32 et al.)  If the name is too long to fit in var_copy[]
+     * allocate memory.
+     */
+    if ((i = STRLEN(name)) > MAXENVLEN)
+	p = alloc(i + 1);
+    else
+	p = var_copy;
+    if (p == NULL)
+	p = name;   /* out of memory, fall back to unmodified name */
+    else
+    {
+	for (i = 0; name[i] != NUL; ++i)
+	    p[i] = toupper(name[i]);
+	p[i] = NUL;
+    }
+
+    res = (char_u *)getenv((char *)p);
+
+    if (p != var_copy && p != name)
+	vim_free(p);
+
+    return res;
+}
+
+/*
+ * Insert user name in s[len].
+ */
+    int
+mch_get_user_name(
+    char_u	*s,
+    int		len)
+{
+    *s = NUL;
+    return FAIL;
+}
+
+/*
+ * Insert host name is s[len].
+ */
+    void
+mch_get_host_name(
+    char_u	*s,
+    int		len)
+{
+#ifdef DJGPP
+    STRNCPY(s, "PC (32 bits Vim)", len);
+#else
+    STRNCPY(s, "PC (16 bits Vim)", len);
+#endif
+    s[len - 1] = NUL;	/* make sure it's terminated */
+}

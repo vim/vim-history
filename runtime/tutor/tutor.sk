@@ -26,9 +26,9 @@
 
    ** Pre pohyb kurzorum stlaè klávesy h,j,k,l ako je znázornené. **
        ^
-       k        Funkcia: Klávesa h je na¾avo a vykoná pohyb do¾ava.
-       < h   l >         Klávesa l je napravo a vykoná pohyb doprava.
-       j         Klávesa j vyzerá ako šípka dole
+       k	Funkcia: Klávesa h je na¾avo a vykoná pohyb do¾ava.
+       < h   l >	 Klávesa l je napravo a vykoná pohyb doprava.
+       j	 Klávesa j vyzerá ako šípka dole
        v
   1. Pohybuj kurzorom po obrazovke, kım si na to nezvykneš.
 
@@ -38,23 +38,23 @@
   3. Pouitím klávesy pre pohyb dole prejdi na Lekciu 1.2.
 
 Poznámka: Ak si niesi istı tım èo si napísal, stlaè <ESC>
-          na prechod do normálneho módu.
+	  na prechod do normálneho módu.
 
 Poznámka: Kurzorové klávesy sú tie funkèné. Ale pouívaním hjkl sa budeš
-          schopnı pohybova rıchlejšie, keï si zvykneš ich pouíva.
+	  schopnı pohybova rıchlejšie, keï si zvykneš ich pouíva.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         LEKCIA 1.2 SPÚŠANIE A ZATVÁRANIE VIMU
+	 LEKCIA 1.2 SPÚŠANIE A ZATVÁRANIE VIMU
 
   !! POZNÁMKA: Pred vykonaním tıchto krokov si preèítaj celú túto lekciu !!
 
   1. Stlaè klávesu <ESC> (aby si sa uèite nachádzal v normálnom móde)
 
-  2. Napíš:   :q! <ENTER>.
+  2. Napíš:	 :q! <ENTER>.
 
 ---> Tım ukonèíš prácu s editorom BEZ uloenia zmien, ktoré si vykonal.
      Ak chceš uloi vykonané zmeny a ukonèi prácu s editorom napíš:
-        :wq   <ENTER>
+	:wq   <ENTER>
 
   3. Keï sa dostaneš na príkazovı riadok, napíš príkaz, ktorım sa dostaneš
      spe do tejto vıuky. To môe by: vimtutor <ENTER>
@@ -67,7 +67,7 @@ Poznámka: Kurzorové klávesy sú tie funkèné. Ale pouívaním hjkl sa budeš
      ukonèenie a znovu spustenie editora. Potom presuò kurzor dole na
      lekciu 1.3.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         Lekcia 1.3: EDITÁCIA TEXTU - MAZANIE
+	 Lekcia 1.3: EDITÁCIA TEXTU - MAZANIE
 
 
 ** Stlaèenie klávesy  x  v normálnom móde zmae znak na mieste kurzora. **
@@ -90,7 +90,7 @@ POZNÁMKA: Neskúšaj si zapametä obsah tejto vıuky, ale sa uè pouívaním.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         Lekcia 1.4: EDITÁCIA TEXTU - VKLADANIE
+	 Lekcia 1.4: EDITÁCIA TEXTU - VKLADANIE
 
 
     ** Stlaèenie klávesy  i  v normálnom móde umoòuje vkladanie text. **
@@ -113,7 +113,7 @@ POZNÁMKA: Neskúšaj si zapametä obsah tejto vıuky, ale sa uè pouívaním.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            ZHRNUTIE LEKCIE 1
+	    ZHRNUTIE LEKCIE 1
 
 
   1. Kurzor sa pohybuje pouitím kláves so šípkami alebo klávesmi hjkl.
@@ -130,7 +130,7 @@ POZNÁMKA: Neskúšaj si zapametä obsah tejto vıuky, ale sa uè pouívaním.
    i     vkladanı text <ESC>
 
 POZNÁMKA: Stlaèenie <ESC> a premiestní do normálneho módu alebo zruší
-          nejakı nechcenı a èiastoène dokonèenı príkaz.
+	  nejakı nechcenı a èiastoène dokonèenı príkaz.
 
 Teraz pokraèuj lekciou 2.
 
@@ -159,7 +159,7 @@ píšeš. Ak píšeš nieèo zle, stlaè  <ESC>  a zaèni znova.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         Lekcia 2.2: VIAC MAZACÍCH PRÍKAZOV
+	 Lekcia 2.2: VIAC MAZACÍCH PRÍKAZOV
 
 
     ** Napísanie príkazu d$  zmae znaky do konca riadku **
@@ -182,7 +182,7 @@ píšeš. Ak píšeš nieèo zle, stlaè  <ESC>  a zaèni znova.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         Lekcia 2.3: ROZŠIROVACIE PRÍKAZY A OBJEKTY
+	 Lekcia 2.3: ROZŠIROVACIE PRÍKAZY A OBJEKTY
 
 
   Formát mazacieho príkazu  d  je nasledovnı:
@@ -199,7 +199,7 @@ píšeš. Ak píšeš nieèo zle, stlaè  <ESC>  a zaèni znova.
     $ - od kurzora do konca riadku.
 
 POZNÁMKA: Ak stlaèíš klávesu objektu v normálnom móde bez príkazu, kurzor
-          sa presunie na miesto špecifikované vo vıpise objektov.
+	  sa presunie na miesto špecifikované vo vıpise objektov.
 
 
 
@@ -251,7 +251,7 @@ Vzh¾adom na frekvenciu mazania celého riadku, sa autori Vimu rozhodli,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-             LEKCIA 2 ZHRNUTIE
+	     LEKCIA 2 ZHRNUTIE
 
 
   1. Pre zmazanie znakov od kurzora do konca slova napíš:   dw
@@ -297,7 +297,7 @@ Vzh¾adom na frekvenciu mazania celého riadku, sa autori Vimu rozhodli,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Lekcia 3.2: PRÍKAZ NAHRADENIA
+	  Lekcia 3.2: PRÍKAZ NAHRADENIA
 
 
      ** Napísaním  r  a znaku sa nahradí znak na mieste kurzora. **
@@ -343,7 +343,7 @@ Poznámka, e  cw  nielen nahrádza slovo, ale a aj premiestní do vkladania.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Lekcia 3.4: VIAC ZMIEN POUITÍM c
+	  Lekcia 3.4: VIAC ZMIEN POUITÍM c
 
 
    ** Príkaz pre úpravy sa pouíva s rovnakımi objektamy ako pre mazanie **
@@ -367,7 +367,7 @@ Poznámka, e  cw  nielen nahrádza slovo, ale a aj premiestní do vkladania.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-           LEKCIA 3 ZHRNUTIE
+	   LEKCIA 3 ZHRNUTIE
 
 
   1. Na vloenie textu, ktorı u bol zmazanı, napíš  p . To vloí zmazanı
@@ -390,7 +390,7 @@ Teraz prejdi na nalsedujúcu lekciu.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Lekcia 4.1: POZÍCIA A STATUS SÚBORU
+	Lekcia 4.1: POZÍCIA A STATUS SÚBORU
 
 
   ** Stlaè CTRL-g pre zobrazenie svojej pozície v súbore a statusu súboru.
@@ -453,13 +453,13 @@ Teraz prejdi na nalsedujúcu lekciu.
 ---> Toto ( je testovací riadok s ('s, ['s ] a {'s } v riadku. ))
 
 Poznámka: Toto je ve¾mi vıhodné pouí pri ladení programu s chıbajúcimi
-          uzatvárajúcimi zátvorkami.
+	  uzatvárajúcimi zátvorkami.
 
 
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Lekcia 4.4: SPOSOB AKO ZMENI CHYBY
+	  Lekcia 4.4: SPOSOB AKO ZMENI CHYBY
 
 
  ** Napíš   :s/starı/novı/g  pre nahradenie slova 'starı' za slovo 'novı'. **
@@ -482,7 +482,7 @@ Poznámka: Toto je ve¾mi vıhodné pouí pri ladení programu s chıbajúcimi
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-             LEKCIA 4 ZHRNUTIE
+	     LEKCIA 4 ZHRNUTIE
 
 
   1. Ctrl-g  vypíše tvoju pozíciu v súbore a status súboru.
@@ -528,7 +528,7 @@ Poznámka: Toto je ve¾mi vıhodné pouí pri ladení programu s chıbajúcimi
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         Lekcia 5.2: VIAC O UKLADANÍ SÚBOROV
+	 Lekcia 5.2: VIAC O UKLADANÍ SÚBOROV
 
 
      ** Pre uloenie zmien v súbore, napíš  :w FILENAME. **
@@ -574,17 +574,17 @@ Poznámka: Toto je ve¾mi vıhodné pouí pri ladení programu s chıbajúcimi
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Lekcia 5.4: VİBER A ZLUÈOVANIE SÚBOROV
+	Lekcia 5.4: VİBER A ZLUÈOVANIE SÚBOROV
 
 
-        ** Pre vloenie obsahu súboru, napíš   :r FILENAME **
+	** Pre vloenie obsahu súboru, napíš   :r FILENAME **
 
   1. Napíš   :!dir   aby si sa presvedèil, e súbor TEST stále existuje.
 
   2. Presuò kurzor na vrch tejto strany.
 
 POZNÁMKA:  Po vykonaní kroku 3 uvidíš Lekciu 5.3. Potom sa presuò dole
-           na túto lekciu.
+	   na túto lekciu.
 
   3. Teraz vlo súbor TEST pouitím príkazu   :r TEST   kde TEST je názov
      súboru.
@@ -597,7 +597,7 @@ POZNÁMKA:  Súbor, ktorı si vloil sa vloí od miesta, kde sa nachádza kurzor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-           LEKCIA 5 ZHRNUTIE
+	   LEKCIA 5 ZHRNUTIE
 
 
   1.  :!príkaz  spustí vonkajší príkaz.
@@ -620,7 +620,7 @@ POZNÁMKA:  Súbor, ktorı si vloil sa vloí od miesta, kde sa nachádza kurzor.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Lekcia 6.1: PRÍKAZ OTVORI
+	Lekcia 6.1: PRÍKAZ OTVORI
 
 
 ** Napíš  o  pre vloenie riadku pod kurzor a prepnutie do vkladacieho módu **
@@ -655,7 +655,7 @@ Vlo riadok nad tımto napísaním Shift-O, keï kurzor je na tomto riadku.
      kurzora. (Ve¾ké A pridá na koniec riadku.)
 
 Poznámka: Toto obchádza písanie  i , poslednı znak, text na vloenie, <ESC>,
-          kurzor doprava, a nakoniec, x , na pridávanie na koniec riadku!
+	  kurzor doprava, a nakoniec, x , na pridávanie na koniec riadku!
 
   3. Teraz dokonèi prvı riadok. Poznámka, e pridávanie je vlastne rovnaké
      ako vkladací mód, okrem miesta, kde sa text vkladá.
@@ -688,7 +688,7 @@ Poznámka: Toto obchádza písanie  i , poslednı znak, text na vloenie, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          Lekcia 6.4: NASTAVENIE MONOSTÍ
+	  Lekcia 6.4: NASTAVENIE MONOSTÍ
 
 
 ** Nastav monosti, take vyh¾adávanie alebo nahradzovanie ignoruje
@@ -712,7 +712,7 @@ Poznámka: Toto obchádza písanie  i , poslednı znak, text na vloenie, <ESC>,
      /ignore
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-             LEKCIA 6 ZHRNUTIE
+	     LEKCIA 6 ZHRNUTIE
 
 
   1. Napísaním  o  sa otvorí novı riadok pod kurzorom a premiestni sa kurzor
@@ -735,10 +735,10 @@ Poznámka: Toto obchádza písanie  i , poslednı znak, text na vloenie, <ESC>,
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          LEKCIA 7: PRÍKAZY ON-LINE NÁPOVEDY
+	  LEKCIA 7: PRÍKAZY ON-LINE NÁPOVEDY
 
 
-          ** Pouívaj on-line systém nápovedy **
+	  ** Pouívaj on-line systém nápovedy **
 
   Vim má obsiahly on-line systém nápovedy. Pre odštartovanie, vyskúšaj jeden
   z tıchto troch:

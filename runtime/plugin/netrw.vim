@@ -7,17 +7,17 @@
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
 "  rcp, ftp support by C Campbell <cec@NgrOyphSon.gPsfAc.nMasa.gov>
 "  fetch    support by Bram Moolenaar and C Campbell
-"  scp      support by raf            <raf@comdyn.com.au>
+"  scp	    support by raf	      <raf@comdyn.com.au>
 "  http     support by Bram Moolenaar <bram@moolenaar.net>
-"  dav      support by C Campbell
+"  dav	    support by C Campbell
 "  rsync    support by C Campbell (suggested by Erik Warendorph)
 "  inputsecret(), BufReadCmd, BufWriteCmd contributed by C Campbell
 "
-"     Jérôme Augé        -- also using new buffer method with ftp+.netrc
-"     Bram Moolenaar     -- obviously vim itself, plus :e and v:cmdarg use
+"     Jérôme Augé	 -- also using new buffer method with ftp+.netrc
+"     Bram Moolenaar	 -- obviously vim itself, plus :e and v:cmdarg use
 "     Yasuhiro Matsumoto -- pointing out undo+0r problem and a solution
-"     Erik Warendorph    -- for several suggestions (g:netrw_..._cmd
-"                           variables, rsync etc)
+"     Erik Warendorph	 -- for several suggestions (g:netrw_..._cmd
+"			    variables, rsync etc)
 
 " Debugging:
 "	If you'd like to try the built-in debugging commands...
@@ -28,10 +28,10 @@
 ""	http://www.erols.com/astronaut/vim/vimscript/Decho.vim
 
 " Options:
-"	let g:netrw_ftp =0 use ftp (default)                 (uid password)
-"			=1 use alternate ftp method     (user uid password)
+"	let g:netrw_ftp =0 use ftp (default)		     (uid password)
+"			=1 use alternate ftp method	(user uid password)
 "	  If you're having trouble with ftp, try changing the value
-"         of this variable in your <.vimrc> to change methods
+"	  of this variable in your <.vimrc> to change methods
 "
 "	let g:netrw_ignorenetrc= 1
 "	  If you have a <.netrc> file but it doesn't work and you
@@ -43,32 +43,32 @@
 "	  lines to stuff it reads (for example, one chap had a misconfigured
 "	  ftp with kerberos which kept complaining with AUTH and KERBEROS
 "	  messages) you may write your own function NetReadFixup to fix
-"	  up the file.  To help with writing a NetReadFixup function,
-"         some information has been provided:
+"	  up the file.	To help with writing a NetReadFixup function,
+"	  some information has been provided:
 "
-"            line1 = first new line in current file
-"            line2 = last  new line in current file
-"            method= 1 = rcp
-"                    2 = ftp+.netrc
-"                    3 = ftp
-"                    4 = scp
-"                    5 = wget
-"                    6 = cadaver
-"                    7 = rsync
+"	     line1 = first new line in current file
+"	     line2 = last  new line in current file
+"	     method= 1 = rcp
+"		     2 = ftp+.netrc
+"		     3 = ftp
+"		     4 = scp
+"		     5 = wget
+"		     6 = cadaver
+"		     7 = rsync
 "
 "
 "	Controlling External Applications
 "
-"	 Protocol  Variable            Default Value
+"	 Protocol  Variable	       Default Value
 "	 --------  ----------------    -------------
-"          rcp:    g:netrw_rcp_cmd   = "rcp"
-"          ftp:    g:netrw_ftp_cmd   = "ftp"
-"          scp:    g:netrw_scp_cmd   = "scp -q"
-"          http:   g:netrw_http_cmd  = "wget -O"
-"          dav:    g:netrw_dav_cmd   = "cadaver"
-"          rsync:  g:netrw_rsync_cmd = "rsync -a"
-"          ftp:    g:netrw_fetch_cmd = ""   (if its not "" it will be used
-"          http:                             to read files via ftp and http:)
+"	   rcp:    g:netrw_rcp_cmd   = "rcp"
+"	   ftp:    g:netrw_ftp_cmd   = "ftp"
+"	   scp:    g:netrw_scp_cmd   = "scp -q"
+"	   http:   g:netrw_http_cmd  = "wget -O"
+"	   dav:    g:netrw_dav_cmd   = "cadaver"
+"	   rsync:  g:netrw_rsync_cmd = "rsync -a"
+"	   ftp:    g:netrw_fetch_cmd = ""   (if its not "" it will be used
+"	   http:			     to read files via ftp and http:)
 
 
 " Reading:
@@ -109,24 +109,24 @@
 
 " Variables:
 "	b:netrw_lastfile last file Network-read/written retained on
-"			  a per-buffer basis            (supports plain :Nw )
-"	b:netrw_line      during Nw/NetWrite, holds current line   number
-"	b:netrw_col       during Nw/NetWrite, holds current column number
+"			  a per-buffer basis		(supports plain :Nw )
+"	b:netrw_line	  during Nw/NetWrite, holds current line   number
+"	b:netrw_col	  during Nw/NetWrite, holds current column number
 "			  b:netrw_line and b:netrw_col are used to
 "			  restore the cursor position on writes
-"	g:netrw_ftp       if it doesn't exist, use default ftp
-"			  =0 use default ftp                   (uid password)
-"			  =1 use alternate ftp method     (user uid password)
-"	g:netrw_ftpmode   ="binary"                                 (default)
-"			  ="ascii"                           (or your choice)
-"	g:netrw_uid       (ftp) user-id,      retained on a per-session basis
-"	g:netrw_passwd    (ftp) password,     retained on a per-session basis
+"	g:netrw_ftp	  if it doesn't exist, use default ftp
+"			  =0 use default ftp		       (uid password)
+"			  =1 use alternate ftp method	  (user uid password)
+"	g:netrw_ftpmode   ="binary"				    (default)
+"			  ="ascii"			     (or your choice)
+"	g:netrw_uid	  (ftp) user-id,      retained on a per-session basis
+"	g:netrw_passwd	  (ftp) password,     retained on a per-session basis
 "	g:netrw_win95ftp  =0 use unix-style ftp even if win95/win98/winME
 "			  =1 use default method to do ftp
-"	g:netrw_cygwin    =1 assume scp under windows is from cygwin
-"			                                 (default if windows)
+"	g:netrw_cygwin	  =1 assume scp under windows is from cygwin
+"							 (default if windows)
 "			  =0 assume scp under windows accepts
-"			    windows-style paths          (default otherwise)
+"			    windows-style paths		 (default otherwise)
 "	g:netrw_use_nt_rcp=0 don't use the rcp of WinNT, Win2000 and WinXP (default)
 "			  =1 use the rcp of WinNT,... in binary mode
 "
@@ -214,7 +214,7 @@ endif
 " ------------------------------------------------------------------------
 
 " Commands: :Nread, :Nwrite, and :NetUserPass
-:com -nargs=* Nread           call s:NetRead(<f-args>)
+:com -nargs=* Nread	      call s:NetRead(<f-args>)
 :com -range=% -nargs=* Nwrite silent <line1>,<line2>call s:NetWrite(<f-args>)
 :com -nargs=* NetUserPass     call NetUserPass(<f-args>)
 
@@ -364,7 +364,7 @@ function! s:NetRead(...)
    endif
   endif
   exe "!".g:netrw_rcp_cmd." ".s:netrw_rcpmode." ".uid_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
-   let result           = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
+   let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
    let b:netrw_lastfile = choice
 
   ".........................................
@@ -429,7 +429,7 @@ function! s:NetRead(...)
     silent exe "%!".g:netrw_ftp_cmd." -i -n"
     bd!
    endif
-   let result           = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
+   let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
    let b:netrw_lastfile = choice
 
   ".........................................
@@ -442,7 +442,7 @@ function! s:NetRead(...)
    else
     exe "!".g:netrw_scp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
    endif
-   let result           = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
+   let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
    let b:netrw_lastfile = choice
 
   ".........................................
@@ -495,7 +495,7 @@ function! s:NetRead(...)
    norm 1Gdd
    silent exe "%!".g:netrw_dav_cmd
    bd!
-   let result           = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
+   let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
    let b:netrw_lastfile = choice
 
   ".........................................
@@ -508,7 +508,7 @@ function! s:NetRead(...)
    else
     exe "!".g:netrw_rsync_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
    endif
-   let result           = s:NetGetFile(readcmd,tmpfile, b:netrw_method)
+   let result		= s:NetGetFile(readcmd,tmpfile, b:netrw_method)
    let b:netrw_lastfile = choice
 
   ".........................................

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2003 Apr 28
+" Last Change:	2003 May 07
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -760,7 +760,7 @@ au BufNewFile,BufRead *.moo			setf moo
 " Modconf
 au BufNewFile,BufRead /etc/modules.conf,/etc/conf.modules	setf modconf
 au BufNewFile,BufRead /etc/modutils/*
-	\ if executable(expand(<afile>)) != 1 | setf modconf | endif
+	\ if executable(expand("<afile>")) != 1 | setf modconf | endif
 
 " Moterola S record
 au BufNewFile,BufRead *.s19,*.s28,*.s37		setf srec
@@ -1266,6 +1266,12 @@ au BufNewFile,BufRead *.sqlj			setf sqlj
 
 " SQR
 au BufNewFile,BufRead *.sqr,*.sqi		setf sqr
+
+" OpenSSH configuration
+au BufNewFile,BufRead ssh_config,.ssh/config	setf sshconfig
+
+" OpenSSH server configuration
+au BufNewFile,BufRead sshd_config		setf sshdconfig
 
 " Stored Procedures
 au BufNewFile,BufRead *.stp			setf stp

@@ -2777,6 +2777,7 @@ typedef struct
     colnr_T	column;		    /* byte column */
     linenr_T	file_line;	    /* line nr in the buffer */
     long_u	bytes_printed;	    /* bytes printed so far */
+    int		ff;		    /* seen form feed character */
 } prt_pos_T;
 
 #ifdef FEAT_SYN_HL
@@ -2790,6 +2791,7 @@ static void prt_line_number __ARGS((prt_settings_T *psettings, int page_line, li
 static void prt_header __ARGS((prt_settings_T *psettings, int pagenum, linenr_T lnum));
 static void prt_message __ARGS((char_u *s));
 static colnr_T hardcopy_line __ARGS((prt_settings_T *psettings, int page_line, prt_pos_T *ppos));
+static void prt_get_attr __ARGS((int hl_id, prt_text_attr_T* pattr, int modec));
 
 #ifdef FEAT_SYN_HL
 /*
@@ -2814,7 +2816,57 @@ prt_get_term_color(colorindex)
 	return cterm_color_16[colorindex % 16];
     return cterm_color_8[colorindex % 8];
 }
-#endif
+
+    static void
+prt_get_attr(hl_id, pattr, modec)
+    int			hl_id;
+    prt_text_attr_T*	pattr;
+    int			modec;
+{
+    int     colorindex;
+    long_u  fg_color;
+    long_u  bg_color;
+    char    *color;
+
+    pattr->bold = (highlight_has_attr(hl_id, HL_BOLD, modec) != NULL);
+    pattr->italic = (highlight_has_attr(hl_id, HL_ITALIC, modec) != NULL);
+    pattr->underline = (highlight_has_attr(hl_id, HL_UNDERLINE, modec) != NULL);
+
+# ifdef FEAT_GUI
+    if (gui.in_use)
+    {
+	bg_color = highlight_gui_color_rgb(hl_id, FALSE);
+	if (bg_color == COLOR_BLACK)
+	    bg_color = COLOR_WHITE;
+
+	fg_color = highlight_gui_color_rgb(hl_id, TRUE);
+    }
+    else
+# endif
+    {
+	bg_color = COLOR_WHITE;
+
+	color = (char *)highlight_color(hl_id, (char_u *)"fg", modec);
+	if (color == NULL)
+	    colorindex = 0;
+	else
+	    colorindex = atoi(color);
+
+	if (colorindex >= 0 && colorindex < t_colors)
+	    fg_color = prt_get_term_color(colorindex);
+	else
+	    fg_color = COLOR_BLACK;
+    }
+
+    if (fg_color == COLOR_WHITE)
+	fg_color = COLOR_BLACK;
+    else if (*p_bg == 'd')
+	fg_color = darken_rgb(fg_color);
+
+    pattr->fg_color = fg_color;
+    pattr->bg_color = bg_color;
+}
+#endif /* FEAT_SYN_HL */
 
     static void
 prt_set_fg(fg)
@@ -2867,12 +2919,9 @@ prt_line_number(psettings, page_line, lnum)
     int		i;
     char_u	tbuf[20];
 
-    if (psettings->has_color)
-	prt_set_fg((long_u)0x808080L);
-    else
-	prt_set_fg(COLOR_BLACK);
-    prt_set_bg(COLOR_WHITE);
-    prt_set_font(FALSE, TRUE, FALSE);
+    prt_set_fg(psettings->number.fg_color);
+    prt_set_bg(psettings->number.bg_color);
+    prt_set_font(psettings->number.bold, psettings->number.italic, psettings->number.underline);
     mch_print_start_line(TRUE, page_line);
 
     /* Leave two spaces between the number and the text; depends on
@@ -3070,6 +3119,7 @@ ex_hardcopy(eap)
     long_u		bytes_to_print = 0;
     int			page_line;
     int			jobsplit;
+    int			id;
 
     memset(&settings, 0, sizeof(prt_settings_T));
     settings.has_color = TRUE;
@@ -3109,13 +3159,45 @@ ex_hardcopy(eap)
 	return;
 
 #ifdef FEAT_SYN_HL
-    if (printer_opts[OPT_PRINT_SYNTAX].present
+# ifdef  FEAT_GUI
+    if (gui.in_use)
+	settings.modec = 'g';
+    else
+# endif
+	if (t_colors > 1)
+	    settings.modec = 'c';
+	else
+	    settings.modec = 't';
+
+    if (!syntax_present(curbuf))
+	settings.do_syntax = FALSE;
+    else if (printer_opts[OPT_PRINT_SYNTAX].present
 	    && TOLOWER_ASC(printer_opts[OPT_PRINT_SYNTAX].string[0]) != 'a')
 	settings.do_syntax =
 	       (TOLOWER_ASC(printer_opts[OPT_PRINT_SYNTAX].string[0]) == 'y');
     else
 	settings.do_syntax = settings.has_color;
 #endif
+
+    /* Set up printing attributes for line numbers */
+    settings.number.fg_color = COLOR_BLACK;
+    settings.number.bg_color = COLOR_WHITE;
+    settings.number.bold = FALSE;
+    settings.number.italic = TRUE;
+    settings.number.underline = FALSE;
+#ifdef FEAT_SYN_HL
+    /*
+     * Syntax highlighting of line numbers.
+     */
+    if (prt_use_number() && settings.do_syntax)
+    {
+	id = syn_name2id((char_u *)"LineNr");
+	if (id > 0)
+	    id = syn_get_final_id(id);
+
+	prt_get_attr(id, &settings.number, settings.modec);
+    }
+#endif /* FEAT_SYN_HL */
 
     /*
      * Estimate the total lines to be printed
@@ -3227,7 +3309,7 @@ ex_hardcopy(eap)
 								  ++page_line)
 		    {
 			prtpos.column = hardcopy_line(&settings,
-							  page_line, &prtpos);
+							   page_line, &prtpos);
 			if (prtpos.column == 0)
 			{
 			    /* finished a file line */
@@ -3235,6 +3317,12 @@ ex_hardcopy(eap)
 				  STRLEN(skipwhite(ml_get(prtpos.file_line)));
 			    if (++prtpos.file_line > eap->line2)
 				break; /* reached the end */
+			}
+			else if (prtpos.ff)
+			{
+			    /* Line had a formfeed in it - start new page but
+			     * stay on the current line */
+			    break;
 			}
 		    }
 
@@ -3296,17 +3384,17 @@ hardcopy_line(psettings, page_line, ppos)
     int		tab_spaces;
     long_u	print_pos;
 #ifdef FEAT_SYN_HL
-    int		colorindex;
-    char	*color;
+    prt_text_attr_T attr;
     int		id;
-    long_u	this_color;
-    char	modec;
 #endif
 
-    if (ppos->column == 0)
+    if (ppos->column == 0 || ppos->ff)
     {
 	print_pos = 0;
 	tab_spaces = 0;
+	if (!ppos->ff && prt_use_number())
+	    prt_line_number(psettings, page_line, ppos->file_line);
+	ppos->ff = FALSE;
     }
     else
     {
@@ -3314,21 +3402,6 @@ hardcopy_line(psettings, page_line, ppos)
 	print_pos = ppos->print_pos;
 	tab_spaces = ppos->lead_spaces;
     }
-
-#ifdef FEAT_SYN_HL
-# ifdef  FEAT_GUI
-    if (gui.in_use)
-	modec = 'g';
-    else
-# endif
-	if (t_colors > 1)
-	    modec = 'c';
-	else
-	    modec = 't';
-#endif
-
-    if (prt_use_number() && ppos->column == 0)
-	prt_line_number(psettings, page_line, ppos->file_line);
 
     mch_print_start_line(0, page_line);
     line = ml_get(ppos->file_line);
@@ -3360,47 +3433,10 @@ hardcopy_line(psettings, page_line, ppos)
 	    if (id != current_syn_id)
 	    {
 		current_syn_id = id;
-
-		prt_set_font((highlight_has_attr(id, HL_BOLD, modec) != NULL),
-			(highlight_has_attr(id, HL_ITALIC, modec) != NULL),
-			(highlight_has_attr(id, HL_UNDERLINE, modec) != NULL));
-
-# ifdef FEAT_GUI
-		if (gui.in_use)
-		{
-		    this_color = highlight_gui_color_rgb(id, FALSE);
-		    if (this_color == COLOR_BLACK)
-			this_color = COLOR_WHITE;
-		    prt_set_bg(this_color);
-
-		    this_color = highlight_gui_color_rgb(id, TRUE);
-		    if (this_color == COLOR_WHITE)
-			this_color = COLOR_BLACK;
-		    else if (*p_bg == 'd')
-			this_color = darken_rgb(this_color);
-		    prt_set_fg(this_color);
-		}
-		else
-# endif
-		{
-		    color = (char *)highlight_color(id, (char_u *)"fg", modec);
-		    if (color == NULL)
-			colorindex = 0;
-		    else
-			colorindex = atoi(color);
-
-		    if (colorindex >= 0 && colorindex < t_colors)
-		    {
-			this_color = prt_get_term_color(colorindex);
-			if (this_color == COLOR_WHITE)
-			    this_color = COLOR_BLACK;
-			else if (*p_bg == 'd')
-			    this_color = darken_rgb(this_color);
-			prt_set_fg(this_color);
-		    }
-		    else
-			prt_set_fg(COLOR_BLACK);
-		}
+		prt_get_attr(id, &attr, psettings->modec);
+		prt_set_font(attr.bold, attr.italic, attr.underline);
+		prt_set_fg(attr.fg_color);
+		prt_set_bg(attr.bg_color);
 	    }
 	}
 #endif /* FEAT_SYN_HL */
@@ -3425,6 +3461,14 @@ hardcopy_line(psettings, page_line, ppos)
 	    if (need_break && tab_spaces > 0)
 		break;
 	}
+	else if (line[col] == FF
+		&& printer_opts[OPT_PRINT_FORMFEED].present
+		&& TOLOWER_ASC(printer_opts[OPT_PRINT_FORMFEED].string[0])
+								       == 'y')
+	{
+	    ppos->ff = TRUE;
+	    need_break = 1;
+	}
 	else
 	{
 	    need_break = mch_print_text_out(line + col, outputlen);
@@ -3442,10 +3486,13 @@ hardcopy_line(psettings, page_line, ppos)
 
     /*
      * Start next line of file if we clip lines, or have reached end of the
-     * line.
+     * line, unless we are doing a formfeed.
      */
-    if (line[col] == NUL || (printer_opts[OPT_PRINT_WRAP].present
-	       && TOLOWER_ASC(printer_opts[OPT_PRINT_WRAP].string[0]) == 'n'))
+    if (!ppos->ff
+	    && (line[col] == NUL
+		|| (printer_opts[OPT_PRINT_WRAP].present
+		    && TOLOWER_ASC(printer_opts[OPT_PRINT_WRAP].string[0])
+								     == 'n')))
 	return 0;
     return col;
 }
@@ -3951,7 +3998,7 @@ prt_open_resource(resource)
     fd_resource = mch_fopen((char *)resource->filename, READBIN);
     if (fd_resource == NULL)
     {
-	EMSG2(_("E456: Can't open file \"%s\""), resource->filename);
+	EMSG2(_("E624: Can't open file \"%s\""), resource->filename);
 	return FALSE;
     }
     vim_memset(buffer, NUL, sizeof(buffer));

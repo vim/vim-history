@@ -1188,9 +1188,9 @@ createBalloonEvalWindow(beval)
     XtSetArg(args[n], XtNallowShellResize, True); n++;
     beval->balloonShell = XtAppCreateShell("balloonEval", "BalloonEval",
 		    overrideShellWidgetClass, gui.dpy, args, n);
-    n = 0;
 #endif
 
+    n = 0;
 #ifdef FEAT_GUI_MOTIF
     {
 	XmFontList fl;

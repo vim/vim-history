@@ -605,6 +605,15 @@ static char *(features[]) =
 	"-xim",
 #endif
 #if defined(UNIX) || defined(VMS)
+# ifdef USE_XSMP_INTERACT
+	"+xsmp_interact",
+# else
+#  ifdef USE_XSMP
+	"+xsmp",
+#  else
+	"-xsmp",
+#  endif
+# endif
 # ifdef FEAT_XCLIPBOARD
 	"+xterm_clipboard",
 # else
@@ -1096,9 +1105,9 @@ do_intro_line(row, mesg, add_version, attr)
     int		col;
     char_u	*p;
     int		l;
-# define MODBY_LEN 150
-    char_u	buf[MODBY_LEN];
+    int		clen;
 #ifdef MODIFIED_BY
+# define MODBY_LEN 150
     char_u	modby[MODBY_LEN];
 
     if (*mesg == ' ')
@@ -1141,12 +1150,22 @@ do_intro_line(row, mesg, add_version, attr)
     /* Split up in parts to highlight <> items differently. */
     for (p = mesg; *p != NUL; p += l)
     {
-	buf[0] = *p;
-	for (l = 1; p[l] != NUL && p[l] != '<' && p[l - 1] != '>'; ++l)
-	    buf[l] = p[l];
-	buf[l] = NUL;
-	screen_puts(buf, row, col, *buf == '<' ? hl_attr(HLF_8) : attr);
-	col += vim_strsize(buf);
+	clen = 0;
+	for (l = 0; p[l] != NUL
+			 && (l == 0 || (p[l] != '<' && p[l - 1] != '>')); ++l)
+	{
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		clen += ptr2cells(p + l);
+		l += (*mb_ptr2len_check)(p + l) - 1;
+	    }
+	    else
+#endif
+		clen += byte2cells(p[l]);
+	}
+	screen_puts_len(p, l, row, col, *p == '<' ? hl_attr(HLF_8) : attr);
+	col += clen;
     }
 
     /* Add the version number to the version line. */

@@ -54,6 +54,7 @@ typedef enum
     , PV_BL
     , PV_BOMB
     , PV_BT
+    , PV_CI
     , PV_CIN
     , PV_CINK
     , PV_CINO
@@ -105,6 +106,7 @@ typedef enum
     , PV_NU
     , PV_OFT
     , PV_PATH
+    , PV_PI
     , PV_PVW
     , PV_RL
     , PV_RLC
@@ -148,6 +150,7 @@ static char_u	*p_bh;
 static char_u	*p_bt;
 #endif
 static int	p_bl;
+static int	p_ci;
 #ifdef FEAT_CINDENT
 static int	p_cin;
 static char_u	*p_cink;
@@ -200,6 +203,7 @@ static char_u	*p_nf;
 #ifdef FEAT_OSFILETYPE
 static char_u	*p_oft;
 #endif
+static int	p_pi;
 static int	p_ro;
 #ifdef FEAT_SMARTINDENT
 static int	p_si;
@@ -622,6 +626,9 @@ static struct vimoption
 #else
 			    (char_u *)NULL, PV_NONE,
 #endif
+			    {(char_u *)FALSE, (char_u *)0L}},
+    {"copyindent",  "ci",   P_BOOL|P_VI_DEF|P_VIM,
+			    (char_u *)&p_ci, PV_CI,
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"cpoptions",   "cpo",  P_STRING|P_VIM|P_RALL|P_FLAGLIST,
 			    (char_u *)&p_cpo, PV_NONE,
@@ -1542,6 +1549,9 @@ static struct vimoption
 # endif
 #endif
 				(char_u *)0L}},
+    {"preserveindent", "pi", P_BOOL|P_VI_DEF|P_VIM,
+			    (char_u *)&p_pi, PV_PI,
+			    {(char_u *)FALSE, (char_u *)0L}},
     {"previewheight", "pvh",P_NUM|P_VI_DEF,
 #if defined(FEAT_WINDOWS) && defined(FEAT_QUICKFIX)
 			    (char_u *)&p_pvh, PV_NONE,
@@ -2489,7 +2499,7 @@ set_init_1()
 	garray_T ga;
 
 	ga_init2(&ga, 1, 100);
-	for (n = 0; n < sizeof(names) / sizeof(char *); ++n)
+	for (n = 0; n < (long)(sizeof(names) / sizeof(char *)); ++n)
 	{
 # ifdef UNIX
 	    if (*names[n] == NUL)
@@ -2704,7 +2714,7 @@ set_init_1()
      * NOTE: mlterm's author is being asked to 'set' a variable
      *       instead of an environment variable due to inheritance.
      */
-    if (mch_getenv("MLTERM") != NULL)
+    if (mch_getenv((char_u *)"MLTERM") != NULL)
 	set_option_value((char_u *)"tbidi", 1L, NULL, 0);
 #endif
 
@@ -2724,7 +2734,7 @@ set_init_1()
      * If $LANG isn't set, try to get a good value for it.  This makes the
      * right language be used automatically.  Don't do this for English.
      */
-    if (mch_getenv("LANG") == NULL)
+    if (mch_getenv((char_u *)"LANG") == NULL)
     {
 	char	buf[20];
 
@@ -7587,6 +7597,7 @@ get_varp(p)
 	case PV_BT:	return (char_u *)&(curbuf->b_p_bt);
 #endif
 	case PV_BL:	return (char_u *)&(curbuf->b_p_bl);
+	case PV_CI:	return (char_u *)&(curbuf->b_p_ci);
 #ifdef FEAT_CINDENT
 	case PV_CIN:	return (char_u *)&(curbuf->b_p_cin);
 	case PV_CINK:	return (char_u *)&(curbuf->b_p_cink);
@@ -7641,6 +7652,7 @@ get_varp(p)
 #ifdef FEAT_OSFILETYPE
 	case PV_OFT:	return (char_u *)&(curbuf->b_p_oft);
 #endif
+	case PV_PI:	return (char_u *)&(curbuf->b_p_pi);
 	case PV_RO:	return (char_u *)&(curbuf->b_p_ro);
 #ifdef FEAT_SMARTINDENT
 	case PV_SI:	return (char_u *)&(curbuf->b_p_si);
@@ -7922,6 +7934,7 @@ buf_copy_options(buf, flags)
 #ifdef FEAT_SMARTINDENT
 	    buf->b_p_si = p_si;
 #endif
+	    buf->b_p_ci = p_ci;
 #ifdef FEAT_CINDENT
 	    buf->b_p_cin = p_cin;
 	    buf->b_p_cink = vim_strsave(p_cink);
@@ -7934,6 +7947,7 @@ buf_copy_options(buf, flags)
 #ifdef FEAT_OSFILETYPE
 	    buf->b_p_oft = vim_strsave(p_oft);
 #endif
+	    buf->b_p_pi = p_pi;
 #if defined(FEAT_SMARTINDENT) || defined(FEAT_CINDENT)
 	    buf->b_p_cinw = vim_strsave(p_cinw);
 #endif

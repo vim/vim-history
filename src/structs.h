@@ -725,7 +725,22 @@ typedef struct attr_entry
 # ifdef HAVE_ICONV_H
 #  include <iconv.h>
 # else
-#  include <errno.h>
+#  if defined(MACOS_X)
+#   include <sys/errno.h>
+#   define EILSEQ ENOENT /* MacOS X does not have EILSEQ */
+typedef struct _iconv_t *iconv_t;
+#  else
+#   if defined(MACOS_CLASSIC)
+typedef struct _iconv_t *iconv_t;
+#    define EINVAL	22
+#    define E2BIG	7
+#    define ENOENT	2
+#    define EFAULT	14
+#    define EILSEQ	123
+#   else
+#    include <errno.h>
+#   endif
+#  endif
 typedef void *iconv_t;
 # endif
 #endif
@@ -992,6 +1007,7 @@ struct file_buffer
 
     int		b_p_ai;		/* 'autoindent' */
     int		b_p_ai_nopaste;	/* b_p_ai saved for paste mode */
+    int		b_p_ci;		/* 'copyindent' */
     int		b_p_bin;	/* 'binary' */
 #ifdef FEAT_MBYTE
     int		b_p_bomb;	/* 'bomb' */
@@ -1056,6 +1072,7 @@ struct file_buffer
 #ifdef FEAT_OSFILETYPE
     char_u	*b_p_oft;	/* 'osfiletype' */
 #endif
+    int		b_p_pi;		/* 'preserveindent' */
     int		b_p_ro;		/* 'readonly' */
     long	b_p_sw;		/* 'shiftwidth' */
 #ifndef SHORT_FNAME
@@ -1756,7 +1773,8 @@ typedef struct
 /*
  * Generic option table item, only used for printer at the moment.
  */
-typedef struct {
+typedef struct
+{
     const char	*name;
     int		hasnum;
     long	number;
@@ -1765,6 +1783,17 @@ typedef struct {
     int		present;
 } option_table_T;
 
+/*
+ * Structure to hold printing color and font attributes.
+ */
+typedef struct
+{
+    long_u	fg_color;
+    long_u	bg_color;
+    int		bold;
+    int		italic;
+    int		underline;
+} prt_text_attr_T;
 
 /*
  * Structure passed back to the generic printer code.
@@ -1777,7 +1806,9 @@ typedef struct
     int		chars_per_line;
     int		lines_per_page;
     int		has_color;
+    prt_text_attr_T number;
 #ifdef FEAT_SYN_HL
+    int		modec;
     int		do_syntax;
 #endif
     int		user_abort;

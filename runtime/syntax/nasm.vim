@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	NASM - The Netwide Assembler (v0.98)
 " Maintainer:	Manuel M.H. Stol	<mmh.stol@gmx.net>
-" Last Change:	2001-05-07
+" Last Change:	2003 May 11
 " Vim URL:	http://www.vim.org/lang.html
 " NASM Home:	http://www.cryogen.com/Nasm/
 
@@ -422,7 +422,7 @@ syn keyword nasmUndInstruction	LOADALL286 LOADALL386 SALC SMI UD1 UMOV XBTS
 syn sync clear
 syn sync minlines=50		"for multiple region nesting
 syn sync match  nasmSync	grouphere nasmMacroDef "^\s*%i\=macro\>"me=s-1
-syn sync match  nasmSync	grouphere NONE         "^\s*%endmacro\>"
+syn sync match	nasmSync	grouphere NONE	       "^\s*%endmacro\>"
 
 
 " Define the default highlighting.

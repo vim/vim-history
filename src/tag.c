@@ -1023,6 +1023,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     off_t	filesize;
     int		tagcmp;
     off_t	offset;
+    int		round;
 #endif
     enum
     {
@@ -1165,9 +1166,9 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
 #ifdef FEAT_TAG_BINS
     regmatch.rm_ic = ((p_ic || !noic)
 				   && (findall || patheadlen == 0 || !p_tbs));
-    for (;;)
+    for (round = 1; round <= 2; ++round)
     {
-      linear = (patheadlen == 0 || !p_tbs);
+      linear = (patheadlen == 0 || !p_tbs || round == 2);
 #else
       regmatch.rm_ic = (p_ic || !noic);
 #endif
@@ -1437,6 +1438,14 @@ line_read_in:
 		    }
 		    else
 			state = TS_LINEAR;
+		}
+
+		if (state == TS_BINARY && regmatch.rm_ic && !sortic)
+		{
+		    /* binary search won't work for ignoring case, use linear
+		     * search. */
+		    linear = TRUE;
+		    state = TS_LINEAR;
 		}
 #else
 		state = TS_LINEAR;
@@ -1950,8 +1959,8 @@ line_read_in:
 #ifdef FEAT_TAG_BINS
       /* stop searching when already did a linear search, or when
        * TAG_NOIC used, and 'ignorecase' not set
-       * or tag file was case-fold sorted */
-      if (stop_searching || linear || (!p_ic && noic) || sortic)
+       * or already did case-ignore search */
+      if (stop_searching || linear || (!p_ic && noic) || regmatch.rm_ic)
 	  break;
 # ifdef FEAT_CSCOPE
       if (use_cscope)

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Ruby
 " Maintainer:	Gavin Sinclair <gsinclair@soyabean.com.au>
-" Last Change:	2002/08/14
+" Last Change:	2003 May 11
 " URL: www.soyabean.com.au/gavin/vim/index.html
 " Changes: (since vim 6.1)
 "  - indentation after a line ending in comma, etc, (even in a comment) was
@@ -43,9 +43,9 @@ function GetRubyIndent()
   let ind = indent(lnum)
   let flag = 0
   if getline(lnum) =~ '^\s*\(module\>\|class\>\|def\>\|if\>\|for\>\|while\>\|until\>\|else\>\|elsif\>\|case\>\|when\>\|unless\|begin\|ensure\>\|rescue\>\)'
-        \ || getline(lnum) =~ '{\s*$'
-        \ || getline(lnum) =~ '\({\|\<do\>\).*|.*|\s*$'
-        \ || getline(lnum) =~ '\<do\>\(\s*#.*\)\=$'
+	\ || getline(lnum) =~ '{\s*$'
+	\ || getline(lnum) =~ '\({\|\<do\>\).*|.*|\s*$'
+	\ || getline(lnum) =~ '\<do\>\(\s*#.*\)\=$'
     let ind = ind + &sw
     let flag = 1
   endif

@@ -1005,24 +1005,21 @@ half_shape(c)
  * Do Arabic shaping on character "c".  Returns the shaped character.
  * out:    "ccp" points to the first byte of the character to be shaped.
  * in/out: "c1p" points to the first composing char for "c".
- * in:     "prev_c" is the previous character (not shaped)
- * in:     "prev_c1" is the first composing char for the previous char (not
- *			shaped)
- * in:     "next_c" is the next character (not shaped).
- * in:	   "ri" is the 'rightleft' option of the window being redrawn.
+ * in:     "prev_c"  is the previous character (not shaped)
+ * in:     "prev_c1" is the first composing char for the previous char
+ *		     (not shaped)
+ * in:     "next_c"  is the next character (not shaped).
  */
     int
-arabic_shape(c, ccp, c1p, prev_c, prev_c1, next_c, rl)
+arabic_shape(c, ccp, c1p, prev_c, prev_c1, next_c)
     int		c;
     int		*ccp;
     int		*c1p;
     int		prev_c;
     int		prev_c1;
     int		next_c;
-    int		rl;
 {
     int		curr_c;
-    int		hs_c;
     int		shape_c;
     int		curr_laa;
     int		prev_laa;
@@ -1033,18 +1030,9 @@ arabic_shape(c, ccp, c1p, prev_c, prev_c1, next_c, rl)
 
     /* half-shape current and previous character */
     shape_c = half_shape(prev_c);
-    if (!rl)
-    {
-	/* It is not clear to me why this is needed... */
-	hs_c = half_shape(c);
-	if (!A_is_formb(hs_c))
-	    hs_c = c;
-    }
-    else
-	hs_c = c;
 
     /* Save away current character */
-    curr_c = hs_c;
+    curr_c = c;
 
     curr_laa = A_firstc_laa(c, *c1p);
     prev_laa = A_firstc_laa(prev_c, prev_c1);
@@ -1061,22 +1049,22 @@ arabic_shape(c, ccp, c1p, prev_c, prev_c1, next_c, rl)
 	*c1p = 0;
     }
     else if (!A_is_valid(prev_c) && A_is_valid(next_c))
-	curr_c = chg_c_a2i(hs_c);
+	curr_c = chg_c_a2i(c);
     else if (!shape_c || A_is_f(shape_c) || A_is_s(shape_c) || prev_laa)
-	curr_c = A_is_valid(next_c) ? chg_c_a2i(hs_c) : chg_c_a2s(hs_c);
+	curr_c = A_is_valid(next_c) ? chg_c_a2i(c) : chg_c_a2s(c);
     else if (A_is_valid(next_c))
-	curr_c = A_is_iso(hs_c) ? chg_c_a2m(hs_c) : chg_c_i2m(hs_c);
+	curr_c = A_is_iso(c) ? chg_c_a2m(c) : chg_c_i2m(c);
     else if (A_is_valid(prev_c))
-	curr_c = chg_c_a2f(hs_c);
+	curr_c = chg_c_a2f(c);
     else
-	curr_c = chg_c_a2s(hs_c);
+	curr_c = chg_c_a2s(c);
 
     /* Sanity check -- curr_c should, in the future, never be 0.
      * We should, in the future, insert a fatal error here. */
     if (curr_c == NUL)
-	curr_c = hs_c;
+	curr_c = c;
 
-    if (curr_c != c)
+    if (curr_c != c && ccp != NULL)
     {
 	char_u buf[MB_MAXBYTES];
 

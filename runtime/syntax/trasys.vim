@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     TRASYS input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 Jul 28
+" Last Change:  2003 May 11
 " Filenames:    *.inp
-" URL:          http://www.naglenet.org/vim/syntax/trasys.vim
+" URL:		http://www.naglenet.org/vim/syntax/trasys.vim
 " MAIN URL:     http://www.naglenet.org/vim/
 
 
@@ -146,27 +146,27 @@ if version >= 508 || !exists("did_trasys_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink trasysOptions          Special
-  HiLink trasysSurface          Special
-  HiLink trasysSurfaceType      Constant
-  HiLink trasysSurfaceArgs      Constant
-  HiLink trasysArgs             Constant
-  HiLink trasysOperations       Statement
-  HiLink trasysSubRoutine       Statement
-  HiLink trassyPrcsrSegm        PreProc
-  HiLink trasysIdentifier       Identifier
-  HiLink trasysComment          Comment
-  HiLink trasysHeader           Typedef
-  HiLink trasysMacro            Macro
-  HiLink trasysInteger          Number
-  HiLink trasysFloat            Float
-  HiLink trasysScientific       Float
+  HiLink trasysOptions		Special
+  HiLink trasysSurface		Special
+  HiLink trasysSurfaceType	Constant
+  HiLink trasysSurfaceArgs	Constant
+  HiLink trasysArgs		Constant
+  HiLink trasysOperations	Statement
+  HiLink trasysSubRoutine	Statement
+  HiLink trassyPrcsrSegm	PreProc
+  HiLink trasysIdentifier	Identifier
+  HiLink trasysComment		Comment
+  HiLink trasysHeader		Typedef
+  HiLink trasysMacro		Macro
+  HiLink trasysInteger		Number
+  HiLink trasysFloat		Float
+  HiLink trasysScientific	Float
 
-  HiLink trasysBlank            SpecialChar
+  HiLink trasysBlank		SpecialChar
 
-  HiLink trasysEndData          Macro
+  HiLink trasysEndData		Macro
 
-  HiLink trasysTodo             Todo
+  HiLink trasysTodo		Todo
 
   delcommand HiLink
 endif

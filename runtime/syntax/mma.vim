@@ -45,17 +45,17 @@ if version >= 508 || !exists("did_mma_syn_inits")
 		command -nargs=+ HiLink hi def link <args>
 	endif
 
-	HiLink mmaOperator         Operator
-	HiLink mmaVariable         Identifier
-	HiLink mmaString           String
-	HiLink mmaUnicode          String
-	HiLink mmaMessage          Identifier
-	HiLink mmaPattern          Identifier
+	HiLink mmaOperator	   Operator
+	HiLink mmaVariable	   Identifier
+	HiLink mmaString	   String
+	HiLink mmaUnicode	   String
+	HiLink mmaMessage	   Identifier
+	HiLink mmaPattern	   Identifier
 	HiLink mmaGenericFunction  Function
-	HiLink mmaError            Error
-	HiLink mmaFixme            Error
-	HiLink mmaComment          Comment
-	HiLink mmaPureFunction     Operator
+	HiLink mmaError		   Error
+	HiLink mmaFixme		   Error
+	HiLink mmaComment	   Comment
+	HiLink mmaPureFunction	   Operator
 
 	delcommand HiLink
 endif

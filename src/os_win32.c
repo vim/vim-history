@@ -267,10 +267,10 @@ dyn_libintl_init(char *libname)
 	}
     }
     for (i = 0; libintl_entry[i].name != NULL
-	    && libintl_entry[i].ptr != NULL; ++i)
+					 && libintl_entry[i].ptr != NULL; ++i)
     {
-	if (!(*libintl_entry[i].ptr = GetProcAddress(hLibintlDLL,
-			libintl_entry[i].name)))
+	if ((*libintl_entry[i].ptr = (FARPROC)GetProcAddress(hLibintlDLL,
+					      libintl_entry[i].name)) == NULL)
 	{
 	    dyn_libintl_end();
 	    if (p_verbose > 0)

@@ -23,7 +23,7 @@ int msg_outtrans __ARGS((char_u *str));
 int msg_outtrans_attr __ARGS((char_u *str, int attr));
 int msg_outtrans_len __ARGS((char_u *str, int len));
 char_u *msg_outtrans_one __ARGS((char_u *p, int attr));
-int msg_outtrans_len_attr __ARGS((char_u *str, int len, int attr));
+int msg_outtrans_len_attr __ARGS((char_u *msgstr, int len, int attr));
 void msg_make __ARGS((char_u *arg));
 int msg_outtrans_special __ARGS((char_u *strstart, int from));
 char_u *str2special __ARGS((char_u **sp, int from));

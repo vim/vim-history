@@ -22,7 +22,7 @@
 " ========
 " 26-04-2002 Got initial version working reasonably well
 " 29-04-2002 Fixed problems in function headers and max line width
-"            Added support for two-line if's without curly braces
+"	     Added support for two-line if's without curly braces
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
@@ -94,11 +94,11 @@ function! GetAwkIndent()
      else
        " Case 1
        if continue_mode == 1
-          " Need continuation due to comma, backslash, etc
-          return s:Safe_indent( ind, s:First_word_len(prev_data), getline(v:lnum))
+	  " Need continuation due to comma, backslash, etc
+	  return s:Safe_indent( ind, s:First_word_len(prev_data), getline(v:lnum))
        else
-         " if/for/while without '{'
-         return ind + &sw
+	 " if/for/while without '{'
+	 return ind + &sw
        endif
      endif
    endif
@@ -119,21 +119,21 @@ function! GetAwkIndent()
    " Case 1
    if prev_data =~ ')' && brace_balance < 0
       while brace_balance != 0
-         let prev_lineno = s:Get_prev_line( prev_lineno )
-         let prev_data = getline( prev_lineno )
-         let brace_balance=brace_balance+s:Get_brace_balance(prev_data,'(',')' )
+	 let prev_lineno = s:Get_prev_line( prev_lineno )
+	 let prev_data = getline( prev_lineno )
+	 let brace_balance=brace_balance+s:Get_brace_balance(prev_data,'(',')' )
       endwhile
       let ind = indent( prev_lineno )
    else
       " Case 2
       if s:Seems_continuing( getline( prev_lineno - 1 ) )
-         let prev_lineno = prev_lineno - 2
-         let prev_data = getline( prev_lineno )
-         while prev_lineno > 0 && (s:Seems_continuing( prev_data ) > 0)
-            let prev_lineno = s:Get_prev_line( prev_lineno )
-            let prev_data = getline( prev_lineno )
-         endwhile
-         let ind = indent( prev_lineno + 1 )
+	 let prev_lineno = prev_lineno - 2
+	 let prev_data = getline( prev_lineno )
+	 while prev_lineno > 0 && (s:Seems_continuing( prev_data ) > 0)
+	    let prev_lineno = s:Get_prev_line( prev_lineno )
+	    let prev_data = getline( prev_lineno )
+	 endwhile
+	 let ind = indent( prev_lineno + 1 )
       endif
    endif
 

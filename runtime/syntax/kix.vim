@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	KixTart 95, Kix2001 Windows script language http://kixtart.org/
 " Maintainer:	Richard Howarth <rhowarth@sgb.co.uk>
-" Last Change:	2001 May 10
+" Last Change:	2003 May 11
 " URL:		http://www.howsoft.demon.co.uk/
 
 " KixTart files identified by *.kix extension.
@@ -51,7 +51,7 @@ syn keyword kixStatement	use
 syn keyword kixStatement	debug function endfunction redim
 
 " Simple variables
-syn match   kixNotVar           "\$\$\|@@\|%%" transparent contains=NONE
+syn match   kixNotVar		"\$\$\|@@\|%%" transparent contains=NONE
 syn match   kixLocalVar		"\$\w\+"
 syn match   kixMacro		"@\w\+"
 syn match   kixEnvVar		"%\w\+"

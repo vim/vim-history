@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Icon
 " Maintainer:	Wendell Turner <wendell@adsi-m4.com>
-" URL:          ftp://ftp.halcyon.com/pub/users/wturner/icon.vim
-" Last Change:	2001 May 4
+" URL:		ftp://ftp.halcyon.com/pub/users/wturner/icon.vim
+" Last Change:	2003 May 11
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded

@@ -29,6 +29,7 @@ DOCS = \
 	gui_w32.txt \
 	gui_x11.txt \
 	hangulin.txt \
+	hebrew.txt \
 	help.txt \
 	howto.txt \
 	if_cscop.txt \
@@ -144,6 +145,7 @@ HTMLS = \
 	gui_w32.html \
 	gui_x11.html \
 	hangulin.html \
+	hebrew.html \
 	help.html \
 	howto.html \
 	if_cscop.html \
@@ -302,6 +304,9 @@ arabic.txt:
 
 farsi.txt:
 	touch farsi.txt
+
+hebrew.txt:
+	touch hebrew.txt
 
 gui_w16.txt:
 	touch gui_w16.txt

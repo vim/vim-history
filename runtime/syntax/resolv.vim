@@ -1,9 +1,9 @@
 " Vim syntax file
 " Language:     resolver configuration file
 " Maintaner:    Radu Dineiu <littledragon@altern.org>
-" URL:          http://ld.yi.org/vim/resolv.vim
+" URL:		http://ld.yi.org/vim/resolv.vim
 " ChangeLog:    http://ld.yi.org/vim/resolv.ChangeLog
-" Last Change:  2003 Apr 25
+" Last Change:  2003 May 11
 " Version:      0.1
 
 if version < 600

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	R (GNU S)
 " Maintainer:	Tom Payne <tom@tompayne.org>
-" Last Change:  2001 May 10
+" Last Change:  2003 May 11
 " Filenames:	*.r
 " URL:		http://www.tompayne.org/vim/syntax/r.vim
 
@@ -90,7 +90,7 @@ if version >= 508 || !exists("did_r_syn_inits")
   HiLink rConditional Conditional
   HiLink rRepeat      Repeat
   HiLink rIdentifier  Identifier
-  HiLink rType        Type
+  HiLink rType	      Type
   HiLink rDelimiter   Delimiter
   HiLink rError       Error
   HiLink rBraceError  Error

@@ -1,7 +1,7 @@
 " Language:     Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
 " Last Change:	Wed Oct 31 16:13:11 CST 2001
-" URL:          http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
+" URL:		http://larc.ee.nthu.edu.tw/~cthuang/vim/indent/verilog.vim
 "
 " Credits:
 "   Suggestions for improvement, bug reports by
@@ -9,7 +9,7 @@
 "
 " Buffer Variables:
 "     b:verilog_indent_modules : indenting after the declaration
-"                                of module blocks
+"				 of module blocks
 "     b:verilog_indent_width   : indenting width
 "     b:verilog_indent_verbose : verbose to each indenting
 "
@@ -96,7 +96,7 @@ function GetVerilogIndent()
       \ last_line =~ '\(//\|/\*\).*\(;\|\<end\>\)\s*' . vlog_comment . '*$'
       let ind = ind + offset
       if vverb
-        echo vverb_str "Indent after function/task block statement."
+	echo vverb_str "Indent after function/task block statement."
       endif
     endif
 
@@ -110,7 +110,7 @@ function GetVerilogIndent()
       \ last_line !~ '\(//\|/\*\).*[(,]\s*' . vlog_comment . '*$'
       let ind = ind + offset
       if vverb
-        echo vverb_str "Indent after a multiple-line module statement."
+	echo vverb_str "Indent after a multiple-line module statement."
       endif
     endif
 
@@ -186,12 +186,12 @@ function GetVerilogIndent()
     if last_line !~ '^\s*\<\(function\|task\|specify\|module\)\>' &&
       \ last_line !~ '^\s*\()*\s*;\|)\+\)\s*' . vlog_comment . '*$' &&
       \ ( last_line =~
-        \ '\<\(`\@<!if\|`\@<!else\|for\|case\%[[zx]]\|always\|initial\)\>' ||
+	\ '\<\(`\@<!if\|`\@<!else\|for\|case\%[[zx]]\|always\|initial\)\>' ||
       \ last_line =~ ')\s*' . vlog_comment . '*$' ||
       \ last_line =~ vlog_openstat . '\s*' . vlog_comment . '*$' )
       let ind = ind - offset
       if vverb
-        echo vverb_str "De-indent a stand alone begin statement."
+	echo vverb_str "De-indent a stand alone begin statement."
       endif
     endif
 

@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:	Oracle config files (.ora) (Oracle 8i, ver. 8.1.5)
 " Maintainer:	Sandor Kopanyi <sandor.kopanyi@mailbox.hu>
-" Url:          <->
-" Last Change:	2001 May 10
+" Url:		<->
+" Last Change:	2003 May 11
 
 " * the keywords are listed by file (sqlnet.ora, listener.ora, etc.)
 " * the parathesis-checking is made at the beginning for all keywords
@@ -40,31 +40,31 @@ syn region  oraString start=+"+ end=+"+
 syn keyword oraKeywordGroup   ADDRESS ADDRESS_LIST
 syn keyword oraKeywordGroup   DESCRIPTION_LIST DESCRIPTION
 "all protocols
-syn keyword oraKeyword        PROTOCOL
-syn keyword oraValue          ipc tcp nmp
+syn keyword oraKeyword	      PROTOCOL
+syn keyword oraValue	      ipc tcp nmp
 "Bequeath
-syn keyword oraKeyword        PROGRAM ARGV0 ARGS
+syn keyword oraKeyword	      PROGRAM ARGV0 ARGS
 "IPC
-syn keyword oraKeyword        KEY
+syn keyword oraKeyword	      KEY
 "Named Pipes
-syn keyword oraKeyword        SERVER PIPE
+syn keyword oraKeyword	      SERVER PIPE
 "LU6.2
-syn keyword oraKeyword        LU_NAME LLU LOCAL_LU LLU_NAME LOCAL_LU_NAME
-syn keyword oraKeyword        MODE MDN
-syn keyword oraKeyword        PLU PARTNER_LU_NAME PLU_LA PARTNER_LU_LOCAL_ALIAS
-syn keyword oraKeyword        TP_NAME TPN
+syn keyword oraKeyword	      LU_NAME LLU LOCAL_LU LLU_NAME LOCAL_LU_NAME
+syn keyword oraKeyword	      MODE MDN
+syn keyword oraKeyword	      PLU PARTNER_LU_NAME PLU_LA PARTNER_LU_LOCAL_ALIAS
+syn keyword oraKeyword	      TP_NAME TPN
 "SPX
-syn keyword oraKeyword        SERVICE
+syn keyword oraKeyword	      SERVICE
 "TCP/IP and TCP/IP with SSL
-syn keyword oraKeyword        HOST PORT
+syn keyword oraKeyword	      HOST PORT
 
 "misc. keywords I've met but didn't find in manual (maybe they are deprecated?)
 syn keyword oraKeywordGroup COMMUNITY_LIST
-syn keyword oraKeyword      COMMUNITY NAME DEFAULT_ZONE
-syn keyword oraValue        tcpcom
+syn keyword oraKeyword	    COMMUNITY NAME DEFAULT_ZONE
+syn keyword oraValue	    tcpcom
 
 "common values
-syn keyword oraValue        yes no on off true false null all none ok
+syn keyword oraValue	    yes no on off true false null all none ok
 "word 'world' is used a lot...
 syn keyword oraModifier       world
 
@@ -113,14 +113,14 @@ syn keyword oraKeyword      TRACE_FILE_CLIENT TRACE_FILE_SERVER
 syn keyword oraKeyword      TRACE_LEVEL_CLIENT TRACE_LEVEL_SERVER
 syn keyword oraKeyword      TRACE_UNIQUE_CLIENT
 syn keyword oraKeyword      USE_CMAN USE_DEDICATED_SERVER
-syn keyword oraValue        user admin support
-syn keyword oraValue        accept accepted reject rejected requested required
-syn keyword oraValue        md5 rc4_40 rc4_56 rc4_128 des des_40
-syn keyword oraValue        tnsnames onames hostname dce nis novell
-syn keyword oraValue        file oracle
-syn keyword oraValue        oss
-syn keyword oraValue        beq nds nts kerberos5 securid cybersafe identix dcegssapi radius
-syn keyword oraValue        undetermined
+syn keyword oraValue	    user admin support
+syn keyword oraValue	    accept accepted reject rejected requested required
+syn keyword oraValue	    md5 rc4_40 rc4_56 rc4_128 des des_40
+syn keyword oraValue	    tnsnames onames hostname dce nis novell
+syn keyword oraValue	    file oracle
+syn keyword oraValue	    oss
+syn keyword oraValue	    beq nds nts kerberos5 securid cybersafe identix dcegssapi radius
+syn keyword oraValue	    undetermined
 
 "tnsnames.ora
 syn keyword oraKeywordGroup CONNECT_DATA FAILOVER_MODE
@@ -129,7 +129,7 @@ syn keyword oraKeyword      BACKUP TYPE METHOD GLOBAL_NAME HS
 syn keyword oraKeyword      INSTANCE_NAME RDB_DATABASE SDU SERVER
 syn keyword oraKeyword      SERVICE_NAME SERVICE_NAMES SID
 syn keyword oraKeyword      HANDLER_NAME EXTPROC_CONNECTION_DATA
-syn keyword oraValue        session select basic preconnect dedicated shared
+syn keyword oraValue	    session select basic preconnect dedicated shared
 
 "listener.ora
 syn keyword oraKeywordGroup SID_LIST SID_DESC PRESPAWN_LIST PRESPAWN_DESC
@@ -147,7 +147,7 @@ syn match   oraKeyword      "TRACE_DIRECTORY_\w*"
 syn match   oraKeyword      "TRACE_FILE_\w*"
 syn match   oraKeyword      "TRACE_LEVEL_\w*"
 syn match   oraKeyword      "USE_PLUG_AND_PLAY_\w*"
-syn keyword oraValue        ttc giop ns raw
+syn keyword oraValue	    ttc giop ns raw
 
 "names.ora
 syn keyword oraKeywordGroup ADDRESSES ADMIN_REGION
@@ -173,16 +173,16 @@ syn keyword oraKeyword      SERVER_NAME TRACE_FUNC TRACE_UNIQUE
 "cman.ora
 syn keyword oraKeywordGroup   CMAN CMAN_ADMIN CMAN_PROFILE PARAMETER_LIST
 syn keyword oraKeywordGroup   CMAN_RULES RULES_LIST RULE
-syn keyword oraKeyword        ANSWER_TIMEOUT AUTHENTICATION_LEVEL LOG_LEVEL
-syn keyword oraKeyword        MAX_FREELIST_BUFFERS MAXIMUM_CONNECT_DATA MAXIMUM_RELAYS
-syn keyword oraKeyword        RELAY_STATISTICS SHOW_TNS_INFO TRACING
-syn keyword oraKeyword        USE_ASYNC_CALL SRC DST SRV ACT
+syn keyword oraKeyword	      ANSWER_TIMEOUT AUTHENTICATION_LEVEL LOG_LEVEL
+syn keyword oraKeyword	      MAX_FREELIST_BUFFERS MAXIMUM_CONNECT_DATA MAXIMUM_RELAYS
+syn keyword oraKeyword	      RELAY_STATISTICS SHOW_TNS_INFO TRACING
+syn keyword oraKeyword	      USE_ASYNC_CALL SRC DST SRV ACT
 
 "protocol.ora
-syn match oraKeyword          "\w*\.EXCLUDED_NODES"
-syn match oraKeyword          "\w*\.INVITED_NODES"
-syn match oraKeyword          "\w*\.VALIDNODE_CHECKING"
-syn keyword oraKeyword        TCP NODELAY
+syn match oraKeyword	      "\w*\.EXCLUDED_NODES"
+syn match oraKeyword	      "\w*\.INVITED_NODES"
+syn match oraKeyword	      "\w*\.VALIDNODE_CHECKING"
+syn keyword oraKeyword	      TCP NODELAY
 
 
 
@@ -191,87 +191,87 @@ syn keyword oraKeyword        TCP NODELAY
 "init.ora
 
 "common values
-syn keyword oraValue          nested_loops merge hash unlimited
+syn keyword oraValue	      nested_loops merge hash unlimited
 
 "init params
-syn keyword oraKeyword        O7_DICTIONARY_ACCESSIBILITY ALWAYS_ANTI_JOIN ALWAYS_SEMI_JOIN
-syn keyword oraKeyword        AQ_TM_PROCESSES ARCH_IO_SLAVES AUDIT_FILE_DEST AUDIT_TRAIL
-syn keyword oraKeyword        BACKGROUND_CORE_DUMP BACKGROUND_DUMP_DEST
-syn keyword oraKeyword        BACKUP_TAPE_IO_SLAVES BITMAP_MERGE_AREA_SIZE
-syn keyword oraKeyword        BLANK_TRIMMING BUFFER_POOL_KEEP BUFFER_POOL_RECYCLE
-syn keyword oraKeyword        COMMIT_POINT_STRENGTH COMPATIBLE CONTROL_FILE_RECORD_KEEP_TIME
-syn keyword oraKeyword        CONTROL_FILES CORE_DUMP_DEST CPU_COUNT
-syn keyword oraKeyword        CREATE_BITMAP_AREA_SIZE CURSOR_SPACE_FOR_TIME
-syn keyword oraKeyword        DB_BLOCK_BUFFERS DB_BLOCK_CHECKING DB_BLOCK_CHECKSUM
-syn keyword oraKeyword        DB_BLOCK_LRU_LATCHES DB_BLOCK_MAX_DIRTY_TARGET
-syn keyword oraKeyword        DB_BLOCK_SIZE DB_DOMAIN
-syn keyword oraKeyword        DB_FILE_DIRECT_IO_COUNT DB_FILE_MULTIBLOCK_READ_COUNT
-syn keyword oraKeyword        DB_FILE_NAME_CONVERT DB_FILE_SIMULTANEOUS_WRITES
-syn keyword oraKeyword        DB_FILES DB_NAME DB_WRITER_PROCESSES
-syn keyword oraKeyword        DBLINK_ENCRYPT_LOGIN DBWR_IO_SLAVES
-syn keyword oraKeyword        DELAYED_LOGGING_BLOCK_CLEANOUTS DISCRETE_TRANSACTIONS_ENABLED
-syn keyword oraKeyword        DISK_ASYNCH_IO DISTRIBUTED_TRANSACTIONS
-syn keyword oraKeyword        DML_LOCKS ENQUEUE_RESOURCES ENT_DOMAIN_NAME EVENT
-syn keyword oraKeyword        FAST_START_IO_TARGET FAST_START_PARALLEL_ROLLBACK
-syn keyword oraKeyword        FIXED_DATE FREEZE_DB_FOR_FAST_INSTANCE_RECOVERY
-syn keyword oraKeyword        GC_DEFER_TIME GC_FILES_TO_LOCKS GC_RELEASABLE_LOCKS GC_ROLLBACK_LOCKS
-syn keyword oraKeyword        GLOBAL_NAMES HASH_AREA_SIZE
-syn keyword oraKeyword        HASH_JOIN_ENABLED HASH_MULTIBLOCK_IO_COUNT
-syn keyword oraKeyword        HI_SHARED_MEMORY_ADDRESS HS_AUTOREGISTER
-syn keyword oraKeyword        IFILE
-syn keyword oraKeyword        INSTANCE_GROUPS INSTANCE_NAME INSTANCE_NUMBER
-syn keyword oraKeyword        JAVA_POOL_SIZE JOB_QUEUE_INTERVAL JOB_QUEUE_PROCESSES LARGE_POOL_SIZE
-syn keyword oraKeyword        LICENSE_MAX_SESSIONS LICENSE_MAX_USERS LICENSE_SESSIONS_WARNING
-syn keyword oraKeyword        LM_LOCKS LM_PROCS LM_RESS
-syn keyword oraKeyword        LOCAL_LISTENER LOCK_NAME_SPACE LOCK_SGA LOCK_SGA_AREAS
-syn keyword oraKeyword        LOG_ARCHIVE_BUFFER_SIZE LOG_ARCHIVE_BUFFERS LOG_ARCHIVE_DEST
-syn match   oraKeyword        "LOG_ARCHIVE_DEST_\(1\|2\|3\|4\|5\)"
-syn match   oraKeyword        "LOG_ARCHIVE_DEST_STATE_\(1\|2\|3\|4\|5\)"
-syn keyword oraKeyword        LOG_ARCHIVE_DUPLEX_DEST LOG_ARCHIVE_FORMAT LOG_ARCHIVE_MAX_PROCESSES
-syn keyword oraKeyword        LOG_ARCHIVE_MIN_SUCCEED_DEST LOG_ARCHIVE_START
-syn keyword oraKeyword        LOG_BUFFER LOG_CHECKPOINT_INTERVAL LOG_CHECKPOINT_TIMEOUT
-syn keyword oraKeyword        LOG_CHECKPOINTS_TO_ALERT LOG_FILE_NAME_CONVERT
-syn keyword oraKeyword        MAX_COMMIT_PROPAGATION_DELAY MAX_DUMP_FILE_SIZE
-syn keyword oraKeyword        MAX_ENABLED_ROLES MAX_ROLLBACK_SEGMENTS
-syn keyword oraKeyword        MTS_DISPATCHERS MTS_MAX_DISPATCHERS MTS_MAX_SERVERS MTS_SERVERS
-syn keyword oraKeyword        NLS_CALENDAR NLS_COMP NLS_CURRENCY NLS_DATE_FORMAT
-syn keyword oraKeyword        NLS_DATE_LANGUAGE NLS_DUAL_CURRENCY NLS_ISO_CURRENCY NLS_LANGUAGE
-syn keyword oraKeyword        NLS_NUMERIC_CHARACTERS NLS_SORT NLS_TERRITORY
-syn keyword oraKeyword        OBJECT_CACHE_MAX_SIZE_PERCENT OBJECT_CACHE_OPTIMAL_SIZE
-syn keyword oraKeyword        OPEN_CURSORS OPEN_LINKS OPEN_LINKS_PER_INSTANCE
-syn keyword oraKeyword        OPS_ADMINISTRATION_GROUP
-syn keyword oraKeyword        OPTIMIZER_FEATURES_ENABLE OPTIMIZER_INDEX_CACHING
-syn keyword oraKeyword        OPTIMIZER_INDEX_COST_ADJ OPTIMIZER_MAX_PERMUTATIONS
-syn keyword oraKeyword        OPTIMIZER_MODE OPTIMIZER_PERCENT_PARALLEL
-syn keyword oraKeyword        OPTIMIZER_SEARCH_LIMIT
-syn keyword oraKeyword        ORACLE_TRACE_COLLECTION_NAME ORACLE_TRACE_COLLECTION_PATH
-syn keyword oraKeyword        ORACLE_TRACE_COLLECTION_SIZE ORACLE_TRACE_ENABLE
-syn keyword oraKeyword        ORACLE_TRACE_FACILITY_NAME ORACLE_TRACE_FACILITY_PATH
-syn keyword oraKeyword        OS_AUTHENT_PREFIX OS_ROLES
-syn keyword oraKeyword        PARALLEL_ADAPTIVE_MULTI_USER PARALLEL_AUTOMATIC_TUNING
-syn keyword oraKeyword        PARALLEL_BROADCAST_ENABLED PARALLEL_EXECUTION_MESSAGE_SIZE
-syn keyword oraKeyword        PARALLEL_INSTANCE_GROUP PARALLEL_MAX_SERVERS
-syn keyword oraKeyword        PARALLEL_MIN_PERCENT PARALLEL_MIN_SERVERS
-syn keyword oraKeyword        PARALLEL_SERVER PARALLEL_SERVER_INSTANCES PARALLEL_THREADS_PER_CPU
-syn keyword oraKeyword        PARTITION_VIEW_ENABLED PLSQL_V2_COMPATIBILITY
-syn keyword oraKeyword        PRE_PAGE_SGA PROCESSES
-syn keyword oraKeyword        QUERY_REWRITE_ENABLED QUERY_REWRITE_INTEGRITY
-syn keyword oraKeyword        RDBMS_SERVER_DN READ_ONLY_OPEN_DELAYED RECOVERY_PARALLELISM
-syn keyword oraKeyword        REMOTE_DEPENDENCIES_MODE REMOTE_LOGIN_PASSWORDFILE
-syn keyword oraKeyword        REMOTE_OS_AUTHENT REMOTE_OS_ROLES
-syn keyword oraKeyword        REPLICATION_DEPENDENCY_TRACKING
-syn keyword oraKeyword        RESOURCE_LIMIT RESOURCE_MANAGER_PLAN
-syn keyword oraKeyword        ROLLBACK_SEGMENTS ROW_LOCKING SERIAL _REUSE SERVICE_NAMES
-syn keyword oraKeyword        SESSION_CACHED_CURSORS SESSION_MAX_OPEN_FILES SESSIONS
-syn keyword oraKeyword        SHADOW_CORE_DUMP
-syn keyword oraKeyword        SHARED_MEMORY_ADDRESS SHARED_POOL_RESERVED_SIZE SHARED_POOL_SIZE
-syn keyword oraKeyword        SORT_AREA_RETAINED_SIZE SORT_AREA_SIZE SORT_MULTIBLOCK_READ_COUNT
-syn keyword oraKeyword        SQL92_SECURITY SQL_TRACE STANDBY_ARCHIVE_DEST
-syn keyword oraKeyword        STAR_TRANSFORMATION_ENABLED TAPE_ASYNCH_IO THREAD
-syn keyword oraKeyword        TIMED_OS_STATISTICS TIMED_STATISTICS
-syn keyword oraKeyword        TRANSACTION_AUDITING TRANSACTIONS TRANSACTIONS_PER_ROLLBACK_SEGMENT
-syn keyword oraKeyword        USE_INDIRECT_DATA_BUFFERS USER_DUMP_DEST
-syn keyword oraKeyword        UTL_FILE_DIR
+syn keyword oraKeyword	      O7_DICTIONARY_ACCESSIBILITY ALWAYS_ANTI_JOIN ALWAYS_SEMI_JOIN
+syn keyword oraKeyword	      AQ_TM_PROCESSES ARCH_IO_SLAVES AUDIT_FILE_DEST AUDIT_TRAIL
+syn keyword oraKeyword	      BACKGROUND_CORE_DUMP BACKGROUND_DUMP_DEST
+syn keyword oraKeyword	      BACKUP_TAPE_IO_SLAVES BITMAP_MERGE_AREA_SIZE
+syn keyword oraKeyword	      BLANK_TRIMMING BUFFER_POOL_KEEP BUFFER_POOL_RECYCLE
+syn keyword oraKeyword	      COMMIT_POINT_STRENGTH COMPATIBLE CONTROL_FILE_RECORD_KEEP_TIME
+syn keyword oraKeyword	      CONTROL_FILES CORE_DUMP_DEST CPU_COUNT
+syn keyword oraKeyword	      CREATE_BITMAP_AREA_SIZE CURSOR_SPACE_FOR_TIME
+syn keyword oraKeyword	      DB_BLOCK_BUFFERS DB_BLOCK_CHECKING DB_BLOCK_CHECKSUM
+syn keyword oraKeyword	      DB_BLOCK_LRU_LATCHES DB_BLOCK_MAX_DIRTY_TARGET
+syn keyword oraKeyword	      DB_BLOCK_SIZE DB_DOMAIN
+syn keyword oraKeyword	      DB_FILE_DIRECT_IO_COUNT DB_FILE_MULTIBLOCK_READ_COUNT
+syn keyword oraKeyword	      DB_FILE_NAME_CONVERT DB_FILE_SIMULTANEOUS_WRITES
+syn keyword oraKeyword	      DB_FILES DB_NAME DB_WRITER_PROCESSES
+syn keyword oraKeyword	      DBLINK_ENCRYPT_LOGIN DBWR_IO_SLAVES
+syn keyword oraKeyword	      DELAYED_LOGGING_BLOCK_CLEANOUTS DISCRETE_TRANSACTIONS_ENABLED
+syn keyword oraKeyword	      DISK_ASYNCH_IO DISTRIBUTED_TRANSACTIONS
+syn keyword oraKeyword	      DML_LOCKS ENQUEUE_RESOURCES ENT_DOMAIN_NAME EVENT
+syn keyword oraKeyword	      FAST_START_IO_TARGET FAST_START_PARALLEL_ROLLBACK
+syn keyword oraKeyword	      FIXED_DATE FREEZE_DB_FOR_FAST_INSTANCE_RECOVERY
+syn keyword oraKeyword	      GC_DEFER_TIME GC_FILES_TO_LOCKS GC_RELEASABLE_LOCKS GC_ROLLBACK_LOCKS
+syn keyword oraKeyword	      GLOBAL_NAMES HASH_AREA_SIZE
+syn keyword oraKeyword	      HASH_JOIN_ENABLED HASH_MULTIBLOCK_IO_COUNT
+syn keyword oraKeyword	      HI_SHARED_MEMORY_ADDRESS HS_AUTOREGISTER
+syn keyword oraKeyword	      IFILE
+syn keyword oraKeyword	      INSTANCE_GROUPS INSTANCE_NAME INSTANCE_NUMBER
+syn keyword oraKeyword	      JAVA_POOL_SIZE JOB_QUEUE_INTERVAL JOB_QUEUE_PROCESSES LARGE_POOL_SIZE
+syn keyword oraKeyword	      LICENSE_MAX_SESSIONS LICENSE_MAX_USERS LICENSE_SESSIONS_WARNING
+syn keyword oraKeyword	      LM_LOCKS LM_PROCS LM_RESS
+syn keyword oraKeyword	      LOCAL_LISTENER LOCK_NAME_SPACE LOCK_SGA LOCK_SGA_AREAS
+syn keyword oraKeyword	      LOG_ARCHIVE_BUFFER_SIZE LOG_ARCHIVE_BUFFERS LOG_ARCHIVE_DEST
+syn match   oraKeyword	      "LOG_ARCHIVE_DEST_\(1\|2\|3\|4\|5\)"
+syn match   oraKeyword	      "LOG_ARCHIVE_DEST_STATE_\(1\|2\|3\|4\|5\)"
+syn keyword oraKeyword	      LOG_ARCHIVE_DUPLEX_DEST LOG_ARCHIVE_FORMAT LOG_ARCHIVE_MAX_PROCESSES
+syn keyword oraKeyword	      LOG_ARCHIVE_MIN_SUCCEED_DEST LOG_ARCHIVE_START
+syn keyword oraKeyword	      LOG_BUFFER LOG_CHECKPOINT_INTERVAL LOG_CHECKPOINT_TIMEOUT
+syn keyword oraKeyword	      LOG_CHECKPOINTS_TO_ALERT LOG_FILE_NAME_CONVERT
+syn keyword oraKeyword	      MAX_COMMIT_PROPAGATION_DELAY MAX_DUMP_FILE_SIZE
+syn keyword oraKeyword	      MAX_ENABLED_ROLES MAX_ROLLBACK_SEGMENTS
+syn keyword oraKeyword	      MTS_DISPATCHERS MTS_MAX_DISPATCHERS MTS_MAX_SERVERS MTS_SERVERS
+syn keyword oraKeyword	      NLS_CALENDAR NLS_COMP NLS_CURRENCY NLS_DATE_FORMAT
+syn keyword oraKeyword	      NLS_DATE_LANGUAGE NLS_DUAL_CURRENCY NLS_ISO_CURRENCY NLS_LANGUAGE
+syn keyword oraKeyword	      NLS_NUMERIC_CHARACTERS NLS_SORT NLS_TERRITORY
+syn keyword oraKeyword	      OBJECT_CACHE_MAX_SIZE_PERCENT OBJECT_CACHE_OPTIMAL_SIZE
+syn keyword oraKeyword	      OPEN_CURSORS OPEN_LINKS OPEN_LINKS_PER_INSTANCE
+syn keyword oraKeyword	      OPS_ADMINISTRATION_GROUP
+syn keyword oraKeyword	      OPTIMIZER_FEATURES_ENABLE OPTIMIZER_INDEX_CACHING
+syn keyword oraKeyword	      OPTIMIZER_INDEX_COST_ADJ OPTIMIZER_MAX_PERMUTATIONS
+syn keyword oraKeyword	      OPTIMIZER_MODE OPTIMIZER_PERCENT_PARALLEL
+syn keyword oraKeyword	      OPTIMIZER_SEARCH_LIMIT
+syn keyword oraKeyword	      ORACLE_TRACE_COLLECTION_NAME ORACLE_TRACE_COLLECTION_PATH
+syn keyword oraKeyword	      ORACLE_TRACE_COLLECTION_SIZE ORACLE_TRACE_ENABLE
+syn keyword oraKeyword	      ORACLE_TRACE_FACILITY_NAME ORACLE_TRACE_FACILITY_PATH
+syn keyword oraKeyword	      OS_AUTHENT_PREFIX OS_ROLES
+syn keyword oraKeyword	      PARALLEL_ADAPTIVE_MULTI_USER PARALLEL_AUTOMATIC_TUNING
+syn keyword oraKeyword	      PARALLEL_BROADCAST_ENABLED PARALLEL_EXECUTION_MESSAGE_SIZE
+syn keyword oraKeyword	      PARALLEL_INSTANCE_GROUP PARALLEL_MAX_SERVERS
+syn keyword oraKeyword	      PARALLEL_MIN_PERCENT PARALLEL_MIN_SERVERS
+syn keyword oraKeyword	      PARALLEL_SERVER PARALLEL_SERVER_INSTANCES PARALLEL_THREADS_PER_CPU
+syn keyword oraKeyword	      PARTITION_VIEW_ENABLED PLSQL_V2_COMPATIBILITY
+syn keyword oraKeyword	      PRE_PAGE_SGA PROCESSES
+syn keyword oraKeyword	      QUERY_REWRITE_ENABLED QUERY_REWRITE_INTEGRITY
+syn keyword oraKeyword	      RDBMS_SERVER_DN READ_ONLY_OPEN_DELAYED RECOVERY_PARALLELISM
+syn keyword oraKeyword	      REMOTE_DEPENDENCIES_MODE REMOTE_LOGIN_PASSWORDFILE
+syn keyword oraKeyword	      REMOTE_OS_AUTHENT REMOTE_OS_ROLES
+syn keyword oraKeyword	      REPLICATION_DEPENDENCY_TRACKING
+syn keyword oraKeyword	      RESOURCE_LIMIT RESOURCE_MANAGER_PLAN
+syn keyword oraKeyword	      ROLLBACK_SEGMENTS ROW_LOCKING SERIAL _REUSE SERVICE_NAMES
+syn keyword oraKeyword	      SESSION_CACHED_CURSORS SESSION_MAX_OPEN_FILES SESSIONS
+syn keyword oraKeyword	      SHADOW_CORE_DUMP
+syn keyword oraKeyword	      SHARED_MEMORY_ADDRESS SHARED_POOL_RESERVED_SIZE SHARED_POOL_SIZE
+syn keyword oraKeyword	      SORT_AREA_RETAINED_SIZE SORT_AREA_SIZE SORT_MULTIBLOCK_READ_COUNT
+syn keyword oraKeyword	      SQL92_SECURITY SQL_TRACE STANDBY_ARCHIVE_DEST
+syn keyword oraKeyword	      STAR_TRANSFORMATION_ENABLED TAPE_ASYNCH_IO THREAD
+syn keyword oraKeyword	      TIMED_OS_STATISTICS TIMED_STATISTICS
+syn keyword oraKeyword	      TRANSACTION_AUDITING TRANSACTIONS TRANSACTIONS_PER_ROLLBACK_SEGMENT
+syn keyword oraKeyword	      USE_INDIRECT_DATA_BUFFERS USER_DUMP_DEST
+syn keyword oraKeyword	      UTL_FILE_DIR
 syn keyword oraKeywordObs     ALLOW_PARTIAL_SN_RESULTS B_TREE_BITMAP_PLANS
 syn keyword oraKeywordObs     BACKUP_DISK_IO_SLAVES CACHE_SIZE_THRESHOLD
 syn keyword oraKeywordObs     CCF_IO_SIZE CLEANUP_ROLLBACK_ENTRIES
@@ -296,30 +296,30 @@ syn keyword oraKeywordObs     SHARED_POOL_RESERVED_MIN_ALLOC
 syn keyword oraKeywordObs     SORT_DIRECT_WRITES SORT_READ_FAC SORT_SPACEMAP_SIZE
 syn keyword oraKeywordObs     SORT_WRITE_BUFFER_SIZE SORT_WRITE_BUFFERS
 syn keyword oraKeywordObs     SPIN_COUNT TEMPORARY_TABLE_LOCKS USE_ISM
-syn keyword oraValue          db os full partial mandatory optional reopen enable defer
-syn keyword oraValue          always default intent disable dml plsql temp_disable
-syn match   oravalue          "Arabic Hijrah"
-syn match   oravalue          "English Hijrah"
-syn match   oravalue          "Gregorian"
-syn match   oravalue          "Japanese Imperial"
-syn match   oravalue          "Persian"
-syn match   oravalue          "ROC Official"
-syn match   oravalue          "Thai Buddha"
-syn match   oravalue          "8.0.0"
-syn match   oravalue          "8.0.3"
-syn match   oravalue          "8.0.4"
-syn match   oravalue          "8.1.3"
-syn match oraModifier         "archived log"
-syn match oraModifier         "backup corruption"
-syn match oraModifier         "backup datafile"
-syn match oraModifier         "backup piece  "
-syn match oraModifier         "backup redo log"
-syn match oraModifier         "backup set"
-syn match oraModifier         "copy corruption"
-syn match oraModifier         "datafile copy"
-syn match oraModifier         "deleted object"
-syn match oraModifier         "loghistory"
-syn match oraModifier         "offline range"
+syn keyword oraValue	      db os full partial mandatory optional reopen enable defer
+syn keyword oraValue	      always default intent disable dml plsql temp_disable
+syn match   oravalue	      "Arabic Hijrah"
+syn match   oravalue	      "English Hijrah"
+syn match   oravalue	      "Gregorian"
+syn match   oravalue	      "Japanese Imperial"
+syn match   oravalue	      "Persian"
+syn match   oravalue	      "ROC Official"
+syn match   oravalue	      "Thai Buddha"
+syn match   oravalue	      "8.0.0"
+syn match   oravalue	      "8.0.3"
+syn match   oravalue	      "8.0.4"
+syn match   oravalue	      "8.1.3"
+syn match oraModifier	      "archived log"
+syn match oraModifier	      "backup corruption"
+syn match oraModifier	      "backup datafile"
+syn match oraModifier	      "backup piece  "
+syn match oraModifier	      "backup redo log"
+syn match oraModifier	      "backup set"
+syn match oraModifier	      "copy corruption"
+syn match oraModifier	      "datafile copy"
+syn match oraModifier	      "deleted object"
+syn match oraModifier	      "loghistory"
+syn match oraModifier	      "offline range"
 
 "undocumented init params
 "up to 7.2 (inclusive)
@@ -448,21 +448,21 @@ if version >= 508 || !exists("did_ora_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink oraKeyword       Statement             "usual keywords
-  HiLink oraKeywordGroup  Type                  "keywords which group other keywords
-  HiLink oraKeywordPref   oraKeywordGroup       "keywords which act as prefixes
-  HiLink oraKeywordObs    Todo                  "obsolete keywords
-  HiLink oraKeywordUnd    PreProc               "undocumented keywords
-  HiLink oraKeywordUndObs oraKeywordObs         "undocumented obsolete keywords
-  HiLink oraValue         Identifier            "values, like true or false
-  HiLink oraModifier      oraValue              "modifies values
-  HiLink oraString        String                "strings
+  HiLink oraKeyword	  Statement		"usual keywords
+  HiLink oraKeywordGroup  Type			"keywords which group other keywords
+  HiLink oraKeywordPref   oraKeywordGroup	"keywords which act as prefixes
+  HiLink oraKeywordObs	  Todo			"obsolete keywords
+  HiLink oraKeywordUnd	  PreProc		"undocumented keywords
+  HiLink oraKeywordUndObs oraKeywordObs		"undocumented obsolete keywords
+  HiLink oraValue	  Identifier		"values, like true or false
+  HiLink oraModifier	  oraValue		"modifies values
+  HiLink oraString	  String		"strings
 
-  HiLink oraSpecial       Special               "special characters
-  HiLink oraError         Error                 "errors
-  HiLink oraParenError    oraError              "errors caused by mismatching parantheses
+  HiLink oraSpecial	  Special		"special characters
+  HiLink oraError	  Error			"errors
+  HiLink oraParenError	  oraError		"errors caused by mismatching parantheses
 
-  HiLink oraComment       Comment               "comments
+  HiLink oraComment	  Comment		"comments
 
   delcommand HiLink
 endif

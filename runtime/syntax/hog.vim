@@ -5,7 +5,7 @@
 " Filenames:	  *.hog *.rules snort.conf vision.conf
 " URL:		  http://home.lanl.gov/cpw/vim/syntax/hog.vim
 " Snort Version:  1.8 By Martin Roesch (roesch@clark.net, www.snort.org)
-" TODO            include all 1.8 syntax
+" TODO		  include all 1.8 syntax
 
 " For version 5.x: Clear all syntax items
 if version < 600
@@ -35,16 +35,16 @@ syn match hogEnvvar contained	"[\!]\=\${\I\i*}"
 " Try to catch strings, if nothing else matches (therefore it must precede the others!)
 " vmEscapeBrace handles ["]  []"] (ie. stays as string)
 syn region       hogEscapeBrace   oneline contained transparent     start="[^\\]\(\\\\\)*\[\^\=\]\=" skip="\\\\\|\\\]" end="\]"me=e-1
-syn match        hogPatSep        contained        "\\[|()]"
-syn match        hogNotPatSep     contained        "\\\\"
-syn region       hogString        oneline          start=+[^:a-zA-Z\->!\\]"+hs=e+1 skip=+\\\\\|\\"+ end=+"\s*;+he=s-1                contains=hogEscapeBrace,hogPatSep,hogNotPatSep oneline
-""syn region       hogString        oneline          start=+[^:a-zA-Z>!\\]'+lc=1 skip=+\\\\\|\\'+ end=+'+                contains=hogEscapeBrace,vimPatSep,hogNotPatSep
-"syn region       hogString        oneline          start=+=!+lc=1   skip=+\\\\\|\\!+ end=+!+                           contains=hogEscapeBrace,hogPatSep,hogNotPatSep
-"syn region       hogString        oneline          start="=+"lc=1   skip="\\\\\|\\+" end="+"                           contains=hogEscapeBrace,hogPatSep,hogNotPatSep
-"syn region       hogString        oneline          start="[^\\]+\s*[^a-zA-Z0-9.]"lc=1 skip="\\\\\|\\+" end="+"         contains=hogEscapeBrace,hogPatSep,hogNotPatSep
-"syn region       hogString        oneline          start="\s/\s*\A"lc=1 skip="\\\\\|\\+" end="/"                       contains=hogEscapeBrace,hogPatSep,hogNotPatSep
-"syn match        hogString        contained        +"[^"]*\\$+      skipnl nextgroup=hogStringCont
-"syn match        hogStringCont    contained        +\(\\\\\|.\)\{-}[^\\]"+
+syn match	 hogPatSep	  contained	   "\\[|()]"
+syn match	 hogNotPatSep	  contained	   "\\\\"
+syn region	 hogString	  oneline	   start=+[^:a-zA-Z\->!\\]"+hs=e+1 skip=+\\\\\|\\"+ end=+"\s*;+he=s-1		     contains=hogEscapeBrace,hogPatSep,hogNotPatSep oneline
+""syn region	   hogString	    oneline	     start=+[^:a-zA-Z>!\\]'+lc=1 skip=+\\\\\|\\'+ end=+'+		 contains=hogEscapeBrace,vimPatSep,hogNotPatSep
+"syn region	  hogString	   oneline	    start=+=!+lc=1   skip=+\\\\\|\\!+ end=+!+				contains=hogEscapeBrace,hogPatSep,hogNotPatSep
+"syn region	  hogString	   oneline	    start="=+"lc=1   skip="\\\\\|\\+" end="+"				contains=hogEscapeBrace,hogPatSep,hogNotPatSep
+"syn region	  hogString	   oneline	    start="[^\\]+\s*[^a-zA-Z0-9.]"lc=1 skip="\\\\\|\\+" end="+"		contains=hogEscapeBrace,hogPatSep,hogNotPatSep
+"syn region	  hogString	   oneline	    start="\s/\s*\A"lc=1 skip="\\\\\|\\+" end="/"			contains=hogEscapeBrace,hogPatSep,hogNotPatSep
+"syn match	  hogString	   contained	    +"[^"]*\\$+      skipnl nextgroup=hogStringCont
+"syn match	  hogStringCont    contained	    +\(\\\\\|.\)\{-}[^\\]"+
 
 
 " Beginners - Patterns that involve ^
@@ -252,10 +252,10 @@ syn keyword hogProto	tcp TCP ICMP icmp udp UDP
 
 " hog alert address port pairs
 " hog IPaddresses
-syn match   hogIPaddrAndPort contained  "\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}\>" skipwhite                  nextgroup=hogPort
-syn match   hogIPaddrAndPort contained  "\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}/\d\{1,2}\>" skipwhite         nextgroup=hogPort
+syn match   hogIPaddrAndPort contained	"\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}\>" skipwhite			nextgroup=hogPort
+syn match   hogIPaddrAndPort contained	"\<\d\{1,3}\.\d\{1,3}\.\d\{1,3}\.\d\{1,3}/\d\{1,2}\>" skipwhite		nextgroup=hogPort
 syn match   hogIPaddrAndPort contained "\<any\>" skipwhite nextgroup=hogPort
-syn match hogIPaddrAndPort contained     "\$\I\i*" nextgroup=hogPort skipwhite
+syn match hogIPaddrAndPort contained	 "\$\I\i*" nextgroup=hogPort skipwhite
 syn match hogIPaddrAndPort contained     "\${\I\i*}" nextgroup=hogPort skipwhite
 "syn match   hogPort contained "[\!]\=[\:]\=\d\+L\=\>" skipwhite
 syn match   hogPort contained "[\:]\=\d\+\>"
@@ -285,7 +285,7 @@ if version >= 508 || !exists("did_hog_syn_inits")
   endif
 " The default methods for highlighting.  Can be overridden later
   HiLink hogComment		Comment
-  HiLink hogLineComment	Comment
+  HiLink hogLineComment		Comment
   HiLink hogAscii		Constant
   HiLink hogCommentString	Constant
   HiLink hogFileName		Constant
@@ -320,7 +320,7 @@ if version >= 508 || !exists("did_hog_syn_inits")
   HiLink hog7Functions		Statement
   HiLink hogActStart		Statement
   HiLink hogIncStart		Statement
-  HiLink hogConfigStart	Statement
+  HiLink hogConfigStart		Statement
   HiLink hogOutStart		Statement
   HiLink hogPPrStart		Statement
   HiLink hogVarStart		Statement
@@ -334,14 +334,14 @@ if version >= 508 || !exists("did_hog_syn_inits")
   HiLink hogAOpt		Type
   HiLink hogDBParam		Type
   HiLink hogStreamArgs		Type
-  HiLink hogOut		Type
-  HiLink hogPPr		Type
-  HiLink  hogConfigType	Type
+  HiLink hogOut			Type
+  HiLink hogPPr			Type
+  HiLink  hogConfigType		Type
   HiLink hogActRegion		Type
   HiLink hogProto		Type
   HiLink hogXMLParam		Type
   HiLink resp			Todo
-  HiLink cLabel         Label
+  HiLink cLabel			Label
   delcommand HiLink
 endif
 

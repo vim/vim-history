@@ -3,7 +3,7 @@
 " Maintainer:   Gerfried Fuchs <alfie@ist.org>
 " Filenames:    *.mgp
 " Last Change:  25 Apr 2001
-" URL:          http://alfie.ist.org/vim/syntax/mgp.vim
+" URL:		http://alfie.ist.org/vim/syntax/mgp.vim
 "
 " Comments are very welcome - but please make sure that you are commenting on
 " the latest version of this file.
@@ -59,23 +59,23 @@ if version >= 508 || !exists("did_mgp_syn_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink mgpLineSkip    Special
+  HiLink mgpLineSkip	Special
 
-  HiLink mgpHash        mgpComment
-  HiLink mgpPercent     mgpComment
-  HiLink mgpComment     Comment
+  HiLink mgpHash	mgpComment
+  HiLink mgpPercent	mgpComment
+  HiLink mgpComment	Comment
 
-  HiLink mgpCommand     Identifier
+  HiLink mgpCommand	Identifier
 
-  HiLink mgpLine        Type
+  HiLink mgpLine	Type
 
-  HiLink mgpFile        String
-  HiLink mgpSize        Number
-  HiLink mgpValue       Number
+  HiLink mgpFile	String
+  HiLink mgpSize	Number
+  HiLink mgpValue	Number
 
-  HiLink mgpPage        mgpDefine
-  HiLink mgpNoDefault   mgpDefine
-  HiLink mgpDefine      Define
+  HiLink mgpPage	mgpDefine
+  HiLink mgpNoDefault	mgpDefine
+  HiLink mgpDefine	Define
 
   delcommand HiLink
 endif

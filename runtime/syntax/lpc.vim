@@ -2,7 +2,7 @@
 " Language:	LPC
 " Maintainer:	Shizhu Pan <poet@mudbuilder.net>
 " URL:		http://poet.tomud.com/pub/lpc.vim.bz2
-" Last Change:	2002 Oct 24
+" Last Change:	2003 May 11
 " Comments:	If you are using Vim 6.2 or later, see :h lpc.vim for
 "		file type recognizing, if not, you had to use modeline.
 
@@ -49,26 +49,26 @@ syn keyword	lpcType		void mixed unknown
 " Scalar/Value types.
 syn keyword	lpcType		int float string
 " Pointer types.
-syn keyword     lpcType         array buffer class function mapping object
+syn keyword	lpcType		array buffer class function mapping object
 " Other types.
 if exists("lpc_compat_32")
-    syn keyword     lpcType         closure status funcall
+    syn keyword     lpcType	    closure status funcall
 else
-    syn keyword     lpcError        closure status
-    syn keyword     lpcType         multiset
+    syn keyword     lpcError	    closure status
+    syn keyword     lpcType	    multiset
 endif
 
 " Type modifier.
-syn keyword     lpcModifier     nomask private public
-syn keyword     lpcModifier     varargs virtual
+syn keyword	lpcModifier	nomask private public
+syn keyword	lpcModifier	varargs virtual
 
 " sensible modifiers
 if exists("lpc_pre_v22")
-    syn keyword	lpcReserved     nosave protected ref
-    syn keyword	lpcModifier     static
+    syn keyword	lpcReserved	nosave protected ref
+    syn keyword	lpcModifier	static
 else
-    syn keyword	lpcError        static
-    syn keyword	lpcModifier     nosave protected ref
+    syn keyword	lpcError	static
+    syn keyword	lpcModifier	nosave protected ref
 endif
 
 " Nodule: Applies {{{1
@@ -380,8 +380,8 @@ if version >= 508 || !exists("did_lpc_syn_inits")
   HiLink lpcSpecialCharacter	lpcSpecial
   HiLink lpcOctal		lpcPreProc
   HiLink lpcOctalZero		lpcSpecial  " LPC will treat octal numbers
-                                            " as decimals, programmers should
-                                            " be aware of that.
+					    " as decimals, programmers should
+					    " be aware of that.
   HiLink lpcEfunError		lpcError
   HiLink lpcKeywdError		lpcError
   HiLink lpcOctalError		lpcError
@@ -406,7 +406,7 @@ if version >= 508 || !exists("did_lpc_syn_inits")
   HiLink lpcReserved		lpcPreProc
   HiLink lpcTextString		lpcString   " This should be preprocessors, but
   HiLink lpcArrayString		lpcPreProc  " let's make some difference
-                                            " between text and array
+					    " between text and array
 
   HiLink lpcIncluded		lpcString
   HiLink lpcCommentString	lpcString

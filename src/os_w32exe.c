@@ -38,7 +38,7 @@ void _cdecl SaveInst(HINSTANCE hInst);
 void (_cdecl *pSaveInst)(HINSTANCE);
 #endif
 
-int WINAPI
+    int WINAPI
 WinMain(
     HINSTANCE	hInstance,
     HINSTANCE	hPrevInst,
@@ -47,105 +47,25 @@ WinMain(
 {
     int		argc;
     char	**argv;
-
-    int		i;
-    char	*pch;
-    char	*pszNewCmdLine;
+    char	*tofree;
     char	prog[256];
-    char	*p;
-    int		fIsQuote;
 #ifdef VIMDLL
+    char	*p;
     HANDLE	hLib;
 #endif
 
-    /*
-     * Ron: added full path name so that the $VIM variable will get set to our
-     * startup path (so the .vimrc file can be found w/o a VIM env. var.)
-     * Remove the ".exe" extension, and find the 1st non-space.
-     */
+    /* Ron: added full path name so that the $VIM variable will get set to our
+     * startup path (so the .vimrc file can be found w/o a VIM env. var.) */
     GetModuleFileName(NULL, prog, 255);
-    p = strrchr(prog, '.');
-    if (p != NULL)
-	*p = '\0';
-    for (p = prog; *p != '\0' && *p == ' '; ++p)
-	;
 
-    /*
-     * Add the size of the string, two quotes, the separating space, and a
-     * terminating '\0'.
-     */
-    pszNewCmdLine = (char *)malloc(STRLEN(lpszCmdLine) + STRLEN(prog) + 4);
-    if (pszNewCmdLine == NULL)
+    /* Separate the command line into arguments. */
+    argc = get_cmd_args(prog, (char *)lpszCmdLine, &argv, &tofree);
+    if (argc == 0)
+    {
+	MessageBox(0, _("Could not allocate memory for command line."),
+							   _("VIM Error"), 0);
 	return 0;
-
-    /* put double quotes around the prog name, it could contain spaces */
-    pszNewCmdLine[0] = '"';
-    STRCPY(pszNewCmdLine + 1, p);
-    STRCAT(pszNewCmdLine, "\" ");
-    STRCAT(pszNewCmdLine, lpszCmdLine);
-
-    /*
-     * Isolate each argument and put it in argv[].
-     */
-    pch = pszNewCmdLine;
-    argc = 0;
-    while ( *pch != '\0' )
-    {
-	/* Ron: Handle quoted strings in args list */
-	fIsQuote = (*pch == '\"');
-	if (fIsQuote)
-	    ++pch;
-
-	argc++;			    /* this is an argument */
-	if (fIsQuote)
-	{
-	    while (*pch != '\0' && *pch != '\"')
-		pch++;		    /* advance until a closing quote */
-	    if (*pch)
-		pch++;
-	}
-	else
-	{
-	    while ((*pch != '\0') && (*pch != ' '))
-		pch++;		    /* advance until a space */
-	}
-	while (*pch && *pch == ' ' )
-	    pch++;		    /* advance until a non-space */
     }
-
-    argv = (char**) malloc((argc+1) * sizeof(char*));
-    if (argv == NULL )
-	return 0;		   /* malloc error */
-
-    i = 0;
-    pch = pszNewCmdLine;
-
-    while ((i < argc) && (*pch != '\0'))
-    {
-	fIsQuote = (*pch == '\"');
-	if (fIsQuote)
-	    ++pch;
-
-	argv[i++] = pch;
-	if (fIsQuote)
-	{
-	    while (*pch != '\0' && *pch != '\"')
-		pch++;		    /* advance until the closing quote */
-	}
-	else
-	{
-	    while (*pch != '\0' && *pch != ' ')
-		pch++;		    /* advance until a space */
-	}
-	if (*pch != '\0')
-	    *(pch++) = '\0';	    /* parse argument here */
-	while (*pch && *pch == ' ')
-	    pch++;		    /* advance until a non-space */
-    }
-
-    // ASSERT(i == argc);
-
-    argv[argc] = (char *) NULL;    /* NULL-terminated list */
 
 #ifdef DYNAMIC_GETTEXT
     /* Initialize gettext library */
@@ -153,63 +73,64 @@ WinMain(
 #endif
 
 #ifdef VIMDLL
-	// LoadLibrary - get name of dll to load in here:
-	p = strrchr(prog, '\\');
-	if (p != NULL)
-	{
-#ifdef DEBUG
-		strcpy(p+1, "vim32d.dll");
+    // LoadLibrary - get name of dll to load in here:
+    p = strrchr(prog, '\\');
+    if (p != NULL)
+    {
+# ifdef DEBUG
+	strcpy(p+1, "vim32d.dll");
+# else
+	strcpy(p+1, "vim32.dll");
+# endif
+    }
+    hLib = LoadLibrary(prog);
+    if (hLib == NULL)
+    {
+	MessageBox(0, _("Could not load vim32.dll!"), _("VIM Error"), 0);
+	goto errout;
+    }
+    // fix up the function pointers
+# ifdef FEAT_GUI
+    pSaveInst = GetProcAddress(hLib, (LPCSTR)2);
+# endif
+    pmain = GetProcAddress(hLib, (LPCSTR)1);
+    if (pmain == NULL)
+    {
+	MessageBox(0, _("Could not fix up function pointers to the DLL!"),
+							    _("VIM Error"),0);
+	goto errout;
+    }
 #else
-		strcpy(p+1, "vim32.dll");
-#endif
-	}
-	hLib = LoadLibrary(prog);
-	if (hLib == NULL)
-	{
-		MessageBox(0, _("Could not load vim32.dll!"),_("VIM Error"),0);
-		goto errout;
-	}
-	// fix up the function pointers
-#ifdef FEAT_GUI
-	pSaveInst = GetProcAddress(hLib, (LPCSTR)2);
-#endif
-	pmain = GetProcAddress(hLib, (LPCSTR)1);
-	if (pmain == NULL)
-	{
-		MessageBox(0, _("Could not fix up function pointers to the DLL!"),_("VIM Error"),0);
-		goto errout;
-	}
-#else
-#ifdef FEAT_GUI
-	pSaveInst = SaveInst;
-#endif
-	pmain =
-#if defined(FEAT_GUI_W32)
-	    //&& defined(__MINGW32__)
-	    VimMain
-#else
-	    main
-#endif
-	    ;
+# ifdef FEAT_GUI
+    pSaveInst = SaveInst;
+# endif
+    pmain =
+# if defined(FEAT_GUI_W32)
+    //&& defined(__MINGW32__)
+	VimMain
+# else
+	main
+# endif
+	;
 #endif
 #ifdef FEAT_GUI
-	pSaveInst(
+    pSaveInst(
 #ifdef __MINGW32__
-		GetModuleHandle(NULL)
+	    GetModuleHandle(NULL)
 #else
-		hInstance
+	    hInstance
 #endif
-		);
+	    );
 #endif
-	pmain(argc, argv);
+    pmain(argc, argv);
 
 #ifdef VIMDLL
-	FreeLibrary(hLib);
+    FreeLibrary(hLib);
 errout:
 #endif
-	free(argv);
-	free(pszNewCmdLine);
+    free(argv);
+    free(tofree);
 
-	return 0;
+    return 0;
 }
 #endif

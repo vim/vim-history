@@ -24,6 +24,7 @@ static char_u *remove_tail __ARGS((char_u *p, char_u *pend, char_u *name));
 static char_u *remove_tail_with_ext __ARGS((char_u *p, char_u *pend, char_u *name));
 #endif
 static int get_indent_str __ARGS((char_u *ptr, int ts));
+static int copy_indent __ARGS((int size, char_u	*src));
 
 /*
  * Count the size (in window cells) of the indent in the current line.
@@ -103,6 +104,8 @@ set_indent(size, flags)
     int		ind_len;
     int		line_len;
     int		doit = FALSE;
+    int		ind_done;
+    int		tab_pad;
 
     /*
      * First check if there is anything to do and compute the number of
@@ -111,16 +114,66 @@ set_indent(size, flags)
     todo = size;
     ind_len = 0;
     p = ml_get_curline();
-    if (!curbuf->b_p_et)	/* if 'expandtab' isn't set: use TABs */
+
+    /* Calculate the buffer size for the new indent, and check to see if it
+     * isn't already set */
+
+    /* if 'expandtab' isn't set: use TABs */
+    if (!curbuf->b_p_et)
+    {
+	/* If 'preserveindent' is set then reuse as much as possible of
+	 * the existing indent structure for the new indent */
+	if (!(flags & SIN_INSERT) && curbuf->b_p_pi)
+	{
+	    ind_done = 0;
+
+	    /* count as many characters as we can use */
+	    while (todo > 0 && vim_iswhite(*p))
+	    {
+		if (*p == TAB)
+		{
+		    tab_pad = (int)curbuf->b_p_ts
+					   - (ind_done % (int)curbuf->b_p_ts);
+		    /* stop if this tab will overshoot the target */
+		    if (todo < tab_pad)
+			break;
+		    todo -= tab_pad;
+		    ++ind_len;
+		    ind_done += tab_pad;
+		}
+		else
+		{
+		    --todo;
+		    ++ind_len;
+		    ++ind_done;
+		}
+		++p;
+	    }
+
+	    /* Fill to next tabstop with a tab, if possible */
+	    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
+	    if (todo >= tab_pad)
+	    {
+		doit = TRUE;
+		todo -= tab_pad;
+		++ind_len;
+		/* ind_done += tab_pad; */
+	    }
+	}
+
+	/* count tabs required for indent */
 	while (todo >= (int)curbuf->b_p_ts)
 	{
 	    if (*p != TAB)
 		doit = TRUE;
 	    else
 		++p;
-	    todo -= curbuf->b_p_ts;
+	    todo -= (int)curbuf->b_p_ts;
 	    ++ind_len;
+	    /* ind_done += (int)curbuf->b_p_ts; */
 	}
+    }
+    /* count spaces required for indent */
     while (todo > 0)
     {
 	if (*p != ' ')
@@ -129,6 +182,7 @@ set_indent(size, flags)
 	    ++p;
 	--todo;
 	++ind_len;
+	/* ++ind_done; */
     }
 
     /* Return if the indent is OK already. */
@@ -148,12 +202,53 @@ set_indent(size, flags)
     /* Put the characters in the new line. */
     s = line;
     todo = size;
-    if (!curbuf->b_p_et)	/* if 'expandtab' isn't set: use TABs */
+    /* if 'expandtab' isn't set: use TABs */
+    if (!curbuf->b_p_et)
+    {
+	/* If 'preserveindent' is set then reuse as much as possible of
+	 * the existing indent structure for the new indent */
+	if (!(flags & SIN_INSERT) && curbuf->b_p_pi)
+	{
+	    p = ml_get_curline();
+	    ind_done = 0;
+
+	    while (todo > 0 && vim_iswhite(*p))
+	    {
+		if (*p == TAB)
+		{
+		    tab_pad = (int)curbuf->b_p_ts
+					   - (ind_done % (int)curbuf->b_p_ts);
+		    /* stop if this tab will overshoot the target */
+		    if (todo < tab_pad)
+			break;
+		    todo -= tab_pad;
+		    ind_done += tab_pad;
+		}
+		else
+		{
+		    --todo;
+		    ++ind_done;
+		}
+		*s++ = *p++;
+	    }
+
+	    /* Fill to next tabstop with a tab, if possible */
+	    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
+	    if (todo >= tab_pad)
+	    {
+		*s++ = TAB;
+		todo -= tab_pad;
+	    }
+
+	    p = skipwhite(p);
+	}
+
 	while (todo >= (int)curbuf->b_p_ts)
 	{
 	    *s++ = TAB;
 	    todo -= (int)curbuf->b_p_ts;
 	}
+    }
     while (todo > 0)
     {
 	*s++ = ' ';
@@ -170,6 +265,135 @@ set_indent(size, flags)
     }
     else
 	vim_free(line);
+
+    curwin->w_cursor.col = ind_len;
+    return TRUE;
+}
+
+/*
+ * Copy the indent from ptr to the current line (and fill to size)
+ * Leaves the cursor on the first non-blank in the line.
+ * Returns TRUE if the line was changed.
+ */
+    static int
+copy_indent(size, src)
+    int		size;
+    char_u	*src;
+{
+    char_u	*p;
+    char_u	*line;
+    char_u	*s;
+    int		todo;
+    int		ind_len;
+    int		line_len;
+    int		tab_pad;
+    int		ind_done;
+
+    /* First compute the numer of characters needed for the indent */
+    todo = size;
+    ind_len = 0;
+    ind_done = 0;
+    s = src;
+
+    /* Count the usable portion of the source line */
+    while (todo > 0 && vim_iswhite(*s))
+    {
+	if (*s == TAB)
+	{
+	    tab_pad = (int)curbuf->b_p_ts
+					   - (ind_done % (int)curbuf->b_p_ts);
+	    /* Stop if this tab will overshoot the target */
+	    if (todo < tab_pad)
+		break;
+	    todo -= tab_pad;
+	    ++ind_len;
+	    ind_done += tab_pad;
+	}
+	else
+	{
+	    --todo;
+	    ++ind_len;
+	    ++ind_done;
+	}
+	++s;
+    }
+
+    /* Fill to next tabstop with a tab, if possible */
+    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
+    if (todo >= tab_pad)
+    {
+	todo -= tab_pad;
+	++ind_len;
+    }
+
+    /* Count tabs required for indent */
+    if (todo >= (int)curbuf->b_p_ts)
+    {
+	ind_len += (todo / (int)curbuf->b_p_ts);
+	todo = todo % (int)curbuf->b_p_ts;
+    }
+
+    /* Count spaces required for indent */
+    ind_len += todo;
+
+    p = ml_get_curline();
+    line_len = (int)STRLEN(p) + 1;
+    line = alloc(ind_len + line_len);
+    if (line == NULL)
+	return FALSE;
+
+    /* Put the characters in the new line */
+    s = line;
+    todo = size;
+
+    /* Copy the usable portion of the source line */
+    while (todo > 0 && vim_iswhite(*src))
+    {
+	if (*src == TAB)
+	{
+	    tab_pad = (int)curbuf->b_p_ts
+					   - (ind_done % (int)curbuf->b_p_ts);
+	    /* Stop if this tab will overshoot the target */
+	    if (todo < tab_pad)
+		break;
+	    todo -= tab_pad;
+	    ind_done += tab_pad;
+	}
+	else
+	{
+	    --todo;
+	    ++ind_done;
+	}
+	*s++ = *src++;
+    }
+
+    /* Fill to next tabstop with a tab, if possible */
+    tab_pad = (int)curbuf->b_p_ts - (ind_done % (int)curbuf->b_p_ts);
+    if (todo >= tab_pad)
+    {
+	*s++ = TAB;
+	todo -= tab_pad;
+    }
+
+    /* Add tabs required for indent */
+    while (todo >= (int)curbuf->b_p_ts)
+    {
+	*s++ = TAB;
+	todo -= (int)curbuf->b_p_ts;
+    }
+
+    /* Add spaces required for indent */
+    while (todo > 0)
+    {
+	*s++ = ' ';
+	--todo;
+    }
+
+    /* Append the original line */
+    mch_memmove(s, p, (size_t)line_len);
+
+    /* Replace the line */
+    ml_replace(curwin->w_cursor.lnum, line, FALSE);
 
     curwin->w_cursor.col = ind_len;
     return TRUE;
@@ -299,6 +523,7 @@ open_line(dir, flags, old_indent)
     int		vreplace_mode;
 #endif
     int		did_append;		/* appended a new line */
+    int		saved_pi = curbuf->b_p_pi; /* copy of preserveindent setting */
 
     /*
      * make a copy of the current line so we can mess with it
@@ -1014,7 +1239,21 @@ open_line(dir, flags, old_indent)
 	    newindent += (int)curbuf->b_p_sw;
 	}
 #endif
-	(void)set_indent(newindent, SIN_INSERT);
+	/* Copy the indent only if expand tab is disabled */
+	if (curbuf->b_p_ci && !curbuf->b_p_et)
+	{
+	    (void)copy_indent(newindent, saved_line);
+
+	    /*
+	     * Set the 'preserveindent' option so that any further screwing
+	     * with the line doesn't entirely destroy our efforts to preserve
+	     * it.  It gets restored at the function end.
+	     */
+	    curbuf->b_p_pi = TRUE;
+	}
+	else
+	    (void)set_indent(newindent, SIN_INSERT);
+
 	ai_col = curwin->w_cursor.col;
 
 	/*
@@ -1163,6 +1402,7 @@ open_line(dir, flags, old_indent)
 
     retval = TRUE;		/* success! */
 theend:
+    curbuf->b_p_pi = saved_pi;
     vim_free(saved_line);
     vim_free(next_line);
     vim_free(allocated);
@@ -3982,6 +4222,7 @@ do_c_expr_indent()
 
 static char_u	*cin_skipcomment __ARGS((char_u *));
 static int	cin_nocode __ARGS((char_u *));
+static pos_T	*find_line_comment __ARGS((void));
 static int	cin_islabel_skip __ARGS((char_u **));
 static int	cin_isdefault __ARGS((char_u *));
 static char_u	*after_label __ARGS((char_u *l));

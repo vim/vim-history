@@ -3,8 +3,8 @@
 " Maintainer: Tom Kowalski <trk@schaefferas.com>
 " Last change: April 27, 2001
 "  Thanks to the authors and maintainers of fortran.vim.
-"               Since DMAP shares some traits with fortran, this syntax file
-"               is based on the fortran.vim syntax file.
+"		Since DMAP shares some traits with fortran, this syntax file
+"		is based on the fortran.vim syntax file.
 "----------------------------------------------------------------------
 " Remove any old syntax stuff hanging around
 "syn clear
@@ -20,9 +20,9 @@ syn case ignore
 "
 " -------Executive Modules and Statements
 "
-syn keyword nastranDmapexecmod         call dbview delete end equiv equivx exit
-syn keyword nastranDmapexecmod         file message purge purgex return subdmap
-syn keyword nastranDmapType            type
+syn keyword nastranDmapexecmod	       call dbview delete end equiv equivx exit
+syn keyword nastranDmapexecmod	       file message purge purgex return subdmap
+syn keyword nastranDmapType	       type
 syn keyword nastranDmapLabel  go to goto
 syn keyword nastranDmapRepeat  if else elseif endif then
 syn keyword nastranDmapRepeat  do while
@@ -59,20 +59,20 @@ syn match  nastranDmapComment  "^.\{-72}.*$"lc=72 contained
 "
 " -------Utility Modules
 "
-syn keyword nastranDmapUtilmod         append copy dbc dbdict dbdir dmin drms1
-syn keyword nastranDmapUtilmod         dtiin eltprt ifp ifp1 inputt2 inputt4 lamx
-syn keyword nastranDmapUtilmod         matgen matgpr matmod matpch matprn matprt
-syn keyword nastranDmapUtilmod         modtrl mtrxin ofp output2 output4 param
-syn keyword nastranDmapUtilmod         paraml paramr prtparam pvt scalar
-syn keyword nastranDmapUtilmod         seqp setval tabedit tabprt tabpt vec vecplot
-syn keyword nastranDmapUtilmod         xsort
+syn keyword nastranDmapUtilmod	       append copy dbc dbdict dbdir dmin drms1
+syn keyword nastranDmapUtilmod	       dtiin eltprt ifp ifp1 inputt2 inputt4 lamx
+syn keyword nastranDmapUtilmod	       matgen matgpr matmod matpch matprn matprt
+syn keyword nastranDmapUtilmod	       modtrl mtrxin ofp output2 output4 param
+syn keyword nastranDmapUtilmod	       paraml paramr prtparam pvt scalar
+syn keyword nastranDmapUtilmod	       seqp setval tabedit tabprt tabpt vec vecplot
+syn keyword nastranDmapUtilmod	       xsort
 "
 " -------Matrix Modules
 "
-syn keyword nastranDmapMatmod          add add5 cead dcmp decomp diagonal fbs merge
-syn keyword nastranDmapMatmod          mpyad norm read reigl smpyad solve solvit
-syn keyword nastranDmapMatmod          trnsp umerge umerge1 upartn dmiin partn
-syn region  nastranDmapMatmod          start=+^ *[Dd][Mm][Ii]+ end=+[\/]+
+syn keyword nastranDmapMatmod	       add add5 cead dcmp decomp diagonal fbs merge
+syn keyword nastranDmapMatmod	       mpyad norm read reigl smpyad solve solvit
+syn keyword nastranDmapMatmod	       trnsp umerge umerge1 upartn dmiin partn
+syn region  nastranDmapMatmod	       start=+^ *[Dd][Mm][Ii]+ end=+[\/]+
 "
 " -------Implicit Functions
 "
@@ -95,7 +95,7 @@ syn keyword nastranDmapImplicit timetogo wlen xorl
 "
 " -------Nastran Statement
 "
-syn keyword nastranNastranCard           nastran
+syn keyword nastranNastranCard		 nastran
 "
 " -------The File Management Section (FMS)
 "
@@ -118,7 +118,7 @@ syn region nastranFMSCard start=+^ *[Ii][Nn][Cc][Ll][Uu]+ end=+$+  oneline
 syn region nastranFMSCard start=+^ *[Ii][Nn][Ii][Tt]+ end=+$+  oneline
 syn region nastranFMSCard start=+^ *[Pp][Rr][Oo][Jj]+ end=+$+  oneline
 syn region nastranFMSCard start=+^ *[Rr][Ee][Ss][Tt]+ end=+$+  oneline
-syn match   nastranDmapUtilmod         "^ *[Rr][Ee][Ss][Tt][Aa].*,.*," contains=nastranDmapComment
+syn match   nastranDmapUtilmod	   "^ *[Rr][Ee][Ss][Tt][Aa].*,.*," contains=nastranDmapComment
 "
 " -------Executive Control Section
 "
@@ -164,27 +164,27 @@ if version >= 508 || !exists("did_nastran_syntax_inits")
      command -nargs=+ HiLink hi link <args>
   endif
   " The default methods for highlighting.  Can be overridden later
-  HiLink nastranDmapexecmod          Statement
-  HiLink nastranDmapType             Type
-  HiLink nastranDmapPreCondit        Error
-  HiLink nastranDmapUtilmod          PreProc
-  HiLink nastranDmapMatmod           nastranDmapUtilmod
-  HiLink nastranDmapString           String
-  HiLink nastranDmapNumber           Constant
-  HiLink nastranDmapFloat            nastranDmapNumber
-  HiLink nastranDmapInitTab          nastranDmapNumber
-  HiLink nastranDmapTab              nastranDmapNumber
-  HiLink nastranDmapLogical          nastranDmapExecmod
-  HiLink nastranDmapImplicit         Identifier
-  HiLink nastranDmapComment          Comment
-  HiLink nastranDmapRepeat           nastranDmapexecmod
-  HiLink nastranNastranCard          nastranDmapPreCondit
-  HiLink nastranECSCard              nastranDmapUtilmod
-  HiLink nastranFMSCard              nastranNastranCard
-  HiLink nastranCC                   nastranDmapexecmod
-  HiLink nastranDelimiter            Special
-  HiLink nastranBulkData             nastranDmapType
-  HiLink nastranUtilCard             nastranDmapexecmod
+  HiLink nastranDmapexecmod	     Statement
+  HiLink nastranDmapType	     Type
+  HiLink nastranDmapPreCondit	     Error
+  HiLink nastranDmapUtilmod	     PreProc
+  HiLink nastranDmapMatmod	     nastranDmapUtilmod
+  HiLink nastranDmapString	     String
+  HiLink nastranDmapNumber	     Constant
+  HiLink nastranDmapFloat	     nastranDmapNumber
+  HiLink nastranDmapInitTab	     nastranDmapNumber
+  HiLink nastranDmapTab		     nastranDmapNumber
+  HiLink nastranDmapLogical	     nastranDmapExecmod
+  HiLink nastranDmapImplicit	     Identifier
+  HiLink nastranDmapComment	     Comment
+  HiLink nastranDmapRepeat	     nastranDmapexecmod
+  HiLink nastranNastranCard	     nastranDmapPreCondit
+  HiLink nastranECSCard		     nastranDmapUtilmod
+  HiLink nastranFMSCard		     nastranNastranCard
+  HiLink nastranCC		     nastranDmapexecmod
+  HiLink nastranDelimiter	     Special
+  HiLink nastranBulkData	     nastranDmapType
+  HiLink nastranUtilCard	     nastranDmapexecmod
   delcommand HiLink
 endif
 

@@ -233,6 +233,7 @@
 #undef HAVE_XM_XPMP_H
 #undef HAVE_X11_XPM_H
 #undef HAVE_X11_XMU_EDITRES_H
+#undef HAVE_X11_SM_SMLIB_H
 
 /* Define if you have <sys/wait.h> that is POSIX.1 compatible.  */
 #undef HAVE_SYS_WAIT_H
@@ -349,3 +350,6 @@
 
 /* Define name of who modified a released Vim */
 #undef MODIFIED_BY
+
+/* Define if you want XSMP interaction as well as vanilla swapfile safety */
+#undef USE_XSMP_INTERACT

@@ -1,7 +1,7 @@
 " Vim syntax file
 "    Language: Structured Query Report Writer (SQR)
 "  Maintainer: Nathan Stratton Treadway (nathanst at ontko dot com)
-"         URL: http://www.ontko.com/sqr/#editor_config_files
+"	  URL: http://www.ontko.com/sqr/#editor_config_files
 "
 " Modification History:
 "     2002-Apr-12: Updated for SQR v6.x
@@ -212,30 +212,30 @@ syn match	  sqrNumber	/-\=\<\d*\.\=[0-9_]\>/
 " as a start-comment if there is only whitespace ahead of it on the line.
 
 syn keyword	sqrTodo		TODO FIXME XXX DEBUG NOTE ###
-syn match       sqrTodo         /???/
+syn match	sqrTodo		/???/
 
 if version >= 600
   " See also the sqrString section above for handling of ! characters
   " inside of strings.  (Those patterns override the ones below.)
   syn match	sqrComment	/!\@<!!\([^!=].*\|$\)/ contains=sqrTodo
-  "                               the ! can't be preceeded by another !,
-  "                               and must be followed by at least one
-  "                               character other than ! or =, or immediately
-  "                               by the end-of-line
+  "				  the ! can't be preceeded by another !,
+  "				  and must be followed by at least one
+  "				  character other than ! or =, or immediately
+  "				  by the end-of-line
   syn match	sqrComment	/^!=.*/ contains=sqrTodo
   syn match	sqrComment	/^!!.*/ contains=sqrTodo
   syn match	sqrError	/^\s\+\zs!=.*/
-  "                               it's an error to have "!=" preceeded by
-  "                               just whitespace on the line ("!="
-  "                               preceeded by non-whitespace is treated
-  "                               as neither a comment nor an error, since
-  "                               it is often correct, i.e.
-  "                                 if #count != 7
+  "				  it's an error to have "!=" preceeded by
+  "				  just whitespace on the line ("!="
+  "				  preceeded by non-whitespace is treated
+  "				  as neither a comment nor an error, since
+  "				  it is often correct, i.e.
+  "				    if #count != 7
   syn match	sqrError	/.\+\zs!!.*/
-  "                               a "!!" anywhere but at the beginning of
-  "                               the line is always an error
+  "				  a "!!" anywhere but at the beginning of
+  "				  the line is always an error
 else "For versions before 6.0, same idea as above but we are limited
-     "to simple patterns only.  Also, the sqrString patterns above
+     "to simple patterns only.	Also, the sqrString patterns above
      "don't seem to take precedence in v5 as they do in v6, so
      "we split the last rule to ignore comments found inside of
      "string literals.
@@ -244,10 +244,10 @@ else "For versions before 6.0, same idea as above but we are limited
   syn match	sqrComment	/^!!.*/ contains=sqrTodo
   syn match	sqrError	/^\s\+!=.*/
   syn match	sqrError	/^[^'!]\+!!/
-  "                             flag !! on lines that don't have ! or '
+  "				flag !! on lines that don't have ! or '
   syn match	sqrError	/^\([^!']*'[^']*'[^!']*\)\+!!/
-  "                             flag !! found after matched ' ' chars
-  "                             (that aren't also commented)
+  "				flag !! found after matched ' ' chars
+  "				(that aren't also commented)
 endif
 
 

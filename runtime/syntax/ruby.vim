@@ -2,7 +2,7 @@
 " Language:		Ruby
 " Maintainer:		Doug Kearns
 " Previous Maintainer:	Mirko Nasato
-" Last Change:		2003 Apr 25
+" Last Change:		2003 May 11
 " Location:		http://mugca.its.monash.edu.au/~djkea2/vim/syntax/ruby.vim
 
 " $Id$
@@ -67,7 +67,7 @@ syn region rubyString matchgroup=rubyStringDelimit start="%r;"  end=";[iomx]*"  
 syn region rubyString matchgroup=rubyStringDelimit start="%r="  end="=[iomx]*"  skip="\\\\\|\\="  contains=rubyExprSubst fold
 syn region rubyString matchgroup=rubyStringDelimit start="%r?"  end="?[iomx]*"  skip="\\\\\|\\?"  contains=rubyExprSubst fold
 syn region rubyString matchgroup=rubyStringDelimit start="%r@"  end="@[iomx]*"  skip="\\\\\|\\@"  contains=rubyExprSubst fold
-syn region rubyString matchgroup=rubyStringDelimit start="%r\\" end="\\[iomx]*"                   contains=rubyExprSubst fold
+syn region rubyString matchgroup=rubyStringDelimit start="%r\\" end="\\[iomx]*"			  contains=rubyExprSubst fold
 syn region rubyString matchgroup=rubyStringDelimit start="%r\^" end="\^[iomx]*" skip="\\\\\|\\\^" contains=rubyExprSubst fold
 syn region rubyString matchgroup=rubyStringDelimit start="%r`"  end="`[iomx]*"  skip="\\\\\|\\`"  contains=rubyExprSubst fold
 syn region rubyString matchgroup=rubyStringDelimit start="%r|"  end="|[iomx]*"  skip="\\\\\|\\|"  contains=rubyExprSubst fold
@@ -123,7 +123,7 @@ syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=;"  end=";"  sk
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]="    end="="  skip="\\\\\|\\="  contains=rubyExprSubst
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=?"  end="?"  skip="\\\\\|\\?"  contains=rubyExprSubst
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=@"  end="@"  skip="\\\\\|\\@"  contains=rubyExprSubst
-syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=\\" end="\\"                   contains=rubyExprSubst
+syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=\\" end="\\"			contains=rubyExprSubst
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=\^" end="\^" skip="\\\\\|\\\^" contains=rubyExprSubst
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=`"  end="`"  skip="\\\\\|\\`"  contains=rubyExprSubst
 syn region rubyString matchgroup=rubyStringDelimit start="%[Qx]\=|"  end="|"  skip="\\\\\|\\|"  contains=rubyExprSubst
@@ -147,11 +147,11 @@ syn region rubyString matchgroup=rubyStringDelimit start="\<if\s*/"lc=2 start="\
 " Here Document:
 if version < 600
   syn region rubyString matchgroup=rubyStringDelimit start=+<<-\(\u\{3,}\|'\u\{3,}'\|"\u\{3,}"\|`\u\{3,}`\)+hs=s+2 end=+^\s*\u\{3,}$+ fold
-  syn region rubyString matchgroup=rubyStringDelimit start=+<<-\(EOF\|'EOF'\|"EOF"\|`EOF`\)+hs=s+2                 end=+^\s*EOF$+     contains=rubyExprSubst fold
-  syn region rubyString matchgroup=rubyStringDelimit start=+<<-\(EOS\|'EOS'\|"EOS"\|`EOS`\)+hs=s+2                 end=+^\s*EOS$+     contains=rubyExprSubst fold
+  syn region rubyString matchgroup=rubyStringDelimit start=+<<-\(EOF\|'EOF'\|"EOF"\|`EOF`\)+hs=s+2		   end=+^\s*EOF$+     contains=rubyExprSubst fold
+  syn region rubyString matchgroup=rubyStringDelimit start=+<<-\(EOS\|'EOS'\|"EOS"\|`EOS`\)+hs=s+2		   end=+^\s*EOS$+     contains=rubyExprSubst fold
   syn region rubyString matchgroup=rubyStringDelimit start=+<<\(\u\{3,}\|'\u\{3,}'\|"\u\{3,}"\|`\u\{3,}`\)+hs=s+2  end=+^\u\{3,}$+    fold
-  syn region rubyString matchgroup=rubyStringDelimit start=+<<\(EOF\|'EOF'\|"EOF"\|`EOF`\)+hs=s+2                  end=+^EOF$+        contains=rubyExprSubst fold
-  syn region rubyString matchgroup=rubyStringDelimit start=+<<\(EOS\|'EOS'\|"EOS"\|`EOS`\)+hs=s+2                  end=+^EOS$+        contains=rubyExprSubst fold
+  syn region rubyString matchgroup=rubyStringDelimit start=+<<\(EOF\|'EOF'\|"EOF"\|`EOF`\)+hs=s+2		   end=+^EOF$+	      contains=rubyExprSubst fold
+  syn region rubyString matchgroup=rubyStringDelimit start=+<<\(EOS\|'EOS'\|"EOS"\|`EOS`\)+hs=s+2		   end=+^EOS$+	      contains=rubyExprSubst fold
 else
  syn region rubyString matchgroup=rubyStringDelimit start=+\(class\s*\)\@<!<<\z(\h\w*\)\s*$+hs=s+2  end=+^\z1$+    contains=rubyExprSubst fold
  syn region rubyString matchgroup=rubyStringDelimit start=+\(class\s*\)\@<!<<"\z(.*\)"\s*$+hs=s+2   end=+^\z1$+    contains=rubyExprSubst fold
@@ -169,7 +169,7 @@ if !exists("ruby_no_expensive")
   syn region rubyFunction      matchgroup=rubyDefine start="^\s*def\s" matchgroup=NONE end="\ze\(\s\|(\|;\|$\)" skip="\.\|\(::\)" oneline fold
   syn region rubyClassOrModule matchgroup=rubyDefine start="^\s*\(class\|module\)\s"   end="<\|$\|;\|\>"he=e-1 oneline fold
 
-  syn region rubyBlock start="^\s*def\s\+"rs=s             matchgroup=rubyDefine end="\<end\>" contains=ALLBUT,rubyExprSubst,rubyTodo nextgroup=rubyFunction fold
+  syn region rubyBlock start="^\s*def\s\+"rs=s		   matchgroup=rubyDefine end="\<end\>" contains=ALLBUT,rubyExprSubst,rubyTodo nextgroup=rubyFunction fold
   syn region rubyBlock start="^\s*\(class\|module\)\>"rs=s matchgroup=rubyDefine end="\<end\>" contains=ALLBUT,rubyExprSubst,rubyTodo nextgroup=rubyClassOrModule fold
 
   " modifiers + redundant *do*
@@ -217,11 +217,11 @@ syn match  rubySharpBang     "#!.*"
 syn region rubyDocumentation start="^=begin" end="^=end.*$" contains=rubyTodo fold
 
 " Note: this is a hack to prevent 'keywords' being highlighted as such when used as method names
-syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(alias\|and\|begin\|break\|case\|catch\|class\|def\|do\|elsif\)\>"        transparent contains=NONE
-syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(else\|fail\|false\|ensure\|for\|end\|if\|in\|include\|lambda\)\>"        transparent contains=NONE
-syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(load\|loop\|module\|next\|nil\|not\|or\|proc\|raise\|require\)\>"        transparent contains=NONE
-syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(redo\|rescue\|retry\|return\|self\|super\|then\|throw\|true\|unless\)\>" transparent contains=NONE
-syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(undef\|until\|when\|while\|yield\|BEGIN\|END\|__FILE__\|__LINE__\)\>"    transparent contains=NONE
+syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(alias\|and\|begin\|break\|case\|catch\|class\|def\|do\|elsif\)\>"		transparent contains=NONE
+syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(else\|fail\|false\|ensure\|for\|end\|if\|in\|include\|lambda\)\>"		transparent contains=NONE
+syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(load\|loop\|module\|next\|nil\|not\|or\|proc\|raise\|require\)\>"		transparent contains=NONE
+syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(redo\|rescue\|retry\|return\|self\|super\|then\|throw\|true\|unless\)\>"	transparent contains=NONE
+syn match rubyKeywordAsMethod "\.\@<!\.\(\s*\n\s*\)*\(undef\|until\|when\|while\|yield\|BEGIN\|END\|__FILE__\|__LINE__\)\>"	transparent contains=NONE
 
 " __END__ directive:
 syn region rubyData matchgroup=rubyDataDirective start="^__END__$" matchgroup=NONE end="." skip="."

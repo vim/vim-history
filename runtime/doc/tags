@@ -93,6 +93,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'ch'	options.txt	/*'ch'*
 'character'	intro.txt	/*'character'*
 'charconvert'	options.txt	/*'charconvert'*
+'ci'	options.txt	/*'ci'*
 'cin'	options.txt	/*'cin'*
 'cindent'	options.txt	/*'cindent'*
 'cink'	options.txt	/*'cink'*
@@ -116,6 +117,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'confirm'	options.txt	/*'confirm'*
 'consk'	options.txt	/*'consk'*
 'conskey'	options.txt	/*'conskey'*
+'copyindent'	options.txt	/*'copyindent'*
 'cp'	options.txt	/*'cp'*
 'cpo'	options.txt	/*'cpo'*
 'cpoptions'	options.txt	/*'cpoptions'*
@@ -398,12 +400,14 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'nobk'	options.txt	/*'nobk'*
 'nobomb'	options.txt	/*'nobomb'*
 'nocf'	options.txt	/*'nocf'*
+'noci'	options.txt	/*'noci'*
 'nocin'	options.txt	/*'nocin'*
 'nocindent'	options.txt	/*'nocindent'*
 'nocompatible'	options.txt	/*'nocompatible'*
 'noconfirm'	options.txt	/*'noconfirm'*
 'noconsk'	options.txt	/*'noconsk'*
 'noconskey'	options.txt	/*'noconskey'*
+'nocopyindent'	options.txt	/*'nocopyindent'*
 'nocp'	options.txt	/*'nocp'*
 'nocscopetag'	options.txt	/*'nocscopetag'*
 'nocscopeverbose'	options.txt	/*'nocscopeverbose'*
@@ -479,6 +483,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'nonu'	options.txt	/*'nonu'*
 'nonumber'	options.txt	/*'nonumber'*
 'nopaste'	options.txt	/*'nopaste'*
+'nopi'	options.txt	/*'nopi'*
+'nopreserveindent'	options.txt	/*'nopreserveindent'*
 'nopreviewwindow'	options.txt	/*'nopreviewwindow'*
 'nopvw'	options.txt	/*'nopvw'*
 'noreadonly'	options.txt	/*'noreadonly'*
@@ -587,8 +593,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'pexpr'	options.txt	/*'pexpr'*
 'pfn'	options.txt	/*'pfn'*
 'pheader'	options.txt	/*'pheader'*
+'pi'	options.txt	/*'pi'*
 'pm'	options.txt	/*'pm'*
 'popt'	options.txt	/*'popt'*
+'preserveindent'	options.txt	/*'preserveindent'*
 'previewheight'	options.txt	/*'previewheight'*
 'previewwindow'	options.txt	/*'previewwindow'*
 'printdevice'	options.txt	/*'printdevice'*
@@ -1050,6 +1058,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +writebackup	various.txt	/*+writebackup*
 +xfontset	various.txt	/*+xfontset*
 +xim	various.txt	/*+xim*
++xsmp	various.txt	/*+xsmp*
++xsmp_interact	various.txt	/*+xsmp_interact*
 +xterm_clipboard	various.txt	/*+xterm_clipboard*
 +xterm_save	various.txt	/*+xterm_save*
 ,	motion.txt	/*,*
@@ -3364,6 +3374,7 @@ E620	options.txt	/*E620*
 E621	various.txt	/*E621*
 E622	if_cscop.txt	/*E622*
 E623	if_cscop.txt	/*E623*
+E624	various.txt	/*E624*
 E63	pattern.txt	/*E63*
 E64	pattern.txt	/*E64*
 E65	pattern.txt	/*E65*
@@ -3773,8 +3784,9 @@ ap	motion.txt	/*ap*
 apache-syntax	syntax.txt	/*apache-syntax*
 apache.vim	syntax.txt	/*apache.vim*
 append()	eval.txt	/*append()*
-arabic	arabic.txt	/*arabic*
 arabic.txt	arabic.txt	/*arabic.txt*
+arabicfonts	arabic.txt	/*arabicfonts*
+arabickeymap	arabic.txt	/*arabickeymap*
 argc()	eval.txt	/*argc()*
 argidx()	eval.txt	/*argidx()*
 arglist	editing.txt	/*arglist*
@@ -4557,6 +4569,7 @@ gui-toolbar	gui.txt	/*gui-toolbar*
 gui-vert-scroll	gui.txt	/*gui-vert-scroll*
 gui-w16	gui_w16.txt	/*gui-w16*
 gui-w32	gui_w32.txt	/*gui-w32*
+gui-w32-cmdargs	gui_w32.txt	/*gui-w32-cmdargs*
 gui-w32-dialogs	gui_w32.txt	/*gui-w32-dialogs*
 gui-w32-printing	gui_w32.txt	/*gui-w32-printing*
 gui-w32-start	gui_w32.txt	/*gui-w32-start*
@@ -4597,7 +4610,8 @@ hangul	hangulin.txt	/*hangul*
 hangulin.txt	hangulin.txt	/*hangulin.txt*
 has()	eval.txt	/*has()*
 hasmapto()	eval.txt	/*hasmapto()*
-hebrew	rileft.txt	/*hebrew*
+hebrew	hebrew.txt	/*hebrew*
+hebrew.txt	hebrew.txt	/*hebrew.txt*
 help	various.txt	/*help*
 help-context	help.txt	/*help-context*
 help-tags	tags	1
@@ -5286,6 +5300,7 @@ preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
 printcap-syntax	syntax.txt	/*printcap-syntax*
 printing	various.txt	/*printing*
+printing-formfeed	various.txt	/*printing-formfeed*
 progname-variable	eval.txt	/*progname-variable*
 progress-syntax	syntax.txt	/*progress-syntax*
 progress.vim	syntax.txt	/*progress.vim*
@@ -5410,6 +5425,7 @@ rgb.txt	gui_w32.txt	/*rgb.txt*
 rgview	starting.txt	/*rgview*
 rgvim	starting.txt	/*rgvim*
 right-justify	change.txt	/*right-justify*
+rileft	rileft.txt	/*rileft*
 rileft.txt	rileft.txt	/*rileft.txt*
 riscos	os_risc.txt	/*riscos*
 riscos-commandline	os_risc.txt	/*riscos-commandline*
@@ -6241,6 +6257,7 @@ xpm.vim	syntax.txt	/*xpm.vim*
 xterm-8-bit	term.txt	/*xterm-8-bit*
 xterm-8bit	term.txt	/*xterm-8bit*
 xterm-blink	syntax.txt	/*xterm-blink*
+xterm-blinking-cursor	syntax.txt	/*xterm-blinking-cursor*
 xterm-clipboard	term.txt	/*xterm-clipboard*
 xterm-codes	term.txt	/*xterm-codes*
 xterm-color	syntax.txt	/*xterm-color*
