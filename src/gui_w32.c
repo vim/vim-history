@@ -3394,6 +3394,8 @@ gui_mch_draw_string(
 {
     static int	*padding = NULL;
     static int	pad_size = 0;
+    const RECT	*pcliprect = NULL;
+    UINT	foptions = 0;
 #ifdef MULTI_BYTE
     static WCHAR *unicodebuf = NULL;
 #endif
@@ -3448,6 +3450,16 @@ gui_mch_draw_string(
 	DeleteBrush(hbr);
 
 	SetBkMode(s_hdc, TRANSPARENT);
+
+	/*
+	 * When drawing block cursor, prevent inverted character spilling
+	 * over character cell (can happen with bold/italic)
+	 */
+	if (flags & DRAW_CURSOR)
+	{
+	    pcliprect = &rc;
+	    foptions = ETO_CLIPPED;
+	}
     }
 #else
     /*
@@ -3484,11 +3496,11 @@ gui_mch_draw_string(
 	/* draw an incomplete composition character (korean) */
 	if (OrgLen == 1 && blink_state == BLINK_ON
 		&& (szComp = ImeGetTempComposition()) != NULL) // hangul
-	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row), 0, NULL, szComp,
-		    2, padding, TRUE);
+	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			       foptions, pcliprect, szComp, 2, padding, TRUE);
 	else
-	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row), 0, NULL, (char *)s,
-		    len, padding, FALSE);
+	    HanExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			 foptions, pcliprect, (char *)s, len, padding, FALSE);
     }
     else
 #endif
@@ -3507,14 +3519,14 @@ gui_mch_draw_string(
 			    MB_PRECOMPOSED,
 			    (char *)s, len,
 			    (LPWSTR)unicodebuf, UNIBUFSIZE)))
-		    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row), 0, NULL,
-						       unicodebuf, len, NULL);
+		    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+				  foptions, pcliprect, unicodebuf, len, NULL);
 	    }
 	}
 	else
 #endif
-	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row), 0, NULL,
-						     (char *)s, len, padding);
+	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+				foptions, pcliprect, (char *)s, len, padding);
     }
 
     if (flags & DRAW_UNDERL)

@@ -1453,10 +1453,13 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     gui_mch_set_font(font);
 #endif
 
+    draw_flags = 0;
+
     /* Set the color */
     bg_color = gui.back_pixel;
     if ((flags & GUI_MON_IS_CURSOR) && gui.in_focus)
     {
+	draw_flags |= DRAW_CURSOR;
 	fg_color = fg;
 	bg_color = bg;
     }
@@ -1499,13 +1502,19 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     if (!(flags & GUI_MON_NOCLEAR))
 	clip_may_clear_selection(gui.row, gui.row);
 
-    draw_flags = 0;
 
     /* If there's no bold font, then fake it */
     if ((highlight_mask & (HL_BOLD | HL_STANDOUT)) &&
 	    (gui.bold_font == 0 || (aep != NULL && aep->ae_u.gui.font != 0)))
-    {
 	draw_flags |= DRAW_BOLD;
+
+    /*
+     * When drawing bold or italic characters the spill-over from the left
+     * neighbor may be destroyed.  Backup to start redrawing just after a
+     * blank.
+     */
+    if ((draw_flags & DRAW_BOLD) || (highlight_mask & HL_ITALIC))
+    {
 	s -= back;
 	len += back;
 	col -= back;
