@@ -212,7 +212,6 @@ static void f_confirm __ARGS((VAR argvars, VAR retvar));
 static void f_cscope_connection __ARGS((VAR argvars, VAR retvar));
 static void f_cursor __ARGS((VAR argsvars, VAR retvar));
 static void f_delete __ARGS((VAR argvars, VAR retvar));
-static void f_inputdialog __ARGS((VAR argvars, VAR retvar));
 static void f_did_filetype __ARGS((VAR argvars, VAR retvar));
 static void f_escape __ARGS((VAR argvars, VAR retvar));
 static void f_eventhandler __ARGS((VAR argvars, VAR retvar));
@@ -253,6 +252,9 @@ static void f_iconv __ARGS((VAR argvars, VAR retvar));
 static void f_indent __ARGS((VAR argvars, VAR retvar));
 static void f_isdirectory __ARGS((VAR argvars, VAR retvar));
 static void f_input __ARGS((VAR argvars, VAR retvar));
+static void f_inputdialog __ARGS((VAR argvars, VAR retvar));
+static void f_inputrestore __ARGS((VAR argvars, VAR retvar));
+static void f_inputsave __ARGS((VAR argvars, VAR retvar));
 static void f_inputsecret __ARGS((VAR argvars, VAR retvar));
 static void f_last_buffer_nr __ARGS((VAR argvars, VAR retvar));
 static void f_libcall __ARGS((VAR argvars, VAR retvar));
@@ -2450,6 +2452,8 @@ static struct fst
     {"indent",		1, 1, f_indent},
     {"input",		1, 2, f_input},
     {"inputdialog",	1, 2, f_inputdialog},
+    {"inputrestore",	0, 0, f_inputrestore},
+    {"inputsave",	0, 0, f_inputsave},
     {"inputsecret",	1, 2, f_inputsecret},
     {"isdirectory",	1, 1, f_isdirectory},
     {"last_buffer_nr",	0, 0, f_last_buffer_nr},/* obsolete */
@@ -4916,6 +4920,54 @@ f_inputdialog(argvars, retvar)
     else
 #endif
 	f_input(argvars, retvar);
+}
+
+static garray_T	    ga_userinput = {0, 0, sizeof(tasave_T), 4, NULL};
+
+/*
+ * "inputrestore()" function
+ */
+/*ARGSUSED*/
+    static void
+f_inputrestore(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    if (ga_userinput.ga_len > 0)
+    {
+	--ga_userinput.ga_len;
+	++ga_userinput.ga_room;
+	restore_typeahead((tasave_T *)(ga_userinput.ga_data)
+						       + ga_userinput.ga_len);
+	retvar->var_val.var_number = 0; /* OK */
+    }
+    else if (p_verbose > 1)
+    {
+	msg((char_u *)_("called inputrestore() more often than inputsave()"));
+	retvar->var_val.var_number = 1; /* Failed */
+    }
+}
+
+/*
+ * "inputsave()" function
+ */
+/*ARGSUSED*/
+    static void
+f_inputsave(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    /* Add an entry to the stack of typehead storage. */
+    if (ga_grow(&ga_userinput, 1) == OK)
+    {
+	save_typeahead((tasave_T *)(ga_userinput.ga_data)
+						       + ga_userinput.ga_len);
+	++ga_userinput.ga_len;
+	--ga_userinput.ga_room;
+	retvar->var_val.var_number = 0; /* OK */
+    }
+    else
+	retvar->var_val.var_number = 1; /* Failed */
 }
 
 /*

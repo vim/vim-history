@@ -1302,6 +1302,11 @@ int vim_memcmp __ARGS((void *, void *, size_t));
 # endif
 #endif
 
+#if defined(UNIX) || defined(FEAT_GUI) || defined(OS2) || defined(VMS) \
+	|| defined(FEAT_CLIENTSERVER)
+# define USE_INPUT_BUF
+#endif
+
 #ifdef MSWIN
 /* On MS-Windows the third argument isn't size_t.  This matters for Win64,
  * where sizeof(size_t)==8, not 4 */

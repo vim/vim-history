@@ -668,6 +668,17 @@ typedef struct
     int		tb_no_abbr_cnt; /* nr of chars without abbrev. in tb_buf[] */
 } typebuf_T;
 
+/* Struct to hold the saved typeahead for save_typeahead(). */
+typedef struct
+{
+    typebuf_T		save_typebuf;
+    int			typebuf_valid;	    /* TRUE when save_typebuf valid */
+    struct buffheader	save_stuffbuff;
+#ifdef USE_INPUT_BUF
+    char_u		*save_inputbuf;
+#endif
+} tasave_T;
+
 /*
  * Used for conversion of terminal I/O and script files.
  */

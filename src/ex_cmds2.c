@@ -30,9 +30,7 @@ do_debug(cmd)
     int		save_State = State;
     int		save_did_emsg = did_emsg;
     int		save_cmd_silent = cmd_silent;
-    typebuf_T	saved_typebuf;
-    int		new_typebuf;
-    struct buffheader save_stuffbuff;
+    tasave_T	typeaheadbuf;
 # ifdef FEAT_EX_EXTRA
     int		save_ex_normal_busy;
 # endif
@@ -96,27 +94,18 @@ do_debug(cmd)
 	 * with the commands being executed.  Reset "ex_normal_busy" to avoid
 	 * the side effects of using ":normal". Save the stuff buffer and make
 	 * it empty. */
-	saved_typebuf = typebuf;
-	new_typebuf = (alloc_typebuf() == OK);
 # ifdef FEAT_EX_EXTRA
 	save_ex_normal_busy = ex_normal_busy;
 	ex_normal_busy = 0;
 # endif
-	save_stuffbuff = stuffbuff;
-	stuffbuff.bh_first.b_next = NULL;
+	save_typeahead(&typeaheadbuf);
 
 	cmdline = getcmdline_prompt('>', NULL, 0);
 
-	if (new_typebuf)
-	{
-	    free_typebuf();
-	    typebuf = saved_typebuf;
-	}
+	restore_typeahead(&typeaheadbuf);
 # ifdef FEAT_EX_EXTRA
 	ex_normal_busy = save_ex_normal_busy;
 # endif
-	free_buff(&stuffbuff);
-	stuffbuff = save_stuffbuff;
 
 	cmdline_row = msg_row;
 	if (cmdline != NULL)

@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.1.  Last change: 2002 Sep 07
+*eval.txt*      For Vim version 6.1.  Last change: 2003 Jan 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -804,6 +804,8 @@ iconv( {expr}, {from}, {to})	String  convert encoding of {expr}
 indent( {lnum})			Number  indent of line {lnum}
 input( {prompt} [, {text}])	String	get input from the user
 inputdialog( {prompt} [, {text}]) String  like input() but in a GUI dialog
+inputrestore()			Number  restore typeahead
+inputsave()			Number  save and clear typeahead
 inputsecret( {prompt} [, {text}]) String  like input() but hiding the text
 isdirectory( {directory})	Number	TRUE if {directory} is a directory
 libcall( {lib}, {func}, {arg})	String  call {func} in library {lib} with {arg}
@@ -1647,6 +1649,13 @@ input({prompt} [, {text}])				*input()*
 		default reply, as if the user typed this.
 		NOTE: This must not be used in a startup file, for the
 		versions that only run in GUI mode (e.g., the Win32 GUI).
+		Note: When input() is called from within a mapping it will
+		consume remaining characters from that mapping, because a
+		mapping is handled like the characters were typed.
+		Use |inputsave()| before input() and |inputrestore()|
+		after input() to avoid that.  Another solution is to avoid
+		that further characters follow in the mapping, e.g., by using
+		|:execute| or |:normal|.
 
 		Example: >
 			:if input("Coffee or beer? ") == "beer"
@@ -1654,6 +1663,13 @@ input({prompt} [, {text}])				*input()*
 			:endif
 <		Example with default text: >
 			:let color = input("Color? ", "white")
+<		Example with a mapping: >
+			:nmap \x :call GetFoo()<CR>:exe "/" . Foo<CR>
+			:function GetFoo()
+			:  call inputsave()
+			:  let g:Foo = input("enter search pattern: ")
+			:  call inputrestore()
+			:endfunction
 
 inputdialog({prompt} [, {text})				*inputdialog()*
 		Like input(), but when the GUI is running and text dialogs are
@@ -1665,6 +1681,20 @@ inputdialog({prompt} [, {text})				*inputdialog()*
 			:endif
 <		Hitting <Enter> works like pressing the OK button.  Hitting
 		<Esc> works like pressing the Cancel button.
+
+inputrestore()						*inputrestore()*
+		Restore typeahead that was saved with a previous inputsave().
+		Should be called the same number of times inputsave() is
+		called.  Calling it more often is harmless though.
+		Returns 1 when there is nothing to restore, 0 otherwise.
+
+inputsave()						*inputsave()*
+		Preserve typeahead (also from mappings) and clear it, so that
+		a following prompt gets input from the user.  Should be
+		followed by a matching inputrestore() after the prompt.  Can
+		be used several times, in which case there must be just as
+		many inputrestore() calls.
+		Returns 1 when out of memory, 0 otherwise.
 
 inputsecret({prompt} [, {text}])			*inputsecret()*
 		This function acts much like the |input()| function with but

@@ -1201,6 +1201,48 @@ save_typebuf()
     return OK;
 }
 
+#if defined(FEAT_EVAL) || defined(FEAT_EX_EXTRA) || defined(PROTO)
+
+/*
+ * Save all three kinds of typeahead, so that the user must type at a prompt.
+ */
+    void
+save_typeahead(tp)
+    tasave_T	*tp;
+{
+    tp->save_typebuf = typebuf;
+    tp->typebuf_valid = (alloc_typebuf() == OK);
+    if (!tp->typebuf_valid)
+	typebuf = tp->save_typebuf;
+
+    tp->save_stuffbuff = stuffbuff;
+    stuffbuff.bh_first.b_next = NULL;
+# ifdef USE_INPUT_BUF
+    tp->save_inputbuf = get_input_buf();
+# endif
+}
+
+/*
+ * Restore the typeahead to what it was before calling save_typeahead().
+ */
+    void
+restore_typeahead(tp)
+    tasave_T	*tp;
+{
+    if (tp->typebuf_valid)
+    {
+	free_typebuf();
+	typebuf = tp->save_typebuf;
+    }
+
+    free_buff(&stuffbuff);
+    stuffbuff = tp->save_stuffbuff;
+# ifdef USE_INPUT_BUF
+    set_input_buf(tp->save_inputbuf);
+# endif
+}
+#endif
+
 /*
  * Open a new script file for the ":source!" command.
  */
