@@ -7520,7 +7520,10 @@ ex_startinsert(eap)
 	restart_edit = 'a';
     }
     else
+    {
 	restart_edit = 'i';
+	curwin->w_curswant = 0;	    /* avoid MAXCOL */
+    }
 }
 
 /*
