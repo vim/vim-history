@@ -5724,7 +5724,11 @@ do_exedit(eap, old_curwin)
 	    readonlymode = TRUE;
 	setpcmark();
 	if (do_ecmd(0, (eap->cmdidx == CMD_enew ? NULL : eap->arg),
-		    NULL, eap, eap->do_ecmd_lnum,
+		    NULL, eap,
+		    /* ":edit" goes to first line if Vi compatible */
+		    (*eap->arg == NUL && eap->do_ecmd_lnum == 0
+				      && vim_strchr(p_cpo, CPO_GOTO1) != NULL)
+					       ? ECMD_ONE : eap->do_ecmd_lnum,
 		    (P_HID(curbuf) ? ECMD_HIDE : 0)
 		    + (eap->forceit ? ECMD_FORCEIT : 0)
 #ifdef FEAT_LISTCMDS
