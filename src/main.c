@@ -1604,6 +1604,11 @@ scripterror:
 	    curbuf = curwin->w_buffer;
 	    if (curbuf->b_ml.ml_mfp == NULL)
 	    {
+#ifdef FEAT_FOLDING
+		/* Set 'foldlevel' to 'foldlevelstart' if it's not negative. */
+		if (p_fdls >= 0)
+		    curwin->w_p_fdl = p_fdls;
+#endif
 #if defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG)
 		/* When getting the ATTENTION prompt here, use a dialog */
 		swap_exists_action = SEA_DIALOG;
