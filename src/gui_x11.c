@@ -3450,7 +3450,8 @@ get_toolbar_pixmap(menu, sen, insen)
     {
 	/* Use the file argument: first as an absolute path (with extension),
 	 * then as a file name (without extension). */
-	createXpmImages(menu->iconfile, NULL, sen, insen);
+	expand_env(menu->iconfile, buf, MAXPATHL);
+	createXpmImages(buf, NULL, sen, insen);
 	if (*sen == (Pixmap)0
 		&& gui_find_bitmap(menu->name, buf, "xpm") == OK
 		&& buf[0] != NUL)
