@@ -62,7 +62,7 @@ static long dos_packet __ARGS((struct MsgPort *, long, long));
 static int lock2name __ARGS((BPTR lock, char_u *buf, long   len));
 static void out_num __ARGS((long n));
 static struct FileInfoBlock *get_fib __ARGS((char_u *));
-static int sortcmp __ARGS((char **a, char **b));
+static int sortcmp __ARGS((const void *a, const void *b));
 
 static BPTR		raw_in = (BPTR)NULL;
 static BPTR		raw_out = (BPTR)NULL;
@@ -233,7 +233,9 @@ mch_suspend()
     suspend_shell();
 }
 
-#define DOS_LIBRARY	((UBYTE *) "dos.library")
+#ifndef DOS_LIBRARY
+# define DOS_LIBRARY	((UBYTE *)"dos.library")
+#endif
 
     void
 mch_init()
@@ -304,7 +306,7 @@ mch_check_win(argc, argv)
     static char_u   *(constrings[3]) = {(char_u *)"con:0/0/662/210/",
 					(char_u *)"con:0/0/640/200/",
 					(char_u *)"con:0/0/320/200/"};
-    static char_u   winerr[] = _("VIM: Can't open window!\n");
+    static char_u   winerr[] = (char_u *)N_("VIM: Can't open window!\n");
     struct WBArg    *argp;
     int		    ac;
     char	    *av;
@@ -316,7 +318,9 @@ mch_check_win(argc, argv)
 /*
  * check if we are running under DOS 2.0x or higher
  */
-    if (DosBase = OpenLibrary(DOS_LIBRARY, 37L))
+    DosBase = OpenLibrary(DOS_LIBRARY, 37L);
+    if (DosBase != NULL)
+    /* if (((struct Library *)DOSBase)->lib_Version >= 37) */
     {
 	CloseLibrary(DosBase);
 #ifdef FEAT_ARP
@@ -394,7 +398,7 @@ mch_check_win(argc, argv)
 	}
 	if (raw_in == (BPTR)NULL)	/* all three failed */
 	{
-	    mch_errmsg((char *)winerr);
+	    mch_errmsg(_(winerr));
 	    goto exit;
 	}
 	raw_out = raw_in;
@@ -412,7 +416,7 @@ mch_check_win(argc, argv)
      * Make a unique name for the temp file (which we will not delete!).
      * Use a pointer on the stack (nobody else will be using it).
      */
-    sprintf((char *)buf1, "t:nc%ld", (char *)buf1);
+    sprintf((char *)buf1, "t:nc%ld", (long)buf1);
     if ((fh = Open((UBYTE *)buf1, (long)MODE_NEWFILE)) == (BPTR)NULL)
     {
 	mch_errmsg(_("Cannot create "));
@@ -499,7 +503,7 @@ mch_check_win(argc, argv)
     if (i == 3)	    /* all three failed */
     {
 	DeleteFile((UBYTE *)buf1);
-	mch_errmsg((char *)winerr);
+	mch_errmsg(_(winerr));
 	goto exit;
     }
     exitval = 0;    /* The Execute succeeded: exit this program */
@@ -1198,7 +1202,7 @@ mch_call_shell(cmd, options)
     else if (x)
 # endif
     {
-	if (x = IoErr())
+	if ((x = IoErr()) != 0)
 	{
 	    if (!(options & SHELL_SILENT))
 	    {
@@ -1314,7 +1318,7 @@ mch_call_shell(cmd, options)
     vim_free(shellcmd);
 #endif	/* AZTEC_C */
 
-    if (mydir = CurrentDir(mydir))	/* make sure we stay in the same directory */
+    if ((mydir = CurrentDir(mydir)) != 0) /* make sure we stay in the same directory */
 	UnLock(mydir);
     if (tmode == TMODE_RAW)
 	settmode(TMODE_RAW);		/* set to raw mode */
@@ -1478,9 +1482,11 @@ Return:
 
     static int
 sortcmp(a, b)
-    char **a, **b;
+    const void *a, *b;
 {
-    return pathcmp(*a, *b);
+    char_u *s = *(char **)a,
+           *t = *(char **)b;
+    return pathcmp(s, t);
 }
 
 /*
