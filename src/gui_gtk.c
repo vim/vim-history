@@ -1099,7 +1099,7 @@ adjustment_value_changed(GtkAdjustment *adjustment, gpointer data)
 
 #ifdef FEAT_XIM
     /* cancel any preediting */
-    if (preedit_start_col != MAXCOL)
+    if (im_is_preediting())
 	xim_reset();
 #endif
 

@@ -772,6 +772,10 @@ u_sync()
 {
     if (curbuf->b_u_synced)
 	return;		    /* already synced */
+#if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+    if (im_is_preediting())
+	return;		    /* XIM is busy, don't break an undo sequence */
+#endif
     if (p_ul < 0)
 	curbuf->b_u_synced = TRUE;  /* no entries, nothing to do */
     else

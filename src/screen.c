@@ -3745,17 +3745,22 @@ win_line(wp, lnum, startrow, endrow)
 	    char_attr = extra_attr;
 
 #if defined(FEAT_XIM) && defined(FEAT_GUI_GTK)
+	/* XIM don't send preedit_start and preedit_end, but they send
+	 * preedit_changed and commit.  Thus Vim can't set "im_is_active", use
+	 * im_is_preediting() here. */
 	if (xic != NULL
 		&& lnum == curwin->w_cursor.lnum
 		&& (State & INSERT)
-		&& im_get_status()
 		&& !p_imdisable
-		&& preedit_start_col != MAXCOL
+		&& im_is_preediting()
 		&& draw_state == WL_LINE)
 	{
 	    colnr_T tcol;
 
-	    getvcol(curwin, &(curwin->w_cursor), &tcol, NULL, NULL);
+	    if (preedit_end_col == MAXCOL)
+		getvcol(curwin, &(curwin->w_cursor), &tcol, NULL, NULL);
+	    else
+		tcol = preedit_end_col;
 	    if ((long)preedit_start_col <= vcol && vcol < (long)tcol)
 	    {
 		if (feedback_old_attr < 0)
