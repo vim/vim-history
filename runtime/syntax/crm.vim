@@ -2,12 +2,13 @@
 " Language:	    CRM114
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/crm/
-" Latest Revision:  2004-04-22
+" Latest Revision:  2004-05-22
+" arch-tag:	    a3d3eaaf-4700-44ff-b332-f6c42c036883
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Todo
@@ -37,24 +38,24 @@ syn match   crmLabel	    '^\s*:[[:graph:]]\+:'
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_crm_syn_inits")
-    if version < 508
-	let did_crm_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_crm_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink crmTodo	Todo
-    HiLink crmComment	Comment
-    HiLink crmVariable	Identifier
-    HiLink crmSpecial	SpecialChar
-    HiLink crmStatement	Statement
-    HiLink crmRegex	String
-    HiLink crmLabel	Label
+  HiLink crmTodo	Todo
+  HiLink crmComment	Comment
+  HiLink crmVariable	Identifier
+  HiLink crmSpecial	SpecialChar
+  HiLink crmStatement	Statement
+  HiLink crmRegex	String
+  HiLink crmLabel	Label
 
-    delcommand HiLink
+  delcommand HiLink
 endif
 
 let b:current_syntax = "crm"
 
-" vim: set sts=4 sw=4:
+" vim: set sts=2 sw=2:

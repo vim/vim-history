@@ -2,7 +2,7 @@
 " Language:	    GNU Arch inventory file.
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/arch/
-" Latest Revision:  2004-04-26
+" Latest Revision:  2004-05-22
 " arch-tag:	    529d60c4-53d8-4d3a-80d6-54ada86d9932
 
 if version < 600

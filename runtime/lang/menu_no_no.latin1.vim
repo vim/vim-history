@@ -1,7 +1,7 @@
 " Menu Translations:	Norwegian / Norsk (Bokmål)
 " Maintainer:		Øyvind A. Holm <sunny@sunbase.org>
-" Last Change:		2004-05-13 11:47:45 +0200
-" menu_no_no.latin1.vim 284 2004-05-13 09:47:45Z sunny
+" Last Change:		2004-05-16 20:00:52 +0200
+" menu_no_no.latin1.vim 289 2004-05-16 18:00:52Z sunny
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -15,23 +15,21 @@ if &enc != "cp1252" && &enc != "iso-8859-15"
 	scriptencoding latin1
 endif
 
-menutrans &File		&Fil " {{{
+menutrans &File		&Fil
 	menutrans &Open\.\.\.<Tab>:e		&Åpne \.\.\.<Tab>:e
 	menutrans Sp&lit-Open\.\.\.<Tab>:sp	Åpne\ i\ nytt\ &vindu \.\.\.<Tab>:sp
 	menutrans &New<Tab>:enew		&Ny\ fil<Tab>:enew
 	menutrans &Close<Tab>:close		L&ukk<Tab>:close
 	menutrans &Save<Tab>:w			&Lagre<Tab>:w
 	menutrans Save\ &As\.\.\.<Tab>:sav	Lagre\ s&om \.\.\.<Tab>:sav
-if has("diff")
+	if has("diff")
 	menutrans Split\ &Diff\ with\.\.\.	Sa&mmenlign\ med\ ny\ fil \.\.\.
 	menutrans Split\ Patched\ &By\.\.\.	&Patch\ i\ nytt\ vindu \.\.\.
-endif
+	endif
 	menutrans &Print			&Skriv\ ut
 	menutrans Sa&ve-Exit<Tab>:wqa		Lagre\ o&g\ avslutt<Tab>:wqa
 	menutrans E&xit<Tab>:qa			&Avslutt<Tab>:qa
-" }}}
-
-menutrans &Edit		&Rediger " {{{
+menutrans &Edit		&Rediger
 	menutrans &Undo<Tab>u						&Angre<Tab>u
 	menutrans &Redo<Tab>^R						&Gjenopprett<Tab>^R
 	menutrans Rep&eat<Tab>\.					&Repeter<Tab>\.
@@ -40,7 +38,7 @@ menutrans &Edit		&Rediger " {{{
 	menutrans &Paste<Tab>"+gP					&Lim\ inn<Tab>"+gP
 	menutrans Put\ &Before<Tab>[p					Lim\ i&nn\ før\ markør<Tab>[p
 	menutrans Put\ &After<Tab>]p					Lim\ inn\ &etter\ markør<Tab>]p
-	menutrans &Select\ all<Tab>ggVG					&Merk\ alt<Tab>ggVG
+	menutrans &Select\ All<Tab>ggVG					&Merk\ alt<Tab>ggVG
 	menutrans &Find\.\.\.						&Søk \.\.\.
 	menutrans Find\ and\ Rep&lace\.\.\.				S&øk\ og\ erstatt \.\.\.
 	menutrans Settings\ &Window					&Innstillinger
@@ -78,13 +76,11 @@ menutrans &Edit		&Rediger " {{{
 	menutrans C&olor\ Scheme					&Fargekart
 	menutrans &Keymap						&Tastaturoppsett
 	menutrans Select\ Fo&nt\.\.\.					Skriftt&ype \.\.\.
-" }}}
-
-menutrans &Tools	&Verktøy " {{{
+menutrans &Tools	&Verktøy
 	menutrans &Jump\ to\ this\ tag<Tab>g^]			&Hopp\ til\ tag\ under\ markør<Tab>g^]
 	menutrans Jump\ &back<Tab>^T				Hopp\ &tilbake<Tab>^T
 	menutrans Build\ &Tags\ File				Lag\ ta&gfil
-if has("folding")
+	if has("folding")
 	menutrans &Folding					Fol&der
 		menutrans &Enable/Disable\ folds<Tab>zi			&Folder\ av/på<Tab>zi
 		menutrans &View\ Cursor\ Line<Tab>zv			Se\ &markørlinje<Tab>zv
@@ -104,13 +100,13 @@ if has("folding")
 		menutrans &Delete\ Fold<Tab>zd				&Slett\ fold<Tab>zd
 		menutrans Delete\ &All\ Folds<Tab>zD			Sl&ett\ alle\ folder<Tab>zD
 		menutrans Fold\ col&umn\ width				Bredde\ på\ fold&kolonne
-endif
-if has("diff")
+	endif
+	if has("diff")
 	menutrans &Diff						&Forskjeller
 		menutrans &Update					&Oppdater
 		menutrans &Get\ Block					&Hent\ blokk
 		menutrans &Put\ Block					&Putt\ blokk
-endif
+	endif
 	menutrans &Make<Tab>:make				&Kjør\ "make"<Tab>:make
 	menutrans &List\ Errors<Tab>:cl				&List\ feil<Tab>:cl
 	menutrans L&ist\ Messages<Tab>:cl!			List\ &meldinger<Tab>:cl!
@@ -125,9 +121,7 @@ endif
 	menutrans &Set\ Compiler				&Velg\ kompilator
 	menutrans &Convert\ to\ HEX<Tab>:%!xxd			Konverter\ til\ hek&sadesimal<Tab>:%!xxd
 	menutrans Conve&rt\ back<Tab>:%!xxd\ -r			K&onverter\ tilbake<Tab>:%!xxd\ -r
-" }}}
-
-menutrans &Syntax	&Syntaks " {{{
+menutrans &Syntax	&Syntaks
 	menutrans &Show\ filetypes\ in\ menu	&Vis\ filtyper\ i\ menyen
 	menutrans Set\ '&syntax'\ only		Sett\ bare\ '&syntax'
 	menutrans Set\ '&filetype'\ too		Sett\ '&filetype'\ også
@@ -138,18 +132,14 @@ menutrans &Syntax	&Syntaks " {{{
 	menutrans Co&lor\ test			Far&getest
 	menutrans &Highlight\ test		Uthevings&test
 	menutrans &Convert\ to\ HTML		Konverter\ til\ &HTML
-" }}}
-
-menutrans &Buffers	&Buffer " {{{
+menutrans &Buffers	&Buffer
 	menutrans &Refresh\ menu	&Oppdater
 	menutrans Delete		&Slett
 	menutrans &Alternate		&Veksle
 	menutrans &Next			&Neste
 	menutrans &Previous		&Forrige
 	menutrans [No\ File]		[Uten\ navn]
-" }}}
-
-menutrans &Window	Vi&ndu " {{{
+menutrans &Window	Vi&ndu
 	menutrans &New<Tab>^Wn			&Nytt<Tab>^Wn
 	menutrans S&plit<Tab>^Ws		&Splitt<Tab>^Ws
 	menutrans Sp&lit\ To\ #<Tab>^W^^	Splitt\ &til\ #<Tab>^W^^
@@ -169,9 +159,7 @@ menutrans &Window	Vi&ndu " {{{
 	menutrans M&in\ Height<Tab>^W1_		M&inimal\ høyde<Tab>^W1_
 	menutrans Max\ &Width<Tab>^W\|		Ma&ksimal\ bredde<Tab>^W\|
 	menutrans Min\ Widt&h<Tab>^W1\|		Minimal\ &bredde<Tab>^W1\|
-" }}}
-
-menutrans &Help		&Hjelp " {{{
+menutrans &Help		&Hjelp
 	menutrans &Overview<Tab><F1>	&Oversikt<Tab><F1>
 	menutrans &User\ Manual		&Brukerhåndbok
 	menutrans &How-to\ links	&Førstehjelp
@@ -182,9 +170,8 @@ menutrans &Help		&Hjelp " {{{
 	menutrans O&rphans		Fo&reldreløse
 	menutrans &Version		&Versjon
 	menutrans &About		&Om\ Vim
-" }}}
 
-" Popup {{{
+" Popup
 	menutrans &Undo			&Angre
 	menutrans Cu&t			Klipp\ &ut
 	menutrans &Copy			&Kopier
@@ -195,9 +182,8 @@ menutrans &Help		&Hjelp " {{{
 	menutrans Select\ &Line		Marker\ lin&je
 	menutrans Select\ &Block	Marker\ &blokk
 	menutrans Select\ &All		Marker\ al&t
-" }}}
 
-" Verktøylinje {{{
+" Verktøylinje
 if has("toolbar")
 	if exists("*Do_toolbar_tmenu")
 		delfunction Do_toolbar_tmenu
@@ -234,16 +220,14 @@ if has("toolbar")
 		tmenu ToolBar.FindHelp		Søk i hjelpen ...
 	endfunction
 endif
-" }}}
 
-" Dialogmeldinger {{{
+" Dialogmeldinger
 	let g:menutrans_no_file = "[Uten navn]"
 	let g:menutrans_help_dialog = "Skriv en kommando eller ord du vil ha hjelp om:\n\nLegg til i_ i begynnelsen for inndatametoder (f.eks.: i_CTRL-X)\nLegg til c_ i begynnelsen for kommandoer som redigerer kommandolinjen (f.eks.: c_<Del>)\nLegg til ' i begynnelsen for et valgnavn (f.eks.: 'shiftwidth')"
 	let g:menutrans_path_dialog = "Skriv søkesti for filer.\nSkill katalognavn med komma."
 	let g:menutrans_tags_dialog = "Skriv navn på tagfiler.\nSkill navnene med komma."
 	let g:menutrans_textwidth_dialog = "Velg ny tekstbredde (0 for å forhindre formatering): "
 	let g:menutrans_fileformat_dialog = "Velg filformat som filen skal lagres med"
-" }}}
 
 "    vim: set ts=8 sw=8 :
-" vim600: set fdm=marker :
+" vim600: set fdm=indent :

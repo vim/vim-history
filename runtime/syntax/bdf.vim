@@ -1,13 +1,14 @@
 " Vim syntax file
 " Language:	    BDF Font definition
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/bdf/
+" Latest Revision:  2004-05-06
+" arch-tag:	    b696b6ba-af24-41ba-b4eb-d248495eca68
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " numbers
@@ -17,7 +18,7 @@ syn match   bdfNumber	    display "\<\(\x\+\|\d\+\.\d\+\)\>"
 syn region  bdfComment	    start="^COMMENT\>" end="$" contains=bdfTodo
 
 " todo
-syn keyword bdfTodo	    contained TODO
+syn keyword bdfTodo	    contained TODO FIXME XXX NOTE
 
 " strings
 syn region  bdfString	    start=+"+ skip=+""+ end=+"+
@@ -50,9 +51,9 @@ syn region  bdfCharDefinition transparent start="^STARTCHAR\>" matchgroup=bdfDel
 syn region  bdfFontDefinition transparent matchgroup=bdfDelim start="^STARTFONT\>" end="^ENDFONT\>" contains=bdfProperties,bdfDefinition,bdfCharDefinition,bdfNumber,bdfComment
 
 if exists("bdf_minlines")
-    let b:bdf_minlines = bdf_minlines
+  let b:bdf_minlines = bdf_minlines
 else
-    let b:bdf_minlines = 50
+  let b:bdf_minlines = 50
 endif
 exec "syn sync minlines=" . b:bdf_minlines
 
@@ -60,26 +61,26 @@ exec "syn sync minlines=" . b:bdf_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_bdf_syn_inits")
-    if version < 508
-	let did_bdf_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_bdf_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink bdfComment		Comment
-    HiLink bdfTodo		Todo
-    HiLink bdfNumber		Number
-    HiLink bdfString		String
-    HiLink bdfProperties	Keyword
-    HiLink bdfXProperties	Keyword
-    HiLink bdfCharProperties	Structure
-    HiLink bdfDelim		Delimiter
-    HiLink bdfCharName		String
-    HiLink bdfCharNameError	Error
-    delcommand HiLink
+  HiLink bdfComment		Comment
+  HiLink bdfTodo		Todo
+  HiLink bdfNumber		Number
+  HiLink bdfString		String
+  HiLink bdfProperties	Keyword
+  HiLink bdfXProperties	Keyword
+  HiLink bdfCharProperties	Structure
+  HiLink bdfDelim		Delimiter
+  HiLink bdfCharName		String
+  HiLink bdfCharNameError	Error
+  delcommand HiLink
 endif
 
 let b:current_syntax = "bdf"
 
-" vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

@@ -2,21 +2,22 @@
 " Language:	    pinfo(1) configuration file
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/
-" Latest Revision:  2004-04-20
+" Latest Revision:  2004-05-22
+" arch-tag:	    da2cfa1c-0350-45dc-b2d2-2bf3915bd0a2
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Set iskeyword since we need `-' (and potentially others) in keywords.
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
 if version >= 600
-    command -nargs=1 SetIsk setlocal iskeyword=<args>
+  command -nargs=1 SetIsk setlocal iskeyword=<args>
 else
-    command -nargs=1 SetIsk set iskeyword=<args>
+  command -nargs=1 SetIsk set iskeyword=<args>
 endif
 SetIsk @,48-57,_,-
 delcommand SetIsk
@@ -25,7 +26,7 @@ delcommand SetIsk
 syn case ignore
 
 " Todo
-syn keyword pinfoTodo	contained FIXME TODO XXX
+syn keyword pinfoTodo	contained FIXME TODO XXX NOTE
 
 " Comments
 syn region  pinfoComment    start='^#' end='$' contains=pinfoTodo
@@ -90,44 +91,44 @@ syn keyword pinfoConstants  TRUE FALSE YES NO
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_pinfo_syn_inits")
-    if version < 508
-	let did_pinfo_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-	command -nargs=+ HiDef hi <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-	command -nargs=+ HiDef hi def <args>
-    endif
+  if version < 508
+    let did_pinfo_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+    command -nargs=+ HiDef hi <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+    command -nargs=+ HiDef hi def <args>
+  endif
 
-    HiLink pinfoTodo		Todo
-    HiLink pinfoComment		Comment
-    HiLink pinfoOptions		Keyword
-    HiLink pinfoColors		Keyword
-    HiLink pinfoColorDefault	Normal
-    HiDef pinfoColorBold	cterm=bold
-    HiDef pinfoColorNoBold	cterm=none
-    " we can't access the blink attribute from Vim atm
-    HiDef pinfoColorBlink	cterm=inverse
-    HiDef pinfoColorNoBlink	cterm=none
-    HiDef pinfoColorBlack	ctermfg=Black	    guifg=Black
-    HiDef pinfoColorRed		ctermfg=DarkRed	    guifg=DarkRed
-    HiDef pinfoColorGreen	ctermfg=DarkGreen   guifg=DarkGreen
-    HiDef pinfoColorYellow	ctermfg=DarkYellow  guifg=DarkYellow
-    HiDef pinfoColorBlue	ctermfg=DarkBlue    guifg=DarkBlue
-    HiDef pinfoColorMagenta	ctermfg=DarkMagenta guifg=DarkMagenta
-    HiDef pinfoColorCyan	ctermfg=DarkCyan    guifg=DarkCyan
-    HiDef pinfoColorWhite	ctermfg=LightGray   guifg=LightGray
-    HiLink pinfoKeys		Keyword
-    HiLink pinfoSpecialKeys	SpecialChar
-    HiLink pinfoSimpleKey	String
-    HiLink pinfoSimpleKeyEscape	SpecialChar
-    HiLink pinfoKeycode		Number
-    HiLink pinfoConstants	Constant
+  HiLink pinfoTodo		Todo
+  HiLink pinfoComment		Comment
+  HiLink pinfoOptions		Keyword
+  HiLink pinfoColors		Keyword
+  HiLink pinfoColorDefault	Normal
+  HiDef pinfoColorBold		cterm=bold
+  HiDef pinfoColorNoBold	cterm=none
+  " we can't access the blink attribute from Vim atm
+  HiDef pinfoColorBlink		cterm=inverse
+  HiDef pinfoColorNoBlink	cterm=none
+  HiDef pinfoColorBlack		ctermfg=Black	    guifg=Black
+  HiDef pinfoColorRed		ctermfg=DarkRed	    guifg=DarkRed
+  HiDef pinfoColorGreen		ctermfg=DarkGreen   guifg=DarkGreen
+  HiDef pinfoColorYellow	ctermfg=DarkYellow  guifg=DarkYellow
+  HiDef pinfoColorBlue		ctermfg=DarkBlue    guifg=DarkBlue
+  HiDef pinfoColorMagenta	ctermfg=DarkMagenta guifg=DarkMagenta
+  HiDef pinfoColorCyan		ctermfg=DarkCyan    guifg=DarkCyan
+  HiDef pinfoColorWhite		ctermfg=LightGray   guifg=LightGray
+  HiLink pinfoKeys		Keyword
+  HiLink pinfoSpecialKeys	SpecialChar
+  HiLink pinfoSimpleKey		String
+  HiLink pinfoSimpleKeyEscape	SpecialChar
+  HiLink pinfoKeycode		Number
+  HiLink pinfoConstants	Constant
 
-    delcommand HiLink
-    delcommand HiDef
+  delcommand HiLink
+  delcommand HiDef
 endif
 
 let b:current_syntax = "pinfo"
 
-" vim: set sts=4 sw=4:
+" vim: set sts=2 sw=2:

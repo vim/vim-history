@@ -2,12 +2,13 @@
 " Language:	    calendar(1) file.
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/calendar/
-" Latest Revision:  2004-04-21
+" Latest Revision:  2004-05-06
+" arch-tag:	    d714127d-469d-43bd-9c79-c2a46ec54535
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Todo
@@ -68,36 +69,36 @@ exec "syn sync ccomment calendarComment minlines=" . b:c_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_calendar_syn_inits")
-    if version < 508
-	let did_calendar_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_calendar_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink calendarTodo		Todo
-    HiLink calendarComment	Comment
-    HiLink calendarCppString	String
-    HiLink calendarSpecial	SpecialChar
-    HiLink calendarPreCondit	PreCondit
-    HiLink calendarCppOut	Comment
-    HiLink calendarCppOut2	calendarCppOut
-    HiLink calendarCppSkip	calendarCppOut
-    HiLink calendarIncluded	String
-    HiLink calendarInclude	Include
-    HiLink calendarDefine	Macro
-    HiLink calendarPreProc	PreProc
-    HiLink calendarKeyword	Keyword
-    HiLink calendarNumber	Number
-    HiLink calendarMonth	String
-    HiLink calendarWeekday	String
-    HiLink calendarWeekdayMod	Special
-    HiLink calendarTime		Number
-    HiLink calendarVariable	Identifier
+  HiLink calendarTodo		Todo
+  HiLink calendarComment	Comment
+  HiLink calendarCppString	String
+  HiLink calendarSpecial	SpecialChar
+  HiLink calendarPreCondit	PreCondit
+  HiLink calendarCppOut	Comment
+  HiLink calendarCppOut2	calendarCppOut
+  HiLink calendarCppSkip	calendarCppOut
+  HiLink calendarIncluded	String
+  HiLink calendarInclude	Include
+  HiLink calendarDefine	Macro
+  HiLink calendarPreProc	PreProc
+  HiLink calendarKeyword	Keyword
+  HiLink calendarNumber	Number
+  HiLink calendarMonth	String
+  HiLink calendarWeekday	String
+  HiLink calendarWeekdayMod	Special
+  HiLink calendarTime		Number
+  HiLink calendarVariable	Identifier
 
-    delcommand HiLink
+  delcommand HiLink
 endif
 
 let b:current_syntax = "calendar"
 
-" vim: set sts=4 sw=4:
+" vim: set sts=2 sw=2:

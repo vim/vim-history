@@ -1,7 +1,7 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-" Last Change:	Apr 21, 2004
+" Last Change:	Jun 04, 2004
 " Maintainer:	Charles E. Campbell, Jr. PhD   <drchipNOSPAM at campbellfamily.biz>
-" Version:	43
+" Version:	44
 " License:	Vim License  (see vim's :help license)
 "
 "  But be doers of the word, and not only hearers, deluding your own selves
@@ -12,7 +12,7 @@
 if exists("loaded_netrw") || &cp
   finish
 endif
-let loaded_netrw = "v36"
+let loaded_netrw = "v44"
 let s:save_cpo   = &cpo
 set cpo&vim
 
@@ -59,7 +59,7 @@ if !exists("g:netrw_dav_cmd")
   let g:netrw_dav_cmd	= "cadaver"
 endif
 if !exists("g:netrw_rsync_cmd")
-  let g:netrw_rsync_cmd	= "rsync -a"
+  let g:netrw_rsync_cmd	= "rsync"
 endif
 if !exists("g:netrw_fetch_cmd")
  if executable("fetch")
@@ -259,6 +259,7 @@ fun! s:NetRead(...)
     let uid_machine = g:netrw_machine
    endif
   endif
+"  call Decho("executing: !".g:netrw_rcp_cmd." ".s:netrw_rcpmode." ".uid_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile)
   exe "!".g:netrw_rcp_cmd." ".s:netrw_rcpmode." ".uid_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
   let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
   let b:netrw_lastfile = choice
@@ -273,8 +274,10 @@ fun! s:NetRead(...)
     exe "put ='".g:netrw_ftpmode."'"
     exe "put ='get ".netrw_fname." ".tmpfile."'"
     if exists("g:netrw_port") && g:netrw_port != ""
+"     call Decho("executing: %!".g:netrw_ftp_cmd." -i ".g:netrw_machine." ".g:netrw_port)
      exe "%!".g:netrw_ftp_cmd." -i ".g:netrw_machine." ".g:netrw_port
     else
+"     call Decho("executing: %!".g:netrw_ftp_cmd." -i ".g:netrw_machine)
      exe "%!".g:netrw_ftp_cmd." -i ".g:netrw_machine
     endif
     " If the result of the ftp operation isn't blank, show an error message (tnx to Doug Claar)
@@ -317,6 +320,7 @@ fun! s:NetRead(...)
    " -n  win32: quit being obnoxious about password
 "   call Decho('performing ftp -i -n')
    norm 1Gdd
+"   call Decho("executing: %!".g:netrw_ftp_cmd." -i -n")
    exe "%!".g:netrw_ftp_cmd." -i -n"
    " If the result of the ftp operation isn't blank, show an error message (tnx to Doug Claar)
    if getline(1) !~ "^$"
@@ -337,8 +341,10 @@ fun! s:NetRead(...)
    endif
    if g:netrw_cygwin == 1
     let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
+"    call Decho("executing: !".g:netrw_scp_cmd.useport." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile)
     exe "!".g:netrw_scp_cmd.useport." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile
    else
+"    call Decho("executing: !".g:netrw_scp_cmd.useport." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile)
     exe "!".g:netrw_scp_cmd.useport." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
    endif
    let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
@@ -354,6 +360,7 @@ fun! s:NetRead(...)
 
    if match(b:netrw_fname,"#") == -1
     " simple wget
+"    call Decho("executing: !".g:netrw_http_cmd." ".tmpfile." http://".g:netrw_machine.escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_http_cmd." ".tmpfile." http://".g:netrw_machine.escape(b:netrw_fname,' ?&')
     let result = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
 
@@ -363,6 +370,7 @@ fun! s:NetRead(...)
     let netrw_tag = substitute(b:netrw_fname,"^.*#","","")
 "	call Decho("netrw_html<".netrw_html.">")
 "	call Decho("netrw_tag <".netrw_tag.">")
+"    call Decho("executing: !".g:netrw_http_cmd." ".tmpfile." http://".g:netrw_machine.netrw_html)
     exe "!".g:netrw_http_cmd." ".tmpfile." http://".g:netrw_machine.netrw_html
     let result = s:NetGetFile(readcmd, tmpfile, b:netrw_method)
 "    call Decho('<\s*a\s*name=\s*"'.netrw_tag.'"/')
@@ -395,6 +403,7 @@ fun! s:NetRead(...)
 
    " perform cadaver operation:
    norm 1Gdd
+"   call Decho("executing: %!".g:netrw_dav_cmd)
    exe "%!".g:netrw_dav_cmd
    bd!
    let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
@@ -406,8 +415,10 @@ fun! s:NetRead(...)
 "   call Decho("read via rsync (method #7)")
    if g:netrw_cygwin == 1
     let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
+"    call Decho("executing: !".g:netrw_rsync_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile)
     exe "!".g:netrw_rsync_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile
    else
+"    call Decho("executing: !".g:netrw_rsync_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile)
     exe "!".g:netrw_rsync_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
    endif
    let result		= s:NetGetFile(readcmd,tmpfile, b:netrw_method)
@@ -416,6 +427,7 @@ fun! s:NetRead(...)
   ".........................................
   " fetch: Method #8
   "    fetch://[user@]host[:http]/path
+  elseif     b:netrw_method  == 8	" read with fetch
    if g:netrw_fetch_cmd == ""
     echoerr "fetch command not available"
     exit
@@ -428,8 +440,10 @@ fun! s:NetRead(...)
 "   call Decho("read via fetch for ".netrw_option)
 
    if exists("g:netrw_uid") && g:netrw_uid != "" && exists("g:netrw_passwd") && g:netrw_passwd != ""
+"    call Decho("executing: !".g:netrw_fetch_cmd." ".tmpfile." ".netrw_option."://".g:netrw_uid.':'.g:netrw_passwd.'@'.g:netrw_machine."/".escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_fetch_cmd." ".tmpfile." ".netrw_option."://".g:netrw_uid.':'.g:netrw_passwd.'@'.g:netrw_machine."/".escape(b:netrw_fname,' ?&')
    else
+"    call Decho("executing: !".g:netrw_fetch_cmd." ".tmpfile." ".netrw_option."://".g:netrw_machine."/".escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_fetch_cmd." ".tmpfile." ".netrw_option."://".g:netrw_machine."/".escape(b:netrw_fname,' ?&')
    endif
 
@@ -443,9 +457,10 @@ fun! s:NetRead(...)
    if g:netrw_cygwin == 1
     let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
 "    call Decho("!".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile)
+"    call Decho("executing: !".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile)
     exe "!".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".cygtmpfile
    else
-"    call Decho("!".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile)
+"    call Decho("executing: !".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile)
     exe "!".g:netrw_sftp_cmd." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')." ".tmpfile
    endif
    let result		= s:NetGetFile(readcmd, tmpfile, b:netrw_method)
@@ -676,6 +691,7 @@ fun! s:NetWrite(...) range
      let uid_machine = g:netrw_machine
     endif
    endif
+"   call Decho("executing: !".g:netrw_rcp_cmd." ".s:netrw_rcpmode." ".tmpfile." ".uid_machine.":".escape(b:netrw_fname,' ?&'))
    exe "!".g:netrw_rcp_cmd." ".s:netrw_rcpmode." ".tmpfile." ".uid_machine.":".escape(b:netrw_fname,' ?&')
    let b:netrw_lastfile = choice
 
@@ -690,11 +706,11 @@ fun! s:NetWrite(...) range
    exe "put ='put ".tmpfile." ".netrw_fname."'"
 "   call Decho("put ='put ".tmpfile." ".netrw_fname."'")
    if exists("g:netrw_port") && g:netrw_port != ""
+"    call Decho("executing: %!".g:netrw_ftp_cmd." -i ".g:netrw_machine." ".g:netrw_port)
     exe "%!".g:netrw_ftp_cmd." -i ".g:netrw_machine." ".g:netrw_port
-"    call Decho("%!".g:netrw_ftp_cmd." -i ".g:netrw_machine." ".g:netrw_port)
    else
+"    call Decho("executing: %!".g:netrw_ftp_cmd." -i ".g:netrw_machine)
     exe "%!".g:netrw_ftp_cmd." -i ".g:netrw_machine
-"    call Decho("%!".g:netrw_ftp_cmd." -i ".g:netrw_machine)
    endif
    " If the result of the ftp operation isn't blank, show an error message (tnx to Doug Claar)
    if getline(1) !~ "^$"
@@ -731,6 +747,7 @@ fun! s:NetWrite(...) range
    " -n  win32: quit being obnoxious about password
 "   call Decho('performing ftp -i -n')
    norm 1Gdd
+"   call Decho("executing: %!".g:netrw_ftp_cmd." -i -n")
    exe "%!".g:netrw_ftp_cmd." -i -n"
    " If the result of the ftp operation isn't blank, show an error message (tnx to Doug Claar)
    if getline(1) !~ "^$"
@@ -749,9 +766,11 @@ fun! s:NetWrite(...) range
    endif
    if g:netrw_cygwin == 1
     let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
+"    call Decho("executing: !".g:netrw_scp_cmd.useport." ".cygtmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_scp_cmd.useport." ".cygtmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')
    else
-    exe ":!".g:netrw_scp_cmd.useport." ".tmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')
+"    call Decho("executing: !".g:netrw_scp_cmd.useport." ".tmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&'))
+    exe "!".g:netrw_scp_cmd.useport." ".tmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')
    endif
    let b:netrw_lastfile = choice
 
@@ -785,6 +804,7 @@ fun! s:NetWrite(...) range
 
    " perform cadaver operation:
    norm 1Gdd
+"   call Decho("executing: %!".g:netrw_dav_cmd)
    exe "%!".g:netrw_dav_cmd
    bd!
    let b:netrw_lastfile = choice
@@ -794,8 +814,10 @@ fun! s:NetWrite(...) range
   elseif     b:netrw_method == 7	" write with rsync
    if g:netrw_cygwin == 1
     let cygtmpfile=substitute(tmpfile,'^\(\a\):','/cygdrive/\1/','e')
+"    call Decho("executing: !".g:netrw_rsync_cmd." ".cygtmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_rsync_cmd." ".cygtmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')
    else
+"    call Decho("executing: !".g:netrw_rsync_cmd." ".tmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&'))
     exe "!".g:netrw_rsync_cmd." ".tmpfile." ".g:netrw_machine.":".escape(b:netrw_fname,' ?&')
    endif
    let b:netrw_lastfile = choice
@@ -813,7 +835,7 @@ fun! s:NetWrite(...) range
    set ff=unix
    put ='put '.tmpfile.' '.netrw_fname
    norm 1Gdd
-"   call Decho("g:netrw_sftp_cmd<".g:netrw_sftp_cmd.">")
+"   call Decho("executing: %!".g:netrw_sftp_cmd.' '.uid_machine)
    exe "%!".g:netrw_sftp_cmd.' '.uid_machine
    bd!
    let b:netrw_lastfile= choice
@@ -865,8 +887,8 @@ fun! s:NetMethod(choice)  " globals: method machine id passwd fname
  " rcphf    : [user@]host:filename		    Use rcp
  " scpurm   : scp://[user@]host[[#:]port]/filename  Use scp
  " httpurm  : http://[user@]host/filename	    Use wget
- " davurm   : dav://host[:port]/path		    Use cadaver
- " rsyncurm : rsync://host[:port]/path		    Use rsync
+ " davurm   : dav://host[:port]/path                Use cadaver
+ " rsyncurm : rsync://host[:port]/path              Use rsync
  " fetchurm : fetch://[user@]host[:http]/filename   Use fetch (defaults to ftp, override for http)
  " sftpurm  : sftp://[user@]host/filename  Use scp
  let mipf     = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'

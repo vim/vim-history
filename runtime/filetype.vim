@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 07
+" Last Change:	2004 May 30
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -706,6 +706,9 @@ au BufNewFile,BufRead *.ldif			setf ldif
 " Lex
 au BufNewFile,BufRead *.lex,*.l			setf lex
 
+" Libao
+au BufNewFile,BufRead /etc/libao.conf,~/.libao	setf libao
+
 " LFTP
 au BufNewFile,BufRead lftp.conf,.lftprc,*lftp/rc	setf lftp
 
@@ -846,6 +849,9 @@ au BufNewFile,BufRead *.moo			setf moo
 au BufNewFile,BufRead /etc/modules.conf,/etc/conf.modules	setf modconf
 au BufNewFile,BufRead /etc/modutils/*
 	\ if executable(expand("<afile>")) != 1 | setf modconf | endif
+
+" Mplayer config
+au BufNewFile,BufRead mplayer.conf,~/.mplayer/config	setf mplayerconf
 
 " Moterola S record
 au BufNewFile,BufRead *.s19,*.s28,*.s37		setf srec
@@ -1228,6 +1234,9 @@ au BufNewFile,BufRead robots.txt		setf robots
 " Rpcgen
 au BufNewFile,BufRead *.x			setf rpcgen
 
+" reStructuredText Documentation Format
+au BufNewFile,BufRead *.rst			setf rst
+
 " RTF
 au BufNewFile,BufRead *.rtf			setf rtf
 
@@ -1554,6 +1563,9 @@ au BufNewFile,BufRead XF86Config
 	\   let b:xf86c_xfree86_version = 3 |
 	\ endif |
 	\ setf xf86conf
+
+" Xorg config
+au BufNewFile,BufRead xorg.conf,xorg.conf-4	let b:xf86c_xfree86_version = 4 | setf xf86conf
 
 " XS Perl extension interface language
 au BufNewFile,BufRead *.xs			setf xs

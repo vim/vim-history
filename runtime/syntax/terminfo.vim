@@ -1,23 +1,24 @@
 " Vim syntax file
 " Language:	    Terminfo definition
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/terminfo/
+" Latest Revision:  2004-05-22
+" arch-tag:	    8464dd47-0c5a-47d5-87ed-a2ad99e1196f
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " keywords (define first as to not mess up comments
 syn match terminfoKeywords	"[,=#|]"
 
+" todo
+syn keyword terminfoTodo	contained TODO FIXME XXX NOTE
+
 " comments
 syn region  terminfoComment	matchgroup=terminfoComment start="^#" end="$" contains=terminfoTodo
-
-" todo
-syn keyword terminfoTodo	contained TODO FIXME
 
 " numbers
 syn match   terminfoNumbers	"\<[0-9]\+\>"
@@ -69,9 +70,9 @@ syn keyword terminfoStrings	op pad dch dl cud mcud ich indn il cub mcub cuf
 syn keyword terminfoStrings	mcuf rin cuu mccu pfkey pfloc pfx pln mc0 mc5p
 syn keyword terminfoStrings	mc4 mc5 pulse qdial rmclk rep rfi rs1 rs2 rs3 rf
 syn keyword terminfoStrings	rc vpa sc ind ri scs sgr setbsmgb smgbp sclk scp
-syn keyword terminfoStrings	setf smgl smglp smgr smgrp hts smgt smgtp wind
-syn keyword terminfoStrings	sbim scsd rbim rcsd subcs supcs ht docr tsl tone
-syn keyword terminfoStrings	uc hu
+syn keyword terminfoStrings	setb setf smgl smglp smgr smgrp hts smgt smgtp
+syn keyword terminfoStrings	wind sbim scsd rbim rcsd subcs supcs ht docr
+syn keyword terminfoStrings	tsl tone uc hu
 syn match   terminfoStrings	"\<u[0-9]\>"
 syn keyword terminfoStrings	wait xoffc xonc zerom
 syn keyword terminfoStrings	scesa bicr binel birep csnm csin colornm defbi
@@ -85,37 +86,30 @@ syn keyword terminfoStrings	slengthsL
 syn match terminfoParameters	"%[%dcspl+*/mAO&|^=<>!~i?te;-]"
 syn match terminfoParameters	"%\('[A-Z]'\|{[0-9]\{1,2}}\|p[1-9]\|P[a-z]\|g[A-Z]\)"
 
-if exists("terminfo_minlines")
-    let b:terminfo_minlines = terminfo_minlines
-else
-    let b:terminfo_minlines = 10
-endif
-exec "syn sync minlines=" . b:terminfo_minlines
-
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_terminfo_syn_inits")
-    if version < 508
-	let did_terminfo_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_terminfo_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink terminfoComment	Comment
-    HiLink terminfoTodo		Todo
-    HiLink terminfoNumbers	Number
-    HiLink terminfoSpecialChar	SpecialChar
-    HiLink terminfoDelay	Special
-    HiLink terminfoBooleans	Type
-    HiLink terminfoNumerics	Type
-    HiLink terminfoStrings	Type
-    HiLink terminfoParameters	Keyword
-    HiLink terminfoKeywords	Keyword
-    delcommand HiLink
+  HiLink terminfoComment	Comment
+  HiLink terminfoTodo		Todo
+  HiLink terminfoNumbers	Number
+  HiLink terminfoSpecialChar	SpecialChar
+  HiLink terminfoDelay		Special
+  HiLink terminfoBooleans	Type
+  HiLink terminfoNumerics	Type
+  HiLink terminfoStrings	Type
+  HiLink terminfoParameters	Keyword
+  HiLink terminfoKeywords	Keyword
+  delcommand HiLink
 endif
 
 let b:current_syntax = "terminfo"
 
-"  vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

@@ -71,7 +71,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 3b
+MINOR = 3
 
 # Uncomment this line if the Win32s version is to be included.
 #DOSBIN_S =  dosbin_s
@@ -816,6 +816,7 @@ LANG_GEN = \
 		runtime/tutor/tutor.?? \
 		runtime/tutor/tutor.gr.* \
 		runtime/tutor/tutor.ja.* \
+		runtime/tutor/tutor.ko.* \
 		runtime/tutor/tutor.pl.* \
 		runtime/tutor/tutor.ru.* \
 		runtime/tutor/tutor.zh.* \

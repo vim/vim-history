@@ -1,25 +1,26 @@
 " Vim syntax file
 " Language:	    readline configuration file
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-12-06
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/readline/
+" Latest Revision:  2004-05-22
+" arch-tag:	    6d8e7da4-b39c-4bf7-8e6a-d9135f993457
 " Variables:
 "   readline_has_bash - if defined add support for bash specific
 "			settings/functions
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Set iskeyword since we need `-' (and potentially others) in keywords.
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
 if version >= 600
-    command -nargs=1 SetIsk setlocal iskeyword=<args>
+  command -nargs=1 SetIsk setlocal iskeyword=<args>
 else
-    command -nargs=1 SetIsk set iskeyword=<args>
+  command -nargs=1 SetIsk set iskeyword=<args>
 endif
 SetIsk 48-57,65-90,97-122,-
 delcommand SetIsk
@@ -28,7 +29,7 @@ delcommand SetIsk
 syn region  readlineComment	display oneline matchgroup=readlineComment start="^\s*#" end="$" contains=readlineTodo
 
 " todo
-syn keyword readlineTodo	contained TODO FIXME
+syn keyword readlineTodo	contained TODO FIXME XXX NOTE
 
 " strings (argh...not the way i want it, but fine..."
 syn match   readlineString	"^\s*[A-Za-z-]\+:"me=e-1 contains=readlineKeys
@@ -78,7 +79,7 @@ syn keyword readlineSettings	contained match-hidden-files history-preserve-point
 
 " bash extensions
 if exists("readline_has_bash")
-    "syn keyword readlineSettings	contained
+  "syn keyword readlineSettings	contained
 endif
 
 " key bindings
@@ -109,44 +110,43 @@ syn keyword readlineFunctions	contained vi-back-to-indent vi-bword vi-bWord vi-e
 
 " bash extensions
 if exists("readline_has_bash")
-    syn keyword readlineFunctions	contained shell-expand-line history-expand-line magic-space alias-expand-line history-and-alias-expand-line insert-last-argument
-    syn keyword readlineFunctions	contained operate-and-get-next forward-backward-delete-char delete-char-or-list complete-filename possible-filename-completions
-    syn keyword readlineFunctions	contained complete-username possible-username-completions complete-variable possible-variable-completions complete-hostname
-    syn keyword readlineFunctions	contained possible-hostname-completions complete-command possible-command-completions dynamic-complete-history complete-into-braces
-    syn keyword readlineFunctions	contained glob-expand-word glob-list-expansions display-shell-version
-    syn keyword readlineFunctions	contained glob-complete-word edit-and-execute-command
+  syn keyword readlineFunctions	contained shell-expand-line history-expand-line magic-space alias-expand-line history-and-alias-expand-line insert-last-argument
+  syn keyword readlineFunctions	contained operate-and-get-next forward-backward-delete-char delete-char-or-list complete-filename possible-filename-completions
+  syn keyword readlineFunctions	contained complete-username possible-username-completions complete-variable possible-variable-completions complete-hostname
+  syn keyword readlineFunctions	contained possible-hostname-completions complete-command possible-command-completions dynamic-complete-history complete-into-braces
+  syn keyword readlineFunctions	contained glob-expand-word glob-list-expansions display-shell-version
+  syn keyword readlineFunctions	contained glob-complete-word edit-and-execute-command
 endif
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_readline_syn_inits")
-    if version < 508
-	let did_readline_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_readline_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink readlineComment	Comment
-    HiLink readlineTodo		Todo
-    HiLink readlineString	String
-    HiLink readlineKeys		SpecialChar
-    HiLink readlineKeysTwo	SpecialChar
-    HiLink readlineKeymaps	Constant
-    HiLink readlineBellStyles	Constant
-    HiLink readlineNumber	Number
-    HiLink readlineBoolean	Boolean
-    HiLink readlineIfOps	Type
-    HiLink readlineConditional	Conditional
-    HiLink readlineInclude	Include
-    HiLink readlineKeyword	Keyword
-    HiLink readlineSettings	Type
-    HiLink readlineFunctions	Type
-    delcommand HiLink
+  HiLink readlineComment	Comment
+  HiLink readlineTodo		Todo
+  HiLink readlineString		String
+  HiLink readlineKeys		SpecialChar
+  HiLink readlineKeysTwo	SpecialChar
+  HiLink readlineKeymaps	Constant
+  HiLink readlineBellStyles	Constant
+  HiLink readlineNumber		Number
+  HiLink readlineBoolean	Boolean
+  HiLink readlineIfOps		Type
+  HiLink readlineConditional	Conditional
+  HiLink readlineInclude	Include
+  HiLink readlineKeyword	Keyword
+  HiLink readlineSettings	Type
+  HiLink readlineFunctions	Type
+  delcommand HiLink
 endif
 
 let b:current_syntax = "readline"
 
-" vim: set sw=4 sts=4:
-
+" vim: set sts=2 sw=2:

@@ -21,8 +21,8 @@
 # comment the next line if you do not want to add Native Language Support
 !define HAVE_NLS
 
-!define VER_MINOR 3b
 !define VER_MAJOR 6
+!define VER_MINOR 3
 
 # ----------- No configurable settings below this line -----------
 

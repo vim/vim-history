@@ -1,4 +1,4 @@
-*mbyte.txt*     For Vim version 6.3b.  Last change: 2004 May 02
+*mbyte.txt*     For Vim version 6.3.  Last change: 2004 Jun 07
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar et al.
@@ -244,7 +244,7 @@ variables.
 Charset is another name for encoding.  There are subtle differences, but these
 don't matter when using Vim.  "codeset" is another similar name.
 
-Each characters is encoded as one or more bytes.  When all characters are
+Each character is encoded as one or more bytes.  When all characters are
 encoded with one byte, we call this a single-byte encoding.  The most often
 used one is called "latin1".  This limits the number of characters to 256.
 Some of these are control characters, thus even fewer can be used for text.

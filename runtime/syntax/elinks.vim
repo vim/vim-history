@@ -2,7 +2,7 @@
 " Language:	    elinks(1) configuration file
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/
-" Latest Revision:  2004-04-25
+" Latest Revision:  2004-05-22
 " arch-tag:	    74eaff55-cdb5-4d31-805b-9627eb6535f1
 
 if version < 600
@@ -11,7 +11,6 @@ elseif exists("b:current_syntax")
   finish
 endif
 
-" XXX: remove
 " Set iskeyword since we need `-' (and potentially others) in keywords.
 " For version 5.x: Set it globally
 " For version 6.x: Set it locally
@@ -204,6 +203,5 @@ if version >= 508 || !exists("did_elinks_syn_inits")
 endif
 
 let b:current_syntax = "elinks"
-
 
 " vim: set sts=2 sw=2:

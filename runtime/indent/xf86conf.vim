@@ -1,12 +1,13 @@
 " Vim indent file
 " Language:	    XFree86 Configuration File
-" Maintainer:	    Nikolai Weibull <lone-star@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2003-07-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/indent/pcp/xf86conf/
+" Latest Revision:  2004-04-25
+" arch-tag:	    8a42f7b6-5088-49cf-b15b-07696a91c015
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")
-    finish
+  finish
 endif
 
 let b:did_indent = 1
@@ -16,26 +17,26 @@ setlocal indentkeys=!^F,o,O,=End
 
 " Only define the function once.
 if exists("*GetXF86ConfIndent")
-    finish
+  finish
 endif
 
 function GetXF86ConfIndent()
-    let lnum = prevnonblank(v:lnum - 1)
+  let lnum = prevnonblank(v:lnum - 1)
 
-    if lnum == 0
-	return 0
-    endif
+  if lnum == 0
+    return 0
+  endif
 
-    let ind = indent(lnum)
-    let line = getline(lnum)
+  let ind = indent(lnum)
+  let line = getline(lnum)
 
-    if line =~? '^\s*\(Sub\)\=Section'
-	let ind = ind + &sw
-    elseif getline(v:lnum) =~? '^\s*End'
-	let ind = ind - &sw
-    endif
+  if line =~? '^\s*\(Sub\)\=Section'
+    let ind = ind + &sw
+  elseif getline(v:lnum) =~? '^\s*End'
+    let ind = ind - &sw
+  endif
 
-    return ind
+  return ind
 endfunction
 
-" vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

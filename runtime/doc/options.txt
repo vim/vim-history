@@ -1,4 +1,4 @@
-*options.txt*	For Vim version 6.3b.  Last change: 2004 May 14
+*options.txt*	For Vim version 6.3.  Last change: 2004 Jun 01
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -3719,7 +3719,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 	When this option is set, the screen will not be redrawn while
 	executing macros, registers and other commands that have not been
-	typed.	Also, udating the window title is postponed.  To force an
+	typed.	Also, updating the window title is postponed.  To force an
 	update use |:redraw|.
 
 			*'linebreak'* *'lbr'* *'nolinebreak'* *'nolbr'*
@@ -3740,11 +3740,16 @@ A jump table for the options with a short description can be found at |Q_op|.
 						*'lines'* *E593*
 'lines'			number	(default 24 or terminal height)
 			global
-	Number of lines in the display.  Normally you don't need to set this.
-	That is done automatically by the terminal initialization code.
+	Number of lines of the Vim window.
+	Normally you don't need to set this.  It is done automatically by the
+	terminal initialization code.
 	When Vim is running in the GUI or in a resizable window, setting this
 	option will cause the window size to be changed.  When you only want
 	to use the size for the GUI, put the command in your |gvimrc| file.
+	Vim limits the number of lines to what fits on the screen.  You can
+	use this command to get the tallest window possible: >
+		:set lines=999
+<	If you get less lines than expected, check the 'guiheadroom' option.
 	When you set this option and Vim is unable to change the physical
 	number of lines of the display, the display may be messed up.
 
@@ -5509,7 +5514,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	f S   Path to the file in the buffer, relative to current directory.
 	F S   Full path to the file in the buffer.
 	t S   File name (tail) of file in the buffer.
-	m F   Modified flag, text is " [+]" or " [-]" if 'modifiable' is off.
+	m F   Modified flag, text is " [+]"; " [-]" if 'modifiable' is off.
 	M F   Modified flag, text is ",+" or ",-".
 	r F   Readonly flag, text is " [RO]".
 	R F   Readonly flag, text is ",RO".
@@ -6678,7 +6683,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	minimum, Vim will use fewer lines if there is not enough room.	If the
 	current window is smaller, its size is increased, at the cost of the
 	height of other windows.  Set it to 999 to make the current window
-	always fill the screen.  Set it to a small number for normal editing.
+	always fill the screen (although this has the drawback that ":all"
+	will create only two windows).  Set it to a small number for normal
+	editing.
 	Minimum value is 1.
 	The height is not adjusted after one of the commands to change the
 	height of the current window.

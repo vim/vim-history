@@ -1,20 +1,21 @@
 " Vim syntax file
-" Language:	    Linux Modutils modules.conf File
-" Maintainer:	    Nikolai :: lone-star :: Weibull <lone-star@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Language:	    Linux modutils modules.conf File
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/modconf/
+" Latest Revision:  2004-05-22
+" arch-tag:	    b7981bdb-daa3-41d1-94b5-a3d60b627916
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " comments
 syn region  modconfComment  start="#" skip="\\$" end="$" contains=modconfTodo
 
 " todo
-syn keyword modconfTodo	    FIXME TODO XXX
+syn keyword modconfTodo	    FIXME TODO XXX NOTE
 
 " keywords and similar
 syn match   modconfBegin    "^" skipwhite nextgroup=modconfCommand,modconfComment
@@ -44,22 +45,22 @@ exec "syn sync minlines=" . b:modconf_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_modconf_syn_inits")
-    if version < 508
-	let did_modconf_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_modconf_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink modconfComment   Comment
-    HiLink modconfTodo	    Todo
-    HiLink modconfCommand   Keyword
-    HiLink modconfPath	    String
-    HiLink modconfOp	    Identifier
-    HiLink modconfModOpt    Identifier
-    delcommand HiLink
+  HiLink modconfComment Comment
+  HiLink modconfTodo	Todo
+  HiLink modconfCommand Keyword
+  HiLink modconfPath	String
+  HiLink modconfOp	Identifier
+  HiLink modconfModOpt  Identifier
+  delcommand HiLink
 endif
 
 let b:current_syntax = "modconf"
 
-" vim: set sts=4 sw=4:
+" vim: set sts=2 sw=2:

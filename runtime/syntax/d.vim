@@ -1,10 +1,10 @@
-" Vim syntax file for the D programming language (version 0.82).
+" Vim syntax file for the D programming language (version 0.90).
 "
 " Language:     D
 " Maintainer:   Jason Mills<jmills@cs.mun.ca>
 " URL:
-" Last Change:  2004 May 16
-" Version:      0.6
+" Last Change:  2004 May 21
+" Version:      0.8
 "
 " Options:
 "   d_comment_strings - set to highlight strings and numbers in comments
@@ -58,7 +58,7 @@ syn keyword dDebug	     deprecated unittest
 syn keyword dExceptions      throw try catch finally
 syn keyword dScopeDecl       public protected private export
 syn keyword dStatement       version debug return with invariant body
-syn keyword dStatement       in out inout asm
+syn keyword dStatement       in out inout asm mixin
 syn keyword dStatement       function delegate
 syn keyword dStorageClass    auto static override final const abstract volatile
 syn keyword dStorageClass    synchronized
@@ -92,16 +92,16 @@ syn match   dCommentStar      contained "^\s*\*$"
 syn match   dCommentPlus      contained "^\s*+[^/]"me=e-1
 syn match   dCommentPlus      contained "^\s*+$"
 if exists("d_comment_strings")
-   syn region  dBlockCommentString   contained  start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=dCommentStar,dUnicode,dEscSequence,@Spell
-   syn region  dNestedCommentString  contained  start=+"+ end=+"+ end="+"me=s-1,he=s-1 contains=dCommentPlus,dUnicode,dEscSequence,@Spell
-   syn region  dLineCommentString    contained start=+"+  end=+$\|"+ contains=dUnicode,dEscSequence,@Spell
-   syn region  dBlockComment     start="/\*"  end="\*/" contains=dBlockCommentString,dTodo,@Spell
-   syn region  dNestedComment    start="/+"  end="+/" contains=dNestedComment,dNestedCommentString,dTodo,@Spell
-   syn match   dLineComment      "//.*" contains=dLineCommentString,dTodo,@Spell
+  syn region  dBlockCommentString   contained  start=+"+ end=+"+ end=+\*/+me=s-1,he=s-1 contains=dCommentStar,dUnicode,dEscSequence,@Spell
+  syn region  dNestedCommentString  contained  start=+"+ end=+"+ end="+"me=s-1,he=s-1 contains=dCommentPlus,dUnicode,dEscSequence,@Spell
+  syn region  dLineCommentString    contained start=+"+  end=+$\|"+ contains=dUnicode,dEscSequence,@Spell
+  syn region  dBlockComment     start="/\*"  end="\*/" contains=dBlockCommentString,dTodo,@Spell
+  syn region  dNestedComment    start="/+"  end="+/" contains=dNestedComment,dNestedCommentString,dTodo,@Spell
+  syn match   dLineComment      "//.*" contains=dLineCommentString,dTodo,@Spell
 else
-   syn region  dBlockComment     start="/\*"  end="\*/" contains=dBlockCommentString,dTodo,@Spell
-   syn region  dNestedComment    start="/+"  end="+/" contains=dNestedComment,dNestedCommentString,dTodo,@Spell
-   syn match   dLineComment      "//.*" contains=dLineCommentString,dTodo,@Spell
+  syn region  dBlockComment     start="/\*"  end="\*/" contains=dBlockCommentString,dTodo,@Spell
+  syn region  dNestedComment    start="/+"  end="+/" contains=dNestedComment,dNestedCommentString,dTodo,@Spell
+  syn match   dLineComment      "//.*" contains=dLineCommentString,dTodo,@Spell
 endif
 
 hi link dLineCommentString dBlockCommentString
@@ -126,7 +126,6 @@ syn match dCharacter  "'[^\\]'"
 " Unicode characters
 "
 syn match   dUnicode "\\u\d\{4\}"
-
 
 " String.
 "
@@ -176,45 +175,44 @@ syn region  dPragma start="#\s*\(line\>\)" skip="\\$" end="$"
 
 " The default highlighting.
 "
-hi def link dBinary		     Number
-hi def link dInt		     Number
-hi def link dHex		     Number
-hi def link dOctal		     Number
-hi def link dFloat		     Float
-hi def link dHexFloat		     Float
-hi def link dDebug		     Debug
-hi def link dBranch		     Conditional
-hi def link dConditional	     Conditional
-hi def link dLabel		     Label
-hi def link dUserLabel		     Label
-hi def link dRepeat		     Repeat
-hi def link dExceptions		     Exception
-hi def link dAssert		     Statement
-hi def link dStatement		     Statement
-hi def link dScopeDecl		     dStorageClass
-hi def link dStorageClass	     StorageClass
-hi def link dBoolean		     Boolean
-hi def link dUnicode		     Special
-hi def link dRawString		     String
-hi def link dString		     String
-hi def link dHexString		     String
-hi def link dCharacter		     Character
-hi def link dEscSequence	     SpecialChar
-hi def link dSpecialCharError	     Error
-hi def link dOctalError		     Error
-hi def link dOperator		     Operator
-hi def link dOpOverload		     Operator
-hi def link dConstant		     Constant
-hi def link dTypedef		     Typedef
-hi def link dStructure		     Structure
-hi def link dTodo		     Todo
-hi def link dType		     Type
-hi def link dLineComment	     Comment
-hi def link dBlockComment	     Comment
-hi def link dNestedComment	     Comment
-hi def link dExternal		     Include
-hi def link dPragma		     PreProc
-
+hi def link dBinary		Number
+hi def link dInt		Number
+hi def link dHex		Number
+hi def link dOctal		Number
+hi def link dFloat		Float
+hi def link dHexFloat		Float
+hi def link dDebug		Debug
+hi def link dBranch		Conditional
+hi def link dConditional	Conditional
+hi def link dLabel		Label
+hi def link dUserLabel		Label
+hi def link dRepeat		Repeat
+hi def link dExceptions		Exception
+hi def link dAssert		Statement
+hi def link dStatement		Statement
+hi def link dScopeDecl		dStorageClass
+hi def link dStorageClass	StorageClass
+hi def link dBoolean		Boolean
+hi def link dUnicode		Special
+hi def link dRawString		String
+hi def link dString		String
+hi def link dHexString		String
+hi def link dCharacter		Character
+hi def link dEscSequence	SpecialChar
+hi def link dSpecialCharError	Error
+hi def link dOctalError		Error
+hi def link dOperator		Operator
+hi def link dOpOverload		Operator
+hi def link dConstant		Constant
+hi def link dTypedef		Typedef
+hi def link dStructure		Structure
+hi def link dTodo		Todo
+hi def link dType		Type
+hi def link dLineComment	Comment
+hi def link dBlockComment	Comment
+hi def link dNestedComment	Comment
+hi def link dExternal		Include
+hi def link dPragma		PreProc
 
 let b:current_syntax = "d"
 

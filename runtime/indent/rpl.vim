@@ -1,10 +1,8 @@
 " Vim indent file
 " Language:	RPL/2
 " Version:	0.2
-" Last Change:	2003 Apr 25
+" Last Change:	2002 August 16
 " Maintainer:	BERTRAND Joël <rpl2@free.fr>
-" URL:		http://www.makalis.fr/~bertrand/rpl2/download/vim/indent/rpl.vim
-
 
 " Only load this indent file when no other was loaded.
 if exists("b:did_indent")

@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.3b.  Last change: 2004 Mar 12
+*usr_08.txt*	For Vim version 6.3.  Last change: 2004 Jun 04
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -370,7 +370,7 @@ in which you added characters, and a few lines above and below it.
 better look.)
 
 The lines that were not modified have been collapsed into one line.  This is
-called a closed fold.  The are indicated in the picture with "<- fold".  Thus
+called a closed fold.  They are indicated in the picture with "<- fold".  Thus
 the single fold line at the top stands for 123 text lines.  These lines are
 equal in both files.
    The line marked with "<- changed line" is highlighted, and the inserted

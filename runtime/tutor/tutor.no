@@ -14,7 +14,7 @@
      filen som du kan øve deg på (hvis du kjørte «vimtutor»-kommandoen, er
      dette allerede en kopi).
 
-     Det er viktig å huske at denne innføringen er er beregnet for læring
+     Det er viktig å huske at denne innføringen er beregnet på læring
      gjennom bruk. Det betyr at du må utføre kommandoene for å lære dem
      skikkelig. Hvis du bare leser teksten, vil du glemme kommandoene!
 
@@ -53,8 +53,8 @@ MERK: Piltastene skal også virke. Men ved å bruke hjkl vil du være i stand til
 
   2. Skriv:  :q! <ENTER>
 
----> Dette avslutter editoren UTEN at forandringer du har gjort blir lagret.
-     Hvis du vil lagre forandringene og avslutte, skriver du:
+---> Dette avslutter editoren UTEN at endringer blir lagret.
+     Hvis du vil lagre endringene og avslutte, skriver du:
 	     :wq <ENTER>
 
   3. Når du ser kommandolinjen i skallet, skriv kommandoen som startet denne
@@ -121,7 +121,7 @@ HUSK: Når du går gjennom innføringen, ikke bare prøv å huske kommandoene, men
 
   2. For å starte Vim (fra skall-kommandolinjen), skriv:  vim FILNAVN <ENTER>
 
-  3. For å avslutte Vim, skriv:  <ESC> :q! <ENTER>  for å skrote forandringer.
+  3. For å avslutte Vim, skriv:  <ESC> :q! <ENTER>  for å forkaste forandringer.
 		   ELLER skriv:  <ESC> :wq <ENTER>  for å lagre forandringene.
 
   4. For å slette et tegn under markøren når du er i normalmodus, trykk  x
@@ -279,7 +279,7 @@ MERK: For den eventyrlystne: Skriving av kun objektet i normalmodus uten en
 
    ** Trykk  p	for å lime inn den siste slettede teksten etter markøren **
 
-  1. Flytt markøren til den første linjen i settet nedenfor.
+  1. Flytt markøren til den første linjen i listen nedenfor.
 
   2. Trykk  dd	for å slette linjen og lagre den i utklippstavlen til Vim.
 
@@ -530,7 +530,7 @@ MERK: Dette er meget god hjelp til feilsøking i programmer som har ubalansert
 		     Leksjon 5.2: MER OM LAGRING AV FILER
 
 
-     ** For å lagre forandringene gjort i en fil, skriv  :w FILNAVN  . **
+     ** For å lagre endringene gjort i en fil, skriv  :w FILNAVN  . **
 
   1. Skriv  :!dir  eller  :!ls	for å få en liste over filene i katalogen. Du
      vet allerede at du må trykke <ENTER> etter dette.
@@ -555,8 +555,8 @@ MERK: Dette er meget god hjelp til feilsøking i programmer som har ubalansert
 
 	  ** For å lagre en del av en fil, skriv  :#,# w FILNAVN  **
 
-  1. En gang til: Skriv  :!dir	eller  :!ls  for å få en liste av filene i
-     katalogen. Velg et passende filnavn som  TEST  .
+  1. En gang til: Skriv  :!dir	eller  :!ls  for å få en liste over filene i
+     katalogen. Velg et passende filnavn, som  TEST  .
 
   2. Flytt markøren til toppen av denne siden og trykk Ctrl-g for å finne
      nummeret på denne linjen. HUSK DETTE NUMMERET!
@@ -763,7 +763,7 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
 			** Slå på funksjoner i Vim. **
 
   Vim har mange flere funksjoner enn Vi, men flesteparten av dem er slått av
-  som standard. For å begynne å bruke kan du lage en «vimrc»-fil.
+  som standard. For å begynne å bruke dem kan du lage en «vimrc»-fil.
 
   1. Start redigeringen av «vimrc»-filen, dette avhenger av systemet ditt:
        :edit ~/.vimrc	  for UNIX
@@ -795,7 +795,7 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
   Denne boken er eldre og handler mer om Vi enn Vim, men anbefales også:
       «Learning the Vi Editor» av Linda Lamb
       Utgiver: O'Reilly & Associates Inc.
-  Det er en god bok for å få vite omtrent hva du vil om Vi.
+  Det er en god bok for å få vite omtrent hva som helst om Vi.
   Den sjette utgaven inneholder også informasjon om Vim.
 
   Denne innføringen er skrevet av Michael C. Pierce og Robert K. Ware,
@@ -803,7 +803,8 @@ MERK: Dette gjør at du slipper å trykke  i  , det siste tegnet, teksten som
   University. Email: bware@mines.colorado.edu .
 
   Modifisert for Vim av Bram Moolenaar.
-  Oversatt av Øyvind A. Holm -- sunny _AT_ sunbase.org -- 2003/08/13 05:22:21
+  Oversatt av Øyvind A. Holm -- sunny _AT_ sunbase.org
+  tutor.no 279 2004-05-12 09:21:53Z sunny
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 vim: set ts=8 :

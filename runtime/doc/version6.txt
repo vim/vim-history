@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.3b.  Last change: 2004 May 16
+*version6.txt*  For Vim version 6.3.  Last change: 2004 Jun 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -9861,18 +9861,23 @@ Syntax files:
 	Slice (Morel Bodin)
 	VAX Macro Assembly (Tom Uijldert)
 	grads (Stefan Fronzek)
+	libao (Nikolai Weibull)
+	mplayer (Nikolai Weibull)
+	rst (Nikolai Weibull)
 	tcsh (Gautam Iyer)
 	yaml (Nikolai Weibull)
 
 Compiler plugins:
-	Apple Project Builder (Alexander von Below)
 	ATT dot (Marcos Macedo)
+	Apple Project Builder (Alexander von Below)
 	Intel (David Harrison)
+	bdf (Nikolai Weibull)
 	icc (Peter Puck)
 	javac (Doug Kearns)
 	neato (Marcos Macedo)
 	onsgmls (Robert B. Rowsome)
 	perl (Christian J. Robinson)
+	rst (Nikolai Weibull)
 	se (SmartEiffel) (Doug Kearns)
 	tcl (Doug Kearns)
 	xmlwf (Robert B. Rowsome)
@@ -9880,7 +9885,9 @@ Compiler plugins:
 Filetype plugins:
 	Aap (Bram Moolenaar)
 	Ch (Wayne Cheng)
+	Css (Nikolai Weibull)
 	Pyrex (Marco Barisione)
+	Rst (Nikolai Weibull)
 
 Indent scripts:
 	Aap (Bram Moolenaar)
@@ -9889,6 +9896,7 @@ Indent scripts:
 	MetaPost (Eugene Minkovskii)
 	Objective-C (Kazunobu Kuriyama)
 	Pyrex (Marco Barisione)
+	Rst (Nikolai Weibull)
 	Tcsh (Gautam Iyer)
 	XFree86 configuration file (Nikolai Weibull)
 	Zsh (Nikolai Weibull)
@@ -9913,6 +9921,7 @@ Tutor translations:
 	Russian in cp1251 (Alexey Froloff)
 	Slovak in cp1251 and iso8859-2 (Lubos Celko)
 	Swedish (Johan Svedberg)
+	Korean (Kee-Won Seo)
 	UTF-8 version of the Japanese tutor (Yasuhiro Matsumoto) Use this as
 		the original, create the other Japanese tutor by conversion.
 
@@ -9927,8 +9936,8 @@ that is actually being used. (idea from Yakov Lerner)
 The big Win32 version is now compiled with Ruby interface, version 1.8.  For
 Python version 2.3 is used.  For Perl version 5.8 is used.
 
-The "ftdetect" directory is mentioned in the documentation.  Have the install
-program create it.
+The "ftdetect" directory is mentioned in the documentation.  The DOS install
+program creates it.
 
 
 Fixed							*fixed-6.3*
@@ -13646,5 +13655,192 @@ Problem:    ":normal ." doesn't work inside a function, because redo is saved
 	    and restored. (Benji Fisher)
 Solution:   Make a copy of the redo buffer when executing a function.
 Files:	    src/getchar.c
+
+Patch 6.3b.001 (extra)
+Problem:    Bcc 5: The generated auto/pathdef can't be compiled.
+Solution:   Fix the way quotes and backslashes are escaped.
+Files:	    src/Make_bc5.mak
+
+Patch 6.3b.002
+Problem:    Win32: conversion during file write fails when a double-byte
+	    character is split over two writes.
+Solution:   Fix the conversion retry without a trailing byte. (Taro Muraoka)
+Files:	    src/fileio.c
+
+Patch 6.3b.003 (extra)
+Problem:    Win32: When compiling with Borland C 5.5 and 'encoding' is "utf-8"
+	    then Vim can't open files under MS-Windows 98. (Antoine J.
+	    Mechelynck)
+Solution:   Don't use _wstat(), _wopen() and _wfopen() in this situation.
+Files:	    src/os_mswin.c, src/os_win32.c
+
+Patch 6.3b.004
+Problem:    ":helpgrep" includes a trailing CR in the text line.
+Solution:   Remove the CR.
+Files:	    src/quickfix.c
+
+Patch 6.3b.005
+Problem:    ":echo &g:ai" results in the local option value. (Salman Halim)
+Solution:   Pass the flags from find_option_end() to get_option_value().
+Files:	    src/eval.c
+
+Patch 6.3b.006
+Problem:    When using "mswin.vim", CTRL-V in Insert mode leaves cursor before
+	    last pasted character.  (Mathew Davis)
+Solution:   Use the same Paste() function as in menu.vim.
+Files:	    runtime/mswin.vim
+
+Patch 6.3b.007
+Problem:    Session file doesn't restore view on windows properly. (Robert
+	    Webb)
+Solution:   Restore window sizes both before and after restoring the view, so
+	    that the view, cursor position and size are restored properly.
+Files:	    src/ex_docmd.c
+
+Patch 6.3b.008
+Problem:    Using ":finally" in a user command doesn't always work. (Hari
+	    Krishna Dara)
+Solution:   Don't assume that using getexline() means the command was typed.
+Files:	    src/ex_docmd.c
+
+Patch 6.3b.009 (extra)
+Problem:    Win32: When the -P argument is not found in a window title, there
+	    is no error message.
+Solution:   When the window can't be found give an error message and exit.
+	    Also use try/except to catch failing to open the MDI window.
+	    (Michael Wookey)
+Files:	    src/gui_w32.c
+
+Patch 6.3b.010
+Problem:    Win32: Using the "-D" argument and expanding arguments may cause a
+	    hang, because the terminal isn't initialized yet. (Vince Negri)
+Solution:   Don't go into debug mode before the terminal is initialized.
+Files:	    src/main.c
+
+Patch 6.3b.011
+Problem:    Using CTRL-\ e while obtaining an expression aborts the command
+	    line. (Hari Krishna Dara)
+Solution:   Insert the CTRL-\ e as typed.
+Files:	    src/ex_getln.c
+
+Patch 6.3b.012 (after 6.3b.010)
+Problem:    Can't compile with tiny features. (Norbert Tretkowski)
+Solution:   Add #ifdefs.
+Files:	    src/main.c
+
+Patch 6.3b.013
+Problem:    Loading a session file results in editing the wrong file in the
+	    first window when this is not the file at the current position in
+	    the argument list. (Robert Webb)
+Solution:   Check w_arg_idx_invalid to decide whether to edit a file.
+Files:	    src/ex_docmd.c
+
+Patch 6.3b.014
+Problem:    ":runtime! foo*.vim" may using freed memory when a sourced script
+	    changes the value of 'runtimepath'.
+Solution:   Make a copy of 'runtimepath' when looping over the matches.
+Files:	    src/ex_cmds2.c
+
+Patch 6.3b.015
+Problem:    Get lalloc(0) error when using "p" in Visual mode while
+	    'clipboard' contains "autoselect,unnamed". (Mark Wagonner)
+Solution:   Avoid allocating zero bytes.  Obtain the clipboard when necessary.
+Files:	    src/ops.c
+
+Patch 6.3b.016
+Problem:    When 'virtualedit' is used "x" doesn't delete the last character
+	    of a line that has as many characters as 'columns'. (Yakov Lerner)
+Solution:   When the cursor isn't moved let oneright() return FAIL.
+Files:	    src/edit.c
+
+Patch 6.3b.017
+Problem:    Win32: "vim --remote-wait" doesn't exit when the server finished
+	    editing the file. (David Fishburn)
+Solution:   In the rrhelper plugin change backslashes to forward slashes and
+	    escape special characters.
+Files:	    runtime/plugin/rrhelper.vim
+
+Patch 6.3b.018
+Problem:    The list of help files in the "local additions" table doesn't
+	    recognize utf-8 encoding. (Yasuhiro Matsumoto)
+Solution:   Recognize utf-8 characters.
+Files:	    src/ex_cmds.c
+
+Patch 6.3b.019
+Problem:    When $VIMRUNTIME is not a full path name the "local additions"
+	    table lists all the help files.
+Solution:   Use fullpathcmp() instead of fnamecmp() to compare the directory
+	    names.
+Files:	    src/ex_cmds.c
+
+Patch 6.3b.020
+Problem:    When using CTRL-^ when entering a search string, the item in the
+	    statusline that indicates the keymap is not updated. (Ilya
+	    Dogolazky)
+Solution:   Mark the statuslines for updating.
+Files:	    src/ex_getln.c
+
+Patch 6.3b.021
+Problem:    The swapfile is not readable for others, the ATTENTION prompt does
+	    not show all info when someone else is editing the same file.
+	    (Marcel Svitalsky)
+Solution:   Use the protection of original file for the swapfile and set it
+	    after creating the swapfile.
+Files:	    src/fileio.c
+
+Patch 6.3b.022
+Problem:    Using "4v" to select four times the old Visual area may put the
+	    cursor beyond the end of the line. (Jens Paulus)
+Solution:   Correct the cursor column.
+Files:	    src/normal.c
+
+Patch 6.3b.023
+Problem:    When "3dip" starts in an empty line, white lines after the
+	    non-white lines are not deleted. (Jens Paulus)
+Solution:   Include the white lines.
+Files:	    src/search.c
+
+Patch 6.3b.024
+Problem:    "2daw" does not delete leading white space like "daw" does.  (Jens
+	    Paulus)
+Solution:   Include the white space when a count is used.
+Files:	    src/search.c
+
+Patch 6.3b.025
+Problem:    Percentage in ruler isn't updated when a line is deleted. (Jens
+	    Paulus)
+Solution:   Check for a change in line count when deciding to update the ruler.
+Files:	    src/screen.c, src/structs.h
+
+Patch 6.3b.026
+Problem:    When selecting "abort" at the ATTENTION prompt for a file that is
+	    already being edited Vim crashes.
+Solution:   Don't abort creating a new buffer when we really need it.
+Files:	    src/buffer.c, src/vim.h
+
+Patch 6.3b.027
+Problem:    Win32: When enabling the menu in a maximized window, Vim uses more
+	    lines than what is room for. (Shizhu Pan)
+Solution:   When deciding to call shell_resized(), also compare the text area
+	    size with Rows and Columns, not just with screen_Rows and
+	    screen_Columns.
+Files:	    src/gui.c
+
+Patch 6.3b.028
+Problem:    When in diff mode, setting 'rightleft' causes a crash. (Eddine)
+Solution:   Check for last column differently when 'rightleft' is set.
+Files:	    src/screen.c
+
+Patch 6.3b.029
+Problem:    Win32: warning for uninitialized variable.
+Solution:   Initialize to zero.
+Files:	    src/misc1.c
+
+Patch 6.3b.030
+Problem:    After Visually selecting four characters, changing it to other
+	    text, Visually selecting and yanking two characters: "." changes
+	    four characters, another "." changes two characters. (Robert Webb)
+Solution:   Don't store the size of the Visual area when redo is active.
+Files:	    src/normal.c
 
  vim:tw=78:ts=8:ft=help:norl:

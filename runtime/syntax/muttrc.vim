@@ -2,9 +2,9 @@
 " Language:	Mutt setup files
 " Maintainer:	Preben 'Peppe' Guldberg <peppe-vim@wielders.org>
 " Contributor:	Gary Johnson <garyjohn@spk.agilent.com>
-" Last Change:	30 May 2003
+" Last Change:	27 May 2004
 
-" This file covers mutt version 1.4.1i
+" This file covers mutt version 1.4.2.1i
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -182,7 +182,7 @@ syn keyword muttrcColorField	contained indicator markers message normal quoted s
 syn keyword muttrcColorField	contained status tilde tree underline
 syn match   muttrcColorField	contained "\<quoted\d\=\>"
 syn keyword muttrcColorFG	contained black blue cyan default green magenta red white yellow
-syn keyword muttrcColorFG	contained brightblue brightcyan brightdefault brightgreen
+syn keyword muttrcColorFG	contained brightblack brightblue brightcyan brightdefault brightgreen
 syn keyword muttrcColorFG	contained brightmagenta brightred brightwhite brightyellow
 syn match   muttrcColorFG	contained "\<\(bright\)\=color\d\{1,2}\>"
 syn keyword muttrcColorBG	contained black blue cyan default green magenta red white yellow

@@ -2,12 +2,13 @@
 " Language:	    lftp(1) configuration file
 " Maintainer:	    Nikolai Weibull <source@pcppopper.org>
 " URL:		    http://www.pcppopper.org/vim/syntax/pcp/lftp/
-" Latest Revision:  2004-04-22
+" Latest Revision:  2004-05-22
+" arch-tag:	    f2537c49-5d64-42b8-beb4-13a09dd723d2
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Set iskeyword since we need `-' (and potentially others) in keywords.
@@ -25,7 +26,7 @@ delcommand SetIsk
 syn region  lftpComment		display oneline matchgroup=lftpComment start="#" end="$" contains=lftpTodo
 
 " todo
-syn keyword lftpTodo		contained TODO FIXME
+syn keyword lftpTodo		contained TODO FIXME XXX NOTE
 
 " strings
 syn region  lftpString		contained display start=+"+ skip=+\\$\|\\"+ end=+"+ end=+$+
@@ -159,26 +160,25 @@ syn keyword lftpSettings	contained ra[te-period]
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_lftp_syn_inits")
-    if version < 508
-	let did_lftp_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_lftp_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink lftpComment		Comment
-    HiLink lftpTodo		Todo
-    HiLink lftpString		String
-    HiLink lftpNumber		Number
-    HiLink lftpBoolean		Boolean
-    HiLink lftpInterval		Number
-    HiLink lftpKeywords		Keyword
-    HiLink lftpSettingsPrefix	PreProc
-    HiLink lftpSettings		Type
-    delcommand HiLink
+  HiLink lftpComment		Comment
+  HiLink lftpTodo		Todo
+  HiLink lftpString		String
+  HiLink lftpNumber		Number
+  HiLink lftpBoolean		Boolean
+  HiLink lftpInterval		Number
+  HiLink lftpKeywords		Keyword
+  HiLink lftpSettingsPrefix	PreProc
+  HiLink lftpSettings		Type
+  delcommand HiLink
 endif
 
 let b:current_syntax = "lftp"
 
-" vim: set sw=4 sts=4:
-
+" vim: set sts=2 sw=2:

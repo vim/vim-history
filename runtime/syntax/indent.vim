@@ -1,16 +1,17 @@
 " Vim syntax file
 " Language:	    indent RC File
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/indent/
+" Latest Revision:  2004-05-22
+" arch-tag:	    23c11190-79fa-4493-9fc5-36435402a20d
 " TODO: is the deny-all (a la lilo.vim nice or no?)...
 "	irritating to be wrong to the last char...
 "	would be sweet if right until one char fails
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " Set iskeyword since we need `-' (and potentially others) in keywords.
@@ -27,11 +28,11 @@ delcommand SetIsk
 " errors
 syn match   indentError "\S\+"
 
+" todo
+syn keyword indentTodo contained TODO FIXME XXX NOTE
+
 " comments
 syn region  indentComment matchgroup=indentComment start="/\*" end="\*/" contains=indentTodo
-
-" todo
-syn keyword indentTodo contained TODO
 
 " keywords (command-line switches)
 syn match   indentOptions "\<--\(no-\)\=blank-\(before-sizeof\|Bill-Shannon\|lines-\(after-\(commas\|declarations\|procedures\)\|before-block-comments\)\)\>"
@@ -81,20 +82,20 @@ exec "syn sync minlines=" . b:indent_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_indent_syn_inits")
-    if version < 508
-	let did_indent_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_indent_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink indentError	    Error
-    HiLink indentComment    Comment
-    HiLink indentTodo	    Todo
-    HiLink indentOptions    Keyword
-    delcommand HiLink
+  HiLink indentError	Error
+  HiLink indentComment	Comment
+  HiLink indentTodo	Todo
+  HiLink indentOptions	Keyword
+  delcommand HiLink
 endif
 
 let b:current_syntax = "indent"
 
-"  vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

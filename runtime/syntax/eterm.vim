@@ -1,13 +1,14 @@
 " Vim syntax file
 " Language:	    Eterm configuration file
-" Maintainer:	    Nikolai 'pcp' Weibull <da.box@home.se>
-" URL:		    http://www.pcppopper.org/
-" Latest Revision:  2002-10-24
+" Maintainer:	    Nikolai Weibull <source@pcppopper.org>
+" URL:		    http://www.pcppopper.org/vim/syntax/pcp/eterm/
+" Latest Revision:  2004-05-06
+" arch-tag:	    f4c58caf-2b91-4fc4-96af-e3cad7c70e6b
 
 if version < 600
-    syntax clear
+  syntax clear
 elseif exists("b:current_syntax")
-    finish
+  finish
 endif
 
 " magic number
@@ -17,7 +18,7 @@ syn match   etermMagic		display "^<Eterm-[0-9.]\+>$"
 syn region  etermComment	matchgroup=etermComment start="^#" end="$" contains=etermTodo
 
 " todo
-syn keyword etermTodo		contained TODO
+syn keyword etermTodo		contained TODO FIXME XXX NOTE
 
 " numbers
 syn match   etermNumber		contained display "\<\(\d\+\|0x\x\{1,2}\)\>"
@@ -143,9 +144,9 @@ syn keyword etermMiscOptions	contained finished_text exec
 syn region  etermMiscContext	fold transparent  matchgroup=etermContext start="^\s*begin\s\+misc\s*$" end="^\s*end\>\(\s\+.\{-0,}\)\=$" contains=@etermGeneral,etermMiscOptions
 
 if exists("eterm_minlines")
-    let b:eterm_minlines = eterm_minlines
+  let b:eterm_minlines = eterm_minlines
 else
-    let b:eterm_minlines = 30
+  let b:eterm_minlines = 30
 endif
 exec "syn sync minlines=" . b:eterm_minlines
 
@@ -153,47 +154,47 @@ exec "syn sync minlines=" . b:eterm_minlines
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
 if version >= 508 || !exists("did_eterm_syn_inits")
-    if version < 508
-	let did_eterm_syn_inits = 1
-	command -nargs=+ HiLink hi link <args>
-    else
-	command -nargs=+ HiLink hi def link <args>
-    endif
+  if version < 508
+    let did_eterm_syn_inits = 1
+    command -nargs=+ HiLink hi link <args>
+  else
+    command -nargs=+ HiLink hi def link <args>
+  endif
 
-    HiLink etermMagic		Special
-    HiLink etermComment		Comment
-    HiLink etermTodo		Todo
-    HiLink etermNumber		Number
-    HiLink etermString		String
-    HiLink etermBoolean		Boolean
-    HiLink etermColor		Number
-    HiLink etermPreProc		PreProc
-    HiLink etermFunctions	Function
-    HiLink etermKeyMod		Special
-    HiLink etermContext		Keyword
-    HiLink etermOption		Keyword
-    HiLink etermType		Type
-    HiLink etermColorOptions	Keyword
-    HiLink etermAttrOptions	Keyword
-    HiLink etermIClassOptions	Keyword
-    HiLink etermImageTypes	Type
-    HiLink etermImageModes	Type
-    HiLink etermImageModesAllow	Keyword
-    HiLink etermImageOptions	Keyword
-    HiLink etermMenuOptions	Keyword
-    HiLink etermMenuItemOptions	Keyword
-    HiLink etermActionDef	Type
-    HiLink etermActionsOptions	Keyword
-    HiLink etermButtonDef	Type
-    HiLink etermButtonOptions	Keyword
-    HiLink etermMultiOptions	Keyword
-    HiLink etermXimOptions	Keyword
-    HiLink etermTogOptions	Keyword
-    HiLink etermKeyboardOptions	Keyword
-    HiLink etermMiscOptions	Keyword
-    delcommand HiLink
+  HiLink etermMagic		Special
+  HiLink etermComment		Comment
+  HiLink etermTodo		Todo
+  HiLink etermNumber		Number
+  HiLink etermString		String
+  HiLink etermBoolean		Boolean
+  HiLink etermColor		Number
+  HiLink etermPreProc		PreProc
+  HiLink etermFunctions    	Function
+  HiLink etermKeyMod		Special
+  HiLink etermContext		Keyword
+  HiLink etermOption		Keyword
+  HiLink etermType		Type
+  HiLink etermColorOptions	Keyword
+  HiLink etermAttrOptions	Keyword
+  HiLink etermIClassOptions	Keyword
+  HiLink etermImageTypes	Type
+  HiLink etermImageModes	Type
+  HiLink etermImageModesAllow	Keyword
+  HiLink etermImageOptions	Keyword
+  HiLink etermMenuOptions	Keyword
+  HiLink etermMenuItemOptions	Keyword
+  HiLink etermActionDef	Type
+  HiLink etermActionsOptions	Keyword
+  HiLink etermButtonDef	Type
+  HiLink etermButtonOptions	Keyword
+  HiLink etermMultiOptions	Keyword
+  HiLink etermXimOptions	Keyword
+  HiLink etermTogOptions	Keyword
+  HiLink etermKeyboardOptions	Keyword
+  HiLink etermMiscOptions	Keyword
+  delcommand HiLink
 endif
 
 let b:current_syntax = "eterm"
 
-"  vim: set sw=4 sts=4:
+" vim: set sts=2 sw=2:

@@ -1,6 +1,6 @@
 " Vim tutor support file
 " Author: Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:	2004 Apr 30
+" Last Change:	2004 Jun 03
 
 " This small source file is used for detecting if a translation of the
 " tutor file exist, i.e., a tutor.xx file, where xx is the language.
@@ -46,6 +46,15 @@ if s:ext =~? '\.ja'
     let s:ext = ".ja.utf-8"
   else
     let s:ext = ".ja.sjis"
+  endif
+endif
+
+" The korean tutor is available in two encodings, guess which one to use
+if s:ext =~? '\.ko'
+  if &enc =~ "utf-8$"
+    let s:ext = ".ko.utf-8"
+  else
+    let s:ext = ".ko.euc"
   endif
 endif
 
