@@ -3304,7 +3304,9 @@ gui_update_scrollbars(force)
 # endif
 #endif
 
-	    if (wp == firstwin)
+#ifdef FEAT_WINDOWS
+	    if (wp->w_winrow == 0)
+#endif
 	    {
 		/* Height of top scrollbar includes width of top border */
 		h += gui.border_offset;
