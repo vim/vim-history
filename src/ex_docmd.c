@@ -609,6 +609,10 @@ do_cmdline(cmdline, getline, cookie, flags)
     cstack.cs_had_endwhile = FALSE;
     cstack.cs_had_continue = FALSE;
     ga_init2(&lines_ga, (int)sizeof(wcmd_T), 10);
+
+    /* Inside a function use a higher debug level. */
+    if (getline == get_func_line)
+	++debug_level;
 #endif
 
     /*
@@ -913,6 +917,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 	    EMSG(_("E171: Missing :endif"));
     }
 
+    /* When leaving a function, reduce debug level. */
+    if (getline == get_func_line)
+	--debug_level;
     /*
      * Go to debug mode when returning from a function in which we are
      * single-stepping.
