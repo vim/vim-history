@@ -973,10 +973,12 @@ gui_update_cursor(force, clear_selection)
 		/* Double wide character. */
 		if (shape_table[idx].shape != SHAPE_VER)
 		    cur_width += gui.char_width;
-		else if (!(State & CMDLINE) && curwin->w_p_rl)
+		if (!(State & CMDLINE) && curwin->w_p_rl)
 		{
 		    /* gui.col points to the left halve of the character but
-		     * the vertical line needs to be on the right halve. */
+		     * the vertical line needs to be on the right halve.
+		     * A double-wide horizontal line is also drawn from the
+		     * right halve in gui_mch_draw_part_cursor(). */
 		    col_off = TRUE;
 		    ++gui.col;
 		}
