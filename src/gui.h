@@ -139,6 +139,7 @@
 #ifdef RISCOS
 # define DRAW_ITALIC		0x08	/* draw italic text */
 #endif
+#define DRAW_CURSOR		0x10	/* drawing block cursor (win32) */
 
 /* For our own tearoff menu item */
 #define TEAR_STRING		"-->Detach"
