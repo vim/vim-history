@@ -927,6 +927,11 @@ $(OBJDIR)\vim.res: vim.rc version.h tools.bmp tearoff.bmp \
 $(OBJDIR)\pathdef.obj:	auto\pathdef.c
 	$(CC) $(CCARG) $(CC1) $(CC2)$@ auto\pathdef.c
 
+
+# Need to escape both quotes and backslashes in $INTERP_DEFINES
+INTERP_DEFINES_ESC_BKS=$(INTERP_DEFINES:\=\\)
+INTERP_DEFINES_ESC=$(INTERP_DEFINES_ESC_BKS:"=\")
+
 # Note:  the silly /*"*/ below are there to trick make into accepting
 # the # character as something other than a comment without messing up
 # the preprocessor directive.
@@ -939,7 +944,7 @@ auto\pathdef.c::
 
 char_u *default_vim_dir = (char_u *)"$(VIMRCLOC:\=\\)";
 char_u *default_vimruntime_dir = (char_u *)"$(VIMRUNTIMEDIR:\=\\)";
-char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS:\=\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES:\=\\) $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)";
+char_u *all_cflags = (char_u *)"$(CC:\=\\) $(CFLAGS:\=\\) $(DEFINES) $(MBDEFINES) $(INTERP_DEFINES_ESC) $(OPT) $(EXETYPE) $(CPUARG) $(ALIGNARG) $(DEBUG_FLAG) $(CODEGUARD_FLAG)";
 char_u *all_lflags = (char_u *)"$(LINK:\=\\) $(LFLAGS:\=\\)";
 char_u *compiled_user = (char_u *)"$(USERNAME)";
 char_u *compiled_sys = (char_u *)"$(USERDOMAIN)";
