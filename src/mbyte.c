@@ -1842,39 +1842,55 @@ mb_strnicmp(s1, s2, n)
     char_u	*s1, *s2;
     int		n;
 {
-    int		i, l;
+    int		i, j, l;
     int		cdiff;
 
     for (i = 0; i < n; i += l)
     {
+	if (s1[i] == NUL && s2[i] == NUL)   /* both strings end */
+	    return 0;
 	if (enc_utf8)
-	    l = utf_ptr2len_check(s1 + i);  /* exclude composing chars */
-	else
-	    l = (*mb_ptr2len_check)(s1 + i);
-	if (l <= 1)
 	{
-	    /* Single byte: first check normally, then with ignore case. */
-	    if (s1[i] != s2[i])
+	    l = utf_byte2len(s1[i]);
+	    if (l > n - i)
+		l = n - i;		    /* incomplete character */
+	    /* Check directly first, it's faster. */
+	    for (j = 0; j < l; ++j)
+		if (s1[i + j] != s2[i + j])
+		    break;
+	    if (j < l)
 	    {
-		cdiff = TOLOWER_LOC(s1[i]) - TOLOWER_LOC(s2[i]);
+		/* If one of the two characters is incomplete return -1. */
+		if (i + utf_byte2len(s1[i]) > n || i + utf_byte2len(s2[i]) > n)
+		    return -1;
+		cdiff = utf_fold(utf_ptr2char(s1 + i))
+					     - utf_fold(utf_ptr2char(s2 + i));
 		if (cdiff != 0)
 		    return cdiff;
 	    }
-	    else if (s1[i] == NUL)
-		return 0;
 	}
 	else
 	{
-	    /* For multi-byte only ignore case for Unicode. */
-	    if (l > n - i)
-		l = n - i;
-	    if (enc_utf8)
-		cdiff = utf_fold(utf_ptr2char(s1 + i))
-					     - utf_fold(utf_ptr2char(s2 + i));
+	    l = (*mb_ptr2len_check)(s1 + i);
+	    if (l <= 1)
+	    {
+		/* Single byte: first check normally, then with ignore case. */
+		if (s1[i] != s2[i])
+		{
+		    cdiff = TOLOWER_LOC(s1[i]) - TOLOWER_LOC(s2[i]);
+		    if (cdiff != 0)
+			return cdiff;
+		}
+	    }
 	    else
-		cdiff =  STRNCMP(s1 + i, s2 + i, l);
-	    if (cdiff != 0)
-		return cdiff;
+	    {
+		/* For non-Unicode multi-byte don't ignore case. */
+		if (l > n - i)
+		    l = n - i;
+		cdiff = STRNCMP(s1 + i, s2 + i, l);
+		if (cdiff != 0)
+		    return cdiff;
+	    }
 	}
     }
     return 0;
