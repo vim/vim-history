@@ -2282,7 +2282,10 @@ dialog_callback(
 	 * accept the default value, some reason this is what we get.
 	 */
 	if (button == IDOK)
-	    EndDialog(hwnd, dialog_default_button);
+	{
+	    if (dialog_default_button > IDCANCEL)
+		EndDialog(hwnd, dialog_default_button);
+	}
 	else
 	    EndDialog(hwnd, button - IDCANCEL);
 	return TRUE;
@@ -2422,7 +2425,7 @@ gui_mch_dialog(
 	    numButtons++;
     }
     if (dfltbutton >= numButtons)
-	dfltbutton = 0;
+	dfltbutton = -1;
 
     /* Allocate array to hold the width of each button */
     buttonWidths = (int *) lalloc(numButtons * sizeof(int), TRUE);
@@ -2640,7 +2643,7 @@ gui_mch_dialog(
 	if (vertical)
 	{
 	    p = add_dialog_element(p,
-		    ((i == dfltbutton || dfltbutton < 0)
+		    (i == dfltbutton
 			    ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(DLG_VERT_PADDING_X),
 		    PixelToDialogY(buttonYpos /* TBK */
@@ -2652,7 +2655,7 @@ gui_mch_dialog(
 	else
 	{
 	    p = add_dialog_element(p,
-		    ((i == dfltbutton || dfltbutton < 0)
+		    (i == dfltbutton
 			    ? BS_DEFPUSHBUTTON : BS_PUSHBUTTON) | WS_TABSTOP,
 		    PixelToDialogX(horizWidth + buttonPositions[i]),
 		    PixelToDialogY(buttonYpos), /* TBK */
