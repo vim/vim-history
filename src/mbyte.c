@@ -1324,6 +1324,46 @@ utfc_ptr2char(p, p1, p2)
 }
 
 /*
+ * Convert a UTF-8 byte string to a wide chararacter.  Also get up to two
+ * composing characters.  Use no more than p[maxlen].
+ */
+    int
+utfc_ptr2char_len(p, p1, p2, maxlen)
+    char_u	*p;
+    int		*p1;	/* return: first composing char or 0 */
+    int		*p2;	/* return: second composing char or 0 */
+    int		maxlen;
+{
+    int		len;
+    int		c;
+    int		cc;
+
+    c = utf_ptr2char(p);
+    len = utf_ptr2len_check_len(p, maxlen);
+    /* Only accept a composing char when the first char isn't illegal. */
+    if ((len > 1 || *p < 0x80)
+	    && len < maxlen
+	    && p[len] >= 0x80
+	    && UTF_COMPOSINGLIKE(p, p + len))
+    {
+	*p1 = utf_ptr2char(p + len);
+	len += utf_ptr2len_check_len(p + len, maxlen - len);
+	if (len < maxlen
+		&& p[len] >= 0x80
+		&& utf_iscomposing(cc = utf_ptr2char(p + len)))
+	    *p2 = cc;
+	else
+	    *p2 = 0;
+    }
+    else
+    {
+	*p1 = 0;
+	*p2 = 0;
+    }
+    return c;
+}
+
+/*
  * Convert the character at screen position "off" to a sequence of bytes.
  * Includes the composing characters.
  * "buf" must at least have the length MB_MAXBYTES.
@@ -1448,7 +1488,6 @@ utfc_ptr2len_check(p)
     }
 }
 
-# if defined(FEAT_GUI_W32) || defined(PROTO)
 /*
  * Return the number of bytes the UTF-8 encoding of the character at "p[size]"
  * takes.  This includes following composing characters.
@@ -1459,6 +1498,9 @@ utfc_ptr2len_check_len(p, size)
     int		size;
 {
     int		len;
+#ifdef FEAT_ARABIC
+    int		prevlen;
+#endif
 
     if (*p == NUL)
 	return 0;
@@ -1476,17 +1518,22 @@ utfc_ptr2len_check_len(p, size)
      * Check for composing characters.  We can handle only the first two, but
      * skip all of them (otherwise the cursor would get stuck).
      */
+#ifdef FEAT_ARABIC
+    prevlen = 0;
+#endif
     while (len < size)
     {
-	if (p[len] < 0x80 || !utf_iscomposing(utf_ptr2char(p + len)))
+	if (p[len] < 0x80 || !UTF_COMPOSINGLIKE(p + prevlen, p + len))
 	    break;
 
 	/* Skip over composing char */
+#ifdef FEAT_ARABIC
+	prevlen = len;
+#endif
 	len += utf_ptr2len_check_len(p + len, size - len);
     }
     return len;
 }
-# endif
 
 /*
  * Return the number of bytes the UTF-8 encoding of character "c" takes.

@@ -22,6 +22,7 @@ int arabic_combine __ARGS((int one, int two));
 int arabic_maycombine __ARGS((int two));
 int utf_composinglike __ARGS((char_u *p1, char_u *p2));
 int utfc_ptr2char __ARGS((char_u *p, int *p1, int *p2));
+int utfc_ptr2char_len __ARGS((char_u *p, int *p1, int *p2, int maxlen));
 int utfc_char2bytes __ARGS((int off, char_u *buf));
 int utf_ptr2len_check __ARGS((char_u *p));
 int utf_byte2len __ARGS((int b));

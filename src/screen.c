@@ -5395,14 +5395,22 @@ screen_puts_len(text, len, row, col, attr)
 	/* check if this is the first byte of a multibyte */
 	if (has_mbyte)
 	{
-	    mbyte_blen = (*mb_ptr2len_check)(ptr);
+	    if (enc_utf8 && len > 0)
+		mbyte_blen = utfc_ptr2len_check_len(ptr,
+						   (int)((text + len) - ptr));
+	    else
+		mbyte_blen = (*mb_ptr2len_check)(ptr);
 	    if (enc_dbcs == DBCS_JPNU && c == 0x8e)
 		mbyte_cells = 1;
 	    else if (enc_dbcs != 0)
 		mbyte_cells = mbyte_blen;
 	    else	/* enc_utf8 */
 	    {
-		u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
+		if (len >= 0)
+		    u8c = utfc_ptr2char_len(ptr, &u8c_c1, &u8c_c2,
+						   (int)((text + len) - ptr));
+		else
+		    u8c = utfc_ptr2char(ptr, &u8c_c1, &u8c_c2);
 		mbyte_cells = utf_char2cells(u8c);
 		/* Non-BMP character: display as ? or fullwidth ?. */
 		if (u8c >= 0x10000)

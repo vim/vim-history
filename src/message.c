@@ -1179,7 +1179,12 @@ msg_outtrans_len_attr(msgstr, len, attr)
     while (--len >= 0)
     {
 #ifdef FEAT_MBYTE
-	if (has_mbyte && (mb_l = (*mb_ptr2len_check)(str)) > 1)
+	if (enc_utf8)
+	    /* Don't include composing chars after the end. */
+	    mb_l = utfc_ptr2len_check_len(str, len + 1);
+	else if (has_mbyte)
+	    mb_l = (*mb_ptr2len_check)(str);
+	if (has_mbyte && mb_l > 1)
 	{
 	    c = (*mb_ptr2char)(str);
 	    if (vim_isprintc(c))
@@ -2000,7 +2005,11 @@ msg_puts_attr_len(str, maxlen, attr)
 	    if (has_mbyte)
 	    {
 		cw = (*mb_ptr2cells)(s);
-		l = (*mb_ptr2len_check)(s);
+		if (enc_utf8 && maxlen >= 0)
+		    /* avoid including composing chars after the end */
+		    l = utfc_ptr2len_check_len(s, (int)((str + maxlen) - s));
+		else
+		    l = (*mb_ptr2len_check)(s);
 	    }
 	    else
 	    {
