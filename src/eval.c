@@ -6599,10 +6599,10 @@ f_prevnonblank(argvars, retvar)
 }
 
 #if defined(FEAT_CLIENTSERVER) && defined(FEAT_X11)
-static int make_connection __ARGS((void));
+static void make_connection __ARGS((void));
 static int check_connection __ARGS((void));
 
-    static int
+    static void
 make_connection()
 {
     if (X_DISPLAY == NULL && !gui.in_use)
