@@ -7410,6 +7410,10 @@ ex_redraw(eap)
 	    VIsual_active ? INVERTED :
 #endif
 	    0);
+#ifdef FEAT_TITLE
+    if (need_maketitle)
+	maketitle();
+#endif
     RedrawingDisabled = r;
     p_lz = p;
     out_flush();
