@@ -2190,6 +2190,10 @@ mch_has_exp_wildcard(char_u *p)
 	if (vim_strchr((char_u *)"?*[", *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p) - 1;
+#endif
     }
     return FALSE;
 }
@@ -2212,6 +2216,10 @@ mch_has_wildcard(char_u *p)
 						, *p) != NULL
 		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
+#ifdef FEAT_MBYTE
+	if (has_mbyte)
+	    p += (*mb_ptr2len_check)(p) - 1;
+#endif
     }
     return FALSE;
 }
