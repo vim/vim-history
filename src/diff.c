@@ -1613,6 +1613,15 @@ diff_find_change(wp, lnum, startp, endp)
 	    /* Search for start of difference */
 	    for (si = 0; line_org[si] != NUL && line_org[si] == line_new[si]; )
 		++si;
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		/* Move back to first byte of character in both lines (may
+		 * have "nn^" in line_org and "n^ in line_new). */
+		si -= (*mb_head_off)(line_org, line_org + si);
+		si -= (*mb_head_off)(line_new, line_new + si);
+	    }
+#endif
 	    if (*startp > si)
 		*startp = si;
 
