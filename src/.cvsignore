@@ -3,3 +3,6 @@ vim
 ObjC
 ObjGO
 vimres.res
+gobj
+obj
+pathdef.c

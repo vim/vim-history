@@ -2258,7 +2258,6 @@ buflist_list(eap)
     buf_T	*buf;
     int		len;
     int		i;
-    char	*mod;
 
     for (buf = firstbuf; buf != NULL && !got_int; buf = buf->b_next)
     {
@@ -2271,26 +2270,17 @@ buflist_list(eap)
 	else
 	    home_replace(buf, buf->b_fname, NameBuff, MAXPATHL, TRUE);
 
-	switch (bufIsChanged(buf) + (buf->b_p_ro * 2) + (!buf->b_p_ma * 4))
-	{
-	    default: mod = "  "; break;
-	    case 1: mod = " +"; break;
-	    case 2: mod = "= "; break;
-	    case 3: mod = "=+"; break;
-	    case 4:
-	    case 6: mod = "- "; break;
-	    case 5:
-	    case 7: mod = "-+"; break;
-	}
-
-	sprintf((char *)IObuff, "%3d%c%c%c%s \"",
+	sprintf((char *)IObuff, "%3d%c%c%c%c%c \"",
 		buf->b_fnum,
 		buf->b_p_bl ? ' ' : 'u',
 		buf == curbuf ? '%' :
 			(curwin->w_alt_fnum == buf->b_fnum ? '#' : ' '),
 		buf->b_ml.ml_mfp == NULL ? ' ' :
 			(buf->b_nwindows == 0 ? 'h' : 'a'),
-		mod);
+		!buf->b_p_ma ? '-' : (buf->b_p_ro ? '=' : ' '),
+		(buf->b_flags & BF_READERR) ? 'x'
+					    : (bufIsChanged(buf) ? '+' : ' ')
+		);
 
 	len = (int)STRLEN(IObuff);
 	STRNCPY(IObuff + len, NameBuff, IOSIZE - 20 - len);
