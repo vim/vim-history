@@ -2262,9 +2262,26 @@ foldUpdateIEMSRecurse(gap, level, startlnum, flp, getlevel, bot, topflags)
 		    && getlevel != foldlevelExpr
 		    && getlevel != foldlevelSyntax)
 		break;
-	    if (lvl == level
-		    && foldFind(&fp->fd_nested, flp->lnum - fp->fd_top, &fp2))
-		bot = fp2->fd_top + fp2->fd_len - 1 + fp->fd_top;
+	    i = 0;
+	    fp2 = fp;
+	    if (lvl >= level)
+	    {
+		/* Compute how deep the folds currently are, if it's deeper
+		 * than "lvl" then some must be deleted, need to update
+		 * at least one nested fold. */
+		ll = flp->lnum - fp->fd_top;
+		while (foldFind(&fp2->fd_nested, ll, &fp2))
+		{
+		    ++i;
+		    ll -= fp2->fd_top;
+		}
+	    }
+	    if (lvl < level + i)
+	    {
+		foldFind(&fp->fd_nested, flp->lnum - fp->fd_top, &fp2);
+		if (fp2 != NULL)
+		    bot = fp2->fd_top + fp2->fd_len - 1 + fp->fd_top;
+	    }
 	    else if (fp->fd_top + fp->fd_len <= flp->lnum && lvl >= level)
 		finish = TRUE;
 	    else
@@ -2959,6 +2976,7 @@ foldlevelMarker(flp)
     char_u	*startmarker;
     int		cstart;
     int		cend;
+    int		start_lvl = flp->lvl;
     char_u	*s;
     int		n;
 
@@ -2987,7 +3005,10 @@ foldlevelMarker(flp)
 		{
 		    flp->lvl = n;
 		    flp->lvl_next = n;
-		    ++flp->start;
+		    if (n < start_lvl)
+			flp->start = 0;
+		    else
+			flp->start = n - start_lvl;
 		}
 	    }
 	    else
@@ -3036,7 +3057,7 @@ foldlevelSyntax(flp)
     fline_T	*flp;
 {
 #ifndef FEAT_SYN_HL
-    flp->start = FALSE;
+    flp->start = 0;
     flp->lvl = 0;
 #else
     linenr_T	lnum = flp->lnum + flp->off;
@@ -3044,7 +3065,7 @@ foldlevelSyntax(flp)
 
     /* Use the maximum fold level at the start of this line and the next. */
     flp->lvl = syn_get_foldlevel(flp->wp, lnum);
-    flp->start = FALSE;
+    flp->start = 0;
     if (lnum < flp->wp->w_buffer->b_ml.ml_line_count)
     {
 	n = syn_get_foldlevel(flp->wp, lnum + 1);
