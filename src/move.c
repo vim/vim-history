@@ -931,6 +931,7 @@ curs_columns(scroll)
     int		extra;		/* offset for first screen line */
     int		off;
     int		n;
+    int		p_lines;
     int		width = 0;
     int		textwidth;
     int		new_leftcol;
@@ -1071,11 +1072,11 @@ curs_columns(scroll)
 
     prev_skipcol = curwin->w_skipcol;
 
-    n = 0;
+    p_lines = 0;
     if ((curwin->w_wrow >= curwin->w_height
 		|| ((prev_skipcol > 0
 			|| curwin->w_wrow + p_so >= curwin->w_height)
-		    && (n =
+		    && (p_lines =
 #ifdef FEAT_DIFF
 			plines_win_nofill
 #else
@@ -1102,15 +1103,17 @@ curs_columns(scroll)
 	    extra = 1;
 	/* Compute last display line of the buffer line that we want at the
 	 * bottom of the window. */
-	if (n == 0)
-	    n = plines_win(curwin, curwin->w_cursor.lnum, FALSE);
-	--n;
-	if (curwin->w_wrow + p_so < n)
+	if (p_lines == 0)
+	    p_lines = plines_win(curwin, curwin->w_cursor.lnum, FALSE);
+	--p_lines;
+	if (p_lines > curwin->w_wrow + p_so)
 	    n = curwin->w_wrow + p_so;
+	else
+	    n = p_lines;
 	if ((colnr_T)n >= curwin->w_height + curwin->w_skipcol / width)
 	    extra += 2;
 
-	if (extra == 3)
+	if (extra == 3 || p_lines < p_so * 2)
 	{
 	    /* not enough room for 'scrolloff', put cursor in the middle */
 	    n = curwin->w_virtcol / width;
@@ -1118,6 +1121,9 @@ curs_columns(scroll)
 		n -= curwin->w_height / 2;
 	    else
 		n = 0;
+	    /* don't skip more than necessary */
+	    if (n > p_lines - curwin->w_height + 1)
+		n = p_lines - curwin->w_height + 1;
 	    curwin->w_skipcol = n * width;
 	}
 	else if (extra == 1)
@@ -1149,12 +1155,11 @@ curs_columns(scroll)
 	    curwin->w_wrow -= extra;
 	}
 
-	extra = (curwin->w_skipcol - prev_skipcol) / width;
+	extra = ((int)prev_skipcol - (int)curwin->w_skipcol) / width;
 	if (extra > 0)
 	    win_ins_lines(curwin, 0, extra, FALSE, FALSE);
 	else if (extra < 0)
 	    win_del_lines(curwin, 0, -extra, FALSE, FALSE);
-
     }
     else
 	curwin->w_skipcol = 0;
