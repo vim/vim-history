@@ -5814,9 +5814,16 @@ nv_percent(cap)
 	{
 	    cap->oap->motion_type = MLINE;
 	    setpcmark();
-			    /* round up, so CTRL-G will give same value */
-	    curwin->w_cursor.lnum = (curbuf->b_ml.ml_line_count *
+	    /* Round up, so CTRL-G will give same value.  Watch out for a
+	     * large line count, the line number must not go negative! */
+	    if (curbuf->b_ml.ml_line_count > 1000000)
+		curwin->w_cursor.lnum = (curbuf->b_ml.ml_line_count + 99L)
+							 / 100L * cap->count0;
+	    else
+		curwin->w_cursor.lnum = (curbuf->b_ml.ml_line_count *
 						    cap->count0 + 99L) / 100L;
+	    if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
+		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 	    beginline(BL_SOL | BL_FIX);
 	}
     }

@@ -3401,7 +3401,10 @@ ex_hardcopy(eap)
 
 		    sprintf((char *)IObuff, _("Printing page %d (%d%%)"),
 			    page_count + 1 + side,
-			    (int)((prtpos.bytes_printed * 100)
+			    prtpos.bytes_printed > 1000000
+				? (int)(prtpos.bytes_printed /
+						       (bytes_to_print / 100))
+				: (int)((prtpos.bytes_printed * 100)
 							   / bytes_to_print));
 		    if (!mch_print_begin_page(IObuff))
 			goto print_fail;
