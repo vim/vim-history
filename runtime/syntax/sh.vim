@@ -2,8 +2,8 @@
 " Language:		shell (sh) Korn shell (ksh) bash (sh)
 " Maintainer:		Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Previous Maintainer:	Lennart Schultz <Lennart.Schultz@ecmwf.int>
-" Last Change:	September 18, 2001
-" Version: 26
+" Last Change:	September 26, 2001
+" Version: 27
 "
 " Using the following VIM variables:
 " b:is_kornshell               if defined, enhance with kornshell syntax
@@ -318,8 +318,10 @@ syn sync match shForSync	grouphere	shFor	"\<for\>"
 syn sync match shForSync	groupthere	shFor	"\<in\>"
 syn sync match shIfSync	grouphere	shIf	"\<if\>"
 syn sync match shIfSync	groupthere	shIf	"\<fi\>"
-syn sync match shUntilSync	grouphere	shRepeat	"\<until\>"
-syn sync match shWhileSync	grouphere	shRepeat	"\<while\>"
+if exists("b:is_kornshell") || exists("b:is_bash")
+ syn sync match shUntilSync	grouphere	shRepeat	"\<until\>"
+ syn sync match shWhileSync	grouphere	shRepeat	"\<while\>"
+endif
 
 " The default highlighting.
 hi def link shArithRegion		shShellVariables
@@ -382,7 +384,9 @@ hi def link shFunction		Function
 hi def link shFunctionName		Function
 hi def link shNumber		Number
 hi def link shOperator		Operator
-hi def link shRepeat		Repeat
+if exists("b:is_kornshell") || exists("b:is_bash")
+ hi def link shRepeat		Repeat
+endif
 hi def link shSetList		Identifier
 hi def link shShellVariables		PreProc
 hi def link shSpecial		Special
