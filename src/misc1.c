@@ -3053,7 +3053,7 @@ expand_env_esc(src, dst, dstlen, esc)
 	     * Recogize the start of a new name, for '~'.
 	     */
 	    at_start = FALSE;
-	    if (src[0] == '\\')
+	    if (src[0] == '\\' && src[1] != NUL)
 	    {
 		*dst++ = *src++;
 		--dstlen;
