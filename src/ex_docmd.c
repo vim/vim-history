@@ -6242,6 +6242,9 @@ ex_operators(eap)
     oa.end.lnum = eap->line2;
     oa.line_count = eap->line2 - eap->line1 + 1;
     oa.motion_type = MLINE;
+#ifdef FEAT_VIRTUALEDIT
+    virtual_op = FALSE;
+#endif
     if (eap->cmdidx != CMD_yank)	/* position cursor for undo */
     {
 	setpcmark();
@@ -6273,6 +6276,9 @@ ex_operators(eap)
 	    op_shift(&oa, FALSE, eap->amount);
 	    break;
     }
+#ifdef FEAT_VIRTUALEDIT
+    virtual_op = MAYBE;
+#endif
 }
 
 /*

@@ -1013,6 +1013,12 @@ EXTERN char	psepsN[2]		/* abnormal path separator string */
 			;
 #endif
 
+#ifdef FEAT_VIRTUALEDIT
+/* Set to TRUE when an operator is being executed with virtual editing, MAYBE
+ * when no operator is being executed, FALSE otherwise. */
+EXTERN int	virtual_op INIT(= MAYBE);
+#endif
+
 #ifdef FEAT_SYN_HL
 /* Display tick, incremented for each call to update_screen() */
 EXTERN disptick_T	display_tick INIT(= 0);

@@ -1641,7 +1641,7 @@ op_delete(oap)
     else
     {
 #ifdef FEAT_VIRTUALEDIT
-	if (virtual_active())
+	if (virtual_op)
 	{
 	    int		endcol = 0;
 
@@ -1696,7 +1696,7 @@ op_delete(oap)
 	    n = oap->end.col - oap->start.col + 1 - !oap->inclusive;
 
 #ifdef FEAT_VIRTUALEDIT
-	    if (virtual_active())
+	    if (virtual_op)
 	    {
 		/* fix up things for virtualedit-delete:
 		 * break the tabs which are going to get in our way
@@ -1717,7 +1717,7 @@ op_delete(oap)
 		    curwin->w_cursor.coladd = 0;
 	    }
 #endif
-	    (void)del_bytes((long)n, restart_edit == NUL && !virtual_active());
+	    (void)del_bytes((long)n, restart_edit == NUL && !virtual_op);
 	}
 	else				/* delete characters between lines */
 	{
@@ -1737,7 +1737,7 @@ op_delete(oap)
 	    /* delete from start of line until op_end */
 	    curwin->w_cursor.col = 0;
 	    (void)del_bytes((long)(oap->end.col + 1 - !oap->inclusive),
-				    restart_edit == NUL && !virtual_active());
+				    restart_edit == NUL && !virtual_op);
 	    curwin->w_cursor = curpos;		/* restore curwin->w_cursor */
 
 	    (void)do_join(FALSE);
@@ -1846,7 +1846,7 @@ op_replace(oap, c)
 	for ( ; curwin->w_cursor.lnum <= oap->end.lnum; ++curwin->w_cursor.lnum)
 	{
 	    block_prep(oap, &bd, curwin->w_cursor.lnum, TRUE);
-	    if (bd.textlen == 0 && !virtual_active())	/* nothing to delete */
+	    if (bd.textlen == 0 && !virtual_op)	/* nothing to delete */
 		continue;
 
 	    /* n == number of extra chars required
@@ -1856,7 +1856,7 @@ op_replace(oap, c)
 #ifdef FEAT_VIRTUALEDIT
 	    /* If the range starts in virtual space, count the initial
 	     * coladd offset as part of "startspaces" */
-	    if (virtual_active() && bd.is_short && *bd.textstart == NUL)
+	    if (virtual_op && bd.is_short && *bd.textstart == NUL)
 	    {
 		pos_T vpos;
 
@@ -1877,7 +1877,7 @@ op_replace(oap, c)
 		    && bd.end_char_vcols > 0 ? bd.end_char_vcols - 1 : 0);
 	    /* Figure out how many characters to replace. */
 	    numc = oap->end_vcol - oap->start_vcol + 1;
-	    if (bd.is_short && (!virtual_active() || bd.is_MAX))
+	    if (bd.is_short && (!virtual_op || bd.is_MAX))
 		numc -= (oap->end_vcol - bd.end_vcol) + 1;
 	    /* oldlen includes textlen, so don't double count */
 	    n += numc - bd.textlen;
@@ -1955,14 +1955,13 @@ op_replace(oap, c)
 			coladvance_force(getviscol());
 			if (curwin->w_cursor.lnum == oap->end.lnum)
 			    getvpos(&oap->end, end_vcol);
-			pchar(curwin->w_cursor, c);
 		    }
 #endif
 		    pchar(curwin->w_cursor, c);
 		}
 	    }
 #ifdef FEAT_VIRTUALEDIT
-	    else if (virtual_active() && curwin->w_cursor.lnum == oap->end.lnum)
+	    else if (virtual_op && curwin->w_cursor.lnum == oap->end.lnum)
 	    {
 		int virtcols = oap->end.coladd;
 
@@ -2329,7 +2328,7 @@ op_change(oap)
 	return FALSE;
 
     if ((l > curwin->w_cursor.col) && !lineempty(curwin->w_cursor.lnum)
-							 && !virtual_active())
+							 && !virtual_op)
 	inc_cursor();
 
 #ifdef FEAT_VISUALEXTRA
@@ -2592,7 +2591,7 @@ op_yank(oap, deleting, mess)
 		    {
 			startcol = oap->start.col;
 #ifdef FEAT_VIRTUALEDIT
-			if (virtual_active())
+			if (virtual_op)
 			{
 			    getvcol(curwin, &oap->start, &cs, NUL, &ce);
 			    if (ce != cs && oap->start.coladd > 0)
@@ -2611,7 +2610,7 @@ op_yank(oap, deleting, mess)
 		    {
 			endcol = oap->end.col;
 #ifdef FEAT_VIRTUALEDIT
-			if (virtual_active())
+			if (virtual_op)
 			{
 			    getvcol(curwin, &oap->end, &cs, NUL, &ce);
 			    if (p[endcol] == NUL || (cs + oap->end.coladd < ce
@@ -4378,7 +4377,7 @@ block_prep(oap, bdp, lnum, is_del)
 		 * Disadvantage: can lead to trailing spaces when the line is
 		 * short where the text is put */
 		/* if (!is_del || oap->op_type == OP_APPEND) */
-		if (oap->op_type == OP_APPEND || virtual_active())
+		if (oap->op_type == OP_APPEND || virtual_op)
 		    bdp->endspaces = oap->end_vcol - bdp->end_vcol
 					+ oap->inclusive;
 		else
@@ -5527,7 +5526,13 @@ cursor_pos_info()
 		switch (VIsual_mode)
 		{
 		    case Ctrl_V:
+# ifdef FEAT_VIRTUALEDIT
+			virtual_op = virtual_active();
+# endif
 			block_prep(&oparg, &bd, lnum, 0);
+# ifdef FEAT_VIRTUALEDIT
+			virtual_op = MAYBE;
+# endif
 			char_count_cursor += line_count_info(bd.textstart,
 				&word_count_cursor, (long)bd.textlen, eol_size);
 			break;

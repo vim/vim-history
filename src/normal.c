@@ -1434,6 +1434,11 @@ do_pending_operator(cap, old_col, gui_yank)
 
 	oap->line_count = oap->end.lnum - oap->start.lnum + 1;
 
+#ifdef FEAT_VIRTUALEDIT
+	/* Set "virtual_op" before resetting VIsual_active. */
+	virtual_op = virtual_active();
+#endif
+
 #ifdef FEAT_VISUAL
 	if (VIsual_active || redo_VIsual_busy)
 	{
@@ -1551,7 +1556,7 @@ do_pending_operator(cap, old_col, gui_yank)
 		oap->motion_type = MCHAR;
 		if (VIsual_mode != Ctrl_V && *ml_get_pos(&(oap->end)) == NUL
 # ifdef FEAT_VIRTUALEDIT
-			&& (include_line_break || !virtual_active())
+			&& (include_line_break || !virtual_op)
 # endif
 			)
 		{
@@ -1631,8 +1636,7 @@ do_pending_operator(cap, old_col, gui_yank)
 			    && gchar_pos(&oap->end) == NUL))
 		    && equal(oap->start, oap->end)
 #ifdef FEAT_VIRTUALEDIT
-		    && !(virtual_active()
-			&& oap->start.coladd != oap->end.coladd)
+		    && !(virtual_op && oap->start.coladd != oap->end.coladd)
 #endif
 		    );
 	/*
@@ -1879,6 +1883,9 @@ do_pending_operator(cap, old_col, gui_yank)
 	default:
 	    clearopbeep(oap);
 	}
+#ifdef FEAT_VIRTUALEDIT
+	virtual_op = MAYBE;
+#endif
 	if (!gui_yank)
 	{
 	    /*
