@@ -1102,8 +1102,15 @@ when the filesystem supports it.
    Vim attempts to preserve the ACL info when writing a file.  The backup file
 will get the ACL info of the original file.
    The ACL info is also used to check if a file is read-only (when opening the
-file).  Not for MS-Windows though, because the ACL library functions are
-buggy.
+file).
+
+						*read-only-share*
+When MS-Windows shares a drive on the network it can be marked as read-only.
+This means that even if the file read-only attribute is absent, and the ACL
+settings on NT network shared drives allow writing to the file, you can still
+not write to the file.  Vim on Win32 platforms will detect read-only network
+drives and will mark the file as read-only.  You will not be able to override
+it with |:write|.
 
 						*write-device*
 When the file name is actually a device name, Vim will not make a backup (that
