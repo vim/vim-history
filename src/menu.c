@@ -2244,6 +2244,7 @@ theend:
 typedef struct
 {
     char_u	*from;		/* English name */
+    char_u	*from_noamp;	/* same, without '&' */
     char_u	*to;		/* translated name */
 } menutrans_T;
 
@@ -2264,7 +2265,7 @@ ex_menutranslate(eap)
     char_u		*arg = eap->arg;
     menutrans_T		*tp;
     int			i;
-    char_u		*from, *to;
+    char_u		*from, *from_noamp, *to;
 
     if (menutrans_ga.ga_itemsize == 0)
 	ga_init2(&menutrans_ga, (int)sizeof(menutrans_T), 5);
@@ -2278,6 +2279,7 @@ ex_menutranslate(eap)
 	for (i = 0; i < menutrans_ga.ga_len; ++i)
 	{
 	    vim_free(tp[i].from);
+	    vim_free(tp[i].from_noamp);
 	    vim_free(tp[i].to);
 	}
 	ga_clear(&menutrans_ga);
@@ -2302,13 +2304,21 @@ ex_menutranslate(eap)
 	    {
 		tp = (menutrans_T *)menutrans_ga.ga_data;
 		from = vim_strsave(from);
+		from_noamp = menu_text(from, NULL, NULL);
 		to = vim_strnsave(to, (int)(arg - to));
-		if (from != NULL && to != NULL)
+		if (from != NULL && from_noamp != NULL && to != NULL)
 		{
 		    tp[menutrans_ga.ga_len].from = from;
+		    tp[menutrans_ga.ga_len].from_noamp = from_noamp;
 		    tp[menutrans_ga.ga_len].to = to;
 		    ++menutrans_ga.ga_len;
 		    --menutrans_ga.ga_room;
+		}
+		else
+		{
+		    vim_free(from);
+		    vim_free(from_noamp);
+		    vim_free(to);
 		}
 	    }
 	}
@@ -2346,10 +2356,30 @@ menutrans_lookup(name, len)
 {
     menutrans_T		*tp = (menutrans_T *)menutrans_ga.ga_data;
     int			i;
+    char_u		*dname;
+    int			dlen;
 
     for (i = 0; i < menutrans_ga.ga_len; ++i)
 	if (STRNCMP(name, tp[i].from, len) == 0 && tp[i].from[len] == NUL)
 	    return tp[i].to;
+
+    /* Now try again while ignoring '&' characters. */
+    i = name[len];
+    name[len] = NUL;
+    dname = menu_text(name, NULL, NULL);
+    name[len] = i;
+    if (dname != NULL)
+    {
+	dlen = STRLEN(dname);
+	for (i = 0; i < menutrans_ga.ga_len; ++i)
+	    if (STRCMP(dname, tp[i].from_noamp) == 0)
+	    {
+		vim_free(dname);
+		return tp[i].to;
+	    }
+	vim_free(dname);
+    }
+
     return NULL;
 }
 #endif /* FEAT_MULTI_LANG */
