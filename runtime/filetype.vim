@@ -285,7 +285,7 @@ au BufNewFile,BufRead *.lss			set ft=lss
 au BufNewFile,BufRead *.m4			if expand("<afile>") !~?  "html.m4$" | set ft=m4 | endif
 
 " Mail (for Elm, trn and rn)
-au BufNewFile,BufRead snd.*,.letter,.letter.[0-9]\+,.followup,.article,.article.[0-9]\+,pico.[0-9]\+,mutt*[0-9],ae[0-9]\+.txt set ft=mail
+au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,ae\d\+.txt set ft=mail
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak,*.dsp set ft=make
