@@ -49,7 +49,7 @@ char_u *getsourceline __ARGS((int c, void *cookie, int indent));
 void ex_scriptencoding __ARGS((exarg_T *eap));
 void ex_finish __ARGS((exarg_T *eap));
 void do_finish __ARGS((exarg_T *eap, int reanimate));
-int source_finished __ARGS((void *cookie));
+int source_finished __ARGS((char_u *(*getline)(int, void *, int), void *cookie));
 void ex_checktime __ARGS((exarg_T *eap));
 int get_printer_page_num __ARGS((void));
 int prt_header_height __ARGS((void));

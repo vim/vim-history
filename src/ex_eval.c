@@ -1256,7 +1256,7 @@ do_throw(cstack)
 	 * End the current script or function.  The exception will be rethrown
 	 * in the caller.
 	 */
-	if (eap->getline == get_func_line)
+	if (getline_equal(eap->getline, eap->cookie, get_func_line))
 	    current_funccal->returned = TRUE;
 	elseif (eap->get_func_line == getsourceline)
 	    ((struct source_cookie *)eap->cookie)->finished = TRUE;
