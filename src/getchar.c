@@ -2750,7 +2750,12 @@ fix_input_buffer(buf, len, script)
 	}
 	else
 #endif
-	if (p[0] == NUL || (p[0] == K_SPECIAL && !script))
+	if (p[0] == NUL || (p[0] == K_SPECIAL && !script
+#if defined(WIN3264) && !defined(FEAT_GUI)
+		    /* Win32 console passes modifiers */
+		    && (i < 2 || p[1] != KS_MODIFIER)
+#endif
+		    ))
 	{
 	    mch_memmove(p + 3, p + 1, (size_t)i);
 	    p[2] = K_THIRD(p[0]);

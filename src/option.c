@@ -2820,6 +2820,8 @@ set_init_1()
 		    opt_idx = findoption((char_u *)"termencoding");
 		    options[opt_idx].def_val[VI_DEFAULT] = p_tenc;
 		    options[opt_idx].flags |= P_DEF_ALLOCED;
+		    convert_setup(&input_conv, p_tenc, p_enc);
+		    convert_setup(&output_conv, p_enc, p_tenc);
 		}
 		else
 		    p_tenc = empty_option;
