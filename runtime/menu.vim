@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Jul 13
+" Last Change:	2002 Aug 12
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -31,9 +31,11 @@ if exists("v:lang") || &langmenu != ""
   " A language name must be at least two characters, don't accept "C"
   if strlen(s:lang) > 1
     " We always use a lowercase name.
-    " Change "iso-8859" to "iso_8859", some systems appear to use this.
+    " Change "iso-8859" to "iso_8859" and "iso8859" to "iso_8859", some
+    " systems appear to use this.
     " Change spaces to underscores.
-    let s:lang = substitute(tolower(s:lang), "\\.iso-", "\\.iso_", "")
+    let s:lang = substitute(tolower(s:lang), "\\.iso-", ".iso_", "")
+    let s:lang = substitute(s:lang, "\\.iso8859", ".iso_8859", "")
     let s:lang = substitute(s:lang, " ", "_", "g")
     " Remove "@euro", otherwise "LC_ALL=de_DE@euro gvim" will show English menus
     let s:lang = substitute(s:lang, "@euro", "", "")
