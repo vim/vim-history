@@ -1038,12 +1038,18 @@ key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 
     /* Check for Alt/Meta key (Mod1Mask), but not for a BS, DEL or character
      * that already has the 8th bit set.
-     * Don't do this for <S-M-Tab>, that should become K_S_TAB with ALT. */
+     * Don't do this for <S-M-Tab>, that should become K_S_TAB with ALT.
+     * Don't do this for double-byte encodings, it turns the char into a lead
+     * byte. */
     if (len == 1
 	    && (state & GDK_MOD1_MASK)
 	    && !(key_sym == GDK_BackSpace || key_sym == GDK_Delete)
 	    && (string[0] & 0x80) == 0
-	    && !(key_sym == GDK_Tab && (state & GDK_SHIFT_MASK)))
+	    && !(key_sym == GDK_Tab && (state & GDK_SHIFT_MASK))
+#ifdef FEAT_MBYTE
+	    && !enc_dbcs
+#endif
+	    )
     {
 	string[0] |= 0x80;
 	state &= ~GDK_MOD1_MASK;	/* don't use it again */
@@ -1084,11 +1090,16 @@ key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
     if (len == 0)   /* Unrecognized key */
 	return TRUE;
 
-    /* Special keys (and a few others) may have modifiers */
+    /* Special keys (and a few others) may have modifiers. Also when using a
+     * double-byte encoding (can't set the 8th bit). */
     if (len == -3 || key_sym == GDK_space || key_sym == GDK_Tab
 	    || key_sym == GDK_Return || key_sym == GDK_Linefeed
 	    || key_sym == GDK_Escape || key_sym == GDK_KP_Tab
-	    || key_sym == GDK_ISO_Enter || key_sym == GDK_3270_Enter)
+	    || key_sym == GDK_ISO_Enter || key_sym == GDK_3270_Enter
+#ifdef FEAT_MBYTE
+	    || (enc_dbcs && len == 1 && (state & GDK_MOD1_MASK))
+#endif
+	    )
     {
 	modifiers = 0;
 	if (state & GDK_SHIFT_MASK)
