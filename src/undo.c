@@ -563,13 +563,40 @@ u_undoredo()
 	    return;
 	}
 
-	if (top < newlnum)
-	{
-	    newlnum = top;
-	    curwin->w_cursor.lnum = top + 1;
-	}
 	oldsize = bot - top - 1;    /* number of lines before undo */
 	newsize = uep->ue_size;	    /* number of lines after undo */
+
+	if (top < newlnum)
+	{
+	    /* If the saved cursor is somewhere in this undo block, move it to
+	     * the remembered position.  Makes "gwap" put the cursor back
+	     * where it was. */
+	    lnum = curbuf->b_u_curhead->uh_cursor.lnum;
+	    if (lnum >= top && lnum <= top + newsize + 1)
+	    {
+		curwin->w_cursor = curbuf->b_u_curhead->uh_cursor;
+		newlnum = curwin->w_cursor.lnum - 1;
+	    }
+	    else
+	    {
+		/* Use the first line that actually changed.  Avoids that
+		 * undoing auto-formatting puts the cursor in the previous
+		 * line. */
+		for (i = 0; i < newsize && i < oldsize; ++i)
+		    if (STRCMP(uep->ue_array[i], ml_get(top + 1 + i)) != 0)
+			break;
+		if (i == newsize && newlnum == MAXLNUM && uep->ue_next == NULL)
+		{
+		    newlnum = top;
+		    curwin->w_cursor.lnum = newlnum + 1;
+		}
+		else if (i < newsize)
+		{
+		    newlnum = top + i;
+		    curwin->w_cursor.lnum = newlnum + 1;
+		}
+	    }
+	}
 
 	empty_buffer = FALSE;
 

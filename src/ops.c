@@ -4052,9 +4052,14 @@ op_format(oap, keep_cursor)
 {
     long	old_line_count = curbuf->b_ml.ml_line_count;
 
+    /* Place the cursor where the "gq" or "gw" command was given, so that "u"
+     * can put it back there. */
+    curwin->w_cursor = oap->cursor_start;
+
     if (u_save((linenr_T)(oap->start.lnum - 1),
 				       (linenr_T)(oap->end.lnum + 1)) == FAIL)
 	return;
+    curwin->w_cursor = oap->start;
 
 #ifdef FEAT_VISUAL
     if (oap->is_VIsual)
@@ -4065,6 +4070,8 @@ op_format(oap, keep_cursor)
     /* Set '[ mark at the start of the formatted area */
     curbuf->b_op_start = oap->start;
 
+    /* For "gw" remember the cursor position and put it back below (adjusted
+     * for joined and split lines). */
     if (keep_cursor)
 	saved_cursor = oap->cursor_start;
 
