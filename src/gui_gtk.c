@@ -43,6 +43,9 @@
 # ifdef bindtextdomain
 #  undef bindtextdomain
 # endif
+# if defined(FEAT_GETTEXT) && !defined(ENABLE_NLS)
+#  define ENABLE_NLS	/* so the texts in the dialog boxes are translated */
+# endif
 # include <gnome.h>
 #endif
 
