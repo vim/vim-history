@@ -4066,7 +4066,7 @@ op_format(oap, keep_cursor)
     curbuf->b_op_start = oap->start;
 
     if (keep_cursor)
-	saved_cursor = curwin->w_cursor;
+	saved_cursor = oap->cursor_start;
 
     format_lines(oap->line_count);
 

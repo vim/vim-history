@@ -7288,8 +7288,10 @@ nv_g_cmd(cap)
      *	 "gU"	    Change text to upper case.
      *   "g?"	    rot13 encoding
      */
-    case 'q':
     case 'w':
+	oap->cursor_start = curwin->w_cursor;
+	/*FALLTHROUGH*/
+    case 'q':
     case '~':
     case 'u':
     case 'U':
