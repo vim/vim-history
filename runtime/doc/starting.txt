@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.1.  Last change: 2002 Aug 29
+*starting.txt*  For Vim version 6.1.  Last change: 2003 Apr 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -379,8 +379,10 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		but "-fg" is used to specify the foreground color.  |gui-fork|
 		{not in Vi}
 
+							*--nofork*
+--nofork	GUI: Do not fork.  Same as |-f|.
 							*-u* *E282*
--u {vimrc}	The file {vimrc} is read for initializations.  Other
+-u {vimrc}	The file {vimrc} is read for initializations.  Most other
 		initializations are skipped; see |initialization|.  This can
 		be used to start Vim in a special mode, with special
 		mappings and settings.  A shell alias can be used to make
