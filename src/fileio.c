@@ -5238,9 +5238,11 @@ move_lines(frombuf, tobuf)
 	p = vim_strsave(ml_get_buf(frombuf, lnum, FALSE));
 	if (p == NULL || ml_append(lnum - 1, p, 0, FALSE) == FAIL)
 	{
+	    vim_free(p);
 	    retval = FAIL;
 	    break;
 	}
+	vim_free(p);
     }
 
     /* Delete all the lines in "frombuf". */
