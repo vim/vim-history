@@ -814,8 +814,8 @@ EXTERN typebuf_T typebuf		/* typeahead buffer */
 		    ;
 #ifdef FEAT_EX_EXTRA
 EXTERN int	ex_normal_busy INIT(= 0); /* recursivenes of ex_normal() */
-EXTERN int	stop_insert_mode;	/* for ":stopinsert" */
 #endif
+EXTERN int	stop_insert_mode;	/* for ":stopinsert" and 'insertmode' */
 
 EXTERN int	KeyTyped;		/* TRUE if user typed current char */
 EXTERN int	KeyStuffed;		/* TRUE if current char from stuffbuf */
