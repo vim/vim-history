@@ -2382,6 +2382,28 @@ gui_mch_flash(int msec)
 }
 
 /*
+ * Return flags used for scrolling.
+ * The SW_INVALIDATE is required when part of the window is covered or
+ * off-screen. Refer to MS KB Q75236.
+ */
+    static int
+get_scroll_flags(void)
+{
+    HWND	hwnd;
+    RECT	rcVim, rcOther, rcDest;
+
+    GetWindowRect(s_hwnd, &rcVim);
+    for (hwnd = s_hwnd; (hwnd = GetWindow(hwnd, GW_HWNDPREV)) != (HWND)0; )
+	if (IsWindowVisible(hwnd))
+	{
+	    GetWindowRect(hwnd, &rcOther);
+	    if (IntersectRect(&rcDest, &rcVim, &rcOther))
+		return SW_INVALIDATE;
+	}
+    return 0;
+}
+
+/*
  * Delete the given number of lines from the given row, scrolling up any
  * text further down within the scroll region.
  */
@@ -2396,10 +2418,9 @@ gui_mch_delete_lines(
     rc.right = FILL_X(gui.scroll_region_right + 1);
     rc.top = FILL_Y(row);
     rc.bottom = FILL_Y(gui.scroll_region_bot + 1);
-    /* The SW_INVALIDATE is required when part of the window is covered or
-     * off-screen.  How do we avoid it when it's not needed? */
+
     ScrollWindowEx(s_textArea, 0, -num_lines * gui.char_height,
-	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+				    &rc, &rc, NULL, NULL, get_scroll_flags());
 
     UpdateWindow(s_textArea);
     /* This seems to be required to avoid the cursor disappearing when
@@ -2431,7 +2452,7 @@ gui_mch_insert_lines(
     /* The SW_INVALIDATE is required when part of the window is covered or
      * off-screen.  How do we avoid it when it's not needed? */
     ScrollWindowEx(s_textArea, 0, num_lines * gui.char_height,
-	    &rc, &rc, NULL, NULL, SW_INVALIDATE);
+				    &rc, &rc, NULL, NULL, get_scroll_flags());
 
     gui_undraw_cursor();	/* Is this really necessary? */
     UpdateWindow(s_textArea);
