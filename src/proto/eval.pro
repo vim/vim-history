@@ -1,4 +1,7 @@
 /* eval.c */
+char_u *func_name __ARGS((void *cookie));
+linenr_T *func_breakpoint __ARGS((void *cookie));
+int *func_dbg_tick __ARGS((void *cookie));
 int func_level __ARGS((void *cookie));
 int current_func_returned __ARGS((void));
 void set_internal_string_var __ARGS((char_u *name, char_u *value));
