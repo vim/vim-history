@@ -323,7 +323,7 @@ struct memline
 struct keyentry
 {
     struct keyentry *next;	/* next keyword in the hash list */
-    int		    syn_inc_lvl;    /* ":syn include" level for this match */
+    int		    syn_inc_tag;    /* ":syn include" tag for this match */
     short	    syn_id;	/* syntax ID for this match (if non-zero) */
     short	    *next_list;	/* ID list for next match (if non-zero) */
     short	    flags;	/* see syntax.c */

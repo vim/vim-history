@@ -125,7 +125,7 @@ struct syn_pattern
     char		 sp_type;	    /* see SPTYPE_ defines below */
     char		 sp_syncing;	    /* this item used for syncing */
     short		 sp_flags;	    /* see HL_ defines below */
-    int			 sp_syn_inc_lvl;    /* ":syn include" level of item */
+    int			 sp_syn_inc_tag;    /* ":syn include" unique tag */
     short		 sp_syn_id;	    /* highlight group ID of item */
     short		 sp_syn_match_id;   /* highlight group ID of pattern */
     char_u		*sp_pattern;	    /* regexp to match, pattern */
@@ -232,11 +232,12 @@ struct syn_cluster
 static char_u **syn_cmdlinep;
 
 /*
- * Another Annoying Hack(TM):  To prevent rules from higher or lower in the
- * ":syn include" stack from from leaking into ALLBUT lists, we track the
- * current stack "level".
+ * Another Annoying Hack(TM):  To prevent rules from other ":syn include"'d
+ * files from from leaking into ALLBUT lists, we assign a unique ID to the
+ * rules in each ":syn include"'d file.
  */
-static int current_syn_inc_lvl = 0;
+static int current_syn_inc_tag = 0;
+static int running_syn_inc_tag = 0;
 
 /*
  * To reduce the time spent in keepend(), remember at which level in the state
@@ -1348,14 +1349,14 @@ syn_current_attr(syncing, line)
 				&& ((current_next_list != 0
 					&& in_id_list(current_next_list,
 						spp->sp_syn_id,
-						spp->sp_syn_inc_lvl, 0))
+						spp->sp_syn_inc_tag, 0))
 				    || (current_next_list == 0
 					&& ((cur_si == NULL
 					    && !(spp->sp_flags & HL_CONTAINED))
 						|| (cur_si != NULL
 					 && in_id_list(cur_si->si_cont_list,
 						spp->sp_syn_id,
-						spp->sp_syn_inc_lvl,
+						spp->sp_syn_inc_tag,
 					     spp->sp_flags & HL_CONTAINED))))))
 			{
 			    int lc_col;
@@ -2157,13 +2158,13 @@ check_keyword_id(line, startcol, endcol, flags, next_list, cur_si)
 	    if (   STRCMP(keyword, ktab->keyword) == 0
 		&& (   (current_next_list != 0
 			&& in_id_list(current_next_list, ktab->syn_id,
-				      ktab->syn_inc_lvl, 0))
+				      ktab->syn_inc_tag, 0))
 		    || (current_next_list == 0
 			&& ((cur_si == NULL && !(ktab->flags & HL_CONTAINED))
 			    || (cur_si != NULL
 				&& in_id_list(cur_si->si_cont_list,
 					ktab->syn_id,
-					ktab->syn_inc_lvl,
+					ktab->syn_inc_tag,
 					ktab->flags & HL_CONTAINED))))))
 	    {
 		*endcol = startcol + len - 1;
@@ -3013,7 +3014,7 @@ add_keyword(name, id, flags, next_list)
 	return;
     STRCPY(ktab->keyword, name);
     ktab->syn_id = id;
-    ktab->syn_inc_lvl = current_syn_inc_lvl;
+    ktab->syn_inc_tag = current_syn_inc_tag;
     ktab->flags = flags;
     ktab->next_list = copy_id_list(next_list);
 
@@ -3238,6 +3239,7 @@ syn_cmd_include(eap, syncing)
     char_u	*rest;
     char_u	*errormsg = NULL;
     int		prev_toplvl_grp;
+    int		prev_syn_inc_tag;
 
     eap->nextcmd = find_nextcmd(arg);
     if (eap->skip)
@@ -3272,15 +3274,16 @@ syn_cmd_include(eap, syncing)
 
     /*
      * Save and restore the existing top-level grouplist id and ":syn
-     * include" level around the actual inclusion.
+     * include" tag around the actual inclusion.
      */
-    current_syn_inc_lvl++;
+    prev_syn_inc_tag = current_syn_inc_tag;
+    current_syn_inc_tag = ++running_syn_inc_tag;
     prev_toplvl_grp = curbuf->b_syn_topgrp;
     curbuf->b_syn_topgrp = sgl_id;
     if (do_source(eap->arg, FALSE, FALSE) == FAIL)
 	emsg2(e_notopen, eap->arg);
     curbuf->b_syn_topgrp = prev_toplvl_grp;
-    current_syn_inc_lvl--;
+    current_syn_inc_tag = prev_syn_inc_tag;
 }
 
 /*
@@ -3429,7 +3432,7 @@ syn_cmd_match(eap, syncing)
 	    SYN_ITEMS(curbuf)[idx].sp_syncing = syncing;
 	    SYN_ITEMS(curbuf)[idx].sp_type = SPTYPE_MATCH;
 	    SYN_ITEMS(curbuf)[idx].sp_syn_id = syn_id;
-	    SYN_ITEMS(curbuf)[idx].sp_syn_inc_lvl = current_syn_inc_lvl;
+	    SYN_ITEMS(curbuf)[idx].sp_syn_inc_tag = current_syn_inc_tag;
 	    SYN_ITEMS(curbuf)[idx].sp_flags = flags;
 	    SYN_ITEMS(curbuf)[idx].sp_sync_idx = sync_idx;
 	    SYN_ITEMS(curbuf)[idx].sp_cont_list = cont_list;
@@ -3652,7 +3655,7 @@ syn_cmd_region(eap, syncing)
 			    (item == ITEM_SKIP) ? SPTYPE_SKIP : SPTYPE_END;
 		    SYN_ITEMS(curbuf)[idx].sp_flags |= flags;
 		    SYN_ITEMS(curbuf)[idx].sp_syn_id = syn_id;
-		    SYN_ITEMS(curbuf)[idx].sp_syn_inc_lvl = current_syn_inc_lvl;
+		    SYN_ITEMS(curbuf)[idx].sp_syn_inc_tag = current_syn_inc_tag;
 		    SYN_ITEMS(curbuf)[idx].sp_syn_match_id =
 							ppp->pp_matchgroup_id;
 		    if (item == ITEM_START)
@@ -4358,7 +4361,7 @@ get_id_list(arg, keylen, list)
 		    vim_free(name);
 		    break;
 		}
-		id = CONTAINS_ALLBUT + current_syn_inc_lvl;
+		id = CONTAINS_ALLBUT + current_syn_inc_tag;
 	    }
 	    else if (name[1] == '@')
 	    {
@@ -4495,10 +4498,10 @@ copy_id_list(list)
  * Check if "id" is in the "contains" or "nextgroup" list of pattern "idx".
  */
     static int
-in_id_list(list, id, inclvl, contained)
+in_id_list(list, id, inctag, contained)
     short	*list;		/* id list */
     int		id;		/* group id */
-    int		inclvl;		/* ":syn include" level of group id */
+    int		inctag;		/* ":syn include" tag of group id */
     int		contained;	/* group id is contained */
 {
     int		retval;
@@ -4519,7 +4522,7 @@ in_id_list(list, id, inclvl, contained)
      */
     if (*list >= CONTAINS_ALLBUT && *list < CLUSTER_ID_MIN)
     {
-	if (*list - CONTAINS_ALLBUT != inclvl)
+	if (*list - CONTAINS_ALLBUT != inctag)
 	    return FALSE;
 	++list;
 	retval = FALSE;
@@ -4538,7 +4541,7 @@ in_id_list(list, id, inclvl, contained)
 	if (scl_id >= 0)
 	{
 	    scl_list = SYN_CLSTR(syn_buf)[scl_id].scl_list;
-	    if (scl_list != NULL && in_id_list(scl_list, id, inclvl, contained))
+	    if (scl_list != NULL && in_id_list(scl_list, id, inctag, contained))
 		return retval;
 	}
     }
