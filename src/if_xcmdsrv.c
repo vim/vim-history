@@ -189,6 +189,8 @@ static Atom	registryProperty = None;
 static Atom	vimProperty = None;
 static int	got_x_error = FALSE;
 
+static char_u	*empty_prop = (char_u *)"";	/* empty GetRegProp() result */
+
 /*
  * Associate an ASCII name with Vim.  Try real hard to get a unique one.
  * Returns FAIL or OK.
@@ -667,7 +669,8 @@ serverGetVimNames(dpy)
 		p++;
 	}
     }
-    XFree(regProp);
+    if (regProp != empty_prop)
+	XFree(regProp);
     return ga.ga_data;
 }
 
@@ -983,7 +986,8 @@ LookupName(dpy, name, delete, loose)
 	XSync(dpy, False);
     }
 
-    XFree(regProp);
+    if (regProp != empty_prop)
+	XFree(regProp);
     return (Window)returnValue;
 }
 
@@ -1048,11 +1052,14 @@ DeleteAnyLingerer(dpy, win)
 	XSync(dpy, False);
     }
 
-    XFree(regProp);
+    if (regProp != empty_prop)
+	XFree(regProp);
 }
 
 /*
  * Read the registry property.  Delete it when it's formatted wrong.
+ * Return the property in "regPropp".  "empty_prop" is used when it doesn't
+ * exist yet.
  * Return OK when successful.
  */
     static int
@@ -1077,7 +1084,7 @@ GetRegProp(dpy, regPropp, numItemsp, domsg)
     {
 	/* No prop yet. Logically equal to the empty list */
 	*numItemsp = 0;
-	*regPropp = (char_u *)"";
+	*regPropp = empty_prop;
 	return OK;
     }
 
