@@ -4380,6 +4380,7 @@ ex_window()
     char_u		typestr[2];
     int			save_restart_edit = restart_edit;
     int			save_State = State;
+    int			save_exmode = exmode_active;
 
     /* Can't do this recursively.  Can't do it when typing a password. */
     if (cmdwin_type != 0
@@ -4467,6 +4468,9 @@ ex_window()
     ccline.cmdbuff = NULL;
     ccline.cmdprompt = NULL;
 
+    /* No Ex mode here! */
+    exmode_active = 0;
+
     State = NORMAL;
 # ifdef FEAT_MOUSE
     setmouse();
@@ -4498,6 +4502,8 @@ ex_window()
     /* Restore the comand line info. */
     ccline = save_ccline;
     cmdwin_type = 0;
+
+    exmode_active = save_exmode;
 
     /* Safety check: The old window or buffer was deleted: It's a a bug when
      * this happens! */
