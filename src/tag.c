@@ -2226,7 +2226,7 @@ get_tagfname(first, buf)
 	     * For a help window find "doc/tags" and "doc/tags-??" in all
 	     * directories in 'runtimepath'.
 	     */
-	    ga_clear(&tag_fnames);
+	    ga_clear_strings(&tag_fnames);
 	    ga_init2(&tag_fnames, sizeof(char_u *), 10);
 	    do_in_runtimepath((char_u *)
 #ifdef FEAT_MULTI_LANG

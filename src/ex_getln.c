@@ -2048,8 +2048,10 @@ cmdline_getvcol_cursor()
 redrawcmd_preedit()
 {
     if ((State & CMDLINE)
-	&& xic != NULL && im_get_status() && !p_imdisable
-	&& preedit_start_col != MAXCOL)
+	    && xic != NULL
+	    && im_get_status()
+	    && !p_imdisable
+	    && preedit_start_col != MAXCOL)
     {
 	int	cmdpos = 0;
 	int	cmdspos;
@@ -4057,6 +4059,7 @@ globpath(path, file)
 		    ga.ga_len += len;
 		    ga.ga_room -= len;
 		}
+		FreeWild(num_p, p);
 	    }
 	}
     }

@@ -2611,8 +2611,20 @@ static void	reg_nextline __ARGS((void));
 static void	reg_save __ARGS((regsave_T *save));
 static void	reg_restore __ARGS((regsave_T *save));
 static int	reg_save_equal __ARGS((regsave_T *save));
-static void	save_se __ARGS((save_se_T *savep, lpos_T *posp, char_u **pp));
-static void	restore_se __ARGS((save_se_T *savep, lpos_T *posp, char_u **pp));
+static void	save_se_multi __ARGS((save_se_T *savep, lpos_T *posp));
+static void	save_se_one __ARGS((save_se_T *savep, char_u **pp));
+
+/* Save the sub-expressions before attempting a match. */
+#define save_se(savep, posp, pp) \
+    REG_MULTI ? save_se_multi((savep), (posp)) : save_se_one((savep), (pp))
+
+/* After a failed match restore the sub-expressions. */
+#define restore_se(savep, posp, pp) { \
+    if (REG_MULTI) \
+	*(posp) = (savep)->se_u.pos; \
+    else \
+	*(pp) = (savep)->se_u.ptr; }
+
 static int	re_num_cmp __ARGS((long_u val, char_u *scan));
 static int	regmatch __ARGS((char_u *prog));
 static int	regrepeat __ARGS((char_u *p, long maxcount));
@@ -4747,40 +4759,26 @@ reg_save_equal(save)
  * Tentatively set the sub-expression start to the current position (after
  * calling regmatch() they will have changed).  Need to save the existing
  * values for when there is no match.
- * Use pointer or position, depending on REG_MULTI.
+ * Use se_save() to use pointer (save_se_multi()) or position (save_se_one()),
+ * depending on REG_MULTI.
  */
     static void
-save_se(savep, posp, pp)
+save_se_multi(savep, posp)
     save_se_T	*savep;
     lpos_T	*posp;
-    char_u	**pp;
 {
-    if (REG_MULTI)
-    {
-	savep->se_u.pos = *posp;
-	posp->lnum = reglnum;
-	posp->col = (colnr_T)(reginput - regline);
-    }
-    else
-    {
-	savep->se_u.ptr = *pp;
-	*pp = reginput;
-    }
+    savep->se_u.pos = *posp;
+    posp->lnum = reglnum;
+    posp->col = (colnr_T)(reginput - regline);
 }
 
-/*
- * We were wrong, restore the sub-expressions.
- */
     static void
-restore_se(savep, posp, pp)
+save_se_one(savep, pp)
     save_se_T	*savep;
-    lpos_T	*posp;
     char_u	**pp;
 {
-    if (REG_MULTI)
-	*posp = savep->se_u.pos;
-    else
-	*pp = savep->se_u.ptr;
+    savep->se_u.ptr = *pp;
+    *pp = reginput;
 }
 
 /*

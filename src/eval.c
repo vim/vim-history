@@ -1690,6 +1690,8 @@ eval1(arg, retvar, evaluate)
 	if ((*arg)[0] != ':')
 	{
 	    EMSG(_("E109: Missing ':' after '?'"));
+	    if (evaluate && result)
+		clear_var(retvar);
 	    return FAIL;
 	}
 
@@ -1698,7 +1700,11 @@ eval1(arg, retvar, evaluate)
 	 */
 	*arg = skipwhite(*arg + 1);
 	if (eval1(arg, &var2, evaluate && !result) == FAIL) /* recursive! */
+	{
+	    if (evaluate && result)
+		clear_var(retvar);
 	    return FAIL;
+	}
 	if (evaluate && !result)
 	    *retvar = var2;
     }
@@ -1734,10 +1740,10 @@ eval2(arg, retvar, evaluate)
     /*
      * Repeat until there is no following "||".
      */
+    first = TRUE;
+    result = FALSE;
     while ((*arg)[0] == '|' && (*arg)[1] == '|')
     {
-	result = FALSE;
-	first = TRUE;
 	if (evaluate && first)
 	{
 	    if (get_var_number(retvar) != 0)
@@ -1800,10 +1806,10 @@ eval3(arg, retvar, evaluate)
     /*
      * Repeat until there is no following "&&".
      */
+    first = TRUE;
+    result = TRUE;
     while ((*arg)[0] == '&' && (*arg)[1] == '&')
     {
-	result = TRUE;
-	first = TRUE;
 	if (evaluate && first)
 	{
 	    if (get_var_number(retvar) == 0)
@@ -2306,6 +2312,7 @@ eval7(arg, retvar, evaluate)
 		else if (ret == OK)
 		{
 		    EMSG(_("E110: Missing ')'"));
+		    clear_var(retvar);
 		    ret = FAIL;
 		}
 		break;
@@ -2331,7 +2338,11 @@ eval7(arg, retvar, evaluate)
 			 * aborting on error, or when an interrupt occurred or
 			 * an exception was thrown but not caught. */
 			if (aborting())
+			{
+			    if (ret == OK)
+				clear_var(retvar);
 			    ret = FAIL;
+			}
 		    }
 		    else if (evaluate)
 			ret = get_var_var(s, len, retvar);
@@ -2364,6 +2375,7 @@ eval7(arg, retvar, evaluate)
 	{
 	    EMSG(_("E111: Missing ']'"));
 	    clear_var(retvar);
+	    clear_var(&var2);
 	    return FAIL;
 	}
 
@@ -6929,13 +6941,14 @@ f_strpart(argvars, retvar)
     int		slen;
 
     p = get_var_string(&argvars[0]);
+    slen = (int)STRLEN(p);
+
     n = get_var_number(&argvars[1]);
     if (argvars[2].var_type != VAR_UNKNOWN)
 	len = get_var_number(&argvars[2]);
     else
-	len = (int)STRLEN(p) - n;
+	len = slen - n;	    /* default len: all bytes that are available. */
 
-    slen = (int)STRLEN(p);
     /*
      * Only return the overlap between the specified part and the actual
      * string.
@@ -8920,7 +8933,7 @@ ex_function(eap)
 		p += eval_fname_script(p);
 		if (ASCII_ISALPHA(*p))
 		{
-		    (void)trans_function_name(&p, TRUE, FALSE);
+		    vim_free(trans_function_name(&p, TRUE, FALSE));
 		    if (*skipwhite(p) == '(')
 		    {
 			++nesting;
