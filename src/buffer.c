@@ -1393,7 +1393,7 @@ buflist_new(ffname, sfname, lnum, flags)
     struct stat	st;
 #endif
 
-    fname_expand(&ffname, &sfname);	/* will allocate ffname */
+    fname_expand(curbuf, &ffname, &sfname);	/* will allocate ffname */
 
     /*
      * If file name already exists in the list, update the entry.
@@ -1796,8 +1796,8 @@ buflist_getfpos()
 }
 
 /*
- * find file in buffer list by name (it has to be for the current window)
- * 'ffname' must have a full path.
+ * Find file in buffer list by name (it has to be for the current window).
+ * "ffname" must have a full path.
  */
     buf_T *
 buflist_findname(ffname)
@@ -2369,34 +2369,36 @@ buflist_name_nr(fnum, fname, lnum)
 }
 
 /*
- * Set the current file name to 'ffname', short file name to 'sfname'.
+ * Set the file name for "buf"' to 'ffname', short file name to 'sfname'.
  * The file name with the full path is also remembered, for when :cd is used.
  * Returns FAIL for failure (file name already in use by other buffer)
  *	OK otherwise.
  */
     int
-setfname(ffname, sfname, message)
-    char_u *ffname, *sfname;
-    int	    message;
-{
+setfname(buf, ffname, sfname, message)
     buf_T	*buf;
+    char_u	*ffname, *sfname;
+    int		message;
+{
+    buf_T	*obuf;
 #ifdef UNIX
     struct stat st;
 #endif
 
     if (ffname == NULL || *ffname == NUL)
     {
-	vim_free(curbuf->b_ffname);
-	vim_free(curbuf->b_sfname);
-	curbuf->b_ffname = NULL;
-	curbuf->b_sfname = NULL;
+	/* Removing the name. */
+	vim_free(buf->b_ffname);
+	vim_free(buf->b_sfname);
+	buf->b_ffname = NULL;
+	buf->b_sfname = NULL;
 #ifdef UNIX
 	st.st_dev = (dev_T)-1;
 #endif
     }
     else
     {
-	fname_expand(&ffname, &sfname);	    /* will allocate ffname */
+	fname_expand(buf, &ffname, &sfname); /* will allocate ffname */
 	if (ffname == NULL)		    /* out of memory */
 	    return FAIL;
 
@@ -2408,20 +2410,20 @@ setfname(ffname, sfname, message)
 #ifdef UNIX
 	if (mch_stat((char *)ffname, &st) < 0)
 	    st.st_dev = (dev_T)-1;
-	buf = buflist_findname_stat(ffname, &st);
+	obuf = buflist_findname_stat(ffname, &st);
 #else
-	buf = buflist_findname(ffname);
+	obuf = buflist_findname(ffname);
 #endif
-	if (buf != NULL && buf != curbuf)
+	if (obuf != NULL && obuf != buf)
 	{
-	    if (buf->b_ml.ml_mfp != NULL)	/* it's loaded, fail */
+	    if (obuf->b_ml.ml_mfp != NULL)	/* it's loaded, fail */
 	    {
 		if (message)
 		    EMSG(_("E95: Buffer with this name already exists"));
 		vim_free(ffname);
 		return FAIL;
 	    }
-	    close_buffer(NULL, buf, DOBUF_WIPE); /* delete from the list */
+	    close_buffer(NULL, obuf, DOBUF_WIPE); /* delete from the list */
 	}
 	sfname = vim_strsave(sfname);
 	if (ffname == NULL || sfname == NULL)
@@ -2436,52 +2438,54 @@ setfname(ffname, sfname, message)
 # endif
 	    fname_case(sfname, 0);    /* set correct case for short file name */
 #endif
-	vim_free(curbuf->b_ffname);
-	vim_free(curbuf->b_sfname);
-	curbuf->b_ffname = ffname;
-	curbuf->b_sfname = sfname;
+	vim_free(buf->b_ffname);
+	vim_free(buf->b_sfname);
+	buf->b_ffname = ffname;
+	buf->b_sfname = sfname;
     }
-    curbuf->b_fname = curbuf->b_sfname;
+    buf->b_fname = buf->b_sfname;
 #ifdef UNIX
     if (st.st_dev == (dev_T)-1)
-	curbuf->b_dev = -1;
+	buf->b_dev = -1;
     else
     {
-	curbuf->b_dev = st.st_dev;
-	curbuf->b_ino = st.st_ino;
+	buf->b_dev = st.st_dev;
+	buf->b_ino = st.st_ino;
     }
 #endif
 
 #ifndef SHORT_FNAME
-    curbuf->b_shortname = FALSE;
+    buf->b_shortname = FALSE;
 #endif
 
-    buf_name_changed();
+    buf_name_changed(buf);
     return OK;
 }
 
 /*
- * Take care of what needs to be done when the name of the current buffer has
+ * Take care of what needs to be done when the name of buffer "buf" has
  * changed.
  */
     void
-buf_name_changed()
+buf_name_changed(buf)
+    buf_T	*buf;
 {
     /*
      * If the file name changed, also change the name of the swapfile
      */
-    if (curbuf->b_ml.ml_mfp != NULL)
-	ml_setname();
+    if (buf->b_ml.ml_mfp != NULL)
+	ml_setname(buf);
 
-    check_arg_idx(curwin);	/* check file name for arg list */
+    if (curwin->w_buffer == buf)
+	check_arg_idx(curwin);	/* check file name for arg list */
 #ifdef FEAT_TITLE
     maketitle();		/* set window title */
 #endif
 #ifdef FEAT_WINDOWS
     status_redraw_all();	/* status lines need to be redrawn */
 #endif
-    fmarks_check_names(curbuf);	/* check named file marks */
-    ml_timestamp(curbuf);	/* reset timestamp */
+    fmarks_check_names(buf);	/* check named file marks */
+    ml_timestamp(buf);		/* reset timestamp */
 }
 
 /*
@@ -3855,11 +3859,13 @@ fix_fname(fname)
 }
 
 /*
- * make ffname a full file name, set sfname to ffname if not NULL
- * ffname becomes a pointer to allocated memory (or NULL).
+ * Make "ffname" a full file name, set "sfname" to "ffname" if not NULL.
+ * "ffname" becomes a pointer to allocated memory (or NULL).
  */
+/*ARGSUSED*/
     void
-fname_expand(ffname, sfname)
+fname_expand(buf, ffname, sfname)
+    buf_T	*buf;
     char_u	**ffname;
     char_u	**sfname;
 {
@@ -3870,7 +3876,7 @@ fname_expand(ffname, sfname)
     *ffname = fix_fname(*ffname);   /* expand to full path */
 
 #ifdef FEAT_SHORTCUT
-    if (!curbuf->b_p_bin)
+    if (!buf->b_p_bin)
     {
 	char_u  *rfname = NULL;
 

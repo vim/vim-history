@@ -1,6 +1,6 @@
 /* memline.c */
 int ml_open __ARGS((void));
-void ml_setname __ARGS((void));
+void ml_setname __ARGS((buf_T *buf));
 void ml_open_files __ARGS((void));
 void ml_open_file __ARGS((buf_T *buf));
 void check_need_swap __ARGS((int newfile));

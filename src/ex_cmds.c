@@ -2021,7 +2021,7 @@ ex_file(eap)
 	xfname = curbuf->b_fname;
 	curbuf->b_ffname = NULL;
 	curbuf->b_sfname = NULL;
-	if (setfname(eap->arg, NULL, TRUE) == FAIL)
+	if (setfname(curbuf, eap->arg, NULL, TRUE) == FAIL)
 	{
 	    curbuf->b_ffname = fname;
 	    curbuf->b_sfname = sfname;
@@ -2217,7 +2217,7 @@ do_write(eap)
 	    fname = alt_buf->b_sfname;
 	    alt_buf->b_sfname = curbuf->b_sfname;
 	    curbuf->b_sfname = fname;
-	    buf_name_changed();
+	    buf_name_changed(curbuf);
 #ifdef FEAT_AUTOCMD
 	    apply_autocmds(EVENT_BUFFILEPOST, NULL, NULL, FALSE, curbuf);
 	    if (!alt_buf->b_p_bl)
@@ -2336,6 +2336,7 @@ do_wqall(eap)
 {
     buf_T	*buf;
     int		error = 0;
+    int		save_forceit = eap->forceit;
 
     if (eap->cmdidx == CMD_xall || eap->cmdidx == CMD_wqall)
 	exiting = TRUE;
@@ -2359,8 +2360,7 @@ do_wqall(eap)
 #ifdef FEAT_BROWSE
 	    /* ":browse wall": ask for file name if there isn't one */
 	    if (buf->b_ffname == NULL && cmdmod.browse)
-		buf->b_ffname = do_browse(TRUE, (char_u *)_("Save As"), NULL,
-						       NULL, NULL, NULL, buf);
+		browse_save_fname(buf);
 #endif
 	    if (buf->b_ffname == NULL)
 	    {
@@ -2383,6 +2383,7 @@ do_wqall(eap)
 		    buf = firstbuf;
 #endif
 	    }
+	    eap->forceit = save_forceit;    /* check_overwrite() may set it */
 	}
     }
     if (exiting)
@@ -2470,7 +2471,8 @@ getfile(fnum, ffname, sfname, setpm, lnum, forceit)
 
     if (fnum == 0)
     {
-	fname_expand(&ffname, &sfname);	/* make ffname full path, set sfname */
+					/* make ffname full path, set sfname */
+	fname_expand(curbuf, &ffname, &sfname);
 	other = otherfile(ffname);
 	free_me = ffname;		/* has been allocated, free() later */
     }

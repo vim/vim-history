@@ -2,7 +2,7 @@
 " You can also use this as a start for your own set of menus.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2004 May 09
+" Last Change:	2004 May 14
 
 " Note that ":an" (short for ":anoremenu") is often used to make a menu work
 " in all modes and avoid side effects from mappings defined by the user.
@@ -796,7 +796,7 @@ cnoremenu <script> <silent> 1.100 PopUp.Select\ &All	<C-U>call <SID>SelectAll()<
 if has("toolbar")
   an 1.10 ToolBar.Open			:browse confirm e<CR>
   an <silent> 1.20 ToolBar.Save		:if expand("%") == ""<Bar>browse confirm w<Bar>else<Bar>confirm w<Bar>endif<CR>
-  an 1.30 ToolBar.SaveAll		:wa<CR>
+  an 1.30 ToolBar.SaveAll		:browse confirm wa<CR>
 
   if has("printer")
     an 1.40   ToolBar.Print		:hardcopy<CR>

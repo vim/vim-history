@@ -3046,9 +3046,9 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     char_u		*fname;
     static char_u	*last_dir = NULL;    /* last used directory */
     char_u		*tofree = NULL;
+    int			save_browse = cmdmod.browse;
 
-
-    /* Must turn off browse straight away, or :so autocommands will get the
+    /* Must turn off browse to avoid that autocommands will get the
      * flag too!  */
     cmdmod.browse = FALSE;
 
@@ -3152,6 +3152,7 @@ do_browse(saving, title, dflt, ext, initdir, filter, buf)
     }
 
     vim_free(tofree);
+    cmdmod.browse = save_browse;
 
     return fname;
 }
