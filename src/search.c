@@ -1060,6 +1060,11 @@ searchc(c, dir, type, count)
     int		    col;
     char_u	    *p;
     int		    len;
+#ifdef MULTI_BYTE
+    int		    c2 = NUL;	    /* 2nd byte for DBCS */
+    static int	    lastc2 = NUL;   /* 2nd last character searched */
+    int		    char_bytes;	    /* 1: normal char, 2: DBCS char */
+#endif
 
     if (c != NUL)	/* normal search: remember args for repeat */
     {
@@ -1068,6 +1073,10 @@ searchc(c, dir, type, count)
 	    lastc = c;
 	    lastcdir = dir;
 	    lastctype = type;
+#ifdef MULTI_BYTE
+	    if (is_dbcs && IsLeadByte(c))
+		lastc2 = c2 = (char_u)safe_vgetc();
+#endif
 	}
     }
     else		/* repeat previous search */
@@ -1080,32 +1089,58 @@ searchc(c, dir, type, count)
 	    dir = lastcdir;
 	type = lastctype;
 	c = lastc;
+#ifdef MULTI_BYTE
+	c2 = lastc2;
+#endif
     }
 
     p = ml_get_curline();
     col = curwin->w_cursor.col;
     len = STRLEN(p);
 
+#ifdef MULTI_BYTE
+    if (is_dbcs && IsLeadByte(c))
+	char_bytes = 2;
+    else
+	char_bytes = 1;
+#endif
+
     while (count--)
     {
 	for (;;)
 	{
+#ifdef MULTI_BYTE
+	    if (is_dbcs && dir > 0 && IsLeadByte(p[col]))
+		++col;		/* advance two bytes for multibyte char */
+#endif
 	    if ((col += dir) < 0 || col >= len)
 		return FALSE;
 #ifdef MULTI_BYTE
 	    if (is_dbcs && dir < 0 && IsTrailByte(p, &p[col]))
 		continue;	/* skip multibyte's trail byte */
+
+	    if (is_dbcs && char_bytes == 2)
+	    {
+		if (p[col] == c && p[col + 1] == c2)
+		    break;
+	    }
+	    else
 #endif
-	    if (p[col] == c)
-		break;
-#ifdef MULTI_BYTE
-	    if (is_dbcs && dir > 0 && IsLeadByte(p[col]))
-		++col;		/* skip multibyte's trail byte */
-#endif
+		if (p[col] == c)
+		    break;
 	}
     }
     if (type)
+    {
+	/* backup to before the character (possibly double-byte) */
 	col -= dir;
+#ifdef MULTI_BYTE
+	if (is_dbcs
+		&& ((dir < 0 && char_bytes == 2)
+		    || (dir > 0 && IsTrailByte(p, &p[col]))))
+	    col -= dir;
+#endif
+    }
     curwin->w_cursor.col = col;
     return TRUE;
 }
