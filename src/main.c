@@ -542,6 +542,7 @@ main
 				/* "--help" give help message */
 				/* "--version" give version message */
 				/* "--literal" take files literally */
+				/* "--nofork" don't fork */
 				/* "--noplugin[s]" skip plugins */
 				/* "--cmd <cmd>" execute cmd before vimrc */
 		if (STRICMP(argv[0] + argv_idx, "help") == 0)
@@ -557,6 +558,12 @@ main
 		{
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
 		    literal = TRUE;
+#endif
+		}
+		else if (STRNICMP(argv[0] + argv_idx, "nofork", 6) == 0)
+		{
+#ifdef FEAT_GUI
+		    gui.dofork = FALSE;	/* don't fork() when starting GUI */
 #endif
 		}
 		else if (STRNICMP(argv[0] + argv_idx, "noplugin", 8) == 0)
@@ -2335,7 +2342,7 @@ usage()
 #endif
 #ifdef FEAT_GUI
     main_msg(_("-g\t\t\tRun using GUI (like \"gvim\")"));
-    main_msg(_("-f\t\t\tForeground: Don't fork when starting GUI"));
+    main_msg(_("-f  or  --nofork\tForeground: Don't fork when starting GUI"));
 #endif
     main_msg(_("-v\t\t\tVi mode (like \"vi\")"));
     main_msg(_("-e\t\t\tEx mode (like \"ex\")"));
@@ -2396,9 +2403,6 @@ usage()
     main_msg(_("-display <display>\tConnect vim to this particular X-server"));
 # endif
     main_msg(_("-X\t\t\tDo not connect to X server"));
-# ifdef FEAT_GUI_GTK
-    main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
-# endif
 #endif
 #ifdef FEAT_CLIENTSERVER
     main_msg(_("--remote <files>\tEdit <files> in a Vim server if possible"));
@@ -2413,7 +2417,7 @@ usage()
 #ifdef FEAT_VIMINFO
     main_msg(_("-i <viminfo>\t\tUse <viminfo> instead of .viminfo"));
 #endif
-    main_msg(_("-h\t\t\tPrint Help (this message) and exit"));
+    main_msg(_("-h  or  --help\tPrint Help (this message) and exit"));
     main_msg(_("--version\t\tPrint version information and exit"));
 
 #ifdef FEAT_GUI_X11
@@ -2452,6 +2456,7 @@ usage()
 #endif
 #ifdef FEAT_GUI_GTK
     mch_msg(_("\nArguments recognised by gvim (GTK+ version):\n"));
+    main_msg(_("--socketid <xid>\tOpen Vim inside another GTK widget"));
     main_msg(_("-font <font>\t\tUse <font> for normal text (also: -fn)"));
     main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
     main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
