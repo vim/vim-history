@@ -2794,6 +2794,12 @@ gui_mch_init()
     gui.scrollbar_height = gui.scrollbar_width = 15; /* cheat 1 overlap */
     gui.border_offset = gui.border_width = 2;
 
+#if defined(FEAT_GUI) && defined(MACOS_X)
+    /* If Quartz-style text antialiasing is available (see
+       gui_mch_draw_string() below), enable it for all font sizes. */
+    vim_setenv((char_u *)"QDTEXT_MINSIZE", (char_u *)"1");
+#endif
+
     /* TODO: Load bitmap if using TOOLBAR */
     return OK;
 }
@@ -3265,31 +3271,85 @@ gui_mch_draw_string(row, col, s, len, flags)
     int		len;
     int		flags;
 {
-    TextMode (srcCopy);
-    TextFace (normal);
 
-/*  SelectFont(hdc, gui.currFont); */
+#if defined(FEAT_GUI) && defined(MACOS_X)
+    /*
+     * On OS X, try using Quartz-style text antialiasing.
+     */
+    SInt32 sys_version = 0;
 
-    if (flags & DRAW_TRANSP)
+    Gestalt(gestaltSystemVersion, &sys_version);
+    if (sys_version >= 0x1020)
     {
-	TextMode (srcOr);
+        /* Quartz antialiasing is available only in OS 10.2 and later. */
+        UInt32 qd_flags = (p_antialias ?
+			     kQDUseCGTextRendering | kQDUseCGTextMetrics : 0);
+        (void)SwapQDTextFlags(qd_flags);
     }
 
-    MoveTo (TEXT_X(col), TEXT_Y(row));
-    DrawText ((char *)s, 0, len);
-
-
-    if (flags & DRAW_BOLD)
+    if (sys_version >= 0x1020 && p_antialias)
     {
-	TextMode (srcOr);
-	MoveTo (TEXT_X(col) + 1, TEXT_Y(row));
+        StyleParameter face;
+
+        face = normal;
+        if (flags & DRAW_BOLD)
+            face |= bold;
+        if (flags & DRAW_UNDERL)
+            face |= underline;
+        TextFace(face);
+
+        /* Quartz antialiasing works only in srcOr transfer mode. */
+        TextMode(srcOr);
+
+        if (!(flags & DRAW_TRANSP))
+        {
+            /*
+             * Since we're using srcOr mode, we have to clear the block
+             * before drawing the text.  The following is like calling
+             * gui_mch_clear_block(row, col, row, col + len - 1),
+             * but without setting the bg color to gui.back_pixel.
+             */
+            Rect rc;
+            rc.left = FILL_X(col);
+            rc.top = FILL_Y(row);
+            rc.right = FILL_X(col + len) + (col + len == Columns);
+            rc.bottom = FILL_Y(row + 1);
+            EraseRect(&rc);
+        }
+
+        MoveTo(TEXT_X(col), TEXT_Y(row));
+        DrawText((char*)s, 0, len);
+    }
+    else
+#endif
+    {
+	/* Use old-style, non-antialiased QuickDraw text rendering. */
+	TextMode (srcCopy);
+	TextFace (normal);
+
+    /*  SelectFont(hdc, gui.currFont); */
+
+	if (flags & DRAW_TRANSP)
+	{
+	    TextMode (srcOr);
+	}
+
+	MoveTo (TEXT_X(col), TEXT_Y(row));
 	DrawText ((char *)s, 0, len);
-    }
 
-    if (flags & DRAW_UNDERL)
-    {
-	MoveTo (FILL_X(col), FILL_Y(row + 1) - 1);
-	LineTo (FILL_X(col + len) - 1, FILL_Y(row + 1) - 1);
+
+	if (flags & DRAW_BOLD)
+	{
+	    TextMode (srcOr);
+	    MoveTo (TEXT_X(col) + 1, TEXT_Y(row));
+	    DrawText ((char *)s, 0, len);
+	}
+
+	if (flags & DRAW_UNDERL)
+	{
+	    MoveTo (FILL_X(col), FILL_Y(row + 1) - 1);
+	    LineTo (FILL_X(col + len) - 1, FILL_Y(row + 1) - 1);
+	}
     }
 }
 
@@ -4045,6 +4105,7 @@ gui_mch_add_menu_item(menu, idx)
 	int	    key = 0;
 	int	    modifiers = 0;
 	char_u	    *p_actext;
+
 	p_actext = menu->actext;
 	key = find_special_key(&p_actext, &modifiers, /*keycode=*/0);
 	if (*p_actext != 0)
@@ -5110,7 +5171,7 @@ gui_mch_show_popupmenu(menu)
 #if defined(FEAT_CW_EDITOR) || defined(PROTO)
 /* TODO: Is it need for MACOS_X? (Dany) */
     void
-mch_post_buffer_write (buf_T *buf)
+mch_post_buffer_write(buf_T *buf)
 {
 # ifdef USE_SIOUX
     printf ("Writing Buf...\n");

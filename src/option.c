@@ -320,6 +320,15 @@ static struct vimoption
 			    (char_u *)224L,
 #endif
 					    (char_u *)0L}},
+    {"antialias",   "anti", P_BOOL|P_VI_DEF|P_VIM|P_RCLR,
+#if defined(FEAT_GUI) && defined(MACOS_X)
+			    (char_u *)&p_antialias, PV_NONE,
+			    {(char_u *)FALSE, (char_u *)FALSE}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)FALSE, (char_u *)FALSE}
+#endif
+                            },
     {"arabic",	    "arab", P_BOOL|P_VI_DEF|P_VIM,
 #ifdef FEAT_ARABIC
 			    (char_u *)VAR_WIN, PV_ARAB,
