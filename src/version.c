@@ -612,6 +612,8 @@ static char *(features[]) =
 static int included_patches[] =
 {   /* Add new patch number below this line */
 /**/
+    388,
+/**/
     387,
 /**/
     386,
@@ -1401,6 +1403,7 @@ highest_patch()
     return h;
 }
 
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Return TRUE if patch "n" has been included.
  */
@@ -1415,6 +1418,7 @@ has_patch(n)
 	    return TRUE;
     return FALSE;
 }
+#endif
 
     void
 ex_version(eap)
