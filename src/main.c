@@ -1535,6 +1535,8 @@ scripterror:
      * This seems to be required to make callbacks to be called now, instead
      * of after things have been put on the screen, which then may be deleted
      * when getting a resize callback.
+     * For the Mac this handles putting files dropped on the Vim icon to
+     * global_alist.
      */
     if (gui.in_use)
     {
