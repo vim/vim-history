@@ -6555,12 +6555,11 @@ showoptions(all, opt_flags)
 	item_count = 0;
 	for (p = &options[0]; p->fullname != NULL; p++)
 	{
+	    varp = NULL;
 	    isterm = istermoption(p);
-	    if (!isterm && opt_flags != 0)
+	    if (opt_flags != 0)
 	    {
-		if (p->indir == PV_NONE)
-		    varp = NULL;
-		else
+		if (p->indir != PV_NONE && !isterm)
 		    varp = get_varp_scope(p, opt_flags);
 	    }
 	    else
