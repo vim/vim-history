@@ -2300,7 +2300,8 @@ mb_lefthalve(row, col)
 }
 #endif
 
-#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(FEAT_RIGHTLEFT) \
+	|| defined(PROTO)
 /*
  * Correct a position on the screen, if it's the right halve of a double-wide
  * char move it to the left halve.  Returns the corrected column.
