@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2002 Apr 23
+" Last change:	2002 May 06
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -31,6 +31,11 @@ au BufNewFile,BufRead *.in
 	\   exe "doau filetypedetect BufRead " . expand("<afile>:r") |
 	\ endif
 
+" Pattern used to match file names which should not be inspected.
+" Currently finds compressed files.
+if !exists("g:ft_ignore_pat")
+  let g:ft_ignore_pat = '\.\(Z\|gz\|bz2\|zip\|tgz\)$'
+endif
 
 " Abaqus or Trasys
 au BufNewFile,BufRead *.inp			call FTCheck_inp()
@@ -1286,9 +1291,12 @@ endif
 
 " Check for "*" after loading myfiletypefile, so that scripts.vim is only used
 " when there are no matching file name extensions.
+" Don't do this for compressed files.
 augroup filetypedetect
-au BufNewFile,BufRead,StdinReadPost *
-	\ if !did_filetype() | runtime! scripts.vim | endif
+au BufNewFile,BufRead *
+	\ if !did_filetype() && expand("<amatch>") !~ g:ft_ignore_pat
+	\ | runtime! scripts.vim | endif
+au StdinReadPost * if !did_filetype() | runtime! scripts.vim | endif
 
 
 " Extra checks for when no filetype has been detected now.  Mostly used for
@@ -1365,7 +1373,7 @@ au BufNewFile,BufRead zsh*,zlog*		setf zsh
 
 " Generic configuration file (check this last, it's just guessing!)
 au BufNewFile,BufRead,StdinReadPost *
-	\ if !did_filetype()
+	\ if !did_filetype() && expand("<amatch>") !~ g:ft_ignore_pat
 	\    && (getline(1) =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'
 	\	|| getline(4) =~ '^#' || getline(5) =~ '^#') |
 	\   setf conf |
