@@ -408,6 +408,12 @@ mb_init()
     int		idx;
     int		n;
     int		enc_dbcs_new = 0;
+#if defined(USE_ICONV) && !defined(WIN3264) && !defined(WIN32UNIX) \
+	&& !defined(MACOS)
+# define LEN_FROM_CONV
+    vimconv_T	vimconv;
+    char_u	*p;
+#endif
 
     if (p_enc == NULL)
     {
@@ -555,6 +561,22 @@ codepage_invalid:
     /*
      * Fill the mb_bytelen_tab[] for MB_BYTE2LEN().
      */
+#ifdef LEN_FROM_CONV
+    /* When 'encoding' is different from the current locale mblen() won't
+     * work.  Use conversion to "utf-8" instead. */
+    vimconv.vc_type = CONV_NONE;
+    if (enc_dbcs)
+    {
+	p = enc_locale();
+	if (p == NULL || STRCMP(p, p_enc) != 0)
+	{
+	    convert_setup(&vimconv, p_enc, (char_u *)"utf-8");
+	    vimconv.vc_fail = TRUE;
+	}
+	vim_free(p);
+    }
+#endif
+
     for (i = 0; i < 256; ++i)
     {
 	/* Our own function to reliably check the length of UTF-8 characters,
@@ -589,22 +611,38 @@ codepage_invalid:
 		n = 1;
 	    else
 	    {
-		/*
-		 * mblen() should return -1 for invalid (means the leading
-		 * multibyte) character.  However there are some platform
-		 * where mblen() returns 0 for invalid character.  Therefore,
-		 * following condition includes 0.
-		 */
 		buf[0] = i;
 		buf[1] = 0;
-#if 0
-		if (i >= 0x80)/* TESTING DBCS: 'encoding' != current locale */
-#else
-		if (mblen(buf, (size_t)1) <= 0)
-#endif
-		    n = 2;
+#ifdef LEN_FROM_CONV
+		if (vimconv.vc_type != CONV_NONE)
+		{
+		    /*
+		     * string_convert() should fail when converting the first
+		     * byte of a double-byte character.
+		     */
+		    p = string_convert(&vimconv, (char_u *)buf, NULL);
+		    if (p != NULL)
+		    {
+			vim_free(p);
+			n = 1;
+		    }
+		    else
+			n = 2;
+		}
 		else
-		    n = 1;
+#endif
+		{
+		    /*
+		     * mblen() should return -1 for invalid (means the leading
+		     * multibyte) character.  However there are some platforms
+		     * where mblen() returns 0 for invalid character.
+		     * Therefore, following condition includes 0.
+		     */
+		    if (mblen(buf, (size_t)1) <= 0)
+			n = 2;
+		    else
+			n = 1;
+		}
 	    }
 # endif
 #endif
@@ -612,6 +650,10 @@ codepage_invalid:
 
 	mb_bytelen_tab[i] = n;
     }
+
+#ifdef LEN_FROM_CONV
+    convert_setup(&vimconv, NULL, NULL);
+#endif
 
     /* The cell width depends on the type of multi-byte characters. */
     (void)init_chartab();
@@ -2824,7 +2866,7 @@ encname2codepage(name)
 
 # if defined(USE_ICONV) || defined(PROTO)
 
-static char_u *iconv_string __ARGS((iconv_t fd, char_u *str, int slen));
+static char_u *iconv_string __ARGS((vimconv_T *vcp, char_u *str, int slen));
 
 /*
  * Call iconv_open() with a check if iconv() works properly (there are broken
@@ -2885,8 +2927,8 @@ my_iconv_open(to, from)
  * Returns the converted string in allocated memory.  NULL for an error.
  */
     static char_u *
-iconv_string(fd, str, slen)
-    iconv_t	fd;
+iconv_string(vcp, str, slen)
+    vimconv_T	*vcp;
     char_u	*str;
     int		slen;
 {
@@ -2922,7 +2964,8 @@ iconv_string(fd, str, slen)
 	tolen = len - done - 2;
 	/* Avoid a warning for systems with a wrong iconv() prototype by
 	 * casting the second argument to void *. */
-	if (iconv(fd, (void *)&from, &fromlen, &to, &tolen) != (size_t)-1)
+	if (iconv(vcp->vc_fd, (void *)&from, &fromlen, &to, &tolen)
+								!= (size_t)-1)
 	{
 	    /* Finished, append a NUL. */
 	    *to = NUL;
@@ -2930,7 +2973,8 @@ iconv_string(fd, str, slen)
 	}
 	/* Check both ICONV_EILSEQ and EILSEQ, because the dynamically loaded
 	 * iconv library may use one of them. */
-	if (ICONV_ERRNO == ICONV_EILSEQ || ICONV_ERRNO == EILSEQ)
+	if (!vcp->vc_fail && (ICONV_ERRNO == ICONV_EILSEQ
+						    || ICONV_ERRNO == EILSEQ))
 	{
 	    /* Can't convert: insert a '?' and skip a character.  This assumes
 	     * conversion from 'encoding' to something else.  In other
@@ -5209,6 +5253,7 @@ convert_setup(vcp, from, to)
 # endif
     vcp->vc_type = CONV_NONE;
     vcp->vc_factor = 1;
+    vcp->vc_fail = FALSE;
 
     /* No conversion when one of the names is empty or they are equal. */
     if (from == NULL || *from == NUL || to == NULL || *to == NUL
@@ -5304,16 +5349,17 @@ convert_input(ptr, len, maxlen)
 }
 
 #if defined(MACOS_X)
-static char_u *mac_string_convert __ARGS((char_u *ptr, int len, int *lenp, CFStringEncoding from, CFStringEncoding to));
+static char_u *mac_string_convert __ARGS((char_u *ptr, int len, int *lenp, int fail_on_error, CFStringEncoding from, CFStringEncoding to));
 
 /*
  * A Mac version of string_convert() for special cases.
  */
     static char_u *
-mac_string_convert(ptr, len, lenp, from, to)
+mac_string_convert(ptr, len, lenp, fail_on_error, from, to)
     char_u		*ptr;
     int			len;
     int			*lenp;
+    int			fail_on_error;
     CFStringEncoding	from;
     CFStringEncoding	to;
 {
@@ -5337,6 +5383,12 @@ mac_string_convert(ptr, len, lenp, from, to)
     if (!CFStringGetCString(cfstr, retval, buflen, to))
     {
 	CFRelease(cfstr);
+	if (fail_on_error)
+	{
+	    vim_free(retval);
+	    return NULL;
+	}
+
 	/* conversion failed for the whole string, but maybe it will work
 	 * for each character */
 	for (d = retval, in = 0, out = 0; in < len && out < buflen - 1;)
@@ -5384,6 +5436,7 @@ mac_string_convert(ptr, len, lenp, from, to)
  * Convert text "ptr[*lenp]" according to "vcp".
  * Returns the result in allocated memory and sets "*lenp".
  * When "lenp" is NULL, use NUL terminated strings.
+ * Illegal chars are often changed to "?", unless vcp->vc_fail is set.
  * When something goes wrong, NULL is returned and "*lenp" is unchanged.
  */
     char_u *
@@ -5445,6 +5498,11 @@ string_convert(vcp, ptr, lenp)
 		    {
 			if (c < 0x100)
 			    *d++ = c;
+			else if (vcp->vc_fail)
+			{
+			    vim_free(retval);
+			    return NULL;
+			}
 			else
 			{
 			    *d++ = 0xbf;
@@ -5462,25 +5520,25 @@ string_convert(vcp, ptr, lenp)
 
 # ifdef MACOS_X
 	case CONV_MAC_LATIN1:
-	    retval = mac_string_convert(ptr, len, lenp,
+	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingMacRoman,
 					kCFStringEncodingISOLatin1);
 	    break;
 
 	case CONV_LATIN1_MAC:
-	    retval = mac_string_convert(ptr, len, lenp,
+	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingISOLatin1,
 					kCFStringEncodingMacRoman);
 	    break;
 
 	case CONV_MAC_UTF8:
-	    retval = mac_string_convert(ptr, len, lenp,
+	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingMacRoman,
 					kCFStringEncodingUTF8);
 	    break;
 
 	case CONV_UTF8_MAC:
-	    retval = mac_string_convert(ptr, len, lenp,
+	    retval = mac_string_convert(ptr, len, lenp, vcp->vc_fail,
 					kCFStringEncodingUTF8,
 					kCFStringEncodingMacRoman);
 	    break;
@@ -5488,7 +5546,7 @@ string_convert(vcp, ptr, lenp)
 
 # ifdef USE_ICONV
 	case CONV_ICONV:	/* conversion with output_conv.vc_fd */
-	    retval = iconv_string(vcp->vc_fd, ptr, len);
+	    retval = iconv_string(vcp, ptr, len);
 	    if (retval != NULL && lenp != NULL)
 		*lenp = (int)STRLEN(retval);
 	    break;

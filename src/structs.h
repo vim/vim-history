@@ -817,6 +817,7 @@ typedef struct
 # ifdef USE_ICONV
     iconv_t	vc_fd;		/* for CONV_ICONV */
 # endif
+    int		vc_fail;	/* fail for invalid char, don't use '?' */
 } vimconv_T;
 
 /*

@@ -2116,30 +2116,23 @@ getexactdigraph(char1, char2, meta)
     {
 	char_u	    buf[6], *to;
 	vimconv_T   vc;
-	int	    utflen;
 
 	/*
 	 * Convert the Unicode digraph to 'encoding'.
 	 */
 	i = utf_char2bytes(retval, buf);
+	retval = 0;
+	vc.vc_type = CONV_NONE;
 	if (convert_setup(&vc, (char_u *)"utf-8", p_enc) == OK)
 	{
-	    utflen = i;
+	    vc.vc_fail = TRUE;
 	    to = string_convert(&vc, buf, &i);
 	    if (to != NULL)
 	    {
-		/* Checking for invalid values isn't very easy. Internal
-		 * latin1 conversion will return char 0xbf in case it can't be
-		 * converted */
-		if ((i > 1 && !has_mbyte)
-			|| (vc.vc_type == CONV_TO_LATIN1 && utflen != 1
-							    && to[0] == 0xbf))
-		    /* assume invalid value */
-		    retval = 0;
-		else
-		    retval = (*mb_ptr2char)(to);
+		retval = (*mb_ptr2char)(to);
 		vim_free(to);
 	    }
+	    (void)convert_setup(&vc, NULL, NULL);
 	}
     }
 # endif
