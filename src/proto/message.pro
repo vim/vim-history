@@ -42,6 +42,7 @@ void mch_msg __ARGS((char *str));
 void msg_moremsg __ARGS((int full));
 void repeat_message __ARGS((void));
 void msg_clr_eos __ARGS((void));
+void msg_clr_eos_force __ARGS((void));
 void msg_clr_cmdline __ARGS((void));
 int msg_end __ARGS((void));
 void msg_check __ARGS((void));

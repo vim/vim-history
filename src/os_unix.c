@@ -2580,8 +2580,8 @@ exit_scroll()
     }
     else
     {
-	restore_cterm_colors();	/* get original colors back */
-	msg_clr_eos();		/* clear the rest of the display */
+	restore_cterm_colors();		/* get original colors back */
+	msg_clr_eos_force();		/* clear the rest of the display */
 	windgoto((int)Rows - 1, 0);	/* may have moved the cursor */
     }
 }

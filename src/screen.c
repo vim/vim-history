@@ -7858,7 +7858,7 @@ showmode()
 	 * Call char_avail() only when we are going to show something, because
 	 * it takes a bit of time.
 	 */
-	if (!redrawing() || (char_avail() && !KeyTyped))
+	if (!redrawing() || (char_avail() && !KeyTyped) || msg_silent != 0)
 	{
 	    redraw_cmdline = TRUE;		/* show mode later */
 	    return 0;
@@ -8006,8 +8006,9 @@ showmode()
 	msg_col = 0;
 	need_wait_return = nwr_save;	/* never ask for hit-return for this */
     }
-    else if (clear_cmdline)		/* just clear anything */
-	msg_clr_cmdline();		/* will reset clear_cmdline */
+    else if (clear_cmdline && msg_silent == 0)
+	/* Clear the whole command line.  Will reset "clear_cmdline". */
+	msg_clr_cmdline();
 
 #ifdef FEAT_CMDL_INFO
 # ifdef FEAT_VISUAL
