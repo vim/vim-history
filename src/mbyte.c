@@ -2629,6 +2629,12 @@ iconv_enabled(verbose)
     void
 iconv_end()
 {
+    /* Don't use iconv() when inputting or outputting characters. */
+    if (input_conv.vc_type == CONV_ICONV)
+	convert_setup(&input_conv, (char_u *)"", (char_u *)"");
+    if (output_conv.vc_type == CONV_ICONV)
+	convert_setup(&output_conv, (char_u *)"", (char_u *)"");
+
     if (hIconvDLL != 0)
 	FreeLibrary(hIconvDLL);
     if (hMsvcrtDLL != 0)
