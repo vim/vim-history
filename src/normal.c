@@ -5880,12 +5880,12 @@ nv_replace(cap)
     }
 
     /*
-     * Replacing with a TAB is done by edit(), because it is complicated when
-     * 'expandtab', 'smarttab' or 'softtabstop' is set.
+     * Replacing with a TAB is done by edit() when it is complicated because
+     * 'expandtab' or 'smarttab' is set.  CTRL-V TAB inserts a literal TAB.
      * Other characters are done below to avoid problems with things like
      * CTRL-V 048 (for edit() this would be R CTRL-V 0 ESC).
      */
-    if (cap->nchar == '\t' && (curbuf->b_p_et || p_sta))
+    if (had_ctrl_v != Ctrl_V && cap->nchar == '\t' && (curbuf->b_p_et || p_sta))
     {
 	stuffnumReadbuff(cap->count1);
 	stuffcharReadbuff('R');
