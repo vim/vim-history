@@ -610,6 +610,11 @@ check_stack_growth(p)
 #if defined(HAVE_GETRLIMIT) || defined(PROTO)
 static char *stack_limit = NULL;
 
+#if defined(_THREAD_SAFE) && defined(HAVE_PTHREAD_NP_H)
+# include <pthread.h>
+# include <pthread_np.h>
+#endif
+
 /*
  * Find out until how var the stack can grow without getting into trouble.
  * Called when starting up and when switching to the signal stack in
@@ -620,6 +625,7 @@ get_stack_limit()
 {
     struct rlimit	rlp;
     int			i;
+    long		lim;
 
     /* Set the stack limit to 15/16 of the allowable size.  Skip this when the
      * limit doesn't fit in a long (rlim_cur might be "long long"). */
@@ -630,16 +636,34 @@ get_stack_limit()
 #  endif
        )
     {
+	lim = (long)rlp.rlim_cur;
+#if defined(_THREAD_SAFE) && defined(HAVE_PTHREAD_NP_H)
+	{
+	    pthread_attr_t  attr;
+	    size_t	    size;
+
+	    /* On FreeBSD the initial thread always has a fixed stack size, no
+	     * matter what the limits are set to.  Normally it's 1 Mbyte. */
+	    pthread_attr_init(&attr);
+	    if (pthread_attr_get_np(pthread_self(), &attr) == 0)
+	    {
+		pthread_attr_getstacksize(&attr, &size);
+		if (lim > (long)size)
+		    lim = (long)size;
+	    }
+	    pthread_attr_destroy(&attr);
+	}
+#endif
 	if (stack_grows_downwards)
 	{
-	    stack_limit = (char *)((long)&i - ((long)rlp.rlim_cur / 16L * 15L));
+	    stack_limit = (char *)((long)&i - (lim / 16L * 15L));
 	    if (stack_limit >= (char *)&i)
 		/* overflow, set to 1/16 of current stack position */
 		stack_limit = (char *)((long)&i / 16L);
 	}
 	else
 	{
-	    stack_limit = (char *)((long)&i + ((long)rlp.rlim_cur / 16L * 15L));
+	    stack_limit = (char *)((long)&i + (lim / 16L * 15L));
 	    if (stack_limit <= (char *)&i)
 		stack_limit = NULL;	/* overflow */
 	}
