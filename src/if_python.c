@@ -107,6 +107,9 @@ struct PyMethodDef { int a; };
 # define _PyObject_New dll__PyObject_New
 # define _Py_NoneStruct (*dll__Py_NoneStruct)
 # define PyObject_Init dll__PyObject_Init
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
+#  define PyType_IsSubtype dll_PyType_IsSubtype
+# endif
 
 /*
  * Pointers for dynamic link
@@ -148,6 +151,9 @@ static void(*dll_Py_Initialize)(void);
 static PyObject*(*dll__PyObject_New)(PyTypeObject *, PyObject *);
 static PyObject*(*dll__PyObject_Init)(PyObject *, PyTypeObject *);
 static PyObject* dll__Py_NoneStruct;
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
+static int (*dll_PyType_IsSubtype)(PyTypeObject *, PyTypeObject *);
+# endif
 
 static HINSTANCE hinstPython = 0; /* Instance of python.dll */
 
@@ -211,6 +217,9 @@ static struct
     {"_PyObject_New", (PYTHON_PROC*)&dll__PyObject_New},
     {"PyObject_Init", (PYTHON_PROC*)&dll__PyObject_Init},
     {"_Py_NoneStruct", (PYTHON_PROC*)&dll__Py_NoneStruct},
+# if defined(PY_VERSION_HEX) && PY_VERSION_HEX >= 0x02020000
+    {"PyType_IsSubtype", (PYTHON_PROC*)&dll_PyType_IsSubtype},
+# endif
     {"", NULL},
 };
 
