@@ -4009,6 +4009,10 @@ find_help_tags(arg, num_matches, matches)
 	}
 	else
 	{
+	  /* replace "[:...:]" with "\[:...:]" */
+	  if (arg[0] == '[' && arg[1] == ':')
+	      *d++ = '\\';
+
 	  for (s = arg; *s; ++s)
 	  {
 	    /*
