@@ -100,6 +100,7 @@ struct PyMethodDef { int a; };
 # define PyString_Size dll_PyString_Size
 # define PyString_Type (*dll_PyString_Type)
 # define PySys_SetObject dll_PySys_SetObject
+# define PySys_SetArgv dll_PySys_SetArgv
 # define PyType_Type (*dll_PyType_Type)
 # define Py_BuildValue dll_Py_BuildValue
 # define Py_FindMethod dll_Py_FindMethod
@@ -149,6 +150,7 @@ static PyObject*(*dll_PyString_FromStringAndSize)(const char *, int);
 static int(*dll_PyString_Size)(PyObject *);
 static PyTypeObject* dll_PyString_Type;
 static int(*dll_PySys_SetObject)(char *, PyObject *);
+static int(*dll_PySys_SetArgv)(int, char **);
 static PyTypeObject* dll_PyType_Type;
 static PyObject*(*dll_Py_BuildValue)(char *, ...);
 static PyObject*(*dll_Py_FindMethod)(struct PyMethodDef[], PyObject *, char *);
@@ -220,6 +222,7 @@ static struct
     {"PyString_Size", (PYTHON_PROC*)&dll_PyString_Size},
     {"PyString_Type", (PYTHON_PROC*)&dll_PyString_Type},
     {"PySys_SetObject", (PYTHON_PROC*)&dll_PySys_SetObject},
+    {"PySys_SetArgv", (PYTHON_PROC*)&dll_PySys_SetArgv},
     {"PyType_Type", (PYTHON_PROC*)&dll_PyType_Type},
     {"Py_BuildValue", (PYTHON_PROC*)&dll_Py_BuildValue},
     {"Py_FindMethod", (PYTHON_PROC*)&dll_Py_FindMethod},
@@ -2073,6 +2076,7 @@ PythonMod_Init(void)
 {
     PyObject *mod;
     PyObject *dict;
+    static char *(argv[2]) = {"", NULL};
 
     /* Fixups... */
     BufferType.ob_type = &PyType_Type;
@@ -2081,6 +2085,9 @@ PythonMod_Init(void)
     BufListType.ob_type = &PyType_Type;
     WinListType.ob_type = &PyType_Type;
     CurrentType.ob_type = &PyType_Type;
+
+    /* Set sys.argv[] to avoid a crash in warn(). */
+    PySys_SetArgv(1, argv);
 
     mod = Py_InitModule("vim", VimMethods);
     dict = PyModule_GetDict(mod);
