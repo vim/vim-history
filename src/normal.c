@@ -1441,26 +1441,21 @@ do_pending_operator(cap, searchbuff,
     static colnr_t  redo_VIsual_col;	    /* number of cols or end column */
     static long	    redo_VIsual_count;	    /* count for Visual operator */
 
-#if defined(USE_CLIPBOARD) && !defined(MSWIN)
+#if defined(USE_CLIPBOARD)
     /*
      * Yank the visual area into the GUI selection register before we operate
-     * on it and lose it forever.  This could call do_pending_operator()
-     * recursively, but that's OK because gui_yank will be TRUE for the
-     * nested call.  Note also that we call clip_copy_selection() and not
-     * clip_auto_select().  This is because even when 'autoselect' is not set,
-     * if we operate on the text, eg by deleting it, then this is considered to
-     * be an explicit request for it to be put in the global cut buffer, so we
-     * always want to do it here. -- webb
+     * on it and lose it forever.
+     * Don't do it if a specific register was specified, so that ""x"*P works.
+     * This could call do_pending_operator() recursively, but that's OK
+     * because gui_yank will be TRUE for the nested call.
      */
-    /* MSWINDOWS: don't do this, there is no automatic copy to the clipboard */
-    /* Don't do it if a specific register was specified, so that ""x"*P works */
     if (clipboard.available
 	    && oap->op_type != OP_NOP
 	    && !gui_yank
 	    && VIsual_active
 	    && oap->regname == 0
 	    && !redo_VIsual_busy)
-	clip_copy_selection();
+	clip_auto_select();
 #endif
     old_cursor = curwin->w_cursor;
 
