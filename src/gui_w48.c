@@ -476,8 +476,64 @@ _OnDeadChar(
 }
 
 /*
+ * Convert Unicode character "ch" to bytes in "string[slen]".
+ * Return the length.
+ */
+    static int
+char_to_string(ch, string, slen)
+    int		ch;
+    char_u	*string;
+    int		slen;
+{
+    int		len;
+    int		i;
+#ifdef FEAT_MBYTE
+    WCHAR	wstring[2];
+    char_u	*ws = NULL;;
+
+    /* "ch" is a UTF-16 character.  Convert it to a string of bytes.  When
+     * "enc_codepage" is non-zero use the standard Win32 function, otherwise
+     * use our own conversion function (e.g., for UTF-8). */
+    wstring[0] = ch;
+    if (enc_codepage > 0)
+	len = WideCharToMultiByte(enc_codepage, 0, wstring, 1, string, slen,
+								     0, NULL);
+    else
+    {
+	len = 1;
+	ws = ucs2_to_enc(wstring, &len);
+	if (ws == NULL)
+	    len = 0;
+	else
+	{
+	    if (len > slen)	/* just in case */
+		len = slen;
+	    mch_memmove(string, ws, len);
+	    vim_free(ws);
+	}
+    }
+    if (len == 0)
+#endif
+    {
+	string[0] = ch;
+	len = 1;
+    }
+
+    for (i = 0; i < len; ++i)
+	if (string[i] == CSI && len <= slen - 2)
+	{
+	    /* Insert CSI as K_CSI. */
+	    mch_memmove(string + i + 3, string + i + 1, len - i - 1);
+	    string[++i] = KS_EXTRA;
+	    string[++i] = (int)KE_CSI;
+	    len += 2;
+	}
+
+    return len;
+}
+
+/*
  * Key hit, add it to the input buffer.
- * Careful: CSI arrives as 0xffffff9b.
  */
     static void
 _OnChar(
@@ -486,31 +542,16 @@ _OnChar(
     int cRepeat)
 {
     char_u	string[40];
+    int		len = 0;
 
-    string[0] = ch;
-    if (string[0] == Ctrl_C && ctrl_c_interrupts)
+    len = char_to_string(ch, string, 40);
+    if (len == 1 && string[0] == Ctrl_C && ctrl_c_interrupts)
     {
 	trash_input_buf();
 	got_int = TRUE;
     }
 
-    if (string[0] == CSI)
-    {
-	/* Insert CSI as K_CSI. */
-	string[1] = KS_EXTRA;
-	string[2] = (int)KE_CSI;
-	add_to_input_buf(string, 3);
-    }
-    else
-    {
-	int	len = 1;
-
-#ifdef FEAT_MBYTE
-	if (input_conv.vc_type != CONV_NONE)
-	    len = convert_input(string, len, sizeof(string));
-#endif
-	add_to_input_buf(string, len);
-    }
+    add_to_input_buf(string, len);
 }
 
 /*
@@ -565,30 +606,11 @@ _OnSysChar(
 	string[len++] = K_SECOND((int)ch);
 	string[len++] = K_THIRD((int)ch);
     }
-    else if (ch == CSI)
-    {
-	string[len++] = CSI;
-	string[len++] = KS_EXTRA;
-	string[len++] = (int)KE_CSI;
-    }
     else
     {
-	string[len++] = ch;
-#ifdef FEAT_MBYTE
-	if (input_conv.vc_type != CONV_NONE)
-	    len += convert_input(string + len - 1, 1, sizeof(string) - len) - 1;
-	else if (enc_utf8 && string[len - 1] >= 0x80)
-	{
-	    /* convert to utf-8 */
-	    string[len] = string[len - 1] & 0xbf;
-	    string[len - 1] = ((unsigned)string[len - 1] >> 6) + 0xc0;
-	    if (string[len++] == CSI)
-	    {
-		string[len++] = KS_EXTRA;
-		string[len++] = (int)KE_CSI;
-	    }
-	}
-#endif
+	/* Although the documentation isn't clear about it, we assume "ch" is
+	 * a Unicode character. */
+	len += char_to_string(ch, string + len, 40 - len);
     }
 
     add_to_input_buf(string, len);
@@ -1509,7 +1531,7 @@ process_message(void)
 {
     MSG		msg;
     UINT	vk = 0;		/* Virtual key */
-    char_u	string[3];
+    char_u	string[40];
     int		i;
     int		modifiers = 0;
     int		key;
@@ -1649,13 +1671,10 @@ process_message(void)
 		}
 		else
 		{
-		    int	len = 1;
+		    int	len;
 
-		    string[0] = key;
-#ifdef FEAT_MBYTE
-		    if (input_conv.vc_type != CONV_NONE)
-			len = convert_input(string, len, sizeof(string));
-#endif
+		    /* Handle "key" as a Unicode character. */
+		    len = char_to_string(key, string, 40);
 		    add_to_input_buf(string, len);
 		}
 		break;
