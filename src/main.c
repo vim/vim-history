@@ -829,7 +829,7 @@ main
 		    mainerr(ME_GARBAGE, (char_u *)argv[0]);
 
 		--argc;
-		if (argc < 1)
+		if (argc < 1 && c != 'S')
 		    mainerr_arg_missing((char_u *)argv[0]);
 		++argv;
 		argv_idx = -1;
@@ -842,10 +842,26 @@ main
 			mainerr(ME_EXTRA_CMD, NULL);
 		    if (c == 'S')
 		    {
-			p = alloc((unsigned)(STRLEN(argv[0]) + 4));
+			char	*a;
+
+			if (argc < 1)
+			    /* "-S" without argument: use default session file
+			     * name. */
+			    a = SESSION_FILE;
+			else if (argv[0][0] == '-')
+			{
+			    /* "-S" followed by another option: use default
+			     * session file name. */
+			    a = SESSION_FILE;
+			    ++argc;
+			    --argv;
+			}
+			else
+			    a = argv[0];
+			p = alloc((unsigned)(STRLEN(a) + 4));
 			if (p == NULL)
 			    mch_exit(2);
-			sprintf((char *)p, "so %s", argv[0]);
+			sprintf((char *)p, "so %s", a);
 			commands[n_commands++] = p;
 		    }
 		    else

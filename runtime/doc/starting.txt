@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.1.  Last change: 2002 Feb 21
+*starting.txt*  For Vim version 6.1.  Last change: 2002 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -181,7 +181,11 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		This is an easy way to do the equivalent of: >
 			-c "source {file}"
 <		It can be mixed with "-c" arguments and repeated like "-c".
+		{file} cannot start with a "-".
 		{not in Vi}
+
+-S		Works like "-S Session.vim".  Only when used as the last
+		argument or when another "-" option follows.
 
 							*-r*
 -r		Recovery mode.  Without a file name argument, a list of
