@@ -2224,17 +2224,13 @@ mch_get_host_name(
     char_u	*s,
     int		len)
 {
-    char szHostName[MAX_COMPUTERNAME_LENGTH + 1];
-    DWORD cch = sizeof szHostName;
+    DWORD cch = len;
 
-    if (GetComputerName(szHostName, &cch))
+    if (!GetComputerName(s, &cch))
     {
-	STRCPY(s, "PC ");
-	STRNCPY(s + 3, szHostName, len - 3);
-    }
-    else
 	STRNCPY(s, "PC (Win32 Vim)", len);
-    s[len - 1] = NUL;	/* make sure it's terminated */
+	s[len - 1] = NUL;	/* make sure it's terminated */
+    }
 }
 
 
