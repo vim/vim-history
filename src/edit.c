@@ -195,7 +195,7 @@ int	    revins_legal;		/* was the last char 'legal'? */
 int	    revins_scol;		/* start column of revins session */
 #endif
 
-#if defined(FEAT_MBYTE) && defined(MACOS)
+#if defined(FEAT_MBYTE) && defined(MACOS_CLASSIC)
 static short	previous_script = smRoman;
 #endif
 
@@ -341,7 +341,7 @@ edit(cmdchar, startln, count)
     im_set_active(curbuf->b_p_iminsert == B_IMODE_IM);
 #endif
 
-#if defined(FEAT_MBYTE) && defined(MACOS)
+#if defined(FEAT_MBYTE) && defined(MACOS_CLASSIC)
     KeyScript(previous_script);
 #endif
 
@@ -5630,7 +5630,7 @@ ins_esc(count, cmdchar)
 	composing_hangul = 0;
     }
 #endif
-#if defined(FEAT_MBYTE) && defined(MACOS)
+#if defined(FEAT_MBYTE) && defined(MACOS_CLASSIC)
     previous_script = GetScriptManagerVariable(smKeyScript);
     KeyScript(smKeyRoman); /* or smKeySysScript */
 #endif
