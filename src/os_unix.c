@@ -2225,13 +2225,12 @@ mch_getperm(name)
 {
     struct stat statb;
 
-    if (stat((char *)
+    /* Keep the #ifdef outside of stat(), it may be a macro. */
 #ifdef VMS
-		    vms_fixfilename(name),
+    if (stat((char *)vms_fixfilename(name), &statb))
 #else
-		    name,
+    if (stat((char *)name, &statb))
 #endif
-		    &statb))
 	return -1;
     return statb.st_mode;
 }
