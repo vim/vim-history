@@ -182,7 +182,9 @@ typedef struct GuiScrollbar
     struct window *wp;		/* Scrollbar's window, NULL for bottom */
     int		type;		/* one of SBAR_{LEFT,RIGHT,BOTTOM} */
     long	value;		/* Represents top line number visible */
+#ifdef FEAT_GUI_ATHENA
     int		pixval;		/* pixel count of value */
+#endif
     long	size;		/* Size of scrollbar thumb */
     long	max;		/* Number of lines in buffer */
 

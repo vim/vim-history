@@ -3053,7 +3053,9 @@ gui_create_scrollbar(sb, type, wp)
     sb->wp = wp;
     sb->type = type;
     sb->value = 0;
+#ifdef FEAT_GUI_ATHENA
     sb->pixval = 0;
+#endif
     sb->size = 1;
     sb->max = 1;
     sb->top = 0;
@@ -3458,22 +3460,25 @@ gui_update_scrollbars(force)
 	    }
 	}
 
-	/* reduce the number of calls to gui_mch_set_scrollbar_thumb() by
-	 * checking if the thumb moved at least a pixel */
+	/* Reduce the number of calls to gui_mch_set_scrollbar_thumb() by
+	 * checking if the thumb moved at least a pixel.  Only do this for
+	 * Athena, most other GUIs require the update anyway to make the
+	 * arrows work. */
+#ifdef FEAT_GUI_ATHENA
 	if (max == 0)
 	    y = 0;
 	else
 	    y = (val * (sb->height + 2) * gui.char_height + max / 2) / max;
-#ifndef RISCOS
-	/* RISCOS does scrollbars differently - if the position through the
-	 * file has changed then we must update the scrollbar regardless of
-	 * how far we think it has moved. */
 	if (force || sb->pixval != y || sb->size != size || sb->max != max)
+#else
+	if (force || sb->value != val || sb->size != size || sb->max != max)
 #endif
 	{
 	    /* Thumb of scrollbar has moved */
 	    sb->value = val;
+#ifdef FEAT_GUI_ATHENA
 	    sb->pixval = y;
+#endif
 	    sb->size = size;
 	    sb->max = max;
 	    if (gui.which_scrollbars[SBAR_LEFT] && gui.dragged_sb != SBAR_LEFT)
