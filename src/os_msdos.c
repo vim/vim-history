@@ -1640,16 +1640,36 @@ mch_get_winsize(void)
     return OK;
 }
 
+#if defined(DJGPP) || defined(PROTO)
+/*
+ * Check the number of Columns with a BIOS call.  This avoids a crash of the
+ * DOS console when 'columns' is set to a too large value.
+ */
+    void
+mch_check_columns()
+{
+    static union REGS	regs;
+
+    regs.h.ah = 0x0f;
+    (void)int86(0x10, &regs, &regs);
+    if ((unsigned)Columns > (unsigned)regs.h.ah)
+	Columns = (unsigned)regs.h.ah;
+}
+#endif
+
 /*
  * Set the active window for delline/insline.
  */
     void
 set_window(void)
 {
+    if (term_console)
+    {
 #ifndef DJGPP
-    _video.screenheight = Rows;
+	_video.screenheight = Rows;
 #endif
-    mywindow(1, 1, Columns, Rows);
+	mywindow(1, 1, Columns, Rows);
+    }
     screen_start();
 }
 

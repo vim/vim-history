@@ -4105,6 +4105,13 @@ set_num_option(opt_idx, varp, value, errbuf)
 	}
 	Columns = MIN_COLUMNS;
     }
+
+#ifdef DJGPP
+    /* avoid a crash by checking for a too large value of 'columns' */
+    if (old_Columns != Columns && full_screen && term_console)
+	mch_check_columns();
+#endif
+
     /*
      * If the screenheight has been changed, assume it is the physical
      * screenheight.
