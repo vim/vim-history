@@ -79,7 +79,9 @@
 #endif
 
 #ifndef __ARGS
-# if defined(__STDC__) || defined(__GNUC__)
+    /* The AIX VisualAge cc compiler defines __EXTENDED__ instead of __STDC__
+     * because it includes pre-ansi features. */
+# if defined(__STDC__) || defined(__GNUC__) || defined(__EXTENDED__)
 #  define __ARGS(x) x
 # else
 #  define __ARGS(x) ()
