@@ -22,6 +22,10 @@
 # include <fcntl.h>
 #endif
 
+#ifdef __CYGWIN__
+# include <sys/cygwin.h>
+#endif
+
 #if defined(UNIX) || defined(VMS)
 static int file_owned __ARGS((char *fname));
 #endif
@@ -971,6 +975,23 @@ scripterror:
 		    p = r;
 		}
 	    }
+#endif
+#ifdef __CYGWIN__
+            /*
+             * If vim is invoked by non-Cygwin tools, convert away any
+             * DOS paths, so things like .swp files are created correctly.
+             * Look for evidence of non-Cygwin paths before we bother.
+             */
+            if (strpbrk(p, "\\:") != NULL)
+	    {
+                char posix_path[PATH_MAX];
+
+                cygwin_conv_to_posix_path(p, posix_path);
+                vim_free(p);
+                p = vim_strsave(posix_path);
+                if (p == NULL)
+                    mch_exit(2);
+            }
 #endif
 	    alist_add(&global_alist, p,
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
