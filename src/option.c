@@ -4580,6 +4580,9 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		curbuf->b_p_tx = TRUE;
 	    else
 		curbuf->b_p_tx = FALSE;
+#ifdef FEAT_TITLE
+	    need_maketitle = TRUE;
+#endif
 	}
     }
 
@@ -5606,20 +5609,26 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	if (!curbuf->b_p_ro && (opt_flags & OPT_LOCAL) == 0)
 	    readonlymode = FALSE;
 #ifdef FEAT_TITLE
-	maketitle();
+	need_maketitle = TRUE;
 #endif
     }
 
 #ifdef FEAT_TITLE
     /* when 'modifiable' is changed, redraw the window title */
     else if ((int *)varp == &curbuf->b_p_ma)
-	maketitle();
+	need_maketitle = TRUE;
+    /* when 'endofline' is changed, redraw the window title */
+    else if ((int *)varp == &curbuf->b_p_eol)
+	need_maketitle = TRUE;
 #endif
 
     /* when 'bin' is set also set some other options */
     else if ((int *)varp == &curbuf->b_p_bin)
     {
 	set_options_bin(old_value, curbuf->b_p_bin, opt_flags);
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;
+#endif
     }
 
 #ifdef FEAT_AUTOCMD
@@ -5750,7 +5759,7 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	if (!value)
 	    save_file_ff(curbuf);	/* Buffer is unchanged */
 #ifdef FEAT_TITLE
-	maketitle();
+	need_maketitle = TRUE;
 #endif
 #ifdef FEAT_AUTOCMD
 	modified_was_set = value;
@@ -6132,7 +6141,7 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    p_titlelen = 85;
 	}
 	if (starting != NO_SCREEN && old_value != p_titlelen)
-	    maketitle();
+	    need_maketitle = TRUE;
     }
 #endif
 
@@ -8665,6 +8674,7 @@ save_file_ff(buf)
     buf_T	*buf;
 {
     buf->b_start_ffc = *buf->b_p_ff;
+    buf->b_start_eol = buf->b_p_eol;
 #ifdef FEAT_MBYTE
     vim_free(buf->b_start_fenc);
     buf->b_start_fenc = vim_strsave(buf->b_p_fenc);
@@ -8674,12 +8684,15 @@ save_file_ff(buf)
 /*
  * Return TRUE if 'fileformat' and/or 'fileencoding' has a different value
  * from when editing started (save_file_ff() called).
+ * Also when 'endofline' was changed and 'binary' is set.
  */
     int
 file_ff_differs(buf)
     buf_T	*buf;
 {
     if (buf->b_start_ffc != *buf->b_p_ff)
+	return TRUE;
+    if (buf->b_p_bin && buf->b_start_eol != buf->b_p_eol)
 	return TRUE;
 #ifdef FEAT_MBYTE
     if (buf->b_start_fenc == NULL)
