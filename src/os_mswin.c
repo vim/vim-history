@@ -944,7 +944,8 @@ crnl_to_nl(const char_u *str, int *size)
     char_u	*ret;
     char_u	*retp;
 
-    ret = lalloc((long_u)str_len, TRUE);
+    /* Avoid allocating zero bytes, it generates an error message. */
+    ret = lalloc((long_u)(str_len == 0 ? 1 : str_len), TRUE);
     if (ret != NULL)
     {
 	retp = ret;
@@ -1014,7 +1015,8 @@ enc_to_ucs2(char_u *str, int *lenp)
 	convert_setup(&conv, NULL, NULL);
 
 	length = utf8_to_ucs2(str, *lenp, NULL);
-	ret = (WCHAR *)alloc((unsigned)(length * sizeof(WCHAR)));
+	ret = (WCHAR *)alloc((unsigned)((length == 0 ? 1 : length)
+							    * sizeof(WCHAR)));
 	if (ret != NULL)
 	    utf8_to_ucs2(str, *lenp, (short_u *)ret);
 
@@ -1057,7 +1059,8 @@ ucs2_to_enc(short_u *str, int *lenp)
 	return enc_str;
     }
 
-    utf8_str = alloc(ucs2_to_utf8(str, *lenp, NULL));
+    /* Avoid allocating zero bytes, it generates an error message. */
+    utf8_str = alloc(ucs2_to_utf8(str, *lenp == 0 ? 1 : *lenp, NULL));
     if (utf8_str != NULL)
     {
 	*lenp = ucs2_to_utf8(str, *lenp, utf8_str);
@@ -1133,8 +1136,8 @@ clip_mch_request_selection(VimClipboard *cbd)
     }
 
 #if defined(FEAT_MBYTE) && defined(WIN3264)
-    /* Try to get the clipboard in Unicode. */
-    if (IsClipboardFormatAvailable(CF_UNICODETEXT))
+    /* Try to get the clipboard in Unicode if it's not an empty string. */
+    if (IsClipboardFormatAvailable(CF_UNICODETEXT) && metadata.ucslen != 0)
     {
 	HGLOBAL hMemW;
 
@@ -1277,7 +1280,8 @@ clip_mch_set_selection(VimClipboard *cbd)
 	    metadata.txtlen = WideCharToMultiByte(GetACP(), 0, out, len,
 							       NULL, 0, 0, 0);
 	    vim_free(str);
-	    str = (char_u *)alloc((unsigned)metadata.txtlen);
+	    str = (char_u *)alloc((unsigned)(metadata.txtlen == 0 ? 1
+							  : metadata.txtlen));
 	    if (str == NULL)
 	    {
 		vim_free(out);
