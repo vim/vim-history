@@ -5312,7 +5312,7 @@ uc_check_code(code, len, buf, cmd, eap, split_buf, split_len)
     {
     case ct_ARGS:
 	/* Simple case first */
-	if (eap->arg == NUL)
+	if (*eap->arg == NUL)
 	{
 	    if (quote == 1)
 	    {
@@ -5320,6 +5320,9 @@ uc_check_code(code, len, buf, cmd, eap, split_buf, split_len)
 		if (buf)
 		    STRCPY(buf, "''");
 	    }
+	    else
+		result = 0;
+	    break;
 	}
 
 	switch (quote)
