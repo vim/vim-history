@@ -133,6 +133,37 @@ static char utf8len_tab[256] =
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1,
 };
 
+/*
+ * XIM often causes trouble.  Define XIM_DEBUG to get a log of XIM callbacks
+ * in the "xim.log" file.
+ */
+/* #define XIM_DEBUG */
+#ifdef XIM_DEBUG
+    static void
+xim_log(char *s, ...)
+{
+    va_list arglist;
+    static FILE *fd = NULL;
+
+    if (fd == (FILE *)-1)
+	return;
+    if (fd == NULL)
+    {
+	fd = fopen("xim.log", "w");
+	if (fd == NULL)
+	{
+	    EMSG("Cannot open xim.log");
+	    fd = (FILE *)-1;
+	    return;
+	}
+    }
+
+    va_start(arglist, s);
+    vfprintf(fd, s, arglist);
+    va_end(arglist);
+}
+#endif
+
 #endif
 
 #if defined(FEAT_MBYTE) || defined(FEAT_POSTSCRIPT) || defined(PROTO)
@@ -3007,6 +3038,20 @@ iconv_end()
 
 #if defined(FEAT_XIM) || defined(PROTO)
 
+# ifdef FEAT_GUI_GTK
+/*
+ * Set preedit_start_col to the current cursor position.
+ */
+    static void
+init_preedit_start_col(void)
+{
+    if (State & CMDLINE)
+	preedit_start_col = cmdline_getvcol_cursor();
+    else if (curwin != NULL)
+	getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+}
+# endif
+
 # if defined(HAVE_GTK2) && !defined(PROTO)
 
 static int im_is_active	       = FALSE;	/* IM is enabled for current mode    */
@@ -3128,8 +3173,12 @@ static int xim_ignored_char = FALSE;
     static void
 im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
 {
-    int slen = (int)strlen(str);
-    int add_to_input = TRUE;
+    int		slen = (int)STRLEN(str);
+    int		add_to_input = TRUE;
+
+#ifdef XIM_DEBUG
+    xim_log("im_commit_cb(): %s\n", str);
+#endif
 
     /* The imhangul module doesn't reset the preedit string before
      * committing.  Call im_delete_preedit() to work around that. */
@@ -3141,26 +3190,25 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
     /* Is this a single character that matches a keypad key that's just
      * been pressed?  If so, we don't want it to be entered as such - let
      * us carry on processing the raw keycode so that it may be used in
-     * mappings as <kSomething>
-     */
+     * mappings as <kSomething>. */
     if (xim_expected_char != NUL)
     {
-        /* We're currently processing a keypad or other special key */
-        if (slen == 1 && str[0] == xim_expected_char)
-        {
-            /* It's a match - don't do it here */
-            xim_ignored_char = TRUE;
-            add_to_input = FALSE;
-        }
-        else
-        {
-            /* Not a match */
-            xim_ignored_char = FALSE;
-        }
+	/* We're currently processing a keypad or other special key */
+	if (slen == 1 && str[0] == xim_expected_char)
+	{
+	    /* It's a match - don't do it here */
+	    xim_ignored_char = TRUE;
+	    add_to_input = FALSE;
+	}
+	else
+	{
+	    /* Not a match */
+	    xim_ignored_char = FALSE;
+	}
     }
 
     if (add_to_input)
-        im_add_to_input((char_u *)str, slen);
+	im_add_to_input((char_u *)str, slen);
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -3173,9 +3221,14 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
     static void
 im_preedit_start_cb(GtkIMContext *context, gpointer data)
 {
+#ifdef XIM_DEBUG
+    xim_log("im_preedit_start_cb()\n");
+#endif
+
     im_is_active = TRUE;
     gui_update_cursor(TRUE, FALSE);
 }
+
 /*
  * Callback invoked after end to the preedit.
  */
@@ -3183,6 +3236,9 @@ im_preedit_start_cb(GtkIMContext *context, gpointer data)
     static void
 im_preedit_end_cb(GtkIMContext *context, gpointer data)
 {
+#ifdef XIM_DEBUG
+    xim_log("im_preedit_end_cb()\n");
+#endif
     im_is_active = FALSE;
     gui_update_cursor(TRUE, FALSE);
 }
@@ -3239,6 +3295,10 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data)
 				      &preedit_string, NULL,
 				      &cursor_index);
 
+#ifdef XIM_DEBUG
+    xim_log("im_preedit_changed_cb(): %s\n", preedit_string);
+#endif
+
     g_return_if_fail(preedit_string != NULL); /* just in case */
 
     /* If at the start position (after typing backspace) preedit_start_col
@@ -3246,13 +3306,11 @@ im_preedit_changed_cb(GtkIMContext *context, gpointer data)
     if (cursor_index == 0)
 	preedit_start_col = MAXCOL;
 
+    /* If preedit_start_col is MAXCOL set it to the current cursor position. */
     if (preedit_start_col == MAXCOL && preedit_string[0] != '\0')
     {
 	/* Urgh, this breaks if the input buffer isn't empty now */
-	if (State & CMDLINE)
-	    preedit_start_col = cmdline_getvcol_cursor();
-	else if (curwin != NULL)
-	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+	init_preedit_start_col();
     }
 
     im_delete_preedit();
@@ -3396,6 +3454,10 @@ im_get_feedback_attr(int col)
     void
 xim_init(void)
 {
+#ifdef XIM_DEBUG
+    xim_log("xim_init()\n");
+#endif
+
     g_return_if_fail(gui.drawarea != NULL);
     g_return_if_fail(gui.drawarea->window != NULL);
 
@@ -3416,6 +3478,10 @@ xim_init(void)
     void
 im_shutdown(void)
 {
+#ifdef XIM_DEBUG
+    xim_log("im_shutdown()\n");
+#endif
+
     if (xic != NULL)
     {
 	gtk_im_context_focus_out(xic);
@@ -3559,6 +3625,7 @@ xim_reset(void)
 	    im_synthesize_keypress(GDK_Escape, 0U);
 
 	gtk_im_context_reset(xic);
+
 	/*
 	 * HACK for Ami: This sequence of function calls makes Ami handle
 	 * the IM reset gratiously, without breaking loads of other stuff.
@@ -3677,9 +3744,9 @@ xim_queue_key_press_event(GdkEventKey *event, int down)
             if (xim_expected_char != NUL && xim_ignored_char)
                 /* We had a keypad key, and XIM tried to thieve it */
                 return FALSE;
-            else
-                /* Normal processing */
-                return imresult;
+
+	    /* Normal processing */
+	    return imresult;
         }
     }
 
@@ -3959,10 +4026,7 @@ im_set_active(active)
     if (xim_input_style & XIMPreeditCallbacks)
     {
 	preedit_buf_len = 0;
-	if (State & CMDLINE)
-	    preedit_start_col = cmdline_getvcol_cursor();
-	else
-	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+	init_preedit_start_col();
     }
 #else
 # if 0
@@ -4352,6 +4416,10 @@ xim_instantiate_cb(display, client_data, call_data)
     Window	x11_window;
     Display	*x11_display;
 
+#ifdef XIM_DEBUG
+    xim_log("xim_instantiate_cb()\n");
+#endif
+
     gui_get_x11_windis(&x11_window, &x11_display);
     if (display != x11_display)
 	return;
@@ -4373,6 +4441,9 @@ xim_destroy_cb(im, client_data, call_data)
     Window	x11_window;
     Display	*x11_display;
 
+#ifdef XIM_DEBUG
+    xim_log("xim_destroy_cb()\n");
+#endif
     gui_get_x11_windis(&x11_window, &x11_display);
 
     xic = NULL;
@@ -4390,6 +4461,10 @@ xim_init()
 {
     Window	x11_window;
     Display	*x11_display;
+
+#ifdef XIM_DEBUG
+    xim_log("xim_init()\n");
+#endif
 
     gui_get_x11_windis(&x11_window, &x11_display);
 
@@ -4643,6 +4718,10 @@ xim_decide_input_style()
 				 (int)GDK_IM_STATUS_NONE |
 				 (int)GDK_IM_STATUS_NOTHING;
 
+#ifdef XIM_DEBUG
+    xim_log("xim_decide_input_style()\n");
+#endif
+
     if (!gdk_im_ready())
 	xim_input_style = 0;
     else
@@ -4672,6 +4751,10 @@ xim_decide_input_style()
     static void
 preedit_start_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+#ifdef XIM_DEBUG
+    xim_log("xim_decide_input_style()\n");
+#endif
+
     draw_feedback = NULL;
     xim_preediting = TRUE;
     gui_update_cursor(TRUE, FALSE);
@@ -4706,16 +4789,17 @@ preedit_draw_cbproc(XIC xic, XPointer client_data, XPointer call_data)
     char	*src;
     GSList	*event_queue;
 
+#ifdef XIM_DEBUG
+    xim_log("preedit_draw_cbproc()\n");
+#endif
+
     draw_data = (XIMPreeditDrawCallbackStruct *) call_data;
     text = (XIMText *) draw_data->text;
 
     if ((text == NULL && draw_data->chg_length == preedit_buf_len)
-	    || preedit_buf_len == 0)
+						      || preedit_buf_len == 0)
     {
-	if (State & CMDLINE)
-	    preedit_start_col = cmdline_getvcol_cursor();
-	else
-	    getvcol(curwin, &curwin->w_cursor, &preedit_start_col, NULL, NULL);
+	init_preedit_start_col();
 	vim_free(draw_feedback);
 	draw_feedback = NULL;
     }
@@ -4840,12 +4924,19 @@ im_get_feedback_attr(int col)
     static void
 preedit_caret_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+#ifdef XIM_DEBUG
+    xim_log("preedit_caret_cbproc()\n");
+#endif
 }
 
 /*ARGSUSED*/
     static void
 preedit_done_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 {
+#ifdef XIM_DEBUG
+    xim_log("preedit_done_cbproc()\n");
+#endif
+
     vim_free(draw_feedback);
     draw_feedback = NULL;
     xim_preediting = FALSE;
@@ -4861,6 +4952,10 @@ preedit_done_cbproc(XIC xic, XPointer client_data, XPointer call_data)
 xim_reset(void)
 {
     char *text;
+
+#ifdef XIM_DEBUG
+    xim_log("xim_reset()\n");
+#endif
 
     if (xic != NULL)
     {
@@ -4878,6 +4973,10 @@ xim_reset(void)
     int
 xim_queue_key_press_event(GdkEventKey *event, int down)
 {
+#ifdef XIM_DEBUG
+    xim_log("xim_queue_key_press_event()\n");
+#endif
+
     if (preedit_buf_len <= 0)
 	return FALSE;
     if (processing_queued_event)
@@ -4928,6 +5027,10 @@ reset_state_setup(GdkIC *ic)
     void
 xim_init(void)
 {
+#ifdef XIM_DEBUG
+    xim_log("xim_init()\n");
+#endif
+
     xic = NULL;
     xic_attr = NULL;
 
@@ -5031,6 +5134,10 @@ xim_init(void)
     void
 im_shutdown(void)
 {
+#ifdef XIM_DEBUG
+    xim_log("im_shutdown()\n");
+#endif
+
     if (xic != NULL)
     {
 	gdk_im_end();
