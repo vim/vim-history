@@ -118,7 +118,7 @@ MINOR = 2
 # - Rename the executables to "vimd16.exe", "xxdd16.exe", "installd16.exe" and
 #   "uninstald16.exe".
 # 32 bit DOS version:
-# - Set environment for compiling with DJGPP; "make -f Make_djg.mak".
+# - Set environment for compiling with DJGPP; "gmake -f Make_djg.mak".
 # - "rm testdir/*.out", "make -f Make_djg.mak test" and check the output.
 # - Rename the executables to "vimd32.exe", "xxdd32.exe", "installd32.exe" and
 #   "uninstald32.exe".
@@ -156,10 +156,9 @@ MINOR = 2
 # - "make doslang".
 # NSIS self installing exe:
 # - Unpack the doslang archive on the PC.
-# - rename gvim_ole.exe to gvim.exe
-# - rename installw32.exe to install.exe
-# - rename uninstalw32.exe to uninstal.exe
-# - rename xxdw32.exe to xxd/xxd.exe
+# - Make sure gvim_ole.exe, vimd32.exe, vimw32.exe, installw32.exe,
+#   uninstalw32.exe and xxdw32.exe have been build as mentioned above.
+# - Move the files from the "runtime" directory one level up.
 # - put gvimext.dll in src/GvimExt and VisVim.dll in src/VisVim (get them
 #   from a binary archive or build them)
 # - make sure there is a diff.exe two levels up
