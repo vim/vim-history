@@ -630,6 +630,9 @@ AC_ARG_ENABLE(netbeans,
 	, [enable_netbeans="yes"])
 if test "$enable_netbeans" = "yes"; then
   AC_MSG_RESULT(no)
+  dnl On Solaris we need the socket and nsl library.
+  AC_CHECK_LIB(socket, socket)
+  AC_CHECK_LIB(nsl, gethostbyname)
   AC_MSG_CHECKING(whether compiling netbeans integration is possible)
   AC_TRY_LINK([
 #include <stdio.h>
