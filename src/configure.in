@@ -588,6 +588,57 @@ if test "$enable_workshop" = "yes"; then
   fi
 fi
 
+AC_MSG_CHECKING(--enable-netbeans argument)
+AC_ARG_ENABLE(netbeans,
+	[  --enable-netbeans       Include NetBeans integration support.], ,
+	[enable_netbeans="no"])
+AC_MSG_RESULT($enable_netbeans)
+if test "$enable_netbeans" = "yes"; then
+  AC_MSG_CHECKING(whether compiling netbeans integration is possible)
+  AC_TRY_COMPILE([
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+	/* Check use of vsnprintf() */
+	void warn(char *fmt, ...);
+	void warn(char *fmt, ...)
+	{
+	  va_list ap; char *buf = NULL;
+	  va_start(ap, fmt);
+	  vsnprintf(buf, 100, fmt, ap);
+	  va_end(ap);
+	}
+	/* Check bitfields */
+	struct nbbuf {
+	unsigned int  initDone:1;
+	ushort signmaplen;
+	};
+	    ], [
+		/* Check creating a socket. */
+		struct sockaddr_in server;
+		(void)socket(AF_INET, SOCK_STREAM, 0);
+		(void)htons(100);
+		(void)gethostbyname("microsoft.com");
+		if (errno == ECONNREFUSED)
+		  (void)connect(1, (struct sockaddr *)&server, sizeof(server));
+	    ],
+	AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no); enable_netbeans="no")
+fi
+if test "$enable_netbeans" = "yes"; then
+  AC_DEFINE(FEAT_NETBEANS_INTG)
+  NETBEANS_SRC="netbeans.c"
+  AC_SUBST(NETBEANS_SRC)
+  NETBEANS_OBJ="objects/netbeans.o"
+  AC_SUBST(NETBEANS_OBJ)
+fi
+
 AC_MSG_CHECKING(--enable-sniff argument)
 AC_ARG_ENABLE(sniff,
 	[  --enable-sniff          Include Sniff interface.], ,

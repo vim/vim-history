@@ -42,6 +42,8 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-workshop       Include Sun Visual Workshop support."
 ac_help="$ac_help
+  --enable-netbeans       Include NetBeans integration support."
+ac_help="$ac_help
   --enable-sniff          Include Sniff interface."
 ac_help="$ac_help
   --enable-multibyte      Include multibyte editing support."
@@ -2048,8 +2050,84 @@ EOF
   fi
 fi
 
+echo $ac_n "checking --enable-netbeans argument""... $ac_c" 1>&6
+echo "configure:2055: checking --enable-netbeans argument" >&5
+# Check whether --enable-netbeans or --disable-netbeans was given.
+if test "${enable_netbeans+set}" = set; then
+  enableval="$enable_netbeans"
+  :
+else
+  enable_netbeans="no"
+fi
+
+echo "$ac_t""$enable_netbeans" 1>&6
+if test "$enable_netbeans" = "yes"; then
+  echo $ac_n "checking whether compiling netbeans integration is possible""... $ac_c" 1>&6
+echo "configure:2067: checking whether compiling netbeans integration is possible" >&5
+  cat > conftest.$ac_ext <<EOF
+#line 2069 "configure"
+#include "confdefs.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+	/* Check use of vsnprintf() */
+	void warn(char *fmt, ...);
+	void warn(char *fmt, ...)
+	{
+	  va_list ap; char *buf = NULL;
+	  va_start(ap, fmt);
+	  vsnprintf(buf, 100, fmt, ap);
+	  va_end(ap);
+	}
+	/* Check bitfields */
+	struct nbbuf {
+	unsigned int  initDone:1;
+	ushort signmaplen;
+	};
+	    
+int main() {
+
+		/* Check creating a socket. */
+		struct sockaddr_in server;
+		(void)socket(AF_INET, SOCK_STREAM, 0);
+		(void)htons(100);
+		(void)gethostbyname("microsoft.com");
+		if (errno == ECONNREFUSED)
+		  (void)connect(1, (struct sockaddr *)&server, sizeof(server));
+	    
+; return 0; }
+EOF
+if { (eval echo configure:2108: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""no" 1>&6; enable_netbeans="no"
+fi
+rm -f conftest*
+fi
+if test "$enable_netbeans" = "yes"; then
+  cat >> confdefs.h <<\EOF
+#define FEAT_NETBEANS_INTG 1
+EOF
+
+  NETBEANS_SRC="netbeans.c"
+  
+  NETBEANS_OBJ="objects/netbeans.o"
+  
+fi
+
 echo $ac_n "checking --enable-sniff argument""... $ac_c" 1>&6
-echo "configure:2038: checking --enable-sniff argument" >&5
+echo "configure:2131: checking --enable-sniff argument" >&5
 # Check whether --enable-sniff or --disable-sniff was given.
 if test "${enable_sniff+set}" = set; then
   enableval="$enable_sniff"
@@ -7399,6 +7477,8 @@ s%@RUBY_CFLAGS@%$RUBY_CFLAGS%g
 s%@RUBY_LIBS@%$RUBY_LIBS%g
 s%@WORKSHOP_SRC@%$WORKSHOP_SRC%g
 s%@WORKSHOP_OBJ@%$WORKSHOP_OBJ%g
+s%@NETBEANS_SRC@%$NETBEANS_SRC%g
+s%@NETBEANS_OBJ@%$NETBEANS_OBJ%g
 s%@SNIFF_SRC@%$SNIFF_SRC%g
 s%@SNIFF_OBJ@%$SNIFF_OBJ%g
 s%@xmkmfpath@%$xmkmfpath%g

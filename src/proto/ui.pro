@@ -55,6 +55,7 @@ int jump_to_mouse __ARGS((int flags, int *inclusive, int which_button));
 int mouse_comp_pos __ARGS((win_T *win, int *rowp, int *colp, linenr_T *lnump));
 win_T *mouse_find_win __ARGS((int *rowp, int *colp));
 int get_fpos_of_mouse __ARGS((pos_T *mpos));
+int vcol2col __ARGS((win_T *wp, linenr_T lnum, int vcol));
 void ui_focus_change __ARGS((int in_focus));
 void im_save_status __ARGS((long *psave));
 /* vim: set ft=c : */

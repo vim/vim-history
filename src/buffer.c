@@ -112,10 +112,22 @@ open_buffer(read_stdin, eap)
     /* mark cursor position as being invalid */
     changed_line_abv_curs();
 
-    if (curbuf->b_ffname != NULL)
+    if (curbuf->b_ffname != NULL
+#ifdef FEAT_NETBEANS_INTG
+	    && netbeansReadFile
+#endif
+       )
     {
+#ifdef FEAT_NETBEANS_INTG
+	int oldFire = netbeansFireChanges;
+
+	netbeansFireChanges = 0;
+#endif
 	retval = readfile(curbuf->b_ffname, curbuf->b_fname,
 		  (linenr_T)0, (linenr_T)0, (linenr_T)MAXLNUM, eap, READ_NEW);
+#ifdef FEAT_NETBEANS_INTG
+	netbeansFireChanges = oldFire;
+#endif
 	/* Help buffer is filtered. */
 	if (curbuf->b_help)
 	    fix_help_buffer();
@@ -371,6 +383,17 @@ close_buffer(win, buf, action)
 	return;
 #endif
 
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	netbeans_file_closed(buf);
+#endif
+#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
+    /* Change directories when the acd option is set on. */
+    if (p_acd && curbuf->b_ffname != NULL
+				     && vim_chdirfile(curbuf->b_ffname) == OK)
+	shorten_fnames(TRUE);
+#endif
+
     /*
      * Remove the buffer from the list.
      */
@@ -432,6 +455,10 @@ buf_clear_file(buf)
 #endif
     buf->b_ml.ml_mfp = NULL;
     buf->b_ml.ml_flags = ML_EMPTY;		/* empty buffer */
+#ifdef FEAT_NETBEANS_INTG
+    netbeans_deleted_all_lines(buf);
+    netbeansOpenFile = 0;  /* reset in netbeans_file_opened() */
+#endif
 }
 
 /*
@@ -649,6 +676,9 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
     int		bnr;		/* buffer number */
     char_u	*p;
 
+#ifdef FEAT_NETBEANS_INTG
+    netbeansCloseFile = 1;
+#endif
     if (addr_count == 0)
     {
 	(void)do_buffer(command, DOBUF_CURRENT, FORWARD, 0, forceit);
@@ -742,6 +772,10 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 	    }
 	}
     }
+
+#ifdef FEAT_NETBEANS_INTG
+    netbeansCloseFile = 0;
+#endif
 
     return errormsg;
 }
@@ -1203,10 +1237,13 @@ enter_buffer(buf)
     if (curwin->w_topline == 1)		/* when autocmds didn't change it */
 #endif
 	scroll_cursor_halfway(FALSE);	/* redisplay at correct position */
-#ifdef FEAT_SUN_WORKSHOP
-    if (usingSunWorkShop && vim_chdirfile(buf->b_ffname) == OK)
+
+#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
+    /* Change directories when the acd option is set on. */
+    if (p_acd && vim_chdirfile(buf->b_ffname) == OK)
 	shorten_fnames(TRUE);
 #endif
+
 #ifdef FEAT_KEYMAP
     if (curbuf->b_kmap_state & KEYMAP_INIT)
 	keymap_init();
@@ -4292,6 +4329,11 @@ insert_sign(buf, prev, next, id, lnum, typenr)
 	newsign->lnum = lnum;
 	newsign->typenr = typenr;
 	newsign->next = next;
+#ifdef FEAT_NETBEANS_INTG
+	newsign->prev = prev;
+	if (next != NULL)
+	    next->prev = newsign;
+#endif
 
 	if (prev == NULL)
 	{
@@ -4314,7 +4356,7 @@ insert_sign(buf, prev, next, id, lnum, typenr)
 /*
  * Add the sign into the signlist. Find the right spot to do it though.
  */
-    int
+    void
 buf_addsign(buf, id, lnum, typenr)
     buf_T	*buf;		/* buffer to store sign in */
     int		id;		/* sign ID */
@@ -4330,18 +4372,43 @@ buf_addsign(buf, id, lnum, typenr)
 	if (lnum == sign->lnum && id == sign->id)
 	{
 	    sign->typenr = typenr;
-	    return sign->lnum;
+	    return;
 	}
-	else if (id < 0 && lnum < sign->lnum)
+	else if (
+#ifndef FEAT_NETBEANS_INTG  /* keep signs sorted by lnum */
+	           id < 0 &&
+#endif
+	                     lnum < sign->lnum)
 	{
+#ifdef FEAT_NETBEANS_INTG /* insert new sign at head of list for this lnum */
+	    /* XXX - GRP: Is this because of sign slide problem? Or is it
+	     * really needed? Or is it because we allow multiple signs per
+	     * line? If so, should I add that feature to FEAT_SIGNS?
+	     */
+	    while (prev != NULL && prev->lnum == lnum)
+		prev = prev->prev;
+	    if (prev == NULL)
+		sign = buf->b_signlist;
+	    else
+		sign = prev->next;
+#endif
 	    insert_sign(buf, prev, sign, id, lnum, typenr);
-	    return lnum;
+	    return;
 	}
 	prev = sign;
     }
-    insert_sign(buf, prev, NULL, id, lnum, typenr);
+#ifdef FEAT_NETBEANS_INTG /* insert new sign at head of list for this lnum */
+    /* XXX - GRP: See previous comment */
+    while (prev != NULL && prev->lnum == lnum)
+	prev = prev->prev;
+    if (prev == NULL)
+	sign = buf->b_signlist;
+    else
+	sign = prev->next;
+#endif
+    insert_sign(buf, prev, sign, id, lnum, typenr);
 
-    return lnum;
+    return;
 }
 
     int
@@ -4365,14 +4432,24 @@ buf_change_sign_type(buf, markId, typenr)
 }
 
     int_u
-buf_getsigntype(buf, lnum)
+buf_getsigntype(buf, lnum, type)
     buf_T	*buf;
     linenr_T	lnum;
+    int		type;	/* SIGN_ICON, SIGN_TEXT, SIGN_ANY, SIGN_LINEHL */
 {
     signlist_T	*sign;		/* a sign in a b_signlist */
 
     for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
-	if (sign->lnum == lnum)
+	if (sign->lnum == lnum
+		&& (type == SIGN_ANY
+# ifdef FEAT_SIGN_ICONS
+		    || (type == SIGN_ICON
+			&& sign_get_image(sign->typenr) != NULL)
+# endif
+		    || (type == SIGN_TEXT
+			&& sign_get_text(sign->typenr) != NULL)
+		    || (type == SIGN_LINEHL
+			&& sign_get_attr(sign->typenr, TRUE) != 0)))
 	    return sign->typenr;
     return 0;
 }
@@ -4396,6 +4473,10 @@ buf_delsign(buf, id)
 	if (sign->id == id)
 	{
 	    *lastp = next;
+#ifdef FEAT_NETBEANS_INTG
+	    if (next != NULL)
+		next->prev = sign->prev;
+#endif
 	    lnum = sign->lnum;
 	    vim_free(sign);
 	    break;
@@ -4448,6 +4529,43 @@ buf_findsign_id(buf, lnum)
 
     return 0;
 }
+
+
+# if defined(FEAT_NETBEANS_INTG) || defined(PROTO)
+/* see if a given type of sign exists on a specific line */
+    int
+buf_findsigntype_id(buf, lnum, typenr)
+    buf_T	*buf;		/* buffer whose sign we are searching for */
+    linenr_T	lnum;		/* line number of sign */
+    int		typenr;		/* sign type number */
+{
+    signlist_T	*sign;		/* a sign in the signlist */
+
+    for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
+	if (sign->lnum == lnum && sign->typenr == typenr)
+	    return sign->id;
+
+    return 0;
+}
+
+
+/* return the number of icons on the given line */
+    int
+buf_signcount(buf, lnum)
+    buf_T	*buf;
+    linenr_T	lnum;
+{
+    signlist_T	*sign;		/* a sign in the signlist */
+    int		count = 0;
+
+    for (sign = buf->b_signlist; sign != NULL; sign = sign->next)
+	if (sign->lnum == lnum)
+	    if (sign_get_image(sign->typenr) != NULL)
+		count++;
+
+    return count;
+}
+# endif /* FEAT_NETBEANS_INTG */
 
 
     void

@@ -326,6 +326,11 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
+#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
+    {"autochdir",  "acd",   P_BOOL|P_VI_DEF,
+			    (char_u *)&p_acd, PV_NONE,
+			    {(char_u *)FALSE, (char_u *)0L}},
+#endif
     {"autoindent",  "ai",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_ai, PV_AI,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -390,7 +395,8 @@ static struct vimoption
 			    (char_u *)&p_bdlay, PV_NONE,
 			    {(char_u *)600L, (char_u *)0L}},
 #endif
-#ifdef FEAT_SUN_WORKSHOP
+#if defined(FEAT_BEVAL) && (defined(FEAT_SUN_WORKSHOP) \
+	|| defined(FEAT_NETBEANS_INTG))
     {"ballooneval", "beval",P_BOOL|P_VI_DEF|P_NO_MKRC,
 			    (char_u *)&p_beval, PV_NONE,
 			    {(char_u*)FALSE, (char_u *)0L}},
@@ -5865,7 +5871,8 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	p_wiv = (*T_XS != NUL);
     }
 
-#ifdef FEAT_SUN_WORKSHOP
+#if defined(FEAT_BEVAL) && (defined(FEAT_SUN_WORKSHOP) \
+	|| defined(FEAT_NETBEANS_INTG))
     else if ((int *)varp == &p_beval)
     {
 	extern BalloonEval	*balloonEval;
@@ -5874,6 +5881,13 @@ set_bool_option(opt_idx, varp, value, opt_flags)
 	    gui_mch_enable_beval_area(balloonEval);
 	else
 	    gui_mch_disable_beval_area(balloonEval);
+    }
+
+    else if ((int *)varp == &p_acd)
+    {
+	if (p_acd && curbuf->b_ffname != NULL
+		&& vim_chdirfile(curbuf->b_ffname) == OK)
+	    shorten_fnames(TRUE);
     }
 #endif
 

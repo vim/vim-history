@@ -137,8 +137,13 @@ gui_mch_disable_beval_area(beval)
 	removeEventHandler(beval);
 }
 
-#if defined(FEAT_SUN_WORKSHOP) || defined(PROTO)
-    Boolean
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) || defined(PROTO)
+/*
+ * Get the text and position to be evaluated for "beval".
+ * When "usingNetbeans" is set the returned text is in allocated memory.
+ * Returns OK or FAIL.
+ */
+    int
 gui_mch_get_beval_info(beval, filename, line, text, idx)
     BalloonEval	*beval;
     char_u     **filename;
@@ -151,6 +156,7 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
     char_u	*lbuf;
     linenr_T	lnum;
 
+    *text = NULL;
     row = Y_2_ROW(beval->y);
     col = X_2_COL(beval->x);
     wp = mouse_find_win(&row, &col);
@@ -165,17 +171,75 @@ gui_mch_get_beval_info(beval, filename, line, text, idx)
 	    if (col <= win_linetabsize(wp, lbuf, (colnr_T)MAXCOL))
 	    {
 		/* Not past end of line. */
+# ifdef FEAT_NETBEANS_INTG
+		if (usingNetbeans)
+		{
+		    /* For Netbeans we get the relevant part of the line
+		     * instead of the whole line. */
+		    int		len;
+		    pos_T	*spos = NULL, *epos = NULL;
+
+		    if (VIsual_active)
+		    {
+			if (lt(VIsual, curwin->w_cursor))
+			{
+			    spos = &VIsual;
+			    epos = &curwin->w_cursor;
+			}
+			else
+			{
+			    spos = &curwin->w_cursor;
+			    epos = &VIsual;
+			}
+		    }
+
+		    col = vcol2col(wp, lnum, col) - 1;
+
+		    if (VIsual_active
+			    && wp->w_buffer == curwin->w_buffer
+			    && (lnum == spos->lnum
+				? col >= spos->col
+				: lnum > spos->lnum)
+			    && (lnum == epos->lnum
+				? col <= epos->col
+				: lnum < epos->lnum))
+		    {
+			/* Visual mode and pointing to the line with the
+			 * Visual selection: return selected text, with a
+			 * maximum of one line. */
+			if (spos->lnum != epos->lnum || spos->col == epos->col)
+			    return FAIL;
+
+			lbuf = ml_get_buf(curwin->w_buffer, VIsual.lnum, FALSE);
+			lbuf = vim_strnsave(lbuf + spos->col,
+				     epos->col - spos->col + (*p_sel != 'e'));
+			lnum = spos->lnum;
+			col = spos->col;
+		    }
+		    else
+		    {
+			/* Find the word under the cursor. */
+			++emsg_off;
+			len = find_ident_at_pos(wp, lnum, (colnr_T)col, &lbuf,
+						    FIND_IDENT + FIND_STRING);
+			--emsg_off;
+			if (len == 0)
+			    return FAIL;
+			lbuf = vim_strnsave(lbuf, len);
+		    }
+		}
+# endif
 		*filename = wp->w_buffer->b_ffname;
 		*line = (int)lnum;
 		*text = lbuf;
 		*idx = col;
 		beval->ts = wp->w_buffer->b_p_ts;
-		return True;
+		return OK;
 	    }
 	}
     }
 
-    return False;
+    return FAIL;
 }
 
 /*
@@ -425,7 +489,13 @@ drawBalloon(beval)
 #ifdef FEAT_GUI_MOTIF
 	XmString s;
 
-	s = XmStringCreateLocalized((char *)beval->msg);
+	/* For the callback function we parse NL characters to create a
+	 * multi-line label.  This doesn't work for all languages, but
+	 * XmStringCreateLocalized() doesn't do multi-line labels... */
+	if (beval->msgCB != NULL)
+	    s = XmStringCreateLtoR((char *)beval->msg, XmFONTLIST_DEFAULT_TAG);
+	else
+	    s = XmStringCreateLocalized((char *)beval->msg);
 	{
 	    XmFontList fl;
 

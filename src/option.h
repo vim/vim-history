@@ -281,6 +281,9 @@
 #ifdef FEAT_RIGHTLEFT
 EXTERN long	p_aleph;	/* 'aleph' */
 #endif
+#if defined(FEAT_NETBEANS_INTG) || defined(FEAT_SUN_WORKSHOP)
+EXTERN int	p_acd;		/* 'autochdir' */
+#endif
 EXTERN int	p_ar;		/* 'autoread' */
 EXTERN int	p_aw;		/* 'autowrite' */
 EXTERN int	p_awa;		/* 'autowriteall' */
@@ -295,9 +298,9 @@ EXTERN char_u	*p_bsk;		/* 'backupskip' */
 #endif
 #ifdef FEAT_BEVAL
 EXTERN long	p_bdlay;	/* 'balloondelay' */
-#endif
-#ifdef FEAT_SUN_WORKSHOP
+# if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG)
 EXTERN int	p_beval;	/* 'ballooneval' */
+# endif
 #endif
 #ifdef FEAT_BROWSE
 EXTERN char_u	*p_bsdir;	/* 'browsedir' */

@@ -789,6 +789,15 @@ edit(cmdchar, startln, count)
 		need_start_insertmode = TRUE;
 	    goto doESCkey;
 
+#ifdef FEAT_NETBEANS_INTG
+	case K_F21:
+	    ++no_mapping;		/* don't map the next key hits */
+	    i = safe_vgetc();
+	    --no_mapping;
+	    netbeans_keycommand(i);
+	    break;
+#endif
+
 	/* an escape ends input mode */
 	case ESC:
 	    if (echeck_abbr(ESC + ABBR_OFF))

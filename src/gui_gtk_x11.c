@@ -253,11 +253,12 @@ static struct cmdline_option
     {"-geometry",	TRUE},
     {"-reverse",	FALSE},
     {"-rv",		FALSE},
-#if 0	/* TBD */
+
     {"-bg",		TRUE},
     {"-background",	TRUE},
     {"-fg",		TRUE},
     {"-foreground",	TRUE},
+#if 0	/* TBD */
     {"-boldfont",	TRUE},
     {"-italicfont",	TRUE},
     {"+reverse",	FALSE},
@@ -293,7 +294,7 @@ static char *gtk_cmdline_options[] =
     "--disable-sound",
     "--enable-sound",
     "--espeaker=",
-    "--version",
+    /* "--version", */
     "-?",
     "--help",
     "--usage",
@@ -364,6 +365,16 @@ gui_mch_prepare(int *argc, char **argv)
 	    {
 		gui.geom = (char_u *)g_strdup((const char *)argv[arg + 1]);
 	    }
+	    else if ((strcmp("-background", argv[arg]) == 0
+			|| strcmp("-bg", argv[arg]) == 0) && arg + 1 < *argc)
+	    {
+	        background_argument = g_strdup((const char *)argv[arg + 1]);
+	    }
+	    else if ((strcmp("-foreground", argv[arg]) == 0
+			|| strcmp("-fg", argv[arg]) == 0) && arg + 1 < *argc)
+	    {
+	        foreground_argument = g_strdup((const char *)argv[arg + 1]);
+	    }
 
 #ifndef FEAT_GUI_GNOME
 	    /* Found match in table, so move it into gui_argv */
@@ -385,6 +396,24 @@ gui_mch_prepare(int *argc, char **argv)
 		}
 	    }
 	}
+#ifdef FEAT_NETBEANS_INTG
+	else if (strncmp("-nb", argv[arg], 3) == 0)
+	{
+	    usingNetbeans++;
+	    gui.dofork = FALSE;	/* don't fork() when starting GUI */
+	    netbeansArg = argv[arg];
+	    mch_memmove(&argv[arg], &argv[arg + 1],
+					    (--*argc - arg) * sizeof(char *));
+	}
+
+	else if (strcmp("-xrm", argv[arg]) == 0
+		|| strcmp("-mf", argv[arg]) == 0)
+	{
+	    /* remove these arguments for now */
+	    mch_memmove(&argv[arg], &argv[arg + 2],
+				    ((*argc=*argc-2) - arg) * sizeof(char *));
+        }
+#endif
 	else
 	    ++arg;
     }
@@ -2040,6 +2069,11 @@ gui_mch_init()
     /* Pretend we don't have input focus, we will get an event if we do. */
     gui.in_focus = FALSE;
 
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	netbeans_gtk_connect();
+# endif
+
     return OK;
 }
 
@@ -2196,17 +2230,21 @@ gui_mch_open()
 	gui.def_back_pixel = gui_get_color((char_u *)"White");
     }
 
+    if (background_argument)
+	gui.def_back_pixel = gui_get_color((char_u *)background_argument);
+
+    if (foreground_argument)
+	gui.def_norm_pixel = gui_get_color((char_u *)foreground_argument);
+
     /* Get the colors from the "Normal" and "Menu" group (set in syntax.c or
-     * in a vimrc file)
-     */
+     * in a vimrc file) */
     set_normal_colors();
 
     /* Check that none of the colors are the same as the background color */
     gui_check_colors();
 
     /* Get the colors for the highlight groups (gui_check_colors() might have
-     * changed them).
-     */
+     * changed them).  */
     highlight_gui_started();	/* re-init colors and fonts */
 
     gtk_signal_connect(GTK_OBJECT(gui.mainwin), "destroy",
@@ -3842,3 +3880,71 @@ mch_set_mouse_shape(shape)
 	last_shape = shape;
 }
 #endif
+
+#if defined(FEAT_SIGN_ICONS) || defined(PROTO)
+
+/* Signs are currently always 2 chars wide.  Hopefully the font is big enough
+ * to provide room for the bitmap! */
+# define SIGN_WIDTH (gui.char_width * 2)
+# define SIGN_HEIGHT (gui.char_height)
+
+#if 0	/* not used */
+    void
+gui_mch_clearsign(row)
+    int		row;
+{
+    if (gui.in_use)
+	XClearArea(gui.dpy, gui.wid, 0, TEXT_Y(row) - gui.char_height,
+		SIGN_WIDTH, gui.char_height, FALSE);
+}
+#endif
+
+    void
+gui_mch_drawsign(row, col, typenr)
+    int		row;
+    int		col;
+    int		typenr;
+{
+    GdkPixmap	*sign = 0;
+    gint	width;
+    gint	height;
+
+    if (gui.in_use && (sign = (GdkPixmap *)sign_get_image(typenr)) != NULL)
+    {
+	gdk_window_get_size(sign, &width, &height);
+	gdk_window_clear_area(gui.drawarea->window, TEXT_X(col),
+		TEXT_Y(row) - height,
+		SIGN_WIDTH, gui.char_height);
+	gdk_draw_pixmap(gui.drawarea->window, gui.text_gc, sign, 0, 0,
+		TEXT_X(col) + (SIGN_WIDTH - width) / 2,
+		TEXT_Y(row) - (SIGN_HEIGHT - height) / 2 - height,
+		width, height);
+    }
+}
+
+    void *
+gui_mch_register_sign(signfile)
+    char_u	    *signfile;
+{
+    GdkPixmap	    *sign;
+
+    sign = NULL;
+    if (signfile[0] != NUL && signfile[0] != '-')
+    {
+	sign = gdk_pixmap_create_from_xpm(gui.drawarea->window, NULL, NULL,
+					   (char *)signfile);
+	if (sign == NULL)
+	    EMSG(_("E255: Couldn't read in sign data!"));
+    }
+
+    return (void *)sign;
+}
+
+/*ARGSUSED*/
+    void
+gui_mch_destroy_sign(sign)
+    void *sign;
+{
+    /* ??? */
+}
+#endif /* FEAT_SIGN_ICONS */

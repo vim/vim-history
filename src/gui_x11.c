@@ -656,6 +656,15 @@ gui_x11_resize_window_cb(w, dud, event, dum)
 	workshop_frame_moved(rec.x, rec.y, rec.width, rec.height);
     }
 #endif
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+    {
+	XRectangle  rec;
+
+	shellRectangle(w, &rec);
+	netbeans_frame_moved(rec.x, rec.y);
+    }
+#endif
 #ifdef FEAT_XIM
     xim_set_preedit();
 #endif
@@ -1169,6 +1178,17 @@ gui_mch_prepare(argc, argv)
 	}
 	else
 #endif
+#ifdef FEAT_NETBEANS_INTG
+	    if (strncmp("-nb", argv[arg], 3) == 0)
+	{
+	    usingNetbeans++;
+	    gui.dofork = FALSE;	/* don't fork() when starting GUI */
+	    netbeansArg = argv[arg];
+	    mch_memmove(&argv[arg], &argv[arg + 1],
+					    (--*argc - arg) * sizeof(char *));
+	}
+	else
+#endif
 	    arg++;
     }
 }
@@ -1428,13 +1448,17 @@ gui_mch_init()
     if (usingSunWorkShop)
 	workshop_connect(app_context);
 #endif
+#ifdef FEAT_NETBEANS_INTG
+    if (usingNetbeans)
+	netbeans_Xt_connect(app_context);
+#endif
 
-# ifdef FEAT_BEVAL
+#ifdef FEAT_BEVAL
     gui_init_tooltip_font();
-# endif
-# ifdef FEAT_MENU
+#endif
+#ifdef FEAT_MENU
     gui_init_menu_font();
-# endif
+#endif
 
     return OK;
 }

@@ -1462,19 +1462,16 @@ clip_gen_request_selection(cbd)
  * descriptions which would otherwise overflow.  The buffer is considered full
  * when only this extra space (or part of it) remains.
  */
-#ifdef VMS
-# define INBUFLEN 10000 /* for proper cut/paste between X windows in ch. mode */
-#else
-# if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_CLIENTSERVER)
+#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) \
+	|| defined(FEAT_CLIENTSERVER)
    /*
-    * Sun WorkShop stuffs debugger commands into the input buffer. This requires
-    * a larger buffer...
+    * Sun WorkShop and NetBeans stuff debugger commands into the input buffer.
+    * This requires a larger buffer...
     * (Madsen) Go with this for remote input as well ...
     */
-#  define INBUFLEN 4096
-# else
-#  define INBUFLEN 250
-# endif
+# define INBUFLEN 4096
+#else
+# define INBUFLEN 250
 #endif
 
 static char_u	inbuf[INBUFLEN + MAX_KEY_CODE_LEN];
@@ -2689,7 +2686,12 @@ mouse_comp_pos(win, rowp, colp, lnump)
     /* skip line number and fold column in front of the line */
     col -= win_col_off(win);
     if (col < 0)
+    {
+#ifdef FEAT_NETBEANS_INTG
+	netbeans_gutter_click(lnum);
+#endif
 	col = 0;
+    }
 
     *colp = col;
     *rowp = row;
@@ -2697,7 +2699,7 @@ mouse_comp_pos(win, rowp, colp, lnump)
     return retval;
 }
 
-#ifdef FEAT_WINDOWS
+#if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
  * Find the window at screen position "*rowp" and "*colp".  The positions are
  * updated to become relative to the top-left of the window.
@@ -2751,8 +2753,6 @@ get_fpos_of_mouse(mpos)
     pos_T	*mpos;
 {
     win_T	*wp;
-    int		count;
-    char_u	*ptr;
     int		row = mouse_row;
     int		col = mouse_col;
 
@@ -2782,25 +2782,41 @@ get_fpos_of_mouse(mpos)
     if (mouse_comp_pos(curwin, &row, &col, &mpos->lnum))
 	return IN_STATUS_LINE; /* past bottom */
 
+    mpos->col = vcol2col(wp, mpos->lnum, col);
+
+    if (mpos->col > 0)
+	--mpos->col;
+    return IN_BUFFER;
+}
+
+/*
+ * Convert a virtual (screen) column to a character column.
+ * The first column is one.
+ */
+    int
+vcol2col(wp, lnum, vcol)
+    win_T	*wp;
+    linenr_T	lnum;
+    int		vcol;
+{
     /* try to advance to the specified column */
-    mpos->col = 0;
-    count = 0;
-    ptr = ml_get_buf(wp->w_buffer, mpos->lnum, FALSE);
-    while (count <= col && *ptr != NUL)
+    int		col = 0;
+    int		count = 0;
+    char_u	*ptr;
+
+    ptr = ml_get_buf(wp->w_buffer, lnum, FALSE);
+    while (count <= vcol && *ptr != NUL)
     {
-	++mpos->col;
+	++col;
 	count += win_lbr_chartabsize(wp, ptr, count, NULL);
-#ifdef FEAT_MBYTE
+# ifdef FEAT_MBYTE
 	if (has_mbyte)
 	    ptr += (*mb_ptr2len_check)(ptr);
 	else
-#endif
+# endif
 	    ++ptr;
     }
-    if (mpos->col == 0)
-	return IN_BUFFER;
-    --mpos->col;
-    return IN_BUFFER;
+    return col;
 }
 #endif
 

@@ -57,7 +57,9 @@ static void	 load_buffer_by_number(int, int);
 #endif
 static void	 load_window(char *, int lnum);
 static void	 warp_to_pc(int);
+#ifdef FEAT_BEVAL
 static void	 bevalCB(BalloonEval *, int);
+#endif
 static char	*fixAccelText(char *);
 static void	 addMenu(char *, char *, char *);
 static char	*lookupVerb(char *, int);
@@ -217,6 +219,7 @@ workshop_load_file(
 	wstrace("workshop_load_file(%s, %d)\n", filename, line);
 #endif
 
+#ifdef FEAT_BEVAL
     if (balloonEval == NULL)
     {
 	/*
@@ -227,6 +230,7 @@ workshop_load_file(
 	if (!p_beval)
 	    gui_mch_disable_beval_area(balloonEval);
     }
+#endif
 
     load_window(filename, line);
 }
@@ -1556,6 +1560,7 @@ fixAccelText(
 	return NULL;
 }
 
+#ifdef FEAT_BEVAL
     static void
 bevalCB(
 	BalloonEval	*beval,
@@ -1573,7 +1578,7 @@ bevalCB(
     if (!p_beval)
 	return;
 
-    if (gui_mch_get_beval_info(beval, &filename, &line, &text, &col))
+    if (gui_mch_get_beval_info(beval, &filename, &line, &text, &col) == OK)
     {
 	if (text && text[0])
 	{
@@ -1622,6 +1627,7 @@ bevalCB(
 	}
     }
 }
+#endif
 
 
     static int
@@ -1639,9 +1645,9 @@ computeIndex(
 	    col += ts - (col % ts);
 	else
 	    col++;
-	if (col == wantedCol)
-	    return idx + 1;
 	idx++;
+	if (col >= wantedCol)
+	    return idx;
     }
 
     return -1;
