@@ -209,6 +209,11 @@ u_savecommon(top, bot, newbot)
      */
     if (curbuf->b_u_synced)
     {
+#ifdef FEAT_JUMPLIST
+	/* Need to create new entry in b_changelist. */
+	curbuf->b_new_change = TRUE;
+#endif
+
 	/*
 	 * if we undid more than we redid, free the entry lists before and
 	 * including curbuf->b_u_curhead
@@ -223,7 +228,10 @@ u_savecommon(top, bot, newbot)
 	    u_freelist(curbuf->b_u_oldhead);
 
 	if (p_ul < 0)		/* no undo at all */
+	{
+	    curbuf->b_u_synced = FALSE;
 	    return OK;
+	}
 
 	/*
 	 * make a new header entry
@@ -259,6 +267,9 @@ u_savecommon(top, bot, newbot)
     }
     else
     {
+	if (p_ul < 0)		/* no undo at all */
+	    return OK;
+
 	/*
 	 * When saving a single line, and it has been saved just before, it
 	 * doesn't make sense saving it again.  Saves a lot of memory when
@@ -544,7 +555,8 @@ u_undoredo()
 	bot = uep->ue_bot;
 	if (bot == 0)
 	    bot = curbuf->b_ml.ml_line_count + 1;
-	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
+	if (top > curbuf->b_ml.ml_line_count || top >= bot
+				      || bot > curbuf->b_ml.ml_line_count + 1)
 	{
 	    EMSG(_("E438: u_undo: line numbers wrong"));
 	    changed();		/* don't want UNCHANGED now */
@@ -733,8 +745,13 @@ u_sync()
 {
     if (curbuf->b_u_synced)
 	return;		    /* already synced */
-    u_getbot();		    /* compute ue_bot of previous u_save */
-    curbuf->b_u_curhead = NULL;
+    if (p_ul < 0)
+	curbuf->b_u_synced = TRUE;  /* no entries, nothing to do */
+    else
+    {
+	u_getbot();		    /* compute ue_bot of previous u_save */
+	curbuf->b_u_curhead = NULL;
+    }
 }
 
 /*

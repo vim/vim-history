@@ -409,6 +409,7 @@ static void	ex_folddo __ARGS((exarg_T *eap));
 #endif
 #ifndef FEAT_JUMPLIST
 # define ex_jumps		ex_ni
+# define ex_changes		ex_ni
 #endif
 
 /*
@@ -1657,9 +1658,14 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 			continue;
 
-	    case 'k':	if (!checkforcmd(&ea.cmd, "keepmarks", 3))
+	    case 'k':	if (checkforcmd(&ea.cmd, "keepmarks", 3))
+			{
+			    cmdmod.keepmarks = TRUE;
+			    continue;
+			}
+			if (!checkforcmd(&ea.cmd, "keepjumps", 5))
 			    break;
-			cmdmod.keepmarks = TRUE;
+			cmdmod.keepjumps = TRUE;
 			continue;
 
 			/* ":hide" and ":hide | cmd" are not modifiers */
@@ -2352,6 +2358,7 @@ do_one_cmd(cmdlinep, sourcing,
 	    case CMD_ilist:
 	    case CMD_isearch:
 	    case CMD_isplit:
+	    case CMD_keepjumps:
 	    case CMD_keepmarks:
 	    case CMD_leftabove:
 	    case CMD_let:
@@ -2747,6 +2754,7 @@ cmd_exists(name)
 	{"browse", 3},
 	{"confirm", 4},
 	{"hide", 3},
+	{"keepjumps", 5},
 	{"keepmarks", 3},
 	{"leftabove", 5},
 	{"lockmarks", 3},
@@ -2848,7 +2856,7 @@ set_one_cmd_context(xp, buff)
      * Isolate the command and search for it in the command table.
      * Exceptions:
      * - the 'k' command can directly be followed by any character, but
-     *   do accept "keepmarks".
+     *   do accept "keepmarks" and "keepjumps".
      * - the 's' command can be followed directly by 'c', 'g', 'i', 'I' or 'r'
      */
     if (*cmd == 'k' && cmd[1] != 'e')
@@ -3188,6 +3196,7 @@ set_one_cmd_context(xp, buff)
 	case CMD_folddoclosed:
 	case CMD_folddoopen:
 	case CMD_hide:
+	case CMD_keepjumps:
 	case CMD_keepmarks:
 	case CMD_leftabove:
 	case CMD_lockmarks:
