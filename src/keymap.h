@@ -197,7 +197,7 @@ enum key_extra
     , KE_IGNORE		/* Ignored mouse drag/release */
 
     , KE_TAB		/* unshifted TAB key */
-    , KE_S_TAB		/* shifted TAB key */
+    , KE_S_TAB_OLD	/* shifted TAB key (no longer used) */
 
     , KE_SNIFF		/* SNiFF+ input waiting */
 
@@ -260,7 +260,7 @@ enum key_extra
 #define K_S_END		TERMCAP2KEY('*', '7')
 #define K_C_END		TERMCAP2KEY(KS_EXTRA, KE_C_END)
 #define K_TAB		TERMCAP2KEY(KS_EXTRA, KE_TAB)
-#define K_S_TAB		TERMCAP2KEY(KS_EXTRA, KE_S_TAB)
+#define K_S_TAB		TERMCAP2KEY('k', 'B')
 
 /* extra set of function keys F1-F4, for vt100 compatible xterm */
 #define K_XF1		TERMCAP2KEY(KS_EXTRA, KE_XF1)
