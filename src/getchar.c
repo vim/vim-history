@@ -550,7 +550,14 @@ AppendToRedobuffLit(s)
 	    /* Handle a special or multibyte character. */
 #ifdef FEAT_MBYTE
 	    if (has_mbyte)
-		c = mb_ptr2char_adv(&s);
+	    {
+		c = (*mb_ptr2char)(s);
+		if (enc_utf8)
+		    /* Handle composing chars as well. */
+		    s += utf_ptr2len_check(s);
+		else
+		    s += (*mb_ptr2len_check)(s);
+	    }
 	    else
 #endif
 		c = *s++;
