@@ -1,4 +1,4 @@
-*netbeans.txt*  For Vim version 6.2.  Last change: 2004 Jan 17
+*netbeans.txt*  For Vim version 6.2.  Last change: 2004 Feb 15
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -200,8 +200,26 @@ NetBeans connection lost for this buffer
 ==============================================================================
 9. Running Vim from NetBeans				*netbeans-run*
 
-NetBeans starts Vim with the |-nb| argument.  The full form is: >
-	-nb:{hostname}:{addr}:{password}
+NetBeans starts Vim with the |-nb| argument.  Three forms can be used, that
+differ in the way the information for the connection is specified:
+
+	-nb={fname}				from a file
+	-nb:{hostname}:{addr}:{password}	directly
+	-nb					from a file or environment
+
+								*E660*
+For security reasons, the best method is to write the information in a file
+readable only by the user.  The name of the file can be passed with the
+"-nb={fname}" argument or, when "-nb" is used without a parameter, the
+environment variable "__NETBEANS_CONINFO".  The file must contain these three
+lines, in any order:
+
+	host={hostname}
+	port={addr}
+	auth={password}
+
+Other lines are ignored.  The caller of Vim is responsible for deleting the
+file afterwards.
 
 {hostname} is the name of the machine where NetBeans is running.  When omitted
 the environment variable "__NETBEANS_HOST" is used or the default "localhost".
