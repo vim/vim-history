@@ -937,7 +937,7 @@ key_press_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
 #endif
 
 #ifdef FEAT_XIM
-    if (xim_queue_key_press_event(event))
+    if (xim_queue_key_press_event(event, TRUE))
 	return TRUE;
 #endif
 
@@ -1161,7 +1161,7 @@ key_release_event(GtkWidget *widget, GdkEventKey *event, gpointer data)
      * With the default IM for instance, you can enter any UCS code point
      * by holding down CTRL-SHIFT and typing hexadecimal digits.
      */
-    return xim_queue_key_press_event(event);
+    return xim_queue_key_press_event(event, FALSE);
 }
 #endif
 

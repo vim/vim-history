@@ -3114,6 +3114,9 @@ im_correct_cursor(int num_move_back)
 	add_to_input_buf(backkey, (int)sizeof(backkey));
 }
 
+static int xim_expected_char = NUL;
+static int xim_ignored_char = FALSE;
+
 /*
  * Callback invoked when the user finished preediting.
  * Put the final string into the input buffer.
@@ -3122,6 +3125,9 @@ im_correct_cursor(int num_move_back)
     static void
 im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
 {
+    int slen = (int)strlen(str);
+    int add_to_input = TRUE;
+
     /* The imhangul module doesn't reset the preedit string before
      * committing.  Call im_delete_preedit() to work around that. */
     im_delete_preedit();
@@ -3129,7 +3135,29 @@ im_commit_cb(GtkIMContext *context, const gchar *str, gpointer data)
     /* Indicate that preediting has finished */
     preedit_start_col = MAXCOL;
 
-    im_add_to_input((char_u *)str, (int)strlen(str));
+    /* Is this a single character that matches a keypad key that's just
+     * been pressed?  If so, we don't want it to be entered as such - let
+     * us carry on processing the raw keycode so that it may be used in
+     * mappings as <kSomething>
+     */
+    if (xim_expected_char != NUL)
+    {
+        /* We're currently processing a keypad or other special key */
+        if (slen == 1 && str[0] == xim_expected_char)
+        {
+            /* It's a match - don't do it here */
+            xim_ignored_char = TRUE;
+            add_to_input = FALSE;
+        }
+        else
+        {
+            /* Not a match */
+            xim_ignored_char = FALSE;
+        }
+    }
+
+    if (add_to_input)
+        im_add_to_input((char_u *)str, slen);
 
     if (gtk_main_level() > 0)
 	gtk_main_quit();
@@ -3556,8 +3584,43 @@ xim_reset(void)
 }
 
     int
-xim_queue_key_press_event(GdkEventKey *event)
+xim_queue_key_press_event(GdkEventKey *event, int down)
 {
+    if (down)
+    {
+	/*
+	 * Workaround GTK2 XIM 'feature' that always converts keypad keys to
+	 * chars., even when not part of an IM sequence (ref. feature of
+	 * gdk/gdkkeyuni.c).
+	 * Flag any keypad keys that might represent a single char.
+	 * If this (on its own - i.e., not part of an IM sequence) is
+	 * committed while we're processing one of these keys, we can ignore
+	 * that commit and go ahead & process it ourselves.  That way we can
+	 * still distinguish keypad keys for use in mappings.
+	 */
+	switch (event->keyval)
+	{
+	    case GDK_KP_Add:      xim_expected_char = '+';  break;
+	    case GDK_KP_Subtract: xim_expected_char = '-';  break;
+	    case GDK_KP_Divide:   xim_expected_char = '/';  break;
+	    case GDK_KP_Multiply: xim_expected_char = '*';  break;
+	    case GDK_KP_Decimal:  xim_expected_char = '.';  break;
+	    case GDK_KP_Equal:    xim_expected_char = '=';  break;
+	    case GDK_KP_0:        xim_expected_char = '0';  break;
+	    case GDK_KP_1:        xim_expected_char = '1';  break;
+	    case GDK_KP_2:        xim_expected_char = '2';  break;
+	    case GDK_KP_3:        xim_expected_char = '3';  break;
+	    case GDK_KP_4:        xim_expected_char = '4';  break;
+	    case GDK_KP_5:        xim_expected_char = '5';  break;
+	    case GDK_KP_6:        xim_expected_char = '6';  break;
+	    case GDK_KP_7:        xim_expected_char = '7';  break;
+	    case GDK_KP_8:        xim_expected_char = '8';  break;
+	    case GDK_KP_9:        xim_expected_char = '9';  break;
+	    default:              xim_expected_char = NUL;
+	}
+	xim_ignored_char = FALSE;
+    }
+
     /*
      * When typing fFtT, XIM may be activated. Thus it must pass
      * gtk_im_context_filter_keypress() in Normal mode.
@@ -3603,7 +3666,18 @@ xim_queue_key_press_event(GdkEventKey *event)
 	 * right now.  Unlike with GTK+ 1.2 we cannot rely on the IM module
 	 * not doing anything before the activation key was sent. */
 	if (im_activatekey_keyval == GDK_VoidSymbol || im_is_active)
-	    return gtk_im_context_filter_keypress(xic, event);
+        {
+	    int imresult = gtk_im_context_filter_keypress(xic, event);
+
+            /* If XIM tried to commit a keypad key as a single char.,
+             * ignore it so we can use the keypad key 'raw', for mappings. */
+            if (xim_expected_char != NUL && xim_ignored_char)
+                /* We had a keypad key, and XIM tried to thieve it */
+                return FALSE;
+            else
+                /* Normal processing */
+                return imresult;
+        }
     }
 
     return FALSE;
@@ -4797,8 +4871,9 @@ xim_reset(void)
     }
 }
 
+/*ARGSUSED*/
     int
-xim_queue_key_press_event(GdkEventKey *event)
+xim_queue_key_press_event(GdkEventKey *event, int down)
 {
     if (preedit_buf_len <= 0)
 	return FALSE;
