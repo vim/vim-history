@@ -2451,23 +2451,23 @@ ex_checktime(eap)
 #ifdef FEAT_SYN_HL
 static const long_u  cterm_color_8[8] =
 {
-    0x000000UL, 0xff0000UL, 0x00ff00UL, 0xffff00UL,
-    0x0000ffUL, 0xff00ffUL, 0x00ffffUL, 0xffffffUL
+    (long_u)0x000000, (long_u)0xff0000, (long_u)0x00ff00, (long_u)0xffff00,
+    (long_u)0x0000ff, (long_u)0xff00ff, (long_u)0x00ffff, (long_u)0xffffff
 };
 
 static const long_u  cterm_color_16[16] =
 {
-    0x000000UL, 0x0000c0UL, 0x008000UL, 0x004080UL,
-    0xc00000UL, 0xc000c0UL, 0x808000UL, 0xc0c0c0UL,
-    0x808080UL, 0x6060ffUL, 0x00ff00UL, 0x00ffffUL,
-    0xff8080UL, 0xff40ffUL, 0xffff00UL, 0xffffffUL
+    (long_u)0x000000, (long_u)0x0000c0, (long_u)0x008000, (long_u)0x004080,
+    (long_u)0xc00000, (long_u)0xc000c0, (long_u)0x808000, (long_u)0xc0c0c0,
+    (long_u)0x808080, (long_u)0x6060ff, (long_u)0x00ff00, (long_u)0x00ffff,
+    (long_u)0xff8080, (long_u)0xff40ff, (long_u)0xffff00, (long_u)0xffffff
 };
 
 static int		current_syn_id;
 #endif
 
-#define COLOR_BLACK	0UL
-#define COLOR_WHITE	0xFFFFFFUL
+#define COLOR_BLACK	(long_u)0
+#define COLOR_WHITE	(long_u)0xFFFFFF
 
 static int	curr_italic;
 static int	curr_bold;
@@ -2573,7 +2573,7 @@ prt_line_number(psettings, page_line, lnum)
     char_u	tbuf[20];
 
     if (psettings->has_color)
-	prt_set_fg(0x808080UL);
+	prt_set_fg((long_u)0x808080);
     else
 	prt_set_fg(COLOR_BLACK);
     prt_set_bg(COLOR_WHITE);
@@ -2673,7 +2673,7 @@ prt_header(psettings, pagenum, lnum)
     if (prt_use_number())
 	width += PRINT_NUMBER_WIDTH;
 
-    tbuf = alloc(width + 1);
+    tbuf = alloc(width + IOSIZE);
     if (tbuf == NULL)
 	return;
 
@@ -2822,8 +2822,8 @@ ex_hardcopy(eap)
     }
 
     /* Set colors and font to normal. */
-    curr_bg = 0xffffffffUL;
-    curr_fg = 0xffffffffUL;
+    curr_bg = (long_u)0xffffffff;
+    curr_fg = (long_u)0xffffffff;
     curr_italic = MAYBE;
     curr_bold = MAYBE;
     curr_underline = MAYBE;
@@ -3178,20 +3178,20 @@ struct prt_mediasize_S
 
 static struct prt_mediasize_S prt_mediasize[] =
 {
-    {"A4",		595.0f,  842.0f},
-    {"letter",		612.0f,  792.0f},
-    {"10x14",		720.0f, 1008.0f},
-    {"A3",		842.0f, 1191.0f},
-    {"A5",		420.0f,  595.0f},
-    {"B4",		729.0f, 1032.0f},
-    {"B5",		516.0f,  729.0f},
-    {"executive",	522.0f,  756.0f},
-    {"folio",		595.0f,  935.0f},
-    {"ledger",	       1224.0f,  792.0f},   /* Yes, it is wider than taller! */
-    {"legal",		612.0f, 1008.0f},
-    {"quarto",		610.0f,  780.0f},
-    {"statement",	396.0f,  612.0f},
-    {"tabloid",		792.0f, 1224.0f}
+    {"A4",		595.0,  842.0},
+    {"letter",		612.0,  792.0},
+    {"10x14",		720.0, 1008.0},
+    {"A3",		842.0, 1191.0},
+    {"A5",		420.0,  595.0},
+    {"B4",		729.0, 1032.0},
+    {"B5",		516.0,  729.0},
+    {"executive",	522.0,  756.0},
+    {"folio",		595.0,  935.0},
+    {"ledger",	       1224.0,  792.0},   /* Yes, it is wider than taller! */
+    {"legal",		612.0, 1008.0},
+    {"quarto",		610.0,  780.0},
+    {"statement",	396.0,  612.0},
+    {"tabloid",		792.0, 1224.0}
 };
 
 /* PS font names, must be in Roman, Bold, Italic, Bold-Italic order */
@@ -3291,8 +3291,8 @@ static float prt_first_line_height;
 static float prt_char_width;
 static float prt_number_width;
 static float prt_bgcol_offset;
-static float prt_pos_x_moveto = 0.0f;
-static float prt_pos_y_moveto = 0.0f;
+static float prt_pos_x_moveto = 0.0;
+static float prt_pos_y_moveto = 0.0;
 
 /*
  * Various control variables used to decide when and how to change the
@@ -3434,10 +3434,10 @@ prt_real_bits(real, precision, pinteger, pfraction)
     if (real < (double)integer)
         fraction = -fraction;
     for (i = 0; i < precision; i++)
-        fraction *= 10.0f;
+        fraction *= 10.0;
 
     *pinteger = integer;
-    *pfraction = (int)(fraction + 0.5f);
+    *pfraction = (int)(fraction + 0.5);
 }
 
 /*
@@ -3491,7 +3491,7 @@ prt_def_var(name, value, prec)
 }
 
 /* Convert size from font space to user space at current font scale */
-#define PRT_PS_FONT_TO_USER(scale, size)    ((size) * ((scale)/1000.0f))
+#define PRT_PS_FONT_TO_USER(scale, size)    ((size) * ((scale)/1000.0))
 
     static void
 prt_flush_buffer()
@@ -3749,7 +3749,7 @@ to_device_units(idx, physsize, def_number)
 	    ret = (float)(nr * PRT_PS_DEFAULT_DPI);
 	    break;
 	case PRT_UNIT_MM:
-	    ret = (float)(nr * PRT_PS_DEFAULT_DPI) / 25.4f;
+	    ret = (float)(nr * PRT_PS_DEFAULT_DPI) / 25.4;
 	    break;
 	case PRT_UNIT_POINT:
 	    ret = (float)nr;
@@ -3799,7 +3799,7 @@ prt_get_cpl()
 	prt_left_margin += prt_number_width;
     }
     else
-	prt_number_width = 0.0f;
+	prt_number_width = 0.0;
 
     return (int)((prt_right_margin - prt_left_margin) / prt_char_width);
 }
@@ -3819,10 +3819,10 @@ prt_get_lpp()
      */
     prt_bgcol_offset = PRT_PS_FONT_TO_USER(prt_line_height,
 					   prt_ps_font.bbox_min_y);
-    if ((prt_ps_font.bbox_max_y - prt_ps_font.bbox_min_y) < 1000.0f)
+    if ((prt_ps_font.bbox_max_y - prt_ps_font.bbox_min_y) < 1000.0)
     {
 	prt_bgcol_offset -= PRT_PS_FONT_TO_USER(prt_line_height,
-				(1000.0f - (prt_ps_font.bbox_max_y -
+				(1000.0 - (prt_ps_font.bbox_max_y -
 					    prt_ps_font.bbox_min_y)) / 2);
     }
 
@@ -4315,6 +4315,11 @@ mch_print_begin_page(msg)
 
     prt_dsc_noarg("EndPageSetup");
 
+    /* We have reset the font attributes, force setting them again. */
+    curr_bg = (long_u)0xffffffff;
+    curr_fg = (long_u)0xffffffff;
+    curr_bold = MAYBE;
+
     return !prt_file_error;
 }
 
@@ -4461,7 +4466,7 @@ mch_print_text_out(p, len)
     prt_pos_x += prt_char_width;
 
     /* The downside of fp - need a little tolerance in the right margin check */
-    need_break = (prt_pos_x + prt_char_width > (prt_right_margin + 0.01f));
+    need_break = (prt_pos_x + prt_char_width > (prt_right_margin + 0.01));
 
     if (need_break)
 	prt_flush_buffer();
