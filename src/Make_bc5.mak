@@ -64,6 +64,8 @@
 # FASTCALL	no or yes: set to yes to use register-based function protocol (yes)
 # OPTIMIZE	SPEED or SPACE: type of optimization (SPEED)
 # POSTSCRIPT	no or yes: set to yes for PostScript printing
+# FEATURES	TINY, SMALL, NORMAL, BIG or HUGE
+#		(BIG for WIN32, SMALL for DOS16)
 #
 ### BOR: root of the BC installation
 !if ("$(BOR)"=="")
@@ -157,6 +159,14 @@ FASTCALL = yes
 !if ("$(OPTIMIZE)"=="")
 OPTIMIZE = SPEED
 !endif
+### FEATURES: TINY, SMALL, NORMAL, BIG or HUGE (BIG for WIN32, SMALL for DOS16)
+!if ("$(FEATURES)"=="")
+! if ($(OSTYPE)==DOS16)
+FEATURES = SMALL
+! else
+FEATURES = BIG
+! endif
+!endif
 #
 ### POSTSCRIPT: uncomment this line if you want PostScript printing
 #POSTSCRIPT = yes
@@ -212,7 +222,7 @@ OPT = $(OPT) -vi-
 # shouldn't have to change:
 LIB = $(BOR)\lib
 INCLUDE = $(BOR)\include;.;proto
-DEFINES = -DWIN32 -DPC $(WINVER)
+DEFINES = -DFEAT_$(FEATURES) -DWIN32 -DPC $(WINVER)
 #
 !ifdef PERL
 INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_PERL
@@ -322,7 +332,7 @@ TARGET = vimd.exe
 TARGET = vim.exe
 !endif
 !if ($(OSTYPE)==DOS16)
-DEFINES=-DMSDOS
+DEFINES= -DFEAT_$(FEATURES) -DMSDOS
 EXETYPE=-ml
 STARTUPOBJ = c0l.obj
 LINK2 =
