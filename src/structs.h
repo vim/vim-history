@@ -232,6 +232,7 @@ struct u_header
     u_header_T	*uh_next;	/* pointer to next header in list */
     u_header_T	*uh_prev;	/* pointer to previous header in list */
     u_entry_T	*uh_entry;	/* pointer to first entry */
+    u_entry_T	*uh_getbot_entry; /* pointer to where ue_bot must be set */
     pos_T	uh_cursor;	/* cursor position before saving */
 #ifdef FEAT_VIRTUALEDIT
     long	uh_cursor_vcol;

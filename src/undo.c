@@ -224,6 +224,7 @@ u_savecommon(top, bot, newbot)
 	if (curbuf->b_u_newhead != NULL)
 	    curbuf->b_u_newhead->uh_prev = uhp;
 	uhp->uh_entry = NULL;
+	uhp->uh_getbot_entry = NULL;
 	uhp->uh_cursor = curwin->w_cursor;	/* save cursor pos. for undo */
 #ifdef FEAT_VIRTUALEDIT
 	if (virtual_active() && curwin->w_cursor.coladd > 0)
@@ -263,7 +264,7 @@ u_savecommon(top, bot, newbot)
 		    break;
 
 		/* If lines have been inserted/deleted we give up. */
-		if (uep->ue_lcount == 0
+		if (curbuf->b_u_newhead->uh_getbot_entry != uep
 			? (uep->ue_top + uep->ue_size + 1
 			    != (uep->ue_bot == 0
 				? curbuf->b_ml.ml_line_count + 1
@@ -274,14 +275,39 @@ u_savecommon(top, bot, newbot)
 		/* If it's the same line we can skip saving it again. */
 		if (uep->ue_size == 1 && uep->ue_top == top)
 		{
-		    /* The line count might change. */
-		    uep->ue_lcount = 0;
+		    /* If it's not the last entry, get ue_bot for the last
+		     * entry now.  Following deleted/inserted lines go to the
+		     * re-used entry. */
+		    if (i > 0)
+			u_getbot();
+
+		    /* The line count might change afterwards. */
 		    if (newbot != 0)
+		    {
+			/* When changing the line count and it's not the
+			 * newest entry, must adjust the line numbers of older
+			 * entries. */
+			if (uep != curbuf->b_u_newhead->uh_entry
+						     && uep->ue_bot != newbot)
+			{
+			    u_entry_T	*p;
+
+			    for (p = curbuf->b_u_newhead->uh_entry;
+						     p != uep; p = p->ue_next)
+			    {
+				p->ue_bot -= uep->ue_bot - newbot;
+				p->ue_top -= uep->ue_bot - newbot;
+			    }
+			}
 			uep->ue_bot = newbot;
+		    }
 		    else if (bot > curbuf->b_ml.ml_line_count)
 			uep->ue_bot = 0;
 		    else
+		    {
 			uep->ue_lcount = curbuf->b_ml.ml_line_count;
+			curbuf->b_u_newhead->uh_getbot_entry = uep;
+		    }
 		    return OK;
 		}
 		uep = uep->ue_next;
@@ -310,7 +336,6 @@ u_savecommon(top, bot, newbot)
 
     uep->ue_size = size;
     uep->ue_top = top;
-    uep->ue_lcount = 0;
     if (newbot)
 	uep->ue_bot = newbot;
 	/*
@@ -320,7 +345,10 @@ u_savecommon(top, bot, newbot)
     else if (bot > curbuf->b_ml.ml_line_count)
 	uep->ue_bot = 0;
     else
+    {
 	uep->ue_lcount = curbuf->b_ml.ml_line_count;
+	curbuf->b_u_newhead->uh_getbot_entry = uep;
+    }
 
     if (size)
     {
@@ -732,20 +760,22 @@ u_get_headentry()
 u_getbot()
 {
     u_entry_T	*uep;
+    linenr_T	extra;
 
-    uep = u_get_headentry();
+    uep = u_get_headentry();	/* check for corrupt undo list */
     if (uep == NULL)
 	return;
 
-    if (uep->ue_lcount != 0)
+    uep = curbuf->b_u_newhead->uh_getbot_entry;
+    if (uep != NULL)
     {
 	/*
 	 * the new ue_bot is computed from the number of lines that has been
 	 * inserted (0 - deleted) since calling u_save. This is equal to the old
 	 * line count subtracted from the current line count.
 	 */
-	uep->ue_bot = uep->ue_top + uep->ue_size + 1 +
-				(curbuf->b_ml.ml_line_count - uep->ue_lcount);
+	extra = curbuf->b_ml.ml_line_count - uep->ue_lcount;
+	uep->ue_bot = uep->ue_top + uep->ue_size + 1 + extra;
 	if (uep->ue_bot < 1 || uep->ue_bot > curbuf->b_ml.ml_line_count)
 	{
 	    EMSG(_("E440: undo line missing"));
@@ -754,7 +784,19 @@ u_getbot()
 					     * without deleting the current
 					     * ones */
 	}
-	uep->ue_lcount = 0;
+
+	/* If not the newest entry and lines have been inserted or deleted,
+	 * newer entries must have their line numbers adjusted. */
+	if (extra != 0)
+	    for (uep = curbuf->b_u_newhead->uh_entry;
+		    uep != curbuf->b_u_newhead->uh_getbot_entry;
+		    uep = uep->ue_next)
+	    {
+		uep->ue_bot -= extra;
+		uep->ue_top -= extra;
+	    }
+
+	curbuf->b_u_newhead->uh_getbot_entry = NULL;
     }
 
     curbuf->b_u_synced = TRUE;
