@@ -82,6 +82,9 @@
 #  define WIN32_LEAN_AND_MEAN
 # endif
 # include <windows.h>
+# ifdef WIN32
+#  undef WIN32	    /* Some windows.h define WIN32, we don't want that here. */
+# endif
 #endif
 
 #if (defined(WIN3264) || defined(WIN32UNIX)) && !defined(__MINGW32__)
@@ -4196,7 +4199,7 @@ convert_setup(vcp, from, to)
 	/* Internal utf-8 -> latin1 conversion. */
 	vcp->vc_type = CONV_TO_LATIN1;
     }
-#ifdef WIN32
+#ifdef WIN3264
     /* Win32-specific codepage <-> codepage conversion without iconv. */
     else if (((from_prop & ENC_UNICODE) || encname2codepage(from) > 0)
 	    && ((to_prop & ENC_UNICODE) || encname2codepage(to) > 0))
