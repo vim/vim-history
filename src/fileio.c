@@ -259,6 +259,8 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
 #ifdef FEAT_MBYTE
     int		can_retry;
     int		conv_error = FALSE;	/* conversion error detected */
+    int		keep_dest_enc = FALSE;	/* don't retry when char doesn't fit
+					   in destination encoding */
     linenr_T	illegal_byte = 0;	/* line nr with illegal byte */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
@@ -745,14 +747,39 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     }
     else if (curbuf->b_help)
     {
+	char_u	    firstline[80];
+
 	/* Help files are either utf-8 or latin1.  Try utf-8 first, if this
-	 * fails it must be latin1.  Only do this when 'encoding' is utf-8 to
-	 * avoid [converted] remarks all the time. */
+	 * fails it must be latin1.
+	 * Always do this when 'encoding' is "utf-8".  Otherwise only do
+	 * this when needed to avoid [converted] remarks all the time.
+	 * It is needed when the first line contains non-ASCII characters.
+	 * That is only in *.??x files. */
 	fenc = (char_u *)"latin1";
-	if (enc_utf8)
+	c = enc_utf8;
+	if (!c && !read_stdin && TOLOWER_ASC(fname[STRLEN(fname) - 1]) == 'x')
+	{
+	    /* Read the first line (and a bit more).  Immediately rewind to
+	     * the start of the file.  If the read() fails "len" is -1. */
+	    len = vim_read(fd, firstline, 80);
+	    lseek(fd, (off_t)0L, SEEK_SET);
+	    for (p = firstline; p < firstline + len; ++p)
+		if (*p >= 0x80)
+		{
+		    c = TRUE;
+		    break;
+		}
+	}
+
+	if (c)
 	{
 	    fenc_next = fenc;
 	    fenc = (char_u *)"utf-8";
+
+	    /* When the file is utf-8 but a character doesn't fit in
+	     * 'encoding' don't retry.  In help text editing utf-8 bytes
+	     * doesn't make sense. */
+	    keep_dest_enc = TRUE;
 	}
 	fenc_alloced = FALSE;
     }
@@ -1534,7 +1561,7 @@ retry:
 			    /* character doesn't fit in latin1, retry with
 			     * another fenc when possible, otherwise just
 			     * report the error. */
-			    if (can_retry)
+			    if (can_retry && !keep_dest_enc)
 				goto rewind_retry;
 			    *dest = 0xBF;
 			    conv_error = TRUE;
