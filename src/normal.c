@@ -2178,12 +2178,17 @@ do_mouse(oap, c, dir, count, fixindent)
 	     */
 	}
 
+	else if ((State & INSERT) == 0)
+	    return FALSE;
+
 	/*
 	 * Middle click in insert mode doesn't move the mouse, just insert the
 	 * contents of a register.  '.' register is special, can't insert that
 	 * with do_put().
+	 * Also paste at the cursor if the current mode isn't in 'mouse' (only
+	 * happens for the GUI).
 	 */
-	else if (State & INSERT)
+	if ((State & INSERT) || !mouse_has(MOUSE_NORMAL))
 	{
 	    if (regname == '.')
 		insert_reg(regname, TRUE);
@@ -2207,8 +2212,6 @@ do_mouse(oap, c, dir, count, fixindent)
 	    }
 	    return FALSE;
 	}
-	else
-	    return FALSE;
     }
 
     /* When dragging or button-up stay in the same window. */
