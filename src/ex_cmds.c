@@ -3185,13 +3185,13 @@ do_sub(eap)
 	    unsigned	len, needed_len;
 	    unsigned	new_start_len = 0;
 
-	    /* make a copy of the line, so it won't be taken away when updating
-		the screen */
+	    /* Make a copy of the line, so it won't be taken away when
+	     * updating the screen. */
 	    if ((old_line = vim_strsave(ptr)) == NULL)
 		continue;
-	    vim_regexec(prog, old_line, TRUE);	/* match again on this line to
-						 * update the pointers. TODO:
-						 * remove extra vim_regexec() */
+	    /* Adjust the pointers in "prog" for the copied string. */
+	    vim_regnewptr(prog, ptr, old_line);
+
 	    if (!got_match)
 	    {
 		setpcmark();
