@@ -949,7 +949,9 @@ syn_update_ends(startofline)
 	for (i = 0; i < current_state.ga_len; ++i)
 	{
 	    cur_si = &CUR_STATE(i);
-	    if ((SYN_ITEMS(syn_buf)[cur_si->si_idx]).sp_type == SPTYPE_MATCH
+	    if (cur_si->si_idx >= 0
+		    && (SYN_ITEMS(syn_buf)[cur_si->si_idx]).sp_type
+							       == SPTYPE_MATCH
 		    && cur_si->si_m_endpos.lnum < current_lnum)
 	    {
 		cur_si->si_flags |= HL_MATCHCONT;
@@ -1432,8 +1434,11 @@ load_current_state(from)
 		keepend_level = i;
 	    CUR_STATE(i).si_ends = FALSE;
 	    CUR_STATE(i).si_m_lnum = 0;
-	    CUR_STATE(i).si_next_list =
+	    if (CUR_STATE(i).si_idx >= 0)
+		CUR_STATE(i).si_next_list =
 		       (SYN_ITEMS(syn_buf)[CUR_STATE(i).si_idx]).sp_next_list;
+	    else
+		CUR_STATE(i).si_next_list = NULL;
 	    update_si_attr(i);
 	}
 	current_state.ga_len = from->sst_stacksize;
@@ -1633,8 +1638,9 @@ syn_finish_line(syncing)
 		 * Check for match with sync item.
 		 */
 		cur_si = &CUR_STATE(current_state.ga_len - 1);
-		if (SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_flags
-					       & (HL_SYNC_HERE|HL_SYNC_THERE))
+		if (cur_si->si_idx >= 0
+			&& (SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_flags
+					      & (HL_SYNC_HERE|HL_SYNC_THERE)))
 		    return TRUE;
 
 		/* syn_current_attr() will have skipped the check for an item
@@ -2335,8 +2341,10 @@ check_state_ends()
 		 * - not at the end of the line (could be end="x$"me=e-1).
 		 * - "excludenl" is used (HL_HAS_EOL won't be set)
 		 */
-		if (SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_type == SPTYPE_START
-			     && !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND)))
+		if (cur_si->si_idx >= 0
+			&& SYN_ITEMS(syn_buf)[cur_si->si_idx].sp_type
+							       == SPTYPE_START
+			&& !(cur_si->si_flags & (HL_MATCH | HL_KEEPEND)))
 		{
 		    update_si_end(cur_si, (int)current_col, TRUE);
 		    check_keepend();
