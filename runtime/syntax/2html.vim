@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Sep 02
+" Last Change: 2001 Dec 12
 "	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
@@ -71,7 +71,7 @@ if !exists("html_use_css")
       let x = s:HtmlColor(synIDattr(a:id, "fg#", s:whatterm))
       let a = a . '<span style="background-color: ' . ( x != "" ? x : s:fgc ) . '">'
       let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
-      let a = a . '<font color="' . ( if x != "" ? x : s:bgc ) . '">'
+      let a = a . '<font color="' . ( x != "" ? x : s:bgc ) . '">'
     else
       let x = s:HtmlColor(synIDattr(a:id, "bg#", s:whatterm))
       if x != "" | let a = a . '<span style="background-color: ' . x . '">' | endif
@@ -184,7 +184,7 @@ while s:lnum <= s:end
   let s:new = ""
 
   if s:numblines
-    let s:new = '<span class=lnr>' . strpart('        ', 0, strlen(line("$")) - strlen(s:lnum)) . s:lnum . '</span>  '
+    let s:new = '<span class="lnr">' . strpart('        ', 0, strlen(line("$")) - strlen(s:lnum)) . s:lnum . '</span>  '
   endif
 
   " Loop over each character in the line
@@ -199,7 +199,7 @@ while s:lnum <= s:end
 
     " Output the text with the same synID, with class set to c{s:id}
     let s:id = synIDtrans(s:id)
-    let s:new = s:new . '<span class=c' . s:id . '>' . substitute(substitute(substitute(substitute(substitute(strpart(s:line, s:startcol - 1, s:col - s:startcol), '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<hr class="PAGE-BREAK">', 'g') . '</span>'
+    let s:new = s:new . '<span class="c' . s:id . '">' . substitute(substitute(substitute(substitute(substitute(strpart(s:line, s:startcol - 1, s:col - s:startcol), '&', '\&amp;', 'g'), '<', '\&lt;', 'g'), '>', '\&gt;', 'g'), '"', '\&quot;', 'g'), "\x0c", '<hr class="PAGE-BREAK">', 'g') . '</span>'
     " Add the class to class list if it's not there yet
     if stridx(s:idlist, "," . s:id . ",") == -1
       let s:idlist = s:idlist . s:id . ","
@@ -252,7 +252,7 @@ if s:numblines
   if exists("html_use_css")
     execute "normal A\n.lnr { " . s:CSS1(highlightID("LineNr")) . "}\e"
   else
-    execute '%s+<span class=lnr>\([^<]*\)</span>+' . s:HtmlOpening(highlightID("LineNr")) . '\1' . s:HtmlClosing(highlightID("LineNr")) . '+g'
+    execute '%s+<span class="lnr">\([^<]*\)</span>+' . s:HtmlOpening(highlightID("LineNr")) . '\1' . s:HtmlClosing(highlightID("LineNr")) . '+g'
   endif
 endif
 
@@ -270,10 +270,10 @@ while s:idlist != ""
     if exists("html_use_css")
       execute "normal A\n.c" . s:id . " { " . s:attr . "}"
     else
-      execute '%s+<span class=c' . s:id . '>\([^<]*\)</span>+' . s:HtmlOpening(s:id) . '\1' . s:HtmlClosing(s:id) . '+g'
+      execute '%s+<span class="c' . s:id . '">\([^<]*\)</span>+' . s:HtmlOpening(s:id) . '\1' . s:HtmlClosing(s:id) . '+g'
     endif
   else
-    execute '%s+<span class=c' . s:id . '>\([^<]*\)</span>+\1+g'
+    execute '%s+<span class="c' . s:id . '">\([^<]*\)</span>+\1+g'
     8
   endif
 endwhile
