@@ -33,7 +33,9 @@ do_debug(cmd)
     typebuf_T	saved_typebuf;
     int		new_typebuf;
     struct buffheader save_stuffbuff;
+# ifdef FEAT_EX_EXTRA
     int		save_ex_normal_busy;
+# endif
     int		n;
     char_u	*cmdline = NULL;
     char_u	*p;
@@ -96,8 +98,10 @@ do_debug(cmd)
 	 * it empty. */
 	saved_typebuf = typebuf;
 	new_typebuf = (alloc_typebuf() == OK);
+# ifdef FEAT_EX_EXTRA
 	save_ex_normal_busy = ex_normal_busy;
 	ex_normal_busy = 0;
+# endif
 	save_stuffbuff = stuffbuff;
 	stuffbuff.bh_first.b_next = NULL;
 
@@ -108,7 +112,9 @@ do_debug(cmd)
 	    free_typebuf();
 	    typebuf = saved_typebuf;
 	}
+# ifdef FEAT_EX_EXTRA
 	ex_normal_busy = save_ex_normal_busy;
+# endif
 	free_buff(&stuffbuff);
 	stuffbuff = save_stuffbuff;
 
