@@ -407,6 +407,13 @@ include config.mk
 #CFLAGS = -g
 #CFLAGS = -O
 
+# Optimization limits - depends on the compiler.  Automatic check in configure
+# doesn't work very well, because many compilers only give a warning for
+# unrecognized arguments.
+#CFLAGS = -O -OPT:Olimit=2600
+#CFLAGS = -O -Olimit 2000
+#CFLAGS = -O -FOlimit,2000
+
 # Often used for GCC: mixed optimizing, lot of optimizing, debugging
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
