@@ -2179,6 +2179,13 @@ ex_helpgrep(eap)
 			while (!vim_fgets(IObuff, IOSIZE, fd) && !got_int)
 			{
 			    if (vim_regexec(&regmatch, IObuff, (colnr_T)0))
+			    {
+				int	l = STRLEN(IObuff);
+
+				/* remove trailing CR, LF, spaces, etc. */
+				while (l > 0 && IObuff[l - 1] <= ' ')
+				     IObuff[--l] = NUL;
+
 				if (qf_add_entry(&prevp,
 					    NULL,	/* dir */
 					    fnames[fi],
@@ -2194,6 +2201,7 @@ ex_helpgrep(eap)
 				    got_int = TRUE;
 				    break;
 				}
+			    }
 			    ++lnum;
 			    line_breakcheck();
 			}
