@@ -133,7 +133,7 @@ menutrans &Max\ Height<Tab>^W_		程蔼(&M)<Tab>^W
 menutrans M&in\ Height<Tab>^W1_		程蔼(&i)<Tab>^W1_
 menutrans Max\ Width<Tab>^W\|		程糴<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		程糴<Tab>^W1\|
-menutrans Select\ &Font\.\.\.		砞﹚(&F)\.\.\.
+menutrans Select\ Fo&nt\.\.\.		砞﹚(&F)\.\.\.
 "
 " The popup menu
 menutrans &Undo			確(&U)

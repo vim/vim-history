@@ -872,7 +872,7 @@ getcount:
 		ui_cursor_shape();	/* show different cursor shape */
 	    }
 #endif
-	    if (lang && (curbuf->b_lmap & B_LMAP_INSERT))
+	    if (lang && (curbuf->b_im_insert == B_IMODE_LMAP))
 	    {
 		/* Allow mappings defined with ":lmap". */
 		--no_mapping;
@@ -881,12 +881,8 @@ getcount:
 		    State = LREPLACE;
 		else
 		    State = LANGMAP;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-		ImeSetOriginMode();
-#endif
-#ifdef FEAT_XIM
-		/* Enable XIM to allow typing language character directly */
-		xim_set_focus(TRUE);
+#ifdef USE_IM_CONTROL
+		im_set_active(curbuf->b_im_insert == B_IMODE_IM);
 #endif
 		langmap = TRUE;
 	    }
@@ -899,13 +895,9 @@ getcount:
 		++no_mapping;
 		++allow_keys;
 		State = NORMAL_BUSY;
-#if defined(FEAT_GUI_W32) && defined(FEAT_MBYTE_IME)
-		ImeSetEnglishMode();
-#endif
-#ifdef FEAT_XIM
-		/* Disable XIM to allow typing English directly for Normal
-		 * mode commands. */
-		xim_set_focus(FALSE);
+#ifdef USE_IM_CONTROL
+		im_save_status(&curbuf->b_im_insert);
+		im_set_active(0);
 #endif
 	    }
 #ifdef CURSOR_SHAPE

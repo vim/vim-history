@@ -2,12 +2,11 @@
 # Makefile for Vim on OpenVMS
 #
 # Maintainer:   Zoltan Arpadffy <arpadffy@altavista.net>
-# Last change:  2001 Mar 25
+# Last change:  2001 May 15
 #
-# This has been tested on VMS 6.2 to 7.1 on DEC Alpha and VAX.
+# This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # The following will be built:
 #	vim.exe:	standard
-#		  or
 #	dvim.exe:	debug
 #
 # Edit the lines in the Configuration section below to select.
@@ -15,10 +14,11 @@
 # To build: use the following command line:
 #
 #	mms/descrip=Make_vms.mms
-#	   or if you use mmk
-#	mmk/descrip=Make_vms.mms
 #
-
+# To clean up: use the following command line:
+#
+#       mms/descrip=Make_vms.mms clean
+#
 ######################################################################
 # Configuration section.
 ######################################################################
@@ -36,10 +36,6 @@ DECC = YES
 # predefined symbols/flags for your compiler. If does, just leave behind
 # the comment varialbe CCVER.
 CCVER = YES
-
-# Used to fix some dependecies problem during development.
-# Development purpose only! Normally, it should not be defined. !!!
-# DEVELOPMENT = YES
 
 # Uncomment if want a debug version. Resulting executable is DVIM.EXE
 # Development purpose only! Normally, it should not be defined. !!!
@@ -69,11 +65,12 @@ CCVER = YES
 # These may need to be defined if things are not in standard locations
 ######################################################################
 
+CONFIG_H = os_vms_conf.h
+
 .IFDEF GUI
 # X/Motif executable  (also works in terminal mode )
 DEFS	 = "HAVE_CONFIG_H","FEAT_GUI_MOTIF"
 LIBS	 = ,OS_VMS.OPT/OPT
-CONFIG_H = gui_vms_conf.h
 GUI_SRC  = gui.c gui_motif.c gui_x11.c
 GUI_OBJ  = gui.obj gui_motif.obj gui_x11.obj
 GUI_INC  = gui.h
@@ -88,7 +85,6 @@ GUI_INC  = gui.h
 # Character terminal only executable
 DEFS	 = "HAVE_CONFIG_H"
 LIBS	 =
-CONFIG_H = os_vms_conf.h
 .ENDIF
 
 .IFDEF VIM_PERL
@@ -196,7 +192,7 @@ SRC =	buffer.c charset.c diff.c digraph.c edit.c eval.c ex_cmds.c ex_cmds2.c ex_
 	ex_getln.c fileio.c fold.c getchar.c main.c mark.c menu.c mbyte.c \
 	memfile.c memline.c message.c misc1.c misc2.c move.c normal.c ops.c option.c \
 	pty.c quickfix.c regexp.c search.c syntax.c tag.c term.c termlib.c \
-	ui.c undo.c version.c screen.c window.c os_vms.c pathdef.c \
+	ui.c undo.c version.c screen.c window.c os_unix.c os_vms.c pathdef.c \
 	$(GUI_SRC) $(PERL_SRC) $(PYTHON_SRC) $(TCL_SRC) $(SNIFF_SRC) $(RUBY_SRC) $(HANGULIN_SRC)
 
 OBJ =	buffer.obj charset.obj diff.obj digraph.obj edit.obj eval.obj ex_cmds.obj ex_cmds2.obj \
@@ -204,23 +200,18 @@ OBJ =	buffer.obj charset.obj diff.obj digraph.obj edit.obj eval.obj ex_cmds.obj 
 	main.obj mark.obj menu.obj memfile.obj memline.obj message.obj misc1.obj \
 	misc2.obj move.obj mbyte.obj normal.obj ops.obj option.obj pty.obj quickfix.obj \
 	regexp.obj search.obj syntax.obj tag.obj term.obj termlib.obj ui.obj \
-	undo.obj screen.obj window.obj os_vms.obj pathdef.obj \
+	undo.obj screen.obj window.obj os_unix.obj os_vms.obj pathdef.obj \
 	$(GUI_OBJ) $(PERL_OBJ) $(PYTHON_OBJ) $(TCL_OBJ) $(SNIFF_OBJ) $(RUBY_OBJ) $(HANGULIN_OBJ)
 
 # Default target is making the executable
 all : $(TARGET) mms_vim
 	! $@
 
-.IFDEF DEVELOPMENT
 [.auto]config.h : $(CONFIG_H)
-	copy $(CONFIG_H) [.auto]config.h
-.ELSE
-[.auto]config.h : make_vms.mms $(CONFIG_H)
-	copy $(CONFIG_H) [.auto]config.h
-.ENDIF
+	copy/nolog $(CONFIG_H) [.auto]config.h
 
 osdef.h : os_vms_osdef.h
-	copy os_vms_osdef.h osdef.h
+	copy/nolog os_vms_osdef.h osdef.h
 
 # Re-execute this make_vms.mms to include the new [.auto]config.mk produced by
 # [.auto]configure Only used when typing "make" with a fresh [.auto]config.mk.
@@ -423,8 +414,10 @@ termlib.obj : termlib.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.
 undo.obj : undo.c vim.h [.auto]config.h feature.h os_unix.h osdef.h ascii.h keymap.h term.h \
 	macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
-os_vms.obj : os_vms.c vim.h globals.h option.h proto.h
+os_unix.obj : os_unix.c vim.h globals.h option.h proto.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
+os_vms.obj : os_vms.c vim.h globals.h option.h proto.h
+        $(CC_DEF) $(ALL_CFLAGS) $<
 window.obj : window.c vim.h [.auto]config.h feature.h os_unix.h osdef.h \
 	ascii.h keymap.h term.h macros.h structs.h gui.h globals.h proto.h regexp.h option.h
 	$(CC_DEF) $(ALL_CFLAGS) $<
@@ -450,7 +443,7 @@ mms_vim.exe :	mms_vim.obj
 	$(LD_DEF) $(LDFLAGS) mms_vim.obj
 mms_vim.obj :	os_vms_mms.c
 	$(CC_DEF) $(CFLAGS) os_vms_mms.c
-	copy os_vms_mms.obj mms_vim.obj
+	copy/nolog os_vms_mms.obj mms_vim.obj
 
 .IFDEF CCVER
 # This part can make some complications if you're using some predefined

@@ -4,7 +4,7 @@
 # Authors:	Zoltan Arpadffy, <arpadffy@altavista.net>
 #		Sandor Kopanyi,  <sandor.kopanyi@altavista.net>
 #
-# Last change:  2001 May 13
+# Last change:  2001 May 15
 #
 # This has been tested on VMS 6.2 to 7.2 on DEC Alpha and VAX.
 # Edit the lines in the Configuration section below to select.
@@ -51,7 +51,8 @@ SCRIPT = test1.out  test2.out  test3.out  test4.out  test5.out  \
 	 test28.out test29.out test31.out test32.out \
 	 test33.out test34.out test35.out test36.out test37.out \
 	 test38.out test39.out test40.out test41.out test42.out \
-	 test43.out test44.out test45.out test46.out test47.out
+	 test43.out test44.out test45.out test46.out test47.out \
+	 test48.out
 
 .IFDEF WANT_GUI
 SCRIPT_GUI = test16.out

@@ -21,6 +21,8 @@ extern "C" {
     void WINAPI global_ime_set_font(LOGFONT*);
     void WINAPI global_ime_status_evacuate();
     void WINAPI global_ime_status_restore();
+    void WINAPI global_ime_set_status(int status);
+    int WINAPI global_ime_get_status();
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

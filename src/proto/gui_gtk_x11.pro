@@ -51,6 +51,7 @@ void gui_mch_draw_menubar __ARGS((void));
 void gui_mch_enable_scrollbar __ARGS((scrollbar_T *sb, int flag));
 int gui_mch_get_lightness __ARGS((guicolor_T pixel));
 char_u *gui_mch_get_rgb __ARGS((guicolor_T pixel));
+unsigned long gui_mch_get_rgb_long __ARGS((guicolor_T pixel));
 int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));
 void gui_mch_setmouse __ARGS((int x, int y));

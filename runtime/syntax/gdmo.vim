@@ -2,8 +2,8 @@
 " Language:	GDMO
 "		(ISO-10165-4; Guidelines for the Definition of Managed Object)
 " Maintainer:	Gyuman Kim <violino@dooly.modacom.co.kr>
-" URL:		http://dooly.modacom.co.kr/~violino/gdmo.vim
-" Last Change:	2001 May 09
+" URL:		http://dooly.modacom.co.kr/gdmo.vim
+" Last change:	2001 May 4
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -15,7 +15,7 @@ endif
 
 " keyword definitions
 syn match   gdmoCategory      "MANAGED\s\+OBJECT\s\+CLASS"
-syn keyword gdmoCategory      NOTIFICATION ATTRIBUTE BEHAVIOUR PACKAGE
+syn keyword gdmoCategory      NOTIFICATION ATTRIBUTE BEHAVIOUR PACKAGE ACTION
 syn match   gdmoCategory      "NAME\s\+BINDING"
 syn match   gdmoRelationship  "DERIVED\s\+FROM"
 syn match   gdmoRelationship  "SUPERIOR\s\+OBJECT\s\+CLASS"
@@ -37,7 +37,7 @@ syn match   gdmoExtension     "DEFAULT\s\+VALUE"
 syn match   gdmoExtension     "PERMITTED\s\+VALUES"
 syn match   gdmoExtension     "REQUIRED\s\+VALUES"
 syn match   gdmoExtension     "NAMED\s\+BY"
-syn keyword gdmoReference     ATTRIBUTES NOTIFICATIONS
+syn keyword gdmoReference     ATTRIBUTES NOTIFICATIONS ACTIONS
 syn keyword gdmoExtension     DELETE CREATE
 syn keyword gdmoExtension     EQUALITY SUBSTRINGS ORDERING
 syn match   gdmoExtension     "REPLACE-WITH-DEFAULT"

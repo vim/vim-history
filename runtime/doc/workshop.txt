@@ -1,4 +1,4 @@
-*workshop.txt*  For Vim version 6.0af.  Last change: 2001 Feb 13
+*workshop.txt*  For Vim version 6.0ag.  Last change: 2001 May 20
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -13,6 +13,7 @@ Sun Visual WorkShop Features			*workshop* *workshop-support*
 5. Obtaining the latest version of the XPM library	|workshop-xpm|
 
 {Vi does not have any of these features}
+{only available when compiled with the |+sun_workshop| feature}
 
 ==============================================================================
 1. Introduction						*workshop-intro*

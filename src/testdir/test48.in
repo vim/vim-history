@@ -1,0 +1,55 @@
+This is a test of 'virtualedit'.
+
+STARTTEST
+:so small.vim
+:set noswf
+:set ve=all
+-dgg
+:"
+:"   Insert "keyword keyw", ESC, C CTRL-N, shows "keyword ykeyword".
+:"    Repeating CTRL-N fixes it. (Mary Ellen Foster)
+2/w
+C
+:"
+:"   Using "C" then then <CR> moves the last remaining character to the next
+:"    line.  (Mary Ellen Foster)
+j^/are
+Care belong to vim
+:"
+:"   When past the end of a line that ends in a single character "b" skips
+:"    that word.
+^$15lbC7
+:"
+:"   Make sure 'i' works
+$4li<-- should be 3 ' '
+:"
+:"   Make sure 'C' works
+$4lC<-- should be 3 ' '
+:"
+:"   Make sure 'a' works
+$4la<-- should be 4 ' '
+:"
+:"   Make sure 'A' works
+$4lA<-- should be 4 ' '
+:"
+:"   Make sure 'D' works
+$4lDi<-- 'D' should be intact
+:"
+:"   Test for yank bug reported by Mark Waggoner.
+:set ve=block
+^2w3jyGp
+:wq! test.out
+ENDTEST
+keyword keyw
+all your base are belong to us
+1 2 3 4 5 6
+'i'
+'C'
+'a'
+'A'
+'D'
+this is a test
+this is a test
+this is a test
+
+

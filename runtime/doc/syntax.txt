@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0af.  Last change: 2001 May 12
+*syntax.txt*    For Vim version 6.0ag.  Last change: 2001 May 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -353,27 +353,42 @@ settings, depending on which syntax is active.  Example: >
 
 This is not a syntax file itself, but a script that converts the current
 window into HTML.  A new window is opened, in which the HTML file is built.
+
+You are not supposed to set the 'filetype' or 'syntax' option to "2html"!
+Source the script to convert the current file: >
+
+	:runtime! syntax/2html.vim
+<
 	Warning: This is slow!
+
 The resulting file can be written where you want it.  You can then view it
 with any HTML viewer, such as Netscape.  The colors should be exactly the same
 as you see them in Vim.
-If you want the lines to be numbered, set the "html_number_color" variable to
-the color name of the line number.  The color name must be valid in HTML.
-Example: >
-    :let html_number_color = "#804000"
-To stop this, remove the variable: >
-    :unlet html_number_color
+
+The lines are numbered according to 'number' option and the Number
+highlighting.  You can force lines to be numbered in the HTML output by
+setting "html_number_lines" to nonzero value: >
+   :let html_number_lines = 1
+Force to omit the line numbers by using a zero value: >
+   :let html_number_lines = 0
+Go back to the default to use 'number' by deleting the variable: >
+   :unlet html_number_lines
+
+By default, HTML optimized for old browsers is generated.  If you prefer using
+cascading style sheets (CSS1) for the attributes (resulting in considerably
+shorter and valid HTML 4 file), use: >
+   :let html_use_css = 1
+
 Remarks:
-- This only works in a version with GUI support.  If the GUI not actually
-  running (possible for X11) it still works, but not that good (the color
-  names may be wrong).
+- This only works in a version with GUI support.  If the GUI is not actually
+  running (possible for X11) it still works, but not that good (the colors
+  may be wrong).
 - In older browsers the background colors will not be shown.
-- From Netscape you can also print the file (in color)!
-- When 'tabstop' is not 8, the amount of white space will be wrong.
+- From most browsers you can also print the file (in color)!
 
 Here is an example how to run the script over all .c and .h files from a
 Unix shell: >
-   $ for f in *.[ch]; do gvim -f +"syn on" +"so \$VIMRUNTIME/syntax/2html.vim" +"wq" +"q" $f; done
+   for f in *.[ch]; do gvim -f +"syn on" +"run! syntax/2html.vim" +"wq" +"q" $f; done
 <
 
 		*asm.vim* *asmh8300.vim* *nasm.vim* *masm.vim* *asm68k*
@@ -1668,6 +1683,13 @@ If you have a slow computer, you may wish to reduce the values for >
 increase them.  This primarily affects synchronizing (ie. just what group,
 if any, is the text at the top of the screen supposed to be in?).
 
+The <tex.vim> supports lexical error checking of various sorts.  Thus,
+although the error checking is ofttimes very useful, it can indicate
+errors where none actually are.  If this proves to be a problem for you,
+you may put in your <.vimrc> the following statement: >
+	let tex_no_error=1
+and all error checking by <tex.vim> will be suppressed.
+
 
 TF						*tf.vim* *tf-syntax*
 
@@ -2743,6 +2765,8 @@ in their own color.
 
 :hi[ghlight] clear	Reset all highlighting to the defaults.  Removes all
 			highlighting for groups added by the user!
+			Uses the current value of 'background' to decide which
+			default colors to use.
 
 :hi[ghlight] clear {group-name}
 :hi[ghlight] {group-name} NONE

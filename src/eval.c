@@ -567,6 +567,8 @@ make_expanded_name(in_start, expr_start, expr_end, in_end)
     char_u	*retval = NULL;
     char_u	*temp_result;
 
+    if (expr_end == NULL || in_end == NULL)
+	return NULL;
     *expr_start	= NUL;
     *expr_end = NUL;
     c1 = *in_end;
@@ -3945,6 +3947,9 @@ f_has(argvars, retvar)
 #ifdef FEAT_FOLDING
 	"folding",
 #endif
+#ifdef FEAT_FOOTER
+	"footer",
+#endif
 #if !defined(USE_SYSTEM) && defined(UNIX)
 	"fork",
 #endif
@@ -4090,6 +4095,9 @@ f_has(argvars, retvar)
 	"showcmd",
 	"cmdline_info",
 #endif
+#ifdef FEAT_SIGNS
+	"signs",
+#endif
 #ifdef FEAT_SMARTINDENT
 	"smartindent",
 #endif
@@ -4098,6 +4106,9 @@ f_has(argvars, retvar)
 #endif
 #ifdef FEAT_STL_OPT
 	"statusline",
+#endif
+#ifdef FEAT_SUN_WORKSHOP
+	"sun_workshop",
 #endif
 #ifdef FEAT_SYN_HL
 	"syntax",

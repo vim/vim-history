@@ -26,4 +26,14 @@ void clip_mch_lose_selection __ARGS((VimClipboard *cbd));
 void clip_mch_request_selection __ARGS((VimClipboard *cbd));
 void clip_mch_set_selection __ARGS((VimClipboard *cbd));
 void DumpPutS __ARGS((const char *psz));
+void mch_print_cleanup __ARGS((void));
+int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int forceit));
+int mch_print_begin __ARGS((prt_settings_T *psettings));
+void mch_print_end __ARGS((void));
+int mch_print_end_page __ARGS((void));
+int mch_print_begin_page __ARGS((void));
+int mch_print_text_out __ARGS((int x, int y, char_u *p, int len, int *must_break));
+void mch_print_setfont __ARGS((int iBold, int iItalic, int iUnderline));
+void mch_print_set_bg __ARGS((unsigned long bgcol));
+void mch_print_set_fg __ARGS((unsigned long fgcol));
 /* vim: set ft=c : */

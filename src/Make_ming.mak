@@ -213,7 +213,7 @@ endif
 
 GUIOBJ = $(GUISRC:.c=.o)
 OBJ    = $(SRC:.c=.o)
-LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32
+LIB = -lkernel32 -luser32 -lgdi32 -ladvapi32 -lcomdlg32 -lcomctl32
 
 # added by E.F. Amatria to include NLS
 ifdef NLS
@@ -243,7 +243,7 @@ DEFINES+=-DDYNAMIC_ICONV
 CFLAGS += -I$(ICONV)
 endif
 
-GUI_LIB = $(LIB) -lcomdlg32 -lcomctl32
+GUI_LIB = $(LIB)
 
 
 all: $(TARGET) vimrun.exe xxd/xxd.exe install.exe uninstall.exe

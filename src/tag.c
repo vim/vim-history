@@ -2719,6 +2719,9 @@ expand_tag_fname(fname, tag_fname, expand)
 	retval = vim_strsave(fname);
 
     vim_free(expanded_fname);
+#ifdef VMS
+    retval = vms_fixfilename(retval);
+#endif
     return retval;
 }
 

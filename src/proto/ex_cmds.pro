@@ -43,5 +43,9 @@ int find_help_tags __ARGS((char_u *arg, int *num_matches, char_u ***matches));
 void fix_help_buffer __ARGS((void));
 void ex_helptags __ARGS((exarg_T *eap));
 void ex_sign __ARGS((exarg_T *eap));
-void ex_unsign __ARGS((exarg_T *eap));
+void sign_gui_started __ARGS((void));
+int sign_get_attr __ARGS((int typenr, int line));
+char_u *sign_get_text __ARGS((int typenr));
+void *sign_get_image __ARGS((int typenr));
+char_u *sign_typenr2name __ARGS((int typenr));
 /* vim: set ft=c : */

@@ -1,16 +1,16 @@
 " Vim color file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 09
+" Last Change:	2001 May 19
 
 " This color scheme uses a light grey background.
 
 " First remove all existing highlighting.
+set background=light
 hi clear
 
 let colors_name = "morning"
 
 hi Normal ctermfg=Black ctermbg=LightGrey guifg=Black guibg=grey90
-set background=light
 
 " Groups used in the 'highlight' and 'guicursor' options default value.
 hi ErrorMsg term=standout ctermbg=DarkRed ctermfg=White guibg=Red guifg=White
@@ -50,7 +50,7 @@ hi Ignore ctermfg=LightGrey guifg=grey90
 
 if exists("syntax_on")
   let syntax_cmd = "enable"
-  runtime syntax/syncolor.vim
+  runtime! syntax/syncolor.vim
   unlet syntax_cmd
 endif
 

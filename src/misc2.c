@@ -492,15 +492,15 @@ leftcol_changed()
      * If the cursor is right or left of the screen, move it to last or first
      * character.
      */
-    if (curwin->w_virtcol > (colnr_T)lastcol)
+    if (curwin->w_virtcol > (colnr_T)(lastcol - p_siso))
     {
 	retval = TRUE;
-	coladvance((colnr_T)lastcol);
+	coladvance((colnr_T)(lastcol - p_siso));
     }
-    else if (curwin->w_virtcol < curwin->w_leftcol)
+    else if (curwin->w_virtcol < curwin->w_leftcol + p_siso)
     {
 	retval = TRUE;
-	(void)coladvance(curwin->w_leftcol);
+	(void)coladvance((colnr_T)(curwin->w_leftcol + p_siso));
     }
 
     /*
@@ -735,7 +735,7 @@ lalloc(size, message)
 #endif
 
     /* Safety check for allocating zero bytes */
-    if (size <= 0)
+    if (size == 0)
     {
 	/* Don't hide this message */
 	emsg_silent = 0;
@@ -3840,7 +3840,7 @@ vim_findfile(void *search_ctx)
 			    file_path[len++] = '*';
 			}
 
-			if (*p <= 0)
+			if (*p == 0)
 			{
 			    /* remove '**<numb> from wildcards */
 			    mch_memmove(rest_of_wildcards,
@@ -5000,7 +5000,7 @@ pathcmp(p, q)
  */
     char_u *
 parse_list_options(option_str, table, table_size)
-    char_u 		*option_str;
+    char_u		*option_str;
     option_table_T	*table;
     int			table_size;
 {
@@ -5069,6 +5069,8 @@ option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS] = {
     {"header",	TRUE, 0, NULL, 0, FALSE},
     {"mono",	FALSE, 0, NULL, 0, FALSE},
     {"number",	FALSE, 0, NULL, 0, FALSE},
+    {"wrap",	FALSE, 0, NULL, 0, FALSE},
 };
 
-#endif
+
+#endif /*FEAT_PRINTER*/

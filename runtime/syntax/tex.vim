@@ -1,23 +1,32 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-6
+" Version:     6.0-7
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: March 27, 2001
+" Last Change: May 15, 2001
 "
 " Notes:
+"
 " 1. If you have a \begin{verbatim} that appears to overrun its boundaries,
 "    use %stopzone.
+"
 " 2. Run-on equations ($..$ and $$..$$, particularly) can also be stopped
 "    by suitable use of %stopzone.
+"
 " 3. If you have a slow computer, you may wish to modify
 "
-"    syn sync maxlines=200
-"    syn sync minlines=50
+"        syn sync maxlines=200
+"        syn sync minlines=50
 "
 "    to values that are more to your liking.
+"
 " 4. There is no match-syncing for $...$ and $$...$$; hence large
 "    equation blocks constructed that way may exhibit syncing problems.
 "    (there's no difference between begin/end patterns)
+"
+" 5. If you have the variable "tex_no_error" defined then none of the
+"    lexical error-checking will be done.
+"
+"    ie. let tex_no_error=1
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -37,7 +46,7 @@ endif
 
 " Clusters
 " --------
-syn cluster texCmdGroup	contains=texCmdBody,texComment,texDelimiter,texDocType,texDocTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
+syn cluster texCmdGroup	contains=texCmdBody,texComment,texDefParm,texDelimiter,texDocType,texDocTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
 syn cluster texEnvGroup	contains=texMatcher,texMathDelim,texSpecialChar,texStatement
 syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
 syn cluster texMathDelimGroup	contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
@@ -59,9 +68,9 @@ syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end=
 syn match texStatement	"\\\a\+"
 let b:extfname=expand("%:e")
 if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
-  syn match texStatement	"\\\a*@[a-zA-Z@]*"
+  syn match texStatement	"\\[a-zA-Z@]\+"
 else
-  syn match texError		"\\\a*@[a-zA-Z@]*"
+  syn match texError	"\\\a*@[a-zA-Z@]*"
 endif
 
 " TeX/LaTeX delimiters
@@ -85,7 +94,7 @@ syn match  texDocType	"\\documentclass\>\|\\documentstyle\>\|\\usepackage\>"	nex
 syn region texDocTypeArgs	matchgroup=Delimiter start="\[" end="]"		contained	nextgroup=texSectionName
 
 " TeX input
-syn match texInput	"\\input\s\+[a-zA-Z/.0-9_]\+"hs=s+7		contains=texStatement
+syn match texInput	"\\input\s\+[a-zA-Z/.0-9_^]\+"hs=s+7		contains=texStatement
 syn match texInputFile	"\\include\(graphics\|list\)\=\(\[.\{-}\]\)\=\s*{.\{-}}"	contains=texStatement,texInputCurlies
 syn match texInputFile	"\\\(epsfig\|input\|usepackage\)\s*\(\[.*\]\)\={.\{-}}"	contains=texStatement,texInputCurlies,texInputFileOpt
 syn match texInputCurlies	"[{}]"				contained
@@ -242,10 +251,18 @@ syn region texEnvBgn  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	ne
 syn region texEnvEnd  contained matchgroup=Delimiter start="{"rs=s+1  end="}"	skipwhite skipnl contains=@texEnvGroup
 
 syn match texDefCmd		"\\def\>"			nextgroup=texDefName skipwhite skipnl
-syn match texDefName contained	"\\\a\+"			nextgroup=texCmdBody skipwhite skipnl
+if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  syn match texDefName contained	"\\[a-zA-Z@]\+"		nextgroup=texDefParms,texCmdBody skipwhite skipnl
+  syn match texDefName contained	"\\[^a-zA-Z@]"			nextgroup=texDefParms,texCmdBody skipwhite skipnl
+else
+  syn match texDefName contained	"\\\a\+"			nextgroup=texDefParms,texCmdBody skipwhite skipnl
+  syn match texDefName contained	"\\\A"			nextgroup=texDefParms,texCmdBody skipwhite skipnl
+endif
+syn match texDefParms  contained	"#[^{]*"	contains=texDefParm nextgroup=texCmdBody skipwhite skipnl
+syn match  texDefParm  contained	"#\d\+"
 
 " TeX Lengths
-syn match  texLength	"\d\+\(\.\d\+\)\=\(bp\|cc\|cm\|dd\|em\|ex\|in\|mm\|pc\|pt\|sp\)"
+syn match  texLength	"\<\d\+\(\.\d\+\)\=\(bp\|cc\|cm\|dd\|em\|ex\|in\|mm\|pc\|pt\|sp\)\>"
 
 " TeX String Delimiters
 syn match texString	"\(``\|''\|,,\)"
@@ -323,7 +340,16 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   endif
 
   " TeX highlighting groups which should share similar highlighting
-  HiLink texBadMath	texError
+  if !exists("tex_no_error")
+    HiLink texBadMath	texError
+    HiLink texMathDelimBad	texError
+    HiLink texMathError	texError
+    if b:extfname != "sty" && b:extfname != "cls" && b:extfname != "clo" && b:extfname != "dtx" && b:extfname != "ltx"
+      HiLink texOnlyMath	texError
+    endif
+    HiLink texError	Error
+  endif
+
   HiLink texDefCmd	texDef
   HiLink texDefName	texDef
   HiLink texDocType	texCmdName
@@ -331,11 +357,9 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   HiLink texInputFileOpt	texCmdArgs
   HiLink texInputCurlies	texDelimiter
   HiLink texLigature	texSpecialChar
-  HiLink texMathDelimBad	texError
   HiLink texMathDelimSet1	texMathDelim
   HiLink texMathDelimSet2	texMathDelim
   HiLink texMathDelimKey	texMathDelim
-  HiLink texMathError	texError
   HiLink texMathMatcher	texMath
   HiLink texMathZoneA	texMath
   HiLink texMathZoneB	texMath
@@ -360,7 +384,6 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   HiLink texMathZoneU	texMath
   HiLink texMathZoneV	texMath
   HiLink texMathZoneW	texMath
-  HiLink texOnlyMath	texError
   HiLink texSectionMarker	texCmdName
   HiLink texSectionName	texSection
   HiLink texTypeSize	texType
@@ -371,8 +394,8 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   HiLink texCmdName	Statement
   HiLink texComment	Comment
   HiLink texDef	Statement
+  HiLink texDefParm	Special
   HiLink texDelimiter	Delimiter
-  HiLink texError	Error
   HiLink texInput	Special
   HiLink texInputFile	Special
   HiLink texLength	Number

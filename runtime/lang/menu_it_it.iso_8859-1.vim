@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 May 02
+" Last Change:	2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -105,6 +105,13 @@ menut Soft\ &Tabstop		&Tabulazione\ Software
 menut Te&xt\ Width\.\.\.		Lunghe&zza\ Riga\.\.\.
 menut &File\ Format\.\.\.	Formato\ &File\.\.\.
 
+let g:menutrans_help_dialog = "Batti un comando o una parola per cercare aiuto:\n\nPremetti i_ per comandi in modalità Input (ad.es.: i_CTRL-X)\nPremetti c_ per comandi che editano la linea-comandi (ad.es.: c_<Del>)\nPremetti ' per un nome di opzione (ad.es.: 'shiftwidth')"
+let g:menutrans_path_dialog = "Batti percorso di ricerca per i file.\nSepara fra loro i nomi di directory con una virgola."
+let g:menutrans_tags_dialog = "Batti nome dei file di tag.\nSepara fra loro i nomi di directory con una virgola."
+let g:menutrans_textwidth_dialog = "Batti nuova lunghezza linea (0 per inibire la formattazione): "
+let g:menutrans_fileformat_dialog = "Scegli formato con cui scrivere il file"
+let g:menutrans_no_file = "[Senza nome]"
+
 " Programming menu
 menut &Tools			&Strumenti
 menut &Jump\ to\ this\ tag<Tab>g^]	&Vai\ a\ questa\ Tag<Tab>g^]
@@ -137,6 +144,9 @@ menut I&ndent	&Nidificazione
 menut E&xpression	&Espressione\ Reg\.
 menut S&yntax	&Sintassi
 menut &Diff		&Differenza
+menut &Update		&Aggiorna
+menut &Get\ Block	&Importa\ Differenze
+menut &Put\ Block	&Esporta\ DIfferenze
 menut Ma&rker	Mar&catura
 " create and delete folds
 menut Create\ &Fold<Tab>zf		Crea\ &Piegatura<Tab>zf
@@ -174,11 +184,11 @@ menut P&revious<Tab>^WW		&Precedente<Tab>^WW
 menut &Equal\ Size<Tab>^W=		&Uguale\ ampiezza<Tab>^W=
 menut &Max\ Height<Tab>^W_		&Altezza\ massima<Tab>^W_
 menut M&in\ Height<Tab>^W1_		A&ltezza\ minima<Tab>^W1_
-menut Max\ Width<Tab>^W\|		Larghezza\ massima<Tab>^W\|
-menut Min\ Width<Tab>^W1\|		Larghezza\ minima<Tab>^W1\|
+menut Max\ &Width<Tab>^W\|		Larghezza\ massima<Tab>^W\|
+menut Min\ Widt&h<Tab>^W1\|		Larghezza\ minima<Tab>^W1\|
 menut Rotate\ &Up<Tab>^WR		Ruota\ verso\ l'&alto<Tab>^WR
 menut Rotate\ &Down<Tab>^Wr		Ruota\ verso\ il\ &basso<Tab>^Wr
-menut Select\ &Font\.\.\.		Scegli\ &Font\.\.\.
+menut Select\ Fo&nt\.\.\.		Scegli\ &Font\.\.\.
 
 " The popup menu
 menut &Undo		        &Disfa

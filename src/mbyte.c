@@ -92,7 +92,6 @@
 #if defined(FEAT_MBYTE) || defined(PROTO)
 
 static int dbcs_ptr2len_check __ARGS((char_u *p));
-static int dbcs_ptr2cells __ARGS((char_u *p));
 static int dbcs_char2cells __ARGS((int c));
 static int dbcs_char2len __ARGS((int c));
 static int dbcs_char2bytes __ARGS((int c, char_u *buf));
@@ -944,7 +943,7 @@ utf_ptr2cells(p)
     return 1;
 }
 
-    static int
+    int
 dbcs_ptr2cells(p)
     char_u	*p;
 {
@@ -1567,7 +1566,7 @@ dbcs_head_off(base, p)
     return (q == p) ? 0 : 1;
 }
 
-#if defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
 /*
  * Special version of dbcs_head_off() that works for ScreenLines[], where
  * single-width DBCS_JPNU characters are stored separately.
@@ -1872,7 +1871,7 @@ mb_unescape(pp)
     return NULL;
 }
 
-#if defined(FEAT_GUI) || defined(PROTO)
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
 /*
  * Return TRUE if the character at "row"/"col" on the screen is the left side
  * of a double-width character.
@@ -1893,6 +1892,29 @@ mb_lefthalve(row, col)
 	return (col + 1 < Columns
 		&& ScreenLines[LineOffset[row] + col + 1] == 0);
     return FALSE;
+}
+#endif
+
+#if defined(FEAT_CLIPBOARD) || defined(FEAT_GUI) || defined(PROTO)
+/*
+ * Correct a position on the screen, if it's the right halve of a double-wide
+ * char move it to the left halve.  Returns the corrected column.
+ */
+    int
+mb_fix_col(col, row)
+    int		col;
+    int		row;
+{
+    col = check_col(col);
+    row = check_row(row);
+    if (has_mbyte && ScreenLines != NULL && col > 0
+	    && ((enc_dbcs
+		    && ScreenLines[LineOffset[row] + col] != NUL
+		    && dbcs_screen_head_off(ScreenLines + LineOffset[row],
+					 ScreenLines + LineOffset[row] + col))
+		|| (enc_utf8 && ScreenLines[LineOffset[row] + col] == 0)))
+	--col;
+    return col;
 }
 #endif
 
@@ -2285,6 +2307,13 @@ static gboolean	use_status_area = 0;
 #endif
 
     void
+im_set_active(active)
+    int		active;
+{
+    xim_set_focus(active);
+}
+
+    void
 xim_set_focus(int focus)
 {
     if (xic == NULL)
@@ -2315,6 +2344,15 @@ xim_set_focus(int focus)
 #endif
 	}
     }
+}
+
+/*ARGSUSED*/
+    void
+im_set_position(row, col)
+    int		row;
+    int		col;
+{
+    xim_set_preedit();
 }
 
 /*
@@ -3272,10 +3310,19 @@ xim_get_status_area_height(void)
     return 0;
 }
 
+/*
+ * Get IM status.  When IM is on, return TRUE.  Else return FALSE.
+ */
+    int
+im_get_status()
+{
+    return input_method_active();
+}
+
     int
 input_method_active()
 {
-    return xim_preediting && xim_has_focus;
+    return (xim_preediting && xim_has_focus);
 }
 
 #endif /* FEAT_XIM */

@@ -1,16 +1,17 @@
-*sign.txt*     For Vim version 6.0af.  Last change: 2001 May 12
+*sign.txt*     For Vim version 6.0ag.  Last change: 2001 May 19
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
+		  			  and Bram Moolenaar
 
 
 Sign Support Features				*sign-support*
 
 1. Introduction				|sign-intro|
 2. Commands				|sign-commands|
-3. Compiling vim/gvim with signs	|sign-compiling|
 
 {Vi does not have any of these features}
+{only available when compiled with the |+signs| feature}
 
 ==============================================================================
 1. Introduction					*sign-intro*
@@ -21,57 +22,126 @@ about the file. One example of this would be a debugger which had an icon
 in the left-hand column denoting a breakpoint. Another example might be an
 arrow representing the Program Counter (PC). The sign features allow both
 placement of a sign, or icon, in the left-hand side of the window and
-definition of a highlight which will be applied to that line. The sign
-is most likely only feasible in gvim (although Sun Microsystem's dtterm
-does support this its the only terminal emulator I know of which does).
-The highlight should be feasible in any color terminal emulator.
+definition of a highlight which will be applied to that line. Displaying the
+sign as an image is most likely only feasible in gvim (although Sun
+Microsystem's dtterm does support this its the only terminal emulator I know
+of which does).  A text sign and the highlight should be feasible in any color
+terminal emulator.
 
 Signs and highlights are not useful just for debuggers. Sun's Visual
 WorkShop uses signs and highlights to mark build errors and SourceBrowser
 hits. Additionally, the debugger supports 8 to 10 different signs and
-highlight colors.
+highlight colors. |workshop|
 
-Before a sign can be created, a sign type must be defined. Sign types are
-defined by the |highlight-sign|, |highlight-guifg|, and |highlight-guibg|
-arguments to the |:highlight| command. Once a sign type has been defined
-signs using that type can be created. The ":sign" command is used to create
-and manipulate signs within a buffer or file.
+There are two steps in using signs:
 
-==============================================================================
-2. Commands					*sign-commands*
+1. Define the sign.  This specifies the image, text and highlighting.  For
+   example, you can define a "break" sign with an image of a stop roadsign and
+   text "!!".
 
-			*:sig* *:sign* *E155* *E156* *E159* *E255* *E157* *E158*
-:sig[n] id linenum index file		Create a new sign
-:sig[n] id index file			Change sign types
-:sig[n] id file			Jump to sign
-:signs					Display all signs
-						*:uns* *:unsign* *E160*
-:uns[ign] id file			Delete a sign
+2. Place the sign.  This specifies the file and line number where the sign is
+   displayed.  A defined sign can be placed several times in different lines
+   and files.
 
-Where:
-	id		is a sign identifier passed to the sign command
-	linenum		is a line number where a sign should be created
-	index		is the sign index passed in the sign= part of the
-			|:highlight| command
-	file		is the name of the file with the sign
-
-Creating and deleting signs are obvious functions. Why change sign type and
-jump to sign? Some debuggers have different signs for a breakpoint and the
-same breakpoint when the debugger is stopped at that breakpoint. Since the
-debugger may stop at a breakpoint often, it makes sense to allow the sign
-type to change rather than to have to remove the sign and create a new one
-at the same location with a different sign type (index).
-
-The jump to sign is useful in many situations. In Sun's Visual WorkShop we
-use this feature when stepping up and down the stack, for jumping to the
-source of a breakpoint, and for various other uses.
+When signs are defined for a file, Vim will automatically add a column of two
+characters to display them in.  When the last sign is unplaced the column
+disappears again.
 
 ==============================================================================
-3. Compiling vim/gvim with signs		*sign-compiling*
+2. Commands					*sign-commands* *:sig* *:sign*
+								*E160* *E158*
+DEFINING A SIGN.						*E255*
 
-The debug sign and debug line highlights are controlled by the compile-time
-flags FEAT_SIGN. The line highlighting is intended for systems without sign
-support. However, I've had a tight schedule and have not tested line
-highlighting without signs.
+:sign define {name} {argument}...
+		Define a new sign or set attributes for an existing sign.
+		The {name} can either be a number (all digits) or a name
+		starting with a non-digit.
+		About 120 different signs can be defined.
+
+		Accepted arguments:
+
+	icon={pixmap}
+		Define the file name where the pixmap can be found.  The
+		pixmap should fit in the place of two characters.  This is not
+		checked.  If the pixmap is too big it will cause redraw
+		problems.
+
+	linehl={group}
+		Highlighting group used for the whole line the sign is placed
+		in.  Most useful is defining a background color.
+
+	text={text}						*E239*
+		Define the text that is displayed when there is no icon or the
+		GUI is not being used.  Thus currently must be two ASCII
+		characters.
+
+	texthl={group}
+		Highlighting group used for the text item.
+
+
+DELETING A SIGN							*E155*
+
+:sign undefine {name}
+		Deletes a previously defined sign.  If signs with this {name}
+		are still placed this will cause trouble.
+
+
+LISTING SIGNS							*E156*
+
+:sign list	Lists all defined signs and their attributes.
+
+:sign list {name}
+		Lists one defined sign and its attributes.
+
+
+PLACING SIGNS
+
+:sign place {id} line={lnum} name={name} file={fname}
+		Place sign defined as {name} at line {lnum} in file {fname}.
+		The sign is remembered under {id}, this can be used for
+		further manipulation.  {id} must be a number.
+		It's up to the user to make sure the {id} is used only once in
+		each file (if it's used several times unplacing will also have
+		to be done several times and making changes may not work as
+		expected).
+
+:sign place {id} name={name} file={fname}
+		Change the placed sign {id} in file {fname} to use the defined
+		sign {name}.  This can be used to change the displayed sign
+		without moving it (e.g., when the debugger has stopped at a
+		breakpoint).
+
+
+REMOVING SIGNS							*E159*
+
+:sign unplace {id} file={fname}
+		Remove the previously placed sign {id} from file {fname}.
+
+:sign unplace {id}
+		Remove the previously placed sign {id} from all files it
+		appears in.
+
+:sign unplace *
+		Remove all placed signs.
+
+:sign unplace
+		Remove the placed sign at the cursor position.
+
+
+LISTING PLACED SIGNS
+
+:sign place file={fname}
+		List signs placed in file {fname}.
+
+:sign place	List placed signs in all files.
+
+
+JUMPING TO A SIGN						*E157*
+
+:sign jump {id} file={fname}
+		Open the file {fname} or jump to the window that contains
+		{fname} and position the cursor at sign {id}.
+		If the file isn't displayed in window and the current file can
+		not be |abandon|ed this fails.
 
  vim:tw=78:

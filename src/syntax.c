@@ -47,11 +47,6 @@ struct hl_group
     char_u	*sg_font_name;  /* GUI font or fontset name */
     int		sg_gui_attr;    /* Screen attr for GUI mode */
 #endif
-#ifdef FEAT_SIGNS
-    XImage	*sg_sign;	/* store an sign for an extra highlight */
-    char_u	*sg_sign_name;	/* store the sign's name */
-    int		sg_sign_type;	/* index of sign */
-#endif
     int		sg_link;	/* link to this highlight group ID */
     int		sg_set;		/* combination of SG_* flags */
 };
@@ -6042,16 +6037,6 @@ do_highlight(line, forceit, init)
 #ifdef FEAT_EVAL
 	    do_unlet((char_u *)"colors_name");
 #endif
-#ifdef FEAT_GUI
-	    /* need to get the value of 'background' */
-	    if (gui.in_use)
-	    {
-		set_normal_colors();
-		set_option_value((char_u *)"bg", 0L,
-			gui_mch_get_lightness(gui.back_pixel) < 127
-				   ? (char_u *)"dark" : (char_u *)"light", 0);
-	    }
-#endif
 #if defined(MSDOS) || (defined(WIN32) && !defined(FEAT_GUI_W32))
 	    /* Since t_me has been set, this probably means that the user
 	     * wants to use this as default colors.  Need to reset default
@@ -6610,26 +6595,6 @@ do_highlight(line, forceit, init)
 		HL_TABLE()[idx].sg_stop = p;
 	    }
 	}
-	else if (STRCMP(key, "SIGN") == 0)
-	{
-	    /*
-	     * Note: Parse but ignore sign= arguments even if FEAT_SIGNS
-	     * is not defined. This allows .vimrc files and other files to
-	     * still be correctly parsed, even if the option is not compiled
-	     * into vim/gvim.
-	     */
-#ifdef FEAT_SIGNS
-	    /* the sign arg format is: filename,id */
-	    HL_TABLE()[idx].sg_sign_name = vim_strsave(arg);
-	    p = vim_strrchr(arg, ',');
-	    if (p != NULL)
-	    {
-		*p++ = NUL;
-		 HL_TABLE()[idx].sg_sign_type = atoi((char *)p);
-	    }
-	    HL_TABLE()[idx].sg_sign = gui_mch_register_sign((char *)arg);
-#endif
-	}
 	else
 	{
 	    EMSG2(_("E423: Illegal argument: %s"), key_start);
@@ -6990,43 +6955,6 @@ hl_do_font(idx, arg, do_normal, do_menu)
     }
 }
 
-#if defined(FEAT_SIGNS) || defined(PROTO)
-/*
- * Search all highlights for one with sg_sign_type == type
- */
-    int
-get_debug_highlight(type)
-    int	    type;
-{
-    int	    i;
-
-    for (i = 1; i <= highlight_ga.ga_len; i++)
-	if (HL_TABLE()[i].sg_sign_type == type)
-	    return HL_TABLE()[i].sg_gui_attr;
-
-    return 0;
-}
-#endif
-
-#if defined(FEAT_SIGNS) || defined(PROTO)
-    XImage *
-get_debug_sign(type)
-    int	    type;		    /* the attribute which may have a sign */
-{
-    int	    i;
-    struct hl_group *hp;
-
-    for (i = 0; i < highlight_ga.ga_len; i++)
-    {
-	hp = &HL_TABLE()[i];
-	if (hp->sg_sign_type == type && hp->sg_sign != NULL)
-	    return hp->sg_sign;
-    }
-    return NULL;
-}
-#endif
-
-
 #endif /* FEAT_GUI */
 
 /*
@@ -7081,9 +7009,6 @@ get_attr_entry(table, aep)
 		       (table == &gui_attr_table
 			&& (aep->ae_u.gui.fg_color == gap->ae_u.gui.fg_color
 			    && aep->ae_u.gui.bg_color == gap->ae_u.gui.bg_color
-#  ifdef FEAT_SIGNS
-			    && aep->ae_u.gui.sign == gap->ae_u.gui.sign
-#  endif
 			    && aep->ae_u.gui.font == gap->ae_u.gui.font
 #  ifdef FEAT_XFONTSET
 			    && aep->ae_u.gui.fontset == gap->ae_u.gui.fontset
@@ -7154,9 +7079,6 @@ get_attr_entry(table, aep)
 	gap->ae_u.gui.font = aep->ae_u.gui.font;
 # ifdef FEAT_XFONTSET
 	gap->ae_u.gui.fontset = aep->ae_u.gui.fontset;
-# endif
-# ifdef FEAT_SIGNS
-	gap->ae_u.gui.sign = aep->ae_u.gui.sign;
 # endif
     }
 #endif
@@ -7251,10 +7173,6 @@ highlight_list_one(id)
 				    0, sgp->sg_gui_bg_name, "guibg");
     didh = highlight_list_arg(id, didh, LIST_STRING,
 				    0, sgp->sg_font_name, "font");
-#ifdef FEAT_SIGNS
-    didh = highlight_list_arg(id, didh, LIST_STRING,
-				    0, sgp->sg_sign_name, "sign");
-#endif
 #endif
 
     if (sgp->sg_link)
@@ -7407,7 +7325,7 @@ highlight_color(id, what, modec)
     unsigned long
 highlight_gui_color_rgb(id, fg)
     int		id;
-    int	fg;	/* TRUE = fg, FALSE = bg */
+    int		fg;	/* TRUE = fg, FALSE = bg */
 {
     guicolor_T	color;
 
@@ -7508,9 +7426,6 @@ set_hl_attr(idx)
 # ifdef FEAT_XFONTSET
 	at_en.ae_u.gui.fontset = HL_TABLE()[idx].sg_fontset;
 # endif
-#ifdef FEAT_SIGNS
-	at_en.ae_u.gui.sign = HL_TABLE()[idx].sg_sign_type;
-#endif
 	HL_TABLE()[idx].sg_gui_attr = get_attr_entry(&gui_attr_table, &at_en);
     }
 #endif
@@ -8092,7 +8007,7 @@ highlight_list_two(cnt, attr)
 #endif /* FEAT_CMDL_COMPL */
 
 #if defined(FEAT_CMDL_COMPL) || (defined(FEAT_SYN_HL) && defined(FEAT_EVAL)) \
-    || defined(PROTO)
+    || defined(FEAT_SIGNS) || defined(PROTO)
 /*
  * Function given to ExpandGeneric() to obtain the list of group names.
  * Also used for synIDattr() function.

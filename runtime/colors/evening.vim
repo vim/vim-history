@@ -1,16 +1,16 @@
 " Vim color file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 09
+" Last Change:	2001 May 19
 
 " This color scheme uses a dark grey background.
 
 " First remove all existing highlighting.
+set background=dark
 hi clear
 
 let colors_name = "evening"
 
 hi Normal ctermbg=DarkGrey ctermfg=White guifg=White guibg=grey20
-set background=dark
 
 " Groups used in the 'highlight' and 'guicursor' options default value.
 hi ErrorMsg term=standout ctermbg=DarkRed ctermfg=White guibg=Red guifg=White
@@ -49,7 +49,9 @@ endif
 hi Ignore ctermfg=DarkGrey guifg=grey20
 
 if exists("syntax_on")
-  runtime syntax/syncolor.vim
+  let syntax_cmd = "enable"
+  runtime! syntax/syncolor.vim
+  unlet syntax_cmd
 endif
 
 " vim: sw=2

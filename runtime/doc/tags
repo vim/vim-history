@@ -256,6 +256,10 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'iconstring'	options.txt	/*'iconstring'*
 'ignorecase'	options.txt	/*'ignorecase'*
 'im'	options.txt	/*'im'*
+'imi'	options.txt	/*'imi'*
+'iminsert'	options.txt	/*'iminsert'*
+'ims'	options.txt	/*'ims'*
+'imsearch'	options.txt	/*'imsearch'*
 'inc'	options.txt	/*'inc'*
 'include'	options.txt	/*'include'*
 'includeexpr'	options.txt	/*'includeexpr'*
@@ -553,7 +557,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'printerfont'	options.txt	/*'printerfont'*
 'printersettings'	options.txt	/*'printersettings'*
 'prompt'	vi_diff.txt	/*'prompt'*
-'pst'	options.txt	/*'pst'*
+'pset'	options.txt	/*'pset'*
 'pt'	options.txt	/*'pt'*
 'pvh'	options.txt	/*'pvh'*
 'pvw'	options.txt	/*'pvw'*
@@ -923,6 +927,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +file_in_path	various.txt	/*+file_in_path*
 +find_in_path	various.txt	/*+find_in_path*
 +folding	various.txt	/*+folding*
++footer	various.txt	/*+footer*
 +fork	various.txt	/*+fork*
 +gettext	various.txt	/*+gettext*
 +hangul_input	various.txt	/*+hangul_input*
@@ -959,9 +964,11 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 +rightleft	various.txt	/*+rightleft*
 +ruby	various.txt	/*+ruby*
 +scrollbind	various.txt	/*+scrollbind*
++signs	various.txt	/*+signs*
 +smartindent	various.txt	/*+smartindent*
 +sniff	various.txt	/*+sniff*
 +statusline	various.txt	/*+statusline*
++sun_workshop	various.txt	/*+sun_workshop*
 +syntax	various.txt	/*+syntax*
 +system()	various.txt	/*+system()*
 +tag_any_white	various.txt	/*+tag_any_white*
@@ -1071,6 +1078,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 -xrm	gui_x11.txt	/*-xrm*
 -y	starting.txt	/*-y*
 .	repeat.txt	/*.*
+.	version6.txt	/*.*
 .Xdefaults	gui_x11.txt	/*.Xdefaults*
 .exrc	starting.txt	/*.exrc*
 .gvimrc	gui.txt	/*.gvimrc*
@@ -1607,6 +1615,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :ime	gui.txt	/*:ime*
 :imenu	gui.txt	/*:imenu*
 :in	insert.txt	/*:in*
+:index	index.txt	/*:index*
 :ino	map.txt	/*:ino*
 :inorea	map.txt	/*:inorea*
 :inoreabbrev	map.txt	/*:inoreabbrev*
@@ -1839,6 +1848,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :redi	various.txt	/*:redi*
 :redir	various.txt	/*:redir*
 :redo	undo.txt	/*:redo*
+:redr	various.txt	/*:redr*
+:redraw	various.txt	/*:redraw*
 :reg	change.txt	/*:reg*
 :registers	change.txt	/*:registers*
 :res	windows.txt	/*:res*
@@ -2075,8 +2086,6 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :unme	gui.txt	/*:unme*
 :unmenu	gui.txt	/*:unmenu*
 :unmenu-all	gui.txt	/*:unmenu-all*
-:uns	sign.txt	/*:uns*
-:unsign	sign.txt	/*:unsign*
 :up	editing.txt	/*:up*
 :update	editing.txt	/*:update*
 :v	repeat.txt	/*:v*
@@ -2553,6 +2562,7 @@ E162	message.txt	/*E162*
 E163	editing.txt	/*E163*
 E164	editing.txt	/*E164*
 E165	editing.txt	/*E165*
+E166	message.txt	/*E166*
 E167	repeat.txt	/*E167*
 E168	repeat.txt	/*E168*
 E169	message.txt	/*E169*
@@ -2603,6 +2613,9 @@ E209	message.txt	/*E209*
 E21	options.txt	/*E21*
 E210	message.txt	/*E210*
 E211	message.txt	/*E211*
+E212	message.txt	/*E212*
+E213	options.txt	/*E213*
+E214	options.txt	/*E214*
 E215	autocmd.txt	/*E215*
 E216	autocmd.txt	/*E216*
 E217	autocmd.txt	/*E217*
@@ -2627,11 +2640,15 @@ E233	gui.txt	/*E233*
 E234	options.txt	/*E234*
 E235	options.txt	/*E235*
 E236	options.txt	/*E236*
+E237	various.txt	/*E237*
+E238	various.txt	/*E238*
+E239	sign.txt	/*E239*
 E24	message.txt	/*E24*
 E242	syntax.txt	/*E242*
 E243	if_ole.txt	/*E243*
 E244	options.txt	/*E244*
 E245	options.txt	/*E245*
+E246	autocmd.txt	/*E246*
 E25	message.txt	/*E25*
 E250	options.txt	/*E250*
 E252	options.txt	/*E252*
@@ -2724,6 +2741,7 @@ E335	gui.txt	/*E335*
 E336	gui.txt	/*E336*
 E337	gui.txt	/*E337*
 E338	editing.txt	/*E338*
+E339	message.txt	/*E339*
 E34	various.txt	/*E34*
 E340	vi_diff.txt	/*E340*
 E341	message.txt	/*E341*
@@ -2748,7 +2766,9 @@ E358	options.txt	/*E358*
 E359	term.txt	/*E359*
 E36	windows.txt	/*E36*
 E360	various.txt	/*E360*
+E361	pattern.txt	/*E361*
 E362	term.txt	/*E362*
+E363	pattern.txt	/*E363*
 E364	eval.txt	/*E364*
 E366	options.txt	/*E366*
 E368	eval.txt	/*E368*
@@ -3632,8 +3652,6 @@ encryption	editing.txt	/*encryption*
 end	intro.txt	/*end*
 end-of-file	pattern.txt	/*end-of-file*
 enlightened-terminal	syntax.txt	/*enlightened-terminal*
-ep2	pattern.txt	/*ep2*
-ep5	message.txt	/*ep5*
 erlang-syntax	syntax.txt	/*erlang-syntax*
 erlang.vim	syntax.txt	/*erlang.vim*
 errmsg-variable	eval.txt	/*errmsg-variable*
@@ -3738,8 +3756,6 @@ expression-syntax	eval.txt	/*expression-syntax*
 exrc	starting.txt	/*exrc*
 extension-removal	cmdline.txt	/*extension-removal*
 extensions-improvements	todo.txt	/*extensions-improvements*
-ey8	pattern.txt	/*ey8*
-ey9	pattern.txt	/*ey9*
 ez4	multibyte.txt	/*ez4*
 f	motion.txt	/*f*
 faq	intro.txt	/*faq*
@@ -4800,7 +4816,6 @@ shift-left-right	change.txt	/*shift-left-right*
 short-name-changed	version4.txt	/*short-name-changed*
 showing-menus	gui.txt	/*showing-menus*
 sign-commands	sign.txt	/*sign-commands*
-sign-compiling	sign.txt	/*sign-compiling*
 sign-intro	sign.txt	/*sign-intro*
 sign-support	sign.txt	/*sign-support*
 sign.txt	sign.txt	/*sign.txt*

@@ -451,10 +451,10 @@ typedef struct signlist signlist_T;
 
 struct signlist
 {
-    int		id;		/* unique identifier for each sign */
-    linenr_T	lineno;		/* line number which has this sign */
-    int		type;		/* type of sign (index into signtab) */
-    signlist_T *next;		/* next signlist entry */
+    int		id;		/* unique identifier for each placed sign */
+    linenr_T	lnum;		/* line number which has this sign */
+    int		typenr;		/* typenr of sign */
+    signlist_T	*next;		/* next signlist entry */
 };
 #endif
 
@@ -599,9 +599,6 @@ typedef struct attr_entry
 	    GuiFont	    font;	/* font handle */
 #  ifdef FEAT_XFONTSET
 	    GuiFontset	    fontset;	/* fontset handle */
-#  endif
-#  ifdef FEAT_SIGNS
-	    int		    sign;	/* breakpoint and error markers */
 #  endif
 	} gui;
 # endif
@@ -819,9 +816,18 @@ struct file_buffer
     int		b_scanned;	/* ^N/^P have scanned this buffer */
 #endif
 
-    short	b_lmap;		/* flags for use of ":lmap" mappings */
-#define B_LMAP_INSERT	1	/* ":lmap"s are used in Insert mode */
-#define B_LMAP_SEARCH	2	/* ":lmap"s are used for search patterns */
+    /* flags for use of ":lmap" and IM control */
+    long	b_im_insert;	/* input mode for insert */
+    long	b_im_search;	/* input mode for search */
+#define B_IMODE_USE_INSERT -1	/*	Use b_im_insert value for search */
+#define B_IMODE_NONE 0		/*	Input via none */
+#define B_IMODE_LMAP 1		/*	Input via langmap */
+#ifndef USE_IM_CONTROL
+# define B_IMODE_LAST 1
+#else
+# define B_IMODE_IM 2		/*	Input via input method */
+# define B_IMODE_LAST 2
+#endif
 
 #ifdef FEAT_KEYMAP
     short	b_kmap_state;	/* using "lmap" mappings */
@@ -1492,6 +1498,7 @@ struct VimMenu
     int		priority;	    /* Menu order priority */
 #ifdef FEAT_GUI
     void	(*cb)();	    /* Call-back routine */
+    char_u	*iconfile;	    /* name of file for icon or NULL */
 #endif
     char_u	*strings[MENU_MODES]; /* Mapped string for each mode */
     int		noremap[MENU_MODES]; /* A REMAP_ flag for each mode */
@@ -1590,17 +1597,15 @@ typedef struct
  * Generic option table item, only used for printer at the moment.
  */
 typedef struct {
-    const char_u    *name;
-    int		    hasnum;
-
-    long	    number;
-    char_u	    *string;	/* points into option string */
-    int		    strlen;
-    int		    present;
+    const char	*name;
+    int		hasnum;
+    long	number;
+    char_u	*string;	/* points into option string */
+    int		strlen;
+    int		present;
 } option_table_T;
 
 
-#ifdef FEAT_PRINTER
 /*
  * Structure passed back to the generic printer code.
  */
@@ -1622,7 +1627,6 @@ typedef struct
 #define OPT_PRINT_HEADERHEIGHT	4
 #define OPT_PRINT_MONO		5
 #define OPT_PRINT_NUMBER	6
+#define OPT_PRINT_WRAP		7
 
-#define OPT_PRINT_NUM_OPTIONS	7
-
-#endif
+#define OPT_PRINT_NUM_OPTIONS	8

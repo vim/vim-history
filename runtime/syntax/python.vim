@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Python
-" Maintainer:	Neil Schemenauer <nascheme@enme.ucalgary.ca>
-" Updated:	Mon 03 Apr 2000
+" Maintainer:	Neil Schemenauer <nas@python.ca>
+" Updated:	2001-05-13
 "
 " There are four options to control Python syntax highlighting.
 "
@@ -30,6 +30,7 @@ if version < 600
 elseif exists("b:current_syntax")
   finish
 endif
+
 
 syn keyword pythonStatement	break continue del
 syn keyword pythonStatement	except exec finally
@@ -109,28 +110,26 @@ endif
 " you have a fast machine you can try uncommenting the "sync minlines"
 " and commenting out the rest.
 syn sync match pythonSync grouphere NONE "):$"
-syn sync maxlines=100
+syn sync maxlines=200
 "syn sync minlines=2000
 
-" Define the default highlighting.
-" For version 5.7 and earlier: only when not done already
-" For version 5.8 and later: only when an item doesn't have highlighting yet
-if version >= 508 || !exists("did_python_syntax_inits")
-  if version < 508
-    let did_python_syntax_inits = 1
+if version >= 508 || !exists("did_python_syn_inits")
+  if version <= 508
+    let did_python_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
   else
     command -nargs=+ HiLink hi def link <args>
   endif
 
+  " The default methods for highlighting.  Can be overridden later
   HiLink pythonStatement	Statement
-  HiLink pythonFunction	Function
+  HiLink pythonFunction		Function
   HiLink pythonConditional	Conditional
   HiLink pythonRepeat		Repeat
   HiLink pythonString		String
   HiLink pythonRawString	String
   HiLink pythonEscape		Special
-  HiLink pythonOperator	Operator
+  HiLink pythonOperator		Operator
   HiLink pythonPreCondit	PreCondit
   HiLink pythonComment		Comment
   HiLink pythonTodo		Todo

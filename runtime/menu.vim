@@ -3,7 +3,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 13
+" Last Change:	2001 May 20
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -319,7 +319,7 @@ if has("keymap")
   unlet s:n
 endif
 if has("win32") || has("win16") || has("gui_gtk") || has("qui_photon")
-  amenu 20.470 &Edit.Select\ &Font\.\.\.	:set guifont=*<CR>
+  amenu 20.470 &Edit.Select\ Fo&nt\.\.\.	:set guifont=*<CR>
 endif
 
 " Programming menu
@@ -371,7 +371,11 @@ endif  " has folding
 if has("diff")
   amenu 40.350.100 &Tools.&Diff.&Update		:diffupdate<CR>
   amenu 40.350.110 &Tools.&Diff.&Get\ Block 	:diffget<CR>
+  vunmenu &Tools.&Diff.&Get\ Block
+  vmenu &Tools.&Diff.&Get\ Block 		:diffget<CR>
   amenu 40.350.120 &Tools.&Diff.&Put\ Block 	:diffput<CR>
+  vunmenu &Tools.&Diff.&Put\ Block
+  vmenu &Tools.&Diff.&Put\ Block 		:diffput<CR>
 endif
 
 amenu 40.358 &Tools.-SEP2-			:

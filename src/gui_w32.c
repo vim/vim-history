@@ -1324,11 +1324,8 @@ HanExtTextOut(HDC hdc, int X, int Y, UINT fuOption, const RECT *lprc,
 #include <ime.h>
 #include <imm.h>
 
-static BOOL bImeOpenStatus = FALSE;
 static char lpCompStr[100];		// Pointer to composition str.
 static BOOL bInComposition=FALSE;
-static BOOL bCommandMode=TRUE;
-static BOOL bImeNative = FALSE;
 
 /*
  * display composition string(korean)
@@ -1344,25 +1341,8 @@ DisplayCompStringOpaque(char_u *s, int len)
 }
 
 /*
- * Position IME composition window.
- */
-    static void
-ImePositionWindow(HIMC hImc)
-{
-    COMPOSITIONFORM	cfs;
-
-    cfs.dwStyle = CFS_POINT;
-    cfs.ptCurrentPos.x = FILL_X(gui.col);
-    cfs.ptCurrentPos.y = FILL_Y(gui.row);
-    MapWindowPoints(s_textArea, s_hwnd, &cfs.ptCurrentPos, 1);
-    ImmSetCompositionWindow(hImc, &cfs);
-}
-
-/*
  * handle WM_IME_NOTIFY message
  */
-static BOOL bImeStatus = FALSE;
-
     static LRESULT
 _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 {
@@ -1374,10 +1354,33 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
     switch (dwCommand)
     {
 	case IMN_SETOPENSTATUS:
-	    if (bImeStatus = ImmGetOpenStatus(hImc))
+	    if (ImmGetOpenStatus(hImc))
 	    {
 		ImmSetCompositionFont(hImc, &norm_logfont);
-		ImePositionWindow(hImc);
+		im_set_position(gui.row, gui.col);
+
+		/* Disable langmap */
+		State &= ~ LANGMAP;
+		if (State & INSERT)
+		{
+		    int old_row, old_col;
+
+		    /* Save cursor position */
+		    old_row = gui.row;
+		    old_col = gui.col;
+
+		    curbuf->b_im_insert = B_IMODE_IM;
+		    showmode();
+#if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
+		    /* Show/unshow value of 'keymap' in status lines. */
+		    status_redraw_curbuf();
+#endif
+		    update_screen(0);
+
+		    /* Restore cursor position */
+		    gui.row = old_row;
+		    gui.col = old_col;
+		}
 	    }
 	    gui_update_cursor(TRUE, FALSE);
 	    lResult = 1;
@@ -1387,71 +1390,13 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
     return lResult;
 }
 
-/*
- * When status IME is 'open' change cursor color to hilight 'CursorIM'
- */
-    int
-input_method_active()
-{
-    return bImeStatus;
-}
-
-/*
- * Get context and position IME composition window.
- */
     void
-ImeSetCompositionWindow(void)
+im_set_active(int active)
 {
-    HIMC hImc;
-
-    if ((hImc = ImmGetContext(s_hwnd)))
-    {
-	ImePositionWindow(hImc);
-	ImmReleaseContext(s_hwnd, hImc);
-    }
-}
-
-
-/*
- * When entering Insert mode, set IME to previous language mode
- */
-    void
-ImeSetOriginMode(void)
-{
-    HIMC    hImc;
-
-    if ((hImc = ImmGetContext(s_hwnd)))
-    {
-	if (!ImmGetOpenStatus(hImc) && bImeOpenStatus == TRUE)
-	    ImmSetOpenStatus(hImc, TRUE);
-	else
-	    bImeOpenStatus = FALSE;
-	ImmReleaseContext(s_hwnd, hImc);
-    }
-    bCommandMode = FALSE;
-}
-
-
-/* When enter to command mode, set IME to english mode */
-    void
-ImeSetEnglishMode(void)
-{
-    HIMC    hImc;
-    DWORD   dwConvMode, dwSentMode;
-
-    if ((hImc = ImmGetContext(s_hwnd)))
-    {
-	ImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
-	if (ImmGetOpenStatus(hImc))
-	{
-	    ImmSetOpenStatus(hImc, FALSE);
-	    bImeOpenStatus = TRUE;
-	}
-	else
-	    bImeOpenStatus = FALSE;
-	ImmReleaseContext(s_hwnd, hImc);
-    }
-    bCommandMode = TRUE;
+    if (active)
+	ImeSetOriginMode();
+    else
+	ImeSetEnglishMode();
 }
 
 /* get composition string from WIN_IME */
@@ -1538,39 +1483,10 @@ exit2:
     ImmReleaseContext(hwnd, hIMC);
 }
 
-#if 0
-/* this handles WM_IME_STARTCOMPOSITION */
-    static void
-ImeUIStartComposition(HWND hwnd)
-{
-     bInComposition = TRUE;
-     //GetResultStr( hwnd );
-}
-
-/* WM_IME_COMPOSITION */
-    static void
-ImeUIComposition(HWND hwnd, WPARAM wParam, LPARAM CompFlag)
-{
-
-    if (CompFlag & GCS_RESULTSTR)
-	GetResultStr( hwnd );
-    else if (CompFlag & GCS_COMPSTR)
-	GetCompositionStr( hwnd, CompFlag );
-}
-
-/* WM_IME_COMPOSITION */
-    static void
-ImeUIEndComposition(HWND hwnd)
-{
-    bInComposition = FALSE;
-    //GetResultStr( hwnd );
-}
-#endif
-
     static char *
 ImeGetTempComposition(void)
 {
-    if (bInComposition == TRUE /* && bCommandMode == FALSE */)
+    if (bInComposition == TRUE)
     {
 	HIMC    hImc;
 	DWORD   dwConvMode, dwSentMode;
@@ -1586,102 +1502,101 @@ ImeGetTempComposition(void)
     return NULL;
 }
 
-#if 0
-    static void
-ImeNotify(WPARAM w, LPARAM l)
+/*
+ * Notify cursor position to IM.
+ */
+    void
+im_set_position(int row, int col)
 {
-    HIMC    hImc;
-    DWORD   dwConvMode, dwSentMode;
+    HIMC hImc;
 
     if ((hImc = ImmGetContext(s_hwnd)))
     {
-	ImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
-	if (dwConvMode & IME_CMODE_NATIVE)
-	{
-	    if (w = IMN_SETOPENSTATUS)
-	    {
-		ImmSetCompositionFont(hImc, &norm_logfont);
-		ImePositionWindow(hImc);
-	    }
-	    bImeNative = TRUE;
-	}
-	else
-	    bImeNative = FALSE;
+	COMPOSITIONFORM	cfs;
+
+	cfs.dwStyle = CFS_POINT;
+	cfs.ptCurrentPos.x = FILL_X(col);
+	cfs.ptCurrentPos.y = FILL_Y(row);
+	MapWindowPoints(s_textArea, s_hwnd, &cfs.ptCurrentPos, 1);
+	ImmSetCompositionWindow(hImc, &cfs);
+
 	ImmReleaseContext(s_hwnd, hImc);
     }
 }
-#endif
 
-#  if 0 // This is not used !?
+/*
+ * Set IM status.  If status is not 0, IM would be turn on.  If status is 0,
+ * IM would be turn off.
+ */
     void
-ImeOpenClose(HWND hWnd, BOOL fFlag)
+im_set_active(int active)
 {
-    HIMC	hIMC;
+    HIMC    hImc;
 
-    //
-    // If fFlag is true then open IME; otherwise close it.
-    //
-
-    if (!(hIMC = ImmGetContext(hWnd)))
-	return;
-
-    ImmSetOpenStatus(hIMC, fFlag);
-
-    ImmReleaseContext(hWnd, hIMC);
+    if ((hImc = ImmGetContext(s_hwnd)))
+    {
+	ImmSetOpenStatus(hImc, active);
+	ImmReleaseContext(s_hwnd, hImc);
+    }
 }
 
 /*
-*   IsDBCSTrailByte - returns TRUE if the given byte is a DBCS trail byte
-*
-*		The algorithm searchs backward in the string, to some known
-*		character boundary, counting consecutive bytes in the lead
-*		byte range. An odd number indicates the current byte is part
-*		of a two byte character code.
-*
-*   INPUT: PCHAR  - pointer to a preceding known character boundary.
-*	   PCHAR  - pointer to the character to test.
-*
-*   OUTPUT:BOOL   - indicating truth of p==trailbyte.
-*
-*/
+ * Get IM status.  When IM is on, return not 0.  Else return 0.
+ */
     int
-IsDBCSTrailByte(char *base, char *p)
+im_get_status()
 {
-    int lbc = 0;    // lead byte count
+    int status = 0;
+    HIMC    hImc;
 
-    if (base > p)
-	return 0;
-    if (strlen(base) <= (size_t)(p-base))
-	return 0;
-
-    while (p > base)
+    if ((hImc = ImmGetContext(s_hwnd)))
     {
-	if (!IsLeadByte(*(--p)))
-	    break;
-	lbc++;
+	status = ImmGetOpenStatus(hImc) ? 1 : 0;
+	ImmReleaseContext(s_hwnd, hImc);
     }
-
-    return (lbc & 1);
+    return status;
 }
-#  endif /* not used */
 
 #endif /* FEAT_MBYTE && FEAT_MBYTE_IME */
 
-/* GIME_TEST */
-#if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
+#if defined(FEAT_MBYTE) && !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
+/* Win32 with GLOBAL IME */
+
+/*
+ * Notify cursor position to IM.
+ */
     void
-ImeSetEnglishMode(void)
+im_set_position(int row, int col)
 {
-    global_ime_status_evacuate();
+    /* Win32 with GLOBAL IME */
+    POINT p;
+
+    p.x = FILL_X(col);
+    p.y = FILL_Y(row);
+    MapWindowPoints(s_textArea, s_hwnd, &p, 1);
+    global_ime_set_position(&p);
 }
 
+/*
+ * Set IM status.  If status is not 0, IM would be turn on.  If status is 0,
+ * IM would be turn off.
+ */
     void
-ImeSetOriginMode(void)
+im_set_active(int active)
 {
-    global_ime_status_restore();
+    global_ime_set_status(active);
+}
+
+/*
+ * Get IM status.  When IM is on, return not 0.  Else return 0.
+ */
+    int
+im_get_status()
+{
+    return global_ime_get_status()
 }
 #endif
-/* GIME_TEST */
+
 
 #ifdef FEAT_RIGHTLEFT
 /*
@@ -3255,6 +3170,7 @@ gui_mch_tearoff(
     force_menu_update = TRUE;
 }
 #endif
+
 #if defined(FEAT_TOOLBAR) || defined(PROTO)
 #include "gui_w32_rc.h"
 

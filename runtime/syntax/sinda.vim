@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:     sinda85, sinda/fluint input file
 " Maintainer:   Adrian Nagle, anagle@ball.com
-" Last Change:  2001 May 10
+" Last Change:  2001 May 15
 " Filenames:    *.sin
 " URL:          http://www.naglenet.org/vim/syntax/sinda.vim
 " MAIN URL:     http://www.naglenet.org/vim/
@@ -28,6 +28,9 @@ syn case ignore
 " Begin syntax definitions for sinda input and output files.
 "
 
+" Force free-form fortran format
+let fortran_free_source=1
+
 " Load FORTRAN syntax file
 if version < 600
   source <sfile>:p:h/fortran.vim
@@ -35,10 +38,6 @@ else
   runtime! syntax/fortran.vim
 endif
 unlet b:current_syntax
-
-" Delete fortran syntax definition for line error format.
-"syn clear fortranCommentError
-"syn clear fortranNoLabelNumber
 
 
 

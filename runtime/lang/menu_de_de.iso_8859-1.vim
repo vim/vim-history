@@ -91,7 +91,7 @@ menutrans Max\ Width<Tab>^W\|		Maximale\ Breite<Tab>^W\|
 menutrans Min\ Width<Tab>^W1\|		Minimale\ Breite<Tab>^W1\|
 menutrans Rotate\ &Up<Tab>^WR		Rotiere\ nach\ &oben<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Rotiere\ nach\ &unten<Tab>^Wr
-menutrans Select\ &Font\.\.\.		Auswahl\ der\ Schriftart\.\.\.
+menutrans Select\ Fo&nt\.\.\.		Auswahl\ der\ Schriftart\.\.\.
 
 " The popup menu
 menutrans &Undo			&Zurück

@@ -20,6 +20,7 @@ void mch_restore_title __ARGS((int which));
 int vim_is_xterm __ARGS((char_u *name));
 int use_xterm_mouse __ARGS((void));
 int vim_is_iris __ARGS((char_u *name));
+int vim_is_vt300 __ARGS((char_u *name));
 int vim_is_fastterm __ARGS((char_u *name));
 int mch_get_user_name __ARGS((char_u *s, int len));
 int mch_get_uname __ARGS((uid_t uid, char_u *s, int len));

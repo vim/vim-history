@@ -319,11 +319,7 @@ static int		s_findrep_is_find;
  * For control IME.
  */
 #ifdef FEAT_MBYTE
-# ifdef FEAT_MBYTE_IME
-static LOGFONT norm_logfont;
-# endif
-# if !defined(FEAT_MBYTE_IME) && defined(GLOBAL_IME)
-/* GIME_TEST */
+# ifdef USE_IM_CONTROL
 static LOGFONT norm_logfont;
 # endif
 #endif
@@ -1348,7 +1344,7 @@ init_logfont(LOGFONT *lf)
 get_logfont(
     LOGFONT *lf,
     char_u  *name,
-    HDC printer_dc)
+    void *printer_dc)
 {
     char_u	*p;
     CHOOSEFONT	cf;
@@ -1968,16 +1964,6 @@ process_message(void)
 	}
     }
 #ifdef FEAT_MBYTE_IME
-# if 0
-    else if (msg.message == WM_IME_STARTCOMPOSITION)
-	ImeUIStartComposition(s_hwnd);
-    else if (msg.message == WM_IME_COMPOSITION)
-	ImeUIComposition(s_hwnd, msg.wParam, msg.lParam);
-    else if (msg.message == WM_IME_ENDCOMPOSITION)
-	ImeUIEndComposition(s_hwnd);
-    else if (msg.message == WM_IME_COMPOSITIONFULL)
-	ImeUIEndComposition(s_hwnd);
-# endif
     else if (msg.message == WM_IME_NOTIFY)
 	_OnImeNotify(msg.hwnd, (DWORD)msg.wParam, (DWORD)msg.lParam);
 #endif

@@ -1,6 +1,6 @@
 " Vim syntax support file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 03
+" Last Change:	2001 May 19
 
 " This file sets up for syntax highlighting.
 " It is loaded from "syntax.vim" and "manual.vim".
@@ -15,7 +15,11 @@ endif
 let syntax_on = 1
 
 " Set the default highlighting colors
-source <sfile>:p:h/syncolor.vim
+if exists("colors_name")
+  exe "colors " . colors_name
+else
+  runtime! syntax/syncolor.vim
+endif
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
 let s:cpo_save = &cpo

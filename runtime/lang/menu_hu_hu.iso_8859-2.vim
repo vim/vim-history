@@ -1,6 +1,6 @@
 " Menu Translations:	Hungarian
 " Translated By: 	Zoltan Arpadffy <arpadffy@altavista.net>
-" Last Change:		2001 apr 26
+" Last Change:		2001 May 18
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -79,7 +79,7 @@ menutrans &Max\ Height<Tab>^W_		Egyenlô\ &szélesség<Tab>^W_
 menutrans M&in\ Height<Tab>^W1_		Alap\ szé&lesség<Tab>^W1_
 menutrans Rotate\ &Up<Tab>^WR		Gördít\ &felfelé<Tab>^WR
 menutrans Rotate\ &Down<Tab>^Wr		Gördít\ &lefelé<Tab>^Wr
-menutrans Select\ &Font\.\.\.		&Fontot\ választ\.\.\.
+menutrans Select\ Fo&nt\.\.\.		&Fontot\ választ\.\.\.
 
 " The popup menu
 menutrans &Undo			&Vissza

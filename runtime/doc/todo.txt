@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0af.  Last change: 2001 May 13
+*todo.txt*      For Vim version 6.0ag.  Last change: 2001 May 20
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,8 +29,8 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Add an option for the langmap state.  Also use it for IME and XIM state?
-Use one flag instead of two (Insert mode and typing search pattern).
+Win32: Patch for dropping a shortcut on Vim. (Matsumoto)  Only for OLE
+version?  Use non-OLE hack?
 
 GUI: Make inputdialog() work for Win16, Win32, Photon, Amiga, Mac, RiscOS.
 
@@ -50,7 +50,7 @@ D.  Vertical window split
 E.  Virtual edit
 	Works for some commands.  Still needs to be improved a lot.
 F.  Sun Visual workshop (debugger) interface
-	Code is included but not tested.
+	Works.
 G.  Edit command line with Vi commands
 	The command-line window works.
 H.  More automatic testing
@@ -64,7 +64,6 @@ J.  User Friendlier
 
 E. Virtual edit:
 -   Still a lot of work to do.  Test various commands.
--   "x" on a control character doesn't do anything.
 -   When doing Visual selection and including space after the end-of-line it
     is not highlighted.  It's also not included in the operation.  Should this
     be changed to include the space after the end-of-line?
@@ -83,23 +82,6 @@ E. Virtual edit:
     end of the line?
 -   Allow specifying it separately for Tabs and beyond end-of-line?
 -   Add test for various virtualedit operations that went wrong in the past.
-
-
-F. Sun Visual Workshop patch from Gordon Prieur:
--   Displaying signs doesn't always work properly.  Should use a flag in the
-    window for the sign column: it is set as soon as a sign is drawn and reset
-    when editing another file.  When drawing the first sign the display isn't
-    updated properly.  Force a redisplay when setting the new flag.  When not
-    in the GUI or no motif, only use line highlighting (later add ASCII sign,
-    like ">>" for an arrow, "!!" for a breakpoint).
--   sign mixed in with highlighting, is that what we want?
--   Check that rename from "glyph" to "sign" is correct.
--   Add ASCII signs, see patch from Mirian Lennox.
--   remove ":signs", use ":sign" without arguments to show signs
--   docs for 'balloon*' options.
--   docs for 'F' flag in 'guioptions'.
--   add stdarg.h include file in os_unix.h?
--   Add code to handle folding.
 
 
 J. User Friendlier
@@ -124,13 +106,19 @@ J. User Friendlier
 
 
 Various recent:
-8   Use $install_prefix? (Cabric)
+9   Diff: when scrolling with the mouse or scrollbar one line is sometimes
+    missing.  It's hard to reproduce.  Both in console and GUI.
+9   When t_Co changes because of an xterm termresponse and the user defined a
+    different Comment color in his mysyntaxfile, resetting the colors causes
+    the default Comment color to appear again.
 8   Test if it possible for a skip pattern to include "\n", so that it can
     skip over newlines for a "oneline" region.
 -   Check use of multi-line regexp in syntax highlighting.
 -   "ls -1 * | xargs vim" works a bit but not well.  Should use stderr for all
     term I/O.
-9   ":cwindow!" always open quickfix window, ":cwindow" only open it if there
+8   Make 'indentkeys' accept "0=then" (typed "then" as the first thing in a
+    line). (Neil Bird)
+9   ":cwindow!" always open quickfix window, ":cwindow" only opens it if there
     are recognized errors.  ":cclose" to close quickfix window?
     Or use a new command: ":cwincheck", opens the cwindow when there are
     recognized errors, closes it when there are none.
@@ -164,9 +152,6 @@ Various recent:
        DOS console used to execute external commands.  Pass a flag to
        vimrun.exe.
     Ideas in ~/vim/patches/wall.noredir.tgz (Stephen P. Wall).
--   Check all places where buf_write() is called if it takes care of "buf"
-    becoming invalid because of autocommands.  Also callers of
-    buf_check_timestamp().
 -   xterm sends <Esc>O5F for <C-End>.  Similarly for other Control-keys.
 -   Problem with cscope jumping to the wrong position? (Medley)
     Selecting item 5 jumps to item 4. (Andrej Borsenkow)
@@ -1190,6 +1175,8 @@ Built-in script language:
 				Tcl implementation ~/vim/HierAssist/ )
 8   argc() returns 0 when using "vim -t tag".  How to detect that no file was
     specified in any way?  To be able to jump to the last edited file.
+8   Pass the executable name to the Vim scripts in some way.  As v:argv0?
+8   Add command arguments with three dashes, passed on to Vim scripts.
 8   When starting to source a vim script, delete all functions that it has
     previously defined?  Avoids using ":fun!" all the time.
 7   Add optional arguments to user functions:
@@ -2777,7 +2764,6 @@ Various improvements:
     implementing ":w" to stdout in the buffer that was read from stdin.
 8   Allow opening an unnamed buffer with ":e !cmd" and ":sp !cmd".  Vile can
     do it.
--   Allow for +command and -option on any position in argv[].
 -   Add commands like ]] and [[ that do not include the line jumped to.
 -   When :unab without matching "from" part and several matching "to" parts,
     delete the entry that was used last, instead of the first in the list.

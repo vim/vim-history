@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 May 13
+" Last change:	2001 May 17
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -16,7 +16,7 @@ set cpo&vim
 augroup filetypedetect
 
 " Ignored extensions
-au BufNewFile,BufRead *.orig,*.bak,*.old,*.new
+au BufNewFile,BufRead *.orig,*.bak,*.old,*.new,*.rpmsave,*.rpmnew
 	\ exe "doau filetypedetect BufRead " . expand("<afile>:r")
 au BufNewFile,BufRead *~
 	\ exe "doau filetypedetect BufRead " . substitute(expand("<afile>"), '\~$', '', '')
@@ -395,7 +395,7 @@ au BufNewFile,BufRead *.gpi			setf gnuplot
 au BufNewFile,BufRead *.gsp			setf gsp
 
 " GTK RC
-au BufNewFile,BufRead gtkrc			setf gtkrc
+au BufNewFile,BufRead .gtkrc,gtkrc		setf gtkrc
 
 " Haskell
 au BufNewFile,BufRead *.hs			setf haskell
@@ -1068,8 +1068,8 @@ au BufNewFile,BufRead *.web
 	\   setf winbatch |
 	\ endif
 
-" Windows Scripting Host
-au BufNewFile,BufRead *.wsf			setf wsh
+" Windows Scripting Host and Windows Script Component
+au BufNewFile,BufRead *.ws[fc]			setf wsh
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
 au BufEnter *.xpm
@@ -1144,7 +1144,7 @@ au BufNewFile,BufRead *fvwm2rc*
 	\ let b:fvwm_version = 2 | setf fvwm
 
 " GTK RC
-au BufNewFile,BufRead gtkrc*			setf gtkrc
+au BufNewFile,BufRead .gtkrc*,gtkrc*		setf gtkrc
 
 " Jam
 au BufNewFile,BufRead Prl*.*,JAM*.*		setf jam

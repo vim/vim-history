@@ -308,7 +308,9 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      */
     if (!filtering && !read_stdin && !read_buffer)
     {
-	pos_T	    pos = curbuf->b_op_start;
+	pos_T	    pos;
+
+	pos = curbuf->b_op_start;
 
 	/* Set '[ mark to the line above where the lines go (line 1 if zero). */
 	curbuf->b_op_start.lnum = ((from == 0) ? 1 : from);
@@ -2146,8 +2148,8 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     int		    overwriting;	    /* TRUE if writing over original */
     int		    no_eol = FALSE;	    /* no end-of-line written */
     int		    device = FALSE;	    /* writing to a device */
-#if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     struct stat	    st_old;
+#if defined(UNIX) || defined(__EMX__XX)	    /*XXX fix me sometime? */
     int		    made_writable = FALSE;  /* 'w' bit has been set */
 #endif
 #ifdef VMS
@@ -2445,12 +2447,6 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    newfile = TRUE;
 	    perm = -1;
 	}
-	if (overwriting && !device)
-	{
-	    retval = check_mtime(buf, &st_old);
-	    if (retval == FAIL)
-		goto fail;
-	}
     }
 #else /* !UNIX */
     /*
@@ -2478,31 +2474,43 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    errmsg = (char_u *)_("is a directory");
 	    goto fail;
 	}
-	else if (!forceit && (
+	if (overwriting)
+	    (void)mch_stat((char *)fname, &st_old);
+    }
+#endif /* !UNIX */
+
+    if (!device && !newfile)
+    {
+	/*
+	 * Check if the file is really writable (when renaming the file to
+	 * make a backup we won't discover it later).
+	 */
+	if (!forceit && (
 # ifdef USE_MCH_ACCESS
+#  ifdef UNIX
+		    (perm & 0222) == 0 ||
+#  endif
 		    mch_access((char *)fname, W_OK)
 # else
 		    (fd = mch_open((char *)fname, O_RDWR | O_EXTRA, 0)) < 0
 		    ? TRUE : (close(fd), FALSE)
 # endif
-			     ))
+		    ))
 	{
 	    errmsg = (char_u *)_("is read-only (use ! to override)");
 	    goto fail;
 	}
-	else if (overwriting)
-	{
-	    struct stat	st;
 
-	    if (mch_stat((char *)fname, &st) >= 0)
-	    {
-		retval = check_mtime(buf, &st);
-		if (retval == FAIL)
-		    goto fail;
-	    }
+	/*
+	 * Check if the timestamp hasn't changed since reading the file.
+	 */
+	if (overwriting)
+	{
+	    retval = check_mtime(buf, &st_old);
+	    if (retval == FAIL)
+		goto fail;
 	}
     }
-#endif /* !UNIX */
 
 #ifdef HAVE_ACL
     /*
@@ -3032,7 +3040,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		wfname = vim_tempname('w');
 		if (wfname == NULL)	/* Can't write without a tempfile! */
 		{
-		    errmsg = (char_u *)_("Can't find temp file for writing");
+		    errmsg = (char_u *)_("E214: Can't find temp file for writing");
 		    goto fail;
 		}
 	    }
@@ -3050,7 +3058,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     {
 	if (!forceit)
 	{
-	    errmsg = (char_u *)_("Cannot convert (use ! to write without conversion)");
+	    errmsg = (char_u *)_("E213: Cannot convert (use ! to write without conversion)");
 	    goto fail;
 	}
 	notconverted = TRUE;
@@ -3080,21 +3088,35 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	 */
 	if (errmsg == NULL)
 	{
-	    errmsg = (char_u *)_("Can't open file for writing");
-	    if (forceit && vim_strchr(p_cpo, CPO_FWRITE) == NULL && perm >= 0)
-	    {
 #ifdef UNIX
-		/* we write to the file, thus it should be marked
-						    writable after all */
-		if (!(perm & 0200))
-		    made_writable = TRUE;
-		perm |= 0200;
-		if (st_old.st_uid != getuid() || st_old.st_gid != getgid())
-		    perm &= 0777;
+	    struct stat	st;
+
+	    /* Don't delete the file when it's a hard or symbolic link. */
+	    if (st_old.st_nlink > 1
+		    || (mch_lstat((char *)fname, &st) == 0
+			&& (st.st_dev != st_old.st_dev
+			    || st.st_ino != st_old.st_ino)))
+		errmsg = (char_u *)_("E166: Can't open linked file for writing");
+	    else
 #endif
-		if (!append)	    /* don't remove when appending */
-		    mch_remove(wfname);
-		continue;
+	    {
+		errmsg = (char_u *)_("E212: Can't open file for writing");
+		if (forceit && vim_strchr(p_cpo, CPO_FWRITE) == NULL
+								 && perm >= 0)
+		{
+#ifdef UNIX
+		    /* we write to the file, thus it should be marked
+		       writable after all */
+		    if (!(perm & 0200))
+			made_writable = TRUE;
+		    perm |= 0200;
+		    if (st_old.st_uid != getuid() || st_old.st_gid != getgid())
+			perm &= 0777;
+#endif
+		    if (!append)	    /* don't remove when appending */
+			mch_remove(wfname);
+		    continue;
+		}
 	    }
 	}
 	/*
@@ -3275,7 +3297,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	    s = buffer;
 	    len = 0;
 	}
-#ifdef VMS
+#ifdef VMS_OLD_STUFF
 	/*
 	 * On VMS there is an unexplained problem: newlines get added when
 	 * writing blocks at a time.  Fix it by writing a line at a time.
@@ -4857,8 +4879,16 @@ buf_check_timestamp(buf, focus)
 	     * Only give the warning if there are no FileChangedShell
 	     * autocommands.
 	     */
-	    if (!apply_autocmds(EVENT_FILECHANGEDSHELL,
+	    if (apply_autocmds(EVENT_FILECHANGEDSHELL,
 				      buf->b_fname, buf->b_fname, FALSE, buf))
+	    {
+		if (!buf_valid(buf))
+		{
+		    EMSG(_("E246: FileChangedShell autocommand deleted buffer"));
+		}
+		return 2;
+	    }
+	    else
 #endif
 	    {
 		if (stat_res < 0)

@@ -1444,7 +1444,7 @@ make_percent_swname(dir, name)
 }
 #endif
 
-#if (defined(UNIX) || defined(__EMX__)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
+#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 static int process_still_running;
 #endif
 
@@ -3434,7 +3434,7 @@ findswapname(buf, dirp, old_fname)
 				(char *)fname,
 #endif
 				O_RDWR|O_CREAT|O_EXCL|O_EXTRA
-#ifdef UNIX				/* open in rw------- mode */
+#if defined(UNIX) || defined(VMS)  /* open in rw------- mode */
 							      , (mode_t)0600
 #endif
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)  /* open read/write */
@@ -3459,7 +3459,7 @@ findswapname(buf, dirp, old_fname)
 				    (char *)fname2,
 #endif
 				    O_RDWR|O_CREAT|O_EXCL|O_EXTRA
-#ifdef UNIX				/* open in rw------- mode */
+#if defined(UNIX) || defined(VMS)  /* open in rw------- mode */
 							      , (mode_t)0600
 #endif
 #if defined(MSDOS) || defined(MSWIN) || defined(OS2)  /* open read/write */
@@ -3609,7 +3609,7 @@ findswapname(buf, dirp, old_fname)
 		{
 		    struct stat st;
 
-#if (defined(UNIX) || defined(__EMX__)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
+#if (defined(UNIX) || defined(__EMX__) || defined(VMS)) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 		    process_still_running = FALSE;
 #endif
 		    ++no_wait_return;
@@ -3667,7 +3667,7 @@ findswapname(buf, dirp, old_fname)
 				    name == NULL
 					?  (char_u *)_("Swap file already exists!")
 					: name,
-# if defined(UNIX) || defined(__EMX__)
+# if defined(UNIX) || defined(__EMX__) || defined(VMS)
 				    process_still_running
 					? (char_u *)_("&Open Read-Only\n&Edit anyway\n&Recover\n&Quit") :
 # endif

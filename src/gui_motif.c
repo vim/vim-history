@@ -767,7 +767,8 @@ gui_mch_add_menu_item(menu, idx)
 	}
 	else
 	{
-	    get_pixmap(menu->name, &menu->image, &menu->image_ins);
+	    get_pixmap(menu->name, menu->iconfile,
+					      &menu->image, &menu->image_ins);
 	    /* Set the label here, so that we can switch between icons/text
 	     * by changing the XmNlabelType resource. */
 	    xms = XmStringCreate((char *)menu->dname, STRING_TAG);
@@ -990,7 +991,8 @@ gui_mch_submenu_change(menu, colors)
 		{
 		    XFreePixmap(gui.dpy, mp->image);
 		    XFreePixmap(gui.dpy, mp->image_ins);
-		    get_pixmap(mp->name, &mp->image, &mp->image_ins);
+		    get_pixmap(mp->name, mp->iconfile,
+						  &mp->image, &mp->image_ins);
 		    if (mp->image != (Pixmap)0)
 			XtVaSetValues(mp->id,
 				XmNlabelPixmap, mp->image,
@@ -1811,7 +1813,7 @@ gui_mch_compute_footer_height()
     return (int) height + top + bottom + (shadow << 1);
 }
 
-
+#if 0	    /* not used */
     void
 gui_mch_set_footer_pos(h)
     int	    h;			    /* textArea height */
@@ -1820,6 +1822,7 @@ gui_mch_set_footer_pos(h)
 		  XmNtopOffset, h + 7,
 		  NULL);
 }
+#endif
 
     void
 gui_mch_enable_footer(showit)

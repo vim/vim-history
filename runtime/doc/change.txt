@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0af.  Last change: 2001 May 13
+*change.txt*    For Vim version 6.0ag.  Last change: 2001 May 20
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -179,8 +179,7 @@ gR			Enter Virtual replace mode: Each character you type
 			in Vi}
 
 							*v_r*
-{Visual}["x]r		Doesn't work yet, it's supposed to replace all
-			selected characters by the next typed character.
+{Visual}["x]r{char}	Replace all selected characters by {char}.
 
 {Visual}["x]C	or
 {Visual}["x]S	or					*v_C* *v_R* *v_S*
@@ -291,8 +290,8 @@ gU{motion}		Make {motion} text uppercase. {not in Vi}
 			Example: >
 				:map! <C-F> <Esc>gUiw`]a
 <			This works in Insert mode: press CTRL-F to make the
-			before the cursor upper case.  Handy to type words in
-			lower case and then make them uppercase.
+			word before the cursor upper case.  Handy to type
+			words in lower case and then make them uppercase.
 
 
 gUgU							*gUgU* *gUU*

@@ -1,8 +1,5 @@
 /* os_vms_conf.h.  Replaces auto/config.h for VMS */
 
-/* Define unless no X support found */
-/*#define HAVE_X11 1*/
-
 /* Define when curses library found */
 /* #undef HAVE_LIBCURSES */
 
@@ -124,17 +121,28 @@
 /* Define if you have the rename() function. */
 #define HAVE_RENAME 1
 
+/* Define if you have the qsort() function. */
+#define HAVE_QSORT 1
+
 /* Define if you have the fsync() function. */
 #define HAVE_FSYNC 1
 
 /* Define if you have the setenv() function. */
-#define HAVE_SETENV 1
-
 /* Define if you have the putenv() function. */
-#define HAVE_PUTENV 1
-
 /* Define if you have the gettimeofday() function. */
+/* Define if you have the usleep() function.  */
+/* Define if you have the usleep() function.  */
+#ifdef VAX
+#undef HAVE_SETENV
+#undef HAVE_PUTENV
+#undef HAVE_GETTIMEOFDAY
+#undef HAVE_USLEEP
+#else
+#define HAVE_PUTENV 1
+#define HAVE_SETENV 1
 #define HAVE_GETTIMEOFDAY 1
+#define HAVE_USLEEP 1
+#endif
 
 /* Define if you have the getpwuid() function. */
 #define HAVE_GETPWUID 1
@@ -147,9 +155,6 @@
 
 /* Define if you have the opendir() function. */
 /* #undef HAVE_OPENDIR */
-
-/* Define if you have the qsort() function. */
-#define HAVE_QSORT 1
 
 /* Define if you have the select() function.  */
 #define HAVE_SELECT 1
@@ -182,22 +187,21 @@
 #undef	HAVE_SYS_SELECT_H
 #undef	HAVE_SYS_UTSNAME_H
 #undef	HAVE_TERMCAP_H
+
 #ifdef  VAXC
-#undef HAVE_FCNTL_H
-#undef HAVE_UNISTD_H
-#else
-#define HAVE_FCNTL_H		1
-#define HAVE_UNISTD_H		1
-#endif
-#undef	HAVE_SGTTY_H
-#undef	HAVE_SYS_IOCTL_H
-#ifdef VAXC
+#undef  HAVE_FCNTL_H
+#undef  HAVE_UNISTD_H
 #undef  HAVE_SYS_TIME_H
 #undef  HAVE_LOCALE_H
 #else
-#define	HAVE_SYS_TIME_H		1
+#define HAVE_FCNTL_H		1
+#define HAVE_UNISTD_H		1
+#define HAVE_SYS_TIME_H         1
 #define HAVE_LOCALE_H           1
 #endif
+
+#undef	HAVE_SGTTY_H
+#undef	HAVE_SYS_IOCTL_H
 #undef	HAVE_TERMIO_H
 #undef	HAVE_STROPTS_H
 #define	HAVE_ERRNO_H		1
@@ -210,3 +214,20 @@
 #undef	HAVE_SYS_STATFS_H
 #undef	HAVE_SYS_POLL_H
 #undef	HAVE_PWD_H
+#undef  HAVE_FCHDIR
+
+/* Define if your libc doesn't work POSIX.2 locale function correctly */
+#define BROKEN_LOCALE 1
+
+#ifdef FEAT_GUI_MOTIF
+
+/* Define unless no X support found */
+#define HAVE_X11 1
+
+/* Define if you want to include fontset support. */
+#define USE_FONTSET 1
+
+/* Define if your X has own locale library */
+/* #undef X_LOCALE */
+
+#endif

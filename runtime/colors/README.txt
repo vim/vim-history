@@ -6,9 +6,35 @@ Edit/Color Scheme menu in the GUI.
 
 Hints for writing a color scheme file:
 
+There are two basic ways to define a color scheme:
+
+1. Define a new Normal color and set the 'background' option accordingly.
+	set background={light or dark}
+	highlight clear
+	highlight Normal ...
+	...
+
+2. Use the default Normal color and automatically adjust to the value of
+   'background'.
+   	highlight clear Normal
+	set background&
+	highlight clear
+	if &background == "light"
+	  highlight Error ...
+	  ...
+	else
+	  highlight Error ...
+	  ...
+	endif
+
 You can use ":highlight clear" to reset everything to the defaults, and then
 change the groups that you want differently.  This also will work for groups
 that are added in later versions of Vim.
+Note that ":highlight clear" uses the value of 'background', thus set it
+before this command.
+Some attributes (e.g., bold) might be set in the defaults that you want
+removed in your color scheme.  Use something like "gui=NONE" to remove the
+attributes.
 
 You can use ":highlight" to find out the current colors.  Exception: the
 ctermfg and ctermbg values are numbers, which are only valid for the current
@@ -21,7 +47,7 @@ If you think you have a color scheme that is good enough to be used by others,
 please check the following items:
 
 - Does it work in a color terminal as well as in the GUI?
-- Is 'background' appropriately set to "light" or "dark"?
+- Is 'background' either used or appropriately set to "light" or "dark"?
 - Try setting 'hlsearch' and searching for a pattern, is the match easy to
   spot?
 - Split a window with ":split" and ":vsplit".  Are the status lines and

@@ -2323,7 +2323,7 @@ check_readonly(forceit, buf)
 	{
 	    char_u	buff[IOSIZE];
 
-	    dialog_msg(buff, _("'readonly' option is set for \"%.*s\".\nDo you wish to override it?"),
+	    dialog_msg(buff, _("'readonly' option is set for \"%.*s\".\nDo you wish to write anyway?"),
 		    buf->b_fname);
 
 	    if (vim_dialog_yesno(VIM_QUESTION, NULL, buff, 2) == VIM_YES)
@@ -2604,6 +2604,9 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	{
 	    oldbuf = TRUE;
 	    (void)buf_check_timestamp(buf, FALSE);
+	    /* Check if autocommands made buffer invalid. */
+	    if (!buf_valid(buf))
+		goto theend;
 	}
 
 	/* May jump to last used line number for a loaded buffer or when asked
@@ -3004,7 +3007,7 @@ ex_append(eap)
 	--lnum;
 
     State = INSERT;		    /* behave like in Insert mode */
-    if (curbuf->b_lmap & B_LMAP_INSERT)
+    if (curbuf->b_im_insert == B_IMODE_LMAP)
 	State |= LANGMAP;
     while (1)
     {
@@ -4496,11 +4499,13 @@ find_help_tags(arg, num_matches, matches)
     static char *(mtable[]) = {"*", "g*", "[*", "]*", ":*",
 			       "/*", "/\\*", "\"*", "/\\(\\)",
 			       "?", ":?", "?<CR>", "g?", "g?g?", "g??",
+			       "/\\?",
 			       "[count]", "[quotex]", "[range]",
 			       "[pattern]", "\\|", "\\%$"};
     static char *(rtable[]) = {"star", "gstar", "[star", "]star", ":star",
 			       "/star", "/\\\\star", "quotestar", "/\\\\(\\\\)",
 			       "?", ":?", "?<CR>", "g?", "g?g?", "g??",
+			       "/\\\\?",
 			       "\\[count]", "\\[quotex]", "\\[range]",
 			       "\\[pattern]", "\\\\bar", "/\\\\%\\$"};
 
@@ -4937,223 +4942,532 @@ ex_helptags(eap)
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
 
-static void show_signs __ARGS((void));
+/*
+ * Struct to hold the sign properties.
+ */
+typedef struct sign sign_T;
+
+struct sign
+{
+    sign_T	*sn_next;	/* next sign in list */
+    int		sn_typenr;	/* type number of sign (negative if not equal
+				   to name) */
+    char_u	*sn_name;	/* name of sign */
+    char_u	*sn_icon;	/* name of pixmap */
+#ifdef FEAT_SIGN_ICONS
+    XImage	*sn_image;	/* icon image */
+#endif
+    char_u	*sn_text;	/* text used instead of pixmap */
+    int		sn_line_hl;	/* highlight ID for line */
+    int		sn_text_hl;	/* highlight ID for text */
+};
+
+#define MAX_TYPENR 255		/* depends on sattr_T */
+static sign_T	*first_sign = NULL;
+static int	last_sign_typenr = MAX_TYPENR;	/* is decremented */
+
+static void sign_list_defined __ARGS((sign_T *sp));
 
 /*
- * The following formats of the :sign command are supported:
- *
- *	:sign id lnum type file
- *	:sign id type file
- *	:sign id file
- *
- * Where:
- *	id is a sign identifier
- *	lnum is the (optional) line number
- *	type is the sign index passed in the sign= part of the highlight cmd
- *	file is the file the sign refers to
- *
- * The first case sets a sign and the second case moves the cursor to a sign.
+ * ":sign" command
  */
     void
 ex_sign(eap)
     exarg_T	*eap;
 {
-    char_u	*arg;			/* parse command line */
-    char_u	*arg1;			/* the 1st argument */
-    char_u	*arg2;			/* the second argument */
-    char_u	*arg3;			/* the third argument */
-    int		markId;			/* unique mark identifier */
-    linenr_T	lnum = 0;		/* line number mark displayed on */
-    int		type;			/* which mark to use */
-    char_u	*filename;		/* filename which gets the mark */
-    buf_T	*buf;			/* buffer to set mark in */
-    char_u	cmd[MAXPATHL];		/* build :edit command here */
+    char_u	*arg = eap->arg;
+    char_u	*p;
+    int		idx;
+    sign_T	*sp;
+    sign_T	*sp_prev;
+    buf_T	*buf;
+    static char	*cmds[] = {
+			"define",
+#define SIGNCMD_DEFINE	0
+			"undefine",
+#define SIGNCMD_UNDEFINE 1
+			"list",
+#define SIGNCMD_LIST	2
+			"place",
+#define SIGNCMD_PLACE	3
+			"unplace",
+#define SIGNCMD_UNPLACE	4
+			"jump",
+#define SIGNCMD_JUMP	5
+#define SIGNCMD_LAST	6
+    };
 
-    if (eap->cmdidx == CMD_signs)
+    /* Parse the subcommand. */
+    p = skiptowhite(arg);
+    if (*p != NUL)
+	*p++ = NUL;
+    for (idx = 0; ; ++idx)
     {
-	show_signs();
-	return;
-    }
-
-    filename = NULL;
-    arg = eap->arg;
-    type = -1;
-    if (vim_iswhite(*arg))
-	arg = skipwhite(arg);
-
-    /* First argument must be a digit (the mark id) */
-    arg1 = arg;
-    arg = skiptowhite(arg);
-    if (arg == skipdigits(arg1))
-    {
-	markId = atoi((char *)arg1);
-	arg = skipwhite(arg);
-    }
-    else
-    {
-	EMSG(_("E155: Missing sign ID"));
-	return;
-    }
-
-    /* Second argument may be a line number, sign index, or filename */
-    arg2 = arg;
-    arg = skiptowhite(arg);
-    if (arg == skipdigits(arg2))
-	arg = skipwhite(arg);		/* arg2 is a number */
-    else
-	filename = arg2;
-
-    if (filename == NULL)
-    {
-        arg3 = arg;
-	arg = skiptowhite(arg);
-	if (arg == skipdigits(arg3))
-	{				/* arg2 and arg3 are both numbers */
-	    arg = skipwhite(arg);
-	    lnum = atol((char *)arg2);
-	    type = atoi((char *)arg3);
-	    filename = arg;
-	}
-	else
+	if (idx == SIGNCMD_LAST)
 	{
-	    type = atoi((char *)arg2);
-	    filename = arg3;
-	}
-    }
-
-    /* Verify filename is a string */
-    if (*filename == NUL)
-    {
-	EMSG(_("E156: Missing filename"));
-	return;
-    }
-
-    /* Does filename get us a valid buffer? */
-    buf = buflist_findname((char_u *)filename);
-    if (buf != NULL)
-    {
-	if (type > 0 && lnum > 0)	/* create a new sign */
-	{
-	    buf_addsign(buf, markId, lnum, type);
-	    update_debug_sign(buf, lnum);
-	}
-	else if (type > 0 && lnum == 0)	/* change the sign type */
-	{
-	    lnum = buf_change_sign_type(buf, markId, type);
-	    update_debug_sign(buf, lnum);
-	}
-	else if ((lnum = buf_findsign(buf, markId)) > 0)
-	{				/* goto a sign ... */
-	    if (buf_jump_open_win(buf) != NULL)
-	    {				/* ... in a current window */
-		sprintf((char *)cmd, "%ldG", (long)lnum);
-		add_to_input_buf(cmd, strlen((char *) cmd));
-	    }
-	    else
-	    {				/* ... not currently in a window */
-		sprintf((char *)cmd, "e +%ld %s", (long)lnum, buf->b_fname);
-		do_cmdline_cmd(cmd);
-	    }
-	}
-	else
-	    EMSG2(_("E157: Invalid line number: %ld"), (long)lnum);
-    }
-    else
-	EMSG2(_("E158: Invalid buffer name: %s"), filename);
-}
-
-    void
-ex_unsign(eap)
-    exarg_T	*eap;
-{
-    char_u	*arg;			/* argument pointer */
-    char_u	*filename;		/* filename which gets the mark */
-    int		markId;			/* unique mark identifier */
-    linenr_T	lnum;			/* line number mark displayed on */
-    buf_T	*buf;			/* buffer of mark we want to delete */
-
-    arg = eap->arg;
-    if (vim_iswhite(*arg))
-	arg = skipwhite(arg);
-
-    if (*arg == '*')
-    {
-	buf_delete_all_signs();
-	update_debug_sign(NULL, (linenr_T)0);
-    }
-    else
-    {
-	markId = atoi((char *) arg);
-	if (markId > 0)
-	    arg = skipdigits(arg);
-	else
-	{
-	    markId = buf_findsign_id(curwin->w_buffer, curwin->w_cursor.lnum);
-	    if (markId > 0)
-	    {
-		buf_delsign(curwin->w_buffer, markId);
-		update_debug_sign(curwin->w_buffer, curwin->w_cursor.lnum);
-	    }
-	    else
-		EMSG(_("E159: Missing sign ID"));
+	    EMSG2(_("E160: Unknown sign command: %s"), arg);
 	    return;
 	}
-	arg = skipwhite(arg);
+	if (STRCMP(arg, cmds[idx]) == 0)
+	    break;
+    }
+    arg = skipwhite(p);
 
-	filename = arg;
-	if (*filename == NUL)
+    if (idx <= SIGNCMD_LIST)
+    {
+	/*
+	 * Define, undefine or list signs.
+	 */
+	if (idx == SIGNCMD_LIST && *arg == NUL)
 	{
-	    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-		if ((lnum = buf_delsign(buf, markId)) != 0)
-		    update_debug_sign(buf, lnum);
+	    /* ":sign list": list all defined signs */
+	    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+		sign_list_defined(sp);
 	}
+	else if (*arg == NUL)
+	    EMSG(_("E156: Missing sign name"));
 	else
 	{
-	    buf = buflist_findname((char_u *) filename);
-	    if (buf != NULL)
+	    p = skiptowhite(arg);
+	    if (*p != NUL)
+		*p++ = NUL;
+	    sp_prev = NULL;
+	    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
 	    {
-		    lnum = buf_delsign(buf, markId);
-		    update_debug_sign(buf, lnum);
+		if (STRCMP(sp->sn_name, arg) == 0)
+		    break;
+		sp_prev = sp;
+	    }
+	    if (idx == SIGNCMD_DEFINE)
+	    {
+		/* ":sign define {name} ...": define a sign */
+		if (sp == NULL)
+		{
+		    /* Allocate a new sign. */
+		    sp = (sign_T *)alloc_clear((unsigned)sizeof(sign_T));
+		    if (sp == NULL)
+			return;
+		    if (sp_prev == NULL)
+			first_sign = sp;
+		    else
+			sp_prev->sn_next = sp;
+		    sp->sn_name = vim_strnsave(arg, p - arg);
+
+		    /* If the name is a number use that for the typenr,
+		     * otherwise use a negative number. */
+		    if (isdigit(*arg))
+			sp->sn_typenr = atoi((char *)arg);
+		    else
+		    {
+			sign_T	*lp;
+			int	start = last_sign_typenr;
+
+			for (lp = first_sign; lp != NULL; lp = lp->sn_next)
+			{
+			    if (lp->sn_typenr == last_sign_typenr)
+			    {
+				--last_sign_typenr;
+				if (last_sign_typenr == 0)
+				    last_sign_typenr = MAX_TYPENR;
+				if (last_sign_typenr == start)
+				{
+				    EMSG(_("E255: Too many signs defined"));
+				    return;
+				}
+				lp = first_sign;
+				continue;
+			    }
+			}
+
+			sp->sn_typenr = last_sign_typenr--;
+			if (last_sign_typenr == 0)
+			    last_sign_typenr = MAX_TYPENR; /* wrap around */
+		    }
+		}
+
+		/* set values for a defined sign. */
+		for (;;)
+		{
+		    arg = skipwhite(p);
+		    if (*arg == NUL)
+			break;
+		    p = skiptowhite(arg);
+		    if (STRNCMP(arg, "icon=", 5) == 0)
+		    {
+			arg += 5;
+			vim_free(sp->sn_icon);
+			sp->sn_icon = vim_strnsave(arg, p - arg);
+#ifdef FEAT_SIGN_ICONS
+			if (gui.in_use)
+			{
+			    if (sp->sn_image != NULL)
+				gui_mch_destroy_sign(sp->sn_image);
+			    sp->sn_image = gui_mch_register_sign(sp->sn_icon);
+			}
+#endif
+		    }
+		    else if (STRNCMP(arg, "text=", 5) == 0)
+		    {
+			arg += 5;
+			/* Currently must have two printable characters. */
+			if (!vim_isprintc(arg[0]) || !vim_isprintc(arg[1])
+							     || p - arg != 2)
+			{
+			    EMSG2(_("E239: Invalid sign text: %s"), arg);
+			    return;
+			}
+			vim_free(sp->sn_text);
+			sp->sn_text = vim_strnsave(arg, p - arg);
+		    }
+		    else if (STRNCMP(arg, "linehl=", 7) == 0)
+		    {
+			arg += 7;
+			sp->sn_line_hl = syn_check_group(arg, p - arg);
+		    }
+		    else if (STRNCMP(arg, "texthl=", 7) == 0)
+		    {
+			arg += 7;
+			sp->sn_text_hl = syn_check_group(arg, p - arg);
+		    }
+		    else
+		    {
+			EMSG2(_(e_invarg2), arg);
+			return;
+		    }
+		}
+	    }
+	    else if (sp == NULL)
+		EMSG2(_("E155: Unknown sign: %s"), arg);
+	    else if (idx == SIGNCMD_LIST)
+		/* ":sign list {name}" */
+		sign_list_defined(sp);
+	    else
+	    {
+		/* ":sign undefine {name}" */
+		vim_free(sp->sn_name);
+		vim_free(sp->sn_icon);
+#ifdef FEAT_SIGN_ICONS
+		if (sp->sn_image != NULL)
+		    gui_mch_destroy_sign(sp->sn_image);
+#endif
+		vim_free(sp->sn_text);
+		if (sp_prev == NULL)
+		    first_sign = sp->sn_next;
+		else
+		    sp_prev = sp->sn_next;
+		vim_free(sp);
+	    }
+	}
+    }
+    else
+    {
+	int		id = -1;
+	linenr_T	lnum = -1;
+	char_u		*sign_name = NULL;
+	char_u		*arg1;
+
+	if (*arg == NUL)
+	{
+	    if (idx == SIGNCMD_PLACE)
+	    {
+		/* ":sign place": list placed signs in all buffers */
+		sign_list_placed(NULL);
+	    }
+	    else if (idx == SIGNCMD_UNPLACE)
+	    {
+		/* ":sign unplace": remove placed sign at cursor */
+		id = buf_findsign_id(curwin->w_buffer, curwin->w_cursor.lnum);
+		if (id > 0)
+		{
+		    buf_delsign(curwin->w_buffer, id);
+		    update_debug_sign(curwin->w_buffer, curwin->w_cursor.lnum);
+		}
+		else
+		    EMSG(_("E159: Missing sign number"));
 	    }
 	    else
-		EMSG2(_("E160: Cannot find buffer: %s"), filename);
+		EMSG(_(e_argreq));
+	    return;
 	}
-    }
-}
 
-    static void
-print_sign(glist)
-    signlist_T	*glist;
-{
-    char	lbuf[BUFSIZ];
-
-    sprintf(lbuf, _("    line %ld, id %d, type %d"),
-	    (long)glist->lineno, glist->id, glist->type);
-    MSG_PUTS_ATTR(lbuf, 0);
-    msg_putchar('\n');
-}
-
-
-    static void
-show_signs()
-{
-    buf_T	*buf;
-    signlist_T	*glist;
-    char	lbuf[BUFSIZ];
-
-    MSG_PUTS_TITLE(_("\n--- Signs ---"));
-    msg_putchar('\n');
-    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-    {
-	if (buf->b_signlist != NULL)
+	if (idx == SIGNCMD_UNPLACE && arg[0] == '*' && arg[1] == NUL)
 	{
-	    sprintf(lbuf, _("Signs for %s:"), buf->b_fname);
-	    MSG_PUTS_ATTR(lbuf, hl_attr(HLF_D));
-	    msg_putchar('\n');
+	    /* ":sign unplace *": remove all placed signs */
+	    buf_delete_all_signs();
+	    return;
 	}
-	for (glist = buf->b_signlist; glist != NULL; glist = glist->next)
-	    print_sign(glist);
+
+	/* first arg could be placed sign id */
+	arg1 = arg;
+	if (isdigit(*arg))
+	{
+	    id = getdigits(&arg);
+	    if (!vim_iswhite(*arg) && *arg != NUL)
+	    {
+		id = -1;
+		arg = arg1;
+	    }
+	    else
+	    {
+		arg = skipwhite(arg);
+		if (idx == SIGNCMD_UNPLACE && *arg == NUL)
+		{
+		    /* ":sign unplace {id}": remove placed sign by number */
+		    for (buf = firstbuf; buf != NULL; buf = buf->b_next)
+			if ((lnum = buf_delsign(buf, id)) != 0)
+			    update_debug_sign(buf, lnum);
+		    return;
+		}
+	    }
+	}
+
+	/*
+	 * Check for line={lnum} name={name} and file={fname}.
+	 * Leave "arg" pointing to {fname}.
+	 */
+	for (;;)
+	{
+	    if (STRNCMP(arg, "line=", 5) == 0)
+	    {
+		arg += 5;
+		lnum = atoi((char *)arg);
+		arg = skiptowhite(arg);
+	    }
+	    else if (STRNCMP(arg, "name=", 5) == 0)
+	    {
+		arg += 5;
+		sign_name = arg;
+		arg = skiptowhite(arg);
+		if (*arg != NUL)
+		    *arg++ = NUL;
+	    }
+	    else if (STRNCMP(arg, "file=", 5) == 0)
+	    {
+		arg += 5;
+		break;
+	    }
+	    else
+	    {
+		EMSG(_(e_invarg));
+		return;
+	    }
+	    arg = skipwhite(arg);
+	}
+
+	buf = buflist_findname(arg);
+	if (buf == NULL)
+	{
+	    EMSG2(_("E158: Invalid buffer name: %s"), arg);
+	}
+	else if (id <= 0)
+	{
+	    if (lnum >= 0 || sign_name != NULL)
+		EMSG(_(e_invarg));
+	    else
+		/* ":sign place file={fname}": list placed signs in one file */
+		sign_list_placed(buf);
+	}
+	else if (idx == SIGNCMD_JUMP)
+	{
+	    /* ":sign jump {id} file={fname}" */
+	    if (lnum >= 0 || sign_name != NULL)
+		EMSG(_(e_invarg));
+	    else if ((lnum = buf_findsign(buf, id)) > 0)
+	    {				/* goto a sign ... */
+		if (buf_jump_open_win(buf) != NULL)
+		{			/* ... in a current window */
+		    curwin->w_cursor.lnum = lnum;
+		    check_cursor_lnum();
+		    beginline(BL_WHITE);
+		}
+		else
+		{			/* ... not currently in a window */
+		    char_u	*cmd;
+
+		    cmd = alloc((unsigned)STRLEN(buf->b_fname) + 25);
+		    if (cmd == NULL)
+			return;
+		    sprintf((char *)cmd, "e +%ld %s", (long)lnum, buf->b_fname);
+		    do_cmdline_cmd(cmd);
+		    vim_free(cmd);
+		}
+#ifdef FEAT_FOLDING
+		foldOpenCursor();
+#endif
+	    }
+	    else
+		EMSGN(_("E157: Invalid sign ID: %ld"), id);
+	}
+	else if (idx == SIGNCMD_UNPLACE)
+	{
+	    /* ":sign unplace {id} file={fname}" */
+	    if (lnum >= 0 || sign_name != NULL)
+		EMSG(_(e_invarg));
+	    else
+	    {
+		lnum = buf_delsign(buf, id);
+		update_debug_sign(buf, lnum);
+	    }
+	}
+	    /* idx == SIGNCMD_PLACE */
+	else if (sign_name != NULL)
+	{
+	    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+		if (STRCMP(sp->sn_name, sign_name) == 0)
+		    break;
+	    if (sp == NULL)
+	    {
+		EMSG2(_("E155: Unknown sign: %s"), sign_name);
+		return;
+	    }
+	    if (lnum > 0)
+		/* ":sign place {id} line={lnum} name={name} file={fname}":
+		 * place a sign */
+		buf_addsign(buf, id, lnum, sp->sn_typenr);
+	    else
+		/* ":sign place {id} file={fname}": change sign type */
+		lnum = buf_change_sign_type(buf, id, sp->sn_typenr);
+	    update_debug_sign(buf, lnum);
+	}
+	else
+	    EMSG(_(e_invarg));
     }
+}
+
+#if defined(FEAT_SIGN_ICONS) || defined(PROTO)
+/*
+ * Allocate the icons.  Called when the GUI has started.  Allows defining
+ * signs before it starts.
+ */
+    void
+sign_gui_started()
+{
+    sign_T	*sp;
+
+    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+	if (sp->sn_icon != NULL)
+	    sp->sn_image = gui_mch_register_sign(sp->sn_icon);
+}
+#endif
+
+/*
+ * List one sign.
+ */
+    static void
+sign_list_defined(sp)
+    sign_T	*sp;
+{
+    char_u	*p;
+
+    smsg((char_u *)"sign %s", sp->sn_name);
+    if (sp->sn_icon != NULL)
+    {
+	MSG_PUTS(" icon=");
+	msg_outtrans(sp->sn_icon);
+#ifdef FEAT_SIGN_ICONS
+	if (sp->sn_image == NULL)
+	    MSG_PUTS(" (NOT FOUND)");
+#else
+	MSG_PUTS(" (not supported)");
+#endif
+    }
+    if (sp->sn_text != NULL)
+    {
+	MSG_PUTS(" text=");
+	msg_outtrans(sp->sn_text);
+    }
+    if (sp->sn_line_hl > 0)
+    {
+	MSG_PUTS(" linehl=");
+	p = get_highlight_name(NULL, sp->sn_line_hl - 1);
+	if (p == NULL)
+	    MSG_PUTS("NONE");
+	else
+	    msg_puts(p);
+    }
+    if (sp->sn_text_hl > 0)
+    {
+	MSG_PUTS(" texthl=");
+	p = get_highlight_name(NULL, sp->sn_text_hl - 1);
+	if (p == NULL)
+	    MSG_PUTS("NONE");
+	else
+	    msg_puts(p);
+    }
+}
+
+/*
+ * Get highlighting attribute for sign "typenr".
+ * If "line" is TRUE: line highl, if FALSE: text highl.
+ */
+    int
+sign_get_attr(typenr, line)
+    int		typenr;
+    int		line;
+{
+    sign_T	*sp;
+
+    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+	if (sp->sn_typenr == typenr)
+	{
+	    if (line)
+	    {
+		if (sp->sn_line_hl > 0)
+		    return syn_id2attr(sp->sn_line_hl);
+	    }
+	    else
+	    {
+		if (sp->sn_text_hl > 0)
+		    return syn_id2attr(sp->sn_text_hl);
+	    }
+	    break;
+	}
+    return 0;
+}
+
+/*
+ * Get text mark for sign "typenr".
+ * Returns NULL if there isn't one.
+ */
+    char_u *
+sign_get_text(typenr)
+    int		typenr;
+{
+    sign_T	*sp;
+
+    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+	if (sp->sn_typenr == typenr)
+	    return sp->sn_text;
+    return NULL;
+}
+
+#if defined(FEAT_SIGN_ICONS) || defined(PROTO)
+    void *
+sign_get_image(typenr)
+    int		typenr;		/* the attribute which may have a sign */
+{
+    sign_T	*sp;
+
+    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+	if (sp->sn_typenr == typenr)
+	    return (void *)sp->sn_image;
+    return NULL;
+}
+#endif
+
+/*
+ * Get the name of a sign by its typenr.
+ */
+    char_u *
+sign_typenr2name(typenr)
+    int		typenr;
+{
+    sign_T	*sp;
+
+    for (sp = first_sign; sp != NULL; sp = sp->sn_next)
+	if (sp->sn_typenr == typenr)
+	    return sp->sn_name;
+    return (char_u *)_("[Deleted]");
 }
 
 #endif

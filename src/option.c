@@ -81,6 +81,8 @@ typedef enum
     , PV_FO
     , PV_FT
     , PV_GP
+    , PV_IMI
+    , PV_IMS
     , PV_INC
     , PV_INDE
     , PV_INDK
@@ -169,6 +171,8 @@ static char_u	*p_fo;
 #ifdef FEAT_AUTOCMD
 static char_u	*p_ft;
 #endif
+static long	p_iminsert;
+static long	p_imsearch;
 #ifdef FEAT_FIND_ID
 static char_u	*p_inc;
 #endif
@@ -1043,6 +1047,12 @@ static struct vimoption
     {"ignorecase",  "ic",   P_BOOL|P_VI_DEF,
 			    (char_u *)&p_ic, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
+    {"iminsert",    "imi",  P_NUM|P_VIM,
+			    (char_u *)&p_iminsert, PV_IMI,
+			    {(char_u *)B_IMODE_NONE, (char_u *)0L}},
+    {"imsearch",    "ims",  P_NUM|P_VIM,
+			    (char_u *)&p_imsearch, PV_IMS,
+			    {(char_u *)B_IMODE_NONE, (char_u *)0L}},
     {"include",	    "inc",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
 			    (char_u *)&p_inc, PV_INC,
@@ -3279,7 +3289,21 @@ do_set(arg, opt_flags)
 			oldval = *(char_u **)varp;
 			if (nextchar == '&')	/* set to default val */
 			{
-			    newval = options[opt_idx].def_val[
+#ifdef FEAT_GUI
+			    if ((char_u **)varp == &p_bg && gui.in_use)
+			    {
+				/* guess the value of 'background' */
+				if (gui_mch_get_lightness(gui.back_pixel) < 127)
+				    newval = (char_u *)"dark";
+				else
+				    newval = (char_u *)"light";
+			    }
+			    else
+#endif
+			      if (STRCMP(T_NAME, "linux") == 0)
+				newval = (char_u *)"dark";
+			    else
+				newval = options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
 
@@ -5780,6 +5804,28 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	}
     }
 
+    else if ((long *)varp == &curbuf->b_im_insert)
+    {
+	if (curbuf->b_im_insert < 0 || curbuf->b_im_insert > B_IMODE_LAST)
+	{
+	    errmsg = e_invarg;
+	    curbuf->b_im_insert = B_IMODE_NONE;
+	}
+	showmode();
+#if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
+	/* Show/unshow value of 'keymap' in status lines. */
+	status_redraw_curbuf();
+#endif
+    }
+    else if ((long *)varp == &curbuf->b_im_search)
+    {
+	if (curbuf->b_im_search < -1 || curbuf->b_im_search > B_IMODE_LAST)
+	{
+	    errmsg = e_invarg;
+	    curbuf->b_im_search = B_IMODE_NONE;
+	}
+    }
+
     /* 'shiftwidth' */
     else if (pp == &curbuf->b_p_sw)
     {
@@ -6860,6 +6906,8 @@ get_varp(p)
 	case PV_FT:	return (char_u *)&(curbuf->b_p_ft);
 #endif
 	case PV_FO:	return (char_u *)&(curbuf->b_p_fo);
+	case PV_IMI:	return (char_u *)&(curbuf->b_im_insert);
+	case PV_IMS:	return (char_u *)&(curbuf->b_im_search);
 	case PV_INF:	return (char_u *)&(curbuf->b_p_inf);
 	case PV_ISK:	return (char_u *)&(curbuf->b_p_isk);
 #ifdef FEAT_FIND_ID
@@ -7199,9 +7247,10 @@ buf_copy_options(buf, flags)
 	    buf->b_p_keymap = vim_strsave(p_keymap);
 	    buf->b_kmap_state |= KEYMAP_INIT;
 #endif
-	    /* This isn't really an option, but copying the langmap state from
-	     * the current buffer is better than resetting it. */
-	    buf->b_lmap = b_lmap_def;
+	    /* This isn't really an option, but copying the langmap and IME
+	     * state from the current buffer is better than resetting it. */
+	    buf->b_im_insert = b_im_insert_def;
+	    buf->b_im_search = b_im_search_def;
 
 	    /* options that are normally global but also have a local value
 	     * are not copied, start using the global value */
