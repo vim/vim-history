@@ -125,10 +125,15 @@ do_cscope_general(eap, make_split)
 	    return;
 	}
 	postponed_split = -1;
+	postponed_split_flags = cmdmod.split;
     }
 #endif
 
     cmdp->func(eap);
+
+#ifdef FEAT_WINDOWS
+    postponed_split_flags = 0;
+#endif
 }
 
 /*
@@ -1102,7 +1107,8 @@ cs_find_common(opt, pat, forceit, verbose)
 # ifdef FEAT_WINDOWS
 	    if (postponed_split != 0)
 	    {
-		win_split(postponed_split > 0 ? postponed_split : 0, 0);
+		win_split(postponed_split > 0 ? postponed_split : 0,
+						       postponed_split_flags);
 #  ifdef FEAT_SCROLLBIND
 		curwin->w_p_scb = FALSE;
 #  endif

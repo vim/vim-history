@@ -7023,7 +7023,12 @@ ex_wincmd(eap)
     if (*p != NUL && *p != '"' && eap->nextcmd == NULL)
 	EMSG(_(e_invarg));
     else
+    {
+	/* Pass flags on for ":vertical wincmd ]". */
+	postponed_split_flags = cmdmod.split;
 	do_window(*eap->arg, eap->addr_count > 0 ? eap->line2 : 0L, xchar);
+	postponed_split_flags = 0;
+    }
 }
 #endif
 
@@ -8044,7 +8049,9 @@ ex_stag(eap)
     exarg_T	*eap;
 {
     postponed_split = -1;
+    postponed_split_flags = cmdmod.split;
     ex_tag_cmd(eap, cmdnames[eap->cmdidx].cmd_name + 1);
+    postponed_split_flags = 0;
 }
 #endif
 
