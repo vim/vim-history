@@ -1024,7 +1024,7 @@ function! s:FileNameCmp(line1, line2, direction)
   elseif (g:explSuffixesLast != 0) && (f1 !~ b:suffixesRegexp) && (f2 =~ b:suffixesRegexp)
     return -g:explSuffixesLast
   else
-    return s:StrCmp(f1,f2,a:direction)
+    return s:StrCmp(substitute(f1, "/$", "", ""), substitute(f2, "/$", "", ""), a:direction)
   endif
 
 endfunction
@@ -1054,7 +1054,7 @@ function! s:FileDateCmp(line1, line2, direction)
   elseif t1 < t2
     return a:direction
   else
-    return s:StrCmp(f1,f2,1)
+    return s:StrCmp(substitute(f1, "/$", "", ""), substitute(f2, "/$", "", ""), 1)
   endif
 endfunction
 
@@ -1082,7 +1082,7 @@ function! s:FileSizeCmp(line1, line2, direction)
   elseif s1 < s2
     return a:direction
   else
-    return s:StrCmp(f1,f2,1)
+    return s:StrCmp(substitute(f1, "/$", "", ""), substitute(f2, "/$", "", ""), 1)
   endif
 endfunction
 
