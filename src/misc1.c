@@ -2771,7 +2771,7 @@ get_keystroke()
 	 * insert a key code into (max 5 chars plus NUL).  And
 	 * fix_input_buffer() can triple the number of bytes. */
 	n = ui_inchar(buf + len, (CBUFLEN - 6 - len) / 3,
-						       len == 0 ? -1L : 100L);
+						    len == 0 ? -1L : 100L, 0);
 	if (n > 0)
 	{
 	    /* Replace zero and CSI by a special key code. */

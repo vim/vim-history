@@ -309,10 +309,11 @@ mch_write(s, len)
  * If wtime == -1 wait forever for characters.
  */
     int
-mch_inchar(buf, maxlen, wtime)
+mch_inchar(buf, maxlen, wtime, tb_change_cnt)
     char_u	*buf;
     int		maxlen;
     long	wtime;	    /* don't use "time", MIPS cannot handle it */
+    int		tb_change_cnt;
 {
     int		len;
 #ifdef FEAT_AUTOCMD
@@ -383,10 +384,9 @@ mch_inchar(buf, maxlen, wtime)
 	if (do_resize)	    /* interrupted by SIGWINCH signal */
 	    continue;
 
-#ifdef FEAT_CLIENTSERVER
-	if (received_from_client)
-	    return 0;	    /* Input was put directly in typeahead buffer */
-#endif
+	/* If input was put directly in typeahead buffer bail out here. */
+	if (typebuf_changed(tb_change_cnt))
+	    return 0;
 
 	/*
 	 * For some terminals we only get one character at a time.
@@ -3609,7 +3609,8 @@ mch_call_shell(cmd, options)
 		    len = 0;
 		    if (!(options & SHELL_EXPAND)
 			    && (ta_len > 0
-				|| (len = ui_inchar(ta_buf, BUFLEN, 10L)) > 0))
+				|| (len = ui_inchar(ta_buf, BUFLEN, 10L,
+								     0)) > 0))
 		    {
 			/*
 			 * For pipes:
