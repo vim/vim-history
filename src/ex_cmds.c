@@ -2140,52 +2140,55 @@ do_write(eap)
 	}
     }
 
-    if (eap->cmdidx == CMD_saveas && alt_buf != NULL)
-    {
-#ifdef FEAT_AUTOCMD
-	buf_T	*was_curbuf = curbuf;
-
-	apply_autocmds(EVENT_BUFFILEPRE, NULL, NULL, FALSE, curbuf);
-	if (curbuf != was_curbuf)
-	{
-	    /* buffer changed, don't change name now */
-	    retval = FAIL;
-	    goto theend;
-	}
-#endif
-	/* Exchange the file names for the current and the alternate buffer.
-	 * This makes it look like we are now editing the buffer under the new
-	 * name.  Must be done before buf_write(), because if there is no file
-	 * name and 'cpo' contains 'F', it will set the file name. */
-	fname = alt_buf->b_fname;
-	alt_buf->b_fname = curbuf->b_fname;
-	curbuf->b_fname = fname;
-	fname = alt_buf->b_ffname;
-	alt_buf->b_ffname = curbuf->b_ffname;
-	curbuf->b_ffname = fname;
-	fname = alt_buf->b_sfname;
-	alt_buf->b_sfname = curbuf->b_sfname;
-	curbuf->b_sfname = fname;
-	buf_name_changed();
-#ifdef FEAT_AUTOCMD
-	apply_autocmds(EVENT_BUFFILEPOST, NULL, NULL, FALSE, curbuf);
-	if (!alt_buf->b_p_bl)
-	{
-	    alt_buf->b_p_bl = TRUE;
-	    apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, alt_buf);
-	}
-	if (curbuf != was_curbuf)
-	{
-	    /* buffer changed, don't write the file */
-	    retval = FAIL;
-	    goto theend;
-	}
-#endif
-    }
-
     if (check_overwrite(eap, curbuf, fname, ffname, other) == OK)
+    {
+	if (eap->cmdidx == CMD_saveas && alt_buf != NULL)
+	{
+#ifdef FEAT_AUTOCMD
+	    buf_T	*was_curbuf = curbuf;
+
+	    apply_autocmds(EVENT_BUFFILEPRE, NULL, NULL, FALSE, curbuf);
+	    if (curbuf != was_curbuf)
+	    {
+		/* buffer changed, don't change name now */
+		retval = FAIL;
+		goto theend;
+	    }
+#endif
+	    /* Exchange the file names for the current and the alternate
+	     * buffer.  This makes it look like we are now editing the buffer
+	     * under the new name.  Must be done before buf_write(), because
+	     * if there is no file name and 'cpo' contains 'F', it will set
+	     * the file name. */
+	    fname = alt_buf->b_fname;
+	    alt_buf->b_fname = curbuf->b_fname;
+	    curbuf->b_fname = fname;
+	    fname = alt_buf->b_ffname;
+	    alt_buf->b_ffname = curbuf->b_ffname;
+	    curbuf->b_ffname = fname;
+	    fname = alt_buf->b_sfname;
+	    alt_buf->b_sfname = curbuf->b_sfname;
+	    curbuf->b_sfname = fname;
+	    buf_name_changed();
+#ifdef FEAT_AUTOCMD
+	    apply_autocmds(EVENT_BUFFILEPOST, NULL, NULL, FALSE, curbuf);
+	    if (!alt_buf->b_p_bl)
+	    {
+		alt_buf->b_p_bl = TRUE;
+		apply_autocmds(EVENT_BUFADD, NULL, NULL, FALSE, alt_buf);
+	    }
+	    if (curbuf != was_curbuf)
+	    {
+		/* buffer changed, don't write the file */
+		retval = FAIL;
+		goto theend;
+	    }
+#endif
+	}
+
 	retval = buf_write(curbuf, ffname, fname, eap->line1, eap->line2,
 				 eap, eap->append, eap->forceit, TRUE, FALSE);
+    }
 
 theend:
 #ifdef FEAT_BROWSE
