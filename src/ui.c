@@ -134,9 +134,18 @@ ui_inchar(buf, maxlen, wtime)
 
 #ifdef NO_CONSOLE_INPUT
     /* Don't wait for character input when the window hasn't been opened yet.
-     * Must return something, otherwise we'll loop forever.  */
+     * Do try reading, this works when redirecting stdin from a file.
+     * Must return something, otherwise we'll loop forever.  If we run into
+     * this very often we probably got stuck, exit Vim. */
     if (no_console_input())
     {
+	static int count = 0;
+
+	retval = mch_inchar(buf, maxlen, 10L);
+	if (retval > 0)
+	    return retval;
+	if (wtime == -1 && ++count == 1000)
+	    read_error_exit();
 	buf[0] = CR;
 	return 1;
     }
