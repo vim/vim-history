@@ -1,7 +1,7 @@
 dnl configure.in: autoconf script for Vim
 
 dnl Process this file with autoconf 2.12 or 2.13 to produce "configure".
-dnl Does NOT work with autoconf 2.50 - 2.53!
+dnl Might also work with autoconf 2.57 or later.
 
 AC_INIT(vim.h)
 AC_CONFIG_HEADER(auto/config.h:config.h.in)
@@ -2349,7 +2349,7 @@ else
 fi
 
 dnl Check for dynamic linking loader
-AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, AC_CHECK_HEADER(dl.h, DLL=dl.h))
+AC_CHECK_HEADER(dlfcn.h, DLL=dlfcn.h, [AC_CHECK_HEADER(dl.h, DLL=dl.h)])
 if test x${DLL} = xdlfcn.h; then
   AC_DEFINE(HAVE_DLFCN_H, 1, [ Define if we have dlfcn.h. ])
   AC_MSG_CHECKING([for dlopen()])
