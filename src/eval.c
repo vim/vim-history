@@ -3418,13 +3418,13 @@ f_filewritable(argvars, retvar)
 #ifndef MACOS_CLASSIC /* TODO: get either mch_writable or mch_access */
     if (
 # ifdef WIN3264
-	    mch_writable(p)
+	    mch_writable(p) &&
 # else
 # if defined(UNIX) || defined(VMS)
-	    (perm & 0222)
+	    (perm & 0222) &&
 #  endif
 # endif
-	    && mch_access((char *)p, W_OK) == 0
+	    mch_access((char *)p, W_OK) == 0
        )
 #endif
     {
