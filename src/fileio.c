@@ -2633,12 +2633,13 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     {
 	if (*p_bkc == 'y' || append)	/* "yes" */
 	    backup_copy = TRUE;
-#ifdef UNIX
+#if defined(UNIX) || defined(WIN32)
 	else if (*p_bkc == 'a')		/* "auto" */
 	{
 	    struct stat	st;
 	    int		i;
 
+# ifdef UNIX
 	    /*
 	     * Don't rename the file when:
 	     * - it's a hard link
@@ -2652,6 +2653,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    || st.st_ino != st_old.st_ino)
 		backup_copy = TRUE;
 	    else
+# endif
 	    {
 		/*
 		 * Check if we can create a file and set the owner/group to
@@ -2672,6 +2674,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 		    backup_copy = TRUE;
 		else
 		{
+# ifdef UNIX
 		    chown((char *)IObuff, st_old.st_uid, st_old.st_gid);
 		    (void)mch_setperm(IObuff, perm);
 		    if (mch_stat((char *)IObuff, &st) < 0
@@ -2679,6 +2682,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 			    || st.st_gid != st_old.st_gid
 			    || st.st_mode != perm)
 			backup_copy = TRUE;
+# endif
 		    mch_remove(IObuff);
 		}
 	    }
