@@ -1925,6 +1925,9 @@ op_replace(oap, c)
     int		c;
 {
     int			n, numc;
+#ifdef FEAT_MBYTE
+    int			num_chars;
+#endif
     char_u		*newp, *oldp;
     size_t		oldlen;
     struct block_def	bd;
@@ -1978,11 +1981,29 @@ op_replace(oap, c)
 #ifdef FEAT_VIRTUALEDIT
 		    && !bd.is_oneChar
 #endif
-		    && bd.end_char_vcols > 0 ? bd.end_char_vcols - 1 : 0);
+		    && bd.end_char_vcols > 0) ? bd.end_char_vcols - 1 : 0;
 	    /* Figure out how many characters to replace. */
 	    numc = oap->end_vcol - oap->start_vcol + 1;
 	    if (bd.is_short && (!virtual_op || bd.is_MAX))
 		numc -= (oap->end_vcol - bd.end_vcol) + 1;
+
+#ifdef FEAT_MBYTE
+	    /* A double-wide character can be replaced only up to half the
+	     * times. */
+	    if ((*mb_char2cells)(c) > 1)
+	    {
+		if ((numc & 1) && !bd.is_short)
+		{
+		    ++bd.endspaces;
+		    ++n;
+		}
+		numc = numc / 2;
+	    }
+
+	    /* Compute bytes needed, move character count to num_chars. */
+	    num_chars = numc;
+	    numc *= (*mb_char2len)(c);
+#endif
 	    /* oldlen includes textlen, so don't double count */
 	    n += numc - bd.textlen;
 
@@ -1998,7 +2019,16 @@ op_replace(oap, c)
 	    /* insert pre-spaces */
 	    copy_spaces(newp + bd.textcol, (size_t)bd.startspaces);
 	    /* insert replacement chars CHECK FOR ALLOCATED SPACE */
-	    copy_chars(newp + STRLEN(newp), (size_t)numc, c);
+#ifdef FEAT_MBYTE
+	    if (has_mbyte)
+	    {
+		n = STRLEN(newp);
+		while (--num_chars >= 0)
+		    n += (*mb_char2bytes)(c, newp + n);
+	    }
+	    else
+#endif
+		copy_chars(newp + STRLEN(newp), (size_t)numc, c);
 	    if (!bd.is_short)
 	    {
 		/* insert post-spaces */
@@ -2036,6 +2066,7 @@ op_replace(oap, c)
 		{
 		    /* This is slow, but it handles replacing a single-byte
 		     * with a multi-byte and the other way around. */
+		    oap->end.col += (*mb_char2len)(c) - (*mb_char2len)(n);
 		    n = State;
 		    State = REPLACE;
 		    ins_char(c);
