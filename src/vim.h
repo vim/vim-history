@@ -1743,7 +1743,8 @@ typedef int VimClipboard;	/* This is required for the prototypes. */
 # ifdef instr
 #  undef instr
 # endif
-# ifdef bool
+  /* bool causes trouble on MACOS but is required on a few other systems */
+# if defined(bool) && defined(MACOS)
 #  undef bool
 # endif
 
