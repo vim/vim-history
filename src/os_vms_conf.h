@@ -44,6 +44,9 @@
 #define USEMEMMOVE 1
 /* #undef USEMEMCPY */
 
+/* Define when "man -s 2" is to be used */
+/* #undef USEMAN_S */
+
 /* Define to empty if the keyword does not work.  */
 /* #undef const */
 
@@ -65,6 +68,9 @@
 /* Define to `int' if <sys/types.h> doesn't define.  */
 /* #undef gid_t */
 
+/* Define to `long' if <sys/types.h> doesn't define.  */
+/* #undef ino_t */
+
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #define TIME_WITH_SYS_TIME 1
 
@@ -76,6 +82,9 @@
 
 /* Define as the command at the end of signal handlers ("" or "return 0;").  */
 #define SIGRETURN return
+
+/* Define if struct sigcontext is present */
+#define HAVE_SIGCONTEXT 1
 
 /* Define if touuper/tolower only work on lower/upercase characters */
 /* #undef BROKEN_TOUPPER */
@@ -104,6 +113,9 @@
 /* Define if you have the memset() function.  */
 #define HAVE_MEMSET 1
 
+/* Define if you have the memcmp() function.  */
+#define HAVE_MEMCMP 1
+
 /* Define if you have the strerror() function.  */
 #define HAVE_STRERROR 1
 
@@ -131,6 +143,30 @@
 /* Define if you have the getpwnam() function. */
 #define HAVE_GETPWNAM 1
 
+/* Define if you have the nanosleep() function.  */
+/* #undef HAVE_NANOSLEEP */
+
+/* Define if you have the opendir() function. */
+/* #undef HAVE_OPENDIR */
+
+/* Define if you have the qsort() function. */
+#define HAVE_QSORT 1
+
+/* Define if you have the select() function.  */
+#define HAVE_SELECT 1
+
+/* Define if you have the setpgid() function.  */
+/* #undef HAVE_SETPGID */
+
+/* Define if you have the setsid() function.  */
+/* #undef HAVE_SETSID */
+
+/* Define if you have the sigset() function.  */
+/* #undef HAVE_SIGSET */
+
+/* Define if you have the strcasecmp() function.  */
+/* #undef HAVE_STRCASECMP */
+
 #undef	HAVE_DIRENT_H
 #undef	HAVE_SYS_NDIR_H
 #undef	HAVE_SYS_DIR_H
@@ -147,12 +183,17 @@
 #undef	HAVE_SYS_SELECT_H
 #undef	HAVE_SYS_UTSNAME_H
 #undef	HAVE_TERMCAP_H
-#define	HAVE_FCNTL_H		1
+#ifdef  VAXC
+#undef HAVE_FCNTL_H
+#undef HAVE_UNISTD_H
+#else
+#define HAVE_FCNTL_H		1
+#define HAVE_UNISTD_H		1
+#endif
 #undef	HAVE_SGTTY_H
 #undef	HAVE_SYS_IOCTL_H
 #define	HAVE_SYS_TIME_H		1
 #undef	HAVE_TERMIO_H
-#define	HAVE_UNISTD_H		1
 #undef	HAVE_STROPTS_H
 #define	HAVE_ERRNO_H		1
 #undef	HAVE_STRINGS_H

@@ -2884,13 +2884,15 @@ settmode(tmode)
 	 */
 	if (tmode != TMODE_COOK || cur_tmode != TMODE_COOK)
 	{
+#ifdef USE_MOUSE
+	    if (tmode != TMODE_RAW)
+		mch_setmouse(FALSE);		/* switch mouse off */
+#endif
 	    out_flush();
 	    mch_settmode(tmode);    /* machine specific function */
 	    cur_tmode = tmode;
 #ifdef USE_MOUSE
-	    if (tmode != TMODE_RAW)
-		mch_setmouse(FALSE);		/* switch mouse off */
-	    else
+	    if (tmode == TMODE_RAW)
 		setmouse();			/* may switch mouse on */
 #endif
 	    out_flush();

@@ -35,6 +35,7 @@ void get_stty __ARGS((void));
 void mch_setmouse __ARGS((int on));
 void check_mouse_termcode __ARGS((void));
 int use_xterm_mouse __ARGS((void));
+int use_dec_mouse __ARGS((void));
 int mch_screenmode __ARGS((char_u *arg));
 int mch_get_winsize __ARGS((void));
 void mch_set_winsize __ARGS((void));
