@@ -2552,7 +2552,7 @@ gui_send_mouse_event(button, x, y, repeated_click, modifiers)
     {
 #ifdef FEAT_VISUAL
 	/* Don't do modeless selection in Visual mode. */
-	if (checkfor != MOUSE_NONEF && VIsual_active)
+	if (checkfor != MOUSE_NONEF && VIsual_active && (State & NORMAL))
 	    return;
 #endif
 

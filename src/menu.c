@@ -1518,14 +1518,15 @@ get_menu_index(menu, state)
 {
     int		idx;
 
-#ifdef FEAT_VISUAL
-    if (VIsual_active)
-	idx = MENU_INDEX_VISUAL;
-    else
-#endif
-	if ((state & INSERT))
+    if ((state & INSERT))
 	idx = MENU_INDEX_INSERT;
-    else if ((state & CMDLINE) || state == HITRETURN || state == ASKMORE)
+    else if (state & CMDLINE)
+	idx = MENU_INDEX_CMDLINE;
+#ifdef FEAT_VISUAL
+    else if (VIsual_active)
+	idx = MENU_INDEX_VISUAL;
+#endif
+    else if (state == HITRETURN || state == ASKMORE)
 	idx = MENU_INDEX_CMDLINE;
     else if (finish_op)
 	idx = MENU_INDEX_OP_PENDING;

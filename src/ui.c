@@ -396,7 +396,7 @@ clip_update_selection()
     pos_T    start, end;
 
     /* If visual mode is only due to a redo command ("."), then ignore it */
-    if (!redo_VIsual_busy && VIsual_active)
+    if (!redo_VIsual_busy && VIsual_active && (State & NORMAL))
     {
 	if (lt(VIsual, curwin->w_cursor))
 	{
@@ -490,7 +490,7 @@ clip_lose_selection(cbd)
     void
 clip_copy_selection()
 {
-    if (VIsual_active && clip_star.available)
+    if (VIsual_active && (State & NORMAL) && clip_star.available)
     {
 	if (clip_isautosel())
 	    clip_update_selection();
