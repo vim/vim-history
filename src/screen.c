@@ -140,6 +140,9 @@ static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width
 static void screen_line __ARGS((int row, int coloff, int endcol, int clear_width));
 # define SCREEN_LINE(r, o, e, c, rl)    screen_line((r), (o), (e), (c))
 #endif
+#ifdef FEAT_RIGHTLEFT
+static void rl_mirror __ARGS((char_u *str));
+#endif
 #ifdef FEAT_VERTSPLIT
 static void draw_vsep_win __ARGS((win_T *wp, int row));
 #endif
@@ -2925,17 +2928,7 @@ win_line(wp, lnum, startrow, endrow)
 				*p_extra = '-';
 #ifdef FEAT_RIGHTLEFT
 			if (wp->w_p_rl)		    /* reverse line numbers */
-			{
-			    char_u *c1, *c2, t;
-
-			    for (c1 = extra, c2 = extra + STRLEN(extra) - 1;
-				    c1 < c2; c1++, c2--)
-			    {
-				t = *c1;
-				*c1 = *c2;
-				*c2 = t;
-			    }
-			}
+			    rl_mirror(extra);
 #endif
 			p_extra = extra;
 			c_extra = NUL;
@@ -3253,6 +3246,10 @@ win_line(wp, lnum, startrow, endrow)
 			 * Illegal UTF-8 byte: display as <xx>.
 			 */
 			transchar_hex(extra, mb_c);
+#ifdef FEAT_RIGHTLEFT
+			if (wp->w_p_rl)		/* reverse */
+			    rl_mirror(extra);
+#endif
 			p_extra = extra;
 			c = *p_extra++;
 			mb_c = c;
@@ -3492,6 +3489,10 @@ win_line(wp, lnum, startrow, endrow)
 		else if (c != NUL)
 		{
 		    p_extra = transchar(c);
+#ifdef FEAT_RIGHTLEFT
+		    if ((dy_flags & DY_UHEX) && wp->w_p_rl)
+			rl_mirror(p_extra);	/* reverse "<12>" */
+#endif
 		    n_extra = byte2cells(c) - 1;
 		    c_extra = NUL;
 		    c = *p_extra++;
@@ -4361,6 +4362,26 @@ screen_line(row, coloff, endcol, clear_width
     }
 #endif
 }
+
+#ifdef FEAT_RIGHTLEFT
+/*
+ * Mirror text "str" for right-lieft displaying.
+ */
+    static void
+rl_mirror(str)
+    char_u	*str;
+{
+    char_u	*p1, *p2;
+    int		t;
+
+    for (p1 = str, p2 = str + STRLEN(str) - 1; p1 < p2; ++p1, --p2)
+    {
+	t = *p1;
+	*p1 = *p2;
+	*p2 = t;
+    }
+}
+#endif
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
 /*
