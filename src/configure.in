@@ -331,25 +331,43 @@ if test "$enable_perlinterp" = "yes"; then
       dnl Remove "-fno-something", it breaks using cproto.
       perlcppflags=`$vi_cv_path_perl -Mlib=$srcdir -MExtUtils::Embed \
 	      -e 'ccflags;perl_inc;print"\n"' | sed -e 's/-fno[[^ ]]*//'`
-      if test "X$perlcppflags" != "X"; then
-	PERL_CFLAGS="$perlcppflags"
-      fi
       dnl Remove "-lc", it breaks on FreeBSD when using "-pthread".
-      PERL_LIBS=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
+      perllibs=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
 		sed -e '/Warning/d' -e '/Note (probably harmless)/d' \
 			-e 's/-bE:perl.exp//' -e 's/-lc //'`
-      AC_SUBST(PERL_LIBS)
       dnl Don't add perl lib to $LIBS: if it's not in LD_LIBRARY_PATH
       dnl a test in configure may fail because of that.
       perlldflags=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed \
 		-e 'ccdlflags' | sed -e 's/-bE:perl.exp//'`
-      if test "X$perlldflags" != "X"; then
-	LDFLAGS="$perlldflags $LDFLAGS"
+
+      dnl check that compiling a simple program still works with the flags
+      dnl added for Perl.
+      AC_MSG_CHECKING([if compile and link flags for Perl are sane])
+      cflags_save=$CFLAGS
+      libs_save=$LIBS
+      ldflags_save=$LDFLAGS
+      CFLAGS="$CFLAGS $perlcppflags"
+      LIBS="$LIBS $perllibs"
+      LDFLAGS="$perlldflags $LDFLAGS"
+      AC_TRY_LINK(,[ ],
+	     AC_MSG_RESULT(yes); perl_ok=yes,
+	     AC_MSG_RESULT(no: PERL DISABLED); perl_ok=no)
+      CFLAGS=$cflags_save
+      LIBS=$libs_save
+      LDFLAGS=$ldflags_save
+      if test $perl_ok = yes; then
+	if test "X$perlcppflags" != "X"; then
+	  PERL_CFLAGS="$perlcppflags"
+	fi
+	if test "X$perlldflags" != "X"; then
+	  LDFLAGS="$perlldflags $LDFLAGS"
+	fi
+        PERL_LIBS=$perllibs
+	PERL_SRC="auto/if_perl.c if_perlsfio.c"
+	PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
+	PERL_PRO="if_perl.pro if_perlsfio.pro"
+	AC_DEFINE(FEAT_PERL)
       fi
-      PERL_SRC="auto/if_perl.c if_perlsfio.c"
-      PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
-      PERL_PRO="if_perl.pro if_perlsfio.pro"
-      AC_DEFINE(FEAT_PERL)
      fi
     else
       AC_MSG_RESULT(>>> too old; need Perl version 5.003_01 or later <<<)
@@ -383,6 +401,7 @@ AC_SUBST(PERL_SRC)
 AC_SUBST(PERL_OBJ)
 AC_SUBST(PERL_PRO)
 AC_SUBST(PERL_CFLAGS)
+AC_SUBST(PERL_LIBS)
 
 AC_MSG_CHECKING(--enable-pythoninterp argument)
 AC_ARG_ENABLE(pythoninterp,
@@ -517,21 +536,41 @@ eof
 	    thread_lib="-pthread"
 	  fi
 	fi
+	libs_save_old=$LIBS
 	if test -n "$threadsafe_flag"; then
 	  cflags_save=$CFLAGS
-	  libs_save=$LIBS
 	  CFLAGS="$CFLAGS $threadsafe_flag"
 	  LIBS="$LIBS $thread_lib"
 	  AC_TRY_LINK(,[ ],
 	     AC_MSG_RESULT(yes); PYTHON_CFLAGS="$PYTHON_CFLAGS $threadsafe_flag",
-	     AC_MSG_RESULT(no); LIBS=$libs_save
+	     AC_MSG_RESULT(no); LIBS=$libs_save_old
 	     )
 	  CFLAGS=$cflags_save
 	else
 	  AC_MSG_RESULT(no)
 	fi
 
-	AC_DEFINE(FEAT_PYTHON)
+	dnl check that compiling a simple program still works with the flags
+	dnl added for Python.
+	AC_MSG_CHECKING([if compile and link flags for Python are sane])
+	cflags_save=$CFLAGS
+	libs_save=$LIBS
+	CFLAGS="$CFLAGS $PYTHON_CFLAGS"
+	LIBS="$LIBS $PYTHON_LIBS"
+	AC_TRY_LINK(,[ ],
+	       AC_MSG_RESULT(yes); python_ok=yes,
+	       AC_MSG_RESULT(no: PYTHON DISABLED); python_ok=no)
+	CFLAGS=$cflags_save
+	LIBS=$libs_save
+	if test $python_ok = yes; then
+	  AC_DEFINE(FEAT_PYTHON)
+	else
+	  LIBS=$libs_save_old
+	  PYTHON_SRC=
+	  PYTHON_OBJ=
+	  PYTHON_LIBS=
+	  PYTHON_CFLAGS=
+	fi
 
       fi
     else

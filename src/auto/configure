@@ -1599,25 +1599,57 @@ echo "configure:1574: checking Perl version" >&5
       
             perlcppflags=`$vi_cv_path_perl -Mlib=$srcdir -MExtUtils::Embed \
 	      -e 'ccflags;perl_inc;print"\n"' | sed -e 's/-fno[^ ]*//'`
-      if test "X$perlcppflags" != "X"; then
-	PERL_CFLAGS="$perlcppflags"
-      fi
-            PERL_LIBS=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
+            perllibs=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed -e 'ldopts' | \
 		sed -e '/Warning/d' -e '/Note (probably harmless)/d' \
 			-e 's/-bE:perl.exp//' -e 's/-lc //'`
-      
                   perlldflags=`cd $srcdir; $vi_cv_path_perl -MExtUtils::Embed \
 		-e 'ccdlflags' | sed -e 's/-bE:perl.exp//'`
-      if test "X$perlldflags" != "X"; then
-	LDFLAGS="$perlldflags $LDFLAGS"
-      fi
-      PERL_SRC="auto/if_perl.c if_perlsfio.c"
-      PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
-      PERL_PRO="if_perl.pro if_perlsfio.pro"
-      cat >> confdefs.h <<\EOF
+
+                  echo $ac_n "checking if compile and link flags for Perl are sane""... $ac_c" 1>&6
+echo "configure:1610: checking if compile and link flags for Perl are sane" >&5
+      cflags_save=$CFLAGS
+      libs_save=$LIBS
+      ldflags_save=$LDFLAGS
+      CFLAGS="$CFLAGS $perlcppflags"
+      LIBS="$LIBS $perllibs"
+      LDFLAGS="$perlldflags $LDFLAGS"
+      cat > conftest.$ac_ext <<EOF
+#line 1618 "configure"
+#include "confdefs.h"
+
+int main() {
+ 
+; return 0; }
+EOF
+if { (eval echo configure:1625: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; perl_ok=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""no: PERL DISABLED" 1>&6; perl_ok=no
+fi
+rm -f conftest*
+      CFLAGS=$cflags_save
+      LIBS=$libs_save
+      LDFLAGS=$ldflags_save
+      if test $perl_ok = yes; then
+	if test "X$perlcppflags" != "X"; then
+	  PERL_CFLAGS="$perlcppflags"
+	fi
+	if test "X$perlldflags" != "X"; then
+	  LDFLAGS="$perlldflags $LDFLAGS"
+	fi
+        PERL_LIBS=$perllibs
+	PERL_SRC="auto/if_perl.c if_perlsfio.c"
+	PERL_OBJ="objects/if_perl.o objects/if_perlsfio.o"
+	PERL_PRO="if_perl.pro if_perlsfio.pro"
+	cat >> confdefs.h <<\EOF
 #define FEAT_PERL 1
 EOF
 
+      fi
      fi
     else
       echo "$ac_t"">>> too old; need Perl version 5.003_01 or later <<<" 1>&6
@@ -1845,27 +1877,27 @@ echo "configure:1839: checking if -pthread should be used" >&5
 	    thread_lib="-pthread"
 	  fi
 	fi
+	libs_save_old=$LIBS
 	if test -n "$threadsafe_flag"; then
 	  cflags_save=$CFLAGS
-	  libs_save=$LIBS
 	  CFLAGS="$CFLAGS $threadsafe_flag"
 	  LIBS="$LIBS $thread_lib"
 	  cat > conftest.$ac_ext <<EOF
-#line 1716 "configure"
+#line 1888 "configure"
 #include "confdefs.h"
 
 int main() {
  
 ; return 0; }
 EOF
-if { (eval echo configure:1723: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1895: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   echo "$ac_t""yes" 1>&6; PYTHON_CFLAGS="$PYTHON_CFLAGS $threadsafe_flag"
 else
   echo "configure: failed program was:" >&5
   cat conftest.$ac_ext >&5
   rm -rf conftest*
-  echo "$ac_t""no" 1>&6; LIBS=$libs_save
+  echo "$ac_t""no" 1>&6; LIBS=$libs_save_old
 	     
 fi
 rm -f conftest*
@@ -1874,10 +1906,44 @@ rm -f conftest*
 	  echo "$ac_t""no" 1>&6
 	fi
 
-	cat >> confdefs.h <<\EOF
+			echo $ac_n "checking if compile and link flags for Python are sane""... $ac_c" 1>&6
+echo "configure:1912: checking if compile and link flags for Python are sane" >&5
+	cflags_save=$CFLAGS
+	libs_save=$LIBS
+	CFLAGS="$CFLAGS $PYTHON_CFLAGS"
+	LIBS="$LIBS $PYTHON_LIBS"
+	cat > conftest.$ac_ext <<EOF
+#line 1918 "configure"
+#include "confdefs.h"
+
+int main() {
+ 
+; return 0; }
+EOF
+if { (eval echo configure:1925: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+  rm -rf conftest*
+  echo "$ac_t""yes" 1>&6; python_ok=yes
+else
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  echo "$ac_t""no: PYTHON DISABLED" 1>&6; python_ok=no
+fi
+rm -f conftest*
+	CFLAGS=$cflags_save
+	LIBS=$libs_save
+	if test $python_ok = yes; then
+	  cat >> confdefs.h <<\EOF
 #define FEAT_PYTHON 1
 EOF
 
+	else
+	  LIBS=$libs_save_old
+	  PYTHON_SRC=
+	  PYTHON_OBJ=
+	  PYTHON_LIBS=
+	  PYTHON_CFLAGS=
+	fi
 
       fi
     else
@@ -8252,12 +8318,12 @@ s%@dogvimdiff@%$dogvimdiff%g
 s%@compiledby@%$compiledby%g
 s%@vi_cv_path_perl@%$vi_cv_path_perl%g
 s%@vi_cv_perllib@%$vi_cv_perllib%g
-s%@PERL_LIBS@%$PERL_LIBS%g
 s%@shrpenv@%$shrpenv%g
 s%@PERL_SRC@%$PERL_SRC%g
 s%@PERL_OBJ@%$PERL_OBJ%g
 s%@PERL_PRO@%$PERL_PRO%g
 s%@PERL_CFLAGS@%$PERL_CFLAGS%g
+s%@PERL_LIBS@%$PERL_LIBS%g
 s%@vi_cv_path_python@%$vi_cv_path_python%g
 s%@PYTHON_CONFDIR@%$PYTHON_CONFDIR%g
 s%@PYTHON_LIBS@%$PYTHON_LIBS%g
