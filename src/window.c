@@ -2135,9 +2135,21 @@ frame_new_height(topfrp, height, topfirst, wfh)
 #ifdef FEAT_VERTSPLIT
     else if (topfrp->fr_layout == FR_ROW)
     {
-	/* All frames in this row get the same new height. */
-	for (frp = topfrp->fr_child; frp != NULL; frp = frp->fr_next)
-	    frame_new_height(frp, height, topfirst, wfh);
+	do
+	{
+	    /* All frames in this row get the same new height. */
+	    for (frp = topfrp->fr_child; frp != NULL; frp = frp->fr_next)
+	    {
+		frame_new_height(frp, height, topfirst, wfh);
+		if (frp->fr_height > height)
+		{
+		    /* Could not fit the windows, make the whole row higher. */
+		    height = frp->fr_height;
+		    break;
+		}
+	    }
+	}
+	while (frp != NULL);
     }
 #endif
     else
