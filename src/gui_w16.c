@@ -356,10 +356,6 @@ _WndProc(
 #endif
 	    return 0;
 
-    case WM_CREATE:	/* HANDLE_MSG doesn't seem to handle this one */
-	return _OnCreate (hwnd, (LPCREATESTRUCT)lParam);
-
-
 #if defined(MENUHINTS) && defined(FEAT_MENU)
     case WM_MENUSELECT:
 	if (((UINT) LOWORD(lParam)
@@ -764,9 +760,6 @@ gui_mch_draw_string(
      */
     HBRUSH	hbr;
     RECT	rc;
-#ifdef FEAT_MBYTE_IME
-    char	*szComp;
-#endif
 
     if (!(flags & DRAW_TRANSP))
     {
