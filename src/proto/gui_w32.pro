@@ -53,6 +53,7 @@ void mch_set_mouse_shape __ARGS((int shape));
 char_u *gui_mch_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter));
 int get_cmd_args __ARGS((char *prog, char *cmdline, char ***argvp, char **tofree));
 int gui_is_win32s __ARGS((void));
+void gui_mch_set_parent __ARGS((char *title));
 void gui_mch_prepare __ARGS((int *argc, char **argv));
 int gui_mch_init __ARGS((void));
 void gui_mch_set_shellsize __ARGS((int width, int height, int min_width, int min_height, int base_width, int base_height));

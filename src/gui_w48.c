@@ -87,6 +87,7 @@
 typedef int BOOL;
 typedef int BYTE;
 typedef int DWORD;
+typedef int WCHAR;
 typedef int ENUMLOGFONT;
 typedef int FINDREPLACE;
 typedef int HANDLE;
@@ -113,6 +114,7 @@ typedef int RECT;
 typedef int UINT;
 typedef int WORD;
 typedef int WPARAM;
+typedef int POINT;
 typedef void *HINSTANCE;
 typedef void *HMENU;
 typedef void *HWND;
@@ -618,6 +620,9 @@ _OnMouseButtonDown(
     int	    button = -1;
     int	    repeated_click;
 
+    /* Give main window the focus: this is so the cursor isn't hollow. */
+    (void)SetFocus(s_hwnd);
+
     if (s_uMsg == WM_LBUTTONDOWN || s_uMsg == WM_LBUTTONDBLCLK)
 	button = MOUSE_LEFT;
     else if (s_uMsg == WM_MBUTTONDOWN || s_uMsg == WM_MBUTTONDBLCLK)
@@ -801,7 +806,9 @@ _OnFindRepl(void)
     int	    flags = 0;
     int	    down;
 
-    /* if (s_findrep_struct.Flags & FR_DIALOGTERM)  nothing to do */
+    if (s_findrep_struct.Flags & FR_DIALOGTERM)
+	/* Give main window the focus back. */
+	(void)SetFocus(s_hwnd);
 
     if (s_findrep_struct.Flags & FR_FINDNEXT)
     {

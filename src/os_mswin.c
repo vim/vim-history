@@ -2099,6 +2099,11 @@ mch_print_begin(prt_settings_T *psettings)
     di.lpszDocName = psettings->jobname;
     ret = StartDoc(prt_dlg.hDC, &di);
 
+#ifdef FEAT_GUI
+    /* Give focus back to main window (when using MDI). */
+    SetFocus(s_hwnd);
+#endif
+
     return (ret > 0);
 }
 
