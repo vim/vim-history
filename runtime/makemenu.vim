@@ -1,6 +1,6 @@
 " Script to define the syntax menu in synmenu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2002 Jul 09
+" Last Change:	2003 Jan 29
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/synmenu.vim
@@ -106,14 +106,15 @@ SynMenu CD.Clever:cl
 SynMenu CD.Clipper:clipper
 SynMenu CD.Cold\ Fusion:cf
 SynMenu CD.Config.Cfg\ Config\ file:cfg
-SynMenu CD.Config.Generic Config\ file:conf
+SynMenu CD.Config.Generic\ Config\ file:conf
 SynMenu CD.Config.Configure\.in:config
 SynMenu CD.Ctrl-H:ctrlh
 SynMenu CD.Cobol:cobol
 SynMenu CD.CSP:csp
 SynMenu CD.CUPL.CUPL:cupl
 SynMenu CD.CUPL.Simulation:cuplsim
-SynMenu CD.CVS\ commit:cvs
+SynMenu CD.CVS.commit\ file:cvs
+SynMenu CD.CVS.cvsrc:cvsrc
 SynMenu CD.Debian.Debian\ ChangeLog:debchangelog
 SynMenu CD.Debian.Debian\ Control:debcontrol
 SynMenu CD.Diff:diff
@@ -129,6 +130,7 @@ SynMenu CD.Dylan.Dylan:dylan
 SynMenu CD.Dylan.Dylan\ interface:dylanintr
 SynMenu CD.Dylan.Dylan\ lid:dylanlid
 
+SynMenu EFG.EDIF:edif
 SynMenu EFG.Eiffel:eiffel
 SynMenu EFG.Elm\ filter\ rules:elmfilt
 SynMenu EFG.Embedix\ Component\ Description:ecd
@@ -136,14 +138,17 @@ SynMenu EFG.ERicsson\ LANGuage:erlang
 SynMenu EFG.ESQL-C:esqlc
 SynMenu EFG.Essbase\ script:csc
 SynMenu EFG.Eterm\ config:eterm
+SynMenu EFG.Exim\ conf:exim
 SynMenu EFG.Expect:expect
 SynMenu EFG.Exports:exports
+SynMenu EFG.Fetchmail:fetchmail
 SynMenu EFG.Focus\ Executable:focexec
 SynMenu EFG.Focus\ Master:master
 SynMenu EFG.FORM:form
 SynMenu EFG.Forth:forth
 SynMenu EFG.Fortran:fortran
 SynMenu EFG.FoxPro:foxpro
+SynMenu EFG.Fstab:fstab
 SynMenu EFG.Fvwm.Fvwm\ configuration:fvwm1
 SynMenu EFG.Fvwm.Fvwm2\ configuration:fvwm2
 SynMenu EFG.Fvwm.Fvwm2\ configuration with M4:fvwm2m4
@@ -152,6 +157,8 @@ SynMenu EFG.GDMO:gdmo
 SynMenu EFG.Gedcom:gedcom
 SynMenu EFG.Gkrellmrc:gkrellmrc
 SynMenu EFG.GP:gp
+SynMenu EFG.GPG:gpg
+SynMenu EFG.Grub:grub
 SynMenu EFG.GNU\ Server\ Pages:gsp
 SynMenu EFG.GNUplot:gnuplot
 SynMenu EFG.Groff:groff
@@ -166,7 +173,8 @@ SynMenu HIJK.HTML\ with\ M4:htmlm4
 SynMenu HIJK.HTML/OS:htmlos
 SynMenu HIJK.Hyper\ Builder:hb
 SynMenu HIJK.Icon:icon
-SynMenu HIJK.IDL:idl
+SynMenu HIJK.IDL\Generic\ IDL:idl
+SynMenu HIJK.IDL\Microsoft\ IDL:msidl
 SynMenu HIJK.Indent\ profile:indent
 SynMenu HIJK.Inform:inform
 SynMenu HIJK.Informix\ 4GL:fgl
@@ -201,12 +209,14 @@ SynMenu L-Ma.Logtalk:logtalk
 SynMenu L-Ma.LOTOS:lotos
 SynMenu L-Ma.LotusScript:lscript
 SynMenu L-Ma.Lout:lout
+SynMenu L-Ma.LPC:lpc
 SynMenu L-Ma.Lua:lua
 SynMenu L-Ma.Lynx\ Style:lss
 SynMenu L-Ma.Lynx\ config:lynx
 SynMenu L-Ma.M4:m4
 SynMenu L-Ma.MaGic\ Point:mgp
 SynMenu L-Ma.Mail:mail
+SynMenu L-Ma.Mailcap:mailcap
 SynMenu L-Ma.Makefile:make
 SynMenu L-Ma.MakeIndex:ist
 SynMenu L-Ma.Man\ page:man
@@ -219,6 +229,7 @@ SynMenu Me-NO.MEL\ (for\ Maya):mel
 SynMenu Me-NO.Metafont:mf
 SynMenu Me-NO.MetaPost:mp
 SynMenu Me-NO.MMIX:mmix
+SynMenu Me-NO.Modconf:modconf
 SynMenu Me-NO.Model:model
 SynMenu Me-NO.Modsim\ III:modsim3
 SynMenu Me-NO.Modula\ 2:modula2
@@ -242,6 +253,7 @@ SynMenu Me-NO.Nroff:nroff
 SynMenu Me-NO.NSIS\ script:nsis
 SynMenu Me-NO.Objective\ C:objc
 SynMenu Me-NO.OCAML:ocaml
+SynMenu Me-NO.Occam:occam
 SynMenu Me-NO.Omnimark:omnimark
 SynMenu Me-NO.OpenROAD:openroad
 SynMenu Me-NO.Open\ Psion\ Lang:opl
@@ -275,15 +287,18 @@ SynMenu PQ.Progress:progress
 SynMenu PQ.Prolog:prolog
 SynMenu PQ.Purify\ log:purifylog
 SynMenu PQ.Python:python
+SynMenu PQ.Quake:quake
 
 SynMenu R-Sg.R:r
 SynMenu R-Sg.Radiance:radiance
 SynMenu R-Sg.Ratpoison:ratpoison
 SynMenu R-Sg.Readline\ config:readline
-SynMenu R-Sg.RCS\ log\ output:rcslog
+SynMenu R-Sg.RCS.RCS\ log\ output:rcslog
+SynMenu R-Sg.RCS.RCS\ file:rcs
 SynMenu R-Sg.Rebol:rebol
 SynMenu R-Sg.Remind:remind
-SynMenu R-Sg.Renderman\ Shader\ Lang:sl
+SynMenu R-Sg.Renderman.Renderman\ Shader\ Lang:sl
+SynMenu R-Sg.Renderman.Renderman\ Interface\ Bytestream:rib
 SynMenu R-Sg.Rexx:rexx
 SynMenu R-Sg.Robots\.txt:robots
 SynMenu R-Sg.RockLinux\ package\ desc\.:desc
@@ -343,6 +358,7 @@ SynMenu Sh-S.SQR:sqr
 SynMenu Sh-S.Standard\ ML:sml
 SynMenu Sh-S.Stored\ Procedures:stp
 SynMenu Sh-S.Strace:strace
+SynMenu Sh-S.Subversion\ commit:svn
 
 SynMenu TUV.TADS:tads
 SynMenu TUV.Tags:tags
