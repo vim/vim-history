@@ -5431,6 +5431,8 @@ check_stl_option(s)
 	if (!*s)
 	    break;
 	s++;
+	if (*s != '%' && *s != ')')
+	    ++itemcnt;
 	if (*s == '%' || *s == STL_TRUNCMARK || *s == STL_MIDDLEMARK)
 	{
 	    s++;
@@ -5439,7 +5441,8 @@ check_stl_option(s)
 	if (*s == ')')
 	{
 	    s++;
-	    groupdepth--;
+	    if (--groupdepth < 0)
+		break;
 	    continue;
 	}
 	if (*s == '-')
