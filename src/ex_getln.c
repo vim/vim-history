@@ -2647,7 +2647,21 @@ ExpandEscape(xp, str, numfiles, files, options)
 #endif
 		    }
 		}
+#ifdef BACKSLASH_IN_FILENAME
+		{
+		    char_u	buf[20];
+		    int		j = 0;
+
+		    /* Don't escape '[' and '{' if they are in 'isfname'. */
+		    for (p = PATH_ESC_CHARS; *p != NUL; ++p)
+			if ((*p != '[' && *p != '{') || !vim_isfilec(*p))
+			    buf[j++] = *p;
+		    buf[j] = NUL;
+		    p = vim_strsave_escaped(files[i], buf);
+		}
+#else
 		p = vim_strsave_escaped(files[i], PATH_ESC_CHARS);
+#endif
 		if (p != NULL)
 		{
 		    vim_free(files[i]);
