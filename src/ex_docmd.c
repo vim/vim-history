@@ -904,6 +904,7 @@ do_cmdline(cmdline, getline, cookie, flags)
     ga_clear(&lines_ga);
 
     if (cstack.cs_idx >= 0
+	    && !got_int
 	    && ((getline == getsourceline && !source_finished(cookie))
 		|| (getline == get_func_line && !func_has_ended(cookie))))
     {
