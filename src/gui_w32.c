@@ -48,6 +48,10 @@
 # include "xpm_w32.h"
 #endif
 
+#ifdef PROTO
+# define WINAPI
+#endif
+
 #ifdef __MINGW32__
 /*
  * Add a lot of missing defines.
@@ -200,6 +204,7 @@ static UINT	s_menu_id = 100;
 
 #define VIM_NAME	"vim"
 #define VIM_CLASS	"Vim"
+#define VIM_CLASSW	L"Vim"
 
 /* Initial size for the dialog template.  For gui_mch_dialog() it's fixed,
  * thus there should be room for every dialog.  For tearoffs it's made bigger
@@ -545,7 +550,7 @@ _OnWindowPosChanged(
 	netbeans_frame_moved(x, y);
     }
     /* Allow to send WM_SIZE and WM_MOVE */
-    FORWARD_WM_WINDOWPOSCHANGED(hwnd, lpwpos, DefWindowProc);
+    FORWARD_WM_WINDOWPOSCHANGED(hwnd, lpwpos, MyWindowProc);
 }
 #endif
 
@@ -653,7 +658,7 @@ _WndProc(
 	    return HANDLE_WM_SYSCHAR((hwnd), (wParam), (lParam), (_OnSysChar));
 #ifdef FEAT_MENU
 	else
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
 #endif
 
     case WM_SYSKEYUP:
@@ -662,7 +667,7 @@ _WndProc(
 	 * that.  But that caused problems when menu is disabled and using
 	 * Alt-Tab-Esc: get into a strange state where no mouse-moved events
 	 * are received, mouse pointer remains hidden. */
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return MyWindowProc(hwnd, uMsg, wParam, lParam);
 #else
 	return 0;
 #endif
@@ -742,7 +747,7 @@ _WndProc(
 	    int		x, y;
 	    int		xPos = GET_X_LPARAM(lParam);
 
-	    result = DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    result = MyWindowProc(hwnd, uMsg, wParam, lParam);
 	    if (result == HTCLIENT)
 	    {
 		gui_mch_get_winpos(&x, &y);
@@ -761,11 +766,11 @@ _WndProc(
 #ifdef FEAT_MBYTE_IME
     case WM_IME_NOTIFY:
 	if (!_OnImeNotify(hwnd, (DWORD)wParam, (DWORD)lParam))
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
 	break;
     case WM_IME_COMPOSITION:
 	if (!_OnImeComposition(hwnd, wParam, lParam))
-	    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	    return MyWindowProc(hwnd, uMsg, wParam, lParam);
 	break;
 #endif
 
@@ -782,7 +787,7 @@ _WndProc(
 	    _OnFindRepl();
 	}
 #endif
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return MyWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
     return 1;
@@ -964,6 +969,10 @@ gui_mch_init(void)
     const char szVimWndClass[] = VIM_CLASS;
     const char szTextAreaClass[] = "VimTextArea";
     WNDCLASS wndclass;
+#ifdef FEAT_MBYTE
+    const WCHAR szVimWndClassW[] = VIM_CLASSW;
+    WNDCLASSW wndclassw;
+#endif
 #ifdef GLOBAL_IME
     ATOM	atom;
 #endif
@@ -991,6 +1000,40 @@ gui_mch_init(void)
     gui.border_width = 0;
 
     s_brush = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+
+#ifdef FEAT_MBYTE
+    /* First try using the wide version, so that we can use any title.
+     * Otherwise only characters in the active codepage will work. */
+    if (GetClassInfoW(s_hinst, szVimWndClassW, &wndclassw) == 0)
+    {
+	wndclassw.style = 0;
+	wndclassw.lpfnWndProc = _WndProc;
+	wndclassw.cbClsExtra = 0;
+	wndclassw.cbWndExtra = 0;
+	wndclassw.hInstance = s_hinst;
+	wndclassw.hIcon = LoadIcon(wndclassw.hInstance, "IDR_VIM");
+	wndclassw.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndclassw.hbrBackground = s_brush;
+	wndclassw.lpszMenuName = NULL;
+	wndclassw.lpszClassName = szVimWndClassW;
+
+	if ((
+#ifdef GLOBAL_IME
+		    atom =
+#endif
+		    RegisterClassW(&wndclassw)) == 0)
+	{
+	    if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
+		return FAIL;
+
+	    /* Must be Windows 98, fall back to non-wide function. */
+	}
+	else
+	    wide_WindowProc = TRUE;
+    }
+
+    if (!wide_WindowProc)
+#endif
 
     if (GetClassInfo(s_hinst, szVimWndClass, &wndclass) == 0)
     {

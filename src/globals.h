@@ -675,6 +675,10 @@ EXTERN int	enc_codepage INIT(= -1);
 # endif
 EXTERN int	has_mbyte INIT(= 0);		/* any multi-byte encoding */
 
+#if defined(WIN3264) && defined(FEAT_MBYTE)
+EXTERN int	wide_WindowProc INIT(= FALSE);	/* use wide WindowProc() */
+#endif
+
 /*
  * To speed up BYTELEN() we fill a table with the byte lengths whenever
  * enc_utf8 or enc_dbcs changes.

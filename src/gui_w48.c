@@ -82,7 +82,6 @@
 # define CONST
 # define FAR
 # define NEAR
-# define WINAPI
 # define _cdecl
 typedef int BOOL;
 typedef int BYTE;
@@ -186,13 +185,18 @@ static int		s_need_activate = FALSE;
  */
 static int allow_scrollbar = FALSE;
 
-
 #ifdef GLOBAL_IME
-# undef DefWindowProc
-# define DefWindowProc(a, b, c, d) global_ime_DefWindowProc(a, b, c, d)
 # define MyTranslateMessage(x) global_ime_TranslateMessage(x)
 #else
 # define MyTranslateMessage(x) TranslateMessage(x)
+#endif
+
+#if (defined(WIN3264) && defined(FEAT_MBYTE)) || defined(GLOBAL_IME)
+  /* use of WindowProc depends on wide_WindowProc */
+# define MyWindowProc vim_WindowProc
+#else
+  /* use ordinary WindowProc */
+# define MyWindowProc DefWindowProc
 #endif
 
 extern int current_font_height;	    /* this is in os_mswin.c */
@@ -951,9 +955,29 @@ _TextAreaWndProc(
 #endif
 
     default:
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return MyWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
+
+#if (defined(WIN3264) && defined(FEAT_MBYTE)) \
+	|| defined(GLOBAL_IME) \
+	|| defined(PROTO)
+# ifdef PROTO
+typedef int WINAPI;
+# endif
+
+    LRESULT WINAPI
+vim_WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+# ifdef GLOBAL_IME
+    return global_ime_DefWindowProc(hwnd, message, wParam, lParam);
+# else
+    if (wide_WindowProc)
+	return DefWindowProcW(hwnd, message, wParam, lParam);
+    return DefWindowProc(hwnd, message, wParam, lParam);
+#endif
+}
+#endif
 
 /*
  * Called when the foreground or background color has been changed.
@@ -2245,7 +2269,7 @@ _OnSetFocus(
     HWND hwndOldFocus)
 {
     gui_focus_change(TRUE);
-    (void)DefWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
+    (void)MyWindowProc(hwnd, WM_SETFOCUS, (WPARAM)hwndOldFocus, 0);
 }
 
     static void
@@ -2254,7 +2278,7 @@ _OnKillFocus(
     HWND hwndNewFocus)
 {
     gui_focus_change(FALSE);
-    (void)DefWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
+    (void)MyWindowProc(hwnd, WM_KILLFOCUS, (WPARAM)hwndNewFocus, 0);
 }
 
 /*
@@ -2277,7 +2301,7 @@ _OnActivateApp(
 {
     /* we call gui_focus_change() in _OnSetFocus() */
     /* gui_focus_change((int)fActivate); */
-    return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, (DWORD)dwThreadId);
+    return MyWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, (DWORD)dwThreadId);
 }
 
 #if defined(FEAT_WINDOWS) || defined(PROTO)
