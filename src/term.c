@@ -1015,6 +1015,7 @@ struct builtin_term builtin_termcaps[] =
     {K_S_F10,		IF_EB("\033[21;2~", ESC_STR "[21;2~")},
     {K_S_F11,		IF_EB("\033[23;2~", ESC_STR "[23;2~")},
     {K_S_F12,		IF_EB("\033[24;2~", ESC_STR "[24;2~")},
+    {K_S_TAB,		IF_EB("\033[Z", ESC_STR "[Z")},
     {K_HELP,		IF_EB("\033[28~", ESC_STR "[28~")},
     {K_UNDO,		IF_EB("\033[26~", ESC_STR "[26~")},
     {K_INS,		IF_EB("\033[2~", ESC_STR "[2~")},
