@@ -1086,6 +1086,7 @@ getcount:
 	    && stuff_empty()
 	    && typebuf_typed()
 	    && emsg_silent == 0
+	    && !did_wait_return
 	    && oap->op_type == OP_NOP)
     {
 	int	save_State = State;
