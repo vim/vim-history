@@ -458,6 +458,7 @@ shift_block(oap, amount)
     }
     /* replace the line */
     ml_replace(curwin->w_cursor.lnum, newp, FALSE);
+    changed();
     State = oldstate;
     curwin->w_cursor.col = oldcol;
 #ifdef RIGHTLEFT
