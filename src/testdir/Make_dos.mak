@@ -45,17 +45,17 @@ clean:
 	-del small.vim
 	-del tiny.vim
 	-del mbyte.vim
-	-deltree /y X*
+	-del X*
 
 .in.out:
 	copy $*.ok test.ok
 	$(VIMPROG) -u dos.vim -U NONE --noplugin -s dotest.in $*.in
 	diff test.out $*.ok
 	rename test.out $*.out
-	-deltree /y X*
+	-del X*
 	-del test.ok
 
 
 # Create a directory for temp files
 /tmp:
-	-mkdir /tmp
+	-mkdir \tmp
