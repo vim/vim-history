@@ -1,0 +1,22 @@
+*usr_08.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			      Splitting windows
+
+
+|08.1|	Split a window
+
+     Next chapter: |usr_09.txt|  Using the GUI
+ Previous chapter: |usr_07.txt|  Editing more than one file
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*08.1*	Split a window
+
+
+==============================================================================
+
+Next chapter: |usr_09.txt|  Using the GUI
+
+Copyright: see |manual-copyright|  vim:tw=78:

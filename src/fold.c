@@ -619,6 +619,11 @@ foldCreate(start, end)
 		break;
 	if (cont > 0 && ga_grow(&fold_ga, cont) == OK)
 	{
+	    /* If the first fold starts before the new fold, let the new fold
+	     * start there.  Otherwise the existing fold would change. */
+	    if (start_rel > fp->fd_top)
+		start_rel = fp->fd_top;
+
 	    /* When last contained fold isn't completely contained, adjust end
 	     * of new fold. */
 	    if (end_rel < fp[cont - 1].fd_top + fp[cont - 1].fd_len - 1)

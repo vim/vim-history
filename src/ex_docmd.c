@@ -178,6 +178,8 @@ static void	ex_mode __ARGS((exarg_T *eap));
 static void	ex_browse __ARGS((exarg_T *eap));
 static void	ex_confirm __ARGS((exarg_T *eap));
 static void	ex_vertical __ARGS((exarg_T *eap));
+static void	ex_aboveleft __ARGS((exarg_T *eap));
+static void	ex_belowright __ARGS((exarg_T *eap));
 static void	ex_topleft __ARGS((exarg_T *eap));
 static void	ex_botright __ARGS((exarg_T *eap));
 static void	ex_find __ARGS((exarg_T *eap));
@@ -1288,37 +1290,40 @@ do_one_cmd(cmdlinep, sourcing,
 #endif
 	ea.argt = cmdnames[(int)ea.cmdidx].cmd_argt;
 
+    if (!ea.skip)
+    {
 #ifdef HAVE_SANDBOX
-    if (sandbox != 0 && !(ea.argt & SBOXOK))
-    {
-	/* Command not allowed in sandbox. */
-	errormsg = (char_u *)_(e_sandbox);
-	goto doend;
-    }
+	if (sandbox != 0 && !(ea.argt & SBOXOK))
+	{
+	    /* Command not allowed in sandbox. */
+	    errormsg = (char_u *)_(e_sandbox);
+	    goto doend;
+	}
 #endif
-    if (!curbuf->b_p_ma && (ea.argt & MODIFY))
-    {
-	/* Command not allowed in non-'modifiable' buffer */
-	errormsg = (char_u *)_(e_modifiable);
-	goto doend;
-    }
+	if (!curbuf->b_p_ma && (ea.argt & MODIFY))
+	{
+	    /* Command not allowed in non-'modifiable' buffer */
+	    errormsg = (char_u *)_(e_modifiable);
+	    goto doend;
+	}
 #ifdef FEAT_CMDWIN
-    if (cmdwin_type != 0 && !(ea.argt & CMDWIN)
+	if (cmdwin_type != 0 && !(ea.argt & CMDWIN)
 # ifdef FEAT_USR_CMDS
-	    && !USER_CMDIDX(ea.cmdidx)
+		&& !USER_CMDIDX(ea.cmdidx)
 # endif
-       )
-    {
-	/* Command not allowed in cmdline window. */
-	errormsg = (char_u *)_(e_cmdwin);
-	goto doend;
-    }
+	   )
+	{
+	    /* Command not allowed in cmdline window. */
+	    errormsg = (char_u *)_(e_cmdwin);
+	    goto doend;
+	}
 #endif
 
-    if (!(ea.argt & RANGE) && ea.addr_count > 0)	/* no range allowed */
-    {
-	errormsg = (char_u *)_(e_norange);
-	goto doend;
+	if (!(ea.argt & RANGE) && ea.addr_count > 0)	/* no range allowed */
+	{
+	    errormsg = (char_u *)_(e_norange);
+	    goto doend;
+	}
     }
 
     if (!(ea.argt & BANG) && ea.forceit)	/* no <!> allowed */
@@ -2339,6 +2344,8 @@ set_one_cmd_context(xp, buff)
 	case CMD_browse:
 	case CMD_confirm:
 	case CMD_vertical:
+	case CMD_aboveleft:
+	case CMD_belowright:
 	case CMD_topleft:
 	case CMD_botright:
 	case CMD_silent:
@@ -5311,6 +5318,32 @@ ex_vertical(eap)
 }
 
 /*
+ * ":rightbelow" and ":belowright".
+ */
+    static void
+ex_belowright(eap)
+    exarg_T	*eap;
+{
+#ifdef FEAT_WINDOWS
+    cmdmod.split |= WSP_BELOW;
+#endif
+    eap->nextcmd = eap->arg;
+}
+
+/*
+ * ":leftabove" and ":aboveleft".
+ */
+    static void
+ex_aboveleft(eap)
+    exarg_T	*eap;
+{
+#ifdef FEAT_WINDOWS
+    cmdmod.split |= WSP_ABOVE;
+#endif
+    eap->nextcmd = eap->arg;
+}
+
+/*
  * ":topleft".
  */
     static void
@@ -6661,6 +6694,7 @@ ex_normal(eap)
     int		save_msg_didout = msg_didout;
     int		save_State = State;
     typebuf_T	save_typebuf;
+    int		save_insertmode = p_im;
 #ifdef FEAT_MBYTE
     char_u	*arg = NULL;
     int		l;
@@ -6676,6 +6710,7 @@ ex_normal(eap)
 
     msg_scroll = FALSE;	    /* no msg scrolling in Normal mode */
     restart_edit = 0;	    /* don't go to Insert mode */
+    p_im = FALSE;	    /* don't use 'insertmode' */
 
 #ifdef FEAT_MBYTE
     /*
@@ -6792,6 +6827,7 @@ ex_normal(eap)
     --ex_normal_busy;
     msg_scroll = save_msg_scroll;
     restart_edit = save_restart_edit;
+    p_im = save_insertmode;
     msg_didout |= save_msg_didout;	/* don't reset msg_didout now */
 
     /* Restore the state (needed when called from a function executed for
@@ -9203,9 +9239,11 @@ static unsigned long	current_bg;
 static unsigned long	current_fg;
 static int		current_id;
 #endif
+static int		page_count;
 
 static unsigned long darken_rgb __ARGS((unsigned long rgb));
 static void ex_print_number __ARGS((int offset, int y_pos, linenr_T line_num, int format));
+static void ex_print_header __ARGS((int offset, int width, int pagenum, int format));
 
     static unsigned long
 darken_rgb(rgb)
@@ -9256,10 +9294,17 @@ ex_print_number(offset, y_pos, line_num, format)
 	    &needbreak);
 }
 
+    int
+get_printer_page_num()
+{
+    return page_count + 1;
+}
+
+/*ARGSUSED*/
     static void
-ex_print_header(offset, headertext, pagenum, format)
+ex_print_header(offset, width, pagenum, format)
     int		offset;
-    char_u	*headertext;
+    int		width;
     int		pagenum;
     int		format;
 {
@@ -9275,13 +9320,17 @@ ex_print_header(offset, headertext, pagenum, format)
     int		l;
 #endif
 
-    /* Assumes %ld won't format to > 8 chars */
-    p = tbuf = alloc(STRLEN(headertext) + 8 + 8 + 1);
+    p = tbuf = alloc(width + 1);
 
     if (p == NULL)
 	return;
 
-    sprintf((char *)tbuf, "Page %d - %s", pagenum, headertext);
+#ifdef FEAT_STL_OPT
+    build_stl_str_hl(curwin, p, p_headerfmt, ' ', width, NULL);
+#else
+    sprintf((char *)tbuf, "Page %d", pagenum);
+#endif
+
 
 #ifdef FEAT_SYN_HL
     if (format)
@@ -9345,7 +9394,6 @@ ex_hardcopy(eap)
     int			num_lines = 0;
     int			num_pages;
 #endif
-    int			page_count;
     int			collated_copies, uncollated_copies;
     char_u		*start_line = NULL; /* for gcc */
     prt_settings_T	settings;
@@ -9362,9 +9410,7 @@ ex_hardcopy(eap)
     int			tab_spaces = 0;
     int			ts = curbuf->b_p_ts;
     int			need_break = FALSE;
-#if 0
     int			no_wrapping = FALSE;
-#endif
 
 #ifdef FEAT_SYN_HL
 # ifdef  FEAT_GUI
@@ -9389,13 +9435,11 @@ ex_hardcopy(eap)
 	&&  printer_opts[OPT_PRINT_MONO].string[0] == 'y')
 	mono = TRUE;
 
-#if 0
+
+#endif
     if (    printer_opts[OPT_PRINT_WRAP].present
 	&&  printer_opts[OPT_PRINT_WRAP].string[0] == 'n')
 	no_wrapping = TRUE;
-#endif
-
-#endif
 
     /*
      * Initialise printer. The mch_ code should set up margins
@@ -9504,7 +9548,7 @@ ex_hardcopy(eap)
 		 */
 		if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
 		    ex_print_header(    settings.line_height,
-					settings.jobname,
+					settings.chars_per_line,
 					page_count + 1,
 					!mono);
 
@@ -9680,20 +9724,28 @@ ex_hardcopy(eap)
 			    p += outputlen - 1;
 			}
 
-			/*
-			 * Allow that tab expansion can cause more lines to be
-			 * output than originally estimated
-			 */
-
-			if (++page_line == settings.lines_per_page || *p == NUL)
+			if (	(++page_line == settings.lines_per_page)
+				|| (*p == NUL)
+				|| (no_wrapping && need_break))
 			    break;
 		    }
+
+		    /*
+		     * Start next line of file if we clip lines, or have
+		     * reached line end
+		     */
+
+		    if (no_wrapping && need_break)
+		    {
+			total_charcount += (STRLEN(start_line) - (p - start_line));
+		    }
+
+		    if (*p == NUL || (no_wrapping && need_break))
+			p = NULL;
+
 		    /*
 		     * Break out if you need to start on the next page
 		     */
-		    if (*p == NUL)
-			p = NULL;
-
 		    if (page_line == settings.lines_per_page)
 			break;
 		}

@@ -109,7 +109,6 @@ static void	nv_findpar __ARGS((cmdarg_T *cap));
 static void	nv_undo __ARGS((cmdarg_T *cap));
 static void	nv_kundo __ARGS((cmdarg_T *cap));
 static void	nv_Replace __ARGS((cmdarg_T *cap));
-static void	nv_VReplace __ARGS((cmdarg_T *cap));
 static void	nv_vreplace __ARGS((cmdarg_T *cap));
 #ifdef FEAT_VISUAL
 static void	v_swap_corners __ARGS((int cmdchar));
@@ -299,7 +298,7 @@ static const struct nv_cmd
     {'O',	nv_open,	0,			0},
     {'P',	nv_put,		0,			0},
     {'Q',	nv_exmode,	NV_NCW,			0},
-    {'R',	nv_Replace,	0,			0},
+    {'R',	nv_Replace,	0,			FALSE},
     {'S',	nv_subst,	NV_KEEPREG,		0},
     {'T',	nv_csearch,	NV_NCH_ALW|NV_LANG,	BACKWARD},
     {'U',	nv_Undo,	0,			0},
@@ -1259,24 +1258,6 @@ do_pending_operator(cap, old_col, gui_yank)
 	    VIsual_mode = Ctrl_V;
 	    VIsual_select = FALSE;
 	    VIsual_reselect = FALSE;
-	}
-#endif
-
-#ifdef FEAT_VIRTUALEDIT
-       /* If virtual editing is ON, we have to make sure the cursor position
-	* is identical with the text position. */
-	if (ve_flags == VE_ALL
-		&& !VIsual_active
-		&& curwin->w_cursor.coladd > 0
-		&& oap->motion_type != MLINE
-		&& (   oap->op_type == OP_JOIN_NS
-		    || oap->op_type == OP_CHANGE
-		    || oap->op_type == OP_INSERT
-		    || oap->op_type == OP_APPEND
-		    || oap->op_type == OP_REPLACE))
-	{
-	    u_save_cursor();
-	    coladvance_force(getviscol());
 	}
 #endif
 
@@ -2627,11 +2608,16 @@ do_mouse(oap, c, dir, count, fix_indent)
 		    if (oap->motion_type == MLINE)
 			VIsual_mode = 'V';
 		    else if (*p_sel == 'e')
-			++curwin->w_cursor.col;
+		    {
+			if (lt(curwin->w_cursor, VIsual))
+			    ++VIsual.col;
+			else
+			    ++curwin->w_cursor.col;
+		    }
 		}
 	    }
 
-	    if (pos == NULL)
+	    if (pos == NULL && (is_click || is_drag))
 	    {
 		/* When not found a match or when dragging: extend to include
 		 * a word. */
@@ -5738,7 +5724,14 @@ nv_replace(cap)
     if (virtual_active())
     {
 	u_save_cursor();
-	coladvance_force(getviscol());
+	if (gchar_cursor() == NUL)
+	{
+	    /* Add extra space and put the cursor on the first one. */
+	    coladvance_force((colnr_T)(getviscol() + cap->count1));
+	    curwin->w_cursor.col -= cap->count1;
+	}
+	else
+	    coladvance_force(getviscol());
     }
 #endif
 
@@ -5911,7 +5904,7 @@ v_swap_corners(cmdchar)
 #endif /* FEAT_VISUAL */
 
 /*
- * "R".
+ * "R" (cap->arg is FALSE) and "gR" (cap->arg is TRUE).
  */
     static void
 nv_Replace(cap)
@@ -5921,6 +5914,7 @@ nv_Replace(cap)
     if (VIsual_active)		/* "R" is replace lines */
     {
 	cap->cmdchar = 'c';
+	cap->nchar = NUL;
 	VIsual_mode = 'V';
 	nv_operator(cap);
     }
@@ -5928,7 +5922,9 @@ nv_Replace(cap)
 #endif
 	if (!checkclearopq(cap->oap))
     {
-	if (u_save_cursor() == OK)
+	if (!curbuf->b_p_ma)
+	    EMSG(_(e_modifiable));
+	else
 	{
 #ifdef FEAT_VIRTUALEDIT
 	    if (virtual_active())
@@ -5937,36 +5933,7 @@ nv_Replace(cap)
 	    /* This is a new edit command, not a restart.  We don't edit
 	     * recursively. */
 	    restart_edit = 0;
-	    if (edit('R', FALSE, cap->count1))
-		cap->retval |= CA_COMMAND_BUSY;
-	}
-    }
-}
-
-/*
- * "gR".
- */
-    static void
-nv_VReplace(cap)
-    cmdarg_T	    *cap;
-{
-#ifdef FEAT_VISUAL
-    if (VIsual_active)
-    {
-	cap->cmdchar = 'R';
-	cap->nchar = NUL;
-	nv_Replace(cap);	/* Do same as "R" in Visual mode for now */
-    }
-    else
-#endif
-	if (!checkclearopq(cap->oap))
-    {
-	if (u_save_cursor() == OK)
-	{
-	    /* This is a new edit command, not a restart.  We don't edit
-	     * recursively. */
-	    restart_edit = 0;
-	    if (edit('V', FALSE, cap->count1))
+	    if (edit(cap->arg ? 'V' : 'R', FALSE, cap->count1))
 		cap->retval |= CA_COMMAND_BUSY;
 	}
     }
@@ -5990,12 +5957,18 @@ nv_vreplace(cap)
 #endif
 	if (!checkclearopq(cap->oap))
     {
-	if (u_save_cursor() == OK)
+	if (!curbuf->b_p_ma)
+	    EMSG(_(e_modifiable));
+	else
 	{
 	    if (cap->extra_char == Ctrl_V)	/* get another character */
 		cap->extra_char = get_literal();
 	    stuffcharReadbuff(cap->extra_char);
 	    stuffcharReadbuff(ESC);
+#ifdef FEAT_VIRTUALEDIT
+	    if (virtual_active())
+		coladvance(getviscol());
+#endif
 	    /* This is a new edit command, not a restart.  We don't edit
 	     * recursively. */
 	    restart_edit = 0;
@@ -6512,7 +6485,8 @@ nv_g_cmd(cap)
      * "gR": Enter virtual replace mode.
      */
     case 'R':
-	nv_VReplace(cap);
+	cap->arg = TRUE;
+	nv_Replace(cap);
 	break;
 
     case 'r':
@@ -6839,14 +6813,11 @@ nv_g_cmd(cap)
 	beginline(0);
 	if (!checkclearopq(oap))
 	{
-	    if (u_save_cursor() == OK)
-	    {
-		/* This is a new edit command, not a restart.  We don't edit
-		 * recursively. */
-		restart_edit = 0;
-		if (edit('g', FALSE, cap->count1))
-		    cap->retval |= CA_COMMAND_BUSY;
-	    }
+	    /* This is a new edit command, not a restart.  We don't edit
+	     * recursively. */
+	    restart_edit = 0;
+	    if (edit('g', FALSE, cap->count1))
+		cap->retval |= CA_COMMAND_BUSY;
 	}
 	break;
 
@@ -7508,7 +7479,13 @@ nv_edit(cap)
 	clearopbeep(cap->oap);
 #endif
     }
-    else if (!checkclearopq(cap->oap) && u_save_cursor() == OK)
+    else if (!curbuf->b_p_ma && !p_im)
+    {
+	/* Only give this error when 'insertmode' is off. */
+	EMSG(_(e_modifiable));
+	clearop(cap->oap);
+    }
+    else if (!checkclearopq(cap->oap))
     {
 	switch (cap->cmdchar)
 	{

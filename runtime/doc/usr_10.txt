@@ -1,0 +1,22 @@
+*usr_10.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Making big changes
+
+
+|10.1|	Substitution
+
+     Next chapter: |usr_11.txt|  Recovering from a crash
+ Previous chapter: |usr_09.txt|  Parts of the GUI
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*10.1*  Substitution
+
+
+==============================================================================
+
+Next chapter: |usr_11.txt|  Recovering from a crash
+
+Copyright: see |manual-copyright|  vim:tw=78:

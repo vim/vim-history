@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0ag.  Last change: 2001 May 20
+*version6.txt*  For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -42,6 +42,7 @@ UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
 Filetype plugins			|new-filetype-plugins|
+User manual				|new-user-manual|
 Window for command-line editing		|new-cmdwin|
 Debugging mode				|new-debug-mode|
 Cursor in virtual position		|new-virtedit|
@@ -223,8 +224,8 @@ column.  This also looks better without highlighting.
 When syntax highlighting is not enabled, the characters in the help file which
 mark examples ('>' and '<') and header lines ('~') are replaced with a space.
 
-When closing the help window restore the layout from before opening it, if the
-window layout didn't change since then.
+When closing the help window, restore the layout from before opening it, if
+the window layout didn't change since then.
 When opening the help window, put it at the top of the Vim window if the
 current window is less than 80 characters and not full width.
 
@@ -340,8 +341,8 @@ would sell copies of the manual to contribute to Uganda.
 After  "ayy  don't let  ""yy  or  :let @" = val overwrite the "a register.
 Use the unnamed register instead. 
 
-MSDOS: A pattern *.* previously also matched a file name without a dot.  This
-was inconsistent with other versions.
+MSDOS: A pattern "*.*" previously also matched a file name without a dot.
+This was inconsistent with other versions.
 
 ==============================================================================
 NEW FEATURES
@@ -398,7 +399,7 @@ window, with the cursor on the first definition of "DEBUG".
 The help window is always opened at the top, like ":topleft" was used.
 
 A few options can be used to set the preferences for vertically split windows.
-They work similar to their existing horizontal equavalents:
+They work similar to their existing horizontal equivalents:
 	horizontal	vertical ~
 	'splitbelow'	'splitright'
 	'winheight'	'winwidth'
@@ -500,8 +501,8 @@ Multi-line patterns: (partly by Loic Grenie)
 		Example: "foo\(bar\)\@!" matches "foo " but not "foobar".
 \@=		match atom, resulting in  zero-width match
 		Example: "foo\(bar\)\@=" matches "foo" in "foobar".
-\@<!		don't match atom before it before the current position
-\@<=		match atom before it before current position
+\@<!		don't match preceding atom before the current position
+\@<=		match preceding atom before current position
 \@>		match preceding atom as a subexpression
 
 \&		match only when branch before and after it match
@@ -647,7 +648,7 @@ Multi-language support					*new-multi-lang*
   "menutrans_" variables.  ":menutrans clear" deletes them.
 - Added message translations for various languages.
 - removed "broken locale" (Marcin Dalecki).
-- don't user color names in icons, use RGB values.  The names could be
+- Don't use color names in icons, use RGB values.  The names could be
   translated.
 - Win32: Added global IME support (Muraoka)
 - ":messages" prints a message about who maintains the messages or the
@@ -742,6 +743,17 @@ The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
 
 
+User manual						*new-user-manual*
+-----------
+
+The documentation has been split into a reference section and a User manual.
+This can be read like a book, from start to end, to learn the most useful Vim
+features.  It is much easier to read than the reference manual, but omits
+details.
+
+Parts of the Vim book by Steve Oualline have been used |frombook|.
+
+
 Window for command-line editing				*new-cmdwin*
 -------------------------------
 
@@ -820,6 +832,12 @@ Print on other systems by producing PostScript. (Vince Negri)
 
 Made ":harcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
 Matsumoto)
+
+Added options to tune he way printing works: (Vince Negri)
+- 'printersettings', defines various things.
+- 'printerheader', specifies the header.  Added "N" field to 'statusline'
+  for the page number.
+- 'printername', defines the default printer for ":harcopy!".
 
 
 Ports							*ports-6*
@@ -1006,6 +1024,10 @@ Options: ~
 
 'previewwindow' Set in the preview window.  Used in a session file to mark a
 		window as the preview window.
+'printerfont'
+'printerheader'
+'printername'
+'printersettings'	for ":hardcopy".
 'buflisted'	Makes a buffer appear in the buffer list or not.
 
 Use "vim{version}:" for modelines, only to be executed when the version is
@@ -1038,6 +1060,12 @@ Ex commands: ~
 
 :finish		Finish sourcing a file.  Can be used to skip the rest of a Vim
 		script. |:finish|
+
+:leftbelow
+:belowleft	Split left/below current window.
+
+:rightabove
+:aboveright	Split right/above current window.
 
 :first, :bfirst, :ptfirst, etc.
 		Alias for ":rewind".  It's more logical compared to ":last".
@@ -1073,6 +1101,8 @@ Ex commands: ~
 :popup		Pop up a popup menu.
 
 :redraw		Redraw the screen even when busy with a script or function.
+
+:hardcopy	Print to paper.
 
 New marks: ~
 
@@ -1134,7 +1164,7 @@ winline()	window line of the cursor
 
 
 Added expansion of curly braces in variable and function names.  This can be
-used for variable names that include the value of the an option.  Or a
+used for variable names that include the value of an option.  Or a
 primitive form of arrays. (Vince Negri)
 
 
@@ -1169,7 +1199,8 @@ Updated many syntax files to work both with Vim 5.7 and 6.0.
 Support for loading a color scheme.  Added the ":colorscheme" command.
 Automatically add menu entries for available schemes.
 Should now properly reset the colors when 'background' or 't_Co' is changed.
-":highlight clear" deletes all highlighting and sets the default colors.
+":highlight clear" sets the default colors again.
+":syntax reset" sets the syntax highlight colors back to the defaults.
 For ":set bg&" guess the value.  This allows a color scheme to switch back to
 the default colors.
 When syntax highlighting is switched on and a color scheme was defined, reload
@@ -1193,6 +1224,9 @@ that character to the match.  Similar to "v%".
 "-S session.vim" argument: Source a script file when starting up.  Convenient
 way to start Vim with a session file.
 
+Added "--cmd {command}" Vim argument to execute a command before a vimrc file
+is loaded. (Vince Negri)
+
 Added runtime/delmenu.vim.  Source this to remove all menus and prepare for
 loading new menus.  Useful when changing 'langmenu'.
 
@@ -1201,6 +1235,10 @@ Ziefle)
 
 Added runtime/macros/less.vim: Vim script to simulate less, but with syntax
 highlighting.
+
+The Win32 install program can now create shortcuts. (Jon Merz)
+
+Generate a self-installing Vim package for MS-Windows. (Jon Merz)
 
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
@@ -1586,6 +1624,8 @@ Also set "v:errmsg" when using ":silent! cmd".
 
 Added the v:prevcount variable: v:count for the previous command.
 
+Added "v:progname", name with which Vim was started. (Vince Negri)
+
 When editing the last file in the argument list in any way, allow exiting.
 Previously this was only possible when getting to that file with ":next" or
 ":last".
@@ -1619,6 +1659,9 @@ When asked to display the value of a hidden option, tell it's not supported.
 
 GTK GUI: When dropping a file on Vim, remove extra slashes from the start of
 the path.  Also shorten the file name if possible.
+
+Win32: When dropping a shortcut on gvim (.lnk file) edit the target, not the
+shortcut itself.  (Yasuhiro Matsumoto)
 
 Let "%p" in 'errorformat' (column of error indicated by a row of characters)
 also accept a line of dots.
@@ -1681,6 +1724,8 @@ Added more option settings to the default menus.
 
 Added IDs to many error messages.  Makes it easier to find the relevant
 explanation in the docs.
+
+Unix: Catch SIGPWR to preserve files when the power is about to go down.
 
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
@@ -2044,6 +2089,9 @@ Removed defining SVR4 in configure.  It causes problems for some X header
 files and doesn't appear to be used anywhere.
 
 When 'wildignore' is used, 'ignorecase' for a tag match was not working.
+
+When 'wildignore' contains "*~" it was impossible to edit a file ending in a
+"~".  Now don't recognize a file ending in "~" as containing wildcards.
 
 Disabled the mouse code for OS/2.  It was not really used.
 
@@ -2529,5 +2577,10 @@ functions.
 
 Win32: Gvimext could not edit more than a few files at once, the length of the
 argument was fixed.
+
+"ls -1 * | xargs vim" worked, but the input was in cooked mode.  Now switch to
+raw mode when needed.  Use dup() to copy the stderr file descriptor to stdin
+to make shell commands work.  No longer requires an external program to do
+this.
 
  vim:tw=78:

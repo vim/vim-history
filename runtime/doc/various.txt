@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0ag.  Last change: 2001 May 20
+*various.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -112,6 +112,8 @@ g8			Print the hex values of the bytes used in the
 							*:=*
 :=			Print the cursor line number.
 
+:{range}=		Prints the last line number in {range}.
+
 :norm[al][!] {commands}					*:norm* *:normal*
 			Execute Normal mode commands {commands}.  This makes
 			it possible to execute Normal mode commands typed on
@@ -125,6 +127,7 @@ g8			Print the hex values of the bytes used in the
 			insert command must be completed (to start Insert
 			mode, see |:startinsert|).  A ":" command must be
 			completed as well.
+			The 'insertmode' option is ignored for {commands}.
 			This command cannot be followed by another command,
 			since any '|' is considered part of the command.
 			This command can be used recursively, but the depth is
@@ -428,8 +431,9 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			printer.
 			On some platforms a dialog is displayed to allow
 			selection of printer, paper size etc. To skip the
-			dialogue and immediately print to the system default
-			printer, use the bang.  (!)
+			dialog, use the [!].  In this case the printer defined
+			by 'printername' is used, or (if 'printername' is
+			empty) the system default printer.
 
 			Progress is displayed during printing as a page number
 			and a percentage.  To abort printing use the interrupt

@@ -9,6 +9,7 @@
 #define NO_EXPANDPATH		/* always call mch_expand_wildcards */
 #define USE_EXE_NAME		/* use argv[0] for $VIM */
 #define USE_TERM_CONSOLE
+#define HAVE_DUP		/* have dup() */
 
 #define FNAME_ILLEGAL "\"*?><|" /* illegal characters in a file name */
 

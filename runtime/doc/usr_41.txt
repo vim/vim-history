@@ -1,0 +1,22 @@
+*usr_41.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			      Make new commands
+
+
+|41.1|	Replace a word
+
+     Next chapter: |usr_42.txt|  Add new menus
+ Previous chapter: |usr_40.txt|  Write a Vim script
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*41.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_42.txt|  Add new menus
+
+Copyright: see |manual-copyright|  vim:tw=78:

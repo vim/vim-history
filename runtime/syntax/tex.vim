@@ -1,8 +1,8 @@
 " Vim syntax file
 " Language:    TeX
-" Version:     6.0-7
+" Version:     6.0-8
 " Maintainer:  Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change: May 15, 2001
+" Last Change: May 16, 2001
 "
 " Notes:
 "
@@ -38,15 +38,22 @@ endif
 
 " (La)TeX keywords only use the letters a-zA-Z
 " but _ is the only one that causes problems.
+let b:extfname=expand("%:e")
 if version < 600
   set isk-=_
+  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+    set isk+=@
+  endif
 else
   setlocal isk-=_
+  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+    setlocal isk+=@
+  endif
 endif
 
 " Clusters
 " --------
-syn cluster texCmdGroup	contains=texCmdBody,texComment,texDefParm,texDelimiter,texDocType,texDocTypeArgs,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
+syn cluster texCmdGroup	contains=texCmdBody,texComment,texDefParm,texDelimiter,texDocType,texInput,texLength,texLigature,texMathDelim,texMathError,texMathOper,texNewCmd,texNewEnv,texRefZone,texSection,texSectionMarker,texSectionName,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle
 syn cluster texEnvGroup	contains=texMatcher,texMathDelim,texSpecialChar,texStatement
 syn cluster texMatchGroup	contains=@texMathZones,texAccent,texBadMath,texComment,texDefCmd,texDelimiter,texDocType,texInput,texLength,texLigature,texMatcher,texNewCmd,texNewEnv,texOnlyMath,texParen,texRefZone,texSection,texSpecialChar,texStatement,texString,texTypeSize,texTypeStyle,texZone,texInputFile
 syn cluster texMathDelimGroup	contains=texMathDelimBad,texMathDelimKey,texMathDelimSet1,texMathDelimSet2
@@ -54,9 +61,9 @@ syn cluster texMathMatchGroup contains=@texMathZones,texComment,texDefCmd,texDel
 syn cluster texMathZoneGroup	contains=texComment,texDelimiter,texLength,texMathDelim,texMathError,texMathMatcher,texMathOper,texRefZone,texSpecialChar,texStatement,texTypeSize,texTypeStyle
 syn cluster texMathZones	contains=texMathZoneA,texMathZoneB,texMathZoneC,texMathZoneD,texMathZoneE,texMathZoneF,texMathZoneG,texMathZoneH,texMathZoneI,texMathZoneJ,texMathZoneK,texMathZoneL,texMathZoneM,texMathZoneN,texMathZoneO,texMathZoneP,texMathZoneQ,texMathZoneR,texMathZoneS,texMathZoneT,texMathZoneU,texMathZoneV,texMathZoneW
 
-" Try to flag {}, [], and () mismatches
-syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup
-syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup
+" Try to flag {} and () mismatches
+syn region texMatcher	matchgroup=Delimiter start="{" skip="\\\\\|\\[{}]"	end="}"	contains=@texMatchGroup,texError
+syn region texMatcher	matchgroup=Delimiter start="\["		end="]"	contains=@texMatchGroup,texError
 syn region texParen	start="("				end=")"	contains=@texMatchGroup
 syn match  texError	"[}\])]"
 syn match  texMathError	"}"	contained
@@ -65,11 +72,10 @@ syn region texMathMatcher	matchgroup=Delimiter start="{"  skip="\\\\\|\\}"  end=
 " TeX/LaTeX keywords
 " Instead of trying to be All Knowing, I just match \..alphameric..
 " Note that *.tex files may not have "@" in their \commands
-syn match texStatement	"\\\a\+"
-let b:extfname=expand("%:e")
 if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
   syn match texStatement	"\\[a-zA-Z@]\+"
 else
+  syn match texStatement	"\\\a\+"
   syn match texError	"\\\a*@[a-zA-Z@]*"
 endif
 
@@ -78,11 +84,16 @@ syn match texDelimiter	"&"
 syn match texDelimiter	"\\\\"
 
 " texAccent (tnx to Karim Belabas) avoids annoying highlighting for accents
-syn match texAccent	"\\[bcdvuH]\A"me=e-1
+if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  syn match texAccent	"\\[bcdvuH][^a-zA-Z@]"me=e-1
+  syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)[^a-zA-Z@]"me=e-1
+else
+  syn match texAccent	"\\[bcdvuH]\A"me=e-1
+  syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)\A"me=e-1
+endif
 syn match texAccent	"\\[bcdvuH]$"
 syn match texAccent	+\\[=^.\~"`']+
 syn match texAccent	+\\['=t'.c^ud"vb~Hr]{\a}+
-syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)\A"me=e-1
 syn match texLigature	"\\\([ijolL]\|ae\|oe\|ss\|AA\|AE\|OE\)$"
 
 " \begin{}/\end{} section markers
@@ -153,6 +164,10 @@ syn match texTypeSize	"\\LARGE\>"
 syn match texTypeSize	"\\huge\>"
 syn match texTypeSize	"\\Huge\>"
 
+" Spacecodes
+syn match texSpaceCode	"\\\(math\|cat\|del\|lc\|sf\|uc\)code`"me=e-1 nextgroup=texSpaceCodeChar
+syn match texSpaceCodeChar	"`.\{-}="me=e-1
+
 " Sections, subsections, etc
 syn match texSection	"\\\(sub\)*section\*\=\>"
 syn match texSection	"\\\(title\|author\|part\|chapter\|paragraph\|subparagraph\)\>"
@@ -204,7 +219,11 @@ syn keyword texMathDelimKey   contained	Updownarrow	langle	rangle
 
 " special TeX characters  ( \$ \& \% \# \{ \} \_ \S \P )
 syn match texSpecialChar	"\\[$&%#{}_]"
-syn match texSpecialChar	"\\[SP@]\A"me=e-1
+if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+  syn match texSpecialChar	"\\[SP@][^a-zA-Z@]"me=e-1
+else
+  syn match texSpecialChar	"\\[SP@]\A"me=e-1
+endif
 syn match texSpecialChar	"\\\\"
 syn match texOnlyMath	"[_^]"
 syn match texSpecialChar	"\^\^[0-9a-f]\{2}\|\^\^\S"
@@ -230,7 +249,11 @@ if version < 600
  syn region texZone	start="\\verb`"		end="`\|%stopzone\>"
  syn region texZone	start="\\verb#"		end="#\|%stopzone\>"
 else
- syn region texZone	start="\\verb\z(.\)"		end="\z1\|%stopzone\>"
+  if b:extfname == "sty" || b:extfname == "cls" || b:extfname == "clo" || b:extfname == "dtx" || b:extfname == "ltx"
+    syn region texZone	start="\\verb\z([^ \ta-zA-Z@]\)"	end="\z1\|%stopzone\>"
+  else
+    syn region texZone	start="\\verb\z([^ \ta-zA-Z]\)"	end="\z1\|%stopzone\>"
+  endif
 endif
 syn region texZone	start="@samp{"		end="}\|%stopzone\>"
 syn region texRefZone	matchgroup=texStatement start="\\nocite{"	keepend end="}\|%stopzone\>"  contains=texComment,texDelimiter
@@ -386,6 +409,7 @@ if version >= 508 || !exists("did_tex_syntax_inits")
   HiLink texMathZoneW	texMath
   HiLink texSectionMarker	texCmdName
   HiLink texSectionName	texSection
+  HiLink texSpaceCode	texStatement
   HiLink texTypeSize	texType
   HiLink texTypeStyle	texType
 

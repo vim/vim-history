@@ -1498,6 +1498,24 @@ static struct vimoption
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
 				    },
+    {"printerheader", "pheader",  P_STRING|P_VI_DEF,
+#ifdef FEAT_PRINTER
+			    (char_u *)&p_headerfmt, PV_NONE,
+			    {(char_u *)"%<%f%h%m%=Page %N", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+				    },
+    {"printername", "pname",  P_STRING|P_VI_DEF,
+#ifdef FEAT_PRINTER
+			    (char_u *)&p_prtname, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+				    },
     {"printersettings", "pset",  P_STRING|P_VI_DEF,
 #ifdef FEAT_PRINTER
 			    (char_u *)&p_prtsettings, PV_NONE,
@@ -3289,23 +3307,26 @@ do_set(arg, opt_flags)
 			oldval = *(char_u **)varp;
 			if (nextchar == '&')	/* set to default val */
 			{
-#ifdef FEAT_GUI
-			    if ((char_u **)varp == &p_bg && gui.in_use)
-			    {
-				/* guess the value of 'background' */
-				if (gui_mch_get_lightness(gui.back_pixel) < 127)
-				    newval = (char_u *)"dark";
-				else
-				    newval = (char_u *)"light";
-			    }
-			    else
-#endif
-			      if (STRCMP(T_NAME, "linux") == 0)
-				newval = (char_u *)"dark";
-			    else
-				newval = options[opt_idx].def_val[
+			    newval = options[opt_idx].def_val[
 						((flags & P_VI_DEF) || cp_val)
 						 ?  VI_DEFAULT : VIM_DEFAULT];
+			    if ((char_u **)varp == &p_bg)
+			    {
+#ifdef FEAT_GUI
+				if (gui.in_use)
+				{
+				    /* guess the value of 'background' */
+				    if (gui_mch_get_lightness(gui.back_pixel)
+									< 127)
+					newval = (char_u *)"dark";
+				    else
+					newval = (char_u *)"light";
+				}
+				else
+#endif
+				    if (STRCMP(T_NAME, "linux") == 0)
+					newval = (char_u *)"dark";
+			    }
 
 			    /* expand environment variables and ~ (since the
 			     * default value was already expanded, only
@@ -4255,7 +4276,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     else if (varp == &p_bg)
     {
 	if (check_opt_strings(p_bg, p_bg_values, FALSE) == OK)
-	    init_highlight(FALSE);
+	    init_highlight(FALSE, FALSE);
 	else
 	    errmsg = e_invarg;
     }
@@ -4529,7 +4550,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		T_CCO = empty_option;
 	    }
 	    /* We now have a different color setup, initialize it again. */
-	    init_highlight(TRUE);
+	    init_highlight(TRUE, FALSE);
 	}
 	ttest(FALSE);
 	if (varp == &T_ME)

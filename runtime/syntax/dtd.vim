@@ -3,7 +3,7 @@
 " Maintainer:	Johannes Zellner <johannes@zellner.org>
 "		Author and previous maintainer:
 "		Daniel Amyot <damyot@site.uottawa.ca>
-" Last Change:	Mon, 23 Apr 2001 09:56:42 +0200
+" Last Change:	Mon, 21 May 2001 13:13:43 +0200
 " Filenames:	*.dtd
 " URL:		http://www.zellner.org/vim/syntax/dtd.vim
 " $Id$
@@ -76,7 +76,7 @@ syn match  dtdCard contained "|"
 syn match  dtdCard contained ","
 " evenutally overridden by dtdEntity
 syn match  dtdCard contained "&"
-syn match  dtdCard contained "\?"
+syn match  dtdCard contained "?"
 syn match  dtdCard contained "\*"
 syn match  dtdCard contained "+"
 

@@ -898,29 +898,29 @@ qf_guess_filepath(filename)
  */
     void
 qf_jump(dir, errornr, forceit)
-    int	    dir;
-    int	    errornr;
-    int	    forceit;
+    int		dir;
+    int		errornr;
+    int		forceit;
 {
-    struct qf_line  *qf_ptr;
-    struct qf_line  *old_qf_ptr;
-    int		    qf_index;
-    int		    old_qf_fnum;
-    int		    old_qf_index;
-    int		    prev_index;
-    static char_u   *e_no_more_items = (char_u *)N_("No more items");
-    char_u	    *err = e_no_more_items;
-    linenr_T	    i;
-    buf_T	    *old_curbuf;
-    linenr_T	    old_lnum;
+    struct qf_line	*qf_ptr;
+    struct qf_line	*old_qf_ptr;
+    int			qf_index;
+    int			old_qf_fnum;
+    int			old_qf_index;
+    int			prev_index;
+    static char_u	*e_no_more_items = (char_u *)N_("No more items");
+    char_u		*err = e_no_more_items;
+    linenr_T		i;
+    buf_T		*old_curbuf;
+    linenr_T		old_lnum;
 #ifdef FEAT_WINDOWS
-    int		    opened_window = FALSE;
-    win_T	    *win;
+    int			opened_window = FALSE;
+    win_T		*win;
 #endif
-    int		    print_message = TRUE;
-    int		    len;
+    int			print_message = TRUE;
+    int			len;
 #ifdef FEAT_FOLDING
-    int		    old_KeyTyped = KeyTyped;	/* getting file may reset it */
+    int			old_KeyTyped = KeyTyped; /* getting file may reset it */
 #endif
 
     if (qf_curlist >= qf_listcount || qf_lists[qf_curlist].qf_count == 0)
@@ -1016,8 +1016,6 @@ qf_jump(dir, errornr, forceit)
      */
     if (bt_quickfix(curbuf))
     {
-	int	save_p_sb;
-
 	/*
 	 * If there is no file specified, we don't know where to go.
 	 * But do advance, otherwise ":cn" gets stuck.
@@ -1031,12 +1029,8 @@ qf_jump(dir, errornr, forceit)
 	 */
 	if (firstwin == lastwin)
 	{
-	    save_p_sb = p_sb;
-	    p_sb = FALSE;
-	    i = win_split(0, 0);
-	    p_sb = save_p_sb;
-	    if (i == FAIL)		/* not enough room for window */
-		goto failed;
+	    if (win_split(0, WSP_ABOVE) == FAIL)
+		goto failed;		/* not enough room for window */
 	    opened_window = TRUE;	/* close it when fail */
 	}
 	else
@@ -1443,8 +1437,6 @@ ex_cwindow(eap)
     int		height;
     buf_T	*buf;
     win_T	*win;
-    int		save_p_sb;
-    int		i;
 
     if (eap->addr_count != 0)
 	height = eap->line2;
@@ -1470,12 +1462,8 @@ ex_cwindow(eap)
     {
 	/* Create the new window at the very bottom. */
 	win_goto(lastwin);
-	save_p_sb = p_sb;
-	p_sb = TRUE;
-	i = win_split(height, 0);
-	p_sb = save_p_sb;
-	if (i == FAIL)		/* not enough room for window */
-	    return;
+	if (win_split(height, WSP_BELOW) == FAIL)
+	    return;		/* not enough room for window */
 
 	/*
 	 * Find existing quickfix buffer, or create a new one.

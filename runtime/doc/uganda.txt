@@ -1,4 +1,4 @@
-*uganda.txt*    For Vim version 6.0ag.  Last change: 2001 May 12
+*uganda.txt*    For Vim version 6.0ah.  Last change: 2001 May 25
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,7 +39,7 @@ Vim releases instead of the text that was included with it.
 The Open Publication License applies to the Vim documentation, see
 |manual-copyright|.
 
-							*iccf*
+							*iccf* *ICCF*
 If you are happy with Vim, please express that by reading the rest of this
 file.  You can also have a look here (these are mirrors):
 

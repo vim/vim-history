@@ -142,6 +142,9 @@ static RETSIGTYPE sig_winch __ARGS(SIGPROTOARG);
 #if defined(SIGINT)
 static RETSIGTYPE catch_sigint __ARGS(SIGPROTOARG);
 #endif
+#if defined(SIGPWR)
+static RETSIGTYPE catch_sigpwr __ARGS(SIGPROTOARG);
+#endif
 #if defined(SIGALRM) && defined(FEAT_X11) \
 	&& defined(FEAT_TITLE) && !defined(FEAT_GUI_GTK)
 # define SET_SIG_ALARM
@@ -648,6 +651,21 @@ catch_sigint SIGDEFARG(sigarg)
 }
 #endif
 
+#if defined(SIGPWR)
+/* ARGSUSED */
+    static RETSIGTYPE
+catch_sigpwr SIGDEFARG(sigarg)
+{
+    /*
+     * I'm not sure we get the SIGPWR signal when the system is really going
+     * down or when the batteries are almost empty.  Just preserve the swap
+     * files and don't exit, that can't do any harm.
+     */
+    ml_sync_all(FALSE, FALSE);
+    SIGRETURN;
+}
+#endif
+
 #ifdef SET_SIG_ALARM
 /*
  * signal function for alarm().
@@ -920,6 +938,14 @@ set_signals()
      */
 #ifdef SIGALRM
     signal(SIGALRM, SIG_IGN);
+#endif
+
+    /*
+     * Catch SIGPWR (power failure?) to preserve the swap files, so that no
+     * work will be lost.
+     */
+#ifdef SIGPWR
+    signal(SIGPWR, (RETSIGTYPE (*)())catch_sigpwr);
 #endif
 
     /*
@@ -4525,33 +4551,40 @@ save_patterns(num_pat, pat, num_file, file)
 }
 #endif
 
-
+/*
+ * Return TRUE if the string "p" contains a wildcard.
+ * Don't recognize '~' at the end as a wildcard.
+ */
     int
 mch_has_wildcard(p)
     char_u  *p;
 {
-#ifdef OS2
-# ifdef VIM_BACKTICK
-    return (vim_strpbrk(p, (char_u *)"?*$`~") != NULL);
-# else
-    return (vim_strpbrk(p, (char_u *)"?*$~") != NULL);
-# endif
-#else
     for ( ; *p; ++p)
     {
+#ifndef OS2
 	if (*p == '\\' && p[1] != NUL)
 	    ++p;
-        else if (vim_strchr((char_u *)
-#ifdef VMS
-                                    "*?%$~"
-#else
-                                    "*?[{`'~$"
+        else
 #endif
-                                                , *p) != NULL)
+	    if (vim_strchr((char_u *)
+#ifdef VMS
+                                    "*?%$"
+#else
+# ifdef OS2
+#  ifdef VIM_BACKTICK
+				    "*?$`"
+#  else
+				    "*?$"
+#  endif
+# else
+				    "*?[{`'$"
+# endif
+#endif
+                                                , *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
 	    return TRUE;
     }
     return FALSE;
-#endif
 }
 
 #ifndef __EMX__

@@ -725,12 +725,17 @@ win_split_ins(size, flags, newwin, dir)
     /*
      * allocate new window structure and link it in the window list
      */
-    if ((flags & WSP_TOP) == 0 && ((flags & WSP_BOT) || (
+    if ((flags & WSP_TOP) == 0
+	    && ((flags & WSP_BOT)
+		|| (flags & WSP_BELOW)
+		|| (!(flags & WSP_ABOVE)
+		    && (
 #ifdef FEAT_VERTSPLIT
-	    (flags & WSP_VERT) ? p_spr :
+			(flags & WSP_VERT) ? p_spr :
 #endif
-	    p_sb)))	/* new window below/right of current one */
+			p_sb))))
     {
+	/* new window below/right of current one */
 	if (newwin == NULL)
 	    wp = win_alloc(oldwin);
 	else
@@ -821,6 +826,11 @@ win_split_ins(size, flags, newwin, dir)
     else
     {
 	curfrp = oldwin->w_frame;
+	if (flags & WSP_BELOW)
+	    before = FALSE;
+	else if (flags & WSP_ABOVE)
+	    before = TRUE;
+	else
 #ifdef FEAT_VERTSPLIT
 	if (flags & WSP_VERT)
 	    before = !p_spr;
@@ -1112,7 +1122,6 @@ make_windows(count, vertical)
 {
     int		maxcount;
     int		todo;
-    int		p_sb_save;
 
 #ifdef FEAT_VERTSPLIT
     if (vertical)
@@ -1149,18 +1158,13 @@ make_windows(count, vertical)
     ++autocmd_busy;
 #endif
 
-    /*
-     * set 'splitbelow' off for a moment, don't want that now
-     */
-    p_sb_save = p_sb;
-    p_sb = FALSE;
     /* todo is number of windows left to create */
     for (todo = count - 1; todo > 0; --todo)
 #ifdef FEAT_VERTSPLIT
 	if (vertical)
 	{
 	    if (win_split(curwin->w_width - (curwin->w_width - todo)
-			/ (todo + 1) - 1, WSP_VERT) == FAIL)
+			/ (todo + 1) - 1, WSP_VERT | WSP_ABOVE) == FAIL)
 		break;
 	}
 	else
@@ -1168,10 +1172,9 @@ make_windows(count, vertical)
 	{
 	    if (win_split(curwin->w_height - (curwin->w_height - todo
 			    * STATUS_HEIGHT) / (todo + 1)
-			- STATUS_HEIGHT, 0) == FAIL)
+			- STATUS_HEIGHT, WSP_ABOVE) == FAIL)
 		break;
 	}
-    p_sb = p_sb_save;
 
 #ifdef FEAT_AUTOCMD
     --autocmd_busy;

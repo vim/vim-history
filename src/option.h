@@ -240,11 +240,12 @@
 #define STL_PERCENTAGE	'p'		/* percentage through file */
 #define STL_ALTPERCENT	'P'		/* percentage as TOP BOT ALL or NN% */
 #define STL_ARGLISTSTAT	'a'		/* argument list status as (x of y) */
+#define STL_PAGENUM	'N'		/* page number (when printing)*/
 #define STL_VIM_EXPR	'{'		/* start of expression to substitute */
 #define STL_MIDDLEMARK	'='		/* separation between left and right */
 #define STL_TRUNCMARK	'<'		/* truncation mark if line is too long*/
 #define STL_HIGHLIGHT	'*'		/* highlight from (User)1..9 or 0 */
-#define STL_ALL		((char_u *) "fFtcvVlLknoObBrRhHmYyWwMpPa{")
+#define STL_ALL		((char_u *) "fFtcvVlLknoObBrRhHmYyWwMpPaN{")
 
 /* flags used for parsed 'wildmode' */
 #define WIM_FULL	1
@@ -391,6 +392,8 @@ EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef FEAT_PRINTER
 EXTERN char_u	*p_prtfont;	/* 'printerfont' */
 EXTERN char_u	*p_prtsettings;	/* 'printersettings' */
+EXTERN char_u	*p_prtname;	/* 'printername' */
+EXTERN char_u	*p_headerfmt;	/* 'printerheader' */
 #endif
 #ifdef FEAT_GUI
 EXTERN char_u	*p_guifont;	/* 'guifont' */

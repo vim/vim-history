@@ -18,11 +18,14 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+
 #ifndef __CYGWIN__
 # include <direct.h>
 #endif
+
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #ifdef WIN32
 # include <windows.h>
 #else
@@ -30,10 +33,27 @@
 # include <bios.h>
 # include <dos.h>
 #endif
+
 #ifdef DJGPP
 # include <unistd.h>
 # include <errno.h>
 #endif
+
+/* shlobj.h is needed for shortcut creation */
+#ifdef WIN32
+# include <shlobj.h>
+#endif
+
+#ifdef DJGPP
+# define vim_mkdir(x, y) mkdir((char *)(x), y)
+#else
+# ifdef WIN32
+#  define vim_mkdir(x, y) _mkdir((char *)(x))
+# else
+#  define vim_mkdir(x, y) mkdir((char *)(x))
+# endif
+#endif
+/* ---------------------------------------- */
 
 #include "version.h"
 
@@ -86,7 +106,7 @@ char	*(compat_choices[]) =
     "with some Vim ehancements",
     "with syntax highlighting and other features switched on",
 };
-int	compat_choices_default = 3;
+int	compat_choice_default = 3;
 int	compat_choice;
 char	*compat_text = "- run Vim %s";
 
@@ -109,6 +129,34 @@ char	*(mouse_choices[]) =
 int	mouse_choice_default = 2;
 int	mouse_choice;
 char	*mouse_text = "- The mouse %s";
+
+char	*(shortcut_choices[]) =
+{
+    "\nChoose where and whether to create shortcuts to Vim:",
+    "no shortcuts to Vim",
+    "a shortcut to Vim on the desktop",
+    "a shortcut to Vim in the Start Menu",
+    "shortcuts to Vim both on the desktop and in the Start Menu",
+};
+int	shortcut_choice_default = 1;
+int	shortcut_choice;
+char	*shortcut_text = "Create %s";
+
+
+/*
+ * Definitions of the directory name (under $VIM) of the vimfiles directory
+ * and its subdirectories:
+ */
+char	*vimfiles_dir_name = "vimfiles";
+char	*(vimfiles_subdirs[]) =
+{
+    "plugin",
+    "ftplugin",
+    "doc",
+    "colors",
+    "indent",
+    "syntax",
+};
 
 /*
  * The toupper() in Bcc 5.5 doesn't work, use our own implementation.
@@ -652,7 +700,7 @@ inspect_system(void)
     }
 
     /*
-     * If $VIMRUNTIME is set, check that it's pointing to our directory.
+     * If $VIMRUNTIME is set, check that it's pointing to our runtime directory.
      */
     p = getenv("VIMRUNTIME");
     if (p != NULL && pathcmp(p, strlen(p), installdir, strlen(installdir)) != 0)
@@ -927,7 +975,7 @@ init_bat_choice(char *name, char *oldname, char *batname, int gvim)
 	else
 	{
 	    p = getenv("PATH");
-	    if (p == NULL || *p == NUL)	    /* "cannot happen" */
+	    if (p == NULL || *p == NUL)		/* "cannot happen" */
 		strcpy(batname, "C:/Windows");
 	    else
 	    {
@@ -1098,8 +1146,8 @@ init_vimrc_choices(void)
 
     /* default way to run Vim */
     choices[choice_count].text = alloc(80);
-    sprintf(choices[choice_count].text, compat_text, compat_choices[compat_choices_default]);
-    compat_choice = compat_choices_default;
+    sprintf(choices[choice_count].text, compat_text, compat_choices[compat_choice_default]);
+    compat_choice = compat_choice_default;
     choices[choice_count].changefunc = change_run_choice;
     choices[choice_count].installfunc = NULL;;
     choices[choice_count].active = (*oldvimrc == NUL);
@@ -1236,6 +1284,404 @@ init_popup_choice(void)
 	add_dummy_choice();
 }
 
+#ifdef WIN32
+/* create_shortcut
+ *
+ * Create a shell link.
+ *
+ * returns 0 on failure, non-zero on successful completion.
+ *
+ * NOTE:  Currently, this may not work in DJGPP, MINGW
+ *	  Untested in BC3, VC < 5, ming, djgpp
+ */
+    int
+create_shortcut(
+	const char *shortcut_name,
+	const char *iconfile_path,
+	int	    iconindex,
+	const char *shortcut_target,
+	const char *shortcut_args,
+	const char *workingdir
+	)
+{
+   IShellLinkA	    *shelllink_ptr;
+   HRESULT	    hres;
+   IPersistFile	    *persistfile_ptr;
+
+   printf("Creating shortcut at path: %s\n\n", shortcut_name);
+
+   /* Initialize COM library */
+   hres = CoInitialize(NULL);
+   if (!SUCCEEDED(hres))
+   {
+      printf("Error:  Could not open the COM library.  Not creating shortcut.\n");
+      return 0;
+   }
+
+   /* Instantiate a COM object for the ShellLink, store a pointer to it
+    * in shelllink_ptr.  */
+   hres = CoCreateInstance(&CLSID_ShellLink,
+			   NULL,
+			   CLSCTX_INPROC_SERVER,
+			   &IID_IShellLink,
+			   (void **) &shelllink_ptr);
+
+   if (SUCCEEDED(hres)) /* If the instantiation was successful... */
+   {
+      /* ...Then build a PersistFile interface for the ShellLink so we can
+       * save it as a file after we build it.  */
+      hres = shelllink_ptr->lpVtbl->QueryInterface(shelllink_ptr, &IID_IPersistFile, (void **) &persistfile_ptr);
+
+      if (SUCCEEDED(hres))
+      {
+	 wchar_t wsz[BUFSIZE];
+
+	 /* translate the (possibly) multibyte shortcut filename to windows
+	  * Unicode so it can be used as a file name.
+	  */
+	 MultiByteToWideChar(CP_ACP, 0, shortcut_name, -1, wsz, BUFSIZE);
+
+	 /* set the attributes */
+	 shelllink_ptr->lpVtbl->SetPath(shelllink_ptr, shortcut_target);
+	 shelllink_ptr->lpVtbl->SetWorkingDirectory(shelllink_ptr, workingdir);
+	 shelllink_ptr->lpVtbl->SetIconLocation(shelllink_ptr, iconfile_path,
+								   iconindex);
+	 shelllink_ptr->lpVtbl->SetArguments(shelllink_ptr, shortcut_args);
+
+	 /* save the shortcut to a file and return the PersistFile object*/
+	 persistfile_ptr->lpVtbl->Save(persistfile_ptr, wsz, TRUE);
+	 persistfile_ptr->lpVtbl->Release(persistfile_ptr);
+      }
+      else
+      {
+	 printf("QueryInterface Error\n");
+	 return 0;
+      }
+
+      /* Return the ShellLink object */
+      shelllink_ptr->lpVtbl->Release(shelllink_ptr);
+   }
+   else
+   {
+      printf("CoCreateInstance Error - hres = %08x\n", hres);
+      return 0;
+   }
+
+   return 1;
+}
+
+/*
+ * Give the user options and get a choice on shortcut creation.
+ */
+    void
+change_shortcut_choice(int idx)
+{
+    shortcut_choice = get_choice(shortcut_choices, TABLE_SIZE(shortcut_choices));
+    sprintf(choices[idx].text, shortcut_text, shortcut_choices[shortcut_choice]);
+}
+
+/*
+ * Get the path to a requested Windows shell folder.
+ *
+ * Return 0 on error, non-zero on success
+ */
+    int
+get_shell_folder_path(char shell_folder_path[BUFSIZE], const char *shell_folder_name)
+{
+    long path_length = BUFSIZE; /* this variable needs to be volatile so we
+				    can't just use BUFSIZE */
+    long value_type;
+    long rtype;
+
+    char unexpanded_shell_folder_path[BUFSIZE];
+    char *user_shell_folders_key = "software\\microsoft\\windows\\currentversion\\explorer\\User Shell Folders";
+
+    HKEY key_handle;
+
+    rtype = RegOpenKeyEx(HKEY_CURRENT_USER, user_shell_folders_key, 0, KEY_QUERY_VALUE, &key_handle);
+    if (rtype != ERROR_SUCCESS)
+    {
+	printf("\nERROR opening registry key: \"%s\"\n\n", user_shell_folders_key);
+	return 0;
+    }
+
+    rtype = RegQueryValueEx(key_handle, shell_folder_name, NULL, &value_type, unexpanded_shell_folder_path, &path_length);
+    if (rtype != ERROR_SUCCESS)
+    {
+	printf("\nERROR querying for shell folder \"%s\"\n\n", shell_folder_name);
+	return 0;
+    }
+
+    if (value_type == REG_EXPAND_SZ)
+    {
+	/* There are environment variables (%WINDIR% for example) in the
+	 * path */
+	ExpandEnvironmentStrings(unexpanded_shell_folder_path, shell_folder_path, BUFSIZE);
+    }
+    else
+    {
+	/* no environment variables, just copy the result to the pointer we
+	 * got */
+	strcpy(shell_folder_path, unexpanded_shell_folder_path);
+    }
+    return 1;
+}
+
+/*
+ * Build a path to where we will put a specified link.
+ *
+ * Return 0 on error, non-zero on success
+ */
+   int
+build_link_name(
+	char link_path[BUFSIZE],
+	const char *link_name,
+	const char *shell_folder_name)
+{
+    char	shell_folder_path[BUFSIZE];
+    int		return_val = 0;
+
+    return_val = get_shell_folder_path(shell_folder_path, shell_folder_name);
+    if (return_val == 0)
+    {
+	printf("An error occurred while attempting to find the path to %s.\n", shell_folder_name);
+	return 0;
+    }
+
+    /* build the path to the shortcut and the path to gvim.exe */
+    sprintf(link_path, "%s\\%s", shell_folder_path, link_name);
+
+    return return_val;
+}
+
+/*
+ * Function to actually create the shortcuts
+ *
+ * On shortcut creation:
+ * 1. For now, I am assuming we only create a shortcut if gvim is present,
+ *    as console Vim will usually be started from a console (I assume...)
+ * 2. Currently, I supply no args to gvim in the shortcut, though this could be
+ *    used if we want to make a shortcut to vimdiff/view/evim...
+ * 3. Currently I am supplying no working directory to the shortcut.  This means
+ *    that the initial working dir will be:
+ *    - the location of the shortcut if no file is supplied
+ *    - the location of the file being edited if a file is supplied (ie via drag
+ *	and drop onto the shortcut).
+ */
+    void
+install_shortcuts(int idx)
+{
+    char gvim_path [BUFSIZE];
+    char link_name [BUFSIZE];
+    int return_val = 0;
+
+    /* Create the path to gvim.exe */
+    sprintf(gvim_path, "%s\\gvim.exe", installdir);
+
+    switch (shortcut_choice)
+    {
+	case 1: /* no shortcuts - do nothing */
+	{
+	    break;
+	}
+	case 4: /* Create shortcuts in Start Menu\Programs AND Desktop */
+	{
+	    /* Since we have the code to create each of those individually,
+	     * just drop through and execute each one.
+	     */
+	}
+	case 2: /* Create a shortcut on the desktop */
+	{
+	    /* get the name of the link to put on the desktop */
+	    return_val = build_link_name(link_name, "Vim.lnk", "desktop");
+	    if (return_val == 0)
+	    {
+		printf("A shortcut to Vim will not be created on the destop.\n");
+		break;
+	    }
+
+	    /* Create the shortcut: */
+	    create_shortcut(link_name, gvim_path, 0, gvim_path, "", "");
+
+	    if (shortcut_choice == 2) /* Then we only want to create _this_ shortcut */
+	    {
+		break;
+	    }
+	    else /* We got here by drop through from above:  clear link_name to use it again */
+	    {
+		/* Clear link_name so we can use it again: */
+		sprintf(link_name, "");
+	    }
+	}
+	case 3: /* Create a shortcut in the Start Menu\Programs folder */
+	{
+	    /* get the name of the link to put on the desktop */
+	    return_val = build_link_name(link_name, "Vim.lnk", "programs");
+	    if (return_val == 0)
+	    {
+		printf("A shortcut to Vim will not be created in Start Menu\\Programs.\n");
+		break;
+	    }
+
+	    /* Create the shortcut: */
+	    create_shortcut(link_name, gvim_path, 0, gvim_path, "", "");
+	    break;
+	}
+	default:
+	{
+	    /* We should never get here... famous last words... ;-)
+	     * Just in case we DO end up here, with an invalid option selected
+	     * let the user remake the selection.  Give them the choice again,
+	     * then recall this function to finish installing the shortcut.
+	     */
+	    printf("\nYour choice of shortcuts has somehow become corrupted.  Please choose again:\n");
+	    change_shortcut_choice(idx);
+	    install_shortcuts(idx);
+	    break;
+	}
+    }
+}
+
+/*
+ * Add the choice for the shortcuts.
+ */
+    static void
+init_shortcut_choice(void)
+{
+    choices[choice_count].text = alloc(150);
+    shortcut_choice = shortcut_choice_default;
+    sprintf(choices[choice_count].text, shortcut_text, shortcut_choices[shortcut_choice]);
+    choices[choice_count].changefunc = change_shortcut_choice;
+    choices[choice_count].installfunc = install_shortcuts;
+    choices[choice_count].active = 1;
+    ++choice_count;
+}
+
+/*
+ * Attempt to register OLE for Vim.
+ */
+   static void
+install_OLE_register(int idx)
+{
+    char register_command_string[BUFSIZE + 20];
+
+    printf("\n--- Attempting to register Vim with OLE ---\n");
+    printf("If Vim registers successfully, a message box will appear with a success message.\n");
+    printf("If Vim does not register, a message box will appear with the error.\n");
+    printf("To finish installation, click the OK button in the message box.\n");
+    printf("If no message box appears at all, your gvim.exe is not OLE enabled.\n");
+
+    sprintf(register_command_string, "%s\\gvim.exe -register", installdir);
+    system(register_command_string);
+}
+
+/*
+ * Toggle whether to try registering OLE for Vim
+ */
+   static void
+change_OLE_register_choice(int idx)
+{
+    if (choices[idx].installfunc == NULL)
+    {
+	strcpy(choices[idx].text, "Register OLE Vim if your gvim.exe is OLE enabled.");
+	choices[idx].installfunc = install_OLE_register;
+    }
+    else
+    {
+	strcpy(choices[idx].text, "Do not try to register OLE Vim.  If Registration is necessary,\n    Vim will give you the option next time you run it in GUI mode.");
+	choices[idx].installfunc = NULL;
+    }
+}
+/*
+ * Add the choice for registering OLE Vim
+ */
+    static void
+init_OLE_register_choice(void)
+{
+    choices[choice_count].text = alloc(150);
+    choices[choice_count].changefunc = change_OLE_register_choice;
+    choices[choice_count].installfunc = NULL;
+    choices[choice_count].active = 1;
+    change_OLE_register_choice(choice_count);
+    ++choice_count;
+}
+#endif /* WIN32 */
+
+/*
+ * Remove the last part of a directory path to get its parent.
+ */
+    static void
+dir_remove_last(const char *path, char buffer[BUFSIZE])
+{
+    char c;
+    long last_char_to_copy;
+    long path_length = strlen(path);
+
+    /* skip the last character just in case it is a '\\' */
+    last_char_to_copy = path_length - 2;
+    c = path[last_char_to_copy];
+
+    while (c != '\\')
+    {
+	last_char_to_copy--;
+	c = path[last_char_to_copy];
+    }
+
+    strncpy(buffer, path, last_char_to_copy);
+    buffer[last_char_to_copy] = NUL;
+}
+
+/*
+ * Create the vimfiles directories...
+ */
+    static void
+install_vimfilesdir(int idx)
+{
+    int i;
+    char *p;
+    char vimdir_path[BUFSIZE];
+    char vimfiles_path[BUFSIZE];
+    char tmp_dirname[BUFSIZE];
+
+    /* 1.  Go to the $VIM directory - check env first, then go one dir
+     *	   below installdir if there is no %VIM% environment variable.	The
+     *	   accuracy of $VIM is checked in inspect_system(), so we can be sure
+     *	   it is ok to use here.
+     */
+    p = getenv("VIM");
+    if (p == NULL) /* No $VIM in path */
+	dir_remove_last(installdir, vimdir_path);
+    else
+	strcpy(vimdir_path, p);
+
+    /* Now, just create the directory.	If it already exists, it will fail
+     * silently.
+     */
+    sprintf(vimfiles_path, "%s\\%s", vimdir_path, vimfiles_dir_name);
+    vim_mkdir(vimfiles_path, 0755);
+
+    printf("Now creating the following directories so that plugins and\n");
+    printf("documentation can be dropped in easily:\n\n");
+    for (i = 0; i < TABLE_SIZE(vimfiles_subdirs); i++)
+    {
+	sprintf(tmp_dirname, "%s\\%s", vimfiles_path, vimfiles_subdirs[i]);
+	printf("    %s\n", tmp_dirname);
+	vim_mkdir(tmp_dirname, 0755);
+    }
+}
+
+/*
+ * Add the vimfiles dir creation to the setup sequence.
+ * Not much to do here, since we don't currently give a choice.
+ */
+    static void
+init_vimfilesdir_setup(void)
+{
+    choices[choice_count].installfunc = install_vimfilesdir;
+    choices[choice_count].active = 0;
+    ++choice_count;
+}
+
 /*
  * Setup the default choices.
  */
@@ -1259,6 +1705,31 @@ setup_choices(void)
 
     /* Whether to add Vim to the popup menu */
     init_popup_choice();
+
+#ifdef WIN32
+    /* Whether to add shortcuts to Vim on desktop or in Start Menu
+     * Only available if gvim.exe is present (for now at least) */
+    if (has_gvim)
+	init_shortcut_choice();
+    else
+#endif
+	add_dummy_choice();
+
+#ifdef WIN32
+    /* If gvim is present, it may be OLE enabled.  Since there is no easy way
+     * to detect whether gvim is OLE enabled from install, we'll just give the
+     * option to register it.  If it is not OLE enabled and we try to register,
+     * nothing will happen, so we'll be ok.  */
+    if (has_gvim)
+	init_OLE_register_choice();
+    else
+#endif
+	add_dummy_choice();
+
+    /* ALWAYS keep the vimfilesdir_setup at the end of setup_choices.  It needs
+     * to increment choice_count, but it does not have a menu entry for the
+     * user, so we don't want to take up unnecessary numbers */
+    init_vimfilesdir_setup();
 }
 
 /*
@@ -1337,6 +1808,17 @@ show_help(void)
 "An alternative is the option offered here: Install an \"Edit with Vim\"\n"
 "entry in the popup menu for the right mouse button.  This means you can\n"
 "edit any file you like with Vim\n"
+,
+"Shortcuts to GVim\n"
+"-----------------\n"
+"In Windows 95 and later, shortcuts to GVim can be created on the Desktop,\n"
+"in the Start Menu, or both.  This option is turned off by default.\n"
+,
+"Registering OLE in GVim with OLE enabled\n"
+"----------------------------------------\n"
+"On by default if GVim is present.  This will register OLE for GVim if\n"
+"your GVim is OLE enabled.  Otherwise it will do nothing.  This is not\n"
+"available for console mode Vim.\n"
 ,
 NULL
     };

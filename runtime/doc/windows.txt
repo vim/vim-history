@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0ag.  Last change: 2001 May 12
+*windows.txt*   For Vim version 6.0ah.  Last change: 2001 May 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -186,10 +186,24 @@ CTRL-W ^	Does ":split #", split window in two and edit alternate file.
 Note that the 'splitbelow' and 'splitright' options influence where a new
 window will appear.
 
-						*:vertical*
+						*:vert* *:vertical*
 :vert[ical] {cmd}
 		Execute {cmd}.  If it contains a command that splits a window,
 		it will be split vertically.
+
+:lefta[bove] {cmd}				*:lefta* *leftabove*
+:abo[veleft] {cmd}				*:abo* *:aboveleft*
+		Execute {cmd}.  If it contains a command that splits a window,
+		it will be opened left (vertical split) or above (horizontal
+		split) the current window.  Overrules 'splitbelow' and
+		'splitright'.
+
+:rightb[elow] {cmd}				*:rightb* *:rightbelow*
+:bel[owright] {cmd}				*:bel* *:belowright*
+		Execute {cmd}.  If it contains a command that splits a window,
+		it will be opened right (vertical split) or below (horizontal
+		split) the current window.  Overrules 'splitbelow' and
+		'splitright'.
 
 						*:topleft* *E442*
 :to[pleft] {cmd}

@@ -250,8 +250,8 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
     int		conv_error = FALSE;	/* conversion error detected */
     char_u	*tmpname = NULL;	/* name of 'charconvert' output file */
     int		fio_flags = 0;
-    char_u	*fenc;			/* fileencoding to use; when fenc_next
-					   != NULL it's in allocated memory */
+    char_u	*fenc;			/* fileencoding to use */
+    int		fenc_alloced;		/* fenc_next is in allocated memory */
     char_u	*fenc_next = NULL;	/* next item in 'fencs' or NULL */
     int		advance_fenc = FALSE;
     long	real_size = 0;
@@ -667,15 +667,25 @@ readfile(fname, sfname, from, lines_to_skip, lines_to_read, eap, flags)
      * Decide which 'encoding' to use first.
      */
     if (eap != NULL && eap->force_enc != 0)
+    {
 	fenc = enc_canonize(eap->cmd + eap->force_enc);
+	fenc_alloced = TRUE;
+    }
     else if (curbuf->b_p_bin)
+    {
 	fenc = (char_u *)"";		/* binary: don't convert */
+	fenc_alloced = FALSE;
+    }
     else if (*p_fencs == NUL)
+    {
 	fenc = curbuf->b_p_fenc;	/* use format from buffer */
+	fenc_alloced = FALSE;
+    }
     else
     {
 	fenc_next = p_fencs;		/* try items in 'fileencodings' */
 	fenc = next_fenc(&fenc_next);
+	fenc_alloced = TRUE;
     }
 #endif
 
@@ -765,18 +775,25 @@ retry:
 	     * without conversion. */
 	    notconverted = TRUE;
 	    conv_error = FALSE;
-	    vim_free(fenc);
+	    if (fenc_alloced)
+		vim_free(fenc);
 	    fenc = (char_u *)"";
+	    fenc_alloced = FALSE;
 	}
 	else
 	{
+	    if (fenc_alloced)
+		vim_free(fenc);
 	    if (fenc_next != NULL)
 	    {
-		vim_free(fenc);
 		fenc = next_fenc(&fenc_next);
+		fenc_alloced = (fenc_next != NULL);
 	    }
 	    else
+	    {
 		fenc = (char_u *)"";
+		fenc_alloced = FALSE;
+	    }
 	}
 	if (tmpname != NULL)
 	{
@@ -1101,13 +1118,10 @@ retry:
 		    else
 		    {
 			/* BOM detected: set "fenc" and jump back */
-			if (fenc_next != NULL)
-			{
+			if (fenc_alloced)
 			    vim_free(fenc);
-			    fenc = vim_strsave(ccname);
-			}
-			else
-			    fenc = ccname;
+			fenc = ccname;
+			fenc_alloced = FALSE;
 		    }
 		    /* retry reading without getting new bytes or rewinding */
 		    skip_read = TRUE;
@@ -1619,8 +1633,7 @@ failed:
     if (newfile)
 	set_string_option_direct((char_u *)"fenc", -1, fenc,
 							  OPT_FREE|OPT_LOCAL);
-    if (fenc_next != NULL
-	    || (eap != NULL && eap->force_enc != 0 && *fenc != NUL))
+    if (fenc_alloced)
 	vim_free(fenc);
 # ifdef USE_ICONV
     if (iconv_fd != (iconv_t)-1)

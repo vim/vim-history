@@ -282,7 +282,9 @@ GUI_OBJ = \
 GUI_LIB = \
 	oldnames.lib kernel32.lib gdi32.lib $(IME_LIB) \
 	winspool.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib \
+	ole32.lib uuid.lib \
 	/machine:$(CPU) /nodefaultlib
+# ole32.lib and uuid.lib are only needed for FEAT_SHORTCUT
 !else
 SUBSYSTEM = console
 !endif
@@ -433,7 +435,7 @@ $(OUTDIR):
 	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
 
 install.exe: dosinst.c
-	$(CC) /nologo -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib
+	$(CC) /nologo -DNDEBUG -DWIN32 dosinst.c kernel32.lib shell32.lib ole32.lib advapi32.lib uuid.lib
 	- if exist install.exe del install.exe
 	ren dosinst.exe install.exe
 

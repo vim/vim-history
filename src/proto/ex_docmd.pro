@@ -37,6 +37,7 @@ int do_in_runtimepath __ARGS((char_u *name, int all, void (*callback)(char_u *fn
 void dialog_msg __ARGS((char_u *buff, char *format, char_u *fname));
 void set_lang_var __ARGS((void));
 char_u *get_lang_arg __ARGS((expand_T *xp, int idx));
+int get_printer_page_num __ARGS((void));
 void mch_print_cleanup __ARGS((void));
 int mch_print_init __ARGS((prt_settings_T *psettings, char_u *jobname, int forceit));
 int mch_print_begin __ARGS((prt_settings_T *psettings));

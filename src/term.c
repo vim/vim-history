@@ -1863,7 +1863,7 @@ set_termname(term)
 #endif
 
 #ifdef USE_TERM_CONSOLE
-	/* DEFAULT_TERM indicates that it is the machine console. */
+    /* DEFAULT_TERM indicates that it is the machine console. */
     if (STRCMP(term, DEFAULT_TERM))
 	term_console = FALSE;
     else
@@ -1876,16 +1876,16 @@ set_termname(term)
 #endif
 
 #if defined(UNIX) || defined(VMS)
-/*
- * 'ttyfast' is default on for xterm, iris-ansi and a few others.
- */
+    /*
+     * 'ttyfast' is default on for xterm, iris-ansi and a few others.
+     */
     if (vim_is_fastterm(term))
 	p_tf = TRUE;
 #endif
 #ifdef USE_TERM_CONSOLE
-/*
- * 'ttyfast' is default on consoles
- */
+    /*
+     * 'ttyfast' is default on consoles
+     */
     if (term_console)
 	p_tf = TRUE;
 #endif
@@ -3018,8 +3018,6 @@ set_shellsize(width, height, mustset)
     out_flush();
     --busy;
 }
-
-static int	cur_tmode = TMODE_COOK;
 
 /*
  * Set the terminal to TMODE_RAW (for Normal mode) or TMODE_COOK (for external
@@ -5022,7 +5020,7 @@ got_code_from_term(code, len)
 		    /* Nr of colors changed, initialize highlighting and
 		     * redraw everything. */
 		    set_color_count(i);
-		    init_highlight(TRUE);
+		    init_highlight(TRUE, FALSE);
 		    redraw_later(CLEAR);
 		}
 	    }

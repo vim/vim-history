@@ -297,32 +297,33 @@ if_python.c: dyn-ming.h
 if_perl.c: dyn-ming.h if_perl.xs typemap
 	$(PERL) $(PERLLIB)/ExtUtils/xsubpp -prototypes -typemap $(PERLLIB)/ExtUtils/typemap if_perl.xs > $@
 
+# $(SHELL) is set to sh.exe by default, it is reset to the ABSOLUT path if a
+# sh.exe is found; therefore ifeq ("sh.exe", $(SHELL)) means no sh was found
+# and the shell used is the dos shell
 dyn-ming.h:
-ifeq ($(CROSS),1)
+ifneq (sh.exe, $(SHELL))
 	@echo \/\* created by make \*\/ > dyn-ming.h
 else
 	@echo "/* created by make */" > dyn-ming.h
 endif
 ifdef DYNAMIC_PERL
-ifeq ($(CROSS),1)
+ifneq (sh.exe, $(SHELL))
 	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
 else
-	@echo \#define DYNAMIC_PERL_DLL \"$(DYNAMIC_PERL)\" >> dyn-ming.h
+	@echo #define DYNAMIC_PERL_DLL "$(DYNAMIC_PERL)" >> dyn-ming.h
 endif
 endif
-
 ifdef DYNAMIC_RUBY
-ifeq ($(CROSS),1)
+ifneq (sh.exe, $(SHELL))
 	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY_DLL)\" >> dyn-ming.h
 else
-	@echo \#define DYNAMIC_RUBY_DLL \"$(DYNAMIC_RUBY_DLL)\" >> dyn-ming.h
+	@echo #define DYNAMIC_RUBY_DLL "$(DYNAMIC_RUBY_DLL)" >> dyn-ming.h
 endif
 endif
-
 ifdef DYNAMIC_PYTHON
-ifeq ($(CROSS),1)
+ifneq (sh.exe, $(SHELL))
 	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
 else
-	@echo \#define DYNAMIC_PYTHON_DLL \"$(DYNAMIC_PYTHON)\" >> dyn-ming.h
+	@echo #define DYNAMIC_PYTHON_DLL "$(DYNAMIC_PYTHON)" >> dyn-ming.h
 endif
 endif

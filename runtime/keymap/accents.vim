@@ -1,6 +1,6 @@
 " Vim Keymap file for latin1 accents through dead characters
 " Maintainer: Bram Moolenaar
-" Last Change: 2001 Mar 20
+" Last Change: 2001 May 21
 
 " All characters are given literally, conversion to another encoding (e.g.,
 " UTF-8) should work.
@@ -10,7 +10,6 @@ scriptencoding latin1
 let b:keymap_name = "acc"
 
 loadkeymap
-aa	<char-0x05d0><char-0x05d0>
 `A	À
 'A	Á
 ^A	Â

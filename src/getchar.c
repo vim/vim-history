@@ -2220,7 +2220,12 @@ vgetorpeek(advance)
 			timedout = TRUE;
 			continue;
 		    }
-		    c = ESC;
+		    /* When 'insertmode' is set, ESC just beeps in Insert
+		     * mode.  Use CTRL-L to make edit() return. */
+		    if (p_im && (State & INSERT))
+			c = Ctrl_L;
+		    else
+			c = ESC;
 		    break;
 		}
 #endif

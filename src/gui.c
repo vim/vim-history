@@ -1583,6 +1583,8 @@ gui_outstr(s, len)
 		    break;
 		this_len += (*mb_ptr2len_check)(s + this_len);
 	    }
+	    if (this_len > len)
+		this_len = len;	    /* don't include following composing char */
 	}
 	else
 #endif

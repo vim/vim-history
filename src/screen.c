@@ -777,6 +777,7 @@ win_update(wp)
     {
 	/* draw the vertical separator right of this window */
 	draw_vsep_win(wp, 0);
+	wp->w_redr_type = 0;
 	return;
     }
 #endif
@@ -979,10 +980,9 @@ win_update(wp)
 	    {
 		i = plines_m_win(wp, wp->w_topline, wp->w_lines[0].wl_lnum - 1);
 #ifdef FEAT_DIFF
-		/* don't insert lines for invisible filler lines */
-		i -= diff_check_fill(wp, wp->w_topline) - wp->w_topfill;
-		/* do insert lines for previously invisible filler lines */
-		i += diff_check_fill(wp, wp->w_lines[0].wl_lnum)
+		/* insert extra lines for previously invisible filler lines */
+		if (wp->w_lines[0].wl_lnum != wp->w_topline)
+		    i += diff_check_fill(wp, wp->w_lines[0].wl_lnum)
 							  - wp->w_old_topfill;
 #endif
 		if (i < wp->w_height - 2)	/* less than a screen off */
@@ -2449,7 +2449,11 @@ win_line(wp, lnum, startrow, endrow)
 		if (VIsual_mode == 'V')	/* linewise */
 		    fromcol = 0;
 		else
+		{
 		    getvvcol(wp, top, (colnr_T *)&fromcol, NULL, NULL);
+		    if (gchar_pos(top) == NUL)
+			tocol = fromcol + 1;
+		}
 	    }
 	    if (VIsual_mode != 'V' && lnum == bot->lnum)
 	    {
@@ -2879,9 +2883,6 @@ win_line(wp, lnum, startrow, endrow)
 
 	/* When still displaying '$' of change command, stop at cursor */
 	if (dollar_vcol != 0 && wp == curwin && vcol >= (long)wp->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-						   + (long)wp->w_cursor.coladd
-#endif
 #ifdef FEAT_DIFF
 				   && filler_todo <= 0
 #endif
@@ -2900,15 +2901,9 @@ win_line(wp, lnum, startrow, endrow)
 	    if (((vcol == fromcol
 			    && !(noinvcur
 				&& (colnr_T)vcol == wp->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-							 + wp->w_cursor.coladd
-#endif
 				))
 			|| (noinvcur
 			    && (colnr_T)vcol_prev == wp->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-							 + wp->w_cursor.coladd
-#endif
 			    && vcol >= fromcol))
 		    && vcol < tocol)
 		area_attr = attr;		/* start highlighting */
@@ -2916,9 +2911,6 @@ win_line(wp, lnum, startrow, endrow)
 		    && (vcol == tocol
 			|| (noinvcur
 			    && (colnr_T)vcol == wp->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-							 + wp->w_cursor.coladd
-#endif
 			    )))
 #ifdef LINE_ATTR
 		area_attr = line_attr;		/* stop highlighting */
@@ -3358,8 +3350,9 @@ win_line(wp, lnum, startrow, endrow)
 		}
 #ifdef FEAT_VIRTUALEDIT
 		else if (VIsual_active
-			 && VIsual_mode == Ctrl_V
-			 && (ve_flags & VE_BLOCK)
+			 && (VIsual_mode == Ctrl_V
+			     || VIsual_mode == 'v')
+			 && virtual_active()
 			 && tocol != MAXCOL
 			 && vcol < tocol
 			 && (
@@ -4885,7 +4878,7 @@ screen_puts(text, row, col, attr)
 {
     unsigned	off;
 #ifdef FEAT_MBYTE
-    int		mbyte_blen = 0;
+    int		mbyte_blen = 1;
     int		mbyte_cells = 1;
     int		u8c = 0;
     int		u8c_c1 = 0;
@@ -4895,7 +4888,7 @@ screen_puts(text, row, col, attr)
     if (ScreenLines != NULL && row < screen_Rows)	/* safety check */
     {
 	off = LineOffset[row] + col;
-	while (*text && col < screen_Columns)
+	while (*text != NUL && col < screen_Columns)
 	{
 #ifdef FEAT_MBYTE
 	    /* check if this is the first byte of a multibyte */
@@ -4953,18 +4946,17 @@ screen_puts(text, row, col, attr)
 		    int		n;
 
 		    n = ScreenAttrs[off];
-		    if (col + 1
 # ifdef FEAT_MBYTE
-				+ mbyte_cells - 1
-# endif
-				< screen_Columns
+		    if (col + 1 + mbyte_cells - 1 < screen_Columns
+			    && (n > HL_ALL || (n & HL_BOLD))
+			    && text[mbyte_blen] != NUL)
+			ScreenLines[off + 1 + mbyte_cells - 1] = 0;
+# else
+		    if (col + 1 < screen_Columns
 			    && (n > HL_ALL || (n & HL_BOLD))
 			    && text[1] != NUL)
-			ScreenLines[off + 1
-# ifdef FEAT_MBYTE
-			    + mbyte_cells - 1
+			ScreenLines[off + 1] = 0;
 # endif
-			    ] = 0;
 		}
 #endif
 		ScreenLines[off] = *text;
@@ -5363,9 +5355,15 @@ reset_cterm_colors()
     {
 	/* set Normal cterm colors */
 	if (cterm_normal_fg_color > 0 || cterm_normal_bg_color > 0)
+	{
 	    out_str(T_OP);
+	    screen_attr = -1;
+	}
 	if (cterm_normal_fg_bold)
+	{
 	    out_str(T_ME);
+	    screen_attr = -1;
+	}
     }
 }
 
@@ -7553,12 +7551,9 @@ win_redr_ruler(wp, always)
 	if (wp->w_p_list && lcs_tab1 == NUL)
 	{
 	    wp->w_p_list = FALSE;
-	    getvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
+	    getvvcol(wp, &wp->w_cursor, NULL, &virtcol, NULL);
 	    wp->w_p_list = TRUE;
 	}
-#ifdef FEAT_VIRTUALEDIT
-	virtcol += wp->w_cursor.coladd;
-#endif
 
 	/*
 	 * Some sprintfs return the length, some return a pointer.

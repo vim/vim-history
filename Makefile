@@ -70,7 +70,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0ag
+MINOR = 0ah
 
 # CHECKLIST for creating a new version:
 #
@@ -396,6 +396,9 @@ SRC_DOS =	\
 		src/xxd/Make_cyg.mak \
 		src/xxd/Make_djg.mak \
 		src/xxd/Make_mvc.mak \
+		nsis/gvim.nsi \
+		nsis/README.txt \
+		nsis/icons \
 
 
 # source files for DOS without CR/LF translation (also in the extra archive)
@@ -476,7 +479,6 @@ SRC_MAC =	\
 SRC_VMS =	\
 		src/INSTALLvms.txt \
 		src/Make_vms.mms \
-		src/gui_vms_conf.h \
 		src/os_vms.c \
 		src/os_vms.h \
 		src/os_vms.opt \

@@ -725,6 +725,7 @@ EXTERN int	got_int INIT(= FALSE);	    /* set to TRUE when interrupt
 EXTERN int	term_console INIT(= FALSE); /* set to TRUE when console used */
 #endif
 EXTERN int	termcap_active INIT(= FALSE);	/* set by starttermcap() */
+EXTERN int	cur_tmode INIT(= TMODE_COOK);	/* input terminal mode */
 EXTERN int	bangredo INIT(= FALSE);	    /* set to TRUE whith ! command */
 EXTERN int	searchcmdlen;		    /* length of previous search cmd */
 EXTERN int	reg_syn INIT(= 0);	    /* vim_regexec() used for syntax */

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 May 17
+" Last change:	2001 May 26
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -678,6 +678,9 @@ au BufNewFile,BufRead *.pls,*.plsql		setf plsql
 " PO (GNU gettext)
 au BufNewFile,BufRead *.po			setf po
 
+" Postfix main config
+au BufNewFile,BufRead main.cf			setf pfmain
+
 " PostScript
 au BufNewFile,BufRead *.ps,*.eps		setf postscr
 
@@ -952,6 +955,9 @@ au BufNewFile,BufRead *.sno			setf snobol4
 
 " SNMP MIB files
 au BufNewFile,BufRead *.mib			setf mib
+
+" Snort Configuration
+au BufNewFile,BufRead *.hog,snort.conf,vision.conf,*.rules	setf hog
 
 " Spec (Linux RPM)
 au BufNewFile,BufRead *.spec			setf spec

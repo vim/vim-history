@@ -1,0 +1,22 @@
+*usr_25.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Editing formatted text
+
+
+|25.1|	Replace a word
+
+     Next chapter: |usr_26.txt|  Repeating
+ Previous chapter: |usr_24.txt|  Inserting quickly
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*25.1*	Replace a word
+
+
+==============================================================================
+
+Next chapter: |usr_26.txt|  Repeating
+
+Copyright: see |manual-copyright|  vim:tw=78:

@@ -305,6 +305,10 @@ gui_mswin_get_menu_height(
 #endif /*FEAT_MENU*/
 
 
+#define FEAT_SHORTCUT	/* accept dropping a shortcut on Vim. */
+#ifdef FEAT_SHORTCUT
+# include <shlobj.h>
+#endif
 
     static void
 _OnDropFiles(
@@ -331,6 +335,57 @@ _OnDropFiles(
     {
 	DragQueryFile(hDrop, i, szFile, _MAX_PATH);
 
+#ifdef FEAT_SHORTCUT
+	{
+	    HRESULT		hr;
+	    IShellLink		*psl = NULL;
+	    IPersistFile	*ppf = NULL;
+	    OLECHAR		wsz[MAX_PATH];
+	    WIN32_FIND_DATA	ffd; // we get those free of charge
+	    TCHAR		buf[MAX_PATH]; // could have simply reused 'wsz'...
+
+	    CoInitialize(NULL);
+
+	    // create a link manager object and request its interface
+	    hr = CoCreateInstance(
+		    &CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+		    &IID_IShellLink, (void**)&psl);
+	    if (hr != S_OK)
+		goto shortcut_error;
+
+	    // Get a pointer to the IPersistFile interface.
+	    hr = psl->lpVtbl->QueryInterface(
+		    psl, &IID_IPersistFile, (void**)&ppf);
+	    if (hr != S_OK)
+		goto shortcut_error;
+
+	    // full path string must be in Unicode.
+	    MultiByteToWideChar(CP_ACP, 0, szFile, -1, wsz, MAX_PATH);
+
+	    // "load" the name and resove the link
+	    hr = ppf->lpVtbl->Load(ppf, wsz, STGM_READ);
+	    if (hr != S_OK)
+		goto shortcut_error;
+	    hr = psl->lpVtbl->Resolve(psl, NULL, SLR_UPDATE);
+	    if (hr != S_OK)
+		goto shortcut_error;
+
+	    // Get the path to the link target.
+	    hr = psl->lpVtbl->GetPath(psl, buf, MAX_PATH, &ffd, 0);
+	    if (hr != S_OK)
+		goto shortcut_error;
+	    strcpy( szFile, buf );
+
+shortcut_error:
+	    // Release all interface pointers (both belong to the same object)
+	    if (ppf != NULL)
+		ppf->lpVtbl->Release(ppf);
+	    if (psl != NULL)
+		psl->lpVtbl->Release(psl);
+
+	    CoUninitialize();
+	}
+#endif
 	mch_dirname(IObuff, IOSIZE);
 	fname = shorten_fname(szFile, IObuff);
 	if (fname == NULL)
@@ -1388,15 +1443,6 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
     }
     ImmReleaseContext(hWnd, hImc);
     return lResult;
-}
-
-    void
-im_set_active(int active)
-{
-    if (active)
-	ImeSetOriginMode();
-    else
-	ImeSetEnglishMode();
 }
 
 /* get composition string from WIN_IME */

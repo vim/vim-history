@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0ag.  Last change: 2001 Apr 24
+*intro.txt*     For Vim version 6.0ah.  Last change: 2001 May 23
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -60,9 +60,9 @@ features are summarized.  There is a comprehensive index and a quick
 reference.
 Published by New Riders Publishing.  ISBN: 0735710015
 For more information try one of these:
-	http://www.iccf.nl/click5.html
 	http://vim.iccf-holland.org
 	http://www.vim.org/iccf/click5.html
+	http://www.iccf.nl/click5.html
 
 	"Learning the Vi editor" by Linda Lamb and Arnold Robbins
 This is a book about Vi that includes a chapter on Vim (in the sixth edition).
@@ -78,10 +78,11 @@ The Vim pages contain the most recent information about Vim.  They also
 contain links to the most recent version of Vim.  The FAQ is a list of
 Frequently Asked Questions.  Read this if you have problems.
 
-	VIM home page:	http://www.vim.org/
-	Latest news:	http://www.vim.org/news.html
-	VIM FAQ:	http://www.vim.org/faq/
-	Downloading:	ftp://ftp.vim.org/pub/vim/MIRRORS
+	VIM home page:	  http://vim.sf.net/
+	Sven's VIM pages: http://www.vim.org/
+	Latest news:	  http://www.vim.org/news.html
+	VIM FAQ:	  http://www.vim.org/faq/
+	Downloading:	  ftp://ftp.vim.org/pub/vim/MIRRORS
 
 
 Usenet News group where Vim is discussed:		*news* *usenet*
@@ -247,6 +248,7 @@ Vim would never have become what it is now, without the help of these people!
 	Katsuhito Nagano	Work on multi-byte versions
 	Sung-Hyun Nam		Work on multi-byte versions
 	Vince Negri		Win32 GUI and generic console enhancements
+	Steve Oualline		Author of the first Vim book |frombook|
 	George V. Reilly	Win32 port, Win32 GUI start-off
 	Stephen Riehm		bug collector
 	Stefan Roemer		various patches and help to users
@@ -304,6 +306,10 @@ Elvis	Another Vi clone, made by Steve Kirkendall.  Very compact but isn't
 When syntax highlighting is used to read this, text that is not typed
 literally is often highlighted with the Special group.  These are items in [],
 {} and <>, and CTRL-X.
+
+Note that Vim uses all possible characters in commands.  Sometimes the [], {}
+and <> are part of what you type, the context should make this clear.
+
 
 []		Characters in square brackets are optional.
 

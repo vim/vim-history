@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0ag.  Last change: 2000 Oct 20
+*usr_43.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -127,4 +127,7 @@ directory.
 *43.3*  Automatic commands
 
 ==============================================================================
- vim:tw=78:
+
+Next chapter: |usr_44.txt|  Your own syntax highlighted
+
+Copyright: see |manual-copyright|  vim:tw=78:

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 May 18
+" Last Change:	2001 May 23
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -76,6 +76,7 @@ menut C&olor\ Scheme		Schema\ C&olori
 menut default		per\ difetto
 menut evening		notturno
 menut morning		diurno
+menut peachpuff         alla\ pesca
 menut &Keymap				&Mappa\ tastiera
 
 " Edit/File Settings
@@ -261,13 +262,12 @@ endif
 
 " Syntax menu
 menut &Syntax		&Sintassi
-menut Set\ 'syntax'\ only	Attiva\ solo\ \ 'syntax'
-menut Set\ 'filetype'\ too	Attiva\ anche\ 'filetype'
+menut Set\ '&syntax'\ only	Attiva\ solo\ \ '&syntax'
+menut Set\ '&filetype'\ too	Attiva\ anche\ '&filetype'
 menut &Off			&Basta
 menut &Manual		&Manuale
 menut A&utomatic		A&utomatico
-menut o&n\ (this\ file)	A&ttiva\ (con\ questo\ file)
-menut o&ff\ (this\ file)	&Disattiva\ (con\ \questo\ file)
+menut on/off\ for\ &This\ file  Attiva\ Sì/No\ su\ ques&to\ file
 menut Co&lor\ test		Test\ &Colori
 menut &Highlight\ test	Test\ &Evidenziamento
 menut &Convert\ to\ HTML	Converti\ ad\ &HTML

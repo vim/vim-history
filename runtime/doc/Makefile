@@ -83,12 +83,34 @@ DOCS = \
 	usr_02.txt \
 	usr_03.txt \
 	usr_04.txt \
+	usr_05.txt \
 	usr_06.txt \
 	usr_07.txt \
+	usr_08.txt \
+	usr_09.txt \
+	usr_10.txt \
+	usr_11.txt \
+	usr_12.txt \
+	usr_20.txt \
+	usr_21.txt \
+	usr_22.txt \
+	usr_23.txt \
+	usr_24.txt \
+	usr_25.txt \
+	usr_26.txt \
+	usr_27.txt \
 	usr_28.txt \
+	usr_29.txt \
+	usr_30.txt \
+	usr_31.txt \
 	usr_40.txt \
+	usr_41.txt \
+	usr_42.txt \
 	usr_43.txt \
+	usr_44.txt \
+	usr_45.txt \
 	usr_90.txt \
+	usr_91.txt \
 	usr_toc.txt \
 	various.txt \
 	version4.txt \
@@ -173,12 +195,34 @@ HTMLS = \
 	usr_02.html \
 	usr_03.html \
 	usr_04.html \
+	usr_05.html \
 	usr_06.html \
 	usr_07.html \
+	usr_08.html \
+	usr_09.html \
+	usr_10.html \
+	usr_11.html \
+	usr_12.html \
+	usr_20.html \
+	usr_21.html \
+	usr_22.html \
+	usr_23.html \
+	usr_24.html \
+	usr_25.html \
+	usr_26.html \
+	usr_27.html \
 	usr_28.html \
+	usr_29.html \
+	usr_30.html \
+	usr_31.html \
 	usr_40.html \
+	usr_41.html \
+	usr_42.html \
 	usr_43.html \
+	usr_44.html \
+	usr_45.html \
 	usr_90.html \
+	usr_91.html \
 	usr_toc.html \
 	various.html \
 	version4.html \

@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0ag.  Last change: 2001 May 14
+*gui.txt*       For Vim version 6.0ah.  Last change: 2001 May 26
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -47,6 +47,9 @@ When the GUI starts up initializations are carried out, in this order:
 	:let no_buffers_menu = 1
 < NOTE: Switching on syntax highlighting also loads the menu file, thus
   disabling the buffer menu must be done before ":syntax on".
+  The path names are truncated to 35 characters.  You can truncate them at a
+  different length, for example 50, like this: >
+  	:let bmenu_max_pathlen = 50
 - If the "-U {gvimrc}" command-line option has been used when starting Vim,
   the {gvimrc} file will be read for initializations.  The following
   initializations are skipped.
@@ -364,6 +367,7 @@ is changed, Vim becomes the owner of the windowing system's primary selection
 (on MS-Windows the |gui-clipboard| is used; under X11, the |x11-selection| is
 used - you should read whichever of these is appropriate now).
 
+							*clipboard*
 There is a special register for storing this selection, it is the "*
 register.  Nothing is put in here unless the information about what text is
 selected is about to change (eg with a left mouse click somewhere), or when

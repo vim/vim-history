@@ -11,7 +11,7 @@ void gui_mch_enable_scrollbar __ARGS((scrollbar_T *sb, int flag));
 void gui_mch_set_scrollbar_pos __ARGS((scrollbar_T *sb, int x, int y, int w, int h));
 void gui_mch_create_scrollbar __ARGS((scrollbar_T *sb, int orient));
 int gui_mch_adjust_charsize __ARGS((void));
-int get_logfont __ARGS((LOGFONT *lf, char_u *name, void *printer_dc));
+int get_logfont __ARGS((LOGFONT *lf, char_u *name, HDC printer_dc));
 GuiFont gui_mch_get_font __ARGS((char_u *name, int giveErrorIfMissing));
 void gui_mch_free_font __ARGS((GuiFont font));
 guicolor_T gui_mch_get_color __ARGS((char_u *name));
@@ -59,7 +59,6 @@ void gui_mch_set_scrollbar_thumb __ARGS((scrollbar_T *sb, long val, long size, l
 void gui_mch_set_font __ARGS((GuiFont font));
 void gui_mch_set_fg_color __ARGS((guicolor_T color));
 void gui_mch_set_bg_color __ARGS((guicolor_T color));
-void im_set_active __ARGS((int active));
 void im_set_position __ARGS((int row, int col));
 void im_set_active __ARGS((int active));
 int im_get_status __ARGS((void));

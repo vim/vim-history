@@ -1,0 +1,22 @@
+*usr_11.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			   Recovering from a crash
+
+
+|11.1|	Basic recovery
+
+     Next chapter: |usr_12.txt|  Clever tricks
+ Previous chapter: |usr_10.txt|  Making big changes
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*11.1*	Basic recovery
+
+
+==============================================================================
+
+Next chapter: |usr_12.txt|  Clever tricks
+
+Copyright: see |manual-copyright|  vim:tw=78:

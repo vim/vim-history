@@ -2030,7 +2030,7 @@ gui_mch_insert_lines(int row, int num_lines)
 
     PhBlit( PtWidgetRid( PtFindDisjoint( gui.vimTextArea ) ) , &rect, &delta );
 
-    gui_clear_block( row, gui.scroll_region_left, 
+    gui_clear_block( row, gui.scroll_region_left,
 	    row + num_lines - 1, gui.scroll_region_right );
 }
 

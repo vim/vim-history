@@ -1,12 +1,15 @@
 " Vim color file
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 May 19
+" Last Change:	2001 May 21
 
 " This color scheme uses a dark grey background.
 
 " First remove all existing highlighting.
 set background=dark
 hi clear
+if exists("syntax_on")
+  syntax reset
+endif
 
 let colors_name = "evening"
 
@@ -47,11 +50,5 @@ if &t_Co > 8
   hi Statement term=bold cterm=bold ctermfg=Yellow guifg=#ffff60 gui=bold
 endif
 hi Ignore ctermfg=DarkGrey guifg=grey20
-
-if exists("syntax_on")
-  let syntax_cmd = "enable"
-  runtime! syntax/syncolor.vim
-  unlet syntax_cmd
-endif
 
 " vim: sw=2

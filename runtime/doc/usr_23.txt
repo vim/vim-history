@@ -1,0 +1,22 @@
+*usr_23.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
+
+		     VIM USER MANUAL - by Bram Moolenaar
+		
+			     Editing other files
+
+
+|23.1|	Replace a word
+
+     Next chapter: |usr_24.txt|  Inserting quickly
+ Previous chapter: |usr_22.txt|  Finding the file to edit
+Table of contents: |usr_toc.txt|
+
+==============================================================================
+*23.1*	Replace a word
+
+
+==============================================================================
+   
+Next chapter: |usr_24.txt|  Inserting quickly
+
+Copyright: see |manual-copyright|  vim:tw=78:

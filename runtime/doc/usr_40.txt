@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0ag.  Last change: 2001 Jan 13
+*usr_40.txt*	For Vim version 6.0ah.  Last change: 2001 May 25
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -576,4 +576,7 @@ exists("*s:Func")	Check if a function was already defined.
 Also see |plugin-special|, the special things used for all plugins.
 
 ==============================================================================
- vim:tw=78:
+
+Next chapter: |usr_41.txt|  Make new commands
+
+Copyright: see |manual-copyright|  vim:tw=78:

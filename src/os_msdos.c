@@ -2078,13 +2078,21 @@ mch_breakcheck(void)
 }
 
     int
-mch_has_wildcard(char_u *s)
+mch_has_wildcard(char_u *p)
 {
-#ifdef VIM_BACKTICK
-    return (vim_strpbrk(s, (char_u *)"?*$~`") != NULL);
-#else
-    return (vim_strpbrk(s, (char_u *)"?*$~") != NULL);
-#endif
+    for ( ; *p; ++p)
+    {
+	if (vim_strchr((char_u *)
+#  ifdef VIM_BACKTICK
+				    "?*$`"
+#  else
+				    "?*$"
+#  endif
+                                                , *p) != NULL
+		|| (*p == '~' && p[1] != NUL))
+	    return TRUE;
+    }
+    return FALSE;
 }
 
 /*

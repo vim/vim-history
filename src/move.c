@@ -419,11 +419,7 @@ update_curswant()
     if (curwin->w_set_curswant)
     {
 	validate_virtcol();
-	curwin->w_curswant = curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-	    + curwin->w_cursor.coladd
-#endif
-	    ;
+	curwin->w_curswant = curwin->w_virtcol;
 	curwin->w_set_curswant = FALSE;
     }
 }
@@ -815,7 +811,7 @@ validate_virtcol_win(wp)
     check_cursor_moved(wp);
     if (!(wp->w_valid & VALID_VIRTCOL))
     {
-	getvcol(wp, &wp->w_cursor, NULL, &(wp->w_virtcol), NULL);
+	getvvcol(wp, &wp->w_cursor, NULL, &(wp->w_virtcol), NULL);
 	wp->w_valid |= VALID_VIRTCOL;
     }
 }
@@ -855,11 +851,7 @@ validate_cursor_col()
     validate_virtcol();
     if (!(curwin->w_valid & VALID_WCOL))
     {
-	col = curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-	    + curwin->w_cursor.coladd
-#endif
-	    ;
+	col = curwin->w_virtcol;
 	off = curwin_col_off();
 	col += off;
 
@@ -962,7 +954,7 @@ curs_columns(scroll)
 	startcol = curwin->w_virtcol = endcol = curwin->w_leftcol;
     else
 #endif
-	getvcol(curwin, &curwin->w_cursor,
+	getvvcol(curwin, &curwin->w_cursor,
 				&startcol, &(curwin->w_virtcol), &endcol);
 
     /* remove '$' from change command when cursor moves onto it */
@@ -970,11 +962,7 @@ curs_columns(scroll)
 	dollar_vcol = 0;
 
     extra = curwin_col_off();
-    curwin->w_wcol = curwin->w_virtcol + extra
-#ifdef FEAT_VIRTUALEDIT
-	+ curwin->w_cursor.coladd
-#endif
-	;
+    curwin->w_wcol = curwin->w_virtcol + extra;
     endcol += extra;
 
 #ifdef FEAT_VIRTUALEDIT
@@ -1116,11 +1104,7 @@ curs_columns(scroll)
 	 * 2: Less than "p_so" lines below
 	 * 3: both of them */
 	extra = 0;
-	if (curwin->w_skipcol + p_so * width > curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-						     + curwin->w_cursor.coladd
-#endif
-		)
+	if (curwin->w_skipcol + p_so * width > curwin->w_virtcol)
 	    extra = 1;
 	/* Compute last display line of the buffer line that we want at the
 	 * bottom of the window. */
@@ -1135,11 +1119,7 @@ curs_columns(scroll)
 	if (extra == 3)
 	{
 	    /* not enough room for 'scrolloff', put cursor in the middle */
-	    n = (curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-		    + curwin->w_cursor.coladd
-#endif
-				     ) / width;
+	    n = curwin->w_virtcol / width;
 	    if (n > curwin->w_height / 2)
 		n -= curwin->w_height / 2;
 	    else
@@ -1150,9 +1130,6 @@ curs_columns(scroll)
 	{
 	    /* less then 'scrolloff' lines above, decrease skipcol */
 	    extra = (curwin->w_skipcol + p_so * width - curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-							    + curwin->w_cursor.coladd
-#endif
 				     + width - 1) / width;
 	    if (extra > 0)
 	    {
@@ -1273,11 +1250,8 @@ scrolldown(line_count, byfold)
     {
 	validate_virtcol();
 	validate_cheight();
-	wrow += curwin->w_cline_height - 1 - (curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-						     + curwin->w_cursor.coladd
-#endif
-							  ) / W_WIDTH(curwin);
+	wrow += curwin->w_cline_height - 1 -
+	    curwin->w_virtcol / W_WIDTH(curwin);
     }
     while (wrow >= curwin->w_height && curwin->w_cursor.lnum > 1)
     {
@@ -1459,11 +1433,8 @@ scrolldown_clamp()
     {
 	validate_cheight();
 	validate_virtcol();
-	end_row += curwin->w_cline_height - 1 - (curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-						     + curwin->w_cursor.coladd
-#endif
-							  ) / W_WIDTH(curwin);
+	end_row += curwin->w_cline_height - 1 -
+	    curwin->w_virtcol / W_WIDTH(curwin);
     }
     if (end_row < curwin->w_height - p_so)
     {
@@ -1519,11 +1490,7 @@ scrollup_clamp()
 	    )
     {
 	validate_virtcol();
-	start_row -= (curwin->w_virtcol
-#ifdef FEAT_VIRTUALEDIT
-			+ curwin->w_cursor.coladd
-#endif
-			) / W_WIDTH(curwin);
+	start_row -= curwin->w_virtcol / W_WIDTH(curwin);
     }
     if (start_row >= p_so)
     {
