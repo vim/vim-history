@@ -2638,7 +2638,7 @@ get_real_state()
     return State;
 }
 
-#if defined(FEAT_SESSION) || defined(MSWIN) \
+#if defined(FEAT_SESSION) || defined(MSWIN) || defined(FEAT_GUI_MAC) \
 	|| (defined(FEAT_GUI_GTK) \
 			    && (defined(FEAT_WINDOWS) || defined(FEAT_DND))) \
 	|| defined(FEAT_SUN_WORKSHOP) || defined(FEAT_NETBEANS_INTG) \
