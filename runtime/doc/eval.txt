@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.2.  Last change: 2004 Feb 15
+*eval.txt*      For Vim version 6.2.  Last change: 2004 Mar 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -826,6 +826,8 @@ foreground( )			Number	bring the Vim window to the foreground
 getchar( [expr])		Number  get one character from the user
 getcharmod( )			Number  modifiers for the last typed character
 getbufvar( {expr}, {varname})		variable {varname} in buffer {expr}
+getcmdline()			String	return the current command-line
+getcmdpos()			Number	return cursor position in command-line
 getcwd()			String	the current working directory
 getfsize( {fname})		Number	size in bytes of file
 getftime( {fname})		Number	last modification time of file
@@ -889,6 +891,7 @@ server2client( {clientid}, {string})
 				Number	send reply string
 serverlist()			String	get a list of available servers
 setbufvar( {expr}, {varname}, {val})	set {varname} in buffer {expr} to {val}
+setcmdpos( {pos})		Number	set cursor position in command-line
 setline( {lnum}, {line})	Number	set line {lnum} to {line}
 setreg( {n}, {v}[, {opt}])	Number  set register to value and type
 setwinvar( {nr}, {varname}, {val})	set {varname} in window {nr} to {val}
@@ -1485,6 +1488,21 @@ getbufvar({expr}, {varname})				*getbufvar()*
 			:let bufmodified = getbufvar(1, "&mod")
 			:echo "todo myvar = " . getbufvar("todo", "myvar")
 <
+getcmdline()						*getcmdline()*
+		Return the current command-line.  Only works when the command
+		line is being edited, thus requires use of |c_CTRL-\_e| or
+		|c_CTRL-R_=|.
+		Example: >
+			:cmap <F7> <C-\>eescape(getcmdline(), ' \')<CR>
+<		Also see |getcmdpos()| and |setcmdpos()|.
+
+getcmdpos({pos})					*getcmdpos()*
+		Return the position of the cursor in the command line as a
+		byte count.  The first column is 1.
+		Only works when editing the command line, thus requires use of
+		|c_CTRL-\_e| or |c_CTRL-R_=|.  Returns 0 otherwise.
+		Also see |setcmdpos()| and |getcmdline()|.
+
 							*getcwd()*
 getcwd()	The result is a String, which is the name of the current
 		working directory.
@@ -2276,6 +2294,18 @@ setbufvar({expr}, {varname}, {val})			*setbufvar()*
 			:call setbufvar(1, "&mod", 1)
 			:call setbufvar("todo", "myvar", "foobar")
 <		This function is not available in the |sandbox|.
+
+setcmdpos({pos})					*setcmdpos()*
+		Set the cursor position in the command line to byte position
+		{pos}.  The first position is 1.
+		Use |getcmdpos()| to obtain the current position.
+		Only works while editing the command line, thus you must use
+		|c_CTRL-\_e| or |c_CTRL-R_=|.  The position is set after the
+		command line is set to the expression.
+		When the number is too big the cursor is put at the end of the
+		line.  A number smaller than one has undefined results.
+		Returns 0 when successful, 1 when not editing the command
+		line.
 
 setline({lnum}, {line})					*setline()*
 		Set line {lnum} of the current buffer to {line}.  If this

@@ -37,6 +37,9 @@ static struct cmdline_info ccline;	/* current cmdline_info */
 
 static int	cmd_showtail;		/* Only show path tail in lists ? */
 
+#ifdef FEAT_EVAL
+static int	new_cmdpos;	/* position set by set_cmdline_pos() */
+#endif
 
 #ifdef FEAT_CMDHIST
 typedef struct hist_entry
@@ -575,11 +578,59 @@ getcmdline(firstc, count, indent)
 	    c = safe_vgetc();
 	    --no_mapping;
 	    --allow_keys;
-	    if (c != Ctrl_N && c != Ctrl_G)
+	    if (c != Ctrl_N && c != Ctrl_G && c != 'e')
 	    {
 		vungetc(c);
 		c = Ctrl_BSL;
 	    }
+#ifdef FEAT_EVAL
+	    else if (c == 'e')
+	    {
+		/*
+		 * Replace the command line with the result of an expression.
+		 * Need to save the current command line, to be able to enter
+		 * a new one...
+		 */
+		if (ccline.cmdfirstc != '=')	/* can't do this recursively */
+		{
+		    struct cmdline_info	    save_ccline;
+		    char_u		    *p;
+
+		    if (ccline.cmdpos == ccline.cmdlen)
+			new_cmdpos = 99999;	/* keep it at the end */
+		    else
+			new_cmdpos = ccline.cmdpos;
+		    save_ccline = ccline;
+		    ccline.cmdbuff = NULL;
+		    ccline.cmdprompt = NULL;
+		    c = get_expr_register();
+		    ccline = save_ccline;
+		    if (c == '=')
+		    {
+			p = get_expr_line();
+			if (p != NULL && realloc_cmdbuff(STRLEN(p) + 1) == OK)
+			{
+			    ccline.cmdlen = STRLEN(p);
+			    STRCPY(ccline.cmdbuff, p);
+			    vim_free(p);
+
+			    /* Restore the cursor or use the position set with
+			     * set_cmdline_pos(). */
+			    if (new_cmdpos > ccline.cmdlen)
+				ccline.cmdpos = ccline.cmdlen;
+			    else
+				ccline.cmdpos = new_cmdpos;
+
+			    KeyTyped = FALSE;	/* Don't do p_wc completion. */
+			    redrawcmd();
+			    goto cmdline_changed;
+			}
+		    }
+		}
+		beep_flush();
+		c = ESC;
+	    }
+#endif
 	    else
 	    {
 		if (c == Ctrl_G && p_im && restart_edit == 0)
@@ -959,6 +1010,7 @@ getcmdline(firstc, count, indent)
 		 * Need to save the current command line, to be able to enter
 		 * a new one...
 		 */
+		new_cmdpos = -1;
 		if (c == '=')
 		{
 		    struct cmdline_info	    save_ccline;
@@ -982,6 +1034,16 @@ getcmdline(firstc, count, indent)
 		{
 		    cmdline_paste(c, i == Ctrl_R);
 		    KeyTyped = FALSE;	/* Don't do p_wc completion. */
+#ifdef FEAT_EVAL
+		    if (new_cmdpos >= 0)
+		    {
+			/* set_cmdline_pos() was used */
+			if (new_cmdpos > ccline.cmdlen)
+			    ccline.cmdpos = ccline.cmdlen;
+			else
+			    ccline.cmdpos = new_cmdpos;
+		    }
+#endif
 		}
 		redrawcmd();
 		goto cmdline_changed;
@@ -4353,6 +4415,54 @@ get_history_idx(histype)
 	return -1;
 
     return history[histype][hisidx[histype]].hisnum;
+}
+
+/*
+ * Get the current command line in allocated memory.
+ * Only works when the command line is being edited.
+ * Returns NULL when something is wrong.
+ */
+    char_u *
+get_cmdline_str()
+{
+    if (ccline.cmdbuff == NULL || (State & CMDLINE) == 0)
+	return NULL;
+    return vim_strnsave(ccline.cmdbuff, ccline.cmdlen);
+}
+
+/*
+ * Get the current command line position, counted in bytes.
+ * Zero is the first position.
+ * Only works when the command line is being edited.
+ * Returns -1 when something is wrong.
+ */
+    int
+get_cmdline_pos()
+{
+    if (ccline.cmdbuff == NULL || (State & CMDLINE) == 0)
+	return -1;
+    return ccline.cmdpos;
+}
+
+/*
+ * Set the command line byte position to "pos".  Zero is the first position.
+ * Only works when the command line is being edited.
+ * Returns 1 when failed, 0 when OK.
+ */
+    int
+set_cmdline_pos(pos)
+    int		pos;
+{
+    if (ccline.cmdbuff == NULL || (State & CMDLINE) == 0)
+	return 1;
+
+    /* The position is not set directly but after CTRL-\ e or CTRL-R = has
+     * changed the command line. */
+    if (pos < 0)
+	new_cmdpos = 0;
+    else
+	new_cmdpos = pos;
+    return 0;
 }
 
 /*

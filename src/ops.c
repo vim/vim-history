@@ -94,9 +94,6 @@ struct block_def
 static void shift_block __ARGS((oparg_T *oap, int amount));
 static void block_insert __ARGS((oparg_T *oap, char_u *s, int b_insert, struct block_def*bdp));
 #endif
-#ifdef FEAT_EVAL
-static char_u	*get_expr_line __ARGS((void));
-#endif
 static void	get_yank_register __ARGS((int regname, int writing));
 static int	stuff_yank __ARGS((int, char_u *));
 static int	put_in_typebuf __ARGS((char_u *s, int colon));
@@ -637,7 +634,7 @@ block_insert(oap, s, b_insert, bdp)
 }
 #endif
 
-#if defined(FEAT_LISP) || defined(FEAT_CINDENT)
+#if defined(FEAT_LISP) || defined(FEAT_CINDENT) || defined(PROTO)
 /*
  * op_reindent - handle reindenting a block of lines.
  */
@@ -721,7 +718,7 @@ op_reindent(oap, how)
 }
 #endif /* defined(FEAT_LISP) || defined(FEAT_CINDENT) */
 
-#ifdef FEAT_EVAL
+#if defined(FEAT_EVAL) || defined(PROTO)
 /*
  * Keep the last expression line here, for repeating.
  */
@@ -762,7 +759,7 @@ set_expr_line(new_line)
  * Get the result of the '=' register expression.
  * Returns a pointer to allocated memory, or NULL for failure.
  */
-    static char_u *
+    char_u *
 get_expr_line()
 {
     char_u	*expr_copy;

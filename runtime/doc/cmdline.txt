@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.2.  Last change: 2003 May 16
+*cmdline.txt*   For Vim version 6.2.  Last change: 2004 Mar 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -175,6 +175,25 @@ CTRL-R CTRL-O {0-9a-z"%#:-=. CTRL-F CTRL-P CTRL-W CTRL-A}
 		"CTRL-R a" will insert "xz" while "CTRL-R CTRL-R a" will
 		insert "xy^Hz".
 
+CTRL-\ e {expr}						*c_CTRL-\_e*
+		Evaluate {expr} and replace the whole command line with the
+		result.  You will be prompted for the expression, type <Enter>
+		to finish it.  It's most useful in mappings though.  See
+		|expression|.
+		See |c_CTRL-R_=| for inserting the result of an expression.
+		Useful functions are |getcmdline()| and |getcmdpos()|.
+		The cursor position is unchanged, except when the cursor was
+		at the end of the line, then it stays at the end.
+		|setcmdpos()| can be used to set the cursor position.
+		Example: >
+			:cmap <F7> <C-\>eAppendSome()<CR>
+			:func AppendSome()
+			   :let cmd = getcmdline() . " Some()"
+			   :" place the cursor on the )
+			   :call setcmdpos(strlen(cmd))
+			   :return cmd
+			:endfunc
+<
 							*c_CTRL-Y*
 CTRL-Y		When there is a modeless selection, copy the selection into
 		the clipboard. |modeless-selection|
