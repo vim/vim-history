@@ -1418,8 +1418,8 @@ win_totop(size, flags)
 }
 
 /*
- * Move window "win1" to below "win2" and make "win1" the current window.
- * Only works within the same frame!
+ * Move window "win1" to below/right of "win2" and make "win1" the current
+ * window.  Only works within the same frame!
  */
     void
 win_move_after(win1, win2)
@@ -1434,18 +1434,27 @@ win_move_after(win1, win2)
     /* check if there is something to do */
     if (win2->w_next != win1)
     {
-	/* may need move the status line of the last window */
+	/* may need move the status line/vertical separator of the last window
+	 * */
 	if (win1 == lastwin)
 	{
 	    height = win1->w_prev->w_status_height;
 	    win1->w_prev->w_status_height = win1->w_status_height;
 	    win1->w_status_height = height;
+#ifdef FEAT_VERTSPLIT
+	    win1->w_prev->w_vsep_width = 0;
+	    win1->w_vsep_width = 1;
+#endif
 	}
 	else if (win2 == lastwin)
 	{
 	    height = win1->w_status_height;
 	    win1->w_status_height = win2->w_status_height;
 	    win2->w_status_height = height;
+#ifdef FEAT_VERTSPLIT
+	    win2->w_vsep_width = 1;
+	    win1->w_vsep_width = 0;
+#endif
 	}
 	win_remove(win1);
 	frame_remove(win1->w_frame);

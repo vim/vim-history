@@ -2,9 +2,10 @@
 "  File        : bdf.vim
 "  Language    : BDF Font
 "  Maintainer  : Nikolai 'pcp' Weibull <da.box@home.se>
-"  Revised on  : Wed, 11 Jul 2001 19:01:07 +0200
+"  Revised on  : Thu, 19 Jul 2001 22:10:33 +0200
 "  TODO	       : Floating point values aren't displayed right (not a major
 "	       : issue though)
+"	       : add variable list (perhaps to documentation as well)
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -18,7 +19,7 @@ endif
 endif
 
 " comments
-syn region bdfComment start="^COMMENT " end="$" contains=bdfTodo
+syn region bdfComment start="^COMMENT\>" end="$" contains=bdfTodo
 
 " todo
 syn keyword bdfTodo contained TODO
@@ -27,7 +28,7 @@ syn keyword bdfTodo contained TODO
 syn match bdfNumber display "\<\(\x\+\|\d\+\.\d\+\)\>"
 
 " strings
-syn region bdfString start=+"+ skip=+\\\\\|\\"+ end=+"+
+syn region bdfString start=+"+ skip=+""+ end=+"+
 
 " properties
 syn keyword bdfProperties contained FONT SIZE FONTBOUNDINGBOX CHARS
@@ -41,21 +42,20 @@ syn keyword bdfXProperties contained CHARSET_REGISTRY CHARSET_ENCODING COPYRIGHT
 syn keyword bdfXProperties contained ADD_STYLE_NAME WEIGHT RESOLUTION X_HEIGHT
 syn keyword bdfXProperties contained QUAD_WIDTH FONT AVERAGE_WIDTH
 
-syn match bdfDefDelim contained "\<\(STARTPROPERTIES\|ENDPROPERTIES\)\>"
-
-syn region bdfDefinition transparent matchgroup=bdfDefDelim start="STARTPROPERTIES" end="ENDPROPERTIES" contains=bdfXProperties,bdfNumber,bdfString
+syn region bdfDefinition transparent matchgroup=bdfDelim start="\<STARTPROPERTIES\>" end="\<ENDPROPERTIES\>" contains=bdfXProperties,bdfNumber,bdfString
 
 " characters
-syn keyword bdfCharProperties contained ENCODING SWIDTH DWIDTH BBX BITMAP
+syn keyword bdfCharProperties contained ENCODING SWIDTH DWIDTH BBX ATTRIBUTES BITMAP
 
-syn match bdfCharDelim contained "\<\(STARTCHAR\|ENDCHAR\)\>"
+syn match bdfCharName contained display "\<[0-9a-zA-Z]\{1,14}\>"
+syn match bdfCharNameError contained display "\<[0-9a-zA-Z]\{15,}\>"
 
-syn region bdfCharDefinition transparent matchgroup=bdfCharDelim start="STARTCHAR" end="ENDCHAR" contains=bdfCharProperties,bdfNumber,bdfCharDelim
+syn region bdfStartChar transparent matchgroup=bdfDelim start="\<STARTCHAR\>" end="$" contains=bdfCharName,bdfCharNameError
+
+syn region bdfCharDefinition transparent start="\<STARTCHAR\>" matchgroup=bdfDelim end="\<ENDCHAR\>" contains=bdfCharProperties,bdfNumber,bdfStartChar
 
 " font
-syn match bdfFontDelim contained "\<\(STARTFONT\|ENDFONT\)\>"
-
-syn region bdfFontDefinition transparent matchgroup=bdfFontdelim start="STARTFONT" end="ENDFONT" contains=ALL
+syn region bdfFontDefinition transparent matchgroup=bdfDelim start="\<STARTFONT\>" end="\<ENDFONT\>" contains=bdfProperties,bdfDefinition,bdfCharDefinition,bdfNumber,bdfComment
 
 if exists("bdf_minlines")
     let b:bdf_minlines = bdf_minlines
@@ -63,6 +63,7 @@ else
     let b:bdf_minlines = 50
 endif
 exec "syn sync minlines=" . b:bdf_minlines
+
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
 " For version 5.8 and later: only when an item doesn't have highlighting yet
@@ -74,21 +75,21 @@ if version >= 508 || !exists("did_bdf_syn_inits")
 	command -nargs=+ HiLink hi def link <args>
     endif
 
-    HiLink bdfComment Comment
-    HiLink bdfTodo Todo
-    HiLink bdfNumber Number
-    HiLink bdfString String
-    HiLink bdfProperties Keyword
-    HiLink bdfXProperties Keyword
-    HiLink bdfCharProperties StorageClass
-    HiLink bdfDefDelim Delimiter
-    HiLink bdfCharDelim Delimiter
-    HiLink bdfFontDelim Delimiter
+    HiLink bdfComment		Comment
+    HiLink bdfTodo		Todo
+    HiLink bdfNumber		Number
+    HiLink bdfString		String
+    HiLink bdfProperties	Keyword
+    HiLink bdfXProperties	Keyword
+    HiLink bdfCharProperties	Structure
+    HiLink bdfDelim		Delimiter
+    HiLink bdfCharName		String
+    HiLink bdfCharNameError	Error
     delcommand HiLink
 endif
 
 let b:current_syntax = "bdf"
 
 if main_syntax == 'bdf'
-  unlet main_syntax
+    unlet main_syntax
 endif

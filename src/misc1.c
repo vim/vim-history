@@ -1136,7 +1136,6 @@ open_line(dir, del_spaces, old_indent)
 #ifdef FEAT_VIRTUALEDIT
 	curwin->w_cursor.coladd = 0;
 #endif
-	vr_virtcol = MAXCOL;
 	ins_bytes(p_extra);	/* will call changed_bytes() */
 	next_line = NULL;
     }
@@ -1536,25 +1535,22 @@ ins_char(c)
 }
 
     void
-ins_char_bytes(buf, newlen)
+ins_char_bytes(buf, charlen)
     char_u	*buf;
-    int		newlen;
+    int		charlen;
 {
     int		c = buf[0];
-    int		oldlen;
+    int		l, j;
 #endif
+    int		newlen;		/* nr of bytes inserted */
+    int		oldlen;		/* nr of bytes deleted (0 when not replacing) */
     char_u	*p;
     char_u	*newp;
     char_u	*oldp;
     int		linelen;	/* length of old line including NUL */
-    int		extra;		/* number of extra bytes (can be negative) */
     colnr_T	col;
     linenr_T	lnum = curwin->w_cursor.lnum;
-    int		vcol;
-    int		new_vcol = 0;   /* init for GCC */
     int		i;
-    int		size;
-    int		old_list;
 
 #ifdef FEAT_VIRTUALEDIT
     /* Break tabs if needed. */
@@ -1571,114 +1567,86 @@ ins_char_bytes(buf, newlen)
     oldp = ml_get(lnum);
     linelen = (int)STRLEN(oldp) + 1;
 
-    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG) && oldp[col] != NUL)
-    {
+    /* The lengths default to the values for when not replacing. */
+    oldlen = 0;
 #ifdef FEAT_MBYTE
-	if (has_mbyte)
-	    oldlen = (*mb_ptr2len_check)(oldp + col);
-	else
-	    oldlen = 1;
+    newlen = charlen;
 #else
-	extra = 0;			/* overwriting */
-#endif
-    }
-    else
-#ifdef FEAT_MBYTE
-	oldlen = 0;
-#else
-	extra = 1;			/* inserting or appending */
-#endif
-#ifdef FEAT_MBYTE
-    extra = newlen - oldlen;	/* extra can be negative! */
+    newlen = 1;
 #endif
 
-    /*
-     * A character has to be put on the replace stack if there is a
-     * character that is replaced, so it can be put back when BS is used.
-     */
-    if ((State & REPLACE_FLAG) && !(State & VREPLACE_FLAG))
+    if (State & REPLACE_FLAG)
     {
-	replace_push(NUL);
-	if (oldp[col] != NUL)
+	if (State & VREPLACE_FLAG)
 	{
-#ifdef FEAT_MBYTE
-	    for (i = oldlen - 1; i >= 0; --i)
-		replace_push(oldp[col + i]);
-#else
-	    replace_push(oldp[col]);
-#endif
-	}
-    }
-
-    /*
-     * In virtual replace mode each character may replace any number of
-     * characters from zero up.  Make sure BS works.
-     */
-    if (State & VREPLACE_FLAG)
-    {
+	    colnr_T	new_vcol = 0;   /* init for GCC */
+	    colnr_T	vcol;
+	    int		old_list;
 #ifndef FEAT_MBYTE
-	char_u	buf[2];
+	    char_u	buf[2];
 #endif
 
-	old_list = temporary_nolist();
-	if (vr_virtcol == MAXCOL)
-	{
-	    getvcol(curwin, &curwin->w_cursor, NULL, &vr_virtcol, NULL);
-
-	    /* In case we backspace over one of the two normal characters that
-	     * replaced a single CTRL character, and then typed a normal
-	     * character again.  We need to know whether to replace the CTRL
-	     * character or not.
+	    /*
+	     * In virtual replace mode each character may replace one or more
+	     * characters (zero if it's a TAB).  Count the number of bytes to
+	     * be deleted to make room for the new character, counting screen
+	     * cells.  May result in adding spaces to fill a gap.
 	     */
-	    vr_virtoffset = vr_virtcol - get_replace_stack_virtcol();
-	}
-	vcol = vr_virtcol;
-	replace_push(NUL);
+	    old_list = temporary_nolist();
+	    getvcol(curwin, &curwin->w_cursor, NULL, &vcol, NULL);
 #ifndef FEAT_MBYTE
-	buf[0] = c;
-	buf[1] = NUL;
+	    buf[0] = c;
+	    buf[1] = NUL;
 #endif
-	new_vcol = vcol + chartabsize(buf, vcol);
-	vcol -= vr_virtoffset;
-	vr_virtoffset = 0;
-	i = col;
-	while (oldp[i] != NUL)
+	    new_vcol = vcol + chartabsize(buf, vcol);
+	    while (oldp[col + oldlen] != NUL && vcol < new_vcol)
+	    {
+		vcol += chartabsize(oldp + col + oldlen, vcol);
+		/* Don't need to remove a TAB that takes us to the right
+		 * position. */
+		if (vcol > new_vcol && oldp[col + oldlen] == TAB)
+		    break;
+#ifdef FEAT_MBYTE
+		oldlen += (*mb_ptr2len_check)(oldp + col + oldlen);
+#else
+		++oldlen;
+#endif
+		/* Deleted a bit too much, insert spaces. */
+		if (vcol > new_vcol)
+		    newlen += vcol - new_vcol;
+	    }
+	    curwin->w_p_list = old_list;
+	}
+	else if (oldp[col] != NUL)
+	{
+	    /* normal replace */
+#ifdef FEAT_MBYTE
+	    oldlen = (*mb_ptr2len_check)(oldp + col);
+#else
+	    oldlen = 1;
+#endif
+	}
+
+
+	/* Push the replaced bytes onto the replace stack, so that they can be
+	 * put back when BS is used.  The bytes of a multi-byte character are
+	 * done the other way around, so that the first byte is popped off
+	 * first (it tells the byte length of the character). */
+	replace_push(NUL);
+	for (i = 0; i < oldlen; ++i)
 	{
 #ifdef FEAT_MBYTE
-	    int byte_length, j;
-#endif
-
-	    size = chartabsize(oldp + i, vcol);
-	    vcol += size;
-	    if (vcol > new_vcol)
-	    {
-		/* Check for doing something like typing "a" over "^A".  Can't
-		 * keep columns aligned, so set vr_virtoffset to 1.
-		 */
-		if (size == 2 && (oldp[i] != TAB || curwin->w_p_list)
-						&& vcol == new_vcol + 1)
-		    vr_virtoffset = 1;
-		break;
-	    }
-#ifdef FEAT_MBYTE
-	    /* Push (multibyte) character to replace stack (last byte first) */
-	    byte_length = (*mb_ptr2len_check)(oldp + i);
-	    for (j = byte_length - 1; j >= 0; --j)
-		replace_push(oldp[i + j]);
-	    i += byte_length;
-	    extra -= byte_length;
+	    l = (*mb_ptr2len_check)(oldp + col + i) - 1;
+	    for (j = l; j >= 0; --j)
+		replace_push(oldp[col + i + j]);
+	    i += l;
 #else
-	    replace_push(oldp[i++]);
-	    extra--;	/* Goes negative when replacing more than one char */
+	    replace_push(oldp[col + i]);
 #endif
 	}
-#ifdef FEAT_MBYTE
-	oldlen = i - col;
-#endif
-	curwin->w_p_list = old_list;
     }
 
-    newp = alloc_check((unsigned)(linelen + extra));
+    newp = alloc_check((unsigned)(linelen + newlen - oldlen));
     if (newp == NULL)
 	return;
 
@@ -1686,27 +1654,23 @@ ins_char_bytes(buf, newlen)
     if (col > 0)
 	mch_memmove(newp, oldp, (size_t)col);
 
-    /* Copy bytes after (and under) the cursor. */
+    /* Copy bytes after the changed character(s). */
     p = newp + col;
-    if ((State & VREPLACE_FLAG) && extra <= 0)
-    {
-	i = col - extra + 1;
-	mch_memmove(p + 1, oldp + i, (size_t)(linelen - i));
-    }
-    else
-#ifdef FEAT_MBYTE
-	mch_memmove(p + newlen, oldp + col + oldlen,
+    mch_memmove(p + newlen, oldp + col + oldlen,
 					    (size_t)(linelen - col - oldlen));
-#else
-	mch_memmove(p + extra, oldp + col, (size_t)(linelen - col));
-#endif
 
     /* Insert or overwrite the new character. */
 #ifdef FEAT_MBYTE
-    mch_memmove(p, buf, newlen);
+    mch_memmove(p, buf, charlen);
+    i = charlen;
 #else
     *p = c;
+    i = 1;
 #endif
+
+    /* Fill with spaces when necessary. */
+    while (i < newlen)
+	p[i++] = ' ';
 
     /* Replace the line in the buffer. */
     ml_replace(lnum, newp, FALSE);
@@ -1721,7 +1685,7 @@ ins_char_bytes(buf, newlen)
     if (p_sm && (State & INSERT)
 	    && msg_silent == 0
 #ifdef FEAT_MBYTE
-	    && newlen == 1
+	    && charlen == 1
 #endif
 #ifdef FEAT_RIGHTLEFT
 	    && ((!(curwin->w_p_rl ^ p_ri)
@@ -1740,13 +1704,10 @@ ins_char_bytes(buf, newlen)
     {
 	/* Normal insert: move cursor right */
 #ifdef FEAT_MBYTE
-	curwin->w_cursor.col += newlen;
+	curwin->w_cursor.col += charlen;
 #else
 	++curwin->w_cursor.col;
 #endif
-
-	/* For VREPLACE mode */
-	vr_virtcol = new_vcol;
     }
     /*
      * TODO: should try to update w_row here, to avoid recomputing it later.
@@ -4592,9 +4553,33 @@ get_c_indent()
     int ind_unclosed2 = curbuf->b_p_sw;
 
     /*
+     * suppress ignoring spaces from the indent of a line starting with an
+     * unclosed parentheses.
+     */
+    int ind_unclosed_noignore = 0;
+
+    /*
+     * suppress ignoring white space when lining up with the character after
+     * an unclosed parentheses.
+     */
+    int ind_unclosed_whiteok = 0;
+
+    /*
+     * indent a closing parentheses under the line start of the matching
+     * opening parentheses.
+     */
+    int ind_matching_paren = 0;
+
+    /*
      * spaces from the comment opener when there is nothing after it.
      */
     int ind_in_comment = 3;
+
+    /*
+     * boolean: if non-zero, use ind_in_comment even if there is something
+     * after the comment opener.
+     */
+    int ind_in_comment2 = 0;
 
     /*
      * max lines to search for an open paren
@@ -4699,9 +4684,13 @@ get_c_indent()
 	    case 'p': ind_param = n; break;
 	    case 't': ind_func_type = n; break;
 	    case 'c': ind_in_comment = n; break;
+	    case 'C': ind_in_comment2 = n; break;
 	    case '+': ind_continuation = n; break;
 	    case '(': ind_unclosed = n; break;
 	    case 'u': ind_unclosed2 = n; break;
+	    case 'U': ind_unclosed_noignore = n; break;
+	    case 'w': ind_unclosed_whiteok = n; break;
+	    case 'm': ind_matching_paren = n; break;
 	    case ')': ind_maxparen = n; break;
 	    case '*': ind_maxcomment = n; break;
 	    case 'g': ind_scopedecl = n; break;
@@ -4848,10 +4837,10 @@ get_c_indent()
 	{
 	    /*
 	     * If we are more than one line away from the comment opener, take
-	     * the indent of the previous non-empty line.
-	     * If we are just below the comment opener and there are any
-	     * white characters after it line up with the text after it.
-	     * up with them; otherwise, just use a single space.
+	     * the indent of the previous non-empty line.  If 'cino' has "CO"
+	     * and we are just below the comment opener and there are any
+	     * white characters after it line up with the text after it;
+	     * otherwise, add the amount specified by "c" in 'cino'
 	     */
 	    amount = -1;
 	    for (lnum = cur_curpos.lnum - 1; lnum > trypos->lnum; --lnum)
@@ -4863,13 +4852,16 @@ get_c_indent()
 	    }
 	    if (amount == -1)			    /* use the comment opener */
 	    {
-		start = ml_get(trypos->lnum);
-		look = start + trypos->col + 2;	    /* skip / and * */
-		if (*look != NUL)		    /* if something after it */
-		    trypos->col = (colnr_T)(skipwhite(look) - start);
+		if (!ind_in_comment2)
+		{
+		    start = ml_get(trypos->lnum);
+		    look = start + trypos->col + 2; /* skip / and * */
+		    if (*look != NUL)		    /* if something after it */
+			trypos->col = (colnr_T)(skipwhite(look) - start);
+		}
 		getvcol(curwin, trypos, &col, NULL, NULL);
 		amount = col;
-		if (*look == NUL)
+		if (ind_in_comment2 || *look == NUL)
 		    amount += ind_in_comment;
 	    }
 	}
@@ -4943,22 +4935,28 @@ get_c_indent()
 	    amount = skip_label(our_paren_pos.lnum, &look, ind_maxcomment);
 	    cur_amount = MAXCOL;
 	    if (theline[0] == ')' || ind_unclosed == 0
-						   || *skipwhite(look) == '(')
+		       || (!ind_unclosed_noignore && *skipwhite(look) == '('))
 	    {
 		/*
 		 * If we're looking at a close paren, line up right there;
-		 * otherwise, line up with the next non-white character.
+		 * otherwise, line up with the next (non-white) character.
 		 */
 		if (theline[0] != ')')
 		{
-		    col = our_paren_pos.col + 1;
-		    look = ml_get(our_paren_pos.lnum);
-		    while (vim_iswhite(look[col]))
-			col++;
-		    if (look[col] != NUL)	/* In case of trailing space */
-			our_paren_pos.col = col;
-		    else
+		    if (ind_unclosed_whiteok)
 			our_paren_pos.col++;
+		    else {
+			char_u	*look;
+
+			col = our_paren_pos.col + 1;
+			look = ml_get(our_paren_pos.lnum);
+			while (vim_iswhite(look[col]))
+			    col++;
+			if (look[col] != NUL)	/* In case of trailing space */
+			    our_paren_pos.col = col;
+			else
+			    our_paren_pos.col++;
+		    }
 		}
 
 		/*
@@ -4969,7 +4967,12 @@ get_c_indent()
 		cur_amount = col;
 	    }
 
-	    if (ind_unclosed == 0 || *skipwhite(look) == '(')
+	    if (theline[0] == ')' && ind_matching_paren)
+	    {
+		/* Line up with the start of the matching paren line. */
+	    }
+	    else if (ind_unclosed == 0 || (!ind_unclosed_noignore
+						  && *skipwhite(look) == '('))
 		amount = cur_amount;
 	    else
 	    {

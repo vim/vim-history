@@ -2,7 +2,7 @@
 " Note that ":amenu" is often used to make a menu work in all modes.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 11
+" Last Change:	2001 Jul 18
 
 " Make sure the '<' and 'C' flags are not included in 'cpoptions', otherwise
 " <CR> would not be recognized.  See ":help 'cpoptions'".
@@ -490,8 +490,7 @@ func! s:BMShow(...)
     let bmenu_cutoff = &lines / 2
   endif
   " remove old menu, if exists
-  exe g:bmenu_priority . 'am &Buffers.x x'
-  exe "aun &Buffers"
+  silent! aunmenu &Buffers
 
   " get new priority, if exists
   if a:0 == 1
@@ -984,24 +983,25 @@ am 50.40.150 &Syntax.HIJK.HTML/OS :cal SetSyn("htmlos")<CR>
 am 50.40.160 &Syntax.HIJK.Hyper\ Builder :cal SetSyn("hb")<CR>
 am 50.40.180 &Syntax.HIJK.Icon :cal SetSyn("icon")<CR>
 am 50.40.190 &Syntax.HIJK.IDL :cal SetSyn("idl")<CR>
-am 50.40.200 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
+am 50.40.200 &Syntax.HIJK.Indent\ profile :cal SetSyn("indent")<CR>
 am 50.40.210 &Syntax.HIJK.Inform :cal SetSyn("inform")<CR>
 am 50.40.220 &Syntax.HIJK.Informix\ 4GL :cal SetSyn("fgl")<CR>
 am 50.40.230 &Syntax.HIJK.Inittab :cal SetSyn("inittab")<CR>
 am 50.40.240 &Syntax.HIJK.Inno\ Setup :cal SetSyn("iss")<CR>
 am 50.40.250 &Syntax.HIJK.InstallShield\ Rules :cal SetSyn("ishd")<CR>
-am 50.40.270 &Syntax.HIJK.Jam :cal SetSyn("jam")<CR>
-am 50.40.280 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
-am 50.40.290 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
-am 50.40.300 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
-am 50.40.310 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
-am 50.40.320 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
-am 50.40.330 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
-am 50.40.340 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
-am 50.40.350 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
-am 50.40.370 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
-am 50.40.380 &Syntax.HIJK.Kimwitu :cal SetSyn("kwt")<CR>
-am 50.40.390 &Syntax.HIJK.Kixtart :cal SetSyn("kix")<CR>
+am 50.40.260 &Syntax.HIJK.Interactive\ Data\ Lang :cal SetSyn("idlang")<CR>
+am 50.40.280 &Syntax.HIJK.Jam :cal SetSyn("jam")<CR>
+am 50.40.290 &Syntax.HIJK.Jargon :cal SetSyn("jargon")<CR>
+am 50.40.300 &Syntax.HIJK.Java.Java :cal SetSyn("java")<CR>
+am 50.40.310 &Syntax.HIJK.Java.JavaCC :cal SetSyn("javacc")<CR>
+am 50.40.320 &Syntax.HIJK.Java.JavaScript :cal SetSyn("javascript")<CR>
+am 50.40.330 &Syntax.HIJK.Java.Java\ Server\ Pages :cal SetSyn("jsp")<CR>
+am 50.40.340 &Syntax.HIJK.Java.Java\ Properties :cal SetSyn("jproperties")<CR>
+am 50.40.350 &Syntax.HIJK.Jess :cal SetSyn("jess")<CR>
+am 50.40.360 &Syntax.HIJK.Jgraph :cal SetSyn("jgraph")<CR>
+am 50.40.380 &Syntax.HIJK.KDE\ script :cal SetSyn("kscript")<CR>
+am 50.40.390 &Syntax.HIJK.Kimwitu :cal SetSyn("kwt")<CR>
+am 50.40.400 &Syntax.HIJK.Kixtart :cal SetSyn("kix")<CR>
 am 50.50.100 &Syntax.L-Ma.Lace :cal SetSyn("lace")<CR>
 am 50.50.110 &Syntax.L-Ma.Lamda\ Prolog :cal SetSyn("lprolog")<CR>
 am 50.50.120 &Syntax.L-Ma.Latte :cal SetSyn("latte")<CR>
@@ -1047,30 +1047,31 @@ am 50.60.320 &Syntax.Me-NO.Omnimark :cal SetSyn("omnimark")<CR>
 am 50.60.330 &Syntax.Me-NO.OpenROAD :cal SetSyn("openroad")<CR>
 am 50.60.340 &Syntax.Me-NO.Open\ Psion\ Lang :cal SetSyn("opl")<CR>
 am 50.60.350 &Syntax.Me-NO.Oracle\ config :cal SetSyn("ora")<CR>
-am 50.70.100 &Syntax.PQ.PApp :cal SetSyn("papp")<CR>
-am 50.70.110 &Syntax.PQ.Pascal :cal SetSyn("pascal")<CR>
-am 50.70.120 &Syntax.PQ.PCCTS :cal SetSyn("pccts")<CR>
-am 50.70.130 &Syntax.PQ.PPWizard :cal SetSyn("ppwiz")<CR>
-am 50.70.140 &Syntax.PQ.Perl.Perl :cal SetSyn("perl")<CR>
-am 50.70.150 &Syntax.PQ.Perl.Perl\ POD :cal SetSyn("pod")<CR>
-am 50.70.160 &Syntax.PQ.Perl.Perl\ XS :cal SetSyn("xs")<CR>
-am 50.70.170 &Syntax.PQ.PHP\ 3-4 :cal SetSyn("php")<CR>
-am 50.70.180 &Syntax.PQ.Phtml :cal SetSyn("phtml")<CR>
-am 50.70.190 &Syntax.PQ.Pike :cal SetSyn("pike")<CR>
-am 50.70.200 &Syntax.PQ.Pine\ RC :cal SetSyn("pine")<CR>
-am 50.70.210 &Syntax.PQ.PL/M :cal SetSyn("plm")<CR>
-am 50.70.220 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
-am 50.70.230 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
-am 50.70.240 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
-am 50.70.250 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
-am 50.70.260 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
-am 50.70.270 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
-am 50.70.280 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
-am 50.70.290 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
-am 50.70.300 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
-am 50.70.310 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
-am 50.70.320 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
-am 50.70.330 &Syntax.PQ.Python :cal SetSyn("python")<CR>
+am 50.70.100 &Syntax.PQ.Palm\ resource\ compiler :cal SetSyn("pilrc")<CR>
+am 50.70.110 &Syntax.PQ.PApp :cal SetSyn("papp")<CR>
+am 50.70.120 &Syntax.PQ.Pascal :cal SetSyn("pascal")<CR>
+am 50.70.130 &Syntax.PQ.PCCTS :cal SetSyn("pccts")<CR>
+am 50.70.140 &Syntax.PQ.PPWizard :cal SetSyn("ppwiz")<CR>
+am 50.70.150 &Syntax.PQ.Perl.Perl :cal SetSyn("perl")<CR>
+am 50.70.160 &Syntax.PQ.Perl.Perl\ POD :cal SetSyn("pod")<CR>
+am 50.70.170 &Syntax.PQ.Perl.Perl\ XS :cal SetSyn("xs")<CR>
+am 50.70.180 &Syntax.PQ.PHP\ 3-4 :cal SetSyn("php")<CR>
+am 50.70.190 &Syntax.PQ.Phtml :cal SetSyn("phtml")<CR>
+am 50.70.200 &Syntax.PQ.Pike :cal SetSyn("pike")<CR>
+am 50.70.210 &Syntax.PQ.Pine\ RC :cal SetSyn("pine")<CR>
+am 50.70.220 &Syntax.PQ.PL/M :cal SetSyn("plm")<CR>
+am 50.70.230 &Syntax.PQ.PL/SQL :cal SetSyn("plsql")<CR>
+am 50.70.240 &Syntax.PQ.PO\ (GNU\ gettext) :cal SetSyn("po")<CR>
+am 50.70.250 &Syntax.PQ.Postfix\ main\ config :cal SetSyn("pfmain")<CR>
+am 50.70.260 &Syntax.PQ.PostScript :cal SetSyn("postscr")<CR>
+am 50.70.270 &Syntax.PQ.Povray :cal SetSyn("pov")<CR>
+am 50.70.280 &Syntax.PQ.Printcap :cal SetSyn("pcap")<CR>
+am 50.70.290 &Syntax.PQ.Procmail :cal SetSyn("procmail")<CR>
+am 50.70.300 &Syntax.PQ.Product\ Spec\ File :cal SetSyn("psf")<CR>
+am 50.70.310 &Syntax.PQ.Progress :cal SetSyn("progress")<CR>
+am 50.70.320 &Syntax.PQ.Prolog :cal SetSyn("prolog")<CR>
+am 50.70.330 &Syntax.PQ.Purify\ log :cal SetSyn("purifylog")<CR>
+am 50.70.340 &Syntax.PQ.Python :cal SetSyn("python")<CR>
 am 50.80.100 &Syntax.R-Sg.R :cal SetSyn("r")<CR>
 am 50.80.110 &Syntax.R-Sg.Radiance :cal SetSyn("radiance")<CR>
 am 50.80.120 &Syntax.R-Sg.RCS\ log\ output :cal SetSyn("rcslog")<CR>

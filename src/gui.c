@@ -2718,9 +2718,9 @@ gui_menu_cb(menu)
 gui_init_which_components(oldval)
     char_u	*oldval;
 {
-    static int prev_which_scrollbars[3] = {-1, -1, -1};
+    static int	prev_which_scrollbars[3] = {-1, -1, -1};
 #ifdef FEAT_MENU
-    static int prev_menu_is_active = -1;
+    static int	prev_menu_is_active = -1;
 #endif
 #ifdef FEAT_TOOLBAR
     static int	prev_toolbar = -1;

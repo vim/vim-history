@@ -213,6 +213,39 @@ static void initialise_toolbar(void);
 static int get_toolbar_bitmap(vimmenu_T *menu);
 #endif
 
+#if defined(FEAT_MBYTE_IME) && defined(DYNAMIC_IME)
+# ifdef NOIME
+typedef struct tagCOMPOSITIONFORM {
+    DWORD dwStyle;
+    POINT ptCurrentPos;
+    RECT  rcArea;
+} COMPOSITIONFORM, *PCOMPOSITIONFORM, NEAR *NPCOMPOSITIONFORM, FAR *LPCOMPOSITIONFORM;
+typedef HANDLE HIMC;
+# endif
+
+HINSTANCE hLibImm = NULL;
+LONG (WINAPI *pImmGetCompositionString)(HIMC, DWORD, LPVOID, DWORD);
+HIMC (WINAPI *pImmGetContext)(HWND);
+BOOL (WINAPI *pImmReleaseContext)(HWND, HIMC);
+BOOL (WINAPI *pImmGetOpenStatus)(HIMC);
+BOOL (WINAPI *pImmSetOpenStatus)(HIMC, BOOL);
+BOOL (WINAPI *pImmGetCompositionFont)(HIMC, LPLOGFONTA);
+BOOL (WINAPI *pImmSetCompositionFont)(HIMC, LPLOGFONTA);
+BOOL (WINAPI *pImmSetCompositionWindow)(HIMC, LPCOMPOSITIONFORM);
+BOOL (WINAPI *pImmGetConversionStatus)(HIMC, LPDWORD, LPDWORD);
+static void dyn_imm_load(void);
+#else
+# define pImmGetCompositionString ImmGetCompositionStringA
+# define pImmGetContext           ImmGetContext
+# define pImmReleaseContext       ImmReleaseContext
+# define pImmGetOpenStatus        ImmGetOpenStatus
+# define pImmSetOpenStatus        ImmSetOpenStatus
+# define pImmGetCompositionFont   ImmGetCompositionFontA
+# define pImmSetCompositionFont   ImmSetCompositionFontA
+# define pImmSetCompositionWindow ImmSetCompositionWindow
+# define pImmGetConversionStatus  ImmGetConversionStatus
+#endif
+
 /*
  * Return TRUE when running under Windows NT 3.x or Win32s, both of which have
  * less fancy GUI APIs.
@@ -1022,6 +1055,9 @@ gui_mch_init(void)
 #ifdef GLOBAL_IME
     global_ime_init(atom, s_hwnd);
 #endif
+#if defined(FEAT_MBYTE_IME) && defined(DYNAMIC_IME)
+    dyn_imm_load();
+#endif
 
     /* Create the text area window */
     if (GetClassInfo(s_hinst, szTextAreaClass, &wndclass) == 0) {
@@ -1140,9 +1176,12 @@ gui_mch_set_shellsize(int width, int height, int min_width, int min_height,
     int	    win_xpos, win_ypos;
     WINDOWPLACEMENT wndpl;
 
-    /* Don't change the size when maximized. */
+    /* Don't change the size when maximized, recompute the number of chars. */
     if (IsZoomed(s_hwnd))
+    {
+	gui_mch_newfont();
 	return;
+    }
 
     /* try to keep window completely on screen */
     /* get size of the screen work area (excludes taskbar, appbars) */
@@ -1357,14 +1396,14 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
     LRESULT lResult = 0;
     HIMC hImc;
 
-    if (!(hImc = ImmGetContext(hWnd)))
+    if (!pImmGetContext || !(hImc = pImmGetContext(hWnd)))
 	return lResult;
     switch (dwCommand)
     {
 	case IMN_SETOPENSTATUS:
-	    if (ImmGetOpenStatus(hImc))
+	    if (pImmGetOpenStatus(hImc))
 	    {
-		ImmSetCompositionFont(hImc, &norm_logfont);
+		pImmSetCompositionFont(hImc, &norm_logfont);
 		im_set_position(gui.row, gui.col);
 
 		/* Disable langmap */
@@ -1394,7 +1433,7 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 	    lResult = 1;
 	    break;
     }
-    ImmReleaseContext(hWnd, hImc);
+    pImmReleaseContext(hWnd, hImc);
     return lResult;
 }
 
@@ -1409,7 +1448,7 @@ GetCompositionStr(HWND hwnd, LPARAM CompFlag)
     // Applications should call ImmGetContext API to get
     // input context handle.
 
-    if (!(hIMC = ImmGetContext(hwnd)))
+    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
 	return;
 
     // Determines how much memory space to store the composition string.
@@ -1417,7 +1456,7 @@ GetCompositionStr(HWND hwnd, LPARAM CompFlag)
     // GCS_COMPSTR flag on, buffer length zero, to get the bullfer
     // length.
 
-    if ((dwBufLen = ImmGetCompositionString( hIMC, GCS_COMPSTR,
+    if ((dwBufLen = pImmGetCompositionString(hIMC, GCS_COMPSTR,
 		    (void FAR*)NULL, 0l)) < 0)
 	goto exit2;
 
@@ -1427,7 +1466,7 @@ GetCompositionStr(HWND hwnd, LPARAM CompFlag)
     // Reads in the composition string.
     if ( dwBufLen != 0 )
     {
-	ImmGetCompositionString(hIMC, GCS_COMPSTR, lpCompStr, dwBufLen);
+	pImmGetCompositionString(hIMC, GCS_COMPSTR, lpCompStr, dwBufLen);
 	lpCompStr[dwBufLen] = 0;
     }
     else
@@ -1441,7 +1480,7 @@ GetCompositionStr(HWND hwnd, LPARAM CompFlag)
 
 
 exit2:
-    ImmReleaseContext(hwnd, hIMC);
+    pImmReleaseContext(hwnd, hIMC);
 }
 
 
@@ -1458,14 +1497,14 @@ GetResultStr(HWND hwnd)
     HIMC	hIMC;			// Input context handle.
 
     // If fail to get input context handle then do nothing.
-    if (!(hIMC = ImmGetContext(hwnd)))
+    if (!pImmGetContext || !(hIMC = pImmGetContext(hwnd)))
 	return;
 
     // Determines how much memory space to store the result string.
     // Applications should call ImmGetCompositionString with
     // GCS_RESULTSTR flag on, buffer length zero, to get the bullfer
     // length.
-    if ((dwBufLen = ImmGetCompositionString( hIMC, GCS_RESULTSTR,
+    if ((dwBufLen = pImmGetCompositionString(hIMC, GCS_RESULTSTR,
 		    (void FAR *)NULL, (DWORD) 0)) <= 0)
 	goto exit2;
 
@@ -1473,13 +1512,13 @@ GetResultStr(HWND hwnd)
 	goto exit2;
 
     // Reads in the result string.
-    ImmGetCompositionString(hIMC, GCS_RESULTSTR, lpCompStr, dwBufLen);
+    pImmGetCompositionString(hIMC, GCS_RESULTSTR, lpCompStr, dwBufLen);
 
     // Displays the result string.
     DisplayCompStringOpaque(lpCompStr, dwBufLen);
 
 exit2:
-    ImmReleaseContext(hwnd, hIMC);
+    pImmReleaseContext(hwnd, hIMC);
 }
 
     static char *
@@ -1490,15 +1529,30 @@ ImeGetTempComposition(void)
 	HIMC    hImc;
 	DWORD   dwConvMode, dwSentMode;
 
-	if ((hImc = ImmGetContext(s_hwnd)))
+	if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
 	{
-	    ImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
-	    ImmReleaseContext(s_hwnd, hImc);
+	    pImmGetConversionStatus(hImc, &dwConvMode, &dwSentMode);
+	    pImmReleaseContext(s_hwnd, hImc);
 	    if ((dwConvMode & IME_CMODE_NATIVE))
 		return lpCompStr;
 	}
     }
     return NULL;
+}
+
+/*
+ * set font to IM.
+ */
+    void
+im_set_font(LOGFONT *lf)
+{
+    HIMC hImc;
+
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
+    {
+	pImmSetCompositionFont(hImc, lf);
+	pImmReleaseContext(s_hwnd, hImc);
+    }
 }
 
 /*
@@ -1509,7 +1563,7 @@ im_set_position(int row, int col)
 {
     HIMC hImc;
 
-    if ((hImc = ImmGetContext(s_hwnd)))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
     {
 	COMPOSITIONFORM	cfs;
 
@@ -1517,9 +1571,9 @@ im_set_position(int row, int col)
 	cfs.ptCurrentPos.x = FILL_X(col);
 	cfs.ptCurrentPos.y = FILL_Y(row);
 	MapWindowPoints(s_textArea, s_hwnd, &cfs.ptCurrentPos, 1);
-	ImmSetCompositionWindow(hImc, &cfs);
+	pImmSetCompositionWindow(hImc, &cfs);
 
-	ImmReleaseContext(s_hwnd, hImc);
+	pImmReleaseContext(s_hwnd, hImc);
     }
 }
 
@@ -1531,10 +1585,10 @@ im_set_active(int active)
 {
     HIMC	hImc;
 
-    if ((hImc = ImmGetContext(s_hwnd)))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
     {
-	ImmSetOpenStatus(hImc, active);
-	ImmReleaseContext(s_hwnd, hImc);
+	pImmSetOpenStatus(hImc, active);
+	pImmReleaseContext(s_hwnd, hImc);
     }
 }
 
@@ -1547,10 +1601,10 @@ im_get_status()
     int		status = 0;
     HIMC	hImc;
 
-    if ((hImc = ImmGetContext(s_hwnd)))
+    if (pImmGetContext && (hImc = pImmGetContext(s_hwnd)))
     {
-	status = ImmGetOpenStatus(hImc) ? 1 : 0;
-	ImmReleaseContext(s_hwnd, hImc);
+	status = pImmGetOpenStatus(hImc) ? 1 : 0;
+	pImmReleaseContext(s_hwnd, hImc);
     }
     return status;
 }
@@ -3299,4 +3353,72 @@ gui_mch_set_foreground(void)
 	 SendMessage(s_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
     SetForegroundWindow(s_hwnd);
 }
+#endif
+
+#if defined(FEAT_MBYTE_IME) && defined(DYNAMIC_IME)
+    static void
+dyn_imm_load(void)
+{
+    OSVERSIONINFO ovi;
+    int	nImmFunc = 0;
+
+    ovi.dwOSVersionInfoSize = sizeof(ovi);
+    GetVersionEx(&ovi);
+    if (ovi.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) /* Windows 95 */
+	hLibImm = LoadLibrary("imm.dll");
+    else
+	hLibImm = LoadLibrary("imm32.dll");	    /* Windows NT */
+    if (hLibImm == NULL)
+	return;
+    if ((*((FARPROC*)&pImmGetCompositionString)
+	    = GetProcAddress(hLibImm, "ImmGetCompositionStringA")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmGetContext)
+	    = GetProcAddress(hLibImm, "ImmGetContext")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmReleaseContext)
+	    = GetProcAddress(hLibImm, "ImmReleaseContext")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmGetOpenStatus)
+	    = GetProcAddress(hLibImm, "ImmGetOpenStatus")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmSetOpenStatus)
+	    = GetProcAddress(hLibImm, "ImmSetOpenStatus")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmGetCompositionFont)
+	    = GetProcAddress(hLibImm, "ImmGetCompositionFontA")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmSetCompositionFont)
+	    = GetProcAddress(hLibImm, "ImmSetCompositionFontA")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmSetCompositionWindow)
+	    = GetProcAddress(hLibImm, "ImmSetCompositionWindow")))
+	nImmFunc++;
+    if ((*((FARPROC*)&pImmGetConversionStatus)
+	    = GetProcAddress(hLibImm, "ImmGetConversionStatus")))
+	nImmFunc++;
+
+    if (nImmFunc != 9)
+    {
+	FreeLibrary(hLibImm);
+	hLibImm = NULL;
+	pImmGetContext = NULL;
+	return;
+    }
+
+    return;
+}
+
+# if 0	/* not used */
+    int
+dyn_imm_unload(void)
+{
+    if (!hLibImm)
+	return FALSE;
+    FreeLibrary(hLibImm);
+    hLibImm = NULL;
+    return TRUE;
+}
+# endif
+
 #endif

@@ -1,4 +1,4 @@
-README_w32s.txt for version 6.0an of Vim: Vi IMproved.
+README_w32s.txt for version 6.0ao of Vim: Vi IMproved.
 
 This archive contains the gvim.exe that was specifically compiled for use in
 the Win32s subsystem in MS-Windows 3.1 and 3.11.

@@ -2657,7 +2657,8 @@ im_xim_str2keycode(code, state)
 
 	/* Get keycode from string. */
 	gui_get_x11_windis(&window, &display);
-	keycode = XKeysymToKeycode(display, XStringToKeysym((char *)str));
+	if (display)
+	    keycode = XKeysymToKeycode(display, XStringToKeysym((char *)str));
 	if (keycode == 0)
 	    retval = FAIL;
 

@@ -1605,7 +1605,7 @@ vgetorpeek(advance)
 #endif
     int		n;
 #ifdef FEAT_LANGMAP
-    int		c2;
+    int		nolmaplen;
 #endif
     int		old_wcol, old_wrow;
 
@@ -1739,7 +1739,13 @@ vgetorpeek(advance)
 		    {
 			c1 = typebuf.tb_buf[typebuf.tb_off];
 #ifdef FEAT_LANGMAP
-			LANGMAP_ADJUST(c1, TRUE);
+			if (c1 == K_SPECIAL)
+			    nolmaplen = 2;
+			else
+			{
+			    LANGMAP_ADJUST(c1, TRUE);
+			    nolmaplen = 0;
+			}
 #endif
 #ifdef FEAT_LOCALMAP
 			/* First try buffer-local mappings. */
@@ -1775,12 +1781,21 @@ vgetorpeek(advance)
 			    if (mp->m_keys[0] == c1
 						&& (mp->m_mode & local_State))
 			    {
+#ifdef FEAT_LANGMAP
+				int	nomap = nolmaplen;
+				int	c2;
+#endif
 				/* find the match length of this mapping */
 				for (mlen = 1; mlen < typebuf.tb_len; ++mlen)
 				{
 #ifdef FEAT_LANGMAP
 				    c2 = typebuf.tb_buf[typebuf.tb_off + mlen];
-				    LANGMAP_ADJUST(c2, TRUE);
+				    if (nomap > 0)
+					--nomap;
+				    else if (c2 == K_SPECIAL)
+					nomap = 2;
+				    else
+					LANGMAP_ADJUST(c2, TRUE);
 				    if (mp->m_keys[mlen] != c2)
 #else
 				    if (mp->m_keys[mlen] !=

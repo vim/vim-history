@@ -329,6 +329,7 @@ EXTERN int	p_csverbose;	/* 'cscopeverbose' */
 EXTERN char_u	*p_debug;	/* 'debug' */
 #ifdef FEAT_FIND_ID
 EXTERN char_u	*p_def;		/* 'define' */
+EXTERN char_u	*p_inc;
 #endif
 #ifdef FEAT_DIFF
 EXTERN char_u	*p_dip;		/* 'diffopt' */
@@ -398,7 +399,7 @@ EXTERN char_u	*p_fp;		/* 'formatprg' */
 EXTERN int	p_gd;		/* 'gdefault' */
 #ifdef FEAT_PRINTER
 EXTERN char_u	*p_prtfont;	/* 'printerfont' */
-EXTERN char_u	*p_prtsettings;	/* 'printersettings' */
+EXTERN char_u	*p_popt;	/* 'printeroptions' */
 EXTERN char_u	*p_prtname;	/* 'printername' */
 EXTERN char_u	*p_headerfmt;	/* 'printerheader' */
 #endif

@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0an.  Last change: 2001 Jul 11
+*options.txt*   For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -585,13 +585,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 	type anything on the new line except <BS> or CTRL-D and then type
 	<Esc> or <CR>, the indent is deleted again.  When autoindent is on,
 	formatting (with the "gq" command or when you reach 'textwidth' in
-	Insert mode) uses the indentation of the first line.   When
-	'smartindent' or 'cindent' is on the indent is changed in specific
-	cases.  The 'autoindent' option is reset when the 'paste' option is
-	set.  {small difference from Vi: After the indent is deleted when
-	typing <Esc> or <CR>, the cursor position when moving up or down is
-	after the deleted indent; Vi puts the cursor somewhere in the deleted
-	indent}.
+	Insert mode) uses the indentation of the first line.
+	When 'smartindent' or 'cindent' is on the indent is changed in
+	a different way.
+	The 'autoindent' option is reset when the 'paste' option is set.
+	{small difference from Vi: After the indent is deleted when typing
+	<Esc> or <CR>, the cursor position when moving up or down is after the
+	deleted indent; Vi puts the cursor somewhere in the deleted indent}.
 
 				 *'autoread'* *'ar'* *'noautoread'* *'noar'*
 'autoread' 'ar'		boolean	(default off)
@@ -1019,56 +1019,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 <	|Nvi| also has this option, but it only uses the first character.
 	See |cmdwin|.
 
-					*'encoding'* *'enc'*
-'encoding' 'enc'	string (default: "latin1" or value from $LANG)
-			global
-			{only available when compiled with the |+multi_byte|
-			feature}
-			{not in Vi}
-	Sets the character encoding used inside Vim.  It applies to text in
-	the buffers, registers, Strings in expressions, text stored in the
-	viminfo file, etc.  It sets the kind of characters which Vim can work
-	with.  See |encoding-names| for the possible values.
-
-	NOTE: Changing this option will not change the encoding of the
-	existing text in Vim.  It may cause multi-byte text to become invalid.
-	It should normally be kept at its default value, or set when Vim
-	starts up.  See |multibyte|.
-
-	The character encoding of files can be different from 'encoding'.
-	This is specified with 'fileencoding'.  The conversion is done with
-	iconv() or as specified with 'charconvert'.
-
-	Normally 'encoding' will be equal to your current locale.  This will
-	be the default if Vim recognizes your environment settings.  If
-	'encoding' is not set to the current locale, 'termencoding' must be
-	set to convert typed and displayed text.  See |encoding-table|.
-
-	When you set this option, it fires the |EncodingChanged| autocommand
-	event so that you can set up fonts if necessary.
-
-	When the option is set, the value is converted to lowercase.  Thus
-	you can set it with uppercase values too.  Underscores are translated
-	to '-' signs.
-	When the encoding is recognized, it is changed to the standard name.
-	For example "Latin-1" becomes "latin1", "ISO_88592" becomes
-	"iso-8859-2" and "utf8" becomes "utf-8".
-
-	Note: "latin1" is also used when the encoding could not be detected.
-	This only works when editing files in the same encoding!  When the
-	actual characterset is not latin1, make sure 'fileencoding' and
-	'fileencodings' are empty.  When conversion is needed, switch to using
-	utf-8.
-
-	When "unicode", "ucs-2" or "ucs-4" is used, Vim internally uses utf-8.
-	You don't notice this while editing, but it does matter for the
-	|viminfo-file|.  And Vim expects the terminal to use utf-8 too.  Thus
-	setting 'encoding' to one of these values instead of utf-8 only has
-	effect for encoding used for files when 'fileencoding' is empty.
-
-	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
-	 not set yet, the default for 'fileencodings' is changed.
-
 					*'charconvert'* *'ccv'* *E202* *E214*
 'charconvert' 'ccv'	string (default "")
 			global
@@ -1133,7 +1083,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	NOTE: This option is reset when 'compatible' is set.
 
 							*'cinkeys'* *'cink'*
-'cinkeys' 'cink'	string	(default "0{,0},:,0#,!^F,o,O,e")
+'cinkeys' 'cink'	string	(default "0{,0},0),:,0#,!^F,o,O,e")
 			local to buffer
 			{not in Vi}
 			{not available when compiled without the |+cindent|
@@ -1817,6 +1767,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 	uhex		Show unprintable characters hexadecimal as <xx>
 			instead of using ^C and ~C.
 
+						*'eadirection'* *'ead'*
+'eadirection' 'ead'	string	(default "both")
+			global
+			{not in Vi}
+			{not available when compiled without the +vertsplit
+			feature}
+	Tells when the 'equalalways' option applies:
+		ver	vertically, width of windows is not affected
+		hor	horizontally, height of windows is not affected
+		both	width and height of windows is affected
+
 			   *'ed'* *'edcompatible'* *'noed'* *'noedcompatible'*
 'edcompatible' 'ed'	boolean	(default off)
 			global
@@ -1824,6 +1785,56 @@ A jump table for the options with a short description can be found at |Q_op|.
 	toggled each time the flag is given.  See |complex-change|.  See
 	also 'gdefault' option.
 	Switching this option on is discouraged!
+
+					*'encoding'* *'enc'*
+'encoding' 'enc'	string (default: "latin1" or value from $LANG)
+			global
+			{only available when compiled with the |+multi_byte|
+			feature}
+			{not in Vi}
+	Sets the character encoding used inside Vim.  It applies to text in
+	the buffers, registers, Strings in expressions, text stored in the
+	viminfo file, etc.  It sets the kind of characters which Vim can work
+	with.  See |encoding-names| for the possible values.
+
+	NOTE: Changing this option will not change the encoding of the
+	existing text in Vim.  It may cause multi-byte text to become invalid.
+	It should normally be kept at its default value, or set when Vim
+	starts up.  See |multibyte|.
+
+	The character encoding of files can be different from 'encoding'.
+	This is specified with 'fileencoding'.  The conversion is done with
+	iconv() or as specified with 'charconvert'.
+
+	Normally 'encoding' will be equal to your current locale.  This will
+	be the default if Vim recognizes your environment settings.  If
+	'encoding' is not set to the current locale, 'termencoding' must be
+	set to convert typed and displayed text.  See |encoding-table|.
+
+	When you set this option, it fires the |EncodingChanged| autocommand
+	event so that you can set up fonts if necessary.
+
+	When the option is set, the value is converted to lowercase.  Thus
+	you can set it with uppercase values too.  Underscores are translated
+	to '-' signs.
+	When the encoding is recognized, it is changed to the standard name.
+	For example "Latin-1" becomes "latin1", "ISO_88592" becomes
+	"iso-8859-2" and "utf8" becomes "utf-8".
+
+	Note: "latin1" is also used when the encoding could not be detected.
+	This only works when editing files in the same encoding!  When the
+	actual characterset is not latin1, make sure 'fileencoding' and
+	'fileencodings' are empty.  When conversion is needed, switch to using
+	utf-8.
+
+	When "unicode", "ucs-2" or "ucs-4" is used, Vim internally uses utf-8.
+	You don't notice this while editing, but it does matter for the
+	|viminfo-file|.  And Vim expects the terminal to use utf-8 too.  Thus
+	setting 'encoding' to one of these values instead of utf-8 only has
+	effect for encoding used for files when 'fileencoding' is empty.
+
+	 When 'encoding' is set to a Unicode encoding, and 'fileencodings' was
+	 not set yet, the default for 'fileencodings' is changed.
 
 			*'endofline'* *'eol'* *'noendofline'* *'noeol'*
 'endofline' 'eol'	boolean	(default on)
@@ -1852,17 +1863,6 @@ A jump table for the options with a short description can be found at |Q_op|.
 	When mixing vertically and horizontally split windows, a minimal size
 	is computed and some windows may be larger if there is room.  The
 	'eadirection' option tells in which direction the size is affected.
-
-						*'eadirection'* *'ead'*
-'eadirection' 'ead'	string	(default "both")
-			global
-			{not in Vi}
-			{not available when compiled without the +vertsplit
-			feature}
-	Tells when the 'equalalways' option applies:
-		ver	vertically, width of windows is not affected
-		hor	horizontally, height of windows is not affected
-		both	width and height of windows is affected
 
 						*'equalprg'* *'ep'*
 'equalprg' 'ep'		string	(default "")
@@ -2912,17 +2912,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 'iminsert' 'imi'	number (default 0, 2 when an input method is supported)
 			local to buffer
 			{not in Vi}
-	Specifies whether langmap or an Input Method (IM) is to be used in
+	Specifies whether :lmap or an Input Method (IM) is to be used in
 	Insert mode.  Valid values:
-		0	langmap is off and IM is off
-		1	langmap is ON and IM is off
-		2	langmap is off and IM is ON
+		0	:lmap is off and IM is off
+		1	:lmap is ON and IM is off
+		2	:lmap is off and IM is ON
 	2 is available only when compiled with the |+multi_byte_ime|, |+xim|
 	or |global-ime|.
 	To always reset the option to zero when leaving Insert mode with <Esc>
 	this can be used: >
 		:inoremap <ESC> <ESC>:set iminsert=0<CR>
-<	This makes langmap and IM turn off automatically when leaving Insert
+<	This makes :lmap and IM turn off automatically when leaving Insert
 	mode.
 	Note that this option changes when using CTRL-^ in Insert mode
 	|i_CTRL-^|.
@@ -2933,20 +2933,20 @@ A jump table for the options with a short description can be found at |Q_op|.
 'imsearch' 'ims'	number (default 0, 2 when an input method is supported)
 			local to buffer
 			{not in Vi}
-	Specifies whether langmap or an Input Method (IM) is to be used when
+	Specifies whether :lmap or an Input Method (IM) is to be used when
 	entering a search pattern.  Valid values:
 		-1	the value of 'iminsert' is used, makes it look like
 			'iminsert' is also used when typing a search pattern
-		0	langmap is off and IM is off
-		1	langmap is ON and IM is off
-		2	langmap is off and IM is ON
+		0	:lmap is off and IM is off
+		1	:lmap is ON and IM is off
+		2	:lmap is off and IM is ON
 	Note that this option changes when using CTRL-^ in Insert mode
 	|c_CTRL-^|.
 	The value is set to 1 when defining a new |:lmap| mapping.
 
 						*'include'* *'inc'*
 'include' 'inc'		string	(default "^#\s*include")
-			local to buffer
+			global or local to buffer |global-local|
 			{not in Vi}
 			{not available when compiled without the
 			|+find_in_path| feature}
@@ -3003,7 +3003,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	The expression is evaluated with |v:lnum| set to the line number for
 	which the indent is to be computed.
 	The expression must return the number of spaces worth of indent.  It
-	can return "-1" to keep the current indent.
+	can return "-1" to keep the current indent (this means 'autoindent' is
+	used for the indent).
 	The evaluation of the expression must not have side effects!  It must
 	not change the text, jump to another window, etc.  Afterwards the
 	cursor position is always restored, thus the cursor may be moved.
@@ -3287,7 +3288,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	Use a mapping to avoid having to type it each time!
 
 					*'langmenu'* *'lm'*
-'langmenu' 'lmenu'	string	(default "")
+'langmenu' 'lm'		string	(default "")
 			global
 			{not in Vi}
 			{only available when compiled with the |+menu| and
@@ -3382,6 +3383,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 
 						*'lispwords'* *'lw'*
 'lispwords' 'lw'	string	(default is very long)
+			global
 			{not in Vi}
 			{not available when compiled without the |+lispindent|
 			feature}
@@ -3492,10 +3494,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 	pairs must be separated by a comma.  Example for including '<' and '>'
 	(HTML): >
 		:set mps+=<:>
+
 <	A more exotic example, to jump between the '=' and ';' in an
 	assignment, useful for languages like C and Java: >
 		:au FileType c,cpp,java set mps+==:;
-<
+
+<	For a more advanced way of using "%", see the matchit.vim plugin in
+	the $VIMRUNTIME/macros directory. |add-local-help|
+
 						*'matchtime'* *'mat'*
 'matchtime' 'mat'	number	(default 5)
 			global
@@ -3551,7 +3557,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{not available when compiled without the |+menu|
 			feature}
-	Maximum number of menu items to use.  Used for menus that are
+	Maximum number of items to use in a menu.  Used for menus that are
 	generated from a list of items, e.g., the Buffers menu.  Changing this
 	option has no direct effect, the menu must be refreshed first.
 
@@ -4017,13 +4023,13 @@ A jump table for the options with a short description can be found at |Q_op|.
 	If the option is empty, then vim will use the system default printer
 	for ":hardcopy!"
 
-						*'printersettings'* *'pset'*
-'printersettings' 'pset' string (default "left:10pc,right:5pc,
+						*'printeroptions'* *'popt'*
+'printeroptions' 'popt' string (default "left:10pc,right:5pc,
 						 top:5pc,bottom:5pc,header:2")
 			global
 			{not in Vi}
 			{only available when compiled with |+printer| feature}
-	This is a comma-separated list of options that control the format of
+	This is a comma-separated list of items that control the format of
 	the output of |:hardcopy|:
 
 	  left:{spec}		left margin
@@ -4144,11 +4150,14 @@ A jump table for the options with a short description can be found at |Q_op|.
 			{not in Vi}
 			{not available when compiled without the |+statusline|
 			feature}
-	The format of this option, is like that of 'statusline'.  When it is
-	not empty it determines the content of the ruler string.  If the
-	option has a leading "%{wid}(", then {wid} determines the width of the
-	ruler.  The default ruler width is 17 characters.
-
+	When this option is not empty, it determines the content of the ruler
+	string, as displayed for the 'ruler' option.
+	The format of this option, is like that of 'statusline'.
+	The default ruler width is 17 characters.  To make the ruler 15
+	characters wide, put "%15(" at the start and "%)" at the end.
+	Example: >
+		:set rulerformat=%15(%c%V\ %p%%%)
+<
 						*'runtimepath'* *'rtp'*
 'runtimepath' 'rtp'	string	(default:
 					Unix: "$HOME/.vim,
@@ -4183,12 +4192,17 @@ A jump table for the options with a short description can be found at |Q_op|.
 	files:
 	  filetype.vim	filetypes by file name |new-filetype|
 	  scripts.vim	filetypes by file contents |new-filetype-scripts|
-	  menu.vim	GUI menus |menu.vim|
+	  colors/	color scheme files |:colorscheme|
+	  compiler/	compiler files |:compiler|
 	  doc/		documentation |write-local-help|
-	  lang/		menu translations |:menutrans|
-	  plugin/	plugin scripts |write-plugin|
 	  ftplugin/	filetype plugins |write-filetype-plugin|
+	  indent/	indent scripts |indent-expression|
+	  keymap/	key mapping files |mbyte-keymap|
+	  lang/		menu translations |:menutrans|
+	  menu.vim	GUI menus |menu.vim|
+	  plugin/	plugin scripts |write-plugin|
 	  syntax/	syntax files |mysyntaxfile|
+	  tutor/	files for vimtutor |tutor|
 
 	And any other file searched for with the |:runtime| command.
 

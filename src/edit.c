@@ -130,7 +130,7 @@ static int  replace_pop __ARGS((void));
 static void replace_join __ARGS((int off));
 static void replace_pop_ins __ARGS((void));
 #ifdef FEAT_MBYTE
-static void ins_replace_pop __ARGS((int cc));
+static void mb_replace_pop_ins __ARGS((int cc));
 #endif
 static void replace_flush __ARGS((void));
 static void replace_do_bs __ARGS((void));
@@ -321,7 +321,6 @@ edit(cmdchar, startln, count)
 	replaceState = VREPLACE;
 	orig_line_count = curbuf->b_ml.ml_line_count;
 	vr_lines_changed = 1;
-	vr_virtcol = MAXCOL;
     }
     else
 	State = INSERT;
@@ -1611,7 +1610,6 @@ change_indent(type, amount, round, replaced)
 	backspace_until_column(0);
 
 	/* Insert new stuff into line again */
-	vr_virtcol = MAXCOL;
 	ins_bytes(new_line);
 
 	vim_free(new_line);
@@ -4204,7 +4202,6 @@ stop_arrow()
 	{
 	    orig_line_count = curbuf->b_ml.ml_line_count;
 	    vr_lines_changed = 1;
-	    vr_virtcol = MAXCOL;
 	}
 	ResetRedobuff();
 	AppendToRedobuff((char_u *)"1i");   /* pretend we start an insertion */
@@ -4764,7 +4761,6 @@ replace_push_off(c)
     static int
 replace_pop()
 {
-    vr_virtcol = MAXCOL;
     if (replace_stack_nr == 0)
 	return -1;
     return (int)replace_stack[--replace_stack_nr];
@@ -4804,7 +4800,7 @@ replace_pop_ins()
     while ((cc = replace_pop()) > 0)
     {
 #ifdef FEAT_MBYTE
-	ins_replace_pop(cc);
+	mb_replace_pop_ins(cc);
 #else
 	ins_char(cc);
 #endif
@@ -4819,12 +4815,13 @@ replace_pop_ins()
  * indicates a multi-byte char, pop the other bytes too.
  */
     static void
-ins_replace_pop(cc)
+mb_replace_pop_ins(cc)
     int		cc;
 {
     int		n;
     char_u	buf[MB_MAXBYTES];
     int		i;
+    int		c;
 
     if (has_mbyte && (n = MB_BYTE2LEN(cc)) > 1)
     {
@@ -4840,18 +4837,18 @@ ins_replace_pop(cc)
 	/* Handle composing chars. */
 	for (;;)
 	{
-	    cc = replace_pop();
-	    if (cc == -1)	    /* stack empty */
+	    c = replace_pop();
+	    if (c == -1)	    /* stack empty */
 		break;
-	    if ((n = MB_BYTE2LEN(cc)) == 1)
+	    if ((n = MB_BYTE2LEN(c)) == 1)
 	    {
 		/* Not a multi-byte char, put it back. */
-		replace_push(cc);
+		replace_push(c);
 		break;
 	    }
 	    else
 	    {
-		buf[0] = cc;
+		buf[0] = c;
 		for (i = 1; i < n; ++i)
 		    buf[i] = replace_pop();
 		if (utf_iscomposing(utf_ptr2char(buf)))
@@ -4885,80 +4882,79 @@ replace_flush()
  * Handle doing a BS for one character.
  * cc < 0: replace stack empty, just move cursor
  * cc == 0: character was inserted, delete it
- * cc > 0: character was replaced, put cc (original char) back
+ * cc > 0: character was replaced, put cc (first byte of original char) back
+ * and check for more characters to be put back
  */
     static void
 replace_do_bs()
 {
-    int	    cc;
+    int		cc;
+    int		orig_len = 0;
+    int		ins_len;
+    int		orig_vcols = 0;
+    colnr_T	start_vcol;
+    char_u	*p;
+    int		i;
+    int		vcol;
 
     cc = replace_pop();
     if (cc > 0)
     {
+	if (State & VREPLACE_FLAG)
+	{
+	    /* Get the number of screen cells used by the character we are
+	     * going to delete. */
+	    getvcol(curwin, &curwin->w_cursor, NULL, &start_vcol, NULL);
+	    orig_vcols = chartabsize(ml_get_cursor(), start_vcol);
+	}
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
 	{
 	    del_char(FALSE);
+	    if (State & VREPLACE_FLAG)
+		orig_len = STRLEN(ml_get_cursor());
 	    replace_push(cc);
 	}
 	else
 #endif
+	{
 	    pchar_cursor(cc);
+	    if (State & VREPLACE_FLAG)
+		orig_len = STRLEN(ml_get_cursor()) - 1;
+	}
 	replace_pop_ins();
+
+	if (State & VREPLACE_FLAG)
+	{
+	    /* Get the number of screen cells used by the inserted characters */
+	    p = ml_get_cursor();
+	    ins_len = STRLEN(p) - orig_len;
+	    vcol = start_vcol;
+	    for (i = 0; i < ins_len; ++i)
+	    {
+		vcol += chartabsize(p + i, vcol);
+#ifdef FEAT_MBYTE
+		i += (*mb_ptr2len_check)(p) - 1;
+#endif
+	    }
+	    vcol -= start_vcol;
+
+	    /* Delete spaces that were inserted after the cursor to keep the
+	     * text aligned. */
+	    curwin->w_cursor.col += ins_len;
+	    while (vcol > orig_vcols && gchar_cursor() == ' ')
+	    {
+		del_char(FALSE);
+		++orig_vcols;
+	    }
+	    curwin->w_cursor.col -= ins_len;
+	}
+
 	/* mark the buffer as changed and prepare for displaying */
 	changed_bytes(curwin->w_cursor.lnum, curwin->w_cursor.col);
     }
     else if (cc == 0)
 	(void)del_char(FALSE);
-}
-
-/*
- * Returns the virtcol of the text that's been replaced so far on this line.
- */
-    int
-get_replace_stack_virtcol()
-{
-    int		col = curwin->w_cursor.col;
-    colnr_T	vcol = 0;
-    int		i;
-    pos_T	pos;
-#ifdef FEAT_MBYTE
-    char_u	*top = ml_get_curline();
-#endif
-
-    /* First, find the character that was pushed at the start of the line */
-    i = replace_stack_nr;
-    while (i >= 0 && col--)
-    {
-	while (--i >= 0 && replace_stack[i] != NUL)
-	    ;
-#ifdef FEAT_MBYTE
-	/* When we (virtual) replace characters with a multibyte character,
-	 * col depends on current line's text.  Check it.  */
-	if (has_mbyte && col > 0)
-	    col -= (*mb_head_off)(top, top + col);
-#endif
-    }
-
-    /* If col is not less than zero, then we ran out of replace stack.  This
-     * means that replacing must have started earlier on this line.  Initialise
-     * vcol with the width up to the starting col.
-     */
-    if (col >= 0)
-    {
-	pos.lnum = curwin->w_cursor.lnum;
-	pos.col = col + 1;
-	getvcol(curwin, &pos, NULL, &vcol, NULL);
-	i++;
-    }
-
-    /* Now add up virtcol from slot i onwards */
-    for (; i < replace_stack_nr; i++)
-    {
-	if (replace_stack[i] != NUL)	/* Skip NULs */
-	    vcol += chartabsize(replace_stack + i, vcol);
-    }
-    return (int)vcol;
 }
 
 #ifdef FEAT_CINDENT
@@ -5918,7 +5914,7 @@ ins_bs(c, mode, inserted_space_p)
 		dec_cursor();
 
 	    /*
-	     * In REPLACE mode we have to put back the text that was replace
+	     * In REPLACE mode we have to put back the text that was replaced
 	     * by the NL. On the replace stack is first a NUL-terminated
 	     * sequence of characters that were deleted and then the
 	     * characters that NL replaced.
@@ -5939,7 +5935,7 @@ ins_bs(c, mode, inserted_space_p)
 		{
 		    temp = curwin->w_cursor.col;
 #ifdef FEAT_MBYTE
-		    ins_replace_pop(cc);
+		    mb_replace_pop_ins(cc);
 #else
 		    ins_char(cc);
 #endif

@@ -553,6 +553,7 @@ extern char* (*dyn_libintl_textdomain)(const char* domainname);
 #define EXPAND_ENV_VARS		26
 #define EXPAND_LANGUAGE		27
 #define EXPAND_COLORS		28
+#define EXPAND_COMPILER		29
 
 /* Values for exmode_active (0 is no exmode) */
 #define EXMODE_NORMAL		1

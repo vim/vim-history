@@ -1,9 +1,13 @@
 # Makefile for the Vim message translations.
 
 # TODO make this configurable
-LANGUAGES = af cs de es fr it ja ko pl tr zh_TW
-MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo ko.mo pl.mo tr.mo zh_TW.mo
-POFILES = af.po cs.po de.po es.po fr.po it.po ja.po ko.po pl.po tr.po zh_TW.po
+# Note: ja.sjis is only for MS-Windows, it's not installed on Unix
+LANGUAGES = af cs de es fr it ja ko pl sk tr zh_TW
+NOTINSTALL = ja.sjis
+MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo ja.sjis.mo \
+		ko.mo pl.mo sk.mo tr.mo zh_TW.mo
+POFILES = af.po cs.po de.po es.po fr.po it.po ja.po ja.sjis.po \
+		ko.po pl.po sk.po tr.po zh_TW.po
 
 PACKAGE = vim
 SHELL = /bin/sh
@@ -18,7 +22,7 @@ MSGMERGE = OLD_PO_FILE_INPUT=yes OLD_PO_FILE_OUTPUT=yes msgmerge
 
 .SUFFIXES:
 .SUFFIXES: .po .mo .pot
-.PHONY: all install uninstall check clean distclean $(LANGUAGES)
+.PHONY: all install uninstall check clean distclean $(LANGUAGES) $(NOTINSTALL)
 
 .po.mo:
 	$(MSGFMT) -o $@ $<
@@ -50,6 +54,14 @@ uninstall:
 	  rm -f $(LOCALEDIR)/$$lang/LC_MESSAGES/$(PACKAGE).mo; \
 	done
 
+# Convert ja.po to create ja.sjis.po.  Requires doubling backslashes in the
+# second byte.
+ja.sjis.po: ja.po sjiscorr
+	iconv -f euc-jp -t cp932 ja.po | ./sjiscorr > ja.sjis.po
+
+sjiscorr: sjiscorr.c
+	cc -o sjiscorr sjiscorr.c
+
 check:
 	@if test "x" = "x$(prefix)"; then \
 	  echo "******************************************"; \
@@ -59,7 +71,7 @@ check:
 	fi
 
 clean:
-	rm -f core core.* *.old.po *.mo *.pot
+	rm -f core core.* *.old.po *.mo *.pot sjiscorr ja.sjis.po
 
 distclean: clean
 

@@ -1,4 +1,4 @@
-*usr_20.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
+*usr_20.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -141,6 +141,19 @@ makes it easier to read back when you make later changes.  Except for some
 often used commands like ":w" (":write") and ":r" (":read").
    A particularly confusing one is ":end", which could stand for ":endif",
 ":endwhile" or ":endfunction".  Therefore, always use the full name.
+
+
+SHORT OPTION NAMES
+
+In the user manual the long version of the option names is used.  Many options
+also have a short name.  Unlike ":" commands, there is only one short name
+that works.  For example, the short name of 'autoindent' is 'ai'.  Thus these
+two commands do the same thing: >
+
+	:set autoindent
+	:set ai
+
+You can find the full list of long and short names here: |option-list|.
 
 ==============================================================================
 *20.3*	Command line completion

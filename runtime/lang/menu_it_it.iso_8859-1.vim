@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
-" Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2001 Jun 05
+" Maintainer:		Antonio Colombo <antonio.colombo@jrc.it>
+" Last Change:	2001 Jul 16
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -133,6 +133,7 @@ menut &Open<Tab>:copen		&Apri<Tab>:copen
 menut &Close<Tab>:cclose	&Chiudi<Tab>:cclose
 menut &Convert\ to\ HEX<Tab>:%!xxd	&Converti\ a\ Esadecimale<Tab>:%!xxd
 menut Conve&rt\ back<Tab>:%!xxd\ -r	Conve&rti\ da\ Esadecimale<Tab>:%!xxd\ -r
+menut &Set\ Compiler		Impo&sta\ Compilatore
 
 " open close folds 
 menut &Enable/Disable\ folds<Tab>zi		Pi&egature\ Sì/No<Tab>zi

@@ -21,7 +21,7 @@
 
 #include "vim.h"
 
-#ifdef HAVE_XM_XPMP_H
+#if defined(HAVE_XM_XPMP_H) && defined(FEAT_GUI_MOTIF)
 # include <Xm/XpmP.h>
 #else
 # ifdef HAVE_X11_XPM_H
@@ -2506,8 +2506,8 @@ gui_mch_update()
     else
 #endif
 	desired = (XtIMAll);
-    while ((mask = XtAppPending(app_context)) && (mask & desired) &&
-		!vim_is_input_buf_full())
+    while ((mask = XtAppPending(app_context)) && (mask & desired)
+	    && !vim_is_input_buf_full())
 	XtAppProcessEvent(app_context, desired);
 }
 

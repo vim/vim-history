@@ -506,14 +506,16 @@ extern "C" void RegisterMe()
     ITypeLib *typelib = NULL;
     if (LoadTypeLib(w_module, &typelib) != S_OK)
     {
-	MessageBox(0, "Cannot load type library to register", "Vim Registration", 0);
+	MessageBox(0, "Cannot load type library to register",
+						       "Vim Registration", 0);
 	ok = FALSE;
     }
     else
     {
 	if (RegisterTypeLib(typelib, w_module, NULL) != S_OK)
 	{
-	    MessageBox(0, "Cannot register type library", "Vim Registration", 0);
+	    MessageBox(0, "Cannot register type library",
+						       "Vim Registration", 0);
 	    ok = FALSE;
 	}
 	typelib->Release();

@@ -174,9 +174,6 @@ static char_u	*p_ft;
 #endif
 static long	p_iminsert;
 static long	p_imsearch;
-#ifdef FEAT_FIND_ID
-static char_u	*p_inc;
-#endif
 #if defined(FEAT_FIND_ID) && defined(FEAT_EVAL)
 static char_u	*p_inex;
 #endif
@@ -494,7 +491,7 @@ static struct vimoption
     {"cinkeys",	    "cink", P_STRING|P_ALLOCED|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_CINDENT
 			    (char_u *)&p_cink, PV_CINK,
-			    {(char_u *)"0{,0},:,0#,!^F,o,O,e", (char_u *)0L}
+			    {(char_u *)"0{,0},0),:,0#,!^F,o,O,e", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -631,7 +628,7 @@ static struct vimoption
     {"debug",	    NULL,   P_STRING|P_VI_DEF,
 			    (char_u *)&p_debug, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}},
-    {"define",	    "def",  P_STRING|P_VI_DEF,
+    {"define",	    "def",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
 			    (char_u *)&p_def, OPT_BOTH(PV_DEF),
 			    {(char_u *)"^#\\s*define", (char_u *)0L}
@@ -1072,7 +1069,7 @@ static struct vimoption
 			    {(char_u *)FALSE, (char_u *)0L}},
     {"include",	    "inc",  P_STRING|P_ALLOCED|P_VI_DEF,
 #ifdef FEAT_FIND_ID
-			    (char_u *)&p_inc, PV_INC,
+			    (char_u *)&p_inc, OPT_BOTH(PV_INC),
 			    {(char_u *)"^#\\s*include", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
@@ -1542,9 +1539,9 @@ static struct vimoption
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
 				    },
-    {"printersettings", "pset",  P_STRING|P_VI_DEF,
+    {"printeroptions", "popt", P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_PRINTER
-			    (char_u *)&p_prtsettings, PV_NONE,
+			    (char_u *)&p_popt, PV_NONE,
 			    {
 				(char_u *)"left:10pc,right:5pc,top:5pc,bottom:5pc,header:2",
 				(char_u *)0L}
@@ -3935,6 +3932,7 @@ check_buf_options(buf)
 #endif
     check_string_option(&buf->b_p_ff);
 #ifdef FEAT_FIND_ID
+    check_string_option(&buf->b_p_def);
     check_string_option(&buf->b_p_inc);
 # ifdef FEAT_EVAL
     check_string_option(&buf->b_p_inex);
@@ -3990,9 +3988,6 @@ check_buf_options(buf)
     check_string_option(&buf->b_p_ep);
     check_string_option(&buf->b_p_path);
     check_string_option(&buf->b_p_tags);
-#ifdef FEAT_FIND_ID
-    check_string_option(&buf->b_p_def);
-#endif
 #ifdef FEAT_INS_EXPAND
     check_string_option(&buf->b_p_dict);
     check_string_option(&buf->b_p_tsr);
@@ -4658,8 +4653,8 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 #endif
 
 #ifdef FEAT_PRINTER
-    else if (varp == &p_prtsettings)
-	errmsg = parse_list_options(p_prtsettings, printer_opts, OPT_PRINT_NUM_OPTIONS);
+    else if (varp == &p_popt)
+	errmsg = parse_list_options(p_popt, printer_opts, OPT_PRINT_NUM_OPTIONS);
 #endif
 
 #ifdef FEAT_LANGMAP
@@ -6850,6 +6845,7 @@ get_varp_scope(p, opt_flags)
 	    case OPT_BOTH(PV_TAGS): return (char_u *)&(curbuf->b_p_tags);
 #ifdef FEAT_FIND_ID
 	    case OPT_BOTH(PV_DEF):  return (char_u *)&(curbuf->b_p_def);
+	    case OPT_BOTH(PV_INC):  return (char_u *)&(curbuf->b_p_inc);
 #endif
 #ifdef FEAT_INS_EXPAND
 	    case OPT_BOTH(PV_DICT): return (char_u *)&(curbuf->b_p_dict);
@@ -6888,6 +6884,8 @@ get_varp(p)
 #ifdef FEAT_FIND_ID
 	case OPT_BOTH(PV_DEF):	return *curbuf->b_p_def != NUL
 				    ? (char_u *)&(curbuf->b_p_def) : p->var;
+	case OPT_BOTH(PV_INC):	return *curbuf->b_p_inc != NUL
+				    ? (char_u *)&(curbuf->b_p_inc) : p->var;
 #endif
 #ifdef FEAT_INS_EXPAND
 	case OPT_BOTH(PV_DICT):	return *curbuf->b_p_dict != NUL
@@ -6980,7 +6978,6 @@ get_varp(p)
 	case PV_INF:	return (char_u *)&(curbuf->b_p_inf);
 	case PV_ISK:	return (char_u *)&(curbuf->b_p_isk);
 #ifdef FEAT_FIND_ID
-	case PV_INC:	return (char_u *)&(curbuf->b_p_inc);
 # ifdef FEAT_EVAL
 	case PV_INEX:	return (char_u *)&(curbuf->b_p_inex);
 # endif
@@ -7296,12 +7293,6 @@ buf_copy_options(buf, flags)
 	    /* Don't copy 'syntax', it must be set */
 	    buf->b_p_syn = empty_option;
 #endif
-#ifdef FEAT_FIND_ID
-	    buf->b_p_inc = vim_strsave(p_inc);
-# ifdef FEAT_EVAL
-	    buf->b_p_inex = vim_strsave(p_inex);
-# endif
-#endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
 	    buf->b_p_inde = vim_strsave(p_inde);
 	    buf->b_p_indk = vim_strsave(p_indk);
@@ -7334,6 +7325,10 @@ buf_copy_options(buf, flags)
 	    buf->b_p_tags = empty_option;
 #ifdef FEAT_FIND_ID
 	    buf->b_p_def = empty_option;
+	    buf->b_p_inc = empty_option;
+# ifdef FEAT_EVAL
+	    buf->b_p_inex = vim_strsave(p_inex);
+# endif
 #endif
 #ifdef FEAT_INS_EXPAND
 	    buf->b_p_dict = empty_option;

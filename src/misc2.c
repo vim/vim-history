@@ -5118,7 +5118,7 @@ parse_list_options(option_str, table, table_size)
     return NULL;
 }
 
-/*---printersettings------*/
+/*---printeroptions------*/
 
 
 option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS] = {

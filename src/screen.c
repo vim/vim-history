@@ -7264,7 +7264,7 @@ showmode()
 	{
 	    MSG_PUTS_ATTR("--", attr);
 #if defined(FEAT_XIM)
-	    if (im_get_status())
+	    if (xic != NULL && im_get_status())
 		MSG_PUTS_ATTR(" XIM", attr);
 #endif
 #if defined(FEAT_HANGULIN) && defined(FEAT_GUI)

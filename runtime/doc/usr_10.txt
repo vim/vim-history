@@ -1,4 +1,4 @@
-*usr_10.txt*	For Vim version 6.0an.  Last change: 2001 Jun 28
+*usr_10.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -21,7 +21,7 @@ an external program to do really complicated things.
 |10.9|  Using an external program
 
      Next chapter: |usr_11.txt|  Recovering from a crash
- Previous chapter: |usr_09.txt|  Parts of the GUI
+ Previous chapter: |usr_09.txt|  Using the GUI
 Table of contents: |usr_toc.txt|
 
 ==============================================================================

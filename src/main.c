@@ -1057,7 +1057,7 @@ scripterror:
     parse_shape_opt(SHAPE_MOUSE);  /* set mouse shapes from 'mouseshape' */
 #endif
 #ifdef FEAT_PRINTER
-    parse_list_options(p_prtsettings, printer_opts, OPT_PRINT_NUM_OPTIONS);
+    parse_list_options(p_popt, printer_opts, OPT_PRINT_NUM_OPTIONS);
 #endif
 #ifdef FEAT_PRECOMMANDS
     if (p_commands > 0)

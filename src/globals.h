@@ -506,8 +506,6 @@ EXTERN pos_T	Insstart;		/* This is where the latest
  */
 EXTERN int	orig_line_count INIT(= 0);  /* Line count when "gR" started */
 EXTERN int	vr_lines_changed INIT(= 0); /* #Lines changed by "gR" so far */
-EXTERN colnr_T	vr_virtcol INIT(= MAXCOL);  /* Virtual column for "gR" */
-EXTERN int	vr_virtoffset INIT(= 0);  /* Offset when columns can't align */
 
 #if defined(HAVE_SETJMP_H)
 /*

@@ -86,7 +86,7 @@ static int	showmatches __ARGS((expand_T *xp, int wildmenu));
 static void	set_expand_context __ARGS((expand_T *xp));
 static int	ExpandFromContext __ARGS((expand_T *xp, char_u *, int *, char_u ***, int));
 #ifdef FEAT_CMDL_COMPL
-static int	ExpandColors __ARGS((char_u *pat, int *num_file, char_u ***file));
+static int	ExpandRTDir __ARGS((char_u *pat, int *num_file, char_u ***file, char *dirname));
 #endif
 
 #ifdef FEAT_CMDWIN
@@ -252,7 +252,9 @@ getcmdline(firstc, count, indent)
     do_digraph(-1);		/* init digraph typahead */
 #endif
 
-    /* collect the command string, handling editing keys */
+    /*
+     * Collect the command string, handling editing keys.
+     */
     for (;;)
     {
 #ifdef USE_ON_FLY_SCROLL
@@ -335,8 +337,8 @@ getcmdline(firstc, count, indent)
 #endif
 
 	/* free expanded names when finished walking through matches */
-	if (cmd_numfiles != -1 && !(c == p_wc && KeyTyped)
-		&& c != p_wcm
+	if (cmd_numfiles != -1
+		&& !(c == p_wc && KeyTyped) && c != p_wcm
 		&& c != Ctrl_N && c != Ctrl_P && c != Ctrl_A
 		&& c != Ctrl_L)
 	{
@@ -921,7 +923,10 @@ getcmdline(firstc, count, indent)
 		}
 #endif
 		if (c != ESC)	    /* use ESC to cancel inserting register */
+		{
 		    cmdline_paste(c, i == Ctrl_R);
+		    KeyTyped = FALSE;	/* Don't do p_wc completion. */
+		}
 		redrawcmd();
 		goto cmdline_changed;
 
@@ -2337,6 +2342,8 @@ nextwild(xp, type, options)
  * Return a pointer to alloced memory containing the new string.
  * Return NULL for failure.
  *
+ * Results are cached in cmd_files and cmd_numfiles.
+ *
  * mode = WILD_FREE:	    just free previously expanded matches
  * mode = WILD_EXPAND_FREE: normal expansion, do not keep matches
  * mode = WILD_EXPAND_KEEP: normal expansion, keep matches
@@ -2866,7 +2873,9 @@ addstar(fname, len, context)
 	 */
 
 	/* for help tags the translation is done in find_help_tags() */
-	if (context == EXPAND_HELP || context == EXPAND_COLORS)
+	if (context == EXPAND_HELP
+		|| context == EXPAND_COLORS
+		|| context == EXPAND_COMPILER)
 	    retval = vim_strnsave(fname, len);
 	else
 	{
@@ -3143,7 +3152,9 @@ ExpandFromContext(xp, pat, num_file, file, options)
 	    || xp->xp_context == EXPAND_TAGS_LISTFILES)
 	return expand_tags(xp->xp_context == EXPAND_TAGS, pat, num_file, file);
     if (xp->xp_context == EXPAND_COLORS)
-	return ExpandColors(pat, num_file, file);
+	return ExpandRTDir(pat, num_file, file, "colors");
+    if (xp->xp_context == EXPAND_COMPILER)
+	return ExpandRTDir(pat, num_file, file, "compiler");
 
     regmatch.regprog = vim_regcomp(pat, (int)p_magic);
     if (regmatch.regprog == NULL)
@@ -3296,12 +3307,14 @@ ExpandGeneric(xp, regmatch, num_file, file, func)
 
 /*
  * Expand color scheme names: 'runtimepath'/colors/{pat}.vim
+ * or compiler names.
  */
     static int
-ExpandColors(pat, num_file, file)
+ExpandRTDir(pat, num_file, file, dirname)
     char_u	*pat;
     int		*num_file;
     char_u	***file;
+    char	*dirname;	/* "colors" or "compiler" */
 {
     char_u	*all;
     char_u	*s;
@@ -3310,10 +3323,10 @@ ExpandColors(pat, num_file, file)
 
     *num_file = 0;
     *file = NULL;
-    s = alloc((unsigned)(STRLEN(pat) + 13));
+    s = alloc((unsigned)(STRLEN(pat) + STRLEN(dirname) + 7));
     if (s == NULL)
 	return FAIL;
-    sprintf((char *)s, "colors/%s*.vim", pat);
+    sprintf((char *)s, "%s/%s*.vim", dirname, pat);
     all = globpath(p_rtp, s);
     vim_free(s);
     if (all == NULL)
@@ -3365,10 +3378,17 @@ globpath(path, file)
     garray_T	ga;
     int		len;
     char_u	*p;
+    char_u	**save_cmd_files = cmd_files;
+    int		save_cmd_numfiles = cmd_numfiles;
 
     buf = alloc(MAXPATHL);
     if (buf == NULL)
 	return NULL;
+
+    /* ExpandOne() uses cmd_files and cmd_numfiles, need to save and restore
+     * them. */
+    cmd_files = NULL;
+    cmd_numfiles = -1;
 
     xpc.xp_context = EXPAND_FILES;
     ga_init2(&ga, 1, 100);
@@ -3408,6 +3428,11 @@ globpath(path, file)
 	}
     }
     vim_free(buf);
+
+    FreeWild(cmd_numfiles, cmd_files);
+    cmd_files = save_cmd_files;
+    cmd_numfiles = save_cmd_numfiles;
+
     return ga.ga_data;
 }
 

@@ -1,4 +1,4 @@
-*diff.txt*      For Vim version 6.0an.  Last change: 2001 Jul 11
+*diff.txt*      For Vim version 6.0ao.  Last change: 2001 Jul 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,11 +24,11 @@ The easiest way to start editing in diff mode is with the "vimdiff" command.
 This starts Vim as usual, and additionally sets up for viewing the differences
 between the arguments. >
 
-	vimdiff file1 file2 [file3]
+	vimdiff file1 file2 [file3 [file4]]
 
 This is equivalent to: >
 
-	vim -d file1 file2 [file3]
+	vim -d file1 file2 [file3 [file4]]
 
 You may also use "gvimdiff" or "vim -g".  The GUI is started then.
 You may also use "viewdiff" or "gviewdiff".  Vim starts in readonly mode then.
@@ -250,7 +250,8 @@ format mentioned.  These variables are set to the file names used:
 Additionally, 'diffexpr' should take care of "icase" and "iwhite" in the
 'diffopt' option.
 
-Example (this does the same as 'diffexpr' being empty): >
+Example (this does the same as 'diffexpr' being empty, but adds the "-a"
+flag to force comparing them as text): >
 
 	let diffexpr=MyDiff()
 	function MyDiff()
@@ -261,7 +262,7 @@ Example (this does the same as 'diffexpr' being empty): >
 	   if &diffopt =~ "iwhite"
 	     let opt = opt . "-b "
 	   endif
-	   silent execute "!diff " . opt . v:fname_in . " " . v:fname_new .
+	   silent execute "!diff -a " . opt . v:fname_in . " " . v:fname_new .
 		\  " > " . v:fname_out
 	endfunction
 <

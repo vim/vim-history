@@ -1,17 +1,12 @@
 " Vim syntax file
+" This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: XKB (X Keyboard Extension) components
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
-" Last Change: 2001 Apr 27
+" Last Change: 2001-04-26
 " URI: http://physics.muni.cz/~yeti/download/xkb.vim
-"
-" FIXME: I don't fully understand XKB. (But apparently, nobody does.)
-"        So this file highlights something, somehow, at least.
-" TODO: everything, and add `display' where appropriate
 
-" Setup {{{
-" React to possibly already-defined syntax.
-" For version 5.x: Clear all syntax items unconditionally
-" For version 6.x: Quit when a syntax file was already loaded
+
+" Setup
 if version >= 600
   if exists("b:current_syntax")
     finish
@@ -22,34 +17,31 @@ endif
 
 syn case match
 syn sync minlines=100
-" }}}
-" Comments {{{
+
+" Comments
 syn region xkbComment start="//" skip="\\$" end="$" keepend contains=xkbTodo
 syn region xkbComment start="/\*" matchgroup=NONE end="\*/" contains=xkbCommentStartError,xkbTodo
 syn match xkbCommentError "\*/"
 syntax match xkbCommentStartError "/\*" contained
 syn sync ccomment xkbComment
 syn keyword xkbTodo TODO FIXME contained
-" }}}
-" Literal strings {{{
+
+" Literal strings
 syn match xkbSpecialChar "\\\d\d\d\|\\." contained
 syn region xkbString start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=xkbSpecialChar oneline
-" }}}
-" Catch errors caused by wrong parenthesization {{{
-" For parentheses
+
+" Catch errors caused by wrong parenthesization
 syn region xkbParen start='(' end=')' contains=ALLBUT,xkbParenError,xkbSpecial,xkbTodo transparent
 syn match xkbParenError ")"
-" Idem for curly braces
 syn region xkbBrace start='{' end='}' contains=ALLBUT,xkbBraceError,xkbSpecial,xkbTodo transparent
 syn match xkbBraceError "}"
-" Idem for brackets
 syn region xkbBracket start='\[' end='\]' contains=ALLBUT,xkbBracketError,xkbSpecial,xkbTodo transparent
 syn match xkbBracketError "\]"
-" }}}
-" Physical keys {{{
+
+" Physical keys
 syn match xkbPhysicalKey "<\w\+>"
-" }}}
-" Keywords {{{
+
+" Keywords
 syn keyword xkbPreproc augment include replace
 syn keyword xkbConstant False True
 syn keyword xkbModif override replace
@@ -57,10 +49,8 @@ syn keyword xkbIdentifier action affect alias allowExplicit approx baseColor cle
 syn keyword xkbAction ISOLock LatchGroup LatchMods LockControls LockGroup LockMods NoAction SetControls SetGroup SetMods Terminate
 syn keyword xkbTModif default hidden partial virtual
 syn keyword xkbSect alphanumeric_keys alternate_group keypad_keys modifier_keys xkb_compatibility xkb_geometry xkb_keycodes xkb_keymap xkb_semantics xkb_symbols xkb_types
-" }}}
-" Define the default highlighting {{{
-" For version 5.7 and earlier: Only when not done already
-" For version 5.8 and later: Only when an item doesn't have highlighting yet
+
+" Define the default highlighting
 if version >= 508 || !exists("did_xkb_syntax_inits")
   if version < 508
     let did_xkb_syntax_inits = 1
@@ -98,5 +88,5 @@ if version >= 508 || !exists("did_xkb_syntax_inits")
 
   delcommand HiLink
 endif
-" }}}
+
 let b:current_syntax = "xkb"

@@ -93,6 +93,11 @@ AC_ARG_WITH(view-name, [  --with-view-name=NAME   what to call the View executab
 	VIEWNAME="view"; AC_MSG_RESULT(Defaulting to view))
 AC_SUBST(VIEWNAME)
 
+AC_MSG_CHECKING(--with-global-runtime argument)
+AC_ARG_WITH(global-runtime, [  --with-global-runtime=DIR    global runtime directory in 'runtimepath'],
+	AC_MSG_RESULT($withval); AC_DEFINE_UNQUOTED(RUNTIME_GLOBAL, "$withval"),
+	AC_MSG_RESULT(no))
+
 dnl Check for EBCDIC stolen from the LYNX port to OS390 Unix
 AC_MSG_CHECKING(if character set is EBCDIC)
 AC_TRY_COMPILE([ ],
@@ -887,12 +892,12 @@ AC_DEFUN([GNOME_INIT_HOOK],
   AC_SUBST(GNOME_INCLUDEDIR)
 
   AC_ARG_WITH(gnome-includes,
-    [  --with-gnome-includes   Specify location of GNOME headers],
+    [  --with-gnome-includes=DIR Specify location of GNOME headers],
     [CFLAGS="$CFLAGS -I$withval"]
   )
 
   AC_ARG_WITH(gnome-libs,
-    [  --with-gnome-libs       Specify location of GNOME libs],
+    [  --with-gnome-libs=DIR   Specify location of GNOME libs],
     [LDFLAGS="$LDFLAGS -L$withval" gnome_prefix=$withval]
   )
 
@@ -1221,7 +1226,15 @@ fi
 if test -z "$SKIP_ATHENA" -o -z "$SKIP_MOTIF"; then
   cppflags_save=$CPPFLAGS
   CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-  AC_CHECK_HEADERS(Xm/Xm.h Xm/XpmP.h X11/Xmu/Editres.h)
+  AC_CHECK_HEADERS(X11/Xmu/Editres.h)
+  CPPFLAGS=$cppflags_save
+fi
+
+dnl Only use the Xm directory when compiling Motif, don't use it for Athena
+if test -z "$SKIP_MOTIF"; then
+  cppflags_save=$CPPFLAGS
+  CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+  AC_CHECK_HEADERS(Xm/Xm.h Xm/XpmP.h)
   CPPFLAGS=$cppflags_save
 fi
 

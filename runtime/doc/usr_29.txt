@@ -1,4 +1,4 @@
-*usr_29.txt*	For Vim version 6.0an.  Last change: 2001 Jul 04
+*usr_29.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -17,7 +17,7 @@ There is more in the next chapter.
 |29.5|	Finding local identifiers
 
      Next chapter: |usr_30.txt|  Editing programs
- Previous chapter: |usr_28.txt|  Search commands and patterns
+ Previous chapter: |usr_28.txt|  Folding
 Table of contents: |usr_toc.txt|
 
 ==============================================================================

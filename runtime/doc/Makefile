@@ -236,7 +236,7 @@ HTMLS = \
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
 
-all: tags vim.man vimdiff.man vimtutor.man xxd.man
+all: tags vim.man vimdiff.man vimtutor.man xxd.man uganda.nsis.txt
 
 # We should use Vim to generate the tags file:
 # 	vim -c "helptags ." -c quit
@@ -259,6 +259,10 @@ vimtutor.man: vimtutor.1
 
 xxd.man: xxd.1
 	nroff -man xxd.1 | sed -e s/.//g > xxd.man
+
+uganda.nsis.txt: uganda.txt
+	sed -e 's/[ 	]*\*[-a-zA-Z0-9.]*\*//g' -e 's/vim:tw=78://' \
+		uganda.txt >uganda.nsis.txt
 
 # Awk version of .txt to .html conversion.
 html: noerrors tags tags.ref $(HTMLS)

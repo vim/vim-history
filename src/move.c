@@ -39,7 +39,7 @@ static void botline_forw __ARGS((lineoff_T *lp));
 #ifdef FEAT_DIFF
 static void botline_topline __ARGS((lineoff_T *lp));
 static void topline_botline __ARGS((lineoff_T *lp));
-static void check_topfill __ARGS((int down));
+static void max_topfill __ARGS((void));
 #endif
 
 /*
@@ -1225,7 +1225,7 @@ scrolldown(line_count, byfold)
 #ifdef FEAT_DIFF
     if (curwin->w_cursor.lnum == curwin->w_topline)
 	curwin->w_cline_row = 0;
-    check_topfill(TRUE);
+    check_topfill(curwin, TRUE);
 #endif
 
     /*
@@ -1333,7 +1333,7 @@ scrollup(line_count, byfold)
 	curwin->w_topline = curbuf->b_ml.ml_line_count;
 
 #ifdef FEAT_DIFF
-    check_topfill(FALSE);
+    check_topfill(curwin, FALSE);
 #endif
 
 #ifdef FEAT_FOLDING
@@ -1356,25 +1356,50 @@ scrollup(line_count, byfold)
 /*
  * Don't end up with too many filler lines in the window.
  */
-    static void
-check_topfill(down)
+    void
+check_topfill(wp, down)
+    win_T	*wp;
     int		down;	/* when TRUE scroll down when not enough space */
 {
-    int		n = plines_nofill(curwin->w_topline);
+    int		n;
 
-    if (curwin->w_topfill + n > curwin->w_height)
+    if (wp->w_topfill > 0)
     {
-	if (down && curwin->w_topline > 1)
+	n = plines_win_nofill(wp, wp->w_topline, TRUE);
+	if (wp->w_topfill + n > wp->w_height)
 	{
-	    --curwin->w_topline;
-	    curwin->w_topfill = 0;
+	    if (down && wp->w_topline > 1)
+	    {
+		--wp->w_topline;
+		wp->w_topfill = 0;
+	    }
+	    else
+	    {
+		wp->w_topfill = wp->w_height - n;
+		if (wp->w_topfill < 0)
+		    wp->w_topfill = 0;
+	    }
 	}
-	else
-	{
+    }
+}
+
+/*
+ * Use as many filler lines as possible for w_topline.  Make sure w_topline
+ * is still visible.
+ */
+    static void
+max_topfill()
+{
+    int		n;
+
+    n = plines_nofill(curwin->w_topline);
+    if (n >= curwin->w_height)
+	curwin->w_topfill = 0;
+    else
+    {
+	curwin->w_topfill = diff_check_fill(curwin, curwin->w_topline);
+	if (curwin->w_topfill + n > curwin->w_height)
 	    curwin->w_topfill = curwin->w_height - n;
-	    if (curwin->w_topfill < 0)
-		curwin->w_topfill = 0;
-	}
     }
 }
 #endif
@@ -1431,7 +1456,10 @@ scrolldown_clamp()
     {
 #ifdef FEAT_DIFF
 	if (can_fill)
+	{
 	    ++curwin->w_topfill;
+	    check_topfill(curwin, TRUE);
+	}
 	else
 	{
 	    --curwin->w_topline;
@@ -1708,7 +1736,7 @@ scroll_cursor_top(min_scroll, always)
 	/*
 	 * If scrolling is needed, scroll at least 'sj' lines.
 	 */
-	if ((new_topline >= curwin->w_topline || scrolled >= min_scroll)
+	if ((new_topline >= curwin->w_topline || scrolled > min_scroll)
 		&& extra >= off)
 	    break;
 
@@ -1743,6 +1771,7 @@ scroll_cursor_top(min_scroll, always)
 	    if (curwin->w_topfill < 0)
 		curwin->w_topfill = 0;
 	}
+	check_topfill(curwin, FALSE);
 #endif
 	if (curwin->w_topline != old_topline
 #ifdef FEAT_DIFF
@@ -2070,6 +2099,7 @@ scroll_cursor_halfway(atend)
 	curwin->w_topline = topline;
 #ifdef FEAT_DIFF
     curwin->w_topfill = loff.fill;
+    check_topfill(curwin, FALSE);
 #endif
     curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE|VALID_BOTLINE_AP);
     curwin->w_valid |= VALID_TOPLINE;
@@ -2205,9 +2235,6 @@ cursor_correct()
 }
 
 static void get_scroll_overlap __ARGS((lineoff_T *lp, int dir));
-#ifdef FEAT_DIFF
-static void max_topfill __ARGS((void));
-#endif
 
 /*
  * move screen 'count' pages up or down and update screen
@@ -2280,7 +2307,7 @@ onepage(dir, count)
 		curwin->w_topline = loff.lnum;
 #ifdef FEAT_DIFF
 		curwin->w_topfill = loff.fill;
-		check_topfill(FALSE);
+		check_topfill(curwin, FALSE);
 #endif
 		curwin->w_cursor.lnum = curwin->w_topline;
 		curwin->w_valid &= ~(VALID_WCOL|VALID_CHEIGHT|VALID_WROW|
@@ -2377,6 +2404,7 @@ onepage(dir, count)
 		    curwin->w_topline = loff.lnum;
 #ifdef FEAT_DIFF
 		    curwin->w_topfill = loff.fill;
+		    check_topfill(curwin, FALSE);
 #endif
 		    curwin->w_valid &= ~(VALID_WROW|VALID_CROW|VALID_BOTLINE);
 		}
@@ -2469,28 +2497,6 @@ get_scroll_overlap(lp, dir)
 	*lp = loff2;	/* 2 lines overlap */
     return;
 }
-
-#ifdef FEAT_DIFF
-/*
- * Use as many filler lines as possible for w_topline.  Make sure w_topline
- * is still visible.
- */
-    static void
-max_topfill()
-{
-    int		n;
-
-    n = plines_nofill(curwin->w_topline);
-    if (n >= curwin->w_height)
-	curwin->w_topfill = 0;
-    else
-    {
-	curwin->w_topfill = diff_check_fill(curwin, curwin->w_topline);
-	if (curwin->w_topfill + n > curwin->w_height)
-	    curwin->w_topfill = curwin->w_height - n;
-    }
-}
-#endif
 
 /* #define KEEP_SCREEN_LINE */
 /*
@@ -2706,6 +2712,9 @@ halfpage(flag, Prenum)
     /* Move cursor to first line of closed fold. */
     foldAdjustCursor();
 # endif
+#ifdef FEAT_DIFF
+    check_topfill(curwin, FALSE);
+#endif
     cursor_correct();
     beginline(BL_SOL | BL_FIX);
     redraw_later(VALID);

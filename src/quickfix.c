@@ -136,6 +136,7 @@ qf_init(efile, errorformat, newlist)
     int		    round;
     int		    idx = 0;
     int		    multiline = FALSE;
+    int		    multiignore = FALSE;
     int		    multiscan = FALSE;
     int		    retval = -1;	/* default: return error flag */
     char_u	    *directory = NULL;
@@ -530,7 +531,7 @@ restofline:
 	    valid = FALSE;
 	    STRCPY(errmsg, IObuff);	/* copy whole line to error message */
 	    if (!fmt_ptr)
-		multiline = FALSE;
+		multiline = multiignore = FALSE;
 	}
 	else if (fmt_ptr)
 	{
@@ -540,7 +541,7 @@ restofline:
 	    {				/* continuation of multi-line msg */
 		if (qfprev == NULL)
 		    goto error1;
-		if (*errmsg)
+		if (*errmsg && !multiignore)
 		{
 		    len = (int)STRLEN(qfprev->qf_text);
 		    if ((ptr = alloc((unsigned)(len + STRLEN(errmsg) + 2)))
@@ -566,7 +567,7 @@ restofline:
 					*namebuf || directory ? namebuf
 					  : currfile && valid ? currfile : 0);
 		if (idx == 'Z')
-		    multiline = FALSE;
+		    multiline = multiignore = FALSE;
 		line_breakcheck();
 		continue;
 	    }
@@ -590,7 +591,11 @@ restofline:
 		}
 	    }
 	    if (fmt_ptr->flags == '-')	/* generally exclude this line */
+	    {
+		if (multiline)
+		    multiignore = TRUE;	/* also exclude continuation lines */
 		continue;
+	    }
 	}
 
 	if ((qfp = (struct qf_line *)alloc((unsigned)sizeof(struct qf_line)))

@@ -1,4 +1,4 @@
-*help.txt*	For Vim version 6.0an.  Last change: 2001 Jul 12
+*help.txt*	For Vim version 6.0ao.  Last change: 2001 Jul 22
 
 			VIM - main help file
 									 k
@@ -75,7 +75,7 @@ Tuning Vim ~
 |usr_40.txt|  Make new commands
 |usr_41.txt|  Write a Vim script
 |usr_42.txt|  Add new menus
-|usr_43.txt|  Automatic settings
+|usr_43.txt|  Using filetypes
 |usr_44.txt|  Your own syntax highlighted
 |usr_45.txt|  Select your language
 

@@ -562,14 +562,14 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'pheader'	options.txt	/*'pheader'*
 'pm'	options.txt	/*'pm'*
 'pname'	options.txt	/*'pname'*
+'popt'	options.txt	/*'popt'*
 'previewheight'	options.txt	/*'previewheight'*
 'previewwindow'	options.txt	/*'previewwindow'*
 'printerfont'	options.txt	/*'printerfont'*
 'printerheader'	options.txt	/*'printerheader'*
 'printername'	options.txt	/*'printername'*
-'printersettings'	options.txt	/*'printersettings'*
+'printeroptions'	options.txt	/*'printeroptions'*
 'prompt'	vi_diff.txt	/*'prompt'*
-'pset'	options.txt	/*'pset'*
 'pt'	options.txt	/*'pt'*
 'pvh'	options.txt	/*'pvh'*
 'pvw'	options.txt	/*'pvw'*
@@ -2945,6 +2945,7 @@ E318	message.txt	/*E318*
 E319	message.txt	/*E319*
 E32	message.txt	/*E32*
 E320	message.txt	/*E320*
+E321	editing.txt	/*E321*
 E322	message.txt	/*E322*
 E323	message.txt	/*E323*
 E325	usr_11.txt	/*E325*
@@ -3857,6 +3858,8 @@ dos-standard-mappings	os_dos.txt	/*dos-standard-mappings*
 dos-temp-files	os_dos.txt	/*dos-temp-files*
 dos16	os_msdos.txt	/*dos16*
 dos32	os_msdos.txt	/*dos32*
+dosbatch-syntax	syntax.txt	/*dosbatch-syntax*
+dosbatch.vim	syntax.txt	/*dosbatch.vim*
 double-click	term.txt	/*double-click*
 download	intro.txt	/*download*
 drag-n-drop-win32	gui_w32.txt	/*drag-n-drop-win32*
@@ -4456,7 +4459,6 @@ improved-viminfo	version5.txt	/*improved-viminfo*
 improvements	version5.txt	/*improvements*
 improvements-6	version6.txt	/*improvements-6*
 inactive-buffer	windows.txt	/*inactive-buffer*
-include-local	version6.txt	/*include-local*
 include-search	tagsearch.txt	/*include-search*
 inclusive	motion.txt	/*inclusive*
 incomp-small-6	version6.txt	/*incomp-small-6*
@@ -4729,6 +4731,7 @@ new-diff-mode	version6.txt	/*new-diff-mode*
 new-encryption	version5.txt	/*new-encryption*
 new-evim	version6.txt	/*new-evim*
 new-ex-commands-5.2	version5.txt	/*new-ex-commands-5.2*
+new-file-browser	version6.txt	/*new-file-browser*
 new-file-writing	version6.txt	/*new-file-writing*
 new-filetype	filetype.txt	/*new-filetype*
 new-filetype-5.4	version5.txt	/*new-filetype-5.4*

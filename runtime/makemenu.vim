@@ -1,6 +1,6 @@
 " Script to define the syntax menu in menu.vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Jul 11
+" Last Change:	2001 Jul 21
 
 " This is used by "make menu" in the src directory.
 edit <sfile>:p:h/menu.vim
@@ -156,12 +156,13 @@ SynMenu HIJK.HTML/OS:htmlos
 SynMenu HIJK.Hyper\ Builder:hb
 SynMenu HIJK.Icon:icon
 SynMenu HIJK.IDL:idl
-SynMenu HIJK.Interactive\ Data\ Lang:idlang
+SynMenu HIJK.Indent\ profile:indent
 SynMenu HIJK.Inform:inform
 SynMenu HIJK.Informix\ 4GL:fgl
 SynMenu HIJK.Inittab:inittab
 SynMenu HIJK.Inno\ Setup:iss
 SynMenu HIJK.InstallShield\ Rules:ishd
+SynMenu HIJK.Interactive\ Data\ Lang:idlang
 SynMenu HIJK.Jam:jam
 SynMenu HIJK.Jargon:jargon
 SynMenu HIJK.Java.Java:java
@@ -222,6 +223,7 @@ SynMenu Me-NO.OpenROAD:openroad
 SynMenu Me-NO.Open\ Psion\ Lang:opl
 SynMenu Me-NO.Oracle\ config:ora
 
+SynMenu PQ.Palm\ resource\ compiler:pilrc
 SynMenu PQ.PApp:papp
 SynMenu PQ.Pascal:pascal
 SynMenu PQ.PCCTS:pccts

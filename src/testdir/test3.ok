@@ -707,3 +707,95 @@ label3 /* post */:
 ** A different comment
 */
 
+
+void f()
+{
+
+	/*********
+	  A comment.
+	*********/
+}
+
+
+void f()
+{
+
+	/*********
+	A comment.
+	*********/
+}
+
+
+void f()
+{
+	c = c1 &&
+		(
+		 c2 ||
+		 c3
+		) && c4;
+}
+
+
+void f()
+{
+	c = c1 &&
+		(
+		 c2 ||
+		 c3
+		) && c4;
+}
+
+
+void f()
+{
+	c = c1 &&
+		(
+			c2 ||
+			c3
+		) && c4;
+}
+
+
+void f()
+{
+	if (   c1
+		   && (   c2
+				  || c3))
+		foo;
+}
+
+
+void f()
+{
+	if (   c1
+		&& (   c2
+			|| c3))
+		foo;
+}
+
+
+void f()
+{
+	c = c1 && (
+		c2 ||
+		c3
+		) && c4;
+	if (
+		c1 && c2
+	   )
+		foo;
+}
+
+
+void f()
+{
+	c = c1 && (
+		c2 ||
+		c3
+	) && c4;
+	if (
+		c1 && c2
+	)
+		foo;
+}
+

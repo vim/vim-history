@@ -76,7 +76,7 @@ EXE_dependencies =  \
  window.obj \
  version.obj
 
-all: vim.exe install.exe xxd/xxd.exe
+all: vim.exe install.exe uninstal.exe xxd/xxd.exe
 
 #		*Explicit Rules*
 #  add /v to TLINK for debugging
@@ -133,6 +133,9 @@ install.exe: dosinst.c
 	$(CC) dosinst.c
 	-del install.exe
 	ren dosinst.exe install.exe
+
+uninstal.exe: uninstal.c
+	$(CC) uninstal.c
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd

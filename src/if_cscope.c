@@ -852,7 +852,7 @@ cs_find_common(opt, pat, forceit, verbose)
 
     if (totmatches == 0)
     {
-	char *nf = _("E258: no matches found in cscope connections");
+	char *nf = _("E259: no matches found for cscope query %s of %s");
 	char *buf;
 
 	if (!verbose)
@@ -863,8 +863,7 @@ cs_find_common(opt, pat, forceit, verbose)
 	    (void)EMSG(nf);
 	else
 	{
-	    sprintf(buf, _("E259: no matches found for cscope query %s of %s"),
-		opt, pat);
+	    sprintf(buf, nf, opt, pat);
 	    (void)EMSG(buf);
 	    vim_free(buf);
 	}

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Jul 11
+" Last change:	2001 Jul 21
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -174,7 +174,7 @@ fun! <SID>FTVB(alt)
 endfun
 
 " Visual Basic Script (close to Visual Basic)
-au BufNewFile,BufRead *.vbs			setf vb
+au BufNewFile,BufRead *.vbs,*.dsm		setf vb
 
 " Batch file for MSDOS (*.cmd is close enough)
 au BufNewFile,BufRead *.bat,*.cmd,*.sys		setf dosbatch
@@ -264,7 +264,7 @@ au BufNewFile,BufRead *.dcl,*.icl		setf clean
 " Clever
 au BufNewFile,BufRead *.eni			setf cl
 
-" Clever or SGML
+" Clever or dtd
 au BufNewFile,BufRead *.ent			call <SID>FTent()
 
 fun! <SID>FTent()
@@ -284,7 +284,7 @@ fun! <SID>FTent()
     endif
     let lnum = lnum + 1
   endw
-  setf sgml
+  setf dtd
 endfun
 
 " Clipper (or FoxPro)
@@ -303,6 +303,9 @@ au BufNewFile,BufRead *.cfm,*.cfi		setf cf
 
 " Configure scripts
 au BufNewFile,BufRead configure.in,configure.ac setf config
+
+" Enlightenment configuration files
+au BufNewFile,BufRead *enlightenment/*.cfg	setf c
 
 " Configure files
 au BufNewFile,BufRead *.cfg			setf cfg
@@ -452,6 +455,9 @@ au BufNewFile,BufRead *.idl			setf idl
 
 " IDL (Interactive Data Language)
 au BufNewFile,BufRead *.pro			setf idlang
+
+" Inform
+au BufNewFile,BufRead .indent.pro		setf indent
 
 " Inform
 au BufNewFile,BufRead *.inf,*.INF		setf inform
@@ -700,6 +706,9 @@ au BufNewFile,BufRead *.phtml			setf phtml
 
 " Pike
 au BufNewFile,BufRead *.pike,*.lpc,*.ulpc,*.pmod setf pike
+
+" Palm Resource compiler
+au BufNewFile,BufRead *.rcp			setf pilrc
 
 " Pine config
 au BufNewFile,BufRead .pinerc,pinerc		setf pine
@@ -1046,6 +1055,9 @@ au BufNewFile,BufRead *.texinfo,*.texi,*.txi	setf texinfo
 " TeX configuration
 au BufNewFile,BufRead texmf.cnf			setf texmf
 
+" Tidy config
+au BufNewFile,BufRead .tidyrc			setf tidy
+
 " TF mud client
 au BufNewFile,BufRead *.tf			setf tf
 
@@ -1202,6 +1214,9 @@ au! BufNewFile,BufRead *jarg*
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*		setf make
+
+" Mutt setup file
+au BufNewFile,BufRead muttrc*			setf muttrc
 
 " Nroff macros
 au BufNewFile,BufRead tmac.*			setf nroff

@@ -5,7 +5,7 @@
 # libraries when they exist, but this doesn't mean they are needed for Vim.
 #
 #      Author: Bram Moolenaar
-# Last change: 2001 Mar 13
+# Last change: 2001 Jul 13
 #
 # Warning: This fails miserably if the linker doesn't return an error code!
 #
@@ -78,7 +78,7 @@ else
       done
     done
     if test ! -f auto/pathdef.c; then
-      $MAKE auto/pathdef.o
+      $MAKE objects/pathdef.o
     fi
     if test ! -f link1.sed; then
       echo "link.sh: Linked fine, no libraries can be removed"
@@ -105,7 +105,7 @@ if test -s auto/link.sed; then
     mv -f auto/link.sed link2.sed
     touch auto/link.sed
     rm -f auto/pathdef.c
-    $MAKE auto/pathdef.o
+    $MAKE objects/pathdef.o
   fi
 fi
 if test -f auto/link.sed -a ! -s auto/link.sed -a ! -f link3.sed; then

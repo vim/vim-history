@@ -1,16 +1,12 @@
 " Vim syntax file
+" This is a GENERATED FILE. Please always refer to source file at the URI below.
 " Language: strace output
 " Maintainer: David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>
 " Last Change: 2001-04-26
 " URI: http://physics.muni.cz/~yeti/download/strace.vim
 
-" Notes: Still APLHA.  The parsing works, more-or-less, but the result is
-"        somewhat over-highlighted.
 
-" Setup {{{
-" React to possibly already-defined syntax.
-" For version 5.x: Clear all syntax items unconditionally
-" For version 6.x: Quit when a syntax file was already loaded
+" Setup
 if version >= 600
   if exists("b:current_syntax")
     finish
@@ -20,8 +16,8 @@ else
 endif
 
 syn case match
-" }}}
-" Parse the line {{{
+
+" Parse the line
 syn match straceSpecialChar "\\\d\d\d\|\\." contained
 syn region straceString start=+"+ skip=+\\\\\|\\"+ end=+"+ contains=straceSpecialChar oneline
 syn match straceNumber "\W[+-]\=\(\d\+\)\=\.\=\d\+\([eE][+-]\=\d\+\)\="lc=1
@@ -36,10 +32,8 @@ syn match straceSysCall "^\w\+"
 syn match straceParenthesis "[][(){}]"
 syn match straceOperator "[-+=*/!%&|:,]"
 syn region straceComment start="/\*" end="\*/" oneline
-" }}}
-" Define the default highlighting {{{
-" For version 5.7 and earlier: Only when not done already
-" For version 5.8 and later: Only when an item doesn't have highlighting yet
+
+" Define the default highlighting
 if version >= 508 || !exists("did_strace_syntax_inits")
   if version < 508
     let did_strace_syntax_inits = 1
@@ -63,5 +57,5 @@ if version >= 508 || !exists("did_strace_syntax_inits")
 
   delcommand HiLink
 endif
-" }}}
+
 let b:current_syntax = "strace"
