@@ -910,9 +910,9 @@ do_arglist(str, what, after)
     garray_T	new_ga;
     int		exp_count;
     char_u	**exp_files;
-    char_u	*p;
     int		i;
 #ifdef FEAT_LISTCMDS
+    char_u	*p;
     int		match;
 #endif
 
