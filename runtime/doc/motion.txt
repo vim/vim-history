@@ -1,4 +1,4 @@
-*motion.txt*    For Vim version 6.0.  Last change: 2001 Sep 05
+*motion.txt*    For Vim version 6.0.  Last change: 2002 Feb 18
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -101,8 +101,11 @@ be operated upon.  This allows much more freedom, but requires more key
 strokes and has limited redo functionality.  See the chapter on Visual mode
 |Visual-mode|.
 
+You can use a ":" command for a motion.  For example "d:call FindEnd()".
+But this can't be redone with ".".
 
-Forcing a motion to be linewise, characterwise or blockwise
+
+FORCING A MOTION TO BE LINEWISE, CHARACTERWISE OR BLOCKWISE
 
 When a motion is not of the type you would like to use, you can force another
 type by using "v", "V" or CTRL-V just after the operator.
@@ -122,6 +125,9 @@ v		When used after an operator, before the motion command: Force
 		the operator to work characterwise, also when the motion is
 		linewise.  If the motion was linewise, it will become
 		|exclusive|.
+		If the motion already was characterwise, toggle
+		inclusive/exclusive.  This can be used to make an exclusive
+		motion inclusive and an inclusive motion exclusive.
 
 							*o_V*
 V		When used after an operator, before the motion command: Force
