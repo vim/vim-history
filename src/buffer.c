@@ -355,6 +355,9 @@ free_buffer(buf)
 #ifdef FEAT_PYTHON
     python_buffer_free(buf);
 #endif
+#ifdef FEAT_RUBY
+    ruby_buffer_free(buf);
+#endif
 #ifdef FEAT_EVAL
     var_clear(&buf->b_vars);	    /* free all internal variables */
 #endif
@@ -468,15 +471,29 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 
 	if (deleted == 0)
 	{
-	    sprintf((char *)IObuff, _("No buffers were %s"),
-		    command == DOBUF_UNLOAD ? _("unloaded") : _("deleted"));
+	    if (command == DOBUF_UNLOAD)
+		sprintf((char *)IObuff, _("No buffers were unloaded"));
+	    else
+		sprintf((char *)IObuff, _("No buffers were deleted")),
 	    errormsg = IObuff;
 	}
 	else if (deleted >= p_report)
-	    smsg((char_u *)(deleted == 1
-			? _("%d buffer %s") : _("%d buffers %s")),
-		    deleted,
-		    command == DOBUF_UNLOAD ? _("unloaded") : _("deleted"));
+	{
+	    if (command == DOBUF_UNLOAD)
+	    {
+		if (deleted == 1)
+		    smsg((char_u *)_("1 buffer unloaded"));
+		else
+		    smsg((char_u *)_("%d buffers unloaded"), deleted);
+	    }
+	    else
+	    {
+		if (deleted == 1)
+		    smsg((char_u *)_("1 buffer deleted"));
+		else
+		    smsg((char_u *)_("%d buffers deleted"), deleted);
+	    }
+	}
     }
 
     return errormsg;
@@ -804,9 +821,6 @@ enter_buffer(buf)
     buflist_getfpos();			/* restore curpos.lnum and possibly
 					 * curpos.col */
     check_arg_idx(curwin);		/* check for valid arg_idx */
-#ifdef FEAT_FOLDING
-    clearFolding(curwin);
-#endif
 #ifdef FEAT_TITLE
     maketitle();
 #endif
@@ -1043,6 +1057,7 @@ free_buf_options(buf, free_p_ff)
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
     free_string_option(buf->b_p_inde);
+    free_string_option(buf->b_p_indk);
 #endif
 #ifdef FEAT_CRYPT
     free_string_option(buf->b_p_key);
@@ -2166,7 +2181,7 @@ maketitle()
 	}
 	else
 	{
-	    /* format: "fname + (path) (1 of 2) - VIM" */
+	    /* format: "fname +RO (path) (1 of 2) - VIM" */
 
 	    if (curbuf->b_fname == NULL)
 		STRCPY(buf, _("[No file]"));
@@ -2179,7 +2194,13 @@ maketitle()
 	    }
 
 	    if (bufIsChanged(curbuf))
+	    {
 		STRCAT(buf, " +");
+		if (curbuf->b_p_ro)
+		    STRCAT(buf, "RO");
+	    }
+	    else if (curbuf->b_p_ro)
+		STRCAT(buf, " RO");
 
 	    if (curbuf->b_fname != NULL)
 	    {

@@ -1102,6 +1102,9 @@ do_pending_operator(cap, old_col, gui_yank)
 {
     oparg_t	*oap = cap->oap;
     pos_t	old_cursor;
+#ifdef FEAT_VIRTUALEDIT
+    int		old_coladd;
+#endif
     int		empty_region_error;
 
 #ifdef FEAT_VISUAL
@@ -1131,6 +1134,9 @@ do_pending_operator(cap, old_col, gui_yank)
 	clip_auto_select();
 #endif
     old_cursor = curwin->w_cursor;
+#ifdef FEAT_VIRTUALEDIT
+    old_coladd = curwin->w_coladd;
+#endif
 
     /*
      * If an operation is pending, handle it...
@@ -1169,6 +1175,7 @@ do_pending_operator(cap, old_col, gui_yank)
        /* If virtual editing is ON, we have to make sure the cursor position
 	* is identical with the text position. */
 	if (ve_all
+		&& !VIsual_active
 		&& curwin->w_coladd
 		&& oap->motion_type != MLINE
 		&& (oap->op_type == OP_DELETE
@@ -1264,11 +1271,6 @@ do_pending_operator(cap, old_col, gui_yank)
 		unadjust_for_sel();
 
 # ifdef FEAT_VIRTUALEDIT
-	    if (ve_block && VIsual_mode == Ctrl_V)
-	    {
-		u_save_cursor();
-	        coladvance_force(getviscol());
-	    }
 	    curbuf->b_visual_start_coladd = VIsual_coladd;
 	    curbuf->b_visual_end_coladd = curwin->w_coladd;
 # endif
@@ -1330,6 +1332,12 @@ do_pending_operator(cap, old_col, gui_yank)
 		if (!redo_VIsual_busy)
 		{
 		    getvcol(curwin, &(oap->end), &start, NULL, &end);
+# ifdef FEAT_VIRTUALEDIT
+		    start += curbuf->b_visual_end_coladd;
+		    end += curbuf->b_visual_end_coladd;
+		    oap->start_vcol += curbuf->b_visual_start_coladd;
+# endif
+
 		    if (start < oap->start_vcol)
 			oap->start_vcol = start;
 		    if (end > oap->end_vcol)
@@ -1364,9 +1372,16 @@ do_pending_operator(cap, old_col, gui_yank)
 		curwin->w_cursor.lnum = oap->end.lnum;
 		coladvance(oap->end_vcol);
 		oap->end = curwin->w_cursor;
+# ifdef FEAT_VIRTUALEDIT
+		oap->end.col += curwin->w_coladd;
+# endif
+
 		curwin->w_cursor = oap->start;
 		coladvance(oap->start_vcol);
 		oap->start = curwin->w_cursor;
+# ifdef FEAT_VIRTUALEDIT
+		oap->start.col += curwin->w_coladd;
+# endif
 	    }
 
 	    if (!redo_VIsual_busy && !gui_yank)
@@ -1718,7 +1733,12 @@ do_pending_operator(cap, old_col, gui_yank)
 	    oap->op_type = OP_NOP;
 	}
 	else
+	{
 	    curwin->w_cursor = old_cursor;
+#ifdef FEAT_VIRTUALEDIT
+	    curwin->w_coladd = old_coladd;
+#endif
+	}
 	oap->block_mode = FALSE;
 	oap->regname = 0;
 	oap->motion_force = NUL;
@@ -3243,49 +3263,70 @@ nv_gd(oap, nchar)
  */
     static int
 nv_screengo(oap, dir, dist)
-    oparg_t   *oap;
-    int	    dir;
-    long    dist;
+    oparg_t	*oap;
+    int		dir;
+    long	dist;
 {
     int		linelen = linetabsize(ml_get_curline());
     int		retval = OK;
     int		atend = FALSE;
     int		n;
-    int		col_off = curwin_col_off();
+    int		col_off1;	/* margin offset for first screen line */
+    int		col_off2;	/* margin offset for wrapped screen line */
+    int		width1;		/* text width for first screen line */
+    int		width2;		/* test width for wrapped screen line */
 
     oap->motion_type = MCHAR;
     oap->inclusive = FALSE;
+
+    col_off1 = curwin_col_off();
+    col_off2 = col_off1 - curwin_col_off2();
+    width1 = W_WIDTH(curwin) - col_off1;
+    width2 = W_WIDTH(curwin) - col_off2;
 
 #ifdef FEAT_VERTSPLIT
     if (curwin->w_width != 0)
     {
 #endif
     /*
-     * Instead of sticking at the last character of the line in the file we
-     * try to stick in the last column of the screen
+     * Instead of sticking at the last character of the buffer line we
+     * try to stick in the last column of the screen.
      */
     if (curwin->w_curswant == MAXCOL)
     {
 	atend = TRUE;
 	validate_virtcol();
-	curwin->w_curswant = ((curwin->w_virtcol + col_off)
-				 / W_WIDTH(curwin) + 1) * W_WIDTH(curwin) - 1;
-	if (col_off != 0 && (int)curwin->w_curswant > col_off)
-	    curwin->w_curswant -= col_off;
+	if (width1 <= 0)
+	    curwin->w_curswant = 0;
+	else
+	{
+	    curwin->w_curswant = width1 - 1;
+	    if (curwin->w_virtcol > curwin->w_curswant)
+		curwin->w_curswant += ((curwin->w_virtcol
+			     - curwin->w_curswant - 1) / width2 + 1) * width2;
+	}
     }
     else
-	while (curwin->w_curswant >= (colnr_t)(linelen + W_WIDTH(curwin)))
-	    curwin->w_curswant -= W_WIDTH(curwin);
+    {
+	if (linelen > width1)
+	    n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
+	else
+	    n = width1;
+	if (curwin->w_curswant > n + 1)
+	    curwin->w_curswant -= ((curwin->w_curswant - n) / width2 + 1)
+								     * width2;
+    }
 
     while (dist--)
     {
 	if (dir == BACKWARD)
 	{
-						/* move back within line */
-	    if ((long)curwin->w_curswant >= W_WIDTH(curwin))
-		curwin->w_curswant -= W_WIDTH(curwin);
-	    else				/* to previous line */
+	    if ((long)curwin->w_curswant >= width2)
+		/* move back within line */
+		curwin->w_curswant -= width2;
+	    else
 	    {
+		/* to previous line */
 		if (curwin->w_cursor.lnum == 1)
 		{
 		    retval = FAIL;
@@ -3293,32 +3334,30 @@ nv_screengo(oap, dir, dist)
 		}
 		--curwin->w_cursor.lnum;
 		linelen = linetabsize(ml_get_curline());
-		n = ((linelen + col_off - 1) / W_WIDTH(curwin))
-							    * W_WIDTH(curwin);
-		if (col_off != 0 && (long)curwin->w_curswant
-					    >= W_WIDTH(curwin) - col_off && n)
-		    n -= W_WIDTH(curwin);
-		curwin->w_curswant += n;
+		if (linelen > width1)
+		    curwin->w_curswant += (((linelen - width1 - 1) / width2)
+								+ 1) * width2;
 	    }
 	}
 	else /* dir == FORWARD */
 	{
-	    n = ((linelen + col_off - 1) / W_WIDTH(curwin)) * W_WIDTH(curwin);
-	    if (col_off != 0 && n > col_off)
-		n -= col_off;
-						/* move forward within line */
-	    if (curwin->w_curswant < (colnr_t)n)
-		curwin->w_curswant += W_WIDTH(curwin);
-	    else				/* to next line */
+	    if (linelen > width1)
+		n = ((linelen - width1 - 1) / width2 + 1) * width2 + width1;
+	    else
+		n = width1;
+	    if (curwin->w_curswant + width2 < (colnr_t)n)
+		/* move forward within line */
+		curwin->w_curswant += width2;
+	    else
 	    {
+		/* to next line */
 		if (curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
 		{
 		    retval = FAIL;
 		    break;
 		}
 		curwin->w_cursor.lnum++;
-		linelen = linetabsize(ml_get_curline());
-		curwin->w_curswant %= W_WIDTH(curwin);
+		curwin->w_curswant %= width2;
 	    }
 	}
     }
@@ -5982,18 +6021,22 @@ nv_g_cmd(cap)
 #endif
 		)
 	{
-	    int col_off = win_col_off(curwin);
+	    int		width1 = W_WIDTH(curwin) - curwin_col_off();
+	    int		width2 = width1 + curwin_col_off2();
 
 	    validate_virtcol();
-	    i = ((curwin->w_virtcol + col_off) / W_WIDTH(curwin))
-							    * W_WIDTH(curwin);
-	    if (col_off != 0 && i > col_off)
-		i -= col_off;
+	    i = 0;
+	    if (curwin->w_virtcol >= width1 && width2 > 0)
+		i = (curwin->w_virtcol - width1) / width2 * width2 + width1;
 	}
 	else
 	    i = curwin->w_leftcol;
+	/* Go to the middle of the screen line.  When 'number' is on and lines
+	 * are wrapping the middle can be more to the left.*/
 	if (cap->nchar == 'm')
-	    i += W_WIDTH(curwin) / 2;
+	    i += (W_WIDTH(curwin) - curwin_col_off()
+		    + ((curwin->w_p_wrap && i > 0)
+			? curwin_col_off2() : 0)) / 2;
 	coladvance((colnr_t)i);
 	if (flag)
 	{
@@ -6040,11 +6083,14 @@ nv_g_cmd(cap)
 		curwin->w_curswant = MAXCOL;    /* so we stay at the end */
 		if (cap->count1 == 1)
 		{
+		    int		width1 = W_WIDTH(curwin) - col_off;
+		    int		width2 = width1 + curwin_col_off2();
+
 		    validate_virtcol();
-		    i = ((curwin->w_virtcol + col_off)
-				 / W_WIDTH(curwin) + 1) * W_WIDTH(curwin) - 1;
-		    if (col_off != 0 && i > col_off)
-			i -= col_off;
+		    i = width1 - 1;
+		    if (curwin->w_virtcol >= width1)
+			i += ((curwin->w_virtcol - width1) / width2 + 1)
+								     * width2;
 		    coladvance((colnr_t)i);
 		}
 		else if (nv_screengo(oap, FORWARD, cap->count1 - 1) == FAIL)

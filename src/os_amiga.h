@@ -94,8 +94,8 @@ typedef long off_t;
 #ifndef FILETYPE_FILE
 # define FILETYPE_FILE	"filetype.vim"
 #endif
-#ifndef SETTINGS_FILE
-# define SETTINGS_FILE	"settings.vim"
+#ifndef FTPLUGIN_FILE
+# define FTPLUGIN_FILE	"ftplugin.vim"
 #endif
 #ifndef INDENT_FILE
 # define INDENT_FILE	"indent.vim"
@@ -103,8 +103,8 @@ typedef long off_t;
 #ifndef FTOFF_FILE
 # define FTOFF_FILE	"ftoff.vim"
 #endif
-#ifndef SETSOFF_FILE
-# define SETSOFF_FILE	"setsoff.vim"
+#ifndef FTPLUGOF_FILE
+# define FTPLUGOF_FILE	"ftplugof.vim"
 #endif
 #ifndef INDOFF_FILE
 # define INDOFF_FILE	"indoff.vim"

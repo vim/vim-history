@@ -313,7 +313,7 @@ shift_line(left, round, amount)
     if (State == VREPLACE)
 	change_indent(INDENT_SET, count, FALSE, NUL);
     else
-	set_indent(count, TRUE);
+	(void)set_indent(count, SIN_CHANGED);
 }
 
 #if defined(FEAT_VISUALEXTRA) || defined(PROTO)
@@ -566,9 +566,7 @@ block_insert(oap, s, b_insert, bdp)
 
 #if defined(FEAT_LISP) || defined(FEAT_CINDENT)
 /*
- * op_reindent - handle reindenting a block of lines for C or lisp.
- *
- * mechanism copied from op_shift, above
+ * op_reindent - handle reindenting a block of lines.
  */
     void
 op_reindent(oap, how)
@@ -578,10 +576,8 @@ op_reindent(oap, how)
     long	i;
     char_u	*l;
     int		count;
-
-    if (u_save((linenr_t)(curwin->w_cursor.lnum - 1),
-		 (linenr_t)(curwin->w_cursor.lnum + oap->line_count)) == FAIL)
-	return;
+    linenr_t	first_changed = 0;
+    linenr_t	last_changed = 0;
 
     for (i = oap->line_count; --i >= 0 && !got_int; )
     {
@@ -598,8 +594,8 @@ op_reindent(oap, how)
 	 * indented, unless there is only one line.
 	 */
 #ifdef FEAT_LISP
-	if (i != oap->line_count - 1 || oap->line_count == 1 ||
-						       how != get_lisp_indent)
+	if (i != oap->line_count - 1 || oap->line_count == 1
+						    || how != get_lisp_indent)
 #endif
 	{
 	    l = skipwhite(ml_get_curline());
@@ -608,7 +604,13 @@ op_reindent(oap, how)
 	    else
 		count = how();		    /* get the indent for this line */
 
-	    set_indent(count, TRUE);
+	    if (set_indent(count, SIN_UNDO))
+	    {
+		/* did change the indent, call changed_lines() later */
+		if (first_changed == 0)
+		    first_changed = curwin->w_cursor.lnum;
+		last_changed = curwin->w_cursor.lnum;
+	    }
 	}
 	++curwin->w_cursor.lnum;
     }
@@ -617,7 +619,13 @@ op_reindent(oap, how)
     curwin->w_cursor.lnum -= oap->line_count;
     beginline(BL_SOL | BL_FIX);
 
-    changed_lines(oap->start.lnum, 0, oap->end.lnum + 1, 0L);
+    if (last_changed != 0)
+	changed_lines(first_changed, 0, last_changed + 1, 0L);
+#ifdef FEAT_VISUAL
+    else if (oap->is_VIsual)
+	/* No change: need to remove the Visual selection */
+	redraw_curbuf_later(INVERTED);
+#endif
 
     if (oap->line_count > p_report)
     {
@@ -1189,6 +1197,12 @@ cmdline_paste(regname, literally)
 	    && regname != Ctrl_A && !valid_yank_reg(regname, FALSE))
 	return FAIL;
 
+    /* A register containing CTRL-R can cause an endless loop.  Allow using
+     * CTRL-C to break the loop. */
+    line_breakcheck();
+    if (got_int)
+	return FAIL;
+
 #ifdef FEAT_CLIPBOARD
     if (regname == '*')
     {
@@ -1206,7 +1220,7 @@ cmdline_paste(regname, literally)
 	cmdline_paste_str(arg, literally);
 	if (allocated)
 	    vim_free(arg);
-	return (int)OK;
+	return OK;
     }
 
     get_yank_register(regname, FALSE);
@@ -2501,7 +2515,7 @@ do_put(regname, dir, count, flags)
 
 #ifdef FEAT_VIRTUALEDIT
     if (ve_all && curwin->w_coladd && (y_type == MBLOCK || y_type == MCHAR))
-	coladvance_force(getviscol());
+	coladvance_force(getviscol() + 1);
 #endif
 
 /*
@@ -2751,7 +2765,7 @@ do_put(regname, dir, count, flags)
 			}
 			else if ((indent = get_indent() + indent_diff) < 0)
 			    indent = 0;
-			set_indent(indent, TRUE);
+			(void)set_indent(indent, 0);
 			curwin->w_cursor = old_pos;
 			/* remember how many chars were removed */
 			if (cnt == count && i == y_size - 1)
@@ -3400,7 +3414,7 @@ op_format(oap)
 		if (need_set_indent)
 		    /* replace indent in first line with minimal number of
 		     * tabs and spaces, according to current options */
-		    set_indent(get_indent(), TRUE);
+		    (void)set_indent(get_indent(), SIN_CHANGED);
 
 		/* put cursor on last non-space */
 		coladvance((colnr_t)MAXCOL);
@@ -3748,6 +3762,10 @@ do_addsub(command, Prenum1)
 		&& !(doalp && isalpha(ptr[col])))
 	    --col;
     }
+
+    /* truncate to max length of a number */
+    if (length >= NUMBUFLEN - 1)
+	length = NUMBUFLEN - 2;
 
     /*
      * If a number was found, and saving for undo works, replace the number.

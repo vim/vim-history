@@ -25,10 +25,10 @@
 #include "version.h"	/* used by dialog box routine for default title */
 #include <windows.h>
 #ifdef DEBUG
-#include <tchar.h>
-#endif /* DEBUG */
+# include <tchar.h>
+#endif
 #ifndef __MINGW32__
-#include <shellapi.h>
+# include <shellapi.h>
 #endif
 #ifdef FEAT_TOOLBAR
 # include <commctrl.h>
@@ -191,12 +191,14 @@
 # define HDC		void *
 # define HMENU		void *
 # define UINT		int
+# define INT		int
 # define WPARAM		int
 # define LPARAM		int
 typedef int LOGFONT[];
 # define ENUMLOGFONT	int
 # define NEWTEXTMETRIC	int
 # define VOID		void
+# define CONST
 # define CALLBACK
 # define WORD		int
 # define DWORD		int
@@ -892,12 +894,9 @@ _OnSysChar(
      * '(' and '*' */
     if (ch < 0x100 && (!isalpha(ch)) && isprint(ch))
 	modifiers &= ~MOD_MASK_SHIFT;
-    /* Interpret the ALT key as making the key META */
-    if (modifiers & MOD_MASK_ALT)
-    {
-	ch |= 0x80;
-	modifiers &= ~MOD_MASK_ALT;
-    }
+
+    /* Interpret the ALT key as making the key META, include SHIFT, etc. */
+    ch = extract_modifiers(ch, &modifiers);
 
     len = 0;
     if (modifiers)
@@ -2837,7 +2836,15 @@ gui_mch_init_font(char_u *font_name, int fontset)
     hl_set_font_name(lf.lfFaceName);
     if (STRCMP(font_name, "*") == 0)
     {
-	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14));
+	struct charset_pair *cp;
+
+	/* Try to find a charset we recognize. */
+	for (cp = charset_pairs; cp->name != NULL; ++cp)
+	    if (lf.lfCharSet == cp->charset)
+		break;
+
+	p = alloc((unsigned)(strlen(lf.lfFaceName) + 14
+		    + (cp->name == NULL ? 0 : strlen(cp->name) + 2)));
 	if (p != NULL)
 	{
 	    /* make a normal font string out of the lf thing:*/
@@ -2859,15 +2866,10 @@ gui_mch_init_font(char_u *font_name, int fontset)
 		strcat(p, ":u");
 	    if (lf.lfStrikeOut)
 		strcat(p, ":s");
+	    if (cp->name != NULL)
 	    {
-		struct charset_pair *cp;
-
-		for (cp = charset_pairs; cp->name != NULL; ++cp)
-		    if (lf.lfCharSet == cp->charset)
-		    {
-			strcat(p, ":c");
-			strcat(p, cp->name);
-		    }
+		strcat(p, ":c");
+		strcat(p, cp->name);
 	    }
 	}
     }
@@ -3586,6 +3588,56 @@ ImeSetOriginMode(void)
 
 #define UNIBUFSIZE 2000		/* a big buffer */
 
+#ifdef FEAT_RIGHTLEFT
+/*
+ * What is this for?  In the case where you are using Win98 or Win2K or later,
+ * and you are using a Hebrew font (or Arabic!), Windows does you a favor and
+ * reverses the string sent to the TextOut... family.  This sucks, because we
+ * go to a lot of effort to do the right thing, and there doesn't seem to be a
+ * way to tell Windblows not to do this!
+ *
+ * The short of it is that this 'RevOut' only gets called if you are running
+ * one of the new, "improved" MS OSes, and only if you are running in
+ * 'rightleft' mode.  It makes display take *slightly* longer, but not
+ * noticeably so.
+ */
+    static void
+RevOut( HDC s_hdc,
+	int col,
+	int row,
+	UINT foptions,
+	CONST RECT *pcliprect,
+	LPCTSTR text,
+	UINT len,
+	CONST INT *padding)
+{
+    int		ix;
+    static int	special = -1;
+
+    if (special == -1)
+    {
+	/* Check windows version: special treatment is needed if it is NT 5 or
+	 * Win98 or higher. */
+	if  ((os_version.dwPlatformId == VER_PLATFORM_WIN32_NT
+		    && os_version.dwMajorVersion >= 5)
+		|| (os_version.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS
+		    && (os_version.dwMajorVersion > 4
+			|| (os_version.dwMajorVersion == 4
+			    && os_version.dwMinorVersion > 0))))
+	    special = 1;
+	else
+	    special = 0;
+    }
+
+    if (special)
+	for (ix = 0; ix < len; ++ix)
+	    ExtTextOut(s_hdc, col + TEXT_X(ix), row, foptions,
+					    pcliprect, text + ix, 1, padding);
+    else
+	ExtTextOut(s_hdc, col, row, foptions, pcliprect, text, len, padding);
+}
+#endif
+
     void
 gui_mch_draw_string(
     int		row,
@@ -3757,8 +3809,17 @@ gui_mch_draw_string(
 	}
 	else
 #endif
-	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+	{
+#ifdef FEAT_RIGHTLEFT
+	    /* ron: fixed Hebrew on Win98/Win2000 */
+	    if (curwin->w_p_rl)
+		RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
 			     foptions, pcliprect, (char *)text, len, padding);
+	    else
+#endif
+		ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+			     foptions, pcliprect, (char *)text, len, padding);
+	}
     }
 
     if (flags & DRAW_UNDERL)
@@ -6176,13 +6237,13 @@ mch_set_mouse_shape(int shape)
 	ShowCursor(FALSE);
     else
     {
-	if (!p_mh)
-	    ShowCursor(TRUE);
 	if (shape >= MSHAPE_NUMBERED)
 	    idc = IDC_ARROW;
 	else
 	    idc = mshape_idcs[shape];
-	SetClassLong(s_textArea, GCL_HCURSOR, (LONG) LoadCursor(NULL, idc));
+	SetClassLong(s_textArea, GCL_HCURSOR, (LONG)LoadCursor(NULL, idc));
+	if (!p_mh)
+	    ShowCursor(TRUE);
     }
 }
 #endif

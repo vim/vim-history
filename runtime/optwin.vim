@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Aug 15
+" Last Change:	2000 Oct 07
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -19,7 +19,7 @@ endif
 
 " Make sure the '<' flag is not included in 'cpoptions', otherwise <CR> would
 " not be recognized.  See ":help 'cpoptions'".
-let s:optwin_cpo_save = &cpo
+let s:cpo_save = &cpo
 let &cpo = ""
 
 " function to be called when <CR> is hit in the option-window
@@ -198,7 +198,7 @@ fun! OW_Header(text)
 endfun
 
 " Restore the previous value of 'cpoptions' here, it's used below.
-let &cpo = s:optwin_cpo_save
+let &cpo = s:cpo_save
 
 " List of all options, organized by function.
 " The text should be sufficient to know what the option is used for.
@@ -883,5 +883,5 @@ let &title = s:old_title
 let &icon = s:old_icon
 let &ru = s:old_ru
 let &sc = s:old_sc
-let &cpo = s:optwin_cpo_save
+let &cpo = s:cpo_save
 unlet OW_idx OW_lnum

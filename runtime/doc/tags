@@ -78,8 +78,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'charconvert'	options.txt	/*'charconvert'*
 'cin'	options.txt	/*'cin'*
 'cindent'	options.txt	/*'cindent'*
-'cink'	change.txt	/*'cink'*
-'cinkeys'	change.txt	/*'cinkeys'*
+'cink'	options.txt	/*'cink'*
+'cinkeys'	options.txt	/*'cinkeys'*
 'cino'	options.txt	/*'cino'*
 'cinoptions'	options.txt	/*'cinoptions'*
 'cinw'	options.txt	/*'cinw'*
@@ -229,6 +229,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 'incsearch'	options.txt	/*'incsearch'*
 'inde'	options.txt	/*'inde'*
 'indentexpr'	options.txt	/*'indentexpr'*
+'indentkeys'	options.txt	/*'indentkeys'*
+'indk'	options.txt	/*'indk'*
 'inex'	options.txt	/*'inex'*
 'inf'	options.txt	/*'inf'*
 'infercase'	options.txt	/*'infercase'*
@@ -883,6 +885,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 +python	various.txt	/*+python*
 +quickfix	various.txt	/*+quickfix*
 +rightleft	various.txt	/*+rightleft*
++ruby	various.txt	/*+ruby*
 +scrollbind	various.txt	/*+scrollbind*
 +smartindent	various.txt	/*+smartindent*
 +sniff	various.txt	/*+sniff*
@@ -1383,8 +1386,8 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :filetype-indent-off	filetype.txt	/*:filetype-indent-off*
 :filetype-indent-on	filetype.txt	/*:filetype-indent-on*
 :filetype-overview	filetype.txt	/*:filetype-overview*
-:filetype-settings-off	filetype.txt	/*:filetype-settings-off*
-:filetype-settings-on	filetype.txt	/*:filetype-settings-on*
+:filetype-plugin-off	filetype.txt	/*:filetype-plugin-off*
+:filetype-plugin-on	filetype.txt	/*:filetype-plugin-on*
 :fin	editing.txt	/*:fin*
 :find	editing.txt	/*:find*
 :fini	repeat.txt	/*:fini*
@@ -1663,6 +1666,12 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :ri	change.txt	/*:ri*
 :right	change.txt	/*:right*
 :ru	repeat.txt	/*:ru*
+:rub	if_ruby.txt	/*:rub*
+:ruby	if_ruby.txt	/*:ruby*
+:rubyd	if_ruby.txt	/*:rubyd*
+:rubydo	if_ruby.txt	/*:rubydo*
+:rubyf	if_ruby.txt	/*:rubyf*
+:rubyfile	if_ruby.txt	/*:rubyfile*
 :runtime	repeat.txt	/*:runtime*
 :rv	starting.txt	/*:rv*
 :rviminfo	starting.txt	/*:rviminfo*
@@ -1988,11 +1997,12 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 <Help>	various.txt	/*<Help>*
 <Home>	motion.txt	/*<Home>*
 <Insert>	insert.txt	/*<Insert>*
+<Leader>	map.txt	/*<Leader>*
 <Left>	motion.txt	/*<Left>*
 <LeftDrag>	term.txt	/*<LeftDrag>*
 <LeftMouse>	visual.txt	/*<LeftMouse>*
 <LeftRelease>	visual.txt	/*<LeftRelease>*
-<Map>	map.txt	/*<Map>*
+<LocalLeader>	map.txt	/*<LocalLeader>*
 <MiddleMouse>	change.txt	/*<MiddleMouse>*
 <Mouse>	term.txt	/*<Mouse>*
 <MouseDown>	scroll.txt	/*<MouseDown>*
@@ -2348,6 +2358,7 @@ RISCOS	os_riscos.txt	/*RISCOS*
 Replace	insert.txt	/*Replace*
 Replace-mode	insert.txt	/*Replace-mode*
 Root	multibyte.txt	/*Root*
+Ruby	if_ruby.txt	/*Ruby*
 S	change.txt	/*S*
 SHELL	starting.txt	/*SHELL*
 Select	visual.txt	/*Select*
@@ -2538,6 +2549,8 @@ ab	motion.txt	/*ab*
 abandon	editing.txt	/*abandon*
 abbreviations	map.txt	/*abbreviations*
 active-buffer	windows.txt	/*active-buffer*
+add-filetype-plugin	usr_06.txt	/*add-filetype-plugin*
+add-global-plugin	usr_06.txt	/*add-global-plugin*
 add-local-help	usr_06.txt	/*add-local-help*
 add-option-flags	options.txt	/*add-option-flags*
 add-plugin	usr_06.txt	/*add-plugin*
@@ -2733,6 +2746,7 @@ charconvert_out-variable	eval.txt	/*charconvert_out-variable*
 charconvert_to-variable	eval.txt	/*charconvert_to-variable*
 charset	multibyte.txt	/*charset*
 charset-conversion	multibyte.txt	/*charset-conversion*
+cinkeys-format	change.txt	/*cinkeys-format*
 cinoptions-values	change.txt	/*cinoptions-values*
 cmdline-arguments	vi_diff.txt	/*cmdline-arguments*
 cmdline-changed	version5.txt	/*cmdline-changed*
@@ -2802,6 +2816,7 @@ cst	if_cscope.txt	/*cst*
 csto	if_cscope.txt	/*csto*
 csverb	if_cscope.txt	/*csverb*
 ctags	tagsearch.txt	/*ctags*
+ctags-gone	version6.txt	/*ctags-gone*
 cterm-colors	syntax.txt	/*cterm-colors*
 ctrl	intro.txt	/*ctrl*
 curpos-visual	version6.txt	/*curpos-visual*
@@ -3012,7 +3027,8 @@ filename-backslash	cmdline.txt	/*filename-backslash*
 filename-modifiers	cmdline.txt	/*filename-modifiers*
 filereadable()	eval.txt	/*filereadable()*
 filetype	filetype.txt	/*filetype*
-filetype-settings	filetype.txt	/*filetype-settings*
+filetype-plugin	usr_43.txt	/*filetype-plugin*
+filetype-plugins	filetype.txt	/*filetype-plugins*
 filetype.txt	filetype.txt	/*filetype.txt*
 filetypedetect-changed	version6.txt	/*filetypedetect-changed*
 filetypes	filetype.txt	/*filetypes*
@@ -3038,7 +3054,9 @@ fold-methods	fold.txt	/*fold-methods*
 fold-options	fold.txt	/*fold-options*
 fold-syntax	fold.txt	/*fold-syntax*
 fold.txt	fold.txt	/*fold.txt*
+foldclosed()	eval.txt	/*foldclosed()*
 folding	fold.txt	/*folding*
+foldlevel()	eval.txt	/*foldlevel()*
 font-sizes	gui_x11.txt	/*font-sizes*
 fontset	multibyte.txt	/*fontset*
 fork	os_unix.txt	/*fork*
@@ -3192,6 +3210,7 @@ h	motion.txt	/*h*
 hangul	hangulin.txt	/*hangul*
 hangulin.txt	hangulin.txt	/*hangulin.txt*
 has()	eval.txt	/*has()*
+hasmapto()	eval.txt	/*hasmapto()*
 hebrew	rightleft.txt	/*hebrew*
 help	various.txt	/*help*
 help-tags	tags	1
@@ -3369,6 +3388,7 @@ if_cscope.txt	if_cscope.txt	/*if_cscope.txt*
 if_ole.txt	if_ole.txt	/*if_ole.txt*
 if_perl.txt	if_perl.txt	/*if_perl.txt*
 if_python.txt	if_python.txt	/*if_python.txt*
+if_ruby.txt	if_ruby.txt	/*if_ruby.txt*
 if_sniff.txt	if_sniff.txt	/*if_sniff.txt*
 if_tcl.txt	if_tcl.txt	/*if_tcl.txt*
 improved-autocmds-5.4	version5.txt	/*improved-autocmds-5.4*
@@ -3385,6 +3405,7 @@ incomp-small-6	version6.txt	/*incomp-small-6*
 incompatible-6	version6.txt	/*incompatible-6*
 indent()	eval.txt	/*indent()*
 indent-expression	change.txt	/*indent-expression*
+indentkeys-format	change.txt	/*indentkeys-format*
 index.txt	index.txt	/*index.txt*
 initialization	starting.txt	/*initialization*
 input()	eval.txt	/*input()*
@@ -3471,7 +3492,6 @@ locale	change.txt	/*locale*
 locale-multibyte	multibyte.txt	/*locale-multibyte*
 locale-name	multibyte.txt	/*locale-name*
 localized	multibyte.txt	/*localized*
-localmapchar	usr_43.txt	/*localmapchar*
 localtime()	eval.txt	/*localtime()*
 long-lines	version5.txt	/*long-lines*
 lowercase	change.txt	/*lowercase*
@@ -3484,8 +3504,8 @@ mac-lack	os_mac.txt	/*mac-lack*
 mac-vimfile	os_mac.txt	/*mac-vimfile*
 macintosh	os_mac.txt	/*macintosh*
 macro	map.txt	/*macro*
-mail-filetype	filetype.txt	/*mail-filetype*
 mail-list	intro.txt	/*mail-list*
+mail-plugin	filetype.txt	/*mail-plugin*
 maillist	intro.txt	/*maillist*
 maillist-archive	intro.txt	/*maillist-archive*
 map-backtick	tips.txt	/*map-backtick*
@@ -3509,6 +3529,8 @@ map_space_in_rhs	map.txt	/*map_space_in_rhs*
 maparg()	eval.txt	/*maparg()*
 mapcheck()	eval.txt	/*mapcheck()*
 maple.vim	syntax.txt	/*maple.vim*
+mapleader	usr_40.txt	/*mapleader*
+maplocalleader	usr_43.txt	/*maplocalleader*
 mapping	map.txt	/*mapping*
 mark	motion.txt	/*mark*
 mark-motions	motion.txt	/*mark-motions*
@@ -3570,8 +3592,8 @@ multilang-menus	multilang.txt	/*multilang-menus*
 multilang-scripts	multilang.txt	/*multilang-scripts*
 multilang.txt	multilang.txt	/*multilang.txt*
 multilingualized	multibyte.txt	/*multilingualized*
-myfiletypefile	filetype.txt	/*myfiletypefile*
-myscriptsfile	filetype.txt	/*myscriptsfile*
+myfiletypefile	syntax.txt	/*myfiletypefile*
+myscriptsfile	syntax.txt	/*myscriptsfile*
 mysyntaxfile	syntax.txt	/*mysyntaxfile*
 mysyntaxfile-add	syntax.txt	/*mysyntaxfile-add*
 mysyntaxfile-replace	syntax.txt	/*mysyntaxfile-replace*
@@ -3591,11 +3613,12 @@ new-ex-commands-5.2	version5.txt	/*new-ex-commands-5.2*
 new-file-writing	version6.txt	/*new-file-writing*
 new-filetype	filetype.txt	/*new-filetype*
 new-filetype-5.4	version5.txt	/*new-filetype-5.4*
-new-filetype-settings	version6.txt	/*new-filetype-settings*
+new-filetype-plugins	version6.txt	/*new-filetype-plugins*
 new-folding	version6.txt	/*new-folding*
 new-functions-5.2	version5.txt	/*new-functions-5.2*
 new-global-values	version6.txt	/*new-global-values*
 new-highlighting	version5.txt	/*new-highlighting*
+new-indent-flex	version6.txt	/*new-indent-flex*
 new-items-6	version6.txt	/*new-items-6*
 new-line-continuation	version5.txt	/*new-line-continuation*
 new-multi-byte	version5.txt	/*new-multi-byte*
@@ -3623,6 +3646,7 @@ not-edited	editing.txt	/*not-edited*
 notation	intro.txt	/*notation*
 notepad	gui_w32.txt	/*notepad*
 nr2char()	eval.txt	/*nr2char()*
+nroff.vim	syntax.txt	/*nroff.vim*
 o	insert.txt	/*o*
 o_CTRL-V	motion.txt	/*o_CTRL-V*
 o_V	motion.txt	/*o_V*
@@ -3694,8 +3718,10 @@ perl-editing	if_perl.txt	/*perl-editing*
 perl-overview	if_perl.txt	/*perl-overview*
 perl-using	if_perl.txt	/*perl-using*
 perl.vim	syntax.txt	/*perl.vim*
+php.vim	syntax.txt	/*php.vim*
 php3.vim	syntax.txt	/*php3.vim*
 phtml.vim	syntax.txt	/*phtml.vim*
+plugin-details	filetype.txt	/*plugin-details*
 popup-menu	gui.txt	/*popup-menu*
 popup-menu-added	version5.txt	/*popup-menu-added*
 ports-5.2	version5.txt	/*ports-5.2*
@@ -3803,6 +3829,16 @@ riscos-porting	os_riscos.txt	/*riscos-porting*
 riscos-remote	os_riscos.txt	/*riscos-remote*
 riscos-shell	os_riscos.txt	/*riscos-shell*
 riscos-temp-files	os_riscos.txt	/*riscos-temp-files*
+ruby	if_ruby.txt	/*ruby*
+ruby-buffer	if_ruby.txt	/*ruby-buffer*
+ruby-command	if_ruby.txt	/*ruby-command*
+ruby-commands	if_ruby.txt	/*ruby-commands*
+ruby-evaluate	if_ruby.txt	/*ruby-evaluate*
+ruby-globals	if_ruby.txt	/*ruby-globals*
+ruby-message	if_ruby.txt	/*ruby-message*
+ruby-set_option	if_ruby.txt	/*ruby-set_option*
+ruby-vim	if_ruby.txt	/*ruby-vim*
+ruby-window	if_ruby.txt	/*ruby-window*
 ruby.vim	syntax.txt	/*ruby.vim*
 rview	starting.txt	/*rview*
 rvim	starting.txt	/*rvim*
@@ -3838,7 +3874,6 @@ session-file	options.txt	/*session-file*
 set-option	options.txt	/*set-option*
 setbufvar()	eval.txt	/*setbufvar()*
 setline()	eval.txt	/*setline()*
-settings	usr_43.txt	/*settings*
 setwinvar()	eval.txt	/*setwinvar()*
 sh.vim	syntax.txt	/*sh.vim*
 shell-window	tips.txt	/*shell-window*
@@ -3855,6 +3890,7 @@ sign.txt	sign.txt	/*sign.txt*
 simple-change	change.txt	/*simple-change*
 single-repeat	repeat.txt	/*single-repeat*
 skeleton	autocmd.txt	/*skeleton*
+skipblank()	eval.txt	/*skipblank()*
 slow-fast-terminal	term.txt	/*slow-fast-terminal*
 slow-start	starting.txt	/*slow-start*
 slow-terminal	term.txt	/*slow-terminal*
@@ -4167,6 +4203,7 @@ tolower()	eval.txt	/*tolower()*
 toupper()	eval.txt	/*toupper()*
 trojan-horse	starting.txt	/*trojan-horse*
 tutor	usr_01.txt	/*tutor*
+type()	eval.txt	/*type()*
 type-mistakes	tips.txt	/*type-mistakes*
 typecorr-settings	usr_40.txt	/*typecorr-settings*
 typecorr.txt	usr_40.txt	/*typecorr.txt*
@@ -4345,6 +4382,7 @@ viminfo-file-name	starting.txt	/*viminfo-file-name*
 viminfo-read	starting.txt	/*viminfo-read*
 viminfo-write	starting.txt	/*viminfo-write*
 vimrc	starting.txt	/*vimrc*
+vimrc-filetype	usr_06.txt	/*vimrc-filetype*
 vimrc-intro	starting.txt	/*vimrc-intro*
 vimrc_example.vim	starting.txt	/*vimrc_example.vim*
 virtcol()	eval.txt	/*virtcol()*
@@ -4424,6 +4462,7 @@ windows.txt	windows.txt	/*windows.txt*
 windows95	os_win32.txt	/*windows95*
 winheight()	eval.txt	/*winheight()*
 winnr()	eval.txt	/*winnr()*
+winwidth()	eval.txt	/*winwidth()*
 word	motion.txt	/*word*
 word-motions	motion.txt	/*word-motions*
 workbench	starting.txt	/*workbench*
@@ -4437,6 +4476,7 @@ workshop.txt	workshop.txt	/*workshop.txt*
 wrap-off	intro.txt	/*wrap-off*
 write-device	editing.txt	/*write-device*
 write-fail	editing.txt	/*write-fail*
+write-ftplugin	usr_40.txt	/*write-ftplugin*
 write-local-help	usr_40.txt	/*write-local-help*
 write-plugin	usr_40.txt	/*write-plugin*
 write-quit	editing.txt	/*write-quit*

@@ -12,6 +12,7 @@ The other files contain some handy utilities.  They also serve as examples for
 how to use Vi and Vim functionality.
 
 diffwin.vim	show the differences of two windows
+hdiffwin.vim	like diffwin but uses horizontally split windows
 dvorak		for when you use a Dvorak keyboard
 explorer.vim	file browser
 html		macros for editing HTML files

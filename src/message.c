@@ -1859,6 +1859,8 @@ give_warning(message, hl)
 msg_advance(col)
     int	    col;
 {
+    if (msg_silent)		/* nothing to advance to */
+	return;
     if (col >= Columns)		/* not enough room */
 	col = Columns - 1;
     while (msg_col < col)

@@ -102,8 +102,8 @@
 #ifndef FILETYPE_FILE
 # define FILETYPE_FILE	    "Filetype"
 #endif
-#ifndef SETSOFF_FILE
-# define SETSOFF_FILE	    "Settings"
+#ifndef FTPLUGIN_FILE
+# define FTPLUGIN_FILE	    "Ftplugin"
 #endif
 #ifndef INDENT_FILE
 # define INDENT_FILE	    "Indent"
@@ -111,8 +111,8 @@
 #ifndef FTOFF_FILE
 # define FTOFF_FILE	    "Ftoff"
 #endif
-#ifndef SETSOFF_FILE
-# define SETSOFF_FILE	    "Setsoff"
+#ifndef FTPLUGOF_FILE
+# define FTPLUGOF_FILE	    "Ftplugof"
 #endif
 #ifndef INDOFF_FILE
 # define INDOFF_FILE	    "Indoff"

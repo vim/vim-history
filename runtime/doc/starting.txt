@@ -1,4 +1,4 @@
-*starting.txt*  For Vim version 6.0h.  Last change: 2000 Aug 31
+*starting.txt*  For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -124,6 +124,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 							*--noplugins*
 --noplugins	Skip loading plugins.  Resets the 'loadplugins' option.
 		{not in Vi}
+		Note that the |-u| argument may also disable loading plugins:
+			argument	load vimrc files	load plugins ~
+			(nothing)		yes		    yes
+			-u NONE			no		    no
+			-u NORC			no		    yes
+			--noplugins		yes		    no
 
 							*-+*
 +[num]		The cursor will be positioned on line "num" for the first
@@ -300,7 +306,7 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		Vi} |gui-fork|
 
 							*-u*
--u {vimrc}	The file "vimrc" is read for initializations.  Other
+-u {vimrc}	The file {vimrc} is read for initializations.  Other
 		initializations are skipped; see |initialization|.  This can
 		be used to start Vim in a special mode, with special
 		mappings and settings.  A shell alias can be used to make
@@ -310,10 +316,12 @@ a slash.  Thus "-R" means recovery and "-/R" readonly.
 		When {vimrc} is equal to "NONE" (all uppercase), all
 		initializations from files and environment variables are
 		skipped, including reading the .gvimrc file when the GUI
-		starts.
-		Using the "-u" argument also means that the 'compatible'
-		option will be on by default.  This can have unexpected side
-		effects.  See |'compatible'|.
+		starts.  Loading plugins is also skipped.
+		When {vimrc} is equal to "NORC" (all uppercase), this has the
+		same effect as "NONE", but loading plugins is not skipped.
+		Using the "-u" argument has the side effect that the
+		'compatible' option will be on by default.  This can have
+		unexpected effects.  See |'compatible'|.
 		{not in Vi}
 
 							*-U*
@@ -560,6 +568,7 @@ accordingly.  Vim proceeds in this order:
 	Loading plugins won't be done when:
 	- The 'loadplugins' option was reset in a vimrc file.
 	- The |--noplugins| command line argument is used.
+	- The "-u NONE" command line argument is used |-u|.
 	- When Vim was started with the |-u| argument to specify a vimrc
 	  script to use.
 	Note that using "-c set noloadplugins" doesn't work, because the

@@ -137,6 +137,7 @@
 #define CPO_LITERAL	'l'	/* take char after backslash in [] literal */
 #define CPO_LISTWM	'L'	/* 'list' changes wrapmargin */
 #define CPO_SHOWMATCH	'm'
+#define CPO_NUMCOL	'n'	/* 'number' column also used for text */
 #define CPO_LINEOFF	'o'
 #define CPO_OVERNEW	'O'	/* silently overwrite new file */
 #define CPO_LISP	'p'	/* 'lisp' indenting */
@@ -155,7 +156,7 @@
 #define CPO_STAR	'*'	/* ":*" means ":@" */
 #define CPO_SPECI	'<'	/* don't recognize <> in mappings */
 #define CPO_DEFAULT	"aABceFs"
-#define CPO_ALL		"aAbBcCdeEfFjJkKlLmoOprsStuwWxy$!%*<"
+#define CPO_ALL		"aAbBcCdeEfFjJkKlLmnoOprsStuwWxy$!%*<"
 
 /* characters for p_ww option: */
 #define WW_ALL		"bshl<>[],~"

@@ -1,8 +1,8 @@
 " Vim syntax file:
-" Language:	Clipper 5.2
-" Maintainer:	Claudio R Zamana <zamana@zip.net>
+" Language:	Clipper 5.2 & FlagShip
+" Maintainer:	C R Zamana <zamana@zip.net>
 " Some things based on c.vim by Bram Moolenaar and pascal.vim by Mario Eusebio
-" Last Change:	1999 Aug 16
+" Last Change:	Sat Sep 09 2000
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -46,7 +46,7 @@ syn keyword clipperStatement	DBSORTITEM DBTRANSINFO DBTRANSITEM WORKAREA
 
 " Conditionals
 syn keyword clipperConditional	CASE OTHERWISE ENDCASE
-syn keyword clipperConditional	IF ELSE ENDIF IIF
+syn keyword clipperConditional	IF ELSE ENDIF IIF IFDEF IFNDEF
 
 " Loops
 syn keyword clipperRepeat	DO WHILE ENDDO
@@ -93,13 +93,16 @@ if exists("c_comment_strings")
   syntax match clipperCommentSkip	contained "^\s*\*\($\|\s\+\)"
   syntax region clipperCommentString	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end=+\*/+me=s-1 contains=clipperCommentSkip
   syntax region clipperComment2String	contained start=+"+ skip=+\\\\\|\\"+ end=+"+ end="$"
-  syntax region clipperComment		start="/\*" end="\*/" contains=clipperCommentString,clipperCharacter,clipperNumber
+  syntax region clipperComment		start="/\*" end="\*/" contains=clipperCommentString,clipperCharacter,clipperNumber,clipperString
   syntax match  clipperComment		"//.*" contains=clipperComment2String,clipperCharacter,clipperNumber
 else
   syn region clipperComment		start="/\*" end="\*/"
   syn match clipperComment		"//.*"
 endif
 syntax match clipperCommentError	"\*/"
+
+" Lines beggining with an "*" are comments too
+syntax match clipperComment		"^\*.*"
 
 
 if !exists("did_clipper_syntax_inits")
@@ -122,4 +125,4 @@ endif
 
 let b:current_syntax = "clipper"
 
-" vim: ts=8
+" vim: ts=4

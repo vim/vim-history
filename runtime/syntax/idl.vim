@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	IDL (Interface Description Language)
 " Maintainer:	Jody Goldberg <jodyg@idt.net>
-" Last Change:	1997 Nov 20
+" Last Change:	2000 Oct 03
 
 " This is an experiment.  IDL's structure is simple enough to permit a full
 " grammar based approach to rather than using a few heuristics.  The result
@@ -30,7 +30,7 @@ syn match  idlCommentError	"\*/"
 " C style Preprocessor
 syn region idlIncluded contained start=+"+  skip=+\\\(\\\\\)*"+  end=+"+
 syn match  idlIncluded contained "<[^>]*>"
-syn match  idlInclude		"^[ \t]*#[ \t]*include\>[ \t]*["<]" contains=idlIncluded, idlString
+syn match  idlInclude		"^[ \t]*#[ \t]*include\>[ \t]*["<]" contains=idlIncluded,idlString
 syn region idlPreCondit	start="^[ \t]*#[ \t]*\(if\>\|ifdef\>\|ifndef\>\|elif\>\|else\>\|endif\>\)"  skip="\\$"  end="$" contains=idlComment,idlCommentError
 syn region idlDefine	start="^[ \t]*#[ \t]*\(define\>\|undef\>\)" skip="\\$" end="$" contains=idlLiteral, idlString
 

@@ -18,7 +18,9 @@ syn match cshSetVariables	contained "cdpath\|history\|mail\|nonomatch\|savehist\
 syn match cshSetVariables	contained "cwd\|home\|noclobber\|path\|shell\|verbose"
 syn match cshSetVariables	contained "echo"
 
-syn keyword cshTodo	contained TODO
+syn case ignore
+syn keyword cshTodo	contained todo
+syn case match
 
 " Variable Name Expansion Modifiers
 syn match cshModifier	contained ":\(h\|t\|r\|q\|x\|gh\|gt\|gr\)"
@@ -34,7 +36,8 @@ syn region  cshBckQuote	start=+[^\\]`+lc=1 skip=+\\\\\|\\`+ end=+`+	contains=csh
 syn region  cshDblQuote	start=+^"+ skip=+\\\\\|\\"+ end=+"+		contains=cshSpecial,cshExtVar,cshSelector,cshQtyWord,cshArgv,cshSubst,cshNoEndlineDQ
 syn region  cshSnglQuote	start=+^'+ skip=+\\\\\|\\'+ end=+'+		contains=cshNoEndlineSQ
 syn region  cshBckQuote	start=+^`+ skip=+\\\\\|\\`+ end=+`+		contains=cshNoEndlineBQ
-syn match   cshComment	"#.*$" contains=cshTodo
+syn cluster cshCommentGroup	contains=cshTodo
+syn match   cshComment	"#.*$" contains=@cshCommentGroup
 
 " A bunch of useful csh keywords
 syn keyword cshStatement	alias	end	history	onintr	setenv	unalias

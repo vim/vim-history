@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0h.  Last change: 2000 Aug 29
+*syntax.txt*    For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -268,7 +268,7 @@ What ":syntax on" does:
     |	|   This is where the connection between file name and file type is
     |	|   made for known file types. *synload-3*
     |	|
-    |	+-  Source the user's optional file, from the |myfiletypefile|
+    |	+-  Source the user's optional file, from the *myfiletypefile*
     |	|   variable.  This is for backwards compatibility with Vim 5.x only.
     |	|   *synload-4*
     |	|
@@ -296,8 +296,8 @@ When a file is loaded, its syntax file is found in this way:
     |	found yet, then scripts.vim is searched for in 'runtimepath'.  This
     |	should always load $VIMRUNTIME/scripts.vim, which does the following.
     |	|
-    |	+-  Source the user's optional |myscriptsfile|.  This is for backwards
-    |	|   compbatibility with Vim 5.x only.
+    |	+-  Source the user's optional file, from the *myscriptsfile*
+    |	|   variable.  This is for backwards compbatibility with Vim 5.x only.
     |	|
     |	+-  If the file type is still unknown, check the contents of the file,
     |	    again with checks like "getline(1) =~ pattern" as to whether the
@@ -370,6 +370,9 @@ files are included:
 	asmh8300	Hitachi H-8300 version of GNU assembly
 	masm		Microsoft assembly (probably works for any 80x86)
 	nasm		Netwide assembly
+	tasm		Turbo Assembly (with opcodes 80x86 up to Pentium, and
+			MMX)
+	pic		PIC assembly (currently for PIC16F84)
 
 The most flexible is to add a line in your assembly file containing: >
 	:asmsyntax=nasm
@@ -906,6 +909,13 @@ errors, use this: >
 If you don't want to highlight these errors, leave it unset.
 
 
+NROFF							*nroff.vim*
+
+To mark trailing spaces as an error, use this:
+
+>  let nroff_space_errors = 1
+
+
 PASCAL							*pascal.vim*
 
 The Pascal syntax file has been extended to take into account some extensions
@@ -960,22 +970,33 @@ its attempts in syntax highlighting. >
 	:let perl_sync_dist = 100
 
 
-PHP3							*php3.vim*
+PHP3 and PHP4					*php.vim* *php3.vim*
 
-There are three options to the php3 syntax highlighting.
+[note: previously this was called "php3", but since it now also supports php4
+it has been renamed to "php"]
 
-If you like SQL syntax highligthing inside Strings: >
+There are the following options to the php syntax highlighting.
 
-	:let php3_sql_query = 1
+If you like SQL syntax hightligthing inside Strings: >
+
+  let php_sql_query = 1
 
 For highligthing the Baselib methods: >
 
-	:let php3_baselib = 1
+  let php_baselib = 1
 
-For syncing minlines is being set default to 100.  If you
+For syncing minlines is being set default to 100. If you
 prefer another value, please make use of something like: >
 
-	:let php3_minlines = 200
+  let php_minlines = 200
+
+Using the old colorstyle: >
+
+  let php_oldStyle = 1
+
+Enable parent error highlighting: >
+
+  let_parentError = 1
 
 
 PHTML							*phtml.vim*

@@ -33,6 +33,7 @@ DOCS = \
 	if_ole.txt \
 	if_perl.txt \
 	if_python.txt \
+	if_ruby.txt \
 	if_sniff.txt \
 	if_tcl.txt \
 	index.txt \
@@ -116,6 +117,7 @@ HTMLS = \
 	if_ole.html \
 	if_perl.html \
 	if_python.html \
+	if_ruby.html \
 	if_sniff.html \
 	if_tcl.html \
 	index.html \
@@ -180,7 +182,7 @@ HTMLS = \
 .SUFFIXES:
 .SUFFIXES: .c .o .txt .html
 
-all: tags vim.man vimtutor.man xxd.man ctags.man
+all: tags vim.man vimtutor.man xxd.man
 
 # We should use Vim to generate the tags file:
 # 	vim -c "helptags ." -c quit
@@ -200,12 +202,6 @@ vimtutor.man: vimtutor.1
 
 xxd.man: xxd.1
 	nroff -man xxd.1 | sed -e s/.//g > xxd.man
-
-ctags.man: ctags.1
-	nroff -man ctags.1 | sed -e s/.//g > ctags.man
-
-ctags.1: ../../src/ctags/ctags.1
-	cp ../../src/ctags/ctags.1 ctags.1
 
 # Awk version of .txt to .html conversion.
 html: noerrors tags tags.ref $(HTMLS)

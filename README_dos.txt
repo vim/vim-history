@@ -1,4 +1,4 @@
-README_dos.txt for version 6.0h of Vim: Vi IMproved.
+README_dos.txt for version 6.0i of Vim: Vi IMproved.
 
 This file explains the installation of Vim on MS-DOS and MS-Windows systems.
 See "README.txt" for general information about Vim.
@@ -35,6 +35,10 @@ These are the normal steps to install Vim:
    After you unpacked the files, you can still move the whole directory tree
    to another location.  That is where they will stay, the install program
    won't move or copy the runtime files.
+
+   Only for the 32 bit DOS version on MS-DOS without DPMI support (trying to
+   run install.exe will produce an error message): Unpack the CSDPMI4B.ZIP
+   archive and follow the instructions in the documentation.
 
 3. Change to the new directory:
 	cd vim\vim60

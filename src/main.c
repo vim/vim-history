@@ -209,6 +209,9 @@ usage()
     main_msg(_("-geometry <geom>\tUse <geom> for initial geometry (also: -geom)"));
     main_msg(_("-reverse\t\tUse reverse video (also: -rv)"));
     main_msg(_("-display <display>\tRun vim on <display> (also: --display)"));
+# ifdef FEAT_GUI_GNOME
+    main_msg(_("--help\t\tShow Gnome arguments"));
+# endif
 #endif
     mch_windexit(1);
 }
@@ -770,9 +773,9 @@ main
 		    }
 		    if ((scriptin[0] = mch_fopen(argv[0], READBIN)) == NULL)
 		    {
-			mch_errmsg(_("Cannot open \""));
+			mch_errmsg(_("Cannot open for reading: \""));
 			mch_errmsg(argv[0]);
-			mch_errmsg(_("\" for reading\n"));
+			mch_errmsg(_("\"\n"));
 			mch_windexit(2);
 		    }
 		    if (save_typebuf() == FAIL)
@@ -1021,12 +1024,14 @@ main
      */
     if (use_vimrc != NULL)
     {
-	if (STRCMP(use_vimrc, "NONE") == 0)
+	if (STRCMP(use_vimrc, "NONE") == 0 || STRCMP(use_vimrc, "NORC") == 0)
 	{
 #ifdef FEAT_GUI
 	    if (use_gvimrc == NULL)	    /* don't load gvimrc either */
 		use_gvimrc = use_vimrc;
 #endif
+	    if (use_vimrc[2] == 'N')
+		p_lpl = FALSE;		    /* don't load plugins either */
 	}
 	else
 	{

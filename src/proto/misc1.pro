@@ -2,7 +2,7 @@
 int get_indent __ARGS((void));
 int get_indent_lnum __ARGS((linenr_t lnum));
 int get_indent_buf __ARGS((buf_t *buf, linenr_t lnum));
-void set_indent __ARGS((int size, int del_first));
+int set_indent __ARGS((int size, int flags));
 int open_line __ARGS((int dir, int del_spaces, int old_indent));
 int get_leader_len __ARGS((char_u *line, char_u **flags, int backward));
 int plines __ARGS((linenr_t lnum));

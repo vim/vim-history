@@ -1,4 +1,4 @@
-*quickref.txt*  For Vim version 6.0h.  Last change: 2000 Aug 21
+*quickref.txt*  For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -1173,6 +1173,9 @@ Context-sensitive completion on the command-line:
 
 |:filetype|	:filetype on		switch on file type detection, without
 					syntax highlighting
+|:filetype|	:filetype plugin indent on
+					switch on file type detection, with
+					automatic indenting and settings
 ------------------------------------------------------------------------------
 *X_gu*		GUI commands
 

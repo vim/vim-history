@@ -299,6 +299,9 @@ getmark2(c, changefile, fcoladd)
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
+#ifdef FEAT_VIRTUALEDIT
+	curwin->w_coladd = 0;
+#endif
     }
     else if (c == '(' || c == ')')	/* to previous/next sentence */
     {
@@ -311,6 +314,9 @@ getmark2(c, changefile, fcoladd)
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
+#ifdef FEAT_VIRTUALEDIT
+	curwin->w_coladd = 0;
+#endif
     }
 #ifdef FEAT_VISUAL
     else if (c == '<' || c == '>')	/* start/end of visual area */

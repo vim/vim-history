@@ -710,6 +710,7 @@ struct file_buffer
 #endif
 #if defined(FEAT_CINDENT) && defined(FEAT_EVAL)
     char_u	*b_p_inde;	/* 'indentexpr' */
+    char_u	*b_p_indk;	/* 'indentkeys' */
 #endif
 #ifdef FEAT_CRYPT
     char_u	*b_p_key;	/* 'key' */
@@ -787,6 +788,10 @@ struct file_buffer
 
 #ifdef FEAT_TCL
     void	*tcl_ref;
+#endif
+  
+#ifdef FEAT_RUBY
+    void	*ruby_ref;
 #endif
 
 #ifdef FEAT_SYN_HL
@@ -1129,6 +1134,10 @@ struct window
 
 #ifdef FEAT_TCL
     void	    *tcl_ref;
+#endif
+
+#ifdef FEAT_RUBY
+    void	    *ruby_ref;
 #endif
 };
 

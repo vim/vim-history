@@ -6898,13 +6898,14 @@ syn_list_header(did_header, outlen, id)
     int	    outlen;		/* length of string that comes */
     int	    id;			/* highlight group id */
 {
-    int	    endcol = 15;
+    int	    endcol = 19;
     int	    newline = TRUE;
 
     if (!did_header)
     {
 	msg_putchar('\n');
 	msg_outtrans(HL_TABLE()[id - 1].sg_name);
+	endcol = 15;
     }
     else if (msg_col + outlen + 1 >= Columns)
 	msg_putchar('\n');
@@ -6912,7 +6913,6 @@ syn_list_header(did_header, outlen, id)
     {
 	if (msg_col >= endcol)	/* wrap around is like starting a new line */
 	    newline = FALSE;
-	msg_putchar(' ');
     }
 
     if (msg_col >= endcol)	/* output at least one space */
@@ -6921,6 +6921,13 @@ syn_list_header(did_header, outlen, id)
 	endcol = Columns - 1;
 
     msg_advance(endcol);
+
+    /* Show "xxx" with the attributes. */
+    if (!did_header)
+    {
+	msg_puts_attr((char_u *)"xxx", syn_id2attr(id));
+	msg_putchar(' ');
+    }
 
     return newline;
 }

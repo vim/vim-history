@@ -1,8 +1,8 @@
 # Makefile for the Vim message translations.
 
 # TODO make this configurable
-LANGUAGES = cs de pl
-MOFILES = cs.mo de.mo pl.mo
+LANGUAGES = cs de ko pl
+MOFILES = cs.mo de.mo ko.mo pl.mo
 
 PACKAGE = vim
 SHELL = /bin/sh

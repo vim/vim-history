@@ -1698,15 +1698,21 @@ line_read_in:
 			 * Don't add identical matches.
 			 * This can take a lot of time when finding many
 			 * matches, check for CTRL-C now and then.
+			 * Add all cscope tags, because they are all listed.
 			 */
-			for (i = ga_match[mtt].ga_len; --i >= 0 && !got_int; )
-			{
+#ifdef FEAT_CSCOPE
+			if (use_cscope)
+			    i = -1;
+			else
+#endif
+			  for (i = ga_match[mtt].ga_len; --i >= 0 && !got_int; )
+			  {
 			    if (vim_memcmp(
 				      ((char_u **)(ga_match[mtt].ga_data))[i],
 							 p, (size_t)len) == 0)
 				break;
 			    line_breakcheck();
-			}
+			  }
 			if (i < 0)
 			{
 			    ((char_u **)(ga_match[mtt].ga_data))

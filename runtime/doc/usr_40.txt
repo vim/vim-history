@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0h.  Last change: 2000 Aug 30
+*usr_40.txt*	For Vim version 6.0i.  Last change: 2000 Oct 15
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -53,6 +53,12 @@ You can write a Vim script in such a way that several people can use it.  This
 is called a plugin.  Other Vim users can drop your script in their plugin
 directory and use its features right away |add-plugin|.
 
+There are actually two types of plugins:
+  1. Used in all types of files.
+  2. Used only for files of a specific type.
+The first type will be explained first.  The second type here:
+|write-ftplugin|.
+
 First of all you must think of a name for your plugin.  The features provided
 by the plugin should be clear from its name.  And it should be unlikely that
 someone else writes a plugin with the same name but does something
@@ -63,7 +69,7 @@ could be called "typecorr.vim".
 The plugin should follow a few guidelines.  Here is an example: >
 
   1	" Vim plugin for correcting typing mistakes
-  2	" Last change: 2000 Aug 19
+  2	" Last change: 2000 Oct 15
   3	" Maintainer: Bram Moolenaar <Bram@vim.org>
   4
   5	if exists("loaded_typecorr")
@@ -80,7 +86,17 @@ The plugin should follow a few guidelines.  Here is an example: >
  16	iabbrev synchronisation
  17		\ synchronization
  18
- 19	let &cpo = s:save_cpo
+ 19	if !hasmapto('\TypeCorrAdd')
+ 20	  map <Leader>a \TypeCorrAdd
+ 21	endif
+ 22	noremap \TypeCorrAdd :call TypeCorrAdd(expand("<cword>"))<CR>
+ 23
+ 24	function TypeCorrAdd(from)
+ 25	  let to = input("type the correction for " . a:from)
+ 26	  exe ":iabbrev " . a:from . " " . to
+ 27	endfunction
+ 28
+ 29	let &cpo = s:save_cpo
 
 The line numbers have only been added to explain a few things, don't put them
 in your plugin file!
@@ -95,7 +111,7 @@ Make sure the file is loaded only once.  That's not very imporant for this
 simple example, but when the plugin defines functions and autocommands, you
 only want that to happen once.
 
-Lines 10,11 and 19:
+Lines 10,11 and 29
 The value of the 'cpoptions' option is saved and made empty.  It is restored
 in line 19.  This is useful to avoid problems when users use the plugin with
 different option values.  If the 'cpoptions' would have included the 'C' flag,
@@ -107,14 +123,40 @@ trouble with using the same variable name in different scripts, and makes the
 variable disappear automatically when the script is finished.  Warning: You
 can't use the "s:" variables in a function or autocommand!
 
-If your plugin adds a mapping to trigger a command, use the "localmapchar",
-like this is done for |settings|.  Example: >
+Lines 13-17:
+These are the abbreviations that make the plugin useful.  The actual list
+should be much longer, of course.
 
-	if exists("localmapchar")
-  	  exe 'map ' . localmapchar . 'r :call MyStuff()<CR>'
-	endif
+Lines 19-22:
+Define a mapping to call the TypeCorrAdd() function.  Instead of defining it
+directly, it is done in two steps:
+1. map <Leader>a  to  \TypeCorrAdd
+2. map \TypeCorrAdd  to do the work
 
-If "localmapchar" is a comma, this will install the ",r" mapping.
+The actual functionality is triggered by a long sequence of characters:
+"\TypeCorrAdd".  This allows you to pick your own preferred key sequence and
+map it to \TypeCorrAdd.  If you didn't do this, a default key sequence is
+used, starting with "mapleader" and then "a".  If "mapleader" is a comma, this
+will install the ",a" mapping.  But if you already made a mapping, like when
+you have this in your vimrc file: >
+	map ,x \TypeCorrAdd
+Then the first mapping will be skipped.  This way you can choose your own key
+sequence to trigger the function.
+
+Note that ":noremap" is used to avoid that any mappings from other scripts get
+in the way.
+
+Lines 24-27:
+Define the function that adds an abbreviation.
+
+							*mapleader*
+Note that "mapleader" is used here.  It is the start of all default mappings
+in plugins.  There is also |maplocalleader|, which is used in filetype
+plugins, for mappings that are local to a buffer.  "mapleader" and
+"maplocalleader" can be equal.  Although, if you make them different, there is
+a smaller chance of mappings from plugins to clash with mappings for settings.
+For example, you could keep "mapleader" at the default backslash, and set
+"maplocalleader" to an underscore.
 
 							*write-local-help*
 It's a good idea to also write some documentation for your plugin.  Especially
@@ -143,6 +185,21 @@ them, like "typecorr-settings" in the example.
 
 Using references to other parts of the help in || is recommended.  This makes
 it easy for the user to find associated help.
+
+
+							*write-ftplugin*
+TODO: write filetype plugin
+
+You can use the detected file type to set options and install mappings.  For
+example, to set the 'tabstop' option for C files to 4: >
+	:setlocal tabstop=4
+
+Example to install a mapping for Java: >
+	:map <buffer> <LocalLeader>i /import<CR>
+
+Note that ":map <buffer>" and ":setlocal" are used to affect only this
+specific buffer.  You probably don't want to use these settings for another
+type of buffers.
 
 ==============================================================================
  vim:tw=78:

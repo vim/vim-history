@@ -206,7 +206,7 @@ ex_align(eap)
 		if (has_tab)
 		    while (new_indent > 0)
 		    {
-			set_indent(new_indent, TRUE);	/* set indent */
+			(void)set_indent(new_indent, 0);
 			if (linelen(NULL) <= width)
 			{
 			    /*
@@ -214,7 +214,7 @@ ex_align(eap)
 			     * the right.  Stop when it moves too far.
 			     */
 			    do
-				set_indent(++new_indent, TRUE);	/* set indent */
+				(void)set_indent(++new_indent, 0);
 			    while (linelen(NULL) <= width);
 			    --new_indent;
 			    break;
@@ -225,7 +225,7 @@ ex_align(eap)
 	}
 	if (new_indent < 0)
 	    new_indent = 0;
-	set_indent(new_indent, TRUE);		/* set indent */
+	(void)set_indent(new_indent, 0);		/* set indent */
     }
     changed_lines(eap->line1, 0, eap->line2 + 1, 0L);
     curwin->w_cursor = save_curpos;
@@ -1112,7 +1112,7 @@ make_filter_cmd(cmd, itmp, otmp)
 
     len = STRLEN(cmd) + 3;				/* "()" + NUL */
     if (itmp != NULL)
-	len += STRLEN(itmp) + 8;			/* " { < " + " } " */
+	len += STRLEN(itmp) + 9;			/* " { < " + " } " */
     if (otmp != NULL)
 	len += STRLEN(otmp) + STRLEN(p_srr) + 2;	/* "  " */
     buf = lalloc(len, TRUE);
@@ -1160,7 +1160,10 @@ make_filter_cmd(cmd, itmp, otmp)
 	{
 	    p = vim_strchr(cmd, '|');
 	    if (p != NULL)
+	    {
+		STRCAT(buf, " ");   /* insert a space before the '|' for DOS */
 		STRCAT(buf, p);
+	    }
 	}
     }
 #endif

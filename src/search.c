@@ -2226,6 +2226,9 @@ fwd_word(count, type, eol)
     int		i;
     int		last_line;
 
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_coladd = 0;
+#endif
     stype = type;
     while (--count >= 0)
     {
@@ -2293,6 +2296,9 @@ bck_word(count, type, stop)
 {
     int		sclass;	    /* starting class */
 
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_coladd = 0;
+#endif
     stype = type;
     while (--count >= 0)
     {
@@ -2359,6 +2365,9 @@ end_word(count, type, stop, empty)
 {
     int		sclass;	    /* starting class */
 
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_coladd = 0;
+#endif
     stype = type;
     while (--count >= 0)
     {
@@ -2428,6 +2437,9 @@ bckend_word(count, type, eol)
     int		sclass;	    /* starting class */
     int		i;
 
+#ifdef FEAT_VIRTUALEDIT
+    curwin->w_coladd = 0;
+#endif
     stype = type;
     while (--count >= 0)
     {

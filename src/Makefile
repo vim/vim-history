@@ -28,14 +28,13 @@
 #	  want to disable using X11 libraries.	This speeds up starting Vim,
 #	  but the window title will not be set and the X11 selection can not
 #	  used.
-#	- Uncomment the line with --enable-perlinterp to enable Perl.  Makes
-#	  Vim quite a bit bigger.
-#	- Uncomment the line with --enable-pythoninterp to enable Python.
-#	  Makes Vim quite a bit bigger.
-#	- Uncomment the line with --enable-tclinterp to enable Tcl.  Makes Vim
-#	  quite a bit bigger.
-#	- Uncomment the line with --enable-cscope to enable the Cscope
-#	  interface.
+#	- Uncomment one or more of these lines to include an interface;
+#	  each makes Vim quite a bit bigger:
+#		--enable-perlinterp	for Perl interpreter
+#		--enable-pythoninterp	for Python interpreter
+#		--enable-rubyinterp	for Ruby interpreter
+#		--enable-tclinterp	for Tcl interpreter
+#		--enable-cscope		for Cscope interface
 #	- Uncomment one of the lines with --with-features= to enable a set of
 #	  features (but not the interfaces just mentioned).
 #	- Uncomment the line with --disable-gpm to disable gpm support
@@ -117,7 +116,7 @@
 #		make installhelplinks	only installs the Vim manpage links
 #		make installmacros	only installs the Vim macros
 #		make installtutor	only installs the Vim tutor
-#		make installtools	only installs the tools ctags and xxd
+#		make installtools	only installs xxd
 #
 # 6. Use Vim until a new version comes out.
 #
@@ -315,6 +314,7 @@ CClink = $(CC)
 # Uncomment one of these lines if you have that GUI but don't want to use it.
 # The automatic check will use another one that can be found
 #CONF_OPT_GUI = --disable-gtk-check
+#CONF_OPT_GUI = --disable-gnome-check
 #CONF_OPT_GUI = --disable-motif-check
 #CONF_OPT_GUI = --disable-athena-check
 
@@ -356,6 +356,10 @@ CClink = $(CC)
 # TCL - For creating Vim with Tcl interface
 # Uncomment this when you want to include the Tcl interface.
 #CONF_OPT_TCL = --enable-tclinterp
+
+# RUBY - For creating Vim with Ruby interface
+# Uncomment this when you want to include the Ruby interface.
+#CONF_OPT_RUBY = --enable-rubyinterp
 
 # CSCOPE - For creating Vim with Cscope interface
 # Uncomment this when you want to include the Cscope interface.
@@ -728,11 +732,8 @@ LINT_OPTIONS = -beprxzF
 ##################### end of system specific lines ###################
 
 ### Names of the programs and targets
-VIMNAME		= vim
 VIMTARGET	= $(VIMNAME)$(SUFFIX)
-EXNAME		= ex
 EXTARGET	= $(EXNAME)$(SUFFIX)
-VIEWNAME	= view
 VIEWTARGET	= $(VIEWNAME)$(SUFFIX)
 GVIMNAME	= g$(VIMNAME)
 GVIMTARGET	= $(GVIMNAME)$(SUFFIX)
@@ -748,7 +749,7 @@ RGVIEWNAME	= r$(GVIEWNAME)
 RGVIEWTARGET	= $(RGVIEWNAME)$(SUFFIX)
 
 ### Names of the tools that are also made
-TOOLS = ctags/ctags$(SUFFIX) xxd/xxd$(SUFFIX)
+TOOLS = xxd/xxd$(SUFFIX)
 
 ### Installation directories.  The defaults come from configure.
 #
@@ -782,9 +783,11 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60h
+VIMRTDIR = /vim60i
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
+INDSUBDIR = /indent
+FTPLUGSUBDIR = /ftplugin
 LANGSUBDIR = /lang
 MACROSUBDIR = /macros
 TOOLSSUBDIR = /tools
@@ -797,6 +800,8 @@ PODIR = po
 ### VIMRUNTIMEDIR  compiled-in location for runtime files (optional)
 ### HELPSUBLOC	location for help files
 ### SYNSUBLOC	location for syntax files
+### INDSUBLOC	location for indent files
+### FTPLUGSUBLOC	location for ftplugin files
 ### LANGSUBLOC	location for syntax files
 ### MACROSUBLOC	location for macro files
 ### TOOLSSUBLOC	location for tools files
@@ -809,6 +814,8 @@ VIMRTLOC	= $(DATADIR)$(VIMDIR)$(VIMRTDIR)
 VIMRCLOC	= $(VIMLOC)
 HELPSUBLOC	= $(VIMRTLOC)$(HELPSUBDIR)
 SYNSUBLOC	= $(VIMRTLOC)$(SYNSUBDIR)
+INDSUBLOC	= $(VIMRTLOC)$(INDSUBDIR)
+FTPLUGSUBLOC	= $(VIMRTLOC)$(FTPLUGSUBDIR)
 LANGSUBLOC	= $(VIMRTLOC)$(LANGSUBDIR)
 MACROSUBLOC	= $(VIMRTLOC)$(MACROSUBDIR)
 TOOLSSUBLOC	= $(VIMRTLOC)$(TOOLSSUBDIR)
@@ -829,6 +836,10 @@ HELPENDLOC = $(HELPSUBLOC)
 #HELPENDLOC = /usr/doc/vim
 SYNTAXENDLOC = $(SYNSUBLOC)
 #SYNTAXENDLOC = /usr/lib/vim/syntax
+INDENTENDLOC = $(INDSUBLOC)
+#INDENTENDLOC = /usr/lib/vim/indent
+FTPLUGINFTENDLOC = $(FTPLUGSUBLOC)
+#FTPLUGINFTENDLOC = /usr/lib/vim/ftplugin
 LANGENDLOC = $(LANGSUBLOC)
 #LANGENDLOC = /usr/share/locale/vim
 SCRIPTENDLOC = $(SCRIPTLOC)
@@ -850,6 +861,18 @@ SYS_FTOFF_FILE	= $(SCRIPTLOC)/ftoff.vim
 
 ### Name of the file type detection script file target.
 SYS_SCRIPTS_FILE = $(SCRIPTLOC)/scripts.vim
+
+### Name of the ftplugin-on file target.
+SYS_FTPLUGIN_FILE = $(SCRIPTLOC)/ftplugin.vim
+
+### Name of the ftplugin-off file target.
+SYS_FTPLUGOF_FILE = $(SCRIPTLOC)/ftplugof.vim
+
+### Name of the indent-on file target.
+SYS_INDENT_FILE = $(SCRIPTLOC)/indent.vim
+
+### Name of the indent-off file target.
+SYS_INDOFF_FILE = $(SCRIPTLOC)/indoff.vim
 
 ### Name of the option window script file target.
 SYS_OPTWIN_FILE = $(SCRIPTLOC)/optwin.vim
@@ -893,6 +916,12 @@ SCRIPTSOURCE = ../runtime
 
 # Where to copy the syntax files from
 SYNSOURCE = ../runtime/syntax
+
+# Where to copy the indent files from
+INDSOURCE = ../runtime/indent
+
+# Where to copy the indent files from
+FTPLUGSOURCE = ../runtime/ftplugin
 
 # Where to copy the macro files from
 MACROSOURCE = ../runtime/macros
@@ -1033,7 +1062,7 @@ BEOSGUI_MAN_TARGETS = $(MANSUBDIR)/$(GVIMNAME).1 \
 			$(MANSUBDIR)/$(RGVIEWNAME).1
 BEOSGUI_TESTTARGET = gui
 
-# GUI files used for making ctags
+# GUI files used for making Vim
 ALL_GUI_SRC  = gui.c gui_gtk.c gui_gtk_f.c gui_motif.c gui_athena.c gui_gtk_x11.c gui_x11.c gui_at_sb.c gui_at_fs.c pty.c
 ALL_GUI_PRO  = gui.pro gui_gtk.pro gui_motif.pro gui_athena.pro gui_gtk_x11.pro gui_x11.pro gui_w16.pro gui_w32.pro gui_amiga.pro
 
@@ -1079,7 +1108,7 @@ SHELL = /bin/sh
 .SUFFIXES: .cc .c .o .pro
 
 PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS) $(EXTRA_IPATHS)
-POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DEFS)
+POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(RUBY_CFLAGS) $(EXTRA_DEFS)
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
 
@@ -1090,7 +1119,7 @@ DEPEND_CFLAGS = -DPROTO -DDEPEND -DFEAT_GUI $(LINT_CFLAGS)
 PFLAGS = $(PROTO_FLAGS) -DPROTO $(LINT_CFLAGS)
 
 ALL_LIB_DIRS = $(GUI_LIBS_DIR) $(X_LIBS_DIR)
-ALL_LIBS = $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS)
+ALL_LIBS = $(GUI_LIBS1) $(GUI_X_LIBS) $(GUI_LIBS2) $(X_PRE_LIBS) $(X_LIBS) $(X_EXTRA_LIBS) $(LIBS) $(EXTRA_LIBS) $(PERL_LIBS) $(PYTHON_LIBS) $(TCL_LIBS) $(RUBY_LIBS)
 
 #	     BASIC_SRC: files that are always used
 #	       GUI_SRC: extra GUI files for current configuration
@@ -1144,12 +1173,13 @@ BASIC_SRC = \
 	$(OS_EXTRA_SRC)
 
 SRC =	$(BASIC_SRC) $(GUI_SRC) $(HANGULIN_SRC) $(PERL_SRC) $(PYTHON_SRC) \
-	$(TCL_SRC) $(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC)
+	$(TCL_SRC) $(RUBY_SRC) $(SNIFF_SRC) $(WORKSHOP_SRC) $(WSDEBUG_SRC)
 
 TAGS_SRC = *.c *.cpp if_perl.xs
 
 EXTRA_SRC = hangulin.c auto/if_perl.c if_perlsfio.c if_python.c if_tcl.c \
-		if_sniff.c gui_beval.c workshop.c integration.c
+		if_ruby.c if_sniff.c gui_beval.c \
+		workshop.c wsdebug.c integration.c
 
 # All sources, also the ones that are not configured
 ALL_SRC = $(BASIC_SRC) $(ALL_GUI_SRC) $(EXTRA_SRC)
@@ -1205,6 +1235,7 @@ OBJ = \
 	$(PERL_OBJ) \
 	$(PYTHON_OBJ) \
 	$(TCL_OBJ) \
+	$(RUBY_OBJ) \
 	$(OS_EXTRA_OBJ) \
 	$(WORKSHOP_OBJ) \
 	$(WSDEBUG_OBJ)
@@ -1224,6 +1255,7 @@ PRO_AUTO = \
 	hangulin.pro \
 	if_cscope.pro \
 	if_python.pro \
+	if_ruby.pro \
 	main.pro \
 	mark.pro \
 	memfile.pro \
@@ -1276,7 +1308,8 @@ config auto/config.mk: auto/configure
 		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) srcdir="$(srcdir)" \
 		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
-		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
+		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) \
+		$(CONF_OPT_TCL) $(CONF_OPT_RUBY) \
 		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
 		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) $(CONF_OPT_WORKSHOP) \
 		$(CONF_OPT_FEAT) $(CONF_TERM_LIB) $(CONF_ARGS)
@@ -1312,24 +1345,6 @@ $(VIMTARGET): auto/config.mk objects $(OBJ) version.c version.h
 	@LINK="$(PURIFY) $(SHRPENV) $(CClink) $(LDFLAGS) $(ALL_LIB_DIRS) \
 		-o $(VIMTARGET) $(OBJ) objects/version.o $(ALL_LIBS)" \
 		MAKE="$(MAKE)" sh $(srcdir)/link.sh
-
-CTAGSFILES =	ctags/args.c ctags/args.h ctags/config.h ctags/ctags.h \
-		ctags/debug.c ctags/debug.h ctags/eiffel.c ctags/entry.c \
-		ctags/entry.h ctags/fortran.c ctags/general.h ctags/get.c \
-		ctags/get.h ctags/keyword.c ctags/keyword.h ctags/main.c \
-		ctags/main.h ctags/options.c ctags/options.h ctags/parse.c \
-		ctags/parse.h ctags/read.c ctags/read.h ctags/sort.c \
-		ctags/sort.h ctags/strlist.c ctags/strlist.h \
-		ctags/strstr.c ctags/vstring.c ctags/vstring.h
-
-ctags/ctags$(SUFFIX): ctags/Makefile $(CTAGSFILES)
-	cd ctags; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
-		$(MAKE) -f Makefile SUFFIX="$(SUFFIX)"
-
-ctags/Makefile ctags/config.h: ctags/Makefile.in
-	cd ctags; SUFFIX="$(SUFFIX)" CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" \
-		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
-		./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
 
 xxd/xxd$(SUFFIX): xxd/xxd.c
 	cd xxd; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
@@ -1444,7 +1459,9 @@ installvimbin: $(VIMTARGET) $(exec_prefix) $(BINDIR)
 	-$(LINKIT)
 
 # install the help files; first adjust the contents for the location
-installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) $(SYNSUBLOC) $(TUTORSUBLOC)
+installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) \
+		$(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) \
+		$(TUTORSUBLOC)
 	@echo generating $(MANSUBDIR)/$(VIMNAME).1
 	@sed -e s+/usr/local/lib/vim+$(VIMLOC)+ \
 		-e s+$(VIMLOC)/doc+$(HELPENDLOC)+ \
@@ -1487,11 +1504,26 @@ installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUB
 	chmod $(VIMSCRIPTMOD) $(SYS_FTOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/scripts.vim $(SYS_SCRIPTS_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_SCRIPTS_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/ftplugin.vim $(SYS_FTPLUGIN_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_FTPLUGIN_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/ftplugof.vim $(SYS_FTPLUGOF_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_FTPLUGOF_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/indent.vim $(SYS_INDENT_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_INDENT_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/indoff.vim $(SYS_INDOFF_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_INDOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
 # install the syntax files
 	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim $(SYNSUBLOC)
 	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim
+# install the indent files
+	cd $(INDSOURCE); $(INSTALL_DATA) *.vim $(INDSUBLOC)
+	cd $(INDSUBLOC); chmod $(HELPMOD) *.vim
+# install the ftplugin files
+	cd $(FTPLUGSOURCE); $(INSTALL_DATA_R) * $(FTPLUGSUBLOC)
+	cd $(FTPLUGSUBLOC); chmod $(DIRMOD) *
+	cd $(FTPLUGSUBLOC); chmod $(HELPMOD) */*.vim
 
 installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
 	$(INSTALL_DATA_R) $(MACROSOURCE)/* $(MACROSUBLOC)
@@ -1505,12 +1537,9 @@ installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
 	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
 	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
-# install helper programs ctags and xxd
+# install helper program xxd
 installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 		$(TOOLSSOURCE) $(VIMLOC) $(VIMRTLOC) $(TOOLSSUBLOC)
-	cd ctags; mandir="$(MANDIR)" \
-		exec_prefix="$(exec_prefix)" bindir="$(BINDIR)" \
-		$(MAKE) -e -f Makefile	SUFFIX="$(SUFFIX)" install
 	if test -f $(BINDIR)/xxd$(SUFFIX); then \
 	  mv -f $(BINDIR)/xxd$(SUFFIX) $(BINDIR)/xxd.rm; \
 	  rm -f $(BINDIR)/xxd.rm; \
@@ -1543,9 +1572,9 @@ $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	test -f error
 
 $(exec_prefix) $(BINDIR) $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUBLOC) \
-		$(SYNSUBLOC) $(LANGSUBLOC) $(MACROSUBLOC) $(TOOLSSUBLOC) \
-		$(TUTORSUBLOC):
-	-$(SHELL) ctags/mkinstalldirs $@
+		$(SYNSUBLOC) $(INDSUBLOC) $(FTPLUGSUBLOC) $(LANGSUBLOC) \
+		$(MACROSUBLOC) $(TOOLSSUBLOC) $(TUTORSUBLOC):
+	-$(SHELL) ./mkinstalldirs $@
 	-chmod $(DIRMOD) $@
 
 # create links from various names to vim.  This is only done when the links
@@ -1608,7 +1637,6 @@ uninstall: uninstall_runtime
 	-rm -f $(BINDIR)/$(VIMTARGET)
 	-rm -f $(MANSUBDIR)/$(VIMNAME).1 $(MANSUBDIR)/$(VIMNAME)tutor.1
 	-rm -f $(BINDIR)/vimtutor
-	-rm -f $(BINDIR)/ctags$(SUFFIX) $(MANSUBDIR)/ctags.1
 	-rm -f $(BINDIR)/xxd$(SUFFIX) $(MANSUBDIR)/xxd.1
 	-rm -f $(BINDIR)/$(EXTARGET) $(BINDIR)/$(VIEWTARGET)
 	-rm -f $(BINDIR)/$(GVIMTARGET) $(BINDIR)/$(GVIEWTARGET)
@@ -1625,12 +1653,15 @@ uninstall_runtime:
 	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
 	-rm -f $(SCRIPTLOC)/gvimrc_example.vim $(SCRIPTLOC)/vimrc_example.vim
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)
-	-rm -f $(SYS_OPTWIN_FILE) $(SYNSUBLOC)/*.vim
+	-rm -f $(SYS_OPTWIN_FILE)
+	-rm -f $(SYNSUBLOC)/*.vim $(INDSUBLOC)/*.vim
 	-rm -rf $(MACROSUBLOC)
 	-rm -rf $(TUTORSUBLOC)
 	-rm -rf $(TOOLSSUBLOC)
 	-rm -rf $(LANGSUBLOC)
-	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(VIMRTLOC)
+	-rmdir $(HELPSUBLOC) $(SYNSUBLOC) $(INDSUBLOC) $(VIMRTLOC)
+	-rm -rf $(FTPLUGSUBLOC)/*/*.vim $(FTPLUGSUBLOC)/README.txt
+	-rmdir $(FTPLUGSUBLOC)/* $(FTPLUGSUBLOC)
 
 # Clean up all the files that have been produced, except configure's.
 # We support common typing mistakes for Juergen! :-)
@@ -1638,31 +1669,31 @@ clean celan: testclean
 	-rm -f *.o objects/* core $(VIMTARGET).core $(VIMTARGET) xxd/*.o
 	-rm -f $(TOOLS) auto/osdef.h auto/pathdef.c auto/if_perl.c
 	-rm -f conftest* *~ auto/link.sed
-	if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" clean; \
-	fi
 	if test -d $(PODIR); then \
 		cd $(PODIR); $(MAKE) prefix=$(prefix) clean; \
 	fi
 
+# Make a shadow directory for compilation on another system or with different
+# features.
+SHADOWDIR = shadow
+
 shadow:	runtime pixmaps
-	mkdir shadow
-	cd shadow; ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../vimtutor .
-	mkdir shadow/auto
-	cd shadow/auto ln -s ../../auto/configure .
-	cd shadow; rm -f auto/link.sed
-	cp Makefile shadow
-	echo "the first targets to make vim are: scratch config myself" > shadow/auto/config.mk
-	echo "srcdir = ." >> shadow/auto/config.mk
-	mkdir shadow/ctags
-	cd shadow/ctags; ln -s ../../ctags/*.[ch1] \
-				../../ctags/*.in \
-				../../ctags/mkinstalldirs \
-				../../ctags/configure .
-	mkdir shadow/xxd
-	cd shadow/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
-	mkdir shadow/testdir
-	cd shadow/testdir; ln -s ../../testdir/Makefile \
+	mkdir $(SHADOWDIR)
+	cd $(SHADOWDIR); ln -s ../*.[ch] ../*.in ../*.sh ../*.xs ../*.xbm ../toolcheck ../proto ../vimtutor ../mkinstalldirs .
+	mkdir $(SHADOWDIR)/auto
+	cd $(SHADOWDIR)/auto ln -s ../../auto/configure .
+	cd $(SHADOWDIR); rm -f auto/link.sed
+	cp Makefile configure $(SHADOWDIR)
+	@echo generating auto/config.mk
+	@echo "the first targets to make vim are: scratch config myself" > $(SHADOWDIR)/auto/config.mk
+	@echo "srcdir = ." >> $(SHADOWDIR)/auto/config.mk
+	@echo "VIMNAME = vim" >> $(SHADOWDIR)/auto/config.mk
+	@echo "EXNAME = ex" >> $(SHADOWDIR)/auto/config.mk
+	@echo "VIEWNAME = view" >> $(SHADOWDIR)/auto/config.mk
+	mkdir $(SHADOWDIR)/xxd
+	cd $(SHADOWDIR)/xxd; ln -s ../../xxd/*.[ch] ../../xxd/Make* .
+	mkdir $(SHADOWDIR)/testdir
+	cd $(SHADOWDIR)/testdir; ln -s ../../testdir/Makefile \
 				 ../../testdir/vimrc.unix \
 				 ../../testdir/*.in \
 				 ../../testdir/*.ok .
@@ -1679,13 +1710,14 @@ pixmaps:
 scrub scratch:
 	-rm -f auto/config.status auto/config.cache auto/config.log auto/config.h
 	touch auto/config.h
-	-if test -f ctags/Makefile; then \
-		cd ctags; $(MAKE) -f Makefile SUFFIX="$(SUFFIX)" distclean; \
-	fi
 
 distclean: clean scratch
-	echo "the first targets to make vim are: scratch config myself" > auto/config.mk
-	echo "srcdir = ." >> auto/config.mk
+	@echo generating auto/config.mk
+	@echo "the first targets to make vim are: scratch config myself" > auto/config.mk
+	@echo "srcdir = ." >> auto/config.mk
+	@echo "VIMNAME = vim" >> auto/config.mk
+	@echo "EXNAME = ex" >> auto/config.mk
+	@echo "VIEWNAME = view" >> auto/config.mk
 
 dist: distclean tar
 
@@ -1835,6 +1867,9 @@ objects/if_perlsfio.o: if_perlsfio.c
 objects/if_python.o: if_python.c
 	$(CCC) -o $@ if_python.c
 
+objects/if_ruby.o: if_ruby.c
+	$(CCC) -o $@ if_ruby.c
+
 objects/if_sniff.o: if_sniff.c
 	$(CCC) -o $@ if_sniff.c
 
@@ -1933,6 +1968,9 @@ objects/window.o: window.c
 
 objects/workshop.o: workshop.c
 	$(CCC) -o $@ workshop.c
+
+objects/wsdebug.o: wsdebug.c
+	$(CCC) -o $@ wsdebug.c
 
 
 Makefile:
@@ -2130,6 +2168,9 @@ objects/if_python.o: if_python.c vim.h auto/config.h feature.h os_unix.h \
 objects/if_tcl.o: if_tcl.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h
+objects/if_ruby.o: if_ruby.c vim.h auto/config.h feature.h os_unix.h \
+ auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
+ gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h
 objects/if_sniff.o: if_sniff.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h os_unixx.h
@@ -2141,6 +2182,7 @@ objects/workshop.o: workshop.c auto/config.h integration.h vim.h feature.h \
  os_unix.h auto/osdef.h ascii.h keymap.h term.h macros.h structs.h \
  regexp.h gui.h globals.h farsi.h option.h ex_cmds.h proto.h version.h \
  gui_beval.h proto/gui_beval.pro workshop.h
+objects/wsdebug.o: wsdebug.c
 objects/integration.o: integration.c vim.h auto/config.h feature.h os_unix.h \
  auto/osdef.h ascii.h keymap.h term.h macros.h structs.h regexp.h \
  gui.h globals.h farsi.h option.h ex_cmds.h proto.h integration.h

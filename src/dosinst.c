@@ -326,6 +326,11 @@ my_fullpath(char *buf, char *fname, int len)
     /*
      * Concatenate the file name to the path.
      */
+    if (strlen(buf) + strlen(fname) >= len - 1)
+    {
+	printf("ERROR: File name too long!\n");
+	exit();
+    }
     add_pathsep(buf);
     strcat(buf, fname);
     if (p)

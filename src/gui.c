@@ -22,6 +22,7 @@ static void gui_screenchar __ARGS((int off, int flags, guicolor_t fg, guicolor_t
 static void gui_delete_lines __ARGS((int row, int count));
 static void gui_insert_lines __ARGS((int row, int count));
 static void gui_update_scrollbars __ARGS((int));
+static void gui_do_scrollbar __ARGS((win_t *wp, int which, int enable));
 static void gui_update_horiz_scrollbar __ARGS((int));
 static win_t *xy2win __ARGS((int x, int y));
 
@@ -2592,23 +2593,12 @@ gui_init_which_components(oldval)
 	    if (gui.which_scrollbars[i] != prev_which_scrollbars[i])
 	    {
 		if (i == SBAR_BOTTOM)
-		{
 		    gui_mch_enable_scrollbar(&gui.bottom_sbar,
-					     gui.which_scrollbars[i]);
-		}
+						     gui.which_scrollbars[i]);
 		else
 		{
 		    for (wp = firstwin; wp != NULL; wp = wp->w_next)
-#ifdef FEAT_VERTSPLIT
-			/* Only enable/disable scrollbars touching the window
-			 * frame. */
-			if ((i != SBAR_LEFT
-				    || wp->w_wincol == 0)
-				&& (i != SBAR_RIGHT
-				    || wp->w_wincol + wp->w_width == Columns))
-#endif
-			    gui_mch_enable_scrollbar(&wp->w_scrollbars[i],
-						     gui.which_scrollbars[i]);
+			gui_do_scrollbar(wp, i, gui.which_scrollbars[i]);
 		}
 		need_set_size = TRUE;
 	    }
@@ -2676,15 +2666,6 @@ gui_create_scrollbar(sb, type, wp)
     sb->height = 0;
     sb->status_height = 0;
     gui_mch_create_scrollbar(sb, (wp == NULL) ? SBAR_HORIZ : SBAR_VERT);
-#if 0	    /* this gets done several other places too */
-    if (wp != NULL)
-    {
-	int	    which;
-
-	which = (sb == &wp->w_scrollbars[SBAR_LEFT]) ? SBAR_LEFT : SBAR_RIGHT;
-	gui_mch_enable_scrollbar(sb, gui.which_scrollbars[which]);
-    }
-#endif
 }
 
 /*
@@ -2977,18 +2958,10 @@ gui_update_scrollbars(force)
 	     * scrollbar for now.
 	     */
 	    sb->height = 0;	    /* Force update next time */
-	    if (gui.which_scrollbars[SBAR_LEFT]
-#ifdef FEAT_VERTSPLIT
-		    && wp->w_wincol == 0
-#endif
-		    )
-		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT], FALSE);
-	    if (gui.which_scrollbars[SBAR_RIGHT]
-#ifdef FEAT_VERTSPLIT
-		    && wp->w_wincol + wp->w_width == Columns
-#endif
-		    )
-		gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT], FALSE);
+	    if (gui.which_scrollbars[SBAR_LEFT])
+		gui_do_scrollbar(wp, SBAR_LEFT, FALSE);
+	    if (gui.which_scrollbars[SBAR_RIGHT])
+		gui_do_scrollbar(wp, SBAR_RIGHT, FALSE);
 	    continue;
 	}
 	if (force || sb->height != wp->w_height
@@ -3029,22 +3002,14 @@ gui_update_scrollbars(force)
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_LEFT],
 					  gui.left_sbar_x, y,
 					  gui.scrollbar_width, h);
-#ifdef FEAT_VERTSPLIT
-		if (wp->w_wincol == 0)
-#endif
-		    gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_LEFT],
-			TRUE);
+		gui_do_scrollbar(wp, SBAR_LEFT, TRUE);
 	    }
 	    if (gui.which_scrollbars[SBAR_RIGHT])
 	    {
 		gui_mch_set_scrollbar_pos(&wp->w_scrollbars[SBAR_RIGHT],
 					  gui.right_sbar_x, y,
 					  gui.scrollbar_width, h);
-#ifdef FEAT_VERTSPLIT
-		if (wp->w_wincol + wp->w_width == Columns)
-#endif
-		    gui_mch_enable_scrollbar(&wp->w_scrollbars[SBAR_RIGHT],
-			TRUE);
+		gui_do_scrollbar(wp, SBAR_RIGHT, TRUE);
 	    }
 	}
 
@@ -3076,6 +3041,28 @@ gui_update_scrollbars(force)
 	}
     }
     --hold_gui_events;
+}
+
+/*
+ * Enable or disable a scrollbar.
+ * Check for scrollbars for vertically split windows which are never enabled.
+ */
+    static void
+gui_do_scrollbar(wp, which, enable)
+    win_t	*wp;
+    int		which;	    /* SBAR_LEFT or SBAR_RIGHT */
+    int		enable;	    /* TRUE to enable scrollbar */
+{
+#ifdef FEAT_VERTSPLIT
+    /* Only enable/disable scrollbars touching the window
+     * frame. */
+    if ((which == SBAR_LEFT
+		&& wp->w_wincol != 0)
+	    || (which == SBAR_RIGHT
+		&& wp->w_wincol + wp->w_width != Columns))
+	enable = FALSE;
+#endif
+    gui_mch_enable_scrollbar(&wp->w_scrollbars[which], enable);
 }
 
 /*
@@ -3212,7 +3199,7 @@ gui_update_horiz_scrollbar(force)
 	max += W_WIDTH(curwin) - 1;
 #endif
 	/* The line number isn't scrolled, thus there is less space when
-	 * 'number' is set. */
+	 * 'number' is set (also for 'foldcolumn'). */
 	size -= curwin_col_off();
 #ifndef SCROLL_PAST_END
 	max -= curwin_col_off();

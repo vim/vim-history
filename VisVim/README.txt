@@ -62,6 +62,9 @@ Installation
    > regsvr32 -unregister VisVim.dll
    The batch files register.bat and unregister.bat can do that for you.
 
+3a) If you didn't do this yet: Register the OLE gvim:
+   > gvim -register
+	
 4) Start Visual Studio and go to:
       Tools
          Customize...

@@ -1410,7 +1410,7 @@ change_indent(type, amount, round, replaced)
      * Set the new indent.  The cursor will be put on the first non-blank.
      */
     if (type == INDENT_SET)
-	set_indent(amount, TRUE);
+	(void)set_indent(amount, SIN_CHANGED);
     else
 	shift_line(type == INDENT_DEC, round, 1);
     insstart_less -= curwin->w_cursor.col;
@@ -2035,6 +2035,7 @@ ins_compl_prep(c)
     char_u	*ptr;
     char_u	*tmp_ptr;
     int		temp;
+    int		want_cindent;
 
     /* Ignore end of Select mode mapping */
     if (c == K_SELECT)
@@ -2196,6 +2197,15 @@ ins_compl_prep(c)
 		}
 	    }
 
+#ifdef FEAT_CINDENT
+	    want_cindent = (!p_paste
+		    && can_cindent
+		    && (curbuf->b_p_cin
+# ifdef FEAT_EVAL
+			|| *curbuf->b_p_inde != NUL
+# endif
+		       ));
+#endif
 	    /*
 	     * When completing whole lines: fix indent for 'cindent'.
 	     * Otherwise, break line if it's too long.
@@ -2204,14 +2214,11 @@ ins_compl_prep(c)
 	    {
 #ifdef FEAT_CINDENT
 		/* re-indent the current line */
-		if (!p_paste
-			&& can_cindent
-			&& (curbuf->b_p_cin
-# ifdef FEAT_EVAL
-			    || *curbuf->b_p_inde != NUL
-# endif
-			    ))
+		if (want_cindent)
+		{
 		    do_c_expr_indent();
+		    want_cindent = FALSE;	/* don't do it again */
+		}
 #endif
 	    }
 	    else
@@ -2233,6 +2240,14 @@ ins_compl_prep(c)
 		edit_submode = NULL;
 		showmode();
 	    }
+
+#ifdef FEAT_CINDENT
+	    /*
+	     * Indent now if a key was typed that is in 'cinkeys'.
+	     */
+	    if (want_cindent && in_cinkeys(KEY_COMPLETE, ' ', inindent(0)))
+		do_c_expr_indent();
+#endif
 	}
     }
 
@@ -3575,7 +3590,7 @@ insertchar(c, force_formatting, second_indent, ctrlv)
 		if (State == VREPLACE)
 		    change_indent(INDENT_SET, second_indent, FALSE, NUL);
 		else
-		    set_indent(second_indent, TRUE);
+		    (void)set_indent(second_indent, SIN_CHANGED);
 	    }
 	    first_line = FALSE;
 
@@ -4590,6 +4605,11 @@ fix_indent()
  * when == '!':	    Only if key is prededed with '!'	(don't insert)
  * when == ' ':	    Only if key is not preceded with '*'(indent afterwards)
  *
+ * "keytyped" can have a few special values:
+ * KEY_OPEN_FORW
+ * KEY_OPEN_BACK
+ * KEY_COMPLETE	    just finished completion.
+ *
  * If line_is_empty is TRUE accept keys with '0' before them.
  */
     int
@@ -4602,9 +4622,14 @@ in_cinkeys(keytyped, when, line_is_empty)
     int		try_match;
     char_u	*p;
     char_u	*line;
+    int		icase;
     int		i;
 
-    for (look = curbuf->b_p_cink; *look; )
+    if (*curbuf->b_p_inde != NUL)
+	look = curbuf->b_p_indk;	/* 'indentexpr' set: use 'indentkeys' */
+    else
+	look = curbuf->b_p_cink;	/* 'indentexpr' empty: use 'cinkeys' */
+    while (*look)
     {
 	/*
 	 * Find out if we want to try a match with this key, depending on
@@ -4714,12 +4739,12 @@ in_cinkeys(keytyped, when, line_is_empty)
 	    if (try_match)
 	    {
 		/*
-		 * make up some named keys <o>, <O>, <e>, <0>, <>>, <<>, <*>
-		 * and <!> so that people can re-indent on o, O, e, 0, <, >, *
-		 * and ! keys if they really really want to.
+		 * make up some named keys <o>, <O>, <e>, <0>, <>>, <<>, <*>,
+		 * <:> and <!> so that people can re-indent on o, O, e, 0, <,
+		 * >, *, : and ! keys if they really really want to.
 		 */
-		if (vim_strchr((char_u *)"<>!*oOe0", look[1]) != NULL &&
-							  keytyped == look[1])
+		if (vim_strchr((char_u *)"<>!*oOe0:", look[1]) != NULL
+						       && keytyped == look[1])
 		    return TRUE;
 
 		if (keytyped == get_special_key_code(look + 1))
@@ -4737,17 +4762,48 @@ in_cinkeys(keytyped, when, line_is_empty)
 	else if (*look == '=' && look[1] != ',' && look[1] != NUL)
 	{
 	    ++look;
+	    if (*look == '~')
+	    {
+		icase = TRUE;
+		++look;
+	    }
+	    else
+		icase = FALSE;
 	    p = vim_strchr(look, ',');
 	    if (p == NULL)
 		p = look + STRLEN(look);
-	    if (try_match && keytyped == (int)p[-1]
-		    && curwin->w_cursor.col >= (colnr_t)(p - look))
+	    if (try_match && curwin->w_cursor.col >= (colnr_t)(p - look))
 	    {
-		line = ml_get_cursor();
-		if ((curwin->w_cursor.col == (colnr_t)(p - look)
-			    || !vim_iswordc(line[-(p - look) - 1]))
-			&& STRNCMP(line - (p - look), look, p - look) == 0)
-		    return TRUE;
+#ifdef FEAT_INS_EXPAND
+		if (keytyped == KEY_COMPLETE)
+		{
+		    char_u	*s;
+
+		    /* Just completed a word, check if it starts with "look".
+		     * search back for the start of a word. */
+		    line = ml_get_curline();
+		    for (s = line + curwin->w_cursor.col; s > line; --s)
+			if (!vim_iswordc(s[-1]))
+			    break;
+		    if (s + (p - look) <= line + curwin->w_cursor.col
+			    && (icase
+				? STRNICMP(s, look, p - look)
+				: STRNCMP(s, look, p - look)) == 0)
+			return TRUE;
+		}
+		else
+#endif
+		    if (keytyped == (int)p[-1])
+		{
+		    line = ml_get_cursor();
+		    if ((curwin->w_cursor.col == (colnr_t)(p - look)
+				|| !vim_iswordc(line[-(p - look) - 1]))
+			    && (icase
+				? STRNICMP(line - (p - look), look, p - look)
+				: STRNCMP(line - (p - look), look, p - look))
+									 == 0)
+			return TRUE;
+		}
 	    }
 	    look = p;
 	}
@@ -6289,7 +6345,7 @@ ins_try_si(c)
 	    if (State == VREPLACE)
 		change_indent(INDENT_SET, i, FALSE, NUL);
 	    else
-		set_indent(i, TRUE);
+		(void)set_indent(i, SIN_CHANGED);
 	}
 	else if (curwin->w_cursor.col > 0)
 	{
@@ -6326,7 +6382,7 @@ ins_try_si(c)
     {
 	/* remember current indent for next line */
 	old_indent = get_indent();
-	set_indent(0, TRUE);
+	(void)set_indent(0, SIN_CHANGED);
     }
 
     /* Adjust ai_col, the char at this position can be deleted. */

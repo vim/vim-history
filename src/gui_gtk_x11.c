@@ -267,7 +267,7 @@ static struct cmdline_option
 };
 
 /*
- * Arguments handled by GTK internally.
+ * Arguments handled by GTK (and GNOME) internally.
  */
 static char *gtk_cmdline_options[] =
 {
@@ -283,6 +283,19 @@ static char *gtk_cmdline_options[] =
     "--gtk-module=",
     "-display",
     "--display",
+#ifdef FEAT_GUI_GNOME
+    "--disable-sound",
+    "--enable-sound",
+    "--espeaker=",
+    "--version",
+    "-?",
+    "--help",
+    "--usage",
+    "--disable-crash-dialog",
+    "--sm-client-id=",
+    "--sm-config-prefix=",
+    "--sm-disable",
+#endif
     NULL
 };
 
@@ -337,16 +350,20 @@ gui_mch_prepare(int *argc, char **argv)
 		gui.geom = (char_u *)g_strdup((const char *)argv[arg + 1]);
 	    }
 
+#ifndef FEAT_GUI_GNOME
 	    /* Found match in table, so move it into gui_argv */
 	    gui_argv[gui_argc++] = argv[arg];
+#endif
 	    if (--*argc > arg)
 	    {
 		mch_memmove(&argv[arg], &argv[arg + 1],
 			    (*argc - arg) * sizeof(char *));
 		if (cmdline_options[i].has_value)
 		{
+#ifndef FEAT_GUI_GNOME
 		    /* Move the option argument as well. */
 		    gui_argv[gui_argc++] = argv[arg];
+#endif
 		    if (--*argc > arg)
 			mch_memmove(&argv[arg], &argv[arg + 1],
 				    (*argc - arg) * sizeof(char *));
@@ -373,6 +390,16 @@ gui_mch_prepare(int *argc, char **argv)
 				   (char *)vim_strsave((char_u *)"--display");
 		else
 		    gui_argv[gui_argc++] = argv[arg];
+
+		/* These arguments make gnome_init() print a message and exit.
+		 * Must start the GUI for this, otherwise ":gui" will exit
+		 * later! */
+		if (strcmp("-?", argv[arg]) == 0
+			|| strcmp("--help", argv[arg]) == 0
+			|| strcmp("--version", argv[arg]) == 0
+			|| strcmp("--usage", argv[arg]) == 0)
+		    gui.starting = TRUE;
+
 		if (--*argc > arg)
 		{
 		    mch_memmove(&argv[arg], &argv[arg + 1],

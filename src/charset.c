@@ -751,17 +751,23 @@ win_lbr_chartabsize(wp, s, col, head)
      * needs a break here
      */
     if (wp->w_p_lbr && vim_isbreak(c) && !vim_isbreak(s[1])
-					     && !wp->w_p_list && wp->w_p_wrap
+	    && !wp->w_p_list && wp->w_p_wrap
 # ifdef FEAT_VERTSPLIT
-					     && wp->w_width != 0
+	    && wp->w_width != 0
 # endif
-					     )
+       )
     {
+	/*
+	 * Count all characters from first non-blank after a blank up to next
+	 * non-blank after a blank.
+	 */
 	numberextra = win_col_off(wp);
-	/* count all characters from first non-blank after a blank up to next
-	 * non-blank after a blank */
 	col2 = col;
-	colmax = (((col + numberextra) / W_WIDTH(wp)) + 1) * W_WIDTH(wp);
+	colmax = W_WIDTH(wp) - numberextra;
+	if (col >= colmax)
+	    colmax += (((col - colmax)
+			/ (colmax + win_col_off2(wp))) + 1)
+			* (colmax + win_col_off2(wp));
 	for (;;)
 	{
 	    ps = s;
@@ -779,9 +785,9 @@ win_lbr_chartabsize(wp, s, col, head)
 		break;
 
 	    col2 += win_chartabsize(wp, s, col2);
-	    if (col2 + numberextra >= colmax)		/* doesn't fit */
+	    if (col2 >= colmax)		/* doesn't fit */
 	    {
-		size = W_WIDTH(wp) - ((col + numberextra) % W_WIDTH(wp));
+		size = colmax - col;
 		break;
 	    }
 	}
@@ -792,14 +798,20 @@ win_lbr_chartabsize(wp, s, col, head)
      * Set *head to the size of what we add.
      */
     added = 0;
-    if (*p_sbr != NUL && wp->w_p_wrap && col
+    if (*p_sbr != NUL && wp->w_p_wrap && col != 0
 # ifdef FEAT_VERTSPLIT
 					     && wp->w_width != 0
 # endif
 	    )
     {
 	numberextra = win_col_off(wp);
-	col = (col + numberextra) % W_WIDTH(wp);
+	col += numberextra;
+	if (col >= W_WIDTH(wp))
+	{
+	    col -= W_WIDTH(wp);
+	    numberextra -= win_col_off2(wp);
+	    col = col % (W_WIDTH(wp) - numberextra);
+	}
 	if (col == 0 || col + size > (colnr_t)W_WIDTH(wp))
 	{
 	    added = STRLEN(p_sbr);

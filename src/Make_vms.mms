@@ -43,17 +43,18 @@ CCVER = YES
 
 ######################################################################
 # Used to fix some dependecies problem during development.
-# Normally, it should not be defined. !!!
+# Development purpose only! Normally, it should not be defined. !!!
 ######################################################################
-DEVELOPMENT = YES
+# DEVELOPMENT = YES
 
 ######################################################################
 # Uncomment if want a debug version. Resulting executable is DVIM.EXE
+# Development purpose only! Normally, it should not be defined. !!!
 ######################################################################
 # DEBUG = YES
 
 ######################################################################
-# Languages support as Perl, Python, TCL etc.
+# Languages support for Perl, Python, TCL etc.
 # If you don't need it really, leave them behind the comment.
 # You will need special libs etc.
 ######################################################################
@@ -208,14 +209,14 @@ all : $(TARGET) mms_vim
 [.auto]config.h : $(CONFIG_H)
 	copy $(CONFIG_H) [.auto]config.h
 .ELSE
-[.auto]config.h : os_vms.mms $(CONFIG_H)
+[.auto]config.h : make_vms.mms $(CONFIG_H)
 	copy $(CONFIG_H) [.auto]config.h
 .ENDIF
 
 osdef.h : os_vms_osdef.h
 	copy os_vms_osdef.h osdef.h
 
-# Re-execute this os_vms.mms to include the new [.auto]config.mk produced by
+# Re-execute this make_vms.mms to include the new [.auto]config.mk produced by
 # [.auto]configure Only used when typing "make" with a fresh [.auto]config.mk.
 myself :
 	mms /descrip=Make_vms.mms all
@@ -230,7 +231,7 @@ $(TARGET) : $(OBJ) version.obj
 	$(CC_DEF) $(ALL_CFLAGS) version.c
 	$(LD_DEF) $(LDFLAGS) /exe=$(TARGET) $+ $(ALL_LIBS)
 
-FILES = *.c *.h os_vms.mms *.in makefile.* *.sh cmdtab.tab tags [.auto]configure
+FILES = *.c *.h make_vms.mms *.in makefile.* *.sh cmdtab.tab tags [.auto]configure
 
 ###########################################################################
 
@@ -254,8 +255,8 @@ FILES = *.c *.h os_vms.mms *.in makefile.* *.sh cmdtab.tab tags [.auto]configure
 	-@ write pd "char_u *compiled_sys = (char_u *) "$(VIMHOST)";"
 	-@ close pd
 
-os_vms.mms :
-	@ write sys$output "The name of the makefile MUST be <OS_VMS.MMS> !!!!"
+make_vms.mms :
+	@ write sys$output "The name of the makefile MUST be <MAKE_VMS.MMS> !!!!"
 
 cmdtab.h : cmdtab.tab mkcmdtab.exe
 	mkcmdtab :== $sys$disk:[]mkcmdtab

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	C
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Aug 26
+" Last Change:	2000 Oct 15
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -121,7 +121,7 @@ endif
 hi link cCommentL cComment
 hi link cCommentStart cComment
 syntax match	cCommentError	display "\*/"
-syntax match	cCommentStartError display "/\*" contained
+syntax match	cCommentStartError display "/\*"me=e-1 contained
 
 syn keyword	cOperator	sizeof
 if exists("c_gnu")
@@ -169,7 +169,7 @@ if !exists("c_no_ansi") || exists("c_ansi_constants") || exists("c_gnu")
   syn keyword cConstant LC_ALL LC_COLLATE LC_CTYPE LC_MONETARY
   syn keyword cConstant LC_NUMERIC LC_TIME
   syn keyword cConstant SIG_DFL SIG_ERR SIG_IGN
-  syn keyword cConstant SIGABRT SIGFPE SIGILL SIGINT SIGSEGV SIGTERM
+  syn keyword cConstant SIGABRT SIGFPE SIGILL SIGHUP SIGINT SIGSEGV SIGTERM
   syn keyword cConstant _IOFBF _IOLBF _IONBF BUFSIZ EOF
   syn keyword cConstant FOPEN_MAX FILENAME_MAX L_tmpnam
   syn keyword cConstant SEEK_CUR SEEK_END SEEK_SET

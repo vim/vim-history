@@ -144,7 +144,7 @@ PRO =	proto/buffer.pro \
 	proto/undo.pro \
 	proto/window.pro
 
-all: Vim ctags/Ctags xxd/Xxd
+all: Vim xxd/Xxd
 
 Vim: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c -o obj/version.o
@@ -153,9 +153,6 @@ Vim: obj $(OBJ) version.c version.h
 debug: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) version.c -o obj/version.o
 	$(LN) $(LNFLAGS) -m -g -o Vim $(OBJ) obj/version.o $(LIBS)
-
-ctags/Ctags: ctags/main.c
-	$(SHELL) -c cd ctags; make -f Makefile.manx; cd ..
 
 xxd/Xxd: xxd/xxd.c
 	$(SHELL) -c cd xxd; make -f Make_amiga.mak; cd ..
@@ -173,8 +170,7 @@ tags: $(SRC) $(INCL)
 # can't use delete here, too many file names
 clean:
 	$(DEL) $(OBJ) obj/version.o \
-		obj/termlib.o Vim $(SYMS) \
-		ctags/Ctags xxd/Xxd
+		obj/termlib.o Vim $(SYMS) xxd/Xxd
 
 test:
 	$(SHELL) -c cd testdir; make -f Make_amiga.mak; cd ..

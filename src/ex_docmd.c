@@ -213,6 +213,11 @@ static void	ex_popup __ARGS((exarg_t *eap));
 # define ex_tcldo		ex_ni
 # define ex_tclfile		ex_ni
 #endif
+#ifndef FEAT_RUBY
+# define ex_ruby		ex_ni
+# define ex_rubydo		ex_ni
+# define ex_rubyfile		ex_ni
+#endif
 #ifndef FEAT_SNIFF
 # define ex_sniff		ex_ni
 #endif
@@ -2532,6 +2537,7 @@ set_one_cmd_context(buff)
 	case CMD_bunload:
 	    while ((expand_pattern = vim_strchr(arg, ' ')) != NULL)
 		arg = expand_pattern + 1;
+	    /*FALLTHROUGH*/
 	case CMD_buffer:
 	case CMD_sbuffer:
 	    expand_context = EXPAND_BUFFERS;
@@ -4095,23 +4101,32 @@ theend:
 }
 
 #if defined(USE_CR) || defined(PROTO)
+/*
+ * Version of fgets() which also works for lines ending in a <CR> only
+ * (Macintosh format).
+ */
     char *
 fgets_cr(s, n, stream)
     char	*s;
     int		n;
     FILE	*stream;
 {
-    int	character = 0;
+    int	c = 0;
     int char_read = 0;
-    while (!feof(stream) && character != '\r' && character != '\n'
-							   && char_read < n-1)
-    {
-	character = fgetc(stream);
-	s[char_read++] = character;
-    }
 
-    if (char_read > n - 2)
-	s[char_read] = 0;
+    while (!feof(stream) && c != '\r' && c != '\n' && char_read < n - 1)
+    {
+	c = fgetc(stream);
+	s[char_read++] = c;
+	/* If the file is in DOS format, we need to skip a NL after a CR.  I
+	 * thought it was the other way around, but this appears to work... */
+	if (c == '\n')
+	{
+	    c = fgetc(stream);
+	    if (c != '\r')
+		ungetc(c, stream);
+	}
+    }
 
     s[char_read] = 0;
     if (char_read == 0)
@@ -5329,7 +5344,8 @@ ex_quit(eap)
 # ifdef FEAT_GUI
 	need_mouse_correct = TRUE;
 # endif
-	win_close(curwin, !P_HID(curwin->w_buffer) || eap->forceit); /* may free buffer */
+	/* close window; may free buffer */
+	win_close(curwin, !P_HID(curwin->w_buffer) || eap->forceit);
 #endif
     }
 }
@@ -8417,7 +8433,7 @@ cmd_runtime(name, all)
     char_u	*name;
     int		all;
 {
-    char_u	*p = p_rtp;
+    char_u	*p;
     char_u	*buf;
     int		num_files;
     char_u	**files;
@@ -8429,6 +8445,7 @@ cmd_runtime(name, all)
 	if (p_verbose > 0)
 	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
 						 (char *)name, (char *)p_rtp);
+	p = p_rtp;
 	while (*p != NUL)
 	{
 	    /* Concatenate a part of 'runtimepath' with the file name. */
@@ -8548,15 +8565,15 @@ ex_behave(eap)
 
 #ifdef FEAT_AUTOCMD
 static int filetype_detect = FALSE;
-static int filetype_settings = FALSE;
+static int filetype_plugin = FALSE;
 static int filetype_indent = FALSE;
 
 /*
- * ":filetype [settings] {on,off}"
+ * ":filetype [plugin] [indent] {on,off}"
  * on: Load the filetype.vim file to install autocommands for file types.
- * off: Remove all "filetype" group autocommands.
- * settings on: load filetype.vim and settings.vim
- * settings off: load setsoff.vim
+ * off: Load the ftoff.vim file to remove all autocommands for file types.
+ * plugin on: load filetype.vim and ftplugin.vim
+ * plugin off: load ftplugof.vim
  * indent on: load filetype.vim and indent.vim
  * indent off: load indoff.vim
  */
@@ -8565,26 +8582,26 @@ ex_filetype(eap)
     exarg_t	*eap;
 {
     char_u	*arg = eap->arg;
-    int		settings = FALSE;
+    int		plugin = FALSE;
     int		indent = FALSE;
 
     if (*eap->arg == NUL)
     {
 	/* Print current status. */
-	smsg((char_u *)"filetype detection:%s  settings:%s  indent:%s",
+	smsg((char_u *)"filetype detection:%s  plugin:%s  indent:%s",
 		filetype_detect ? "ON" : "OFF",
-		filetype_settings ? (filetype_detect ? "ON" : "(on)") : "OFF",
+		filetype_plugin ? (filetype_detect ? "ON" : "(on)") : "OFF",
 		filetype_indent ? (filetype_detect ? "ON" : "(on)") : "OFF");
 	return;
     }
 
-    /* Accept "settings" and "indent" in any order. */
+    /* Accept "plugin" and "indent" in any order. */
     for (;;)
     {
-	if (STRNCMP(arg, "settings", 8) == 0)
+	if (STRNCMP(arg, "plugin", 6) == 0)
 	{
-	    settings = TRUE;
-	    arg = skipwhite(arg + 8);
+	    plugin = TRUE;
+	    arg = skipwhite(arg + 6);
 	    continue;
 	}
 	if (STRNCMP(arg, "indent", 6) == 0)
@@ -8599,10 +8616,10 @@ ex_filetype(eap)
     {
 	cmd_runtime((char_u *)FILETYPE_FILE, TRUE);
 	filetype_detect = TRUE;
-	if (settings)
+	if (plugin)
 	{
-	    cmd_runtime((char_u *)SETTINGS_FILE, TRUE);
-	    filetype_settings = TRUE;
+	    cmd_runtime((char_u *)FTPLUGIN_FILE, TRUE);
+	    filetype_plugin = TRUE;
 	}
 	if (indent)
 	{
@@ -8612,12 +8629,12 @@ ex_filetype(eap)
     }
     else if (STRCMP(arg, "off") == 0)
     {
-	if (settings || indent)
+	if (plugin || indent)
 	{
-	    if (settings)
+	    if (plugin)
 	    {
-		cmd_runtime((char_u *)SETSOFF_FILE, TRUE);
-		filetype_settings = FALSE;
+		cmd_runtime((char_u *)FTPLUGOF_FILE, TRUE);
+		filetype_plugin = FALSE;
 	    }
 	    if (indent)
 	    {
@@ -8771,11 +8788,22 @@ set_lang_var()
     {
 	char_u	*p;
 
-	/* Borland returns something like "LC_CTYPE=<name>"
+	/* Borland returns something like "LC_CTYPE=<name>\n"
 	 * Let's try to fix that bug here... */
 	p = vim_strchr(loc, '=');
 	if (p != NULL)
-	    loc = p + 1;
+	{
+	    loc = ++p;
+	    while (*p != NUL)	/* remove trailing newline */
+	    {
+		if (*p < ' ')
+		{
+		    *p = NUL;
+		    break;
+		}
+		++p;
+	    }
+	}
     }
 #  endif
 # else

@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0h.  Last change: 2000 Aug 27
+*change.txt*    For Vim version 6.0i.  Last change: 2000 Oct 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -442,21 +442,16 @@ For example: >
 ={motion}		Filter {motion} lines through the external program
 			given with the 'equalprg' option.  When the 'equalprg'
 			option is empty (this is the default), use the
-			internal formatting function to set the indent of each
-			line |C-indenting|.
+			internal formatting function |C-indenting|.  But when
+			'indentexpr' is not empty, it will be used instead
+			|indent-expression|.
 
 							*==*
-==			Filter [count] lines through the external program
-			given with the 'equalprg' option.  When the 'equalprg'
-			option is empty (this is the default), use the
-			internal formatting function |C-indenting|.
+==			Filter [count] lines like with ={motion}.
 
 							*v_=*
-{Visual}=		Filter the highlighted lines through the external
-			program given with the 'equalprg' option.  When the
-			'equalprg' option is empty (this is the default),
-			use the internal formatting function |C-indenting|.
-			(for {Visual} see |Visual-mode|).  {not in Vi}
+{Visual}=		Filter the highlighted lines like with ={motion}.
+			{not in Vi}
 
 A filter is a program that accepts text at standard input, changes it in some
 way, and sends it to standard output.  You can use the commands above to send
@@ -1212,12 +1207,15 @@ formatting, see |format-comments|.
 Note that this will not work when the |+smartindent| or |+cindent| features
 have been disabled at compile time.
 
-There are in fact three methods available for indentation:
+There are in fact four methods available for indentation:
 'autoindent'	uses the indent from the previous line.
 'smartindent'	is like 'autoindent' but also recognizes some C syntax to
 		increase/reduce the indent where appropriate.
 'cindent'	Works more cleverly than the other two and is configurable to
 		different indenting styles.
+'indentexpr'	The most flexible of all: Evaluates an expression to compute
+		the indent of a line.  When non-empty this method overrides
+		the other ones.  See |indent-expression|.
 The rest of this section describes the 'cindent' option.
 
 Note that 'cindent' indenting does not work for every code scenario.  Vim
@@ -1235,14 +1233,18 @@ Vim's built-in algorithm rather than calling an external program.
 See |autocommand| for how to set the 'cindent' option automatically for C code
 files and reset it for others.
 
-							*'cinkeys'* *'cink'*
+					*cinkeys-format* *indentkeys-format*
 The 'cinkeys' option is a string that controls Vim's indenting in response to
-typing certain characters or commands in certain contexts.  The default is
-"0{,0},:,0#,!^F,o,O,e" which specifies that indenting occurs as follows:
+typing certain characters or commands in certain contexts.  Note that this not
+only triggers C-indenting.  When 'indentexpr' is not empty 'indentkeys' is
+used instead.  The format of 'cinkeys' and 'indentkeys' is equal.
+
+The default is "0{,0},:,0#,!^F,o,O,e" which specifies that indenting occurs as
+follows:
 
 	"0{"	if you type '{' as the first character in a line
 	"0}"	if you type '}' as the first character in a line
-	":"	if you type ':' anywhere
+	":"	if you type ':' after a label or case statement
 	"0#"	if you type '#' as the first character in a line
 	"!^F"	if you type CTRL-F (which is not inserted)
 	"o"	if you type a <CR> anywhere or use the "o" command (not in
@@ -1277,14 +1279,19 @@ o	Reindent a line when you use the "o" command or when Vim opens a new
 	mode).
 O	Reindent a line when you use the "O" command.
 e	Reindent a line that starts with "else" when you type the second 'e'.
+:	Reindent a line when a ':' is typed which is after a label or case
+	statement.  Don't reindent for a ":" in "class::method" for C++.  To
+	Reindent for any ":", use "<:>".
 =word	Reindent when typing the last character of "word".  "word" may
 	actually be part of another word.  Thus "=end" would cause reindenting
 	when typing the "d" in "endif" or "endwhile".  But not when typing
-	"bend".
+	"bend".  Also reindent when completion produces a word that starts
+	with "word".
+=~word	Like =word, but ignore case.
 
-If you really want to reindent when you type 'o', 'O', 'e', '0', '<', '>', '*'
-or '!', use "<o>", "<O>", "<e>", "<0>", "<<>", "<>>", "<*>" or "<!>",
-respectively, for those keys.
+If you really want to reindent when you type 'o', 'O', 'e', '0', '<', '>',
+'*', ':' or '!', use "<o>", "<O>", "<e>", "<0>", "<<>", "<>>", "<*>", "<:>" or
+"<!>", respectively, for those keys.
 
 For an emacs-style indent mode where lines aren't indented every time you
 press Return but only if you press Tab, I suggest:
@@ -1509,6 +1516,6 @@ and put it in one of the "indent" directories.  For example, "~/.vim/indent/"
 for Unix.  You can find examples for these indent files in the distributed
 "indent" directory.
 
-Also see 'indentexpr' and 'cinkeys'.
+Also see 'indentexpr' and 'indentkeys'.
 
  vim:tw=78:

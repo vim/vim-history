@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0h.  Last change: 2000 Aug 31
+*version6.txt*  For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -23,6 +23,7 @@ global option values used		|new-global-values|
 'fileencoding' obsolete			|fileencoding-obsolete|
 filetype detection changed		|filetypedetect-changed|
 CTRL-U in Command-line mode		|CTRL-U-changed|
+Ctags gone				|ctags-gone|
 Documentation				|documentation-6|
 Small incompatibilities			|incomp-small-6|
 
@@ -30,10 +31,11 @@ NEW FEATURES
 Folding					|new-folding|
 Vertically split windows		|new-vertsplit|
 Extended search patterns		|new-searchpat|
+Flexible indenting			|new-indent-flex|
 UTF-8 support				|new-utf-8|
 Multi-language support			|new-multi-lang|
 Plugin support				|new-plugins|
-Filetype settings			|new-filetype-settings|
+Filetype plugins			|new-filetype-plugins|
 Cursor in virtual position		|new-virtedit|
 Debugger interface			|new-debug-itf|
 Buffer types				|new-buftype|
@@ -131,6 +133,14 @@ the characters before the cursor.  Made it like that. (Steve Wall)
 You can get the old behavior with CTRL-E CTRL-U: >
 	:cnoremap <C-U> <C-E><C-U>
 
+Ctags gone					*ctags-gone*
+----------
+
+Ctags is no longer part of the Vim distribution.  It's now a grown-up program
+by itself, it deserves to be distributed separately.  However, the binary
+archives do include the ctags program, since it's small and useful.
+Ctags can be found here: http://darren.hiebert.com/ctags/index.html.
+
 
 Documentation					*documentation-6*
 -------------
@@ -174,6 +184,10 @@ Non-Unix systems: When expanding wildcards for the Vim arguments, don't use
 The 'lisp', 'smartindent' and 'cindent' options are not switched off when
 'paste' is set.  The auto-indenting is disabled when 'paste' is set, but
 manual indenting with "=" still works.
+
+When formatting with "=" uses 'cindent' or 'indentexpr' indenting, and there
+is no change in indent, this is not counted as a change ('modified' isn't set
+and there is nothing to undo).
 
 ==============================================================================
 NEW FEATURES
@@ -246,6 +260,18 @@ often not fit.  The 'sidescrolloff' has been added to keep some context left
 and right of the cursor.  The 'listchars' option has been extended with the
 "precedes" item, to show a "<" for example, when there is text left off the
 screen. (Utz-Uwe Haus)
+
+
+Flexible indenting					*new-indent-flex*
+------------------
+
+Automatic indenting is now possible for any language.  It works with a Vim
+script, which makes it very flexible to compute the indent.
+
+The 'indentexpr' option is evaluated to get the indent for a line.  The
+'indentkeys' option tells when to trigger re-indenting.  Normally these
+options are set from an indent script.  Like Syntax files, indent scripts will
+be created and maintained by many people.
 
 
 Extended search patterns				*new-searchpat*
@@ -328,7 +354,7 @@ Plugin support					*new-plugins*
 --------------
 
 To make it really easy to load a Vim script when starting Vim, the "plugin"
-runtime directory can be used.  All ".vim" files in it will be automatically
+runtime directory can be used.  All "*.vim" files in it will be automatically
 loaded.  For Unix, the directory "~/.vim/plugin" is used by default.  The
 'runtimepath' option can be set to look in other directories for plugins.
 |load-plugins| |add-plugin|
@@ -343,16 +369,16 @@ The first line of each help file is automagically added to the "LOCAL
 ADDITIONS" section in doc/help.txt.
 
 
-Filetype settings				*new-filetype-settings*
+Filetype plugins				*new-filetype-plugins*
 -----------------
 
 A new group of files has been added to do settings for specific file types.
 These can be options and mappings which are specifically used for one value of
 'filetype'.
 
-The files are located in "$VIMRUNTIME/settings".  The 'runtimepath' option
-makes it possible to use several sets of settings files: Your own,
-system-wide, included in the Vim distribution, etc.
+The files are located in "$VIMRUNTIME/ftplugin".  The 'runtimepath' option
+makes it possible to use several sets of plugins: Your own, system-wide,
+included in the Vim distribution, etc.
 
 To be able to make this work, several features were added:
 - Added the "s:" variables, local to a script.  Avoids name conflicts and
@@ -365,11 +391,10 @@ To be able to make this work, several features were added:
   ":setglobal" displays the global value for a local option.  Setting only
   the global value isn't implemented yet.
 - Added mappings and abbreviations local to a buffer: ":map <buffer>".
-- When the "localmapchar" variable has been set by the user, mappings in the
-  settings file will start with the value of this variable.
-- In a mapping "<Map>" can be used to get the value of the "localmapchar"
-  variable.  This simplifies mappings that use "localmapchar".  "<Map>"
-  defaults to ",".
+- In a mapping "<Leader>" can be used to get the value of the "mapleader"
+  variable.  This simplifies mappings that use "mapleader".  "<Leader>"
+  defaults to "\".  "<LocalLeader>" does the same with "maplocalleader".  This
+  is to be used for mappings local to a buffer.
 
 The new ":setfiletype" command is used in the filetype detection autocommands,
 to avoid that 'filetype' is set twice.
@@ -402,7 +427,7 @@ Buffer types						*new-buftype*
 'buftype' option: special buffer type.
 "quickfix": Shows the error list, allowing to jump to the error location.
 "nofile": A buffer that's not associated with any file.
-"scratch": A buffer thats not assiciated with any file and gets deleted as
+"scratch": A buffer that's not associated with any file and gets deleted as
 soon as there is no window left that displays its contents
 
 
@@ -465,6 +490,8 @@ copied).
 Various new items					*new-items-6*
 -----------------
 
+Interface to Ruby. (Shugo Maeda)
+
 :silent[!] cmd
 		Execute a command silently.
 		RISCOS: Removed that "!~cmd" didn't output anything, and
@@ -506,15 +533,30 @@ New marks:
 '{ and '}: begin or end of current paragraph.  Useful in Ex commands.
 
 New functions:
+foldclosed()	Find out if there is a closed fold. (Johannes Zellner).
+foldlevel()	Find out the foldlevel. (Johannes Zellner)
 getfsize()	Return the size of a file.
+hasmapto()	Detect if a mapping to a string is already present.
 search()	Search for a pattern.
+skipblank()	Skip blank lines.  Useful to for indent scripts.
 stridx()	Search for first occurrence of one string in another.
 strridx()	Search for last occurrence of one string in another.
-toupper()	Convert string to all-upper case.
 tolower()	Convert string to all-lower case.
+toupper()	Convert string to all-upper case.
+type()		Check the type of an expression.
+winwidth()	Width of a window. (Johannes Zellner)
+getwinvar()	gets the value of an option or local variable in a window (Ron
+		Aaron)
+getbufvar()	gets the value of an option or local variable in a buffer (Ron
+		Aaron)
+indent()	gets the indent of a line (Ron Aaron)
+setwinvar()	sets an option or variable local to a window (Ron Aaron)
+setbufvar()	sets an option or variable local to a buffer (Ron Aaron)
+libcall()	for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
+libcallnr()	for Win32 and Unix
 
 The ":command" command now accepts a "-bar" argument.  This allows the user
-command to be followed by "| command|.
+command to be followed by "| command".
 
 The preview window is now also used by these commands:
 |:pedit| edits the specified file in the preview window
@@ -524,9 +566,9 @@ displays the found text in the preview window.
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
 
-Included Exuberant ctags 4.03. (Darren Hiebert)
-It now additionally supports Assembler, COBOL, LISP, PERL, Scheme, AWK, Bourne
-Shell, BETA, Python, TCL, and Vim scripts.
+'n' flag for 'cpoptions': When omitted text of wrapped lines in not put
+between line numbers from 'number' option.
+
 When there is a format error in a tags file, the byte position is reported so
 that the error can be located.
 
@@ -538,7 +580,8 @@ never moved or $PATH changed.  A small batch file is created in a directory in
 $PATH.  Less choices to be made.
 
 The window title now has "VIM" on the end.  The file name comes first, useful
-in the taskbar.  A "+" is added when the file is modified.
+in the taskbar.  A "+" is added when the file is modified.  "RO" is added for
+a read-only file.
 
 Added "b:changedtick" variable.  Incremented at each change, also for undo.
 Can be used to take action only if the buffer has been changed.
@@ -578,8 +621,12 @@ Syntax highlighting:
 - Also allow the "lc" leading context for skip and end patterns. (Scott
   Bigham)
 
-Win32 console version: Includes the user and system name in the ":version"
-message, when available.  It generates a pathdef.c file for this.  (Jon Miner)
+Win32 console version:
+- Includes the user and system name in the ":version" message, when available.
+  It generates a pathdef.c file for this.  (Jon Miner)
+- Set the window icon to Vim's icon (only for Windows 2000).  While executing
+  a shell command, modify the window title to show this.  When exiting,
+  restore the cursor position too.  (Craig Barkhouse)
 
 Added keypad special keys <kEnter>, <k0> - <k9>.  When not mapped they behave
 like the ASCII equivalent. (Ivan Wellesz and Vince Negri)
@@ -639,17 +686,15 @@ Redirect messages to the clipboard ":redir @*" and to the unnamed register
 ":let @/ = ''" clears the search pattern, instead of setting it to an empty
 string.
 
+In a ":highlight" listing, show "xxx" with the highlight color.
+
 Expression evaluation:
 "? :" can be used like in C.
 col("$") returns the length of the cursor line. (Stephen P. Wall)
-getwinvar() gets the value of an option or local variable in a window
-getbufvar() gets the value of an option or local variable in a buffer
-indent()    gets the indent of a line
-setwinvar() sets an option or variable local to a window
-setbufvar() sets an option or variable local to a buffer
-    (Ron Aaron)
-libcall() for Unix (Neil Bird, Johannes Zellner, Stephen Wall)
-libcallnr() for Win32 and Unix
+
+Optional extra argument for match(), matchend() and matchstr(): Offset to
+start looking for a match.
+Made third argument to strpart() optional.  (Paul Moore, Zdenek Sekera)
 
 Cscope: (kahn)
 cscope_connection() function.
@@ -696,6 +741,14 @@ script.
 
 The number of marks kept in the jumplist has been increased from 50 to 100.
 
+Python interface: Allow setting the width of a vertically split window. (John
+Cook)
+
+Added "=word" and "=~word" to 'cinkeys' (also used in 'indentkeys').
+
+When doing Insert mode completion, when completion is finished check for a
+match with words from 'cinkeys' or 'indentkeys'.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -712,6 +765,9 @@ Removed GTK+ support for versions older than 1.1.16.
 
 The configure checks for using PTYs have been improved.  Code taken from a
 recent version of screen.
+
+Added configure options to install Vim, Ex and View under another name (e.g.,
+vim6, ex6 and view6).
 
 ==============================================================================
 BUG FIXES						*bug-fixes-6*
@@ -740,8 +796,8 @@ CTRL-E could get stuck in a file with very long lines.
 ":au syntax<Tab>" expanded event names while it should expand groups starting
 with "syntax".
 
-When exanding a file name caused an error (e.g., for <amatch>) it was produced
-even when inside an "if 0".
+When expanding a file name caused an error (e.g., for <amatch>) it was
+produced even when inside an "if 0".
 
 'cindent' formatted C comments differently from what the 'comments' option
 specified. (Steve Wall)
@@ -753,7 +809,7 @@ Opening the option window twice caused trouble.  Now the cursor goes to the
 existing option window.
 
 ":sview" and ":view" didn't set 'readonly' for an existing buffer.  Now do set
-'readonly', unless the buffer is also editied in another window.
+'readonly', unless the buffer is also edited in another window.
 
 GTK GUI: When 'guioptions' excluded 'g', the more prompt caused the toolbar
 and menubar to disappear and resize the window (which clears the text).
@@ -765,5 +821,46 @@ not deleted.
 
 GUI: when 'scrolloff' is 0 dragging the mouse above the window didn't cause a
 down scroll.  Now pass on a mouse event with mouse_row set to -1.
+
+Win32: Console version didn't work on telnet, because of switching between two
+console screens.  Now use one console screen and save/restore the contents
+when needed.  (Craig Barkhouse)
+
+When reading a file the magic number for encryption was included in the file
+length. (Antonio Colombo)
+
+The quickfix window contained leading whitespace and NULs for multi-line
+messages. (David Harrison)
+
+When using cscope, redundant tags were removed.  This caused a numbering
+problem, because they were all listed.  Don't remove redundant cscope tags.
+(David Bustos).
+
+Cscope: Test for which matches are in the current buffer sometimes failed,
+causing a jump to another match than selected. (David Bustos)
+
+Win32: Buffer overflow when adding a charset name in a font.
+
+'titlestring' and 'iconstring' were evaluating an expression in the current
+context, which could be a user function, which is a problem for local
+variables vs global variables.
+
+Win32 GUI: Mapping <M-F> didn't work.  Now handle SHIFT and CTRL in
+_OnSysChar().
+
+Win32 GUI: (on no file), :vs<CR>:q<CR> left a trail of pixels down the middle.
+Could also happen for the ruler.  screen_puts() didn't clear the right char in
+ScreenLines[] for the bold trick.
+
+Win32: ":%!sort|uniq" didn't work, because the input file name touches the
+"|".  Insert a space before the "|".
+
+OS/2: Expanding wildcards included non-existing files.  Caused ":runtime" to
+fail, which caused syntax highlighting to fail.
+
+Mac: Also accept tags files in DOS format. (Axel Kielhorn)
+
+Pasting a register containing CTRL-R on the command line could cause an
+endless loop that can't be interrupted.  Now it can be stopped with CTRL-C.
 
  vim:tw=78:

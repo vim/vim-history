@@ -1,13 +1,14 @@
 " Vim syntax file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
-" Version:	0.71
-" Last Change:	2000 June 19
+" Version:	0.74
+" Last Change:	2000 July 25
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " Credits:
 "  Some items based on the fortran syntax file by Mario Eusebio and
 "   Preben Guldberg, and some on suggestions by Andrej Panjkov,
-"   Bram Moolenaar and Thomas Olsen.
+"   Bram Moolenaar, Thomas Olsen, Michael Sternberg, Christian Reile, 
+"   and Walter Dieudonné.
 
 " let b:fortran_dialect = fortran_dialect if set correctly by user
 if exists("fortran_dialect")
@@ -69,7 +70,7 @@ else
   let b:ln=1
   while b:ln < 5
     let b:test = strpart(getline(b:ln),0,5)
-    if b:test =~ '\S' && b:test[0] !~ '[Cc*]' && b:test =~ '[^ 0-9\t]'
+    if b:test[0] !~ '[Cc*]' && b:test !~ '^\s*!' && b:test =~ '[^ 0-9\t]'
       let b:fortran_fixed_source = 0
       break
     endif
@@ -117,7 +118,9 @@ syn match fortranBoolean	"\.\(true\|false\)\."
 syn keyword fortranReadWrite	backspace close inquire open rewind endfile
 syn keyword fortranReadWrite	read write print
 
+"if you want to allow tabs, comment the next line and uncomment the line after 
 syn match fortranTab		"\t"
+"syn match fortranTab		"\t"  transparent
 
 syn keyword fortranI_O		unit file iostat access blank err fmt form
 syn keyword fortranI_O		recl status exist opened number named name
@@ -306,18 +309,20 @@ endif
 if (b:fortran_fixed_source == 1)
 "Flag items beyond column 72
   syn match fortSerialNumber	        "^.\{73,}$"lc=72 excludenl
-  syn match fortranLabelError		"^.\{,4}[^ 0-9]\+"
-  syn match fortranComment		"^[!c*].*$" excludenl contains=fortranTodo,fortranTab
-  syn match fortranLeftMargin		"^     "
-  syn match fortranContinueMark		"^     \S"lc=5
 
+"Flag left margin errors -- does not do anything if you allow tabs 
+  syn match fortranLabelError		"^[^\t]\{-,4}[^0-9 \t]" contains=fortranTab
   syn match fortranLabelError	"^\d\{5}\S"
   syn match fortranLabelError	"^ \d\{4}\S"
   syn match fortranLabelError	"^  \d\d\d\S"
   syn match fortranLabelError	"^   \d\d\S"
   syn match fortranLabelError	"^    \d\S"
+
+  syn match fortranComment		"^[!c*].*$" excludenl contains=fortranTodo,fortranTab
+  syn match fortranLeftMargin		"^     "
+  syn match fortranContinueMark		"^     \S"lc=5
 else
-  syn match fortranContinueMark		"\&"
+  syn match fortranContinueMark		"&"
 endif
 
 if b:fortran_dialect == "f95"
@@ -328,7 +333,7 @@ endif
 
 "Synchronising limits assume that comment and continuation lines are not mixed
 if (b:fortran_fixed_source == 0)
-  syn sync linecont "\&" maxlines=40
+  syn sync linecont "&" maxlines=40
 else
   syn sync minlines=20
 endif
@@ -374,6 +379,7 @@ if !exists("did_fortran_syntax_inits")
   hi link fortranFormatSpec		Identifier
   hi link fortranSpecial		Special
   hi link fortranPreCondit		PreCondit
+  hi link fortrancPreCondit		PreCondit
   hi link fortranInclude		Include
   hi link cIncluded			fortranString
   hi link cInclude			Include
@@ -381,11 +387,9 @@ if !exists("did_fortran_syntax_inits")
   hi link fortranParenError		Error
   hi link fortranComment		Comment
   hi link fortSerialNumber		Todo
-
-  "Optional highlighting
-  "If you like tabs, comment out the next line
   hi link fortranTab			Error
-  "Uncomment next line if you define some vendor extensions
+
+  "For future versions
   "hi link fortranExtended		Special
 endif
 

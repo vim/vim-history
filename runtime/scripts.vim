@@ -1,7 +1,7 @@
 " Vim support file to detect file types in scripts
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 29
+" Last change:	2000 Oct 15
 
 " This file is called by an autocommand for every file that has just been
 " loaded into a buffer.  It checks if the type of file can be recognized by
@@ -20,13 +20,13 @@ if did_filetype()
 endif
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
-let s:scr_cpo_save = &cpo
+let s:cpo_save = &cpo
 set cpo-=C
 
 let s:line1 = getline(1)
 
-" Bourne-like shell scripts: sh ksh bash
-if s:line1 =~ '^#!.*[/\\]\(bash\|ksh\|sh\)\>'
+" Bourne-like shell scripts: sh ksh bash bash2
+if s:line1 =~ '^#!.*[/\\]\(bash\|bash2\|ksh\|sh\)\>'
   call SetFileTypeSH(s:line1)	" defined in filetype.vim
 
 " csh and tcsh scripts
@@ -151,9 +151,21 @@ elseif s:line1 =~ '^SNNS pattern definition file'
 elseif s:line1 =~ '^SNNS result file'
   set ft=snnsres
 
+" Virata
+elseif s:line1 =~ '^%.\{-}[Vv]irata'
+	\ || getline(2) =~ '^%.\{-}[Vv]irata'
+	\ || getline(3) =~ '^%.\{-}[Vv]irata'
+	\ || getline(4) =~ '^%.\{-}[Vv]irata'
+	\ || getline(5) =~ '^%.\{-}[Vv]irata'
+  set ft=virata
+
 " Website MetaLanguage
 elseif s:line1 =~ '^#!.*wml.*'
   set ft=wml
+
+" Strace
+elseif s:line1 =~ '^execve('
+  set ft=strace
 
 " Generic configuration file (check this last, it's just guessing!)
 elseif s:line1 =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'
@@ -163,4 +175,4 @@ elseif s:line1 =~ '^#' || getline(2) =~ '^#' || getline(3) =~ '^#'
 endif
 
 " Restore 'cpoptions'
-let &cpo = s:scr_cpo_save
+let &cpo = s:cpo_save

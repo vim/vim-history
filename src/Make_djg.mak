@@ -55,18 +55,13 @@ OBJ = \
 	obj/window.o \
 	$(TERMLIB)
 
-all: vim.exe install.exe ctags/ctags.exe xxd/xxd.exe
+all: vim.exe install.exe xxd/xxd.exe
 
 vim.exe: obj $(OBJ) version.c version.h
 	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
 
 install.exe: dosinst.c
 	$(CC) $(CFLAGS) -s -o install.exe dosinst.c -lpc
-
-ctags/ctags.exe: ctags/main.c
-	cd ctags
-	$(MAKE) -f Makefile.djg
-	cd ..
 
 xxd/xxd.exe: xxd/xxd.c
 	cd xxd
@@ -83,7 +78,6 @@ clean:
 	-del obj\*.o
 	-del vim.exe
 	-del install.exe
-	-del ctags\ctags.exe
 	-del xxd\xxd.exe
 	-del testdir\*.out
 

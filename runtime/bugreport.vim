@@ -2,7 +2,7 @@
 :" information about the environment of a possible bug in Vim.
 :"
 :" Maintainer:	Bram Moolenaar <Bram@vim.org>
-:" Last change:	2000 Jul 15
+:" Last change:	2000 Oct 07
 :"
 :" To use inside Vim:
 :"	:so $VIMRUNTIME/bugreport.vim
@@ -83,5 +83,6 @@
 :set more&
 :if 1
 :  let &more = more_save
+:  unlet more_save
 :endif
 :e bugreport.txt

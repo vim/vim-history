@@ -372,6 +372,9 @@ check_cursor_lnum()
 check_cursor_col()
 {
     colnr_t len;
+#ifdef FEAT_VIRTUALEDIT
+    colnr_t oldcol = curwin->w_cursor.col + curwin->w_coladd;
+#endif
 
     len = STRLEN(ml_get_curline());
     if (len == 0)
@@ -389,6 +392,13 @@ check_cursor_col()
 	else
 	    curwin->w_cursor.col = len - 1;
     }
+
+#ifdef FEAT_VIRTUALEDIT
+    /* If virtual editing is on, we can leave the cursor on the old position,
+       only we must set it to virtual */
+    if (ve_all)
+	curwin->w_coladd = oldcol - curwin->w_cursor.col;
+#endif
 }
 
 /*
@@ -2089,42 +2099,7 @@ find_special_key(srcp, modp, keycode)
 		 * Normal Key with modifier: Try to make a single byte code.
 		 */
 		if (!IS_SPECIAL(key))
-		{
-		    if ((modifiers & MOD_MASK_SHIFT) && isalpha(key))
-		    {
-			key = TO_UPPER(key);
-			modifiers &= ~MOD_MASK_SHIFT;
-		    }
-		    if ((modifiers & MOD_MASK_CTRL)
-#ifdef EBCDIC
-			    /*
-			     * TODO: EBCDIC Better use:
-			     * && (Ctrl_chr(key) || key == '?')
-			     * ???
-			     */
-			    && strchr("?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_", key)
-								       != NULL
-#else
-			    && ((key >= '?' && key <= '_') || isalpha(key))
-#endif
-			    )
-		    {
-			if (key == '?')
-			    key = DEL;
-			else
-#ifdef EBCDIC
-			    key = Ctrl_chr(key);
-#else
-			    key &= 0x1f;
-#endif
-			modifiers &= ~MOD_MASK_CTRL;
-		    }
-		    if ((modifiers & MOD_MASK_ALT) && key < 0x80)
-		    {
-			key |= 0x80;
-			modifiers &= ~MOD_MASK_ALT;
-		    }
-		}
+		    key = extract_modifiers(key, &modifiers);
 
 		*modp = modifiers;
 		*srcp = end_of_name;
@@ -2133,6 +2108,56 @@ find_special_key(srcp, modp, keycode)
 	}
     }
     return 0;
+}
+
+/*
+ * Try to include modifiers in the key.
+ * Changes "Shift-a" to 'A', "Alt-A" to 0xc0, etc.
+ */
+    int
+extract_modifiers(key, modp)
+    int	    key;
+    int	    *modp;
+{
+    int	modifiers = *modp;
+
+    if ((modifiers & MOD_MASK_SHIFT) && isalpha(key))
+    {
+	key = TO_UPPER(key);
+	modifiers &= ~MOD_MASK_SHIFT;
+    }
+    if ((modifiers & MOD_MASK_CTRL)
+#ifdef EBCDIC
+	    /*
+	     * TODO: EBCDIC Better use:
+	     * && (Ctrl_chr(key) || key == '?')
+	     * ???
+	     */
+	    && strchr("?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_", key)
+						       != NULL
+#else
+	    && ((key >= '?' && key <= '_') || isalpha(key))
+#endif
+	    )
+    {
+	if (key == '?')
+	    key = DEL;
+	else
+#ifdef EBCDIC
+	    key = Ctrl_chr(key);
+#else
+	    key &= 0x1f;
+#endif
+	modifiers &= ~MOD_MASK_CTRL;
+    }
+    if ((modifiers & MOD_MASK_ALT) && key < 0x80)
+    {
+	key |= 0x80;
+	modifiers &= ~MOD_MASK_ALT;
+    }
+
+    *modp = modifiers;
+    return key;
 }
 
 /*

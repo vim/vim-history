@@ -82,12 +82,11 @@ syn region shCaseEsac transparent matchgroup=specBlock start="\<case\>" matchgro
 syn region shCaseEsac matchgroup=specBlock start="\<in\>" end="\<esac\>" contains=ALLBUT,shFunction,shCaseError,@specListedFilesBin
 syn region shCase matchgroup=specBlock contained start=")"  end=";;" contains=ALLBUT,shFunction,shCaseError,shCase,@specListedFiles
 
-
 syn sync match shDoSync       grouphere  shDo       "\<do\>"
 syn sync match shDoSync       groupthere shDo       "\<done\>"
 syn sync match shIfSync       grouphere  shIf       "\<if\>"
 syn sync match shIfSync       groupthere shIf       "\<fi\>"
-syn sync match specIfSync     grouphere	 specIf	    "%ifarch\|%ifos\|%ifnos"
+syn sync match specIfSync     grouphere  specIf     "%ifarch\|%ifos\|%ifnos"
 syn sync match specIfSync     groupthere specIf     "%endIf"
 syn sync match shForSync      grouphere  shFor      "\<for\>"
 syn sync match shForSync      groupthere shFor      "\<in\>"
@@ -95,42 +94,67 @@ syn sync match shCaseEsacSync grouphere  shCaseEsac "\<case\>"
 syn sync match shCaseEsacSync groupthere shCaseEsac "\<esac\>"
 
 if !exists("did_spec_syntax_inits")
-	let did_spec_syntax_inits = 1
-	" The default methods for highlighting. Can be overridden later.
-	
-	  hi link specBabyMacro			specCommand
-	  hi link specBlock			Function
-	  hi link specColon			Special
-	  hi link specCommand			Statement
-	  hi link specCommandOpts		Operator
-	  hi link specCommandSpecial		Special
-	  hi link specComment			Comment
-	  hi link specConfigure			specCommand
-	  hi link specDate			String
-	  hi link specDeref			Identifier
-	  hi link specDescription		NONE
-	  hi link specEmail			String
-	  hi link specFiles			NONE
-	  hi link specFilesMacro		Identifier
-	  hi link specInstallOption		Operator
-	  hi link specMacro			Identifier
-	  hi link specMacroHeading		Identifier
-	  hi link specManpageFile		NONE
-	  hi link specMonth specDate
-	  hi link specNoNumberHilite		NONE
-	  hi link specNumber			String
-	  hi link specSpecial			String
-	  hi link specSpecialChar		Special
-	  hi link specSpecialVariables		Identifier
-	  hi link specTarCommand		specCommand
-	  hi link specURL				String
-	  hi link specWeekday specDate
-	  hi link specListedFilesBin		Statement
-	  hi link specListedFilesDoc		Statement
-	  hi link specListedFilesEtc		Statement
-	  hi link specListedFilesLib		Statement
-	  hi link specListedFilesPrefix		Repeat
-	  hi link specListedFilesShare		Statement
+        let did_spec_syntax_inits = 1
+        " The default methods for highlighting. Can be overridden later.
+
+          "main types color definitions
+          hi link specSection                   Structure
+          hi link specSectionMacro              Macro
+          hi link specWWWlink                   PreProc
+          hi link specOpts                      Operator
+
+          "yes, it's ugly, but white is sooo cool
+          if &background == "dark"
+            hi      specGlobalMacro            ctermfg=white
+          else
+            hi link specGlobalMacro            Identifier
+          endif
+
+          "sh colors
+          hi link shComment                     Comment
+          hi link shIf                          Statement
+          hi link shOperator                    Special
+          hi link shQuote1                      String
+          hi link shQuote2                      String
+          hi link shQuoteDelim                  Statement
+
+          "spec colors
+          hi link specBlock                     Function
+          hi link specColon                     Special
+          hi link specCommand                   Statement
+          hi link specCommandOpts               specOpts
+          hi link specCommandSpecial            Special
+          hi link specComment                   Comment
+          hi link specConfigure                 specCommand
+          hi link specDate                      String
+          hi link specDescriptionOpts           specOpts
+          hi link specEmail                     specWWWlink
+          hi link specError                     Error
+          hi link specFilesDirective            specSectionMacro
+          hi link specFilesOpts                 specOpts
+          hi link specLicense                   String
+          hi link specMacroNameLocal            specGlobalMacro
+          hi link specMacroNameOther            specGlobalMacro
+          hi link specManpageFile               NONE
+          hi link specMonth                     specDate
+          hi link specNoNumberHilite            NONE
+          hi link specNumber                    Number
+          hi link specPackageOpts               specOpts
+          hi link specPercent                   Special
+          hi link specSpecialChar               Special
+          hi link specSpecialVariables          specGlobalMacro
+          hi link specSpecialVariablesNames     specGlobalMacro
+          hi link specTarCommand                specCommand
+          hi link specURL                       specWWWlink
+          hi link specURLMacro                  specWWWlink
+          hi link specVariables                 Identifier
+          hi link specWeekday                   specDate
+          hi link specListedFilesBin            Statement
+          hi link specListedFilesDoc            Statement
+          hi link specListedFilesEtc            Statement
+          hi link specListedFilesLib            Statement
+          hi link specListedFilesPrefix         Statement
+          hi link specListedFilesShare          Statement
   endif
 
 let b:current_syntax = "spec"

@@ -206,6 +206,7 @@ static void win_redr_ruler __ARGS((win_t *wp, int always));
 #if defined(FEAT_STL_OPT) || defined(FEAT_CMDL_INFO)
 static void get_rel_pos __ARGS((win_t *wp, char_u	*str));
 #endif
+static int mouse_comp_pos __ARGS((int *rowp, int *colp, linenr_t *lnump));
 static int get_scroll_overlap __ARGS((linenr_t lnum, int dir));
 static void intro_message __ARGS((void));
 
@@ -1552,6 +1553,7 @@ win_update(wp)
     if (wp == curwin && wp->w_botline != old_botline && !recursive)
     {
 	recursive = TRUE;
+	curwin->w_valid &= ~VALID_TOPLINE;
 	update_topline();	/* may invalidate w_botline again */
 	if (must_redraw)
 	{
@@ -2197,7 +2199,11 @@ win_line(wp, lnum, startrow, endrow)
 	    if (draw_state == WL_NR - 1 && n_extra == 0)
 	    {
 		draw_state = WL_NR;
-		if (wp->w_p_nu)
+		/* Display the line number.  After the first fill with blanks
+		 * when the 'n' flag isn't in 'cpo' */
+		if (wp->w_p_nu
+			&& (row == startrow
+			    || vim_strchr(p_cpo, CPO_NUMCOL) == NULL))
 		{
 		    /* Draw the line number (empty space after wrapping). */
 		    if (row == startrow)
@@ -3905,6 +3911,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 #ifdef FEAT_EVAL
     win_t	*o_curwin;
     buf_t	*o_curbuf;
+    void	*save_funccalp;
 #endif
     int		empty_line;
     colnr_t	virtcol;
@@ -4145,6 +4152,8 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 	    o_curwin = curwin;
 	    curwin = wp;
 	    curbuf = wp->w_buffer;
+	    /* Don't want to use local function variables here. */
+	    save_funccalp = save_funccal();
 
 	    str = eval_to_string(p, &t);
 	    if (str != NULL && *str != 0)
@@ -4162,6 +4171,7 @@ build_stl_str_hl(wp, out, fmt, fillchar, maxlen, hl)
 		    itemisflag = FALSE;
 		}
 	    }
+	    restore_funccal(save_funccalp);
 	    curwin = o_curwin;
 	    curbuf = o_curbuf;
 	    do_unlet((char_u *)"g:actual_curbuf");
@@ -4528,7 +4538,7 @@ screen_puts(text, row, col, attr)
     unsigned	off;
 #ifdef FEAT_MBYTE
     int		mbyte_blen = 0;
-    int		mbyte_cells = 0;
+    int		mbyte_cells = 1;
     int		u8c = 0;
     int		u8c_c1 = 0;
     int		u8c_c2 = 0;
@@ -5820,6 +5830,9 @@ update_topline()
 	}
 	else
 	    redraw_later(VALID);
+	/* May need to set w_skipcol when cursor in w_topline. */
+	if (curwin->w_cursor.lnum == curwin->w_topline)
+	    validate_cursor();
     }
 
 #ifdef FEAT_MOUSE
@@ -7026,7 +7039,6 @@ validate_cursor_col()
     colnr_t off;
     colnr_t col;
 
-
     validate_virtcol();
     if (!(curwin->w_valid & VALID_WCOL))
     {
@@ -7036,16 +7048,19 @@ validate_cursor_col()
 #endif
 	    ;
 	off = curwin_col_off();
+	col += off;
 
 	/* long line wrapping, adjust curwin->w_wrow */
-	if (curwin->w_p_wrap && col >= W_WIDTH(curwin) - off
+	if (curwin->w_p_wrap && col >= W_WIDTH(curwin)
 #ifdef FEAT_VERTSPLIT
 		&& curwin->w_width != 0
 #endif
 		)
-	    col = col % (W_WIDTH(curwin) - off);
-
-	curwin->w_wcol = col + off;
+	{
+	    col -= W_WIDTH(curwin);
+	    col = col % (W_WIDTH(curwin) - off + curwin_col_off2());
+	}
+	curwin->w_wcol = col;
 	curwin->w_valid |= VALID_WCOL;
     }
 }
@@ -7071,14 +7086,26 @@ win_col_off(wp)
     int
 curwin_col_off()
 {
-    return ((curwin->w_p_nu ? 8 : 0)
-#ifdef FEAT_FOLDING
-	    + (curwin->w_p_fdc ? 2 : 0)
-#endif
-#ifdef FEAT_SIGNS
-	    + (curwin->w_buffer->b_signlist != NULL ? 2 : 0)
-#endif
-	   );
+    return win_col_off(curwin);
+}
+
+/*
+ * Return the difference in column offset for the second screen line of a
+ * wrapped line.  It's 8 if 'number' is on and 'n' is in 'cpoptions'.
+ */
+    int
+win_col_off2(wp)
+    win_t	*wp;
+{
+    if (wp->w_p_nu && vim_strchr(p_cpo, CPO_NUMCOL) != NULL)
+	return 8;
+    return 0;
+}
+
+    int
+curwin_col_off2()
+{
+    return win_col_off2(curwin);
 }
 
 /*
@@ -7091,8 +7118,9 @@ curs_columns(scroll)
     int		scroll;		/* when TRUE, may scroll horizontally */
 {
     int		diff;
-    int		extra;
+    int		extra;		/* offset for first screen line */
     int		n;
+    int		width;
     int		new_leftcol;
     colnr_t	startcol;
     colnr_t	endcol;
@@ -7151,22 +7179,24 @@ curs_columns(scroll)
 #ifdef FEAT_VERTSPLIT
 	    && curwin->w_width != 0
 #endif
-	    )	/* long line wrapping, adjust curwin->w_wrow */
+	    )
     {
+	/* long line wrapping, adjust curwin->w_wrow */
 	if (curwin->w_wcol >= W_WIDTH(curwin))
 	{
 	    if (W_WIDTH(curwin) <= extra)
 	    {
+		/* No room for text, put cursor in last char of window. */
 		curwin->w_wcol = W_WIDTH(curwin) - 1;
 		curwin->w_wrow = curwin->w_height - 1;
 	    }
 	    else
 	    {
-		curwin->w_wcol -= extra;
-		n = curwin->w_wcol / (W_WIDTH(curwin) - extra);
-		curwin->w_wcol -= n * (W_WIDTH(curwin) - extra);
+		width = W_WIDTH(curwin) - extra + curwin_col_off2();
+		n = (curwin->w_wcol - W_WIDTH(curwin)) / width + 1;
+		curwin->w_wcol -= n * width;
 		curwin->w_wrow += n;
-		curwin->w_wcol += extra;
+
 #ifdef FEAT_LINEBREAK
 		/* When cursor wraps to first char of next line in Insert
 		 * mode, the 'showbreak' string isn't shown, backup to first
@@ -8805,68 +8835,11 @@ retnomove:
 		    && curwin->w_cursor.lnum == curwin->w_topline)
 		curwin->w_valid &= ~(VALID_TOPLINE);
 	}
-
-	curwin->w_cursor.lnum = curwin->w_topline;
     }
 
-#ifdef FEAT_RIGHTLEFT
-    if (curwin->w_p_rl)
-	col = W_WIDTH(curwin) - 1 - col;
-#endif
-
-    if (curwin->w_p_wrap)	/* lines wrap */
-    {
-	while (row)
-	{
-	    count = plines(curwin->w_cursor.lnum);
-	    if (count > row)
-	    {
-		if (col < curwin_col_off())
-		    col = curwin_col_off();
-		col += row * (W_WIDTH(curwin) - curwin_col_off());
-		break;
-	    }
-	    if (curwin->w_cursor.lnum == curbuf->b_ml.ml_line_count)
-	    {
-		mouse_past_bottom = TRUE;
-		break;
-	    }
-	    row -= count;
-#ifdef FEAT_FOLDING
-	    hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
-#endif
-	    ++curwin->w_cursor.lnum;
-	}
-    }
-    else				/* lines don't wrap */
-    {
-#ifdef FEAT_FOLDING
-	if (hasAnyFolding(curwin))
-	{
-	    while (row)
-	    {
-		--row;
-		++curwin->w_cursor.lnum;
-		if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-		    break;
-		hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
-	    }
-	}
-	else
-#endif
-	    curwin->w_cursor.lnum += row;
-	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
-	{
-	    curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
-	    mouse_past_bottom = TRUE;
-	}
-	col += curwin->w_leftcol;
-    }
-
-    /* skip line number and fold column in front of the line */
-    col -= curwin_col_off();
-    if (col < 0)
-	col = 0;
+    /* compute the position in the buffer line from the posn on the screen */
+    if (mouse_comp_pos(&row, &col, &curwin->w_cursor.lnum))
+	mouse_past_bottom = TRUE;
 
 #ifdef FEAT_VISUAL
     /* Start Visual mode before coladvance(), for when 'sel' != "old" */
@@ -8899,6 +8872,93 @@ retnomove:
 	    && curwin->w_cursor.col == old_cursor.col)
 	return IN_BUFFER;		/* Cursor has not moved */
     return IN_BUFFER | CURSOR_MOVED;	/* Cursor has moved */
+}
+
+/*
+ * Compute the position in the buffer line from the posn on the screen.
+ * Only works for current window.
+ * Returns TRUE if the position is below the last line.
+ */
+    static int
+mouse_comp_pos(rowp, colp, lnump)
+    int		*rowp;
+    int		*colp;
+    linenr_t	*lnump;
+{
+    int		col = *colp;
+    int		row = *rowp;
+    linenr_t	lnum;
+    int		retval = FALSE;
+    int		off;
+    int		count;
+
+#ifdef FEAT_RIGHTLEFT
+    if (curwin->w_p_rl)
+	col = W_WIDTH(curwin) - 1 - col;
+#endif
+
+    lnum = curwin->w_topline;
+    if (curwin->w_p_wrap)	/* lines wrap */
+    {
+	while (row > 0)
+	{
+	    count = plines(lnum);
+	    if (count > row)
+	    {
+		/* Position is in this buffer line.  Compute the column
+		 * without wrapping. */
+		off = curwin_col_off() - curwin_col_off2();
+		if (col < off)
+		    col = off;
+		col += row * (W_WIDTH(curwin) - off);
+		break;
+	    }
+	    if (lnum == curbuf->b_ml.ml_line_count)
+	    {
+		retval = TRUE;
+		break;		/* past end of file */
+	    }
+	    row -= count;
+#ifdef FEAT_FOLDING
+	    (void)hasFolding(lnum, NULL, &lnum);
+#endif
+	    ++lnum;
+	}
+    }
+    else			/* lines don't wrap */
+    {
+#ifdef FEAT_FOLDING
+	if (hasAnyFolding(curwin))
+	{
+	    while (row > 0)
+	    {
+		--row;
+		++lnum;
+		if (lnum > curbuf->b_ml.ml_line_count)
+		    break;
+		(void)hasFolding(lnum, NULL, &lnum);
+	    }
+	}
+	else
+#endif
+	    lnum += row;
+	if (lnum > curbuf->b_ml.ml_line_count)
+	{
+	    lnum = curbuf->b_ml.ml_line_count;
+	    retval = TRUE;
+	}
+	col += curwin->w_leftcol;
+    }
+
+    /* skip line number and fold column in front of the line */
+    col -= curwin_col_off();
+    if (col < 0)
+	col = 0;
+
+    *colp = col;
+    *rowp = row;
+    *lnump = lnum;
+    return retval;
 }
 
 #ifdef FEAT_WINDOWS
@@ -8981,57 +9041,9 @@ get_fpos_of_mouse(mpos)
     if (wp != curwin)
 	return IN_UNKNOWN;
 
-#ifdef FEAT_RIGHTLEFT
-    if (wp->w_p_rl)
-	col = W_WIDTH(wp) - 1 - col;
-#endif
-
-    mpos->lnum = wp->w_topline;
-    if (wp->w_p_wrap)	/* lines wrap */
-    {
-	while (row)
-	{
-	    count = plines(mpos->lnum);
-	    if (count > row)
-	    {
-		col += row * W_WIDTH(wp);
-		break;
-	    }
-	    if (mpos->lnum == wp->w_buffer->b_ml.ml_line_count)
-		return IN_STATUS_LINE; /* past bottom */
-	    row -= count;
-#ifdef FEAT_FOLDING
-	    hasFoldingWin(wp, mpos->lnum, NULL, &mpos->lnum, TRUE, NULL);
-#endif
-	    ++mpos->lnum;
-	}
-    }
-    else				/* lines don't wrap */
-    {
-#ifdef FEAT_FOLDING
-	if (hasAnyFolding(wp))
-	{
-	    while (row)
-	    {
-		--row;
-		++mpos->lnum;
-		if (mpos->lnum > wp->w_buffer->b_ml.ml_line_count)
-		    break;
-		hasFoldingWin(wp, mpos->lnum, NULL, &mpos->lnum, TRUE, NULL);
-	    }
-	}
-	else
-#endif
-	    mpos->lnum += row;
-	if (mpos->lnum > wp->w_buffer->b_ml.ml_line_count)
-	    return IN_UNKNOWN; /* past bottom */
-	col += wp->w_leftcol;
-    }
-
-    /* skip line number and fold column in front of the line */
-    col -= win_col_off(wp);
-    if (col < 0)
-	col = 0;
+    /* compute the position in the buffer line from the posn on the screen */
+    if (mouse_comp_pos(&row, &col, &mpos->lnum))
+	return IN_STATUS_LINE; /* past bottom */
 
     /* try to advance to the specified column */
     mpos->col = 0;
@@ -9147,7 +9159,7 @@ onepage(dir, count)
 		n += plines(lp);
 		--lp;
 #ifdef FEAT_FOLDING
-		hasFolding(lp, &lp, NULL);
+		(void)hasFolding(lp, &lp, NULL);
 #endif
 	    }
 	    if (n <= curwin->w_height)		    /* at begin of file */
@@ -9205,9 +9217,9 @@ get_scroll_overlap(lnum, dir)
 	l = lnum;
 #ifdef FEAT_FOLDING
 	if (dir > 0)
-	    hasFolding(l, NULL, &l);
+	    (void)hasFolding(l, NULL, &l);
 	else
-	    hasFolding(l, &l, NULL);
+	    (void)hasFolding(l, &l, NULL);
 #endif
 	l += dir;
 	h2 = plines_check(l);
@@ -9217,9 +9229,9 @@ get_scroll_overlap(lnum, dir)
 	{
 #ifdef FEAT_FOLDING
 	    if (dir > 0)
-		hasFolding(l, NULL, &l);
+		(void)hasFolding(l, NULL, &l);
 	    else
-		hasFolding(l, &l, NULL);
+		(void)hasFolding(l, &l, NULL);
 #endif
 	    l += dir;
 	    h3 = plines_check(l);
@@ -9229,9 +9241,9 @@ get_scroll_overlap(lnum, dir)
 	    {
 #ifdef FEAT_FOLDING
 		if (dir > 0)
-		    hasFolding(l, NULL, &l);
+		    (void)hasFolding(l, NULL, &l);
 		else
-		    hasFolding(l, &l, NULL);
+		    (void)hasFolding(l, &l, NULL);
 #endif
 		l += dir;
 		h4 = plines_check(l);
@@ -9273,7 +9285,7 @@ halfpage(flag, Prenum)
 	    if (n < 0 && scrolled)
 		break;
 #ifdef FEAT_FOLDING
-	    hasFolding(curwin->w_topline, NULL, &curwin->w_topline);
+	    (void)hasFolding(curwin->w_topline, NULL, &curwin->w_topline);
 #endif
 	    ++curwin->w_topline;
 	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW);
@@ -9289,7 +9301,7 @@ halfpage(flag, Prenum)
 		if (i > room)
 		    break;
 #ifdef FEAT_FOLDING
-		hasFolding(curwin->w_botline, NULL, &curwin->w_botline);
+		(void)hasFolding(curwin->w_botline, NULL, &curwin->w_botline);
 #endif
 		++curwin->w_botline;
 		room -= i;
@@ -9323,7 +9335,7 @@ halfpage(flag, Prenum)
 	    if (scrolled < 0 && curwin->w_cursor.lnum >= curwin->w_topline)
 		break;
 #ifdef FEAT_FOLDING
-	    hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
+	    (void)hasFolding(curwin->w_cursor.lnum, NULL, &curwin->w_cursor.lnum);
 #endif
 	    ++curwin->w_cursor.lnum;
 	}
@@ -9340,7 +9352,7 @@ halfpage(flag, Prenum)
 	    scrolled += i;
 	    --curwin->w_topline;
 #ifdef FEAT_FOLDING
-	    hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
+	    (void)hasFolding(curwin->w_topline, &curwin->w_topline, NULL);
 #endif
 	    curwin->w_valid &= ~(VALID_CROW|VALID_WROW|
 					      VALID_BOTLINE|VALID_BOTLINE_AP);
@@ -9374,7 +9386,7 @@ halfpage(flag, Prenum)
 		break;
 	    --curwin->w_cursor.lnum;
 #ifdef FEAT_FOLDING
-	    hasFolding(curwin->w_cursor.lnum, &curwin->w_cursor.lnum, NULL);
+	    (void)hasFolding(curwin->w_cursor.lnum, &curwin->w_cursor.lnum, NULL);
 #endif
 	}
 #endif
@@ -9436,27 +9448,30 @@ intro_message()
 		    break;
 		continue;
 	    }
-	    col = strlen(_(lines[i]));
-	    if (i == 2)
+	    if (*lines[i] != NUL)
 	    {
-		STRCPY(vers, mediumVersion);
-		if (highest_patch())
+		col = strlen(_(lines[i]));
+		if (i == 2)
 		{
-		    /* Check for 9.9x, alpha/beta version */
-		    if (isalpha(mediumVersion[3]))
-			sprintf((char *)vers + 4, ".%d%s", highest_patch(),
+		    STRCPY(vers, mediumVersion);
+		    if (highest_patch())
+		    {
+			/* Check for 9.9x, alpha/beta version */
+			if (isalpha(mediumVersion[3]))
+			    sprintf((char *)vers + 4, ".%d%s", highest_patch(),
 							   mediumVersion + 4);
-		    else
-			sprintf((char *)vers + 3, ".%d", highest_patch());
+			else
+			    sprintf((char *)vers + 3, ".%d", highest_patch());
+		    }
+		    col += STRLEN(vers);
 		}
-		col += STRLEN(vers);
+		col = (Columns - col) / 2;
+		if (col < 0)
+		    col = 0;
+		screen_puts((char_u *)_(lines[i]), row, col, 0);
+		if (i == 2)
+		    screen_puts(vers, row, col + 8, 0);
 	    }
-	    col = (Columns - col) / 2;
-	    if (col < 0)
-		col = 0;
-	    screen_puts((char_u *)_(lines[i]), row, col, 0);
-	    if (i == 2)
-		screen_puts(vers, row, col + 8, 0);
 	    ++row;
 	}
 #if defined(WIN32) && !defined(FEAT_GUI_W32)

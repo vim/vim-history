@@ -340,6 +340,11 @@ static char *(features[]) =
 #else
 	"-rightleft",
 #endif
+#ifdef FEAT_RUBY
+ 	"+ruby",
+#else
+ 	"-ruby",
+#endif
 #ifdef FEAT_SCROLLBIND
 	"+scrollbind",
 #else
@@ -712,7 +717,7 @@ list_version()
     version_msg("\"\n");
 #endif
 #ifdef USR_VIMRC_FILE3
-    version_msg(_("  3d user vimrc file: \""));
+    version_msg(_(" 3rd user vimrc file: \""));
     version_msg(USR_VIMRC_FILE3);
     version_msg("\"\n");
 #endif
@@ -741,7 +746,7 @@ list_version()
     version_msg("\"\n");
 # endif
 # ifdef USR_GVIMRC_FILE3
-    version_msg(_(" 3d user gvimrc file: \""));
+    version_msg(_("3rd user gvimrc file: \""));
     version_msg(USR_GVIMRC_FILE3);
     version_msg("\"\n");
 # endif

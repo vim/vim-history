@@ -1,4 +1,4 @@
-*cmdline.txt*   For Vim version 6.0h.  Last change: 2000 Aug 07
+*cmdline.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -507,14 +507,18 @@ Examples: >
 	7;/pat2/	Find line containing "pat2", after line 7, leaving
 			the cursor in line 7.
 
-The {number} must be between 0 and the number of lines in the file.  A 0 is
-interpreted as a 1, except with the commands tag, pop and read.
+The {number} must be between 0 and the number of lines in the file.  When
+using a 0 (zero) this is interpreted as a 1 by most commands.  Commands that
+use it as a count do use it as a zero (|:tag|, |:pop|, etc).  Some commands
+interpret the zero as "before the first line" (|:read|, search pattern, etc).
 
 Examples: >
 	.+3		three lines below the cursor
 	/that/+1	the line below the next line containing "that"
 	.,$		from current line until end of file
-	0;/that		the first line containing "that"
+	0;/that		the first line containing "that", also matches in the
+			first line.
+	1;/that		the first line after line 1 containing "that"
 
 Some commands allow for a count after the command.  This count is used as the
 number of lines to be used, starting with the line given in the last line

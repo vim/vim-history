@@ -1,11 +1,14 @@
 " Vim syntax file
 " Language:	Man page
 " Maintainer:	Gautam H. Mudunuri <gmudunur@informatica.com>
-" Last Change:	1999 Jun 14
+" Last Change:	2000 Oct 15
 " Version Info:
 
 " clear any unwanted syntax defs
 syn clear
+
+" Get the CTRL-H syntax to handle backspaced text
+source <sfile>:p:h/ctrlh.vim
 
 syn case ignore
 syn match  manReference       "[a-z][a-z0-9_]*([1-9][a-z]\{0,1})"

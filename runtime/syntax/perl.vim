@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Perl
 " Maintainer:	Nick Hibma <n_hibma@webweaving.org>
-" Last Change:	2000-06-13
+" Last Change:	2000-09-07
 " Location:	http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
 " Please download most recent version first before mailing
@@ -68,7 +68,7 @@ syn keyword perlStatementProc		alarm exec fork getpgrp getppid getpriority kill 
 syn keyword perlStatementSocket		accept bind connect getpeername getsockname getsockopt listen recv send setsockopt shutdown socket socketpair
 syn keyword perlStatementIPC		msgctl msgget msgrcv msgsnd semctl semget semop shmctl shmget shmread shmwrite
 syn keyword perlStatementNetwork	endprotoent endservent gethostbyaddr gethostbyname gethostent getnetbyaddr getnetbyname getnetent getprotobyname getprotobynumber getprotoent getservbyname getservbyport getservent sethostent setnetent setprotoent setservent
-syn keyword perlStatementPword		getgrent getgrgid getgrnam getlogia
+syn keyword perlStatementPword		getpwuid getpwnam getpwent setpwent endpwent getgrent getgrgid
 syn keyword perlStatementTime		gmtime localtime time times
 
 syn keyword perlStatementMisc		warn formline reset scalar new delete
@@ -153,7 +153,6 @@ syn match  perlNotEmptyLine	"^\s\+$" contained
 " '} elsif (...) {'.
 syn keyword perlElseIfError	if contained
 
-
 " Variable interpolation
 "
 " These items are interpolated inside "" strings and similar constructs.
@@ -171,7 +170,7 @@ syn region  perlShellCommand	matchgroup=perlMatchStartEnd start="`" end="`" cont
 " Constants
 "
 " Numbers
-syn match  perlNumber		"-\=\<\d\+L\=\>\|0[xX]\x\+\>"
+syn match  perlNumber		"[-+]\=\(\<\d[[:digit:]_]*\(L\=\|[eE][\-+]\=\d\+\)\>\|0[xX]\x[[:xdigit:]_]*\>\)"
 
 " Simple version of searches and matches
 " caters for m//, m## and m[] (and the !/ variant)
@@ -209,35 +208,39 @@ syn region perlTranslation	matchgroup=perlMatchStartEnd start=+\[+ end=+\][cds]*
 syn match  perlString "\<\I\i*\s*=>"me=e-2
 
 " Strings and q, qq, qw and qr expressions
+
+" Brackets in qq()
+syn region perlBrackets		start=+(+ end=+)+ contained transparent contains=perlBrackets,@perlStringSQ
+
 syn region perlStringUnexpanded	matchgroup=perlStringStartEnd start="'" end="'" contains=@perlInterpSQ
 syn region perlString		matchgroup=perlStringStartEnd start=+"+  end=+"+ contains=@perlInterpDQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q#+ end=+#+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q|+ end=+|+ contains=@perlInterpSQ
-syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q(+ end=+)+ contains=@perlInterpSQ
+syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q(+ end=+)+ contains=@perlInterpSQ,perlBrackets
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q{+ end=+}+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q/+ end=+/+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx]#+ end=+#+ contains=@perlInterpDQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx]|+ end=+|+ contains=@perlInterpDQ
-syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx](+ end=+)+ contains=@perlInterpDQ
+syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx](+ end=+)+ contains=@perlInterpDQ,perlBrackets
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx]{+ end=+}+ contains=@perlInterpDQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<q[qx]/+ end=+/+ contains=@perlInterpDQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw#+  end=+#+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw|+  end=+|+ contains=@perlInterpSQ
-syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw(+  end=+)+ contains=@perlInterpSQ
+syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw(+  end=+)+ contains=@perlInterpSQ,perlBrackets
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw{+  end=+}+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qw/+  end=+/+ contains=@perlInterpSQ
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr#+  end=+#[imosx]*+ contains=@perlInterpMatch
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr|+  end=+|[imosx]*+ contains=@perlInterpMatch
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr(+  end=+)[imosx]*+ contains=@perlInterpMatch
 syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr{+  end=+}[imosx]*+ contains=@perlInterpMatch
-syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr/+  end=+/[imosx]*+ contains=@perlInterpMatch
+syn region perlQQ		matchgroup=perlStringStartEnd start=+\<qr/+  end=+/[imosx]*+ contains=@perlInterpSlash
 
 " Constructs such as print <<EOF [...] EOF
 "
-syn region perlUntilEOF		start=+<<EOF+hs=s+2 start=+<<"EOF"+hs=s+2 end="^EOF$" contains=@perlInterpDQ
-syn region perlUntilEOF		start=+<<""+hs=s+2 end="^$" contains=@perlInterpDQ,perlNotEmptyLine
-syn region perlUntilEOF		start=+<<'EOF'+hs=s+2 end="^EOF$" contains=@perlInterpSQ
-syn region perlUntilEOF		start=+<<''+hs=s+2 end="^$" contains=@perlInterpSQ,perlNotEmptyLine
+syn region perlUntilEOF		start=+<<\s*EOF+hs=s+2 start=+<<\s*"EOF"+hs=s+2 end="^EOF$" contains=@perlInterpDQ
+syn region perlUntilEOF		start=+<<\s*""+hs=s+2 end="^$" contains=@perlInterpDQ,perlNotEmptyLine
+syn region perlUntilEOF		start=+<<\s*'EOF'+hs=s+2 end="^EOF$" contains=@perlInterpSQ
+syn region perlUntilEOF		start=+<<\s*''+hs=s+2 end="^$" contains=@perlInterpSQ,perlNotEmptyLine
 
 " Class declarations
 "
@@ -273,7 +276,7 @@ syn match  perlFormatField	"@[^A-Za-z_|<>~#*]"me=e-1 contained
 syn match  perlFormatField	"@$" contained
 
 " __END__ and __DATA__ clauses
-syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="."
+syntax region perlDATA		start="^__\(DATA\|END\)__$" skip="." end="." contains=perlPOD
 
 
 
@@ -358,6 +361,8 @@ if !exists("did_perl_syntax_inits")
   hi link perlSpecialMatch	perlSpecial
   hi link perlSpecialBEOM	perlSpecial
   hi link perlDATA		perlComment
+
+  hi link perlBrackets		Error
 
   " Possible errors
   hi link perlNotEmptyLine	Error

@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Aug 27
+" Last change:	2000 Oct 15
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -10,7 +10,7 @@ endif
 let did_load_filetypes = 1
 
 " Line continuation is used here, remove 'C' from 'cpoptions'
-let s:ft_cpo_save = &cpo
+let s:cpo_save = &cpo
 set cpo-=C
 
 augroup filetypedetect
@@ -228,6 +228,15 @@ au BufNewFile,BufRead *.rul
 " DCL (Digital Command Language - vms)
 au BufNewFile,BufRead *.com			setf dcl
 
+" Dylan - lid files
+au BufNewFile,BufRead *.lid			setf dylanlid
+
+" Dylan - intr files (melange)
+au BufNewFile,BufRead *.intr			setf dylanintr
+
+" Dylan
+au BufNewFile,BufRead *.dylan			setf dylan
+
 " Microsoft Module Definition
 au BufNewFile,BufRead *.def			setf def
 
@@ -292,6 +301,9 @@ au BufNewFile,BufRead *.gpi			setf gnuplot
 au BufNewFile,BufRead *.hs			setf haskell
 au BufNewFile,BufRead *.lhs			setf lhaskell
 
+" HEX (Intel)
+au BufNewFile,BufRead *.hex,*.h32		setf hex
+
 " HTML (.shtml for server side)
 au BufNewFile,BufRead *.html,*.htm,*.shtml	setf html
 
@@ -337,6 +349,9 @@ au BufNewFile,BufRead *.jsp			setf jsp
 " Java Properties resource file (note: doesn't catch font.properties.pl)
 au BufNewFile,BufRead *.properties,*.properties_??,*.properties_??_??,*.properties_??_??_*	setf jproperties
 
+" Jess
+au BufNewFile,BufRead *.clp			setf jess
+
 " Jgraph
 au BufNewFile,BufRead *.jgr			setf jgraph
 
@@ -351,6 +366,9 @@ au BufNewFile,BufRead *.ace,*.ACE		setf lace
 
 " Latte
 au BufNewFile,BufRead *.latte,*.lte		setf latte
+
+" LambdaProlog (*.mod too, see Modsim)
+au BufNewFile,BufRead *.sig			setf lprolog
 
 " Lex
 au BufNewFile,BufRead *.lex,*.l			setf lex
@@ -384,6 +402,9 @@ au BufNewFile,BufRead *.lss			setf lss
 au BufNewFile,BufRead *.m4
 	\ if expand("<afile>") !~? 'html.m4$' | setf m4 | endif
 
+" MaGic Point
+au BufNewFile,BufRead *.mgp			setf mgp
+
 " Mail (for Elm, trn, mutt and rn)
 au BufNewFile,BufRead snd.\d\+,.letter,.letter.\d\+,.followup,.article,.article.\d\+,pico.\d\+,mutt-*-\d\+,mutt\w\{6\},ae\d\+.txt setf mail
 
@@ -416,14 +437,22 @@ au BufNewFile,BufRead *.mf			setf mf
 " MetaPost
 au BufNewFile,BufRead *.mp			setf mp
 
-" Modsim III
-au BufNewFile,BufRead *.mod			setf modsim3
+" Modsim III (or LambdaProlog)
+au BufNewFile,BufRead *.mod
+	\ if getline(1) =~ '\<module\>' |
+	\   setf lprolog |
+	\ else |
+	\   setf modsim3 |
+	\ endif
 
 " Modula 2
 au BufNewFile,BufRead *.m2,*.DEF,*.MOD,*.md,*.mi setf modula2
 
 " Modula 3 (.m3, .i3, .mg, .ig)
 au BufNewFile,BufRead *.[mi][3g]		setf modula3
+
+" Moterola S record
+au BufNewFile,BufRead *.s19,*.s28,*.s37		setf srec
 
 " Msql
 au BufNewFile,BufRead *.msql			setf msql
@@ -456,6 +485,12 @@ endfun
 
 " OCAML
 au BufNewFile,BufRead *.ml,*.mli,*.mll,*.mly	setf ocaml
+
+" Omnimark
+au BufNewFile,BufRead *.xom,*.xin		setf omnimark
+
+" OpenROAD
+au BufNewFile,BufRead *.or			setf openroad
 
 " OPL
 au BufNewFile,BufRead *.[Oo][Pp][Ll]		setf opl
@@ -490,7 +525,7 @@ au BufNewFile,BufRead *.pm
 au BufNewFile,BufRead *.pod			setf pod
 
 " Php3
-au BufNewFile,BufRead *.php,*.php3		setf php3
+au BufNewFile,BufRead *.php,*.php3		setf php
 
 " Phtml
 au BufNewFile,BufRead *.phtml			setf phtml
@@ -519,7 +554,8 @@ au BufNewFile,BufRead *printcap
 au BufNewFile,BufRead *termcap
 	\ let b:ptcap_type = "term" | setf ptcap
 
-" PCCTS
+" PCCTS / ANTRL
+"au BufNewFile,BufRead *.g			setf antrl
 au BufNewFile,BufRead *.g			setf pccts
 
 " Procmail
@@ -548,8 +584,14 @@ au BufNewFile,BufRead *.r
 " Remind
 au BufNewFile,BufRead .reminders*		setf remind
 
+" Robots.txt
+au BufNewFile,BufRead robots.txt		setf robots
+
 " Rpcgen
 au BufNewFile,BufRead *.x			setf rpcgen
+
+" RTF
+au BufNewFile,BufRead *.rtf			setf rtf
 
 " Ruby
 au BufNewFile,BufRead *.rb			setf ruby
@@ -584,7 +626,7 @@ au BufNewFile,BufRead *.sgm,*.sgml
 	\ endif
 au BufNewFile,BufRead *.ent			setf sgml
 
-" Shell scripts (sh, ksh, bash, csh); Allow .profile_foo etc.
+" Shell scripts (sh, ksh, bash, bash2, csh); Allow .profile_foo etc.
 au BufNewFile,BufRead .bashrc*,bashrc,bash.bashrc,.bash_profile*,*.bash call SetFileTypeSH("bash")
 au BufNewFile,BufRead .kshrc*,*.ksh call SetFileTypeSH("ksh")
 au BufNewFile,BufRead /etc/profile,.profile*,*.sh,*.env call SetFileTypeSH(getline(1))
@@ -596,7 +638,7 @@ fun! SetFileTypeSH(name)
     if exists("b:is_bash")
       unlet b:is_bash
     endif
-  elseif exists("g:bash_is_sh") || a:name =~ '\<bash\>'
+  elseif exists("g:bash_is_sh") || a:name =~ '\<bash\>' || a:name =~ '\<bash2\>'
     let b:is_bash = 1
     if exists("b:is_kornshell")
       unlet b:is_kornshell
@@ -712,6 +754,9 @@ au BufNewFile,BufRead *vimrc*,*.vim,.exrc,_exrc setf vim
 " Viminfo file
 au BufNewFile,BufRead .viminfo,_viminfo		setf viminfo
 
+" Virata Config Script File
+au BufRead,BufNewFile *.hw,*.module,*.pkg	setf virata
+
 " Visual Basic (also uses *.bas) or FORM
 au BufNewFile,BufRead *.frm			call FTCheck_VB("form")
 
@@ -744,6 +789,9 @@ au BufNewFile,BufRead *.web
 	\ else |
 	\   setf winbatch |
 	\ endif
+
+" Windows Scripting Host
+au BufNewFile,BufRead *.wsf			setf wsh
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
 au BufEnter *.xpm
@@ -809,4 +857,4 @@ if has("gui_running") && !exists("did_install_syntax_menu") && &guioptions !~# "
 endif
 
 " Restore 'cpoptions'
-let &cpo = s:ft_cpo_save
+let &cpo = s:cpo_save

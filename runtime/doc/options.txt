@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0h.  Last change: 2000 Aug 31
+*options.txt*   For Vim version 6.0i.  Last change: 2000 Oct 15
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -131,6 +131,13 @@ A few examples: >
    :set tags=tags\ /usr/tags	    results in "tags /usr/tags"
    :set tags=tags\\,file	    results in "tags\,file"
    :set tags=tags\\\ file	    results in "tags\ file"
+
+The "|" character separates a ":set" command from a following command.  To
+include the "|" in the option value, use "\|" instead.  This example sets the
+'titlestring' option to "hi|there": >
+   :set titlestring=hi\|there
+This sets the 'titlestring' option to "hi" and 'iconstring' to "there": >
+   :set titlestring=hi|set iconstring=there
 
 For MS-DOS and WIN32 backslashes in file names are mostly not removed.  More
 precise: For options that expect a file name (those where environment
@@ -1065,14 +1072,17 @@ A jump table for the options with a short description can be found at |X_op|.
 	This option is not used when 'paste' is set.
 	NOTE: This option is reset when 'compatible' is set.
 
+							*'cinkeys'* *'cink'*
 'cinkeys' 'cink'	string	(default "0{,0},:,0#,!^F,o,O,e")
 			local to buffer
 			{not in Vi}
 			{not available when compiled without the |+cindent|
 			feature}
 	A list of keys that, when typed in Insert mode, cause reindenting of
-	the current line.  Only happens if 'cindent' is on or 'indentexpr'
-	isn't empty.  See |C-indenting| and |indent-expression|.
+	the current line.  Only used if 'cindent' is on and 'indentexpr' is
+	empty.
+	For the format of this option see |cinkeys-format|.
+	See |C-indenting|.
 
 						*'cinoptions'* *'cino'*
 'cinoptions' 'cino'	string	(default "")
@@ -1403,6 +1413,8 @@ A jump table for the options with a short description can be found at |X_op|.
 		m	When included, a showmatch will always wait half a
 			second.  When not included, a showmatch will wait half
 			a second or until a character is typed.  |'showmatch'|
+		n	When included, the column used for 'number' will also
+			be used for text of wrapped lines.
 		o	Line offset to search command is not remembered for
 			next search.
 		O	Don't complain if a file is being overwritten, even
@@ -2574,7 +2586,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+cindent|
 			or |+eval| features}
 	Expression which is evaluated to obtain the proper indent for a line.
-	The 'cinkeys' option specifies when it is used.
+	It is used when a new line is created, for the |=| operator and
+	in Insert mode as specified with the 'indentkeys' option.
 	When this option is not empty, it overrules the 'cindent' and
 	'smartindent' indenting.
 	When 'paste' is set this option is not used for indenting.
@@ -2589,6 +2602,17 @@ A jump table for the options with a short description can be found at |X_op|.
 		:set indentexpr=GetMyIndent()
 <	See |indent-expression|.  Also see |eval-sandbox|.
 	NOTE: This option is made empty when 'compatible' is set.
+
+						*'indentkeys'* *'indk'*
+'indentkeys' 'indk'	string	(default "0{,0},:,0#,!^F,o,O,e")
+			local to buffer
+			{not in Vi}
+			{not available when compiled without the |+cindent|
+			feature}
+	A list of keys that, when typed in Insert mode, cause reindenting of
+	the current line.  Only happens if 'indentexpr' isn't empty.
+	The format is identical to 'cinkeys', see |indentkeys-format|.
+	See |C-indenting| and |indent-expression|.
 
 			*'infercase'* *'inf'* *'noinfercase'* *'noinf'*
 'infercase' 'inf'	boolean	(default off)
@@ -2970,8 +2994,8 @@ A jump table for the options with a short description can be found at |X_op|.
 	When on the plugin scripts are loaded when starting up |load-plugins|.
 	This option can be reset in your |vimrc| file to disable the loading
 	of plugins.
-	Note that using the "-u {vimrc}" command line argument also disables
-	loading plugins |-u|.
+	Note that using the "-u NONE" and "--noplugins" command line arguments
+	reset this option. |-u| |--noplugins|
 
 						*'magic'* *'nomagic'*
 'magic'			boolean	(default on)
@@ -3300,10 +3324,9 @@ A jump table for the options with a short description can be found at |X_op|.
 				*'number'* *'nu'* *'nonumber'* *'nonu'*
 'number' 'nu'		boolean	(default off)
 			local to window
-	Print the line number in front of each line.  Tip: If you don't like
-	wrapping lines to mix with the line numbers, set the 'showbreak'
-	option to eight spaces:
-		:set showbreak=\ \ \ \ \ \ \ \ 
+	Print the line number in front of each line.  When the 'n' option is
+	excluded from 'cpoptions' a wrapped line will not use the column of
+	line numbers (this is the default when 'compatible' isn't set).
 
 					*'osfiletype'* *'oft'*
 'osfiletype' 'oft'	string (RISC-OS default: "Text",
@@ -3411,8 +3434,8 @@ A jump table for the options with a short description can be found at |X_op|.
 			global
 			{not in Vi}
 	This is a list of directories which will be searched when using the
-	gf, [f, ]f, ^Wf and other commands, provided that the file being
-	searched for has a relative path (not starting with '/').  The
+	|gf|, [f, ]f, ^Wf, |:find| and other commands, provided that the file
+	being searched for has a relative path (not starting with '/').  The
 	directories in the 'path' option may be relative or absolute.
 	- Use commas to separate directory names: >
 		:set path=.,/usr/local/include,/usr/include
@@ -3602,7 +3625,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	Note that, unlike 'path', no wildcards like "*" or "**" are allowed.
 	See |:runtime|.
 	Example: >
-		:set runtimepath=/mygroup/vim,~/vimruntime,$VIMRUNTIME
+		:set runtimepath=~/vimruntime,/mygroup/vim,$VIMRUNTIME
 <	This will use the directory "~/vimruntime" first (containing your
 	personal Vim runtime files), then "/mygroup/vim" (shared between a
 	group of people) and finally "$VIMRUNTIME" (the distributed runtime
@@ -3775,9 +3798,6 @@ A jump table for the options with a short description can be found at |X_op|.
 	It is allowed to give an argument to the command, e.g.  "csh -f".
 	See |option-backslash| about including spaces and backslashes.
 	Environment variables are expanded |:set_env|.
-	For Dos 32 bits (DJGPP), you can set the $DJSYSFLAGS environment
-	variable to change the way external commands are executed.  See the
-	libc.inf file of DJGPP.
 	If the name of the shell contains a space, you might need to enclose
 	it in quotes.  Example: >
 		:set shell=\"c:\program\ files\unix\sh.exe\"\ -f
@@ -3786,6 +3806,9 @@ A jump table for the options with a short description can be found at |X_op|.
 	"-f" is not inside the quotes, because it is not part of the command
 	name.  And Vim automagically recognizes the backslashes that are path
 	separators.
+	For Dos 32 bits (DJGPP), you can set the $DJSYSFLAGS environment
+	variable to change the way external commands are executed.  See the
+	libc.inf file of DJGPP.
 	Under MS-Windows, when the executable ends in ".com" it must be
 	included.  Thus setting the shell to "command.com" or "4dos.com"
 	works, but "command" and "4dos" do not work for all commands (e.g.,
@@ -4357,6 +4380,7 @@ A jump table for the options with a short description can be found at |X_op|.
 	When 'swapfile' is reset, the swap file for the current buffer is
 	immediately deleted.  When 'swapfile' is set, and 'updatecount' is
 	non-zero, a swap file is immediately created.
+	Also see |swap-file| and |'swapsync'|.
 
 						*'swapsync'* *'sws'*
 'swapsync' 'sws'	string	(default "fsync")
@@ -4672,9 +4696,14 @@ A jump table for the options with a short description can be found at |X_op|.
 			{not available when compiled without the |+title|
 			feature}
 	When on, the title of the window will be set to the value of
-	'titlestring' (if it is not empty), or to "VIM - filename", where
-	filename is the name of the file currently being edited.  Only works
-	if the terminal supports setting window titles
+	'titlestring' (if it is not empty), or to:
+		filename +RO (path) - VIM
+	Where:
+		filename	the name of the file being edited
+		+		indicates the file was modified
+		RO		indicates the file is read-only
+		(path)		is the path of the file being edited
+	Only works if the terminal supports setting window titles
 	(currently Amiga console, Win32 console, all GUI versions and
 	terminals with a non- empty 't_ts' option - these are Unix xterm and
 	iris-ansi by default, where 't_ts' is taken from the builtin termcap).

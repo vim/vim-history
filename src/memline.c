@@ -3627,9 +3627,9 @@ findswapname(buf, dirp, old_fname)
 			x = st.st_mtime;    /* Manx C can't do &st.st_mtime */
 			MSG_PUTS(ctime(&x));
 		    }
-		    MSG_PUTS(_("\n(1) Another program may be editing the same file.\n"));
-		    MSG_PUTS(_("    If this is the case, be careful not to end up with two\n"));
-		    MSG_PUTS(_("    different instances of the same file when making changes.\n"));
+		    /* Some of these messages are long to allow translation to
+		     * other languages. */
+		    MSG_PUTS(_("\n(1) Another program may be editing the same file.\n    If this is the case, be careful not to end up with two\n    different instances of the same file when making changes.\n"));
 		    MSG_PUTS(_("    Quit, or continue with caution.\n"));
 		    MSG_PUTS(_("\n(2) An edit session for this file crashed.\n"));
 		    MSG_PUTS(_("    If this is the case, use \":recover\" or \"vim -r "));

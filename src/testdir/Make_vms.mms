@@ -47,7 +47,7 @@ SCRIPT = test1.out test2.out test3.out test4.out test5.out \
 	 test23.out test24.out test26.out \
 	 test28.out test29.out test31.out test32.out \
 	 test33.out test34.out test35.out test36.out test37.out \
-	 test38.out test39.out
+	 test38.out test39.out test40.out
 
 .IFDEF WANT_GUI
 SCRIPT_GUI = test16.out
@@ -93,7 +93,7 @@ nolog :
 	-@ write sys$output "   HAVE_GZIP = ""$(HAVE_GZIP)"" "
 	-@ write sys$output "Default vimrc file is VMS.VIM:
 	-@ write sys$output "-----------------------------------------------"
-	-@ ty VIMRC.VMS
+	-@ ty VMS.VIM
 
 clean :
 	-@ if "''F$SEARCH("*.out")'" .NES. ""  then del *.out.*
