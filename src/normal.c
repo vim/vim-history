@@ -3665,6 +3665,8 @@ nv_gd(oap, nchar)
 	if ((fdo_flags & FDO_SEARCH) && KeyTyped && oap->op_type == OP_NOP)
 	    foldOpenCursor();
 #endif
+	/* "n" searches forward now */
+	reset_search_dir();
     }
 
     vim_free(pat);
