@@ -270,26 +270,32 @@ getmark(c, changefile)
     {
 	pos_T	pos;
 	oparg_T	oa;
+	int	slcb = listcmd_busy;
 
 	pos = curwin->w_cursor;
+	listcmd_busy = TRUE;	    /* avoid that '' is changed */
 	if (findpar(&oa, c == '}' ? FORWARD : BACKWARD, 1L, NUL, FALSE))
 	{
 	    pos_copy = curwin->w_cursor;
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
+	listcmd_busy = slcb;
     }
     else if (c == '(' || c == ')')	/* to previous/next sentence */
     {
 	pos_T	pos;
+	int	slcb = listcmd_busy;
 
 	pos = curwin->w_cursor;
+	listcmd_busy = TRUE;	    /* avoid that '' is changed */
 	if (findsent(c == ')' ? FORWARD : BACKWARD, 1L))
 	{
 	    pos_copy = curwin->w_cursor;
 	    posp = &pos_copy;
 	}
 	curwin->w_cursor = pos;
+	listcmd_busy = slcb;
     }
 #ifdef FEAT_VISUAL
     else if (c == '<' || c == '>')	/* start/end of visual area */
