@@ -5544,7 +5544,17 @@ nv_csearch(cap)
     {
 	curwin->w_set_curswant = TRUE;
 #ifdef FEAT_VIRTUALEDIT
-	curwin->w_cursor.coladd = 0;
+	/* Include a Tab for "tx" and for "dfx". */
+	if (gchar_cursor() == TAB && virtual_active() && cap->arg == FORWARD
+		&& (t_cmd || cap->oap->op_type != OP_NOP))
+	{
+	    colnr_T	scol, ecol;
+
+	    getvcol(curwin, &curwin->w_cursor, &scol, NULL, &ecol);
+	    curwin->w_cursor.coladd = ecol - scol;
+	}
+	else
+	    curwin->w_cursor.coladd = 0;
 #endif
 #ifdef FEAT_VISUAL
 	adjust_for_sel(cap);
