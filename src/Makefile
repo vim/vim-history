@@ -348,7 +348,7 @@ CClink = $(CC)
 # This requires at least "small" features, "tiny" doesn't work.
 # NOTE: May not work in combination with "-pthread" linker argument, sometimes
 # needed for Python.
-CONF_OPT_PERL = --enable-perlinterp
+#CONF_OPT_PERL = --enable-perlinterp
 
 # PYTHON - For creating Vim with Python interface
 # Uncomment this when you want to include the Python interface.
@@ -356,15 +356,15 @@ CONF_OPT_PERL = --enable-perlinterp
 
 # TCL - For creating Vim with Tcl interface
 # Uncomment this when you want to include the Tcl interface.
-CONF_OPT_TCL = --enable-tclinterp
+#CONF_OPT_TCL = --enable-tclinterp
 
 # RUBY - For creating Vim with Ruby interface
 # Uncomment this when you want to include the Ruby interface.
-CONF_OPT_RUBY = --enable-rubyinterp
+#CONF_OPT_RUBY = --enable-rubyinterp
 
 # CSCOPE - For creating Vim with Cscope interface
 # Uncomment this when you want to include the Cscope interface.
-CONF_OPT_CSCOPE = --enable-cscope
+#CONF_OPT_CSCOPE = --enable-cscope
 
 # WORKShOP - Sun Visual Workshop interface
 #CONF_OPT_WORKSHOP = --enable-workshop
@@ -402,7 +402,7 @@ CONF_OPT_CSCOPE = --enable-cscope
 #CONF_OPT_FEAT = --with-features=small
 #CONF_OPT_FEAT = --with-features=normal
 #CONF_OPT_FEAT = --with-features=big
-CONF_OPT_FEAT = --with-features=huge
+#CONF_OPT_FEAT = --with-features=huge
 
 # X WINDOWS DISABLE - For creating a plain Vim without any X11 related fancies
 # (otherwise Vim configure will try to include xterm titlebar access)
@@ -446,7 +446,7 @@ CONF_OPT_FEAT = --with-features=huge
 
 # Often used for GCC: mixed optimizing, lot of optimizing, debugging
 #CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
-CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
+#CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
 #CFLAGS = -O6 -fno-strength-reduce -Wall -Wshadow -Wmissing-prototypes
 #CFLAGS = -g -DDEBUG -Wall -Wshadow -Wmissing-prototypes
 
@@ -455,7 +455,7 @@ CFLAGS = -g -O2 -fno-strength-reduce -Wall -Wmissing-prototypes
 # Electric Fence is free (search ftp sites).
 # On FreeBSD you might need to enlarge the number of mmaps allowed.  Do this
 # as root: sysctl -w vm.max_proc_mmap=30000
-EXTRA_LIBS = /usr/local/lib/libefence.a
+#EXTRA_LIBS = /usr/local/lib/libefence.a
 
 # PURIFY - remove the # to use the "purify" program (hoi Nia++!)
 #PURIFY = purify
