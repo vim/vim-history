@@ -2353,7 +2353,8 @@ gui_x11_wm_protocol_handler(w, client_data, event, dum)
 	return;
 
     /*
-     * SAVE_YOURSELF can arrive at any moment (not only when crashing!).
+     * The WM_SAVE_YOURSELF event arrives when the window manager wants to
+     * exit.  That can be cancelled though, thus Vim shouldn't exit here.
      * Just sync our swap files.
      */
     if (((XClientMessageEvent *)event)->data.l[0] ==
@@ -2361,6 +2362,11 @@ gui_x11_wm_protocol_handler(w, client_data, event, dum)
     {
 	out_flush();
 	ml_sync_all(FALSE, FALSE);	/* preserve all swap files */
+
+	/* Set the window's WM_COMMAND property, to let the window manager
+	 * know we are done saving ourselves.  We don't want to be restarted,
+	 * thus set argv to NULL. */
+	XSetCommand(gui.dpy, XtWindow(vimShell), NULL, 0);
 	return;
     }
 
