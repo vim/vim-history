@@ -547,11 +547,11 @@ gui_mch_add_menu(menu, idx)
 	if (mouse_model_popup())
 # endif
 	{
-	    if (gui.menu_bg_pixel != -1)
+	    if (gui.menu_bg_pixel != INVALCOLOR)
 	    {
 		XtSetArg(arg[0], XmNbackground, gui.menu_bg_pixel); n++;
 	    }
-	    if (gui.menu_fg_pixel != -1)
+	    if (gui.menu_fg_pixel != INVALCOLOR)
 	    {
 		XtSetArg(arg[1], XmNforeground, gui.menu_fg_pixel); n++;
 	    }
@@ -1445,7 +1445,7 @@ gui_mch_set_scrollbar_colors(sb)
 {
     if (sb->id != (Widget)0)
     {
-	if (gui.scroll_bg_pixel != (guicolor_T)-1)
+	if (gui.scroll_bg_pixel != INVALCOLOR)
 	{
 #if (XmVersion>=1002)
 	    XmChangeColor(sb->id, gui.scroll_bg_pixel);
@@ -1456,7 +1456,7 @@ gui_mch_set_scrollbar_colors(sb)
 #endif
 	}
 
-	if (gui.scroll_fg_pixel != (guicolor_T)-1)
+	if (gui.scroll_fg_pixel != INVALCOLOR)
 	    XtVaSetValues(sb->id,
 		    XmNforeground, gui.scroll_fg_pixel,
 #if (XmVersion<1002)
@@ -1620,7 +1620,7 @@ gui_mch_browse(saving, title, dflt, ext, initdir, filter)
     set_predefined_label(dialog_wgt, "Selection", _("Selection"));
 
     gui_motif_menu_colors(dialog_wgt);
-    if (gui.scroll_bg_pixel != -1)
+    if (gui.scroll_bg_pixel != INVALCOLOR)
 	XtVaSetValues(dialog_wgt, XmNtroughColor, gui.scroll_bg_pixel, NULL);
 
     XtAddCallback(dialog_wgt, XmNokCallback, DialogAcceptCB, (XtPointer)0);
@@ -2490,13 +2490,13 @@ gui_mch_get_toolbar_colors(bgp, fgp, bsp, tsp, hsp)
 gui_motif_menu_colors(id)
     Widget  id;
 {
-    if (gui.menu_bg_pixel != (guicolor_T)-1)
+    if (gui.menu_bg_pixel != INVALCOLOR)
 #if (XmVersion >= 1002)
 	XmChangeColor(id, gui.menu_bg_pixel);
 #else
 	XtVaSetValues(id, XmNbackground, gui.menu_bg_pixel, NULL);
 #endif
-    if (gui.menu_fg_pixel != (guicolor_T)-1)
+    if (gui.menu_fg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XmNforeground, gui.menu_fg_pixel, NULL);
 }
 
@@ -2507,13 +2507,13 @@ gui_motif_menu_colors(id)
 gui_motif_scroll_colors(id)
     Widget  id;
 {
-    if (gui.scroll_bg_pixel != (guicolor_T)-1)
+    if (gui.scroll_bg_pixel != INVALCOLOR)
 #if (XmVersion >= 1002)
 	XmChangeColor(id, gui.scroll_bg_pixel);
 #else
 	XtVaSetValues(id, XmNbackground, gui.scroll_bg_pixel, NULL);
 #endif
-    if (gui.scroll_fg_pixel != (guicolor_T)-1)
+    if (gui.scroll_fg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XmNforeground, gui.scroll_fg_pixel, NULL);
 }
 

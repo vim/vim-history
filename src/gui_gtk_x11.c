@@ -2830,7 +2830,7 @@ gui_mch_free_fontset(GuiFontset fontset)
  * Return the Pixel value (color) for the given color name.  This routine was
  * pretty much taken from example code in the Silicon Graphics OSF/Motif
  * Programmer's Guide.
- * Return -1 for error.
+ * Return INVALCOLOR for error.
  */
     guicolor_T
 gui_mch_get_color(char_u * name)
@@ -2852,7 +2852,7 @@ gui_mch_get_color(char_u * name)
     };
 
     if (!gui.in_use)		/* can't do this when GUI not running */
-	return (guicolor_T)(-1);
+	return INVALCOLOR;
 
     while (name != NULL)
     {
@@ -2913,7 +2913,7 @@ gui_mch_get_color(char_u * name)
 	}
     }
 
-    return (guicolor_T)(-1);
+    return INVALCOLOR;
 }
 
 /*

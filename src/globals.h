@@ -620,8 +620,8 @@ EXTERN char		*draw_feedback INIT(= NULL);
 # else
 EXTERN XIC		xic INIT(= NULL);
 # endif
-EXTERN guicolor_T	xim_fg_color INIT(= (guicolor_T)-1);
-EXTERN guicolor_T	xim_bg_color INIT(= (guicolor_T)-1);
+EXTERN guicolor_T	xim_fg_color INIT(= INVALCOLOR);
+EXTERN guicolor_T	xim_bg_color INIT(= INVALCOLOR);
 #endif
 
 #ifdef FEAT_HANGULIN

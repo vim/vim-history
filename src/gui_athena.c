@@ -218,7 +218,7 @@ gui_x11_create_widgets()
 	XtNinsertPosition,	athena_calculate_ins_pos,
 	NULL);
     gui_athena_menu_colors(menuBar);
-    if (gui.menu_fg_pixel != -1)
+    if (gui.menu_fg_pixel != INVALCOLOR)
 	XtVaSetValues(menuBar, XtNborderColor, gui.menu_fg_pixel, NULL);
 #endif
 
@@ -1284,7 +1284,7 @@ gui_mch_new_menu_colors()
 {
     if (menuBar == (Widget)0)
 	return;
-    if (gui.menu_fg_pixel != -1)
+    if (gui.menu_fg_pixel != INVALCOLOR)
 	XtVaSetValues(menuBar, XtNborderColor,	gui.menu_fg_pixel, NULL);
     gui_athena_menu_colors(menuBar);
 #ifdef FEAT_TOOLBAR
@@ -2118,9 +2118,9 @@ error:
 gui_athena_menu_colors(id)
     Widget  id;
 {
-    if (gui.menu_bg_pixel != -1)
+    if (gui.menu_bg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XtNbackground, gui.menu_bg_pixel, NULL);
-    if (gui.menu_fg_pixel != -1)
+    if (gui.menu_fg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XtNforeground, gui.menu_fg_pixel, NULL);
 }
 #endif
@@ -2132,8 +2132,8 @@ gui_athena_menu_colors(id)
 gui_athena_scroll_colors(id)
     Widget  id;
 {
-    if (gui.scroll_bg_pixel != -1)
+    if (gui.scroll_bg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XtNbackground, gui.scroll_bg_pixel, NULL);
-    if (gui.scroll_fg_pixel != -1)
+    if (gui.scroll_fg_pixel != INVALCOLOR)
 	XtVaSetValues(id, XtNforeground, gui.scroll_fg_pixel, NULL);
 }

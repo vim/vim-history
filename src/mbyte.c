@@ -3043,7 +3043,7 @@ xim_set_preedit()
 	}
 # endif /* FEAT_XFONTSET */
 
-	if (xim_fg_color < 0)
+	if (xim_fg_color == INVALCOLOR)
 	{
 	    xim_fg_color = gui.def_norm_pixel;
 	    xim_bg_color = gui.def_back_pixel;
@@ -3085,7 +3085,7 @@ xim_set_preedit()
 
 	if (input_style & XIMPreeditPosition)
 	{
-	    if (xim_fg_color < 0)
+	    if (xim_fg_color == INVALCOLOR)
 	    {
 		xim_fg_color = gui.def_norm_pixel;
 		xim_bg_color = gui.def_back_pixel;

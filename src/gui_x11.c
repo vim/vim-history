@@ -115,8 +115,8 @@ static int fontset_width __ARGS((XFontSet fs));
 static int fontset_ascent __ARGS((XFontSet fs));
 #endif
 
-static guicolor_T	prev_fg_color = (guicolor_T)-1;
-static guicolor_T	prev_bg_color = (guicolor_T)-1;
+static guicolor_T	prev_fg_color = INVALCOLOR;
+static guicolor_T	prev_bg_color = INVALCOLOR;
 
 #if defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)
 static XButtonPressedEvent last_mouse_event;
@@ -2122,7 +2122,7 @@ fontset_ascent(fs)
 
 /*
  * Return the Pixel value (color) for the given color name.
- * Return -1 for error.
+ * Return INVALCOLOR for error.
  */
     guicolor_T
 gui_mch_get_color(reqname)
@@ -2149,7 +2149,7 @@ gui_mch_get_color(reqname)
 
     /* can't do this when GUI not running */
     if (!gui.in_use || *reqname == NUL)
-	return (guicolor_T)-1;
+	return INVALCOLOR;
 
     colormap = DefaultColormap(gui.dpy, XDefaultScreen(gui.dpy));
 
@@ -2201,7 +2201,7 @@ gui_mch_get_color(reqname)
 	}
     }
 
-    return (guicolor_T)-1;
+    return INVALCOLOR;
 }
 
 /*
@@ -2397,7 +2397,7 @@ gui_mch_draw_string(row, col, s, len, flags)
 	    XDrawString(gui.dpy, gui.wid, gui.text_gc, TEXT_X(col),
 		    TEXT_Y(row), (char *)s, len);
     }
-    else if (p_linespace
+    else if (p_linespace != 0
 #ifdef FEAT_XFONTSET
 	    || current_fontset != NULL
 #endif

@@ -830,8 +830,8 @@ gui_update_cursor(force, clear_selection)
 	    id = shape_table[idx].id;
 
 	/* get the colors and attributes for the cursor.  Default is inverted */
-	cfg = (guicolor_T)-1;
-	cbg = (guicolor_T)-1;
+	cfg = INVALCOLOR;
+	cbg = INVALCOLOR;
 	cattr = HL_INVERSE;
 	gui_mch_set_blinking(shape_table[idx].blinkwait,
 			     shape_table[idx].blinkon,
@@ -850,14 +850,12 @@ gui_update_cursor(force, clear_selection)
 		    if (iid > 0)
 		    {
 			syn_id2colors(iid, &fg, &bg);
-			if (bg > 0)
+			if (bg != INVALCOLOR)
 			    cbg = bg;
 		    }
 		}
 	    }
 #endif
-	    --cbg;
-	    --cfg;
 	}
 
 	/*
@@ -870,29 +868,29 @@ gui_update_cursor(force, clear_selection)
 	if (aep != NULL)
 	{
 	    attr = aep->ae_attr;
-	    if (cfg < 0)
+	    if (cfg == INVALCOLOR)
 		cfg = ((attr & HL_INVERSE)  ? aep->ae_u.gui.bg_color
-					    : aep->ae_u.gui.fg_color) - 1;
-	    if (cbg < 0)
+					    : aep->ae_u.gui.fg_color);
+	    if (cbg == INVALCOLOR)
 		cbg = ((attr & HL_INVERSE)  ? aep->ae_u.gui.fg_color
-					    : aep->ae_u.gui.bg_color) - 1;
+					    : aep->ae_u.gui.bg_color);
 	}
-	if (cfg < 0)
+	if (cfg == INVALCOLOR)
 	    cfg = (attr & HL_INVERSE) ? gui.back_pixel : gui.norm_pixel;
-	if (cbg < 0)
+	if (cbg == INVALCOLOR)
 	    cbg = (attr & HL_INVERSE) ? gui.norm_pixel : gui.back_pixel;
 
 #ifdef FEAT_XIM
 	if (aep != NULL)
 	{
 	    xim_bg_color = ((attr & HL_INVERSE) ? aep->ae_u.gui.fg_color
-						: aep->ae_u.gui.bg_color) - 1;
+						: aep->ae_u.gui.bg_color);
 	    xim_fg_color = ((attr & HL_INVERSE) ? aep->ae_u.gui.bg_color
-						: aep->ae_u.gui.fg_color) - 1;
-	    if (xim_bg_color < 0)
+						: aep->ae_u.gui.fg_color);
+	    if (xim_bg_color == INVALCOLOR)
 		xim_bg_color = (attr & HL_INVERSE) ? gui.norm_pixel
 						   : gui.back_pixel;
-	    if (xim_fg_color < 0)
+	    if (xim_fg_color == INVALCOLOR)
 		xim_fg_color = (attr & HL_INVERSE) ? gui.back_pixel
 						   : gui.norm_pixel;
 	}
@@ -1839,15 +1837,11 @@ gui_outstr_nowrap(s, len, flags, fg, bg, back)
     else if (aep != NULL)
     {
 	fg_color = aep->ae_u.gui.fg_color;
-	if (fg_color == 0)
+	if (fg_color == INVALCOLOR)
 	    fg_color = gui.norm_pixel;
-	else
-	    --fg_color;
 	bg_color = aep->ae_u.gui.bg_color;
-	if (bg_color == 0)
+	if (bg_color == INVALCOLOR)
 	    bg_color = gui.back_pixel;
-	else
-	    --bg_color;
     }
     else
 	fg_color = gui.norm_pixel;
@@ -3659,10 +3653,10 @@ gui_do_horiz_scroll()
     void
 gui_check_colors()
 {
-    if (gui.norm_pixel == gui.back_pixel || gui.norm_pixel == (guicolor_T)-1)
+    if (gui.norm_pixel == gui.back_pixel || gui.norm_pixel == INVALCOLOR)
     {
 	gui_set_bg_color((char_u *)"White");
-	if (gui.norm_pixel == gui.back_pixel || gui.norm_pixel == (guicolor_T)-1)
+	if (gui.norm_pixel == gui.back_pixel || gui.norm_pixel == INVALCOLOR)
 	    gui_set_fg_color((char_u *)"Black");
     }
 }
@@ -3685,7 +3679,7 @@ gui_set_bg_color(name)
 
 /*
  * Allocate a color by name.
- * Returns -1 and gives an error message when failed.
+ * Returns INVALCOLOR and gives an error message when failed.
  */
     guicolor_T
 gui_get_color(name)
@@ -3694,9 +3688,9 @@ gui_get_color(name)
     guicolor_T	t;
 
     if (*name == NUL)
-	return (guicolor_T)-1;
+	return INVALCOLOR;
     t = gui_mch_get_color(name);
-    if (t < 0
+    if (t == INVALCOLOR
 #if defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK)
 	    && gui.in_use
 #endif
