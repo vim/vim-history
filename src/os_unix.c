@@ -4038,7 +4038,7 @@ do_xterm_trace()
 
     STRCPY(buf, mouse_code);
     strp = buf + STRLEN(buf);
-    *strp++ = xterm_button | MOUSE_DRAG;
+    *strp++ = (xterm_button | MOUSE_DRAG) & ~0x20;
     *strp++ = (char_u)(col + ' ' + 1);
     *strp++ = (char_u)(row + ' ' + 1);
     *strp = 0;
