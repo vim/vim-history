@@ -1,0 +1,14 @@
+Makefile.w32
+# The most simplistic Makefile for Win32 (NT and Windows 95)
+
+xxd: xxd.exe
+
+xxd.exe: xxd.c
+# if using Microsoft Visual C++
+     cl xxd.c -DWIN32 /link setargv.obj
+# if using Borland C++
+#    bcc32 xxd.c -DWIN32 c:\bc45\lib\32bit\wildargs.obj
+
+clean:
+     - del xxd.obj
+     - del xxd.exe

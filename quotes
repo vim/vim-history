@@ -1,0 +1,88 @@
+Here are some quotes about Vim that I collected from news and mail (only the
+good ones, of course).
+
+Vim is so much better than vi that a great many of my old vi :map's became
+immediately obsolete! (Tony Nugent)
+
+The options are really excellent and very powerful. (Anish Maharaj)
+
+The BEST EDITOR EVER (Stuart Woolford)
+
+Hint:  "vim" is "vi improved" - much better! (Sven Guckes)
+
+I strongly advise using vim--its infinite undo/redo saved me much grief.
+(Terry Brown)
+
+Hurrah for VIM!! It is "at your fingertips" like vi, and has the extensions
+that vi sorely needs: highlighting for executing commands on blocks, an easily
+navigable and digestible help screen, and more. (Paul Pax)
+
+The reason WHY I don't have this amazingly useful macro any more, is that I
+now use Vim - and this is built in!! (Stephen Riehm)
+
+I am a user of VIM and I love it. I use it to do all my programming, C,
+C++, HTML what ever. (Tim Allwine)
+
+This version of vim will just blow people apart when they discover just how
+fantastic it is! (Tony Nugent)
+
+I took your advice & finally got vim & I'm really impressed. Instant convert.
+(Patrick Killelea)
+
+Vim is by far my favorite piece of shareware and I have been particularly
+pleased with version 3.0.  This is really a solid piece of work. (Robert
+Colon)
+
+I cannot believe how great it is to use VIM.  I think the guys at work are
+getting tired of hearing me bragging about it.  Others eyes are lighting up.
+(Rick Croote)
+
+Emacs takes way to much time to start up and run, it is to big and bulky for
+effective use and the interface is more confusing than it is of any help.  Vim
+however is short, it is fast, it is powerful, it has a good interface and it
+is all purpose.  (Paal Ditlefsen Ekran)
+
+From the first time I got VIM3.0, I was very enthousiastic.  It has almost no
+problems.  The swapfile handling and the backup possibilities are robust, also
+the protection against editing one file twice.  It is very compatible to the
+real VI (and that is a MUST, because my brain is trained over years in using
+it).  (Gert van Antwerpen)
+
+Visual mode in vim is a very powerful thing! (Tony Nugent)
+
+I have to say that vim is *THE* single greatest piece of source code to ever
+come across the net (Jim Battle).
+
+In fact, if you do want to get a new vi I'd suggest vim-3.0.  This is, by
+far, the best version of vi I've ever seen (Albert W. Schueller).
+
+I should mention that vim is a very good editor and can compete with anything
+(Ilya Beloozerov).
+
+To tell the truth sometimes I used elvis, vile, xvi, calvin, etc.  And this is
+the reason that I can state that VIM is the best! (Ferenc Deak).
+
+VIM is by far the best editor that I have used in a long time, and I have
+looked at just about every thing that is available for every platform that I
+use.  Vim is the best on all of them.  (Guy L. Oliver)
+
+I would like to say that with VIM I am finally making the 'emacs to vi'
+transition - as an Editor it is so much better in many ways: keyboard layout,
+memory usage, text alteration to name 3. (Mark Adam)
+
+In fact, now if I want to know what a particular setting does in vi, I fire up
+vim and check out it's help!  (Nikhil Patel)
+
+
+In summary:
+     __     ___             _       _   _  ___ _____ 
+     \ \   / (_)_ __ ___   (_)___  | | | |/ _ \_   _|
+      \ \ / /| | '_ ` _ \  | / __| | |_| | | | || |  
+       \ V / | | | | | | | | \__ \ |  _  | |_| || |  
+        \_/  |_|_| |_| |_| |_|___/ |_| |_|\___/ |_|  
+             ____ _____ _   _ _____ _____ _ _ 
+            / ___|_   _| | | |  ___|  ___| | |
+            \___ \ | | | | | | |_  | |_  | | |
+             ___) || | | |_| |  _| |  _| |_|_|
+            |____/ |_|  \___/|_|   |_|   (_|_)
+(Tony Nugent)

@@ -1,0 +1,1136 @@
+.\" hacked up from @(#)vi.1 1.30 90/02/15; from UCB 4.2 by M F Wyle
+.TH VI 1 "2 October 1989"
+.SH NAME
+vi, view, vedit \- visual display editor based on ex(1)
+.SH SYNOPSIS
+.B vi
+[
+.B \-ClLRVx
+]
+[
+.BI \-c " command"
+]
+[
+.BI \-r " filename"
+]
+[
+.BI \-t " tag"
+]
+[
+.BI \-w nnn
+]
+[
+.BI + command
+]
+.IR filename .\|.\|.
+.LP
+.BR view .\|.\|.
+.LP
+.BR vedit .\|.\|.
+.IX  "vi command"  ""  "\fLvi\fP \(em visual editor"
+.IX  "screen-oriented editor"  ""  "screen-oriented editor \(em \fLvi\fP"
+.IX  "display editor"  ""  "display editor \(em \fLvi\fP"
+.IX  "visual editor"  ""  "visual editor \(em \fLvi\fP"
+.IX  "text editing"  vi  ""  "\fLvi\fP \(em visual editor"
+.SH DESCRIPTION
+.LP
+.B vi
+(visual) is a display oriented text editor based on
+.BR ex (1).
+.B ex
+and
+.B vi
+are, in fact, the same text editor; it is
+possible to get to the command mode of
+.B ex
+from within
+.B vi
+and vice-versa.
+.LP
+.B view
+runs
+.B vi
+with the
+.B readonly
+flag set.
+With
+.BR view ,
+you can browse through files interactively without making any changes.
+.LP
+.B vedit
+runs
+.B vi 
+with the
+.B report
+flag set to 1,
+the
+.B showmode
+and
+.B novice
+flags set,
+and the
+.B magic
+flag turned off.
+These default settings are intended to make
+easier for beginners to learn
+.BR vi .
+.SH OPTIONS
+.TP 12
+.B \-C
+Encryption option; the same as the 
+.B \-x
+option, except that all input text is assumed to have already been 
+encrypted.
+This guarantees decryption in the cases where the 
+.B \-x
+option incorrectly determines that the input file is not already encrypted
+(this is extremely rare, and will only occur in conjunction with the use
+of files containing non-ASCII text).
+.TP
+.B \-l
+Set up for editing
+.SM LISP
+programs.
+.TP
+.B \-L
+List the names of all files saved as the result of an editor or system crash.
+.TP
+.B \-R
+Edit files in read only state.  This has the same effect as the
+.B view
+command.
+.TP 
+.B \-V
+Verbose. Any non-tty input will be echoed on standard error.
+.TP
+.B \-x
+Prompt for a key to be used in encrypting the file being edited. 
+When used in conjunction with a pre-existing file,
+.I ex
+will make an educated guess to determine whether or not the input text file is already encrypted.
+.TP
+.BI \-c " command"
+Start the editing session by executing the editor command
+.IR command .
+If 
+.I command
+contains spaces, it must be surrounded by double quotess, see
+.SM EXAMPLES
+below.
+.TP
+.BI \-r " filename"
+Recover the named files after a crash.
+.TP
+.BI \-t " tag"
+Edit the file containing
+.IR tag .
+There must be a tags database in the directory, built by
+.BR ctags (1),
+that contains a reference to
+.IR tag .
+.TP
+.BI + command
+Start the editing session by executing
+.IR command .
+This is identical to the
+.B \-c
+option.
+.SH ENVIRONMENT
+.LP
+The editor recognizes the environment variable
+.SB EXINIT
+as a command (or list of commands separated by
+.B |
+characters) to run when it starts up.  If this variable is
+undefined, the editor checks for startup commands in the file
+.B ~/.exrc
+file, which you must own.  However, if there is a
+.B \&.exrc
+owned by you in the current directory, the editor takes its
+startup commands from this file \(em overriding both the
+file in your home directory and the environment variable.
+.br
+.ne 8
+.LP
+The environment variables
+.BR \s-1LC_CTYPE\s0 ,
+.BR \s-1LANG\s0 ,
+and
+.B \s-1LC\s0_default
+control the character classification
+throughout
+.BR vi .
+On entry to
+.BR vi ,
+these environment variables are checked in the
+following order:
+.BR \s-1LC_CTYPE\s0 ,
+.BR \s-1LANG\s0 ,
+and
+.BR \s-1LC\s0_default.
+When a valid value is found,
+remaining environment variables for character classification
+are ignored.
+For example, a new setting for
+.B \s-1LANG\s0
+does not override the current valid character
+classification rules of
+.BR \s-1LC_CTYPE\s0 .
+When none of the values is valid,
+the shell character
+classification defaults to the 
+.SM POSIX.1 \*(lqC\*(rq
+locale.
+In the \*(lqC\*(rq locale, all 8-bit
+characters are escaped into an octal representation.
+.SH EXAMPLES
+.LP
+The following command:
+.LP
+.RS
+.ft B
+example%  vi \-c\ ":r test" tested
+.ft R
+.RE
+.LP
+will read in the file
+.B test 
+at the end of the 
+.B tested
+file.
+.SH REFERENCE GUIDE
+.nf
+.br
+
+///////////
+/ legenda /
+///////////
+
+default values          : 1
+<*>                     : `*' must not be taken literally
+[*]                     : `*' is optional
+^X                      : <ctrl>X
+<sp>                    : space
+<cr>                    : carriage return
+<lf>                    : linefeed
+<ht>                    : horizontal tab
+<esc>                   : escape
+<erase>                 : your erase character
+<kill>                  : your kill character
+<intr>                  : your interrupt character
+<a-z>                   : an element in the range
+N                       : number (`*' = allowed, `-' = not appropriate)
+CHAR                    : char unequal to <ht>|<sp>
+WORD                    : word followed by <ht>|<sp>|<lf>
+
+/////////////////
+/ move commands /
+/////////////////
+
+ N | Command            | Meaning
+---+--------------------+-----------------------------------------------
+ * | h | ^H | <erase>   | <*> chars to the left.
+ * | j | <lf> | ^N      | <*> lines downward.
+ * | l | <sp>           | <*> chars to the right.
+ * | k | ^P             | <*> lines upward.
+ * | $                  | To the end of line <*> from the cursor.
+ - | ^                  | To the first CHAR of the line.
+ * | _                  | To the first CHAR <*> - 1 lines lower.
+ * | -                  | To the first CHAR <*> lines higher.
+ * | + | <cr>           | To the first CHAR <*> lines lower.
+ - | 0                  | To the first char of the line.
+ * | |                  | To column <*> (<ht>: only to the endpoint).
+ * | f<char>            | <*> <char>s to the right (find).
+ * | t<char>            | Till before <*> <char>s to the right.
+ * | F<char>            | <*> <char>s to the left.
+ * | T<char>            | Till after <*> <char>s to the left.
+ * | ;                  | Repeat latest `f'|`t'|`F'|`T' <*> times.
+ * | ,                  | Idem in opposite direction.
+ * | w                  | <*> words forward.
+ * | W                  | <*> WORDS forward.
+ * | b                  | <*> words backward.
+ * | B                  | <*> WORDS backward.
+ * | e                  | To the end of word <*> forward.
+ * | E                  | To the end of WORD <*> forward.
+ * | G                  | Go to line <*> (default EOF).
+ * | H                  | To line <*> from top of the screen (home).
+ * | L                  | To line <*> from bottom of the screen (last).
+ - | M                  | To the middle line of the screen.
+ * | )                  | <*> sentences forward.
+ * | (                  | <*> sentences backward.
+ * | }                  | <*> paragraphs forward.
+ * | {                  | <*> paragraphs backward.
+ - | ]]                 | To the next section (default EOF).
+ - | [[                 | To the previous section (default begin of file).
+ - | `<a-z>             | To the mark.
+ - | '<a-z>             | To the first CHAR of the line with the mark.
+ - | ``                 | To the cursor position before the latest absolute
+                        |   jump (of which are examples `/' and `G').
+ - | ''                 | To the first CHAR of the line on which the cursor
+                        |   was placed before the latest absolute jump.
+ - | /<string>          | To the next occurrence of <string>.
+ - | ?<string>          | To the previous occurrence of <string>.
+ - | n                  | Repeat latest `/'|`?' (next).
+ - | N                  | Idem in opposite direction.
+ - | %                  | Find the next bracket and go to its match
+                        |   (also with `{'|`}' and `['|`]').
+
+/////////////////////////
+/ searching (see above) /
+/////////////////////////
+
+:ta <name>              | Search in the tags file[s] where <name> is
+                        |   defined (file, line), and go to it.
+^]                      | Use the name under the cursor in a `:ta' command.
+^T                      | Pop the previous tag off the tagstack and return
+                        |   to its position.
+:[x,y]g/<string>/<cmd>  | Search globally [from line x to y] for <string>
+                        |   and execute the `ex' <cmd> on each occurrence.
+:[x,y]v/<string>/<cmd>  | Execute <cmd> on the lines that don't match.
+
+///////////////////
+/ undoing changes /
+///////////////////
+
+u                       | Undo the latest change.
+U                       | Undo all changes on a line, while not having
+                        |   moved off it (unfortunately).
+:q!                     | Quit vi without writing.
+:e!                     | Re-edit a messed-up file.
+
+///////////////////////////////////
+/ appending text (end with <esc>) /
+///////////////////////////////////
+
+ * | a                  | <*> times after the cursor.
+ * | A                  | <*> times at the end of line.
+ * | i                  | <*> times before the cursor (insert).
+ * | I                  | <*> times before the first CHAR of the line
+ * | o                  | On a new line below the current (open).
+                        |   The count is only useful on a slow terminal.
+ * | O                  | On a new line above the current.
+                        |   The count is only useful on a slow terminal.
+ * | ><move>            | Shift the lines described by <*><move> one
+                        |   shiftwidth to the right.
+ * | >>                 | Shift <*> lines one shiftwidth to the right.
+ * | ["<a-zA-Z1-9>]p    | Put the contents of the (default undo) buffer
+                        |   <*> times after the cursor.
+                        |   A buffer containing lines is put only once,
+                        |   below the current line.
+ * | ["<a-zA-Z1-9>]P    | Put the contents of the (default undo) buffer
+                        |   <*> times before the cursor.
+                        |   A buffer containing lines is put only once,
+                        |   above the current line.
+ * | .                  | Repeat previous command <*> times.  If the last
+                        |   command before a `.' command references a
+                        |   numbered buffer, the buffer number is
+                        |   incremented first (and the count is ignored):
+                        |
+                        |   "1pu.u.u.u.u      - `walk through' buffers 1
+                        |                       through 5
+                        |   "1P....           - restore them
+
+/////////////////
+/ deleting text /
+/////////////////
+
+Everything deleted can be stored into a buffer. This is achieved by
+putting a `"' and a letter <a-z> before the delete command. The
+deleted text will be in the buffer with the used letter. If <A-Z>
+is used as buffer name, the adjugate buffer <a-z> will be augmented
+instead of overwritten with the text. The undo buffer always
+contains the latest change. Buffers <1-9> contain the latest 9
+LINE deletions (`"1' is most recent).
+
+ * | x                  | Delete <*> chars under and after the cursor.
+ * | X                  | <*> chars before the cursor.
+ * | d<move>            | From begin to endpoint of <*><move>.
+ * | dd                 | <*> lines.
+ - | D                  | The rest of the line.
+ * | <<move>            | Shift the lines described by <*><move> one
+                        |   shiftwidth to the left.
+ * | <<                 | Shift <*> lines one shiftwidth to the left.
+ * | .                  | Repeat latest command <*> times.
+
+//////////////////////////////////
+/ changing text (end with <esc>) /
+//////////////////////////////////
+
+ * | r<char>            | Replace <*> chars by <char> - no <esc>.
+ * | R                  | Overwrite the rest of the line,
+                        |   appending change <*> - 1 times.
+ * | s                  | Substitute <*> chars.
+ * | S                  | <*> lines.
+ * | c<move>            | Change from begin to endpoint of <*><move>.
+ * | cc                 | <*> lines.
+ * | C                  | The rest of the line and <*> - 1 next lines.
+ * | =<move>            | If the option `lisp' is set, this command
+                        |   will realign the lines described by <*><move>
+                        |   as though they had been typed with the option
+                        |   `ai' set too.
+ - | ~                  | Switch lower and upper cases
+                        |   (should be an operator, like `c').
+ * | J                  | Join <*> lines (default 2).
+ * | .                  | Repeat latest command <*> times (`J' only once).
+ - | &                  | Repeat latest `ex' substitute command, e.g.
+                        |   `:s/wrong/good'.
+ - | :[x,y]s/<p>/<r>/<f>| Substitute (on lines x through y) the pattern <p>
+                        |   (default the last pattern) with <r>.  Useful
+                        |   flags <f> are `g' for `global' (i.e. change
+                        |   every non-overlapping occurrence of <p>) and
+                        |   `c' for `confirm' (type `y' to confirm a
+                        |   particular substitution, else <cr>).  Instead
+                        |   of `/' any punctuation CHAR unequal to <lf>
+                        |   can be used as delimiter.
+
+///////////////////////////////////
+/ substitute replacement patterns /
+///////////////////////////////////
+
+The basic meta-characters for the replacement pattern are `&' and `~';
+these are given as `\&' and `\~' when nomagic is set.  Each instance
+of `&' is replaced by the characters which the regular expression
+matched.  The meta-character `~' stands, in the replacement
+pattern, for the defining text of the previous replacement
+pattern.  Other meta-sequences possible in the replacement pattern
+are always introduced by the escaping character `\'.  The sequence
+`\n' (with `n' in [1-9]) is replaced by the text matched by the
+n-th regular subexpression enclosed between `\(' and `\)'.  The
+sequences `\u' and `\l' cause the immediately following character
+in the replacement to be converted to upper- or lower-case
+respectively if this character is a letter.  The sequences `\U' and
+`\L' turn such conversion on, either until `\E' or `\e' is
+encountered, or until the end of the replacement pattern.
+
+//////////////////////////////
+/ remembering text (yanking) /
+//////////////////////////////
+
+With yank commands you can put `"<a-zA-Z>' before the command, just as
+with delete commands.  Otherwise you only copy to the undo buffer.
+The use of buffers <a-z> is THE way of copying text to another file;
+see the `:e <file>' command.
+
+ * | y<move>            | Yank from begin to endpoint of <*><move>.
+ * | yy                 | <*> lines.
+ * | Y                  | Idem (should be equivalent to `y$' though).
+ - | m<a-z>             | Mark the cursor position with a letter.
+
+////////////////////////////////////////
+/ commands while in append|change mode /
+////////////////////////////////////////
+
+^@                      | If typed as the first character of the
+                        |   insertion, it is replaced with the previous
+                        |   text inserted (max. 128 chars), after which
+                        |   the insertion is terminated.
+^V                      | Deprive the next char of its special meaning
+                        |   (e.g. <esc>).
+^D                      | One shiftwidth to the left.
+0^D                     | Remove all indentation on the current line
+                        |   (there must be no other chars on the line).
+^^D                     | Idem, but it is restored on the next line.
+^T                      | One shiftwidth to the right
+^H | <erase>            | One char back.
+^W                      | One word back.
+<kill>                  | Back to the begin of the change on the
+                        |   current line.
+<intr>                  | Like <esc> (but you get a beep as well).
+
+
+/////////////////////////////////////////////////
+/ writing, editing other files, and quitting vi /
+/////////////////////////////////////////////////
+
+In `:' `ex' commands `%' denotes the current file, `#' is a synonym for
+the alternate file (which normally is the previous file).
+Marks can be used for line numbers too: '<a-z>.
+In the `:w'|`:f'|`:cd'|`:e'|`:n' commands shell meta-characters can be
+used.
+
+:q                      | Quit vi, unless the buffer has been changed.
+:q!                     | Quit vi without writing.
+^Z                      | Suspend vi.
+:w                      | Write the file.
+:w <name>               | Write to the file <name>.
+:w >> <name>            | Append the buffer to the file <name>.
+:w! <name>              | Overwrite the file <name>.
+:x,y w <name>           | Write lines x through y to the file <name>.
+:wq                     | Write the file and quit vi; some versions quit
+                        |   even if the write was unsuccessful!
+                        |   Use `ZZ' instead.
+ZZ                      | Write if the buffer has been changed, and
+                        |   quit vi.  If you have invoked vi with the `-r'
+                        |   option, you'd better write the file
+                        |   explicitly (`w' or `w!'), or quit the
+                        |   editor explicitly (`q!') if you don't want
+                        |   to overwrite the file - some versions of vi
+                        |   don't handle the `recover' option very well.
+:x [<file>]             | Idem [but write to <file>].
+:x! [<file>]            | `:w![<file>]' and `:q'.
+:pre                    | Preserve the file - the buffer is saved as if
+                        |   the system had just crashed; for emergencies,
+                        |   when a `:w' command has failed and you don't
+                        |   know how to save your work (see `vi -r').
+:f <name>               | Set the current filename to <name>.
+:cd [<dir>]             | Set the working directory to <dir>
+                        |   (default home directory).
+:cd! [<dir>]            | Idem, but don't save changes.
+:e [+<cmd>] <file>      | Edit another file without quitting vi - the
+                        |   buffers are not changed (except the undo
+                        |   buffer), so text can be copied from one file to
+                        |   another this way.  [Execute the `ex' command
+                        |   <cmd> (default `$') when the new file has been
+                        |   read into the buffer.]  <cmd> must contain no
+                        |   <sp> or <ht>.  See `vi startup'.
+:e! [+<cmd>] <file>     | Idem, without writing the current buffer.
+^^                      | Edit the alternate (normally the previous) file.
+:rew                    | Rewind the argument list, edit the first file.
+:rew!                   | Idem, without writing the current buffer.
+:n [+<cmd>] [<files>]   | Edit next file or specify a new argument list.
+:n! [+<cmd>] [<files>]  | Idem, without writing the current buffer.
+:args                   | Give the argument list, with the current file
+                        |   between `[' and `]'.
+
+////////////////////
+/ display commands /
+////////////////////
+
+^G                      | Give file name, status, current line number
+                        |   and relative position.
+^L                      | Refresh the screen (sometimes `^P' or `^R').
+^R                      | Sometimes vi replaces a deleted line by a `@',
+                        |   to be deleted by `^R' (see option `redraw').
+[*]^E                   | Expose <*> more lines at bottom, cursor
+                        |   stays put (if possible).
+[*]^Y                   | Expose <*> more lines at top, cursor
+                        |   stays put (if possible).
+[*]^D                   | Scroll <*> lines downward
+                        |   (default the number of the previous scroll;
+                        |   initialization: half a page).
+[*]^U                   | Scroll <*> lines upward
+                        |   (default the number of the previous scroll;
+                        |   initialization: half a page).
+[*]^F                   | <*> pages forward.
+[*]^B                   | <*> pages backward (in older versions `^B' only
+                        |   works without count).
+
+If in the next commands the field <wi> is present, the windowsize
+will change to <wi>. The window will always be displayed at the
+bottom of the screen.
+
+[*]z[wi]<cr>            | Put line <*> at the top of the window
+                        |   (default the current line).
+[*]z[wi]+               | Put line <*> at the top of the window
+                        |   (default the first line of the next page).
+[*]z[wi]-               | Put line <*> at the bottom of the window
+                        |   (default the current line).
+[*]z[wi]^               | Put line <*> at the bottom of the window
+                        |   (default the last line of the previous page).
+[*]z[wi].               | Put line <*> in the centre of the window
+                        |   (default the current line).
+
+////////////////////////////
+/ mapping and abbreviation /
+////////////////////////////
+
+When mapping take a look at the options `to' and `remap' (below).
+
+:map <string> <seq>     | <string> is interpreted as <seq>, e.g.
+                        |   `:map ^C :!cc %^V<cr>' to invoke `cc' (the C
+                        |   compiler) from within the editor
+                        |   (vi replaces `%' with the current file name).
+:map                    | Show all mappings.
+:unmap <string>         | Deprive <string> of its mapping.  When vi
+                        |   complains about non-mapped macros (whereas no
+                        |   typos have been made), first do something like
+                        |   `:map <string> Z', followed by
+                        |   `:unmap <string>' (`Z' must not be a macro
+                        |   itself), or switch to `ex' mode first with `Q'.
+:map! <string> <seq>    | Mapping in append mode, e.g.
+                        |   `:map! \be begin^V<cr>end;^V<esc>O<ht>'.
+                        |   When in append mode <string> is preceded by
+                        |   `^V', no mapping is done.
+:map!                   | Show all append mode mappings.
+:unmap! <string>        | Deprive <string> of its mapping (see `:unmap').
+:ab <string> <seq>      | Whenever in append mode <string> is preceded and
+                        |   followed by a breakpoint (e.g. <sp> or `,'), it
+                        |   is interpreted as <seq>, e.g.
+                        |   `:ab ^P procedure'.  A `^V' immediately
+                        |   following <string> inhibits expansion.
+:ab                     | Show all abbreviations.
+:unab <string>          | Do not consider <string> an abbreviation
+                        |   anymore (see `:unmap').
+@<a-z>                  | Consider the contents of the named register a
+                        |   command, e.g.:
+                        |       o0^D:s/wrong/good/<esc>"zdd
+                        |   Explanation:
+                        |       o              - open a new line
+                        |       0^D            - remove indentation
+                        |       :s/wrong/good/ - this input text is an
+                        |                        `ex' substitute command
+                        |       <esc>          - finish the input
+                        |       "zdd           - delete the line just
+                        |                        created into register `z'
+                        |   Now you can type `@z' to replace `wrong'
+                        |   with `good' on the current line.
+@@                      | Repeat last register command.
+
+/////////////////////////////
+/ switch and shell commands /
+/////////////////////////////
+
+Q | ^\ | <intr><intr>   | Switch from vi to `ex'.
+:                       | An `ex' command can be given.
+:vi                     | Switch from `ex' to vi.
+:sh                     | Execute a subshell, back to vi by `^D'.
+:[x,y]!<cmd>            | Execute a shell <cmd> [on lines x through y;
+                        |   these lines will serve as input for <cmd> and
+                        |   will be replaced by its standard output].
+:[x,y]!! [<args>]       | Repeat last shell command [and append <args>].
+:[x,y]!<cmd> ! [<args>] | Use the previous command (the second `!') in a
+                        |   new command.
+[*]!<move><cmd>         | The shell executes <cmd>, with as standard
+                        |   input the lines described by <*><move>,
+                        |   next the standard output replaces those lines
+                        |   (think of `cb', `sort', `nroff', etc.).
+[*]!<move>!<args>       | Append <args> to the last <cmd> and execute it,
+                        |   using the lines described by the current
+                        |   <*><move>.
+[*]!!<cmd>              | Give <*> lines as standard input to the
+                        |   shell <cmd>, next let the standard output
+                        |   replace those lines.
+[*]!!! [<args>]         | Use the previous <cmd> [and append <args> to it].
+:x,y w !<cmd>           | Let lines x to y be standard input for <cmd>
+                        |   (notice the <sp> between the `w' and the `!').
+:r!<cmd>                | Put the output of <cmd> onto a new line.
+:r <name>               | Read the file <name> into the buffer.
+
+
+//////////////
+/ vi startup /
+//////////////
+
+vi [<files>]            | Edit the files, start with the first page of
+                        |   the first file.
+
+The editor can be initialized by the shell variable `EXINIT', which
+looks like:
+
+        EXINIT='<cmd>|<cmd>|...'
+        <cmd>: set options
+               map ...
+               ab ...
+        export EXINIT (in the Bourne shell)
+
+However, the list of initializations can also be put into a file.
+If this file is located in your home directory, and is named `.exrc'
+AND the variable `EXINIT' is NOT set, the list will be executed
+automatically at startup time. However, vi will always execute the
+contents of a `.exrc' in the current directory, if you own the file.
+Else you have to give the execute (`source') command yourself:
+
+        :so file
+
+In a `.exrc' file a comment is introduced with a double quote character:
+the rest of the line is ignored.  Exception: if the last command on the
+line is a `map[!]' or `ab' command or a shell escape, a trailing comment
+is not recognized, but considered part of the command.
+
+On-line initializations can be given with `vi +<cmd> file', e.g.:
+
+vi +x file              | The cursor will immediately jump to line x
+                        |   (default last line).
+vi +/<string> file      | Jump to the first occurrence of <string>.
+
+You can start at a particular tag with:
+
+vi -t <tag>             | Start in the right file in the right place.
+
+Sometimes (e.g. if the system crashed while you were editing) it is
+possible to recover files lost in the editor by `vi -r file'.  A plain
+`vi -r' command shows the files you can recover.
+If you just want to view a file by using vi, and you want to avoid any
+change, instead of vi you can use the `view' or `vi -R' command:
+the option `readonly' will be set automatically (with `:w!' you can
+override this option).
+
+//////////////////////////////
+/ the most important options /
+//////////////////////////////
+
+ai                      | autoindent - In append mode after a <cr> the
+                        |   cursor will move directly below the first
+                        |   CHAR on the previous line.  However, if the
+                        |   option `lisp' is set, the cursor will align
+                        |   at the first argument to the last open list.
+aw                      | autowrite - Write at every shell escape
+                        |   (useful when compiling from within vi).
+dir=<string>            | directory - The directory for vi to make
+                        |   temporary files (default `/tmp').
+eb                      | errorbells - Beeps when you goof
+                        |   (not on every terminal).
+ic                      | ignorecase - No distinction between upper and
+                        |   lower cases when searching.
+lisp                    | Redefine the following commands:
+                        |   `(', `)'   - move backward (forward) over
+                        |                S-expressions
+                        |   `{', `}'   - idem, but don't stop at atoms
+                        |   `[[', `]]' - go to previous (next) line
+                        |                beginning with a `('
+                        |   See option `ai'.
+list                    | <lf> is shown as `$', <ht> as `^I'.
+magic                   | If this option is set (default), the chars `.',
+                        |   `[' and `*' have special meanings within search
+                        |   and `ex' substitute commands.  To deprive such
+                        |   a char of its special function it must be
+                        |   preceded by a `\'.  If the option is turned off
+                        |   it's just the other way around.  Meta-chars:
+                        |   ^<string>    - <string> must begin the line
+                        |   <string>$    - <string> must end the line
+                        |   .            - matches any char
+                        |   [a-z]        - matches any char in the range
+                        |   [^a-z]       - any char not in the range
+                        |   [<string>]   - matches any char in <string>
+                        |   [^<string>]  - any char not in <string>
+                        |   <char>*      - 0 or more <char>s
+                        |   \<<string>   - <string> must begin a word
+                        |   <string>\>   - <string> must end a word
+modeline                | When you read an existing file into the buffer,
+                        |   and this option is set, the first and last 5
+                        |   lines are checked for editing commands in the
+                        |   following form:
+                        |
+                        |     <sp>vi:set options|map ...|ab ...|!...:
+                        |
+                        |   Instead of <sp> a <ht> can be used, instead of
+                        |   `vi' there can be `ex'.  Warning: this option
+                        |   could have nasty results if you edit a file
+                        |   containing `strange' modelines.
+nu                      | number - Numbers before the lines.
+                        |
+para=<string>           | paragraphs - Every pair of chars in <string> is
+                        |   considered a paragraph delimiter nroff macro
+                        |   (for `{' and `}').  A <sp> preceded by a `\'
+                        |   indicates the previous char is a single letter
+                        |   macro.  `:set para=P\ bp' introduces `.P' and
+                        |   `.bp' as paragraph delimiters.  Empty lines and
+                        |   section boundaries are paragraph boundaries
+                        |   too.
+redraw                  | The screen remains up to date.
+remap                   | If on (default), macros are repeatedly
+                        |   expanded until they are unchanged.
+                        |   Example: if `o' is mapped to `A', and `A'
+                        |   is mapped to `I', then `o' will map to `I'
+                        |   if `remap' is set, else it will map to `A'.
+report=<*>              | Vi reports whenever e.g. a delete
+                        |   or yank command affects <*> or more lines.
+ro                      | readonly - The file is not to be changed.
+                        |   However, `:w!' will override this option.
+sect=<string>           | sections - Gives the section delimiters (for `[['
+                        |   and `]]'); see option `para'. A `{' beginning a
+                        |   line also starts a section (as in C functions).
+sh=<string>             | shell - The program to be used for shell escapes
+                        |   (default `$SHELL' (default `/bin/sh')).
+sw=<*>                  | shiftwidth - Gives the shiftwidth (default 8
+                        |   positions).
+sm                      | showmatch - Whenever you append a `)', vi shows
+                        |   its match if it's on the same page; also with
+                        |   `{' and `}'.  If there's no match at all, vi
+                        |   will beep.
+taglength=<*>           | The number of significant characters in tags
+                        |   (0 = unlimited).
+tags=<string>           | The space-separated list of tags files.
+terse                   | Short error messages.
+to                      | timeout - If this option is set, append mode
+                        |   mappings will be interpreted only if they're
+                        |   typed fast enough.
+ts=<*>                  | tabstop - The length of a <ht>; warning: this is
+                        |   only IN the editor, outside of it <ht>s have
+                        |   their normal length (default 8 positions).
+wa                      | writeany - No checks when writing (dangerous).
+warn                    | Warn you when you try to quit without writing.
+wi=<*>                  | window - The default number of lines vi shows.
+wm=<*>                  | wrapmargin - In append mode vi automatically
+                        |   puts a <lf> whenever there is a <sp> or <ht>
+                        |   within <wm> columns from the right margin
+                        |   (0 = don't put a <lf> in the file, yet put it
+                        |   on the screen).
+ws                      | wrapscan - When searching, the end is
+                        |   considered `stuck' to the begin of the file.
+
+:set <option>           | Turn <option> on.
+:set no<option>         | Turn <option> off.
+:set <option>=<value>   | Set <option> to <value>.
+:set                    | Show all non-default options and their values.
+:set <option>?          | Show <option>'s value.
+:set all                | Show all options and their values.
+.br
+.fi
+.SH BEGINNERS GUIDE
+
+Although learning the more esoteric and advanced commands takes many
+months of experience, vi basics can be mastered in just a few lessons.
+The first vi edit session should familiarize the student with the
+following commands:
+.sp
+.IP .
+i - insert mode
+.IP .
+<esc> - leave insert mode and enter command mode
+.IP .
+hjkl  -  move the cursor left, down, up, right
+.IP .
+<del> -  delete the character left of the cursor (in both modes)
+.IP .
+:wq   -  write the file and quit the editor
+.IP .
+:q!   -  quit the editor without saving.
+.PP
+That's all!  There are many people who never learn any more than these
+commands, yet they can perform every edit function in vi, though
+somewhat inefficiently.
+
+The second lesson consists of:
+.IP .
+w     -  move forward one word
+.IP .
+b     -  move backward one word
+.IP .
+<n>w  -  move forward n words
+.IP .
+the concept of <n> command where the command is repeated n times.
+This concept applies to cursor movement from the last lesson, w,
+b, and all other commands learned in this lesson.  Practice with
+<n> j and <n> k.
+.IP .
+0     - move to beginning of current line
+.IP .
+$     - move to end of current line
+.IP .
+x     - delete character upon which cursor rests
+.IP .
+dd    - delete line
+.PP
+Notice that these commands are not grouped according to category or
+functionality.  Every textbook and tutorial I have seen makes the same
+mistake of teaching useless commands early because they happen to fall
+into the "movement" category or function similar to other important
+commands.  Remember when teaching text editing that the user forms a
+mental model about the editing task and that the order in which the
+task is taught is also important.
+.PP
+The third lesson should include the following commands:
+.IP .
+^F    - scroll forward one screen; practice <n>^F also!
+.IP .
+^B    - scroll backwards one screen
+.IP .
+/pat  - search for the regular expression
+.I pat;
+.br
+Here is a good place to teach some useful regular
+expressions; make sure they are motivating and useful!
+I teach the ^, $, \<, and .* metacharacters in that order.
+Examples from the grep(1) manual page are good for C
+programmers; most of the vi books have good examples for
+secretaries.
+.IP .
+n       Find next occurrence of search pattern pat.
+.PP
+At this point the student has learned enough material to practice some
+pretty sophisticated editing tasks.  The new commands in this third
+lesson should be exercised along with new uses of the commands from the
+earlier lessons.
+.PP
+The fourth lesson introduces the un-do and re-do features.
+.IP . 
+u      -  un-do last command
+.IP . 
+.      -  re-do last command
+.IP . 
+<n>G   -  Goto line number n  (useful for programmers)
+.IP . 
+%      -  Match parenthesis or bracket
+.PP
+These commands should be used frequently by programmers.  The <n>G
+command places the cursor at the beginning of line number n.  I
+personally use this command very often right after issuing a :!cc %
+command, which compiles the program I am currently editing.  The
+compiler displays the lines on which errors occurred and the <n>G
+command in vi takes me right to the line with the error.
+.PP
+The u command is very useful after one too many dd (delete line)
+commands to rescue that deleted line.  It has some intelligence built
+into it but does not compare well with emacs' undo levels.  Vi does
+have text buffers 1 through 9 which contain the last 9 deleted lines of
+text (1 is the last line, 2 is second to last, etc.). You can access
+these buffers with the " command, as in "2p.  I still have to admit
+that emacs' concept of kill buffering is much better.
+.PP
+The dot "." command should also become second nature to intermediate
+users to repeat a command a few times.  I find that many simple
+repetitive tasks can be accomplished more quickly using the . command
+than by writing a macro.  For example, I find myself deleting a few
+lines or words by typing dd (or dw) and then the dot command five or
+ten times.  I admit it would save key strokes to use <n>dd or <n>dw, but
+somehow my mind is not always in a state where I can plan in advance
+and chunk large tasks into a more powerful command.
+.PP
+Repeat counts are somehow easier for me to use with cursor
+positioning.  I type $ a lot to get to the end of the line, but I'll
+also type 7w to move seven words over, or 9^F to move 9 screens down.
+.PP
+Lesson five involves moving around more efficiently, using text markers.
+.IP .
+ma       mark the current position with marker a.
+.IP .
+`a       go to cursor position marked a.
+.PP
+There are, of course, 26 markers, using lower-case letters a through
+z.  In text files of several hundred or several thousand lines, these
+commands really help.  I am embarrassed to admit that I learned them
+relatively late, but when editing program text I use them all the
+time.
+.PP
+Students coming from wordstar or its off-shoots will feel at home using
+these commands.  First time users will need good, motivating examples.
+When teaching vi to novices, spend time in preparing your lesson plan
+to construct good examples of using these commands.  For programmers, I
+recommend marking the current position in a function, going to the
+definition of a particular struct or record, and then going back to the
+code using that data structure.  Of course using tags will accomplish
+this type of task much better, but for now it's still a good example.
+For secretaries, mark the current editing position a few hundred lines
+deep in a file, and then go back to the beginning (1G) read something
+there, and finally move back to the marked position.  More commands on
+movement are presented next:
+.IP .
+}        beginning of next paragraph
+.IP .
+)        beginning of next sentence
+.PP
+These commands are hardly ever used but they can be enormous time-
+savers!  Even if the students completely forget how to use these
+commands or how to invoke them, it is important that they remember that
+entities extend beyond character, word, and line to include paragraphs
+and sections.  Later, when the concept of <number> command <entity> is
+drilled in, they just might remember that <entity> can mean paragraph
+and section.  At any rate, teach the } command early and have your
+students practice moving around by sentences and paragraphs.
+.PP
+Again, at this point I suggest a lot of practice with good examples.
+Although the first five lessons contain the commands which should
+account for more than 80% of all key strokes, there are still many
+nuances and basic concepts missing from these lessons.
+.PP
+The sixth lesson includes change mode, yanking text, and some basic
+line editing functions.  It is again somewhat niggardly in the number
+of new commands presented because time for practice is so important.
+.IP .
+cw       change word
+.PP
+At this point the student should be introduced to the most important,
+all-pervasive vi concept of <n> command <entity>.  Using the d command
+with all the different entities (character, word, line, paragraph, and
+section) should be reviewed.  Cursor movement is just a degenerate form
+of this paradigm!  All new commands will fit into this form, and the
+exercises should emphasize using words and paragraphs, not just
+characters and lines.
+.IP .
+y        yank
+.IP .
+p        put
+.IP .
+J        Join lines
+.PP
+Start with simple word yw and line yy yanking and then progress to
+paragraphs y} and several lines 9yy.  I emphasize combining this
+command with advanced cursor movement.  For example, a good exercise is
+to mark the current position, move to a certain paragraph, yank it,
+then return to the original position, and finally put the paragraph
+there.  A typical key stroke sequence might be: ma3^Fjjjy{`ap
+.nf
+.sp
+ma    (mark current position with marker a)
+3^F   (scroll three screens forward)
+jjj   (move to a certain line position)
+y{    (yank the paragraph)
+`a    (return to original position)
+p     (put the paragraph to the right of current cursor position)
+.PP
+.fi
+The J command may be taught earlier if intermediate users get
+frustrated at not being able to use the <del> key to join lines
+together.
+.IP .
+:s      The "ex" (line mode) substitute command
+.PP
+I find it a good idea immediately to teach the full format of this
+command, namely :<range>s/bad/good/<options>.  The first range I teach
+is % for every line.  Other ranges (in order of importance) include
+1,.  from first line to current line, .,$ from current line to the last
+line in the file, and explicit line number ranges.  Options include g
+for global and q for query.  The ex commands are a bit powerful for
+beginners, and I usually stress the black box approach of learning (by
+rote) a few forms without trying to understand all the underlying
+power.  Some good examples to teach are :%s/bad/good/g  which
+substitutes the word "good" for the word "bad" everywhere in the file,
+and :.,$s/^/> / which puts the text "> " in front of every line.
+.IP .
+:g      The "ex" global command
+.PP
+This command is often necessary to delete lines matching some pattern as
+in :g/^From: /d which would delete all lines which start with the text
+"From: ".
+.PP
+It is very tempting at this point to discuss other "ex" commands such
+as :e, :w and :r, but the student will most probably forget some
+important points if he is bombarded with too much information at once.
+Try to avoid information overload and take a break after this lesson.
+.PP
+The die-hard super nerds who absorb advanced editing techniques like
+sponges should refer to a comprehensive book or command reference.  The
+concept behind the design of this curse is to make vi users more
+productive by teaching appropriate commands with motivating examples in
+the proper order.  I am assuming that references are available to the
+students which list all these commands.
+.PP
+Lesson seven should start with a review of <n> command <entity> and the
+instructor should give even more examples of using movement and
+deletion commands within this paradigm.  Then come variations of
+commands which the students have already learned, and finally the
+important "ex" commands are taught.
+.IP .
+a        -  append text, like the "i" command, but appends
+.IP .
+e        -  move to the end of a word
+.IP .
+D        -  delete from current position to the end of the line
+.IP .
+?pat     -  search backwards for pattern
+.IP .
+^G       -  display information about current file
+.PP
+I actually use this command quite often to figure out which line I'm at.
+It can be used in conjunction with the "ex" d command as in the
+following editing sequence: /bbad^Gjj:172,.d
+.PP
+.nf
+/bbad     (find the beginning of some bad text)
+^G        (find out which line we're on)
+/ebad     (find the end of the bad text)
+jj        (move down two lines)
+:172,.d   (delete all lines from 172 to current line inclusive)
+.PP
+.fi
+I admit that using text markers is much more elegant, as in:
+/bbadma/ebadjjd`a
+.PP
+.nf
+/bbad     (find bad text)
+ma        (mark this point with marker a)
+/ebad     (find end of bad text
+jj        (move down two lines to the real end of bad text)
+d`a       (delete from marker a to here)
+.PP
+.fi
+But we all have to learn to crawl before we can walk, and as I
+mentioned earlier, I started using text markers relatively late.  Some
+people have the concept of line numbers more prominently in their
+cognitive models of text editing while other people are more
+comfortable with symbolic markers.  Vi is powerful enough to offer both
+kinds of users enough commands and options that they can both work
+productively.
+.IP .
+:r       (read file)
+.IP .
+:e       (edit file)
+.IP .
+:!       (shell command)
+.PP
+.fi
+At this point it is a good idea to teach the generalized form of ex
+commands, namely :<address><command>[!][parameters][flags].  The :e!
+command is a very good example because it allows catastrophic damage to
+be saved without leaving vi.  :w! file is dangerous but also worth
+teaching.
+.br
+.fi
+.br
+.fi
+.SH SEE ALSO
+.BR ctags (1),
+.BR ex (1)
+.LP
+.TX TEXT
+.br
+.TX GSBG
+.SH BUGS
+.LP
+Software
+.SM TAB
+characters using
+.SM CTRL-T
+work only immediately after the
+.BR autoindent .
+.LP
+.SM SHIFT\s0-left
+and
+.SM SHIFT\s0-right
+on intelligent terminals do not make use of
+insert and delete character operations in the terminal.
+.LP
+The
+.B wrapmargin
+option can be fooled since it looks at output columns when blanks are
+typed.  When insert mode pushes an existing word through the margin and onto 
+the next line without a break, the line will not be broken.
+.LP
+Insert/delete within a line can be slow if
+.SM TAB
+characters are present on intelligent
+terminals, since the terminals need help in doing this correctly.
+.LP
+Saving text on deletes in the named buffers is somewhat inefficient.
+.LP
+The
+.I source
+command does not work when executed as
+.RB ` :source ';
+there is no way to use the
+.RB ` :append ',
+.RB ` :change ',
+and
+.RB ` :insert '
+commands, since it is not possible to give
+more than one line of input to a
+.RB ` : '
+escape.  To use these on a
+.RB ` :global '
+you must
+.B Q
+to
+.I ex
+command mode,
+execute them, and then reenter the screen editor with
+.B vi
+or
+.BR open .
+.LP
+When using the
+.B \-r
+option to recover a file, you must write the recovered
+text before quitting or you will lose it.
+.B vi
+does not prevent you
+from exiting without writing unless you make changes.
+.LP
+.B vi
+does not adjust when the window in which it runs is resized.
+.SH RESTRICTIONS
+.LP
+The encryption facilities of
+.B vi
+are not available on software
+shipped outside the U.S.

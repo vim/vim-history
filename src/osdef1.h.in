@@ -1,0 +1,79 @@
+/* autoconf cannot fiddle out declarations. Use our homebrewn tools. (jw) */
+/* 
+ * Declarations that may cause conflicts belong here so that osdef.sh
+ * can clean out the forest. Everything else belongs in unix.h
+ *
+ * How this works:
+ * - This file contains all unix prototypes that Vim might need.
+ * - The shell script osdef.sh is executed at compile time to remove all the
+ *   prototypes that are in an include file. This results in osdef.h.
+ * - osdef.h is included in vim.h.
+ *
+ * sed cannot always handle so many commands, this is file 1 of 2
+ */
+
+extern int   printf __ARGS((char *, ...));
+extern int   fprintf __ARGS((FILE *, char *, ...));
+extern int   sprintf __ARGS((char *, char *, ...));
+extern int   sscanf __ARGS((char *, char *, ...));
+extern FILE *fopen __ARGS((char *, char *));
+extern int   fclose __ARGS((FILE *));
+extern int   fseek __ARGS((FILE *, long, int));
+extern int   fread __ARGS((char *, int, int, FILE *));
+extern int   fwrite __ARGS((char *, int, int, FILE *));
+extern int   fputs __ARGS((char *, FILE *));
+#ifndef ferror	/* let me say it again: "macros should never have prototypes" */
+extern int   ferror __ARGS((FILE *));	
+#endif
+#if defined(sun) || defined(_SEQUENT_)	
+/* used inside of stdio macros getc(), puts(), putchar()... */
+extern int   _flsbuf __ARGS((int, FILE *));
+extern int   _filbuf __ARGS((FILE *));
+#endif
+
+#if !defined(HAVE_SELECT)
+struct pollfd;			/* for poll __ARGS */
+extern int poll __ARGS((struct pollfd *, long, int));
+#endif
+
+#ifdef HAVE_MEMSET
+extern void *memset __ARGS((void *, int, size_t));
+#endif
+#ifdef HAVE_STRCSPN
+extern size_t  strcspn __ARGS((char *, char *));
+extern char *strpbrk __ARGS((char *, char *));
+#endif
+#ifdef USEBCOPY
+extern void  bcopy __ARGS((char *, char *, int));
+#else
+# ifdef USEMEMCPY
+extern void  memcpy __ARGS((char *, char *, int));
+# else
+#  ifdef USEMEMMOVE
+extern void  memmove __ARGS((char *, char *, int));
+#  endif
+# endif
+#endif
+/* used inside of FDZERO macro: */
+extern void  bzero __ARGS((char *, int));
+#ifdef HAVE_STRTOL
+extern int   strtol __ARGS((char *, char **, int));
+#endif
+extern int   atoi __ARGS((char *));
+extern int   atol __ARGS((char *));
+
+#ifndef USE_SYSTEM
+extern int   fork __ARGS((void));
+extern int   execvp __ARGS((const char *, const char **));
+extern int   wait __ARGS((int *)); /* will this break things ...? */
+extern int   waitpid __ARGS((pid_t, int *, int));
+#endif
+
+extern int   toupper __ARGS((int));
+extern int   tolower __ARGS((int));
+
+extern RETSIGTYPE (*signal __ARGS((int, RETSIGTYPE (*func) SIGPROTOARG))) __PARMS(SIGPROTOARG);
+#ifdef HAVE_SIGSET
+extern RETSIGTYPE (*sigset __ARGS((int, RETSIGTYPE (*func) SIGPROTOARG))) __PARMS(SIGPROTOARG);
+#endif
+

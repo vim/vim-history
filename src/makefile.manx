@@ -1,39 +1,19 @@
 #
 # Makefile for VIM on the Amiga, using Aztec/Manx C 5.0 or later
 #
-# Note: not all dependencies are included. This was done to avoid having
-#       to compile everything when a global variable or function is added
+# Note: Not all dependencies are included. This was done to avoid having
+#       to compile everything when a global variable or function is added.
+#	Careful when changing a global struct or variable!
 #	
 
 #>>>>> choose options:
-### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
-### -DNO_ARP		do not use arp.library, DOS 2.0 required
-### -DCOMPATIBLE	start in vi-compatible mode
-### -DNOBACKUP		default is no backup file
-### -DDEBUG		output a lot of debugging garbage
-### -DTERMCAP		include termcap file support
-### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
-###				(use only with -DTERMCAP)
-### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -Dconst		for compilers that don't have type const
-### -DVIMRC_FILE	name of the .vimrc file in current dir
-### -DEXRC_FILE		name of the .exrc file in current dir
-### -DSYSVIMRC_FILE	name of the global .vimrc file
-### -DSYSEXRC_FILE	name of the global .exrc file
-### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
-### -DVIM_HLP		name of the help file
-### -DNOTITLE		'title' option off by default
-### -DWEBB_COMPLETE	include Webb's code for command line completion
-### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
 
-DEFINES = -DDIGRAPHS -DSOME_BUILTIN_TCAPS -DVIM_ISSPACE \
-		-DWEBB_COMPLETE -DWEBB_KEYWORD_COMPL
+### See feature.h for a list of optionals.
+### Any other defines can be included here.
+DEFINES =
 
-#>>>>> if TERMCAP is defined obj/termlib.o has to be used
-#TERMLIB = obj/termlib.o
+#>>>>> if HAVE_TGETENT is defined objects/termlib.o has to be used
+#TERMLIB = objects/termlib.o
 TERMLIB = 
 
 #>>>>> choose between debugging (-bs) or optimizing (-so)
@@ -48,249 +28,270 @@ CFLAGS = $(OPTIONS) -wapruq -ps -qf $(DEFINES) -DAMIGA
 LIBS = -lc16
 SYMS = vim.syms
 
-OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
-	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/getchar.o obj/help.o \
-	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
-	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
-	obj/regsub.o obj/screen.o obj/search.o \
-	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
+SRC =	alloc.c amiga.c buffer.c charset.c cmdcmds.c cmdline.c \
+	csearch.c digraph.c edit.c fileio.c getchar.c help.c \
+	linefunc.c main.c mark.c memfile.c memline.c message.c misccmds.c \
+	normal.c ops.c option.c quickfix.c regexp.c \
+	regsub.c screen.c search.c \
+	tables.c tag.c term.c undo.c window.c version.c
 
-PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro proto/cmdline.pro \
-	proto/csearch.pro proto/digraph.pro proto/edit.pro proto/fileio.pro \
-	proto/getchar.pro proto/help.pro proto/linefunc.pro proto/main.pro proto/mark.pro \
-	proto/memfile.pro proto/memline.pro proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
-	proto/param.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
-	proto/screen.pro proto/search.pro \
-	proto/tag.pro proto/term.pro proto/termlib.pro \
-	proto/undo.pro proto/window.pro proto/amiga.pro
+OBJ =	objects/alloc.o objects/amiga.o objects/buffer.o objects/charset.o \
+	objects/cmdcmds.o objects/cmdline.o objects/csearch.o \
+	objects/digraph.o objects/edit.o objects/fileio.o objects/getchar.o \
+	objects/help.o objects/linefunc.o objects/main.o objects/mark.o \
+	objects/memfile.o objects/memline.o objects/message.o \
+	objects/misccmds.o objects/normal.o objects/ops.o objects/option.o \
+	objects/quickfix.o objects/regexp.o objects/regsub.o objects/screen.o \
+	objects/search.o objects/tables.o objects/tag.o objects/term.o \
+	objects/undo.o objects/window.o $(TERMLIB)
 
-/Vim: $(OBJ) version.c
-	cc $(CFLAGS) version.c -o obj/version.o
-	ln +q -m -o /Vim $(OBJ) obj/version.o $(LIBS)
+PRO =	proto/alloc.pro proto/buffer.pro proto/charset.pro proto/cmdcmds.pro \
+	proto/cmdline.pro proto/csearch.pro proto/digraph.pro proto/edit.pro \
+	proto/fileio.pro proto/getchar.pro proto/help.pro proto/linefunc.pro \
+	proto/main.pro proto/mark.pro proto/memfile.pro proto/memline.pro \
+	proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
+	proto/option.pro proto/quickfix.pro proto/regexp.pro proto/regsub.pro \
+	proto/screen.pro proto/search.pro proto/tables.pro proto/tag.pro \
+	proto/term.pro proto/termlib.pro proto/undo.pro proto/window.pro \
+	proto/amiga.pro
 
-debug: $(OBJ) version.c
-	cc $(CFLAGS) version.c -o obj/version.o
-	ln +q -m -g -o /Vim $(OBJ) obj/version.o $(LIBS)
+Vim: objects $(OBJ) version.c
+	cc $(CFLAGS) version.c -o objects/version.o
+	ln +q -m -o Vim $(OBJ) objects/version.o $(LIBS)
+
+debug: objects $(OBJ) version.c
+	cc $(CFLAGS) version.c -o objects/version.o
+	ln +q -m -g -o Vim $(OBJ) objects/version.o $(LIBS)
 
 proto: $(SYMS) $(PRO)
 
+objects:
+	makedir objects
+
 ctags:
-	csh -c ctags *.c *.h
+	csh -c ctags $(SRC) *.h
 
 # can't use delete here, too many file names
 clean:
-	csh -c rm -f $(OBJ) obj/version.o obj/mkcmdtab.o obj/termlib.o /Vim $(SYMS) mkcmdtab cmdtab.h
+	csh -c rm -f $(OBJ) objects/version.o objects/mkcmdtab.o objects/termlib.o Vim $(SYMS) mkcmdtab cmdtab.h
 
 $(SYMS)  : vim.h keymap.h macros.h ascii.h term.h structs.h amiga.h
 	cc $(CFLAGS) -ho$(SYMS) vim.h
 
 ###########################################################################
 
-obj/alloc.o:	alloc.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) alloc.c -o obj/alloc.o
+objects/alloc.o:	alloc.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) alloc.c -o objects/alloc.o
 
 proto/alloc.pro:	alloc.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) alloc.c
 	csh -c mv -f alloc.pro proto
 
-obj/amiga.o:	amiga.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) amiga.c -o obj/amiga.o
+objects/amiga.o:	amiga.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) amiga.c -o objects/amiga.o
 
 proto/amiga.pro:	amiga.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) amiga.c
 	csh -c mv -f amiga.pro proto
 
-obj/buffer.o:	buffer.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) buffer.c -o obj/buffer.o
+objects/buffer.o:	buffer.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) buffer.c -o objects/buffer.o
 
 proto/buffer.pro:	buffer.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) buffer.c
 	csh -c mv -f buffer.pro proto
 
-obj/charset.o:	charset.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) charset.c -o obj/charset.o
+objects/charset.o:	charset.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) charset.c -o objects/charset.o
 
 proto/charset.pro:	charset.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) charset.c
 	csh -c mv -f charset.pro proto
 
-obj/cmdcmds.o:	cmdcmds.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) cmdcmds.c -o obj/cmdcmds.o
+objects/cmdcmds.o:	cmdcmds.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) cmdcmds.c -o objects/cmdcmds.o
 
 proto/cmdcmds.pro:	cmdcmds.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) cmdcmds.c
 	csh -c mv -f cmdcmds.pro proto
 
-obj/cmdline.o:	cmdline.c  $(SYMS) cmdtab.h
-	cc $(CFLAGS) -hi$(SYMS) cmdline.c -o obj/cmdline.o
+objects/cmdline.o:	cmdline.c  $(SYMS) cmdtab.h
+	cc $(CFLAGS) -hi$(SYMS) cmdline.c -o objects/cmdline.o
 
 proto/cmdline.pro:	cmdline.c $(SYMS) cmdtab.h
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) cmdline.c
 	csh -c mv -f cmdline.pro proto
 
-obj/csearch.o:	csearch.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) csearch.c -o obj/csearch.o
+objects/csearch.o:	csearch.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) csearch.c -o objects/csearch.o
 
 proto/csearch.pro:	csearch.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) csearch.c
 	csh -c mv -f csearch.pro proto
 
-obj/digraph.o:	digraph.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) digraph.c -o obj/digraph.o
+objects/digraph.o:	digraph.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) digraph.c -o objects/digraph.o
 
 proto/digraph.pro:	digraph.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) digraph.c
 	csh -c mv -f digraph.pro proto
 
-obj/edit.o:	edit.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) edit.c -o obj/edit.o
+objects/edit.o:	edit.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) edit.c -o objects/edit.o
 
 proto/edit.pro:	edit.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) edit.c
 	csh -c mv -f edit.pro proto
 
-obj/fileio.o:	fileio.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) fileio.c -o obj/fileio.o
+objects/fileio.o:	fileio.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) fileio.c -o objects/fileio.o
 
 proto/fileio.pro:	fileio.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) fileio.c
 	csh -c mv -f fileio.pro proto
 
-obj/getchar.o:	getchar.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) getchar.c -o obj/getchar.o
+objects/getchar.o:	getchar.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) getchar.c -o objects/getchar.o
 
 proto/getchar.pro:	getchar.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) getchar.c
 	csh -c mv -f getchar.pro proto
 
-obj/help.o:	help.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) help.c -o obj/help.o
+objects/help.o:	help.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) help.c -o objects/help.o
 
 proto/help.pro:	help.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) help.c
 	csh -c mv -f help.pro proto
 
-obj/linefunc.o:	linefunc.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) linefunc.c -o obj/linefunc.o
+objects/linefunc.o:	linefunc.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) linefunc.c -o objects/linefunc.o
 
 proto/linefunc.pro:	linefunc.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) linefunc.c
 	csh -c mv -f linefunc.pro proto
 
-obj/main.o:	main.c $(SYMS) param.h globals.h
-	cc $(CFLAGS) -hi$(SYMS) main.c -o obj/main.o
+objects/main.o:	main.c $(SYMS) option.h globals.h
+	cc $(CFLAGS) -hi$(SYMS) main.c -o objects/main.o
 
 proto/main.pro:	main.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) main.c
 	csh -c mv -f main.pro proto
 
-obj/mark.o:	mark.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) mark.c -o obj/mark.o
+objects/mark.o:	mark.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) mark.c -o objects/mark.o
 
 proto/mark.pro:	mark.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) mark.c
 	csh -c mv -f mark.pro proto
 
-obj/memfile.o:	memfile.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) memfile.c -o obj/memfile.o
+objects/memfile.o:	memfile.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) memfile.c -o objects/memfile.o
 
 proto/memfile.pro:	memfile.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) memfile.c
 	csh -c mv -f memfile.pro proto
 
-obj/memline.o:	memline.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) memline.c -o obj/memline.o
+objects/memline.o:	memline.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) memline.c -o objects/memline.o
 
 proto/memline.pro:	memline.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) memline.c
 	csh -c mv -f memline.pro proto
 
-obj/message.o:	message.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) message.c -o obj/message.o
+objects/message.o:	message.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) message.c -o objects/message.o
 
 proto/message.pro:	message.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) message.c
 	csh -c mv -f message.pro proto
 
-obj/misccmds.o:	misccmds.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) misccmds.c -o obj/misccmds.o
+objects/misccmds.o:	misccmds.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) misccmds.c -o objects/misccmds.o
 
 proto/misccmds.pro:	misccmds.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) misccmds.c
 	csh -c mv -f misccmds.pro proto
 
-obj/normal.o:	normal.c  $(SYMS) ops.h
-	cc $(CFLAGS) -hi$(SYMS) normal.c -o obj/normal.o
+objects/normal.o:	normal.c  $(SYMS) ops.h
+	cc $(CFLAGS) -hi$(SYMS) normal.c -o objects/normal.o
 
 proto/normal.pro:	normal.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) normal.c
 	csh -c mv -f normal.pro proto
 
-obj/ops.o:	ops.c  $(SYMS) ops.h
-	cc $(CFLAGS) -hi$(SYMS) ops.c -o obj/ops.o
+objects/ops.o:	ops.c  $(SYMS) ops.h
+	cc $(CFLAGS) -hi$(SYMS) ops.c -o objects/ops.o
 
 proto/ops.pro:	ops.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) ops.c
 	csh -c mv -f ops.pro proto
 
-obj/param.o:	param.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) param.c -o obj/param.o
+objects/option.o:	option.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) option.c -o objects/option.o
 
-proto/param.pro:	param.c $(SYMS)
-	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) param.c
-	csh -c mv -f param.pro proto
+proto/option.pro:	option.c $(SYMS)
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) option.c
+	csh -c mv -f option.pro proto
 
-obj/quickfix.o:	quickfix.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) quickfix.c -o obj/quickfix.o
+objects/quickfix.o:	quickfix.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) quickfix.c -o objects/quickfix.o
 
 proto/quickfix.pro:	quickfix.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) quickfix.c
 	csh -c mv -f quickfix.pro proto
 
-obj/regexp.o:	regexp.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) regexp.c -o obj/regexp.o
+objects/regexp.o:	regexp.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) regexp.c -o objects/regexp.o
 
 proto/regexp.pro:	regexp.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) regexp.c
 	csh -c mv -f regexp.pro proto
 
-obj/regsub.o:	regsub.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) regsub.c -o obj/regsub.o
+objects/regsub.o:	regsub.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) regsub.c -o objects/regsub.o
 
 proto/regsub.pro:	regsub.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) regsub.c
 	csh -c mv -f regsub.pro proto
 
-obj/screen.o:	screen.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) screen.c -o obj/screen.o
+objects/screen.o:	screen.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) screen.c -o objects/screen.o
 
 proto/screen.pro:	screen.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) screen.c
 	csh -c mv -f screen.pro proto
 
-obj/search.o:	search.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) search.c -o obj/search.o
+objects/search.o:	search.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) search.c -o objects/search.o
 
 proto/search.pro:	search.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) search.c
 	csh -c mv -f search.pro proto
 
-obj/tag.o:	tag.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) tag.c -o obj/tag.o
+objects/tables.o:	tables.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) tables.c -o objects/tables.o
+
+proto/tables.pro:	tables.c $(SYMS)
+	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) tables.c
+	csh -c mv -f tables.pro proto
+
+objects/tag.o:	tag.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) tag.c -o objects/tag.o
 
 proto/tag.pro:	tag.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) tag.c
 	csh -c mv -f tag.pro proto
 
-obj/term.o:	term.c  $(SYMS) term.h
-	cc $(CFLAGS) -hi$(SYMS) term.c -o obj/term.o
+objects/term.o:	term.c  $(SYMS) term.h
+	cc $(CFLAGS) -hi$(SYMS) term.c -o objects/term.o
 
 proto/term.pro:	term.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) term.c
 	csh -c mv -f term.pro proto
 
-obj/termlib.o:	termlib.c  $(SYMS)
-	cc $(CFLAGS) termlib.c -o obj/termlib.o
+objects/termlib.o:	termlib.c  $(SYMS)
+	cc $(CFLAGS) termlib.c -o objects/termlib.o
 
 proto/termlib.pro:	termlib.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO termlib.c
@@ -298,15 +299,15 @@ proto/termlib.pro:	termlib.c $(SYMS)
 	vim -s termlib.fix termlib.pro
 	csh -c mv -f termlib.pro proto
 
-obj/undo.o:	undo.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) undo.c -o obj/undo.o
+objects/undo.o:	undo.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) undo.c -o objects/undo.o
 
 proto/undo.pro:	undo.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) undo.c
 	csh -c mv -f undo.pro proto
 
-obj/window.o:	window.c  $(SYMS)
-	cc $(CFLAGS) -hi$(SYMS) window.c -o obj/window.o
+objects/window.o:	window.c  $(SYMS)
+	cc $(CFLAGS) -hi$(SYMS) window.c -o objects/window.o
 
 proto/window.pro:	window.c $(SYMS)
 	cc -qa -qp $(CFLAGS) -DPROTO -hi$(SYMS) window.c
@@ -315,8 +316,8 @@ proto/window.pro:	window.c $(SYMS)
 cmdtab.h: cmdtab.tab mkcmdtab
 	mkcmdtab cmdtab.tab cmdtab.h
 
-mkcmdtab: obj/mkcmdtab.o
-	ln +q -o mkcmdtab obj/mkcmdtab.o -lc16
+mkcmdtab: objects/mkcmdtab.o
+	ln +q -o mkcmdtab objects/mkcmdtab.o -lc16
 
-obj/mkcmdtab.o: mkcmdtab.c
-	cc $(CFLAGS) mkcmdtab.c -o obj/mkcmdtab.o
+objects/mkcmdtab.o: mkcmdtab.c
+	cc $(CFLAGS) mkcmdtab.c -o objects/mkcmdtab.o

@@ -1,5 +1,5 @@
 #
-# Makefile for Borland C++ 2.0
+# Makefile for Borland C++ 2.0, 3.1 or 4.0
 # Can also be used for Turbo C++
 #
 # The options are at the end of this file
@@ -20,10 +20,10 @@ TLINK = tlink
 #	then also remove the SPAWNO define further down and the line
 #	with spawnl.lib
 #
-#LIBPATH = C:\BORLANDC\LIB
-#INCLUDEPATH = C:\BORLANDC\INCLUDE
-LIBPATH = C:\BORLANDC\LIB;C:\CC\SPAWN
-INCLUDEPATH = C:\BORLANDC\INCLUDE;C:\CC\SPAWN
+#LIBPATH = C:\BC4\LIB
+#INCLUDEPATH = C:\BC4\INCLUDE
+LIBPATH = E:\BC4\LIB;C:\CC\SPAWN
+INCLUDEPATH = E:\BC4\INCLUDE;C:\CC\SPAWN
  
  
 #		*Implicit Rules*
@@ -59,12 +59,13 @@ EXE_dependencies =  \
  msdos.obj \
  normal.obj \
  ops.obj \
- param.obj \
+ option.obj \
  quickfix.obj \
  regexp.obj \
  regsub.obj \
  screen.obj \
  search.obj \
+ tables.obj \
  tag.obj \
  term.obj \
  undo.obj \
@@ -72,7 +73,7 @@ EXE_dependencies =  \
  version.obj
  
 #		*Explicit Rules*
-#  add /v to TLINK for degubbing
+#  add /v to TLINK for debugging
 vim.exe: vim.cfg $(EXE_dependencies)
   $(CC) -c version.c
   $(TLINK) /x/c/L$(LIBPATH) @&&|
@@ -98,12 +99,13 @@ misccmds.obj+
 msdos.obj+
 normal.obj+
 ops.obj+
-param.obj+
+option.obj+
 quickfix.obj+
 regexp.obj+
 regsub.obj+
 screen.obj+
 search.obj+
+tables.obj+
 tag.obj+
 term.obj+
 undo.obj+
@@ -117,7 +119,15 @@ spawnl.lib+
 cl.lib
 |
  
- 
+
+# cleaning up
+clean:
+	-del *.obj
+	-del *.exe
+	-del cmdtab.h
+	-del *~
+	-del *.*~
+
 #		*Individual File Dependencies*
 alloc.obj: alloc.c 
  
@@ -132,11 +142,9 @@ cmdline.obj: cmdline.c cmdtab.h
 cmdtab.h: cmdtab.tab mkcmdtab.exe
 	mkcmdtab cmdtab.tab cmdtab.h
 
-mkcmdtab.exe: mkcmdtab.obj
-	$(CC) -ml -omkcmdtab mkcmdtab.obj
-
-mkcmdtab.obj: mkcmdtab.c
-	$(CC) $(CFLAGS) mkcmdtab.c
+mkcmdtab.exe: mkcmdtab.c
+	$(CC) $(CFLAGS) -ml -omkcmdtab mkcmdtab.c
+	-del mkcmdtab.obj
 
 csearch.obj: csearch.c 
  
@@ -152,7 +160,7 @@ help.obj: help.c
  
 linefunc.obj: linefunc.c 
  
-main.obj: main.c globals.h param.h
+main.obj: main.c globals.h option.h
  
 mark.obj: mark.c
  
@@ -170,7 +178,7 @@ normal.obj: normal.c ops.h
  
 ops.obj: ops.c ops.h
  
-param.obj: param.c 
+option.obj: option.c 
  
 quickfix.obj: quickfix.c 
  
@@ -182,6 +190,8 @@ screen.obj: screen.c
  
 search.obj: search.c 
  
+tables.obj: tables.c
+
 tag.obj: tag.c
  
 term.obj: term.c term.h
@@ -212,34 +222,11 @@ vim.cfg: makefile
 -vi-
 -H=VIM.SYM
 -w-par
--w-pro
 -weas
 -wpre
 -I$(INCLUDEPATH)
 -L$(LIBPATH)
--DPC;MSDOS;SPAWNO;DIGRAPHS;WEBB_COMPLETE;WEBB_KEYWORD_COMPL
+-DPC;MSDOS;SPAWNO
 | vim.cfg
 
-#
-# options:
-### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
-### -DNO_ARP		do not use arp.library, DOS 2.0 required
-### -DCOMPATIBLE	start in vi-compatible mode
-### -DNOBACKUP		default is no backup file
-### -DDEBUG		output a lot of debugging garbage
-### -DTERMCAP		include termcap file support
-### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
-###				(use only with -DTERMCAP)
-### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -DVIMRC_FILE	name of the .vimrc file in current dir
-### -DEXRC_FILE		name of the .exrc file in current dir
-### -DSYSVIMRC_FILE	name of the global .vimrc file
-### -DSYSEXRC_FILE	name of the global .exrc file
-### -DDEFVIMRC_FILE	name of the system-wide .vimrc file
-### -DVIM_HLP		name of the help file
-### -DWEBB_COMPLETE	include Webb's code for command line completion
-### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
-### -DNOTITLE		'title' option off by default
+### See makefile.txt for a list of defines that can be included

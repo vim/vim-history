@@ -1,0 +1,9 @@
+# The most simplistic Makefile, for DJGPP on MS-DOS
+
+CFLAGS = -O4 -Wall
+
+ctags.exe: ctags.c
+	gcc $(CFLAGS) -s -o ctags.exe ctags.c -lpc
+
+clean:
+	del ctags.exe

@@ -1,0 +1,143 @@
+#
+# Makefile for Vim on Acorn Archimedes, using gcc and UnixLib
+#
+
+MACHINE = -DARCHIE
+
+### gcc on the Arc.
+CC=gcc
+
+### Name of target
+TARGET = vim
+
+### See makefile.txt for a list of defines that can be included
+
+# To keep the command line down, all the defs have gone into
+# the macro file "defs"
+DEFS = -include defs -O2
+
+#>>>>> link with termlib or termcap only if HAVE_TGETENT is defined
+### default
+LIBS =
+
+#>>>>> end of choices
+###########################################################################
+
+CFLAGS = -c $(MACHINE) $(DEFS)
+
+INCL = h.vim h.globals h.option h.keymap h.macros h.ascii h.term h.unix h.debug
+
+OBJ =	o.alloc o.archie o.buffer o.charset o.cmdcmds o.cmdline o.csearch o.digraph \
+	o.edit o.fileio o.getchar o.help o.linefunc o.main o.mark o.memfile o.memline o.message o.misccmds \
+	o.normal o.ops o.option o.quickfix o.regexp o.regsub o.screen \
+	o.search o.tables o.tag o.term o.undo o.window
+
+$(TARGET): $(OBJ) c.version
+	$(CC) $(CFLAGS) version.c
+	rename o.mkcmdtab tempfile
+	$(CC) -o $(TARGET) o.* $(LIBS)
+	rename tempfile o.mkcmdtab
+
+###########################################################################
+
+o.alloc:	c.alloc  $(INCL)
+	$(CC) $(CFLAGS) alloc.c
+
+o.archie:	c.archie  $(INCL) h.archie
+	$(CC) $(CFLAGS) archie.c
+
+o.buffer:	c.buffer  $(INCL)
+	$(CC) $(CFLAGS) buffer.c
+
+o.charset:	c.charset  $(INCL)
+	$(CC) $(CFLAGS) charset.c
+
+o.cmdcmds:	c.cmdcmds  $(INCL)
+	$(CC) $(CFLAGS) cmdcmds.c
+
+o.cmdline:	c.cmdline  $(INCL) h.cmdtab
+	$(CC) $(CFLAGS) cmdline.c
+
+o.csearch:	c.csearch  $(INCL)
+	$(CC) $(CFLAGS) csearch.c
+
+o.digraph:	c.digraph  $(INCL)
+	$(CC) $(CFLAGS) digraph.c
+
+o.edit:	c.edit  $(INCL)
+	$(CC) $(CFLAGS) edit.c
+
+o.fileio:	c.fileio  $(INCL)
+	$(CC) $(CFLAGS) fileio.c
+
+o.getchar:	c.getchar  $(INCL)
+	$(CC) $(CFLAGS) getchar.c
+
+o.help:	c.help  $(INCL)
+	$(CC) $(CFLAGS) help.c
+
+o.linefunc:	c.linefunc  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c
+
+o.main:	c.main  $(INCL)
+	$(CC) $(CFLAGS) main.c
+
+o.mark:	c.mark  $(INCL)
+	$(CC) $(CFLAGS) mark.c
+
+o.memfile:	c.memfile  $(INCL)
+	$(CC) $(CFLAGS) memfile.c
+
+o.memline:	c.memline  $(INCL)
+	$(CC) $(CFLAGS) memline.c
+
+o.message:	c.message  $(INCL)
+	$(CC) $(CFLAGS) message.c
+
+o.misccmds:	c.misccmds  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c
+
+o.normal:	c.normal  $(INCL) h.ops
+	$(CC) $(CFLAGS) normal.c
+
+o.ops:	c.ops  $(INCL) h.ops
+	$(CC) $(CFLAGS) ops.c
+
+o.option:	c.option  $(INCL)
+	$(CC) $(CFLAGS) option.c
+
+o.quickfix:	c.quickfix  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c
+
+o.regexp:	c.regexp  $(INCL)
+	$(CC) $(CFLAGS) regexp.c
+
+o.regsub:	c.regsub  $(INCL)
+	$(CC) $(CFLAGS) regsub.c
+
+o.screen:	c.screen  $(INCL)
+	$(CC) $(CFLAGS) screen.c
+
+o.search:	c.search  $(INCL)
+	$(CC) $(CFLAGS) search.c
+
+o.tables:	c.tables  $(INCL)
+	$(CC) $(CFLAGS) tables.c
+
+o.tag:	c.tag  $(INCL)
+	$(CC) $(CFLAGS) tag.c
+
+o.term:	c.term  $(INCL)
+	$(CC) $(CFLAGS) term.c
+
+o.undo:	c.undo  $(INCL)
+	$(CC) $(CFLAGS) undo.c
+
+o.window:	c.window  $(INCL)
+	$(CC) $(CFLAGS) window.c
+
+h.cmdtab: cmdtab mkcmdtab
+	mkcmdtab cmdtab h.cmdtab
+
+mkcmdtab: o.mkcmdtab
+	$(CC) -o mkcmdtab mkcmdtab.o

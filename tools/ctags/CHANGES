@@ -1,0 +1,132 @@
+#!/bin/cat CHANGES
+# vim:tw=72
+
+95-May-23  0.42: Changes since version 0.4:
+-------------------------------------------
+
+Various small adjustments to improve portability.
+
+
+95-May-20  0.4: Changes since version 0.31:
+-------------------------------------------
+
+Updated man page and added some additional description for -x.
+
+Added support for supplying default options via CTAGS environment
+variable.
+
+Changed default -i operation from '=' (exclusive) to '+' (add). This
+make is easier to specify adding of static tag prefixing (e.g. -iP), as
+well as add tags to a custom default set of tags specified by CTAGS.
+
+Removed -b option. Files are now automatically reprocessed with this
+heuristic if brace matching problems are detected. This heuristic now
+only causes a skip to a '}' in line 1 if a nested brace is found within
+an #if conditional, since this is the only circumstance which can make
+this heuristic necessary.
+
+Corrected line numbers listed in xref output.
+
+Changed temp file name for xref output to use a 8.3 name in the current
+directory on MSDOS, OS2, and WIN32 platforms. Goes into /tmp otherwise.
+
+Added -L option to read file names from a file.
+
+Added compile checks for WIN32.
+
+Corrected problem with functions declare using enum keyword.
+
+Corrected //-style comments one more time.
+
+Lowered memory usage for internal sort.
+
+Skipped special files in case we are fed something irrational.
+
+Fixed a few small bugs.
+
+
+95-May-9  0.31: Changes since version 0.3:
+------------------------------------------
+
+Corrected a problem which caused the alternate branches of a #if 0
+conditional to be ignored, possibly resulting in false condition of
+unmatched braces.
+
+
+95-May-9  0.3: Changes since version 0.21:
+------------------------------------------
+
+Corrected problem which prevented recognition of preprocessor directives
+on line following //-style comment.
+
+Added some logic to detect declarations of form "type *(var[]);
+
+Completely changes command line options (again!).
+
+Space is no longer required to follow option letters expecting a list.
+
+Restored option to use brace formatting to determine end of {} blocks.
+
+Updated man page.
+
+Added simple internal tag sort for systems not supporting the external
+programs "sort" and "awk". This is enabled by compiling with
+INTERNAL_SORT defined.
+
+Improved xref format, sending output to standard output instead of tag
+file.
+
+Miscellaneous small internal reorganization and cleanup.
+
+
+0.21: Changes since version 0.2:
+--------------------------------
+
+Corrected default value for -h option, which had previously not been
+recognizing header files.
+
+Corrected -iz documentation note printed by program
+
+
+0.2: Changes since version 0.1:
+-------------------------------
+
+Completely changed the scanner. This allowed defines which ended with a
+multi-line comment and prevented ctags from losing sync.
+
+Added ability to selectively follow one branch of a #if preprocessor
+construct if needed to resolve a tag. "#if 0" branches are always
+ignored. These changes made the '-F' option obsolete.
+
+Added ability to generate xref (cross reference) output.
+
+Added an optional call to "awk" to report duplicate tags.
+
+Added -u option to call to "sort" to discard identical tag lines, in
+case the same file was supplied more than once. I wonder if this should
+be an option, since it is possible that multiple tags in one file might
+have the same search pattern.
+
+Added ability to create tags for function declarations, in order to
+create tags for prototypes for functions for which source code is not
+available.
+
+Added special case for "int (foo)()" form of definitions and declarations
+and array variables within "()".
+
+Added special case to check for C++ class and method definitions.
+
+Check for presence of option argument to those options which expect them
+(e.g. -h, -i, -o).
+
+Completely changes command line options. Default is now to generate all
+type of tags except for function declarations.
+
+Added special checking of the tagfile to avoid overwriting source files.
+
+Corrected problem of last enumerated value being missed when it was
+followed by '= something".
+
+
+0.1: Initial beta release
+-------------------------

@@ -1,0 +1,154 @@
+#
+# Makefile for VIM on MSDOS, using DJGPP 2.0
+#
+
+#>>>>> choose options:
+
+### See feature.h for a list of optionals.
+### Any other defines can be included here.
+
+DEFINES =
+
+#>>>>> name of the compiler and linker, name of lib directory
+CC = gcc
+
+#>>>>> end of choices
+###########################################################################
+
+INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h msdos.h structs.h
+CFLAGS = -O4 -DMSDOS $(DEFINES) -Dinterrupt= -Dfar= -DMAXMEM=512 -D_NAIVE_DOS_REGS
+
+OBJ =	objects/alloc.o objects/buffer.o objects/charset.o objects/cmdcmds.o \
+	objects/cmdline.o objects/csearch.o objects/digraph.o objects/edit.o \
+	objects/fileio.o objects/getchar.o objects/help.o objects/linefunc.o \
+	objects/main.o objects/mark.o objects/memfile.o objects/memline.o \
+	objects/message.o objects/misccmds.o objects/normal.o objects/ops.o \
+	objects/option.o objects/quickfix.o objects/regexp.o objects/regsub.o \
+	objects/screen.o objects/search.o objects/tables.o objects/tag.o \
+	objects/term.o objects/undo.o objects/window.o objects/msdos.o \
+	$(TERMLIB)
+
+vim.exe: objects $(OBJ) version.c
+	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -lpc
+
+objects:
+	mkdir objects
+
+ctags:
+	command /c ctags *.c $(INCL)
+
+clean:
+	-del objects\*.o
+	-del *.o
+	-del *.exe
+	-del cmdtab.h
+	-del *.~
+	-del *~
+
+addcr:	addcr.c
+	$(CC) addcr.c
+	command /c addcr.bat
+
+###########################################################################
+
+objects/alloc.o:	alloc.c  $(INCL)
+	$(CC) -c $(CFLAGS) alloc.c -o objects/alloc.o
+
+objects/msdos.o:	msdos.c  $(INCL) msdos.h
+	$(CC) -c $(CFLAGS) msdos.c -o objects/msdos.o
+
+objects/buffer.o:	buffer.c  $(INCL)
+	$(CC) -c $(CFLAGS) buffer.c -o objects/buffer.o
+
+objects/charset.o:	charset.c  $(INCL)
+	$(CC) -c $(CFLAGS) charset.c -o objects/charset.o
+
+objects/cmdcmds.o:	cmdcmds.c  $(INCL)
+	$(CC) -c $(CFLAGS) cmdcmds.c -o objects/cmdcmds.o
+
+objects/cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+	$(CC) -c $(CFLAGS) cmdline.c -o objects/cmdline.o
+
+objects/csearch.o:	csearch.c  $(INCL)
+	$(CC) -c $(CFLAGS) csearch.c -o objects/csearch.o
+
+objects/digraph.o:	digraph.c  $(INCL)
+	$(CC) -c $(CFLAGS) digraph.c -o objects/digraph.o
+
+objects/edit.o:	edit.c  $(INCL)
+	$(CC) -c $(CFLAGS) edit.c -o objects/edit.o
+
+objects/fileio.o:	fileio.c  $(INCL)
+	$(CC) -c $(CFLAGS) fileio.c -o objects/fileio.o
+
+objects/getchar.o:	getchar.c  $(INCL)
+	$(CC) -c $(CFLAGS) getchar.c -o objects/getchar.o
+
+objects/help.o:	help.c  $(INCL)
+	$(CC) -c $(CFLAGS) help.c -o objects/help.o
+
+objects/linefunc.o:	linefunc.c  $(INCL)
+	$(CC) -c $(CFLAGS) linefunc.c -o objects/linefunc.o
+
+objects/main.o:	main.c  $(INCL)
+	$(CC) -c $(CFLAGS) main.c -o objects/main.o
+
+objects/mark.o:	mark.c  $(INCL)
+	$(CC) -c $(CFLAGS) mark.c -o objects/mark.o
+
+objects/memfile.o:	memfile.c  $(INCL)
+	$(CC) -c $(CFLAGS) memfile.c -o objects/memfile.o
+
+objects/memline.o:	memline.c  $(INCL)
+	$(CC) -c $(CFLAGS) memline.c -o objects/memline.o
+
+objects/message.o:	message.c  $(INCL)
+	$(CC) -c $(CFLAGS) message.c -o objects/message.o
+
+objects/misccmds.o:	misccmds.c  $(INCL)
+	$(CC) -c $(CFLAGS) misccmds.c -o objects/misccmds.o
+
+objects/normal.o:	normal.c  $(INCL) ops.h
+	$(CC) -c $(CFLAGS) normal.c -o objects/normal.o
+
+objects/ops.o:	ops.c  $(INCL) ops.h
+	$(CC) -c $(CFLAGS) ops.c -o objects/ops.o
+
+objects/option.o:	option.c  $(INCL)
+	$(CC) -c $(CFLAGS) option.c -o objects/option.o
+
+objects/quickfix.o:	quickfix.c  $(INCL)
+	$(CC) -c $(CFLAGS) quickfix.c -o objects/quickfix.o
+
+objects/regexp.o:	regexp.c  $(INCL)
+	$(CC) -c $(CFLAGS) regexp.c -o objects/regexp.o
+
+objects/regsub.o:	regsub.c  $(INCL)
+	$(CC) -c $(CFLAGS) regsub.c -o objects/regsub.o
+
+objects/screen.o:	screen.c  $(INCL)
+	$(CC) -c $(CFLAGS) screen.c -o objects/screen.o
+
+objects/search.o:	search.c  $(INCL)
+	$(CC) -c $(CFLAGS) search.c -o objects/search.o
+
+objects/tables.o:	tables.c  $(INCL)
+	$(CC) -c $(CFLAGS) tables.c -o objects/tables.o
+
+objects/tag.o:	tag.c  $(INCL)
+	$(CC) -c $(CFLAGS) tag.c -o objects/tag.o
+
+objects/term.o:	term.c  $(INCL)
+	$(CC) -c $(CFLAGS) term.c -o objects/term.o
+
+objects/undo.o:	undo.c  $(INCL)
+	$(CC) -c $(CFLAGS) undo.c -o objects/undo.o
+
+objects/window.o:	window.c  $(INCL)
+	$(CC) -c $(CFLAGS) window.c -o objects/window.o
+
+cmdtab.h: cmdtab.tab mkcmdtab.exe
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab.exe:	mkcmdtab.c
+	$(CC) $(CFLAGS) -o mkcmdtab.exe mkcmdtab.c

@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -14,49 +14,50 @@
 #include "globals.h"
 #define MESSAGE			/* don't include prototype for smsg() */
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
+static void msg_screen_outchar __ARGS((int c));
 static int msg_check_screen __ARGS((void));
 
-static int lines_left = -1;			/* lines left for listing */
+static int	lines_left = -1;			/* lines left for listing */
 
 /*
  * msg(s) - displays the string 's' on the status line
+ * When terminal not initialized (yet) fprintf(stderr,..) is used.
  * return TRUE if wait_return not called
  */
 	int
 msg(s)
 	char_u		   *s;
 {
-	if (!screen_valid())			/* terminal not initialized */
-	{
-		fprintf(stderr, (char *)s);
-		fflush(stderr);
-		return TRUE;
-	}
-
 	msg_start();
-	if (msg_highlight)			/* actually it is highlighting instead of invert */
+	if (msg_highlight)
 		start_highlight();
-	msg_outtrans(s, -1);
+	msg_outtrans(s);
 	if (msg_highlight)
 	{
 		stop_highlight();
 		msg_highlight = FALSE;		/* clear for next call */
 	}
-	msg_ceol();
+	msg_clr_eos();
 	return msg_end();
 }
 
-#ifndef PROTO		/* automatic prototype generation does not understand this */
+/*
+ * automatic prototype generation does not understand this function
+ */
+#ifndef PROTO
+int smsg __ARGS((char_u *, long, long, long,
+						long, long, long, long, long, long, long));
+
 /* VARARGS */
-	void
+	int
 smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 	char_u		*s;
 	long		a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
 {
 	sprintf((char *)IObuff, (char *)s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-	msg(IObuff);
+	return msg(IObuff);
 }
 #endif
 
@@ -64,6 +65,7 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
  * emsg() - display an error message
  *
  * Rings the bell, if appropriate, and calls message() to do the real work
+ * When terminal not initialized (yet) fprintf(stderr,..) is used.
  *
  * return TRUE if wait_return not called
  */
@@ -71,30 +73,84 @@ smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
 emsg(s)
 	char_u		   *s;
 {
+	char_u			*Buf;
+#ifdef SLEEP_IN_EMSG
+	int				retval;
+#endif
+	static int		last_lnum = 0;
+	static char_u	*last_sourcing_name = NULL;
+
+	if (emsg_off)				/* no error messages at the moment */
+		return TRUE;
+
+	if (global_busy)			/* break :global command */
+		++global_busy;
+
 	if (p_eb)
-		beep();					/* also includes flush_buffers() */
+		beep_flush();			/* also includes flush_buffers() */
 	else
 		flush_buffers(FALSE);	/* flush internal buffers */
+	did_emsg = TRUE;			/* flag for DoOneCmd() */
+	++msg_scroll;				/* don't overwrite a previous message */
 	(void)set_highlight('e');	/* set highlight mode for error messages */
 	msg_highlight = TRUE;
+	if (msg_scrolled)
+		need_wait_return = TRUE;	/* needed in case emsg() is called after
+									 * wait_return has reset need_wait_return
+									 * and a redraw is expected because
+									 * msg_scrolled is non-zero */
+
+/*
+ * First output name and line number of source of error message
+ */
+	if (sourcing_name != NULL &&
+		   (sourcing_name != last_sourcing_name || sourcing_lnum != last_lnum)
+									  && (Buf = alloc(MAXPATHL + 30)) != NULL)
+	{
+		++no_wait_return;
+		if (sourcing_name != last_sourcing_name)
+		{
+			sprintf((char *)Buf, "Error detected while processing %s:",
+											sourcing_name);
+			msg(Buf);
+			msg_highlight = TRUE;
+		}
+			/* lnum is 0 when executing a command from the command line
+			 * argument, we don't want a line number then */
+		if (sourcing_lnum != 0)
+		{
+			(void)set_highlight('n');	/* highlight mode for line numbers */
+			sprintf((char *)Buf, "line %4ld:", sourcing_lnum);
+			msg(Buf);
+			(void)set_highlight('e');	/* highlight mode for error messages */
+			msg_highlight = TRUE;
+		}
+		--no_wait_return;
+		last_lnum = sourcing_lnum;	/* only once for each line */
+		vim_free(Buf);
+	}
+	last_sourcing_name = sourcing_name;	/* do this also when it is NULL */
+
+#ifdef SLEEP_IN_EMSG
 /*
  * Msg returns TRUE if wait_return() was not called.
  * In that case may call sleep() to give the user a chance to read the message.
  * Don't call sleep() if dont_sleep is set.
  */
-	if (msg(s))
+	retval = msg(s);
+	if (retval)
 	{
-		if (dont_sleep)
-		{
-			msg_outchar('\n');	/* one message per line, don't overwrite */
-			cmdline_row = msg_row;
-			need_wait_return = TRUE;
-		}
+		if (dont_sleep || need_wait_return)
+			need_sleep = TRUE;	/* sleep before removing the message */
 		else
-			sleep(1);			/* give the user a chance to read the message */
-		return TRUE;
+			mch_delay(1000L, TRUE);	/* give user chance to read message */
 	}
-	return FALSE;
+	/* --msg_scroll;			don't overwrite this message */
+	return retval;
+#else
+	emsg_on_display = TRUE;		/* remember there is an error message */
+	return msg(s);
+#endif
 }
 
 	int
@@ -103,6 +159,35 @@ emsg2(s, a1)
 {
 	sprintf((char *)IObuff, (char *)s, (char *)a1);
 	return emsg(IObuff);
+}
+
+	int
+emsgn(s, n)
+	char_u *s;
+	long    n;
+{
+	sprintf((char *)IObuff, (char *)s, n);
+	return emsg(IObuff);
+}
+
+/*
+ * Like msg(), but truncate to a single line if p_shm contains 't'.
+ * Careful: The string may be changed!
+ */
+	int
+msg_trunc(s)
+	char_u	*s;
+{
+	int		n;
+
+	if (shortmess(SHM_TRUNC) && (n = (int)STRLEN(s) -
+					(int)(Rows - cmdline_row - 1) * Columns - sc_col + 1) > 0)
+	{
+		s[n] = '<';
+		return msg(s + n);
+	}
+	else
+		return msg(s);
 }
 
 /*
@@ -119,6 +204,9 @@ wait_return(redraw)
 	int				oldState;
 	int				tmpState;
 
+	if (redraw == TRUE)
+		must_redraw = CLEAR;
+
 /*
  * With the global command (and some others) we only need one return at the
  * end. Adjust cmdline_row to avoid the next message overwriting the last one.
@@ -127,48 +215,86 @@ wait_return(redraw)
 	{
 		need_wait_return = TRUE;
 		cmdline_row = msg_row;
-		if (!termcap_active)
-			starttermcap();
 		return;
 	}
-	need_wait_return = FALSE;
-	lines_left = -1;
 	oldState = State;
-	State = HITRETURN;
-	if (got_int)
-		msg_outstr((char_u *)"Interrupt: ");
-
-	(void)set_highlight('r');
-	start_highlight();
-#ifdef ORG_HITRETURN
-	msg_outstr("Press RETURN to continue");
-	stop_highlight();
-	do {
-		c = vgetc();
-	} while (strchr("\r\n: ", c) == NULL);
-	if (c == ':')			 		/* this can vi too (but not always!) */
-		stuffcharReadbuff(c);
-#else
-	msg_outstr((char_u *)"Press RETURN or enter command to continue");
-	stop_highlight();
-	do
+	if (quit_more)
 	{
-		c = vgetc();
+		c = CR;						/* just pretend CR was hit */
+		quit_more = FALSE;
 		got_int = FALSE;
-	} while (c == Ctrl('C'));
-	breakcheck();
-	if (strchr("\r\n ", c) == NULL)
-		stuffcharReadbuff(c);
+	}
+	else
+	{
+		State = HITRETURN;
+#ifdef USE_MOUSE
+		setmouse();
 #endif
+		if (msg_didout)				/* start on a new line */
+			msg_outchar('\n');
+		if (got_int)
+			MSG_OUTSTR("Interrupt: ");
+
+		(void)set_highlight('r');
+		start_highlight();
+#ifdef ORG_HITRETURN
+		MSG_OUTSTR("Press RETURN to continue");
+		stop_highlight();
+		do {
+			c = vgetc();
+		} while (vim_strchr((char_u *)"\r\n: ", c) == NULL);
+		if (c == ':')			 		/* this can vi too (but not always!) */
+			stuffcharReadbuff(c);
+#else
+		MSG_OUTSTR("Press RETURN or enter command to continue");
+		stop_highlight();
+		do
+		{
+			c = vgetc();
+			got_int = FALSE;
+		} while (c == Ctrl('C')
+#ifdef USE_GUI
+								|| c == K_SCROLLBAR || c == K_HORIZ_SCROLLBAR
+#endif
+#ifdef USE_MOUSE
+								|| c == K_LEFTDRAG   || c == K_LEFTRELEASE
+								|| c == K_MIDDLEDRAG || c == K_MIDDLERELEASE
+								|| c == K_RIGHTDRAG  || c == K_RIGHTRELEASE
+								|| c == K_IGNORE	 ||
+								(!mouse_has(MOUSE_RETURN) &&
+									 (c == K_LEFTMOUSE ||
+									  c == K_MIDDLEMOUSE ||
+									  c == K_RIGHTMOUSE))
+#endif
+								);
+		mch_breakcheck();
+#ifdef USE_MOUSE
+		/*
+		 * Avoid that the mouse-up event causes visual mode to start.
+		 */
+		if (c == K_LEFTMOUSE || c == K_MIDDLEMOUSE || c == K_RIGHTMOUSE)
+			jump_to_mouse(MOUSE_SETPOS);
+		else
+#endif
+			if (vim_strchr((char_u *)"\r\n ", c) == NULL)
+		{
+			stuffcharReadbuff(c);
+			do_redraw = TRUE;		/* need a redraw even though there is
+									   something in the stuff buffer */
+		}
+#endif
+	}
 
 	/*
-	 * If the user hits ':' we get a command line from the next line.
+	 * If the user hits ':', '?' or '/' we get a command line from the next
+	 * line.
 	 */
-	if (c == ':')
+	if (c == ':' || c == '?' || c == '/')
+	{
 		cmdline_row = msg_row;
-
-	if (!termcap_active)			/* start termcap before redrawing */
-		starttermcap();
+		skip_redraw = TRUE;			/* skip redraw once */
+		do_redraw = FALSE;
+	}
 
 /*
  * If the window size changed set_winsize() will redraw the screen.
@@ -176,21 +302,31 @@ wait_return(redraw)
  */
 	tmpState = State;
 	State = oldState;				/* restore State before set_winsize */
+#ifdef USE_MOUSE
+	setmouse();
+#endif
 	msg_check();
+
+	need_wait_return = FALSE;
+	emsg_on_display = FALSE;	/* can delete error message now */
+#ifdef SLEEP_IN_EMSG
+	need_sleep = FALSE;			/* no need to call sleep() anymore */
+#endif
+	msg_didany = FALSE;			/* reset lines_left at next msg_start() */
+	lines_left = -1;
+	if (keep_msg != NULL && linetabsize(keep_msg) >=
+								  (Rows - cmdline_row - 1) * Columns + sc_col)
+		keep_msg = NULL;			/* don't redisplay message, it's too long */
+
 	if (tmpState == SETWSIZE)		/* got resize event while in vgetc() */
 		set_winsize(0, 0, FALSE);
-	else if (redraw == TRUE)
+	else if (!skip_redraw && (redraw == TRUE || (msg_scrolled && redraw != -1)))
 	{
-		if (c == ':')
-			must_redraw = CLEAR;
-		else
-			updateScreen(CLEAR);
-	}
-	else if (msg_scrolled && c != ':' && redraw != -1)
+		starttermcap();				/* start termcap before redrawing */
 		updateScreen(VALID);
+	}
 
-	if (c == ':')
-		skip_redraw = TRUE;			/* skip redraw once */
+	dont_wait_return = TRUE;		/* don't wait again in main() */
 }
 
 /*
@@ -199,11 +335,19 @@ wait_return(redraw)
 	void
 msg_start()
 {
-	did_msg = TRUE;					/* for doglob() */
-	keep_msg = NULL;				/* don't display old message now */
-	msg_pos(cmdline_row, 0);
+	keep_msg = NULL;						/* don't display old message now */
+	keep_msg_highlight = 0;
+	if (!msg_scroll && full_screen)			/* overwrite last message */
+		msg_pos(cmdline_row, 0);
+	else if (msg_didout)					/* start message on next line */
+	{
+		msg_outchar('\n');
+		cmdline_row = msg_row;
+	}
+	if (!msg_didany)
+		lines_left = cmdline_row;
+	msg_didout = FALSE;						/* no output on current line yet */
 	cursor_off();
-	lines_left = cmdline_row;
 }
 
 /*
@@ -218,17 +362,26 @@ msg_pos(row, col)
 		msg_row = row;
 	if (col >= 0)
 		msg_col = col;
-	screen_start();
 }
 
 	void
 msg_outchar(c)
 	int		c;
 {
-	char_u		buf[2];
+	char_u		buf[4];
 
-	buf[0] = c;
-	buf[1] = NUL;
+	if (IS_SPECIAL(c))
+	{
+		buf[0] = K_SPECIAL;
+		buf[1] = K_SECOND(c);
+		buf[2] = K_THIRD(c);
+		buf[3] = NUL;
+	}
+	else
+	{
+		buf[0] = c;
+		buf[1] = NUL;
+	}
 	msg_outstr(buf);
 }
 
@@ -242,25 +395,114 @@ msg_outnum(n)
 	msg_outstr(buf);
 }
 
+	void
+msg_home_replace(fname)
+	char_u	*fname;
+{
+	char_u		*name;
+
+	name = home_replace_save(NULL, fname);
+	if (name != NULL)
+		msg_outtrans(name);
+	vim_free(name);
+}
+
 /*
  * output 'len' characters in 'str' (including NULs) with translation
  * if 'len' is -1, output upto a NUL character
  * return the number of characters it takes on the screen
  */
 	int
-msg_outtrans(str, len)
+msg_outtrans(str)
+	register char_u *str;
+{
+	return msg_outtrans_len(str, (int)STRLEN(str));
+}
+
+	int
+msg_outtrans_len(str, len)
 	register char_u *str;
 	register int   len;
 {
 	int retval = 0;
 
-	if (len == -1)
-		len = STRLEN(str);
 	while (--len >= 0)
 	{
 		msg_outstr(transchar(*str));
 		retval += charsize(*str);
 		++str;
+	}
+	return retval;
+}
+
+/*
+ * Output the string 'str' upto a NUL character.
+ * Return the number of characters it takes on the screen.
+ *
+ * If K_SPECIAL is encountered, then it is taken in conjunction with the
+ * following character and shown as <F1>, <S-Up> etc.  In addition, if 'all'
+ * is TRUE, then any other character which has its 8th bit set is shown as
+ * <M-x>, where x is the equivalent character without its 8th bit set.  If a
+ * character is displayed in one of these special ways, is also highlighted
+ * (its highlight name is '8' in the p_hl variable).
+ * This function is used to show mappings, where we want to see how to type
+ * the character/string -- webb
+ */
+	int
+msg_outtrans_special(str, all)
+	register char_u *str;
+	register int	all;	/* <M-a> etc as well as <F1> etc */
+{
+	int		retval = 0;
+	char_u	*string;
+	int		c;
+	int		modifiers;
+
+	set_highlight('8');
+	for (; *str; ++str)
+	{
+		c = *str;
+		if (c == K_SPECIAL && str[1] != NUL && str[2] != NUL)
+		{
+			modifiers = 0x0;
+			if (str[1] == KS_MODIFIER)
+			{
+				modifiers = str[2];
+				str += 3;
+				c = *str;
+			}
+			if (c == K_SPECIAL)
+			{
+				c = TO_SPECIAL(str[1], str[2]);
+				str += 2;
+				if (c == K_ZERO)		/* display <Nul> as ^@ */
+					c = NUL;
+			}
+			if (IS_SPECIAL(c) || modifiers)		/* special key */
+			{
+				string = get_special_key_name(c, modifiers);
+				start_highlight();
+				msg_outstr(string);
+				retval += STRLEN(string);
+				stop_highlight();
+				flushbuf();			/* Otherwise gets overwritten by spaces */
+				continue;
+			}
+		}
+		if ((c & 0x80) && all)
+		{
+			start_highlight();
+			MSG_OUTSTR("<M-");
+			msg_outstr(transchar(c & 0x7f));
+			retval += 2 + charsize(c & 0x7f);
+			MSG_OUTSTR(">");
+			stop_highlight();
+		}
+		else
+		{
+			msg_outstr(transchar(c));
+			retval += charsize(c);
+		}
 	}
 	return retval;
 }
@@ -332,69 +574,177 @@ msg_prt_line(s)
 msg_outstr(s)
 	char_u		*s;
 {
-	int		c;
+	int		oldState;
+	char_u	buf[20];
 
 	/*
-	 * if there is no valid screen, use fprintf so we can see error messages
+	 * If there is no valid screen, use fprintf so we can see error messages.
+	 * If termcap is not active, we may be writing in an alternate console
+	 * window, cursor positioning may not work correctly (window size may be
+	 * different, e.g. for WIN32 console).
 	 */
-	if (!msg_check_screen())
+	if (!msg_check_screen()
+#ifdef WIN32
+							|| !termcap_active
+#endif
+												)
 	{
+#ifdef WIN32
+		mch_settmode(0);	/* cook so that \r and \n are handled correctly */
+#endif
 		fprintf(stderr, (char *)s);
+		msg_didout = TRUE;			/* assume that line is not empty */
+#ifdef WIN32
+		mch_settmode(1);
+#endif
 		return;
 	}
 
+	msg_didany = TRUE;			/* remember that something was outputted */
 	while (*s)
 	{
 		/*
-		 * the screen is scrolled up when:
+		 * The screen is scrolled up when:
 		 * - When outputting a newline in the last row
 		 * - when outputting a character in the last column of the last row
-		 *   (some terminals scroll automatically, some don't. To avoid problems
-		 *   we scroll ourselves)
+		 *   (some terminals scroll automatically, some don't. To avoid
+		 *   problems we scroll ourselves)
 		 */
-		if (msg_row >= Rows - 1 && (*s == '\n' || msg_col >= Columns - 1))
+		if (msg_row >= Rows - 1 && (*s == '\n' || msg_col >= Columns - 1 ||
+							  (*s == TAB && msg_col >= ((Columns - 1) & ~7))))
 		{
 			screen_del_lines(0, 0, 1, (int)Rows);		/* always works */
 			msg_row = Rows - 2;
 			if (msg_col >= Columns)		/* can happen after screen resize */
 				msg_col = Columns - 1;
 			++msg_scrolled;
+			need_wait_return = TRUE;	/* may need wait_return in main() */
 			if (cmdline_row > 0)
 				--cmdline_row;
 			/*
 			 * if screen is completely filled wait for a character
 			 */
-			if (p_more && --lines_left == 0)
+			if (p_more && --lines_left == 0 && State != HITRETURN)
 			{
-				windgoto((int)Rows - 1, 0);
-				outstr((char_u *)"-- more --");
-				c = vgetc();
-				if (c == CR || c == NL)
-					lines_left = 1;
-				else if (c == 'q' || c == Ctrl('C'))
-					got_int = TRUE;
-				else
-					lines_left = Rows - 1;
-				outstr((char_u *)"\r          ");
+				oldState = State;
+				State = ASKMORE;
+#ifdef USE_MOUSE
+				setmouse();
+#endif
+				msg_moremsg(FALSE);
+				for (;;)
+				{
+					/*
+					 * Get a typed character directly from the user.
+					 * Don't use vgetc(), it syncs undo and eats mapped
+					 * characters.  Disadvantage: Special keys and mouse
+					 * cannot be used here, typeahead is ignored.
+					 */
+					flushbuf();
+					(void)mch_inchar(buf, 20, -1L);
+					switch (buf[0])
+					{
+					case CR:			/* one extra line */
+					case NL:
+						lines_left = 1;
+						break;
+					case ':':			/* start new command line */
+						stuffcharReadbuff(':');
+						cmdline_row = Rows - 1;		/* put ':' on this line */
+						skip_redraw = TRUE;			/* skip redraw once */
+						dont_wait_return = TRUE;	/* don't wait in main() */
+						/*FALLTHROUGH*/
+					case 'q':			/* quit */
+					case Ctrl('C'):
+						got_int = TRUE;
+						quit_more = TRUE;
+						break;
+					case 'd':			/* Down half a page */
+						lines_left = Rows / 2;
+						break;
+					case ' ':			/* one extra page */
+						lines_left = Rows - 1;
+						break;
+					default:			/* no valid response */
+						msg_moremsg(TRUE);
+						continue;
+					}
+					break;
+				}
+				/* clear the --more-- message */
+				screen_fill((int)Rows - 1, (int)Rows,
+												   0, (int)Columns, ' ', ' ');
+				State = oldState;
+#ifdef USE_MOUSE
+				setmouse();
+#endif
+				if (quit_more)
+				{
+					msg_row = Rows - 1;
+					msg_col = 0;
+					return;			/* the string is not displayed! */
+				}
 			}
-			screen_start();
 		}
-		if (*s == '\n')
+		if (*s == '\n')				/* go to next line */
+		{
+			msg_didout = FALSE;		/* remember that line is empty */
+			msg_col = 0;
+			if (++msg_row >= Rows)	/* safety check */
+				msg_row = Rows - 1;
+		}
+		else if (*s == '\r')		/* go to column 0 */
 		{
 			msg_col = 0;
-			++msg_row;
+		}
+		else if (*s == '\b')		/* go to previous char */
+		{
+			if (msg_col)
+				--msg_col;
+		}
+		else if (*s == TAB)			/* translate into spaces */
+		{
+			do
+				msg_screen_outchar(' ');
+			while (msg_col & 7);
 		}
 		else
-		{
-			screen_outchar(*s, msg_row, msg_col);
-			if (++msg_col >= Columns)
-			{
-				msg_col = 0;
-				++msg_row;
-			}
-		}
+			msg_screen_outchar(*s);
 		++s;
 	}
+}
+
+	static void
+msg_screen_outchar(c)
+	int		c;
+{
+	msg_didout = TRUE;		/* remember that line is not empty */
+	screen_outchar(c, msg_row, msg_col);
+	if (++msg_col >= Columns)
+	{
+		msg_col = 0;
+		++msg_row;
+	}
+}
+
+	void
+msg_moremsg(full)
+	int		full;
+{
+	/*
+	 * Need to restore old highlighting when we've finished with it
+	 * because the output that's paging may be relying on it not
+	 * changing -- webb
+	 */
+	remember_highlight();
+	set_highlight('m');
+	start_highlight();
+	screen_msg((char_u *)"-- More --", (int)Rows - 1, 0);
+	if (full)
+		screen_msg((char_u *)" (RET: line, SPACE: page, d: half page, q: quit)",
+														   (int)Rows - 1, 10);
+	stop_highlight();
+	recover_old_highlight();
 }
 
 /*
@@ -404,7 +754,7 @@ msg_outstr(s)
 	static int
 msg_check_screen()
 {
-	if (!screen_valid())
+	if (!full_screen || !screen_valid(FALSE))
 		return FALSE;
 	
 	if (msg_row >= Rows)
@@ -420,9 +770,13 @@ msg_check_screen()
  * for msg_check().
  */
 	void
-msg_ceol()
+msg_clr_eos()
 {
-	if (!msg_check_screen())
+	if (!msg_check_screen()
+#ifdef WIN32
+							|| !termcap_active
+#endif
+												)
 		return;
 	screen_fill(msg_row, msg_row + 1, msg_col, (int)Columns, ' ', ' ');
 	screen_fill(msg_row + 1, (int)Rows, 0, (int)Columns, ' ', ' ');
@@ -436,7 +790,6 @@ msg_ceol()
 	int
 msg_end()
 {
-	lines_left = -1;
 	/*
 	 * if the string is larger than the window,
 	 * or the ruler option is set and we run into it,
@@ -445,7 +798,6 @@ msg_end()
 	 */
 	if (!exiting && msg_check() && State != CMDLINE)
 	{
-		msg_outchar('\n');
 		wait_return(FALSE);
 		return FALSE;
 	}
@@ -460,11 +812,9 @@ msg_end()
 	int
 msg_check()
 {
-	lines_left = -1;
 	if (msg_scrolled || (msg_row == Rows - 1 && msg_col >= sc_col))
 	{
-		if (must_redraw < NOT_VALID)
-			must_redraw = NOT_VALID;
+		redraw_later(NOT_VALID);
 		redraw_cmdline = TRUE;
 		return TRUE;
 	}

@@ -1,4 +1,4 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  * NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
  *
  * This is NOT the original regular expression code as written by
@@ -11,7 +11,7 @@
  * NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
  *
  *
- * regcomp and regexec -- regsub and regerror are elsewhere
+ * vim_regcomp and vim_regexec -- vim_regsub and regerror are elsewhere
  *
  *		Copyright (c) 1986 by University of Toronto.
  *		Written by Henry Spencer.  Not derived from licensed software.
@@ -38,11 +38,11 @@
  * Revision 1.2  88/04/28  08:09:45  tony
  * First modification of the regexp library. Added an external variable
  * 'reg_ic' which can be set to indicate that case should be ignored.
- * Added a new parameter to regexec() to indicate that the given string
+ * Added a new parameter to vim_regexec() to indicate that the given string
  * comes from the beginning of a line and is thus eligible to match
  * 'beginning-of-line'.
  *
- * Revisions by Olaf 'Rhialto' Seibert, rhialto@cs.kun.nl:
+ * Revisions by Olaf 'Rhialto' Seibert, rhialto@mbfys.kun.nl:
  * Changes for vi: (the semantics of several things were rather different)
  * - Added lexical analyzer, because in vi magicness of characters
  *   is rather difficult, and may change over time.
@@ -57,8 +57,7 @@
 
 #include <stdio.h>
 #include "regexp.h"
-#include "regmagic.h"
-#include "param.h"
+#include "option.h"
 
 /*
  * The "internal use only" fields in regexp.h are present to pass info from
@@ -73,11 +72,11 @@
  * Regstart and reganch permit very fast decisions on suitable starting points
  * for a match, cutting down the work a lot.  Regmust permits fast rejection
  * of lines that cannot possibly match.  The regmust tests are costly enough
- * that regcomp() supplies a regmust only if the r.e. contains something
+ * that vim_regcomp() supplies a regmust only if the r.e. contains something
  * potentially expensive (at present, the only such thing detected is * or +
  * at the start of the r.e., which can involve a lot of backup).  Regmlen is
- * supplied because the test in regexec() needs it and regcomp() is computing
- * it anyway.
+ * supplied because the test in vim_regexec() needs it and vim_regcomp() is
+ * computing it anyway.
  */
 
 /*
@@ -115,11 +114,19 @@
 								 *		times. */
 #define BOW		12				/* no	Match "" after [^a-zA-Z0-9_] */
 #define EOW		13				/* no	Match "" at    [^a-zA-Z0-9_] */
-#define MOPEN	20				/* no	Mark this point in input as start of
+#define IDENT	14				/* no	Match identifier char */
+#define WORD	15				/* no	Match keyword char */
+#define FNAME   16				/* no	Match file name char */
+#define PRINT	17				/* no	Match printable char */
+#define SIDENT	18				/* no	Match identifier char but no digit */
+#define SWORD	19				/* no	Match word char but no digit */
+#define SFNAME	20				/* no	Match file name char but no digit */
+#define SPRINT	21				/* no	Match printable char but no digit */
+#define MOPEN	30				/* no	Mark this point in input as start of
 								 *		#n. */
  /* MOPEN+1 is number 1, etc. */
-#define MCLOSE	30				/* no	Analogous to MOPEN. */
-#define BACKREF	40				/* node Match same string again \1-\9 */
+#define MCLOSE	40				/* no	Analogous to MOPEN. */
+#define BACKREF	50				/* node Match same string again \1-\9 */
 
 #define Magic(x)	((x)|('\\'<<8))
 
@@ -141,6 +148,9 @@
  *				BRANCH structures using BACK.  Simple cases (one character
  *				per match) are implemented with STAR and PLUS for speed
  *				and to minimize recursive plunges.
+ *				Note: We would like to use "\?" instead of "\=", but a "\?"
+ *				can be part of a pattern to escape the special meaning of '?'
+ *				at the end of the pattern in "?pattern?e".
  *
  * MOPEN,MCLOSE	...are numbered at compile time.
  */
@@ -160,11 +170,6 @@
 #define OPERAND(p)		((p) + 3)
 
 /*
- * See regmagic.h for one further detail of program structure.
- */
-
-
-/*
  * Utility definitions.
  */
 #ifndef CHARBITS
@@ -173,9 +178,10 @@
 #define UCHARAT(p)		((int)*(p)&CHARBITS)
 #endif
 
-#define EMSG_RETURN(m) { emsg(m); return NULL; }
+#define EMSG_RETURN(m) { emsg(m); rc_did_emsg = TRUE; return NULL; }
 
 static int ismult __ARGS((int));
+static char_u *cstrchr __ARGS((char_u *, int));
 
 	static int
 ismult(c)
@@ -207,13 +213,7 @@ char_u		   *reg_prev_sub;
 #endif
 
 /*
- * This if for vi's "magic" mode. If magic is false, only ^$\ are magic.
- */
-
-int				reg_magic = 1;
-
-/*
- * Global work variables for regcomp().
+ * Global work variables for vim_regcomp().
  */
 
 static char_u    *regparse;	/* Input-scan pointer. */
@@ -231,20 +231,30 @@ static char_u   **regendp;		/* Ditto for endp. */
 
 #ifdef TILDE
 # ifdef BACKREF
-       static char_u META[] = ".[()|=+*<>~123456789";
+       static char_u META[] = ".[()|=+*<>iIkKfFpP~123456789";
 # else
-       static char_u META[] = ".[()|=+*<>~";
+       static char_u META[] = ".[()|=+*<>iIkKfFpP~";
 # endif
 #else
 # ifdef BACKREF
-       static char_u META[] = ".[()|=+*<>123456789";
+       static char_u META[] = ".[()|=+*<>iIkKfFpP123456789";
 # else
-       static char_u META[] = ".[()|=+*<>";
+       static char_u META[] = ".[()|=+*<>iIkKfFpP";
 # endif
 #endif
 
 /*
- * Forward declarations for regcomp()'s friends.
+ * REGEXP_ABBR contains all characters which act as abbreviations after '\'.
+ * These are:
+ *	\r	- New line (CR).
+ *	\t	- Tab (TAB).
+ *	\e	- Escape (ESC).
+ *	\b	- Backspace (Ctrl('H')).
+ */
+static char_u REGEXP_ABBR[] = "rteb";
+
+/*
+ * Forward declarations for vim_regcomp()'s friends.
  */
 static void		initchr __ARGS((char_u *));
 static int		getchr __ARGS((void));
@@ -265,9 +275,8 @@ static void 	reginsert __ARGS((int, char_u *));
 static void 	regtail __ARGS((char_u *, char_u *));
 static void 	regoptail __ARGS((char_u *, char_u *));
 
-#undef STRCSPN
-#ifdef STRCSPN
-static int		strcspn __ARGS((const char_u *, const char_u *));
+#ifndef HAVE_STRCSPN
+static size_t	strcspn __ARGS((const char_u *, const char_u *));
 #endif
 
 /*
@@ -307,7 +316,7 @@ skip_regexp(p, dirc)
 }
 
 /*
- - regcomp - compile a regular expression into internal code
+ - vim_regcomp - compile a regular expression into internal code
  *
  * We can't allocate space until we know how big the compiled form will be,
  * but we can't compile it (and thus know how big it is) until we've got a
@@ -316,13 +325,13 @@ skip_regexp(p, dirc)
  * This also means that we don't allocate space until we are sure that the
  * thing really will compile successfully, and we never have to move the
  * code and thus invalidate pointers into it.  (Note that it has to be in
- * one piece because free() must be able to free it all.)
+ * one piece because vim_free() must be able to free it all.)
  *
  * Beware that the optimization-preparation code in here knows about some
  * of the structure of the compiled regexp.
  */
 	regexp		   *
-regcomp(exp)
+vim_regcomp(exp)
 	char_u		   *exp;
 {
 	register regexp *r;
@@ -332,17 +341,16 @@ regcomp(exp)
 	int 			flags;
 /*	extern char    *malloc();*/
 
-	if (exp == NULL) {
+	if (exp == NULL)
 		EMSG_RETURN(e_null);
-	}
 
 #ifdef EMPTY_RE			/* this is done outside of regexp */
-	if (*exp == '\0') {
-		if (reg_prev_re) {
+	if (*exp == '\0')
+	{
+		if (reg_prev_re)
 			exp = reg_prev_re;
-		} else {
+		else
 			EMSG_RETURN(e_noprevre);
-		}
 	}
 #endif
 
@@ -364,11 +372,11 @@ regcomp(exp)
 /*	r = (regexp *) malloc((unsigned) (sizeof(regexp) + regsize));*/
 	r = (regexp *) alloc((unsigned) (sizeof(regexp) + regsize));
 	if (r == NULL)
-		EMSG_RETURN(e_outofmem);
+		return NULL;
 
 #ifdef EMPTY_RE			/* this is done outside of regexp */
 	if (exp != reg_prev_re) {
-		free(reg_prev_re);
+		vim_free(reg_prev_re);
 		if (reg_prev_re = alloc(STRLEN(exp) + 1))
 			STRCPY(reg_prev_re, exp);
 	}
@@ -381,7 +389,7 @@ regcomp(exp)
 	regendp = r->endp;
 	regc(MAGIC);
 	if (reg(0, &flags) == NULL) {
-		free(r);
+		vim_free(r);
 		return NULL;
 	}
 
@@ -495,13 +503,14 @@ reg(paren, flagp)
 		regoptail(br, ender);
 
 	/* Check for proper termination. */
-	if (paren && getchr() != Magic(')')) {
-		EMSG_RETURN(e_toombra);
-	} else if (!paren && peekchr() != '\0') {
-		if (PeekChr() == Magic(')')) {
-			EMSG_RETURN(e_toomket);
-		} else
-			EMSG_RETURN(e_trailing);/* "Can't happen". */
+	if (paren && getchr() != Magic(')'))
+		EMSG_RETURN(e_toombra)
+	else if (!paren && peekchr() != '\0')
+	{
+		if (PeekChr() == Magic(')'))
+			EMSG_RETURN(e_toomket)
+		else
+			EMSG_RETURN(e_trailing)		/* "Can't happen". */
 		/* NOTREACHED */
 	}
 	/*
@@ -645,47 +654,37 @@ regatom(flagp)
 		ret = regnode(ANY);
 		*flagp |= HASWIDTH | SIMPLE;
 		break;
-	  case Magic('['):{
-			/*
-			 * In a character class, different parsing rules apply.
-			 * Not even \ is special anymore, nothing is.
-			 */
-			if (*regparse == '^') { 	/* Complement of range. */
-				ret = regnode(ANYBUT);
-				regparse++;
-			} else
-				ret = regnode(ANYOF);
-			if (*regparse == ']' || *regparse == '-')
-				regc(*regparse++);
-			while (*regparse != '\0' && *regparse != ']') {
-				if (*regparse == '-') {
-					regparse++;
-					if (*regparse == ']' || *regparse == '\0')
-						regc('-');
-					else {
-						register int	class;
-						register int	classend;
-
-						class = UCHARAT(regparse - 2) + 1;
-						classend = UCHARAT(regparse);
-						if (class > classend + 1)
-							EMSG_RETURN(e_invrange);
-						for (; class <= classend; class++)
-							regc(class);
-						regparse++;
-					}
-				} else if (*regparse == '\\' && regparse[1]) {
-					regparse++;
-					regc(*regparse++);
-				} else
-					regc(*regparse++);
-			}
-			regc('\0');
-			if (*regparse != ']')
-				EMSG_RETURN(e_toomsbra);
-			skipchr();			/* let's be friends with the lexer again */
-			*flagp |= HASWIDTH | SIMPLE;
-		}
+	  case Magic('i'):
+	  	ret = regnode(IDENT);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('k'):
+	  	ret = regnode(WORD);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('I'):
+	  	ret = regnode(SIDENT);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('K'):
+	  	ret = regnode(SWORD);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('f'):
+	  	ret = regnode(FNAME);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('F'):
+	  	ret = regnode(SFNAME);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('p'):
+	  	ret = regnode(PRINT);
+		*flagp |= HASWIDTH | SIMPLE;
+		break;
+	  case Magic('P'):
+	  	ret = regnode(SPRINT);
+		*flagp |= HASWIDTH | SIMPLE;
 		break;
 	  case Magic('('):
 		ret = reg(1, &flags);
@@ -696,12 +695,19 @@ regatom(flagp)
 	  case '\0':
 	  case Magic('|'):
 	  case Magic(')'):
-		EMSG_RETURN(e_internal);	/* Supposed to be caught earlier. */
-		/* break; Not Reached */
+		EMSG_RETURN(e_internal)		/* Supposed to be caught earlier. */
+		/* NOTREACHED */
 	  case Magic('='):
+		EMSG_RETURN((char_u *)"\\= follows nothing")
+		/* NOTREACHED */
 	  case Magic('+'):
+		EMSG_RETURN((char_u *)"\\+ follows nothing")
+		/* NOTREACHED */
 	  case Magic('*'):
-		EMSG_RETURN((char_u *)"=+* follows nothing");
+		if (reg_magic)
+			EMSG_RETURN((char_u *)"* follows nothing")
+		else
+			EMSG_RETURN((char_u *)"\\* follows nothing")
 		/* break; Not Reached */
 #ifdef TILDE
 	  case Magic('~'):			/* previous substitute pattern */
@@ -754,14 +760,91 @@ regatom(flagp)
 		}
 		break;
 #endif
-	  default:{
+	  case Magic('['):
+	    {
+			char_u 		*p;
+
+			/*
+			 * If there is no matching ']', we assume the '[' is a normal
+			 * character. This makes ":help [" work.
+			 */
+			p = regparse;
+			if (*p == '^') 	/* Complement of range. */
+				++p;
+			if (*p == ']' || *p == '-')
+				++p;
+			while (*p != '\0' && *p != ']')
+			{
+				if (*p == '-')
+				{
+					++p;
+					if (*p != ']' && *p != '\0')
+						++p;
+				}
+				else if (*p == '\\' && p[1] != '\0')
+					p += 2;
+				else
+					++p;
+			}
+			if (*p == ']')		/* there is a matching ']' */
+			{
+				/*
+				 * In a character class, different parsing rules apply.
+				 * Not even \ is special anymore, nothing is.
+				 */
+				if (*regparse == '^') { 	/* Complement of range. */
+					ret = regnode(ANYBUT);
+					regparse++;
+				} else
+					ret = regnode(ANYOF);
+				if (*regparse == ']' || *regparse == '-')
+					regc(*regparse++);
+				while (*regparse != '\0' && *regparse != ']') {
+					if (*regparse == '-') {
+						regparse++;
+						if (*regparse == ']' || *regparse == '\0')
+							regc('-');
+						else {
+							register int	cclass;
+							register int	cclassend;
+
+							cclass = UCHARAT(regparse - 2) + 1;
+							cclassend = UCHARAT(regparse);
+							if (cclass > cclassend + 1)
+								EMSG_RETURN(e_invrange);
+							for (; cclass <= cclassend; cclass++)
+								regc(cclass);
+							regparse++;
+						}
+					} else if (*regparse == '\\' && regparse[1]) {
+						regparse++;
+						regc(*regparse++);
+					} else
+						regc(*regparse++);
+				}
+				regc('\0');
+				if (*regparse != ']')
+					EMSG_RETURN(e_toomsbra);
+				skipchr();			/* let's be friends with the lexer again */
+				*flagp |= HASWIDTH | SIMPLE;
+				break;
+			}
+		}
+		/* FALLTHROUGH */
+
+	  default:
+	    {
 			register int	len;
 			int				chr;
 
 			ungetchr();
 			len = 0;
 			ret = regnode(EXACTLY);
-			while ((chr = peekchr()) != '\0' && (chr < Magic(0)))
+			/*
+			 * Always take at least one character, for '[' without matching
+			 * ']'.
+			 */
+			while ((chr = peekchr()) != '\0' && (chr < Magic(0) || len == 0))
 			{
 				regc(chr);
 				skipchr();
@@ -925,6 +1008,12 @@ regoptail(p, val)
 /* static int		curchr; */
 static int		prevchr;
 static int		nextchr;	/* used for ungetchr() */
+/*
+ * Note: prevchr is sometimes -1 when we are not at the start,
+ * eg in /[ ^I]^ the pattern was never found even if it existed, because ^ was
+ * taken to be magic -- webb
+ */
+static int		at_start;	/* True when we are on the first character */
 
 static void
 initchr(str)
@@ -932,6 +1021,7 @@ char_u *str;
 {
 	regparse = str;
 	curchr = prevchr = nextchr = -1;
+	at_start = TRUE;
 }
 
 static int
@@ -940,7 +1030,6 @@ peekchr()
 	if (curchr < 0) {
 		switch (curchr = regparse[0]) {
 		case '.':
-		case '*':
 	/*	case '+':*/
 	/*	case '=':*/
 		case '[':
@@ -948,9 +1037,14 @@ peekchr()
 			if (reg_magic)
 				curchr = Magic(curchr);
 			break;
+		case '*':
+			/* * is not magic as the very first character, eg "?*ptr" */
+			if (reg_magic && !at_start)
+				curchr = Magic('*');
+			break;
 		case '^':
 			/* ^ is only magic as the very first character */
-			if (prevchr < 0)
+			if (at_start)
 				curchr = Magic('^');
 			break;
 		case '$':
@@ -962,7 +1056,7 @@ peekchr()
 			regparse++;
 			if (regparse[0] == NUL)
 				curchr = '\\';	/* trailing '\' */
-			else if (STRCHR(META, regparse[0]))
+			else if (vim_strchr(META, regparse[0]))
 			{
 				/*
 				 * META contains everything that may be magic sometimes, except
@@ -971,8 +1065,22 @@ peekchr()
 				 * Therefore, \ is so meta-magic that it is not in META.
 				 */
 				curchr = -1;
+				at_start = FALSE;			/* We still want to be able to say "/\*ptr" */
 				peekchr();
 				curchr ^= Magic(0);
+			}
+			else if (vim_strchr(REGEXP_ABBR, regparse[0]))
+			{
+				/*
+				 * Handle abbreviations, like "\t" for TAB -- webb
+				 */
+				switch (regparse[0])
+				{
+					case 'r':	curchr = CR;		break;
+					case 't':	curchr = TAB;		break;
+					case 'e':	curchr = ESC;		break;
+					case 'b':	curchr = Ctrl('H');	break;
+				}
 			}
 			else
 			{
@@ -993,6 +1101,7 @@ static void
 skipchr()
 {
 	regparse++;
+	at_start = FALSE;
 	prevchr = curchr;
 	curchr = nextchr;		/* use previously unget char, or -1 */
 	nextchr = -1;
@@ -1025,11 +1134,11 @@ ungetchr()
 }
 
 /*
- * regexec and friends
+ * vim_regexec and friends
  */
 
 /*
- * Global work variables for regexec().
+ * Global work variables for vim_regexec().
  */
 static char_u    *reginput;		/* String-input pointer. */
 static char_u    *regbol; 		/* Beginning of input, for ^ check. */
@@ -1050,10 +1159,11 @@ static char_u    *regprop __ARGS((char_u *));
 #endif
 
 /*
- - regexec - match a regexp against a string
+ * vim_regexec - match a regexp against a string
+ * Return non-zero if there is a match.
  */
 int
-regexec(prog, string, at_bol)
+vim_regexec(prog, string, at_bol)
 	register regexp *prog;
 	register char_u  *string;
 	int 			at_bol;
@@ -1063,11 +1173,13 @@ regexec(prog, string, at_bol)
 	/* Be paranoid... */
 	if (prog == NULL || string == NULL) {
 		emsg(e_null);
+		rc_did_emsg = TRUE;
 		return 0;
 	}
 	/* Check validity of program. */
 	if (UCHARAT(prog->program) != MAGIC) {
 		emsg(e_re_corr);
+		rc_did_emsg = TRUE;
 		return 0;
 	}
 	/* If there is a "must appear" string, look for it. */
@@ -1180,16 +1292,15 @@ regmatch(prog)
 				return 0;
 			break;
 		  case BOW:		/* \<word; reginput points to w */
-#define isidchar(x)	(isalnum(x) || ((x) == '_'))
-		  	if (reginput != regbol && isidchar(reginput[-1]))
+		  	if (reginput != regbol && iswordchar(reginput[-1]))
 				return 0;
-		  	if (!reginput[0] || !isidchar(reginput[0]))
+		  	if (!reginput[0] || !iswordchar(reginput[0]))
 				return 0;
 			break;
 		  case EOW:		/* word\>; reginput points after d */
-		  	if (reginput == regbol || !isidchar(reginput[-1]))
+		  	if (reginput == regbol || !iswordchar(reginput[-1]))
 				return 0;
-		  	if (reginput[0] && isidchar(reginput[0]))
+		  	if (reginput[0] && iswordchar(reginput[0]))
 				return 0;
 			break;
 		  case ANY:
@@ -1197,6 +1308,46 @@ regmatch(prog)
 				return 0;
 			reginput++;
 			break;
+		  case IDENT:
+		  	if (!isidchar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case WORD:
+		  	if (!iswordchar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case FNAME:
+		  	if (!isfilechar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case PRINT:
+		  	if (charsize(*reginput) != 1)
+				return 0;
+			reginput++;
+		    break;
+		  case SIDENT:
+		  	if (isdigit(*reginput) || !isidchar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case SWORD:
+		  	if (isdigit(*reginput) || !iswordchar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case SFNAME:
+		  	if (isdigit(*reginput) || !isfilechar(*reginput))
+				return 0;
+			reginput++;
+		    break;
+		  case SPRINT:
+		  	if (isdigit(*reginput) || charsize(*reginput) != 1)
+				return 0;
+			reginput++;
+		    break;
 		  case EXACTLY:{
 				register int	len;
 				register char_u  *opnd;
@@ -1412,6 +1563,38 @@ regrepeat(p)
 		count = STRLEN(scan);
 		scan += count;
 		break;
+	  case IDENT:
+	    for (count = 0; isidchar(*scan); ++count)
+			++scan;
+		break;
+	  case WORD:
+	    for (count = 0; iswordchar(*scan); ++count)
+			++scan;
+		break;
+	  case FNAME:
+	    for (count = 0; isfilechar(*scan); ++count)
+			++scan;
+		break;
+	  case PRINT:
+	    for (count = 0; charsize(*scan) == 1; ++count)
+			++scan;
+		break;
+	  case SIDENT:
+	    for (count = 0; !isdigit(*scan) && isidchar(*scan); ++count)
+			++scan;
+		break;
+	  case SWORD:
+	    for (count = 0; !isdigit(*scan) && iswordchar(*scan); ++count)
+			++scan;
+		break;
+	  case SFNAME:
+	    for (count = 0; !isdigit(*scan) && isfilechar(*scan); ++count)
+			++scan;
+		break;
+	  case SPRINT:
+	    for (count = 0; !isdigit(*scan) && charsize(*scan) == 1; ++count)
+			++scan;
+		break;
 	  case EXACTLY:
 		while (*opnd == *scan || (reg_ic && TO_UPPER(*opnd) == TO_UPPER(*scan)))
 		{
@@ -1476,7 +1659,6 @@ regdump(r)
 	register char_u  *s;
 	register int	op = EXACTLY;		/* Arbitrary non-END op. */
 	register char_u  *next;
-	/*extern char_u    *strchr();*/
 
 
 	s = r->program + 1;
@@ -1531,6 +1713,30 @@ regprop(op)
 		break;
 	  case ANY:
 		p = "ANY";
+		break;
+	  case IDENT:
+	  	p = "IDENT";
+		break;
+	  case WORD:
+	  	p = "WORD";
+		break;
+	  case FNAME:
+	  	p = "FNAME";
+		break;
+	  case PRINT:
+	  	p = "PRINT";
+		break;
+	  case SIDENT:
+	  	p = "SIDENT";
+		break;
+	  case SWORD:
+	  	p = "SWORD";
+		break;
+	  case SFNAME:
+	  	p = "SFNAME";
+		break;
+	  case SPRINT:
+	  	p = "SPRINT";
 		break;
 	  case ANYOF:
 		p = "ANYOF";
@@ -1612,13 +1818,13 @@ regprop(op)
  * about it; at least one public-domain implementation of those (highly
  * useful) string routines has been published on Usenet.
  */
-#ifdef STRCSPN
+#ifndef HAVE_STRCSPN
 /*
  * strcspn - find length of initial segment of s1 consisting entirely
  * of characters not from s2
  */
 
-static int
+	static size_t
 strcspn(s1, s2)
 	const char_u		   *s1;
 	const char_u		   *s2;
@@ -1656,7 +1862,7 @@ cstrncmp(s1, s2, n)
 /*
  * cstrchr: This function is used a lot for simple searches, keep it fast!
  */
-	char_u *
+	static char_u *
 cstrchr(s, c)
 	char_u		   *s;
 	register int	c;
@@ -1664,7 +1870,7 @@ cstrchr(s, c)
 	register char_u		   *p;
 
 	if (!reg_ic)
-		return STRCHR(s, c);
+		return vim_strchr(s, c);
 
 	c = TO_UPPER(c);
 

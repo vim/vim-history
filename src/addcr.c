@@ -4,11 +4,12 @@
 
 #include <stdio.h>
 
+char buffer[1024];
+
 main(argc, argv)
 	int argc;
 	char **argv;
 {
-	char buffer[1024];
 	int	len;
 
 	while ((len = fread(buffer, 1, 1024, stdin)) > 0)

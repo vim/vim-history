@@ -1,0 +1,18 @@
+The macros in the maze, hanoi and urm directories can be used to test Vim for
+vi compatibility.  They have been written for vi to show its unlimited
+possibilities.
+
+hanoi	Macros that solve the tower of hanoi problem.
+maze	Macros that solve a maze (amazing!).
+urm	Macros that simulate a simple computer: "Universal Register Machine"
+
+They are unmodified.
+
+
+The other files contain some handy utilities:
+
+dvorak:	    for when you use a Dvorak keyboard
+html:	    macros for editing HTML files
+rot13:	    code/decode the buffer for rot13
+shell.gui:  menus for editing shell scripts in the GUI version
+swapmous:   swap left and right mouse buttons

@@ -1,0 +1,834 @@
+diff -c ../../vim-3.29/src/INSTALL ./INSTALL
+*** ../../vim-3.29/src/INSTALL	Wed May 29 11:57:30 1996
+--- ./INSTALL	Wed May 29 11:57:30 1996
+***************
+*** 12,17 ****
+--- 12,18 ----
+  6. Macintosh
+  7. Unix
+  8. OS/2 (with EMX 0.9b)
++ 9. MiNT
+  
+  
+  1. Generic
+***************
+*** 192,197 ****
+--- 193,212 ----
+  
+  Check vim_os2.txt for additional info.
+  
++ 
++ 9. MiNT
++ =======
++ 
++ To compile Vim for MiNT you may either copy makefile.mint to Makefile or use
++ the Unix Makefile adapted for the MiNT configuration.
++ 
++ Now proceed as described in the Unix section.
++ 
++ Prerequisites:
++ 
++ You need a curses or termcap library that supports non-alphanumeric
++ termcap names. If you don't have any, link with termlib.o.
++ 
+  -----------------------------------------------------------------------------
+  
+  The rest of this file is based on the INSTALL file that comes with GNU
+diff -c ../../vim-3.29/src/Makefile ./Makefile
+*** ../../vim-3.29/src/Makefile	Thu May 23 11:43:00 1996
+--- ./Makefile	Wed May 29 11:41:48 1996
+***************
+*** 145,150 ****
+--- 145,151 ----
+  #Linux 1.3.98-ELF        gcc-2.7.2   +X11 Athena Motif  3.27     Bill Foster
+  #Linux 1.3.39            gcc-2.7.2   +X11R6 Athena3d    3.28     L. Duperval
+  #Linux 1.99.4            gcc-2.7.0   +X11 Athena        3.27     Lennart Schultz
++ #MiNT 1.12.5             gcc gcc-2.6.1		     	3.29     Jens Felderhoff
+  #mot88 R32V3          cc             -X11 -GUI          3.21     Juergen Weigert
+  #NCR Tower 32/450 SVR3   cc          -X11               3.22     Paul Slootman
+  #NCR Tower 32/450 SVR3   gcc-2.4.3   -X11               3.22     Paul Slootman
+***************
+*** 377,382 ****
+--- 378,391 ----
+  ### after changing this, you need to do "make distclean; make".
+  #TERM_LIB = -lcurses
+  
++ ### (M)  MiNT with gcc 2.6.1 and gdb 3.5
++ #CC = gcc -mint
++ #CFLAGS = -g -O
++ #EXTRA_DEFS = -DMINT
++ #POSTPROCESS = fixstk 20k $(TARGET)
++ #DBGLDFLAGS = -B/gnu/bin/sym-
++ #DBGTARGET = $(TARGET).sym
++ 
+  ### If you want to use ncurses library instead of the automatically found one
+  ### after changing this, you need to do "make distclean; make".
+  #TERM_LIB = -lncurses
+***************
+*** 386,391 ****
+--- 395,401 ----
+  ### Name of target(s)
+  TARGET = vim
+  GTARGET = gvim
++ DBGTARGET = $(TARGET)
+  
+  ### Installation directory. Default from configure is "/usr/local".
+  ### EXEC_PREFIX is for the executable, PREFIX is for other files (they may be
+***************
+*** 608,618 ****
+  $(TARGET): $(OBJ) version.c
+  	$(CC) -c $(ALL_CFLAGS) version.c
+  	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJ) version.o $(ALL_LIBS)
+  
+  # Link the target for debugging
+  debug: $(OBJ) version.c
+  	$(CC) -c $(ALL_CFLAGS) version.c
+! 	$(CC) $(LDFLAGS) -o $(TARGET) -g $(OBJ) version.o $(ALL_LIBS) 
+  
+  # Generate function prototypes.  This is not needed to compile vim, but if
+  # you want to use it, cproto is out there on the net somewhere -- Webb
+--- 618,629 ----
+  $(TARGET): $(OBJ) version.c
+  	$(CC) -c $(ALL_CFLAGS) version.c
+  	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJ) version.o $(ALL_LIBS)
++ 	$(POSTPROCESS)
+  
+  # Link the target for debugging
+  debug: $(OBJ) version.c
+  	$(CC) -c $(ALL_CFLAGS) version.c
+! 	$(CC) $(LDFLAGS) $(DBGLDFLAGS) -o $(DBGTARGET) -g $(OBJ) version.o $(ALL_LIBS) 
+  
+  # Generate function prototypes.  This is not needed to compile vim, but if
+  # you want to use it, cproto is out there on the net somewhere -- Webb
+diff -c ../../vim-3.29/src/config.h ./config.h
+*** ../../vim-3.29/src/config.h	Sat May 25 20:14:28 1996
+--- ./config.h	Tue May 28 11:40:42 1996
+***************
+*** 38,44 ****
+  #define HAVE_DATE_TIME 1
+  
+  #define UNIX 1		/* define always by current configure script */
+! #define SVR4 1		/* an elf-based system is SVR4. What is linux? */
+  
+  /* Defined to the size of an int */
+  #define SIZEOF_INT 4
+--- 38,44 ----
+  #define HAVE_DATE_TIME 1
+  
+  #define UNIX 1		/* define always by current configure script */
+! /* #undef SVR4 */		/* an elf-based system is SVR4. What is linux? */
+  
+  /* Defined to the size of an int */
+  #define SIZEOF_INT 4
+***************
+*** 58,76 ****
+  /* #undef mode_t */
+  
+  /* Define to `long' if <sys/types.h> doesn't define.  */
+! #define off_t long
+  
+  /* Define to `long' if <sys/types.h> doesn't define.  */
+! #define pid_t int
+  
+  /* Define to `unsigned' if <sys/types.h> doesn't define.  */
+  /* #undef size_t */
+  
+  /* Define to `int' if <sys/types.h> doesn't define.  */
+! #define uid_t int
+  
+  /* Define to `int' if <sys/types.h> doesn't define.  */
+! #define gid_t int
+  
+  /* Define if you can safely include both <sys/time.h> and <time.h>.  */
+  #define TIME_WITH_SYS_TIME 1
+--- 58,76 ----
+  /* #undef mode_t */
+  
+  /* Define to `long' if <sys/types.h> doesn't define.  */
+! /* #undef off_t */
+  
+  /* Define to `long' if <sys/types.h> doesn't define.  */
+! /* #undef pid_t */
+  
+  /* Define to `unsigned' if <sys/types.h> doesn't define.  */
+  /* #undef size_t */
+  
+  /* Define to `int' if <sys/types.h> doesn't define.  */
+! /* #undef uid_t */
+  
+  /* Define to `int' if <sys/types.h> doesn't define.  */
+! /* #undef gid_t */
+  
+  /* Define if you can safely include both <sys/time.h> and <time.h>.  */
+  #define TIME_WITH_SYS_TIME 1
+***************
+*** 222,228 ****
+  #define HAVE_LOCALE_H 1
+  
+  /* Define if you have the <sys/stream.h> header file. */
+! #define HAVE_SYS_STREAM_H 1
+  
+  /* Define if you have the <sys/ptem.h> header file. */
+  /* #undef HAVE_SYS_PTEM_H */
+--- 222,228 ----
+  #define HAVE_LOCALE_H 1
+  
+  /* Define if you have the <sys/stream.h> header file. */
+! /* #undef HAVE_SYS_STREAM_H */
+  
+  /* Define if you have the <sys/ptem.h> header file. */
+  /* #undef HAVE_SYS_PTEM_H */
+diff -c ../../vim-3.29/src/config.status ./config.status
+*** ../../vim-3.29/src/config.status	Sat May 25 20:11:30 1996
+--- ./config.status	Tue May 28 16:04:16 1996
+***************
+*** 168,185 ****
+  ${ac_dA}HAVE_DATE_TIME${ac_dB}HAVE_DATE_TIME${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_DATE_TIME${ac_uB}HAVE_DATE_TIME${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_DATE_TIME${ac_eB}HAVE_DATE_TIME${ac_eC}1${ac_eD}
+! ${ac_dA}SVR4${ac_dB}SVR4${ac_dC}1${ac_dD}
+! ${ac_uA}SVR4${ac_uB}SVR4${ac_uC}1${ac_uD}
+! ${ac_eA}SVR4${ac_eB}SVR4${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+- ${ac_dA}HAVE_DIRENT_H${ac_dB}HAVE_DIRENT_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_DIRENT_H${ac_uB}HAVE_DIRENT_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_DIRENT_H${ac_eB}HAVE_DIRENT_H${ac_eC}1${ac_eD}
+  ${ac_dA}STDC_HEADERS${ac_dB}STDC_HEADERS${ac_dC}1${ac_dD}
+  ${ac_uA}STDC_HEADERS${ac_uB}STDC_HEADERS${ac_uC}1${ac_uD}
+  ${ac_eA}STDC_HEADERS${ac_eB}STDC_HEADERS${ac_eC}1${ac_eD}
+--- 168,182 ----
+  ${ac_dA}HAVE_DATE_TIME${ac_dB}HAVE_DATE_TIME${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_DATE_TIME${ac_uB}HAVE_DATE_TIME${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_DATE_TIME${ac_eB}HAVE_DATE_TIME${ac_eC}1${ac_eD}
+! ${ac_dA}HAVE_DIRENT_H${ac_dB}HAVE_DIRENT_H${ac_dC}1${ac_dD}
+! ${ac_uA}HAVE_DIRENT_H${ac_uB}HAVE_DIRENT_H${ac_uC}1${ac_uD}
+! ${ac_eA}HAVE_DIRENT_H${ac_eB}HAVE_DIRENT_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}STDC_HEADERS${ac_dB}STDC_HEADERS${ac_dC}1${ac_dD}
+  ${ac_uA}STDC_HEADERS${ac_uB}STDC_HEADERS${ac_uC}1${ac_uD}
+  ${ac_eA}STDC_HEADERS${ac_eB}STDC_HEADERS${ac_eC}1${ac_eD}
+***************
+*** 189,203 ****
+  ${ac_dA}HAVE_STDLIB_H${ac_dB}HAVE_STDLIB_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STDLIB_H${ac_uB}HAVE_STDLIB_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STDLIB_H${ac_eB}HAVE_STDLIB_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+- ${ac_dA}HAVE_STRING_H${ac_dB}HAVE_STRING_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_STRING_H${ac_uB}HAVE_STRING_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_STRING_H${ac_eB}HAVE_STRING_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_SYS_UTSNAME_H${ac_dB}HAVE_SYS_UTSNAME_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_UTSNAME_H${ac_uB}HAVE_SYS_UTSNAME_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_UTSNAME_H${ac_eB}HAVE_SYS_UTSNAME_H${ac_eC}1${ac_eD}
+--- 186,200 ----
+  ${ac_dA}HAVE_STDLIB_H${ac_dB}HAVE_STDLIB_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STDLIB_H${ac_uB}HAVE_STDLIB_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STDLIB_H${ac_eB}HAVE_STDLIB_H${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_STRING_H${ac_dB}HAVE_STRING_H${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_STRING_H${ac_uB}HAVE_STRING_H${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_STRING_H${ac_eB}HAVE_STRING_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_SYS_UTSNAME_H${ac_dB}HAVE_SYS_UTSNAME_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_UTSNAME_H${ac_uB}HAVE_SYS_UTSNAME_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_UTSNAME_H${ac_eB}HAVE_SYS_UTSNAME_H${ac_eC}1${ac_eD}
+***************
+*** 207,221 ****
+  ${ac_dA}HAVE_FCNTL_H${ac_dB}HAVE_FCNTL_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_FCNTL_H${ac_uB}HAVE_FCNTL_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_FCNTL_H${ac_eB}HAVE_FCNTL_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+- ${ac_dA}HAVE_SGTTY_H${ac_dB}HAVE_SGTTY_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_SGTTY_H${ac_uB}HAVE_SGTTY_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_SGTTY_H${ac_eB}HAVE_SGTTY_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_SYS_IOCTL_H${ac_dB}HAVE_SYS_IOCTL_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_IOCTL_H${ac_uB}HAVE_SYS_IOCTL_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_IOCTL_H${ac_eB}HAVE_SYS_IOCTL_H${ac_eC}1${ac_eD}
+--- 204,218 ----
+  ${ac_dA}HAVE_FCNTL_H${ac_dB}HAVE_FCNTL_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_FCNTL_H${ac_uB}HAVE_FCNTL_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_FCNTL_H${ac_eB}HAVE_FCNTL_H${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_SGTTY_H${ac_dB}HAVE_SGTTY_H${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_SGTTY_H${ac_uB}HAVE_SGTTY_H${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_SGTTY_H${ac_eB}HAVE_SGTTY_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_SYS_IOCTL_H${ac_dB}HAVE_SYS_IOCTL_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_IOCTL_H${ac_uB}HAVE_SYS_IOCTL_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_IOCTL_H${ac_eB}HAVE_SYS_IOCTL_H${ac_eC}1${ac_eD}
+***************
+*** 225,386 ****
+  ${ac_dA}HAVE_UNISTD_H${ac_dB}HAVE_UNISTD_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_UNISTD_H${ac_uB}HAVE_UNISTD_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_UNISTD_H${ac_eB}HAVE_UNISTD_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+- ${ac_dA}HAVE_ERRNO_H${ac_dB}HAVE_ERRNO_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_ERRNO_H${ac_uB}HAVE_ERRNO_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_ERRNO_H${ac_eB}HAVE_ERRNO_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_STRINGS_H${ac_dB}HAVE_STRINGS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRINGS_H${ac_uB}HAVE_STRINGS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRINGS_H${ac_eB}HAVE_STRINGS_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_LOCALE_H${ac_dB}HAVE_LOCALE_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_LOCALE_H${ac_uB}HAVE_LOCALE_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_LOCALE_H${ac_eB}HAVE_LOCALE_H${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_SYS_STREAM_H${ac_dB}HAVE_SYS_STREAM_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_SYS_STREAM_H${ac_uB}HAVE_SYS_STREAM_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_SYS_STREAM_H${ac_eB}HAVE_SYS_STREAM_H${ac_eC}1${ac_eD}
+- CEOF
+-   sed -f conftest.frag conftest.in > conftest.out
+-   rm -f conftest.in
+-   mv conftest.out conftest.in
+- 
+-   cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_TERMIOS_H${ac_dB}HAVE_TERMIOS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_TERMIOS_H${ac_uB}HAVE_TERMIOS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_TERMIOS_H${ac_eB}HAVE_TERMIOS_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_SYS_STATFS_H${ac_dB}HAVE_SYS_STATFS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_STATFS_H${ac_uB}HAVE_SYS_STATFS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_STATFS_H${ac_eB}HAVE_SYS_STATFS_H${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_PWD_H${ac_dB}HAVE_PWD_H${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_PWD_H${ac_uB}HAVE_PWD_H${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_PWD_H${ac_eB}HAVE_PWD_H${ac_eC}1${ac_eD}
+- ${ac_dA}off_t${ac_dB}off_t${ac_dC}long${ac_dD}
+- ${ac_uA}off_t${ac_uB}off_t${ac_uC}long${ac_uD}
+- ${ac_eA}off_t${ac_eB}off_t${ac_eC}long${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+! ${ac_dA}pid_t${ac_dB}pid_t${ac_dC}int${ac_dD}
+! ${ac_uA}pid_t${ac_uB}pid_t${ac_uC}int${ac_uD}
+! ${ac_eA}pid_t${ac_eB}pid_t${ac_eC}int${ac_eD}
+! ${ac_dA}uid_t${ac_dB}uid_t${ac_dC}int${ac_dD}
+! ${ac_uA}uid_t${ac_uB}uid_t${ac_uC}int${ac_uD}
+! ${ac_eA}uid_t${ac_eB}uid_t${ac_eC}int${ac_eD}
+! ${ac_dA}gid_t${ac_dB}gid_t${ac_dC}int${ac_dD}
+! ${ac_uA}gid_t${ac_uB}gid_t${ac_uC}int${ac_uD}
+! ${ac_eA}gid_t${ac_eB}gid_t${ac_eC}int${ac_eD}
+  ${ac_dA}TIME_WITH_SYS_TIME${ac_dB}TIME_WITH_SYS_TIME${ac_dC}1${ac_dD}
+  ${ac_uA}TIME_WITH_SYS_TIME${ac_uB}TIME_WITH_SYS_TIME${ac_uC}1${ac_uD}
+  ${ac_eA}TIME_WITH_SYS_TIME${ac_eB}TIME_WITH_SYS_TIME${ac_eC}1${ac_eD}
+- CEOF
+-   sed -f conftest.frag conftest.in > conftest.out
+-   rm -f conftest.in
+-   mv conftest.out conftest.in
+- 
+-   cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_OSPEED${ac_dB}HAVE_OSPEED${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_OSPEED${ac_uB}HAVE_OSPEED${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_OSPEED${ac_eB}HAVE_OSPEED${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_UP_BC_PC${ac_dB}HAVE_UP_BC_PC${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_UP_BC_PC${ac_uB}HAVE_UP_BC_PC${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_UP_BC_PC${ac_eB}HAVE_UP_BC_PC${ac_eC}1${ac_eD}
+- ${ac_dA}RETSIGTYPE${ac_dB}RETSIGTYPE${ac_dC}void${ac_dD}
+- ${ac_uA}RETSIGTYPE${ac_uB}RETSIGTYPE${ac_uC}void${ac_uD}
+- ${ac_eA}RETSIGTYPE${ac_eB}RETSIGTYPE${ac_eC}void${ac_eD}
+- ${ac_dA}SIGRETURN${ac_dB}SIGRETURN${ac_dC}return${ac_dD}
+- ${ac_uA}SIGRETURN${ac_uB}SIGRETURN${ac_uC}return${ac_uD}
+- ${ac_eA}SIGRETURN${ac_eB}SIGRETURN${ac_eC}return${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_GETCWD${ac_dB}HAVE_GETCWD${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETCWD${ac_uB}HAVE_GETCWD${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETCWD${ac_eB}HAVE_GETCWD${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_GETWD${ac_dB}HAVE_GETWD${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETWD${ac_uB}HAVE_GETWD${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETWD${ac_eB}HAVE_GETWD${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_SELECT${ac_dB}HAVE_SELECT${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_SELECT${ac_uB}HAVE_SELECT${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_SELECT${ac_eB}HAVE_SELECT${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_STRCSPN${ac_dB}HAVE_STRCSPN${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_STRCSPN${ac_uB}HAVE_STRCSPN${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_STRCSPN${ac_eB}HAVE_STRCSPN${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_STRTOL${ac_dB}HAVE_STRTOL${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRTOL${ac_uB}HAVE_STRTOL${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRTOL${ac_eB}HAVE_STRTOL${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_KILLPG${ac_dB}HAVE_KILLPG${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_KILLPG${ac_uB}HAVE_KILLPG${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_KILLPG${ac_eB}HAVE_KILLPG${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_TGETENT${ac_dB}HAVE_TGETENT${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_TGETENT${ac_uB}HAVE_TGETENT${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_TGETENT${ac_eB}HAVE_TGETENT${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_MEMSET${ac_dB}HAVE_MEMSET${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_MEMSET${ac_uB}HAVE_MEMSET${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_MEMSET${ac_eB}HAVE_MEMSET${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_STRERROR${ac_dB}HAVE_STRERROR${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRERROR${ac_uB}HAVE_STRERROR${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRERROR${ac_eB}HAVE_STRERROR${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_FSYNC${ac_dB}HAVE_FSYNC${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_FSYNC${ac_uB}HAVE_FSYNC${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_FSYNC${ac_eB}HAVE_FSYNC${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_PUTENV${ac_dB}HAVE_PUTENV${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_PUTENV${ac_uB}HAVE_PUTENV${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_PUTENV${ac_eB}HAVE_PUTENV${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_GETTIMEOFDAY${ac_dB}HAVE_GETTIMEOFDAY${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_GETTIMEOFDAY${ac_uB}HAVE_GETTIMEOFDAY${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_GETTIMEOFDAY${ac_eB}HAVE_GETTIMEOFDAY${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_GETPWUID${ac_dB}HAVE_GETPWUID${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETPWUID${ac_uB}HAVE_GETPWUID${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETPWUID${ac_eB}HAVE_GETPWUID${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_GETPWNAM${ac_dB}HAVE_GETPWNAM${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETPWNAM${ac_uB}HAVE_GETPWNAM${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETPWNAM${ac_eB}HAVE_GETPWNAM${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_QSORT${ac_dB}HAVE_QSORT${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_QSORT${ac_uB}HAVE_QSORT${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_QSORT${ac_eB}HAVE_QSORT${ac_eC}1${ac_eD}
+- ${ac_dA}HAVE_RENAME${ac_dB}HAVE_RENAME${ac_dC}1${ac_dD}
+- ${ac_uA}HAVE_RENAME${ac_uB}HAVE_RENAME${ac_uC}1${ac_uD}
+- ${ac_eA}HAVE_RENAME${ac_eB}HAVE_RENAME${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}SIZEOF_INT${ac_dB}SIZEOF_INT${ac_dC}4${ac_dD}
+  ${ac_uA}SIZEOF_INT${ac_uB}SIZEOF_INT${ac_uC}4${ac_uD}
+  ${ac_eA}SIZEOF_INT${ac_eB}SIZEOF_INT${ac_eC}4${ac_eD}
+  ${ac_dA}USEMEMMOVE${ac_dB}USEMEMMOVE${ac_dC}1${ac_dD}
+  ${ac_uA}USEMEMMOVE${ac_uB}USEMEMMOVE${ac_uC}1${ac_uD}
+  ${ac_eA}USEMEMMOVE${ac_eB}USEMEMMOVE${ac_eC}1${ac_eD}
+  s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+--- 222,362 ----
+  ${ac_dA}HAVE_UNISTD_H${ac_dB}HAVE_UNISTD_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_UNISTD_H${ac_uB}HAVE_UNISTD_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_UNISTD_H${ac_eB}HAVE_UNISTD_H${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_ERRNO_H${ac_dB}HAVE_ERRNO_H${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_ERRNO_H${ac_uB}HAVE_ERRNO_H${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_ERRNO_H${ac_eB}HAVE_ERRNO_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+  ${ac_dA}HAVE_STRINGS_H${ac_dB}HAVE_STRINGS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRINGS_H${ac_uB}HAVE_STRINGS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRINGS_H${ac_eB}HAVE_STRINGS_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_LOCALE_H${ac_dB}HAVE_LOCALE_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_LOCALE_H${ac_uB}HAVE_LOCALE_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_LOCALE_H${ac_eB}HAVE_LOCALE_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_TERMIOS_H${ac_dB}HAVE_TERMIOS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_TERMIOS_H${ac_uB}HAVE_TERMIOS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_TERMIOS_H${ac_eB}HAVE_TERMIOS_H${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_SYS_STATFS_H${ac_dB}HAVE_SYS_STATFS_H${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_SYS_STATFS_H${ac_uB}HAVE_SYS_STATFS_H${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_SYS_STATFS_H${ac_eB}HAVE_SYS_STATFS_H${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
+! ${ac_dA}HAVE_PWD_H${ac_dB}HAVE_PWD_H${ac_dC}1${ac_dD}
+! ${ac_uA}HAVE_PWD_H${ac_uB}HAVE_PWD_H${ac_uC}1${ac_uD}
+! ${ac_eA}HAVE_PWD_H${ac_eB}HAVE_PWD_H${ac_eC}1${ac_eD}
+  ${ac_dA}TIME_WITH_SYS_TIME${ac_dB}TIME_WITH_SYS_TIME${ac_dC}1${ac_dD}
+  ${ac_uA}TIME_WITH_SYS_TIME${ac_uB}TIME_WITH_SYS_TIME${ac_uC}1${ac_uD}
+  ${ac_eA}TIME_WITH_SYS_TIME${ac_eB}TIME_WITH_SYS_TIME${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_OSPEED${ac_dB}HAVE_OSPEED${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_OSPEED${ac_uB}HAVE_OSPEED${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_OSPEED${ac_eB}HAVE_OSPEED${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_UP_BC_PC${ac_dB}HAVE_UP_BC_PC${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_UP_BC_PC${ac_uB}HAVE_UP_BC_PC${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_UP_BC_PC${ac_eB}HAVE_UP_BC_PC${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
++ ${ac_dA}RETSIGTYPE${ac_dB}RETSIGTYPE${ac_dC}void${ac_dD}
++ ${ac_uA}RETSIGTYPE${ac_uB}RETSIGTYPE${ac_uC}void${ac_uD}
++ ${ac_eA}RETSIGTYPE${ac_eB}RETSIGTYPE${ac_eC}void${ac_eD}
++ ${ac_dA}SIGRETURN${ac_dB}SIGRETURN${ac_dC}return${ac_dD}
++ ${ac_uA}SIGRETURN${ac_uB}SIGRETURN${ac_uC}return${ac_uD}
++ ${ac_eA}SIGRETURN${ac_eB}SIGRETURN${ac_eC}return${ac_eD}
+  ${ac_dA}HAVE_GETCWD${ac_dB}HAVE_GETCWD${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETCWD${ac_uB}HAVE_GETCWD${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETCWD${ac_eB}HAVE_GETCWD${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_GETWD${ac_dB}HAVE_GETWD${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETWD${ac_uB}HAVE_GETWD${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETWD${ac_eB}HAVE_GETWD${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
++ ${ac_dA}HAVE_SELECT${ac_dB}HAVE_SELECT${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_SELECT${ac_uB}HAVE_SELECT${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_SELECT${ac_eB}HAVE_SELECT${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_STRCSPN${ac_dB}HAVE_STRCSPN${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_STRCSPN${ac_uB}HAVE_STRCSPN${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_STRCSPN${ac_eB}HAVE_STRCSPN${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_STRTOL${ac_dB}HAVE_STRTOL${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRTOL${ac_uB}HAVE_STRTOL${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRTOL${ac_eB}HAVE_STRTOL${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_KILLPG${ac_dB}HAVE_KILLPG${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_KILLPG${ac_uB}HAVE_KILLPG${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_KILLPG${ac_eB}HAVE_KILLPG${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
++ ${ac_dA}HAVE_TGETENT${ac_dB}HAVE_TGETENT${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_TGETENT${ac_uB}HAVE_TGETENT${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_TGETENT${ac_eB}HAVE_TGETENT${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_MEMSET${ac_dB}HAVE_MEMSET${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_MEMSET${ac_uB}HAVE_MEMSET${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_MEMSET${ac_eB}HAVE_MEMSET${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_STRERROR${ac_dB}HAVE_STRERROR${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_STRERROR${ac_uB}HAVE_STRERROR${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_STRERROR${ac_eB}HAVE_STRERROR${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_FSYNC${ac_dB}HAVE_FSYNC${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_FSYNC${ac_uB}HAVE_FSYNC${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_FSYNC${ac_eB}HAVE_FSYNC${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
++ ${ac_dA}HAVE_PUTENV${ac_dB}HAVE_PUTENV${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_PUTENV${ac_uB}HAVE_PUTENV${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_PUTENV${ac_eB}HAVE_PUTENV${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_GETTIMEOFDAY${ac_dB}HAVE_GETTIMEOFDAY${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_GETTIMEOFDAY${ac_uB}HAVE_GETTIMEOFDAY${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_GETTIMEOFDAY${ac_eB}HAVE_GETTIMEOFDAY${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_GETPWUID${ac_dB}HAVE_GETPWUID${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETPWUID${ac_uB}HAVE_GETPWUID${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETPWUID${ac_eB}HAVE_GETPWUID${ac_eC}1${ac_eD}
+  ${ac_dA}HAVE_GETPWNAM${ac_dB}HAVE_GETPWNAM${ac_dC}1${ac_dD}
+  ${ac_uA}HAVE_GETPWNAM${ac_uB}HAVE_GETPWNAM${ac_uC}1${ac_uD}
+  ${ac_eA}HAVE_GETPWNAM${ac_eB}HAVE_GETPWNAM${ac_eC}1${ac_eD}
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+    rm -f conftest.in
+    mv conftest.out conftest.in
+  
+    cat > conftest.frag <<CEOF
++ ${ac_dA}HAVE_QSORT${ac_dB}HAVE_QSORT${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_QSORT${ac_uB}HAVE_QSORT${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_QSORT${ac_eB}HAVE_QSORT${ac_eC}1${ac_eD}
++ ${ac_dA}HAVE_RENAME${ac_dB}HAVE_RENAME${ac_dC}1${ac_dD}
++ ${ac_uA}HAVE_RENAME${ac_uB}HAVE_RENAME${ac_uC}1${ac_uD}
++ ${ac_eA}HAVE_RENAME${ac_eB}HAVE_RENAME${ac_eC}1${ac_eD}
+  ${ac_dA}SIZEOF_INT${ac_dB}SIZEOF_INT${ac_dC}4${ac_dD}
+  ${ac_uA}SIZEOF_INT${ac_uB}SIZEOF_INT${ac_uC}4${ac_uD}
+  ${ac_eA}SIZEOF_INT${ac_eB}SIZEOF_INT${ac_eC}4${ac_eD}
+  ${ac_dA}USEMEMMOVE${ac_dB}USEMEMMOVE${ac_dC}1${ac_dD}
+  ${ac_uA}USEMEMMOVE${ac_uB}USEMEMMOVE${ac_uC}1${ac_uD}
+  ${ac_eA}USEMEMMOVE${ac_eB}USEMEMMOVE${ac_eC}1${ac_eD}
++ CEOF
++   sed -f conftest.frag conftest.in > conftest.out
++   rm -f conftest.in
++   mv conftest.out conftest.in
++ 
++   cat > conftest.frag <<CEOF
+  s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
+  CEOF
+    sed -f conftest.frag conftest.in > conftest.out
+diff -c ../../vim-3.29/src/digraph.c ./digraph.c
+*** ../../vim-3.29/src/digraph.c	Tue May 21 22:37:46 1996
+--- ./digraph.c	Wed May 29 11:25:32 1996
+***************
+*** 88,94 ****
+  		};
+  
+  #else	/* !MSDOS && !WIN32 */
+! # ifdef _INCLUDE_HPUX_SOURCE
+  
+  char_u	digraphdefault[][3] = 		/* default HPUX digraphs */
+  	   {{'A', '`', 161},	/* ° */
+--- 88,157 ----
+  		};
+  
+  #else	/* !MSDOS && !WIN32 */
+! # ifdef MINT
+! char_u	digraphdefault[][3] = 		/* standard ATARI digraphs */
+! 	   {{'C', ',', 128},	/* ~@ */
+! 		{'u', '"', 129},	/* Å */
+! 		{'e', '\'', 130},	/* Ç */
+! 		{'a', '^', 131},	/* É */
+! 		{'a', '"', 132},	/* Ñ */
+! 		{'a', '`', 133},	/* Ö */
+! 		{'a', '@', 134},	/* Ü */
+! 		{'c', ',', 135},	/* ~G */
+! 		{'e', '^', 136},	/* ~H */
+! 		{'e', '"', 137},	/* â */
+! 		{'e', '`', 138},	/* ä */
+! 		{'i', '"', 139},	/* ã */
+! 		{'i', '^', 140},	/* å */
+! 		{'i', '`', 141},	/* ç */
+! 		{'A', '"', 142},	/* é */
+! 		{'A', '@', 143},	/* è */
+! 		{'E', '\'', 144},	/* ê */
+! 		{'a', 'e', 145},	/* ë */
+! 		{'A', 'E', 146},	/* í */
+! 		{'o', '^', 147},	/* ì */
+! 		{'o', '"', 148},	/* î */
+! 		{'o', '`', 149},	/* ï */
+! 		{'u', '^', 150},	/* ñ */
+! 		{'u', '`', 151},	/* ó */
+! 		{'y', '"', 152},	/* ò */
+! 		{'O', '"', 153},	/* ô */
+! 		{'U', '"', 154},	/* ö */
+! 	   	{'c', '|', 155},	/* õ */
+! 	   	{'$', '$', 156},	/* ú */
+! 	   	{'Y', '-', 157},	/* ~] */
+! 	   	{'s', 's', 158},	/* û */
+! 	    {'f', 'f', 159},	/* ü */
+! 		{'a', '\'', 160},	/* † */
+! 		{'i', '\'', 161},	/* ° */
+! 		{'o', '\'', 162},	/* ¢ */
+! 		{'u', '\'', 163},	/* £ */
+! 		{'n', '~', 164},	/* § */
+! 		{'N', '~', 165},	/* • */
+! 		{'a', 'a', 166},	/* ¶ */
+! 		{'o', 'o', 167},	/* ß */
+! 		{'~', '?', 168},	/* ® */
+! 		{'-', 'a', 169},	/* © */
+! 		{'a', '-', 170},	/* ™ */
+! 		{'1', '2', 171},	/* ´ */
+! 		{'1', '4', 172},	/* ¨ */
+! 		{'~', '!', 173},	/* ≠ */
+! 		{'<', '<', 174},	/* Æ */
+! 		{'>', '>', 175},	/* Ø */
+! 		{'j', 'u', 230},	/* Ê */
+! 		{'o', '/', 237},	/* Ì */
+! 		{'+', '-', 241},	/* Ò */
+! 		{'>', '=', 242},	/* Ú */
+! 		{'<', '=', 243},	/* Û */
+! 		{':', '-', 246},	/* ˆ */
+! 		{'~', '~', 247},	/* ˜ */
+! 		{'~', 'o', 248},	/* ¯ */
+! 		{'2', '2', 253},	/* ˝ */
+! 		{NUL, NUL, NUL}
+! 		};
+! 
+! # else	/* !MINT */
+! #  ifdef _INCLUDE_HPUX_SOURCE
+  
+  char_u	digraphdefault[][3] = 		/* default HPUX digraphs */
+  	   {{'A', '`', 161},	/* ° */
+***************
+*** 189,195 ****
+  		{NUL, NUL, NUL}
+  		};
+  
+! # else	/* _INCLUDE_HPUX_SOURCE */
+  
+  char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
+  	   {{'~', '!', 161},	/* ° */
+--- 252,258 ----
+  		{NUL, NUL, NUL}
+  		};
+  
+! #  else	/* _INCLUDE_HPUX_SOURCE */
+  
+  char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
+  	   {{'~', '!', 161},	/* ° */
+***************
+*** 290,296 ****
+  		{NUL, NUL, NUL}
+  		};
+  
+! # endif	/* _INCLUDE_HPUX_SOURCE */
+  #endif	/* !MSDOS && !WIN32 */
+   
+  /*
+--- 353,360 ----
+  		{NUL, NUL, NUL}
+  		};
+  
+! #  endif	/* _INCLUDE_HPUX_SOURCE */
+! # endif	/* !MINT */
+  #endif	/* !MSDOS && !WIN32 */
+   
+  /*
+diff -c ../../vim-3.29/src/memfile.c ./memfile.c
+*** ../../vim-3.29/src/memfile.c	Tue May 28 01:36:20 1996
+--- ./memfile.c	Tue May 28 01:36:20 1996
+***************
+*** 53,58 ****
+--- 53,61 ----
+  # include <sys/statfs.h>
+  # define STATFS statfs
+  # define F_BSIZE f_bsize
++ # ifdef MINT
++ #  define fstatfs(fd, buf, len, nul) fstat((fd), (buf))
++ # endif
+  #else
+  # define STATFS stat
+  # define F_BSIZE st_blksize
+Common subdirectories: ../../vim-3.29/src/proto and ./proto
+diff -c ../../vim-3.29/src/term.c ./term.c
+*** ../../vim-3.29/src/term.c	Tue May 28 02:05:30 1996
+--- ./term.c	Tue May 28 16:28:56 1996
+***************
+*** 501,520 ****
+  	{K_PAGEUP,		"\316I"},
+  # endif
+  
+! # ifdef ALL_BUILTIN_TCAPS
+  /*
+   * Ordinary vt52
+   */
+  	{KS_NAME,	 "	vt52"},
+  	{KS_CE,			"\033K"},
+  	{KS_CD,			"\033J"},
+  	{KS_AL,			"\033T"},
+  	{KS_DL,			"\033U"},
+  	{KS_CL,			"\033H\033J"},
+  	{KS_ME,			"\033SO"},
+  	{KS_MR,			"\033S2"},
+  	{KS_MS,			"\001"},
+! 	{KS_CM,			"\033Y%+ %+ "},
+  # endif
+  
+  # if defined(UNIX) || defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS) || defined(__EMX__)
+--- 501,567 ----
+  	{K_PAGEUP,		"\316I"},
+  # endif
+  
+! # if defined(ALL_BUILTIN_TCAPS) || defined(MINT)
+  /*
+   * Ordinary vt52
+   */
++ #  ifdef MINT
++ 	{KS_NAME,	 "vt52"},
++ #  else
+  	{KS_NAME,	 "	vt52"},
++ #  endif
+  	{KS_CE,			"\033K"},
+  	{KS_CD,			"\033J"},
++ 	{KS_CM,			"\033Y%+ %+ "},
++ #  ifdef MINT
++ 	{KS_AL,			"\033L"},
++ 	{KS_DL,			"\033M"},
++ 	{KS_CL,			"\033E"},
++ 	{KS_SR,			"\033I"},
++ 	{KS_VE,			"\033e"},
++ 	{KS_VI,			"\033f"},
++ 	{KS_SO,			"\033p"},
++ 	{KS_SE,			"\033q"},
++ 	{K_UP,			"\033A"},
++ 	{K_DOWN,		"\033B"},
++ 	{K_LEFT,		"\033D"},
++ 	{K_RIGHT,		"\033C"},
++ 	{K_S_UP,		"\033a"},
++ 	{K_S_DOWN,		"\033b"},
++ 	{K_S_LEFT,		"\033d"},
++ 	{K_S_RIGHT,		"\033c"},
++ 	{K_F1,			"\033P"},
++ 	{K_F2,			"\033Q"},
++ 	{K_F3,			"\033R"},
++ 	{K_F4,			"\033S"},
++ 	{K_F5,			"\033T"},
++ 	{K_F6,			"\033U"},
++ 	{K_F7,			"\033V"},
++ 	{K_F8,			"\033W"},
++ 	{K_F9,			"\033X"},
++ 	{K_F10,			"\033Y"},
++ 	{K_S_F1,		"\033p"},
++ 	{K_S_F2,		"\033q"},
++ 	{K_S_F3,		"\033r"},
++ 	{K_S_F4,		"\033s"},
++ 	{K_S_F5,		"\033t"},
++ 	{K_S_F6,		"\033u"},
++ 	{K_S_F7,		"\033v"},
++ 	{K_S_F8,		"\033w"},
++ 	{K_S_F9,		"\033x"},
++ 	{K_S_F10,		"\033y"},
++ 	{K_INS,			"\033I"},
++ 	{K_HOME,		"\033E"},
++ 	{K_PAGEDOWN,	"\033b"},
++ 	{K_PAGEUP,		"\033a"},
++ #  else
+  	{KS_AL,			"\033T"},
+  	{KS_DL,			"\033U"},
+  	{KS_CL,			"\033H\033J"},
+  	{KS_ME,			"\033SO"},
+  	{KS_MR,			"\033S2"},
+  	{KS_MS,			"\001"},
+! #  endif
+  # endif
+  
+  # if defined(UNIX) || defined(ALL_BUILTIN_TCAPS) || defined(SOME_BUILTIN_TCAPS) || defined(__EMX__)
+diff -c ../../vim-3.29/src/vim.h ./vim.h
+*** ../../vim-3.29/src/vim.h	Tue May 28 01:46:44 1996
+--- ./vim.h	Tue May 28 01:46:42 1996
+***************
+*** 105,110 ****
+--- 105,114 ----
+  # include "win32.h"
+  #endif
+  
++ #ifdef MINT
++ # include "mint.h"
++ #endif
++ 
+  /*
+   * maximum length of a file name and a path	(for non-unix systems)
+   */

@@ -1,30 +1,15 @@
 #
-# Makefile for VIM, using DICE 2.06.40 and 2.06.21
+# Makefile for VIM, using DICE 3
 #
-# LAST CHANGES NOT TESTED
 #
 
 #>>>>> choose options:
-### -DDIGRAPHS		digraph support (at the cost of 1.6 Kbyte code)
-### -DNO_ARP		do not use arp.library, DOS 2.0 required
-### -DCOMPATIBLE	start in vi-compatible mode
-### -DNOBACKUP		default is no backup file
-### -DDEBUG		output a lot of debugging garbage
-### -DTERMCAP		include termcap file support
-### -DNO_BUILTIN_TCAPS	do not include builtin termcap entries
-###				(use only with -DTERMCAP)
-### -DSOME_BUILTIN_TCAPS include most useful builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -DALL_BUILTIN_TCAPS	include all builtin termcap entries
-###				(use only without -DNO_BUILTIN_TCAPS)
-### -DWEBB_COMPLETE	include Webb's code for command line completion
-### -DWEBB_KEYWORD_COMPL include Webb's code for keyword completion
-### -DNOTITLE		'title' option off by default
-DEFINES = -DTERMCAP -DDIGRAPHS -DSOME_BUILTIN_TCAPS \
-		-DWEBB_COMPLETE -DWEBB_KEYWORD_COMPL
+### See feature.h for a list of optionals.
+### Any other defines can be included here.
+DEFINES = -DHAVE_TGETENT -DUP_BC_PC_EXTERN -DOSPEED_EXTERN
 
-#>>>>> if TERMCAP is defined obj/termlib.o has to be used
-TERMLIB = obj/termlib.o
+#>>>>> if HAVE_TGETENT is defined o/termlib.o has to be used
+TERMLIB = o/termlib.o
 #TERMLIB = 
 
 #>>>>> end of choices
@@ -32,112 +17,126 @@ TERMLIB = obj/termlib.o
 
 CFLAGS = -c -DAMIGA $(DEFINES)
 
-INCL = vim.syms
-PRE = -H${INCL}=vim.h
-LIBS = -lmanx -la
+SYMS = vim.syms
+PRE = -H${SYMS}=vim.h
+LIBS = -la
 CC = dcc
 LD = dcc
 
 .c.o:
-	${CC} ${PRE} ${CFLAGS} $*.c -o $@
+	${CC} ${PRE} ${CFLAGS} $< -o $@
 
-OBJ =	obj/alloc.o obj/amiga.o obj/buffer.o obj/charset.o obj/cmdcmds.o obj/cmdline.o \
-	obj/csearch.o obj/digraph.o obj/edit.o obj/fileio.o obj/getchar.o obj/help.o \
-	obj/linefunc.o obj/main.o obj/mark.o obj/memfile.o obj/memline.o obj/message.o obj/misccmds.o \
-	obj/normal.o obj/ops.o obj/param.o obj/quickfix.o obj/regexp.o \
-	obj/regsub.o obj/screen.o obj/search.o \
-	obj/tag.o obj/term.o obj/undo.o obj/window.o $(TERMLIB)
+SRC =	alloc.c amiga.c buffer.c charset.c cmdcmds.c cmdline.c \
+	csearch.c digraph.c edit.c fileio.c getchar.c help.c \
+	linefunc.c main.c mark.c memfile.c memline.c message.c misccmds.c \
+	normal.c ops.c option.c quickfix.c regexp.c \
+	regsub.c screen.c search.c \
+	tables.c tag.c term.c undo.c window.c version.c
 
-/Vim: $(OBJ) version.c
-	${CC} $(CFLAGS) version.c -o obj/version.o
-	${LD} -o /Vim $(OBJ) obj/version.o $(LIBS)
+OBJ =	o/alloc.o o/amiga.o o/buffer.o o/charset.o \
+	o/cmdcmds.o o/cmdline.o o/csearch.o \
+	o/digraph.o o/edit.o o/fileio.o o/getchar.o \
+	o/help.o o/linefunc.o o/main.o o/mark.o \
+	o/memfile.o o/memline.o o/message.o \
+	o/misccmds.o o/normal.o o/ops.o o/option.o \
+	o/quickfix.o o/regexp.o o/regsub.o \
+	o/screen.o o/search.o o/tables.o o/tag.o \
+	o/term.o o/undo.o o/window.o $(TERMLIB)
+
+Vim: $(OBJ) version.c
+	${CC} $(CFLAGS) version.c -o o/version.o
+	${LD} -o Vim $(OBJ) o/version.o $(LIBS)
 
 debug: $(OBJ) version.c
-	${CC} $(CFLAGS) version.c -o obj/version.o
-	${LD} -s -o /Vim $(OBJ) obj/version.o $(LIBS)
+	${CC} $(CFLAGS) version.c -o o/version.o
+	${LD} -s -o Vim $(OBJ) o/version.o $(LIBS)
 
 ctags:
-	csh -c ctags *.c *.h
+	csh -c ctags $(SRC) *.h
 
-# can't use delete here, too many file names
 clean:
-	csh -c rm -f $(OBJ) obj/version.o obj/mkcmdtab.o /Vim $(INCL) mkcmdtab cmdtab.h
+	delete o/*.o Vim $(SYMS) mkcmdtab cmdtab.h
 
-$(INCL)  : vim.h globals.h keymap.h macros.h ascii.h term.h amiga.h structs.h
-	delete $(INCL)
+$(SYMS)  : vim.h globals.h keymap.h macros.h ascii.h term.h amiga.h structs.h
+	delete $(SYMS)
 
 ###########################################################################
 
-obj/alloc.o:	alloc.c  $(INCL)
+o/alloc.o:	alloc.c  $(SYMS)
 
-obj/amiga.o:	amiga.c  $(INCL) amiga.h
+o/amiga.o:	amiga.c  $(SYMS) amiga.h
 
-obj/buffer.o:	buffer.c  $(INCL)
+o/buffer.o:	buffer.c  $(SYMS)
 
-obj/charset.o:	charset.c  $(INCL)
+o/charset.o:	charset.c  $(SYMS)
 
-obj/cmdcmds.o:	cmdcmds.c  $(INCL)
+o/cmdcmds.o:	cmdcmds.c  $(SYMS)
 
-obj/cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+o/cmdline.o:	cmdline.c  $(SYMS) cmdtab.h
 
-obj/csearch.o:	csearch.c  $(INCL) regexp.h
+o/csearch.o:	csearch.c  $(SYMS) regexp.h
 
-obj/digraph.o: digraph.c	$(INCL)
+o/digraph.o: digraph.c	$(SYMS)
 
-obj/edit.o: edit.c	$(INCL)
+o/edit.o: edit.c	$(SYMS)
 
-obj/fileio.o:	fileio.c  $(INCL)
+o/fileio.o:	fileio.c  $(SYMS)
 
-obj/getchar.o: getchar.c	$(INCL)
+o/getchar.o: getchar.c	$(SYMS)
 
-obj/help.o: help.c	$(INCL)
+o/help.o: help.c	$(SYMS)
 
-obj/linefunc.o:	linefunc.c  $(INCL)
+o/linefunc.o:	linefunc.c  $(SYMS)
 
-obj/main.o: main.c
-	${CC} ${CFLAGS} main.c -o main.o
+o/main.o: main.c $(SYMS)
 
-obj/mark.o: mark.c	$(INCL)
+o/mark.o: mark.c	$(SYMS)
 
-obj/memfile.o:	memfile.c  $(INCL)
+o/memfile.o:	memfile.c  $(SYMS)
 
-obj/memline.o:	memline.c  $(INCL)
+o/memline.o:	memline.c  $(SYMS)
 
-obj/message.o:	message.c  $(INCL)
+o/message.o:	message.c  $(SYMS)
 
-obj/misccmds.o:	misccmds.c  $(INCL)
+o/misccmds.o:	misccmds.c  $(SYMS)
 
-obj/normal.o:	normal.c  $(INCL) ops.h
+o/normal.o:	normal.c  $(SYMS) ops.h
 
-obj/ops.o:	ops.c  $(INCL) ops.h
+o/ops.o:	ops.c  $(SYMS) ops.h
 
-obj/param.o:	param.c  $(INCL)
+o/option.o:	option.c  $(SYMS)
 # Because of a bug in DC1 2.06.40, initialisation of unions does not
 # work correctly. dc1-21 is DC1 2.06.21 which does work.
-	rename dc1-21 dc1
-	${CC} ${CFLAGS} param.c -o param.o
-	rename dc1 dc1-21
+#	rename dc1-21 dc1
+	${CC} ${CFLAGS} option.c -o o/option.o
+#	rename dc1 dc1-21
 
-obj/quickfix.o:	quickfix.c  $(INCL)
+o/quickfix.o:	quickfix.c  $(SYMS)
 
-obj/regexp.o:	regexp.c  $(INCL) regexp.h
+o/regexp.o:	regexp.c  $(SYMS) regexp.h
 
-obj/regsub.o:	regsub.c  $(INCL) regexp.h
+o/regsub.o:	regsub.c  $(SYMS) regexp.h
 
-obj/screen.o:	screen.c  $(INCL)
+o/screen.o:	screen.c  $(SYMS)
 
-obj/search.o:	search.c  $(INCL) regexp.h
+o/search.o:	search.c  $(SYMS) regexp.h
 
-obj/tag.o:	tags.c  $(INCL)
+o/tables.o:	tables.c  $(SYMS)
 
-obj/termlib.o:	termlib.c $(INCL)
+o/tag.o:	tag.c  $(SYMS)
 
-obj/undo.o: undo.c	$(INCL)
+o/term.o:	term.c  $(SYMS) term.h
 
-obj/window.o: window.c	$(INCL)
+o/termlib.o:	termlib.c $(SYMS)
+
+o/undo.o: undo.c	$(SYMS)
+
+o/window.o: window.c	$(SYMS)
 
 cmdtab.h: cmdtab.tab mkcmdtab
 	mkcmdtab cmdtab.tab cmdtab.h
 
-mkcmdtab: obj/mkcmdtab.o
-	${LD} -o mkcmdtab obj/mkcmdtab.o
+mkcmdtab: o/mkcmdtab.o
+	${LD} -o mkcmdtab o/mkcmdtab.o
+
+o/mkcmdtab.o: mkcmdtab.c

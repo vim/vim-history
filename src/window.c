@@ -1,21 +1,23 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read a list of people who contributed.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
+static void reset_VIsual __ARGS((void));
 static int win_comp_pos __ARGS((void));
 static void win_exchange __ARGS((long));
 static void win_rotate __ARGS((int, int));
 static void win_append __ARGS((WIN *, WIN *));
 static void win_remove __ARGS((WIN *));
+static void win_new_height __ARGS((WIN *, int));
 
 static WIN		*prevwin = NULL;		/* previous window */
 
@@ -30,6 +32,9 @@ do_window(nchar, Prenum)
 	long	Prenum1;
 	WIN		*wp;
 	char_u	*ptr;
+	int		len;
+	int		type = -1;
+	WIN		*wp2;
 
 	if (Prenum == 0)
 		Prenum1 = 1;
@@ -41,13 +46,23 @@ do_window(nchar, Prenum)
 /* split current window in two parts */
 	case 'S':
 	case Ctrl('S'):
-	case 's':	VIsual.lnum = 0;		/* stop Visual mode */
-				win_split(Prenum, TRUE);
+	case 's':	reset_VIsual();					/* stop Visual mode */
+				win_split((int)Prenum, TRUE);
+				break;
+
+/* split current window and edit alternate file */
+	case K_CCIRCM:
+	case '^':
+				reset_VIsual();					/* stop Visual mode */
+				stuffReadbuff((char_u *)":split #");
+				if (Prenum)
+					stuffnumReadbuff(Prenum);	/* buffer number */
+				stuffcharReadbuff('\n');
 				break;
 
 /* open new window */
 	case Ctrl('N'):
-	case 'n':	VIsual.lnum = 0;					/* stop Visual mode */
+	case 'n':	reset_VIsual();					/* stop Visual mode */
 				stuffcharReadbuff(':');
 				if (Prenum)
 					stuffnumReadbuff(Prenum);		/* window height */
@@ -56,30 +71,46 @@ do_window(nchar, Prenum)
 
 /* quit current window */
 	case Ctrl('Q'):
-	case 'q':	VIsual.lnum = 0;		/* stop Visual mode */
+	case 'q':	reset_VIsual();					/* stop Visual mode */
 				stuffReadbuff((char_u *)":quit\n");	/* it is cmdline.c */
 				break;
 
 /* close current window */
 	case Ctrl('C'):
-	case 'c':	VIsual.lnum = 0;		/* stop Visual mode */
+	case 'c':	reset_VIsual();					/* stop Visual mode */
 				stuffReadbuff((char_u *)":close\n");	/* it is cmdline.c */
 				break;
 
 /* close all but current window */
 	case Ctrl('O'):
-	case 'o':	VIsual.lnum = 0;		/* stop Visual mode */
+	case 'o':	reset_VIsual();					/* stop Visual mode */
 				stuffReadbuff((char_u *)":only\n");	/* it is cmdline.c */
 				break;
 
 /* cursor to next window */
 	case 'j':
-	case K_DARROW:
+	case K_DOWN:
 	case Ctrl('J'):
-				VIsual.lnum = 0;		/* stop Visual mode */
 				for (wp = curwin; wp->w_next != NULL && Prenum1-- > 0;
 															wp = wp->w_next)
 					;
+new_win:
+				/*
+				 * When jumping to another buffer, stop visual mode
+				 * Do this before changing windows so we can yank the
+				 * selection into the '"*' register.
+				 */
+				if (wp->w_buffer != curbuf && VIsual_active)
+				{
+					end_visual_mode();
+					for (wp2 = firstwin; wp2 != NULL; wp2 = wp2->w_next)
+						if (wp2->w_buffer == curbuf &&
+											wp2->w_redr_type < NOT_VALID)
+						{
+							wp2->w_redr_type = NOT_VALID;
+							redraw_later(NOT_VALID);
+						}
+				}
 				win_enter(wp, TRUE);
 				cursupdate();
 				break;
@@ -87,9 +118,10 @@ do_window(nchar, Prenum)
 /* cursor to next window with wrap around */
 	case Ctrl('W'):
 	case 'w':
-				VIsual.lnum = 0;		/* stop Visual mode */
+/* cursor to previous window with wrap around */
+	case 'W':
 				if (lastwin == firstwin)		/* just one window */
-					beep();
+					beep_flush();
 				else
 				{
 					if (Prenum)					/* go to specified window */
@@ -102,39 +134,55 @@ do_window(nchar, Prenum)
 								wp = wp->w_next;
 						}
 					}
-					else						/* go to next window */
+					else
 					{
-						wp = curwin->w_next;
-						if (wp == NULL)
-							wp = firstwin;		/* wrap around */
+						if (nchar == 'W')			/* go to previous window */
+						{
+							wp = curwin->w_prev;
+							if (wp == NULL)
+								wp = lastwin;		/* wrap around */
+						}
+						else						/* go to next window */
+						{
+							wp = curwin->w_next;
+							if (wp == NULL)
+								wp = firstwin;		/* wrap around */
+						}
 					}
-					win_enter(wp, TRUE);
-					cursupdate();
+					goto new_win;
 				}
 				break;
 
 /* cursor to window above */
 	case 'k':
-	case K_UARROW:
+	case K_UP:
 	case Ctrl('K'):
-				VIsual.lnum = 0;		/* stop Visual mode */
 				for (wp = curwin; wp->w_prev != NULL && Prenum1-- > 0;
 															wp = wp->w_prev)
 					;
-				win_enter(wp, TRUE);
-				cursupdate();
-				break;
+				goto new_win;
+
+/* cursor to top window */
+	case 't':
+	case Ctrl('T'):
+				wp = firstwin;
+				goto new_win;
+
+/* cursor to bottom window */
+	case 'b':
+	case Ctrl('B'):
+				wp = lastwin;
+				goto new_win;
 
 /* cursor to last accessed (previous) window */
 	case 'p':
 	case Ctrl('P'):
-				VIsual.lnum = 0;		/* stop Visual mode */
 				if (prevwin == NULL)
-					beep();
+					beep_flush();
 				else
 				{
-					win_enter(prevwin, TRUE);
-					cursupdate();
+					wp = prevwin;
+					goto new_win;
 				}
 				break;
 
@@ -146,12 +194,12 @@ do_window(nchar, Prenum)
 
 /* rotate windows downwards */
 	case Ctrl('R'):
-	case 'r':	VIsual.lnum = 0;					/* stop Visual mode */
+	case 'r':	reset_VIsual();					/* stop Visual mode */
 				win_rotate(FALSE, (int)Prenum1);	/* downwards */
 				break;
 
 /* rotate windows upwards */
-	case 'R':	VIsual.lnum = 0;					/* stop Visual mode */
+	case 'R':	reset_VIsual();					/* stop Visual mode */
 				win_rotate(TRUE, (int)Prenum1);		/* upwards */
 				break;
 
@@ -175,7 +223,7 @@ do_window(nchar, Prenum)
 /* jump to tag and split window if tag exists */
 	case ']':
 	case Ctrl(']'):
-				VIsual.lnum = 0;		/* stop Visual mode */
+				reset_VIsual();					/* stop Visual mode */
 				postponed_split = TRUE;
 				stuffcharReadbuff(Ctrl(']'));
 				break;
@@ -183,35 +231,62 @@ do_window(nchar, Prenum)
 /* edit file name under cursor in a new window */
 	case 'f':
 	case Ctrl('F'):
-				VIsual.lnum = 0;		/* stop Visual mode */
-				ptr = file_name_at_cursor();
-				if (ptr == NULL)
-					beep();
-				else
+				reset_VIsual();					/* stop Visual mode */
+				ptr = file_name_at_cursor(FNAME_MESS|FNAME_HYP|FNAME_EXP);
+				if (ptr != NULL)
 				{
-					stuffReadbuff((char_u *) ":split ");
-					stuffReadbuff(ptr);
-					stuffReadbuff((char_u *) "\n");
-					free(ptr);
+					setpcmark();
+					if (win_split(0, FALSE) == OK)
+						(void)do_ecmd(0, ptr, NULL, NULL, p_hid, (linenr_t)0, FALSE);
+					vim_free(ptr);
 				}
 				break;
 
-	default:	beep();
+/* Go to the first occurence of the identifier under cursor along path in a
+ * new window -- webb
+ */
+	case 'i':						/* Go to any match */
+	case Ctrl('I'):
+				type = FIND_ANY;
+				/* FALLTHROUGH */
+	case 'd':						/* Go to definition, using p_def */
+	case Ctrl('D'):
+				if (type == -1)
+					type = FIND_DEFINE;
+
+				if ((len = find_ident_under_cursor(&ptr, FIND_IDENT)) == 0)
+					break;
+				find_pattern_in_path(ptr, len, TRUE, TRUE, type,
+					   Prenum1, ACTION_SPLIT, (linenr_t)1, (linenr_t)MAXLNUM);
+				curwin->w_set_curswant = TRUE;
 				break;
+
+	default:	beep_flush();
+				break;
+	}
+}
+
+	static void
+reset_VIsual()
+{
+	if (VIsual_active)
+	{
+		end_visual_mode();
+		update_curbuf(NOT_VALID);		/* delete the inversion */
 	}
 }
 
 /*
  * split the current window, implements CTRL-W s and :split
  *
- * new_height is the height for the new window, 0 to make half of current height
- * redraw is TRUE when redraw now
+ * new_height is the height for the new window, 0 to make half of current
+ * height redraw is TRUE when redraw now
  *
  * return FAIL for failure, OK otherwise
  */
 	int
 win_split(new_height, redraw)
-	long	new_height;
+	int		new_height;
 	int		redraw;
 {
 	WIN			*wp;
@@ -222,6 +297,7 @@ win_split(new_height, redraw)
 	int			do_equal = (p_ea && new_height == 0);
 	int			needed;
 	int			available;
+	int			curwin_height;
 	
 		/* add a status line when p_ls == 1 and splitting the first window */
 	if (lastwin == firstwin && p_ls == 1 && curwin->w_status_height == 0)
@@ -248,22 +324,23 @@ win_split(new_height, redraw)
 		EMSG(e_noroom);
 		return FAIL;
 	}
+	curwin_height = curwin->w_height;
 	if (need_status)
 	{
 		curwin->w_status_height = STATUS_HEIGHT;
-		curwin->w_height -= STATUS_HEIGHT;
+		curwin_height -= STATUS_HEIGHT;
 	}
 	if (new_height == 0)
-		new_height = curwin->w_height / 2;
+		new_height = curwin_height / 2;
 
-	if (new_height > curwin->w_height - MIN_ROWS - STATUS_HEIGHT)
-		new_height = curwin->w_height - MIN_ROWS - STATUS_HEIGHT;
+	if (new_height > curwin_height - MIN_ROWS - STATUS_HEIGHT)
+		new_height = curwin_height - MIN_ROWS - STATUS_HEIGHT;
 
 	if (new_height < MIN_ROWS)
 		new_height = MIN_ROWS;
 
 		/* if it doesn't fit in the current window, need win_equal() */
-	if (curwin->w_height - new_height - STATUS_HEIGHT < MIN_ROWS)
+	if (curwin_height - new_height - STATUS_HEIGHT < MIN_ROWS)
 		do_equal = TRUE;
 /*
  * allocate new window structure and link it in the window list
@@ -277,10 +354,8 @@ win_split(new_height, redraw)
 /*
  * compute the new screen positions
  */
-	wp->w_height = new_height;
-	win_comp_scroll(wp);
-	curwin->w_height -= new_height + STATUS_HEIGHT;
-	win_comp_scroll(curwin);
+	win_new_height(wp, new_height);
+	win_new_height(curwin, curwin_height - (new_height + STATUS_HEIGHT));
 	if (p_sb)		/* new window below current one */
 	{
 		wp->w_winpos = curwin->w_winpos + curwin->w_height + STATUS_HEIGHT;
@@ -308,6 +383,7 @@ win_split(new_height, redraw)
 	wp->w_leftcol = curwin->w_leftcol;
 	wp->w_pcmark = curwin->w_pcmark;
 	wp->w_prev_pcmark = curwin->w_prev_pcmark;
+	wp->w_alt_fnum = curwin->w_alt_fnum;
 
 	wp->w_arg_idx = curwin->w_arg_idx;
 	/*
@@ -344,21 +420,45 @@ win_split(new_height, redraw)
 	}
 	wp->w_topline = lnum;
 	curwin->w_topline = lnum;
+	if (need_status)
+	{
+		msg_pos((int)Rows - 1, sc_col);
+		msg_clr_eos();		/* Old command/ruler may still be there -- webb */
+		comp_col();
+		msg_pos((int)Rows - 1, 0);	/* put position back at start of line */
+	}
 /*
  * make the new window the current window and redraw
  */
 	if (do_equal)
 		win_equal(wp, FALSE);
  	win_enter(wp, FALSE);
+
 	if (redraw)
 		updateScreen(NOT_VALID);
+
 	return OK;
 }
 
 /*
- * make 'count' windows on the screen
- * return actual number of windows on the screen
- * called when there is just one window, filling the whole screen.
+ * Return the number of windows.
+ */
+	int
+win_count()
+{
+	WIN 	*wp;
+	int		count = 0;
+
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		++count;
+	return count;
+}
+
+/*
+ * Make 'count' windows on the screen.
+ * Return actual number of windows on the screen.
+ * Must be called when there is just one window, filling the whole screen
+ * (excluding the command line).
  */
 	int
 make_windows(count)
@@ -369,10 +469,14 @@ make_windows(count)
 	int		p_sb_save;
 
 /*
- * each window needs at least MIN_ROWS lines and a status line
+ * Each window needs at least MIN_ROWS lines and a status line.
+ * Add 4 lines for one window, otherwise we may end up with all one-line
+ * windows. Use value of 'winheight' if it is set
  */
-	maxcount = (curwin->w_height + curwin->w_status_height) /
-											(MIN_ROWS + STATUS_HEIGHT);
+	maxcount = (curwin->w_height + curwin->w_status_height -
+						(p_wh ? (p_wh - 1) : 4)) / (MIN_ROWS + STATUS_HEIGHT);
+	if (maxcount < 2)
+		maxcount = 2;
 	if (count > maxcount)
 		count = maxcount;
 
@@ -382,18 +486,18 @@ make_windows(count)
 	if ((p_ls == 2 || (count > 1 && p_ls == 1)) && curwin->w_status_height == 0)
 	{
 		curwin->w_status_height = STATUS_HEIGHT;
-		curwin->w_height -= STATUS_HEIGHT;
+		win_new_height(curwin, curwin->w_height - STATUS_HEIGHT);
 	}
 
 /*
- * set 'splitbelow' off for a moment, don't what that now
+ * set 'splitbelow' off for a moment, don't want that now
  */
 	p_sb_save = p_sb;
 	p_sb = FALSE;
 		/* todo is number of windows left to create */
 	for (todo = count - 1; todo > 0; --todo)
-		if (win_split((long)(curwin->w_height - (curwin->w_height - todo
-				* STATUS_HEIGHT) / (todo + 1) - STATUS_HEIGHT), FALSE) == FAIL)
+		if (win_split(curwin->w_height - (curwin->w_height - todo
+				* STATUS_HEIGHT) / (todo + 1) - STATUS_HEIGHT, FALSE) == FAIL)
 			break;
 	p_sb = p_sb_save;
 
@@ -414,7 +518,7 @@ win_exchange(Prenum)
 
 	if (lastwin == firstwin)		/* just one window */
 	{
-		beep();
+		beep_flush();
 		return;
 	}
 
@@ -460,6 +564,16 @@ win_exchange(Prenum)
 	win_enter(wp, TRUE);
 	cursupdate();
 	updateScreen(CLEAR);
+
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		if (gui.which_scrollbars[SB_LEFT])
+			gui_mch_reorder_scrollbars(SB_LEFT);
+		if (gui.which_scrollbars[SB_RIGHT])
+			gui_mch_reorder_scrollbars(SB_RIGHT);
+	}
+#endif
 }
 
 /*
@@ -476,7 +590,7 @@ win_rotate(upwards, count)
 
 	if (firstwin == lastwin)			/* nothing to do */
 	{
-		beep();
+		beep_flush();
 		return;
 	}
 	while (count--)
@@ -506,10 +620,22 @@ win_rotate(upwards, count)
 
 	cursupdate();
 	updateScreen(CLEAR);
+
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		if (gui.which_scrollbars[SB_LEFT])
+			gui_mch_reorder_scrollbars(SB_LEFT);
+		if (gui.which_scrollbars[SB_RIGHT])
+			gui_mch_reorder_scrollbars(SB_RIGHT);
+	}
+#endif
 }
 
 /*
- * make all windows the same height
+ * Make all windows the same height.
+ * 'next_curwin' will soon be the current window, make sure it has enough
+ * rows.
  */
 	void
 win_equal(next_curwin, redraw)
@@ -536,22 +662,23 @@ win_equal(next_curwin, redraw)
 	}
 
 /*
- * if next_curwin given and 'winheight' set, make next_curwin p_wh lines
+ * If next_curwin given and 'winheight' set, make next_curwin p_wh lines.
  */
-	if (next_curwin != NULL && p_wh)
+	less = 0;
+	if (next_curwin != NULL)
 	{
-		if (p_wh - MIN_ROWS > total)	/* all lines go to current window */
-			less = total;
-		else
+		if (p_wh)
 		{
-			less = p_wh - MIN_ROWS - total / wincount;
-			if (less < 0)
-				less = 0;
+			if (p_wh - MIN_ROWS > total)	/* all lines go to current window */
+				less = total;
+			else
+			{
+				less = p_wh - MIN_ROWS - total / wincount;
+				if (less < 0)
+					less = 0;
+			}
 		}
 	}
-	else
-		less = 0;
-		
 
 /*
  * spread the available lines over the windows
@@ -575,8 +702,7 @@ win_equal(next_curwin, redraw)
 			wp->w_redr_status = TRUE;
 		}
 		wp->w_winpos = winpos;
-		wp->w_height = new_height;
-		win_comp_scroll(wp);
+		win_new_height(wp, new_height);
 		total -= temp;
 		--wincount;
 		winpos += wp->w_height + wp->w_status_height;
@@ -589,13 +715,37 @@ win_equal(next_curwin, redraw)
 }
 
 /*
- * close current window
+ * close all windows for buffer 'buf'
+ */
+	void
+close_windows(buf)
+	BUF		*buf;
+{
+	WIN 	*win;
+
+	++RedrawingDisabled;
+	for (win = firstwin; win != NULL && lastwin != firstwin; )
+	{
+		if (win->w_buffer == buf)
+		{
+			close_window(win, FALSE);
+			win = firstwin;			/* go back to the start */
+		}
+		else
+			win = win->w_next;
+	}
+	--RedrawingDisabled;
+}
+
+/*
+ * close window "win"
  * If "free_buf" is TRUE related buffer may be freed.
  *
  * called by :quit, :close, :xit, :wq and findtag()
  */
 	void
-close_window(free_buf)
+close_window(win, free_buf)
+	WIN		*win;
 	int		free_buf;
 {
 	WIN 	*wp;
@@ -607,27 +757,43 @@ close_window(free_buf)
 	}
 
 /*
- * Close the link to the buffer.
- */
-	close_buffer(curbuf, free_buf, FALSE);
-
-/*
  * Remove the window.
+ * if 'splitbelow' the free space goes to the window above it.
+ * if 'nosplitbelow' the free space goes to the window below it.
+ * This makes opening a window and closing it immediately keep the same window
+ * layout.
  */
-	if (curwin->w_prev == NULL)		/* freed space goes to next window */
+									/* freed space goes to next window */
+	if ((!p_sb && win->w_next != NULL) || win->w_prev == NULL)
 	{
-		wp = curwin->w_next;
-		wp->w_winpos = curwin->w_winpos;
+		wp = win->w_next;
+		wp->w_winpos = win->w_winpos;
 	}
 	else							/* freed space goes to previous window */
-		wp = curwin->w_prev;
-	wp->w_height += curwin->w_height + curwin->w_status_height;
+		wp = win->w_prev;
+	win_new_height(wp, wp->w_height + win->w_height + win->w_status_height);
 
-	win_free(curwin);
-	curwin = NULL;
+#ifdef AUTOCMD
+	if (win == curwin)
+	{
+		if (wp->w_buffer != curbuf)
+			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+		apply_autocmds(EVENT_WINLEAVE, NULL, NULL);
+	}
+#endif
+
+/*
+ * Close the link to the buffer.
+ */
+	close_buffer(win, win->w_buffer, free_buf, FALSE);
+
+	win_free(win);
+	if (win == curwin)
+		curwin = NULL;
 	if (p_ea)
 		win_equal(wp, FALSE);
-	win_enter(wp, FALSE);
+	if (curwin == NULL)
+		win_enter(wp, FALSE);
 	/*
 	 * if last window has status line now and we don't want one,
 	 * remove the status line
@@ -635,12 +801,14 @@ close_window(free_buf)
 	if (lastwin->w_status_height &&
 						(p_ls == 0 || (p_ls == 1 && firstwin == lastwin)))
 	{
-		lastwin->w_height += lastwin->w_status_height;
+		win_new_height(lastwin, lastwin->w_height + lastwin->w_status_height);
 		lastwin->w_status_height = 0;
-		win_comp_scroll(lastwin);
+		comp_col();
 	}
-	win_comp_scroll(curwin);
+
 	updateScreen(NOT_VALID);
+	if (RedrawingDisabled)
+		comp_Botline(wp);			/* need to do this before cursupdate() */
 }
 
 /*
@@ -658,8 +826,12 @@ close_others(message)
 
 	if (lastwin == firstwin)
 	{
-		if (message)
-			EMSG("Already only one window");
+		if (message
+#ifdef AUTOCMD
+					&& !autocmd_busy
+#endif
+									)
+			MSG("Already only one window");
 		return;
 	}
 
@@ -668,29 +840,29 @@ close_others(message)
 		nextwp = wp->w_next;
 		if (wp == curwin)				/* don't close current window */
 			continue;
-	/*
-	 * Close the link to the buffer.
-	 */
-		close_buffer(wp->w_buffer, FALSE, FALSE);
+		/*
+		 * Close the link to the buffer.
+		 */
+		close_buffer(wp, wp->w_buffer, FALSE, FALSE);
 
-	/*
-	 * Remove the window. All lines go to current window.
-	 */
-		curwin->w_height += wp->w_height + wp->w_status_height;
-
+		/*
+		 * Remove the window. All lines go to current window.
+		 */
+		win_new_height(curwin,
+					   curwin->w_height + wp->w_height + wp->w_status_height);
 		win_free(wp);
 	}
+
 	/*
-	 * if current window has status line and we don't want one,
-	 * remove the status line
+	 * If current window has status line and we don't want one,
+	 * remove the status line.
 	 */
 	if (curwin->w_status_height && p_ls != 2)
 	{
-		curwin->w_height += curwin->w_status_height;
+		win_new_height(curwin, curwin->w_height + curwin->w_status_height);
 		curwin->w_status_height = 0;
 	}
-	curwin->w_winpos = 0;			/* put current window at top of the screen */
-	win_comp_scroll(curwin);
+	curwin->w_winpos = 0;		/* put current window at top of the screen */
 	if (message)
 		updateScreen(NOT_VALID);
 }
@@ -723,20 +895,49 @@ win_enter(wp, undo_sync)
 	WIN		*wp;
 	int		undo_sync;
 {
+#ifdef AUTOCMD
+	int			other_buffer = FALSE;
+#endif
+
 	if (wp == curwin)			/* nothing to do */
 		return;
+
+#ifdef AUTOCMD
+	if (curwin != NULL)
+	{
+		if (wp->w_buffer != curbuf)
+		{
+			apply_autocmds(EVENT_BUFLEAVE, NULL, NULL);
+			other_buffer = TRUE;
+		}
+		apply_autocmds(EVENT_WINLEAVE, NULL, NULL);
+	}
+#endif
 
 		/* sync undo before leaving the current buffer */
 	if (undo_sync && curbuf != wp->w_buffer)
 		u_sync();
+		/* may have to copy the buffer options when 'cpo' contains 'S' */
+	if (wp->w_buffer != curbuf)
+		buf_copy_options(curbuf, wp->w_buffer, TRUE);
 	if (curwin != NULL)
 		prevwin = curwin;		/* remember for CTRL-W p */
 	curwin = wp;
 	curbuf = wp->w_buffer;
+
+#ifdef AUTOCMD
+	apply_autocmds(EVENT_WINENTER, NULL, NULL);
+	if (other_buffer)
+		apply_autocmds(EVENT_BUFENTER, NULL, NULL);
+#endif
+
 	maketitle();
 			/* set window height to desired minimal value */
 	if (p_wh && curwin->w_height < p_wh)
 		win_setheight((int)p_wh);
+#ifdef USE_MOUSE
+	setmouse();					/* in case jumped to/from help buffer */
+#endif
 }
 
 /*
@@ -746,30 +947,36 @@ win_enter(wp, undo_sync)
 win_alloc(after)
 	WIN		*after;
 {
-	WIN		*new;
+	WIN		*newwin;
 
 /*
  * allocate window structure and linesizes arrays
  */
-	new = (WIN *)alloc((unsigned)sizeof(WIN));
-	if (new)
+	newwin = (WIN *)alloc((unsigned)sizeof(WIN));
+	if (newwin)
 	{
 /*
  * most stucture members have to be zero
  */
- 		memset((char *)new, 0, sizeof(WIN));
+ 		(void)vim_memset(newwin, 0, sizeof(WIN));
 /*
  * link the window in the window list
  */
-		win_append(after, new);
+		win_append(after, newwin);
 
-		win_alloc_lsize(new);
+		win_alloc_lsize(newwin);
 
 		/* position the display and the cursor at the top of the file. */
-		new->w_topline = 1;
-		new->w_cursor.lnum = 1;
+		newwin->w_topline = 1;
+		newwin->w_botline = 2;
+		newwin->w_cursor.lnum = 1;
+
+#ifdef USE_GUI
+		/* Let the GUI know this is a new scrollbar */
+		newwin->w_scrollbar.height = 0;
+#endif /* USE_GUI */
 	}
-	return new;
+	return newwin;
 }
 
 /*
@@ -779,11 +986,22 @@ win_alloc(after)
 win_free(wp)
 	WIN		*wp;
 {
+	int		i;
+
 	if (prevwin == wp)
 		prevwin = NULL;
 	win_free_lsize(wp);
+
+	for (i = 0; i < wp->w_tagstacklen; ++i)
+		free(wp->w_tagstack[i].tagname);
+
+#ifdef USE_GUI
+	if (gui.in_use)
+		gui_mch_destroy_scrollbar(wp);
+#endif /* USE_GUI */
+
 	win_remove(wp);
-	free(wp);
+	vim_free(wp);
 }
 
 	static void
@@ -854,8 +1072,8 @@ win_alloc_lsize(wp)
 win_free_lsize(wp)
 	WIN		*wp;
 {
-	free(wp->w_lsize_lnum);
-	free(wp->w_lsize);
+	vim_free(wp->w_lsize_lnum);
+	vim_free(wp->w_lsize);
 }
 
 /*
@@ -882,25 +1100,23 @@ screen_new_rows()
 			if (wp->w_height - MIN_ROWS < -extra_lines)
 			{
 				extra_lines += wp->w_height - MIN_ROWS;
-				wp->w_height = MIN_ROWS;
-				win_comp_scroll(wp);
+				win_new_height(wp, MIN_ROWS);
 			}
 			else
 			{
-				wp->w_height += extra_lines;
-				win_comp_scroll(wp);
+				win_new_height(wp, wp->w_height + extra_lines);
 				break;
 			}
 		}
-		(void)win_comp_pos();					/* compute w_winpos */
+		(void)win_comp_pos();				/* compute w_winpos */
 	}
-	else if (extra_lines > 0)					/* increase height of last window */
-	{
-		lastwin->w_height += extra_lines;
-		win_comp_scroll(lastwin);
-	}
+	else if (extra_lines > 0)				/* increase height of last window */
+		win_new_height(lastwin, lastwin->w_height + extra_lines);
 
 	compute_cmdrow();
+
+	if (p_ea)
+		win_equal(curwin, FALSE);
 }
 
 /*
@@ -939,6 +1155,7 @@ win_setheight(height)
 	int		take;				/* number of lines taken from other windows */
 	int		room_cmdline;		/* lines available from cmdline */
 	int		row;
+	int		run;
 
 	if (height < MIN_ROWS)		/* need at least some lines */
 		height = MIN_ROWS;
@@ -955,63 +1172,53 @@ win_setheight(height)
 /*
  * limit new height to the room available
  */
-	if (height > room + room_cmdline)			/* can't make it that large */
-		height = room + room_cmdline;			/* use all available room */
+	if (height > room + room_cmdline)		/* can't make it that large */
+		height = room + room_cmdline;		/* use all available room */
 /*
  * compute the number of lines we will take from the windows (can be negative)
  */
 	take = height - curwin->w_height;
-	if (take == 0)								/* no change, nothing to do */
+	if (take == 0)							/* no change, nothing to do */
 		return;
 
 	if (take > 0)
 	{
-		take -= room_cmdline;					/* use lines from cmdline first */
+		take -= room_cmdline;				/* use lines from cmdline first */
 		if (take < 0)
 			take = 0;
 	}
 /*
  * set the current window to the new height
  */
-	curwin->w_height = height;
-	win_comp_scroll(curwin);
+	win_new_height(curwin, height);
+
 /*
- * take lines from the windows below the current window
+ * First take lines from the windows below the current window.
+ * If that is not enough, takes lines from windows above the current window.
  */
-	for (wp = curwin->w_next; wp != NULL && take != 0; wp = wp->w_next)
+	for (run = 0; run < 2; ++run)
 	{
-		if (wp->w_height - take < MIN_ROWS)
-		{
-			take -= wp->w_height - MIN_ROWS;
-			wp->w_height = MIN_ROWS;
-		}
+		if (run == 0)
+			wp = curwin->w_next;		/* 1st run: start with next window */
 		else
+			wp = curwin->w_prev;		/* 2nd run: start with prev window */
+		while (wp != NULL && take != 0)
 		{
-			wp->w_height -= take;
-			take = 0;
+			if (wp->w_height - take < MIN_ROWS)
+			{
+				take -= wp->w_height - MIN_ROWS;
+				win_new_height(wp, MIN_ROWS);
+			}
+			else
+			{
+				win_new_height(wp, wp->w_height - take);
+				take = 0;
+			}
+			if (run == 0)
+				wp = wp->w_next;
+			else
+				wp = wp->w_prev;
 		}
-		win_comp_scroll(wp);				/* recompute p_scroll */
-		wp->w_redr_type = NOT_VALID;		/* need to redraw this window */
-		wp->w_redr_status = TRUE;
-	}
-/*
- * take lines from the windows above the current window
- */
-	for (wp = curwin->w_prev; wp != NULL && take != 0; wp = wp->w_prev)
-	{
-		if (wp->w_height - take < MIN_ROWS)
-		{
-			take -= wp->w_height - MIN_ROWS;
-			wp->w_height = MIN_ROWS;
-		}
-		else
-		{
-			wp->w_height -= take;
-			take = 0;
-		}
-		win_comp_scroll(wp);				/* recompute p_scroll */
-		wp->w_redr_type = NOT_VALID;		/* need to redraw this window */
-		wp->w_redr_status = TRUE;
 	}
 
 /* recompute the window positions */
@@ -1021,10 +1228,105 @@ win_setheight(height)
  * If there is extra space created between the last window and the command line,
  * clear it.
  */
- 	screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ');
+	screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ');
 	cmdline_row = row;
 
 	updateScreen(NOT_VALID);
+}
+
+#ifdef USE_MOUSE
+	void
+win_drag_status_line(offset)
+	int		offset;
+{
+	WIN		*wp;
+	int		room;
+	int		row;
+	int		up;				/* if TRUE, drag status line up, otherwise down */
+
+	if (offset < 0)
+	{
+		up = TRUE;
+		offset = -offset;
+	}
+	else
+		up = FALSE;
+
+	if (up)	/* drag up */
+	{
+		room = 0;
+		for (wp = curwin; wp != NULL && room < offset; wp = wp->w_prev)
+			room += wp->w_height - MIN_ROWS;
+		wp = curwin->w_next;				/* put wp at window that grows */
+	}
+	else	/* drag down */
+	{
+		/*
+		 * Only dragging the last status line can reduce p_ch.
+		 */
+		room = Rows - cmdline_row;
+		if (curwin->w_next == NULL)
+			room -= 1;
+		else
+			room -= p_ch;
+		for (wp = curwin->w_next; wp != NULL && room < offset; wp = wp->w_next)
+			room += wp->w_height - MIN_ROWS;
+		wp = curwin;						/* put wp at window that grows */
+	}
+
+	if (room < offset)		/* Not enough room */
+		offset = room;		/* Move as far as we can */
+	if (offset <= 0)
+		return;
+
+	if (wp != NULL)			/* grow window wp by offset lines */
+		win_new_height(wp, wp->w_height + offset);
+
+	if (up)
+		wp = curwin;				/* current window gets smaller */
+	else
+		wp = curwin->w_next;		/* next window gets smaller */
+
+	while (wp != NULL && offset > 0)
+	{
+		if (wp->w_height - offset < MIN_ROWS)
+		{
+			offset -= wp->w_height - MIN_ROWS;
+			win_new_height(wp, MIN_ROWS);
+		}
+		else
+		{
+			win_new_height(wp, wp->w_height - offset);
+			offset = 0;
+		}
+		if (up)
+			wp = wp->w_prev;
+		else
+			wp = wp->w_next;
+	}
+	row = win_comp_pos();
+	screen_fill(row, cmdline_row, 0, (int)Columns, ' ', ' ');
+	cmdline_row = row;
+	p_ch = Rows - cmdline_row;
+	updateScreen(NOT_VALID);
+	showmode();
+}
+#endif /* USE_MOUSE */
+
+/*
+ * Set new window height.
+ */
+	static void
+win_new_height(wp, height)
+	WIN		*wp;
+	int		height;
+{
+	/* should adjust topline to keep cursor at same relative postition */
+
+	wp->w_height = height;
+	win_comp_scroll(wp);
+	wp->w_redr_type = NOT_VALID;
+	wp->w_redr_status = TRUE;
 }
 
 	void
@@ -1045,23 +1347,18 @@ command_height()
 	int		current;
 
 	current = Rows - cmdline_row;
-	if (current > p_ch)				/* p_ch got smaller */
-		lastwin->w_height += current - p_ch;
-	else							/* p_ch got bigger */
+	if (p_ch > current)				/* p_ch got bigger */
 	{
 		if (lastwin->w_height - (p_ch - current) < MIN_ROWS)
 		{
 			emsg(e_noroom);
 			p_ch = lastwin->w_height - MIN_ROWS + current;
 		}
-		lastwin->w_height -= p_ch - current;
-									/* clear the lines added to cmdline */
+		/* clear the lines added to cmdline */
 		screen_fill((int)(Rows - p_ch), (int)Rows, 0, (int)Columns, ' ', ' ');
 	}
-	win_comp_scroll(lastwin);
+	win_new_height(lastwin, lastwin->w_height + current - (int)p_ch);
 	cmdline_row = Rows - p_ch;
-	lastwin->w_redr_type = NOT_VALID;
-	lastwin->w_redr_status = TRUE;
 	redraw_cmdline = TRUE;
 }
 
@@ -1073,10 +1370,8 @@ last_status()
 					/* remove status line */
 		if (p_ls == 0 || (p_ls == 1 && firstwin == lastwin))
 		{
+			win_new_height(lastwin, lastwin->w_height + 1);
 			lastwin->w_status_height = 0;
-			lastwin->w_height++;
-			win_comp_scroll(lastwin);
-			lastwin->w_redr_status = TRUE;
 		}
 	}
 	else
@@ -1088,10 +1383,8 @@ last_status()
 				emsg(e_noroom);
 			else
 			{
+				win_new_height(lastwin, lastwin->w_height - 1);
 				lastwin->w_status_height = 1;
-				lastwin->w_height--;
-				win_comp_scroll(lastwin);
-				lastwin->w_redr_status = TRUE;
 			}
 		}
 	}
@@ -1106,46 +1399,73 @@ last_status()
  * NULL is returned if the file name or file is not found.
  */
 	char_u *
-file_name_at_cursor()
+file_name_at_cursor(options)
+	int		options;
 {
+	return get_file_name_in_path(ml_get_curline(),
+											   curwin->w_cursor.col, options);
+}
+/* options:
+ * FNAME_MESS		give error messages
+ * FNAME_EXP		expand to path
+ * FNAME_HYP		check for hypertext link
+ */
+	char_u *
+get_file_name_in_path(ptr, col, options)
 	char_u	*ptr;
+	int		col;
+	int		options;
+{
 	char_u	*dir;
 	char_u	*file_name;
 	char_u	save_char;
-	int		col;
+	char_u	*curr_path = NULL;
+	int		curr_path_len;
 	int		len;
 
-		/* characters in a file name besides alfa-num */
-#ifdef UNIX
-	char_u	*file_chars = (char_u *)"/.-_+,~$";
-#endif
-#ifdef AMIGA
-	char_u	*file_chars = (char_u *)"/.-_+,$:";
-#endif
-#ifdef MSDOS
-	char_u	*file_chars = (char_u *)"/.-_+,$\\:";
-#endif
-
-	ptr = ml_get(curwin->w_cursor.lnum);
-	col = curwin->w_cursor.col;
-
 		/* search forward for what could be the start of a file name */
-	while (!isalnum((char) ptr[col]) && STRCHR(file_chars, ptr[col]) == NULL)
+	while (ptr[col] != NUL && !isfilechar(ptr[col]))
 		++col;
 	if (ptr[col] == NUL)			/* nothing found */
+	{
+		if (options & FNAME_MESS)
+			EMSG("No file name under cursor");
 		return NULL;
+	}
 
 		/* search backward for char that cannot be in a file name */
-	while (col >= 0 &&
-	  (isalnum((char) ptr[col]) || STRCHR(file_chars, ptr[col]) != NULL))
+	while (col >= 0 && isfilechar(ptr[col]))
 		--col;
 	ptr += col + 1;
 	col = 0;
 
 		/* search forward for a char that cannot be in a file name */
-	while (ptr[col] != NUL
-	  && (isalnum((char) ptr[col]) || STRCHR(file_chars, ptr[col]) != NULL))
+	while (isfilechar(ptr[col]))
 		++col;
+
+	if (options & FNAME_HYP)
+	{
+		/* For hypertext links, ignore the name of the machine.
+		 * Such a link looks like "type://machine/path". Only "/path" is used.
+		 * First search for the string "://", then for the extra '/'
+		 */
+		if ((file_name = vim_strchr(ptr, ':')) != NULL &&
+				STRNCMP(file_name, "://", (size_t)3) == 0 &&
+				(file_name = vim_strchr(file_name + 3, '/')) != NULL &&
+				file_name < ptr + col)
+		{
+			col -= file_name - ptr;
+			ptr = file_name;
+			if (ptr[1] == '~')		/* skip '/' for /~user/path */
+			{
+				++ptr;
+				--col;
+			}
+		}
+	}
+
+	if (!(options & FNAME_EXP))
+		return strnsave(ptr, col);
 
 		/* copy file name into NameBuff, expanding environment variables */
 	save_char = ptr[col];
@@ -1159,35 +1479,91 @@ file_name_at_cursor()
 			return NULL;
 		if (getperm(file_name) >= 0)
 			return file_name;
+		if (options & FNAME_MESS)
+		{
+			sprintf((char *)IObuff, "Can't find file `%s'", NameBuff);
+			emsg(IObuff);
+		}
 	}
 	else							/* relative path, use 'path' option */
 	{
-		if ((file_name = alloc((int)(STRLEN(p_path) + STRLEN(NameBuff) + 2))) == NULL)
-			return NULL;
-		dir = p_path;
-		for (;;)
+		if (curbuf->b_xfilename != NULL)
 		{
-			skipspace(&dir);
-			for (len = 0; dir[len] != NUL && dir[len] != ' '; len++)
-				;
-			if (len == 0)
-				break;
-			if (len == 1 && dir[0] == '.')		/* current dir */
-				STRCPY(file_name, NameBuff);
-			else
+			curr_path = curbuf->b_xfilename;
+			ptr = gettail(curr_path);
+			curr_path_len = ptr - curr_path;
+		}
+		else
+			curr_path_len = 0;
+		if ((file_name = alloc((int)(curr_path_len + STRLEN(p_path) +
+											STRLEN(NameBuff) + 3))) == NULL)
+			return NULL;
+
+		for (dir = p_path; *dir;)
+		{
+			len = copy_option_part(&dir, file_name, 31000, " ,");
+			/* len == 0 means: use current directory */
+			if (len != 0)
 			{
-				STRNCPY(file_name, dir, (size_t)len);
-#ifdef AMIGA			/* Amiga doesn't like c:/file */
-				if (file_name[len - 1] != ':')
-#endif
-					file_name[len] = '/';
-				STRCPY(file_name + len + 1, NameBuff);
+								/* Look for file relative to current file */
+				if (file_name[0] == '.' && curr_path_len > 0)
+				{
+					if (len == 1)		/* just a "." */
+						len = 0;
+					else				/* "./path": move "path" */
+					{
+						len -= 2;
+						vim_memmove(file_name + curr_path_len, file_name + 2,
+																 (size_t)len);
+					}
+					STRNCPY(file_name, curr_path, curr_path_len);
+					len += curr_path_len;
+				}
+				if (!ispathsep(file_name[len - 1]))
+					file_name[len++] = PATHSEP;
 			}
+			STRCPY(file_name + len, NameBuff);
 			if (getperm(file_name) >= 0)
 				return file_name;
-			dir += len;
 		}
+		if (options & FNAME_MESS)
+			EMSG2("Can't find file \"%s\" in path", NameBuff);
 	}
-	free(file_name);			/* file doesn't exist */
+	vim_free(file_name);			/* file doesn't exist */
 	return NULL;
+}
+
+/*
+ * Return the minimal number of rows that is needed on the screen to display
+ * the current number of windows.
+ */
+	int
+min_rows()
+{
+	WIN		*wp;
+	int		total;
+
+	if (firstwin == NULL)		/* not initialized yet */
+		return MIN_ROWS + 1;	/* one window plus command line */
+
+	total = p_ch;		/* count the room for the status line */
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		total += MIN_ROWS + wp->w_status_height;
+	return total;
+}
+
+/*
+ * Return TRUE if there is only one window, not counting a help window, unless
+ * it is the current window.
+ */
+	int
+only_one_window()
+{
+	int		count = 0;
+	WIN		*wp;
+
+	for (wp = firstwin; wp != NULL; wp = wp->w_next)
+		if (!wp->w_buffer->b_help || wp == curwin)
+			++count;
+	return (count <= 1);
 }

@@ -1,0 +1,330 @@
+
+
+
+VIM(1)                                                     VIM(1)
+
+
+NNAAMMEE
+       vim - Vi IMproved, a programmers text editor
+
+SSYYNNOOPPSSIISS
+       vviimm [options] [file ..]
+       vviimm [options] -t tag
+       vviimm [options] -e [errorfile]
+
+DDEESSCCRRIIPPTTIIOONN
+       VViimm is a text editor that is upwards compatible to vi.  It
+       can be used to edit any ASCII text.  It is especially use-
+       ful for editing programs.
+
+       There  are  a  lot  of  enhancements above vi: multi level
+       undo, multi windows and  buffers,  command  line  editing,
+       filename completion, on-line help, visual selection, etc..
+       Read vim_diff.txt for a summary of the differences between
+       VViimm and vi.
+
+       While  running  VViimm a lot of help can be obtained from the
+       on-line help system.  See ON-LINE HELP below.
+
+       Most often VViimm is started to edit a single file  with  the
+       command
+
+            vim file
+
+       More generally VViimm is started with:
+
+            vim [options] [filelist]
+
+       If  the filelist is missing, the editor will start with an
+       empty buffer.  Otherwise exactly one out of the  following
+       three  may  be  used  to  choose  one  or more files to be
+       edited.
+
+       file ..     A list of file names.  The first one  will  be
+                   the  current  file  and  read into the buffer.
+                   The cursor will be  positioned  on  the  first
+                   line  of the buffer.  You can get to the other
+                   files with the ":next"  command.   To  edit  a
+                   file  that  starts  with  a  dash, precede the
+                   filelist with "--".
+
+       -t {tag}    The file to edit and the initial cursor  posi-
+                   tion depends on a "tag", a sort of goto label.
+                   {tag} is looked up in the tags file, the asso-
+                   ciated  file  becomes the current file and the
+                   associated command is executed.   Mostly  this
+                   is  used for C programs.  {tag} then should be
+                   a function name.  The effect is that the  file
+                   containing  that  function becomes the current
+                   file and the cursor is positioned on the start
+                   of the function.  See ":help tag_commands".
+
+
+
+                           1996 May 27                          1
+
+
+
+
+
+VIM(1)                                                     VIM(1)
+
+
+       -e [errorfile]
+                   Start  in quickFix mode.  The file [errorfile]
+                   is read and the first error is displayed.   If
+                   [errorfile]   is  omitted  the  file  name  is
+                   obtained from the 'errorfile' option (defaults
+                   to "AztecC.Err" for the Amiga, "errors.vim" on
+                   other systems).  Further errors can be  jumped
+                   to  with the ":cn" command.  See ":help quick-
+                   fix".
+
+OOPPTTIIOONNSS
+       The options, if present, must precede the  filelist.   The
+       options  may be given in any order.  Options can mostly be
+       combined after a single dash.
+
+       +[num]      For the first file the cursor  will  be  posi-
+                   tioned  on  line  "num".  If "num" is missing,
+                   the cursor will  be  positioned  on  the  last
+                   line.
+
+       +/{pat}     For  the  first  file the cursor will be posi-
+                   tioned on the first occurrence of {pat}.   See
+                   ":help   search_pattern"   for  the  available
+                   search patterns.
+
+       +{command}
+
+       -c {command}
+                   {command} will be  executed  after  the  first
+                   file  has been read.  {command} is interpreted
+                   as an Ex command.  If the  {command}  contains
+                   spaces  it  must  be enclosed in double quotes
+                   (this depends on  the  shell  that  is  used).
+                   Example: Vim "+set si" main.c
+                   Note:  You  can use only one "+" or "-c" argu-
+                   ment.
+
+       -b          Binary mode.  A few options will be  set  that
+                   makes  it  possible  to  edit a binary or exe-
+                   cutable file.
+
+       -d {device} Open {device} for use as a terminal.  Only  on
+                   the Amiga.  Example: "-d con:20/30/600/150".
+
+       -i {viminfo}
+                   When  using  the viminfo file is enabled, this
+                   option sets the file name to use,  instead  of
+                   the  default  "~/.viminfo".   This can also be
+                   used to skip the use of the .viminfo file,  by
+                   giving the name "NONE".
+
+       -g          If  VViimm  has  been  compiled with GUI support,
+                   this option turns the GUI on.  If no GUI  sup-
+                   port  was  compiled  in,  an  error message is
+
+
+
+                           1996 May 27                          2
+
+
+
+
+
+VIM(1)                                                     VIM(1)
+
+
+                   given and VViimm aborts.
+
+       -H          If VViimm has been compiled with  RIGHTLEFT  sup-
+                   port  for editing right-to-left oriented files
+                   and  Hebrew  keyboard  mapping,  this   option
+                   starts  VViimm  in  Hebrew  mode,  i.e. hkmap and
+                   rightleft are set.  Otherwise an error message
+                   is given and VViimm aborts.
+
+       -n          No  swap  file will be used.  Recovery after a
+                   crash will be impossible.  Handy if  you  want
+                   to  edit  a  file  on a very slow medium (e.g.
+                   floppy).  Can also be done with  ":set  uc=0".
+                   Can be undone with ":set uc=200".
+
+       -o[N]       Open  N  windows.  When N is omitted, open one
+                   window for each file.
+
+       -r          List swap files, with information about  using
+                   them for recovery.
+
+       -r {file}   Recovery  mode.   The  swap  file  is  used to
+                   recover a crashed editing session.   The  swap
+                   file  is a file with the same file name as the
+                   text file with ".swp"  appended.   See  ":help
+                   recovery".
+
+       -s {scriptin}
+                   The script file {scriptin} is read.  The char-
+                   acters in the file are interpreted as  if  you
+                   had typed them.  The same can be done with the
+                   command ":source! {scriptin}".  If the end  of
+                   the  file  is reached before the editor exits,
+                   further characters are read from the keyboard.
+
+       -T {terminal}
+                   Tells  VViimm  the  name  of the terminal you are
+                   using.  Should be  a  terminal  known  to  VViimm
+                   (builtin)  or  defined  in the termcap or ter-
+                   minfo file.
+
+       -u {vimrc}  Use the commands in the file "vimrc" for  ini-
+                   tializations.   All  the other initializations
+                   are skipped.  Use this to edit a special  kind
+                   of  files.   It  can  also be used to skip all
+                   initializations by  giving  the  name  "NONE".
+                   See ":help initialization" within vim for more
+                   details.
+
+       -v          View mode.  The 'readonly' option will be set.
+                   You  can  still  edit  the buffer, but will be
+                   prevented from accidently overwriting a  file.
+                   If  you  do  want  to overwrite a file, add an
+                   exclamation mark to  the  Ex  command,  as  in
+
+
+
+                           1996 May 27                          3
+
+
+
+
+
+VIM(1)                                                     VIM(1)
+
+
+                   ":w!".   The  -v  option  also  implies the -n
+                   option (see below).  The 'readonly' option can
+                   be  reset with ":set noro".  See ":help 'read-
+                   only'".
+
+       -w {scriptout}
+                   All the characters that you type are  recorded
+                   in  the  file {scriptout}, until you exit VViimm..
+                   This is useful if you want to create a  script
+                   file  to  be used with "vim -s" or ":source!".
+                   If the {scriptout} file exists, characters are
+                   appended.
+
+       -W {scriptout}
+                   Like  -w, but an existing file is overwritten.
+
+       -x          (Amiga only) VViimm is not restarted  to  open  a
+                   new  window.   This option should be used when
+                   VViimm is executed by a program  that  will  wait
+                   for  the  edit  session to finish (e.g. mail).
+                   The ":sh" and ":!" commands will not work.
+
+       --          Denotes the  end  of  the  options,  arguments
+                   after  this  will  be  handled as a file name.
+                   This can be used to  edit  a  file  name  that
+                   starts with a '-'.
+
+OONN--LLIINNEE HHEELLPP
+       Type  ":help" in VViimm to get started.  Type ":help subject"
+       to get help on a specific subject.   For  example:  ":help
+       ZZ" to get help for the "ZZ" command.  Use <Tab> and CTRL-
+       D to complete subjects (":help cmdline_completion").  Tags
+       are  present  to  jump  from one place to another (sort of
+       hypertext links, see ":help").  All files mentioned  below
+       can   be   viewed   in   this   way,  for  example  ":help
+       vim_ref.txt".
+
+FFIILLEESS
+       Vim documentation (in /usr/local/lib/vim).
+
+       vim_ref.txt    A complete reference of VViimm (long).
+
+       vim_help.txt   File used by the on-line help (short), con-
+                      tains links to all other files.
+
+       vim_win.txt    Explanation   of   the  multi  windows  and
+                      buffers commands and options.
+
+       vim_idx.txt    Overview of all command characters  (useful
+                      when adding new mappings).
+
+       vim_tips.txt   Some  useful  tips about using VViimm for spe-
+                      cific file types.
+
+
+
+
+                           1996 May 27                          4
+
+
+
+
+
+VIM(1)                                                     VIM(1)
+
+
+       vim_digr.txt   Overview of the available digraphs.
+
+       vim_kcc.txt    About copying VViimm and Uganda.
+
+       vim_diff.txt   Overview of the differences between VViimm and
+                      vi.
+
+       vim_<machine>.txt
+                      Machine  specific  comments.  <machine> can
+                      be ami (Amiga),  arch  (Archimedes),  unix,
+                      w32  (Windows  95/NT), dos (MS-DOS) and mac
+                      (Macintosh).
+
+       vim_gui.txt    Specific comments about the GUI version.
+
+       vim_rlh.txt    Information about  using  VViimm  for  editing
+                      right-to-left oriented files.
+
+       /usr/local/lib/vim/vimrc
+                      System wide VViimm initializations
+
+       /usr/local/lib/vim/gvimrc
+                      System wide gvim initializations
+
+       For recent info read the VIM home page:
+       <URL:http://www.math.fu-berlin.de/~guckes/vim/>
+
+AAUUTTHHOORR
+       Most of VViimm was made by Bram Moolenaar.
+       VViimm  is  based on Stevie, worked on by: Tim Thompson, Tony
+       Andrews and G.R. (Fred) Walter
+
+BBUUGGSS
+       Probably.  See the "todo" file that comes with the distri-
+       bution.
+
+       Note  that a number of things that may be regarded as bugs
+       by some, are in fact caused by a too-faithful reproduction
+       of  vi's  behaviour.   Other people may think other things
+       are bugs "because vi does it differently".   Those  people
+       should  take  a  closer  look at the vim_diff.txt file (or
+       type :help vim_diff.txt when in Vim).  Also have a look at
+       the 'compatible' option.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                           1996 May 27                          5
+
+

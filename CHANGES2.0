@@ -1,0 +1,662 @@
+This is a summary of the modifications from Vim version 1.27 to version 2.0.
+
+Incompatible changes
+====================
+
+The 'exrc' and 'secure' options are default off. If you want Vim to read a
+.exrc or .vimrc in the current directory, you will have to set 'exrc' in your
+global .exrc or .vimrc. People doing this are supposed to know about the
+security problems, so they don't need the 'secure' option set. This is also
+more vi-compatible.
+
+Renamed quoting to visual select and swapped 'q' and 'v' keys to avoid
+problems with CTRL-Q. This is also more Elvis compatible. The commands now are:
+	'v'		start character-wise visual select
+	'V'		start line-wise visual select
+	CTRL-V		start block-wise visual select
+
+	'q'		start recording
+	'Q'		formatting operator
+
+Changed CTRL-R into CTRL-Y for insert mode (copy character from line above).
+This is more logical when comparing the meaning of CTRL-E and CTRL-Y in
+command mode and insert mode.
+
+Replaced CTRL-B with CTRL-R (insert contents of a register) in insert mode.
+This mnemonic is more logical, because "register" is used in the documentation.
+
+Added ":pwd" command and made ":cd" without an argument for Unix go to home
+directory. This is more vi-compatible and behaves the same as the unix cd
+command. The ":cd" command for MSDOS and Amiga versions is unchanged, these
+machines don't have a home directory.
+
+With the 'confirm' option to :s anything but 'y', 'n', ESC, CTRL-C or 'q' is
+ignored. Nothing happens until you type a valid character. Quit substitution
+with <q>, ESC and CTRL-C.
+
+Swapped 'u' and 'U' for visual mode. 'u' makes lower case, 'U' upper. This is
+more logical.
+
+Added 'wildchar' option for filename completion. The default is <TAB> instead
+of <ESC>. Most other programs use this and it avoids problems with terminal
+sequences that start with <ESC> (one second wait before filename completion
+starts).
+
+Changed short name of 'showmode' option from "mo" to "smd".
+
+Changed short name of 'modelines' from 'ml' into 'mls'. This is vi-compatible.
+
+Changed meaning of the argument to :cf. The 'errorfile' option will now be
+set to the argument.
+
+
+Major improvements
+==================
+
+Added horizontal scrolling and 'wrap' option. This allows the user to choose
+between line wrap (you see all the text but long lines mess up the layout)
+and horizontal scrolling (correct layout but you see only a part of long
+lines).
+
+Added 'sidescroll' option. It is the number of columns to jump when the
+cursor gets off of the screen while the 'wrap' option is off. The default is
+0, which means that the cursor is centered on the screen. Set it to a small
+number if you have fast screen I/O.
+
+Wildcard expansion has been made more compatible with other programs. Added
+'wildchar' option; default is <TAB> instead of <ESC>. With multiple matches
+first match is inserted. CTRL-A inserts all matches. With CTRL-D command: If
+file is a dir '/' is added. WILD_CARDS code now always included, no
+compile-time option anymore. 'wildchar' is only recognized when typed, not in
+a macro (prevents problems with macros containing TABs).
+
+CTRL-L on commandline inserts longest common part of filename completion. Now
+you can choose between using TAB (or 'wildchar') for getting the first match
+or CTRL-L for getting the longest match.
+
+Added automatic textmode (lines ending in CR-LF instead of LF) detection and
+'textauto' option. This works when starting to edit a file and when doing a
+":r" command. This is useful on MS-DOS systems with a network file system and
+when editing an MS-DOS floppy on Unix or Amiga. Added [(no)textmode] message
+to readfile() and writeit(). Now you can see when unexpected line separators
+have been detected or are being used.
+
+Added "-b" command line option. This makes it more easy to edit binary files
+without unexpected effects.
+
+Added ":make" command, 'errorformat' option and argument to -e option. Now you
+can do your compiling from within Vim and automatically jump to the line where
+the error is. Can be adjusted to work with many compilers. The command to be
+executed with ":make" can be set with the  'makeprg' option. '%' and '#' in
+the 'makeprg' option are expanded as usual in a command line.
+
+Added reverse insert mode, 'revins' option and CTRL-P command. Now you can
+type backwards!
+
+Added abbreviations. They work in insert mode and in command line mode, just
+like Vi. Also added :iabbr, :cabbr and friends: abbreviations for command line
+only or insert mode only. Added dumping of abbreviations to :mkexrc.
+
+Added ":center" (center the lines), ":left" (left adjustment) and ":right"
+(right adjustment). ":center" and ":right" use the 'textwith' option.
+
+Added bios calls for MSDOS screen output, ansi.sys no longer required.
+Screen updating much faster now and works with more video modes. Added pcansi
+termcap for when not using the console.
+
+
+Other improvements
+==================
+
+If 'expandtab' is set, spaces will also be used in indents.
+
+'tabstop' maximum removed.
+
+Digraphs also work in the command line.
+
+Added :redo, same as CTRL-R.
+
+Added '-x' option for the Amiga version. The current window will be used, but
+shell commands are not possible. Handy when starting Vim from a mail program.
+
+Added 'secure' option. When reset you don't get the warnings from reading a
+.vimrc/.exrc file in the current directory.
+
+Added 'exrc' option. Now you can switch the reading of ".exrc/.vimrc" off.
+
+Added "vim:" modelines. Other vi versions allowed all ex commands in
+modelines, vim only allows set commands. Use "vim:" to avoid confusion.
+
+Optimized position of ruler and shown command.
+
+Improved redrawing of long command lines.
+
+Added <SC_UP> and <SC_DOWN> to command line editing. This finds the
+next/previous command that starts with the text in front of the cursor.
+
+Added CTRL-B and CTRL-E to command line editing. Go to begin/end of the
+command line.
+
+With ":w!" readonly is reset.
+
+If possible the cursor is switched off while visual selecting. Makes it more
+clear what is selected.
+
+Format deletes blanks at end of lines. This makes it possible to use
+formatting to limit the text to a certain number of columns (e.g. 80).
+
+Modelines quits after first error. This avoids a long list of errors when
+editing a text with "vi:" accidently embedded (e.g. vim.hlp).
+
+Optimized undo for delete. Now only 2/3 of the memory used and less copying of
+lines. Speed up when deleting a lot of lines in a big file.
+
+Added :suspend, same as CTRL-Z.
+
+Added command-line-only mapping ":cmap", insert-mode-only ":imap" and the
+associated unmap and noremap commands. Now you can enter mappings for every
+mode (command/insert/command-line) separately.
+
+Changed smart-indent a little.
+
+Now one free chunk list per allocated block in storage.c. Makes editing big
+files a bit faster.
+
+Added repeat to visual select. now you can select the same area again.
+
+Improved showmatch() for uneven number of quotes.
+
+Added 'paste' option. This makes it easy to swith between typing and inserting
+text with a cut/paste method. Doing ":set nopaste" before ":set paste" does
+not do anything.
+
+Added sFilename: Filename without path. Mostly only the name you typed is
+shown, but internally the full path name is remembered. Otherwise the ":cd"
+command would mess up the real file name. Use short file name as long as :cd
+not used. If one does not use :cd the short file name will be valid. This
+will avoid long path names to be printed on the status line and having to
+"hit return to continue". It is also better to avoid problems with some
+networks where the absolute path is not valid after a while. If :cd has been
+used the full path name needs to be used to get to the right file.
+
+Changed :digraph in :digraphs. Now "digraph" and "digraphs" both work.
+
+Added emsg2() for more informative error messages. For example: "Cannot open
+<filename> for writing" with :mkexrc.
+
+Made 'r' command use get_literal(). Now you enter the decimal code for the
+replacement character with CTRL-V nnn, where nnn is any decimal number.
+
+Added default digraphs for MSDOS.
+
+Added 'timoutlen' option. One can set this depending on the speed of the
+terminal used. Helps when cursor keys start with ESC while working on the
+console: get out of insert mode fast. Or when using a terminal over a very
+slow line, although you better set 'notimeout' then.
+
+Added wildcard expansion to tags, so environment variables in the file name
+get expanded.
+
+No error message for a non-existant tags file, only for a not-found tag.
+
+ExpandWildCards() in unix.c does not start the shell when there are no
+wildcards. Speeds up editing new files.
+
+:set can now show several values in one command, e.g. ":set columns lines".
+
+In MSDOS use $COMSPEC to init 'shell' option.
+
+Added 'formatprg' option for external formatting. This is the program to use
+when the 'Q' command is given. If it is an empty string (which is the
+default) the internal formatting is used.
+
+Made ioctl() first in mch_get_winsize() in unix.c. The environment variables
+are now only used if the ioctl() fails. This works without problems on more
+systems.
+
+Added second column number to ruler. Now you can see both the column number
+in the file and on the screen.
+
+With MSDOS also accept '/' as file name separator. Works better in combination
+with 4dos.
+
+Screen redrawn after t_tp set. You can now directly see the result of the new
+colors.
+
+Improved error handling from write() in writeit(). Made the write_buf
+function to repeat write() until all characters have been written or an error
+is detected. Fixes a possible problem with signals (which has never been
+reported).
+
+Workaround for cursor key that sends ^H. The televideo 925 sends codes for
+cursor keys that cannot be distinguished from normal commands. At least the
+backspace is working again now.
+
+If you are using a csh use 'glob' instead of 'echo' in WildExpand in unix.c.
+This makes it possible to find file names with embedded spaces. Spaces in the
+entered file name are still not possible (vi can't do it either).
+
+Call_shell() in unix.c uses fork/exec instead of system. This makes it about
+twice as fast and fixes problems with special characters in the command, e.g.
+"!!awk '{ print "ok" }'.
+
+Fixed call_shell in amiga.c for space in shell option. You can now give
+options to the shell command, but the name of the shell cannot contain
+spaces anymore (big deal).
+
+Warn if no inversion is possible. Poor user, now you can't use visual select.
+
+Use termcap entries 'se' and 'so' when 'mr' or 'me' are not available. Makes
+using inversion possible on more terminals.
+
+Added 'esckeys' option. If your special keys have codes that start with an
+ESC you can switch them off in insert mode. When typing ESC you will
+directly exit insert mode, instead of having to wait for more characters to
+find out if it might be a special key.
+
+Added register name "% for the current file name. Handy when you want to use
+the current file name in macros.
+
+Added <"> as a name for the unnamed register. Added the use of more registers
+to some commands.
+
+Added expansion of environment variable to most string parameters. Any non-id
+character can be used after the environment variable name.
+
+Trailing '/' in 'dir' option not required.
+
+Added [Not edited] message to ":file".
+
+If errors occur when starting to edit a file (e.g. out of memory) the
+readonly flag is set to prevent accidently overwriting the original file with
+a truncated version.
+
+Trailing spaces are removed from ":" commands (except map, abbreviate, ":s",
+":g" and ":!" commands and after <|>). Useful when accidently typing a space
+after a filename.
+
+Added TIOCLGET to mch_settmode() in unix.c. Restores some terminal settings
+after exiting Vim.
+
+A "recursive mapping" followed by another "recursive mapping" would loop
+very long.
+
+Allow entering CTRL-@ in command line mode.
+
+Added 'A' - 'Z' for helpfile pages. You can add your own pages if you like.
+
+Display several help pages at once on a big screen.
+
+Don't give ".vim file exists" message when recovering.
+
+Put command line terminated with ESC in history. If you accidently try to
+use ESC for wildcard completion, you can get back what you typed.
+
+Changed display method for CTRL-D on command line. Now the redraw is done
+after the whole command line has been entered. Big speed win on slow
+terminals.
+
+Don't call flushbuf() in normal() when p_sc is off (speeds up "x").
+
+Don't redisplay in main() when there is something in the stuff buffer. Speeds
+up display a bit.
+
+:tag shows short filename. Reduces the need for "hit return to continue".
+
+Added "#<" for command line: current filename without extension.
+
+Changed digraphs 208 and 240. Fixed digraph 172.
+
+In help mode the keys CTRL-B and CTRL-F go one page back or forward. With
+MSDOS page-up and page-down can also be used.
+
+Implemented the drive specifier for the :cd command on MSDOS, ":cd c:" goes
+to the C drive.
+
+Implemented FullName for msdos. Makes ":cd" really work.
+
+When the cursor is off the screen, put it at 1/2 of the screen. Used to be 1/3
+or 2/3, depending on the direction.
+
+
+Bug fixes
+=========
+
+Fixed small screen updating bug in dodelete().
+
+Inserting tab in Replace mode with 'et' option set did not delete char.
+
+Fixed bug when start and end of operator are the same, e.g. "^d^".
+
+Fixed 'w' on last word in file and 'b' on first word in the file.
+
+Fixed 'dw' on empty line.
+
+Fixed storage.c for 64 bit longs.
+
+Fixed :w[!]>>newfile. Without the '!' the file must already exist.
+
+In insert mode ^O had to be typed twice before the change command.
+
+Fixed ":r !ls *". Wildcard expansion was done on "!ls".
+
+Changed flag not reset with ":w !wc".
+
+After CTRL-C go to normal mode. You could end up in insert mode when
+interrupting a macro (e.g. with the maze solving macros).
+
+doarglist() called FreeWild() with argv[]. This could cause a crash!
+
+Repaired FullName() in unix.c. Now "../" and links are correctly dealth with.
+Added error handling. If a file or directory does not exist this is dealth
+with correctly.
+
+Fixed ":g/pat/p". There is now a wait for "hit return" at the end.
+Also fixed a double redraw.
+
+Changed key codes for MSDOS. The old ones overlapped with a few useful
+accented characters. Now only some graphics characters cannot be entered
+directly from the keyboard.
+
+Delete "recording" when p_smd is off.
+
+Fixed ":/pat" on last line. It would give an "illegal nr" error.
+
+Fixed "invalid chunk" bug in insertchar(). Too many blanks were deleted when
+doing text formatting when the cursor is just after several blanks.
+
+Blockwise quoting did not work with upper case operators.
+
+Removed forceit from getfile(); makes autowrite work with CTRL-^ after :n!.
+
+No beep when search fails. When errorbells option was set you would get two
+beeps.
+
+Isdir() in msdos.c now returns -1 when file does not exist. It would see a
+non-existant file as a directory.
+
+Fixed [new file] message for MSDOS.
+
+Fixed screen updating in edit.c when entering CTRL-V TAB in front of a TAB.
+The '^' would not be deleted.
+
+Made t_ options working again. You couldn't set them at all!
+
+Setting a terminal option to an empty string caused a hang.
+
+Changed flag was set for an option when it was printed.
+
+Fixed makeset() for spaces in string options. Now a backslash is prepended.
+
+Fixed makemap() for special characters. Now a CTRL-V is prepended.
+
+Fixed dosource() for a line containing CTRL-V newline. The following line is
+now appended.
+
+Makeset() and makemap() add '\r' for MSDOS.
+
+'r' command no longer uses replace mode, except for CR, LF and TAB. Some
+replacement characters would give strange results, e.g. CTRL-O.
+
+Fixed screen updating with ":s/a/A/gc". Now the screen is updated after each
+replacement, not after finishing a line.
+
+Fixed MSDOS problem in lalloc(): Cannot handle block >64K.
+
+Fixed bug in writeit(): Faulty write to memory when write() fails. This was a
+nasty one, caused my Amiga to crash when writing to a full disk!
+
+Fixed problem with cursor keys in xterm. This stupid terminal emulator sends
+only one character at each read().
+
+Fixed problem with linewise visual and 'o' command. The column would be
+changed, making the visual mode character wise.
+
+Fixed bug in u_undoredo() when newsize and oldsize are both zero. You would
+get an error message when doing "!!foo", 'u', CTRL-R, 'u', when the command
+'foo' does not exist.
+
+Fixed bug: not doing all lines with ":%s/ /^M/g" in dosub(). The number of
+lines processed was not incremented by the number of new lines created.
+
+Fixed crash caused by call to MatchEnd() while using ARP. This would mean
+that you could not use Vim with DOS 1.3. Only one person complained! Is
+nobody using 1.3 anymore?
+
+In out-of-memory situations writeit() would fail. It needed to allocate a
+buffer of 4K. It would be impossible to save your changes! Now a small
+emergency buffer is used.
+
+Fixed illegal memory access when not-set terminal option was printed.
+
+Fixed hang with V~ on last line in file when the line was empty.
+
+Fixed crash when typing "//".
+
+Updated builtin termcap entry for xterm. Function keys now work.
+
+Fixed bug with allocating argv in call_shell() for unix. Could cause a crash.
+
+Fixed deletion of "no write since last change" message with :q command.
+
+Added call to screenalloc() in screenclear(), fixes crash when resizing
+window while viewing help.
+
+Fixed screen updating with '$' in block mode.
+
+Redisplay INSERT message after visual bell.
+
+Fixed backspace in column 1 in reverse insert mode.
+Fixed "illegal nr" when doing i^P^H in an empty file.
+
+Fixed ruler on empty line. Column number was wrong.
+
+Typehead not flushed with every error, fixes problems with 'notimeout' and
+errors in scripts (recovery!).
+
+No beep with "qxq".
+
+Added setting of Changed flag to readfile(), needed for :r !cmd.
+
+Jumplist entries were not deleted properly, causing "no alternate file" and
+"illegal nr" errors.
+
+Fixed entering CTRL-V CTRL-@ in insert mode.
+
+Default values for 'showcommand' and 'showmode' for unix exchanged.
+
+Put braces around filter command for unix, allows ":r! echo this; echo that".
+
+Fixed screen redraw after ".vim file exists" message with :e command.
+
+Changed CTRL-W for insert mode: stop before spaces.
+
+When changing more than 8000 lines at once undo is prohibited on Amiga and
+MSDOS (used to cause out of memory errors with "10000dd").
+
+Fixed problem with undo after delete without undo. (?)
+
+Fixed error messages with ":set".
+
+Terminal type not reset to default with ":set term=xxx", where xxx is not a
+valid terminal type.
+
+Fixed problem in search pattern: With 'ignorecase' set the first character
+after '*' was case-sensitive.
+
+Update screen with ":g/the/s//THE/c".
+
+With "hit return" use command-mode mappings.
+
+Fixed "(" and ")" for sentence ending at end of line.
+
+Fixed screen updating with very long lines. Cursor could end up in the middle
+of nowhere.
+
+Fixed message for yank with blockwise visual (was one line off).
+
+Fixed :copy when destination is within source range.
+
+"r" in visual mode wanted to get another character.
+
+With 'nowrapscan' "Q}" scrolled the screen horizontally.
+
+Don't allocate screen if Rows or Columns is 0.
+
+Fixed CTRL-D in insert mode: First round indent to multiple of shiftwidth.
+
+"z<number><CR>" is limited to physical screen height. Fixes screen updating
+problems when set to large number. Also fixed screen updating for CTRL-D on
+command line and for ":set all".
+
+Re-inserted forceit in getfile to make ":ta!" work. Now forceit is reset at
+the end of DoOneCmd() to keep CTRL-^ working.
+
+Check for :unmap without valid number of arguments in domap(). Ctrl-V was
+removed twice from :unmap.
+
+Added noremaplist in buffers.c; makes mixing @a and noremap mappings work.
+
+Do not check for terminal-code in mapped characters.
+
+Recording now stores the trailing 'q' in the register; the 'q' command is
+disabled while executing a register (solves problem when final 'q' is result
+from mapping).
+
+Fixed '\~' in substitute string being recognized as '~'.
+
+Fixed ":s/ */ /g", inserted one space per line instead of one space per
+character.
+
+Fixed ungetchr() in regexp.c: backslashed characters were not handled
+correctly.
+
+Fixed screen being messed up with long commands when 'sc' is set.
+
+
+Vi-compatibility fixes
+======================
+
+When not editing last file in a file list, typing :q twice will quit.
+
+Added [readonly] to fileinfo().
+
+Undo in macros allowed. But it only works correctly once.
+
+Added hidden options to avoid error messages when reading .exrc.
+
+Allow '-ttag' (no space after -t) on command line.
+
+Changed short name for 'showmode' option from "mo" to "smd".
+
+Added check for "view" in main(). Vim will start in readonly mode. On Unix you
+can make a link from "view" to "vim".
+
+Undo keeps marks if line count does not change.
+
+Fixed operators to be linewise in some cases.
+
+CTRL-Z is :stop instead of :stop!.
+
+'}' command does not stop at '{' at start of line.
+
+With :s lines are split at CR, unless preceded with a CTRL-V. In fact this is
+better than Vi, because vi can't insert a CR in the text with :s.
+
+Textwidth now off when 0, also when wrapmargin set to 0.
+
+Fixed autoindent when inserting <CR> in front of some blanks.
+
+Removed 'repdel' option: BS in replace mode puts replaced character back
+(within one line).
+
+Option 'sect' short for 'sections'.
+
+Adjusted 'M' when '~' lines on screen. Now put cursor in the middle of the
+lines that are present on the screen, not on the middle of the screen.
+
+Multiple spaces to separate fields in tags file allowed.
+
+DEL displayed as ^? instead of ~?.
+
+Added 'mesg', 'edcompatible', 'modeline', 'sourceany' and 'ttytype' options.
+Only 'edcompatible' is really implemented.
+
+Added test for trying to edit/read/write a direcory. Now you get an error
+message instead of [new file] (on Amiga/MSDOS) or garbage (Unix).
+
+'%' now works on \(this\).
+
+In UNIX and MSDOS ignore spaces after filename. In Amiga the spaces may be
+part of the filename, on other systems this is very unlikely.
+
+Moved code from inchar() to vgetorpeek(): Key sequences can now be mapped
+before recogized as key codes. But they are still stored with a special code
+in the script files, which makes them terminal-independent.
+
+Added recognition of vi-compatible modeline with set command.
+
+Implemented 'warn' option.
+
+Added CTRL-W to command line editing.
+
+Implemented 0^D and ^^D in insert mode.
+
+Non-linewise deletes within one line do not go into numbered registers.
+
+Set previous context mark with 'L', 'M' and 'H' commands.
+
+Make "cc" work like "S": indent not deleted when 'autoindent' set.
+CTRL-U in insert mode does not delete indent when 'autoindent' set.
+
+With the "J" command the cursor is put just after the first line instead of
+at the start of the second.
+
+Concatenated mapstr and typestr in buffers.c; makes ":map x y" ":map yz foo"
+work (mixing mapped and typed characters in another mapping).
+
+CTRL-C quits command line and insert mode.
+
+ESC in macro executes command line (but typed ESC still quits command line).
+
+Deleted "#include <ctype.h>" from regexp.c.
+
+Call_shell does not always use cooked mode, fixes problem with typing CR
+while doing filename completion in unix.
+
+Fixed return value for FullName in unix.c.
+
+Removed redraw on exit for msdos.
+
+":v" without argument was not handled correctly in doglob().
+
+CR-LF in tags file was not handled correctly.
+
+
+Porting
+=======
+
+Added _UNIX to BSD and SYSV because 'BSD' already used by Alpha.
+
+Added three changes for Apollo DOMAIN.
+
+Added a few things for Amdahl UTS.
+
+Use fork() in unix.c, not all systems have vfork().
+
+Added POSIX compatible file type checking.
+
+Added small changes for USL 4.2.
+
+Added additional set of termcap entries for terminfo.
+
+Added memmove() function for SYSV. Not all versions of memcpy() can handle
+overlapped areas.
+
+Small fixes for a few unix versions: AIX (on rs6000) and NeXT.
+
+Changed SETWINSIZE to SETWSIZE and a few other changes for Convex.
+
+Added a few changes for Borland C++. Phew, it compiles really fast!
+
+Many other small changes for different Unix versions.

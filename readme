@@ -1,55 +1,60 @@
-README for version 3.0 of Vim: Vi IMproved.
+README for version 4.0 of Vim: Vi IMproved.
 
-Vim is an almost compatible version of the UNIX editor vi. Only the 'Q'
-command is missing (you don't need it). Many new features have been added:
+Vim is an almost compatible version of the UNIX editor vi.  Only the "Q"
+command is missing (you don't need it).  Many new features have been added:
 multi level undo, command line history, filename completion, block operations,
-etc. See difference.doc.
+etc.  There is also a Graphical User Interface (GUI) available.  See
+doc/vim_diff.doc.
 
-This editor is very useful for editing programs and other plain ASCII files. 
-All commands are given with normal keyboard characters, so those who can type 
-with ten fingers can work very fast. Additionally function keys can be defined
-by the user.
+This editor is very useful for editing programs and other plain ASCII files.
+All commands are given with normal keyboard characters, so those who can type
+with ten fingers can work very fast.  Additionally function keys can be
+defined by the user.
 
-Vim currently runs under Amiga DOS, MSDOS, Windows NT and many UNIX versions.
-There are some things included for the Archimedes, but it does not work yet.
-Porting to other systems should not be very difficult. 
+Vim currently runs under Amiga DOS, MS-DOS, Windows NT, Windows 95, Atari
+MiNT, OS/2 and almost all flavours of UNIX.  There are some things included
+for the Archimedes, but it does not work yet.  There are people working on a
+VMS and a Mac port.  Porting to other systems should not be very difficult.
 
 Documentation:
-	  tutor/readme - one hour training course for beginners
-	 reference.doc - complete reference of all Vim commands
-	difference.doc - summarizes the differences with UNIX vi
-	   windows.doc - reference for the multi windows and buffer commands
-		 index - alfabetical list of commands
-	     amiga.doc - remarks for Amiga
-	      unix.doc - remarks for unix
-	     msdos.doc - remarks for MSDOS
-	     winnt.doc - remarks for Windows NT
-            archie.doc - remarks for Archimedes
+The best is to use ":help" in Vim.  If you don't have an executable (yet),
+read doc/vim_help.txt.  It contains pointers to the other documentation files.
 
-Vim is Charityware. You can copy it as much as you like. Please read
-uganda.txt for details.
+"tutor/readme" is a one hour training course for beginners.
+
+Vim is Charityware.  You can copy it as much as you like, but you are
+encouraged to make a donation to orphans in Uganda.  Please read the file
+"doc/vim_kcc.txt" for details.  You are allowed to include Vim on a CD-ROM if
+you send me one.
+
+Compiling: All stuff for compiling Vim is in the "src" directory.  See
+src/INSTALL for instructions.
 
 
-Compiling:
-	cd src
-	cp makefile.<system> makefile
-	make
+The latest news about Vim can be found in the Vim home page:
+	<URL:http://www.math.fu-berlin.de/~guckes/vim/>
 
-When using makefile.unix you MUST uncomment three lines for your system!
+If you have problems, have a look at the Vim FAQ:
+	<URL:http://www.grafnetix.com/~laurent/vim/>
 
-The makefile offers some compilation options. If you do not use digraphs, you
-can save some memory by recompiling without the DIGRAPHS option. The Amiga
-and MS-DOS versions are compiled for a limited number of supported terminals.
-If you want to use Vim with other terminals you can recompile with the
-TERMCAP option. See the makefiles for further options.
+Please send bug reports to:
+	Bram Moolenaar <mool@oce.nl>
 
-Please send comments, bug reports and suggestions to:
+There are three mailing lists for Vim:
 
-stable address:	Bram Moolenaar		UUCP E-mail:	mool@oce.nl
-		molenstraat 2
-		2162 HP  Lisse		Fax: +31 2521 16381
-		The Netherlands		Tel: +31 2521 13037
+	vim@prz.tu-berlin.de		about using Vim
+	vimdev@prz.tu-berlin.de		about developing Vim
+	vimannounce@prz.tu-berlin.de	announcements
 
-September 1994 - August 1995:
-Kibaale Children's Centre			Tel: +256 481 21033
-p.o. box 1658, Masaka, Uganda, East Africa   	Fax: +256 481 20514
+If you want to join send a message to
+	<majordomo@prz.tu-berlin.de>
+and put "info" in the body.  Then Majordomo will give you a little help.
+You must join before you are allowed to send messages to the lists (otherwise
+Majordomo will eat your messages).
+
+Send any other comments, patches, pizza and suggestions to:
+
+	Bram Moolenaar		E-mail:	mool@oce.nl
+	Clematisstraat 30
+	5925 BE  Venlo		Fax: +31 77 3595473
+	The Netherlands		Tel: +31 77 3872340

@@ -1,645 +1,1724 @@
-AppendCharToRedobuff	getchar.c	/^AppendCharToRedobuff(c)$/
-AppendNumberToRedobuff	getchar.c	/^AppendNumberToRedobuff(n)$/
-AppendToRedobuff	getchar.c	/^AppendToRedobuff(s)$/
-CHECK	memfile.c	/^#define CHECK(c, s)	if (c) printf(s)$/
-Chk_Abort	amiga.c	/^Chk_Abort()$/
-Ctrl	ascii.h	/^#define Ctrl(x) ((x) & 0x1f)$/
-DoOneCmd	cmdline.c	/^DoOneCmd(buff)$/
-EMSG	vim.h	/^#define EMSG(s)				emsg((char_u *)(s))$/
-EMSG2	vim.h	/^#define EMSG2(s, p)			emsg2((char_u *)(s), (char_u/
-EMSG_RETURN	regexp.c	/^#define EMSG_RETURN(m) { emsg(m); return NULL; }$/
-EXTERN	param.h	/^EXTERN char_u *p_ep	INIT(= (char_u *)"indent");	\/*/
-ExpandFromContext	cmdline.c	/^ExpandFromContext(pat, num_file, file, files_only,/
-ExpandOne	cmdline.c	/^ExpandOne(str, list_notfound, mode)$/
-ExpandSettings	param.c	/^ExpandSettings(prog, num_file, file)$/
-ExpandTags	tag.c	/^ExpandTags(prog, num_file, file)$/
-ExpandWildCards	amiga.c	/^ExpandWildCards(num_pat, pat, num_file, file, file/
-FreeWild	amiga.c	/^FreeWild(num, file)$/
-FullName	amiga.c	/^FullName(fname, buf, len)$/
-GetChars	amiga.c	/^GetChars(buf, maxlen, time)$/
-INIT	normal.c	/^#define INIT(x) x$/
-ISSPECIAL	edit.c	/^#define ISSPECIAL(c)	((c) < ' ' || (c) >= DEL)$/
-MEMHASH	structs.h	/^#define MEMHASH(nr)		((nr) & (MEMHASHSIZE - 1))$/
-ML_SIMPLE	memline.c	/^#define ML_SIMPLE(x)	(x & 0x10)	\/* DEL, INS or FIN/
-MP	amiga.c	/^#define MP(xx)	((struct MsgPort *)((struct FileHan/
-MSG	vim.h	/^#define MSG(s)				msg((char_u *)(s))$/
-Maddcr	addcr.c	/^main(argc, argv)$/
-Magic	regexp.c	/^#define Magic(x)	((x)|('\\\\'<<8))$/
-Meta	ascii.h	/^#define Meta(x) ((x) | 0x80)$/
-Mmain	main.c	/^main(argc, argv)$/
-Mmkcmdtab	mkcmdtab.c	/^main(argc, argv)$/
-NEXT	regexp.c	/^#define NEXT(p) (((*((p)+1)&0377)<<8) + (*((p)+2)&/
-OP	regexp.c	/^#define OP(p)	(*(p))$/
-OPERAND	regexp.c	/^#define OPERAND(p)		((p) + 3)$/
-OUTSTR	vim.h	/^#define OUTSTR(s)			outstr((char_u *)(s))$/
-OUTSTRN	vim.h	/^#define OUTSTRN(s)			outstrn((char_u *)(s))$/
-Opencmd	misccmds.c	/^Opencmd(dir, redraw, delspaces)$/
-PERR	winnt.c	/^#define PERR(bSuccess, api) {if (!(bSuccess)) perr/
-PeekChr	regexp.c	/^#define PeekChr() curchr	\/* shortcut only when las/
-Read	archie.c	/^Read(buf, maxlen)$/
-RealWaitForChar	archie.c	/^RealWaitForChar(ticks)$/
-ResetRedobuff	getchar.c	/^ResetRedobuff()$/
-STRCAT	vim.h	/^#define STRCAT(d, s)		strcat((char *)(d), (char *)/
-STRCHR	vim.h	/^#define STRCHR(s, c)		(char_u *)strchr((char *)(s)/
-STRCMP	vim.h	/^#define STRCMP(d, s)		strcmp((char *)(d), (char *)/
-STRCPY	vim.h	/^#define STRCPY(d, s)		strcpy((char *)(d), (char *)/
-STRLEN	vim.h	/^#define STRLEN(s)			strlen((char *)(s))$/
-STRNCMP	vim.h	/^#define STRNCMP(d, s, n)	strncmp((char *)(d), (cha/
-STRNCPY	vim.h	/^#define STRNCPY(d, s, n)	strncpy((char *)(d), (cha/
-STRRCHR	vim.h	/^#define STRRCHR(s, c)		(char_u *)strrchr((char *)(/
-TGETSTR	term.c	/^# define TGETSTR(s, p)	(char_u *)tgetstr((s), (cha/
-TO_LOWER	macros.h	/^# define TO_LOWER(c)	(isupper(c) ? tolower(c) : (c/
-TO_UPPER	macros.h	/^# define TO_UPPER(c)	(islower(c) ? toupper(c) : (c/
-UCHARAT	regexp.c	/^#define UCHARAT(p)		((int)*(unsigned char *)(p))$/
-UNCHANGED	vim.h	/^#define UNCHANGED(buf)	unset_Changed(buf)$/
-WaitForChar	archie.c	/^WaitForChar(ticks)$/
-__ARGS	regsub.c	/^# define __ARGS(a)	a$/
-__PARMS	vim.h	/^# define __PARMS(x)	x$/
-_addfmt	termlib.c	/^_addfmt(buf, fmt, val)             \/* add val to b/
-_find	termlib.c	/^_find(s, set)   \/* finds next c in s that's a memb/
-_match	termlib.c	/^_match(s1, s2)                 \/* returns length o/
-add_buff	getchar.c	/^add_buff(buf, s)$/
-add_char_buff	getchar.c	/^add_char_buff(buf, c)$/
-add_num_buff	getchar.c	/^add_num_buff(buf, n)$/
-addfile	msdos.c	/^addfile(fl, f, isdir)$/
-addstar	cmdline.c	/^addstar(fname, len)$/
-adjust_cursor	linefunc.c	/^adjust_cursor()$/
-alloc	alloc.c	/^alloc(size)$/
-ask_yesno	misccmds.c	/^ask_yesno(str)$/
-autowrite	cmdline.c	/^autowrite(buf)$/
-autowrite_all	cmdline.c	/^autowrite_all()$/
-bck_word	search.c	/^bck_word(count, type)$/
-beep	misccmds.c	/^beep()$/
-beginline	edit.c	/^beginline(flag)$/
-block_prep	ops.c	/^block_prep(lnum, delete)$/
-breakcheck	amiga.c	/^breakcheck()$/
-bsdmemset	alloc.c	/^bsdmemset(ptr, c, size)$/
-buf_clear	buffer.c	/^buf_clear(buf)$/
-buf_copy_options	param.c	/^buf_copy_options(bp_from, bp_to)$/
-buf_freeall	buffer.c	/^buf_freeall(buf)$/
-buf_modname	fileio.c	/^buf_modname(buf, fname, ext)$/
-buf_write	fileio.c	/^buf_write(buf, fname, sfname, start, end, append, /
-buf_write_all	cmdline.c	/^buf_write_all(buf)$/
-bufempty	macros.h	/^#define bufempty() (curbuf->b_ml.ml_flags & ML_EMP/
-buflist_add	buffer.c	/^buflist_add(fname)$/
-buflist_altlnum	buffer.c	/^buflist_altlnum()$/
-buflist_findlnum	buffer.c	/^buflist_findlnum(buf)$/
-buflist_findname	buffer.c	/^buflist_findname(fname)$/
-buflist_findnr	buffer.c	/^buflist_findnr(nr)$/
-buflist_getfile	buffer.c	/^buflist_getfile(n, lnum, setpm)$/
-buflist_getlnum	buffer.c	/^buflist_getlnum()$/
-buflist_list	buffer.c	/^buflist_list()$/
-buflist_name_nr	buffer.c	/^buflist_name_nr(fnum, fname, lnum)$/
-buflist_new	buffer.c	/^buflist_new(fname, sfname, lnum, use_curbuf)$/
-buflist_nr2name	buffer.c	/^buflist_nr2name(n)$/
-buflist_setlnum	buffer.c	/^buflist_setlnum(buf, lnum)$/
-bzero	unix.c	/^#  define bzero(a, b)	memset((a), 0, (b))$/
-call_shell	amiga.c	/^call_shell(cmd, filter, cooked)$/
-catch_cbrk	msdos.c	/^catch_cbrk()$/
-catch_cint	msdos.c	/^catch_cint(bp, di, si, ds, es, dx, cx, bx, ax)$/
-cbrk_handler	msdos.c	/^cbrk_handler()$/
-ccheck_abbr	cmdline.c	/^ccheck_abbr(c)$/
-change_drive	msdos.c	/^change_drive(drive)$/
-change_warning	misccmds.c	/^change_warning()$/
-charsize	charset.c	/^charsize(c)$/
-chartabsize	charset.c	/^chartabsize(c, col)$/
-check_abbr	getchar.c	/^check_abbr(c, ptr, col, mincol)$/
-check_changed	cmdline.c	/^check_changed(buf, checkaw, mult_win)$/
-check_changed_any	cmdline.c	/^check_changed_any(checkaw)$/
-check_cursor	screen.c	/^check_cursor()$/
-check_fname	cmdline.c	/^check_fname()$/
-check_more	cmdline.c	/^check_more(message)$/
-check_readonly	cmdline.c	/^check_readonly()$/
-check_status	misccmds.c	/^check_status(buf)$/
-check_termcode	term.c	/^check_termcode(buf)$/
-check_win	amiga.c	/^check_win(argc, argv)$/
-check_winsize	term.c	/^check_winsize()$/
-checkclearop	normal.c	/^checkclearop()$/
-checkclearopq	normal.c	/^checkclearopq()$/
-checknextcomm	cmdline.c	/^checknextcomm(arg)$/
-checkpcmark	mark.c	/^checkpcmark()$/
-chk_mline	fileio.c	/^chk_mline(lnum)$/
-clear_termparam	param.c	/^clear_termparam()$/
-clearopbeep	normal.c	/^clearopbeep()$/
-close_buffer	buffer.c	/^close_buffer(buf, free_buf, remove)$/
-close_others	window.c	/^close_others(message)$/
-close_window	window.c	/^close_window(free_buf)$/
-clrallmarks	mark.c	/^clrallmarks(buf)$/
-clreol	winnt.c	/^clreol()$/
-clrscr	winnt.c	/^clrscr()$/
-cls	search.c	/^cls()$/
-coladvance	linefunc.c	/^coladvance(wcol)$/
-command_height	window.c	/^command_height()$/
-comp_Botline	screen.c	/^comp_Botline(wp)$/
-comp_Botline_all	screen.c	/^comp_Botline_all()$/
-comp_col	param.c	/^comp_col()$/
-compute_cmdrow	cmdline.c	/^compute_cmdrow()$/
-copy_redo	getchar.c	/^copy_redo()$/
-copy_spaces	alloc.c	/^copy_spaces(ptr, count)$/
-cstrchr	regexp.c	/^cstrchr(s, c)$/
-cstrncmp	regexp.c	/^cstrncmp(s1, s2, n)$/
-curs_columns	screen.c	/^curs_columns(scroll)$/
-cursor_off	term.c	/^cursor_off()$/
-cursor_on	term.c	/^cursor_on()$/
-cursor_visible	winnt.c	/^cursor_visible(int visible)$/
-cursorcmd	cmdline.c	/^cursorcmd()$/
-cursupdate	screen.c	/^cursupdate()$/
-dec	linefunc.c	/^dec(lp)$/
-dec_cursor	linefunc.c	/^dec_cursor()$/
-decl	linefunc.c	/^decl(lp)$/
-del_spaces	alloc.c	/^del_spaces(ptr)$/
-del_typestr	getchar.c	/^del_typestr(len)$/
-delay	winnt.c	/^delay(x)$/
-delchar	misccmds.c	/^delchar(fixpos)$/
-delline	winnt.c	/^delline(int count)$/
-dellines	misccmds.c	/^dellines(nlines, dowindow, undo)$/
-delmode	screen.c	/^delmode()$/
-dirname	archie.c	/^dirname(buf, len)$/
-dis_msg	ops.c	/^dis_msg(p, skip_esc)$/
-do_Copy	regsub.c	/^do_Copy(d, c)$/
-do_Lower	regsub.c	/^do_Lower(d, c)$/
-do_Upper	regsub.c	/^do_Upper(d, c)$/
-do_align	cmdcmds.c	/^do_align(start, end, width, type)$/
-do_arg_all	buffer.c	/^do_arg_all()$/
-do_buffer	buffer.c	/^do_buffer(action, start, dir, count, forceit)$/
-do_buffer_all	buffer.c	/^do_buffer_all(all)$/
-do_copy	cmdcmds.c	/^do_copy(line1, line2, n)$/
-do_lower	regsub.c	/^do_lower(d, c)$/
-do_mlines	fileio.c	/^do_mlines()$/
-do_move	cmdcmds.c	/^do_move(line1, line2, n)$/
-do_upper	regsub.c	/^do_upper(d, c)$/
-do_window	window.c	/^do_window(nchar, Prenum)$/
-doaddsub	ops.c	/^doaddsub(command, Prenum1)$/
-doarglist	cmdline.c	/^doarglist(str)$/
-dobang	cmdcmds.c	/^dobang(addr_count, line1, line2, forceit, arg)$/
-dochange	ops.c	/^dochange()$/
-docmdline	cmdline.c	/^docmdline(cmdline)$/
-dodelete	ops.c	/^dodelete()$/
-dodigraph	digraph.c	/^dodigraph(c)$/
-dodis	ops.c	/^dodis()$/
-dodojoin	ops.c	/^dodojoin(count, insert_space, redraw)$/
-doecmd	cmdline.c	/^doecmd(fname, sfname, command, hide, newlnum)$/
-doexecbuf	ops.c	/^doexecbuf(c)$/
-dofilter	cmdcmds.c	/^dofilter(line1, line2, buff, do_in, do_out)$/
-doformat	ops.c	/^doformat()$/
-doglob	csearch.c	/^doglob(type, lp, up, cmd)$/
-dojoin	ops.c	/^dojoin(insert_space, redraw)$/
-dojumps	mark.c	/^dojumps()$/
-domake	cmdline.c	/^domake(arg)$/
-domap	getchar.c	/^domap(maptype, keys, mode)$/
-domarks	mark.c	/^domarks()$/
-doput	ops.c	/^doput(dir, count, fix_indent)$/
-dorecord	ops.c	/^dorecord(c)$/
-dos_packet	amiga.c	/^dos_packet(pid, action, arg)$/
-dosearch	search.c	/^dosearch(dirc, str, reverse, count, echo, message)/
-doset	param.c	/^doset(arg)$/
-doshell	cmdcmds.c	/^doshell(cmd)$/
-doshift	ops.c	/^doshift(op, curs_top, amount)$/
-dosource	cmdline.c	/^dosource(fname)$/
-dosub	csearch.c	/^dosub(lp, up, cmd, nextcommand, use_old)$/
-dotag	tag.c	/^dotag(tag, type, count)$/
-dotags	tag.c	/^dotags()$/
-dotilde	ops.c	/^dotilde()$/
-dowrite	cmdline.c	/^dowrite(fname, append)$/
-doyank	ops.c	/^doyank(deleting)$/
-echeck_abbr	edit.c	/^echeck_abbr(c)$/
-edit	edit.c	/^edit(count)$/
-emsg	message.c	/^emsg(s)$/
-emsg2	message.c	/^emsg2(s, a1)$/
-end_word	search.c	/^end_word(count, type, stop)$/
-enter_buffer	buffer.c	/^enter_buffer(buf)$/
-equal	macros.h	/^#define equal(a, b) (((a).lnum == (b).lnum) && ((a/
-expand_env	misccmds.c	/^expand_env(src, dst, dstlen)$/
-expandpath	msdos.c	/^expandpath(fl, path, fonly, donly, notf)$/
-file_name_at_cursor	window.c	/^file_name_at_cursor()$/
-fileinfo	buffer.c	/^fileinfo(fullname)$/
-filemess	fileio.c	/^filemess(name, s)$/
-fill_inbuf	archie.c	/^fill_inbuf()$/
-findfunc	search.c	/^findfunc(dir, what, count)$/
-findpar	search.c	/^findpar(dir, count, what, both)$/
-findparam	param.c	/^findparam(arg)$/
-findsent	search.c	/^findsent(dir, count)$/
-findswapname	memline.c	/^findswapname(buf, second_try)$/
-findtag	tag.c	/^findtag(tag)$/
-fix_fname	buffer.c	/^fix_fname(fname)$/
-flush_buffers	getchar.c	/^flush_buffers(typeahead)$/
-flushbuf	term.c	/^flushbuf()$/
-fm_getname	mark.c	/^fm_getname(fmark)$/
-fname_case	amiga.c	/^fname_case(name)$/
-fname_expand	buffer.c	/^fname_expand(fname, sfname)$/
-fnamecmp	vim.h	/^# define fnamecmp(x, y) stricmp((char *)(x), (char/
-free	vim.h	/^# define free(x)	nofreeNULL(x)$/
-free_buff	getchar.c	/^free_buff(buf)$/
-free_yank	ops.c	/^free_yank(n)$/
-free_yank_all	ops.c	/^free_yank_all()$/
-freefiles	amiga.c	/^freefiles()$/
-fstatfs	memfile.c	/^# define fstatfs(fd, buf, len, nul) fstat((fd), (b/
-fullpathcmp	misccmds.c	/^fullpathcmp(s1, s2)$/
-fwd_word	search.c	/^fwd_word(count, type, eol)$/
-gchar	misccmds.c	/^gchar(pos)$/
-gchar_cursor	misccmds.c	/^gchar_cursor()$/
-get_address	cmdline.c	/^get_address(ptr)$/
-get_bufcont	getchar.c	/^get_bufcont(buffer, dozero)$/
-get_fib	amiga.c	/^get_fib(fname)$/
-get_indent	misccmds.c	/^get_indent()$/
-get_inserted	getchar.c	/^get_inserted()$/
-get_last_insert	edit.c	/^get_last_insert()$/
-get_literal	edit.c	/^get_literal(nextc)$/
-get_recorded	getchar.c	/^get_recorded()$/
-get_varp	param.c	/^get_varp(p)$/
-get_x11_icon	unix.c	/^get_x11_icon()$/
-get_x11_title	unix.c	/^get_x11_title()$/
-get_x11_windis	unix.c	/^get_x11_windis()$/
-get_yank_buffer	ops.c	/^get_yank_buffer(writing)$/
-getargcmd	cmdline.c	/^getargcmd(argp)$/
-getchr	regexp.c	/^getchr()$/
-getcmdline	cmdline.c	/^getcmdline(firstc, buff)$/
-getdigits	misccmds.c	/^getdigits(pp)$/
-getdigraph	digraph.c	/^getdigraph(char1, char2, meta)$/
-getent	termlib.c	/^getent(tbuf, term, termcap, buflen)$/
-getfile	cmdline.c	/^getfile(fname, sfname, setpm, lnum)$/
-getlinecol	term.c	/^getlinecol()$/
-getmark	mark.c	/^getmark(c, changefile)$/
-getout	main.c	/^getout(r)$/
-getperm	amiga.c	/^getperm(name)$/
-gettail	misccmds.c	/^gettail(fname)$/
-getvcol	screen.c	/^getvcol(wp, pos, type)$/
-gotchars	getchar.c	/^gotchars(s, len)$/
-gotocmdend	cmdline.c	/^gotocmdend()$/
-gotocmdline	cmdline.c	/^gotocmdline(clr, firstc)$/
-gotoxy	winnt.c	/^gotoxy(x, y)$/
-handler_routine	winnt.c	/^BOOL WINAPI     handler_routine(DWORD dwCtrlType)$/
-has_wildcard	amiga.c	/^has_wildcard(p)$/
-have_wildcard	archie.c	/^have_wildcard(num, file)$/
-help	help.c	/^help()$/
-home_replace	misccmds.c	/^home_replace(src, dst, dstlen)$/
-inc	linefunc.c	/^inc(lp)$/
-inc_cursor	linefunc.c	/^inc_cursor()$/
-inchar	term.c	/^inchar(buf, maxlen, time)$/
-incl	linefunc.c	/^incl(lp)$/
-inindent	misccmds.c	/^inindent()$/
-init_typestr	getchar.c	/^init_typestr()$/
-init_yank	ops.c	/^init_yank()$/
-initchr	regexp.c	/^initchr(str)$/
-inmacro	search.c	/^inmacro(opt, s)$/
-ins_typestr	getchar.c	/^ins_typestr(str, noremap)$/
-inschar	misccmds.c	/^inschar(c)$/
-insertbuf	ops.c	/^insertbuf(c)$/
-insertchar	edit.c	/^insertchar(c)$/
-insfile	amiga.c	/^insfile(name, isdir)$/
-insline	winnt.c	/^insline(int count)$/
-insstr	misccmds.c	/^insstr(s)$/
-isFullName	amiga.c	/^isFullName(fname)$/
-is_yank_buffer	ops.c	/^is_yank_buffer(c, write)$/
-isdir	amiga.c	/^isdir(name)$/
-isidchar	charset.c	/^isidchar(c)$/
-iskeypad	winnt.c	/^#define iskeypad(x)	(KEYPADLO <= (x) && (x) <= KEY/
-ismult	regexp.c	/^ismult(c)$/
-ispathsep	misccmds.c	/^ispathsep(c)$/
-isspace	vim.h	/^# define isspace(x)  (((x) >= 9 && (x) <= 13) || (/
-istermparam	param.c	/^istermparam(p)$/
-iswhite	vim.h	/^#define iswhite(x)	((x) == ' ' || (x) == '\\t')$/
-kbhit	winnt.c	/^int             kbhit()$/
-lalloc	alloc.c	/^lalloc(size, message)$/
-last_status	window.c	/^last_status()$/
-lineempty	macros.h	/^#define lineempty(p) (*ml_get(p) == NUL)$/
-listdigraphs	digraph.c	/^listdigraphs()$/
-lock2name	amiga.c	/^lock2name(lock, buf, len)$/
-lt	macros.h	/^#define lt(a, b) (((a).lnum != (b).lnum) \\$/
-ltoreq	macros.h	/^#define ltoreq(a, b) (((a).lnum != (b).lnum) \\$/
-make_windows	window.c	/^make_windows(count)$/
-makemap	getchar.c	/^makemap(fd)$/
-makeset	param.c	/^makeset(fd)$/
-makeswapname	memline.c	/^makeswapname(buf, second_try)$/
-maketitle	buffer.c	/^maketitle()$/
-mark_adjust	mark.c	/^mark_adjust(line1, line2, inc)$/
-mch_avail_mem	amiga.c	/^mch_avail_mem(special)$/
-mch_char_avail	amiga.c	/^mch_char_avail()$/
-mch_get_winsize	amiga.c	/^mch_get_winsize()$/
-mch_restore_title	amiga.c	/^mch_restore_title(which)$/
-mch_screenmode	amiga.c	/^mch_screenmode(arg)$/
-mch_set_winsize	amiga.c	/^mch_set_winsize()$/
-mch_settitle	amiga.c	/^mch_settitle(title, icon)$/
-mch_settmode	amiga.c	/^mch_settmode(raw)$/
-mch_suspend	amiga.c	/^mch_suspend()$/
-mch_windexit	amiga.c	/^mch_windexit(r)$/
-mch_windinit	amiga.c	/^mch_windinit()$/
-mch_write	amiga.c	/^mch_write(p, len)$/
-memmove	alloc.c	/^memmove(desti, source, len)$/
-memset	unix.h	/^# define memset(ptr, c, size)	bsdmemset((ptr), (c)/
-mf_alloc_bhdr	memfile.c	/^mf_alloc_bhdr(mfp, page_count)$/
-mf_close	memfile.c	/^mf_close(mfp, delete)$/
-mf_do_open	memfile.c	/^mf_do_open(mfp, fname, new)$/
-mf_find_hash	memfile.c	/^mf_find_hash(mfp, nr)$/
-mf_free	memfile.c	/^mf_free(mfp, hp)$/
-mf_free_bhdr	memfile.c	/^mf_free_bhdr(hp)$/
-mf_fullname	memfile.c	/^mf_fullname(mfp)$/
-mf_get	memfile.c	/^mf_get(mfp, nr, page_count)$/
-mf_ins_free	memfile.c	/^mf_ins_free(mfp, hp)$/
-mf_ins_hash	memfile.c	/^mf_ins_hash(mfp, hp)$/
-mf_ins_used	memfile.c	/^mf_ins_used(mfp, hp)$/
-mf_need_trans	memfile.c	/^mf_need_trans(mfp)$/
-mf_new	memfile.c	/^mf_new(mfp, negative, page_count)$/
-mf_open	memfile.c	/^mf_open(fname, new, fail_nofile)$/
-mf_open_file	memfile.c	/^mf_open_file(mfp, fname)$/
-mf_put	memfile.c	/^mf_put(mfp, hp, dirty, infile)$/
-mf_read	memfile.c	/^mf_read(mfp, hp)$/
-mf_release	memfile.c	/^mf_release(mfp, page_count)$/
-mf_release_all	memfile.c	/^mf_release_all()$/
-mf_rem_free	memfile.c	/^mf_rem_free(mfp)$/
-mf_rem_hash	memfile.c	/^mf_rem_hash(mfp, hp)$/
-mf_rem_used	memfile.c	/^mf_rem_used(mfp, hp)$/
-mf_statistics	memfile.c	/^mf_statistics()$/
-mf_sync	memfile.c	/^mf_sync(mfp, all, check_char)$/
-mf_trans_add	memfile.c	/^mf_trans_add(mfp, hp)$/
-mf_trans_del	memfile.c	/^mf_trans_del(mfp, old)$/
-mf_write	memfile.c	/^mf_write(mfp, hp)$/
-mktemp	cmdcmds.c	/^# define mktemp(a)	tmpnam(a)$/
-ml_add_stack	memline.c	/^ml_add_stack(buf)$/
-ml_append	memline.c	/^ml_append(lnum, line, len, newfile)$/
-ml_append_int	memline.c	/^ml_append_int(buf, lnum, line, len, newfile)$/
-ml_clearmarked	memline.c	/^ml_clearmarked()$/
-ml_close	memline.c	/^ml_close(buf)$/
-ml_close_all	memline.c	/^ml_close_all()$/
-ml_delete	memline.c	/^ml_delete(lnum)$/
-ml_delete_int	memline.c	/^ml_delete_int(buf, lnum)$/
-ml_find_line	memline.c	/^ml_find_line(buf, lnum, action)$/
-ml_firstmarked	memline.c	/^ml_firstmarked()$/
-ml_flush_line	memline.c	/^ml_flush_line(buf)$/
-ml_get	memline.c	/^ml_get(lnum)$/
-ml_get_buf	memline.c	/^ml_get_buf(buf, lnum, will_change)$/
-ml_get_cursor	memline.c	/^ml_get_cursor()$/
-ml_get_pos	memline.c	/^ml_get_pos(pos)$/
-ml_has_mark	memline.c	/^ml_has_mark(lnum)$/
-ml_line_alloced	memline.c	/^ml_line_alloced()$/
-ml_lineadd	memline.c	/^ml_lineadd(buf, count)$/
-ml_new_data	memline.c	/^ml_new_data(mfp, negative, page_count)$/
-ml_new_ptr	memline.c	/^ml_new_ptr(mfp)$/
-ml_open	memline.c	/^ml_open()$/
-ml_open_files	memline.c	/^ml_open_files()$/
-ml_preserve	memline.c	/^ml_preserve(buf, message)$/
-ml_recover	memline.c	/^ml_recover()$/
-ml_replace	memline.c	/^ml_replace(lnum, line, copy)$/
-ml_setmarked	memline.c	/^ml_setmarked(lnum)$/
-ml_sync_all	memline.c	/^ml_sync_all(check_file)$/
-ml_timestamp	memline.c	/^ml_timestamp(buf)$/
-modname	fileio.c	/^modname(fname, ext)$/
-movemark	mark.c	/^movemark(count)$/
-msg	message.c	/^msg(s)$/
-msg_ceol	message.c	/^msg_ceol()$/
-msg_check	message.c	/^msg_check()$/
-msg_check_screen	message.c	/^msg_check_screen()$/
-msg_end	message.c	/^msg_end()$/
-msg_outchar	message.c	/^msg_outchar(c)$/
-msg_outnum	message.c	/^msg_outnum(n)$/
-msg_outstr	message.c	/^msg_outstr(s)$/
-msg_outtrans	message.c	/^msg_outtrans(str, len)$/
-msg_pos	message.c	/^msg_pos(row, col)$/
-msg_prt_line	message.c	/^msg_prt_line(s)$/
-msg_start	message.c	/^msg_start()$/
-msgmore	misccmds.c	/^msgmore(n)$/
-myregcomp	search.c	/^myregcomp(pat, sub_cmd, which_pat)$/
-nextent	termlib.c	/^nextent(tbuf, termcap, buflen)         \/* Read 1 e/
-nextwild	cmdline.c	/^nextwild(buff, type)$/
-nofreeNULL	alloc.c	/^nofreeNULL(x)$/
-normal	normal.c	/^normal()$/
-normvideo	winnt.c	/^normvideo()$/
-onedown	edit.c	/^onedown(n)$/
-oneleft	edit.c	/^oneleft()$/
-onepage	edit.c	/^onepage(dir, count)$/
-oneright	edit.c	/^oneright()$/
-oneup	edit.c	/^oneup(n)$/
-open_buffer	buffer.c	/^open_buffer()$/
-openscript	getchar.c	/^openscript(name)$/
-otherfile	buffer.c	/^otherfile(fname)$/
-outchar	term.c	/^outchar(c)$/
-outnum	term.c	/^outnum(n)$/
-outstr	term.c	/^outstr(s)$/
-outstrn	term.c	/^outstrn(s)$/
-param_expand	param.c	/^param_expand(i, dofree)$/
-paramchanged	param.c	/^paramchanged(arg)$/
-parse_builtin_tcap	term.c	/^parse_builtin_tcap(tc, s)$/
-pchar	macros.h	/^#define pchar(lp, c) (*(ml_get_buf(curbuf, (lp).ln/
-pchar_cursor	misccmds.c	/^pchar_cursor(c)$/
-peekchr	regexp.c	/^peekchr()$/
-perr	winnt.c	/^void            perr(PCHAR szFileName, int line, P/
-plines	misccmds.c	/^plines(p)$/
-plines_m	misccmds.c	/^plines_m(first, last)$/
-plines_m_win	misccmds.c	/^plines_m_win(wp, first, last)$/
-plines_win	misccmds.c	/^plines_win(wp, p)$/
-plural	misccmds.c	/^plural(n)$/
-premsg	normal.c	/^premsg(c1, c2)$/
-prep_redo	normal.c	/^prep_redo(num, cmd, c, nchar)$/
-printdigraph	digraph.c	/^printdigraph(p)$/
-pstrcmp	msdos.c	/^pstrcmp(a, b)$/
-putch	winnt.c	/^putch(char c)$/
-putcmdline	cmdline.c	/^putcmdline(c, buff)$/
-putdigraph	digraph.c	/^putdigraph(str)$/
-putescstr	getchar.c	/^putescstr(fd, str, set)$/
-qf_free	quickfix.c	/^qf_free()$/
-qf_init	quickfix.c	/^qf_init()$/
-qf_jump	quickfix.c	/^qf_jump(dir, errornr)$/
-qf_list	quickfix.c	/^qf_list()$/
-qf_mark_adjust	quickfix.c	/^qf_mark_adjust(line1, line2, inc)$/
-qf_types	quickfix.c	/^qf_types(c, nr)$/
-read_redo	getchar.c	/^read_redo(init)$/
-read_stuff	getchar.c	/^read_stuff(advance)$/
-readfile	fileio.c	/^readfile(fname, sfname, from, newfile, skip_lnum, /
-redrawcmd	cmdline.c	/^redrawcmd()$/
-redrawcmdline	cmdline.c	/^redrawcmdline()$/
-redrawhelp	help.c	/^redrawhelp()$/
-reg	regexp.c	/^reg(paren, flagp)$/
-regatom	regexp.c	/^regatom(flagp)$/
-regbranch	regexp.c	/^regbranch(flagp)$/
-regc	regexp.c	/^regc(b)$/
-regcomp	regexp.c	/^regcomp(exp)$/
-regdump	regexp.c	/^regdump(r)$/
-regexec	regexp.c	/^regexec(prog, string, at_bol)$/
-reginsert	regexp.c	/^reginsert(op, opnd)$/
-regmatch	regexp.c	/^regmatch(prog)$/
-regnext	regexp.c	/^regnext(p)$/
-regnode	regexp.c	/^regnode(op)$/
-regoptail	regexp.c	/^regoptail(p, val)$/
-regpiece	regexp.c	/^regpiece(flagp)$/
-regprop	regexp.c	/^regprop(op)$/
-regrepeat	regexp.c	/^regrepeat(p)$/
-regsub	regsub.c	/^regsub(prog, source, dest, copy, magic)$/
-regtail	regexp.c	/^regtail(p, val)$/
-regtilde	regsub.c	/^regtilde(source, magic)$/
-regtry	regexp.c	/^regtry(prog, string)$/
-remove	unix.c	/^remove(buf)$/
-rename	unix.c	/^rename(src, dest)$/
-resettitle	archie.c	/^resettitle()$/
-resizeConBufAndWindow	winnt.c	/^void            resizeConBufAndWindow(HANDLE hCons/
-screen_char	screen.c	/^screen_char(p, row, col)$/
-screen_del_lines	screen.c	/^screen_del_lines(off, row, nlines, end)$/
-screen_fill	screen.c	/^screen_fill(start_row, end_row, start_col, end_col/
-screen_ins_lines	screen.c	/^screen_ins_lines(off, row, nlines, end)$/
-screen_msg	screen.c	/^screen_msg(msg, row, col)$/
-screen_new_rows	window.c	/^screen_new_rows()$/
-screen_outchar	screen.c	/^screen_outchar(c, row, col)$/
-screen_start	screen.c	/^screen_start()$/
-screen_valid	screen.c	/^screen_valid()$/
-screenalloc	screen.c	/^screenalloc(clear)$/
-screenclear	screen.c	/^screenclear()$/
-screenclear2	screen.c	/^screenclear2()$/
-scroll	winnt.c	/^scroll()$/
-scroll_region_reset	term.c	/^scroll_region_reset()$/
-scroll_region_set	term.c	/^scroll_region_set(wp)$/
-scrolldown	screen.c	/^scrolldown(nlines)$/
-scrollup	screen.c	/^scrollup(nlines)$/
-searchc	search.c	/^searchc(c, dir, type, count)$/
-searchit	search.c	/^searchit(pos, dir, str, count, end, message)$/
-set_Changed	misccmds.c	/^set_Changed()$/
-set_context_in_set_cmd	param.c	/^set_context_in_set_cmd(arg)$/
-set_expand_context	cmdline.c	/^set_expand_context(firstc, buff)$/
-set_highlight	screen.c	/^set_highlight(context)$/
-set_indent	misccmds.c	/^set_indent(size, delete)$/
-set_init	param.c	/^set_init()$/
-set_keymap	amiga.c	/^set_keymap(name)$/
-set_one_cmd_context	cmdline.c	/^set_one_cmd_context(firstc, buff)$/
-set_redo_ins	getchar.c	/^set_redo_ins()$/
-set_term	term.c	/^set_term(term)$/
-set_window	msdos.c	/^set_window()$/
-set_winsize	term.c	/^set_winsize(width, height, mustset)$/
-set_x11_icon	unix.c	/^set_x11_icon(icon)$/
-set_x11_title	unix.c	/^set_x11_title(title)$/
-setaltfname	buffer.c	/^setaltfname(fname, sfname, lnum)$/
-setcursor	term.c	/^setcursor()$/
-setfname	buffer.c	/^setfname(fname, sfname, message)$/
-setmark	mark.c	/^setmark(c)$/
-setpcmark	mark.c	/^setpcmark()$/
-setperm	amiga.c	/^setperm(name, perm)$/
-settitle	archie.c	/^settitle(str)$/
-settmode	term.c	/^settmode(raw)$/
-shift_line	ops.c	/^shift_line(left, round, amount)$/
-showmap	getchar.c	/^showmap(mp)$/
-showmatch	search.c	/^showmatch(initc)$/
-showmatches	cmdline.c	/^showmatches(buff)$/
-showmode	screen.c	/^showmode()$/
-showonep	param.c	/^showonep(p)$/
-showparams	param.c	/^showparams(all)$/
-showruler	screen.c	/^showruler(always)$/
-sig_winch	unix.c	/^sig_winch()$/
-skip_chars	search.c	/^skip_chars(class, dir)$/
-skip_regexp	regexp.c	/^skip_regexp(p, dirc)$/
-skipchr	regexp.c	/^skipchr()$/
-skipspace	misccmds.c	/^skipspace(pp)$/
-skiptodigit	misccmds.c	/^skiptodigit(pp)$/
-skiptospace	misccmds.c	/^skiptospace(pp)$/
-sleep	amiga.c	/^sleep(n)$/
-smsg	message.c	/^smsg(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)$/
-sortcmp	amiga.c	/^sortcmp(a, b)$/
-startPS	search.c	/^startPS(lnum, para, both)$/
-start_arrow	edit.c	/^start_arrow()$/
-start_highlight	screen.c	/^start_highlight()$/
-start_redo	getchar.c	/^start_redo(count)$/
-start_redo_ins	getchar.c	/^start_redo_ins()$/
-start_stuff	getchar.c	/^start_stuff()$/
-startinsert	ops.c	/^startinsert(initstr, startln, count)$/
-starttermcap	term.c	/^starttermcap()$/
-status_redraw_all	screen.c	/^status_redraw_all()$/
-stop_arrow	edit.c	/^stop_arrow()$/
-stop_highlight	screen.c	/^stop_highlight()$/
-stop_insert	edit.c	/^stop_insert()$/
-stop_redo_ins	getchar.c	/^stop_redo_ins()$/
-stoptermcap	term.c	/^stoptermcap()$/
-strchr	unix.h	/^# define strchr(ptr, c)			index((ptr), (c))$/
-strcspn	regexp.c	/^strcspn(s1, s2)$/
-strlowcpy	msdos.c	/^strlowcpy(d, s)$/
-strnfcpy	regsub.c	/^strnfcpy(f, d, s, n)$/
-strnsave	alloc.c	/^strnsave(string, len)$/
-strrchr	unix.h	/^# define strrchr(ptr, c)		rindex((ptr), (c))$/
-strsave	alloc.c	/^strsave(string)$/
-strsize	charset.c	/^strsize(s)$/
-stuffReadbuff	getchar.c	/^stuffReadbuff(s)$/
-stuff_empty	getchar.c	/^stuff_empty()$/
-stuff_inserted	edit.c	/^stuff_inserted(c, count, no_esc)$/
-stuff_yank	ops.c	/^stuff_yank(bufname, p)$/
-stuffcharReadbuff	getchar.c	/^stuffcharReadbuff(c)$/
-stuffnumReadbuff	getchar.c	/^stuffnumReadbuff(n)$/
-swapchar	ops.c	/^swapchar(pos)$/
-termcapinit	term.c	/^termcapinit(term)$/
-textattr	winnt.c	/^textattr(int attr)$/
-tgetch	winnt.c	/^int             tgetch()$/
-tgetent	termlib.c	/^tgetent(tbuf, term)$/
-tgetflag	termlib.c	/^tgetflag(id)$/
-tgetnum	termlib.c	/^tgetnum(id)$/
-tgetstr	termlib.c	/^tgetstr(id, buf)$/
-tgoto	term.c	/^tgoto(cm, x, y)$/
-tinit	termlib.c	/^tinit(name)$/
-tltoa	term.c	/^tltoa(i)$/
-tputs	termlib.c	/^tputs(cp, affcnt, outc)$/
-transchar	charset.c	/^transchar(c)$/
-ttest	term.c	/^ttest(pairs)$/
-u_alloc_line	undo.c	/^u_alloc_line(size)$/
-u_blockalloc	undo.c	/^u_blockalloc(size)$/
-u_blockfree	undo.c	/^u_blockfree(buf)$/
-u_clearall	undo.c	/^u_clearall(buf)$/
-u_clearline	undo.c	/^u_clearline()$/
-u_free_line	undo.c	/^u_free_line(ptr)$/
-u_freeentry	undo.c	/^u_freeentry(uep, n)$/
-u_freelist	undo.c	/^u_freelist(uhp)$/
-u_getbot	undo.c	/^u_getbot()$/
-u_inssub	undo.c	/^u_inssub(lnum)$/
-u_redo	undo.c	/^u_redo(count)$/
-u_save	undo.c	/^u_save(top, bot)$/
-u_save_cursor	undo.c	/^u_save_cursor()$/
-u_save_line	undo.c	/^u_save_line(lnum)$/
-u_savecommon	undo.c	/^u_savecommon(top, bot, newbot)$/
-u_savedel	undo.c	/^u_savedel(lnum, nlines)$/
-u_saveline	undo.c	/^u_saveline(lnum)$/
-u_savesub	undo.c	/^u_savesub(lnum)$/
-u_sync	undo.c	/^u_sync()$/
-u_unchanged	undo.c	/^u_unchanged(buf)$/
-u_undo	undo.c	/^u_undo(count)$/
-u_undo_end	undo.c	/^u_undo_end()$/
-u_undoline	undo.c	/^u_undoline()$/
-u_undoredo	undo.c	/^u_undoredo()$/
-ungetchr	regexp.c	/^ungetchr()$/
-unregc	regexp.c	/^unregc()$/
-unset_Changed	misccmds.c	/^unset_Changed(buf)$/
-updateScreen	screen.c	/^updateScreen(type)$/
-updateline	screen.c	/^updateline()$/
-updatescript	getchar.c	/^updatescript(c)$/
-usage	main.c	/^usage(n)$/
-vbell	winnt.c	/^vbell()$/
-vgetc	getchar.c	/^vgetc()$/
-vgetorpeek	getchar.c	/^vgetorpeek(advance)$/
-vim_chdir	msdos.c	/^vim_chdir(path)$/
-vim_delay	amiga.c	/^vim_delay()$/
-vim_dirname	amiga.c	/^vim_dirname(buf, len)$/
-vim_fgets	fileio.c	/^vim_fgets(buf, size, fp, lnum)$/
-vim_remove	msdos.c	/^vim_remove(name)$/
-vim_strncpy	cmdline.c	/^vim_strncpy(to, from, len)$/
-vim_strnicmp	alloc.c	/^vim_strnicmp(s1, s2, len)$/
-vimgetenv	amiga.c	/^vimgetenv(var)$/
-vpeekc	getchar.c	/^vpeekc()$/
-wait_return	message.c	/^wait_return(redraw)$/
-win_alloc	window.c	/^win_alloc(after)$/
-win_alloc_lsize	window.c	/^win_alloc_lsize(wp)$/
-win_append	window.c	/^win_append(after, wp)$/
-win_comp_pos	window.c	/^win_comp_pos()$/
-win_comp_scroll	window.c	/^win_comp_scroll(wp)$/
-win_copy_options	param.c	/^win_copy_options(wp_from, wp_to)$/
-win_del_lines	screen.c	/^win_del_lines(wp, row, nlines, invalid, mayclear)$/
-win_enter	window.c	/^win_enter(wp, undo_sync)$/
-win_equal	window.c	/^win_equal(next_curwin, redraw)$/
-win_exchange	window.c	/^win_exchange(Prenum)$/
-win_free	window.c	/^win_free(wp)$/
-win_free_lsize	window.c	/^win_free_lsize(wp)$/
-win_init	window.c	/^win_init(wp)$/
-win_ins_lines	screen.c	/^win_ins_lines(wp, row, nlines, invalid, mayclear)$/
-win_line	screen.c	/^win_line(wp, lnum, startrow, endrow)$/
-win_redr_ruler	screen.c	/^win_redr_ruler(wp, always)$/
-win_redr_status	screen.c	/^win_redr_status(wp)$/
-win_remove	window.c	/^win_remove(wp)$/
-win_resize_off	amiga.c	/^win_resize_off()$/
-win_resize_on	amiga.c	/^win_resize_on()$/
-win_rest_invalid	screen.c	/^win_rest_invalid(wp)$/
-win_rotate	window.c	/^win_rotate(upwards, count)$/
-win_setheight	window.c	/^win_setheight(height)$/
-win_split	window.c	/^win_split(new_height, redraw)$/
-win_update	screen.c	/^win_update(wp)$/
-windgoto	term.c	/^windgoto(row, col)$/
-write_buf	fileio.c	/^write_buf(fd, buf, len)$/
+
+addcr.c,12
+main(9,130
+
+alloc.c,273
+#define KEEP_ROOM 24,555
+alloc(31,707
+alloc_check(41,842
+lalloc(55,1048
+do_outofmem_msg(106,2188
+strsave(119,2350
+strnsave(131,2508
+copy_spaces(150,2736
+del_trailing_spaces(165,2932
+nofreeNULL(181,3204
+bsdmemset(191,3291
+memmove(211,3625
+vim_strnicmp(242,4149
+
+amiga.c,1100
+#define TRUE 54,1091
+#define FALSE 56,1121
+win_resize_on(83,1867
+win_resize_off(89,1916
+mch_write(95,1966
+GetChars(112,2322
+mch_char_avail(151,3098
+sleep(157,3168
+mch_avail_mem(169,3331
+vim_delay(176,3448
+mch_suspend(185,3550
+#define DOS_LIBRARY 191,3639
+mch_windinit(194,3696
+#define BUF2SIZE 236,4810
+check_win(239,4894
+fname_case(448,9645
+get_fib(470,10087
+mch_settitle(498,10637
+mch_restore_title(514,10990
+vim_dirname(525,11220
+FullName(538,11437
+isFullName(583,12476
+lock2name(596,12755
+getperm(615,13124
+setperm(636,13419
+isdir(650,13711
+mch_windexit(669,14006
+#define MP(711,14925
+mch_settmode(726,15536
+mch_screenmode(737,15747
+mch_get_winsize(763,16185
+mch_set_winsize(820,17573
+dos_packet(858,18436
+call_shell(909,19717
+breakcheck(1115,23532
+#define Chk_Abort 1126,23927
+Chk_Abort(1130,23968
+#define ANCHOR_BUF_SIZE 1163,25172
+#define ANCHOR_SIZE 1164,25202
+struct onefileonefile1169,25331
+insfile(1180,25549
+freefiles(1203,25946
+sortcmp(1216,26076
+ExpandWildCards(1223,26140
+FreeWild(1376,29219
+has_wildcard(1388,29364
+vimgetenv(1403,29585
+
+amiga.h,353
+# define SYSVIMRC_FILE	19,377
+# define SYSEXRC_FILE	23,440
+# define VIMRC_FILE	27,499
+# define EXRC_FILE	31,555
+# define VIM_HLP	35,607
+# define VIMINFO_FILE	40,688
+# define DEF_DIR	45,768
+#define TMPNAME1	48,799
+#define TMPNAME2	49,830
+#define TMPNAMELEN	50,861
+# define MAXMEM	53,900
+# define MAXMEMTOT	56,984
+#define BASENAMELEN	59,1040
+
+archie.c,675
+mch_write(46,933
+GetChars(65,1261
+vim_delay(90,1683
+mch_suspend(102,1839
+mch_windinit(109,1925
+check_win(124,2080
+fname_case(140,2385
+settitle(146,2426
+resettitle(152,2463
+dirname(161,2600
+FullName(180,2877
+getperm(242,3941
+setperm(256,4111
+isdir(267,4234
+mch_windexit(278,4374
+mch_settmode(289,4510
+mch_get_winsize(337,5670
+mch_set_winsize(401,6738
+call_shell(407,6828
+#define INBUFLEN 450,7512
+Read(455,7681
+breakcheck(471,7999
+fill_inbuf(481,8171
+WaitForChar(522,8843
+RealWaitForChar(535,9086
+# define SEEK_SET 581,10156
+# define SEEK_END 584,10200
+ExpandWildCards(588,10233
+FreeWild(733,13081
+has_wildcard(745,13224
+have_wildcard(752,13294
+
+archie.h,0
+
+arp_proto.h,26
+#define	PROTO_ARP_H	2,20
+
+arpbase.h,6456
+#define	LIBRARIES_ARPBASE_H 2,28
+#define __VERSION 81,2708
+#define	NO_PRAGMAS	89,2874
+#define NO_PROTOTYPES	90,2895
+#define	C_Args93,2943
+#define	C_Args	99,2997
+#define	ArpName	108,3255
+#define	ArpVersion	109,3311
+struct	ArpBase	ArpBase116,3557
+struct EnvBase EnvBase139,4627
+#define	ARPB_WILD_WORLD 153,5194
+#define	ARPB_WILD_BCPL 154,5253
+#define	ARPF_WILD_WORLD 156,5305
+#define	ARPF_WILD_BCPL 157,5353
+#define	AO_ArpLib	169,5878
+#define	AN_ArpLib	176,6130
+#define	AN_ArpNoMem	177,6182
+#define	AN_ArpInputMem	178,6237
+#define	AN_ArpNoMakeEnv	179,6306
+#define	AN_ArpNoDOS	181,6375
+#define	AN_ArpNoGfx	182,6437
+#define	AN_ArpNoIntuit	183,6504
+#define	AN_BadPackBlues	184,6568
+#define	AN_Zombie	185,6646
+#define	AN_ArpScattered	187,6713
+#define	ASSIGN_OK	195,7008
+#define	ASSIGN_NODEV	196,7068
+#define	ASSIGN_FATAL	197,7138
+#define	ASSIGN_CANCEL	198,7201
+#define	MaxInputBuf	205,7499
+#define LIBRARIES_ASL_H 219,7910
+struct FileRequester	FileRequester225,8035
+#define	FRB_DoWildFunc	256,9242
+#define	FRB_DoMsgFunc	257,9326
+#define	FRB_DoColor	258,9407
+#define	FRB_NewIDCMP	259,9482
+#define	FRB_NewWindFunc	260,9559
+#define	FRB_AddGadFunc	261,9636
+#define	FRB_GEventFunc	262,9696
+#define	FRB_ListFunc	263,9781
+#define	FRF_DoWildFunc	265,9837
+#define	FRF_DoMsgFunc	266,9883
+#define	FRF_DoColor	267,9927
+#define	FRF_NewIDCMP	268,9967
+#define	FRF_NewWindFunc	269,10009
+#define	FRF_AddGadFunc	270,10057
+#define	FRF_GEventFunc	271,10103
+#define	FRF_ListFunc	272,10149
+#define	FR2B_LongPath	279,10417
+#define	FR2F_LongPath	281,10493
+#define	FCHARS	288,10739
+#define	DSIZE	289,10782
+#define	LONG_DSIZE	291,10849
+#define	LONG_FSIZE	292,10919
+#define	FR_FIRST_GADGET	294,10984
+#define DOS_DOSASL_H299,11160
+struct	AnchorPath	AnchorPath326,12530
+#define ap_Length 338,13056
+#define	APB_DoWild	345,13288
+#define	APB_ItsWild	346,13335
+#define	APB_DoDir	347,13400
+#define	APB_DidDir	350,13549
+#define	APB_NoMemErr	351,13615
+#define	APB_DoDot	352,13681
+#define	APF_DoWild	354,13754
+#define	APF_ItsWild	355,13792
+#define	APF_DoDir	356,13832
+#define	APF_DidDir	357,13868
+#define	APF_NoMemErr	358,13906
+#define	APF_DoDot	359,13948
+struct	AChain	AChain370,14354
+#define	DDB_PatternBit	380,14610
+#define	DDB_ExaminedBit	381,14636
+#define	DDB_Completed	382,14663
+#define	DDB_AllBit	383,14688
+#define	DDF_PatternBit	385,14711
+#define	DDF_ExaminedBit	386,14757
+#define	DDF_Completed	387,14805
+#define	DDF_AllBit	388,14849
+#define	IsWild(396,15149
+#define	P_ANY	407,15594
+#define	P_SINGLE	408,15642
+#define	P_ORSTART	416,15916
+#define	P_ORNEXT	417,15960
+#define	P_OREND	418,16003
+#define	P_NOT	419,16046
+#define	P_NOTCLASS	420,16087
+#define	P_CLASS	421,16132
+#define	P_REPBEG	422,16176
+#define	P_REPEND	423,16219
+#define	ERROR_BUFFER_OVERFLOW	426,16288
+#define	ERROR_BREAK	427,16362
+#define	ERROR_NOT_EXECUTABLE	428,16425
+struct	DirectoryEntry	DirectoryEntry445,17081
+#define	DLB_DEVICES	466,17966
+#define	DLB_DISKONLY	467,18013
+#define	DLB_VOLUMES	468,18088
+#define	DLB_DIRS	469,18140
+#define	DLF_DEVICES	471,18198
+#define	DLF_DISKONLY	472,18238
+#define	DLF_VOLUMES	473,18280
+#define	DLF_DIRS	474,18320
+#define	DLX_FILE	482,18641
+#define	DLX_DIR	483,18700
+#define	DLX_DEVICE	484,18759
+#define	DLX_VOLUME	486,18813
+#define	DLX_UNMOUNTED	487,18863
+#define	DLX_ASSIGN	489,18920
+#define	ERRBADINT	499,19385
+#define	Errno	500,19406
+#define	CLEAR_ID(541,21378
+#define	LastTracker	553,21921
+struct	TrackedResource	TrackedResource576,23054
+#define	tg_Value 599,23953
+struct	DefaultTracker	DefaultTracker619,24993
+#define	TRAK_AAMEM	635,25529
+#define	TRAK_LOCK	636,25585
+#define	TRAK_FILE	637,25625
+#define	TRAK_WINDOW	638,25667
+#define	TRAK_SCREEN	639,25717
+#define	TRAK_LIBRARY	640,25756
+#define	TRAK_DAMEM	641,25803
+#define	TRAK_MEMNODE	642,25861
+#define	TRAK_SEGLIST	643,25911
+#define	TRAK_RESLIST	644,25959
+#define	TRAK_MEM	645,26012
+#define	TRAK_GENERIC	646,26059
+#define	TRAK_DALIST	647,26120
+#define	TRAK_ANCHOR	648,26179
+#define	TRAK_FREQ	649,26241
+#define	TRAK_FONT	650,26290
+#define	TRAK_MAX	651,26340
+#define	TRB_UNLINK	653,26400
+#define	TRB_RELOC	654,26444
+#define	TRB_MOVED	655,26508
+#define	TRF_UNLINK	657,26550
+#define	TRF_RELOC	658,26588
+#define	TRF_MOVED	659,26624
+struct	ResList	ResList668,26998
+#define	LCK_EQUAL	680,27457
+#define	LCK_VOLUME	681,27523
+#define	LCK_DIFVOL1	682,27582
+#define	LCK_DIFVOL2	683,27643
+struct	ZombieMsg	ZombieMsg695,28219
+struct	ProcessControlBlock	ProcessControlBlock709,28754
+#define	NOCMD	731,29722
+#define	PRB_SAVEIO	739,30024
+#define	PRB_CLOSESPLAT	740,30090
+#define	PRB_NOCLI	741,30164
+#define	PRB_CODE	743,30274
+#define	PRB_STDIO	744,30325
+#define	PRF_SAVEIO	746,30395
+#define	PRF_CLOSESPLAT	747,30433
+#define	PRF_NOCLI	748,30479
+#define	PRF_CODE	749,30515
+#define	PRF_STDIO	750,30549
+#define	PR_NOFILE	757,30792
+#define	PR_NOMEM	758,30851
+#define	PR_NOSLOT	760,30950
+#define	PR_NOINPUT	761,31002
+#define	PR_NOOUTPUT	762,31059
+#define	PR_NOSTDIO	767,31306
+#define	PR_WANTSMESSAGE	774,31555
+#define	PR_NOSHELLPROC	776,31666
+#define	PR_NOEXEC	777,31734
+#define	PR_SCRIPT	778,31783
+struct	NewShell	NewShell799,32623
+#define	PRB_CLI	815,33319
+#define	PRB_BACKGROUND	816,33367
+#define	PRB_EXECUTE	817,33417
+#define	PRB_INTERACTIVE	818,33464
+#define	PRB_FB	819,33522
+#define	PRF_CLI	821,33569
+#define	PRF_BACKGOUND	822,33602
+#define	PRF_EXECUTE	823,33647
+#define	PRF_INTERACTIVE	824,33687
+#define	PRF_FB	825,33735
+#define	INTERACTIVE_SHELL	833,34028
+#define	INTERACTIVE_CLI	834,34105
+#define	BACKGROUND_SHELL	835,34191
+#define	EXECUTE_ME	836,34273
+#define	ERROR_NOT_CLI	843,34568
+struct	ResidentProgramNode	ResidentProgramNode859,35422
+#define	RPNB_NOCHECK	874,36025
+#define	RPNB_CACHE	875,36095
+#define	RPNF_NOCHECK	877,36151
+#define	RPNF_CACHE	878,36193
+struct	ResidentProgramTag	ResidentProgramTag894,37049
+struct	ProcessMemory	ProcessMemory923,38502
+#define	PMEM_NAME	940,39113
+#define	RESIDENT_MAGIC	942,39142
+#define DOS_DATETIME_H950,39446
+struct	DateTime	DateTime952,39470
+#define	LEN_DATSTRING	966,40010
+#define	DTB_SUBST	973,40217
+#define	DTB_FUTURE	974,40292
+#define	DTF_SUBST	976,40353
+#define	DTF_FUTURE	977,40389
+#define	FORMAT_DOS	984,40609
+#define	FORMAT_INT	985,40678
+#define	FORMAT_USA	986,40739
+#define	FORMAT_CDN	987,40797
+#define	FORMAT_MAX	988,40873
+#define	ARGs(1003,41377
+#define	ARGs(1005,41402
+
+ascii.h,375
+#define NUL 13,260
+#define BS	14,284
+#define BS_STR	15,307
+#define TAB 16,343
+#define NL	17,367
+#define NL_STR	18,390
+#define CR	19,426
+#define ESC 20,449
+#define ESC_STR 21,473
+#define DEL 22,510
+#define CSI 23,532
+#define Ctrl(25,555
+#define Meta(26,584
+# define PATHSEP 32,682
+# define PATHSEPSTR 33,704
+# define PATHSEP 35,735
+# define PATHSEPSTR 36,756
+
+buffer.c,705
+open_buffer(41,1198
+close_buffer(97,2594
+buf_clear(141,3470
+buf_freeall(158,3780
+do_buffer(171,4118
+enter_buffer(321,7560
+buflist_new(354,8426
+buflist_getfile(480,11322
+buflist_getlnum(509,11812
+buflist_findname(525,12149
+buflist_findnr(540,12423
+buflist_nr2name(557,12684
+buflist_setlnum(575,12998
+buflist_findlnum(617,13828
+buflist_list(639,14220
+buflist_name_nr(688,15447
+setfname(715,16002
+setaltfname(785,17519
+buflist_add(803,17839
+buflist_altlnum(818,18051
+otherfile(828,18255
+fileinfo(837,18461
+maketitle(895,19943
+resettitle(941,20851
+fix_fname(950,20974
+fname_expand(976,21466
+do_arg_all(991,21815
+do_buffer_all(1029,22632
+do_mlines(1083,23833
+chk_mline(1106,24356
+
+charset.c,136
+transchar(16,288
+charsize(56,920
+strsize(74,1173
+chartabsize(89,1383
+linetabsize(106,1757
+isidchar(120,1938
+isidchar_id(150,2445
+
+check64.c,16
+int main(8,116
+
+cmdcmds.c,368
+# define mktemp(19,371
+do_ascii(31,748
+do_align(48,1003
+do_retab(120,2590
+do_move(244,5485
+do_copy(327,7604
+dobang(382,8837
+doshell(476,10568
+dofilter(550,12584
+read_viminfo(719,16399
+write_viminfo(746,17092
+viminfo_filename(781,17841
+do_viminfo(796,18117
+read_viminfo_up_to_marks(943,21917
+viminfo_readstring(1009,23481
+viminfo_writestring(1032,23826
+
+cmdline.c,1035
+init_history(79,2605
+is_in_history(142,4091
+getcmdline(195,5054
+alloc_cmdbuff(690,16878
+realloc_cmdbuff(710,17242
+putcmdline(732,17628
+redrawcmdline(748,17880
+compute_cmdrow(757,17973
+redrawcmd(767,18148
+cursorcmd(782,18381
+ccheck_abbr(795,18782
+docmdline(818,19336
+DoOneCmd(928,22105
+autowrite(2558,59552
+autowrite_all(2570,59764
+buf_write_all(2587,60058
+dowrite(2604,60464
+doecmd(2680,62346
+getargcmd(2838,66022
+domake(2867,66499
+doarglist(2897,67081
+gotocmdline(2983,68659
+check_readonly(2993,68840
+check_changed(3007,69032
+check_changed_any(3026,69473
+check_fname(3052,70007
+check_more(3071,70343
+getfile(3097,71068
+vim_strncpy(3146,72261
+nextwild(3182,72921
+ExpandOne(3259,74815
+showmatches(3429,78587
+addstar(3541,81230
+dosource(3621,82961
+get_address(3683,84426
+set_expand_context(3829,88206
+set_one_cmd_context(3852,88923
+ExpandFromContext(4158,95095
+prepare_viminfo_history(4244,97209
+read_viminfo_history(4273,97823
+finish_viminfo_history(4292,98232
+write_viminfo_history(4333,98988
+
+cmdtab.h,487
+#define RANGE	15,298
+#define BANG	16,343
+#define EXTRA	17,402
+#define XFILE	18,465
+#define NOSPC	19,523
+#define	DFLALL	20,586
+#define NODFL	21,640
+#define NEEDARG	22,707
+#define TRLBAR	23,754
+#define REGSTR	24,815
+#define COUNT	25,878
+#define NOTRLCOM 26,945
+#define ZEROR	27,1004
+#define USECTRLV 28,1058
+#define NOTADR	29,1125
+#define EDITCMD	30,1195
+#define FILES	31,1250
+#define WORD1	32,1315
+#define FILE1	33,1374
+#define NAMEDF	34,1451
+#define NAMEDFS	35,1519
+
+csearch.c,104
+dosub(45,1099
+doglob(483,12291
+read_viminfo_sub_string(603,14850
+write_viminfo_sub_string(620,15150
+
+digraph.c,134
+dodigraph(194,5127
+getexactdigraph(221,5611
+getdigraph(261,6404
+putdigraph(281,6802
+listdigraphs(332,7805
+printdigraph(354,8324
+
+edit.c,1068
+#define CTRL_X_WANT_IDENT	19,358
+#define CTRL_X_NOT_DEFINED_YET	21,392
+#define CTRL_X_SCROLL	22,427
+#define CTRL_X_WHOLE_LINE	23,455
+#define CTRL_X_FILES	24,486
+#define CTRL_X_TAGS	25,513
+#define CTRL_X_PATH_PATTERNS	26,560
+#define CTRL_X_PATH_DEFINES	27,613
+#define CTRL_X_FINISHED	28,666
+struct CompletionCompletion30,697
+edit(67,1861
+is_ctrl_x_key(1332,34898
+add_completion_and_infercase(1384,36229
+add_new_completion(1453,37822
+make_cyclic(1520,39200
+complete_dictionaries(1545,39675
+free_completions(1618,41117
+count_completions(1638,41475
+get_literal(1660,41917
+insert_special(1710,42717
+#define ISSPECIAL(1732,43374
+insertchar(1735,43428
+start_arrow(1921,48594
+stop_arrow(1936,48930
+stop_insert(1952,49259
+set_last_insert(1989,50087
+beginline(2012,50586
+oneright(2039,51058
+oneleft(2052,51237
+oneup(2062,51373
+onedown(2082,51742
+onepage(2106,52289
+stuff_inserted(2171,53967
+get_last_insert(2201,54499
+echeck_abbr(2215,54881
+replace_push(2242,55710
+replace_pop(2279,56557
+replace_flush(2291,56748
+get_id_option(2300,56878
+
+fileio.c,244
+#define BUFSIZE	33,623
+#define SBUFSIZE	34,681
+filemess(42,869
+readfile(79,1886
+check_marks_read(447,11057
+buf_write(471,11728
+write_buf(1107,28783
+modname(1136,29437
+buf_modname(1143,29535
+vim_fgets(1247,32016
+vim_rename(1279,32731
+
+getchar.c,1100
+struct bufblockbufblock26,538
+#define MINIMAL_SIZE 32,674
+struct buffheaderbuffheader37,795
+struct mapblockmapblock59,1516
+#define TYPELEN_INIT	90,2840
+free_buff(116,3913
+get_bufcont(133,4197
+get_recorded(163,4886
+get_inserted(176,5072
+add_buff(185,5211
+add_num_buff(235,6256
+add_char_buff(246,6418
+read_stuff(274,6823
+start_stuff(303,7327
+stuff_empty(316,7513
+flush_buffers(327,7809
+ResetRedobuff(363,8538
+AppendToRedobuff(374,8679
+AppendCharToRedobuff(382,8770
+AppendNumberToRedobuff(390,8867
+stuffReadbuff(398,8964
+stuffcharReadbuff(405,9034
+stuffnumReadbuff(412,9110
+read_redo(425,9411
+copy_redo(460,9980
+start_redo(479,10394
+start_redo_ins(531,11493
+set_redo_ins(558,11942
+stop_redo_ins(564,11988
+init_typebuf(575,12202
+ins_typebuf(601,12837
+del_typebuf(694,15195
+gotchars(750,16427
+openscript(777,16957
+updatescript(826,17921
+#define NEEDMORET 840,18098
+vgetc(845,18226
+vpeekc(876,18722
+char_avail(887,18915
+vungetc(900,19079
+vgetorpeek(919,19549
+domap(1337,31031
+showmap(1610,37148
+check_abbr(1659,38476
+makemap(1742,40487
+putescstr(1811,41694
+
+globals.h,95
+# define EXTERN 16,313
+# define INIT(17,336
+#  define INIT(20,373
+#define NSCRIPT 214,7580
+
+help.c,15
+dohelp(19,351
+
+keymap.h,1204
+#define K_CCIRCM	9,200
+#define KS_OFF	17,364
+#define K_NUL	23,538
+#define K_SPECIAL	25,600
+#define KS_ZERO	31,723
+#define KS_SPECIAL	37,850
+#define K_SECOND(42,950
+enum SpecialKeysSpecialKeys51,1377
+#define K_ZERO	135,2944
+#define K_UARROW	137,2981
+#define K_DARROW	138,3020
+#define K_LARROW	139,3059
+#define K_RARROW	140,3098
+#define K_SUARROW	141,3137
+#define K_SDARROW	142,3178
+#define K_SLARROW	143,3219
+#define K_SRARROW	144,3260
+#define K_F1	146,3302
+#define K_F2	147,3354
+#define K_F3	148,3386
+#define K_F4	149,3418
+#define K_F5	150,3450
+#define K_F6	151,3482
+#define K_F7	152,3514
+#define K_F8	153,3546
+#define K_F9	154,3578
+#define K_F10	155,3610
+#define K_SF1	157,3645
+#define K_SF2	158,3707
+#define K_SF3	159,3741
+#define K_SF4	160,3775
+#define K_SF5	161,3809
+#define K_SF6	162,3843
+#define K_SF7	163,3877
+#define K_SF8	164,3911
+#define K_SF9	165,3945
+#define K_SF10	166,3979
+#define K_HELP	168,4016
+#define K_UNDO	169,4052
+#define K_BS	171,4089
+#define K_INS	173,4122
+#define K_DEL	174,4156
+#define K_HOME	175,4190
+#define K_END	176,4226
+#define K_PAGEUP	177,4260
+#define K_PAGEDOWN	178,4299
+#define K_MOUSE	180,4343
+#define K_MAXKEY	182,4382
+
+linefunc.c,140
+coladvance(25,463
+inc_cursor(62,1202
+inc(68,1257
+incl(91,1646
+dec_cursor(108,1931
+dec(114,1986
+decl(135,2340
+adjust_cursor(149,2527
+
+macros.h,245
+#define pchar(16,319
+#define lt(21,430
+#define ltoreq(24,528
+#define equal(27,631
+#define lineempty(32,758
+#define bufempty(37,866
+# define TO_UPPER(43,1099
+# define TO_LOWER(44,1152
+# define TO_UPPER	46,1211
+# define TO_LOWER	47,1238
+
+main.c,67
+#define EXTERN9,200
+usage(22,422
+main(68,1972
+getout(637,16300
+
+mark.c,224
+setmark(29,616
+setpcmark(57,1041
+checkpcmark(134,3372
+movemark(149,3716
+getmark(193,4873
+clrallmarks(247,6210
+fm_getname(266,6573
+domarks(285,6922
+dojumps(335,7935
+#define one_adjust(371,8730
+mark_adjust(384,8909
+
+memfile.c,781
+#define CHECK(10,220
+# define STATFS 53,1941
+# define F_BSIZE 54,1964
+# define STATFS 57,2050
+# define F_BSIZE 58,2071
+# define fstatfs(59,2099
+#define MEMFILE_PAGE_SIZE 75,2386
+mf_open(122,4292
+mf_open_file(207,6538
+mf_close(224,6822
+mf_new(266,7727
+mf_get(352,10014
+mf_put(413,11360
+mf_free(438,11827
+mf_sync(464,12511
+mf_ins_hash(559,14863
+mf_rem_hash(579,15193
+mf_find_hash(596,15564
+mf_ins_used(612,15833
+mf_rem_used(631,16268
+mf_release(655,16961
+mf_release_all(714,18289
+mf_alloc_bhdr(747,19004
+mf_free_bhdr(769,19412
+mf_ins_free(780,19534
+mf_rem_free(793,19805
+mf_read(809,20017
+mf_write(842,20629
+mf_trans_add(922,22835
+mf_trans_del(992,24417
+mf_fullname(1025,25083
+mf_need_trans(1040,25353
+mf_statistics(1051,25574
+mf_do_open(1089,26309
+
+memline.c,1539
+#define CHECK(11,261
+#  define gethostname(81,3052
+typedef struct block0			ZERO_BL;ZERO_BL87,3202
+typedef struct pointer_block	PTR_BL;PTR_BL88,3269
+typedef struct data_block		DATA_BL;DATA_BL89,3341
+typedef struct pointer_entry	PTR_EN;PTR_EN90,3408
+#define DATA_ID	92,3475
+#define PTR_ID	93,3531
+#define BLOCK0_ID 94,3589
+struct pointer_entrypointer_entry99,3698
+struct pointer_blockpointer_block110,4019
+struct data_blockdata_block126,4624
+#define DB_MARKED	147,5469
+#define DB_INDEX_MASK	148,5534
+#define INDEX_SIZE	150,5570
+#define HEADER_SIZE	151,5642
+struct block0block0153,5726
+#define STACK_INCR	174,6514
+#define ML_DELETE	187,6884
+#define ML_INSERT	188,6927
+#define ML_FIND	189,6970
+#define ML_FLUSH	190,7019
+#define ML_SIMPLE(191,7068
+ml_open(210,7737
+ml_setname(381,11751
+ml_open_files(455,13401
+ml_close(509,14734
+ml_close_all(528,15196
+ml_timestamp(542,15423
+ml_recover(572,16033
+recover_names(974,26090
+ml_sync_all(1218,31791
+ml_preserve(1264,33023
+ml_get(1334,34928
+ml_get_pos(1344,35068
+ml_get_cursor(1351,35173
+ml_get_buf(1362,35428
+ml_line_alloced(1419,36804
+ml_append(1433,37121
+ml_append_int(1445,37499
+ml_replace(1914,51823
+ml_delete(1941,52522
+ml_delete_int(1950,52666
+ml_setmarked(2096,56582
+ml_firstmarked(2126,57367
+ml_has_mark(2170,58400
+ml_clearmarked(2188,58730
+ml_flush_line(2230,59628
+ml_new_data(2319,61892
+ml_new_ptr(2343,62355
+ml_find_line(2376,63287
+ml_add_stack(2577,68057
+ml_lineadd(2616,69081
+makeswapname(2648,69734
+findswapname(2684,70603
+
+message.c,465
+#define MESSAGE	15,314
+msg(29,689
+smsg(61,1252
+emsg(78,1644
+emsg2(153,3586
+msg_trunc(164,3767
+wait_return(186,4172
+msg_start(286,6535
+msg_pos(307,7095
+msg_outchar(318,7221
+msg_outnum(338,7419
+msg_outtrans(353,7705
+msg_outtrans_len(360,7800
+msg_outtrans_meta(388,8644
+get_key_names(443,9723
+msg_prt_line(468,10540
+msg_outstr(528,11481
+msg_moremsg(638,14102
+msg_check_screen(661,14718
+msg_clr_eos(679,15069
+msg_end(693,15422
+msg_check(715,15934
+
+misccmds.c,809
+get_indent(27,624
+set_indent(49,1083
+Opencmd(87,1776
+get_leader_len(589,13977
+prefix_in_list(629,14729
+plines(676,15653
+plines_win(683,15718
+plines_m(723,16420
+plines_m_win(730,16519
+inschar(746,16818
+insstr(800,18291
+delchar(828,18979
+dellines(873,20140
+gchar(930,21598
+gchar_cursor(937,21666
+pchar_cursor(947,21829
+inindent(957,22027
+skipwhite(976,22348
+skiptowhite(992,22627
+skiptodigit(1008,22875
+getdigits(1025,23122
+plural(1040,23337
+set_Changed(1054,23529
+unset_Changed(1068,23744
+check_status(1083,23962
+change_warning(1107,24441
+ask_yesno(1127,25001
+get_number(1164,25584
+msgmore(1191,25930
+beep_flush(1223,26574
+beep(1233,26668
+expand_env(1263,27345
+home_replace(1317,28489
+fullpathcmp(1356,29371
+gettail(1394,30215
+ispathsep(1413,30496
+concat_fnames(1432,30863
+
+mkcmdtab.c,13
+main(22,393
+
+msdos.c,1055
+typedef struct filelistfilelist32,692
+} FileList;FileList37,764
+mch_avail_mem(55,1504
+vim_delay(62,1572
+vim_remove(73,1742
+mch_write(84,1922
+#define POLL_SPEED 162,3339
+#define FOREVER 175,3742
+WaitForChar(178,3777
+GetChars(224,4778
+mch_char_avail(349,7144
+mch_suspend(358,7263
+mch_windinit(369,7439
+show_mouse(383,7690
+check_win(407,8062
+fname_case(431,8638
+mch_settitle(441,8764
+mch_restore_title(451,8895
+vim_dirname(461,9067
+change_drive(472,9248
+FullName(495,9658
+isFullName(581,11264
+getperm(593,11443
+setperm(608,11644
+isdir(624,12014
+mch_windexit(651,12488
+catch_cbrk(665,12680
+cbrk_handler(680,13208
+catch_cint(692,13448
+mch_settmode(709,13814
+setmouse(744,14904
+mch_screenmode(755,15024
+mch_get_winsize(794,15816
+set_window(833,16607
+mch_set_winsize(840,16690
+call_shell(850,16885
+breakcheck(896,17731
+#define FL_CHUNK 905,17818
+addfile(908,17852
+pstrcmp(948,18538
+has_wildcard(955,18606
+strlowcpy(966,18742
+expandpath(975,18839
+ExpandWildCards(1060,20521
+FreeWild(1093,21167
+vim_chdir(1110,21407
+
+msdos.h,547
+# define SYSVIMRC_FILE	19,378
+# define SYSEXRC_FILE	23,445
+# define VIMRC_FILE	27,508
+# define EXRC_FILE	31,564
+# define VIM_HLP	35,616
+# define VIMINFO_FILE	40,699
+# define DEF_DIR	45,782
+#define TMPNAME1	48,818
+#define TMPNAME2	49,876
+#define TMPNAMELEN	50,938
+# define MAXMEM	53,977
+# define MAXMEMTOT	56,1063
+#define BASENAMELEN	59,1121
+#define remove 68,1321
+#define chdir 71,1402
+#define MOUSE_MASK	74,1461
+#define MOUSE_LEFT	75,1486
+#define MOUSE_RIGHT	76,1511
+#define MOUSE_MIDDLE	77,1537
+#define MOUSE_RELEASE	78,1563
+
+normal.c,460
+#define EXTERN21,455
+#define INIT(22,470
+#define CLEAROP 30,656
+#define CLEAROPBEEP 31,718
+#define CHECKCLEAROP	32,781
+#define CHECKCLEAROPQ	33,829
+normal(80,2409
+start_visual_highlight(2131,47996
+find_ident_under_cursor(2150,48619
+prep_redo(2212,49923
+checkclearop(2242,50476
+checkclearopq(2256,50667
+clearop(2265,50791
+clearopbeep(2277,50952
+clear_showcmd(2291,51216
+add_to_showcmd(2318,51783
+push_showcmd(2351,52349
+pop_showcmd(2358,52426
+
+ops.c,732
+static struct yankbufyankbuf25,600
+doshift(56,1668
+shift_line(105,2864
+is_yank_buffer(151,3710
+get_yank_buffer(169,4151
+dorecord(205,4832
+stuff_yank(246,5584
+doexecbuf(295,6526
+insertbuf(353,7861
+dodelete(414,9048
+dotilde(625,14737
+swapchar(686,15906
+dochange(710,16250
+init_yank(731,16630
+free_yank(744,16841
+free_yank_all(765,17199
+doyank(779,17559
+doput(954,22120
+get_register_name(1294,30565
+dodis(1311,30796
+dis_msg(1395,32372
+dodojoin(1411,32686
+dojoin(1437,33141
+same_leader(1548,35868
+doformat(1574,36290
+fmt_is_blank(1721,40186
+startinsert(1738,40569
+block_prep(1779,41559
+#define NUMBUFLEN 1847,42926
+doaddsub(1856,43109
+read_viminfo_register(1999,46472
+write_viminfo_registers(2091,48352
+
+ops.h,403
+#define NOP 16,290
+#define DELETE	17,335
+#define YANK	18,352
+#define CHANGE	19,367
+#define LSHIFT	20,384
+#define RSHIFT	21,401
+#define FILTER	22,418
+#define TILDE	23,435
+#define INDENT	24,451
+#define FORMAT	25,468
+#define COLON	26,485
+#define UPPER	27,502
+#define LOWER	28,519
+#define JOIN	29,536
+#define MBAD	51,1227
+#define MCHAR	52,1295
+#define MLINE	53,1311
+#define MBLOCK	54,1327
+
+option.c,1416
+struct optionoption21,540
+#define P_BOOL	32,748
+#define P_NUM	33,801
+#define P_STRING	34,853
+#define P_CHANGED	35,908
+#define P_EXPAND	36,969
+#define P_IND	37,1020
+#define PV_LIST	46,1411
+#define PV_NU	47,1430
+#define PV_SCROLL	48,1447
+#define PV_WRAP	49,1467
+#define PV_AI	51,1487
+#define PV_BIN	52,1505
+#define PV_COM	53,1524
+#define PV_EOL	54,1543
+#define PV_ET	55,1562
+#define PV_FO	56,1580
+#define PV_ML	57,1598
+#define PV_NCOM	58,1616
+#define PV_RO	59,1636
+#define PV_SI	60,1654
+#define PV_SN	61,1672
+#define PV_SW	62,1690
+#define PV_TS	63,1708
+#define PV_TW	64,1726
+#define PV_TX	65,1744
+#define PV_WM	66,1762
+#define PV_ID	67,1780
+#define PARAM_COUNT 297,13466
+set_init(310,13877
+set_init_shell(369,15195
+doset(417,16318
+param_expand(880,28719
+findparam(918,29470
+paramchanged(948,29913
+showparams(964,30179
+showonep(1055,32102
+makeset(1101,32933
+clear_termparam(1145,33952
+istermparam(1163,34301
+#define COL_RULER 1176,34642
+comp_col(1179,34701
+get_varp(1207,35260
+win_copy_options(1248,36682
+buf_copy_options(1262,36953
+set_context_in_set_cmd(1292,37822
+ExpandSettings(1393,39728
+ExpandOldSetting(1477,41744
+typedef struct AutoCmdAutoCmd1534,42839
+} AutoCmd;AutoCmd1538,42903
+typedef struct AutoPatAutoPat1540,42915
+} AutoPat;AutoPat1546,43017
+file_pat_to_reg_pat(1551,43078
+show_autocmd(1663,44829
+do_autocmd(1699,45937
+apply_autocmds(1883,49371
+
+param.h,85
+# define EXTERN 16,341
+# define INIT(17,364
+#  define INIT(20,401
+EXTERN 47,1431
+
+proto.h,0
+
+ptx_stdlib.h,0
+
+quickfix.c,148
+struct qf_lineqf_line24,518
+qf_init(50,1585
+qf_jump(268,6145
+qf_list(400,8915
+qf_free(454,10123
+qf_mark_adjust(472,10336
+qf_types(502,11008
+
+regexp.c,1278
+#define END 100,4397
+#define BOL 101,4440
+#define EOL 102,4498
+#define ANY 103,4550
+#define ANYOF	104,4602
+#define ANYBUT	105,4667
+#define BRANCH	107,4749
+#define BACK	109,4831
+#define EXACTLY 110,4896
+#define NOTHING 111,4946
+#define STAR	112,4996
+#define PLUS	114,5081
+#define BOW	116,5166
+#define EOW	117,5223
+#define MOPEN	118,5280
+#define MCLOSE	121,5395
+#define BACKREF	122,5445
+#define Magic(124,5509
+#define OP(158,6935
+#define NEXT(159,6956
+#define OPERAND(160,7013
+#define UCHARAT(171,7164
+#define UCHARAT(173,7219
+#define EMSG_RETURN(176,7268
+ismult(181,7364
+#define HASWIDTH	190,7494
+#define SIMPLE	191,7556
+#define SPSTART 192,7622
+#define WORST	193,7670
+#define TILDE204,7925
+#define PeekChr(252,9082
+skip_regexp(280,10042
+regcomp(325,11387
+reg(442,14290
+regbranch(522,16142
+regpiece(561,17165
+regatom(623,18832
+regnode(806,23005
+regc(830,23340
+unregc(843,23500
+reginsert(857,23698
+regtail(885,24162
+regoptail(917,24710
+initchr(943,25415
+peekchr(952,25526
+skipchr(1012,26898
+getchr(1022,27049
+ungetchr(1036,27177
+regexec(1076,28024
+regtry(1138,29397
+regmatch(1175,30300
+regrepeat(1420,35773
+regnext(1468,36591
+regdump(1492,36906
+regprop(1536,37861
+strcspn(1641,39792
+cstrncmp(1665,40242
+cstrchr(1679,40485
+
+regexp.h,114
+#define _REGEXP_H20,679
+#define NSUBEXP 22,698
+typedef struct regexp regexp23,718
+}				regexp;regexp31,1044
+
+regmagic.h,22
+#define MAGIC	17,644
+
+regsub.c,265
+# define __ARGS(54,2086
+#define UCHARAT(66,2259
+#define UCHARAT(68,2311
+# define __ARGS(76,2487
+typedef void (*(*fptr) __ARGS((char_u *, int)85,2807
+do_upper(93,3057
+do_Upper(103,3150
+do_lower(113,3247
+do_Lower(123,3340
+regtilde(146,3997
+regsub(210,5373
+
+screen.c,1157
+#define CHAR_INVERT	31,741
+#define CHAR_UNDERL	32,764
+#define CHAR_BOLD	33,787
+#define CHAR_STDOUT	34,808
+updateline(65,2048
+update_curbuf(108,3054
+updateScreen(127,3431
+win_update(225,5560
+status_redraw_all(547,13448
+win_redr_status(562,13706
+win_line(622,14986
+screen_outchar(897,21264
+screen_msg(916,21669
+screen_start(947,22228
+set_highlight(958,22418
+start_highlight(1006,23401
+stop_highlight(1016,23512
+remember_highlight(1035,23813
+recover_old_highlight(1043,23943
+screen_char(1054,24154
+screen_fill(1144,26141
+comp_Botline_all(1216,27698
+comp_Botline(1228,27878
+screenalloc(1244,28196
+screenclear(1302,29444
+screenclear2(1309,29562
+check_cursor(1339,30165
+cursupdate(1348,30364
+curs_columns(1499,34641
+getvcol(1561,36509
+scrolldown(1605,37340
+scrollup(1629,37942
+scrolldown_clamp(1655,38600
+scrollup_clamp(1678,39110
+win_ins_lines(1694,39547
+win_del_lines(1793,41991
+win_rest_invalid(1868,43692
+screen_ins_lines(1900,44726
+screen_del_lines(1976,46507
+showmode(2062,48187
+delmode(2108,48929
+showruler(2121,49124
+win_redr_ruler(2128,49200
+screen_valid(2181,50564
+jumpto(2194,50934
+redraw_later(2294,53128
+
+search.c,585
+typedef struct SearchedFileSearchedFile67,2089
+} SearchedFile;SearchedFile72,2242
+myregcomp(86,2708
+searchit(166,4476
+dosearch(331,8614
+search_for_exact_line(536,13313
+searchc(618,14752
+findmatch(685,16048
+showmatch(1105,25807
+findfunc(1133,26489
+findsent(1176,27209
+findpar(1277,29491
+inmacro(1329,30535
+startPS(1353,31068
+cls(1394,32121
+fwd_word(1419,32551
+bck_word(1474,33505
+end_word(1536,35026
+skip_chars(1583,35939
+find_pattern_in_path(1594,36114
+show_pat_in_path(1970,45466
+read_viminfo_search_pattern(2032,46795
+write_viminfo_search_pattern(2061,47303
+
+structs.h,1368
+typedef struct fpos		FPOS;FPOS17,310
+typedef long			linenr_t;linenr_t23,454
+typedef unsigned		colnr_t;colnr_t24,479
+typedef unsigned short	short_u;short_u25,506
+struct fposfpos28,546
+#define NMARKS	39,744
+#define JUMPLISTSIZE	40,794
+#define TAGSTACKSIZE	41,855
+struct filemarkfilemark43,916
+struct taggytaggy53,1156
+typedef struct window		WIN;WIN69,1510
+typedef struct winlnum		WINLNUM;WINLNUM70,1538
+struct winlnumwinlnum72,1572
+struct u_entryu_entry84,1877
+struct u_headeru_header94,2241
+# define ALIGN_LONG	108,2681
+# define ALIGN_SIZE 109,2747
+# define ALIGN_SIZE 111,2788
+#define ALIGN_MASK 114,2832
+typedef struct m_info info_t;info_t116,2869
+struct m_infom_info121,2971
+struct m_blockm_block134,3278
+typedef struct block_hdr	BHDR;BHDR144,3463
+typedef struct memfile		MEMFILE;MEMFILE145,3494
+typedef long				blocknr_t;blocknr_t146,3527
+struct block_hdrblock_hdr163,4220
+typedef struct nr_trans NR_TRANS;NR_TRANS184,5034
+struct nr_transnr_trans186,5069
+#define MEMHASHSIZE	198,5470
+#define MEMHASH(199,5494
+struct memfilememfile201,5543
+typedef struct info_pointer		IPTR;IPTR224,6529
+struct info_pointerinfo_pointer231,6825
+typedef struct memline MEMLINE;MEMLINE239,7054
+struct memlinememline244,7161
+typedef struct buffer BUF;BUF277,8334
+struct bufferbuffer279,8362
+struct windowwindow383,11537
+
+sun_stdlib.h,0
+
+t.c,50
+#define huuh1,0
+} ij_t;ij_t6,43
+int main 8,52
+
+tag.c,95
+dotag(31,747
+dotags(152,3716
+findtag(192,4657
+get_tagfname(574,14269
+ExpandTags(636,15620
+
+term.c,1068
+    typedef int (*outfuntype)outfuntype26,653
+#  define TPUTSFUNCAST 28,699
+#  define TPUTSFUNCAST30,742
+struct builtin_termbuiltin_term52,1472
+# define DEFAULT_TERM	568,13467
+# define DEFAULT_TERM	572,13537
+#  define DEFAULT_TERM	575,13601
+# define DEFAULT_TERM	580,13728
+find_builtin_term(593,14103
+parse_builtin_tcap(614,14530
+# define TGETSTR(653,15627
+# define TGETSTR(655,15693
+#define TGETENT(657,15759
+set_term(660,15818
+getlinecol(900,22504
+tltoa(917,22791
+tgoto(943,23099
+termcapinit(994,23829
+#define BSIZE	1011,24183
+flushbuf(1019,24343
+outchar(1033,24525
+outstrn(1060,25099
+outstr(1074,25377
+windgoto(1092,25674
+setcursor(1105,25861
+ttest(1112,25970
+inchar(1190,27706
+check_termcode(1279,29936
+replace_termcodes(1398,33696
+gather_termleader(1459,35083
+outnum(1490,35626
+check_winsize(1497,35701
+set_winsize(1516,36252
+settmode(1571,37372
+starttermcap(1587,37608
+stoptermcap(1599,37813
+scroll_start(1617,38266
+cursor_on(1632,38468
+cursor_off(1642,38599
+scroll_region_set(1653,38753
+scroll_region_reset(1663,38927
+
+term.h,731
+typedef unsigned char char_u;char_u21,655
+typedef struct _tcarr_tcarr32,1041
+} Tcarr;Tcarr113,4613
+#define T_EL	120,4725
+#define T_IL	121,4758
+#define T_CIL	122,4791
+#define T_DL	123,4826
+#define T_CDL	124,4859
+#define T_CS	125,4894
+#define T_ED	126,4927
+#define T_CI	127,4960
+#define T_CV	128,4993
+#define T_CVV	129,5026
+#define T_TP	130,5061
+#define T_TI	131,5094
+#define T_TB	132,5127
+#define T_SE	133,5160
+#define T_SO	134,5193
+#define T_UE	135,5226
+#define T_US	136,5259
+#define T_MS	137,5292
+#define T_CM	138,5325
+#define T_SR	139,5358
+#define T_CRI	140,5391
+#define T_VB	141,5426
+#define T_KS	142,5459
+#define T_KE	143,5492
+#define T_TS	144,5525
+#define T_TE	145,5558
+#define T_CSC	146,5591
+
+termlib.c,271
+# define TERMCAPFILE 61,1780
+# define TERMCAPFILE 63,1819
+tgetent(66,1863
+getent(127,3108
+nextent(155,3695
+tgetflag(200,4886
+tgetnum(218,5183
+tgetstr(258,6124
+tgoto(367,8819
+tinit(507,12622
+tputs(561,13678
+_match(610,14972
+_find(622,15152
+_addfmt(639,15388
+
+undo.c,601
+u_save_cursor(70,2766
+u_save(81,3097
+u_savesub(102,3549
+u_inssub(116,3809
+u_savedel(131,4098
+u_savecommon(143,4304
+u_undo(260,7087
+u_redo(296,7894
+u_undoredo(323,8452
+u_undo_end(489,13095
+u_sync(503,13361
+u_unchanged(516,13647
+u_getbot(531,13945
+u_freelist(566,14858
+u_freeentry(598,15471
+u_clearall(611,15701
+u_saveline(625,15955
+u_clearline(647,16529
+u_undoline(663,16853
+#define MEMBLOCKSIZE 745,19545
+# define M_OFFSET 761,20035
+# define M_OFFSET 764,20098
+u_blockalloc(771,20237
+u_blockfree(799,20963
+u_free_line(819,21327
+u_alloc_line(921,23827
+u_save_line(1017,26287
+
+unix.c,1324
+# define USE_SYSTEM40,1082
+#  define bzero(62,2067
+#   define SIGWINCH 83,2602
+mch_write(224,5721
+GetChars(239,6028
+mch_char_avail(299,7329
+mch_avail_mem(305,7381
+vim_delay(313,7490
+vim_delay(323,7688
+sig_winch(336,7907
+deathtrap(381,9011
+deathtrap(421,9870
+mch_suspend(489,11139
+mch_windinit(504,11475
+catch_signals(525,11770
+#define BUF2SIZE 594,13226
+check_win(597,13310
+fname_case(612,13683
+get_x11_windis(624,13835
+get_x11_title(647,14399
+get_x11_icon(670,14856
+set_x11_title(701,15484
+set_x11_icon(724,15989
+get_x11_title(744,16411
+get_x11_icon(750,16492
+mch_settitle(766,16745
+is_xterm(849,18353
+is_iris_ansi(859,18521
+mch_restore_title(875,18787
+vim_dirname(886,19036
+FullName(911,19515
+isFullName(980,20856
+getperm(990,20970
+setperm(1006,21194
+isdir(1023,21506
+mch_windexit(1038,21756
+mch_settmode(1056,22089
+setmouse(1129,23543
+mch_screenmode(1147,23834
+mch_get_winsize(1162,24137
+mch_set_winsize(1234,25319
+call_shell(1248,25566
+#define INBUFLEN 1407,28617
+Read(1412,28777
+breakcheck(1428,29129
+fill_inbuf(1438,29301
+WaitForChar(1473,30062
+RealWaitForChar(1486,30308
+remove(1513,30837
+# define SEEK_SET 1539,31536
+# define SEEK_END 1542,31580
+ExpandWildCards(1546,31613
+FreeWild(1745,36056
+has_wildcard(1757,36201
+have_wildcard(1771,36394
+rename(1790,36748
+
+unix.h,721
+# define SYSEXRC_FILE	14,264
+# define SYSVIMRC_FILE	18,330
+# define EXRC_FILE	22,394
+# define VIMRC_FILE	26,449
+# define DEFVIMRC_FILE	30,509
+# define VIM_HLP	34,579
+# define VIMINFO_FILE	39,671
+# define BACKUPDIR	44,757
+# define DEF_DIR	48,809
+#define TMPNAME1	51,842
+#define TMPNAME2	52,876
+#define TMPNAMELEN	53,910
+# define MAXMEM	56,949
+# define MAXMEMTOT	59,1034
+#define BASENAMELEN	62,1102
+#define stricmp 64,1140
+#   define MEMMOVE92,2038
+#  define memmove(96,2137
+# define strchr(108,2463
+# define strrchr(109,2507
+# define memset(113,2576
+#define MOUSE_MASK	138,3300
+#define MOUSE_LEFT	139,3325
+#define MOUSE_MIDDLE	140,3350
+#define MOUSE_RIGHT	141,3376
+#define MOUSE_RELEASE	142,3402
+
+version.c,0
+
+vim.h,4032
+#define ADDED_BY_WEBB8,199
+#define ADDED_BY_WEBB_COMPILE11,243
+#define ADDED_BY_WEBB_SIGNALS12,273
+#define ADDED_BY_WEBB_ISIDCHAR13,303
+#define WEBB_DIAG(15,335
+#define WEBB_DIAG1(16,433
+#define WEBB_DIAG2(17,542
+#define WEBB_DIAG3(18,665
+#  define UNIX24,887
+#  define HAVE_NFS30,948
+typedef unsigned char	char_u;char_u38,1120
+typedef unsigned short	short_u;short_u39,1150
+typedef unsigned int	int_u;int_u40,1182
+typedef unsigned long	long_u;long_u41,1210
+#	  define volatile	78,1820
+#	  define signed	79,1862
+# define vimgetenv(111,2448
+# define __ARGS(116,2545
+# define __PARMS(117,2566
+# define __ARGS(122,2639
+# define __PARMS(123,2660
+# define __ARGS(128,2726
+# define __PARMS(129,2747
+# define __ARGS(132,2789
+# define __PARMS(133,2810
+# define __ARGS(137,2858
+#  define MAXNAMLEN 163,3390
+#  define MAXNAMLEN 166,3476
+#  define MAXNAMLEN 169,3585
+#  define MAXNAMLEN 176,3807
+#  define __ARGS(186,4046
+#  define __PARMS(207,4460
+#define __ARGS(211,4513
+#define __PARMS(214,4557
+# define free(221,4658
+# define fnamecmp(231,4985
+# define fnamecmp(233,5049
+#define VALID	240,5198
+#define INVERTED	241,5244
+#define VALID_TO_CURSCHAR	242,5297
+#define NOT_VALID	243,5364
+#define CURSUPD	244,5409
+#define CLEAR	245,5474
+#define NORMAL	254,5801
+#define VISUAL	255,5825
+#define CMDLINE 256,5849
+#define INSERT	257,5874
+#define NORMAL_BUSY	258,5898
+#define REPLACE 259,5960
+#define NOMAPPING 260,6004
+#define ONLYKEY 261,6066
+#define HITRETURN	262,6130
+#define ASKMORE	263,6183
+#define SETWSIZE	264,6242
+#define ABBREV	265,6297
+#define FORWARD 268,6377
+#define BACKWARD	269,6399
+#define BOTH_DIRECTIONS	270,6422
+#define OK	273,6485
+#define FAIL	274,6503
+#define T_PEEK	277,6542
+#define T_WAIT	278,6588
+#define T_BLOCK	279,6637
+#define CONTEXT_UNKNOWN	284,6724
+#define EXPAND_UNSUCCESSFUL	285,6753
+#define EXPAND_NOTHING	286,6785
+#define EXPAND_COMMANDS	287,6812
+#define EXPAND_FILES	288,6840
+#define EXPAND_DIRECTORIES	289,6865
+#define EXPAND_SETTINGS	290,6895
+#define EXPAND_BOOL_SETTINGS	291,6923
+#define EXPAND_TAGS	292,6954
+#define EXPAND_OLD_SETTING	293,6979
+#define EXPAND_HELP	294,7009
+#define FIND_ANY	297,7114
+#define FIND_DEFINE	298,7134
+#define CHECK_PATH	299,7157
+#define ACTION_SHOW	301,7180
+#define ACTION_GOTO	302,7203
+#define ACTION_SPLIT	303,7226
+#define ACTION_SHOW_ALL	304,7249
+#define ACTION_EXPAND	305,7275
+#define FALSE	311,7341
+#define TRUE	312,7401
+#define MAYBE	314,7425
+#define RET_ERROR	317,7536
+#define VIM_EOF	320,7592
+#define FO_WRAP	323,7663
+#define FO_WRAP_COMS	324,7685
+#define FO_RET_COMS	325,7710
+#define FO_OPEN_COMS	326,7735
+#define FO_Q_COMS	327,7760
+#define FO_Q_SECOND	328,7783
+#define FO_DFLT	330,7809
+# define MAX_COLUMNS 336,7910
+# define MAX_COLUMNS 338,7944
+#define MIN_COLUMNS	340,7978
+#define MIN_ROWS	341,8036
+#define STATUS_HEIGHT	342,8091
+# define CMDBUFFSIZE	348,8230
+# define CMDBUFFSIZE	350,8306
+#define LSIZE	353,8384
+#define IOSIZE	355,8449
+#define MSG_BUF_LEN	356,8516
+#define	TERMBUFSIZE	358,8584
+# define TBUFSZ 361,8623
+# define TBUFSZ 363,8688
+# define MAXPATHL	370,8812
+# define MAXPATHL	372,8889
+#define MAXMAPLEN	379,9064
+# define WRITEBIN	382,9099
+# define READBIN	383,9150
+# define APPENDBIN	384,9172
+# define WRITEBIN	386,9202
+# define READBIN	387,9224
+# define APPENDBIN	388,9245
+#define CHANGED 391,9276
+#define UNCHANGED(392,9310
+#define STRCHR(397,9427
+#define STRRCHR(398,9482
+#define STRLEN(399,9539
+#define STRCPY(400,9579
+#define STRNCPY(401,9634
+#define STRCMP(402,9696
+#define STRNCMP(403,9751
+#define STRCAT(404,9813
+#define MSG(406,9869
+#define EMSG(407,9906
+#define EMSG2(408,9945
+#define OUTSTR(409,10003
+#define OUTSTRN(410,10045
+#define MSG_OUTSTR(411,10089
+typedef long			linenr_t;linenr_t413,10139
+typedef unsigned		colnr_t;colnr_t414,10187
+#define MAXLNUM 416,10240
+# define MAXCOL	418,10321
+# define MAXCOL	420,10382
+#define SHOWCMD_COLS 423,10452
+# define isspace(433,10693
+#define iswhite(439,10830
+
+window.c,671
+do_window(27,666
+reset_Visual(252,5765
+win_split(270,6126
+make_windows(429,10182
+win_exchange(473,11191
+win_rotate(535,12438
+win_equal(580,13326
+close_windows(671,14976
+close_window(697,15423
+close_others(756,16576
+win_init(807,17563
+win_enter(825,17924
+win_alloc(855,18504
+win_free(889,19085
+win_append(900,19214
+win_remove(926,19625
+win_alloc_lsize(944,19914
+win_free_lsize(964,20343
+screen_new_rows(975,20485
+win_comp_pos(1021,21463
+win_setheight(1044,21826
+win_comp_scroll(1141,24199
+command_height(1153,24392
+last_status(1179,25031
+file_name_at_cursor(1219,25949
+get_file_name_in_path(1226,26088
+isfilechar(1357,29298
+min_rows(1380,29799
+
+winnt.c,1987
+typedef struct filelist filelist46,941
+}               FileList;FileList50,1051
+void            vim_delay(62,1576
+int             vim_remove(70,1700
+void            mch_write(80,1908
+#define KEYPADLO	211,5695
+#define KEYPADHI	212,5717
+#define PADKEYS 214,5740
+#define iskeypad(215,5783
+static int      WaitForChar(221,5890
+int             tgetch(251,6811
+int             kbhit(297,7878
+int             GetChars(340,9318
+void            mch_suspend(389,10816
+void            mch_windinit(399,10984
+void            check_win(426,11865
+void            fname_case(444,12498
+void         mch_settitle(454,12645
+mch_restore_title(470,12987
+int             vim_dirname(480,13195
+int             FullName(490,13400
+isFullName(509,13826
+long            getperm(520,13999
+int             setperm(537,14277
+int             isdir(547,14448
+void            mch_windexit(563,14808
+BOOL WINAPI     handler_routine(577,15050
+void            mch_settmode(588,15215
+int             mch_get_winsize(630,16371
+#define MAX_MSG_BUF_SIZE 675,18042
+void            perr(677,18072
+#define PERR(710,19556
+void            resizeConBufAndWindow(714,19658
+void            mch_set_winsize(753,21587
+int             call_shell(758,21677
+#define FL_CHUNK 791,22479
+static void     addfile(793,22500
+static int      pstrcmp(829,23375
+int             has_wildcard(836,23485
+static void     strlowcpy(846,23660
+static int      expandpath(855,23803
+int             ExpandWildCards(930,25721
+void            FreeWild(960,26501
+int             vim_chdir(976,26797
+clrscr(991,27269
+clreol(1003,27582
+insline(1014,27928
+delline(1036,28397
+scroll(1060,28947
+gotoxy(1083,29462
+normvideo(1092,29620
+textattr(1100,29754
+putch(1108,29884
+delay(1116,30000
+sleep(1121,30028
+vbell(1126,30063
+cursor_visible(1144,30671
+void            set_window(1153,30875
+void            breakcheck(1160,30977
+mch_avail_mem(1169,31103
+mch_char_avail(1179,31248
+mch_screenmode(1188,31340

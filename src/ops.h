@@ -1,13 +1,13 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
- * ops.h: things shared between normal.c, cmdline.c and ops.c
+ * ops.h: Things mostly shared between normal.c, cmdline.c and ops.c
  */
 
 /*
@@ -17,20 +17,21 @@
 #define DELETE	1
 #define YANK	2
 #define CHANGE	3
-#define LSHIFT	4
-#define RSHIFT	5
+#define LSHIFT	4				/* left shift */
+#define RSHIFT	5				/* right shift */
 #define FILTER	6
-#define TILDE	7
+#define TILDE	7				/* switch case */
 #define INDENT	8
 #define FORMAT	9
 #define COLON	10
-#define UPPER	11
-#define LOWER	12
+#define UPPER	11				/* make upper case */
+#define LOWER	12				/* make lower case */
+#define JOIN	13				/* only for visual mode */
 
 /*
- * operator characters; the order must correspond to the defines above
+ * operator characters; the order must correspond to the defines above!
  */
-EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:Uu");
+EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:UuJ");
 
 /*
  * When a cursor motion command is made, it is marked as being a character or
@@ -47,16 +48,21 @@ EXTERN char_u *opchars INIT(= (char_u *)"dyc<>!~=Q:Uu");
 /*
  * Motion types
  */
-#define MBAD	(-1)			/* 'bad' motion type marks unusable yank buf */
 #define MCHAR	0
 #define MLINE	1
 #define MBLOCK	2
 
-EXTERN int		operator INIT(= NOP);	/* current pending operator */
-EXTERN int		mtype;					/* type of the current cursor motion */
-EXTERN int		mincl;					/* true if char motion is inclusive */
-EXTERN colnr_t	startvcol;				/* start col for block mode operator */
-EXTERN colnr_t	endvcol;				/* end col for block mode operator */
-EXTERN long		nlines;					/* lines between startop and endop + 1 */
+EXTERN int		op_type INIT(= NOP);	/* current pending operator type */
+EXTERN int		op_motion_type;			/* type of the current cursor motion */
+EXTERN int		op_inclusive;			/* TRUE if char motion is inclusive */
+EXTERN int		op_block_mode INIT(= FALSE);
+									/* current operator is Visual block mode */
+EXTERN colnr_t	op_start_vcol;			/* start col for block mode operator */
+EXTERN colnr_t	op_end_vcol;			/* end col for block mode operator */
+EXTERN int		op_end_adjusted;		/* backuped op_end one char */
+EXTERN long		op_line_count;			/* number of lines from op_start to
+											op_end (inclusive) */
+EXTERN int		op_empty;				/* op_start and op_end the same */
+EXTERN int		op_is_VIsual;			/* opeartor on visual area */
+
 EXTERN int		yankbuffer INIT(= 0);	/* current yank buffer */
-EXTERN int		no_op;					/* startop and endop the same */

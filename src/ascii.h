@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -11,8 +11,6 @@
  */
 
 #define NUL 					'\000'
-#define BS						'\010'
-#define BS_STR					(char_u *)"\010"
 #define TAB 					'\011'
 #define NL						'\012'
 #define NL_STR					(char_u *)"\012"
@@ -26,12 +24,9 @@
 #define Meta(x) ((x) | 0x80)
 
 /*
- * character that separates dir names in a path
+ * Character that separates dir names in a path.
+ * For MS-DOS and WIN32 we also use the slash, the backslash causes trouble in
+ * a command line and the slash works fine.
  */
-#ifdef MSDOS
-# define PATHSEP '\\'
-# define PATHSEPSTR "\\"
-#else
-# define PATHSEP '/'
-# define PATHSEPSTR "/"
-#endif
+#define PATHSEP '/'
+#define PATHSEPSTR "/"

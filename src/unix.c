@@ -1,83 +1,52 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
+ *                OS/2 port by Paul Slootman
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
- * unix.c -- BSD and SYSV code
+ * unix.c -- code for all flavors of Unix (BSD, SYSV, SVR4, POSIX, ...)
+ *           Also for OS/2, using the excellent EMX package!!!
  *
- * A lot of this file was written by Juergen Weigert.
+ * A lot of this file was originally written by Juergen Weigert and later
+ * changed beyond recognition.
  */
+
+/*
+ * Some systems have a prototype for select() that has (int *) instead of
+ * (fd_set *), which is wrong. This define removes that prototype. We include
+ * our own prototype in osdef.h.
+ */
+#define select select_declared_wrong
 
 #include "vim.h"
 #include "globals.h"
-#include "param.h"
+#include "option.h"
 #include "proto.h"
 
-#include <fcntl.h>
-#if !defined(pyr) && !defined(NOT_BOTH_TIME)
-# include <time.h>			/* on some systems time.h should not be
-							   included together with sys/time.h */
-#endif
-#include <sys/ioctl.h>
-#ifndef M_XENIX
-# include <sys/types.h>
-#endif
-#include <signal.h>
-
-#ifndef USE_SYSTEM		/* use fork/exec to start the shell */
-# include <sys/wait.h>
-# if !defined(SCO) && !defined(SOLARIS) && !defined(hpux) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(_SEQUENT_) && !defined(UNISYS)	/* SCO returns pid_t */
-extern int fork();
-# endif
-# if !defined(linux) && !defined(SOLARIS) && !defined(USL) && !defined(sun) && !(defined(hpux) && defined(__STDC__)) && !defined(__NetBSD__) && !defined(__FreeBSD__) && !defined(USL) && !defined(UNISYS)
-extern int execvp __ARGS((const char *, const char **));
-# endif
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
 #endif
 
-#if defined(SYSV_UNIX) || defined(USL)
-# if defined(__sgi) || defined(UTS2) || defined(UTS4) || defined(MIPS) || defined (MIPSEB) || defined(__osf__)
-#  include <sys/time.h>
-# endif
-# if defined(M_XENIX) || defined(SCO)
-#  include <stropts.h>
-# endif
-# if defined(M_XENIX) || defined(SCO) || defined(UNICOS)
-#  include <sys/select.h>
-#  define bzero(a, b)	memset((a), 0, (b))
-# endif
-# if !defined(M_XENIX) && !defined(UNICOS)
-#  include <poll.h>
-# endif
-# if defined(SCO) || defined(ISC)
-#  include <sys/stream.h>
-#  include <sys/ptem.h>
-# endif
-# if defined(M_UNIX) && !defined(SCO)
-#  include <sys/time.h>
-# endif       /* M_UNIX */
-# ifdef ISC
-#  include <termios.h>
-# endif
-# include <termio.h>
-#else	/* SYSV_UNIX */
-# include <sys/time.h>
-# if defined(hpux) || defined(linux)
-#  include <termio.h>
-#  if defined(hpux) && !defined(SIGWINCH)	/* hpux 9.01 has it */
-#   define SIGWINCH SIGWINDOW
-#  endif
-# else
-#  include <sgtty.h>
-# endif	/* hpux */
-#endif	/* !SYSV_UNIX */
+#include "unixunix.h"		/* unix includes for unix.c only */
 
-#if (defined(pyr) || defined(NO_FD_ZERO)) && defined(SYSV_UNIX) && defined(FD_ZERO)
-# undef FD_ZERO
+/*
+ * Use this prototype for select, some include files have a wrong prototype
+ */
+#undef select
+
+#if defined(HAVE_SELECT)
+extern int   select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
 #endif
+
+/*
+ * end of autoconf section. To be extended...
+ */
+
+/* Are the following #ifdefs still required? And why? Is that for X11? */
 
 #if defined(ESIX) || defined(M_UNIX) && !defined(SCO)
 # ifdef SIGWINCH
@@ -88,72 +57,182 @@ extern int execvp __ARGS((const char *, const char **));
 # endif
 #endif
 
-#ifdef USE_X11
+#if defined(SIGWINDOW) && !defined(SIGWINCH)	/* hpux 9.01 has it */
+# define SIGWINCH SIGWINDOW
+#endif
 
+#if defined(HAVE_X11) && defined(WANT_X11)
 # include <X11/Xlib.h>
 # include <X11/Xutil.h>
+# include <X11/Xatom.h>
 
 Window		x11_window = 0;
 Display		*x11_display = NULL;
+int			got_x_error = FALSE;
 
 static int	get_x11_windis __ARGS((void));
-#ifdef BUGGY
 static void set_x11_title __ARGS((char_u *));
 static void set_x11_icon __ARGS((char_u *));
 #endif
-#endif
 
-static void get_x11_title __ARGS((void));
-static void get_x11_icon __ARGS((void));
+static int get_x11_title __ARGS((int));
+static int get_x11_icon __ARGS((int));
+
+static void may_core_dump __ARGS((void));
 
 static int	Read __ARGS((char_u *, long));
-static int	WaitForChar __ARGS((int));
-static int	RealWaitForChar __ARGS((int));
-static void fill_inbuf __ARGS((void));
-#ifdef USL
-static void sig_winch __ARGS((int));
-#else
-# if defined(SIGWINCH) && !defined(linux) && !defined(__alpha) && !defined(mips) && !defined(_SEQUENT_) && !defined(SCO) && !defined(SOLARIS) && !defined(ISC)
-static void sig_winch __ARGS((int, int, struct sigcontext *));
-# endif
+static int	WaitForChar __ARGS((long));
+static int	RealWaitForChar __ARGS((int, long));
+static void fill_inbuf __ARGS((int));
+
+#if defined(SIGWINCH)
+static RETSIGTYPE sig_winch __ARGS(SIGPROTOARG);
+#endif
+#if defined(SIGALRM) && defined(HAVE_X11) && defined(WANT_X11)
+static RETSIGTYPE sig_alarm __ARGS(SIGPROTOARG);
+#endif
+static RETSIGTYPE deathtrap __ARGS(SIGPROTOARG);
+
+static void catch_signals __ARGS((RETSIGTYPE (*func)()));
+#ifndef __EMX__
+static int	have_wildcard __ARGS((int, char_u **));
+static int	have_dollars __ARGS((int, char_u **));
 #endif
 
-static int do_resize = FALSE;
-static char_u *oldtitle = NULL;
-static char_u *oldicon = NULL;
-static char_u *extra_shell_arg = NULL;
-static int show_shell_mess = TRUE;
+static int		do_resize = FALSE;
+static char_u	*oldtitle = NULL;
+static char_u	*fixedtitle = (char_u *)"Thanks for flying Vim";
+static char_u	*oldicon = NULL;
+static char_u	*extra_shell_arg = NULL;
+#ifndef __EMX__
+static int		show_shell_mess = TRUE;
+#endif
+static int		core_dump = FALSE;			/* core dump in mch_windexit() */
 
+#ifdef SYS_SIGLIST_DECLARED
 /*
- * At this point TRUE and FALSE are defined as 1L and 0L, but we want 1 and 0.
+ * I have seen 
+ * 	extern char *_sys_siglist[NSIG];
+ * on Irix, Linux, NetBSD and Solaris. It contains a nice list of strings
+ * that describe the signals. That is nearly what we want here.  But
+ * autoconf does only check for sys_siglist (without the underscore), I
+ * do not want to change everything today.... jw.
+ * This is why AC_DECL_SYS_SIGLIST is commented out in configure.in
  */
-#undef TRUE
-#define TRUE 1
-#undef FALSE
-#define FALSE 0
+#endif
+
+static struct
+{
+	int		sig;		/* Signal number, eg. SIGSEGV etc */
+	char	*name;		/* Signal name (not char_u!). */
+	int		dump;		/* Should this signal cause a core dump? */
+} signal_info[] =
+{
+#ifdef SIGHUP
+	{SIGHUP,		"HUP",		FALSE},
+#endif
+#ifdef SIGINT
+	{SIGINT,		"INT",		FALSE},
+#endif
+#ifdef SIGQUIT
+	{SIGQUIT,		"QUIT",		TRUE},
+#endif
+#ifdef SIGILL
+	{SIGILL,		"ILL",		TRUE},
+#endif
+#ifdef SIGTRAP
+	{SIGTRAP,		"TRAP",		TRUE},
+#endif
+#ifdef SIGABRT
+	{SIGABRT,		"ABRT",		TRUE},
+#endif
+#ifdef SIGEMT
+	{SIGEMT,		"EMT",		TRUE},
+#endif
+#ifdef SIGFPE
+	{SIGFPE,		"FPE",		TRUE},
+#endif
+#ifdef SIGBUS
+	{SIGBUS,		"BUS",		TRUE},
+#endif
+#ifdef SIGSEGV
+	{SIGSEGV,		"SEGV",		TRUE},
+#endif
+#ifdef SIGSYS
+	{SIGSYS,		"SYS",		TRUE},
+#endif
+#ifdef SIGALRM
+	{SIGALRM,		"ALRM",		FALSE},
+#endif
+#ifdef SIGTERM
+	{SIGTERM,		"TERM",		FALSE},
+#endif
+#ifdef SIGVTALRM
+	{SIGVTALRM,		"VTALRM",	FALSE},
+#endif
+#ifdef SIGPROF
+	{SIGPROF,		"PROF",		FALSE},
+#endif
+#ifdef SIGXCPU
+	{SIGXCPU,		"XCPU",		TRUE},
+#endif
+#ifdef SIGXFSZ
+	{SIGXFSZ,		"XFSZ",		TRUE},
+#endif
+#ifdef SIGUSR1
+	{SIGUSR1,		"USR1",		FALSE},
+#endif
+#ifdef SIGUSR2
+	{SIGUSR2,		"USR2",		FALSE},
+#endif
+	{-1,			"Unknown!",	-1}
+};
 
 	void
 mch_write(s, len)
 	char_u	*s;
 	int		len;
 {
-	write(1, (char *)s, len);
+#ifdef USE_GUI
+	if (gui.in_use && !gui.dying)
+	{
+		gui_write(s, len);
+		if (p_wd)
+			gui_mch_wait_for_chars(p_wd);
+	}
+	else
+#endif
+	{
+		write(1, (char *)s, len);
+		if (p_wd)			/* Unix is too fast, slow down a bit more */
+			RealWaitForChar(0, p_wd);
+	}
 }
 
 /*
- * GetChars(): low level input funcion.
+ * mch_inchar(): low level input funcion.
  * Get a characters from the keyboard.
+ * Return the number of characters that are available.
  * If wtime == 0 do not wait for characters.
  * If wtime == n wait a short time for characters.
  * If wtime == -1 wait forever for characters.
  */
 	int
-GetChars(buf, maxlen, wtime)
+mch_inchar(buf, maxlen, wtime)
 	char_u	*buf;
 	int		maxlen;
-	int		wtime;			/* don't use "time", MIPS cannot handle it */
+	long	wtime;			/* don't use "time", MIPS cannot handle it */
 {
-	int		len;
+	int			len;
+
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		if (!gui_mch_wait_for_chars(wtime))
+			return 0;
+		return Read(buf, (long)maxlen);
+	}
+#endif
 
 	if (wtime >= 0)
 	{
@@ -172,7 +251,7 @@ GetChars(buf, maxlen, wtime)
 	 * flush all the swap files to disk
 	 * Also done when interrupted by SIGWINCH.
 	 */
-		if (WaitForChar((int)p_ut) == 0)
+		if (WaitForChar(p_ut) == 0)
 			updatescript(0);
 	}
 
@@ -186,12 +265,29 @@ GetChars(buf, maxlen, wtime)
 		/* 
 		 * we want to be interrupted by the winch signal
 		 */
-		WaitForChar(-1);
+		WaitForChar(-1L);
 		if (do_resize)		/* interrupted by SIGWINCHsignal */
 			continue;
+
+		/*
+		 * For some terminals we only get one character at a time.
+		 * We want the get all available characters, so we could keep on
+		 * trying until none is available
+		 * For some other terminals this is quite slow, that's why we don't do
+		 * it.
+		 */
 		len = Read(buf, (long)maxlen);
 		if (len > 0)
+		{
+#ifdef OS2
+			int i;
+
+			for (i = 0; i < len; i++)
+				if (buf[i] == 0)
+					buf[i] = K_NUL;
+#endif
 			return len;
+		}
 	}
 }
 
@@ -201,81 +297,181 @@ GetChars(buf, maxlen, wtime)
 	int
 mch_char_avail()
 {
-	return WaitForChar(0);
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		gui_mch_update();
+		return !is_input_buf_empty();
+	}
+#endif
+	return WaitForChar(0L);
 }
 
 	long
 mch_avail_mem(special)
 	int special;
 {
-	return 0x7fffffff;		/* virual memory eh */
-}
-
-#ifndef FD_ZERO
-	void
-vim_delay()
-{
-	poll(0, 0, 500);
-}
+#ifdef __EMX__
+	return ulimit(3, 0L);	/* always 32MB? */
 #else
-# if (defined(__STDC__) && !defined(hpux)) || defined(ultrix)
-extern int select __ARGS((int, fd_set *, fd_set *, fd_set *, struct timeval *));
-# endif
-
-	void
-vim_delay()
-{
-	struct timeval tv;
-
-	tv.tv_sec = 25 / 50;
-	tv.tv_usec = (25 % 50) * (1000000/50);
-	select(0, 0, 0, 0, &tv);
-}
+ 	return 0x7fffffff;		/* virtual memory eh */
 #endif
+}
 
-	static void
-#if defined(__alpha) || (defined(mips) && !defined(USL))
-sig_winch()
+	void
+mch_delay(msec, ignoreinput)
+	long		msec;
+	int			ignoreinput;
+{
+	if (ignoreinput)
+#ifndef HAVE_SELECT
+		poll(NULL, 0, (int)msec);
 #else
-# if defined(_SEQUENT_) || defined(SCO) || defined(ISC)
-sig_winch(sig, code)
-	int		sig;
-	int		code;
+# ifdef __EMX__
+	_sleep2(msec);
 # else
-#  if defined(USL)
-sig_winch(sig)
-	int		sig;
-#  else
-sig_winch(sig, code, scp)
-	int		sig;
-	int		code;
-	struct sigcontext *scp;
-#  endif
-# endif
+	{
+		struct timeval tv;
+
+		tv.tv_sec = msec / 1000;
+		tv.tv_usec = (msec % 1000) * 1000;
+		select(0, NULL, NULL, NULL, &tv);
+	}
+# endif	/* __EMX__ */
+#endif	/* HAVE_SELECT */
+	else
+#ifdef USE_GUI
+		if (gui.in_use)
+			gui_mch_wait_for_chars(msec);
+		else
 #endif
-{
+			WaitForChar(msec);
+}
+
 #if defined(SIGWINCH)
-		/* this is not required on all systems, but it doesn't hurt anybody */
-	signal(SIGWINCH, (void (*)())sig_winch);
-#endif
+/*
+ * We need correct potatotypes, otherwise mean compilers will barf when the
+ * second argument to signal() is ``wrong''.
+ * Let me try it with a few tricky defines from my own osdef.h  (jw).
+ */
+	static RETSIGTYPE
+sig_winch SIGDEFARG(sigarg)
+{
+	/* this is not required on all systems, but it doesn't hurt anybody */
+	signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
 	do_resize = TRUE;
+	SIGRETURN;
+}
+#endif
+ 
+#if defined(SIGALRM) && defined(HAVE_X11) && defined(WANT_X11)
+/*
+ * signal function for alarm().
+ */
+	static RETSIGTYPE
+sig_alarm SIGDEFARG(sigarg)
+{
+	/* doesn't do anything, just to break a system call */
+	SIGRETURN;
+}
+#endif
+ 
+	void
+mch_resize()
+{
+	do_resize = TRUE;
+}
+
+/*
+ * This function handles deadly signals.
+ * It tries to preserve any swap file and exit properly.
+ * (partly from Elvis).
+ */
+	static RETSIGTYPE
+deathtrap SIGDEFARG(sigarg)
+{
+	static int		entered = 0;
+#ifdef SIGHASARG
+	int		i;
+
+	for (i = 0; signal_info[i].dump != -1; i++)
+	{
+		if (sigarg == signal_info[i].sig)
+		{
+			if (signal_info[i].dump)
+				core_dump = TRUE;
+			break;
+		}
+	}
+#endif
+
+	/*
+	 * If something goes wrong after entering here, we may get here again.
+	 * When this happens, give a message and try to exit nicely (resetting the
+	 * terminal mode, etc.)
+	 * When this happens twice, just exit, don't even try to give a message,
+	 * stack may be corrupt or something weird.
+	 */
+	if (entered == 2)
+	{
+		may_core_dump();
+		exit(7);
+	}
+	if (entered)
+	{
+		OUTSTR("Vim: Double signal, exiting\n");
+		flushbuf();
+		getout(1);
+	}
+	++entered;
+
+	sprintf((char *)IObuff, "Vim: Caught %s %s\n",
+#ifdef SIGHASARG
+					"deadly signal", signal_info[i].name);
+#else
+					"some", "deadly signal");
+#endif
+
+	preserve_exit();				/* preserve files and exit */
+
+	SIGRETURN;
 }
 
 /*
  * If the machine has job control, use it to suspend the program,
  * otherwise fake it by starting a new shell.
+ * When running the GUI iconify the window.
  */
 	void
 mch_suspend()
 {
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		gui_mch_iconify();
+		return;
+	}
+#endif
 #ifdef SIGTSTP
+	flushbuf();				/* needed to make cursor visible on some systems */
 	settmode(0);
+	flushbuf();				/* needed to disable mouse on some systems */
 	kill(0, SIGTSTP);		/* send ourselves a STOP signal */
+	
+	/*
+	 * Set oldtitle to NULL, so the current title is obtained again.
+	 */
+	if (oldtitle != fixedtitle)
+	{
+		vim_free(oldtitle);
+		oldtitle = NULL;
+	}
 	settmode(1);
 #else
-	OUTSTR("new shell started\n");
-	(void)call_shell(NULL, 0, TRUE);
+	MSG_OUTSTR("new shell started\n");
+	(void)call_shell(NULL, SHELL_COOKED);
 #endif
+	need_check_timestamps = TRUE;
 }
 
 	void
@@ -287,46 +483,105 @@ mch_windinit()
 	flushbuf();
 
 	(void)mch_get_winsize();
+
 #if defined(SIGWINCH)
-	signal(SIGWINCH, (void (*)())sig_winch);
+	/*
+	 * WINDOW CHANGE signal is handled with sig_winch().
+	 */
+	signal(SIGWINCH, (RETSIGTYPE (*)())sig_winch);
 #endif
+
+	/*
+	 * We want the STOP signal to work, to make mch_suspend() work
+	 */
+#ifdef SIGTSTP
+	signal(SIGTSTP, SIG_DFL);
+#endif
+
+	/*
+	 * We want to ignore breaking of PIPEs.
+	 */
+#ifdef SIGPIPE
+	signal(SIGPIPE, SIG_IGN);
+#endif
+
+	/*
+	 * Arrange for other signals to gracefully shutdown Vim.
+	 */
+	catch_signals(deathtrap);
+}
+
+	static void
+catch_signals(func)
+	RETSIGTYPE (*func)();
+{
+	int		i;
+
+	for (i = 0; signal_info[i].dump != -1; i++)
+		signal(signal_info[i].sig, func);
+}
+
+	void
+reset_signals()
+{
+	catch_signals(SIG_DFL);
 }
 
 /*
  * Check_win checks whether we have an interactive window.
- * If not, a new window is opened with the newcli command.
- * If we would open a window ourselves, the :sh and :! commands would not
- * work properly (Why? probably because we are then running in a background CLI).
- * This also is the best way to assure proper working in a next Workbench release.
- *
- * For the -e option (quickfix mode) we open our own window and disable :sh.
- * Otherwise we would never know when editing is finished.
  */
-#define BUF2SIZE 320		/* lenght of buffer for argument with complete path */
-
-	void
-check_win(argc, argv)
+	int
+mch_check_win(argc, argv)
 	int		argc;
 	char	**argv;
 {
-	if (!isatty(0) || !isatty(1))
-    {
-		fprintf(stderr, "VIM: no controlling terminal\n");
-		exit(2);
-    }
+	if (isatty(1))
+		return OK;
+	return FAIL;
+}
+
+	int
+mch_check_input()
+{
+	if (isatty(0))
+		return OK;
+	return FAIL;
+}
+
+#if defined(HAVE_X11) && defined(WANT_X11)
+/*
+ * X Error handler, otherwise X just exits!  (very rude) -- webb
+ */
+	static int
+x_error_handler(dpy, error_event)
+	Display		*dpy;
+	XErrorEvent	*error_event;
+{
+	XGetErrorText(dpy, error_event->error_code, (char *)IObuff, IOSIZE);
+	STRCAT(IObuff, "\nVim: Got X error\n");
+
+#if 1
+	preserve_exit();				/* preserve files and exit */
+#else
+	printf(IObuff);					/* print error message and continue */
+									/* Makes my system hang */
+#endif
+
+	return 0;			/* NOTREACHED */
 }
 
 /*
- * fname_case(): Set the case of the filename, if it already exists.
- *				 This will cause the filename to remain exactly the same.
+ * Another X Error handler, just used to check for errors.
  */
-	void
-fname_case(name)
-	char_u *name;
+	static int
+x_error_check(dpy, error_event)
+	Display	*dpy;
+	XErrorEvent	*error_event;
 {
+	got_x_error = TRUE;
+	return 0;
 }
 
-#ifdef USE_X11
 /*
  * try to get x11 window and display
  *
@@ -335,7 +590,34 @@ fname_case(name)
 	static int
 get_x11_windis()
 {
-	char		*winid;
+	char			*winid;
+	XTextProperty	text_prop;
+	int				(*old_handler)();
+	static int		result = -1;
+	static int		x11_display_opened_here = FALSE;
+
+	/* X just exits if it finds an error otherwise! */
+	XSetErrorHandler(x_error_handler);
+
+#ifdef USE_GUI_X11
+	if (gui.in_use)
+	{
+		/*
+		 * If the X11 display was opened here before, for the window where Vim
+		 * was started, close that one now to avoid a memory leak.
+		 */
+		if (x11_display_opened_here && x11_display != NULL)
+		{
+			XCloseDisplay(x11_display);
+			x11_display = NULL;
+			x11_display_opened_here = FALSE;
+		}
+		return gui_get_x11_windis(&x11_window, &x11_display);
+	}
+#endif
+
+	if (result != -1)		/* Have already been here and set this */
+		return result;		/* Don't do all these X calls again */
 
 	/*
 	 * If WINDOWID not set, should try another method to find out
@@ -346,19 +628,63 @@ get_x11_windis()
 	if (x11_window == 0 && (winid = getenv("WINDOWID")) != NULL) 
 		x11_window = (Window)atol(winid);
 	if (x11_window != 0 && x11_display == NULL)
+	{
+#ifdef SIGALRM
+		RETSIGTYPE (*sig_save)();
+
+		/*
+		 * Opening the Display may hang if the DISPLAY setting is wrong, or
+		 * the network connection is bad.  Set an alarm timer to get out.
+		 */
+		sig_save = (RETSIGTYPE (*)())signal(SIGALRM,
+												 (RETSIGTYPE (*)())sig_alarm);
+		alarm(2);
+#endif
 		x11_display = XOpenDisplay(NULL);
+#ifdef SIGALRM
+		alarm(0);
+		signal(SIGALRM, (RETSIGTYPE (*)())sig_save);
+#endif
+		if (x11_display != NULL)
+		{
+			/*
+			 * Try to get the window title.  I don't actually want it yet, so
+			 * there may be a simpler call to use, but this will cause the
+			 * error handler x_error_check() to be called if anything is wrong,
+			 * such as the window pointer being invalid (as can happen when the
+			 * user changes his DISPLAY, but not his WINDOWID) -- webb
+			 */
+			old_handler = XSetErrorHandler(x_error_check);
+			got_x_error = FALSE;
+			if (XGetWMName(x11_display, x11_window, &text_prop))
+				XFree((void *)text_prop.value);
+			XSync(x11_display, False);
+			if (got_x_error)
+			{
+				/* Maybe window id is bad */
+				x11_window = 0;
+				XCloseDisplay(x11_display);
+				x11_display = NULL;
+			}
+			else
+				x11_display_opened_here = TRUE;
+			XSetErrorHandler(old_handler);
+		}
+	}
 	if (x11_window == 0 || x11_display == NULL)
-		return FAIL;
-	return OK;
+		return (result = FAIL);
+	return (result = OK);
 }
 
 /*
  * Determine original x11 Window Title
  */
-	static void
-get_x11_title()
+	static int
+get_x11_title(test_only)
+	int		test_only;
 {
 	XTextProperty	text_prop;
+	int				retval = FALSE;
 
 	if (get_x11_windis() == OK)
 	{
@@ -366,22 +692,30 @@ get_x11_title()
 		if (XGetWMName(x11_display, x11_window, &text_prop))
 		{
 			if (text_prop.value != NULL)
-				oldtitle = strsave((char_u *)text_prop.value);
+			{
+				retval = TRUE;
+				if (!test_only)
+					oldtitle = strsave((char_u *)text_prop.value);
+			}
 			XFree((void *)text_prop.value);
 		}
 	}
-	if (oldtitle == NULL)		/* could not get old title */
-		oldtitle = (char_u *)"Thanks for flying Vim";
+	if (oldtitle == NULL && !test_only)		/* could not get old title */
+		oldtitle = fixedtitle;
+
+	return retval;
 }
 
 /*
  * Determine original x11 Window icon
  */
 
-	static void
-get_x11_icon()
+	static int
+get_x11_icon(test_only)
+	int		test_only;
 {
-	XTextProperty text_prop;
+	XTextProperty	text_prop;
+	int				retval = FALSE;
 
 	if (get_x11_windis() == OK)
 	{
@@ -389,44 +723,48 @@ get_x11_icon()
 		if (XGetWMIconName(x11_display, x11_window, &text_prop))
 		{
 			if (text_prop.value != NULL)
-				oldicon = strsave((char_u *)text_prop.value);
+			{
+				retval = TRUE;
+				if (!test_only)
+					oldicon = strsave((char_u *)text_prop.value);
+			}
 			XFree((void *)text_prop.value);
 		}
 	}
 
 		/* could not get old icon, use terminal name */
-	if (oldicon == NULL)
+	if (oldicon == NULL && !test_only)
 	{
-		if (STRNCMP(term_strings.t_name, "builtin_", 8) == 0)
-			oldicon = term_strings.t_name + 8;
+		if (STRNCMP(term_strings[KS_NAME], "builtin_", 8) == 0)
+			oldicon = term_strings[KS_NAME] + 8;
 		else
-			oldicon = term_strings.t_name;
+			oldicon = term_strings[KS_NAME];
 	}
+
+	return retval;
 }
-
-#if BUGGY
-
-This is not included, because it probably does not work at all.
-On my FreeBSD/Xfree86 in a shelltool I get all kinds of error messages and
-Vim is stopped in an uncontrolled way.
 
 /*
  * Set x11 Window Title
  *
  * get_x11_windis() must be called before this and have returned OK
  */
-	static void
+    static void
 set_x11_title(title)
-	char_u		*title;
+    char_u      *title;
 {
-	XTextProperty text_prop;
+#if XtSpecificationRelease >= 4
+    XTextProperty text_prop;
 
-		/* Get icon name if any */
-	text_prop.value = title;
-	text_prop.nitems = STRLEN(title);
-	XSetWMName(x11_display, x11_window, &text_prop);
-	if (XGetWMName(x11_display, x11_window, &text_prop)) 	/* required? */
-		XFree((void *)text_prop.value);
+    text_prop.value = title;
+    text_prop.nitems = STRLEN(title);
+    text_prop.encoding = XA_STRING;
+    text_prop.format = 8;
+    XSetWMName(x11_display, x11_window, &text_prop);
+#else
+    XStoreName(x11_display, x11_window, (char *)title);
+#endif
+    XFlush(x11_display);
 }
 
 /*
@@ -434,43 +772,83 @@ set_x11_title(title)
  *
  * get_x11_windis() must be called before this and have returned OK
  */
-	static void
+    static void
 set_x11_icon(icon)
-	char_u		*icon;
+    char_u      *icon;
 {
-	XTextProperty text_prop;
+#if XtSpecificationRelease >= 4
+    XTextProperty text_prop;
 
-		/* Get icon name if any */
-	text_prop.value = icon;
-	text_prop.nitems = STRLEN(icon);
-	XSetWMIconName(x11_display, x11_window, &text_prop);
-	if (XGetWMIconName(x11_display, x11_window, &text_prop)) /* required? */
-		XFree((void *)text_prop.value);
-}
+    text_prop.value = icon;
+    text_prop.nitems = STRLEN(icon);
+    text_prop.encoding = XA_STRING;
+    text_prop.format = 8;
+    XSetWMIconName(x11_display, x11_window, &text_prop);
+#else
+    XSetIconName(x11_display, x11_window, (char *)icon);
 #endif
-
-#else	/* USE_X11 */
-
-	static void
-get_x11_title()
-{
-	oldtitle = (char_u *)"Thanks for flying Vim";
+    XFlush(x11_display);
 }
 
-	static void
-get_x11_icon()
+#else	/* HAVE_X11 && WANT_X11 */
+
+	static int
+get_x11_title(test_only)
+	int		test_only;
 {
-	if (STRNCMP(term_strings.t_name, "builtin_", 8) == 0)
-		oldicon = term_strings.t_name + 8;
-	else
-		oldicon = term_strings.t_name;
+	if (!test_only)
+		oldtitle = fixedtitle;
+	return FALSE;
 }
 
-#endif	/* USE_X11 */
+	static int
+get_x11_icon(test_only)
+	int		test_only;
+{
+	if (!test_only)
+	{
+		if (STRNCMP(term_strings[KS_NAME], "builtin_", 8) == 0)
+			oldicon = term_strings[KS_NAME] + 8;
+		else
+			oldicon = term_strings[KS_NAME];
+	}
+	return FALSE;
+}
 
+#endif	/* HAVE_X11 && WANT_X11 */
+
+	int
+mch_can_restore_title()
+{
+#ifdef USE_GUI
+	/*
+	 * If GUI is (going to be) used, we can always set the window title.
+	 * Saves a bit of time, because the X11 display server does not need to be
+	 * contacted.
+	 */
+	if (gui.starting || gui.in_use)
+		return TRUE;
+#endif
+	return get_x11_title(TRUE);
+}
+
+	int
+mch_can_restore_icon()
+{
+#ifdef USE_GUI
+	/*
+	 * If GUI is (going to be) used, we can always set the icon name.
+	 * Saves a bit of time, because the X11 display server does not need to be
+	 * contacted.
+	 */
+	if (gui.starting || gui.in_use)
+		return TRUE;
+#endif
+	return get_x11_icon(TRUE);
+}
 
 /*
- * set the window title and icon
+ * Set the window title and icon.
  * Currently only works for x11.
  */
 	void
@@ -480,32 +858,29 @@ mch_settitle(title, icon)
 {
 	int			type = 0;
 
-	if (term_strings.t_name == NULL)		/* no terminal name (yet) */
+	if (term_strings[KS_NAME] == NULL)		/* no terminal name (yet) */
+		return;
+	if (title == NULL && icon == NULL)		/* nothing to do */
 		return;
 
 /*
  * if the window ID and the display is known, we may use X11 calls
  */
-#ifdef USE_X11
+#if defined(HAVE_X11) && defined(WANT_X11)
 	if (get_x11_windis() == OK)
 		type = 1;
 #endif
 
 	/*
-	 * note: if terminal is xterm, title is set with escape sequence rather
+	 * Note: if terminal is xterm, title is set with escape sequence rather
 	 * 		 than x11 calls, because the x11 calls don't always work
+	 * Check only if the start of the terminal name is "xterm", also catch
+	 * "xterms".
 	 */
-	if (	STRCMP(term_strings.t_name, "xterm") == 0 ||
-			STRCMP(term_strings.t_name, "builtin_xterm") == 0)
+	if (is_xterm(term_strings[KS_NAME]))
 		type = 2;
 
-		/*
-		 * Note: getting the old window title for iris-ansi will only
-		 * currently work if you set WINDOWID by hand, it is not
-		 * done automatically like an xterm.
-		 */
-	if (STRCMP(term_strings.t_name, "iris-ansi") == 0 ||
-			 STRCMP(term_strings.t_name, "iris-ansi-net") == 0)
+	if (is_iris_ansi(term_strings[KS_NAME]))
 		type = 3;
 
 	if (type)
@@ -513,15 +888,13 @@ mch_settitle(title, icon)
 		if (title != NULL)
 		{
 			if (oldtitle == NULL)				/* first call, save title */
-				get_x11_title();
+				(void)get_x11_title(FALSE);
 
 			switch(type)
 			{
-#ifdef USE_X11
-#ifdef BUGGY
+#if defined(HAVE_X11) && defined(WANT_X11)
 			case 1:	set_x11_title(title);				/* x11 */
 					break;
-#endif
 #endif
 			case 2: outstrn((char_u *)"\033]2;");		/* xterm */
 					outstrn(title);
@@ -540,15 +913,13 @@ mch_settitle(title, icon)
 		if (icon != NULL)
 		{
 			if (oldicon == NULL)				/* first call, save icon */
-				get_x11_icon();
+				get_x11_icon(FALSE);
 
 			switch(type)
 			{
-#ifdef USE_X11
-#ifdef BUGGY
+#if defined(HAVE_X11) && defined(WANT_X11)
 			case 1:	set_x11_icon(icon);					/* x11 */
 					break;
-#endif
 #endif
 			case 2: outstrn((char_u *)"\033]1;");		/* xterm */
 					outstrn(icon);
@@ -566,6 +937,44 @@ mch_settitle(title, icon)
 	}
 }
 
+	int
+is_xterm(name)
+	char_u *name;
+{
+	if (name == NULL)
+		return FALSE;
+	return (vim_strnicmp(name, (char_u *)"xterm", (size_t)5) == 0 ||
+						STRCMP(name, "builtin_xterm") == 0);
+}
+
+	int
+is_iris_ansi(name)
+	char_u	*name;
+{
+	if (name == NULL)
+		return FALSE;
+	return (vim_strnicmp(name, (char_u *)"iris-ansi", (size_t)9) == 0 ||
+						STRCMP(name, "builtin_iris-ansi") == 0);
+}
+
+/*
+ * Return TRUE if "name" is a terminal for which 'ttyfast' should be set.
+ * This should include all windowed terminal emulators.
+ */
+	int
+is_fastterm(name)
+	char_u	*name;
+{
+	if (name == NULL)
+		return FALSE;
+	if (is_xterm(name) || is_iris_ansi(name))
+		return TRUE;
+	return (vim_strnicmp(name, (char_u *)"hpterm", (size_t)6) == 0 ||
+		    vim_strnicmp(name, (char_u *)"sun-cmd", (size_t)7) == 0 ||
+		    vim_strnicmp(name, (char_u *)"screen", (size_t)6) == 0 ||
+		    vim_strnicmp(name, (char_u *)"dtterm", (size_t)6) == 0);
+}
+
 /*
  * Restore the window/icon title.
  * which is one of:
@@ -581,21 +990,102 @@ mch_restore_title(which)
 }
 
 /*
+ * Insert user name in s[len].
+ * Return OK if a name found.
+ */
+	int
+mch_get_user_name(s, len)
+	char_u	*s;
+	int		len;
+{
+#if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
+	struct passwd	*pw;
+#endif
+	uid_t			uid;
+
+	uid = getuid();
+#if defined(HAVE_PWD_H) && defined(HAVE_GETPWUID)
+	if ((pw = getpwuid(uid)) != NULL &&
+								   pw->pw_name != NULL && *pw->pw_name != NUL)
+	{
+		STRNCPY(s, pw->pw_name, len);
+		return OK;
+	}
+#endif
+	sprintf((char *)s, "%d", (int)uid);		/* assumes s is long enough */
+	return FAIL;							/* a number is not a name */
+}
+
+/*
+ * Insert host name is s[len].
+ */
+
+#ifdef HAVE_SYS_UTSNAME_H
+	void
+mch_get_host_name(s, len)
+	char_u	*s;
+	int		len;
+{
+    struct utsname vutsname;
+
+    uname(&vutsname);
+    STRNCPY(s, vutsname.nodename, len);
+}
+#else /* HAVE_SYS_UTSNAME_H */
+
+# ifdef HAVE_SYS_SYSTEMINFO_H
+#  define gethostname(nam, len) sysinfo(SI_HOSTNAME, nam, len)
+# endif
+
+	void
+mch_get_host_name(s, len)
+	char_u	*s;
+	int		len;
+{
+	gethostname((char *)s, len);
+}
+#endif /* HAVE_SYS_UTSNAME_H */
+
+/*
+ * return process ID
+ */
+	long
+mch_get_pid()
+{
+	return (long)getpid();
+}
+
+#if !defined(HAVE_STRERROR) && defined(USE_GETCWD)
+static char *strerror __ARGS((int));
+
+	static char *
+strerror(err)
+	int err;
+{
+	extern int		sys_nerr;
+	extern char		*sys_errlist[];
+	static char		er[20];
+
+	if (err > 0 && err < sys_nerr)
+		return (sys_errlist[err]);
+	sprintf(er, "Error %d", err);
+	return er;
+}
+#endif
+
+/*
  * Get name of current directory into buffer 'buf' of length 'len' bytes.
  * Return OK for success, FAIL for failure.
  */
 	int 
-vim_dirname(buf, len)
-	char_u *buf;
-	int len;
+mch_dirname(buf, len)
+	char_u	*buf;
+	int		len;
 {
-#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
-	extern int		errno;
-	extern char		*sys_errlist[];
-
+#if defined(USE_GETCWD)
 	if (getcwd((char *)buf, len) == NULL)
 	{
-	    STRCPY(buf, sys_errlist[errno]);
+	    STRCPY(buf, strerror(errno));
 	    return FAIL;
 	}
     return OK;
@@ -604,20 +1094,45 @@ vim_dirname(buf, len)
 #endif
 }
 
+#ifdef __EMX__
 /*
- * get absolute filename into buffer 'buf' of length 'len' bytes
+ * Replace all slashes by backslashes.
+ */
+	static void
+slash_adjust(p)
+	char_u	*p;
+{
+	while (*p)
+	{
+		if (*p == '/')
+			*p = '\\';
+		++p;
+	}
+}
+#endif
+
+/*
+ * Get absolute filename into buffer 'buf' of length 'len' bytes.
  *
  * return FAIL for failure, OK for success
  */
 	int 
-FullName(fname, buf, len)
+FullName(fname, buf, len, force)
 	char_u *fname, *buf;
 	int len;
+	int	force;			/* also expand when already absolute path name */
 {
 	int		l;
+#ifdef OS2
+	int		only_drive;	/* only a drive letter is specified in file name */
+#endif
+#ifdef HAVE_FCHDIR
+	int		fd = -1;
+	static int	dont_fchdir = FALSE;	/* TRUE when fchdir() doesn't work */
+#endif
 	char_u	olddir[MAXPATHL];
 	char_u	*p;
-	int		c;
+	char_u	c;
 	int		retval = OK;
 
 	if (fname == NULL)	/* always fail */
@@ -627,40 +1142,77 @@ FullName(fname, buf, len)
 	}
 
 	*buf = 0;
-	if (!isFullName(fname))			/* if not an absolute path */
+	if (force || !isFullName(fname))	/* if forced or not an absolute path */
 	{
 		/*
 		 * If the file name has a path, change to that directory for a moment,
 		 * and then do the getwd() (and get back to where we were).
 		 * This will get the correct path name with "../" things.
 		 */
-		if ((p = STRRCHR(fname, '/')) != NULL)
-		{
-#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
-			if (getcwd((char *)olddir, MAXPATHL) == NULL)
+#ifdef OS2
+		only_drive = 0;
+		if (((p = vim_strrchr(fname, '/')) != NULL) ||
+		    ((p = vim_strrchr(fname, '\\')) != NULL) ||
+		    (((p = vim_strchr(fname,  ':')) != NULL) && ++only_drive))
 #else
-			if (getwd((char *)olddir) == NULL)
+		if ((p = vim_strrchr(fname, '/')) != NULL)
 #endif
+		{
+#ifdef HAVE_FCHDIR
+			/*
+			 * Use fchdir() if possible, it's said to be faster and more
+			 * reliable.  But on SunOS 4 it might not work.  Check this by
+			 * doing a fchdir() right now.
+			 */
+			if (!dont_fchdir)
+			{
+				fd = open(".", O_RDONLY | O_EXTRA);
+				if (fd >= 0 && fchdir(fd) < 0)
+				{
+					close(fd);
+					fd = -1;
+					dont_fchdir = TRUE;		/* don't try again */
+				}
+			}
+#endif
+			if (
+#ifdef HAVE_FCHDIR
+				fd < 0 &&
+#endif
+							mch_dirname(olddir, MAXPATHL) == FAIL)
 			{
 				p = NULL;		/* can't get current dir: don't chdir */
 				retval = FAIL;
 			}
 			else
 			{
+#ifdef OS2
+				/*
+				 * compensate for case where ':' from "D:" was the only
+				 * path separator detected in the file name; the _next_
+				 * character has to be removed, and then restored later.
+				 */
+				if (only_drive)
+					p++;
+#endif
 				c = *p;
 				*p = NUL;
-				if (chdir((char *)fname))
+				if (vim_chdir((char *)fname))
 					retval = FAIL;
 				else
 					fname = p + 1;
 				*p = c;
+#ifdef OS2
+				if (only_drive)
+				{
+					p--;
+					if (retval != FAIL)
+						fname--;
+				}
+#endif
 			}
 		}
-#if defined(SYSV_UNIX) || defined(USL) || defined(hpux) || defined(linux)
-		if (getcwd((char *)buf, len) == NULL)
-#else
-		if (getwd((char *)buf) == NULL)
-#endif
+		if (mch_dirname(buf, len) == FAIL)
 		{
 			retval = FAIL;
 			*buf = NUL;
@@ -668,10 +1220,23 @@ FullName(fname, buf, len)
 		l = STRLEN(buf);
 		if (l && buf[l - 1] != '/')
 			STRCAT(buf, "/");
-		if (p)
-			chdir((char *)olddir);
+		if (p != NULL)
+		{
+#ifdef HAVE_FCHDIR
+			if (fd >= 0)
+			{
+				fchdir(fd);
+				close(fd);
+			}
+			else
+#endif
+				vim_chdir((char *)olddir);
+		}
 	}
 	STRCAT(buf, fname);
+#ifdef OS2
+	slash_adjust(buf);
+#endif
 	return retval;
 }
 
@@ -682,7 +1247,11 @@ FullName(fname, buf, len)
 isFullName(fname)
 	char_u		*fname;
 {
-	return (*fname == '/');
+#ifdef __EMX__
+	return _fnisabs(fname);
+#else
+	return (*fname == '/' || *fname == '~');
+#endif
 }
 
 /*
@@ -709,26 +1278,22 @@ setperm(name, perm)
 	char_u *name;
 	int perm;
 {
-#ifdef SCO
 	return (chmod((char *)name, (mode_t)perm) == 0 ? OK : FAIL);
-#else
-	return (chmod((char *)name, perm) == 0 ? OK : FAIL);
-#endif
 }
 
 /*
  * return TRUE if "name" is a directory
  * return FALSE if "name" is not a directory
- * return -1 for error
+ * return FALSE for error
  */
 	int 
-isdir(name)
+mch_isdir(name)
 	char_u *name;
 {
 	struct stat statb;
 
 	if (stat((char *)name, &statb))
-		return -1;
+		return FALSE;
 #ifdef _POSIX_SOURCE
 	return (S_ISDIR(statb.st_mode) ? TRUE : FALSE);
 #else
@@ -745,53 +1310,87 @@ mch_windexit(r)
 	mch_settitle(oldtitle, oldicon);	/* restore xterm title */
 	stoptermcap();
 	flushbuf();
-	ml_close_all(); 				/* remove all memfiles */
+	ml_close_all(TRUE); 				/* remove all memfiles */
+	may_core_dump();
 	exit(r);
 }
+
+	static void
+may_core_dump()
+{
+#ifdef SIGQUIT
+	signal(SIGQUIT, SIG_DFL);
+	if (core_dump)
+		kill(getpid(), SIGQUIT);		/* force a core dump */
+#endif
+}
+
+static int curr_tmode = 0;	/* contains current raw/cooked mode (0 = cooked) */
 
 	void
 mch_settmode(raw)
 	int				raw;
 {
-#if defined(ECHOE) && defined(ICANON) && !defined(__NeXT__)
+	static int first = TRUE;
+
+	/* Why is NeXT excluded here (and not in unixunix.h)? */
+#if defined(ECHOE) && defined(ICANON) && (defined(HAVE_TERMIO_H) || defined(HAVE_TERMIOS_H)) && !defined(__NeXT__)
 	/* for "new" tty systems */
-# ifdef CONVEX
+# ifdef HAVE_TERMIOS_H
 	static struct termios told;
 		   struct termios tnew;
 # else
 	static struct termio told;
 		   struct termio tnew;
 # endif
-#ifdef TIOCLGET
+
+# ifdef TIOCLGET
 	static unsigned long tty_local;
-#endif
+# endif
 
 	if (raw)
 	{
-#ifdef TIOCLGET
-		ioctl(0, TIOCLGET, &tty_local);
-#endif
-		ioctl(0, TCGETA, &told);
+		if (first)
+		{
+			first = FALSE;
+# ifdef TIOCLGET
+			ioctl(0, TIOCLGET, &tty_local);
+# endif
+# if defined(HAVE_TERMIOS_H)
+			tcgetattr(0, &told);
+# else
+			ioctl(0, TCGETA, &told);
+# endif
+		}
 		tnew = told;
 		/*
 		 * ICRNL enables typing ^V^M
 		 */
 		tnew.c_iflag &= ~ICRNL;
 		tnew.c_lflag &= ~(ICANON | ECHO | ISIG | ECHOE
-#ifdef IEXTEN
+# if defined(IEXTEN) && !defined(MINT)
 					| IEXTEN		/* IEXTEN enables typing ^V on SOLARIS */
-#endif
-						);
+									/* but it breaks function keys on MINT */
+# endif
+								);
 		tnew.c_cc[VMIN] = 1;			/* return after 1 char */
 		tnew.c_cc[VTIME] = 0;			/* don't wait */
+# if defined(HAVE_TERMIOS_H)
+		tcsetattr(0, TCSANOW, &tnew);
+# else
 		ioctl(0, TCSETA, &tnew);
+# endif
 	}
 	else
 	{
+# if defined(HAVE_TERMIOS_H)
+		tcsetattr(0, TCSANOW, &told);
+# else
 		ioctl(0, TCSETA, &told);
-#ifdef TIOCLGET
+# endif
+# ifdef TIOCLGET
 		ioctl(0, TIOCLSET, &tty_local);
-#endif
+# endif
 	}
 #else
 # ifndef TIOCSETN
@@ -803,7 +1402,11 @@ mch_settmode(raw)
 
 	if (raw)
 	{
-		ioctl(0, TIOCGETP, &ttybold);
+		if (first)
+		{
+			first = FALSE;
+			ioctl(0, TIOCGETP, &ttybold);
+		}
 		ttybnew = ttybold;
 		ttybnew.sg_flags &= ~(CRMOD | ECHO);
 		ttybnew.sg_flags |= RAW;
@@ -812,7 +1415,86 @@ mch_settmode(raw)
 	else
 		ioctl(0, TIOCSETN, &ttybold);
 #endif
+	curr_tmode = raw;
 }
+
+/*
+ * Try to get the code for "t_kb" from the stty setting
+ *
+ * Even if termcap claims a backspace key, the user's setting *should*
+ * prevail.  stty knows more about reality than termcap does, and if
+ * somebody's usual erase key is DEL (which, for most BSD users, it will
+ * be), they're going to get really annoyed if their erase key starts
+ * doing forward deletes for no reason. (Eric Fischer)
+ */
+	void
+get_stty()
+{
+	char_u	buf[2];
+	char_u	*p;
+
+	/* Why is NeXT excluded here (and not in unixunix.h)? */
+#if defined(ECHOE) && defined(ICANON) && (defined(HAVE_TERMIO_H) || defined(HAVE_TERMIOS_H)) && !defined(__NeXT__)
+	/* for "new" tty systems */
+# ifdef HAVE_TERMIOS_H
+	struct termios keys;
+# else
+	struct termio keys;
+# endif
+
+# if defined(HAVE_TERMIOS_H)
+	if (tcgetattr(0, &keys) != -1)
+# else
+	if (ioctl(0, TCGETA, &keys) != -1)
+# endif
+	{
+		buf[0] = keys.c_cc[VERASE];
+#else
+	/* for "old" tty systems */
+	struct sgttyb keys;
+
+	if (ioctl(0, TIOCGETP, &keys) != -1)
+	{
+		buf[0] = keys.sg_erase;
+#endif
+		buf[1] = NUL;
+		add_termcode((char_u *)"kb", buf);
+
+		/*
+		 * If <BS> and <DEL> are now the same, redefine <DEL>.
+		 */
+		p = find_termcode((char_u *)"kD");
+		if (p != NULL && p[0] == buf[0] && p[1] == buf[1])
+			do_fixdel();
+	}
+#if 0
+	}		/* to keep cindent happy */
+#endif
+}
+
+#ifdef USE_MOUSE
+/*
+ * set mouse clicks on or off (only works for xterms)
+ */
+	void
+mch_setmouse(on)
+	int		on;
+{
+	static int	ison = FALSE;
+
+	if (on == ison)		/* return quickly if nothing to do */
+		return;
+
+	if (is_xterm(term_strings[KS_NAME]))
+	{
+		if (on)
+			outstrn((char_u *)"\033[?1000h"); /* xterm: enable mouse events */
+		else
+			outstrn((char_u *)"\033[?1000l"); /* xterm: disable mouse events */
+	}
+	ison = on;
+}
+#endif
 
 /*
  * set screen mode, always fails.
@@ -839,24 +1521,33 @@ mch_get_winsize()
 	int			old_Columns = Columns;
 	char_u		*p;
 
+#ifdef USE_GUI
+	if (gui.in_use)
+		return gui_mch_get_winsize();
+#endif
+
 	Columns = 0;
 	Rows = 0;
 
 /*
- * 1. try using an ioctl. It is the most accurate method.
+ * For OS/2 use _scrsize().
  */
-# ifdef TIOCGSIZE
+# ifdef __EMX__
 	{
-		struct ttysize	ts;
-
-	    if (ioctl(0, TIOCGSIZE, &ts) == 0)
-	    {
-			Columns = ts.ts_cols;
-			Rows = ts.ts_lines;
-	    }
+		int s[2];
+		_scrsize(s);
+		Columns = s[0];
+		Rows = s[1];
 	}
-# else /* TIOCGSIZE */
-#  ifdef TIOCGWINSZ
+# endif
+
+/*
+ * 1. try using an ioctl. It is the most accurate method.
+ *
+ * Try using TIOCGWINSZ first, some systems that have it also define TIOCGSIZE
+ * but don't have a struct ttysize.
+ */
+# ifdef TIOCGWINSZ
 	{
 		struct winsize	ws;
 
@@ -866,8 +1557,19 @@ mch_get_winsize()
 			Rows = ws.ws_row;
 	    }
 	}
-#  endif /* TIOCGWINSZ */
-# endif /* TIOCGSIZE */
+# else /* TIOCGWINSZ */
+#  ifdef TIOCGSIZE
+	{
+		struct ttysize	ts;
+
+	    if (ioctl(0, TIOCGSIZE, &ts) == 0)
+	    {
+			Columns = ts.ts_cols;
+			Rows = ts.ts_lines;
+	    }
+	}
+#  endif /* TIOCGSIZE */
+# endif /* TIOCGWINSZ */
 
 /*
  * 2. get size from environment
@@ -880,16 +1582,12 @@ mch_get_winsize()
 			Columns = atoi((char *)p);
 	}
 
-#ifdef TERMCAP
+#ifdef HAVE_TGETENT
 /*
  * 3. try reading the termcap
  */
 	if (Columns == 0 || Rows == 0)
-	{
-		extern void getlinecol();
-
 		getlinecol();	/* get "co" and "li" entries from termcap */
-	}
 #endif
 
 /*
@@ -911,14 +1609,32 @@ mch_get_winsize()
 	void
 mch_set_winsize()
 {
-	/* should try to set the window size to Rows and Columns */
+	char_u	string[10];
+
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		gui_mch_set_winsize();
+		return;
+	}
+#endif
+
+	/* try to set the window size to Rows and Columns */
+	if (is_iris_ansi(term_strings[KS_NAME]))
+	{
+		sprintf((char *)string, "\033[203;%ld;%ld/y", Rows, Columns);
+		outstrn(string);
+		flushbuf();
+		screen_start();					/* don't know where cursor is now */
+	}
 }
 
 	int 
-call_shell(cmd, dummy, cooked)
+call_shell(cmd, options)
 	char_u	*cmd;
-	int		dummy;
-	int		cooked;
+	int		options;		/* SHELL_FILTER if called by do_filter() */
+							/* SHELL_COOKED if term needs cooked mode */
+							/* SHELL_EXPAND if called by ExpandWildCards() */
 {
 #ifdef USE_SYSTEM		/* use system() to start the shell: simple but slow */
 
@@ -927,51 +1643,77 @@ call_shell(cmd, dummy, cooked)
 
 	flushbuf();
 
-	if (cooked)
+	if (options & SHELL_COOKED)
 		settmode(0); 				/* set to cooked mode */
 
 	if (cmd == NULL)
 		x = system(p_sh);
 	else
 	{
+#ifdef __EMX__
+		sprintf(newcmd, "%s %s /c \"%s\"", p_sh,
+#else
 		sprintf(newcmd, "%s %s -c \"%s\"", p_sh,
-						extra_shell_arg == NULL ? "" : extra_shell_arg, cmd);
+#endif
+					extra_shell_arg == NULL ? "" : (char *)extra_shell_arg,
+					(char *)cmd);
 		x = system(newcmd);
 	}
 	if (x == 127)
 	{
-		outstrn((char_u *)"\nCannot execute shell sh\n");
-	}
-#ifdef WEBB_COMPLETE
-	else if (x && !expand_interactively)
+#ifdef __EMX__
+		MSG_OUTSTR("\nCannot execute shell cmd.exe\n");
 #else
-	else if (x)
+ 		MSG_OUTSTR("\nCannot execute shell sh\n");
 #endif
+	}
+	else if (x && !expand_interactively)
 	{
-		outchar('\n');
-		outnum((long)x);
-		outstrn((char_u *)" returned\n");
+		msg_outchar('\n');
+		msg_outnum((long)x);
+		MSG_OUTSTR(" returned\n");
 	}
 
-	if (cooked)
-		settmode(1); 						/* set to raw mode */
+	settmode(1); 						/* set to raw mode */
 	resettitle();
 	return (x ? FAIL : OK);
 
-#else /* USE_SYSTEM */		/* first attempt at not using system() */
+#else /* USE_SYSTEM */		/* don't use system(), use fork()/exec() */
+
+#define EXEC_FAILED 122		/* Exit code when shell didn't execute.  Don't use
+							   127, some shell use that already */
 
 	char_u	newcmd[1024];
 	int		pid;
+#ifdef HAVE_UNION_WAIT
+	union wait status;
+#else
 	int		status = -1;
+#endif
+	int		retval = FAIL;
 	char	**argv = NULL;
 	int		argc;
 	int		i;
 	char_u	*p;
 	int		inquote;
+#ifdef USE_GUI
+	int		pty_master_fd = -1;		/* for pty's */
+	int		pty_slave_fd = -1;
+	char	*tty_name;
+	int		fd_toshell[2];			/* for pipes */
+	int		fd_fromshell[2];
+	int		pipe_error = FALSE;
+# ifdef HAVE_SETENV
+	char	envbuf[50];
+# else
+	static char	envbuf_Rows[20];
+	static char	envbuf_Columns[20];
+# endif
+#endif
+	int		did_settmode = FALSE;	/* TRUE when settmode(1) called */
 
 	flushbuf();
-	signal(SIGINT, SIG_IGN);	/* we don't want to be killed here */
-	if (cooked)
+	if (options & SHELL_COOKED)
 		settmode(0);			/* set to cooked mode */
 
 	/*
@@ -999,7 +1741,7 @@ call_shell(cmd, dummy, cooked)
 				break;
 			if (i == 1)
 				*p++ = NUL;
-			skipspace(&p);
+			p = skipwhite(p);
 		}
 		if (i == 0)
 		{
@@ -1017,64 +1759,411 @@ call_shell(cmd, dummy, cooked)
 	}
 	argv[argc] = NULL;
 
-	if ((pid = fork()) == -1)		/* maybe we should use vfork() */
+#ifdef tower32
+	/*
+	 * reap lost children (seems necessary on NCR Tower,
+	 * although I don't have a clue why...) (Slootman)
+	 */
+	while (wait(&status) != 0 && errno != ECHILD)
+		;	/* do it again, if necessary */
+#endif
+
+#ifdef USE_GUI
+/*
+ * First try at using a pseudo-tty to get the stdin/stdout of the executed
+ * command into the current window for the GUI.
+ */
+
+	if (gui.in_use && show_shell_mess)
 	{
-		outstrn((char_u *)"\nCannot fork\n");
-	}
-	else if (pid == 0)		/* child */
-	{
-		signal(SIGINT, SIG_DFL);
-		if (!show_shell_mess)
+		/*
+		 * Try to open a master pty.
+		 * If this works, open the slave pty.
+		 * If the slave can't be opened, close the master pty.
+		 */
+		if (p_guipty)
 		{
-			fclose(stdout);
-			fclose(stderr);
+			pty_master_fd = OpenPTY(&tty_name);		/* open pty */
+			if (pty_master_fd >= 0 && ((pty_slave_fd =
+									   open(tty_name, O_RDWR | O_EXTRA)) < 0))
+			{
+				close(pty_master_fd);
+				pty_master_fd = -1;
+			}
 		}
-		execvp(argv[0], (char **)argv);
-		exit(127);			/* exec failed, return failure code */
-	}
-	else					/* parent */
-	{
-		wait(&status);
-		status = (status >> 8) & 255;
-		if (status)
+		/*
+		 * If opening a pty didn't work, try using pipes.
+		 */
+		if (pty_master_fd < 0)
 		{
-#ifdef WEBB_COMPLETE
-			if (status == 127)
+			pipe_error = (pipe(fd_toshell) < 0);
+			if (!pipe_error)						/* pipe create OK */
 			{
-				outstrn((char_u *)"\nCannot execute shell ");
-				outstrn(p_sh);
-				outchar('\n');
+				pipe_error = (pipe(fd_fromshell) < 0);
+				if (pipe_error)						/* pipe create failed */
+				{
+					close(fd_toshell[0]);
+					close(fd_toshell[1]);
+				}
 			}
-			else if (!expand_interactively)
+			if (pipe_error)
 			{
-				outchar('\n');
-				outnum((long)status);
-				outstrn((char_u *)" returned\n");
+				MSG_OUTSTR("\nCannot create pipes\n");
+				flushbuf();
 			}
+		}
+	}
+
+	if (!pipe_error)					/* pty or pipe opened or not used */
+#endif
+
+	{
+		if ((pid = fork()) == -1)		/* maybe we should use vfork() */
+		{
+			MSG_OUTSTR("\nCannot fork\n");
+#ifdef USE_GUI
+			if (gui.in_use && show_shell_mess)
+			{
+				if (pty_master_fd >= 0)			/* close the pseudo tty */
+				{
+					close(pty_master_fd);
+					close(pty_slave_fd);
+				}
+				else							/* close the pipes */
+				{
+					close(fd_toshell[0]);
+					close(fd_toshell[1]);
+					close(fd_fromshell[0]);
+					close(fd_fromshell[1]);
+				}
+			}
+#endif
+		}
+		else if (pid == 0)		/* child */
+		{
+			reset_signals();			/* handle signals normally */
+			if (!show_shell_mess)
+			{
+				int fd;
+
+				/*
+				 * Don't want to show any message from the shell.  Can't just
+				 * close stdout and stderr though, because some systems will
+				 * break if you try to write to them after that, so we must
+				 * use dup() to replace them with something else -- webb
+				 */
+				fd = open("/dev/null", O_WRONLY | O_EXTRA);
+				fclose(stdout);
+				fclose(stderr);
+
+				/*
+				 * If any of these open()'s and dup()'s fail, we just continue
+				 * anyway.  It's not fatal, and on most systems it will make
+				 * no difference at all.  On a few it will cause the execvp()
+				 * to exit with a non-zero status even when the completion
+				 * could be done, which is nothing too serious.  If the open()
+				 * or dup() failed we'd just do the same thing ourselves
+				 * anyway -- webb
+				 */
+				if (fd >= 0)
+				{
+					/* To replace stdout (file descriptor 1) */
+					dup(fd);
+
+					/* To replace stderr (file descriptor 2) */
+					dup(fd);
+
+					/* Don't need this now that we've duplicated it */
+					close(fd);
+				}
+			}
+#ifdef USE_GUI
+			else if (gui.in_use)
+			{
+
+#ifdef HAVE_SETSID
+				(void)setsid();
+#endif
+#ifdef TIOCSCTTY
+				/* try to become controlling tty (probably doesn't work,
+				 * unless run by root) */
+				ioctl(pty_slave_fd, TIOCSCTTY, (char *)NULL);
+#endif
+				/* Simulate to have a dumb terminal (for now) */
+#ifdef HAVE_SETENV
+				setenv("TERM", "dumb", 1);
+				sprintf((char *)envbuf, "%ld", Rows);
+				setenv("ROWS", (char *)envbuf, 1);
+				sprintf((char *)envbuf, "%ld", Columns);
+				setenv("COLUMNS", (char *)envbuf, 1);
 #else
-			outchar('\n');
-			if (status == 127)
+				/*
+				 * Putenv does not copy the string, it has to remain valid.
+				 * Use a static array to avoid loosing allocated memory.
+				 */
+				putenv("TERM=dumb");
+				sprintf(envbuf_Rows, "ROWS=%ld", Rows);
+				putenv(envbuf_Rows);
+				sprintf(envbuf_Columns, "COLUMNS=%ld", Columns);
+				putenv(envbuf_Columns);
+#endif
+
+				if (pty_master_fd >= 0)
+				{
+					close(pty_master_fd);	/* close master side of pty */
+
+					/* set up stdin/stdout/stderr for the child */
+					close(0);
+					dup(pty_slave_fd);
+					close(1);
+					dup(pty_slave_fd);
+					close(2);
+					dup(pty_slave_fd);
+
+					close(pty_slave_fd);	/* has been dupped, close it now */
+				}
+				else
+				{
+					/* set up stdin for the child */
+					close(fd_toshell[1]);
+					close(0);
+					dup(fd_toshell[0]);
+					close(fd_toshell[0]);
+
+					/* set up stdout for the child */
+					close(fd_fromshell[0]);
+					close(1);
+					dup(fd_fromshell[1]);
+					close(fd_fromshell[1]);
+
+					/* set up stderr for the child */
+					close(2);
+					dup(1);
+				}
+			}
+#endif
+			/*
+			 * There is no type cast for the argv, because the type may be
+			 * different on different machines. This may cause a warning
+			 * message with strict compilers, don't worry about it.
+			 */
+			execvp(argv[0], argv);
+			exit(EXEC_FAILED);		/* exec failed, return failure code */
+		}
+		else					/* parent */
+		{
+			/*
+			 * While child is running, ignore terminating signals.
+			 */
+			catch_signals(SIG_IGN);
+
+#ifdef USE_GUI
+
+			/*
+			 * For the GUI we redirect stdin, stdout and stderr to our window.
+			 */
+			if (gui.in_use && show_shell_mess)
 			{
-				outstrn((char_u *)"Cannot execute shell ");
-				outstrn(p_sh);
+#define BUFLEN 100				/* length for buffer, pseudo tty limit is 128 */
+				char_u		buffer[BUFLEN];
+				int			len;
+				int			p_more_save;
+				int			read_count;
+				int			c;
+				int			toshell_fd;
+				int			fromshell_fd;
+
+				if (pty_master_fd >= 0)
+				{
+					close(pty_slave_fd);		/* close slave side of pty */
+					fromshell_fd = pty_master_fd;
+					toshell_fd = dup(pty_master_fd);
+				}
+				else
+				{
+					close(fd_toshell[0]);
+					close(fd_fromshell[1]);
+					toshell_fd = fd_toshell[1];
+					fromshell_fd = fd_fromshell[0];
+				}
+
+				/*
+				 * Write to the child if there are typed characters.
+				 * Read from the child if there are characters available.
+				 *   Repeat the reading a few times if more characters are
+				 *   available. Need to check for typed keys now and then, but
+				 *   not too often (delays when no chars are available).
+				 * This loop is quit if no characters can be read from the pty
+				 * (WaitForChar detected special condition), or there are no
+				 * characters available and the child has exited.
+				 * Only check if the child has exited when there is no more
+				 * output. The child may exit before all the output has
+				 * been printed.
+				 *
+				 * Currently this busy loops!
+				 * This can probably dead-lock when the write blocks!
+				 */
+				p_more_save = p_more;
+				p_more = FALSE;
+				for (;;)
+				{
+					/*
+					 * Check if keys have been typed, write them to the child
+					 * if there are any.  Don't do this if we are expanding
+					 * wild cards (would eat typeahead).
+					 */
+					if (!(options & SHELL_EXPAND) &&
+							  (len = mch_inchar(buffer, BUFLEN - 1, 10) != 0))
+					{
+						/*
+						 * For pipes:
+						 * Check for CTRL-C: sent interrupt signal to child.
+						 * Check for CTRL-D: EOF, close pipe to child.
+						 */
+						if (len == 1 && (pty_master_fd < 0 || cmd != NULL))
+						{
+#ifdef SIGINT
+							if (buffer[0] == Ctrl('C'))
+							{
+								/* Use both kill() and killpg(), in case one
+								 * of the two fails */
+								kill(pid, SIGINT);
+# ifdef HAVE_KILLPG
+								killpg(0, SIGINT);
+# endif
+							}
+#endif
+							if (pty_master_fd < 0 && toshell_fd >= 0 &&
+													   buffer[0] == Ctrl('D'))
+							{
+								close(toshell_fd);
+								toshell_fd = -1;
+							}
+						}
+
+						/* replace K_BS by <BS> and K_DEL by <DEL> */
+						for (i = 0; i < len; ++i)
+						{
+							if (buffer[i] == CSI && len - i > 2)
+							{
+								c = TERMCAP2KEY(buffer[i + 1], buffer[i + 2]);
+								if (c == K_DEL || c == K_BS)
+								{
+									vim_memmove(buffer + i + 1, buffer + i + 3,
+													   (size_t)(len - i - 2));
+									if (c == K_DEL)
+										buffer[i] = DEL;
+									else
+										buffer[i] = Ctrl('H');
+									len -= 2;
+								}
+							}
+							else if (buffer[i] == '\r')
+								buffer[i] = '\n';
+						}
+
+						/*
+						 * For pipes: echo the typed characters.
+						 * For a pty this does not seem to work.
+						 */
+						if (pty_master_fd < 0)
+						{
+							for (i = 0; i < len; ++i)
+								if (buffer[i] == '\n' || buffer[i] == '\b')
+									msg_outchar(buffer[i]);
+								else
+									msg_outtrans_len(buffer + i, 1);
+							windgoto(msg_row, msg_col);
+							flushbuf();
+						}
+
+						/*
+						 * Write the characters to the child, unless EOF has
+						 * been typed for pipes.  Ignore errors.
+						 */
+						if (toshell_fd >= 0)
+							write(toshell_fd, (char *)buffer, (size_t)len);
+					}
+
+					/*
+					 * Check if the child has any characters to be printed.
+					 * Read them and write them to our window.
+					 * Repeat this a few times as long as there is something
+					 * to do, avoid the 10ms wait for mch_inchar().
+					 * TODO: This should handle escape sequences.
+					 */
+					for (read_count = 0; read_count < 10 &&
+							 RealWaitForChar(fromshell_fd, 10); ++read_count)
+					{
+						len = read(fromshell_fd, (char *)buffer,
+															  (size_t)BUFLEN);
+						if (len == 0)				/* end of file */
+							goto finished;
+						buffer[len] = NUL;
+						msg_outstr(buffer);
+						windgoto(msg_row, msg_col);
+						cursor_on();
+						flushbuf();
+					}
+
+					/*
+					 * Check if the child still exists when we finished
+					 * outputting all characters.
+					 */
+					if (read_count == 0 &&
+#ifdef __NeXT__
+							wait4(pid, &status, WNOHANG, (struct rusage *) 0) &&
+#else
+							waitpid(pid, &status, WNOHANG) &&
+#endif
+															WIFEXITED(status))
+						break;
+				}
+finished:
+				p_more = p_more_save;
+				if (toshell_fd >= 0)
+					close(toshell_fd);
+				close(fromshell_fd);
+			}
+#endif /* USE_GUI */
+			wait(&status);
+			settmode(1); 		/* set to raw mode right now, otherwise a
+								   CTRL-C after catch_signals will kill Vim */
+			did_settmode = TRUE;
+			catch_signals(deathtrap);
+			if (WIFEXITED(status))
+			{
+				i = WEXITSTATUS(status);
+				if (i)
+				{
+					if (i == EXEC_FAILED)
+					{
+						MSG_OUTSTR("\nCannot execute shell ");
+						msg_outtrans(p_sh);
+						msg_outchar('\n');
+					}
+					else if (!expand_interactively)
+					{
+						msg_outchar('\n');
+						msg_outnum((long)i);
+						MSG_OUTSTR(" returned\n");
+					}
+				}
+				else
+					retval = OK;
 			}
 			else
-			{
-				outnum((long)status);
-				outstrn((char_u *)" returned");
-			}
-			outchar('\n');
-#endif /* WEBB_COMPLETE */
+				MSG_OUTSTR("\nCommand terminated\n");
 		}
 	}
-	free(argv);
+	vim_free(argv);
 
 error:
-	if (cooked)
-		settmode(1); 						/* set to raw mode */
+	if (!did_settmode)
+		settmode(1); 						/* always set to raw mode */
 	resettitle();
-	signal(SIGINT, SIG_DFL);
-	return (status ? FAIL : OK);
+
+	return retval;
 
 #endif /* USE_SYSTEM */
 }
@@ -1085,9 +2174,56 @@ error:
  * a portable way for a tty in RAW mode.
  */
 
+/*
+ * Internal typeahead buffer.  Includes extra space for long key code
+ * descriptions which would otherwise overflow.  The buffer is considered full
+ * when only this extra space (or part of it) remains.
+ */
 #define INBUFLEN 250
-static char_u		inbuf[INBUFLEN];	/* internal typeahead buffer */
+
+static char_u	inbuf[INBUFLEN + MAX_KEY_CODE_LEN];
 static int		inbufcount = 0;		/* number of chars in inbuf[] */
+
+/*
+ * is_input_buf_full(), is_input_buf_empty(), add_to_input_buf(), and
+ * trash_input_buf() are functions for manipulating the input buffer.  These
+ * are used by the gui_* calls when a GUI is used to handle keyboard input.
+ *
+ * NOTE: These functions will be identical in msdos.c etc, and should probably
+ * be taken out and put elsewhere, but at the moment inbuf is only local.
+ */
+
+	int
+is_input_buf_full()
+{
+	return (inbufcount >= INBUFLEN);
+}
+
+	int
+is_input_buf_empty()
+{
+	return (inbufcount == 0);
+}
+
+/* Add the given bytes to the input buffer */
+	void
+add_to_input_buf(s, len)
+	char_u	*s;
+	int		len;
+{
+	if (inbufcount + len > INBUFLEN + MAX_KEY_CODE_LEN)
+		return;		/* Shouldn't ever happen! */
+	
+	while (len--)
+		inbuf[inbufcount++] = *s++;
+}
+
+/* Remove everything from the input buffer.  Called when ^C is found */
+	void
+trash_input_buf()
+{
+	inbufcount = 0;
+}
 
 	static int
 Read(buf, maxlen)
@@ -1095,38 +2231,72 @@ Read(buf, maxlen)
 	long	maxlen;
 {
 	if (inbufcount == 0)		/* if the buffer is empty, fill it */
-		fill_inbuf();
+		fill_inbuf(TRUE);
 	if (maxlen > inbufcount)
 		maxlen = inbufcount;
-	memmove((char *)buf, (char *)inbuf, maxlen);
+	vim_memmove(buf, inbuf, (size_t)maxlen);
 	inbufcount -= maxlen;
 	if (inbufcount)
-		memmove((char *)inbuf, (char *)inbuf + maxlen, inbufcount);
+		vim_memmove(inbuf, inbuf + maxlen, (size_t)inbufcount);
 	return (int)maxlen;
 }
 
 	void
-breakcheck()
+mch_breakcheck()
 {
+#ifdef USE_GUI
+	if (gui.in_use)
+	{
+		gui_mch_update();
+		return;
+	}
+#endif /* USE_GUI */
+
 /*
- * check for CTRL-C typed by reading all available characters
+ * Check for CTRL-C typed by reading all available characters.
+ * In cooked mode we should get SIGINT, no need to check.
  */
-	if (RealWaitForChar(0))		/* if characters available */
-		fill_inbuf();
+	if (curr_tmode && RealWaitForChar(0, 0L))	/* if characters available */
+		fill_inbuf(FALSE);
 }
 
 	static void
-fill_inbuf()
+fill_inbuf(exit_on_error)
+	int	exit_on_error;
 {
 	int		len;
+	int		try;
 
-	if (inbufcount >= INBUFLEN)		/* buffer full */
-		return;
-	len = read(0, inbuf + inbufcount, (long)(INBUFLEN - inbufcount));
-	if (len <= 0)	/* cannot read input??? */
+#ifdef USE_GUI
+	if (gui.in_use)
 	{
+		gui_mch_update();
+		return;
+	}
+#endif
+	if (is_input_buf_full())
+		return;
+	/*
+	 * Fill_inbuf() is only called when we really need a character.
+	 * If we can't get any, but there is some in the buffer, just return.
+	 * If we can't get any, and there isn't any in the buffer, we give up and
+	 * exit Vim.
+	 */
+	for (try = 0; try < 100; ++try)
+	{
+		len = read(0, (char *)inbuf + inbufcount,
+											 (size_t)(INBUFLEN - inbufcount));
+		if (len > 0)
+			break;
+		if (!exit_on_error)
+			return;
+	}
+	if (len <= 0)
+	{
+		windgoto((int)Rows - 1, 0);
 		fprintf(stderr, "Vim: Error reading input, exiting...\n");
-		exit(1);
+		ml_sync_all(FALSE, TRUE);		/* preserve all swap files */
+		getout(1);
 	}
 	while (len-- > 0)
 	{
@@ -1136,7 +2306,7 @@ fill_inbuf()
 		if (inbuf[inbufcount] == 3)
 		{
 			/* remove everything typed before the CTRL-C */
-			memmove((char *)inbuf, (char *)inbuf + inbufcount, len + 1);
+			vim_memmove(inbuf, inbuf + inbufcount, (size_t)(len + 1));
 			inbufcount = 0;
 			got_int = TRUE;
 		}
@@ -1145,66 +2315,69 @@ fill_inbuf()
 }
 
 /* 
- * Wait "ticks" until a character is available from the keyboard or from inbuf[]
- * ticks = -1 will block forever
+ * Wait "msec" msec until a character is available from the keyboard or from
+ * inbuf[]. msec == -1 will block forever.
+ * When a GUI is being used, this will never get called -- webb 
  */
 
-	static int
-WaitForChar(ticks)
-	int ticks;
+	static	int
+WaitForChar(msec)
+	long	msec;
 {
 	if (inbufcount)		/* something in inbuf[] */
 		return 1;
-	return RealWaitForChar(ticks);
+	return RealWaitForChar(0, msec);
 }
 
 /* 
- * Wait "ticks" until a character is available from the keyboard
- * ticks = -1 will block forever
+ * Wait "msec" msec until a character is available from file descriptor "fd".
+ * Time == -1 will block forever.
+ * When a GUI is being used, this will not be used for input -- webb 
  */
-	static int
-RealWaitForChar(ticks)
-	int ticks;
+	static	int
+RealWaitForChar(fd, msec)
+	int		fd;
+	long	msec;
 {
-#ifndef FD_ZERO
+#ifndef HAVE_SELECT
 	struct pollfd fds;
 
-	fds.fd = 0;
+	fds.fd = fd;
 	fds.events = POLLIN;
-	return (poll(&fds, 1, ticks));
+	return (poll(&fds, 1, (int)msec) > 0);	/* is this correct when fd != 0?? */
 #else
 	struct timeval tv;
-	fd_set fdset;
+	fd_set rfds, efds;
 
-	if (ticks >= 0)
+# ifdef __EMX__
+	/* don't check for incoming chars if not in raw mode, because select()
+	 * always returns TRUE then (in some version of emx.dll) */
+	if (curr_tmode == 0)
+		return 0;
+# endif
+
+	if (msec >= 0)
     {
-   		tv.tv_sec = ticks / 1000;
-		tv.tv_usec = (ticks % 1000) * (1000000/1000);
+   		tv.tv_sec = msec / 1000;
+		tv.tv_usec = (msec % 1000) * (1000000/1000);
     }
 
-	FD_ZERO(&fdset);
-	FD_SET(0, &fdset);
-	return (select(1, &fdset, NULL, NULL, (ticks >= 0) ? &tv : NULL));
+	/*
+	 * Select on ready for reading and exceptional condition (end of file).
+	 */
+	FD_ZERO(&rfds);	/* calls bzero() on a sun */
+	FD_ZERO(&efds);
+	FD_SET(fd, &rfds);
+	FD_SET(fd, &efds);
+	return (select(fd + 1, &rfds, NULL, &efds, (msec >= 0) ? &tv : NULL) > 0);
 #endif
 }
-
-#if !defined(__alpha) && !defined(mips) && !defined(SCO) && !defined(remove) && !defined(CONVEX)
-	int 
-remove(buf)
-# if defined(linux) || defined(__STDC__) || defined(__NeXT__) || defined(M_UNIX)
-	const
-# endif
-			char *buf;
-{
-	return unlink(buf);
-}
-#endif
 
 /*
- * ExpandWildCard() - this code does wild-card pattern matching using the shell
+ * ExpandWildCards() - this code does wild-card pattern matching using the shell
  *
- * Mool: return 0 for success, 1 for error (you may loose some memory) and
- *       put an error message in *file.
+ * return OK for success, FAIL for error (you may lose some memory) and put
+ * an error message in *file.
  *
  * num_pat is number of input patterns
  * pat is array of pointers to input patterns
@@ -1231,14 +2404,71 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	int				files_only;
 	int				list_notfound;
 {
+	int		i;
+	size_t	len;
+	char_u	*p;
+#ifdef __EMX__
+
+	*num_file = 0;		/* default: no files found */
+
+	if (vim_strchr(*pat, '$') || vim_strchr(*pat, '~'))
+	{
+		/* expand environment var or home dir */
+		char_u	*buf = alloc(1024);
+		expand_env(*pat, buf, 1024);
+		if (mch_has_wildcard(buf))	/* still wildcards in there? */
+		{
+			*file = (char_u **)_fnexplode(buf);
+		}
+		else
+		{
+			*file = (char_u **)alloc(sizeof(char_u **) * 2);
+			(*file)[0] = strsave(buf);
+			(*file)[1] = NULL;
+		}
+		vim_free(buf);
+	}
+	else
+	{
+		*file = (char_u **)_fnexplode(*pat);
+	}
+	if (!*file)
+	{
+		/*
+		 * _fnexplode() returns NULL if there are no matches.
+		 * We return a zero count and OK to indicate no matches.
+		 */
+		*file = (char_u **)"";
+		*num_file = 0;
+		return OK;
+	}
+	/*
+	 * Count number of names resulting from expansion,
+	 * At the same time add a backslash to the end of names that happen to be
+	 * directories, and replace slashes with backslashes.
+	 */
+	for (i = 0; (p = (*file)[i]) != NULL; i++)
+	{
+		slash_adjust(p);
+		if (mch_isdir(p))
+		{
+			len = strlen(p);
+			(*file)[i] = p = realloc(p, len + 2);
+			p += len;
+			*p++ = '\\';
+			*p = 0;
+		}
+	}
+	*num_file = i;
+	return OK;
+
+#else /* __EMX__ */
+
+	int		dir;
 	char_u	tmpname[TMPNAMELEN];
 	char_u	*command;
-	int		i;
-	int		dir;
-	size_t	len;
 	FILE	*fd;
 	char_u	*buffer;
-	char_u	*p;
 	int		use_glob = FALSE;
 
 	*num_file = 0;		/* default: no files found */
@@ -1286,9 +2516,9 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	if (command == NULL)
 		return FAIL;
 	if (use_glob)
-		STRCPY(command, "glob >");		/* built the shell command */
+		STRCPY(command, "glob >");		/* build the shell command */
 	else
-		STRCPY(command, "echo >");		/* built the shell command */
+		STRCPY(command, "echo >");		/* build the shell command */
 	STRCAT(command, tmpname);
 	for (i = 0; i < num_pat; ++i)
 	{
@@ -1301,23 +2531,30 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		STRCAT(command, pat[i]);
 #endif
 	}
-#ifdef WEBB_COMPLETE
 	if (expand_interactively)
 		show_shell_mess = FALSE;
-#endif /* WEBB_COMPLETE */
-	if (use_glob)							/* Use csh fast option */
+	/*
+	 * If we use -f then shell variables set in .cshrc won't get expanded.
+	 * vi can do it, so we will too, but it is only necessary if there is a "$"
+	 * in one of the patterns, otherwise we can still use the fast option.
+	 */
+	if (use_glob && !have_dollars(num_pat, pat))	/* Use csh fast option */
 		extra_shell_arg = (char_u *)"-f";
-	i = call_shell(command, 0, FALSE);		/* execute it */
+	i = call_shell(command, SHELL_EXPAND);		/* execute it */
 	extra_shell_arg = NULL;
 	show_shell_mess = TRUE;
-	free(command);
+	vim_free(command);
 	if (i == FAIL)							/* call_shell failed */
 	{
-		remove((char *)tmpname);
-#ifdef WEBB_COMPLETE
-		/* With interactive completion, the error message is not printed */
+		vim_remove(tmpname);
+		/*
+		 * With interactive completion, the error message is not printed.
+		 * However with USE_SYSTEM, I don't know how to turn off error messages
+		 * from the shell, so screen may still get messed up -- webb.
+		 */
+#ifndef USE_SYSTEM
 		if (!expand_interactively)
-#endif /* WEBB_COMPLETE */
+#endif
 		{
 			must_redraw = CLEAR;			/* probably messed up screen */
 			msg_outchar('\n');				/* clear bottom line quickly */
@@ -1341,49 +2578,64 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 	buffer = alloc(len + 1);
 	if (buffer == NULL)
 	{
-		remove((char *)tmpname);
+		vim_remove(tmpname);
 		fclose(fd);
 		return FAIL;
 	}
 	i = fread((char *)buffer, 1, len, fd);
 	fclose(fd);
-	remove((char *)tmpname);
+	vim_remove(tmpname);
 	if (i != len)
 	{
 		emsg2(e_notread, tmpname);
-		free(buffer);
+		vim_free(buffer);
 		return FAIL;
 	}
 
 	if (use_glob)		/* file names are separated with NUL */
 	{
-		buffer[len] = NUL;					/* make sure the buffers ends in NUL */
+		buffer[len] = NUL;				/* make sure the buffers ends in NUL */
 		i = 0;
 		for (p = buffer; p < buffer + len; ++p)
-			if (*p == NUL)					/* count entry */
+			if (*p == NUL)				/* count entry */
 				++i;
 		if (len)
-			++i;							/* count last entry */
+			++i;						/* count last entry */
 	}
 	else				/* file names are separated with SPACE */
 	{
-		buffer[len] = '\n';					/* make sure the buffers ends in NL */
+		buffer[len] = '\n';				/* make sure the buffers ends in NL */
 		p = buffer;
-		for (i = 0; *p != '\n'; ++i)		/* count number of entries */
+		for (i = 0; *p != '\n'; ++i)	/* count number of entries */
 		{
 			while (*p != ' ' && *p != '\n')	/* skip entry */
 				++p;
-			skipspace(&p);					/* skip to next entry */
+			p = skipwhite(p);			/* skip to next entry */
 		}
+	}
+	if (i == 0)
+	{
+		/*
+		 * Can happen when using /bin/sh and typing ":e $NO_SUCH_VAR^I".
+		 * /bin/sh will happily expand it to nothing rather than returning an
+		 * error; and hey, it's good to check anyway -- webb.
+		 */
+		vim_free(buffer);
+		*file = (char_u **)"";
+		return FAIL;
 	}
 	*num_file = i;
 	*file = (char_u **)alloc(sizeof(char_u *) * i);
 	if (*file == NULL)
 	{
-		free(buffer);
+		vim_free(buffer);
 		*file = (char_u **)"";
 		return FAIL;
 	}
+	
+	/*
+	 * Isolate the individual file names.
+	 */
 	p = buffer;
 	for (i = 0; i < *num_file; ++i)
 	{
@@ -1403,15 +2655,34 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 			else
 			{
 				*p++ = NUL;
-				skipspace(&p);					/* skip to next entry */
+				p = skipwhite(p);				/* skip to next entry */
 			}
 		}
 	}
+
+	/*
+	 * Move the file names to allocated memory.
+	 */
 	for (i = 0; i < *num_file; ++i)
 	{
-		dir = (isdir((*file)[i]) == TRUE);
-		if (dir < 0)			/* if file doesn't exist don't add '/' */
-			dir = 0;
+		/* Require the files to exist.  Helps when using /bin/sh */
+		if (expand_interactively)
+		{
+			struct stat		st;
+			int				j;
+
+			if (stat((char *)((*file)[i]), &st) < 0)
+			{
+				for (j = i; j + 1 < *num_file; ++j)
+					(*file)[j] = (*file)[j + 1];
+				--*num_file;
+				--i;
+				continue;
+			}
+		}
+
+		/* if file doesn't exist don't add '/' */
+		dir = (mch_isdir((*file)[i]));
 		p = alloc((unsigned)(STRLEN((*file)[i]) + 1 + dir));
 		if (p)
 		{
@@ -1421,37 +2692,36 @@ ExpandWildCards(num_pat, pat, num_file, file, files_only, list_notfound)
 		}
 		(*file)[i] = p;
 	}
-	free(buffer);
+	vim_free(buffer);
+
+	if (*num_file == 0)		/* rejected all entries */
+	{
+		vim_free(*file);
+		*file = (char_u **)"";
+		return FAIL;
+	}
+
 	return OK;
-}
 
-	void
-FreeWild(num, file)
-	int		num;
-	char_u	**file;
-{
-	if (file == NULL || num == 0)
-		return;
-	while (num--)
-		free(file[num]);
-	free(file);
+#endif /* __EMX__ */
 }
 
 	int
-has_wildcard(p)
-	char_u *p;
+mch_has_wildcard(p)
+	char_u	*p;
 {
-#ifdef __STDC__
-	return strpbrk((char *)p, "*?[{`~$") != NULL;
-#else
 	for ( ; *p; ++p)
-		if (STRCHR("*?[{`~$", *p) != NULL)
-			return 1;
-	return 0;
-#endif
+	{
+		if (*p == '\\' && p[1] != NUL)
+			++p;
+		else if (vim_strchr((char_u *)"*?[{`~$", *p) != NULL)
+			return TRUE;
+	}
+	return FALSE;
 }
 
-	int
+#ifndef __EMX__
+	static int
 have_wildcard(num, file)
 	int		num;
 	char_u	**file;
@@ -1459,12 +2729,26 @@ have_wildcard(num, file)
 	register int i;
 
 	for (i = 0; i < num; i++)
-		if (has_wildcard(file[i]))
+		if (mch_has_wildcard(file[i]))
 			return 1;
 	return 0;
 }
 
-#if defined(M_XENIX) || defined(UTS2)
+	static int
+have_dollars(num, file)
+	int		num;
+	char_u	**file;
+{
+	register int i;
+
+	for (i = 0; i < num; i++)
+		if (vim_strchr(file[i], '$') != NULL)
+			return TRUE;
+	return FALSE;
+}
+#endif	/* ifndef __EMX__ */
+
+#ifndef HAVE_RENAME
 /*
  * Scaled-down version of rename, which is missing in Xenix.
  * This version can only move regular files and will fail if the
@@ -1472,16 +2756,16 @@ have_wildcard(num, file)
  */
 	int
 rename(src, dest)
-	char_u *src, *dest;
+	const char *src, *dest;
 {
 	struct stat		st;
 
-	if (stat(dest, &st) >= 0)	/* fail if destination exists */
+	if (stat(dest, &st) >= 0)		/* fail if destination exists */
 		return -1;
-	if (link(src, dest) != 0)	/* link file to new name */
+	if (link(src, dest) != 0)		/* link file to new name */
 		return -1;
-	if (unlink(src) == 0)		/* delete link to old name */
+	if (vim_remove(src) == 0)		/* delete link to old name */
 		return 0;
 	return -1;
 }
-#endif /* M_XENIX || UTS2 */
+#endif /* !HAVE_RENAME */

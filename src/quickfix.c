@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -13,7 +13,7 @@
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
 static void qf_free __ARGS((void));
 static char_u *qf_types __ARGS((int, int));
@@ -42,6 +42,24 @@ static int	qf_count = 0;		/* number of errors (0 means no error list) */
 static int	qf_index;			/* current index in the error list */
 static int	qf_nonevalid;		/* set to TRUE if not a single valid entry found */
 
+#define MAX_ADDR	7			/* maximum number of % recognized, also adjust
+									sscanf() below */
+
+/*
+ * Structure used to hold the info of one part of 'errorformat'
+ */
+struct eformat
+{
+	char_u			*fmtstr;		/* pre-formatted part of 'errorformat' */
+#ifdef UTS2
+	char_u			*(adr[MAX_ADDR]);	/* addresses used */
+#else
+	void			*(adr[MAX_ADDR]);
+#endif
+	int				adr_cnt;		/* number of addresses used */
+	struct eformat	*next;			/* pointer to next (NULL if last) */
+};
+
 /*
  * Read the errorfile into memory, line by line, building the error list.
  * Return FAIL for error, OK for success.
@@ -49,8 +67,8 @@ static int	qf_nonevalid;		/* set to TRUE if not a single valid entry found */
 	int
 qf_init()
 {
-	char_u 			namebuf[CMDBUFFSIZE + 1];
-	char_u			errmsg[CMDBUFFSIZE + 1];
+	char_u 			*namebuf;
+	char_u			*errmsg;
 	int				col;
 	int				type;
 	int				valid;
@@ -59,133 +77,226 @@ qf_init()
 	FILE			*fd;
 	struct qf_line	*qfp = NULL;
 	struct qf_line	*qfprev = NULL;		/* init to make SASC shut up */
-	char_u			*pfmt, *fmtstr;
-#ifdef UTS2
-	char_u			*(adr[7]);
-#else
-	void			*(adr[7]);
-#endif
-	int				adr_cnt = 0;
+	char_u			*efmp;
+	struct eformat	*fmt_first = NULL;
+	struct eformat	*fmt_last = NULL;
+	struct eformat	*fmt_ptr;
+	char_u			*efm;
 	int				maxlen;
-	int				i;
+	int				len;
+	int				i, j;
+	int				retval = FAIL;
 
-	if (p_ef == NULL || *p_ef == NUL)
+	if (*p_ef == NUL)
 	{
 		emsg(e_errorf);
 		return FAIL;
 	}
+
+	namebuf = alloc(CMDBUFFSIZE + 1);
+	errmsg = alloc(CMDBUFFSIZE + 1);
+	if (namebuf == NULL || errmsg == NULL)
+		goto qf_init_end;
+
 	if ((fd = fopen((char *)p_ef, "r")) == NULL)
 	{
 		emsg2(e_openerrf, p_ef);
-		return FAIL;
+		goto qf_init_end;
 	}
 	qf_free();
 	qf_index = 0;
-	for (i = 0; i < 7; ++i)
-		adr[i] = NULL;
 
 /*
- * The format string is copied and modified from p_efm to fmtstr.
+ * Each part of the format string is copied and modified from p_efm to fmtstr.
  * Only a few % characters are allowed.
  */
-		/* get some space to modify the format string into */
-		/* must be able to do the largest expansion 7 times (7 x 3) */
-	maxlen = STRLEN(p_efm) + 25;
-	fmtstr = alloc(maxlen);
-	if (fmtstr == NULL)
-		goto error2;
-	for (pfmt = p_efm, i = 0; *pfmt; ++pfmt, ++i)
+	efm = p_efm;
+	while (efm[0])
 	{
-		if (pfmt[0] != '%')				/* copy normal character */
-			fmtstr[i] = pfmt[0];
+		/*
+		 * Allocate a new eformat structure and put it at the end of the list
+		 */
+		fmt_ptr = (struct eformat *)alloc((unsigned)sizeof(struct eformat));
+		if (fmt_ptr == NULL)
+			goto error2;
+		if (fmt_first == NULL)		/* first one */
+			fmt_first = fmt_ptr;
 		else
-		{
-			fmtstr[i++] = '%';
-			switch (pfmt[1])
-			{
-			case 'f':		/* filename */
-					adr[adr_cnt++] = namebuf;
+			fmt_last->next = fmt_ptr;
+		fmt_last = fmt_ptr;
+		fmt_ptr->next = NULL;
+		fmt_ptr->adr_cnt = 0;
 
-			case 'm':		/* message */
-					if (pfmt[1] == 'm')
-						adr[adr_cnt++] = errmsg;
-					fmtstr[i++] = '[';
-					fmtstr[i++] = '^';
-					if (pfmt[2])
-						fmtstr[i++] = pfmt[2];
-					else
-#ifdef MSDOS
-						fmtstr[i++] = '\r';
-#else
-						fmtstr[i++] = '\n';
-#endif
-					fmtstr[i] = ']';
-					break;
-			case 'c':		/* column */
-					adr[adr_cnt++] = &col;
-					fmtstr[i] = 'd';
-					break;
-			case 'l':		/* line */
-					adr[adr_cnt++] = &lnum;
-					fmtstr[i++] = 'l';
-					fmtstr[i] = 'd';
-					break;
-			case 'n':		/* error number */
-					adr[adr_cnt++] = &enr;
-					fmtstr[i] = 'd';
-					break;
-			case 't':		/* error type */
-					adr[adr_cnt++] = &type;
-					fmtstr[i] = 'c';
-					break;
-			case '%':		/* %% */
-			case '*':		/* %*: no assignment */
-					fmtstr[i] = pfmt[1];
-					break;
-			default:
-					EMSG("invalid % in format string");
-					goto error2;
-			}
-			if (adr_cnt == 7)
+		/*
+		 * Isolate one part in the 'errorformat' option
+		 */
+		for (len = 0; efm[len] != NUL && efm[len] != ','; ++len)
+			if (efm[len] == '\\' && efm[len + 1] != NUL)
+				++len;
+
+		/*
+		 * Get some space to modify the format string into.
+		 * Must be able to do the largest expansion (x3) MAX_ADDR times.
+		 */
+		maxlen = len + MAX_ADDR * 3 + 4;
+		if ((fmt_ptr->fmtstr = alloc(maxlen)) == NULL)
+			goto error2;
+
+		for (i = 0; i < MAX_ADDR; ++i)
+			fmt_ptr->adr[i] = NULL;
+
+		for (efmp = efm, i = 0; efmp < efm + len; ++efmp, ++i)
+		{
+			if (efmp[0] != '%')				/* copy normal character */
 			{
-				EMSG("too many % in format string");
+				if (efmp[0] == '\\' && efmp + 1 < efm + len)
+					++efmp;
+				fmt_ptr->fmtstr[i] = efmp[0];
+			}
+			else
+			{
+				fmt_ptr->fmtstr[i++] = '%';
+				switch (efmp[1])
+				{
+				case 'f':		/* filename */
+						fmt_ptr->adr[fmt_ptr->adr_cnt++] = namebuf;
+						/* FALLTHROUGH */
+
+				case 'm':		/* message */
+						if (efmp[1] == 'm')
+							fmt_ptr->adr[fmt_ptr->adr_cnt++] = errmsg;
+						fmt_ptr->fmtstr[i++] = '[';
+						fmt_ptr->fmtstr[i++] = '^';
+#ifdef __EMX__
+						/* don't allow spaces in filename. This fixes
+						 * the broken sscanf() where an empty message
+						 * is accepted as a valid conversion.
+						 */
+						if (efmp[1] == 'f')
+							fmt_ptr->fmtstr[i++] = ' ';
+#endif
+						if (efmp[2] == '\\')		/* could be "%m\," */
+							j = 3;
+						else
+							j = 2;
+						if (efmp + j < efm + len)
+							fmt_ptr->fmtstr[i++] = efmp[j];
+						else
+						{
+							/*
+							 * The %f or %m is the last one in the format,
+							 * stop at the CR of NL at the end of the line.
+							 */
+#ifdef USE_CRNL
+							fmt_ptr->fmtstr[i++] = '\r';
+#endif
+							fmt_ptr->fmtstr[i++] = '\n';
+						}
+						fmt_ptr->fmtstr[i] = ']';
+						break;
+				case 'c':		/* column */
+						fmt_ptr->adr[fmt_ptr->adr_cnt++] = &col;
+						fmt_ptr->fmtstr[i] = 'd';
+						break;
+				case 'l':		/* line */
+						fmt_ptr->adr[fmt_ptr->adr_cnt++] = &lnum;
+						fmt_ptr->fmtstr[i++] = 'l';
+						fmt_ptr->fmtstr[i] = 'd';
+						break;
+				case 'n':		/* error number */
+						fmt_ptr->adr[fmt_ptr->adr_cnt++] = &enr;
+						fmt_ptr->fmtstr[i] = 'd';
+						break;
+				case 't':		/* error type */
+						fmt_ptr->adr[fmt_ptr->adr_cnt++] = &type;
+						fmt_ptr->fmtstr[i] = 'c';
+						break;
+				case '%':		/* %% */
+				case '*':		/* %*: no assignment */
+						fmt_ptr->fmtstr[i] = efmp[1];
+						break;
+				default:
+						EMSG("invalid % in format string");
+						goto error2;
+				}
+				if (fmt_ptr->adr_cnt == MAX_ADDR)
+				{
+					EMSG("too many % in format string");
+					goto error2;
+				}
+				++efmp;
+			}
+			if (i >= maxlen - 6)
+			{
+				EMSG("invalid format string");
 				goto error2;
 			}
-			++pfmt;
 		}
-		if (i >= maxlen - 6)
-		{
-			EMSG("invalid format string");
-			goto error2;
-		}
-	}
-	fmtstr[i] = NUL;
+		fmt_ptr->fmtstr[i] = NUL;
 
+		/*
+		 * Advance to next part
+		 */
+		efm = skip_to_option_part(efm + len);	/* skip comma and spaces */
+	}
+	if (fmt_first == NULL)		/* nothing found */
+	{
+		EMSG("'errorformat' contains no pattern");
+		goto error2;
+	}
+
+	/*
+	 * Read the lines in the error file one by one.
+	 * Try to recognize one of the error formats in each line.
+	 */
 	while (fgets((char *)IObuff, CMDBUFFSIZE, fd) != NULL && !got_int)
 	{
-		if ((qfp = (struct qf_line *)alloc((unsigned)sizeof(struct qf_line))) == NULL)
+		if ((qfp = (struct qf_line *)alloc((unsigned)sizeof(struct qf_line)))
+																	  == NULL)
 			goto error2;
 
 		IObuff[CMDBUFFSIZE] = NUL;	/* for very long lines */
-		namebuf[0] = NUL;
-		errmsg[0] = NUL;
-		lnum = 0;
-		col = 0;
-		enr = -1;
-		type = 0;
-		valid = TRUE;
 
-		if (sscanf((char *)IObuff, (char *)fmtstr, adr[0], adr[1], adr[2], adr[3],
-												adr[4], adr[5]) != adr_cnt)
+		/*
+		 * Try to match each part of 'errorformat' until we find a complete
+		 * match or none matches.
+		 */
+		valid = TRUE;
+		for (fmt_ptr = fmt_first; fmt_ptr != NULL; fmt_ptr = fmt_ptr->next)
 		{
-			namebuf[0] = NUL;			/* something failed, remove file name */
+			namebuf[0] = NUL;
+			errmsg[0] = NUL;
+			lnum = 0;
+			col = 0;
+			enr = -1;
+			type = 0;
+
+			/*
+			 * If first char of the format and message don't match, there is
+			 * no need to try sscanf() on it... Somehow I believe there are
+			 * very slow implementations of sscanf().
+			 * -- Paul Slootman
+			 */
+			if (fmt_ptr->fmtstr[0] != '%' && fmt_ptr->fmtstr[0] != IObuff[0])
+				continue;
+
+			if (sscanf((char *)IObuff, (char *)fmt_ptr->fmtstr,
+						fmt_ptr->adr[0], fmt_ptr->adr[1], fmt_ptr->adr[2],
+						fmt_ptr->adr[3], fmt_ptr->adr[4], fmt_ptr->adr[5],
+						fmt_ptr->adr[6]) == fmt_ptr->adr_cnt)
+				break;
+		}
+		if (fmt_ptr == NULL)
+		{
+			namebuf[0] = NUL;			/* no match found, remove file name */
+			lnum = 0;					/* don't jump to this line */
 			valid = FALSE;
 			STRCPY(errmsg, IObuff);		/* copy whole line to error message */
-			if ((pfmt = STRRCHR(errmsg, '\n')) != NULL)
-				*pfmt = NUL;
-#ifdef MSDOS
-			if ((pfmt = STRRCHR(errmsg, '\r')) != NULL)
-				*pfmt = NUL;
+			if ((efmp = vim_strrchr(errmsg, '\n')) != NULL)
+				*efmp = NUL;
+#ifdef USE_CRNL
+			if ((efmp = vim_strrchr(errmsg, '\r')) != NULL)
+				*efmp = NUL;
 #endif
 		}
 
@@ -220,9 +331,8 @@ qf_init()
 			qf_index = qf_count;
 			qf_ptr = qfp;
 		}
-		breakcheck();
+		line_breakcheck();
 	}
-	free(fmtstr);
 	if (!ferror(fd))
 	{
 		if (qf_index == 0)		/* no valid entry found */
@@ -233,17 +343,26 @@ qf_init()
 		}
 		else
 			qf_nonevalid = FALSE;
-		fclose(fd);
-		qf_jump(0, 0);			/* display first error */
-		return OK;
+		retval = OK;
+		goto qf_init_ok;
 	}
 	emsg(e_readerrf);
 error1:
-	free(qfp);
+	vim_free(qfp);
 error2:
-	fclose(fd);
 	qf_free();
-	return FAIL;
+qf_init_ok:
+	fclose(fd);
+	for (fmt_ptr = fmt_first; fmt_ptr != NULL; fmt_ptr = fmt_first)
+	{
+		fmt_first = fmt_ptr->next;
+		vim_free(fmt_ptr->fmtstr);
+		vim_free(fmt_ptr);
+	}
+qf_init_end:
+	vim_free(namebuf);
+	vim_free(errmsg);
+	return retval;
 }
 
 /*
@@ -258,6 +377,10 @@ qf_jump(dir, errornr)
 	int		dir;
 	int		errornr;
 {
+	struct qf_line	*old_qf_ptr;
+	int				old_qf_index;
+	static char_u	*e_no_more_errors = (char_u *)"No more errors";
+	char_u			*err = e_no_more_errors;
 	linenr_t		i;
 
 	if (qf_count == 0)
@@ -266,30 +389,58 @@ qf_jump(dir, errornr)
 		return;
 	}
 
+	old_qf_ptr = qf_ptr;
+	old_qf_index = qf_index;
 	if (dir == FORWARD)		/* next valid entry */
 	{
 		while (errornr--)
 		{
+			old_qf_ptr = qf_ptr;
+			old_qf_index = qf_index;
 			do
 			{
 				if (qf_index == qf_count || qf_ptr->qf_next == NULL)
+				{
+					qf_ptr = old_qf_ptr;
+					qf_index = old_qf_index;
+					if (err != NULL)
+					{
+						emsg(err);
+						return;
+					}
+					errornr = 0;
 					break;
+				}
 				++qf_index;
 				qf_ptr = qf_ptr->qf_next;
 			} while (!qf_nonevalid && !qf_ptr->qf_valid);
+			err = NULL;
 		}
 	}
 	else if (dir == BACKWARD)		/* previous valid entry */
 	{
 		while (errornr--)
 		{
+			old_qf_ptr = qf_ptr;
+			old_qf_index = qf_index;
 			do
 			{
 				if (qf_index == 1 || qf_ptr->qf_prev == NULL)
+				{
+					qf_ptr = old_qf_ptr;
+					qf_index = old_qf_index;
+					if (err != NULL)
+					{
+						emsg(err);
+						return;
+					}
+					errornr = 0;
 					break;
+				}
 				--qf_index;
 				qf_ptr = qf_ptr->qf_prev;
 			} while (!qf_nonevalid && !qf_ptr->qf_valid);
+			err = NULL;
 		}
 	}
 	else if (errornr != 0)		/* go to specified number */
@@ -310,7 +461,8 @@ qf_jump(dir, errornr)
 	 * If there is a file name, 
 	 * read the wanted file if needed, and check autowrite etc.
 	 */
-	if (qf_ptr->qf_fnum == 0 || buflist_getfile(qf_ptr->qf_fnum, (linenr_t)1, TRUE) == OK)
+	if (qf_ptr->qf_fnum == 0 || buflist_getfile(qf_ptr->qf_fnum,
+											 (linenr_t)1, GETF_SETMARK) == OK)
 	{
 		/*
 		 * Go to line with error, unless qf_lnum is 0.
@@ -322,46 +474,88 @@ qf_jump(dir, errornr)
 				i = curbuf->b_ml.ml_line_count;
 			curwin->w_cursor.lnum = i;
 		}
-		curwin->w_cursor.col = qf_ptr->qf_col;
-		adjust_cursor();
+		if (qf_ptr->qf_col > 0)
+		{
+			curwin->w_cursor.col = qf_ptr->qf_col - 1;
+			adjust_cursor();
+		}
+		else
+			beginline(TRUE);
 		cursupdate();
-		smsg((char_u *)"(%d of %d) %s%s: %s", qf_index, qf_count, 
-					qf_ptr->qf_cleared ? (char_u *)"(line deleted) " : (char_u *)"",
+		smsg((char_u *)"(%d of %d)%s%s: %s", qf_index, qf_count, 
+					qf_ptr->qf_cleared ? (char_u *)" (line deleted)" : (char_u *)"",
 					qf_types(qf_ptr->qf_type, qf_ptr->qf_nr), qf_ptr->qf_text);
+		/*
+		 * if the message is short, redisplay after redrawing the screen
+		 */
+		if (linetabsize(IObuff) < ((int)p_ch - 1) * Columns + sc_col)
+			keep_msg = IObuff;
 	}
+	else if (qf_ptr->qf_fnum != 0)
+	{
+		/*
+		 * Couldn't open file, so put index back where it was.  This could
+		 * happen if the file was readonly and we changed something - webb
+		 */
+		qf_ptr = old_qf_ptr;
+		qf_index = old_qf_index;
+  	}
 }
 
 /*
  * list all errors
  */
 	void
-qf_list()
+qf_list(all)
+	int all;		/* If not :cl!, only show recognised errors */
 {
-	struct qf_line *qfp;
-	int i;
+	BUF				*buf;
+	char_u			*fname;
+	struct qf_line	*qfp;
+	int				i;
 
 	if (qf_count == 0)
 	{
 		emsg(e_quickfix);
 		return;
 	}
+
+	if (qf_nonevalid)
+		all = TRUE;
 	qfp = qf_start;
-	gotocmdline(TRUE, NUL);
+	set_highlight('d');		/* Same as for directories */
 	for (i = 1; !got_int && i <= qf_count; ++i)
 	{
-		sprintf((char *)IObuff, "%2d line %3ld col %2d %s: %s",
-			i,
-			(long)qfp->qf_lnum,
-			qfp->qf_col,
-			qf_types(qfp->qf_type, qfp->qf_nr),
-			qfp->qf_text);
-		msg_outstr(IObuff);
-		msg_outchar('\n');
+		if (qfp->qf_valid || all)
+		{
+			msg_outchar('\n');
+			start_highlight();
+			fname = NULL;
+			if (qfp->qf_fnum != 0 &&
+								 (buf = buflist_findnr(qfp->qf_fnum)) != NULL)
+				fname = buf->b_xfilename;
+			if (fname == NULL)
+				sprintf((char *)IObuff, "%2d", i);
+			else
+				sprintf((char *)IObuff, "%2d %s", i, fname);
+			msg_outtrans(IObuff);
+			stop_highlight();
+			if (qfp->qf_lnum == 0)
+				IObuff[0] = NUL;
+			else if (qfp->qf_col == 0)
+				sprintf((char *)IObuff, ":%ld", qfp->qf_lnum);
+			else
+				sprintf((char *)IObuff, ":%ld, col %d",
+												   qfp->qf_lnum, qfp->qf_col);
+			sprintf((char *)IObuff + STRLEN(IObuff), "%s: ",
+										qf_types(qfp->qf_type, qfp->qf_nr));
+			msg_outstr(IObuff);
+			msg_prt_line(qfp->qf_text);
+			flushbuf();					/* show one line at a time */
+		}
 		qfp = qfp->qf_next;
-		flushbuf();					/* show one line at a time */
-		breakcheck();
+		mch_breakcheck();
 	}
-	wait_return(FALSE);
 }
 
 /*
@@ -375,8 +569,8 @@ qf_free()
 	while (qf_count)
 	{
 		qfp = qf_start->qf_next;
-		free(qf_start->qf_text);
-		free(qf_start);
+		vim_free(qf_start->qf_text);
+		vim_free(qf_start);
 		qf_start = qfp;
 		--qf_count;
 	}
@@ -386,34 +580,39 @@ qf_free()
  * qf_mark_adjust: adjust marks
  */
    void
-qf_mark_adjust(line1, line2, inc)
+qf_mark_adjust(line1, line2, amount, amount_after)
 	linenr_t	line1;
 	linenr_t	line2;
-	long		inc;
+	long		amount;
+	long		amount_after;
 {
 	register int i;
 	struct qf_line *qfp;
 
 	if (qf_count)
 		for (i = 0, qfp = qf_start; i < qf_count; ++i, qfp = qfp->qf_next)
-			if (qfp->qf_fnum == curbuf->b_fnum &&
-							qfp->qf_lnum >= line1 && qfp->qf_lnum <= line2)
+			if (qfp->qf_fnum == curbuf->b_fnum)
 			{
-				if (inc == MAXLNUM)
-					qfp->qf_cleared = TRUE;
-				else
-					qfp->qf_lnum += inc;
+				if (qfp->qf_lnum >= line1 && qfp->qf_lnum <= line2)
+				{
+					if (amount == MAXLNUM)
+						qfp->qf_cleared = TRUE;
+					else
+						qfp->qf_lnum += amount;
+				}
+				if (amount_after && qfp->qf_lnum > line2)
+					qfp->qf_lnum += amount_after;
 			}
 }
 
 /*
  * Make a nice message out of the error character and the error number:
  *	char	number		message
- *  e or E    0			"  Error"
- *  w or W    0			"Warning"
- *  other     0			 ""
- *  w or W    n			"Warning n"
- *  other     n			"  Error n"
+ *  e or E    0			"   error"
+ *  w or W    0			" warning"
+ *  other     0			""
+ *  w or W    n			" warning n"
+ *  other     n			"   error n"
  */
 	static char_u *
 qf_types(c, nr)
@@ -422,9 +621,9 @@ qf_types(c, nr)
 	static char_u	buf[20];
 	char_u		*p1;
 
-	p1 = (char_u *)"  Error";
+	p1 = (char_u *)"   error";
 	if (c == 'W' || c == 'w')
-		p1 =  (char_u *)"Warning";
+		p1 =  (char_u *)" warning";
 	else if (nr <= 0 && c != 'E' && c != 'e')
 		p1 = (char_u *)"";
 

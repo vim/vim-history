@@ -1,0 +1,399 @@
+.TH CTAGS 1 "Version 0.4 Beta     20 May 1996"
+
+.SH NAME
+ctags \- Generate C language tag files for use with
+.BR vi (1)
+.SH SYNOPSIS
+.TP 6
+.B ctags
+[
+.B \-aBdFlsStTwWx
+] [
+.BI \-f " tagfile"
+] [
+.BI \-h " list"
+]
+.br
+[
+.BI \-i " types"
+] [
+.BI \-L " listfile"
+] [
+.BI \-o " tagfile"
+]
+.br
+[
+.I file(s)
+]
+.SH DESCRIPTION
+.B Ctags
+generates an index (or "tag") file of C language objects found in
+.I file(s)
+that allows these items to be quickly and easily located by a text editor or
+other utility. A "tag" signifies a C language object for which an index entry
+is available (or, alternatively, the index entry created for that object).
+.PP
+Alternatively,
+.B ctags
+can generate a cross reference file which lists, in human readable form,
+information about the various objects found in a set of C language files.
+.PP
+Tag index files are supported by the
+.BR vi (1)
+editor and its derivatives
+(such as
+.BR vim ,
+.BR elvis ,
+.BR stevie ,
+and
+.BR xvi )
+through the use of the ":ta" command, which locates the object associated with
+a name appearing in a source file and jumps to the file and line which defines
+the name. The following types of tags are supported by 
+.B ctags:
+.PP
+.RS 4
+macro definitions (i.e. names created by #define)
+.br
+enumerated values (i.e. the values inside enum{...})
+.br
+function definitions
+.br
+function prototypes or declarations (optional)
+.br
+class, enum, struct and union tags
+.br
+typedefs
+.br
+variables
+.RE
+.PP
+With the exception of macro definitions, only objects defined outside of
+function, class, structure and union blocks are candidates for a tag. For
+every one of the selected objects listed above which are discovered in the
+source files supplied to
+.BR ctags ,
+a separate line is added to the tags
+file in the following format:
+.PP
+.PD 0
+.RS 4
+.TP 4
+1.
+tag name (a C language identifier)
+.TP 4
+2.
+a single tab character
+.TP 4
+3.
+the name of the file in which the object associated with the tag is located
+.TP 4
+4.
+a single tab character
+.TP 4
+5.
+a search pattern (either /pattern/ or ?pattern?) or line number with which
+to locate the tag within the file
+.RE
+.PD 1
+.PP
+Note that the name of each source file will be recorded in the tag file
+exactly as it appears on the command line. Therefore, if the path you
+specified on the command line was relative to some directory, then it will
+be recorded in that same manner in the tag file.
+.PP
+This version of
+.B ctags
+imposes no formatting requirements. Other versions of ctags tended to rely
+upon certain formatting assumptions in order to help it resolve coding
+dilemmas caused by preprocessor conditionals.
+.PP
+In general,
+.B ctags
+tries to be smart about conditional preprocessor directives. If a preprocessor
+conditional is encountered within a statement which defines a tag,
+.B ctags
+follows only the first branch of that conditional (except in the special case
+of "#if 0", in which case it follows only the last branch). The reason for
+this is that failing to pursue only one branch can result in ambiguous syntax,
+as in the following
+example:
+.PP
+.RS
+#ifdef STORE_SEPARATELY
+.br
+struct {
+.br
+#else
+.br
+union {
+.br
+#endif
+.RS 4
+short a;
+.br
+long b;
+.RE
+}
+.RE
+.PP
+Both branches cannot be followed, or braces become unbalanced and
+.B ctags
+would be unable to make sense of the syntax.
+.PP
+If the application of this heuristic fails to properly parse a file,
+generally due to complicated and inconsistent pairing within the conditionals,
+.B ctags
+will retry the file using a different heuristic which does not selectively
+follow conditional preprocessor branches, but instead falls back to relying
+upon a closing brace ("}") in column 1 as indicating the end of a block once
+any brace imbalance is detected within a #if conditional.
+.PP
+.B Ctags
+will also try to specially handle arguments lists enclosed in double sets of
+parentheses in order to accept the following conditional construct:
+.PP
+.RS
+extern void (*fptr) __ARGS((int one, char two));
+.RE
+.PP
+Any name immediately preceding the "((" will be discarded and the previous
+name will be used.
+.PP
+After creating or appending to the tag file, it is sorted by the tag name,
+removing identical tag lines.
+.SH OPTIONS
+.TP 5
+.B \-a
+Append the tags to an existing tag file.
+.TP 5
+.B \-B
+Use backward searching patterns (?...?).
+.TP 5
+.B \-d
+Include macro definitions in the output file. This is equivalent to
+.BI -i +d
+and is supported only for backwards compatibility with other versions of
+ctags. Use of
+.B -i
+is preferred.
+.TP 5
+.BI \-f " tagfile"
+Output tags to the specified file (default is "tags"). A space separating
+the option letter from the file name is optional.
+.B Ctags
+will stubbornly refuse to take orders if
+.I tagfile
+exists and its first line contains something other than a valid tags line.
+This will save your neck if you mistakenly type "ctags -o *.c", which would
+otherwise overwrite your first C file with the tags generated by the rest!
+.TP 5
+.B \-F
+Use forward searching patterns (/.../) (default).
+.TP 5
+.BI \-h  " list"
+Specifies a list of file extensions used for headers, separated by either
+periods or commas . A space separating the option letter from the list is
+optional. The default list is ".h.H.hpp.hxx.h++".
+.TP 5
+.BI \-i " types"
+Specifies the list of tag types to include in the output file.
+.B Types
+is a group of letters designating the types of tags affected. Each letter or
+group of letters may be preceded by either a '+' sign (default, if omitted) to
+add it to those already included, a '-' sign to exclude it from the list (e.g.
+to exclude a default tag type), or an '=' sign to include its corresponding
+tag type at the exclusion of those not listed. A space separating the option
+letter from the list is optional. The following tag types are supported:
+.RS 8
+.PD 0
+.TP 4
+.B d
+macro definitions
+.TP 4
+.B e
+enumerated values (values inside enum{...})
+.TP 4
+.B f
+function and method definitions
+.TP 4
+.B g
+enum/struct/union tags (or new C++ types)
+.TP 4
+.B p
+external function prototypes
+.TP 4
+.B t
+typedefs
+.TP 4
+.B v
+variable declarations
+.RE
+.RS 5
+In addition, the following two modifiers are accepted:
+.RE
+.RS 8
+.TP 4
+.B P
+Prefix static tags (if included) in the tag file with the filename in which
+they appear, followed by a colon (Elvis style).
+.TP 4
+.B S
+Include static tags (those not visible outside of a single source file).
+Function and variable definitions are considered static only when their
+definitions are preceded with the "static" keyword. All other types of tags
+are considered static when they appear in a non-header file (see the -h
+option).
+.RE
+.RS 5
+The default value of
+.I list
+is "=defgtvS" (i.e all tag types except for function
+prototypes; include static tags but do not prefix them).
+.RE
+.PD 1
+.TP 5
+.BI \-L " listfile"
+Read the names of files for which tags tags should be generated from
+.IR listfile "."
+.TP 5
+.BI \-o " tagfile"
+Alternative for
+.BR -f "."
+.TP 5
+.B \-s
+Include static tags in the output file, each prefixed with the name of
+the file in which it appears followed by a colon. This is equivalent to
+.BI -i +SP
+and is supported only for backwards compatibility with other versions of
+ctags. Use of
+.B -i
+is preferred.
+.TP 5
+.B \-S
+Include static tags in the output file, but do not prefix them, thereby
+making them appear the same as global tags. This is equivalent to
+.BI -i +S-P
+and is supported only for backwards compatibility with other versions of
+ctags. Use of
+.B -i
+is preferred.
+.TP 5
+.B \-t
+Include typedefs in the output file. This is equivalent to
+.BI -i +t
+and is supported only for backwards compatibility with other versions of
+ctags. Use of
+.B -i
+is preferred.
+.TP 5
+.B \-T
+Include typedefs and class/enum/struct/union tags in the output file.
+This is equivalent to
+.BI -i +tg
+and is supported only for backwards compatibility with other versions of
+ctags. Use of
+.B -i
+is preferred.
+.TP 5
+.B \-w
+Exclude warnings about duplicate tags (default).
+.TP 5
+.B \-W
+Generate warnings about duplicate tags.
+.TP 5
+.B \-x
+Print a tabular, human-readable cross reference (xref) file to standard
+output. No tag file is written and the following options will be ignored:
+.BR \-a ", " \-f ", " \-i+P ", " \-o ", " \-B " and " \-F .
+Example applications for this feature are generating a listing of all
+functions (including statics) located in a source
+.BR "" "file (" "ctags -xi=fS"
+.IR " file" "),"
+or generating a list of all externally visible global variables located in a
+source
+.BR "" "file (" "ctags -xi=v"
+.IR " file" ")."
+.SH "ENVIRONMENT VARIABLES"
+.TP 8
+.B CTAGS
+If found, this variable will be assumed to contain a set of custom default
+options which are read when
+.B ctags
+starts, but before any command line options are read. Options in this variable
+should be in the same form as those on the comand line. Command line options
+will override options specified in this variable. Only options may be
+specified with this variable; no source file names are read from its value.
+.SH "HOW TO USE WITH VI"
+Vi will, by default, expect a tag file by the name "tags" in the current
+directory. Once the tag file is build, the following vi commands take
+exercise the tag indexing feature:
+.TP 12
+vi -t tag
+Start vi and position the cursor at the file and line where "tag" is defined.
+.TP 12
+Control-]
+Find the tag under the cursor.
+.TP 12
+:ta tag
+Find a tag.
+.TP 12
+Control-T
+Return to previous location before jump to tag (not widely implemented).
+.SH BUGS
+Because
+.B ctags
+is neither a preprocessor nor a compiler, some complex or obscure constructs
+can fool
+.B ctags
+into either missing a tag or improperly generating an inappropriate tag. In
+particular, the use of preprocessor constructs which alter the textual syntax
+of C can fool
+.BR ctags ,
+as demonstrated by the following example:
+.PP
+.RS
+#ifdef GLOBAL
+.br
+#define EXTERN
+.br
+#define INIT(assign)	assign
+.br
+#else
+.br
+#define EXTERN extern
+.br
+#define INIT(assign)
+.br
+#endif
+.br
+
+EXTERN BUF *firstbuf INIT(= NULL);
+.RE
+.PP
+This looks too much like a declaration for a function called "INIT",
+which returns a pointer to a typedef "firstbuf", rather than the actual
+variable definition that it is, since this distinction can only be
+resolved by the preprocessor. The moral of the story: don't do this if
+you want a tag generated for it.
+.SH FILES
+.TP 10
+.B tags
+The default tag file created by
+.B ctags
+.SH "SEE ALSO"
+.BR ex (1),
+.BR vi (1),
+.BR elvis ,
+or, better yet,
+.B vim
+(VI Improved), by Bram Moolenaar!
+.SH AUTHOR
+Written by Darren Hiebert, (darren@sirsi.com, darren@hiwaay.net)
+.SH CREDITS
+This version of
+.B ctags
+is derived from and inspired by the ctags program by Steve Kirkendall
+(kirkenda@cs.pdx.edu) that comes with the Elvis vi clone (though almost
+none of the original code remains).
+

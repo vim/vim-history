@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -19,37 +19,43 @@
  * coladvance(col)
  *
  * Try to advance the Cursor to the specified column.
+ *
+ * return OK if desired column is reached, FAIL if not
  */
 
-	void
+	int
 coladvance(wcol)
 	colnr_t 		wcol;
 {
-	int 				index;
+	int 				idx;
 	register char_u		*ptr;
 	register colnr_t	col;
 
-	ptr = ml_get(curwin->w_cursor.lnum);
+	ptr = ml_get_curline();
 
 	/* try to advance to the specified column */
-	index = -1;
+	idx = -1;
 	col = 0;
 	while (col <= wcol && *ptr)
 	{
-		++index;
+		++idx;
 		/* Count a tab for what it's worth (if list mode not on) */
-		col += chartabsize(*ptr, (long)col);
+		col += lbr_chartabsize(ptr, col);
 		++ptr;
 	}
 	/*
 	 * in insert mode it is allowed to be one char beyond the end of the line
 	 */
 	if ((State & INSERT) && col <= wcol)
-		++index;
-	if (index < 0)
+		++idx;
+	if (idx < 0)
 		curwin->w_cursor.col = 0;
 	else
-		curwin->w_cursor.col = index;
+		curwin->w_cursor.col = idx;
+	if (col <= wcol)
+		return FAIL;		/* Couldn't reach column */
+	else
+		return OK;			/* Reached column */
 }
 
 /*
@@ -70,13 +76,13 @@ inc(lp)
 {
 	register char_u  *p = ml_get_pos(lp);
 
-	if (*p != NUL)
-	{			/* still within line */
+	if (*p != NUL)		/* still within line, move to next char (may be NUL) */
+	{
 		lp->col++;
 		return ((p[1] != NUL) ? 0 : 1);
 	}
-	if (lp->lnum != curbuf->b_ml.ml_line_count)
-	{			/* there is a next line */
+	if (lp->lnum != curbuf->b_ml.ml_line_count)		/* there is a next line */
+	{
 		lp->col = 0;
 		lp->lnum++;
 		return 1;
@@ -133,13 +139,13 @@ dec(lp)
  */
 	int
 decl(lp)
-		register FPOS *lp;
+	register FPOS *lp;
 {
-		register int r;
+	register int r;
 
-		if ((r = dec(lp)) == 1 && lp->col)
-				r = dec(lp);
-		return r;
+	if ((r = dec(lp)) == 1 && lp->col)
+		r = dec(lp);
+	return r;
 }
 
 /*
@@ -148,14 +154,14 @@ decl(lp)
 	void
 adjust_cursor()
 {
-	int len;
+	colnr_t len;
 
 	if (curwin->w_cursor.lnum == 0)
 		curwin->w_cursor.lnum = 1;
 	if (curwin->w_cursor.lnum > curbuf->b_ml.ml_line_count)
 		curwin->w_cursor.lnum = curbuf->b_ml.ml_line_count;
 
-	len = STRLEN(ml_get(curwin->w_cursor.lnum));
+	len = STRLEN(ml_get_curline());
 	if (len == 0)
 		curwin->w_cursor.col = 0;
 	else if (curwin->w_cursor.col >= len)

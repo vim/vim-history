@@ -1,0 +1,280 @@
+#
+# Makefile for Vim on Win32 (Windows NT and Windows 95), using the Borland C++
+# 4.5 32-bit compiler.  Contributed by Ben Singer.
+# It builds on Windows 95 and NT-Intel, producing the same binary in either
+# case.  To build using Microsoft Visual C++, use Makefile.w32.
+#
+
+# Be sure to change LIB and INCLUDE to point to the
+# correct directories on your system.
+
+LIB = c:\bc45\lib
+INCLUDE = c:\bc45\include
+
+# Uncomment SRCDEBUG to make an executable for debugging
+# SRCDEBUG = -v
+
+BCC32   = Bcc32 +BccW32.cfg 
+LINK    = TLink32 
+DEFINES = -DWIN32;PC
+LFLAGS  = -Tpe -ap -c -L$(LIB) $(SRCDEBUG)
+OBJDIR  = obj
+
+
+vim: BccW32.cfg vim.exe 
+        @del $(OBJDIR)\version.obj
+
+
+BccW32.cfg: Makefile.b32
+  copy &&|
+        $(DEFINES)
+        -I$(INCLUDE)
+        -vi
+        -H
+        -H=$(OBJDIR)\vim.csm
+        -P-
+        -WC
+        -Z
+        -waus-
+        $(SRCDEBUG)
+| $@
+
+
+vimobj = \
+        $(OBJDIR)\alloc.obj\
+        $(OBJDIR)\buffer.obj\
+        $(OBJDIR)\charset.obj\
+        $(OBJDIR)\cmdcmds.obj\
+        $(OBJDIR)\cmdline.obj\
+        $(OBJDIR)\csearch.obj\
+        $(OBJDIR)\digraph.obj\
+        $(OBJDIR)\edit.obj\
+        $(OBJDIR)\fileio.obj\
+        $(OBJDIR)\getchar.obj\
+        $(OBJDIR)\help.obj\
+        $(OBJDIR)\linefunc.obj\
+        $(OBJDIR)\main.obj\
+        $(OBJDIR)\mark.obj\
+        $(OBJDIR)\memfile.obj\
+        $(OBJDIR)\memline.obj\
+        $(OBJDIR)\message.obj\
+        $(OBJDIR)\misccmds.obj\
+        $(OBJDIR)\normal.obj\
+        $(OBJDIR)\ops.obj\
+        $(OBJDIR)\option.obj\
+        $(OBJDIR)\quickfix.obj\
+        $(OBJDIR)\regexp.obj\
+        $(OBJDIR)\regsub.obj\
+        $(OBJDIR)\screen.obj\
+        $(OBJDIR)\search.obj\
+        $(OBJDIR)\tables.obj\
+        $(OBJDIR)\tag.obj\
+        $(OBJDIR)\term.obj\
+        $(OBJDIR)\undo.obj\
+        $(OBJDIR)\version.obj\
+        $(OBJDIR)\win32.obj\
+        $(OBJDIR)\window.obj
+
+vim.exe: $(OBJDIR) $(vimobj)
+  $(LINK) @&&|
+        $(LFLAGS) +
+        c0x32.obj+
+        $(OBJDIR)\alloc.obj+
+        $(OBJDIR)\buffer.obj+
+        $(OBJDIR)\charset.obj+
+        $(OBJDIR)\cmdcmds.obj+
+        $(OBJDIR)\cmdline.obj+
+        $(OBJDIR)\csearch.obj+
+        $(OBJDIR)\digraph.obj+
+        $(OBJDIR)\edit.obj+
+        $(OBJDIR)\fileio.obj+
+        $(OBJDIR)\getchar.obj+
+        $(OBJDIR)\help.obj+
+        $(OBJDIR)\linefunc.obj+
+        $(OBJDIR)\main.obj+
+        $(OBJDIR)\mark.obj+
+        $(OBJDIR)\memfile.obj+
+        $(OBJDIR)\memline.obj+
+        $(OBJDIR)\message.obj+
+        $(OBJDIR)\misccmds.obj+
+        $(OBJDIR)\normal.obj+
+        $(OBJDIR)\ops.obj+
+        $(OBJDIR)\option.obj+
+        $(OBJDIR)\quickfix.obj+
+        $(OBJDIR)\regexp.obj+
+        $(OBJDIR)\regsub.obj+
+        $(OBJDIR)\screen.obj+
+        $(OBJDIR)\search.obj+
+        $(OBJDIR)\tables.obj+
+        $(OBJDIR)\tag.obj+
+        $(OBJDIR)\term.obj+
+        $(OBJDIR)\undo.obj+
+        $(OBJDIR)\version.obj+
+        $(OBJDIR)\win32.obj+
+        $(OBJDIR)\window.obj
+        $<,$*
+        import32.lib+
+        cw32.lib
+|
+
+$(OBJDIR)\alloc.obj:  alloc.c
+        $(BCC32) -c -o$@ alloc.c
+
+$(OBJDIR)\buffer.obj:  buffer.c 
+        $(BCC32) -c -o$@ buffer.c
+
+$(OBJDIR)\charset.obj:  charset.c 
+        $(BCC32) -c -o$@ charset.c
+
+$(OBJDIR)\cmdcmds.obj:  cmdcmds.c 
+        $(BCC32) -c -o$@ cmdcmds.c
+
+$(OBJDIR)\cmdline.obj:  cmdline.c cmdtab.h 
+        $(BCC32) -c -o$@ cmdline.c
+
+$(OBJDIR)\csearch.obj:  csearch.c 
+        $(BCC32) -c -o$@ csearch.c
+
+$(OBJDIR)\digraph.obj:  digraph.c 
+        $(BCC32) -c -o$@ digraph.c
+
+$(OBJDIR)\edit.obj:  edit.c 
+        $(BCC32) -c -o$@ edit.c
+
+$(OBJDIR)\fileio.obj:  fileio.c 
+        $(BCC32) -c -o$@ fileio.c
+
+$(OBJDIR)\getchar.obj:  getchar.c 
+        $(BCC32) -c -o$@ getchar.c
+
+$(OBJDIR)\help.obj:  help.c 
+        $(BCC32) -c -o$@ help.c
+
+$(OBJDIR)\linefunc.obj:  linefunc.c 
+        $(BCC32) -c -o$@ linefunc.c
+
+$(OBJDIR)\main.obj:  main.c 
+        $(BCC32) -c -o$@ main.c
+
+$(OBJDIR)\mark.obj:  mark.c 
+        $(BCC32) -c -o$@ mark.c
+
+$(OBJDIR)\memfile.obj:  memfile.c 
+        $(BCC32) -c -o$@ memfile.c
+
+$(OBJDIR)\memline.obj:  memline.c 
+        $(BCC32) -c -o$@ memline.c
+
+$(OBJDIR)\message.obj:  message.c 
+        $(BCC32) -c -o$@ message.c
+
+$(OBJDIR)\misccmds.obj:  misccmds.c 
+        $(BCC32) -c -o$@ misccmds.c
+
+$(OBJDIR)\normal.obj:  normal.c 
+        $(BCC32) -c -o$@ normal.c
+
+$(OBJDIR)\ops.obj:  ops.c 
+        $(BCC32) -c -o$@ ops.c
+
+$(OBJDIR)\option.obj:  option.c 
+        $(BCC32) -c -o$@ option.c
+
+$(OBJDIR)\quickfix.obj:  quickfix.c 
+        $(BCC32) -c -o$@ quickfix.c
+
+$(OBJDIR)\regexp.obj:  regexp.c 
+        $(BCC32) -c -o$@ regexp.c
+
+$(OBJDIR)\regsub.obj:  regsub.c 
+        $(BCC32) -c -o$@ regsub.c
+
+$(OBJDIR)\screen.obj:  screen.c 
+        $(BCC32) -c -o$@ screen.c
+
+$(OBJDIR)\search.obj:  search.c 
+        $(BCC32) -c -o$@ search.c
+
+$(OBJDIR)\tables.obj:  tables.c 
+        $(BCC32) -c -o$@ tables.c
+
+$(OBJDIR)\tag.obj:  tag.c 
+        $(BCC32) -c -o$@ tag.c
+
+$(OBJDIR)\term.obj:  term.c 
+        $(BCC32) -c -o$@ term.c
+
+$(OBJDIR)\undo.obj:  undo.c 
+        $(BCC32) -c -o$@ undo.c
+
+$(OBJDIR)\version.obj:  version.c 
+        $(BCC32) -c -o$@ version.c
+
+$(OBJDIR)\win32.obj:  win32.c 
+        $(BCC32) -c -o$@ win32.c
+
+$(OBJDIR)\window.obj:  window.c 
+        $(BCC32) -c -o$@ window.c
+
+
+$(OBJDIR):
+        @if not exist $(OBJDIR)\nul mkdir $(OBJDIR)
+
+
+cmdtab.h: cmdtab.tab $(OBJDIR)\mkcmdtab.exe
+        $(OBJDIR)\mkcmdtab.exe cmdtab.tab cmdtab.h
+
+$(OBJDIR)\mkcmdtab.exe: $(OBJDIR)\mkcmdtab.obj
+        $(LINK) @&&|
+        $(LFLAGS) +
+        c0x32.obj+
+        $(OBJDIR)\mkcmdtab.obj
+        $<,$*
+        import32.lib+
+        cw32.lib
+|
+
+$(OBJDIR)\mkcmdtab.obj: mkcmdtab.c
+        $(BCC32) -c -o$@ mkcmdtab.c
+
+
+ctags: ctags.exe
+
+ctags.exe: bccw32.cfg $(OBJDIR)\ctags.obj
+        $(LINK) @&&|
+        $(LFLAGS) +
+        c0x32.obj+
+        $(OBJDIR)\ctags.obj+
+        $(LIB)\32bit\wildargs.obj
+        $<,$*
+        import32.lib+
+        cw32.lib
+|
+
+$(OBJDIR)\ctags.obj: ctags.c
+        $(BCC32) -DINTERNAL_SORT -o$@ -c ctags.c
+
+ctags.c:
+        copy ..\tools\ctags\ctags.c .
+
+
+addcr: addcr.exe
+        addcr.bat
+
+addcr.exe: addcr.c
+        $(BCC32) addcr.c
+
+
+clean:
+        - del bccw32.cfg
+        - del cmdtab.h
+        - del vim.exe
+        - del ctags.exe
+        - del $(OBJDIR)\*.obj
+        - del $(OBJDIR)\*.map
+        - del $(OBJDIR)\mkcmdtab.exe
+        - del $(OBJDIR)\vim.csm
+        - del $(OBJDIR)\vim.sym
+
+
+# vi:set ts=4 sw=4:

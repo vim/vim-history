@@ -1,0 +1,88 @@
+#
+# Makefile for Borland C++ 2.0, 3.1 or 4.0
+# Can also be used for Turbo C++
+#
+# The options are at the end of this file
+#
+
+.AUTODEPEND
+
+#		*Translator Definitions*
+#   use tcc for Turbo C++
+CC = bcc +ctags.cfg
+#CC = tcc +ctags.cfg
+TASM = TASM
+TLIB = tlib
+TLINK = tlink
+#
+# Adjust the paths for your environment
+#
+LIBPATH = E:\BC4\LIB
+INCLUDEPATH = E:\BC4\INCLUDE
+ 
+ 
+#		*Implicit Rules*
+#
+# use -v for debugging
+#
+.c.obj:
+  $(CC) -c {$< }
+#  $(CC) -c -v {$< }
+ 
+#		*List Macros*
+ 
+ 
+EXE_dependencies =  ctags.obj
+ 
+#		*Explicit Rules*
+#  add /v to TLINK for debugging
+ctags.exe: ctags.cfg $(EXE_dependencies)
+  $(TLINK) /x/c/L$(LIBPATH) @&&|
+c0l.obj+
+ctags.obj
+ctags
+		# no map file
+fp87.lib+
+mathl.lib+
+cl.lib
+|
+ 
+
+# cleaning up
+clean:
+	-del *.obj
+	-del *.exe
+	-del *~
+	-del *.*~
+
+#		*Individual File Dependencies*
+ctags.obj: ctags.c 
+ 
+#		*Compiler Configuration File*
+# The following compile options can be changed for better machines.
+#	replace -1- with -2 to produce code for a 80286 or higher
+#	replace -1- with -3 to produce code for a 80386 or higher
+#	add -v for source debugging
+ctags.cfg: makefile
+  copy &&|
+-ml
+-1-
+-f-
+-C
+-N
+-O
+-Z
+-k-
+-d
+-h
+-vi-
+-H=CTAGS.SYM
+-w-par
+-weas
+-wpre
+-I$(INCLUDEPATH)
+-L$(LIBPATH)
+-DPC;MSDOS;__STDC__=1
+| ctags.cfg
+
+### See makefile.txt for a list of defines that can be included

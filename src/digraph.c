@@ -1,12 +1,11 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
-#ifdef DIGRAPHS
 /*
  * digraph.c: code for digraphs
  */
@@ -14,16 +13,19 @@
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
+#ifdef DIGRAPHS
+
+static int getexactdigraph __ARGS((int, int, int));
 static void printdigraph __ARGS((char_u *));
 
-char_u	(*digraphnew)[3];			/* pointer to added digraphs */
-int		digraphcount = 0;			/* number of added digraphs */
+static char_u	(*digraphnew)[3];			/* pointer to added digraphs */
+static int		digraphcount = 0;			/* number of added digraphs */
 
-#ifdef MSDOS
+#if defined(MSDOS) || defined(WIN32) || defined(OS2)
 char_u	digraphdefault[][3] = 		/* standard MSDOS digraphs */
-	   {{'C', ',', 128},	/* Ä */
+	   {{'C', ',', 128},	/* ~@ (SAS C can't handle the real char) */
 		{'u', '"', 129},	/* Å */
 		{'e', '\'', 130},	/* Ç */
 		{'a', '^', 131},	/* É */
@@ -85,7 +87,109 @@ char_u	digraphdefault[][3] = 		/* standard MSDOS digraphs */
 		{NUL, NUL, NUL}
 		};
 
-#else	/* MSDOS */
+#else	/* !MSDOS && !WIN32 */
+# ifdef _INCLUDE_HPUX_SOURCE
+
+char_u	digraphdefault[][3] = 		/* default HPUX digraphs */
+	   {{'A', '`', 161},	/* ° */
+	    {'A', '^', 162},	/* ¢ */
+	    {'E', '`', 163},	/* £ */
+	    {'E', '^', 164},	/* § */
+	    {'E', '"', 165},	/* • */
+	    {'I', '^', 166},	/* ¶ */
+	    {'I', '"', 167},	/* ß */
+	    {'\'', '\'', 168},	/* ® */
+	    {'`', '`', 169},	/* © */
+		{'^', '^', 170},	/* ™ */
+		{'"', '"', 171},	/* ´ */
+		{'~', '~', 172},	/* ¨ */
+		{'U', '`', 173},	/* ≠ */
+		{'U', '^', 174},	/* Æ */
+		{'L', '=', 175},	/* Ø */
+		{'~', '_', 176},	/* ∞ */
+		{'Y', '\'', 177},	/* ± */
+		{'y', '\'', 178},	/* ≤ */
+		{'~', 'o', 179},	/* ≥ */
+		{'C', ',', 180},	/* ¥ */
+		{'c', ',', 181},	/* µ */
+		{'N', '~', 182},	/* ∂ */
+		{'n', '~', 183},	/* ∑ */
+		{'~', '!', 184},	/* ∏ */
+		{'~', '?', 185},	/* π */
+		{'o', 'x', 186},	/* ∫ */
+		{'L', '-', 187},	/* ª */
+		{'Y', '=', 188},	/* º */
+		{'p', 'p', 189},	/* Ω */
+		{'f', 'l', 190},	/* æ */
+		{'c', '|', 191},	/* ø */
+		{'a', '^', 192},	/* ¿ */
+		{'e', '^', 193},	/* ¡ */
+		{'o', '^', 194},	/* ¬ */
+		{'u', '^', 195},	/* √ */
+		{'a', '\'', 196},	/* ƒ */
+		{'e', '\'', 197},	/* ≈ */
+		{'o', '\'', 198},	/* ∆ */
+		{'u', '\'', 199},	/* « */
+		{'a', '`', 200},	/* » */
+		{'e', '`', 201},	/* … */
+		{'o', '`', 202},	/*   */
+		{'u', '`', 203},	/* À */
+		{'a', '"', 204},	/* Ã */
+		{'e', '"', 205},	/* Õ */
+		{'o', '"', 206},	/* Œ */
+		{'u', '"', 207},	/* œ */
+		{'A', 'o', 208},	/* – */
+		{'i', '^', 209},	/* — */
+		{'O', '/', 210},	/* “ */
+		{'A', 'E', 211},	/* ” */
+		{'a', 'o', 212},	/* ‘ */
+		{'i', '\'', 213},	/* ’ */
+		{'o', '/', 214},	/* ÷ */
+		{'a', 'e', 215},	/* ◊ */
+		{'A', '"', 216},	/* ÿ */
+		{'i', '`', 217},	/* Ÿ */
+		{'O', '"', 218},	/* ⁄ */
+		{'U', '"', 219},	/* € */
+		{'E', '\'', 220},	/* ‹ */
+		{'i', '"', 221},	/* › */
+		{'s', 's', 222},	/* ﬁ */
+		{'O', '^', 223},	/* ﬂ */
+		{'A', '\'', 224},	/* ‡ */
+		{'A', '~', 225},	/* · */
+		{'a', '~', 226},	/* ‚ */
+		{'D', '-', 227},	/* „ */
+		{'d', '-', 228},	/* ‰ */
+		{'I', '\'', 229},	/* Â */
+		{'I', '`', 230},	/* Ê */
+		{'O', '\'', 231},	/* Á */
+		{'O', '`', 232},	/* Ë */
+		{'O', '~', 233},	/* È */
+		{'o', '~', 234},	/* Í */
+		{'S', '~', 235},	/* Î */
+		{'s', '~', 236},	/* Ï */
+		{'U', '\'', 237},	/* Ì */
+		{'Y', '"', 238},	/* Ó */
+		{'y', '"', 239},	/* Ô */
+		{'p', '-', 240},	/*  */
+		{'p', '~', 241},	/* Ò */
+		{'~', '.', 242},	/* Ú */
+		{'j', 'u', 243},	/* Û */
+		{'P', 'p', 244},	/* Ù */
+		{'3', '4', 245},	/* ı */
+		{'-', '-', 246},	/* ˆ */
+		{'1', '4', 247},	/* ˜ */
+		{'1', '2', 248},	/* ¯ */
+		{'a', '_', 249},	/* ˘ */
+		{'o', '_', 250},	/* ˙ */
+		{'<', '<', 251},	/* ˚ */
+		{'x', 'x', 252},	/* ¸ */
+		{'>', '>', 253},	/* ˝ */
+		{'+', '-', 254},	/* ˛ */
+		{'n', 'u', 255},	/* (char excluded, is EOF on some systems */
+		{NUL, NUL, NUL}
+		};
+
+# else	/* _INCLUDE_HPUX_SOURCE */
 
 char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
 	   {{'~', '!', 161},	/* ° */
@@ -182,19 +286,21 @@ char_u	digraphdefault[][3] = 		/* standard ISO digraphs */
 		{'u', '"', 252},	/* ¸ */
 		{'y', '\'', 253},	/* ˝ */
 		{'i', 'p', 254},	/* ˛ */
-		{'y', '"', 255},	/* ˇ */
+		{'y', '"', 255},	/* (char excluded, is EOF on some systems */
 		{NUL, NUL, NUL}
 		};
-#endif	/* MSDOS */
+
+# endif	/* _INCLUDE_HPUX_SOURCE */
+#endif	/* !MSDOS && !WIN32 */
  
 /*
  * handle digraphs after typing a character
  */
 	int
-dodigraph(c)
+do_digraph(c)
 	int		c;
 {
-	static int	backspaced;		/* character before BS */
+	static int	backspaced;		/* character before K_BS */
 	static int	lastchar;		/* last typed character */
 
 	if (c == -1)				/* init values */
@@ -206,7 +312,7 @@ dodigraph(c)
 		if (backspaced >= 0)
 			c = getdigraph(backspaced, c, FALSE);
 		backspaced = -1;
-		if (c == BS && lastchar >= 0)
+		if ((c == K_BS || c == Ctrl('H')) && lastchar >= 0)
 			backspaced = lastchar;
 	}
 	lastchar = c;
@@ -217,8 +323,8 @@ dodigraph(c)
  * lookup the pair char1, char2 in the digraph tables
  * if no match, return char2
  */
-	int
-getdigraph(char1, char2, meta)
+	static int
+getexactdigraph(char1, char2, meta)
 	int	char1;
 	int	char2;
 	int	meta;
@@ -226,6 +332,8 @@ getdigraph(char1, char2, meta)
 	int		i;
 	int		retval;
 
+	if (IS_SPECIAL(char1) || IS_SPECIAL(char2))
+		return char2;
 	retval = 0;
 	for (i = 0; ; ++i)			/* search added digraphs first */
 	{
@@ -256,6 +364,25 @@ getdigraph(char1, char2, meta)
 }
 
 /*
+ * Get digraph.
+ * Allow for both char1-char2 and char2-char1
+ */
+	int
+getdigraph(char1, char2, meta)
+	int	char1;
+	int	char2;
+	int	meta;
+{
+	int		retval;
+
+	if (((retval = getexactdigraph(char1, char2, meta)) == char2) &&
+														   (char1 != char2) &&
+					((retval = getexactdigraph(char2, char1, meta)) == char1))
+		return char2;
+	return retval;
+}
+
+/*
  * put the digraphs in the argument string in the digraph table
  * format: {c1}{c2} char {c1}{c2} char ...
  */
@@ -269,7 +396,7 @@ putdigraph(str)
 
 	while (*str)
 	{
-		skipspace(&str);
+		str = skipwhite(str);
 		if ((char1 = *str++) == 0 || (char2 = *str++) == 0)
 			return;
 		if (char1 == ESC || char2 == ESC)
@@ -277,7 +404,7 @@ putdigraph(str)
 			EMSG("Escape not allowed in digraph");
 			return;
 		}
-		skipspace(&str);
+		str = skipwhite(str);
 		if (!isdigit(*str))
 		{
 			emsg(e_number);
@@ -298,8 +425,9 @@ putdigraph(str)
 		newtab = (char_u (*)[3])alloc(digraphcount * 3 + 3);
 		if (newtab)
 		{
-			memmove((char *)newtab, (char *)digraphnew, (size_t)(digraphcount * 3));
-			free(digraphnew);
+			vim_memmove((char *)newtab, (char *)digraphnew, 
+												  (size_t)(digraphcount * 3));
+			vim_free(digraphnew);
 			digraphnew = newtab;
 			digraphnew[digraphcount][0] = char1;
 			digraphnew[digraphcount][1] = char2;
@@ -314,22 +442,21 @@ listdigraphs()
 {
 	int		i;
 
-	printdigraph(NULL);
-	msg_start();
 	msg_outchar('\n');
+	printdigraph(NULL);
 	for (i = 0; digraphdefault[i][0] && !got_int; ++i)
 	{
-		if (getdigraph(digraphdefault[i][0], digraphdefault[i][1], FALSE) == digraphdefault[i][2])
+		if (getexactdigraph(digraphdefault[i][0], digraphdefault[i][1],
+											   FALSE) == digraphdefault[i][2])
 			printdigraph(digraphdefault[i]);
-		breakcheck();
+		mch_breakcheck();
 	}
 	for (i = 0; i < digraphcount && !got_int; ++i)
 	{
 		printdigraph(digraphnew[i]);
-		breakcheck();
+		mch_breakcheck();
 	}
-	msg_outchar('\n');
-	wait_return(TRUE);		/* clear screen, because some digraphs may be wrong,
+	must_redraw = CLEAR;	/* clear screen, because some digraphs may be wrong,
 							 * in which case we messed up NextScreen */
 }
 
@@ -350,7 +477,7 @@ printdigraph(p)
 			len = 0;
 		}
 		if (len)
-			msg_outstr((char_u *)"   ");
+			MSG_OUTSTR("   ");
 		sprintf((char *)buf, "%c%c %c %3d", p[0], p[1], p[2], p[2]);
 		msg_outstr(buf);
 		len += 11;

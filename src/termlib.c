@@ -1,10 +1,11 @@
-/* vi:sw=4:ts=4:
+/* vi:set ts=4 sw=4:
    The following software is (C) 1984 Peter da Silva,
    the Mad Australian, in the public domain. It may
    be re-distributed for any purpose with the inclusion
    of this notice. */
 
 /* modified by Bram Moolenaar for use with VIM - Vi Improved */
+/* a few bugs removed by Olaf 'Rhialto' Seibert */
 
 /* TERMLIB: Terminal independant database. */
 
@@ -12,7 +13,7 @@
 #include "proto.h"
 #include "proto/termlib.pro"
 
-#ifndef AMIGA
+#if !defined(AMIGA) && !defined(VMS)
 # include <sgtty.h>
 #endif
 
@@ -75,26 +76,38 @@ tgetent(tbuf, term)
 	int		retval = 0;
 	int		len;
 
-	if ((tmp = (char *)vimgetenv("TERMCAP")) != NULL)
+	if ((tmp = (char *)vim_getenv((char_u *)"TERMCAP")) != NULL)
 	{
 		if (*tmp == '/')            /* TERMCAP = name of termcap file */
+		{
 			tcap = tmp ;
+#if defined(AMIGA)
+			/* Convert /usr/share/lib/termcap to usr:share/lib/termcap */
+			tcap++;
+			tmp = strchr(tcap, '/');
+			if (tmp)
+				*tmp = ':';
+#endif
+		}
 		else                    	/* TERMCAP = termcap entry itself */
 		{
 			int tlen = strlen(term);
 
 			while (*tmp && *tmp != ':') /* Check if TERM matches */
 			{
+				char *nexttmp;
+
 				while (*tmp == '|')
 					tmp++;
-				if (_match(tmp, term) == tlen)
+				nexttmp  = _find(tmp, ":|");	/* Rhialto */
+				if (tmp+tlen == nexttmp && _match(tmp, term) == tlen)
 				{
 					strcpy(tbuf, tmp);
 					tent = tbuf;
 					return 1;
 				} 
 				else
-					tmp = _find(tmp, ":|");
+					tmp = nexttmp;
 			}
 		}
 	}
@@ -107,6 +120,7 @@ tgetent(tbuf, term)
 	len = 0;
 	while (getent(tbuf + len, term, termcap, TBUFSZ - len))
 	{
+		tcptr = tcbuf;		/* Rhialto */
 		if ((term = tgetstr("tc", &tcptr)))         /* extended entry */
 		{
 			rewind(termcap);
@@ -115,7 +129,7 @@ tgetent(tbuf, term)
 		else
 		{
 			retval = 1; 
-			tent = tbuf;
+			tent = tbuf;		/* reset it back to the beginning */
 			break;
 		}
 	}
@@ -137,15 +151,19 @@ getent(tbuf, term, termcap, buflen)
 		tptr = tbuf;
 		while (*tptr && *tptr != ':')    /* : terminates name field */
 		{
+			char    *nexttptr;
+
 			while (*tptr == '|')             /* | seperates names */
 				tptr++;
-			if (_match(tptr, term) == tlen)             /* FOUND! */
+			nexttptr = _find(tptr, ":|");	 /* Rhialto */
+			if (tptr + tlen == nexttptr &&
+				_match(tptr, term) == tlen)             /* FOUND! */
 			{
 				tent = tbuf;
 				return 1;
 			} 
 			else                           /* Look for next name */
-				tptr = _find(tptr, ":|");
+				tptr = nexttptr;
 		}
 	}
 	return 0;
@@ -565,7 +583,7 @@ void (*outc) __ARGS((unsigned int));                              /* routine to 
 {
 	long	frac,                    /* 10^(#digits after decimal point) */
 		counter,                                           /* digits */
-		atol();
+		atol __ARGS((const char *));
 
 	if (isdigit(*cp)) {
 		counter = 0;

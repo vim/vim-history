@@ -1,0 +1,277 @@
+#
+# Makefile for Vim on Win32 (Windows NT and Windows 95), using the
+# Microsoft Visual C++ 2.x and MSVC 4.x compilers.  It builds on Windows 95
+# and all four NT platforms: i386, Alpha, MIPS, and PowerPC.  The NT/i386
+# binary and the Windows 95 binary are identical.  To build using Borland C++,
+# use Makefile.b32.
+#
+
+# to build the retail version:
+#	nmake -f Makefile.w32
+# to build the debug version:
+#	nmake DEBUG=1 -f Makefile.w32
+
+### See feature.h for a list of optionals.
+# If you want to build some optional features without modifying the source,
+# you can set DEFINES on the command line, e.g.,
+#	nmake -f makefile.w32 "DEFINES=-DEMACS_TAGS"
+
+
+# Build on both Windows NT and Windows 95
+
+TARGETOS = BOTH
+
+
+# ntwin32.mak requires that CPU be set appropriately
+
+!ifdef PROCESSOR_ARCHITECTURE
+# We're on Windows NT
+CPU = $(PROCESSOR_ARCHITECTURE)
+! if "$(CPU)" == "x86"
+CPU = i386
+! endif
+!else  # !PROCESSOR_ARCHITECTURE
+# We're on Windows 95
+CPU = i386
+!endif # !PROCESSOR_ARCHITECTURE
+
+
+# Build a retail version by default
+
+!ifndef DEBUG
+NODEBUG = 1
+!endif
+
+
+# Build a multithreaded version for the Windows 95 dead keys hack
+# Commented out because it doesn't work.
+# MULTITHREADED = 1
+
+
+# Get all sorts of useful, standard macros from the SDK.  (Note that
+# MSVC 2.2 does not install <ntwin32.mak> in the \msvc20\include
+# directory, but you can find it in \msvc20\include on the CD-ROM.
+# You may also need <win32.mak> from the same place.)
+
+!include <ntwin32.mak>
+
+
+#>>>>> path of the compiler and linker; name of include and lib directories
+# PATH = c:\msvc20\bin;$(PATH)
+# INCLUDE = c:\msvc20\include
+# LIB = c:\msvc20\lib
+
+!ifndef CTAGS
+CTAGS = ctags
+!endif
+
+!ifdef MULTITHREADED
+CVARS = $(cvarsmt)
+CONLIBS = $(conlibsmt)
+!else
+CVARS = $(cvars)
+CONLIBS = $(conlibs)
+!endif
+
+
+CFLAGS = -c /W3 /nologo $(CVARS) $(cflags) $(DEFINES)
+
+#>>>>> end of choices
+###########################################################################
+
+!ifdef PROCESSOR_ARCHITECTURE
+OS_TYPE	= winnt
+DEL_TREE = rmdir /s /q
+!else
+OS_TYPE	= win95
+DEL_TREE = deltree /y
+!endif
+
+!ifdef NODEBUG
+OUTDIR=.\Release
+VIM = vim
+CFLAGS = $(CFLAGS) -DNDEBUG /Ox
+RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
+!else  # DEBUG
+OUTDIR=.\Debug
+VIM = vimd
+# MSVC 4.1
+PDB = /Fd$(OUTDIR)/
+LINK_PDB = /PDB:$(OUTDIR)/
+# MSVC 2.2
+# PDB = /Fd$(OUTDIR)/vim.pdb
+# LINK_PDB = /PDB:$(OUTDIR)/vim.pdb
+CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG /Zi /Od
+RCFLAGS = $(rcflags) $(rcvars) -D_DEBUG -DDEBUG
+!endif # DEBUG
+
+
+INCL =	vim.h win32.h ascii.h feature.h globals.h keymap.h macros.h \
+	proto.h option.h structs.h term.h
+	
+
+OBJ =	$(OUTDIR)\win32.obj    $(OUTDIR)\alloc.obj    $(OUTDIR)\buffer.obj   \
+	$(OUTDIR)\charset.obj  $(OUTDIR)\cmdcmds.obj  $(OUTDIR)\cmdline.obj  \
+	$(OUTDIR)\csearch.obj  $(OUTDIR)\digraph.obj  $(OUTDIR)\edit.obj     \
+	$(OUTDIR)\fileio.obj   $(OUTDIR)\getchar.obj  $(OUTDIR)\help.obj     \
+	$(OUTDIR)\linefunc.obj $(OUTDIR)\main.obj     $(OUTDIR)\mark.obj     \
+	$(OUTDIR)\memfile.obj  $(OUTDIR)\memline.obj  $(OUTDIR)\message.obj  \
+	$(OUTDIR)\misccmds.obj $(OUTDIR)\normal.obj   $(OUTDIR)\option.obj   \
+	$(OUTDIR)\ops.obj      $(OUTDIR)\quickfix.obj $(OUTDIR)\regexp.obj   \
+	$(OUTDIR)\regsub.obj   $(OUTDIR)\screen.obj   $(OUTDIR)\search.obj   \
+	$(OUTDIR)\tables.obj   $(OUTDIR)\tag.obj      $(OUTDIR)\term.obj     \
+	$(OUTDIR)\undo.obj     $(OUTDIR)\window.obj   $(OUTDIR)\vim.res
+
+all:	$(VIM)
+
+$(VIM): $(OUTDIR) $(OBJ) $(OUTDIR)\version.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $(OBJ) \
+		$(OUTDIR)\version.obj $(CONLIBS) user32.lib $(LINK_PDB)
+        del $(OUTDIR)\version.obj
+
+$(VIM).exe: $(VIM)
+
+$(OUTDIR):
+	if not exist $(OUTDIR)/nul    mkdir $(OUTDIR)
+
+ctags tags: notags
+	$(CTAGS) *.c *.h proto\*.pro
+
+notags:
+	- del tags
+
+clean:
+	- $(DEL_TREE) $(OUTDIR)
+	- del cmdtab.h
+	- del $(VIM).exe
+	- del $(VIM).ilk
+	- del $(VIM).pdb
+	- del $(VIM).map
+	- del $(VIM).ncb
+
+addcr:	addcr.c
+	$(CC) addcr.c
+	addcr.bat
+
+###########################################################################
+
+$(OUTDIR)/win32.obj:	$(OUTDIR) win32.c  $(INCL) win32.h
+	$(CC) $(CFLAGS) win32.c /Fo$(OUTDIR)/win32.obj $(PDB)
+
+$(OUTDIR)/alloc.obj:	$(OUTDIR) alloc.c  $(INCL)
+	$(CC) $(CFLAGS) alloc.c /Fo$(OUTDIR)/alloc.obj $(PDB)
+
+$(OUTDIR)/buffer.obj:	$(OUTDIR) buffer.c  $(INCL)
+	$(CC) $(CFLAGS) buffer.c /Fo$(OUTDIR)/buffer.obj $(PDB)
+
+$(OUTDIR)/charset.obj:	$(OUTDIR) charset.c  $(INCL)
+	$(CC) $(CFLAGS) charset.c /Fo$(OUTDIR)/charset.obj $(PDB)
+
+$(OUTDIR)/cmdcmds.obj:	$(OUTDIR) cmdcmds.c  $(INCL)
+	$(CC) $(CFLAGS) cmdcmds.c /Fo$(OUTDIR)/cmdcmds.obj $(PDB)
+
+$(OUTDIR)/cmdline.obj:	$(OUTDIR) cmdline.c  $(INCL) cmdtab.h
+	$(CC) $(CFLAGS) cmdline.c /Fo$(OUTDIR)/cmdline.obj $(PDB)
+
+$(OUTDIR)/csearch.obj:	$(OUTDIR) csearch.c  $(INCL)
+	$(CC) $(CFLAGS) csearch.c /Fo$(OUTDIR)/csearch.obj $(PDB)
+
+$(OUTDIR)/digraph.obj:	$(OUTDIR) digraph.c  $(INCL)
+	$(CC) $(CFLAGS) digraph.c /Fo$(OUTDIR)/digraph.obj $(PDB)
+
+$(OUTDIR)/edit.obj:	$(OUTDIR) edit.c  $(INCL)
+	$(CC) $(CFLAGS) edit.c /Fo$(OUTDIR)/edit.obj $(PDB)
+
+$(OUTDIR)/fileio.obj:	$(OUTDIR) fileio.c  $(INCL)
+	$(CC) $(CFLAGS) fileio.c /Fo$(OUTDIR)/fileio.obj $(PDB)
+
+$(OUTDIR)/getchar.obj:	$(OUTDIR) getchar.c  $(INCL)
+	$(CC) $(CFLAGS) getchar.c /Fo$(OUTDIR)/getchar.obj $(PDB)
+
+$(OUTDIR)/help.obj:	$(OUTDIR) help.c  $(INCL)
+	$(CC) $(CFLAGS) help.c /Fo$(OUTDIR)/help.obj $(PDB)
+
+$(OUTDIR)/linefunc.obj:	$(OUTDIR) linefunc.c  $(INCL)
+	$(CC) $(CFLAGS) linefunc.c /Fo$(OUTDIR)/linefunc.obj $(PDB)
+
+$(OUTDIR)/main.obj:	$(OUTDIR) main.c  $(INCL)
+	$(CC) $(CFLAGS) main.c /Fo$(OUTDIR)/main.obj $(PDB)
+
+$(OUTDIR)/mark.obj:	$(OUTDIR) mark.c  $(INCL)
+	$(CC) $(CFLAGS) mark.c /Fo$(OUTDIR)/mark.obj $(PDB)
+
+$(OUTDIR)/memfile.obj:	$(OUTDIR) memfile.c  $(INCL)
+	$(CC) $(CFLAGS) memfile.c /Fo$(OUTDIR)/memfile.obj $(PDB)
+
+$(OUTDIR)/memline.obj:	$(OUTDIR) memline.c  $(INCL)
+	$(CC) $(CFLAGS) memline.c /Fo$(OUTDIR)/memline.obj $(PDB)
+
+$(OUTDIR)/message.obj:	$(OUTDIR) message.c  $(INCL)
+	$(CC) $(CFLAGS) message.c /Fo$(OUTDIR)/message.obj $(PDB)
+
+$(OUTDIR)/misccmds.obj:	$(OUTDIR) misccmds.c  $(INCL)
+	$(CC) $(CFLAGS) misccmds.c /Fo$(OUTDIR)/misccmds.obj $(PDB)
+
+$(OUTDIR)/normal.obj:	$(OUTDIR) normal.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) normal.c /Fo$(OUTDIR)/normal.obj $(PDB)
+
+$(OUTDIR)/option.obj:	$(OUTDIR) option.c  $(INCL)
+	$(CC) $(CFLAGS) option.c /Fo$(OUTDIR)/option.obj $(PDB)
+
+$(OUTDIR)/ops.obj:	$(OUTDIR) ops.c  $(INCL) ops.h
+	$(CC) $(CFLAGS) ops.c /Fo$(OUTDIR)/ops.obj $(PDB)
+
+$(OUTDIR)/quickfix.obj:	$(OUTDIR) quickfix.c  $(INCL)
+	$(CC) $(CFLAGS) quickfix.c /Fo$(OUTDIR)/quickfix.obj $(PDB)
+
+$(OUTDIR)/regexp.obj:	$(OUTDIR) regexp.c  $(INCL)
+	$(CC) $(CFLAGS) regexp.c /Fo$(OUTDIR)/regexp.obj $(PDB)
+
+$(OUTDIR)/regsub.obj:	$(OUTDIR) regsub.c  $(INCL)
+	$(CC) $(CFLAGS) regsub.c /Fo$(OUTDIR)/regsub.obj $(PDB)
+
+$(OUTDIR)/screen.obj:	$(OUTDIR) screen.c  $(INCL)
+	$(CC) $(CFLAGS) screen.c /Fo$(OUTDIR)/screen.obj $(PDB)
+
+$(OUTDIR)/search.obj:	$(OUTDIR) search.c  $(INCL)
+	$(CC) $(CFLAGS) search.c /Fo$(OUTDIR)/search.obj $(PDB)
+
+$(OUTDIR)/tables.obj:	$(OUTDIR) tables.c  $(INCL)
+	$(CC) $(CFLAGS) tables.c /Fo$(OUTDIR)/tables.obj $(PDB)
+
+$(OUTDIR)/tag.obj:	$(OUTDIR) tag.c  $(INCL)
+	$(CC) $(CFLAGS) tag.c /Fo$(OUTDIR)/tag.obj $(PDB)
+
+$(OUTDIR)/term.obj:	$(OUTDIR) term.c  $(INCL)
+	$(CC) $(CFLAGS) term.c /Fo$(OUTDIR)/term.obj $(PDB)
+
+$(OUTDIR)/undo.obj:	$(OUTDIR) undo.c  $(INCL)
+	$(CC) $(CFLAGS) undo.c /Fo$(OUTDIR)/undo.obj $(PDB)
+
+$(OUTDIR)/version.obj: $(OUTDIR) version.c version.h
+	$(CC) $(CFLAGS) version.c /Fo$(OUTDIR)/version.obj $(PDB)
+
+$(OUTDIR)/window.obj:	$(OUTDIR) window.c  $(INCL)
+	$(CC) $(CFLAGS) window.c /Fo$(OUTDIR)/window.obj $(PDB)
+
+$(OUTDIR)/vim.res:	$(OUTDIR) vim.rc version.h
+	$(RC) /l 0x409 /Fo$(OUTDIR)/vim.res $(RCFLAGS) vim.rc
+
+cmdtab.h: cmdtab.tab $(OUTDIR)/mkcmdtab.exe
+	$(OUTDIR)\mkcmdtab cmdtab.tab cmdtab.h
+
+$(OUTDIR)/mkcmdtab.exe: $(OUTDIR)/mkcmdtab.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $** $(CONLIBS)
+
+$(OUTDIR)/mkcmdtab.obj: $(OUTDIR) mkcmdtab.c
+	$(CC) $(CFLAGS) mkcmdtab.c /Fo$(OUTDIR)/mkcmdtab.obj
+
+proto.h: proto/win32.pro proto/alloc.pro proto/buffer.pro proto/charset.pro \
+	proto/cmdcmds.pro proto/cmdline.pro proto/csearch.pro \
+	proto/digraph.pro proto/edit.pro proto/fileio.pro \
+	proto/getchar.pro proto/help.pro proto/linefunc.pro \
+	proto/main.pro proto/mark.pro proto/memfile.pro proto/memline.pro \
+	proto/message.pro proto/misccmds.pro proto/normal.pro proto/ops.pro \
+	proto/option.pro proto/quickfix.pro proto/regexp.pro \
+	proto/regsub.pro proto/screen.pro proto/search.pro proto/tables.pro \
+	proto/tag.pro proto/term.pro proto/undo.pro proto/window.pro

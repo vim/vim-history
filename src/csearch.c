@@ -1,25 +1,31 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
  *
- * csearch.c: dosub() and doglob() for :s, :g and :v
+ * csearch.c: do_sub() and do_glob() for :s, :g and :v
  */
 
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
 /* we use modified Henry Spencer's regular expression routines */
 #include "regexp.h"
 
-/* dosub(lp, up, cmd)
+static int do_sub_msg __ARGS((void));
+
+#ifdef VIMINFO
+	static char_u   *old_sub = NULL;
+#endif /* VIMINFO */
+
+/* do_sub(lp, up, cmd)
  *
  * Perform a substitution from line 'lp' to line 'up' using the
  * command pointed to by 'cmd' which should be of the form:
@@ -37,8 +43,11 @@
  * use_old == 2 for :~
  */
 
+static long			sub_nsubs;		/* total number of substitutions */
+static linenr_t		sub_nlines;		/* total number of lines changed */
+
 	void
-dosub(lp, up, cmd, nextcommand, use_old)
+do_sub(lp, up, cmd, nextcommand, use_old)
 	linenr_t	lp;
 	linenr_t	up;
 	char_u		*cmd;
@@ -50,12 +59,13 @@ dosub(lp, up, cmd, nextcommand, use_old)
 	char_u		   *ptr;
 	char_u		   *old_line;
 	regexp		   *prog;
-	long			nsubs = 0;
-	linenr_t		nlines = 0;
 	static int		do_all = FALSE; 	/* do multiple substitutions per line */
 	static int		do_ask = FALSE; 	/* ask for confirmation */
-	char_u		   *pat = NULL, *sub = NULL;
+	int				do_print = FALSE;	/* print last line with subst. */
+	char_u		   *pat, *sub;
+#ifndef VIMINFO						/* otherwise it is global */
 	static char_u   *old_sub = NULL;
+#endif
 	int 			delimiter;
 	int 			sublen;
 	int				got_quit = FALSE;
@@ -63,44 +73,53 @@ dosub(lp, up, cmd, nextcommand, use_old)
 	int				temp;
 	int				which_pat;
 	
-	if (use_old == 2)
-		which_pat = 2;		/* use last used regexp */
-	else
-		which_pat = 1;		/* use last substitute regexp */
-
-								   /* new pattern and substitution */
-	if (use_old == 0 && *cmd != NUL && strchr("0123456789gcr|\"", *cmd) == NULL)
+	if (!global_busy)
 	{
-		if (isalpha(*cmd))			/* don't accept alpha for separator */
+		sub_nsubs = 0;
+		sub_nlines = 0;
+	}
+
+	if (use_old == 2)
+		which_pat = RE_LAST;	/* use last used regexp */
+	else
+		which_pat = RE_SUBST;	/* use last substitute regexp */
+
+								/* new pattern and substitution */
+	if (use_old == 0 && *cmd != NUL &&
+					   vim_strchr((char_u *)"0123456789gcr|\"", *cmd) == NULL)
+	{
+								/* don't accept alphanumeric for separator */
+		if (isalpha(*cmd) || isdigit(*cmd))
 		{
-			emsg(e_invarg);
+			EMSG("Regular expressions can't be delimited by letters or digits");
 			return;
 		}
 		/*
 		 * undocumented vi feature:
-		 *	"\/sub/" and "\?sub?" use last used search pattern (almost like //sub/r).
-		 *  "\&sub&" use last substitute pattern (like //sub/).
+		 *	"\/sub/" and "\?sub?" use last used search pattern (almost like
+		 *	//sub/r).  "\&sub&" use last substitute pattern (like //sub/).
 		 */
 		if (*cmd == '\\')
 		{
 			++cmd;
-			if (strchr("/?&", *cmd) == NULL)
+			if (vim_strchr((char_u *)"/?&", *cmd) == NULL)
 			{
 				emsg(e_backslash);
 				return;
 			}
 			if (*cmd != '&')
-				which_pat = 0;				/* use last '/' pattern */
+				which_pat = RE_SEARCH;		/* use last '/' pattern */
 			pat = (char_u *)"";				/* empty search pattern */
 			delimiter = *cmd++;				/* remember delimiter character */
 		}
 		else			/* find the end of the regexp */
 		{
+			which_pat = RE_LAST;			/* use last used regexp */
 			delimiter = *cmd++;				/* remember delimiter character */
-			pat = cmd;						/* remember start of search pattern */
+			pat = cmd;						/* remember start of search pat */
 			cmd = skip_regexp(cmd, delimiter);
 			if (cmd[0] == delimiter)		/* end delimiter found */
-				*cmd++ = NUL;				/* replace it by a NUL */
+				*cmd++ = NUL;				/* replace it with a NUL */
 		}
 
 		/*
@@ -113,7 +132,7 @@ dosub(lp, up, cmd, nextcommand, use_old)
 		{
 			if (cmd[0] == delimiter)			/* end delimiter found */
 			{
-				*cmd++ = NUL;					/* replace it by a NUL */
+				*cmd++ = NUL;					/* replace it with a NUL */
 				break;
 			}
 			if (cmd[0] == '\\' && cmd[1] != 0)	/* skip escaped characters */
@@ -121,7 +140,7 @@ dosub(lp, up, cmd, nextcommand, use_old)
 			++cmd;
 		}
 
-		free(old_sub);
+		vim_free(old_sub);
 		old_sub = strsave(sub);
 	}
 	else								/* use previous pattern and substitution */
@@ -157,7 +176,9 @@ dosub(lp, up, cmd, nextcommand, use_old)
 		else if (*cmd == 'c')
 			do_ask = !do_ask;
 		else if (*cmd == 'r')		/* use last used regexp */
-			which_pat = 2;
+			which_pat = RE_LAST;
+		else if (*cmd == 'p')
+			do_print = TRUE;
 		else
 			break;
 		++cmd;
@@ -166,7 +187,7 @@ dosub(lp, up, cmd, nextcommand, use_old)
 	/*
 	 * check for a trailing count
 	 */
-	skipspace(&cmd);
+	cmd = skipwhite(cmd);
 	if (isdigit(*cmd))
 	{
 		i = getdigits(&cmd);
@@ -182,26 +203,26 @@ dosub(lp, up, cmd, nextcommand, use_old)
 	/*
 	 * check for trailing '|', '"' or '\n'
 	 */
-	skipspace(&cmd);
+	cmd = skipwhite(cmd);
 	if (*cmd)
 	{
-		if (strchr("|\"\n", *cmd) == NULL)
+		if (vim_strchr((char_u *)"|\"\n", *cmd) == NULL)
 		{
 			emsg(e_trailing);
 			return;
 		}
 		else
-			*nextcommand = cmd;
+			*nextcommand = cmd + 1;
 	}
 
-	if ((prog = myregcomp(pat, 1, which_pat)) == NULL)
+	if ((prog = myregcomp(pat, RE_SUBST, which_pat, SEARCH_HIS)) == NULL)
 	{
 		emsg(e_invcmd);
 		return;
 	}
 
 	/*
-	 * ~ in the substitute pattern is replaced by the old pattern.
+	 * ~ in the substitute pattern is replaced with the old pattern.
 	 * We do it here once to avoid it to be replaced over and over again.
 	 */
 	sub = regtilde(sub, (int)p_magic);
@@ -210,7 +231,7 @@ dosub(lp, up, cmd, nextcommand, use_old)
 	for (lnum = lp; lnum <= up && !(got_int || got_quit); ++lnum)
 	{
 		ptr = ml_get(lnum);
-		if (regexec(prog, ptr, TRUE))  /* a match on this line */
+		if (vim_regexec(prog, ptr, TRUE))  /* a match on this line */
 		{
 			char_u		*new_end, *new_start = NULL;
 			char_u		*old_match, *old_copy;
@@ -218,12 +239,16 @@ dosub(lp, up, cmd, nextcommand, use_old)
 			char_u		*p1;
 			int			did_sub = FALSE;
 			int			match, lastone;
+			unsigned	len, needed_len;
+			unsigned	new_start_len = 0;
 
 			/* make a copy of the line, so it won't be taken away when updating
 				the screen */
 			if ((old_line = strsave(ptr)) == NULL)
 				continue;
-			regexec(prog, old_line, TRUE);  /* match again on this line to update the pointers. TODO: remove extra regexec() */
+			vim_regexec(prog, old_line, TRUE);  /* match again on this line to
+											 	 * update the pointers. TODO:
+												 * remove extra vim_regexec() */
 			if (!got_match)
 			{
 				setpcmark();
@@ -253,20 +278,36 @@ dosub(lp, up, cmd, nextcommand, use_old)
 				old_match = prog->endp[0];
 				prev_old_match = old_match;
 
-				while (do_ask)		/* loop until 'y', 'n' or 'q' typed */
+				while (do_ask)		/* loop until 'y', 'n', 'q', CTRL-E or CTRL-Y typed */
 				{
 					temp = RedrawingDisabled;
 					RedrawingDisabled = FALSE;
 					comp_Botline(curwin);
+					search_match_len = prog->endp[0] - prog->startp[0];
+									/* invert the matched string
+									 * remove the inversion afterwards */
+					if (search_match_len == 0)
+						search_match_len = 1;		/* show something! */
+					highlight_match = TRUE;
 					updateScreen(CURSUPD);
+					highlight_match = FALSE;
+					redraw_later(NOT_VALID);
 									/* same highlighting as for wait_return */
 					(void)set_highlight('r');
 					msg_highlight = TRUE;
-					smsg((char_u *)"replace by %s (y/n/q)?", sub);
+					smsg((char_u *)"replace with %s (y/n/a/q/^E/^Y)?", sub);
 					showruler(TRUE);
-					setcursor();
 					RedrawingDisabled = temp;
-					if ((i = vgetc()) == 'q' || i == ESC || i == Ctrl('C'))
+					
+					++no_mapping;				/* don't map this key */
+					i = vgetc();
+					--no_mapping;
+
+						/* clear the question */
+					msg_didout = FALSE;			/* don't scroll up */
+					msg_col = 0;
+					gotocmdline(TRUE);
+					if (i == 'q' || i == ESC || i == Ctrl('C'))
 					{
 						got_quit = TRUE;
 						break;
@@ -275,44 +316,64 @@ dosub(lp, up, cmd, nextcommand, use_old)
 						goto skip;
 					else if (i == 'y')
 						break;
+					else if (i == 'a')
+					{
+						do_ask = FALSE;
+						break;
+					}
+					else if (i == Ctrl('E'))
+						scrollup_clamp();
+					else if (i == Ctrl('Y'))
+						scrolldown_clamp();
 				}
 				if (got_quit)
 					break;
 
 						/* get length of substitution part */
-				sublen = regsub(prog, sub, old_line, 0, (int)p_magic);
+				sublen = vim_regsub(prog, sub, old_line, FALSE, (int)p_magic);
 				if (new_start == NULL)
 				{
 					/*
-					 * Get some space for a temporary buffer to do the substitution
-					 * into.
+					 * Get some space for a temporary buffer to do the
+					 * substitution into (and some extra space to avoid
+					 * too many calls to alloc()/free()).
 					 */
-					if ((new_start = alloc((unsigned)(STRLEN(old_line) + sublen + 5))) == NULL)
+					new_start_len = STRLEN(old_copy) + sublen + 25;
+					if ((new_start = alloc_check(new_start_len)) == NULL)
 						goto outofmem;
 					*new_start = NUL;
+					new_end = new_start;
 				}
 				else
 				{
 					/*
-					 * extend the temporary buffer to do the substitution into.
+					 * Extend the temporary buffer to do the substitution into.
+					 * Avoid an alloc()/free(), it takes a lot of time.
 					 */
-					if ((p1 = alloc((unsigned)(STRLEN(new_start) + STRLEN(old_copy) + sublen + 1))) == NULL)
-						goto outofmem;
-					STRCPY(p1, new_start);
-					free(new_start);
-					new_start = p1;
+					len = STRLEN(new_start);
+					needed_len = len + STRLEN(old_copy) + sublen + 1;
+					if (needed_len > new_start_len)
+					{
+						needed_len += 20;		/* get some extra */
+						if ((p1 = alloc_check(needed_len)) == NULL)
+							goto outofmem;
+						STRCPY(p1, new_start);
+						vim_free(new_start);
+						new_start = p1;
+						new_start_len = needed_len;
+					}
+					new_end = new_start + len;
 				}
 
-				for (new_end = new_start; *new_end; new_end++)
-					;
 				/*
-				 * copy up to the part that matched
+				 * copy the text up to the part that matched
 				 */
-				while (old_copy < prog->startp[0])
-					*new_end++ = *old_copy++;
+				i = prog->startp[0] - old_copy;
+				vim_memmove(new_end, old_copy, (size_t)i);
+				new_end += i;
 
-				regsub(prog, sub, new_end, 1, (int)p_magic);
-				nsubs++;
+				vim_regsub(prog, sub, new_end, TRUE, (int)p_magic);
+				sub_nsubs++;
 				did_sub = TRUE;
 
 				/*
@@ -322,17 +383,18 @@ dosub(lp, up, cmd, nextcommand, use_old)
 				 * avoided by preceding the CTRL-M with a CTRL-V. Now you can't
 				 * precede a line break with a CTRL-V, big deal.
 				 */
-				while ((p1 = STRCHR(new_end, CR)) != NULL)
+				while ((p1 = vim_strchr(new_end, CR)) != NULL)
 				{
 					if (p1 == new_end || p1[-1] != Ctrl('V'))
 					{
-						if (u_inssub(lnum))				/* prepare for undo */
+						if (u_inssub(lnum) == OK)	/* prepare for undo */
 						{
-							*p1 = NUL;					/* truncate up to the CR */
-							mark_adjust(lnum, MAXLNUM, 1L);
-							ml_append(lnum - 1, new_start, (colnr_t)(p1 - new_start + 1), FALSE);
+							*p1 = NUL;				/* truncate up to the CR */
+							mark_adjust(lnum, MAXLNUM, 1L, 0L);
+							ml_append(lnum - 1, new_start,
+										(colnr_t)(p1 - new_start + 1), FALSE);
 							++lnum;
-							++up;					/* number of lines increases */
+							++up;				/* number of lines increases */
 							STRCPY(new_start, p1 + 1);	/* copy the rest */
 							new_end = new_start;
 						}
@@ -353,81 +415,105 @@ dosub(lp, up, cmd, nextcommand, use_old)
 skip:
 				match = -1;
 				lastone = (*old_match == NUL || got_int || got_quit || !do_all);
-				if (lastone || do_ask || (match = regexec(prog, old_match, (int)FALSE)) == 0)
+				if (lastone || do_ask ||
+					  (match = vim_regexec(prog, old_match, (int)FALSE)) == 0)
 				{
 					if (new_start)
 					{
 						/*
 						 * Copy the rest of the line, that didn't match.
-						 * Old_match has to be adjusted, we use the end of the line
-						 * as reference, because the substitute may have changed
-						 * the number of characters.
+						 * Old_match has to be adjusted, we use the end of the
+						 * line as reference, because the substitute may have
+						 * changed the number of characters.
 						 */
 						STRCAT(new_start, old_copy);
 						i = old_line + STRLEN(old_line) - old_match;
-						if (u_savesub(lnum))
+						if (u_savesub(lnum) == OK)
 							ml_replace(lnum, new_start, TRUE);
 
-						free(old_line);			/* free the temp buffer */
+						vim_free(old_line);			/* free the temp buffer */
 						old_line = new_start;
 						new_start = NULL;
 						old_match = old_line + STRLEN(old_line) - i;
 						if (old_match < old_line)		/* safety check */
 						{
-							EMSG("dosub internal error: old_match < old_line");
+							EMSG("do_sub internal error: old_match < old_line");
 							old_match = old_line;
 						}
 						old_copy = old_line;
 					}
 					if (match == -1 && !lastone)
-						match = regexec(prog, old_match, (int)FALSE);
-					if (match <= 0)		/* quit loop if there is no more match */
+						match = vim_regexec(prog, old_match, (int)FALSE);
+					if (match <= 0)	  /* quit loop if there is no more match */
 						break;
 				}
-					/* breakcheck is slow, don't call it too often */
-				if ((nsubs & 15) == 0)
-					breakcheck();
+				line_breakcheck();
 
 			}
 			if (did_sub)
-				++nlines;
-			free(old_line);		/* free the copy of the original line */
+				++sub_nlines;
+			vim_free(old_line);		/* free the copy of the original line */
 			old_line = NULL;
 		}
-			/* breakcheck is slow, don't call it too often */
-		if ((lnum & 15) == 0)
-			breakcheck();
+		line_breakcheck();
 	}
 
 outofmem:
-	free(old_line);		/* may have to free an allocated copy of the line */
-	if (nsubs)
+	vim_free(old_line);		/* may have to free an allocated copy of the line */
+	if (sub_nsubs)
 	{
 		CHANGED;
-		updateScreen(CURSUPD); /* need this to update LineSizes */
-		beginline(TRUE);
-		if (nsubs > p_report)
-			smsg((char_u *)"%s%ld substitution%s on %ld line%s",
-								got_int ? "(Interrupted) " : "",
-								nsubs, plural(nsubs),
-								(long)nlines, plural((long)nlines));
-		else if (got_int)
-				emsg(e_interr);
-		else if (do_ask)
+		if (!global_busy)
+		{
+			updateScreen(CURSUPD); /* need this to update LineSizes */
+			beginline(TRUE);
+			if (!do_sub_msg() && do_ask)
 				MSG("");
+		}
+		if (do_print)
+			print_line(curwin->w_cursor.lnum, FALSE);
 	}
-	else if (got_int)		/* interrupted */
-		emsg(e_interr);
-	else if (got_match)		/* did find something but nothing substituted */
-		MSG("");
-	else					/* nothing found */
-		emsg(e_nomatch);
+	else if (!global_busy)
+	{
+		if (got_int)			/* interrupted */
+			emsg(e_interr);
+		else if (got_match)		/* did find something but nothing substituted */
+			MSG("");
+		else					/* nothing found */
+			emsg(e_nomatch);
+	}
 
-	free(prog);
+	vim_free(prog);
 }
 
 /*
- * doglob(cmd)
+ * Give message for number of substitutions.
+ * Can also be used after a ":global" command.
+ * Return TRUE if a message was given.
+ */
+	static int
+do_sub_msg()
+{
+	if (sub_nsubs > p_report)
+	{
+		sprintf((char *)msg_buf, "%s%ld substitution%s on %ld line%s",
+				got_int ? "(Interrupted) " : "",
+				sub_nsubs, plural(sub_nsubs),
+				(long)sub_nlines, plural((long)sub_nlines));
+		if (msg(msg_buf))
+			keep_msg = msg_buf;
+		return TRUE;
+	}
+	if (got_int)
+	{
+		emsg(e_interr);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*
+ * do_glob(cmd)
  *
  * Execute a global command of the form:
  *
@@ -446,7 +532,7 @@ outofmem:
  */
 
 	void
-doglob(type, lp, up, cmd)
+do_glob(type, lp, up, cmd)
 	int 		type;
 	linenr_t	lp, up;
 	char_u		*cmd;
@@ -463,12 +549,13 @@ doglob(type, lp, up, cmd)
 
 	if (global_busy)
 	{
-		EMSG("Cannot do :global recursive");
-		++global_busy;
+		EMSG("Cannot do :global recursive");	/* will increment global_busy */
 		return;
 	}
 
-	which_pat = 2;			/* default: use last used regexp */
+	which_pat = RE_LAST;			/* default: use last used regexp */
+	sub_nsubs = 0;
+	sub_nlines = 0;
 
 	/*
 	 * undocumented vi feature:
@@ -478,17 +565,22 @@ doglob(type, lp, up, cmd)
 	if (*cmd == '\\')
 	{
 		++cmd;
-		if (strchr("/?&", *cmd) == NULL)
+		if (vim_strchr((char_u *)"/?&", *cmd) == NULL)
 		{
 			emsg(e_backslash);
 			return;
 		}
 		if (*cmd == '&')
-			which_pat = 1;		/* use previous substitute pattern */
+			which_pat = RE_SUBST;		/* use previous substitute pattern */
 		else
-			which_pat = 0;		/* use previous search pattern */
+			which_pat = RE_SEARCH;		/* use previous search pattern */
 		++cmd;
 		pat = (char_u *)"";
+	}
+	else if (*cmd == NUL)
+	{
+		EMSG("Regular expression missing from global");
+		return;
 	}
 	else
 	{
@@ -498,17 +590,14 @@ doglob(type, lp, up, cmd)
 		pat = cmd;				/* remember start of pattern */
 		cmd = skip_regexp(cmd, delim);
 		if (cmd[0] == delim)				/* end delimiter found */
-			*cmd++ = NUL;					/* replace it by a NUL */
+			*cmd++ = NUL;					/* replace it with a NUL */
 	}
 
-	reg_ic = p_ic;           /* set "ignore case" flag appropriately */
-
-	if ((prog = myregcomp(pat, 2, which_pat)) == NULL)
+	if ((prog = myregcomp(pat, RE_BOTH, which_pat, SEARCH_HIS)) == NULL)
 	{
 		emsg(e_invcmd);
 		return;
 	}
-	MSG("");
 
 /*
  * pass 1: set marks for each (not) matching line
@@ -516,15 +605,14 @@ doglob(type, lp, up, cmd)
 	ndone = 0;
 	for (lnum = lp; lnum <= up && !got_int; ++lnum)
 	{
-		match = regexec(prog, ml_get(lnum), (int)TRUE);     /* a match on this line? */
+		/* a match on this line? */
+		match = vim_regexec(prog, ml_get(lnum), (int)TRUE);
 		if ((type == 'g' && match) || (type == 'v' && !match))
 		{
 			ml_setmarked(lnum);
 			ndone++;
 		}
-			/* breakcheck is slow, don't call it too often */
-		if ((lnum & 15) == 0)
-			breakcheck();
+		line_breakcheck();
 	}
 
 /*
@@ -536,46 +624,66 @@ doglob(type, lp, up, cmd)
 		msg(e_nomatch);
 	else
 	{
+		/*
+		 * Set current position only once for a global command.
+		 * If global_busy is set, setpcmark() will not do anything.
+		 * If there is an error, global_busy will be incremented.
+		 */
+		setpcmark();
+
 		global_busy = 1;
-		dont_sleep = 1;			/* don't sleep in emsg() */
-		no_wait_return = 1;		/* dont wait for return until finished */
-		need_wait_return = FALSE;
-		RedrawingDisabled = TRUE;
 		old_lcount = curbuf->b_ml.ml_line_count;
-		did_msg = FALSE;
 		while (!got_int && (lnum = ml_firstmarked()) != 0 && global_busy == 1)
 		{
-			/*
-			 * If there was a message from the previous command, scroll
-			 * the lines up for the next, otherwise it will be overwritten.
-			 * did_msg is set by msg_start().
-			 */
-			if (did_msg)
-			{
-				cmdline_row = msg_row;
-				did_msg = FALSE;
-			}
 			curwin->w_cursor.lnum = lnum;
 			curwin->w_cursor.col = 0;
 			if (*cmd == NUL || *cmd == '\n')
-				docmdline((char_u *)"p");
+				do_cmdline((char_u *)"p", FALSE, TRUE);
 			else
-				docmdline(cmd);
-			breakcheck();
+				do_cmdline(cmd, FALSE, TRUE);
+			mch_breakcheck();
 		}
 
-		RedrawingDisabled = FALSE;
 		global_busy = 0;
-		dont_sleep = 0;
-		no_wait_return = 0;
-		if (need_wait_return)                /* wait for return now */
-			wait_return(FALSE);
 
-		screenclear();
-		updateScreen(CURSUPD);
-		msgmore(curbuf->b_ml.ml_line_count - old_lcount);
+		must_redraw = CLEAR;
+		cursupdate();
+
+		/* If subsitutes done, report number of substitues, otherwise report
+		 * number of extra or deleted lines. */
+		if (!do_sub_msg())
+			msgmore(curbuf->b_ml.ml_line_count - old_lcount);
 	}
 
 	ml_clearmarked();      /* clear rest of the marks */
-	free(prog);
+	vim_free(prog);
 }
+
+#ifdef VIMINFO
+	int
+read_viminfo_sub_string(line, fp, force)
+	char_u	*line;
+	FILE	*fp;
+	int		force;
+{
+	if (old_sub != NULL && force)
+		vim_free(old_sub);
+	if (force || old_sub == NULL)
+	{
+		viminfo_readstring(line);
+		old_sub = strsave(line + 1);
+	}
+	return vim_fgets(line, LSIZE, fp);
+}
+
+	void
+write_viminfo_sub_string(fp)
+	FILE	*fp;
+{
+	if (get_viminfo_parameter('/') != 0 && old_sub != NULL)
+	{
+		fprintf(fp, "\n# Last Substitute String:\n$");
+		viminfo_writestring(fp, old_sub);
+	}
+}
+#endif /* VIMINFO */

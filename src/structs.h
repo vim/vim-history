@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -30,6 +30,14 @@ struct fpos
 	linenr_t		lnum;			/* line number */
 	colnr_t 		col;			/* column number */
 };
+
+/*
+ * Sorry to put this here, but gui.h needs the FPOS type, and WIN needs gui.h
+ * for GuiScrollbar.  There is probably somewhere better it could go -- webb
+ */
+#ifdef USE_GUI
+# include "gui.h"
+#endif
 
 /*
  * marks: positions in a file
@@ -97,14 +105,18 @@ struct u_header
 	struct u_header	*uh_prev;	/* pointer to previous header in list */
 	struct u_entry	*uh_entry;	/* pointer to first entry */
 	FPOS			 uh_cursor;	/* cursor position before saving */
-	int				 uh_changed;/* b_changed flag before undo/after redo */
+	int				 uh_flags;	/* see below */
 	FPOS			 uh_namedm[NMARKS];	/* marks before undo/after redo */
 };
+
+/* values for uh_flags */
+#define UH_CHANGED	0x01		/* b_changed flag before undo/after redo */
+#define UH_EMPTYBUF	0x02		/* buffer was empty */
 
 /*
  * stuctures used in undo.c
  */
-#ifdef UNIX
+#if defined(UNIX) || defined(WIN32) || defined(__EMX__)
 # define ALIGN_LONG		/* longword alignment and use filler byte */
 # define ALIGN_SIZE (sizeof(long))
 #else
@@ -247,7 +259,7 @@ struct memline
 
 	MEMFILE		*ml_mfp;		/* pointer to associated memfile */
 
-#define ML_EMPTY		1		/* empty buffer (one empty line */
+#define ML_EMPTY		1		/* empty buffer */
 #define ML_LINE_DIRTY	2		/* cached line was changed and allocated */
 #define ML_LOCKED_DIRTY	4		/* ml_locked was changed */
 #define ML_LOCKED_POS	8		/* ml_locked needs positive block number */
@@ -284,8 +296,10 @@ struct buffer
 	BUF				*b_next;			/* links in list of buffers */
 	BUF				*b_prev;
 
-	int				 b_changed;			/* Set to 1 if something in the file has
-								 		 * been changed and not written out. */
+	int				 b_changed;			/* 'modified': Set to TRUE if
+										 * something in the file has
+								 		 * been changed and not written out.
+										 */
 
 	int				 b_notedited;		/* Set to TRUE when file name is
 										 * changed after starting to edit, 
@@ -312,17 +326,27 @@ struct buffer
 										 * each window */
 
 	long			 b_mtime;			/* last change time of original file */
+	long			 b_mtime_read;		/* last change time when reading */
+
+	FPOS          	 b_namedm[NMARKS];	/* current named marks (mark.c) */
+
+	FPOS			 b_last_cursor;		/* cursor position when last unloading
+										   this buffer */
 
 	/*
-	 * The following only used in mark.c.
+	 * Character table, only used in charset.c for 'iskeyword'
 	 */
-	FPOS          	 b_namedm[NMARKS];	/* current marks */
+	char			 b_chartab[256];
 
 	/*
 	 * start and end of an operator, also used for '[ and ']
 	 */
-	FPOS			 b_startop;
-	FPOS			 b_endop;
+	FPOS			 b_op_start;
+	FPOS			 b_op_end;
+	
+#ifdef VIMINFO
+	int				 b_marks_read;		/* Have we read viminfo marks yet? */
+#endif /* VIMINFO */
 
 	/*
 	 * The following only used in undo.c.
@@ -349,22 +373,50 @@ struct buffer
 	struct m_block	*b_mb_current;		/* block where m_search points in */
 
 	/*
-	 * Variables "local" to a buffer.
+	 * Options "local" to a buffer.
 	 * They are here because their value depends on the type of file
 	 * or contents of the file being edited.
 	 * The "save" options are for when the paste option is set.
 	 */
-	int				 b_p_ai, b_p_si, b_p_ro;
-	int				 b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_sn, b_p_tx;
+	int				 b_p_initialized;	/* set when options initialized */
+	int				 b_p_ai, b_p_ro, b_p_lisp;
+	int				 b_p_inf; 			/* infer case of ^N/^P completions */
+	int				 b_p_bin, b_p_eol, b_p_et, b_p_ml, b_p_tx;
+#ifndef SHORT_FNAME
+	int				 b_p_sn;
+#endif
+
 	long			 b_p_sw, b_p_ts, b_p_tw, b_p_wm;
-	int				 b_p_ai_save, b_p_si_save;
+	char_u			*b_p_fo, *b_p_com, *b_p_isk;
+
+	/* saved values for when 'bin' is set */
+	long			 b_p_wm_nobin, b_p_tw_nobin;
+	int				 b_p_tx_nobin, b_p_ta_nobin;
+	int				 b_p_ml_nobin, b_p_et_nobin;
+
+	/* saved values for when 'paste' is set */
+	int				 b_p_ai_save, b_p_lisp_save;
 	long			 b_p_tw_save, b_p_wm_save;
 
-	char			 b_did_warn;		/* Set to 1 if user has been warned on
-										 * first change of a read-only file */
+#ifdef SMARTINDENT
+	int				 b_p_si, b_p_si_save;
+#endif
+#ifdef CINDENT
+	int				 b_p_cin;		/* use C progam indent mode */
+	int				 b_p_cin_save;	/* b_p_cin saved for paste mode */
+	char_u			*b_p_cino;		/* C progam indent mode options */
+	char_u			*b_p_cink;		/* C progam indent mode keys */
+#endif
+#if defined(CINDENT) || defined(SMARTINDENT)
+	char_u			*b_p_cinw;		/* words extra indent for 'si' and 'cin' */
+#endif
 
-#ifndef MSDOS
-	int				 b_shortname;		/* this file has an 8.3 filename */
+	char			 b_did_warn;	/* Set to 1 if user has been warned on
+									 * first change of a read-only file */
+	char			 b_help;		/* buffer for help file */
+
+#ifndef SHORT_FNAME
+	int				 b_shortname;	/* this file has an 8.3 filename */
 #endif
 };
 
@@ -389,6 +441,17 @@ struct window
 	 */
 	int			w_row, w_col;		/* cursor's position in window */
 
+	/*
+	 * w_cline_height is set in cursupdate() to the number of physical lines
+	 * taken by the buffer line that the cursor is on.  We use this to avoid
+	 * extra calls to plines().  Note that w_cline_height and w_cline_row are
+	 * only valid after calling cursupdate(), until the next vertical movement
+	 * of the cursor or change of text.
+	 */
+	int			w_cline_height;		/* current size of cursor line */
+
+	int			w_cline_row;		/* starting row of the cursor line */
+
 	colnr_t		w_virtcol;			/* column number of the file's actual */
 									/* line, as opposed to the column */
 									/* number we're at on the screen. */
@@ -405,6 +468,14 @@ struct window
 									/* the next time through cursupdate() */
 									/* to the current virtual column */
 
+	/*
+	 * the next three are used to update the visual part
+	 */
+	linenr_t	w_old_cursor_lnum;	/* last known end of visual part */
+	colnr_t		w_old_cursor_vcol;	/* last known end of visual part */
+	linenr_t	w_old_visual_lnum;	/* last known start of visual part */
+	colnr_t		w_old_curswant;		/* last known value of Curswant */
+
 	linenr_t	w_topline;			/* number of the line at the top of
 									 * the screen */
 	linenr_t	w_botline;			/* number of the line below the bottom
@@ -419,7 +490,7 @@ struct window
 	int			w_redr_status;		/* if TRUE status line must be redrawn */
 	int			w_redr_type;		/* type of redraw to be performed on win */
 
-	int			w_leftcol;			/* starting column of the screen */
+	colnr_t		w_leftcol;			/* starting column of the screen */
 
 /*
  * The height of the lines currently in the window is remembered
@@ -432,6 +503,7 @@ struct window
 	int			w_alt_fnum;			/* alternate file (for # and CTRL-^) */
 
 	int			w_arg_idx;			/* current index in argument list */
+	int			w_arg_idx_invalid;	/* editing another file then w_arg_idx */
 
 	/*
 	 * Variables "local" to a window.
@@ -440,7 +512,11 @@ struct window
 	 */
 	int			w_p_list,
 				w_p_nu,
-				w_p_wrap;
+#ifdef RIGHTLEFT
+				w_p_rl,
+#endif
+				w_p_wrap,
+				w_p_lbr;
 	long		w_p_scroll;
 
 	/*
@@ -455,8 +531,8 @@ struct window
 	 * the jumplist contains old cursor positions
 	 */
 	struct filemark w_jumplist[JUMPLISTSIZE];
-	int 			w_jumplistlen;	/* number of active entries */
-	int				w_jumplistidx;	/* current position */
+	int 			w_jumplistlen;				/* number of active entries */
+	int				w_jumplistidx;				/* current position */
 
 	/*
 	 * the tagstack grows from 0 upwards:
@@ -465,7 +541,10 @@ struct window
 	 * entry 2: newest
 	 */
 	struct taggy	w_tagstack[TAGSTACKSIZE];	/* the tag stack */
-	int				w_tagstackidx;				/* index just below active entry */
-	int				w_tagstacklen;				/* number of tags on the stack */
+	int				w_tagstackidx;				/* idx just below activ entry */
+	int				w_tagstacklen;				/* number of tags on stack */
 
+#ifdef USE_GUI
+	GuiScrollbar	w_scrollbar;				/* Scrollbar for this window */
+#endif /* USE_GUI */
 };

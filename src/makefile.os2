@@ -1,0 +1,104 @@
+#
+# Makefile for VIM on OS/2 using EMX	vim:ts=8:sw=8:tw=78
+#
+# Created by: Paul Slootman
+#
+
+### This Makefile has been succesfully tested on these systems.
+### Check the (*) column for remarks, listed below.
+### Later code changes may cause small problems, otherwise Vim is supposed to
+### compile and run without problems.
+### Just to show that this is just like the Unix version!
+
+#system:              configurations:    	     version (*) tested by:
+#-------------        ------------------------       -------  -  ----------
+#OS/2 FAT             gcc-emx 2.6.3    -X11 -GUI        3.29     Karsten Sievert
+
+#>>>>> choose options:
+
+### See feature.h for a list of optionals.
+### Any other defines can be included here.
+
+DEFINES = -DUSE_SYSTEM=1
+
+#>>>>> name of the compiler and linker, name of lib directory
+CC = gcc
+
+#>>>>> end of choices
+###########################################################################
+
+INCL = vim.h globals.h option.h keymap.h macros.h ascii.h term.h msdos.h structs.h
+CFLAGS = -O2 -fno-strength-reduce -DOS2 -Wall $(DEFINES)
+
+OBJ =	alloc.o buffer.o charset.o cmdcmds.o cmdline.o csearch.o digraph.o \
+	edit.o fileio.o getchar.o help.o linefunc.o main.o mark.o memfile.o \
+	memline.o message.o misccmds.o normal.o ops.o option.o quickfix.o \
+	regexp.o regsub.o screen.o search.o tables.o tag.o term.o undo.o \
+	window.o unix.o pathdef.o
+
+vim.exe: $(OBJ) version.c
+	$(CC) $(CFLAGS) -s -o vim.exe version.c $(OBJ) -ltermcap
+
+ctags:
+	cmd /c ctags *.c $(INCL)
+
+clean:
+	-del *.o
+	-del *.exe
+	-del cmdtab.h pathdef.c
+	-del *.~ *~ *.bak
+
+addcr:	addcr.c addcr.cmd
+	$(CC) addcr.c
+	cmd /c addcr.cmd
+
+addcr.cmd: addcr.bat
+	copy addcr.bat addcr.cmd
+
+###########################################################################
+
+alloc.o:	alloc.c  $(INCL)
+unix.o:		unix.c  $(INCL)
+buffer.o:	buffer.c  $(INCL)
+charset.o:	charset.c  $(INCL)
+cmdcmds.o:	cmdcmds.c  $(INCL)
+cmdline.o:	cmdline.c  $(INCL) cmdtab.h
+csearch.o:	csearch.c  $(INCL)
+digraph.o:	digraph.c  $(INCL)
+edit.o:		edit.c  $(INCL)
+fileio.o:	fileio.c  $(INCL)
+getchar.o:	getchar.c  $(INCL)
+help.o:		help.c  $(INCL)
+linefunc.o:	linefunc.c  $(INCL)
+main.o:		main.c  $(INCL)
+mark.o:		mark.c  $(INCL)
+memfile.o:	memfile.c  $(INCL)
+memline.o:	memline.c  $(INCL)
+message.o:	message.c  $(INCL)
+misccmds.o:	misccmds.c  $(INCL)
+normal.o:	normal.c  $(INCL) ops.h
+ops.o:		ops.c  $(INCL) ops.h
+option.o:	option.c  $(INCL)
+quickfix.o:	quickfix.c  $(INCL)
+regexp.o:	regexp.c  $(INCL)
+regsub.o:	regsub.c  $(INCL)
+screen.o:	screen.c  $(INCL)
+search.o:	search.c  $(INCL)
+tables.o:	tables.c  $(INCL)
+tag.o:		tag.c  $(INCL)
+term.o:		term.c  $(INCL)
+undo.o:		undo.c  $(INCL)
+window.o:	window.c  $(INCL)
+pathdef.o:	pathdef.c  $(INCL)
+
+pathdef.c: Makefile mk_os2pd.exe
+	mk_os2pd "$(CC)" "$(CFLAGS)" > pathdef.c
+
+mk_os2pd.exe: mk_os2pd.c feature.h
+	$(CC) $(CFLAGS) -s -o mk_os2pd.exe mk_os2pd.c
+
+cmdtab.h: cmdtab.tab mkcmdtab.exe
+	mkcmdtab cmdtab.tab cmdtab.h
+
+mkcmdtab.exe:	mkcmdtab.c
+	$(CC) $(CFLAGS) -o mkcmdtab.exe mkcmdtab.c

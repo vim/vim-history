@@ -1,7 +1,10 @@
 /* fileio.c */
-void filemess __PARMS((unsigned char *name, unsigned char *s));
-int readfile __PARMS((unsigned char *fname, unsigned char *sfname, long from, int newfile, long skip_lnum, long nlines));
-int buf_write __PARMS((struct buffer *buf, unsigned char *fname, unsigned char *sfname, long start, long end, int append, int forceit, int reset_changed));
-unsigned char *modname __PARMS((unsigned char *fname, unsigned char *ext));
-unsigned char *buf_modname __PARMS((struct buffer *buf, unsigned char *fname, unsigned char *ext));
-int vim_fgets __PARMS((unsigned char *buf, int size, struct __stdio *fp, int *lnum));
+void filemess __PARMS((BUF *buf, char_u *name, char_u *s));
+int readfile __PARMS((char_u *fname, char_u *sfname, linenr_t from, int newfile, linenr_t lines_to_skip, linenr_t lines_to_read, int filtering));
+int buf_write __PARMS((BUF *buf, char_u *fname, char_u *sfname, linenr_t start, linenr_t end, int append, int forceit, int reset_changed, int filtering));
+char_u *modname __PARMS((char_u *fname, char_u *ext));
+char_u *buf_modname __PARMS((BUF *buf, char_u *fname, char_u *ext));
+int vim_fgets __PARMS((char_u *buf, int size, FILE *fp));
+int vim_rename __PARMS((char_u *from, char_u *to));
+void check_timestamps __PARMS((void));
+void buf_check_timestamp __PARMS((BUF *buf));

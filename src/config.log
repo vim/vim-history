@@ -1,0 +1,181 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:637: gcc -E conftest.c
+configure:694: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:760: gcc -o conftest    conftest.c  1>&5
+configure:1130: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   -L/usr/X11R6/lib conftest.c -lICE   1>&5
+configure:1178: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ldnet   1>&5
+ld: -ldnet: no match
+configure:1217: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ldnet_stub   1>&5
+ld: -ldnet_stub: no match
+configure:1261: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -lnsl   1>&5
+ld: -lnsl: no match
+configure:1304: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -lsocket   1>&5
+ld: -lsocket: no match
+configure:1358: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow -I/usr/X11R6/include   conftest.c 1>&5
+configure:1555: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow    -L/usr/X11R6/lib conftest.c -lXext -lX11   1>&5
+configure:1645: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap   1>&5
+configure:1812: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:1809: warning: return-type defaults to `int'
+configure: In function `main':
+configure:1809: warning: implicit declaration of function `tgoto'
+configure:1809: warning: passing arg 1 of `strcmp' makes pointer from integer without a cast
+configure:1835: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:1832: warning: return-type defaults to `int'
+configure:1857: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:1853: warning: implicit declaration of function `fprintf'
+configure:1881: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:1877: elf.h: No such file or directory
+configure:1962: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:1958: warning: unused variable `dirp'
+configure:2005: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ldir  -ltermcap  1>&5
+ld: -ldir: no match
+configure:2078: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2143: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2184: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure:2247: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2247: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2247: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2247: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2247: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2284: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2284: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2284: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2284: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2284: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2280: termio.h: No such file or directory
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2317: stropts.h: No such file or directory
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2317: sys/systeminfo.h: No such file or directory
+configure:2321: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2358: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2354: sys/stream.h: No such file or directory
+configure:2358: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2354: sys/ptem.h: No such file or directory
+configure:2358: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2358: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2354: libc.h: No such file or directory
+configure:2358: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2354: sys/statfs.h: No such file or directory
+configure:2395: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2391: sys/poll.h: No such file or directory
+configure:2395: gcc -E  conftest.c >/dev/null 2>conftest.out
+configure:2475: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:2448: warning: declaration of `t' shadows global declaration
+configure:2449: warning: unused variable `s'
+configure:2454: warning: declaration of `x' shadows previous local
+configure:2460: warning: declaration of `p' shadows previous local
+configure:2469: warning: unused variable `foo'
+configure:2437: warning: unused variable `zero'
+configure:2431: warning: unused variable `x'
+configure:2448: warning: `t' might be used uninitialized in this function
+configure:2466: warning: `b' might be used uninitialized in this function
+configure:2666: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:2662: warning: unused variable `tp'
+configure:2700: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2755: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2810: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:2806: `outfuntype' undeclared (first use this function)
+configure:2806: (Each undeclared identifier is reported only once
+configure:2806: for each function it appears in.)
+configure:2806: parse error before `xx'
+configure:2836: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure:2877: termio.h: No such file or directory
+configure:2920: gcc -c -O2 -fno-strength-reduce -Wall -Wshadow  conftest.c 1>&5
+configure: In function `t':
+configure:2916: warning: unused variable `i'
+configure:2967: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:2959: warning: return-type defaults to `int'
+configure: In function `main':
+configure:2963: warning: implicit declaration of function `getcwd'
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+/var/tmp/cc0032151.o: Undefined symbol `_sigset' referenced from text segment
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3011: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3064: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3117: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3150: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3182: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3174: warning: return-type defaults to `int'
+configure:3222: gcc -o conftest -O2 -fno-strength-reduce -Wall -Wshadow   conftest.c -ltermcap  1>&5
+configure:3220: warning: return-type defaults to `int'
+configure: In function `main':
+configure:3223: warning: implicit declaration of function `memmove'
+configure:3224: warning: implicit declaration of function `strncmp'
+etags: not found
+etags: not found
+Ctags, Ver. 0.42 Beta, by Darren Hiebert
+Usage: ctags [-aBdFLsStTwWx] [-{f|o} tagfile] [-h list] [-i types] file(s)
+    -a   Append the tags to an existing tag file.
+    -B   Use backward searching patterns (?...?).
+    -F   Use forward searching patterns (/.../) (default).
+    -o   Alternative for -f.
+    -w   Exclude warnings about duplicate tags (default).
+    -W   Generate warnings about duplicate tags.
+    -x   Print a tabular cross reference file to standard output.
+    -f <tagfile>
+         Output tags to the specified file (default is "tags").
+    -h <list>
+         Specifies a list of file extensions used for headers.
+         The default list is ".h.H.hpp.hxx.h++".
+    -i <types>
+         Specifies the list of tag types to include in the output file.
+         "Types" is a group of letters designating the types of tags
+         affected. Each letter or group of letters may be preceded by
+         either a '+' sign (default, if omitted) to add it to those already
+         included, a '-' sign to exclude it from the list (e.g. to exclude
+         a default tag type), or an '=' sign to include its corresponding
+         tag type at the exclusion of those not listed. A space separating
+         the option letter from the list is optional. The following tag
+         types are supported:
+            d   macro definitions
+            e   enumerated values (values inside enum{...})
+            f   function and method definitions
+            g   enum/struct/union tags (or new C++ types)
+            p   external function prototypes
+            t   typedefs
+            v   variable declarations
+         In addition, the following two modifiers are accepted:
+            P   prefix static tags with "filename:" (Elvis style).
+            S   include static tags (special case of above types)
+         The default value of list is "=defgtvS" (i.e all tag types
+         except for function prototypes; include static tags but do not
+         prefix them).
+    -L <listfile>
+         A list of source file names are read from the specified file
+
+  The following tag control options are accepted only for backwards
+  compatibility with other versions of ctags and (except for -s) are
+  selected by default in this version. Use of the -i option is preferred.
+    -d   Include macro definitions (equiv. to -i+d).
+    -s   Include static tags prefixed by "filename:" (equiv. to -i+SP).
+    -S   Include static tags without filename prefix (equiv. to -i+S-P).
+    -t   Include typedefs (equiv. to -i+t).
+    -T   Include typedefs and enum/struct/union tags (equiv. to -i+gt).
+
+Error: Invalid option character: 'v'
+

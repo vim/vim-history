@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -34,6 +34,23 @@ alloc(size)
 	return (lalloc((long_u)size, TRUE));
 }
 
+/*
+ * alloc() with check for maximum line length
+ */
+	char_u *
+alloc_check(size)
+	unsigned		size;
+{
+#if !defined(UNIX) && !defined(__EMX__)
+	if (sizeof(int) == 2 && size > 0x7fff)
+	{
+		EMSG("Line is becoming too long");
+		return NULL;
+	}
+#endif
+	return (lalloc((long_u)size, TRUE));
+}
+
 	char_u *
 lalloc(size, message)
 	long_u			size;
@@ -43,7 +60,12 @@ lalloc(size, message)
 	static int	releasing = FALSE;	/* don't do mf_release_all() recursive */
 	int			try_again;
 
-#ifdef MSDOS
+	if (size <= 0)
+	{
+		EMSGN("Internal error: lalloc(%ld, )", size);
+		return NULL;
+	}
+#if defined(MSDOS) && !defined(DJGPP)
 	if (size >= 0xfff0)			/* in MSDOS we can't deal with >64K blocks */
 		p = NULL;
 	else
@@ -59,7 +81,7 @@ lalloc(size, message)
 		{
 			if (mch_avail_mem(TRUE) < KEEP_ROOM && !releasing)
 			{ 								/* System is low... no go! */
-					free((char *)p);
+					vim_free((char *)p);
 					p = NULL;
 			}
 		}
@@ -80,12 +102,19 @@ lalloc(size, message)
 	 * Avoid repeating the error message many times (they take 1 second each).
 	 * Did_outofmem_msg is reset when a character is read.
 	 */
-	if (message && p == NULL && !did_outofmem_msg)
+	if (message && p == NULL)
+		do_outofmem_msg();
+	return (p);
+}
+
+	void
+do_outofmem_msg()
+{
+	if (!did_outofmem_msg)
 	{
 		emsg(e_outofmem);
 		did_outofmem_msg = TRUE;
 	}
-	return (p);
 }
 
 /*
@@ -113,10 +142,50 @@ strnsave(string, len)
 	p = alloc((unsigned) (len + 1));
 	if (p != NULL)
 	{
-		STRNCPY(p, string, (size_t)len);
+		STRNCPY(p, string, len);
 		p[len] = NUL;
 	}
 	return p;
+}
+
+/*
+ * Same as strsave(), but any characters found in esc_chars are preceded by a
+ * backslash.
+ */
+	char_u *
+strsave_escaped(string, esc_chars)
+	char_u		*string;
+	char_u		*esc_chars;
+{
+	char_u		*p;
+	char_u		*p2;
+	char_u		*escaped_string;
+	unsigned	length;
+
+	/*
+	 * First count the number of backslashes required.
+	 * Then allocate the memory and insert them.
+	 */
+	length = 1;							/* count the trailing '/' and NUL */
+	for (p = string; *p; p++)
+	{
+		if (vim_strchr(esc_chars, *p) != NULL)
+			++length;					/* count a backslash */
+		++length;						/* count an ordinary char */
+	}
+	escaped_string = alloc(length);
+	if (escaped_string != NULL)
+	{
+		p2 = escaped_string;
+		for (p = string; *p; p++)
+		{
+			if (vim_strchr(esc_chars, *p) != NULL)
+				*p2++ = '\\';
+			*p2++ = *p;
+		}
+		*p2 = NUL;
+	}
+	return escaped_string;
 }
 
 /*
@@ -135,39 +204,75 @@ copy_spaces(ptr, count)
 }
 
 /*
- * delete spaces at the end of the string
+ * delete spaces at the end of a string
  */
 	void
-del_spaces(ptr)
+del_trailing_spaces(ptr)
 	char_u *ptr;
 {
 	char_u	*q;
 
 	q = ptr + STRLEN(ptr);
-	while (--q > ptr && isspace(q[0]) && q[-1] != '\\' && q[-1] != Ctrl('V'))
+	while (--q > ptr && vim_iswhite(q[0]) && q[-1] != '\\' &&
+														   q[-1] != Ctrl('V'))
 		*q = NUL;
 }
 
-#ifdef NO_FREE_NULL
-#undef free
 /*
- * replacement for free() that cannot handle NULL pointers
+ * Isolate one part of a string option where parts are separated with commas.
+ * The part is copied into buf[maxlen].
+ * "*option" is advanced to the next part.
+ * The length is returned.
+ */
+	int
+copy_option_part(option, buf, maxlen, sep_chars)
+	char_u		**option;
+	char_u		*buf;
+	int			maxlen;
+	char		*sep_chars;
+{
+	int		len = 0;
+	char_u	*p = *option;
+
+	/* skip '.' at start of option part, for 'suffixes' */
+	if (*p == '.')
+		buf[len++] = *p++;
+	while (*p && vim_strchr((char_u *)sep_chars, *p) == NULL)
+	{
+		/*
+		 * Skip backslash before a separator character and space.
+		 */
+		if (p[0] == '\\' && vim_strchr((char_u *)sep_chars, p[1]) != NULL)
+			++p;
+		if (len < maxlen - 1)
+			buf[len++] = *p;
+		++p;
+	}
+	buf[len] = NUL;
+
+	p = skip_to_option_part(p);	/* p points to next file name */
+
+	*option = p;
+	return len;
+}
+
+/*
+ * replacement for free() that ignores NULL pointers
  */
 	void
-nofreeNULL(x)
+vim_free(x)
 	void *x;
 {
 	if (x != NULL)
 		free(x);
 }
-#endif
 
-#ifdef BSD_UNIX
-	char *
-bsdmemset(ptr, c, size)
-	char	*ptr;
+#ifndef HAVE_MEMSET
+	void *
+vim_memset(ptr, c, size)
+	void	*ptr;
 	int		c;
-	long	size;
+	size_t	size;
 {
 	register char *p = ptr;
 
@@ -177,26 +282,23 @@ bsdmemset(ptr, c, size)
 }
 #endif
 
-#ifdef MEMMOVE
+#ifdef VIM_MEMMOVE
 /*
  * Version of memmove that handles overlapping source and destination.
  * For systems that don't have a function that is guaranteed to do that (SYSV).
  */
-	void *
-#ifdef __sgi
-memmove(desti, source, len)
-	void	*source, *desti;
+	void
+vim_memmove(dst_arg, src_arg, len)
+	void	*src_arg, *dst_arg;
 	size_t	len;
-#else
-memmove(desti, source, len)
-	void	*source, *desti;
-	int		len;
-#endif
 {
-	char	*src = (char *)source;
-	char	*dst = (char *)desti;
+	/*
+	 * A void doesn't have a size, we use char pointers.
+	 */
+	register char *dst = dst_arg, *src = src_arg;
 
-	if (dst > src && dst < src + len)	/* overlap, copy backwards */
+										/* overlap, copy backwards */
+	if (dst > src && dst < src + len)
 	{
 		src +=len;
 		dst +=len;
@@ -206,7 +308,6 @@ memmove(desti, source, len)
 	else								/* copy forwards */
 		while (len-- > 0)
 			*dst++ = *src++;
-	return desti;
 }
 #endif
 
@@ -231,4 +332,50 @@ vim_strnicmp(s1, s2, len)
 		--len;
 	}
 	return 0;								/* strings match */
+}
+
+/*
+ * Version of strchr() and strrchr() that handle unsigned char strings
+ * with characters above 128 correctly. Also it doesn't return a pointer to
+ * the NUL at the end of the string.
+ */
+	char_u	*
+vim_strchr(string, n)
+	char_u	*string;
+	int		n;
+{
+	while (*string)
+	{
+		if (*string == n)
+			return string;
+		++string;
+	}
+	return NULL;
+}
+
+	char_u	*
+vim_strrchr(string, n)
+	char_u	*string;
+	int		n;
+{
+	char_u	*retval = NULL;
+
+	while (*string)
+	{
+		if (*string == n)
+			retval = string;
+		++string;
+	}
+	return retval;
+}
+
+/*
+ * Vim has its own isspace() function, because on some machines isspace()
+ * can't handle characters above 128.
+ */
+	int
+vim_isspace(x)
+	int		x;
+{
+	return ((x >= 9 && x <= 13) || x == ' ');
 }

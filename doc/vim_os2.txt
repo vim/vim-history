@@ -1,0 +1,72 @@
+*vim_os2.txt*   For Vim version 4.0.  Last modification: 1996 May 26
+
+This file contains the particularities for the OS/2 version of Vim.
+
+
+Warning! This has not been tested as well as the other ports of Vim!
+	 Report problems to paul@wau.mis.ah.nl (email valid up to at least
+	 August 1996).  Watch out for binary mode (tested a bit and it looked
+	 OK, but make sure it does what you think it does). Other problems are
+	 sure to exist as well; as always when testing beta software, keep an
+	 up to date backup of files use this software on!
+
+Prerequisites:
+
+- To run Vim, you need the emx runtime environment (at least rev. 0.9b).  This
+  is generally available as (ask Archie about it):
+
+    emxrt.zip     emx runtime package
+
+  I've included a copy of emx.dll, which should be copied to one of the
+  directories listed in your LIBPATH. Emx is GPL'ed, but the emx.dll library
+  is not (read COPYING.EMX to find out what that means to you).
+  
+  This emx.dll is from the emxfix04.zip package, which unfortunately has a bug
+  in select().  Versions of Vim before 3.27 will appear to hang when starting
+  (actually, while processing vimrc). Hit return a couple of times until Vim
+  starts working if this happens.  Next, get an up to date version of Vim!
+
+The VIM environment variable is used to find the location of the help files
+and the system .vimrc. Place an entry such as this in CONFIG.SYS:
+
+SET VIM=c:/local/lib/vim
+
+and copy all the vim_*.txt files and .vimrc to that directory. Vim will then
+be able to find them.
+
+Note: .vimrc may also be called _vimrc to accommodate those who have chosen to
+install OS/2 on a FAT file system. Vim first tries to find .vimrc and if that
+fails, looks for _vimrc in the same place.
+
+If you're using network drives with OS/2, then you can install Vim on a
+network drive (including .vimrc; this is then called the "system" vimrc file),
+and then use a personal copy of .vimrc (the "user" vimrc file). This should be
+located in a directory indicated by the HOME environment variable.
+
+Use "os2ansi" as the TERM environment variable (or don't set it at all, as the
+default is the correct value). You can set term to os2ansi in the .vimrc, in
+case you need TERM to be a different value for other applications.  The
+problem is that OS/2 ANSI emulation is quite limited (it doesn't have insert /
+delete line, for example).
+
+Using slashes ('/') and backslashes ('\') can be a bit of a problem (see
+vim_dos.txt for more explanation), but in almost all cases Vim does "The Right
+Thing".  Vim prefers backslashes in file names, but will happily accept
+forward slashes if they are entered. Note that ":n doc\*.txt" will say
+"doc\*.txt [New File]", as the backslash serves to escape the *.
+":n doc/*.txt" will work as expected.
+
+Due to an oversight, ":n *.c *.h" will NOT work.  Sorry.  Starting Vim with
+"vim *.c *.h" works correctly.
+
+
+Try and test it as much as possible; when a problem is found, try to recreate
+it as simply as possible, ans then try it again on another platform (dos or
+unix for example) if at all possible, to separate generic Vim bugs from
+genuine OS/2 problems.  Report bugs to me: paul@wau.mis.ah.nl (up to at least
+August 1996) or paul@wurtel.hobby.nl (permanent, but only infrequently
+checked).
+
+Paul Slootman
+
+vim:ts=8:tw=78:

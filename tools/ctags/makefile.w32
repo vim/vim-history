@@ -1,0 +1,72 @@
+#
+# Makefile for ctags on Win32 (Windows NT and Windows 95), using MS SDK
+# and MSVC 2.0 or 2.2 compilers.  Also works with MSVC 4.x compilers.
+# It is not known if it will build with other compilers or on non-Intel
+# platforms, but it shouldn't be too difficult to get it to do so.
+#
+
+# to build the retail version
+#  nmake -f Makefile.w32
+# to build the debug version
+#  nmake DEBUG=1 -f Makefile.w32
+
+# Build on both Windows NT and Windows 95
+
+TARGETOS = BOTH
+
+
+# ntwin32.mak requires that CPU be set appropriately
+
+!ifdef PROCESSOR_ARCHITECTURE
+# We're on Windows NT
+CPU = $(PROCESSOR_ARCHITECTURE)
+! if "$(PROCESSOR_ARCHITECTURE)" == "x86"
+CPU = i386
+! endif
+!else
+# We're on Windows 95
+CPU = i386
+!endif
+
+
+# Build a retail version by default
+
+!ifndef DEBUG
+NODEBUG = 1
+!endif
+
+
+# Get all sorts of useful, standard macros from the SDK.  (Note that
+# MSVC 2.2 does not install <ntwin32.mak> in the \msvc20\include
+# directory, but you can find it in \msvc20\include on the CD-ROM.
+# You may also need <win32.mak> from the same place.)
+
+!include <ntwin32.mak>
+
+
+#>>>>> path of the compiler and linker; name of include and lib directories
+#      Only needed if your environment is not correctly set up
+# PATH = c:\msvc20\bin;$(PATH)
+# INCLUDE = c:\msvc20\include
+# LIB = c:\msvc20\lib
+
+CFLAGS = -c /W3 /nologo $(cvars) $(cflags) $(DEFINES)
+
+#>>>>> end of choices
+###########################################################################
+
+!ifdef NODEBUG
+CFLAGS = $(CFLAGS) -DNDEBUG
+!else
+CFLAGS = $(CFLAGS) -D_DEBUG -DDEBUG
+!endif
+
+ctags.exe: ctags.obj
+	$(link) $(linkdebug) $(conflags) -out:$*.exe $** setargv.obj $(conlibs)
+
+ctags.obj: ctags.c
+	$(CC) $(CFLAGS) ctags.c /Foctags.obj
+
+clean:
+	del ctags.obj
+	del ctags.exe

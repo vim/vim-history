@@ -1,0 +1,189 @@
+diff -c ../../vim-3.29/doc/Makefile ./Makefile
+*** ../../vim-3.29/doc/Makefile	Wed May 29 10:12:22 1996
+--- ./Makefile	Wed May 29 10:12:22 1996
+***************
+*** 1,7 ****
+  DOCS = vim_ami.txt vim_arch.txt vim_diff.txt vim_digr.txt vim_dos.txt \
+! 	vim_help.txt vim_idx.txt vim_mac.txt vim_w32.txt vim_ref.txt \
+! 	vim_tips.txt vim_unix.txt vim_win.txt vim_gui.txt vim_40.txt \
+! 	vim_kcc.txt vim_rlh.txt
+  
+  all: vim_tags vim.man
+  
+--- 1,7 ----
+  DOCS = vim_ami.txt vim_arch.txt vim_diff.txt vim_digr.txt vim_dos.txt \
+! 	vim_help.txt vim_idx.txt vim_mac.txt vim_mint.txt vim_w32.txt \
+! 	vim_ref.txt vim_tips.txt vim_unix.txt vim_win.txt vim_gui.txt \
+! 	vim_40.txt vim_kcc.txt vim_rlh.txt
+  
+  all: vim_tags vim.man
+  
+diff -c ../../vim-3.29/doc/vim_40.txt ./vim_40.txt
+*** ../../vim-3.29/doc/vim_40.txt	Wed May 29 02:49:16 1996
+--- ./vim_40.txt	Wed May 29 02:49:12 1996
+***************
+*** 46,51 ****
+--- 46,52 ----
+      Mouse support					|new_mouse|
+      Graphical User Interface (GUI)			|new_gui|
+      Support for Windows NT and Windows 95		|new_win32|
++     Support for MiNT					|new_mint|
+      Support for OS/2					|new_os2|
+      Miscellaneous					|new_misc|
+  
+***************
+*** 1013,1018 ****
+--- 1014,1027 ----
+  this port quite easy.  It mostly uses the Unix files and settings.
+  							|vim_os2.txt|
+  
++ 
++ Support for MiNT						*new_mint*
++ ----------------
++ 
++ There is now a version of Vim for MiNT. It was compiled with gcc under
++ a Unix-like environment.
++ 							|vim_mint.txt|
++ 
+  
+  Miscellaneous new features					*new_misc*
+  --------------------------
+diff -c ../../vim-3.29/doc/vim_diff.txt ./vim_diff.txt
+*** ../../vim-3.29/doc/vim_diff.txt	Wed May 29 10:13:50 1996
+--- ./vim_diff.txt	Wed May 29 10:13:48 1996
+***************
+*** 29,34 ****
+--- 29,35 ----
+  	- Windows 95 and Windows NT, with support for long file names.
+  	- OS/2 (in an MS-DOS console window).
+  	- Macintosh (although it has not been tested much).
++ 	- Atari running MiNT
+  
+  Multi level undo.					|undo|
+  	'u' goes backward in time, 'ctrl-R' goes forward again.  Set option
+diff -c ../../vim-3.29/doc/vim_help.txt ./vim_help.txt
+*** ../../vim-3.29/doc/vim_help.txt	Wed May 29 10:16:20 1996
+--- ./vim_help.txt	Wed May 29 10:16:18 1996
+***************
+*** 61,67 ****
+  |vim_win.txt|	reference for window commands	    |vim_w32.txt|   Win-NT/95
+  |vim_diff.txt|	differences between Vim and Vi	    |vim_arch.txt|  Archimedes
+  |vim_digr.txt|	list of available digraphs	    |vim_mac.txt|   Macintosh
+! |vim_tips.txt|	tips on using Vim
+  |vim_gui.txt|	about the Graphical User Interface
+  |vim_rlh.txt|	about right-to-left editing
+  |vim_40.txt|	about this version
+--- 61,67 ----
+  |vim_win.txt|	reference for window commands	    |vim_w32.txt|   Win-NT/95
+  |vim_diff.txt|	differences between Vim and Vi	    |vim_arch.txt|  Archimedes
+  |vim_digr.txt|	list of available digraphs	    |vim_mac.txt|   Macintosh
+! |vim_tips.txt|	tips on using Vim                   |vim_mint.txt|  MiNT
+  |vim_gui.txt|	about the Graphical User Interface
+  |vim_rlh.txt|	about right-to-left editing
+  |vim_40.txt|	about this version
+diff -c ../../vim-3.29/doc/vim_mint.txt ./vim_mint.txt
+*** ../../vim-3.29/doc/vim_mint.txt	Wed May 29 02:37:22 1996
+--- ./vim_mint.txt	Wed May 29 02:37:22 1996
+***************
+*** 1,32 ****
+! *vim_mint.txt*  For Vim version 3.27. Last modification 1996 May 15
+  
+  This file contains the particularities for the Atari MiNT version of Vim.
+  
+! For compiling Vim on the Atari using MiNT see "INSTALL" and "Makefile"
+  in the src directory.
+  
+! The MiNT version of vim behaves almost exactly like the Unix version.
+  
+  The MiNT version of vim needs the termcap file /etc/termcap with the
+! terminal capabilities of your terminal. Builtin termcaps are not (yet)
+! supported for the mint version. Termcap entries for the TOSWIN window
+  manager and the virtual console terminals have been appended to the
+! vim-3.27/termcap file.
+  
+! The default help filename is "/usr/local/lib/vim/vim_help.txt"
+! The files "$HOME/.vimrc" and "$HOME/.exrc" are used instead of "s:.vimrc" and
+! "s:.exrc". Additionally "/usr/local/etc/vimrc" is used first.
+! If "/usr/local/share" exists it is used instead of "/usr/local/lib"
+! 
+! Temporary files (for filtering) are put in "/tmp".
+! 
+! With wildcard expansion you can use <~> (home directory) and <$>
+! (environment variable).
+! 							*fork* *spoon*
+! For executing external commands fork()/exec() is used when possible, otherwise
+! system() is used, which is a bit slower.  The output of ":version" includes
+! "+fork" when fork()/exec() is used.  This can be changed at compile time by
+! defining USE_SYSTEM in feature.h.
+  
+  Because terminal updating under MiNT is often slow (e.g. serial line
+  terminal), the 'showcommand' and 'ruler' options are default off. 
+--- 1,22 ----
+! *vim_mint.txt*  For Vim version 3.29. Last modification 1996 May 29
+  
+  This file contains the particularities for the Atari MiNT version of Vim.
+  
+! For compiling Vim on the Atari running MiNT see "INSTALL" and "Makefile"
+  in the src directory.
+  
+! Vim for MiNT behaves almost exactly like the Unix version.
+! The Unix behavior described in the documentation also refers to the
+! MiNT version of Vim unless explicitly stated otherwise.
+  
+  The MiNT version of vim needs the termcap file /etc/termcap with the
+! terminal capabilities of your terminal. Builtin termcaps are 
+! supported for the vt52 terminal. Termcap entries for the TOSWIN window
+  manager and the virtual console terminals have been appended to the
+! vim-3.28/termcap file.
+  
+! If you should encounter problems with swapped <BS> and <Del> keys, see
+! |:fixdel|.
+  
+  Because terminal updating under MiNT is often slow (e.g. serial line
+  terminal), the 'showcommand' and 'ruler' options are default off. 
+diff -c ../../vim-3.29/doc/vim_ref.txt ./vim_ref.txt
+*** ../../vim-3.29/doc/vim_ref.txt	Wed May 29 10:20:28 1996
+--- ./vim_ref.txt	Wed May 29 10:20:18 1996
+***************
+*** 52,57 ****
+--- 52,58 ----
+  	system			    see
+  	Amiga			|vim_ami.txt|
+  	Archimedes		|vim_arch.txt|
++ 	Atari MiNT              |vim_mint.txt|
+  	Macintosh		|vim_mac.txt|
+  	MS-DOS			|vim_dos.txt|
+  	Unix			|vim_unix.txt|
+***************
+*** 2329,2334 ****
+--- 2330,2336 ----
+  	vim_w32.txt	Windows-NT/95 specific remarks	      |vim_w32.txt|
+  	vim_arch.txt	Archimedes specific remarks	      |vim_arch.txt|
+  	vim_mac.txt	Macintosh specific remarks	      |vim_mac.txt|
++ 	vim_mint.txt    Atari MiNT specific remarks           |vim_mint.txt|
+  
+  	vim_tags	tags file for documentation
+  
+diff -c ../../vim-3.29/doc/vim_tags ./vim_tags
+*** ../../vim-3.29/doc/vim_tags	Wed May 29 12:10:08 1996
+--- ./vim_tags	Wed May 29 12:12:38 1996
+***************
+*** 1590,1595 ****
+--- 1590,1596 ----
+  new_help	vim_40.txt	/\*new_help\*
+  new_include	vim_40.txt	/\*new_include\*
+  new_keys	vim_40.txt	/\*new_keys\*
++ new_mint	vim_40.txt	/\*new_mint\*
+  new_misc	vim_40.txt	/\*new_misc\*
+  new_mouse	vim_40.txt	/\*new_mouse\*
+  new_msg	vim_40.txt	/\*new_msg\*
+***************
+*** 1862,1867 ****
+--- 1863,1869 ----
+  vim_idx.txt	vim_idx.txt	/\*vim_idx.txt\*
+  vim_kcc.txt	vim_kcc.txt	/\*vim_kcc.txt\*
+  vim_mac.txt	vim_mac.txt	/\*vim_mac.txt\*
++ vim_mint.txt	vim_mint.txt	/\*vim_mint.txt\*
+  vim_modes	vim_ref.txt	/\*vim_modes\*
+  vim_ref.txt	vim_ref.txt	/\*vim_ref.txt\*
+  vim_rlh.txt	vim_rlh.txt	/\*vim_rlh.txt\*

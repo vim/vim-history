@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /*
@@ -37,8 +37,8 @@
  *                        etc.
  *
  * Each u_entry list contains the information for one undo or redo.
- * curbuf->b_u_curhead points to the header of the last undo (the next redo), or is
- * NULL if nothing has been undone.
+ * curbuf->b_u_curhead points to the header of the last undo (the next redo),
+ * or is NULL if nothing has been undone.
  *
  * All data is allocated with u_alloc_line(), thus it will be freed as soon as
  * we switch files!
@@ -47,7 +47,7 @@
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
+#include "option.h"
 
 static void u_getbot __ARGS((void));
 static int u_savecommon __ARGS((linenr_t, linenr_t, linenr_t));
@@ -75,13 +75,17 @@ u_save_cursor()
 /*
  * Save the lines between "top" and "bot" for both the "u" and "U" command.
  * "top" may be 0 and bot may be curbuf->b_ml.ml_line_count + 1.
- * Returns FALSE when lines could not be saved.
+ * Returns FAIL when lines could not be saved, OK otherwise.
  */
 	int
 u_save(top, bot)
 	linenr_t top, bot;
 {
-	if (top > curbuf->b_ml.ml_line_count || top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
+	if (undo_off)
+		return OK;
+
+	if (top > curbuf->b_ml.ml_line_count ||
+							top >= bot || bot > curbuf->b_ml.ml_line_count + 1)
 		return FALSE;	/* rely on caller to do error messages */
 
 	if (top + 2 == bot)
@@ -98,6 +102,9 @@ u_save(top, bot)
 u_savesub(lnum)
 	linenr_t	lnum;
 {
+	if (undo_off)
+		return OK;
+
 	return (u_savecommon(lnum - 1, lnum + 1, lnum + 1));
 }
 
@@ -109,19 +116,27 @@ u_savesub(lnum)
 u_inssub(lnum)
 	linenr_t	lnum;
 {
+	if (undo_off)
+		return OK;
+
 	return (u_savecommon(lnum - 1, lnum, lnum + 1));
 }
 
 /*
  * save the lines "lnum" - "lnum" + nlines (used by delete command)
- * The lines are deleted, so the new bottom line is lnum.
+ * The lines are deleted, so the new bottom line is lnum, unless the buffer
+ * becomes empty.
  */
 	int
 u_savedel(lnum, nlines)
 	linenr_t	lnum;
 	long		nlines;
 {
-	return (u_savecommon(lnum - 1, lnum + nlines, lnum));
+	if (undo_off)
+		return OK;
+
+	return (u_savecommon(lnum - 1, lnum + nlines,
+						nlines == curbuf->b_ml.ml_line_count ? 2 : lnum));
 }
 
 	static int 
@@ -154,7 +169,7 @@ u_savecommon(top, bot, newbot)
 			u_freelist(curbuf->b_u_oldhead);
 
 		if (p_ul < 0)			/* no undo at all */
-			return TRUE;
+			return OK;
 
 		/*
 		 * make a new header entry
@@ -167,10 +182,15 @@ u_savecommon(top, bot, newbot)
 		if (curbuf->b_u_newhead != NULL)
 			curbuf->b_u_newhead->uh_prev = uhp;
 		uhp->uh_entry = NULL;
-		uhp->uh_cursor = curwin->w_cursor;		/* save cursor position for undo */
-		uhp->uh_changed = curbuf->b_changed;	/* save changed flag for undo */
-												/* save named marks for undo */
-		memmove((char *)uhp->uh_namedm, (char *)curbuf->b_namedm, sizeof(FPOS) * NMARKS); 
+		uhp->uh_cursor = curwin->w_cursor;		/* save cursor pos. for undo */
+
+		/* save changed and buffer empty flag for undo */
+		uhp->uh_flags = (curbuf->b_changed ? UH_CHANGED : 0) +
+					   ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
+
+		/* save named marks for undo */
+		vim_memmove((char *)uhp->uh_namedm, (char *)curbuf->b_namedm,
+													   sizeof(FPOS) * NMARKS); 
 		curbuf->b_u_newhead = uhp;
 		if (curbuf->b_u_oldhead == NULL)
 			curbuf->b_u_oldhead = uhp;
@@ -180,7 +200,7 @@ u_savecommon(top, bot, newbot)
 		u_getbot();
 
 	size = bot - top - 1;
-#ifndef UNIX
+#if !defined(UNIX) && !defined(DJGPP) && !defined(WIN32) && !defined(__EMX__)
 		/*
 		 * With Amiga and MSDOS we can't handle big undo's, because then
 		 * u_alloc_line would have to allocate a block larger than 32K
@@ -202,13 +222,13 @@ u_savecommon(top, bot, newbot)
 	if (newbot)
 		uep->ue_bot = newbot;
 		/*
-		 * use 0 for ue_bot if bot is below last line or if the buffer is empty, in
-		 * which case the last line may be replaced (e.g. with 'O' command).
+		 * Use 0 for ue_bot if bot is below last line.
+		 * Otherwise we have to compute ue_bot later.
 		 */
-	else if (bot > curbuf->b_ml.ml_line_count || bufempty())
+	else if (bot > curbuf->b_ml.ml_line_count)
 		uep->ue_bot = 0;
 	else
-		uep->ue_lcount = curbuf->b_ml.ml_line_count;	/* we have to compute ue_bot later */
+		uep->ue_lcount = curbuf->b_ml.ml_line_count;
 
 	if (size)
 	{
@@ -229,12 +249,16 @@ u_savecommon(top, bot, newbot)
 	uep->ue_next = curbuf->b_u_newhead->uh_entry;
 	curbuf->b_u_newhead->uh_entry = uep;
 	curbuf->b_u_synced = FALSE;
-	return TRUE;
+	return OK;
 
 nomem:
-	if (ask_yesno((char_u *)"no undo possible; continue anyway") == 'y')
-		return TRUE;
-	return FALSE;
+	if (ask_yesno((char_u *)"No undo possible; continue anyway", TRUE) == 'y')
+	{
+		undo_off = TRUE;			/* will be reset when character typed */
+		return OK;
+	}
+	do_outofmem_msg();
+	return FAIL;
 }
 
 	void
@@ -252,21 +276,21 @@ u_undo(count)
 		count = 1;
 	}
 
-	curbuf->b_startop.lnum = 0;			/* unset '[ mark */
-	curbuf->b_endop.lnum = 0;				/* unset '] mark */
 	u_newcount = 0;
 	u_oldcount = 0;
 	while (count--)
 	{
-		if (curbuf->b_u_curhead == NULL)						/* first undo */
+		if (curbuf->b_u_curhead == NULL)			/* first undo */
 			curbuf->b_u_curhead = curbuf->b_u_newhead;
 		else if (p_ul > 0)							/* multi level undo */
-			curbuf->b_u_curhead = curbuf->b_u_curhead->uh_next;			/* get next undo */
-
-		if (curbuf->b_u_numhead == 0 || curbuf->b_u_curhead == NULL)	/* nothing to undo */
+													/* get next undo */
+			curbuf->b_u_curhead = curbuf->b_u_curhead->uh_next;
+													/* nothing to undo */
+		if (curbuf->b_u_numhead == 0 || curbuf->b_u_curhead == NULL)
 		{
-			curbuf->b_u_curhead = curbuf->b_u_oldhead;					/* stick curbuf->b_u_curhead at end */
-			beep();
+									/* stick curbuf->b_u_curhead at end */
+			curbuf->b_u_curhead = curbuf->b_u_oldhead;
+			beep_flush();
 			break;
 		}
 
@@ -283,15 +307,15 @@ u_redo(count)
 	u_oldcount = 0;
 	while (count--)
 	{
-		if (curbuf->b_u_curhead == NULL || p_ul <= 0)		/* nothing to redo */
+		if (curbuf->b_u_curhead == NULL || p_ul <= 0)	/* nothing to redo */
 		{
-			beep();
+			beep_flush();
 			break;
 		}
 
 		u_undoredo();
-
-		curbuf->b_u_curhead = curbuf->b_u_curhead->uh_prev;			/* advance for next redo */
+													/* advance for next redo */
+		curbuf->b_u_curhead = curbuf->b_u_curhead->uh_prev;
 	}
 	u_undo_end();
 }
@@ -299,8 +323,9 @@ u_redo(count)
 /*
  * u_undoredo: common code for undo and redo
  *
- * The lines in the file are replaced by the lines in the entry list at curbuf->b_u_curhead.
- * The replaced lines in the file are saved in the entry list for the next undo/redo.
+ * The lines in the file are replaced by the lines in the entry list at
+ * curbuf->b_u_curhead. The replaced lines in the file are saved in the entry
+ * list for the next undo/redo.
  */
 	static void
 u_undoredo()
@@ -314,17 +339,29 @@ u_undoredo()
 	long		i;
 	struct u_entry *uep, *nuep;
 	struct u_entry *newlist = NULL;
-	int			changed = curbuf->b_changed;
+	int			old_flags;
+	int			new_flags;
 	FPOS		namedm[NMARKS];
+	int			empty_buffer;				/* buffer became empty */
 
-	if (curbuf->b_u_curhead->uh_changed)
+	old_flags = curbuf->b_u_curhead->uh_flags;
+	new_flags = (curbuf->b_changed ? UH_CHANGED : 0) +
+			   ((curbuf->b_ml.ml_flags & ML_EMPTY) ? UH_EMPTYBUF : 0);
+	if (old_flags & UH_CHANGED)
 		CHANGED;
 	else
 		UNCHANGED(curbuf);
+	setpcmark();
+
 	/*
 	 * save marks before undo/redo
 	 */
-	memmove((char *)namedm, (char *)curbuf->b_namedm, sizeof(FPOS) * NMARKS); 
+	vim_memmove((char *)namedm, (char *)curbuf->b_namedm, 
+													   sizeof(FPOS) * NMARKS); 
+	curbuf->b_op_start.lnum = curbuf->b_ml.ml_line_count;
+	curbuf->b_op_start.col = 0;
+	curbuf->b_op_end.lnum = 0;
+	curbuf->b_op_end.col = 0;
 
 	for (uep = curbuf->b_u_curhead->uh_entry; uep != NULL; uep = nuep)
 	{
@@ -345,14 +382,16 @@ u_undoredo()
 			curwin->w_cursor.lnum = top + 1;
 		}
 		oldsize = bot - top - 1;	/* number of lines before undo */
-
 		newsize = uep->ue_size;		/* number of lines after undo */
+
+		empty_buffer = FALSE;
 
 		/* delete the lines between top and bot and save them in newarray */
 		if (oldsize)
 		{
 			if ((newarray = (char_u **)u_alloc_line((unsigned)(sizeof(char_u *) * oldsize))) == NULL)
 			{
+				do_outofmem_msg();
 				/*
 				 * We have messed up the entry list, repair is impossible.
 				 * we have to free the rest of the list.
@@ -368,8 +407,14 @@ u_undoredo()
 			/* delete backwards, it goes faster in most cases */
 			for (lnum = bot - 1, i = oldsize; --i >= 0; --lnum)
 			{
-				newarray[i] = u_save_line(lnum);
-				ml_delete(lnum);
+					/* what can we do when we run out of memory? */
+				if ((newarray[i] = u_save_line(lnum)) == NULL)
+					do_outofmem_msg();
+					/* remember we deleted the last line in the buffer, and a
+					 * dummy empty line will be inserted */
+				if (curbuf->b_ml.ml_line_count == 1)
+					empty_buffer = TRUE;
+				ml_delete(lnum, FALSE);
 			}
 		}
 
@@ -378,7 +423,14 @@ u_undoredo()
 		{
 			for (lnum = top, i = 0; i < newsize; ++i, ++lnum)
 			{
-				ml_append(lnum, uep->ue_array[i], (colnr_t)0, FALSE);
+				/*
+				 * If the file is empty, there is an empty line 1 that we
+				 * should get rid of, by replacing it with the new line
+				 */
+				if (empty_buffer && lnum == 0)
+					ml_replace((linenr_t)1, uep->ue_array[i], TRUE);
+				else
+					ml_append(lnum, uep->ue_array[i], (colnr_t)0, FALSE);
 				u_free_line(uep->ue_array[i]);
 			}
 			u_free_line((char_u *)uep->ue_array);
@@ -387,9 +439,20 @@ u_undoredo()
 		/* adjust marks */
 		if (oldsize != newsize)
 		{
-			mark_adjust(top, top + oldsize - 1, MAXLNUM);
-			mark_adjust(top + oldsize, MAXLNUM, (long)newsize - (long)oldsize);
+			mark_adjust(top + 1, top + oldsize, MAXLNUM,
+											   (long)newsize - (long)oldsize);
+			if (curbuf->b_op_start.lnum > top + oldsize)
+				curbuf->b_op_start.lnum += newsize - oldsize;
+			if (curbuf->b_op_end.lnum > top + oldsize)
+				curbuf->b_op_end.lnum += newsize - oldsize;
 		}
+		/* set '[ and '] mark */
+		if (top + 1 < curbuf->b_op_start.lnum)
+			curbuf->b_op_start.lnum = top + 1;
+		if (newsize == 0 && top + 1 > curbuf->b_op_end.lnum)
+			curbuf->b_op_end.lnum = top + 1;
+		else if (top + newsize > curbuf->b_op_end.lnum)
+			curbuf->b_op_end.lnum = top + newsize;
 
 		u_newcount += newsize;
 		u_oldcount += oldsize;
@@ -406,7 +469,9 @@ u_undoredo()
 	}
 
 	curbuf->b_u_curhead->uh_entry = newlist;
-	curbuf->b_u_curhead->uh_changed = changed;
+	curbuf->b_u_curhead->uh_flags = new_flags;
+	if ((old_flags & UH_EMPTYBUF) && bufempty())
+		curbuf->b_ml.ml_flags |= ML_EMPTY;
 
 	/*
 	 * restore marks from before undo/redo
@@ -418,8 +483,23 @@ u_undoredo()
 			curbuf->b_u_curhead->uh_namedm[i] = namedm[i];
 		}
 
+	/*
+	 * If the cursor is only off by one line, put it at the same position as
+	 * before starting the change (for the "o" command).
+	 * Otherwise the cursor should go to the first undone line.
+	 */
+	if (curbuf->b_u_curhead->uh_cursor.lnum + 1 == curwin->w_cursor.lnum &&
+													curwin->w_cursor.lnum > 1)
+		--curwin->w_cursor.lnum;
 	if (curbuf->b_u_curhead->uh_cursor.lnum == curwin->w_cursor.lnum)
 		curwin->w_cursor.col = curbuf->b_u_curhead->uh_cursor.col;
+	else if (curwin->w_cursor.lnum <= curbuf->b_ml.ml_line_count)
+		beginline(MAYBE);
+	/* We still seem to need the case below because sometimes we get here with
+	 * the current cursor line being one past the end (eg after adding lines
+	 * at the end of the file, and then undoing it).  Is it fair enough that
+	 * this happens? -- webb
+	 */
 	else
 		curwin->w_cursor.col = 0;
 }
@@ -437,7 +517,7 @@ u_undo_end()
 	else if (u_newcount > p_report)
 		smsg((char_u *)"%ld change%s", u_newcount, plural(u_newcount));
 
-	updateScreen(CURSUPD);
+	update_curbuf(CURSUPD);		/* need to update all windows in this buffer */
 }
 
 /*
@@ -463,7 +543,7 @@ u_unchanged(buf)
 	register struct u_header *uh;
 
 	for (uh = buf->b_u_newhead; uh; uh = uh->uh_next)
-		uh->uh_changed = 1;
+		uh->uh_flags |= UH_CHANGED;
 	buf->b_did_warn = FALSE;
 }
 
@@ -476,7 +556,8 @@ u_getbot()
 {
 	register struct u_entry *uep;
 
-	if (curbuf->b_u_newhead == NULL || (uep = curbuf->b_u_newhead->uh_entry) == NULL)
+	if (curbuf->b_u_newhead == NULL ||
+								(uep = curbuf->b_u_newhead->uh_entry) == NULL)
 	{
 		EMSG("undo list corrupt");
 		return;
@@ -489,13 +570,15 @@ u_getbot()
 		 * inserted (0 - deleted) since calling u_save. This is equal to the old
 		 * line count subtracted from the current line count.
 		 */
-		uep->ue_bot = uep->ue_top + uep->ue_size + 1 + (curbuf->b_ml.ml_line_count - uep->ue_lcount);
+		uep->ue_bot = uep->ue_top + uep->ue_size + 1 +
+								(curbuf->b_ml.ml_line_count - uep->ue_lcount);
 		if (uep->ue_bot < 1 || uep->ue_bot > curbuf->b_ml.ml_line_count)
 		{
 			EMSG("undo line missing");
-			uep->ue_bot = uep->ue_top + 1;	/* assume all lines deleted, will get
-											 * all the old lines back without
-											 * deleting the current ones */
+			uep->ue_bot = uep->ue_top + 1;	/* assume all lines deleted, will
+											 * get all the old lines back
+											 * without deleting the current
+											 * ones */
 		}
 		uep->ue_lcount = 0;
 	}
@@ -579,7 +662,8 @@ u_saveline(lnum)
 		curbuf->b_u_line_colnr = curwin->w_cursor.col;
 	else
 		curbuf->b_u_line_colnr = 0;
-	curbuf->b_u_line_ptr = u_save_line(lnum);	/* when out of mem alloc() will give a warning */
+	if ((curbuf->b_u_line_ptr = u_save_line(lnum)) == NULL)
+		do_outofmem_msg();
 }
 
 /*
@@ -606,21 +690,30 @@ u_clearline()
 u_undoline()
 {
 	colnr_t t;
-	char_u	*old;
+	char_u	*oldp;
 
-	if (curbuf->b_u_line_ptr == NULL || curbuf->b_u_line_lnum > curbuf->b_ml.ml_line_count)
+	if (undo_off)
+		return;
+
+	if (curbuf->b_u_line_ptr == NULL ||
+						curbuf->b_u_line_lnum > curbuf->b_ml.ml_line_count)
 	{
-		beep();
+		beep_flush();
 		return;
 	}
 		/* first save the line for the 'u' command */
-	u_savecommon(curbuf->b_u_line_lnum - 1, curbuf->b_u_line_lnum + 1, (linenr_t)0);
-	old = u_save_line(curbuf->b_u_line_lnum);
-	if (old == NULL)
+	if (u_savecommon(curbuf->b_u_line_lnum - 1,
+								curbuf->b_u_line_lnum + 1, (linenr_t)0) == FAIL)
 		return;
+	oldp = u_save_line(curbuf->b_u_line_lnum);
+	if (oldp == NULL)
+	{
+		do_outofmem_msg();
+		return;
+	}
 	ml_replace(curbuf->b_u_line_lnum, curbuf->b_u_line_ptr, TRUE);
 	u_free_line(curbuf->b_u_line_ptr);
-	curbuf->b_u_line_ptr = old;
+	curbuf->b_u_line_ptr = oldp;
 
 	t = curbuf->b_u_line_colnr;
 	if (curwin->w_cursor.lnum == curbuf->b_u_line_lnum)
@@ -708,7 +801,7 @@ u_blockalloc(size)
 	struct m_block *p;
 	struct m_block *mp, *next;
 
-	p = (struct m_block *)lalloc(size + sizeof(struct m_block), TRUE);
+	p = (struct m_block *)lalloc(size + sizeof(struct m_block), FALSE);
 	if (p != NULL)
 	{
 		 /* Insert the block into the allocated block list, keeping it
@@ -738,7 +831,7 @@ u_blockfree(buf)
 	for (p = buf->b_block_head.mb_next; p != NULL; p = np)
 	{
 		np = p->mb_next;
-		free(p);
+		vim_free(p);
 	}
 	buf->b_block_head.mb_next = NULL;
 	buf->b_m_search = NULL;
@@ -958,6 +1051,6 @@ u_save_line(lnum)
 	src = ml_get(lnum);
 	len = STRLEN(src);
 	if ((dst = u_alloc_line(len)) != NULL)
-		memmove((char *)dst, (char *)src, (size_t)(len + 1));
+		vim_memmove(dst, src, (size_t)(len + 1));
 	return (dst);
 }

@@ -1,0 +1,96 @@
+From: cec@gryphon.gsfc.nasa.gov (Dr. Charles E. Campbell Jr.)
+Newsgroups: alt.sources
+Subject: A ViM ":r" for files on other machines
+Date: 13 Oct 1994 14:41:51 GMT
+Organization: NASA Goddard Space Flight Center -- Greenbelt, Maryland USA
+
+For those of you who use ViM (vi-improved) by Bram Moolenaar on unix,
+here's a command + scriptfile that will allow you to read in files from
+other machines.
+
+To use this command, type
+
+    #r
+
+The script will be invoked and will prompt you for machine, filename, etc.
+It will optionally use
+
+    rcp : if you give a "machine:filename" response
+
+or it will use a temporary ftp connection
+
+    ftp: if you give a "machine id pass filename" response
+
+
+OK, now here's how to do it:
+
+Put the following in your .vimrc:  (the ^V and ^M are control characters)
+
+    map #r  :w^V^M:!vimrcpfile^V^M:r tmp.vim^V^M:!rm tmp.vim^M
+
+The shell script is:
+
+#! /bin/ksh -f
+#  vimrcpfile
+#
+#  Author : Dr. Charles E. Campbell, Jr.
+#           Goddard Space Flight Center
+#           Greenbelt Rd
+#           Greenbelt, MD 20771
+#
+#   Purpose: ftp-s or rcp-s a specified file to <tmp.vim>
+#
+#   Usage  : vimrcpfile
+#            (will prompt the user for what file to obtain)
+
+# give prompt and get response
+echo 'Enter machine:filename (rcp mode) -or-'
+echo 'Enter machine id password filename (ftp mode)'
+read -r response
+echo "response was <${response}>"
+
+# unset all current positional parameters
+# set   response into positional parameters
+set -- ${response}
+
+# issue an rcp or ftp as appropriate
+if [ ${#} -eq 1 ]; then
+    echo "attempting "'"'"rcp $1 tmp.vim"'"'
+    rcp $1 tmp.vim
+elif [ ${#} -eq 4 ]; then
+    if [ -r ~/.netrc ]; then
+        echo "attempting ftp with .netrc pre-existing"
+        mv ~/.netrc ~/.netrc.tmp
+        echo "machine $1 login $2 password "'"'$3'"' > ~/.netrc
+        chmod 600 ~/.netrc
+
+        # get the file via ftp
+        cat <<EOM | ftp $1
+            binary
+            get $4 tmp.vim
+            quit
+EOM
+        /bin/rm ~/.netrc
+        mv ~/.netrc.tmp ~/.netrc
+    else
+        echo "attempting ftp with no .netrc"
+        echo "machine $1 login $2 password "'"'$3'"' > ~/.netrc
+        chmod 600 ~/.netrc
+
+        # get the file via ftp
+        cat <<EOM | ftp $1
+            binary
+            get $4 tmp.vim
+            quit
+EOM
+        /bin/rm ~/.netrc
+        fi
+else
+    echo "improper qty (${#}) of arguments"
+    /bin/rm -f tmp.vim
+    fi
+--
+        Charles E Campbell, Jr, PhD            _   __   __
+        Guidance and Controls Branch (712)    / /_/\_\_/ /
+        Goddard Space Flight Center          /_/  \/_//_/
+        cec@gryphon.gsfc.nasa.gov                   `-( .....

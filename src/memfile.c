@@ -1,9 +1,9 @@
-/* vi:ts=4:sw=4
+/* vi:set ts=4 sw=4:
  *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
- * Read the file "credits.txt" for a list of people who contributed.
- * Read the file "uganda.txt" for copying and usage conditions.
+ * Do ":help uganda"  in Vim to read copying and usage conditions.
+ * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
 /* for debugging */
@@ -25,7 +25,7 @@
  * the device the file is on. Most blocks are 1 page long. A Block of multiple
  * pages is used for a line that does not fit in a single page.
  *
- * Each block can be in memory and/or in a file. The blocks stays in memory
+ * Each block can be in memory and/or in a file. The block stays in memory
  * as long as it is locked. If it is no longer locked it can be swapped out to
  * the file. It is only written to the file if it has been changed.
  *
@@ -34,25 +34,25 @@
  * file is opened.
  */
 
-#ifdef MSDOS
+#if defined MSDOS  ||  defined WIN32
 # include <io.h>		/* for lseek(), must be before vim.h */
 #endif
 
 #include "vim.h"
 #include "globals.h"
 #include "proto.h"
-#include "param.h"
-#include <fcntl.h>
+#include "option.h"
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
 
 /* 
  * Some systems have the page size in statfs, some in stat
  */
-#if defined(SCO) || defined(_SEQUENT_) || defined(__sgi) || defined(MIPS) || defined(MIPSEB) || defined(m88k)
-# include <sys/types.h>
+#ifdef HAVE_SYS_STATFS_H
 # include <sys/statfs.h>
 # define STATFS statfs
 # define F_BSIZE f_bsize
-int  fstatfs __ARGS((int, struct statfs *, int, int));
 #else
 # define STATFS stat
 # define F_BSIZE st_blksize
@@ -64,17 +64,17 @@ int  fstatfs __ARGS((int, struct statfs *, int, int));
  */
 #ifdef AMIGA
 # ifndef NO_ARP
-extern int dos2;					/* this is in amiga.c */
+extern int dos2;						/* this is in amiga.c */
 # endif
 # ifdef SASC
 #  include <proto/dos.h>
-#  include <ios1.h>					/* for chkufb() */
+#  include <ios1.h>						/* for chkufb() */
 # endif
 #endif
 
-#define MEMFILE_PAGE_SIZE 4096		/* default page size */
+#define MEMFILE_PAGE_SIZE 4096			/* default page size */
 
-static long total_mem_used = 0;	/* total memory used for memfiles */
+static long total_mem_used = 0;			/* total memory used for memfiles */
 
 static void mf_ins_hash __ARGS((MEMFILE *, BHDR *));
 static void mf_rem_hash __ARGS((MEMFILE *, BHDR *));
@@ -95,6 +95,7 @@ static void mf_do_open __ARGS((MEMFILE *, char_u *, int));
  * The functions for using a memfile:
  *
  * mf_open()		open a new or existing memfile
+ * mf_open_file()	open a swap file for an existing memfile
  * mf_close()		close (and delete) a memfile
  * mf_new()			create a new block in a memfile and lock it
  * mf_get()			get an existing block and lock it
@@ -111,17 +112,17 @@ static void mf_do_open __ARGS((MEMFILE *, char_u *, int));
  *
  *	fname:		name of file to use (NULL means no file at all)
  *				Note: fname must have been allocated, it is not copied!
- *						If opening the file fails, fname is freed.
- *  new:		if TRUE: file should be truncated when opening
- *  fail_nofile:	if TRUE: if file cannot be opened, fail.
+ *						If opening the file fails, fname is NOT freed.
+ *  trunc_file:		if TRUE: file should be truncated when opening
+ *
+ *  If fname != NULL and file cannot be opened, fail.
  *
  * return value: identifier for this memory block file.
  */
 	MEMFILE *
-mf_open(fname, new, fail_nofile)
+mf_open(fname, trunc_file)
 	char_u	*fname;
-	int		new;
-	int		fail_nofile;
+	int		trunc_file;
 {
 	MEMFILE			*mfp;
 	int				i;
@@ -131,10 +132,7 @@ mf_open(fname, new, fail_nofile)
 #endif
 
 	if ((mfp = (MEMFILE *)alloc((unsigned)sizeof(MEMFILE))) == NULL)
-	{
-		free(fname);
 		return NULL;
-	}
 
 	if (fname == NULL)		/* no file for this memfile, use memory only */
 	{
@@ -143,15 +141,15 @@ mf_open(fname, new, fail_nofile)
 		mfp->mf_fd = -1;
 	}
 	else
-		mf_do_open(mfp, fname, new);		/* try to open the file */
-
-	/*
-	 * if fail_nofile is set and there is no file, return here
-	 */
-	if (mfp->mf_fd < 0 && fail_nofile)
 	{
-		free(mfp);
-		return NULL;
+		mf_do_open(mfp, fname, trunc_file);		/* try to open the file */
+
+		/* if the file cannot be opened, return here */
+		if (mfp->mf_fd < 0)
+		{
+			vim_free(mfp);
+			return NULL;
+		}
 	}
 
 	mfp->mf_free_first = NULL;			/* free list is empty */
@@ -170,7 +168,8 @@ mf_open(fname, new, fail_nofile)
 	/*
 	 * Try to set the page size equal to the block size of the device.
 	 * Speeds up I/O a lot.
-	 * NOTE: minimal block size depends on size of block 0 data!
+	 * NOTE: minimal block size depends on size of block 0 data! It's not done
+	 * with a sizeof(), because block 0 is defined in memline.c (Sorry).
 	 * The maximal block size is arbitrary.
 	 */
 	if (mfp->mf_fd >= 0 &&
@@ -179,7 +178,8 @@ mf_open(fname, new, fail_nofile)
 		mfp->mf_page_size = stf.F_BSIZE;
 #endif
 
-	if (mfp->mf_fd < 0 || new || (size = lseek(mfp->mf_fd, 0L, SEEK_END)) <= 0)
+	if (mfp->mf_fd < 0 || trunc_file ||
+								(size = lseek(mfp->mf_fd, 0L, SEEK_END)) <= 0)
 		mfp->mf_blocknr_max = 0;		/* no file or empty file */
 	else
 		mfp->mf_blocknr_max = size / mfp->mf_page_size;
@@ -200,7 +200,7 @@ mf_open(fname, new, fail_nofile)
  *
  *	fname:		name of file to use (NULL means no file at all)
  *				Note: fname must have been allocated, it is not copied!
- *						If opening the file fails, fname is freed.
+ *						If opening the file fails, fname is NOT freed.
  *
  * return value: FAIL if file could not be opened, OK otherwise
  */
@@ -219,12 +219,12 @@ mf_open_file(mfp, fname)
 }
 
 /*
- * close a memory file and delete the associated file if 'delete' is TRUE
+ * close a memory file and delete the associated file if 'del_file' is TRUE
  */
 	void
-mf_close(mfp, delete)
+mf_close(mfp, del_file)
 	MEMFILE	*mfp;
-	int		delete;
+	int		del_file;
 {
 	BHDR		*hp, *nextp;
 	NR_TRANS	*tp, *tpnext;
@@ -237,25 +237,26 @@ mf_close(mfp, delete)
 		if (close(mfp->mf_fd) < 0)
 			EMSG("Close error on swap file");
 	}
-	if (delete && mfp->mf_fname != NULL)
-		remove((char *)mfp->mf_fname);
+	if (del_file && mfp->mf_fname != NULL)
+		vim_remove(mfp->mf_fname);
 											/* free entries in used list */
 	for (hp = mfp->mf_used_first; hp != NULL; hp = nextp)
 	{
+		total_mem_used -= hp->bh_page_count * mfp->mf_page_size;
 		nextp = hp->bh_next;
 		mf_free_bhdr(hp);
 	}
 	while (mfp->mf_free_first != NULL)		/* free entries in free list */
-		(void)free(mf_rem_free(mfp));
+		vim_free(mf_rem_free(mfp));
 	for (i = 0; i < MEMHASHSIZE; ++i)		/* free entries in trans lists */
 		for (tp = mfp->mf_trans[i]; tp != NULL; tp = tpnext)
 		{
 			tpnext = tp->nt_next;
-			free(tp);
+			vim_free(tp);
 		}
-	free(mfp->mf_fname);
-	free(mfp->mf_xfname);
-	free(mfp);
+	vim_free(mfp->mf_fname);
+	vim_free(mfp->mf_xfname);
+	vim_free(mfp);
 }
 
 /*
@@ -317,7 +318,7 @@ mf_new(mfp, negative, page_count)
 		{
 			freep = mf_rem_free(mfp);
 			hp->bh_bnum = freep->bh_bnum;
-			free(freep);
+			vim_free(freep);
 		}
 	}
 	else		/* get a new number */
@@ -440,12 +441,12 @@ mf_free(mfp, hp)
 	MEMFILE	*mfp;
 	BHDR	*hp;
 {
-	free(hp->bh_data);			/* free the memory */
+	vim_free(hp->bh_data);		/* free the memory */
 	mf_rem_hash(mfp, hp);		/* get *hp out of the hash list */
 	mf_rem_used(mfp, hp);		/* get *hp out of the used list */
 	if (hp->bh_bnum < 0)
 	{
-		free(hp);				/* don't want negative numbers in free list */
+		vim_free(hp);			/* don't want negative numbers in free list */
 		mfp->mf_neg_count--;
 	}
 	else
@@ -458,18 +459,21 @@ mf_free(mfp, hp)
  *  they are dirty!
  *  if 'check_char' is TRUE, stop syncing when a character becomes available,
  *  but sync at least one block.
+ *  if 'do_fsync' is TRUE make sure buffers are flushed to disk, so they will
+ *  survive a system crash.
  *
  * Return FAIL for failure, OK otherwise
  */
 	int
-mf_sync(mfp, all, check_char)
+mf_sync(mfp, all, check_char, do_fsync)
 	MEMFILE	*mfp;
 	int		all;
 	int		check_char;
+	int		do_fsync;
 {
 	int		status;
 	BHDR	*hp;
-#if defined(MSDOS) || defined(SCO)
+#ifdef SYNC_DUP_CLOSE
 	int		fd;
 #endif
 
@@ -480,10 +484,10 @@ mf_sync(mfp, all, check_char)
 	}
 
 	/*
-	 * sync from last to first (may reduce the probability of an inconsistent file)
-	 * If a write fails, it is very likely caused by a full filesystem. Then we
-	 * only try to write blocks within the existing file. If that also fails then
-	 * we give up.
+	 * sync from last to first (may reduce the probability of an inconsistent
+	 * file) If a write fails, it is very likely caused by a full filesystem.
+	 * Then we only try to write blocks within the existing file. If that also
+	 * fails then we give up.
 	 */
 	status = OK;
 	for (hp = mfp->mf_used_last; hp != NULL; hp = hp->bh_prev)
@@ -508,46 +512,74 @@ mf_sync(mfp, all, check_char)
 	if (hp == NULL || status == FAIL)
 		mfp->mf_dirty = FALSE;
 
-#if defined(UNIX) && !defined(SCO)
-# if !defined(SVR4) && (defined(MIPS) || defined(MIPSEB) || defined(m88k))         
-     sync();         /* Do we really need to sync()?? (jw) */   
-# else
-	/*
-	 * Unix has the very useful fsync() function, just what we need.
-	 */
-	if (fsync(mfp->mf_fd))
-		status = FAIL;
+	if (do_fsync && *p_sws != NUL)
+	{
+#if defined(UNIX)
+# ifdef HAVE_FSYNC
+		/*
+		 * most Unixes have the very useful fsync() function, just what we need.
+		 * However, with OS/2 and EMX it is also available, but there are
+		 * reports of bad problems with it (a bug in HPFS.IFS).
+		 * So we disable use of it here in case someone tries to be smart
+		 * and changes conf_os2.h... (even though there is no __EMX__ test
+		 * in the #if, as __EMX__ does not have sync(); we hope for a timely
+		 * sync from the system itself).
+		 */
+#  if defined(__EMX__)
+   error "Dont use fsync with EMX! Read emxdoc.doc or emxfix01.doc for info."
+#  endif
+		if (STRCMP(p_sws, "fsync") == 0)
+		{
+			if (fsync(mfp->mf_fd))
+				status = FAIL;
+		}
+		else
 # endif
+			 sync();
 #endif
-#if defined(MSDOS) || defined(SCO)
-	/*
-	 * MSdos is a bit more work: Duplicate the file handle and close it.
-	 * This should flush the file to disk.
-	 * Also use this for SCO, which has no fsync().
-	 */
-	if ((fd = dup(mfp->mf_fd)) >= 0)
-		close(fd);
+#ifdef DJGPP
+		if (_dos_commit(mfp->mf_fd))
+			status = FAIL;
+#else
+# ifdef SYNC_DUP_CLOSE
+		/*
+		 * MSdos is a bit more work: Duplicate the file handle and close it.
+		 * This should flush the file to disk.
+		 */
+		if ((fd = dup(mfp->mf_fd)) >= 0)
+			close(fd);
+# endif
 #endif
 #ifdef AMIGA
-	/*
-	 * Flush() only exists for AmigaDos 2.0.
-	 * For 1.3 it should be done with close() + open(), but then the risk
-	 * is that the open() may fail and loose the file....
-	 */
+		/*
+		 * Flush() only exists for AmigaDos 2.0.
+		 * For 1.3 it should be done with close() + open(), but then the risk
+		 * is that the open() may fail and lose the file....
+		 */
 # ifndef NO_ARP
-	if (dos2)
+		if (dos2)
 # endif
 # ifdef SASC
-	{
-		struct UFB *fp = chkufb(mfp->mf_fd);
+		{
+			struct UFB *fp = chkufb(mfp->mf_fd);
 
-		if (fp != NULL)
-			Flush(fp->ufbfh);
-	}
+			if (fp != NULL)
+				Flush(fp->ufbfh);
+		}
 # else
-		Flush(_devtab[mfp->mf_fd].fd);
+#  ifdef _DCC
+		{
+			BPTR fh = (BPTR)fdtofh(mfp->mf_fd);
+
+			if (fh != 0)
+				Flush(fh);
+			}
+#  else /* assume Manx */
+			Flush(_devtab[mfp->mf_fd].fd);
+#  endif
 # endif
-#endif
+#endif /* AMIGA */
+	}
 
 	return status;
 }
@@ -693,10 +725,10 @@ mf_release(mfp, page_count)
  */
 	if (hp->bh_page_count != page_count)
 	{
-		free(hp->bh_data);
+		vim_free(hp->bh_data);
 		if ((hp->bh_data = alloc(mfp->mf_page_size * page_count)) == NULL)
 		{
-			free(hp);
+			vim_free(hp);
 			return NULL;
 		}
 		hp->bh_page_count = page_count;
@@ -752,10 +784,11 @@ mf_alloc_bhdr(mfp, page_count)
 
 	if ((hp = (BHDR *)alloc((unsigned)sizeof(BHDR))) != NULL)
 	{
-		if ((hp->bh_data = (char_u *)alloc(mfp->mf_page_size * page_count)) == NULL)
+		if ((hp->bh_data = (char_u *)alloc(mfp->mf_page_size * page_count))
+																	  == NULL)
 		{
-			free(hp);			/* not enough memory */
-			hp = NULL;
+			vim_free(hp);			/* not enough memory */
+			return NULL;
 		}
 		hp->bh_page_count = page_count;
 	}
@@ -769,8 +802,8 @@ mf_alloc_bhdr(mfp, page_count)
 mf_free_bhdr(hp)
 	BHDR		*hp;
 {
-	free(hp->bh_data);
-	free(hp);
+	vim_free(hp->bh_data);
+	vim_free(hp);
 }
 
 /*
@@ -820,12 +853,12 @@ mf_read(mfp, hp)
 	page_size = mfp->mf_page_size;
 	offset = page_size * hp->bh_bnum;
 	size = page_size * hp->bh_page_count;
-	if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
+	if ((long_u)lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 	{
 		EMSG("Seek error in swap file read");
 		return FAIL;
 	}
-	if (read(mfp->mf_fd, hp->bh_data, (size_t)size) != size)
+	if ((unsigned)read(mfp->mf_fd, (char *)hp->bh_data, (size_t)size) != size)
 	{
 		EMSG("Read error in swap file");
 		return FAIL;
@@ -877,7 +910,7 @@ mf_write(mfp, hp)
 			hp2 = hp;
 
 		offset = page_size * nr;
-		if (lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
+		if ((long_u)lseek(mfp->mf_fd, offset, SEEK_SET) != offset)
 		{
 			EMSG("Seek error in swap file write");
 			return FAIL;
@@ -887,20 +920,28 @@ mf_write(mfp, hp)
 		else
 			page_count = hp2->bh_page_count;
 		size = page_size * page_count;
-		if (write(mfp->mf_fd, (hp2 == NULL ? hp : hp2)->bh_data,
-													(size_t)size) != size)
+		if ((unsigned)write(mfp->mf_fd,
+			 (char *)(hp2 == NULL ? hp : hp2)->bh_data, (size_t)size) != size)
 		{
-			EMSG("Write error in swap file");
+			/*
+			 * Avoid repeating the error message, this mostly happens when the
+			 * disk is full. We give the message again only after a succesful
+			 * write or when hitting a key. We keep on trying, in case some
+			 * space becomes available.
+			 */
+			if (!did_swapwrite_msg)
+				EMSG("Write error in swap file");
+			did_swapwrite_msg = TRUE;
 			return FAIL;
 		}
+		did_swapwrite_msg = FALSE;
 		if (hp2 != NULL)					/* written a non-dummy block */
 			hp2->bh_flags &= ~BH_DIRTY;
-
-		if (nr + page_count > mfp->mf_infile_count)		/* appended to the file */
+											/* appended to the file */
+		if (nr + (blocknr_t)page_count > mfp->mf_infile_count)
 			mfp->mf_infile_count = nr + page_count;
 		if (nr == hp->bh_bnum)				/* written the desired block */
 			break;
-		nr += page_count;
 	}
 	return OK;
 }
@@ -916,7 +957,7 @@ mf_trans_add(mfp, hp)
 	BHDR	*hp;
 {
 	BHDR		*freep;
-	blocknr_t	new;
+	blocknr_t	new_bnum;
 	int			hash;
 	NR_TRANS	*np;
 	int			page_count;
@@ -936,7 +977,7 @@ mf_trans_add(mfp, hp)
 	page_count = hp->bh_page_count;
 	if (freep != NULL && freep->bh_page_count >= page_count)
 	{
-		new = freep->bh_bnum;
+		new_bnum = freep->bh_bnum;
 		/*
 		 * If the page count of the free block was larger, recude it.
 		 * If the page count matches, remove the block from the free list
@@ -949,20 +990,20 @@ mf_trans_add(mfp, hp)
 		else
 		{
 			freep = mf_rem_free(mfp);
-			free(freep);
+			vim_free(freep);
 		}
 	}
 	else
 	{
-		new = mfp->mf_blocknr_max;
+		new_bnum = mfp->mf_blocknr_max;
 		mfp->mf_blocknr_max += page_count;
 	}
 
 	np->nt_old_bnum = hp->bh_bnum;			/* adjust number */
-	np->nt_new_bnum = new;
+	np->nt_new_bnum = new_bnum;
 
 	mf_rem_hash(mfp, hp);					/* remove from old hash list */
-	hp->bh_bnum = new;
+	hp->bh_bnum = new_bnum;
 	mf_ins_hash(mfp, hp);					/* insert in new hash list */
 
 	hash = MEMHASH(np->nt_old_bnum);		/* insert in trans list */
@@ -981,32 +1022,46 @@ mf_trans_add(mfp, hp)
  * Return the positive new number when found, the old number when not found
  */
  	blocknr_t
-mf_trans_del(mfp, old)
+mf_trans_del(mfp, old_nr)
 	MEMFILE		*mfp;
-	blocknr_t	old;
+	blocknr_t	old_nr;
 {
 	int			hash;
 	NR_TRANS	*np;
-	blocknr_t	new;
+	blocknr_t	new_bnum;
 
-	hash = MEMHASH(old);
+	hash = MEMHASH(old_nr);
 	for (np = mfp->mf_trans[hash]; np != NULL; np = np->nt_next)
-		if (np->nt_old_bnum == old)
+		if (np->nt_old_bnum == old_nr)
 			break;
 	if (np == NULL)				/* not found */
-		return old;
+		return old_nr;
 
 	mfp->mf_neg_count--;
-	new = np->nt_new_bnum;
+	new_bnum = np->nt_new_bnum;
 	if (np->nt_prev != NULL)			/* remove entry from the trans list */
 		np->nt_prev->nt_next = np->nt_next;
 	else
 		mfp->mf_trans[hash] = np->nt_next;
 	if (np->nt_next != NULL)
 		np->nt_next->nt_prev = np->nt_prev;
-	free(np);
+	vim_free(np);
 
-	return new;
+	return new_bnum;
+}
+
+/*
+ * Set mfp->mf_xfname according to mfp->mf_fname and some other things.
+ * Don't get the full path name if did_cd is TRUE, then fname should
+ * already be a full path name.
+ */
+	void
+mf_set_xfname(mfp)
+	MEMFILE		*mfp;
+{
+	mfp->mf_xfname = NULL;
+	if (!did_cd)
+		mfp->mf_xfname = FullName_save(mfp->mf_fname);
 }
 
 /*
@@ -1019,7 +1074,7 @@ mf_fullname(mfp)
 {
 	if (mfp != NULL && mfp->mf_fname != NULL && mfp->mf_xfname != NULL)
 	{
-		free(mfp->mf_fname);
+		vim_free(mfp->mf_fname);
 		mfp->mf_fname = mfp->mf_xfname;
 		mfp->mf_xfname = NULL;
 	}
@@ -1070,55 +1125,54 @@ mf_statistics()
 		sprintf((char *)IObuff, "%d used (%d locked, %d dirty, %d (%d) negative), %d free",
 						used, locked, dirty, negative, (int)mfp->mf_neg_count, nfree);
 		msg(IObuff);
+		sprintf((char *)IObuff, "Total mem used is %ld bytes", total_mem_used);
+		msg(IObuff);
 	}
 }
 #endif
 
 /*
- * open a file for a memfile
+ * open a swap file for a memfile
  */
 	static void
-mf_do_open(mfp, fname, new)
+mf_do_open(mfp, fname, trunc_file)
 	MEMFILE		*mfp;
 	char_u		*fname;
-	int			new;
+	int			trunc_file;
 {
 	mfp->mf_fname = fname;
 	/*
-	 * get the full path name before the open, because this is
+	 * Get the full path name before the open, because this is
 	 * not possible after the open on the Amiga.
-	 * fname cannot be NameBuff, because it has been allocated.
+	 * fname cannot be NameBuff, because it must have been allocated.
 	 */
-	if (FullName(fname, NameBuff, MAXPATHL) == FAIL)
-		mfp->mf_xfname = NULL;
-	else
-		mfp->mf_xfname = strsave(NameBuff);
+	mf_set_xfname(mfp);
 
 	/*
 	 * try to open the file
 	 */
-	mfp->mf_fd = open((char *)fname, new ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)
+	mfp->mf_fd = open((char *)fname,
+			(trunc_file ? (O_CREAT | O_RDWR | O_TRUNC) : (O_RDONLY)) | O_EXTRA
 
 #ifdef AMIGA				/* Amiga has no mode argument */
 					);
 #endif
 #ifdef UNIX					/* open in rw------- mode */
-# ifdef SCO
 					, (mode_t)0600);
-# else
+#endif
+#if defined(MSDOS) || defined(WIN32) || defined(__EMX__)
+					, S_IREAD | S_IWRITE);         /* open read/write */
+#endif
+#ifdef VMS					/* open in rw------- mode */
 					, 0600);
-# endif
 #endif
-#ifdef MSDOS				/* open read/write */
-					, S_IREAD | S_IWRITE);
-#endif
+
 	/*
 	 * If the file cannot be opened, use memory only
 	 */
 	if (mfp->mf_fd < 0)
 	{
-		free(fname);
-		free(mfp->mf_xfname);
+		vim_free(mfp->mf_xfname);
 		mfp->mf_fname = NULL;
 		mfp->mf_xfname = NULL;
 	}

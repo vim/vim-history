@@ -1,0 +1,967 @@
+This file contains an overview of changes from Vim version 2.0 to 3.0
+
+The changes new in version 2.x are marked with (2.x).
+Some changes from Robert Webb are marked with (Webb 2.5).
+
+Big improvements
+================
+
+Added multiple windows and multiple buffers! See doc/windows.doc for an
+overview of the new and changed commands.
+
+Added hidden buffers. 'hidden' option can be set to create a hidden buffer
+instead of abandoning a buffer. Added ":bnext", ":bprev", ":bNext" and
+"brewind" commands to go to other buffer. Added ":buffers" command to show all
+buffers. Added ":bmod" command: go to next modified buffer. Added ":bdelete"
+command: delete buffer from list. (2.4)
+
+Added a lot of commands to manipulate buffers:
+- Added commands to open a window for all arguments, all active buffers, all
+  buffers: ":all", ":sall", ":unhide", ":sunhide", ":ball", ":sball". (2.5)
+- Added ":bunload" command: Unload buffer from memory. The ":bdelete" command
+  does the same plus deletes the buffer from the buffer list. (2.5)
+- Arguments from command line are always put in buffer list. (2.5)
+- Added ":sbuffer", ":sbnext", ":sbNext", ":sbprevious", ":sbmodified",
+  ":sbrewind", ":sblast": split window and go to specified buffer. (2.5)
+- Added ":wNext" and ":wprevious": write file and go back in argument list.
+  (2.5)
+- Added ":wqall" and ":xall", write all change buffers and exit. (2.5)
+
+
+When all changes have been undone the buffer is not considered to be changed.
+Vim can then be exit with ":q" instead of ":q!".
+
+Added simple "more" facility to listings. Can be switched on/off with the
+'more' option.
+
+Added Webb's code for command line completion, with "#ifdef WEBB_COMPLETE".
+(Webb 2.5)
+
+
+Changes incompatible with previous versions
+===========================================
+
+Command lines starting with '#' are no longer considered to be comments. '#'
+is a synonym for :number.
+
+Embedded newline characters in command lines are considered to be the end of a
+command line. To use newline characters in a command, precede it with CTRL-V
+(you have to type CTRL-V two times to get one).
+
+The ":files" command is now the same as the ":buffers" command. The file list
+and the buffer list have been integrated into one list. The buffer number and
+the file number are equal and will not change during an editing session. (2.5)
+
+":buffer" does not accept a file name but a buffer number. Use ":set hid" and
+":e file". (2.5)
+
+Made 'laststatus' a numeric option. It says when to use a status line for last
+window: 0 is never, 1 if more than one window, 2 is always. (2.5)
+
+Replaced CTRL-P in insert mode by CTRL-B (for Backwards). CTRL-P can now be
+used for keyword completion. (2.5)
+
+The search pattern for the :tag command does not replace the search pattern
+that is remembered for the next search command. (Webb 2.5)
+
+Use CTRL-X instead of CTRL-S (subtract). Do not switch off xon/xoff in unix.c.
+Fixes problems with CTRL-S on some terminals. (2.4)
+
+Using >> will not shift lines that start with '#' when 'si' is set. (Webb 2.5)
+
+"\?" in expressions (match exactly one time) replaced by "\=", makes "?\?\?"
+work.
+
+The commands "*" and "#" only search for whole words, using "\<ident\>". (Webb
+2.5)
+
+When doing a ":ta" command after CTRL-T, the tag stack is truncated, rather
+than keeping old tags at the top. Now repeating CTRL-T will get you back to
+the first ":ta" and stop there. (Webb 2.5)
+
+Made argument list global, not local to each window. ":quit" works when there
+are more files to edit, except when there is only one window. (2.4)
+
+The ".vim" file is not used for recovery with the "-r" argument. Use
+"Vim -s file.vim file" instead.
+
+First page of swap file has changed, cannot recover files from older versions.
+The swap file can now be recognized by its start: "b0VIM 3.0", where 3.0 is
+the version number. (3.0)
+
+
+New commands and functionality
+==============================
+
+Added insert-mode keyword completion commands CTRL-P and CTRL-N inside #ifdef
+WEBB_KEYWORD_COMPL. (Webb 2.5)
+
+Updated error messages for keyword completion in insert mode. (2.7)
+
+Added "]f" command: Edit file whose name is under the cursor. Added CTRL-W
+CTRL-F and CTRL-W f: split window and edit file whose name is
+under the cursor. (Webb 2.5)
+
+Changed "]f" into "gf". Mnemonic: goto file. (2.7)
+
+Put "]f" and "[f" back in, they do the same as "gf". For people that have the
+'g' key remapped. (2.9)
+
+Added CTRL-W CTRL-R, CTRL-W r, CTRL-W R: rotate windows upwards/downwards
+(2.5)
+
+Added CTRL-W CTRL-X and CTRL-W x: exchange current window with next one. (Webb
+2.5)
+
+Added window title for xterm.
+
+Added termcap options 't_so' (standout) and 't_se' (standout end). Use 't_so'
+and 't_se' if inversion is not possible and for highlighting directories.
+At some places standout mode is used instead of inversion. (Webb 2.5)
+
+Do wait_return() message and the message used when asked for 'y' or 'n' is now
+in standout mode. (Webb 2.5)
+
+Added termcap option 't_ms' (save to move cursor in reverse mode). Makes
+inversion work on some terminals.
+
+Added ":mode" command. Under Amiga and Unix this only re-sets the screen
+size. With MSDOS it is possible to switch screen mode.
+
+Now also "%<", "#31<", alternate file name without extension.
+
+Added ':' register. Contains last command line. "@:" repeats last command
+line.
+
+Added ":exit" as synonym for ":xit". More logical, isn't it?
+
+Added ":swapname". Show swap file name for current buffer.
+
+":args" can have arguments for redefining the argument list, just like
+":next". (2.5)
+
+When the command for the tag is a search and it fails, try searching for the
+tag itself with pattern "^tag(" and "^[#a-zA-Z_].*tag(". (Webb 2.5)
+
+"%" will now go to matching comment delimiters (/ *, * /) and find matches for
+the preprocessing lines #ifdef, #else, #elif and #endif. (Webb 2.5)
+
+Using '%' on #if/#else/#endif makes the movement linewise. (2.7)
+
+"[p", "[P", "]p" and "]P" work like "p" and "P" but adjust the indent of the
+putted lines to match the context. (Webb 2.5)
+
+Changed put indented: "[p" and "]p" is "]p" (put forward), "[P" and "]P" is
+"[p" (put backward). (2.7)
+
+"[(" and "[{" may be used to go to the (count'th) last unclosed ( or {.
+"])" and "]}" may be used to jump to the (count'th) next unopen) or }. Can be
+used to jump to the start/end of the innermost c-code block (Webb 2.5)
+
+Added count to ":", "count:" translates into ":.,.+(count - 1)". (Webb 2.5)
+
+Added ":sleep" command. (2.4)
+
+"g" is to be used for a new series of commands. First one: "gs" sleeps for a
+moment (Mnemonic: Go to Sleep). Give count for that many seconds. Can be
+interrupted with CTRL-C. (2.5)
+
+Added ":last" and ":slast", go to last argument. (2.5)
+Added ":argument [N]" and ":sargument [N]", go to Nth argument. (2.5)
+Added ":blast" and ":sblast", go to last buffer. (2.5)
+
+Added "-o[N]" command line argument: Open N windows on startup. (2.5)
+
+Added ":only", CTRL-W CTRL-O, CTRL-O o: Close all but current window. (2.5)
+
+Added default digraph: <space> <char> is meta-char. (2.4)
+
+Digraphs with CTRL-H do not make meta characters. Use CTRL-K <space>
+<char>. Fixes problem with abbreviations when 'digraph' set. (2.5)
+
+Don't allow digraphs with ESC. Hitting ESC in digraph exits insert mode. (2.5)
+
+Added ":snext", ":sNext", ":sprev" and ":srewind" commands, split window and
+go to next/previous file in argument list. (2.4)
+
+Added CTRL-W CTRL-P and CTRL-W p, jump to previous window. (2.4)
+
+Added "zz", "zt" and "zb", same as "z.", "zCR" and "z-" but without moving the
+cursor to the start of the line. (2.4)
+
+":bdelete" and ":bunload" accept a range of buffers and a list of buffer
+numbers. (2.7)
+
+
+Improvements
+============
+
+Cursor up/down in insert mode keep the same column. Also for "CTRL-O j" and
+the like.
+
+Added column number to :file.
+
+Improved listing of ":set" command. The columns are now sorted top to bottom.
+Long string options are listed at the end (idea comes from nvi).
+
+Renamed directory "macros" to "tools". Moved doc/vim132 to tools/vim132.
+
+"ref" program added for "K" command (in the tools directory. Does simple
+spelling check.
+
+Vim arguments "-c command" and "+command" are now options that can be given
+anywhere on the command line before the file names. Makes it possible to do
+"Vim "+set ic" -t FuncTion".
+
+Improved Usage message.
+
+Added check for negative line numbers in colon commands.
+
+Removed 'n' offset to search patterns. Avoiding pcmark set is now down with
+tag_busy flag.
+
+Improved error messages for file access.
+
+":args" does not call wait_return() when message is short.
+
+When doing :paste twice the option values are saved only once.
+
+Accept '\n' to separate Ex commands, just like '|'.
+
+With search also accept 'b' for begin, like 's' for start.
+When 'e' used the operator is inclusive.
+
+Visual shift accepts a count for number of indents.
+
+No "hit return to continue" while filtering and only once when reading/writing
+files.
+
+For Amiga and MSDOS lines longer than 32000 characters are split when reading.
+Used to give problems (out of memory errors).
+
+When ':' entered after "hit return to continue" don't redraw the screen.
+
+In regexp: made '$' in front of '\|' also end-of-line.
+
+Added "+command" argument to ":next", ":prev", ":rewind" and ":Next".
+
+Give better error message when "/" did not found pattern and 'wrapscan' off.
+
+Added message "search hit BOTTOM, continuing at TOP" when search wraps. Don't
+display this message when 'terse' option is on.
+
+Made ":&" work like ":s//~/".
+
+Consider mapped characters for terminal codes, makes "map <key-code1>
+<key-code2>" work.
+
+Remember two search patterns: One for substitute and one for the rest. This is
+how vi works. ":global" command sets both patterns.
+
+Error messages during global command are listed below each other. (2.4)
+
+Don't redisplay the "INSERT" message when getting out of insert mode.
+
+With escape in insert mode and auto-indent the cursor is put in the correct
+column right away instead of after one second.
+
+Added "Permission denied" message to readfile().
+
+Added preserve command. Writes all text into the swap file.
+
+Named marks are saved for undo, restored for redo.
+
+Reduced terminal I/O by using screen_char() instead of outchar() for messages.
+
+Added count to quickfix commands :cn and :cp. :cl and :cf can be interrupted
+by CTRL-C.
+
+For MSDOS ignore CTRL-Z at end of file in textmode.
+
+No mapping for CR when waiting for "hit return to continue".
+
+Use 'ignorecase' option when searching for tag in tag file.
+
+When count given for undo or redo, redraw screen only once.
+
+Clear message on command line when scrolling, otherwise it will stay there
+until the screen is cleared. (2.5)
+
+Marks are remembered for buffers that are unloaded. (2.5)
+
+Implemented scroll regions, using "CS" termcap entry. Also works for pc
+console. Does not work for Amiga. (2.5)
+
+Made searches starting with "\<" quite a bit faster, by using regmust in
+regexp.c. (2.5)
+
+Don't output an extra line when reading a file and screen has been scrolled up
+(e.g. after CTRL-D). (2.5)
+
+After "dG" "''" still works (when previous context mark is deleted, use
+previous one). (2.5)
+
+A count can be given after an ex command for all commands that do not use a
+line number or range, e.g. ":sleep 2" is the same as :2sleep". Do not accept a
+count where a file name is expected, because file names can be numbers. For
+example ":next 4". (2.5)
+
+"~/" is expanded to $HOME, wherever an environment variable is allowed. (2.5)
+
+When the start of a filename matches $HOME, it is replaced with "~/" for the
+window title, status line, message from ":read", ":write", CTRL-G, ":file",
+":marks" and ":jumps". Also for string options shown with ":set" that can be a
+file name. (2.5)
+
+Previous context mark for each window instead of for each buffer. (Webb 2.5)
+
+Set previous context mark only if line number changed. (Webb 2.5)
+
+Made tagstack local to each window. (Webb 2.5)
+
+In the status line of a modified buffer "[+]" is shown. (Webb 2.5)
+
+Remember cursor position in tag stack for :tag command without argument. (Webb
+2.5)
+
+When backwards range given for ":" command, ask for confirmation to swap it
+and continue. (Webb 2.5)
+
+After CTRL-T set curswant, so we stay in that column when moving up/down.
+(Webb 2.5)
+
+With :s/../../c show ruler when waiting for reply. (Webb 2.5)
+
+Give file name message for commands ":bnext", ":bmod" and the like. (2.5)
+
+Made index in argument list local to each window. (2.5)
+
+Show visual selection only in current window. (2.5)
+
+When a window is split, redraw both windows with cursor in middle. (2.4)
+
+Included code to save the xterm title. Need to define USE_X11, because
+specific include file and library are needed. (2.4)
+
+Made "search hit BOT.." messages redisplay after screen redraw. (2.4)
+
+Don't do textwidth formatting when in replace mode and replacing an existing
+character. (2.4)
+
+Print message about the file when starting to edit an existing buffer. Fixes
+not giving a message when doing ":n" to file being edited in other window.
+(2.4)
+
+When lines are deleted/inserted, adjust topline and cursor position of other
+windows on same buffer to stay in the same place (if possible). (2.4)
+
+If CTRL-W CTRL-] is done on a tag that does not exist, the window is not
+split. (2.4)
+
+Moved column number in CTRL-G to the end and adjusted the number. (2.4)
+
+Added "-- more --" message to listing of mappings. (2.4)
+
+Accept 'q' with "-- more --" message. Interrupts current listing. (2.4)
+
+When end of Visual area is on an empty line, minlc is FALSE, makes
+"d}P" and "v}dP" do the same. (2.4)
+
+When the commands '*' and '#' do not find an identifier after the cursor, a
+search is done for a non-identifier string. (2.5)
+
+Made the ":buffers" listing nicer by putting the "line" string in column 40.
+(2.7)
+
+Updated error messages for keyword completion. (2.8)
+
+If 'winheight' set spread extra lines over other windows. (2.8)
+
+When 'updatecount' changed from zero to non-zero, create swap file for all
+loaded buffers. (2.8)
+
+When command line completion found more than one match, beep. (3.0)
+
+Changed "still more files to edit" into "6 more files to edit". (2.9)
+
+When :bdel is used with a range and errors occur, still delete the other
+buffers. (3.0)
+
+Added version string to .swp file. (3.0)
+
+In MSDOS version: After calling a shell, check screen size. Now it is possible
+to set the screen size with a command like ":!setmode xxx". (3.0)
+
+Don't try to open an X11 display if WINDOWID is not set, makes startup a bit
+quicker sometimes. (3.0)
+
+
+New and changed options
+=======================
+
+Default 'updatetime' is 10000, 10sec. Default 'updatecount' is 1000. This
+feels more comfortable. But if you keep on typing, more will be lost when
+crashing.
+
+Changed default for 'updatecount' to 200 (1000 was too much). Default for
+'updatetime' is now four seconds (more than three seconds means that your
+attention is drawn away). (2.7)
+
+Added 'cmdheight' option ('ch'), number of lines for command line. Set it to 2
+or 3 if you are annoyed by "hit return to continue" questions for long
+messages.
+
+Added 'winheight' option ('wh'), number of lines for active window. Set it to
+999 to make the current window always fill the screen.
+
+Made 'winheight' option a "minimal window height" option, only set height if
+current height is smaller. (2.4)
+
+Added 'laststatus' option ('ls'). When set to 2 last window always has a
+status line. When set to 1 (which is the default) the last window only has a
+status line if there are two or more windows. When set to 0 there is never a
+status line. The screen looks nicer with a status line if you have several
+windows, but takes another screen line.
+
+Added optional '>' to 'directory' and 'backupdir' option, e.g. ">/tmp". When
+used, 'directory' option is always used for swap file. When not used
+'directory' is only used when swap file cannot be created in current
+directory. The default is that the swap file will be in the current directory
+when possible, in 'directory' otherwise. 'directory' defaults to "/tmp" for
+unix, "t:" for Amiga and "c:\tmp" for MSDOS. The 'backupdir' option works in
+the same way, but is currently only available for Unix.
+
+Added 'nobuf' option ('nb'). When set one character is send to the terminal
+at a time (does not work for MSDOS). For debugging purposes.
+
+Added 'shellpipe' option ('sp'). String to use for the make command to store
+the error messages. For Amiga and MSDOS it defaults to ">". For Unix it
+defaults to "| tee". For "csh", "tcsh" and "zsh" it is changed into "|& tee".
+For "sh", "ksh" and "bash" it is changed into "2>&1| tee". Fixes problem with
+:make when not using csh.
+
+Added 'maxmem' option ('mm'), maximal Kbyte to use for one buffer.
+
+Added 'smarttab' option ('sta'). When set a TAB in front of a line inserts
+'shiftwidth' positions, 'tabstop' in other places. When not set a TAB always
+inserts 'tabstop' positions, 'shiftwidth' is only used for ">>" and the like.
+
+Added 'maxmemtot' option ('mmt'), maximal Kbyte to use for all buffers.
+
+Added 'ttyfast' option ('tf'). When set the terminal is assumed to be fast,
+scrolling windows is done by redrawing. When not set windows are scrolled with
+insert/delete line commands, causing the windows below it to jump up and down
+if threre is no support for a scrolling region.
+
+Added 'equalalways' option: When windows split or closed, always do CTRL-W =.
+(2.5)
+
+Added 'splitbelow': When set new window from split is below current one. (2.5)
+
+Added 'tagrelative' option (default ON!). When using tag file in other
+directory, file names are relative to the directory where the tag file is.
+(Webb 2.5)
+
+When setting 'winheight' adjust current window straight away. Check for
+negative value. (Webb 2.5)
+
+Added 'gdefault' option: make /g default for :s command (default off). (2.4)
+
+Added 'title' option (default on). When off, window title is not set. (2.4)
+
+Added NOTITLE compile time option for Vera: When defined the title option is
+default off. (2.7)
+
+Added 'icon' option (default off): when set xterm icon is set to file name.
+(2.4)
+
+Added 'invertweird' option, for terminals that have a weird inversion method.
+Makes the start/end invert code outputted before every character. (2.4)
+
+Changed 'invertweird' to 'weirdinvert', because an option starting with 'inv'
+is illegal. ":set invertweird" gives an error message. (2.7)
+
+Added 'endofline' 'eol' option. If not set and in binary mode, last line will
+not get an end of line when writing. (2.4)
+
+Added 'bswrap' option: Backspace (CTRL-H) and space wrap to previous/next line
+in command mode. Default is ON! Should have been added long ago! (2.4)
+
+When 'bswrap' option set, left/right cursor keys in insert mode also wrap to
+previous/next line. (2.7)
+
+Changed toggle 'bswrap' option to number 'whichwrap' option: Add numbers to
+allow specific keys to wrap to next/previous line: 1 for backspace, 2 for
+space, 4 for 'h' and 'l', 8 for cursor left/right, 16 for cursor left/right in
+insert mode. (2.7)
+
+Added 'patchmode' option. Oldest version of a file is kept. (2.4)
+
+Added 't_csc' termcap option: when set (to anything) the cursor positioning is
+done relative to the start of the scrolling region. Otherwise it is relative
+to the start of the screen. Unfortunately there is no termcap entry for this.
+We are just guessing its value. Currently only MSDOS pcterm is know to need
+this set. This fixes doing 'o' not getting the new line in the right place for
+MSDOS. (2.7)
+
+Added 'highlight' ('hl') option: Can set highlighting mode for various
+occasions. 'i' for invert, 'b' for bold, 's' for standout; 'v' = visual mode,
+'d' = directories in CTRL-D listing, 'e' = error messages, 's' = status lines,
+'h' = help file headers, 'r' = return to continue message. They have to be
+given in pairs, separated with a comma. For example:
+":set hl=ds,vb,ei,si,hb,ri". Invert is used for occasions that are not
+included. Default is "ds,es,hs,rs,vi,si". (2.6)
+
+Changed the default highlight mode for directories to bold. (2.7)
+
+Added 'n' to 'highlight' option: no highlighting. (2.7)
+
+Added 'bold' termcap option as t_tb. (2.6)
+
+
+Vi compatibility fixes
+======================
+
+":>", ":<" and ":yank" leave cursor on the last line.
+
+Abbreviations recognized like vi, fixes abbreviation of "#i" to "#include".
+
+"d]]" also stops at '{'.
+
+']' and '[' are not linewise.
+
+"z." and "z-" move cursor to start of line. "zz" does the same as "z.".
+
+":>>" shifts two indents, ":>>>" three, etc.
+
+When no file name yet and giving a ":read fname" command, use that file name.
+(2.4) When no file name yet and giving a ":write fname" command, use that file
+name. (2.5)
+
+":3,3join" does nothing, fixes "g/^$/.,/./-j" to delete only multiple empty
+lines. (2.5)
+
+":wnext" does not go to next file in argument list if write fails. (2.5)
+
+CTRL-W CURSOR-UP and CTRL-W CURSOR-DOWN do the same as CTRL-W k and CTRL-W j.
+(2.5)
+
+'smartindent' is improved: When '}' is typed as the first char on a line,
+it is moved to line up with the line containing the matching '{' (rather than
+just moving back one shift-width no matter what).  If '#' is the first
+character typed on a line, then the line is moved all the way to the left.
+(Webb 2.5)
+
+When 'smartindent' set, '#' removes all indent. Now the existing indent is
+remembered for the next line (like with ^ CTRL-D). (2.7)
+
+When ESC is used to cancel a command, don't beep. (Webb 2.5)
+
+When 'autoindent' set and inserting a CR, delete white space after the cursor.
+(Webb 2.5)
+
+Don't set curswant when 'h' or 'l' fails. (Webb 2.5)
+
+With "70|" command set curswant to 70, also when line is shorter. (Webb 2.5)
+
+Fixed "cc" to delete the text linewise, but keep the indent when 'ai' is set.
+(2.5)
+
+"dTx" and "dFx" do not include cursor position.
+
+":r" without a file name specified reads current file.
+
+"ce" when on the end of a word changes until the end of the next word
+(but "cw" not).
+
+After "dd" put cursor on first non-blank in line.
+
+Abbreviations are never recursive, makes ":ab f f-o" work.
+
+'#' is not the start of an ex comment but an abbreviation for ":number".
+
+Put redo for "p" and "P" back in. It is not completely compatible, because vi
+doesn't always redo putting less then a line (but that is considered to be a
+bug in vi). (2.5)
+
+Adjusted comp_col() for when 'laststatus' is set. Reduces need for "hit return
+to continue". (2.5)
+
+With ":global" command, don't display "n more lines" messages until the end.
+(2.5)
+
+Don't reset yank buffer with "." command. Makes dwu"a. work. (2.4)
+
+Don't check for abbreviation when a (non-id) character is entered with CTRL-V.
+(2.4)
+
+With change command put deleted text in "1, even with text within one line.
+(2.4)
+
+When deleting and a register is specified, also yank into buffer "1. (2.4)
+
+":3|" prints line 3 instead of jumping to it. (2.4)
+
+Separated 'wrapmargin' and 'textwidth'. Both can be used, if textwidth is set
+it overrides 'wrapmargin'. (2.8)
+
+
+Bug fixes
+=========
+
+Fixed problem in memmove for __sgi.
+
+Fixed ":cd" not working for unix.
+
+Made incrementing hex numbers with CTRL-A work on systems that don't accept 0x
+in scanf for "%x".
+
+Reset p_ro in readfile() when starting to edit a new file.
+
+inchar() also calls flushbuf when waiting for a second, fixes screen not
+updated while waiting for a mapping to be completed.
+
+Fixed ":/pat/s/x/X/"; 's' was seen as option to search command.
+
+Fixed search patterns where delimiter is inside of a range, e.g. "/[/]".
+
+Fixed ignoring 'ignorecase' option for "/[a-z]". Fixed mixing upper/lower case
+when 'ignorecase' option not set (just slowed down the searching).
+
+Use iswhite() instead of isspace() for "^" and set_indent().
+
+Allow pipe in ":r !cmd" and ":w !cmd".
+Adjusted check for '|' in ":e +cmd".
+
+Fixed insertchar() lookahead for digraph not working when using mapped
+characters.
+
+Fixed :unab and :unmap for rhs with spaces.
+
+Fixed not accepting ambiguous abbreviations.
+
+Added check for valid abbreviations.
+
+Fixed crash for AmigaDOS 1.3 when giving more than one file on the command
+line.
+
+Updated isidchar for meta chars.
+
+Added setting of Changed flag to :move and :copy.
+
+Number after search pattern (e.g. "/pattern/3") is line offset.
+
+"cc<ESC>" when 'ai' is set, deletes the indent.
+
+Fixed ":s/1/1^M/gc" on "111" and ":s/O/oO/gc" looping.
+
+Fixed trailing "\" in substitute string (produced garbage).
+
+Fixed yanking control characters (like "^B") with block visual mode.
+
+Fixed cursor left of line with "i<ESC>" when 'number' set.
+
+MSDOS: isdir() adjusted for trailing backslash, fixes CTRL-D listing.
+
+MSDOS: Fixed call to lalloc() in addfile() in msdos.c, could only do 32 files.
+
+MSDOS: Fixed setting archive bit in setperm() in msdos.c.
+
+MSDOS: Do not eat backslashes in ":next" command.
+
+Fixed bug in makescriptname: alloc 1 byte extra.
+
+Fixed bug in doaddsub(): Line truncated 30 chars after number.
+
+Fixed CTRL-O in insert mode moving cursor when it is after end of line.
+
+Vertical movement in insert mode can put cursor one char after the line.
+
+Fixed not inverting 0xa0 in visual mode when scrolling. This caused gaps in
+the inverted region.
+
+Fixed hangup for "?$" command.
+
+Fixed keyword macros: ^B must be ^R.
+
+":set all" and ":set termcap" do not look for other arguments.
+
+{count}% puts cursor on first non-blank.
+
+When ":ta" to tag in same file, start search in line 1. Fixes problem when
+'wrapscan' is not set.
+
+Fixed setting of pcmark for "(" and ")".
+
+Fixed setting pcmark with :e command.
+
+Fixed a crash on Unix when terminal type unknown. (2.5)
+
+Fixed 'showmatch', the cursor was off. (2.5)
+
+Solved crash when 'lines' was set in .exrc. (2.5)
+
+Fixed memory leak for mf_xfname. (2.5)
+
+Fixed a problem in the Unix part for making backup files. Strange that this
+did not cause the compiler to complain. (2.5)
+
+Filename expansion is now done into NameBuff instead of IObuff. Fixes bugs
+where file name was scrambled or Vim crashed some time after ":next file".
+(2.5)
+
+Fixed deleting the file message when 't_tp' was set in .vimrc. (2.5)
+
+Fixed cursor positioning problem when :s/../../gc made line go past end of
+screen. (Webb 2.5)
+
+Don't nag about swap file not existing when preserving, except for
+":preserve". (2.5)
+
+Fixed loosing changes without warning when 'hidden' option set and re-editing
+the same file with a command like ":rewind". (2.5)
+
+Clear commandline with ":buffers" command. (2.5)
+
+Fixed ":1buf" to go to first buffer instead of second one. (2.5)
+
+Fixed default for ":sleep" to be 1 instead of current line number. (2.5)
+
+When the 'hidden' option is set don't give error message for changed file on
+several commands (:ta). (2.5)
+
+Update timestamp in swap file when the file has been written. (2.5)
+
+Fixed a problem not updating the time stamp in the swap file when writing
+another but the current buffer. (2.7)
+
+Fixed bug: not-edited file could be written with ":w". (2.5)
+
+Fixed invering Visual part when 'nowrap' set and start is left of window.
+(2.4)
+
+Fixed problem with join: Deleted leading spaces in the 2nd line when it
+shouldn't. (2.4)
+
+MSDOS: Trailing CTRL-V in sourced ex file now handled correctly. (2.4)
+
+Improved check for readonly files, now "466" is not readonly for others. (2.4)
+
+Fixed not inverting one char with "1v" when cursor cannot be made invisible.
+(2.4)
+
+Stop Visual mode before exiting a window. (2.4)
+
+Changed "short_u" to "unsigned" in data block. Fixes problem with lines longer
+than 64K characters on Unix. Disadvantage: Need 2 bytes extra for each line.
+(2.4)
+
+Fixed plines_win() and chartabsize() for lines that are almost 32768
+characters. (2.4)
+
+Replace MAX_INT by INT_MAX, fixes problem with "$" not getting very far. (2.4)
+
+Status lines also redrawn after ":set". Needed when 'ruler' option was
+changed. (2.4)
+
+Fixed fname freed twice in mf_open(). Fixes crash/hang when editing a file in
+a readonly directory. (2.4)
+
+Update mf_neg_count in mf_free, fixes "line count wrong in block 1" errors.
+(2.4)
+
+Fixed bug when in replace mode and beyond the end of the line. (2.4)
+
+Fixed a problem for 'r' with a count. Could corrupt the text in the buffer!
+(2.4)
+
+Scroll options adjusted after CTRL-W =. (2.4)
+
+If a tag is found, but the associated file does not exist, do not start
+editing an empty file. (2.4)
+
+sc_col and ru_col cannot become negative anymore, fixes crash with ":win 1".
+(2.4)
+
+Check_winsize makes Rows at least 2. (2.4)
+
+'o' and 'O' commands did not update marks for the line just below the new
+line. (2.4)
+
+Fixed truncated displaying of string options. (2.4)
+
+Fixed chmod for help file in makefile.unix. (2.4)
+
+Highlighting of directories for CTRL-D on command line no longer highlights
+some spaces. (2.4)
+
+Moved #endif in param.c from below to above p_wh, fixes problem when
+COMPATIBLE is defined. (2.4)
+
+Don't reset msg_scrolled in UpdateScreen() when redrawing is disabled. (2.4)
+
+Fixed cursor positioning error when cursor is on first char of non-empty
+cmdline. (2.4)
+
+Fixed problem with redraw when filename completion fails under unix. (2.4)
+
+No "hit return to continue" while editing a command line
+(e.g. when filename completion fails). (2.4)
+
+Fixed bug: Errors while reading file caused big problems. (2.4)
+
+Don't try to preserve if there is no swap file. (2.4)
+
+Dont' complain about .swp file existing without a file name. (2.4)
+
+Fixed endless loop for CTRL-R a in insert mode while register a contained
+CTRL-R a. Can now be interrupted with CTRL-C. (2.6)
+
+Fixed ":n *" in MSDOS not finding file names with dot. (2.7)
+
+Fixed cursor not moved to the right column when scrolling with CTRL-E and
+CTRL-Y. (2.7)
+
+Fixed bug when using CTRL-A to increment a decimal number after incrementing
+an upper case hexadecimal number. (2.7)
+
+Only reset the 'notedited' flag when writing to the current file name, not
+when writing to another file. (2.7)
+
+Fixed screen redraw when window resized, was sometimes done only after
+character typed. (2.7)
+
+Corrected the order of the options to be alfabetical. (2.7)
+
+Fixed using CTRL-D on the command line when there are no matches at all. (2.7)
+
+Fixed beeping always when doing CTRL-A on command line. (2.7)
+
+Fixed the line number for the alternate file being used for the next command.
+e.g. ":w #", ":e file" when # is file. (2.7)
+
+Moved the fileinfo() in doecmd() to after the place where the cursor is set.
+Fixes reporting the wrong cursor position when entering a hidden buffer. (2.7)
+
+Fixed compilation problem in unix.c when compiling without WEBB_COMPLETE.
+(2.7)
+
+When going to previous line with backspace, set curswant. (2.7)
+
+Fixed status line showing "[No File] [+] [+]": two plusses. (2.7)
+
+The 'changed' flag was not reset for other buffers with :wall. (2.7)
+
+Solved bug in 'r': The change was not written to the swap file, which made the
+change to be lost sometimes. (2.6)
+
+Don't ask for swapping the command line range when in global command. (2.6)
+
+Fixed :bdelete, it did't work. :bdelete and :bunload cannot remove a buffer
+with an open window, unless it is only the current window. (2.6)
+
+Fixed .swp files not deleted when starting to edit a file when the current
+buffer is empty and has no name. This also fixes the problem which happens
+when starting vim without a file name and the starting to edit a file that
+does not exist. (2.6)
+
+When error encountered while loading files for "-o" option or ":all", continue
+loading the other files. (2.8)
+
+If cursor is in column 0, always reset horizontal scrolling. Makes tabs
+completely visible. (2.8)
+
+Fixed problem in mf_release_all, empty used list not detected properly. (2.8)
+
+Fixed crash with command ":@:", repeat last command line. (2.8)
+
+Fixed cursor in wrong column when matched string from search was just one line
+below the window. (2.8)
+
+":m+1" on the last line in the file silently deleted that line. (3.0)
+
+Fixed command line completion of ":s<TAB>". (3.0)
+
+The ":srewind" command did not work. (3.0)
+
+The ":k" command did not work. (3.0)
+
+When making windows for ":all" or "-o" argument, ignore 'splitbelow' option.
+(3.0)
+
+Fixed a problem when recovering with a swap file that has a page size
+different from the default page size. (3.0)
+
+The ":bdelete" command did not delete the last buffer. (3.0)
+
+When using a range with ":bdelete" that included the current buffer, all the
+buffers after it would get loaded before being deleted (3.0)
+
+Fixed <SPACE>, wrapping to first char of next line, not setting the wanted
+column, causing the next 'k' to go to the wrong column. Same for <BACKSPACE>
+on the first column, sticking in the last column. (3.0)
+
+
+Internals
+=========
+
+Renamed u_char to char_u, u_short to short_u. Avoids problems with systems
+where these are already defined.
+
+Replaced almost all char by char_u, solves some problems with characters above
+127.
+
+Removed ptr2nr(). This means that line numbers are adjusted when
+inserting/deleting lines. Marks remember line number instead of pointer; undo
+uses line count to compute ue_bot.
+
+Moved all objects files into "obj" directory.
+
+Added "window.c" for multiple window code.
+
+Added "memfile.c" and "memline.c" for swap file code.
+
+Moved what was remaining of "storage.c" to "undo.c", deleted "storage.c".
+
+Deleted autoscript file stuff.
+
+Renamed "buffers.c" to "getchar.c".
+
+Created "buffer.c". Deleted "script.c".
+
+Moved a few functions from "cmdline.c" to "cmdcmds.c" to reduce the size of
+"cmdline.c".
+
+Integrated file list into buffer list. ":buffers" and ":files" do the same.
+Moved functions from "filelist.c" to "buffer.c", deleted "filelist.c". (2.5)
+
+Remove mch_start_listing() and mch_stop_listing(), replaced by "--more--".
+(2.5)
+
+
+Portability
+===========
+
+A few patches, the file "winnt.c" and "makefile.nt" for windows NT. (2.4)
+
+Added support for Archimedes. It probably doesn't work, because "archie.h" was
+missing, and the patches are for Vim version 2.0. Included them anyway, so
+people can make patches to make it working. (2.9)
+
+Added a few changes for USL in unix.c.
+
+Made makefile for unix more easy to change for a specific system.
+
+Included small patches for gcc on HPUX 9. (2.4)
+
+Set the SIGWINCH signal, when receiving that signal, for all systems. (Webb
+2.5)
+
+Changed Visual into VIsual, because it is also used by X11. (2.4)
+
+Added some changes for USL and picky gcc. (2.4)
+
+Included patches for SCO 3.2. (2.4)
+
+Removed the use of the 'obj' directory from makefile.unix. Some versions of
+make and cc were having problems with it. (2.7)

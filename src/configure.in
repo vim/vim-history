@@ -1,0 +1,491 @@
+dnl autoconf script for Vim on Unix
+dnl
+dnl Process this file with autoconf 2.4 to produce a configure script.
+dnl Gnu m4 1.3 or later is also required
+dnl
+
+AC_INIT(vim.h)
+AC_CONFIG_HEADER(config.h)
+AC_DEFINE(UNIX)	dnl or do you think configure may run on a non-unix system?
+AC_PROG_MAKE_SET
+
+dnl Checks for programs.
+AC_PROG_CC	dnl required by almost everything
+AC_PROG_CPP	dnl required by header file checks
+AC_ISC_POSIX	dnl required by AC_C_CROSS
+AC_C_CROSS	dnl required by AC_TRY_RUN
+
+dnl Set default value for CFLAGS if none is defined or it's empty
+if test -z "$CFLAGS"; then
+  CFLAGS="-O"
+  test "$GCC" = yes && CFLAGS="-O2 -fno-strength-reduce"
+fi
+
+dnl you might want to remove this, if it causes too much trouble. I like it:
+dnl -Wmissing-prototypes removed, old versions of GCC don't have it
+test "$GCC" = yes && CFLAGS="$CFLAGS -Wall -Wshadow"
+
+dnl If configure things we are cross compiling, there is probably something
+dnl wrong with the CC or CFLAGS settings, give an understandable error message
+if test "$cross_compiling" = yes; then
+  AC_MSG_ERROR([cannot compile a simple program, check CC and CFLAGS])
+fi
+
+dnl see if the compiler accepts "-Olimit 2000", needed for some systems
+dnl because Vim uses very big case statements.
+if test "$GCC" != yes; then
+  AC_MSG_CHECKING(if compiler accepts -Olimit)
+  save_cflags=$CFLAGS
+  CFLAGS="$CFLAGS -Olimit 2000"
+  AC_TRY_LINK(, ,
+	AC_MSG_RESULT(yes),
+	AC_MSG_RESULT(no); CFLAGS=$save_cflags)
+fi
+
+dnl gcc-cpp has the wonderful -MM option to produce nicer dependencies
+test "$GCC" = yes && CPP_MM=M; AC_SUBST(CPP_MM)
+
+if test -f ./toolcheck; then
+AC_CHECKING(for buggy tools)
+sh ./toolcheck 1>&AC_FD_MSG
+fi
+
+
+dnl Check user requested features
+test -z "$with_x" && with_x=yes
+test "${enable_gui-no}" != no && with_x=yes
+if test "$with_x" = no; then
+  AC_MSG_RESULT(defaulting to: don't HAVE_X11)
+else
+  dnl do this header check early, so that its failure can override user
+  dnl requests.
+
+  AC_PATH_PROG(xmkmfpath, xmkmf)
+
+  AC_PATH_XTRA
+
+  dnl On my system the X include dir is found, but the lib dir not. This is a
+  dnl desparate try to fix this.
+
+  if test -d "$x_includes" && test ! -d "$x_libraries"; then
+    x_libraries=`echo "$x_includes" | sed s/include/lib/`
+    AC_MSG_RESULT(Corrected X libraries to $x_libraries)
+    X_LIBS="$X_LIBS -L$x_libraries"
+    if test "`(uname) 2>/dev/null`" = SunOS &&
+          uname -r | grep '^5' >/dev/null; then
+      X_LIBS="$X_LIBS -R $x_libraries"
+    fi
+  fi
+
+  if test -d "$x_libraries" && test ! -d "$x_includes"; then
+    x_includes=`echo "$x_libraries" | sed s/lib/include/`
+    AC_MSG_RESULT(Corrected X includes to $x_includes)
+    X_CFLAGS="$X_CFLAGS -I$x_includes"
+  fi
+
+  dnl remove "-I/usr/include " from X_CFLAGS, should not be needed.
+  X_CFLAGS="`echo $X_CFLAGS\  | sed 's%-I/usr/include %%'`"
+
+  dnl Check if the X11 header files are correctly installed. On some systems
+  dnl Xlib.h includes files that don't exist
+    AC_MSG_CHECKING(if X11 header files can be found)
+    cflags_save=$CFLAGS
+    CFLAGS="$CFLAGS $X_CFLAGS"
+    AC_TRY_COMPILE([#include <X11/Xlib.h>], ,
+	  AC_MSG_RESULT(yes),
+	  AC_MSG_RESULT(no); no_x=yes)
+    CFLAGS=$cflags_save
+
+  if test "${no_x-no}" = yes; then with_x=no; else 
+    AC_DEFINE(HAVE_X11) 
+    X_LIB=-lX11; AC_SUBST(X_LIB)
+  fi
+
+  dnl Some systems need -lnsl -lsocket when testing for ICE.
+  dnl The check above doesn't do this, try here (again) if X_PRE_LIBS is empty
+  dnl and X_EXTRA_LIBS is not empty.  Check for other function then above to
+  dnl avoid the cached value
+
+  if test -z "$X_PRE_LIBS" -a -n "$X_EXTRA_LIBS"; then
+    ac_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -L$x_libraries"
+    AC_CHECK_LIB(ICE, IceOpenConnection,
+      [X_PRE_LIBS="$X_PRE_LIBS -lSM -lICE"],, [$X_EXTRA_LIBS])
+    LDFLAGS="$ac_save_LDFLAGS"
+  fi
+
+fi
+
+test "x$with_x" = xno -a "x$enable_gui" = xyes && enable_gui=no
+
+AC_ARG_ENABLE(gui, 
+ [  --enable-gui            X11-Athena or Motif Graphical User Interface],
+ AC_MSG_RESULT(option GUI: $enableval), 
+ AC_MSG_RESULT(defaulting to: don't support GUI))
+ MOTIF_COMMENT=ZZZ; ATHENA_COMMENT=ZZZ
+ case "$enable_gui" in
+   no | "" )        ;;
+   yes|YES)         MOTIF_COMMENT= ; ATHENA_COMMENT= ;;
+   motif|MOTIF)     MOTIF_COMMENT= ;;
+   athena|ATHENA)   ATHENA_COMMENT= ;;
+   *)               AC_MSG_ERROR([Sorry, $enable_gui GUI is not supported.]) ;;
+ esac
+
+dnl Check for Motif include files location.
+dnl The LAST one found is used, this makes the highest version to be used,
+dnl e.g. when Motif1.2 and Motif2.0 are both present.
+
+if test -z "$MOTIF_COMMENT"; then
+  gui_includes="`echo $x_includes|sed 's%/[^/][^/]*$%%'` /local/Motif*/include /local/include/Motif* /usr/local/Motif*/include /usr/local/include/Motif* /usr/include/Motif* /usr/Motif*/include /usr/local/include /usr/local/X11*/include /usr/include /usr/include/X11* /usr/dt/include $GUI_INC_LOC"
+  AC_MSG_CHECKING(for location of Motif GUI includes)
+  GUI_INC_LOC=
+  for try in $gui_includes; do
+    if test -f "$try/Xm/Xm.h"; then
+      GUI_INC_LOC=$try
+    fi
+  done
+  if test -n "$GUI_INC_LOC"; then
+    AC_MSG_RESULT($GUI_INC_LOC)
+    test "$GUI_INC_LOC" = /usr/include && GUI_INC_LOC=.
+    AC_SUBST(GUI_INC_LOC)
+  else
+    AC_MSG_RESULT(<not found>) 
+    MOTIF_COMMENT=ZZZ  
+  fi
+fi
+
+dnl Check for Motif library files location.
+dnl The LAST one found is used, this makes the highest version to be used,
+dnl e.g. when Motif1.2 and Motif2.0 are both present.
+
+if test -z "$MOTIF_COMMENT"; then
+  gui_libs="`echo $x_libraries|sed 's%/[^/][^/]*$%%'` `echo "$GUI_INC_LOC" | sed s/include/lib/` /local/Motif*/lib /local/lib/Motif* /usr/local/Motif*/lib /usr/local/lib/Motif* /usr/Motif*/lib /usr/lib/Motif* /usr/local/lib /usr/local/X11*/lib /usr/lib /usr/lib/X11* /usr/dt/lib $GUI_LIB_LOC"
+  AC_MSG_CHECKING(for location of Motif GUI libs)
+  GUI_LIB_LOC=
+  for try in $gui_libs; do
+    if test -f "$try/libXm.a" -o -f "$try/libXm.so" -o -f "$try/libXm.sl"; then
+      GUI_LIB_LOC=$try
+      if test "`(uname) 2>/dev/null`" = SunOS &&
+            uname -r | grep '^5' >/dev/null; then
+        GUI_LIB_LOC="$GUI_LIB_LOC -R $try"
+      fi
+    fi
+  done
+  if test -n "$GUI_LIB_LOC"; then
+    AC_MSG_RESULT($GUI_LIB_LOC)
+    AC_SUBST(GUI_LIB_LOC)
+  else
+    AC_MSG_RESULT(<not found>) 
+    MOTIF_COMMENT=ZZZ  
+  fi
+fi
+
+if test -z "$MOTIF_COMMENT"; then
+  ATHENA_COMMENT=ZZZ
+fi
+AC_SUBST(MOTIF_COMMENT)
+
+dnl Check if the Athena files can be found
+
+GUI_X_LIBS=
+
+if test -z "$ATHENA_COMMENT"; then
+  AC_MSG_CHECKING(if Athena header files can be found)
+  cflags_save=$CFLAGS
+  CFLAGS="$CFLAGS $X_CFLAGS"
+  AC_TRY_COMPILE([
+#include <X11/Intrinsic.h>
+#include <X11/Xaw/Paned.h>], ,
+    AC_MSG_RESULT(yes),
+    AC_MSG_RESULT(no); ATHENA_COMMENT=ZZZ )
+  CFLAGS=$cflags_save
+fi
+
+if test -z "$ATHENA_COMMENT"; then
+  dnl The GUI_INC_LOC and GUI_LIB_LOC must not be empty, use "." (ugly!)
+  if test -z "$GUI_INC_LOC"; then
+    GUI_INC_LOC=.
+  fi
+  AC_SUBST(GUI_INC_LOC)
+  if test -z "$GUI_LIB_LOC"; then
+    GUI_LIB_LOC=.
+  fi
+  AC_SUBST(GUI_LIB_LOC)
+fi
+
+if test -z "$ATHENA_COMMENT" -o -z "$MOTIF_COMMENT"; then
+  dnl Check for -lXext, needed on some systems
+  ldflags_save=$LDFLAGS
+  LDFLAGS="$LDFLAGS $X_LIBS"
+  AC_CHECK_LIB(Xext, XShapeQueryExtension, GUI_X_LIBS="-lXext",, -lX11 $X_EXTRA_LIBS)
+  LDFLAGS=$ldflags_save
+
+  dnl Execute xmkmf to figure out if -DNARROWPROTO is needed.
+  AC_MSG_CHECKING(for extra X11 defines)
+  NARROW_PROTO=
+  rm -fr conftestdir
+  if mkdir conftestdir; then
+    cd conftestdir
+    cat > Imakefile <<'EOF'
+acfindx:
+	@echo 'NARROW_PROTO="${PROTO_DEFINES}"'
+EOF
+    if (xmkmf) >/dev/null 2>/dev/null && test -f Makefile; then
+      eval `${MAKE-make} acfindx 2>/dev/null | grep -v make`
+    fi
+    cd ..
+    rm -fr conftestdir
+  fi
+  if test -z "$NARROW_PROTO"; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT($NARROW_PROTO)
+  fi
+  AC_SUBST(NARROW_PROTO)
+fi
+
+AC_SUBST(ATHENA_COMMENT)
+AC_SUBST(GUI_X_LIBS)
+
+dnl Checks for libraries.
+AC_MSG_CHECKING(for sequent/ptx)
+AC_EGREP_CPP(yes,
+[#ifdef _SEQUENT_
+  yes;
+#endif
+], LIBS="$LIBS -linet" AC_MSG_RESULT(yes), AC_MSG_RESULT(no))
+
+olibs="$LIBS"
+if test -n "$TERM_LIB"; then
+	LIBS="$LIBS $TERM_LIB"
+else
+	dnl  On HP-UX 10.10 termcap or termlib should be used instead of
+	dnl  curses, because curses is much slower.
+	dnl  Older versions of ncurses have bugs, avoid it.
+	AC_CHECK_LIB(termcap, tgetent,,
+	AC_CHECK_LIB(termlib, tgetent,,
+	AC_CHECK_LIB(curses, tgetent,,
+	AC_CHECK_LIB(ncurses, tgetent,,
+	))))
+fi
+if test "x$olibs" != "x$LIBS"; then
+  AC_MSG_CHECKING(whether we talk terminfo)
+  AC_TRY_RUN([main() { exit(strcmp(tgoto("%p1%d", 0, 1), "1") ? 0 : 1); }],
+	  AC_MSG_RESULT([no -- we are in termcap land]),
+	  AC_MSG_RESULT([yes -- terminfo spoken here]); AC_DEFINE(TERMINFO),
+	  AC_MSG_ERROR(failed to compile test program.))
+fi
+
+AC_MSG_CHECKING(quality of toupper)
+AC_TRY_RUN([#include <ctype.h>
+main() { exit(toupper('A') == 'A' && tolower('z') == 'z'); }], 
+ AC_DEFINE(BROKEN_TOUPPER) AC_MSG_RESULT(bad),
+ AC_MSG_RESULT(good), AC_MSG_ERROR(failed to compile test program))
+
+AC_MSG_CHECKING(whether __DATE__ and __TIME__ work)
+AC_TRY_COMPILE(, [fprintf("(" __DATE__ " " __TIME__ ")");],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_DATE_TIME),
+	AC_MSG_RESULT(no))
+
+dnl Checks for header files.
+AC_CHECK_HEADER(elf.h, SVR4=1)
+dnl AC_CHECK_HEADER(dwarf.h, SVR4=1)
+if test "$SVR4" = 1; then AC_DEFINE(SVR4) AC_CHECK_LIB(elf, main) fi
+
+AC_HEADER_DIRENT
+
+dnl check for standard headers, we don't use this in Vim but other stuff
+dnl in autoconf needs it
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+
+dnl If sys/wait.h is not found it might still exist but not be POSIX
+dnl compliant. In that case we define HAVE_UNION_WAIT (for NeXT)
+if test $ac_cv_header_sys_wait_h = no; then
+   AC_MSG_CHECKING([for sys/wait.h that defines union wait])
+   AC_TRY_COMPILE([#include <sys/wait.h>],
+			[union wait xx, yy; xx = yy],
+		AC_MSG_RESULT(yes)
+			AC_DEFINE(HAVE_SYS_WAIT_H)
+			AC_DEFINE(HAVE_UNION_WAIT),
+		AC_MSG_RESULT(no))
+fi
+
+AC_CHECK_HEADERS(stdlib.h string.h sys/select.h sys/utsname.h termcap.h)
+AC_CHECK_HEADERS(fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h)
+AC_CHECK_HEADERS(unistd.h stropts.h errno.h strings.h sys/systeminfo.h locale.h)
+AC_CHECK_HEADERS(sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h)
+AC_CHECK_HEADERS(sys/poll.h pwd.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_UID_T
+AC_HEADER_TIME
+
+AC_MSG_CHECKING(whether termcap.h contains ospeed)
+AC_TRY_LINK([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+			], [ospeed = 20000],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_OSPEED),
+	[AC_MSG_RESULT(no)
+	AC_MSG_CHECKING(whether ospeed can be extern)
+	AC_TRY_LINK([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+extern short ospeed;
+			], [ospeed = 20000],
+		AC_MSG_RESULT(yes); AC_DEFINE(OSPEED_EXTERN),
+		AC_MSG_RESULT(no))]
+	)
+
+AC_MSG_CHECKING([whether termcap.h contains UP, BC and PC])
+AC_TRY_LINK([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+			], [if (UP == 0 && BC == 0) PC = 1],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_UP_BC_PC),
+	[AC_MSG_RESULT(no)
+	AC_MSG_CHECKING([whether UP, BC and PC can be extern])
+	AC_TRY_LINK([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+extern char *UP, *BC, PC;
+			], [if (UP == 0 && BC == 0) PC = 1],
+		AC_MSG_RESULT(yes); AC_DEFINE(UP_BC_PC_EXTERN),
+		AC_MSG_RESULT(no))]
+	)
+
+AC_MSG_CHECKING(whether tputs() uses outfuntype)
+AC_TRY_COMPILE([
+#ifdef HAVE_TERMCAP_H
+# include <termcap.h>
+#endif
+			], [extern int xx(); tputs("test", 1, (outfuntype)xx)],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_OUTFUNTYPE),
+	AC_MSG_RESULT(no))
+
+dnl On some SCO machines sys/select redefines struct timeval
+AC_MSG_CHECKING([whether sys/select.h and sys/time.h may both be included])
+AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/select.h>], ,
+	  AC_MSG_RESULT(yes)
+			AC_DEFINE(SYS_SELECT_WITH_SYS_TIME),
+	  AC_MSG_RESULT(no))
+
+dnl AC_DECL_SYS_SIGLIST
+
+dnl Checks for library functions. ===================================
+AC_PROG_GCC_TRADITIONAL
+AC_TYPE_SIGNAL
+
+dnl find out what to use at the end of a signal function
+if test $ac_cv_type_signal = void; then
+   AC_DEFINE(SIGRETURN, [return])
+else
+   AC_DEFINE(SIGRETURN, [return 0])
+fi
+
+dnl tricky stuff: try to find out if getcwd() is implemented with
+dnl system("sh -c pwd")
+AC_MSG_CHECKING(getcwd implementation)
+AC_TRY_RUN([
+char *dagger[] = { "IFS=pwd", 0 };
+main()
+{
+  char buffer[500];
+  extern char **environ;
+  environ = dagger;
+  return getcwd(buffer, 500) ? 0 : 1;
+}],
+	AC_MSG_RESULT(it is usable),
+	AC_MSG_RESULT(it stinks)
+		AC_DEFINE(BAD_GETCWD),
+	AC_MSG_ERROR(failed to compile test program))
+
+AC_CHECK_FUNCS(sigset getcwd getwd select strcspn strtol killpg)
+AC_CHECK_FUNCS(tgetent memset strerror fchown fsync fchdir)
+AC_CHECK_FUNCS(setenv putenv gettimeofday getpwuid getpwnam qsort)
+
+dnl rename needs to be checked separately to work on Nextstep with cc
+AC_MSG_CHECKING(for rename)
+AC_TRY_LINK([#include <stdio.h>], [rename("this", "that")],
+	AC_MSG_RESULT(yes); AC_DEFINE(HAVE_RENAME),
+	AC_MSG_RESULT(no))
+
+dnl this generates a warning, because the macro from autoconf is wrong.
+dnl just ignore it.
+AC_CHECK_SIZEOF(int)
+
+AC_MSG_CHECKING(whether memmove/bcopy/memcpy handle overlaps)
+[bcopy_test_prog='
+main() {
+  char buf[10];
+  strcpy(buf, "abcdefghi");
+  bcopy(buf, buf + 2, 3);
+  if (strncmp(buf, "ababcf", 6))
+    exit(1);
+  strcpy(buf, "abcdefghi");
+  bcopy(buf + 2, buf, 3);
+  if (strncmp(buf, "cdedef", 6))
+    exit(1);
+  exit(0); /* libc version works properly.  */
+}']
+
+dnl Check for memmove() before bcopy(), makes memmove() be used when both are
+dnl present, fixes problem with incompatibility between Solaris 2.4 and 2.5.
+
+AC_TRY_RUN([#define bcopy(s,d,l) memmove(d,s,l) $bcopy_test_prog],
+ AC_DEFINE(USEMEMMOVE) AC_MSG_RESULT(memmove does),
+AC_TRY_RUN([$bcopy_test_prog],
+ AC_DEFINE(USEBCOPY) AC_MSG_RESULT(bcopy does),
+AC_TRY_RUN([#define bcopy(s,d,l) memcpy(d,s,l)  $bcopy_test_prog],
+ AC_DEFINE(USEMEMCPY) AC_MSG_RESULT(memcpy does), AC_MSG_RESULT(no),
+  AC_MSG_ERROR(failed to compile test program)),
+  AC_MSG_ERROR(failed to compile test program)), 
+  AC_MSG_ERROR(failed to compile test program)) 
+
+dnl Check how we can run ctags
+dnl -t for typedefs (many ctags have this)
+dnl -s for static functions (Elvis ctags only?)
+dnl -v for variables. Dangerous, most ctags take this for 'vgrind style'.
+dnl -i+t to test for Darren Hiebert's ctags (no arguments really needed)
+AC_MSG_CHECKING(how to create tags)
+test -f tags && mv tags tags.save
+(eval etags       /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="etags"
+(eval etags -c    /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="etags -c"
+(eval ctags       /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags"
+(eval ctags -t    /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -t"
+(eval ctags -ts   /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -ts"
+(eval ctags -tvs  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -tvs"
+(eval ctags -i+t  /dev/null) < /dev/null 1>&AC_FD_CC 2>&1 && CTAGS="ctags -i+t"
+test -f tags.save && mv tags.save tags
+AC_MSG_RESULT($CTAGS) AC_SUBST(CTAGS)
+
+dnl Check if PREFIX/share exists
+dnl unfortunately prefix may not be set here yet
+AC_MSG_CHECKING(for default location to put help files)
+if test "x$prefix" = xNONE; then
+   tt=$ac_default_prefix
+else
+   tt=$prefix
+fi
+if test -d "$tt""/share"; then
+   HELPDIR="/share"
+else
+   HELPDIR="/lib"
+fi
+AC_MSG_RESULT("$tt""$HELPDIR") AC_SUBST(HELPDIR)
+
+dnl write output files
+AC_OUTPUT(config.mk)

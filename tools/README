@@ -1,0 +1,15 @@
+Some tools that can be used with Vim:
+
+ctags/:	C program to generate a tags file from a C program
+
+mvi/:	C program for renaming, deleting and linking files.
+
+ref:	shell script for the K command
+
+remote: mapping and shell script to read a file from a remote machine.
+
+vim132: shell script to edit in 132 column mode on vt100 compatible terminals
+
+xxd/:	C program to make a hex dump and do the reverse. Use like
+		:%!xxd		translate buffer to hexdump
+		:%!xxd -r	do the reverse action
