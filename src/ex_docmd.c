@@ -2552,7 +2552,7 @@ set_one_cmd_context(xp, buff)
 		if (*arg != NUL)
 		{
 		    xp->xp_context = EXPAND_NOTHING;
-		    arg = skip_regexp(arg + 1, *arg, p_magic);
+		    arg = skip_regexp(arg + 1, *arg, p_magic, NULL);
 		}
 	    }
 	    return find_nextcmd(arg);
@@ -2642,7 +2642,7 @@ set_one_cmd_context(xp, buff)
 	    {
 		/* skip "from" part */
 		++arg;
-		arg = skip_regexp(arg, delim, p_magic);
+		arg = skip_regexp(arg, delim, p_magic, NULL);
 	    }
 	    /* skip "to" part */
 	    while (arg[0] != NUL && arg[0] != delim)
@@ -2968,7 +2968,7 @@ get_address(ptr, skip)
 			c = *cmd++;
 			if (skip)	/* skip "/pat/" */
 			{
-			    cmd = skip_regexp(cmd, c, (int)p_magic);
+			    cmd = skip_regexp(cmd, c, (int)p_magic, NULL);
 			    if (*cmd == c)
 				++cmd;
 			}
@@ -7063,7 +7063,7 @@ ex_findpat(eap)
     {
 	whole = FALSE;
 	++eap->arg;
-	p = skip_regexp(eap->arg, '/', p_magic);
+	p = skip_regexp(eap->arg, '/', p_magic, NULL);
 	if (*p)
 	{
 	    *p++ = NUL;
@@ -8898,7 +8898,7 @@ ex_match(eap)
 	    EMSG2(_(e_invarg2), eap->arg);
 	    return;
 	}
-	end = skip_regexp(p + 1, *p, TRUE);
+	end = skip_regexp(p + 1, *p, TRUE, NULL);
 	if (!eap->skip)
 	{
 	    c = *end;

@@ -849,6 +849,8 @@ do_search(oap, dirc, str, count, options)
     char_u	    *p;
     long	    c;
     char_u	    *dircp;
+    char_u	    *strcopy = NULL;
+    char_u	    *ps;
 
     /*
      * A line offset is not remembered, this is vi compatible.
@@ -940,7 +942,15 @@ do_search(oap, dirc, str, count, options)
 	     * Find end of regular expression.
 	     * If there is a matching '/' or '?', toss it.
 	     */
-	    p = skip_regexp(str, dirc, (int)p_magic);
+	    ps = strcopy;
+	    p = skip_regexp(str, dirc, (int)p_magic, &strcopy);
+	    if (strcopy != ps)
+	    {
+		/* made a copy of "str" to change "\?" to "?" */
+		searchcmdlen += STRLEN(str) - STRLEN(strcopy);
+		str = strcopy;
+		searchstr = strcopy;
+	    }
 	    if (*p == dirc)
 	    {
 		dircp = p;	/* remember where we put the NUL */
@@ -977,8 +987,10 @@ do_search(oap, dirc, str, count, options)
 		while (isdigit(*p))	    /* skip number */
 		    ++p;
 	    }
-	    searchcmdlen = (int)(p - str); /* compute length of search command
-							    for get_address() */
+
+	    /* compute length of search command for get_address() */
+	    searchcmdlen += (int)(p - searchstr);
+
 	    str = p;			    /* put str after search command */
 	}
 
@@ -1074,6 +1086,7 @@ do_search(oap, dirc, str, count, options)
 			+ SEARCH_MSG + SEARCH_START
 			+ ((str != NULL && *str == ';') ? 0 : SEARCH_NOOF))),
 		RE_LAST);
+
 	if (dircp != NULL)
 	    *dircp = dirc;	/* restore second '/' or '?' for normal_cmd() */
 	if (c == FAIL)
@@ -1155,6 +1168,8 @@ do_search(oap, dirc, str, count, options)
 end_do_search:
     if (options & SEARCH_KEEP)
 	spats[0].off = old_off;
+    vim_free(strcopy);
+
     return retval;
 }
 

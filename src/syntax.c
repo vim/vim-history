@@ -5077,7 +5077,7 @@ get_syn_pattern(arg, ci)
     if (arg == NULL || arg[1] == NUL || arg[2] == NUL)
 	return NULL;
 
-    end = skip_regexp(arg + 1, *arg, TRUE);
+    end = skip_regexp(arg + 1, *arg, TRUE, NULL);
     if (*end != *arg)			    /* end delimiter not found */
     {
 	EMSG2(_("E401: Pattern delimiter not found: %s"), arg);
@@ -5246,7 +5246,7 @@ syn_cmd_sync(eap, syncing)
 		finished = TRUE;
 		break;
 	    }
-	    arg_end = skip_regexp(next_arg + 1, *next_arg, TRUE);
+	    arg_end = skip_regexp(next_arg + 1, *next_arg, TRUE, NULL);
 	    if (*arg_end != *next_arg)	    /* end delimiter not found */
 	    {
 		illegal = TRUE;

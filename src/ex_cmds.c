@@ -3408,7 +3408,7 @@ do_sub(eap)
 	    which_pat = RE_LAST;	    /* use last used regexp */
 	    delimiter = *cmd++;		    /* remember delimiter character */
 	    pat = cmd;			    /* remember start of search pat */
-	    cmd = skip_regexp(cmd, delimiter, p_magic);
+	    cmd = skip_regexp(cmd, delimiter, p_magic, &eap->arg);
 	    if (cmd[0] == delimiter)	    /* end delimiter found */
 		*cmd++ = NUL;		    /* replace it with a NUL */
 	}
@@ -4195,7 +4195,7 @@ ex_global(eap)
 	if (delim)
 	    ++cmd;		/* skip delimiter if there is one */
 	pat = cmd;		/* remember start of pattern */
-	cmd = skip_regexp(cmd, delim, p_magic);
+	cmd = skip_regexp(cmd, delim, p_magic, &eap->arg);
 	if (cmd[0] == delim)		    /* end delimiter found */
 	    *cmd++ = NUL;		    /* replace it with a NUL */
     }

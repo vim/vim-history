@@ -2528,7 +2528,7 @@ jumpto_tag(lbuf, forceit)
 	 */
 	str = pbuf;
 	if (pbuf[0] == '/' || pbuf[0] == '?')
-	    str = skip_regexp(pbuf + 1, pbuf[0], FALSE) + 1;
+	    str = skip_regexp(pbuf + 1, pbuf[0], FALSE, NULL) + 1;
 	if (str > pbuf_end - 1)	/* search command with nothing following */
 	{
 	    save_p_ws = p_ws;
@@ -2914,7 +2914,7 @@ find_extra(pp)
 	    str = skipdigits(str);
 	else if (*str == '/' || *str == '?')
 	{
-	    str = skip_regexp(str + 1, *str, FALSE);
+	    str = skip_regexp(str + 1, *str, FALSE, NULL);
 	    if (*str != **pp)
 		str = NULL;
 	    else
