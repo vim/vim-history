@@ -4025,21 +4025,30 @@ skip:
 		    break;
 	    }
 	}
-	arg = skipwhite(arg);
 
 	if (errmsg != NULL)
 	{
-	    ++no_wait_return;	/* wait_return done below */
-	    EMSG(_(errmsg));	/* show error highlighted */
-	    MSG_PUTS(": ");
-				/* show argument normal */
-	    while (startarg < arg)
-		startarg = msg_outtrans_one(startarg, 0);
-	    msg_end();		/* check for scrolling */
+	    STRNCPY(IObuff, _(errmsg), IOSIZE - 1);
+	    IObuff[IOSIZE - 1] = NUL;
+	    i = STRLEN(IObuff) + 2;
+	    if (i + (arg - startarg) < IOSIZE)
+	    {
+		/* append the argument with the error */
+		STRCAT(IObuff, ": ");
+		mch_memmove(IObuff + i, startarg, (arg - startarg));
+		IObuff[i + (arg - startarg)] = NUL;
+	    }
+	    /* make sure all characters are printable */
+	    trans_characters(IObuff, IOSIZE);
+
+	    ++no_wait_return;	/* wait_return done later */
+	    emsg(IObuff);	/* show error highlighted */
 	    --no_wait_return;
 
 	    return FAIL;
 	}
+
+	arg = skipwhite(arg);
     }
 
     return OK;
