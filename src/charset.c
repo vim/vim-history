@@ -1332,7 +1332,7 @@ getvvcol(wp, pos, start, cursor, end)
 	if (pos->coladd > 0)
 	{
 	    /* Adjust for multiwide char */
-	    ptr = ml_get(pos->lnum);
+	    ptr = ml_get_buf(wp->w_buffer, pos->lnum, FALSE);
 	    if (pos->col <= STRLEN(ptr))
 	    {
 		ptr += pos->col;
