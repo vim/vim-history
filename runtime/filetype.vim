@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2000 Dec 27
+" Last change:	2001 Jan 02
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -66,7 +66,7 @@ au BufNewFile,BufRead *.asa			setf aspvbs
 
 " Active Server Pages (with Perl or Visual Basic Script)
 au BufNewFile,BufRead *.asp
-	\ if getline(1) . getline(2) .  getline(3) =~? "perlscript" |
+	\ if getline(1) . getline(2) . getline(3) =~? "perlscript" |
 	\   setf aspperl |
 	\ else |
 	\   setf aspvbs |

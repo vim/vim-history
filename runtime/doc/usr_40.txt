@@ -1,4 +1,4 @@
-*usr_40.txt*	For Vim version 6.0r.  Last change: 2000 Nov 19
+*usr_40.txt*	For Vim version 6.s.  Last change: 2001 Jan 13
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -422,7 +422,7 @@ hasmapto()		Function to test if the user already defined a mapping
 exists(":cmd")		Check if a user command doesn't exist yet.
 
 ==============================================================================
-*40.8*	Writing a filetype plugin		*write-filetype-plugin*
+*40.8*	Writing a filetype plugin	*write-filetype-plugin* *ftplugin*
 
 A filetype plugin is like a global plugin, except that it sets options and
 defines mappings for the current buffer only.  See |add-filetype-plugin| for
@@ -446,12 +446,26 @@ chance to disable loading it.  Put this at the top of the plugin: >
 	let b:did_ftplugin = 1
 
 This also needs to be used to avoid that the same plugin is executed twice for
-the same buffer (happens with an ":edit" command without arguments).  
+the same buffer (happens when using an ":edit" command without arguments).  
 
-Now you can disable loading the default plugin by making a filetype plugin
-with only this line: >
+Now you can disable loading the default plugin completely by making a filetype
+plugin with only this line: >
 
 	let b:did_ftplugin = 1
+
+This does require that your filetype plugin directory comes before $VIMRUNTIME
+in 'runtimepath'!
+
+If you do want to use the default plugin, but overrule one of the settings,
+you can make a filetype plugin like this: >
+
+	source $VIMRUNTIME/ftplugin/vim.vim
+	set textwidth=70
+
+This first loads the default filetype plugin to get all its settings.  Then
+the value for the 'textwidth' option is changed to "70".  Note that the
+default plugin will have set "b:did_ftplugin", thus when it's sourced later,
+it won't do anything.
 
 
 OPTIONS

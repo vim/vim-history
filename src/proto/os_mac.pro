@@ -24,11 +24,19 @@ long mch_getperm __PARMS((char_u *name));
 int mch_setperm __PARMS((char_u *name, long perm));
 void mch_hide __ARGS((char_u *name));
 int mch_isdir __PARMS((char_u *name));
+int mch_can_exe __ARGS((char_u *name));
+int mch_nodetype __ARGS((char_u *name));
+void mch_init __ARGS((void));
 void mch_settmode __PARMS((int raw));
 
 #define mch_get_winsize()		gui_get_winsize()
 #define mch_set_winsize()		gui_set_winsize(FALSE)
 #define mch_suspend			gui_mch_iconify
+#if defined(__MRC__) || defined(__SC__)
+int mch_chdir __ARGS((char *p_name));
+int stat __ARGS((char *p, struct stat *p_st));
+#endif
+
 void mch_errmsg __ARGS((char *str));
 void mch_display_error __ARGS((void));
 int mch_call_shell __PARMS((char_u *cmd, int options));
@@ -73,3 +81,5 @@ int mch_get_shellsize __ARGS((void));
 void mch_set_shellsize __ARGS((void));
 void mch_new_shellsize __ARGS((void));
 int mch_nodetype __ARGS((char_u *name));
+
+/* vim: set ft=c : */

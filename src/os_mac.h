@@ -22,14 +22,31 @@
 #include <Script.h>
 #endif
 
+#if defined(__MWERKS__)  /* Only for metrowerks Compilers */
 #include <unistd.h>
 #include <utsname.h>
+#endif
 #include <signal.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
+#ifdef powerc
+# pragma options align=power
+#endif
+struct stat
+{
+    UInt32 st_mtime;
+    UInt32 st_mode;
+    UInt32 st_size;
+};
+#ifdef powerc
+# pragma options align=reset
+#endif
+#else
 #include <stat.h>
 #include <unix.h>
+#endif
 
 #if 0	    /* this doesn't work, because realloc() isn't redefined */
 /*
@@ -195,8 +212,13 @@
 
 #define mch_rename(src, dst) rename(src, dst)
 #define mch_remove(x) unlink((char *)(x))
-#define mch_chdir(s) chdir(s)
-/* vim_getenv() is in pty.c */
-#define USE_VIMPTY_GETENV
-#define mch_getenv(x) vimpty_getenv(x)
-#define mch_setenv(name, val, x) setenv(name, val, x)
+#if defined(__MRC__) || defined(__SC__)
+# define mch_getenv(name)  ((char_u *)getenv((char *)(name)))
+# define mch_setenv(name, val, x) setenv((name), (val))
+#else
+ /* vim_getenv() is in pty.c */
+# define USE_VIMPTY_GETENV
+# define mch_chdir(s) chdir(s)
+# define mch_getenv(x) vimpty_getenv(x)
+# define mch_setenv(name, val, x) setenv(name, val, x)
+#endif

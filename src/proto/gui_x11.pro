@@ -60,3 +60,4 @@ void gui_mch_drawsign __ARGS((int row, int sign_idx));
 XImage *gui_mch_register_sign __ARGS((char *signfile));
 void gui_mch_mousehide __ARGS((int hide));
 void mch_set_mouse_shape __ARGS((int shape));
+/* vim: set ft=c : */

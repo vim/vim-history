@@ -16,6 +16,32 @@
 #include "globals.h"
 #include "option.h"
 
+#if defined(__MRC__) || defined(__SC__) /* for Apple MPW Compilers */
+#include "StandardFile.h"
+/*
+ * Implements the corresponding unix function
+ */
+    int
+stat(
+    char *p,
+    struct stat *p_st)
+{
+    /*
+       TODO: Use functions which fill the FileParam struct (Files.h)
+             and copy these contents to our self-defined stat struct
+     */
+    return 0;
+}
+/*
+ * change the current working directory
+ */
+    int
+mch_chdir(char *p_name)
+{
+    /* TODO */
+    return FAIL;
+}
+#endif
 /*
  * Recursively build up a list of files in "gap" matching the first wildcard
  * in `path'.  Called by mch_expandpath().
@@ -48,10 +74,8 @@ mac_expandpath(
     char_u	*buf;
     char_u	*p, *s, *e, dany;
     int		start_len, c;
-    char	dummy;
     char_u	*pat;
     regmatch_t	regmatch;
-    int		matches;
 
     start_len = gap->ga_len;
     buf = alloc(STRLEN(path) + BASENAMELEN + 5);/* make room for file name */
@@ -118,7 +142,7 @@ mac_expandpath(
     }
 
     /* compile the regexp into a program */
-    reg_ic = FALSE;				/* Don't ever ignore case */
+    regmatch.rm_ic = FALSE;			/* Don't ever ignore case */
     regmatch.regprog = vim_regcomp(pat, TRUE);
     vim_free(pat);
 
@@ -362,7 +386,7 @@ mch_delay(msec, ignoreinput)
     long	msec;
     int		ignoreinput;
 {
-#if __MWERKS__ >= 0x2000
+#if __MWERKS__ >= 0x2000 || defined(__MRC__) || defined(__SC__)
     unsigned
 #endif
     long   finalTick;
@@ -463,6 +487,7 @@ mch_get_user_name(s, len)
     char_u	*s;
     int		len;
 {
+#if !(defined(__MRC__) || defined(__SC__)) /* No solution yet */
     /*
      * TODO: clean up and try getlogin ()
      */
@@ -481,6 +506,7 @@ mch_get_user_name(s, len)
     }
 #endif
     sprintf((char *)s, "%d", (int)uid);		/* assumes s is long enough */
+#endif
     return FAIL;				/* a number is not a name */
 }
 
@@ -493,10 +519,14 @@ mch_get_host_name(s, len)
     char_u	*s;
     int		len;
 {
+#if defined(__MRC__) || defined(__SC__)
+    s[0] = '\0'; /* TODO: use Gestalt information */
+#else
     struct utsname vutsname;
 
     uname(&vutsname);
     STRNCPY(s, vutsname.nodename, len);
+#endif
 }
 
 /*
@@ -517,6 +547,9 @@ mch_dirname(buf, len)
     char_u	*buf;
     int		len;
 {
+#if defined(__MRC__) || defined(__SC__)
+    return FAIL; /* No solution yet */
+#else
     /* The last : is already put by getcwd */
     if (getcwd((char *)buf, len) == NULL)
 	{
@@ -524,6 +557,7 @@ mch_dirname(buf, len)
 	    return FAIL;
 	}
     return OK;
+#endif
 }
 
     void
@@ -535,9 +569,6 @@ slash_n_colon_adjust (buf)
      */
 
     char_u  temp[MAXPATHL];
-    char_u  *dot;
-    char_u  *slash;
-    char_u  *searching;
     char_u  *first_colon = vim_strchr(buf, ':');
     char_u  *first_slash = vim_strchr(buf, '/');
     int     full = TRUE;
@@ -828,13 +859,17 @@ mch_isdir(name)
     char_u  *name;
 {
     /*
-     * TODO: Find maybe throught FileManager calls
+     * TODO: Find out by FileManager calls ...
      */
     struct stat statb;
 
     if (stat((char *)name, &statb))
 	return FALSE;
+#if defined(__MRC__) || defined(__SC__)
+    return FALSE;   /* definitely TODO */
+#else
     return ((statb.st_mode & S_IFMT) == S_IFDIR ? TRUE : FALSE);
+#endif
 }
 
 #if defined(FEAT_EVAL) || defined(PROTO)

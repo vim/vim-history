@@ -1,4 +1,4 @@
-*fold.txt*      For Vim version 6.0r.  Last change: 2001 Jan 01
+*fold.txt*      For Vim version 6.s.  Last change: 2001 Jan 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -253,10 +253,12 @@ zN		Fold normal: set 'foldenable'.  All folds will be as they
 							*zi*
 zi		Invert 'foldenable'.
 
+
 ==============================================================================
 3. Fold options					*fold-options*
 
-						*fold-foldlevel*
+FOLDLEVEL						*fold-foldlevel*
+
 'foldlevel' is a number option: The higher the more folded regions are open.
 When 'foldlevel' is 0, all folds are closed.
 When 'foldlevel' is positive, some folds closed.
@@ -268,7 +270,9 @@ folds will be closed.
 When decreased, folds above the new level are closed.  No manually closed
 folds will be opened.
 
-						*fold-foldtext*
+
+FOLDTEXT						*fold-foldtext*
+
 'foldtext' is a string option that specifies an expression.  This expression
 is evaluated to obtain the text displayed for a closed fold.  This is done in
 the |sandbox|.  Errors are ignored.
@@ -293,9 +297,29 @@ Note that backslashes need to be used for characters that the ":set" command
 handles differently: Space, backslash and double-quote. |option-backslash|
 
 
-Other options for folding:
-'foldcolumn' 'fdc':	When set, show a small column on the left of the
-			window to indicate folds.
+FOLDCOLUMN						*fold-foldcolumn*
+
+'foldcolumn' is a number, which sets the width for a column on the side of the
+window to indicate folds.  When it is zero, there is no foldcolumn.  A normal
+value is 4 or 5.  The minimal useful value is 2.  The maximum is 12.  
+
+An open fold is indicated with a column that has a '-' at the top and '|'
+characters below it.  This column stops where the open fold stops.  When folds
+nest, the nested fold is one character right of the fold it's contained in.
+
+A closed fold is indicated with a '+'.
+
+Where the fold column is too narrow to display all nested folds, digits are
+shown to indicate the nesting level.
+
+The mouse can also be used to open and close folds by clicking in the
+fold column:
+- Click on a '+' to open the closed fold at this row.
+- Click on any other non-blank character to close the open fold at this row
+
+
+OTHER OPTIONS
+
 'foldenable' 'fen':	Open all folds while set.
 'foldexpr'   'fde':	Expression used for "expr" folding.
 'foldignore' 'fdi':	Characters used for "indent" folding.
@@ -313,7 +337,7 @@ When moving the cursor upwards, it will move to the last line of a sequence of
 folded lines.  When the cursor is already on a folded line, it moves to the
 previous unfolded line.
 
-While the cursor is on a folded lines, the cursor is always displayed in the
+While the cursor is on folded lines, the cursor is always displayed in the
 first column.  The ruler does show the actual cursor position, but since the
 line is folded, it cannot be displayed there.
 

@@ -41,3 +41,4 @@ int mch_expandpath __ARGS((garray_t *gap, char_u *path, int flags));
 int mch_chdir __ARGS((char *path));
 char_u *mch_getenv __ARGS((char_u *name));
 char *djgpp_setlocale __ARGS((void));
+/* vim: set ft=c : */

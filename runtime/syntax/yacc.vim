@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Yacc
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Last Change:	December 13, 1999
+" Last Change:	December 15, 1999
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -18,11 +18,11 @@ syn cluster	yaccActionGroup	contains=yaccDelim,cInParen,cTodo,cIncluded,yaccDeli
 syn cluster	yaccUnionGroup	contains=yaccKey,cComment,yaccCurly,cType,cStructure,cStorageClass,yaccUnionCurly
 
 " Yacc stuff
-syn match	yaccDelim	"^[ \t]*[:|;]"
+syn match	yaccDelim	"^\s*[:|;]"
 syn match	yaccOper	"@\d\+"
 
-syn match	yaccKey	"^[ \t]*%\(token\|type\|left\|right\|start\|ident\)\>"
-syn match	yaccKey	"[ \t]%\(prec\|expect\|nonassoc\)\>"
+syn match	yaccKey	"^\s*%\(token\|type\|left\|right\|start\|ident\|nonassoc\)\>"
+syn match	yaccKey	"\s%\(prec\|expect\)\>"
 syn match	yaccKey	"\$\(<[a-zA-Z_][a-zA-Z_0-9]*>\)\=[\$0-9]\+"
 syn keyword	yaccKeyActn	yyerrok yyclearin
 

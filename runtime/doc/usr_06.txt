@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0r.  Last change: 2000 Oct 31
+*usr_06.txt*	For Vim version 6.s.  Last change: 2001 Jan 13
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -145,11 +145,14 @@ FILETYPE PLUGINS
 							*add-filetype-plugin*
 The Vim distribution comes with a set of plugins for different filetypes that
 you can start using with this command: >
+
 	:filetype plugin on
+
 That's all!  See |vimrc-filetype|.
 
-If you are missing a plugin for a filetype you are using, you can add it.
-There are two steps for adding another filetype plugin:
+If you are missing a plugin for a filetype you are using, or you found a
+better one, you can add it.
+There are two steps for adding a filetype plugin:
 1. Get a copy of the plugin.
 2. Drop it in the right directory.
 
@@ -164,20 +167,46 @@ plugins are in $VIMRUNTIME/ftplugin.
 
 USING A FILETYPE PLUGIN
 
-You can add more filetype plugins by dropping them in the right directory.
-The name of this directory is in the same directory mentioned above for
-global plugins, but with the last part looking like: >
+You can add a filetype plugins by dropping it in the right directory.  The
+name of this directory is in the same directory mentioned above for global
+plugins, but the last part is "ftplugin".  Suppose you have found a plugin for
+the "stuff" filetype, and you are on Unix.  Then you can move this file to the
+ftplugin directory: >
 
-	ftplugin/<filetype>/name.vim
+	mv thefile ~/.vim/ftplugin/stuff.vim
 
-Example for Unix: >
+If that file already exists you already have a plugin for "stuff".  You might
+want to check if the existing plugin doesn't conflict with the one you are
+adding.  If it's OK, you can give the new one another name: >
 
-	~/.vim/ftplugin/cpp/stuff.vim
+	mv thefile ~/.vim/ftplugin/stuff_too.vim
+
+The underscore is used to separate the name of the filetype from the rest,
+which can be anything.
+
+On MS-DOS you cannot use long filenames.  You would run into trouble if you
+add a second plugin and the filetype has more than six characters.  You can
+use an extra directory to get around this: >
+
+	mkdir $VIM/vimfiles/ftplugin/fortran
+	copy thefile $VIM/vimfiles/ftplugin/fortran/too.vim
+
+The generic names for the filetype plugins are: >
+
+	ftplugin/<filetype>.vim
+	ftplugin/<filetype>_<name>.vim
+	ftplugin/<filetype>/<name>.vim
+
+Examples for the "stuff" filetype on Unix: >
+
+	~/.vim/ftplugin/stuff.vim
+	~/.vim/ftplugin/stuff_def.vim
+	~/.vim/ftplugin/stuff/header.vim
 
 The <filetype> part is the name of the filetype the plugin is to be used for.
-In this case it's "cpp".  Only files of this filetype will use the settings
-from the plugin.  The name of the plugin file doesn't matter, but it must end
-in ".vim".
+Only files of this filetype will use the settings from the plugin.  The <name>
+part of the plugin file doesn't matter, you can use it to have several plugins
+for the same filetype.  Note that it must end in ".vim".
 
 
 Further reading:

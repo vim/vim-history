@@ -28,3 +28,4 @@ void foldAdjustVisual __ARGS((void));
 void foldMarkAdjust __ARGS((win_t *wp, linenr_t line1, linenr_t line2, long amount, long amount_after));
 int getDeepestNesting __ARGS((void));
 int put_folds __ARGS((FILE *fd, win_t *wp));
+/* vim: set ft=c : */

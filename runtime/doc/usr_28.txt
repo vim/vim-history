@@ -1,4 +1,4 @@
-*usr_28.txt*	For Vim version 6.0r.  Last change: 2000 Aug 20
+*usr_28.txt*	For Vim version 6.s.  Last change: 2001 Jan 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 		
@@ -61,7 +61,7 @@ And you can close the fold again with: >
 	zc
 
 All the folding commands start with 'z'.  With some fantasy, this looks like a
-folded piece of papre, seen from the side.  The following letter has a
+folded piece of paper, seen from the side.  The following letter has a
 mnemonic meaning to make it easier to remember the commands:
 	zf	F-old creation
 	zo	O-pen a fold
@@ -181,7 +181,7 @@ Thus there are two ways to open and close the folds:
 
 This can be combined: You can first close most folds by using |zm| a few times
 and then open a specific fold with |zo|.  Or open all folds with |zR| and
-then close specific folgs with |zc|.
+then close specific folds with |zc|.
 
 But you cannot manually define folds when 'foldmethod' is "indent", as that
 would conflict with the relation between the indent and the fold level.

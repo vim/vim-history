@@ -637,7 +637,15 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 #ifdef FEAT_XIM
     if (xic)
     {
-	len = XmbLookupString(xic, ev_press, (char *)string,
+#if X_HAVE_UTF8_STRING
+	/* XFree86 4.0.2 or newer: Be able to get UTF-8 characers even when
+	 * the locale isn't utf-8.  */
+	if (cc_utf8)
+	    len = Xutf8LookupString(xic, ev_press, (char *)string,
+				  sizeof(string_shortbuf), &key_sym, &status);
+	else
+#endif
+	    len = XmbLookupString(xic, ev_press, (char *)string,
 				  sizeof(string_shortbuf), &key_sym, &status);
 	if (status == XBufferOverflow)
 	{
@@ -668,7 +676,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
     if ((key_sym == XK_space) && (ev_press->state & ShiftMask))
     {
 	hangul_input_state_toggle();
-	return;
+	goto theend;
     }
 #endif
 
@@ -701,13 +709,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 	if (gui.menu_is_active
 		&& (p_wak[0] == 'y'
 		    || (p_wak[0] == 'm' && gui_is_menu_shortcut(string[0]))))
-	{
-# ifdef FEAT_XIM
-	    if (string_alloced)
-		XtFree((char *)string);
-# endif
-	    return;
-	}
+	    goto theend;
 #endif
 	/*
 	 * Before we set the 8th bit, check to make sure the user doesn't
@@ -755,13 +757,7 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 
     /* Unrecognised key is ignored. */
     if (len == 0)
-    {
-#ifdef FEAT_XIM
-	if (string_alloced)
-	    XtFree((char *)string);
-#endif
-	return;
-    }
+	goto theend;
 
     /* Special keys (and a few others) may have modifiers */
     if (len == 3 || key_sym == XK_space || key_sym == XK_Tab
@@ -832,16 +828,17 @@ gui_x11_key_hit_cb(w, dud, event, dum)
 
     add_to_input_buf(string, len);
 
-#ifdef FEAT_XIM
-    if (string_alloced)
-	XtFree((char *)string);
-#endif
-
     /*
      * blank out the pointer if necessary
      */
     if (p_mh)
 	gui_mch_mousehide(TRUE);
+
+theend:
+#ifdef FEAT_XIM
+    if (string_alloced)
+	XtFree((char *)string);
+#endif
 }
 
 /* ARGSUSED */

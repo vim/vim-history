@@ -56,3 +56,4 @@ int show_one_termcode __ARGS((char_u *name, char_u *code, int printit));
 void check_for_codes_from_term __ARGS((void));
 char_u *translate_mapping __ARGS((char_u *str, int expmap));
 void update_tcap __ARGS((int attr));
+/* vim: set ft=c : */

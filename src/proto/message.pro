@@ -46,3 +46,4 @@ int vim_dialog_yesno __ARGS((int type, char_u *title, char_u *message, int dflt)
 int vim_dialog_yesnocancel __ARGS((int type, char_u *title, char_u *message, int dflt));
 int vim_dialog_yesnoallcancel __ARGS((int type, char_u *title, char_u *message, int dflt));
 char_u *do_browse __ARGS((int saving, char_u *title, char_u *dflt, char_u *ext, char_u *initdir, char_u *filter, buf_t *buf));
+/* vim: set ft=c : */

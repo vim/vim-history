@@ -72,7 +72,6 @@ typedef long off_t;
  * Try several directories to put the temp files.
  */
 #define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
-#define TEMPNAME	"v?XXXXXX"
 #define TEMPNAMELEN	128
 
 #ifndef DFLT_MAXMEM
@@ -98,5 +97,12 @@ int mch_rename(const char *OldFile, const char *NewFile);
 #else
 # define mch_rename(src, dst) rename(src, dst)
 #endif
+
+#ifdef DJGPP
+# define mch_mkdir(x, y) mkdir((char *)(x), y)
+#else
+# define mch_mkdir(x, y) mkdir((char *)(x))
+#endif
+#define mch_rmdir(x) rmdir((char *)(x))
 
 #define mch_setenv(name, val, x) setenv(name, val, x)

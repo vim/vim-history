@@ -34,7 +34,7 @@ Rules for making a syntax file:
 - The name of the file must be the same as the head of the group names in the
   file.  This avoids using the same group name as another syntax file.  Use
   the same name for the string that b:current_syntax is set to.  Always use
-  lower case.
+  lower case.  A name of six characters or shorter is preferred.
 - Start with a "syntax clear".
 - Do not include anything that is a user preference.
 - Do not include mappings or abbreviations.  Only include setting 'iskeyword'

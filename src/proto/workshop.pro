@@ -47,3 +47,4 @@ char *workshop_test_getcursorrowtext __ARGS((void));
 char *workshop_test_getselectedtext __ARGS((void));
 void workshop_save_sensitivity __ARGS((char *filename));
 void findYourself __ARGS((char *argv0));
+/* vim: set ft=c : */

@@ -1472,6 +1472,20 @@ menu_is_popup(name)
     return (STRNCMP(name, "PopUp", 5) == 0);
 }
 
+#if defined(FEAT_GUI_MOTIF) || defined(PROTO)
+/*
+ * Return TRUE if "name" is part of a poup menu.
+ */
+    int
+menu_is_child_of_popup(menu)
+    vimmenu_t *menu;
+{
+    while (menu->parent != NULL)
+	menu = menu->parent;
+    return menu_is_popup(menu->name);
+}
+#endif
+
 /*
  * Return TRUE if "name" is a toolbar menu name.
  */

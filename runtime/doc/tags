@@ -80,6 +80,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'ccv'	options.txt	/*'ccv'*
 'cd'	options.txt	/*'cd'*
 'cdpath'	options.txt	/*'cdpath'*
+'cedit'	options.txt	/*'cedit'*
 'cf'	options.txt	/*'cf'*
 'ch'	options.txt	/*'ch'*
 'character'	intro.txt	/*'character'*
@@ -95,6 +96,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'cinwords'	options.txt	/*'cinwords'*
 'clipboard'	options.txt	/*'clipboard'*
 'cmdheight'	options.txt	/*'cmdheight'*
+'cmdwinheight'	options.txt	/*'cmdwinheight'*
 'co'	options.txt	/*'co'*
 'columns'	options.txt	/*'columns'*
 'com'	options.txt	/*'com'*
@@ -116,6 +118,7 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'cst'	options.txt	/*'cst'*
 'csto'	options.txt	/*'csto'*
 'csverb'	options.txt	/*'csverb'*
+'cwh'	options.txt	/*'cwh'*
 'debug'	options.txt	/*'debug'*
 'def'	options.txt	/*'def'*
 'define'	options.txt	/*'define'*
@@ -374,11 +377,9 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 'noex'	options.txt	/*'noex'*
 'noexpandtab'	options.txt	/*'noexpandtab'*
 'noexrc'	options.txt	/*'noexrc'*
-'nofdc'	options.txt	/*'nofdc'*
 'nofen'	options.txt	/*'nofen'*
 'nofk'	options.txt	/*'nofk'*
 'nofkmap'	options.txt	/*'nofkmap'*
-'nofoldcolumn'	options.txt	/*'nofoldcolumn'*
 'nofoldenable'	options.txt	/*'nofoldenable'*
 'nogd'	options.txt	/*'nogd'*
 'nogdefault'	options.txt	/*'nogdefault'*
@@ -1224,6 +1225,8 @@ $VIMRUNTIME	starting.txt	/*$VIMRUNTIME*
 :argd	editing.txt	/*:argd*
 :argdelete	editing.txt	/*:argdelete*
 :argdo	editing.txt	/*:argdo*
+:arge	editing.txt	/*:arge*
+:argedit	editing.txt	/*:argedit*
 :argglobal	editing.txt	/*:argglobal*
 :arglocal	editing.txt	/*:arglocal*
 :args	editing.txt	/*:args*
@@ -2308,6 +2311,8 @@ Chinese	multibyte.txt	/*Chinese*
 Cmd-event	autocmd.txt	/*Cmd-event*
 Cmdline	cmdline.txt	/*Cmdline*
 Cmdline-mode	cmdline.txt	/*Cmdline-mode*
+CmdwinEnter	autocmd.txt	/*CmdwinEnter*
+CmdwinLeave	autocmd.txt	/*CmdwinLeave*
 Command-line	cmdline.txt	/*Command-line*
 Command-line-mode	cmdline.txt	/*Command-line-mode*
 Contents	quickref.txt	/*Contents*
@@ -2840,7 +2845,10 @@ cmdline-lines	cmdline.txt	/*cmdline-lines*
 cmdline-ranges	cmdline.txt	/*cmdline-ranges*
 cmdline-special	cmdline.txt	/*cmdline-special*
 cmdline-too-long	cmdline.txt	/*cmdline-too-long*
+cmdline-window	cmdline.txt	/*cmdline-window*
 cmdline.txt	cmdline.txt	/*cmdline.txt*
+cmdwin	cmdline.txt	/*cmdwin*
+cmdwin-char	cmdline.txt	/*cmdwin-char*
 cobol-syntax	syntax.txt	/*cobol-syntax*
 cobol.vim	syntax.txt	/*cobol.vim*
 coded-character-set	multibyte.txt	/*coded-character-set*
@@ -2863,6 +2871,7 @@ compl-filename	insert.txt	/*compl-filename*
 compl-generic	insert.txt	/*compl-generic*
 compl-keyword	insert.txt	/*compl-keyword*
 compl-tag	insert.txt	/*compl-tag*
+compl-vim	insert.txt	/*compl-vim*
 compl-whole-line	insert.txt	/*compl-whole-line*
 complex-change	change.txt	/*complex-change*
 complex-repeat	repeat.txt	/*complex-repeat*
@@ -3150,6 +3159,7 @@ fo-table	change.txt	/*fo-table*
 fold-behavior	fold.txt	/*fold-behavior*
 fold-commands	fold.txt	/*fold-commands*
 fold-expr	fold.txt	/*fold-expr*
+fold-foldcolumn	fold.txt	/*fold-foldcolumn*
 fold-foldlevel	fold.txt	/*fold-foldlevel*
 fold-foldtext	fold.txt	/*fold-foldtext*
 fold-indent	fold.txt	/*fold-indent*
@@ -3181,6 +3191,7 @@ fortran-syntax	syntax.txt	/*fortran-syntax*
 fortran.vim	syntax.txt	/*fortran.vim*
 french-maillist	intro.txt	/*french-maillist*
 ftp	intro.txt	/*ftp*
+ftplugin	usr_40.txt	/*ftplugin*
 ftplugin-special	usr_40.txt	/*ftplugin-special*
 function-argument	eval.txt	/*function-argument*
 function-key	intro.txt	/*function-key*
@@ -3204,6 +3215,8 @@ g:explDetailedList	pi_expl.txt	/*g:explDetailedList*
 g:explDirsFirst	pi_expl.txt	/*g:explDirsFirst*
 g:explHideFiles	pi_expl.txt	/*g:explHideFiles*
 g:explSortBy	pi_expl.txt	/*g:explSortBy*
+g:explSplitBelow	pi_expl.txt	/*g:explSplitBelow*
+g:explSplitRight	pi_expl.txt	/*g:explSplitRight*
 g:explSuffixesLast	pi_expl.txt	/*g:explSuffixesLast*
 g:explUseSeparators	pi_expl.txt	/*g:explUseSeparators*
 g:explVertical	pi_expl.txt	/*g:explVertical*
@@ -3243,6 +3256,8 @@ ga	various.txt	/*ga*
 gd	pattern.txt	/*gd*
 ge	motion.txt	/*ge*
 getbufvar()	eval.txt	/*getbufvar()*
+getchar()	eval.txt	/*getchar()*
+getcharmod()	eval.txt	/*getcharmod()*
 getcwd()	eval.txt	/*getcwd()*
 getfsize()	eval.txt	/*getfsize()*
 getftime()	eval.txt	/*getftime()*
@@ -3259,6 +3274,7 @@ gj	motion.txt	/*gj*
 gk	motion.txt	/*gk*
 glob()	eval.txt	/*glob()*
 global-ime	multibyte.txt	/*global-ime*
+global-local	options.txt	/*global-local*
 global-variable	eval.txt	/*global-variable*
 gm	motion.txt	/*gm*
 go	motion.txt	/*go*
@@ -3504,6 +3520,7 @@ i_CTRL-X_CTRL-L	insert.txt	/*i_CTRL-X_CTRL-L*
 i_CTRL-X_CTRL-N	insert.txt	/*i_CTRL-X_CTRL-N*
 i_CTRL-X_CTRL-P	insert.txt	/*i_CTRL-X_CTRL-P*
 i_CTRL-X_CTRL-T	insert.txt	/*i_CTRL-X_CTRL-T*
+i_CTRL-X_CTRL-V	insert.txt	/*i_CTRL-X_CTRL-V*
 i_CTRL-X_CTRL-Y	insert.txt	/*i_CTRL-X_CTRL-Y*
 i_CTRL-X_CTRL-]	insert.txt	/*i_CTRL-X_CTRL-]*
 i_CTRL-Y	insert.txt	/*i_CTRL-Y*
@@ -3773,6 +3790,7 @@ new-Select-mode	version5.txt	/*new-Select-mode*
 new-View	version6.txt	/*new-View*
 new-argument-list	version6.txt	/*new-argument-list*
 new-buftype	version6.txt	/*new-buftype*
+new-cmdwin	version6.txt	/*new-cmdwin*
 new-commands	version5.txt	/*new-commands*
 new-commands-5.4	version5.txt	/*new-commands-5.4*
 new-debug-itf	version6.txt	/*new-debug-itf*
@@ -3914,6 +3932,7 @@ postscr-syntax	syntax.txt	/*postscr-syntax*
 postscr.vim	syntax.txt	/*postscr.vim*
 ppwiz-syntax	syntax.txt	/*ppwiz-syntax*
 ppwiz.vim	syntax.txt	/*ppwiz.vim*
+prevcount-variable	eval.txt	/*prevcount-variable*
 preview-window	windows.txt	/*preview-window*
 prevnonblank()	eval.txt	/*prevnonblank()*
 printcap-syntax	syntax.txt	/*printcap-syntax*
@@ -3938,6 +3957,9 @@ python-window	if_python.txt	/*python-window*
 python-windows	if_python.txt	/*python-windows*
 python.vim	syntax.txt	/*python.vim*
 q	repeat.txt	/*q*
+q/	cmdline.txt	/*q\/*
+q:	cmdline.txt	/*q:*
+q?	cmdline.txt	/*q?*
 quickfix	quickfix.txt	/*quickfix*
 quickfix-6	version6.txt	/*quickfix-6*
 quickfix-directory-stack	quickfix.txt	/*quickfix-directory-stack*
@@ -4462,6 +4484,7 @@ v:foldend	eval.txt	/*v:foldend*
 v:foldstart	eval.txt	/*v:foldstart*
 v:lang	eval.txt	/*v:lang*
 v:lnum	eval.txt	/*v:lnum*
+v:prevcount	eval.txt	/*v:prevcount*
 v:shell_error	eval.txt	/*v:shell_error*
 v:statusmsg	eval.txt	/*v:statusmsg*
 v:termresponse	eval.txt	/*v:termresponse*
@@ -4528,6 +4551,7 @@ v_d	change.txt	/*v_d*
 v_g?	change.txt	/*v_g?*
 v_gJ	change.txt	/*v_gJ*
 v_gV	visual.txt	/*v_gV*
+v_gf	editing.txt	/*v_gf*
 v_gq	change.txt	/*v_gq*
 v_gv	visual.txt	/*v_gv*
 v_i	motion.txt	/*v_i*
@@ -4561,6 +4585,7 @@ various.txt	various.txt	/*various.txt*
 vb-syntax	syntax.txt	/*vb-syntax*
 vb.vim	syntax.txt	/*vb.vim*
 verbose	starting.txt	/*verbose*
+verilog-indent	change.txt	/*verilog-indent*
 version-5.1	version5.txt	/*version-5.1*
 version-5.2	version5.txt	/*version-5.2*
 version-5.3	version5.txt	/*version-5.3*

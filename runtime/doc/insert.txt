@@ -1,4 +1,4 @@
-*insert.txt*    For Vim version 6.0r.  Last change: 2000 Dec 28
+*insert.txt*    For Vim version 6.s.  Last change: 2001 Jan 13
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -513,7 +513,8 @@ Completion can be done for:
 6. tags							|i_CTRL-X_CTRL-]|
 7. file names						|i_CTRL-X_CTRL-F|
 8. definitions or macros				|i_CTRL-X_CTRL-D|
-9. keywords in 'complete'				|i_CTRL-N|
+9. Vim command-line					|i_CTRL-X_CTRL-V|
+10. keywords in 'complete'				|i_CTRL-N|
 
 All these (except 2) are done in CTRL-X mode.  This is a sub-mode of Insert
 and Replace modes.  You enter CTRL-X mode by typing CTRL-X and one of the
@@ -759,6 +760,26 @@ CTRL-X CTRL-D		Search in the current and included files for the
 			following the previous expansion in other contexts
 			unless a double CTRL-X is used.
 
+
+Completing Vim commands					*compl-vim*
+
+Completion is context-sensitive.  It works like on the Command-line.  It
+completes an Ex command as well as its arguments.
+
+							*i_CTRL-X_CTRL-V*
+CTRL-X CTRL-V		Guess what kind of item is in front of the cursor and
+			find the first match for it.
+	CTRL-V	or
+	CTRL-N		Search forwards for next match.  This match replaces
+			the previous one.
+
+	CTRL-P		Search backward for previous match.  This match
+			replaces the previous one.
+
+	CTRL-X CTRL-V	Further use of CTRL-X CTRL-V will do the same as
+			CTRL-V.  This allows mapping a key to do Vim command
+			completion, for example: >
+				:imap <Tab> <C-X><C-V>
 
 Completing keywords from different sources		*compl-generic*
 

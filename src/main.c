@@ -279,8 +279,8 @@ main
     int		    bin_mode = FALSE;	    /* -b option used */
 #ifdef FEAT_WINDOWS
     int		    window_count = 1;	    /* number of windows to use */
+    int		    arg_idx;		    /* index in argument list */
 #endif
-    int		    arg_idx = 0;	    /* index in argument list */
     int		    had_minmin = FALSE;	    /* found "--" option */
     int		    argv_idx;		    /* index in argv[n][] */
     int		    want_full_screen = TRUE;
@@ -293,7 +293,6 @@ main
     int		    edit_type = EDIT_NONE;  /* type of editing to do */
     int		    stdout_isatty;	    /* is stdout a terminal? */
     int		    input_isatty;	    /* is active input a terminal? */
-    oparg_t	    oa;			    /* operator arguments */
 
     /*
      * Do any system-specific initialisations.
@@ -1261,16 +1260,6 @@ main
 #endif
 
     /*
-     * Don't set the file name if there was a command in .vimrc that already
-     * loaded the file
-     */
-    if (curbuf->b_ffname == NULL)
-    {
-	(void)setfname(fname, NULL, TRUE);  /* includes maketitle() */
-	++arg_idx;			    /* used first argument name */
-    }
-
-    /*
      * Start putting things on the screen.
      * Scroll screen down before drawing over it
      * Clear screen now, so file message will not be cleared.
@@ -1476,6 +1465,7 @@ main
     ++autocmd_no_enter;
     ++autocmd_no_leave;
 # endif
+    arg_idx = 1;
     for (i = 1; i < window_count; ++i)
     {
 	if (curwin->w_next == NULL)	    /* just checking */
@@ -1574,10 +1564,31 @@ main
 	stuffReadbuff((char_u *)"\034\016");
 
     /*
-     * main command loop
+     * Call the main command loop.  This never returns.
      */
+    main_loop(FALSE);
+
+    return 0;
+}
+#endif /* PROTO */
+
+/*
+ * Main loop: Execute Normal mode commands until exiting Vim.
+ * Also used to handle commands in the command-line window, until the window
+ * is closed.
+ */
+    void
+main_loop(cmdwin)
+    int		cmdwin;	/* TRUE when working in the command-line window */
+{
+    oparg_t	oa;	/* operator arguments */
+
     clear_oparg(&oa);
-    for (;;)
+    while (!cmdwin
+#ifdef FEAT_CMDWIN
+	    || cmdwin_result == 0
+#endif
+	    )
     {
 	if (stuff_empty())
 	{
@@ -1677,12 +1688,7 @@ main
 	else
 	    normal_cmd(&oa, TRUE);
     }
-    /*NOTREACHED*/
-#if (!defined(MSDOS) && !defined(WIN16)) || defined(DJGPP)
-    return 0;	/* Borland C++ gives a "not reached" error message here */
-#endif
 }
-#endif /* PROTO */
 
 /*
  * Get a (optional) count for a Vim argument.

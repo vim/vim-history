@@ -18,3 +18,4 @@ void check_scrollbind __ARGS((linenr_t topline_diff, long leftcol_diff));
 void scroll_redraw __ARGS((int up, long count));
 void start_selection __ARGS((void));
 void may_start_select __ARGS((int c));
+/* vim: set ft=c : */

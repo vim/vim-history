@@ -286,7 +286,9 @@ EXTERN int	p_bk;		/* 'backup' */
 EXTERN char_u	*p_bkc;		/* 'backupcopy' */
 EXTERN char_u	*p_bdir;	/* 'backupdir' */
 EXTERN char_u	*p_bex;		/* 'backupext' */
+#ifdef FEAT_WILDIGN
 EXTERN char_u	*p_bsk;		/* 'backupskip' */
+#endif
 #ifdef FEAT_BEVAL
 EXTERN int	p_bdlay;	/* 'balloondelay' */
 EXTERN int	p_beval;	/* 'ballooneval' */
@@ -304,6 +306,10 @@ EXTERN char_u	*p_cc;		/* 'charcode' */
 # ifdef FEAT_EVAL
 EXTERN char_u	*p_ccv;		/* 'charconvert' */
 # endif
+#endif
+#ifdef FEAT_CMDWIN
+EXTERN char_u	*p_cedit;	/* 'cedit' */
+EXTERN long	p_cwh;		/* 'cmdwinheight' */
 #endif
 #ifdef FEAT_CLIPBOARD
 EXTERN char_u	*p_cb;		/* 'clipboard' */

@@ -43,7 +43,6 @@
 #undef HAVE_DATE_TIME
 
 #undef UNIX	/* defined always when using configure */
-#undef SVR4	/* an elf-based system is SVR4. What is linux? */
 
 /* Defined to the size of an int */
 #undef SIZEOF_INT
@@ -142,7 +141,6 @@
 #undef HAVE_LSTAT
 #undef HAVE_MEMCMP
 #undef HAVE_MEMSET
-#undef HAVE_MKSTEMP
 #undef HAVE_NANOSLEEP
 #undef HAVE_OPENDIR
 #undef HAVE_PUTENV

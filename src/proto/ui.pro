@@ -46,3 +46,4 @@ void clip_x11_request_selection __ARGS((Widget myShell, Display *dpy));
 void clip_x11_lose_selection __ARGS((Widget myShell));
 int clip_x11_own_selection __ARGS((Widget myShell));
 void clip_x11_set_selection __ARGS((void));
+/* vim: set ft=c : */

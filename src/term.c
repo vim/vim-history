@@ -1463,6 +1463,10 @@ set_color_count(nr)
 #ifdef HAVE_TGETENT
 static char *(key_names[]) =
 {
+#ifdef FEAT_TERMRESPONSE
+    /* Do this one first, it may cause a screen redraw. */
+    "Co",
+#endif
     "ku", "kd", "kr", "kl",
 # ifdef ARCHIE
     "su", "sd",		/* Termcap code made up! */
@@ -1472,9 +1476,6 @@ static char *(key_names[]) =
     "k7", "k8", "k9", "k;", "F1", "F2",
     "%1", "&8", "kb", "kI", "kD", "kh",
     "@7", "kP", "kN", "K1", "K3", "K4", "K5",
-#ifdef FEAT_TERMRESPONSE
-    "Co",
-#endif
     NULL
 };
 #endif
@@ -3043,6 +3044,9 @@ starttermcap()
 	screen_start();			/* don't know where cursor is now */
 #ifdef FEAT_TERMRESPONSE
 	may_req_termresponse();
+	/* Immediately check for a response.  If t_Co changes, we don't want
+	 * to redraw with wrong colors first. */
+	check_for_codes_from_term();
 #endif
     }
 }
@@ -3087,6 +3091,7 @@ may_req_termresponse()
 	need_get_crv = FALSE;
 	/* check for the characters now, otherwise they might be eaten by
 	 * get_keystroke() */
+	out_flush();
 	(void)vpeekc_nomap();
     }
 }
@@ -3180,7 +3185,7 @@ mouse_has(c)
 }
 
 /*
- * Return TRUE when 'mousemodel' is set to "popup".
+ * Return TRUE when 'mousemodel' is set to "popup" or "popup_setpos".
  */
     int
 mouse_model_popup()
@@ -4862,7 +4867,13 @@ got_code_from_term(code, len)
 	    if (name[0] == 'C' && name[1] == 'o')
 	    {
 		/* Color count is not a key code. */
-		set_color_count(atoi((char *)str));
+		i = atoi((char *)str);
+		if (i != t_colors)
+		{
+		    /* Nr of colors changed, must redraw everything. */
+		    set_color_count(i);
+		    redraw_later(CLEAR);
+		}
 	    }
 	    else
 	    {

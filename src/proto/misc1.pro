@@ -78,3 +78,4 @@ void addfile __ARGS((garray_t *gap, char_u *f, int flags));
 char_u *get_cmd_output __ARGS((char_u *cmd, int flags));
 void FreeWild __ARGS((int count, char_u **files));
 int goto_im __ARGS((void));
+/* vim: set ft=c : */

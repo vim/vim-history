@@ -21,3 +21,4 @@ void write_viminfo_filemarks __ARGS((FILE *fp));
 int removable __ARGS((char_u *name));
 int write_viminfo_marks __ARGS((FILE *fp_out));
 void copy_viminfo_marks __ARGS((char_u *line, FILE *fp_in, FILE *fp_out, int count, int eof));
+/* vim: set ft=c : */

@@ -1,6 +1,6 @@
 " Menu Translations:	Italian
 " Maintainer:		Antonio Colombo <antonio.colombo@jrc.org>
-" Last Change:	2000 Dic 20
+" Last Change:	2001 Jan 03
 
 menutrans clear
 let did_menu_trans = 1
@@ -30,9 +30,9 @@ menutrans E&xit<Tab>:qa			&Esci<Tab>:qa
 
 " Edit menu
 " menutrans &Edit			&Edit
-menutrans &Undo<Tab>u			&Torna\ indietro<Tab>u
-menutrans &Redo<Tab>^R			&Vai\ in\ avanti<Tab>^R
-menutrans Rep&eat<Tab>\.		&Ripeti<Tab>\.
+menutrans &Undo<Tab>u			&Disfa<Tab>u
+menutrans &Redo<Tab>^R			Ri&fai<Tab>^R
+menutrans Rep&eat<Tab>\.		&Ripeti \ultimo \comando<Tab>\.
 menutrans Cu&t<Tab>"*x			T&aglia<Tab>"*x
 menutrans &Copy<Tab>"*y			&Copia<Tab>"*y
 menutrans &Paste<Tab>"*p		&Incolla<Tab>"*p
@@ -50,8 +50,8 @@ menutrans Options\.\.\.			Opzioni\.\.\.
 
 " Programming menu
 menutrans &Tools			&Strumenti
-menutrans &Jump\ to\ this\ tag<Tab>g^]	&Salta\ a\ questa\ Tag<Tab>g^]
-menutrans Jump\ &back<Tab>^T		Salta\ &indietro<Tab>^T
+menutrans &Jump\ to\ this\ tag<Tab>g^]	&Vai\ a\ questa\ Tag<Tab>g^]
+menutrans Jump\ &back<Tab>^T		Torna\ &indietro<Tab>^T
 menutrans Build\ &Tags\ File		Costruisci\ File\ &Tags\
 menutrans &Make<Tab>:make		Esegui\ &Make<Tab>:make
 menutrans &List\ Errors<Tab>:cl		Lista\ &Errori<Tab>:cl
@@ -62,7 +62,7 @@ menutrans &Older\ List<Tab>:cold	Lista\ men&o\ recente<Tab>:cold
 menutrans N&ewer\ List<Tab>:cnew	Lista\ più\ rece&nte<Tab>:cnew
 menutrans Error\ &Window<Tab>:cwin	&Finestra\ errori<Tab>:cwin
 menutrans Convert\ to\ HEX<Tab>:%!xxd	Tradurre\ in\ Esadecimale<Tab>:%!xxd
-menutrans Convert\ back<Tab>:%!xxd\ -r	Tradurre\ indietro<Tab>:%!xxd\ -r
+menutrans Convert\ back<Tab>:%!xxd\ -r	Tradurre\ da\ Esadecimale<Tab>:%!xxd\ -r
 
 " Names for buffer menu.
 menutrans &Buffers	&Buffer
@@ -91,15 +91,15 @@ menutrans Rotate\ &Down<Tab>^Wr		Rotation\ verso\ il &basso<Tab>^Wr
 menutrans Select\ &Font\.\.\.		Scegli\ &font\.\.\.
 
 " The popup menu
-menutrans &Undo		        Torna \&indietro
+menutrans &Undo		        &Disfa
 menutrans Cu&t			&Taglia
 menutrans &Copy			C&opia
 menutrans &Paste		I&ncolla
 menutrans &Delete		C&ancella
 menutrans Select\ Blockwise 	Seleziona\ in\ blocco
-menutrans Select\ &Word		Seleziona\ una\ &parola
-menutrans Select\ &Line		Seleziona\ una\ &linea
-menutrans Select\ &Block	Seleziona\ un\ &blocco
+menutrans Select\ &Word		Seleziona\ &parola
+menutrans Select\ &Line		Seleziona\ &linea
+menutrans Select\ &Block	Seleziona\ &blocco
 menutrans Select\ &All		Seleziona\ &tutto
  
 " The GUI toolbar (for Win32 or GTK)
@@ -112,22 +112,22 @@ if has("win32") || has("gui_gtk")
     tmenu ToolBar.Save		Salva file
     tmenu ToolBar.SaveAll	Salva tutti i files
     tmenu ToolBar.Print		Stampa
-    tmenu ToolBar.Undo		Torna indietro
-    tmenu ToolBar.Redo		Vai in avanti
+    tmenu ToolBar.Undo		Disfa
+    tmenu ToolBar.Redo		Rifai
     tmenu ToolBar.Cut		Taglia
     tmenu ToolBar.Copy		Copia
     tmenu ToolBar.Paste		Incolla
     tmenu ToolBar.Find		Cerca...
     tmenu ToolBar.FindNext	Cerca successivo
     tmenu ToolBar.FindPrev	Cerca precedente
-    tmenu ToolBar.Replace	Cerca e rimpiazza...
+    tmenu ToolBar.Replace	Rimpiazza...
     tmenu ToolBar.LoadSesn	Carica sessione
     tmenu ToolBar.SaveSesn	Salva sessione
-    tmenu ToolBar.RunScript	esegui uno script
-    tmenu ToolBar.Make		esegui Make 
-    tmenu ToolBar.Shell		esegui il tuo Shell
-    tmenu ToolBar.RunCtags	genera un file di Tags
-    tmenu ToolBar.TagJump	Salta a una Tag
+    tmenu ToolBar.RunScript	Esegui script
+    tmenu ToolBar.Make		Esegui Make 
+    tmenu ToolBar.Shell		Esegui Shell
+    tmenu ToolBar.RunCtags	Genera file di Tags
+    tmenu ToolBar.TagJump	Vai a una Tag
     tmenu ToolBar.Help		Aiuto!
     tmenu ToolBar.FindHelp	Cerca nella documentazione...
   endfun
@@ -135,9 +135,9 @@ endif
 
 " Syntax menu
 menutrans &Syntax		&Sintassi
-menutrans Set\ 'syntax'\ only	attivare\ soltanto\ 'syntax'
-menutrans Set\ 'filetype'\ too	attivare\ anche\ 'filetype'
-menutrans &Off			&basta
+menutrans Set\ 'syntax'\ only	Attivare\ soltanto\ 'syntax'
+menutrans Set\ 'filetype'\ too	Attivare\ anche\ 'filetype'
+menutrans &Off			&Basta
 menutrans &Manual		&Manuale
 menutrans A&utomatic		A&utomatico
 menutrans &on\ (this\ file)	A&ttivare\ (per\ questo\ file)

@@ -51,14 +51,6 @@
 #endif
 
 /*
- * SVR4 will be defined for linux and FreeBSD if elf.h exists, but those aren't
- * SVR4
- */
-#if defined(SVR4) && ((defined(__linux__) && (__GLIBC__ < 2)) || defined(BSD))
-# undef SVR4
-#endif
-
-/*
  * Sun defines FILE on SunOS 4.x.x, Solaris has a typedef for FILE
  */
 #if defined(sun) && !defined(FILE)
@@ -85,6 +77,8 @@
 
 /* always use unlink() to remove files */
 #ifndef PROTO
+# define mch_mkdir(x, y) mkdir((char *)(x), y)
+# define mch_rmdir(x) rmdir((char *)(x))
 # define mch_remove(x) unlink((char *)(x))
 #endif
 
@@ -274,11 +268,7 @@
 #endif
 
 #define DFLT_ERRORFILE		"errors.err"
-#ifdef OS2
-# define DFLT_MAKEEF		"vim##.err"
-#else
-# define DFLT_MAKEEF		"/tmp/vim##.err"
-#endif
+#define DFLT_MAKEEF		""
 
 #ifdef OS2
 # define DFLT_RUNTIMEPATH	"$HOME/vimfiles,$VIM/vimfiles,$VIMRUNTIME"
@@ -291,11 +281,9 @@
  * Try several directories to put the temp files.
  */
 # define TEMPDIRNAMES	"$TMP", "$TEMP", "c:\\TMP", "c:\\TEMP", ""
-# define TEMPNAME	"v?XXXXXX"
 # define TEMPNAMELEN	128
 #else
-# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ""
-# define TEMPNAME	"v?XXXXXX"
+# define TEMPDIRNAMES	"$TMPDIR", "/tmp", ".", "$HOME"
 # define TEMPNAMELEN	256
 #endif
 

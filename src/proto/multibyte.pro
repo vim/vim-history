@@ -41,3 +41,4 @@ void xim_reset __ARGS((void));
 int xim_queue_key_press_event __ARGS((GdkEvent *ev));
 void xim_init __ARGS((void));
 int xim_get_status_area_height __ARGS((void));
+/* vim: set ft=c : */

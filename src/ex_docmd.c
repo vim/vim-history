@@ -124,6 +124,8 @@ static int	do_arglist __ARGS((char_u *str, int what, int after));
 #define AL_SET	1
 #define AL_ADD	2
 #define AL_DEL	3
+static void alist_check_arg_idx __ARGS((void));
+
 #if defined(FEAT_BROWSE) && (defined(FEAT_GUI_DIALOG) || defined(FEAT_CON_DIALOG))
 static void	browse_save_fname __ARGS((buf_t *buf));
 #endif
@@ -181,10 +183,13 @@ static void	ex_preserve __ARGS((exarg_t *eap));
 static void	ex_recover __ARGS((exarg_t *eap));
 static void	ex_args __ARGS((exarg_t *eap));
 #ifdef FEAT_LISTCMDS
+static void	ex_argedit __ARGS((exarg_t *eap));
 static void	ex_argadd __ARGS((exarg_t *eap));
 static void	ex_argdelete __ARGS((exarg_t *eap));
 static void	ex_listdo __ARGS((exarg_t *eap));
+static int alist_add_list __ARGS((int count, char_u **files, int after));
 #else
+# define ex_argedit		ex_ni
 # define ex_argadd		ex_ni
 # define ex_argdelete		ex_ni
 # define ex_listdo		ex_ni
@@ -542,6 +547,13 @@ do_exmode(improved)
     msg_scroll = save_msg_scroll;
 }
 
+/* Struct for storing a line inside a while loop */
+typedef struct
+{
+    char_u	*line;		/* command line */
+    linenr_t	lnum;		/* sourcing_lnum of the line */
+} wcmd_t;
+
 /*
  * do_cmdline(): execute one Ex command line
  *
@@ -585,7 +597,7 @@ do_cmdline(cmdline, getline, cookie, flags)
     cstack.cs_had_while = FALSE;
     cstack.cs_had_endwhile = FALSE;
     cstack.cs_had_continue = FALSE;
-    ga_init2(&lines_ga, (int)sizeof(char_u *), 10);
+    ga_init2(&lines_ga, (int)sizeof(wcmd_t), 10);
 #endif
 
     /*
@@ -654,7 +666,8 @@ do_cmdline(cmdline, getline, cookie, flags)
 		break;
 	    }
 
-	    next_cmdline = ((char_u **)(lines_ga.ga_data))[current_line];
+	    next_cmdline = ((wcmd_t *)(lines_ga.ga_data))[current_line].line;
+	    sourcing_lnum = ((wcmd_t *)(lines_ga.ga_data))[current_line].lnum;
 	}
 #endif
 
@@ -675,8 +688,10 @@ do_cmdline(cmdline, getline, cookie, flags)
 #endif
 			    )) == NULL)
 	    {
-		/* don't call wait_return for aborted command line */
-		if (KeyTyped)
+		/* Don't call wait_return for aborted command line.  The NULL
+		 * returned for the end of a sourced file or executed function
+		 * doesn't do this. */
+		if (KeyTyped && !(flags & DOCMD_REPEAT))
 		    need_wait_return = FALSE;
 		retval = FAIL;
 		break;
@@ -706,8 +721,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 		&& (cstack.cs_whilelevel || has_while_cmd(next_cmdline))
 		&& ga_grow(&lines_ga, 1) == OK)
 	{
-	    ((char_u **)(lines_ga.ga_data))[current_line] =
+	    ((wcmd_t *)(lines_ga.ga_data))[current_line].line =
 						    vim_strsave(next_cmdline);
+	    ((wcmd_t *)(lines_ga.ga_data))[current_line].lnum = sourcing_lnum;
 	    ++lines_ga.ga_len;
 	    --lines_ga.ga_room;
 	}
@@ -746,14 +762,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 		c = cmdline_copy[200];
 		cmdline_copy[200] = NUL;
 	    }
-#ifdef FEAT_EVAL
-	    if (current_line + 1 < lines_ga.ga_len)
-		smsg((char_u *)_("line ~%ld: %s"),
-		     (long)sourcing_lnum - lines_ga.ga_len + current_line + 1,
-								cmdline_copy);
-	    else
-#endif
-		smsg((char_u *)_("line %ld: %s"),
+	    smsg((char_u *)_("line %ld: %s"),
 					   (long)sourcing_lnum, cmdline_copy);
 	    msg_puts((char_u *)"\n");   /* don't overwrite this either */
 	    if (c >= 0)
@@ -852,11 +861,16 @@ do_cmdline(cmdline, getline, cookie, flags)
 	}
 
 	/*
-	 * When not inside a ":while", clear remembered lines.
+	 * When not inside any ":while" loop, clear remembered lines.
 	 */
 	if (!cstack.cs_whilelevel)
 	{
-	    free_cmdlines(&lines_ga);
+	    if (lines_ga.ga_len > 0)
+	    {
+		sourcing_lnum =
+		       ((wcmd_t *)lines_ga.ga_data)[lines_ga.ga_len - 1].lnum;
+		free_cmdlines(&lines_ga);
+	    }
 	    current_line = 0;
 	}
 #endif /* FEAT_EVAL */
@@ -924,7 +938,7 @@ do_cmdline(cmdline, getline, cookie, flags)
 	     * here should not overwrite the command that may be shown before
 	     * doing that.
 	     */
-	    msg_didout = msg_didout_before_start;
+	    msg_didout |= msg_didout_before_start;
 	    wait_return(FALSE);
 	}
     }
@@ -947,9 +961,9 @@ do_cmdline(cmdline, getline, cookie, flags)
 free_cmdlines(gap)
     garray_t	*gap;
 {
-    while (gap->ga_len)
+    while (gap->ga_len > 0)
     {
-	vim_free(((char_u **)(gap->ga_data))[gap->ga_len - 1]);
+	vim_free(((wcmd_t *)(gap->ga_data))[gap->ga_len - 1].line);
 	--gap->ga_len;
 	++gap->ga_room;
     }
@@ -1272,6 +1286,14 @@ do_one_cmd(cmdlinep, sourcing,
 	goto doend;
     }
 #endif
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0 && !(ea.argt & CMDWIN))
+    {
+	/* Command not allowed in cmdline window. */
+	errormsg = (char_u *)_(e_cmdwin);
+	goto doend;
+    }
+#endif
 
     if (!(ea.argt & RANGE) && ea.addr_count > 0)	/* no range allowed */
     {
@@ -1335,7 +1357,21 @@ do_one_cmd(cmdlinep, sourcing,
 	int		len;
 	int		i;
 
-	program = (ea.cmdidx == CMD_grep) ? p_gp : p_mp;
+	if (ea.cmdidx == CMD_grep)
+	{
+	    if (*curbuf->b_p_gp == NUL)
+		program = p_gp;
+	    else
+		program = curbuf->b_p_gp;
+	}
+	else
+	{
+	    if (*curbuf->b_p_mp == NUL)
+		program = p_mp;
+	    else
+		program = curbuf->b_p_mp;
+	}
+
 	p = skipwhite(p);
 
 	if ((pos = (char_u *)strstr((char *)program, "$*")) != NULL)
@@ -2123,7 +2159,9 @@ set_one_cmd_context(xp, buff)
 #if defined(FEAT_USR_CMDS) && defined(FEAT_CMDL_COMPL)
     int			compl = EXPAND_NOTHING;
 #endif
-    char_u		delim;
+#ifdef FEAT_CMDL_COMPL
+    int			delim;
+#endif
     int			forceit = FALSE;
     int			usefilter = FALSE;  /* filter instead of file name */
 
@@ -2149,30 +2187,7 @@ set_one_cmd_context(xp, buff)
 /*
  * 3. parse a range specifier of the form: addr [,addr] [;addr] ..
  */
-    /*
-     * Backslashed delimiters after / or ? will be skipped, and commands will
-     * not be expanded between /'s and ?'s or after "'". -- webb
-     */
-    while (*cmd != NUL && (vim_isspace(*cmd) || isdigit(*cmd) ||
-			    vim_strchr((char_u *)".$%'/?-+,;", *cmd) != NULL))
-    {
-	if (*cmd == '\'')
-	{
-	    if (*++cmd == NUL)
-		xp->xp_context = EXPAND_NOTHING;
-	}
-	else if (*cmd == '/' || *cmd == '?')
-	{
-	    delim = *cmd++;
-	    while (*cmd != NUL && *cmd != delim)
-		if (*cmd++ == '\\' && *cmd != NUL)
-		    ++cmd;
-	    if (*cmd == NUL)
-		xp->xp_context = EXPAND_NOTHING;
-	}
-	if (*cmd != NUL)
-	    ++cmd;
-    }
+    cmd = skip_range(cmd, &xp->xp_context);
 
 /*
  * 4. parse command
@@ -2503,10 +2518,15 @@ set_one_cmd_context(xp, buff)
 	    xp->xp_context = EXPAND_HELP;
 	    xp->xp_pattern = arg;
 	    break;
-#ifdef FEAT_BROWSE
+
+	/* Command modifiers: return the argument. */
 	case CMD_browse:
-#endif
 	case CMD_confirm:
+	case CMD_vertical:
+	case CMD_topleft:
+	case CMD_botright:
+	case CMD_silent:
+	case CMD_verbose:
 	    return arg;
 
 #ifdef FEAT_CMDL_COMPL
@@ -2783,6 +2803,44 @@ set_one_cmd_context(xp, buff)
 	    break;
     }
     return NULL;
+}
+
+/*
+ * skip a range specifier of the form: addr [,addr] [;addr] ..
+ *
+ * Backslashed delimiters after / or ? will be skipped, and commands will
+ * not be expanded between /'s and ?'s or after "'".
+ *
+ * Returns the "cmd" pointer advanced to beyond the range.
+ */
+    char_u *
+skip_range(cmd, ctx)
+    char_u	*cmd;
+    int		*ctx;	/* pointer to xp_context or NULL */
+{
+    int		delim;
+
+    while (*cmd != NUL && (vim_isspace(*cmd) || isdigit(*cmd) ||
+			    vim_strchr((char_u *)".$%'/?-+,;", *cmd) != NULL))
+    {
+	if (*cmd == '\'')
+	{
+	    if (*++cmd == NUL && ctx != NULL)
+		*ctx = EXPAND_NOTHING;
+	}
+	else if (*cmd == '/' || *cmd == '?')
+	{
+	    delim = *cmd++;
+	    while (*cmd != NUL && *cmd != delim)
+		if (*cmd++ == '\\' && *cmd != NUL)
+		    ++cmd;
+	    if (*cmd == NUL && ctx != NULL)
+		*ctx = EXPAND_NOTHING;
+	}
+	if (*cmd != NUL)
+	    ++cmd;
+    }
+    return cmd;
 }
 
 /*
@@ -3852,8 +3910,10 @@ get_mef_name()
 
     if (*p_mef == NUL)
     {
-	EMSG(_("makeef option not set"));
-	return NULL;
+	name = vim_tempname('e');
+	if (name == NULL)
+	    EMSG(_(e_notmp));
+	return name;
     }
 
     for (p = p_mef; *p; ++p)
@@ -3960,9 +4020,6 @@ do_arglist(str, what, after)
 #ifdef FEAT_LISTCMDS
     int		match;
 #endif
-#ifdef FEAT_WINDOWS
-    win_t	*win;
-#endif
 
     /*
      * Collect all file name arguments in "new_ga".
@@ -4023,9 +4080,9 @@ do_arglist(str, what, after)
 	 * argument list.
 	 */
 #ifdef CASE_INSENSITIVE_FILENAME
-	reg_ic = TRUE;		/* Always ignore case */
+	regmatch.rm_ic = TRUE;		/* Always ignore case */
 #else
-	reg_ic = FALSE;		/* Never ignore case */
+	regmatch.rm_ic = FALSE;		/* Never ignore case */
 #endif
 	for (i = 0; i < new_ga.ga_len && !got_int; ++i)
 	{
@@ -4080,48 +4137,34 @@ do_arglist(str, what, after)
 #ifdef FEAT_LISTCMDS
 	if (what == AL_ADD)
 	{
-	    if (ga_grow(&ALIST(curwin)->al_ga, exp_count) == OK)
-	    {
-		if (after < 0)
-		    after = 0;
-		if (after > ARGCOUNT)
-		    after = ARGCOUNT;
-		if (after < ARGCOUNT)
-		    mch_memmove(&(ARGLIST[after + exp_count]),
-			    &(ARGLIST[after]),
-			    (ARGCOUNT - after) * sizeof(aentry_t));
-		for (i = 0; i < exp_count; ++i)
-		{
-		    ARGLIST[after + i].ae_fname = ((char_u **)exp_files)[i];
-		    ARGLIST[after + i].ae_fnum =
-				buflist_add(((char_u **)exp_files)[i], FALSE);
-		}
-		ALIST(curwin)->al_ga.ga_len += exp_count;
-		ALIST(curwin)->al_ga.ga_room -= exp_count;
-		if (curwin->w_arg_idx >= after)
-		    ++curwin->w_arg_idx;
-		vim_free(exp_files);
-	    }
-	    else
-		FreeWild(exp_count, exp_files);
+	    (void)alist_add_list(exp_count, exp_files, after);
+	    vim_free(exp_files);
 	}
 	else /* what == AL_SET */
 #endif
 	    alist_set(ALIST(curwin), exp_count, exp_files, FALSE);
     }
 
-    /*
-     * Check the validity of the arg_idx for each other window.
-     */
+    alist_check_arg_idx();
+
+    return OK;
+}
+
+/*
+ * Check the validity of the arg_idx for each other window.
+ */
+    static void
+alist_check_arg_idx()
+{
 #ifdef FEAT_WINDOWS
+    win_t	*win;
+
     for (win = firstwin; win != NULL; win = win->w_next)
 	if (win->w_alist == curwin->w_alist)
 	    check_arg_idx(win);
 #else
     check_arg_idx(curwin);
 #endif
-
-    return OK;
 }
 
 /*
@@ -5795,6 +5838,14 @@ not_exiting()
 ex_quit(eap)
     exarg_t	*eap;
 {
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+    {
+	cmdwin_result = ESC;
+	return;
+    }
+#endif
+
     /*
      * If there are more files or windows we won't exit.
      */
@@ -5856,7 +5907,12 @@ ex_quit_all(eap)
 ex_close(eap)
     exarg_t	*eap;
 {
-    ex_win_close(eap, curwin);
+# ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+	cmdwin_result = K_IGNORE;
+    else
+# endif
+	ex_win_close(eap, curwin);
 }
 
     static void
@@ -6009,6 +6065,14 @@ ex_stop(eap)
 ex_exit(eap)
     exarg_t	*eap;
 {
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+    {
+	cmdwin_result = ESC;
+	return;
+    }
+#endif
+
     /*
      * if more files or windows we won't exit
      */
@@ -6265,6 +6329,11 @@ handle_drop(filec, filev, split)
     int		split;		/* force splitting the window */
 {
     exarg_t	ea;
+
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0)
+	return;
+#endif
 
     /* Check whether the current buffer is changed. If so, we will need
      * to split the current window or data could be lost.
@@ -6618,6 +6687,43 @@ ex_args(eap)
 
 #ifdef FEAT_LISTCMDS
 /*
+ * ":argedit"
+ */
+    static void
+ex_argedit(eap)
+    exarg_t	*eap;
+{
+    int		fnum;
+    int		i;
+    char_u	*s;
+
+    /* Add the argument to the buffer list and get the buffer number. */
+    fnum = buflist_add(eap->arg, FALSE);
+
+    /* Check if this argument is already in the argument list. */
+    for (i = 0; i < ARGCOUNT; ++i)
+	if (ARGLIST[i].ae_fnum == fnum)
+	    break;
+    if (i == ARGCOUNT)
+    {
+	/* Can't find it, add it to the argument list. */
+	s = vim_strsave(eap->arg);
+	if (s == NULL)
+	    return;
+	i = alist_add_list(1, &s,
+	       eap->addr_count > 0 ? (int)eap->line2 : curwin->w_arg_idx + 1);
+	if (i < 0)
+	    return;
+	curwin->w_arg_idx = i;
+    }
+
+    alist_check_arg_idx();
+
+    /* Edit the argument. */
+    do_argfile(eap, i);
+}
+
+/*
  * ":argadd"
  */
     static void
@@ -6739,7 +6845,48 @@ ex_listdo(eap)
     vim_free(save_ei);
 #endif
 }
-#endif
+
+/*
+ * Add files[count] to the arglist of the current window after arg "after".
+ * The file names in files[count] must have been allocated and are taken over.
+ * Files[] itself is not taken over.
+ * Returns index of first added argument.  Returns -1 when failed (out of mem).
+ */
+    static int
+alist_add_list(count, files, after)
+    int		count;
+    char_u	**files;
+    int		after;	    /* where to add: 0 = before first one */
+{
+    int		i;
+
+    if (ga_grow(&ALIST(curwin)->al_ga, count) == OK)
+    {
+	if (after < 0)
+	    after = 0;
+	if (after > ARGCOUNT)
+	    after = ARGCOUNT;
+	if (after < ARGCOUNT)
+	    mch_memmove(&(ARGLIST[after + count]), &(ARGLIST[after]),
+				       (ARGCOUNT - after) * sizeof(aentry_t));
+	for (i = 0; i < count; ++i)
+	{
+	    ARGLIST[after + i].ae_fname = files[i];
+	    ARGLIST[after + i].ae_fnum = buflist_add(files[i], FALSE);
+	}
+	ALIST(curwin)->al_ga.ga_len += count;
+	ALIST(curwin)->al_ga.ga_room -= count;
+	if (curwin->w_arg_idx >= after)
+	    ++curwin->w_arg_idx;
+	return after;
+    }
+
+    for (i = 0; i < count; ++i)
+	vim_free(files[i]);
+    return -1;
+}
+
+#endif /* FEAT_LISTCMDS */
 
 /*
  * Command modifiers: The argument is another command.
@@ -9046,9 +9193,9 @@ makeopens(fd, dirnow)
 #endif
 
     /*
-     * Next a command to unload current buffers.
+     * Close all windows but one.
      */
-    if (put_line(fd, "1,9999bd") == FAIL)
+    if (put_line(fd, "only") == FAIL)
 	return FAIL;
 
     /*
@@ -9082,7 +9229,7 @@ makeopens(fd, dirnow)
 		&& buf->b_fname != NULL)
 	{
 	    if (fprintf(fd, "badd +%ld ", buf->b_wininfo->wi_fpos.lnum) < 0
-		    || ses_fname(fd, buf, TRUE) == FAIL)
+		    || ses_fname(fd, buf, FALSE) == FAIL)
 		return FAIL;
 	}
     }
@@ -9520,7 +9667,7 @@ ses_arglist(fd, cmd, gap, fullname)
     char_u	*s;
 
     if (gap->ga_len == 0)
-	return put_line(fd, "argdel *");
+	return put_line(fd, "silent! argdel *");
     if (fputs(cmd, fd) < 0)
 	return FAIL;
     for (i = 0; i < gap->ga_len; ++i)
@@ -9682,8 +9829,10 @@ cmd_runtime(name, all)
     char_u	*name;
     int		all;
 {
-    char_u	*p;
+    char_u	*rtp;
+    char_u	*np;
     char_u	*buf;
+    char_u	*tail;
     int		num_files;
     char_u	**files;
     int		i;
@@ -9702,30 +9851,39 @@ cmd_runtime(name, all)
 	if (p_verbose > 1)
 	    smsg((char_u *)_("Searching for \"%s\" in \"%s\""),
 						 (char *)name, (char *)p_rtp);
-	p = p_rtp;
-	while (*p != NUL)
+	/* Loop over all entries in 'runtimepath'. */
+	rtp = p_rtp;
+	while (*rtp != NUL && (all || !did_one))
 	{
-	    /* Concatenate a part of 'runtimepath' with the file name. */
-	    copy_option_part(&p, buf, MAXPATHL, ",");
-	    if (STRLEN(buf) + STRLEN(name) + 1 < MAXPATHL)
+	    /* Copy the path from 'runtimepath' to buf[]. */
+	    copy_option_part(&rtp, buf, MAXPATHL, ",");
+	    if (STRLEN(buf) + STRLEN(name) + 2 < MAXPATHL)
 	    {
 		add_pathsep(buf);
-		STRCAT(buf, name);
+		tail = buf + STRLEN(buf);
 
-		/* Expand wildcards and source each match. */
-		if (gen_expand_wildcards(1, &buf, &num_files, &files,
-							       EW_FILE) == OK)
+		/* Loop over all patterns in "name" */
+		np = name;
+		while (*np != NUL && (all || !did_one))
 		{
-		    for (i = 0; i < num_files; ++i)
+		    /* Append the pattern from "name" to buf[]. */
+		    copy_option_part(&np, tail, MAXPATHL - (tail - buf), " ");
+
+		    if (p_verbose > 2)
+			smsg((char_u *)_("Searching for \"%s\""), (char *)buf);
+		    /* Expand wildcards and source each match. */
+		    if (gen_expand_wildcards(1, &buf, &num_files, &files,
+							       EW_FILE) == OK)
 		    {
-			(void)do_source(files[i], FALSE, FALSE);
-			did_one = TRUE;
-			if (!all)
-			    break;
+			for (i = 0; i < num_files; ++i)
+			{
+			    (void)do_source(files[i], FALSE, FALSE);
+			    did_one = TRUE;
+			    if (!all)
+				break;
+			}
+			FreeWild(num_files, files);
 		    }
-		    FreeWild(num_files, files);
-		    if (!all && num_files > 0)
-			break;
 		}
 	    }
 	}
@@ -10109,6 +10267,7 @@ do_debug(cmd)
     int		n;
     char_u	*cmdline = NULL;
     char_u	*p;
+    char	*tail = NULL;
     static int	last_cmd = 0;
 #define CMD_CONT	1
 #define CMD_NEXT	2
@@ -10161,20 +10320,45 @@ do_debug(cmd)
 	cmdline_row = msg_row;
 	if (cmdline != NULL)
 	{
+	    /* If this is a debug command, set "last_cmd".
+	     * If not, reset "last_cmd".
+	     * For a blank line use previous command. */
 	    p = skipwhite(cmdline);
-	    if (STRCMP(p, "cont") == 0)
-		last_cmd = CMD_CONT;
-	    else if (STRCMP(p, "next") == 0)
-		last_cmd = CMD_NEXT;
-	    else if (STRCMP(p, "step") == 0)
-		last_cmd = CMD_STEP;
-	    else if (STRCMP(p, "finish") == 0)
-		last_cmd = CMD_FINISH;
-	    else if (*p != NUL)
-		last_cmd = 0;
+	    if (*p != NUL)
+	    {
+		switch (*p)
+		{
+		    case 'c': last_cmd = CMD_CONT;
+			      tail = "ont";
+			      break;
+		    case 'n': last_cmd = CMD_NEXT;
+			      tail = "ext";
+			      break;
+		    case 's': last_cmd = CMD_STEP;
+			      tail = "tep";
+			      break;
+		    case 'f': last_cmd = CMD_FINISH;
+			      tail = "inish";
+			      break;
+		    default: last_cmd = 0;
+		}
+		if (last_cmd != 0)
+		{
+		    /* Check that the tail matches. */
+		    ++p;
+		    while (*p != NUL && *p == *tail)
+		    {
+			++p;
+			++tail;
+		    }
+		    if (isalpha(*p))
+			last_cmd = 0;
+		}
+	    }
 	}
 	if (last_cmd != 0)
 	{
+	    /* Execute debug command: decided where to break next and return. */
 	    switch (last_cmd)
 	    {
 		case CMD_CONT:
@@ -10454,6 +10638,7 @@ dbg_find_breakpoint(file, fname, after)
 		&& (lnum == 0 || bp->dbg_lnum < lnum))
 	{
 	    regmatch.regprog = bp->dbg_prog;
+	    regmatch.rm_ic = FALSE;
 	    if (vim_regexec(&regmatch, name, (colnr_t)0))
 		lnum = bp->dbg_lnum;
 	}

@@ -15,3 +15,4 @@ void u_undoline __ARGS((void));
 void u_blockfree __ARGS((buf_t *buf));
 int bufIsChanged __ARGS((buf_t *buf));
 int curbufIsChanged __ARGS((void));
+/* vim: set ft=c : */

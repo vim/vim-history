@@ -724,7 +724,7 @@ wait_return(redraw)
 	 * Avoid that the mouse-up event causes visual mode to start.
 	 */
 	if (c == K_LEFTMOUSE || c == K_MIDDLEMOUSE || c == K_RIGHTMOUSE)
-	    jump_to_mouse(MOUSE_SETPOS, NULL);
+	    (void)jump_to_mouse(MOUSE_SETPOS, NULL);
 	else
 #endif
 	    if (vim_strchr((char_u *)"\r\n ", c) == NULL)

@@ -124,13 +124,15 @@ typedef struct SearchedFile
  * options & SEARCH_HIS: put search string in history
  * options & SEARCH_KEEP: keep previous search pattern
  *
+ * returns FAIL if failed, OK otherwise.
  */
-    regprog_t *
-search_regcomp(pat, pat_save, pat_use, options)
+    int
+search_regcomp(pat, pat_save, pat_use, options, regmatch)
     char_u	*pat;
     int		pat_save;
     int		pat_use;
     int		options;
+    regmmatch_t	*regmatch;	/* return: pattern and ignore-case flag */
 {
     int		magic;
     int		i;
@@ -154,7 +156,7 @@ search_regcomp(pat, pat_save, pat_use, options)
 	    else
 		EMSG(_(e_noprevre));
 	    rc_did_emsg = TRUE;
-	    return (regprog_t *)NULL;
+	    return FAIL;
 	}
 	pat = spats[i].pat;
 	magic = spats[i].magic;
@@ -179,8 +181,11 @@ search_regcomp(pat, pat_save, pat_use, options)
 	    save_re_pat(RE_SUBST, pat, magic);
     }
 
-    set_reg_ic(pat);		/* tell vim_regexec() how to search */
-    return vim_regcomp(pat, magic);
+    regmatch->rmm_ic = ignorecase(pat);
+    regmatch->regprog = vim_regcomp(pat, magic);
+    if (regmatch->regprog == NULL)
+	return FAIL;
+    return OK;
 }
 
 /*
@@ -257,16 +262,18 @@ restore_search_patterns()
 #endif
 
 /*
- * Set reg_ic according to p_ic, p_scs and the search pattern.
+ * Return TRUE when case should be ignored for search pattern "pat".
+ * Uses the 'ignorecase' and 'smartcase' options.
  */
-    void
-set_reg_ic(pat)
-    char_u  *pat;
+    int
+ignorecase(pat)
+    char_u	*pat;
 {
-    char_u *p;
+    char_u	*p;
+    int		ic;
 
-    reg_ic = p_ic;
-    if (reg_ic && !no_smartcase && p_scs
+    ic = p_ic;
+    if (ic && !no_smartcase && p_scs
 #ifdef FEAT_INS_EXPAND
 				&& !(ctrl_x_mode && curbuf->b_p_inf)
 #endif
@@ -283,10 +290,12 @@ set_reg_ic(pat)
 	    else
 #endif
 		if (isupper(*p++))
-		    reg_ic = FALSE;
+		    ic = FALSE;
 	}
     }
     no_smartcase = FALSE;
+
+    return ic;
 }
 
     char_u *
@@ -343,18 +352,20 @@ set_last_search_pat(s, idx, magic, setlast)
 /*
  * Get a regexp program for the last used search pattern.
  * This is used for highlighting all matches in a window.
+ * Values returned in regmatch->regprog and regmatch->rmm_ic.
  */
-    regprog_t *
-last_pat_prog()
+    void
+last_pat_prog(regmatch)
+    regmmatch_t	*regmatch;
 {
-    regprog_t *prog;
-
     if (spats[last_idx].pat == NULL)
-	return NULL;
+    {
+	regmatch->regprog = NULL;
+	return;
+    }
     ++emsg_off;		/* So it doesn't beep if bad expr */
-    prog = search_regcomp((char_u *)"", 0, last_idx, SEARCH_KEEP);
+    (void)search_regcomp((char_u *)"", 0, last_idx, SEARCH_KEEP, regmatch);
     --emsg_off;
-    return prog;
 }
 #endif
 
@@ -414,8 +425,8 @@ searchit(buf, pos, dir, str, count, options, pat_use)
     int		match_ok;
     long	nmatched;
 
-    if ((regmatch.regprog = search_regcomp(str, RE_SEARCH, pat_use,
-			     (options & (SEARCH_HIS + SEARCH_KEEP)))) == NULL)
+    if (search_regcomp(str, RE_SEARCH, pat_use,
+		   (options & (SEARCH_HIS + SEARCH_KEEP)), &regmatch) == FAIL)
     {
 	if ((options & SEARCH_MSG) && !rc_did_emsg)
 	    emsg2((char_u *)_("Invalid search string: %s"), mr_pattern);
@@ -3237,7 +3248,6 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
     long	match_count = 1;
 
     char_u	*pat;
-    int		pat_reg_ic = FALSE;
     char_u	*new_fname;
     char_u	*curr_fname = curbuf->b_fname;
     char_u	*prev_fname = NULL;
@@ -3292,8 +3302,8 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	if (pat == NULL)
 	    goto fpip_end;
 	sprintf((char *)pat, whole ? "\\<%.*s\\>" : "%.*s", len, ptr);
-	set_reg_ic(pat);    /* set reg_ic according to p_ic, p_scs and pat */
-	pat_reg_ic = reg_ic;
+	/* ignore case according to p_ic, p_scs and pat */
+	regmatch.rm_ic = ignorecase(pat);
 	regmatch.regprog = vim_regcomp(pat, (int)p_magic);
 	vim_free(pat);
 	if (regmatch.regprog == NULL)
@@ -3304,12 +3314,14 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	incl_regmatch.regprog = vim_regcomp(curbuf->b_p_inc, (int)p_magic);
 	if (incl_regmatch.regprog == NULL)
 	    goto fpip_end;
+	incl_regmatch.rm_ic = FALSE;	/* don't ignore case in incl. pat. */
     }
     if (type == FIND_DEFINE && *p_def != NUL)
     {
 	def_regmatch.regprog = vim_regcomp(p_def, (int)p_magic);
 	if (def_regmatch.regprog == NULL)
 	    goto fpip_end;
+	def_regmatch.rm_ic = FALSE;	/* don't ignore case in define pat. */
     }
     files = (SearchedFile *)lalloc((long_u)
 			       (max_path_depth * sizeof(SearchedFile)), TRUE);
@@ -3334,11 +3346,10 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 
     for (;;)
     {
-	reg_ic = FALSE;	/* don't ignore case in include pattern */
 	if (incl_regmatch.regprog != NULL
 		&& vim_regexec(&incl_regmatch, line, (colnr_t)0))
 	{
-	    new_fname = get_file_name_in_path(incl_regmatch.endp[0] + 1,
+	    new_fname = file_name_in_line(incl_regmatch.endp[0] + 1,
 						 0, FNAME_EXP|FNAME_INCL, 1L);
 	    already_searched = FALSE;
 	    if (new_fname != NULL)
@@ -3493,7 +3504,6 @@ find_pattern_in_path(ptr, dir, len, whole, skip_comments,
 	    p = line;
 search_line:
 	    define_matched = FALSE;
-	    reg_ic = FALSE;	/* don't ignore case in define patterns */
 	    if (def_regmatch.regprog != NULL
 			      && vim_regexec(&def_regmatch, line, (colnr_t)0))
 	    {
@@ -3514,7 +3524,6 @@ search_line:
 	     */
 	    if (def_regmatch.regprog == NULL || define_matched)
 	    {
-		reg_ic = pat_reg_ic;
 		if (define_matched
 #ifdef FEAT_INS_EXPAND
 			|| (continue_status & CONT_SOL)

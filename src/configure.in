@@ -1135,7 +1135,8 @@ if test -z "$SKIP_ATHENA" -o -z "$SKIP_MOTIF" -o -z "$SKIP_GTK"; then
   CPPFLAGS=$cppflags_save
 
   dnl automatically enable XIM when hangul input isn't enabled
-  if test "$enable_xim" = "auto" -a ! "$enable_hangulinput" = "yes"; then
+  if test "$enable_xim" = "auto" -a ! "$enable_hangulinput" = "yes" \
+		-a ! "x$GUITYPE" = "xNONE"; then
     AC_MSG_RESULT(X GUI selected; xim has been enabled)
     enable_xim="yes"
   fi
@@ -1182,10 +1183,10 @@ AC_TRY_COMPILE(, [printf("(" __DATE__ " " __TIME__ ")");],
 	AC_MSG_RESULT(no))
 
 dnl Checks for header files.
-AC_CHECK_HEADER(elf.h, SVR4=1)
+AC_CHECK_HEADER(elf.h, HAS_ELF=1)
 dnl AC_CHECK_HEADER(dwarf.h, SVR4=1)
-if test "$SVR4" = 1; then
-  AC_DEFINE(SVR4) AC_CHECK_LIB(elf, main)
+if test "$HAS_ELF" = 1; then
+  AC_CHECK_LIB(elf, main)
 fi
 
 AC_HEADER_DIRENT
@@ -1516,7 +1517,7 @@ main()
 
 dnl Check for functions in one big call, to reduce the size of configure
 AC_CHECK_FUNCS(bcmp fchdir fchown fseeko fsync ftello getcwd getpwnam getpwuid \
-	getrlimit gettimeofday getwd lstat memcmp memset mkstemp \
+	getrlimit gettimeofday getwd lstat memcmp memset \
 	nanosleep opendir putenv qsort select setenv setpgid setsid \
 	sigaltstack sigstack sigset sigsetjmp sigaction sigvec \
 	strcasecmp strerror strftime stricmp strncasecmp strnicmp \

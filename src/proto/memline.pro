@@ -28,3 +28,4 @@ char_u *get_file_in_dir __ARGS((char_u *fname, char_u *dname));
 void ml_setdirty __ARGS((buf_t *buf, int flag));
 long ml_find_line_or_offset __ARGS((buf_t *buf, linenr_t line, long *offp));
 void goto_byte __ARGS((long cnt));
+/* vim: set ft=c : */

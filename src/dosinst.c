@@ -17,7 +17,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include <direct.h>
+#ifndef __CYGWIN__
+# include <direct.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifdef WIN32

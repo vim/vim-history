@@ -2754,6 +2754,11 @@ gui_drag_scrollbar(sb, value, still_dragging)
     if (hold_gui_events)
 	return;
 
+#ifdef FEAT_CMDWIN
+    if (cmdwin_type != 0 && sb->wp != curwin)
+	return;
+#endif
+
     if (still_dragging)
     {
 	if (sb->wp == NULL)

@@ -1,7 +1,7 @@
 " Vim filetype plugin
 " Language:	Vim
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Dec 02
+" Last Change:	2001 Jan 10
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -20,6 +20,3 @@ setlocal com=sO:\"\ -,mO:\"\ \ eO:\"\",:\"
 
 " Format comments to be up to 78 characters long
 setlocal tw=78
-
-" Default shiftwidth is 2
-setlocal sw=2

@@ -36,10 +36,12 @@ int get_map_mode __ARGS((char_u **cmdp, int forceit));
 void map_clear __ARGS((char_u *cmdp, char_u *arg, int forceit, int abbr));
 int map_to_exists __ARGS((char_u *str, char_u *modechars));
 char_u *set_context_in_map_cmd __ARGS((expand_t *xp, char_u *cmd, char_u *arg, int forceit, int isabbrev, int isunmap, cmdidx_t cmdidx));
-int ExpandMappings __ARGS((regprog_t *prog, int *num_file, char_u ***file));
+int ExpandMappings __ARGS((regmatch_t *regmatch, int *num_file, char_u ***file));
 int check_abbr __ARGS((int c, char_u *ptr, int col, int mincol));
 int makemap __ARGS((FILE *fd, buf_t *buf));
 int put_escstr __ARGS((FILE *fd, char_u *str, int set));
 void check_map_keycodes __ARGS((void));
 char_u *check_map __ARGS((char_u *keys, int mode, int exact));
 void init_mappings __ARGS((void));
+void add_map __ARGS((char_u *map, int mode));
+/* vim: set ft=c : */

@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0r.  Last change: 2000 Dec 30
+*intro.txt*     For Vim version 6.s.  Last change: 2001 Jan 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -271,7 +271,8 @@ Posix	From the IEEE standard 1003.2, Part 2: Shell and utilities.
 Nvi	The "New" Vi.  The version of Vi that comes with BSD 4.4 and FreeBSD.
 	Very good compatibility with the original Vi, with a few extensions.
 	The version used is 1.79.  ":version" returns "Version 1.79
-	(10/23/96)".  There has been no development the last few years.
+	(10/23/96)".  There has been no release the last few years, although
+	there is a development version 1.81.
 	Source code is freely available.
 							*Elvis*
 Elvis	Another Vi clone, made by Steve Kirkendall.  Very compact but isn't

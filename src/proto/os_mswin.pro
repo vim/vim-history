@@ -18,3 +18,4 @@ int mch_screenmode __ARGS((char_u *arg));
 void clip_mch_lose_selection __ARGS((void));
 int clip_mch_own_selection __ARGS((void));
 void DumpPutS __ARGS((const char *psz));
+/* vim: set ft=c : */

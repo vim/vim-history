@@ -896,7 +896,7 @@ syn_match_linecont(lnum)
 
     if (syn_buf->b_syn_linecont_prog != NULL)
     {
-	reg_ic = syn_buf->b_syn_linecont_ic;
+	regmatch.rmm_ic = syn_buf->b_syn_linecont_ic;
 	regmatch.regprog = syn_buf->b_syn_linecont_prog;
 	return syn_regexec(&regmatch, lnum, (colnr_t)0);
     }
@@ -1486,6 +1486,30 @@ syn_stack_equal(sp)
 }
 
 /*
+ * We stop parsing syntax above line "lnum".  If the stored state at or below
+ * this line depended on a change before it, it now depends on the line below
+ * the last parsed line.
+ * The window looks like this:
+ *	    line which changed
+ *	    displayed line
+ *	    displayed line
+ * lnum ->  line below window
+ */
+    void
+syntax_end_parsing(lnum)
+    linenr_t	lnum;
+{
+    synstate_t	*sp;
+
+    sp = syn_stack_find_entry(lnum);
+    if (sp != NULL && sp->sst_lnum < lnum)
+	sp = sp->sst_next;
+
+    if (sp != NULL && sp->sst_change_lnum != 0)
+	sp->sst_change_lnum = lnum;
+}
+
+/*
  * End of handling of the state stack.
  ****************************************/
 
@@ -1835,7 +1859,7 @@ syn_current_attr(syncing, displaying)
 			    if (lc_col < 0)
 				lc_col = 0;
 
-			    reg_ic = spp->sp_ic;
+			    regmatch.rmm_ic = spp->sp_ic;
 			    regmatch.regprog = spp->sp_prog;
 			    if (!syn_regexec(&regmatch, current_lnum,
 							     (colnr_t)lc_col))
@@ -2546,7 +2570,7 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 	    if (lc_col < 0)
 		lc_col = 0;
 
-	    reg_ic = spp->sp_ic;
+	    regmatch.rmm_ic = spp->sp_ic;
 	    regmatch.regprog = spp->sp_prog;
 	    if (syn_regexec(&regmatch, startpos->lnum, lc_col))
 	    {
@@ -2577,7 +2601,7 @@ find_endpos(idx, startpos, m_endpos, hl_endpos, flagsp, end_endpos,
 
 	    if (lc_col < 0)
 		lc_col = 0;
-	    reg_ic = spp_skip->sp_ic;
+	    regmatch.rmm_ic = spp_skip->sp_ic;
 	    regmatch.regprog = spp_skip->sp_prog;
 	    if (syn_regexec(&regmatch, startpos->lnum, lc_col)
 		    && regmatch.startpos[0].col
@@ -5180,7 +5204,7 @@ get_id_list(arg, keylen, list)
 			break;
 		    }
 
-		    reg_ic = TRUE;
+		    regmatch.rm_ic = TRUE;
 		    id = 0;
 		    for (i = highlight_ga.ga_len; --i >= 0; )
 		    {
@@ -5580,6 +5604,7 @@ static char *(highlight_init_light[]) =
 	"WarningMsg term=standout ctermfg=DarkRed guifg=Red",
 	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	"Folded term=standout ctermbg=Grey ctermfg=DarkBlue guibg=LightGrey guifg=DarkBlue",
+	"FoldColumn term=standout ctermbg=Grey ctermfg=DarkBlue guibg=Grey guifg=DarkBlue",
 	NULL
     };
 
@@ -5596,6 +5621,7 @@ static char *(highlight_init_dark[]) =
 	"WarningMsg term=standout ctermfg=LightRed guifg=Red",
 	"WildMenu term=standout ctermbg=Yellow ctermfg=Black guibg=Yellow guifg=Black",
 	"Folded term=standout ctermbg=DarkGrey ctermfg=Cyan guibg=DarkGrey guifg=Cyan",
+	"FoldColumn term=standout ctermbg=DarkGrey ctermfg=Cyan guibg=Grey guifg=Cyan",
 	NULL
     };
 

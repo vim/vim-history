@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2000 Nov 05
+" Last Change:	2001 Jan 02
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -858,7 +858,7 @@ noremap <buffer> <Space> :call <SID>Space()<CR>:echo<CR>
 inoremap <buffer> <Space> <Esc>:call <SID>Space()<CR>:echo<CR>
 
 " Make the buffer be deleted when the window is closed.
-set buftype=scratch
+set buftype=nofile bufhidden=delete noswapfile
 
 augroup optwin
   au! BufUnload,BufHidden option-window nested

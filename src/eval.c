@@ -19,6 +19,10 @@
 # include <time.h>	/* for strftime() */
 #endif
 
+#ifdef macintosh
+# include <time.h>       /* for time_t */
+#endif
+
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
@@ -141,6 +145,7 @@ struct vimvar
 {   /* The order here must match the VV_ defines in vim.h! */
     {"count", sizeof("count") - 1, NULL, VAR_NUMBER, VV_COMPAT+VV_RO},
     {"count1", sizeof("count1") - 1, NULL, VAR_NUMBER, VV_RO},
+    {"prevcount", sizeof("prevcount") - 1, NULL, VAR_NUMBER, VV_RO},
     {"errmsg", sizeof("errmsg") - 1, NULL, VAR_STRING, VV_COMPAT},
     {"warningmsg", sizeof("warningmsg") - 1, NULL, VAR_STRING, 0},
     {"statusmsg", sizeof("statusmsg") - 1, NULL, VAR_STRING, 0},
@@ -206,6 +211,8 @@ static void f_foldclosed __ARGS((VAR argvars, VAR retvar));
 static void f_foldlevel __ARGS((VAR argvars, VAR retvar));
 static void f_foldtext __ARGS((VAR argvars, VAR retvar));
 static void f_getbufvar __ARGS((VAR argvars, VAR retvar));
+static void f_getchar __ARGS((VAR argvars, VAR retvar));
+static void f_getcharmod __ARGS((VAR argvars, VAR retvar));
 static void f_getwinvar __ARGS((VAR argvars, VAR retvar));
 static void f_getcwd __ARGS((VAR argvars, VAR retvar));
 static void f_getftime __ARGS((VAR argvars, VAR retvar));
@@ -1409,11 +1416,11 @@ eval4(arg, retvar, evaluate)
 
 		    case TYPE_MATCH:
 		    case TYPE_NOMATCH:
-			    reg_ic = ic;
 			    /* avoid 'l' flag in 'cpoptions' */
 			    save_cpo = p_cpo;
 			    p_cpo = (char_u *)"";
 			    regmatch.regprog = vim_regcomp(s2, TRUE);
+			    regmatch.rm_ic = ic;
 			    if (regmatch.regprog != NULL)
 			    {
 				n1 = vim_regexec(&regmatch, s1, (colnr_t)0);
@@ -2147,6 +2154,8 @@ static struct fst
     {"foldlevel",	1, 1, f_foldlevel},
     {"foldtext",	0, 0, f_foldtext},
     {"getbufvar",	2, 2, f_getbufvar},
+    {"getchar",		0, 1, f_getchar},
+    {"getcharmod",	0, 0, f_getcharmod},
     {"getcwd",		0, 0, f_getcwd},
     {"getfsize",	1, 1, f_getfsize},
     {"getftime",	1, 1, f_getftime},
@@ -3249,34 +3258,74 @@ f_foldtext(argvars, retvar)
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = NULL;
 #ifdef FEAT_FOLDING
-    /* Find first non-empty line in the fold. */
-    lnum = (linenr_t)vimvars[VV_FOLDSTART].val;
-    while (lnum < (linenr_t)vimvars[VV_FOLDEND].val)
+    if ((linenr_t)vimvars[VV_FOLDSTART].val > 0
+	    && (linenr_t)vimvars[VV_FOLDEND].val <= curbuf->b_ml.ml_line_count
+	    && vimvars[VV_FOLDDASHES].val != NULL)
     {
-	if (!linewhite(lnum))
-	    break;
-	++lnum;
-    }
+	/* Find first non-empty line in the fold. */
+	lnum = (linenr_t)vimvars[VV_FOLDSTART].val;
+	while (lnum < (linenr_t)vimvars[VV_FOLDEND].val)
+	{
+	    if (!linewhite(lnum))
+		break;
+	    ++lnum;
+	}
 
-    /* Find interesting text in this line. */
-    s = skipwhite(ml_get(lnum));
-    /* skip comment-start */
-    if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
-	s = skipwhite(s + 2);
-    r = alloc((unsigned)(STRLEN(s) + STRLEN(vimvars[VV_FOLDDASHES].val) + 20));
-    if (r != NULL)
-    {
-	sprintf((char *)r, "+-%s %ld lines: %s", vimvars[VV_FOLDDASHES].val,
-		(long)((linenr_t)vimvars[VV_FOLDEND].val
+	/* Find interesting text in this line. */
+	s = skipwhite(ml_get(lnum));
+	/* skip comment-start */
+	if (s[0] == '/' && (s[1] == '*' || s[1] == '/'))
+	    s = skipwhite(s + 2);
+	r = alloc((unsigned)(STRLEN(s)
+				  + STRLEN(vimvars[VV_FOLDDASHES].val) + 20));
+	if (r != NULL)
+	{
+	    sprintf((char *)r, "+-%s %ld lines: %s", vimvars[VV_FOLDDASHES].val,
+		    (long)((linenr_t)vimvars[VV_FOLDEND].val
 				   - (linenr_t)vimvars[VV_FOLDSTART].val + 1),
-		s);
-	/* remove trailing "{{{" foldmarker */
-	s = (char_u *)strstr((char *)r, "{{{");
-	if (s != NULL)
-	    *s = NUL;
-	retvar->var_val.var_string = r;
+		    s);
+	    /* remove trailing "{{{" foldmarker */
+	    s = (char_u *)strstr((char *)r, "{{{");
+	    if (s != NULL)
+		*s = NUL;
+	    retvar->var_val.var_string = r;
+	}
     }
 #endif
+}
+
+/*
+ * "getchar()" function
+ */
+    static void
+f_getchar(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    if (argvars[0].var_type == VAR_UNKNOWN)
+	/* getchar(): blocking wait. */
+	retvar->var_val.var_number = safe_vgetc();
+    else if (get_var_number(&argvars[0]) == 1)
+	/* getchar(1): only check if char avail */
+	retvar->var_val.var_number = vpeekc();
+    else if (vpeekc() == NUL)
+	/* getchar(0) and no char avail: return zero */
+	retvar->var_val.var_number = 0;
+    else
+	/* getchar(0) and char avail: return char */
+	retvar->var_val.var_number = safe_vgetc();
+}
+
+/*
+ * "getcharmod()" function
+ */
+/*ARGSUSED*/
+    static void
+f_getcharmod(argvars, retvar)
+    VAR		argvars;
+    VAR		retvar;
+{
+    retvar->var_val.var_number = mod_mask;
 }
 
 /*
@@ -4364,14 +4413,14 @@ f_some_match(argvars, retvar, type)
 	if (start < 0)
 	    start = 0;
 	if (start > (long)STRLEN(str))
-	    start = STRLEN(str);
+	    goto theend;
 	str += start;
     }
 
     regmatch.regprog = vim_regcomp(pat, TRUE);
     if (regmatch.regprog != NULL)
     {
-	reg_ic = p_ic;
+	regmatch.rm_ic = p_ic;
 	if (vim_regexec(&regmatch, str, (colnr_t)0))
 	{
 	    if (type == 2)
@@ -4389,6 +4438,7 @@ f_some_match(argvars, retvar, type)
 	vim_free(regmatch.regprog);
     }
 
+theend:
     p_cpo = save_cpo;
 }
 
@@ -5439,6 +5489,19 @@ set_vim_var_nr(idx, val)
 }
 
 /*
+ * Set v:count, v:count1 and v:prevcount.
+ */
+    void
+set_vcount(count, count1)
+    long	count;
+    long	count1;
+{
+    vimvars[VV_PREVCOUNT].val = vimvars[VV_COUNT].val;
+    vimvars[VV_COUNT].val = (char_u *)count;
+    vimvars[VV_COUNT1].val = (char_u *)count1;
+}
+
+/*
  * Set string v: variable to a copy of "val".
  */
     void
@@ -6229,6 +6292,7 @@ ex_function(eap)
     ufunc_t	*fp;
     int		indent;
     int		nesting;
+    int		in_append = FALSE;
 
     /*
      * ":function" without argument: list functions.
@@ -6392,37 +6456,58 @@ ex_function(eap)
 	    goto erret;
 	}
 
-	/* Check for "endfunction" (should be more strict...). */
-	for (p = theline; vim_iswhite(*p) || *p == ':'; ++p)
-	    ;
-	if (STRNCMP(p, "endf", 4) == 0 && nesting-- == 0)
+	if (in_append)
 	{
-	    vim_free(theline);
-	    break;
+	    /* between ":append" and "." there is no check for ":endfunc". */
+	    if (theline[0] == '.' && theline[1] == NUL)
+		in_append = FALSE;
 	}
-
-	/* Increase indent inside "if" and "while", decrease at "end" */
-	if (indent > 2 && STRNCMP(p, "end", 3) == 0)
-	    indent -= 2;
-	else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
-	    indent += 2;
-
-	/* Check for defining a function inside this function. */
-	if (STRNCMP(p, "fu", 2) == 0)
+	else
 	{
-	    p = skipwhite(skiptowhite(p));
-	    p += eval_fname_script(p);
-	    if (isalpha(*p))
+	    /* skip ':' and blanks*/
+	    for (p = theline; vim_iswhite(*p) || *p == ':'; ++p)
+		;
+
+	    /* Check for "endfunction" (should be more strict...). */
+	    if (STRNCMP(p, "endf", 4) == 0 && nesting-- == 0)
 	    {
-		while (isalpha(*p) || isdigit(*p) || *p == '_')
-		    ++p;
-		if (*skipwhite(p) == '(')
+		vim_free(theline);
+		break;
+	    }
+
+	    /* Increase indent inside "if" and "while", decrease at "end" */
+	    if (indent > 2 && STRNCMP(p, "end", 3) == 0)
+		indent -= 2;
+	    else if (STRNCMP(p, "if", 2) == 0 || STRNCMP(p, "wh", 2) == 0)
+		indent += 2;
+
+	    /* Check for defining a function inside this function. */
+	    if (STRNCMP(p, "fu", 2) == 0)
+	    {
+		p = skipwhite(skiptowhite(p));
+		p += eval_fname_script(p);
+		if (isalpha(*p))
 		{
-		    ++nesting;
-		    indent += 2;
+		    while (isalpha(*p) || isdigit(*p) || *p == '_')
+			++p;
+		    if (*skipwhite(p) == '(')
+		    {
+			++nesting;
+			indent += 2;
+		    }
 		}
 	    }
+
+	    /* Check for ":append" or ":insert". */
+	    p = skip_range(p, NULL);
+	    if ((p[0] == 'a' && (!isalpha(p[1]) || p[1] == 'p'))
+		    || (p[0] == 'i'
+			&& (!isalpha(p[1]) || (p[1] == 'n'
+				&& (!isalpha(p[2]) || (p[2] == 's'))))))
+		in_append = TRUE;
 	}
+
+	/* Add the line to the function. */
 	if (ga_grow(&newlines, 1) == FAIL)
 	    goto erret;
 	((char_u **)(newlines.ga_data))[newlines.ga_len] = theline;
@@ -7435,7 +7520,7 @@ do_string_sub(str, pat, sub, flags)
 
     do_all = (flags[0] == 'g');
 
-    reg_ic = p_ic;
+    regmatch.rm_ic = p_ic;
     regmatch.regprog = vim_regcomp(pat, TRUE);
     if (regmatch.regprog != NULL)
     {

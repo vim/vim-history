@@ -98,7 +98,7 @@ typedef struct taggy
 typedef struct
 {
 #ifdef FEAT_FOLDING
-    int		wo_fdc;			/* 'foldcolumn' */
+    long	wo_fdc;			/* 'foldcolumn' */
 #define w_p_fdc w_onebuf_opt.wo_fdc
     int		wo_fen;			/* 'foldenable' */
 #define w_p_fen w_onebuf_opt.wo_fen
@@ -829,6 +829,13 @@ struct file_buffer
 #ifdef FEAT_KEYMAP
     char_u	*b_p_keymap;	/* 'keymap' */
 #endif
+
+    /* local values for options which are normally global */
+#ifdef FEAT_QUICKFIX
+    char_u	*b_p_gp;	/* 'grepprg' */
+    char_u	*b_p_mp;	/* 'makeprg' */
+#endif
+    char_u	*b_p_ep;	/* 'equalprg' */
 
     /* end of buffer options */
 

@@ -50,3 +50,4 @@ linenr_t buf_delsign __ARGS((buf_t *buf, int id));
 int buf_findsign __ARGS((buf_t *buf, int id));
 int buf_findsign_id __ARGS((buf_t *buf, linenr_t lnum));
 void buf_delete_all_signs __ARGS((void));
+/* vim: set ft=c : */

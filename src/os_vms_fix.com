@@ -1,5 +1,5 @@
 $!
-$! OS_VMS_FILTER.COM
+$! OS_VMS_FIX.COM
 $! Copyright (C) 2000, Stephen P. Wall
 $!
 $! Filter files for "#if" line continuations using a '\' and convert
@@ -51,11 +51,11 @@ $
 $ all = "''p1'''p2'''p3'''p4'''p5'''p6'''p7'''p8'"
 $ if (all .nes. "") .and. (p1 .nes. "-h") .and. (p1 .nes. "-H") then goto startup
 $
-$ write sys$output "OS_VMS_FILTER - DECC->VAXC pre-processor directive convert script"
-$ write sys$output "Usage: @OS_VMS_FILTER <filename_1> <filename_2> <...>"
-$ write sys$output "       @OS_VMS_FILTER <filename with wildcard> <...>"
+$ write sys$output "OS_VMS_FIX - DECC->VAXC pre-processor directive convert script"
+$ write sys$output "Usage: @OS_VMS_FIX <filename_1> <filename_2> <...>"
+$ write sys$output "       @OS_VMS_FIX <filename with wildcard> <...>"
 $ write sys$output ""
-$ write sys$output "Example: @OS_VMS_FILTER *.c *.h [.proto]*.pro"
+$ write sys$output "Example: @OS_VMS_FIX *.c *.h [.proto]*.pro"
 $ write sys$output "Please note, you can define up to 8 parameters."
 $ write sys$output ""
 $ exit

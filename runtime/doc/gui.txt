@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0r.  Last change: 2000 Dec 31
+*gui.txt*       For Vim version 6.s.  Last change: 2001 Jan 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -621,8 +621,8 @@ nr  Name		Normal action  ~
 26  TagJump		jump to tag under the cursor
 27  RunCtags		build tags for files in current directory
 28  WinVSplit		split current window vertically
-29  WinMax		make current window use many lines
-30  WinMin		make current window use few lines
+29  WinMaxWidth		make current window use many columns
+30  WinMinWidth		make current window use few columns
 
 							*win32-hidden-menus*
 In the Win32 GUI, starting a menu name with ']' excludes that menu from the

@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 6.0r.  Last change: 2001 Jan 01
+*repeat.txt*    For Vim version 6.s.  Last change: 2001 Jan 14
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -127,22 +127,31 @@ q			Stops recording.  (Implementation note: The 'q' that
 :so[urce]! {file}	Read Vim commands from {file}.  {not in Vi}
 
 							*:ru* *:runtime*
-:ru[ntime][!] {file}	Read Ex commands from {file} in each directory given
+:ru[ntime][!] {file} ..
+			Read Ex commands from {file} in each directory given
 			by 'runtimepath'.  There is no error for non-existing
 			files.  Example: >
 				:runtime syntax/c.vim
-<			When [!] is included, all found files are sourced.
+
+<			There can be multiple {file} arguments, separated by
+			spaces.  Each {file} is searched for in the first
+			directory from 'runtimepath', then in the second
+			directory, etc.  Use a backslash to include a space
+			inside {file} (although it's better not to use spaces
+			in file names, it causes trouble).
+
+			When [!] is included, all found files are sourced.
 			When it is not included only the first found file is
 			sourced.
+
 			When {file} contains wildcards it is expanded to all
 			matching files.  Example: >
 				:runtime! plugin/*.vim
 <			This is what Vim uses to load the plugin files when
 			starting up. This similar command: >
 				:runtime plugin/*.vim
-<			will source the first file only.
-			Only one file name can be given, spaces are considered
-			to be part of the name, except at the start and end.
+<			would source the first file only.
+
 			When 'verbose' is one or higher, there is a message
 			when no file could be found.
 			When 'verbose' is two or higher, there is a message
@@ -333,9 +342,14 @@ won't be very helpful.
 
 There is a separate command-line history for debug mode.
 
+The line number for a function line is relative to the start of the function.
+If you have trouble figuring out where you are, edit the file that defines
+the function in another Vim, search for the start of the function and do
+"99j".  Replace "99" with the line number.
+
 Additionally, these commands can be used:
 							*>cont*
-	cont	Continue execution without coming back to debug mode.
+	cont	Continue execution until the next breakpoint is hit.
 							*>next*
 	next	Execute the command and come back to debug mode when it's
 		finished.  This steps over user function calls and sourced
@@ -351,8 +365,11 @@ Additionally, these commands can be used:
 
 About the additional commands in debug mode:
 - There is no command-line completion.
-- They cannot be abbreviated.  For example, typing "con" doesn't work.
-- Hitting <CR> will repeat the previous one.
+- You can shorten them, up to a single character: "c", "n", "s" and "f".
+- Hitting <CR> will repeat the previous one.  When doing another command, this
+  is reset (because it's not clear what you want to repeat).
+- When you want to use the Ex command with the same name, prepend a colon:
+  ":cont", ":next", ":finish" (or shorter).
 
 
 DEFINING BREAKPOINTS
@@ -369,7 +386,8 @@ this line.  When omitted line 1 is used.
 {name} is a pattern that is matched with the file or function name.  The
 pattern is like what is used for autocommands.  There must be a full match (as
 if the pattern starts with "^" and ends in "$").  A "*" matches any sequence
-of characters.
+of characters.  'ignorecase' is not used, but "\c" can be used in the pattern
+to ignore case |/\c|.
 
 The match for sourced scripts is done against the full file name.  Examples: >
 	breakadd file explorer

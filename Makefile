@@ -69,7 +69,7 @@ all install uninstall tools config configure proto depend lint tags types test t
 #    Before creating an archive first delete all backup files, *.orig, etc.
 
 MAJOR = 6
-MINOR = 0r
+MINOR = 0s
 
 # CHECKLIST for creating a new version:
 #
@@ -378,6 +378,7 @@ SRC_DOS =	\
 		src/vimtbar.h \
 		src/xxd/Make_bc3.mak \
 		src/xxd/Make_bc5.mak \
+		src/xxd/Make_cyg.mak \
 		src/xxd/Make_djg.mak \
 		src/xxd/Make_mvc.mak \
 
@@ -562,7 +563,7 @@ RT_ALL =	\
 		runtime/indoff.vim \
 		runtime/indent/*.vim \
 		runtime/indent/README.txt \
-		runtime/ftplugin/*/*.vim \
+		runtime/ftplugin/*.vim \
 		runtime/ftplugin/README.txt \
 		runtime/syntax/*.vim \
 		runtime/syntax/README.txt \

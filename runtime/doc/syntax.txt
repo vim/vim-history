@@ -1,4 +1,4 @@
-*syntax.txt*    For Vim version 6.0r.  Last change: 2000 Dec 11
+*syntax.txt*    For Vim version 6.s.  Last change: 2001 Jan 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -2755,12 +2755,17 @@ When you want to use the same highlighting for several syntax groups, you
 can do this more easily by linking the groups into one common highlight
 group, and give the color attributes only for that group.
 
+To set a link:
+
     :hi[ghlight][!] [default] link {from-group} {to-group}
+
+To remove a link:
+
+    :hi[ghlight][!] [default] link {from-group} NONE
 
 Notes:
 - If the {from-group} and/or {to-group} doesn't exist, it is created.  You
   don't get an error message for a non-existing group.
-- If the {to-group} is "NONE", the link is removed from the {from-group}.
 - As soon as you use a ":highlight" command for a linked group, the link is
   removed.
 - If there are already highlight settings for the {from-group}, the link is

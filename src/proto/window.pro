@@ -1,6 +1,6 @@
 /* window.c */
 void do_window __ARGS((int nchar, long Prenum));
-int win_split __ARGS((int new_size, int flags));
+int win_split __ARGS((int size, int flags));
 int win_valid __ARGS((win_t *win));
 int win_count __ARGS((void));
 int make_windows __ARGS((int count));
@@ -19,6 +19,8 @@ int win_alloc_lines __ARGS((win_t *wp));
 void win_free_lsize __ARGS((win_t *wp));
 void shell_new_rows __ARGS((void));
 void shell_new_columns __ARGS((void));
+void win_size_save __ARGS((garray_t *gap));
+void win_size_restore __ARGS((garray_t *gap));
 void win_setheight __ARGS((int height));
 void win_setwidth __ARGS((int width));
 void win_setminheight __ARGS((void));
@@ -28,10 +30,12 @@ void win_comp_scroll __ARGS((win_t *wp));
 void command_height __ARGS((long old_p_ch));
 void last_status __ARGS((int morewin));
 char_u *file_name_at_cursor __ARGS((int options, long count));
-char_u *get_file_name_in_path __ARGS((char_u *line, int col, int options, long count));
+char_u *file_name_in_line __ARGS((char_u *line, int col, int options, long count));
+char_u *find_file_name_in_path __ARGS((char_u *ptr, int len, int options, long count));
 int path_with_url __ARGS((char_u *fname));
 int vim_isAbsName __ARGS((char_u *name));
 int vim_FullName __ARGS((char_u *fname, char_u *buf, int len, int force));
 int min_rows __ARGS((void));
 int only_one_window __ARGS((void));
 void check_lnums __ARGS((int do_curwin));
+/* vim: set ft=c : */
