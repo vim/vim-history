@@ -41,6 +41,10 @@ cat << EOF > osdef0.c
 # include <sys/types.h>
 # include <sys/statfs.h>	/* only for memfile.c */
 #endif
+
+#ifdef HAVE_X11
+# include <X11/Intrinsic.h>
+#endif
 EOF
 
 # Mac uses precompiled headers, but we need real headers here.
