@@ -375,10 +375,10 @@ static struct vimoption
 			    (char_u *)"~",
 #endif
 					    (char_u *)0L}},
-    {"backupskip",  "bsk",  P_STRING|P_VI_DEF,
+    {"backupskip",  "bsk",  P_STRING|P_VI_DEF|P_COMMA,
 #ifdef FEAT_WILDIGN
 			    (char_u *)&p_bsk, PV_NONE,
-			    {(char_u *)"/tmp/*", (char_u *)0L}
+			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)0L, (char_u *)0L}
@@ -1506,9 +1506,27 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 #endif
 			    {(char_u *)FALSE, (char_u *)0L}},
-    {"printerfont", "pfn",  P_STRING|P_VI_DEF,
+    {"printdevice", "pdev", P_STRING|P_VI_DEF,
 #ifdef FEAT_PRINTER
-			    (char_u *)&p_prtfont, PV_NONE,
+			    (char_u *)&p_pdev, PV_NONE,
+			    {(char_u *)"", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
+    {"printexpr", "pexpr",  P_STRING|P_VI_DEF,
+#ifdef FEAT_POSTSCRIPT
+			    (char_u *)&p_pexpr, PV_NONE,
+			    {(char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in . ') . delete(v:fname_in)", (char_u *)0L}
+#else
+			    (char_u *)NULL, PV_NONE,
+			    {(char_u *)NULL, (char_u *)0L}
+#endif
+			    },
+    {"printfont", "pfn",    P_STRING|P_VI_DEF,
+#ifdef FEAT_PRINTER
+			    (char_u *)&p_pfn, PV_NONE,
 			    {
 # ifdef MSWIN
 				(char_u *)"Courier_New:h10",
@@ -1520,36 +1538,25 @@ static struct vimoption
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
-				    },
-    {"printerheader", "pheader",  P_STRING|P_VI_DEF,
+			    },
+    {"printheader", "pheader",  P_STRING|P_VI_DEF,
 #ifdef FEAT_PRINTER
-			    (char_u *)&p_headerfmt, PV_NONE,
+			    (char_u *)&p_header, PV_NONE,
 			    {(char_u *)"%<%f%h%m%=Page %N", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
-				    },
-    {"printername", "pname",  P_STRING|P_VI_DEF,
+			    },
+    {"printoptions", "popt", P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
 #ifdef FEAT_PRINTER
-			    (char_u *)&p_prtname, PV_NONE,
+			    (char_u *)&p_popt, PV_NONE,
 			    {(char_u *)"", (char_u *)0L}
 #else
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)NULL, (char_u *)0L}
 #endif
-				    },
-    {"printeroptions", "popt", P_STRING|P_VI_DEF|P_COMMA|P_NODUP,
-#ifdef FEAT_PRINTER
-			    (char_u *)&p_popt, PV_NONE,
-			    {
-				(char_u *)"left:10pc,right:5pc,top:5pc,bottom:5pc,header:2",
-				(char_u *)0L}
-#else
-			    (char_u *)NULL, PV_NONE,
-			    {(char_u *)NULL, (char_u *)0L}
-#endif
-				    },
+			    },
     {"prompt",	    NULL,   P_BOOL|P_VI_DEF,
 			    (char_u *)NULL, PV_NONE,
 			    {(char_u *)FALSE, (char_u *)0L}},
@@ -2366,25 +2373,52 @@ set_init_1()
 	    || (p = default_shell()) != NULL
 # endif
 #endif
-							    )
-    {
+       )
 	set_string_default("sh", p);
-    }
 
 #ifdef FEAT_WILDIGN
-    /* Set default for 'backupskip' to include $TMPDIR if it's set. */
-    if ((p = mch_getenv((char_u *)"TMPDIR")) != NULL)
+    /*
+     * Set the default for 'backupskip' to include environment variables for
+     * temp files.
+     */
     {
-	char_u	*buf;
+	char	*(names[]) = {
+# ifdef UNIX
+			    "",
+# endif
+				"TMPDIR", "TEMP", "TMP"};
+	int	len;
+	garray_T ga;
 
-	buf = alloc((unsigned)STRLEN(p) + 10);
-	if (buf != NULL)
+	ga_init2(&ga, 1, 100);
+	for (n = 0; n < sizeof(names) / sizeof(char *); ++n)
 	{
-	    STRCPY(buf, p);
-	    add_pathsep(buf);
-	    STRCAT(buf, "*,/tmp/*");
-	    set_string_default("bsk", buf);
-	    vim_free(buf);
+# ifdef UNIX
+	    if (*names[n] == NUL)
+		p = (char_u *)"/tmp";
+	    else
+# endif
+		p = mch_getenv((char_u *)names[n]);
+	    if (p != NULL && *p != NUL)
+	    {
+		/* First time count the NUL, otherwise count the ','. */
+		len = STRLEN(p) + 3;
+		if (ga_grow(&ga, len) == OK)
+		{
+		    if (ga.ga_len > 0)
+			STRCAT(ga.ga_data, ",");
+		    STRCAT(ga.ga_data, p);
+		    add_pathsep(ga.ga_data);
+		    STRCAT(ga.ga_data, "*");
+		    ga.ga_room -= len;
+		    ga.ga_len += len;
+		}
+	    }
+	}
+	if (ga.ga_data != NULL)
+	{
+	    set_string_default("bsk", ga.ga_data);
+	    vim_free(ga.ga_data);
 	}
     }
 #endif
@@ -2485,6 +2519,12 @@ set_init_1()
      * initialize the table for 'breakat'.
      */
     fill_breakat_flags();
+#endif
+
+#ifdef FEAT_POSTSCRIPT
+    /* 'printexpr' must be allocated to be able to evaluate it. */
+    set_string_default("pexpr",
+	    (char_u *)"system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice) . ' ' . v:fname_in) . delete(v:fname_in)");
 #endif
 
     /*
@@ -3866,6 +3906,11 @@ option_expand(opt_idx, val)
     if (!(options[opt_idx].flags & P_EXPAND) || options[opt_idx].var == NULL)
 	return NULL;
 
+    /* If val is longer than MAXPATHL no meaningful expansion can be done,
+     * expand_env would truncate the string. */
+    if (val != NULL && STRLEN(val) > MAXPATHL)
+	return NULL;
+
     if (val == NULL)
 	val = *(char_u **)options[opt_idx].var;
 
@@ -4803,6 +4848,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	int		new_unnamed = FALSE;
 	int		new_autoselect = FALSE;
+	int		new_autoselectml = FALSE;
 	regprog_T	*new_exclude_prog = NULL;
 
 	for (p = p_cb; *p != NUL; )
@@ -4817,6 +4863,12 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    {
 		new_autoselect = TRUE;
 		p += 10;
+	    }
+	    else if (STRNCMP(p, "autoselectml", 12) == 0
+					    && (p[12] == ',' || p[12] == NUL))
+	    {
+		new_autoselectml = TRUE;
+		p += 12;
 	    }
 	    else if (STRNCMP(p, "exclude:", 8) == 0)
 	    {
@@ -4838,6 +4890,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	{
 	    clip_unnamed = new_unnamed;
 	    clip_autoselect = new_autoselect;
+	    clip_autoselectml = new_autoselectml;
 	    vim_free(clip_exclude_prog);
 	    clip_exclude_prog = new_exclude_prog;
 	}
@@ -5970,7 +6023,11 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
      * If the screen (shell) height has been changed, assume it is the
      * physical screenheight.
      */
-    if ((old_Rows != Rows || old_Columns != Columns) && full_screen)
+    if ((old_Rows != Rows || old_Columns != Columns) && full_screen
+#ifdef FEAT_GUI
+	    && !gui.starting
+#endif
+	    )
 	set_shellsize((int)Columns, (int)Rows, TRUE);
 
     if (curbuf->b_p_sts < 0)

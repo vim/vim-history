@@ -1,4 +1,4 @@
-*usr_43.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_43.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -70,7 +70,7 @@ More details about writing a filetype plugin can be found here:
 *43.2*	Adding a filetype
 
 If you are using a type of file that is not recognized by Vim, this is how to
-get them recognized.  You need a runtime directory of your own.  See
+get it recognized.  You need a runtime directory of your own.  See
 |your-runtime-dir| above.
 
 Create a file "filetype.vim" which contains an autocommand for your filetype.
@@ -121,12 +121,12 @@ autocommand to catch *.txt files is defined there.  Then Vim finds the
 filetype.vim file in $VIMRUNTIME, which is halfway 'runtimepath'.  Finally
 ~/.vim/after/filetype.vim is found and the autocommand for detecting ruby
 files in /usr/share/scripts is added.
-   When you now edits the /usr/share/scripts/README.txt, the autocommands are
+   When you now edit /usr/share/scripts/README.txt, the autocommands are
 checked in the order in which they were defined.  The *.txt pattern matches,
 thus "setf text" is executed to set the filetype to "text".  The pattern for
 ruby matches too, and the "setf ruby" is executed.  But since 'filetype' was
 already set to "text", nothing happens here.
-   When you edit the file /usr/share/scripts/first the same autocommands are
+   When you edit the file /usr/share/scripts/foobar the same autocommands are
 checked.  Only the one for ruby matches and "setf ruby" sets 'filetype' to
 ruby.
 

@@ -927,8 +927,10 @@ curs_columns(scroll)
 {
     int		diff;
     int		extra;		/* offset for first screen line */
+    int		off;
     int		n;
     int		width = 0;
+    int		textwidth;
     int		new_leftcol;
     colnr_T	startcol;
     colnr_T	endcol;
@@ -970,38 +972,36 @@ curs_columns(scroll)
      */
     curwin->w_wrow = curwin->w_cline_row;
 
-    if (curwin->w_p_wrap
+    textwidth = W_WIDTH(curwin) - extra;
+    if (textwidth <= 0)
+    {
+	/* No room for text, put cursor in last char of window. */
+	curwin->w_wcol = W_WIDTH(curwin) - 1;
+	curwin->w_wrow = curwin->w_height - 1;
+    }
+    else if (curwin->w_p_wrap
 #ifdef FEAT_VERTSPLIT
 	    && curwin->w_width != 0
 #endif
 	    )
     {
-	width = W_WIDTH(curwin) - extra + curwin_col_off2();
+	width = textwidth + curwin_col_off2();
 
 	/* long line wrapping, adjust curwin->w_wrow */
 	if (curwin->w_wcol >= W_WIDTH(curwin))
 	{
-	    if (W_WIDTH(curwin) <= extra)
-	    {
-		/* No room for text, put cursor in last char of window. */
-		curwin->w_wcol = W_WIDTH(curwin) - 1;
-		curwin->w_wrow = curwin->w_height - 1;
-	    }
-	    else
-	    {
-		n = (curwin->w_wcol - W_WIDTH(curwin)) / width + 1;
-		curwin->w_wcol -= n * width;
-		curwin->w_wrow += n;
+	    n = (curwin->w_wcol - W_WIDTH(curwin)) / width + 1;
+	    curwin->w_wcol -= n * width;
+	    curwin->w_wrow += n;
 
 #ifdef FEAT_LINEBREAK
-		/* When cursor wraps to first char of next line in Insert
-		 * mode, the 'showbreak' string isn't shown, backup to first
-		 * column */
-		if (*p_sbr && *ml_get_cursor() == NUL
-				      && curwin->w_wcol == (int)STRLEN(p_sbr))
-		    curwin->w_wcol = 0;
+	    /* When cursor wraps to first char of next line in Insert
+	     * mode, the 'showbreak' string isn't shown, backup to first
+	     * column */
+	    if (*p_sbr && *ml_get_cursor() == NUL
+		    && curwin->w_wcol == (int)STRLEN(p_sbr))
+		curwin->w_wcol = 0;
 #endif
-	    }
 	}
     }
 
@@ -1020,24 +1020,24 @@ curs_columns(scroll)
 	 * If we get closer to the edge than 'sidescrolloff', scroll a little
 	 * extra
 	 */
-	if ((extra = (int)startcol - (int)curwin->w_leftcol - p_siso) < 0
-		|| (extra = (int)endcol
+	if ((off = (int)startcol - (int)curwin->w_leftcol - p_siso) < 0
+		|| (off = (int)endcol
 			 - (int)(curwin->w_leftcol + W_WIDTH(curwin) - p_siso)
 			 + 1) > 0)
 	{
-	    if (extra < 0)
-		diff = -extra;
+	    if (off < 0)
+		diff = -off;
 	    else
-		diff = extra;
+		diff = off;
 
 	    /* far off, put cursor in middle of window */
-	    if (p_ss == 0 || diff >= W_WIDTH(curwin) / 2)
-		new_leftcol = curwin->w_wcol - W_WIDTH(curwin) / 2;
+	    if (p_ss == 0 || diff >= textwidth / 2)
+		new_leftcol = curwin->w_wcol - extra - textwidth / 2;
 	    else
 	    {
 		if (diff < p_ss)
 		    diff = p_ss;
-		if (extra < 0)
+		if (off < 0)
 		    new_leftcol = curwin->w_leftcol - diff;
 		else
 		    new_leftcol = curwin->w_leftcol + diff;

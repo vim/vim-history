@@ -11,11 +11,11 @@ nohlsearch
 
 " Used after each command: put cursor at end and display position
 if &wrap
-  noremap <SID>L L$:file<CR>
-  au VimEnter * normal L$
+  noremap <SID>L L0:file<CR>
+  au VimEnter * normal L0
 else
-  noremap <SID>L Lg$:file<CR>
-  au VimEnter * normal Lg$
+  noremap <SID>L Lg0:file<CR>
+  au VimEnter * normal Lg0
 endif
 
 " When reading from stdin don't consider the file modified.

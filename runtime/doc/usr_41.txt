@@ -1,4 +1,4 @@
-*usr_41.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_41.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -156,7 +156,7 @@ used ones are:
 
 DELETING VARIABLES
 
-Variables take up memory and show up in the output of he ":let" command.  To
+Variables take up memory and show up in the output of the ":let" command.  To
 delete a variable use the ":unlet" command.  Example: >
 
 	:unlet s:count
@@ -413,7 +413,7 @@ pattern, like what's used for searching.  Example: >
 	:endif
 
 Notice the use of a single-quote string for the pattern.  This is useful,
-because backslashes need to be doubled in a double-qoute string and patterns
+because backslashes need to be doubled in a double-quote string and patterns
 tend to contain many backslashes.
 
 The 'ignorecase' option is used when comparing strings.  When you don't want
@@ -538,7 +538,7 @@ the function name to jump to detailed help on it.
 String manipulation:
 	char2nr()		get ASCII value of a character
 	nr2char()		get a character by its ASCII value
-	escape()		Escape characters in a string with a '\'
+	escape()		escape characters in a string with a '\'
 	strtrans()		translate a string to make it printable
 	tolower()		turn a string to lowercase
 	toupper()		turn a string to uppercase
@@ -638,7 +638,7 @@ Various:
 	mode()			get current editing mode
 	visualmode()		last visual mode used
 	hasmapto()		check if a mapping exists
-	mapcheck		check if a matching mapping exists
+	mapcheck()		check if a matching mapping exists
 	maparg()		get rhs of a mapping
 	exists()		check if a variable, function, etc. exists
 	has()			check if a feature is supported in Vim
@@ -852,8 +852,8 @@ WHITE SPACE
 Blank lines are allowed and ignored.
 
 Leading whitespace characters (blanks and TABs) are always ignored.  The
-whitespaces between parameters (e.g. between the 'set' and the 'number' in the
-example above) are reduced to one blank character and plays the role of a
+whitespaces between parameters (e.g. between the 'set' and the 'cpoptions' in the
+example below) are reduced to one blank character and plays the role of a
 separator, the whitespaces after the last (visible) character may or may not
 be ignored depending on the situation, see below.
 
@@ -933,7 +933,7 @@ does not exist as a mapped sequence.  An error will be issued, which is very
 hard to identify, because the ending whitespace character on the 'unmap ,ab '
 is not visible.
 
-And this is the same what happens when one uses a comment after an 'unmap'
+And this is the same as what happens when one uses a comment after an 'unmap'
 command: >
 
 	:unmap ,ab     " comment
@@ -949,8 +949,8 @@ RESTORING THE VIEW
 Sometimes you want to make a change and go back to where cursor was.
 Restoring the relative position would also be nice, so that the same line
 appears at the top of the window.
-   This example yanks the current line and puts it above the first line in the
-file: >
+   This example yanks the current line, puts it above the first line in the
+file and then restores the view: >
 
 	map ,p ma"aYHmbgg"aP`bzt`a
 
@@ -1155,7 +1155,7 @@ script also defines s:Add(), it will be local to that script and can only
 be called from the script it was defined in.  There can also be a global Add()
 function (without the "s:"), which is again another function.
 
-<SID> can be used way mappings.  It generates a script ID, which identifies
+<SID> can be used with mappings.  It generates a script ID, which identifies
 the current script.  In our typing correction plugin we use it like this: >
 
  23	noremap <unique> <script> <Plug>TypecorrAdd  <SID>Add
@@ -1365,7 +1365,7 @@ hasmapto()		Function to test if the user already defined a mapping
 :noremap <script>	Use only mappings local to the script, not global
 			mappings.
 
-exists(":cmd")		Check if a user command doesn't exist yet.
+exists(":Cmd")		Check if a user command already exists.
 
 ==============================================================================
 *41.10*	Writing a filetype plugin	*write-filetype-plugin* *ftplugin*
@@ -1394,12 +1394,12 @@ chance to disable loading it.  Put this at the top of the plugin: >
 This also needs to be used to avoid that the same plugin is executed twice for
 the same buffer (happens when using an ":edit" command without arguments).
 
-Now you can disable loading the default plugin completely by making a filetype
+Now users can disable loading the default plugin completely by making a filetype
 plugin with only this line: >
 
 	let b:did_ftplugin = 1
 
-This does require that your filetype plugin directory comes before $VIMRUNTIME
+This does require that the filetype plugin directory comes before $VIMRUNTIME
 in 'runtimepath'!
 
 If you do want to use the default plugin, but overrule one of the settings,
@@ -1545,7 +1545,7 @@ runtime directory, use the mechanism mentioned above.  When
 "current_compiler" was already set by a user plugin nothing will be done.
 
 When you write a compiler plugin to overrule settings from a default plugin,
-you don't check "current_compiler".  This plugin is supposed to be loaded
+don't check "current_compiler".  This plugin is supposed to be loaded
 last, thus it should be in a directory at the end of 'runtimepath'.  For Unix
 that could be ~/.vim/runtime/after/compiler.
 

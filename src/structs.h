@@ -1636,18 +1636,16 @@ typedef struct
     int		duplex;
     int		chars_per_line;
     int		lines_per_page;
-    int		number_width;
+    int		has_color;
+#ifdef FEAT_SYN_HL
+    int		do_syntax;
+#endif
     int		user_abort;
     char_u	*jobname;
+#ifdef FEAT_POSTSCRIPT
+    char_u	*outfile;
+    char_u	*arguments;
+#endif
 } prt_settings_T;
 
-#define OPT_PRINT_TOP		0
-#define OPT_PRINT_BOT		1
-#define OPT_PRINT_LEFT		2
-#define OPT_PRINT_RIGHT		3
-#define OPT_PRINT_HEADERHEIGHT	4
-#define OPT_PRINT_MONO		5
-#define OPT_PRINT_NUMBER	6
-#define OPT_PRINT_WRAP		7
-
-#define OPT_PRINT_NUM_OPTIONS	8
+#define PRINT_NUMBER_WIDTH 8

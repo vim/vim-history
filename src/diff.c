@@ -60,6 +60,7 @@ static int diff_a_works = MAYBE; /* TRUE when "diff -a" works, FALSE when it
 
 static int diff_buf_idx __ARGS((buf_T *buf));
 static void diff_check_unchanged __ARGS((diff_T *dp));
+static int diff_check_sanity __ARGS((diff_T *dp));
 static void diff_redraw __ARGS((int dofold));
 static void diff_file __ARGS((char_u *tmp_orig, char_u *tmp_new, char_u *tmp_diff));
 static void diff_clear __ARGS((void));
@@ -455,6 +456,9 @@ diff_check_unchanged(dp)
     if (i_org == DB_COUNT)	/* safety check */
 	return;
 
+    if (diff_check_sanity(dp) == FAIL)
+	return;
+
     /* First check lines at the top, then at the bottom. */
     off_org = 0;
     off_new = 0;
@@ -503,6 +507,24 @@ diff_check_unchanged(dp)
 	    break;
 	dir = BACKWARD;
     }
+}
+
+/*
+ * Check if a diff block doesn't contain invalid line numbers.
+ * This can happen when the diff program returns invalid results.
+ */
+    static int
+diff_check_sanity(dp)
+    diff_T	*dp;
+{
+    int		i;
+
+    for (i = 0; i < DB_COUNT; ++i)
+	if (diffbuf[i] != NULL)
+	    if (dp->df_lnum[i] + dp->df_count[i]
+					     > diffbuf[i]->b_ml.ml_line_count)
+		return FAIL;
+    return OK;
 }
 
 /*
@@ -683,7 +705,7 @@ diff_file(tmp_orig, tmp_new, tmp_diff)
 		    (diff_flags & DIFF_IWHITE) ? "-b " : "",
 		    (diff_flags & DIFF_ICASE) ? "-i " : "",
 		    tmp_orig, tmp_new);
-	    append_redir(cmd, tmp_diff);
+	    append_redir(cmd, p_srr, tmp_diff);
 	    (void)call_shell(cmd, SHELL_FILTER|SHELL_SILENT|SHELL_DOOUT);
 	    vim_free(cmd);
 	}
@@ -1100,6 +1122,8 @@ diff_read(idx_orig, idx_new, fname)
 	dp = dp->df_next;
 	notset = TRUE;
     }
+
+    fclose(fd);
 }
 
 /*
@@ -1253,6 +1277,8 @@ diff_equal_entry(dp, idx1, idx2)
     int		cmp;
 
     if (dp->df_count[idx1] != dp->df_count[idx2])
+	return FALSE;
+    if (diff_check_sanity(dp) == FAIL)
 	return FALSE;
     for (i = 0; i < dp->df_count[idx1]; ++i)
     {
@@ -1523,6 +1549,9 @@ diff_find_change(wp, lnum, startp, endp)
     for (dp = first_diff; dp != NULL; dp = dp->df_next)
 	if (lnum <= dp->df_lnum[idx] + dp->df_count[idx])
 	    break;
+    if (dp == NULL || diff_check_sanity(dp) == FAIL)
+	return;
+
     off = lnum - dp->df_lnum[idx];
 
     for (i = 0; i < DB_COUNT; ++i)
@@ -1783,8 +1812,12 @@ ex_diffgetput(eap)
 	    }
 	    for (i = 0; i < dp->df_count[idx_from] - start_skip - end_skip; ++i)
 	    {
-		p = vim_strsave(ml_get_buf(diffbuf[idx_from],
-			      dp->df_lnum[idx_from] + start_skip + i, FALSE));
+		linenr_T nr;
+
+		nr = dp->df_lnum[idx_from] + start_skip + i;
+		if (nr > diffbuf[idx_from]->b_ml.ml_line_count)
+		    break;
+		p = vim_strsave(ml_get_buf(diffbuf[idx_from], nr, FALSE));
 		ml_append(lnum + i - 1, p, 0, FALSE);
 		++added;
 	    }

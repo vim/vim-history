@@ -656,7 +656,7 @@ inspect_system(void)
 	    if (targets[i].oldexe != NULL)
 		printf("%s\n", targets[i].oldexe);
 	printf("It will be used instead of the version you are installing.\n");
-	printf("Please delete or rename it, or adjust your $PATH setting.");
+	printf("Please delete or rename it, or adjust your $PATH setting.\n");
     }
 
     /*
@@ -1660,19 +1660,17 @@ init_shortcut_choices(void)
    static void
 install_OLE_register(void)
 {
-    char register_command_string[BUFSIZE + 20];
+    char register_command_string[BUFSIZE + 30];
 
     printf("\n--- Attempting to register Vim with OLE ---\n");
-    printf("A message box will appear if gvim is OLE enabled.\n");
-    printf("To finish installation, click the OK button in the message box.\n");
-    printf("If no message box appears, your gvim.exe is not OLE enabled.\n");
+    printf("(There is no message whether this works or not.)\n");
 
 #ifndef __CYGWIN__
-    sprintf(register_command_string, "\"%s\\gvim.exe\" -register", installdir);
+    sprintf(register_command_string, "\"%s\\gvim.exe\" -silent -register", installdir);
 #else
     /* handle this differently for Cygwin which sometimes has trouble with
      * Windows-style pathnames here. */
-    sprintf(register_command_string, "./gvim.exe -register", installdir);
+    sprintf(register_command_string, "./gvim.exe -silent -register");
 #endif
     system(register_command_string);
 }

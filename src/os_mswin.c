@@ -42,8 +42,8 @@
 #ifndef STRICT
 # define STRICT
 #endif
-#ifndef WIN32_LEAN_AND_MEAN
-# define WIN32_LEAN_AND_MEAN
+#ifndef COBJMACROS
+# define COBJMACROS /* Enable "friendlier" access to objects */
 #endif
 #include <windows.h>
 
@@ -493,9 +493,9 @@ display_errors()
 		if (STRLEN(p) > 2000)
 		    STRCPY(p + 2000 - 14, "...(truncated)");
 #ifdef WIN3264
-		MessageBox(0, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
+		MessageBox(NULL, p, "Vim", MB_TASKMODAL|MB_SETFOREGROUND);
 #else
-		MessageBox(0, p, "Vim", MB_TASKMODAL);
+		MessageBox(NULL, p, "Vim", MB_TASKMODAL);
 #endif
 		break;
 	    }
@@ -946,37 +946,37 @@ swap_me(COLORREF colorref)
     static BOOL CALLBACK
 PrintDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-     switch (message)
-     {
-     case WM_INITDIALOG:
-          SetWindowText(hDlg, szAppName);
-          EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
-          return TRUE;
+    switch (message)
+    {
+	case WM_INITDIALOG:
+	    SetWindowText(hDlg, szAppName);
+	    EnableMenuItem(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_GRAYED);
+	    return TRUE;
 
-     case WM_COMMAND:
-          *bUserAbort = TRUE;
-          EnableWindow(GetParent(hDlg), TRUE);
-          DestroyWindow(hDlg);
-          hDlgPrint = NULL;
-          return TRUE;
-     }
-     return FALSE;
+	case WM_COMMAND:
+	    *bUserAbort = TRUE;
+	    EnableWindow(GetParent(hDlg), TRUE);
+	    DestroyWindow(hDlg);
+	    hDlgPrint = NULL;
+	    return TRUE;
+    }
+    return FALSE;
 }
 
     static BOOL CALLBACK
 AbortProc(HDC hdcPrn, int iCode)
 {
-     MSG msg;
+    MSG msg;
 
-     while (!*bUserAbort && PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-     {
-          if (!hDlgPrint || !IsDialogMessage(hDlgPrint, &msg))
-          {
-               TranslateMessage(&msg);
-               DispatchMessage(&msg);
-          }
-     }
-     return !*bUserAbort;
+    while (!*bUserAbort && PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+	if (!hDlgPrint || !IsDialogMessage(hDlgPrint, &msg))
+	{
+	    TranslateMessage(&msg);
+	    DispatchMessage(&msg);
+	}
+    }
+    return !*bUserAbort;
 }
 
 #ifndef FEAT_GUI
@@ -1094,16 +1094,28 @@ extern HWND s_hwnd;
 #endif
 
     static int
-to_device_units(int idx, int dpi, int physsize, int offset)
+to_device_units(int idx, int dpi, int physsize, int offset, int def_number)
 {
-    int ret;
+    int		ret;
+    int		c;
+    int		nr;
 
-    if (printer_opts[idx].string[0] == 'i')
-	ret = (printer_opts[idx].number * dpi);
-    else if (printer_opts[idx].string[0] == 'm')
-	ret = (printer_opts[idx].number * 10 * dpi) / 254;
+    if (printer_opts[idx].present)
+    {
+	c = TO_LOWER(printer_opts[idx].string[0]);
+	nr = printer_opts[idx].number;
+    }
     else
-	ret = (physsize * printer_opts[idx].number) / 100;
+    {
+	c = 'p';
+	nr = def_number;
+    }
+    if (c == 'i')
+	ret = (nr * dpi);
+    else if (c == 'm')
+	ret = (nr * 10 * dpi) / 254;
+    else
+	ret = (physsize * nr) / 100;
 
     if (ret < offset)
 	return 0;
@@ -1136,21 +1148,21 @@ mch_print_get_cpl(void)
     phyw    = GetDeviceCaps(prt_dlg.hDC, PHYSICALWIDTH);
     dvoff   = GetDeviceCaps(prt_dlg.hDC, PHYSICALOFFSETX);
 #endif
-    dpi	    = GetDeviceCaps(prt_dlg.hDC, LOGPIXELSY);
+    dpi	    = GetDeviceCaps(prt_dlg.hDC, LOGPIXELSX);
 
     rev_offset = phyw - (dvoff + hr);
 
-    prt_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff);
-    if (printer_opts[OPT_PRINT_NUMBER].present)
+    prt_left_margin = to_device_units(OPT_PRINT_LEFT, dpi, phyw, dvoff, 10);
+    if (prt_use_number())
     {
-	prt_number_width = 8 * prt_tm.tmAveCharWidth;
+	prt_number_width = PRINT_NUMBER_WIDTH * prt_tm.tmAveCharWidth;
 	prt_left_margin += prt_number_width;
     }
     else
 	prt_number_width = 0;
 
     prt_right_margin = hr - to_device_units(OPT_PRINT_RIGHT, dpi, phyw,
-								  rev_offset);
+							       rev_offset, 5);
 
     return (prt_right_margin - prt_left_margin) / prt_tm.tmAveCharWidth;
 }
@@ -1182,14 +1194,13 @@ mch_print_get_lpp(void)
 
     rev_offset = phyw - (dvoff + vr);
 
-    prt_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff);
+    prt_top_margin = to_device_units(OPT_PRINT_TOP, dpi, phyw, dvoff, 5);
 
     /* adjust top margin if there is a header */
-    if (printer_opts[OPT_PRINT_HEADERHEIGHT].present)
-	prt_top_margin += (prt_line_height
-			       * printer_opts[OPT_PRINT_HEADERHEIGHT].number);
+    prt_top_margin += prt_line_height * prt_header_height();
 
-    bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw, rev_offset);
+    bottom_margin = vr - to_device_units(OPT_PRINT_BOT, dpi, phyw,
+							       rev_offset, 5);
 
     return (bottom_margin - prt_top_margin) / prt_line_height;
 }
@@ -1208,6 +1219,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     int			pifUnderline;
 
     LPVOID		mem = NULL;
+    int			i;
 
     bUserAbort = &(psettings->user_abort);
     memset(&prt_dlg, 0, sizeof(PRINTDLG));
@@ -1220,7 +1232,7 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     prt_dlg.Flags = PD_NOPAGENUMS | PD_NOSELECTION | PD_RETURNDC;
     prt_dlg.hDevMode = stored_dm;
     prt_dlg.hDevNames = stored_devn;
-    prt_dlg.lCustData = stored_nCopies; /* work around bug in print dialogue */
+    prt_dlg.lCustData = stored_nCopies; /* work around bug in print dialog */
 #ifndef FEAT_GUI
     /*
      * Use hook to prevent console window being sent to back
@@ -1230,8 +1242,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 #endif
     prt_dlg.Flags |= stored_nFlags;
     /*
-     * If bang present, return default printer setup with no dialogue
-     * never show dialogue if we are running over telnet
+     * If bang present, return default printer setup with no dialog
+     * never show dialog if we are running over telnet
      */
     if (forceit
 #ifndef FEAT_GUI
@@ -1245,8 +1257,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 	 * MSDN suggests setting the first parameter to WINSPOOL for
 	 * NT, but NULL appears to work just as well.
 	 */
-	if (STRLEN(p_prtname))
-	    prt_dlg.hDC = CreateDC(NULL, p_prtname, NULL, NULL);
+	if (*p_pdev != NUL)
+	    prt_dlg.hDC = CreateDC(NULL, p_pdev, NULL, NULL);
 	else
 #endif
 	{
@@ -1295,16 +1307,16 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
     GlobalUnlock(prt_dlg.hDevMode);
 #endif
 
-    memset(&fLogFont, 0, sizeof(fLogFont));
     /*
      * Initialise the font according to 'printerfont'
      */
+    memset(&fLogFont, 0, sizeof(fLogFont));
 #ifdef FEAT_GUI
-    if (!get_logfont(&fLogFont, p_prtfont, prt_dlg.hDC))
+    if (!get_logfont(&fLogFont, p_pfn, prt_dlg.hDC))
 	return FALSE;
 #else
     /*<VN> need to rearrange win32 code so we can call get_logfont*/
-    /* Should use p_prtfont here, but only the font name. */
+    /* Should use p_pfn here, but only the font name. */
     STRCPY(fLogFont.lfFaceName, "Courier New");
 #endif
 
@@ -1320,8 +1332,8 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 					      = CreateFontIndirect(&fLogFont);
 	    }
 
-    SetBkMode(prt_dlg.hDC , OPAQUE);
-    SelectObject(prt_dlg.hDC , prt_font_handles[0][0][0]);
+    SetBkMode(prt_dlg.hDC, OPAQUE);
+    SelectObject(prt_dlg.hDC, prt_font_handles[0][0][0]);
 
     /*
      * Fill in the settings struct
@@ -1332,6 +1344,10 @@ mch_print_init(prt_settings_T *psettings, char_u *jobname, int forceit)
 							? prt_dlg.nCopies : 1;
     psettings->n_uncollated_copies = (prt_dlg.Flags & PD_COLLATE)
 							? 1 : prt_dlg.nCopies;
+    i = GetDeviceCaps(prt_dlg.hDC, NUMCOLORS);
+    psettings->has_color = (GetDeviceCaps(prt_dlg.hDC, BITSPIXEL) > 1
+				   || GetDeviceCaps(prt_dlg.hDC, PLANES) > 1
+				   || i > 2 || i == -1);
 
     if (psettings->n_collated_copies == 0)
 	psettings->n_collated_copies = 1;
@@ -1391,13 +1407,13 @@ mch_print_begin(prt_settings_T *psettings)
 }
 
     void
-mch_print_end(void)
+mch_print_end(prt_settings_T *psettings)
 {
     EndDoc(prt_dlg.hDC);
     if (!*bUserAbort)
     {
-          EnableWindow(prt_dlg.hwndOwner, TRUE);
-          DestroyWindow(hDlgPrint);
+	EnableWindow(prt_dlg.hwndOwner, TRUE);
+	DestroyWindow(hDlgPrint);
     }
 }
 
@@ -1464,7 +1480,7 @@ mch_print_text_out(char_u *p, int len)
 }
 
     void
-mch_print_setfont(int iBold, int iItalic, int iUnderline)
+mch_print_set_font(int iBold, int iItalic, int iUnderline)
 {
     SelectObject(prt_dlg.hDC, prt_font_handles[iBold][iItalic][iUnderline]);
 }
@@ -1472,7 +1488,7 @@ mch_print_setfont(int iBold, int iItalic, int iUnderline)
     void
 mch_print_set_bg(unsigned long bgcol)
 {
-    SetBkColor(prt_dlg.hDC, swap_me(bgcol));
+    SetBkColor(prt_dlg.hDC, GetNearestColor(prt_dlg.hDC, swap_me(bgcol)));
 }
     void
 mch_print_set_fg(unsigned long fgcol)
@@ -1556,3 +1572,200 @@ shortcut_error:
 }
 #endif
 
+#if defined(FEAT_OLE) || defined(PROTO)
+/*
+ * Client code for the Vim OLE functionality.
+ *
+ * Initially written by Walter Briscoe.
+ */
+#ifdef PROTO
+# define IDispatch int
+# define BSTR int
+#endif
+
+static IDispatch *m_pDisp = NULL;
+
+/*
+ * Make a copy of multi-byte string in a WideChar string -- new string
+ * allocated using SysAllocString().
+ */
+    static BSTR
+DuplicateAsSysBstr(const char *sStr)
+{
+    int nLen = (int)strlen(sStr);
+    int nCnt = MultiByteToWideChar(CP_ACP, 0, sStr, nLen, NULL, 0);
+    BSTR bstrRet = SysAllocStringLen(NULL, (unsigned)(nCnt + 1));
+
+    MultiByteToWideChar(CP_ACP, 0, sStr, nLen, bstrRet, nCnt);
+    bstrRet[nCnt] = 0;
+    return bstrRet;
+}
+
+/*
+ * Make a copy of a WideChar string in a multi-byte string.
+ */
+    static char *
+DuplicateAsStr(const BSTR bstr)
+{
+    int nLen = WideCharToMultiByte(CP_ACP, 0, bstr, -1, NULL, 0, NULL, NULL);
+    char *sRet = alloc((unsigned)nLen);
+
+    if (sRet != NULL)
+	WideCharToMultiByte(CP_ACP, 0, bstr, -1, sRet, nLen, NULL, NULL);
+    return sRet;
+}
+
+/*
+ * Send keys to the Vim server.
+ * return OK or FAIL.
+ */
+    int
+ole_SendKeys(const char_u *sKeys)
+{
+    OLECHAR *szMember = (OLECHAR*)L"SendKeys";
+    DISPID dispid;
+    VARIANTARG varg;
+    DISPPARAMS params = {NULL, NULL, 1, 0};
+
+    params.rgvarg = &varg;
+
+    if (m_pDisp != NULL
+	    && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
+		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
+    {
+	varg.vt = VT_BSTR;
+	varg.bstrVal = DuplicateAsSysBstr(sKeys);
+	IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
+		LOCALE_SYSTEM_DEFAULT,
+		DISPATCH_METHOD, &params, NULL, NULL, NULL);
+	SysFreeString(varg.bstrVal);
+	return OK;
+    }
+    return FAIL;
+}
+
+/*
+ * Evaluate an expression in the Vim server.
+ */
+    char_u *
+ole_Eval(const char_u *sExpr)
+{
+    OLECHAR *szMember = (OLECHAR*)L"Eval";
+    DISPID dispid;
+    VARIANTARG varg;
+    VARIANTARG vret;
+    char *sRet = NULL;
+    DISPPARAMS params = {NULL, NULL, 1, 0};
+
+    params.rgvarg = &varg;
+
+    if (m_pDisp != NULL
+	    && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
+		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
+    {
+	HRESULT res;
+
+	varg.vt = VT_BSTR;
+	varg.bstrVal = DuplicateAsSysBstr(sExpr);
+	VariantInit(&vret);
+
+	res = IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
+		LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
+						  &params, &vret, NULL, NULL);
+
+	SysFreeString(varg.bstrVal);
+
+	if (SUCCEEDED(res))
+	{
+	    sRet = DuplicateAsStr(vret.bstrVal);
+	    SysFreeString(vret.bstrVal);
+	    return (char_u *)sRet;
+	}
+    }
+
+    return NULL;
+}
+
+/*
+ * Get the window ID of the Vim server.
+ */
+    unsigned
+ole_GetHwnd(void)
+{
+    OLECHAR *szMember = (OLECHAR*)L"GetHwnd";
+    DISPID dispid;
+    VARIANTARG vret = {0};
+    DISPPARAMS params = {NULL, NULL, 0, 0};
+
+    if (m_pDisp == NULL
+	    || FAILED(IDispatch_GetIDsOfNames(m_pDisp, &IID_NULL, &szMember, 1,
+		    LOCALE_SYSTEM_DEFAULT, &dispid))
+	    || FAILED(IDispatch_Invoke(m_pDisp, dispid, &IID_NULL,
+		    LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD, &params, &vret,
+								  NULL, NULL))
+	    || vret.vt != VT_UI4)
+	return 0;
+    return (unsigned)vret.lVal;
+}
+
+/*
+ * Make the Vim server jump to the foreground.
+ */
+    void
+ole_SetForeground(void)
+{
+    OLECHAR *szMember = (OLECHAR*)L"SetForeground";
+    DISPID dispid;
+    DISPPARAMS params = {NULL, NULL, 0, 0};
+
+    if (m_pDisp != NULL && !FAILED(IDispatch_GetIDsOfNames(m_pDisp,
+		    &IID_NULL, &szMember, 1, LOCALE_SYSTEM_DEFAULT, &dispid)))
+	IDispatch_Invoke(m_pDisp, dispid, &IID_NULL, LOCALE_SYSTEM_DEFAULT,
+		DISPATCH_METHOD, &params, NULL, NULL, NULL);
+}
+
+/*
+ * Open a connection to a Vim server.
+ * Returns FAIL or OK.
+ */
+    int
+ole_client_init(void)
+{
+    CLSID m_CLSID_Vim;
+
+    /* Check if already connected. */
+    if (m_pDisp != NULL)
+	return OK;
+
+    if (FAILED(CoInitialize(NULL))
+	    || FAILED(CLSIDFromProgID((OLECHAR*)L"Vim.Application",
+								&m_CLSID_Vim))
+	    || FAILED(CoCreateInstance(&m_CLSID_Vim, NULL, CLSCTX_LOCAL_SERVER,
+		    &IID_IDispatch, (void**)&m_pDisp)))
+    {
+	(void)MessageBox(NULL,
+			 "Failed to obtain a connection to a Vim server.\n"
+			 "Please run Vim to register it !",
+			 "Vim OLE client",
+			 MB_OK | MB_ICONEXCLAMATION);
+    }
+
+    return m_pDisp == NULL ? FAIL : OK;
+}
+
+/*
+ * Close the connection to the Vim server.
+ */
+    void
+ole_client_close(void)
+{
+    if (m_pDisp != NULL)
+    {
+	IDispatch_Release(m_pDisp);
+	m_pDisp = NULL;
+    }
+
+    CoUninitialize();
+}
+
+#endif /* FEAT_OLE */

@@ -2256,7 +2256,8 @@ peekchr()
 	case '^':
 	    /* '^' is only magic as the very first character and if it's after
 	     * "\(", "\|", "\&' or "\n" */
-	    if (reg_magic >= MAGIC_OFF && (at_start
+	    if (reg_magic >= MAGIC_OFF
+		    && (at_start
 			|| prevchr == Magic('(')
 			|| prevchr == Magic('|')
 			|| prevchr == Magic('&')
@@ -2272,65 +2273,72 @@ peekchr()
 	case '$':
 	    /* '$' is only magic as the very last char and if it's in front of
 	     * either "\|", "\)", "\&", or "\n" */
+	    if (reg_magic >= MAGIC_OFF)
 	    {
 		char_u *p = regparse + 1;
 
 		/* ignore \c \C \m and \M after '$' */
-		if (p[0] == '\\' && (p[1] == 'c' || p[1] == 'C'
+		while (p[0] == '\\' && (p[1] == 'c' || p[1] == 'C'
 					       || p[1] == 'm' || p[1] == 'M'))
 		    p += 2;
-		if (reg_magic >= MAGIC_OFF
-			&& (p[0] == NUL
-			    || (p[0] == '\\'
-				&& (p[1] == '|' || p[1] == '&' || p[1] == ')'
-				    || p[1] == 'n'))))
+		if (p[0] == NUL
+			|| (p[0] == '\\'
+			    && (p[1] == '|' || p[1] == '&' || p[1] == ')'
+				|| p[1] == 'n')))
 		    curchr = Magic('$');
 	    }
 	    break;
 	case '\\':
-	    if (regparse[1] == NUL)
-		curchr = '\\';	/* trailing '\' */
+	    {
+		int c = regparse[1];
+
+		if (c == NUL)
+		    curchr = '\\';	/* trailing '\' */
 #ifdef EBCDIC
-	    else if (vim_strchr(META, regparse[1]))
+		else if (vim_strchr(META, c))
 #else
-	    else if (regparse[1] <= '~' && META_flags[regparse[1]])
+		else if (c <= '~' && META_flags[c])
 #endif
-	    {
-		/*
-		 * META contains everything that may be magic sometimes,
-		 * except ^ and $ ("\^" and "\$" are never magic).  We now
-		 * fetch the next character and toggle its magicness.
-		 * Therefore, \ is so meta-magic that it is not in META.
-		 */
-		curchr = -1;
-		prev_at_start = at_start;
-		at_start = FALSE;	/* be able to say "/\*ptr" */
-		++regparse;
-		peekchr();
-		--regparse;
-		curchr = toggle_Magic(curchr);
-	    }
-	    else if (vim_strchr(REGEXP_ABBR, regparse[1]))
-	    {
-		/*
-		 * Handle abbreviations, like "\t" for TAB -- webb
-		 */
-		curchr = backslash_trans(regparse[1]);
-	    }
-	    else
-	    {
-		/*
-		 * Next character can never be (made) magic?
-		 * Then backslashing it won't do anything.
-		 */
-#ifdef FEAT_MBYTE
-		if (has_mbyte)
-		    curchr = (*mb_ptr2char)(regparse + 1);
+		{
+		    /*
+		     * META contains everything that may be magic sometimes,
+		     * except ^ and $ ("\^" and "\$" are only magic after
+		     * "\v").  We now fetch the next character and toggle its
+		     * magicness.  Therefore, \ is so meta-magic that it is
+		     * not in META.
+		     */
+		    curchr = -1;
+		    prev_at_start = at_start;
+		    at_start = FALSE;	/* be able to say "/\*ptr" */
+		    ++regparse;
+		    peekchr();
+		    --regparse;
+		    curchr = toggle_Magic(curchr);
+		}
+		else if (vim_strchr(REGEXP_ABBR, c))
+		{
+		    /*
+		     * Handle abbreviations, like "\t" for TAB -- webb
+		     */
+		    curchr = backslash_trans(c);
+		}
+		else if (reg_magic == MAGIC_NONE && (c == '$' || c == '^'))
+		    curchr = toggle_Magic(c);
 		else
+		{
+		    /*
+		     * Next character can never be (made) magic?
+		     * Then backslashing it won't do anything.
+		     */
+#ifdef FEAT_MBYTE
+		    if (has_mbyte)
+			curchr = (*mb_ptr2char)(regparse + 1);
+		    else
 #endif
-		    curchr = regparse[1];
+			curchr = c;
+		}
+		break;
 	    }
-	    break;
 
 #ifdef FEAT_MBYTE
 	default:

@@ -369,10 +369,10 @@ static const struct nv_cmd
     {K_S_DOWN,	nv_page,	NV_SS,			FORWARD},
     {K_LEFT,	nv_left,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_LEFT,	nv_bck_word,	NV_SS|NV_RL,		0},
-    {K_C_LEFT,	nv_bck_word,	NV_SSS|NV_RL,		1},
+    {K_C_LEFT,	nv_bck_word,	NV_SSS|NV_RL|NV_STS,	1},
     {K_RIGHT,	nv_right,	NV_SSS|NV_STS|NV_RL,	0},
     {K_S_RIGHT,	nv_wordcmd,	NV_SS|NV_RL,		FALSE},
-    {K_C_RIGHT,	nv_wordcmd,	NV_SSS|NV_RL,		TRUE},
+    {K_C_RIGHT,	nv_wordcmd,	NV_SSS|NV_RL|NV_STS,	TRUE},
     {K_PAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_KPAGEUP,	nv_page,	NV_SSS|NV_STS,		BACKWARD},
     {K_PAGEDOWN, nv_page,	NV_SSS|NV_STS,		FORWARD},
@@ -381,12 +381,12 @@ static const struct nv_cmd
     {K_KEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
     {K_XEND,	nv_end,		NV_SSS|NV_STS,		FALSE},
     {K_S_END,	nv_end,		NV_SS,			FALSE},
-    {K_C_END,	nv_end,		NV_SSS,			TRUE},
+    {K_C_END,	nv_end,		NV_SSS|NV_STS,		TRUE},
     {K_HOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_KHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_XHOME,	nv_home,	NV_SSS|NV_STS,		0},
     {K_S_HOME,	nv_home,	NV_SS,			0},
-    {K_C_HOME,	nv_goto,	NV_SSS,			FALSE},
+    {K_C_HOME,	nv_goto,	NV_SSS|NV_STS,		FALSE},
     {K_DEL,	nv_abbrev,	0,			0},
     {K_KDEL,	nv_abbrev,	0,			0},
     {K_UNDO,	nv_kundo,	0,			0},
@@ -878,7 +878,7 @@ getcount:
 		/* Allow mappings defined with ":lmap". */
 		--no_mapping;
 		--allow_keys;
-		if (State == REPLACE)
+		if (repl)
 		    State = LREPLACE;
 		else
 		    State = LANGMAP;
@@ -3127,6 +3127,7 @@ unshift_special(cap)
 	case K_S_HOME:	cap->cmdchar = K_HOME; break;
 	case K_S_END:	cap->cmdchar = K_END; break;
     }
+    cap->cmdchar = simplify_key(cap->cmdchar, &mod_mask);
 }
 #endif
 
@@ -5196,19 +5197,19 @@ normal_search(cap, dir, pat, opt)
 nv_csearch(cap)
     cmdarg_T	*cap;
 {
-    int		type;
+    int		t_cmd;
 
     if (cap->cmdchar == 't' || cap->cmdchar == 'T')
-	type = TRUE;
+	t_cmd = TRUE;
     else
-	type = FALSE;
+	t_cmd = FALSE;
 
     cap->oap->motion_type = MCHAR;
     if (cap->arg == BACKWARD)
 	cap->oap->inclusive = FALSE;
     else
 	cap->oap->inclusive = TRUE;
-    if (IS_SPECIAL(cap->nchar) || !searchc(cap, type))
+    if (IS_SPECIAL(cap->nchar) || searchc(cap, t_cmd) == FAIL)
 	clearopbeep(cap->oap);
     else
     {
@@ -7300,7 +7301,7 @@ adjust_for_sel(cap)
     cmdarg_T	*cap;
 {
     if (VIsual_active && cap->oap->inclusive && *p_sel == 'e'
-						     && gchar_cursor() != NUL)
+	    && gchar_cursor() != NUL && lt(VIsual, curwin->w_cursor))
     {
 # ifdef FEAT_MBYTE
 	if (has_mbyte)

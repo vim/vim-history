@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0aq.  Last change: 2001 Aug 05
+*version6.txt*  For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -24,6 +24,7 @@ Unlisted buffers introduced		|new-unlisted-buffers|
 CTRL-U in Command-line mode changed	|CTRL-U-changed|
 Ctags gone				|ctags-gone|
 Documentation reorganized		|documentation-6|
+Modeless selection and clipboard	|modeless-and-clipboard|
 Small incompatibilities			|incomp-small-6|
 
 NEW FEATURES
@@ -230,6 +231,22 @@ column.  This also looks better without highlighting.
 to add its own help files (e.g., for plugins).
 
 
+Modeless selection and clipboard		*modeless-and-clipboard*
+--------------------------------
+
+The modeless selection is used to select text when Visual mode can't be used,
+for example when editing the command line or at the more prompt.
+In Vim 5.x the modeless selection was always used.  On MS-Windows this caused
+the clipboard to be overwritten, with no way to avoid that.  The modeless
+selection now obeys the 'a' and 'A' flags in 'guioptions' and "autoselect" and
+"autoselectml" in 'clipboard'.  By default there is no automatic copy on
+MS-Windows.  Use the |c_CTRL-Y| command to manually copy the selection.
+
+To get the old behavior back, do this: >
+
+	:set clipboard^=autoselectml guioptions+=A
+
+
 Small incompatibilities				*incomp-small-6*
 -----------------------
 
@@ -343,6 +360,9 @@ which is supposed to take us to Normal mode (especially in ":amenu").
 
 Allow using ":" commands after an operator.  Could be used to implement a new
 movement command.  Thus it no longer aborts a pending operator.
+
+For the Amiga the "-d {device}" argument was possible.  When compiled with the
+diff feature, this no longer works.  Use "-dev {device}" instead. |-dev|
 
 ==============================================================================
 NEW FEATURES
@@ -902,18 +922,27 @@ ToolBar item.
 Communication between Vims				*new-vim-server*
 --------------------------
 
-Added X-Windows communication between two Vims.  Makes it possible to send
-commands from one Vim to another.  Works much like the MS-Windows OLE version,
-but for the versions using X-Windows.  See |x11-command-server|.
+Added communication between two Vims.  Makes it possible to send commands from
+one Vim to another.  Works for X-Windows and MS-Windows (requires the OLE
+feature).  For the X-Windows implementation |x11-command-server|.
 
 Use "--remote" to have files be edited in an already running Vim.
-Use "--remote-wait" to do the same and wait for the editing to finish.
+Use "--remote-wait" to do the same and wait for the editing to finish. (X
+only)
 Use "--serversend" or "serversend()" to send commands from one Vim to another.
 Use "--serverexpr" to have an expression evaluated in another Vim.
-Use "--serverlist" to list the currently available Vim servers.
+Use "--serverlist" to list the currently available Vim servers. (X only)
 Added functions to communicate betweeen the server and the client.
 
-(implemented by Flemming Madsen)
+(X-windows version implemented by Flemming Madsen, basic work for the
+MS-Windows version by Walter Briscoe)
+
+Added the command server name to the window title.  Now you can see which
+server name belongs to which Vim.
+
+Removed the OleVim directory and SendToVim.exe and EditWithVim.exe from the
+distribution.  Can now use "gvim --remote" and "gvim --serversend", which is
+portable.
 
 GTK: Support running Vim inside another window.  Uses the --socketid argument
 (Neil Bird)
@@ -938,16 +967,21 @@ Printing						*new-printing*
 --------
 
 Included first implementation of the ":hardcopy" command for printing
-to paper.  Works for MS-Windows only. (Vince Negri, Vipin Aravind)
+to paper.  For MS-Windows any installed printer can be used.  For other
+systems a PostScript file is generated, which can be printed with the
+'printexpr' option.
+(MS-Windows part by Vince Negri, Vipin Aravind, PostScript by Vince Negri and
+Mike Williams)
 
 Made ":hardcopy" work with multi-byte characters. (Muraoka Taro, Yasuhiro
 Matsumoto)
 
-Added options to tune he way printing works: (Vince Negri)
-- 'printeroptions', defines various things.
-- 'printerheader', specifies the header.  Added "N" field to 'statusline'
+Added options to tune the way printing works: (Vince Negri)
+- 'printoptions' defines various things.
+- 'printheader' specifies the header format.  Added "N" field to 'statusline'
   for the page number.
-- 'printername', defines the default printer for ":hardcopy!".
+- 'printfont' specifies the font name.
+- 'printdevice' defines the default printer for ":hardcopy!".
 
 
 Ports							*ports-6*
@@ -1154,10 +1188,11 @@ Options: ~
 'previewwindow' Set in the preview window.  Used in a session file to mark a
 		window as the preview window.
 
-'printerfont'
-'printerheader'
-'printername'
-'printeroptions'	for ":hardcopy".
+'printfont'
+'printexpr'
+'printheader'
+'printdevice'
+'printoptions'	for ":hardcopy".
 
 'buflisted'	Makes a buffer appear in the buffer list or not.
 
@@ -1462,6 +1497,8 @@ When reading stdin, first read the text in binary mode and then re-read it
 with automatic selection of 'fileformat' and 'fileencoding'.  This avoids
 problems with not being able to rewind the file (e.g., when a line near the
 end of the file ends in LF instead of CR-LF).
+When reading text from stdin and the buffer is empty, don't mark it changed.
+Allows exiting without trouble.
 
 Added an ID to many error messages.  This will make it easier to find help for
 a message.
@@ -1572,8 +1609,8 @@ Modeless selection:
   right click doesn't use the word selection started by a double-left-click.
   Makes it work like in Visual mode.
 - The modeless selection no longer has an implied automatic copy to the
-  clipboard.  It now obeys the 'a' flag in 'guioptions' or "autoselect" in
-  'clipboard'.
+  clipboard.  It now obeys the 'a' and 'A' flags in 'guioptions' or
+  "autoselect" and "autoselectml" in 'clipboard'.
 - Added the CTRL-Y command in Cmdline-mode to copy the modeless selection to
   the clipboard.  Also works at the hit-enter prompt and the more prompt.
   Removed the mappings in runtime/mswin.vim for CTRL-Y and CTRL-Z in
@@ -1857,6 +1894,8 @@ The g CTRL-G command also works in Visual mode and counts the number of words.
 
 Give an error message when using 'shell' and it's empty.
 
+Added the possibility to include "%s" in 'shellpipe'.
+
 Added "uhex" value for 'display': show non-printable characters as <xx>.
 Show unprintable characters with NonText highlighting, also in the command
 line.
@@ -1878,6 +1917,8 @@ Win32 console version:
 - Set the window icon to Vim's icon (only for Windows 2000).  While executing
   a shell command, modify the window title to show this.  When exiting,
   restore the cursor position too.  (Craig Barkhouse)
+- The Win32 console version can be compiled with OLE support.  It can only
+  function as a client, not as an OLE server.
 
 Errorformat:
 - Let "%p" in 'errorformat' (column of error indicated by a row of characters)
@@ -1975,6 +2016,15 @@ When a ":cd" command was typed, echo the new current directory. (Dan Sharp)
 When using ":winpos" before the GUI window has been opened, remember the
 values until it is opened.
 
+In the ":version" output, add "/dyn" for features that are dynamically loaded.
+This indicates the feature may not always work.
+
+On Windows NT it is possible that a directory is read-only, but a file can be
+deleted.  When making a backup by renaming the file and 'backupdir' doesn't
+use the current directory, this causes the original file to be deleted,
+without the possibility to create a new file.  Give an extra error message
+then to warn to user about this.
+
 ==============================================================================
 COMPILE TIME CHANGES					*compile-changes-6*
 
@@ -2060,11 +2110,16 @@ Updated the Borland C version 5 Makefile: (Dan Sharp)
 - Added python and tcl builds
 - Added dynamic perl and dynamic python builds
 - Added uninstal.exe build
+- Use "yes" and "no" for the options, like in Make_mvc.mak.
 
 Win32: Merged Make_gvc.mak and Make_ovc.mak into one file: Make_ivc.mak.  It's
 much smaller, many unecessary text has been removed. (Walter Briscoe)
 Added Make_dvc.mak to be able to debug exe generated with Make_mvc.mak in
 MS-Devstudio. (Walter Briscoe)
+
+MS-Windows: The big gvim.exe, which includes OLE, now also includes
+dynamically loaded Tcl, Perl and Python.  This uses ActivePerl 5.6.1,
+ActivePython 2.1.1 and ActiveTCL 8.3.3
 
 Added AC_EXEEXT to configure.in, to check if the executable needs ".exe" for
 Cygwin or MingW.  Renamed SUFFIX to EXEEXT in Makefile.
@@ -3038,5 +3093,31 @@ Cygwin.
 
 The generic check in scripts.vim for "conf" syntax was done before some checks
 in filetype.vim, resulting in "conf" syntax too often.
+
+Dos32: Typing lagged behind.  Would wait for one biostick when checking if a
+character is available.
+
+GTK: When setting 'columns' while starting up "gvim", would set the width of
+the terminal it was started in.
+
+When using ESC in Insert mode, an autoindent that wraps to the next line
+caused the cursor to move to the end of the line temporarily.  When the
+character before the cursor was a double-wide multi-byte character the cursor
+would be on the right halve, which causes problems with some terminals.
+
+Didn't handle multi-byte characters correctly when expanding a file name.
+(Yasuhiro Matsumoto)
+
+Win32 GUI: Errors generated before the GUI is decided to start were not
+reported.
+
+globpath() didn't reserve enough room for concatenated results. (Anduin
+Withers)
+
+When expanding an option that is very long already, don't do the expansion, it
+would be truncated to MAXPATHL. (Anduin Withers)
+
+When 'selection' is "exclusive", using "Fx" in Visual mode only moved until
+just after the character.
 
  vim:tw=78:

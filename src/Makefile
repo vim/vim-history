@@ -281,9 +281,9 @@ CClink = $(CC)
 # You can give a lot of options to configure.
 # Change this to your desire and do 'make config' afterwards
 
-# examples:
+# examples (can only use one!):
 #CONF_ARGS = --exec-prefix=/usr
-#CONF_ARGS = --with-vim-name=vim6
+#CONF_ARGS = --with-vim-name=vim6 --with-ex-name=ex6 --with-view-name=view6
 #CONF_ARGS = --with-global-runtime=/etc/vim
 
 # GUI - For creating Vim with GUI (gvim) (B)
@@ -771,7 +771,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and  {{{1
 ### some things might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim60aq
+VIMRTDIR = /vim60ar
 HELPSUBDIR = /doc
 COLSUBDIR = /colors
 SYNSUBDIR = /syntax
@@ -832,6 +832,7 @@ MSWIN_FILE	= $(DESTDIR)$(SCRIPTLOC)/mswin.vim
 
 ### Name of the menu file target.
 SYS_MENU_FILE	= $(DESTDIR)$(SCRIPTLOC)/menu.vim
+SYS_DELMENU_FILE = $(DESTDIR)$(SCRIPTLOC)/delmenu.vim
 
 ### Name of the bugreport file target.
 SYS_BUGR_FILE	= $(DESTDIR)$(SCRIPTLOC)/bugreport.vim
@@ -1369,8 +1370,8 @@ xxd/xxd$(EXEEXT): xxd/xxd.c
 	cd xxd; CC="$(CC)" CFLAGS="$(CPPFLAGS) $(CFLAGS)" \
 		$(MAKE) -f Makefile
 
-# build the language specific files if they were unpacked
-# generate the ja.sjis.mo file separately, it's no problem if this fails.
+# Build the language specific files if they were unpacked.
+# Generate the ja.sjis.mo file separately, it's no problem if this fails.
 languages:
 	@if test -n "$(MAKEMO)"; then \
 		cd $(PODIR); CC="$(CC)" $(MAKE) prefix=$(DESTDIR)$(prefix); \
@@ -1532,6 +1533,8 @@ installruntime: $(HELPSOURCE)/vim.1 $(DEST_MAN) $(DEST_VIM) $(DEST_RT) \
 # install the menu file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
 	chmod $(VIMSCRIPTMOD) $(SYS_MENU_FILE)
+	$(INSTALL_DATA) $(SCRIPTSOURCE)/delmenu.vim $(SYS_DELMENU_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_DELMENU_FILE)
 # install the evim file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/mswin.vim $(MSWIN_FILE)
 	chmod $(VIMSCRIPTMOD) $(MSWIN_FILE)
@@ -1781,7 +1784,7 @@ uninstall: uninstall_runtime
 # Note: the "rmdir" will fail if any files were added after "make install"
 uninstall_runtime:
 	-rm -f $(DEST_HELP)/*.txt $(DEST_HELP)/tags $(DEST_HELP)/*.pl
-	-rm -f $(SYS_MENU_FILE) $(SYS_BUGR_FILE)
+	-rm -f $(SYS_MENU_FILE) $(SYS_DELMENU_FILE) $(SYS_BUGR_FILE)
 	-rm -f $(EVIM_FILE) $(MSWIN_FILE)
 	-rm -f $(DEST_SCRIPT)/gvimrc_example.vim $(DEST_SCRIPT)/vimrc_example.vim
 	-rm -f $(SYS_FILETYPE_FILE) $(SYS_FTOFF_FILE) $(SYS_SCRIPTS_FILE)

@@ -34,7 +34,7 @@
 # BOR		path to root of Borland C install (c:\bc5)
 # LINK		name of the linker ($(BOR)\bin\ilink if OSTYPE is DOS16,
 #		$(BOR)\bin\ilink32 otherwise)
-# GUI		0 or 1: set to 1 if you want the GUI version (1)
+# GUI		no or yes: set to yes if you want the GUI version (yes)
 # PERL		define to path to Perl dir to get Perl support (not defined)
 #   PERL_VER	  define to version of Perl being used (56)
 #   DYNAMIC_PERL  no or yes: set to yes to load the Perl DLL dynamically (no)
@@ -47,18 +47,18 @@
 # RUBY		define to patch to Ruby dir to get Ruby support (not defined)
 #   RUBY_VER	define to version of Ruby being used (16)
 #   DYNAMIC_RUBY no or yes: use yes to load the Ruby DLL dynamically (no)
-# MBYTE		0 or 1: set to 1 for multi-byte support (1)
-# ICONV		0 or 1: set to 1 for dynamic iconv support (1)
-# OLE		0 or 1: set to 1 to make OLE gvim (0)
+# MBYTE		no or yes: set to yes for multi-byte support (yes)
+# ICONV		no or yes: set to yes for dynamic iconv support (yes)
+# OLE		no or yes: set to yes to make OLE gvim (no)
 # OSTYPE	DOS16 or WIN32 (WIN32)
 # DEBUG		set to "-v" if you wish a DEBUGging build (not defined)
 # CODEGUARD	set to "-vG" if you want to use CODEGUARD (not defined)
 # CPU		1 through 6: select CPU to compile for (3)
-# USEDLL	0 or 1: set to 1 to use the Runtime library DLL (0)
+# USEDLL	no or yes: set to yes to use the Runtime library DLL (no)
 #		For USEDLL=1 the cc3250.dll is required to run Vim.
-# VIMDLL	0 or 1: create vim32.dll, and stub (g)vim.exe (0)
+# VIMDLL	no or yes: create vim32.dll, and stub (g)vim.exe (no)
 # ALIGN		1, 2 or 4: Alignment to use (4 for Win32, 2 for DOS16)
-# FASTCALL	0 or 1: set to 1 to use register-based function protocol (1)
+# FASTCALL	no or yes: set to yes to use register-based function protocol (yes)
 # OPTIMIZE	SPEED or SPACE: type of optimization (SPEED)
 #
 ### BOR: root of the BC installation
@@ -69,19 +69,22 @@ BOR = c:\bc5
 ### LINK: Name of the linker: tlink or ilink32 (this is below, depends on
 # $(OSTYPE)
 #
-### GUI: 1 for GUI version, 0 for console version
+### GUI: yes for GUI version, no for console version
 !if ("$(GUI)"=="")
-GUI = 1
+GUI = yes
 !endif
+#
+### MBYTE: yes for multibyte support, no to disable it.
 !if ("$(MBYTE)"=="")
-MBYTE = 1
+MBYTE = yes
 !endif
+#
+### ICONV: yes to enable dynamic-iconv support, no to disable it
 !if ("$(ICONV)"=="")
-ICONV = 1
+ICONV = yes
 !endif
 #
 ### PERL: uncomment this line if you want perl support in vim
-#	'USEDLL' doesn't seem to work with perl, don't know why.
 # PERL=c:\perl
 #
 ### PYTHON: uncomment this line if you want python support in vim
@@ -93,8 +96,8 @@ ICONV = 1
 ### TCL: uncomment this line if you want tcl support in vim
 # TCL=c:\tcl
 #
-### OLE: 0 for normal gvim, 1 for OLE-capable gvim (only works with GUI)
-#OLE = 1
+### OLE: no for normal gvim, yes for OLE-capable gvim (only works with GUI)
+#OLE = yes
 #
 ### OSTYPE: DOS16 for Windows 3.1 version, WIN32 for Windows 95/98/NT/2000
 #   version
@@ -116,13 +119,13 @@ CPU = 3
 ### Comment out to use precompiled headers (faster, but uses lots of disk!)
 HEADERS = -H -H=vim.csm -Hc
 #
-### USEDLL: 0 for statically linked version of run-time, 1 for DLL runtime
+### USEDLL: no for statically linked version of run-time, yes for DLL runtime
 !if ("$(USEDLL)"=="")
-USEDLL = 0
+USEDLL = no
 !endif
 #
-### VIMDLL: 1 for a DLL version of VIM (NOT RECOMMENDED), 0 otherwise
-#VIMDLL = 1
+### VIMDLL: yes for a DLL version of VIM (NOT RECOMMENDED), no otherwise
+#VIMDLL = yes
 #
 ### ALIGN: alignment you desire: (1,2 or 4: s/b 4 for Win32, 2 for DOS)
 !if ("$(ALIGN)"=="")
@@ -133,7 +136,7 @@ ALIGN = 4
 !endif
 !endif
 #
-### FASTCALL: 1 to use FASTCALL calling convention (RECOMMENDED!), 0 otherwise
+### FASTCALL: yes to use FASTCALL calling convention (RECOMMENDED!), no otherwise
 #   Incompatible when calling external functions (like MSVC-compiled DLLs), so
 #   don't use FASTCALL when linking with external libs.
 !if ("$(FASTCALL)"=="") && \
@@ -187,7 +190,7 @@ OPT = -O1 -f- -N- -d
 !else
 OPT = -O2 -f- -d -N- -Oca -O
 !endif
-!if ($(FASTCALL)==1)
+!if ("$(FASTCALL)"=="yes")
 OPT = $(OPT) -pr
 !endif
 !ifndef CODEGUARD
@@ -233,12 +236,6 @@ PYTHON_LIB_FLAG = /nodefaultlib:
 !endif
 #
 !ifdef RUBY
-!if "$(OS)" == "Windows_NT"
-!message Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
-!undef RUBY
-!else
-INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
-INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
 !ifndef RUBY_VER
 RUBY_VER = 16
 !endif
@@ -248,6 +245,12 @@ RUBY_VER_LONG = 1.6
 !ifndef RUBY_PLATFORM
 RUBY_PLATFORM = i586-mswin32
 !endif
+!if ("$(OS)" == "Windows_NT") && ("$(RUBY_VER)" == "16")
+#!error Cannot build Ruby-enabled executable on NT/2K due to Ruby header file bug
+#!undef RUBY
+#!else
+INTERP_DEFINES = $(INTERP_DEFINES) -DFEAT_RUBY
+INCLUDE = $(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM);$(INCLUDE)
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
 
 !if "$(DYNAMIC_RUBY)" == "yes"
@@ -263,11 +266,12 @@ INCLUDE = $(TCL)\include;$(INCLUDE)
 !ifndef TCL_VER
 TCL_VER = 83
 !endif
-TCL_LIB=$(TCL)\lib\tcl$(TCL_VER).lib
+TCL_LIB = $(TCL)\lib\tcl$(TCL_VER).lib
+TCL_LIB_FLAG =
 !if "$(DYNAMIC_TCL)" == "yes"
 INTERP_DEFINES = $(INTERP_DEFINES) -DDYNAMIC_TCL -DDYNAMIC_TCL_DLL=\"tcl$(TCL_VER).dll\"
-TCL_LIB = $(TCL)\lib\tclstub$(TCL_VER).lib
-TCL_LIB_FLAG = /nodefaultlib:
+TCL_LIB = tclstub$(TCL_VER)-bor.lib
+TCL_LIB_FLAG = 
 !endif
 !endif
 #
@@ -280,28 +284,28 @@ ALIGN = -a$(ALIGN)
 DEFINES=$(DEFINES) -DDEBUG
 !endif
 #
-!if ($(OLE)==1)
+!if ("$(OLE)"=="yes")
 DEFINES = $(DEFINES) -DFEAT_OLE
 !endif
 #
-!if ($(MBYTE)==1)
+!if ("$(MBYTE)"=="yes")
 MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE -DDYNAMIC_GETTEXT
-!if ($(GUI)==1)
+!if ("$(GUI)"=="yes")
 MBDEFINES = $(MBDEFINES) -DFEAT_MBYTE_IME -DDYNAMIC_IME
 !endif
-!if ($(ICONV)==1)
+!if ("$(ICONV)"=="yes")
 MBDEFINES = $(MBDEFINES) -DDYNAMIC_ICONV
 !endif
 !endif
 
-!if ($(GUI)==1)
+!if ("$(GUI)"=="yes")
 DEFINES = $(DEFINES) -DFEAT_GUI_W32 -DFEAT_CLIPBOARD 
 !ifdef DEBUG
 TARGET = gvimd.exe
 !else
 TARGET = gvim.exe
 !endif
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 EXETYPE=-WD
 DEFINES = $(DEFINES) -DVIMDLL
 !else
@@ -331,15 +335,15 @@ LINK2 = -ap -OS -o -P
 RESFILE = vim.res
 !endif
 
-!if ($(USEDLL)==1)
+!if ("$(USEDLL)"=="yes")
 DEFINES = $(DEFINES) -D_RTLDLL
 !endif
 
 !ifdef DEBUG
 OBJDIR	= $(OSTYPE)\objdbg
 !else
-!if ($(GUI)==1)
-!if ($(OLE)==1)
+!if ("$(GUI)"=="yes")
+!if ("$(OLE)"=="yes")
 OBJDIR	= $(OSTYPE)\oleobj
 !else
 OBJDIR	= $(OSTYPE)\gobj
@@ -386,7 +390,7 @@ CCARG = +$(OBJDIR)\bcc.cfg
 !else # win32:
 vimmain = \
 	$(OBJDIR)\os_w32exe.obj
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 vimwinmain = \
 	$(OBJDIR)\os_w32dll.obj
 !else
@@ -434,7 +438,7 @@ vimobj = $(vimwinmain) \
 	$(OBJDIR)\version.obj \
 	$(OBJDIR)\window.obj
 
-!if ($(OLE)==1)
+!if ("$(OLE)"=="yes")
 vimobj = $(vimobj) \
 	$(OBJDIR)\if_ole.obj
 !endif
@@ -459,7 +463,7 @@ vimobj = $(vimobj) \
     $(OBJDIR)\if_tcl.obj
 !endif
 
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 vimdllobj = $(vimobj)
 !ifdef DEBUG
 DLLTARGET = vim32d.dll
@@ -470,7 +474,7 @@ DLLTARGET = vim32.dll
 DLLTARGET = joebob
 !endif
 
-!if ($(GUI)==1)
+!if ("$(GUI)"=="yes")
 vimobj = $(vimobj) \
 	$(OBJDIR)\gui.obj \
 	$(OBJDIR)\gui_w32.obj
@@ -485,20 +489,26 @@ vimobj = $(vimobj) \
 !endif
 # Blab what we are going to do:
 MSG = Compiling $(OSTYPE) $(TARGET) $(OLETARGET), with:
-!if ($(GUI)==1)
+!if ("$(GUI)"=="yes")
 MSG = $(MSG) GUI
 !endif
-!if ($(OLE)==1)
+!if ("$(OLE)"=="yes")
 MSG = $(MSG) OLE
 !endif
-!if ($(USEDLL)==1)
+!if ("$(USEDLL)"=="yes")
 MSG = $(MSG) USEDLL
 !endif
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 MSG = $(MSG) VIMDLL
 !endif
-!if ($(FASTCALL)==1)
+!if ("$(FASTCALL)"=="yes")
 MSG = $(MSG) FASTCALL
+!endif
+!if ("$(MBYTE)"=="yes")
+MSG = $(MSG) MBYTE
+!endif
+!if ("$(ICONV)"=="yes")
+MSG = $(MSG) ICONV
 !endif
 !ifdef DEBUG
 MSG = $(MSG) DEBUG
@@ -508,25 +518,25 @@ MSG = $(MSG) CODEGUARD
 !endif
 !ifdef PERL
 MSG = $(MSG) PERL
-! ifdef DYNAMIC_PERL
+! if "DYNAMIC_PERL" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef PYTHON
 MSG = $(MSG) PYTHON
-! ifdef DYNAMIC_PYTHON
+! if "DYNAMIC_PYTHON" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef RUBY
 MSG = $(MSG) RUBY
-! ifdef DYNAMIC_RUBY
+! if "DYNAMIC_RUBY" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
 !ifdef TCL
 MSG = $(MSG) TCL
-! ifdef DYNAMIC_TCL
+! if "DYNAMIC_TCL" == "yes"
 MSG = $(MSG)(dynamic)
 ! endif
 !endif
@@ -538,7 +548,7 @@ MSG = $(MSG) Align=$(ALIGN)
 !if ($(OSTYPE)==DOS16)
 TARGETS = $(TARGET)
 !else
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 TARGETS = $(DLLTARGET)
 !endif
 TARGETS = $(TARGETS) $(TARGET)
@@ -601,7 +611,7 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !ifdef CODEGUARD
 	cg32.lib+
 !endif
-!if ($(OLE)==1)
+!if ("$(OLE)"=="yes")
 	ole2w32.lib +
 !endif
 !if ($(OSTYPE)==WIN32)
@@ -618,7 +628,7 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
 !endif
-!if ($(USEDLL)==1)
+!if ("$(USEDLL)"=="yes")
 	cw32i.lib
 !else
 	cw32.lib
@@ -629,7 +639,7 @@ $(DLLTARGET): $(OBJDIR) $(vimdllobj)
 !endif
 |
 
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 $(TARGET): $(OBJDIR) $(DLLTARGET) $(vimmain) $(OBJDIR)\$(RESFILE)
 !else
 $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
@@ -637,7 +647,7 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
   $(LINK) @&&|
 	$(LFLAGS) +
 	$(STARTUPOBJ) +
-!if ($(VIMDLL)==1)
+!if ("$(VIMDLL)"=="yes")
 	$(vimmain)
 !else
 	$(vimobj)
@@ -647,7 +657,7 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !ifdef CODEGUARD
 	cg32.lib+
 !endif
-!if ($(OLE)==1)
+!if ("$(OLE)"=="yes")
 	ole2w32.lib +
 !endif
 	import32.lib+
@@ -663,12 +673,12 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !ifdef TCL
 	$(TCL_LIB_FLAG)tcl.lib+
 !endif
-!if ($(USEDLL)==1)
+!if ("$(USEDLL)"=="yes")
 	cw32i.lib
 !else
 	cw32.lib
 !endif
-!if ($(GUI)==1)
+!if ("$(GUI)"=="yes")
 
 	$(OBJDIR)\$(RESFILE)
 !endif
@@ -798,11 +808,26 @@ ruby.lib: $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib
 	coff2omf $(RUBY)\lib\$(RUBY_INSTALL_NAME).lib $@
 
 tcl.lib: $(TCL_LIB)
-	coff2omf $(TCL_LIB) $@
+
+tcl.lib: $(TCL_LIB)
+!if ("$(DYNAMIC_TCL)" == "yes")
+	copy $(TCL_LIB) $@
+!if ("$(DYNAMIC_TCL)" == "yes")
+	copy $(TCL_LIB) $@
+!endif
+
+!if ("$(DYNAMIC_TCL)" == "yes")
+tclstub$(TCL_VER)-bor.lib:
+	-@IF NOT EXIST $@ ECHO You must download tclstub83-bor.lib separately and \
+	place it in the src directory in order to compile a dynamic TCL-enabled \
+	(g)vim with the Borland compiler.  You can get the tclstub83-bor.lib file \
+	at http://vim.sourceforge.net/bin_download/tclstub83-bor.lib \
+	or ftp://vim.sourceforge.net/pub/vim/upload_binaries/tclstub83-bor.lib
+!endif
 
 # vimrun.exe:
 vimrun.exe: vimrun.c
-!if ($(USEDLL)==1)
+!if ("$(USEDLL)"=="yes")
 	$(CC) -WC -O1 -I$(INCLUDE) -L$(LIB) -D_RTLDLL vimrun.c cw32mti.lib
 !else
 	$(CC) -WC -O1 -I$(INCLUDE) -L$(LIB) vimrun.c

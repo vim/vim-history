@@ -1694,6 +1694,8 @@ get_menu_mode()
 	return MENU_INDEX_OP_PENDING;
     if (State & NORMAL)
 	return MENU_INDEX_NORMAL;
+    if (State & LANGMAP)	/* must be a "r" command, like Insert mode */
+	return MENU_INDEX_INSERT;
     return MENU_INDEX_INVALID;
 }
 

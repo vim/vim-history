@@ -1,4 +1,4 @@
-*usr_08.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_08.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -460,7 +460,7 @@ For details about diff mode, see |vimdiff|.
 ==============================================================================
 *08.8*	Various
 
-The 'statusline' option can be used to specify when the last window has a
+The 'laststatus' option can be used to specify when the last window has a
 statusline:
 
 	0	never

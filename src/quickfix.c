@@ -1886,15 +1886,13 @@ ex_make(eap)
      */
     len = (unsigned)STRLEN(p_shq) * 2 + (unsigned)STRLEN(eap->arg) + 1;
     if (*p_sp != NUL)
-	len += (unsigned)STRLEN(p_sp) + (unsigned)STRLEN(name) + 2;
+	len += (unsigned)STRLEN(p_sp) + (unsigned)STRLEN(name) + 3;
     cmd = alloc(len);
     if (cmd == NULL)
 	return;
-    if (*p_sp == NUL)
-	sprintf((char *)cmd, "%s%s%s", p_shq, eap->arg, p_shq);
-    else
-	sprintf((char *)cmd, "%s%s%s %s %s", p_shq, eap->arg, p_shq,
-								  p_sp, name);
+    sprintf((char *)cmd, "%s%s%s", p_shq, eap->arg, p_shq);
+    if (*p_sp != NUL)
+	append_redir(cmd, p_sp, name);
     /*
      * Output a newline if there's something else than the :make command that
      * was typed (in which case the cursor is in column 0).

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0aq.  Last change: 2001 Aug 05
+*todo.txt*      For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,8 +29,16 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-Amiga: test 47 fails.  Fails to read diff or does this in a wrong way,
-resulting in a ml_get error.
+After "hi Tooltip font=5x7", "hi clear" the tooltips are empty or crash.
+(David Harrison)
+
+OLE version of vim client:
+- Make --serverlist work.  Make it possible to address a specific server.
+- Make --remote-wait work.
+- Use a solution with windows messages instead? (Paul Moore)
+
+The X11 server code uses replace_termcodes(), which depends on 'cpoptions'.
+(Paul Moore)
 
 
 Vi incompatibility:
@@ -117,6 +125,9 @@ GTK+ GUI known bugs:
     Without Gnome it does work.
     Not all Gnome arguments get to gnome_init().
     When using confirm() the mouse pointer is invisible in the main window.
+    Dialogs may appear far from the cursor and the Vim window.
+    A dialog with a textfield (for inputdialog()) looks different from other
+    dialogs.
 9   When logging out from KDE, vim is not told to save its files.  Catching
     the WM_SAVE_YOURSELF event doesn't work.
 9   When selecting a font from the font selector with an embedded space it
@@ -438,10 +449,10 @@ VMS:
 8   ":hardcopy":
     - Separate the machine independent and machine specific parts better. (Mike
       Williams)
-    - When printing on HP Laserjet L5 some of the colored text disappears.
-      Probably have to do our own dithering.
     - Need to handle unprintable characters.
     - ml_get error? (Xiangjiang Ma)
+    - On a B&W printer syntax highlighting is disabled.  Perform dithering to
+      make grey text?
 9   dosinst.c: The DJGPP version can't uninstall the Uninstall registry key on
     Windows NT.  How to install a .inf file on Windows NT and how to detect
     that Windows NT is being used?
@@ -704,11 +715,27 @@ User Friendlier:
 8   Windows uninstall: Have uninstal.c delete the vimfiles directories that
     dosinst.c creates.  List the contents of the directory (recursively) if
     the user asks for it.  Requires an implementation of "rm -rf".
+-   Add a way to save local settings and mappings into a new plugin file.
+    ":mkplugin <file>"?
+9   Buffer-local autocommands?
+	:au BufEnter <current> menu enable ...
+	:au BufLeave <current> menu disable ...
+-   Add mappings local to a window: ":map <window> ..."?
+9   Add buffer-local menu.  Should offer a choice between removing the menu or
+    disabling it.  Be careful that tear-offs don't disappear (keep one empty
+    item?).
+    Alternative: use BufEnter and BufLeave autocommands.
+8   Add file locking.  Lock a file when starting to edit it with flock() or
+    fcntl().  This patch has advisory file locking while reading/writing the
+    file: ~/vim/patches/kahn_file_locking .
+8   make a vimtutor script for Amiga and other systems.
 
 
 Folding:
     (commands still available: zg zG zI zJ zK zp zP zq zQ zV zw zW zy zY;
     secondary: zB zS zT zZ)
+7   When using 2html.vim, also reproduce folds as you can see them.  When
+    someone doesn't want the folds he can disable them before converting.
 -   When pressing the down arrow of a scrollbar, a closed fold doesn't scroll
     until after a long time.  How to make scrolling with closed folds
     smoother?
@@ -757,23 +784,6 @@ Multi-byte characters:
     account.  The "linebreak" program from Bruno Haible can do it:
     ftp://ftp.ilog.fr/pub/Users/haible/gnu/linebreak-0.1.tar.gz
     But it's very complicated...
-
-
-Ease of use:
--   Add a way to save local settings and mappings into a new plugin file.
-    ":mkplugin <file>"?
-9   Buffer-local autocommands?
-	:au BufEnter <current> menu enable ...
-	:au BufLeave <current> menu disable ...
--   Add mappings local to a window: ":map <window> ..."?
-9   Add buffer-local menu.  Should offer a choice between removing the menu or
-    disabling it.  Be careful that tear-offs don't disappear (keep one empty
-    item?).
-    Alternative: use BufEnter and BufLeave autocommands.
-8   Add file locking.  Lock a file when starting to edit it with flock() or
-    fcntl().  This patch has advisory file locking while reading/writing the
-    file: ~/vim/patches/kahn_file_locking .
-8   make a vimtutor script for Amiga and other systems.
 
 
 Printing:
@@ -1559,6 +1569,7 @@ Command line completion:
 -   When using <Up> in wildmenu mode for a submenu, should go back to the
     current menu, not the first one.  E.g., ":emenu File.Save<Up>".
 8   For ":find" and ":sfind" expand files found in 'path'.
+8   Add cmdline completion for the ":debug" command.
 8   When using backtick expansion, the external command may write a greeting
     message.  Add an option or commands to remove lines that match a regexp?
 7   When listing matches of files, display the common path separately from the
@@ -2295,6 +2306,8 @@ Registers:
 
 
 Various improvements:
+7   Some compilers give error messages in which the file name does not have a
+    path.  Be able to specify that 'path' is used for these files.
 8   Add term entries for function keys on xterm with alt and ctrl (new in pl
     94).  E.g., Control adds ";5" in "<Esc>[20;5~".  Find a generic way to
     prepend a modifier in console mode, to avoid having to specify each
@@ -2303,7 +2316,7 @@ Various improvements:
     etc.  Combinations of Alt, Ctrl and Shift are also possible.  Recognize
     these to avoid inserting the raw byte sequence, handle like the key
     without modifier (unless mapped).
-8   Add a watchpoint in the debug mode: An expression that breaks execution
+7   Add a watchpoint in the debug mode: An expression that breaks execution
     when evaluating to non-zero.
 7   Support ":browse edit" in console, using explorer.vim?
 6   Add "gG": like what "gj" is to "j": go to the N'th window line.

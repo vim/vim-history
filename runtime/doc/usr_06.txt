@@ -1,4 +1,4 @@
-*usr_06.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_06.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 08
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -229,10 +229,10 @@ same as what you see inside Vim.  But when you use a dark background the
 colors will be adjusted to look good on white paper.
 
 There are several options that change the way Vim prints:
-	'printername'
-	'printerheader'
-	'printerfont'
-	'printeroptions'
+	'printdevice'
+	'printheader'
+	'printfont'
+	'printoptions'
 
 To print only a range of lines,  use Visual mode to select the lines and then
 type the command: >

@@ -5,7 +5,13 @@
  * Do ":help uganda"  in Vim to read copying and usage conditions.
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
-#ifdef FEAT_OLE
+
+#if defined(FEAT_OLE) && defined(FEAT_GUI_W32)
+/*
+ * OLE server implementation.
+ *
+ * See os_mswin.c for the client side.
+ */
 
 #include <windows.h>
 #include <oleauto.h>
@@ -125,7 +131,7 @@ CVim *CVim::Create(int* pbDoRestart)
 	if (MessageBox(0, "Cannot load registered type library.\nDo you want to register Vim now?",
 		    "Vim Initialisation", MB_YESNO | MB_ICONQUESTION) == IDYES)
 	{
-	    RegisterMe();
+	    RegisterMe(FALSE);
 	    MessageBox(0, "You must restart Vim in order for the registration to take effect.", "Vim Initialisation", 0);
 	    *pbDoRestart = TRUE;
 	}
@@ -317,6 +323,9 @@ CVim::Eval(BSTR expr, BSTR *result)
 
     /* Get a suitable buffer */
     len = WideCharToMultiByte(CP_ACP, 0, expr, -1, 0, 0, 0, 0);
+    if (len == 0)
+	return E_INVALIDARG;
+
     buffer = (char *)alloc(len);
 
     if (buffer == NULL)
@@ -330,6 +339,8 @@ CVim::Eval(BSTR expr, BSTR *result)
     /* Evaluate the expression */
     str = (char *)eval_to_string((char_u *)buffer, NULL);
     vim_free(buffer);
+    if (str == NULL)
+	return E_FAIL;
 
     /* Get a suitable buffer to store the result in wide characters */
     len = MultiByteToWideChar(CP_ACP, 0, str, -1, 0, 0);
@@ -456,10 +467,9 @@ static void RecursiveDeleteKey(HKEY hKeyParent, const char* child);
 static const int GUID_STRING_SIZE = 39;
 
 // Register the component in the registry
-//
-// Note: There is little error checking in this code at present.
+// When "silent" is TRUE don't give any messages.
 
-extern "C" void RegisterMe()
+extern "C" void RegisterMe(int silent)
 {
     BOOL ok = TRUE;
 
@@ -506,7 +516,8 @@ extern "C" void RegisterMe()
     ITypeLib *typelib = NULL;
     if (LoadTypeLib(w_module, &typelib) != S_OK)
     {
-	MessageBox(0, "Cannot load type library to register",
+	if (!silent)
+	    MessageBox(0, "Cannot load type library to register",
 						       "Vim Registration", 0);
 	ok = FALSE;
     }
@@ -514,14 +525,15 @@ extern "C" void RegisterMe()
     {
 	if (RegisterTypeLib(typelib, w_module, NULL) != S_OK)
 	{
-	    MessageBox(0, "Cannot register type library",
+	    if (!silent)
+		MessageBox(0, "Cannot register type library",
 						       "Vim Registration", 0);
 	    ok = FALSE;
 	}
 	typelib->Release();
     }
 
-    if (ok)
+    if (ok && !silent)
 	MessageBox(0, "Registered successfully", "Vim", 0);
 }
 

@@ -249,12 +249,12 @@ op_shift(oap, curs_top, amount)
 
     if (oap->block_mode)
     {
-	curwin->w_cursor.lnum -= oap->line_count;
+	curwin->w_cursor.lnum = oap->start.lnum;
 	curwin->w_cursor.col = block_col;
     }
     else if (curs_top)	    /* put cursor on first line, for ">>" */
     {
-	curwin->w_cursor.lnum -= oap->line_count;
+	curwin->w_cursor.lnum = oap->start.lnum;
 	beginline(BL_SOL | BL_FIX);   /* shift_line() may have set cursor.col */
     }
     else

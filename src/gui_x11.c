@@ -386,7 +386,7 @@ static XtResource vim_resources[] =
     {
 	XtNmenuFont,
 	XtCMenuFont,
-	XtRFontSet,
+	XtRFontStruct,
 	sizeof(XFontStruct *),
 	XtOffsetOf(gui_T, menu_font),
 	XtRImmediate,
@@ -514,7 +514,7 @@ static XtResource vim_resources[] =
 	sizeof(XFontSet),
 	XtOffsetOf(gui_T, balloonEval_fontList),
 	XtRString,
-	"fixed"
+	"-*-*-medium-r-normal--*-*-*-*-*-*-*" /* Uses whatever fontset is appropriate */
     },
 #endif
 #endif /* FEAT_BEVAL */
@@ -552,8 +552,14 @@ static XrmOptionDescRec cmdline_options[] =
     {"-scrollbarwidth",	".scrollbarWidth",  XrmoptionSepArg,	NULL},
     {"-mh",		".menuHeight",	    XrmoptionSepArg,	NULL},
     {"-menuheight",	".menuHeight",	    XrmoptionSepArg,	NULL},
+#ifdef FONTSET_ALWAYS
+    {"-mf",		".menuFontSet",	    XrmoptionSepArg,	NULL},
+    {"-menufont",	".menuFontSet",	    XrmoptionSepArg,	NULL},
+    {"-menufontset",	".menuFontSet",	    XrmoptionSepArg,	NULL},
+#else
     {"-mf",		".menuFont",	    XrmoptionSepArg,	NULL},
     {"-menufont",	".menuFont",	    XrmoptionSepArg,	NULL},
+#endif
     {"-xrm",		NULL,		    XrmoptionResArg,	NULL}
 };
 
@@ -1513,7 +1519,7 @@ gui_mch_open()
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
-	serverRegisterName(gui.dpy, serverDelayedStartName);
+	(void)serverRegisterName(gui.dpy, serverDelayedStartName);
     }
     else
     {
@@ -1948,7 +1954,7 @@ gui_mch_get_fontset(name, giveErrorIfMissing)
     if (check_fontset_sanity(fontset) == FAIL)
     {
 	XFreeFontSet(gui.dpy, fontset);
-	return NOFONT;
+	return NOFONTSET;
     }
     return (GuiFontset)fontset;
 }

@@ -1206,21 +1206,22 @@ search_for_exact_line(buf, pos, dir, pat)
  */
 
 /*
- * Search for a character in a line.  If "type" is 0, move to the
+ * Search for a character in a line.  If "t_cmd" is FALSE, move to the
  * position of the character, otherwise move to just before the char.
  * Do this "cap->count1" times.
+ * Return FAIL or OK.
  */
     int
-searchc(cap, type)
+searchc(cap, t_cmd)
     cmdarg_T	*cap;
-    int		type;
+    int		t_cmd;
 {
     int			c = cap->nchar;	/* char to search for */
     int			dir = cap->arg;	/* TRUE for searching forward */
     long		count = cap->count1;	/* repeat count */
     static int		lastc = NUL;	/* last character searched for */
     static int		lastcdir;	/* last direction of character search */
-    static int		lastctype;	/* last search type ("find" or "to") */
+    static int		last_t_cmd;	/* last search t_cmd */
     int			col;
     char_u		*p;
     int			len;
@@ -1235,7 +1236,7 @@ searchc(cap, type)
 	{
 	    lastc = c;
 	    lastcdir = dir;
-	    lastctype = type;
+	    last_t_cmd = t_cmd;
 #ifdef FEAT_MBYTE
 	    bytelen = (*mb_char2bytes)(c, bytes);
 	    if (cap->ncharC1 != 0)
@@ -1250,12 +1251,12 @@ searchc(cap, type)
     else		/* repeat previous search */
     {
 	if (lastc == NUL)
-	    return FALSE;
+	    return FAIL;
 	if (dir)	/* repeat in opposite direction */
 	    dir = -lastcdir;
 	else
 	    dir = lastcdir;
-	type = lastctype;
+	t_cmd = last_t_cmd;
 	c = lastc;
 	/* For multi-byte re-use last bytes[] and bytelen. */
     }
@@ -1275,12 +1276,12 @@ searchc(cap, type)
 		{
 		    col += (*mb_ptr2len_check)(p + col);
 		    if (col >= len)
-			return FALSE;
+			return FAIL;
 		}
 		else
 		{
 		    if (col == 0)
-			return FALSE;
+			return FAIL;
 		    col -= (*mb_head_off)(p, p + col - 1) + 1;
 		}
 		if (bytelen == 1)
@@ -1301,14 +1302,14 @@ searchc(cap, type)
 	    for (;;)
 	    {
 		if ((col += dir) < 0 || col >= len)
-		    return FALSE;
+		    return FAIL;
 		if (p[col] == c)
 		    break;
 	    }
 	}
     }
 
-    if (type)
+    if (t_cmd)
     {
 	/* backup to before the character (possibly double-byte) */
 	col -= dir;
@@ -1325,7 +1326,8 @@ searchc(cap, type)
 #endif
     }
     curwin->w_cursor.col = col;
-    return TRUE;
+
+    return OK;
 }
 
 /*

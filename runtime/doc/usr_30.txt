@@ -1,4 +1,4 @@
-*usr_30.txt*	For Vim version 6.0aq.  Last change: 2001 Aug 05
+*usr_30.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -120,7 +120,7 @@ should set this to "nmake" by executing the following command: >
 
 	:set makeprg=nmake
 
-You can also include arguments in in this option.  Special characters need to
+You can also include arguments in this option.  Special characters need to
 be escaped with a backslash.  Example: >
 
 	:set makeprg=nmake\ -f\ project.mak
@@ -285,9 +285,9 @@ a C file.  This is how you make it work automatically: >
 
 	:filetype indent on
 
-Actually, this does a lot more then switching on 'cindent' for C files.  First
-of all, it enables detecting the type of a file.  That's the same what is used
-for syntax highlighting.
+Actually, this does a lot more than switching on 'cindent' for C files.  First
+of all, it enables detecting the type of a file.  That's the same as what is
+used for syntax highlighting.
    When the filetype is known, Vim will search for an indent file for this
 type of file.  The Vim distribution includes a number of these for various
 programming languages.  This indent file will then prepare for automatic
@@ -336,7 +336,7 @@ How to do that is explained here: |indent-expression|.
 ==============================================================================
 *30.4*	Other indenting
 
-The most simple for of automatic indenting is with the 'autoindent' option.
+The most simple form of automatic indenting is with the 'autoindent' option.
 It uses the indent from the previous line.  A bit smarter is the 'smartindent'
 option.  This is useful for languages where no indent file is available.
 'smartindent'is not as smart as 'cindent', but smarter than 'autoindent'.
@@ -344,7 +344,7 @@ option.  This is useful for languages where no indent file is available.
 and removed for each }.  An extra level of indentation will also be added for
 any of the words in the 'cinwords' option.  Lines that begin with # are
 treated specially: all indentation is removed.  This is done so that
-preprocesser directives will all start in column 1.  The indentation is
+preprocessor directives will all start in column 1.  The indentation is
 restored for the next line.
 
 
@@ -610,7 +610,7 @@ Visually selecting it and typing "gq".  The result is:
 	What is the URL of that site? ~
 
 You will notice that Vim did not move text from one type of comment to
-another.  The "I" in the first line would have fit at the end of the first
+another.  The "I" in the second line would have fit at the end of the first
 line, but since that line starts with "> !" and the second line with ">", Vim
 knows that this is a different kind of comment.
 

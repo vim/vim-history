@@ -1,4 +1,4 @@
-*usr_44.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
+*usr_44.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 07
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -200,7 +200,7 @@ Take a look at this comment:
 
 	%Get input  TODO: Skip white space ~
 
-You want to highlight TODO in big red letters, even though it is in a
+You want to highlight TODO in big yellow letters, even though it is in a
 comment that is highlighted blue.  To let Vim know about this, you define the
 following syntax groups: >
 
@@ -280,9 +280,9 @@ For example: >
 All syntax items will be contained in this one.  It also contains itself, but
 not at the same position (that would cause an endless loop).
    You can specify that some groups are not contained.  Thus contain all
-groups but the the ones that are listed:
+groups but the ones that are listed:
 >
-	:syntax region xList start=/\[/ end=/\]/ contains==ALLBUT,xString
+	:syntax region xList start=/\[/ end=/\]/ contains=ALLBUT,xString
 
 With the "TOP" item you can include all items that don't have a "contained"
 argument.  "CONTAINED" is used to only include items with a "contained"
@@ -349,7 +349,7 @@ the start or end of the region.  The example for "transparent" uses this.
 
 TRANSPARENT
 
-In a C language file you would like the highlight the () text after a "while"
+In a C language file you would like to highlight the () text after a "while"
 differently from the () text after a "for".  In both of these there can be
 nested () items, which should be highlighted in the same way.  You must make
 sure the () highlighting stops at the matching ).  This is one way to do this:
@@ -574,7 +574,7 @@ backwards in the file.
 	:syntax sync match {sync-group-name}
 		\ grouphere {group-name} {pattern}
 
-This tells Vim that when it sees pattern the syntax group named {group-name}
+This tells Vim that when it sees {pattern} the syntax group named {group-name}
 begins just after the pattern given.  The {sync-group-name} is used to give a
 name to this synchronization specification.  For example, the sh scripting
 language begins an if statement with "if" and ends it with "fi":
@@ -599,7 +599,7 @@ region.  In particular, you are not inside an if block.
 You also can define matches and regions that are with no "grouphere" or
 "groupthere" arguments.  These groups are for syntax groups skipped during
 synchronization.  For example, the following skips over anything inside {},
-even if would normally match another synchronization method: >
+even if it would normally match another synchronization method: >
 
 	:syntax sync match xSpecial /{.*}/
 
@@ -620,17 +620,17 @@ You must also make the file type be recognized.  See |43.2|.
 If your file works well, you migth want to make it available to other Vim
 users.  First read the next section to make sure your file works well for
 others.  Then e-mail it to the Vim maintainer: <maintainer@vim.org>.  Also
-explain how the filetype can be detected.   With a bit of luck your file will
+explain how the filetype can be detected.  With a bit of luck your file will
 be included in the next Vim version!
 
 
 ADDING TO AN EXISTING SYNTAX FILE
 
-This assumes you are adding a completely new syntax file.  When an existing
+We were assuming you were adding a completely new syntax file.  When an existing
 syntax file works, but is missing some items, you can add items in a separate
 file.  That avoids changing the distributed syntax file, which will be lost
 when installing a new version of Vim.
-   Write syntax commands in your file, possibily using group names from the
+   Write syntax commands in your file, possibly using group names from the
 existing syntax.  For example, to add new variable types to the C syntax file:
 >
 	:syntax keyword cType off_t uint

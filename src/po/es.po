@@ -473,8 +473,8 @@ msgstr ""
 "Cancelar"
 
 #: eval.c:5428
-msgid "E240: No connection to X server"
-msgstr "E240: Sin conexión al servidor X"
+msgid "E240: No connection to Vim server"
+msgstr "E240: Sin conexión al servidor Vim"
 
 #: eval.c:5496
 msgid "Unable to  read a server reply"

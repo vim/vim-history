@@ -909,7 +909,7 @@ _WndProc(
  */
 
     static void
-gui_w32_oleerr(char *arg)
+ole_error(char *arg)
 {
     EMSG2(_("E243: Argument not supported: \"-%s\"; Use the OLE version."),
 									 arg);
@@ -923,29 +923,44 @@ gui_w32_oleerr(char *arg)
     void
 gui_mch_prepare(int *argc, char **argv)
 {
+    int		silent = FALSE;
+    int		idx;
+
     /* Check for special OLE command line parameters */
-    if (*argc == 2 && (argv[1][0] == '-' || argv[1][0] == '/'))
+    if ((*argc == 2 || *argc == 3) && (argv[1][0] == '-' || argv[1][0] == '/'))
     {
+	/* Check for a "-silent" argument first. */
+	if (*argc == 3 && STRICMP(argv[1] + 1, "silent") == 0
+		&& (argv[2][0] == '-' || argv[2][0] == '/'))
+	{
+	    silent = TRUE;
+	    idx = 2;
+	}
+	else
+	    idx = 1;
+
 	/* Register Vim as an OLE Automation server */
-	if (STRICMP(argv[1] + 1, "register") == 0)
+	if (STRICMP(argv[idx] + 1, "register") == 0)
 	{
 #ifdef FEAT_OLE
-	    RegisterMe();
+	    RegisterMe(silent);
 	    mch_exit(0);
 #else
-	    gui_w32_oleerr("register");
+	    if (!silent)
+		ole_error("register");
 	    mch_exit(2);
 #endif
 	}
 
 	/* Unregister Vim as an OLE Automation server */
-	if (STRICMP(argv[1] + 1, "unregister") == 0)
+	if (STRICMP(argv[idx] + 1, "unregister") == 0)
 	{
 #ifdef FEAT_OLE
-	    UnregisterMe(TRUE);
+	    UnregisterMe(!silent);
 	    mch_exit(0);
 #else
-	    gui_w32_oleerr("unregister");
+	    if (!silent)
+		ole_error("unregister");
 	    mch_exit(2);
 #endif
 	}
@@ -955,12 +970,12 @@ gui_mch_prepare(int *argc, char **argv)
 	 * differently from the case where it is started via automation (and
 	 * we don't).
 	 */
-	if (STRICMP(argv[1] + 1, "embedding") == 0)
+	if (STRICMP(argv[idx] + 1, "embedding") == 0)
 	{
 #ifdef FEAT_OLE
 	    *argc = 1;
 #else
-	    gui_w32_oleerr("embedding");
+	    ole_error("embedding");
 	    mch_exit(2);
 #endif
 	}
@@ -1419,7 +1434,10 @@ _OnImeNotify(HWND hWnd, DWORD dwCommand, DWORD dwData)
 		    old_col = gui.col;
 
 		    curbuf->b_p_iminsert = B_IMODE_IM;
-		    showmode();
+
+		    // It appears this makes -- REPLACE -- appear for "r"
+		    // showmode();
+
 #if defined(FEAT_WINDOWS) && defined(FEAT_KEYMAP)
 		    /* Show/unshow value of 'keymap' in status lines. */
 		    status_redraw_curbuf();

@@ -8,5 +8,4 @@ int serverSendReply __ARGS((Display *dpy, Window win, char_u *str));
 int serverReadReply __ARGS((Display *dpy, Window win, char_u **str, int localLoop));
 int serverPeekReply __ARGS((Display *dpy, Window win, char_u **str));
 void serverEventProc __ARGS((Display *dpy, XEvent *eventPtr));
-void cmdsrv_main __ARGS((int *argc, char **argv, char_u *cmdTarget, char_u **serverStr));
 /* vim: set ft=c : */

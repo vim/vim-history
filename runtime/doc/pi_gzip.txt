@@ -1,4 +1,4 @@
-*pi_gzip.txt*    For Vim version 6.0aq.  Last change: 2001 Jul 06
+*pi_gzip.txt*    For Vim version 6.0ar.  Last change: 2001 Jul 06
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

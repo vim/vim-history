@@ -1,4 +1,4 @@
-*options.txt*   For Vim version 6.0aq.  Last change: 2001 Jul 30
+*options.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 12
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -813,7 +813,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	".bak" that you want to keep.
 
 						*'backupskip'* *'bsk'*
-'backupskip' 'bsk'	string  (default: "$TMPDIR/*,/tmp/*")
+'backupskip' 'bsk'	string  (default: "/tmp/*,$TMPDIR/*,$TMP/*,$TEMP/*")
 			global
 			{not in Vi}
 			{not available when compiled without the |+wildignore|
@@ -823,7 +823,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	the specified file name and the full path name of the file are used.
 	The pattern is used like with |:autocmd|, see |autocmd-patterns|.
 	Watch out for special characters, see |option-backslash|.
-	When $TMPDIR is not defined, it is not used for the default value.
+	When $TMPDIR, $TMP or $TEMP is not defined, it is not used for the
+	default value. "/tmp/*" is only used for Unix.
 
 						*'balloondelay'* *'bdlay'*
 'balloondelay' 'bdlay'	number	(default: 600)
@@ -1129,12 +1130,12 @@ A jump table for the options with a short description can be found at |Q_op|.
 	These names are recognized:
 
 	unnamed		When included, Vim will use the clipboard register '*'
-			for all yank, delete and put operations which would
-			normally go to the unnamed register.  When a register
-			is explicitly specified, it will always be used
-			regardless of whether "unnamed" is in 'clipboard' or
-			not.  The clipboard register can always be explicitly
-			accessed using the "* notation.  Also see
+			for all yank, delete, change and put operations which
+			would normally go to the unnamed register.  When a
+			register is explicitly specified, it will always be
+			used regardless of whether "unnamed" is in 'clipboard'
+			or not.  The clipboard register can always be
+			explicitly accessed using the "* notation.  Also see
 			|gui-clipboard|.
 
 	autoselect	Works like the 'a' flag in 'guioptions': If present,
@@ -1146,6 +1147,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 			details.  When the GUI is active, the 'a' flag in
 			'guioptions' is used, when the GUI is not active, this
 			"autoselect" flag is used.
+			Also applies to the modeless selection.
+	
+	autoselectml	Like "autoselect", but for the modeless selection
+			only.  Compare to the 'A' flag in 'guioptions'.
 
 	exclude:{pattern}
 			Defines a pattern that is matched against the name of
@@ -2617,6 +2622,16 @@ A jump table for the options with a short description can be found at |Q_op|.
 		    If not present, then Vim won't become the owner of the
 		windowing system's global selection unless explicitly told to
 		by a yank or delete operation for the "* register.
+		The same applies to the modeless selection.
+	
+	  'A'	Autoselect for the modeless selection.  Like 'a', but only
+	  	applies to the modeless selection.
+
+		    'guioptions'   autoselect Visual  autoselect modeless ~
+			 ""		 -			 -
+			 "a"		yes			yes
+			 "A"		 -			yes
+			 "aA"		yes			yes
 
 	  'f'	Foreground: Don't use fork() to detach the GUI from the shell
 		where it was started.  Use this for programs that wait for the
@@ -3993,30 +4008,8 @@ A jump table for the options with a short description can be found at |Q_op|.
 	set.  It's normally not set directly, but by using one of the commands
 	|:ptag|, |:pedit|, etc.
 
-						*'printerfont'* *'pfn'*
-'printerfont' 'pfn'	string	(default "courier")
-			global
-			{not in Vi}
-			{only available when compiled with the |+printer|
-			feature}
-	This is the name of the font that will be used for the |:hardcopy|
-	command's output.  It has the same format as the 'guifont' option,
-	except that only one font may be named, and the special "guifont=*"
-	syntax is not available.
-
-						*'printerheader'* *'pheader'*
-'printerheader' 'pheader'  string  (default "%<%f%h%m%=Page %N")
-			global
-			{not in Vi}
-			{only available when compiled with the |+printer|
-			feature}
-	This defines the format of the header produced in |:hardcopy| output.
-	The option is defined in the same way as the 'statusline' option.
-	If Vim has not been compiled with the |+statusline| feature, this
-	option has no effect and a simple default header is used.
-
-						*'printername'* *'pname'*
-'printername' 'pname'	string	(default empty)
+						*'printdevice'* *'pdev'*
+'printdevice' 'pdev'	string	(default empty)
 			global
 			{not in Vi}
 			{only available when compiled with the |+printer|
@@ -4028,32 +4021,114 @@ A jump table for the options with a short description can be found at |Q_op|.
 	If the option is empty, then vim will use the system default printer
 	for ":hardcopy!"
 
-						*'printeroptions'* *'popt'*
-'printeroptions' 'popt' string (default "left:10pc,right:5pc,
-						 top:5pc,bottom:5pc,header:2")
+						*'printexpr'* *'pexpr'*
+'printexpr' 'pexpr'	String	(default: see below)
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			and |+postscript| features}
+	Expression that is evaluated to print the PostScript produced with
+	":hardcopy".
+	The file name to be printed is in |v:fname_in|.
+	The arguments to the ":hardcopy" command are in |v:cmdarg|.
+	The expression must take care of deleting the file after printing it.
+	The default simply uses "lpr" to print the file: >
+
+	    system('lpr' . (&printdevice == '' ? '' : ' -P' . &printdevice)
+	    		. ' ' . v:fname_in) . delete(v:fname_in)
+<	
+	If you change this option, using a function is an easy way to avoid
+	having to escape all the spaces.  Example: >
+
+		:set printexpr=PrintFile(v:fname_in)
+		:function PrintFile(fname)
+		:  system("ghostview " . a:fname)
+		:  delete(a:fname)
+		:endfunc
+<
+	If evaluating the expression fails, you get an error message. *E365*
+	In that case Vim will delete the file.
+	This option cannot be set from a |modeline|, for security reasons.
+
+						*'printfont'* *'pfn'*
+'printfont' 'pfn'	string	(default "courier")
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			feature}
+	This is the name of the font that will be used for the |:hardcopy|
+	command's output.  It has the same format as the 'guifont' option,
+	except that only one font may be named, and the special "guifont=*"
+	syntax is not available.
+	Currently only works in the Win32 GUI version.
+
+						*'printheader'* *'pheader'*
+'printheader' 'pheader'  string  (default "%<%f%h%m%=Page %N")
+			global
+			{not in Vi}
+			{only available when compiled with the |+printer|
+			feature}
+	This defines the format of the header produced in |:hardcopy| output.
+	The option is defined in the same way as the 'statusline' option.
+	If Vim has not been compiled with the |+statusline| feature, this
+	option has no effect and a simple default header is used, which shows
+	the page number.
+
+						*'printoptions'* *'popt'*
+'printoptions' 'popt' string (default "")
 			global
 			{not in Vi}
 			{only available when compiled with |+printer| feature}
 	This is a comma-separated list of items that control the format of
 	the output of |:hardcopy|:
 
-	  left:{spec}		left margin
-	  right:{spec}		right margin
-	  top:{spec}		top margin
-	  bottom:{spec}		bottom margin
+	  left:{spec}		left margin (default: 10pc)
+	  right:{spec}		right margin (default: 5pc)
+	  top:{spec}		top margin (default: 5pc)
+	  bottom:{spec}		bottom margin (default: 5pc)
 				{spec} is a number followed by "in" for
 				inches, "mm" for millimetres or "pc" for a
 				percentage of the media size.
 
-	  header:{nr}		number of lines to use for the header The
-				If omitted, no header is printed.  The header
-				is of fixed format and shows the page number
-				and buffer name.
-	  mono:y		Use plain text monochrome output.  This is
-				faster and thus useful when printing large
-				files.  But you don't get syntax highlighting.
-	  number:y		Include line numbers in the printed output.
+	  header:{nr}		Number of lines to reserve for the header.
+				Only the first line is actually filled, thus
+				when {nr} is 2 there is one empty line.  The
+				header is formatted according to
+				'printheader'.
+	  header:0  		Do not print a header.
+	  header:2  (default)	Use two lines for the header
 
+	  syntax:n		Do not use syntax highlighting.  This is
+				faster and thus useful when printing large
+				files.
+	  syntax:y		Do syntax highlighting.
+	  syntax:a  (default)	Use syntax highligting if the printer appears
+				to be able to print color or grey.
+
+	  number:y		Include line numbers in the printed output.
+	  number:n  (default)	No line numbers.
+
+	  wrap:y    (default)   Wrap long lines.
+	  wrap:n		Truncate long lines.
+
+	  duplex:off		Print on one side.
+	  duplex:long (default)	Print on both sides (when possible), bind on
+				long side.
+	  duplex:short		Print on both sides (when possible), bind on
+				short side.
+
+	  portrait:y (default)	Orientation is portrait.
+	  portrait:n		Orientation is landscape.
+
+	  paper:A4   (default)	Paper size: A4
+	  paper:letter		Paper size: Letter
+	
+	The item indicated with (default) is used when the item is not
+	present.  The values are not always used, especially when using a
+	dialog to select the printer and options.
+	Example: >
+		:set printoptions=paper:letter,duplex:off
+<
 				   *'readonly'* *'ro'* *'noreadonly'* *'noro'*
 'readonly' 'ro'		boolean	(default off)
 			local to buffer
@@ -4223,7 +4298,10 @@ A jump table for the options with a short description can be found at |Q_op|.
 	   personal preferences to overrule or add to the distributed defaults
 	   or system-wide settings (rarely needed).
 
-	Note that, unlike 'path', no wildcards like "*" or "**" are allowed.
+	Note that, unlike 'path', no wildcards like "**" are allowed.  Normal
+	wildcards are allowed, but can significantly slow down searching for
+	runtime files.  For speed, use as few items as possible and avoid
+	wildcards.
 	See |:runtime|.
 	Example: >
 		:set runtimepath=~/vimruntime,/mygroup/vim,$VIMRUNTIME
@@ -4459,6 +4537,9 @@ A jump table for the options with a short description can be found at |Q_op|.
 	String to be used to put the output of the ":make" command in the
 	error file.  See also |:make_makeprg|.  See |option-backslash| about
 	including spaces and backslashes.
+	The name of the temporary file can be represented by "%s" if necessary
+	(the file name is appended automatically if no %s appears in the value
+	of this option).
 	For the Amiga and MS-DOS the default is ">".  The output is directly
 	saved in a file and not echoed to the screen.
 	For Unix the default it "| tee".  The stdout of the compiler is saved
@@ -4900,8 +4981,7 @@ A jump table for the options with a short description can be found at |Q_op|.
 	      Mnemonic: Offset from start of file (with one added)
 	      {not available when compiled without |+byte_offset| feature}
 	O N   As above, in hexadecimal.
-	N N   Printer page number. (Only of use in the 'printerheader'
-		option.)
+	N N   Printer page number. (Only of use in the 'printheader' option.)
 	l N   Line number.
 	L N   Number of lines in buffer.
 	c N   Column number.

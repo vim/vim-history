@@ -13,7 +13,7 @@
 # This will build the console version of vim with no additional interfaces.
 # To add interfaces, define any of the following:
 #	GUI interface: GUI=yes
-#	OLE interface: OLE=yes
+#	OLE interface: OLE=yes (usually with GUI=yes)
 #	IME support: IME=yes	(requires GUI=yes)
 #	  DYNAMIC_IME=[yes or no]  (to load the imm32.dll dynamically, default
 #	  is yes)
@@ -37,7 +37,7 @@
 #	  DYNAMIC_TCL=yes (to load the Tcl DLL dynamically)
 #	  TCL_VER=[Tcl version, e.g. 80, 83]  (default is 83)
 #	  TCL_VER_LONG=[Tcl version, eg 8.3] (default is 8.3)
-#	    You must set TCL_VER_LONG when change TCL_VER.
+#	    You must set TCL_VER_LONG when you set TCL_VER.
 #	Debug version: DEBUG=1
 #	SNiFF+ interface: SNIFF=yes
 #	Iconv library support (always dynamically loaded):
@@ -278,8 +278,6 @@ OBJ = \
 	$(OUTDIR)\vim.res
 
 !if "$(OLE)" == "yes"
-# Force GUI version to be built
-GUI = yes
 CFLAGS = $(CFLAGS) -DFEAT_OLE
 RCFLAGS = $(RCFLAGS) -DFEAT_OLE
 OLE_OBJ = $(OUTDIR)\if_ole.obj
@@ -356,7 +354,7 @@ CFLAGS = $(CFLAGS) -DDYNAMIC_GETTEXT
 TCL_VER = 83
 TCL_VER_LONG = 8.3
 !endif
-!message Tcl detected (version $(TCL_VER)) - root dir is "$(TCL)"
+!message Tcl requested (version $(TCL_VER)) - root dir is "$(TCL)"
 !if "$(DYNAMIC_TCL)" == "yes"
 !message Tcl DLL will be loaded dynamically
 TCL_DLL = tcl$(TCL_VER).dll
@@ -377,7 +375,7 @@ TCL_LIB = $(TCL)\lib\tcl$(TCL_VER)vc.lib
 !ifndef PYTHON_VER
 PYTHON_VER = 15
 !endif
-!message Python detected (version $(PYTHON_VER)) - root dir is "$(PYTHON)"
+!message Python requested (version $(PYTHON_VER)) - root dir is "$(PYTHON)"
 !if "$(DYNAMIC_PYTHON)" == "yes"
 !message Python DLL will be loaded dynamically
 !endif
@@ -394,7 +392,7 @@ PYTHON_LIB = $(PYTHON)\libs\python$(PYTHON_VER).lib
 
 # Perl interface
 !ifdef PERL
-!message Perl detected (version $(PERL_VER)) - root dir is "$(PERL)"
+!message Perl requested (version $(PERL_VER)) - root dir is "$(PERL)"
 !if "$(DYNAMIC_PERL)" == "yes"
 !if "$(PERL_VER)" == "56"
 !message Perl DLL will be loaded dynamically
@@ -452,7 +450,7 @@ RUBY_PLATFORM = i586-mswin32
 !endif
 RUBY_INSTALL_NAME = mswin32-ruby$(RUBY_VER)
 
-!message Ruby detected (version $(RUBY_VER)) - root dir is "$(RUBY)"
+!message Ruby requested (version $(RUBY_VER)) - root dir is "$(RUBY)"
 CFLAGS = $(CFLAGS) -DFEAT_RUBY
 RUBY_OBJ = $(OUTDIR)\if_ruby.obj
 RUBY_INC = /I "$(RUBY)\lib\ruby\$(RUBY_VER_LONG)\$(RUBY_PLATFORM)"

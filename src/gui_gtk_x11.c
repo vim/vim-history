@@ -836,7 +836,7 @@ key_press_event(GtkWidget * widget, GdkEventKey * event, gpointer data)
     }
 
     if (len == 1 && ((string[0] == Ctrl_C && ctrl_c_interrupts)
-						   || string[0] == intr_char))
+		   || (string[0] == intr_char && intr_char != Ctrl_C)))
     {
 	trash_input_buf();
 	got_int = TRUE;
@@ -1649,7 +1649,7 @@ mainwin_realize(GtkWidget *widget)
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
-	serverRegisterName(gui.dpy, serverDelayedStartName);
+	(void)serverRegisterName(gui.dpy, serverDelayedStartName);
     }
     else
     {
@@ -2117,7 +2117,7 @@ gui_mch_open()
 	    (guint)(gui_get_base_height() + Rows * gui.char_height));
     update_window_manager_hints();
 
-    if (found_reverse_arg )
+    if (found_reverse_arg)
     {
 	gui.def_norm_pixel = gui_mch_get_color((char_u *)"White");
 	gui.def_back_pixel = gui_mch_get_color((char_u *)"Black");

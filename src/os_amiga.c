@@ -338,9 +338,9 @@ mch_check_win(argc, argv)
 #endif
     }
 
-/*
- * scan argv[] for the "-f" and "-d" arguments
- */
+    /*
+     * scan argv[] for the "-f" and "-d" arguments
+     */
     for (i = 1; i < argc; ++i)
 	if (argv[i][0] == '-')
 	{
@@ -350,23 +350,25 @@ mch_check_win(argc, argv)
 		usewin = TRUE;
 		break;
 
-#ifndef FEAT_DIFF
 	    case 'd':
-		if (i < argc - 1)
+		if (i < argc - 1
+#ifdef FEAT_DIFF
+			/* require using "-dev", "-d" means diff mode */
+			&& argv[i][2] == 'e' && argv[i][3] == 'v'
+#endif
+		   )
 		    device = (char_u *)argv[i + 1];
 		break;
-#endif
 	    }
 	}
 
 /*
- * If we were not started from workbench, do not have a '-d' argument and
- * we have been started with an interactive window, use that window.
+ * If we were not started from workbench, do not have a "-d" or "-dev"
+ * argument and we have been started with an interactive window, use that
+ * window.
  */
     if (argc != 0
-#ifndef FEAT_DIFF
 	    && device == NULL
-#endif
 	    && (IsInteractive(Input()) || IsInteractive(Output())))
 	return OK;
 
@@ -447,13 +449,16 @@ mch_check_win(argc, argv)
 	else
 	    av = argv[i];
 
-#ifndef FEAT_DIFF
-	if (av[0] == '-' && av[1] == 'd')	/* skip '-d' option */
+	/* skip '-d' or "-dev" option */
+	if (av[0] == '-' && av[1] == 'd'
+#ifdef FEAT_DIFF
+		&& av[2] == 'e' && av[3] == 'v'
+#endif
+		)
 	{
 	    ++i;
 	    continue;
 	}
-#endif
 	if (vim_strchr((char_u *)av, ' '))
 	    Write(fh, "\"", 1L);
 	Write(fh, av, (long)strlen(av));
@@ -465,9 +470,9 @@ mch_check_win(argc, argv)
     Close(fh);
 
 /*
- * Try to open a new cli in a window. If '-d' argument was given try to open
- * the specified device. Then try a 24 line 80 column window.
- * If that fails, try two smaller ones.
+ * Try to open a new cli in a window. If "-d" or "-dev" argument was given try
+ * to open the specified device. Then try a 24 line 80 column window.  If that
+ * fails, try two smaller ones.
  */
     for (i = -1; i < 3; ++i)
     {

@@ -84,9 +84,31 @@ A.1: Compiling with CodeWarior
  
 A.2: Compiling with MPW.
 
-  TODO:
+ 0. You will need a recent version of the MPW and the Universal Interfaces.
+    You can get both at:
+	ftp://ftp.apple.com/developer/Tool_Chest/Interfaces-Libraries/
+	ftp://ftp.apple.com/developer/Tool_Chest/Core_Mac_OS_Tools/
+   For a Carbon version you will need a recent Carbon SDK as well.
 
+ 1. Expand the resource file:
+   - ../src/os_mac.rsr.hqx (to produce ../src/gui_mac.rsrc)
 
+ 2. Create a new folder called "obj" in the vim folder. (At the same level
+    as the src folder.)
+
+ 3. Double click on CreateVimMake, the MPW will now open in the correct
+    folder and load the CreateVimMake script. Move the cursor to the only
+    line in that file and hit enter (not return!). This will create a file
+    Vim.make.
+
+    For a carbon version use CreateVimMake.carbon instead.
+    
+ 4. Select "Build" from the menu (or type command-B). Type the program name
+    into the dialog box.
+
+ 5. Open vim with ResEdit and copy the contents of gui_mac.rsrc into vim.
+    
+    TODO: Debug the resulting program.
 
 A.3: Compiling with Project Builder.
 

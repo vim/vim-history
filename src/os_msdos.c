@@ -690,10 +690,11 @@ vim_kbhit(void)
 WaitForChar(long msec)
 {
     union REGS	regs;
-    long	starttime;
+    long	starttime = 0;
     int		x, y;
 
-    starttime = biostime(0, 0L);
+    if (msec != 0)
+	starttime = biostime(0, 0L);
 
     for (;;)
     {
@@ -781,7 +782,8 @@ WaitForChar(long msec)
 	 * fixed in service pack 1, but not everybody installed that.
 	 * The DJGPP implementation of usleep() uses a busy-wait loop too.
 	 */
-	if (msec != FOREVER && biostime(0, 0L) > starttime + msec / BIOSTICK)
+	if (msec == 0 || (msec != FOREVER
+			    && biostime(0, 0L) > starttime + msec / BIOSTICK))
 	    break;
 
 #ifdef DJGPP
@@ -1498,9 +1500,9 @@ mch_get_host_name(
     int		len)
 {
 #ifdef DJGPP
-    STRNCPY(s, _("PC (32 bits Vim)"), len);
+    STRNCPY(s, "PC (32 bits Vim)", len);
 #else
-    STRNCPY(s, _("PC (16 bits Vim)"), len);
+    STRNCPY(s, "PC (16 bits Vim)", len);
 #endif
 }
 
@@ -1903,7 +1905,7 @@ mch_screenmode(char_u *arg)
     }
     if (mode == -1)
     {
-	EMSG(_("E362: Unsupported screen mode"));
+	EMSG("E362: Unsupported screen mode");
 	return FAIL;
     }
     textmode(mode);		    /* use Borland function */
@@ -2097,7 +2099,7 @@ mch_call_shell(
 
     if (x && !(options & SHELL_SILENT) && !emsg_silent)
     {
-	MSG_PUTS(_("\nshell returned "));
+	MSG_PUTS("\nshell returned ");
 	msg_outnum((long)x);
 	msg_putchar('\n');
     }
@@ -2523,7 +2525,7 @@ clip_mch_set_selection( VimClipboard *cbd )
 		 * We report the error here (instead of in SetClipboardData())
 		 * because we don't want the error reported twice.
 		 */
-		EMSG("Selection too large, cannot allocate DOS buffer");
+		EMSG("E450: Selection too large, cannot allocate DOS buffer");
 	    }
 	}
 
@@ -2677,7 +2679,7 @@ FreeDOSMemory(int protected_mode_selector)
      * unconditionally.
      */
     if (__dpmi_free_dos_memory(protected_mode_selector) == -1)
-	EMSG("E453: could not free DOS memory buffer (DJGPP)");
+	EMSG("E451: could not free DOS memory buffer (DJGPP)");
 }
 
 /*
@@ -2781,7 +2783,7 @@ GetClipboardData(int clip_data_format)
 	     * up to about 600K in size.  This depends on your HIMEM.SYS and
 	     * EMM386.EXE settings however.
 	     */
-	    EMSG("Clipboard data too large, cannot allocate DOS buffer");
+	    EMSG("E452: Clipboard data too large, cannot allocate DOS buffer");
 	    return NULL;				    /* early exit */
 	}
 
@@ -2798,7 +2800,7 @@ GetClipboardData(int clip_data_format)
 	if (__dpmi_int( 0x2f, &dpmi_regs) == -1)
 	{
 	    /* real-mode interrupt failed? */
-	    EMSG("E452: could not copy clipboard data to DOS buffer");
+	    EMSG("E453: could not copy clipboard data to DOS buffer");
 	    FreeDOSMemory(protected_mode_selector);	/* clean up DOS mem */
 	    return NULL;				/* early exit */
 	}
@@ -2813,7 +2815,7 @@ GetClipboardData(int clip_data_format)
 	if (clip_data_buffer == NULL)
 	{
 	    /* allocation failed? */
-	    EMSG("E453: could not allocate clipboard memory buffer");
+	    EMSG("E454: could not allocate clipboard memory buffer");
 	    FreeDOSMemory(protected_mode_selector);	/* clean up DOS mem */
 	    return NULL;				/* early exit */
 	}

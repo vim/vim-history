@@ -6792,7 +6792,7 @@ highlight_clear(idx)
     HL_TABLE()[idx].sg_font = NOFONT;
 # ifdef FEAT_XFONTSET
     gui_mch_free_fontset(HL_TABLE()[idx].sg_fontset);
-    HL_TABLE()[idx].sg_font = NOFONTSET;
+    HL_TABLE()[idx].sg_fontset = NOFONTSET;
 # endif
     vim_free(HL_TABLE()[idx].sg_font_name);
     HL_TABLE()[idx].sg_font_name = NULL;

@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Verilog
 " Maintainer:	Mun Johl <mun_johl@agilent.com>
-" Last Update:  Thu May  3 09:47:51 PDT 2001
+" Last Update:  Tue Aug  7 12:47:15 PDT 2001
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -41,7 +41,7 @@ syn keyword verilogTodo contained TODO
 syn match   verilogOperator "[&|~><!)(*#%@+/=?:;}{,.\^\-\[\]]"
 
 syn region  verilogComment start="/\*" end="\*/" contains=verilogTodo
-syn match   verilogComment "//.*" oneline
+syn match   verilogComment "//.*" oneline contains=verilogTodo
 
 syn match   verilogGlobal "`[a-zA-Z0-9_]\+\>"
 syn match   verilogGlobal "$[a-zA-Z0-9_]\+\>"

@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 01
+*windows.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

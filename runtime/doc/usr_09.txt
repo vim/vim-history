@@ -1,4 +1,4 @@
-*usr_09.txt*	For Vim version 6.0aq.  Last change: 2001 Jul 28
+*usr_09.txt*	For Vim version 6.0ar.  Last change: 2001 Aug 09
 
 		     VIM USER MANUAL - by Bram Moolenaar
 
@@ -62,7 +62,7 @@ Vim will set the title to show the name of the current file.  First comes the
 name of the file.  Then some special characters and the directory of the file
 in parens.  These special character can be present:
 
-	-	The file cannot be modifed (e.g., a help file)
+	-	The file cannot be modified (e.g., a help file)
 	+	The file contains changes
 	=	The file is read-only
 	=+	The file is read-only, contains changes anyway
@@ -181,7 +181,7 @@ exchange text between programs.  MS-Windows doesn't have this.
 
 In X-Windows there is the "current selection".  This is the text that is
 currently highlighted.  In Vim this is the Visual area (this assumes you are
-using the default option settings).  You can past this selection in another
+using the default option settings).  You can paste this selection in another
 application without any further action.
    For example, in this text select a few words with the mouse.  Vim will
 switch to Visual mode and highlight the text.  Now start another gVim, without

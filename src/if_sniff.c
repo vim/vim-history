@@ -856,7 +856,7 @@ HandleSniffRequest(buffer)
 	    char *new_path = argv[1];
 
 	    buf = vi_find_buffer(file);
-	    if (buf && !buf->b_changed)    /* delete buffer only if not modified */
+	    if (buf && !buf->b_changed) /* delete buffer only if not modified */
 	    {
 		sprintf(VICommand, DeleteBuf, file);
 		vi_exec_cmd(VICommand);

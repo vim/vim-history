@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 6.0aq.  Last change: 2001 Aug 05
+*various.txt*   For Vim version 6.0ar.  Last change: 2001 Aug 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -8,7 +8,8 @@ Various commands					*various*
 
 1. Various commands		|various-cmds|
 2. Online help			|online-help|
-3. Using Vim like less or more	|less|
+3. Printing			|printing|
+4. Using Vim like less or more	|less|
 
 ==============================================================================
 1. Various commands					*various-cmds*
@@ -251,7 +252,7 @@ N  *+gettext*		message translations |multi-lang|
    *+GUI_Motif*		Unix only: Motif |GUI|
    *+GUI_Photon*	QNX only:  Photon |GUI|
 m  *+hangul_input*	Hangul input support |hangul|
-   *+iconv*		Compiled with the |iconv()| function
+   *+iconv*		Compiled with the |iconv()| function, may have |/dyn|
 N  *+insert_expand*	|insert_expand| Insert mode completion
 N  *+jumplist*		|jumplist|
 B  *+keymap*		|'keymap'|
@@ -279,12 +280,13 @@ m  *+ole*		Win32 GUI only: |ole-interface|
    *+osfiletype*	Support for the 'osfiletype' option and filetype
 			checking in automatic commands.  |autocmd-osfiletypes|
 N  *+path_extra*	Up/downwards search in 'path' and 'tags'
-m  *+perl*		Perl interface |perl|
-N  *+printer*		Win32 GUI only for now: |:hardcopy|
-m  *+python*		Python interface |python|
+m  *+perl*		Perl interface |perl|, may have |/dyn|
+   *+postscript*	|:hardcopy| writes a PostScript file
+N  *+printer*		|:hardcopy| command
+m  *+python*		Python interface |python|, may have |/dyn|
 N  *+quickfix*		|:make| and |quickfix| commands
 B  *+rightleft*		Right to left typing |'rightleft'|
-m  *+ruby*		Ruby interface |ruby|
+m  *+ruby*		Ruby interface |ruby|, may have |/dyn|
 N  *+scrollbind*	|'scrollbind'|
 B  *+signs*		|:sign|
 N  *+smartindent*	|'smartindent'|
@@ -297,7 +299,7 @@ N  *+syntax*		Syntax highlighting |syntax|
 N  *+tag_binary*	binary searching in tags file |tag-binary-search|
 N  *+tag_old_static*	old method for static tags |tag-old-static|
 m  *+tag_any_white*	any white space allowed in tags file |tag-any-white|
-m  *+tcl*		Tcl interface |tcl|
+m  *+tcl*		Tcl interface |tcl|, may have |/dyn|
    *+terminfo*		uses |terminfo| instead of termcap
 N  *+termresponse*	support for |t_RV| and |v:termresponse|
 N  *+textobjects*	|text-objects| selection
@@ -321,6 +323,11 @@ N  *+xcmdsrv*		Unix only: Remote invocation |x11-command-server|
 N  *+xterm_clipboard*	Unix only: xterm clipboard handling
 m  *+xterm_save*	save and restore xterm screen |xterm-screens|
 N  *+X11*		Unix only: can restore window title |X11|
+
+								*/dyn*
+			To some of the features "/dyn" is added when the
+			feature is only available when the related library can
+			be dynamically loaded.
 
 :ve[rsion] {nr}		Is now ignored.  This was previously used to check the
 			version number of a .vimrc file.  It was removed,
@@ -450,39 +457,6 @@ g CTRL-A		Only when Vim was compiled with MEM_PROFILING defined
 			(which is very rare): print memory usage statistics.
 			Only useful for debugging Vim.
 
-					*:ha* *:hardcopy* *E237* *E238* *E324*
-:[range]ha[hardcopy][!]
-			Send [range] lines (default whole file) to the
-			printer.
-			On some platforms a dialog is displayed to allow
-			selection of printer, paper size etc. To skip the
-			dialog, use the [!].  In this case the printer defined
-			by 'printername' is used, or (if 'printername' is
-			empty) the system default printer.
-
-			Progress is displayed during printing as a page number
-			and a percentage.  To abort printing use the interrupt
-			key (CTRL-C or, on MS-systems, CTRL-Break.)
-
-			Printer output is controlled by the 'printerfont' and
-			'printeroptions' options.
-
-			The printed file is always line wrapped to the
-			selected margins irrespective of the current window's
-			'wrap' or 'linebreak' settings. The current
-			highlighting colours are used in the printout, with
-			the following considerations:
-			1) The normal background is always rendered as white
-			   (i.e. blank paper.)
-			2) White text or the default foreground is rendered as
-			   black, so that it shows up!
-			3) If 'background' is "dark", then the colours are
-			   darkened to compensate for the fact that otherwise
-			   they would be too bright to show up clearly on
-			   white paper.
-			{not in Vi}
-			{only available when compiled with |+printer| feature}
-
 ==============================================================================
 2. Online help						*online-help*
 
@@ -598,7 +572,62 @@ command:
 			overwritten.
 
 ==============================================================================
-3. Using Vim like less or more					*less*
+3. Printing						*printing*
+
+On MS-Windows Vim can print your text on any installed printer.  On other
+systems a PostScript file is produced.  This can be directly send to a
+PostScript printer.  For other printers a program like ghostscript needs to be
+used.
+
+{not in Vi}
+{only available when compiled with |+printer| feature}
+
+					*:ha* *:hardcopy* *E237* *E238* *E324*
+:[range]ha[hardcopy][!] [arguments]
+			Send [range] lines (default whole file) to the
+			printer.
+
+			On MS-Windows a dialog is displayed to allow selection
+			of printer, paper size etc. To skip the dialog, use
+			the [!].  In this case the printer defined by
+			'printdevice' is used, or, if 'printdevice' is empty,
+			the system default printer.
+
+			For systems other than MS-Windows, PostScript is
+			written in a temp file and 'printexpr' is used to
+			actually print it.  Then [arguments] can be used by
+			'printexpr' through |v:cmdarg|.  Otherwise [arguments]
+			is ignored.
+
+:[range]ha[hardcopy][!] >{filename}
+			As above, but write the resulting PostScript in file
+			{filename}.  Careful: An existing file is silently
+			overwritten.
+			{only available when compiled with the |+postscript|
+			feature}
+			On MS-Windows use the "print to file" feature of the
+			printer driver.
+
+Progress is displayed during printing as a page number and a percentage.  To
+abort printing use the interrupt key (CTRL-C or, on MS-systems, CTRL-Break).
+
+Printer output is controlled by the 'printfont' and 'printoptions' options.
+'printheader' specifies the format of a page header.
+
+The printed file is always limited to the selected margins, irrespective of
+the current window's 'wrap' or 'linebreak' settings.  The "wrap" item in
+'printoptions' can be used to switch wrapping off.
+The current highlighting colors are used in the printout, with the following
+considerations:
+1) The normal background is always rendered as white (i.e. blank paper.)
+2) White text or the default foreground is rendered as black, so that it shows
+   up!
+3) If 'background' is "dark", then the colours are darkened to compensate for
+   the fact that otherwise they would be too bright to show up clearly on
+   white paper.
+
+==============================================================================
+4. Using Vim like less or more					*less*
 
 If you use the less or more program to view a file, you don't get syntax
 highlighting.  Thus you would like to use Vim instead.  You can do this by

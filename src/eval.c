@@ -4136,6 +4136,9 @@ f_has(argvars, retvar)
 	"python",
 #endif
 #endif
+#ifdef FEAT_POSTSCRIPT
+	"postscript",
+#endif
 #ifdef FEAT_PRINTER
 	"printer",
 #endif
@@ -5417,15 +5420,19 @@ f_prevnonblank(argvars, retvar)
     retvar->var_val.var_number = lnum;
 }
 
-#ifdef FEAT_XCMDSRV
+#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
 static int check_connection __ARGS((void));
 
     static int
 check_connection()
 {
+# ifdef FEAT_XCMDSRV
     if (X_DISPLAY == NULL)
+# else
+    if (ole_client_init() == FAIL)
+# endif
     {
-	EMSG(_("E240: No connection to X server"));
+	EMSG(_("E240: No connection to Vim server"));
 	return FAIL;
     }
     return OK;
@@ -5528,39 +5535,58 @@ f_serversend(argvars, retvar)
     VAR		argvars;
     VAR		retvar;
 {
-#ifdef FEAT_XCMDSRV
-    char_u	*s;
-    char_u	*p;
+#if defined(FEAT_XCMDSRV) || defined(FEAT_OLE)
+    char_u	*server_name;
+    char_u	*keys;
     char_u	*r = NULL;
-    char_u	str[30];
-    var         v;
-    Window	w;
     int		asExpr = 0;
+# ifdef FEAT_XCMDSRV
+    Window	w;
+# endif
 
     retvar->var_val.var_number = -1;
     if (!check_connection())
 	return;
 
-    s = get_var_string(&argvars[0]);
-    p = get_var_string(&argvars[1]);
+    server_name = get_var_string(&argvars[0]);
+    keys = get_var_string(&argvars[1]);
     if (argvars[2].var_type != VAR_UNKNOWN && get_var_number(&argvars[2]) != 0)
 	asExpr = 1;
-    if (serverSendToVim(X_DISPLAY, s, p, &r, &w, asExpr, 0) < 0)
+# ifdef FEAT_XCMDSRV
+    if (serverSendToVim(X_DISPLAY, server_name, keys, &r, &w, asExpr, 0) < 0)
     {
-	EMSG2(_("E241: Unable to send to %s"), s);
+	EMSG2(_("E241: Unable to send to %s"), server_name);
 	return;
     }
+# else
+    if (asExpr)
+	r = ole_Eval(keys);
+    else
+    {
+	if (ole_SendKeys(keys) == FAIL)
+	{
+	    EMSG(_("E241: Unable to send to Vim server"));
+	    return;
+	}
+    }
+# endif
 
     retvar->var_type = VAR_STRING;
     retvar->var_val.var_string = r;
+
+# ifdef FEAT_XCMDSRV
     if (argvars[2].var_type != VAR_UNKNOWN
 	    && argvars[3].var_type != VAR_UNKNOWN)
     {
+	var	v;
+	char_u	str[30];
+
 	sprintf((char *)str, "0x%x", (unsigned int)w);
 	v.var_type = VAR_STRING;
 	v.var_val.var_string = vim_strsave(str);
 	set_var(get_var_string(&argvars[3]), &v);
     }
+# endif
 #endif
 }
 
@@ -8291,6 +8317,30 @@ eval_charconvert(enc_from, enc_to, fname_from, fname_to)
 
     if (err)
 	return FAIL;
+    return OK;
+}
+# endif
+
+# if defined(FEAT_POSTSCRIPT) || defined(PROTO)
+    int
+eval_printexpr(fname, args)
+    char_u	*fname;
+    char_u	*args;
+{
+    int		err = FALSE;
+
+    set_vim_var_string(VV_FNAME_IN, fname, -1);
+    set_vim_var_string(VV_CMDARG, args, -1);
+    if (eval_to_bool(p_pexpr, &err, NULL, FALSE))
+	err = TRUE;
+    set_vim_var_string(VV_FNAME_IN, NULL, -1);
+    set_vim_var_string(VV_CMDARG, NULL, -1);
+
+    if (err)
+    {
+	mch_remove(fname);
+	return FAIL;
+    }
     return OK;
 }
 # endif

@@ -1827,7 +1827,7 @@ mch_errmsg(str)
 {
     int		len;
 
-#if defined(UNIX) || defined(FEAT_GUI)
+#if (defined(UNIX) || defined(FEAT_GUI)) && !defined(ALWAYS_USE_GUI)
     /* On Unix use stderr if it's a tty.
      * When not going to start the GUI also use stderr. */
     if (
@@ -1885,7 +1885,7 @@ mch_errmsg(str)
 mch_msg(str)
     char	*str;
 {
-# if defined(UNIX) || defined(FEAT_GUI)
+#if (defined(UNIX) || defined(FEAT_GUI)) && !defined(ALWAYS_USE_GUI)
     /* On Unix use stdout if we have a tty.  This allows "vim -h | more" and
      * uses mch_errmsg() when started from the desktop.
      * When not going to start the GUI also use stdout. */

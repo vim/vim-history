@@ -214,7 +214,7 @@ function! s:StartExplorer(split, start_dir)
   else
     let startcmd = "edit " . fname
   endif
-  execute startcmd
+  silent execute startcmd
   let &splitbelow = savesplitbelow
   let &splitright = savesplitright
 endfunction
@@ -224,7 +224,11 @@ endfunction
 "
 function! s:EditDir()
   " Get out of here right away if this isn't a directory!
-  if !isdirectory(expand("%"))
+  let name = expand("%")
+  if name == ""
+    let name = expand("%:p")
+  endif
+  if !isdirectory(name)
     return
   endif
 
@@ -590,7 +594,7 @@ function! s:ShowDirectory()
 
   " Add the header
   call s:AddHeader()
-  $ d
+  $d _
 
   " Display the files
 
@@ -810,7 +814,7 @@ function! s:AddFileInfo()
     " add file modification date
     0
     /^"=/+1,$g/^/let fn=s:GetFullFileName() |
-                   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>x" |
+                   \exec "normal! A \<esc>$b".(b:maxFileLen+b:maxFileSizeLen-strlen(getline("."))+3)."i \<esc>"_x" |
                    \exec 's/$/ '.escape(s:FileModDate(fn), '/').'/'
     setlocal nomodified
   endif
@@ -944,7 +948,7 @@ function! s:UpdateHeader()
   normal! mt
   " Remove old header
   0
-  1,/^"=/ d
+  1,/^"=/ d _
   " Add new header
   call s:AddHeader()
   " Go back where we came from if possible
@@ -1006,7 +1010,7 @@ function! s:RemoveSeparators()
     return
   endif
   0
-  silent! exec '/^"=/+1,$g/^' . s:separator . "/d"
+  silent! exec '/^"=/+1,$g/^' . s:separator . "/d _"
 endfunction
 
 "---

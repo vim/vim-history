@@ -2169,7 +2169,7 @@ vgetorpeek(advance)
 						    + typebuf.tb_len, 3, 25L))
 									 == 0)
 		{
-		    colnr_T	col, vcol;
+		    colnr_T	col = 0, vcol;
 		    char_u	*ptr;
 
 		    if (p_smd)
@@ -2221,16 +2221,41 @@ vgetorpeek(advance)
 #endif
 					++col;
 				}
+				curwin->w_wrow = curwin->w_cline_row
+					   + curwin->w_wcol / W_WIDTH(curwin);
+				curwin->w_wcol %= W_WIDTH(curwin);
 				curwin->w_wcol += curwin_col_off();
+#ifdef FEAT_MBYTE
+				col = 0;	/* no correction needed */
+#endif
 			    }
 			    else
+			    {
 				--curwin->w_wcol;
+#ifdef FEAT_MBYTE
+				col = curwin->w_cursor.col - 1;
+#endif
+			    }
 			}
 			else if (curwin->w_p_wrap && curwin->w_wrow)
 			{
-				--curwin->w_wrow;
-				curwin->w_wcol = W_WIDTH(curwin) - 1;
+			    --curwin->w_wrow;
+			    curwin->w_wcol = W_WIDTH(curwin) - 1;
+#ifdef FEAT_MBYTE
+			    col = curwin->w_cursor.col - 1;
+#endif
 			}
+#ifdef FEAT_MBYTE
+			if (has_mbyte && col > 0 && curwin->w_wcol > 0)
+			{
+			    /* Correct when the cursor is on the right halve
+			     * of a double-wide character. */
+			    ptr = ml_get_curline();
+			    col -= (*mb_head_off)(ptr, ptr + col);
+			    if ((*mb_ptr2cells)(ptr + col) > 1)
+				--curwin->w_wcol;
+			}
+#endif
 		    }
 		    setcursor();
 		    out_flush();

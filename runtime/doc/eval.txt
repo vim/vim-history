@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 6.0aq.  Last change: 2001 Aug 01
+*eval.txt*      For Vim version 6.0ar.  Last change: 2001 Aug 10
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -551,6 +551,7 @@ v:fname_in	The name of the input file.  Only valid while evaluating:
 			'charconvert'	file to be converted
 			'diffexpr'	original file
 			'patchexpr'	original file
+			'printexpr'	file to be printed
 
 					*v:fname_out* *fname_out-variable*
 v:fname_out	The name of the output file.  Only valid while
@@ -573,13 +574,17 @@ v:fname_diff	The name of the diff (patch) file.  Only valid while
 		evaluating 'patchexpr'.
 
 					*v:cmdarg* *cmdarg-variable*
-v:cmdarg	The extra arguments given to a file read/write command.
-		Currently these are "++enc=" and "++ff=".  This variable is
-		set before an autocommand event for a file read/write command
-		is triggered.  There is a leading space to make it possible to
-		append this variable directly after the read/write command.
-		Note: The "+cmd" argument isn't included here, because it will
-		be executed anyway.
+v:cmdarg	This variable is used for two purposes:
+		1. The extra arguments given to a file read/write command.
+		   Currently these are "++enc=" and "++ff=".  This variable is
+		   set before an autocommand event for a file read/write
+		   command is triggered.  There is a leading space to make it
+		   possible to append this variable directly after the
+		   read/write command.  Note: The "+cmd" argument isn't
+		   included here, because it will be executed anyway.
+		2. When printing a PostScript file with ":hardcopy" this is
+		   the argument for the ":hardcopy" command.  This can be used
+		   in 'printexpr'.
 
 					*v:count* *count-variable*
 v:count		The count given for the last Normal mode command.  Can be used
@@ -661,7 +666,7 @@ v:ctype		The current locale setting for characters of the runtime
 
 						*v:lnum* *lnum-variable*
 v:lnum		Line number for the 'foldexpr' and 'indentexpr' expressions.
-		Only valid while onf of these expressions is being evaluated.
+		Only valid while one of these expressions is being evaluated.
 		Read-only. |fold-expr| 'indentexpr'
 
 					*v:servername* *servername-variable*
@@ -1948,6 +1953,7 @@ searchpair({start}, {middle}, {end} [, {flags} [, {skip}]])
 servernames()					*servernames()* *E240*
 		Return a list of available servernames. One per line.
 		See also |x11-command-server|.
+		{only available when compiled with the +xcmdsrv feature}
 		Examples: >
 		:echo servernames()
 
@@ -1958,6 +1964,7 @@ serverreply_peek({serverid} [, {retvar}])		*serverreply_peek()*
 		name of a variable.
 		Returns zero if none are available.
 		See also |x11-command-server|.
+		{only available when compiled with the +xcmdsrv feature}
 		Examples: >
 		:let repl = ""
 		:echo "PEEK: ".serverreply_peek(id, "repl").": ".repl
@@ -1966,12 +1973,14 @@ serverreply_read({serverid})				*serverreply_read()*
 		Return the oldest available reply from {serverid} and consume
 		it.
 		See also |x11-command-server|.
+		{only available when compiled with the +xcmdsrv feature}
 		Examples: >
 		:echo serverreply_read(id)
 
 serverreply_send( {clientid}, {string})			*serverreply_send()*
 		Send a reply string to {clientid}. The most recent {clientid}
 		that sent a string can be retrieved with expand("<client>").
+		{only available when compiled with the +xcmdsrv feature}
 		Note:
 		This id has to be stored before the next command can be
 		received. Ie. before returning from the received command and
@@ -1982,15 +1991,18 @@ serverreply_send( {clientid}, {string})			*serverreply_send()*
 <
 							*serversend()* *E241*
 serversend({server}, {string} [, {eval} [, {idvar}]]) 
-		Send the {string} to {server}.
+		Send the {string} to {server}.  On MS-Windows {server} is
+		ignored, but it must be present; use an empty string.
 		If {eval} is present and non-zero, the string is sent as an
 		expression and the result is returned after evaluation.
 		Otherwise the string is sent as input keys and the function
 		returns immediately.
-		If {idvar} is present, it is taken as the name of a variable
-		and a {serverid} for later use with serverreply_read() is
-		stored there.
+		Unix only: If {idvar} is present, it is taken as the name of a
+		variable and a {serverid} for later use with
+		serverreply_read() is stored there.
 		See also |x11-command-server| |ServerReplyRecv|.
+		{only available when compiled with the +ole or +xcmdsrv
+		feature}
 		Note: Any errors will be reported in the server and may mess
 		up the display.
 		Examples: >
@@ -2392,6 +2404,7 @@ os2			OS/2 version of Vim.
 osfiletype		Compiled with support for osfiletypes |+osfiletype|
 path_extra		Compiled with up/downwards search in 'path' and 'tags'
 perl			Compiled with Perl interface.
+postscript		Compiled with PostScript file printing.
 printer			Compiled with |:hardcopy| support.
 python			Compiled with Python interface.
 qnx			QNX version of vim.

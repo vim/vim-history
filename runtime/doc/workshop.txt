@@ -1,4 +1,4 @@
-*workshop.txt*  For Vim version 6.0aq.  Last change: 2001 Jun 21
+*workshop.txt*  For Vim version 6.0ar.  Last change: 2001 Jun 21
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur

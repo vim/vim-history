@@ -1565,7 +1565,7 @@ ga_concat(gap, s)
 }
 
 /*
- * Append a character to a growarray which contains characters.
+ * Append one byte to a growarray which contains bytes.
  */
     void
 ga_append(gap, c)
@@ -5100,7 +5100,7 @@ parse_list_options(option_str, table, table_size)
 	    return (char_u *)N_("Missing colon");
 	commap = vim_strchr(stringp, ',');
 	if (commap == NULL)
-		commap = option_str + STRLEN(option_str);
+	    commap = option_str + STRLEN(option_str);
 
 	len = (int)(colonp - stringp);
 
@@ -5132,20 +5132,6 @@ parse_list_options(option_str, table, table_size)
 
     return NULL;
 }
-
-/*---printeroptions------*/
-
-
-option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS] = {
-    {"top",	TRUE, 0, NULL, 0, FALSE},
-    {"bottom",	TRUE, 0, NULL, 0, FALSE},
-    {"left",	TRUE, 0, NULL, 0, FALSE},
-    {"right",	TRUE, 0, NULL, 0, FALSE},
-    {"header",	TRUE, 0, NULL, 0, FALSE},
-    {"mono",	FALSE, 0, NULL, 0, FALSE},
-    {"number",	FALSE, 0, NULL, 0, FALSE},
-    {"wrap",	FALSE, 0, NULL, 0, FALSE},
-};
 
 
 #endif /*FEAT_PRINTER*/
