@@ -4626,7 +4626,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	for (s = p_viminfo; *s;)
 	{
 	    /* Check it's a valid character */
-	    if (vim_strchr((char_u *)"!\"%'/:cfhnr", *s) == NULL)
+	    if (vim_strchr((char_u *)"!\"%'/:@cfhnr", *s) == NULL)
 	    {
 		errmsg = illegal_char(errbuf, *s);
 		break;
