@@ -884,6 +884,11 @@ $(TARGET): $(OBJDIR) $(vimobj) $(OBJDIR)\$(RESFILE)
 !endif
 |
 
+test:
+	cd testdir
+	$(MAKE) /NOLOGO -f Make_dos.mak win32
+	cd ..
+
 $(OBJDIR)\ex_docmd.obj:  ex_docmd.c ex_cmds.h
 
 $(OBJDIR)\ex_eval.obj:  ex_eval.c ex_cmds.h
