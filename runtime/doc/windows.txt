@@ -1,4 +1,4 @@
-*windows.txt*   For Vim version 6.1.  Last change: 2002 Jan 30
+*windows.txt*   For Vim version 6.1.  Last change: 2003 Feb 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -588,10 +588,14 @@ can also get to them with the buffer list commands, like ":bnext".
 
 						*:dr* *:drop*
 :dr[op] {file} ..
-		Redefine the argument list to "{file} ..", similar to ":next".
-		The first file is edited in the current window if possible.
-		If the current buffer can't be |abandon|ed, the window is
-		split first.
+		Edit the first file in a window.
+		- If the file is already open in a window change to that
+		  window.
+		- If the file is not open in a window edit the file in the
+		  current window.  If the current buffer can't be |abandon|ed,
+		  the window is split first.
+		When there are two or more arguments the |argument-list| is
+		set, like with the |:next| command.
 		The purpose of this command is that it can be used from a
 		program that wants Vim to edit another file, e.g., a debugger.
 		{only available when compiled with the +gui feature}

@@ -5639,72 +5639,112 @@ sign_typenr2name(typenr)
 #if defined(FEAT_GUI) || defined(FEAT_CLIENTSERVER) || defined(PROTO)
 /*
  * ":drop"
+ * Opens the first argument in a window.  When there are two or more arguments
+ * the argument list is redefined.
  */
     void
 ex_drop(eap)
     exarg_T	*eap;
 {
     int		split = FALSE;
+    int		incurwin = FALSE;
+    char_u	*arg;
+    int		two_or_more = FALSE;
+    char_u	*first = NULL;
+    win_T	*wp;
+    buf_T	*buf;
 
-    /* Check whether the current buffer is changed. If so, we will need
+    /*
+     * Check if the first argument is already being edited in a window.  If
+     * so, jump to that window.
+     * We would actually need to check all arguments, but that's complicated
+     * and mostly only one file is dropped.
+     */
+    arg = vim_strsave(eap->arg);
+    if (arg != NULL)
+    {
+	/* Get the first argument, remove quotes, make it a full path. */
+	two_or_more = (*do_one_arg(arg) != NUL);
+	first = fix_fname(arg);
+	if (first != NULL)
+	{
+	    buf = buflist_findname(first);
+	    FOR_ALL_WINDOWS(wp)
+	    {
+		if (wp->w_buffer == buf)
+		{
+		    incurwin = TRUE;
+# ifdef FEAT_WINDOWS
+		    win_enter(wp, TRUE);
+		    break;
+# endif
+		}
+	    }
+	    vim_free(first);
+
+	    if (incurwin)
+	    {
+		/* Already editing the file.  If there are more redefine the
+		 * argument list. */
+		if (two_or_more)
+		{
+		    set_arglist(eap->arg);
+		    curwin->w_arg_idx = 0;
+		}
+		vim_free(arg);
+		return;
+	    }
+	}
+	vim_free(arg);
+    }
+
+    /*
+     * Check whether the current buffer is changed. If so, we will need
      * to split the current window or data could be lost.
-     * We don't need to check if the 'hidden' option is set, as in this
-     * case the buffer won't be lost.
+     * Skip the check if the 'hidden' option is set, as in this case the
+     * buffer won't be lost.
      */
     if (!P_HID(curbuf))
     {
+# ifdef FEAT_WINDOWS
 	++emsg_off;
+# endif
 	split = check_changed(curbuf, TRUE, FALSE, FALSE, FALSE);
+# ifdef FEAT_WINDOWS
 	--emsg_off;
+# else
+	if (split)
+	    return;
+# endif
+    }
 
-	/*
-	 * When dropping a single file that is equal to the currently edited
-	 * file, no splitting is to be done.  This happens when controlling
-	 * Vim remotely to jump to a position in a file.
-	 */
+    if (two_or_more)
+    {
+	/* Fake a ":snext" or ":next" command, redefine the arglist. */
 	if (split)
 	{
-	    char_u	*arg = vim_strsave(eap->arg);
-	    char_u	*nxt;
-	    char_u	*f;
-
-	    if (arg != NULL)
-	    {
-		/* get the first argument, removing quotes. */
-		nxt = do_one_arg(arg);
-		f = fix_fname(arg);
-		if (f != NULL)
-		{
-		    /* if it's equal to the current file, don't split */
-		    if (!otherfile(f))
-			split = FALSE;
-		    vim_free(f);
-		}
-		vim_free(arg);
-
-		if (!split)
-		{
-		    /* If already editing the file and it's the only one:
-		     * return.  Otherwise remove the file from the list and
-		     * split anyway to edit the others. */
-		    if (*nxt == NUL)
-			return;
-		    f = eap->arg + (nxt - arg);
-		    mch_memmove(eap->arg, f, STRLEN(f) + 1);
-		    split = TRUE;
-		}
-	    }
+	    eap->cmdidx = CMD_snext;
+	    eap->cmd[0] = 's';
 	}
-    }
-
-    /* Fake a ":snext" or ":next" command. */
-    if (split)
-    {
-	eap->cmdidx = CMD_snext;
-	eap->cmd[0] = 's';
+	else
+	    eap->cmdidx = CMD_next;
+	ex_next(eap);
     }
     else
-	eap->cmdidx = CMD_next;
-    ex_next(eap);
+    {
+	/* Fake a ":split" or ":edit" command, don't change the arglist. */
+# ifdef FEAT_WINDOWS
+	if (split)
+	{
+	    eap->cmdidx = CMD_split;
+	    ex_splitview(eap);
+	}
+	else
+# endif
+	{
+	    eap->cmdidx = CMD_edit;
+	    do_exedit(eap, NULL);
+	}
+    }
 }
 #endif
