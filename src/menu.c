@@ -1596,12 +1596,16 @@ menu_text(str, mnemonic, actext)
     }
     else
 	text = vim_strsave(str);
-    if (text != NULL)
+
+    /* Find mnemonic characters "&a" and reduce "&&" to "&". */
+    for (p = text; p != NULL; )
     {
-	p = vim_strchr(text, '&');
+	p = vim_strchr(p, '&');
 	if (p != NULL)
 	{
-	    if (mnemonic != NULL)
+	    if (p[1] == NUL)	    /* trailing "&" */
+		break;
+	    if (mnemonic != NULL && p[1] != '&')
 #if !defined(__MVS__) || defined(MOTIF390_MNEMONIC_FIXED)
 		*mnemonic = p[1];
 #else
@@ -1618,6 +1622,7 @@ menu_text(str, mnemonic, actext)
 	    }
 #endif
 	    mch_memmove(p, p + 1, STRLEN(p));
+	    p = p + 1;
 	}
     }
     return text;
