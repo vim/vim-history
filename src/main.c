@@ -1774,7 +1774,7 @@ scripterror:
      * Need to jump to the tag before executing the '-c command'.
      * Makes "vim -c '/return' -t main" work.
      */
-    if (tagname)
+    if (tagname != NULL)
     {
 	STRCPY(IObuff, "ta ");
 
@@ -1791,7 +1791,8 @@ scripterror:
 	 * pattern on line 1.
 	 */
 	msg_scroll = TRUE;
-	curwin->w_cursor.lnum = 0;
+	if (tagname == NULL)
+	    curwin->w_cursor.lnum = 0;
 	sourcing_name = (char_u *)"command line";
 	for (i = 0; i < n_commands; ++i)
 	    do_cmdline_cmd(commands[i]);
@@ -1803,7 +1804,7 @@ scripterror:
 	    msg_scroll = FALSE;
 
 #ifdef FEAT_QUICKFIX
-	/* When started with "-q errorfile" jump to first again. */
+	/* When started with "-q errorfile" jump to first error again. */
 	if (edit_type == EDIT_QF)
 	    qf_jump(0, 0, FALSE);
 #endif
