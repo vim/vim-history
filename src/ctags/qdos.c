@@ -19,6 +19,10 @@
 #include        <errno.h>
 #include        "ctags.h"
 
+#ifdef TRAP_MEMORY_CALLS
+# include "safe_malloc.h"
+#endif
+
 /* Translate the filenames from UNIX to QDOS conventions on open calls */
 int (*_Open)(const char *, int, ...) = qopen;
 

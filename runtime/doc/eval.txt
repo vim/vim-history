@@ -1,4 +1,4 @@
-*eval.txt*      For Vim version 5.5.  Last change: 1999 Sep 16
+*eval.txt*      For Vim version 5.6a.  Last change: 1999 Dec 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -423,7 +423,8 @@ v:shell_error	Result of the last shell command.  When non-zero, the last
 
 			    *v:this_session-variable* *this_session-variable*
 v:this_session	Full filename of the last loaded or saved session file.  See
-		|:mksession|.  It is allowed to set this variable.
+		|:mksession|.  It is allowed to set this variable.  When no
+		session file has been saved, this variable is empty.
 		"this_session" also works, for backwards compatibility.
 
 				    *v:version-variable* *version-variable*

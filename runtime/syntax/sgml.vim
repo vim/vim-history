@@ -1,52 +1,104 @@
 " Vim syntax file
 " Language:	SGML-DTD (supported by sgmltools-2.x and DocBook)
-"		(for more information, visit www.sgmltools.org)
+"		For more information, visit
+"		http://nis-www.lanl.gov/~rosalia/mydocs/docbook-intro.html
+"		ftp://sourceware.cygnus.com/pub/docbook-tools
 " Maintainer:	Sung-Hyun Nam <namsh@kldp.org>
 "               If you want to enhance and maintain, You can remove my name
 "               and insert yours.
-" Last change:	1999/08/19
+" Last change:	1999/12/10
 
 " Remove any old syntax stuff hanging around
 syn clear
 syn case ignore
 
 " tags
-syn cluster sgmlTagGroup contains=sgmlTagError,sgmlSpecial,sgmlComment,sgmlDocType
 syn match   sgmlTagError ">"
 syn match   sgmlErrInTag contained "<"
-syn region  sgmlEndTag	start=+</+    end=+>+	contains=ALLBUT,@sgmlTagGroup,sgmlErrInTag
-syn region  sgmlTag	start=+<[^/]+ end=+>+	contains=ALLBUT,@sgmlTagGroup,sgmlErrInTag
-syn match   sgmlTagN	contained +<\s*[-a-zA-Z0-9]\++ms=s+1	contains=ALLBUT,@sgmlTagGroup,sgmlErrInTag,sgmlStr
-syn match   sgmlTagN	contained +</\s*[-a-zA-Z0-9]\++ms=s+2	contains=ALLBUT,@sgmlTagGroup,sgmlErrInTag
-
+syn region  sgmlEndTag	start=+</[a-zA-Z]+ end=+>+ contains=sgmlTagName
+syn match   sgmlEndTag	"</>"
+syn region  sgmlTag	start=+<[a-zA-Z]+ end=+>+
+			\ contains=sgmlTagName,sgmlAssign
 syn region  sgmlStr	contained start=+L\="+ end=+"+
-
-syn region  sgmlSpecial	oneline start="&" end=";"
-
-" tag names for DTD DocBook V3.0
-syn match   sgmlTagName contained "sect\d\+"
-syn keyword sgmlTagName contained address affiliation application appendix area
-syn keyword sgmlTagName contained areaspec author
-syn keyword sgmlTagName contained authorblurb authorgroup book bookinfo bridgehead
-syn keyword sgmlTagName contained chapter command copyright date docinfo
-syn keyword sgmlTagName contained editor email emphasis
-syn keyword sgmlTagName contained entry example figure firstname funcdef funcsynopsis
-syn keyword sgmlTagName contained function glossdef glossentry glosslist
-syn keyword sgmlTagName contained glossterm graphic guibutton guilabel guimenu guimenuitem holder
-syn keyword sgmlTagName contained important indexterm informaltable itemizedlist keycap legalnotice
-syn keyword sgmlTagName contained listitem literallayout note orderedlist
-syn keyword sgmlTagName contained othername para paramdef
-syn keyword sgmlTagName contained parameter preface primary programlisting
-syn keyword sgmlTagName contained programlistingco prompt releaseinfo revhistory
-syn keyword sgmlTagName contained revision revnumber row screeninfo screenshot
-syn keyword sgmlTagName contained secondary see seealso simpara structfield structname subtitle
-syn keyword sgmlTagName contained surname symbol tbody tgroup thead tip title
-syn keyword sgmlTagName contained toc type ulink userinput warning xref year
-
-syn region  sgmlEntity  oneline start="^\s\+&" end=";$"
+syn region  sgmlAssign  contained start=+=+hs=e+1 end=+[ \t\>]+me=s-1
+			\ contains=sgmlStr
+syn region  sgmlSpecial oneline start="&" end=";"
 syn region  sgmlComment start=+<!--+ end=+-->+
-syn region  sgmlDocEnt  contained start="<!entity" end=">"
-syn region  sgmlDocType start=+<!doctype+ end=+>+ contains=sgmlDocEnt
+syn region  sgmlDocEnt  contained start="<!\(entity\|element\)\s" end=">"
+			\ contains=sgmlStr
+syn region  sgmlDocEntI contained start=+\[+ end=+]+ contains=sgmlDocEnt
+syn region  sgmlDocType start=+<!doctype\s+ end=+>+
+			\ contains=sgmlDocEntI,sgmlStr
+
+" tag names for DTD DocBook V3.[01]
+syn match   sgmlTagName contained "sect\d\+"
+syn match   sgmlTagName contained "sect\d\+info"
+syn match   sgmlTagName contained "refsect\d\+"
+syn keyword sgmlTagName contained abbrev abstract accel acronym action address
+				\ affiliation alt anchor answer appendix
+				\ application
+				\ area areaset areaspec arg artheader article
+				\ artpagenums attribution author authorblurb
+				\ authorgroup authorinitials bibliodiv
+				\ biblioentry bibliography bibliomixed
+				\ bibliomset biblioset blockquote book
+				\ bookbiblio bookinfo bridgehead callout
+				\ calloutlist caption caution chapter citation
+				\ citerefentry citetitle city classname
+				\ cmdsynopsis colophon colspec command comment
+				\ computeroutput constant copyright corpauthor
+				\ corpname country database date dedication
+				\ docinfo edition editor email emphasis entry
+				\ envar epigraph equation errorcode errorname
+				\ errortype example fax figure filename
+				\ firstname firstterm footnote footnoteref
+				\ foreignphrase formalpara funcdef funcparams
+				\ funcprototype funcsynopsis funcsynopsisinfo
+				\ function glossary glossdef glossdiv
+				\ glossentry glosslist glosssee glossseealso
+				\ glossterm graphic group guibutton guiicon
+				\ guilabel guimenu guimenuitem guisubmenu
+				\ hardware holder honorific imagedata
+				\ imageobject important index indexdiv
+				\ indexentry indexterm informalequation
+				\ informalexample informalfigure informaltable
+				\ inlineequation inlinegraphic
+				\ inlinemediaobject interface
+				\ interfacedefinition isbn issn issuenum
+				\ itemizedlist jobtitle keycap keycode
+				\ keycombo keysym legalnotice lineannotation
+				\ link listitem literal literallayout manvolnum
+				\ markup medialabel mediaobject member
+				\ mousebutton msg msgaud msgentry msgexplan
+				\ msginfo msglevel msgmain msgorig msgrel
+				\ msgset msgsub msgtext note objectinfo option
+				\ optional orderedlist orgdiv orgname
+				\ otheraddr othername pagenums para paramdef
+				\ parameter part partintro phone phrase
+				\ postcode preface primary primaryie procedure
+				\ productname programlisting programlistingco
+				\ prompt property pubdate publisher
+				\ publishername qandadiv qandaentry qandaset
+				\ question quote refdescriptor refentry
+				\ refentrytitle reference refmeta refmiscinfo
+				\ refname
+				\ refnamediv refpurpose refsynopsisdiv
+				\ releaseinfo replaceable returnvalue
+				\ revhistory revision revnumber revremark row
+				\ sbr screen screeninfo screenshot secondary
+				\ secondaryie section see seealso seealsoie
+				\ seeie seg seglistitem segmentedlist segtitle
+				\ seriesinfo set setinfo sgmltag shortaffil
+				\ sidebar simpara simplelist simplesect
+				\ spanspec state step street structfield
+				\ structname subscript substeps subtitle
+				\ superscript surname symbol synopsis
+				\ systemitem table tbody term tertiaryie
+				\ textobject tgroup thead tip title
+				\ titleabbrev toc token trademark type ulink
+				\ userinput varargs variablelist varlistentry
+				\ varname videodata videoobject void volumenum
+				\ warning wordasword xref year
 
 if !exists("did_sgml_syntax_inits")
   let did_sgml_syntax_inits = 1
@@ -60,10 +112,11 @@ if !exists("did_sgml_syntax_inits")
   hi link sgmlSpecial	Special
   hi link sgmlDocType   PreProc
   hi link sgmlStr	String
+  hi link sgmlAssign	String
   hi link sgmlTagError	Error
   hi link sgmlErrInTag	Error
 endif
 
 let b:current_syntax = "sgml"
 
-" vim:set tw=78 ts=8 sts=8 sw=8 noet com=nb\:":
+" vim:set tw=78 ts=8 sts=2 sw=2 noet com=nb\:":

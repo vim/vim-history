@@ -102,12 +102,12 @@ extern void stringListDelete( current )
 	if (current->list != NULL)
 	{
 	    stringListClear(current);
-	    free(current->list);
+	    eFree(current->list);
 	    current->list = NULL;
 	}
 	current->max   = 0;
 	current->count = 0;
-	free(current);
+	eFree(current);
     }
 }
 

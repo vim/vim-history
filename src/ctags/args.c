@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1996-1999, Darren Hiebert
+*   Copyright (c) 1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -64,6 +64,18 @@ extern Arguments* argNewFromFile( fp )
     Arguments* result = (Arguments*)eMalloc(sizeof(Arguments));
     memset(result, 0, sizeof(Arguments));
     result->type = ARG_FILE;
+    result->u.fileArgs.fp = fp;
+    result->item = nextFileString(result, result->u.fileArgs.fp);
+    return result;
+}
+
+extern Arguments* argNewFromLineFile( fp )
+    FILE* const fp;
+{
+    Arguments* result = (Arguments*)eMalloc(sizeof(Arguments));
+    memset(result, 0, sizeof(Arguments));
+    result->type = ARG_FILE;
+    result->lineMode = TRUE;
     result->u.fileArgs.fp = fp;
     result->item = nextFileString(result, result->u.fileArgs.fp);
     return result;
@@ -239,7 +251,7 @@ extern void argForth( current )
     {
 	case ARG_STRING:
 	    if (current->item != NULL)
-		free(current->item);
+		eFree(current->item);
 	    current->u.stringArgs.item = current->u.stringArgs.next;
 	    current->item = nextString(current, &current->u.stringArgs.next);
 	    break;
@@ -249,7 +261,7 @@ extern void argForth( current )
 	    break;
 	case ARG_FILE:
 	    if (current->item != NULL)
-		free(current->item);
+		eFree(current->item);
 	    current->item = nextFileString(current, current->u.fileArgs.fp);
 	    break;
 	default:
@@ -263,7 +275,7 @@ extern void argDelete( current )
 {
     Assert(current != NULL);
     if (current->type ==  ARG_STRING  &&  current->item != NULL)
-	free(current->item);
+	eFree(current->item);
     memset(current, 0, sizeof(Arguments));
-    free(current);
+    eFree(current);
 }

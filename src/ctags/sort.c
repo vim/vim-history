@@ -27,6 +27,10 @@
 #include "read.h"
 #include "sort.h"
 
+#ifdef TRAP_MEMORY_CALLS
+# include "safe_malloc.h"
+#endif
+
 /*============================================================================
 =   Function prototypes
 ============================================================================*/
@@ -65,7 +69,7 @@ extern void externalSortTags( toStdout )
 #ifndef NON_CONST_PUTENV_PROTOTYPE
     const
 #endif
-	  char *const sortOrder = "LC_COLLATE=C";
+	  char *const sortOrder = "LC_COLLATE=C LC_ALL=C";
     const char *env = "";
     const size_t length	= strlen(sortOrder) + strlen(sortTemplate) +
 	    			2 * strlen(tagFileName());
@@ -83,6 +87,7 @@ extern void externalSortTags( toStdout )
 #else
 # ifdef HAVE_SETENV
 	setenv("LC_COLLATE", "C", 1);
+	setenv("LC_ALL", "C", 1);
 # else
 	env = sortOrder;
 # endif

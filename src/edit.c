@@ -1875,6 +1875,10 @@ ins_compl_prep(c)
     linenr_t	lnum;
     int		need_redraw = FALSE;
 
+    /* Ignore end of Select mode mapping */
+    if (c == K_SELECT)
+	return FALSE;
+
     if (ctrl_x_mode == CTRL_X_NOT_DEFINED_YET)
     {
 	/*

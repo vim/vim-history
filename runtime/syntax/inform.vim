@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language: Inform
 " Maintainer: Stephen Thomas (stephent@isltd.insignia.com)
-" Last change: 1998 May 27th
+" Last change: 1999 Oct 16th
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -28,36 +28,6 @@ syn keyword informGramPreProc contained Verb Extend
 " Now the case sensitive stuff.
 
 syntax case match
-
-" Assembly language mnemonics must be preceded by a '@'.
-
-syn match informAsm "@\s*\(je\|jl\|jg\|dec_chk\|inc_chk\|jin\|test\|or\|and\)\>"
-syn match informAsm "@\s*\(test_attr\|set_attr\|clear_attr\|store\)\>"
-syn match informAsm "@\s*\(insert_obj\|loadw\|loadb\|get_prop\)\>"
-syn match informAsm "@\s*\(get_prop_addr\|get_next_prop\|add\|sub\|mul\|div\)\>"
-syn match informAsm "@\s*\(mod\|call\|storew\|storeb\|put_prop\|sread\)\>"
-syn match informAsm "@\s*\(print_char\|print_num\|random\|push\|pull\)\>"
-syn match informAsm "@\s*\(split_window\|set_window\|output_stream\)\>"
-syn match informAsm "@\s*\(input_stream\|sound_effect\|jz\|get_sibling\)\>"
-syn match informAsm "@\s*\(get_child\|get_parent\|get_prop_len\|inc\|dec\)\>"
-syn match informAsm "@\s*\(print_addr\|remove_obj\|print_obj\|ret\|jump\)\>"
-syn match informAsm "@\s*\(print_paddr\|load\|not\|rtrue\|rfalse\|print\)\>"
-syn match informAsm "@\s*\(print_ret\|nop\|save\|restore\|restart\)\>"
-syn match informAsm "@\s*\(ret_popped\|pop\|quit\|new_line\|show_status\)\>"
-syn match informAsm "@\s*\(verify\|call_2s\|call_vs\|aread\|call_vs2\)\>"
-syn match informAsm "@\s*\(erase_window\|erase_line\|set_cursor\|get_cursor\)\>"
-syn match informAsm "@\s*\(set_text_style\|buffer_mode\|read_char\)\>"
-syn match informAsm "@\s*\(scan_table\|call_1s\|call_2n\|set_colour\|throw\)\>"
-syn match informAsm "@\s*\(call_vn\|call_vn2\|tokenise\|encode_text\)\>"
-syn match informAsm "@\s*\(copy_table\|print_table\|check_arg_count\)\>"
-syn match informAsm "@\s*\(call_1n\|catch\|piracy\|log_shift\|art_shift\)\>"
-syn match informAsm "@\s*\(set_font\|save_undo\|restore_undo\|draw_picture\)\>"
-syn match informAsm "@\s*\(picture_data\|erase_picture\|set_margins\)\>"
-syn match informArm "@\s*\(move_window\|window_size\|window_style\)\>"
-syn match informArm "@\s*\(get_wind_prop\|scroll_window\|pop_stack\)\>"
-syn match informAsm "@\s*\(read_mouse\|mouse_window\|push_stack\)\>"
-syn match informArm "@\s*\(put_wind_prop\|print_form\|make_menu\)\>"
-syn match informArm "@\s*picture_table\>"
 
 syn keyword informSysFunc child children elder indirect parent random
 syn keyword informSysFunc sibling younger youngest metaclass
@@ -199,6 +169,38 @@ syn keyword informGrammar contained scope topic reverse meta only replace
 syn keyword informGrammar contained first last
 
 syn keyword informTodo contained TODO
+
+" Assembly language mnemonics must be preceded by a '@'.
+
+syn match informAsmContainer "@\s*\k*" contains=informAsm
+
+syn keyword informAsm contained je jl jg dec_chk inc_chk jin test or and
+syn keyword informAsm contained test_attr set_attr clear_attr store
+syn keyword informAsm contained insert_obj loadw loadb get_prop
+syn keyword informAsm contained get_prop_addr get_next_prop add sub mul div
+syn keyword informAsm contained mod call storew storeb put_prop sread
+syn keyword informAsm contained print_char print_num random push pull
+syn keyword informAsm contained split_window set_window output_stream
+syn keyword informAsm contained input_stream sound_effect jz get_sibling
+syn keyword informAsm contained get_child get_parent get_prop_len inc dec
+syn keyword informAsm contained print_addr remove_obj print_obj ret jump
+syn keyword informAsm contained print_paddr load not rtrue rfalse print
+syn keyword informAsm contained print_ret nop save restore restart
+syn keyword informAsm contained ret_popped pop quit new_line show_status
+syn keyword informAsm contained verify call_2s call_vs aread call_vs2
+syn keyword informAsm contained erase_window erase_line set_cursor get_cursor
+syn keyword informAsm contained set_text_style buffer_mode read_char
+syn keyword informAsm contained scan_table call_1s call_2n set_colour throw
+syn keyword informAsm contained call_vn call_vn2 tokenise encode_text
+syn keyword informAsm contained copy_table print_table check_arg_count
+syn keyword informAsm contained call_1n catch piracy log_shift art_shift
+syn keyword informAsm contained set_font save_undo restore_undo draw_picture
+syn keyword informAsm contained picture_data erase_picture set_margins
+syn keyword informAsm contained move_window window_size window_style
+syn keyword informAsm contained get_wind_prop scroll_window pop_stack
+syn keyword informAsm contained read_mouse mouse_window push_stack
+syn keyword informAsm contained put_wind_prop print_form make_menu
+syn keyword informAsm contained picture_table
 
 " Grammar sections.
 

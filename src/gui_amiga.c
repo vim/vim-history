@@ -134,6 +134,8 @@ static struct
     {0,		    0, 0}
 };
 
+#if 0
+    /* not used? */
     static int
 hex_digit(int c)
 {
@@ -144,6 +146,7 @@ hex_digit(int c)
 	return c - 'a' + 10;
     return -1000;
 }
+#endif
 
 static int characterWidth = -1;
 static int characterHeight = -1;

@@ -1394,11 +1394,7 @@ mch_screenmode(char_u *arg)
 }
 
 /*
- * Try to get the current window size:
- * 1. with an ioctl(), most accurate method
- * 2. from the environment variables LINES and COLUMNS
- * 3. from the termcap
- * 4. keep using the old values
+ * Get the current window size.
  */
     int
 mch_get_winsize(void)

@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 5.5.  Last change: 1999 Aug 27
+*autocmd.txt*   For Vim version 5.6a.  Last change: 1999 Dec 07
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -486,7 +486,7 @@ overwritten when installing a new version of Vim.
    the name of this file.  Example:
 >    let myfiletypefile = "~/vim/myfiletypes.vim"
 
-   Your file when then be sourced after the default FileType autocommands have
+   Your file will then be sourced after the default FileType autocommands have
    been installed.  This allows you to overrule any of the defaults, by using
    ":au!" to remove any existing FileType autocommands for the same pattern.
    Only the autocommand to source the scripts.vim file is given later.  This
@@ -772,26 +772,38 @@ To always start editing C files at the first function:
 Without the "1;" above, the search would start from wherever the file was
 entered, rather than from the start of the file.
 
-To read a skeleton file for new C files:
+						*skeleton* *template*
+To read a skeleton (template) file when opening a new file:
 
-> :autocmd BufNewFile  *.c	0r ~/.skeleton.c
-> :autocmd BufNewFile  *.h	0r ~/.skeleton.h
+> autocmd BufNewFile  *.c	0r ~/vim/skeleton.c
+> autocmd BufNewFile  *.h	0r ~/vim/skeleton.h
+> autocmd BufNewFile  *.java	0r ~/vim/skeleton.java
 
 To insert the current date and time in a *.html file when writing it:
 
-> :autocmd BufWritePre,FileWritePre *.html ks|1,20g/Last modification: /normal f:lD:read !date^MkJ's
+> autocmd BufWritePre,FileWritePre *.html   ks|call LastMod()|'s
+> fun LastMod()
+>   if line("$") > 20
+>     let l = 20
+>   else
+>     let l = line("$")
+>   endif
+>   exe "1," . l . "g/Last modified: /s/Last modified: .*/Last modified: " .
+>   \ strftime("%Y %b %d")
+> endfun
 
-(to insert the ^M type CTRL-V CTRL-M)
-You need to have a line "Last modification: <date time>" in the first 20 lines
+You need to have a line "Last modified: <date time>" in the first 20 lines
 of the file for this to work.  Vim replaces <date time> (and anything in the
 same line after it) with the current date and time.  Explanation:
 	ks		mark current position with mark 's'
-	1,20g/pattern/	find lines that contain the pattern
-	normal f:	find the ':'
-	lD		delete the old date and time
-	!date^M		read the current date and time into the next line
-	kJ		Join the date and time with the previous line
+	call LastMod()  call the LastMod() function to do the work
 	's		return the cursor to the old position
+The LastMod() function checks if the file is shorter than 20 lines, and then
+uses the ":g" command to find lines that contain "Last modified: ".  For those
+lines the ":s" command is executed to replace the existing date with the
+current one.  The ":execute" command is used to be able to use an expression
+for the ":g" and ":s" commands.  The date is obtained with the strftime()
+function.  You can change its argument to get another date string.
 
 When entering :autocmd on the command-line, completion of events and command
 names may be done (with <Tab>, CTRL-D, etc.) where appropriate.

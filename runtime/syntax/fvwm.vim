@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fvwm{1,2} configuration file
 " Maintainer:	Haakon Riiser <hakonrk@fys.uio.no>
-" Last change:	1999 Jun 29
+" Last change:	1999 Dec 16
 
 " Clear old syntax defs
 syn clear
@@ -64,7 +64,7 @@ syn match   fvwmPath		"\<PixmapPath\s.*$"lc=10 contains=fvwmEnvVar
 syn match   fvwmModule		"\<Module\s\+\w\+"he=s+6
 syn match   fvwmKey		"\<Key\s\+\w\+"he=s+3
 
-if bufname("%") =~ ".*fvwmrc.*"
+if exists("use_fvwm_1") && use_fvwm_1
     syn match  fvwmEnvVar	"\$(\w\+)"
     syn region fvwmStyle	matchgroup=fvwmFunction start="^\s*Style\>"hs=e-5 end="$" oneline keepend contains=fvwmString,fvwmKeyword,fvwmWhiteSpace
 
@@ -111,7 +111,7 @@ if bufname("%") =~ ".*fvwmrc.*"
     syn keyword fvwmKeyword	StartsAnyWhere StartsOnDesk StaysOnTop contained
     syn keyword fvwmKeyword	StaysPut Sticky Title WindowListHit contained
     syn keyword fvwmKeyword	WindowListSkip contained
-elseif bufname("%") =~ ".*fvwm2rc.*"
+elseif exists("use_fvwm_2") && use_fvwm_2
     syn match   fvwmEnvVar	"\${\w\+}"
     syn match   fvwmDef		'^\s*+\s*".\{-}"' contains=fvwmMenuString,fvwmWhitespace
     syn match   fvwmIcon	'%.\{-}%' contained

@@ -273,7 +273,7 @@ static boolean isValidTagAddress( excmd )
 	    if (sscanf(excmd, "%[^;\n]", address) == 1  &&
 		strspn(address,"0123456789") == strlen(address))
 		    isValid = TRUE;
-	    free(address);
+	    eFree(address);
 	}
     }
     return isValid;
@@ -314,7 +314,7 @@ static boolean isCtagsLine( line )
 	    isValidTagAddress(field(EXCMD)))
 		ok = TRUE;
 
-	free(fields);
+	eFree(fields);
     }
     return ok;
 }
@@ -369,7 +369,7 @@ extern void copyBytes( fromFp, toFp, size )
 	if (remaining > 0)
 	    remaining -= numRead;
     } while (numRead == toRead  &&  remaining != 0);
-    free(buffer);
+    eFree(buffer);
 }
 
 extern void copyFile( from, to, size )

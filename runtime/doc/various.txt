@@ -1,4 +1,4 @@
-*various.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
+*various.txt*   For Vim version 5.6a.  Last change: 1999 Oct 11
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -104,10 +104,11 @@ ga			Print the ascii value of the character under the
 			{commands} should be a complete command.  If
 			{commands} does not finish a command, more characters
 			need to be typed, but the display isn't updated while
-			doing this.
-			Mostly useful for autocommands.  This command cannot
-			be followed by another command, since any '|' is
-			considered part of the command.
+			doing this.  This implies that an insert command must
+			be completed (to start Insert mode, see
+			|:startinsert|).
+			This command cannot be followed by another command,
+			since any '|' is considered part of the command.
 			This command can be used recursively, but the depth is
 			limited by 'maxmapdepth'.
 			When this command is called from a non-remappable
@@ -155,6 +156,9 @@ ga			Print the ascii value of the character under the
 			After the command has been executed, the timestamp of
 			the current file is checked |timestamp|.
 			There cannot be a '|' in {cmd}, see |:bar|.
+			On Unix the command normally runs in a non-interactive
+			shell.  If you want an interactive shell to be used
+			(to use aliases) set 'shellcmdflag' to "-ic".
 			Also see |shell-window|.
 
 							*:!!*

@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	Maple V (based on release 4)
-" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.Campbell@gsfc.nasa.gov>
+" Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
 " Last change:	October 16, 1998
 "
 " Because there are a lot of packages, and because of the potential for namespace

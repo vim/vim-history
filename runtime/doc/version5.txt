@@ -1,4 +1,4 @@
-*version5.txt*  For Vim version 5.5.  Last change: 1999 Sep 19
+*version5.txt*  For Vim version 5.6a.  Last change: 1999 Dec 19
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -99,6 +99,11 @@ VERSION 5.5			|version-5.5|
 Changed					|changed-5.5|
 Added					|added-5.5|
 Fixed					|fixed-5.5|
+
+VERSION 5.6			|version-5.6|
+Changed					|changed-5.6|
+Added					|added-5.6|
+Fixed					|fixed-5.6|
 
 ==============================================================================
 				 INCOMPATIBLE
@@ -273,7 +278,8 @@ Vim no longer supports the following X resources:
 - cursorColor
 
 Vim now uses highlight groups to set colors.  This avoids the confusion of
-using a bold Font, which would imply a certain color.  See |:highlight|.
+using a bold Font, which would imply a certain color.  See |:highlight| and
+|gui-resources|.
 
 
 Use of $VIM						*$VIM-use*
@@ -5840,5 +5846,549 @@ Solution:   When using a command that starts Insert mode from CTRL-O, reset
 	    "restart_edit" first.  This avoids that edit() is called with a
 	    mix of starting a new edit command and restarting a previous one.
 Files:	    src/normal.c
+
+==============================================================================
+VERSION 5.6						*version-5.6*
+
+Version 5.6 is a bug-fix version of 5.5.
+
+
+Changed							*changed-5.6*
+-------
+
+Small changes to OleVim files. (Christian Schaller)
+
+Inserted "/**/" between patch numbers in src/version.c.  This allows for one
+line of context, which some versions of patch need.
+
+Reordered the Syntax menu to avoid long submenus.  Removed keyboard shortcuts
+for alphabetical items to avoid a clash with fixed items.
+
+
+Added							*added-5.6*
+-----
+
+Included Exuberant Ctags version 3.3.3. (Darren Hiebert)
+
+New syntax files:
+Abel "abel.vim"
+MakeIndex syntax "ist.vim"
+Arc Macro Language "aml.vim"
+Java Server Pages "jsp.vim"
+Apache-style config file "apachestyle.vim"
+files with CTRL-H sequences "ctrlh.vim"
+CUPL "cupl.vim" and "cuplsim.vim"
+Remind "remind.vim"
+Structured Query Report Writer "sqr.vim"
+TADS "tads.vim"
+X Pixmap v2 "xpm2.vim"
+
+The 'C' flag in 'cpoptions' can be used to switch off concatenation for
+sourced lines.  See patch 5.5.013 below. |line-continuation|
+
+"excludenl" argument for the ":syntax" command.  See patch 5.5.032 below.
+|:syn-excludenl|
+
+Implemented |z+| and |z^| commands.  See patch 5.5.050 below.
+
+
+Fixed							*fixed-5.6*
+-----
+
+VMS: ioctl() in pty.c caused trouble, #ifndef VMS added.
+
+Using this mapping in Select mode, terminates completion:
+":vnoremap <C-N> <Esc>a<C-N>" (Benji Fisher)
+Ignore K_SELECT in ins_compl_prep().
+
+GTK GUI: With GTK 1.2.5 and later the scrollbars were not redrawn correctly.
+Adjusted the gtk_form_draw() function.
+
+Patch 5.5.001
+Problem:    Configure in the top directory did not pass on an argument with a
+	    space correctly.  For example "./configure --previs="/My home".
+	    (Stephane Chazelas)
+Solution:   Use '"$@"' instead of '$*' to pass on the arguments.
+Files:	    configure
+
+Patch 5.5.002
+Problem:    Compilation error for using "fds[] & POLLIN". (Jeff Walker)
+Solution:   Use "fds[].revents & POLLIN".
+Files:	    src/os_unix.c
+
+Patch 5.5.003
+Problem:    The autoconf check for sizeof(int) is wrong on machines where
+	    sizeof(size_t) != sizeof(int).
+Solution:   Use our own configure check.  Also fixes the warning for
+	    cross-compiling.
+Files:	    src/configure.in, src/configure
+
+Patch 5.5.004
+Problem:    On Unix it's not possible to interrupt ":sleep 100".
+Solution:   Switch terminal to cooked mode while asleep, to allow a SIGINT to
+	    wake us up.  But switch off echo, added TMODE_SLEEP.
+Files:	    src/term.h, src/os_unix.c
+
+Patch 5.5.005
+Problem:    When using <f-args> with a user command, an empty argument to the
+	    command resulted in one empty string, while no string was
+	    expected.
+Solution:   Catch an empty argument and pass no argument to the function.
+	    (Paul Moore)
+Files:	    src/ex_docmd.c
+
+Patch 5.5.006
+Problem:    Python: When platform-dependent files are in another directory
+	    than the platform-independent files it doesn't work.
+Solution:   Also check the executable directory, and add it to CFLAGS. (Tessa
+	    Lau)
+Files:	    src/configure.in, src/configure
+
+Patch 5.5.007 (extra)
+Problem:    Win32 OLE: Occasional crash when exiting while still being used
+	    via OLE.
+Solution:   Move OleUninitialize() to before deleting the application object.
+	    (Vince Negri)
+Files:	    src/if_ole.cpp
+
+Patch 5.5.008
+Problem:    10000@@ takes a long time and cannot be interrupted.
+Solution:   Check for CTRL-C typed while in the loop to push the register.
+Files:	    src/normal.c
+
+Patch 5.5.009
+Problem:    Recent Sequent machines don't link with "-linet". (Kurtis Rader)
+Solution:   Remove configure check for Sequent.
+Files:	    src/configure.in, src/configure
+
+Patch 5.5.010
+Problem:    Ctags freed a memory block twice when exiting.  When out of
+	    memory, a misleading error message was given.
+Solution:   Update to ctags 3.3.2.  Also fixes a few other problems. (Darren
+	    Hiebert)
+Files:	    src/ctags/*
+
+Patch 5.5.011
+Problem:    After "CTRL-V s", the cursor jumps back to the start, while all
+	    other operators leave the cursor on the last changed character.
+	    (Xiangjiang Ma)
+Solution:   Position cursor on last changed character, if possible.
+Files:	    src/ops.c
+
+Patch 5.5.012
+Problem:    Using CTRL-] in Visual mode doesn't work when the text includes a
+	    space (just where it's useful). (Stefan Bittner)
+Solution:   Don't escape special characters in a tag name with a backslash.
+Files:	    src/normal.c
+
+Patch 5.5.013
+Problem:    The ":append" and ":insert" commands allow using a leading
+	    backslash in a line.  The ":source" command concatenates those
+	    lines. (Heinlein)
+Solution:   Add the 'C' flag in 'cpoptions' to switch off concatenation.
+Files:	    src/ex_docmd.c, src/option.h, runtime/doc/options.txt,
+	    runtime/filetype.vim, runtime/scripts.vim
+
+Patch 5.5.014
+Problem:    When executing a register with ":@", the ":append" command would
+	    get text lines with a ':' prepended. (Heinlein)
+Solution:   Remove the ':' characters.
+Files:	    src/ex_docmd.c, src/ex_getln.c, src/globals.h
+
+Patch 5.5.015
+Problem:    When using ":g/pat/p", it's hard to see where the output starts,
+	    the ":g" command is overwritten.  Vi keeps the ":g" command.
+Solution:   Keep the ":g" command, but allow overwriting it with the report
+	    for the number of changes.
+Files:	    src/ex_cmds.c
+
+Patch 5.5.016 (extra)
+Problem:    Win32: Using regedit to install Vim in the popup menu requires the
+	    user to confirm this in a dialog.
+Solution:   Use "regedit /s" to avoid the dialog
+Files:	    src/dosinst.c
+
+Patch 5.5.017
+Problem:    If an error occurs when closing the current window, Vim could get
+	    stuck in the error handling.
+Solution:   Don't set curwin to NULL when closing the current window.
+Files:	    src/window.c
+
+Patch 5.5.018
+Problem:    Absolute paths in shell scripts do not always work.
+Solution:   Use /usr/bin/env to find out the path.
+Files:	    runtime/doc/vim2html.pl, runtime/tools/efm_filter.pl,
+	    runtime/tools/shtags.pl
+
+Patch 5.5.019
+Problem:    A function call in 'statusline' stops using ":q" twice from
+	    exiting, when the last argument hasn't been edited.
+Solution:   Don't decrement quitmore when executing a function. (Madsen)
+Files:	    src/ex_docmd.c
+
+Patch 5.5.020
+Problem:    When the output of CTRL-D completion in the commandline goes all
+	    the way to the last column, there is an empty line.
+Solution:   Don't add a newline when the cursor wrapped already. (Madsen)
+Files:	    src/ex_getln.c
+
+Patch 5.5.021
+Problem:    When checking if a file name in the tags file is relative,
+	    environment variables were not expanded.
+Solution:   Expand the file name before checking if it is relative. (Madsen)
+Files:	    src/tag.c
+
+Patch 5.5.022
+Problem:    When setting or resetting 'paste' the ruler wasn't updated.
+Solution:   Update the status lines when 'ruler' changes because of 'paste'.
+Files:	    src/option.c
+
+Patch 5.5.023
+Problem:    When editing a new file and autocommands change the cursor
+	    position, the cursor was moved back to the first non-white, unless
+	    'startofline' was reset.
+Solution:   Keep the new column, just like the line number.
+Files:	    src/ex_cmds.c
+
+Patch 5.5.024 (extra)
+Problem:    Win32 GUI: When using confirm() to put up a dialog without a
+	    default button, the dialog would not have keyboard focus.
+	    (Krishna)
+Solution:   Always set focus to the dialog window.  Only set focus to a button
+	    when a default one is specified.
+Files:	    src/gui_w32.c
+
+Patch 5.5.025
+Problem:    When using "keepend" in a syntax region, a contained match that
+	    includes the end-of-line could still force that region to
+	    continue, if there is another contained match in between.
+Solution:   Check the keepend_level in check_state_ends().
+Files:	    src/syntax.c
+
+Patch 5.5.026
+Problem:    When starting Vim in a white-on-black xterm, with 'bg' set to
+	    "dark", and then starting the GUI with ":gui", setting 'bg' to
+	    "light" in the gvimrc, the highlighting isn't set.  (Tsjokwing)
+Solution:   Set the highlighting when 'bg' is changed in the gvimrc, even
+	    though full_screen isn't set.
+Files:	    src/option.c
+
+Patch 5.5.027
+Problem:    Unix: os_unix.c doesn't compile when XTERM_CLIP is used but
+	    WANT_TITLE isn't. (Barnum)
+Solution:   Move a few functions that are used by the X11 title and clipboard
+	    and put another "#if" around it.
+Files:	    src/os_unix.c
+
+Patch 5.5.028 (extra)
+Problem:    Win32 GUI: When a file is dropped on Win32 gvim while at the ":"
+	    prompt, the file is edited but the command line is actually still
+	    there, the cursor goes back to command line on the next command.
+	    (Krishna)
+Solution:   When dropping a file or directory on gvim while at the ":" prompt,
+	    insert the name of the file/directory.  Allows using the
+	    file/directory name for any Ex command.
+Files:	    src/gui_w32.c
+
+Patch 5.5.029
+Problem:    "das" at the end of the file didn't delete the last character of
+	    the sentence.
+Solution:   When there is no character after the sentence, make the operation
+	    inclusive in current_sent().
+Files:	    src/search.c
+
+Patch 5.5.030
+Problem:    Unix: in os_unix.c, "term_str" is used, which is also defined in
+	    vim.h as a macro. (wuxin)
+Solution:   Renamed "term_str" to "buf" in do_xterm_trace().
+Files:	    src/os_unix.c
+
+Patch 5.5.031 (extra)
+Problem:    Win32 GUI: When exiting Windows, gvim will leave swap files behind
+	    and will be killed ungracefully. (Krishna)
+Solution:   Catch the WM_QUERYENDSESSION and WM_ENDSESSION messages and try to
+	    exit gracefully.  Allow the user to cancel the shutdown if there
+	    is a changed buffer.
+Files:	    src/gui_w32.c
+
+Patch 5.5.032
+Problem:    Patch 5.5.025 wasn't right.  And C highlighting was still not
+	    working correctly for a #define.
+Solution:   Added "excludenl" argument to ":syntax", to be able not to extend
+	    a containing item when there is a match with the end-of-line.
+Files:	    src/syntax.c, runtime/doc/syntax.txt, runtime/syntax/c.vim
+
+Patch 5.5.033
+Problem:    When reading from stdin, a long line in viminfo would mess up the
+	    file message.  readfile() uses IObuff for keep_msg, which could be
+	    overwritten by anyone.
+Solution:   Copy the message from IObuff to msg_buf and set keep_msg to that.
+	    Also change vim_fgets() to not use IObuff any longer.
+Files:	    src/fileio.c
+
+Patch 5.5.034
+Problem:    "gvim -rv" caused a crash.  Using 't_Co' before it's set.
+Solution:   Don't try to initilize the highlighting before it has been
+	    initilized from main().
+Files:	    src/syntax.c
+
+Patch 5.5.035
+Problem:    GTK with XIM: Resizing with status area was messy, and
+	    ":set guioptions+=b" didn't work.
+Solution:   Make status area a separate widget, but not a separate window.
+	    (Chi-Deok Hwang)
+Files:	    src/gui_gtk_f.c, src/gui_gtk_x11.c, src/multbyte.c
+
+Patch 5.5.036
+Problem:    The GZIP_read() function in $VIMRUNTIME/vimrc_example.vim to
+	    uncompress a file did not do detection for 'fileformat'.  This is
+	    because the filtering is done with 'binary' set.
+Solution:   Split the filtering into separate write, filter and read commands.
+Files:	    runtime/vimrc_example.vim
+
+Patch 5.5.037
+Problem:    The "U" command didn't mark the buffer as changed. (McCormack)
+Solution:   Set the 'modified' flag when using "U".
+Files:	    src/undo.c
+
+Patch 5.5.038
+Problem:    When typing a long ":" command, so that the screen scrolls up,
+	    causes the hit-return prompt, even though the user just typed
+	    return to execute the command.
+Solution:   Reset need_wait_return if (part of) the command was typed in
+	    getcmdline().
+Files:	    src/ex_getln.c
+
+Patch 5.5.039
+Problem:    When using a custom status line, "%a" (file # of #) reports the
+	    index of the current window for all windows.
+Solution:   Pass a window pointer to append_arg_number(), and pass the window
+	    being updated from build_stl_str_hl(). (Stephen P. Wall)
+Files:	    src/buffer.c, src/screen.c, src/proto/buffer.pro
+
+Patch 5.5.040
+Problem:    Multi-byte: When there is some error in xim_real_init(), it can
+	    close XIM and return.  After this there can be a segv.
+Solution:   Test "xic" for being non-NULL, don't set "xim" to NULL.  Also try
+	    to find more matches for supported styles. (Sung-Hyun Nam)
+Files:	    src/multbyte.c
+
+Patch 5.5.041
+Problem:    X11 GUI: CTRL-_ requires the SHIFT key only on some machines.
+Solution:   Translate CTRL-- to CTRL-_. (Robert Webb)
+Files:	    src/gui_x11.c
+
+Patch 5.5.042
+Problem:    X11 GUI: keys with ALT were assumed to be used for the menu, even
+	    when the menu has been disabled by removing 'm' from 'guioptions'.
+Solution:   Ignore keys with ALT only when gui.menu_is_active is set. (Raf)
+Files:	    src/gui_x11.c
+
+Patch 5.5.043
+Problem:    GTK: Handling of fontset fonts was not right when 'guifontset'
+	    contains exactly 14 times '-'.
+Solution:   Avoid setting fonts when working with a fontset. (Sung-Hyun Nam)
+Files:	    src/gui_gtk_x11.c
+
+Patch 5.5.044
+Problem:    pltags.pl contains an absolute path "/usr/local/bin/perl".  That
+	    might not work everywhere.
+Solution:   Use "/usr/bin/env perl" instead.
+Files:	    runtime/tools/pltags.pl
+
+Patch 5.5.045
+Problem:    Using "this_session" variable does not work, requires preceding it
+	    with "v:".  Default filename for ":mksession" isn't mentioned
+	    in the docs. (Fisher)
+Solution:   Support using "this_session" to be backwards compatible.
+Files:	    src/eval.c, runtime/doc/options.txt
+
+Patch 5.5.046 (extra)
+Problem:    VMS: problems with path and filename.
+Solution:   Truncate file name at last ';', etc. (Zoltan Arpadffy)
+Files:	    src/buffer.c, src/fileio.c, src/gui_motif.c, src/os_vms.c,
+	    src/proto/os_vms.pro
+
+Patch 5.5.047
+Problem:    VMS: Crash when using the popup menu
+Solution:   Turn the #define MENU_MODE_CHARS into an array. (Arpadffy)
+Files:	    src/structs.h, src/menu.c
+
+Patch 5.5.048
+Problem:    HP-UX 11: Compiling doesn't work, because both string.h and
+	    strings.h are included. (Squassabia)
+Solution:   The configure test for including both string.h and strings.h
+	    must include <Xm/Xm.h> first, because it causes problems.
+Files:	    src/configure.in, src/configure, src/config.h.in
+
+Patch 5.5.049
+Problem:    Unix: When installing Vim, the protection bits of files might be
+	    influenced by the umask.
+Solution:   Add $(FILEMOD) to Makefile. (Shetye)
+Files:	    src/Makefile
+
+Patch 5.5.050
+Problem:    "z+" and "z^" commands are missing.
+Solution:   Implemented "z+" and "z^".
+Files:	    src/normal.c, runtime/doc/scroll.txt, runtime/doc/index.txt
+
+Patch 5.5.051
+Problem:    Several Unix systems have a problem with the optimization limits
+	    check in configure.
+Solution:   Removed the configure check, let the user add it manually in
+	    Makefile or the enviroment.
+Files:	    src/configure.in, src/configure, src/Makefile
+
+Patch 5.5.052
+Problem:    Crash when using a cursor key at the ATTENTION prompt. (Alberani)
+Solution:   Ignore special keys at the console dialog.  Also ignore characters
+	    > 255 for other uses of tolower() and toupper().
+Files:	    src/menu.c, src/message.c, src/misc2.c
+
+Patch 5.5.053
+Problem:    Indenting is wrong after a function when 'cino' has "fs".  Another
+	    problem when 'cino' has "{s".
+Solution:   Put line after closing "}" of a function at the left margin.
+	    Apply ind_open_extra in the right way after a '{'.
+Files:	    src/misc1.c, src/testdir/test3.in, src/testdir/test3.ok
+
+Patch 5.5.054
+Problem:    Unix: ":e #" doesn't work if the alternate file name contains a
+	    space or backslash. (Hudacek)
+Solution:   When replacing "#", "%" or other items that stand for a file name,
+	    prepend a backslash before special characters.
+Files:	    src/ex_docmd.c
+
+Patch 5.5.055
+Problem:    Using "<C-V>$r-" in blockwise Visual mode replaces one character
+	    beyond the end of the line. (Zivkov)
+Solution:   Only replace existing characters.
+Files:	    src/ops.c
+
+Patch 5.5.056
+Problem:    After "z20<CR>" messages were printed at the old command line
+	    position once.  (Veselinovic)
+Solution:   Set msg_row and msg_col when changing cmdline_row in
+	    win_setheight().
+Files:	    src/window.c
+
+Patch 5.5.057
+Problem:    After "S<Esc>" it should be possible to restore the line with "U".
+	    (Veselinovic)
+Solution:   Don't call u_clearline() in op_delete() when changing only one
+	    line.
+Files:	    src/ops.c
+
+Patch 5.5.058
+Problem:    Using a long search pattern and then "n" causes the hit-return
+	    prompt.  (Krishna)
+Solution:   Truncate the echoed pattern, like other messages.  Moved code for
+	    truncating from msg_attr() to msg_strtrunc().
+Files:	    src/message.c, src/proto/message.pro, src/search.c
+
+Patch 5.5.059
+Problem:    GTK GUI: When $term is invalid, using "gvim" gives an error
+	    message, even though $term isn't really used.  (Robbins)
+Solution:   When the GUI is about to start, skip the error messages for a
+	    wrong $term.
+Files:	    src/term.c
+
+Patch 5.5.060 (extra)
+Problem:    Dos 32 bit: When a directory in 'backupdir' doesn't exist, ":w"
+	    causes the file to be renamed to "axlqwqhy.ba~". (Matzdorf)
+Solution:   The code to work around a LFN bug in Windows 95 doesn't handle a
+	    non-existing target name correctly.  When renaming fails, make
+	    sure the file has its original name.  Also do this for the Win32
+	    version, although it's unlikely that it runs into this problem.
+Files:	    src/os_msdos.c, src/os_win32.c
+
+Patch 5.5.061
+Problem:    When using "\:" in a modeline, the backslash is included in the
+	    option value. (Mohsin)
+Solution:   Remove one backslash before the ':' in a modeline.
+Files:	    src/buffer.c, runtime/doc/options.txt
+
+Patch 5.5.062 (extra)
+Problem:    Win32 console: Temp files are created in the root of the current
+	    drive, which may be read-only. (Peterson)
+Solution:   Use the same mechanism of the GUI version: Use $TMP, $TEMP or the
+	    current directory.  Cleaned up vim_tempname() a bit.
+Files:	    src/fileio.c, src/os_win32.h, runtime/doc/os_dos.txt
+
+Patch 5.5.063
+Problem:    When using whole-line completion in Insert mode, 'cindent' is
+	    applied, even after changing the indent of the line.
+Solution:   Don't reindent the completed line after inserting/removing indent.
+	    (Robert Webb)
+Files:	    src/edit.c
+
+Patch 5.5.064
+Problem:    has("sniff") doesn't work correctly.
+Solution:   Return 1 when Vim was compiled with the +sniff feature. (Pruemmer)
+Files:	    src/eval.c
+
+Patch 5.5.065
+Problem:    When dropping a file on Vim, the 'shellslash' option is not
+	    effective. (Krishna)
+Solution:   Fix the slashes in the dropped file names according to
+	    'shellslash'.
+Files:	    src/ex_docmd.c, runtime/doc/options.txt
+
+Patch 5.5.066
+Problem:    For systems with backslash in file name: Setting a file name
+	    option to a value starting with "\\machine" removed a backslash.
+Solution:   Keep the double backslash for "\\machine", but do change
+	    "\\\\machine" to "\\machine" for backwards compatibility.
+Files:	    src/option.c, runtime/doc/options.txt
+
+Patch 5.5.067
+Problem:    With 'hlsearch' set, the pattern "\>" doesn't highlight the first
+	    match in a line. (Benji Fisher)
+Solution:   Fix highlighting an empty match.  Also highlight the first
+	    character in an empty line for "$".
+Files:	    src/screen.c
+
+Patch 5.5.068
+Problem:    Crash when a ":while" is used with an argument that has an error.
+	    (Sylvain Viart)
+Solution:   Was using an uninitialized index in the cs_line[] array.  The
+	    crash only happened when the index was far off.  Made sure the
+	    uninitialized index isn't used.
+Files:	    src/ex_docmd.c
+
+Patch 5.5.069
+Problem:    Shifting lines in blockwise Visual mode didn't set the 'modified'
+	    flag.
+Solution:   Do set the 'modified' flag.
+Files:	    src/ops.c
+
+Patch 5.5.070
+Problem:    When editing a new file, creating that file outside of Vim, then
+	    editing it again, ":w" still warns for overwriting an existing
+	    file. (Nam)
+Solution:   The BF_NEW flag in the "b_flags" field wasn't cleared properly.
+Files:	    src/buffer.c, src/fileio.c
+
+Patch 5.5.071
+Problem:    Using a matchgroup in a ":syn region", which is the same syntax
+	    group as the region, didn't stop a contained item from matching in
+	    the start pattern.
+Solution:   Also push an item on the stack when the syntax ID of the
+	    matchgroup is the same as the syntax ID of the region.
+Files:	    src/syntax.c
+
+Patch 5.5.072 (extra)
+Problem:    Dos 32 bit: When setting 'columns' to a too large value, Vim may
+	    crash, and the DOS console too.
+Solution:   Check that the value of 'columns' isn't larger than the number of
+	    columns that the BIOS reports.
+Files:	    src/os_msdos.c, src/proto/os_msdos.pro, src/option.c
+
+Patch 5.5.073 (extra)
+Problem:    Win 32 GUI: The Find and Find/Replace dialogs didn't show the
+	    "match case" checkbox.  The Find/Replace dialog didn't handle the
+	    "match whole word" checkbox.
+Solution:   Support the "match case" and "match whole word" checkboxes.
+Files:	    src/gui_w32.c
 
  vim:ts=8:sw=8:tw=78:

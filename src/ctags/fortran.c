@@ -181,6 +181,7 @@ static void setTagType __ARGS((tokenInfo *const token, const tagType type));
 static void nameTag __ARGS((tokenInfo *const token, const tagType type));
 static void parseParenName __ARGS((tokenInfo *const token));
 static void parseInterface __ARGS((tokenInfo *const token));
+static void parseModule __ARGS((tokenInfo *const token));
 static void tagSlashName __ARGS((tokenInfo *const token, const tagType type));
 static void parseType __ARGS((tokenInfo *const token));
 static void parseBlock __ARGS((tokenInfo *const token));
@@ -244,7 +245,7 @@ static int tagLetter( type )
 static boolean includeTag( type )
     const tagType type;
 {
-    const struct sFortranInclude *const inc = &Option.include.fortran;
+    const struct sFortranInclude *const inc = &Option.include.fortranTypes;
     boolean include;
 
     switch (type)
@@ -900,6 +901,22 @@ static void parseInterface( token )
     }
 }
 
+static void parseModule( token )
+    tokenInfo *const token;
+{
+    readToken(token);
+    if (isType(token, TOKEN_IDENTIFIER))
+    {
+	vString *moduleName = vStringNew();
+	vStringCopyToLower(moduleName, token->string);
+	if (strcmp(vStringValue(moduleName), "procedure") != 0)
+	{
+	    setTagType(token, TAG_MODULE);
+	    makeFortranTag(token);
+	}
+    }
+}
+
 static void tagSlashName( token, type )
     tokenInfo *const token;
     const tagType type;
@@ -961,7 +978,7 @@ static void parseFile( token )
 	case KEYWORD_entry:	nameTag(token, TAG_ENTRY_POINT);	break;
 	case KEYWORD_function:  nameTag(token, TAG_FUNCTION);		break;
 	case KEYWORD_interface:	parseInterface(token);			break;
-	case KEYWORD_module:    nameTag(token, TAG_MODULE);		break;
+	case KEYWORD_module:    parseModule(token);			break;
 	case KEYWORD_namelist:	tagSlashName(token, TAG_NAMELIST);	break;
 	case KEYWORD_program:   nameTag(token, TAG_PROGRAM);		break;
 	case KEYWORD_subroutine:nameTag(token, TAG_SUBROUTINE);		break;
@@ -990,7 +1007,7 @@ static void deleteToken ( token )
     tokenInfo *const token;
 {
     vStringDelete(token->string);
-    free(token);
+    eFree(token);
 }
 
 static void init()

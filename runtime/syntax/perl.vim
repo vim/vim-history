@@ -1,16 +1,16 @@
 " Vim syntax file
 " Language:        Perl
-" Maintainer:      Nick Hibma <hibma@skylink.it>
-" Last change:     1999 July 31
+" Maintainer:      Nick Hibma <n_hibma@webweaving.org>
+" Last change:     1999 Dec 15
 " Location:        http://www.etla.net/~n_hibma/vim/syntax/perl.vim
 "
-" Please download most recent version first before mailing any comments.
+" Please download most recent version first before mailing
+" any comments.
 " See also the file perl.vim.regression.pl to check whether your
 " modifications work in the most odd cases
 "       http://www.etla.net/~n_hibma/vim/syntax/perl.vim.regression.pl
 "
 " Original version: Sonia Heimann <niania@netsurf.org>
-" Thanks to many people for their contribution. They made it work, not me.
 
 " The following parameters are available for tuning the
 " perl syntax highlighting, with defaults given:
@@ -18,9 +18,9 @@
 " let perl_include_pod = 0
 " let perl_want_scope_in_variables = 0
 " let perl_extended_vars = 0
-" unlet perl_string_as_statement
-" unlet perl_no_sync_on_sub
-" unlet perl_no_sync_on_global_var
+" let perl_string_as_statement = 0
+" let perl_no_sync_on_sub = 0
+" let perl_no_sync_on_global_var = 0
 " let perl_sync_dist = 100
 
 " Remove any old syntax stuff hanging around
@@ -41,7 +41,8 @@ endif
 " All keywords
 "
 syn keyword perlLabel            case default
-syn keyword perlConditional      if elsif unless else switch eq ne gt lt ge le cmp not and or xor
+syn keyword perlConditional      if elsif unless switch eq ne gt lt ge le cmp not and or xor
+syn keyword perlConditional      else nextgroup=perlElseIfError skipwhite skipnl skipempty
 syn keyword perlRepeat           while for foreach do until
 syn keyword perlOperator         defined undef and or not bless ref
 syn keyword perlControl          BEGIN END
@@ -66,7 +67,7 @@ syn keyword perlStatementSocket  accept bind connect getpeername getsockname get
 syn keyword perlStatementIPC     msgctl msgget msgrcv msgsnd semctl semget semop shmctl shmget shmread shmwrite
 syn keyword perlStatementNetwork endprotoent endservent gethostbyaddr gethostbyname gethostent getnetbyaddr getnetbyname getnetent getprotobyname getprotobynumber getprotoent getservbyname getservbyport getservent sethostent setnetent setprotoent setservent
 syn keyword perlStatementPword   getgrent getgrgid getgrnam getlogia
-syn keyword perlStatementTime    gmtime localtime time times
+syn keyword perlStatementTime    gmtime localtime time timesr
 
 syn keyword perlStatementMisc    print warn formline reset scalar new delete STDIN STDOUT STDERR
 
@@ -84,7 +85,7 @@ syn keyword perlTodo             TODO TBD FIXME XXX contained
 
 " Special variables first ($^A, ...) and ($|, $', ...)
 syn match perlVarPlain "$^[ADEFHILMOPSTWX]\="
-syn match perlVarPlain "$[\\\"\[\]'&`+*.,;=%~!@$<>(0-9-]"
+syn match perlVarPlain "$[\\\"\[\]'&`+*.,;=%~!?@$<>(0-9-]"
 " Same as above, but avoids confusion in $::foo (equivalent to $main::foo)
 syn match perlVarPlain "$:[^:]"
 " These variables are not recognized within matches.
@@ -137,6 +138,8 @@ syn match perlSpecialMatch   "(?[imsx]\+)" contained
 "
 " Highlight lines with only whitespace (only in blank delimited here documents) as errors
 syn match perlNotEmptyLine  "^\s\+$" contained
+syn keyword perlElseIfError if contained
+
 
 " Variable interpolation
 "
@@ -165,7 +168,7 @@ syn region perlMatch matchgroup=perlMatchStartEnd start=+[m!]\[+ end=+\][xosmige
 
 " Below some hacks to recognise the // variant. This is virtually impossible to catch in all
 " cases as the / is used in so many other ways, but these should be the most obvious ones.
-syn region perlMatch matchgroup=perlMatchStartEnd start=+split /+lc=5 start=+=\~\s*/+lc=2 start=+[(~]/+lc=1 start=+\.\./+lc=2 start=+\s/[^= \t\d$@%]+lc=1,me=e-1,rs=e-1 start=+^/+ skip=+\\/+ end=+/[xosmige]*+ contains=@perlInterpSlash
+syn region perlMatch matchgroup=perlMatchStartEnd start=+split /+lc=5 start=+[!=]\~\s*/+lc=2 start=+[(~]/+lc=1 start=+\.\./+lc=2 start=+\s/[^= \t\d$@%]+lc=1,me=e-1,rs=e-1 start=+^/+ skip=+\\/+ end=+/[xosmige]*+ contains=@perlInterpSlash
 
 " Substitutions
 " caters for s///, s### and s[][]
@@ -187,6 +190,10 @@ syn region perlTranslation matchgroup=perlMatchStartEnd start=+/+ end=+/[xosmige
 syn region perlTranslation matchgroup=perlMatchStartEnd start=+#+ end=+#[xosmige]*+ contained contains=@perlInterpSQ
 syn region perlTranslation matchgroup=perlMatchStartEnd start=+\[+ end=+\][xosmige]*+ contained contains=@perlInterpSQ
 
+
+" The => operator forces a bareword to the left of it to be interpreted as
+" a string
+syn match perlString "\<\I\i*\s*=>"me=e-2
 
 " Strings and q, qq and qw expressions
 syn region perlStringUnexpanded matchgroup=perlStringStartEnd start="'" end="'" contains=@perlInterpSQ
@@ -320,7 +327,8 @@ if !exists("did_perl_syntax_inits")
   hi link perlSpecialBEOM       perlSpecial
 
   " Possible errors
-  hi link perlNotEmptyLine   Error
+  hi link perlNotEmptyLine      Error
+  hi link perlElseIfError       Error
 endif
 
 " Syncing to speed up processing

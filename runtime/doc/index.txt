@@ -1,4 +1,4 @@
-*index.txt*     For Vim version 5.5.  Last change: 1999 Oct 31
+*index.txt*     For Vim version 5.6a.  Last change: 1999 Oct 31
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar

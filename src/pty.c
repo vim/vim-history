@@ -142,15 +142,17 @@ static void initpty __ARGS((int));
 initpty(f)
     int f;
 {
-#ifdef POSIX
+#ifndef VMS
+# ifdef POSIX
     tcflush(f, TCIOFLUSH);
-#else
-# ifdef TIOCFLUSH
+# else
+#  ifdef TIOCFLUSH
     (void) ioctl(f, TIOCFLUSH, (char *) 0);
+#  endif
 # endif
-#endif
-#ifdef LOCKPTY
+# ifdef LOCKPTY
     (void) ioctl(f, TIOCEXCL, (char *) 0);
+# endif
 #endif
 }
 

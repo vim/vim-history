@@ -270,7 +270,7 @@ static boolean includeTag( type, fileScope )
     const tagType type;
     const boolean fileScope;
 {
-    const struct sEiffelInclude *const inc = &Option.include.eiffel;
+    const struct sEiffelInclude *const inc = &Option.include.eiffelTypes;
     boolean include = FALSE;
 
     if (fileScope  &&  ! Option.include.fileScope)
@@ -1008,7 +1008,7 @@ static void deleteToken ( token )
     vStringDelete(token->className);
     vStringDelete(token->featureName);
 
-    free(token);
+    eFree(token);
 }
 
 static void init()

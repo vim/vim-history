@@ -1,4 +1,5 @@
 /* vi:set ts=8 sts=4 sw=4:
+ *
  * VIM - Vi IMproved		by Bram Moolenaar
  *
  * Do ":help uganda"  in Vim to read copying and usage conditions.
@@ -792,7 +793,7 @@ mainwin_realize(GtkWidget *widget)
  * After the drawing area comes up, we calculate all colors and create the
  * dummy blank cursor.
  *
- * Don't try to sed any VIM scrollbar sizes anywhere here. I'm relying on the
+ * Don't try to set any VIM scrollbar sizes anywhere here. I'm relying on the
  * fact that the main VIM engine doesn't take them into account anywhere.
  */
 static void

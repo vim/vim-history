@@ -863,6 +863,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 -x	starting.txt	/*-x*
 -xrm	gui_x11.txt	/*-xrm*
 .	repeat.txt	/*.*
+.Xdefaults	gui_x11.txt	/*.Xdefaults*
 .exrc	starting.txt	/*.exrc*
 .gvimrc	gui.txt	/*.gvimrc*
 .vimrc	starting.txt	/*.vimrc*
@@ -1495,6 +1496,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 :syn-default-override	syntax.txt	/*:syn-default-override*
 :syn-define	syntax.txt	/*:syn-define*
 :syn-end	syntax.txt	/*:syn-end*
+:syn-excludenl	syntax.txt	/*:syn-excludenl*
 :syn-file-remarks	syntax.txt	/*:syn-file-remarks*
 :syn-files	syntax.txt	/*:syn-files*
 :syn-include	syntax.txt	/*:syn-include*
@@ -1768,6 +1770,7 @@ $VIMRUNTIME	options.txt	/*$VIMRUNTIME*
 ?	pattern.txt	/*?*
 ?<CR>	pattern.txt	/*?<CR>*
 @	repeat.txt	/*@*
+@/	change.txt	/*@\/*
 @:	repeat.txt	/*@:*
 @@	repeat.txt	/*@@*
 A	insert.txt	/*A*
@@ -2063,7 +2066,6 @@ ZZ	editing.txt	/*ZZ*
 [/	motion.txt	/*[\/*
 [:alnum:]	pattern.txt	/*[:alnum:]*
 [:alpha:]	pattern.txt	/*[:alpha:]*
-[:ascii:]	pattern.txt	/*[:ascii:]*
 [:backspace:]	pattern.txt	/*[:backspace:]*
 [:blank:]	pattern.txt	/*[:blank:]*
 [:cntrl:]	pattern.txt	/*[:cntrl:]*
@@ -2143,6 +2145,7 @@ added-5.2	version5.txt	/*added-5.2*
 added-5.3	version5.txt	/*added-5.3*
 added-5.4	version5.txt	/*added-5.4*
 added-5.5	version5.txt	/*added-5.5*
+added-5.6	version5.txt	/*added-5.6*
 added-BeOS	version5.txt	/*added-BeOS*
 added-Mac	version5.txt	/*added-Mac*
 added-VMS	version5.txt	/*added-VMS*
@@ -2301,6 +2304,7 @@ changed-5.2	version5.txt	/*changed-5.2*
 changed-5.3	version5.txt	/*changed-5.3*
 changed-5.4	version5.txt	/*changed-5.4*
 changed-5.5	version5.txt	/*changed-5.5*
+changed-5.6	version5.txt	/*changed-5.6*
 changing	change.txt	/*changing*
 char2nr()	eval.txt	/*char2nr()*
 characterwise	motion.txt	/*characterwise*
@@ -2398,6 +2402,7 @@ delete-menus	gui.txt	/*delete-menus*
 deleting	change.txt	/*deleting*
 design-compatible	develop.txt	/*design-compatible*
 design-documented	develop.txt	/*design-documented*
+design-flexible	develop.txt	/*design-flexible*
 design-goals	develop.txt	/*design-goals*
 design-improved	develop.txt	/*design-improved*
 design-maintain	develop.txt	/*design-maintain*
@@ -2441,6 +2446,7 @@ double-click	term.txt	/*double-click*
 download	intro.txt	/*download*
 drag-n-drop-win32	gui_w32.txt	/*drag-n-drop-win32*
 drag-status-line	term.txt	/*drag-status-line*
+dtd.vim	syntax.txt	/*dtd.vim*
 e	motion.txt	/*e*
 edit-a-file	editing.txt	/*edit-a-file*
 edit-binary	editing.txt	/*edit-binary*
@@ -2555,6 +2561,7 @@ fixed-5.2	version5.txt	/*fixed-5.2*
 fixed-5.3	version5.txt	/*fixed-5.3*
 fixed-5.4	version5.txt	/*fixed-5.4*
 fixed-5.5	version5.txt	/*fixed-5.5*
+fixed-5.6	version5.txt	/*fixed-5.6*
 fnamemodify()	eval.txt	/*fnamemodify()*
 fo-table	change.txt	/*fo-table*
 font-sizes	gui_x11.txt	/*font-sizes*
@@ -2569,6 +2576,7 @@ function-key	intro.txt	/*function-key*
 function_key	intro.txt	/*function_key*
 functions	eval.txt	/*functions*
 fvwm.vim	syntax.txt	/*fvwm.vim*
+fvwmrc	syntax.txt	/*fvwmrc*
 g	index.txt	/*g*
 g#	pattern.txt	/*g#*
 g$	motion.txt	/*g$*
@@ -3117,8 +3125,8 @@ python-command	if_python.txt	/*python-command*
 python-commands	if_python.txt	/*python-commands*
 python-current	if_python.txt	/*python-current*
 python-error	if_python.txt	/*python-error*
+python-eval	if_python.txt	/*python-eval*
 python-examples	if_python.txt	/*python-examples*
-python-expr	if_python.txt	/*python-expr*
 python-input	if_python.txt	/*python-input*
 python-output	if_python.txt	/*python-output*
 python-range	if_python.txt	/*python-range*
@@ -3242,6 +3250,7 @@ short-name-changed	version4.txt	/*short-name-changed*
 showing-menus	gui.txt	/*showing-menus*
 simple-change	change.txt	/*simple-change*
 single-repeat	repeat.txt	/*single-repeat*
+skeleton	autocmd.txt	/*skeleton*
 slow-fast-terminal	term.txt	/*slow-fast-terminal*
 slow-start	starting.txt	/*slow-start*
 slow-terminal	term.txt	/*slow-terminal*
@@ -3502,6 +3511,7 @@ tcsh-style	cmdline.txt	/*tcsh-style*
 tear-off-menus	gui.txt	/*tear-off-menus*
 telnet-CTRL-]	tagsearch.txt	/*telnet-CTRL-]*
 temp-file-name	eval.txt	/*temp-file-name*
+template	autocmd.txt	/*template*
 tempname()	eval.txt	/*tempname()*
 term-dependent-settings	term.txt	/*term-dependent-settings*
 term-list	syntax.txt	/*term-list*
@@ -3654,6 +3664,7 @@ version-5.2	version5.txt	/*version-5.2*
 version-5.3	version5.txt	/*version-5.3*
 version-5.4	version5.txt	/*version-5.4*
 version-5.5	version5.txt	/*version-5.5*
+version-5.6	version5.txt	/*version-5.6*
 version-variable	eval.txt	/*version-variable*
 version4.txt	version4.txt	/*version4.txt*
 version5.txt	version5.txt	/*version5.txt*
@@ -3666,6 +3677,7 @@ vim-announce	intro.txt	/*vim-announce*
 vim-arguments	starting.txt	/*vim-arguments*
 vim-default-editor	gui_w32.txt	/*vim-default-editor*
 vim-dev	intro.txt	/*vim-dev*
+vim-mac	intro.txt	/*vim-mac*
 vim-modes	intro.txt	/*vim-modes*
 vim-modes-intro	intro.txt	/*vim-modes-intro*
 vim-multibyte	intro.txt	/*vim-multibyte*
@@ -3750,6 +3762,7 @@ xfontset	multibyte.txt	/*xfontset*
 xim	multibyte.txt	/*xim*
 xiterm	syntax.txt	/*xiterm*
 xpm.vim	syntax.txt	/*xpm.vim*
+xterm-blink	syntax.txt	/*xterm-blink*
 xterm-clipboard	term.txt	/*xterm-clipboard*
 xterm-color	syntax.txt	/*xterm-color*
 xterm-copy-paste	term.txt	/*xterm-copy-paste*
@@ -3768,6 +3781,7 @@ ye-option-gone	version4.txt	/*ye-option-gone*
 year-2000	intro.txt	/*year-2000*
 yy	change.txt	/*yy*
 z	scroll.txt	/*z*
+z+	scroll.txt	/*z+*
 z-	scroll.txt	/*z-*
 z.	scroll.txt	/*z.*
 z<CR>	scroll.txt	/*z<CR>*
@@ -3776,6 +3790,7 @@ z<Right>	scroll.txt	/*z<Right>*
 zH	scroll.txt	/*zH*
 zL	scroll.txt	/*zL*
 zN<CR>	scroll.txt	/*zN<CR>*
+z^	scroll.txt	/*z^*
 zb	scroll.txt	/*zb*
 ze	scroll.txt	/*ze*
 zh	scroll.txt	/*zh*

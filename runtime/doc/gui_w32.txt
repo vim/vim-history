@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 5.5.  Last change: 1999 Sep 14
+*gui_w32.txt*   For Vim version 5.6a.  Last change: 1999 Oct 17
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -61,9 +61,13 @@ To set Vim as the default editor for a file type:
 3. Select the path to gvim for every file type that you want to use it for.
    (you can also use three spaces in the file type field, for files without an
    extension).
-   In the "open" action, use
+   In the "open" action, use:
 >	gvim "%1"
    The quotes are required for using file names with embedded spaces.
+   You can also use this:
+>	gvim "%L"
+   This should avoid short (8.3 character) file names in some situations.  But
+   I'm not sure if this works everywhere.
 
 When you open a file in Vim by double clicking it, Vim changes to that
 file's directory.
@@ -108,10 +112,10 @@ You can also do this by hand:
 2. Add two keys:
    key					    value ~
    HKEY_CLASSES_ROOT\*\shell\Vim	    Edit with &Vim
-   HKEY_CLASSES_ROOT\*\shell\Vim\command    {path}\gvim.exe "%1"
+   HKEY_CLASSES_ROOT\*\shell\Vim\command    {path}\gvim.exe "%L"
 
    Replace {path} with the path that leads to gvim.exe.
-   Don't forget the double quotes around %1, file names with a space won't
+   Don't forget the double quotes around %L, file names with a space won't
    work.
 
 NOTE: Problems have been reported with using this in combination with the
@@ -123,7 +127,13 @@ entries mentioned above.
 
 If you notice that this entry overrules other file type associatons, set those
 associations again by hand (using Windows Explorer, see above).  This only
-seems to happen on some Windows NT versions (Windows bug?).
+seems to happen on some Windows NT versions (Windows bug?).  Procedure:
+1. Find the name of the file type.  This can be done by starting the registry
+   editor, and searching for the extension in \\HKEY_CLASSES_ROOT
+2. In a Windows Explorer, use View/Options/File Types.  Search for the file
+   type in the list and click "Edit".  In the actions list, you can select on
+   to be used as the default (normally the "open" action) and click on the
+   "Set Default" button.
 
 ==============================================================================
 3. Using the clipboard					*gui-clipboard*
@@ -322,6 +332,9 @@ been changed.
 You can also drop a directory's icon, but rather than open all files in the
 directory (which wouldn't usually be what you want) Vim instead changes to
 that directory and begins a new file.
+If Vim happens to be editing a command line, the names of the dropped files
+and directories will be inserted at the cursor.  This allows you to use these
+names with any Ex command.
 
 							*:simalt* *:si*
 :si[malt] {key}		simulate pressing {key} while holding Alt pressed.

@@ -1,4 +1,4 @@
-*quickfix.txt*  For Vim version 5.5.  Last change: 1999 Sep 17
+*quickfix.txt*  For Vim version 5.6a.  Last change: 1999 Oct 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -210,8 +210,8 @@ Some examples for C compilers that produce single-line error outputs:
 %f\ %l\ %t%*[^0-9]%n:\ %m		for SAS C
 \"%f\"\\,%*[^0-9]%l:\ %m		for generic C compilers
 %f:%l:\ %m				for GCC
-%f:%l:\ %m,%Dgmake[%*\d]:\ Entering directory\ `%f',
-%Dgmake[%*\d]:\ Leaving\ directory\ `%f'
+%f:%l:\ %m,%Dgmake[%*\\d]:\ Entering\ directory\ `%f',
+%Dgmake[%*\\d]:\ Leaving\ directory\ `%f'
 					for GCC with gmake (concat the lines!)
 %f(%l)\ :\ %*[^:]:\ %m			old SCO C compiler (pre-OS5)
 %f(%l)\ :\ %t%*[^0-9]%n:\ %m		idem, with error type and number

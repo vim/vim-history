@@ -64,13 +64,13 @@ typedef struct sOptionValues {
 	    boolean	externVars;
 	    boolean	access;
 	    boolean	classPrefix;
-	} c;
+	} cTypes;
 	struct sEiffelInclude {
 	    boolean	classNames;
 	    boolean	features;
 	    boolean	localEntities;
 	    boolean	classPrefix;
-	} eiffel;
+	} eiffelTypes;
 	struct sFortranInclude {
 	    boolean	blockData;
 	    boolean	commonBlocks;
@@ -83,7 +83,7 @@ typedef struct sOptionValues {
 	    boolean	programs;
 	    boolean	subroutines;
 	    boolean	types;
-	} fortran;
+	} fortranTypes;
 	struct sJavaInclude {
 	    boolean	classNames;
 	    boolean	fields;
@@ -92,7 +92,7 @@ typedef struct sOptionValues {
 	    boolean	packageNames;
 	    boolean	access;
 	    boolean	classPrefix;
-	} java;
+	} javaTypes;
 	boolean fileNames;	/* include tags for source file names */
 	boolean	fileScope;	/* include tags of file scope only */
     } include;
@@ -142,6 +142,7 @@ extern CONST_OPTION optionValues	Option;
 extern cookedArgs* cArgNewFromString __ARGS((const char* string));
 extern cookedArgs* cArgNewFromArgv __ARGS((char* const* const argv));
 extern cookedArgs* cArgNewFromFile __ARGS((FILE* const fp));
+extern cookedArgs* cArgNewFromLineFile __ARGS((FILE* const fp));
 extern void cArgDelete __ARGS((cookedArgs* const current));
 extern boolean cArgOff __ARGS((cookedArgs* const current));
 extern boolean cArgIsOption __ARGS((cookedArgs* const current));

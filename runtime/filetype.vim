@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	1999 Oct 02
+" Last change:	1999 Dec 16
 
 if !exists("did_load_filetypes")
 let did_load_filetypes = 1
@@ -20,6 +20,9 @@ au BufNewFile,BufRead *~		exe "doau filetype BufRead " . substitute(expand("<afi
 " ABC music notation
 au BufNewFile,BufRead *.abc			set ft=abc
 
+" ABEL
+au BufNewFile,BufRead *.abl			set ft=abel
+
 " Ada (83, 9X, 95)
 au BufNewFile,BufRead *.adb,*.ads		set ft=ada
 
@@ -28,6 +31,9 @@ au BufNewFile,BufRead *.tdf			set ft=ahdl
 
 " Applix ELF
 au BufNewFile,BufRead *.am			set ft=elf
+
+" Arc Macro Language
+au BufNewFile,BufRead *.aml			set ft=aml
 
 " ASN.1
 au BufNewFile,BufRead *.asn,*.asn1		set ft=asn
@@ -124,6 +130,10 @@ au BufNewFile,BufRead *.cbl,*.cob,*.cpy,*.lib	set ft=cobol
 " Configure scripts
 au BufNewFile,BufRead configure.in		set ft=config
 
+" CUPL logic description and simulation
+au BufNewFile,BufRead *.pld			set ft=cupl
+au BufNewFile,BufRead *.si			set ft=cuplsim
+
 " Diff files
 au BufNewFile,BufRead *.diff,*.rej		set ft=diff
 
@@ -167,7 +177,10 @@ au BufNewFile,BufRead *.fs,*.ft			set ft=forth
 au BufNewFile,BufRead *.f,*.F,*.for,*.fpp	set ft=fortran
 
 " Fvwm
-au BufNewFile,BufRead *fvwm*rc*			set ft=fvwm
+au BufNewFile,BufRead *fvwmrc*
+	\ let use_fvwm_1 = 1 | let use_fvwm_2 = 0 | set ft=fvwm
+au BufNewFile,BufRead *fvwm2rc*
+	\ let use_fvwm_2 = 1 | let use_fvwm_1 = 0 | set ft=fvwm
 
 " GDB command files
 au BufNewFile,BufRead .gdbinit			set ft=gdb
@@ -212,6 +225,9 @@ au BufNewFile,BufRead *.jj,*.jjt		set ft=javacc
 " JavaScript
 au BufNewFile,BufRead *.js,*.javascript		set ft=javascript
 
+" Java Server Pages
+au BufNewFile,BufRead *.jsp			set ft=jsp
+
 " Jgraph
 au BufNewFile,BufRead *.jgr			set ft=jgraph
 
@@ -253,10 +269,13 @@ au BufNewFile,BufRead *.lss			set ft=lss
 au BufNewFile,BufRead *.m4			if expand("<afile>") !~?  "html.m4$" | set ft=m4 | endif
 
 " Mail (for Elm, trn and rn)
-au BufNewFile,BufRead snd.*,.letter,.followup,.article,.article.[0-9]\+,pico.[0-9]\+,mutt*[0-9],ae[0-9]\+.txt set ft=mail
+au BufNewFile,BufRead snd.*,.letter,.letter.[0-9]\+,.followup,.article,.article.[0-9]\+,pico.[0-9]\+,mutt*[0-9],ae[0-9]\+.txt set ft=mail
 
 " Makefile
 au BufNewFile,BufRead [mM]akefile*,GNUmakefile,*.mk,*.mak,*.dsp set ft=make
+
+" MakeIndex
+au BufNewFile,BufRead *.ist,*.mst		set ft=ist
 
 " Manpage
 au BufNewFile,BufRead *.man			set ft=man
@@ -324,8 +343,8 @@ else
   au BufNewFile,BufRead *.pl			set ft=perl
 endif
 
-" Perl or XPM
-au BufNewFile,BufRead *.pm		if getline(1) =~ "XPM"|set ft=xpm|else|set ft=perl|endif
+" Perl, XPM or XPM2
+au BufNewFile,BufRead *.pm	if getline(1) =~ "XPM2"|set ft=xpm2|elseif getline(1) =~ "XPM"|set ft=xpm|else|set ft=perl|endif
 
 " Perl POD
 au BufNewFile,BufRead *.pod			set ft=pod
@@ -378,6 +397,9 @@ au BufNewFile,BufRead *.rexx,*.rex		set ft=rexx
 " Rexx or Rebol
 au BufNewFile,BufRead *.r			if getline(1) =~ '^REBOL'|set ft=rebol|else|set ft=rexx|endif
 
+" Remind
+au BufNewFile,BufRead .reminders*		set ft=remind
+
 " Rpcgen
 au BufNewFile,BufRead *.x			set ft=rpcgen
 
@@ -403,6 +425,7 @@ au BufNewFile,BufRead sendmail.cf		set ft=sm
 au BufNewFile,BufRead *.sgm,*.sgml		if getline(1).getline(2).
 	\getline(3).getline(4).getline(5) =~? 'linuxdoc'|set ft=sgmllnx|
 	\else|set ft=sgml|endif
+au BufNewFile,BufRead *.ent			set ft=sgml
 
 " Shell scripts (sh, ksh, bash, csh); Allow .profile_foo etc.
 au BufNewFile,BufRead /etc/profile,.profile*,.bashrc*,.bash_profile*,.kshrc*,*.sh,*.ksh,*.bash,*.env set ft=sh
@@ -427,8 +450,13 @@ au BufNewFile,BufRead *.score			set ft=slrnsc
 " Smalltalk
 au BufNewFile,BufRead *.st,*.cls		set ft=st
 
-" SMIL
-au BufNewFile,BufReadPost *.smil		set ft=smil
+" SMIL or XML
+au BufNewFile,BufReadPost *.smil
+	\ if getline(1) =~ '<?\s*xml.*?>'|
+	\   set ft=xml|
+	\ else|
+	\   set ft=smil|
+	\ endif
 
 " SMIL or SNMP MIB file
 au BufNewFile,BufRead *.smi		if getline(1) =~ '\<smil\>'|set ft=smil|else|set ft=mib|endif
@@ -445,11 +473,17 @@ au BufNewFile,BufRead *.speedup,*.spdata,*.spd	set ft=spup
 " Spice
 au BufNewFile,BufRead *.sp,*.spice		set ft=spice
 
-" Squid: Removed, because there are too many *.conf files that aren't Squid.
-"au BufNewFile,BufRead *.conf			set ft=squid
+" Squid
+au BufNewFile,BufRead squid.conf		set ft=squid
 
 " SQL (all but the first one for Oracle Designer)
 au BufNewFile,BufRead *.sql,*.tyb,*.typ,*.tyc,*.pkb,*.pks	set ft=sql
+
+" SQR
+au BufNewFile,BufRead *.sqr,*.sqi		set ft=sqr
+
+" Tads
+au BufNewFile,BufRead *.t			set ft=tads
 
 " Tags
 au BufNewFile,BufRead tags			set ft=tags
@@ -511,7 +545,8 @@ au BufNewFile,BufRead *.web			if getline(1)[0].getline(2)[0].getline(3)[0].getli
 au BufNewFile,BufRead *.ch			set ft=change
 
 " X Pixmap (dynamically sets colors, use BufEnter to make it work better)
-au BufEnter *.xpm				set ft=xpm
+au BufEnter *.xpm				if getline(1) =~ "XPM2"|set ft=xpm2|else|set ft=xpm|endif
+au BufEnter *.xpm2				set ft=xpm2
 
 " XS Perl extension interface language
 au BufEnter *.xs				set ft=xs
@@ -525,7 +560,7 @@ au BufNewFile,BufRead *.ms			if !FTCheck_nroff() | set ft=xmath | endif
 
 " vim: ts=8
 " XML
-au BufNewFile,BufRead *.xml			set ft=xml
+au BufNewFile,BufRead *.xml,*.xsl		set ft=xml
 
 " Yacc
 au BufNewFile,BufRead *.y			set ft=yacc

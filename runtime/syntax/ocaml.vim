@@ -2,7 +2,9 @@
 " Language:      OCAML
 " Maintainers:   Markus Mottl     <mottl>@miss.wu-wien.ac.at
 "                Karl-Heinz Sylla <Karl-Heinz.Sylla>@gmd.de
-" Last change:   1999 July 26 - completely revised (MM)
+" URL:           http://miss.wu-wien.ac.at/~mottl/vim/syntax/ocaml.vim
+" Last change:   1999 Oct  10 - small fix for modules (MM)
+
 
 " Remove any old syntax stuff hanging around.
 syn clear
@@ -13,8 +15,9 @@ syn case match
 
 
 " lowercase identifier - the standard way to match
-syn match    ocamlLCIdentifier /\<\l\(\w\|'\)*\>/
+syn match    ocamlLCIdentifier /\<\(\l\|_\)\(\w\|'\)*\>/
 
+syn match    ocamlKeyChar    "|"
 
 " Errors
 syn match    ocamlBraceErr   "}"
@@ -93,7 +96,7 @@ syn region   ocamlModSpec matchgroup=ocamlKeyword start="\<module\>" matchgroup=
 syn region   ocamlNone matchgroup=ocamlKeyword start="\<open\>" matchgroup=ocamlModule end="\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*\>" contains=@ocamlAllErrs,ocamlComment
 
 " "include"
-syn region   ocamlNone matchgroup=ocamlKeyword start="\<include\>" matchgroup=ocamlModPath end="\<\u\(\w\|'\)*\(\.\u\(\w\|'\)*\)*\.\(\w\|'\)\+\>" contains=o@ocamlAllErrs,camlComment
+syn region   ocamlNone matchgroup=ocamlKeyword start="\<include\>" matchgroup=ocamlModPath end="\<\(\u\(\w\|'\)*\.\)*\w\(\w\|'\)*\>" contains=o@ocamlAllErrs,camlComment
 
 " "module" - somewhat complicated stuff ;-)
 syn region   ocamlModule matchgroup=ocamlKeyword start="\<module\>" matchgroup=ocamlModule end="\<\u\(\w\|'\)*\>" contains=@ocamlAllErrs,ocamlComment skipwhite skipempty nextgroup=ocamlPreDef
@@ -105,7 +108,7 @@ syn region   ocamlPreMPRestr start="."me=e-1 end=")"me=e-1 contained contains=@o
 
 syn region   ocamlMPRestr start=":" end="."me=e-1 contained contains=@ocamlComment skipwhite skipempty nextgroup=ocamlMPRestr1,ocamlMPRestr2,ocamlMPRestr3
 syn region   ocamlMPRestr1 matchgroup=ocamlModule start="\ssig\s\=" matchgroup=ocamlModule end="\<end\>" contained contains=ALLBUT,@ocamlContained,ocamlEndErr,ocamlModule
-syn region   ocamlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=ocamlKeyword end="->" contained contains=@ocamlAllErrs,ocamlComment,ocamlModParam
+syn region   ocamlMPRestr2 start="\sfunctor\(\s\|(\)\="me=e-1 matchgroup=ocamlKeyword end="->" contained contains=@ocamlAllErrs,ocamlComment,ocamlModParam skipwhite skipempty nextgroup=ocamlFuncWith
 syn match    ocamlMPRestr3 "\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*" contained
 syn match  ocamlModPreRHS "=" contained skipwhite skipempty nextgroup=ocamlModParam,ocamlFullMod
 syn region  ocamlModRHS start="." end=".\w\|([^*]"me=e-2 contained contains=ocamlComment skipwhite skipempty nextgroup=ocamlModParam,ocamlFullMod
@@ -116,7 +119,7 @@ syn region  ocamlFuncStruct matchgroup=ocamlModule start="[^a-zA-Z]struct\>"hs=s
 
 syn match    ocamlModTypeRestr "\<\w\(\w\|'\)*\(\.\w\(\w\|'\)*\)*\>" contained
 syn region   ocamlModTRWith start=":\s*("hs=s+1 end=")" contained contains=@ocamlAENoParen,ocamlWith
-syn match    ocamlWith "\<\(\w\|'\)\+\>" contained skipwhite skipempty nextgroup=ocamlWithRest
+syn match    ocamlWith "\<\(\u\(\w\|'\)*\.\)*\w\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=ocamlWithRest
 syn region   ocamlWithRest start="[^)]" end=")"me=e-1 contained contains=ALLBUT,@ocamlContained
 
 " "module type"
@@ -162,17 +165,17 @@ syn match    ocamlOperator     "::"
 syn match    ocamlOperator     "<-"
 syn match    ocamlAnyVar       "\<_\>"
 syn match    ocamlKeyChar      "!"
-syn match    ocamlKeyChar      "|[^\]]"
+syn match    ocamlKeyChar      "|[^\]]"me=e-1
 syn match    ocamlKeyChar      ";"
 syn match    ocamlKeyChar      "?"
 syn match    ocamlKeyChar      "\*"
 syn match    ocamlKeyChar      "="
 
 syn match    ocamlNumber        "\<-\=\d\+\>"
-syn match    ocamlNumber        "\<.\=0[x|X]\x\+\>"
-syn match    ocamlNumber        "\<.\=0[o|O]\o\+\>"
-syn match    ocamlNumber        "\<.\=0[b|B][01]\+\>"
-syn match    ocamlFloat         "\<\d\+\.\d*\([eE][-+]\=\d\+\)\=[fl]\=\>"
+syn match    ocamlNumber        "\<-\=0[x|X]\x\+\>"
+syn match    ocamlNumber        "\<-\=0[o|O]\o\+\>"
+syn match    ocamlNumber        "\<-\=0[b|B][01]\+\>"
+syn match    ocamlFloat         "\<-\=\d\+\.\d*\([eE][-+]\=\d\+\)\=[fl]\=\>"
 
 " synchronization
 syn sync minlines=20
@@ -247,5 +250,3 @@ if !exists("did_ocaml_syntax_inits")
 endif
 
 let b:current_syntax = "ocaml"
-
-" vim: ts=28

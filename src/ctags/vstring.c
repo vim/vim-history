@@ -77,8 +77,8 @@ extern void vStringDelete( string )
     if (string != NULL)
     {
 	if (string->buffer != NULL)
-	    free(string->buffer);
-	free(string);
+	    eFree(string->buffer);
+	eFree(string);
     }
 }
 

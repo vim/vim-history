@@ -126,7 +126,7 @@
 #	to use while another version is being used, only version-specific
 #	files will be deleted.
 #	To remove the runtime files of another version:
-#		make uninstall_runtime VIMRTDIR=/vim54x
+#		make uninstall_runtime VIMRTDIR=/vim54
 #	If you want to delete all installed files, use:
 #		make uninstall
 #	Note that this will delete files have the same name for any version,
@@ -158,6 +158,7 @@
 #CX/UX 6.2	      cc	     +X11 +GUI_Mofif	5.4  (V) Kipp E. Howard
 #DG/UX 5.4*	      gcc 2.5.8      GUI		5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI		5.0s (H) Rocky Olive
+#DigitalUnix OSF 4.0b cc (not gcc)   +X11 +GUI +GTK	5.5b	 Peter Turcan
 #HP-UX (most)	      c89 cc				5.1  (2) Bram Moolenaar
 #HP-UX_9.04	      cc	     +X11 +Motif	5.0  (2) Carton Lao
 #HP-UX_10.01	      gcc 2.7.2      +X11 -GUI		5.2	 D. Rothkamp
@@ -202,10 +203,11 @@
 #Solaris 2.5 (sun4m)  cc (SC4.0)     +X11R6 +GUI (CDE)	4.6b (E) Andrew Large
 #Solaris 2.5	      cc	     +X11 +GUI Athena	4.2  (9) Sonia Heimann
 #Solaris 2.5	      gcc 2.5.6      +X11 Motif		5.0m (R) Ant. Colombo
-#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.4m	 Ant. Colombo
+#Solaris 2.5 (Sparc)  gcc-2.7.2.3    +X11 +GUI Motif	5.5	 Ant. Colombo
 #Solaris 2.6 (sun4u)  gcc 2.7.2.3    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #Solaris 2.6 (sun4u)  cc (SC4.2)     +X11R6 +GUI (CDE)	5.0v	 Andrew Large
 #Solaris 2.6	      gcc 2.8.1      ncursus		5.3  (G) Larry W. Virden
+#Solaris with -lthread                                  5.5  (W) K. Nagano
 #SunOS_5.5.1	      gcc 2.7.2      +X11 +Motif	5.0s	 Karsten Sievert
 #SunOS 4.1.x			     +X11 -GUI		5.1b (J) Bram Moolenaar
 #SunOS 4.1.3_U1 (sun4c) gcc	     +X11 +GUI Athena	5.0w (J) Darren Hiebert
@@ -278,6 +280,9 @@ CC=
 # distribution it is almost empty. After running ./configure it contains
 # settings that have been discovered for your system. Settings below this
 # include override settings in config.mk!
+
+# Note: if config.mk is lost somehow (e.g., because configure was
+# interrupted), create an empty config.mk file and do "make config".
 
 # (X) How to include config.mk depends on the version of "make" you have, if
 #     the current choice doesn't work, try the other one.
@@ -489,6 +494,10 @@ LINT_OPTIONS = -beprxzF
 
 ### (5) AIX 4.1.4 with cc
 #CFLAGS = -O -qmaxmem=8092
+
+### (W) Solaris with multi-threaded libraries (-lthread):
+###	If suspending doesn't work properly, try using this line:
+#EXTRA_DEFS = -D_REENTRANT
 
 ### (7) Solaris 2.4/2.5 with Centerline compiler
 #CC = clcc
@@ -727,7 +736,7 @@ MANSUBDIR = $(MANDIR)/man1
 ### Location of Vim files (should not need to be changed, and some things
 ### might not work when they are changed!)
 VIMDIR = /vim
-VIMRTDIR = /vim55
+VIMRTDIR = /vim56a
 HELPSUBDIR = /doc
 SYNSUBDIR = /syntax
 MACROSUBDIR = /macros
@@ -813,10 +822,10 @@ MANMOD = 644
 HELPMOD = 644
 
 ### Permissions for Perl and shell scripts
-PERLMOD = 755
+SCRIPTMOD = 755
 
-### Permission for script files (menu.vim, bugreport.vim, ..)
-SCRIPTMOD = 644
+### Permission for Vim script files (menu.vim, bugreport.vim, ..)
+VIMSCRIPTMOD = 644
 
 ### Permissions for all directories that are created
 DIRMOD = 755
@@ -1363,27 +1372,27 @@ installvimhelp: $(HELPSOURCE)/vim.1 $(MANSUBDIR) $(VIMLOC) $(VIMRTLOC) $(HELPSUB
 	cd $(HELPSOURCE); $(INSTALL_DATA) *.txt tags $(HELPSUBLOC)
 	cd $(HELPSUBLOC); chmod $(HELPMOD) *.txt tags
 	$(INSTALL_DATA)  $(HELPSOURCE)/*.pl $(HELPSUBLOC)
-	chmod $(PERLMOD) $(HELPSUBLOC)/*.pl
+	chmod $(SCRIPTMOD) $(HELPSUBLOC)/*.pl
 # install the menu file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/menu.vim $(SYS_MENU_FILE)
-	chmod $(SCRIPTMOD) $(SYS_MENU_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_MENU_FILE)
 # install the bugreport file
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/bugreport.vim $(SYS_BUGR_FILE)
-	chmod $(SCRIPTMOD) $(SYS_BUGR_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_BUGR_FILE)
 # install the example vimrc files
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/vimrc_example.vim $(SCRIPTLOC)
-	chmod $(SCRIPTMOD) $(SCRIPTLOC)/vimrc_example.vim
+	chmod $(VIMSCRIPTMOD) $(SCRIPTLOC)/vimrc_example.vim
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/gvimrc_example.vim $(SCRIPTLOC)
-	chmod $(SCRIPTMOD) $(SCRIPTLOC)/gvimrc_example.vim
+	chmod $(VIMSCRIPTMOD) $(SCRIPTLOC)/gvimrc_example.vim
 # install the file type detection files
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/filetype.vim $(SYS_FILETYPE_FILE)
-	chmod $(SCRIPTMOD) $(SYS_FILETYPE_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_FILETYPE_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/ftoff.vim $(SYS_FTOFF_FILE)
-	chmod $(SCRIPTMOD) $(SYS_FTOFF_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_FTOFF_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/scripts.vim $(SYS_SCRIPTS_FILE)
-	chmod $(SCRIPTMOD) $(SYS_SCRIPTS_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_SCRIPTS_FILE)
 	$(INSTALL_DATA) $(SCRIPTSOURCE)/optwin.vim $(SYS_OPTWIN_FILE)
-	chmod $(SCRIPTMOD) $(SYS_OPTWIN_FILE)
+	chmod $(VIMSCRIPTMOD) $(SYS_OPTWIN_FILE)
 # install the syntax files
 	cd $(SYNSOURCE); $(INSTALL_DATA) *.vim $(SYNSUBLOC)
 	cd $(SYNSUBLOC); chmod $(HELPMOD) *.vim
@@ -1396,7 +1405,7 @@ installmacros: $(MACROSOURCE) $(VIMLOC) $(VIMRTLOC) $(MACROSUBLOC)
 # install the tutor files
 installtutor: $(TUTORSOURCE) $(VIMLOC) $(VIMRTLOC) $(TUTORSUBLOC)
 	$(INSTALL_DATA) vimtutor $(BINDIR)
-	chmod $(PERLMOD) $(BINDIR)/vimtutor
+	chmod $(SCRIPTMOD) $(BINDIR)/vimtutor
 	-$(INSTALL_DATA) $(TUTORSOURCE)/* $(TUTORSUBLOC)
 	chmod $(HELPMOD) $(TUTORSUBLOC)/*
 
@@ -1418,7 +1427,7 @@ installtools: $(TOOLS) $(exec_prefix) $(BINDIR) $(MANSUBDIR) \
 # install the runtime tools
 	$(INSTALL_DATA_R) $(TOOLSSOURCE)/* $(TOOLSSUBLOC)
 	-chmod $(FILEMOD) $(TOOLSSUBLOC)/*
-	-chmod $(PERLMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
+	-chmod $(SCRIPTMOD) `grep -l "^#!" $(TOOLSSUBLOC)/*`
 
 $(HELPSOURCE)/vim.1 $(MACROSOURCE) $(TOOLSSOURCE):
 	@echo Runtime files not found.

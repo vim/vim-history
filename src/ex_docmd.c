@@ -3964,7 +3964,7 @@ skip_cmd_arg(p)
  * backslash.  "C:\$VIM\doc" is taken literally, only "$VIM\doc" works.
  * Although "\ name" is valid, the backslash in "Program\ files" must be
  * removed.  Assume a file name doesn't start with a space.
- * Make sure that "\\mch\file" isn't translated into "\mch\file".
+ * Caller must make sure that "\\mch\file" isn't translated into "\mch\file".
  */
     int
 rem_backslash(str)

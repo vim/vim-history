@@ -1,4 +1,4 @@
-*scroll.txt*    For Vim version 5.5.  Last change: 1999 Oct 31
+*scroll.txt*    For Vim version 5.6a.  Last change: 1999 Dec 08
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -262,24 +262,22 @@ To use the mouse wheel in an xterm you must do this:
 You can do the translations by adding this to your ~.Xdefaults file (or other
 file where your X resources are kept):
 
-> *VT100.Translations:		#override \n\
-> 		s<Btn4Down>: string("0x1b") string("[64~") \n\
-> 		s<Btn5Down>: string("0x1b") string("[65~") \n\
-> 		<Btn4Down>: string("0x1b") string("[62~") \n\
-> 		<Btn5Down>: string("0x1b") string("[63~")
-
-If these don't work (because other translations get in the way), try these:
-
-> *VT100.Translations:		#override \n\
-> 		s<Btn4Up>: string("0x1b") string("[64~") \n\
-> 		s<Btn5Up>: string("0x1b") string("[65~") \n\
-> 		<Btn4Up>: string("0x1b") string("[62~") \n\
-> 		<Btn5Up>: string("0x1b") string("[63~")
+> XTerm*VT100.Translations:		#override \n\
+> 		s<Btn4Down>: string("0x9b") string("[64~") \n\
+> 		s<Btn5Down>: string("0x9b") string("[65~") \n\
+> 		<Btn4Down>: string("0x9b") string("[62~") \n\
+> 		<Btn5Down>: string("0x9b") string("[63~") \n\
+>		<Btn4Up>: \n\
+>		<Btn5Up>: 
 
 Add these mappings to your vimrc file:
-> map <Esc>[62~ <MouseDown>
-> map <Esc>[63~ <MouseUp>
-> map <Esc>[64~ <S-MouseDown>
-> map <Esc>[65~ <S-MouseUp>
+> map <M-Esc>[62~ <MouseDown>
+> map! <M-Esc>[62~ <MouseDown>
+> map <M-Esc>[63~ <MouseUp>
+> map! <M-Esc>[63~ <MouseUp>
+> map <M-Esc>[64~ <S-MouseDown>
+> map! <M-Esc>[64~ <S-MouseDown>
+> map <M-Esc>[65~ <S-MouseUp>
+> map! <M-Esc>[65~ <S-MouseUp>
 
  vim:tw=78:ts=8:sw=8:

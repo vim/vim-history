@@ -1,4 +1,4 @@
-*develop.txt*   For Vim version 5.5.  Last change: 1999 Sep 18
+*develop.txt*   For Vim version 5.6a.  Last change: 1999 Dec 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -39,7 +39,7 @@ Exceptions:
 - Some things are hardly ever used (open mode, sending an e-mail when
   crashing, etc.).  Those will only be included when someone has a good reason
   why it should be included and it's not too much work.
-- For some items it is discutable whether Vi compatibility should be
+- For some items it is debatable whether Vi compatibility should be
   maintained.  There will be an option flag for these.
 
 
@@ -119,6 +119,16 @@ VIM IS... MAINTAINABLE					*design-maintain*
   too much platform-independent code.
 - Use the object-oriented spirit: Put data and code together.  Minimize the
   knowledge spread to other parts of the code.
+
+
+VIM IS... FLEXIBLE					*design-flexible*
+
+Vim should make it easy for users to work in their preferred styles rather
+than coercing its users into particular patterns of work.  This can be for
+items with a large impact (e.g., the 'compatible' option) or for details.  The
+defaults are carefully chosen such that most users will enjoy using Vim as it
+is.  Commands and options can be used to adjust Vim to the desire of the user
+and its environment.
 
 
 VIM IS... NOT						*design-not*

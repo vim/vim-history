@@ -73,7 +73,7 @@ unsigned long	S_ulScreenBase = 0xb8000;
 unsigned short	S_uiAttribute = 0;
 int		S_iCurrentRow = 0;	/* These are 0 offset */
 int		S_iCurrentColumn = 0;
-int		S_iLeft = 0;	/* These are 1 offset */
+int		S_iLeft = 0;	/* Scroll window; these are 1 offset */
 int		S_iTop = 0;
 int		S_iRight = 0;
 int		S_iBottom = 0;
@@ -87,6 +87,9 @@ mygotoxy(int x, int y)
     gotoxy(x,y);		/* set cursor position */
 }
 
+/*
+ * Scroll the screen one line up, clear the last line.
+ */
     static void
 myscroll(void)
 {

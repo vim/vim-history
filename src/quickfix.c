@@ -1227,7 +1227,7 @@ qf_mark_adjust(line1, line2, amount, amount_after)
 			else
 			    qfp->qf_lnum += amount;
 		    }
-		    if (amount_after && qfp->qf_lnum > line2)
+		    else if (amount_after && qfp->qf_lnum > line2)
 			qfp->qf_lnum += amount_after;
 		}
 }

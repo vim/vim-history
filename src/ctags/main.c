@@ -100,6 +100,10 @@
 #include "read.h"
 #include "vstring.h"
 
+#ifdef TRAP_MEMORY_CALLS
+# include "safe_malloc.h"
+#endif
+
 /*============================================================================
 =   Defines
 ============================================================================*/
@@ -281,6 +285,13 @@ extern void *eRealloc( ptr, size )
     return buffer;
 }
 
+extern void eFree( ptr )
+    void *const ptr;
+{
+    Assert(ptr != NULL);
+    free(ptr);
+}
+
 extern unsigned long getFileSize( name )
     const char *const __unused__ name;
 {
@@ -339,7 +350,7 @@ static boolean isDirectory( name )
 		isDir = ((fib->fib_DirEntryType >= 0) ? TRUE : FALSE);
 	    UnLock(flock);
 	}
-	free(fib);
+	eFree(fib);
     }
 #else
     struct stat fileStatus;
@@ -657,13 +668,14 @@ static boolean createTagsForMatchingEntries( pattern )
     char *const pattern;
 {
     boolean resize = FALSE;
-    struct AnchorPath *const anchor = (struct AnchorPath *)
-					calloc((size_t)1, (size_t)ANCHOR_SIZE);
+    struct AnchorPath *const anchor =
+			(struct AnchorPath *)eMalloc((size_t)ANCHOR_SIZE);
 
     if (anchor != NULL)
     {
 	LONG result;
 
+	memset(anchor, 0, (size_t)ANCHOR_SIZE);
 	anchor->ap_Strlen = ANCHOR_BUF_SIZE; /* ap_Length no longer supported */
 
 	/*  Allow '.' for current directory.
@@ -681,7 +693,7 @@ static boolean createTagsForMatchingEntries( pattern )
 	    result = MatchNext(anchor);
 	}
 	MatchEnd(anchor);
-	free(anchor);
+	eFree(anchor);
     }
     return resize;
 }
@@ -836,7 +848,7 @@ static boolean createTagsFromFileInput( fp, filter )
     boolean resize = FALSE;
     if (fp != NULL)
     {
-	cookedArgs* args = cArgNewFromFile(fp);
+	cookedArgs* args = cArgNewFromLineFile(fp);
 	parseOptions(args);
 	while (! cArgOff(args))
 	{

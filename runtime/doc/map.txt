@@ -1,4 +1,4 @@
-*map.txt*       For Vim version 5.5.  Last change: 1999 Sep 17
+*map.txt*       For Vim version 5.6a.  Last change: 1999 Sep 24
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -729,7 +729,8 @@ To allow commands to pass their arguments on to a user-defined function, there
 is a special form <f-args> ("function args"). This splits the command
 arguments at spaces, quotes each argument individually, and the <f-args>
 sequence is replaced by the comma-separated list of quoted arguments.  See the
-Mycmd example below.
+Mycmd example below.  When there is no argument, <f-args> also has no
+argument.
 
 Examples
 

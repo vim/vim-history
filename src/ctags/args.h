@@ -1,7 +1,7 @@
 /*****************************************************************************
 *   $Id$
 *
-*   Copyright (c) 1998-1999, Darren Hiebert
+*   Copyright (c) 1999, Darren Hiebert
 *
 *   This source code is released for free distribution under the terms of the
 *   GNU General Public License.
@@ -47,6 +47,7 @@ typedef struct sArgs {
 extern Arguments* argNewFromString __ARGS((const char* const string));
 extern Arguments* argNewFromArgv __ARGS((char* const* const argv));
 extern Arguments* argNewFromFile __ARGS((FILE* const fp));
+extern Arguments* argNewFromLineFile __ARGS((FILE* const fp));
 extern char *argItem __ARGS((const Arguments* const current));
 extern boolean argOff __ARGS((const Arguments* const current));
 extern void argSetWordMode __ARGS((Arguments* const current));

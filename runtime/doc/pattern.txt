@@ -1,4 +1,4 @@
-*pattern.txt*   For Vim version 5.5.  Last change: 1999 Sep 17
+*pattern.txt*   For Vim version 5.6a.  Last change: 1999 Oct 27
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -386,7 +386,6 @@ Patterns may contain special characters, depending on the setting of the
 			  Name		Contents ~
 *[:alnum:]*		  [:alnum:]     letters and digits
 *[:alpha:]*		  [:alpha:]     letters
-*[:ascii:]*		  [:ascii:]     ASCII characters
 *[:blank:]*		  [:blank:]     space and tab characters
 *[:cntrl:]*		  [:cntrl:]     control characters
 *[:digit:]*		  [:digit:]     decimal digits
@@ -431,7 +430,8 @@ Patterns may contain special characters, depending on the setting of the
 			- Matching ranges can be slow, use one of the other
 			  items above when possible.
 
-If the 'ignorecase' option is on, the case of letters is ignored.
+If the 'ignorecase' option is on, the case of letters is ignored.  'smartcase'
+can be set to ignore case when the pattern contains uppercase letters only.
 
 It is impossible to have a pattern that contains a line break (Sorry!).
 

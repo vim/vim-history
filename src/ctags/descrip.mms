@@ -15,10 +15,10 @@ CFLAGS	= $(CDEBFLAGS)/prefix=all/define=(HAVE_CONFIG_H$(DEBDEF))/include=[]
 LDFLAGS	= $(LDEBFLAGS)/exec=$(MMS$TARGET)
 LIBS	=
 
-SOURCES	= eiffel.c entry.c fortran.c get.c keyword.c main.c options.c \
-	parse.c read.c sort.c vstring.c
-OBJ	= eiffel.obj entry.obj fortran.obj get.obj keyword.obj main.obj \
-	options.obj parse.obj read.obj sort.obj vstring.obj
+SOURCES	= args.c eiffel.c entry.c fortran.c get.c keyword.c \
+	main.c options.c parse.c read.c sort.c strlist.c vstring.c
+OBJ	= args.obj eiffel.obj entry.obj fortran.obj get.obj keyword.obj \
+	main.obj options.obj parse.obj read.obj sort.obj strlist.c vstring.obj
 
 .first
 	! For use with DEC C under VMS versions prior 7.0

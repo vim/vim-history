@@ -1,4 +1,4 @@
-*repeat.txt*    For Vim version 5.5.  Last change: 1999 Jun 10
+*repeat.txt*    For Vim version 5.6a.  Last change: 1999 Oct 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -205,10 +205,25 @@ Example: the lines
 are interpreted as if they were given in one line:
 >	set comments=sr:/*,mb:*,el:*/,://,b:#,:%,n:>,fb:-
 
-All leading whitespace characters in the line before a backslash is ignored.
+All leading whitespace characters in the line before a backslash are ignored.
 Note however that trailing whitespace in the line before it cannot be
 inserted freely; it depends on the position where a command is split up
 whether additional whitespace is allowed or not.
+
+There is a problem with the ":append" and ":insert" commands:
+>   1append
+>   \asdf
+>   .
+The backslash is seen as a line-continuation symbol, thus this results in the
+command:
+>   1appendasdf
+>   .
+To avoid this, add the 'C' flag to the 'cpoptions' option:
+>   set cpo+=C
+>   1append
+>   \asdf
+>   .
+>   set cpo-=C
 
 Rationale: Most programs work with a trailing backslash to indicate line
 continuation.  Using this in Vim would cause incompatibility with Vi.  For

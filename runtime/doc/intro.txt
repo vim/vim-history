@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 5.5.  Last change: 1999 Sep 17
+*intro.txt*     For Vim version 5.6a.  Last change: 1999 Nov 04
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -84,6 +84,9 @@ There are four mailing lists for Vim:
 <vim-multibyte@vim.org>				*vim-multibyte*
 	For discussions about using and improving the multi-byte aspects of
 	Vim.
+<vim-mac@vim.org>				*vim-mac*
+	For discussions about using and improving the Macintosh version of
+	Vim.
 
 See http://www.vim.org/mail.html.
 
@@ -107,6 +110,7 @@ http://www.egroups.com/group/vim
 http://www.egroups.com/group/vimdev
 http://www.egroups.com/group/vimannounce
 http://www.egroups.com/group/vim-multibyte
+http://www.egroups.com/group/vim-mac
 
 
 Additional maillists:
@@ -570,9 +574,10 @@ Ex		 :vi	  --	  --	 --	    --	      --
    executed.  If you want the Vi behaviour also when typing <Esc>, use ":cmap
    ^V<Esc> ^V^M"}
 *4 Go from Normal to Select mode by:
-   - use the mouse to select text while 'mousemodel' is "ms"
+   - use the mouse to select text while 'selectmode' contains "mouse"
    - use a non-printable command to move the cursor while keeping the Shift
-     key pressed, and the 'select' option is set
+     key pressed, and the 'selectmode' option contains "key"
+   - use "v", "V" or "CTRL-V" while 'selectmode' contains "cmd"
 *5 Go from Select mode to Normal mode by using a non-printable command to move
    the cursor, without keeping the Shift key pressed.
 *6 Go from Select mode to Insert mode by typing a printable character.  The

@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 5.5.  Last change: 1999 Sep 16
+*if_python.txt* For Vim version 5.6a.  Last change: 1999 Oct 28
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -84,13 +84,13 @@ Methods
 >		# quotes
 >		normal('"a2dd"aP')
 
-	vim.expr(str)					*python-expr*
+	vim.eval(str)					*python-eval*
 	Evaluates the expression str using the vim internal expression
 	evaluator (see |expression|). Returns the expression result as a
 	string.
 	Examples:
->		text_width = vim.expr("'tw'")
->		str = vim.expr("12+12")		# NB result is a string! Use
+>		text_width = vim.eval("'tw'")
+>		str = vim.eval("12+12")		# NB result is a string! Use
 >						# string.atoi() to convert to
 >						# a number.
 

@@ -909,6 +909,7 @@ typedef struct VimMenu
 #ifdef USE_GUI_WIN16
     UINT	id;		    /* Id of menu item */
     HMENU	submenu_id;	    /* If this is submenu, add children here */
+    struct VimMenu *parent;	    /* Parent of menu */
 #endif
 #ifdef USE_GUI_WIN32
     UINT	id;		    /* Id of menu item */
