@@ -4609,7 +4609,7 @@ ins_esc(count, need_redraw, cmdchar)
      */
     if (       curwin->w_cursor.col != 0
 	    && (!restart_edit
-		|| gchar_cursor() == NUL)
+		|| (gchar_cursor() == NUL && !VIsual_active))
 #ifdef RIGHTLEFT
 	    && !revins_on
 #endif
