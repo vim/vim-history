@@ -8417,7 +8417,8 @@ ses_fname(fd, buf, flagp)
 
 /*
  * Write a file name to the session file.
- * Takes care of the "slash" option in 'sessionoptions'.
+ * Takes care of the "slash" option in 'sessionoptions' and escapes special
+ * characters.
  * Returns FAIL if writing fails.
  */
     static int
@@ -8433,19 +8434,42 @@ ses_put_fname(fd, name, flagp)
     sname = home_replace_save(NULL, name);
     if (sname != NULL)
 	name = sname;
-    if (*flagp & SSOP_SLASH)
+    while (*name != NUL)
     {
-	while (*name)
+#ifdef FEAT_MBYTE
 	{
-	    c = *name++;
-	    if (c == '\\')
-		c = '/';
-	    if (putc(c, fd) != c)
+	    int l;
+
+	    if (has_mbyte && (l = (*mb_ptr2len_check)(name)) > 1)
+	    {
+		/* copy a multibyte char */
+		while (--l >= 0)
+		{
+		    if (putc(*name, fd) != *name)
+			retval = FAIL;
+		    ++name;
+		}
+		continue;
+	    }
+	}
+#endif
+	c = *name++;
+	if (c == '\\' && (*flagp & SSOP_SLASH))
+	    /* change a backslash to a forward slash */
+	    c = '/';
+	else if (vim_strchr(escape_chars, c) != NULL
+#ifdef BACKSLASH_IN_FILENAME
+		&& c != '\\'
+#endif
+		)
+	{
+	    /* escape a special character with a backslash */
+	    if (putc('\\', fd) != '\\')
 		retval = FAIL;
 	}
+	if (putc(c, fd) != c)
+	    retval = FAIL;
     }
-    else if (fputs((char *)name, fd) < 0)
-	retval = FAIL;
     vim_free(sname);
     return retval;
 }
