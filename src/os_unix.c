@@ -1857,7 +1857,7 @@ get_stty()
 	intr_char = keys.sg_kill;
 #endif
 	buf[1] = NUL;
-	add_termcode((char_u *)"kb", buf);
+	add_termcode((char_u *)"kb", buf, FALSE);
 
 	/*
 	 * If <BS> and <DEL> are now the same, redefine <DEL>.
@@ -1922,7 +1922,8 @@ check_mouse_termcode()
 # ifdef XTERM_MOUSE
     if (use_xterm_mouse())
     {
-	set_mouse_termcode(KS_MOUSE, (char_u *)"\033[M");
+	set_mouse_termcode(KS_MOUSE, (char_u *)(term_is_8bit(T_NAME)
+						       ? "\233M" : "\033[M"));
 	if (*p_mouse != NUL)
 	{
 	    /* force mouse off and maybe on to send possibly new mouse
