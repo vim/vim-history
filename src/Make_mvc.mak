@@ -251,11 +251,13 @@ CFLAGS = $(CFLAGS) $(OPTFLAG) -DNDEBUG /Zi $(CPUARG)
 RCFLAGS = $(rcflags) $(rcvars) -DNDEBUG
 PDB = /Fd$(OUTDIR)/
 LINK_PDB = /PDB:$(OUTDIR)/
-! ifndef USE_MSVCRT
-LIBC = libc.lib
-! else
+! ifdef USE_MSVCRT
 CFLAGS = $(CFLAGS) -MD
 LIBC = msvcrt.lib
+! elseif defined(MULTITHREADED)
+LIBC = libcmt.lib
+! else
+LIBC = libc.lib
 ! endif
 !else  # DEBUG
 VIM = vimd
