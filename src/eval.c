@@ -8547,7 +8547,7 @@ store_session_globals(fd)
     garray_T	*gap = &variables;		/* global variable */
     VAR		this_var;
     int		i;
-    char_u	*p;
+    char_u	*p, *t;
 
     for (i = gap->ga_len; --i >= 0; )
     {
@@ -8556,8 +8556,17 @@ store_session_globals(fd)
 	{
 	    if (var_flavour(this_var->var_name) == VAR_FLAVOUR_SESSION)
 	    {
+		/* Escapse special characters with a backslash.  Turn a LF and
+		 * CR into \n and \r. */
 		p = vim_strsave_escaped(get_var_string(this_var),
-							    (char_u *)"\\\"");
+							(char_u *)"\\\"\n\r");
+		if (p == NULL)	    /* out of memory */
+		    continue;
+		for (t = p; *t != NUL; ++t)
+		    if (*t == '\n')
+			*t = 'n';
+		    else if (*t == '\r')
+			*t = 'r';
 		if ((fprintf(fd, "let %s = %c%s%c",
 			    this_var->var_name,
 			    (this_var->var_type == VAR_STRING) ? '"' : ' ',
