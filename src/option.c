@@ -6741,7 +6741,14 @@ set_num_option(opt_idx, varp, value, errbuf, opt_flags)
 	    errmsg = e_positive;
 	    p_ch = 1;
 	}
-	if (p_ch != old_value)
+
+	/* Only compute the new window layout when startup has been
+	 * completed. Otherwise the frame sizes may be wrong. */
+	if (p_ch != old_value && full_screen
+#ifdef FEAT_GUI
+		&& !gui.starting
+#endif
+	   )
 	    command_height(old_value);
     }
 
