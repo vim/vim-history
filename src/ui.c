@@ -141,9 +141,11 @@ ui_inchar(buf, maxlen, wtime)
     {
 	static int count = 0;
 
+#ifndef NO_CONSOLE
 	retval = mch_inchar(buf, maxlen, 10L);
 	if (retval > 0)
 	    return retval;
+#endif
 	if (wtime == -1 && ++count == 1000)
 	    read_error_exit();
 	buf[0] = CR;
