@@ -150,11 +150,12 @@
 #AIX 4.2	      gcc 2.7.2.1    +X11 +GUI_Motif	5.2	 D. Rothkamp
 #AIX 4.2.1	      cc				5.2k (C) Will Fiveash
 #AIX 4.3	      cc	     +X11 +GUI_Athena	5.3	 Glauber Ribeiro
+#AIX 4.3.3.12	      xic 3.6.6				5.6  (5) David R. Favor
 #A/UX 3.1.1	      gcc	     +X11		4.0  (6) Jim Jagielski
 #BeOS PR	      mwcc DR3				5.0n (T) Olaf Seibert
 #BSDI 2.1 (x86)       shlicc2 gcc-2.6.3 -X11 X11R6	4.5  (1) Jos Backus
 #BSD/OS 3.0 (x86)     gcc gcc-2.7.2.1 -X11 X11R6	4.6c (1) Jos Backus
-#CYGWIN32_NT 19.3     egcs-2.90.27 -X11 -GUI		5.2	 D. Rothkamp
+#Cygwin 1.0 Win-NT    2.9-cygwin-990830 -X11 -GUI	5.6	 Bram Moolenaar
 #CX/UX 6.2	      cc	     +X11 +GUI_Mofif	5.4  (V) Kipp E. Howard
 #DG/UX 5.4*	      gcc 2.5.8      GUI		5.0e (H) Jonas Schlein
 #DG/UX 5.4R4.20       gcc 2.7.2      GUI		5.0s (H) Rocky Olive
@@ -222,7 +223,7 @@
 #      And add "-lXpm" to MOTIF_LIBS2.
 # (4)  For cc the optimizer must be disabled (use CFLAGS= after running
 #      configure) (symptom: ":set termcap" output looks weird).
-# (5)  Compiler may need -qmaxmem argument, see below.
+# (5)  Compiler may need extra argument, see below.
 # (6)  See below for a few lines to uncomment
 # (7)  See below for lines which enable the use of clcc
 # (8)  Needs some EXTRA_LIBS, search for Unisys below
@@ -493,7 +494,15 @@ LINT_OPTIONS = -beprxzF
 #GUI_LIB_LOC = /usr/lib/Motif1.2_R6
 
 ### (5) AIX 4.1.4 with cc
-#CFLAGS = -O -qmaxmem=8092
+#CFLAGS = -O -qmaxmem=8192
+
+###     AIX with c89 (Walter Briscoe)
+#CC = c89
+#CPPFLAGS = -D_ALL_SOURCE
+
+###     AIX 4.3.3.12 with xic 3.6.6 (David R. Favor)
+#       needed to avoid a problem where strings.h gets included
+#CFLAGS = -qsrcmsg -O2 -qmaxmem=8192 -D__STR31__
 
 ### (W) Solaris with multi-threaded libraries (-lthread):
 ###	If suspending doesn't work properly, try using this line:
@@ -1020,7 +1029,7 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .cc .c .o .pro
 
-PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH)
+PRE_DEFS = -Iproto $(DEFS) $(SNIFF_DEFS) $(GUI_DEFS) $(GUI_IPATH) $(CPPFLAGS)
 POST_DEFS = $(X_CFLAGS) $(PERL_CFLAGS) $(PYTHON_CFLAGS) $(TCL_CFLAGS) $(EXTRA_DEFS)
 
 ALL_CFLAGS = $(PRE_DEFS) $(CFLAGS) $(POST_DEFS)
@@ -1211,12 +1220,13 @@ tools: $(TOOLS)
 #
 config config.mk: configure
 	GUI_INC_LOC="$(GUI_INC_LOC)" GUI_LIB_LOC="$(GUI_LIB_LOC)" \
-		CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	$(CONF_SHELL) ./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
-	$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
-	$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
-	$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) \
-	$(CONF_OPT_MAX) $(CONF_OPT_MIN) $(CONF_TERM_LIB) $(CONF_ARGS)
+		CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
+		LDFLAGS="$(LDFLAGS)" $(CONF_SHELL) \
+		./configure $(CONF_OPT_GUI) $(CONF_OPT_X) \
+		$(CONF_OPT_PERL) $(CONF_OPT_PYTHON) $(CONF_OPT_TCL) \
+		$(CONF_OPT_CSCOPE) $(CONF_OPT_MULTIBYTE) $(CONF_OPT_INPUT) \
+		$(CONF_OPT_OUTPUT) $(CONF_OPT_GPM) \
+		$(CONF_OPT_MAX) $(CONF_OPT_MIN) $(CONF_TERM_LIB) $(CONF_ARGS)
 
 # When configure.in has changed, run autoconf to produce configure
 # If you don't have autoconf, use the configure that's there
@@ -1243,16 +1253,17 @@ CTAGSFILES =	ctags/entry.c ctags/main.c ctags/parse.c ctags/sort.c \
 		ctags/config.h ctags/ctags.h
 
 ctags/ctags$(SUFFIX): ctags/Makefile $(CTAGSFILES)
-	cd ctags; CC="$(CC)" CFLAGS="$(CFLAGS)" \
+	cd ctags; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
 		$(MAKE) -f Makefile SUFFIX="$(SUFFIX)"
 
 ctags/Makefile ctags/config.h: ctags/Makefile.in
-	cd ctags; SUFFIX="$(SUFFIX)" CC="$(CC)" CFLAGS="$(CFLAGS)" \
-		LDFLAGS="$(LDFLAGS)" \
+	cd ctags; SUFFIX="$(SUFFIX)" CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" \
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" \
 		./configure --mandir="$(MANDIR)" --exec_prefix="$(exec_prefix)"
 
 xxd/xxd$(SUFFIX): xxd/xxd.c
-	cd xxd; CC="$(CC)" CFLAGS="$(CFLAGS)" $(MAKE) -f Makefile.unix
+	cd xxd; CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" \
+		$(MAKE) -f Makefile.unix
 
 # Generate function prototypes.  This is not needed to compile vim, but if
 # you want to use it, cproto is out there on the net somewhere -- Webb
