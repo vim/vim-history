@@ -721,7 +721,8 @@
 #endif
 #if defined(FEAT_GUI_DIALOG) && \
 	(defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA) \
-	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN))
+	 || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_MSWIN) \
+	 || defined(FEAT_GUI_PHOTON))
 # define FEAT_GUI_TEXTDIALOG
 #endif
 
@@ -993,7 +994,8 @@
 #  define MCH_CURSOR_SHAPE
 # endif
 # if defined(FEAT_GUI_W32) || defined(FEAT_GUI_W16) || defined(FEAT_GUI_MOTIF) \
-	|| defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK)
+	|| defined(FEAT_GUI_ATHENA) || defined(FEAT_GUI_GTK) \
+	|| defined(FEAT_GUI_PHOTON)
 #  define FEAT_MOUSESHAPE
 # endif
 #endif

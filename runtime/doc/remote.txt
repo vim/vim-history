@@ -1,4 +1,4 @@
-*remote.txt*    For Vim version 6.0at.  Last change: 2001 Aug 27
+*remote.txt*    For Vim version 6.0au.  Last change: 2001 Sep 01
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -31,12 +31,15 @@ The following command line arguments are available:
    --remote-wait [+{cmd}] {file} ...				*--remote-wait*
 				As above, but wait for files to
 				complete (unload) in remote Vim.
-   --servername {name}		Send to or become the server	*--servername*
-				{name}
-   --remote-send {keys}		Send {keys} to server and exit.	*--remote-send*
-   --remote-expr {expr}		Evaluate {expr} in server and	*--remote-expr*
+								*--servername*
+   --servername {name}		Send to or become the server {name}
+								*--remote-send*
+   --remote-send {keys}		Send {keys} to server and exit.
+								*--remote-expr*
+   --remote-expr {expr}		Evaluate {expr} in server and
 				print the result on stdout.
-   --serverlist			Output a list of server names.	*--serverlist*
+								*--serverlist*
+   --serverlist			Output a list of server names.
 
 
 SERVER NAME
@@ -46,8 +49,8 @@ egvim ...).  This can be overridden with the --servername argument.  If the
 specified name is not available, a postfix is applied until a free name is
 encountered, ie. "gvim1" for the second invocation of gvim on a particular
 X-server.  The resulting name is available in the servername builtin variable
-|v:servername|.
-
+|v:servername|.  The case of the server name is ignored, thus "gvim" and
+"GVIM" are considered equal.
 
 When Vim is invoked with --remote-send it will try to locate the server name
 determined by the invocation name and --servername argument as described

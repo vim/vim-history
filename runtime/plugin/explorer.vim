@@ -347,21 +347,21 @@ function! s:OpenEntryPrevWindow()
       let action=confirm("Save Changes in " . bufname . "?","&Yes\n&No\n&Cancel")
       " Yes - try to save - if there is an error, cancel
       if action == 1
-        let v:errmsg = ""
-        silent w
-        if v:errmsg != ""
-          echoerr "Unable to write buffer!"
-          wincmd p
-          return
-        endif
+	let v:errmsg = ""
+	silent w
+	if v:errmsg != ""
+	  echoerr "Unable to write buffer!"
+	  wincmd p
+	  return
+	endif
       " No, abandon changes
       elseif action == 2
-        set nomodified
-        echomsg "Warning, abandoning changes in " . bufname
+	set nomodified
+	echomsg "Warning, abandoning changes in " . bufname
       " Cancel (or any other result), don't do the open
       else
-        wincmd p
-        return
+	wincmd p
+	return
       endif
     endif
     wincmd p

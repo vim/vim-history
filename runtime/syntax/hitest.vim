@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	none; used to see highlighting
 " Maintainer:	Ronald Schild <rs@scutum.de>
-" Last Change:	2001 Jul 11
+" Last Change:	2001 Sep 02
 " Version:	5.4n.1
 
 " To see your current highlight settings, do
@@ -10,7 +10,7 @@
 " save global options and registers
 let s:hidden      = &hidden
 let s:lazyredraw  = &lazyredraw
-let s:more        = &more
+let s:more	  = &more
 let s:report      = &report
 let s:shortmess   = &shortmess
 let s:wrapscan    = &wrapscan
@@ -95,11 +95,11 @@ if b:i < line("$")-1
       let @a = substitute(@a, "\n", '', 'g')
       let @a = substitute(@a, '^,', '', 'g')
       if @a != ""
-         let b:synhead = b:synhead." - filetype"
-         if @a =~ ','
-            let b:synhead = b:synhead."s"
-         endif
-         let b:synhead = b:synhead.":".@a
+	 let b:synhead = b:synhead." - filetype"
+	 if @a =~ ','
+	    let b:synhead = b:synhead."s"
+	 endif
+	 let b:synhead = b:synhead.":".@a
       endif
    endif
    call append(b:i+1, "")
@@ -132,11 +132,11 @@ set nomodified
 " restore global options and registers
 let &hidden      = s:hidden
 let &lazyredraw  = s:lazyredraw
-let &more        = s:more
-let &report      = s:report
-let &shortmess   = s:shortmess
-let &wrapscan    = s:wrapscan
-let @a           = s:register_a
+let &more	 = s:more
+let &report	 = s:report
+let &shortmess	 = s:shortmess
+let &wrapscan	 = s:wrapscan
+let @a		 = s:register_a
 
 " restore last search pattern
 call histdel("search", -1)

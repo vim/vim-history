@@ -6,6 +6,10 @@
  * Do ":help credits" in Vim to see a list of people who contributed.
  */
 
+#ifdef __QNXNTO__
+# include <sys/procmgr.h>
+#endif
+
 #define	USE_TMPNAM
 
 #define POSIX	    /* Used by pty.c */

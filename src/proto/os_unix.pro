@@ -53,6 +53,7 @@ int mch_call_shell __ARGS((char_u *cmd, int options));
 void mch_breakcheck __ARGS((void));
 int mch_expandpath __ARGS((garray_T *gap, char_u *path, int flags));
 int mch_expand_wildcards __ARGS((int num_pat, char_u **pat, int *num_file, char_u ***file, int flags));
+int mch_has_exp_wildcard __ARGS((char_u *p));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_libcall __ARGS((char_u *libname, char_u *funcname, char_u *argstring, int argint, char_u **string_result, int *number_result));
 void setup_term_clip __ARGS((void));

@@ -3,7 +3,7 @@
 " Created By:	Nathaniel Harward nharward@yahoo.com
 " Last Changed: Dec. 12, 2000
 " Filenames:    *.gsp
-" URL:          http://www.constructicon.com/~nharward/vim/syntax/gsp.vim
+" URL:		http://www.constructicon.com/~nharward/vim/syntax/gsp.vim
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -43,8 +43,8 @@ syn keyword htmlArg     contained type file page
 syn region htmlString contained start=+"+ end=+"+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc,gspInLine
 syn region htmlString contained start=+'+ end=+'+ contains=htmlSpecialChar,javaScriptExpression,@htmlPreproc,gspInLine
 syn match  htmlValue  contained "=[\t ]*[^'" \t>][^ \t>]*"hs=s+1 contains=javaScriptExpression,@htmlPreproc,gspInLine
-syn region htmlEndTag           start=+</+    end=+>+ contains=htmlTagN,htmlTagError,gspInLine
-syn region htmlTag              start=+<[^/]+ end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc,@htmlArgCluster,gspInLine
+syn region htmlEndTag		start=+</+    end=+>+ contains=htmlTagN,htmlTagError,gspInLine
+syn region htmlTag		start=+<[^/]+ end=+>+ contains=htmlTagN,htmlString,htmlArg,htmlValue,htmlTagError,htmlEvent,htmlCssDefinition,@htmlPreproc,@htmlArgCluster,gspInLine
 syn match  htmlTagN   contained +<\s*[-a-zA-Z0-9]\++hs=s+1 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster,gspInLine
 syn match  htmlTagN   contained +</\s*[-a-zA-Z0-9]\++hs=s+2 contains=htmlTagName,htmlSpecialTagName,@htmlTagNameCluster,gspInLine
 

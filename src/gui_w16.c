@@ -1590,7 +1590,7 @@ gui_mch_dialog(
 
     SelectFont(hdc, oldFont);
     ReleaseDC(hwnd, hdc);
-    dp = MakeProcInstance(dialog_callback, s_hinst);
+    dp = MakeProcInstance((FARPROC)dialog_callback, s_hinst);
 
 
     /* Let the dialog_callback() function know which button to make default
@@ -1718,5 +1718,18 @@ initialise_toolbar(void)
 		    );
 
     gui_mch_show_toolbar(vim_strchr(p_go, GO_TOOLBAR) != NULL);
+}
+#endif
+
+#if defined(FEAT_OLE) || defined(FEAT_EVAL) || defined(PROTO)
+/*
+ * Make the GUI window come to the foreground.
+ */
+    void
+gui_mch_set_foreground(void)
+{
+    if (IsIconic(s_hwnd))
+	 SendMessage(s_hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
+    SetActiveWindow(s_hwnd);
 }
 #endif

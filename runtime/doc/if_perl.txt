@@ -1,4 +1,4 @@
-*if_perl.txt*   For Vim version 6.0at.  Last change: 2001 Jul 20
+*if_perl.txt*   For Vim version 6.0au.  Last change: 2001 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Sven Verdoolaege
@@ -57,7 +57,7 @@ http://www.perl.com/CPAN-local/ports/nt/Standard/x86/
 {script}
 {endpattern}
 			Execute Perl script {script}.
-			{endpattern} must NOT be preceeded by any white space.
+			{endpattern} must NOT be preceded by any white space.
 			If {endpattern} is omitted, it defaults to a dot '.'
 			like for the |:append| and |:insert| commands.  This
 			form of the |:perl| command is mainly useful for

@@ -12,6 +12,7 @@
  */
 
 #include "vim.h"
+#include "version.h"
 
 #if defined(FEAT_CLIENTSERVER) || defined(PROTO)
 
@@ -160,25 +161,23 @@ typedef int (*EndCond) __ARGS((void *));
  * Forward declarations for procedures defined later in this file:
  */
 
-static int	x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
-static int	AppendPropCarefully __ARGS((Display *display,
-		    Window window, Atom property, char_u *value, int length));
-static Window	LookupName __ARGS((Display *dpy, char_u *name,
-		    int delete, char_u **loose));
+static Window	LookupName __ARGS((Display *dpy, char_u *name, int delete, char_u **loose));
 static int	SendInit __ARGS((Display *dpy));
-static int      DoRegisterName __ARGS((Display *dpy, char_u *name));
-static int      IsSerialName __ARGS((char_u *name));
+static int	DoRegisterName __ARGS((Display *dpy, char_u *name));
 static void	DeleteAnyLingerer __ARGS((Display *dpy, Window w));
+static int	GetRegProp __ARGS((Display *dpy, char_u **regPropp, long_u *numItemsp, long_u *bytesAfterp, int msg));
 static int	WaitForPend __ARGS((void *p));
 static int	WaitForReply __ARGS((void *p));
 static int	WindowValid __ARGS((Display *dpy, Window w));
-static void	ServerWait __ARGS((Display *dpy, Window w, EndCond endCond,
-		    void *endData, int localLoop, int seconds));
-static struct ServerReply *
-		ServerReplyFind __ARGS((Window w, enum ServerReplyOp op));
+static void	ServerWait __ARGS((Display *dpy, Window w, EndCond endCond, void *endData, int localLoop, int seconds));
+static struct ServerReply *ServerReplyFind __ARGS((Window w, enum ServerReplyOp op));
+static int	AppendPropCarefully __ARGS((Display *display, Window window, Atom property, char_u *value, int length));
+static int	x_error_check __ARGS((Display *dpy, XErrorEvent *error_event));
+static int	IsSerialName __ARGS((char_u *name));
 
 /* Private variables for the "server" functionality */
 static Atom	registryProperty;
+static Atom	vimProperty;
 static int	got_x_error = FALSE;
 
 /*
@@ -245,7 +244,7 @@ DoRegisterName(dpy, name)
      * here to prevent conflicting changes to the registry property.
      */
     XGrabServer(dpy);
-    w = LookupName(dpy, name, 0, NULL);
+    w = LookupName(dpy, name, FALSE, NULL);
     if (w != (Window)0)
     {
 	Status		status;
@@ -288,6 +287,9 @@ DoRegisterName(dpy, name)
 	set_vim_var_string(VV_SEND_SERVER, name, -1);
 #endif
 	serverName = vim_strsave(name);
+#ifdef FEAT_TITLE
+	need_maketitle = TRUE;
+#endif
 	return 0;
     }
     return -2;
@@ -316,11 +318,11 @@ serverChangeRegisteredWindow(dpy, newwin)
     if (serverName != NULL)
     {
 	/* Reinsert name if we was already registered */
-	(void) LookupName(dpy, serverName, /*delete=*/TRUE, NULL);
+	(void)LookupName(dpy, serverName, /*delete=*/TRUE, NULL);
 	sprintf((char *)propInfo, "%x %.*s",
-		(int_u) newwin, MAX_NAME_LENGTH, serverName);
+		(int_u)newwin, MAX_NAME_LENGTH, serverName);
 	XChangeProperty(dpy, RootWindow(dpy, 0), registryProperty, XA_STRING, 8,
-			PropModeAppend, (char_u *) propInfo,
+			PropModeAppend, (char_u *)propInfo,
 			STRLEN(propInfo) + 1);
     }
     XUngrabServer(dpy);
@@ -363,7 +365,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
     }
 
     /* Execute locally if no display or target is ourselves */
-    if (dpy == NULL || (serverName != NULL && STRCMP(name, serverName) == 0))
+    if (dpy == NULL || (serverName != NULL && STRICMP(name, serverName) == 0))
     {
 	if (asExpr)
 	{
@@ -392,7 +394,7 @@ serverSendToVim(dpy, name, cmd,  result, server, asExpr, localLoop)
      */
     while (TRUE)
     {
-	w = LookupName(dpy, name, 0, &loosename);
+	w = LookupName(dpy, name, FALSE, &loosename);
 	/* Check that the window is hot */
 	if (w != None)
 	{
@@ -488,6 +490,9 @@ WaitForPend(p)
     return pending->result != NULL;
 }
 
+/*
+ * Return TRUE if window "w" exists and has a "Vim" property on it.
+ */
     static int
 WindowValid(dpy, w)
     Display     *dpy;
@@ -495,16 +500,21 @@ WindowValid(dpy, w)
 {
     XErrorHandler   old_handler;
     Atom	    *plist;
-    int		    result;
+    int		    numProp;
+    int		    i;
 
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = 0;
-    plist = XListProperties(dpy, w, &result);
+    plist = XListProperties(dpy, w, &numProp);
     XSync(dpy, False);
-    if (plist != NULL)
-	XFree(plist);
     XSetErrorHandler(old_handler);
-    return got_x_error ? FALSE : TRUE;
+    if (plist == NULL || got_x_error)
+	return FALSE;
+
+    for (i = 0; i < numProp; i++)
+	if (plist[i] == vimProperty)
+	    return TRUE;
+    return FALSE;
 }
 
 /*
@@ -587,14 +597,12 @@ ServerWait(dpy, w, endCond, endData, localLoop, seconds)
 serverGetVimNames(dpy)
     Display	*dpy;
 {
-    char_u	    *regProp;
-    char_u	    *entry;
-    char_u	    *p;
-    int		    result, actualFormat;
-    unsigned long   numItems, bytesAfter;
-    Atom	    actualType;
-    int_u	    w;
-    garray_T	    ga;
+    char_u	*regProp;
+    char_u	*entry;
+    char_u	*p;
+    long_u	numItems, bytesAfter;
+    int_u	w;
+    garray_T	ga;
 
     if (registryProperty == None)
     {
@@ -606,31 +614,8 @@ serverGetVimNames(dpy)
     /*
      * Read the registry property.
      */
-    regProp = NULL;
-    result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-				(long)MAX_PROP_WORDS, False,
-				XA_STRING, &actualType,
-				&actualFormat, &numItems, &bytesAfter,
-				&regProp);
-
-    if (actualType == None)
-    {
-	EMSG(_("E249: couldn't read VIM instance registry property"));
+    if (GetRegProp(dpy, &regProp, &numItems, &bytesAfter, TRUE) == FAIL)
 	return NULL;
-    }
-
-    /*
-     * If the property is improperly formed, then delete it.
-     */
-    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
-    {
-	if (regProp != NULL)
-	{
-	    XFree(regProp);
-	}
-	EMSG(_("E251: VIM instance registry property is badly formed.  Deleted!"));
-	return NULL;
-    }
 
     /*
      * Scan all of the names out of the property.
@@ -847,13 +832,14 @@ SendInit(dpy)
     got_x_error = FALSE;
 
     commProperty = XInternAtom(dpy, "Comm", False);
+    vimProperty = XInternAtom(dpy, "Vim", False);
+
     /* Change this back to "InterpRegistry" to talk to tk processes */
     registryProperty = XInternAtom(dpy, "VimRegistry", False);
 
     if (commWindow == None)
     {
-	commWindow =
-	    XCreateSimpleWindow(dpy, XDefaultRootWindow(dpy),
+	commWindow = XCreateSimpleWindow(dpy, XDefaultRootWindow(dpy),
 				getpid(), 0, 10, 10, 0,
 				WhitePixel(dpy, DefaultScreen(dpy)),
 				WhitePixel(dpy, DefaultScreen(dpy)));
@@ -863,6 +849,11 @@ SendInit(dpy)
 	XUngrabServer(dpy);
     }
 
+    /* Make window recognizable as a vim window */
+    XChangeProperty(dpy, commWindow, vimProperty, XA_STRING,
+		    8, PropModeReplace, (char_u *)VIM_VERSION_SHORT,
+			(int)STRLEN(VIM_VERSION_SHORT) + 1);
+
     XSync(dpy, False);
     (void)XSetErrorHandler(old_handler);
 
@@ -870,56 +861,35 @@ SendInit(dpy)
 }
 
 /*
- * Given an interpreter name, see if the name exists in the interpreter
- * registry for a particular display.
+ * Given a server name, see if the name exists in the registry for a
+ * particular display.
  *
  * If the given name is registered, return the ID of the window associated
  * with the name.  If the name isn't registered, then return 0.
  *
  * Side effects:
- *	If the registry property is improperly formed, then
- *	it is deleted.  If "delete" is non-zero, then if the
- *	named interpreter is found it is removed from the
- *	registry property.
+ *	If the registry property is improperly formed, then it is deleted.
+ *	If "delete" is non-zero, then if the named server is found it is
+ *	removed from the registry property.
  */
     static Window
 LookupName(dpy, name, delete, loose)
     Display	*dpy;	    /* Display whose registry to check. */
-    char_u	*name;	    /* Name of an interpreter. */
+    char_u	*name;	    /* Name of a server. */
     int		delete;	    /* If non-zero, delete info about name. */
     char_u	**loose;    /* Do another search matching -999 if not found
 			       Return result here if a match is found */
 {
-    char_u	    *regProp, *entry;
-    register char_u *p;
-    int		    result, actualFormat;
-    unsigned long   numItems, bytesAfter;
-    Atom	    actualType;
-    int_u	    returnValue;
+    char_u	*regProp, *entry;
+    char_u	*p;
+    long_u	numItems, bytesAfter;
+    int_u	returnValue;
 
     /*
      * Read the registry property.
      */
-    regProp = NULL;
-    result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-				(long)MAX_PROP_WORDS, False,
-				XA_STRING, &actualType,
-				&actualFormat, &numItems, &bytesAfter,
-				&regProp);
-
-    if (actualType == None)
+    if (GetRegProp(dpy, &regProp, &numItems, &bytesAfter, FALSE) == FAIL)
 	return 0;
-
-    /*
-     * If the property is improperly formed, then delete it.
-     */
-    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
-    {
-	if (regProp != NULL)
-	    XFree(regProp);
-	XDeleteProperty(dpy, RootWindow(dpy, 0), registryProperty);
-	return 0;
-    }
 
     /*
      * Scan the property for the desired name.
@@ -987,8 +957,8 @@ LookupName(dpy, name, delete, loose)
 }
 
 /*
- * Delete any lingering occurences of window id. WE promise that any occurences
- * is not ours since it is not yet put into the registry (by us)
+ * Delete any lingering occurences of window id.  We promise that any
+ * occurences is not ours since it is not yet put into the registry (by us)
  *
  * This is necessary in the following scenario:
  * 1. There is an old windowid for an exit'ed vim in the registry
@@ -997,35 +967,19 @@ LookupName(dpy, name, delete, loose)
  */
     static void
 DeleteAnyLingerer(dpy, win)
-    Display *dpy;	/* Display whose registry to check. */
-    Window  win;	/* Window to remove */
+    Display	*dpy;	/* Display whose registry to check. */
+    Window	win;	/* Window to remove */
 {
-    char_u	    *regProp, *entry = NULL;
-    register char_u *p;
-    int		    result, actualFormat;
-    unsigned long   numItems, bytesAfter;
-    Atom	    actualType;
-    Window	    wwin;
+    char_u	*regProp, *entry = NULL;
+    char_u	*p;
+    long_u	numItems, bytesAfter;
+    Window	wwin;
 
-    /* Read the registry property.  */
-    regProp = NULL;
-    result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
-				(long)MAX_PROP_WORDS, False,
-				XA_STRING, &actualType,
-				&actualFormat, &numItems, &bytesAfter,
-				&regProp);
-
-    if (actualType == None)
+    /*
+     * Read the registry property.
+     */
+    if (GetRegProp(dpy, &regProp, &numItems, &bytesAfter, FALSE) == FAIL)
 	return;
-
-    /* If the property is improperly formed, then delete it.  */
-    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
-    {
-	if (regProp != NULL)
-	    XFree(regProp);
-	XDeleteProperty(dpy, RootWindow(dpy, 0), registryProperty);
-	return;
-    }
 
     /* Scan the property for the window id.  */
     for (p = regProp; (p - regProp) < numItems; )
@@ -1067,20 +1021,62 @@ DeleteAnyLingerer(dpy, win)
 }
 
 /*
+ * Read the registry property.  Delete it when it's formatted wrong.
+ * Return OK when successful.
+ */
+    static int
+GetRegProp(dpy, regPropp, numItemsp, bytesAfterp, msg)
+    Display	*dpy;
+    char_u	**regPropp;
+    long_u	*numItemsp;
+    long_u	*bytesAfterp;
+    int		msg;		/* When TRUE give error message. */
+{
+    int		result, actualFormat;
+    Atom	actualType;
+
+    *regPropp = NULL;
+    result = XGetWindowProperty(dpy, RootWindow(dpy, 0), registryProperty, 0L,
+				(long)MAX_PROP_WORDS, False,
+				XA_STRING, &actualType,
+				&actualFormat, numItemsp, bytesAfterp,
+				regPropp);
+
+    if (actualType == None)
+    {
+	if (msg)
+	    EMSG(_("E249: couldn't read VIM instance registry property"));
+	return FAIL;
+    }
+
+    /* If the property is improperly formed, then delete it. */
+    if (result != Success || actualFormat != 8 || actualType != XA_STRING)
+    {
+	if (*regPropp != NULL)
+	    XFree(*regPropp);
+	XDeleteProperty(dpy, RootWindow(dpy, 0), registryProperty);
+	if (msg)
+	    EMSG(_("E251: VIM instance registry property is badly formed.  Deleted!"));
+	return FAIL;
+    }
+    return OK;
+}
+
+/*
  * This procedure is invoked by the varous X event loops throughout Vims when
  * a property changes on the communication window.  This procedure reads the
  * property and handles command requests and responses.
  */
     void
 serverEventProc(dpy, eventPtr)
-    Display	   *dpy;
-    XEvent	    *eventPtr;		/* Information about event. */
+    Display	*dpy;
+    XEvent	*eventPtr;		/* Information about event. */
 {
-    char_u	    *propInfo;
-    char_u	    *p;
-    int		    result, actualFormat;
-    unsigned long   numItems, bytesAfter;
-    Atom	    actualType;
+    char_u	*propInfo;
+    char_u	*p;
+    int		result, actualFormat;
+    long_u	numItems, bytesAfter;
+    Atom	actualType;
 
     if (eventPtr->xproperty.atom != commProperty
 	    || eventPtr->xproperty.state != PropertyNewValue)
@@ -1096,10 +1092,7 @@ serverEventProc(dpy, eventPtr)
 				&actualFormat, &numItems, &bytesAfter,
 				&propInfo);
 
-    /*
-     * If the property doesn't exist or is improperly formed
-     * then ignore it.
-     */
+    /* If the property doesn't exist or is improperly formed then ignore it. */
     if (result != Success || actualType != XA_STRING || actualFormat != 8)
     {
 	if (propInfo != NULL)
@@ -1153,8 +1146,7 @@ serverEventProc(dpy, eventPtr)
 			resWindow = 0;
 			while (isxdigit(*end))
 			{
-			    resWindow = 16 * resWindow
-						+ (unsigned long)hex2nr(*end);
+			    resWindow = 16 * resWindow + (long_u)hex2nr(*end);
 			    ++end;
 			}
 			if (end == p + 2 || *end != ' ')
@@ -1195,7 +1187,7 @@ serverEventProc(dpy, eventPtr)
 		reply.ga_room -= reply.ga_len;
 	    }
 	    res = NULL;
-	    if (serverName != NULL && STRCMP(name, serverName) == 0)
+	    if (serverName != NULL && STRICMP(name, serverName) == 0)
 	    {
 		if (asKeys)
 		    server_to_input_buf(script);
@@ -1341,19 +1333,18 @@ serverEventProc(dpy, eventPtr)
  */
     static int
 AppendPropCarefully(dpy, window, property, value, length)
-    Display *dpy;		/* Display on which to operate. */
-    Window window;		/* Window whose property is to
-				 * be modified. */
-    Atom property;		/* Name of property. */
-    char_u *value;		/* Characters  to append to property. */
-    int  length;		/* How much to append */
+    Display	*dpy;		/* Display on which to operate. */
+    Window	window;		/* Window whose property is to be modified. */
+    Atom	property;	/* Name of property. */
+    char_u	*value;		/* Characters  to append to property. */
+    int		length;		/* How much to append */
 {
     XErrorHandler old_handler;
 
     old_handler = XSetErrorHandler(x_error_check);
     got_x_error = FALSE;
     XChangeProperty(dpy, window, property, XA_STRING, 8,
-		    PropModeAppend, value, length);
+					       PropModeAppend, value, length);
     XSync(dpy, False);
     (void) XSetErrorHandler(old_handler);
     return got_x_error ? -1 : 0;
@@ -1366,7 +1357,7 @@ AppendPropCarefully(dpy, window, property, value, length)
 /* ARGSUSED */
     static int
 x_error_check(dpy, error_event)
-    Display *dpy;
+    Display	*dpy;
     XErrorEvent	*error_event;
 {
     got_x_error = TRUE;
@@ -1374,7 +1365,8 @@ x_error_check(dpy, error_event)
 }
 
 /*
- * Check if "str" looks like it had a serial number appended
+ * Check if "str" looks like it had a serial number appended.
+ * Actually just checks if the name ends in a digit.
  */
     static int
 IsSerialName(str)

@@ -25,7 +25,7 @@ menutrans &File				檔案(&F)
 menutrans &Open\.\.\.<Tab>:e		開啟(&O)\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	分割視窗並開啟(&L)<Tab>:sp
 menutrans &New<Tab>:enew		編輯新檔案(&N)<Tab>:enew
-menutrans &Close<Tab>:q			關閉檔案(&C)<Tab>:q
+menutrans &Close<Tab>:close		關閉檔案(&C)<Tab>:close
 menutrans &Save<Tab>:w			儲存(&S)<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	另存新檔(&A)\.\.\.<Tab>:sav
 menutrans Show\ &Diff\ with\.\.\.	比較(&Diff)\.\.\.

@@ -98,7 +98,7 @@ gui_start()
 	display_errors();
 #endif
 
-#if defined(UNIX) && !defined(__BEOS__)
+#if defined(UNIX) && !defined(__BEOS__) && !defined(__QNXNTO__)
     /*
      * Quit the current process and continue in the child.
      * Makes "gvim file" disconnect from the shell it was started in.
@@ -114,15 +114,12 @@ gui_start()
 	     * exit() may kill the child too (when starting gvim from inside a
 	     * gvim). */
 	    ui_delay(100L, TRUE);
-# ifdef FEAT_GUI_GTK
+
 	    /*
-	     * GTK messes up signals when exiting.  The parent must skip the
-	     * normal exit() processing.
+	     * The parent must skip the normal exit() processing, the child
+	     * will do it.  For example, GTK messes up signals when exiting.
 	     */
 	    _exit(0);
-# else
-	    exit(0);
-# endif
 	}
 
 # if defined(HAVE_SETSID) || defined(HAVE_SETPGID)
@@ -138,6 +135,12 @@ gui_start()
 #  endif
 # endif
     }
+#else
+# if defined(__QNXNTO__)
+    if (gui.in_use && dofork)
+	procmgr_daemon(0, PROCMGR_DAEMON_KEEPUMASK | PROCMGR_DAEMON_NOCHDIR |
+		PROCMGR_DAEMON_NOCLOSE | PROCMGR_DAEMON_NODEVNULL);
+# endif
 #endif
 
 #ifdef FEAT_AUTOCMD
@@ -950,7 +953,7 @@ gui_update_cursor(force, clear_selection)
     void
 gui_position_menu()
 {
-# ifndef FEAT_GUI_GTK
+# if !defined(FEAT_GUI_GTK) && !defined(FEAT_GUI_MOTIF)
     if (gui.menu_is_active && gui.in_use)
 	gui_mch_set_menu_pos(0, 0, gui.menu_width, gui.menu_height);
 # endif
@@ -3856,8 +3859,8 @@ ex_gui(eap)
 	ex_next(eap);
 }
 
-#if ((defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32)) \
-	&& defined(FEAT_TOOLBAR)) || defined(PROTO)
+#if ((defined(FEAT_GUI_X11) || defined(FEAT_GUI_GTK) || defined(FEAT_GUI_W32) \
+	|| defined(FEAT_GUI_PHOTON)) && defined(FEAT_TOOLBAR)) || defined(PROTO)
 /*
  * This is shared between Athena, Motif and GTK.
  */

@@ -1021,9 +1021,23 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
     return FAIL;
 }
 
-    int			/* TRUE if string contains wildcards. */
+/*
+ * Return TRUE if "p" contains wildcards which can be expanded by
+ * mch_expandpath().
+ */
+    int
+mch_has_exp_wildcard(p)
+    char_u	*p;
+{
+    if (vim_strpbrk((char_u *)"*#", p))
+	return TRUE;
+    return FALSE;
+}
+
+/* Return TRUE if "p" contains wildcards. */
+    int
 mch_has_wildcard(p)
-    char_u  *p;		/* String to check. */
+    char_u	*p;
 {
     if (vim_strpbrk((char_u *)"*#`", p))
 	return TRUE;

@@ -3081,7 +3081,7 @@ xim_set_status_area()
 	    status_area.y = gui.char_height * Rows + gui.border_offset;
 	    if (gui.which_scrollbars[SBAR_BOTTOM])
 		status_area.y += gui.scrollbar_height;
-#if defined(FEAT_MENU) && !defined(FEAT_GUI_GTK)
+#ifdef FEAT_MENU
 	    if (gui.menu_is_active)
 		status_area.y += gui.menu_height;
 #endif
@@ -3240,8 +3240,9 @@ xim_real_init(x11_window, x11_display)
 		*s,
 		*ns,
 		*end,
-		tmp[1024],
-		buf[32];
+		tmp[1024];
+#define IMLEN_MAX 40
+    char	buf[IMLEN_MAX + 7];
     XIM		xim = NULL;
     XIMStyles	*xim_styles;
     XIMStyle	this_input_style = 0;
@@ -3260,22 +3261,26 @@ xim_real_init(x11_window, x11_display)
 	strcpy(tmp, gui.rsrc_input_method);
 	for (ns = s = tmp; ns != NULL && *s != NUL;)
 	{
-	    while (*s && isspace((unsigned char)*s))
-		s++;
-	    if (!*s)
+	    s = (char *)skipwhite((char_u *)s);
+	    if (*s == NUL)
 		break;
 	    if ((ns = end = strchr(s, ',')) == NULL)
 		end = s + strlen(s);
-	    while (isspace((unsigned char)*end))
+	    while (isspace(((char_u *)end)[-1]))
 		end--;
 	    *end = NUL;
 
-	    strcpy(buf, "@im=");
-	    strcat(buf, s);
-	    if ((p = XSetLocaleModifiers(buf)) != NULL
-		&& *p != NUL
-		&& (xim = XOpenIM(x11_display, NULL, NULL, NULL)) != NULL)
-		break;
+	    if (strlen(s) <= IMLEN_MAX)
+	    {
+		strcpy(buf, "{@im=");
+		strcat(buf, s);
+		strcat(buf, "}");
+		if ((p = XSetLocaleModifiers(buf)) != NULL
+			&& *p != NUL
+			&& (xim = XOpenIM(x11_display, NULL, NULL, NULL))
+								      != NULL)
+		    break;
+	    }
 
 	    s = ns + 1;
 	}
@@ -3286,13 +3291,9 @@ xim_real_init(x11_window, x11_display)
 
     if (xim == NULL)
     {
-#ifndef __sgi
 	/* This is supposed to be useful to obtain characters through
-	 * XmbLookupString() without really using a XIM. For SGI/Irix machines
-	 * this apparently causes the first character after an "i" command to
-	 * be lost. */
-	(void)XSetLocaleModifiers("@im=none");
-#endif
+	 * XmbLookupString() without really using a XIM. */
+	(void)XSetLocaleModifiers("{@im=none}");
 	xim = XOpenIM(x11_display, NULL, NULL, NULL);
     }
 

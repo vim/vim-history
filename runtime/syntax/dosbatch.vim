@@ -6,7 +6,7 @@
 " Web Page:     N/A
 "
 " Options Flags:
-" dosbatch_cmdextversion        - 1 = Windows NT, 2 = Windows 2000 [default]
+" dosbatch_cmdextversion	- 1 = Windows NT, 2 = Windows 2000 [default]
 "
 
 " For version 5.x: Clear all syntax items
@@ -44,7 +44,7 @@ syn match dosbatchIfOperator    "if\s\+\(\(not\)\=\s\+\)\=\(exist\|defined\|erro
 
 " String - using "'s is a convenience rather than a requirement outside of FOR
 syn match dosbatchString	"\"[^"]*\"" contains=dosbatchVariable,dosBatchArgument,@dosbatchNumber
-syn match dosbatchString        "\<echo[^)>|]*"lc=4 contains=dosbatchVariable,dosbatchArgument,@dosbatchNumber
+syn match dosbatchString	"\<echo[^)>|]*"lc=4 contains=dosbatchVariable,dosbatchArgument,@dosbatchNumber
 syn match dosbatchEchoOperator  "\<echo\s\+\(on\|off\)\s*$"lc=4
 
 " For embedded commands
@@ -52,13 +52,13 @@ syn match dosbatchCmd		"(\s*'[^']*'"lc=1 contains=dosbatchString,dosbatchVariabl
 
 " Numbers - surround with ws to not include in dir and filenames
 syn match dosbatchInteger       "[[:space:]=(/:]\d\+"lc=1
-syn match dosbatchHex           "[[:space:]=(/:]0x\x\+"lc=1
-syn match dosbatchBinary        "[[:space:]=(/:]0b[01]\+"lc=1
-syn match dosbatchOctal         "[[:space:]=(/:]0\o\+"lc=1
+syn match dosbatchHex		"[[:space:]=(/:]0x\x\+"lc=1
+syn match dosbatchBinary	"[[:space:]=(/:]0b[01]\+"lc=1
+syn match dosbatchOctal		"[[:space:]=(/:]0\o\+"lc=1
 syn cluster dosbatchNumber      contains=dosbatchInteger,dosbatchHex,dosbatchBinary,dosbatchOctal
 
 " Command line switches
-syn match dosbatchSwitch        "/\(\a\+\|?\)"
+syn match dosbatchSwitch	"/\(\a\+\|?\)"
 
 " Various special escaped char formats
 syn match dosbatchSpecialChar   "\^[&|()<>^]"
@@ -70,7 +70,7 @@ syn match dosbatchIdentifier    contained "\s\h\w*\>"
 syn match dosbatchVariable	"%\h\w*%"
 syn match dosbatchVariable	"%\h\w*:\*\=[^=]*=[^%]*%"
 syn match dosbatchVariable	"%\h\w*:\~\d\+,\d\+%" contains=dosbatchInteger
-syn match dosbatchSet           "\s\h\w*[+-]\==\{-1}" contains=dosbatchIdentifier,dosbatchOperator
+syn match dosbatchSet		"\s\h\w*[+-]\==\{-1}" contains=dosbatchIdentifier,dosbatchOperator
 
 " Args to bat files and for loops, etc
 syn match dosbatchArgument	"%\(\d\|\*\)"
@@ -82,10 +82,10 @@ else
 endif
 
 " Line labels
-syn match dosbatchLabel         "^\s*:\s*\h\w*\>"
-syn match dosbatchLabel         "\<\(goto\|call\)\s\+:\h\w*\>"lc=4
-syn match dosbatchLabel         "\<goto\s\+\h\w*\>"lc=4
-syn match dosbatchLabel         ":\h\w*\>"
+syn match dosbatchLabel		"^\s*:\s*\h\w*\>"
+syn match dosbatchLabel		"\<\(goto\|call\)\s\+:\h\w*\>"lc=4
+syn match dosbatchLabel		"\<goto\s\+\h\w*\>"lc=4
+syn match dosbatchLabel		":\h\w*\>"
 
 " Comments - usual rem but also two colons as first non-space is an idiom
 syn match dosbatchComment	"^rem\($\|\s.*$\)"lc=3 contains=dosbatchTodo,@dosbatchNumber,dosbatchVariable,dosbatchArgument
@@ -143,9 +143,9 @@ if version >= 508 || !exists("did_dosbatch_syntax_inits")
   HiLink dosbatchComment	Comment
   HiLink dosbatchImplicit	Function
 
-  HiLink dosbatchSwitch         Special
+  HiLink dosbatchSwitch		Special
 
-  HiLink dosbatchCmd            PreProc
+  HiLink dosbatchCmd		PreProc
 
   delcommand HiLink
 endif

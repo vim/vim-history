@@ -1479,6 +1479,24 @@ sortcmp(a, b)
     return pathcmp(*a, *b);
 }
 
+/*
+ * Return TRUE if "p" has wildcards that can be expanded by mch_expandpath().
+ */
+    int
+mch_has_exp_wildcard(p)
+    char_u *p;
+{
+    for ( ; *p; ++p)
+    {
+	if (*p == '\\' && p[1] != NUL)
+	    ++p;
+	else
+	    if (vim_strchr((char_u *)"*?[(#", *p) != NULL)
+		return TRUE;
+    }
+    return FALSE;
+}
+
     int
 mch_has_wildcard(p)
     char_u *p;
@@ -1495,8 +1513,8 @@ mch_has_wildcard(p)
 				    "*?[(#$"
 #  endif
 						, *p) != NULL
-		|| (*p == '~' && p[1] != NUL))
-	    return TRUE;
+		    || (*p == '~' && p[1] != NUL))
+		return TRUE;
     }
     return FALSE;
 }

@@ -299,7 +299,8 @@ gui_mch_add_menu(vimmenu_T *menu, int idx)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->id), menu->submenu_id);
 
     menu->tearoff_handle = gtk_tearoff_menu_item_new();
-    gtk_widget_show(menu->tearoff_handle);
+    if (vim_strchr(p_go, GO_TEAROFF) != NULL)
+	gtk_widget_show(menu->tearoff_handle);
     gtk_menu_prepend(GTK_MENU(menu->submenu_id), menu->tearoff_handle);
 }
 
@@ -896,6 +897,23 @@ gui_mch_browse(int saving,
 static char_u *dialog_textfield = NULL;
 static GtkWidget *dialog_textentry;
 
+    static void
+dlg_destroy(GtkWidget *dlg)
+{
+    gchar *p;
+
+    if (dialog_textfield != NULL)
+    {
+	/* Get the text from the textentry widget. */
+	p = gtk_editable_get_chars(GTK_EDITABLE(dialog_textentry),
+							       0, IOSIZE - 1);
+	STRCPY(dialog_textfield, p);
+	g_free(p);
+    }
+    /* Destroy the dialog, will break the waiting loop. */
+    gtk_widget_destroy(dlg);
+}
+
 # ifdef FEAT_GUI_GNOME
 /* ARGSUSED */
     static int
@@ -1006,6 +1024,7 @@ gui_gnome_dialog( int	type,
 	g_free(buttons_list[cur]);
     g_free(buttons_list);
 
+    dialog_textfield = textfield;
     if (textfield != NULL)
     {
 	/* Add text entry field */
@@ -1019,8 +1038,11 @@ gui_gnome_dialog( int	type,
 	gtk_entry_set_max_length(GTK_ENTRY(dialog_textentry), IOSIZE - 1);
 	gtk_entry_set_position(GTK_ENTRY(dialog_textentry), STRLEN(textfield));
 	gtk_widget_show(dialog_textentry);
+	gtk_window_set_focus(GTK_WINDOW(dlg), dialog_textentry);
     }
 
+    gtk_signal_connect_object(GTK_OBJECT(dlg), "destroy",
+			      GTK_SIGNAL_FUNC(dlg_destroy), GTK_OBJECT(dlg));
     gnome_dialog_set_default(GNOME_DIALOG(dlg), dfltbutton + 1);
     gui_gtk_position_in_parent(GTK_WIDGET(gui.mainwin),
 			       GTK_WIDGET(dlg), VW_POS_MOUSE);
@@ -1042,23 +1064,6 @@ typedef struct _CancelData
     int		*status;
     GtkWidget	*dialog;
 } CancelData;
-
-    static void
-dlg_destroy(GtkWidget *dlg)
-{
-    gchar *p;
-
-    if (dialog_textfield!= NULL)
-    {
-	/* Get the text from the textentry widget. */
-	p = gtk_editable_get_chars(GTK_EDITABLE(dialog_textentry),
-							       0, IOSIZE - 1);
-	STRCPY(dialog_textfield, p);
-	g_free(p);
-    }
-    /* Destroy the dialog, will break the waiting loop. */
-    gtk_widget_destroy(dlg);
-}
 
 /* ARGSUSED */
     static void
@@ -1395,8 +1400,8 @@ gui_mch_dialog(	int	type,		/* type of dialog */
     void
 gui_mch_show_popupmenu(vimmenu_T *menu)
 {
-    gtk_menu_popup(GTK_MENU(menu->submenu_id),
-		   NULL, NULL, NULL, NULL, 3, (guint32)GDK_CURRENT_TIME);
+    gtk_menu_popup(GTK_MENU(menu->submenu_id), NULL, NULL,
+	       (GtkMenuPositionFunc)NULL, NULL, 3, (guint32)GDK_CURRENT_TIME);
 }
 #endif
 

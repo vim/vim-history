@@ -1,4 +1,4 @@
-*version6.txt*  For Vim version 6.0at.  Last change: 2001 Aug 27
+*version6.txt*  For Vim version 6.0au.  Last change: 2001 Sep 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -79,10 +79,10 @@ When going from one window to another window on the same buffer while in
 Visual mode, the cursor position of the other window is adjusted to keep the
 same Visual area.  This can be used to set the start of the Visual area in one
 window and the end in another.  In vim 5.x the cursor position of the other
-window would be used, which could be anywhere.
+window would be used, which could be anywhere and was not very useful.
 
 
-substitute command Vi compatible		*substitute-CR*
+Substitute command Vi compatible		*substitute-CR*
 --------------------------------
 
 The substitute string (the "to" part of the substitute command) has been made
@@ -374,8 +374,8 @@ Folding							*new-folding*
 -------
 
 Vim can now display a buffer with text folded.  This allows overviewing the
-structure of a file quickly.  It is also possible to move folded text, for
-example to move a function to another position.
+structure of a file quickly.  It is also possible to yank, delete and put
+folded text, for example to move a function to another position.
 
 There is a whole bunch of new commands and options related to folding.
 See |folding|.
@@ -444,7 +444,7 @@ and right of the cursor.  The 'listchars' option has been extended with the
 "precedes" item, to show a "<" for example, when there is text left off the
 screen. (Utz-Uwe Haus)
 
-"-O" command line argument: like "-o" but split windows vertically. (Scott
+"-O" command line argument: Like "-o" but split windows vertically. (Scott
 Urban)
 
 Added commands to move the current window to the very top (CTRL-W K), bottom
@@ -1396,6 +1396,11 @@ screen		Screen RC (Nikolai Weibull)
 specman		Specman (Or Freund)
 terminfo	terminfo (Nikolai Weibull)
 tidy		Tidy configuration (Doug Kearns)
+lftp	    	LFTP (Nikolai Weibull)
+readline    	readline config (Nikolai Weibull)
+mush	    	mush sourcecode (Bek Oberin)
+wget	    	Wget configuration (Doug Kearns)
+sqlforms    	SQL*Forms (Austin Ziegler)
 
 Updated many syntax files to work both with Vim 5.7 and 6.0.
 
@@ -1461,6 +1466,11 @@ Merz et al.)
 
 Added ":filetype detect".  Try detecting the filetype again.  Helps when
 writing a new shell script, after adding "#!/bin/csh".
+
+Added ":augroup! name" to delete an autocommand group.  Needed for the
+client-server "--remote-wait".
+
+Add the Vim version number to the viminfo file, useful for debugging.
 
 ==============================================================================
 IMPROVEMENTS						*improvements-6*
@@ -2163,7 +2173,7 @@ When "t_Co" is set, the default colors remain the same, thus wrong.  Reset the
 colors after changing "t_Co". (Steve Wall)
 
 When exiting with ":wqall" the messages about writing files could overwrite
-eachother and be lost forever.
+each other and be lost forever.
 
 When starting Vim with an extremely long file name (around 1024 characters) it
 would crash.  Added a few checks to avoid buffer overflows.
@@ -3192,7 +3202,7 @@ GUI: When typing ":" at the more prompt, would return to Normal mode and not
 redraw the screen.
 
 When starting Vim with an argument "-c g/at/p" the printed lines would
-overwrite eachother.
+overwrite each other.
 
 BeOS: Didn't compile.  Configure didn't add the os_beos files, the QNX check
 removed them.  Various changes to os_beos.cc. (Joshua Haberman)
@@ -3220,5 +3230,58 @@ When using ":3call func()" or ":3,3call func() the line number was ignored.
 
 When 'showbreak' and 'linebreak' were both set, Visual highlighting sometimes
 continued until the end of the line.
+
+GTK GUI: Tearoff items were added even when 'guioptions' didn't contain 't'
+when starting up.
+
+MS-Windows: When the current directory includes a "~", searching files with
+"gf" or ":find" didn't work.  A "$" in the directory had the same problem.
+Added mch_has_exp_wildcard() functions.
+
+When reducing the Vim window height while starting up, would get an
+out-of-memory error message.
+
+When editing a very long search pattern, 'incsearch' caused the redraw of the
+command line to fail.
+
+Motif GUI: On some systems the "Help" menu would not be on the far right, as
+it should be.  On some other systems (esp. IRIX) the command line would not
+completely show.  Solution is to only resize the menubar for Lesstif.
+
+Using "%" in a line that contains "\\" twice didn't take care of the quotes
+properly.  Now make a difference between \" and \\".
+
+For non-Unix systems a dummy file is created when finding a swap name to
+detect a 8.3 filesystem.  When there is an existing swap file, would get a
+warning for the file being created outside of Vim.  Also, when closing the Vim
+window the file would remain.
+
+Motif: The menu height was always computed, using a "-menuheight" argument
+was setting the room for the command line.  Now make clear the argument is not
+supported.
+
+For some (EBCDIC) systems, POUND was equal to '#'.  Added an #if for that to
+avoid a duplicate case in a switch.
+
+The GUI may have problems when forking.  Always call _exit() instead of exit()
+in the parent, the child will call exit().
+
+Win32 GUI: Accented characters were often wrong in dialogs and tearoff menus.
+Now use CP_ACP instead of CP_OEMCP. (Vince Negri)
+
+When displaying text with syntax highlighting causes an error (e.g., running
+out of stack) the syntax highlighting is disabled to avoid further messages.
+
+When a command in a .vimrc or .gvimrc causes an ATTENTION prompt, and Vim was
+started from the desktop (no place to display messages) it would hang.  Now
+open the GUI window early to be able to display the messages and pop up the
+dialog.
+
+"r<CR>" on a multi-byte character deleted only the first byte of the
+character. "3r<CR>" deleted three bytes instead of three characters.
+
+When interrupting reading a file, Vi considers the buffer modified.  Added the
+'i' flag in 'cpoptions' flag for this (we don't want it modified to be able to
+do ":q").
 
  vim:tw=78:

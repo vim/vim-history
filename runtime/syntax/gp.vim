@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	gp (version 2.1)
 " Maintainer:	Karim Belabas <Karim.Belabas@math.u-psud.fr>
-" Last change:	2001 May 10
+" Last change:	2001 Sep 02
 
 if version < 600
   syntax clear
@@ -13,7 +13,7 @@ endif
 syntax keyword gpStatement	break return next
 syntax keyword gpConditional	if
 syntax keyword gpRepeat		until while for fordiv forprime forstep forvec
-syntax keyword gpScope          local global
+syntax keyword gpScope		local global
 
 syntax keyword gpInterfaceKey	buffersize colors compatible debug debugmem
 syntax keyword gpInterfaceKey	echo format help histsize log logfile output

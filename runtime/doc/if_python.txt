@@ -1,4 +1,4 @@
-*if_python.txt* For Vim version 6.0at.  Last change: 2001 Jun 24
+*if_python.txt* For Vim version 6.0au.  Last change: 2001 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Paul Moore
@@ -29,7 +29,7 @@ The Python interface is available only when Vim was compiled with the
 {endmarker}
 			Execute Python script {script}.
 
-{endmarker} must NOT be preceeded by any white space.  If {endmarker} is
+{endmarker} must NOT be preceded by any white space.  If {endmarker} is
 omitted from after the "<<", a dot '.' must be used after {script}, like
 for the |:append| and |:insert| commands.
 This form of the |:python| command is mainly useful for including python code

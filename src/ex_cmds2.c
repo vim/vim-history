@@ -2604,11 +2604,36 @@ prt_header_height()
     return 2;
 }
 
+/*
+ * Return TRUE if using a line number for printing.
+ */
     int
 prt_use_number()
 {
     return (printer_opts[OPT_PRINT_NUMBER].present
 	    && TO_LOWER(printer_opts[OPT_PRINT_NUMBER].string[0]) == 'y');
+}
+
+/*
+ * Return the unit used in a margin item in 'printoptions'.
+ * Returns PRT_UNIT_NONE if not recognized.
+ */
+    int
+prt_get_unit(idx)
+    int		idx;
+{
+    int		u = PRT_UNIT_NONE;
+    int		i;
+    static char *(units[4]) = PRT_UNIT_NAMES;
+
+    if (printer_opts[idx].present)
+	for (i = 0; i < 4; ++i)
+	    if (STRNICMP(printer_opts[idx].string, units[i], 2) == 0)
+	    {
+		u = i;
+		break;
+	    }
+    return u;
 }
 
 /*
@@ -2740,7 +2765,7 @@ ex_hardcopy(eap)
 
 # ifdef FEAT_POSTSCRIPT
     if (*eap->arg == '>')
-	settings.outfile = eap->arg + 1;
+	settings.outfile = skipwhite(eap->arg + 1);
     else if (*eap->arg != NUL)
 	settings.arguments = eap->arg;
 # endif
@@ -2898,10 +2923,12 @@ ex_hardcopy(eap)
 		}
 
 		/*
-		 * Extra blank page for duplexing with odd number of pages.
+		 * Extra blank page for duplexing with odd number of pages and
+		 * more copies to come.
 		 */
 		if (prtpos.file_line > eap->line2 && settings.duplex
-								 && side == 0)
+								 && side == 0
+		    && uncollated_copies + 1 < settings.n_uncollated_copies)
 		{
 		    if (!mch_print_blank_page())
 			goto print_fail;
@@ -2919,6 +2946,11 @@ ex_hardcopy(eap)
     }
 
 print_fail:
+    if (got_int || settings.user_abort)
+    {
+	sprintf((char *)IObuff, _("Printing aborted"));
+	prt_message(IObuff);
+    }
     mch_print_end(&settings);
 
 print_fail_no_begin:
@@ -3044,6 +3076,8 @@ hardcopy_line(psettings, page_line, ppos)
 			    this_color = darken_rgb(this_color);
 			prt_set_fg(this_color);
 		    }
+		    else
+			prt_set_fg(COLOR_BLACK);
 		}
 	    }
 	}
@@ -3121,17 +3155,28 @@ hardcopy_line(psettings, page_line, ppos)
 struct prt_pagesize_S
 {
     char	*name;
-    char	portrait;	/* TRUE for portrait, FALSE for landscape */
-    float	width;		/* width and height in points */
+    float	width;		/* width and height in points for portrait */
     float	height;
 };
 
+#define PRT_PAGESIZE_LEN  (sizeof(prt_pagesize) / sizeof(struct prt_pagesize_S))
+
 static struct prt_pagesize_S prt_pagesize[] =
 {
-    {"A4",	TRUE,  595.0f, 842.0f},
-    {"A4",	FALSE, 842.0f, 595.0f},
-    {"letter",	TRUE,  612.0f, 792.0f},
-    {"letter",	FALSE, 792.0f, 612.0f}
+    {"A4",		595.0f,  842.0f},
+    {"letter",		612.0f,  792.0f},
+    {"10x14",		720.0f, 1008.0f},
+    {"A3",		842.0f, 1190.0f},
+    {"A5",		420.0f,  595.0f},
+    {"B4",		729.0f, 1032.0f},
+    {"B5",		516.0f,  729.0f},
+    {"executive",	522.0f,  756.0f},
+    {"folio",		595.0f,  935.0f},
+    {"ledger",	       1224.0f,  792.0f},   /* portrait?? */
+    {"legal",		612.0f, 1008.0f},
+    {"quarto",		610.0f,  780.0f},
+    {"statement",	396.0f,  612.0f},
+    {"tabloid",		792.0f, 1224.0f}
 };
 
 /* PS font names, must be in Roman, Bold, Italic, Bold-Italic order */
@@ -3158,10 +3203,12 @@ static struct prt_ps_font_S prt_ps_font =
     {"Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique"}
 };
 
-#define PRT_RESOURCE_NAME "vim_ps 1.0 0"
+#define PRT_RESOURCE_NAME "vim_ps 1.1 0"
 
-static void prt_write_file __ARGS((char_u *buffer, int bytes));
+static void prt_write_file __ARGS((char_u *buffer));
+static void prt_write_file_len __ARGS((char_u *buffer, int bytes));
 static void prt_write_int __ARGS((int i));
+static void prt_write_boolean __ARGS((int b));
 static void prt_def_font __ARGS((char *n, int h, char *f));
 static void prt_real_int __ARGS((double val, int prec));
 static void prt_def_var __ARGS((char *n, double v, int prec));
@@ -3171,9 +3218,10 @@ static void prt_dsc_noarg __ARGS((char *comment));
 static void prt_dsc_textline __ARGS((char *comment, char *text));
 static void prt_dsc_text __ARGS((char *comment, char *text));
 static void prt_dsc_ints __ARGS((char *comment, int count, int *ints));
+static void prt_dsc_docmedia __ARGS((char *paper_name, double width, double height, double weight, char *colour, char *type));
 static void prt_dsc_resources __ARGS((char *comment, char *type, int count, char **strings));
-static float to_device_units __ARGS((int idx, int dpi, double physsize, int def_number));
-static void prt_page_margins __ARGS((struct prt_pagesize_S *pagesize));
+static float to_device_units __ARGS((int idx, double physsize, int def_number));
+static void prt_page_margins __ARGS((void));
 static void prt_font_metrics __ARGS((int font_scale));
 static int prt_get_cpl __ARGS((void));
 static int prt_get_lpp __ARGS((void));
@@ -3208,9 +3256,13 @@ static int prt_bgcol;
 static int prt_new_bgcol;
 static int prt_attribute_change;
 
-static int prt_paper;
+static float prt_paper_width;
+static float prt_paper_height;
+static char *prt_paper_name;
 static int prt_portrait;
 static int prt_num_uncollated_copies;
+static int prt_duplex;
+static int prt_tumble;
 
 static int prt_text_count;
 static int prt_page_num;
@@ -3223,27 +3275,27 @@ static char_u prt_line_buffer[257];
 static garray_T prt_ps_buffer;
 
     static void
-prt_write_file(buffer, bytes)
+prt_write_file(buffer)
+    char_u	*buffer;
+{
+    prt_write_file_len(buffer, STRLEN(buffer));
+}
+
+    static void
+prt_write_file_len(buffer, bytes)
     char_u	*buffer;
     int		bytes;
 {
-    int bytes_written;
-
-    if (!prt_file_error)
+    if (!prt_file_error
+	    && fwrite(buffer, sizeof(char_u), bytes, prt_ps_fd) != bytes)
     {
-	if (bytes < 0)
-	    bytes = STRLEN(buffer);
-	bytes_written = fwrite(buffer, sizeof(char_u), bytes, prt_ps_fd);
-	if (bytes_written != bytes)
-	{
-	    EMSG(_("E455: Error writing to PostScript output file"));
-	    prt_file_error = TRUE;
-	}
+	EMSG(_("E455: Error writing to PostScript output file"));
+	prt_file_error = TRUE;
     }
 }
 
 /* Short way to write a string. */
-#define PRT_PS_WRITE_STRING(s) prt_write_file((char_u *)(s), (sizeof(s) - 1))
+#define PRT_PS_WRITE_STRING(s) prt_write_file_len((char_u *)(s), (sizeof(s) - 1))
 
 /*
  * Write an int and a space.
@@ -3253,7 +3305,18 @@ prt_write_int(i)
     int		i;
 {
     sprintf((char *)prt_line_buffer, "%d ", i);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
+}
+
+/*
+ * Write a boolean and a space.
+ */
+    static void
+prt_write_boolean(b)
+    int		b;
+{
+    sprintf((char *)prt_line_buffer, "%s ", (b ? "true" : "false"));
+    prt_write_file(prt_line_buffer);
 }
 
 /*
@@ -3266,7 +3329,7 @@ prt_def_font(n, h, f)
     char	*f;
 {
     sprintf((char *)prt_line_buffer, "/%s %d /%s ffs\n", n, h, f);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 }
 
 /*
@@ -3283,7 +3346,7 @@ prt_real_int(val, prec)
     if ((t - (int)t) != 0.0)
     {
 	sprintf((char *)prt_line_buffer, "%.*f ", prec, t);
-	prt_write_file(prt_line_buffer, -1);
+	prt_write_file(prt_line_buffer);
     }
     else
 	prt_write_int((int)t);
@@ -3304,7 +3367,7 @@ prt_def_var(n, v, prec)
 	sprintf((char *)prt_line_buffer, "/%s %.*f d\n", n, prec, t);
     else
 	sprintf((char *)prt_line_buffer, "/%s %d d\n", n, (int)t);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 }
 
 /* Convert size from font space to user space at current font scale */
@@ -3360,7 +3423,7 @@ prt_flush_buffer()
 	}
 	/* Draw the text */
 	PRT_PS_WRITE_STRING("(");
-	prt_write_file(prt_ps_buffer.ga_data, prt_ps_buffer.ga_len);
+	prt_write_file_len(prt_ps_buffer.ga_data, prt_ps_buffer.ga_len);
 	PRT_PS_WRITE_STRING(")");
 	/* Add a moveto if need be and use the appropriate show procedure */
 	if (prt_do_moveto)
@@ -3390,7 +3453,7 @@ prt_dsc_noarg(comment)
     char	*comment;
 {
     sprintf((char *)prt_line_buffer, "%%%%%s\n", comment);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 }
 
     static void
@@ -3399,7 +3462,7 @@ prt_dsc_textline(comment, text)
     char	*text;
 {
     sprintf((char *)prt_line_buffer, "%%%%%s: %s\n", comment, text);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 }
 
     static void
@@ -3409,7 +3472,7 @@ prt_dsc_text(comment, text)
 {
     /* TODO - should scan 'text' for any chars needing escaping! */
     sprintf((char *)prt_line_buffer, "%%%%%s: (%s)\n", comment, text);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 }
 
 #define prt_dsc_atend(c)	prt_dsc_text((c), "atend")
@@ -3423,14 +3486,40 @@ prt_dsc_ints(comment, count, ints)
     int		i;
 
     sprintf((char *)prt_line_buffer, "%%%%%s:", comment);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 
     for (i = 0; i < count; i++)
     {
 	sprintf((char *)prt_line_buffer, " %d", ints[i]);
-	prt_write_file(prt_line_buffer, -1);
+	prt_write_file(prt_line_buffer);
     }
 
+    PRT_PS_WRITE_STRING("\n");
+}
+
+    static void
+prt_dsc_docmedia(paper_name, width, height, weight, colour, type)
+    char	*paper_name;
+    double	width;
+    double	height;
+    double	weight;
+    char	*colour;
+    char	*type;
+{
+    sprintf((char *)prt_line_buffer, "%%%%DocumentMedia: %s ", paper_name);
+    prt_write_file(prt_line_buffer);
+    prt_real_int(width, 2);
+    prt_real_int(height, 2);
+    prt_real_int(weight, 2);
+    if (colour == NULL)
+	PRT_PS_WRITE_STRING("()");
+    else
+	PRT_PS_WRITE_STRING(colour);
+    PRT_PS_WRITE_STRING(" ");
+    if (type == NULL)
+	PRT_PS_WRITE_STRING("()");
+    else
+	PRT_PS_WRITE_STRING(type);
     PRT_PS_WRITE_STRING("\n");
 }
 
@@ -3444,12 +3533,12 @@ prt_dsc_resources(comment, type, count, strings)
     int		i;
 
     sprintf((char *)prt_line_buffer, "%%%%%s: %s", comment, type);
-    prt_write_file(prt_line_buffer, -1);
+    prt_write_file(prt_line_buffer);
 
     for (i = 0; i < count; i++)
     {
 	sprintf((char *)prt_line_buffer, " %s", strings[i]);
-	prt_write_file(prt_line_buffer, -1);
+	prt_write_file(prt_line_buffer);
     }
 
     PRT_PS_WRITE_STRING("\n");
@@ -3472,55 +3561,57 @@ mch_print_cleanup()
 }
 
     static float
-to_device_units(idx, dpi, physsize, def_number)
+to_device_units(idx, physsize, def_number)
     int		idx;
-    int		dpi;
     double	physsize;
     int		def_number;
 {
     float	ret;
-    int		c;
+    int		u;
     int		nr;
 
-    if (printer_opts[idx].present)
+    u = prt_get_unit(idx);
+    if (u == PRT_UNIT_NONE)
     {
-	c = TO_LOWER(printer_opts[idx].string[0]);
-	nr = printer_opts[idx].number;
-    }
-    else
-    {
-	c = 'p';
+	u = PRT_UNIT_PERC;
 	nr = def_number;
     }
-
-    if (c == 'i')
-	ret = (float)(nr * dpi);
-    else if (c == 'm')
-	ret = (float)(nr * dpi) / 25.4f;
     else
-	ret = (float)(physsize * nr) / 100;
+	nr = printer_opts[idx].number;
+
+    switch (u)
+    {
+	case PRT_UNIT_INCH:
+	    ret = (float)(nr * PRT_PS_DEFAULT_DPI);
+	    break;
+	case PRT_UNIT_MM:
+	    ret = (float)(nr * PRT_PS_DEFAULT_DPI) / 25.4f;
+	    break;
+	case PRT_UNIT_POINT:
+	    ret = (float)nr;
+	    break;
+	case PRT_UNIT_PERC:
+	default:
+	    ret = (float)(physsize * nr) / 100;
+	    break;
+    }
 
     return ret;
 }
 
     static void
-prt_page_margins(pagesize)
-    struct prt_pagesize_S *pagesize;
+prt_page_margins()
 {
-    int		dpi = PRT_PS_DEFAULT_DPI;
-
     /*
      * Calculate initial page margins - these are later massaged to better
      * support the PS generating code.
      */
-    prt_left_margin = to_device_units(OPT_PRINT_LEFT,
-						    dpi, pagesize->width, 10);
-    prt_right_margin = pagesize->width - to_device_units(OPT_PRINT_RIGHT,
-						     dpi, pagesize->width, 5);
-    prt_top_margin = pagesize->height - to_device_units(OPT_PRINT_TOP,
-						    dpi, pagesize->height, 5);
-    prt_bottom_margin = to_device_units(OPT_PRINT_BOT,
-						    dpi, pagesize->height, 5);
+    prt_left_margin = to_device_units(OPT_PRINT_LEFT, prt_paper_width, 10);
+    prt_right_margin = prt_paper_width - to_device_units(OPT_PRINT_RIGHT,
+							  prt_paper_width, 5);
+    prt_top_margin = prt_paper_height - to_device_units(OPT_PRINT_TOP,
+							 prt_paper_height, 5);
+    prt_bottom_margin = to_device_units(OPT_PRINT_BOT, prt_paper_height, 5);
 }
 
     static void
@@ -3589,7 +3680,6 @@ mch_print_init(psettings, jobname, forceit)
     int		forceit;
 {
     int		i;
-    char_u	*paper_name;
     int		paper_strlen;
     int		fontsize;
     char_u	*p;
@@ -3619,24 +3709,33 @@ mch_print_init(psettings, jobname, forceit)
 	      || TO_LOWER(printer_opts[OPT_PRINT_PORTRAIT].string[0]) == 'y');
     if (printer_opts[OPT_PRINT_PAPER].present)
     {
-	paper_name = printer_opts[OPT_PRINT_PAPER].string;
+	prt_paper_name = (char *)printer_opts[OPT_PRINT_PAPER].string;
 	paper_strlen = printer_opts[OPT_PRINT_PAPER].strlen;
     }
     else
     {
-	paper_name = (char_u *)"A4";
+	prt_paper_name = "A4";
 	paper_strlen = 2;
     }
-    for (i = 0; i < sizeof(prt_pagesize) / sizeof(struct prt_pagesize_S); ++i)
-	if (prt_pagesize[i].portrait == prt_portrait
-		&& STRLEN(prt_pagesize[i].name) == (unsigned)paper_strlen
-		&& STRNICMP(prt_pagesize[i].name, paper_name,
+    for (i = 0; i < PRT_PAGESIZE_LEN; ++i)
+	if (STRLEN(prt_pagesize[i].name) == (unsigned)paper_strlen
+		&& STRNICMP(prt_pagesize[i].name, prt_paper_name,
 							   paper_strlen) == 0)
-	{
-	    prt_paper = i;
 	    break;
-	}
-    prt_page_margins(&prt_pagesize[prt_paper]);
+    if (i == PRT_PAGESIZE_LEN)
+	i = 0;
+    prt_paper_name = prt_pagesize[i].name;
+    if (prt_portrait)
+    {
+	prt_paper_width = prt_pagesize[i].width;
+	prt_paper_height = prt_pagesize[i].height;
+    }
+    else
+    {
+	prt_paper_width = prt_pagesize[i].height;
+	prt_paper_height = prt_pagesize[i].width;
+    }
+    prt_page_margins();
 
     /* Set up the font size. */
     fontsize = PRT_PS_DEFAULT_FONTSIZE;
@@ -3689,8 +3788,24 @@ mch_print_init(psettings, jobname, forceit)
 
     psettings->jobname = jobname;
 
-    /* For now duplex and user abort not supported */
-    psettings->duplex = 0;
+    /* Set up printer duplex and tumble based on Duplex option setting -
+     * default is long sided duplex printing (i.e. no tumble). */
+    prt_duplex = TRUE;
+    prt_tumble = FALSE;
+    psettings->duplex = 1;
+    if (printer_opts[OPT_PRINT_DUPLEX].present)
+    {
+        if (STRNICMP(printer_opts[OPT_PRINT_DUPLEX].string, "off", 3) == 0)
+        {
+            prt_duplex = FALSE;
+            psettings->duplex = 0;
+        }
+        else if (STRNICMP(printer_opts[OPT_PRINT_DUPLEX].string, "short", 5)
+									 == 0)
+            prt_tumble = TRUE;
+    }
+
+    /* For now user abort not supported */
     psettings->user_abort = 0;
 
     /* If the user didn't specify a file name, use a temp file. */
@@ -3763,7 +3878,7 @@ prt_add_procset()
 	}
 	if (bytes_read == 0)
 	    break;
-	prt_write_file(procset_buffer, bytes_read);
+	prt_write_file_len(procset_buffer, bytes_read);
 	if (prt_file_error)
 	{
 	    fclose(fd_procset);
@@ -3809,9 +3924,14 @@ mch_print_begin(psettings)
     bbox[0] = (int)(prt_left_margin - prt_number_width);
     bbox[1] = (int)(prt_bottom_margin);
     bbox[2] = (int)(prt_right_margin + 0.5f);
-    bbox[3] = (int)((prt_top_margin + prt_line_height*prt_header_height())
-								      + 0.5f);
+    bbox[3] = (int)((prt_top_margin + prt_line_height
+					       * prt_header_height()) + 0.5f);
+
     prt_dsc_ints("BoundingBox", 4, bbox);
+    prt_dsc_docmedia(prt_paper_name,
+	    prt_portrait ? prt_paper_width : prt_paper_height,
+	    prt_portrait ? prt_paper_height : prt_paper_width,
+	    (double)0, NULL, NULL);
     prt_dsc_resources("DocumentNeededResources", "font", 4,
 						     prt_ps_font.ps_fontname);
     procsets[0] = PRT_RESOURCE_NAME;
@@ -3825,6 +3945,8 @@ mch_print_begin(psettings)
 
     /* List font resources most likely common to all pages */
     prt_dsc_resources("PageResources", "font", 4, prt_ps_font.ps_fontname);
+    /* Paper will be used for all pages */
+    prt_dsc_textline("PageMedia", prt_paper_name);
 
     prt_dsc_noarg("EndDefaults");
 
@@ -3845,12 +3967,15 @@ mch_print_begin(psettings)
     prt_dsc_noarg("BeginSetup");
 
     /* Device setup - page size and number of uncollated copies */
-    prt_write_int((int)prt_pagesize[prt_paper].width);
-    prt_write_int((int)prt_pagesize[prt_paper].height);
+    prt_write_int((int)prt_paper_width);
+    prt_write_int((int)prt_paper_height);
     prt_write_int(prt_portrait ? 0 : 1);
     PRT_PS_WRITE_STRING("sps\n");
     prt_write_int(prt_num_uncollated_copies);
     PRT_PS_WRITE_STRING("nc\n");
+    prt_write_boolean(prt_duplex);
+    prt_write_boolean(prt_tumble);
+    PRT_PS_WRITE_STRING("dt\n");
 
     /* Font resource inclusion and definition */
     prt_dsc_resources("IncludeResource", "font", 1,
@@ -3896,7 +4021,8 @@ mch_print_end(psettings)
 
     prt_dsc_noarg("EOF");
 
-    if (!prt_file_error && psettings->outfile == NULL)
+    if (!prt_file_error && psettings->outfile == NULL
+					&& !got_int && !psettings->user_abort)
     {
 	/* Close the file first. */
 	if (prt_ps_fd != NULL)

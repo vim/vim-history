@@ -2,9 +2,9 @@
 
 # TODO make this configurable
 # Note: ja.sjis is only for MS-Windows, it's not installed on Unix
-LANGUAGES = af cs de es fr it ja ko pl sk tr zh_TW
+LANGUAGES = af cs de es fr it ja ko pl sk tr uk zh_TW
 MOFILES = af.mo cs.mo de.mo es.mo fr.mo it.mo ja.mo \
-		ko.mo pl.mo sk.mo tr.mo zh_TW.mo
+		ko.mo pl.mo sk.mo tr.mo uk.mo zh_TW.mo
 
 PACKAGE = vim
 SHELL = /bin/sh

@@ -1,6 +1,6 @@
 " Menu Translations:	Español
 " Maintainer:		Eduardo F. Amatria <eferna1@platea.pntic.mec.es>
-" Last Change:		2001 Jul 28
+" Last Change:		2001 Sep 02
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -27,7 +27,7 @@ menutrans &File				&Archivo
 menutrans &Open\.\.\.<Tab>:e		&Abrir\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	A&brir\ en\ otra\ ventana\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nuevo<Tab>:enew
-menutrans &Close<Tab>:q			&Cerrar<Tab>:q
+menutrans &Close<Tab>:close		&Cerrar<Tab>:close
 menutrans &Save<Tab>:w			&Guardar<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Guardar\ &como\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	&Mostrar\ diferencias\ con\.\.\.
@@ -40,7 +40,7 @@ menutrans E&xit<Tab>:qa			&Salir<Tab>:qa
 menutrans &Edit				&Editar
 menutrans &Undo<Tab>u			&Deshacer<Tab>u
 menutrans &Redo<Tab>^R			&Rehacer<Tab>^R
-menutrans Rep&eat<Tab>\.                Repe&tir<Tab>\.
+menutrans Rep&eat<Tab>\.		Repe&tir<Tab>\.
 menutrans Cu&t<Tab>"+x			Cor&tar<Tab>"+x
 menutrans &Copy<Tab>"+y			&Copiar<Tab>"+y
 menutrans &Paste<Tab>"+P		&Pegar<Tab>"+P
@@ -191,7 +191,7 @@ menutrans Max\ &Width<Tab>^W\|		Anchura\ má&xima<Tab>^W\|
 menutrans Min\ Widt&h<Tab>^W1\|		Anc&hura\ mínima<Tab>^W1\|
 
 " The popup menu
-menutrans &Undo		        &Deshacer
+menutrans &Undo			&Deshacer
 menutrans Cu&t			Cor&tar
 menutrans &Copy			&Copiar
 menutrans &Paste		&Pegar

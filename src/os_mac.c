@@ -227,7 +227,7 @@ mac_expandpath(
 		}
 		start_at = STRLEN(buf);
 		STRCAT(buf, path);
-		if (mch_has_wildcard(path))	/* handle more wildcard */
+		if (mch_has_exp_wildcard(path))	/* handle more wildcards */
 		    (void)mac_expandpath(gap, buf, flags, start_at, FALSE);
 		else
 		{
@@ -267,7 +267,7 @@ mac_expandpath(
 		{
 		    STRCPY(s, cfilename);
 		    STRCAT(buf, path);
-		    if (mch_has_wildcard(path))	/* handle more wildcard */
+		    if (mch_has_exp_wildcard(path)) /* handle more wildcards */
 			(void)mac_expandpath(gap, s, flags, 0, FALSE);
 		    else
 		    {
@@ -419,7 +419,7 @@ unix_expandpath(gap, path, wildoff, flags)
 		STRCPY(s, dp->d_name);
 		len = STRLEN(buf);
 		STRCPY(buf + len, path_end);
-		if (mch_has_wildcard(path_end))	/* handle more wildcards */
+		if (mch_has_exp_wildcard(path_end)) /* handle more wildcards */
 		{
 		    /* need to expand another component of the path */
 		    /* remove backslashes for the remaining components only */
@@ -1181,14 +1181,14 @@ mch_call_shell(cmd, options)
     return (-1);
 }
 
-	int
-mch_has_wildcard(p)
-	char_u	*p;
+/*
+ * Return TRUE if "p" contains a wildcard that can be expanded by
+ * mch_expandpath().
+ */
+    int
+mch_has_exp_wildcard(p)
+    char_u	*p;
 {
-#ifdef USE_UNIXFILENAME
-    if (*p == '~' && p[1] !=NUL)
-	return TRUE;
-#endif
     for ( ; *p; ++p)
     {
 	if (*p == '\\' && p[1] != NUL)
@@ -1197,6 +1197,17 @@ mch_has_wildcard(p)
 	    return TRUE;
     }
     return FALSE;
+}
+
+    int
+mch_has_wildcard(p)
+    char_u	*p;
+{
+#ifdef USE_UNIXFILENAME
+    if (*p == '~' && p[1] != NUL)
+	return TRUE;
+#endif
+    return mch_has_exp_wildcard(p);
 }
 
 

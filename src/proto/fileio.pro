@@ -15,7 +15,7 @@ int buf_check_timestamp __ARGS((buf_T *buf, int focus));
 void write_lnum_adjust __ARGS((linenr_T offset));
 void vim_deltempdir __ARGS((void));
 char_u *vim_tempname __ARGS((int extra_char));
-void do_augroup __ARGS((char_u *arg));
+void do_augroup __ARGS((char_u *arg, int del_group));
 int check_ei __ARGS((void));
 void do_autocmd __ARGS((char_u *arg, int forceit));
 int do_doautocmd __ARGS((char_u *arg, int do_msg));

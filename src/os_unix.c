@@ -3987,7 +3987,7 @@ unix_expandpath(gap, path, wildoff, flags)
 		STRCPY(s, dp->d_name);
 		len = STRLEN(buf);
 		STRCPY(buf + len, path_end);
-		if (mch_has_wildcard(path_end))	/* handle more wildcards */
+		if (mch_has_exp_wildcard(path_end)) /* handle more wildcards */
 		{
 		    /* need to expand another component of the path */
 		    /* remove backslashes for the remaining components only */
@@ -4075,7 +4075,7 @@ mch_expand_wildcards(num_pat, pat, num_file, file, flags)
 	else
 	    buf = vim_strsave(*pat);
 	expl_files = NULL;
-	has_wildcard = mch_has_wildcard(buf);  /* (still) wildcards in there? */
+	has_wildcard = mch_has_exp_wildcard(buf);  /* (still) wildcards in there? */
 	if (has_wildcard)   /* yes, so expand them */
 	    expl_files = (char_u **)_fnexplode(buf);
 
@@ -4563,6 +4563,37 @@ save_patterns(num_pat, pat, num_file, file)
 }
 #endif
 
+
+/*
+ * Return TRUE if the string "p" contains a wildcard that mch_expandpath() can
+ * expand.
+ */
+    int
+mch_has_exp_wildcard(p)
+    char_u  *p;
+{
+    for ( ; *p; ++p)
+    {
+#ifndef OS2
+	if (*p == '\\' && p[1] != NUL)
+	    ++p;
+	else
+#endif
+	    if (vim_strchr((char_u *)
+#ifdef VMS
+				    "*?%"
+#else
+# ifdef OS2
+				    "*?"
+# else
+				    "*?[{'"
+# endif
+#endif
+						, *p) != NULL)
+	    return TRUE;
+    }
+    return FALSE;
+}
 
 /*
  * Return TRUE if the string "p" contains a wildcard.

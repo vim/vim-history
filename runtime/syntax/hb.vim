@@ -2,7 +2,7 @@
 " Language:	Hyper Builder
 " Maintainer:	Alejandro Forero Cuervo
 " URL:		http://bachue.com/hb/vim/syntax/hb.vim
-" Last Change:	2001 May 09
+" Last Change:	2001 Sep 02
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -70,9 +70,9 @@ if version >= 508 || !exists("did_hb_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink HBhtmlString                    String
-  HiLink HBhtmlTagN                      Function
-  HiLink htmlSpecialChar                 String
+  HiLink HBhtmlString			 String
+  HiLink HBhtmlTagN			 Function
+  HiLink htmlSpecialChar		 String
 
   HiLink HBInvalidLine Error
   HiLink HBFoobar Comment

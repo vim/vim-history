@@ -1,4 +1,4 @@
-*gui_w32.txt*   For Vim version 6.0at.  Last change: 2000 Aug 19
+*gui_w32.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -347,13 +347,9 @@ Note that a menu that starts with ']' will not be displayed.
 7. Various						*gui-w32-various*
 
 							*gui-w32-printing*
-The "File/Print" menu uses Notepad to print the current buffer.  This is a bit
-clumsy, but it's portable.  If you want something else, you can define your
-own print command.  For example, you could replace Notepad with Editpad
-(www.tornado.be/~johnfg).  See $VIMRUNTIME/menu.vim for how it works by
-default.
-
-Using this should also work: >
+The "File/Print" menu prints the text with syntax highlighting, see
+|:hardcopy|.  If you just want to print the raw text and have a default
+printer installed this should also work: >
 	:w >>prn
 
 Vim supports a number of standard MS Windows features. Some of these are

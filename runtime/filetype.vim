@@ -1,7 +1,7 @@
 " Vim support file to detect file types
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last change:	2001 Aug 23
+" Last change:	2001 Aug 31
 
 " Listen very carefully, I will say this only once
 if exists("did_load_filetypes")
@@ -525,14 +525,17 @@ au BufNewFile,BufRead *.sig			setf lprolog
 " Lex
 au BufNewFile,BufRead *.lex,*.l			setf lex
 
+" LFTP
+au BufNewFile,BufRead lftp.conf,.lftprc,*lftp/rc	setf lftp
+
 " Lilo: Linux loader
 au BufNewFile,BufRead lilo.conf*		setf lilo
 
 " Lisp (*.el = ELisp, *.cl = Common Lisp, *.jl = librep Lisp)
 if has("fname_case")
-  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.jl,*.L	setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl,*.L	setf lisp
 else
-  au BufNewFile,BufRead *.lsp,*.el,*.cl,*.jl		setf lisp
+  au BufNewFile,BufRead *.lsp,*.lisp,*.el,*.cl,*.jl	setf lisp
 endif
 
 " Lite
@@ -629,6 +632,9 @@ au BufNewFile,BufRead *.msql			setf msql
 
 " M$ Resource files
 au BufNewFile,BufRead *.rc			setf rc
+
+" Mush
+au BufNewFile,BufRead .mush			setf mush
 
 " Mutt setup file
 au BufNewFile,BufRead .muttrc*,Muttrc		setf muttrc
@@ -863,6 +869,9 @@ au BufNewFile,BufRead *.py			setf python
 " Radiance
 au BufNewFile,BufRead *.rad,*.mat		setf radiance
 
+" Readline
+au BufNewFile,BufRead .inputrc			setf readline
+
 " Registry for MS-Windows
 au BufNewFile,BufRead *.reg
 	\ if getline(1) =~? '^REGEDIT[0-9]*\s*$' | setf registry | endif
@@ -1074,7 +1083,7 @@ au BufNewFile,BufRead *.texinfo,*.texi,*.txi	setf texinfo
 au BufNewFile,BufRead texmf.cnf			setf texmf
 
 " Tidy config
-au BufNewFile,BufRead .tidyrc			setf tidy
+au BufNewFile,BufRead .tidyrc,tidyrc		setf tidy
 
 " TF mud client
 au BufNewFile,BufRead *.tf			setf tf
@@ -1123,6 +1132,9 @@ au BufNewFile,BufRead *.wrl			setf vrml
 
 " Webmacro
 au BufNewFile,BufRead *.wm			setf webmacro
+
+" Wget config
+au BufNewFile,BufRead .wgetrc,wgetrc		setf wget
 
 " Website MetaLanguage
 au BufNewFile,BufRead *.wml			setf wml

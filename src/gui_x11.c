@@ -50,7 +50,11 @@
 
 /* Default resource values */
 #define DFLT_FONT		"7x13"
-#define DFLT_MENU_FONT		XtDefaultFontSet
+#ifdef FONTSET_ALWAYS
+# define DFLT_MENU_FONT		XtDefaultFontSet
+#else
+# define DFLT_MENU_FONT		XtDefaultFont
+#endif
 #define DFLT_TOOLTIP_FONT	XtDefaultFontSet
 
 #ifdef FEAT_GUI_ATHENA
@@ -368,6 +372,7 @@ static XtResource vim_resources[] =
 	(XtPointer)SB_DEFAULT_WIDTH
     },
 #ifdef FEAT_MENU
+# ifdef FEAT_GUI_ATHENA		/* with Motif the height is always computed */
     {
 	XtNmenuHeight,
 	XtCMenuHeight,
@@ -377,6 +382,7 @@ static XtResource vim_resources[] =
 	XtRImmediate,
 	(XtPointer)MENU_DEFAULT_HEIGHT	    /* Should figure out at run time */
     },
+# endif
     {
 # ifdef FONTSET_ALWAYS
 	XtNmenuFontSet,
@@ -566,7 +572,10 @@ gui_x11_visibility_cb(w, dud, event, dum)
      * to receive an event to tell us whether it worked or not.
      */
     XSetGraphicsExposures(gui.dpy, gui.text_gc,
-	gui.visibility != VisibilityUnobscured);
+	    gui.visibility != VisibilityUnobscured);
+
+    /* This is needed for when redrawing is slow. */
+    gui_mch_update();
 }
 
 /* ARGSUSED */
@@ -599,6 +608,9 @@ gui_x11_expose_cb(w, dud, event, dum)
 	XClearArea(gui.dpy, gui.wid, FILL_X((int)Columns), 0, 0, 0, False);
     if (gevent->y > FILL_Y(Rows))
 	XClearArea(gui.dpy, gui.wid, 0, FILL_Y((int)Rows), 0, 0, False);
+
+    /* This is needed for when redrawing is slow. */
+    gui_mch_update();
 }
 
 /* ARGSUSED */
@@ -1229,7 +1241,7 @@ gui_mch_init()
     gui.tooltip_bg_pixel = gui_mch_get_color((char_u *)gui.rsrc_tooltip_bg_name);
 #endif
 
-#ifdef FEAT_MENU
+#if defined(FEAT_MENU) && defined(FEAT_GUI_ATHENA)
     /* If the menu height was set, don't change it at runtime */
     if (gui.menu_height != MENU_DEFAULT_HEIGHT)
 	gui.menu_height_fixed = TRUE;
@@ -1499,6 +1511,7 @@ gui_mch_open()
     if (serverName == NULL && serverDelayedStartName != NULL)
     {
 	/* This is a :gui command in a plain vim with no previous server */
+	commWindow = XtWindow(vimShell);
 	(void)serverRegisterName(gui.dpy, serverDelayedStartName);
     }
     else
@@ -3115,13 +3128,9 @@ gui_mch_get_mouse_x()
     Window	root, child;
     unsigned int mask;
 
-    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
-		&rootx, &rooty, &winx, &winy, &mask))
-    {
-	if (gui.which_scrollbars[SBAR_LEFT])
-	    return winx - gui.scrollbar_width;
+    if (gui.wid && XQueryPointer(gui.dpy, gui.wid, &root, &child,
+					 &rootx, &rooty, &winx, &winy, &mask))
 	return winx;
-    }
     return -1;
 }
 
@@ -3132,13 +3141,9 @@ gui_mch_get_mouse_y()
     Window	root, child;
     unsigned int mask;
 
-    if (XQueryPointer(gui.dpy, XtWindow(vimShell), &root, &child,
-		&rootx, &rooty, &winx, &winy, &mask))
-	return winy
-#ifdef FEAT_MENU
-	    - gui.menu_height
-#endif
-	    ;
+    if (gui.wid && XQueryPointer(gui.dpy, gui.wid, &root, &child,
+					 &rootx, &rooty, &winx, &winy, &mask))
+	return winy;
     return -1;
 }
 
@@ -3147,14 +3152,8 @@ gui_mch_setmouse(x, y)
     int		x;
     int		y;
 {
-    if (gui.which_scrollbars[SBAR_LEFT])
-	x += gui.scrollbar_width;
-    XWarpPointer(gui.dpy, (Window)0, XtWindow(vimShell), 0, 0, 0, 0,
-						      x, y
-#ifdef FEAT_MENU
-						      + gui.menu_height
-#endif
-						      );
+    if (gui.wid)
+	XWarpPointer(gui.dpy, (Window)0, gui.wid, 0, 0, 0, 0, x, y);
 }
 
 #if (defined(FEAT_GUI_MOTIF) && defined(FEAT_MENU)) || defined(PROTO)

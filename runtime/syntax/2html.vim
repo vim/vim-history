@@ -1,7 +1,7 @@
 " Vim syntax support file
 " Maintainer: Bram Moolenaar <Bram@vim.org>
-" Last Change: 2001 Aug 11
-"              (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
+" Last Change: 2001 Sep 02
+"	       (modified by David Ne\v{c}as (Yeti) <yeti@physics.muni.cz>)
 
 " Transform a file into HTML, using the current syntax highlighting.
 

@@ -1,4 +1,4 @@
-*todo.txt*      For Vim version 6.0at.  Last change: 2001 Aug 27
+*todo.txt*      For Vim version 6.0au.  Last change: 2001 Sep 02
 
 
 		  VIM REFERENCE MANUAL	  by Bram Moolenaar
@@ -29,14 +29,12 @@ See |develop.txt| for development plans.
 							*known-bugs*
 -------------------- Known bugs and current work -----------------------
 
-GTK with Gnome: inputdialog() doesn't work, it always returns the default
-text.
+9   When XIM is being used, sometimes one character is lost.  Probably when
+    XIM has just been enabled.  For Irix this can be fixed by avoiding
+    "@im=none", but then Ctrl keys stop working.  Disable XIM for SGI?
+    Does patch from David Harrison fix this?
 
-Client-server: When using "vim --remote-wait file" twice, one of the clients
-will block forever. 
-
-Win32 console: There is a delay when exiting.  Because of the client-server
-code?
+VisVim/VisVim.mak does not work with MSVC 5.0.
 
 
 Vi incompatibility:
@@ -48,12 +46,13 @@ Vi incompatibility:
     position is one line down. (Veselinovic)
 8   When stdin is not a tty, and Vim reads commands from it, an error should
     make Vim exit.
-8   Unix Vim (not gvim): Typing CTRL-C in Ex mode should finish the line
+7   Unix Vim (not gvim): Typing CTRL-C in Ex mode should finish the line
     (currently you can continue typing, but it's truncated later anyway).
+    Requires a way to make CTRL-C interrupt select() when in cooked input.
 8   When loading a file in the .exrc, Vi loads the argument anyway.  Vim skips
-    loading the argument if there is a file already. When no file argument
+    loading the argument if there is a file already.  When no file argument
     given, Vi starts with an empty buffer, Vim keeps the loaded file. (Bearded)
-8   In Insert mode, when using <BS> or <Del>, don't wipe out the text, but
+6   In Insert mode, when using <BS> or <Del>, don't wipe out the text, but
     only move back the cursor.	Behaves like '$' in 'cpoptions'.  Use a flag
     in 'cpoptions' to switch this on/off.
 8   When editing a file which is a symbolic link, and then opening another
@@ -65,13 +64,10 @@ Vi incompatibility:
     name of the buffer to the actual file, instead of using the name of the
     symlink?
 7   The ":undo" command works differently in Ex mode.  Edit a file, make some
-    changes, "Q", "undo" and _all_ changes are undone, like editing the file
-    was one command.
+    changes, "Q", "undo" and _all_ changes are undone, like the ":visual"
+    command was one command.
 7   The ":map" command output overwrites the command.  Perhaps it should keep
     the ":map" when it's used without arguments?
-7   When interrupting reading a file, Vi considers the buffer modified.  Add a
-    'cpoptions' flag for this (we don't want it modified always to be able to
-    do ":q")?
 7   CTRL-L is not the end of a section?  It is for Posix!  Make it an option.
 7   Implement 'prompt' option.	Init to off when stdin is not a tty.
 7   CTRL-T in Insert mode inserts 'shiftwidth' of spaces at the cursor.  Add a
@@ -234,8 +230,8 @@ Athena GUI:
 
 Motif GUI:
 8   Popup menu ordering is wrong.
+8   Accelerators don't work in a dialog.
 8   The texts in the find/replace dialog don't use the right font.
-8   Dialog: Accelerators don't work yet.
 8   Lesstif: When deleting a menu that's torn off, the torn off menu becomes
     very small instead of disappearing.  When closing it, Vim crashes.
     (Phillipps)
@@ -448,14 +444,12 @@ VMS:
     ATTENTION message, because the path in the swap file is different.  Using
     a relative path name will cause no ATTENTION for Vim 5.8.
     Somehow add a flag that the swap file is in the same dir as the file?
-9   When XIM is being used, sometimes one character is lost.  Probably when
-    XIM has just been enabled.
-9   Using "rx" with 'virtualedit' set on a double-wide UTF-8 character of
-    three bytes, keeps the first two bytes and adds a space.  Should replace
-    the whole character if it's the same width, insert a space when it's
-    smaller.
 7   When 'virtualedit' is used, moving with "$" and the "rx" still replaces
     the whole block instead of until the end of the line in each line.
+8   When 'virtualedit' is set, selecting a block just after the end of the
+    line, "Ax<Esc>" doesn't position the "x" correctly in following lines.
+8   When 'virtualedit' is "block,insert" and encoding is "utf-8", selecting a
+    block of one double-wide character, then "d" deletes only half of it.
 8   ":hardcopy": Using the cterm_color[] table is wrong when t_colors is > 16.
 8   A nested include file should also be found relative to the file that
     includes it.  "lev1/foo.h" includes "lev2/bar.h" which is
@@ -557,6 +551,8 @@ VMS:
 
 
 I can't reproduce these (if you can, let me know how!):
+9   NT 4: writing a file makes it disappear, reappear, disappear... happens
+    for file "kandis~1.v30".  Same for backup file. (Andre Braun)
 -   With backupdir=~/tmp,/tmp nowritebackup nobackup patchmode=.smr and the
     patchmode file exists, backup files in the tmp directory are left lying
     around - they should be deleted! (Riehm)
@@ -788,7 +784,6 @@ Printing:
 -   Unix: Use some dialog box to do the obvious settings (paper size, printer
     name, portrait/landscape, etc).
 -   PostScript: only works for 7-bit ASCII.
--   PostScript: duplex is not supported.
 
 
 Syntax highlighting:
@@ -997,6 +992,9 @@ Built-in script language:
 	getkey()		Like input() but get only one char.
 	raisewin()		raise gvim window (see HierAssist patch for
 				Tcl implementation ~/vim/HierAssist/ )
+	gettext()		Translate a message.  (Patch from Yasuhiro
+				Matsumoto) How to get the messages into the
+				.po files?
 7   Make bufname("'0") return the buffer name from mark '0.
 8   argc() returns 0 when using "vim -t tag".  How to detect that no file was
     specified in any way?  To be able to jump to the last edited file.
@@ -1632,6 +1630,12 @@ Insert mode:
 		} else
 		    qwer;
 	    while (1);
+9   too much indent for d():
+	{
+		t(int f,
+			int d);		// )
+			d();
+	}
 9   brace not indented correctly:
 	case 'c':   if (cond)
 			{

@@ -931,6 +931,13 @@ EXTERN option_table_T printer_opts[OPT_PRINT_NUM_OPTIONS]
 # endif
 ;
 
+/* For prt_get_unit(). */
+# define PRT_UNIT_NONE	-1
+# define PRT_UNIT_PERC	0
+# define PRT_UNIT_INCH	1
+# define PRT_UNIT_MM	2
+# define PRT_UNIT_POINT	3
+# define PRT_UNIT_NAMES {"pc", "in", "mm", "pt"}
 #endif
 
 #ifdef FEAT_XCLIPBOARD

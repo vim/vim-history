@@ -68,7 +68,7 @@ function GetCSSIndent()
 
     " check for closing brace first on current line
     if line =~ '^\s*}'
-        let ind	= ind - &sw
+	let ind	= ind - &sw
     endif
 
     return ind

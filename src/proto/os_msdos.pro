@@ -36,6 +36,7 @@ void mch_new_shellsize __ARGS((void));
 void mch_check_columns __ARGS((void));
 int mch_call_shell __ARGS((char_u *cmd, int options));
 void mch_breakcheck __ARGS((void));
+int mch_has_exp_wildcard __ARGS((char_u *p));
 int mch_has_wildcard __ARGS((char_u *p));
 int mch_chdir __ARGS((char *path));
 char_u *mch_getenv __ARGS((char_u *name));

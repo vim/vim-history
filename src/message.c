@@ -182,7 +182,7 @@ msg_strtrunc(s)
     {
 	len = vim_strsize(s);
 	room = (int)(Rows - cmdline_row - 1) * Columns + sc_col - 1;
-	if (len > room)
+	if (len > room && room > 0)
 	{
 #ifdef FEAT_MBYTE
 	    if (enc_utf8)

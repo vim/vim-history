@@ -3,7 +3,7 @@
 " Maintainer:	Jan Bredereke <brederek@tzi.de>
 " Version:	0.5.0
 " Last change:	Fri May 4, 2001
-" URL:          http://www.tzi.de/~brederek/vim/
+" URL:		http://www.tzi.de/~brederek/vim/
 " Copying:	You may distribute and use this file freely, in the same
 "		way as the vim editor itself.
 "
@@ -67,9 +67,9 @@ syn match  cspOperator "\."
 " syn match  cspDelimiter	"[^-|]}"lc=1
 
 " Keywords:
-syn keyword cspKeyword          length null head tail concat elem
-syn keyword cspKeyword          union inter diff Union Inter member card
-syn keyword cspKeyword          empty set Set Seq
+syn keyword cspKeyword		length null head tail concat elem
+syn keyword cspKeyword		union inter diff Union Inter member card
+syn keyword cspKeyword		empty set Set Seq
 syn keyword cspKeyword		true false and or not within let
 syn keyword cspKeyword		nametype datatype diamond normal
 syn keyword cspKeyword		sbisim tau_loop_factor model_compress

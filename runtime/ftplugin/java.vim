@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Java
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Tue, 31 Jul 2001 14:00:20 Eastern Daylight Time
+" Last Change:	Fri, 31 Aug 2001 14:00:20 Eastern Daylight Time
 " Current version is at http://sites.netscape.net/sharppeople/vim/scripts
 
 " Only do this when not done yet for this buffer
@@ -16,6 +16,12 @@ let b:did_ftplugin = 1
 " aren't being used.
 setlocal cindent
 
+"---------------------
+" From Johannes Zellner <johannes@zellner.org>
+setlocal cinoptions+=j1		" Correctly indent anonymous classes
+setlocal cinoptions+=+0		" Align continuation lines with the previous line
+"---------------------
+
 " For filename completion, prefer the .java extension over the .class
 " extension.
 setlocal suffixes+=.class
@@ -28,9 +34,9 @@ setlocal fo-=t fo+=croql
 setlocal com& com^=sO:*\ -,mO:*\ \ ,exO:*/  " Behaves just like C
 
 " Change the :browse e filter to primarily show Java-related files.
-if has("gui") && !exists("b:browsefilter")
+if has("gui_win32") && !exists("b:browsefilter")
     let  b:browsefilter="Java Files (*.java)\t*.java\n" .
-	        \	"Properties Files (*.prop*)\t*.prop*\n" .
+		\	"Properties Files (*.prop*)\t*.prop*\n" .
 		\	"Manifest Files (*.mf)\t*.mf\n" .
 		\	"All Files (*.*)\t*.*\n"
 endif

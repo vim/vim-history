@@ -2224,15 +2224,24 @@ _OnKillFocus(
 /*
  * Get a message when the user switches back to vim
  */
+#ifdef WIN16
+    static BOOL
+#else
     static LRESULT
+#endif
 _OnActivateApp(
     HWND hwnd,
     BOOL fActivate,
-    DWORD dwThreadId)
+#ifdef WIN16
+    HTASK dwThreadId
+#else
+    DWORD dwThreadId
+#endif
+	)
 {
     /* we call gui_focus_change() in _OnSetFocus() */
     /* gui_focus_change((int)fActivate); */
-    return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, dwThreadId);
+    return DefWindowProc(hwnd, WM_ACTIVATEAPP, fActivate, (DWORD)dwThreadId);
 }
 
     static BOOL

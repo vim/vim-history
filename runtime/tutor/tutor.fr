@@ -352,7 +352,7 @@ Notez que  cw  efface le mot et vous place ensuite en mode Insertion.
      Le format est:
 
 	 [nombre]  c  objet	   OU	     c	[nombre]  objet
- 
+
   2. Les objets sont également les mêmes:  w (mot), $ (fin de ligne), etc.
 
   3. Déplacez-vous à la première ligne marquée ---> ci-dessous.

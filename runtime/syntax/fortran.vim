@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Fortran95 (and Fortran90, Fortran77, F and elf90)
 " Version:	0.81
-" Last Change:	2001 July 26
+" Last Change:	2001 Sep 02
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 " For instructions on use, do :help fortran from vim
@@ -315,7 +315,7 @@ syn cluster fortranCommentGroup contains=fortranTodo
 if (b:fortran_fixed_source == 1)
   if !exists("fortran_have_tabs")
     "Flag items beyond column 72
-    syn match fortranSerialNumber	        excludenl "^.\{73,}$"lc=72
+    syn match fortranSerialNumber	excludenl "^.\{73,}$"lc=72
     "Flag left margin errors
     syn match fortranLabelError	"^.\{-,4}[^0-9 ]" contains=fortranTab
     syn match fortranLabelError	"^.\{4}\d\S"

@@ -1,7 +1,7 @@
 " Menu Translations:	Polish
 " Maintainer:		Rafal M. Sulejman <rms@poczta.onet.pl>
 " Initial Translation:	Marcin Dalecki <dalecki@cs.net.pl>
-" Last Change:		2001 Aug 14
+" Last Change:		2001 Aug 31
 
 " Quit when menu translations have already been done.
 if exists("did_menu_trans")
@@ -26,7 +26,7 @@ menutrans &File				&Plik
 menutrans &Open\.\.\.<Tab>:e		&Otwórz\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	Otwórz\ z\ &podzia³em\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew       &Nowy<Tab>:enew
-menutrans &Close<Tab>:q			&Zamknij<Tab>:q
+menutrans &Close<Tab>:close		&Zamknij<Tab>:close
 menutrans &Save<Tab>:w			Za&pisz<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:sav	Zapisz\ &jako\.\.\.<Tab>:sav
 menutrans Split\ &Diff\ with\.\.\.	Podziel\ na\ diff-a\ miêdzy\.\.\.

@@ -1,4 +1,4 @@
-*autocmd.txt*   For Vim version 6.0at.  Last change: 2001 Aug 19
+*autocmd.txt*   For Vim version 6.0au.  Last change: 2001 Sep 02
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -607,6 +607,11 @@ The group name can contain any characters except white space.  The group name
 :aug[roup] {name}		Define the autocmd group name for the
 				following ":autocmd" commands.  The name "end"
 				or "END" selects the default group.
+
+						*:augroup-delete* *E367*
+:aug[roup]! {name}		Delete the autocmd group {name}.  Don't use
+				this if there is still an autocommand using
+				this group!  This is not checked.
 
 To enter autocommands for a specific group, use this method:
 1. Select the group with ":augroup {name}".

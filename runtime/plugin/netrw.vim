@@ -1,12 +1,12 @@
 " netrw.vim: (global plugin) Handles file transfer across a network
-"  Last Change: August 24, 2001
+"  Last Change: August 31, 2001
 "  Maintainer:  Charles E. Campbell, Jr. PhD   <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  Version:     2.12
+"  Version:     2.13
 
 " Credits:
 "  Vim editor   by Bram Moolenaar (Thanks, Bram!)
 "  rcp, ftp support by C Campbell <cec@NgrOyphSon.gPsfAc.nMasa.gov>
-"  scp  support by raf            <raf@comdyn.com.au>
+"  scp	support by raf		  <raf@comdyn.com.au>
 "  http support by Bram Moolenaar <bram@moolenaar.net>
 "  inputsecret(), BufReadCmd, BufWriteCmd contributed by C Campbell
 
@@ -18,30 +18,37 @@
 ""  (or <vimfiles\plugin> for Windows).  Its available at
 ""  http://www.erols.com/astronaut/vim/vimscript/Decho.vim
 
-" Option:
+" Options:
 "   let g:netrw_ftp = 1
 "      If you're having trouble with ftp-.netrc file (ie. you don't
 "      have a <.netrc> file) then you may wish to try putting the
 "      statement above in your <.vimrc> file.
+"
+"   User Function NetReadFixup(tmpfile)
+"      If your ftp has an obnoxious habit of prepending/appending
+"      lines to stuff it reads (for example, one chap had a misconfigured
+"      ftp with kerberos which kept complaining with AUTH and KERBEROS
+"      messages) you may write your own function NetReadFixup to fix
+"      up the file.
 
 " Reading:
-" :Nread ?                             give help
-" :Nread machine:file                  uses rcp
-" :Nread "machine file"                uses ftp with <.netrc>
+" :Nread ?			       give help
+" :Nread machine:file		       uses rcp
+" :Nread "machine file"		       uses ftp with <.netrc>
 " :Nread "machine id password file"    uses ftp
 " :Nread "ftp://machine[#port]/file"   uses ftp  (autodetects <.netrc>)
 " :Nread "http://[user@]machine/file"  uses http (wget)
-" :Nread "rcp://machine/file"          uses rcp
+" :Nread "rcp://machine/file"	       uses rcp
 " :Nread "scp://[user@]machine/file"   uses scp
 
 " Writing:
-" :Nwrite ?                             give help
-" :Nwrite machine:file                  uses rcp
-" :Nwrite "machine file"                uses ftp with <.netrc>
-" :Nwrite "machine id password file"    uses ftp
-" :Nwrite "ftp://machine[#port]/file"   uses ftp  (autodetects <.netrc>)
-" :Nwrite "rcp://machine/file"          uses rcp
-" :Nwrite "scp://[user@]machine/file"   uses scp
+" :Nwrite ?				give help
+" :Nwrite machine:file			uses rcp
+" :Nwrite "machine file"		uses ftp with <.netrc>
+" :Nwrite "machine id password file"	uses ftp
+" :Nwrite "ftp://machine[#port]/file"	uses ftp  (autodetects <.netrc>)
+" :Nwrite "rcp://machine/file"		uses rcp
+" :Nwrite "scp://[user@]machine/file"	uses scp
 " http: not supported!
 
 " User And Password Changing:
@@ -51,23 +58,23 @@
 "  a different user id and/or password, you'll want to
 "  call NetUserPass() first.
 
-"   :NetUserPass [uid [password]]       -- will prompt as needed
-"   :call NetUserPass()                 -- will prompt for userid and password
-"   :call NetUserPass("uid")            -- will prompt for password
+"   :NetUserPass [uid [password]]	-- will prompt as needed
+"   :call NetUserPass()			-- will prompt for userid and password
+"   :call NetUserPass("uid")		-- will prompt for password
 "   :call NetUserPass("uid","password") -- sets global userid and password
 
 " Variables:
 "    b:netrw_lastfile : last file Network-read/written retained on
-"                       a per-buffer basis (supports bare :Nw )
-"    b:netrw_line     : during Nw/NetWrite, holds current line   number
+"			a per-buffer basis (supports bare :Nw )
+"    b:netrw_line     : during Nw/NetWrite, holds current line	 number
 "    b:netrw_col      : during Nw/NetWrite, holds current column number
-"                       b:netrw_line and b:netrw_col are used to restore
-"                       the cursor position on writes
+"			b:netrw_line and b:netrw_col are used to restore
+"			the cursor position on writes
 "
-"    g:netrw_uid      : (ftp) user id,      retained on a per-session basis
+"    g:netrw_uid      : (ftp) user id,	    retained on a per-session basis
 "    g:netrw_passwd   : (ftp) password,     retained on a per-session basis
 "    g:netrw_ftp      : if it doesn't exist, use default ftp (user id pass)
-"                       =1 : use alternate ftp method
+"			=1 : use alternate ftp method
 
 "  But be doers of the word, and not only hearers, deluding your own selves
 "  (James1:22 RSV)
@@ -115,8 +122,8 @@ function! s:NetRead(...)
 " Decho "DBG: tmpfile<".tmpfile.">"
 
  " Special Exception: if a file is named "0r", then
- "                    "0r" will be used to read the
- "                    following files instead of "r"
+ "		      "0r" will be used to read the
+ "		      following files instead of "r"
  if     a:0 == 0
   let readcmd= "r"
   let ichoice= 0
@@ -284,6 +291,10 @@ endfunction
 " Takes care of deleting the last line when the buffer was emtpy.
 " Deletes the file "fname".
 function! s:NetGetFile(readcmd, fname)
+  " User-provided (ie. optional) fix-it-up command
+   if exists("*NetReadFixup")
+	 call NetReadFixup(a:fname)
+   endif
 " Decho "DBG: NetGetFile readcmd<".a:readcmd."> fname<".a:fname.">"
   let dodel = 0
   if line("$") == 1 && getline(1) == ""
@@ -439,10 +450,10 @@ endfunction
 
 " NetMethod:  determine method of transfer
 "  method == 1: rcp
-"            2: ftp + <.netrc>
-"            3: ftp + machine, id, password, and [path]filename
-"            4: scp
-"            5: http (wget)
+"	     2: ftp + <.netrc>
+"	     3: ftp + machine, id, password, and [path]filename
+"	     4: scp
+"	     5: http (wget)
 function! s:NetMethod(choice)  " globals: method machine id passwd fname
 " Decho "DBG: NetMethod(a:choice<".a:choice.">) {"
 
@@ -454,11 +465,11 @@ function! s:NetMethod(choice)  " globals: method machine id passwd fname
 
  " Patterns:
  " mipf   : a:machine a:id password filename  Use ftp
- " mf     : a:machine filename                Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
- " ftpurm : ftp://host[#port]/filename        Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
- " rcpurm : rcp://host/filename               Use rcp
- " rcphf  : host:filename                     Use rcp
- " scpurm : scp://[user@]host/filename        Use scp
+ " mf	  : a:machine filename		      Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
+ " ftpurm : ftp://host[#port]/filename	      Use ftp + <.netrc> or g:netrw_uid g:netrw_passwd
+ " rcpurm : rcp://host/filename		      Use rcp
+ " rcphf  : host:filename		      Use rcp
+ " scpurm : scp://[user@]host/filename	      Use scp
  " httpurm: http://[user@]host/filename       Use wget
  let mipf   = '\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)\s\+\(\S\+\)'
  let mf     = '\(\S\+\)\s\+\(\S\+\)'
@@ -568,9 +579,9 @@ endfunction
 " ------------------------------------------------------------------------
 
 " NetUserPass: set username and password for subsequent ftp transfer
-"   Usage:  :call NetUserPass()                 -- will prompt for userid and password
-"           :call NetUserPass("uid")            -- will prompt for password
-"           :call NetUserPass("uid","password") -- sets global userid and password
+"   Usage:  :call NetUserPass()			-- will prompt for userid and password
+"	    :call NetUserPass("uid")		-- will prompt for password
+"	    :call NetUserPass("uid","password") -- sets global userid and password
 function! NetUserPass(...)
 
  " get/set userid

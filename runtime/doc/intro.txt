@@ -1,4 +1,4 @@
-*intro.txt*     For Vim version 6.0at.  Last change: 2001 Aug 19
+*intro.txt*     For Vim version 6.0au.  Last change: 2001 Aug 29
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -269,6 +269,7 @@ Vim would never have become what it is now, without the help of these people!
 	Robert Webb		Command-line completion, GUI versions, and
 				lots of patches
 	Ingo Wilken		Tcl interface
+	Mike Williams		PostScript printing
 	Juergen Weigert		Lattice version, AUX improvements, UNIX and
 				MS-DOS ports, autoconf
 	Stefan 'Sec' Zehl	Maintainer of vim.org

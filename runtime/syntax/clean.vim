@@ -68,7 +68,7 @@ if version >= 508 || !exists("did_clean_syntax_init")
    " Statements
    HiLink cleanTypeClass    Keyword
    HiLink cleanConditional  Conditional
-   HiLink cleanLabel        Label
+   HiLink cleanLabel		Label
    HiLink cleanKeyword      Keyword
    " Generic Preprocessing
    HiLink cleanInclude      Include
@@ -79,10 +79,10 @@ if version >= 508 || !exists("did_clean_syntax_init")
    HiLink cleanFuncTypeDef  Typedef
    " Special
    HiLink cleanSpecial      Special
-   HiLink cleanList         Special
-   HiLink cleanArray        Special
-   HiLink cleanRecord       Special
-   HiLink cleanTuple        Special
+   HiLink cleanList			Special
+   HiLink cleanArray		Special
+   HiLink cleanRecord		Special
+   HiLink cleanTuple		Special
    " Error
    " Todo
 

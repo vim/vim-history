@@ -760,8 +760,8 @@ fi
 if test "x$SKIP_GNOME" != "xYES" -a "$enable_gui" != "gnome"; then
   AC_MSG_CHECKING(whether or not to look for GNOME)
   AC_ARG_ENABLE(gnome-check,
-	[  --enable-gnome-check    If GTK GUI, check for GNOME [default=yes]],
-	, enable_gnome_check="yes")
+	[  --enable-gnome-check    If GTK GUI, check for GNOME [default=no]],
+	, enable_gnome_check="no")
   AC_MSG_RESULT($enable_gnome_check);
   if test "x$enable_gnome_check" = "xno"; then
     SKIP_GNOME=YES

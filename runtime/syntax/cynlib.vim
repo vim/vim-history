@@ -1,17 +1,17 @@
 " Vim syntax file
 " Language:     Cynlib(C++)
 " Maintainer:   Phil Derrick <phild@forteds.com>
-" Last change:  2001 May 10
+" Last change:  2001 Sep 02
 " URL http://www.derrickp.freeserve.co.uk/vim/syntax/cynlib.vim
 "
 " Language Information
 "
-"               Cynlib is a library of C++ classes to allow hardware
-"               modelling in C++. Combined with a simulation kernel,
-"               the compiled and linked executable forms a hardware
-"               simulation of the described design.
+"		Cynlib is a library of C++ classes to allow hardware
+"		modelling in C++. Combined with a simulation kernel,
+"		the compiled and linked executable forms a hardware
+"		simulation of the described design.
 "
-"               Further information can be found from www.forteds.com
+"		Further information can be found from www.forteds.com
 
 
 " Remove any old syntax stuff hanging around
@@ -35,15 +35,15 @@ unlet b:current_syntax
 
 " Cynlib extensions
 
-syn keyword     cynlibMacro        Default CYNSCON
-syn keyword     cynlibMacro        Case CaseX EndCaseX
-syn keyword     cynlibType         CynData CynSignedData CynTime
-syn keyword     cynlibType         In Out InST OutST
-syn keyword     cynlibType         Struct
-syn keyword     cynlibType         Int Uint Const
-syn keyword     cynlibType         Long Ulong
-syn keyword     cynlibType         OneHot
-syn keyword     cynlibType         CynClock Cynclock0
+syn keyword	cynlibMacro	   Default CYNSCON
+syn keyword	cynlibMacro	   Case CaseX EndCaseX
+syn keyword	cynlibType	   CynData CynSignedData CynTime
+syn keyword	cynlibType	   In Out InST OutST
+syn keyword	cynlibType	   Struct
+syn keyword	cynlibType	   Int Uint Const
+syn keyword	cynlibType	   Long Ulong
+syn keyword	cynlibType	   OneHot
+syn keyword	cynlibType	   CynClock Cynclock0
 syn keyword     cynlibFunction     time configure my_name
 syn keyword     cynlibFunction     CynModule epilog execute_on
 syn keyword     cynlibFunction     my_name
@@ -66,7 +66,7 @@ syn keyword     cynlibFunction     CynVerify
 
 
 syn match       cynlibOperator     "<<="
-syn keyword     cynlibType         In Out InST OutST Int Uint Const Cynclock
+syn keyword	cynlibType	   In Out InST OutST Int Uint Const Cynclock
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

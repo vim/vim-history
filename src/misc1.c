@@ -1559,7 +1559,7 @@ ins_char_bytes(buf, charlen)
 
 #ifdef FEAT_VIRTUALEDIT
     /* Break tabs if needed. */
-    if (virtual_active() && curwin->w_cursor.coladd)
+    if (virtual_active() && curwin->w_cursor.coladd > 0)
 	coladvance_force(getviscol());
 #endif
 
@@ -1741,7 +1741,7 @@ ins_str(s)
     linenr_T	lnum = curwin->w_cursor.lnum;
 
 #ifdef FEAT_VIRTUALEDIT
-    if (virtual_active() && curwin->w_cursor.coladd)
+    if (virtual_active() && curwin->w_cursor.coladd > 0)
 	coladvance_force(getviscol());
 #endif
 
@@ -1763,7 +1763,7 @@ ins_str(s)
 
 /*
  * Delete one character under the cursor.
- * If 'fixpos' is TRUE, don't leave the cursor on the NUL after the line.
+ * If "fixpos" is TRUE, don't leave the cursor on the NUL after the line.
  * Caller must have prepared for undo.
  *
  * return FAIL for failure, OK otherwise
@@ -1773,26 +1773,46 @@ del_char(fixpos)
     int		fixpos;
 {
 #ifdef FEAT_MBYTE
-    char_u	*p;
-
     if (has_mbyte)
     {
-	/* delete multi-bytes, when the cursor is on a multi-byte character */
+	/* Make sure the cursor is at the start of a character. */
 	mb_adjust_cursor();
-
-	p = ml_get_cursor();
-	if (p == NULL || p[0] == NUL)
-	    return FALSE;
-
-	return del_bytes((long)(*mb_ptr2len_check)(p), fixpos);
+	if (*ml_get_cursor() == NUL)
+	    return FAIL;
+	return del_chars(1L, fixpos);
     }
 #endif
     return del_bytes(1L, fixpos);
 }
 
+#if defined(FEAT_MBYTE) || defined(PROTO)
 /*
- * Delete 'count' bytes under the cursor.
- * If 'fixpos' is TRUE, don't leave the cursor on the NUL after the line.
+ * Like del_bytes(), but delete characters instead of bytes.
+ */
+    int
+del_chars(count, fixpos)
+    long	count;
+    int		fixpos;
+{
+    long	bytes = 0;
+    long	i;
+    char_u	*p;
+    int		l;
+
+    p = ml_get_cursor();
+    for (i = 0; i < count && *p != NUL; ++i)
+    {
+	l = (*mb_ptr2len_check)(p);
+	bytes += l;
+	p += l;
+    }
+    return del_bytes(bytes, fixpos);
+}
+#endif
+
+/*
+ * Delete "count" bytes under the cursor.
+ * If "fixpos" is TRUE, don't leave the cursor on the NUL after the line.
  * Caller must have prepared for undo.
  *
  * return FAIL for failure, OK otherwise
@@ -1823,7 +1843,7 @@ del_bytes(count, fixpos)
 	return FAIL;
 
 #ifdef FEAT_MBYTE
-    if (p_deco)
+    if (p_deco && enc_utf8)
     {
 	p1 = p2 = 0;
 	/* see if there are any combining characters: */
@@ -5624,6 +5644,16 @@ term_again:
 			    }
 			}
 
+			/* When aligning with the case statement, don't align
+			 * with a statement after it.
+			 *  case 1: {   <-- don't use this { position
+			 *	stat;
+			 *  }
+			 *  case 2:
+			 *	stat;
+			 */
+			iscase = (ind_keep_case_label && cin_iscase(l));
+
 			/*
 			 * Get indent and pointer to text for current line,
 			 * ignoring any jump label.
@@ -5636,7 +5666,7 @@ term_again:
 			/* See remark above: "Only add ind_open_extra.." */
 			if (*skipwhite(l) == '{')
 			    amount -= ind_open_extra;
-			lookfor = LOOKFOR_TERM;
+			lookfor = iscase ? LOOKFOR_ANY : LOOKFOR_TERM;
 
 			/*
 			 * If we're at the end of a block, skip to the start of
@@ -6469,7 +6499,7 @@ dos_expandpath(
 	return 0;
 
     /*
-     * Find the first part in the path name that contains a wildcard.
+     * Find the first part in the path name that contains a wildcard or a ~1.
      * Copy it into buf, including the preceding characters.
      */
     p = buf;
@@ -6486,7 +6516,7 @@ dos_expandpath(
 	    else
 		s = p + 1;
 	}
-	else if (*path == '*' || *path == '?' || *path == '[')
+	else if (*path == '*' || *path == '?' || *path == '[' || *path == '~')
 	    e = p;
 #ifdef FEAT_MBYTE
 	if (has_mbyte)
@@ -6557,7 +6587,7 @@ dos_expandpath(
 #endif
 	    len = (int)STRLEN(buf);
 	    STRCPY(buf + len, path);
-	    if (mch_has_wildcard(path))
+	    if (mch_has_exp_wildcard(path))
 	    {
 		/* need to expand another component of the path */
 		/* remove backslashes for the remaining components only */
@@ -6728,7 +6758,7 @@ gen_expand_wildcards(num_pat, pat, num_file, file, flags)
 	     * If there are no wildcards: Add the file name if it exists or
 	     * when EW_NOTFOUND is given.
 	     */
-	    if (mch_has_wildcard(p))
+	    if (mch_has_exp_wildcard(p))
 		add_pat = mch_expandpath(&ga, p, flags);
 	}
 

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Ada
 " Maintainer:	Neil Bird <neil@fnxweb.com>
-" Last Change:	2001 June 20
+" Last Change:	2001 Sep 02
 " Version:	$Id$
 "
 " ToDo:
@@ -41,23 +41,23 @@ function s:MainBlockIndent( prev_indent, prev_lnum, blockstart )
    let line = getline(lnum)
    while lnum > 1
       if getline(lnum) =~ '^\s*' . a:blockstart
-         let ind = indent(lnum)
-         if ind <= a:prev_indent
-            return ind
-         endif
+	 let ind = indent(lnum)
+	 if ind <= a:prev_indent
+	    return ind
+	 endif
       endif
       let lnum = prevnonblank(lnum - 1)
       " Get previous non-blank/non-comment-only line
       while 1
-         let line = getline(lnum)
-         let line = substitute( line, s:AdaComment, '', '' )
-         if line !~ '^\s*$'
-            break
-         endif
-         let lnum = prevnonblank(lnum - 1)
-         if lnum <= 0
-            return a:prev_indent
-         endif
+	 let line = getline(lnum)
+	 let line = substitute( line, s:AdaComment, '', '' )
+	 if line !~ '^\s*$'
+	    break
+	 endif
+	 let lnum = prevnonblank(lnum - 1)
+	 if lnum <= 0
+	    return a:prev_indent
+	 endif
       endwhile
    endwhile
    " Fallback - just move back one
@@ -76,26 +76,26 @@ function s:StatementIndent( current_indent, prev_lnum )
       let lnum = prevnonblank(lnum - 1)
       " Get previous non-blank/non-comment-only line
       while 1
-         let line = getline(lnum)
-         let line = substitute( line, s:AdaComment, '', '' )
-         if line !~ '^\s*$'
-            break
-         endif
-         let lnum = prevnonblank(lnum - 1)
-         if lnum <= 0
-            return a:current_indent
-         endif
+	 let line = getline(lnum)
+	 let line = substitute( line, s:AdaComment, '', '' )
+	 if line !~ '^\s*$'
+	    break
+	 endif
+	 let lnum = prevnonblank(lnum - 1)
+	 if lnum <= 0
+	    return a:current_indent
+	 endif
       endwhile
       " Leave indent alone if our ';' line is part of a ';'-delineated
       " aggregate (e.g., procedure args.) or first line after a block start.
       if line =~ s:AdaBlockStart
-         return a:current_indent
+	 return a:current_indent
       endif
       if line !~ '[.=(]\s*$'
-         let ind = indent(prev_lnum)
-         if ind < a:current_indent
-            return ind
-         endif
+	 let ind = indent(prev_lnum)
+	 if ind < a:current_indent
+	    return ind
+	 endif
       endif
    endwhile
    " Fallback - just use current one
@@ -114,11 +114,11 @@ function GetAdaIndent()
       let line = getline(lnum)
       let line = substitute( line, s:AdaComment, '', '' )
       if line !~ '^\s*$'
-         break
+	 break
       endif
       let lnum = prevnonblank(lnum - 1)
       if lnum <= 0
-         return ind
+	 return ind
       endif
    endwhile
 
@@ -140,10 +140,10 @@ function GetAdaIndent()
       let b:jobby = 'normal! ' . lnum . 'G$F)%'
       exe 'normal! ' . lnum . 'G$F)%'
       if getline('.') =~ '^\s*('
-         " Dire layout - use previous indent (could check for AdaComment here)
-         let ind = indent( prevnonblank( line('.')-1 ) )
+	 " Dire layout - use previous indent (could check for AdaComment here)
+	 let ind = indent( prevnonblank( line('.')-1 ) )
       else
-         let ind = indent('.')
+	 let ind = indent('.')
       endif
       exe 'normal! ' . v:lnum . 'G'
    elseif line =~ '[.=(]\s*$'

@@ -1,7 +1,7 @@
 " Vim filetype plugin file
 " Language:	Perl
 " Maintainer:	Dan Sharp <vimuser@crosswinds.net>
-" Last Change:	Tue, 21 Aug 2001 16:54:23 
+" Last Change:	Tue, 21 Aug 2001 16:54:23
 " Current version is at http://sites.netscape.net/sharppeople/vim/scripts
 
 if exists("b:did_ftplugin") | finish | endif

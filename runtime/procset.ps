@@ -1,8 +1,9 @@
 %!PS-Adobe-3.0 Resource-ProcSet
 % Editing of this file is NOT RECOMMENDED.  You run a very good risk of causing
 % all PostScript printing from VIM failing if you do.  PostScript is not called
-% a write-only language for nothing! 
-/bd{bind def}bind def/ld{load def}bd/d /def ld
+% a write-only language for nothing!
+/bd{bind def}bind def/ld{load def}bd/ed{exch def}bd/d /def ld
+/db{dict begin}bd/cde{currentdict end}bd
 /SO null d/sv{/SO save d}bd/re{SO restore}bd
 /L2 systemdict/languagelevel 2 copy known{get exec}{pop pop 1}ifelse 2 ge d
 /m{moveto}bd/s{show}bd/ms{m s}bd/g{setgray}bd/r{setrgbcolor}bd/sp{showpage}bd
@@ -12,10 +13,14 @@ stroke gr}bd
 /bg{gs r cp BO add 4 -2 roll rectfill gr}bd
 /ffs{findfont exch scalefont d}bd/sf{setfont}bd
 L2{
-/nc{1 dict begin/NumCopies exch d currentdict end setpagedevice}bd
-/sps{pop[3 1 roll]1 dict begin/PageSize exch d currentdict end setpagedevice}bd
+/nc{1 db/NumCopies ed cde setpagedevice}bd
+/sps{pop[3 1 roll]1 db/PageSize ed cde mark exch{setpagedevice}stopped
+cleartomark}bd
+/dt{2 db/Tumble ed/Duplex ed cde mark exch{setpagedevice}stopped cleartomark}bd
 }{
-/nc{/#copies exch d}bd
+/nc{/#copies ed}bd
 /sps{statusdict/setpage get exec}bd
+/dt{statusdict/settumble 2 copy known{get exec}{pop pop pop}ifelse
+statusdict/setduplexmode 2 copy known{get exec}{pop pop pop}ifelse}bd
 }ifelse
 % vim:ff=unix:

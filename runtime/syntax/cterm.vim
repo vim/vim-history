@@ -1,7 +1,7 @@
 " Vim syntax file
 " Language:	Century Term Command Script
 " Maintainer:	Sean M. McKee <mckee@misslink.net>
-" Last Change:	2001 May 09
+" Last Change:	2001 Sep 02
 " Version Info: @(#)cterm.vim	1.7	97/12/15 09:23:14
 
 " For version 5.x: Clear all syntax items
@@ -75,7 +75,7 @@ syn keyword ctermPreVarRO	_timeout _row _col _version
 syn keyword ctermOperator not mod eq ne gt le lt ge xor and or shr not shl
 
 "SYMBOLS
-syn match   CtermSymbols         "|"
+syn match   CtermSymbols	 "|"
 "syn keyword ctermOperators + - * / % = != > < >= <= & | ^ ! << >>
 "END SYMBOLS
 

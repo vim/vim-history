@@ -1,4 +1,4 @@
-*change.txt*    For Vim version 6.0at.  Last change: 2001 Aug 27
+*change.txt*    For Vim version 6.0au.  Last change: 2001 Aug 28
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -668,9 +668,11 @@ magic	nomagic	  action    ~
       \L	  following characters made lowercase
       \e	  end of \u, \U, \l and \L (NOTE: not <Esc>!)
       \E	  end of \u, \U, \l and \L
-      <CR>	  split line in two at this point
+      <CR>	  split line in two at this point (Type the <CR> as CTRL-V
+		  <Enter>)
       \r	  idem
-      \<CR>	  insert a carriage-return (CTRL-M)
+      \<CR>	  insert a carriage-return (CTRL-M) (Type the <CR> as CTRL-V
+		  <Enter>)
       \n	  insert a <NL> (<NUL> in the file) (does NOT break the line)
       \b	  insert a <BS>
       \t	  insert a <Tab>

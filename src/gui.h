@@ -283,7 +283,9 @@ typedef struct Gui
     int		menu_width;	    /* Width of the menu bar */
 # endif
     char	menu_is_active;	    /* TRUE if menu is present */
+# ifdef FEAT_GUI_ATHENA
     char	menu_height_fixed;  /* TRUE if menu height fixed */
+# endif
 #endif
 
     scrollbar_T bottom_sbar;	    /* Bottom scrollbar */

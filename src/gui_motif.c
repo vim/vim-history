@@ -497,17 +497,6 @@ gui_mch_enable_menu(flag)
 
 }
 
-/* ARGSUSED */
-    void
-gui_mch_set_menu_pos(x, y, w, h)
-    int	    x;
-    int	    y;
-    int	    w;
-    int	    h;
-{
-    /* menuBar is now using XmForm attachments to be positioned */
-}
-
 /*
  * Enable or disable mnemonics for the toplevel menus.
  */
@@ -735,25 +724,13 @@ gui_mch_compute_menu_height(id)
     vimmenu_T	*mp;
     static Dimension	height = 21;	/* normal height of a menu item */
 
-    /* Don't update the menu height when it was set at a fixed value */
-    if (gui.menu_height_fixed)
-	return;
-
     /*
      * Get the height of the new item, before managing it, because it will
      * still reflect the font size.  After managing it depends on the menu
      * height, which is what we just wanted to get!.
      */
     if (id != (Widget)0)
-    {
-#ifndef LESSTIF_VERSION
-	/* On some systems this avoids that the Help menu isn't right aligned.
-	 * On lesstif it causes the menu height to be computed wrong. */
-	if (!XtIsRealized(id))
-	    return;
-#endif
 	XtVaGetValues(id, XmNheight, &height, NULL);
-    }
 
     /* Find any menu Widget, to be able to call XtManageChild() */
     else
@@ -802,11 +779,13 @@ gui_mch_compute_menu_height(id)
      */
     gui.menu_height = maxy + height - 2 * shadow + 2 * margin + 4;
 
+#ifdef LESSTIF_VERSION
     /* Somehow the menu bar doesn't resize automatically.  Set it here,
      * even though this is a catch 22.  Don't do this when starting up,
      * somehow the menu gets very high then. */
     if (gui.shell_created)
 	XtVaSetValues(menuBar, XmNheight, gui.menu_height, NULL);
+#endif
 }
 
     void
@@ -965,7 +944,7 @@ gui_mch_add_menu_item(menu, idx)
 	XmNlabelString, label,
 	XmNmnemonic, menu->mnemonic,
 #if (XmVersion >= 1002)
-	/* count the tearoff item (neede for LessTif) */
+	/* count the tearoff item (needed for LessTif) */
 	XmNpositionIndex, idx + (tearoff_val == (int)XmTEAR_OFF_ENABLED
 								     ? 1 : 0),
 #endif
@@ -983,7 +962,7 @@ gui_mch_add_menu_item(menu, idx)
     }
 }
 
-#if (XmVersion <= 1002)
+#if (XmVersion <= 1002) || defined(PROTO)
 /*
  * This function will destroy/create the popup menus dynamically,
  * according to the value of 'mousemodel'.
@@ -1053,15 +1032,12 @@ gui_mch_new_menu_font()
     if (menuBar == (Widget)0)
 	return;
     gui_mch_submenu_change(root_menu, FALSE);
-    if (!gui.menu_height_fixed)
     {
 	Dimension   height;
+	Position w, h;
 
 	XtVaGetValues(menuBar, XmNheight, &height, NULL);
 	gui.menu_height = height;
-    }
-    {
-	Position w, h;
 
 	XtVaGetValues(vimShell, XtNwidth, &w, XtNheight, &h, NULL);
 	gui_resize_shell(w, h

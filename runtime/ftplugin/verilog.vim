@@ -2,7 +2,7 @@
 " Language:	Verilog HDL
 " Maintainer:	Chih-Tsun Huang <cthuang@larc.ee.nthu.edu.tw>
 " Last Change:	Wed Aug  1 21:06:49 CST 2001
-" URL:          http://larc.ee.nthu.edu.tw/~cthuang/vim/ftplugin/verilog.vim
+" URL:		http://larc.ee.nthu.edu.tw/~cthuang/vim/ftplugin/verilog.vim
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")

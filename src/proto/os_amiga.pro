@@ -39,6 +39,7 @@ int mch_call_shell __ARGS((char_u *cmd, int options));
 void mch_breakcheck __ARGS((void));
 long Chk_Abort __ARGS((void));
 int mch_expandpath __ARGS((garray_T *gap, char_u *pat, int flags));
+int mch_has_exp_wildcard __ARGS((char_u *p));
 int mch_has_wildcard __ARGS((char_u *p));
 char_u *mch_getenv __ARGS((char_u *var));
 int mch_setenv __ARGS((char *var, char *value, int x));

@@ -1,7 +1,7 @@
 " Vim indent file
 " Language:	Fortran90 (and Fortran95, Fortran77, F and elf90)
 " Version:	0.32
-" Last Change:	2001 Jan 15
+" Last Change:	2001 Sep 02
 " Maintainer:	Ajit J. Thakkar <ajit@unb.ca>; <http://www.unb.ca/chem/ajit/>
 " For the latest version of this file, see <http://www.unb.ca/chem/ajit/vim.htm>
 
@@ -117,10 +117,10 @@ function FortranGetFixedIndent()
     else
       let test=strpart(prevline,0,5)
       if test =~ "[0-9]"
-        " Skip lines with statement numbers
+	" Skip lines with statement numbers
 	let lnum = lnum - 1
       else
-        break
+	break
       endif
     endif
   endwhile

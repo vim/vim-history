@@ -2885,9 +2885,9 @@ msgid "-borderwidth <width>\tUse a border width of <width> (also: -bw)"
 msgstr "-borderwidth <width>\t境界の幅を <width> にする(同義: -bw)"
 
 #: main.c:2195
-msgid "-scrollbarwidth <width>\tUse a scrollbar width of <width> (also: -sw)"
+msgid "-scrollbarwidth <width>  Use a scrollbar width of <width> (also: -sw)"
 msgstr ""
-"-scrollbarwidth <width>\tスクロールバーの幅を <width> にする(同義: -sw)"
+"-scrollbarwidth <width>  スクロールバーの幅を <width> にする(同義: -sw)"
 
 #: main.c:2196
 msgid "-menuheight <height>\tUse a menu bar height of <height> (also: -mh)"

@@ -1,4 +1,4 @@
-*os_qnx.txt*  For Vim version 6.0at.  Last change: 2001 Jul 28
+*os_qnx.txt*  For Vim version 6.0au.  Last change: 2001 Jul 28
 
 
 		  VIM REFERENCE MANUAL    by Julian Kinraid
@@ -11,6 +11,7 @@
 3. Terminal support		|qnx-terminal|
 4. Photon GUI			|photon-gui|
 5. Photon fonts			|photon-fonts|
+6. Bugs & things To Do
 
 ==============================================================================
 
@@ -55,22 +56,23 @@ Supported features:
 	Menus, popup menus and menu priorities		|:menu|
 							|popup-menu|
 							|menu-priority|
+	Toolbar						|gui-toolbar|
+							|'toolbar'|
 	Font selector (:set guifont=*)			|photon-fonts|
 	Mouse focus					|'mousefocus'|
 	Mouse hide					|'mousehide'|
+	Mouse cursor shapes				|'mouseshape'|
 	Clipboard					|gui-clipboard|
 
 Unfinished features:
-	Various international support, such as Farsi & Hebrew support, different
-	encodings, etc.
+	Various international support, such as Farsi & Hebrew support,
+	different encodings, etc.
 
-	Toolbar (best not to use it right now...)
 	This help file
 
 Unsupported features:
 	Find & Replace window				|:promptfind|
 	Tearoff menus
-	Mouse shapes					|'mouseshape'|
 
 	Other things which I can't think of so I can't list them
 
@@ -107,5 +109,25 @@ Select a font with the requester >
 	:set guifont=*
 <
 
+
+6. Bugs & things To Do
+
+Bugs:
+	- Still a slight problem with menu highlighting
+	- When using phditto/phinows/etc., if you are using a font that
+	  doesn't support the bold attribute, when vim attempts to draw
+	  bold text it will be all messed up.
+	- The cursor can sometimes be hard to see.
+	- A number of minor problems that can fixed :)
+
+Todo:
+	- Improve multi-language support.
+	- Options for setting the fonts used in the menu and toolbar.
+	- Find & Replace dialog.
+	- The clientserver features.
+	- Maybe tearoff menus.
+
+	- Replace usage of fork() with spawn() when launching external
+	  programs.
 
  vim:tw=78:sw=4:ts=8

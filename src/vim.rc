@@ -107,7 +107,7 @@ END
 /*
  *  Printing Status Dialog (should only be used when FEAT_PRINTER is defined)
  */
-#define IDC_BOX1		400 
+#define IDC_BOX1		400
 #define IDC_PRINTTEXT1		401
 #define IDC_PRINTTEXT2		402
 #define IDC_PROGRESS		403

@@ -1763,16 +1763,19 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	else if (do_quotes == -1)
 	{
 	    /*
-	     * count the number of quotes in the line, skipping \" and '"'
+	     * Count the number of quotes in the line, skipping \" and '"'.
+	     * Watch out for "\\".
 	     */
 	    at_start = do_quotes;
 	    for (ptr = linep; *ptr; ++ptr)
 	    {
 		if (ptr == linep + pos.col + backwards)
 		    at_start = (do_quotes & 1);
-		if (*ptr == '"' && (ptr == linep || ptr[-1] != '\\') &&
-			    (ptr == linep || ptr[-1] != '\'' || ptr[1] != '\''))
+		if (*ptr == '"'
+			&& (ptr == linep || ptr[-1] != '\'' || ptr[1] != '\''))
 		    ++do_quotes;
+		if (*ptr == '\\' && ptr[1] != NUL)
+		    ++ptr;
 	    }
 	    do_quotes &= 1;	    /* result is 1 with even number of quotes */
 
@@ -1830,7 +1833,7 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	switch (c = linep[pos.col])
 	{
 	case NUL:
-		/* at end of line without trailing backslash, reset inquote */
+	    /* at end of line without trailing backslash, reset inquote */
 	    if (pos.col == 0 || linep[pos.col - 1] != '\\')
 	    {
 		inquote = FALSE;
@@ -1839,11 +1842,21 @@ findmatchlimit(oap, initc, flags, maxtravel)
 	    break;
 
 	case '"':
-		/* a quote that is preceded with a backslash is ignored */
-	    if (do_quotes && (pos.col == 0 || linep[pos.col - 1] != '\\'))
+	    /* a quote that is preceded with an odd number of backslashes is
+	     * ignored */
+	    if (do_quotes)
 	    {
-		inquote = !inquote;
-		start_in_quotes = FALSE;
+		int col;
+
+		c = 0;
+		for (col = pos.col - 1; col >= 0; --col)
+		    if (linep[col] != '\\')
+			break;
+		if ((c & 1) == 0)
+		{
+		    inquote = !inquote;
+		    start_in_quotes = FALSE;
+		}
 	    }
 	    break;
 

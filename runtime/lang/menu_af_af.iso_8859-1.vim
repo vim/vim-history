@@ -1,6 +1,6 @@
 " Menu Translations:	Afrikaas
-" Maintainer:	        Danie Roux <droux@tuks.co.za>
-" Last Change:	        2001 Jul 28
+" Maintainer:		Danie Roux <droux@tuks.co.za>
+" Last Change:		2001 Sep 02
 
 menutrans clear
 let did_menu_trans = 1
@@ -21,7 +21,7 @@ menutrans &File				&Lêer
 menutrans &Open\.\.\.<Tab>:e		&Open\.\.\.<Tab>:e
 menutrans Sp&lit-Open\.\.\.<Tab>:sp	Maak\ oop\ in\ nuwe\ &venster\.\.\.<Tab>:sp
 menutrans &New<Tab>:enew		&Nuut<Tab>:enew
-menutrans &Close<Tab>:q			Maak\ &Toe<Tab>:q
+menutrans &Close<Tab>:close		Maak\ &Toe<Tab>:close
 menutrans &Save<Tab>:w			&Skryf<Tab>:w
 menutrans Save\ &As\.\.\.<Tab>:w	Skryf\ &as\.\.\.<Tab>:w
 menutrans &Print			&Druk

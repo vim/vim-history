@@ -1,7 +1,7 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: July 4, 2001
+"  Last Change: August 28, 2001
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.0
+"  Version:     1.1
 
 " Documentation:
 "  The documentation is in a separate file, matchit.txt .
@@ -31,24 +31,27 @@
 if exists("loaded_matchit") || &cp
   finish
 endif
+let loaded_matchit = 1
 let s:last_mps = ""
-let loaded_matchit= 1
 let s:last_words = ""
 
 let s:save_cpo= &cpo
 set cpo&vim
 
-" The echo in the map clears the command line.
-nnoremap% :<C-U>call <SID>Match_wrapper('',1,'n') \| echo<CR>
-vnoremap% :<C-U>call <SID>Match_wrapper('',1,'v') \| echo<CR>m'gv``
-nnoremap g% :<C-U>call <SID>Match_wrapper('',0,'n') \| echo<CR>
-vnoremap g% :<C-U>call <SID>Match_wrapper('',0,'v') \| echo<CR>m'gv``
+nnoremap <silent> %  :<C-U>call <SID>Match_wrapper('',1,'n') <CR>
+nnoremap <silent> g% :<C-U>call <SID>Match_wrapper('',0,'n') <CR>
+vnoremap <silent> %  :<C-U>call <SID>Match_wrapper('',1,'v') <CR>m'gv``
+vnoremap <silent> g% :<C-U>call <SID>Match_wrapper('',0,'v') <CR>m'gv``
+onoremap <silent> %  :<C-U>call <SID>Match_wrapper('',1,'o') <CR>
+onoremap <silent> g% :<C-U>call <SID>Match_wrapper('',0,'o') <CR>
 
 " Analogues of [{ and ]} using matching patterns:
-nnoremap [% :<C-U>call <SID>MultiMatch("bW") <Bar> echo<CR>
+nnoremap <silent> [% :<C-U>call <SID>MultiMatch("bW", "n") <CR>
+nnoremap <silent> ]% :<C-U>call <SID>MultiMatch("W",  "n") <CR>
 vnoremap [% <Esc>[%m'gv``
 vnoremap ]% <Esc>]%m'gv``
-nnoremap ]% :<C-U>call <SID>MultiMatch("W") <Bar> echo<CR>
+onoremap <silent> [% :<C-U>call <SID>MultiMatch("bW", "o") <CR>
+onoremap <silent> ]% :<C-U>call <SID>MultiMatch("W",  "o") <CR>
 
 " Auto-complete mappings:  (not yet "ready for prime time")
 " TODO Read :help write-plugin for the "right" way to let the user
@@ -248,6 +251,10 @@ function! s:Match_wrapper(word, forward, mode) range
   normal!m'
   if sp_return > 0
     execute final_position
+    " Open folds, if appropriate.
+    if a:mode != "o" && &foldopen =~ "percent"
+      normal!zv
+    endif
   endif
 endfun
 
@@ -570,13 +577,13 @@ endfun
 " Jump to the nearest unmatched "(" or "if" or "<tag>" if a:spflag == "bW"
 " or the nearest unmatched "</tag>" or "endif" or ")" if a:spflag == "W".
 " Return a "mark" for the original position, so that
-"   let m = MultiMatch("bW") ... execute m
+"   let m = MultiMatch("bW", "n") ... execute m
 " will return to the original position.  If there is a problem, do not
 " move the cursor and return "", unless a count is given, in which case
 " go up or down as many levels as possible and again return "".
 " TODO This relies on the same patterns as % matching.  It might be a good
 " idea to give it its own matching patterns.
-fun! s:MultiMatch(spflag)
+fun! s:MultiMatch(spflag, mode)
   if !exists("b:match_words") || b:match_words == ""
     return ""
   end
@@ -653,6 +660,10 @@ fun! s:MultiMatch(spflag)
     let level = level - 1
   endwhile
 
+  " Open folds, if appropriate.
+  if a:mode != "o" && &foldopen =~ "percent"
+    normal!zv
+  endif
   " Restore options and return a string to restore the original position.
   execute "set " . restore_options
   return restore_cursor
@@ -796,23 +807,6 @@ aug Matchit
   \ '\<if\>:\<else\%(if\)\=\>:\<endif\>,' .
   \ '\<!loopondimensions\>\|\<!looponselected\>:\<!endloop\>'
   \ | endif
-  " Fortran:  thanks to Johannes Zellner and Ajit Thakkar (77, 90, 95)
-  let s:notelse = '\%(\<end\s\+\|\<else\s\+\)\@<!'
-  au FileType fortran if !exists("b:match_words") |
-    \ let b:match_ignorecase = 1 |
-    \ let b:match_words =
-    \ '\<select\s*case\>:\<case\>:\<end\s*select\>,' .
-    \ s:notelse . '\<if\s*(.\+)\s*then\>:' .
-      \ '\<else\s*\%(if\s*(.\+)\s*then\)\=\>:\<end\s*if\>,'.
-    \ 'do\s\+\(\d\+\):\(^\s*\)\@<=\1\s,'.
-    \ s:notend . '\<do\>:\<end\s*do\>,'.
-    \ s:notelse . '\<where\>:\<elsewhere\>:\<end\s*where\>,'.
-    \ s:notend . '\<type\s*[^(]:\<end\s*type\>,'.
-    \ s:notend . '\<subroutine\>:\<end\s*subroutine\>,'.
-    \ s:notend . '\<function\>:\<end\s*function\>,'.
-    \ s:notend . '\<module\>:\<end\s*module\>,'.
-    \ s:notend . '\<program\>:\<end\s*program\>'
-    \ | endif
   " HTML:  thanks to Johannes Zellner.
     au FileType html,jsp if !exists("b:match_words") |
       \	let b:match_ignorecase = 1 |

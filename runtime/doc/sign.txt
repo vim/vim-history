@@ -1,4 +1,4 @@
-*sign.txt*     For Vim version 6.0at.  Last change: 2001 Jun 03
+*sign.txt*     For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Gordon Prieur
@@ -49,8 +49,8 @@ disappears again.
 
 ==============================================================================
 2. Commands					*sign-commands* *:sig* *:sign*
-								*E160* *E158*
-DEFINING A SIGN.						*E255*
+
+DEFINING A SIGN.				*:sign-define* *E255* *E160*
 
 :sign define {name} {argument}...
 		Define a new sign or set attributes for an existing sign.
@@ -79,14 +79,14 @@ DEFINING A SIGN.						*E255*
 		Highlighting group used for the text item.
 
 
-DELETING A SIGN							*E155*
+DELETING A SIGN						*:sign-undefine* *E155*
 
 :sign undefine {name}
 		Deletes a previously defined sign.  If signs with this {name}
 		are still placed this will cause trouble.
 
 
-LISTING SIGNS							*E156*
+LISTING SIGNS						*:sign-list* *E156*
 
 :sign list	Lists all defined signs and their attributes.
 
@@ -94,10 +94,13 @@ LISTING SIGNS							*E156*
 		Lists one defined sign and its attributes.
 
 
-PLACING SIGNS
+PLACING SIGNS						*:sign-place* *E158*
 
 :sign place {id} line={lnum} name={name} file={fname}
 		Place sign defined as {name} at line {lnum} in file {fname}.
+		The file {fname} must already be loaded in a buffer.  The
+		exact file name must be used, wildcards, $ENV and ~ are not
+		expanded.
 		The sign is remembered under {id}, this can be used for
 		further manipulation.  {id} must be a number.
 		It's up to the user to make sure the {id} is used only once in
@@ -112,7 +115,7 @@ PLACING SIGNS
 		breakpoint).
 
 
-REMOVING SIGNS							*E159*
+REMOVING SIGNS						*:sign-unplace* *E159*
 
 :sign unplace {id} file={fname}
 		Remove the previously placed sign {id} from file {fname}.
@@ -136,7 +139,7 @@ LISTING PLACED SIGNS
 :sign place	List placed signs in all files.
 
 
-JUMPING TO A SIGN						*E157*
+JUMPING TO A SIGN					*:sign-jump* *E157*
 
 :sign jump {id} file={fname}
 		Open the file {fname} or jump to the window that contains

@@ -21,6 +21,7 @@ void gui_mch_set_scrollbar_pos __ARGS((scrollbar_T *sb, int x, int y, int w, int
 void gui_mch_create_scrollbar __ARGS((scrollbar_T *sb, int orient));
 void gui_mch_enable_scrollbar __ARGS((scrollbar_T *sb, int flag));
 void gui_mch_destroy_scrollbar __ARGS((scrollbar_T *sb));
+void mch_set_mouse_shape __ARGS((int shape));
 void gui_mch_mousehide __ARGS((int hide));
 int gui_mch_get_mouse_x __ARGS((void));
 int gui_mch_get_mouse_y __ARGS((void));

@@ -1,7 +1,7 @@
 " These commands create the option window.
 "
 " Maintainer:	Bram Moolenaar <Bram@vim.org>
-" Last Change:	2001 Aug 13
+" Last Change:	2001 Sep 02
 
 " If there already is an option window, jump to that one.
 if bufwinnr("option-window") > 0
@@ -84,10 +84,10 @@ fun! <SID>Find(lnum)
       let thiswin = winnr()
       exe "norm! \<C-W>p"
       if exists("b:current_syntax") && b:current_syntax == "help"
-        exe "norm! \<C-W>j"
-        if winnr() == thiswin
-          exe "norm! \<C-W>j"
-        endif
+	exe "norm! \<C-W>j"
+	if winnr() == thiswin
+	  exe "norm! \<C-W>j"
+	endif
       endif
     else
       let local = 0

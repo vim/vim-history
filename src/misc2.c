@@ -299,7 +299,7 @@ coladvance2(pos, addspaces, finetune, wcol)
 	mb_adjust_cursor();
 #endif
 
-    if (col <= wcol)
+    if (col < wcol)
 	return FAIL;
     return OK;
 }
@@ -3684,7 +3684,7 @@ vim_findfile_init(path, filename, stopdirs, level, free_visited, need_dir,
 error_return:
     /*
      * We clear the search context now!
-     * Even when the caller gave us a (perhapse valid) context we free it here,
+     * Even when the caller gave us a (perhaps valid) context we free it here,
      * as we might have already destroyed it.
      */
     vim_findfile_cleanup(ff_search_ctx);
@@ -4822,9 +4822,8 @@ find_file_in_path_option(ptr, len, options, first, path_option, need_dir)
 
 		if (dir == NULL || *dir == NUL)
 		{
-		    /* We searched all pathes of the option, now we can
-		     * free the search context.
-		     */
+		    /* We searched all paths of the option, now we can
+		     * free the search context. */
 		    vim_findfile_cleanup(search_ctx);
 		    search_ctx = NULL;
 		    break;

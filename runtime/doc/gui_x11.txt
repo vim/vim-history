@@ -1,4 +1,4 @@
-*gui_x11.txt*   For Vim version 6.0at.  Last change: 2001 Aug 27
+*gui_x11.txt*   For Vim version 6.0au.  Last change: 2001 Aug 30
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -70,16 +70,26 @@ version), a number of X resources are available.  You should use Vim's class
     scrollForeground	Color of slider and arrow portions of scrollbars.
     menuBackground	Color of menu backgrounds.
     menuForeground	Color of menu foregrounds.
+    tooltipForeground	Color of tooltip and balloon foreground.
+    tooltipBackground	Color of tooltip and balloon background.
+
     font		Name of font used for normal text.
     boldFont		Name of font used for bold text.
     italicFont		Name of font used for italic text.
     boldItalicFont	Name of font used for bold, italic text.
-    menuFont		Name of font used for the menus
+    menuFont		Name of font used for the menus, used when compiled
+			without the |+xfontset| feature
+    menuFontSet		Name of fontset used for the menus, used when compiled
+			with the |+xfontset| feature
+    tooltipFont		Name of the font used for the tooltip and balloons.
+			When compiled with the |+xfontset| feature this is a
+			fontset name.
+
     geometry		Initial geometry to use for gvim's window (default
 			is same size as terminal that started it).
     scrollbarWidth	Thickness of scrollbars.
-    menuHeight		Height of the menu bar.
     borderWidth		Thickness of border around text area.
+    menuHeight		Height of the menu bar (only for Athena).
 
 A special font for italic, bold, and italic-bold text will only be used if
 the user has specified one via a resource.  No attempt is made to guess what
@@ -122,8 +132,10 @@ With Athena: >
 	Vim*menuBar*MenuButton*font: -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 
 NOTE: A more portable, and indeed more correct, way to specify the menu font
-in either Motif or Athena is through the resource:
+in either Motif or Athena is through the resource: >
 	Vim.menuFont:	     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
+Or, when compiled with the |+xfontset| feature: >
+	Vim.menuFontSet:     -*-courier-medium-r-*-*-10-*-*-*-*-*-*-*
 
 Don't use "Vim*geometry" in the defaults.  This will break the menus.  Use
 "Vim.geometry" instead.
@@ -150,6 +162,7 @@ The resources can also be set with arguments to vim:
    -boldfont {font}	Use {font} for bold text	*-boldfont*
    -italicfont {font}	Use {font} for italic text	*-italicfont*
    -menufont {font}	Use {font} for menu items	*-menufont*
+   -menufontset {fontset} Use {fontset} for menu items	*-menufontset*
    -mf {font}		idem				*-mf*
    -geometry {geom}	Use {geom} for initial geometry	*-geometry*
    -geom {geom}		idem				*-geom*
@@ -160,6 +173,8 @@ The resources can also be set with arguments to vim:
    -sw {width}		idem				*-sw*
    -menuheight {height}	Use a menu bar height of {height} *-menuheight*
    -mh {height}		idem				*-mh*
+			NOTE: On Motif the value is ignored, the menu height
+			is computed to fit the menus.
    -reverse		Use reverse video		*-reverse*
    -rv			idem				*-rv*
    +reverse		Don't use reverse video		*-+reverse*

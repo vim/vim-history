@@ -3,7 +3,7 @@
 " Maintainer:	Bernd Feige <Bernd.Feige@gmx.net>
 " Filenames:	*.bib
 " Last Change:	Apr 26, 2001
-" URL:          http://home.t-online.de/home/Bernd.Feige/bib.vim
+" URL:		http://home.t-online.de/home/Bernd.Feige/bib.vim
 
 " Thanks to those who pointed out problems with this file or supplied fixes!
 

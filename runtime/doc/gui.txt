@@ -1,4 +1,4 @@
-*gui.txt*       For Vim version 6.0at.  Last change: 2001 Aug 05
+*gui.txt*       For Vim version 6.0au.  Last change: 2001 Aug 05
 
 
 		  VIM REFERENCE MANUAL    by Bram Moolenaar
@@ -617,9 +617,9 @@ because the item will never be selected.  Use a single colon to keep it
 simple.
 
 							*gui-toolbar*
-The toolbar is currently available in the Win32, Athena, Motif and GTK+ (X11)
-GUI.  It should turn up in other GUIs in due course.  The default toolbar
-is setup in menu.vim.
+The toolbar is currently available in the Win32, Athena, Motif, GTK+ (X11) and
+Photon GUI.  It should turn up in other GUIs in due course.  The default
+toolbar is setup in menu.vim.
 The display of the toolbar is controlled by the 'guioptions' letter 'T'. You
 can thus have menu & toolbar together, or either on its own, or neither.
 The appearance is controlled by the 'toolbar' option.  You can chose between
@@ -693,9 +693,9 @@ In the Win32 GUI, starting a menu name with ']' excludes that menu from the
 main menu bar.  You must then use the |:tearoff| command to display it.
 
 							*popup-menu*
-In the Win32, GTK, Motif and Athena GUI, you can define the special menu
-"PopUp".  This is the menu that is displayed when the right mouse button is
-pressed, if 'mousemodel' is set to popup or popup_setpos.
+In the Win32, GTK, Motif, Athena and Photon GUI, you can define the special
+menu "PopUp".  This is the menu that is displayed when the right mouse button
+is pressed, if 'mousemodel' is set to popup or popup_setpos.
 
 
 5.3 Showing What Menus Are Mapped To			*showing-menus*

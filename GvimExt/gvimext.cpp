@@ -18,6 +18,9 @@
 
 #ifdef __BORLANDC__
 # include <dir.h>
+# ifndef _strnicmp
+#  define _strnicmp(a, b, c) strnicmp((a), (b), (c))
+# endif
 #else
 static char *searchpath(char *name);
 #endif
@@ -91,6 +94,10 @@ getRuntimeDir(char *buf)
     getGvimName(buf, 1);
     if (buf[0] != 0)
     {
+	// When no path found, use the search path to expand it.
+	if (strchr(buf, '/') == NULL && strchr(buf, '\\') == NULL)
+	    strcpy(buf, searchpath(buf));
+
 	// remove "gvim.exe" from the end
 	for (idx = strlen(buf) - 1; idx >= 0; idx--)
 	    if (buf[idx] == '\\' || buf[idx] == '/')
@@ -245,9 +252,12 @@ dyn_gettext_load(void)
 						    (LPTSTR)szBuff, MAX_PATH);
 	if (len >= 2 && _strnicmp(szBuff, "en", 2) != 0)
 	{
-	    // TODO: is this right?
-	    if (_strnicmp(szBuff, "zht", 3) == 0)
+	    // There are a few exceptions (probably more)
+	    if (_strnicmp(szBuff, "cht", 3) == 0
+					  || _strnicmp(szBuff, "zht", 3) == 0)
 		strcpy(szBuff, "zh_TW");
+	    else if (_strnicmp(szBuff, "jp", 2) == 0)
+		strcpy(szBuff, "ja");
 	    else
 		szBuff[2] = 0;	// truncate to two-letter code
 	    strcat(szLang, szBuff);

@@ -4,6 +4,7 @@
 "		Author and previous maintainer:
 "		Paul Siegmann <pauls@euronet.nl>
 " Last Change:	Mon, 30 Apr 2001 07:45:38 +0200
+" 		Bram: Added temp fix by Kipp Howard for xmlEmptyRegion.
 " Filenames:	*.xml
 " URL:		http://www.zellner.org/vim/syntax/xml.vim
 " $Id$
@@ -141,7 +142,7 @@ syn region   xmlRegion
 "
 " TODO use xmlEmptyTag intead of xmlTag
 syn match    xmlEmptyRegion
-    \ +<[^ /!?>"']\(\_[^"'<>]\|"\_[^"]*"\|'\_[^']*'\)*/>+
+    \ #<[^ /!?>"']\(\_[^"'<>]\(\_[^"'<>]\*\)\@>\|"\_[^"]*"\|'\_[^']*'\)*/>#
     \ contains=xmlEmptyTag
 
 
