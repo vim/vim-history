@@ -2563,29 +2563,6 @@ mb_charlen(str)
 }
 
 /*
- * Decrement position "lp" by one character, taking care of multi-byte chars.
- */
-    int
-mb_dec(lp)
-    pos_T	*lp;
-{
-    if (lp->col > 0)		/* still within line */
-    {
-	--lp->col;
-	mb_adjustpos(lp);
-	return 0;
-    }
-    if (lp->lnum > 1)		/* there is a prior line */
-    {
-	lp->lnum--;
-	lp->col = (colnr_T)STRLEN(ml_get(lp->lnum));
-	mb_adjustpos(lp);
-	return 1;
-    }
-    return -1;			/* at start of file */
-}
-
-/*
  * Try to un-escape a multi-byte character.
  * Used for the "to" and "from" part of a mapping.
  * Return the un-escaped string if it is a multi-byte character, and advance
