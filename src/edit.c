@@ -6007,7 +6007,14 @@ ins_esc(count, cmdchar)
 	}
 	else
 #endif
+	{
 	    --curwin->w_cursor.col;
+#ifdef FEAT_MBYTE
+	    /* Correct cursor for multi-byte character. */
+	    if (has_mbyte)
+		mb_adjust_cursor();
+#endif
+	}
     }
 
 #ifdef USE_IM_CONTROL
