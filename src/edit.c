@@ -592,7 +592,8 @@ edit(cmdchar, startln, count)
 	ins_compl_prep(c);
 #endif
 
-	/* CTRL-\ CTRL-N goes to Normal mode */
+	/* CTRL-\ CTRL-N goes to Normal mode, CTRL-\ CTRL-G goes to mode
+	 * selected with 'insertmode'.  */
 	if (c == Ctrl_BSL)
 	{
 	    /* may need to redraw when no more chars available now */
@@ -602,11 +603,13 @@ edit(cmdchar, startln, count)
 	    c = safe_vgetc();
 	    --no_mapping;
 	    --allow_keys;
-	    if (c != Ctrl_N)		/* it's something else */
+	    if (c != Ctrl_N && c != Ctrl_G)	/* it's something else */
 	    {
 		vungetc(c);
 		c = Ctrl_BSL;
 	    }
+	    else if (c == Ctrl_G && p_im)
+		continue;
 	    else
 	    {
 		count = 0;

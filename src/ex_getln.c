@@ -535,7 +535,8 @@ getcmdline(firstc, count, indent)
 
 #endif	/* FEAT_WILDMENU */
 
-	/* CTRL-\ CTRL-N goes to Normal mode */
+	/* CTRL-\ CTRL-N goes to Normal mode, CTRL-\ CTRL-G goes to Insert
+	 * mode when 'insertmode' is set. */
 	if (c == Ctrl_BSL)
 	{
 	    ++no_mapping;
@@ -543,13 +544,15 @@ getcmdline(firstc, count, indent)
 	    c = safe_vgetc();
 	    --no_mapping;
 	    --allow_keys;
-	    if (c != Ctrl_N)
+	    if (c != Ctrl_N && c != Ctrl_G)
 	    {
 		vungetc(c);
 		c = Ctrl_BSL;
 	    }
 	    else
 	    {
+		if (c == Ctrl_G && p_im && restart_edit == 0)
+		    restart_edit = 'a';
 		gotesc = TRUE;	/* will free ccline.cmdbuff after putting it
 				   in history */
 		goto returncmd;	/* back to Normal mode */
