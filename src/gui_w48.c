@@ -2129,6 +2129,9 @@ gui_mch_mousehide(int hide)
     static void
 gui_mch_show_popupmenu_at(vimmenu_T *menu, int x, int y)
 {
+    /* Unhide the mouse, we don't get move events here. */
+    gui_mch_mousehide(FALSE);
+
     (void)TrackPopupMenu(
 	(HMENU)menu->submenu_id,
 	TPM_LEFTALIGN | TPM_LEFTBUTTON,
