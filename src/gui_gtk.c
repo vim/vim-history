@@ -264,8 +264,10 @@ menu_item_new(vimmenu_t *menu, GtkWidget *parent_widget, int sub_menu)
 
 /*ARGSUSED*/
     void
-gui_mch_add_menu(vimmenu_t * menu, vimmenu_t * parent, int idx)
+gui_mch_add_menu(vimmenu_t *menu, int idx)
 {
+    vimmenu_t	*parent = menu->parent;
+
     if (menu_is_popup(menu->name))
     {
 	menu->submenu_id = gtk_menu_new();
@@ -324,8 +326,10 @@ menu_item_activate(GtkWidget * widget, gpointer data)
 
 /*ARGSUSED*/
     void
-gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent, int idx)
+gui_mch_add_menu_item(vimmenu_t *menu, int idx)
 {
+    vimmenu_t	*parent = menu->parent;
+
 # ifdef FEAT_TOOLBAR
     if (menu_is_toolbar(parent->name))
     {

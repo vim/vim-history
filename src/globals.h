@@ -42,20 +42,28 @@ EXTERN long	Columns INIT(= 80);	/* nr of columns in the screen */
 
 /*
  * The characters that are currently on the screen are kept in ScreenLines[].
- * It is a single block of characters, the size of the screen.
- * The attributes for those characters are kept in ScreenAttrs.
+ * It is a single block of characters, the size of the screen plus one line.
+ * The attributes for those characters are kept in ScreenAttrs[].
  *
  * "LineOffset[n]" is the offset from ScreenLines[] for the start of line 'n'.
- * It is also used for ScreenLinesUC[] and ScreenAttrs[].
+ * The same value is used for ScreenLinesUC[] and ScreenAttrs[].
  */
 EXTERN schar_t	*ScreenLines INIT(= NULL);
+EXTERN sattr_t	*ScreenAttrs INIT(= NULL);
+EXTERN unsigned	*LineOffset INIT(= NULL);
+
 #ifdef FEAT_MBYTE
+/*
+ * When using Unicode characters (in UTF-8 encoding) the character in
+ * ScreenLinesUC[] contains the Unicode for the character at this position, or
+ * NUL when the character in ScreenLines[] is to be used (ASCII char).
+ * The composing characters are to be drawn on top of the original character.
+ * Note: These three are only allocated when cc_utf8 is set!
+ */
 EXTERN u8char_t	*ScreenLinesUC INIT(= NULL);	/* decoded UTF-8 characters */
 EXTERN u8char_t	*ScreenLinesC1 INIT(= NULL);	/* first composing char */
 EXTERN u8char_t	*ScreenLinesC2 INIT(= NULL);	/* second composing char */
 #endif
-EXTERN sattr_t	*ScreenAttrs INIT(= NULL);
-EXTERN unsigned	*LineOffset INIT(= NULL);
 
 EXTERN int	screen_Rows INIT(= 0);	    /* actual size of ScreenLines[] */
 EXTERN int	screen_Columns INIT(= 0);   /* actual size of ScreenLines[] */
@@ -147,6 +155,9 @@ EXTERN int	rc_did_emsg INIT(= FALSE);  /* vim_regcomp() called emsg() */
 
 EXTERN int	no_wait_return INIT(= 0);   /* don't wait for return for now */
 EXTERN int	need_wait_return INIT(= 0); /* need to wait for return later */
+#ifdef FEAT_TITLE
+EXTERN int	need_maketitle INIT(= FALSE); /* call maketitle() soon */
+#endif
 
 EXTERN int	quit_more INIT(= FALSE);    /* 'q' hit at "--more--" msg */
 EXTERN int	more_back INIT(= 0);	    /* 'b' or 'u' at "--more--" msg */
@@ -573,9 +584,10 @@ EXTERN int	swap_exists_action INIT(= 0);	/* use dialog when swap file
 						   already exists */
 #endif
 
-EXTERN char_u	*IObuff;		/* sprintf's are done in this buffer */
+EXTERN char_u	*IObuff;		/* sprintf's are done in this buffer,
+					   size is IOSIZE */
 EXTERN char_u	*NameBuff;		/* file names are expanded in this
-					 * buffer */
+					 * buffer, size is MAXPATHL */
 EXTERN char_u	msg_buf[MSG_BUF_LEN];	/* small buffer for messages */
 
 /* When non-zero, postpone redrawing. */
@@ -727,6 +739,7 @@ EXTERN char_u	*globaldir INIT(= NULL);
 /* Characters from 'listchars' option */
 EXTERN int	lcs_eol INIT(= '$');
 EXTERN int	lcs_ext INIT(= NUL);
+EXTERN int	lcs_prec INIT(= NUL);
 EXTERN int	lcs_tab1 INIT(= NUL);
 EXTERN int	lcs_tab2 INIT(= NUL);
 EXTERN int	lcs_trail INIT(= NUL);

@@ -150,11 +150,6 @@ mb_init()
 
     has_mbyte = (cc_dbcs || cc_utf8);
 
-#ifdef FEAT_AUTOCMD
-    /* Fire an autocommand to let people do custom font setup. */
-    apply_autocmds(EVENT_CHARCODE, NULL, (char_u *)"", FALSE, curbuf);
-#endif
-
     /*
      * Fill the mb_bytelen_tab[] for MB_BYTE2LEN().
      */
@@ -228,6 +223,12 @@ mb_init()
 
     /* When cc_utf8 is set or reset, (de)allocate ScreenLinesUC[] */
     screenalloc(FALSE);
+
+#ifdef FEAT_AUTOCMD
+    /* Fire an autocommand to let people do custom font setup. This must be
+     * after Vim has been setup for the new charcode. */
+    apply_autocmds(EVENT_CHARCODE, NULL, (char_u *)"", FALSE, curbuf);
+#endif
 
     return NULL;
 }

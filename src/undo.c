@@ -1108,6 +1108,7 @@ u_save_line(lnum)
 /*
  * Check if the 'modified' flag is set, or 'ff' has changed (only need to
  * check the first character, because it can only be "dos", "unix" or "mac").
+ * "nofile" and "scratch" type buffers are considered to always be unchanged.
  */
     int
 bufIsChanged(buf)
@@ -1115,7 +1116,7 @@ bufIsChanged(buf)
 {
     return
 #ifdef FEAT_QUICKFIX
-	    !bt_nofile(buf) &&
+	    !bt_nofile(buf) && !bt_scratch(buf) &&
 #endif
 	    (buf->b_changed || file_ff_differs(buf));
 }
@@ -1123,5 +1124,9 @@ bufIsChanged(buf)
     int
 curbufIsChanged()
 {
-    return (curbuf->b_changed || file_ff_differs(curbuf));
+    return
+#ifdef FEAT_QUICKFIX
+	!bt_nofile(curbuf) && !bt_scratch(curbuf) &&
+#endif
+	(curbuf->b_changed || file_ff_differs(curbuf));
 }

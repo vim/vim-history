@@ -136,6 +136,13 @@
 #endif
 
 /*
+ * +keymap		'keymap' option. Allow you to fake having unusual language support. 
+ */
+#ifdef FEAT_BIG
+# define FEAT_KEYMAP
+#endif
+
+/*
  * +localmap		Mappings and abbreviations local to a buffer.
  */
 #ifdef FEAT_NORMAL
@@ -893,6 +900,17 @@
  * +tgetent
  */
 
+/*
+ * +signs		Allow signs to be displayed to the left of text lines.
+ *			The signs can represent breakpoints, PC, etc.
+ *			Also allow full-line highlight for debugger support.
+ *			Used for showing the PC, Breakponts, etc.
+ */
+#if (defined(FEAT_BIG) || defined(FEAT_SUN_WORKSHOP)) \
+	&& (defined(FEAT_GUI_MOTIF) || defined(FEAT_GUI_ATHENA))
+# define FEAT_SIGNS
+#endif
+
 #if defined(FEAT_SUN_WORKSHOP) && defined(FEAT_GUI_MOTIF)
 /*
  * The following features are (currently) only used by Sun Visual WorkShop 6.
@@ -914,19 +932,6 @@
  *			main window area.
  */
 # define FEAT_FOOTER
-
-/*
- * +signs		Allow signs to be displayed to the left of text lines.
- *			The signs can represent breakpoints, PC, etc. Forces
- *			FEAT_LINE_HL to be defined.
- */
-# define FEAT_SIGNS
-
-/*
- * +line_highlight	Allow full-line highlight for debugger support. Used
- *			for showing the PC, Breakponts, etc.
- */
-# define FEAT_LINE_HL
 
 /*
  * +balloon_eval	Allow balloon expression evaluation. Used with a

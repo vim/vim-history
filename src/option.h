@@ -68,6 +68,11 @@
 # define DFLT_TEXTAUTO	FALSE
 #endif
 
+#ifdef FEAT_KEYMAP
+#define	DFLT_KMP	""
+#endif
+
+
 #ifdef FEAT_MBYTE
 /* Possible values for 'charcode' */
 # define CC_ANSI	"ansi"
@@ -273,6 +278,7 @@ EXTERN int	p_aw;		/* 'autowrite' */
 EXTERN char_u	*p_bs;		/* 'backspace' */
 EXTERN char_u	*p_bg;		/* 'background' */
 EXTERN int	p_bk;		/* 'backup' */
+EXTERN char_u	*p_bkc;		/* 'backupcopy' */
 EXTERN char_u	*p_bdir;	/* 'backupdir' */
 EXTERN char_u	*p_bex;		/* 'backupext' */
 #ifdef FEAT_BEVAL
@@ -405,6 +411,9 @@ EXTERN char_u	*p_km;		/* 'keymodel' */
 #ifdef FEAT_LANGMAP
 EXTERN char_u	*p_langmap;	/* 'langmap'*/
 #endif
+#if defined(FEAT_MENU) && defined(FEAT_MULTI_LANG)
+EXTERN char_u	*p_lm;		/* 'langmenu' */
+#endif
 #ifdef FEAT_GUI
 EXTERN long	p_linespace;	/* 'linespace' */
 #endif
@@ -507,6 +516,7 @@ EXTERN int	p_sft;		/* 'showfulltag' */
 EXTERN int	p_sm;		/* 'showmatch' */
 EXTERN int	p_smd;		/* 'showmode' */
 EXTERN long	p_ss;		/* 'sidescroll' */
+EXTERN long	p_siso;		/* 'sidescrolloff' */
 EXTERN int	p_scs;		/* 'smartcase' */
 EXTERN int	p_sta;		/* 'smarttab' */
 #ifdef FEAT_WINDOWS

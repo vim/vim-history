@@ -1045,7 +1045,8 @@ updatescript(c)
 #define K_NEEDMORET -1		/* keylen value for incomplete key-code */
 #define M_NEEDMORET -2		/* keylen value for incomplete mapping */
 
-static int old_char = -1;	/* ungotten character */
+static int old_char = -1;	/* character put back by vungetc() */
+static int old_mod_mask;	/* mod_mask for ungotten character */
 
 /*
  * Get the next input character.
@@ -1063,6 +1064,18 @@ vgetc()
     char_u	buf[MB_MAXBYTES];
     int		i;
 #endif
+
+    /*
+     * If a character was put back with vungetc, it was already processed.
+     * Return it directly.
+     */
+    if (old_char != -1)
+    {
+	c = old_char;
+	old_char = -1;
+	mod_mask = old_mod_mask;
+	return c;
+    }
 
     mod_mask = 0x0;
     last_recorded_len = 0;
@@ -1215,8 +1228,29 @@ safe_vgetc()
     int
 vpeekc()
 {
-    return (vgetorpeek(FALSE));
+    if (old_char != -1)
+	return old_char;
+    return vgetorpeek(FALSE);
 }
+
+#if defined(FEAT_TERMRESPONSE) || defined(PROTO)
+/*
+ * Like vpeekc(), but don't allow mapping.  Do allow checking for terminal
+ * codes.
+ */
+    int
+vpeekc_nomap()
+{
+    int		c;
+
+    ++no_mapping;
+    ++allow_keys;
+    c = vpeekc();
+    --no_mapping;
+    --allow_keys;
+    return c;
+}
+#endif
 
 #if defined(FEAT_INS_EXPAND) || defined(PROTO)
 /*
@@ -1246,7 +1280,7 @@ char_avail()
     int	    retval;
 
     ++no_mapping;
-    retval = vgetorpeek(FALSE);
+    retval = vpeekc();
     --no_mapping;
     return (retval != NUL);
 }
@@ -1256,6 +1290,7 @@ vungetc(c)	/* unget one character (can only be done once!) */
     int		c;
 {
     old_char = c;
+    old_mod_mask = mod_mask;
 }
 
 /*
@@ -1319,17 +1354,6 @@ vgetorpeek(advance)
 	return NUL;
 
     local_State = get_real_state();
-
-/*
- * get a character: 1. from a previously ungotten character
- */
-    if (old_char != -1)
-    {
-	c = old_char;
-	if (advance)
-	    old_char = -1;
-	return c;
-    }
 
     vgetc_busy = TRUE;
 
@@ -1630,9 +1654,6 @@ vgetorpeek(advance)
 				 */
 				may_sync_undo();
 				del_typebuf(3, 0);
-#ifndef BRAM_DO_WE_NEED_THIS
-				msg_scroll = TRUE;
-#endif
 				idx = get_menu_index(current_menu, local_State);
 				if (idx != MENU_INDEX_INVALID)
 				{
@@ -1840,7 +1861,7 @@ vgetorpeek(advance)
 		 */
 		i = 0;
 		if (typelen > 0 && (State & (NORMAL | INSERT))
-						 && advance && !exmode_active)
+			   && State != HITRETURN && advance && !exmode_active)
 		{
 		    /* need to use the col and row from above here */
 		    old_wcol = curwin->w_wcol;
@@ -2661,7 +2682,7 @@ showmap(mp)
     out_flush();			/* show one line at a time */
 }
 
-#ifdef FEAT_CMDL_COMPL
+#if defined(FEAT_CMDL_COMPL) || defined(PROTO)
 /*
  * Used below when expanding mapping/abbreviation names.
  */
@@ -2711,26 +2732,6 @@ set_context_in_map_cmd(cmd, arg, forceit, isabbrev, isunmap, cmdidx)
     }
 
     return NULL;
-}
-
-/*
- * Compare function for qsort() below.
- */
-static int
-#ifdef __BORLANDC__
-_RTLENTRYF
-#endif
-compare_mkeys __ARGS((const void *s1, const void *s2));
-
-    static int
-#ifdef __BORLANDC__
-_RTLENTRYF
-#endif
-compare_mkeys(s1, s2)
-    const void	*s1;
-    const void	*s2;
-{
-    return STRCMP(*(char **)s1, *(char **)s2);
 }
 
 /*
@@ -2822,7 +2823,8 @@ ExpandMappings(prog, num_file, file)
     } /* for (round) */
 
     /* Sort the matches */
-    qsort((void *)*file, (size_t)count, sizeof(char_u *), compare_mkeys);
+    sort_strings(*file, count);
+
     /* Remove multiple entries */
     {
 	char_u	**ptr1 = *file;

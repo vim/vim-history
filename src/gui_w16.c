@@ -3260,12 +3260,12 @@ gui_mch_set_menu_pos(
     void
 gui_mch_add_menu(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		pos)
 {
+    vimmenu_t	*parent = menu->parent;
+
     menu->submenu_id = CreatePopupMenu();
     menu->id = s_menu_id++;
-    menu->parent = parent;
 
     if (menu_is_menubar(menu->name))
     {
@@ -3280,27 +3280,53 @@ gui_mch_add_menu(
 }
 
     void
+gui_mch_show_popupmenu_at(vimmenu_t *menu, int x, int y)
+{
+    (void)TrackPopupMenu(
+	(HMENU)menu->submenu_id,
+	TPM_LEFTALIGN | TPM_LEFTBUTTON,
+	x, y,
+	(int)0,	    /*reserved param*/
+	s_hwnd,
+	NULL);
+    /*
+     * NOTE: The pop-up menu can eat the mouse up event.
+     * We deal with this in normal.c.
+     */
+}
+
+    void
 gui_mch_show_popupmenu(vimmenu_t *menu)
 {
     POINT mp;
 
     GetCursorPos((LPPOINT)&mp);
-    {
-	(void)TrackPopupMenu(
-		 (HMENU)menu->submenu_id,
-		 TPM_LEFTALIGN | TPM_LEFTBUTTON,
-		 (int)mp.x,
-		 (int)mp.y,
-		 (int)0,	    /*reserved param*/
-		 s_hwnd,
-		 NULL);
-	/*
-	 * NOTE: The pop-up menu can eat the mouse up event.
-	 * We deal with this in normal.c.
-	 */
-    }
+    gui_mch_show_popupmenu_at(menu, (int)mp.x, (int)mp.y);
 }
 
+
+    void
+gui_make_popup(char_u *path_name)
+{
+    vimmenu_t	*menu = gui_find_menu(path_name);
+
+    if (menu!=NULL)
+    {
+	/* Find the position of the current cursor */
+	DWORD	temp_p;
+	POINT	p;
+	temp_p = GetDCOrg(s_hdc);
+	p.x = LOWORD(temp_p);
+	p.y = HIWORD(temp_p);
+	if (curwin!=NULL)
+	{
+	    p.x+= TEXT_X(W_WINCOL(curwin) + curwin->w_wcol +1);
+	    p.y+= TEXT_Y(W_WINROW(curwin) + curwin->w_wrow +1);
+	}
+	msg_scroll = FALSE;
+	gui_mch_show_popupmenu_at(menu, (int)p.x, (int)p.y);
+    }
+}
 
 /*
  * Add a menu item to a menu
@@ -3308,12 +3334,12 @@ gui_mch_show_popupmenu(vimmenu_t *menu)
     void
 gui_mch_add_menu_item(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		idx)
 {
+    vimmenu_t	*parent = menu->parent;
+
     menu->id = s_menu_id++;
     menu->submenu_id = NULL;
-    menu->parent = parent;
 
 #ifdef FEAT_TOOLBAR
     if (STRCMP(parent->name, "ToolBar") == 0)

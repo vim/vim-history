@@ -2863,12 +2863,12 @@ gui_mch_set_menu_pos(int x, int y, int w, int h)
 }
 
     void
-gui_mch_add_menu(vimmenu_t *menu, vimmenu_t *parent)
+gui_mch_add_menu(vimmenu_t *menu, int idx)
 {
 }
 
     void
-gui_mch_add_menu_item(vimmenu_t *menu, vimmenu_t *parent)
+gui_mch_add_menu_item(vimmenu_t *menu, int idx)
 {
 }
 

@@ -5,9 +5,9 @@
 #
 # Tested on Win32 NT 4 and Win95.
 #
-# To make everything, just 'make -f makefile.ming'
-# To make just e.g. gvim.exe, 'make -f makefile.ming gvim.exe'
-# After a run, you can 'make -f makefile.ming clean' to clean up
+# To make everything, just 'make -f Make_ming.mak'
+# To make just e.g. gvim.exe, 'make -f Make_ming.mak gvim.exe'
+# After a run, you can 'make -f Make_ming.mak clean' to clean up
 #
 # NOTE: Sometimes 'GNU Make' will stop after building vimrun.exe -- I think
 # it's just run out of memory or something.  Run again, and it will continue
@@ -104,9 +104,9 @@ gvim.exe: $(OBJ) $(GUIOBJ)
 
 exes:
 	@del *.o
-	$(MAKE) -f makefile.ming gvim.exe
+	$(MAKE) -f Make_ming.mak gvim.exe
 	@del *.o
-	$(MAKE) -f makefile.ming vim.exe
+	$(MAKE) -f Make_ming.mak vim.exe
 	@del *.o
 
 ctags/ctags.exe: ctags/main.c

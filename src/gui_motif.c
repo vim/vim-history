@@ -432,13 +432,13 @@ do_set_mnemonics(enable)
 }
 
     void
-gui_mch_add_menu(menu, parent, idx)
+gui_mch_add_menu(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
     XmString	label;
     Widget	shell;
+    vimmenu_t	*parent = menu->parent;
 
 #ifdef MOTIF_POPUP
     if (menu_is_popup(menu->name))
@@ -691,12 +691,12 @@ gui_mch_compute_menu_height(id)
 }
 
     void
-gui_mch_add_menu_item(menu, parent, idx)
+gui_mch_add_menu_item(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
     XmString	label;
+    vimmenu_t	*parent = menu->parent;
 
 # ifdef EBCDIC
     menu->mnemonic = 0;

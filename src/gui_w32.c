@@ -4401,12 +4401,12 @@ gui_mch_set_menu_pos(
     void
 gui_mch_add_menu(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		pos)
 {
+    vimmenu_t	*parent = menu->parent;
+
     menu->submenu_id = CreatePopupMenu();
     menu->id = s_menu_id++;
-    menu->parent = parent;
 
     if (menu_is_menubar(menu->name))
     {
@@ -4503,12 +4503,12 @@ gui_make_tearoff(char_u *path_name)
     void
 gui_mch_add_menu_item(
     vimmenu_t	*menu,
-    vimmenu_t	*parent,
     int		idx)
 {
+    vimmenu_t	*parent = menu->parent;
+
     menu->id = s_menu_id++;
     menu->submenu_id = NULL;
-    menu->parent = parent;
 
     if (STRNCMP(menu->name, TEAR_STRING, TEAR_LEN) == 0)
     {
@@ -4516,7 +4516,7 @@ gui_mch_add_menu_item(
 		(UINT)menu->id, (LPCTSTR) s_htearbitmap);
     }
 #ifdef FEAT_TOOLBAR
-    else if (STRCMP(parent->name, "ToolBar") == 0)
+    else if (menu_is_toolbar(parent->name))
     {
 	TBBUTTON newtb;
 

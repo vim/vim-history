@@ -1,8 +1,10 @@
 " Vim syntax file
 " Language:	C-shell (csh)
 " Maintainer:	Dr. Charles E. Campbell, Jr. <Charles.E.Campbell.1@gsfc.nasa.gov>
-" Version:	1.01
-" Last Change:	March 16, 2000
+" Version:	1.02
+" Last Change:	August 11, 2000
+" History:
+"   v1.02: contains improved HereDoc handling for v6.0
 
 " Remove any old syntax stuff hanging around
 syn clear
@@ -92,8 +94,12 @@ syn match cshNumber	"-\=\<\d\+\>"
 "syn match cshIdentifier	"\<[a-zA-Z._][a-zA-Z0-9._]*\>"
 
 " Shell Input Redirection (Here Documents)
-syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=cshRedir end="^END[a-zA-Z_0-9]*$"
-syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**EOF\**" matchgroup=cshRedir end="^EOF$"
+if version < 600
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**END[a-zA-Z_0-9]*\**" matchgroup=cshRedir end="^END[a-zA-Z_0-9]*$"
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**EOF\**" matchgroup=cshRedir end="^EOF$"
+else
+  syn region cshHereDoc matchgroup=cshRedir start="<<-\=\s*\**\z(\h\w*\)\**" matchgroup=cshRedir end="^\z1$"
+endif
 
 if !exists("did_csh_syntax_inits")
   let did_csh_syntax_inits = 1

@@ -30,6 +30,7 @@
 #define CR		'\015'
 #define ESC		'\033'
 #define ESC_STR		(char_u *)"\033"
+#define ESC_STR_nc	"\033"
 #define DEL		0x7f
 #define DEL_STR		(char_u *)"\177"
 #define CSI		0x9b	/* Control Sequence Introducer */
@@ -119,7 +120,7 @@
 #define CTRL_V_STR	"\062"
 #define CTRL_W_STR	"\046"
 
-#define Ctrl_AT		TODO   /* @ */
+#define Ctrl_AT		0x00   /* @ */
 #define Ctrl_A		0x01
 #define Ctrl_B		0x02
 #define Ctrl_C		0x03
@@ -146,12 +147,11 @@
 #define Ctrl_X		0x18
 #define Ctrl_Y		0x19
 #define Ctrl_Z		0x3F
-#define Ctrl_LSB	TODO  /* [ Left Square Bracket */
+#define Ctrl_LSB	0x27  /* [ Left Square Bracket */
 #define Ctrl_RSB	0x1D  /* ] Right Square Bracket */
 #define Ctrl_BSL	0x1C  /* \ BackSLash */
-#define Ctrl_HAT	TODO  /* ^ */
+#define Ctrl_HAT	0x1E  /* ^ */
 #define Ctrl__		0x1F
-
 
 #define Ctrl_chr(x)	(CtrlTable[(x)])
 extern char CtrlTable[];

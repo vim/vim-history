@@ -895,7 +895,12 @@ main
 #if (!defined(UNIX) && !defined(__EMX__)) || defined(ARCHIE)
 	char_u	    **new_arg_files;
 	int	    new_arg_file_count;
+	char_u	    *save_p_su = p_su;
 
+	/* Don't use 'suffixes' here.  This should work like the shell did the
+	 * expansion.  Also, the vimrc file isn't read yet, thus the user
+	 * can't set the options. */
+	p_su = empty_option;
 	if (expand_wildcards(arg_file_count, arg_files, &new_arg_file_count,
 			&new_arg_files, EW_FILE|EW_NOTFOUND|EW_ADDSLASH) == OK
 		&& new_arg_file_count > 0)
@@ -904,6 +909,7 @@ main
 	    arg_file_count = new_arg_file_count;
 	    arg_files = new_arg_files;
 	}
+	p_su = save_p_su;
 #endif
 	fname = arg_files[0];
     }
@@ -1613,6 +1619,10 @@ main
 		showmode();
 #ifdef FEAT_WINDOWS
 	    redraw_statuslines();
+#endif
+#ifdef FEAT_TITLE
+	    if (need_maketitle)
+		maketitle();
 #endif
 	    /* display message after redraw */
 	    if (keep_msg != NULL)

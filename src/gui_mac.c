@@ -2111,9 +2111,8 @@ gui_mch_set_menu_pos(x, y, w, h)
  * Add a sub menu to the menu bar.
  */
     void
-gui_mch_add_menu(menu, parent, idx)
+gui_mch_add_menu(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
     /*
@@ -2124,6 +2123,7 @@ gui_mch_add_menu(menu, parent, idx)
     char_u	*name;
     long	len;
     short	index;
+    vimmenu_t	*parent = menu->parent;
 
     if (/* !menu_is_menubar(menu->name)
 	    || */ (parent != NULL && parent->submenu_id == 0))
@@ -2203,13 +2203,13 @@ gui_mch_add_menu(menu, parent, idx)
  * Add a menu item to a menu
  */
     void
-gui_mch_add_menu_item(menu, parent, idx)
+gui_mch_add_menu_item(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
     char_u	*name;
     long	len;
+    vimmenu_t	*parent = menu->parent;
 
     if (parent->submenu_id == 0)
 	return;

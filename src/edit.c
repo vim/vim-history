@@ -4594,7 +4594,7 @@ in_cinkeys(keytyped, when, line_is_empty)
 	 */
 	if (*look == '^'
 #ifdef EBCDIC
-		&& (Ctrl(look[1]) != 0)
+		&& (Ctrl_chr(look[1]) != 0)
 #else
 		&& look[1] >= '@' && look[1] <= '_'
 #endif
@@ -4709,6 +4709,18 @@ in_cinkeys(keytyped, when, line_is_empty)
     return FALSE;
 }
 #endif /* FEAT_CINDENT */
+
+#if defined(FEAT_KEYMAP) || defined(PROTO)
+/*
+ * Set up key mapping tables for 'keymap' option
+ */
+    char_u *
+keymap_init()
+{
+	/* do nothing for now, just say we're ok */
+	return NULL;
+}
+#endif /* FEAT_KEYMAP */
 
 #if defined(FEAT_RIGHTLEFT) || defined(PROTO)
 /*

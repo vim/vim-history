@@ -516,10 +516,10 @@ do_move(line1, line2, dest)
 }
 
 /*
- * :copy command - copy lines line1-line2 to line n
+ * ":copy"
  */
     void
-do_copy(line1, line2, n)
+ex_copy(line1, line2, n)
     linenr_t	line1;
     linenr_t	line2;
     linenr_t	n;
@@ -1943,11 +1943,11 @@ do_write(eap)
     /*
      * Writing to the current file is not allowed in readonly mode
      * and need a file name.
-     * "nofile" buffers cannot be written implicitly either.
+     * "nofile" and "scratch" buffers cannot be written implicitly either.
      */
     if (!other && (
 #ifdef FEAT_QUICKFIX
-		bt_nofile(curbuf) ||
+		bt_nofile(curbuf) || bt_scratch(curbuf) ||
 #endif
 		check_fname() == FAIL || check_readonly(&eap->forceit, curbuf)))
 	goto theend;
@@ -2754,7 +2754,7 @@ do_ecmd(fnum, ffname, sfname, eap, newlnum, flags)
 	vim_chdirfile(curbuf->b_ffname);
 
     if (gui.in_use && curbuf != NULL && curbuf->b_fname != NULL)
-	workshop_file_opened((char *) curbuf->b_ffname, curbuf->b_p_ro);
+	workshop_file_opened((char *)curbuf->b_ffname, curbuf->b_p_ro);
 #endif
 
 theend:
@@ -4025,7 +4025,7 @@ prepare_tagpreview()
  * ":help": open a read-only window on the help.txt file
  */
     void
-do_help(eap)
+ex_help(eap)
     exarg_t	*eap;
 {
     char_u	*arg;
@@ -4171,6 +4171,7 @@ do_help(eap)
 	check_buf_options(curbuf);
 	(void)buf_init_chartab(curbuf, FALSE);
     }
+
     curbuf->b_p_ts = 8;
     curwin->w_p_list = FALSE;
 
@@ -4400,6 +4401,12 @@ fix_help_buffer()
     char_u	*line;
     int		in_example = FALSE;
     int		len;
+    char_u	*p;
+    char_u	*rt;
+    int		mustfree;
+
+    /* set filetype to "help". */
+    set_option_value((char_u *)"ft", 0L, (char_u *)"help", TRUE);
 
 #ifdef FEAT_SYN_HL
     if (!syntax_present(curbuf))
@@ -4438,7 +4445,257 @@ fix_help_buffer()
 	    }
 	}
     }
+
+    /*
+     * In the "help.txt" file, add the locally added help files.
+     * This uses the very first line in the help file.
+     */
+    if (fnamecmp(gettail(curbuf->b_fname), "help.txt") == 0)
+    {
+	for (lnum = 1; lnum < curbuf->b_ml.ml_line_count; ++lnum)
+	{
+	    line = ml_get_buf(curbuf, lnum, FALSE);
+	    if (STRNCMP(line, "LOCAL ADDITIONS", 15) == 0)
+	    {
+		/* Go through all directories in 'runtimepath', skipping
+		 * $VIMRUNTIME. */
+		p = p_rtp;
+		while (*p != NUL)
+		{
+		    copy_option_part(&p, NameBuff, MAXPATHL, ",");
+		    mustfree = FALSE;
+		    rt = vim_getenv((char_u *)"VIMRUNTIME", &mustfree);
+		    if (fnamecmp(NameBuff, rt) != 0)
+		    {
+			int	fcount;
+			char_u	**fnames;
+			FILE	*fd;
+			char_u	*s;
+			int	fi;
+
+			/* Find all "doc/ *.txt" files in this directory. */
+			add_pathsep(NameBuff);
+			STRCAT(NameBuff, "doc/*.txt");
+			if (gen_expand_wildcards(1, &NameBuff, &fcount,
+					     &fnames, EW_FILE|EW_SILENT) == OK
+				&& fcount > 0)
+			{
+			    for (fi = 0; fi < fcount; ++fi)
+			    {
+				fd = fopen((char *)fnames[fi], "r");
+				if (fd != NULL)
+				{
+				    vim_fgets(IObuff, IOSIZE, fd);
+				    if (IObuff[0] == '*'
+					    && (s = vim_strchr(IObuff + 1, '*'))
+								      != NULL)
+				    {
+					/* Change tag definition to a
+					 * reference and remove <CR>/<NL>. */
+					IObuff[0] = '|';
+					*s = '|';
+					while (*s != NUL)
+					{
+					    if (*s == '\r' || *s == '\n')
+						*s = NUL;
+					    ++s;
+					}
+					ml_append(lnum, IObuff, (colnr_t)0,
+								       FALSE);
+					++lnum;
+				    }
+				    fclose(fd);
+				}
+			    }
+			    FreeWild(fcount, fnames);
+			}
+		    }
+		    if (mustfree)
+			vim_free(rt);
+		}
+		break;
+	    }
+	}
+    }
 }
+
+#if defined(FEAT_EX_EXTRA) || defined(PROTO)
+/*
+ * ":helptags"
+ */
+    void
+ex_helptags(eap)
+    exarg_t	*eap;
+{
+    FILE	*fd_tags;
+    FILE	*fd;
+    garray_t	ga;
+    int		filecount;
+    char_u	**files;
+    char_u	*p1, *p2;
+    int		fi;
+    char_u	*s;
+    int		i;
+    char_u	*fname;
+
+    if (!mch_isdir(eap->arg))
+    {
+	EMSG2(_("Not a directory: %s"), eap->arg);
+	return;
+    }
+
+    /*
+     * Find all *.txt files.
+     */
+    STRCPY(NameBuff, eap->arg);
+    add_pathsep(NameBuff);
+    STRCAT(NameBuff, "*.txt");
+    if (gen_expand_wildcards(1, &NameBuff, &filecount, &files,
+						    EW_FILE|EW_SILENT) == FAIL
+	    || filecount == 0)
+    {
+	EMSG2("No match: %s", NameBuff);
+	return;
+    }
+
+    /*
+     * Open the tags file for writing.
+     * Do this before scanning through all the files.
+     */
+    STRCPY(NameBuff, eap->arg);
+    add_pathsep(NameBuff);
+    STRCAT(NameBuff, "tags");
+    fd_tags = fopen((char *)NameBuff, "w");
+    if (fd_tags == NULL)
+    {
+	EMSG2(_("Cannot open %s for writing"), NameBuff);
+	FreeWild(filecount, files);
+	return;
+    }
+
+    /*
+     * Go over all the files and extract the tags.
+     */
+    ga_init2(&ga, sizeof(char_u *), 100);
+    for (fi = 0; fi < filecount && !got_int; ++fi)
+    {
+	fd = fopen((char *)files[fi], "r");
+	if (fd == NULL)
+	{
+	    EMSG2(_("Unable to open %s for reading"), files[fi]);
+	    continue;
+	}
+	fname = gettail(files[fi]);
+
+	while (!vim_fgets(IObuff, IOSIZE, fd) && !got_int)
+	{
+	    p1 = vim_strchr(IObuff, '*');	/* find first '*' */
+	    while (p1 != NULL)
+	    {
+		p2 = vim_strchr(p1 + 1, '*');	/* find second '*' */
+		if (p2 != NULL && p2 > p1 + 1)	/* skip "*" and "**" */
+		{
+		    for (s = p1 + 1; s < p2; ++s)
+			if (*s == ' ' || *s == '\t' || *s == '|')
+			    break;
+
+		    /*
+		     * Only accept a *tag* when it consists of valid
+		     * characters, there is no '-' before it and is followed
+		     * by a white character or end-of-line.
+		     */
+		    if (s == p2
+			    && (p1 == IObuff || p1[-1] != '-')
+			    && (vim_strchr((char_u *)" \t\n\r", s[1]) != NULL
+				|| s[1] == '\0'))
+		    {
+			*p2 = '\0';
+			++p1;
+			if (ga_grow(&ga, 1) == FAIL)
+			{
+			    got_int = TRUE;
+			    break;
+			}
+			s = alloc((unsigned)(p2 - p1 + STRLEN(fname) + 2));
+			if (s == NULL)
+			{
+			    got_int = TRUE;
+			    break;
+			}
+			((char_u **)ga.ga_data)[ga.ga_len] = s;
+			++ga.ga_len;
+			--ga.ga_room;
+			sprintf((char *)s, "%s\t%s", p1, fname);
+
+			/* find next '*' */
+			p2 = vim_strchr(p2 + 1, '*');
+		    }
+		}
+		p1 = p2;
+	    }
+	    line_breakcheck();
+	}
+
+	fclose(fd);
+    }
+
+    FreeWild(filecount, files);
+
+    if (!got_int)
+    {
+	/*
+	 * Sort the tags.
+	 */
+	sort_strings((char_u **)ga.ga_data, ga.ga_len);
+
+	/*
+	 * Check for duplicates.
+	 */
+	for (i = 1; i < ga.ga_len; ++i)
+	{
+	    p1 = ((char_u **)ga.ga_data)[i - 1];
+	    p2 = ((char_u **)ga.ga_data)[i];
+	    while (*p1 == *p2)
+	    {
+		if (*p2 == '\t')
+		{
+		    *p2 = NUL;
+		    sprintf((char *)NameBuff,
+			    _("Duplicate tag \"%s\" in file %s"),
+			    ((char_u **)ga.ga_data)[i], p2 + 1);
+		    EMSG(NameBuff);
+		    *p2 = '\t';
+		    break;
+		}
+		++p1;
+		++p2;
+	    }
+	}
+
+	/*
+	 * Write the tags into the file.
+	 */
+	for (i = 0; i < ga.ga_len; ++i)
+	{
+	    s = ((char_u **)ga.ga_data)[i];
+	    fprintf(fd_tags, "%s\t/*", s);
+	    for (p1 = s; *p1 != '\t'; ++p1)
+	    {
+		/* insert backslash before '\\' and '/' */
+		if (*p1 == '\\' || *p1 == '/')
+		    putc('\\', fd_tags);
+		putc(*p1, fd_tags);
+	    }
+	    fprintf(fd_tags, "*\n");
+	}
+    }
+
+    for (i = 0; i < ga.ga_len; ++i)
+	vim_free(((char_u **)ga.ga_data)[i]);
+    ga_clear(&ga);
+    fclose(fd_tags);	    /* there is no check for an error... */
+}
+#endif
 
 #if defined(FEAT_SIGNS) || defined(PROTO)
 
@@ -4492,7 +4749,7 @@ ex_sign(eap)
     arg = skiptowhite(arg);
     if (arg == skipdigits(arg1))
     {
-	markId = atoi((char *) arg1);
+	markId = atoi((char *)arg1);
 	arg = skipwhite(arg);
     }
     else
@@ -4516,13 +4773,13 @@ ex_sign(eap)
 	if (arg == skipdigits(arg3))
 	{				/* arg2 and arg3 are both numbers */
 	    arg = skipwhite(arg);
-	    lnum = atoi((char *) arg2);
-	    idx = atoi((char *) arg3);
+	    lnum = atoi((char *)arg2);
+	    idx = atoi((char *)arg3);
 	    filename = arg;
 	}
 	else
 	{
-	    idx = atoi((char *) arg2);
+	    idx = atoi((char *)arg2);
 	    filename = arg3;
 	}
     }

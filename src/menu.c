@@ -454,6 +454,7 @@ add_menu_path(menu_path, modes, pri_tab,
 	    /* separate mnemonic and accelerator text from actual menu name */
 	    menu->dname = menu_text(name, &menu->mnemonic, &menu->actext);
 	    menu->priority = pri_tab[pri_idx];
+	    menu->parent = parent;
 #ifdef FEAT_GUI_MOTIF
 	    menu->sensitive = TRUE;	    /* the default */
 #endif
@@ -470,7 +471,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		if (*next_name == NUL)
 		{
 		    /* Real menu item, not sub-menu */
-		    gui_mch_add_menu_item(menu, parent, new_idx);
+		    gui_mch_add_menu_item(menu, new_idx);
 
 		    /* Want to update menus now even if mode not changed */
 		    force_menu_update = TRUE;
@@ -478,7 +479,7 @@ add_menu_path(menu_path, modes, pri_tab,
 		else
 		{
 		    /* Sub-menu (not at end of path yet) */
-		    gui_mch_add_menu(menu, parent, new_idx);
+		    gui_mch_add_menu(menu, new_idx);
 		}
 	    }
 #endif
@@ -1360,7 +1361,7 @@ get_menu_index(menu, state)
     int		idx;
 
 #ifdef FEAT_VISUAL
-    if (VIsual_active || state & RANGE)
+    if (VIsual_active)
 	idx = MENU_INDEX_VISUAL;
     else
 #endif
@@ -1530,9 +1531,8 @@ get_menu_mode()
  * gui_create_initial_menus(root_menu, NULL);
  */
     void
-gui_create_initial_menus(menu, parent)
+gui_create_initial_menus(menu)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
 {
     int		idx = 0;
 
@@ -1540,11 +1540,11 @@ gui_create_initial_menus(menu, parent)
     {
 	if (menu->children != NULL)
 	{
-	    gui_mch_add_menu(menu, parent, idx);
-	    gui_create_initial_menus(menu->children, menu);
+	    gui_mch_add_menu(menu, idx);
+	    gui_create_initial_menus(menu->children);
 	}
 	else
-	    gui_mch_add_menu_item(menu, parent, idx);
+	    gui_mch_add_menu_item(menu, idx);
 	menu = menu->next;
 	++idx;
     }
@@ -1568,9 +1568,15 @@ gui_update_menus_recurse(menu, mode)
 	    grey = TRUE;
 #ifdef FEAT_GUI_ATHENA
 	/* Hiding menus doesn't work for Athena, it can cause a crash. */
-       gui_mch_menu_grey(menu, grey);
+	gui_mch_menu_grey(menu, grey);
 #else
-	if (vim_strchr(p_go, GO_GREY) != NULL)
+	/* Never hide a toplevel menu, it may make the menubar resize or
+	 * disappear. Same problem for ToolBar items. */
+	if (vim_strchr(p_go, GO_GREY) != NULL || menu->parent == NULL
+# ifdef FEAT_TOOLBAR
+		|| menu_is_toolbar(menu->parent->name)
+# endif
+		   )
 	    gui_mch_menu_grey(menu, grey);
 	else
 	    gui_mch_menu_hidden(menu, grey);
@@ -1818,7 +1824,7 @@ gui_destroy_tearoffs_recurse(menu)
  * execute it.
  */
     void
-execute_menu(eap)
+ex_emenu(eap)
     exarg_t	*eap;
 {
     vimmenu_t	*menu;
@@ -1878,7 +1884,7 @@ execute_menu(eap)
     else if (eap->argt & RANGE)
     {
 	mode = (char_u *)"Visual";
-	idx = get_menu_index(menu, RANGE);
+	idx = get_menu_index(menu, VISUAL);
 
 	if (idx != MENU_INDEX_INVALID)
 	{
@@ -1942,7 +1948,7 @@ execute_menu(eap)
 	EMSG2(_("Menu not defined for %s mode"),mode);
 }
 
-#if defined(FEAT_GUI_W32) || defined(PROTO)
+#if defined(FEAT_GUI_MSWIN) || defined(PROTO)
 /*
  * Given a menu descriptor, e.g. "File.New", find it in the menu hierarchy.
  */

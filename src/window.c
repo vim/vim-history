@@ -2897,13 +2897,18 @@ frame_setheight(curfrp, height)
     {
 	/*
 	 * Column of frames: try to change only frames in this columns.
-	 *
+	 */
+#ifdef FEAT_VERTSPLIT
+	/*
 	 * Do this twice:
 	 * 1: compute room available, if it's not enough try resizing the
 	 *    containing frame.
 	 * 2: compute the room available and adjust the height to it.
 	 */
 	for (run = 1; run <= 2; ++run)
+#else
+	for (;;)
+#endif
 	{
 	    room = 0;
 	    for (frp = curfrp->fr_parent->fr_child; frp != NULL;

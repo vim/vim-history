@@ -962,9 +962,7 @@ find_tags(pat, num_matches, matchesp, flags, mincount)
     ebuf = alloc(LSIZE);
 #endif
     for (mtt = 0; mtt < MT_COUNT; ++mtt)
-    {
 	ga_init2(&ga_match[mtt], (int)sizeof(char_u *), 100);
-    }
 
     /* check for out of memory situation */
     if (lbuf == NULL || tag_fname == NULL
@@ -1861,11 +1859,13 @@ get_tagfname(first, buf)
     static int		did_filefind_init;
     char_u		*fname = NULL;
     char_u		*r_ptr;
-    size_t		path_len;
 
     if (first)
     {
-	np = p_tags;
+	if (curbuf->b_help)
+	    np = p_rtp;
+	else
+	    np = p_tags;
 	vim_findfile_free_visited(search_ctx);
 	did_filefind_init = FALSE;
     }
@@ -1874,19 +1874,16 @@ get_tagfname(first, buf)
     if (np == NULL)
 	return FAIL;
 
-    /*
-     * For a help window only try the file 'tags' in the same
-     * directory as 'helpfile'.
-     */
     if (curbuf->b_help)
     {
-	path_len = gettail(p_hf) - p_hf;
-	if (path_len + 9 >= MAXPATHL)
+	/*
+	 * For a help window find "doc/tags" in all directories in
+	 * 'runtimepath'.
+	 */
+	if (*np == NUL || copy_option_part(&np, buf, MAXPATHL, ",") == 0)
 	    return FAIL;
-	mch_memmove(buf, p_hf, path_len);
-	STRCPY(buf + path_len, "tags");
-
-	np = NULL;		/* try only once */
+	add_pathsep(buf);
+	STRCAT(buf, "doc/tags");
     }
     else
     {
@@ -1945,7 +1942,7 @@ get_tagfname(first, buf)
 			FALSE, /* don't free visited list */
 			FALSE, /* we search for a file */
 			search_ctx);
-		if (search_ctx != NULL);
+		if (search_ctx != NULL)
 		    did_filefind_init = TRUE;
 	    }
 	}
@@ -2534,15 +2531,12 @@ jumpto_tag(lbuf, forceit)
 	    set_topline(curwin, curwin->w_cursor.lnum);
 
 #ifdef FEAT_WINDOWS
-	if (g_do_tagpreview)
+	if (g_do_tagpreview && curwin != curwin_save && win_valid(curwin_save))
 	{
-	    if (curwin_save != NULL && curwin != curwin_save)
-	    {
-		/* Return cursor to where we were */
-		validate_cursor();
-		redraw_later(VALID);
-		win_enter(curwin_save, TRUE);
-	    }
+	    /* Return cursor to where we were */
+	    validate_cursor();
+	    redraw_later(VALID);
+	    win_enter(curwin_save, TRUE);
 	}
 #endif
 

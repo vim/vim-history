@@ -222,11 +222,6 @@ static char *(features[]) =
 #else
 	"-libcall",
 #endif
-#ifdef FEAT_LINE_HL
-	"+line_highlight",
-#else
-	"-line_highlight",
-#endif
 #ifdef FEAT_LINEBREAK
 	"+linebreak",
 #else
@@ -241,6 +236,11 @@ static char *(features[]) =
 	"+localmap",
 #else
 	"-localmap",
+#endif
+#ifdef FEAT_KEYMAP
+	"+keymap",
+#else
+	"-keymap",
 #endif
 #ifdef FEAT_MENU
 	"+menu",

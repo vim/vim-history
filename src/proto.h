@@ -27,9 +27,9 @@
 # ifndef FEAT_GUI_GTK
 #  define GdkEvent int
 # endif
-#ifndef FEAT_X11
-# define XImage int
-#endif
+# ifndef FEAT_X11
+#  define XImage int
+# endif
 
 # ifdef AMIGA
 #  include "os_amiga.pro"

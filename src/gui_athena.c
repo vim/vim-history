@@ -318,13 +318,13 @@ gui_mch_set_menu_pos(x, y, w, h)
 
 /* ARGSUSED */
     void
-gui_mch_add_menu(menu, parent, idx)
+gui_mch_add_menu(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
     char_u	*pullright_name;
     Dimension	height, space, border;
+    vimmenu_t	*parent = menu->parent;
 
     if (parent == NULL)
     {
@@ -423,11 +423,12 @@ make_pull_name(name)
 
 /* ARGSUSED */
     void
-gui_mch_add_menu_item(menu, parent, idx)
+gui_mch_add_menu_item(menu, idx)
     vimmenu_t	*menu;
-    vimmenu_t	*parent;
     int		idx;
 {
+    vimmenu_t	*parent = menu->parent;
+
     /* Don't add menu separator */
     if (menu_is_separator(menu->name))
 	return;

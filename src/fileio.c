@@ -1356,6 +1356,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 {
     int		    fd;
     char_u	    *backup = NULL;
+    int		    backup_copy = FALSE; /* copy the original file? */
     char_u	    *ffname;
     char_u	    *wfname;		/* name of file to write to */
     char_u	    *s;
@@ -1612,8 +1613,10 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
     else
 	bufsize = BUFSIZE;
 
+    /*
+     * Get information about original file (if there is one).
+     */
 #if defined(UNIX) && !defined(ARCHIE)
-    /* get information about original file (if there is one) */
     st_old.st_dev = st_old.st_ino = 0;
     perm = -1;
     if (mch_stat((char *)fname, &st_old) < 0)
@@ -1636,225 +1639,7 @@ buf_write(buf, fname, sfname, start, end, eap, append, forceit,
 	}
 	perm = st_old.st_mode;
     }
-/*
- * If we are not appending or filtering, the file exists, and the
- * 'writebackup', 'backup' or 'patchmode' option is set, try to make a backup
- * copy of the file.
- */
-    if (!append && !filtering && perm >= 0 && (p_wb || p_bk || *p_pm != NUL)
-	    && (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
-    {
-	int		bfd, buflen;
-	char_u		copybuf[BUFSIZE + 1], *wp;
-	int		some_error = FALSE;
-	struct stat	st_new;
-	char_u		*dirp;
-	char_u		*rootname;
-#ifndef SHORT_FNAME
-	int		did_set_shortname;
-#endif
-
-	/*
-	 * Try to make the backup in each directory in the 'bdir' option.
-	 *
-	 * Unix semantics has it, that we may have a writable file,
-	 * that cannot be recreated with a simple open(..., O_CREAT, ) e.g:
-	 *  - the directory is not writable,
-	 *  - the file may be a symbolic link,
-	 *  - the file may belong to another user/group, etc.
-	 *
-	 * For these reasons, the existing writable file must be truncated
-	 * and reused. Creation of a backup COPY will be attempted.
-	 */
-	dirp = p_bdir;
-	while (*dirp)
-	{
-	    st_new.st_dev = st_new.st_ino = 0;
-	    st_new.st_gid = 0;
-
-	    /*
-	     * Isolate one directory name, using an entry in 'bdir'.
-	     */
-	    (void)copy_option_part(&dirp, copybuf, BUFSIZE, ",");
-	    rootname = get_file_in_dir(fname, copybuf);
-	    if (rootname == NULL)
-	    {
-		some_error = TRUE;	    /* out of memory */
-		goto nobackup;
-	    }
-
-
-#ifndef SHORT_FNAME
-	    did_set_shortname = FALSE;
-#endif
-
-	    /*
-	     * May try twice if 'shortname' not set.
-	     */
-	    for (;;)
-	    {
-		/*
-		 * Make backup file name.
-		 */
-		backup = buf_modname(
-#ifdef SHORT_FNAME
-					TRUE,
 #else
-					(buf->b_p_sn || buf->b_shortname),
-#endif
-						 rootname, backup_ext, FALSE);
-		if (backup == NULL)
-		{
-		    some_error = TRUE;		/* out of memory */
-		    vim_free(rootname);
-		    goto nobackup;
-		}
-
-		/*
-		 * Check if backup file already exists.
-		 */
-		if (mch_stat((char *)backup, &st_new) >= 0)
-		{
-		    /*
-		     * Check if backup file is same as original file.
-		     * May happen when modname() gave the same file back.
-		     * E.g. silly link, or file name-length reached.
-		     * If we don't check here, we either ruin the file when
-		     * copying or erase it after writing. jw.
-		     */
-		    if (st_new.st_dev == st_old.st_dev
-					    && st_new.st_ino == st_old.st_ino)
-		    {
-			vim_free(backup);
-			backup = NULL;	/* there is no backup file to delete */
-#ifndef SHORT_FNAME
-			/*
-			 * may try again with 'shortname' set
-			 */
-			if (!(buf->b_shortname || buf->b_p_sn))
-			{
-			    buf->b_shortname = TRUE;
-			    did_set_shortname = TRUE;
-			    continue;
-			}
-			    /* setting shortname didn't help */
-			if (did_set_shortname)
-			    buf->b_shortname = FALSE;
-#endif
-			break;
-		    }
-
-		    /*
-		     * If we are not going to keep the backup file, don't
-		     * delete an existing one, try to use another name.
-		     * Change one character, just before the extension.
-		     */
-		    if (!p_bk)
-		    {
-			wp = backup + STRLEN(backup) - 1 - STRLEN(backup_ext);
-			if (wp < backup)	/* empty file name ??? */
-			    wp = backup;
-			*wp = 'z';
-			while (*wp > 'a' && mch_stat((char *)backup, &st_new) >= 0)
-			    --*wp;
-			/* They all exist??? Must be something wrong. */
-			if (*wp == 'a')
-			{
-			    vim_free(backup);
-			    backup = NULL;
-			}
-		    }
-		}
-		break;
-	    }
-	    vim_free(rootname);
-
-	    /*
-	     * Try to create the backup file
-	     */
-	    if (backup != NULL)
-	    {
-		/* remove old backup, if present */
-		mch_remove(backup);
-		bfd = mch_open((char *)backup, O_WRONLY|O_CREAT|O_EXTRA, 0666);
-		if (bfd < 0)
-		{
-		    vim_free(backup);
-		    backup = NULL;
-		}
-		else
-		{
-		    /* set file protection same as original file, but strip
-		     * s-bit */
-		    (void)mch_setperm(backup, perm & 0777);
-
-		    /*
-		     * Try to set the group of the backup same as the original
-		     * file. If this fails, set the protection bits for the
-		     * group same as the protection bits for others.
-		     */
-		    if (st_new.st_gid != st_old.st_gid &&
-#ifdef HAVE_FCHOWN  /* sequent-ptx lacks fchown() */
-				    fchown(bfd, (uid_t)-1, st_old.st_gid) != 0
-#else
-			  chown((char *)backup, (uid_t)-1, st_old.st_gid) != 0
-#endif
-					    )
-			mch_setperm(backup, (perm & 0707) | ((perm & 07) << 3));
-
-		    /* copy the file. */
-		    while ((buflen = read(fd, (char *)copybuf, BUFSIZE)) > 0)
-		    {
-			if (buf_write_bytes(bfd, copybuf, buflen
-#ifdef WB_HAS_FLAGS
-				    , 0
-#endif
-				    ) == FAIL)
-			{
-			    errmsg = (char_u *)_("Can't write to backup file (use ! to override)");
-			    break;
-			}
-		    }
-		    if (close(bfd) < 0 && errmsg == NULL)
-			errmsg = (char_u *)_("Close error for backup file (use ! to override)");
-		    if (buflen < 0)
-			errmsg = (char_u *)_("Can't read file for backup (use ! to override)");
-		    set_file_time(backup, st_old.st_atime, st_old.st_mtime);
-		    break;
-		}
-	    }
-	}
-nobackup:
-	close(fd);		/* ignore errors for closing read file */
-
-	if (backup == NULL && errmsg == NULL)
-	    errmsg = (char_u *)_("Cannot create backup file (use ! to override)");
-	/* ignore errors when forceit is TRUE */
-	if ((some_error || errmsg) && !forceit)
-	{
-	    retval = FAIL;
-	    goto fail;
-	}
-	errmsg = NULL;
-    }
-    /* When using ":w!" and the file was read-only: make it writable */
-    if (forceit && st_old.st_uid == getuid() && perm >= 0 && !(perm & 0200)
-				     && vim_strchr(p_cpo, CPO_FWRITE) == NULL)
-    {
-	perm |= 0200;
-	(void)mch_setperm(fname, perm);
-	made_writable = TRUE;
-    }
-
-#else /* end of UNIX, start of the rest */
-
-/*
- * If we are not appending, the file exists, and the 'writebackup' or
- * 'backup' option is set, make a backup.
- * Do not make any backup, if "writebackup" and "backup" are
- * both switched off. This helps when editing large files on
- * almost-full disks. (jw)
- */
     perm = mch_getperm(fname);
     if (perm < 0)
 	newfile = TRUE;
@@ -1886,89 +1671,373 @@ nobackup:
 		goto fail;
 	}
     }
+#endif
 
+    /*
+     * If we are not appending or filtering, the file exists, and the
+     * 'writebackup', 'backup' or 'patchmode' option is set, need a backup.
+     *
+     * Do not make any backup, if 'writebackup' and 'backup' are both switched
+     * off.  This helps when editing large files on almost-full disks.
+     */
     if (!append && !filtering && perm >= 0 && (p_wb || p_bk || *p_pm != NUL))
     {
-	char_u		*dirp;
-	char_u		*p;
-	char_u		*rootname;
 
-	/*
-	 * Form the backup file name - change path/fo.o.h to path/fo.o.h.bak
-	 * Try all directories in 'backupdir', first one that works is used.
-	 */
-	dirp = p_bdir;
-	while (*dirp)
+	if (*p_bkc == 'y')		/* "yes" */
+	    backup_copy = TRUE;
+	else if (*p_bkc == 'a')		/* "auto" */
 	{
+#ifdef UNIX
+	    struct stat	st;
+	    int		i;
+
 	    /*
-	     * Isolate one directory name and make the backup file name.
+	     * Don't rename the file when:
+	     * - it's a hard link
+	     * - it's a symbolic link
+	     * - we don't have write permission in the directory
+	     * - we can't set the owner/group of the new file
 	     */
-	    (void)copy_option_part(&dirp, IObuff, IOSIZE, ",");
-	    rootname = get_file_in_dir(fname, IObuff);
-	    if (rootname == NULL)
-		backup = NULL;
+	    if (st_old.st_nlink > 1
+		    || lstat((char *)fname, &st) < 0
+		    || st.st_dev != st_old.st_dev
+		    || st.st_ino != st_old.st_ino)
+		backup_copy = TRUE;
 	    else
 	    {
-		backup = buf_modname(
+		/*
+		 * Check if we can create a file and set the owner/group to
+		 * the ones from the original file.
+		 * First find a file name that doesn't exist yet (use some
+		 * arbitrary numbers).
+		 */
+		STRCPY(IObuff, fname);
+		for (i = 4913; ; i += 123)
+		{
+		    sprintf((char *)gettail(IObuff), "%d", i);
+		    if (mch_stat((char *)IObuff, &st) < 0)
+			break;
+		}
+		fd = mch_open((char *)IObuff, O_CREAT|O_WRONLY|O_EXCL, perm);
+		close(fd);
+		if (fd < 0)	/* can't write in directory */
+		    backup_copy = TRUE;
+		else
+		{
+		    chown((char *)IObuff, st_old.st_uid, st_old.st_gid);
+		    if (mch_stat((char *)IObuff, &st) < 0
+			    || st.st_uid != st_old.st_uid
+			    || st.st_gid != st_old.st_gid)
+			backup_copy = TRUE;
+		    mch_remove(IObuff);
+		}
+	    }
+#endif
+	}
+
+	if (backup_copy
+		&& (fd = mch_open((char *)fname, O_RDONLY | O_EXTRA, 0)) >= 0)
+	{
+	    int		bfd, buflen;
+	    char_u	copybuf[BUFSIZE + 1], *wp;
+	    int		some_error = FALSE;
+	    struct stat	st_new;
+	    char_u	*dirp;
+	    char_u	*rootname;
+#ifndef SHORT_FNAME
+	    int		did_set_shortname;
+#endif
+
+	    /*
+	     * Try to make the backup in each directory in the 'bdir' option.
+	     *
+	     * Unix semantics has it, that we may have a writable file,
+	     * that cannot be recreated with a simple open(..., O_CREAT, ) e.g:
+	     *  - the directory is not writable,
+	     *  - the file may be a symbolic link,
+	     *  - the file may belong to another user/group, etc.
+	     *
+	     * For these reasons, the existing writable file must be truncated
+	     * and reused. Creation of a backup COPY will be attempted.
+	     */
+	    dirp = p_bdir;
+	    while (*dirp)
+	    {
+		st_new.st_dev = st_new.st_ino = 0;
+		st_new.st_gid = 0;
+
+		/*
+		 * Isolate one directory name, using an entry in 'bdir'.
+		 */
+		(void)copy_option_part(&dirp, copybuf, BUFSIZE, ",");
+		rootname = get_file_in_dir(fname, copybuf);
+		if (rootname == NULL)
+		{
+		    some_error = TRUE;	    /* out of memory */
+		    goto nobackup;
+		}
+
+#ifndef SHORT_FNAME
+		did_set_shortname = FALSE;
+#endif
+
+		/*
+		 * May try twice if 'shortname' not set.
+		 */
+		for (;;)
+		{
+		    /*
+		     * Make backup file name.
+		     */
+		    backup = buf_modname(
 #ifdef SHORT_FNAME
-					TRUE,
+			    TRUE,
 #else
-					(buf->b_p_sn || buf->b_shortname),
+			    (buf->b_p_sn || buf->b_shortname),
 #endif
 						 rootname, backup_ext, FALSE);
-		vim_free(rootname);
-	    }
+		    if (backup == NULL)
+		    {
+			some_error = TRUE;		/* out of memory */
+			vim_free(rootname);
+			goto nobackup;
+		    }
 
-	    if (backup != NULL)
-	    {
+		    /*
+		     * Check if backup file already exists.
+		     */
+		    if (mch_stat((char *)backup, &st_new) >= 0)
+		    {
+#ifdef UNIX
+			/*
+			 * Check if backup file is same as original file.
+			 * May happen when modname() gave the same file back.
+			 * E.g. silly link, or file name-length reached.
+			 * If we don't check here, we either ruin the file
+			 * when copying or erase it after writing. jw.
+			 */
+			if (st_new.st_dev == st_old.st_dev
+					    && st_new.st_ino == st_old.st_ino)
+			{
+			    vim_free(backup);
+			    backup = NULL;	/* no backup file to delete */
+# ifndef SHORT_FNAME
+			    /*
+			     * may try again with 'shortname' set
+			     */
+			    if (!(buf->b_shortname || buf->b_p_sn))
+			    {
+				buf->b_shortname = TRUE;
+				did_set_shortname = TRUE;
+				continue;
+			    }
+				/* setting shortname didn't help */
+			    if (did_set_shortname)
+				buf->b_shortname = FALSE;
+# endif
+			    break;
+			}
+#endif
+
+			/*
+			 * If we are not going to keep the backup file, don't
+			 * delete an existing one, try to use another name.
+			 * Change one character, just before the extension.
+			 */
+			if (!p_bk)
+			{
+			    wp = backup + STRLEN(backup) - 1
+							 - STRLEN(backup_ext);
+			    if (wp < backup)	/* empty file name ??? */
+				wp = backup;
+			    *wp = 'z';
+			    while (*wp > 'a'
+				    && mch_stat((char *)backup, &st_new) >= 0)
+				--*wp;
+			    /* They all exist??? Must be something wrong. */
+			    if (*wp == 'a')
+			    {
+				vim_free(backup);
+				backup = NULL;
+			    }
+			}
+		    }
+		    break;
+		}
+		vim_free(rootname);
+
 		/*
-		 * If we are not going to keep the backup file, don't
-		 * delete an existing one, try to use another name.
-		 * Change one character, just before the extension.
+		 * Try to create the backup file
 		 */
-		if (!p_bk && mch_getperm(backup) >= 0)
+		if (backup != NULL)
 		{
-		    p = backup + STRLEN(backup) - 1 - STRLEN(backup_ext);
-		    if (p < backup)	/* empty file name ??? */
-			p = backup;
-		    *p = 'z';
-		    while (*p > 'a' && mch_getperm(backup) >= 0)
-			--*p;
-		    /* They all exist??? Must be something wrong! */
-		    if (*p == 'a')
+		    /* remove old backup, if present */
+		    mch_remove(backup);
+		    bfd = mch_open((char *)backup, O_WRONLY|O_CREAT|O_EXTRA,
+									0666);
+		    if (bfd < 0)
 		    {
 			vim_free(backup);
 			backup = NULL;
 		    }
+		    else
+		    {
+			/* set file protection same as original file, but strip
+			 * s-bit */
+			(void)mch_setperm(backup, perm & 0777);
+
+#ifdef UNIX
+			/*
+			 * Try to set the group of the backup same as the
+			 * original file. If this fails, set the protection
+			 * bits for the group same as the protection bits for
+			 * others.
+			 */
+			if (st_new.st_gid != st_old.st_gid &&
+# ifdef HAVE_FCHOWN  /* sequent-ptx lacks fchown() */
+				    fchown(bfd, (uid_t)-1, st_old.st_gid) != 0
+# else
+			  chown((char *)backup, (uid_t)-1, st_old.st_gid) != 0
+# endif
+						)
+			    mch_setperm(backup,
+					  (perm & 0707) | ((perm & 07) << 3));
+#endif
+
+			/* copy the file. */
+			while ((buflen = read(fd, (char *)copybuf, BUFSIZE))
+									  > 0)
+			{
+			    if (buf_write_bytes(bfd, copybuf, buflen
+#ifdef WB_HAS_FLAGS
+					, 0
+#endif
+					) == FAIL)
+			    {
+				errmsg = (char_u *)_("Can't write to backup file (use ! to override)");
+				break;
+			    }
+			}
+			if (close(bfd) < 0 && errmsg == NULL)
+			    errmsg = (char_u *)_("Close error for backup file (use ! to override)");
+			if (buflen < 0)
+			    errmsg = (char_u *)_("Can't read file for backup (use ! to override)");
+#ifdef UNIX
+			set_file_time(backup, st_old.st_atime, st_old.st_mtime);
+#endif
+			break;
+		    }
 		}
 	    }
-	    if (backup != NULL)
+    nobackup:
+	    close(fd);		/* ignore errors for closing read file */
+
+	    if (backup == NULL && errmsg == NULL)
+		errmsg = (char_u *)_("Cannot create backup file (use ! to override)");
+	    /* ignore errors when forceit is TRUE */
+	    if ((some_error || errmsg) && !forceit)
 	    {
+		retval = FAIL;
+		goto fail;
+	    }
+	    errmsg = NULL;
+	}
+	else
+	{
+	    char_u	*dirp;
+	    char_u	*p;
+	    char_u	*rootname;
 
+	    /*
+	     * Make a backup by renaming the original file.
+	     *
+	     * Form the backup file name - change path/fo.o.h to
+	     * path/fo.o.h.bak Try all directories in 'backupdir', first one
+	     * that works is used.
+	     */
+	    dirp = p_bdir;
+	    while (*dirp)
+	    {
 		/*
-		 * Delete any existing backup and move the current version to
-		 * the backup.	For safety, we don't remove the backup until
-		 * the write has finished successfully. And if the 'backup'
-		 * option is set, leave it around.
+		 * Isolate one directory name and make the backup file name.
 		 */
-		/*
-		 * If the renaming of the original file to the backup file
-		 * works, quit here.
-		 */
-		if (vim_rename(fname, backup) == 0)
-		    break;
+		(void)copy_option_part(&dirp, IObuff, IOSIZE, ",");
+		rootname = get_file_in_dir(fname, IObuff);
+		if (rootname == NULL)
+		    backup = NULL;
+		else
+		{
+		    backup = buf_modname(
+#ifdef SHORT_FNAME
+			    TRUE,
+#else
+			    (buf->b_p_sn || buf->b_shortname),
+#endif
+						 rootname, backup_ext, FALSE);
+		    vim_free(rootname);
+		}
 
-		vim_free(backup);   /* don't do the rename below */
-		backup = NULL;
+		if (backup != NULL)
+		{
+		    /*
+		     * If we are not going to keep the backup file, don't
+		     * delete an existing one, try to use another name.
+		     * Change one character, just before the extension.
+		     */
+		    if (!p_bk && mch_getperm(backup) >= 0)
+		    {
+			p = backup + STRLEN(backup) - 1 - STRLEN(backup_ext);
+			if (p < backup)	/* empty file name ??? */
+			    p = backup;
+			*p = 'z';
+			while (*p > 'a' && mch_getperm(backup) >= 0)
+			    --*p;
+			/* They all exist??? Must be something wrong! */
+			if (*p == 'a')
+			{
+			    vim_free(backup);
+			    backup = NULL;
+			}
+		    }
+		}
+		if (backup != NULL)
+		{
+
+		    /*
+		     * Delete any existing backup and move the current version to
+		     * the backup.	For safety, we don't remove the backup until
+		     * the write has finished successfully. And if the 'backup'
+		     * option is set, leave it around.
+		     */
+		    /*
+		     * If the renaming of the original file to the backup file
+		     * works, quit here.
+		     */
+		    if (vim_rename(fname, backup) == 0)
+			break;
+
+		    vim_free(backup);   /* don't do the rename below */
+		    backup = NULL;
+		}
+	    }
+	    if (backup == NULL && !forceit)
+	    {
+		errmsg = (char_u *)_("Can't make backup file (use ! to override)");
+		goto fail;
 	    }
 	}
-	if (backup == NULL && !forceit)
-	{
-	    errmsg = (char_u *)_("Can't make backup file (use ! to override)");
-	    goto fail;
-	}
     }
-#endif /* UNIX */
+
+#if defined(UNIX) && !defined(ARCHIE)
+    /* When using ":w!" and the file was read-only: make it writable */
+    if (forceit && st_old.st_uid == getuid() && perm >= 0 && !(perm & 0200)
+				     && vim_strchr(p_cpo, CPO_FWRITE) == NULL)
+    {
+	perm |= 0200;
+	(void)mch_setperm(fname, perm);
+	made_writable = TRUE;
+    }
+#endif
 
     /* When using ":w!" and writing to the current file, readonly makes no
      * sense, reset it */
@@ -2106,33 +2175,37 @@ nobackup:
 		continue;
 	    }
 	}
-/*
- * If we failed to open the file, we don't need a backup. Throw it away.
- * If we moved or removed the original file try to put the backup in its place.
- */
+	/*
+	 * If we failed to open the file, we don't need a backup. Throw it
+	 * away.  If we moved or removed the original file try to put the
+	 * backup in its place.
+	 */
 	if (backup != NULL && wfname == fname)
 	{
-#ifdef UNIX
-	    struct stat st;
+	    if (backup_copy)
+	    {
+		struct stat st;
 
-	    /*
-	     * There is a small chance that we removed the original, try
-	     * to move the copy in its place.
-	     * This may not work if the vim_rename() fails.
-	     * In that case we leave the copy around.
-	     */
-					/* file does not exist */
-	    if (mch_stat((char *)fname, &st) < 0)
-					/* put the copy in its place */
+		/*
+		 * There is a small chance that we removed the original, try
+		 * to move the copy in its place.
+		 * This may not work if the vim_rename() fails.
+		 * In that case we leave the copy around.
+		 */
+		/* If file does not exist, put the copy in its place */
+		if (mch_stat((char *)fname, &st) < 0)
+		    vim_rename(backup, fname);
+		/* if original file does exist throw away the copy */
+		if (mch_stat((char *)fname, &st) >= 0)
+		    mch_remove(backup);
+	    }
+	    else
+	    {
+		/* try to put the original file back */
 		vim_rename(backup, fname);
-					/* original file does exist */
-	    if (mch_stat((char *)fname, &st) >= 0)
-		mch_remove(backup); /* throw away the copy */
-#else
-					/* try to put the original file back */
-	    vim_rename(backup, fname);
-#endif
+	    }
 	}
+
 #ifdef FEAT_MBYTE
 	if (wfname != fname)
 	    vim_free(wfname);
@@ -2148,7 +2221,12 @@ nobackup:
      * Finder attribute (label, comments, custom icons, file creatore)
      */
     if (backup != NULL && overwriting && !append)
-	(void)mch_copy_file_attribute(backup, wfname);
+    {
+	if (backup_copy)
+	    (void)mch_copy_file_attribute(wfname, backup);
+	else
+	    (void)mch_copy_file_attribute(backup, wfname);
+    }
 
     if (!overwriting && !append)
     {
@@ -2307,6 +2385,14 @@ nobackup:
 	mch_set_filetype(wfname, buf->b_p_oft);
 #endif
 
+#ifdef UNIX
+    /* When creating a new file, set its owner/group to that of the original
+     * file. */
+    if (backup != NULL && !backup_copy)
+	chown((char *)wfname, st_old.st_uid, st_old.st_gid);
+#endif
+
+
 #if defined(FEAT_MBYTE) && defined(FEAT_EVAL)
     if (wfname != fname)
     {
@@ -2353,32 +2439,37 @@ nobackup:
 	 */
 	if (backup != NULL)
 	{
-#ifdef UNIX
-	    char_u	copybuf[BUFSIZE + 1];
-	    int		bfd, buflen;
-
-	    if ((bfd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0)) >= 0)
+	    if (backup_copy)
 	    {
-		if ((fd = mch_open((char *)fname,
-			  O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA, 0666)) >= 0)
+		char_u	copybuf[BUFSIZE + 1];
+		int		bfd, buflen;
+
+		if ((bfd = mch_open((char *)backup, O_RDONLY | O_EXTRA, 0))
+									 >= 0)
 		{
-		    /* copy the file. */
-		    while ((buflen = read(bfd, (char *)copybuf, BUFSIZE)) > 0)
-			if (buf_write_bytes(fd, copybuf, buflen
+		    if ((fd = mch_open((char *)fname,
+			  O_WRONLY | O_CREAT | O_TRUNC | O_EXTRA, 0666)) >= 0)
+		    {
+			/* copy the file. */
+			while ((buflen = read(bfd, (char *)copybuf, BUFSIZE))
+									  > 0)
+			    if (buf_write_bytes(fd, copybuf, buflen
 #ifdef WB_HAS_FLAGS
-				    , 0
+					, 0
 #endif
-				    ) == FAIL)
-			    break;
-		    if (close(fd) >= 0 && buflen == 0)	/* success */
-			end = 1;
+					) == FAIL)
+				break;
+			if (close(fd) >= 0 && buflen == 0)	/* success */
+			    end = 1;
+		    }
+		    close(bfd);	/* ignore errors for closing read file */
 		}
-		close(bfd);	/* ignore errors for closing read file */
 	    }
-#else
-	    if (vim_rename(backup, fname) == 0)
-		end = 1;
-#endif
+	    else
+	    {
+		if (vim_rename(backup, fname) == 0)
+		    end = 1;
+	    }
 	}
 	goto fail;
     }
@@ -2427,8 +2518,13 @@ nobackup:
 	}
 #endif
 	msg_add_lines(c, (long)lnum, nchars);	/* add line/char count */
-	if (!shortmess(SHM_WRITE))
-	    STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [w]") : _(" written"));
+	if (!shortmess(SHM_WRITE)) 
+	{
+	    if(!eap->append)
+		  STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [w]") : _(" written"));
+	    else
+		  STRCAT(IObuff, shortmess(SHM_WRI) ? _(" [a]") : _(" appended"));
+	}
 
 	keep_msg = msg_trunc_attr(IObuff, FALSE, 0);
 	keep_msg_attr = 0;
@@ -2937,7 +3033,7 @@ shorten_fname(full_path, dir_name)
  * edited, both for file name and swap file name.  Try to shorten the file
  * names a bit, if safe to do so.
  * When "force" is FALSE: Only try to shorten absolute file names.
- * For buffers that have buftype "nofile": never change the file name.
+ * For buffers that have buftype "nofile" or "scratch": never change the file name.
  */
     void
 shorten_fnames(force)
@@ -2952,7 +3048,7 @@ shorten_fnames(force)
     {
 	if (buf->b_fname != NULL
 #ifdef FEAT_QUICKFIX
-	        && (!bt_nofile(buf))
+	        && !bt_nofile(buf) && !bt_scratch(buf)
 #endif
 		&& (force
 		    || buf->b_sfname == NULL

@@ -414,7 +414,7 @@ gui_init()
     gui_create_scrollbar(&gui.bottom_sbar, SBAR_BOTTOM, NULL);
 
 #ifdef FEAT_MENU
-    gui_create_initial_menus(root_menu, NULL);
+    gui_create_initial_menus(root_menu);
 #endif
 #ifdef FEAT_SUN_WORKSHOP
     if (usingSunWorkShop)

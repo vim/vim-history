@@ -243,7 +243,7 @@ ml_open()
  */
     if (p_uc && curbuf->b_p_swf
 #ifdef FEAT_QUICKFIX
-	    && !bt_nofile(curbuf)
+	    && !bt_nofile(curbuf) && !bt_scratch(curbuf)
 #endif
        )
 	curbuf->b_may_swap = TRUE;
@@ -482,7 +482,7 @@ ml_open_file(buf)
     mfp = buf->b_ml.ml_mfp;
     if (mfp == NULL || mfp->mf_fd >= 0 || !buf->b_p_swf
 #ifdef FEAT_QUICKFIX
-	    || bt_nofile(buf)
+	    || bt_nofile(buf) || bt_scratch(buf)
 #endif
 	)
 	return;		/* nothing to do */
