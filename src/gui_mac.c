@@ -206,7 +206,7 @@ QDGlobals qd;
 #endif
 
 /* Colors Macros */
-#define RGB(r,g,b)	(r << 16) + (g << 8) + b
+#define RGB(r,g,b)	((r) << 16) + ((g) << 8) + (b)
 #define Red(c)		((c & 0x00FF0000) >> 16)
 #define Green(c)	((c & 0x0000FF00) >>  8)
 #define Blue(c)		((c & 0x000000FF) >>  0)
@@ -613,10 +613,10 @@ pascal OSErr Handle_KAHL_SRCH_AE (const AppleEvent *theAEvent, AppleEvent *theRe
     }
 
     for (buf = firstbuf; buf != NULL; buf = buf->b_next)
-	if (buf->b_ml.ml_mfp != NULL)
-	    if (SearchData.theFile.parID == buf->b_FSSpec.parID)
-	      if (SearchData.theFile.name[0] = buf->b_FSSpec.name[0])
-		if (STRNCMP(SearchData.theFile.name, buf->b_FSSpec.name, buf->b_FSSpec.name[0]+1))
+	if (buf->b_ml.ml_mfp != NULL
+		&& SearchData.theFile.parID == buf->b_FSSpec.parID
+		&& SearchData.theFile.name[0] == buf->b_FSSpec.name[0]
+		&& STRNCMP(SearchData.theFile.name, buf->b_FSSpec.name, buf->b_FSSpec.name[0] + 1) == 0)
 	    {
 		foundFile = true;
 		break;
@@ -822,7 +822,7 @@ pascal OSErr Handle_KAHL_GTTX_AE (const AppleEvent *theAEvent, AppleEvent *theRe
     CW_GetText	GetTextData;
     Size	actualSize;
     char_u	*line;
-    char_u	*fullbuffer;
+    char_u	*fullbuffer = NULL;
     long	linesize;
     long	lineStart;
     long	BufferSize;
@@ -875,9 +875,12 @@ pascal OSErr Handle_KAHL_GTTX_AE (const AppleEvent *theAEvent, AppleEvent *theRe
 		HUnlock (GetTextData.theText);
 	    }
 	}
-	HLock (GetTextData.theText);
-	fullbuffer[BufferSize-1] = 0;
-	HUnlock (GetTextData.theText);
+	if (fullbuffer != NULL)
+	{
+	    HLock (GetTextData.theText);
+	    fullbuffer[BufferSize-1] = 0;
+	    HUnlock (GetTextData.theText);
+	}
 	if (foundFile == false)
 	    *GetTextData.theDate = fnfErr;
 	else
@@ -3160,7 +3163,7 @@ gui_mch_get_color(name)
 	if (STRICMP (name, "hilite") == 0)
 	{
 	    LMGetHiliteRGB (&MacColor);
-	    return (RGB (MacColor.red >> 8, MacColor.green >> 8, MacColor.blue >>8));
+	    return (RGB (MacColor.red >> 8, MacColor.green >> 8, MacColor.blue >> 8));
 	}
 	/* Check if the name is one of the colors we know */
 	for (i = 0; i < sizeof(table) / sizeof(table[0]); i++)
@@ -3214,7 +3217,7 @@ gui_mch_get_color(name)
 	    if (STRICMP(color, name) == 0)
 	    {
 		fclose(fd);
-		return (guicolor_T) RGB(r,g,b);
+		return (guicolor_T) RGB(r, g, b);
 	    }
 	}
 	fclose(fd);
@@ -5086,6 +5089,7 @@ gui_mch_show_popupmenu(menu)
     status = ContextualMenuSelect(CntxMenu, where, false, kCMHelpItemNoHelp, HelpName, NULL, &CntxType, &CntxMenuID, &CntxMenuItem);
 
     if (status == noErr)
+    {
 	if (CntxType == kCMMenuItemSelected)
 	{
 	    /* Handle the menu CntxMenuID, CntxMenuItem */
@@ -5097,6 +5101,7 @@ gui_mch_show_popupmenu(menu)
 	{
 	    /* Should come up with the help */
 	}
+    }
 
     /* Restore original Port */
     SetPort (savePort); /*OSX*/

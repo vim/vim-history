@@ -60,7 +60,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --with-x                use the X Window System"
 ac_help="$ac_help
-  --enable-gui[=OPTS]     X11 GUI [default=auto] [OPTS=auto/no/gtk/gtk2/gnome/gnome2/motif/athena/neXtaw/beos/photon]"
+  --enable-gui[=OPTS]     X11 GUI [default=auto] [OPTS=auto/no/gtk/gtk2/gnome/gnome2/motif/athena/neXtaw/beos/photon/carbon]"
 ac_help="$ac_help
   --enable-gtk-check      If auto-select GUI, check for GTK [default=yes]"
 ac_help="$ac_help
@@ -73,6 +73,8 @@ ac_help="$ac_help
   --enable-athena-check   If auto-select GUI, check for Athena [default=yes]"
 ac_help="$ac_help
   --enable-nextaw-check   If auto-select GUI, check for neXtaw [default=yes]"
+ac_help="$ac_help
+  --enable-carbon-check   If auto-select GUI, check for Carbon [default=yes]"
 ac_help="$ac_help
   --with-gtk-prefix=PFX   Prefix where GTK is installed (optional)"
 ac_help="$ac_help
@@ -1169,6 +1171,59 @@ case `uname` in
     *)		QNX=no; echo "$ac_t""no" 1>&6;;
 esac
 
+DEFAULT_VIMNAME=vim
+echo $ac_n "checking for Darwin (Mac OS X)""... $ac_c" 1>&6
+echo "configure:1177: checking for Darwin (Mac OS X)" >&5
+if test "`(uname) 2>/dev/null`" = Darwin; then
+  echo "$ac_t""yes" 1>&6
+  MACOSX=yes
+  OS_EXTRA_SCR="os_macosx.c"; 
+  OS_EXTRA_OBJ="objects/os_macosx.o"
+  CFLAGS="$CFLAGS -DMACOS_X_UNIX"
+
+      ac_safe=`echo "Carbon/Carbon.h" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for Carbon/Carbon.h""... $ac_c" 1>&6
+echo "configure:1187: checking for Carbon/Carbon.h" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 1192 "configure"
+#include "confdefs.h"
+#include <Carbon/Carbon.h>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:1197: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+  CARBON=yes
+else
+  echo "$ac_t""no" 1>&6
+fi
+         
+  if test "x$CARBON" = "xyes"; then
+    if test -z "$with_x"; then
+      with_x=no
+      DEFAULT_VIMNAME=Vim
+    fi
+  fi
+else
+  echo "$ac_t""no" 1>&6
+fi
+
 
 
 
@@ -1194,18 +1249,18 @@ if test -z "$have_local_include" -a -d /usr/local/include; then
 fi
 
 echo $ac_n "checking --with-vim-name argument""... $ac_c" 1>&6
-echo "configure:1198: checking --with-vim-name argument" >&5
+echo "configure:1253: checking --with-vim-name argument" >&5
 # Check whether --with-vim-name or --without-vim-name was given.
 if test "${with_vim_name+set}" = set; then
   withval="$with_vim_name"
   VIMNAME="$withval"; echo "$ac_t""$VIMNAME" 1>&6
 else
-  VIMNAME="vim"; echo "$ac_t""Defaulting to vim" 1>&6
+  VIMNAME="$DEFAULT_VIMNAME"; echo "$ac_t""Defaulting to $VIMNAME" 1>&6
 fi
 
 
 echo $ac_n "checking --with-ex-name argument""... $ac_c" 1>&6
-echo "configure:1209: checking --with-ex-name argument" >&5
+echo "configure:1264: checking --with-ex-name argument" >&5
 # Check whether --with-ex-name or --without-ex-name was given.
 if test "${with_ex_name+set}" = set; then
   withval="$with_ex_name"
@@ -1513,6 +1568,26 @@ EOF
      fi
     else
       echo "$ac_t"">>> too old; need Perl version 5.003_01 or later <<<" 1>&6
+    fi
+  fi
+
+  if test "x$MACOSX" == "xyes"; then 
+        dir=/System/Library/Perl
+    darwindir=$dir/darwin
+    if test -d $darwindir; then 
+      PERL=/usr/bin/perl
+    else
+            dir=/System/Library/Perl/5.8.1
+      darwindir=$dir/darwin-thread-multi-2level
+      if test -d $darwindir; then 
+	PERL=/usr/bin/perl
+      fi
+    fi
+    if test -n "$PERL"; then
+      PERL_DIR=$dir
+      PERL_CFLAGS=-DFEAT_PERL -I$darwindir/CORE
+      PERL_OBJ=if_perl.o if_perlsfio.o $darwindir/auto/DynaLoader/DynaLoader.a
+      PERL_LIBS=-lperl -L$darwindir/CORE
     fi
   fi
 fi
@@ -2345,7 +2420,7 @@ fi
 echo "$ac_t""$enable_fontset" 1>&6
 
 test -z "$with_x" && with_x=yes
-test "${enable_gui-yes}" != no -a "x$QNX" != "xyes" && with_x=yes
+test "${enable_gui-yes}" != no -a "x$MACOSX" != "xyes" -a "x$QNX" != "xyes" && with_x=yes
 if test "$with_x" = no; then
   echo "$ac_t""defaulting to: don't HAVE_X11" 1>&6
 else
@@ -3458,10 +3533,10 @@ rm -f conftest*
   fi
 fi
 
-test "x$with_x" = xno -a "x$BEOS" != "xyes" -a "x$QNX" != "xyes" && enable_gui=no
+test "x$with_x" = xno -a "x$BEOS" != "xyes" -a "x$MACOSX" != "xyes" -a "x$QNX" != "xyes" && enable_gui=no
 
 echo $ac_n "checking --enable-gui argument""... $ac_c" 1>&6
-echo "configure:3465: checking --enable-gui argument" >&5
+echo "configure:3540: checking --enable-gui argument" >&5
 # Check whether --enable-gui or --disable-gui was given.
 if test "${enable_gui+set}" = set; then
   enableval="$enable_gui"
@@ -3471,83 +3546,88 @@ else
 fi
 
 
-## Canonicalize the --enable-gui= argument so that it can be easily compared.
-## Do not use character classes for portability with old tools.
 enable_gui_canon=`echo "_$enable_gui" | \
 	sed 's/[ _+-]//g;y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/'`
 
+SKIP_GTK=YES
+SKIP_GTK2=YES
+SKIP_GNOME=YES
+SKIP_MOTIF=YES
+SKIP_ATHENA=YES
+SKIP_NEXTAW=YES
+SKIP_PHOTON=YES
+SKIP_BEOS=YES
+SKIP_CARBON=YES
+GUITYPE=NONE
+
 if test "x$BEOS" = "xyes"; then
-
-  SKIP_GTK=YES
-  SKIP_GTK2=YES
-  SKIP_GNOME=YES
-  SKIP_MOTIF=YES
-  SKIP_ATHENA=YES
-  SKIP_NEXTAW=YES
-  SKIP_PHOTON=YES
   SKIP_BEOS=
-  GUITYPE=NONE
-
   case "$enable_gui_canon" in
     no)		echo "$ac_t""no GUI support" 1>&6
 		SKIP_BEOS=YES ;;
     yes|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
     auto)	echo "$ac_t""auto - automatic GUI support" 1>&6 ;;
     beos)	echo "$ac_t""BeOS GUI support" 1>&6 ;;
-    *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6 ;;
+    *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6
+		SKIP_BEOS=YES ;;
   esac
 
 elif test "x$QNX" = "xyes" -a "x$with_x" = "xno" ; then
-  SKIP_GTK=YES
-  SKIP_GTK2=YES
-  SKIP_GNOME=YES
-  SKIP_MOTIF=YES
-  SKIP_ATHENA=YES
-  SKIP_NEXTAW=YES
-  SKIP_BEOS=YES
   SKIP_PHOTON=
-  GUITYPE=NONE
-
   case "$enable_gui_canon" in
     no)		echo "$ac_t""no GUI support" 1>&6
 		SKIP_PHOTON=YES ;;
     yes|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
     auto)	echo "$ac_t""auto - automatic GUI support" 1>&6 ;;
     photon)	echo "$ac_t""Photon GUI support" 1>&6 ;;
-    *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6 ;;
+    *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6
+		SKIP_PHOTON=YES ;;
+  esac
+
+elif test "x$MACOSX" = "xyes" -a "x$with_x" = "xno" ; then
+  SKIP_CARBON=
+  case "$enable_gui_canon" in
+    no)		echo "$ac_t""no GUI support" 1>&6
+		SKIP_CARBON=YES ;;
+    yes|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
+    auto)	echo "$ac_t""auto - automatic GUI support" 1>&6 ;;
+    carbon)	echo "$ac_t""Carbon GUI support" 1>&6 ;;
+    *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6
+		SKIP_CARBON=YES ;;
   esac
 
 else
 
-  SKIP_GTK=
-  SKIP_GTK2=
-  SKIP_GNOME=
-  SKIP_MOTIF=
-  SKIP_ATHENA=
-  SKIP_NEXTAW=
-  SKIP_BEOS=YES
-  SKIP_PHOTON=YES
-  GUITYPE=NONE
 
   case "$enable_gui_canon" in
-    no|none)	echo "$ac_t""no GUI support" 1>&6
-		SKIP_GTK=YES; SKIP_GTK2=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+    no|none)	echo "$ac_t""no GUI support" 1>&6 ;;
     yes|"")	echo "$ac_t""yes - automatic GUI support" 1>&6 ;;
-    auto)	echo "$ac_t""auto - automatic GUI support" 1>&6 ;;
+    auto)	echo "$ac_t""auto - automatic GUI support" 1>&6
+		SKIP_GTK=
+		SKIP_GTK2=
+		SKIP_GNOME=
+		SKIP_MOTIF=
+		SKIP_ATHENA=
+		SKIP_NEXTAW=
+		SKIP_CARBON=;;
     gtk)	echo "$ac_t""GTK+ 1.x GUI support" 1>&6
-		SKIP_GTK2=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+		SKIP_GTK=;;
     gtk2)	echo "$ac_t""GTK+ 2.x GUI support" 1>&6
-		SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+		SKIP_GTK=
+		SKIP_GTK2=;;
     gnome)	echo "$ac_t""GNOME 1.x GUI support" 1>&6
-		SKIP_GTK2=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+		SKIP_GNOME=
+		SKIP_GTK=;;
     gnome2)	echo "$ac_t""GNOME 2.x GUI support" 1>&6
-		SKIP_MOTIF=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+		SKIP_GNOME=
+		SKIP_GTK=
+		SKIP_GTK2=;;
     motif)	echo "$ac_t""Motif GUI support" 1>&6
-		SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_ATHENA=YES; SKIP_NEXTAW=YES ;;
+		SKIP_MOTIF=;;
     athena)	echo "$ac_t""Athena GUI support" 1>&6
-		SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_NEXTAW=YES ;;
+		SKIP_ATHENA=;;
     nextaw)	echo "$ac_t""neXtaw GUI support" 1>&6
-		SKIP_GTK=YES; SKIP_GNOME=YES; SKIP_MOTIF=YES; SKIP_ATHENA=YES ;;
+		SKIP_NEXTAW=;;
     *)		echo "$ac_t""Sorry, $enable_gui GUI is not supported" 1>&6 ;;
   esac
 
@@ -3656,6 +3736,39 @@ fi
   if test "x$enable_nextaw_check" = "xno"; then
     SKIP_NEXTAW=YES
   fi
+fi
+
+if test "x$SKIP_CARBON" != "xYES" -a "$enable_gui_canon" != "carbon"; then
+  echo $ac_n "checking whether or not to look for Carbon""... $ac_c" 1>&6
+echo "configure:3744: checking whether or not to look for Carbon" >&5
+  # Check whether --enable-carbon-check or --disable-carbon-check was given.
+if test "${enable_carbon_check+set}" = set; then
+  enableval="$enable_carbon_check"
+  :
+else
+  enable_carbon_check="yes"
+fi
+
+  echo "$ac_t""$enable_carbon_check" 1>&6;
+  if test "x$enable_carbon_check" = "xno"; then
+    SKIP_CARBON=YES
+  fi
+fi
+
+if test "x$MACOSX" = "xyes" -a -z "$SKIP_CARBON" -a "x$CARBON" = "xyes"; then
+  echo $ac_n "checking for Carbon GUI""... $ac_c" 1>&6
+echo "configure:3761: checking for Carbon GUI" >&5
+    echo "$ac_t""yes" 1>&6;
+  GUITYPE=CARBONGUI
+    SKIP_GTK=YES;
+  SKIP_GTK2=YES;
+  SKIP_GNOME=YES;
+  SKIP_MOTIF=YES;
+  SKIP_ATHENA=YES;
+  SKIP_NEXTAW=YES;
+  SKIP_PHOTON=YES;
+  SKIP_BEOS=YES;
+  SKIP_CARBON=YES
 fi
 
 
@@ -5292,7 +5405,7 @@ fi
 
 for ac_hdr in stdarg.h stdlib.h string.h sys/select.h sys/utsname.h \
 	termcap.h fcntl.h sgtty.h sys/ioctl.h sys/time.h termio.h \
-	iconv.h langinfo.h unistd.h stropts.h errno.h strings.h \
+	iconv.h langinfo.h unistd.h stropts.h errno.h \
 	sys/resource.h sys/systeminfo.h locale.h \
 	sys/stream.h sys/ptem.h termios.h libc.h sys/statfs.h \
 	poll.h sys/poll.h pwd.h utime.h sys/param.h libintl.h \
@@ -5301,17 +5414,17 @@ for ac_hdr in stdarg.h stdlib.h string.h sys/select.h sys/utsname.h \
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:5305: checking for $ac_hdr" >&5
+echo "configure:5421: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 5310 "configure"
+#line 5426 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:5315: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:5431: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -5338,12 +5451,55 @@ fi
 done
 
 
+if test "x$MACOSX" != "xyes"; then
+  for ac_hdr in strings.h
+do
+ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
+echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
+echo "configure:5463: checking for $ac_hdr" >&5
+if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  cat > conftest.$ac_ext <<EOF
+#line 5468 "configure"
+#include "confdefs.h"
+#include <$ac_hdr>
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:5473: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=yes"
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  eval "ac_cv_header_$ac_safe=no"
+fi
+rm -f conftest*
+fi
+if eval "test \"`echo '$ac_cv_header_'$ac_safe`\" = yes"; then
+  echo "$ac_t""yes" 1>&6
+    ac_tr_hdr=HAVE_`echo $ac_hdr | sed 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+  cat >> confdefs.h <<EOF
+#define $ac_tr_hdr 1
+EOF
+ 
+else
+  echo "$ac_t""no" 1>&6
+fi
+done
+
+fi
+
 echo $ac_n "checking if strings.h can be included after string.h""... $ac_c" 1>&6
-echo "configure:5343: checking if strings.h can be included after string.h" >&5
+echo "configure:5502: checking if strings.h can be included after string.h" >&5
 cppflags_save=$CPPFLAGS
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 cat > conftest.$ac_ext <<EOF
-#line 5347 "configure"
+#line 5506 "configure"
 #include "confdefs.h"
 
 #if defined(_AIX) && !defined(_AIX51) && !defined(_NO_PROTO)

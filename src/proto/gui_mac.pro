@@ -135,4 +135,8 @@ void gui_mac_doMouseDownEvent __ARGS((EventRecord *theEvent));
 void gui_mac_doMouseMovedEvent __ARGS((EventRecord *event));
 void gui_mac_doMouseUpEvent __ARGS((EventRecord *theEvent));
 
+int C2PascalString (char_u *CString, Str255 *PascalString);
+int GetFSSpecFromPath ( char_u *file, FSSpec *fileFSSpec);
+char_u *FullPathFromFSSpec_save (FSSpec file);
+
 /* vim: set ft=c : */

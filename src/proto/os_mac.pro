@@ -45,11 +45,8 @@ int mch_screenmode __ARGS((char_u *arg));
 int mch_has_exp_wildcard __ARGS((char_u *p));
 
 void slash_n_colon_adjust __ARGS((char_u *buf));
-char_u *FullPathFromFSSpec_save (FSSpec file);
 int mch_copy_file(char_u *from, char_u *to);
 
-int C2PascalString (char_u *CString, Str255 *PascalString);
-int GetFSSpecFromPath ( char_u *file, FSSpec *fileFSSpec);
 int mch_has_resource_fork (char_u *file);
 int mch_copy_file_attribute(char_u *from, char_u *to);
 
