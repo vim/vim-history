@@ -1708,6 +1708,12 @@ gui_mch_draw_string(
 		padding[i] = gui.char_width;
     }
 
+    /* On NT, tell the font renderer not to "help" us with Hebrew and Arabic
+     * text.  This doesn't work in 9x, so we have to deal with it manually on
+     * those systems. */
+    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	foptions |= ETO_IGNORELANGUAGE;
+
     /*
      * We have to provide the padding argument because italic and bold versions
      * of fixed-width fonts are often one pixel or so wider than their normal
@@ -1749,12 +1755,7 @@ gui_mch_draw_string(
 	    i += utfc_ptr2len_check_len(text + i, len - i);
 	    ++clen;
 	}
-	if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
-			     foptions | ETO_IGNORELANGUAGE,
-				       pcliprect, unicodebuf, clen, NULL);
-	else
-	    ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
+	ExtTextOutW(s_hdc, TEXT_X(col), TEXT_Y(row),
 			     foptions, pcliprect, unicodebuf, clen, NULL);
 	len = cells;	/* used for underlining */
     }
@@ -1776,17 +1777,12 @@ gui_mch_draw_string(
 #endif
     {
 #ifdef FEAT_RIGHTLEFT
-	/* ron: fixed Hebrew on Win98/Win2000 */
-	if (curwin->w_p_rl)
-	{
-	    if (os_version.dwPlatformId == VER_PLATFORM_WIN32_NT)
-		ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
-			 foptions | ETO_IGNORELANGUAGE,
-				   pcliprect, (char *)text, len, padding);
-	    else
-		RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
+	/* If we can't use ETO_IGNORELANGUAGE, we can't tell Windows not to
+	 * mess up RL text, so we have to draw it character-by-character.
+	 * Only do this if RL is on, since it's slow. */
+	if (curwin->w_p_rl && !(foptions & ETO_IGNORELANGUAGE))
+	    RevOut(s_hdc, TEXT_X(col), TEXT_Y(row),
 			 foptions, pcliprect, (char *)text, len, padding);
-	}
 	else
 #endif
 	    ExtTextOut(s_hdc, TEXT_X(col), TEXT_Y(row),
