@@ -4503,6 +4503,19 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     {
 	/* load or unload key mapping tables */
 	errmsg = keymap_init();
+
+	/* When successfully installed a new keymap switch on using it. */
+	if (*curbuf->b_p_keymap != NUL && errmsg == NULL)
+	{
+	    curbuf->b_p_iminsert = B_IMODE_LMAP;
+	    if (curbuf->b_p_imsearch != B_IMODE_USE_INSERT)
+		curbuf->b_p_imsearch = B_IMODE_LMAP;
+	    set_iminsert_global();
+	    set_imsearch_global();
+# ifdef FEAT_WINDOWS
+	    status_redraw_curbuf();
+# endif
+	}
     }
 #endif
 

@@ -2916,19 +2916,6 @@ do_map(maptype, arg, mode, abbrev)
     if (!haskey || (maptype != 1 && !hasarg))
 	msg_start();
 
-    /* When definding a ":lmap" switch on using them. */
-    if (hasarg && maptype != 1 && mode == LANGMAP)
-    {
-	curbuf->b_p_iminsert = B_IMODE_LMAP;
-	if (curbuf->b_p_imsearch != B_IMODE_USE_INSERT)
-	    curbuf->b_p_imsearch = B_IMODE_LMAP;
-	set_iminsert_global();
-	set_imsearch_global();
-#ifdef FEAT_WINDOWS
-	status_redraw_curbuf();
-#endif
-    }
-
 #ifdef FEAT_LOCALMAP
     /*
      * Check if a new local mapping wasn't already defined globally.
