@@ -783,7 +783,7 @@ do_bufdel(command, arg, addr_count, start_bnr, end_bnr, forceit)
 		arg = skipwhite(arg);
 		if (*arg == NUL)
 		    break;
-		if (!isdigit(*arg))
+		if (!VIM_ISDIGIT(*arg))
 		{
 		    p = skiptowhite_esc(arg);
 		    bnr = buflist_findpat(arg, p, command == DOBUF_WIPE, FALSE);
@@ -3241,7 +3241,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	    s++;
 	    l = -1;
 	}
-	if (isdigit(*s))
+	if (VIM_ISDIGIT(*s))
 	{
 	    minwid = (int)getdigits(&s);
 	    if (minwid < 0)	/* overflow */
@@ -3259,7 +3259,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 	if (*s == '.')
 	{
 	    s++;
-	    if (isdigit(*s))
+	    if (VIM_ISDIGIT(*s))
 	    {
 		maxwid = (int)getdigits(&s);
 		if (maxwid <= 0)	/* overflow */
@@ -3550,7 +3550,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 		for (; l < minwid && p + 1 < out + outlen; l++)
 		{
 		    /* Don't put a "-" in front of a digit. */
-		    if (l + 1 == minwid && fillchar == '-' && isdigit(*t))
+		    if (l + 1 == minwid && fillchar == '-' && VIM_ISDIGIT(*t))
 			*p++ = ' ';
 		    else
 			*p++ = fillchar;
@@ -3565,7 +3565,7 @@ build_stl_str_hl(wp, out, outlen, fmt, fillchar, maxwidth, hl)
 		/* Change a space by fillchar, unless fillchar is '-' and a
 		 * digit follows. */
 		if (fillable && p[-1] == ' '
-					 && (!isdigit(*t) || fillchar != '-'))
+				     && (!VIM_ISDIGIT(*t) || fillchar != '-'))
 		    p[-1] = fillchar;
 	    }
 	    for (; l < minwid && p + 1 < out + outlen; l++)

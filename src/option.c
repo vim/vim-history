@@ -3626,7 +3626,7 @@ do_set(arg, opt_flags)
 				&& (*arg == '<'
 				    || *arg == '^'
 				    || ((!arg[1] || vim_iswhite(arg[1]))
-					&& !isdigit(*arg))))
+					&& !VIM_ISDIGIT(*arg))))
 			{
 			    value = string_to_key(arg);
 			    if (value == 0 && (long *)varp != &p_wcm)
@@ -3636,7 +3636,7 @@ do_set(arg, opt_flags)
 			    }
 			}
 				/* allow negative numbers (for 'undolevels') */
-			else if (*arg == '-' || isdigit(*arg))
+			else if (*arg == '-' || VIM_ISDIGIT(*arg))
 			{
 			    i = 0;
 			    if (*arg == '-')
@@ -3648,7 +3648,7 @@ do_set(arg, opt_flags)
 #else
 			    value = atol((char *)arg);
 #endif
-			    while (isdigit(arg[i]))
+			    while (VIM_ISDIGIT(arg[i]))
 				++i;
 			    if (arg[i] != NUL && !vim_iswhite(arg[i]))
 			    {
@@ -3753,7 +3753,8 @@ do_set(arg, opt_flags)
 			     * backwards compatibility with Vim 3.0.
 			     * Misuse errbuf[] for the resulting string.
 			     */
-			    else if (varp == (char_u *)&p_ww && isdigit(*arg))
+			    else if (varp == (char_u *)&p_ww
+							 && VIM_ISDIGIT(*arg))
 			    {
 				*errbuf = NUL;
 				i = getdigits(&arg);
@@ -4217,7 +4218,7 @@ get_viminfo_parameter(type)
     char_u  *p;
 
     p = find_viminfo_parameter(type);
-    if (p != NULL && isdigit(*p))
+    if (p != NULL && VIM_ISDIGIT(*p))
 	return atoi((char *)p);
     return -1;
 }
@@ -5004,7 +5005,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 	    while (*s && *s != ':')
 	    {
 		if (vim_strchr((char_u *)COM_ALL, *s) == NULL
-						 && !isdigit(*s) && *s != '-')
+					     && !VIM_ISDIGIT(*s) && *s != '-')
 		{
 		    errmsg = illegal_char(errbuf, *s);
 		    break;
@@ -5075,10 +5076,10 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
 		++s;		/* no extra chars */
 	    else		/* must have a number */
 	    {
-		while (isdigit(*++s))
+		while (vim_isdigit(*++s))
 		    ;
 
-		if (!isdigit(*(s - 1)))
+		if (!VIM_ISDIGIT(*(s - 1)))
 		{
 		    if (errbuf != NULL)
 		    {
@@ -5545,7 +5546,7 @@ did_set_string_option(opt_idx, varp, new_value_alloced, oldval, errbuf,
     /* 'backspace' */
     else if (varp == &p_bs)
     {
-	if (isdigit(*p_bs))
+	if (VIM_ISDIGIT(*p_bs))
 	{
 	    if (*p_bs >'2' || p_bs[1] != NUL)
 		errmsg = e_invarg;
@@ -5918,14 +5919,14 @@ check_stl_option(s)
 	}
 	if (*s == '-')
 	    s++;
-	while (isdigit(*s))
+	while (VIM_ISDIGIT(*s))
 	    s++;
 	if (*s == STL_HIGHLIGHT)
 	    continue;
 	if (*s == '.')
 	{
 	    s++;
-	    while (*s && isdigit(*s))
+	    while (*s && VIM_ISDIGIT(*s))
 		s++;
 	}
 	if (*s == '(')

@@ -2215,7 +2215,7 @@ find_special_key(srcp, modp, keycode)
     {
 	end_of_name = bp + 1;
 
-	if (STRNICMP(src + 1, "char-", 5) == 0 && isdigit(src[6]))
+	if (STRNICMP(src + 1, "char-", 5) == 0 && VIM_ISDIGIT(src[6]))
 	{
 	    /* <Char-123> or <Char-033> or <Char-0x33> */
 	    vim_str2nr(src + 6, NULL, NULL, TRUE, TRUE, NULL, &n);
@@ -2866,7 +2866,7 @@ parse_shape_opt(what)
 			{
 			    if (mshape_names[i] == NULL)
 			    {
-				if (!isdigit(*p))
+				if (!VIM_ISDIGIT(*p))
 				    return (char_u *)N_("E547: Illegal mouseshape");
 				if (round == 2)
 				    shape_table[idx].mshape =
@@ -2906,7 +2906,7 @@ parse_shape_opt(what)
 			if (len != 0)
 			{
 			    p += len;
-			    if (!isdigit(*p))
+			    if (!VIM_ISDIGIT(*p))
 				return (char_u *)N_("E548: digit expected");
 			    n = getdigits(&p);
 			    if (len == 3)   /* "ver" or "hor" */
@@ -5326,7 +5326,7 @@ parse_list_options(option_str, table, table_size)
 
 	if (table[idx].hasnum)
 	{
-	    if (!isdigit(*p))
+	    if (!VIM_ISDIGIT(*p))
 		return (char_u *)N_("E552: digit expected");
 
 	    table[idx].number = getdigits(&p); /*advances p*/

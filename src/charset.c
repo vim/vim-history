@@ -170,7 +170,7 @@ buf_init_chartab(buf, global)
 		tilde = TRUE;
 		++p;
 	    }
-	    if (isdigit(*p))
+	    if (VIM_ISDIGIT(*p))
 		c = getdigits(&p);
 	    else
 		c = *p++;
@@ -178,7 +178,7 @@ buf_init_chartab(buf, global)
 	    if (*p == '-' && p[1] != NUL)
 	    {
 		++p;
-		if (isdigit(*p))
+		if (VIM_ISDIGIT(*p))
 		    c2 = getdigits(&p);
 		else
 		    c2 = *p++;
@@ -1432,19 +1432,36 @@ skipwhite(p)
 skipdigits(p)
     char_u	*p;
 {
-    while (isdigit(*p))	/* skip to next non-digit */
+    while (VIM_ISDIGIT(*p))	/* skip to next non-digit */
 	++p;
     return p;
 }
 
 /*
- * vim_isdigit: version of isdigit() that can handle characters > 0x100.
+ * Variant of isdigit() that can handle characters > 0x100.
+ * We don't use isdigit() here, because on some systems it also considers
+ * superscript 1 to be a digit.
+ * Use the VIM_ISDIGIT() macro for simple arguments.
  */
     int
 vim_isdigit(c)
-    int	    c;
+    int		c;
 {
-    return (c > 0 && c < 0x100 && isdigit(c));
+    return (c >= '0' && c <= '9');
+}
+
+/*
+ * Variant of isxdigit() that can handle characters > 0x100.
+ * We don't use isxdigit() here, because on some systems it also considers
+ * superscript 1 to be a digit.
+ */
+    int
+vim_isxdigit(c)
+    int		c;
+{
+    return (c >= '0' && c <= '9')
+	|| (c >= 'a' && c <= 'f')
+	|| (c >= 'A' && c <= 'F');
 }
 
 /*
@@ -1549,11 +1566,11 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
     if (ptr[0] == '0')			/* could be hex or octal */
     {
 	hex = ptr[1];
-	if (dohex && (hex == 'X' || hex == 'x') && isxdigit(ptr[2]))
+	if (dohex && (hex == 'X' || hex == 'x') && vim_isxdigit(ptr[2]))
 	    ptr += 2;			/* hexadecimal */
 	else
 	{
-	    if (dooct && isdigit(hex))
+	    if (dooct && VIM_ISDIGIT(hex))
 		hex = '0';		/* octal */
 	    else
 		hex = 0;		/* 0 by itself is decimal */
@@ -1578,7 +1595,7 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
 	else
 	{
 	    /* hex */
-	    while (isxdigit(*ptr))
+	    while (vim_isxdigit(*ptr))
 	    {
 		n = 16 * n + (long)hex2nr(*ptr);
 		un = 16 * un + (unsigned long)hex2nr(*ptr);
@@ -1589,7 +1606,7 @@ vim_str2nr(start, hexp, len, dooct, dohex, nptr, unptr)
     else
     {
 	/* decimal */
-	while (isdigit(*ptr))
+	while (VIM_ISDIGIT(*ptr))
 	{
 	    n = 10 * n + (long)(*ptr - '0');
 	    un = 10 * un + (unsigned long)(*ptr - '0');
@@ -1635,7 +1652,7 @@ hex2nr(c)
 hexhex2nr(p)
     char_u	*p;
 {
-    if (!isxdigit(p[0]) || !isxdigit(p[1]))
+    if (!vim_isxdigit(p[0]) || !vim_isxdigit(p[1]))
 	return -1;
     return (hex2nr(p[0]) << 4) + hex2nr(p[1]);
 }

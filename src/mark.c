@@ -371,9 +371,9 @@ getmark(c, changefile)
     {
 	posp = &(curbuf->b_namedm[c - 'a']);
     }
-    else if (ASCII_ISUPPER(c) || vim_isdigit(c))	/* named file mark */
+    else if (ASCII_ISUPPER(c) || VIM_ISDIGIT(c))	/* named file mark */
     {
-	if (vim_isdigit(c))
+	if (VIM_ISDIGIT(c))
 	    c = c - '0' + NMARKS;
 	else
 	    c -= 'A';
@@ -1220,7 +1220,7 @@ read_viminfo_filemark(virp, force)
 #ifndef EBCDIC
 	    *str <= 127 &&
 #endif
-	    ((*virp->vir_line == '\'' && (isdigit(*str) || isupper(*str)))
+	    ((*virp->vir_line == '\'' && (VIM_ISDIGIT(*str) || isupper(*str)))
 	     || (*virp->vir_line == '-' && *str == '\'')))
     {
 	if (*str == '\'')
@@ -1243,7 +1243,7 @@ read_viminfo_filemark(virp, force)
 	    fm = NULL;
 #endif
 	}
-	else if (isdigit(*str))
+	else if (VIM_ISDIGIT(*str))
 	    fm = &namedfm[*str - '0' + NMARKS];
 	else
 	    fm = &namedfm[*str - 'A'];

@@ -1401,8 +1401,9 @@ cs_kill(eap)
     }
 
     /* only single digit positive and negative integers are allowed */
-    if ((strlen(stok) < 2 && isdigit((int)(stok[0])))
-	    || (strlen(stok) < 3 && stok[0] == '-' && isdigit((int)(stok[1]))))
+    if ((strlen(stok) < 2 && VIM_ISDIGIT((int)(stok[0])))
+	    || (strlen(stok) < 3 && stok[0] == '-'
+					      && VIM_ISDIGIT((int)(stok[1]))))
 	i = atoi(stok);
     else
     {

@@ -4702,7 +4702,7 @@ get_list_range(str, num1, num2)
     long	num;
 
     *str = skipwhite(*str);
-    if (**str == '-' || isdigit(**str))	/* parse "from" part of range */
+    if (**str == '-' || vim_isdigit(**str))  /* parse "from" part of range */
     {
 	vim_str2nr(*str, NULL, &len, FALSE, FALSE, &num, NULL);
 	*str += len;
@@ -4752,7 +4752,7 @@ ex_history(eap)
 	return;
     }
 
-    if (!(isdigit(*arg) || *arg == '-' || *arg == ','))
+    if (!(VIM_ISDIGIT(*arg) || *arg == '-' || *arg == ','))
     {
 	end = arg;
 	while (ASCII_ISALPHA(*end)

@@ -2200,7 +2200,7 @@ putdigraph(str)
 	    return;
 	}
 	str = skipwhite(str);
-	if (!isdigit(*str))
+	if (!VIM_ISDIGIT(*str))
 	{
 	    EMSG(_(e_number_exp));
 	    return;

@@ -33,6 +33,7 @@ void getvcols __ARGS((win_T *wp, pos_T *pos1, pos_T *pos2, colnr_T *left, colnr_
 char_u *skipwhite __ARGS((char_u *p));
 char_u *skipdigits __ARGS((char_u *p));
 int vim_isdigit __ARGS((int c));
+int vim_isxdigit __ARGS((int c));
 char_u *skiptowhite __ARGS((char_u *p));
 char_u *skiptowhite_esc __ARGS((char_u *p));
 long getdigits __ARGS((char_u **pp));

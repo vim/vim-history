@@ -109,6 +109,12 @@
 # define ASCII_ISUPPER(c) ((c) < 0x7f && isupper(c))
 #endif
 
+/* Use our own isdigit() replacement, because on MS-Windows isdigit() returns
+ * non-zero for superscript 1.  Also avoids that isdigit() crashes for numbers
+ * below 0 and above 255.  For complicated arguments and in/decrement use
+ * vim_isdigit() instead. */
+#define VIM_ISDIGIT(c) ((c) >= '0' && (c) <= '9')
+
 /* macro version of chartab().
  * Only works with values 0-255!
  * Doesn't work for UTF-8 mode with chars >= 0x80. */

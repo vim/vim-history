@@ -396,7 +396,7 @@ get_number_indent(lnum)
 	return -1;
     line = ml_get(lnum);
     p = skipwhite(line);
-    if (!isdigit(*p))
+    if (!VIM_ISDIGIT(*p))
 	return -1;
     p = skipdigits(p);
     if (vim_strchr((char_u *)":.)]}\t ", *p) == NULL)
@@ -983,7 +983,7 @@ open_line(dir, flags, old_indent)
 		    {
 			if (*p == COM_RIGHT || *p == COM_LEFT)
 			    c = *p;
-			else if (isdigit(*p) || *p == '-')
+			else if (VIM_ISDIGIT(*p) || *p == '-')
 			    off = getdigits(&p);
 		    }
 		    if (c == COM_RIGHT)    /* right adjusted leader */
@@ -2970,7 +2970,7 @@ get_number(colon)
     {
 	windgoto(msg_row, msg_col);
 	c = safe_vgetc();
-	if (vim_isdigit(c))
+	if (VIM_ISDIGIT(c))
 	{
 	    n = n * 10 + c - '0';
 	    msg_putchar(c);
@@ -4290,7 +4290,7 @@ skip_string(p)
 	    if (p[1] == '\\')		    /* '\n' or '\000' */
 	    {
 		++i;
-		while (isdigit(p[i - 1]))   /* '\000' */
+		while (vim_isdigit(p[i - 1]))   /* '\000' */
 		    ++i;
 	    }
 	    if (p[i] == '\'')		    /* check for trailing ' */
@@ -5165,7 +5165,7 @@ get_c_indent()
 	if (*options == '.')	    /* ".5s" means a fraction */
 	{
 	    fraction = atol((char *)++options);
-	    while (isdigit(*options))
+	    while (VIM_ISDIGIT(*options))
 	    {
 		++options;
 		if (divider)
@@ -5311,7 +5311,7 @@ get_c_indent()
 		    what = *p++;
 		else if (*p == COM_LEFT || *p == COM_RIGHT)
 		    align = *p++;
-		else if (isdigit(*p) || *p == '-')
+		else if (VIM_ISDIGIT(*p) || *p == '-')
 		    off = getdigits(&p);
 		else
 		    ++p;

@@ -1723,7 +1723,7 @@ regatom(flagp)
 			  }
 
 		default:
-			  if (isdigit(c) || c == '<' || c == '>')
+			  if (VIM_ISDIGIT(c) || c == '<' || c == '>')
 			  {
 			      long_u	n = 0;
 			      int	cmp;
@@ -1731,7 +1731,7 @@ regatom(flagp)
 			      cmp = c;
 			      if (cmp == '<' || cmp == '>')
 				  c = getchr();
-			      while (isdigit(c))
+			      while (VIM_ISDIGIT(c))
 			      {
 				  n = n * 10 + (c - '0');
 				  c = getchr();
@@ -1917,7 +1917,7 @@ collection:
 				break;
 			    case CLASS_DIGIT:
 				for (cu = 1; cu <= 255; cu++)
-				    if (isdigit(cu))
+				    if (VIM_ISDIGIT(cu))
 					regc(cu);
 				break;
 			    case CLASS_GRAPH:
@@ -1952,7 +1952,7 @@ collection:
 				break;
 			    case CLASS_XDIGIT:
 				for (cu = 1; cu <= 255; cu++)
-				    if (isxdigit(cu))
+				    if (vim_isxdigit(cu))
 					regc(cu);
 				break;
 			    case CLASS_TAB:
@@ -2541,12 +2541,12 @@ read_limits(minval, maxval)
     *minval = getdigits(&regparse);
     if (*regparse == ',')	    /* There is a comma */
     {
-	if (isdigit(*++regparse))
+	if (vim_isdigit(*++regparse))
 	    *maxval = getdigits(&regparse);
 	else
 	    *maxval = MAX_LIMIT;
     }
-    else if (isdigit(*first_char))
+    else if (VIM_ISDIGIT(*first_char))
 	*maxval = *minval;	    /* It was \{n} or \{-n} */
     else
 	*maxval = MAX_LIMIT;	    /* It was \{} or \{-} */
@@ -3405,7 +3405,7 @@ regmatch(scan)
 	    break;
 
 	  case SIDENT:
-	    if (isdigit(*reginput) || !vim_isIDc(c))
+	    if (VIM_ISDIGIT(*reginput) || !vim_isIDc(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -3417,7 +3417,7 @@ regmatch(scan)
 	    break;
 
 	  case SKWORD:
-	    if (isdigit(*reginput) || !vim_iswordp(reginput))
+	    if (VIM_ISDIGIT(*reginput) || !vim_iswordp(reginput))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -3429,7 +3429,7 @@ regmatch(scan)
 	    break;
 
 	  case SFNAME:
-	    if (isdigit(*reginput) || !vim_isfilec(c))
+	    if (VIM_ISDIGIT(*reginput) || !vim_isfilec(c))
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -3441,7 +3441,7 @@ regmatch(scan)
 	    break;
 
 	  case SPRINT:
-	    if (isdigit(*reginput) || ptr2cells(reginput) != 1)
+	    if (VIM_ISDIGIT(*reginput) || ptr2cells(reginput) != 1)
 		return FALSE;
 	    ADVANCE_REGINPUT();
 	    break;
@@ -4339,7 +4339,7 @@ regrepeat(p, maxcount)
       case SIDENT + ADD_NL:
 	while (count < maxcount)
 	{
-	    if (vim_isIDc(*scan) && (testval || !isdigit(*scan)))
+	    if (vim_isIDc(*scan) && (testval || !VIM_ISDIGIT(*scan)))
 	    {
 		ADVANCE_P(scan);
 	    }
@@ -4368,7 +4368,7 @@ regrepeat(p, maxcount)
       case SKWORD + ADD_NL:
 	while (count < maxcount)
 	{
-	    if (vim_iswordp(scan) && (testval || !isdigit(*scan)))
+	    if (vim_iswordp(scan) && (testval || !VIM_ISDIGIT(*scan)))
 	    {
 		ADVANCE_P(scan);
 	    }
@@ -4397,7 +4397,7 @@ regrepeat(p, maxcount)
       case SFNAME + ADD_NL:
 	while (count < maxcount)
 	{
-	    if (vim_isfilec(*scan) && (testval || !isdigit(*scan)))
+	    if (vim_isfilec(*scan) && (testval || !VIM_ISDIGIT(*scan)))
 	    {
 		ADVANCE_P(scan);
 	    }
@@ -4435,7 +4435,7 @@ regrepeat(p, maxcount)
 		if (got_int)
 		    break;
 	    }
-	    else if (ptr2cells(scan) == 1 && (testval || !isdigit(*scan)))
+	    else if (ptr2cells(scan) == 1 && (testval || !VIM_ISDIGIT(*scan)))
 	    {
 		ADVANCE_P(scan);
 	    }

@@ -1499,7 +1499,7 @@ gui_write(s, len)
 	if (s[0] == ESC && s[1] == '|')
 	{
 	    p = s + 2;
-	    if (isdigit(*p))
+	    if (VIM_ISDIGIT(*p))
 	    {
 		arg1 = getdigits(&p);
 		if (p > s + len)

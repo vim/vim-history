@@ -335,7 +335,7 @@ tgetstr(id, buf)
 		    case '9':
 			**buf = 0;
 			    /* get up to three digits */
-			for (i = 0; i < 3 && isdigit(*tmp); ++i)
+			for (i = 0; i < 3 && VIM_ISDIGIT(*tmp); ++i)
 			    **buf = **buf * 8 + *tmp++ - '0';
 			(*buf)++;
 			tmp--;
@@ -480,7 +480,7 @@ tgoto(cm, col, line)
     if (addup)					/* add upline */
 	if (UP) {
 	    ptr=UP;
-	    while (isdigit(*ptr) || *ptr == '.')
+	    while (VIM_ISDIGIT(*ptr) || *ptr == '.')
 		ptr++;
 	    if (*ptr == '*')
 		ptr++;
@@ -491,7 +491,7 @@ tgoto(cm, col, line)
     if (addbak)					/* add backspace */
 	if (BC) {
 	    ptr=BC;
-	    while (isdigit(*ptr) || *ptr == '.')
+	    while (VIM_ISDIGIT(*ptr) || *ptr == '.')
 		ptr++;
 	    if (*ptr == '*')
 		ptr++;
@@ -542,13 +542,13 @@ tputs(cp, affcnt, outc)
 	counter,			/* digits */
 	atol __ARGS((const char *));
 
-    if (isdigit(*cp)) {
+    if (VIM_ISDIGIT(*cp)) {
 	counter = 0;
 	frac = 1000;
-	while (isdigit(*cp))
+	while (VIM_ISDIGIT(*cp))
 	    counter = counter * 10L + (long)(*cp++ - '0');
 	if (*cp == '.')
-	    while (isdigit(*++cp)) {
+	    while (VIM_ISDIGIT(*++cp)) {
 		counter = counter * 10L + (long)(*cp++ - '0');
 		frac = frac * 10;
 	    }

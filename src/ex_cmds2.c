@@ -393,7 +393,7 @@ dbg_parsearg(arg)
     p = skipwhite(p + 4);
 
     /* Find optional line number. */
-    if (isdigit(*p))
+    if (VIM_ISDIGIT(*p))
     {
 	bp->dbg_lnum = getdigits(&p);
 	p = skipwhite(p);
@@ -502,7 +502,7 @@ ex_breakdel(eap)
     int		i;
     linenr_T	best_lnum = 0;
 
-    if (isdigit(*eap->arg))
+    if (vim_isdigit(*eap->arg))
     {
 	/* ":breakdel {nr}" */
 	nr = atol((char *)eap->arg);
@@ -4688,7 +4688,7 @@ mch_print_init(psettings, jobname, forceit)
      */
     fontsize = PRT_PS_DEFAULT_FONTSIZE;
     for (p = p_pfn; (p = vim_strchr(p, ':')) != NULL; ++p)
-	if (p[1] == 'h' && isdigit(p[2]))
+	if (p[1] == 'h' && VIM_ISDIGIT(p[2]))
 	    fontsize = atoi((char *)p + 2);
     prt_font_metrics(fontsize);
 

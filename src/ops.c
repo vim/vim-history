@@ -833,7 +833,7 @@ get_yank_register(regname, writing)
 	return;
     }
     i = regname;
-    if (isdigit(i))
+    if (VIM_ISDIGIT(i))
 	i -= '0';
     else if (ASCII_ISLOWER(i))
 	i = CharOrdLow(i) + 10;
@@ -4627,7 +4627,7 @@ block_prep(oap, bdp, lnum, is_del)
 		{
 		    bdp->endspaces = incr - bdp->endspaces;
 		    if (pend != pstart)
-		    pend = prev_pend;
+			pend = prev_pend;
 		}
 	    }
 	}
@@ -4709,14 +4709,14 @@ do_addsub(command, Prenum1)
      */
     col = curwin->w_cursor.col;
     if (dohex)
-	while (col > 0 && isxdigit(ptr[col]))
+	while (col > 0 && vim_isxdigit(ptr[col]))
 	    --col;
     if (       dohex
 	    && col > 0
 	    && (ptr[col] == 'X'
 		|| ptr[col] == 'x')
 	    && ptr[col - 1] == '0'
-	    && isxdigit(ptr[col + 1]))
+	    && vim_isxdigit(ptr[col + 1]))
     {
 	/*
 	 * Found hexadecimal number, move to its start.
@@ -4731,12 +4731,12 @@ do_addsub(command, Prenum1)
 	col = curwin->w_cursor.col;
 
 	while (ptr[col] != NUL
-		&& !isdigit(ptr[col])
+		&& !vim_isdigit(ptr[col])
 		&& !(doalp && ASCII_ISALPHA(ptr[col])))
 	    ++col;
 
 	while (col > 0
-		&& isdigit(ptr[col - 1])
+		&& vim_isdigit(ptr[col - 1])
 		&& !(doalp && ASCII_ISALPHA(ptr[col])))
 	    --col;
     }
@@ -4750,7 +4750,7 @@ do_addsub(command, Prenum1)
      */
     firstdigit = ptr[col];
     RLADDSUBFIX(ptr);
-    if ((!isdigit(firstdigit) && !(doalp && ASCII_ISALPHA(firstdigit)))
+    if ((!VIM_ISDIGIT(firstdigit) && !(doalp && ASCII_ISALPHA(firstdigit)))
 	    || u_save_cursor() != OK)
     {
 	beep_flush();

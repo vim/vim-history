@@ -1833,7 +1833,7 @@ viminfo_readstring(virp, off, convert)
     char_u	*s, *d;
     long	len;
 
-    if (virp->vir_line[off] == Ctrl_V && isdigit(virp->vir_line[off + 1]))
+    if (virp->vir_line[off] == Ctrl_V && vim_isdigit(virp->vir_line[off + 1]))
     {
 	len = atol((char *)virp->vir_line + off + 1);
 	retval = lalloc(len, TRUE);
@@ -3334,7 +3334,7 @@ ex_z(eap)
 
     if (*x != 0)
     {
-	if (!isdigit(*x))
+	if (!VIM_ISDIGIT(*x))
 	{
 	    EMSG(_("E144: non-numeric argument to :z"));
 	    return;
@@ -3647,7 +3647,7 @@ do_sub(eap)
      * check for a trailing count
      */
     cmd = skipwhite(cmd);
-    if (isdigit(*cmd))
+    if (VIM_ISDIGIT(*cmd))
     {
 	i = getdigits(&cmd);
 	if (i <= 0 && !eap->skip && do_error)
@@ -5573,7 +5573,7 @@ ex_sign(eap)
 
 		    /* If the name is a number use that for the typenr,
 		     * otherwise use a negative number. */
-		    if (isdigit(*arg))
+		    if (VIM_ISDIGIT(*arg))
 			sp->sn_typenr = atoi((char *)arg);
 		    else
 		    {
@@ -5753,7 +5753,7 @@ ex_sign(eap)
 
 	/* first arg could be placed sign id */
 	arg1 = arg;
-	if (isdigit(*arg))
+	if (VIM_ISDIGIT(*arg))
 	{
 	    id = getdigits(&arg);
 	    if (!vim_iswhite(*arg) && *arg != NUL)

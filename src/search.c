@@ -1038,7 +1038,7 @@ do_search(oap, dirc, pat, count, options)
 	     * offset, because it is meaningless and the 's' could be a
 	     * substitute command.
 	     */
-	    if (*p == '+' || *p == '-' || isdigit(*p))
+	    if (*p == '+' || *p == '-' || VIM_ISDIGIT(*p))
 		spats[0].off.line = TRUE;
 	    else if ((options & SEARCH_OPT) &&
 					(*p == 'e' || *p == 's' || *p == 'b'))
@@ -1047,17 +1047,17 @@ do_search(oap, dirc, pat, count, options)
 		    spats[0].off.end = SEARCH_END;
 		++p;
 	    }
-	    if (isdigit(*p) || *p == '+' || *p == '-')	   /* got an offset */
+	    if (VIM_ISDIGIT(*p) || *p == '+' || *p == '-')  /* got an offset */
 	    {
 					    /* 'nr' or '+nr' or '-nr' */
-		if (isdigit(*p) || isdigit(*(p + 1)))
+		if (VIM_ISDIGIT(*p) || VIM_ISDIGIT(*(p + 1)))
 		    spats[0].off.off = atol((char *)p);
 		else if (*p == '-')	    /* single '-' */
 		    spats[0].off.off = -1;
 		else			    /* single '+' */
 		    spats[0].off.off = 1;
 		++p;
-		while (isdigit(*p))	    /* skip number */
+		while (VIM_ISDIGIT(*p))	    /* skip number */
 		    ++p;
 	    }
 

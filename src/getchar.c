@@ -813,7 +813,7 @@ start_redo(count, old_redo)
     /* try to enter the count (in place of a previous count) */
     if (count)
     {
-	while (isdigit(c))	/* skip "old" count */
+	while (VIM_ISDIGIT(c))	/* skip "old" count */
 	    c = read_redo(FALSE, old_redo);
 	add_num_buff(&stuffbuff, count);
     }
@@ -2083,7 +2083,8 @@ vgetorpeek(advance)
 				for (s = typebuf.tb_buf + typebuf.tb_off + 1;
 					s < typebuf.tb_buf + typebuf.tb_off
 							      + typebuf.tb_len
-				   && (isdigit(*s) || *s == ';' || *s == ' ');
+				   && (VIM_ISDIGIT(*s) || *s == ';'
+								|| *s == ' ');
 					++s)
 				    ;
 				if (*s == 'r' || *s == '|') /* found one */

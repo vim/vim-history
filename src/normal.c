@@ -4259,8 +4259,11 @@ nv_zet(cap)
     int		old_fen = curwin->w_p_fen;
 #endif
 
-    if (vim_isdigit(nchar))
+    if (VIM_ISDIGIT(nchar))
     {
+	/*
+	 * "z123{nchar}": edit the count before obtaining {nchar}
+	 */
 	if (checkclearop(cap->oap))
 	    return;
 	n = nchar - '0';
@@ -4282,7 +4285,7 @@ nv_zet(cap)
 #endif
 	    if (nchar == K_DEL || nchar == K_KDEL)
 		n /= 10;
-	    else if (vim_isdigit(nchar))
+	    else if (VIM_ISDIGIT(nchar))
 		n = n * 10 + (nchar - '0');
 	    else if (nchar == CAR)
 	    {
@@ -8355,7 +8358,7 @@ nv_put(cap)
 # ifdef FEAT_CLIPBOARD
 	    adjust_clip_reg(&regname);
 # endif
-	    if (regname == 0 || isdigit(regname)
+	    if (regname == 0 || VIM_ISDIGIT(regname)
 # ifdef FEAT_CLIPBOARD
 		    || (clip_unnamed && (regname == '*' || regname == '+'))
 # endif

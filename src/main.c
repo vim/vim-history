@@ -809,7 +809,7 @@ main
 
 	    case 'w':		/* "-w{number}"	set window height */
 				/* "-w {scriptout}"	write to script */
-		if (isdigit(((char_u *)argv[0])[argv_idx]))
+		if (vim_isdigit(((char_u *)argv[0])[argv_idx]))
 		{
 		    argv_idx = -1;
 		    break;			/* not implemented, ignored */
@@ -2299,10 +2299,10 @@ get_number_arg(p, idx, def)
     int		*idx;	    /* index in argument, is incremented */
     int		def;	    /* default value */
 {
-    if (isdigit(p[*idx]))
+    if (vim_isdigit(p[*idx]))
     {
 	def = atoi((char *)&(p[*idx]));
-	while (isdigit(p[*idx]))
+	while (vim_isdigit(p[*idx]))
 	    *idx = *idx + 1;
     }
     return def;

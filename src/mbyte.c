@@ -377,7 +377,7 @@ enc_canon_props(name)
     if (i >= 0)
 	return enc_canon_table[i].prop;
 #ifdef WIN3264
-    if (name[0] == 'c' && name[1] == 'p' && isdigit(name[2]))
+    if (name[0] == 'c' && name[1] == 'p' && VIM_ISDIGIT(name[2]))
     {
 	CPINFO	cpinfo;
 
@@ -439,7 +439,7 @@ mb_init()
     }
 
 #ifdef WIN3264
-    if (p_enc[0] == 'c' && p_enc[1] == 'p' && isdigit(p_enc[2]))
+    if (p_enc[0] == 'c' && p_enc[1] == 'p' && VIM_ISDIGIT(p_enc[2]))
     {
 	CPINFO	cpinfo;
 

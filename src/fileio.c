@@ -4741,7 +4741,7 @@ get_fio_flags(ptr)
 get_win_fio_flags(ptr)
     char_u	*ptr;
 {
-    if (ptr[0] == 'c' && ptr[1] == 'p' && isdigit(ptr[2]))
+    if (ptr[0] == 'c' && ptr[1] == 'p' && VIM_ISDIGIT(ptr[2]))
 	return FIO_PUT_CP(atoi(ptr + 2)) | FIO_CODEPAGE;
     return 0;
 }
