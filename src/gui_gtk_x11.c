@@ -2500,7 +2500,7 @@ gui_mch_font_dialog(char_u *oldval)
     }
 
     /* Wait for the font dialog to be closed. */
-    while (gui.fontdlg && GTK_WIDGET_VISIBLE(gui.fontdlg))
+    while (gui.fontdlg && GTK_WIDGET_DRAWABLE(gui.fontdlg))
 	gtk_main_iteration_do(TRUE);
 
     if (gui.fontname == NULL)
@@ -2801,7 +2801,7 @@ gui_mch_get_color(char_u * name)
 	GdkColor	color;
 	int		parsed;
 
-	/* Since we have allready called gtk_set_locale here the bugger
+	/* Since we have already called gtk_set_locale here the bugger
 	 * XParseColor will accept only explicit color names in the language
 	 * of the current locale.  However this will interferre with:
 	 * 1. Vim's global startup files
@@ -3007,8 +3007,8 @@ gui_mch_haskey(char_u * name)
     int i;
 
     for (i = 0; special_keys[i].key_sym != 0; i++)
-	if (name[0] == special_keys[i].code0 &&
-	    name[1] == special_keys[i].code1)
+	if (name[0] == special_keys[i].code0
+		&& name[1] == special_keys[i].code1)
 	    return OK;
     return FAIL;
 }
@@ -3527,6 +3527,7 @@ clip_mch_request_selection(cbd)
 /*
  * Disown the selection.
  */
+/*ARGSUSED*/
     void
 clip_mch_lose_selection(cbd)
     VimClipboard *cbd;
@@ -3560,6 +3561,7 @@ clip_mch_own_selection(cbd)
  * Send the current selection to the clipboard.  Do nothing for X because we
  * will fill in the selection only when requested by another app.
  */
+/*ARGSUSED*/
     void
 clip_mch_set_selection(cbd)
     VimClipboard* cbd;
