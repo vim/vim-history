@@ -3952,7 +3952,8 @@ no_console_input()
 }
 #endif
 
-#if defined(FEAT_SUN_WORKSHOP) || defined(FEAT_GUI_MOTIF) || defined(PROTO)
+#if defined(FEAT_GUI_GTK) || defined(FEAT_SUN_WORKSHOP) \
+	|| defined(FEAT_GUI_MOTIF) || defined(PROTO)
 /*
  * Update the current window and the screen.
  */
@@ -3995,7 +3996,10 @@ get_find_dialog_text(arg, wordp)
 
 	    /* Remove "\V" */
 	    if (len >= 2 && STRNCMP(text, "\\V", 2) == 0)
+	    {
 		mch_memmove(text, text + 2, (size_t)(len - 1));
+		len -= 2;
+	    }
 
 	    /* Recognize "\<text\>" and remove. */
 	    if (len >= 4
@@ -4024,14 +4028,9 @@ gui_do_findrepl(flags, find_text, repl_text, down, exact)
     int		exact;		/* Exact word match. */
 {
     garray_T	ga;
+    int		i;
 
     ga_init2(&ga, 1, 100);
-
-    /* start stuffing in the command text */
-    if (State & INSERT)
-	ga_append(&ga, Ctrl_O);
-    else if ((State | NORMAL) == 0)
-	ga_append(&ga, ESC);
 
     if (flags == FR_REPLACE)
     {
@@ -4044,31 +4043,37 @@ gui_do_findrepl(flags, find_text, repl_text, down, exact)
 	}
     }
     else if (flags == FR_REPLACEALL)
+	ga_concat(&ga, (char_u *)"%s/");
+
+    ga_concat(&ga, (char_u *)"\\V");
+    if (exact)
+	ga_concat(&ga, (char_u *)"\\<");
+    ga_concat(&ga, find_text);
+    if (exact)
+	ga_concat(&ga, (char_u *)"\\>");
+
+    if (flags == FR_REPLACEALL)
     {
-	ga_concat(&ga, (char_u *)":%sno/");
-	ga_concat(&ga, find_text);
 	ga_concat(&ga, (char_u *)"/");
 	ga_concat(&ga, repl_text);
-	ga_concat(&ga, (char_u *)"/g\r");
+	ga_concat(&ga, (char_u *)"/g");
+	do_cmdline_cmd(ga.ga_data);
     }
-
-    if (flags != FR_REPLACEALL)
+    else
     {
 	/* Search for the next match. */
-	if (down)
-	    ga_concat(&ga, (char_u *)"/\\V");
-	else
-	    ga_concat(&ga, (char_u *)"?\\V");
-	if (exact)
-	    ga_concat(&ga, (char_u *)"\\<");
-	ga_concat(&ga, find_text);
-	if (exact)
-	    ga_concat(&ga, (char_u *)"\\>");
-	ga_concat(&ga, (char_u *)"\r");
+	i = msg_scroll;
+	do_search(NULL, down ? '/' : '?', ga.ga_data, 1L,
+						    SEARCH_MSG + SEARCH_MARK);
+	msg_scroll = i;	    /* don't let an error message set msg_scroll */
     }
 
-    if (ga.ga_len > 0)
-	add_to_input_buf((char_u *)ga.ga_data, ga.ga_len);
+    if (State & (NORMAL | INSERT))
+    {
+	gui_update_screen();		/* update the screen */
+	msg_didout = 0;			/* overwrite any message */
+	need_wait_return = FALSE;	/* don't wait for return */
+    }
 
     vim_free(ga.ga_data);
     return (ga.ga_len > 0);
