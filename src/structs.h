@@ -669,10 +669,13 @@ typedef struct
  */
 typedef struct
 {
-    int		vc_type;		/* zero or one of the CONV_ values */
-    int		vc_factor;		/* max. expansion factor */
+    int		vc_type;	/* zero or one of the CONV_ values */
+    int		vc_factor;	/* max. expansion factor */
+# ifdef FEAT_WINDOWS
+    int		vc_dbcs;	/* codepage to convert to (CONV_CODEPAGE) */
+# endif
 # ifdef USE_ICONV
-    iconv_t	vc_fd;			/* for CONV_ICONV */
+    iconv_t	vc_fd;		/* for CONV_ICONV */
 # endif
 } vimconv_T;
 
@@ -692,6 +695,10 @@ typedef struct
 #define CONV_TO_UTF8	1
 #define CONV_TO_LATIN1	2
 #define CONV_ICONV	3
+#ifdef FEAT_WINDOWS
+# define CONV_DBCS	4	/* ucs-2 -> dbcs */
+# define CONV_CODEPAGE	5	/* current codepage -> ucs-2 */
+#endif
 
 /*
  * Structure used for mappings and abbreviations.

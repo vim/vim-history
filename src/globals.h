@@ -576,6 +576,10 @@ EXTERN char	mb_bytelen_tab[256];
 EXTERN vimconv_T input_conv;			/* type of input conversion */
 EXTERN vimconv_T output_conv;			/* type of output conversion */
 
+#ifdef FEAT_MBYTE_IME
+EXTERN vimconv_T ime_conv;			/* ucs-2 -> encoding */
+EXTERN vimconv_T ime_conv_cp;			/* codepage -> ucs-2 */
+#endif
 /*
  * Function pointers, used to quickly get to the right function.  Each has
  * three possible values: latin_ (8-bit), utfc_ or utf_ (utf-8) and dbcs_

@@ -1533,6 +1533,32 @@ add_to_input_buf(s, len)
 }
 #endif
 
+#if (defined(FEAT_XIM) && defined(FEAT_GUI_GTK)) \
+	|| (defined(FEAT_MBYTE) && defined(FEAT_MBYTE_IME)) \
+	|| defined(PROTO)
+/*
+ * Add "str[len]" to the input buffer while escaping CSI bytes.
+ */
+    void
+add_to_input_buf_csi(char_u *str, int len)
+{
+    int		i;
+    char_u	buf[2];
+
+    for (i = 0; i < len; ++i)
+    {
+	add_to_input_buf(str + i, 1);
+	if (str[i] == CSI)
+	{
+	    /* Turn CSI into K_CSI. */
+	    buf[0] = KS_EXTRA;
+	    buf[1] = (int)KE_CSI;
+	    add_to_input_buf(buf, 2);
+	}
+    }
+}
+#endif
+
 #if defined(FEAT_HANGULIN) || defined(PROTO)
     void
 push_raw_key (s, len)
